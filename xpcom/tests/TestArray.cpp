@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 #include <stdio.h>
@@ -30,8 +31,6 @@
     {0x80, 0x31, 0x00, 0x60, 0x08, 0x15, 0x9b, 0x5a}}
 
 static const PRBool kExitOnError = PR_TRUE;
-
-static NS_DEFINE_IID(kIFooIID, NS_IFOO_IID);
 
 class IFoo : public nsISupports {
 public:

@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 
@@ -188,7 +189,7 @@ nsProxyObjectManager::GetProxyObject(nsIEventQueue *destQueue,
     if (ciObject == nsnull)
         return NS_ERROR_NULL_POINTER;
 
-    nsresult rv = GetProxyObject(destQueue, nsIProxyCreateInstance::GetIID(), ciObject, PROXY_SYNC, (void**)&ciProxy);
+    nsresult rv = GetProxyObject(destQueue, NS_GET_IID(nsIProxyCreateInstance), ciObject, PROXY_SYNC, (void**)&ciProxy);
     
     if (NS_FAILED(rv))
     {
@@ -321,7 +322,7 @@ NSRegisterSelf(nsISupports* aServMgr, const char *path)
 
     nsIComponentManager* compMgr;
     rv = servMgr->GetService(kComponentManagerCID, 
-                             nsIComponentManager::GetIID(), 
+                             NS_GET_IID(nsIComponentManager), 
                              (nsISupports**)&compMgr);
     if (NS_FAILED(rv)) return rv;
 
@@ -347,7 +348,7 @@ NSUnregisterSelf(nsISupports* aServMgr, const char *path)
 
     nsIComponentManager* compMgr;
     rv = servMgr->GetService(kComponentManagerCID, 
-                             nsIComponentManager::GetIID(), 
+                             NS_GET_IID(nsIComponentManager), 
                              (nsISupports**)&compMgr);
     if (NS_FAILED(rv)) return rv;
 

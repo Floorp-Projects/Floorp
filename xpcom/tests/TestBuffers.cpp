@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 #include "nsIBuffer.h"
@@ -99,7 +100,7 @@ protected:
     PRBool      mDone;
 };
 
-NS_IMPL_ISUPPORTS(Reader, nsIRunnable::GetIID());
+NS_IMPL_ISUPPORTS(Reader, NS_GET_IID(nsIRunnable));
 
 ////////////////////////////////////////////////////////////////////////////////
 

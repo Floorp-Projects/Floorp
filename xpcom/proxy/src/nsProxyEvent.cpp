@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 
@@ -442,7 +443,10 @@ void* CompletedEventHandler(PLEvent *self)
 }
 
 #ifdef AUTOPROXIFICATION
-// ssc@netscape.com wishes he could get rid of this instance of |NS_DEFINE_IID|, but |ProxyEventClassIdentity| is not visible from here
+/* ssc@netscape.com wishes he could get rid of this instance of
+ * |NS_DEFINE_IID|, but |ProxyEventClassIdentity| is not visible from
+ * here.
+ */
 static NS_DEFINE_IID(kProxyObject_Identity_Class_IID, NS_PROXYEVENT_IDENTITY_CLASS_IID);
 
 nsresult
@@ -645,7 +649,10 @@ AutoProxyParameterList(PRUint32 methodIndex, nsXPTMethodInfo *methodInfo, nsXPTC
             nsProxyEventObject* replaceInterface = ((nsProxyEventObject*)params[i].val.p);
             if (replaceInterface)
             {
-                // ssc@netscape.com wishes he could get rid of this instance of |NS_DEFINE_IID|, but |ProxyEventClassIdentity| is not visible from here
+                /* ssc@netscape.com wishes he could get rid of this
+                 * instance of |NS_DEFINE_IID|, but
+                 * |ProxyEventClassIdentity| is not visible from here
+                 */
                 nsISupports *aIdentificationObject;
                 rv = replaceInterface->QueryInterface(kProxyObject_Identity_Class_IID, (void**)&aIdentificationObject);
         

@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 #include "nsIThread.h"
@@ -97,7 +98,7 @@ protected:
     PRUint32            mCount;
 };
 
-NS_IMPL_ISUPPORTS(nsReceiver, nsIRunnable::GetIID());
+NS_IMPL_ISUPPORTS(nsReceiver, NS_GET_IID(nsIRunnable));
 
 nsresult
 TestPipe(nsIInputStream* in, nsIOutputStream* out)
@@ -207,7 +208,7 @@ protected:
     PRUint32            mReceived;
 };
 
-NS_IMPL_ISUPPORTS(nsShortReader, nsIRunnable::GetIID());
+NS_IMPL_ISUPPORTS(nsShortReader, NS_GET_IID(nsIRunnable));
 
 nsresult
 TestShortWrites(nsIInputStream* in, nsIOutputStream* out)
@@ -277,7 +278,7 @@ public:
     virtual ~nsPipeObserver() {}
 };
 
-NS_IMPL_ISUPPORTS(nsPipeObserver, nsIPipeObserver::GetIID());
+NS_IMPL_ISUPPORTS(nsPipeObserver, NS_GET_IID(nsIPipeObserver));
 
 nsresult
 TestPipeObserver()

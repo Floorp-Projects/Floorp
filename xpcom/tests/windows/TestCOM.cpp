@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 #include <windows.h>
@@ -33,12 +34,9 @@
 class nsITestCom: public nsISupports
 {
 public:
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_ITEST_COM_IID)
   NS_IMETHOD Test() = 0;
 };
-
-static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
-static NS_DEFINE_IID(kIFactoryIID, NS_IFACTORY_IID);
-static NS_DEFINE_IID(kITestComIID, NS_ITEST_COM_IID);
 
 /*
  * nsTestCom
@@ -61,7 +59,7 @@ public:
   }
 };
 
-NS_IMPL_QUERY_INTERFACE(nsTestCom, kITestComIID);
+NS_IMPL_QUERY_INTERFACE(nsTestCom, NS_GET_IID(nsITestCom));
 
 nsrefcnt nsTestCom::AddRef() 
 {
@@ -101,7 +99,7 @@ public:
   }
 };
 
-NS_IMPL_ISUPPORTS(nsTestComFactory, kIFactoryIID);
+NS_IMPL_ISUPPORTS(nsTestComFactory, NS_GET_IID(nsIFactory));
 
 nsresult nsTestComFactory::CreateInstance(nsISupports *aOuter,
 					  const nsIID &aIID,
@@ -137,7 +135,7 @@ int main(int argc, char *argv[])
 {
   nsTestComFactory *inst = new nsTestComFactory();
   IClassFactory *iFactory;
-  inst->QueryInterface(kIFactoryIID, (void **) &iFactory);
+  inst->QueryInterface(NS_GET_IID(nsIFactory), (void **) &iFactory);
 
   IUnknown *iUnknown;  
   nsITestCom *iTestCom;

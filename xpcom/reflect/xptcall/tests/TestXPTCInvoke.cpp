@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 /* Invoke tests xptcall. */
@@ -39,6 +40,7 @@ static void DoMultipleInheritenceTest2();
 class InvokeTestTargetInterface : public nsISupports
 {
 public:
+    NS_DEFINE_STATIC_IID_ACCESSOR(INVOKETESTTARGET_IID)
     NS_IMETHOD AddTwoInts(PRInt32 p1, PRInt32 p2, PRInt32* retval) = 0;
     NS_IMETHOD MultTwoInts(PRInt32 p1, PRInt32 p2, PRInt32* retval) = 0;
     NS_IMETHOD AddTwoLLs(PRInt64 p1, PRInt64 p2, PRInt64* retval) = 0;
@@ -73,8 +75,7 @@ public:
     InvokeTestTarget();
 };
 
-static NS_DEFINE_IID(kInvokeTestTargetIID, INVOKETESTTARGET_IID);
-NS_IMPL_ISUPPORTS(InvokeTestTarget, kInvokeTestTargetIID);
+NS_IMPL_ISUPPORTS(InvokeTestTarget, NS_GET_IID(InvokeTestTargetInterface));
 
 InvokeTestTarget::InvokeTestTarget()
 {
@@ -379,6 +380,7 @@ int main()
 class nsIFoo : public nsISupports
 {
 public:
+    NS_DEFINE_STATIC_IID_ACCESSOR(FOO_IID)
     NS_IMETHOD FooMethod1(PRInt32 i) = 0;
     NS_IMETHOD FooMethod2(PRInt32 i) = 0;
 };
@@ -386,6 +388,7 @@ public:
 class nsIBar : public nsISupports
 {
 public:
+    NS_DEFINE_STATIC_IID_ACCESSOR(BAR_IID)
     NS_IMETHOD BarMethod1(PRInt32 i) = 0;
     NS_IMETHOD BarMethod2(PRInt32 i) = 0;
 };
@@ -499,9 +502,6 @@ char* FooBarImpl::ImplName()
     return MyName;
 }
 
-static NS_DEFINE_IID(kFooIID, FOO_IID);
-static NS_DEFINE_IID(kBarIID, BAR_IID);
-
 NS_IMETHODIMP
 FooBarImpl::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 {
@@ -512,18 +512,18 @@ FooBarImpl::QueryInterface(REFNSIID aIID, void** aInstancePtr)
   *aInstancePtr = NULL;
 
 
-  if (aIID.Equals(kFooIID)) {
+  if (aIID.Equals(NS_GET_IID(nsIFoo))) {
     *aInstancePtr = (void*) NS_STATIC_CAST(nsIFoo*,this);
     NS_ADDREF_THIS();
     return NS_OK;
   }
-  if (aIID.Equals(kBarIID)) {
+  if (aIID.Equals(NS_GET_IID(nsIBar))) {
     *aInstancePtr = (void*) NS_STATIC_CAST(nsIBar*,this);
     NS_ADDREF_THIS();
     return NS_OK;
   }
 
-  if (aIID.Equals(nsCOMTypeInfo<nsISupports>::GetIID())) {
+  if (aIID.Equals(NS_GET_IID(nsISupports))) {
     *aInstancePtr = (void*) NS_STATIC_CAST(nsISupports*,
                                            NS_STATIC_CAST(nsIFoo*,this));
     NS_ADDREF_THIS();
@@ -548,8 +548,8 @@ static void DoMultipleInheritenceTest()
     nsXPTCVariant var[1];
 
     printf("\n");
-    if(NS_SUCCEEDED(impl->QueryInterface(kFooIID, (void**)&foo)) &&
-       NS_SUCCEEDED(impl->QueryInterface(kBarIID, (void**)&bar)))
+    if(NS_SUCCEEDED(impl->QueryInterface(NS_GET_IID(nsIFoo), (void**)&foo)) &&
+       NS_SUCCEEDED(impl->QueryInterface(NS_GET_IID(nsIBar), (void**)&bar)))
     {
         printf("impl == %x\n", (int) impl);
         printf("foo  == %x\n", (int) foo);
@@ -646,9 +646,6 @@ FooBarImpl2::~FooBarImpl2()
 {
 }
 
-static NS_DEFINE_IID(kFooIID2, FOO_IID);
-static NS_DEFINE_IID(kBarIID2, BAR_IID);
-
 NS_IMETHODIMP FooBarImpl2::FooMethod1(PRInt32 i)
 {
     printf("\tFooBarImpl2::FooMethod1 called with i == %d, local value = %x\n", 
@@ -687,18 +684,18 @@ FooBarImpl2::QueryInterface(REFNSIID aIID, void** aInstancePtr)
   *aInstancePtr = NULL;
 
 
-  if (aIID.Equals(kFooIID2)) {
+  if (aIID.Equals(NS_GET_IID(nsIFoo))) {
     *aInstancePtr = (void*) NS_STATIC_CAST(nsIFoo2*,this);
     NS_ADDREF_THIS();
     return NS_OK;
   }
-  if (aIID.Equals(kBarIID2)) {
+  if (aIID.Equals(NS_GET_IID(nsIBar))) {
     *aInstancePtr = (void*) NS_STATIC_CAST(nsIBar2*,this);
     NS_ADDREF_THIS();
     return NS_OK;
   }
 
-  if (aIID.Equals(nsCOMTypeInfo<nsISupports>::GetIID())) {
+  if (aIID.Equals(NS_GET_IID(nsISupports))) {
     *aInstancePtr = (void*) NS_STATIC_CAST(nsISupports*,
                                            NS_STATIC_CAST(nsIFoo2*,this));
     NS_ADDREF_THIS();
@@ -722,8 +719,8 @@ static void DoMultipleInheritenceTest2()
     nsXPTCVariant var[1];
 
     printf("\n");
-    if(NS_SUCCEEDED(impl->QueryInterface(kFooIID2, (void**)&foo)) &&
-       NS_SUCCEEDED(impl->QueryInterface(kBarIID2, (void**)&bar)))
+    if(NS_SUCCEEDED(impl->QueryInterface(NS_GET_IID(nsIFoo), (void**)&foo)) &&
+       NS_SUCCEEDED(impl->QueryInterface(NS_GET_IID(nsIBar), (void**)&bar)))
     {
         printf("impl == %x\n", (int) impl);
         printf("foo  == %x\n", (int) foo);

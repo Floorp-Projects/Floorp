@@ -48,10 +48,6 @@ NS_DEF_PTR(nsIDOMNode);
 
 		On Macintosh, both nsCOMPtr and nsIPtr generate out-of-line destructors which are
 		not referenced, and which can be stripped by the linker.
-
-		Also note that on all platforms, each use of the |NS_DEFINE_IID| macro adds 16 bytes of static
-		data per file, while GetIID() has the same code profile and adds only 16 bytes of data to the entire
-		program, reguardless of the number of uses (greater than one).
 	*/
 
 void

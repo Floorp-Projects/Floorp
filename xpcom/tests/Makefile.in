@@ -30,10 +30,10 @@ DIRS		= dynamic services
 
 TESTS_NOT_COMPILING = \
 		TestArray.cpp \
-		TestServMgr.cpp \
 		$(NULL)
 
 CPPSRCS		= \
+		TestServMgr.cpp \
 		TestFactory.cpp \
 		TestCOMPtr.cpp \
 		TestID.cpp \

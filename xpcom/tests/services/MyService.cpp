@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 #include "MyService.h"
@@ -74,9 +75,7 @@ MyServiceFactory* gFact = NULL;
 ////////////////////////////////////////////////////////////////////////////////
 // MyService Implementation
 
-static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID); 
-static NS_DEFINE_IID(kIMyServiceIID, NS_IMYSERVICE_IID);
-NS_IMPL_ISUPPORTS(MyService, kIMyServiceIID);
+NS_IMPL_ISUPPORTS(MyService, NS_GET_IID(IMyService));
 
 MyService::MyService(nsISupports* outer)
 {
@@ -103,8 +102,7 @@ MyService::Doit(void)
 ////////////////////////////////////////////////////////////////////////////////
 // MyServiceFactory Implementation
 
-static NS_DEFINE_IID(kIFactoryIID, NS_IFACTORY_IID);
-NS_IMPL_ISUPPORTS(MyServiceFactory, kIFactoryIID);
+NS_IMPL_ISUPPORTS(MyServiceFactory, NS_GET_IID(nsIFactory));
 
 MyServiceFactory::MyServiceFactory(void)
     : mStarted(PR_FALSE), mOutstandingInstances(0)
@@ -138,7 +136,7 @@ MyServiceFactory::LockFactory(PRBool aLock)
 ////////////////////////////////////////////////////////////////////////////////
 // DLL Entry Points:
 
-static NS_DEFINE_IID(kIMyServiceCID, NS_IMYSERVICE_CID);
+static NS_DEFINE_CID(kIMyServiceCID, NS_IMYSERVICE_CID);
 
 extern "C" NS_EXPORT nsresult
 NSGetFactory(nsISupports* serviceMgr,

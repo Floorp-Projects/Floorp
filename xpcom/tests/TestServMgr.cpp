@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 #include "MyService.h"
@@ -25,8 +26,7 @@
 #include "nsIComponentManager.h"
 #include <stdio.h>
 
-static NS_DEFINE_IID(kIMyServiceCID, NS_IMYSERVICE_CID);
-static NS_DEFINE_IID(kIMyServiceIID, NS_IMYSERVICE_IID);
+static NS_DEFINE_CID(kIMyServiceCID, NS_IMYSERVICE_CID);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -37,7 +37,7 @@ BeginTest(int testNumber)
 {
     nsresult err;
     NS_ASSERTION(myServ == NULL, "myServ not reset");
-    err = nsServiceManager::GetService(kIMyServiceCID, kIMyServiceIID,
+    err = nsServiceManager::GetService(kIMyServiceCID, NS_GET_IID(IMyService),
                                        (nsISupports**)&myServ);
     return err;
 }
@@ -113,7 +113,7 @@ AsyncNoShutdownTest(int testNumber)
     // Create some other user of kIMyServiceCID, preventing it from
     // really going away:
     IMyService* otherClient;
-    err = nsServiceManager::GetService(kIMyServiceCID, kIMyServiceIID,
+    err = nsServiceManager::GetService(kIMyServiceCID, NS_GET_IID(IMyService),
                                        (nsISupports**)&otherClient);
     if (err != NS_OK) return err;
 

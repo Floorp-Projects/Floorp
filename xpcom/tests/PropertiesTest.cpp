@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 #define NS_IMPL_IDS
@@ -56,12 +57,9 @@ static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 #define XPCOM_DLL "libxpcom"MOZ_DLL_SUFFIX
 #endif
 #endif
-static NS_DEFINE_IID(kEventQueueCID, NS_EVENTQUEUE_CID);
-static NS_DEFINE_IID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
-static NS_DEFINE_IID(kIEventQueueServiceIID, NS_IEVENTQUEUESERVICE_IID);
-static NS_DEFINE_IID(kIPersistentPropertiesIID, NS_IPERSISTENTPROPERTIES_IID);
 
-
+static NS_DEFINE_CID(kEventQueueCID, NS_EVENTQUEUE_CID);
+static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 
 /***************************************************************************/
 extern "C" void
@@ -79,7 +77,7 @@ NS_SetupRegistry()
     
 	pEventQService = nsnull;
     nsresult result = nsServiceManager::GetService(kEventQueueServiceCID,
-                                                   kIEventQueueServiceIID,
+                                                   NS_GET_IID(nsIEventQueueService),
                                                    (nsISupports **)&pEventQService);
     if (NS_SUCCEEDED(result)) {
       // XXX: What if this fails?
@@ -125,7 +123,7 @@ main(int argc, char* argv[])
 
   nsIPersistentProperties* props = nsnull;
   ret = nsComponentManager::CreateInstance(kPersistentPropertiesCID, NULL,
-    kIPersistentPropertiesIID, (void**) &props);
+    NS_GET_IID(nsIPersistentProperties), (void**) &props);
   if (NS_FAILED(ret) || (!props)) {
     printf("create nsIPersistentProperties failed\n");
     return 1;

@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 
@@ -107,7 +108,7 @@ nsSampleImpl::~nsSampleImpl()
  * Notice that the second parameter to the macro is the static IID accessor
  * method, and NOT the #defined IID.
  */
-NS_IMPL_ISUPPORTS(nsSampleImpl, nsISample::GetIID());
+NS_IMPL_ISUPPORTS(nsSampleImpl, NS_GET_IID(nsISample));
 
 /**
  * Notice that in the protoype for this function, the NS_IMETHOD macro was

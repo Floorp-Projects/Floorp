@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 #include <stdio.h>
@@ -36,7 +37,6 @@
 #include "nsProxyObjectManager.h"
 #include "nsIEventQueueService.h"
 
-static NS_DEFINE_IID(kProxyObjectManagerIID, NS_IPROXYEVENT_MANAGER_IID);
 static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 
 /***************************************************************************/
@@ -72,8 +72,7 @@ nsTestXPCFoo::~nsTestXPCFoo()
 {
 }
 
-static NS_DEFINE_IID(kITestXPCFooIID, NS_ITESTPROXY_IID);
-NS_IMPL_ISUPPORTS(nsTestXPCFoo,kITestXPCFooIID)
+NS_IMPL_ISUPPORTS(nsTestXPCFoo, NS_GET_IID(nsITestProxy))
 
 NS_IMETHODIMP nsTestXPCFoo::Test(PRInt32 p1, PRInt32 p2, PRInt32* retval)
 {
@@ -96,7 +95,7 @@ NS_IMETHODIMP nsTestXPCFoo::Test3(nsISupports *p1, nsISupports **p2)
     {
         nsITestProxy *test;
 
-        p1->QueryInterface(nsITestProxy::GetIID(), (void**)&test);
+        p1->QueryInterface(NS_GET_IID(nsITestProxy), (void**)&test);
         
         test->Test2();
         PRInt32 a;
@@ -133,8 +132,8 @@ nsTestXPCFoo2::nsTestXPCFoo2()
 nsTestXPCFoo2::~nsTestXPCFoo2()
 {
 }
-//kITestXPCFooIID defined above for nsTestXPCFoo(1)
-NS_IMPL_ISUPPORTS(nsTestXPCFoo2,kITestXPCFooIID)
+
+NS_IMPL_ISUPPORTS(nsTestXPCFoo2,NS_GET_IID(nsITestProxy))
 
 NS_IMETHODIMP nsTestXPCFoo2::Test(PRInt32 p1, PRInt32 p2, PRInt32* retval)
 {
@@ -144,14 +143,14 @@ printf("calling back to caller!\n\n");
     nsITestProxy         *  proxyObject;
     
     nsServiceManager::GetService( NS_XPCOMPROXY_PROGID, 
-                                  kProxyObjectManagerIID,
+                                  NS_GET_IID(nsIProxyObjectManager),
                                   (nsISupports **)&manager);
 
     printf("ProxyObjectManager: %p \n", manager);
     
     PR_ASSERT(manager);
 
-    manager->GetProxyObject((nsIEventQueue*)p1, nsITestProxy::GetIID(), this, PROXY_SYNC, (void**)&proxyObject);
+    manager->GetProxyObject((nsIEventQueue*)p1, NS_GET_IID(nsITestProxy), this, PROXY_SYNC, (void**)&proxyObject);
     proxyObject->Test3(nsnull, nsnull);
     
     printf("Deleting Proxy Object\n");
@@ -194,7 +193,7 @@ void TestCase_TwoClassesOneInterface(void *arg)
     nsIProxyObjectManager*  manager;
     
     nsServiceManager::GetService( NS_XPCOMPROXY_PROGID, 
-                                  kProxyObjectManagerIID,
+                                  NS_GET_IID(nsIProxyObjectManager),
                                   (nsISupports **)&manager);
 
     printf("ProxyObjectManager: %p \n", manager);
@@ -211,9 +210,9 @@ void TestCase_TwoClassesOneInterface(void *arg)
     PR_ASSERT(foo2);
     
     
-    manager->GetProxyObject(argsStruct->queue, nsITestProxy::GetIID(), foo, PROXY_SYNC, (void**)&proxyObject);
+    manager->GetProxyObject(argsStruct->queue, NS_GET_IID(nsITestProxy), foo, PROXY_SYNC, (void**)&proxyObject);
     
-    manager->GetProxyObject(argsStruct->queue, nsITestProxy::GetIID(), foo2, PROXY_SYNC, (void**)&proxyObject2);
+    manager->GetProxyObject(argsStruct->queue, NS_GET_IID(nsITestProxy), foo2, PROXY_SYNC, (void**)&proxyObject2);
 
     
     
@@ -265,7 +264,7 @@ void TestCase_NestedLoop(void *arg)
     nsIProxyObjectManager*  manager;
     
     nsServiceManager::GetService( NS_XPCOMPROXY_PROGID, 
-                                  kProxyObjectManagerIID,
+                                  NS_GET_IID(nsIProxyObjectManager),
                                   (nsISupports **)&manager);
 
     printf("ProxyObjectManager: %d \n", manager);
@@ -278,7 +277,7 @@ void TestCase_NestedLoop(void *arg)
     PR_ASSERT(foo);
     
     
-    manager->GetProxyObject(argsStruct->queue, nsITestProxy::GetIID(), foo, PROXY_SYNC, (void**)&proxyObject);
+    manager->GetProxyObject(argsStruct->queue, NS_GET_IID(nsITestProxy), foo, PROXY_SYNC, (void**)&proxyObject);
     
     if (proxyObject)
     {
@@ -328,7 +327,7 @@ void TestCase_2(void *arg)
     nsIProxyObjectManager*  manager;
     
     nsServiceManager::GetService( NS_XPCOMPROXY_PROGID, 
-                                  kProxyObjectManagerIID,
+                                  NS_GET_IID(nsIProxyObjectManager),
                                   (nsISupports **)&manager);
     
     PR_ASSERT(manager);
@@ -336,9 +335,9 @@ void TestCase_2(void *arg)
     nsITestProxy         *proxyObject;
 
     manager->GetProxyObject(argsStruct->queue,
-                            nsITestProxy::GetIID(),   // should be CID!
+                            NS_GET_IID(nsITestProxy),   // should be CID!
                             nsnull, 
-                            nsITestProxy::GetIID(), 
+                            NS_GET_IID(nsITestProxy), 
                             PROXY_SYNC, 
                             (void**)&proxyObject);
     
@@ -358,7 +357,7 @@ void TestCase_nsISupports(void *arg)
     nsIProxyObjectManager*  manager;
     
     nsServiceManager::GetService( NS_XPCOMPROXY_PROGID, 
-                                  kProxyObjectManagerIID,
+                                  NS_GET_IID(nsIProxyObjectManager),
                                   (nsISupports **)&manager);
     
     PR_ASSERT(manager);
@@ -368,7 +367,7 @@ void TestCase_nsISupports(void *arg)
     
     PR_ASSERT(foo);
 
-     manager->GetProxyObject(argsStruct->queue, nsITestProxy::GetIID(), foo, PROXY_SYNC, (void**)&proxyObject);
+     manager->GetProxyObject(argsStruct->queue, NS_GET_IID(nsITestProxy), foo, PROXY_SYNC, (void**)&proxyObject);
     
     if (proxyObject != nsnull)
     {   
@@ -378,7 +377,7 @@ void TestCase_nsISupports(void *arg)
         proxyObject->Test3(bISupports, &cISupports);
         
         nsITestProxy *test;
-        bISupports->QueryInterface(nsITestProxy::GetIID(), (void**)&test);
+        bISupports->QueryInterface(NS_GET_IID(nsITestProxy), (void**)&test);
         
         test->Test2();
 
@@ -426,7 +425,7 @@ static void PR_CALLBACK EventLoop( void *arg )
     }
     if (NS_FAILED(rv)) return;
 
-    rv = eventQ->QueryInterface(nsIEventQueue::GetIID(), (void**)&gEventQueue);
+    rv = eventQ->QueryInterface(NS_GET_IID(nsIEventQueue), (void**)&gEventQueue);
     if (NS_FAILED(rv)) return;
      
 
@@ -435,7 +434,7 @@ static void PR_CALLBACK EventLoop( void *arg )
     nsIProxyObjectManager*  manager;
     
     nsServiceManager::GetService( NS_XPCOMPROXY_PROGID, 
-                                  kProxyObjectManagerIID,
+                                  NS_GET_IID(nsIProxyObjectManager),
                                   (nsISupports **)&manager);
     
     PR_ASSERT(manager);
@@ -445,7 +444,7 @@ static void PR_CALLBACK EventLoop( void *arg )
     
     PR_ASSERT(foo);
 
-    manager->GetProxyObject(gEventQueue, nsITestProxy::GetIID(), foo, PROXY_SYNC, (void**)&proxyObject);
+    manager->GetProxyObject(gEventQueue, NS_GET_IID(nsITestProxy), foo, PROXY_SYNC, (void**)&proxyObject);
 
     PRInt32 a;
     proxyObject->Test(1, 2, &a);

@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 #include "nsIThread.h"
@@ -54,7 +55,7 @@ protected:
     int mNum;
 };
 
-NS_IMPL_ISUPPORTS(nsRunner, nsIRunnable::GetIID());
+NS_IMPL_ISUPPORTS(nsRunner, NS_GET_IID(nsIRunnable));
 
 nsresult
 TestThreads()

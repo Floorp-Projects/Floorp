@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 #include <iostream.h>
@@ -248,7 +249,7 @@ IBar::QueryInterface( const nsID& aIID, void** aResult )
 
 		if ( aIID.Equals(GetIID()) )
 			rawPtr = this;
-		else if ( aIID.Equals(IFoo::GetIID()) )
+		else if ( aIID.Equals(NS_GET_IID(IFoo)) )
 			rawPtr = STATIC_CAST(IFoo*, this);
 		else
 			{
@@ -321,7 +322,7 @@ TestBloat_Raw()
 				try
 					{
 						IFoo* fooP = 0;
-						if ( NS_SUCCEEDED( result = barP->QueryInterface(IFoo::GetIID(), REINTERPRET_CAST(void**, &fooP)) ) )
+						if ( NS_SUCCEEDED( result = barP->QueryInterface(NS_GET_IID(IFoo), REINTERPRET_CAST(void**, &fooP)) ) )
 							{
 								try
 									{
@@ -359,7 +360,7 @@ TestBloat_Raw_Unsafe()
 		if ( barP )
 			{
 				IFoo* fooP = 0;
-				if ( NS_SUCCEEDED( result = barP->QueryInterface(IFoo::GetIID(), REINTERPRET_CAST(void**, &fooP)) ) )
+				if ( NS_SUCCEEDED( result = barP->QueryInterface(NS_GET_IID(IFoo), REINTERPRET_CAST(void**, &fooP)) ) )
 					{
 						fooP->print_totals();
 						NS_RELEASE(fooP);

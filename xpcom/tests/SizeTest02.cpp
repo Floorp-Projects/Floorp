@@ -8,7 +8,6 @@
 	#pragma exceptions off
 #endif
 
-static NS_DEFINE_IID(kIDOMNodeIID, NS_IDOMNODE_IID);
 NS_DEF_PTR(nsIDOMNode);
 
 	/*
@@ -54,7 +53,7 @@ Test02_Raw00( nsISupports* aDOMNode, nsString* aResult )
 //			return NS_ERROR_NULL_POINTER;
 
 		nsIDOMNode* node = 0;
-		nsresult status = aDOMNode->QueryInterface(kIDOMNodeIID, (void**)&node);
+		nsresult status = aDOMNode->QueryInterface(NS_GET_IID(nsIDOMNode), (void**)&node);
 		if ( NS_SUCCEEDED(status) )
 			{
 				node->GetNodeName(*aResult);
@@ -73,7 +72,7 @@ Test02_Raw01( nsISupports* aDOMNode, nsString* aResult )
 //			return NS_ERROR_NULL_POINTER;
 
 		nsIDOMNode* node;
-		nsresult status = aDOMNode->QueryInterface(kIDOMNodeIID, (void**)&node);
+		nsresult status = aDOMNode->QueryInterface(NS_GET_IID(nsIDOMNode(, (void**)&node);
 		if ( NS_SUCCEEDED(status) )
 			{
 				node->GetNodeName(*aResult);
@@ -104,7 +103,7 @@ Test02_nsIPtr( nsISupports* aDOMNode, nsString* aResult )
 //			return NS_ERROR_NULL_POINTER;
 
 		nsIDOMNodePtr node;
-		nsresult status = aDOMNode->QueryInterface(kIDOMNodeIID, node.Query());
+		nsresult status = aDOMNode->QueryInterface(NS_GET_IID(nsIDOMNode), node.Query());
 
 		if ( NS_SUCCEEDED(status) )
 			node->GetNodeName(*aResult);

@@ -7,9 +7,6 @@
 #include "nsCOMPtr.h"
 #include "nsIPtr.h"
 
-static NS_DEFINE_IID(kIScriptGlobalObjectIID, NS_ISCRIPTGLOBALOBJECT_IID);
-static NS_DEFINE_IID(kIWebShellWindowIID, NS_IWEBSHELL_WINDOW_IID);
-
 NS_DEF_PTR(nsIScriptGlobalObject);
 NS_DEF_PTR(nsIWebShell);
 NS_DEF_PTR(nsIWebShellContainer);
@@ -52,7 +49,7 @@ Test06_raw( nsIDOMWindow* aDOMWindow, nsIWebShellWindow** aWebShellWindow )
 //			return NS_ERROR_NULL_POINTER;
 
 		nsIScriptGlobalObject* scriptGlobalObject = 0;
-		nsresult status = aDOMWindow->QueryInterface(kIScriptGlobalObjectIID, (void**)&scriptGlobalObject);
+		nsresult status = aDOMWindow->QueryInterface(NS_GET_IID(nsIScriptGlobalObject), (void**)&scriptGlobalObject);
 
 		nsIWebShell* webShell = 0;
 		if ( scriptGlobalObject )
@@ -67,7 +64,7 @@ Test06_raw( nsIDOMWindow* aDOMWindow, nsIWebShellWindow** aWebShellWindow )
 			status = rootWebShell->GetContainer(webShellContainer);
 
 		if ( webShellContainer )
-			status = webShellContainer->QueryInterface(kIWebShellWindowIID, (void**)aWebShellWindow);
+			status = webShellContainer->QueryInterface(NS_GET_IID(nsIWebShellWindow), (void**)aWebShellWindow);
 		else
 			(*aWebShellWindow) = 0;
 
@@ -90,7 +87,7 @@ Test06_raw_optimized( nsIDOMWindow* aDOMWindow, nsIWebShellWindow** aWebShellWin
 		(*aWebShellWindow) = 0;
 
 		nsIScriptGlobalObject* scriptGlobalObject;
-		nsresult status = aDOMWindow->QueryInterface(kIScriptGlobalObjectIID, (void**)&scriptGlobalObject);
+		nsresult status = aDOMWindow->QueryInterface(NS_GET_IID(nsIScriptGlobalObject), (void**)&scriptGlobalObject);
 		if ( NS_SUCCEEDED(status) )
 			{
 				nsIWebShell* webShell;
@@ -105,7 +102,7 @@ Test06_raw_optimized( nsIDOMWindow* aDOMWindow, nsIWebShellWindow** aWebShellWin
 								status = rootWebShell->GetContainer(webShellContainer);
 								if ( NS_SUCCEEDED(status) )
 									{
-										status = webShellContainer->QueryInterface(kIWebShellWindowIID, (void**)aWebShellWindow);
+										status = webShellContainer->QueryInterface(NS_GET_IID(nsIWebShellWindow), (void**)aWebShellWindow);
 										NS_RELEASE(webShellContainer);
 									}
 
@@ -171,7 +168,7 @@ Test06_nsCOMPtr00( nsIDOMWindow* aDOMWindow, nsIWebShellWindow** aWebShellWindow
 		nsCOMPtr<nsIWebShellContainer> webShellContainer = dont_AddRef(temp2);
 
 		if ( webShellContainer )
-			status = webShellContainer->QueryInterface(nsIWebShellWindow::GetIID(), (void**)aWebShellWindow);
+			status = webShellContainer->QueryInterface(NS_GET_IID(nsIWebShellWindow), (void**)aWebShellWindow);
 		else
 			(*aWebShellWindow) = 0;
 
@@ -236,7 +233,7 @@ Test06_nsCOMPtr02( nsIDOMWindow* aDOMWindow, nsIWebShellWindow** aWebShellWindow
 								nsCOMPtr<nsIWebShellContainer> webShellContainer = dont_AddRef(temp1);
 
 								if ( webShellContainer )
-									status = webShellContainer->QueryInterface(nsIWebShellWindow::GetIID(), (void**)aWebShellWindow);
+									status = webShellContainer->QueryInterface(NS_GET_IID(nsIWebShellWindow), (void**)aWebShellWindow);
 							}
 					}
 			}
@@ -287,7 +284,7 @@ Test06_nsIPtr( nsIDOMWindow* aDOMWindow, nsIWebShellWindow** aWebShellWindow )
 //			return NS_ERROR_NULL_POINTER;
 
 		nsIScriptGlobalObjectPtr scriptGlobalObject;
-		nsresult status = aDOMWindow->QueryInterface(kIScriptGlobalObjectIID, scriptGlobalObject.Query());
+		nsresult status = aDOMWindow->QueryInterface(NS_GET_IID(nsIScriptGlobalObject), scriptGlobalObject.Query());
 
 		nsIWebShellPtr webShell;
 		if ( scriptGlobalObject.IsNotNull() )
@@ -302,7 +299,7 @@ Test06_nsIPtr( nsIDOMWindow* aDOMWindow, nsIWebShellWindow** aWebShellWindow )
 			status = rootWebShell->GetContainer( webShellContainer.AssignRef() );
 
 		if ( webShellContainer.IsNotNull() )
-			status = webShellContainer->QueryInterface(kIWebShellWindowIID, (void**)aWebShellWindow);
+			status = webShellContainer->QueryInterface(NS_GET_IID(nsIWebShellWindow), (void**)aWebShellWindow);
 		else
 			(*aWebShellWindow) = 0;
 
@@ -317,7 +314,7 @@ Test06_nsIPtr_optimized( nsIDOMWindow* aDOMWindow, nsIWebShellWindow** aWebShell
 //			return NS_ERROR_NULL_POINTER;
 
 		nsIScriptGlobalObject* temp0;
-		nsresult status = aDOMWindow->QueryInterface(kIScriptGlobalObjectIID, (void**)&temp0);
+		nsresult status = aDOMWindow->QueryInterface(NS_GET_IID(nsIScriptGlobalObject), (void**)&temp0);
 		nsIScriptGlobalObjectPtr scriptGlobalObject = temp0;
 
 		nsIWebShell* temp1 = 0;
@@ -336,7 +333,7 @@ Test06_nsIPtr_optimized( nsIDOMWindow* aDOMWindow, nsIWebShellWindow** aWebShell
 		nsIWebShellContainerPtr webShellContainer = temp3;
 
 		if ( webShellContainer.IsNotNull() )
-			status = webShellContainer->QueryInterface(kIWebShellWindowIID, (void**)aWebShellWindow);
+			status = webShellContainer->QueryInterface(NS_GET_IID(nsIWebShellWindow), (void**)aWebShellWindow);
 		else
 			(*aWebShellWindow) = 0;
 

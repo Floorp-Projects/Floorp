@@ -18,13 +18,12 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 #include "prmon.h"
 #include "nsIEventQueue.h"
 #include "nsPIEventQueueChain.h"
-
-static NS_DEFINE_IID(kIEventQueueIID, NS_IEVENTQUEUE_IID);
 
 class nsEventQueueImpl : public nsIEventQueue,
                          public nsPIEventQueueChain
