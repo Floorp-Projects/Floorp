@@ -434,7 +434,7 @@ CalendarWindow.prototype.switchToView = function calWin_switchToView( newView )
 
 CalendarWindow.prototype.changeMouseOverInfo = function calWin_changeMouseOverInfo( calendarEvent, event )
 {
-   var Html = document.getElementById( "savetip" );
+   var Html = document.getElementById( "eventTooltip" );
 
    while( Html.hasChildNodes() )
    {
