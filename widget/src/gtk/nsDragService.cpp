@@ -24,6 +24,7 @@
 #include "nsIRegion.h"
 #include "nsVoidArray.h"
 #include "nsISupportsPrimitives.h"
+#include "nsPrimitiveHelpers.h"
 #include "nsCOMPtr.h"
 #include "nsXPIDLString.h"
 
