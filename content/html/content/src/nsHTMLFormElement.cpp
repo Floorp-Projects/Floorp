@@ -748,9 +748,16 @@ nsHTMLFormElement::DoSubmit(nsIPresContext* aPresContext, nsEvent* aEvent)
                             getter_AddRefs(mSubmittingRequest));
   NS_ENSURE_SUBMIT_SUCCESS(rv);
 
-  nsCOMPtr<nsIWebProgress> webProgress = do_GetInterface(docShell);
-  NS_ASSERTION(webProgress, "nsIDocShell null or not converted to nsIWebProgress!");
-  return webProgress->AddProgressListener(this);
+  // Even if the submit succeeds, it's possible for there to be no docshell
+  // or request; for example, if it's to a named anchor within the same page
+  // the submit will not really do anything.
+  if (docShell) {
+    nsCOMPtr<nsIWebProgress> webProgress = do_GetInterface(docShell);
+    NS_ASSERTION(webProgress, "nsIDocShell not converted to nsIWebProgress!");
+    rv = webProgress->AddProgressListener(this);
+  }
+
+  return rv;
 }
 
 
