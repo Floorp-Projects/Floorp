@@ -43,7 +43,8 @@ Rights Reserved.
 
   <template>
   	<rule rootcontainment="treechildren" subcontainment="treechildren">
-		<treeitem uri="...">
+		<treeitem uri="..."
+  		  Status="rdf:http://home.netscape.com/NC-rdf#Status">
 	  		<treerow >
 				<treecell>
 					<treeindentation />

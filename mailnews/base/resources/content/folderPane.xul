@@ -38,7 +38,9 @@
 <tree style="height: 100%" rdf:datasources="rdf:mailnewsfolders rdf:msgaccountmanager" id="folderTree" rdf:ignore="http://home.netscape.com/NC-rdf#MessageChild" onclick="return top.ChangeFolderByDOMNode(event.target.parentNode.parentNode)">
   <template>
   	<rule rootcontainment="treechildren" subcontainment="treechildren">
-		<treeitem uri="...">
+		<treeitem uri="..."
+		  SpecialFolder="rdf:http://home.netscape.com/NC-rdf#SpecialFolder"
+		  BiffState="rdf:http://home.netscape.com/NC-rdf#BiffState">
 	  		<treerow >
 				<treecell treeallowevents="true">
 					<titledbutton align="right" class="twisty" onclick="return top.ToggleTwisty(event.target.parentNode.parentNode.parentNode)" />
