@@ -590,6 +590,7 @@ struct _MDCPU {
 
 extern PRStatus _MD_WAIT(struct PRThread *, PRIntervalTime timeout);
 extern PRStatus _MD_WAKEUP_WAITER(struct PRThread *);
+extern void     _MD_YIELD(void);
 extern PRStatus _MD_InitializeThread(PRThread *thread);
 extern void     _MD_SET_PRIORITY(struct _MDThread *thread,
 	PRThreadPriority newPri);
