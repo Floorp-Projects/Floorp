@@ -531,28 +531,25 @@ var BookmarksCommand = {
   // requires utilityOverlay.js if opening in new window for getTopWin()
   openOneBookmark: function (aURI, aTargetBrowser, aDS)
   {
-    var w, browser
     var url = BookmarksUtils.getProperty(aURI, NC_NS+"URL", aDS)
     // Ignore "NC:" and empty urls.
     if (url == "")
       return;
+    var w = aTargetBrowser == "window"? null:getTopWin();
+    if (!w) {
+      openDialog(getBrowserURL(), "_blank", "chrome,all,dialog=no", url);
+      return;
+    }
+    var browser = w.document.getElementById("content");
     switch (aTargetBrowser) {
     case "current":
-      openTopWin(url);
+      browser.loadURI(url);
+      w._content.focus();
       break;
     case "tab":
-      w = getTopWin();
-      if (!w) {
-        openDialog(getBrowserURL(), "_blank", "chrome,all,dialog=no", url);
-        break;
-      }
-      browser = w.document.getElementById("content");
       var tab = browser.addTab(url);
       browser.selectedTab = tab;
       browser.focus();
-      break;
-    case "window":
-      openDialog(getBrowserURL(), "_blank", "chrome,all,dialog=no", url);
       break;
     }
   },
