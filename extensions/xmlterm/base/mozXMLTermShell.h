@@ -53,7 +53,7 @@ class mozXMLTermShell : public mozIXMLTermShell,
 
   NS_IMETHOD SetPrompt(const PRUnichar* aPrompt, const PRUnichar* aCookie);
 
-  NS_IMETHOD IgnoreKeyPress(const PRBool aIgnore,
+  NS_IMETHOD IgnoreKeyPress(PRBool aIgnore,
                             const PRUnichar* aCookie);
 
   NS_IMETHOD Init(nsIDOMWindow* aContentWin,

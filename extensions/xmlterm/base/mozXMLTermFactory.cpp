@@ -183,8 +183,8 @@ NSGetFactory(nsISupports* aServMgr,
              const char *aProgID,
              nsIFactory **aFactory)
 {
-  static PRBool ltermInitialized = false;
-  static PRBool xmltermInitialized = false;
+  static PRBool ltermInitialized = PR_FALSE;
+  static PRBool xmltermInitialized = PR_FALSE;
 
   if (!ltermInitialized) {
     // Initialize all LINETERM operations
@@ -205,12 +205,12 @@ NSGetFactory(nsISupports* aServMgr,
     if (result == 0) {
       tlog_set_level(LTERM_TLOG_MODULE, messageLevel, debugStr);
     }
-    ltermInitialized = true;
+    ltermInitialized = PR_TRUE;
 
     char* logStr = (char*) PR_GetEnv("LTERM_LOG");
     if (logStr && (strlen(logStr) > 0)) {
       // Enable LineTerm logging
-      mozLineTerm::mLoggingEnabled = true;
+      mozLineTerm::mLoggingEnabled = PR_TRUE;
     }
   }
 
@@ -225,7 +225,7 @@ NSGetFactory(nsISupports* aServMgr,
     }
 
     tlog_set_level(XMLT_TLOG_MODULE, messageLevel, debugStr);
-    xmltermInitialized = true;
+    xmltermInitialized = PR_TRUE;
   }
 
   if (!aFactory)

@@ -138,7 +138,7 @@ public:
 
   /** Checks if supplied cookie is valid for XMLTerm
    * @param aCookie supplied cookie string
-   * @param _retval true if supplied cookie matches XMLTerm cookie
+   * @param _retval PR_TRUE if supplied cookie matches XMLTerm cookie
    */
   NS_IMETHOD MatchesCookie(const PRUnichar* aCookie, PRBool *_retval) = 0;
 

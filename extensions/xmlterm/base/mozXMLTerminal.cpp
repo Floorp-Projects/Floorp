@@ -109,7 +109,7 @@ mozXMLTerminal::mozXMLTerminal() :
   mXMLTermSession(nsnull),
 
   mLineTermAux(nsnull),
-  mNeedsResizing(false),
+  mNeedsResizing(PR_FALSE),
 
   mKeyListener(nsnull),
   mTextListener(nsnull),
@@ -684,7 +684,7 @@ NS_IMETHODIMP mozXMLTerminal::SendText(const nsString& aString,
   if (!screenMode && (checkSize || mNeedsResizing)) {
     // Resize terminal, if need be
     mXMLTermSession->Resize(mLineTermAux);
-    mNeedsResizing = false;
+    mNeedsResizing = PR_FALSE;
   }
 
   if (!consumed) {
@@ -879,7 +879,7 @@ NS_IMETHODIMP mozXMLTerminal::GetScreenMode(PRBool* aFlag)
 
 /** Checks if supplied cookie is valid for XMLTerm
  * @param aCookie supplied cookie string
- * @param _retval true if supplied cookie matches XMLTerm cookie
+ * @param _retval PR_TRUE if supplied cookie matches XMLTerm cookie
  */
 NS_IMETHODIMP mozXMLTerminal::MatchesCookie(const PRUnichar* aCookie,
                                             PRBool *_retval)
@@ -917,7 +917,7 @@ NS_IMETHODIMP mozXMLTerminal::Resize(void)
 
   if (screenMode) {
     // Delay resizing until next input processing
-    mNeedsResizing = true;
+    mNeedsResizing = PR_TRUE;
   } else {
     // Resize session
     result = mXMLTermSession->Resize(mLineTermAux);

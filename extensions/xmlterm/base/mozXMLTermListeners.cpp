@@ -106,7 +106,7 @@ NS_NewXMLTermDragListener(nsIDOMEventListener ** aInstancePtrResult,
 
 mozXMLTermKeyListener::mozXMLTermKeyListener() :
   mXMLTerminal(nsnull),
-  mSuspend(false)
+  mSuspend(PR_FALSE)
 {
   NS_INIT_REFCNT();
 }
