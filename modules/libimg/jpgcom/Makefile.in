@@ -39,10 +39,9 @@ CPPSRCS		= \
 	$(NULL)
 
 
-CPPSRCS		+=  \
-		  $(NULL)
-
 REQUIRES	+= util jpeg  xpcom img
+
+EXTRA_DSO_LDOPTS += $(JPEG_LIBS)
 
 EXTRA_LIBS	+= $(NSPR_LIBS)
 
