@@ -507,6 +507,7 @@ protected:
               nsHTMLReflowMetrics&     aMetrics,
               nsReflowStatus&          aStatus);     
     ~DR_cookie();
+    void Change() const;
 
     nsIPresContext*          mPresContext;
     nsIFrame*                mFrame;
@@ -518,10 +519,13 @@ protected:
   
 #define DISPLAY_REFLOW(dr_pres_context, dr_frame, dr_rf_state, dr_rf_metrics, dr_rf_status) \
   DR_cookie dr_cookie(dr_pres_context, dr_frame, dr_rf_state, dr_rf_metrics, dr_rf_status); 
+#define DISPLAY_REFLOW_CHANGE() \
+  dr_cookie.Change();
 
 #else
 
 #define DISPLAY_REFLOW(dr_pres_context, dr_frame, dr_rf_state, dr_rf_metrics, dr_rf_status) 
+#define DISPLAY_REFLOW_CHANGE() 
   
 #endif
 // End Display Reflow Debugging

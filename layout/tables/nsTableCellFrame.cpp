@@ -804,6 +804,7 @@ NS_METHOD nsTableCellFrame::Reflow(nsIPresContext*          aPresContext,
 
   if (aReflowState.mFlags.mSpecialTableReflow || (eReflowReason_Incremental == aReflowState.reason)) {
     ((nsHTMLReflowState&)aReflowState).mComputedHeight = mRect.height - topInset - bottomInset;
+    DISPLAY_REFLOW_CHANGE();
   }
   nsHTMLReflowState kidReflowState(aPresContext, aReflowState, firstKid,
                                    availSize);
