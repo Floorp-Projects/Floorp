@@ -251,7 +251,7 @@ nsresult NEW_UTF16LEToUnicode(nsISupports **aResult)
 
 //============== above code is obsolete ==============================
 
-nsresult UTF16ConvertToUnicode(PRUint8 mState, PRUint8 mData, const char * aSrc, PRInt32 * aSrcLength, PRUnichar * aDest, PRInt32 * aDestLength)
+nsresult UTF16ConvertToUnicode(PRUint8& aState, PRUint8& aData, const char * aSrc, PRInt32 * aSrcLength, PRUnichar * aDest, PRInt32 * aDestLength)
 {
   const char* src = aSrc;
   const char* srcEnd = aSrc + *aSrcLength;
@@ -259,7 +259,7 @@ nsresult UTF16ConvertToUnicode(PRUint8 mState, PRUint8 mData, const char * aSrc,
   PRUnichar* destEnd = aDest + *aDestLength;
   PRInt32 copybytes;
 
-  if(2 == mState) // first time called
+  if(2 == aState) // first time called
   {
     // eleminate BOM
     if(0xFEFF == *((PRUnichar*)src)) {
@@ -269,10 +269,10 @@ nsresult UTF16ConvertToUnicode(PRUint8 mState, PRUint8 mData, const char * aSrc,
       *aDestLength=0;
       return NS_ERROR_ILLEGAL_INPUT;
     }  
-    mState=0;
+    aState=0;
   }
 
-  if((1 == mState) && (src < srcEnd))
+  if((1 == aState) && (src < srcEnd))
   {
     if(dest >= destEnd)
       goto error;
@@ -280,7 +280,7 @@ nsresult UTF16ConvertToUnicode(PRUint8 mState, PRUint8 mData, const char * aSrc,
       goto done;
     char tmpbuf[2];
     PRUnichar * up = (PRUnichar*) &tmpbuf[0];
-    tmpbuf[0]= mData;
+    tmpbuf[0]= aData;
     tmpbuf[1]= *src++;
     *dest++ = *up;
   }
@@ -292,10 +292,10 @@ nsresult UTF16ConvertToUnicode(PRUint8 mState, PRUint8 mData, const char * aSrc,
   src +=copybytes;
   dest +=(copybytes/2);
   if(srcEnd==src)  {
-     mState = 0;
+     aState = 0;
   } else if(1 == (srcEnd-src) ) {
-     mState = 1;
-     mData  = *src++;
+     aState = 1;
+     aData  = *src++;
   } else  {
      goto error;
   }
