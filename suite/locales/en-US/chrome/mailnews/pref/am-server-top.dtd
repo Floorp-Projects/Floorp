@@ -16,11 +16,11 @@
                 biffStart.label "every"
                 biffEnd.label   "minutes for new messages Check"
 -->
-<!ENTITY biffStart.label "Check for new messages every ">
-<!ENTITY biffEnd.label "minutes.">
-<!ENTITY leaveOnServer.label "Leave messages on server.">
+<!ENTITY biffStart.label "Check for new mail every ">
+<!ENTITY biffEnd.label "minutes">
+<!ENTITY leaveOnServer.label "Leave messages on server">
 <!ENTITY deleteOnServer.label "Delete messages on server when deleted locally.">
-<!ENTITY emptyTrashOnExit.label "Empty Trash on exit">
+<!ENTITY emptyTrashOnExit.label "Empty Trash on Exit">
 <!ENTITY hostname.label "Server Hostname">
 <!ENTITY username.label "Your Login Name">
 <!-- LOCALIZATION NOTE (popServerTitle.label) : do not translate "POP" in below line -->

@@ -1,3 +1,6 @@
 <!-- extracted from aw-done.xul -->
-
-<!ENTITY completionText.label "Congratulations">
+<!ENTITY completionTitle.label "Congratulations!">
+<!ENTITY completionText.label "You have entered all the information required to set up this account.">
+<!ENTITY userNamePrefix.label "User Name:">
+<!ENTITY emailPrefix.label "Email Address:">
+<!ENTITY setupAnother.label "Click &quot;Set up Another&quot; to save these settings and set up another account.">
