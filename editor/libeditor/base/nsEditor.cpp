@@ -2181,7 +2181,6 @@ nsEditor::EndOperation()
   return NS_OK;
 }
 
-
 // Objects must be DOM elements
 NS_IMETHODIMP
 nsEditor::CloneAttributes(nsIDOMNode *aDestNode, nsIDOMNode *aSourceNode)
@@ -2232,13 +2231,13 @@ nsEditor::CloneAttributes(nsIDOMNode *aDestNode, nsIDOMNode *aSourceNode)
   sourceAttributes->GetLength(&sourceCount);
   PRUint32 i, destCount;
   destAttributes->GetLength(&destCount);
-  nsIDOMNode* attrNode;
+  nsCOMPtr<nsIDOMNode> attrNode;
 
   // Clear existing attributes
   for (i = 0; i < destCount; i++)
   {
     // always remove item number 0 (first item in list)
-    if( NS_SUCCEEDED(destAttributes->Item(0, &attrNode)) && attrNode)
+    if( NS_SUCCEEDED(destAttributes->Item(0, getter_AddRefs(attrNode))) && attrNode)
     {
       nsCOMPtr<nsIDOMAttr> destAttribute = do_QueryInterface(attrNode);
       if (destAttribute)
@@ -2257,7 +2256,7 @@ nsEditor::CloneAttributes(nsIDOMNode *aDestNode, nsIDOMNode *aSourceNode)
   // Set just the attributes that the source element has
   for (i = 0; i < sourceCount; i++)
   {
-    if( NS_SUCCEEDED(sourceAttributes->Item(i, &attrNode)) && attrNode)
+    if( NS_SUCCEEDED(sourceAttributes->Item(i, getter_AddRefs(attrNode))) && attrNode)
     {
       nsCOMPtr<nsIDOMAttr> sourceAttribute = do_QueryInterface(attrNode);
       if (sourceAttribute)
@@ -2288,7 +2287,6 @@ nsEditor::CloneAttributes(nsIDOMNode *aDestNode, nsIDOMNode *aSourceNode)
   }
   return result;
 }
-
 
 #ifdef XP_MAC
 #pragma mark -
