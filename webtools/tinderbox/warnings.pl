@@ -565,16 +565,18 @@ sub print_warning {
   print " (<a href='"
         .build_url($tree, $br, $log_line)
         ."'>";
-  if ($line_rec->{count} == 1) {
+  my $count = $line_rec->{count} - $line_rec->{ignorecount};
+  if ($count == 1) {
     print "See build log excerpt";
   } else {
-    print "See 1st of $line_rec->{count} warnings in build log";
+    print "See 1st of $count warnings in build log";
   }
   print "</a>)";
 
   print "</td></tr><tr><td></td><td>";
 
   for my $warn_rec (@{ $line_rec->{list}}) {
+    next if $warn_rec->{ignore};
     my $warning  = $warn_rec->{warning_text};
 
     # Warning text
