@@ -929,6 +929,16 @@ JSString::operator String()
 }
 
 
+bool JSType::isSubTypeOf(const JSType *other) const
+{
+    if (other == this) 
+        return true;
+    if (mBaseType == NULL)
+        return false;
+    return mBaseType->isSubTypeOf(other);
+}
+
+
 // # of sub-type relationship between this type and the other type 
 // (== MAX_INT if other is not a base type)
 

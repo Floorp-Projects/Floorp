@@ -53,7 +53,7 @@ namespace ICodeASM {
     enum OperandType {
         otNone = 0,
         otArgumentList,
-        otBinaryOp,
+        otExprNodeKind,
         otBool,
         otDouble,
         otICodeModule,
@@ -108,8 +108,8 @@ namespace ICodeASM {
         parseArgumentListOperand (string8_citer begin, string8_citer end,
                                   VM::ArgumentList **rval);
         string8_citer
-        parseBinaryOpOperand (string8_citer begin, string8_citer end,
-                              VM::BinaryOperator::BinaryOp *rval);
+        parseExprNodeKindOperand (string8_citer begin, string8_citer end,
+                                    JavaScript::ExprNode::Kind *rval);
         string8_citer
         parseBoolOperand (string8_citer begin, string8_citer end,
                           bool *rval);

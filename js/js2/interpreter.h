@@ -40,7 +40,7 @@ namespace Interpreter {
         void initContext();
     public:
         explicit Context(World& world, JSScope* aGlobal)
-            : mWorld(world), mGlobal(aGlobal), mLinkage(0), mActivation(0), mHasOperatorsPackageLoaded(false), mCurrentClosure(0) { initContext(); }
+            : mWorld(world), mGlobal(aGlobal), mLinkage(0), mActivation(0), mCurrentClosure(0) { initContext(); }
 
         World& getWorld()           { return mWorld; }
         JSScope* getGlobalObject()  { return mGlobal; }
@@ -83,11 +83,7 @@ namespace Interpreter {
 
         void loadClass(const char *fileName);
 
-        void addBinaryOperator(BinaryOperator::BinaryOp op, BinaryOperator *fn) { mBinaryOperators[op].push_back(fn); }
-        const JSValue findBinaryOverride(JSValue &operand1, JSValue &operand2, BinaryOperator::BinaryOp op);
-
-
-        bool hasOperatorsPackageLoaded()    { return mHasOperatorsPackageLoaded; }
+        const JSValue findBinaryOverride(JSValue &operand1, JSValue &operand2, ExprNode::Kind op);
 
     private:
         void broadcast(Event event);
@@ -103,13 +99,10 @@ namespace Interpreter {
         ListenerList mListeners;
         Activation* mActivation;
         ICodeModule* mICode;
-        bool mHasOperatorsPackageLoaded;
         JSClosure* mCurrentClosure;
 
         InstructionIterator mPC;
         
-        BinaryOperatorList mBinaryOperators[BinaryOperator::BinaryOperatorCount];
-
     }; /* class Context */
 
     /**

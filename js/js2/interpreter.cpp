@@ -375,80 +375,6 @@ static JSValue identical_Default(const JSValue& r1, const JSValue& r2)
     }
 }
 
-
-static JSValue defineAdd(Context *cx, const JSValues& argv)
-{
-    // should be three args, first two are types, third is a function.
-    ASSERT(argv[0].isType());
-    ASSERT(argv[1].isType());
-    ASSERT(argv[2].isFunction());
-
-// XXX need to prove that argv[2].function takes T1 and T2 as args and returns Boolean for the relational operators ?
-
-    cx->addBinaryOperator(BinaryOperator::Add, new BinaryOperator(argv[0].type, argv[1].type, argv[2].function));
-
-    return kUndefinedValue;
-}
-
-#define DEFINE_OBO(NAME)                                                            \
-    static JSValue define##NAME(Context *cx, const JSValues& argv)                  \
-    {                                                                               \
-        ASSERT(argv[0].isType());                                                   \
-        ASSERT(argv[1].isType());                                                   \
-        ASSERT(argv[2].isFunction());                                               \
-        cx->addBinaryOperator(BinaryOperator::##NAME,                               \
-            new BinaryOperator(argv[0].type, argv[1].type, argv[2].function));      \
-        return kUndefinedValue;                                                     \
-    }                                                                               \
-
-DEFINE_OBO(Subtract)
-DEFINE_OBO(Multiply)
-DEFINE_OBO(Divide)
-DEFINE_OBO(Remainder)
-DEFINE_OBO(LeftShift)
-DEFINE_OBO(RightShift)
-DEFINE_OBO(LogicalRightShift)
-DEFINE_OBO(BitwiseOr)
-DEFINE_OBO(BitwiseXor)
-DEFINE_OBO(BitwiseAnd)
-DEFINE_OBO(Less)
-DEFINE_OBO(LessOrEqual)
-DEFINE_OBO(Equal)
-DEFINE_OBO(Identical)
-
-void Context::initOperatorsPackage()
-{
-// hack - the following should be available only after importing the 'Operators' package
-// (hmm, how will that work - the import needs to connect the functions into this mechanism
-//   do we watch for the specific package name???)
-
-    struct OBO {
-        char *name;
-        JSNativeFunction::JSCode fun;
-    } OBOs[] = {
-        { "defineAdd",              defineAdd },
-        { "defineSubtract",         defineSubtract },
-        { "defineMultiply",         defineMultiply },
-        { "defineDivide",           defineDivide },
-        { "defineRemainder",        defineRemainder },
-        { "defineLeftShift",        defineLeftShift },
-        { "defineRightShift",       defineRightShift },
-        { "defineLogicalRightShift",defineLogicalRightShift },
-        { "defineBitwiseOr",        defineBitwiseOr },
-        { "defineBitwiseXor",       defineBitwiseXor },
-        { "defineBitwiseAnd",       defineBitwiseAnd },
-        { "defineLess",             defineLess },
-        { "defineLessOrEqual",      defineLessOrEqual },
-        { "defineEqual",            defineEqual },
-        { "defineIdentical",        defineIdentical },
-    };
-
-    for (uint i = 0; i < sizeof(OBOs) / sizeof(struct OBO); i++)
-        mGlobal->defineNativeFunction(mWorld.identifiers[widenCString(OBOs[i].name)], OBOs[i].fun);
-
-    mHasOperatorsPackageLoaded = true;
-}
-
 void Context::initContext()
 {
 // if global has a parent, assume it's been initialized already.
@@ -499,55 +425,73 @@ void Context::initContext()
     JSMath::initMathObject(mGlobal);
     JSArray::initArrayObject(mGlobal);
 
-    // This initializes the state of the binary operator overload mechanism.
-    // One could argue that it is unneccessary to do this until the 'Operators'
-    // package is loaded and that all (un-typed) binary operators should use a 
-    // form of icode that performed the inline operation instead.
-    JSBinaryOperator::JSBinaryCode defaultFunction[] = {
-        add_Default,
-        subtract_Default,
-        multiply_Default,
-        divide_Default,
-        remainder_Default,
-        shiftLeft_Default,
-        shiftRight_Default,
-        UshiftRight_Default,
-        or_Default,
-        xor_Default,
-        and_Default,
-        less_Default,
-        lessOrEqual_Default,
-        equal_Default,
-        identical_Default
-    };
-
-    for (BinaryOperator::BinaryOp b = BinaryOperator::BinaryOperatorFirst; 
-         b < BinaryOperator::BinaryOperatorCount; 
-         b = (BinaryOperator::BinaryOp)(b + 1) )            
-        addBinaryOperator(b, new BinaryOperator(&Any_Type, &Any_Type, new JSBinaryOperator(defaultFunction[b])));
-
 }
 
-const JSValue Context::findBinaryOverride(JSValue &operand1, JSValue &operand2, BinaryOperator::BinaryOp op)
+JSBinaryOperator::JSBinaryCode getDefaultFunction(ExprNode::Kind op)
 {
-    int32 bestDist1 = JSType::NoRelation;
-    int32 bestDist2 = JSType::NoRelation;
-    BinaryOperatorList::iterator candidate = NULL;
+    switch (op) {
+    case ExprNode::add: return add_Default;
+    case ExprNode::subtract: return subtract_Default;
+    case ExprNode::multiply: return multiply_Default;
+    case ExprNode::divide: return divide_Default;
+    case ExprNode::modulo: return remainder_Default;
+    case ExprNode::leftShift: return shiftLeft_Default;
+    case ExprNode::rightShift: return shiftRight_Default;
+    case ExprNode::logicalRightShift: return UshiftRight_Default;
+    case ExprNode::bitwiseOr: return or_Default;
+    case ExprNode::bitwiseXor: return xor_Default;
+    case ExprNode::bitwiseAnd: return and_Default;
+    case ExprNode::lessThan: return less_Default;
+    case ExprNode::lessThanOrEqual: return lessOrEqual_Default;
+    case ExprNode::equal: return equal_Default;
+    case ExprNode::identical: return identical_Default;
+    default:
+        NOT_REACHED("bad op");
+        return NULL;
+    }
+}
 
-    for (BinaryOperatorList::iterator i = mBinaryOperators[op].begin();
-            i != mBinaryOperators[op].end(); i++) 
-    {
-        int32 dist1 = operand1.getType()->distance((*i)->t1);
-        int32 dist2 = operand2.getType()->distance((*i)->t2);
 
-        if ((dist1 < bestDist1) && (dist2 < bestDist2)) {
-            bestDist1 = dist1;
-            bestDist2 = dist2;
-            candidate = i;
+const JSValue Context::findBinaryOverride(JSValue &operand1, JSValue &operand2, ExprNode::Kind op)
+{
+    JSClass *class1 = operand1.isObject() ? dynamic_cast<JSClass*>(operand1.object->getType()) : NULL;
+    JSClass *class2 = operand2.isObject() ? dynamic_cast<JSClass*>(operand2.object->getType()) : NULL;
+
+    if (class1 || class2) {
+        JSOperatorList applicableList;
+        // find all the applicable operators
+        while (class1) {
+            class1->addApplicableOperators(applicableList, op, operand1.getType(), operand2.getType());
+            class1 = class1->getSuperClass();
+        }
+        while (class2) {
+            class2->addApplicableOperators(applicableList, op, operand1.getType(), operand2.getType());
+            class2 = class2->getSuperClass();
+        }
+        if (applicableList.size() == 0)
+            return JSValue(new JSBinaryOperator(getDefaultFunction(op)) );
+        else {
+            if (applicableList.size() == 1)
+                return JSValue(applicableList[0]->mFunction);
+            else {
+                int32 bestDist1 = JSType::NoRelation;
+                int32 bestDist2 = JSType::NoRelation;
+                JSOperator *candidate = NULL;
+                for (JSOperatorList::iterator i = applicableList.begin(), end = applicableList.end(); i != end; i++) {
+                    int32 dist1 = operand1.getType()->distance((*i)->mOperand1);
+                    int32 dist2 = operand2.getType()->distance((*i)->mOperand2);
+                    if ((dist1 < bestDist1) && (dist2 < bestDist2)) {
+                        bestDist1 = dist1;
+                        bestDist2 = dist2;
+                        candidate = *i;
+                    }
+                }
+                ASSERT(candidate);
+                return JSValue(candidate->mFunction);
+            }
         }
     }
-    ASSERT(candidate);
-    return JSValue((*candidate)->function);
+    return JSValue(new JSBinaryOperator(getDefaultFunction(op)) );
 }
 
 

@@ -255,37 +255,6 @@ namespace VM {
         void setTarget(Label *label) { mOp1 = label; }
     };
 
-    /********************************************************************/
-
-    class BinaryOperator {
-    public:
-
-        // Wah, here's a third enumeration of opcodes - ExprNode, ICodeOp and now here, this can't be right??
-        typedef enum { 
-            BinaryOperatorFirst,
-            Add = BinaryOperatorFirst, Subtract, Multiply, Divide,
-            Remainder, LeftShift, RightShift, LogicalRightShift,
-            BitwiseOr, BitwiseXor, BitwiseAnd, Less, LessOrEqual,
-            Equal, Identical, BinaryOperatorCount
-        } BinaryOp;
-
-        BinaryOperator(const JSType *t1, const JSType *t2, JSBinaryOperator *function) :
-            t1(t1), t2(t2), function(function) { }
-
-        BinaryOperator(const JSType *t1, const JSType *t2, JSFunction *function) :
-            t1(t1), t2(t2), function(function) { }
-
-        static BinaryOp mapICodeOp(ICodeOp op);
-
-        const JSType *t1;
-        const JSType *t2;
-        JSFunction *function;
-
-    };
-
-    typedef std::vector<BinaryOperator *> BinaryOperatorList;
-    
-    Formatter& operator<<(Formatter &f, BinaryOperator::BinaryOp &b);
 
     /********************************************************************/
 

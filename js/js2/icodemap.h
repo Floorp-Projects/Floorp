@@ -73,7 +73,7 @@ namespace ICodeASM {
         {"DIRECT_CALL", {otRegister, otJSFunction, otArgumentList}},
         {"DIVIDE", {otRegister, otRegister, otRegister}},
         {"ELEM_XCR", {otRegister, otRegister, otRegister, otDouble}},
-        {"GENERIC_BINARY_OP", {otRegister, otBinaryOp, otRegister, otRegister}},
+        {"GENERIC_BINARY_OP", {otRegister, otExprNodeKind, otRegister, otRegister}},
         {"GET_CLOSURE", {otRegister, otUInt32}},
         {"GET_ELEMENT", {otRegister, otRegister, otRegister}},
         {"GET_METHOD", {otRegister, otRegister, otUInt32}},
@@ -203,7 +203,7 @@ namespace ICodeASM {
                 i = new ElemXcr (TypedRegister(static_cast<Register>(node->operand[0].data), 0), TypedRegister(static_cast<Register>(node->operand[1].data), 0), TypedRegister(static_cast<Register>(node->operand[2].data), 0), static_cast<double>(node->operand[3].data));
                 break;
             case 22:
-                i = new GenericBinaryOP (TypedRegister(static_cast<Register>(node->operand[0].data), 0), static_cast<BinaryOperator::BinaryOp>(node->operand[1].data), TypedRegister(static_cast<Register>(node->operand[2].data), 0), TypedRegister(static_cast<Register>(node->operand[3].data), 0));
+                i = new GenericBinaryOP (TypedRegister(static_cast<Register>(node->operand[0].data), 0), static_cast<ExprNode::Kind>(node->operand[1].data), TypedRegister(static_cast<Register>(node->operand[2].data), 0), TypedRegister(static_cast<Register>(node->operand[3].data), 0));
                 break;
             case 23:
                 i = new GetClosure (TypedRegister(static_cast<Register>(node->operand[0].data), 0), static_cast<uint32>(node->operand[1].data));

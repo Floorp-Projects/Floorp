@@ -131,7 +131,7 @@ $ops{"GENERIC_BINARY_OP"} =
   {
    super  => "Instruction_4",
    rem    => "dest, op, source1, source2",
-   params => [ ("TypedRegister", "BinaryOperator::BinaryOp", "TypedRegister", "TypedRegister") ]
+   params => [ ("TypedRegister", "ExprNode::Kind", "TypedRegister", "TypedRegister") ]
   };
 $ops{"MOVE"} =
   {
