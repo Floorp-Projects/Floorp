@@ -209,7 +209,7 @@ NS_IMETHODIMP nsWalletlibService::Observe(nsISupports *aSubject, const char *aTo
     if (uri) {
       nsCAutoString spec;
       if (NS_SUCCEEDED(uri->GetSpec(spec)))
-        SINGSIGN_StorePassword(spec.get(), nsnull, someData);
+        SINGSIGN_StorePassword(spec.get(), EmptyString().get(), someData);
     }
   }
   else if (!nsCRT::strcmp(aTopic, "login-failed")) {
@@ -218,9 +218,8 @@ NS_IMETHODIMP nsWalletlibService::Observe(nsISupports *aSubject, const char *aTo
     nsCOMPtr<nsIURI> uri = do_QueryInterface(aSubject);
     if (uri) {
       nsCAutoString spec;
-      uri->GetSpec(spec);
       if (NS_SUCCEEDED(uri->GetSpec(spec)))
-        SINGSIGN_RemoveUserAfterLoginFailure(spec.get(), nsnull, PR_TRUE);
+        SINGSIGN_RemoveUserAfterLoginFailure(spec.get(), EmptyString().get(), PR_TRUE);
     }
   }
   return NS_OK;
