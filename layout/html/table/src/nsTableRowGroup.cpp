@@ -93,6 +93,7 @@ void nsTableRowGroup::SetAttribute(nsIAtom* aAttribute, const nsString& aValue)
     nsHTMLTagContent::SetAttribute(aAttribute, val);
     return;
   }
+  nsTableContent::SetAttribute(aAttribute, aValue);
 }
 
 void nsTableRowGroup::MapAttributesInto(nsIStyleContext* aContext,

@@ -86,6 +86,7 @@ void nsTableCaption::SetAttribute(nsIAtom* aAttribute, const nsString& aValue)
     }
     return;
   }
+  nsTableContent::SetAttribute(aAttribute, aValue);
 }
 
 void nsTableCaption::MapAttributesInto(nsIStyleContext* aContext,

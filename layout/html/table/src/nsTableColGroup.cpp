@@ -304,6 +304,7 @@ void nsTableColGroup::SetAttribute(nsIAtom* aAttribute, const nsString& aValue)
     }
     return;
   }
+  nsTableContent::SetAttribute(aAttribute, aValue);
 }
 
 void nsTableColGroup::MapAttributesInto(nsIStyleContext* aContext,
