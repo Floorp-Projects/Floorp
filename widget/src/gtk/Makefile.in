@@ -62,8 +62,12 @@ CPPSRCS= \
 	nsPopUpMenu.cpp \
 	nsWidget.cpp \
 	nsWindow.cpp \
-	nsClipboard.cpp \
 	$(NULL)
+
+ifdef NEW_CLIPBOARD_SUPPORT
+	CPPSRCS+= nsClipboard.cpp nsDragService.cpp
+
+endif
 
 TARGETS = $(LIBRARY)
 
