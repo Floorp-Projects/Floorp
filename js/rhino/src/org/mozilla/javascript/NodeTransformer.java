@@ -508,7 +508,9 @@ public class NodeTransformer {
         Node node;
         while ((node = iterator.nextNode()) != null) {
             int nodeType = node.getType();
-            if (inFunction && nodeType == TokenStream.FUNCTION) {
+            if (inFunction && nodeType == TokenStream.FUNCTION &&
+                node != tree) 
+            {
                 // In a function with both "var x" and "function x",
                 // disregard the var statement, independent of order.
                 String name = node.getString();
