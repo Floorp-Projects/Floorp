@@ -1932,6 +1932,15 @@ nsImapService::DiscoverChildren(nsIEventQueue* aClientEventQueue,
 				// compiler that is preventing in string parameters from showing up as
 				// const char *. hopefully they will fix it soon.
 				rv = uri->SetSpec(urlSpec.get());
+
+        // Make sure the uri has the same hierarchy separator as the one in msg folder 
+        // obj if it's not kOnlineHierarchySeparatorUnknown (ie, '^').
+        char uriDelimiter;
+        nsresult rv1 = aImapUrl->GetOnlineSubDirSeparator(&uriDelimiter);
+        if (NS_SUCCEEDED (rv1) && hierarchySeparator != kOnlineHierarchySeparatorUnknown &&
+            uriDelimiter != hierarchySeparator)
+          aImapUrl->SetOnlineSubDirSeparator((char)hierarchySeparator);
+
                 if (NS_SUCCEEDED(rv))
                     rv = GetImapConnectionAndLoadUrl(aClientEventQueue,
                                                      aImapUrl,
@@ -3473,7 +3482,28 @@ nsImapService::GetListOfFoldersWithPath(nsIImapIncomingServer *aServer, nsIMsgWi
   nsCOMPtr<nsIFolder> subFolder;
   if (rootMsgFolder && folderPath && (*folderPath))
   {
-    rv = rootMsgFolder->FindSubFolder(folderPath, getter_AddRefs(subFolder));
+    // If the folder path contains 'INBOX' of any forms, we need to convert it to uppercase
+    // before finding it under the root folder. We do the same in PossibleImapMailbox().
+    nsCAutoString tempFolderName(folderPath);
+    nsCAutoString tokenStr, remStr, changedStr;
+    PRInt32 slashPos = tempFolderName.FindChar('/');
+    if (slashPos > 0)
+    {
+      tempFolderName.Left(tokenStr,slashPos);
+      tempFolderName.Right(remStr, tempFolderName.Length()-slashPos);
+    }
+    else
+      tokenStr.Assign(tempFolderName);
+
+    if ((nsCRT::strcasecmp(tokenStr.get(), "INBOX")==0) && (nsCRT::strcmp(tokenStr.get(), "INBOX") != 0))
+      changedStr.Append("INBOX");
+    else
+      changedStr.Append(tokenStr);
+
+    if (slashPos > 0 ) 
+      changedStr.Append(remStr);
+
+    rv = rootMsgFolder->FindSubFolder(changedStr.get(), getter_AddRefs(subFolder));
     if (NS_SUCCEEDED(rv))
       msgFolder = do_QueryInterface(subFolder);
   }
