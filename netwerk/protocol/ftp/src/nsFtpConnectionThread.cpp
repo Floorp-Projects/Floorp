@@ -1232,11 +1232,24 @@ nsFtpState::R_syst() {
         {
             NS_ASSERTION(0, "Guessing FTP server type.");
             // No clue.  We will just hope it is UNIX type server.
+            // An assertion here indicates that we should be testing 
+            // for another substring
             mServerType = FTP_UNIX_TYPE;
             mList = PR_TRUE;
         }
+
+        return FTP_S_PWD;
     }
-    return FTP_S_PWD;
+
+    if (mResponseCode/100 == 5) {   
+        // server didn't like the SYST command.  Probably (500, 501, 502)
+        // No clue.  We will just hope it is UNIX type server.
+        mServerType = FTP_UNIX_TYPE;
+        mList = PR_TRUE;
+
+        return FTP_S_PWD;
+    }
+    return FTP_ERROR;
 }
 
 nsresult
@@ -1456,8 +1469,13 @@ nsFtpState::S_list() {
     nsCOMPtr<nsIStreamListener> converter;
     
     rv = BuildStreamConverter(getter_AddRefs(converter));
-    if (NS_FAILED(rv)) return rv;
-
+    if (NS_FAILED(rv)) {
+        // clear mResponseMsg which is displayed to the user.
+        // TODO: we should probably set this to something 
+        // meaningful.
+        mResponseMsg = "";
+        return rv;
+    }
     mDRequestForwarder->SetStreamListener(converter);
     
 #ifdef DOUGT_NEW_CACHE
