@@ -441,7 +441,7 @@ NS_IMETHODIMP
 nsDNSRequest::IsPending(PRBool *  result)
 {
     if (mLookup)  *result = !mLookup->IsComplete();
-    else          *result = PR_FALSE;  // XXX or error
+    else          *result = PR_FALSE;
     return NS_OK;
 }
 
@@ -910,6 +910,7 @@ nsDNSService::nsDNSService()
     , mExpirationInterval(5*60)         // 300 seconds (5 minutes)
     , mMyIPAddress(0)
     , mState(DNS_NOT_INITIALIZED)
+    , mCacheNeedsClearing(PR_FALSE)
 #if defined(XP_MAC)
     , mServiceRef(nsnull)
 #endif
@@ -1489,6 +1490,12 @@ nsDNSService::Lookup(const char*     hostName,
         if (mThread == nsnull)
             return NS_ERROR_OFFLINE;
 
+        if (mCacheNeedsClearing) {
+            EvictLookupsIfNecessary(0);     // clear cache
+            Reset();                        // reset resolver
+            mCacheNeedsClearing = PR_FALSE;
+        }
+
         nsDNSLookup *lookup = nsnull;
         // IDN handling
         if (mIDNConverter && !nsCRT::IsAscii(hostName)) {
@@ -1627,25 +1634,31 @@ nsDNSService::EvictLookup(nsDNSLookup * lookup)
 
 
 void
-nsDNSService::AddToEvictionQ(nsDNSLookup * lookup)
+nsDNSService::EvictLookupsIfNecessary(PRInt32 targetCount)
 {
-    PR_APPEND_LINK(lookup, &mEvictionQ);
-    ++mEvictionQCount;
-    
-    while (mEvictionQCount > mMaxCachedLookups) {
-        // evict oldest lookup
+    while (mEvictionQCount > targetCount) {
+        // evict oldest lookups first
         PRCList * elem = PR_LIST_HEAD(&mEvictionQ);
         if (elem == &mEvictionQ) {
             NS_ASSERTION(mEvictionQCount == 0, "dns eviction count out of sync");
             mEvictionQCount = 0;
             break;
         }
-        
+
         nsDNSLookup * lookup = (nsDNSLookup *)elem;
         PR_REMOVE_AND_INIT_LINK(lookup);
         --mEvictionQCount;
         EvictLookup(lookup);
     }
+}
+
+
+void
+nsDNSService::AddToEvictionQ(nsDNSLookup * lookup)
+{
+    PR_APPEND_LINK(lookup, &mEvictionQ);
+    ++mEvictionQCount;
+    EvictLookupsIfNecessary(mMaxCachedLookups);
 }
 
 
@@ -1696,24 +1709,37 @@ nsDNSService::Resolve(const char *i_hostname, char **o_ip)
     // release lock before calling synchronous PR_GetHostByName()
     {    
         nsAutoLock    dnsLock(mDNSServiceLock);
-        PLDHashEntryHdr * hashEntry = PL_DHashTableOperate(&mHashTable, i_hostname, PL_DHASH_LOOKUP);
-        if (PL_DHASH_ENTRY_IS_BUSY(hashEntry)) {
-            nsDNSLookup * lookup = ((DNSHashTableEntry *)hashEntry)->mLookup;
-            if (lookup->IsComplete() && !lookup->IsExpired()) {
-                nsHostEnt * hep = lookup->HostEntry();
-                NS_ASSERTION(hep != nsnull, "null DNS Lookup HostEntry.\n");
-                if (hep) {
-                    index = PR_EnumerateHostEnt(0, &hep->hostEnt, 0, &netAddr);
+        if (mCacheNeedsClearing) {
+            EvictLookupsIfNecessary(0);     // clear cache
+            Reset();                        // reset resolver
+            mCacheNeedsClearing = PR_FALSE;
+        } else {
+
+            PLDHashEntryHdr * entry = PL_DHashTableOperate(&mHashTable,
+                                                           i_hostname,
+                                                           PL_DHASH_LOOKUP);
+            if (PL_DHASH_ENTRY_IS_BUSY(entry)) {
+                nsDNSLookup * lookup = ((DNSHashTableEntry *)entry)->mLookup;
+                if (lookup->IsComplete() && !lookup->IsExpired()) {
+                    nsHostEnt * hep = lookup->HostEntry();
+                    NS_ASSERTION(hep!=nsnull, "null DNS Lookup HostEntry.\n");
+                    if (hep) {
+                        index = PR_EnumerateHostEnt(0, &hep->hostEnt,
+                                                    0, &netAddr);
+                    }
                 }
             }
         }
     }
 
+    PRStatus   status = PR_SUCCESS;
+
     if (index == 0) {
         PRHostEnt   he;
-        char        netdbbuf[PR_NETDB_BUF_SIZE];
+        char        buffer[PR_NETDB_BUF_SIZE];
+        status = PR_GetHostByName(i_hostname, buffer, sizeof(buffer), &he);
 
-        if (PR_SUCCESS == PR_GetHostByName(i_hostname, netdbbuf, sizeof(netdbbuf), &he)) {
+        if (status == PR_SUCCESS) {
             index = PR_EnumerateHostEnt(0, &he, 0, &netAddr);
         }
     }
@@ -1727,7 +1753,7 @@ nsDNSService::Resolve(const char *i_hostname, char **o_ip)
             netAddr.inet.family = PR_AF_INET;
             netAddr.inet.ip = v4addr;
         }
-        PRStatus  status = PR_NetAddrToString(&netAddr, ipBuffer, sizeof(ipBuffer));
+        status = PR_NetAddrToString(&netAddr, ipBuffer, sizeof(ipBuffer));
         if (status != PR_SUCCESS)   return NS_ERROR_FAILURE;
     }
     
@@ -1821,6 +1847,7 @@ NS_IMETHODIMP
 nsDNSService::Shutdown()
 {
     mState = DNS_OFFLINE;
+    mCacheNeedsClearing = PR_TRUE;
     return NS_OK;
 }
 
