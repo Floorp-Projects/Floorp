@@ -31,30 +31,20 @@
 #include "nsString.h"
 #include "nsAReadableString.h"
 
+#include "nsICache.h"
 #include "nsICacheEntryDescriptor.h"
 
 
 class nsCacheDevice;
 class nsCacheMetaData;
 class nsCacheRequest;
+class nsCacheEntryDescriptor;
 
 class nsCacheEntry
 {
 public:
-    enum CacheEntryFlags {
-        eDoomedMask        =   1,
-        eEntryDirtyMask    =   2,
-        eDataDirtyMask     =   4,
-        eMetaDataDirtyMask =   8,
-        eStreamDataMask    =  16,
-        eActiveMask        =  32,
-        eInitializedMask   =  64,
-        eValidMask         = 128,
-        eAllowInMemoryMask = 256,
-        eAllowOnDiskMask   = 512
-    };
 
-    nsCacheEntry(nsCString * key);
+    nsCacheEntry(nsCString * key, nsCacheStoragePolicy storagePolicy);
     ~nsCacheEntry();
 
     void GetKey( nsCString ** key)            { if (key) *key = mKey; }
@@ -62,16 +52,14 @@ public:
     void GetFetchCount( PRInt32 * result)    { if (result) *result = mFetchCount; }
     void SetFetchCount( PRInt32   count)     { mFetchCount = count; }
 
-    void GetLastFetched( PRTime * result)     { if (result) *result = mLastFetched; }
-    void SetLastFetched( PRTime   lastFetched)
-              { if (!LL_IS_ZERO(lastFetched)) mLastFetched = lastFetched; }
+    void GetLastFetched( PRTime * result)      { if (result) *result = mLastFetched; }
+    void SetLastFetched( PRTime   lastFetched) { mLastFetched = lastFetched; }
 
     void GetLastValidated( PRTime * result)   { if (result) *result = mLastValidated; }
-    void SetLastValidated( PRTime   lastValidated)
-              { if (!LL_IS_ZERO(lastValidated)) mLastValidated = lastValidated; }
+    void SetLastValidated( PRTime   lastValidated) { mLastValidated = lastValidated; }
 
     void GetExpirationTime( PRTime * result)  { if (result) *result = mExpirationTime; }
-    void SetExpirationTime( PRTime   expires) { if (!LL_IS_ZERO(expires)) mExpirationTime = expires; }
+    void SetExpirationTime( PRTime   expires) { mExpirationTime = expires; }
 
     void GetDataSize( PRUint32 * result)      { if (result) *result = mDataSize; }
     void SetDataSize( PRUint32   size)        { mDataSize = size; }
@@ -85,7 +73,6 @@ public:
     nsresult GetData( nsISupports ** result);
     nsresult SetData( nsISupports *  data);
 
-    //** should we make these string references instead of pointers?
     nsresult GetMetaDataElement( const nsAReadableCString&  key,
                                  nsAReadableCString **      value);
     nsresult SetMetaDataElement( const nsAReadableCString&  key,
@@ -93,31 +80,52 @@ public:
 
     //** enumerate MetaData method
 
-    void MarkEntryDirty()    { mFlags |= eEntryDirtyMask;}
-    void MarkDataDirty()     { mFlags |= eDataDirtyMask; }
-    void MarkMetaDataDirty() { mFlags |= eMetaDataDirtyMask; }
-    void MarkActive()        { mFlags |= eActiveMask; }
-    void MarkInactive()      { mFlags &= ~eActiveMask; }
+
+    enum CacheEntryFlags {
+        eDoomedMask          = 0x00000001,
+        eEntryDirtyMask      = 0x00000002,
+        eDataDirtyMask       = 0x00000004,
+        eMetaDataDirtyMask   = 0x00000008,
+        eStreamDataMask      = 0x00000010,
+        eActiveMask          = 0x00000020,
+        eInitializedMask     = 0x00000040,
+        eValidMask           = 0x00000080,
+        //        eStoragePolicyMask = 0x00000300
+        eAllowedInMemoryMask = 0x00000100,
+        eAllowedOnDiskMask   = 0x00000200
+        
+    };
+
+    void MarkEntryDirty()      { mFlags |= eEntryDirtyMask; }
+    void MarkDataDirty()       { mFlags |= eDataDirtyMask; }
+    void MarkMetaDataDirty()   { mFlags |= eMetaDataDirtyMask; }
+    void MarkActive()          { mFlags |= eActiveMask; }
+    void MarkInactive()        { mFlags &= ~eActiveMask; }
     void MarkValid();
-  
-    PRBool IsDoomed()        { return (mFlags & eDoomedMask) != 0; }
-    PRBool IsEntryDirty()    { return (mFlags & eEntryDirtyMask) != 0; }
-    PRBool IsDataDirty()     { return (mFlags & eDataDirtyMask) != 0; }
-    PRBool IsMetaDataDirty() { return (mFlags & eMetaDataDirtyMask) != 0; }
-    PRBool IsStreamData()    { return (mFlags & eStreamDataMask) != 0; }
-    PRBool IsActive()        { return (mFlags & eActiveMask) != 0; }
-    PRBool IsInitialized()   { return (mFlags & eInitializedMask) != 0; }
-    PRBool IsValid()         { return (mFlags & eValidMask) != 0; }
+    void MarkAllowedInMemory() { mFlags |= eAllowedInMemoryMask; }
+    void MarkAllowedOnDisk()   { mFlags |= eAllowedOnDiskMask; }
 
-private:
-    friend class nsCacheEntryHashTable;
-    friend class nsCacheService;
-
+    PRBool IsDoomed()          { return (mFlags & eDoomedMask) != 0; }
+    PRBool IsEntryDirty()      { return (mFlags & eEntryDirtyMask) != 0; }
+    PRBool IsDataDirty()       { return (mFlags & eDataDirtyMask) != 0; }
+    PRBool IsMetaDataDirty()   { return (mFlags & eMetaDataDirtyMask) != 0; }
+    PRBool IsStreamData()      { return (mFlags & eStreamDataMask) != 0; }
+    PRBool IsActive()          { return (mFlags & eActiveMask) != 0; }
+    PRBool IsInitialized()     { return (mFlags & eInitializedMask) != 0; }
+    PRBool IsValid()           { return (mFlags & eValidMask) != 0; }
 
     // methods for nsCacheService
     nsresult Open(nsCacheRequest *request, nsICacheEntryDescriptor ** result);
     nsresult AsyncOpen(nsCacheRequest *request);
-    nsresult Doom() { return NS_ERROR_NOT_IMPLEMENTED; } //** implement
+    nsresult Doom(void);
+    PRBool   RemoveRequest( nsCacheRequest * request);
+    PRBool   RemoveDescriptor( nsCacheEntryDescriptor * descriptor);
+
+    nsCacheDevice * CacheDevice(void) { return mCacheDevice; }
+
+private:
+    friend class nsCacheEntryHashTable;
+    friend class nsCacheService;
 
     // internal methods
     nsresult CommonOpen(nsCacheRequest * request, PRUint32 *accessGranted);
@@ -138,8 +146,6 @@ private:
     PRCList                mRequestQ;       // 8 = 64
     PRCList                mDescriptorQ;    // 8 = 72
 };
-
-
 
 
 typedef struct {

@@ -31,12 +31,14 @@
 #include "nsICacheService.h"
 
 #define ONE_YEAR (PR_USEC_PER_SEC * 60 * 60 * 24 * 365)
-nsCacheEntry::nsCacheEntry(nsCString * key)
+nsCacheEntry::nsCacheEntry(nsCString * key, nsCacheStoragePolicy storagePolicy)
     : mKey(key),
-    mFetchCount(0),
-    mFlags(0),
-    mDataSize(0),
-    mMetaSize(0),
+      mFetchCount(0),
+      mLastValidated(LL_ZERO),
+      mExpirationTime(LL_ZERO),
+      mFlags(0),
+      mDataSize(0),
+      mMetaSize(0),
       mCacheDevice(nsnull),
       mData(nsnull),
       mMetaData(nsnull)
@@ -44,8 +46,17 @@ nsCacheEntry::nsCacheEntry(nsCString * key)
     PR_INIT_CLIST(&mRequestQ);
     PR_INIT_CLIST(&mDescriptorQ);
 
-    mLastFetched = mLastValidated = PR_Now();
-    mExpirationTime = LL_ZERO;
+    mLastFetched = PR_Now();
+
+    if ((storagePolicy == nsICache::STORE_IN_MEMORY) ||
+        (storagePolicy == nsICache::STORE_ANYWHERE)) {
+        MarkAllowedInMemory();
+    }
+    
+    if ((storagePolicy == nsICache::STORE_ON_DISK) ||
+        (storagePolicy == nsICache::STORE_ANYWHERE)) {
+        MarkAllowedOnDisk();
+    }
 }
 
 
@@ -151,18 +162,33 @@ nsCacheEntry::Open(nsCacheRequest * request, nsICacheEntryDescriptor ** result)
 
     PRUint32  accessGranted;
     nsresult  rv = CommonOpen(request, &accessGranted);
-    if (rv == NS_ERROR_CACHE_WAIT_FOR_VALIDATION) {
-        //** queue request
+    if (NS_SUCCEEDED(rv)) {
+        //        rv = nsCacheEntryDescriptor::Create(this, accessGranted, result);
+
+        nsCacheEntryDescriptor * descriptor =
+            new nsCacheEntryDescriptor(this, accessGranted);
+
+        if (descriptor == nsnull)
+            return NS_ERROR_OUT_OF_MEMORY;
+
+        NS_ADDREF(descriptor);
+        rv = descriptor->QueryInterface(NS_GET_IID(nsICacheEntryDescriptor), 
+                                        (void**)result);
+
+        if (NS_SUCCEEDED(rv)) {
+            // queue the descriptor
+            PR_APPEND_LINK((descriptor)->GetListNode(), &mDescriptorQ);
+        }
+
+        NS_RELEASE(descriptor);
+
+    } else if (rv == NS_ERROR_CACHE_WAIT_FOR_VALIDATION) {
+        // queue request
+        PR_APPEND_LINK(request->GetListNode(), &mRequestQ);
         //** allocate PRCondVar for request, if none
         //** release service lock
         //** wait until valid or doomed
     }
-
-    if (NS_SUCCEEDED(rv)) {
-        rv = nsCacheEntryDescriptor::Create(this, accessGranted, result);
-        //** queue the descriptor
-    }
-
     return rv;
 }
 
@@ -183,9 +209,44 @@ nsCacheEntry::AsyncOpen(nsCacheRequest * request)
         }
     } else if (rv == NS_ERROR_CACHE_WAIT_FOR_VALIDATION) {
         //** queue request and we're done (MarkValid will notify pending requests)
-    } else {
     }
+    return rv;
+}
+
+
+nsresult
+nsCacheEntry::Doom()
+{
     return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+
+PRBool
+nsCacheEntry::RemoveRequest(nsCacheRequest * request)
+{
+    //** if debug: verify this request belongs to this entry
+    PR_REMOVE_AND_INIT_LINK(request->GetListNode());
+
+    // return true if this entry should stay active
+    return !((PR_CLIST_IS_EMPTY(&mRequestQ)) &&
+             (PR_CLIST_IS_EMPTY(&mDescriptorQ)));
+}
+
+
+PRBool
+nsCacheEntry::RemoveDescriptor(nsCacheEntryDescriptor * descriptor)
+{
+    //** if debug: verify this descriptor belongs to this entry
+    PR_REMOVE_AND_INIT_LINK(descriptor->GetListNode());
+
+    if (!PR_CLIST_IS_EMPTY(&mDescriptorQ))
+        return PR_TRUE;  // stay active if we still have open descriptors
+
+    if (PR_CLIST_IS_EMPTY(&mRequestQ))
+        return PR_FALSE; // no descriptors or requests, we can deactivate
+
+    //** find next best request to give a descriptor to
+    return PR_TRUE;
 }
 
 
@@ -290,11 +351,11 @@ nsCacheEntryHashTable::GetKey( PLDHashTable * /*table*/, PLDHashEntryHdr *hashEn
     return cacheEntry->mKey;
 }
 
+
 PLDHashNumber
 nsCacheEntryHashTable::HashKey( PLDHashTable *table, const void *key)
 {
-    // XXX write a good hash function!
-    return PLDHashNumber(key);
+    return PLDHashNumber(((nsCString *)key)->get());
 }
 
 PRBool
