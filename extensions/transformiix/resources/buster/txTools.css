@@ -42,3 +42,14 @@ column {
 .failed {
   background-color: red;
 }
+
+:-moz-outliner-row(success)
+{
+  background-color: green;
+}
+
+:-moz-outliner-row(fail)
+{
+  background-color: red;
+}
+

@@ -59,8 +59,15 @@
   </menulist>
 </titledbox>
 <spring flex="1" /></box>
-<box id="tests" flex="1">
-  <grid> 
+<box align="horizontal"><titledbox align="horizontal"><title value="stats" />
+  <text value="tests run: "/><text id="tests_run" value="0" />
+  <text value="  tests passed: "/><text id="tests_passed" value="0"/>
+  <text value="  tests failed: "/><text id="tests_failed" value="0"/>
+</titledbox>  
+<spring flex="1" /></box>
+
+<box id="tests" flex="1" orient="vertical">
+  <grid>
     <columns> 
       <column/> 
       <column flex="1"/> 
@@ -77,5 +84,6 @@
       </row> 
     </rows> 
   </grid>
+  <spring flex="1" />
 </box>
 </window>
