@@ -1,4 +1,4 @@
-/* -*- Mode: IDL; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*-
  *
  * The contents of this file are subject to the Mozilla Public
  * License Version 1.1 (the "License"); you may not use this file
@@ -183,7 +183,22 @@ nsresult NS_InitLeakDetector()
 	return rv;
 }
 
-nsresult NS_ShutdownLeakDetector()
+#undef SHUTDOWN_LEAKS_EARLY
+#undef SHUTDOWN_LEAKS_MEDIUM
+#define SHUTDOWN_LEAKS_LATE
+
+class LeakDetectorFinalizer
+{
+public:
+	~LeakDetectorFinalizer();
+};
+
+#ifdef SHUTDOWN_LEAKS_LATE
+// do shutdown leaks when XPCOM library is unloaded
+LeakDetectorFinalizer gLeakDetectorFinalizer;
+#endif
+
+LeakDetectorFinalizer::~LeakDetectorFinalizer()
 {
 	GC_gcollect();
 
@@ -195,8 +210,19 @@ nsresult NS_ShutdownLeakDetector()
 		GC_gcollect();
 	}
 #endif
+}
 
-	return NS_OK;	
+nsresult NS_ShutdownLeakDetector()
+{
+#if defined(SHUTDOWN_LEAKS_MEDIUM)
+    // Make this the first atexit() called so it's before the atexit() crashes
+    // see http://bugzilla.redhat.com/bugzilla/show_bug.cgi?id=23552
+    static LeakDetectorFinalizer trick;
+#elsif defined(SHUTDOWN_LEAKS_EARLY)
+    // do shutdown leaks now
+    LeakDetectorFinalizer trick;
+#endif
+	return NS_OK;
 }
 
 #endif /* defined(GC_LEAK_DETECTOR) */

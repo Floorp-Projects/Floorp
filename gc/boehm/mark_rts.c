@@ -495,7 +495,8 @@ ptr_t cold_gc_frame;
 #      if (defined(DYNAMIC_LOADING) || defined(MSWIN32) || defined(PCR)) \
            && !defined(SRC_M3)
          GC_remove_tmp_roots();
-         GC_register_dynamic_libraries();
+         if (GC_root_size)
+             GC_register_dynamic_libraries();
 #      endif
      /* Mark everything in static data areas                             */
        for (i = 0; i < n_root_sets; i++) {
