@@ -263,7 +263,7 @@ protected:
 #endif /* XP_UNIX */
 
 #ifdef XP_BEOS
-#define NS_MOZILLA_DIR_NAME		"mozilla"
+#define NS_MOZILLA_DIR_NAME		"Mozilla"
 #define NS_MOZILLA_DIR_PERMISSION	00700
 #endif /* XP_BEOS */
 
