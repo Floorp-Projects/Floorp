@@ -64,8 +64,8 @@ SHARED_LIBRARY_LIBS = \
 EXTRA_DSO_LDOPTS = \
 	$(DIST)/lib/librdfutil_s.$(LIB_SUFFIX) \
 	-L$(DIST)/bin \
-	$(MOZ_COMPONENT_LIBS) \
 	$(MOZ_UNICHARUTIL_LIBS) \
+	$(MOZ_COMPONENT_LIBS) \
 	$(NULL)
 
 include $(topsrcdir)/config/rules.mk
