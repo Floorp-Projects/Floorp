@@ -75,9 +75,15 @@ public:
   NS_IMETHOD GetDocumentPrincipal(nsIPrincipal** aPrincipal) const;
 
   // nsNodeInfo
+  // Create objects with Create
+public:
+  static nsNodeInfo *Create();
+private:
   nsNodeInfo();
+protected:
   virtual ~nsNodeInfo();
 
+public:
   /*
    * Note! Init() must be called exactly once on every nsNodeInfo before
    * the object is used, if Init() returns an error code the nsNodeInfo
@@ -88,10 +94,27 @@ public:
   nsresult Init(nsIAtom *aName, nsIAtom *aPrefix, PRInt32 aNamespaceID,
                 nsNodeInfoManager *aOwnerManager);
 
+  /**
+   * Call before shutdown to clear the cache and free memory for this class.
+   */
+  static void ClearCache();
+
 protected:
   nsCOMPtr<nsIAtom>   mIDAttributeAtom;
 
   nsNodeInfoManager* mOwnerManager; // Strong reference!
+
+private:
+  void Clear();
+
+  static nsNodeInfo *sCachedNodeInfo;
+
+  /**
+   * This method gets called by Release() when it's time to delete 
+   * this object, instead of always deleting the object we'll put the
+   * object in the cache unless the cache is already full.
+   */
+   void LastRelease();
 };
 
 #endif /* nsNodeInfo_h___ */

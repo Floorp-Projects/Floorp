@@ -179,8 +179,7 @@ public:
   NS_IMETHOD GetNameSpaceID(PRInt32* aID) const;
   NS_IMETHOD_(nsIAtom*) GetIDAttributeName() const;
   NS_IMETHOD_(nsIAtom*) GetClassAttributeName() const;
-  NS_IMETHOD NormalizeAttrString(const nsAString& aStr,
-                                 nsINodeInfo** aNodeInfo);
+  NS_IMETHOD_(already_AddRefed<nsINodeInfo>) GetExistingAttrNameFromQName(const nsAString& aStr);
   NS_IMETHOD SetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
                      const nsAString& aValue, PRBool aNotify);
   NS_IMETHOD SetAttr(nsINodeInfo *aNodeInfo,

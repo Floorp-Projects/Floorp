@@ -1199,18 +1199,18 @@ NS_IMETHODIMP
 nsXULElement::GetAttribute(const nsAString& aName,
                            nsAString& aReturn)
 {
-    nsCOMPtr<nsINodeInfo> nodeInfo;
-    nsresult rv = NormalizeAttrString(aName,
-                                      getter_AddRefs(nodeInfo));
-    if (NS_FAILED(rv)) {
-        NS_WARNING("unable to normalize attribute name");
-        return rv;
+    nsCOMPtr<nsINodeInfo> nodeInfo = GetExistingAttrNameFromQName(aName);
+    if (!nodeInfo) {
+        aReturn.Truncate();
+
+        return NS_OK;
     }
 
     nsCOMPtr<nsIAtom> nameAtom = nodeInfo->GetNameAtom();
     PRInt32 nameSpaceID = nodeInfo->GetNamespaceID();
 
     GetAttr(nameSpaceID, nameAtom, aReturn);
+
     return NS_OK;
 }
 
@@ -1219,39 +1219,33 @@ NS_IMETHODIMP
 nsXULElement::SetAttribute(const nsAString& aName,
                            const nsAString& aValue)
 {
-    nsresult rv;
+    nsCOMPtr<nsINodeInfo> ni = GetExistingAttrNameFromQName(aName);
+    if (!ni) {
+        nsCOMPtr<nsINodeInfoManager> nimgr;
+        NodeInfo()->GetNodeInfoManager(getter_AddRefs(nimgr));
+        NS_ENSURE_TRUE(nimgr, NS_ERROR_FAILURE);
 
-    nsCOMPtr<nsINodeInfo> ni;
-
-    rv = NormalizeAttrString(aName, getter_AddRefs(ni));
-    NS_ASSERTION(NS_SUCCEEDED(rv), "unable to normalize attribute name");
-
-    if (NS_SUCCEEDED(rv)) {
-        rv = SetAttr(ni, aValue, PR_TRUE);
-        NS_ASSERTION(NS_SUCCEEDED(rv), "unable to set attribute");
+        nsresult rv = nimgr->GetNodeInfo(aName, nsnull, kNameSpaceID_None,
+                                         getter_AddRefs(ni));
+        NS_ENSURE_SUCCESS(rv, rv);
     }
 
-    return NS_OK;
+    return SetAttr(ni, aValue, PR_TRUE);
 }
 
 
 NS_IMETHODIMP
 nsXULElement::RemoveAttribute(const nsAString& aName)
 {
-    nsCOMPtr<nsINodeInfo> ni;
-
-    nsresult rv = NormalizeAttrString(aName, getter_AddRefs(ni));
-    NS_ASSERTION(NS_SUCCEEDED(rv), "unable to parse attribute name");
-
-    if (NS_SUCCEEDED(rv)) {
-        nsCOMPtr<nsIAtom> tag = ni->GetNameAtom();
-        PRInt32 nameSpaceID = ni->GetNamespaceID();
-
-        rv = UnsetAttr(nameSpaceID, tag, PR_TRUE);
-        NS_ASSERTION(NS_SUCCEEDED(rv), "unable to remove attribute");
+    nsCOMPtr<nsINodeInfo> ni = GetExistingAttrNameFromQName(aName);
+    if (!ni) {
+        return NS_OK;
     }
 
-    return NS_OK;
+    nsCOMPtr<nsIAtom> tag = ni->GetNameAtom();
+    PRInt32 nameSpaceID = ni->GetNamespaceID();
+
+    return UnsetAttr(nameSpaceID, tag, PR_TRUE);
 }
 
 
@@ -1452,15 +1446,9 @@ nsXULElement::HasAttribute(const nsAString& aName, PRBool* aReturn)
 {
   NS_ENSURE_ARG_POINTER(aReturn);
 
-  nsCOMPtr<nsINodeInfo> ni;
+  nsCOMPtr<nsINodeInfo> ni = GetExistingAttrNameFromQName(aName);
+  *aReturn = (ni != nsnull);
 
-  nsresult rv = NormalizeAttrString(aName, getter_AddRefs(ni));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsCOMPtr<nsIAtom> name = ni->GetNameAtom();
-  PRInt32 nsid = ni->GetNamespaceID();
-
-  *aReturn = HasAttr(nsid, name);
   return NS_OK;
 }
 
@@ -2222,43 +2210,35 @@ nsXULElement::GetTag(nsIAtom** aResult) const
     return NS_OK;
 }
 
-NS_IMETHODIMP
-nsXULElement::NormalizeAttrString(const nsAString& aStr,
-                                  nsINodeInfo** aNodeInfo)
+NS_IMETHODIMP_(already_AddRefed<nsINodeInfo>)
+nsXULElement::GetExistingAttrNameFromQName(const nsAString& aStr)
 {
-    PRInt32 i, count = Attributes() ? Attributes()->Count() : 0;
     NS_ConvertUCS2toUTF8 utf8String(aStr);
-    
-    for (i = 0; i < count; i++) {
+
+    PRInt32 i, count = Attributes() ? Attributes()->Count() : 0;
+    for (i = 0; i < count; ++i) {
         nsXULAttribute* attr = NS_REINTERPRET_CAST(nsXULAttribute*,
                                                    Attributes()->ElementAt(i));
         nsINodeInfo *ni = attr->GetNodeInfo();
         if (ni->QualifiedNameEquals(utf8String)) {
-            *aNodeInfo = ni;
-            NS_ADDREF(*aNodeInfo);
+            NS_ADDREF(ni);
 
-            return NS_OK;
+            return ni;
         }
     }
 
     count = mPrototype ? mPrototype->mNumAttributes : 0;
     for (i = 0; i < count; i++) {
         nsXULPrototypeAttribute* attr = &(mPrototype->mAttributes[i]);
-
         nsINodeInfo *ni = attr->mNodeInfo;
         if (ni->QualifiedNameEquals(utf8String)) {
-            *aNodeInfo = ni;
-            NS_ADDREF(*aNodeInfo);
+            NS_ADDREF(ni);
 
-            return NS_OK;
+            return ni;
         }
     }
 
-    nsCOMPtr<nsINodeInfoManager> nimgr;
-    NodeInfo()->GetNodeInfoManager(getter_AddRefs(nimgr));
-    NS_ENSURE_TRUE(nimgr, NS_ERROR_FAILURE);
-
-    return nimgr->GetNodeInfo(aStr, nsnull, kNameSpaceID_None, aNodeInfo);
+    return nsnull;
 }
 
 void

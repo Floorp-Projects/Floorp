@@ -81,28 +81,31 @@ nsDOMAttributeMap::GetNamedItem(const nsAString& aAttrName,
   NS_ENSURE_ARG_POINTER(aAttribute);
   *aAttribute = nsnull;
 
-  nsresult rv = NS_OK;
   if (mContent) {
-    nsCOMPtr<nsINodeInfo> ni;
-    mContent->NormalizeAttrString(aAttrName, getter_AddRefs(ni));
-    NS_ENSURE_TRUE(ni, NS_ERROR_FAILURE);
+    nsCOMPtr<nsINodeInfo> ni =
+      mContent->GetExistingAttrNameFromQName(aAttrName);
+    if (!ni) {
+      return NS_OK;
+    }
 
     PRInt32 nsid = ni->GetNamespaceID();
     nsCOMPtr<nsIAtom> nameAtom = ni->GetNameAtom();
 
     nsAutoString value;
-    nsresult attrResult = mContent->GetAttr(nsid, nameAtom, value);
+    // Eventually we shouldn't need to get the value here at all
+    nsresult rv = mContent->GetAttr(nsid, nameAtom, value);
+    NS_ASSERTION(rv != NS_CONTENT_ATTR_NOT_THERE, "unable to get attribute");
+    NS_ENSURE_SUCCESS(rv, rv);
 
-    if (NS_CONTENT_ATTR_NOT_THERE != attrResult && NS_SUCCEEDED(attrResult)) {
-      nsDOMAttribute* domAttribute;
-      domAttribute = new nsDOMAttribute(mContent, ni, value);
-      NS_ENSURE_TRUE(domAttribute, NS_ERROR_OUT_OF_MEMORY);
-
-      rv = CallQueryInterface(domAttribute, aAttribute);
+    nsDOMAttribute* domAttribute = new nsDOMAttribute(mContent, ni, value);
+    if (!domAttribute) {
+      return NS_ERROR_OUT_OF_MEMORY;
     }
+
+    NS_ADDREF(*aAttribute = domAttribute);
   }
 
-  return rv;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -137,33 +140,44 @@ nsDOMAttributeMap::SetNamedItem(nsIDOMNode *aNode, nsIDOMNode **aReturn)
       }
     }
 
+    // get node-info and value of old attribute
     nsAutoString name, value;
-
     attribute->GetName(name);
 
-    nsCOMPtr<nsINodeInfo> ni;
-    mContent->NormalizeAttrString(name, getter_AddRefs(ni));
-    NS_ENSURE_TRUE(ni, NS_ERROR_FAILURE);
+    nsCOMPtr<nsINodeInfo> ni = mContent->GetExistingAttrNameFromQName(name);
+    if (ni) {
+      nsCOMPtr<nsIAtom> nameAtom = ni->GetNameAtom();
+      PRInt32 nsid = ni->GetNamespaceID();
 
-    PRInt32 nsid = ni->GetNamespaceID();
-    nsCOMPtr<nsIAtom> nameAtom = ni->GetNameAtom();
+      rv = mContent->GetAttr(nsid, nameAtom, value);
+      NS_ASSERTION(rv != NS_CONTENT_ATTR_NOT_THERE, "unable to get attribute");
+      NS_ENSURE_SUCCESS(rv, rv);
 
-    nsresult attrResult = mContent->GetAttr(nsid, nameAtom, value);
-
-    if (NS_CONTENT_ATTR_NOT_THERE != attrResult && NS_SUCCEEDED(attrResult)) {
-      nsDOMAttribute* domAttribute;
-      // We pass a null content here since the attr node we return isn't
-      // tied to this content anymore.
-      domAttribute = new nsDOMAttribute(nsnull, ni, value);
+      // Create the attributenode to pass back. We pass a null content here
+      // since the attr node we return isn't tied to this content anymore.
+      nsDOMAttribute* domAttribute = new nsDOMAttribute(nsnull, ni, value);
       if (!domAttribute) {
         return NS_ERROR_OUT_OF_MEMORY;
       }
 
-      rv = CallQueryInterface(domAttribute, aReturn);
+      NS_ADDREF(*aReturn = domAttribute);
+    }
+    else {
+      nsCOMPtr<nsINodeInfo> contentNi = mContent->GetNodeInfo();
+      NS_ENSURE_TRUE(contentNi, NS_ERROR_FAILURE);
+
+      nsCOMPtr<nsINodeInfoManager> nimgr;
+      contentNi->GetNodeInfoManager(getter_AddRefs(nimgr));
+      NS_ENSURE_TRUE(nimgr, NS_ERROR_FAILURE);
+
+      rv = nimgr->GetNodeInfo(name, nsnull, kNameSpaceID_None,
+                              getter_AddRefs(ni));
+      NS_ENSURE_SUCCESS(rv, rv);
+      // value is already empty
     }
 
+    // Set the new attributevalue
     attribute->GetValue(value);
-
     rv = mContent->SetAttr(ni, value, PR_TRUE);
 
     // Not all attributes implement nsIAttribute.
@@ -186,30 +200,25 @@ nsDOMAttributeMap::RemoveNamedItem(const nsAString& aName,
   nsresult rv = NS_OK;
 
   if (mContent) {
-    nsCOMPtr<nsINodeInfo> ni;
-    mContent->NormalizeAttrString(aName, getter_AddRefs(ni));
-    NS_ENSURE_TRUE(ni, NS_ERROR_FAILURE);
+    nsCOMPtr<nsINodeInfo> ni = mContent->GetExistingAttrNameFromQName(aName);
+    if (!ni) {
+      return NS_ERROR_DOM_NOT_FOUND_ERR;
+    }
 
     PRInt32 nsid = ni->GetNamespaceID();
     nsCOMPtr<nsIAtom> nameAtom = ni->GetNameAtom();
 
-    nsCOMPtr<nsIDOMNode> attribute;
-
-    nsresult attrResult;
     nsAutoString value;
-    attrResult = mContent->GetAttr(nsid, nameAtom, value);
+    rv = mContent->GetAttr(nsid, nameAtom, value);
+    NS_ASSERTION(rv != NS_CONTENT_ATTR_NOT_THERE, "unable to get attribute");
+    NS_ENSURE_SUCCESS(rv, rv);
 
-    if (NS_CONTENT_ATTR_NOT_THERE != attrResult && NS_SUCCEEDED(attrResult)) {
-      nsDOMAttribute* domAttribute;
-      domAttribute = new nsDOMAttribute(nsnull, ni, value);
-      if (!domAttribute) {
-        return NS_ERROR_OUT_OF_MEMORY;
-      }
-
-      rv = CallQueryInterface(domAttribute, aReturn);
-    } else {
-      return NS_ERROR_DOM_NOT_FOUND_ERR;
+    nsDOMAttribute* domAttribute = new nsDOMAttribute(nsnull, ni, value);
+    if (!domAttribute) {
+      return NS_ERROR_OUT_OF_MEMORY;
     }
+
+    NS_ADDREF(*aReturn = domAttribute);
 
     rv = mContent->UnsetAttr(nsid, nameAtom, PR_TRUE);
   }
@@ -309,11 +318,12 @@ nsDOMAttributeMap::GetNamedItemNS(const nsAString& aNamespaceURI,
       nimgr->GetNodeInfo(nameAtom, prefix, nameSpaceID, getter_AddRefs(ni));
       NS_ENSURE_TRUE(ni, NS_ERROR_FAILURE);
 
-      nsDOMAttribute* domAttribute;
-      domAttribute = new nsDOMAttribute(mContent, ni, value);
-      NS_ENSURE_TRUE(domAttribute, NS_ERROR_OUT_OF_MEMORY);
+      nsDOMAttribute* domAttribute = new nsDOMAttribute(mContent, ni, value);
+      if (!domAttribute) {
+        return NS_ERROR_OUT_OF_MEMORY;
+      }
 
-      rv = CallQueryInterface(domAttribute, aReturn);
+      NS_ADDREF(*aReturn = domAttribute);
     }
   }
 
@@ -369,15 +379,14 @@ nsDOMAttributeMap::SetNamedItemNS(nsIDOMNode* aArg, nsIDOMNode** aReturn)
     nsresult attrResult = mContent->GetAttr(nameSpaceID, nameAtom, value);
 
     if (NS_CONTENT_ATTR_NOT_THERE != attrResult && NS_SUCCEEDED(attrResult)) {
-      nsDOMAttribute* domAttribute;
       // We pass a null content here since the attr node we return isn't
       // tied to this content anymore.
-      domAttribute = new nsDOMAttribute(nsnull, ni, value);
+      nsDOMAttribute* domAttribute = new nsDOMAttribute(nsnull, ni, value);
       if (!domAttribute) {
         return NS_ERROR_OUT_OF_MEMORY;
       }
 
-      rv = CallQueryInterface(domAttribute, aReturn);
+      NS_ADDREF(*aReturn = domAttribute);
     }
 
     attribute->GetValue(value);
@@ -434,13 +443,12 @@ nsDOMAttributeMap::RemoveNamedItemNS(const nsAString& aNamespaceURI,
       nimgr->GetNodeInfo(nameAtom, prefix, nameSpaceID, getter_AddRefs(ni));
       NS_ENSURE_TRUE(ni, NS_ERROR_FAILURE);
 
-      nsDOMAttribute* domAttribute;
-      domAttribute = new nsDOMAttribute(nsnull, ni, value);
+      nsDOMAttribute* domAttribute = new nsDOMAttribute(nsnull, ni, value);
       if (!domAttribute) {
         return NS_ERROR_OUT_OF_MEMORY;
       }
 
-      rv = CallQueryInterface(domAttribute, aReturn);
+      NS_ADDREF(*aReturn = domAttribute);
     } else {
       return NS_ERROR_DOM_NOT_FOUND_ERR;
     }

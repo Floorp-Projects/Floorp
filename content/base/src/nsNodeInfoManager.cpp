@@ -138,6 +138,11 @@ nsNodeInfoManager::~nsNodeInfoManager()
   if (mNodeInfoHash)
     PL_HashTableDestroy(mNodeInfoHash);
 
+
+  if (gNodeManagerCount == 0) {
+    nsNodeInfo::ClearCache();
+  }
+
 #ifdef DEBUG_jst
   printf ("Removing NodeInfoManager, gcount = %d\n", gNodeManagerCount);
 #endif
@@ -201,7 +206,7 @@ nsNodeInfoManager::GetNodeInfo(nsIAtom *aName, nsIAtom *aPrefix,
     return NS_OK;
   }
 
-  nsNodeInfo *newNodeInfo = new nsNodeInfo();
+  nsNodeInfo *newNodeInfo = nsNodeInfo::Create();
   NS_ENSURE_TRUE(newNodeInfo, NS_ERROR_OUT_OF_MEMORY);
 
   NS_ADDREF(newNodeInfo);

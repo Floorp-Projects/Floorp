@@ -117,10 +117,7 @@ public:
     return nsGenericElement::GetAttribute(aName, aReturn);
   }
   NS_METHOD SetAttribute(const nsAString& aName,
-                         const nsAString& aValue)
-  {
-    return nsGenericElement::SetAttribute(aName, aValue);
-  }
+                         const nsAString& aValue);
   NS_METHOD GetTagName(nsAString& aTagName);
   NS_METHOD GetElementsByTagName(const nsAString& aTagname,
                                  nsIDOMNodeList** aReturn);
@@ -177,8 +174,7 @@ public:
   NS_IMETHOD SetDocument(nsIDocument* aDocument, PRBool aDeep,
                          PRBool aCompileEventHandlers);
   NS_IMETHOD GetNameSpaceID(PRInt32* aID) const;
-  NS_IMETHOD NormalizeAttrString(const nsAString& aStr,
-                                 nsINodeInfo** aNodeInfo);
+  NS_IMETHOD_(already_AddRefed<nsINodeInfo>) GetExistingAttrNameFromQName(const nsAString& aStr);
   NS_IMETHOD SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
                      const nsAString& aValue,
                           PRBool aNotify);

@@ -865,13 +865,21 @@ nsXULContentBuilder::AddPersistentAttributes(nsIContent* aTemplateNode,
         if (attribute.IsEmpty())
             break;
 
-        nsCOMPtr<nsINodeInfo> ni;
-        rv = aTemplateNode->NormalizeAttrString(attribute,
-                                                getter_AddRefs(ni));
-        if (NS_FAILED(rv)) return rv;
+        nsCOMPtr<nsIAtom> tag;
+        PRInt32 nameSpaceID;
 
-        nsCOMPtr<nsIAtom> tag = ni->GetNameAtom();
-        PRInt32 nameSpaceID = ni->GetNamespaceID();
+        nsCOMPtr<nsINodeInfo> ni =
+            aTemplateNode->GetExistingAttrNameFromQName(attribute);
+        if (ni) {
+            tag = ni->GetNameAtom();
+            nameSpaceID = ni->GetNamespaceID();
+        }
+        else {
+            tag = do_GetAtom(attribute);
+            NS_ENSURE_TRUE(tag, NS_ERROR_OUT_OF_MEMORY);
+
+            nameSpaceID = kNameSpaceID_None;
+        }
 
         nsCOMPtr<nsIRDFResource> property;
         rv = nsXULContentUtils::GetResource(nameSpaceID, tag, getter_AddRefs(property));

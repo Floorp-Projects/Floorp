@@ -39,6 +39,7 @@
 #define nsIContent_h___
 
 #include <stdio.h>
+#include "nsCOMPtr.h"
 #include "nsISupports.h"
 #include "nsEvent.h"
 #include "nsAString.h"
@@ -217,17 +218,16 @@ public:
   NS_IMETHOD_(nsIAtom*) GetClassAttributeName() const = 0;
 
   /**
-   * Normalizes an attribute string into an atom that represents the
-   * qualified attribute name of the attribute. This method is intended
-   * for character case conversion if the content object is case
-   * insensitive (e.g. HTML).
+   * Normalizes an attribute name and returns it as a nodeinfo if an attribute
+   * with that name exists. This method is intended for character case
+   * conversion if the content object is case insensitive (e.g. HTML). Returns
+   * the nodeinfo of the attribute with the specified name if one exists or
+   * null otherwise.
    *
    * @param aStr the unparsed attribute string
-   * @param aName out parameter representing the complete name of the
-   *        attribute
+   * @return the node info. May be nsnull.
    */
-  NS_IMETHOD NormalizeAttrString(const nsAString& aStr, 
-                                 nsINodeInfo** aNodeInfo) = 0;
+  NS_IMETHOD_(already_AddRefed<nsINodeInfo>) GetExistingAttrNameFromQName(const nsAString& aStr) = 0;
 
   /**
    * Set attribute values. All attribute values are assumed to have a
@@ -524,8 +524,9 @@ public:
    * sink of your choice to do so.  This is an efficiency measure.
    *
    * If you also need to determine whether the parser is the one creating your
-   * element (through createElement() or cloneNode() generally)   * aFromParser to the NS_NewXXX() constructor for your element and have the
-   * parser pass true.  See nsHTMLInputElement.cpp and
+   * element (through createElement() or cloneNode() generally) then add a
+   * boolean aFromParser to the NS_NewXXX() constructor for your element and
+   * have the parser pass true.  See nsHTMLInputElement.cpp and
    * nsHTMLContentSink::MakeContentObject().
    *
    * DO NOT USE THIS METHOD to get around the fact that it's hard to deal with
