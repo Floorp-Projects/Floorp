@@ -356,7 +356,7 @@ Documents:</TH><TD>";
 
     chdir "/";
     
-#    system "rm -rf $tmpdir";
+    system "rm -rf $tmpdir";
     
     
 }
