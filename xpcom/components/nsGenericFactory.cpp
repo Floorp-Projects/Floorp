@@ -210,7 +210,7 @@ nsGenericModule::RegisterSelf(nsIComponentManager *aCompMgr,
         if (NS_FAILED(rv)) {
 #ifdef DEBUG
             printf("nsGenericModule %s: unable to register %s component => %x\n",
-                   mModuleName, cp->mDescription, rv);
+                   mModuleName?mModuleName:"(null)", cp->mDescription?cp->mDescription:"(null)", rv);
 #endif
             break;
         }
