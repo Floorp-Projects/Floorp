@@ -40,6 +40,11 @@
                   <menuitem value="&walletDisplaySignonsCmd.label;" oncommand="WalletDialog('signon');"/> 
                   <menuitem value="&walletChangePasswordCmd.label;" oncommand="WalletAction('password');"/>
                   <menuitem value="&walletExpirePasswordCmd.label;" oncommand="WalletAction('expire');"/>
+                  <menuseparator/>
+                  <menuitem value="&walletEncryptCmd.label;" id="encrypt"
+                    oncommand="WalletAction('encrypt');"/>
+                  <menuitem value="&walletObscureCmd.label;" id="obscure"
+                    oncommand="WalletAction('obscure');"/>
                 </menupopup>
               </menu>
               <menu value="&walletCookieManager.label;">
