@@ -28,23 +28,8 @@
 #	define CRLF "\r\n"
 #endif
 
-#include <stdlib.h>
-#include <string.h>
-
-#define APPEND(x) \
-	if (total) {	\
-	total = (char*) realloc (total, strlen(total) + strlen(x) +1); \
-	if (total == 0)	\
-		return 0;	\
-	strcat(total, x); \
-	} \
-	else {	\
-	total = (char*) malloc (strlen(x)+1); \
-	if (total == 0)	\
-		return 0;	\
-	strcpy(total, x); }
-
-#include <stdio.h>
+#include <xp_core.h>
+#include <xp_str.h>
 
 class nsCacheTrace 
 {

@@ -32,31 +32,53 @@
 #include "nsCacheModule.h"
 #include "nsCacheObject.h"
 
+class nsMemModule;
+class nsDiskModule;
+class nsCachePref;
+
 class nsCacheManager //: public nsISupports
 {
-
+    /* Change entries from 32 to 16 bit */
 public:
 	nsCacheManager();
 	~nsCacheManager();
 
 	PRInt32		    AddModule(nsCacheModule* i_cacheModule);
+    
     PRBool          Contains(const char* i_url) const;
+    
+    /* Number of modules in the cache manager */
 	PRInt32		    Entries() const;
-	/* Singleton */
+	
+    /* Singleton */
 	static nsCacheManager* 
 				    GetInstance();
+    
     nsCacheObject*  GetObject(const char* i_url) const;
 	nsCacheModule*  GetModule(PRInt32 i_index) const;
+
+    nsMemModule*    GetMemModule() const;
+    nsDiskModule*   GetDiskModule() const;
+
 	const char*     Trace() const;
+
     /* Performance measure- microseconds */
-    PRUint32         WorstCaseTime() const;
+    PRUint32        WorstCaseTime() const;
+
 protected:
-	nsCacheModule*
+    void            Init();
+    nsCacheModule*
 				LastModule() const;
 
+   enum modules
+   {
+       MEM =0,
+       DISK=1
+   };
 
 private:
 	nsCacheModule* m_pFirstModule;
+    nsCachePref* m_pPref;
 
 	nsCacheManager(const nsCacheManager& cm);
 	nsCacheManager& operator=(const nsCacheManager& cm);	

@@ -16,8 +16,12 @@
  * Reserved.
  */
 
+#include <xp_core.h>
+#include <xp_str.h>
+
 #include "nsCacheModule.h"
 #include "nsCacheTrace.h"
+
 
 /* 
  * nsCacheModule
@@ -55,10 +59,12 @@ nsCacheModule::~nsCacheModule()
 const char* nsCacheModule::Trace() const
 {
 	char linebuffer[128];
-	char* total = 0;
+	char* total;
 
 	sprintf(linebuffer, "nsCacheModule: Objects = %d\n", Entries());
-	APPEND(linebuffer);
+	
+    total = new char[strlen(linebuffer) + 1];
+    strcpy(total, linebuffer);
 
 	return total;
 }

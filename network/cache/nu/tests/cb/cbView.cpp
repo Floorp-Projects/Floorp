@@ -13,6 +13,7 @@
 #include "nsMemModule.h"
 #include "nsDiskModule.h"
 #include "nsCacheObject.h"
+#include "nsTimeIt.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -58,9 +59,11 @@ void CCbView::OnDraw(CDC* pDC)
 {
 	CRect rect;
 	GetClientRect(&rect);
+    
+    pDC->SetBkColor(RGB(192,192,192));
 	pDC->FillSolidRect(rect, RGB(192,192,192));
-	rect.DeflateRect(10,10);
 	
+    rect.DeflateRect(10,10);
 	pDC->DrawText(m_Mesg.GetBuffer(m_Mesg.GetLength()), -1, rect, DT_WORDBREAK | DT_EXPANDTABS);
 }
 
@@ -123,6 +126,13 @@ void CCbView::OnInitialUpdate()
 	pCO->Size(1230);
 	pCO->Etag("Another");
 	
+    int j = 1000;
+    char tmpBuff[10];
+    while (j--)
+    {
+        pMM->AddObject(pCO);
+        pCO->Address(itoa(j,tmpBuff,10));
+    }
 	if (pMM->AddObject(pCO))
 	{
 		char buffer[10];
@@ -137,15 +147,28 @@ void CCbView::OnInitialUpdate()
 	m_Mesg += pMM->Trace();
 
 	m_Mesg += "-----------------\n";
-	for (int i = pMM->Entries(); i>0 ; i--)
+	/*
+    for (int i = pMM->Entries(); i>0 ; i--)
 	{
 		m_Mesg += pMM->GetObject(i-1)->Trace();
 	}
 
     m_Mesg += "-----------------\n";
+    */
 	char buffer[10];
     m_Mesg += "Worst case time= ";
 	m_Mesg += itoa(pCM->WorstCaseTime(), buffer, 10);
+    m_Mesg += " microsec.\n";
+
+    PRUint32 t;
+    {
+        nsTimeIt tmp(t);
+        if (pMM->Contains("999"))
+            m_Mesg += "!";
+    }
+    m_Mesg += "-----------------\n";
+    m_Mesg += "Found in ";
+    m_Mesg += itoa(t, buffer, 10);
     m_Mesg += " microsec.\n";
 
 	delete pMM; 

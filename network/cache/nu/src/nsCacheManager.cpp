@@ -23,17 +23,23 @@
 
 #include <prtypes.h>
 #include <prinrval.h>
+
+#include <xp_core.h>
+#include <xpassert.h> 
+#include <xp_str.h>
+
 #include "nsCacheManager.h"
 #include "nsCacheTrace.h"
+#include "nsCachePref.h"
 #include "nsCacheModule.h"
-
-#include <assert.h> // TODO change
-#include <time.h>   //TODO change to PR_
+#include "nsMemModule.h"
+#include "nsDiskModule.h"
 
 static nsCacheManager TheManager;
 
-nsCacheManager::nsCacheManager(): m_pFirstModule(0)
+nsCacheManager::nsCacheManager(): m_pFirstModule(0), m_pPref(new nsCachePref())
 {
+    Init();
 }
 
 nsCacheManager::~nsCacheManager()
@@ -43,6 +49,7 @@ nsCacheManager::~nsCacheManager()
 	if (m_pFirstModule)
 		delete m_pFirstModule;
 #endif
+    delete m_pPref;
 }
 
 nsCacheManager* nsCacheManager::GetInstance()
@@ -50,15 +57,17 @@ nsCacheManager* nsCacheManager::GetInstance()
 	return &TheManager;
 }
 
+/* Caller must free returned char* */
 const char* nsCacheManager::Trace() const
 {
 
 	char linebuffer[128];
-	char* total = 0;
+	char* total;
+	
+    sprintf(linebuffer, "nsCacheManager: Modules = %d\n", Entries());
 
-	sprintf(linebuffer, "nsCacheManager: Modules = %d\n", Entries());
-	APPEND(linebuffer);
-
+	total = new char[strlen(linebuffer) + 1];
+    strcpy(total, linebuffer);
 	return total;
 }
 
@@ -133,10 +142,29 @@ nsCacheModule* nsCacheManager::GetModule(PRInt32 i_index) const
 	nsCacheModule* pModule = m_pFirstModule;
 	for (PRInt32 i=0; i<=i_index; pModule = pModule->Next())
 		i++;
-#ifdef DEBUG
-	assert(pModule);
-#endif
+	PR_ASSERT(pModule);
 	return pModule;
+}
+
+nsMemModule* nsCacheManager::GetMemModule() const
+{
+    return (nsMemModule*) m_pFirstModule;
+}
+
+nsDiskModule* nsCacheManager::GetDiskModule() const
+{
+    return (m_pFirstModule) ? (nsDiskModule*) m_pFirstModule->Next() : NULL;
+}
+
+
+void nsCacheManager::Init() 
+{
+    if (m_pFirstModule)
+        delete m_pFirstModule;
+
+     m_pFirstModule = new nsMemModule(m_pPref->MemCacheSize());
+ //  m_pFirstModule->Next((new nsDiskModule(m_pPref->DiskCacheSize()));
+
 }
 
 nsCacheModule* nsCacheManager::LastModule() const 
