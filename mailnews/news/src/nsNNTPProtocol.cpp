@@ -2530,14 +2530,19 @@ PRInt32 nsNNTPProtocol::DisplayArticle(nsIInputStream * inputStream, PRUint32 le
 nsresult nsNNTPProtocol::MarkCurrentMsgRead()
 {
   nsCOMPtr<nsIMsgDBHdr> msgHdr;
-	nsresult rv = NS_OK;
-
+  nsresult rv = NS_OK;
+  
   // if this is a message id url, (news://host/message-id) then don't go try to mark it read
   if (m_runningURL && !m_messageID && (m_key != nsMsgKey_None)) {
-	  rv = m_runningURL->GetMessageHeader(getter_AddRefs(msgHdr));
-
-	  if (NS_SUCCEEDED(rv) && msgHdr)
-		  msgHdr->MarkRead(PR_TRUE);
+    rv = m_runningURL->GetMessageHeader(getter_AddRefs(msgHdr));
+    
+    if (NS_SUCCEEDED(rv) && msgHdr)
+    {
+      PRBool isRead;
+      msgHdr->GetIsRead(&isRead);
+      if (!isRead)
+        msgHdr->MarkRead(PR_TRUE);
+    }
   }
   return rv;
 }
