@@ -313,7 +313,7 @@ my $patchreader = have_vers("PatchReader",0);
 print "\n" unless $silent;
 
 if ($^O =~ /MSWin32/i) {
-    if ($^V lt v5.8.0) {
+    if ($^V lt pack('U*',5,8,0)) {
         print "The required ActivePerl modules are available at OpenInteract's ppm repository.\n";
         print "You can add the repository with the following command:\n";
         print "    ppm rep add oi http://openinteract.sourceforge.net/ppmpackages/\n\n";
