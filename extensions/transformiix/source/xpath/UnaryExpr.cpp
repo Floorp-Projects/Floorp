@@ -27,16 +27,6 @@
 #include "ExprResult.h"
 #include "txIXPathContext.h"
 
-UnaryExpr::UnaryExpr(Expr* expr)
-{
-    this->expr = expr;
-}
-
-UnaryExpr::~UnaryExpr()
-{
-    delete expr;
-}
-
 /*
  * Evaluates this Expr based on the given context node and processor state
  * @param context the context node for evaluation of this Expr

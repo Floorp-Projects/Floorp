@@ -26,7 +26,8 @@ VPATH           = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-SIMPLE_PROGRAMS = transformiix$(BIN_SUFFIX) testXalan$(BIN_SUFFIX)
+SIMPLE_PROGRAMS = transformiix$(BIN_SUFFIX) testXalan$(BIN_SUFFIX) \
+                  txTestExpr$(BIN_SUFFIX)
 ifdef MARK_INC
 SIMPLE_PROGRAMS += txXSLTMarkDriver$(BIN_SUFFIX)
 endif

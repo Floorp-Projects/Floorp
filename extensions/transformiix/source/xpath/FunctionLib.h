@@ -85,24 +85,26 @@ private:
 }; //-- BooleanFunctionCall
 
 /**
- * Internal Function created when there is an Error during parsing
- * an Expression
-**/
-class ErrorFunctionCall : public FunctionCall {
+ * Error Function to be used for unknown extension functions and
+ * forwards-compatible-processing (not implemented, bug XXX)
+ *
+ * txErrorFunctionCall returns NS_ERROR_XPATH_UNKNOWN_FUNCTION
+ * (see FunctionCall.cpp)
+ */
+class txErrorFunctionCall : public FunctionCall
+{
 public:
-
-    ErrorFunctionCall();
-    ErrorFunctionCall(const nsAString& errorMsg);
+    txErrorFunctionCall(nsIAtom* aLName, const PRInt32 aID)
+        : mLName(aLName),
+          mID(aID)
+    {}
 
     TX_DECL_FUNCTION;
 
-    void setErrorMessage(nsAString& errorMsg);
-
 private:
-
-    nsString errorMessage;
-
-}; //-- ErrorFunctionCall
+    nsCOMPtr<nsIAtom> mLName;
+    PRInt32 mID;
+};
 
 /*
  * A representation of the XPath NodeSet funtions

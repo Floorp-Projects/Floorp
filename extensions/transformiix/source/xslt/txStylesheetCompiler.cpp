@@ -941,7 +941,7 @@ txStylesheetCompilerState::caseInsensitiveNameTests()
 }
 
 void
-txStylesheetCompilerState::receiveError(const nsAString& aMsg, nsresult aRes)
+txStylesheetCompilerState::SetErrorOffset(PRUint32 aOffset)
 {
     // XXX implement me
 }

@@ -31,17 +31,6 @@
 #include "NodeSet.h"
 #include "txIXPathContext.h"
 
-/**
- * Creates a new LocationStep using the given NodeExpr and Axis Identifier
- * @param nodeExpr the NodeExpr to use when matching Nodes
- * @param axisIdentifier the Axis Identifier in which to search for nodes
-**/
-LocationStep::LocationStep(nsAutoPtr<txNodeTest> aNodeTest,
-                           LocationStepType aAxisIdentifier)
-    : mNodeTest(aNodeTest), mAxisIdentifier(aAxisIdentifier)
-{
-} //-- LocationStep
-
   //-----------------------------/
  //- Virtual methods from Expr -/
 //-----------------------------/

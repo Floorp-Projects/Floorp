@@ -35,10 +35,11 @@
 #include "baseutils.h"
 #include "nsIAtom.h"
 #include "txError.h"
+#include "Expr.h"
 
 class AttributeValueTemplate;
 class Expr;
-class ExprLexer;
+class txExprLexer;
 class FunctionCall;
 class LocationStep;
 class PredicateList;
@@ -46,42 +47,57 @@ class Token;
 class txIParseContext;
 class txNodeTypeTest;
 
-class ExprParser
+class txExprParser
 {
 public:
 
-    static Expr* createExpr(const nsAFlatString& aExpression,
-                            txIParseContext* aContext);
+    static nsresult createExpr(const nsASingleFragmentString& aExpression,
+                               txIParseContext* aContext, Expr** aExpr);
 
     /**
      * Creates an Attribute Value Template using the given value
-    **/
+     */
     static AttributeValueTemplate* createAttributeValueTemplate
         (const nsAFlatString& attValue, txIParseContext* aContext);
 
 
 protected:
-    static Expr* createBinaryExpr(Expr* left, Expr* right, Token* op);
-    static Expr* createExpr(ExprLexer& lexer, txIParseContext* aContext);
-    static Expr* createFilterExpr(ExprLexer& lexer, txIParseContext* aContext);
-    static Expr* createFunctionCall(ExprLexer& lexer,
-                                    txIParseContext* aContext);
-    static LocationStep* createLocationStep(ExprLexer& lexer,
-                                            txIParseContext* aContext);
-    static txNodeTypeTest* createNodeTypeTest(ExprLexer& lexer);
-    static Expr* createPathExpr(ExprLexer& lexer, txIParseContext* aContext);
-    static Expr* createUnionExpr(ExprLexer& lexer, txIParseContext* aContext);
+    /**
+     * Using nsAutoPtr& to optimize passing the ownership to the
+     * created binary expression objects.
+     */
+    static nsresult createBinaryExpr(nsAutoPtr<Expr>& left,
+                                     nsAutoPtr<Expr>& right, Token* op,
+                                     Expr** aResult);
+    static nsresult createExpr(txExprLexer& lexer, txIParseContext* aContext,
+                               Expr** aResult);
+    static nsresult createFilter(txExprLexer& lexer, txIParseContext* aContext,
+                                 Expr** aResult);
+    static nsresult createFunctionCall(txExprLexer& lexer,
+                                       txIParseContext* aContext,
+                                       Expr** aResult);
+    static nsresult createLocationStep(txExprLexer& lexer,
+                                       txIParseContext* aContext,
+                                       Expr** aResult);
+    static nsresult createNodeTypeTest(txExprLexer& lexer,
+                                       txNodeTest** aResult);
+    static nsresult createPathExpr(txExprLexer& lexer,
+                                   txIParseContext* aContext,
+                                   Expr** aResult);
+    static nsresult createUnionExpr(txExprLexer& lexer,
+                                    txIParseContext* aContext,
+                                    Expr** aResult);
                   
-    static MBool isFilterExprToken  (Token* tok);
-    static MBool isLocationStepToken(Token* tok);
-    static MBool isNodeTypeToken    (Token* tok);
+    static PRBool isFilterExprToken(Token* aToken);
+    static PRBool isLocationStepToken(Token* aToken);
+    static PRBool isNodeTypeToken(Token* aToken);
                   
-    static short precedenceLevel    (short tokenType);
+    static short precedence(Token* aToken);
 
     /**
      * Resolve a QName, given the mContext parse context.
      * Returns prefix and localName as well as namespace ID
-    **/
+     */
     static nsresult resolveQName(const nsAString& aQName, nsIAtom** aPrefix,
                                  txIParseContext* aContext,
                                  nsIAtom** aLocalName, PRInt32& aNamespace,
@@ -95,12 +111,13 @@ protected:
      * @param predicateList, the PredicateList to add predicate expressions to
      * @param lexer the ExprLexer to use for parsing tokens
      * @return 0 if successful, or a String pointer to the error message
-    **/
-    static MBool parsePredicates(PredicateList* predicateList,
-                                 ExprLexer& lexer, txIParseContext* aContext);
-    static MBool parseParameters(FunctionCall* fnCall,
-                                 ExprLexer& lexer, txIParseContext* aContext);
+     */
+    static nsresult parsePredicates(PredicateList* aPredicateList,
+                                    txExprLexer& lexer,
+                                    txIParseContext* aContext);
+    static nsresult parseParameters(FunctionCall* aFnCall, txExprLexer& lexer,
+                                    txIParseContext* aContext);
 
-}; //-- ExprParser
+};
 
 #endif
