@@ -155,7 +155,9 @@ sub formvalue {
 sub pickplatform {
     return formvalue("rep_platform") if formvalue("rep_platform");
 
-    if ( Param('usebrowserinfo') ) {
+    if (Param('defaultplatform')) {
+        return Param('defaultplatform');
+    } else {
         for ($ENV{'HTTP_USER_AGENT'}) {
         #PowerPC
             /\(.*PowerPC.*\)/i && do {return "Macintosh";};
@@ -196,16 +198,17 @@ sub pickplatform {
             /Amiga/ && do {return "Macintosh";};
             /WinMosaic/ && do {return "PC";};
         }
+        return "Other";
     }
-    # default
-    return "Other";
 }
 
 sub pickos {
     if (formvalue('op_sys') ne "") {
         return formvalue('op_sys');
     }
-    if ( Param('usebrowserinfo') ) {
+    if (Param('defaultopsys')) {
+        return Param('defaultopsys');
+    } else {
         for ($ENV{'HTTP_USER_AGENT'}) {
             /\(.*IRIX.*\)/ && do {return "IRIX";};
             /\(.*OSF.*\)/ && do {return "OSF/1";};
@@ -259,9 +262,8 @@ sub pickos {
             /\(.*PPC.*\)/ && do {return "Mac System 9.x";};
             /\(.*68K.*\)/ && do {return "Mac System 8.0";};
         }
+        return "other";
     }
-    # default
-    return "other";
 }
 ##############################################################################
 # End of subroutines

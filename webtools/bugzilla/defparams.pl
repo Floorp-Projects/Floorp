@@ -66,6 +66,26 @@ sub check_priority {
     return "";
 }
 
+sub check_platform {
+    my ($value) = (@_);
+    &::GetVersionTable();
+    if (lsearch(['', @::legal_platform], $value) < 0) {
+        return "Must be empty or a legal platform value: one of " .
+            join(", ", @::legal_platform);
+    }
+    return "";
+}
+
+sub check_opsys {
+    my ($value) = (@_);
+    &::GetVersionTable();
+    if (lsearch(['', @::legal_opsys], $value) < 0) {
+        return "Must be empty or a legal operating system value: one of " .
+            join(", ", @::legal_opsys);
+    }
+    return "";
+}
+
 sub check_shadowdb {
     my ($value) = (@_);
     $value = trim($value);
@@ -741,6 +761,30 @@ You will get this message once a day until you\'ve dealt with these bugs!
   },
 
   {
+    name => 'defaultplatform',
+    desc => 'This is the platform that is preselected on the bug '.
+            'entry form.<br>'.
+            'You can leave this empty: '.
+            'Bugzilla will then use the platform that the browser '.
+            'reports to be running on as the default.',
+    type => 't',
+    default => '',
+    checker => \&check_platform
+  },
+
+  {
+    name => 'defaultopsys',
+    desc => 'This is the operating system that is preselected on the bug '.
+            'entry form.<br>'.
+            'You can leave this empty: '.
+            'Bugzilla will then use the operating system that the browser '.
+            'reports to be running on as the default.',
+    type => 't',
+    default => '',
+    checker => \&check_opsys
+  },
+
+  {
    name => 'usetargetmilestone',
    desc => 'Do you wish to use the Target Milestone field?',
    type => 'b',
@@ -767,14 +811,6 @@ You will get this message once a day until you\'ve dealt with these bugs!
    desc => 'Do you wish to use the Status Whiteboard field?',
    type => 'b',
    default => 0
-  },
-
-  {
-   name => 'usebrowserinfo',
-   desc => 'Do you want bug reports to be assigned an OS & Platform based ' .
-           'on the browser the user makes the report from?',
-   type => 'b',
-   default => 1
   },
 
   {

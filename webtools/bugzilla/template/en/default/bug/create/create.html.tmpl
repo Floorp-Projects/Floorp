@@ -321,13 +321,20 @@ function set_assign_to() {
     </td>
   </tr>
 
-[% IF Param('usebrowserinfo') %]
+[% UNLESS (Param('defaultplatform') && Param('defaultopsys')) %]
   <tr>
     <td></td>
     <td colspan="3">
       <br>
-      We've made a guess at your operating system and platform.
-      Please check them and, if we got it wrong, email
+      We've made a guess at your
+  [% IF Param('defaultplatform') %]
+      operating system. Please check it
+  [% ELSIF Param('defaultopsys') %]
+      platform. Please check it
+  [% ELSE %]
+      operating system and platform. Please check them
+  [% END %]
+      and, if we got it wrong, email
       [%+ Param('maintainer') %].
     </td>
   </tr>
