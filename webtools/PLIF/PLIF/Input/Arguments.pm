@@ -59,6 +59,18 @@ sub getArgument {
     }
 }
 
+# Returns all the arguments present.
+sub getArguments {
+    my $self = shift;
+    my $result = {};
+    foreach my $argument (keys %$self) {
+        if ($argument =~ /^argument (.*)$/o) {
+            $result->{$1} = \@{$self->{$argument}};
+        }
+    }
+    return $result;
+}
+
 # Returns the values given for that argument if it already exists,
 # otherwise undef. In a scalar context, returns the first value (or
 # undef if the argument was never given). In an array context, returns

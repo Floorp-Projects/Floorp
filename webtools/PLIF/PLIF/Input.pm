@@ -74,6 +74,22 @@ sub peekArgument {
     return undef;
 }
 
+# returns all the arguments in a form of a hash:
+#  key => value
+sub getArguments {
+    my $self = shift;
+    $self->notImplemented();
+}
+
+sub hash {
+    my $self = shift;
+    return {
+        'arguments' => $self->getArguments(),
+        'protocol' => $self->defaultOutputProtocol(),
+        # XXX also UA, etc...
+    };
+}
+
 # 'username' and 'password' are two out of band arguments that may be
 # provided as well, they are accessed as properties of the input
 # object (e.g., |if (defined($input->username)) {...}|).  Input
@@ -82,6 +98,12 @@ sub peekArgument {
 # username would be "AIM: HixieDaPixie". Other services, which get the
 # username from the user (e.g. HTTP), should pass the username
 # directly. See the user service for more details.
+#
+# 'username' should only be provided if the user attempted to log in.
+#
+# 'address' is an out of band argument that should only be provided
+# for input devices that know the address of the user (and can thus
+# construct the username).
 
 
 # XXX I don't like having these here:

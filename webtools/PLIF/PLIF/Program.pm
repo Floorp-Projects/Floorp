@@ -55,8 +55,10 @@ sub run {
             $self->objects([]);
             if ($self->verifyInput()) {
                 if ($self->input->command) {
+                    $self->command($command);
                     $self->dispatch($self->input->command);
                 } else {
+                    $self->command('');
                     $self->noCommand();
                 }
             } # verifyInput should deal with the errors
@@ -65,6 +67,7 @@ sub run {
             $self->dump(3, "previous command didn't go over well: $@");
             $self->output->reportFatalError($@);
         }
+        $self->command(undef);
         # In case we used a progressive output device, let it shut
         # down.  It's important to do this, because it holds a
         # reference to us and we wouldn't want a memory leak...
@@ -135,7 +138,7 @@ sub output {
 sub verifyInput {
     my $self = shift;
     # we invoke all the input verifiers until one fails
-    my($result) = $self->getSelectingServiceList('input.verify')->verifyInput($self);
+    my $result = $self->getSelectingServiceList('input.verify')->verifyInput($self);
     if (defined($result)) { 
         # if one failed, then the result will be the object that should report the error
         $result->reportInputVerificationError($self);
@@ -148,6 +151,11 @@ sub verifyInput {
 sub selectOutputProtocol {
     my $self = shift;
     return $self->input->defaultOutputProtocol;
+}
+
+sub hash {
+    my $self = shift;
+    return { 'name' => $self->name };
 }
 
 
@@ -183,4 +191,9 @@ sub unknownCommand {
 sub noCommand {
     my $self = shift;
     $self->unknownCommand(@_);
+}
+
+sub name {
+    my $self = shift;
+    $self->notImplemented();
 }

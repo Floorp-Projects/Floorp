@@ -49,6 +49,7 @@ sub getUserByUsername {
     # decent databases can do this in one go. Those that can't can do
     # it in a generic two-step process:
     return $self->getUserByID($app, $self->getUserIDByUsername($app, $username));
+    # XXX no error checking! if getUserID... return undef, return ()!
     # return the same as getUserByID()
 }
 
@@ -56,7 +57,24 @@ sub getUserIDByUsername {
     my $self = shift;
     my($app, $username) = @_;
     $self->notImplemented();
-    # return userID
+    # return userID or undef
+}
+
+sub getUserByContactDetails {
+    my $self = shift;
+    my($app, $contactName, $address) = @_;
+    # decent databases can do this in one go. Those that can't can do
+    # it in a generic two-step process:
+    return $self->getUserByID($app, $self->getUserIDByContactDetails($app, $username));
+    # XXX no error checking! if getUserID... return undef, return ()!
+    # return the same as getUserByID()
+}
+
+sub getUserIDByContactDetails {
+    my $self = shift;
+    my($app, $contactName, $address) = @_;
+    $self->notImplemented();
+    # return userID or undef
 }
 
 sub getUserByID {

@@ -71,6 +71,17 @@ sub getUserByUsername {
     }
 }
 
+sub getUserByContactDetails {
+    my $self = shift;
+    my($app, $contactName, $address) = @_;
+    my(@data) = $app->getService('dataSource.user')->getUserByContactDetails($app, $contactName, $address);
+    if (@data) {
+        return $self->objectCreate($app, @data);
+    } else {
+        return undef;
+    }
+}
+
 sub getUserByID {
     my $self = shift;
     my($app, $id) = @_;
@@ -211,14 +222,13 @@ sub resetAddressChange {
 
 sub hash {
     my $self = shift;
-    my $result = {
-        'userID' => $self->userID,
-        'mode' => $self->mode,
-        'adminMessage' => $self->adminMessage,
-        'fields' => {},
-        'groups' => $self->groups,
-        'rights' => keys(%{$self->rights});
-    };
+    my $result = $self->SUPER::hash();
+    $result->{'userID'} = $self->userID,
+    $result->{'mode'} = $self->mode,
+    $result->{'adminMessage'} = $self->adminMessage,
+    $result->{'groups'} = $self->groups,
+    $result->{'rights'} = keys(%{$self->rights});
+    $result->{'fields'} = {},
     foreach my $field (values(%{$self->fieldsByID})) {
         # XXX should we also pass the field metadata on? (e.g. typeData)
         $result->{'fields'}->{$field->fieldID} = $field->data;

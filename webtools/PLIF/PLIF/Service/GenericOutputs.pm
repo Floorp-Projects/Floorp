@@ -26,40 +26,55 @@
 # provisions above, a recipient may use your version of this file
 # under either the MPL or the GPL.
 
-package PLIF::Service::Session;
+package PLIF::Service::GenericOutputs;
 use strict;
 use vars qw(@ISA);
 use PLIF::Service;
 @ISA = qw(PLIF::Service);
 1;
 
-sub objectProvides {
+sub provides {
     my $class = shift;
     my($service) = @_;
-    return ($service eq 'session' or $class->SUPER::provides($service));
+    return ($service eq 'dispatcher.output.generic' or 
+            $service eq 'dataSource.strings.default' or
+            $class->SUPER::provides($service));
 }
 
-sub objectInit {
+# dispatcher.output.generic
+# this is typically used by input devices
+sub outputRequest {
     my $self = shift;
-    my($app) = @_;
-    $self->SUPER::objectInit(@_);
-    $self->app($app);
+    my($app, $argument) = @_;
+    $output->output(undef, 'request', {
+        'command' => $app->command,
+        'argument' => $argument,
+    });
 }
 
-# expected by dataSource.strings
-sub selectVariant {
+# dispatcher.output.generic
+sub outputReportFatalError {
     my $self = shift;
-    my($protocol) = @_;
-    return undef; # 'use some other method to work it out...'
+    my($error) = @_;
+    $self->output(undef, 'error', {
+        'error' => $error,
+    });   
 }
 
-# expected by output modules
-sub getAddress {
+# dataSource.strings.default
+sub getDefaultString {
     my $self = shift;
-    my($protocol) = @_;
-    return undef; # 'not known over this protocol'
-}
-
-sub hash {
-    return {};    
+    my($app, $protocol, $string) = @_;
+    if ($protocol eq 'stdout') {
+        if ($string eq 'request') {
+            return '<text>'<text variable="(data.argument)"/>'? </text>';
+        } elsif ($string eq 'error') {
+            return '<text>Error:<br/><text variable="(data.error)"/></br/></text>';
+        }
+    } elsif ($protocol eq 'http') {
+        if ($string eq 'error') {
+            return '<text>HTTP/1.1 500 Internal Error<br/>Content-Type: text/plain<br/><br/>Error:<br/><text variable="(data.error)"/></text>';
+        }
+    }
+    return; # nope, sorry
 }

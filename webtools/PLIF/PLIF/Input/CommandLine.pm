@@ -90,7 +90,7 @@ sub createArgument {
             $self->app->output->request($argument);
             # get input from user :-)
             my $term = Term::ReadLine->new($self->app->name);
-            my $value = $term->readline(''); # argument is prompt            
+            my $value = $term->readline(''); # (the parameter passed is the prompt, if any)
             # if we cached the input device:
             # $term->addhistory($value);
             $self->setArgument($argument, $value);

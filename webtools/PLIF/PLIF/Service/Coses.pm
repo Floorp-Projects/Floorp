@@ -130,6 +130,9 @@ sub expand {
                 } elsif ($node eq 'text') {
                     if ($attributes->{'value'}) {
                         $result .= $self->evaluateExpression($attributes->{'value'}, $scope);
+                        # XXX we need to also support:
+                        #   insert text escaped (as HTML, XML, URI, etc)
+                        #   insert a hash as a particular data structure (CGI arguments, an XML fragment, etc)
                         next node; # skip contents if attribute 'value' is present
                     } 
                 } elsif ($node eq 'br') {

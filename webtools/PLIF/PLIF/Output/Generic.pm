@@ -113,6 +113,7 @@ sub output {
         $expander = $self->app->getService('string.expander');
         $self->assert($expander, 1, 'Could not find a string expander.');
     }
+    $self->fillData($data);
     $self->outputter->output($self->app, $session, $expander->expand($self->app, $session, $self->actualProtocol, $string, $data));
 }
 
@@ -126,6 +127,14 @@ sub methodMissing {
     my $self = shift;
     my($method, @arguments) = @_;
     if (not $self->app->dispatchMethod('dispatcher.output.'.$self->actualProtocol, 'output', $method, $self, @arguments)) {
-        $self->SUPER::methodMissing(@_); # this does the same, but for 'dispatcher.output.generic' handlers
+        $self->SUPER::methodMissing(@_); # this does the same, but for 'dispatcher.output.generic' handlers, since that is our $self->protocol
     }
+}
+
+sub fillData {
+    my $self = shift;
+    my($data) = @_;
+    $data->{'app'} = $app->hash;
+    $data->{'session'} = $self->session->hash;
+    $data->{'input'} = $app->input->hash;
 }
