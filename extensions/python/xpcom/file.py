@@ -131,7 +131,6 @@ class _File:
                 self.outputStream.close()
                 self.outputStream = None
             self.channel = None
-            # leave self.fileInst alone - it should be available after close.
         finally:
             self._release()
 
