@@ -79,8 +79,9 @@ protected:
   virtual nsresult ConsumeContentToEndTag(PRUnichar aChar,eHTMLTags aChildTag,nsScanner& aScanner,CToken*& aToken);
   virtual nsresult ConsumeProcessingInstruction(PRUnichar aChar,CToken*& aToken,nsScanner& aScanner);
 
-protected:
-  
+protected: 
+  static void AddToken(CToken*& aToken,nsresult aResult,nsDeque& aDeque);
+
   nsDeque mTokenDeque;
   PRBool  mDoXMLEmptyTags;
 };

@@ -61,7 +61,7 @@ public:
 protected:
 
   virtual nsresult HandleSkippedContent(nsScanner& aScanner,CToken*& aToken);
-  virtual nsresult ConsumeComment(PRUnichar aChar,nsScanner& aScanner,CToken*& aToken);
+  virtual nsresult ConsumeComment(PRUnichar aChar,CToken*& aToken,nsScanner& aScanner);
 
 };
 
