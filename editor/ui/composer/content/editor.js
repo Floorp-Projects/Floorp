@@ -57,7 +57,6 @@ var gOutputWrap          = 32;
 var gOutputFormatFlowed  = 64;
 var gOutputAbsoluteLinks = 128;
 var gOutputEncodeEntities = 256;
-var gEditModeLabel;
 var gNormalModeButton;
 var gTagModeButton;
 var gSourceModeButton;
@@ -125,6 +124,7 @@ var DocumentStateListener =
     // udpate menu items now that we have an editor to play with
     // Note: This must be AFTER window._content.focus();
     window.updateCommands("create");
+    window.InsertCharWindow = null;
   },
   
   NotifyDocumentWillBeDestroyed: function() {},
@@ -153,7 +153,6 @@ function EditorStartup(editorType, editorElement)
     gSourceContentWindow = document.getElementById("content-source");
 
     gEditModeBar       = document.getElementById("EditModeToolbar");
-    gEditModeLabel     = document.getElementById("EditModeLabel"); 
     gNormalModeButton  = document.getElementById("NormalModeButton");
     gTagModeButton     = document.getElementById("TagModeButton");
     gSourceModeButton  = document.getElementById("SourceModeButton");
@@ -856,17 +855,17 @@ function GetObjectForProperties()
 
   while (node)
   {
-    if (node.tagName)
+    if (node.nodeName)
     {
-      var tagName = node.tagName.toLowerCase();
+      var nodeName = node.nodeName.toLowerCase();
 
       // Done when we hit the body
-      if (tagName == "body") break;
+      if (nodeName == "body") break;
 
-      if ((tagName == "a" && node.href) ||
-          tagName == "ol" || tagName == "ul" || tagName == "dl" ||
-          tagName == "td" || tagName == "th" ||
-          tagName == "table")
+      if ((nodeName == "a" && node.href) ||
+          nodeName == "ol" || nodeName == "ul" || nodeName == "dl" ||
+          nodeName == "td" || nodeName == "th" ||
+          nodeName == "table")
       {
         return node;
       }
@@ -1003,9 +1002,8 @@ function SetDisplayMode(mode)
     if (mode == DisplayModeNormal) selectedTab = gNormalModeButton;
     if (mode == DisplayModeAllTags) selectedTab = gTagModeButton;
     if (mode == DisplayModeSource) selectedTab = gSourceModeButton;
-    if (selectedTab) {
+    if (selectedTab)
       document.getElementById("EditModeTabbox").selectedTab = selectedTab;
-    }
 
     if (mode == DisplayModeSource)
     {
@@ -1185,7 +1183,7 @@ function BuildRecentMenu(savePrefs)
   var curUrl = window.editorShell.editorDocument.location;
   var newDoc = (curUrl == "about:blank");
   var historyCount = 10; 
-  try { historyCount = gPrefs.CopyUnicharPref("editor.history.url_maximum"); } catch(e) {}
+  try { historyCount = gPrefs.GetIntPref("editor.history.url_maximum"); } catch(e) {}
   var titleArray = new Array(historyCount);
   var urlArray   = new Array(historyCount);
   var menuIndex = 1;
@@ -1447,8 +1445,7 @@ function EditorInitToolbars()
 function EditorSetDefaultPrefs()
 {
   /* only set defaults for new documents */
-  var url = document.getElementById("args").getAttribute("value");
-  if ( url != "about:blank" )
+  if ( window.editorShell.editorDocument.location != "about:blank" )
     return;
 
   var element;
@@ -1549,7 +1546,6 @@ function EditorSetDefaultPrefs()
         }
       }
     }
-    
   }
 
   // Get editor color prefs
@@ -1559,49 +1555,53 @@ function EditorSetDefaultPrefs()
   }
   catch (ex) {}
 
-// XXX BUG: this is always comming up TRUE even when pref panel is used to set false
-dump(" *** editor.use_custom_colors="+use_custom_colors+"\n");
-
-  if ( use_custom_colors )
+  // find body node
+  var bodyelement = GetBodyElement();
+  if (bodyelement)
   {
-    // find body node
-    var bodyelement = GetBodyElement();
+    if ( use_custom_colors )
+    {
 
-    // try to get the default color values.  ignore them if we don't have them.
-    var text_color;
-    var link_color;
-    var active_link_color;
-    var followed_link_color;
-    var background_color;
+      // try to get the default color values.  ignore them if we don't have them.
+      var text_color;
+      var link_color;
+      var active_link_color;
+      var followed_link_color;
+      var background_color;
     
-    try { text_color = gPrefs.CopyCharPref("editor.text_color"); } catch (e) {}
-    try { link_color = gPrefs.CopyCharPref("editor.link_color"); } catch (e) {}
-    try { active_link_color = gPrefs.CopyCharPref("editor.active_link_color"); } catch (e) {}
-    try { followed_link_color = gPrefs.CopyCharPref("editor.followed_link_color"); } catch (e) {}
-    try { background_color = gPrefs.CopyCharPref("editor.background_color"); } catch(e) {}
+      try { text_color = gPrefs.CopyCharPref("editor.text_color"); } catch (e) {}
+      try { link_color = gPrefs.CopyCharPref("editor.link_color"); } catch (e) {}
+      try { active_link_color = gPrefs.CopyCharPref("editor.active_link_color"); } catch (e) {}
+      try { followed_link_color = gPrefs.CopyCharPref("editor.followed_link_color"); } catch (e) {}
+      try { background_color = gPrefs.CopyCharPref("editor.background_color"); } catch(e) {}
 
-    // add the color attributes to the body tag.
-    // and use them for the default text and background colors if not empty
-    if (text_color)
-    {
-      AddAttrToElem(domdoc, "text", text_color, bodyelement);
-      gDefaultTextColor = text_color;
-    }
-    if (background_color)
-    {
-      AddAttrToElem(domdoc, "bgcolor", background_color, bodyelement);
-      gDefaultBackgroundColor = background_color
-    }
+      // add the color attributes to the body tag.
+      // and use them for the default text and background colors if not empty
+      if (text_color)
+      {
+        bodyelement.setAttribute("text", text_color);
+        gDefaultTextColor = text_color;
+      }
+      if (background_color)
+      {
+        bodyelement.setAttribute("bgcolor", background_color);
+        gDefaultBackgroundColor = background_color
+      }
 
-    if (link_color)
-      AddAttrToElem(domdoc, "link", link_color, bodyelement);
-    if (active_link_color) 
-      AddAttrToElem(domdoc, "alink", active_link_color, bodyelement);
-    if (followed_link_color)
-      AddAttrToElem(domdoc, "vlink", followed_link_color, bodyelement);
+      if (link_color)
+        bodyelement.setAttribute("link", link_color);
+      if (active_link_color) 
+        bodyelement.setAttribute("alink", active_link_color);
+      if (followed_link_color)
+        bodyelement.setAttribute("vlink", followed_link_color);
+    }
+    // Default image is independent of Custom colors???
+    var background_image;
+    try { background_image = gPrefs.CopyCharPref("editor.default_background_image"); } catch(e) {}
+
+    if (background_image)
+      bodyelement.setAttribute("background", background_image);
   }
-
-
   // auto-save???
 }
 
