@@ -275,6 +275,7 @@ js_InitGC(JSRuntime *rt, uint32 maxbytes)
                      sizeof(JSGCThing));
     if (!JS_DHashTableInit(&rt->gcRootsHash, JS_DHashGetStubOps(), NULL,
                            sizeof(JSGCRootHashEntry), GC_ROOTS_SIZE)) {
+        rt->gcRootsHash.ops = NULL;
         return JS_FALSE;
     }
     rt->gcLocksHash = NULL;     /* create lazily */
@@ -339,8 +340,8 @@ js_FinishGC(JSRuntime *rt)
     JS_FinishArenaPool(&rt->gcArenaPool);
     JS_ArenaFinish();
 
+    if (rt->gcRootsHash.ops) {
 #ifdef DEBUG
-    {
         uint32 leakedroots = 0;
 
         /* Warn (but don't assert) debug builds of any remaining roots. */
@@ -360,10 +361,11 @@ js_FinishGC(JSRuntime *rt)
                         (unsigned long) leakedroots);
             }
         }
-    }
 #endif
 
-    JS_DHashTableFinish(&rt->gcRootsHash);
+        JS_DHashTableFinish(&rt->gcRootsHash);
+        rt->gcRootsHash.ops = NULL;
+    }
     if (rt->gcLocksHash) {
         JS_DHashTableDestroy(rt->gcLocksHash);
         rt->gcLocksHash = NULL;
