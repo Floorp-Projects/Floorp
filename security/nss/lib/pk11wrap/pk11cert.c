@@ -1202,7 +1202,7 @@ PK11_FindCertFromNickname(char *nickname, void *wincx) {
 	search.callback = get_newest_cert;
 	search.cbarg = (void *)&cert;
 	search.cached = certList;
-	search.searchType = nssTokenSearchType_AllObjects;
+	search.searchType = nssTokenSearchType_TokenOnly;
 	/* find best cert on token */
 	nssToken_TraverseCertificatesByNickname(token, NULL, 
 	                                        (NSSUTF8 *)nickname,
@@ -1293,7 +1293,7 @@ PK11_FindCertsFromNickname(char *nickname, void *wincx) {
 	    search.callback = collect_certs;
 	    search.cbarg = nameList;
 	    search.cached = nameList;
-	    search.searchType = nssTokenSearchType_AllObjects;
+	    search.searchType = nssTokenSearchType_TokenOnly;
 	    nssrv = nssToken_TraverseCertificatesByNickname(token, NULL, 
 	                                                    nickname, &search);
 	    count = nssList_Count(nameList);
@@ -2336,7 +2336,7 @@ PK11_TraverseCertsForSubjectInSlot(CERTCertificate *cert, PK11SlotInfo *slot,
     search.callback = convert_cert;
     search.cbarg = &pk11cb;
     search.cached = subjectList;
-    search.searchType = nssTokenSearchType_AllObjects;
+    search.searchType = nssTokenSearchType_TokenOnly;
     token = PK11Slot_GetNSSToken(slot);
     nssrv = nssToken_TraverseCertificatesBySubject(token, NULL, 
                                                    &subject, &search);
@@ -2406,7 +2406,7 @@ PK11_TraverseCertsForNicknameInSlot(SECItem *nickname, PK11SlotInfo *slot,
     search.callback = convert_cert;
     search.cbarg = &pk11cb;
     search.cached = nameList;
-    search.searchType = nssTokenSearchType_AllObjects;
+    search.searchType = nssTokenSearchType_TokenOnly;
     token = PK11Slot_GetNSSToken(slot);
     nssrv = nssToken_TraverseCertificatesByNickname(token, NULL, 
                                                     nick, &search);
@@ -2459,7 +2459,7 @@ PK11_TraverseCertsInSlot(PK11SlotInfo *slot,
     search.callback = convert_cert;
     search.cbarg = &pk11cb;
     search.cached = certList;
-    search.searchType = nssTokenSearchType_AllObjects;
+    search.searchType = nssTokenSearchType_TokenOnly;
     tok = PK11Slot_GetNSSToken(slot);
     if (tok) {
 	nssrv = nssToken_TraverseCertificates(tok, NULL, &search);
@@ -2516,7 +2516,7 @@ PK11_FindCertFromDERCert(PK11SlotInfo *slot, CERTCertificate *cert,
     NSSITEM_FROM_SECITEM(&derCert, &cert->derCert);
     /* XXX login to slots */
     c = nssToken_FindCertificateByEncodedCertificate(tok, NULL, &derCert,
-                                                nssTokenSearchType_AllObjects);
+                                                nssTokenSearchType_TokenOnly);
     if (c) {
 	rvCert = STAN_GetCERTCertificate(c);
     }
