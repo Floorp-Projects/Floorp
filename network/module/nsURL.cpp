@@ -29,6 +29,7 @@
 
 #ifdef XP_PC
 #include <windows.h>
+static HINSTANCE g_hInst = NULL;
 #endif
 
 char *mangleResourceIntoFileURL(const char* aResourceFileName);
@@ -661,7 +662,7 @@ char *mangleResourceIntoFileURL(const char* aResourceFileName)
 #ifdef XP_PC
   // XXX For now, all resources are relative to the .exe file
   resourceBase = (char *)PR_Malloc(_MAX_PATH);;
-  DWORD mfnLen = GetModuleFileName(NULL, resourceBase, _MAX_PATH);
+  DWORD mfnLen = GetModuleFileName(g_hInst, resourceBase, _MAX_PATH);
   // Truncate the executable name from the rest of the path...
   cp = strrchr(resourceBase, '\\');
   if (nsnull != cp) {
@@ -723,3 +724,40 @@ char *mangleResourceIntoFileURL(const char* aResourceFileName)
 
   return fileName;
 }
+
+#ifdef XP_PC
+
+BOOL WINAPI DllMain(HINSTANCE hDllInst,
+                    DWORD fdwReason,
+                    LPVOID lpvReserved)
+{
+    BOOL bResult = TRUE;
+
+    switch (fdwReason)
+    {
+        case DLL_PROCESS_ATTACH:
+          {
+            // save our instance
+            g_hInst = hDllInst;
+          }
+          break;
+
+        case DLL_PROCESS_DETACH:
+            break;
+
+        case DLL_THREAD_ATTACH:
+            break;
+
+        case DLL_THREAD_DETACH:
+            break;
+
+        default:
+            break;
+  }
+
+  return (bResult);
+}
+
+
+
+#endif
