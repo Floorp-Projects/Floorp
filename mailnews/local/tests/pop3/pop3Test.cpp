@@ -318,10 +318,8 @@ static NS_DEFINE_CID(kCMsgMailSessionCID, NS_MSGMAILSESSION_CID);
 
 nsresult nsPop3TestDriver::OnIdentityCheck()
 {
-	nsIMsgMailSession * mailSession = nsnull;
-	nsresult result = nsServiceManager::GetService(kCMsgMailSessionCID,
-												   nsIMsgMailSession::GetIID(),
-                                                   (nsISupports **) &mailSession);
+	nsresult result = NS_OK;
+	NS_WITH_SERVICE(nsIMsgMailSession, mailSession, kCMsgMailSessionCID, &result); 
 	if (NS_SUCCEEDED(result) && mailSession)
 	{
 		// mscott: we really don't check an identity, we check
@@ -344,8 +342,6 @@ nsresult nsPop3TestDriver::OnIdentityCheck()
 		}
 		else
 			printf("Unable to retrieve the outgoing server interface....\n");
-
-		nsServiceManager::ReleaseService(kCMsgMailSessionCID, mailSession);
 	}
 	else
 		printf("Unable to retrieve the mail session service....\n");
@@ -486,10 +482,8 @@ int main()
     }
     
 	// Create the Event Queue for this thread...
-    nsIEventQueueService* pEventQService;
-    result = nsServiceManager::GetService(kEventQueueServiceCID,
-                                          nsIEventQueueService::GetIID(),
-                                          (nsISupports**)&pEventQService);
+	NS_WITH_SERVICE(nsIEventQueueService, pEventQService, kEventQueueServiceCID, &result); 
+
 	if (NS_FAILED(result)) return result;
 
     result = pEventQService->CreateThreadEventQueue();
