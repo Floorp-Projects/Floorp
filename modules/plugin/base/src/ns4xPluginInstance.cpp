@@ -167,7 +167,7 @@ nsresult ns4xPluginStreamListener::CleanUpStream(NPReason reason)
     NS_TRY_SAFE_CALL_RETURN(error, CallNPP_DestroyStreamProc(callbacks->destroystream,
                                                                npp,
                                                                &mNPStream,
-                                                               reason), lib);
+                                                               reason), lib, mInst);
 
     NPP_PLUGIN_LOG(PLUGIN_LOG_NORMAL,
     ("NPP DestroyStream called: this=%p, npp=%p, reason=%d, return=%d, url=%s\n",
@@ -209,7 +209,7 @@ void ns4xPluginStreamListener::CallURLNotify(NPReason reason)
                                                 npp,
                                                 mNotifyURL,
                                                 reason,
-                                                mNotifyData), mInst->fLibrary);
+                                                mNotifyData), mInst->fLibrary, mInst);
 
     NPP_PLUGIN_LOG(PLUGIN_LOG_NORMAL,
     ("NPP URLNotify called: this=%p, npp=%p, notify=%p, reason=%d, url=%s\n",
@@ -264,7 +264,7 @@ ns4xPluginStreamListener::OnStartBinding(nsIPluginStreamInfo* pluginInfo)
                                                        (char *)contentType,
                                                        &mNPStream,
                                                        seekable,
-                                                       &streamType), mInst->fLibrary);
+                                                       &streamType), mInst->fLibrary, mInst);
 
   NPP_PLUGIN_LOG(PLUGIN_LOG_NORMAL,
   ("NPP NewStream called: this=%p, npp=%p, mime=%s, seek=%d, type=%d, return=%d, url=%s\n",
@@ -393,7 +393,7 @@ ns4xPluginStreamListener::OnDataAvailable(nsIPluginStreamInfo* pluginInfo,
       {
         NS_TRY_SAFE_CALL_RETURN(numtowrite, 
           CallNPP_WriteReadyProc(callbacks->writeready, npp, &mNPStream),
-          mInst->fLibrary);
+          mInst->fLibrary, mInst);
        
         NPP_PLUGIN_LOG(PLUGIN_LOG_NOISY,
           ("NPP WriteReady called: this=%p, npp=%p, return(towrite)=%d, url=%s\n",
@@ -420,7 +420,7 @@ ns4xPluginStreamListener::OnDataAvailable(nsIPluginStreamInfo* pluginInfo,
       
       NS_TRY_SAFE_CALL_RETURN(writeCount, 
         CallNPP_WriteProc(callbacks->write, npp, &mNPStream, mPosition, numtowrite, (void *)ptrStreamBuffer),
-        mInst->fLibrary);
+        mInst->fLibrary, mInst);
       
       NPP_PLUGIN_LOG(PLUGIN_LOG_NOISY,
         ("NPP Write called: this=%p, npp=%p, pos=%d, len=%d, buf=%s, return(written)=%d,  url=%s\n",
@@ -493,7 +493,7 @@ ns4xPluginStreamListener::OnFileAvailable(nsIPluginStreamInfo* pluginInfo,
   NS_TRY_SAFE_CALL_VOID(CallNPP_StreamAsFileProc(callbacks->asfile,
                                                    npp,
                                                    &mNPStream,
-                                                   fileName), lib);
+                                                   fileName), lib, mInst);
 
   NPP_PLUGIN_LOG(PLUGIN_LOG_NORMAL,
   ("NPP StreamAsFile called: this=%p, npp=%p, url=%s, file=%s\n",
@@ -707,7 +707,7 @@ NS_IMETHODIMP ns4xPluginInstance::Stop(void)
       listener->CleanUpStream(NPRES_USER_BREAK);
   }
 
-  NS_TRY_SAFE_CALL_RETURN(error, CallNPP_DestroyProc(fCallbacks->destroy, &fNPP, &sdata), fLibrary);
+  NS_TRY_SAFE_CALL_RETURN(error, CallNPP_DestroyProc(fCallbacks->destroy, &fNPP, &sdata), fLibrary, this);
 
   NPP_PLUGIN_LOG(PLUGIN_LOG_NORMAL,
   ("NPP Destroy called: this=%p, npp=%p, return=%d\n", this, &fNPP, error));
@@ -776,7 +776,7 @@ nsresult ns4xPluginInstance::InitializePlugin(nsIPluginInstancePeer* peer)
                                           count,
                                           (char**)names,
                                           (char**)values,
-                                          NULL), fLibrary);
+                                          NULL), fLibrary,this);
 
   NPP_PLUGIN_LOG(PLUGIN_LOG_NORMAL,
   ("NPP New called: this=%p, npp=%p, mime=%s, mode=%d, argc=%d, return=%d\n",
@@ -972,7 +972,8 @@ NS_IMETHODIMP ns4xPluginInstance::SetWindow(nsPluginWindow* window)
 
     NS_TRY_SAFE_CALL_RETURN(error, CallNPP_SetWindowProc(fCallbacks->setwindow,
                                   &fNPP,
-                                  (NPWindow*) window), fLibrary);
+                                  (NPWindow*) window), fLibrary, this);
+
 
     NPP_PLUGIN_LOG(PLUGIN_LOG_NORMAL,
     ("NPP SetWindow called: this=%p, [x=%d,y=%d,w=%d,h=%d], clip[t=%d,b=%d,l=%d,r=%d], return=%d\n",
@@ -1053,7 +1054,7 @@ NS_IMETHODIMP ns4xPluginInstance::Print(nsPluginPrint* platformPrint)
 
   NS_TRY_SAFE_CALL_VOID(CallNPP_PrintProc(fCallbacks->print,
                                           &fNPP,
-                                          thePrint), fLibrary);
+                                          thePrint), fLibrary, this);
 
   NPP_PLUGIN_LOG(PLUGIN_LOG_NORMAL,
   ("NPP PrintProc called: this=%p, pDC=%p, [x=%d,y=%d,w=%d,h=%d], clip[t=%d,b=%d,l=%d,r=%d]\n",
@@ -1097,7 +1098,7 @@ NS_IMETHODIMP ns4xPluginInstance::HandleEvent(nsPluginEvent* event, PRBool* hand
 
       NS_TRY_SAFE_CALL_RETURN(result, CallNPP_HandleEventProc(fCallbacks->event,
                                     &fNPP,
-                                    (void*)&npEvent), fLibrary);
+                                    (void*)&npEvent), fLibrary, this);
 #endif
 
       NPP_PLUGIN_LOG(PLUGIN_LOG_NOISY,
@@ -1141,7 +1142,7 @@ NS_IMETHODIMP ns4xPluginInstance :: GetValue(nsPluginInstanceVariable variable,
                                                      &fNPP, 
                                                      (NPPVariable)variable, 
                                                      value), 
-                                                     fLibrary);
+                                                     fLibrary, this);
         NPP_PLUGIN_LOG(PLUGIN_LOG_NORMAL,
         ("NPP GetValue called: this=%p, npp=%p, var=%d, value=%d, return=%d\n", 
         this, &fNPP, variable, value, res));
