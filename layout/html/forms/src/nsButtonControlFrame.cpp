@@ -279,7 +279,8 @@ nsButtonControlFrame::Reflow(nsIPresContext&          aPresContext,
   if (NS_FORM_INPUT_IMAGE == type) {
     nsSize ignore;
     GetDesiredSize(&aPresContext, aReflowState, aDesiredSize, ignore);
-    AddBordersAndPadding(&aPresContext, aDesiredSize);
+    nsMargin bp;
+    AddBordersAndPadding(&aPresContext, aReflowState, aDesiredSize, bp);
     if (nsnull != aDesiredSize.maxElementSize) {
       aDesiredSize.maxElementSize->width = aDesiredSize.width;
       aDesiredSize.maxElementSize->height = aDesiredSize.height;
