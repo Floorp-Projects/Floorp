@@ -373,6 +373,8 @@ sub getDefaultString {
 }
 
 # setup.install
+# XXX at least part of this could also be implemented as a user field
+# factory registerer hook -- does this matter?
 sub setupInstall {
     my $self = shift;
     my($app) = @_;

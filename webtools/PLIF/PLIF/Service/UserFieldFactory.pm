@@ -36,7 +36,9 @@ use PLIF::Service;
 sub provides {
     my $class = shift;
     my($service) = @_;
-    return ($service eq 'user.fieldFactory' or $class->SUPER::provides($service));
+    return ($service eq 'user.fieldFactory' or 
+            $service eq 'setup.install' or
+            $class->SUPER::provides($service));
 }
 
 # Field Factory (Factory for Field Instances)
@@ -92,15 +94,16 @@ sub registerField {
         $app->getCollectingServiceList("user.field.$oldType.manager")->fieldRemoved($fieldID);
     }
     $fieldID = $dataSource->setField($app, $fieldID, $fieldCategory, $fieldName, $fieldType, @data);
+    $self->assert(defined($fieldID), 1, "Call to 'setField' for field '$fieldCategory.fieldType' of type $fieldType failed to return a valid field ID.");
     # if the field is new or if the type changed, then notify the field type's manager of this:
     if ((not defined($oldType)) or ($oldType ne $fieldType)) {
-        $app->getCollectingServiceList("user.field.$oldType.manager")->fieldAdded($fieldID);
+        $app->getCollectingServiceList("user.field.$fieldType.manager")->fieldAdded($fieldID);
     } else {
         # otherwise, just do a change notification
-        $app->getCollectingServiceList("user.field.$oldType.manager")->fieldChanged($fieldID);
+        $app->getCollectingServiceList("user.field.$fieldType.manager")->fieldChanged($fieldID);
     }
     # return the fieldID
-    return $fieldID
+    return $fieldID;
 }
 
 sub registerSetting {
@@ -120,4 +123,13 @@ sub removeField {
         $dataSource->removeField($app, $fieldID);
     } # else, field wasn't there to start with, so...
     return $fieldID;
+}
+
+
+# setup.install
+sub setupInstall {
+    my $self = shift;
+    my($app) = @_;
+    $app->output->setupProgress('user fields');
+    $app->getCollectingServiceList('user.fieldRegisterer')->register($app, $self);
 }
