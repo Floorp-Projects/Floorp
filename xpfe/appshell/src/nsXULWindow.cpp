@@ -273,6 +273,10 @@ NS_IMETHODIMP nsXULWindow::Destroy()
    if(!mWindow)
       return NS_OK;
 
+#ifdef XP_PC
+   ActivateParent();
+#endif
+
 #ifdef XP_MAC // Anyone still using native menus should add themselves here.
   {
   // unregister as document listener
@@ -1154,6 +1158,38 @@ void nsXULWindow::EnableParent(PRBool aEnable)
     parentWidget->Enable(aEnable);
 }
 
+/* Bring our parent window to the top, if we are the topmost window.
+   This stupid-sounding method is used to hack around a bug in the Windows OS
+   which causes it to seemingly activate a random window instead of the
+   expected one after closing at least two owned windows. (Mozilla bug
+   22658). This method is expected to be called during window teardown.
+*/
+void nsXULWindow::ActivateParent() {
+
+  // do we have an owner/parent window?
+  nsCOMPtr<nsIBaseWindow> parent(do_QueryReferent(mParentWindow));
+  if (!parent)
+    return;
+
+  // are we the topmost window?
+  nsCOMPtr<nsIWindowMediator> windowMediator(do_GetService(kWindowMediatorCID));
+  if (!windowMediator)
+    return;
+
+  nsCOMPtr<nsIDOMWindow> topDOMWindow;
+  windowMediator->GetMostRecentWindow(nsnull, getter_AddRefs(topDOMWindow));
+  nsCOMPtr<nsIDOMWindow> ourDOMWindow(do_GetInterface(mDocShell));
+
+  if (ourDOMWindow != topDOMWindow)
+    return;
+
+  // yes, we're topmost. bring our parent to the top.
+  nsCOMPtr<nsIWidget> parentWidget;
+  parent->GetMainWidget(getter_AddRefs(parentWidget));
+  if (parentWidget)
+    parentWidget->PlaceBehind(0, PR_TRUE);
+}
+
 // Constrain the window to its proper z-level
 PRBool nsXULWindow::ConstrainToZLevel(
                       PRBool      aImmediate,
@@ -1204,7 +1240,7 @@ PRBool nsXULWindow::ConstrainToZLevel(
         if (ourBase) {
           nsCOMPtr<nsIWidget> ourWidget;
           ourBase->GetMainWidget(getter_AddRefs(ourWidget));
-          ourWidget->PlaceBehind(*aActualBelow);
+          ourWidget->PlaceBehind(*aActualBelow, PR_FALSE);
         }
       }
     }
