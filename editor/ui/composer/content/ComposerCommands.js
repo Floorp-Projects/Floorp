@@ -1584,7 +1584,40 @@ var nsPreviewCommand =
 
     // Check if we saved again just in case?
 	  if (DocumentHasBeenSaved())
-	    window.openDialog(getBrowserURL(), "EditorPreview", "chrome,all,dialog=no", window._content.location);
+    {
+      var browser;
+      try {
+        // Find a browser with this URL
+        var windowManager = Components.classes["@mozilla.org/rdf/datasource;1?name=window-mediator"].getService();
+        var windowManagerInterface = windowManager.QueryInterface(Components.interfaces.nsIWindowMediator);
+        var enumerator = windowManagerInterface.getEnumerator("navigator:browser");
+
+        while ( enumerator.hasMoreElements() )
+        {
+          browser = windowManagerInterface.convertISupportsToDOMWindow( enumerator.getNext() );
+          if ( browser && (window._content.location.href == browser._content.location.href))
+            break;
+
+          browser = null;
+        }
+      }
+      catch (ex) {}
+
+      // If none found, open a new browser
+      if (!browser)
+        browser = window.openDialog(getBrowserURL(), "_blank", "chrome,all,dialog=no", window._content.location);
+
+      try {
+        if (browser)
+        {
+          // Be sure browser contains real source content, not cached
+          // setTimeout is needed because the "browser" created by openDialog 
+          //    needs time to finish else BrowserReloadSkipCache doesn't exist
+          setTimeout( function(browser) { browser.BrowserReloadSkipCache(); }, 0, browser );
+          browser.focus();
+        }
+      } catch (ex) {}
+    }
   }
 };
 
