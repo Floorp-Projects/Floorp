@@ -63,6 +63,7 @@
 #include "nsNativeThemeGTK.h"
 #endif
 #include "nsPrintSession.h"
+#include "gfxImageFrame.h"
 
 // objects that just require generic constructors
 
@@ -83,7 +84,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsPrinterEnumeratorGTK)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsNativeThemeGTK)
 #endif
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsPrintSession, Init)
-
+NS_GENERIC_FACTory_CONSTRUCTOR(gfxImageFrame)
 // our custom constructors
 
 static NS_IMETHODIMP nsScriptableRegionConstructor(nsISupports *aOuter, REFNSIID aIID, void **aResult)
@@ -198,12 +199,16 @@ static const nsModuleComponentInfo components[] =
     //    "@mozilla.org/gfx/printer_enumerator/gtk;1",
     "@mozilla.org/gfx/printerenumerator;1",
     nsPrinterEnumeratorGTKConstructor },
+  { "windows image frame",
+    GFX_IMAGEFRAME_CID,
+    "@mozilla.org/gfx/image/frame;2",
+    gfxImageFrameConstructor, },
   { "Print Session",
     NS_PRINTSESSION_CID,
     "@mozilla.org/gfx/printsession;1",
-    nsPrintSessionConstructor }
+    nsPrintSessionConstructor },
 #ifdef NATIVE_THEME_SUPPORT
-  ,{ "Native Theme Renderer",
+   { "Native Theme Renderer",
     NS_THEMERENDERER_CID,
     "@mozilla.org/chrome/chrome-native-theme;1",
     nsNativeThemeGTKConstructor }
