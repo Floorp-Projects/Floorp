@@ -42,12 +42,13 @@
   windowtype="Browser:page-info"
   onload="onLoadPageInfo()"
   align="stretch" class="dialog"
-  width="425" height="450"
+  width="&pageInfoWindow.width;" height="&pageInfoWindow.height;"
   screenX="10" screenY="10"
   persist="screenX screenY width height sizemode">
 
   <script type="application/x-javascript" src="chrome://communicator/content/contentAreaUtils.js"/>
   <script type="application/x-javascript" src="chrome://navigator/content/pageInfo.js"/>
+  <script type="application/x-javascript" src="chrome://help/content/contextHelp.js"/>
 
   <keyset>
     <key id="closeWindow" key="&closeWindow;" modifiers="accel" oncommand="window.close();"/>
@@ -319,4 +320,8 @@
       <!-- Others added by overlay -->
     </tabpanels>
   </tabbox>
+  <box>
+    <spacer flex="1"/>
+    <button label="&helpButton;" oncommand="doHelpButton();" />
+  </box>
 </window>

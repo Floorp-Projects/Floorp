@@ -150,6 +150,35 @@ function onLoadPageInfo()
   }
 }
 
+function doHelpButton() {
+  var tabControl = document.getElementById("tabbox");
+  switch (tabControl.selectedTab.id) {
+    case "generalTab":
+      helpdoc = "pageinfo_general";
+      break;
+    case "formsTab":
+      helpdoc = "pageinfo_forms";
+      break;
+    case "linksTab":
+      helpdoc = "pageinfo_links";
+      break;
+    case "mediaTab":
+      helpdoc = "pageinfo_media";
+      break;
+    case "securityTab":
+      helpdoc = "pageinfo_security";
+      break;
+    case "p3pTab":
+      helpdoc = "pageinfo_privacy";
+      break;
+    default:
+      helpdoc = "pageinfo_general";
+      break;
+  }
+  openHelp(helpdoc);  
+}
+
+ 
 function makeGeneralTab()
 {
   var theBundle = document.getElementById("pageinfobundle");
