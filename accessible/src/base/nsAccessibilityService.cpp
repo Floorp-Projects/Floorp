@@ -447,6 +447,8 @@ nsAccessibilityService::CreateHTMLAccessibleByMarkup(nsISupports *aFrame,
            content->HasAttr(kNameSpaceID_XHTML2_Unofficial, nsAccessibilityAtoms::role)
 #ifndef MOZ_ACCESSIBILITY_ATK
            ||
+           tag == nsAccessibilityAtoms::abbr ||
+           tag == nsAccessibilityAtoms::acronym ||
            tag == nsAccessibilityAtoms::blockquote ||
            tag == nsAccessibilityAtoms::form ||
            tag == nsAccessibilityAtoms::h1 ||
@@ -455,7 +457,10 @@ nsAccessibilityService::CreateHTMLAccessibleByMarkup(nsISupports *aFrame,
            tag == nsAccessibilityAtoms::h4 ||
            tag == nsAccessibilityAtoms::h5 ||
            tag == nsAccessibilityAtoms::h6 ||
-           tag == nsAccessibilityAtoms::q
+           tag == nsAccessibilityAtoms::q ||
+           tag == nsAccessibilityAtoms::tbody ||
+           tag == nsAccessibilityAtoms::tfoot ||
+           tag == nsAccessibilityAtoms::thead
 #endif
            ) {
     *aAccessible = new nsAccessibleWrap(aNode, aWeakShell);
