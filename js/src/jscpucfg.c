@@ -21,60 +21,6 @@
  */
 #include <stdio.h>
 
-#ifdef sgi
-#ifndef IRIX
-# error "IRIX is not defined"
-#endif
-#endif
-
-#ifdef __sun
-#if defined(__svr4) || defined(__svr4__)
-#ifndef SOLARIS
-# error "SOLARIS is not defined"
-#endif
-#else
-#ifndef SUNOS4
-# error "SUNOS4 is not defined"
-#endif
-#endif
-#endif
-
-#ifdef __hpux
-#ifndef HPUX
-# error "HPUX is not defined"
-#endif
-#endif
-
-#ifdef __osf__
-#ifndef OSF1
-# error "OSF1 is not defined"
-#endif
-#endif
-
-#ifdef _IBMR2
-#ifndef AIX
-# error "AIX is not defined"
-#endif
-#endif
-
-#ifdef bsdi
-#ifndef BSDI
-# error "BSDI is not defined"
-#endif
-#endif
-
-#ifdef M_UNIX
-#ifndef SCO
-# error "SCO is not defined"
-#endif
-#endif
-
-#if !defined(M_UNIX) && defined(_USLC_)
-#ifndef UNIXWARE
-# error "UNIXWARE is not defined"
-#endif
-#endif
-
 #ifdef __MWERKS__
 #define XP_MAC 1
 #endif
