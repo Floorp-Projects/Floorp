@@ -388,6 +388,9 @@ pref("network.http.pipelining.maxrequests" , 4);
 pref("network.http.proxy.ssl.connect",true);
 // </ruslan>
 
+// Idle timeout for ftp control connections - 5 minute default
+pref("network.ftp.idleConnectionTimeout", 300);
+
 // until the directory view has an owner
 // necko will produce html -- dougt
 pref("network.dir.generate_html", true);

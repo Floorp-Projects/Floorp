@@ -40,22 +40,29 @@
 
 #include "nsIServiceManager.h"
 #include "nsIProxiedProtocolHandler.h"
-#include "nsHashtable.h"
+#include "nsVoidArray.h"
 #include "nsIIOService.h"
-#include "nsIThreadPool.h"
+#include "nsITimer.h"
 #include "nsIObserverService.h"
-#include "nsAutoLock.h"
 #include "nsICacheSession.h"
+#include "nsIObserver.h"
+#include "nsWeakReference.h"
+#include "nsCRT.h"
+
+class nsITimer;
 
 // {25029490-F132-11d2-9588-00805F369F95}
 #define NS_FTPPROTOCOLHANDLER_CID \
     { 0x25029490, 0xf132, 0x11d2, { 0x95, 0x88, 0x0, 0x80, 0x5f, 0x36, 0x9f, 0x95 } }
 
-class nsFtpProtocolHandler : public nsIProxiedProtocolHandler {
+class nsFtpProtocolHandler : public nsIProxiedProtocolHandler,
+                             public nsIObserver,
+                             public nsSupportsWeakReference {
 public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSIPROTOCOLHANDLER
     NS_DECL_NSIPROXIEDPROTOCOLHANDLER
+    NS_DECL_NSIOBSERVER
     
     // nsFtpProtocolHandler methods:
     nsFtpProtocolHandler();
@@ -69,10 +76,27 @@ public:
 
     static nsresult BuildStreamConverter(nsIStreamListener* in, nsIStreamListener** out);
 protected:
-    static nsSupportsHashtable* mRootConnectionList;
+    // Stuff for the timer callback function
+    struct timerStruct {
+        nsCOMPtr<nsITimer> timer;
+        nsCOMPtr<nsISupports> conn;
+        char* key;
+        
+        timerStruct() : key(nsnull) {};
+        
+        ~timerStruct() {
+            if (timer)
+                timer->Cancel();
+            CRTFREEIF(key);
+        }
+    };
+
+    static void Timeout(nsITimer *aTimer, void *aClosure);
+    static nsVoidArray* mRootConnectionList;
 
     nsCOMPtr<nsIIOService> mIOSvc;
     nsCOMPtr<nsICacheSession> mCacheSession;
+    static PRInt32 mIdleTimeout;
 };
 
 #endif /* nsFtpProtocolHandler_h___ */
