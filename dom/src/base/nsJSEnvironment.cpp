@@ -158,6 +158,8 @@ NS_ScriptErrorReporter(JSContext *cx,
   // mozilla with -console.
   nsAutoString error;
   error.AssignWithConversion("JavaScript ");
+  if (JSREPORT_IS_STRICT(report->flags))
+    error.AppendWithConversion("strict ");
   error.AppendWithConversion(JSREPORT_IS_WARNING(report->flags) ? "warning: " : "error: ");
   error.AppendWithConversion("\n");
   error.AppendWithConversion(report->filename);
@@ -263,25 +265,21 @@ nsJSContext::nsJSContext(JSRuntime *aRuntime)
 
     // Check for the JS strict option, which enables extra error checks
     nsresult rv;
-    PRBool strict;
     NS_WITH_SERVICE(nsIPref, prefs, kPrefServiceCID, &rv);
     if (NS_SUCCEEDED(rv)) {
       uint32 options = 0;
-#ifdef JSOPTION_STRICT
+      PRBool strict;
       if (NS_SUCCEEDED(prefs->GetBoolPref("javascript.options.strict",
                                           &strict)) &&
           strict) {
         options |= JSOPTION_STRICT;
       }
-#endif
-#ifdef JSOPTION_WERROR
       PRBool werror;
       if (NS_SUCCEEDED(prefs->GetBoolPref("javascript.options.werror",
                                           &werror)) &&
           werror) {
         options |= JSOPTION_WERROR;
       }
-#endif
       if (options)
         ::JS_SetOptions(mContext, options);
     }
@@ -996,6 +994,50 @@ nsJSContext::InitializeLiveConnectClasses()
   return NS_OK;
 }
 
+static JSPropertySpec OptionsProperties[] = {
+  {"strict",    JSOPTION_STRICT,    JSPROP_ENUMERATE | JSPROP_PERMANENT},
+  {"werror",    JSOPTION_WERROR,    JSPROP_ENUMERATE | JSPROP_PERMANENT},
+  {0}
+};
+
+static JSBool
+GetOptionsProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
+{
+  if (JSVAL_IS_INT(id)) {
+    uint32 optbit = (uint32) JSVAL_TO_INT(id);
+    if ((optbit & (optbit - 1)) == 0 && optbit <= JSOPTION_WERROR)
+      *vp = (JS_GetOptions(cx) & optbit) ? JSVAL_TRUE : JSVAL_FALSE;
+  }
+  return JS_TRUE;
+}
+
+static JSBool
+SetOptionsProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
+{
+  if (JSVAL_IS_INT(id)) {
+    uint32 optbit = (uint32) JSVAL_TO_INT(id);
+    if ((optbit & (optbit - 1)) == 0 && optbit <= JSOPTION_WERROR) {
+      JSBool optval;
+      if (!JS_ValueToBoolean(cx, *vp, &optval))
+        return JS_FALSE;
+      uint32 optset = JS_GetOptions(cx);
+      if (optval)
+        optset |= optbit;
+      else
+        optset &= ~optbit;
+      JS_SetOptions(cx, optset);
+    }
+  }
+  return JS_TRUE;
+}
+
+static JSClass OptionsClass = {
+  "JSOptions",
+  0,
+  JS_PropertyStub, JS_PropertyStub, GetOptionsProperty, SetOptionsProperty,
+  JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub, JS_FinalizeStub
+};
+
 #ifdef NS_TRACE_MALLOC
 
 #include <errno.h>              // XXX assume Linux if NS_TRACE_MALLOC
@@ -1113,7 +1155,7 @@ static JSFunctionSpec TraceMallocFunctions[] = {
     {"TraceMallocCloseLogFD",      TraceMallocCloseLogFD,      1, 0, 0},
     {"TraceMallocLogTimestamp",    TraceMallocLogTimestamp,    1, 0, 0},
     {"TraceMallocDumpAllocations", TraceMallocDumpAllocations, 1, 0, 0},
-    {NULL,                         NULL,                       0, 0, 0}
+    {nsnull,                       nsnull,                     0, 0, 0}
 };
 
 #endif /* NS_TRACE_MALLOC */
@@ -1123,6 +1165,7 @@ nsJSContext::InitClasses()
 {
   nsresult rv = NS_ERROR_FAILURE;
   nsCOMPtr<nsIScriptGlobalObject> global = dont_AddRef(GetGlobalObject());
+  JSObject *globalObj = ::JS_GetGlobalObject(mContext);
 
   if (NS_OK == NS_InitWindowClass(this, global) &&
       NS_OK == NS_InitNodeClass(this, nsnull) &&
@@ -1145,15 +1188,23 @@ nsJSContext::InitClasses()
   if (NS_SUCCEEDED(rv)) {
     NS_WITH_SERVICE(nsIXPConnect, xpc, nsIXPConnect::GetCID(), &rv);
     if (NS_SUCCEEDED(rv)) {
-      rv = xpc->InitClasses(mContext, ::JS_GetGlobalObject(mContext));
+      rv = xpc->InitClasses(mContext, globalObj);
     }
     NS_ASSERTION(NS_SUCCEEDED(rv), "unable to init xpconnect classes");
   }
 
+  if (NS_SUCCEEDED(rv)) {
+    JSObject *optionsObj = ::JS_DefineObject(mContext, globalObj, "options",
+                                             &OptionsClass, nsnull, 0);
+    if (!optionsObj ||
+        !::JS_DefineProperties(mContext, optionsObj, OptionsProperties)) {
+      rv = NS_ERROR_FAILURE;
+    }
+  }
+
 #ifdef NS_TRACE_MALLOC
   // Attempt to initialize TraceMalloc functions
-  ::JS_DefineFunctions(mContext, ::JS_GetGlobalObject(mContext),
-                       TraceMallocFunctions);
+  ::JS_DefineFunctions(mContext, globalObj, TraceMallocFunctions);
 #endif
 
   mIsInitialized = PR_TRUE;
