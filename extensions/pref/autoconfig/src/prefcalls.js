@@ -47,8 +47,7 @@ const PrefServiceContractID = "@mozilla.org/preferences-service;1";
 // set on a platform specific basis in platform.js
 platform = { value: "" };
 
-// default to LDAP v3
-var gVersion = Components.interfaces.nsILDAPConnection.VERSION3;
+var gVersion;
 
 function getPrefBranch() {
     
@@ -166,7 +165,10 @@ function getLDAPAttributes(host, base, filter, attribs) {
                    + "?sub?" +  filter;
         var ldapquery = Components.classes[LDAPSyncQueryContractID]
                                   .createInstance(nsILDAPSyncQuery);
-	// user supplied method
+        // default to LDAP v3
+        if (!gVersion)
+          gVersion = Components.interfaces.nsILDAPConnection.VERSION3
+ 	// user supplied method
         processLDAPValues(ldapquery.getQueryResults(url, gVersion));
     }
     catch(e) {
