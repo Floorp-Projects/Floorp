@@ -46,7 +46,8 @@ interface nsIPK11Token : nsISupports
    */
   boolean isLoggedIn();
   void login(in boolean force);
-  void logout();
+  void logoutSimple();
+  void logoutAndDropAuthenticatedResources();
 
   /*
    * Reset password

@@ -21,7 +21,6 @@
  *  Javier Delgadillo <javi@netscape.com>
  */
 #include "nsNSSComponent.h"
-#include "nsPSMTracker.h"
 #include "nsCrypto.h"
 #include "nsKeygenHandler.h"
 #include "nsKeygenThread.h"
@@ -76,6 +75,8 @@ extern "C" {
 #include "nsNSSCleaner.h"
 NSSCleanupAutoPtrClass(SECKEYPrivateKey, SECKEY_DestroyPrivateKey)
 NSSCleanupAutoPtrClass(PK11SlotInfo, PK11_FreeSlot)
+
+#include "nsNSSShutDown.h"
 
 /*
  * These are the most common error strings that are returned
@@ -554,6 +555,7 @@ nsConvertToActualKeyGenParams(PRUint32 keyGenMech, char *params,
 static PK11SlotInfo*
 nsGetSlotForKeyGen(nsKeyGenType keyGenType, nsIInterfaceRequestor *ctx)
 {
+  nsNSSShutDownPreventionLock locker;
   PRUint32 mechanism = cryptojs_convert_to_mechanism(keyGenType);
   PK11SlotInfo *slot = nsnull;
   nsresult rv = GetSlotWithMechanism(mechanism,ctx, &slot);
@@ -1370,6 +1372,7 @@ loser:
 NS_IMETHODIMP
 nsCrypto::GenerateCRMFRequest(nsIDOMCRMFObject** aReturn)
 {
+  nsNSSShutDownPreventionLock locker;
   *aReturn = nsnull;
   nsresult nrv;
   nsCOMPtr<nsIXPConnect> xpc(do_GetService(nsIXPConnect::GetCID(), &nrv));
@@ -1657,6 +1660,7 @@ alertUser(const PRUnichar *message)
 NS_IMETHODIMP
 nsP12Runnable::Run()
 {
+  nsNSSShutDownPreventionLock locker;
   NS_ASSERTION(mCertArr, "certArr is NULL while trying to back up");
 
   nsString final;
@@ -1724,6 +1728,7 @@ nsCryptoRunArgs::~nsCryptoRunArgs() {}
 
 nsCryptoRunnable::nsCryptoRunnable(nsCryptoRunArgs *args)
 {
+  nsNSSShutDownPreventionLock locker;
   NS_ASSERTION(args,"Passed nsnull to nsCryptoRunnable constructor.");
   m_args = args;
   NS_IF_ADDREF(m_args);
@@ -1732,6 +1737,7 @@ nsCryptoRunnable::nsCryptoRunnable(nsCryptoRunArgs *args)
 
 nsCryptoRunnable::~nsCryptoRunnable()
 {
+  nsNSSShutDownPreventionLock locker;
   JS_RemoveRoot(m_args->m_cx, &m_args->m_scope);
   NS_IF_RELEASE(m_args);
 }
@@ -1741,6 +1747,7 @@ nsCryptoRunnable::~nsCryptoRunnable()
 NS_IMETHODIMP
 nsCryptoRunnable::Run()
 {
+  nsNSSShutDownPreventionLock locker;
   JSPrincipals *principals;
 
   nsresult rv = m_args->m_principals->GetJSPrincipals(&principals);
@@ -1810,6 +1817,7 @@ nsCrypto::ImportUserCertificates(const nsAString& aNickname,
                                  PRBool aDoForcedBackup, 
                                  nsAString& aReturn)
 {
+  nsNSSShutDownPreventionLock locker;
   char *nickname=nsnull, *cmmfResponse=nsnull;
   char *retString=nsnull;
   char *freeString=nsnull;
@@ -2045,8 +2053,17 @@ nsCrypto::Alert(const nsAString& aMessage)
 NS_IMETHODIMP
 nsCrypto::Logout()
 {
-  PK11_LogoutAll();
-  return NS_OK;
+  nsresult rv;
+  nsCOMPtr<nsINSSComponent> nssComponent(do_GetService(kNSSComponentCID, &rv));
+  if (NS_FAILED(rv))
+    return rv;
+
+  {
+    nsNSSShutDownPreventionLock locker;
+    PK11_LogoutAll();
+  }
+
+  return nssComponent->LogoutAuthenticatedPK11();
 }
 
 NS_IMETHODIMP
@@ -2115,6 +2132,7 @@ confirm_user(const PRUnichar *message)
 NS_IMETHODIMP
 nsPkcs11::Deletemodule(const nsAString& aModuleName, PRInt32* aReturn)
 {
+  nsNSSShutDownPreventionLock locker;
   nsresult rv;
   nsString errorMessage;
 
@@ -2173,6 +2191,7 @@ nsPkcs11::Addmodule(const nsAString& aModuleName,
                     PRInt32 aCryptoMechanismFlags, 
                     PRInt32 aCipherFlags, PRInt32* aReturn)
 {
+  nsNSSShutDownPreventionLock locker;
   nsresult rv;
   nsCOMPtr<nsINSSComponent> nssComponent(do_GetService(kNSSComponentCID, &rv));
   nsString final;

@@ -45,7 +45,7 @@
 #include "nsReadableUtils.h"
 #include "nsNSSCleaner.h"
 #include "nsICertPickDialogs.h"
-#include "nsPSMTracker.h"
+#include "nsNSSShutDown.h"
 
 NSSCleanupAutoPtrClass(CERTCertNicknames, CERT_FreeNicknames)
 NSSCleanupAutoPtrClass(CERTCertList, CERT_DestroyCertList)
@@ -75,6 +75,7 @@ NS_IMETHODIMP nsCertPicker::PickByUsage(nsIInterfaceRequestor *ctx,
                                         PRBool *canceled, 
                                         nsIX509Cert **_retval)
 {
+  nsNSSShutDownPreventionLock locker;
   PRInt32 selectedIndex = -1;
   PRBool selectionFound = PR_FALSE;
   PRUnichar **certNicknameList = nsnull;

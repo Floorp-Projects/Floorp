@@ -45,7 +45,7 @@ extern "C" {
 #include "nsCRT.h"
 #include "nsITokenDialogs.h"
 #include "nsIGenKeypairInfoDlg.h"
-#include "nsPSMTracker.h"
+#include "nsNSSShutDown.h"
 
 //These defines are taken from the PKCS#11 spec
 #define CKM_RSA_PKCS_KEY_PAIR_GEN     0x00000000
@@ -269,6 +269,7 @@ GetSlotWithMechanism(PRUint32 aMechanism,
                      nsIInterfaceRequestor *m_ctx,
                      PK11SlotInfo** aSlot)
 {
+    nsNSSShutDownPreventionLock locker;
     PK11SlotList * slotList = nsnull;
     PRUnichar** tokenNameList = nsnull;
     nsITokenDialogs * dialogs;
@@ -363,6 +364,7 @@ nsKeygenFormProcessor::GetPublicKey(nsString& aValue, nsString& aChallenge,
 				    nsString& aKeyType,
 				    nsString& aOutPublicKey, nsString& aPqg)
 {
+    nsNSSShutDownPreventionLock locker;
     nsresult rv = NS_ERROR_FAILURE;
     char *keystring = nsnull;
     char *pqgString = nsnull, *str = nsnull;

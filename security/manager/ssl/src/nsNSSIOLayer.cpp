@@ -59,7 +59,7 @@
 #include "nsHashSets.h"
 #include "nsCRT.h"
 #include "nsPrintfCString.h"
-#include "nsPSMTracker.h"
+#include "nsNSSShutDown.h"
 
 #include "ssl.h"
 #include "secerr.h"
@@ -151,8 +151,27 @@ nsNSSSocketInfo::nsNSSSocketInfo()
 
 nsNSSSocketInfo::~nsNSSSocketInfo()
 {
+  nsNSSShutDownPreventionLock locker;
+  if (isAlreadyShutDown())
+    return;
+
+  destructorSafeDestroyNSSReference();
+  shutdown(calledFromObject);
+}
+
+void nsNSSSocketInfo::virtualDestroyNSSReference()
+{
+  destructorSafeDestroyNSSReference();
+}
+
+void nsNSSSocketInfo::destructorSafeDestroyNSSReference()
+{
+  if (isAlreadyShutDown())
+    return;
+
   if (mCAChain) {
     CERT_DestroyCertList(mCAChain);
+    mCAChain = nsnull;
   }
 }
 
@@ -340,6 +359,10 @@ nsNSSSocketInfo::StartTLS()
 
 nsresult nsNSSSocketInfo::ActivateSSL()
 {
+  nsNSSShutDownPreventionLock locker;
+  if (isAlreadyShutDown())
+    return NS_ERROR_NOT_AVAILABLE;
+
   if (SECSuccess != SSL_OptionSet(mFd, SSL_SECURITY, PR_TRUE))
     return NS_ERROR_FAILURE;
 
@@ -375,6 +398,10 @@ nsresult nsNSSSocketInfo::GetSSLStatus(nsISupports** _result)
 
 nsresult nsNSSSocketInfo::RememberCAChain(CERTCertList *aCertList)
 {
+  nsNSSShutDownPreventionLock locker;
+  if (isAlreadyShutDown())
+    return NS_ERROR_NOT_AVAILABLE;
+
   if (mCAChain) {
     CERT_DestroyCertList(mCAChain);
   }
@@ -823,6 +850,7 @@ nsSSLIOLayerConnect(PRFileDesc* fd, const PRNetAddr* addr,
                     PRIntervalTime timeout)
 {
   PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("[%p] connecting SSL socket\n", (void*)fd));
+  nsNSSShutDownPreventionLock locker;
   if (!fd || !fd->lower)
     return PR_FAILURE;
   
@@ -875,6 +903,7 @@ nsSSLIOLayerConnect(PRFileDesc* fd, const PRNetAddr* addr,
 static PRInt32 PR_CALLBACK
 nsSSLIOLayerAvailable(PRFileDesc *fd)
 {
+  nsNSSShutDownPreventionLock locker;
   if (!fd || !fd->lower)
     return PR_FAILURE;
 
@@ -909,11 +938,13 @@ rememberPossibleTLSProblemSite(PRFileDesc* fd, nsNSSSocketInfo *socketInfo)
 static PRStatus PR_CALLBACK
 nsSSLIOLayerClose(PRFileDesc *fd)
 {
+  nsNSSShutDownPreventionLock locker;
   if (!fd)
     return PR_FAILURE;
 
   PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("[%p] Shutting down socket\n", (void*)fd));
-  nsPSMTracker::decreaseSSLSocketCounter();
+
+  nsNSSShutDownList::trackSSLSocketClose();
 
   PRFileDesc* popped = PR_PopIOLayer(fd, PR_TOP_IO_LAYER);
   nsNSSSocketInfo *infoObject = (nsNSSSocketInfo *)popped->secret;
@@ -924,12 +955,11 @@ nsSSLIOLayerClose(PRFileDesc *fd)
 
   PRStatus status = fd->methods->close(fd);
   if (status != PR_SUCCESS) return status;
-  
-  popped->identity = PR_INVALID_IO_LAYER;
 
+  popped->identity = PR_INVALID_IO_LAYER;
   NS_RELEASE(infoObject);
   popped->dtor(popped);
-  
+
   return status;
 }
 
@@ -1094,6 +1124,7 @@ checkHandshake(PRBool calledFromRead, PRInt32 bytesTransfered,
 static PRInt32 PR_CALLBACK
 nsSSLIOLayerRead(PRFileDesc* fd, void* buf, PRInt32 amount)
 {
+  nsNSSShutDownPreventionLock locker;
   if (!fd || !fd->lower) {
     return PR_FAILURE;
   }
@@ -1101,6 +1132,11 @@ nsSSLIOLayerRead(PRFileDesc* fd, void* buf, PRInt32 amount)
   nsNSSSocketInfo *socketInfo = nsnull;
   socketInfo = (nsNSSSocketInfo*)fd->secret;
   NS_ASSERTION(socketInfo,"nsNSSSocketInfo was null for an fd");
+
+  if (socketInfo->isPK11LoggedOut() || socketInfo->isAlreadyShutDown()) {
+    PR_SetError(PR_SOCKET_SHUTDOWN_ERROR, 0);
+    return -1;
+  }
 
   if (socketInfo->GetCanceled()) {
     return PR_FAILURE;
@@ -1118,6 +1154,7 @@ nsSSLIOLayerRead(PRFileDesc* fd, void* buf, PRInt32 amount)
 static PRInt32 PR_CALLBACK
 nsSSLIOLayerWrite(PRFileDesc* fd, const void* buf, PRInt32 amount)
 {
+  nsNSSShutDownPreventionLock locker;
   if (!fd || !fd->lower) {
     return PR_FAILURE;
   }
@@ -1128,6 +1165,11 @@ nsSSLIOLayerWrite(PRFileDesc* fd, const void* buf, PRInt32 amount)
   nsNSSSocketInfo *socketInfo = nsnull;
   socketInfo = (nsNSSSocketInfo*)fd->secret;
   NS_ASSERTION(socketInfo,"nsNSSSocketInfo was null for an fd");
+
+  if (socketInfo->isPK11LoggedOut() || socketInfo->isAlreadyShutDown()) {
+    PR_SetError(PR_SOCKET_SHUTDOWN_ERROR, 0);
+    return -1;
+  }
 
   if (socketInfo->GetCanceled()) {
     return PR_FAILURE;
@@ -1835,6 +1877,7 @@ SECStatus nsNSS_SSLGetClientAuthData(void* arg, PRFileDesc* socket,
 								   CERTCertificate** pRetCert,
 								   SECKEYPrivateKey** pRetKey)
 {
+  nsNSSShutDownPreventionLock locker;
   void* wincx = NULL;
   SECStatus ret = SECFailure;
   nsresult rv;
@@ -2033,6 +2076,8 @@ SECStatus nsNSS_SSLGetClientAuthData(void* arg, PRFileDesc* socket,
     NS_ConvertUTF8toUCS2 issuer(cissuer);
     if (cissuer) PORT_Free(cissuer);
 
+    CERT_DestroyCertificate(serverCert);
+
     certNicknameList = (PRUnichar **)nsMemory::Alloc(sizeof(PRUnichar *) * nicknames->numnicknames);
     certDetailsList = (PRUnichar **)nsMemory::Alloc(sizeof(PRUnichar *) * nicknames->numnicknames);
 
@@ -2163,6 +2208,7 @@ done:
 static SECStatus
 nsNSSBadCertHandler(void *arg, PRFileDesc *sslSocket)
 {
+  nsNSSShutDownPreventionLock locker;
   SECStatus rv = SECFailure;
   int error;
   nsNSSSocketInfo* infoObject = (nsNSSSocketInfo *)arg;
@@ -2200,6 +2246,7 @@ nsSSLIOLayerImportFD(PRFileDesc *fd,
                      nsNSSSocketInfo *infoObject,
                      const char *host)
 {
+  nsNSSShutDownPreventionLock locker;
   PRFileDesc* sslSock = SSL_ImportFD(nsnull, fd);
   if (!sslSock) {
     NS_ASSERTION(PR_FALSE, "NSS: Error importing socket");
@@ -2230,6 +2277,7 @@ nsSSLIOLayerSetOptions(PRFileDesc *fd, PRBool forSTARTTLS,
                        const char *proxyHost, const char *host, PRInt32 port,
                        nsNSSSocketInfo *infoObject)
 {
+  nsNSSShutDownPreventionLock locker;
   if (forSTARTTLS || proxyHost) {
     if (SECSuccess != SSL_OptionSet(fd, SSL_SECURITY, PR_FALSE)) {
       return NS_ERROR_FAILURE;
@@ -2283,6 +2331,7 @@ nsSSLIOLayerAddToSocket(const char* host,
                         nsISupports** info,
                         PRBool forSTARTTLS)
 {
+  nsNSSShutDownPreventionLock locker;
   PRFileDesc* layer = nsnull;
   nsresult rv;
 
@@ -2330,8 +2379,8 @@ nsSSLIOLayerAddToSocket(const char* host,
   if (NS_FAILED(rv)) {
     goto loser;
   }
-
-  nsPSMTracker::increaseSSLSocketCounter();
+  
+  nsNSSShutDownList::trackSSLSocketCreate();
 
   PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("[%p] Socket set up\n", (void*)sslSock));
   infoObject->QueryInterface(NS_GET_IID(nsISupports), (void**) (info));

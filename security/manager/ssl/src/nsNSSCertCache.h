@@ -37,8 +37,10 @@
 
 #include "nsINSSCertCache.h"
 #include "certt.h"
+#include "nsNSSShutDown.h"
 
-class nsNSSCertCache : public nsINSSCertCache
+class nsNSSCertCache : public nsINSSCertCache,
+                       public nsNSSShutDownObject
 {
 public:
   NS_DECL_ISUPPORTS
@@ -50,6 +52,8 @@ public:
 private:
   PRLock *mutex;
   CERTCertList *mCertList;
+  virtual void virtualDestroyNSSReference();
+  void destructorSafeDestroyNSSReference();
 };
 
 #endif

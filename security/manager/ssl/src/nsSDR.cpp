@@ -40,7 +40,7 @@
 #include "nsISecretDecoderRing.h"
 #include "nsSDR.h"
 #include "nsNSSComponent.h"
-#include "nsPSMTracker.h"
+#include "nsNSSShutDown.h"
 
 #include "pk11func.h"
 #include "pk11sdr.h" // For PK11SDR_Encrypt, PK11SDR_Decrypt
@@ -119,6 +119,7 @@ nsSecretDecoderRing::~nsSecretDecoderRing()
 NS_IMETHODIMP nsSecretDecoderRing::
 Encrypt(unsigned char * data, PRInt32 dataLen, unsigned char * *result, PRInt32 *_retval)
 {
+  nsNSSShutDownPreventionLock locker;
   nsresult rv = NS_OK;
   PK11SlotInfo *slot = 0;
   PK11SlotInfoCleaner tmpSlotCleaner(slot);
@@ -160,6 +161,7 @@ loser:
 NS_IMETHODIMP nsSecretDecoderRing::
 Decrypt(unsigned char * data, PRInt32 dataLen, unsigned char * *result, PRInt32 *_retval)
 {
+  nsNSSShutDownPreventionLock locker;
   nsresult rv = NS_OK;
   PK11SlotInfo *slot = 0;
   PK11SlotInfoCleaner tmpSlotCleaner(slot);
@@ -200,6 +202,7 @@ loser:
 NS_IMETHODIMP nsSecretDecoderRing::
 EncryptString(const char *text, char **_retval)
 {
+    nsNSSShutDownPreventionLock locker;
     nsresult rv = NS_OK;
     unsigned char *encrypted = 0;
     PRInt32 eLen;
@@ -224,6 +227,7 @@ loser:
 NS_IMETHODIMP nsSecretDecoderRing::
 DecryptString(const char *crypt, char **_retval)
 {
+    nsNSSShutDownPreventionLock locker;
     nsresult rv = NS_OK;
     char *r = 0;
     unsigned char *decoded = 0;
@@ -264,6 +268,7 @@ loser:
 NS_IMETHODIMP nsSecretDecoderRing::
 ChangePassword()
 {
+  nsNSSShutDownPreventionLock locker;
   nsresult rv;
   PK11SlotInfo *slot;
 
@@ -302,12 +307,22 @@ ChangePassword()
   return rv;
 }
 
+static NS_DEFINE_CID(kNSSComponentCID, NS_NSSCOMPONENT_CID);
 /* void logout(); */
 NS_IMETHODIMP nsSecretDecoderRing::
 Logout()
 {
-  PK11_LogoutAll();
-  return NS_OK;
+  nsresult rv;
+  nsCOMPtr<nsINSSComponent> nssComponent(do_GetService(kNSSComponentCID, &rv));
+  if (NS_FAILED(rv))
+    return rv;
+
+  {
+    nsNSSShutDownPreventionLock locker;
+    PK11_LogoutAll();
+  }
+
+  return nssComponent->LogoutAuthenticatedPK11();
 }
 
 /* void setWindow(in nsISupports w); */

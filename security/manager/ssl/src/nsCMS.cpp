@@ -58,9 +58,26 @@ nsHash::nsHash() : m_ctxt(nsnull)
 {
 }
 
-
 nsHash::~nsHash()
 {
+  nsNSSShutDownPreventionLock locker;
+  if (isAlreadyShutDown())
+    return;
+
+  destructorSafeDestroyNSSReference();
+  shutdown(calledFromObject);
+}
+
+void nsHash::virtualDestroyNSSReference()
+{
+  destructorSafeDestroyNSSReference();
+}
+
+void nsHash::destructorSafeDestroyNSSReference()
+{
+  if (isAlreadyShutDown())
+    return;
+
   if (m_ctxt) {
     HASH_Destroy(m_ctxt);
     m_ctxt = nsnull;
@@ -75,6 +92,10 @@ NS_IMETHODIMP nsHash::ResultLen(PRInt16 aAlg, PRUint32 * aLen)
 
 NS_IMETHODIMP nsHash::Create(PRInt16 aAlg)
 {
+  nsNSSShutDownPreventionLock locker;
+  if (isAlreadyShutDown())
+    return NS_ERROR_NOT_AVAILABLE;
+
   m_ctxt = HASH_Create((HASH_HashType)aAlg);
   if (m_ctxt == nsnull) {
     return NS_ERROR_FAILURE;
@@ -84,18 +105,30 @@ NS_IMETHODIMP nsHash::Create(PRInt16 aAlg)
 
 NS_IMETHODIMP nsHash::Begin()
 {
+  nsNSSShutDownPreventionLock locker;
+  if (isAlreadyShutDown())
+    return NS_ERROR_NOT_AVAILABLE;
+
   HASH_Begin(m_ctxt);
   return NS_OK;
 }
 
 NS_IMETHODIMP nsHash::Update(unsigned char* aBuf, PRUint32 aLen)
 {
+  nsNSSShutDownPreventionLock locker;
+  if (isAlreadyShutDown())
+    return NS_ERROR_NOT_AVAILABLE;
+
   HASH_Update(m_ctxt, (const unsigned char*)aBuf, aLen);
   return NS_OK;
 }
 
 NS_IMETHODIMP nsHash::End(unsigned char* aBuf, PRUint32* aResultLen, PRUint32 aMaxResultLen)
 {
+  nsNSSShutDownPreventionLock locker;
+  if (isAlreadyShutDown())
+    return NS_ERROR_NOT_AVAILABLE;
+
   HASH_End(m_ctxt, aBuf, aResultLen, aMaxResultLen);
   return NS_OK;
 }
@@ -113,6 +146,24 @@ nsCMSMessage::nsCMSMessage(NSSCMSMessage *aCMSMsg)
 
 nsCMSMessage::~nsCMSMessage()
 {
+  nsNSSShutDownPreventionLock locker;
+  if (isAlreadyShutDown())
+    return;
+
+  destructorSafeDestroyNSSReference();
+  shutdown(calledFromObject);
+}
+
+void nsCMSMessage::virtualDestroyNSSReference()
+{
+  destructorSafeDestroyNSSReference();
+}
+
+void nsCMSMessage::destructorSafeDestroyNSSReference()
+{
+  if (isAlreadyShutDown())
+    return;
+
   if (m_cmsMsg) {
     NSS_CMSMessage_Destroy(m_cmsMsg);
   }
@@ -125,6 +176,10 @@ NS_IMETHODIMP nsCMSMessage::VerifySignature()
 
 NSSCMSSignerInfo* nsCMSMessage::GetTopLevelSignerInfo()
 {
+  nsNSSShutDownPreventionLock locker;
+  if (isAlreadyShutDown())
+    return nsnull;
+
   if (!m_cmsMsg)
     return nsnull;
 
@@ -145,6 +200,10 @@ NSSCMSSignerInfo* nsCMSMessage::GetTopLevelSignerInfo()
 
 NS_IMETHODIMP nsCMSMessage::GetSignerEmailAddress(char * * aEmail)
 {
+  nsNSSShutDownPreventionLock locker;
+  if (isAlreadyShutDown())
+    return NS_ERROR_NOT_AVAILABLE;
+
   PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("nsCMSMessage::GetSignerEmailAddress\n"));
   NS_ENSURE_ARG(aEmail);
 
@@ -158,6 +217,10 @@ NS_IMETHODIMP nsCMSMessage::GetSignerEmailAddress(char * * aEmail)
 
 NS_IMETHODIMP nsCMSMessage::GetSignerCommonName(char ** aName)
 {
+  nsNSSShutDownPreventionLock locker;
+  if (isAlreadyShutDown())
+    return NS_ERROR_NOT_AVAILABLE;
+
   PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("nsCMSMessage::GetSignerCommonName\n"));
   NS_ENSURE_ARG(aName);
 
@@ -171,6 +234,10 @@ NS_IMETHODIMP nsCMSMessage::GetSignerCommonName(char ** aName)
 
 NS_IMETHODIMP nsCMSMessage::ContentIsEncrypted(PRBool *isEncrypted)
 {
+  nsNSSShutDownPreventionLock locker;
+  if (isAlreadyShutDown())
+    return NS_ERROR_NOT_AVAILABLE;
+
   PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("nsCMSMessage::ContentIsEncrypted\n"));
   NS_ENSURE_ARG(isEncrypted);
 
@@ -184,6 +251,10 @@ NS_IMETHODIMP nsCMSMessage::ContentIsEncrypted(PRBool *isEncrypted)
 
 NS_IMETHODIMP nsCMSMessage::ContentIsSigned(PRBool *isSigned)
 {
+  nsNSSShutDownPreventionLock locker;
+  if (isAlreadyShutDown())
+    return NS_ERROR_NOT_AVAILABLE;
+
   PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("nsCMSMessage::ContentIsSigned\n"));
   NS_ENSURE_ARG(isSigned);
 
@@ -197,6 +268,10 @@ NS_IMETHODIMP nsCMSMessage::ContentIsSigned(PRBool *isSigned)
 
 NS_IMETHODIMP nsCMSMessage::GetSignerCert(nsIX509Cert **scert)
 {
+  nsNSSShutDownPreventionLock locker;
+  if (isAlreadyShutDown())
+    return NS_ERROR_NOT_AVAILABLE;
+
   NSSCMSSignerInfo *si = GetTopLevelSignerInfo();
   if (!si)
     return NS_ERROR_FAILURE;
@@ -221,11 +296,19 @@ NS_IMETHODIMP nsCMSMessage::GetSignerCert(nsIX509Cert **scert)
 
 NS_IMETHODIMP nsCMSMessage::GetEncryptionCert(nsIX509Cert **ecert)
 {
+  nsNSSShutDownPreventionLock locker;
+  if (isAlreadyShutDown())
+    return NS_ERROR_NOT_AVAILABLE;
+
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP nsCMSMessage::VerifyDetachedSignature(unsigned char* aDigestData, PRUint32 aDigestDataLen)
 {
+  nsNSSShutDownPreventionLock locker;
+  if (isAlreadyShutDown())
+    return NS_ERROR_NOT_AVAILABLE;
+
   if (!aDigestData || !aDigestDataLen)
     return NS_ERROR_FAILURE;
 
@@ -234,6 +317,10 @@ NS_IMETHODIMP nsCMSMessage::VerifyDetachedSignature(unsigned char* aDigestData, 
 
 nsresult nsCMSMessage::CommonVerifySignature(unsigned char* aDigestData, PRUint32 aDigestDataLen)
 {
+  nsNSSShutDownPreventionLock locker;
+  if (isAlreadyShutDown())
+    return NS_ERROR_NOT_AVAILABLE;
+
   PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("nsCMSMessage::CommonVerifySignature, content level count %d\n", NSS_CMSMessage_ContentLevelCount(m_cmsMsg)));
   NSSCMSContentInfo *cinfo = nsnull;
   NSSCMSSignedData *sigd = nsnull;
@@ -334,7 +421,7 @@ loser:
   return rv;
 }
 
-class nsZeroTerminatedCertArray
+class nsZeroTerminatedCertArray : public nsNSSShutDownObject
 {
 public:
   nsZeroTerminatedCertArray()
@@ -344,6 +431,24 @@ public:
   
   ~nsZeroTerminatedCertArray()
   {
+    nsNSSShutDownPreventionLock locker;
+    if (isAlreadyShutDown())
+      return;
+
+    destructorSafeDestroyNSSReference();
+    shutdown(calledFromObject);
+  }
+
+  void virtualDestroyNSSReference()
+  {
+    destructorSafeDestroyNSSReference();
+  }
+
+  void destructorSafeDestroyNSSReference()
+  {
+    if (isAlreadyShutDown())
+      return;
+
     if (mCerts)
     {
       for (PRUint32 i=0; i < mSize; i++) {
@@ -388,6 +493,10 @@ public:
   
   void set(PRUint32 i, CERTCertificate *c)
   {
+    nsNSSShutDownPreventionLock locker;
+    if (isAlreadyShutDown())
+      return;
+
     if (i >= mSize)
       return;
     
@@ -400,6 +509,10 @@ public:
   
   CERTCertificate *get(PRUint32 i)
   {
+    nsNSSShutDownPreventionLock locker;
+    if (isAlreadyShutDown())
+      return nsnull;
+
     if (i >= mSize)
       return nsnull;
     
@@ -408,6 +521,10 @@ public:
 
   CERTCertificate **getRawArray()
   {
+    nsNSSShutDownPreventionLock locker;
+    if (isAlreadyShutDown())
+      return nsnull;
+
     return mCerts;
   }
 
@@ -419,6 +536,10 @@ private:
 
 NS_IMETHODIMP nsCMSMessage::CreateEncrypted(nsIArray * aRecipientCerts)
 {
+  nsNSSShutDownPreventionLock locker;
+  if (isAlreadyShutDown())
+    return NS_ERROR_NOT_AVAILABLE;
+
   PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("nsCMSMessage::CreateEncrypted\n"));
   NSSCMSContentInfo *cinfo;
   NSSCMSEnvelopedData *envd;
@@ -449,7 +570,9 @@ NS_IMETHODIMP nsCMSMessage::CreateEncrypted(nsIArray * aRecipientCerts)
     if (!nssRecipientCert)
       return NS_ERROR_FAILURE;
 
-    recipientCerts.set(i, nssRecipientCert->GetCert());
+    CERTCertificate *c = nssRecipientCert->GetCert();
+    CERTCertificateCleaner rcCleaner(c);
+    recipientCerts.set(i, c);
   }
   
   // Find a bulk key algorithm //
@@ -510,6 +633,10 @@ loser:
 
 NS_IMETHODIMP nsCMSMessage::CreateSigned(nsIX509Cert* aSigningCert, nsIX509Cert* aEncryptCert, unsigned char* aDigestData, PRUint32 aDigestDataLen)
 {
+  nsNSSShutDownPreventionLock locker;
+  if (isAlreadyShutDown())
+    return NS_ERROR_NOT_AVAILABLE;
+
   PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("nsCMSMessage::CreateSigned\n"));
   NSSCMSContentInfo *cinfo;
   NSSCMSSignedData *sigd;
@@ -647,6 +774,24 @@ nsCMSDecoder::nsCMSDecoder()
 
 nsCMSDecoder::~nsCMSDecoder()
 {
+  nsNSSShutDownPreventionLock locker;
+  if (isAlreadyShutDown())
+    return;
+
+  destructorSafeDestroyNSSReference();
+  shutdown(calledFromObject);
+}
+
+void nsCMSDecoder::virtualDestroyNSSReference()
+{
+  destructorSafeDestroyNSSReference();
+}
+
+void nsCMSDecoder::destructorSafeDestroyNSSReference()
+{
+  if (isAlreadyShutDown())
+    return;
+
   if (m_dcx) {
     NSS_CMSDecoder_Cancel(m_dcx);
     m_dcx = nsnull;
@@ -656,6 +801,10 @@ nsCMSDecoder::~nsCMSDecoder()
 /* void start (in NSSCMSContentCallback cb, in voidPtr arg); */
 NS_IMETHODIMP nsCMSDecoder::Start(NSSCMSContentCallback cb, void * arg)
 {
+  nsNSSShutDownPreventionLock locker;
+  if (isAlreadyShutDown())
+    return NS_ERROR_NOT_AVAILABLE;
+
   PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("nsCMSDecoder::Start\n"));
   m_ctx = new PipUIContext();
 
@@ -670,6 +819,10 @@ NS_IMETHODIMP nsCMSDecoder::Start(NSSCMSContentCallback cb, void * arg)
 /* void update (in string bug, in long len); */
 NS_IMETHODIMP nsCMSDecoder::Update(const char *buf, PRInt32 len)
 {
+  nsNSSShutDownPreventionLock locker;
+  if (isAlreadyShutDown())
+    return NS_ERROR_NOT_AVAILABLE;
+
   PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("nsCMSDecoder::Update\n"));
   NSS_CMSDecoder_Update(m_dcx, (char *)buf, len);
   return NS_OK;
@@ -678,6 +831,10 @@ NS_IMETHODIMP nsCMSDecoder::Update(const char *buf, PRInt32 len)
 /* void finish (); */
 NS_IMETHODIMP nsCMSDecoder::Finish(nsICMSMessage ** aCMSMsg)
 {
+  nsNSSShutDownPreventionLock locker;
+  if (isAlreadyShutDown())
+    return NS_ERROR_NOT_AVAILABLE;
+
   PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("nsCMSDecoder::Finish\n"));
   NSSCMSMessage *cmsMsg;
   cmsMsg = NSS_CMSDecoder_Finish(m_dcx);
@@ -702,6 +859,25 @@ nsCMSEncoder::nsCMSEncoder()
 
 nsCMSEncoder::~nsCMSEncoder()
 {
+  nsNSSShutDownPreventionLock locker;
+  if (isAlreadyShutDown())
+    return;
+
+  destructorSafeDestroyNSSReference();
+  shutdown(calledFromObject);
+}
+
+void nsCMSEncoder::virtualDestroyNSSReference()
+{
+  destructorSafeDestroyNSSReference();
+}
+
+void nsCMSEncoder::destructorSafeDestroyNSSReference()
+{
+  nsNSSShutDownPreventionLock locker;
+  if (isAlreadyShutDown())
+    return;
+
   if (m_ecx)
     NSS_CMSEncoder_Cancel(m_ecx);
 }
@@ -709,6 +885,10 @@ nsCMSEncoder::~nsCMSEncoder()
 /* void start (); */
 NS_IMETHODIMP nsCMSEncoder::Start(nsICMSMessage *aMsg, NSSCMSContentCallback cb, void * arg)
 {
+  nsNSSShutDownPreventionLock locker;
+  if (isAlreadyShutDown())
+    return NS_ERROR_NOT_AVAILABLE;
+
   PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("nsCMSEncoder::Start\n"));
   nsCMSMessage *cmsMsg = NS_STATIC_CAST(nsCMSMessage*, aMsg);
   m_ctx = new PipUIContext();
@@ -724,6 +904,10 @@ NS_IMETHODIMP nsCMSEncoder::Start(nsICMSMessage *aMsg, NSSCMSContentCallback cb,
 /* void update (in string aBuf, in long aLen); */
 NS_IMETHODIMP nsCMSEncoder::Update(const char *aBuf, PRInt32 aLen)
 {
+  nsNSSShutDownPreventionLock locker;
+  if (isAlreadyShutDown())
+    return NS_ERROR_NOT_AVAILABLE;
+
   PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("nsCMSEncoder::Update\n"));
   if (!m_ecx || NSS_CMSEncoder_Update(m_ecx, aBuf, aLen) != SECSuccess) {
     PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("nsCMSEncoder::Update - can't update encoder\n"));
@@ -735,6 +919,10 @@ NS_IMETHODIMP nsCMSEncoder::Update(const char *aBuf, PRInt32 aLen)
 /* void finish (); */
 NS_IMETHODIMP nsCMSEncoder::Finish()
 {
+  nsNSSShutDownPreventionLock locker;
+  if (isAlreadyShutDown())
+    return NS_ERROR_NOT_AVAILABLE;
+
   nsresult rv = NS_OK;
   PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("nsCMSEncoder::Finish\n"));
   if (!m_ecx || NSS_CMSEncoder_Finish(m_ecx) != SECSuccess) {
@@ -748,6 +936,10 @@ NS_IMETHODIMP nsCMSEncoder::Finish()
 /* void encode (in nsICMSMessage aMsg); */
 NS_IMETHODIMP nsCMSEncoder::Encode(nsICMSMessage *aMsg)
 {
+  nsNSSShutDownPreventionLock locker;
+  if (isAlreadyShutDown())
+    return NS_ERROR_NOT_AVAILABLE;
+
   PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("nsCMSEncoder::Encode\n"));
   return NS_ERROR_NOT_IMPLEMENTED;
 }

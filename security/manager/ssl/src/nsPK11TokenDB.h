@@ -32,8 +32,10 @@
 #include "nsISupportsArray.h"
 #include "nsNSSHelper.h"
 #include "pk11func.h"
+#include "nsNSSShutDown.h"
 
-class nsPK11Token : public nsIPK11Token
+class nsPK11Token : public nsIPK11Token,
+                    public nsNSSShutDownObject
 {
 public:
   NS_DECL_ISUPPORTS
@@ -51,6 +53,8 @@ private:
   nsString mTokenSerialNum;
   PK11SlotInfo *mSlot;
   nsCOMPtr<nsIInterfaceRequestor> mUIContext;
+  virtual void virtualDestroyNSSReference();
+  void destructorSafeDestroyNSSReference();
 };
 
 class nsPK11TokenDB : public nsIPK11TokenDB

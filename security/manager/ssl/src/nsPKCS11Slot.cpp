@@ -52,6 +52,10 @@ NS_IMPL_ISUPPORTS1(nsPKCS11Slot, nsIPKCS11Slot)
 
 nsPKCS11Slot::nsPKCS11Slot(PK11SlotInfo *slot)
 {
+  nsNSSShutDownPreventionLock locker;
+  if (isAlreadyShutDown())
+    return;
+
   PK11_ReferenceSlot(slot);
   mSlot = slot;
 
@@ -85,13 +89,38 @@ nsPKCS11Slot::nsPKCS11Slot(PK11SlotInfo *slot)
 
 nsPKCS11Slot::~nsPKCS11Slot()
 {
-  if (mSlot) PK11_FreeSlot(mSlot);
+  nsNSSShutDownPreventionLock locker;
+  if (isAlreadyShutDown())
+    return;
+
+  destructorSafeDestroyNSSReference();
+  shutdown(calledFromObject);
+}
+
+void nsPKCS11Slot::virtualDestroyNSSReference()
+{
+  destructorSafeDestroyNSSReference();
+}
+
+void nsPKCS11Slot::destructorSafeDestroyNSSReference()
+{
+  if (isAlreadyShutDown())
+    return;
+
+  if (mSlot) {
+    PK11_FreeSlot(mSlot);
+    mSlot = nsnull;
+  }
 }
 
 /* readonly attribute wstring name; */
 NS_IMETHODIMP 
 nsPKCS11Slot::GetName(PRUnichar **aName)
 {
+  nsNSSShutDownPreventionLock locker;
+  if (isAlreadyShutDown())
+    return NS_ERROR_NOT_AVAILABLE;
+
   char *csn = PK11_GetSlotName(mSlot);
   if (*csn) {
     *aName = ToNewUnicode(NS_ConvertUTF8toUCS2(csn));
@@ -112,6 +141,10 @@ nsPKCS11Slot::GetName(PRUnichar **aName)
 NS_IMETHODIMP 
 nsPKCS11Slot::GetDesc(PRUnichar **aDesc)
 {
+  nsNSSShutDownPreventionLock locker;
+  if (isAlreadyShutDown())
+    return NS_ERROR_NOT_AVAILABLE;
+
   *aDesc = ToNewUnicode(mSlotDesc);
   if (!*aDesc) return NS_ERROR_OUT_OF_MEMORY;
   return NS_OK;
@@ -148,6 +181,10 @@ nsPKCS11Slot::GetFWVersion(PRUnichar **aFWVersion)
 NS_IMETHODIMP 
 nsPKCS11Slot::GetToken(nsIPK11Token **_retval)
 {
+  nsNSSShutDownPreventionLock locker;
+  if (isAlreadyShutDown())
+    return NS_ERROR_NOT_AVAILABLE;
+
   nsCOMPtr<nsIPK11Token> token = new nsPK11Token(mSlot);
   if (!token)
     return NS_ERROR_OUT_OF_MEMORY;
@@ -160,6 +197,10 @@ nsPKCS11Slot::GetToken(nsIPK11Token **_retval)
 NS_IMETHODIMP 
 nsPKCS11Slot::GetTokenName(PRUnichar **aName)
 {
+  nsNSSShutDownPreventionLock locker;
+  if (isAlreadyShutDown())
+    return NS_ERROR_NOT_AVAILABLE;
+
   *aName = ToNewUnicode(NS_ConvertUTF8toUCS2(PK11_GetTokenName(mSlot)));
   if (!*aName) return NS_ERROR_OUT_OF_MEMORY;
   return NS_OK;
@@ -168,6 +209,10 @@ nsPKCS11Slot::GetTokenName(PRUnichar **aName)
 NS_IMETHODIMP
 nsPKCS11Slot::GetStatus(PRUint32 *_retval)
 {
+  nsNSSShutDownPreventionLock locker;
+  if (isAlreadyShutDown())
+    return NS_ERROR_NOT_AVAILABLE;
+
   if (PK11_IsDisabled(mSlot))
     *_retval = SLOT_DISABLED;
   else if (!PK11_IsPresent(mSlot))
@@ -187,19 +232,48 @@ NS_IMPL_ISUPPORTS1(nsPKCS11Module, nsIPKCS11Module)
 
 nsPKCS11Module::nsPKCS11Module(SECMODModule *module)
 {
+  nsNSSShutDownPreventionLock locker;
+  if (isAlreadyShutDown())
+    return;
+
   SECMOD_ReferenceModule(module);
   mModule = module;
 }
 
 nsPKCS11Module::~nsPKCS11Module()
 {
-  SECMOD_DestroyModule(mModule);
+  nsNSSShutDownPreventionLock locker;
+  if (isAlreadyShutDown())
+    return;
+
+  destructorSafeDestroyNSSReference();
+  shutdown(calledFromObject);
+}
+
+void nsPKCS11Module::virtualDestroyNSSReference()
+{
+  destructorSafeDestroyNSSReference();
+}
+
+void nsPKCS11Module::destructorSafeDestroyNSSReference()
+{
+  if (isAlreadyShutDown())
+    return;
+
+  if (mModule) {
+    SECMOD_DestroyModule(mModule);
+    mModule = nsnull;
+  }
 }
 
 /* readonly attribute wstring name; */
 NS_IMETHODIMP 
 nsPKCS11Module::GetName(PRUnichar **aName)
 {
+  nsNSSShutDownPreventionLock locker;
+  if (isAlreadyShutDown())
+    return NS_ERROR_NOT_AVAILABLE;
+
   *aName = ToNewUnicode(NS_ConvertUTF8toUCS2(mModule->commonName));
   return NS_OK;
 }
@@ -208,6 +282,10 @@ nsPKCS11Module::GetName(PRUnichar **aName)
 NS_IMETHODIMP 
 nsPKCS11Module::GetLibName(PRUnichar **aName)
 {
+  nsNSSShutDownPreventionLock locker;
+  if (isAlreadyShutDown())
+    return NS_ERROR_NOT_AVAILABLE;
+
   if ( mModule->dllName ) {
     *aName = ToNewUnicode(NS_ConvertUTF8toUCS2(mModule->dllName));
   } else {
@@ -221,6 +299,10 @@ NS_IMETHODIMP
 nsPKCS11Module::FindSlotByName(const PRUnichar *aName,
                                nsIPKCS11Slot **_retval)
 {
+  nsNSSShutDownPreventionLock locker;
+  if (isAlreadyShutDown())
+    return NS_ERROR_NOT_AVAILABLE;
+
   char *asciiname = NULL;
   asciiname = ToNewUTF8String(nsDependentString(aName));
   PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("Getting \"%s\"\n", asciiname));
@@ -259,6 +341,10 @@ nsPKCS11Module::FindSlotByName(const PRUnichar *aName,
 NS_IMETHODIMP 
 nsPKCS11Module::ListSlots(nsIEnumerator **_retval)
 {
+  nsNSSShutDownPreventionLock locker;
+  if (isAlreadyShutDown())
+    return NS_ERROR_NOT_AVAILABLE;
+
   nsresult rv = NS_OK;
   int i;
   /* get isupports array */
@@ -289,6 +375,7 @@ nsPKCS11ModuleDB::~nsPKCS11ModuleDB()
 NS_IMETHODIMP 
 nsPKCS11ModuleDB::GetInternal(nsIPKCS11Module **_retval)
 {
+  nsNSSShutDownPreventionLock locker;
   SECMODModule *nssMod = 
     SECMOD_CreateModule(NULL,SECMOD_INT_NAME, NULL,SECMOD_INT_FLAGS);
   nsCOMPtr<nsIPKCS11Module> module = new nsPKCS11Module(nssMod);
@@ -304,6 +391,7 @@ nsPKCS11ModuleDB::GetInternal(nsIPKCS11Module **_retval)
 NS_IMETHODIMP 
 nsPKCS11ModuleDB::GetInternalFIPS(nsIPKCS11Module **_retval)
 {
+  nsNSSShutDownPreventionLock locker;
   SECMODModule *nssMod = 
     SECMOD_CreateModule(NULL, SECMOD_FIPS_NAME, NULL, SECMOD_FIPS_FLAGS);
   nsCOMPtr<nsIPKCS11Module> module = new nsPKCS11Module(nssMod);
@@ -320,6 +408,7 @@ NS_IMETHODIMP
 nsPKCS11ModuleDB::FindModuleByName(const PRUnichar *aName,
                                    nsIPKCS11Module **_retval)
 {
+  nsNSSShutDownPreventionLock locker;
   NS_ConvertUCS2toUTF8 aUtf8Name(aName);
   SECMODModule *mod =
     SECMOD_FindModule(NS_CONST_CAST(char *, aUtf8Name.get()));
@@ -342,6 +431,7 @@ NS_IMETHODIMP
 nsPKCS11ModuleDB::FindSlotByName(const PRUnichar *aName,
                                  nsIPKCS11Slot **_retval)
 {
+  nsNSSShutDownPreventionLock locker;
   NS_ConvertUCS2toUTF8 aUtf8Name(aName);
   PK11SlotInfo *slotinfo =
    PK11_FindSlotByName(NS_CONST_CAST(char*, aUtf8Name.get()));
@@ -360,6 +450,7 @@ nsPKCS11ModuleDB::FindSlotByName(const PRUnichar *aName,
 NS_IMETHODIMP 
 nsPKCS11ModuleDB::ListModules(nsIEnumerator **_retval)
 {
+  nsNSSShutDownPreventionLock locker;
   nsresult rv = NS_OK;
   /* get isupports array */
   nsCOMPtr<nsISupportsArray> array;
@@ -382,6 +473,7 @@ nsPKCS11ModuleDB::ListModules(nsIEnumerator **_retval)
 
 NS_IMETHODIMP nsPKCS11ModuleDB::GetCanToggleFIPS(PRBool *aCanToggleFIPS)
 {
+  nsNSSShutDownPreventionLock locker;
   *aCanToggleFIPS = SECMOD_CanDeleteInternalModule();
   return NS_OK;
 }
@@ -390,6 +482,7 @@ NS_IMETHODIMP nsPKCS11ModuleDB::GetCanToggleFIPS(PRBool *aCanToggleFIPS)
 /* void toggleFIPSMode (); */
 NS_IMETHODIMP nsPKCS11ModuleDB::ToggleFIPSMode()
 {
+  nsNSSShutDownPreventionLock locker;
   // The way to toggle FIPS mode in NSS is extremely obscure.
   // Basically, we delete the internal module, and voila it
   // gets replaced with the opposite module, ie if it was 
@@ -413,6 +506,7 @@ NS_IMETHODIMP nsPKCS11ModuleDB::ToggleFIPSMode()
 /* readonly attribute boolean isFIPSEnabled; */
 NS_IMETHODIMP nsPKCS11ModuleDB::GetIsFIPSEnabled(PRBool *aIsFIPSEnabled)
 {
+  nsNSSShutDownPreventionLock locker;
   *aIsFIPSEnabled = PK11_IsFIPS();
   return NS_OK;
 }

@@ -41,6 +41,7 @@
 #include "nsDateTimeFormatCID.h"
 #include "nsComponentManagerUtils.h"
 #include "nsReadableUtils.h"
+#include "nsNSSShutDown.h"
 
 static NS_DEFINE_CID(kDateTimeFormatCID, NS_DATETIMEFORMAT_CID);
 
@@ -55,6 +56,7 @@ nsX509CertValidity::nsX509CertValidity() : mTimesInitialized(PR_FALSE)
 nsX509CertValidity::nsX509CertValidity(CERTCertificate *cert) : 
                                            mTimesInitialized(PR_FALSE)
 {
+  nsNSSShutDownPreventionLock locker;
   if (cert) {
     SECStatus rv = CERT_GetCertTimes(cert, &mNotBefore, &mNotAfter);
     if (rv == SECSuccess)

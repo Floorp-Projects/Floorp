@@ -46,7 +46,7 @@
 #include "nsIPrompt.h"
 #include "nsICertificateDialogs.h"
 #include "nsArray.h"
-#include "nsPSMTracker.h"
+#include "nsNSSShutDown.h"
 
 #include "nsNSSCertHeader.h"
 
@@ -80,6 +80,7 @@ nsCRLManager::~nsCRLManager()
 NS_IMETHODIMP 
 nsCRLManager::ImportCrl (PRUint8 *aData, PRUint32 aLength, nsIURI * aURI, PRUint32 aType, PRBool doSilentDonwload, const PRUnichar* crlKey)
 {
+  nsNSSShutDownPreventionLock locker;
   nsresult rv;
   PRArenaPool *arena = NULL;
   CERTCertificate *caCert;
@@ -350,6 +351,7 @@ nsCRLManager::RescheduleCRLAutoUpdate(void)
 NS_IMETHODIMP 
 nsCRLManager::GetCrls(nsIArray ** aCrls)
 {
+  nsNSSShutDownPreventionLock locker;
   SECStatus sec_rv;
   CERTCrlHeadNode *head = nsnull;
   CERTCrlNode *node = nsnull;
@@ -390,6 +392,7 @@ loser:
 NS_IMETHODIMP 
 nsCRLManager::DeleteCrl(PRUint32 aCrlIndex)
 {
+  nsNSSShutDownPreventionLock locker;
   CERTSignedCrl *realCrl = nsnull;
   CERTCrlHeadNode *head = nsnull;
   CERTCrlNode *node = nsnull;

@@ -79,7 +79,7 @@ CPPSRCS = 				\
   nsOCSPResponder.cpp \
   nsUsageArrayHelper.cpp \
   nsCRLManager.cpp \
-  nsPSMTracker.cpp \
+  nsNSSShutDown.cpp \
 	$(NULL)
 
 REQUIRES	= nspr \

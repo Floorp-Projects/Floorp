@@ -50,7 +50,7 @@
 #include "nsOCSPResponder.h"
 #include "nsReadableUtils.h"
 #include "nsArray.h"
-#include "nsPSMTracker.h"
+#include "nsNSSShutDown.h"
 
 #include "nspr.h"
 extern "C" {
@@ -92,6 +92,7 @@ nsNSSCertificateDB::FindCertByNickname(nsISupports *aToken,
                                       const nsAString &nickname,
                                       nsIX509Cert **_rvCert)
 {
+  nsNSSShutDownPreventionLock locker;
   CERTCertificate *cert = NULL;
   char *asciiname = NULL;
   NS_ConvertUCS2toUTF8 aUtf8Nickname(nickname);
@@ -125,6 +126,7 @@ NS_IMETHODIMP
 nsNSSCertificateDB::FindCertByDBKey(const char *aDBkey, nsISupports *aToken,
                                    nsIX509Cert **_cert)
 {
+  nsNSSShutDownPreventionLock locker;
   SECItem keyItem = {siBuffer, nsnull, 0};
   SECItem *dummy;
   CERTIssuerAndSN issuerSN;
@@ -165,6 +167,7 @@ nsNSSCertificateDB::FindCertNicknames(nsISupports *aToken,
                                      PRUint32     *_count,
                                      PRUnichar  ***_certNames)
 {
+  nsNSSShutDownPreventionLock locker;
   nsresult rv = NS_ERROR_FAILURE;
   /*
    * obtain the cert list from NSS
@@ -229,6 +232,7 @@ CERTDERCerts*
 nsNSSCertificateDB::getCertsFromPackage(PRArenaPool *arena, PRUint8 *data, 
                                         PRUint32 length)
 {
+  nsNSSShutDownPreventionLock locker;
   CERTDERCerts *collectArgs = 
                (CERTDERCerts *)PORT_ArenaZAlloc(arena, sizeof(CERTDERCerts));
   if ( collectArgs == nsnull ) 
@@ -260,6 +264,9 @@ nsNSSCertificateDB::handleCACertDownload(nsIArray *x509Certs,
   // cert was signed by the first cert, then we assume the first cert
   // is the root and the last cert in the array is the leaf.  In this
   // case we display the last cert.
+
+  nsNSSShutDownPreventionLock locker;
+
   PRUint32 numCerts;
 
   x509Certs->GetLength(&numCerts);
@@ -420,6 +427,7 @@ nsNSSCertificateDB::ImportCertificates(PRUint8 * data, PRUint32 length,
                                        nsIInterfaceRequestor *ctx)
 
 {
+  nsNSSShutDownPreventionLock locker;
   nsresult nsrv;
 
   PRArenaPool *arena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
@@ -473,6 +481,7 @@ nsNSSCertificateDB::ImportEmailCertificate(PRUint8 * data, PRUint32 length,
                                        nsIInterfaceRequestor *ctx)
 
 {
+  nsNSSShutDownPreventionLock locker;
   SECStatus srv = SECFailure;
   nsresult nsrv = NS_OK;
   CERTCertificate * cert;
@@ -528,6 +537,7 @@ nsNSSCertificateDB::ImportServerCertificate(PRUint8 * data, PRUint32 length,
                                             nsIInterfaceRequestor *ctx)
 
 {
+  nsNSSShutDownPreventionLock locker;
   SECStatus srv = SECFailure;
   nsresult nsrv = NS_OK;
   CERTCertificate * cert;
@@ -591,6 +601,7 @@ loser:
 NS_IMETHODIMP 
 nsNSSCertificateDB::ImportUserCertificate(PRUint8 *data, PRUint32 length, nsIInterfaceRequestor *ctx)
 {
+  nsNSSShutDownPreventionLock locker;
   PK11SlotInfo *slot;
   char * nickname = NULL;
   nsresult rv = NS_ERROR_FAILURE;
@@ -664,6 +675,7 @@ loser:
 NS_IMETHODIMP 
 nsNSSCertificateDB::DeleteCertificate(nsIX509Cert *aCert)
 {
+  nsNSSShutDownPreventionLock locker;
   nsNSSCertificate *nssCert = NS_STATIC_CAST(nsNSSCertificate*, aCert);
   CERTCertificate *cert = nssCert->GetCert();
   if (!cert) return NS_ERROR_FAILURE;
@@ -703,6 +715,7 @@ nsNSSCertificateDB::SetCertTrust(nsIX509Cert *cert,
                                  PRUint32 type,
                                  PRUint32 trusted)
 {
+  nsNSSShutDownPreventionLock locker;
   SECStatus srv;
   nsNSSCertTrust trust;
   nsNSSCertificate *pipCert = NS_STATIC_CAST(nsNSSCertificate *, cert);
@@ -744,6 +757,7 @@ nsNSSCertificateDB::IsCertTrusted(nsIX509Cert *cert,
                                   PRUint32 trustType,
                                   PRBool *_isTrusted)
 {
+  nsNSSShutDownPreventionLock locker;
   SECStatus srv;
   nsNSSCertificate *pipCert = NS_STATIC_CAST(nsNSSCertificate *, cert);
   CERTCertificate *nsscert = pipCert->GetCert();
@@ -872,6 +886,7 @@ nsNSSCertificateDB::ExportPKCS12File(nsISupports     *aToken,
                                      nsIX509Cert     **certs)
                                      //const PRUnichar **aCertNames)
 {
+  nsNSSShutDownPreventionLock locker;
   NS_ENSURE_ARG(aFile);
   nsPKCS12Blob blob;
   if (count == 0) return NS_OK;
@@ -949,6 +964,7 @@ GetOCSPResponders (CERTCertificate *aCert,
 NS_IMETHODIMP 
 nsNSSCertificateDB::GetOCSPResponders(nsIArray ** aResponders)
 {
+  nsNSSShutDownPreventionLock locker;
   SECStatus sec_rv;
   nsCOMPtr<nsIMutableArray> respondersArray;
   nsresult rv = NS_NewArray(getter_AddRefs(respondersArray));
@@ -987,6 +1003,7 @@ nsNSSCertificateDB::getCertNames(CERTCertList *certList,
                                  PRUint32     *_count,
                                  PRUnichar  ***_certNames)
 {
+  nsNSSShutDownPreventionLock locker;
   nsresult rv;
   CERTCertListNode *node;
   PRUint32 numcerts = 0, i=0;
@@ -1060,6 +1077,7 @@ nsNSSCertificateDB::FindEmailEncryptionCert(const nsAString &aNickname, nsIX509C
   if (aNickname.IsEmpty())
     return NS_OK;
 
+  nsNSSShutDownPreventionLock locker;
   nsresult rv = NS_OK;
   CERTCertificate *cert = 0;
   nsCOMPtr<nsIInterfaceRequestor> ctx = new PipUIContext();
@@ -1099,6 +1117,7 @@ nsNSSCertificateDB::FindEmailSigningCert(const nsAString &aNickname, nsIX509Cert
   if (aNickname.IsEmpty())
     return NS_OK;
 
+  nsNSSShutDownPreventionLock locker;
   nsresult rv = NS_OK;
   CERTCertificate *cert = 0;
   nsCOMPtr<nsIInterfaceRequestor> ctx = new PipUIContext();
@@ -1129,6 +1148,7 @@ loser:
 NS_IMETHODIMP
 nsNSSCertificateDB::FindCertByEmailAddress(nsISupports *aToken, const char *aEmailAddress, nsIX509Cert **_retval)
 {
+  nsNSSShutDownPreventionLock locker;
   CERTCertificate *any_cert = CERT_FindCertByNicknameOrEmailAddr(CERT_GetDefaultCertDB(), (char*)aEmailAddress);
   if (!any_cert)
     return NS_ERROR_FAILURE;
@@ -1166,6 +1186,7 @@ nsNSSCertificateDB::ConstructX509FromBase64(const char * base64, nsIX509Cert **_
     return NS_ERROR_FAILURE;
   }
 
+  nsNSSShutDownPreventionLock locker;
   PRUint32 len = PL_strlen(base64);
   int adjust = 0;
 
@@ -1225,6 +1246,7 @@ nsNSSCertificateDB::ConstructX509FromBase64(const char * base64, nsIX509Cert **_
 char *
 nsNSSCertificateDB::default_nickname(CERTCertificate *cert, nsIInterfaceRequestor* ctx)
 {   
+  nsNSSShutDownPreventionLock locker;
   nsresult rv;
   char *username = NULL;
   char *caname = NULL;

@@ -49,6 +49,24 @@ nsNSSCertCache::nsNSSCertCache()
 
 nsNSSCertCache::~nsNSSCertCache()
 {
+  nsNSSShutDownPreventionLock locker;
+  if (isAlreadyShutDown())
+    return;
+
+  destructorSafeDestroyNSSReference();
+  shutdown(calledFromObject);
+}
+
+void nsNSSCertCache::virtualDestroyNSSReference()
+{
+  destructorSafeDestroyNSSReference();
+}
+
+void nsNSSCertCache::destructorSafeDestroyNSSReference()
+{
+  if (isAlreadyShutDown())
+    return;
+
   if (mCertList) {
     CERT_DestroyCertList(mCertList);
   }
@@ -61,6 +79,10 @@ nsNSSCertCache::~nsNSSCertCache()
 NS_IMETHODIMP
 nsNSSCertCache::CacheAllCerts()
 {
+  nsNSSShutDownPreventionLock locker;
+  if (isAlreadyShutDown())
+    return NS_ERROR_NOT_AVAILABLE;
+
   {
     nsAutoLock lock(mutex);
     if (mCertList) {
@@ -83,6 +105,9 @@ nsNSSCertCache::CacheAllCerts()
 
 void* nsNSSCertCache::GetCachedCerts()
 {
+  if (isAlreadyShutDown())
+    return nsnull;
+
   nsAutoLock lock(mutex);
   return mCertList;
 }
