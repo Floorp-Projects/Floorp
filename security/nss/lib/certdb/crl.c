@@ -34,7 +34,7 @@
 /*
  * Moved from secpkcs7.c
  *
- * $Id: crl.c,v 1.10 2002/05/21 21:26:52 relyea%netscape.com Exp $
+ * $Id: crl.c,v 1.11 2002/07/19 00:12:13 jpierre%netscape.com Exp $
  */
 
 #include "cert.h"
@@ -239,10 +239,6 @@ SECStatus cert_check_crl_version (CERTCrl *crl)
 
 	
     if (crl->entries == NULL) {
-	if (hasCriticalExten == PR_FALSE && version == SEC_CRL_VERSION_2) {
-	    PORT_SetError (SEC_ERROR_BAD_DER);
-	    return (SECFailure);
-	}
         return (SECSuccess);
     }
     /* Look in the crl entry extensions.  If there is a critical extension,
