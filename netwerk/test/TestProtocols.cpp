@@ -89,7 +89,7 @@ URLLoadInfo::~URLLoadInfo()
 }
 
 
-NS_IMPL_ISUPPORTS(URLLoadInfo,nsCOMTypeInfo<nsCOMTypeInfo><nsISupports>::GetIID());
+NS_IMPL_ISUPPORTS(URLLoadInfo,nsCOMTypeInfo<nsISupports>::GetIID());
 
 
 class TestHTTPEventSink : public nsIHTTPEventSink
