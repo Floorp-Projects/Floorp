@@ -24,7 +24,7 @@ topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
 
-include $(topsrcdir)/config/autoconf.mk
+include $(DEPTH)/config/autoconf.mk
 
 CPPSRCS		= \
 		TestXMLExtras.cpp \
