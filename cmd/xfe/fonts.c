@@ -180,6 +180,9 @@ static GenericFontFamily fe_generics[] = {
 
 static XP_Bool fe_AreNormalFontsAvail(int16 win_csid);
 
+static XmFontList fe_GetFontListNormal(int16 charset, fe_Font font, int numOfFont);
+static XmString fe_ToXmStringNormal(int16 charset, fe_Font font, char * string, int len);
+
 static fe_Font
 fe_LoadNormalFont(MWContext *context, char *familyName, 
                   int points, int sizeNum,
@@ -211,6 +214,10 @@ static char * fe_FindGenericFamily(int charsetID, char *familyName);
 
 static XP_Bool fe_AreEUCCNFontsAvail(int16 /* win_csid */);
 
+static XmFontList fe_FontGroupGetFontList(int16 charset, fe_Font font, int numOfFonts);
+static XmString fe_EUCToXmString(int16 charset, fe_Font fontGroup, char * string, int len,
+                                 fe_StringProcessTable *table);
+
 static fe_Font
 fe_LoadEUCCNFont(MWContext *context, char *familyName, int points,
                  int sizeNum, int fontmask, int charset, int pitch,
@@ -225,6 +232,7 @@ static void
 fe_DrawEUCCNImageString(Display *dpy, Drawable d, fe_Font font, GC gc, GC gc2,
 	int x, int y, char *string, int len);
 
+static XmString fe_EUCCNToXmString(int16 charset, fe_Font fontGroup, char * string, int len);
 static XP_Bool fe_AreEUCJPFontsAvail(int16 /* win_csid */);
 
 static fe_Font
@@ -240,6 +248,7 @@ fe_DrawEUCJPString(Display *dpy, Drawable d, fe_Font font, GC gc, int x,
 static void
 fe_DrawEUCJPImageString(Display *dpy, Drawable d, fe_Font font, GC gc, GC gc2,
 	int x, int y, char *string, int len);
+static XmString fe_EUCJPToXmString(int16 charset, fe_Font fontGroup, char * string, int len);
 
 static XP_Bool fe_AreEUCKRFontsAvail(int16 /* win_csid */);
 
@@ -256,6 +265,7 @@ fe_DrawEUCKRString(Display *dpy, Drawable d, fe_Font font, GC gc, int x,
 static void
 fe_DrawEUCKRImageString(Display *dpy, Drawable d, fe_Font font, GC gc, GC gc2,
 	int x, int y, char *string, int len);
+static XmString fe_EUCKRToXmString(int16 charset, fe_Font fontGroup, char * string, int len);
 
 static XP_Bool fe_AreEUCTWFontsAvail(int16 /* win_csid */);
 
@@ -272,6 +282,7 @@ fe_DrawEUCTWString(Display *dpy, Drawable d, fe_Font font, GC gc, int x,
 static void
 fe_DrawEUCTWImageString(Display *dpy, Drawable d, fe_Font font, GC gc, GC gc2,
 	int x, int y, char *string, int len);
+static XmString fe_EUCTWToXmString(int16 charset, fe_Font fontGroup, char * string, int len);
 
 static XP_Bool fe_AreBIG5FontsAvail(int16 /* win_csid */);
 
@@ -288,6 +299,7 @@ fe_DrawBIG5String(Display *dpy, Drawable d, fe_Font font, GC gc, int x,
 static void
 fe_DrawBIG5ImageString(Display *dpy, Drawable d, fe_Font font, GC gc, GC gc2,
 	int x, int y, char *string, int len);
+static XmString fe_BIG5ToXmString(int16 charset, fe_Font fontGroup, char * string, int len);
 
 /* Unicode support */
 static XP_Bool fe_AreUnicodeFontsAvail(int16 /* win_csid */);
@@ -297,6 +309,10 @@ fe_DrawUTF8StringImage(Display *dpy, Drawable d, fe_Font font, GC gc, GC gc2,
 static XFontStruct *
 fe_UnicodeInitXfont(fe_UnicodePseudoFont *ufont, uint16 encoding);
 static int16 *INTL_GetXCharSetIDs(Display *dpy);
+
+
+static XmFontList fe_UTF8GetFontList(int16 charset, fe_Font font, int numOfFont);
+static XmString fe_UTF8ToXmString(int16 charset, fe_Font fontGroup, char * string, int len);
 
 enum
 {
@@ -319,7 +335,9 @@ fe_CharSetFuncs fe_CharSetFuncsArray[] =
 		(fe_LoadFontFunc)		fe_LoadNormalFont,
 		(fe_TextExtentsFunc)		XTextExtents,
 		(fe_DrawStringFunc)		XDrawString,
-		(fe_DrawImageStringFunc)	XDrawImageString
+		(fe_DrawImageStringFunc)	XDrawImageString,
+		(fe_GetFontList)	        fe_GetFontListNormal,
+		(fe_ToXmString)	                fe_ToXmStringNormal
 	},
 	{
 						1,
@@ -327,7 +345,9 @@ fe_CharSetFuncs fe_CharSetFuncsArray[] =
 		(fe_LoadFontFunc)		fe_LoadNormalFont,
 		(fe_TextExtentsFunc)		XTextExtents16,
 		(fe_DrawStringFunc)		XDrawString16,
-		(fe_DrawImageStringFunc)	XDrawImageString16
+		(fe_DrawImageStringFunc)	XDrawImageString16,
+		(fe_GetFontList)	        fe_GetFontListNormal,
+		(fe_ToXmString)	                fe_ToXmStringNormal
 	},
 	{
 						2,
@@ -335,7 +355,9 @@ fe_CharSetFuncs fe_CharSetFuncsArray[] =
 		(fe_LoadFontFunc)		fe_LoadEUCCNFont,
 		(fe_TextExtentsFunc)		fe_EUCCNTextExtents,
 		(fe_DrawStringFunc)		fe_DrawEUCCNString,
-		(fe_DrawImageStringFunc)	fe_DrawEUCCNImageString
+		(fe_DrawImageStringFunc)	fe_DrawEUCCNImageString,
+		(fe_GetFontList)	        fe_FontGroupGetFontList,
+		(fe_ToXmString)	                fe_EUCCNToXmString
 	},
 	{
 						4,
@@ -343,7 +365,9 @@ fe_CharSetFuncs fe_CharSetFuncsArray[] =
 		(fe_LoadFontFunc)		fe_LoadEUCJPFont,
 		(fe_TextExtentsFunc)		fe_EUCJPTextExtents,
 		(fe_DrawStringFunc)		fe_DrawEUCJPString,
-		(fe_DrawImageStringFunc)	fe_DrawEUCJPImageString
+		(fe_DrawImageStringFunc)	fe_DrawEUCJPImageString,
+		(fe_GetFontList)	        fe_FontGroupGetFontList,
+		(fe_ToXmString)	                fe_EUCJPToXmString
 	},
 	{
 						2,
@@ -351,7 +375,9 @@ fe_CharSetFuncs fe_CharSetFuncsArray[] =
 		(fe_LoadFontFunc)		fe_LoadEUCKRFont,
 		(fe_TextExtentsFunc)		fe_EUCKRTextExtents,
 		(fe_DrawStringFunc)		fe_DrawEUCKRString,
-		(fe_DrawImageStringFunc)	fe_DrawEUCKRImageString
+		(fe_DrawImageStringFunc)	fe_DrawEUCKRImageString,
+		(fe_GetFontList)	        fe_FontGroupGetFontList,
+		(fe_ToXmString)	                fe_EUCKRToXmString
 	},
 	{
 						3,
@@ -359,7 +385,9 @@ fe_CharSetFuncs fe_CharSetFuncsArray[] =
 		(fe_LoadFontFunc)		fe_LoadEUCTWFont,
 		(fe_TextExtentsFunc)		fe_EUCTWTextExtents,
 		(fe_DrawStringFunc)		fe_DrawEUCTWString,
-		(fe_DrawImageStringFunc)	fe_DrawEUCTWImageString
+		(fe_DrawImageStringFunc)	fe_DrawEUCTWImageString,
+		(fe_GetFontList)	        fe_FontGroupGetFontList,
+		(fe_ToXmString)	                fe_EUCTWToXmString
 	},
 	{
 						2,
@@ -367,7 +395,9 @@ fe_CharSetFuncs fe_CharSetFuncsArray[] =
 		(fe_LoadFontFunc)		fe_LoadBIG5Font,
 		(fe_TextExtentsFunc)		fe_BIG5TextExtents,
 		(fe_DrawStringFunc)		fe_DrawBIG5String,
-		(fe_DrawImageStringFunc)	fe_DrawBIG5ImageString
+		(fe_DrawImageStringFunc)	fe_DrawBIG5ImageString,
+		(fe_GetFontList)	        fe_FontGroupGetFontList,
+		(fe_ToXmString)	                fe_BIG5ToXmString
 	},
 	{
 						4,
@@ -375,7 +405,9 @@ fe_CharSetFuncs fe_CharSetFuncsArray[] =
 		(fe_LoadFontFunc)		fe_LoadUnicodeFont,
 		(fe_TextExtentsFunc)		fe_UTF8TextExtents,
 		(fe_DrawStringFunc)		fe_DrawUTF8String,
-		(fe_DrawImageStringFunc)	fe_DrawUTF8StringImage
+		(fe_DrawImageStringFunc)	fe_DrawUTF8StringImage,
+		(fe_GetFontList)	        fe_UTF8GetFontList,
+		(fe_ToXmString)	                fe_UTF8ToXmString
 	},
 };
 
@@ -4607,6 +4639,24 @@ fe_LoadNormalFont(MWContext *context, char *familyName,
 	return NULL;
 }
 
+static XmFontList
+fe_GetFontListNormal(int16 charset, fe_Font font, int numOfFonts)
+{
+        XmFontList fl;
+        XmFontListEntry e;
+        e = XmFontListEntryCreate("f0", XmFONT_IS_FONT, (XFontStruct*) font);
+        XP_ASSERT(NULL != e);
+
+        fl = XmFontListAppendEntry(NULL, e);
+        XP_ASSERT(NULL != fl);
+
+        XmFontListEntryFree(&e);
+        return fl;
+}
+static XmString fe_ToXmStringNormal(int16 charset, fe_Font font, char * string, int len)
+{
+        return XmStringCreate(string, "f0");
+}
 
 void
 fe_GenericFontExtents(int charset, fe_Font font, 
@@ -4686,7 +4736,6 @@ fe_GenericFontExtents(int charset, fe_Font font,
 
 
 #define FE_PROCESS_STRING_BUFFER_SIZE	1024
-
 
 static void
 fe_ProcessEUCString(int charset, fe_StringProcessTable *table, 
@@ -4863,6 +4912,100 @@ fe_ProcessEUCString(int charset, fe_StringProcessTable *table,
 		fe_GenericFontExtents(charset, fontGroup, fontAscent,
 			fontDescent);
 	}
+}
+
+static XmString fe_create_and_concatnate_XmString(
+       XmString list, char* str, int len, char* flabel)
+{
+    XmString ret;
+    XmString seg = NULL;
+
+    str[len++] = '\0';
+
+    if(NULL == list)
+       return XmStringCreate(str, flabel);
+
+    seg = XmStringCreate(str, flabel);
+    XP_ASSERT(NULL != seg);
+
+    ret = XmStringConcat(list, seg);
+    XP_ASSERT(NULL != list);
+
+    XmStringFree(list);
+    XmStringFree(seg);
+
+    return ret;
+}
+
+static XmString fe_EUCToXmString(int16 charset, fe_Font fontGroup, char * string, int len,
+                                 fe_StringProcessTable *table)
+{
+    int begin, cur, out;
+    unsigned char curFI;
+    char flabel[4]; 
+    XmString xms = NULL;
+    unsigned char		buf[FE_PROCESS_STRING_BUFFER_SIZE];
+    fe_StringProcessTable *entry = &table[(unsigned char)string[0]];
+    unsigned char lastFI = entry->fontIndex;
+    unsigned char mask1 = 0xff;
+    unsigned char mask2 = 0xff;
+    fe_FontGroupFont	*fonts;
+    fonts = (fe_FontGroupFont *) fontGroup;
+
+    if(FALSE == fe_AreFontsAvail(charset)) 
+    {  /* The font is not available, it does not matter what we do, fall back to a simple string */
+           return XmStringCreateLocalized(string);
+    }
+
+    XP_STRCPY(flabel, "f0");
+
+    if(entry->len > 1)
+    {
+        mask1 = fonts[lastFI].mask1;
+        mask2 = fonts[lastFI].mask2;
+    }
+
+    for(out=cur=begin=0; cur < len; )
+    {
+       entry = &table[(unsigned char)string[cur]];
+       curFI = entry->fontIndex;
+      
+       /* Need to switch font, generate a new segment */
+       if((lastFI != curFI) || (out >= (FE_PROCESS_STRING_BUFFER_SIZE - 4)))
+       {
+         (void)PR_snprintf(flabel, sizeof(flabel), "f%d", lastFI);
+
+         xms = fe_create_and_concatnate_XmString( xms, buf, out, flabel);
+
+         /* Now we should save the state somewhere */
+         out = 0;
+         begin = cur;
+         lastFI = curFI;
+         if(entry->len > 1)
+         {
+              mask1 = fonts[lastFI].mask1;
+              mask2 = fonts[lastFI].mask2;
+         }
+       }
+
+       cur += entry->skip;
+       if(1 == entry->len)
+       {
+         if(cur < len) buf[out++] = string[cur++];
+       }
+       else
+       {
+         if(cur < len) buf[out++] = (string[cur++] & mask1);
+         if(cur < len) buf[out++] = (string[cur++] & mask2);
+       }
+
+    }
+    if(begin != len)
+    {
+         (void)PR_snprintf(flabel, sizeof(flabel), "f%d", lastFI);
+         xms = fe_create_and_concatnate_XmString( xms, buf, out, flabel);
+    }
+    return xms;
 }
 
 
@@ -5198,6 +5341,61 @@ fe_LoadEUCCNFont(MWContext *context, char *familyName, int points,
 	return (fe_Font) ret;
 }
 
+static XmFontList
+fe_FontGroupGetFontList(int16 charset, fe_Font fontGroup, int numOfFonts)
+{
+	fe_FontGroupFont	*fonts;
+        int i;
+        char flabel[4];
+        XmFontListEntry e;
+        XmFontList fl;
+
+	if(FALSE == fe_AreFontsAvail(charset)) 
+           return NULL;
+
+        XP_STRCPY(flabel, "f0");
+	fonts = (fe_FontGroupFont *) fontGroup;
+
+        e = XmFontListEntryCreate(flabel, 
+                                  XmFONT_IS_FONT, 
+                                  (XFontStruct*) fonts[0].xFont);
+        flabel[1] = flabel[1] + 1;
+        XP_ASSERT(NULL != e);
+   
+        fl = XmFontListAppendEntry(NULL, e);
+        XP_ASSERT(NULL != fl);
+
+        XmFontListEntryFree(&e);
+
+        for(i=1; i < numOfFonts; i++, flabel[1] = flabel[1] + 1)
+        {
+           XFontStruct* f;
+
+           XP_ASSERT(fonts[i].xFont);
+
+           if(NULL != fonts[i].xFont)
+             f = (XFontStruct*) fonts[i].xFont;
+           else
+             f = (XFontStruct*) fonts[0].xFont; /* somehow it will crash in Xt if we do not create it, fall back to latin1 */
+           
+           e = XmFontListEntryCreate(flabel, 
+                               XmFONT_IS_FONT, 
+                               f);
+           XP_ASSERT(NULL != e);
+
+           fl = XmFontListAppendEntry(fl, e);
+           XP_ASSERT(NULL != fl);
+
+           XmFontListEntryFree(&e);
+        }
+        return fl;
+}
+
+static XmString 
+fe_EUCCNToXmString(int16 charset, fe_Font fontGroup, char * string, int len)
+{
+     return fe_EUCToXmString(charset, fontGroup, string, len, EUCCNTable);
+}
 
 static void
 fe_EUCCNTextExtents(fe_Font font, char *string, int len, int *direction,
@@ -5593,7 +5791,11 @@ fe_LoadEUCJPFont(MWContext *context, char *familyName, int points,
 	return (fe_Font) ret;
 }
 
-
+static XmString 
+fe_EUCJPToXmString(int16 charset, fe_Font fontGroup, char * string, int len)
+{
+     return fe_EUCToXmString(charset, fontGroup, string, len, EUCJPTable);
+}
 static void
 fe_EUCJPTextExtents(fe_Font font, char *string, int len, int *direction,
 	int *fontAscent, int *fontDescent, XCharStruct *overall)
@@ -5965,7 +6167,11 @@ fe_LoadEUCKRFont(MWContext *context, char *familyName, int points,
 	return (fe_Font) ret;
 }
 
-
+static XmString 
+fe_EUCKRToXmString(int16 charset, fe_Font fontGroup, char * string, int len)
+{
+     return fe_EUCToXmString(charset, fontGroup, string, len, EUCKRTable);
+}
 static void
 fe_EUCKRTextExtents(fe_Font font, char *string, int len, int *direction,
 	int *fontAscent, int *fontDescent, XCharStruct *overall)
@@ -6361,6 +6567,12 @@ fe_LoadEUCTWFont(MWContext *context, char *familyName, int points,
 	return (fe_Font) ret;
 }
 
+static XmString 
+fe_EUCTWToXmString(int16 charset, fe_Font fontGroup, char * string, int len)
+{
+     return fe_EUCToXmString(charset, fontGroup, string, len, EUCTWTable);
+}
+
 
 static void
 fe_EUCTWTextExtents(fe_Font font, char *string, int len, int *direction,
@@ -6720,6 +6932,11 @@ fe_LoadBIG5Font(MWContext *context, char *familyName, int points,
 	return (fe_Font) ret;
 }
 
+static XmString 
+fe_BIG5ToXmString(int16 charset, fe_Font fontGroup, char * string, int len)
+{
+     return fe_EUCToXmString(charset, fontGroup, string, len, BIG5Table);
+}
 
 static void
 fe_BIG5TextExtents(fe_Font font, char *string, int len, int *direction,
@@ -6873,6 +7090,21 @@ fe_LoadUnicodeFontByPixelSize(void *not_used, char *familyName, int pixelSize,
     ufont->descent = 0;
 
     return ufont;
+}
+
+static XmFontList
+fe_UTF8GetFontList(int16 charset, fe_Font font, int numOfFonts)
+{
+     fe_UnicodePseudoFont *ufont = (fe_UnicodePseudoFont *)font;
+     XP_ASSERT( NULL != ufont);
+     XP_ASSERT( NULL != ufont->xmfontlist);
+     return XmFontListCopy(ufont->xmfontlist);
+}
+
+static XmString fe_UTF8ToXmString(int16 charset, fe_Font fontGroup, char * string, int len)
+{
+     XP_ASSERT(0);
+     return NULL; /* to make compiler happen */
 }
 
 void

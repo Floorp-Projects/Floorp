@@ -336,6 +336,184 @@ fe_font_list_metrics(MWContext *context, LO_FormElementStruct *form,
 	FE_FONT_EXTENTS(text->charset, font, ascentp, descentp);
 }
 
+static fe_Font fe_LoadFontForWidgetUnicodePseudoFont (MWContext *context,
+                                     Widget parent,
+				     LO_TextAttr *text_attr,
+				     XmFontList *fontlist,
+                                     XmFontType *type,
+                                     int mask
+)
+{
+  fe_Font fe_font;
+
+  fe_font = fe_LoadUnicodeFont(NULL, "", 0, text_attr->size, mask,
+				   0, 0, 0, XtDisplay(parent));
+
+  /* 
+     This looks very weired , 
+     but it looks like this before I split the code 
+   */
+
+   *fontlist = NULL; 
+   return fe_font;
+}
+
+static fe_Font fe_LoadFontForWidgetLocale (MWContext *context,
+                                     Widget parent,
+				     LO_TextAttr *text_attr,
+				     XmFontList *fontlist,
+                                     XmFontType *type,
+                                     int mask
+)
+{
+  fe_Font fe_font;
+  XmFontListEntry flentry;
+  XmFontList locale_font_list = NULL;
+
+  fe_font = fe_GetFontOrFontSetFromFace(context, NULL,
+				    text_attr->font_face,
+			    text_attr->size,
+				    mask, type);
+  XP_ASSERT(NULL != fe_font);
+  if (!fe_font)
+	return NULL;
+
+  flentry = XmFontListEntryCreate(XmFONTLIST_DEFAULT_TAG, *type, fe_font);
+  XP_ASSERT(NULL != flentry);
+  if (!flentry)
+	return NULL;
+
+  locale_font_list = XmFontListAppendEntry(NULL, flentry);
+
+  XP_ASSERT(NULL != locale_font_list);
+  if (!locale_font_list)
+	return NULL;
+
+  XmFontListEntryFree(&flentry);
+      
+  *fontlist = locale_font_list;
+  return fe_font;
+}
+
+static void
+fe_FontlistAndXmStringForOptions( MWContext *context,
+				     LO_TextAttr *text_attr,
+					 LO_FormElementData *form_data,
+					 int nitems,
+				     XmString *xmstrings,
+				     XmFontList *fontlist)
+{
+  Widget parent = CONTEXT_DATA(context)->drawing_area;
+  XP_Bool use_UnicodePseudoFont = IS_UNICODE_CSID(text_attr->charset);
+  fe_Font fe_font;
+  XmFontType type = 0; /* keep purify happy */
+
+  if(use_UnicodePseudoFont)
+  {
+      fe_font = fe_LoadFontForWidgetUnicodePseudoFont(context, parent, text_attr, fontlist, &type,
+         				text_attr->fontmask);
+      if(*fontlist)
+         *fontlist = XmFontListCopy(*fontlist);
+  }
+  else
+  {
+      fe_font = fe_LoadFontFromFace(
+                            context, text_attr, 
+                            &text_attr->charset,
+                            text_attr->font_face, 
+                            text_attr->size,            
+                            text_attr->fontmask            
+      );
+      FE_NONEDIT_FONTLIST(text_attr->charset, fe_font, *fontlist);
+  }
+
+  if (xmstrings)
+  {
+    int i;
+    for(i = 0 ; i < nitems; i++)
+    {
+	unsigned char* text = (unsigned char*) 
+	     XP_FormSelectGetOption(form_data, i)->text_value;
+
+       	if(NULL == text) 
+		text = (unsigned char*) "---\?\?\?---";
+
+        if(use_UnicodePseudoFont)
+        {
+             xmstrings[i] = fe_ConvertToXmString(
+				     text,
+				     text_attr->charset,
+				     fe_font,
+				     type,
+				     fontlist);
+        }
+        else 
+        {
+             xmstrings[i] = FE_NONEDIT_TO_XMSTRING(text_attr->charset,
+                                           fe_font,
+                                           text,
+                                           XP_STRLEN(text)
+                                           );
+        }
+    }
+  }
+}
+static void
+fe_FontlistAndXmStringForButton(MWContext *context,
+				     int32 form_type,
+				     char *string,
+				     LO_TextAttr *text_attr,
+				     XmString *xmstring,
+				     XmFontList *fontlist)
+{
+  Widget parent = CONTEXT_DATA(context)->drawing_area;
+  XP_Bool use_UnicodePseudoFont;
+  fe_Font fe_font;
+  XmFontType type = 0; /* keep purify happy */
+
+  use_UnicodePseudoFont = IS_UNICODE_CSID(text_attr->charset);
+
+  if (xmstring)
+	*xmstring = NULL;
+
+  if( use_UnicodePseudoFont )
+  {
+      fe_font = fe_LoadFontForWidgetUnicodePseudoFont(context, parent, 
+                                    text_attr, fontlist, &type,
+                                    text_attr->fontmask);
+  
+      XP_ASSERT(NULL != fe_font);
+
+      if (string && xmstring)
+        *xmstring = fe_ConvertToXmString((unsigned char*)string,
+				     text_attr->charset,
+				     fe_font,
+				     type,
+				     fontlist);
+      if(*fontlist)
+         *fontlist = XmFontListCopy(*fontlist);
+  }
+  else 
+  {
+      fe_font = fe_LoadFontFromFace(
+                            context, text_attr, 
+                            &text_attr->charset,
+                            text_attr->font_face, 
+                            text_attr->size,            
+                            text_attr->fontmask            
+      );
+      FE_NONEDIT_FONTLIST(text_attr->charset, fe_font, *fontlist);
+
+      if (string && xmstring)
+      {
+         *xmstring = FE_NONEDIT_TO_XMSTRING(text_attr->charset,
+                                           fe_font,
+                                           string,
+                                           XP_STRLEN(string)
+                                           );
+      }
+  }
+}
 static void
 fe_FontlistAndXmStringForFormElement(MWContext *context,
 				     int32 form_type,
@@ -348,10 +526,7 @@ fe_FontlistAndXmStringForFormElement(MWContext *context,
   XP_Bool use_UnicodePseudoFont;
   fe_Font fe_font;
   XmFontType type = 0; /* keep purify happy */
-  XmFontListEntry flentry;
   int mask = text_attr->fontmask;
-  XmFontList unicodePseudo_font_list = NULL;
-  XmFontList locale_font_list = NULL;
 
   use_UnicodePseudoFont = IS_UNICODE_CSID(text_attr->charset);
 
@@ -375,37 +550,15 @@ fe_FontlistAndXmStringForFormElement(MWContext *context,
       break;
     }
 
-  /*
-   * Get the font info
-   */
-  if (use_UnicodePseudoFont) 
-    {
-      fe_font = fe_LoadUnicodeFont(NULL, "", 0, text_attr->size, mask,
-				   0, 0, 0, XtDisplay(parent));
-
-      *fontlist = unicodePseudo_font_list;
-    }
-  else
-    {
-      fe_font = fe_GetFontOrFontSetFromFace(context, NULL,
-					    text_attr->font_face,
-					    text_attr->size,
-					    mask, &type);
-      if (!fe_font)
-	return;
-      flentry = XmFontListEntryCreate(XmFONTLIST_DEFAULT_TAG, type, fe_font);
-      if (!flentry)
-	return;
-      locale_font_list = XmFontListAppendEntry(NULL, flentry);
-      if (!locale_font_list)
-	return;
-      XmFontListEntryFree(&flentry);
-      
-      if (xmstring)
+  if (xmstring)
 	*xmstring = NULL;
 
-      *fontlist = locale_font_list;
-    }
+  if(use_UnicodePseudoFont)
+  	fe_font = fe_LoadFontForWidgetUnicodePseudoFont(context, parent, text_attr, fontlist, &type, mask);
+  else
+  	fe_font = fe_LoadFontForWidgetLocale(context, parent, text_attr, fontlist, &type, mask);
+  
+  XP_ASSERT(NULL != fe_font);
 
   if (string && xmstring)
     *xmstring = fe_ConvertToXmString((unsigned char*)string,
@@ -414,7 +567,6 @@ fe_FontlistAndXmStringForFormElement(MWContext *context,
 				     type,
 				     fontlist);
 }
-
 static void
 set_form_colors(FEFormData *fed,
 		LO_Color *lo_fg,
@@ -1398,7 +1550,7 @@ button_create_widget(FEFormData *fed,
 	      ? "formResetButton"
 	      : "formButton"));
 
-  fe_FontlistAndXmStringForFormElement(context,
+  fe_FontlistAndXmStringForButton(context,
 				       form_type,
 				       (char*)string,
 				       text_attr,
@@ -1489,6 +1641,8 @@ button_create_widget(FEFormData *fed,
 		     XmNactivateCallback, fe_button_form_cb, fed);
       break;
     }
+  if (font_list)
+     XmFontListFree(font_list);
 }
 
 /*
@@ -1635,26 +1789,30 @@ select_create_widget(FEFormData *fed,
   }
   
   for (i = 0; i < nitems; i++)
-    {
+  {
       lo_FormElementOptionData *d2 =
 	XP_FormSelectGetOption(form_data, i);
-
-      fe_FontlistAndXmStringForFormElement(context,
-					   form_type,
-					   (d2->text_value 
-					    ? (char *) d2->text_value
-					    : "---\?\?\?---"),
-					   text_attr,
-					   &items[i],
-					   &font_list);
-      
       selected_p [i] = !!d2->def_selected;
       d2->selected = d2->def_selected;
-    }
+  }
+  fe_FontlistAndXmStringForOptions(context,
+					   text_attr,
+					   form_data,
+					   nitems,
+					   items,
+					   &font_list);
 
   ac = 0;
   /* #ifdef FORMS_ARE_FONTIFIED */
-  XtSetArg (av [ac], XmNfontList, font_list); ac++;
+  if(NULL != font_list)
+  {
+    XtSetArg (av [ac], XmNfontList, font_list); ac++;
+    if (form_type == FORM_TYPE_SELECT_ONE)
+    {
+      /* Need to do this untill Ramiro implement fe_ComboBoxSetFontLists */
+      XtSetArg (av [ac], XmNlistFontList, font_list); ac++;
+    }
+  }
   /* #endif */
   XtSetArg (av [ac], XmNspacing, 0); ac++;
   
@@ -1704,22 +1862,29 @@ select_create_widget(FEFormData *fed,
     }
   else /* FORM_TYPE_SELECT_ONE */
     {
-      /* we also need to set the fontlist explicitly on the label, for
-	 some reason... */
-      Widget label;
-
       fed->widget = DtCreateComboBox(parent, "list", av, ac);
       XtVaGetValues(fed->widget,
 		    XmNlist, &sel_fed->list_widget,
 		    NULL);
 
-      label = ((DtComboBoxWidget)fed->widget)->combo_box.label;
+      /* we also need to set the fontlist explicitly on the label, for
+     	some reason... */
+      if((NULL != font_list) && 
+	 (NULL != fed->widget) 
+      ) 
+      {
 
-      ac = 0;
-      /* #ifdef FORMS_ARE_FONTIFIED */
-      XtSetArg (av [ac], XmNfontList, font_list); ac++;
-      XtSetValues(label, av, ac);
+        ac = 0;
+        XtSetArg (av [ac], XmNfontList, font_list); ac++;
+
+        /* Still need to do this untill Ramiro implement fe_ComboBoxSetFontLists */
+        if(NULL != ((DtComboBoxWidget)(fed->widget))->combo_box.label) 
+        	XtSetValues((Widget)((DtComboBoxWidget)(fed->widget))->combo_box.label , av, ac);
+
+      }
     }
+    if(NULL != font_list)
+    	XmFontListFree(font_list);
 
 #ifdef FORMS_ARE_COLORED
   set_form_colors(fed, &text_attr->fg, &text_attr->bg);
@@ -1872,22 +2037,39 @@ select_change(FEFormData *fed,
   int32 form_type = XP_FormGetType(form_data);
   fe_Font fe_font;
   LO_TextAttr *text_attr;
-  uint16 mask;
   XmString *new_items;
   char* new_selected_p;
   int nitems;
   int i;
-  int16 charset;
-  XmFontList unicodePseudo_font_list = NULL;
+  XmFontList fontlist = NULL;
   XP_Bool item_selected = FALSE;
+  XmFontType type;
+  XP_Bool use_UnicodePseudoFont;
+  MWContext *context = fed->context;
 
   nitems = XP_FormSelectGetOptionsCount(form_data);
   text_attr = XP_GetFormTextAttr(form);
-  mask = text_attr->fontmask;
-  charset = text_attr->charset;
+  use_UnicodePseudoFont = IS_UNICODE_CSID(text_attr->charset);
   
-  fe_font = fe_LoadUnicodeFont(NULL, "", 0, text_attr->size, mask, 0, 0, 0, 
-			       XtDisplay(CONTEXT_WIDGET(fed->context)));
+  if(use_UnicodePseudoFont)
+  {
+      Widget parent = CONTEXT_DATA(context)->drawing_area;
+      fe_font = fe_LoadFontForWidgetUnicodePseudoFont(context, parent, text_attr, &fontlist, &type,
+         				text_attr->fontmask);
+      if(fontlist)
+         fontlist = XmFontListCopy(fontlist);
+  }
+  else
+  {
+      fe_font = fe_LoadFontFromFace(
+                            context, text_attr, 
+                            &text_attr->charset,
+                            text_attr->font_face, 
+                            text_attr->size,            
+                            text_attr->fontmask          
+      );
+      FE_NONEDIT_FONTLIST(text_attr->charset, fe_font, fontlist);
+  }
   
   if (nitems > 0)
     {
@@ -1911,9 +2093,23 @@ select_change(FEFormData *fed,
 		: " ") 
 	     : "---\?\?\?---");
 
-      new_items [i] = fe_ConvertToXmString(str, charset, fe_font,
-					   XmFONT_IS_FONT,
-					   &unicodePseudo_font_list);
+      if(use_UnicodePseudoFont)
+        {
+             new_items[i] = fe_ConvertToXmString(
+				     str,
+				     text_attr->charset,
+				     fe_font,
+				     type,
+				     fontlist);
+        }
+      else 
+        {
+             new_items[i] = FE_NONEDIT_TO_XMSTRING(text_attr->charset,
+                                           fe_font,
+                                           str,
+                                           XP_STRLEN(str)
+                                           );
+        }
       new_selected_p [i] = !!XP_FormOptionGetSelected(option_data);
 
 #ifdef DEBUG_username

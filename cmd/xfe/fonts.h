@@ -345,6 +345,52 @@ do                                                                            \
 } while (0)
 #endif
 
+#ifndef NO_WEB_FONTS
+#define FE_NONEDIT_FONTLIST(charset, font, fontlist)                          \
+do                                                                            \
+{                                                                             \
+        fe_Font   platform_font;                                              \
+                                                                              \
+        fe_CharSetFuncs entry =                                               \
+           fe_CharSetFuncsArray[fe_CharSetInfoArray[(charset) & 0xff].info];  \
+                                                                              \
+        platform_font = ((fe_FontWrap *) font)->platform_font;                \
+                                                                              \
+        (fontlist) =                                                          \
+        (* (entry.nonEditGetFontList))(charset, platform_font,                \
+                               (int)entry.numberOfFonts);                     \
+} while(0)
+#else
+#define FE_NONEDIT_FONTLIST(charset, font, fontlist)                          \
+do                                                                            \
+{                                                                             \
+        fe_CharSetFuncs entry =                                               \
+           fe_CharSetFuncsArray[fe_CharSetInfoArray[(charset) & 0xff].info];  \
+                                                                              \
+        (fontlist) =                                                          \
+        (* (entry.nonEditGetFontList))( charset, font,                        \
+                              (int) entry.numberOfFonts);                     \
+} while(0)
+#endif
+
+
+#ifndef NO_WEB_FONTS
+#define FE_NONEDIT_TO_XMSTRING(charset, font, string, len)                    \
+        (*fe_CharSetFuncsArray[fe_CharSetInfoArray[(charset) & 0xff].         \
+                        info].nonEditToXmString)( (charset),                  \
+                           (fe_Font) (((fe_FontWrap *) font)->platform_font), \
+                                      (string),                               \
+                                      (len)                                   \
+                              )                                              
+#else
+#define FE_NONEDIT_TO_XMSTRING(charset, font, string, len)                    \
+        (*fe_CharSetFuncsArray[fe_CharSetInfoArray[(charset) & 0xff].         \
+                        info].nonEditToXmString)((charset),                   \
+                             (fe_Font)(font),                                 \
+                                      (string),                               \
+                                      (len)                                   \
+                              )                                              
+#endif
 
 /*
  * typedefs and structs
@@ -500,15 +546,19 @@ typedef void (*fe_DrawStringFunc)(Display *dpy, Drawable d, fe_Font font,
 	GC gc, int x, int y, char *string, int len);
 typedef void (*fe_DrawImageStringFunc)(Display *dpy, Drawable d, fe_Font font,
 	GC gc, GC gc2, int x, int y, char *string, int len);
+typedef XmFontList (*fe_GetFontList)(int16 charset, fe_Font font, int numOfFont);
+typedef XmString (*fe_ToXmString)(int16 charset, fe_Font font, char* string, int len );
 
 typedef struct fe_CharSetFuncs
 {
 	unsigned char			numberOfFonts;
-	fe_AreFontsAvailFunc	areFontsAvail;
+	fe_AreFontsAvailFunc		areFontsAvail;
 	fe_LoadFontFunc			loadFont;
 	fe_TextExtentsFunc		textExtents;
 	fe_DrawStringFunc		drawString;
-	fe_DrawImageStringFunc	drawImageString;
+	fe_DrawImageStringFunc		drawImageString;
+	fe_GetFontList			nonEditGetFontList;
+	fe_ToXmString			nonEditToXmString;
 } fe_CharSetFuncs;
 
 
