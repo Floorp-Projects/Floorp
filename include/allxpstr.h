@@ -7855,6 +7855,7 @@ ResDef(MK_ACCESS_NO, XP_MSG_BASE + 1446,
 
 /* -------- Range up tp 1449 reserved for MSGLIB!! ----------------*/
 
+/* the following PRVCY items are all strings used in html */
 ResDef(PRVCY_HAS_A_POLICY, XP_MSG_BASE + 1450,
 "This site has declared a <a href=\042javascript:Policy();\042);>policy</a> \
 for what it does with the information you give it.\n")
