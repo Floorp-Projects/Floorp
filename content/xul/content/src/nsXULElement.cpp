@@ -2473,26 +2473,6 @@ nsXULElement::SetAttr(nsINodeInfo* aNodeInfo,
         return NS_ERROR_NULL_POINTER;
 
     nsresult rv;
-
-#if DEBUG_smfr
-    nsXULAttribute* theAttr = FindLocalAttribute(aNodeInfo);
-    if (theAttr) {
-        nsAutoString  oldValue;
-        attr->GetValue(oldValue);
-        if (oldValue.Equals(aValue))
-        {
-          nsAutoString  attributeName;
-          aNodeInfo->GetName(attributeName);
-          
-          nsCAutoString blurb("SetAttr called redundantly on ");
-          blurb.AppendWithConversion(attributeName);
-          blurb.Append(" with value ");
-          blurb.AppendWithConversion(aValue);
-          NS_WARNING(blurb.get());
-        }
-    }
-#endif
-
     nsCOMPtr<nsIAtom> attrName;
     PRInt32 attrns;
 
