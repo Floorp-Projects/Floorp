@@ -55,4 +55,5 @@ interface nsIImapMockChannel : nsIChannel
     void SetLoadGroup(in nsILoadGroup aLoadGroup);
     void SetURI(in nsIURI aUrl);
     void Close();
+	attribute boolean cancelled;
 };

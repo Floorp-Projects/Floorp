@@ -458,7 +458,7 @@ nsImapMailFolder::UpdateFolder(nsIMsgWindow *msgWindow)
 		if (NS_SUCCEEDED(rv) && pEventQService)
 			pEventQService->GetThreadEventQueue(PR_GetCurrentThread(),
 												getter_AddRefs(eventQ));
-		rv = imapService->SelectFolder(eventQ, this, this, nsnull, nsnull);
+		rv = imapService->SelectFolder(eventQ, this, this, msgWindow, nsnull);
 		m_urlRunning = PR_TRUE;
 	}
 	return rv;

@@ -185,6 +185,7 @@ public:
     NS_IMETHOD SetMockChannel(nsIImapMockChannel * aChannel) = 0;
 
 	NS_IMETHOD AddChannelToLoadGroup() = 0;
+	NS_IMETHOD RemoveChannel(nsresult status) = 0;
 };
 
 #endif /* nsIImapUrl_h___ */

@@ -81,6 +81,7 @@ nsImapUrl::~nsImapUrl()
 	PR_FREEIF(m_listOfMessageIds);
 	PR_FREEIF(m_destinationCanonicalFolderPathSubString);
 	PR_FREEIF(m_sourceCanonicalFolderPathSubString);
+
 }
   
 NS_IMPL_ADDREF_INHERITED(nsImapUrl, nsMsgMailNewsUrl)
@@ -941,6 +942,20 @@ NS_IMETHODIMP nsImapUrl::AddChannelToLoadGroup()
 		if (aLoadGroup)
 		{
 			aLoadGroup->AddChannel(m_mockChannel, nsnull /* context isupports */);
+		}
+	}
+	return NS_OK;
+}
+
+NS_IMETHODIMP nsImapUrl::RemoveChannel(nsresult status)
+{
+	nsCOMPtr <nsILoadGroup> aLoadGroup;
+	if (m_mockChannel)
+	{
+		GetLoadGroup(getter_AddRefs(aLoadGroup));
+		if (aLoadGroup)
+		{
+			aLoadGroup->RemoveChannel(m_mockChannel, nsnull, status, nsnull);
 		}
 	}
 	return NS_OK;

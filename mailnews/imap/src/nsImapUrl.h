@@ -95,6 +95,7 @@ public:
     NS_IMETHOD SetMockChannel(nsIImapMockChannel * aChannel);
 
 	NS_IMETHOD AddChannelToLoadGroup();
+	NS_IMETHOD RemoveChannel(nsresult status);
     // nsIMsgMessageUrl
     NS_DECL_NSIMSGMESSAGEURL
 

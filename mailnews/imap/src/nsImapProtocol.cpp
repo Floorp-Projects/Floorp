@@ -1060,6 +1060,11 @@ PRBool nsImapProtocol::ProcessCurrentURL()
         WaitForFEEventCompletion();
     }
 
+	// probably the wrong place to remove the channel - we need
+	// a place where we know we're finished with the url.
+	if (m_runningUrl)
+		m_runningUrl->RemoveChannel(NS_OK);
+
 	// release this by hand so that we can load the next queued url without thinking
 	// this connection is busy running a url.
 	m_runningUrl = null_nsCOMPtr();
@@ -3341,11 +3346,16 @@ PRMonitor *nsImapProtocol::GetDataMemberMonitor()
 // in 4.5 - we need to think about this some. Some of it may just go away in the new world order
 PRBool nsImapProtocol::DeathSignalReceived()
 {
-	PRBool returnValue;
-	PR_EnterMonitor(m_threadDeathMonitor);
-	returnValue = m_threadShouldDie;
-	PR_ExitMonitor(m_threadDeathMonitor);
-	
+	PRBool returnValue = PR_FALSE;
+	if (m_mockChannel)
+		m_mockChannel->GetCancelled(&returnValue);
+
+	if (!returnValue)	// check the other way of cancelling.
+	{
+		PR_EnterMonitor(m_threadDeathMonitor);
+		returnValue = m_threadShouldDie;
+		PR_ExitMonitor(m_threadDeathMonitor);
+	}
 	return returnValue;
 }
 
@@ -6149,6 +6159,7 @@ nsImapMockChannel::nsImapMockChannel()
 {
     NS_INIT_REFCNT();
     m_channelContext = nsnull;
+	m_cancelled = PR_FALSE;
 }
 
 nsImapMockChannel::~nsImapMockChannel()
@@ -6323,13 +6334,8 @@ NS_IMETHODIMP nsImapMockChannel::IsPending(PRBool *result)
 
 NS_IMETHODIMP nsImapMockChannel::Cancel()
 {
-	if (m_channelContext)
-	{
-		nsCOMPtr<nsIImapProtocol> protocol = do_QueryInterface(m_channelContext);
-		if (protocol)
-			protocol->TellThreadToDie(PR_TRUE);
-	}
-    return NS_ERROR_NOT_IMPLEMENTED;
+	m_cancelled = PR_TRUE;
+    return NS_OK;
 }
 
 NS_IMETHODIMP nsImapMockChannel::Suspend()
@@ -6340,4 +6346,18 @@ NS_IMETHODIMP nsImapMockChannel::Suspend()
 NS_IMETHODIMP nsImapMockChannel::Resume()
 {
     return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP nsImapMockChannel::GetCancelled(PRBool *aResult)
+{
+	if (!aResult)
+		return NS_ERROR_NULL_POINTER;
+	*aResult = m_cancelled;
+	return NS_OK;
+}
+
+NS_IMETHODIMP nsImapMockChannel::SetCancelled(PRBool cancelled)
+{
+	m_cancelled = cancelled;
+	return NS_OK;
 }
