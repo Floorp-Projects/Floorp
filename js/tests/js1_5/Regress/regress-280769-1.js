@@ -46,8 +46,6 @@ printStatus (summary);
 
 function crash(N)
 {
-  var N = 100*1000;
-
   var a = new Array(N);
 
   for (var i = 0; i != N; ++i) {
