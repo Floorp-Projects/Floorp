@@ -47,6 +47,8 @@ class nsHTTPRequest;
 class nsHTTPResponse;
 class nsICachedNetData;
 
+#define LOOPING_REDIRECT_ERROR_URI  "resource:/res/errors/redirect.html"
+
 // Utility functions- TODO share from nsURLHelpers...
 nsresult           
 DupString(char* *o_Dest, const char* i_Src);
