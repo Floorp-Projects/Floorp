@@ -118,21 +118,16 @@ sort -r $RAWTSVFILE > $COPYSORTTSV
 #   If a historical file was specified, diff it with our sorted tsv values.
 #   Run it through a tool to summaries the diffs to the module
 #       level report.
+#   Otherwise, generate the module level report from our new data.
 #
 rm -f $SUMMARYFILE
 DIFFFILE="$MYTMPDIR/diff.txt"
 if [ -e $OLDTSVFILE ]; then
   diff $OLDTSVFILE $COPYSORTTSV > $DIFFFILE
   ./mozilla/dist/bin/maptsvdifftool --input $DIFFFILE >> $SUMMARYFILE
-  echo "" >>  $SUMMARYFILE
-  echo "" >>  $SUMMARYFILE
+else
+  ./mozilla/dist/bin/codesighs --modules --input $COPYSORTTSV >> $SUMMARYFILE
 fi
-
-
-#
-#   Generate the module level report from our new data.
-#
-./mozilla/dist/bin/codesighs --modules --input $COPYSORTTSV >> $SUMMARYFILE
 
 
 #
