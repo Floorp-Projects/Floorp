@@ -1618,7 +1618,7 @@ nsObjectFrame::Paint(nsIPresContext*      aPresContext,
     npprint.mode = nsPluginMode_Embedded;
 
     // we need to find out if we are windowless or not
-    PRBool    windowless;
+    PRBool windowless = PR_FALSE;
     pi->GetValue(nsPluginInstanceVariable_WindowlessBool, (void *)&windowless);
     window.type  =  windowless ? nsPluginWindowType_Drawable : nsPluginWindowType_Window;
 
@@ -3573,7 +3573,7 @@ NS_IMETHODIMP nsPluginInstanceOwner::CreateWidget(void)
 
     if (nsnull == view || nsnull == mWidget)
     {
-      PRBool    windowless;
+      PRBool windowless = PR_FALSE;
 
       mInstance->GetValue(nsPluginInstanceVariable_WindowlessBool, (void *)&windowless);
 
@@ -3589,7 +3589,7 @@ NS_IMETHODIMP nsPluginInstanceOwner::CreateWidget(void)
         if (view)
         {
           view->GetWidget(mWidget);
-          PRBool fTransparent;
+          PRBool fTransparent = PR_FALSE;
           mInstance->GetValue(nsPluginInstanceVariable_TransparentBool, (void *)&fTransparent);
           
           nsCOMPtr<nsIViewManager> vm;
