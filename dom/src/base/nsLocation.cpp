@@ -41,6 +41,8 @@
 #include "nsIDocument.h"
 #include "nsIJSContextStack.h"
 #include "nsXPIDLString.h"
+#include "nsDOMPropEnums.h"
+#include "nsDOMError.h"
 
 static NS_DEFINE_IID(kIScriptObjectOwnerIID, NS_ISCRIPTOBJECTOWNER_IID);
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
@@ -738,18 +740,35 @@ LocationImpl::DeleteProperty(JSContext *aContext, JSObject *aObj, jsval aID, jsv
   return JS_TRUE;
 }
 
+static nsresult
+CheckHrefAccess(JSContext *aContext, JSObject *aObj, PRBool isWrite) 
+{
+  nsresult rv;
+  NS_WITH_SERVICE(nsIScriptSecurityManager, secMan,
+                  NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
+  if (NS_FAILED(rv))
+    rv = NS_ERROR_DOM_SECMAN_ERR;
+  else
+    rv = secMan->CheckScriptAccess(aContext, aObj, NS_DOM_PROP_LOCATION_HREF,
+                                   isWrite);
+  if (NS_FAILED(rv))
+    return nsJSUtils::nsReportError(aContext, aObj, rv);
+  return NS_OK;
+}
+
 PRBool    
 LocationImpl::GetProperty(JSContext *aContext, JSObject *aObj, jsval aID, jsval *aVp)
 {
   PRBool result = PR_TRUE;
 
-  // XXX Security manager needs to be called
   if (JSVAL_IS_STRING(aID)) {
     char* cString = JS_GetStringBytes(JS_ValueToString(aContext, aID));
     if (PL_strcmp("href", cString) == 0) {
       nsAutoString href;
 
-      if (NS_SUCCEEDED(GetHref(href))) {
+    if (NS_SUCCEEDED(CheckHrefAccess(aContext, aObj, PR_FALSE)) &&
+        NS_SUCCEEDED(GetHref(href))) 
+    {
         const PRUnichar* bytes = href.GetUnicode();
         JSString* str = JS_NewUCStringCopyZ(aContext, (const jschar*)bytes);
         if (str) {
@@ -772,7 +791,6 @@ LocationImpl::SetProperty(JSContext *aContext, JSObject *aObj, jsval aID, jsval 
 {
   nsresult result = NS_OK;
 
-  // XXX Security manager needs to be called
   if (JSVAL_IS_STRING(aID)) {
     char* cString = JS_GetStringBytes(JS_ValueToString(aContext, aID));
     
@@ -780,6 +798,9 @@ LocationImpl::SetProperty(JSContext *aContext, JSObject *aObj, jsval aID, jsval 
       nsIURI* base;
       nsAutoString href;
       
+      if (NS_FAILED(CheckHrefAccess(aContext, aObj, PR_TRUE)))
+        return PR_FALSE;
+
       // Get the parameter passed in
       nsJSUtils::nsConvertJSValToString(href, aContext, *aVp);
       

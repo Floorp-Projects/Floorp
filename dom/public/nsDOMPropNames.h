@@ -612,6 +612,7 @@
     "location.hash", \
     "location.host", \
     "location.hostname", \
+    "location.href", \
     "location.pathname", \
     "location.port", \
     "location.protocol", \
