@@ -78,7 +78,7 @@
           var popupset = document.getAnonymousElementByAttribute(this, "anonid", "popupset");
           popupset.appendChild(popup);
         }
-        popup.mParentTextbox = this;
+        popup.mInput = this;
         popup;
       ]]></field>
       
@@ -184,14 +184,13 @@
       <property name="open"
                 onget="return this.getAttribute('open') == 'true';">
         <setter><![CDATA[
-            var historyPopup = document.getAnonymousElementByAttribute(this, "anonid", "historydropmarker");
             if (val) {
               this.setAttribute("open", "true"); 
-              historyPopup.showPopup();
+              this.showHistoryPopup();
             }
             else {
               this.removeAttribute("open");
-              historyPopup.hidePopup();
+              this.closePopup();
             }
         ]]></setter>
       </property>
