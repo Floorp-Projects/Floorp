@@ -855,7 +855,7 @@ sub BuildXPIDLCompiler()
     StartBuildModule("xpidl");
 
     #// see if the xpidl compiler/linker has been rebuilt by comparing modification dates.
-    my($codewarrior_plugins) = CodeWarriorLib::getCodeWarriorPath("CodeWarrior Plugins:");
+    my($codewarrior_plugins) = GetCodeWarriorRelativePath("CodeWarrior Plugins:");
     my($compiler_path) = $codewarrior_plugins . "Compilers:xpidl";
     my($linker_path) = $codewarrior_plugins . "Linkers:xpt Linker";
     my($compiler_modtime) = (-e $compiler_path ? GetFileModDate($compiler_path) : 0);
@@ -874,7 +874,7 @@ sub BuildXPIDLCompiler()
 	# xpt_link MPW tool, needed for merging xpt files (release build)
     if ($main::options_flags{xptlink})
     {
-        my($codewarrior_msl) = CodeWarriorLib::getCodeWarriorPath("MSL:MSL_C:MSL_MacOS:");
+        my($codewarrior_msl) = GetCodeWarriorRelativePath("MSL:MSL_C:MSL_MacOS:");
     	if ( ! -e $codewarrior_msl . "Lib:PPC:MSL C.PPC MPW(NL).Lib") {
         	print("MSL PPC MPW Lib not found... Let's build it.\n");
         	BuildProject($codewarrior_msl . "Project:PPC:MSL C.PPC MPW.mcp", "MSL C.PPC MPW");
@@ -1524,7 +1524,7 @@ sub BuildPluginsProjects()
 
     # as a temporary measure, make sure that the folder "MacOS Support:JNIHeaders" exists,
     # before we attempt to build the MRJ plugin. This will allow a gradual transition.
-    unless( -e CodeWarriorLib::getCodeWarriorPath("MacOS Support:JNIHeaders")) { return; }
+    unless( -e GetCodeWarriorRelativePath("MacOS Support:JNIHeaders")) { return; }
 
     StartBuildModule("plugins");
 
@@ -1545,7 +1545,7 @@ sub BuildPluginsProjects()
     # Build MRJPlugin
     BuildProject($project_path, "MRJPlugin");
     # Build MRJPlugin.jar (if Java tools exist)
-    my($linker_path) = CodeWarriorLib::getCodeWarriorPath("CodeWarrior Plugins:Linkers:Java Linker");
+    my($linker_path) = GetCodeWarriorRelativePath("CodeWarrior Plugins:Linkers:Java Linker");
     if (-e $linker_path) {
         print("CodeWarrior Java tools detected, building MRJPlugin.jar.\n");
         BuildProject($project_path, "MRJPlugin.jar");
