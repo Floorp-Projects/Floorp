@@ -136,10 +136,8 @@ if ( $::FORM{'id'} ) {
     SendSQL("SELECT product FROM bugs WHERE bug_id = $::FORM{'id'}");
     $::oldproduct = FetchSQLData();
 }
-if ((($::FORM{'id'} && $::FORM{'product'} ne $::oldproduct) 
-     || (!$::FORM{'id'} && $::FORM{'product'} ne $::dontchange))
-    && CheckonComment( "reassignbycomponent" ))
-{
+if ( ($::FORM{'id'} && $::FORM{'product'} ne $::oldproduct) 
+       || (!$::FORM{'id'} && $::FORM{'product'} ne $::dontchange) ) {
     if ( Param("strictvaluechecks") ) {
         CheckFormField(\%::FORM, 'product', \@::legal_product);
     }
