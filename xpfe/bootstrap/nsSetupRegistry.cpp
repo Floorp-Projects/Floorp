@@ -44,6 +44,27 @@
 #include "nsIAboutModule.h"
 static NS_DEFINE_CID(kSessionHistoryCID,   NS_SESSIONHISTORY_CID);
 static NS_DEFINE_CID(	kCommonDialogsCID, NS_CommonDialog_CID );
+#ifdef XP_OS2
+
+#define WIDGET_DLL      "WDGTOS2"
+#define GFXWIN_DLL      "GFX_OS2"
+#define VIEW_DLL        "NGVIEW"
+#define WEB_DLL         "WEBSHELL"
+#define PLUGIN_DLL      "NGPLUGIN"
+#define PREF_DLL        "PREF"
+#define PARSER_DLL      "HTMLPARS"
+#define DOM_DLL         "JSDOM"
+#define LAYOUT_DLL      "NGLAYOUT"
+#define NETLIB_DLL      "NECKO"
+#define EDITOR_DLL      "ENDER"
+#define APPSHELL_DLL    "APPSHELL"
+#define APPCORES_DLL    "APPCORES"
+#define CAPS_DLL        "CAPS"
+#define LIVECONNECT_DLL "JSJ"
+#define OJI_DLL         "OJI"
+
+#else
+
 #ifdef XP_PC
 
 #define BROWSER_DLL  "nsbrowser.dll"
@@ -63,6 +84,8 @@ static NS_DEFINE_CID(	kCommonDialogsCID, NS_CommonDialog_CID );
 #endif // XP_MAC
 
 #endif // XP_PC
+
+#endif // XP_OS2
 
 // Class IDs
 static NS_DEFINE_CID(kCAppShellServiceCID, NS_APPSHELL_SERVICE_CID);
