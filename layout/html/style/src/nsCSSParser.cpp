@@ -31,6 +31,9 @@
 #include "nsVoidArray.h"
 #include "nsColor.h"
 #include "nsStyleConsts.h"
+#include "nsCSSAtoms.h"
+#include "nsINameSpaceManager.h"
+#include "nsINameSpace.h"
 
 // XXX TODO:
 // - rework aErrorCode stuff: switch over to nsresult
@@ -46,142 +49,52 @@ static NS_DEFINE_IID(kCSSTextSID, NS_CSS_TEXT_SID);
 
 #define KEYWORD_BUFFER_SIZE 50    // big enough for any keyword
 
-struct Selector {
-  nsAutoString  mTag;     // weight 1
-  nsAutoString  mID;      // weight 100
-  nsAutoString  mClass;   // weight 10
-  nsAutoString  mPseudoClass;  // weight 10 (== class)
-  nsAutoString  mPseudoElement;  // weight 10 (== class) ??
-
-  PRUint32      mMask;    // which fields have values
-
-  Selector();
-  ~Selector();
-
-  PRInt32 Weight() const;
-#ifdef NS_DEBUG
-  void Dump() const;
-#endif
-};
-
-#define SELECTOR_TAG            0x01
-#define SELECTOR_ID             0x02
-#define SELECTOR_CLASS          0x04
-#define SELECTOR_PSEUDO_CLASS   0x08
-#define SELECTOR_PSEUDO_ELEMENT 0x10
-
-#define SELECTOR_WEIGHT_BASE 10
-
-Selector::Selector()
-{
-  mMask = 0;
-}
-
-Selector::~Selector()
-{
-}
-
-PRInt32 Selector::Weight() const
-{
-  return (((0 != (SELECTOR_TAG & mMask)) ? 1 : 0) + 
-          ((0 != (SELECTOR_ID & mMask)) ? (SELECTOR_WEIGHT_BASE * SELECTOR_WEIGHT_BASE) : 0) + 
-          ((0 != ((SELECTOR_CLASS | SELECTOR_PSEUDO_CLASS | SELECTOR_PSEUDO_ELEMENT) & mMask)) ? SELECTOR_WEIGHT_BASE : 0));
-}
-
-#ifdef NS_DEBUG
-void Selector::Dump() const
-{
-  PRBool needSpace = PR_FALSE;
-  if (mTag.Length() > 0) {
-    fputs(mTag, stdout);
-    needSpace = PR_TRUE;
-  }
-  if (mID.Length() > 0) {
-    if (needSpace) fputs(" ", stdout);
-    fputs("#", stdout);
-    fputs(mID, stdout);
-    needSpace = PR_TRUE;
-  }
-  if (mClass.Length() > 0) {
-    if (needSpace) fputs(" ", stdout);
-    fputs(".", stdout);
-    fputs(mClass, stdout);
-    needSpace = PR_TRUE;
-  }
-  if (mPseudoClass.Length() > 0) {
-    if (needSpace) fputs(" ", stdout);
-    fputs(":", stdout);
-    fputs(mPseudoClass, stdout);
-    needSpace = PR_TRUE;
-  }
-  if (mPseudoElement.Length() > 0) {
-    if (needSpace) fputs(" ", stdout);
-    fputs(":", stdout);
-    fputs(mPseudoElement, stdout);
-    needSpace = PR_TRUE;
-  }
-}
-#endif
-
 // e.g. "P B, H1 B { ... }" has a selector list with two elements,
 // each of which has two selectors.
 struct SelectorList {
-  SelectorList* mNext;
-  nsVoidArray mSelectors;
+  SelectorList(void);
+  ~SelectorList(void);
 
-  SelectorList();
-
-  void Destroy();
-
-  void AddSelector(Selector* aSelector) {
-    mSelectors.AppendElement(aSelector);
-  }
+  void AddSelector(const nsCSSSelector& aSelector);
 
 #ifdef NS_DEBUG
-  void Dump();
+  void Dump(void);
 #endif
 
-private:
-  ~SelectorList();
+  nsCSSSelector* mSelectors;
+  SelectorList* mNext;
 };
 
-SelectorList::SelectorList()
+SelectorList::SelectorList(void)
+  : mSelectors(nsnull),
+    mNext(nsnull)
 {
-  mNext = nsnull;
 }
 
 SelectorList::~SelectorList()
 {
-  PRInt32 n = mSelectors.Count();
-  for (PRInt32 i = 0; i < n; i++) {
-    Selector* sel = (Selector*) mSelectors.ElementAt(i);
-    delete sel;
+  nsCSSSelector*  sel = mSelectors;
+  while (nsnull != sel) {
+    nsCSSSelector* dead = sel;
+    sel = sel->mNext;
+    delete dead;
+  }
+  if (nsnull != mNext) {
+    delete mNext;
   }
 }
 
-void SelectorList::Destroy()
-{
-  SelectorList* list = this;
-  while (nsnull != list) {
-    SelectorList* next = list->mNext;
-    delete list;
-    list = next;
-  }
+void SelectorList::AddSelector(const nsCSSSelector& aSelector)
+{ // prepend to list
+  nsCSSSelector* newSel = new nsCSSSelector(aSelector);
+  newSel->mNext = mSelectors;
+  mSelectors = newSel;
 }
+
 
 #ifdef NS_DEBUG
 void SelectorList::Dump()
 {
-  PRInt32 n = mSelectors.Count();
-  for (PRInt32 i = 0; i < n; i++) {
-    Selector* sel = (Selector*) mSelectors.ElementAt(i);
-    sel->Dump();
-    fputs(" ", stdout);
-  }
-  if (mNext) {
-    fputs(", ", stdout);
-    mNext->Dump();
-  }
 }
 #endif
 
@@ -199,6 +112,8 @@ public:
   NS_IMETHOD GetInfoMask(PRUint32& aResult);
 
   NS_IMETHOD SetStyleSheet(nsICSSStyleSheet* aSheet);
+
+  NS_IMETHOD SetCaseSensative(PRBool aCaseSensative);
 
   NS_IMETHOD Parse(nsIUnicharInputStream* aInput,
                    nsIURL*                aInputURL,
@@ -231,9 +146,9 @@ protected:
   PRBool GatherMedia(PRInt32& aErrorCode, nsString& aMedia);
   PRBool ProcessImport(PRInt32& aErrorCode, const nsString& aURLSpec, const nsString& aMedia);
 
-  PRBool ParseSelectorGroup(PRInt32& aErrorCode, SelectorList* aListHead);
-  PRBool ParseSelectorList(PRInt32& aErrorCode, SelectorList* aListHead);
-  PRBool ParseSelector(PRInt32& aErrorCode, Selector* aSelectorResult);
+  PRBool ParseSelectorList(PRInt32& aErrorCode, SelectorList*& aListHead);
+  PRBool ParseSelectorGroup(PRInt32& aErrorCode, SelectorList*& aListHead);
+  PRBool ParseSelector(PRInt32& aErrorCode, nsCSSSelector& aSelectorResult);
   nsICSSDeclaration* ParseDeclarationBlock(PRInt32& aErrorCode,
                                            PRBool aCheckForBraces);
   PRBool ParseDeclaration(PRInt32& aErrorCode,
@@ -317,6 +232,7 @@ protected:
   PRBool mInHead;
 
   PRBool  mNavQuirkMode;
+  PRBool  mCaseSensative;
 };
 
 NS_HTML nsresult
@@ -334,19 +250,23 @@ NS_NewCSSParser(nsICSSParser** aInstancePtrResult)
 CSSParserImpl::CSSParserImpl()
 {
   NS_INIT_REFCNT();
+  nsCSSAtoms::AddrefAtoms();
   mScanner = nsnull;
   mSheet = nsnull;
   mHavePushBack = PR_FALSE;
   mNavQuirkMode = PR_TRUE;
+  mCaseSensative = PR_FALSE;
 }
 
 CSSParserImpl::CSSParserImpl(nsICSSStyleSheet* aSheet)
 {
   NS_INIT_REFCNT();
+  nsCSSAtoms::AddrefAtoms();
   mScanner = nsnull;
   mSheet = aSheet; NS_ADDREF(aSheet);
   mHavePushBack = PR_FALSE;
   mNavQuirkMode = PR_TRUE;
+  mCaseSensative = PR_FALSE;
 }
 
 NS_IMPL_ISUPPORTS(CSSParserImpl,kICSSParserIID)
@@ -354,16 +274,17 @@ NS_IMPL_ISUPPORTS(CSSParserImpl,kICSSParserIID)
 CSSParserImpl::~CSSParserImpl()
 {
   NS_IF_RELEASE(mSheet);
+  nsCSSAtoms::ReleaseAtoms();
 }
 
-NS_METHOD
+NS_IMETHODIMP
 CSSParserImpl::GetInfoMask(PRUint32& aResult)
 {
   aResult = NS_CSS_GETINFO_CSS1 | NS_CSS_GETINFO_CSSP;
   return NS_OK;
 }
 
-NS_METHOD
+NS_IMETHODIMP
 CSSParserImpl::SetStyleSheet(nsICSSStyleSheet* aSheet)
 {
   NS_PRECONDITION(nsnull != aSheet, "null ptr");
@@ -381,7 +302,15 @@ CSSParserImpl::SetStyleSheet(nsICSSStyleSheet* aSheet)
   return NS_OK;
 }
 
-NS_METHOD
+NS_IMETHODIMP
+CSSParserImpl::SetCaseSensative(PRBool aCaseSensative)
+{
+  mCaseSensative = aCaseSensative;
+  return NS_OK;
+}
+
+
+NS_IMETHODIMP
 CSSParserImpl::Parse(nsIUnicharInputStream* aInput,
                      nsIURL*                aInputURL,
                      nsICSSStyleSheet*&     aResult)
@@ -426,7 +355,7 @@ CSSParserImpl::Parse(nsIUnicharInputStream* aInput,
   return NS_OK;
 }
 
-NS_METHOD
+NS_IMETHODIMP
 CSSParserImpl::ParseDeclarations(const nsString& aDeclaration,
                                  nsIURL*         aBaseURL,
                                  nsIStyleRule*&  aResult)
@@ -471,7 +400,7 @@ CSSParserImpl::ParseDeclarations(const nsString& aDeclaration,
   return NS_OK;
 }
 
-NS_METHOD
+NS_IMETHODIMP
 CSSParserImpl::ParseAndAppendDeclaration(const nsString&    aBuffer,
                                          nsIURL*            aBaseURL,
                                          nsICSSDeclaration* aDeclaration,
@@ -925,18 +854,18 @@ PRBool CSSParserImpl::ParseRuleSet(PRInt32& aErrorCode)
   nsCSSToken* tk = &mToken;
 
   // First get the list of selectors for the rule
-  SelectorList *slist = new SelectorList();
-  if (!ParseSelectorList(aErrorCode, slist)) {
+  SelectorList* slist = nsnull;
+  if (! ParseSelectorList(aErrorCode, slist)) {
     SkipRuleSet(aErrorCode);
-    slist->Destroy();
     return PR_FALSE;
   }
+  NS_ASSERTION(nsnull != slist, "null selector list");
 
   // Next parse the declaration block
   nsICSSDeclaration* declaration = ParseDeclarationBlock(aErrorCode, PR_TRUE);
   if (nsnull == declaration) {
     // XXX skip something here
-    slist->Destroy();
+    delete slist;
     return PR_FALSE;
   }
 
@@ -950,34 +879,16 @@ PRBool CSSParserImpl::ParseRuleSet(PRInt32& aErrorCode)
   // Translate the selector list and declaration block into style data
 
   SelectorList* list = slist;
-  nsCSSSelector selector;
-  nsICSSStyleRule* rule = nsnull;
 
   while (nsnull != list) {
-    PRInt32 selIndex = list->mSelectors.Count();
-
-    Selector* sel = (Selector*)list->mSelectors[--selIndex];
-    if (0 < sel->mPseudoElement.Length()) { // only pseudo elements at end selector
-      nsString  nullStr;
-      selector.Set(sel->mPseudoElement, nullStr, nullStr, nullStr);
-      NS_NewCSSStyleRule(&rule, selector);
-    }
-    selector.Set(sel->mTag, sel->mID, sel->mClass, sel->mPseudoClass);
-    PRInt32 weight = sel->Weight();
-
-    if (nsnull == rule) {
-      NS_NewCSSStyleRule(&rule, selector);
-    }
-    else {
-      rule->AddSelector(selector);
-    }
+    PRInt32 weight = list->mSelectors->CalcWeight();
+    nsICSSStyleRule* rule = nsnull;
+    NS_NewCSSStyleRule(&rule, *(list->mSelectors));
     if (nsnull != rule) {
-      while (--selIndex >= 0) {
-        Selector* sel = (Selector*)list->mSelectors[selIndex];
-        selector.Set(sel->mTag, sel->mID, sel->mClass, sel->mPseudoClass);
-
-        rule->AddSelector(selector);
-        weight += sel->Weight();
+      if (nsnull != list->mSelectors->mNext) { // hand off other selectors to new rule
+        nsCSSSelector* ruleFirst = rule->FirstSelector();
+        ruleFirst->mNext = list->mSelectors->mNext;
+        list->mSelectors->mNext = nsnull;
       }
       rule->SetDeclaration(declaration);
       rule->SetWeight(weight);
@@ -990,219 +901,342 @@ PRBool CSSParserImpl::ParseRuleSet(PRInt32& aErrorCode)
   }
 
   // Release temporary storage
-  slist->Destroy();
+  delete slist;
   NS_RELEASE(declaration);
   return PR_TRUE;
 }
 
 PRBool CSSParserImpl::ParseSelectorList(PRInt32& aErrorCode,
-                                        SelectorList* aListHead)
+                                        SelectorList*& aListHead)
 {
-  if (!ParseSelectorGroup(aErrorCode, aListHead)) {
+  SelectorList* list = nsnull;
+  if (! ParseSelectorGroup(aErrorCode, list)) {
     // must have at least one selector group
+    aListHead = nsnull;
     return PR_FALSE;
   }
+  NS_ASSERTION(nsnull != list, "no selector list");
+  aListHead = list;
 
   // After that there must either be a "," or a "{"
   nsCSSToken* tk = &mToken;
   for (;;) {
-    if (!GetToken(aErrorCode, PR_TRUE)) {
-      return PR_FALSE;
+    if (! GetToken(aErrorCode, PR_TRUE)) {
+      break;
     }
     if (eCSSToken_Symbol != tk->mType) {
       UngetToken();
-      return PR_FALSE;
+      break;
     }
     if (',' == tk->mSymbol) {
+      SelectorList* newList = nsnull;
       // Another selector group must follow
-      SelectorList* newList = new SelectorList();
-      if (!ParseSelectorGroup(aErrorCode, newList)) {
-        newList->Destroy();
-        return PR_FALSE;
+      if (! ParseSelectorGroup(aErrorCode, newList)) {
+        break;
       }
       // add new list to the end of the selector list
-      aListHead->mNext = newList;
-      aListHead = newList;
+      list->mNext = newList;
+      list = newList;
       continue;
     } else if ('{' == tk->mSymbol) {
       UngetToken();
-      break;
+      return PR_TRUE;
     } else {
       UngetToken();
-      return PR_FALSE;
+      break;
     }
   }
 
-  return PR_TRUE;
+  delete aListHead;
+  aListHead = nsnull;
+  return PR_FALSE;
+}
+
+static PRBool IsPseudoClass(const nsIAtom* aAtom)
+{
+  return PRBool((nsCSSAtoms::activePseudo == aAtom) || 
+                (nsCSSAtoms::firstChildPseudo == aAtom) ||
+                (nsCSSAtoms::focusPseudo == aAtom) ||
+                (nsCSSAtoms::hoverPseudo == aAtom) ||
+                (nsCSSAtoms::langPseudo == aAtom) ||
+                (nsCSSAtoms::linkPseudo == aAtom) ||
+                (nsCSSAtoms::outOfDatePseudo == aAtom) ||
+                (nsCSSAtoms::visitedPseudo == aAtom));
+}
+
+static PRBool IsSinglePseudoClass(const nsCSSSelector& aSelector)
+{
+  return PRBool((aSelector.mNameSpace == kNameSpaceID_Unknown) && 
+                (aSelector.mTag == nsnull) && 
+                (aSelector.mID == nsnull) &&
+                (aSelector.mClassList == nsnull) &&
+                (aSelector.mAttrList == nsnull) &&
+                (aSelector.mPseudoClassList != nsnull) &&
+                (aSelector.mPseudoClassList->mNext == nsnull));
 }
 
 PRBool CSSParserImpl::ParseSelectorGroup(PRInt32& aErrorCode,
-                                         SelectorList* aList)
+                                         SelectorList*& aList)
 {
+  SelectorList* list = nsnull;
   for (;;) {
-    Selector* sel = new Selector();
-    if (!ParseSelector(aErrorCode, sel)) {
-      delete sel;
+    nsCSSSelector selector;
+    if (! ParseSelector(aErrorCode, selector)) {
       break;
     }
-    aList->AddSelector(sel);
+    if (nsnull == list) {
+      list = new SelectorList();
+    }
+    list->AddSelector(selector);
+    nsCSSSelector* listSel = list->mSelectors;
+    // XXX parse combinator here
+
+    // pull out pseudo elements here
+    nsAtomList* prevList = nsnull;
+    nsAtomList* pseudoClassList = listSel->mPseudoClassList;
+    while (nsnull != pseudoClassList) {
+      if (! IsPseudoClass(pseudoClassList->mAtom)) {
+        if (IsSinglePseudoClass(*listSel)) {  // convert to pseudo element selector
+          nsIAtom* pseudoElement = pseudoClassList->mAtom;  // steal ref count
+          pseudoClassList->mAtom = nsnull;
+          listSel->Reset();
+          listSel->mTag = pseudoElement;
+        }
+        else {  // append new pseudo element selector
+          selector.Reset();
+          selector.mTag = pseudoClassList->mAtom; // steal ref count
+          list->AddSelector(selector);
+          pseudoClassList->mAtom = nsnull;
+          if (nsnull == prevList) { // delete list entry
+            listSel->mPseudoClassList = pseudoClassList->mNext;
+          }
+          else {
+            prevList->mNext = pseudoClassList->mNext;
+          }
+          pseudoClassList->mNext = nsnull;
+          delete pseudoClassList;
+        }
+        break;  // only one pseudo element per selector
+      }
+      prevList = pseudoClassList;
+      pseudoClassList = pseudoClassList->mNext;
+    }
   }
-  return (PRBool) (aList->mSelectors.Count() > 0);
+  aList = list;
+  return PRBool(nsnull != aList);
 }
 
-static PRBool IsPseudoClass(const nsString& aBuffer)
-{
-  return (aBuffer.EqualsIgnoreCase("link") ||
-          aBuffer.EqualsIgnoreCase("visited") ||
-          aBuffer.EqualsIgnoreCase("hover") ||
-          aBuffer.EqualsIgnoreCase("out-of-date") ||  // our extension
-          aBuffer.EqualsIgnoreCase("active"));
-}
+#define SEL_MASK_NSPACE   0x01
+#define SEL_MASK_ELEM     0x02
+#define SEL_MASK_ID       0x04
+#define SEL_MASK_CLASS    0x08
+#define SEL_MASK_ATTRIB   0x10
+#define SEL_MASK_PCLASS   0x20
+#define SEL_MASK_PELEM    0x40
 
 /**
- * These are the 31 possible kinds of CSS1 style selectors:
- * (but there are 50 ways to leave your lover)
- * [*] means it can repeat
- * <UL>
- * <LI>Tag
- * <LI>Tag#Id
- * <LI>Tag#Id.Class[*]
- * <LI>Tag#Id.Class[*]:PseudoClass[*]
- * <LI>Tag#Id.Class[*]:PseudoClass[*]:PseudoElement
- * <LI>Tag#Id.Class[*]:PseudoElement
- * <LI>Tag#Id:PseudoClass[*]
- * <LI>Tag#Id:PseudoClass[*]:PseudoElement
- * <LI>Tag#Id:PseudoElement
- * <LI>Tag.Class[*]
- * <LI>Tag.Class[*]:PseudoClass[*]
- * <LI>Tag.Class[*]:PseudoClass[*]:PseudoElement
- * <LI>Tag.Class[*]:PseudoElement
- * <LI>Tag:PseudoClass[*]
- * <LI>Tag:PseudoClass[*]:PseudoElement
- * <LI>Tag:PseudoElement
- * <LI>#Id
- * <LI>#Id.Class[*]
- * <LI>#Id.Class[*]:PseudoClass[*]
- * <LI>#Id.Class[*]:PseudoClass[*]:PseudoElement
- * <LI>#Id.Class[*]:PseudoElement
- * <LI>#Id:PseudoClass[*]
- * <LI>#Id:PseudoClass[*]:PseudoElement
- * <LI>#Id:PseudoElement
- * <LI>.Class[*]
- * <LI>.Class[*]:PseudoClass[*]
- * <LI>.Class[*]:PseudoClass[*]:PseudoElement
- * <LI>.Class[*]:PseudoElement
- * <LI>:PseudoClass[*]
- * <LI>:PseudoClass[*]:PseudoElement
- * <LI>:PseudoElement
- * </UL>
+ * This is the format for selectors:
+ * operator? [namespace \:]? element_name? [ ID | class | attrib | pseudo ]*
  */
 PRBool CSSParserImpl::ParseSelector(PRInt32& aErrorCode,
-                                    Selector* aSelectorResult)
+                                    nsCSSSelector& aSelector)
 {
-  PRUint32 mask = 0;
-  aSelectorResult->mTag.Truncate(0);
-  aSelectorResult->mClass.Truncate(0);
-  aSelectorResult->mID.Truncate(0);
-  aSelectorResult->mPseudoClass.Truncate(0);
-  aSelectorResult->mPseudoElement.Truncate(0);
+  PRInt32       dataMask = 0;
+  nsAutoString  buffer;
 
-  nsCSSToken* tk = &mToken;
-  if (!GetToken(aErrorCode, PR_TRUE)) {
+  if (! GetToken(aErrorCode, PR_TRUE)) {
     return PR_FALSE;
   }
-  if (eCSSToken_Ident == tk->mType) {
-    // tag
-    mask |= SELECTOR_TAG;
-    aSelectorResult->mTag.Append(tk->mIdent);
-    if (!GetToken(aErrorCode, PR_FALSE)) {
-      // premature eof is ok (here!)
+  if ((eCSSToken_Symbol == mToken.mType) && ('*' == mToken.mSymbol)) {  // universal element selector
+    // don't set any tag in the selector
+    dataMask |= SEL_MASK_ELEM;
+    if (! GetToken(aErrorCode, PR_FALSE)) {   // premature eof is ok (here!)
       return PR_TRUE;
     }
   }
-  if (eCSSToken_ID == tk->mType) {
-    // #id
-    if ((0 < tk->mIdent.Length()) && (nsString::IsAlpha(tk->mIdent.CharAt(0)))) { // verify is legal ID
-      mask |= SELECTOR_ID;
-      aSelectorResult->mID.Append(tk->mIdent);
-      if (!GetToken(aErrorCode, PR_FALSE)) {
-        // premature eof is ok (here!)
-        return PR_TRUE;
+  else if (eCSSToken_Ident == mToken.mType) {    // element name
+    PRInt32 colon = mToken.mIdent.Find(':');
+    if (-1 == colon) {  // no namespace
+      if (mCaseSensative) {
+        aSelector.SetTag(mToken.mIdent);
+      }
+      else {
+        mToken.mIdent.ToUpperCase(buffer);
+        aSelector.SetTag(buffer);
       }
     }
-    else {
-      return PR_FALSE;
+    else {  // pull out the namespace
+      nsAutoString  nameSpace;
+      mToken.mIdent.Left(nameSpace, colon);
+      mToken.mIdent.Right(buffer, (mToken.mIdent.Length() - (colon + 1)));
+      if (! mCaseSensative) {
+        buffer.ToUpperCase();
+      }
+      // XXX lookup namespace, set it
+      // deal with * namespace (== unknown)
+      aSelector.SetTag(buffer);
     }
-  }
-  if ((eCSSToken_Symbol == tk->mType) && ('.' == tk->mSymbol)) {
-    // .class
-    if (!GetToken(aErrorCode, PR_FALSE)) {
-      return PR_FALSE;
-    }
-    if (eCSSToken_Ident != tk->mType) {
-      // malformed selector
-      UngetToken();
-      return PR_FALSE;
-    }
-    mask |= SELECTOR_CLASS;
-    aSelectorResult->mClass.Append(tk->mIdent);
-    if (!GetToken(aErrorCode, PR_FALSE)) {
-      // premature eof is ok (here!)
+    dataMask |= SEL_MASK_ELEM;
+    if (! GetToken(aErrorCode, PR_FALSE)) {   // premature eof is ok (here!)
       return PR_TRUE;
     }
   }
-  if ((eCSSToken_Symbol == tk->mType) && (':' == tk->mSymbol)) {
-    // :pseudo
-    if (!GetToken(aErrorCode, PR_FALSE)) {
-      // premature eof
-      return PR_FALSE;
+  for (;;) {
+    if (eCSSToken_ID == mToken.mType) {   // #id
+      if ((0 == (dataMask & SEL_MASK_ID)) &&  // only one ID
+          (0 < mToken.mIdent.Length()) && 
+          (nsString::IsAlpha(mToken.mIdent.CharAt(0)))) { // verify is legal ID
+        dataMask |= SEL_MASK_ID;
+        aSelector.SetID(mToken.mIdent);
+      }
+      else {
+        UngetToken();
+        return PR_FALSE;
+      }
     }
-    if (eCSSToken_Ident != tk->mType) {
-      // malformed selector
-      UngetToken();
-      return PR_FALSE;
+    else if ((eCSSToken_Symbol == mToken.mType) && ('.' == mToken.mSymbol)) {  // .class
+      if (! GetToken(aErrorCode, PR_FALSE)) { // get ident
+        return PR_FALSE;
+      }
+      if (eCSSToken_Ident != mToken.mType) {  // malformed selector (XXX what about leading digits?)
+        UngetToken();
+        return PR_FALSE;
+      }
+      dataMask |= SEL_MASK_CLASS;
+      if (mCaseSensative) {
+        aSelector.AddClass(mToken.mIdent);
+      }
+      else {
+        mToken.mIdent.ToUpperCase(buffer);
+        aSelector.AddClass(buffer);
+      }
     }
-    if (IsPseudoClass(tk->mIdent)) {
-      mask |= SELECTOR_PSEUDO_CLASS;
-      aSelectorResult->mPseudoClass.Append(tk->mIdent);
+    else if ((eCSSToken_Symbol == mToken.mType) && (':' == mToken.mSymbol)) { // :pseudo
+      if (! GetToken(aErrorCode, PR_FALSE)) { // premature eof
+        return PR_FALSE;
+      }
+      if (eCSSToken_Ident != mToken.mType) {  // malformed selector
+        UngetToken();
+        return PR_FALSE;
+      }
+      buffer.Truncate();
+      buffer.Append(':');
+      buffer.Append(mToken.mIdent);
+      buffer.ToUpperCase();
+      nsIAtom* pseudo = NS_NewAtom(buffer);
+      if (IsPseudoClass(pseudo)) {
+        // XXX parse lang pseudo class
+        dataMask |= SEL_MASK_PCLASS;
+        aSelector.AddPseudoClass(pseudo);
+      }
+      else {
+        if (0 == (dataMask & SEL_MASK_PELEM)) {
+          dataMask |= SEL_MASK_PELEM;
+          aSelector.AddPseudoClass(pseudo); // store it here, it gets pulled later
+        }
+        else {  // multiple pseudo elements, not legal
+          UngetToken();
+          NS_RELEASE(pseudo);
+          return PR_FALSE;
+        }
+      }
+      NS_RELEASE(pseudo);
     }
-    else {
-      mask |= SELECTOR_PSEUDO_ELEMENT;
-      aSelectorResult->mPseudoElement.Append(':');  // keep the colon
-      aSelectorResult->mPseudoElement.Append(tk->mIdent);
+    else if ((eCSSToken_Symbol == mToken.mType) && ('[' == mToken.mSymbol)) {  // attribute
+      if (! GetToken(aErrorCode, PR_FALSE)) { // premature EOF
+        return PR_FALSE;
+      }
+      if (eCSSToken_Ident != mToken.mType) {  // malformed selector
+        UngetToken();
+        return PR_FALSE;
+      }
+      nsAutoString  attr(mToken.mType);
+      if (! mCaseSensative) {
+        attr.ToUpperCase();
+      }
+      if (! GetToken(aErrorCode, PR_FALSE)) { // premature EOF
+        return PR_FALSE;
+      }
+      if (eCSSToken_Symbol == mToken.mType) {
+        PRUint8 func;
+        if (']' == mToken.mSymbol) {
+          dataMask |= SEL_MASK_ATTRIB;
+          aSelector.AddAttribute(attr);
+          func = NS_ATTR_FUNC_SET;
+        }
+        else if ('=' == mToken.mSymbol) {
+          func = NS_ATTR_FUNC_EQUALS;
+        }
+        else if ('~' == mToken.mSymbol) {
+          if (! GetToken(aErrorCode, PR_FALSE)) { // premature EOF
+            return PR_FALSE;
+          }
+          if ((eCSSToken_Symbol == mToken.mType) && ('=' == mToken.mSymbol)) {
+            func = NS_ATTR_FUNC_INCLUDES;
+          }
+          else {
+            UngetToken();
+            return PR_FALSE;
+          }
+        }
+        else if ('|' == mToken.mSymbol) {
+          if (! GetToken(aErrorCode, PR_FALSE)) { // premature EOF
+            return PR_FALSE;
+          }
+          if ((eCSSToken_Symbol == mToken.mType) && ('=' == mToken.mSymbol)) {
+            func = NS_ATTR_FUNC_DASHMATCH;
+          }
+          else {
+            UngetToken();
+            return PR_FALSE;
+          }
+        }
+        else {
+          UngetToken(); // bad function
+          return PR_FALSE;
+        }
+        if (NS_ATTR_FUNC_SET != func) { // get value
+          if (! GetToken(aErrorCode, PR_FALSE)) { // premature EOF
+            return PR_FALSE;
+          }
+          if ((eCSSToken_Ident == mToken.mType) || (eCSSToken_String == mToken.mType)) {
+            nsAutoString  value(mToken.mIdent);
+            if (! GetToken(aErrorCode, PR_FALSE)) { // premature EOF
+              return PR_FALSE;
+            }
+            if ((eCSSToken_Symbol == mToken.mType) && (']' == mToken.mSymbol)) {
+              dataMask |= SEL_MASK_ATTRIB;
+              if (! mCaseSensative) {
+                value.ToUpperCase();
+              }
+              aSelector.AddAttribute(attr, func, value);
+            }
+            else {
+              UngetToken();
+              return PR_FALSE;
+            }
+          }
+          else {
+            UngetToken();
+            return PR_FALSE;
+          }
+        }
+      }
+      else {
+        UngetToken(); // bad dog, no biscut!
+        return PR_FALSE;
+      }
     }
-    if (!GetToken(aErrorCode, PR_FALSE)) {
-      // premature eof is ok (here!)
+    else {  // not a selector token, we're done
+      break;
+    }
+
+    if (! GetToken(aErrorCode, PR_FALSE)) { // premature eof is ok (here!)
       return PR_TRUE;
     }
   }
-  if ((eCSSToken_Symbol == tk->mType) && (':' == tk->mSymbol)) {
-    // :pseudo
-    if (!GetToken(aErrorCode, PR_FALSE)) {
-      // premature eof
-      return PR_FALSE;
-    }
-    if (eCSSToken_Ident != tk->mType) {
-      // malformed selector
-      UngetToken();
-      return PR_FALSE;
-    }
-    if (! IsPseudoClass(tk->mIdent)) {
-      mask |= SELECTOR_PSEUDO_ELEMENT;
-      aSelectorResult->mPseudoElement.Truncate(0);
-      aSelectorResult->mPseudoElement.Append(':');  // keep the colon
-      aSelectorResult->mPseudoElement.Append(tk->mIdent);
-    }
-    tk = nsnull;
-  }
-  if (nsnull != tk) {
-    UngetToken();
-  }
-  if (mask == 0) {
-    return PR_FALSE;
-  }
-  aSelectorResult->mMask = mask;
-  return PR_TRUE;
+  UngetToken();
+  return PRBool(0 != dataMask);
 }
 
 nsICSSDeclaration*

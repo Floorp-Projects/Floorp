@@ -38,6 +38,7 @@
 #include "nsIScriptGlobalObject.h"
 #include "nsIScriptObjectOwner.h"
 #include "nsDOMCSSDeclaration.h"
+#include "nsINameSpaceManager.h"
 
 //#define DEBUG_REFS
 
@@ -62,93 +63,328 @@ static NS_DEFINE_IID(kCSSTableSID, NS_CSS_TABLE_SID);
 
 // -- nsCSSSelector -------------------------------
 
-nsCSSSelector::nsCSSSelector()
-  : mTag(nsnull), mID(nsnull), mClass(nsnull), mPseudoClass(nsnull),
+#define NS_IF_COPY(dest,source,type)  \
+  if (nsnull != source)  dest = new type(*(source))
+
+#define NS_IF_DELETE(ptr)   \
+  if (nsnull != ptr) { delete ptr; ptr = nsnull; }
+
+nsAtomList::nsAtomList(nsIAtom* aAtom)
+  : mAtom(aAtom),
     mNext(nsnull)
 {
+  NS_IF_ADDREF(mAtom);
 }
 
-nsCSSSelector::nsCSSSelector(nsIAtom* aTag, nsIAtom* aID, nsIAtom* aClass, nsIAtom* aPseudoClass)
-  : mTag(aTag), mID(aID), mClass(aClass), mPseudoClass(aPseudoClass),
+nsAtomList::nsAtomList(const nsString& aAtomValue)
+  : mAtom(nsnull),
     mNext(nsnull)
 {
-  NS_IF_ADDREF(mTag);
-  NS_IF_ADDREF(mID);
-  NS_IF_ADDREF(mClass);
-  NS_IF_ADDREF(mPseudoClass);
+  mAtom = NS_NewAtom(aAtomValue);
+}
+
+nsAtomList::nsAtomList(const nsAtomList& aCopy)
+  : mAtom(aCopy.mAtom),
+    mNext(nsnull)
+{
+  NS_IF_ADDREF(mAtom);
+  NS_IF_COPY(mNext, aCopy.mNext, nsAtomList);
+}
+
+nsAtomList::~nsAtomList(void)
+{
+  NS_IF_RELEASE(mAtom);
+  NS_IF_DELETE(mNext);
+}
+
+PRBool nsAtomList::Equals(const nsAtomList* aOther) const
+{
+  if (this == aOther) {
+    return PR_TRUE;
+  }
+  if (nsnull != aOther) {
+    if (mAtom == aOther->mAtom) {
+      if (nsnull != mNext) {
+        return mNext->Equals(aOther->mNext);
+      }
+      return PRBool(nsnull == aOther->mNext);
+    }
+  }
+  return PR_FALSE;
+}
+
+nsAttrSelector::nsAttrSelector(const nsString& aAttr)
+  : mAttr(nsnull),
+    mFunction(NS_ATTR_FUNC_SET),
+    mValue(),
+    mNext(nsnull)
+{
+  mAttr = NS_NewAtom(aAttr);
+}
+
+nsAttrSelector::nsAttrSelector(const nsString& aAttr, PRUint8 aFunction, const nsString& aValue)
+  : mAttr(nsnull),
+    mFunction(aFunction),
+    mValue(aValue),
+    mNext(nsnull)
+{
+  mAttr = NS_NewAtom(aAttr);
+}
+
+nsAttrSelector::nsAttrSelector(const nsAttrSelector& aCopy)
+  : mAttr(aCopy.mAttr),
+    mFunction(aCopy.mFunction),
+    mValue(aCopy.mValue),
+    mNext(nsnull)
+{
+  NS_IF_ADDREF(mAttr);
+  NS_IF_COPY(mNext, aCopy.mNext, nsAttrSelector);
+}
+
+nsAttrSelector::~nsAttrSelector(void)
+{
+  NS_IF_RELEASE(mAttr);
+  NS_IF_DELETE(mNext);
+}
+
+PRBool nsAttrSelector::Equals(const nsAttrSelector* aOther) const
+{
+  if (this == aOther) {
+    return PR_TRUE;
+  }
+  if (nsnull != aOther) {
+    if ((mAttr == aOther->mAttr) && 
+        (mFunction == aOther->mFunction) && 
+        mValue.Equals(aOther->mValue)) {
+      if (nsnull != mNext) {
+        return mNext->Equals(aOther->mNext);
+      }
+      return PRBool(nsnull == aOther->mNext);
+    }
+  }
+  return PR_FALSE;
+}
+
+nsCSSSelector::nsCSSSelector(void)
+  : mNameSpace(kNameSpaceID_Unknown), mTag(nsnull), 
+    mID(nsnull), 
+    mClassList(nsnull), 
+    mPseudoClassList(nsnull),
+    mAttrList(nsnull), 
+    mOperator(0),
+    mNext(nsnull)
+{
 }
 
 nsCSSSelector::nsCSSSelector(const nsCSSSelector& aCopy) 
-  : mTag(aCopy.mTag), mID(aCopy.mID), mClass(aCopy.mClass), mPseudoClass(aCopy.mPseudoClass),
+  : mNameSpace(aCopy.mNameSpace), mTag(aCopy.mTag), 
+    mID(aCopy.mID), 
+    mClassList(nsnull), 
+    mPseudoClassList(nsnull),
+    mAttrList(nsnull), 
+    mOperator(aCopy.mOperator),
     mNext(nsnull)
-{ // implmented to support extension to CSS2 (when we have to copy the array)
+{
   NS_IF_ADDREF(mTag);
   NS_IF_ADDREF(mID);
-  NS_IF_ADDREF(mClass);
-  NS_IF_ADDREF(mPseudoClass);
+  NS_IF_COPY(mClassList, aCopy.mClassList, nsAtomList);
+  NS_IF_COPY(mPseudoClassList, aCopy.mPseudoClassList, nsAtomList);
+  NS_IF_COPY(mAttrList, aCopy.mAttrList, nsAttrSelector);
 }
 
-nsCSSSelector::~nsCSSSelector()  
-{  
-  NS_IF_RELEASE(mTag);
-  NS_IF_RELEASE(mID);
-  NS_IF_RELEASE(mClass);
-  NS_IF_RELEASE(mPseudoClass);
+nsCSSSelector::~nsCSSSelector(void)  
+{
+  Reset();
 }
 
 nsCSSSelector& nsCSSSelector::operator=(const nsCSSSelector& aCopy)
 {
   NS_IF_RELEASE(mTag);
   NS_IF_RELEASE(mID);
-  NS_IF_RELEASE(mClass);
-  NS_IF_RELEASE(mPseudoClass);
+  NS_IF_DELETE(mClassList);
+  NS_IF_DELETE(mPseudoClassList);
+  NS_IF_DELETE(mAttrList);
+
+  mNameSpace    = aCopy.mNameSpace;
   mTag          = aCopy.mTag;
   mID           = aCopy.mID;
-  mClass        = aCopy.mClass;
-  mPseudoClass  = aCopy.mPseudoClass;
+  NS_IF_COPY(mClassList, aCopy.mClassList, nsAtomList);
+  NS_IF_COPY(mPseudoClassList, aCopy.mPseudoClassList, nsAtomList);
+  NS_IF_COPY(mAttrList, aCopy.mAttrList, nsAttrSelector);
+  mOperator     = aCopy.mOperator;
+
   NS_IF_ADDREF(mTag);
   NS_IF_ADDREF(mID);
-  NS_IF_ADDREF(mClass);
-  NS_IF_ADDREF(mPseudoClass);
   return *this;
 }
 
 PRBool nsCSSSelector::Equals(const nsCSSSelector* aOther) const
 {
+  if (this == aOther) {
+    return PR_TRUE;
+  }
   if (nsnull != aOther) {
-    return (PRBool)((aOther->mTag == mTag) && (aOther->mID == mID) && 
-                    (aOther->mClass == mClass) && (aOther->mPseudoClass == mPseudoClass));
+    if ((aOther->mNameSpace == mNameSpace) && 
+        (aOther->mTag == mTag) && 
+        (aOther->mID == mID) && 
+        (aOther->mOperator == mOperator)) {
+      if (nsnull != mClassList) {
+        if (PR_FALSE == mClassList->Equals(aOther->mClassList)) {
+          return PR_FALSE;
+        }
+      }
+      else {
+        if (nsnull != aOther->mClassList) {
+          return PR_FALSE;
+        }
+      }
+      if (nsnull != mPseudoClassList) {
+        if (PR_FALSE == mPseudoClassList->Equals(aOther->mPseudoClassList)) {
+          return PR_FALSE;
+        }
+      }
+      else {
+        if (nsnull != aOther->mPseudoClassList) {
+          return PR_FALSE;
+        }
+      }
+      if (nsnull != mAttrList) {
+        if (PR_FALSE == mAttrList->Equals(aOther->mAttrList)) {
+          return PR_FALSE;
+        }
+      }
+      else {
+        if (nsnull != aOther->mAttrList) {
+          return PR_FALSE;
+        }
+      }
+      return PR_TRUE;
+    }
   }
   return PR_FALSE;
 }
 
 
-void nsCSSSelector::Set(const nsString& aTag, const nsString& aID, 
-                        const nsString& aClass, const nsString& aPseudoClass)
+void nsCSSSelector::Reset(void)
 {
-  nsAutoString  buffer;
+  mNameSpace = kNameSpaceID_Unknown;
   NS_IF_RELEASE(mTag);
   NS_IF_RELEASE(mID);
-  NS_IF_RELEASE(mClass);
-  NS_IF_RELEASE(mPseudoClass);
+  NS_IF_DELETE(mClassList);
+  NS_IF_DELETE(mPseudoClassList);
+  NS_IF_DELETE(mAttrList);
+}
+
+void nsCSSSelector::SetNameSpace(PRInt32 aNameSpace)
+{
+  mNameSpace = aNameSpace;
+}
+
+void nsCSSSelector::SetTag(const nsString& aTag)
+{
+  NS_IF_RELEASE(mTag);
   if (0 < aTag.Length()) {
-    aTag.ToUpperCase(buffer);    // XXX is this correct? what about class?
-    mTag = NS_NewAtom(buffer);
+    mTag = NS_NewAtom(aTag);
   }
+}
+
+void nsCSSSelector::SetID(const nsString& aID)
+{
+  NS_IF_RELEASE(mID);
   if (0 < aID.Length()) {
     mID = NS_NewAtom(aID);
   }
+}
+
+void nsCSSSelector::AddClass(const nsString& aClass)
+{
   if (0 < aClass.Length()) {
-    mClass = NS_NewAtom(aClass);
-  }
-  if (0 < aPseudoClass.Length()) {
-    aPseudoClass.ToUpperCase(buffer);
-    mPseudoClass = NS_NewAtom(buffer);
-    if (nsnull == mTag) {
-      mTag = nsHTMLAtoms::a;
-      NS_ADDREF(mTag);
+    nsAtomList** list = &mClassList;
+    while (nsnull != *list) {
+      list = &((*list)->mNext);
     }
+    *list = new nsAtomList(aClass);
   }
+}
+
+void nsCSSSelector::AddPseudoClass(const nsString& aPseudoClass)
+{
+  if (0 < aPseudoClass.Length()) {
+    nsAtomList** list = &mPseudoClassList;
+    while (nsnull != *list) {
+      list = &((*list)->mNext);
+    }
+    *list = new nsAtomList(aPseudoClass);
+  }
+}
+
+void nsCSSSelector::AddPseudoClass(nsIAtom* aPseudoClass)
+{
+  if (nsnull != aPseudoClass) {
+    nsAtomList** list = &mPseudoClassList;
+    while (nsnull != *list) {
+      list = &((*list)->mNext);
+    }
+    *list = new nsAtomList(aPseudoClass);
+  }
+}
+
+void nsCSSSelector::AddAttribute(const nsString& aAttr)
+{
+  if (0 < aAttr.Length()) {
+    nsAttrSelector** list = &mAttrList;
+    while (nsnull != *list) {
+      list = &((*list)->mNext);
+    }
+    *list = new nsAttrSelector(aAttr);
+  }
+}
+
+void nsCSSSelector::AddAttribute(const nsString& aAttr, PRUint8 aFunc, const nsString& aValue)
+{
+  if (0 < aAttr.Length()) {
+    nsAttrSelector** list = &mAttrList;
+    while (nsnull != *list) {
+      list = &((*list)->mNext);
+    }
+    *list = new nsAttrSelector(aAttr, aFunc, aValue);
+  }
+}
+
+void nsCSSSelector::SetOperator(PRUnichar aOperator)
+{
+  mOperator = aOperator;
+}
+
+PRInt32 nsCSSSelector::CalcWeight(void) const
+{
+  PRInt32 weight = 0;
+
+  if (nsnull != mTag) {
+    weight += 0x000001;
+  }
+  if (nsnull != mID) {
+    weight += 0x010000;
+  }
+  nsAtomList* list = mClassList;
+  while (nsnull != list) {
+    weight += 0x000100;
+    list = list->mNext;
+  }
+  list = mPseudoClassList;
+  while (nsnull != list) {
+    weight += 0x000100;
+    list = list->mNext;
+  }
+  nsAttrSelector* attr = mAttrList;
+  while (nsnull != attr) {
+    weight += 0x000100;
+    attr = attr->mNext;
+  }
+  if (nsnull != mNext) {
+    weight += mNext->CalcWeight();
+  }
+  return weight;
 }
 
 // -- CSSImportantRule -------------------------------
@@ -365,6 +601,8 @@ public:
   virtual nsCSSSelector* FirstSelector(void);
   virtual void AddSelector(const nsCSSSelector& aSelector);
   virtual void DeleteSelector(nsCSSSelector* aSelector);
+  virtual void SetSourceSelectorText(const nsString& aSelectorText);
+  virtual void GetSourceSelectorText(nsString& aSelectorText) const;
 
   virtual nsICSSDeclaration* GetDeclaration(void) const;
   virtual void SetDeclaration(nsICSSDeclaration* aDeclaration);
@@ -410,6 +648,7 @@ protected:
   PRUint32 mRefCnt : 31;
 
   nsCSSSelector           mSelector;
+  nsString                mSelectorText;
   nsICSSDeclaration*      mDeclaration;
   PRInt32                 mWeight;
   CSSImportantRule*       mImportantRule;
@@ -463,7 +702,7 @@ static const PRInt32 kInstrument = 1075;
 #endif
 
 CSSStyleRuleImpl::CSSStyleRuleImpl(const nsCSSSelector& aSelector)
-  : mSelector(aSelector), mDeclaration(nsnull), 
+  : mSelector(aSelector), mSelectorText(), mDeclaration(nsnull), 
     mWeight(0), mImportantRule(nsnull)
 {
   NS_INIT_REFCNT();
@@ -628,16 +867,13 @@ nsCSSSelector* CSSStyleRuleImpl::FirstSelector(void)
 
 void CSSStyleRuleImpl::AddSelector(const nsCSSSelector& aSelector)
 {
-  if ((nsnull != aSelector.mTag) || (nsnull != aSelector.mID) ||
-      (nsnull != aSelector.mClass) || (nsnull != aSelector.mPseudoClass)) { // skip empty selectors
-    nsCSSSelector*  selector = new nsCSSSelector(aSelector);
-    nsCSSSelector*  last = &mSelector;
+  nsCSSSelector*  selector = new nsCSSSelector(aSelector);
+  nsCSSSelector*  last = &mSelector;
 
-    while (nsnull != last->mNext) {
-      last = last->mNext;
-    }
-    last->mNext = selector;
+  while (nsnull != last->mNext) {
+    last = last->mNext;
   }
+  last->mNext = selector;
 }
 
 
@@ -645,9 +881,15 @@ void CSSStyleRuleImpl::DeleteSelector(nsCSSSelector* aSelector)
 {
   if (nsnull != aSelector) {
     if (&mSelector == aSelector) {  // handle first selector
-      mSelector = *aSelector; // assign value
-      mSelector.mNext = aSelector->mNext;
-      delete aSelector;
+      if (nsnull != mSelector.mNext) {
+        nsCSSSelector* nextOne = mSelector.mNext;
+        mSelector = *nextOne; // assign values
+        mSelector.mNext = nextOne->mNext;
+        delete nextOne;
+      }
+      else {
+        mSelector.Reset();
+      }
     }
     else {
       nsCSSSelector*  selector = &mSelector;
@@ -663,6 +905,17 @@ void CSSStyleRuleImpl::DeleteSelector(nsCSSSelector* aSelector)
     }
   }
 }
+
+void CSSStyleRuleImpl::SetSourceSelectorText(const nsString& aSelectorText)
+{
+  mSelectorText = aSelectorText;
+}
+
+void CSSStyleRuleImpl::GetSourceSelectorText(nsString& aSelectorText) const
+{
+  aSelectorText = mSelectorText;
+}
+
 
 nsICSSDeclaration* CSSStyleRuleImpl::GetDeclaration(void) const
 {
@@ -1056,8 +1309,8 @@ void MapDeclarationInto(nsICSSDeclaration* aDeclaration,
           text->mTextDecoration = td;
         }
         else if (eCSSUnit_None == ourText->mDecoration.GetUnit()) {
-          font->mFont.decorations = NS_STYLE_TEXT_DECORATION_NONE;
-          font->mFixedFont.decorations = NS_STYLE_TEXT_DECORATION_NONE;
+          font->mFont.decorations = parentFont->mFont.decorations;
+          font->mFixedFont.decorations = parentFont->mFixedFont.decorations;
           text->mTextDecoration = NS_STYLE_TEXT_DECORATION_NONE;
         }
         else if (eCSSUnit_Inherit == ourText->mDecoration.GetUnit()) {
@@ -1695,6 +1948,11 @@ static void ListSelector(FILE* out, const nsCSSSelector* aSelector)
 {
   nsAutoString buffer;
 
+  if (kNameSpaceID_None < aSelector->mNameSpace) {
+    buffer.Append(aSelector->mNameSpace, 10);
+    fputs(buffer, out);
+    fputs("\\:", out);
+  }
   if (nsnull != aSelector->mTag) {
     aSelector->mTag->ToString(buffer);
     fputs(buffer, out);
@@ -1704,14 +1962,38 @@ static void ListSelector(FILE* out, const nsCSSSelector* aSelector)
     fputs("#", out);
     fputs(buffer, out);
   }
-  if (nsnull != aSelector->mClass) {
-    aSelector->mClass->ToString(buffer);
+  nsAtomList* list = aSelector->mClassList;
+  while (nsnull != list) {
+    list->mAtom->ToString(buffer);
     fputs(".", out);
     fputs(buffer, out);
+    list = list->mNext;
   }
-  if (nsnull != aSelector->mPseudoClass) {
-    aSelector->mPseudoClass->ToString(buffer);
+  list = aSelector->mPseudoClassList;
+  while (nsnull != list) {
+    list->mAtom->ToString(buffer);
     fputs(":", out);
+    fputs(buffer, out);
+    list = list->mNext;
+  }
+  nsAttrSelector* attr = aSelector->mAttrList;
+  while (nsnull != attr) {
+    fputs("[", out);
+    attr->mAttr->ToString(buffer);
+    fputs(buffer, out);
+    if (NS_ATTR_FUNC_SET != attr->mFunction) {
+      switch (attr->mFunction) {
+        case NS_ATTR_FUNC_EQUALS:    fputs("=", out);  break;
+        case NS_ATTR_FUNC_INCLUDES:  fputs("~=", out);  break;
+        case NS_ATTR_FUNC_DASHMATCH: fputs("|=", out);  break;
+      }
+      fputs(attr->mValue, out);
+    }
+    fputs("]", out);
+  }
+  if (0 != aSelector->mOperator) {
+    buffer = aSelector->mOperator;
+    buffer.Append(" ");
     fputs(buffer, out);
   }
 }
@@ -1782,45 +2064,16 @@ CSSStyleRuleImpl::GetSheet(nsIDOMCSSStyleSheet** aSheet)
 NS_IMETHODIMP    
 CSSStyleRuleImpl::GetSelectorText(nsString& aSelectorText)
 {
-  nsAutoString buffer;
-  nsAutoString thisSelector;
-  nsCSSSelector *selector = &mSelector;
-
-  // XXX Ugh...they're in reverse order from the source. Sorry
-  // for the ugliness.
-  aSelectorText.SetLength(0);
-  while (nsnull != selector) {
-    thisSelector.SetLength(0);
-    if (nsnull != selector->mTag) {
-      selector->mTag->ToString(buffer);
-      thisSelector.Append(buffer);
-    }
-    if (nsnull != selector->mID) {
-      selector->mID->ToString(buffer);
-      thisSelector.Append("#");
-      thisSelector.Append(buffer);
-    }
-    if (nsnull != selector->mClass) {
-      selector->mClass->ToString(buffer);
-      thisSelector.Append(".");
-      thisSelector.Append(buffer);
-    }
-    if (nsnull != selector->mPseudoClass) {
-      selector->mPseudoClass->ToString(buffer);
-      thisSelector.Append(":");
-      thisSelector.Append(buffer);
-    }
-    aSelectorText.Insert(thisSelector, 0, thisSelector.Length());
-    selector = selector->mNext;
-  }
-  
+  aSelectorText = mSelectorText;
   return NS_OK;
 }
 
 NS_IMETHODIMP    
 CSSStyleRuleImpl::SetSelectorText(const nsString& aSelectorText)
 {
-  // XXX TBI
+  // XXX TBI - get a parser and re-parse the selectors, 
+  // XXX then need to re-compute the cascade
+  mSelectorText = aSelectorText;
   return NS_OK;
 }
 

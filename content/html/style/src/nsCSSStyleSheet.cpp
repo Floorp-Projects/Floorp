@@ -42,10 +42,12 @@
 #include "nsIScriptObjectOwner.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsICSSParser.h"
+#include "nsCSSAtoms.h"
+#include "nsINameSpaceManager.h"
 #include "prlog.h"
 
 //#define DEBUG_REFS
-//#define DEBUG_RULES
+#define DEBUG_RULES
 
 static NS_DEFINE_IID(kICSSStyleSheetIID, NS_ICSS_STYLE_SHEET_IID);
 static NS_DEFINE_IID(kIStyleSheetIID, NS_ISTYLE_SHEET_IID);
@@ -120,8 +122,8 @@ struct RuleValue {
   }
   ~RuleValue(void)
   {
-    if (nsnull != mNext) {
-      delete mNext;
+    if ((nsnull != mNext) && (nsnull != mNext->mNext)) {
+      delete mNext; // don't delete that last in the chain, it's shared
     }
   }
 
@@ -142,7 +144,7 @@ public:
   RuleHash(void);
   ~RuleHash(void);
   void AppendRule(nsICSSStyleRule* aRule);
-  void EnumerateAllRules(nsIAtom* aTag, nsIAtom* aID, nsIAtom* aClass, 
+  void EnumerateAllRules(nsIAtom* aTag, nsIAtom* aID, const nsVoidArray& aClassList,
                          RuleEnumFunc aFunc, void* aData);
   void EnumerateTagRules(nsIAtom* aTag,
                          RuleEnumFunc aFunc, void* aData);
@@ -154,11 +156,17 @@ protected:
   nsHashtable mTagTable;
   nsHashtable mIdTable;
   nsHashtable mClassTable;
+
+  RuleValue** mEnumList;
+  PRInt32     mEnumListSize;
+  RuleValue   mEndValue;
 };
 
 RuleHash::RuleHash(void)
   : mRuleCount(0),
-    mTagTable(), mIdTable(), mClassTable()
+    mTagTable(), mIdTable(), mClassTable(),
+    mEnumList(nsnull), mEnumListSize(0),
+    mEndValue(nsnull, -1)
 {
 }
 
@@ -173,23 +181,31 @@ RuleHash::~RuleHash(void)
   mTagTable.Enumerate(DeleteValue);
   mIdTable.Enumerate(DeleteValue);
   mClassTable.Enumerate(DeleteValue);
+  if (nsnull != mEnumList) {
+    delete [] mEnumList;
+  }
 }
 
 void RuleHash::AppendRuleToTable(nsHashtable& aTable, nsIAtom* aAtom, nsICSSStyleRule* aRule)
 {
+  NS_ASSERTION(nsnull != aAtom, "null hash key");
+
   RuleKey key(aAtom);
   RuleValue*  value = (RuleValue*)aTable.Get(&key);
 
   if (nsnull == value) {
     value = new RuleValue(aRule, mRuleCount++);
     aTable.Put(&key, value);
+    value->mNext = &mEndValue;
   }
   else {
-    while (nsnull != value->mNext) {
+    while (&mEndValue != value->mNext) {
       value = value->mNext;
     }
     value->mNext = new RuleValue(aRule, mRuleCount++);
+    value->mNext->mNext = &mEndValue;
   }
+  mEndValue.mIndex = mRuleCount;
 }
 
 void RuleHash::AppendRule(nsICSSStyleRule* aRule)
@@ -198,65 +214,128 @@ void RuleHash::AppendRule(nsICSSStyleRule* aRule)
   if (nsnull != selector->mID) {
     AppendRuleToTable(mIdTable, selector->mID, aRule);
   }
-  else if (nsnull != selector->mClass) {
-    AppendRuleToTable(mClassTable, selector->mClass, aRule);
+  else if (nsnull != selector->mClassList) {
+    AppendRuleToTable(mClassTable, selector->mClassList->mAtom, aRule);
   }
   else if (nsnull != selector->mTag) {
     AppendRuleToTable(mTagTable, selector->mTag, aRule);
   }
+  else {  // universal tag selector
+    AppendRuleToTable(mTagTable, nsCSSAtoms::universalSelector, aRule);
+  }
 }
 
-void RuleHash::EnumerateAllRules(nsIAtom* aTag, nsIAtom* aID, nsIAtom* aClass, 
+void RuleHash::EnumerateAllRules(nsIAtom* aTag, nsIAtom* aID, const nsVoidArray& aClassList, 
                                  RuleEnumFunc aFunc, void* aData)
 {
-  RuleValue*  tagValue = nsnull;
-  RuleValue*  idValue = nsnull;
-  RuleValue*  classValue = nsnull;
-
+  PRInt32 classCount = aClassList.Count();
+  PRInt32 testCount = classCount + 1; // + 1 for universal selector
   if (nsnull != aTag) {
-    RuleKey tagKey(aTag);
-    tagValue = (RuleValue*)mTagTable.Get(&tagKey);
+    testCount++;
   }
   if (nsnull != aID) {
-    RuleKey idKey(aID);
-    idValue = (RuleValue*)mIdTable.Get(&idKey);
-  }
-  if (nsnull != aClass) {
-    RuleKey classKey(aClass);
-    classValue = (RuleValue*)mClassTable.Get(&classKey);
+    testCount++;
   }
 
-  PRInt32 tagIndex    = ((nsnull != tagValue)   ? tagValue->mIndex    : mRuleCount);
-  PRInt32 idIndex     = ((nsnull != idValue)    ? idValue->mIndex     : mRuleCount);
-  PRInt32 classIndex  = ((nsnull != classValue) ? classValue->mIndex  : mRuleCount);
+  if (mEnumListSize < testCount) {
+    delete [] mEnumList;
+    mEnumList = new RuleValue*[testCount];
+    mEnumListSize = testCount;
+  }
 
-  while ((nsnull != tagValue) || (nsnull != idValue) || (nsnull != classValue)) {
-    if ((tagIndex < idIndex) && (tagIndex < classIndex)) {
-      (*aFunc)(tagValue->mRule, aData);
-      tagValue = tagValue->mNext;
-      tagIndex = ((nsnull != tagValue) ? tagValue->mIndex : mRuleCount);
+  PRInt32 index;
+  PRInt32 valueCount = 0;
+
+  { // universal tag rules
+    RuleValue*  value = (RuleValue*)mTagTable.Get(&RuleKey(nsCSSAtoms::universalSelector));
+    if (nsnull != value) {
+      mEnumList[valueCount++] = value;
     }
-    else if (idIndex < classIndex) {
-      (*aFunc)(idValue->mRule, aData);
-      idValue = idValue->mNext;
-      idIndex = ((nsnull != idValue) ? idValue->mIndex : mRuleCount);
+  }
+  if (nsnull != aTag) {
+    RuleValue* value = (RuleValue*)mTagTable.Get(&RuleKey(aTag));
+    if (nsnull != value) {
+      mEnumList[valueCount++] = value;
     }
-    else {
-      (*aFunc)(classValue->mRule, aData);
-      classValue = classValue->mNext;
-      classIndex = ((nsnull != classValue) ? classValue->mIndex : mRuleCount);
+  }
+  if (nsnull != aID) {
+    RuleValue* value = (RuleValue*)mIdTable.Get(&RuleKey(aID));
+    if (nsnull != value) {
+      mEnumList[valueCount++] = value;
     }
+  }
+  for (index = 0; index < classCount; index++) {
+    nsIAtom* classAtom = (nsIAtom*)aClassList.ElementAt(index);
+    RuleValue* value = (RuleValue*)mClassTable.Get(&RuleKey(classAtom));
+    if (nsnull != value) {
+      mEnumList[valueCount++] = value;
+    }
+  }
+  NS_ASSERTION(valueCount <= testCount, "values exceeded list size");
+
+  if (1 < valueCount) {
+    PRInt32 ruleIndex = mRuleCount;
+    PRInt32 valueIndex = -1;
+
+    for (index = 0; index < valueCount; index++) {
+      if (mEnumList[index]->mIndex < ruleIndex) {
+        ruleIndex = mEnumList[index]->mIndex;
+        valueIndex = index;
+      }
+    }
+    do {
+      (*aFunc)(mEnumList[valueIndex]->mRule, aData);
+      mEnumList[valueIndex] = mEnumList[valueIndex]->mNext;
+      ruleIndex = mEnumList[valueIndex]->mIndex;
+      for (index = 0; index < valueCount; index++) {
+        if (mEnumList[index]->mIndex < ruleIndex) {
+          ruleIndex = mEnumList[index]->mIndex;
+          valueIndex = index;
+        }
+      }
+    } while (ruleIndex < mRuleCount);
+  }
+  else if (0 < valueCount) {  // fast loop over single value
+    RuleValue* value = mEnumList[0];
+    do {
+      (*aFunc)(value->mRule, aData);
+      value = value->mNext;
+    } while (&mEndValue != value);
   }
 }
 
 void RuleHash::EnumerateTagRules(nsIAtom* aTag, RuleEnumFunc aFunc, void* aData)
 {
-  RuleKey tagKey(aTag);
-  RuleValue*  value = (RuleValue*)mTagTable.Get(&tagKey);
+  RuleValue*  tagValue = (RuleValue*)mTagTable.Get(&RuleKey(aTag));
+  RuleValue*  uniValue = (RuleValue*)mTagTable.Get(&RuleKey(nsCSSAtoms::universalSelector));
 
-  while (nsnull != value) {
-    (*aFunc)(value->mRule, aData);
-    value = value->mNext;
+  if (nsnull == tagValue) {
+    if (nsnull != uniValue) {
+      do {
+        (*aFunc)(uniValue->mRule, aData);
+        uniValue = uniValue->mNext;
+      } while (&mEndValue != uniValue);
+    }
+  }
+  else {
+    if (nsnull == uniValue) {
+      do {
+        (*aFunc)(tagValue->mRule, aData);
+        tagValue = tagValue->mNext;
+      } while (&mEndValue != tagValue);
+    }
+    else {
+      do {
+        if (tagValue->mIndex < uniValue->mIndex) {
+          (*aFunc)(tagValue->mRule, aData);
+          tagValue = tagValue->mNext;
+        }
+        else {
+          (*aFunc)(uniValue->mRule, aData);
+          uniValue = uniValue->mNext;
+        }
+      } while ((&mEndValue != tagValue) || (&mEndValue != uniValue));
+    }
   }
 }
 
@@ -691,6 +770,8 @@ CSSStyleSheetImpl::CSSStyleSheetImpl()
     mRuleHash(nsnull)
 {
   NS_INIT_REFCNT();
+  nsCSSAtoms::AddrefAtoms();
+
   mParent = nsnull;
   mRuleCollection = nsnull;
   mImportsCollection = nsnull;
@@ -744,6 +825,7 @@ CSSStyleSheetImpl::~CSSStyleSheetImpl()
   // XXX The document reference is not reference counted and should
   // not be released. The document will let us know when it is going
   // away.
+  nsCSSAtoms::ReleaseAtoms();
 }
 
 NS_IMPL_ADDREF(CSSStyleSheetImpl)
@@ -801,76 +883,87 @@ static PRBool SelectorMatches(nsIPresContext* aPresContext,
   PRBool  result = PR_FALSE;
   nsIAtom*  contentTag;
   aContent->GetTag(contentTag);
+  PRInt32 nameSpaceID;
+  aContent->GetNameSpaceID(nameSpaceID);
 
-  if ((nsnull == aSelector->mTag) || (aSelector->mTag == contentTag)) {
-    if ((nsnull != aSelector->mClass) || (nsnull != aSelector->mID) || 
-        (nsnull != aSelector->mPseudoClass)) {
+  if (((nsnull == aSelector->mTag) || (aSelector->mTag == contentTag)) && 
+      ((kNameSpaceID_Unknown == aSelector->mNameSpace) || (nameSpaceID == aSelector->mNameSpace))) {
+    result = PR_TRUE;
+    // namespace/tag match
+    if (nsnull != aSelector->mAttrList) { // test for attribute match
+    }
+    if ((PR_TRUE == result) &&
+        ((nsnull != aSelector->mID) || (nsnull != aSelector->mClassList))) {  // test for ID & class match
+      result = PR_FALSE;
       nsIHTMLContent* htmlContent;
-      if (NS_OK == aContent->QueryInterface(kIHTMLContentIID, (void**)&htmlContent)) {
-        nsIAtom* contentClass;
-        htmlContent->GetClass(contentClass);
+      if (NS_SUCCEEDED(aContent->QueryInterface(kIHTMLContentIID, (void**)&htmlContent))) {
         nsIAtom* contentID;
         htmlContent->GetID(contentID);
-        if ((nsnull == aSelector->mClass) || (aSelector->mClass == contentClass)) {
-          if ((nsnull == aSelector->mID) || (aSelector->mID == contentID)) {
-            if ((contentTag == nsHTMLAtoms::a) && (nsnull != aSelector->mPseudoClass)) {
-              // test link state
-              nsILinkHandler* linkHandler;
-
-              if ((NS_OK == aPresContext->GetLinkHandler(&linkHandler)) &&
-                  (nsnull != linkHandler)) {
-                nsAutoString base, href;  // XXX base??
-                nsresult attrState = htmlContent->GetAttribute("href", href);
-
-                if (NS_CONTENT_ATTR_HAS_VALUE == attrState) {
-                  nsIURL* docURL = nsnull;
-                  nsIDocument* doc = nsnull;
-                  aContent->GetDocument(doc);
-                  if (nsnull != doc) {
-                    docURL = doc->GetDocumentURL();
-                    NS_RELEASE(doc);
-                  }
-
-                  nsAutoString absURLSpec;
-                  nsresult rv = NS_MakeAbsoluteURL(docURL, base, href, absURLSpec);
-                  NS_IF_RELEASE(docURL);
-
-                  nsLinkState  state;
-                  if (NS_OK == linkHandler->GetLinkState(absURLSpec, state)) {
-                    switch (state) {
-                      case eLinkState_Unvisited:
-                        result = PRBool (aSelector->mPseudoClass == nsHTMLAtoms::link);
-                        break;
-                      case eLinkState_Visited:
-                        result = PRBool (aSelector->mPseudoClass == nsHTMLAtoms::visited);
-                        break;
-                      case eLinkState_OutOfDate:
-                        result = PRBool (aSelector->mPseudoClass == nsHTMLAtoms::outOfDate);
-                        break;
-                      case eLinkState_Active:
-                        result = PRBool (aSelector->mPseudoClass == nsHTMLAtoms::active);
-                        break;
-                      case eLinkState_Hover:
-                        result = PRBool (aSelector->mPseudoClass == nsHTMLAtoms::hover);
-                        break;
-                    }
-                  }
-                }
-                NS_RELEASE(linkHandler);
-              }
-            }
-            else {
-              result = PR_TRUE;
-            }
+        if ((nsnull == aSelector->mID) || (aSelector->mID == contentID)) {
+          nsIAtom* contentClass;
+          htmlContent->GetClass(contentClass);
+          // XXX only testing for frist class right now
+          if ((nsnull == aSelector->mClassList) || (aSelector->mClassList->mAtom == contentClass)) {
+            result = PR_TRUE;
           }
+          NS_IF_RELEASE(contentClass);
         }
         NS_RELEASE(htmlContent);
-        NS_IF_RELEASE(contentClass);
         NS_IF_RELEASE(contentID);
       }
     }
-    else {
-      result = PR_TRUE;
+    if ((PR_TRUE == result) && 
+        (nsnull != aSelector->mPseudoClassList)) {  // test for pseudo class match
+      result = PR_FALSE;
+      // XXX only testing for anchor pseudo classes right now
+      // XXX only testing first pseudo class right now
+      if ((contentTag == nsHTMLAtoms::a) && (nsnull != aSelector->mPseudoClassList)) {
+        // test link state
+        nsILinkHandler* linkHandler;
+
+        if ((NS_OK == aPresContext->GetLinkHandler(&linkHandler)) &&
+            (nsnull != linkHandler)) {
+          nsAutoString base, href;  // XXX base??
+          nsresult attrState = aContent->GetAttribute("href", href);
+
+          if (NS_CONTENT_ATTR_HAS_VALUE == attrState) {
+            nsIURL* docURL = nsnull;
+            nsIDocument* doc = nsnull;
+            aContent->GetDocument(doc);
+            if (nsnull != doc) {
+              docURL = doc->GetDocumentURL();
+              NS_RELEASE(doc);
+            }
+
+            nsAutoString absURLSpec;
+            nsresult rv = NS_MakeAbsoluteURL(docURL, base, href, absURLSpec);
+            NS_IF_RELEASE(docURL);
+
+            nsIAtom* pseudo = aSelector->mPseudoClassList->mAtom;
+            nsLinkState  state;
+            if (NS_OK == linkHandler->GetLinkState(absURLSpec, state)) {
+              switch (state) {
+                case eLinkState_Unvisited:
+                  result = PRBool (pseudo == nsCSSAtoms::linkPseudo);
+                  break;
+                case eLinkState_Visited:
+                  result = PRBool (pseudo == nsCSSAtoms::visitedPseudo);
+                  break;
+                case eLinkState_OutOfDate:
+                  result = PRBool (pseudo == nsCSSAtoms::outOfDatePseudo);
+                  break;
+                case eLinkState_Active:
+                  result = PRBool (pseudo == nsCSSAtoms::activePseudo);
+                  break;
+                case eLinkState_Hover:
+                  result = PRBool (pseudo == nsCSSAtoms::hoverPseudo);
+                  break;
+              }
+            }
+          }
+          NS_RELEASE(linkHandler);
+        }
+      }
     }
   }
   NS_IF_RELEASE(contentTag);
@@ -898,6 +991,8 @@ struct ContentEnumData {
 static void ContentEnumFunc(nsICSSStyleRule* aRule, void* aData)
 {
   ContentEnumData* data = (ContentEnumData*)aData;
+
+  // XXX not dealing with selector functions...
 
   nsCSSSelector* selector = aRule->FirstSelector();
   if (SelectorMatches(data->mPresContext, selector, data->mContent)) {
@@ -995,7 +1090,13 @@ PRInt32 CSSStyleSheetImpl::RulesMatching(nsIPresContext* aPresContext,
       NS_RELEASE(htmlContent);
     }
 
-    mRuleHash->EnumerateAllRules(tagAtom, idAtom, classAtom, ContentEnumFunc, &data);
+    nsVoidArray classArray; // XXX need to recycle this guy
+
+    if (nsnull != classAtom) {
+      classArray.AppendElement(classAtom);
+    }
+    // XXX need to handle multiple classes
+    mRuleHash->EnumerateAllRules(tagAtom, idAtom, classArray, ContentEnumFunc, &data);
     matchCount += data.mCount;
 
 #ifdef DEBUG_RULES
@@ -1005,7 +1106,7 @@ PRInt32 CSSStyleSheetImpl::RulesMatching(nsIPresContext* aPresContext,
     NS_NewISupportsArray(&list2);
 
     data.mResults = list1;
-    mRuleHash->EnumerateAllRules(tagAtom, idAtom, classAtom, ContentEnumFunc, &data);
+    mRuleHash->EnumerateAllRules(tagAtom, idAtom, classArray, ContentEnumFunc, &data);
     data.mResults = list2;
     mWeightedRules->EnumerateBackwards(ContentEnumWrap, &data);
     NS_ASSERTION(list1->Equals(list2), "lists not equal");
