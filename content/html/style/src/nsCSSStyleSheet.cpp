@@ -245,7 +245,7 @@ RuleHash_CIMatchEntry(PLDHashTable *table, const PLDHashEntryHdr *hdr,
   nsIAtom *entry_atom = NS_CONST_CAST(nsIAtom*, NS_STATIC_CAST(const nsIAtom*,
              table->ops->getKey(table, NS_CONST_CAST(PLDHashEntryHdr*, hdr))));
 
-  // Check for case-insensitive match first.
+  // Check for case-sensitive match first.
   if (match_atom == entry_atom)
     return PR_TRUE;
 
@@ -2065,7 +2065,7 @@ CSSStyleSheetImpl::ClearMedia(void)
 NS_IMETHODIMP
 CSSStyleSheetImpl::GetEnabled(PRBool& aEnabled) const
 {
-  aEnabled = ((PR_TRUE == mDisabled) ? PR_FALSE : PR_TRUE);
+  aEnabled = !mDisabled;
   return NS_OK;
 }
 
@@ -2073,7 +2073,7 @@ NS_IMETHODIMP
 CSSStyleSheetImpl::SetEnabled(PRBool aEnabled)
 {
   PRBool oldState = mDisabled;
-  mDisabled = ((PR_TRUE == aEnabled) ? PR_FALSE : PR_TRUE);
+  mDisabled = !aEnabled;
 
   if ((nsnull != mDocument) && (mDisabled != oldState)) {
     mDocument->SetStyleSheetDisabledState(this, mDisabled);
@@ -2352,6 +2352,16 @@ CSSStyleSheetImpl::CheckRuleForAttributes(nsICSSRule *aRule)
 #endif
           DependentAtomKey key(sel->mAttr);
           mInner->mRelevantAttributes.Put(&key, sel->mAttr);
+        }
+
+        // Search for the :lang() pseudo class.  If it is there add
+        // the lang attribute to the relevant attribute list.
+        for (nsAtomStringList* p = iter->mPseudoClassList; p; p = p->mNext) {
+          if (p->mAtom == nsCSSAtoms::langPseudo) {
+            DependentAtomKey langKey(nsHTMLAtoms::lang);
+            mInner->mRelevantAttributes.Put(&langKey, nsHTMLAtoms::lang);
+            break;
+          }
         }
       }
     } /* fall-through */
@@ -3373,6 +3383,7 @@ RuleProcessorData::RuleProcessorData(nsIPresContext* aPresContext,
   mNameSpaceID = kNameSpaceID_Unknown;
   mPreviousSiblingData = nsnull;
   mParentData = nsnull;
+  mIsLanguageValid = PR_FALSE;
 
   // get the compat. mode (unless it is provided)
   if(!aCompat) {
@@ -3418,7 +3429,7 @@ RuleProcessorData::RuleProcessorData(nsIPresContext* aPresContext,
 
     // if HTML content and it has some attributes, check for an HTML link
     // NOTE: optimization: cannot be a link if no attributes (since it needs an href)
-    if (PR_TRUE == mIsHTMLContent && mHasAttributes) {
+    if (mIsHTMLContent && mHasAttributes) {
       // check if it is an HTML Link
       if(nsStyleUtil::IsHTMLLink(aContent, mContentTag, mPresContext, &mLinkState)) {
         mIsHTMLLink = PR_TRUE;
@@ -3427,9 +3438,9 @@ RuleProcessorData::RuleProcessorData(nsIPresContext* aPresContext,
 
     // if not an HTML link, check for a simple xlink (cannot be both HTML link and xlink)
     // NOTE: optimization: cannot be an XLink if no attributes (since it needs an 
-    if(PR_FALSE == mIsHTMLLink &&
+    if(!mIsHTMLLink &&
        mHasAttributes && 
-       !(aContent->IsContentOfType(nsIContent::eHTML) || aContent->IsContentOfType(nsIContent::eXUL)) && 
+       !(mIsHTMLContent || aContent->IsContentOfType(nsIContent::eXUL)) && 
        nsStyleUtil::IsSimpleXlink(aContent, mPresContext, &mLinkState)) {
       mIsSimpleXLink = PR_TRUE;
     } 
@@ -3461,6 +3472,39 @@ RuleProcessorData::~RuleProcessorData()
   NS_IF_RELEASE(mContentTag);
   NS_IF_RELEASE(mContentID);
   NS_IF_RELEASE(mStyledContent);
+}
+
+const nsString* RuleProcessorData::GetLang(void)
+{
+  if (!mIsLanguageValid) {
+    mIsLanguageValid = PR_TRUE;
+    mLanguage.SetLength(0);
+    nsCOMPtr<nsIContent> content = mContent;
+    while (content) {
+      PRInt32 attrCount = 0;
+      content->GetAttrCount(attrCount);
+      if (attrCount > 0) {
+        // xml:lang has precedence over lang on HTML elements (see
+        // XHTML1 section C.7).
+        nsAutoString value;
+        nsresult attrState = content->GetAttr(kNameSpaceID_XML,
+                                              nsHTMLAtoms::lang, value);
+        if (attrState != NS_CONTENT_ATTR_HAS_VALUE &&
+            content->IsContentOfType(nsIContent::eHTML)) {
+          attrState = content->GetAttr(kNameSpaceID_None,
+                                       nsHTMLAtoms::lang, value);
+        }
+        if (attrState == NS_CONTENT_ATTR_HAS_VALUE) {
+          mLanguage = value;
+          break;
+        }
+      }
+      nsIContent *parent;
+      content->GetParent(parent);
+      content = dont_AddRef(parent);
+    }
+  }
+  return &mLanguage;
 }
 
 static const PRUnichar kNullCh = PRUnichar('\0');
@@ -3564,6 +3608,39 @@ static PRBool IsSignificantChild(nsIContent* aChild, PRBool aAcceptNonWhitespace
   return PR_FALSE;
 }
 
+static PRBool
+DashMatchCompare(const nsAString& aAttributeValue,
+                 const nsAString& aSelectorValue,
+                 const PRBool aCaseSensitive)
+{
+  PRBool result;
+  PRUint32 selectorLen = aSelectorValue.Length();
+  PRUint32 attributeLen = aAttributeValue.Length();
+  if (selectorLen > attributeLen) {
+    result = PR_FALSE;
+  }
+  else {
+    nsAString::const_iterator iter;
+    if (selectorLen != attributeLen &&
+        *aAttributeValue.BeginReading(iter).advance(selectorLen) !=
+            PRUnichar('-')) {
+      // to match, the aAttributeValue must have a dash after the end of
+      // the aSelectorValue's text (unless the aSelectorValue and the
+      // aAttributeValue have the same text)
+      result = PR_FALSE;
+    }
+    else {
+      const nsAString& attributeSubstring =
+        Substring(aAttributeValue, 0, selectorLen);
+      if (aCaseSensitive)
+        result = attributeSubstring.Equals(aSelectorValue);
+      else
+        result = attributeSubstring.Equals(aSelectorValue,
+                                          nsCaseInsensitiveStringComparator());
+    }
+  }
+  return result;
+}
 
 // NOTE:  The |aStateMask| code isn't going to work correctly anymore if
 // we start batching style changes, because if multiple states change in
@@ -3606,7 +3683,7 @@ static PRBool SelectorMatches(RuleProcessorData &data,
   if (nsnull != aSelector->mPseudoClassList) {  // test for pseudo class match
     // first-child, root, lang, active, focus, hover, link, visited...
     // XXX disabled, enabled, selected, selection
-    nsAtomList* pseudoClass = aSelector->mPseudoClassList;
+    nsAtomStringList* pseudoClass = aSelector->mPseudoClassList;
 
     while (result && (nsnull != pseudoClass)) {
       if ((nsCSSAtoms::firstChildPseudo == pseudoClass->mAtom) ||
@@ -3686,8 +3763,49 @@ static PRBool SelectorMatches(RuleProcessorData &data,
                    ? localTrue : localFalse;
       }
       else if (nsCSSAtoms::langPseudo == pseudoClass->mAtom) {
-        // XXX not yet implemented
-        result = PR_FALSE;
+        NS_ASSERTION(nsnull != pseudoClass->mString, "null lang parameter");
+        result = localFalse;
+        if (pseudoClass->mString && *pseudoClass->mString) {
+          // We have to determine the language of the current element.  Since
+          // this is currently no property and since the language is inherited
+          // from the parent we have to be prepared to look at all parent
+          // nodes.  The language itself is encoded in the LANG attribute.
+          const nsString* lang = data.GetLang();
+          if (!lang->IsEmpty()) {
+            result = localTrue == DashMatchCompare(*lang,
+                            nsDependentString(pseudoClass->mString), PR_FALSE);
+          }
+          else {
+            nsCOMPtr<nsIDocument> doc;
+            data.mContent->GetDocument(*getter_AddRefs(doc));
+            if (doc) {
+              // Try to get the language from the HTTP header or if this
+              // is missing as well from the preferences.
+              // The content language can be a comma-separated list of
+              // language codes.
+              nsAutoString language;
+              if (NS_SUCCEEDED(doc->GetContentLanguage(language))) {
+                nsDependentString langString(pseudoClass->mString);
+                language.StripWhitespace();
+                PRInt32 begin = 0;
+                PRInt32 len = language.Length();
+                while (begin < len) {
+                  PRInt32 end = language.FindChar(PRUnichar(','), begin);
+                  if (end == kNotFound) {
+                    end = len;
+                  }
+                  if (DashMatchCompare(Substring(language, begin, end-begin),
+                                       langString,
+                                       PR_FALSE)) {
+                    result = localTrue;
+                    break;
+                  }
+                  begin = end + 1;
+                }
+              }
+            }
+          }
+        }
       }
       else if (IsEventPseudo(pseudoClass->mAtom)) {
         // check if the element is event-sensitive
@@ -3783,36 +3901,17 @@ static PRBool SelectorMatches(RuleProcessorData &data,
           switch (attr->mFunction) {
             case NS_ATTR_FUNC_EQUALS: 
               if (isCaseSensitive) {
-                result = PRBool(localTrue == value.Equals(attr->mValue));
+                result = localTrue == value.Equals(attr->mValue);
               }
               else {
-                result = PRBool(localTrue == value.Equals(attr->mValue, nsCaseInsensitiveStringComparator()));
+                result = localTrue == value.Equals(attr->mValue, nsCaseInsensitiveStringComparator());
               }
               break;
             case NS_ATTR_FUNC_INCLUDES: 
-              result = PRBool(localTrue == ValueIncludes(value, attr->mValue, isCaseSensitive));
+              result = localTrue == ValueIncludes(value, attr->mValue, isCaseSensitive);
               break;
             case NS_ATTR_FUNC_DASHMATCH: 
-              {
-                PRUint32 selLen = attr->mValue.Length();
-                PRUint32 valLen = value.Length();
-                if (selLen > valLen) {
-                  result = localFalse;
-                } else {
-                  if (selLen != valLen &&
-                      value.CharAt(selLen) != PRUnichar('-')) {
-                    // to match, the value must have a dash after the end of
-                    // the selector's text (unless the selector and the value
-                    // have the same text)
-                    result = localFalse;
-                    break;
-                  }
-                  if (isCaseSensitive)
-                    result = PRBool(localTrue == Substring(value, 0, selLen).Equals(attr->mValue, nsDefaultStringComparator()));
-                  else
-                    result = PRBool(localTrue == Substring(value, 0, selLen).Equals(attr->mValue, nsCaseInsensitiveStringComparator()));
-                }
-              }
+              result = localTrue == DashMatchCompare(value, attr->mValue, isCaseSensitive);
               break;
             case NS_ATTR_FUNC_ENDSMATCH:
               {
@@ -3822,9 +3921,9 @@ static PRBool SelectorMatches(RuleProcessorData &data,
                   result = localFalse;
                 } else {
                   if (isCaseSensitive)
-                    result = PRBool(localTrue == Substring(value, valLen - selLen, selLen).Equals(attr->mValue, nsDefaultStringComparator()));
+                    result = localTrue == Substring(value, valLen - selLen, selLen).Equals(attr->mValue, nsDefaultStringComparator());
                   else
-                    result = PRBool(localTrue == Substring(value, valLen - selLen, selLen).Equals(attr->mValue, nsCaseInsensitiveStringComparator()));
+                    result = localTrue == Substring(value, valLen - selLen, selLen).Equals(attr->mValue, nsCaseInsensitiveStringComparator());
                 }
               }
               break;
@@ -3836,14 +3935,14 @@ static PRBool SelectorMatches(RuleProcessorData &data,
                   result = localFalse;
                 } else {
                   if (isCaseSensitive)
-                    result = PRBool(localTrue == Substring(value, 0, selLen).Equals(attr->mValue, nsDefaultStringComparator()));
+                    result = localTrue == Substring(value, 0, selLen).Equals(attr->mValue, nsDefaultStringComparator());
                   else
-                    result = PRBool(localTrue == Substring(value, 0, selLen).Equals(attr->mValue, nsCaseInsensitiveStringComparator()));
+                    result = localTrue == Substring(value, 0, selLen).Equals(attr->mValue, nsCaseInsensitiveStringComparator());
                 }
               }
               break;
             case NS_ATTR_FUNC_CONTAINSMATCH:
-              result = PRBool(localTrue == (FindInReadable(attr->mValue, value, nsCaseInsensitiveStringComparator())));
+              result = localTrue == (FindInReadable(attr->mValue, value, nsCaseInsensitiveStringComparator()));
               break;
           }
         }
@@ -4210,6 +4309,7 @@ PRBool WeightedRulesSizeEnumFunc( nsISupports *aRule, void *aData )
 {
   nsICSSStyleRule* rule = (nsICSSStyleRule*)aRule;
   CascadeSizeEnumData *pData = (CascadeSizeEnumData *)aData;
+
   NS_ASSERTION(rule && pData, "null arguments not supported");
 
   if(! pData->uniqueItems->AddItem((void*)rule)){
@@ -4335,7 +4435,7 @@ CSSRuleProcessor::ClearRuleCascades(void)
 inline
 PRBool IsStateSelector(nsCSSSelector& aSelector)
 {
-  nsAtomList* pseudoClass = aSelector.mPseudoClassList;
+  nsAtomStringList* pseudoClass = aSelector.mPseudoClassList;
   while (pseudoClass) {
     if ((pseudoClass->mAtom == nsCSSAtoms::activePseudo) ||
         (pseudoClass->mAtom == nsCSSAtoms::checkedPseudo) ||

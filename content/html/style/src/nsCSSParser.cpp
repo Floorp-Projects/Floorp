@@ -237,6 +237,8 @@ protected:
                          PRBool aIsNegated);
   void ParseNegatedSimpleSelector(PRInt32&  aDataMask, nsCSSSelector& aSelector,
                          PRInt32& aParsingStatus, PRInt32& aErrorCode);
+  void ParseLangSelector(nsCSSSelector& aSelector, PRInt32& aParsingStatus,
+                         PRInt32& aErrorCode);
 
   PRBool ParseSelectorList(PRInt32& aErrorCode, SelectorList*& aListHead);
   PRBool ParseSelectorGroup(PRInt32& aErrorCode, SelectorList*& aListHead);
@@ -1636,8 +1638,8 @@ PRBool CSSParserImpl::ParseSelectorGroup(PRInt32& aErrorCode,
     nsCSSSelector* listSel = list->mSelectors;
 
     // pull out pseudo elements here
-    nsAtomList* prevList = nsnull;
-    nsAtomList* pseudoClassList = listSel->mPseudoClassList;
+    nsAtomStringList* prevList = nsnull;
+    nsAtomStringList* pseudoClassList = listSel->mPseudoClassList;
     while (nsnull != pseudoClassList) {
       if (! IsPseudoClass(pseudoClassList->mAtom)) {
         havePseudoElement = PR_TRUE;
@@ -2201,7 +2203,7 @@ void CSSParserImpl::ParsePseudoSelector(PRInt32&  aDataMask,
   buffer.Append(PRUnichar(':'));
   buffer.Append(mToken.mIdent);
   ToLowerCase(buffer);
-  nsIAtom* pseudo = NS_NewAtom(buffer);
+  nsCOMPtr<nsIAtom> pseudo = do_GetAtom(buffer);
 
   if (eCSSToken_Ident != mToken.mType) {  // malformed selector
     if (eCSSToken_Function != mToken.mType ||
@@ -2211,19 +2213,17 @@ void CSSParserImpl::ParsePseudoSelector(PRInt32&  aDataMask,
           (!aIsNegated && IsTreePseudoElement(mToken.mIdent)) ||
 #endif
           // the negation pseudo-class is a function
-          (nsCSSAtoms::notPseudo == pseudo))) {
+          (nsCSSAtoms::notPseudo == pseudo) ||
+          // as is the lang pseudo-class
+          (nsCSSAtoms::langPseudo == pseudo))) {
       REPORT_UNEXPECTED_TOKEN(NS_LITERAL_STRING("Expected identifier for pseudo-class selector not found"));
-      NS_RELEASE(pseudo);
       UngetToken();
       aParsingStatus = SELECTOR_PARSING_STOPPED_ERROR;
       return;
-#ifdef INCLUDE_XUL
     }
-#endif
   }
 
   if (nsCSSAtoms::notPseudo == pseudo) {
-    NS_RELEASE(pseudo);
     if (aIsNegated) { // :not() can't be itself negated
       REPORT_UNEXPECTED_TOKEN(NS_LITERAL_STRING("Negation pseudo-class can't be negated"));
       aParsingStatus = SELECTOR_PARSING_STOPPED_ERROR;
@@ -2236,10 +2236,17 @@ void CSSParserImpl::ParsePseudoSelector(PRInt32&  aDataMask,
     }
   }    
   else if (IsPseudoClass(pseudo)) {
-    // XXX parse pseudo classes accepting arguments
     aDataMask |= SEL_MASK_PCLASS;
-    aSelector.AddPseudoClass(pseudo);
-    NS_RELEASE(pseudo);
+    if (nsCSSAtoms::langPseudo == pseudo) {
+      ParseLangSelector(aSelector, aParsingStatus, aErrorCode);
+    }
+    // XXX are there more pseudo classes which accept arguments ?
+    else {
+      aSelector.AddPseudoClass(pseudo);
+    }
+    if (SELECTOR_PARSING_ENDED_OK != aParsingStatus) {
+      return;
+    }
   }
   else {
     if (aIsNegated) { // pseudo-elements can't be negated
@@ -2250,7 +2257,6 @@ void CSSParserImpl::ParsePseudoSelector(PRInt32&  aDataMask,
     if (0 == (aDataMask & SEL_MASK_PELEM)) {
       aDataMask |= SEL_MASK_PELEM;
       aSelector.AddPseudoClass(pseudo); // store it here, it gets pulled later
-      NS_RELEASE(pseudo);
 
 #ifdef INCLUDE_XUL
       if (eCSSToken_Function == mToken.mType && 
@@ -2282,7 +2288,6 @@ void CSSParserImpl::ParsePseudoSelector(PRInt32&  aDataMask,
     else {  // multiple pseudo elements, not legal
       REPORT_UNEXPECTED_TOKEN(NS_LITERAL_STRING("Extra pseudo-element"));
       UngetToken();
-      NS_RELEASE(pseudo);
       aParsingStatus = SELECTOR_PARSING_STOPPED_ERROR;
       return;
     }
@@ -2356,6 +2361,43 @@ void CSSParserImpl::ParseNegatedSimpleSelector(PRInt32&  aDataMask,
   }
   else {
     REPORT_UNEXPECTED_TOKEN(NS_LITERAL_STRING("Missing argument in negation pseudo-class"));
+    aParsingStatus = SELECTOR_PARSING_STOPPED_ERROR;
+  }
+}
+
+//
+// Parse the argument of a pseudo-class :lang()
+//
+void CSSParserImpl::ParseLangSelector(nsCSSSelector& aSelector,
+                                      PRInt32& aParsingStatus,
+                                      PRInt32& aErrorCode)
+{
+  // Check if we have the first parenthesis
+  if (ExpectSymbol(aErrorCode, '(', PR_FALSE)) {
+
+    if (! GetToken(aErrorCode, PR_TRUE)) { // premature eof
+      REPORT_UNEXPECTED_EOF(NS_LITERAL_STRING("argument to :lang selector"));
+      aParsingStatus = SELECTOR_PARSING_STOPPED_ERROR;
+      return;
+    }
+    // We expect an identifier with a language abbreviation
+    if (eCSSToken_Ident != mToken.mType) {
+      REPORT_UNEXPECTED_TOKEN(NS_LITERAL_STRING("Expected identifier for lang pseudo-class parameter"));
+      aParsingStatus = SELECTOR_PARSING_STOPPED_ERROR;
+      return;
+    }
+
+    // Add the pseudo with the language parameter
+    aSelector.AddPseudoClass(nsCSSAtoms::langPseudo, mToken.mIdent.get());
+
+    // close the parenthesis
+    if (!ExpectSymbol(aErrorCode, ')', PR_TRUE)) {
+      REPORT_UNEXPECTED_TOKEN(NS_LITERAL_STRING("Missing closing ')' in lang pseudo-class"));
+      aParsingStatus = SELECTOR_PARSING_STOPPED_ERROR;
+    }
+  }
+  else {
+    REPORT_UNEXPECTED_TOKEN(NS_LITERAL_STRING("Missing argument in lang pseudo-class"));
     aParsingStatus = SELECTOR_PARSING_STOPPED_ERROR;
   }
 }
