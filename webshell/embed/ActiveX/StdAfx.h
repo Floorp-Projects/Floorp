@@ -100,6 +100,9 @@ typedef long int32;
 #include "nsIBrowserWindow.h"
 #include "nsIContentViewer.h"
 #include "nsIPresContext.h"
+#include "nsIPresShell.h"
+#include "nsEditorCID.h"
+#include "nsIEditor.h"
 #include "nsIDocument.h"
 #include "nsIDocumentObserver.h"
 #include "nsIDocumentLoaderObserver.h" 
@@ -120,6 +123,9 @@ typedef long int32;
 
 #include "ActiveXTypes.h"
 #include "BrowserDiagnostics.h"
+#include "IOleCommandTargetImpl.h"
+#include "DHTMLCmdIds.h"
+
 #include "MozillaControl.h"
 #include "PropertyList.h"
 #include "PropertyBag.h"
