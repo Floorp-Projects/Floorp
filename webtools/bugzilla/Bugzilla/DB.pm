@@ -218,7 +218,7 @@ Bugzilla::DB - Database access routines, using L<DBI>
   my $shadow = Bugzilla::DB->connect_shadow;
 
   # Schema Information
-  my @fields = GetFieldDefs();
+  my @fields = Bugzilla::DB::GetFieldDefs();
 
   # Deprecated
   SendSQL("SELECT COUNT(*) FROM bugs");
