@@ -41,6 +41,8 @@ FILES=\
 	ICQ.src				\
 	NetscapeSearch.gif		\
 	NetscapeSearch.src		\
+	NetscapeSearchMain.gif		\
+	NetscapeSearchMain.src		\
         $(NULL)
 
 install:: $(FILES:/=\)
