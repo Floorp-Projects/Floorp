@@ -1498,71 +1498,76 @@ nsStandardURL::SetFileName(const char *filename)
     if (mPath.mLen < 0)
         return SetPath(filename);
 
+    PRInt32 shift = 0;
+
     if (!(filename && *filename)) {
         // remove the filename
         if (mBasename.mLen > 0) {
             if (mExtension.mLen >= 0)
                 mBasename.mLen += (mExtension.mLen + 1);
             mSpec.Cut(mBasename.mPos, mBasename.mLen);
-            ShiftFromParam(-mBasename.mLen);
-            mBasename.mLen = 0;
-            mExtension.mLen = -1;
-        }
-        return NS_OK;
-    }
-
-    nsresult rv;
-    URLSegment basename, extension;
-
-    // let the parser locate the basename and extension
-    rv = gNoAuthParser->ParseFileName(filename, -1,
-                                      &basename.mPos, &basename.mLen,
-                                      &extension.mPos, &extension.mLen);
-    if (NS_FAILED(rv)) return rv;
-
-    if (basename.mLen < 0) {
-        // remove existing filename
-        if (mBasename.mLen >= 0) {
-            PRUint32 len = mBasename.mLen;
-            if (mExtension.mLen >= 0)
-                len += (mExtension.mLen + 1);
-            mSpec.Cut(mBasename.mPos, len);
-            ShiftFromParam(-PRInt32(len));
+            shift = -mBasename.mLen;
             mBasename.mLen = 0;
             mExtension.mLen = -1;
         }
     }
     else {
-        nsCAutoString newFilename;
-        basename.mLen = AppendEscaped(newFilename, filename + basename.mPos,
-                                      basename.mLen, esc_FileBaseName);
-        if (extension.mLen >= 0) {
-            newFilename.Append('.');
-            extension.mLen = AppendEscaped(newFilename, filename + extension.mPos,
-                                           extension.mLen, esc_FileExtension);
-        }
+	    nsresult rv;
+	    URLSegment basename, extension;
 
-        if (mBasename.mLen < 0) {
-            // insert new filename
-            mBasename.mPos = mDirectory.mPos + mDirectory.mLen;
-            mSpec.Insert(newFilename, mBasename.mPos);
-            ShiftFromParam(newFilename.Length());
-        }
-        else {
-            // replace existing filename
-            PRUint32 oldLen = PRUint32(mBasename.mLen);
-            if (mExtension.mLen >= 0)
-                oldLen += (mExtension.mLen + 1);
-            mSpec.Replace(mBasename.mPos, oldLen, newFilename);
-            if (oldLen != newFilename.Length())
-                ShiftFromParam(newFilename.Length() - oldLen);
-        }
+	    // let the parser locate the basename and extension
+	    rv = gNoAuthParser->ParseFileName(filename, -1,
+	                                      &basename.mPos, &basename.mLen,
+	                                      &extension.mPos, &extension.mLen);
+	    if (NS_FAILED(rv)) return rv;
 
-        mBasename.mLen = basename.mLen;
-        mExtension.mLen = extension.mLen;
-        if (mExtension.mLen >= 0)
-            mExtension.mPos = mBasename.mPos + mBasename.mLen + 1;
-        mFilePath.mLen = mDirectory.mLen + newFilename.Length();
+	    if (basename.mLen < 0) {
+	        // remove existing filename
+	        if (mBasename.mLen >= 0) {
+	            PRUint32 len = mBasename.mLen;
+	            if (mExtension.mLen >= 0)
+	                len += (mExtension.mLen + 1);
+	            mSpec.Cut(mBasename.mPos, len);
+	            shift = -PRInt32(len);
+	            mBasename.mLen = 0;
+	            mExtension.mLen = -1;
+	        }
+	    }
+	    else {
+	        nsCAutoString newFilename;
+	        basename.mLen = AppendEscaped(newFilename, filename + basename.mPos,
+	                                      basename.mLen, esc_FileBaseName);
+	        if (extension.mLen >= 0) {
+	            newFilename.Append('.');
+	            extension.mLen = AppendEscaped(newFilename, filename + extension.mPos,
+	                                           extension.mLen, esc_FileExtension);
+	        }
+
+	        if (mBasename.mLen < 0) {
+	            // insert new filename
+	            mBasename.mPos = mDirectory.mPos + mDirectory.mLen;
+	            mSpec.Insert(newFilename, mBasename.mPos);
+	            shift = newFilename.Length();
+	        }
+	        else {
+	            // replace existing filename
+	            PRUint32 oldLen = PRUint32(mBasename.mLen);
+	            if (mExtension.mLen >= 0)
+	                oldLen += (mExtension.mLen + 1);
+	            mSpec.Replace(mBasename.mPos, oldLen, newFilename);
+	            shift = newFilename.Length() - oldLen;
+	        }
+	        
+	        mBasename.mLen = basename.mLen;
+	        mExtension.mLen = extension.mLen;
+	        if (mExtension.mLen >= 0)
+	            mExtension.mPos = mBasename.mPos + mBasename.mLen + 1;
+	    }
+	}
+    if (shift) {
+        ShiftFromParam(shift);
+        mFilePath.mLen += shift;
+        mPath.mLen += shift;
     }
     return NS_OK;
 }
