@@ -191,16 +191,13 @@ Components:rdf.xpt
 Components:shistoryDebug.shlb
 Components:shistory.xpt
 
-; required l10n libraries
+; required i18n libraries
 
-Components:unicharutilDebug.shlb
+Components:i18nDebug.shlb
 Components:unicharutil.xpt
 Components:uconvDebug.shlb
 Components:uconv.xpt
-Components:lwbrkDebug.shlb
-Components:nslocaleDebug.shlb
 Components:nslocale.xpt
-Components:chardetDebug.shlb
 Components:chardet.xpt
 Components:UniversalchardetDebug.shlb
 
@@ -212,7 +209,6 @@ res:charsetalias.properties
 res:maccharset.properties
 
 ; required i18n libs
-Components:strresDebug.shlb
 Components:nsIStringBundle.xpt
 
 ; required prefs files

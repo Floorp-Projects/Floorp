@@ -130,19 +130,13 @@ components\shistory.xpt
 components\rdf.dll
 components\rdf.xpt
 
-; required l10n libraries
+; required i18n libraries
+components\i18n.dll
 components\intl.xpt
 components\locale.xpt
-components\ucharuti.dll
 components\uconv.dll
 components\uconv.xpt
-components\lwbrk.dll
-components\nslocale.dll
 components\unicharutil.xpt
-components\chardet.dll
-
-; required i18n libs
-components\strres.dll
 
 ; dom
 components\jsdom.dll   

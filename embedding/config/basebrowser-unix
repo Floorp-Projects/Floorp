@@ -125,16 +125,10 @@ components/rdf.xpt
 
 components/intl.xpt
 components/locale.xpt
-components/libunicharutil.so
 components/libuconv.so
+components/libi18n.so
 components/uconv.xpt
-components/liblwbrk.so
-components/libnslocale.so
 components/unicharutil.xpt
-components/libchardet.so
-
-; required i18n libs
-components/libstrres.so
 
 ; 
 ; DOM:
