@@ -1,0 +1,21 @@
+Mozilla Calendar README
+-----------------------
+
+This file is meant to inform you about the status of files in this calendar tarball.  
+This calendar, although functional, should not be considered fully functional and instead should be thought of only as an idea of what the calendar can do.
+
+Directory Explanation:
+
+resources/content/ - This directory contains all the XUL and JS files needed for the calendar.
+               /penglobal - This directory contains files that are needed to run the calendar. It is hoped that these files will all be removed at some point, once the calendar is integrated with Mozilla.
+               /test      - Test files for the calendar. These are not needed to run it.
+         locale/  - Where the text for the calendar should end up, as well as definitions for dates and date formats.
+            en-US/
+               penglobal/ - Contains text for items not related to the calendar directly. The files in this directory should be integrated into the calendar or removed once we have integrated with Mozilla.
+               
+         skin/    - Graphics and CSS files defining the look of the calendar.
+            modern/
+               ca-event-dialog/ - Graphics and CSS files for the dialog which adds and edits events.
+               penglobal/       - Graphics and CSS files for items in the calendar which will be integrated into Mozilla later.
+   
+libxpical/ - An XPCOM interface to the libical library. This is needed to retreive and write calendar information to a file.
