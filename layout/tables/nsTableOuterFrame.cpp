@@ -32,6 +32,7 @@
 #include "nsCSSLayout.h"
 #include "nsVoidArray.h"
 #include "nsReflowCommand.h"
+#include "nsIPtr.h"
 
 #ifdef NS_DEBUG
 static PRBool gsDebug = PR_FALSE;
@@ -44,6 +45,9 @@ static const PRBool gsDebug = PR_FALSE;
 
 static NS_DEFINE_IID(kStyleMoleculeSID, NS_STYLEMOLECULE_SID);
 static NS_DEFINE_IID(kITableContentIID, NS_ITABLECONTENT_IID);
+
+NS_DEF_PTR(nsIStyleContext);
+NS_DEF_PTR(nsIContent);
 
 struct OuterTableReflowState {
 
@@ -231,13 +235,12 @@ NS_METHOD nsTableOuterFrame::ResizeReflow(nsIPresContext* aPresContext,
                                                   &innerTableMaxElementSize, tableStyleMol);
   
 #ifdef NOISY_MARGINS
-    nsIContent* content = mInnerTableFrame->GetContent();
+    nsIContentPtr content = mInnerTableFrame->GetContent();
     nsTablePart *table = (nsTablePart*)content;
     if (table != nsnull)
       table->DumpCellMap();
     mInnerTableFrame->ResetColumnLayoutData();
     mInnerTableFrame->ListColumnLayoutData(stdout,1);
-    NS_IF_RELEASE(content);
 #endif
 
   }
@@ -455,13 +458,12 @@ PRBool nsTableOuterFrame::ReflowMappedChildren( nsIPresContext*      aPresContex
                                   kidFrame, aState.processingCaption?"caption":"inner");
 
     // Get top margin for this kid
-    nsIStyleContext* kidSC;
+    nsIStyleContextPtr kidSC;
 
-    kidFrame->GetStyleContext(aPresContext, kidSC);
+    kidFrame->GetStyleContext(aPresContext, kidSC.AssignRef());
     nsStyleMolecule* kidMol = (nsStyleMolecule*)kidSC->GetData(kStyleMoleculeSID);
     nscoord topMargin = GetTopMarginFor(aPresContext, aState, kidMol);
     nscoord bottomMargin = kidMol->margin.bottom;
-    NS_RELEASE(kidSC);
 
     // Figure out the amount of available size for the child (subtract
     // off the top margin we are going to apply to it)
@@ -835,9 +837,9 @@ PRBool nsTableOuterFrame::PullUpChildren( nsIPresContext*      aPresContext,
   */
 void nsTableOuterFrame::SetReflowState(OuterTableReflowState& aState, nsIFrame* aKidFrame)
 {
-  nsIContent *kid;
+  nsIContentPtr kid;
    
-  aKidFrame->GetContent(kid);                             // kid: REFCNT++
+  aKidFrame->GetContent(kid.AssignRef());                             // kid: REFCNT++
   nsITableContent *tableContentInterface = nsnull;
   kid->QueryInterface(kITableContentIID, (void**)&tableContentInterface);// tableContentInterface: REFCNT++
   if (nsnull!=tableContentInterface)
@@ -847,7 +849,6 @@ void nsTableOuterFrame::SetReflowState(OuterTableReflowState& aState, nsIFrame* 
   }
   else
     aState.processingCaption = PR_FALSE;
-  NS_RELEASE(kid);                                                       // kid: REFCNT--
 }
 
 /**
@@ -870,9 +871,9 @@ nsTableOuterFrame::ReflowChild( nsIFrame*        aKidFrame,
   if (PR_TRUE==aState.processingCaption)
   { // it's a caption, find out if it's top or bottom
     // Resolve style
-    nsIStyleContext* captionStyleContext;
+    nsIStyleContextPtr captionStyleContext;
 
-    aKidFrame->GetStyleContext(aPresContext, captionStyleContext);
+    aKidFrame->GetStyleContext(aPresContext, captionStyleContext.AssignRef());
     NS_ASSERTION(nsnull != captionStyleContext, "null style context for caption");
     nsStyleMolecule* captionStyle =
       (nsStyleMolecule*)captionStyleContext->GetData(kStyleMoleculeSID);
@@ -915,7 +916,7 @@ void nsTableOuterFrame::CreateChildFrames(nsIPresContext*  aPresContext)
   if (NS_OK!=frameCreated)
     return;  // SEC: an error!!!!
   // Resolve style
-  nsIStyleContext* kidStyleContext =
+  nsIStyleContextPtr kidStyleContext =
     aPresContext->ResolveStyleContextFor(mContent, this);
   NS_ASSERTION(nsnull!=kidStyleContext, "bad style context for kid.");
   mInnerTableFrame->SetStyleContext(kidStyleContext);
@@ -930,11 +931,11 @@ void nsTableOuterFrame::CreateChildFrames(nsIPresContext*  aPresContext)
   // create caption frames as needed
   nsIFrame *lastTopCaption = nsnull;
   for (PRInt32 kidIndex=0; /* nada */ ;kidIndex++) {
-    nsIContent* caption = mContent->ChildAt(kidIndex);   // caption: REFCNT++
+    nsIContentPtr caption = mContent->ChildAt(kidIndex);   // caption: REFCNT++
     if (nsnull == caption) {
       break;
     }
-    const PRInt32 contentType = ((nsTableContent *)caption)->GetType();
+    const PRInt32 contentType = ((nsTableContent *)(nsIContent*)caption)->GetType();
     if (contentType==nsITableContent::kTableCaptionType)
     {
       nsIFrame *captionFrame=nsnull;
@@ -942,7 +943,7 @@ void nsTableOuterFrame::CreateChildFrames(nsIPresContext*  aPresContext)
       if (NS_OK!=frameCreated)
         return;  // SEC: an error!!!!
       // Resolve style
-      nsIStyleContext* captionStyleContext =
+      nsIStyleContextPtr captionStyleContext =
         aPresContext->ResolveStyleContextFor(caption, this);
       NS_ASSERTION(nsnull!=captionStyleContext, "bad style context for caption.");
       nsStyleMolecule* captionStyle = 
@@ -976,11 +977,9 @@ void nsTableOuterFrame::CreateChildFrames(nsIPresContext*  aPresContext)
         lastTopCaption = captionFrame;
       }
       mCaptionFrames->AppendElement(captionFrame);
-      NS_RELEASE(caption);                                 // caption: REFCNT--
     }
     else
     {
-      NS_RELEASE(caption);                                 // caption: REFCNT--
       break;
     }
   }
@@ -1030,9 +1029,9 @@ nsTableOuterFrame::ResizeReflowTopCaptionsPass2(nsIPresContext*  aPresContext,
       nsTableCaptionFrame *captionFrame = (nsTableCaptionFrame *)mCaptionFrames->ElementAt(captionIndex);
 
       // Resolve style
-      nsIStyleContext* captionStyleContext;
+      nsIStyleContextPtr captionStyleContext;
        
-      captionFrame->GetStyleContext(aPresContext, captionStyleContext);
+      captionFrame->GetStyleContext(aPresContext, captionStyleContext.AssignRef());
       NS_ASSERTION(nsnull != captionStyleContext, "null style context for caption");
       nsStyleMolecule* captionStyle =
         (nsStyleMolecule*)captionStyleContext->GetData(kStyleMoleculeSID);
@@ -1099,7 +1098,7 @@ nsTableOuterFrame::ResizeReflowBottomCaptionsPass2(nsIPresContext*  aPresContext
 
       // Resolve style
 /*
-      nsIStyleContext* captionStyleContext = captionFrame->GetStyleContext(aPresContext);
+      nsIStyleContextPtr captionStyleContext = captionFrame->GetStyleContext(aPresContext);
       NS_ASSERTION(nsnull != captionStyleContext, "null style context for caption");
       nsStyleMolecule* captionStyle =
         (nsStyleMolecule*)captionStyleContext->GetData(kStyleMoleculeSID);
@@ -1216,10 +1215,9 @@ void nsTableOuterFrame::PrepareContinuingFrame(nsIPresContext*    aPresContext,
 
   // Resolve style for the continuing frame and set its style context.
   // XXX presumptive
-  nsIStyleContext* styleContext =
+  nsIStyleContextPtr styleContext =
     aPresContext->ResolveStyleContextFor(mContent, aParent);
   aContFrame->SetStyleContext(styleContext);
-  NS_RELEASE(styleContext);
 }
 
 NS_METHOD nsTableOuterFrame::VerifyTree() const
@@ -1336,10 +1334,9 @@ void nsTableOuterFrame::CreateInnerTableFrame(nsIPresContext* aPresContext)
     mChildCount++;
 
     // Resolve style and set the style context
-    nsIStyleContext* styleContext =
+    nsIStyleContextPtr styleContext =
       aPresContext->ResolveStyleContextFor(mContent, this);
     mInnerTableFrame->SetStyleContext(styleContext);
-    NS_RELEASE(styleContext);
   } else {
     nsTableOuterFrame*  prevOuterTable = (nsTableOuterFrame*)mPrevInFlow;
 

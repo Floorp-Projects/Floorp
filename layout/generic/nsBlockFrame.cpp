@@ -34,6 +34,7 @@
 #include "nsHTMLAtoms.h"
 #include "nsHTMLValue.h"
 #include "nsIHTMLContent.h"
+#include "nsIPtr.h"
 
 #ifdef NS_DEBUG
 #undef NOISY
@@ -48,6 +49,9 @@ static NS_DEFINE_IID(kIFloaterContainerIID, NS_IFLOATERCONTAINER_IID);
 static NS_DEFINE_IID(kIAnchoredItemsIID, NS_IANCHOREDITEMS_IID);
 static NS_DEFINE_IID(kStyleMoleculeSID, NS_STYLEMOLECULE_SID);
 static NS_DEFINE_IID(kStyleFontSID, NS_STYLEFONT_SID);
+
+NS_DEF_PTR(nsIStyleContext);
+NS_DEF_PTR(nsIContent);
 
 struct BlockBandData : public nsBandData {
   nsBandTrapezoid data[5];
@@ -345,11 +349,10 @@ void nsBlockFrame::PlaceBelowCurrentLineFloaters(nsIPresContext* aCX,
     GetAvailableSpaceBand(aState, aY);
 
     // Get the type of floater
-    nsIStyleContext*  styleContext;
+    nsIStyleContextPtr  styleContext;
      
-    floater->GetStyleContext(aCX, styleContext);
+    floater->GetStyleContext(aCX, styleContext.AssignRef());
     nsStyleMolecule*  mol = (nsStyleMolecule*)styleContext->GetData(kStyleMoleculeSID);
-    NS_RELEASE(styleContext);
   
     floater->GetRect(region);
     region.y = mCurrentState->currentBand->trapezoids[0].yTop;
@@ -853,13 +856,12 @@ nsBlockFrame::PlaceAndReflowChild(nsIPresContext* aCX,
 
   // Get kid and its style
   // XXX How is this any different than what was passed in to us as aKidMol?
-  nsIContent* kid;
-  nsIStyleContext* kidSC;
+  nsIContentPtr kid;
+  nsIStyleContextPtr kidSC;
    
-  aKidFrame->GetContent(kid);
-  aKidFrame->GetStyleContext(aCX, kidSC);
+  aKidFrame->GetContent(kid.AssignRef());
+  aKidFrame->GetStyleContext(aCX, kidSC.AssignRef());
   nsStyleMolecule* kidMol = (nsStyleMolecule*)kidSC->GetData(kStyleMoleculeSID);
-  NS_RELEASE(kid);
 
   // Figure out if kid is a block element or not
   PRBool isInline = PR_TRUE;
@@ -899,14 +901,13 @@ nsBlockFrame::PlaceAndReflowChild(nsIPresContext* aCX,
     // Get the style for the last child, and see if it wanted to clear floaters.
     // This handles the BR tag, which is the only inline element for which clear
     // applies
-    nsIStyleContext* lastChildSC;
+    nsIStyleContextPtr lastChildSC;
      
-    lastFrame->GetStyleContext(aCX, lastChildSC);
+    lastFrame->GetStyleContext(aCX, lastChildSC.AssignRef());
     nsStyleMolecule* lastChildMol = (nsStyleMolecule*)lastChildSC->GetData(kStyleMoleculeSID); 
     if (lastChildMol->clear != NS_STYLE_CLEAR_NONE) {
       ClearFloaters(aState, lastChildMol->clear);
     }
-    NS_RELEASE(lastChildSC);
   }
 
   // Now that we've handled force breaks (and maybe called AdvanceToNextLine()
@@ -1096,7 +1097,6 @@ nsBlockFrame::PlaceAndReflowChild(nsIPresContext* aCX,
     // a line break before the next frame is placed.
     aState.breakAfterChild = PR_TRUE;
   }
-  NS_RELEASE(kidSC);
 
   aState.reflowStatus = status;
   return PLACE_FLOWED | PLACE_FIT;
@@ -1132,12 +1132,11 @@ nsBlockFrame::ReflowMappedChildren(nsIPresContext* aCX,
   nsIFrame* prevKidFrame = nsnull;
 
   for (kidFrame = mFirstChild; nsnull != kidFrame; ) {
-    nsIContent* kid;
+    nsIContentPtr kid;
      
-    kidFrame->GetContent(kid);
-    nsIStyleContext* kidSC = aCX->ResolveStyleContextFor(kid, this);
+    kidFrame->GetContent(kid.AssignRef());
+    nsIStyleContextPtr kidSC = aCX->ResolveStyleContextFor(kid, this);
     nsStyleMolecule* kidMol = (nsStyleMolecule*)kidSC->GetData(kStyleMoleculeSID);
-    NS_RELEASE(kid);
 
     // Attempt to place and reflow the child
 
@@ -1147,7 +1146,6 @@ nsBlockFrame::ReflowMappedChildren(nsIPresContext* aCX,
 
     PRIntn placeStatus = PlaceAndReflowChild(aCX, aState, kidFrame, kidMol);
     ReflowStatus status = aState.reflowStatus;
-    NS_RELEASE(kidSC);
     if (0 == (placeStatus & PLACE_FIT)) {
       // The child doesn't fit. Push it and any remaining children.
       PushKids(aState);
@@ -1224,10 +1222,10 @@ PRBool nsBlockFrame::MoreToReflow(nsIPresContext* aCX)
   if (IsPseudoFrame()) {
     // Get the next content object that we would like to reflow
     PRInt32 kidIndex = NextChildOffset();
-    nsIContent* kid = mContent->ChildAt(kidIndex);
+    nsIContentPtr kid = mContent->ChildAt(kidIndex);
     if (nsnull != kid) {
       // Resolve style for the kid
-      nsIStyleContext* kidSC = aCX->ResolveStyleContextFor(kid, this);
+      nsIStyleContextPtr kidSC = aCX->ResolveStyleContextFor(kid, this);
       nsStyleMolecule* kidMol = (nsStyleMolecule*)kidSC->GetData(kStyleMoleculeSID);
       switch (kidMol->display) {
       case NS_STYLE_DISPLAY_BLOCK:
@@ -1239,8 +1237,6 @@ PRBool nsBlockFrame::MoreToReflow(nsIPresContext* aCX)
         rv = PR_TRUE;
         break;
       }
-      NS_RELEASE(kidSC);
-      NS_RELEASE(kid);
     }
   } else {
     if (NextChildOffset() < mContent->ChildCount()) {
@@ -1288,14 +1284,14 @@ nsBlockFrame::ReflowAppendedChildren(nsIPresContext* aCX,
   LastChild(prevKidFrame);
   for (;;) {
     // Get the next content object
-    nsIContent* kid = mContent->ChildAt(kidIndex);
+    nsIContentPtr kid = mContent->ChildAt(kidIndex);
     if (nsnull == kid) {
       result = frComplete;
       break;
     }
 
     // Resolve style for the kid
-    nsIStyleContext* kidSC = aCX->ResolveStyleContextFor(kid, this);
+    nsIStyleContextPtr kidSC = aCX->ResolveStyleContextFor(kid, this);
     nsStyleMolecule* kidMol = (nsStyleMolecule*)kidSC->GetData(kStyleMoleculeSID);
 
     // Is it a floater?
@@ -1321,8 +1317,6 @@ nsBlockFrame::ReflowAppendedChildren(nsIPresContext* aCX,
           // decided it needed a pseudo-frame when it shouldn't have.
           NS_ASSERTION(nsnull != mFirstChild, "bad body");
 
-          NS_RELEASE(kidSC);
-          NS_RELEASE(kid);
           result = frComplete;
           goto done;
         }
@@ -1379,8 +1373,6 @@ nsBlockFrame::ReflowAppendedChildren(nsIPresContext* aCX,
         mLastContentIsComplete = PRBool(nsnull == kidNextInFlow);
         PushKids(aState);
 
-        NS_RELEASE(kid);
-        NS_RELEASE(kidSC);
         goto push_done;
       }
 
@@ -1403,8 +1395,7 @@ nsBlockFrame::ReflowAppendedChildren(nsIPresContext* aCX,
         mChildCount++;
 
         // Switch to new kid style
-        NS_RELEASE(kidSC);
-        kidFrame->GetStyleContext(aCX, kidSC);
+        kidFrame->GetStyleContext(aCX, kidSC.AssignRef());
         kidMol = (nsStyleMolecule*)kidSC->GetData(kStyleMoleculeSID);
       }
 #ifdef NS_DEBUG
@@ -1414,8 +1405,6 @@ nsBlockFrame::ReflowAppendedChildren(nsIPresContext* aCX,
       NS_ASSERTION(nsnull == kidNextInFlow, "huh?");
 #endif
     } while (frNotComplete == status);
-    NS_RELEASE(kid);
-    NS_RELEASE(kidSC);
 
     // The child that we just reflowed is complete
 #ifdef NS_DEBUG
@@ -1485,10 +1474,10 @@ nsBlockFrame::PullUpChildren(nsIPresContext* aCX,
     }
 
     // Get style information for the pulled up kid
-    nsIContent* kid;
+    nsIContentPtr kid;
      
-    kidFrame->GetContent(kid);
-    nsIStyleContext* kidSC = aCX->ResolveStyleContextFor(kid, this);
+    kidFrame->GetContent(kid.AssignRef());
+    nsIStyleContextPtr kidSC = aCX->ResolveStyleContextFor(kid, this);
     nsStyleMolecule* kidMol = (nsStyleMolecule*)kidSC->GetData(kStyleMoleculeSID);
 
     ReflowStatus status;
@@ -1504,8 +1493,6 @@ nsBlockFrame::PullUpChildren(nsIPresContext* aCX,
         PushKids(aState);
 
         result = PR_FALSE;
-        NS_RELEASE(kid);
-        NS_RELEASE(kidSC);
         goto push_done;
       }
 
@@ -1531,8 +1518,7 @@ nsBlockFrame::PullUpChildren(nsIPresContext* aCX,
           mChildCount++;
 
           // Switch to new kid style
-          NS_RELEASE(kidSC);
-          kidFrame->GetStyleContext(aCX, kidSC);
+          kidFrame->GetStyleContext(aCX, kidSC.AssignRef());
           kidMol = (nsStyleMolecule*)kidSC->GetData(kStyleMoleculeSID);
         } else {
           // The child has a next-in-flow, but it's not one of ours.
@@ -1543,8 +1529,6 @@ nsBlockFrame::PullUpChildren(nsIPresContext* aCX,
         }
       }
     } while (frNotComplete == status);
-    NS_RELEASE(kid);
-    NS_RELEASE(kidSC);
 
     prevKidFrame = kidFrame;
   }
@@ -1950,11 +1934,10 @@ void nsBlockFrame::PlaceFloater(nsIPresContext* aCX,
   // todo list and we'll handle it when we flush out the line
   if (IsLeftMostChild(aPlaceholder)) {
     // Get the type of floater
-    nsIStyleContext*  styleContext;
+    nsIStyleContextPtr  styleContext;
 
-    aFloater->GetStyleContext(aCX, styleContext);
+    aFloater->GetStyleContext(aCX, styleContext.AssignRef());
     nsStyleMolecule*  mol = (nsStyleMolecule*)styleContext->GetData(kStyleMoleculeSID);
-    NS_RELEASE(styleContext);
 
     if (!mCurrentState->isInline) {
       // Get the current band for this line
@@ -2008,13 +1991,13 @@ NS_METHOD nsBlockFrame::ContentAppended(nsIPresShell* aShell,
   flow->LastChild(prevKidFrame);
   for (;;) {
     // Get the next content object
-    nsIContent* kid = mContent->ChildAt(kidIndex);
+    nsIContentPtr kid = mContent->ChildAt(kidIndex);
     if (nsnull == kid) {
       break;
     }
 
     // Resolve style for the kid
-    nsIStyleContext* kidSC = aPresContext->ResolveStyleContextFor(kid, this);
+    nsIStyleContextPtr  kidSC = aPresContext->ResolveStyleContextFor(kid, this);
     nsStyleMolecule* kidMol = (nsStyleMolecule*)kidSC->GetData(kStyleMoleculeSID);
 
     // Is it a floater?
@@ -2039,9 +2022,6 @@ NS_METHOD nsBlockFrame::ContentAppended(nsIPresShell* aShell,
           // decided it needed a pseudo-frame when it shouldn't have.
           NS_ASSERTION(nsnull != mFirstChild, "bad body");
   
-          NS_RELEASE(kidSC);
-          NS_RELEASE(kid);
-  
           return NS_OK;
         }
         // FALL THROUGH (and create frame)
@@ -2058,8 +2038,6 @@ NS_METHOD nsBlockFrame::ContentAppended(nsIPresShell* aShell,
       }
     }
     kidFrame->SetStyleContext(kidSC);
-    NS_RELEASE(kidSC);
-    NS_RELEASE(kid);
 
     // Link child frame into the list of children
     if (nsnull != prevKidFrame) {

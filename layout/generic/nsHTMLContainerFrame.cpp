@@ -31,6 +31,7 @@
 #include "nsIURL.h"
 
 static NS_DEFINE_IID(kStyleMoleculeSID, NS_STYLEMOLECULE_SID);
+static NS_DEFINE_IID(kStyleBorderSID, NS_STYLEBORDER_SID);
 static NS_DEFINE_IID(kStyleColorSID, NS_STYLECOLOR_SID);
 
 nsHTMLContainerFrame::nsHTMLContainerFrame(nsIContent* aContent,
@@ -53,12 +54,12 @@ NS_METHOD nsHTMLContainerFrame::Paint(nsIPresContext& aPresContext,
     PRIntn skipSides = GetSkipSides();
     nsStyleColor* color =
       (nsStyleColor*)mStyleContext->GetData(kStyleColorSID);
-    nsStyleMolecule* mol =
-      (nsStyleMolecule*)mStyleContext->GetData(kStyleMoleculeSID);
+    nsStyleBorder* border =
+      (nsStyleBorder*)mStyleContext->GetData(kStyleBorderSID);
     nsCSSRendering::PaintBackground(aPresContext, aRenderingContext, this,
                                     aDirtyRect, mRect, *color);
     nsCSSRendering::PaintBorder(aPresContext, aRenderingContext, this,
-                                aDirtyRect, mRect, *mol, skipSides);
+                                aDirtyRect, mRect, *border, skipSides);
   }
 
   PaintChildren(aPresContext, aRenderingContext, aDirtyRect);

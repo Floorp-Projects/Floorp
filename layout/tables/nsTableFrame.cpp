@@ -35,6 +35,7 @@
 #include "nsCellLayoutData.h"
 #include "nsVoidArray.h"
 #include "prinrval.h"
+#include "nsIPtr.h"
 
 
 #ifdef NS_DEBUG
@@ -56,7 +57,14 @@ static const PRBool gsDebugMBP = PR_FALSE;
 #endif
 
 static NS_DEFINE_IID(kStyleMoleculeSID, NS_STYLEMOLECULE_SID);
+static NS_DEFINE_IID(kStyleBorderSID, NS_STYLEBORDER_SID);
 static NS_DEFINE_IID(kStyleColorSID, NS_STYLECOLOR_SID);
+
+NS_DEF_PTR(nsIStyleContext);
+NS_DEF_PTR(nsIContent);
+NS_DEF_PTR(nsTableContent);
+NS_DEF_PTR(nsTableCol);
+NS_DEF_PTR(nsTableCell);
 
 /* ----------- InnerTableReflowState ---------- */
 
@@ -395,16 +403,16 @@ NS_METHOD nsTableFrame::Paint(nsIPresContext& aPresContext,
   // table paint code is concerned primarily with borders and bg color
   nsStyleColor* myColor =
     (nsStyleColor*)mStyleContext->GetData(kStyleColorSID);
-  nsStyleMolecule* myMol =
-    (nsStyleMolecule*)mStyleContext->GetData(kStyleMoleculeSID);
+  nsStyleBorder* myBorder =
+    (nsStyleBorder*)mStyleContext->GetData(kStyleBorderSID);
   NS_ASSERTION(nsnull != myColor, "null style color");
-  NS_ASSERTION(nsnull != myMol, "null style molecule");
-  if (nsnull!=myMol)
+  NS_ASSERTION(nsnull != myBorder, "null style border");
+  if (nsnull!=myBorder)
   {
     nsCSSRendering::PaintBackground(aPresContext, aRenderingContext, this,
                                     aDirtyRect, mRect, *myColor);
     nsCSSRendering::PaintBorder(aPresContext, aRenderingContext, this,
-                                aDirtyRect, mRect, *myMol, 0);
+                                aDirtyRect, mRect, *myBorder, 0);
   }
 
   // for debug...
@@ -568,7 +576,7 @@ nsIFrame::ReflowStatus nsTableFrame::ResizeReflowPass1(nsIPresContext* aPresCont
    *  TBody, in order
    */
   for (;;) {
-    nsIContent* kid = c->ChildAt(kidIndex);   // kid: REFCNT++
+    nsIContentPtr kid = c->ChildAt(kidIndex);   // kid: REFCNT++
     if (nsnull == kid) {
       result = frComplete;
       break;
@@ -576,11 +584,11 @@ nsIFrame::ReflowStatus nsTableFrame::ResizeReflowPass1(nsIPresContext* aPresCont
 
     mLastContentIsComplete = PR_TRUE;
 
-    const PRInt32 contentType = ((nsTableContent *)kid)->GetType();
+    const PRInt32 contentType = ((nsTableContent *)(nsIContent*)kid)->GetType();
     if (contentType==nsITableContent::kTableRowGroupType)
     {
       // Resolve style
-      nsIStyleContext* kidStyleContext =
+      nsIStyleContextPtr kidStyleContext =
         aPresContext->ResolveStyleContextFor(kid, this);
       NS_ASSERTION(nsnull != kidStyleContext, "null style context for kid");
       nsStyleMolecule* kidStyle =
@@ -605,7 +613,6 @@ nsIFrame::ReflowStatus nsTableFrame::ResizeReflowPass1(nsIPresContext* aPresCont
         NS_RELEASE(kidDel);
         kidFrame->SetStyleContext(kidStyleContext);
       }
-      NS_RELEASE(kidStyleContext);
 
       nsSize maxKidElementSize;
       result = ReflowChild(kidFrame, aPresContext, kidSize, availSize, pKidMaxSize);
@@ -653,7 +660,6 @@ nsIFrame::ReflowStatus nsTableFrame::ResizeReflowPass1(nsIPresContext* aPresCont
         // If the child didn't finish layout then it means that it used
         // up all of our available space (or needs us to split).
         mLastContentIsComplete = PR_FALSE;
-        NS_RELEASE(kid);  // kid: REFCNT--
         break;
       }
     }
@@ -663,10 +669,8 @@ nsIFrame::ReflowStatus nsTableFrame::ResizeReflowPass1(nsIPresContext* aPresCont
       // If the child didn't finish layout then it means that it used
       // up all of our available space (or needs us to split).
       mLastContentIsComplete = PR_FALSE;
-      NS_RELEASE(kid);  // kid: REFCNT--
       break;
     }
-    NS_RELEASE(kid);  // kid: REFCNT--
   }
 
   if (nsnull != prevKidFrame) {
@@ -910,19 +914,17 @@ PRBool nsTableFrame::ReflowMappedChildren( nsIPresContext*      aPresContext,
     nsIFrame::ReflowStatus  status;
 
     // Get top margin for this kid
-    nsIContent* kid;
+    nsIContentPtr kid;
 
-    kidFrame->GetContent(kid);
-    if (((nsTableContent *)kid)->GetType() == nsITableContent::kTableRowGroupType)
+    kidFrame->GetContent(kid.AssignRef());
+    if (((nsTableContent *)(nsIContent*)kid)->GetType() == nsITableContent::kTableRowGroupType)
     { // skip children that are not row groups
-      nsIStyleContext* kidSC;
+      nsIStyleContextPtr kidSC;
 
-      kidFrame->GetStyleContext(aPresContext, kidSC);
+      kidFrame->GetStyleContext(aPresContext, kidSC.AssignRef());
       nsStyleMolecule* kidMol = (nsStyleMolecule*)kidSC->GetData(kStyleMoleculeSID);
       nscoord topMargin = GetTopMarginFor(aPresContext, aState, kidMol);
       nscoord bottomMargin = kidMol->margin.bottom;
-      NS_RELEASE(kid);
-      NS_RELEASE(kidSC);
 
       // Figure out the amount of available size for the child (subtract
       // off the top margin we are going to apply to it)
@@ -1315,7 +1317,7 @@ nsTableFrame::ReflowUnmappedChildren(nsIPresContext*      aPresContext,
   LastChild(prevKidFrame);
   for (;;) {
     // Get the next content object
-    nsIContent* kid = mContent->ChildAt(kidIndex);
+    nsIContentPtr kid = mContent->ChildAt(kidIndex);
     if (nsnull == kid) {
       result = frComplete;
       break;
@@ -1324,12 +1326,11 @@ nsTableFrame::ReflowUnmappedChildren(nsIPresContext*      aPresContext,
     // Make sure we still have room left
     if (aState.availSize.height <= 0) {
       // Note: return status was set to frNotComplete above...
-      NS_RELEASE(kid);
       break;
     }
 
     // Resolve style for the child
-    nsIStyleContext* kidStyleContext =
+    nsIStyleContextPtr kidStyleContext =
       aPresContext->ResolveStyleContextFor(kid, this);
 
     // Figure out how we should treat the child
@@ -1347,8 +1348,6 @@ nsTableFrame::ReflowUnmappedChildren(nsIPresContext*      aPresContext,
     } else {
       kidPrevInFlow->CreateContinuingFrame(aPresContext, this, kidFrame);
     }
-    NS_RELEASE(kid);
-    NS_RELEASE(kidStyleContext);
 
     // Try to reflow the child into the available space. It might not
     // fit or might need continuing.
@@ -1551,7 +1550,7 @@ PRBool nsTableFrame::AssignFixedColumnWidths(nsIPresContext* aPresContext, PRInt
     nsVoidArray *columnLayoutData = GetColumnLayoutData();
     nsColLayoutData * colData = (nsColLayoutData *)(columnLayoutData->ElementAt(colIndex));
     NS_ASSERTION(nsnull != colData, "bad column data");
-    nsTableCol *col = colData->GetCol();    // col: ADDREF++
+    nsTableColPtr col = colData->GetCol();    // col: ADDREF++
     NS_ASSERTION(nsnull != col, "bad col");
     nsStyleMolecule* colStyle =
       (nsStyleMolecule*)mStyleContext->GetData(kStyleMoleculeSID);
@@ -1580,8 +1579,8 @@ PRBool nsTableFrame::AssignFixedColumnWidths(nsIPresContext* aPresContext, PRInt
         // SEC: TODO -- when we have a style system, set the mol for the col
         nsCellLayoutData * data = (nsCellLayoutData *)(cells->ElementAt(0));
         nsTableCellFrame *cellFrame = data->GetCellFrame();
-        nsTableCell *cell;
-        cellFrame->GetContent((nsIContent*&)cell);          // cell: REFCNT++
+        nsTableCellPtr cell;
+        cellFrame->GetContent((nsIContent*&)(cell.AssignRef()));          // cell: REFCNT++
         nsStyleMolecule* cellStyle = (nsStyleMolecule*)mStyleContext->GetData(kStyleMoleculeSID);
         NS_ASSERTION(nsnull != cellStyle, "bad style for cell.");
         // SEC: this is the code to replace
@@ -1590,7 +1589,6 @@ PRBool nsTableFrame::AssignFixedColumnWidths(nsIPresContext* aPresContext, PRInt
         if (-1!=cellStyle->proportionalWidth)
           colStyle->proportionalWidth = cellStyle->proportionalWidth;
         // SEC: end code to replace
-        NS_RELEASE(cell);                                                    // cell: REFCNT--  
       }
       if (-1!=colStyle->fixedWidth)
       { // this col has fixed width, so set the cell's width 
@@ -1641,7 +1639,6 @@ PRBool nsTableFrame::AssignFixedColumnWidths(nsIPresContext* aPresContext, PRInt
     if (gsDebug==PR_TRUE) 
       printf ("  after this col, minTableWidth = %d and maxTableWidth = %d\n", aMinTableWidth, aMaxTableWidth);
   
-    NS_IF_RELEASE(col);               // col: ADDREF--
   } // end Step 1 for fixed-width columns
   return PR_TRUE;
 }
@@ -1722,7 +1719,7 @@ PRBool nsTableFrame::SetColumnsToMinWidth(nsIPresContext* aPresContext)
   for (PRInt32 colIndex = 0; colIndex<numCols; colIndex++)
   { 
     nsColLayoutData * colData = (nsColLayoutData *)(columnLayoutData->ElementAt(colIndex));
-    nsTableCol *col = colData->GetCol();  // col: ADDREF++
+    nsTableColPtr col = colData->GetCol();  // col: ADDREF++
     nsStyleMolecule* colStyle =
       (nsStyleMolecule*)mStyleContext->GetData(kStyleMoleculeSID);
     nsVoidArray *cells = colData->GetCells();
@@ -1763,7 +1760,6 @@ PRBool nsTableFrame::SetColumnsToMinWidth(nsIPresContext* aPresContext)
           printf ("  2: col %d, set to width = %d\n", colIndex, mColumnWidths[colIndex]);
       }
     }
-    NS_IF_RELEASE(col);               // col: ADDREF--
   }
   return result;
 }
@@ -1780,7 +1776,7 @@ PRBool nsTableFrame::BalanceColumnsTableFits(nsIPresContext* aPresContext,
   for (PRInt32 colIndex = 0; colIndex<numCols; colIndex++)
   { 
     nsColLayoutData * colData = (nsColLayoutData *)(columnLayoutData->ElementAt(colIndex));
-    nsTableCol *col = colData->GetCol();  // col: ADDREF++
+    nsTableColPtr col = colData->GetCol();  // col: ADDREF++
     nsStyleMolecule* colStyle =
       (nsStyleMolecule*)mStyleContext->GetData(kStyleMoleculeSID);
     nsVoidArray *cells = colData->GetCells();
@@ -1856,7 +1852,6 @@ PRBool nsTableFrame::BalanceColumnsTableFits(nsIPresContext* aPresContext,
         }
       }
     }
-    NS_IF_RELEASE(col);               // col: ADDREF--
   }
   return result;
 }
@@ -1877,7 +1872,7 @@ PRBool nsTableFrame::BalanceColumnsHTML4Constrained(nsIPresContext* aPresContext
   for (PRInt32 colIndex = 0; colIndex<numCols; colIndex++)
   { 
     nsColLayoutData * colData = (nsColLayoutData *)(columnLayoutData->ElementAt(colIndex));
-    nsTableCol *col = colData->GetCol();  // col: ADDREF++
+    nsTableColPtr col = colData->GetCol();  // col: ADDREF++
     nsStyleMolecule* colStyle =
       (nsStyleMolecule*)mStyleContext->GetData(kStyleMoleculeSID);
     nsVoidArray *cells = colData->GetCells();
@@ -1957,7 +1952,6 @@ PRBool nsTableFrame::BalanceColumnsHTML4Constrained(nsIPresContext* aPresContext
         }
       }
     }
-    NS_IF_RELEASE(col);               // col: ADDREF--
   }
 
   // post-process if necessary
@@ -2033,9 +2027,9 @@ void nsTableFrame::ShrinkWrapChildren(nsIPresContext* aPresContext,
 
     ChildAt(i, kidFrame); // frames are not ref counted
     NS_ASSERTION(nsnull != kidFrame, "bad kid frame");
-    nsTableContent* kid;
+    nsTableContentPtr kid;
      
-    kidFrame->GetContent((nsIContent*&)kid);  // kid: REFCNT++
+    kidFrame->GetContent((nsIContent*&)(kid.AssignRef()));  // kid: REFCNT++
     NS_ASSERTION(nsnull != kid, "bad kid");
     if (kid->GetType() == nsITableContent::kTableRowGroupType)
     {
@@ -2209,7 +2203,6 @@ void nsTableFrame::ShrinkWrapChildren(nsIPresContext* aPresContext,
       rowGroupFrame->SizeTo(rowGroupFrameSize.width, rowGroupHeight);
       tableHeight += rowGroupHeight;
     }
-    NS_RELEASE(kid);                                                  // kid: REFCNT--
   }
   if (0!=tableHeight)
   {
@@ -2293,7 +2286,7 @@ PRBool nsTableFrame::SetCellLayoutData(nsCellLayoutData * aData, nsTableCell *aC
         PRInt32 tableKidCount = tablePart->ChildCount();
         for (PRInt32 i=0; i<tableKidCount; i++)
         {
-          nsTableContent *tableKid = (nsTableContent *)tablePart->ChildAt(i);
+          nsTableContentPtr tableKid = (nsTableContent *)tablePart->ChildAt(i);
           NS_ASSERTION(nsnull != tableKid, "bad kid");
           const int contentType = tableKid->GetType();
           if (contentType == nsITableContent::kTableColGroupType)
@@ -2301,20 +2294,17 @@ PRBool nsTableFrame::SetCellLayoutData(nsCellLayoutData * aData, nsTableCell *aC
             PRInt32 colsInGroup = tableKid->ChildCount();
             for (PRInt32 j=0; j<colsInGroup; j++)
             {
-              nsTableCol *col = (nsTableCol *)tableKid->ChildAt(j);
+              nsTableColPtr col = (nsTableCol *)tableKid->ChildAt(j);
               NS_ASSERTION(nsnull != col, "bad content");
               nsColLayoutData *colData = new nsColLayoutData(col);
               mColumnLayoutData->AppendElement((void *)colData);
-              NS_RELEASE(col);                                                    // col: REFCNT--
             }
           }
           // can't have col groups after row groups, so stop if you find a row group
           else if (contentType == nsITableContent::kTableRowGroupType)
           {
-            NS_RELEASE(tableKid);                                                 // tableKid: REFCNT--
             break;
           }
-          NS_RELEASE(tableKid);                                                 // tableKid: REFCNT--
         }
       }
 
@@ -2388,16 +2378,14 @@ nsCellLayoutData * nsTableFrame::GetCellLayoutData(nsTableCell *aCell)
       for (PRInt32 i=0; i<count; i++)
       {
         nsCellLayoutData * data = (nsCellLayoutData *)(cells->ElementAt(i));
-        nsTableCell *cell;
+        nsTableCellPtr cell;
          
-        data->GetCellFrame()->GetContent((nsIContent*&)cell);  // cell: REFCNT++
+        data->GetCellFrame()->GetContent((nsIContent*&)(cell.AssignRef()));  // cell: REFCNT++
         if (cell == aCell)
         {
           result = data;
-          NS_RELEASE(cell);                                                         // cell: REFCNT--
           break;
         }
-        NS_RELEASE(cell);                                                         // cell: REFCNT--
       }
     }
   }
@@ -2542,7 +2530,7 @@ nsresult nsTableFrame::NewFrame(nsIFrame** aInstancePtrResult,
       for (colIndex = 0; colIndex<numCols; colIndex++)
       {
         nsColLayoutData * colData = (nsColLayoutData *)(columnLayoutData->ElementAt(colIndex));
-        nsTableCol *col = colData->GetCol();  // col: ADDREF++
+        nsTableColPtr col = colData->GetCol();  // col: ADDREF++
         nsStyleMolecule* colStyle =
           (nsStyleMolecule*)mStyleContext->GetData(kStyleMoleculeSID);
         if (PR_TRUE==IsProportionalWidth(colStyle))
@@ -2552,7 +2540,6 @@ nsresult nsTableFrame::NewFrame(nsIFrame** aInstancePtrResult,
           mColumnWidths[colIndex] += additionalSpace;
           additionalSpaceAdded += additionalSpace;
         }
-        NS_IF_RELEASE(col);               // col: ADDREF--
       }
       if (spaceUsed+additionalSpaceAdded < aMaxTableWidth)
         mColumnWidths[numCols-1] += (aMaxTableWidth - (spaceUsed+additionalSpaceAdded));

@@ -34,6 +34,7 @@ static const PRBool gsDebug = PR_FALSE;
 #endif
 
 static NS_DEFINE_IID(kStyleMoleculeSID, NS_STYLEMOLECULE_SID);
+static NS_DEFINE_IID(kStyleBorderSID, NS_STYLEBORDER_SID);
 static NS_DEFINE_IID(kStyleColorSID, NS_STYLECOLOR_SID);
 
 /**
@@ -98,18 +99,18 @@ NS_METHOD nsTableCaptionFrame::Paint(nsIPresContext& aPresContext,
                                      nsIRenderingContext& aRenderingContext,
                                      const nsRect& aDirtyRect)
 {
-  nsStyleMolecule* myMol =
-    (nsStyleMolecule*)mStyleContext->GetData(kStyleMoleculeSID);
+  nsStyleBorder* myBorder =
+    (nsStyleBorder*)mStyleContext->GetData(kStyleBorderSID);
   nsStyleColor* myColor =
     (nsStyleColor*)mStyleContext->GetData(kStyleColorSID);
   NS_ASSERTION(nsnull!=myColor, "bad style color");
-  NS_ASSERTION(nsnull!=myMol, "bad style molecule");
-  if (nsnull==myMol) return NS_OK;
+  NS_ASSERTION(nsnull!=myBorder, "bad style border");
+  if (nsnull==myBorder) return NS_OK;
 
   nsCSSRendering::PaintBackground(aPresContext, aRenderingContext, this,
                                   aDirtyRect, mRect, *myColor);
   nsCSSRendering::PaintBorder(aPresContext, aRenderingContext, this,
-                              aDirtyRect, mRect, *myMol, 0);
+                              aDirtyRect, mRect, *myBorder, 0);
 
 
   // for debug...
