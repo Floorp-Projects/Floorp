@@ -272,7 +272,7 @@ function AbNewAddressBook()
 {
   var dialog = window.openDialog(
     "chrome://messenger/content/addressbook/abAddressBookNameDialog.xul", 
-     "", "chrome,titlebar", {okCallback:AbCreateNewAddressBook});
+     "", "chrome,modal=yes,resizable=no,centerscreen", {okCallback:AbCreateNewAddressBook});
 }
 
 function AbCreateNewAddressBook(name)
