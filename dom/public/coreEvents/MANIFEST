@@ -19,8 +19,6 @@ nsIDOMPaintListener.h
 nsIDOMEventTarget.h
 nsIDOMTextListener.h
 nsIDOMCompositionListener.h
-nsIDOMTextRange.h
-nsIDOMTextRangeList.h
 nsIDOMMenuListener.h
 
 
