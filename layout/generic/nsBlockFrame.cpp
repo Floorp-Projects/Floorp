@@ -299,16 +299,23 @@ nsBlockFrame::List(FILE* out, PRInt32 aIndent) const
   ListTag(out);
 
   // Output the first/last content offset
-  fprintf(out, "[%d,%d,%c] pif=%p nif=%p",
-          mFirstContentOffset, mLastContentOffset,
-          (mLastContentIsComplete ? 'T' : 'F'),
-          mPrevInFlow, mNextInFlow);
+  fprintf(out, "[%d,%d,%c] ", mFirstContentOffset, mLastContentOffset,
+          (mLastContentIsComplete ? 'T' : 'F'));
+  if (nsnull != mPrevInFlow) {
+    fprintf(out, "prev-in-flow=%p ", mPrevInFlow);
+  }
+  if (nsnull != mNextInFlow) {
+    fprintf(out, "next-in-flow=%p ", mNextInFlow);
+  }
 
   // Output the rect
   out << mRect;
 
   // Output the children, one line at a time
   if (nsnull != mLines) {
+    if (0 != mState) {
+      fprintf(out, " [state=%08x]", mState);
+    }
     fputs("<\n", out);
     aIndent++;
 
@@ -322,6 +329,9 @@ nsBlockFrame::List(FILE* out, PRInt32 aIndent) const
     for (PRInt32 i = aIndent; --i >= 0; ) fputs("  ", out);
     fputs(">\n", out);
   } else {
+    if (0 != mState) {
+      fprintf(out, " [state=%08x]", mState);
+    }
     fputs("<>\n", out);
   }
 
