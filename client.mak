@@ -24,6 +24,26 @@ MOZ_TOP=mozilla
 !endif
 
 #//------------------------------------------------------------------------
+#// Defines specific to MOZ_RAPTOR
+#//------------------------------------------------------------------------
+!if defined(MOZ_RAPTOR)
+RAPTOR_MAKEFILE=raptor.mak
+
+CVSCO = cvs -q co -P
+
+# Branch tags we use
+NETLIB_BRANCH = MODULAR_NETLIB_BRANCH
+MOZRAPTOR_BRANCH = RAPTOR_INTEGRATION0_BRANCH
+
+# CVS commands to pull the appropriate branch versions
+CVSCO_NETLIB = $(CVSCO) -r $(NETLIB_BRANCH)
+CVSCO_CONFIG = $(CVSCO) -r $(MOZRAPTOR_BRANCH)
+
+MOZ_BRANCH=$(MOZRAPTOR_BRANCH)
+!endif
+
+
+#//------------------------------------------------------------------------
 #// Figure out how to do the pull.
 #//------------------------------------------------------------------------
 !if "$(MOZ_BRANCH)" != ""
@@ -68,8 +88,25 @@ pull_clobber_build_all:: pull_all \
 clobber_build_all:: 	clobber_all \
 			build_all
 
-pull_all:: pull_client_source_product
+!if defined(MOZ_RAPTOR)
+pull_all:: pull_client_source_product pull_raptor pull_netlib
+!else
+pull_all:: pull_client_source_product 
+!endif
 
+!if defined(MOZ_RAPTOR)
+pull_raptor:
+	@cd $(MOZ_SRC)
+	$(CVSCO) $(MOZ_TOP)/raptor.mak
+	@cd $(MOZ_SRC)/$(MOZ_TOP)
+	$(NMAKE) -f $(RAPTOR_MAKEFILE) pull_xpcom pull_imglib pull_raptor
+
+pull_netlib:
+	@cd $(MOZ_SRC)\.
+	$(CVSCO_NETLIB) $(MOZ_TOP)/lib/xp
+	$(CVSCO_NETLIB) $(MOZ_TOP)/lib/libnet
+	$(CVSCO_NETLIB) $(MOZ_TOP)/include/net.h $(MOZ_TOP)/include/npapi.h
+!endif
 
 pull_client_source_product:
     @echo +++ client.mak: checking out the client with "$(CVS_BRANCH)"
@@ -77,8 +114,21 @@ pull_client_source_product:
     -cvs -q co $(CVS_BRANCH)      MozillaSourceWin
 
 
+!if defined(MOZ_RAPTOR)
+build_all:  build_raptor \
+			build_dist  \
+			build_client
+!else
 build_all:              build_dist  \
 			build_client
+!endif
+
+!if defined(MOZ_RAPTOR)
+build_raptor: 
+	cd $(MOZ_SRC)\$(MOZ_TOP)
+	$(NMAKE) -f $(RAPTOR_MAKEFILE) STANDALONE_IMAGE_LIB=1 RAPTOR=1
+!endif
+
 build_dist:
     @echo +++ client.mak: building dist
     cd $(MOZ_SRC)\$(MOZ_TOP)
@@ -98,7 +148,13 @@ build_client:
 #
 # remove all source files from the tree and print a report of what was missed
 #
-clobber_all:
+!if defined(MOZ_RAPTOR)
+clobber_all:: clobber_moz clobber_raptor
+!else
+clobber_all:: clobber_moz
+!endif
+
+clobber_moz:
     cd $(MOZ_SRC)\$(MOZ_TOP)
     $(NMAKE) -f makefile.win clobber_all
     cd $(MOZ_SRC)\$(MOZ_TOP)\cmd\winfe\mkfiles32
@@ -106,6 +162,12 @@ clobber_all:
 !if !defined(MOZ_MEDIUM)
     cd $(MOZ_SRC)\$(MOZ_TOP)\netsite\ldap\libraries\msdos\winsock
     $(NMAKE) -f nsldap.mak clobber_all
+!endif
+
+!if defined(MOZ_RAPTOR)
+clobber_raptor:
+	cd $(MOZ_SRC)\$(MOZ_TOP)
+	$(NMAKE) -f $(RAPTOR_MAKEFILE) STANDALONE_IMAGE_LIB=1 RAPTOR=1 clobber	
 !endif
 
 depend:
