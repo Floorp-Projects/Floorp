@@ -144,6 +144,9 @@ public:
                                        PRInt32*           aHint);
 
 protected:
+  nsresult InitScanner(nsIUnicharInputStream* aInput, nsIURI* aURI);
+  nsresult ReleaseScanner(void);
+
   PRBool GetToken(PRInt32& aErrorCode, PRBool aSkipWS);
   PRBool GetURLToken(PRInt32& aErrorCode, PRBool aSkipWS);
   void UngetToken();
@@ -378,6 +381,36 @@ CSSParserImpl::SetChildLoader(nsICSSLoader* aChildLoader)
   return NS_OK;
 }
 
+nsresult
+CSSParserImpl::InitScanner(nsIUnicharInputStream* aInput, nsIURI* aURI)
+{
+  NS_ASSERTION(! mScanner, "already have scanner");
+
+  mScanner = new nsCSSScanner();
+  if (! mScanner) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+  mScanner->Init(aInput);
+  NS_IF_RELEASE(mURL);
+  mURL = aURI;
+  NS_IF_ADDREF(mURL);
+
+  mHavePushBack = PR_FALSE;
+
+  return NS_OK;
+}
+
+nsresult
+CSSParserImpl::ReleaseScanner(void)
+{
+  if (mScanner) {
+    delete mScanner;
+    mScanner = nsnull;
+  }
+  NS_IF_RELEASE(mURL);
+  return NS_OK;
+}
+
 
 NS_IMETHODIMP
 CSSParserImpl::Parse(nsIUnicharInputStream* aInput,
@@ -395,13 +428,11 @@ CSSParserImpl::Parse(nsIUnicharInputStream* aInput,
   }
 
   PRInt32 errorCode = NS_OK;
-  mScanner = new nsCSSScanner();
-  if (nsnull == mScanner) {
-    return NS_ERROR_OUT_OF_MEMORY;
+
+  nsresult result = InitScanner(aInput, aInputURL);
+  if (! NS_SUCCEEDED(result)) {
+    return result;
   }
-  mScanner->Init(aInput);
-  mURL = aInputURL;
-  NS_IF_ADDREF(aInputURL);
 
   PRInt32 ruleCount = 0;
   mSheet->StyleRuleCount(ruleCount);
@@ -448,9 +479,7 @@ CSSParserImpl::Parse(nsIUnicharInputStream* aInput,
       mSection = eCSSSection_General;
     }
   }
-  delete mScanner;
-  mScanner = nsnull;
-  NS_IF_RELEASE(mURL);
+  ReleaseScanner();
 
   aResult = mSheet;
   NS_ADDREF(aResult);
@@ -476,16 +505,11 @@ CSSParserImpl::ParseDeclarations(const nsString& aDeclaration,
     return rv;
   }
 
-  mScanner = new nsCSSScanner();
-  if (nsnull == mScanner) {
-    NS_RELEASE(input);
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  mScanner->Init(input);
+  rv = InitScanner(input, aBaseURL);
   NS_RELEASE(input);
-
-  mURL = aBaseURL;
-  NS_IF_ADDREF(mURL);
+  if (! NS_SUCCEEDED(rv)) {
+    return rv;
+  }
 
   mSection = eCSSSection_General;
   PRInt32 errorCode = NS_OK;
@@ -503,9 +527,7 @@ CSSParserImpl::ParseDeclarations(const nsString& aDeclaration,
     aResult = nsnull;
   }
 
-  delete mScanner;
-  mScanner = nsnull;
-  NS_IF_RELEASE(mURL);
+  ReleaseScanner();
 
   return NS_OK;
 }
@@ -529,16 +551,11 @@ CSSParserImpl::ParseAndAppendDeclaration(const nsString&    aBuffer,
     return rv;
   }
 
-  mScanner = new nsCSSScanner();
-  if (nsnull == mScanner) {
-    NS_RELEASE(input);
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  mScanner->Init(input);
+  rv = InitScanner(input, aBaseURL);
   NS_RELEASE(input);
-
-  mURL = aBaseURL;
-  NS_IF_ADDREF(mURL);
+  if (! NS_SUCCEEDED(rv)) {
+    return rv;
+  }
 
   mSection = eCSSSection_General;
   PRInt32 errorCode = NS_OK;
@@ -552,10 +569,7 @@ CSSParserImpl::ParseAndAppendDeclaration(const nsString&    aBuffer,
     *aHint = hint;
   }
 
-  delete mScanner;
-  mScanner = nsnull;
-  NS_IF_RELEASE(mURL);
-
+  ReleaseScanner();
   return NS_OK;
 }
 
