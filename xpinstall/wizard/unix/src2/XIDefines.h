@@ -39,7 +39,7 @@
 #define INSTALL "Install"
 #define DEFAULT_TITLE "Mozilla Installer"
 #define DEST_DIR "Destination Directory"
-#define BROWSE "Browse..."
+#define BROWSE "Change..."
 #define SELECT_DIR "Select a directory"
 #define DOESNT_EXIST "Directory %s doesn't exist.  Create it?\n"
 #define YES_LABEL "Yes"
