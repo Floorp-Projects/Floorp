@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: pkistore.c,v $ $Revision: 1.17 $ $Date: 2002/05/07 20:31:59 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: pkistore.c,v $ $Revision: 1.18 $ $Date: 2002/09/07 01:23:13 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef PKIM_H
@@ -701,7 +701,7 @@ nss_certificate_hash
   const void *key
 )
 {
-    int i;
+    unsigned int i;
     PLHashNumber h;
     NSSCertificate *c = (NSSCertificate *)key;
     h = 0;

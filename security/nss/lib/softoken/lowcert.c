@@ -34,7 +34,7 @@
 /*
  * Certificate handling code
  *
- * $Id: lowcert.c,v 1.13 2002/08/31 00:37:46 jpierre%netscape.com Exp $
+ * $Id: lowcert.c,v 1.14 2002/09/07 01:12:21 jpierre%netscape.com Exp $
  */
 
 #include "seccomon.h"
@@ -128,10 +128,10 @@ nsslowcert_GetDefaultCertDB(void)
  * simple cert decoder to avoid the cost of asn1 engine
  */ 
 static unsigned char *
-nsslowcert_dataStart(unsigned char *buf, int length, 
+nsslowcert_dataStart(unsigned char *buf, unsigned int length, 
 			unsigned int *data_length, PRBool includeTag) {
     unsigned char tag;
-    int used_length= 0;
+    unsigned int used_length= 0;
 
     tag = buf[used_length++];
 

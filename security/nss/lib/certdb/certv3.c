@@ -34,7 +34,7 @@
 /*
  * Code for dealing with X509.V3 extensions.
  *
- * $Id: certv3.c,v 1.2 2002/08/24 00:46:08 jpierre%netscape.com Exp $
+ * $Id: certv3.c,v 1.3 2002/09/07 01:24:27 jpierre%netscape.com Exp $
  */
 
 #include "cert.h"
@@ -108,7 +108,7 @@ CERT_FindCertURLExtension(CERTCertificate *cert, int tag, int catag)
     char *urlstring;
     char *str;
     int len;
-    int i;
+    unsigned int i;
     
     urlstring = NULL;
 
