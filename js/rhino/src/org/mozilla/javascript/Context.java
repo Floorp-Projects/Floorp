@@ -98,12 +98,6 @@ public class Context {
     public Context() {
         setLanguageVersion(VERSION_DEFAULT);
         optimizationLevel = codegenClass != null ? 0 : -1;
-        Object[] array = contextListeners;
-        if (array != null) {
-            for (int i = array.length; i-- != 0;) {
-                ((ContextListener)array[i]).contextCreated(this);
-            }
-        }
     }
 
     /**
@@ -126,14 +120,16 @@ public class Context {
      *      try {
      *          ...
      *          cx.evaluateString(...);
+     *      } finally {
+     *          Context.exit();
      *      }
-     *      finally { Context.exit(); }
      * </pre>
      * @return a Context associated with the current thread
      * @see org.mozilla.javascript.Context#getCurrentContext
      * @see org.mozilla.javascript.Context#exit
      */
-    public static Context enter() {
+    public static Context enter()
+    {
         return enter(null);
     }
 
@@ -148,32 +144,30 @@ public class Context {
      * @param cx a Context to associate with the thread if possible
      * @return a Context associated with the current thread
      */
-    public static Context enter(Context cx) {
-
+    public static Context enter(Context cx)
+    {
         Context old = getCurrentContext();
-
-        if (cx == null) {
-            if (old != null) {
-                cx = old;
-            } else {
-                cx = new Context();
-                setThreadContext(cx);
-            }
-        } else {
-            if (cx.enterCount != 0) {
+        if (old != null) {
+            if (cx != null && cx != old && cx.enterCount != 0) {
                 // The suplied context must be the context for
                 // the current thread if it is already entered
-                if (cx != old) {
-                    throw new RuntimeException
-                        ("Cannot enter Context active on another thread");
-                }
-            } else {
-                if (old != null) {
-                    cx = old;
-                } else {
-                    setThreadContext(cx);
+                throw new IllegalArgumentException(
+                    "Cannot enter Context active on another thread");
+            }
+            cx = old;
+        } else {
+            if (cx == null)
+                cx = new Context();
+            if (cx.enterCount != 0) Context.codeBug();
+
+            Object[] array = contextListeners;
+            if (array != null) {
+                for (int i = array.length; i-- != 0;) {
+                    ((ContextListener)array[i]).contextCreated(cx);
                 }
             }
+
+            setThreadContext(cx);
         }
 
         ++cx.enterCount;
@@ -200,12 +194,13 @@ public class Context {
      *
      * @see org.mozilla.javascript.Context#enter
      */
-    public static void exit() {
+    public static void exit()
+    {
         boolean released = false;
         Context cx = getCurrentContext();
         if (cx == null) {
-            throw new RuntimeException
-                ("Calling Context.exit without previous Context.enter");
+            throw new IllegalStateException(
+                "Calling Context.exit without previous Context.enter");
         }
         if (Context.check && cx.enterCount < 1) Context.codeBug();
         --cx.enterCount;
