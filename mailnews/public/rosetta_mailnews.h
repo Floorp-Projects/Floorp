@@ -90,7 +90,7 @@
 #define HJ82388
 #define HJ67078
 #define HJ10196
-#define HJ58932	--- unused #052, take it! ---
+#define HJ58932
 #define HJ04608	--- unused #053, take it! ---
 #define HJ79059	--- unused #054, take it! ---
 #define HJ73882	--- unused #055, take it! ---
