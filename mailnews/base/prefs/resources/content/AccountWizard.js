@@ -101,7 +101,6 @@ function setBackEnabled(enabled) {
 
 function nextPage(win) {
     var nextPageTag = wizardMap[currentPageTag].next;
-    dump("Loading " + getUrlFromTag(nextPageTag) + "\n");
     if (nextPageTag)
         win.location=getUrlFromTag(nextPageTag);
     else
@@ -116,11 +115,8 @@ function previousPage(win) {
 
 function initializePage(win, hash) {
     var inputs= win.document.getElementsByTagName("FORM")[0].elements;
-    dump("initialize: There are " + inputs.length + " input tags\n");
     for (var i=0; i<inputs.length; i++) {
-        dump("restoring input " + i + "\n");
         restoreValue(hash, inputs[i]);
-        dump("done.\n");
     }
 }
 
@@ -128,7 +124,6 @@ function initializePage(win, hash) {
 function saveContents(win, hash) {
 
     var inputs = win.document.getElementsByTagName("FORM")[0].elements;
-    dump("save: There are " + inputs.length + " input tags\n");
     for (var i=0 ; i<inputs.length; i++) {
         saveValue(hash, inputs[i])
     }
@@ -137,40 +132,30 @@ function saveContents(win, hash) {
 
 function restoreValue(hash, element) {
     if (!hash[element.name]) return;
-    dump("Restoring " + element.name + "...");
     if (element.type=="radio") {
         if (hash[element.name] == element.value)
             element.checked=true;
         else
             element.checked=false;
-        dump(element.checked);
     } else if (element.type=="checkbox") {
         element.checked=hash[element.name];
-        dump(element.checked);
     } else {
         element.value=hash[element.name];
-        dump(element.value);
     }
-    dump("\n");
 }
 
 function saveValue(hash, element) {
 
-    dump("Saving " + element.name + "...");
     if (element.type=="radio") {
         if (element.checked) {
             hash[element.name] = element.value;
-            dump(element.value);
         }
     } else if (element.type == "checkbox") {
         hash[element.name] = element.checked;
-        dump(element.checked);
     }
     else {
         hash[element.name] = element.value;
-        dump(element.value);
     }
-    dump("\n");
 }
 
 function validateIdentity(win, hash) {
@@ -208,15 +193,9 @@ function createAccount(hash) {
 
     var account = am.createAccount();
 
-    dump("Created account " + account.key + "\n");
-
     var server = am.createIncomingServer(hash["server.type"]);
-
-    dump("Created server " + server.key + "\n");
     
     var identity = am.createIdentity();
-
-    dump("Created identity " + identity.key + "\n");
 
     account.incomingServer = server;
     account.addIdentity(identity);
