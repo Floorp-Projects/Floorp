@@ -179,7 +179,11 @@ sub LookupNamedQuery {
     my $qname = SqlQuote($name);
     SendSQL("SELECT query FROM namedqueries WHERE userid = $userid AND name = $qname");
     my $result = FetchOneColumn();
-    $result || ThrowUserError("missing_query", {'queryname' => $name});
+    
+    defined($result) || ThrowUserError("missing_query", {'queryname' => $name});
+    $result
+       || ThrowUserError("buglist_parameters_required", {'queryname' => $name});
+
     return $result;
 }
 
@@ -331,8 +335,10 @@ elsif (($::FORM{'cmdtype'} eq "doit") && $::FORM{'remtype'}) {
         $name !~ /[<>&]/ || ThrowUserError("illegal_query_name");
         my $qname = SqlQuote($name);
 
+        $::FORM{'newquery'} || ThrowUserError("buglist_parameters_required", 
+                                              {'queryname' => $name});
         my $qbuffer = SqlQuote($::FORM{'newquery'});
-
+        
         my $tofooter = 1;
 
         $vars->{'message'} = "buglist_new_named_query";

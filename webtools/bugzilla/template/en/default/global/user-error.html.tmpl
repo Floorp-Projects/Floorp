@@ -118,9 +118,7 @@
 
   [% ELSIF error == "buglist_parameters_required" %]
     [% title = "Parameters Required" %]
-    [% url   = "query.cgi" %]
-    [% link  = "Please use the search form to specify some search criteria." %]
-    This script is not meant to be invoked without any search terms.
+    You may not search, or create saved searches, without any search terms.
 
   [% ELSIF error == "bugs_not_changed" %]
     [% title = BLOCK %][% terms.Bugs %] Not Changed[% END %]
