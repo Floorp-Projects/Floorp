@@ -44,6 +44,12 @@
 
 #include "nsFtpControlConnection.h"
 
+#ifdef MOZ_NEW_CACHE
+#include "nsICacheService.h"
+#include "nsICacheSession.h"
+#include "nsICacheEntryDescriptor.h"
+#endif
+
 // ftp server types
 #define FTP_GENERIC_TYPE     0
 #define FTP_UNIX_TYPE        1
@@ -211,6 +217,11 @@ private:
     PRPackedBool            mControlReadContinue;
     PRPackedBool            mControlReadBrokenLine;
     nsCAutoString           mControlReadCarryOverBuf;
+#ifdef MOZ_NEW_CACHE
+    nsCOMPtr<nsICacheSession>         mCacheSession;
+    nsCOMPtr<nsICacheEntryDescriptor> mCacheEntry;
+    PRPackedBool                      mReadingFromCache;
+#endif
   
 };
 
