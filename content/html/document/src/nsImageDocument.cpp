@@ -42,14 +42,9 @@
 #include "nsGenericHTMLElement.h"
 #include "nsHTMLAtoms.h"
 #include "nsIHTMLContent.h"
-#ifdef USE_IMG2
 #include "imgIRequest.h"
 #include "imgILoader.h"
 #include "imgIContainer.h"
-#else
-#include "nsIImageGroup.h"
-#include "nsIImageRequest.h"
-#endif
 #include "nsIStreamListener.h"
 #include "nsIURL.h"
 #include "nsHTMLValue.h"
@@ -104,19 +99,12 @@ public:
 
   nsresult CreateSyntheticDocument();
 
-#ifndef USE_IMG2
-  nsresult StartImageLoad(nsIURI* aURL, nsIStreamListener*& aListener);
-#endif
   nsresult EndLayout(nsISupports *ctxt, 
                      nsresult status);
   nsresult UpdateTitle( void );
 
   void StartLayout();
-#ifdef USE_IMG2
   nsCOMPtr<imgIRequest> mImageRequest;
-#else
-  nsIImageRequest*  mImageRequest;
-#endif
   nscolor           mBlack;
   nsWeakPtr         mContainer;
 };
@@ -136,11 +124,7 @@ public:
   NS_DECL_NSISTREAMLISTENER
 
   nsImageDocument* mDocument;
-#ifdef USE_IMG2
   nsCOMPtr<nsIStreamListener> mNextStream;
-#else
-  nsIStreamListener *mNextStream;
-#endif
 };
 
 ImageListener::ImageListener(nsImageDocument* aDoc)
@@ -153,9 +137,6 @@ ImageListener::ImageListener(nsImageDocument* aDoc)
 ImageListener::~ImageListener()
 {
   NS_RELEASE(mDocument);
-#ifndef USE_IMG2
-  NS_IF_RELEASE(mNextStream);
-#endif
 }
 
 NS_IMPL_THREADSAFE_ISUPPORTS1(ImageListener, nsIStreamListener)
@@ -164,15 +145,10 @@ NS_IMETHODIMP
 ImageListener::OnStartRequest(nsIRequest* request, nsISupports *ctxt)
 {
   nsresult rv;
-  nsIURI* uri;
 
   nsCOMPtr<nsIChannel> channel = do_QueryInterface(request);
   if (!channel) return NS_ERROR_NULL_POINTER;
 
-  rv = channel->GetURI(&uri);
-  if (NS_FAILED(rv)) return rv;
-  
-#ifdef USE_IMG2
   nsCOMPtr<nsIPresShell> shell;
   nsCOMPtr<nsIPresContext> context;
   mDocument->GetShellAt(0, getter_AddRefs(shell));
@@ -192,10 +168,6 @@ ImageListener::OnStartRequest(nsIRequest* request, nsISupports *ctxt)
 
   mDocument->StartLayout();
 
-#else
-  mDocument->StartImageLoad(uri, mNextStream);
-#endif
-  NS_RELEASE(uri);
   if (nsnull == mNextStream) {
     return NS_ERROR_FAILURE;
   }
@@ -250,17 +222,11 @@ NS_NewImageDocument(nsIDocument** aInstancePtrResult)
 
 nsImageDocument::nsImageDocument()
 {
-#ifndef USE_IMG2
-  mImageRequest = nsnull;
-#endif
   mBlack = NS_RGB(0, 0, 0);
 }
 
 nsImageDocument::~nsImageDocument()
 {
-#ifndef USE_IMG2
-  NS_IF_RELEASE(mImageRequest);
-#endif
 }
 
 NS_IMETHODIMP
@@ -310,51 +276,6 @@ nsImageDocument::StartDocumentLoad(const char* aCommand,
   return NS_OK;
 }
 
-#ifndef USE_IMG2
-nsresult
-nsImageDocument::StartImageLoad(nsIURI* aURL, nsIStreamListener*& aListener)
-{
-  nsresult rv = NS_OK;
-  aListener = nsnull;
-
-  // Tell image group to load the stream now. This will get the image
-  // hooked up to the open stream and return the underlying listener
-  // so that we can pass it back upwards.
-
-
-  nsCOMPtr<nsIPresShell> shell;
-  GetShellAt(0, getter_AddRefs(shell));
-  if (nsnull != shell) {
-    nsCOMPtr<nsIPresContext> cx;
-    shell->GetPresContext(getter_AddRefs(cx));
-    if (cx) {
-      nsIImageGroup* group = nsnull;
-      cx->GetImageGroup(&group);
-      if (nsnull != group) {
-
-        char* spec;
-        (void)aURL->GetSpec(&spec);
-        nsIStreamListener* listener = nsnull;
-        rv = group->GetImageFromStream(spec, nsnull, nsnull,
-                                       0, 0, 0,
-                                       mImageRequest, listener);
-
-        //set flag to indicate view-image needs to use imgcache
-        group->SetImgLoadAttributes(nsImageLoadFlags_kSticky);
-
-        nsCRT::free(spec);
-        aListener = listener;
-        NS_RELEASE(group);
-      }
-    }
-  }
-  
-  // Finally, start the layout going
-  StartLayout();
-
-  return NS_OK;
-}
-#endif
 
 nsresult
 nsImageDocument::CreateSyntheticDocument()
@@ -546,7 +467,6 @@ nsresult nsImageDocument::UpdateTitle( void )
     }
 
     if (mImageRequest) {
-#ifdef USE_IMG2
       imgIContainer* imgContainer;
       rv = mImageRequest->GetImage(&imgContainer);
       if (NS_SUCCEEDED(rv) && imgContainer) {
@@ -557,9 +477,6 @@ nsresult nsImageDocument::UpdateTitle( void )
         height = h;
         NS_RELEASE(imgContainer);
       }
-#else
-      mImageRequest->GetNaturalImageSize(&width, &height);
-#endif
 
       widthStr.AppendInt(width);
       heightStr.AppendInt(height);
