@@ -140,6 +140,9 @@ private:
     NS_IMETHOD
     InitPrefs();
 
+    PRBool
+    EnsureNameSetRegistered();
+
     static nsresult 
     PrincipalPrefNames(const char* pref, char** grantedPref, char** deniedPref);
 
@@ -166,6 +169,7 @@ private:
     PRBool mIsWritingPrefs;
     unsigned char hasDomainPolicyVector[(NS_DOM_PROP_MAX >> 3) + 1];
     nsCOMPtr<nsIJSContextStack> mThreadJSContextStack;
+    PRBool mNameSetRegistered;
 };
 
 #endif /*_NS_SCRIPT_SECURITY_MANAGER_H_*/
