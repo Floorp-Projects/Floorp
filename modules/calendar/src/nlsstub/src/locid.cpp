@@ -19,6 +19,9 @@
 #include "locid.h"
 #include "unistring.h"
 
+static UnicodeString u("Locale Name Goes Here");
+static Locale l;
+
 Locale::Locale()
 {
 }
@@ -29,12 +32,10 @@ Locale::~Locale()
 
 const Locale& Locale::getDefault()
 {
-  Locale l;
   return (l);
 }
 
 UnicodeString& Locale::getName(UnicodeString& aName) const
 {
-  UnicodeString u;
   return (u);
 }

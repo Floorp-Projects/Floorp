@@ -19,6 +19,7 @@
 #include "nscore.h"
 #include "datefmt.h"
 #include "unistring.h"
+#include "time.h"
 
 DateFormat::DateFormat()
 {
@@ -39,8 +40,11 @@ void DateFormat::setTimeZone(const TimeZone& aZone)
 }
 
 Date DateFormat::parse(const UnicodeString& aUnicodeString, ErrorCode& aStatus) const
-{
-  return ((Date)nsnull);
+{ 
+  // XXX
+  time_t t;
+  time(&t);
+  return ((Date)t*kMillisPerSecond);
 }
 
 PRBool DateFormat::operator==(const Format& aFormat) const

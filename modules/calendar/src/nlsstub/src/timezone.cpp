@@ -29,12 +29,14 @@ TimeZone::~TimeZone()
 
 TimeZone* TimeZone::createDefault()
 {
-  return ((TimeZone *)nsnull);
+  TimeZone * t = (TimeZone*) new TimeZone();
+  return ((TimeZone *)t);
 }
 
 TimeZone* TimeZone::createTimeZone(const UnicodeString& aID)
 {
-  return ((TimeZone *)nsnull);
+  TimeZone * t = (TimeZone*) new TimeZone();
+  return ((TimeZone *)t);
 }
 
 void TimeZone::setID(const UnicodeString& aID)
