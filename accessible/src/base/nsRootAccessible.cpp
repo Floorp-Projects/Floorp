@@ -55,6 +55,7 @@
 #include "nsIDOMXULSelectCntrlItemEl.h"
 #include "nsIDocument.h"
 #include "nsIHTMLDocument.h"
+#include "nsIFocusController.h"
 #include "nsIFrame.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsIScriptGlobalObject.h"
@@ -246,6 +247,9 @@ nsresult nsRootAccessible::AddEventListeners()
     rv = target->AddEventListener(NS_LITERAL_STRING("popupshown"), NS_STATIC_CAST(nsIDOMXULListener*, this), PR_TRUE);
     NS_ASSERTION(NS_SUCCEEDED(rv), "failed to register listener");
 
+    rv = target->AddEventListener(NS_LITERAL_STRING("popuphiding"), NS_STATIC_CAST(nsIDOMXULListener*, this), PR_TRUE);
+    NS_ASSERTION(NS_SUCCEEDED(rv), "failed to register listener");
+
     rv = target->AddEventListener(NS_LITERAL_STRING("DOMMenuInactive"), NS_STATIC_CAST(nsIDOMXULListener*, this), PR_TRUE);
     NS_ASSERTION(NS_SUCCEEDED(rv), "failed to register listener");
 
@@ -288,6 +292,7 @@ nsresult nsRootAccessible::RemoveEventListeners()
     target->RemoveEventListener(NS_LITERAL_STRING("CheckboxStateChange"), NS_STATIC_CAST(nsIDOMXULListener*, this), PR_TRUE);
     target->RemoveEventListener(NS_LITERAL_STRING("RadioStateChange"), NS_STATIC_CAST(nsIDOMXULListener*, this), PR_TRUE);
     target->RemoveEventListener(NS_LITERAL_STRING("popupshown"), NS_STATIC_CAST(nsIDOMXULListener*, this), PR_TRUE);
+    target->RemoveEventListener(NS_LITERAL_STRING("popuphiding"), NS_STATIC_CAST(nsIDOMXULListener*, this), PR_TRUE);
     target->RemoveEventListener(NS_LITERAL_STRING("DOMMenuInactive"), NS_STATIC_CAST(nsIDOMXULListener*, this), PR_TRUE);
     target->RemoveEventListener(NS_LITERAL_STRING("DOMMenuItemActive"), NS_STATIC_CAST(nsIDOMXULListener*, this), PR_TRUE);
     target->RemoveEventListener(NS_LITERAL_STRING("DOMMenuBarActive"), NS_STATIC_CAST(nsIDOMXULListener*, this), PR_TRUE);
@@ -456,6 +461,46 @@ void nsRootAccessible::FireDHTMLFocusRelatedEvents(nsIAccessible *aAccessible, P
       privateAccessible->FireToolkitEvent(nsIAccessibleEvent::EVENT_SELECTION,
                                           aAccessible, nsnull);
     }
+  }
+}
+
+void nsRootAccessible::FireCurrentFocusEvent()
+{
+  nsCOMPtr<nsIDOMWindow> domWin;
+  GetWindow(getter_AddRefs(domWin));
+  nsCOMPtr<nsPIDOMWindow> privateDOMWindow(do_QueryInterface(domWin));
+  if (!privateDOMWindow) {
+    return;
+  }
+  nsIFocusController *focusController = privateDOMWindow->GetRootFocusController();
+  if (!focusController) {
+    return;
+  }
+  nsCOMPtr<nsIDOMElement> focusedElement;
+  focusController->GetFocusedElement(getter_AddRefs(focusedElement));
+  nsCOMPtr<nsIDOMNode> focusedNode(do_QueryInterface(focusedElement));
+  if (!focusedNode) {
+    // Document itself may have focus
+    nsCOMPtr<nsIDOMWindowInternal> focusedWinInternal;
+    focusController->GetFocusedWindow(getter_AddRefs(focusedWinInternal));
+    if (focusedWinInternal) {
+      nsCOMPtr<nsIDOMDocument> focusedDOMDocument;
+      focusedWinInternal->GetDocument(getter_AddRefs(focusedDOMDocument));
+      focusedNode = do_QueryInterface(focusedDOMDocument);
+    }
+    if (!focusedNode) {
+      return;  // Could not get a focused document either
+    }
+  }
+  nsCOMPtr<nsIPresShell> eventShell;
+  GetEventShell(focusedNode, getter_AddRefs(eventShell));
+  NS_ASSERTION(eventShell, "No presshell for focused node");
+
+  nsCOMPtr<nsIAccessible> accessible;
+  mAccService->GetAccessibleInShell(focusedNode, eventShell,
+                                    getter_AddRefs(accessible));
+  if (accessible) {
+    FireAccessibleFocusEvent(accessible, focusedNode);
   }
 }
 
@@ -630,12 +675,23 @@ NS_IMETHODIMP nsRootAccessible::HandleEvent(nsIDOMEvent* aEvent)
     privAcc->FireToolkitEvent(nsIAccessibleEvent::EVENT_MENUSTART, accessible, nsnull);
   else if (eventType.LowerCaseEqualsLiteral("dommenubarinactive")) {
     privAcc->FireToolkitEvent(nsIAccessibleEvent::EVENT_MENUEND, accessible, nsnull);
-    GetFocusedChild(getter_AddRefs(accessible)); // Returns null if no focus
-    nsCOMPtr<nsIAccessNode> accessNode(do_QueryInterface(accessible));
-    if (accessNode) {
-      accessNode->GetDOMNode(getter_AddRefs(targetNode));
-      FireAccessibleFocusEvent(accessible, targetNode);
+    FireCurrentFocusEvent();
+  }
+  else if (eventType.LowerCaseEqualsLiteral("popuphiding")) {
+    // If accessible focus was inside popup that closes,
+    // then restore it to true current focus.
+    // This is the case when we've been getting DOMMenuItemActive events
+    // inside of a combo box that closes. The real focus is on the combo box.
+    if (!gLastFocusedNode) {
+      return NS_OK;
     }
+    nsCOMPtr<nsIDOMNode> parentOfFocus;
+    gLastFocusedNode->GetParentNode(getter_AddRefs(parentOfFocus));
+    if (parentOfFocus != targetNode) {
+      return NS_OK;
+    }
+    // Focus was inside of popup that's being hidden
+    FireCurrentFocusEvent();
   }
   else {
     // Menu popup events
@@ -715,6 +771,22 @@ NS_IMETHODIMP nsRootAccessible::HandleEvent(nsIDOMEvent* aEvent)
     stateData.enable = (stateData.state & STATE_EXPANDED) != 0;
     stateData.state = STATE_EXPANDED;
     privAcc->FireToolkitEvent(nsIAccessibleEvent::EVENT_STATE_CHANGE, accessible, &stateData);
+  }
+  else if (eventType.LowerCaseEqualsLiteral("popuphiding")) {
+    // If accessible focus was inside popup that closes,
+    // then restore it to true current focus.
+    // This is the case when we've been getting DOMMenuItemActive events
+    // inside of a combo box that closes. The real focus is on the combo box.
+    if (!gLastFocusedNode) {
+      return NS_OK;
+    }
+    nsCOMPtr<nsIDOMNode> parentOfFocus;
+    gLastFocusedNode->GetParentNode(getter_AddRefs(parentOfFocus));
+    if (parentOfFocus != targetNode) {
+      return NS_OK;
+    }
+    // Focus was inside of popup that's being hidden
+    FireCurrentFocusEvent();
   }
   else if (eventType.LowerCaseEqualsLiteral("popupshown")) {
     FireAccessibleFocusEvent(accessible, targetNode);
