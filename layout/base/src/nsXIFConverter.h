@@ -137,9 +137,10 @@ public:
   NS_IMETHOD EndCSSDeclaration();
   NS_IMETHOD EndCSSDeclarationList();
 
-  NS_IMETHOD IsMarkupEntity(const PRUnichar aChar, PRBool *aReturnVal);
-  NS_IMETHOD AddMarkupEntity(const PRUnichar aChar, PRBool *aReturnVal);
-
+  NS_IMETHOD AppendEntity(const PRUnichar aChar, nsAWritableString* aStr,
+                          nsAReadableString* aInsertIntoTag);
+  NS_IMETHOD AppendWithEntityConversion(const nsAReadableString& aName,
+                                        nsAWritableString& aOutStr);
 
   NS_IMETHOD SetSelection(nsIDOMSelection* aSelection);
 
