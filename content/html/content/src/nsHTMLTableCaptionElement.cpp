@@ -203,14 +203,16 @@ nsHTMLTableCaptionElement::AttributeToString(nsIAtom* aAttribute,
 static 
 void MapAttributesIntoRule(const nsIHTMLMappedAttributes* aAttributes, nsRuleData* aData)
 {
-  if (!aAttributes || !aData || aData->mSID != eStyleStruct_TableBorder || !aData->mTableData)
+  if (!aAttributes || !aData)
     return;
 
-  if (aData->mTableData->mCaptionSide.GetUnit() == eCSSUnit_Null) {
-    nsHTMLValue value;
-    aAttributes->GetAttribute(nsHTMLAtoms::align, value);
-    if (value.GetUnit() == eHTMLUnit_Enumerated)
-      aData->mTableData->mCaptionSide.SetIntValue(value.GetIntValue(), eCSSUnit_Enumerated);
+  if (aData->mSID == eStyleStruct_TableBorder && aData->mTableData) {
+    if (aData->mTableData->mCaptionSide.GetUnit() == eCSSUnit_Null) {
+      nsHTMLValue value;
+      aAttributes->GetAttribute(nsHTMLAtoms::align, value);
+      if (value.GetUnit() == eHTMLUnit_Enumerated)
+        aData->mTableData->mCaptionSide.SetIntValue(value.GetIntValue(), eCSSUnit_Enumerated);
+    }
   }
 
   nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aData);
