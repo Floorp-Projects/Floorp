@@ -42,6 +42,8 @@
 # global-history
 # html
 #       html parsing and layout
+# layout
+#       reflow, frames, line, view
 # images
 #       All images.
 # jar
@@ -98,6 +100,27 @@ gfxImageFrame::Init
 <images>
 gif_write
 
+<images>
+imgRequest::OnDataAvailable
+
+<images>
+imgLoader::
+
+<images>
+jinit_master_decompress
+
+<images>
+jinit_marker_reader
+
+<images>
+jinit_marker_decompress
+
+<images>
+nsJPEGDecoder::
+
+<images>
+nsGIFDecoder2::
+
 <jar>
 nsZipArchive::BuildFileList
 
@@ -127,9 +150,6 @@ nsLocale::
 nsCharsetConverterManager::
 
 <necko>
-nsHttpChannel::AsyncOpen
-
-<necko>
 nsDiskCacheDevice::Init
 
 <necko>
@@ -140,6 +160,12 @@ nsSocketTransport::
 
 <necko>
 nsCacheService::
+
+<necko>
+nsDiskCacheStreamIO::
+
+<necko>
+nsHttpResponseHead::
 
 <wallet>
 WLLT
@@ -208,6 +234,9 @@ RDFXMLDataSourceImpl::Assert
 NS_NewRDFInMemoryDataSource
 
 <css>
+CSSLoaderImpl::ParseSheet
+
+<css>
 CSSParserImpl::Parse(
 
 <css>
@@ -218,6 +247,9 @@ RuleHash::AppendRule
 
 <css>
 nsRuleNode::GetStyleData
+
+<CSS>
+SelectorList::
 
 <css>
 CSSRuleProcessor::RulesMatching
@@ -241,7 +273,65 @@ NS_NewHTMLTokenizer
 nsSlidingString::
 
 <html>
+nsParser::
+
+<html>
+nsIParserService::
+
+<html>
+nsCParserNode::
+
+<html>
 CNavDTD::CNavDTD
+
+<html>
+nsHTMLDocument::
+
+<layout>
+IncrementalReflow::AddCommand
+
+<layout>
+nsBlockFrame::
+
+<layout>
+nsBoxFrame::
+
+<layout>
+nsImageFrame::
+
+<layout>
+nsInlineFrame::
+
+<layout>
+nsLeafFrame::
+
+<layout>
+nsLineLayout::
+
+<layout>
+nsReflowPath::EnsureSubtreeFor
+
+<layout>
+nsSliderFrame::
+
+<layout>
+nsScrollBoxFrame::
+
+<layout>
+nsTextFrame::
+
+<layout>
+nsTableRowFrame::
+
+<layout>
+nsTableRowGroupFrame::
+
+<layout>
+nsViewManager::
+
+<layout>
+PresShell::ProcessReflowCommands
+
 
 # ======================================================================
 # Rules that match higher up on the stack
@@ -340,6 +430,12 @@ nsIOService::NewURI
 
 <necko>
 nsIOService::NewChannelFromURI
+
+<necko>
+nsSegmentedBuffer::AppendNewSegment
+
+<necko>
+nsHttpChannel::
 
 # Catchalls to help categorize
 # ----------------------------------------------------------------------
