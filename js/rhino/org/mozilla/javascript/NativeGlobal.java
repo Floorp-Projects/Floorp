@@ -465,7 +465,7 @@ public class NativeGlobal {
         int[] linep = { 0 };
         String filename = cx.getSourcePositionFromStack(linep);
         return constructError(cx, error, message, scope,
-                              filename, linep[0]);
+                              filename, linep[0], 0, null);
     }
     
     /**
@@ -478,7 +478,9 @@ public class NativeGlobal {
                                            String message,
                                            Object scope,
                                            String sourceName,
-                                           int lineNumber)
+                                           int lineNumber,
+                                           int columnNumber,
+                                           String lineSource)
     {
         Scriptable scopeObject;
         try {
@@ -492,7 +494,7 @@ public class NativeGlobal {
         try {
             Object errorObject = cx.newObject(scopeObject, error, args);
             return new EcmaError((NativeError)errorObject, sourceName, 
-                                 lineNumber);
+                                 lineNumber, columnNumber, lineSource);
         }
         catch (PropertyException x) {
             throw new RuntimeException(x.toString());

@@ -1355,7 +1355,7 @@ public class TokenStream {
             throw NativeGlobal.constructError(
                             Context.getContext(), "SyntaxError",
                             message, scope, getSourceName(),
-                            getLineno());
+                            getLineno(), getOffset(), getLine());
         } else {
             Context.reportError(message, getSourceName(),
                                 getLineno(), getLine(), getOffset());

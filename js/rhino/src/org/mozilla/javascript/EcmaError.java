@@ -50,14 +50,22 @@ public class EcmaError extends RuntimeException {
      * RuntimeException.
      *
      * @param nativeError the NativeError object constructed for this error
+     * @param sourceName the name of the source reponsible for the error
+     * @param lineNumber the line number of the source
+     * @param columnNumber the columnNumber of the source (may be zero if
+     *                     unknown)
+     * @param lineSource the source of the line containing the error (may be 
+     *                   null if unknown)
      */
     public EcmaError(NativeError nativeError, String sourceName, 
-                     int lineNumber) 
+                     int lineNumber, int columnNumber, String lineSource) 
     {
         super("EcmaError");
         errorObject = nativeError;
         this.sourceName = sourceName;
         this.lineNumber = lineNumber;
+        this.columnNumber = columnNumber;
+        this.lineSource = lineSource;
     }
     
     /**
@@ -122,7 +130,23 @@ public class EcmaError extends RuntimeException {
         return errorObject;
     }
     
+    /**
+     * The column number of the location of the error, or zero if unknown.
+     */
+    public int getColumnNumber() {
+        return columnNumber;
+    }
+    
+    /**
+     * The source of the line causing the error, or zero if unknown.
+     */
+    public String getLineSource() {
+        return lineSource;
+    }
+    
     private NativeError errorObject;
     private String sourceName;
     private int lineNumber;
+    private int columnNumber;
+    private String lineSource;
 }

@@ -692,9 +692,8 @@ public class NodeTransformer {
         if (isError) {
             if (scope != null)
             throw NativeGlobal.constructError(
-                        cx, "SyntaxError",
-                        msg,
-                        scope, (String) prop, lineno);
+                        cx, "SyntaxError", msg, scope, 
+                        (String) prop, lineno, 0, null);
             else
                 cx.reportError(msg, (String) prop, lineno, null, 0);
         }

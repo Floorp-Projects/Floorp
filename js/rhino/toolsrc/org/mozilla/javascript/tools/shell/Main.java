@@ -356,7 +356,9 @@ public class Main {
             global.exitCode = EXITCODE_RUNTIME_ERROR;
             if (ee.getSourceName() != null) {
                 Context.reportError(msg, ee.getSourceName(), 
-                                    ee.getLineNumber(), null, 0);
+                                    ee.getLineNumber(), 
+                                    ee.getLineSource(), 
+                                    ee.getColumnNumber());
             } else {
                 Context.reportError(msg);
             }
