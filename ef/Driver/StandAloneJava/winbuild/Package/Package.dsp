@@ -141,6 +141,73 @@ SOURCE=..\..\..\..\Packages\java\lang\nativesrc\Float.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=\
+..\..\..\..\Packages\java\lang\nativesrc\geninclude\java_lang_ArithmeticException.h
+# End Source File
+# Begin Source File
+
+SOURCE=\
+..\..\..\..\Packages\java\lang\nativesrc\geninclude\java_lang_Character.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\..\Packages\java\lang\nativesrc\geninclude\java_lang_Class.h
+# End Source File
+# Begin Source File
+
+SOURCE=\
+..\..\..\..\Packages\java\lang\nativesrc\geninclude\java_lang_ClassLoader.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\..\Packages\java\lang\nativesrc\geninclude\java_lang_Compiler.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\..\Packages\java\lang\nativesrc\geninclude\java_lang_Double.h
+# End Source File
+# Begin Source File
+
+SOURCE=\
+..\..\..\..\Packages\java\lang\nativesrc\geninclude\java_lang_Exception.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\..\Packages\java\lang\nativesrc\geninclude\java_lang_Float.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\..\Packages\java\lang\nativesrc\geninclude\java_lang_Math.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\..\Packages\java\lang\nativesrc\geninclude\java_lang_Number.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\..\Packages\java\lang\nativesrc\geninclude\java_lang_Object.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\..\Packages\java\lang\nativesrc\geninclude\java_lang_Runtime.h
+# End Source File
+# Begin Source File
+
+SOURCE=\
+..\..\..\..\Packages\java\lang\nativesrc\geninclude\java_lang_RuntimeException.h
+# End Source File
+# Begin Source File
+
+SOURCE=\
+..\..\..\..\Packages\java\lang\nativesrc\geninclude\java_lang_SecurityManager.h
+# End Source File
+# Begin Source File
+
+SOURCE=\
+..\..\..\..\Packages\java\lang\nativesrc\geninclude\java_lang_Throwable.h
+# End Source File
+# Begin Source File
+
 SOURCE=..\..\..\..\Packages\java\lang\nativesrc\Math.cpp
 # End Source File
 # Begin Source File
@@ -193,6 +260,51 @@ SOURCE=..\..\..\..\Packages\java\io\nativesrc\FileOutputStream.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=..\..\..\..\Packages\java\io\nativesrc\geninclude\java_io_File.h
+# End Source File
+# Begin Source File
+
+SOURCE=\
+..\..\..\..\Packages\java\io\nativesrc\geninclude\java_io_FileDescriptor.h
+# End Source File
+# Begin Source File
+
+SOURCE=\
+..\..\..\..\Packages\java\io\nativesrc\geninclude\java_io_FileInputStream.h
+# End Source File
+# Begin Source File
+
+SOURCE=\
+..\..\..\..\Packages\java\io\nativesrc\geninclude\java_io_FileOutputStream.h
+# End Source File
+# Begin Source File
+
+SOURCE=\
+..\..\..\..\Packages\java\io\nativesrc\geninclude\java_io_FilterOutputStream.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\..\Packages\java\io\nativesrc\geninclude\java_io_InputStream.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\..\Packages\java\io\nativesrc\geninclude\java_io_OutputStream.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\..\Packages\java\io\nativesrc\geninclude\java_io_PrintStream.h
+# End Source File
+# Begin Source File
+
+SOURCE=\
+..\..\..\..\Packages\java\io\nativesrc\geninclude\java_io_RandomAccessFile.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\..\Packages\java\io\nativesrc\geninclude\java_lang_Object.h
+# End Source File
+# Begin Source File
+
 SOURCE=..\..\..\..\Packages\java\io\nativesrc\Mapping.h
 # End Source File
 # End Group
@@ -205,12 +317,27 @@ SOURCE=..\..\..\..\Packages\java\security\nativesrc\AccessController.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=\
+..\..\..\..\Packages\java\security\nativesrc\geninclude\java_security_AccessController.h
+# End Source File
+# Begin Source File
+
+SOURCE=\
+..\..\..\..\Packages\java\security\nativesrc\geninclude\java_security_ProtectionDomain.h
+# End Source File
+# Begin Source File
+
 SOURCE=..\..\..\..\Packages\java\security\nativesrc\ProtectionDomain.cpp
 # End Source File
 # End Group
 # Begin Group "util"
 
 # PROP Default_Filter ""
+# Begin Source File
+
+SOURCE=\
+..\..\..\..\Packages\java\util\nativesrc\geninclude\java_util_ResourceBundle.h
+# End Source File
 # Begin Source File
 
 SOURCE=..\..\..\..\Packages\java\util\nativesrc\ResourceBundle.cpp
@@ -231,23 +358,35 @@ InputPath=..\..\..\..\Packages\rt.jar
 
 BuildCmds= \
 	..\electric\javah -classpath ../../../../Packages/rt.jar -d\
-          ../../../../Packages/java/security/nativesrc/geninclude\
-             java/security/AccessController java/security/ProtectionDomain \
+             ../../../../Packages/java/security/nativesrc/geninclude\
+                java/security/AccessController java/security/ProtectionDomain \
 	..\electric\javah -classpath ../../../../Packages/rt.jar -d\
-                                     ../../../../Packages/java/lang/nativesrc/geninclude\
-                                     java/lang/ArithmeticException java/lang/Character java/lang/Class\
-                               java/lang/ClassLoader       java/lang/Compiler java/lang/Double java/lang/Float\
-                               java/lang/Math       java/lang/Runtime java/lang/SecurityManager\
-                               java/lang/System java/lang/String       java/lang/Thread\
-                             java/lang/reflect/Field java/lang/reflect/Method java/lang/reflect/Constructor\
-                           java/lang/reflect/Array java/util/Properties \
+                                        ../../../../Packages/java/lang/nativesrc/geninclude\
+                                        java/lang/ArithmeticException java/lang/Character\
+                                        java/lang/Class java/lang/ClassLoader\
+                                        java/lang/Compiler java/lang/Double java/lang/Float \
 	..\electric\javah -classpath ../../../../Packages/rt.jar -d\
-                                     ../../../../Packages/java/io/nativesrc/geninclude java/io/File\
-                                   java/io/FileDescriptor java/io/FileInputStream java/io/FileOutputStream\
-                                   java/io/PrintStream java/io/RandomAccessFile \
+                                ../../../../Packages/java/lang/nativesrc/geninclude\
+                                java/lang/Math\
+                                java/lang/Runtime\
+                                java/lang/SecurityManager\
+                                java/lang/System java/lang/String\
+                                java/lang/Thread \
 	..\electric\javah -classpath ../../../../Packages/rt.jar -d\
-                                     ../../../../Packages/java/util/nativesrc/geninclude java/util/ResourceBundle \
-	
+                                ../../../../Packages/java/lang/nativesrc/reflect/geninclude\
+                                java/lang/reflect/Field\
+                                java/lang/reflect/Method\
+                                java/lang/reflect/Constructor\
+                                java/lang/reflect/Array \
+	..\electric\javah -classpath ../../../../Packages/rt.jar -d\
+                                ../../../../Packages/java/io/nativesrc/geninclude java/io/File\
+                                java/io/FileDescriptor\
+                                java/io/FileInputStream\
+                                java/io/FileOutputStream\
+                                java/io/PrintStream java/io/RandomAccessFile \
+	..\electric\javah -classpath ../../../../Packages/rt.jar -d\
+                                ../../../../Packages/java/util/nativesrc/geninclude\
+                                java/util/ResourceBundle  java/util/Properties	
 
 "..\..\..\..\Packages\java\security\nativesrc\geninclude\ProtectionDomain.h" : \
 $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
