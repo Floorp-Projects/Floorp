@@ -76,10 +76,12 @@
       <!-- xxxslamm Need to add descriptive panel text here -->
       <box align="horizontal" class="button-group">
         <titledbutton id="add_button" onclick="AddPanel()"
+          class="dialog push"
           value="&sidebar.customize.add.label;"
           disabled="true"/>
 
         <titledbutton id="preview_button" onclick="PreviewPanel()"
+          class="dialog push"
           value="&sidebar.customize.preview.label;"
           disabled="true"/>
       </box>
@@ -141,8 +143,10 @@
 
       <box align="horizontal" class="button-group" flex="100%">
         <titledbutton id="customize-button" onclick="CustomizePanel();" 
+          class="dialog push"
           value="&sidebar.customize.customize.label;" />
         <titledbutton id="remove-button" onclick="RemovePanel()"
+          class="dialog push"
           value="&sidebar.customize.remove.label;" />
       </box>
     </box> 
@@ -156,9 +160,11 @@
   <box align="horizontal">
     <spring flex="48%"/>
     <titledbutton onclick="window.close()"
+       class="dialog push"
        value="&sidebar.customize.cancel.label;" />
     <spring flex="4%"/>
     <titledbutton id="save_button" onclick="Save();"
+       class="dialog push"
        value="&sidebar.customize.save.label;"
        disabled="true"/>
     <spring flex="48%"/>
