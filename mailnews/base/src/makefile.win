@@ -28,6 +28,7 @@ DEFINES=-D_IMPL_NS_HTML -DWIN32_LEAN_AND_MEAN
 
 CPPSRCS=                         \
 	nsMessenger.cpp			\
+	nsIMessenger.cpp		\
 	nsMessengerNameSet.cpp	\
         nsMsgRFC822Parser.cpp    \
 	nsUInt32Array.cpp        \
@@ -42,6 +43,7 @@ CPPSRCS=                         \
 
 CPP_OBJS=                                    \
     .\$(OBJDIR)\nsMessenger.obj	\
+	.\$(OBJDIR)\nsIMessenger.obj \
 	.\$(OBJDIR)\nsMessengerNameSet.obj	\
         .\$(OBJDIR)\nsMsgRFC822Parser.obj    \
 	.\$(OBJDIR)\nsUInt32Array.obj        \

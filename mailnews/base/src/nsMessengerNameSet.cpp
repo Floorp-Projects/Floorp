@@ -53,7 +53,7 @@ nsMessengerNameSet::InitializeClasses(nsIScriptContext* aScriptContext)
   
   printf("nsMessengerNameSet::InitializeClasses() Initializing base classes\n");
 #ifdef XPIDL_JS_STUBS
-  rv = nsIMessenger::InitJSClass(cx);
+  nsIMessenger::InitJSClass(cx);
 #endif
 
   return rv;
