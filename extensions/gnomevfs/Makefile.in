@@ -51,6 +51,7 @@ REQUIRES	= xpcom \
 		  necko \
 		  intl \
 		  mimetype \
+		  pref \
 		  $(NULL)
 
 CPPSRCS		= \
