@@ -3054,7 +3054,11 @@ FnSortIdKeyPtr(const void *pItem1, const void *pItem2, void *privateData)
 
     nsIMsgDatabase *db = (nsIMsgDatabase *)privateData;
 
-    rv = db->CompareCollationKeys((*p1)->key,(*p1)->info.len,(*p2)->key,(*p2)->info.len,&retVal);
+    // if either collation key is null, make empty key < non-empty key.
+    if (! (*p1)->key || ! (*p2)->key)
+      retVal = (*p1)->key ? 1 : ((*p2)->key ? -1 : 0);
+    else
+      rv = db->CompareCollationKeys((*p1)->key,(*p1)->info.len,(*p2)->key,(*p2)->info.len,&retVal);
     NS_ASSERTION(NS_SUCCEEDED(rv),"compare failed");
 
     if (retVal != 0)
