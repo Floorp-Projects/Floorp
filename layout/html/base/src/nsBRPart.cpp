@@ -75,6 +75,11 @@ NS_METHOD
 BRFrame::GetReflowMetrics(nsIPresContext*  aPresContext,
                           nsReflowMetrics& aMetrics)
 {
+  if (nsnull != aMetrics.maxElementSize) {
+    aMetrics.maxElementSize->width = 0;
+    aMetrics.maxElementSize->height = 0;
+  }
+
   // We have no width, but we're the height of the default font
   nsStyleFont* font =
     (nsStyleFont*)mStyleContext->GetData(eStyleStruct_Font);
