@@ -5192,7 +5192,7 @@ NS_IMETHODIMP nsHTMLEditor::CanDrag(nsIDOMEvent *aDragEvent, PRBool &aCanDrag)
     return NS_OK;
 
   nsCOMPtr<nsIDOMEventTarget> eventTarget;
-  res = aDragEvent->GetTarget(getter_AddRefs(eventTarget));
+  res = aDragEvent->GetOriginalTarget(getter_AddRefs(eventTarget));
   if (NS_FAILED(res)) return res;
   if ( eventTarget )
   {
