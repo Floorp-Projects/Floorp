@@ -108,7 +108,7 @@ BEGIN
             VALUE "FileVersion", "1, 0, 0, 1\0"
             VALUE "InternalName", "CHARFLIPPER\0"
             VALUE "LegalCopyright", "Copyright © 1996\0"
-            VALUE "MIMEType", "application/x-simple-plugin\0"
+            VALUE "MIMEType", "application/x-simple\0"
             VALUE "OriginalFilename", "NPSimp32.dll\0"
             VALUE "ProductName", "HelloWorld Example Plugin\0"
             VALUE "ProductVersion", "1, 0, 0, 1\0"
