@@ -147,22 +147,12 @@ Rights Reserved.
 <!ENTITY headersBriefCmd.accesskey "b">  
 <!ENTITY viewAttachmentsInlineCmd.label ".View Attachments Inline">  
 <!ENTITY viewAttachmentsInlineCmd.accesskey "a">  
-<!ENTITY wrapLongLinesCmd.label ".Wrap Long Lines">  
-<!ENTITY wrapLongLinesCmd.accesskey "p">  
-<!ENTITY increaseFontCmd.label ".Enlarge Text Size">
-<!ENTITY increaseFontCmd.accesskey "n">
-<!ENTITY decreaseFontCmd.label ".Reduce Text Size">
-<!ENTITY decreaseFontCmd.accesskey "d">
-<!ENTITY reloadCmd.label ".Reload">  
+<!ENTITY reloadCmd.label "Reload">  
 <!ENTITY reloadCmd.accesskey "r">  
-<!ENTITY showImagesCmd.label ".Show Images">  
-<!ENTITY showImagesCmd.accesskey "g">  
-<!ENTITY stopCmd.label ".Stop">  
+<!ENTITY stopCmd.label "Stop">  
 <!ENTITY stopCmd.accesskey "s">  
 <!ENTITY pageSourceCmd.label "Page Source">  
 <!ENTITY pageSourceCmd.accesskey "u">  
-<!ENTITY pageInfoCmd.label ".Page Info">  
-<!ENTITY pageInfoCmd.accesskey "i">  
 <!ENTITY translateMenu.label ".Translate"> 
 <!ENTITY dcharMenu.label "Character Set  ISO">
 <!ENTITY dcharMenu1.label "Character Set  Multibyte">
@@ -290,6 +280,10 @@ Rights Reserved.
 <!ENTITY replyMsgCmd.label "Reply">
 <!ENTITY replyMsgCmd.accesskey	"r">
 <!ENTITY replyMsgCmd.key	"r">
+<!ENTITY replySenderCmd.label "Reply to Sender">
+<!ENTITY replySenderCmd.accesskey	"r">
+<!ENTITY replyNewsgroupCmd.label "Reply to Newsgroup">
+<!ENTITY replyNewsgroupCmd.accesskey	"y">
 <!ENTITY replyToAllMsgCmd.label "Reply to All">  
 <!ENTITY replyToAllMsgCmd.accesskey	"p">
 <!ENTITY replyToAllMsgCmd.key	"r">
@@ -368,18 +362,20 @@ Rights Reserved.
 <!ENTITY  totalCountText.label " Total: ">
 
 <!-- Thread Pane Context Menu -->
-<!ENTITY contextOpenNewWindow.label "Open in New Window">
+<!ENTITY contextOpenNewWindow.label "Open Message in New Window">
 <!ENTITY contextOpenNewWindow.accesskey "w">
 <!ENTITY contextEditAsNew.label "Edit As New...">
 <!ENTITY contextEditAsNew.accesskey "e">
-<!ENTITY contextReplySender.label "Reply To Sender">
+<!ENTITY contextReplySender.label "Reply to Sender">
 <!ENTITY contextReplySender.accesskey "r">
-<!ENTITY contextReplyNewsgroup.label "Reply To Newsgroup">
+<!ENTITY contextReplyNewsgroup.label "Reply to Newsgroup">
 <!ENTITY contextReplyNewsgroup.accesskey "g">
-<!ENTITY contextReplyAll.label "Reply To All">
+<!ENTITY contextReplyAll.label "Reply to All">
 <!ENTITY contextReplyAll.accesskey "p">
 <!ENTITY contextForward.label "Forward">
 <!ENTITY contextForward.accesskey "f">
+<!ENTITY contextForwardAsAttachment.label "Forward as Attachments">
+<!ENTITY contextForwardAsAttachment.accesskey "o">
 <!ENTITY contextMoveMsgMenu.label "Move To">
 <!ENTITY contextMoveMsgMenu.accesskey "m">
 <!ENTITY contextCopyMsgMenu.label "Copy To">
@@ -398,13 +394,13 @@ Rights Reserved.
 <!-- Folder Pane Context Menu -->
 <!ENTITY folderContextGetMessages.label "Get Messages for Account">
 <!ENTITY folderContextGetMessages.accesskey "g">
-<!ENTITY folderContextOpenNewWindow.label "Open in New Window">
+<!ENTITY folderContextOpenNewWindow.label "Open in New Mail Window">
 <!ENTITY folderContextOpenNewWindow.accesskey "w">
 <!ENTITY folderContextRename.label "Rename">
 <!ENTITY folderContextRename.accesskey "r">
 <!ENTITY folderContextRemove.label "Delete">
 <!ENTITY folderContextRemove.accesskey "d">
-<!ENTITY folderContextEmptyTrash.label "Empty This Trash Can Now">
+<!ENTITY folderContextEmptyTrash.label "Empty Trash Can">
 <!ENTITY folderContextEmptyTrash.accesskey "y">
 <!ENTITY folderContextSendUnsentMessages.label "Send Unsent Messages...">
 <!ENTITY folderContextSendUnsentMessages.accesskey "d">

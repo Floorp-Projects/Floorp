@@ -188,18 +188,14 @@ function SendUnsentMessages(folder)
 			// turn this into a new post or a reply to group.
 			if (server.type == "nntp")
 			{
-			    if (type == msgComposeType.Reply)
-			        type = msgComposeType.ReplyToGroup;
-			    else
-			        if (type == msgComposeType.New)
-			        {
-					    type = msgComposeType.NewsPost;
-
+		        if (type == msgComposeType.New)
+		        {
+				    type = msgComposeType.NewsPost;
    					if (folder.isServer) 
-    						newsgroup = "";
-    					else 
-          					newsgroup = server.hostName + "/" + folder.name; 
-				    }
+   						newsgroup = "";
+   					else 
+       					newsgroup = server.hostName + "/" + folder.name; 
+			    }
 			}
 	        identity = getIdentityForServer(server);
 		    // dump("identity = " + identity + "\n");

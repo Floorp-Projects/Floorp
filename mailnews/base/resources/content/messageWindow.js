@@ -152,6 +152,9 @@ function HideMenus()
 	if(renameFolderMenu)
 		renameFolderMenu.setAttribute("hidden", "true");
 
+	var viewMessagesMenu = document.getElementById('viewMessagesMenu');
+	if(viewMessagesMenu)
+		viewMessagesMenu.setAttribute("hidden", "true");
 }
 
 function OnUnloadMessageWindow()

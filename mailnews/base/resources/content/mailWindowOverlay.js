@@ -36,6 +36,126 @@ function view_init()
 	}
 }
 
+function InitViewMessagesMenu()
+{
+	var allMenuItem = document.getElementById("viewAllMessagesMenuItem");
+	var hidden = allMenuItem.getAttribute("hidden") == "true";
+	if(allMenuItem && !hidden)
+		allMenuItem.setAttribute("checked", messageView.viewType == viewShowAll);
+
+	var unreadMenuItem = document.getElementById("viewUnreadMessagesMenuItem");
+	var hidden = unreadMenuItem.getAttribute("hidden") == "true";
+	if(unreadMenuItem && !hidden)
+		unreadMenuItem.setAttribute("checked", messageView.viewType == viewShowUnread);
+
+}
+
+function InitMessageMenu()
+{
+	var messages = GetSelectedMessages();
+	var numMessages = messages.length;
+	var isNews = false;
+	if(numMessages > 0)
+	{
+		isNews = GetMessageType(messages[0]) == "news";
+	}
+
+	//We show reply to Newsgroups only for news messages.
+	var replyNewsgroupMenuItem = document.getElementById("replyNewsgroupMainMenu");
+	if(replyNewsgroupMenuItem)
+		replyNewsgroupMenuItem.setAttribute("hidden", isNews ? "" : "true");
+
+	//For mail messages we say reply. For news we say ReplyToSender.
+	var replyMenuItem = document.getElementById("replyMainMenu");
+	if(replyMenuItem)
+	{
+		replyMenuItem.setAttribute("hidden", !isNews ? "" : "true");
+	}
+
+	var replySenderMenuItem = document.getElementById("replySenderMainMenu");
+	if(replySenderMenuItem)
+	{
+		replySenderMenuItem.setAttribute("hidden", isNews ? "" : "true");
+	}
+
+}
+
+function GetMessageType(message)
+{
+
+	var compositeDS = GetCompositeDataSource("MessageProperty");
+	var property = RDF.GetResource('http://home.netscape.com/NC-rdf#MessageType');
+	var result = compositeDS.GetTarget(message, property, true);
+	result = result.QueryInterface(Components.interfaces.nsIRDFLiteral);
+	return result.Value;
+
+}
+
+function InitMessageMarkMenu()
+{
+	InitMarkReadMenuItem();
+	InitMarkFlaggedMenuItem();
+
+}
+
+function InitMarkReadMenuItem()
+{
+	var messages = GetSelectedMessages();
+	var numMessages = messages.length;
+
+	var compositeDS = GetCompositeDataSource("MarkMessageRead");
+	var property = RDF.GetResource('http://home.netscape.com/NC-rdf#IsUnread');
+
+	var areMessagesRead;
+
+	if(numMessages == 0)
+		areMessagesRead = false;
+	else
+	{
+		areMessagesRead = true;
+		for(var i = 0; i < numMessages; i++)
+		{
+			var result = compositeDS.GetTarget(messages[i], property, true);
+			result = result.QueryInterface(Components.interfaces.nsIRDFLiteral);
+			if(result.Value == "true")
+			{
+				areMessagesRead = false;
+				break;
+			}
+		}
+	}
+
+	var markReadMenuItem = document.getElementById("markReadMenuItem");
+	if(markReadMenuItem)
+		markReadMenuItem.setAttribute("checked", areMessagesRead);
+}
+
+function InitMarkFlaggedMenuItem()
+{
+	var messages = GetSelectedMessages();
+	var numMessages = messages.length;
+
+	var compositeDS = GetCompositeDataSource("MarkMessageFlagged");
+	var property = RDF.GetResource('http://home.netscape.com/NC-rdf#Flagged');
+
+	var areMessagesFlagged = false;
+
+	for(var i = 0; i < numMessages; i++)
+	{
+		var result = compositeDS.GetTarget(messages[i], property, true);
+		result = result.QueryInterface(Components.interfaces.nsIRDFLiteral);
+		if(result.Value == "flagged")
+		{
+			areMessagesFlagged = true;
+			break;
+		}
+	}
+
+	var markFlaggedMenuItem = document.getElementById("markFlaggedMenuItem");
+	if(markFlaggedMenuItem)
+		markFlaggedMenuItem.setAttribute("checked", areMessagesFlagged);
+}
+
 function GetFirstSelectedMsgFolder()
 {
 	var result = null;
@@ -142,13 +262,37 @@ function MsgNewMessage(event)
 function MsgReplyMessage(event)
 {
   var loadedFolder = GetLoadedMsgFolder();
+
+  var server = loadedFolder.server;
+
+  if(server && server.type == "nntp")
+	MsgReplyGroup(event);
+  else 
+	MsgReplySender(event);
+
+}
+
+function MsgReplySender(event)
+{
+  var loadedFolder = GetLoadedMsgFolder();
   var messageArray = GetSelectedMessages();
 
-  dump("\nMsgReplyMessage from XUL\n");
   if (event && event.shiftKey)
     ComposeMessage(msgComposeType.Reply, msgComposeFormat.OppositeOfDefault, loadedFolder, messageArray);
   else
     ComposeMessage(msgComposeType.Reply, msgComposeFormat.Default, loadedFolder, messageArray);
+
+}
+
+function MsgReplyGroup(event)
+{
+  var loadedFolder = GetLoadedMsgFolder();
+  var messageArray = GetSelectedMessages();
+
+  if (event && event.shiftKey)
+    ComposeMessage(msgComposeType.ReplyToGroup, msgComposeFormat.OppositeOfDefault, loadedFolder, messageArray);
+  else
+    ComposeMessage(msgComposeType.ReplyToGroup, msgComposeFormat.Default, loadedFolder, messageArray);
 }
 
 function MsgReplyToAllMessage(event) 
