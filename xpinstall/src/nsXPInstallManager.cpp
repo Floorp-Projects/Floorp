@@ -163,7 +163,6 @@ nsXPInstallManager::InitManager(nsIScriptGlobalObject* aGlobalObject, nsXPITrigg
     mParentWindow = do_QueryInterface(aGlobalObject);
 
     // Don't launch installs while page is still loading
-    PRBool isPageLoading = PR_FALSE;
     nsCOMPtr<nsPIDOMWindow> piWindow = do_QueryInterface(mParentWindow);
     if (piWindow && piWindow->IsLoadingOrRunningTimeout())
         rv = NS_ERROR_FAILURE;
