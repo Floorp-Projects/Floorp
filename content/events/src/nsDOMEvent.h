@@ -61,7 +61,12 @@ public:
 	  eDOMEvents_text,
     eDOMEvents_create,
     eDOMEvents_destroy,
-    eDOMEvents_action
+    eDOMEvents_action,
+    eDOMEvents_dragenter,
+    eDOMEvents_dragover,
+    eDOMEvents_dragexit,
+    eDOMEvents_dragdrop,
+    eDOMEvents_draggesture
   };
 
   nsDOMEvent(nsIPresContext* aPresContext, nsEvent* aEvent);

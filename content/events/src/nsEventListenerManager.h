@@ -172,8 +172,11 @@ protected:
 
 //nsIDOMDragListener
 #define NS_EVENT_BITS_DRAG_NONE     0x00
-#define NS_EVENT_BITS_DRAG_START    0x01
-#define NS_EVENT_BITS_DRAG_DROP     0x02
+#define NS_EVENT_BITS_DRAG_ENTER    0x01
+#define NS_EVENT_BITS_DRAG_OVER     0x02
+#define NS_EVENT_BITS_DRAG_EXIT     0x04
+#define NS_EVENT_BITS_DRAG_DROP     0x08
+#define NS_EVENT_BITS_DRAG_GESTURE  0x10
 
 //nsIDOMPaintListener
 #define NS_EVENT_BITS_PAINT_NONE    0x00

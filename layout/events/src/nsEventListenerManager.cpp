@@ -366,6 +366,26 @@ nsresult nsEventListenerManager::GetIdentifiersForType(const nsString& aType, ns
     aIID = kIDOMMenuListenerIID; 
     *aFlags = NS_EVENT_BITS_MENU_ACTION;
   }
+  else if (aType == "dragenter") {
+    aIID = NS_GET_IID(nsIDOMDragListener);
+    *aFlags = NS_EVENT_BITS_DRAG_ENTER;
+  }
+  else if (aType == "dragover") {
+    aIID = NS_GET_IID(nsIDOMDragListener); 
+    *aFlags = NS_EVENT_BITS_DRAG_OVER;
+  }
+  else if (aType == "dragexit") {
+    aIID = NS_GET_IID(nsIDOMDragListener); 
+    *aFlags = NS_EVENT_BITS_DRAG_EXIT;
+  }
+  else if (aType == "dragdrop") {
+    aIID = NS_GET_IID(nsIDOMDragListener); 
+    *aFlags = NS_EVENT_BITS_DRAG_DROP;
+  }
+  else if (aType == "draggesture") {
+    aIID = NS_GET_IID(nsIDOMDragListener); 
+    *aFlags = NS_EVENT_BITS_DRAG_GESTURE;
+  }
   else {
     return NS_ERROR_FAILURE;
   }
@@ -1049,7 +1069,33 @@ nsresult nsEventListenerManager::HandleEvent(nsIPresContext& aPresContext,
                 NS_RELEASE(dragListener);
               }
               else {
-                ret = ls->mListener->HandleEvent(*aDOMEvent);
+                PRBool correctSubType = PR_FALSE;
+                switch(aEvent->message) {
+                  case NS_DRAGDROP_ENTER:
+                    if (ls->mSubType & NS_EVENT_BITS_DRAG_ENTER)
+                      correctSubType = PR_TRUE;
+                    break;
+                  case NS_DRAGDROP_OVER:
+                    if (ls->mSubType & NS_EVENT_BITS_DRAG_OVER)
+                      correctSubType = PR_TRUE;
+                    break;
+                  case NS_DRAGDROP_EXIT:
+                    if (ls->mSubType & NS_EVENT_BITS_DRAG_EXIT)
+                      correctSubType = PR_TRUE;
+                    break;
+                  case NS_DRAGDROP_DROP:
+                    if (ls->mSubType & NS_EVENT_BITS_DRAG_DROP)
+                      correctSubType = PR_TRUE;
+                    break;
+                  case NS_DRAGDROP_GESTURE:
+                    if (ls->mSubType & NS_EVENT_BITS_DRAG_GESTURE)
+                      correctSubType = PR_TRUE;
+                    break;
+                  default:
+                    break;
+                }
+                if (correctSubType || ls->mSubType == NS_EVENT_BITS_DRAG_NONE)
+                  ret = ls->mListener->HandleEvent(*aDOMEvent);
               }
             }
           }
