@@ -45,6 +45,7 @@
         width="640" height="480">
 
   <html:script language="JavaScript" src="chrome://editor/content/EditorCommands.js"/>
+  <html:script language="JavaScript" src="chrome://editor/content/EditorCommandsDebug.js"/>
 
   <!-- Use this when we abandon the default startup page -->
   <!-- broadcaster id="args" value="about:blank"/ -->
