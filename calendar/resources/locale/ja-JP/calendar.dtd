@@ -163,7 +163,7 @@
 <!ENTITY event.title.alarm         "アラーム" >
 <!ENTITY event.title.new         "新しいイベント" >
 <!ENTITY event.title.edit        "イベントを編集" >
-<!ENTITY event.title.heading        "Calendar Alarm" >
+<!ENTITY event.title.heading        "カレンダーアラーム" >
 
 <!ENTITY onthe-text            "その月の ">
 <!ENTITY last-text             "この前の ">
