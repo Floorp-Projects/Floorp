@@ -21,16 +21,21 @@
  */
 
 /*
-
   Code for the Related Links Sidebar Panel
-
  */
+
+
 
 function debug(msg)
 {
 	// uncomment for noise
 	// dump(msg);
 }
+
+
+
+// get handle to the BrowserAppCore in the content area.
+var appCore = window._content.appCore;
 
 // The content window that we're supposed to be observing.
 var ContentWindow = window._content;
@@ -270,7 +275,16 @@ function openURL(event, root)
 	{
 	}
 
-	ContentWindow.location = id;
+	if(appCore)
+	{
+        // support session history (if appCore is available)
+        appCore.loadUrl(id);
+    }
+    else
+    {
+	    // fallback case (if appCore isn't available)
+	    ContentWindow.location = id;
+	}
 }
 
 addEventListener("load", Init, false);

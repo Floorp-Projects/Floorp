@@ -1608,6 +1608,7 @@ function checkForDirectoryListing() {
          !window._content.HTTPIndex.constructor ) {
         // Give directory .xul/.js access to browser instance.
         window._content.defaultCharacterset = appCore.GetDocumentCharset();
+        window._content.parentWindow = window;
     }
 }
 
