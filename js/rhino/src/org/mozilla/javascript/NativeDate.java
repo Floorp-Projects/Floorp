@@ -222,7 +222,14 @@ public class NativeDate extends ScriptableObject {
 
         if (d < (step = 31))
             return 0;
-        step += (InLeapYear(t) ? 29 : 28);
+
+        // Originally coded as step += (InLeapYear(t) ? 29 : 28);
+        // but some jits always returned 28!
+        if (InLeapYear(t))
+            step += 29;
+        else
+            step += 28;
+
         if (d < step)
             return 1;
         if (d < (step += 31))
@@ -250,11 +257,17 @@ public class NativeDate extends ScriptableObject {
         int d, step, next;
 
         d = DayWithinYear(t);
-
         if (d <= (next = 30))
             return d + 1;
         step = next;
-        next += (InLeapYear(t) ? 29 : 28);
+
+        // Originally coded as next += (InLeapYear(t) ? 29 : 28);
+        // but some jits always returned 28!
+        if (InLeapYear(t))
+            next += 29;
+        else
+            next += 28;
+
         if (d <= next)
             return d - step;
         step = next;
@@ -285,6 +298,10 @@ public class NativeDate extends ScriptableObject {
         if (d <= (next += 30))
             return d - step;
         step = next;
+        
+        System.err.println("step is " + step);
+        System.err.println("result is " + (d - step));
+
         return d - step;
     }
 
