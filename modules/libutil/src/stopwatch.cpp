@@ -9,7 +9,15 @@
 #include "windows.h"
 #endif
 
-double gTicks = 1.0e-7;
+// #define MILLISECOND_RESOLUTION to track time with greater precision
+//  If not defined the resolution is to the second only
+//
+#define MILLISECOND_RESOLUTION
+#ifdef MILLISECOND_RESOLUTION
+double gTicks = 1.0e-4; // for millisecond resolution
+#else
+double gTicks = 1.0e-7; // for second resolution
+#endif
 
 Stopwatch::Stopwatch() {
 
@@ -109,6 +117,8 @@ void Stopwatch::Continue() {
 }
 
 
+// NOTE: returns seconds regardless of the state of the MILLISECOND_RESOLUTION #define
+//
 double Stopwatch::RealTime() {
 
   if (fState != kUndefined) {
@@ -116,9 +126,31 @@ double Stopwatch::RealTime() {
       Stop();
   }
 
+#ifdef MILLISECOND_RESOLUTION
+  return fTotalRealTime/1000;
+#else
   return fTotalRealTime;
+#endif
 }
 
+// NOTE: returns milliseconds regardless of the state of the MILLISECOND_RESOLUTION #define
+//
+double Stopwatch::RealTimeInMilliseconds() {
+
+  if (fState != kUndefined) {
+    if (fState == kRunning)
+      Stop();
+  }
+
+#ifdef MILLISECOND_RESOLUTION
+  return fTotalRealTime;
+#else
+  return fTotalRealTime * 1000; // we don;t have milliseconds, so fake it
+#endif
+}
+
+// NOTE: returns seconds regardless of the state of the MILLISECOND_RESOLUTION define
+//
 double Stopwatch::CpuTime() {
   if (fState != kUndefined) {
 
@@ -126,7 +158,11 @@ double Stopwatch::CpuTime() {
       Stop();
 
   }
+#ifdef MILLISECOND_RESOLUTION
+  return fTotalCpuTime / 1000;  // adjust from milliseconds to seconds
+#else
   return fTotalCpuTime;
+#endif
 }
 
 
@@ -215,17 +251,19 @@ double Stopwatch::GetCPUTime(){
 void Stopwatch::Print(void) {
    // Print the real and cpu time passed between the start and stop events.
 
-   double  realt = RealTime();
+   double  realt = RealTimeInMilliseconds();
 
-   int  hours = int(realt / 3600);
-   realt -= hours * 3600;
-   int  min   = int(realt / 60);
-   realt -= min * 60;
-   int  sec   = int(realt);
+   int  hours = int(realt / 3600000);
+   realt -= hours * 3600000;
+   int  min   = int(realt / 60000);
+   realt -= min * 60000;
+   int  sec   = int(realt/1000);
+   realt -= sec * 1000;
+   int ms     = int(realt);
 #ifdef MOZ_PERF_METRICS
-   RAPTOR_STOPWATCH_TRACE(("Real time %d:%d:%d, CP time %.3f\n", hours, min, sec, CpuTime()));
+   RAPTOR_STOPWATCH_TRACE(("Real time %d:%d:%d.%d, CP time %.3f\n", hours, min, sec, ms, CpuTime()));
 #else
-   printf("Real time %d:%d:%d, CP time %.3f\n", hours, min, sec, CpuTime());
+   printf("Real time %d:%d:%d%.%d, CP time %.3f\n", hours, min, sec, ms, CpuTime());
 #endif
 }
 
