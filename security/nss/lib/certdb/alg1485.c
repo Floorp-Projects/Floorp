@@ -221,6 +221,21 @@ IsPrintable(unsigned char *data, unsigned len)
     return PR_TRUE;
 }
 
+static PRBool
+Is7Bit(unsigned char *data, unsigned len)
+{
+    unsigned char ch, *end;
+
+    end = data + len;
+    while (data < end) {
+        ch = *data++;
+        if ((ch & 0x80)) {
+            return PR_FALSE;
+        }
+    }
+    return PR_TRUE;
+}
+
 static void
 skipSpace(char **pbp, char *endptr)
 {
@@ -419,6 +434,8 @@ CERT_ParseRFC1485AVA(PRArenaPool *arena, char **pbp, char *endptr,
 		/* Hack -- for rationale see X.520 DirectoryString defn */
 		if (IsPrintable((unsigned char*)valBuf, valLen)) {
 		    vt = SEC_ASN1_PRINTABLE_STRING;
+                } else if (Is7Bit((unsigned char *)valBuf, valLen)) {
+                    vt = SEC_ASN1_T61_STRING;
 		} else {
 		    vt = SEC_ASN1_UNIVERSAL_STRING;
 		}
