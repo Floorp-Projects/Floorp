@@ -57,7 +57,7 @@ public:
 
   /* additional members */
   static PRBool Put(nsIURI *aKey, imgRequest *request, nsICacheEntryDescriptor **aEntry);
-  static PRBool Get(nsIURI *aKey, PRBool aDoomIfExpired, imgRequest **aRequest, nsICacheEntryDescriptor **aEntry);
+  static PRBool Get(nsIURI *aKey, PRBool *aHasExpired, imgRequest **aRequest, nsICacheEntryDescriptor **aEntry);
   static PRBool Remove(nsIURI *aKey);
 
   static nsresult ClearChromeImageCache();

@@ -25,16 +25,11 @@
 
 #include "nsCOMPtr.h"
 
-#include "nsIChannel.h"
+#include "nsNetUtil.h"
 #include "nsIHttpChannel.h"
 #include "nsICachingChannel.h"
-#include "nsIInterfaceRequestor.h"
-#include "nsIIOService.h"
-#include "nsILoadGroup.h"
 #include "nsIProxyObjectManager.h"
 #include "nsIServiceManager.h"
-#include "nsIStreamListener.h"
-#include "nsIURI.h"
 #include "nsXPIDLString.h"
 #include "nsCRT.h"
 
@@ -96,27 +91,113 @@ imgLoader::~imgLoader()
   /* destructor code */
 }
 
-#define SHOULD_RELOAD(flags) (flags & nsIRequest::LOAD_BYPASS_CACHE)
-#define SHOULD_VALIDATE(flags) (flags & nsIRequest::VALIDATE_ALWAYS)
-#define SHOULD_USE_CACHE(flags) (flags & nsIRequest::LOAD_FROM_CACHE)
+#define LOAD_FLAGS_CACHE_MASK    (nsIRequest::LOAD_BYPASS_CACHE | \
+                                  nsIRequest::LOAD_FROM_CACHE)
 
-inline int merge_flags(const nsLoadFlags& inFlags, nsLoadFlags& outFlags)
+#define LOAD_FLAGS_VALIDATE_MASK (nsIRequest::VALIDATE_ALWAYS |   \
+                                  nsIRequest::VALIDATE_NEVER |    \
+                                  nsIRequest::VALIDATE_ONCE_PER_SESSION)
+
+
+static PRBool RevalidateEntry(nsICacheEntryDescriptor *aEntry,
+                              nsLoadFlags aFlags,
+                              PRBool aHasExpired)
 {
-  if (SHOULD_RELOAD(inFlags))
-    outFlags |= nsIRequest::LOAD_BYPASS_CACHE;
-  else if (SHOULD_VALIDATE(inFlags))
-     outFlags |= nsIRequest::VALIDATE_ALWAYS;
-  else
-    return 0;
+  PRBool bValidateEntry = PR_FALSE;
 
-  return 1;
+  NS_ASSERTION(!(aFlags & nsIRequest::LOAD_BYPASS_CACHE),
+               "MUST not revalidate when BYPASS_CACHE is specified.");
+
+  if (aFlags & nsIRequest::VALIDATE_ALWAYS) {
+    bValidateEntry = PR_TRUE;
+  }
+  //
+  // The cache entry has expired...  Determine whether the stale cache
+  // entry can be used without validation...
+  //
+  else if (aHasExpired) {
+    //
+    // VALIDATE_NEVER and VALIDATE_ONCE_PER_SESSION allow stale cache
+    // entries to be used unless they have been explicitly marked to
+    // indicate that revalidation is necessary.
+    //
+    if (aFlags & (nsIRequest::VALIDATE_NEVER | 
+                  nsIRequest::VALIDATE_ONCE_PER_SESSION)) 
+    {
+      nsXPIDLCString value;
+
+      aEntry->GetMetaDataElement("MustValidateIfExpired",
+                                 getter_Copies(value));
+      if (PL_strcmp(value, "true")) {
+        bValidateEntry = PR_TRUE;
+      }
+    }
+    //
+    // LOAD_FROM_CACHE allows a stale cache entry to be used... Otherwise,
+    // the entry must be revalidated.
+    //
+    else if (!(aFlags & nsIRequest::LOAD_FROM_CACHE)) {
+      bValidateEntry = PR_TRUE;
+    }
+  }
+
+  return bValidateEntry;
+}
+
+
+static nsresult NewImageChannel(nsIChannel **aResult,
+                                nsIURI *aURI,
+                                nsIURI *aInitialDocumentURI,
+                                nsIURI *aReferringURI,
+                                nsILoadGroup *aLoadGroup, nsLoadFlags aLoadFlags)
+{
+  nsresult rv;
+  nsCOMPtr<nsIChannel> newChannel;
+  nsCOMPtr<nsIHttpChannel> newHttpChannel;
+ 
+  nsCOMPtr<nsIInterfaceRequestor> callbacks;
+
+  if (aLoadGroup) {
+    // Get the notification callbacks from the load group for the new channel.
+    //
+    // XXX: This is not exactly correct, because the network request could be
+    //      referenced by multiple windows...  However, the new channel needs
+    //      something.  So, using the 'first' notification callbacks is better
+    //      than nothing...
+    //
+    aLoadGroup->GetNotificationCallbacks(getter_AddRefs(callbacks));
+  }
+
+  // Pass in a NULL loadgroup because this is the underlying network request.
+  // This request may be referenced by several proxy image requests (psossibly
+  // in different documents).
+  // If all of the proxy requests are canceled then this request should be
+  // canceled too.
+  //
+  rv = NS_NewChannel(aResult,
+                     aURI,        // URI 
+                     nsnull,      // Cached IOService
+                     nsnull,      // LoadGroup
+                     callbacks,   // Notification Callbacks
+                     aLoadFlags);
+  if (NS_FAILED(rv))
+    return rv;
+
+  // Initialize HTTP-specific attributes
+  newHttpChannel = do_QueryInterface(*aResult);
+  if (newHttpChannel) {
+    newHttpChannel->SetDocumentURI(aInitialDocumentURI);
+    newHttpChannel->SetReferrer(aReferringURI, nsIHttpChannel::REFERRER_INLINES);
+  }
+
+  return NS_OK;
 }
 
 /* imgIRequest loadImage (in nsIURI aURI, in nsIURI initialDocumentURI, in nsILoadGroup aLoadGroup, in imgIDecoderObserver aObserver, in nsISupports aCX, in nsLoadFlags aLoadFlags, in nsISupports cacheKey, in imgIRequest aRequest); */
 
 NS_IMETHODIMP imgLoader::LoadImage(nsIURI *aURI, 
-                                   nsIURI *initialDocumentURI,
-                                   nsIURI *referrerURI,
+                                   nsIURI *aInitialDocumentURI,
+                                   nsIURI *aReferrerURI,
                                    nsILoadGroup *aLoadGroup,
                                    imgIDecoderObserver *aObserver,
                                    nsISupports *aCX,
@@ -136,63 +217,90 @@ NS_IMETHODIMP imgLoader::LoadImage(nsIURI *aURI,
   LOG_SCOPE_WITH_PARAM(gImgLog, "imgLoader::LoadImage", "aURI", spec.get());
 #endif
 
+  // This is an owning reference that must be released.
   imgRequest *request = nsnull;
 
   nsresult rv;
+  nsLoadFlags requestFlags = nsIRequest::LOAD_NORMAL;
+
+  // Get the default load flags from the loadgroup (if possible)...
+  if (aLoadGroup) {
+    aLoadGroup->GetLoadFlags(&requestFlags);
+  }
+  //
+  // Merge the default load flags with those passed in via aLoadFlags.
+  // Currently, *only* the caching, validation and background load flags
+  // are merged...
+  //
+  // The flags in aLoadFlags take precidence over the default flags!
+  //
+  if (aLoadFlags & LOAD_FLAGS_CACHE_MASK) {
+    // Override the default caching flags...
+    requestFlags = (requestFlags & ~LOAD_FLAGS_CACHE_MASK) |
+                   (aLoadFlags & LOAD_FLAGS_CACHE_MASK);
+  }
+  if (aLoadFlags & LOAD_FLAGS_VALIDATE_MASK) {
+    // Override the default validation flags...
+    requestFlags = (requestFlags & ~LOAD_FLAGS_VALIDATE_MASK) |
+                   (aLoadFlags & LOAD_FLAGS_VALIDATE_MASK);
+  }
+  if (aLoadFlags & nsIRequest::LOAD_BACKGROUND) {
+    // Propagate background loading...
+    requestFlags |= nsIRequest::LOAD_BACKGROUND;
+  }
+
+  nsCOMPtr<nsICacheEntryDescriptor> entry;
+  PRBool bCanCacheRequest = PR_TRUE;
+  PRBool bHasExpired      = PR_FALSE;
+  PRBool bValidateRequest = PR_FALSE;
 
   // XXX For now ignore the cache key. We will need it in the future
   // for correctly dealing with image load requests that are a result
   // of post data.
-  nsCOMPtr<nsICacheEntryDescriptor> entry;
-  imgCache::Get(aURI, !SHOULD_USE_CACHE(aLoadFlags), 
+  imgCache::Get(aURI, &bHasExpired,
                 &request, getter_AddRefs(entry)); // addrefs request
-
-  PRBool validateRequest = PR_FALSE;
 
   if (request && entry) {
 
-    // request's null out their mCacheEntry when all proxy's are removed from them.
-    // If we are about to add a new one back, go ahead and re-set the cache entry so
-    // it can be used.
-    if (!request->mCacheEntry)
+    // request's null out their mCacheEntry when all proxy's are removed.
+    // If we are about to add a new one back, go ahead and re-set the cache
+    // entry so it can be used.
+    if (!request->mCacheEntry) {
       request->mCacheEntry = entry;
-
-    nsLoadFlags ourFlags = 0;
-
-    if (merge_flags(aLoadFlags, ourFlags)) {
-      ourFlags |= nsIRequest::LOAD_BYPASS_CACHE;
-    } else if (SHOULD_VALIDATE(aLoadFlags)) {
-      ourFlags |= nsIRequest::VALIDATE_ALWAYS;
-    } else if (SHOULD_USE_CACHE(aLoadFlags)) {
-      ourFlags |= nsIRequest::LOAD_FROM_CACHE;
-    } else if (aLoadGroup) {
-      nsLoadFlags flags = 0;
-      aLoadGroup->GetLoadFlags(&flags);
-      if (!merge_flags(flags, ourFlags)) {
-
-        nsCOMPtr<nsIRequest> r;
-        aLoadGroup->GetDefaultLoadRequest(getter_AddRefs(r));
-        if (r) {
-          flags = 0;
-          r->GetLoadFlags(&flags);
-          merge_flags(flags, ourFlags);
-        }
-      }
     }
 
-    // If the request's loadId is the same as the aCX, then it is ok to use this
-    // one because it has already been validated.
+    // If the request's loadId is the same as the aCX, then it is ok to use
+    // this one because it has already been validated for this context.
+    //
+    // XXX: nsnull seems to be a 'special' key value that indicates that NO
+    //      validation is required.
+    //
     void *key = (void*)aCX;
     if (request->mLoadId != key) {
-      if (SHOULD_RELOAD(ourFlags)) {
+
+      // LOAD_BYPASS_CACHE - Always re-fetch
+      if (requestFlags & nsIRequest::LOAD_BYPASS_CACHE) {
         entry->Doom(); // doom this thing.
         entry = nsnull;
         NS_RELEASE(request);
         request = nsnull;
-      } else if (SHOULD_VALIDATE(ourFlags)) {
-        validateRequest = PR_TRUE;
+      } else {
+        // Determine whether the cache entry must be revalidated...
+        bValidateRequest = RevalidateEntry(entry, requestFlags, bHasExpired);
+
+        PR_LOG(gImgLog, PR_LOG_DEBUG,
+               ("imgLoader::LoadImage validating cache entry. " 
+                "bValidateRequest = %d", bValidateRequest));
       }
+
     }
+#if defined(PR_LOGGING)
+    else if (!key) {
+      PR_LOG(gImgLog, PR_LOG_DEBUG,
+             ("imgLoader::LoadImage BYPASSING cache validation for %s " 
+              "because of NULL LoadID", spec.get()));
+    }
+#endif
   }
 
   //
@@ -203,72 +311,83 @@ NS_IMETHODIMP imgLoader::LoadImage(nsIURI *aURI,
   nsCOMPtr<nsIEventQueue> activeQ;
 
   eventQService = do_GetService(NS_EVENTQUEUESERVICE_CONTRACTID, &rv);
-  if (NS_FAILED(rv)) 
+  if (NS_FAILED(rv)) {
+    NS_IF_RELEASE(request);
     return rv;
-
-  rv = eventQService->ResolveEventQueue(NS_CURRENT_EVENTQ, getter_AddRefs(activeQ));
-  if (NS_FAILED(rv))
-    return rv;
-
-  void *cacheId = activeQ.get();
-  PRBool bCanCacheRequest = PR_TRUE;
-  if (request) {
-    if (!request->IsReusable(cacheId)) {
-      //
-      // The current request is still being loaded and lives on a different
-      // event queue.
-      //
-      // Since its event queue is NOT active, do not reuse this imgRequest !!
-      // Instead, force a new request to be created but DO NOT allow it to be
-      // cached!
-      //
-      PR_LOG(gImgLog, PR_LOG_DEBUG,
-             ("[this=%p] imgLoader::LoadImage -- DANGER!! Unable to use cached imgRequest [request=%p]\n", this, request));
-
-      entry = nsnull;
-      NS_RELEASE(request);
-
-      bCanCacheRequest = PR_FALSE;
-    }
   }
 
-  if (request && validateRequest) {
-    /* no request from the cache.  do a new load */
+  rv = eventQService->ResolveEventQueue(NS_CURRENT_EVENTQ,
+                                        getter_AddRefs(activeQ));
+  if (NS_FAILED(rv)) {
+    NS_IF_RELEASE(request);
+    return rv;
+  }
+
+  void *cacheId = activeQ.get();
+  if (request && !request->IsReusable(cacheId)) {
+    //
+    // The current request is still being loaded and lives on a different
+    // event queue.
+    //
+    // Since its event queue is NOT active, do not reuse this imgRequest !!
+    // Instead, force a new request to be created but DO NOT allow it to be
+    // cached!
+    //
+    PR_LOG(gImgLog, PR_LOG_DEBUG,
+           ("[this=%p] imgLoader::LoadImage -- DANGER!! Unable to use cached "
+            "imgRequest [request=%p]\n", this, request));
+
+    entry = nsnull;
+    NS_RELEASE(request);
+
+    bCanCacheRequest = PR_FALSE;
+  }
+
+  //
+  // Time to load the request... There are 3 possible cases:
+  // =======================================================
+  //   1. There is no cached request (ie. nothing was found in the cache).
+  //
+  //   2. There is a cached request that must be validated.
+  //
+  //   3. There is a valid cached request.
+  //
+  if (request && bValidateRequest) {
+    /* Case #2: the cache request cache must be revalidated. */
     LOG_SCOPE(gImgLog, "imgLoader::LoadImage |cache hit| must validate");
 
-    // now we need to insert a new channel request object inbetween the real request and the proxy
-    // that basically delays loading the image until it gets a 304 or figures out that this needs to
-    // be a new request
+    // now we need to insert a new channel request object inbetween the real
+    // request and the proxy that basically delays loading the image until it
+    // gets a 304 or figures out that this needs to be a new request
 
     if (request->mValidator) {
-      rv = CreateNewProxyForRequest(request, aLoadGroup, aObserver, aCX, aLoadFlags, aRequest, _retval);
+      rv = CreateNewProxyForRequest(request, aLoadGroup, aObserver, aCX,
+                                    requestFlags, aRequest, _retval);
 
       if (*_retval)
         request->mValidator->AddProxy(NS_STATIC_CAST(imgRequestProxy*, *_retval));
 
+      NS_RELEASE(request);
       return rv;
 
     } else {
-      nsCOMPtr<nsIIOService> ioserv(do_GetService("@mozilla.org/network/io-service;1"));
-      if (!ioserv) return NS_ERROR_FAILURE;
-
       nsCOMPtr<nsIChannel> newChannel;
-      ioserv->NewChannelFromURI(aURI, getter_AddRefs(newChannel));
-      if (!newChannel) return NS_ERROR_FAILURE;
+      rv = NewImageChannel(getter_AddRefs(newChannel),
+                           aURI,
+                           aInitialDocumentURI,
+                           aReferrerURI,
+                           aLoadGroup,
+                           requestFlags);
+      if (NS_FAILED(rv)) {
+        NS_RELEASE(request);
+        return NS_ERROR_FAILURE;
+      }
 
       nsCOMPtr<nsICachingChannel> cacheChan(do_QueryInterface(newChannel));
 
       if (cacheChan) {
-
-        if (aLoadGroup) {
-          PRUint32 flags;
-          aLoadGroup->GetLoadFlags(&flags);
-          if (aLoadFlags & nsIRequest::LOAD_BACKGROUND)
-            flags |= nsIRequest::LOAD_BACKGROUND;
-          newChannel->SetLoadFlags(flags | nsIRequest::VALIDATE_ALWAYS);
-        }
-
-        rv = CreateNewProxyForRequest(request, aLoadGroup, aObserver, aCX, aLoadFlags, aRequest, _retval);
+        rv = CreateNewProxyForRequest(request, aLoadGroup, aObserver, aCX,
+                                      requestFlags, aRequest, _retval);
 
         httpValidateChecker *hvc = new httpValidateChecker(request, aCX);
         if (!hvc) {
@@ -281,43 +400,33 @@ NS_IMETHODIMP imgLoader::LoadImage(nsIURI *aURI,
 
         hvc->AddProxy(NS_STATIC_CAST(imgRequestProxy*, *_retval));
 
-        nsresult asyncOpenResult = newChannel->AsyncOpen(NS_STATIC_CAST(nsIStreamListener *, hvc), nsnull);
+        nsresult openRes;
+        openRes = newChannel->AsyncOpen(NS_STATIC_CAST(nsIStreamListener *, hvc), nsnull);
 
         NS_RELEASE(hvc);
 
         NS_RELEASE(request);
 
-        return asyncOpenResult;
+        return openRes;
 
-      } else {
-        // If it isn't caching channel, use the cached version.
-        // XXX we should probably do something more intelligent for local files.
-        validateRequest = PR_FALSE;
       }
+      // If it isn't caching channel, use the cached version.
+      // XXX we should probably do something more intelligent for local files.
+      bValidateRequest = PR_FALSE;
     }
   } else if (!request) {
-    /* no request from the cache.  do a new load */
+    /* Case #1: no request from the cache.  do a new load */
     LOG_SCOPE(gImgLog, "imgLoader::LoadImage |cache miss|");
 
-    nsCOMPtr<nsIIOService> ioserv(do_GetService("@mozilla.org/network/io-service;1"));
-    if (!ioserv) return NS_ERROR_FAILURE;
-
     nsCOMPtr<nsIChannel> newChannel;
-    ioserv->NewChannelFromURI(aURI, getter_AddRefs(newChannel));
-    if (!newChannel) return NS_ERROR_FAILURE;
-
-    nsCOMPtr<nsIHttpChannel> newHttpChannel = do_QueryInterface(newChannel);
-    if (newHttpChannel) {
-      newHttpChannel->SetDocumentURI(initialDocumentURI);
-    }
-
-    if (aLoadGroup) {
-      PRUint32 flags;
-      aLoadGroup->GetLoadFlags(&flags);
-      if (aLoadFlags & nsIRequest::LOAD_BACKGROUND)
-        flags |= nsIRequest::LOAD_BACKGROUND;
-      newChannel->SetLoadFlags(flags);
-    }
+    rv = NewImageChannel(getter_AddRefs(newChannel),
+                         aURI,
+                         aInitialDocumentURI,
+                         aReferrerURI,
+                         aLoadGroup,
+                         requestFlags);
+    if (NS_FAILED(rv))
+      return NS_ERROR_FAILURE;
 
     NS_NEWXPCOM(request, imgRequest);
     if (!request) return NS_ERROR_OUT_OF_MEMORY;
@@ -334,7 +443,6 @@ NS_IMETHODIMP imgLoader::LoadImage(nsIURI *aURI,
 
     request->Init(newChannel, entry, cacheId, aCX);
 
-
     // create the proxy listener
     ProxyListener *pl = new ProxyListener(NS_STATIC_CAST(nsIStreamListener *, request));
     if (!pl) {
@@ -344,37 +452,22 @@ NS_IMETHODIMP imgLoader::LoadImage(nsIURI *aURI,
 
     NS_ADDREF(pl);
 
-    if (aLoadGroup) {
-      // Get the notification callbacks from the load group and set them on the channel
-      nsCOMPtr<nsIInterfaceRequestor> interfaceRequestor;
-      aLoadGroup->GetNotificationCallbacks(getter_AddRefs(interfaceRequestor));
-      if (interfaceRequestor)
-        newChannel->SetNotificationCallbacks(interfaceRequestor);
-
-      // set the referrer if this is an HTTP request
-      nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(newChannel));
-
-      if (httpChannel) {
-        // Set the referrer
-        httpChannel->SetReferrer(referrerURI, nsIHttpChannel::REFERRER_INLINES);
-      }
-    }
-
     PR_LOG(gImgLog, PR_LOG_DEBUG,
            ("[this=%p] imgLoader::LoadImage -- Calling channel->AsyncOpen()\n", this));
 
-    nsresult asyncOpenResult = newChannel->AsyncOpen(NS_STATIC_CAST(nsIStreamListener *, pl), nsnull);
+    nsresult openRes;
+    openRes = newChannel->AsyncOpen(NS_STATIC_CAST(nsIStreamListener *, pl), nsnull);
 
     NS_RELEASE(pl);
 
-    if (NS_FAILED(asyncOpenResult)) {
+    if (NS_FAILED(openRes)) {
       /* If AsyncOpen fails, then we want to hand back a request proxy
          object that has a canceled load.
        */
       LOG_MSG(gImgLog, "imgLoader::LoadImage", "async open failed.");
 
-      nsresult rv = CreateNewProxyForRequest(request, aLoadGroup, aObserver,
-                                             aCX, aLoadFlags, aRequest, _retval);
+      rv = CreateNewProxyForRequest(request, aLoadGroup, aObserver,
+                                    aCX, requestFlags, aRequest, _retval);
       request->NotifyProxyListener(NS_STATIC_CAST(imgRequestProxy*, *_retval));
 
       if (NS_SUCCEEDED(rv)) {
@@ -384,12 +477,14 @@ NS_IMETHODIMP imgLoader::LoadImage(nsIURI *aURI,
 
       NS_RELEASE(request);
       
-      return asyncOpenResult;
+      return openRes;
     }
 
   } else {
-    /* request found in cache.  use it */
-    LOG_MSG_WITH_PARAM(gImgLog, "imgLoader::LoadImage |cache hit|", "request", request);
+    /* Case #3: request found in cache.  use it */
+    // XXX: Should this be executed if an expired cache entry does not have a caching channel??
+    LOG_MSG_WITH_PARAM(gImgLog, 
+                       "imgLoader::LoadImage |cache hit|", "request", request);
 
     // Update the request's LoadId
     request->SetLoadId(aCX);
@@ -397,9 +492,10 @@ NS_IMETHODIMP imgLoader::LoadImage(nsIURI *aURI,
 
   LOG_MSG(gImgLog, "imgLoader::LoadImage", "creating proxy request.");
 
-  rv = CreateNewProxyForRequest(request, aLoadGroup, aObserver, aCX, aLoadFlags, aRequest, _retval);
+  rv = CreateNewProxyForRequest(request, aLoadGroup, aObserver, aCX,
+                                requestFlags, aRequest, _retval);
 
-  if (!validateRequest) // if we have to validate the request, then we will send the notifications later.
+  if (!bValidateRequest) // if we have to validate the request, then we will send the notifications later.
     request->NotifyProxyListener(NS_STATIC_CAST(imgRequestProxy*, *_retval));
 
   NS_RELEASE(request);
@@ -419,7 +515,36 @@ NS_IMETHODIMP imgLoader::LoadImageWithChannel(nsIChannel *channel, imgIDecoderOb
   channel->GetOriginalURI(getter_AddRefs(uri));
 
   nsCOMPtr<nsICacheEntryDescriptor> entry;
-  imgCache::Get(uri, PR_TRUE, &request, getter_AddRefs(entry)); // addrefs request
+  PRBool bHasExpired;
+
+  imgCache::Get(uri, &bHasExpired, &request, getter_AddRefs(entry)); // addrefs request
+
+  nsLoadFlags requestFlags = nsIRequest::LOAD_NORMAL;
+
+  channel->GetLoadFlags(&requestFlags);
+
+  if (request) {
+    PRBool bUseCacheCopy = PR_TRUE;
+
+    // LOAD_BYPASS_CACHE - Always re-fetch
+    if (requestFlags & nsIRequest::LOAD_BYPASS_CACHE) {
+      bUseCacheCopy = PR_FALSE;
+    }
+    else if (RevalidateEntry(entry, requestFlags, bHasExpired)) {
+      nsCOMPtr<nsICachingChannel> cacheChan(do_QueryInterface(channel));
+
+      NS_ASSERTION(cacheChan, "Cache entry without a caching channel!");
+      if (cacheChan) {
+        cacheChan->IsFromCache(&bUseCacheCopy);
+      }
+    }
+
+    if (!bUseCacheCopy) {
+      entry->Doom(); // doom this thing.
+      entry = nsnull;
+      NS_RELEASE(request);
+    }
+  }
 
   nsCOMPtr<nsILoadGroup> loadGroup;
   channel->GetLoadGroup(getter_AddRefs(loadGroup));
@@ -472,7 +597,11 @@ NS_IMETHODIMP imgLoader::LoadImageWithChannel(nsIChannel *channel, imgIDecoderOb
     NS_RELEASE(pl);
   }
 
-  rv = CreateNewProxyForRequest(request, loadGroup, aObserver, aCX, nsIRequest::LOAD_NORMAL, nsnull, _retval);
+  // XXX: It looks like the wrong load flags are being passed in...
+  requestFlags &= 0xFFFF;
+
+  rv = CreateNewProxyForRequest(request, loadGroup, aObserver,
+                                aCX, requestFlags, nsnull, _retval);
   request->NotifyProxyListener(NS_STATIC_CAST(imgRequestProxy*, *_retval));
 
   NS_RELEASE(request);
@@ -782,7 +911,7 @@ NS_IMETHODIMP httpValidateChecker::OnStartRequest(nsIRequest *aRequest, nsISuppo
 
       // XXX see bug 113959
       // Don't call cancel here because it makes the HTTP cache entry go away.
-      //      aRequest->Cancel(NS_BINDING_ABORTED);
+      aRequest->Cancel(NS_BINDING_ABORTED);
 
       mRequest->mValidator = nsnull;
 

@@ -173,9 +173,16 @@ ImageListener::OnStartRequest(nsIRequest* request, nsISupports *ctxt)
   if (NS_FAILED(rv)) return rv;
   
 #ifdef USE_IMG2
+  nsCOMPtr<nsIPresShell> shell;
+  nsCOMPtr<nsIPresContext> context;
+  mDocument->GetShellAt(0, getter_AddRefs(shell));
+  if (shell) {
+    shell->GetPresContext(getter_AddRefs(context));
+  }
+
   nsCOMPtr<nsIStreamListener> kungFuDeathGrip(this);
   nsCOMPtr<imgILoader> il(do_GetService("@mozilla.org/image/loader;1"));
-  il->LoadImageWithChannel(channel, nsnull, nsnull, getter_AddRefs(mNextStream), 
+  il->LoadImageWithChannel(channel, nsnull, context, getter_AddRefs(mNextStream), 
                            getter_AddRefs(mDocument->mImageRequest));
 
   // XXX
