@@ -21,6 +21,7 @@
  * Contributor(s):
  *     William A. ("PowerGUI") Law <law@netscape.com>
  *     Blake Ross <blakeross@telocity.com>
+ *     Gervase Markham <gerv@gerv.net>
  */
 
 /*------------------------------ nsContextMenu ---------------------------------
@@ -33,17 +34,18 @@
 |   longer term, this code will be restructured to make it more reusable.      |
 ------------------------------------------------------------------------------*/
 function nsContextMenu( xulMenu ) {
-    this.target     = null;
-    this.menu       = null;
-    this.onTextInput = false;
-    this.onImage    = false;
-    this.onLink     = false;
+    this.target         = null;
+    this.menu           = null;
+    this.onTextInput    = false;
+    this.onImage        = false;
+    this.onLink         = false;
+    this.onMailtoLink   = false;
     this.onSaveableLink = false;
-    this.link       = false;
-    this.inFrame    = false;
-    this.hasBGImage = false;
-    this.inDirList  = false;
-    this.shouldDisplay = true;
+    this.link           = false;
+    this.inFrame        = false;
+    this.hasBGImage     = false;
+    this.inDirList      = false;
+    this.shouldDisplay  = true;
 
     // Initialize new menu.
     this.initMenu( xulMenu );
@@ -110,9 +112,6 @@ nsContextMenu.prototype = {
         // Save link depends on whether we're in a link.
         this.showItem( "context-savelink", this.onSaveableLink );
 
-        // Save background image depends on whether there is one.
-        this.showItem( "context-savebgimage", this.hasBGImage );
-
         // Save image depends on whether there is one.
         this.showItem( "context-saveimage", this.onImage );
         if (this.onImage){ //if onImage, let's get the imagename into the context menu
@@ -143,6 +142,9 @@ nsContextMenu.prototype = {
 
         // View Image depends on whether an image was clicked on.
         this.showItem( "context-viewimage", this.onImage );
+
+        // View background image depends on whether there is one.
+        this.showItem( "context-viewbgimage", this.hasBGImage && !this.onImage );
 
         // Remove separator if all items are removed.
         this.showItem( "context-sep-view", !this.inDirList || this.inFrame || this.onImage );
@@ -182,19 +184,21 @@ nsContextMenu.prototype = {
         this.showItem( "context-copyimage", this.onImage );
     },
     initMetadataItems : function () {
-        // Show unless in directory listing.
-        // Metadata for directory listings could ofcource be added if wanted
-        this.setItemAttr( "context-metadata", "disabled", this.inDirList ? "true" : null );
+        // Show if user clicked on something which has metadata.
+        this.showItem( "context-metadata", this.onMetaDataItem );
+        this.showItem( "context-sep-clip", this.onMetaDataItem );
     },
     // Set various context menu attributes based on the state of the world.
     setTarget : function ( node ) {
         // Initialize contextual info.
         this.onImage    = false;
+        this.onMetaDataItem = false;
         this.onTextInput = false;
         this.imageURL   = "";
         this.onLink     = false;
         this.inFrame    = false;
         this.hasBGImage = false;
+        this.bgImageURL = "";
 
         // Remember the node that was clicked.
         this.target = node;
@@ -263,10 +267,10 @@ nsContextMenu.prototype = {
             } else if ( this.target.tagName.toUpperCase() == "TEXTAREA" ) {
                  this.onTextInput = true;
             } else if ( this.target.getAttribute( "background" ) ) {
-               this.onImage = true;
-               // Convert background attribute to absolute URL.
-               this.imageURL = this.makeURLAbsolute( this.target.ownerDocument,
-                                                     this.target.getAttribute( "background" ) );
+                 this.hasBGImage = true;
+                 // Convert background attribute to absolute URL.
+                 this.bgImageURL = this.makeURLAbsolute( this.target.baseURI,
+                                                         this.target.getAttribute( "background" ) );
             } else if ( "HTTPIndex" in _content &&
                         _content.HTTPIndex instanceof Components.interfaces.nsIHTTPIndex ) {
                 this.inDirList = true;
@@ -316,40 +320,65 @@ nsContextMenu.prototype = {
             }
         }
 
+        // We have meta data on images.
+        this.onMetaDataItem = this.onImage;
+        
         // See if the user clicked in a frame.
         if ( this.target.ownerDocument != window._content.document ) {
             this.inFrame = true;
         }
-
-        // Bubble up looking for an input or textarea
-        var elem = this.target;
-        while ( elem && !this.onTextInput ) {
-            // Test for element types of interest.
-            if ( elem.nodeType == 1 ) {
-                // Clicked on a link.
-                this.onTextInput = this.isTargetATextBox(elem);
-            }
-            elem = elem.parentNode;
-        }
-
-        // Bubble out, looking for link.
+        
+        // Bubble out, looking for items of interest
         elem = this.target;
-        while ( elem && !this.onLink ) {
-            // Test for element types of interest.
-            if ( elem.nodeType == 1 &&
-                 ( elem.tagName.toUpperCase() == "A"
-                   ||
-                   elem.tagName.toUpperCase() == "AREA"
-                   ||
-                   elem.getAttributeNS("http://www.w3.org/1999/xlink","type") == "simple")) {
-                // Clicked on a link.
-                this.onLink = true;
-                // Remember corresponding element.
-                this.link = elem;
-                // Remember if it is saveable.
-                this.onSaveableLink = this.isLinkSaveable( this.link );
+        while ( elem ) {
+            if ( elem.nodeType == 1 ) {
+                var tagname = elem.tagName.toUpperCase();
+                
+                // Link?
+                if ( !this.onLink && 
+                    ( tagname === "A"    ||
+                      tagname === "AREA" ||
+                      elem.getAttributeNS( "http://www.w3.org/1999/xlink", "type") == "simple" ) ) {
+                    // Clicked on a link.
+                    this.onLink = true;
+                    this.onMetaDataItem = true;
+                    // Remember corresponding element.
+                    this.link = elem;
+                    // Remember if it is saveable.
+                    this.onSaveableLink = this.isLinkSaveable( this.link );
+                }
+                
+                // Text input?
+                if ( !this.onTextInput ) {
+                    // Clicked on a link.
+                    this.onTextInput = this.isTargetATextBox(elem);
+                }
+                
+                // Metadata item?
+                if ( !this.onMetaDataItem ) {
+                    // We currently display metadata on anything which fits
+                    // the below test.
+                    if ( ( tagname === "BLOCKQUOTE" && elem.cite )        ||
+                         ( tagname === "Q"          && elem.cite )        ||
+                         ( tagname === "TABLE"      && elem.summary )     ||
+                         ( ( tagname === "INS" || tagname === "DEL" ) &&
+                           ( elem.cite || elem.dateTime ) )               ||
+                         elem.title                                       ||
+                         elem.lang ) {
+                        dump("On metadata item.\n");
+                        this.onMetaDataItem = true;
+                    }
+                }
+
+                // Background image?
+                if ( !this.hasBGImage && elem.background ) {
+                    this.hasBGImage = true;
+                    // Convert background attribute to absolute URL.
+                    this.bgImageURL = this.makeURLAbsolute( elem.baseURI,
+                                                            elem.background );
+                }
             }
-            elem = elem.parentNode;
+            elem = elem.parentNode;    
         }
     },
     // Returns true iff clicked on link is saveable.
@@ -412,9 +441,13 @@ nsContextMenu.prototype = {
     viewFrameInfo : function () {
       BrowserPageInfo(this.target.ownerDocument);
     },
-    // Open new window with the URL of the image.
+    // Change current window to the URL of the image.
     viewImage : function () {
         openTopWin( this.imageURL );
+    },
+    // Change current window to the URL of the background image.
+    viewBGImage : function () {
+        openTopWin( this.bgImageURL );
     },
     // Save URL of clicked-on frame.
     saveFrame : function () {
@@ -428,11 +461,6 @@ nsContextMenu.prototype = {
     saveImage : function () {
         this.savePage( this.imageURL, true );
     },
-    // Save URL of background image.
-    saveBGImage : function () {
-        this.savePage( this.bgImageURL(), true );
-    },
-
     // Open Metadata window for node
     showMetadata : function () {
         window.openDialog(  "chrome://navigator/content/metadata.xul",
