@@ -1064,10 +1064,6 @@ NS_METHOD nsMacWindow::SetSizeMode(PRInt32 aMode)
 
 void nsMacWindow::CalculateAndSetZoomedSize()
 {
-	GDHandle	gdZoomDevice;
-	short		rightVal;
-	short		wTitleHeight;
-	
 	StPortSetter setOurPort(mWindowPtr);
 
 	// calculate current window portbounds
@@ -1077,6 +1073,7 @@ void nsMacWindow::CalculateAndSetZoomedSize()
 	::LocalToGlobal((Point *)&windRect.bottom);
 
 	// calculate window's titlebar height
+	short wTitleHeight;
 	RgnHandle structRgn = ::NewRgn();
 	::GetWindowRegion(mWindowPtr, kWindowStructureRgn, structRgn);
 	Rect structRgnBounds;
@@ -1086,42 +1083,35 @@ void nsMacWindow::CalculateAndSetZoomedSize()
 
 	windRect.top -= wTitleHeight;
 
-	// find the screen to which the window mostly belongs
-	GDHandle gdNthDevice = ::GetDeviceList();
-	long greatestArea = 0;
-	while (gdNthDevice) {
-		if (::TestDeviceAttribute(gdNthDevice, screenDevice) &&
-		    ::TestDeviceAttribute(gdNthDevice, screenActive)) {
+  // find which screen the window is (mostly) on and get its rect. GetAvailRect()
+  // handles subtracting out the menubar and the dock for us. Set the zoom rect
+  // to the screen rect, less some fudging and room for icons on the primary screen.
+	nsCOMPtr<nsIScreenManager> screenMgr = do_GetService(sScreenManagerContractID);
+  if ( screenMgr ) {
+    nsCOMPtr<nsIScreen> screen;
+    screenMgr->ScreenForRect ( windRect.left, windRect.top, windRect.right - windRect.left, windRect.bottom - windRect.top,
+                                getter_AddRefs(screen) );
+    if ( screen ) {
+      nsRect newWindowRect;
+      screen->GetAvailRect ( &newWindowRect.x, &newWindowRect.y, &newWindowRect.width, &newWindowRect.height );
+      
+      // leave room for icons on primary screen
+      nsCOMPtr<nsIScreen> primaryScreen;
+      screenMgr->GetPrimaryScreen ( getter_AddRefs(primaryScreen) );
+      if ( screen == primaryScreen )
+        newWindowRect.width -= 64;
 
-			Rect theSect;
-			long sectArea;
-
-			::SectRect(&windRect, &(**gdNthDevice).gdRect, &theSect);
-			sectArea = (theSect.right - theSect.left) * (theSect.bottom - theSect.top);
-			if (sectArea > greatestArea) {
-				greatestArea = sectArea;
-				gdZoomDevice = gdNthDevice;
-			}
-		}
-		gdNthDevice = ::GetNextDevice(gdNthDevice);
-	}
-
-	// set the window's maximized state to fill most of the screen
-	Rect tempRect = (**gdZoomDevice).gdRect;
-	rightVal = tempRect.right;
-	if (gdZoomDevice == ::GetMainDevice()) {
-		rightVal -= 64; // make room for finder desktop icons
-		wTitleHeight += ::GetMBarHeight();
-	}
-
-	Rect zoomRect;
-	::SetRect(&zoomRect,
-		tempRect.left + 7,
-		tempRect.top + wTitleHeight + 3,
-		rightVal - 12,
-		tempRect.bottom - 8);
-	::SetWindowStandardState ( mWindowPtr, &zoomRect );
-}
+    	Rect zoomRect;
+    	::SetRect(&zoomRect,
+    		newWindowRect.x + 7,
+    		newWindowRect.y + wTitleHeight + 3,
+    		newWindowRect.x + newWindowRect.width - 12,
+    		newWindowRect.y + newWindowRect.height - 8);
+    	::SetWindowStandardState ( mWindowPtr, &zoomRect );
+    }
+  }
+  
+} // CalculateAndSetZoomedSize
 
 
 //-------------------------------------------------------------------------
