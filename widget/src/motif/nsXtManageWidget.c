@@ -43,7 +43,7 @@ static void
 ChangeManaged(Widget w);
 
 
-extern void ResizeWidget(Widget w);
+extern void nsWindow_ResizeWidget(Widget w);
 
 
 NewManageClassRec newManageClassRec =
@@ -69,7 +69,7 @@ NewManageClassRec newManageClassRec =
     /* compress_enterleave*/	TRUE,
     /* visible_interest   */    FALSE,
     /* destroy            */    NULL,
-    /* resize             */    ResizeWidget,
+    /* resize             */    nsWindow_ResizeWidget,
     /* expose             */    XtInheritExpose /* (XtExposeProc) Redisplay */,
     /* set_values         */    NULL /* (XtSetValuesFunc )SetValues */,
     /* set values hook    */    NULL,
