@@ -25,7 +25,7 @@ class nsDialogParamBlock: public nsISupports
  	enum {kNumInts = 8, kNumStrings = 8 };
 public: 	
 		nsDialogParamBlock();
-	virtual ~nsDialogParamBlock(){};
+	 ~nsDialogParamBlock(){};
  	NS_IMETHOD GetInt(PRInt32 inIndex, PRInt32 *_retval);
 	NS_IMETHOD SetInt(PRInt32 inIndex, PRInt32 inInt);
 
