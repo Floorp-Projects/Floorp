@@ -2720,7 +2720,9 @@ nsLineLayout::ApplyFrameJustification(PerSpanData* aPSD, FrameJustificationState
       
       if (PR_TRUE == pfd->GetFlag(PFD_ISTEXTFRAME)) {
         if (aState->mTotalWidthForSpaces > 0 &&
-            aState->mTotalNumSpaces > 0) {
+            aState->mTotalNumSpaces > 0 &&            // we divide by this value, so must be non-zero
+            aState->mTotalNumLetters >0               // we divide by this value, so must be non-zero
+           ) {
           aState->mNumSpacesProcessed += pfd->mJustificationNumSpaces;
 
           nscoord newAllocatedWidthForSpaces =
@@ -2732,8 +2734,7 @@ nsLineLayout::ApplyFrameJustification(PerSpanData* aPSD, FrameJustificationState
           aState->mWidthForSpacesProcessed = newAllocatedWidthForSpaces;
         }
 
-        if (aState->mTotalWidthForLetters > 0 &&
-            aState->mTotalNumLetters > 0) {
+        if (aState->mTotalWidthForLetters > 0) {
           aState->mNumLettersProcessed += pfd->mJustificationNumLetters;
 
           nscoord newAllocatedWidthForLetters =

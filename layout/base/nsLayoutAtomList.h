@@ -210,9 +210,6 @@ LAYOUT_ATOM(onDOMCharacterDataModified, "onDOMCharacterDataModified")
 
   // Alphabetical list of languages for lang-specific transforms
 LAYOUT_ATOM(Japanese, "ja")
-LAYOUT_ATOM(Chinese, "zh-CN")
-LAYOUT_ATOM(Taiwanese, "zh-TW")
-LAYOUT_ATOM(HongKongChinese, "zh-HK")
 LAYOUT_ATOM(Unicode, "x-unicode")
 
   // other
