@@ -22,6 +22,7 @@
 #include "nsLineLayout.h"
 #include "nsString.h"
 #include "nsIPresContext.h"
+#include "nsIContent.h"
 #include "nsStyleConsts.h"
 #include "nsIStyleContext.h"
 #include "nsCoord.h"

@@ -21,8 +21,6 @@
 #include "nsIFrame.h"
 #include "nsIHTMLReflow.h"
 #include "nsRect.h"
-#include "nsSelectionRange.h"
-#include "nsSelectionPoint.h"
 #include "nsString.h"
 #include "prlog.h"
 

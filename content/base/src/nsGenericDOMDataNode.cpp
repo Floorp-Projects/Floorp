@@ -25,7 +25,6 @@
 #include "nsIDOMDocument.h"
 #include "nsIDOMDocumentFragment.h"
 #include "nsXIFConverter.h"
-#include "nsSelectionRange.h"
 #include "nsRange.h"
 
 #include "nsIDOMSelection.h"

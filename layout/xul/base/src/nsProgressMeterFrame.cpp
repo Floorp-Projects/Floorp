@@ -33,6 +33,7 @@ static int   ANIMATION_SPEED = 50;    // miliseconds
 #include "nsProgressMeterFrame.h"
 #include "nsIStyleContext.h"
 #include "nsCSSRendering.h"
+#include "nsIContent.h"
 #include "nsIPresContext.h"
 #include "nsHTMLAtoms.h"
 #include "nsXULAtoms.h"
