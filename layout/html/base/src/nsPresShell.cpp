@@ -1715,6 +1715,10 @@ PresShell::Init(nsIDocument* aDocument,
   // style set, but before creating any frames.
   mPresContext->SetCompatibilityMode(aCompatMode);
 
+  // setup the preference style rules (no forced reflow), and do it
+  // before creating any frames.
+  SetPreferenceStyleRules(PR_FALSE);
+
   mHistoryState = nsnull;
 
   nsresult result = nsComponentManager::CreateInstance(kFrameSelectionCID, nsnull,
@@ -1796,8 +1800,6 @@ PresShell::Init(nsIDocument* aDocument,
 #ifdef IBMBIDI
   mBidiKeyboard = do_GetService("@mozilla.org/widget/bidikeyboard;1");
 #endif
-  // setup the preference style rules up (no forced reflow)
-  SetPreferenceStyleRules(PR_FALSE);
 
 #ifdef MOZ_REFLOW_PERF
     // Get the prefs service
@@ -2251,6 +2253,7 @@ PresShell::SetPreferenceStyleRules(PRBool aForceReflow)
       // this is harsh, but without it the new colors don't appear on the current page
       // Fortunately, it only happens when the prefs change, a rare event.
       // XXX - determine why the normal PresContext::RemapStyleAndReflow doesn't cut it
+      // XXXldb FIX THIS!
       ReconstructFrames();
     }
 
@@ -6425,6 +6428,9 @@ PresShell::ProcessReflowCommands(PRBool aInterruptible)
         else {
           // The reflow command couldn't be added to the tree; leave
           // it in the queue, and we'll handle it next time.
+#ifdef DEBUG
+          printf("WARNING: Couldn't add reflow command, so splitting.\n");
+#endif
         }
       }
 
