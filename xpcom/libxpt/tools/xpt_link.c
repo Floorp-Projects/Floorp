@@ -75,9 +75,25 @@ int trueNumberOfInterfaces = 0;
 int totalNumberOfInterfaces = 0;
 
 #if defined(XP_MAC) && defined(XPIDL_PLUGIN)
+
 #define main xptlink_main
 int xptlink_main(int argc, char *argv[]);
-#endif
+extern size_t mac_get_file_length(const char* filename);
+#define get_file_length mac_get_file_length
+
+#else
+
+static size_t get_file_length(const char* filename)
+{
+    struct stat file_stat;
+    if (stat(filename, &file_stat) != 0) {
+        perror("FAILED: get_file_length");
+        exit(1);
+    }
+    return file_stat.st_size;
+}
+
+#endif /* XP_MAC && XPIDL_PLUGIN */
 
 int 
 main(int argc, char **argv)
@@ -90,7 +106,6 @@ main(int argc, char **argv)
     XPTTypeDescriptor *td;
     XPTAnnotation *ann, *first_ann;
     PRUint32 header_sz, len;
-    struct stat file_stat;
     size_t flen = 0;
     char *head, *data, *whole;
     FILE *in, *out;
@@ -113,11 +128,7 @@ main(int argc, char **argv)
 
 
     for (i=2; i<argc; i++) {
-        if (stat(argv[i], &file_stat) != 0) {
-            perror("FAILED: fstat");
-            return 1;
-        }
-        flen = file_stat.st_size;
+        flen = get_file_length(argv[i]);
 
         in = fopen(argv[i], "rb");
         if (!in) {
