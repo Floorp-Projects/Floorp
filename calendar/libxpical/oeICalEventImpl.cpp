@@ -266,6 +266,7 @@ oeICalEventImpl::oeICalEventImpl()
     m_alarmemail = nsnull;
     m_inviteemail = nsnull;
     m_recurinterval = 1;
+    m_recurcount = 0;
     m_recur = false;
     m_recurforever = true;
     m_alarmunits = nsnull;
@@ -756,7 +757,7 @@ NS_IMETHODIMP oeICalEventImpl::SetInviteEmailAddress(const char * aNewVal)
     return NS_OK;
 }
 
-/* attribute boolean RecurInterval; */
+/* attribute RecurInterval; */
 NS_IMETHODIMP oeICalEventImpl::GetRecurInterval(PRUint32 *aRetVal)
 {
 #ifdef ICAL_DEBUG_ALL
@@ -771,6 +772,24 @@ NS_IMETHODIMP oeICalEventImpl::SetRecurInterval(PRUint32 aNewVal )
     printf( "SetRecurInterval()\n" );
 #endif
     m_recurinterval = aNewVal;
+    return NS_OK;
+}
+
+/* attribute RecurCount; */
+NS_IMETHODIMP oeICalEventImpl::GetRecurCount(PRUint32 *aRetVal)
+{
+#ifdef ICAL_DEBUG_ALL
+    printf( "GetRecurCount()\n" );
+#endif
+    *aRetVal = m_recurcount;
+    return NS_OK;
+}
+NS_IMETHODIMP oeICalEventImpl::SetRecurCount(PRUint32 aNewVal )
+{
+#ifdef ICAL_DEBUG_ALL
+    printf( "SetRecurCount()\n" );
+#endif
+    m_recurcount = aNewVal;
     return NS_OK;
 }
 
@@ -1953,6 +1972,7 @@ bool oeICalEventImpl::ParseIcalComponent( icalcomponent *comp )
         m_recurend->m_datetime.is_date = false;
         m_recurend->m_datetime.is_utc = false;
 	    m_recurinterval = recur.interval;
+	    m_recurcount = recur.count;
         if( !icaltime_is_null_time( recur.until ) )
             m_recurforever = false;
         if( recur.freq == ICAL_DAILY_RECURRENCE ) {
@@ -2253,7 +2273,7 @@ icalcomponent* oeICalEventImpl::AsIcalComponent()
         recur.interval = interval;
         recur.until.is_utc = false;
         recur.until.is_date = true;
-        if( m_recurforever ) {
+        if( m_recurforever && m_recurcount == 0 ) {
             recur.until.year = 0;
             recur.until.month = 0;
             recur.until.day = 0;
@@ -2261,12 +2281,16 @@ icalcomponent* oeICalEventImpl::AsIcalComponent()
             recur.until.minute = 0;
             recur.until.second = 0;
         } else {
-            recur.until.year = m_recurend->m_datetime.year;
-            recur.until.month = m_recurend->m_datetime.month;
-            recur.until.day = m_recurend->m_datetime.day;
-            recur.until.hour = 23;
-            recur.until.minute = 59;
-            recur.until.second = 59;
+            if( m_recurcount == 0 ) {
+                recur.until.year = m_recurend->m_datetime.year;
+                recur.until.month = m_recurend->m_datetime.month;
+                recur.until.day = m_recurend->m_datetime.day;
+                recur.until.hour = 23;
+                recur.until.minute = 59;
+                recur.until.second = 59;
+            } else {
+                recur.count = m_recurcount;
+            }
         }
 
         switch ( recurtype ) {

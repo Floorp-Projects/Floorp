@@ -111,6 +111,7 @@ interface oeIICalEvent : nsISupports
     attribute string alarmEmailAddress;
     attribute string inviteEmailAddress;
     attribute unsigned long recurInterval;
+    attribute unsigned long recurCount;
     readonly attribute oeIDateTime recurEnd;
     attribute boolean recur;
     attribute string recurUnits;

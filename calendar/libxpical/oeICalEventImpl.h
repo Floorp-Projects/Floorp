@@ -136,6 +136,7 @@ private:
     char *m_inviteemail;
     short m_recurtype;
     unsigned long m_recurinterval;
+    unsigned long m_recurcount;
     bool m_recur;
     bool m_recurforever;
     char *m_recurunits;

@@ -1103,6 +1103,16 @@ NS_IMETHODIMP oeICalContainerFilter::SetRecurInterval(PRUint32 aNewVal )
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+NS_IMETHODIMP oeICalContainerFilter::GetRecurCount(PRUint32 *aRetVal)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP oeICalContainerFilter::SetRecurCount(PRUint32 aNewVal )
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
 NS_IMETHODIMP oeICalContainerFilter::GetRecurUnits(char **aRetVal)
 {
     return NS_ERROR_NOT_IMPLEMENTED;

@@ -2310,6 +2310,16 @@ NS_IMETHODIMP oeICalFilter::SetRecurInterval(PRUint32 aNewVal )
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+NS_IMETHODIMP oeICalFilter::GetRecurCount(PRUint32 *aRetVal)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP oeICalFilter::SetRecurCount(PRUint32 aNewVal )
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
 NS_IMETHODIMP oeICalFilter::GetRecurUnits(char **aRetVal)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
