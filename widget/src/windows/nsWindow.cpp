@@ -2095,8 +2095,8 @@ PRBool nsWindow::DispatchKeyEvent(PRUint32 aEventType, WORD aCharCode, UINT aVir
 
   InitEvent(event, aEventType, &point); // this add ref's event.widget
 
-  event.charCode = !mIMEIsComposing?MapFromNativeToDOM(aCharCode):aCharCode;
-  event.keyCode  = !mIMEIsComposing?MapFromNativeToDOM(aVirtualCharCode):aVirtualCharCode;
+  event.charCode = aCharCode;
+  event.keyCode  = aVirtualCharCode;
 
 #ifdef KE_DEBUG
   static cnt=0;
@@ -2151,6 +2151,8 @@ BOOL nsWindow::OnKeyDown( UINT aVirtualKeyCode, UINT aScanCode)
 
   asciiKey = 0;
 
+  aVirtualKeyCode = !mIMEIsComposing?MapFromNativeToDOM(aVirtualKeyCode):aVirtualKeyCode;
+
   //printf("In OnKeyDown ascii %d  virt: %d  scan: %d\n", asciiKey, aVirtualKeyCode, aScanCode);
 
   BOOL result = DispatchKeyEvent(NS_KEY_DOWN, asciiKey, aVirtualKeyCode);
@@ -2163,18 +2165,23 @@ BOOL nsWindow::OnKeyDown( UINT aVirtualKeyCode, UINT aScanCode)
   {
     DispatchKeyEvent(NS_KEY_PRESS, 0, aVirtualKeyCode);
   } 
+  else if (mIsControlDown && 
+           ((( NS_VK_0 <= aVirtualKeyCode) && (aVirtualKeyCode <= NS_VK_9)) ||
+            (aVirtualKeyCode == NS_VK_SEMICOLON) ||
+            (aVirtualKeyCode == NS_VK_EQUALS)    ||
+            (aVirtualKeyCode == NS_VK_COMMA)     ||
+            (aVirtualKeyCode == NS_VK_PERIOD)    ||
+            (aVirtualKeyCode == NS_VK_SLASH)     
+           )
+          )
+  {
+    // put the 0 - 9 in charcode instead of keycode.
+    DispatchKeyEvent(NS_KEY_PRESS, aVirtualKeyCode, 0);
+  }
   else if (NO_WM_CHAR_LATER(aVirtualKeyCode)) 
   {
     DispatchKeyEvent(NS_KEY_PRESS, 0, aVirtualKeyCode);
   } 
-  else if (mIsControlDown && 
-           ((( NS_VK_0 <= aVirtualKeyCode)&&( aVirtualKeyCode <= NS_VK_9)) ||
-           (( 0xBA <= aVirtualKeyCode)&&( aVirtualKeyCode <= 0xBF))))
-  {
-    // put the 0 - 9 in charcode instead of keycode.
-    // or control key BA - BF
-    DispatchKeyEvent(NS_KEY_PRESS, aVirtualKeyCode, 0);
-  }
 
   return result;
 }
@@ -2185,6 +2192,7 @@ BOOL nsWindow::OnKeyDown( UINT aVirtualKeyCode, UINT aScanCode)
 //-------------------------------------------------------------------------
 BOOL nsWindow::OnKeyUp( UINT aVirtualKeyCode, UINT aScanCode)
 {
+  aVirtualKeyCode = !mIMEIsComposing?MapFromNativeToDOM(aVirtualKeyCode):aVirtualKeyCode;
   BOOL result = DispatchKeyEvent(NS_KEY_UP, 0, aVirtualKeyCode);
   return result;
 }
