@@ -84,6 +84,10 @@ protected:
   float             mGammaValue;
   nsDrawingSurfaceUnix * mSurface ;
 
+  // XXX There should be a nsIColormap interface
+public:
+  void InstallColormap(void);
+  void SetDrawingSurface(nsDrawingSurfaceUnix * aSurface) { mSurface = aSurface; }
 };
 
 #endif /* nsDeviceContextUnix_h___ */

@@ -44,6 +44,7 @@ NS_IMPL_RELEASE(nsDeviceContextUnix)
 
 nsresult nsDeviceContextUnix :: Init()
 {
+
   return NS_OK;
 }
 
@@ -111,6 +112,78 @@ nsIRenderingContext * nsDeviceContextUnix :: CreateRenderingContext(nsIView *aVi
 void nsDeviceContextUnix :: InitRenderingContext(nsIRenderingContext *aContext, nsIWidget *aWin)
 {
   aContext->Init(this, aWin);
+
+  InstallColormap();
+}
+
+void nsDeviceContextUnix :: InstallColormap()
+{
+
+  PRUint32 screen;
+  Visual * visual;
+  XStandardColormap * stdcmap;
+  PRInt32 numcmaps;
+  Status status;
+  PRInt32 i,j,k,l;
+  XColor * colors;
+
+  screen = DefaultScreen(mSurface->display);
+  visual = DefaultVisual(mSurface->display, screen);
+
+  // First, let's see if someone else did the hard work already
+  status = XGetRGBColormaps(mSurface->display,
+			    RootWindow(mSurface->display,screen),
+			    &stdcmap, &numcmaps, XA_RGB_BEST_MAP);
+
+  if (status == 0) {
+    fprintf(stderr, "InstallColormap - FAILED\n");
+    // DoSomething here!
+    return;
+  }
+
+  if (stdcmap->colormap && (!stdcmap->red_max || !stdcmap->visualid)) {
+    fprintf(stderr, "InstallColormap - FAILED\n");
+    // DoSomething here!
+    return ;
+  }
+
+  if (!stdcmap->colormap){
+    // Do the hard work ... Create the Colormap here...
+    XVisualInfo * vinfo, vtemplate;
+    XVisualInfo * v;
+    PRInt32 numinfo;
+
+    vinfo = ::XGetVisualInfo(mSurface->display, VisualNoMask, &vtemplate, &numinfo);
+
+    for (v = vinfo; v < vinfo + numinfo; v++)
+      if (v->visualid == stdcmap->visualid){
+	visual = v->visual;
+	break;
+      }
+
+    stdcmap->colormap = ::XCreateColormap(mSurface->display, 
+					 RootWindow(mSurface->display, screen),
+					 visual, AllocAll);
+
+    // If this is the case, we supposedly cannot change the hw colormap
+    if (stdcmap->colormap == DefaultColormap(mSurface->display, screen)) {
+      fprintf(stderr, "InstallColormap - FAILED\n");
+      // DoSomething here!
+      return;
+    }
+
+    // Go and allocate the colorcells
+
+    
+    PRUint32 numcells = stdcmap->base_pixel + 
+      ((stdcmap->red_max+1)*
+       (stdcmap->green_max+1)*
+       (stdcmap->blue_max+1));
+
+  }
+
+
+  return ;
 }
 
 nsIFontCache* nsDeviceContextUnix::GetFontCache()
