@@ -42,14 +42,15 @@ textarea {
   padding: 0 2px 0 1px;
   font-size: 11px;
   background-color: transparent;
+  margin: 2px 1px;
 }
 
 select {
   -moz-appearance: menulist;
-  margin: 1px;
+  margin: 2px;
   background-color: transparent !important;
   color: -moz-FieldText !important;
-  font-size: 11px;
+  font-size: 10px;
 }
 
 /* Need the "select[size][multiple]" selector to override the settings on
@@ -59,7 +60,7 @@ select[size],
 select[multiple],
 select[size][multiple] {
   -moz-appearance: listbox;
-  margin: 0px;
+  margin: 2px;
   background-color: -moz-Field !important;
 }
 
@@ -90,14 +91,14 @@ select[disabled] {
 
 input[type="checkbox"] {
   -moz-appearance: checkbox-small;
-  width: 14px;
+  width: 15px;
   height: 15px;
 }
 
 input[type="radio"] {
   -moz-appearance: radio-small;
-  width: 14px;
-  height: 14px;
+  width: 15px;
+  height: 16px;
 }
 
 input[type="reset"],
@@ -105,25 +106,29 @@ input[type="button"],
 input[type="submit"] {
   -moz-appearance: button-small;
   font-size: 11px;
-  margin: 0px 3px;
-  padding: 0;
+  margin: 2px 2px;
+  padding: 0px;
   border-width: 2px 8px 2px 8px;
-  color: -moz-FieldText !important;
+  color: -moz-FieldText ! important;
+  min-width: 24px;
 }
 
 button,
 button[disabled],
 button[disabled]:active {
   -moz-appearance: button-bevel;
-  padding: 0;
+  padding: 0px;
+  margin: 2px 2px;
   border-width: 4px;
+  min-width: 24px;
+  min-height: 17px;
 }
 
 button:active:hover,
 input[type="reset"]:active:hover,
 input[type="button"]:active:hover,
 input[type="submit"]:active:hover {
-  padding: 0;
+  padding: 0px;
 }
 
 button::-moz-focus-inner,
@@ -141,7 +146,6 @@ input[type="button"][disabled]:active,
 input[type="button"][disabled],
 input[type="submit"][disabled]:active,
 input[type="submit"][disabled] {
-  padding: 0;
   border-width: 2px 8px 2px 8px;
   color: GrayText !important;
 }
