@@ -40,7 +40,6 @@
 #include "nsCOMPtr.h"
 #include "nsIViewManager.h"
 #include "nsCRT.h"
-#include "nsPresContext.h"
 #include "nsIWidget.h"
 #include "nsITimer.h"
 #include "prtime.h"

@@ -51,8 +51,6 @@ GRE_MODULE	= 1
 REQUIRES	= xpcom \
 		  string \
 		  gfx \
-		  layout \
-		  content \
 		  widget \
 		  dom \
 		  locale \
