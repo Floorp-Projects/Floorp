@@ -3163,7 +3163,7 @@ PRInt32 nsNNTPProtocol::ReadNewsList(nsIInputStream * inputStream, PRUint32 leng
                 NS_ENSURE_SUCCESS(rv, rv);
 
                	nsCOMPtr<nsIStringBundle> bundle;
-                rv = bundleService->CreateBundle(NEWS_MSGS_URL, nsnull, 
+                rv = bundleService->CreateBundle(NEWS_MSGS_URL,  
                                             getter_AddRefs(bundle));
                 NS_ENSURE_SUCCESS(rv, rv);
 
@@ -3625,7 +3625,7 @@ nsresult nsNNTPProtocol::GetNewsStringByID(PRInt32 stringID, PRUnichar **aString
         nsCOMPtr<nsIStringBundleService> bundleService = do_GetService(NS_STRINGBUNDLE_CONTRACTID, &rv);
         NS_ENSURE_SUCCESS(rv, rv);
 
-		rv = bundleService->CreateBundle(propertyURL, nsnull, getter_AddRefs(m_stringBundle));
+		rv = bundleService->CreateBundle(propertyURL, getter_AddRefs(m_stringBundle));
         NS_ENSURE_SUCCESS(rv, rv);
 	}
 
@@ -3661,7 +3661,7 @@ nsresult nsNNTPProtocol::GetNewsStringByName(const char *aName, PRUnichar **aStr
         nsCOMPtr<nsIStringBundleService> bundleService = do_GetService(NS_STRINGBUNDLE_CONTRACTID, &rv);
         NS_ENSURE_SUCCESS(rv, rv);
 
-		rv = bundleService->CreateBundle(propertyURL, nsnull, getter_AddRefs(m_stringBundle));
+		rv = bundleService->CreateBundle(propertyURL, getter_AddRefs(m_stringBundle));
 	}
 
 	if (m_stringBundle)
@@ -3858,7 +3858,7 @@ nsNNTPProtocol::SetCheckingForNewNewsStatus(PRInt32 current, PRInt32 total)
     NS_ENSURE_SUCCESS(rv, rv);
 
     nsCOMPtr<nsIStringBundle> bundle;
-    rv = bundleService->CreateBundle(NEWS_MSGS_URL, nsnull, getter_AddRefs(bundle));
+    rv = bundleService->CreateBundle(NEWS_MSGS_URL, getter_AddRefs(bundle));
     NS_ENSURE_SUCCESS(rv, rv);
 
     nsAutoString thisGroupStr; thisGroupStr.AppendInt(current);

@@ -268,7 +268,7 @@ nsNNTPNewsgroupList::GetRangeOfArtsToDownload(nsIMsgWindow *aMsgWindow,
       NS_ENSURE_SUCCESS(rv, rv);
       
       nsCOMPtr<nsIStringBundle> bundle;
-      rv = bundleService->CreateBundle(NEWS_MSGS_URL, nsnull, getter_AddRefs(bundle));
+      rv = bundleService->CreateBundle(NEWS_MSGS_URL, getter_AddRefs(bundle));
       NS_ENSURE_SUCCESS(rv, rv);
       
       rv = bundle->GetStringFromName(NS_LITERAL_STRING("noNewMessages").get(), getter_Copies(statusString));
@@ -704,7 +704,7 @@ nsNNTPNewsgroupList::ProcessXOVERLINE(const char *line, PRUint32 *status)
             NS_ENSURE_SUCCESS(rv, rv);
 
             nsCOMPtr<nsIStringBundle> bundle;
-            rv = bundleService->CreateBundle(NEWS_MSGS_URL, nsnull, getter_AddRefs(bundle));
+            rv = bundleService->CreateBundle(NEWS_MSGS_URL, getter_AddRefs(bundle));
             NS_ENSURE_SUCCESS(rv, rv);
 
             const PRUnichar *formatStrings[2] = { numDownloadedStr.GetUnicode(), totalToDownloadStr.GetUnicode() };
@@ -798,7 +798,7 @@ nsNNTPNewsgroupList::FinishXOVERLINE(int status, int *newstatus)
             NS_ENSURE_SUCCESS(rv, rv);
 
             nsCOMPtr<nsIStringBundle> bundle;
-            rv = bundleService->CreateBundle(NEWS_MSGS_URL, nsnull, getter_AddRefs(bundle));
+            rv = bundleService->CreateBundle(NEWS_MSGS_URL, getter_AddRefs(bundle));
             NS_ENSURE_SUCCESS(rv, rv);
 
             const PRUnichar *formatStrings[2] = { firstStr.GetUnicode(), lastStr.GetUnicode() };
