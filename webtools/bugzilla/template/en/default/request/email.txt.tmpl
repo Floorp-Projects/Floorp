@@ -36,11 +36,10 @@
    [% to_identity = flag.setter.identity _ "'s request" %]
    [% subject_status = statuses.${flag.status} %]
 [% END %]
-From: [% Param('mailfrom') %]
+From: bugzilla-request-daemon
 To: [% to_email %]
 CC: [% flag.type.cc_list %]
 Subject: [% flag.type.name %] [%+ subject_status %]: [[% terms.Bug %] [%+ flag.target.bug.id %]] [% flag.target.bug.summary %]
-X-B[%#%]ugzilla-Type: request
 [%- IF flag.target.attachment.exists %] :
   [Attachment [% flag.target.attachment.id %]] [% flag.target.attachment.summary %][% END %]
 

@@ -251,18 +251,6 @@ sub UpdateParams {
         delete $param{'enablequips'};
     }
 
-    # Update e-mail text to use new mailfrom param (Bug 135812)
-    if (!exists $param{'mailfrom'}) {
-        $param{'passwordmail'} =~ s/^From: bugzilla-daemon$/From: %mailfrom%/mi;
-        $param{'passwordmail'} =~ s/\n\n/\nX-Bugzilla-Type: admin\n\n/;
-        $param{'newchangedmail'} =~ s/^From: bugzilla-daemon$/From: %mailfrom%/mi;
-        $param{'newchangedmail'} =~ s/\n\n/\nX-Bugzilla-Type: newchanged\n\n/;
-        $param{'voteremovedmail'} =~ s/^From: bugzilla-daemon$/From: %mailfrom%/mi;
-        $param{'voteremovedmail'} =~ s/\n\n/\nX-Bugzilla-Type: voteremoved\n\n/;
-        $param{'whinemail'} =~ s/^From: %maintainer%$/From: %mailfrom%/mi;
-        $param{'whinemail'} =~ s/\n\n/\nX-Bugzilla-Type: whine\n\n/;
-    }
-
     # --- DEFAULTS FOR NEW PARAMS ---
 
     foreach my $item (@param_list) {

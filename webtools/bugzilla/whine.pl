@@ -99,13 +99,13 @@ if (Param('shutdownhtml')) {
 }
 
 
-# Send whines from the address in the 'mailfrom' Parameter so that all
+# Send whines from the address in the 'maintainer' Parameter so that all
 # Bugzilla-originated mail appears to come from a single address.
-my $fromaddress = Param('mailfrom');
+my $fromaddress = Param('maintainer');
 
 if ($fromaddress !~ Param('emailregexp')) {
     die "Cannot run.  " .
-        "The Bugzilla email address has not been properly set!\n";
+        "The maintainer email address has not been properly set!\n";
 }
 
 # Check the nomail file for users who should not receive mail
