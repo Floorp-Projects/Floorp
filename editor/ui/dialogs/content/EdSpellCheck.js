@@ -192,7 +192,6 @@ function SelectLanguage()
 
 function Close()
 {
-  dump("SpellCheck: Spell Checker is closing...\n");
   // Shutdown the spell check and close the dialog
   spellChecker.CloseSpellChecking();
   window.close();

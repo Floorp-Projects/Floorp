@@ -96,6 +96,9 @@ interface nsIEditorShell : nsISupports
   
   void Init();
   
+  /* Access for the common alert dialog */
+  void AlertWithTitle(in wstring title, in wstring msg);
+  
   /* check a particular window's URL to see if it matches the given URL */
   boolean checkOpenWindowForURLMatch( in wstring inFileURL, in nsIDOMWindow inCheckWindow); 
 

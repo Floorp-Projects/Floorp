@@ -2445,7 +2445,21 @@ nsEditorShell::Confirm(const nsString& aTitle, const nsString& aQuestion)
   return result;
 }
 
-void    
+NS_IMETHODIMP    
+nsEditorShell::AlertWithTitle(const PRUnichar *aTitle, const PRUnichar *aMsg)
+{
+  if (!aTitle || !aMsg)
+    return NS_ERROR_NULL_POINTER;
+
+  nsresult rv = NS_ERROR_FAILURE;
+  NS_WITH_SERVICE(nsICommonDialogs, dialog, kCommonDialogsCID, &rv); 
+  if (NS_SUCCEEDED(rv) && dialog)
+    rv = dialog->Alert(mContentWindow, aTitle, aMsg);
+
+  return rv;
+}
+
+void
 nsEditorShell::Alert(const nsString& aTitle, const nsString& aMsg)
 {
   nsresult rv;
