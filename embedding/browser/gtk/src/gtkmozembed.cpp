@@ -1514,7 +1514,12 @@ gtk_moz_embed_map(GtkWidget *widget)
 
   embed_private = (GtkMozEmbedPrivate *)embed->data;
 
+  // get our hands on the base window
+  nsCOMPtr<nsIBaseWindow> webBrowserBaseWindow =
+    do_QueryInterface(embed_private->mWebBrowser);
+  g_return_if_fail(webBrowserBaseWindow);
   // show it
+  webBrowserBaseWindow->SetVisibility(PR_TRUE);
   embed_private->mListener.Visibility(PR_TRUE);
 
   // show the widget window
