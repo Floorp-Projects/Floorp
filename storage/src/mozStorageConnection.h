@@ -56,7 +56,7 @@ public:
 
     mozStorageConnection();
 
-    NS_IMETHOD mozStorageConnection::Initialize(nsIFile *aDatabaseFile);
+    NS_IMETHOD Initialize(nsIFile *aDatabaseFile);
 
     // interfaces
     NS_DECL_ISUPPORTS
