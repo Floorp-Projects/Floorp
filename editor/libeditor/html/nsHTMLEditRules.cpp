@@ -78,6 +78,9 @@ nsHTMLEditRules::WillDoAction(nsIDOMSelection *aSelection,
 {
   if (!aInfo || !aCancel || !aHandled) 
     return NS_ERROR_NULL_POINTER;
+#if defined(DEBUG_ftang)
+  printf("nsHTMLEditRules::WillDoAction action = %d\n", aInfo->action);
+#endif
 
   *aCancel = PR_FALSE;
   *aHandled = PR_FALSE;
@@ -271,6 +274,13 @@ nsHTMLEditRules::WillInsertText(nsIDOMSelection *aSelection,
   
   nsString theString(*inString);  // copy instring for now
   PRInt32 pos = theString.FindCharInSet(specialChars);
+  if(0 == theString.Length()) { 
+	 // special case for IME. We need this to remove the last 
+	 // unconverted text.
+	 PRBool bCancel;
+     nsString partialString;
+     res = DoTextInsertion(aSelection, &bCancel, &partialString, typeInState);
+  }
   while (theString.Length())
   {
     PRBool bCancel;
