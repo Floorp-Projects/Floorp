@@ -730,15 +730,14 @@ static PRBool ParseDocTypeDecl(const nsString &aBuffer,
     if (theIndex == kNotFound) break;
     PRUnichar nextChar = aBuffer.CharAt(theIndex+1);
     if (nextChar == PRUnichar('!')) {
-      PRInt32 tmpIndex = theIndex;
+      PRInt32 tmpIndex = theIndex + 2;
       if (kNotFound !=
-          (theIndex=aBuffer.Find("DOCTYPE", PR_TRUE, theIndex+2, 1))) {
+          (theIndex=aBuffer.Find("DOCTYPE", PR_TRUE, tmpIndex, 1))) {
         haveDoctype = PR_TRUE;
         theIndex += 7; // skip "DOCTYPE"
         break;
       }
-      theIndex = ParsePS(aBuffer,tmpIndex);
-      // -1, not 0, in case it's another markup declaration
+      theIndex = ParsePS(aBuffer, tmpIndex);
       theIndex = aBuffer.FindChar('>', theIndex);
     } else if (nextChar == PRUnichar('?')) {
       theIndex = aBuffer.FindChar('>', theIndex);
