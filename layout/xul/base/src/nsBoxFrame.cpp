@@ -404,35 +404,6 @@ nsBoxFrame::Reflow(nsIPresContext&   aPresContext,
                      nsReflowStatus&          aStatus)
 {
 
-#if DEBUG_REFLOW
-  if (NS_BLOCK_DOCUMENT_ROOT & mInner->mFlags) 
-    printf("---------------- Begin Reflow ---------------\n");
-#endif
-
-  /*
-  // see if we are debug
-    mInner->mIsDebug = PR_FALSE;
-    nsString value;
-
-    nsCOMPtr<nsIContent> content;
-    mInner->GetContentOf(this, getter_AddRefs(content));
-
-    if (NS_CONTENT_ATTR_HAS_VALUE == content->GetAttribute(kNameSpaceID_None, nsXULAtoms::debug, value))
-    {
-      mInner->mIsDebug = PR_TRUE;
-    } else {
-      // if our parent is debug we are too
-      nsIFrame* parent = nsnull;
-      GetParent(&parent);
-      if (parent) {
-        nsIBox* ibox;
-        if (NS_SUCCEEDED(parent->QueryInterface(nsIBox::GetIID(), (void**)&ibox)) && ibox) {
-           ibox->IsDebug(mInner->mIsDebug); 
-        }
-      }
-    } 
-    */
-
   // If we have a space manager, then set it in the reflow state
   if (mInner->mSpaceManager) {
     // Modify the reflow state and set the space manager
@@ -561,33 +532,6 @@ printf("\n");
   damageArea.height = aDesiredSize.height;
   damageArea.width = aDesiredSize.width;
 
-  /*
-   if ((NS_BLOCK_DOCUMENT_ROOT & mInner->mFlags)) {
-     printf("----- Reflow --------\n");
-     char* type;
-     switch(aReflowState.reason) {
-     case eReflowReason_Incremental:
-        type = "incremental";
-        break;
-     case eReflowReason_Initial:
-        type = "initial";
-        break;
-     case eReflowReason_Resize:
-        type = "resize";
-        break;
-     case eReflowReason_StyleChange:
-        type = "style change";
-        break;
-     default:
-        type = "unknown";
-        break;
-     }
-
-     printf("type=%s\n", type);
-     printf("calculated: width=%d, height=%d\n", aReflowState.mComputedWidth, aReflowState.mComputedHeight);
-     printf("desired: width=%d, height=%d\n", aDesiredSize.width, aDesiredSize.height);
-   }
-   */
 #if 0
 ListTag(stdout); printf(": reflow done\n");
 #endif
