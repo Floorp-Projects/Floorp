@@ -387,7 +387,8 @@ endif
 #
 
 ifdef MOZ_MAPINFO
-$(error MOZ_MAPINFO is obsolete, use MOZ_CO_MODULE=mozilla/tools/codesighs instead.)
+$(warning MOZ_MAPINFO is obsolete, use MOZ_CO_MODULE=mozilla/tools/codesighs instead.)
+MOZ_CO_MODULE += mozilla/tools/codesighs
 endif
 ifdef MOZ_INTERNAL_LIBART_LGPL
 $(error MOZ_INTERNAL_LIBART_LGPL is obsolete, use MOZ_CO_MODULE=mozilla/other-licenses/libart_lgpl instead.)
