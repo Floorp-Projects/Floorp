@@ -1732,10 +1732,11 @@ nsEditorShell::SaveDocument(PRBool saveAs, PRBool saveCopy, PRBool *_retval)
               PRUnichar *titleUnicode;
               nsAutoString captionStr, msgStr1, msgStr2;
               
-              GetBundleString(NS_ConvertASCIItoUCS2("DocumentTitle"), captionStr);
-              GetBundleString(NS_ConvertASCIItoUCS2("NeedDocTitle"), msgStr1); 
-              GetBundleString(NS_ConvertASCIItoUCS2("DocTitleHelp"), msgStr2);
-              msgStr1 += NS_ConvertASCIItoUCS2("\n") + msgStr2;
+              GetBundleString(NS_LITERAL_STRING("DocumentTitle"), captionStr);
+              GetBundleString(NS_LITERAL_STRING("NeedDocTitle"), msgStr1); 
+              GetBundleString(NS_LITERAL_STRING("DocTitleHelp"), msgStr2);
+              msgStr1 += PRUnichar('\n');
+              msgStr1 += msgStr2;
               
               PRBool retVal = PR_FALSE;
               if(!mContentWindow)
@@ -1768,7 +1769,7 @@ nsEditorShell::SaveDocument(PRBool saveAs, PRBool saveCopy, PRBool *_retval)
           if (NS_SUCCEEDED(res) && fileWidget)
           {
             nsAutoString  promptString;
-            GetBundleString(NS_ConvertASCIItoUCS2("SaveDocumentAs"), promptString);
+            GetBundleString(NS_LITERAL_STRING("SaveDocumentAs"), promptString);
 
             nsString* titles = nsnull;
             nsString* filters = nsnull;
@@ -1792,12 +1793,12 @@ nsEditorShell::SaveDocument(PRBool saveAs, PRBool saveCopy, PRBool *_retval)
             nextTitle = titles;
             nextFilter = filters;
             // The names of the file types are localizable
-            GetBundleString(NS_ConvertASCIItoUCS2("HTMLFiles"), HTMLFiles);
-            GetBundleString(NS_ConvertASCIItoUCS2("TextFiles"), TextFiles);
+            GetBundleString(NS_LITERAL_STRING("HTMLFiles"), HTMLFiles);
+            GetBundleString(NS_LITERAL_STRING("TextFiles"), TextFiles);
             if (! (HTMLFiles.Length() == 0 || TextFiles.Length() == 0))
             {
               nsAutoString allFilesStr;
-              GetBundleString(NS_ConvertASCIItoUCS2("AllFiles"), allFilesStr);
+              GetBundleString(NS_LITERAL_STRING("AllFiles"), allFilesStr);
               
             *nextTitle++ = HTMLFiles;
             (*nextFilter++).AssignWithConversion("*.htm; *.html; *.shtml");
@@ -1940,8 +1941,8 @@ nsEditorShell::SaveDocument(PRBool saveAs, PRBool saveCopy, PRBool *_retval)
         if (NS_FAILED(res))
         {
           nsAutoString saveDocStr, failedStr;
-          GetBundleString(NS_ConvertASCIItoUCS2("SaveDocument"), saveDocStr);
-          GetBundleString(NS_ConvertASCIItoUCS2("SaveFileFailed"), failedStr);
+          GetBundleString(NS_LITERAL_STRING("SaveDocument"), saveDocStr);
+          GetBundleString(NS_LITERAL_STRING("SaveFileFailed"), failedStr);
           Alert(saveDocStr, failedStr);
         } else {
           // File was saved successfully
@@ -2003,7 +2004,7 @@ nsEditorShell::GetLocalFileURL(nsIDOMWindowInternal *parent, const PRUnichar *fi
 
   nsCOMPtr<nsIFileWidget>  fileWidget;
   nsAutoString HTMLTitle;
-  GetBundleString(NS_ConvertASCIItoUCS2("OpenHTMLFile"), HTMLTitle);
+  GetBundleString(NS_LITERAL_STRING("OpenHTMLFile"), HTMLTitle);
 
   // An empty string should just result in "Open" for the dialog
   nsAutoString title;
@@ -2012,7 +2013,7 @@ nsEditorShell::GetLocalFileURL(nsIDOMWindowInternal *parent, const PRUnichar *fi
     title = HTMLTitle;
   } else {
     nsAutoString ImageTitle;
-    GetBundleString(NS_ConvertASCIItoUCS2("SelectImageFile"), ImageTitle);
+    GetBundleString(NS_LITERAL_STRING("SelectImageFile"), ImageTitle);
 
     if (ImageTitle.Length() > 0 && imgFilter)
       title = ImageTitle;
@@ -2045,9 +2046,9 @@ nsEditorShell::GetLocalFileURL(nsIDOMWindowInternal *parent, const PRUnichar *fi
 
       nextTitle = titles;
       nextFilter = filters;
-      GetBundleString(NS_ConvertASCIItoUCS2("HTMLFiles"), tempStr);
+      GetBundleString(NS_LITERAL_STRING("HTMLFiles"), tempStr);
       *nextTitle++ = tempStr;
-      GetBundleString(NS_ConvertASCIItoUCS2("TextFiles"), tempStr);
+      GetBundleString(NS_LITERAL_STRING("TextFiles"), tempStr);
       *nextTitle++ = tempStr;
       (*nextFilter++).AssignWithConversion("*.htm; *.html; *.shtml");
       (*nextFilter++).AssignWithConversion("*.txt");
@@ -2059,12 +2060,12 @@ nsEditorShell::GetLocalFileURL(nsIDOMWindowInternal *parent, const PRUnichar *fi
         return NS_ERROR_OUT_OF_MEMORY;
       nextTitle = titles;
       nextFilter = filters;
-      GetBundleString(NS_ConvertASCIItoUCS2("IMGFiles"), tempStr);
+      GetBundleString(NS_LITERAL_STRING("IMGFiles"), tempStr);
       *nextTitle++ = tempStr;
       (*nextFilter++).AssignWithConversion("*.gif; *.jpg; *.jpeg; *.png; *.*");
       fileWidget->SetFilterList(2, titles, filters);
     }
-    GetBundleString(NS_ConvertASCIItoUCS2("AllFiles"), tempStr);
+    GetBundleString(NS_LITERAL_STRING("AllFiles"), tempStr);
     *nextTitle++ = tempStr;
     (*nextFilter++).AssignWithConversion("*.*");
     // First param should be Parent window, but type is nsIWidget*
@@ -2108,7 +2109,7 @@ nsEditorShell::UpdateWindowTitle()
   res = GetDocumentTitleString(windowCaption);
   // If title is empty, use "untitled"
   if (windowCaption.Length() == 0)
-    GetBundleString(NS_ConvertASCIItoUCS2("untitled"), windowCaption);
+    GetBundleString(NS_LITERAL_STRING("untitled"), windowCaption);
 
   // Append just the 'leaf' filename to the Doc. Title for the window caption
   if (NS_SUCCEEDED(res))
@@ -2951,44 +2952,28 @@ nsEditorShell::FindNext()
 /* Get localized strings for UI from the Editor's string bundle */
 // Use this version from JavaScript:
 NS_IMETHODIMP
-nsEditorShell::GetString(const PRUnichar *name, PRUnichar **_retval)
+nsEditorShell::GetString(const PRUnichar *stringName, PRUnichar **_retval)
 {
-  if (!name || !_retval)
+  if (!stringName || !_retval)
     return NS_ERROR_NULL_POINTER;
 
-  // Don't fail, just return an empty string    
-  nsAutoString empty;
-
-  if (mStringBundle)
-  {
-    if (NS_FAILED(mStringBundle->GetStringFromName(name, _retval)))
-      *_retval = empty.ToNewUnicode();
-
-    return NS_OK;
-  } else {
-    *_retval = empty.ToNewUnicode();
-    return NS_ERROR_NOT_INITIALIZED;
-  }
+  *_retval = NULL;
+  
+  NS_ASSERTION(mStringBundle, "No string bundle!");
+  if (!mStringBundle) return NS_ERROR_NOT_INITIALIZED;
+  
+  return mStringBundle->GetStringFromName(stringName, _retval);
 }
 
 
 // Use this version within the shell:
-void nsEditorShell::GetBundleString(const nsString& name, nsString &outString)
+void nsEditorShell::GetBundleString(const PRUnichar *stringName, nsString &outString)
 {
-  if (mStringBundle && name.Length() > 0)
-  {
-    PRUnichar *ptrv = nsnull;
-    if (NS_SUCCEEDED(mStringBundle->GetStringFromName(name.GetUnicode(), &ptrv)))
-      outString = ptrv;
-    else
-      outString.SetLength(0);
-    
-    nsMemory::Free(ptrv);
-  }
-  else
-  {
-    outString.SetLength(0);
-  }
+  outString.Truncate();
+  
+  nsXPIDLString   tempString;
+  if (NS_SUCCEEDED(GetString(stringName, getter_Copies(tempString))) && tempString)
+    outString = tempString.get();
 }
 
 // Utilities to bring up a Yes/No/Cancel dialog.
@@ -3035,7 +3020,7 @@ nsEditorShell::ConfirmWithCancel(const nsString& aTitle, const nsString& aQuesti
       yesStr.Assign(*aYesString);
     else
       // We always want a "Yes" string, so supply the default
-      GetBundleString(NS_ConvertASCIItoUCS2("Yes"), yesStr);
+      GetBundleString(NS_LITERAL_STRING("Yes"), yesStr);
 
     if (aNoString && aNoString->Length() > 0)
     {
@@ -3050,7 +3035,7 @@ nsEditorShell::ConfirmWithCancel(const nsString& aTitle, const nsString& aQuesti
     block->SetInt( nsICommonDialogs::eNumberButtons, numberOfButtons ); 
 
     nsAutoString cancelStr;
-    GetBundleString(NS_ConvertASCIItoUCS2("Cancel"), cancelStr);
+    GetBundleString(NS_LITERAL_STRING("Cancel"), cancelStr);
 
     block->SetString( nsICommonDialogs::eDialogTitle, aTitle.GetUnicode() );
     //Note: "button0" is always Ok or Yes action, "button1" is Cancel
@@ -5161,7 +5146,7 @@ nsEditorShell::OnEndDocumentLoad(nsIDocumentLoader* aLoader, nsIChannel* aChanne
   if (mCloseWindowWhenLoaded && isRootDoc)
   {
     nsAutoString alertLabel, alertMessage;
-    GetBundleString(NS_ConvertASCIItoUCS2("Alert"), alertLabel);
+    GetBundleString(NS_LITERAL_STRING("Alert"), alertLabel);
     
     nsAutoString  stringID;
     switch (mCantEditReason)
@@ -5180,7 +5165,7 @@ nsEditorShell::OnEndDocumentLoad(nsIDocumentLoader* aLoader, nsIChannel* aChanne
         break;
     }
     
-    GetBundleString(stringID, alertMessage);
+    GetBundleString(stringID.GetUnicode(), alertMessage);
     Alert(alertLabel, alertMessage);
 
     nsCOMPtr<nsIBaseWindow> baseWindow;
@@ -5203,7 +5188,7 @@ nsEditorShell::OnEndDocumentLoad(nsIDocumentLoader* aLoader, nsIChannel* aChanne
   }
 
   nsAutoString doneText;
-  GetBundleString(NS_ConvertASCIItoUCS2("LoadingDone"), doneText);
+  GetBundleString(NS_LITERAL_STRING("LoadingDone"), doneText);
   SetChromeAttribute(mDocShell, "statusText", "value", doneText);
 
   return res;

@@ -141,11 +141,9 @@ class nsEditorShell :   public nsIEditorShell,
     EConfirmResult  ConfirmWithCancel(const nsString& aTitle, const nsString& aQuestion,
                                      const nsString *aYesString, const nsString *aNoString);
 
-    // this returns an AddReffed nsIScriptContext. You must relase it.
-    nsIScriptContext*  GetScriptContext(nsIDOMWindowInternal * aWin);
-
-    // Get a string from the string bundle file
-    void            GetBundleString(const nsString& name, nsString &outString);
+    // Get a string from the string bundle file. If the string is not found
+    // this returns an empty string.
+    void            GetBundleString(const PRUnichar *stringName, nsString &outString);
     
     // Get the text of the <title> tag
     nsresult        GetDocumentTitleString(nsString& title);
