@@ -117,9 +117,9 @@ fprintf(stderr, "Scrollbar 0x%x  this 0x%x\n", mWidget, this);
 void nsScrollbar::Create(nsNativeWindow aParent,
                       const nsRect &aRect,
                       EVENT_CALLBACK aHandleEventFunction,
-                      nsIDeviceContext *aContext = nsnull,
-                      nsIToolkit *aToolkit = nsnull,
-                      nsWidgetInitData *aInitData = nsnull)
+                      nsIDeviceContext *aContext,
+                      nsIToolkit *aToolkit,
+                      nsWidgetInitData *aInitData)
 {
 }
 
