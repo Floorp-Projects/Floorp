@@ -281,6 +281,8 @@ NS_GetSpecialDirectory(const char* specialDirName, nsIFile* *result)
     if (NS_FAILED(rv)) return rv;
 
     *result = (nsIFile*)dir.get();
+    if (*result)
+        NS_ADDREF(*result);
     return NS_OK;
 }
 
