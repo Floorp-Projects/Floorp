@@ -132,6 +132,15 @@ PrintPreviewContext::GetPageDim(nsRect* aActualRect, nsRect* aAdjRect)
         break;
 
     } // switch 
+    PRInt32 orientation = nsIPrintOptions::kPortraitOrientation;
+    printService->GetOrientation(&orientation);
+    if (orientation == nsIPrintOptions::kLandscapeOrientation) {
+      // swap
+      nscoord temp;
+      temp = aActualRect->width;
+      aActualRect->width = aActualRect->height;
+      aActualRect->height = temp;
+    }
   }
 
 #ifdef NS_DEBUG

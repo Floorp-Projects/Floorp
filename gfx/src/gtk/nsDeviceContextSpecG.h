@@ -104,6 +104,8 @@ public:
 
   NS_IMETHOD GetPageDimensions (float &aWidth, float &aHeight );
 
+  NS_IMETHOD GetLandscape (PRBool &aLandscape);
+
   NS_IMETHOD GetUserCancelled( PRBool &aCancel );      
 
   NS_IMETHOD GetPrintMethod(PrintMethod &aMethod ); 

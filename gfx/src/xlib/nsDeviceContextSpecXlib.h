@@ -71,6 +71,7 @@ public:
   NS_IMETHOD GetCommand(char **aCommand);   
   NS_IMETHOD GetPath (char **aPath);    
   NS_IMETHOD GetPageDimensions(float &aWidth, float &aHeight);
+  NS_IMETHOD GetLandscape (PRBool &aLandscape);
   NS_IMETHOD GetUserCancelled(PRBool &aCancel);      
   NS_IMETHOD GetPrintMethod(PrintMethod &aMethod); 
   virtual ~nsDeviceContextSpecXlib();

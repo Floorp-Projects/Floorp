@@ -116,6 +116,14 @@ public:
    NS_IMETHOD GetPageDimensions ( float &aWidth, float &aHeight ) = 0;   
 
   /*
+   * If PR_TRUE, user chose Landscape
+   * @update 
+   * @param aLandscape
+   * @return 
+   **/
+   NS_IMETHOD GetLandscape ( PRBool &aLandscape ) = 0;   
+
+  /*
    * If toPrinter = PR_FALSE, dest file 
    * @update 
    * @param aPath --
