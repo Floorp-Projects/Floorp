@@ -45,7 +45,7 @@
 
 #include "nsNativeDragTarget.h"
 
-//~~~ for windowless plugin support
+//~~~ windowless plugin support
 #include "nsplugindefs.h"
 
 // For clipboard support
@@ -3011,6 +3011,52 @@ PRBool nsWindow::DispatchMouseEvent(PRUint32 aEventType, nsPoint* aPoint)
   event.clickCount = (aEventType == NS_MOUSE_LEFT_DOUBLECLICK ||
                       aEventType == NS_MOUSE_LEFT_DOUBLECLICK)? 2:1;
   event.eventStructType = NS_MOUSE_EVENT;
+
+
+  nsPluginEvent pluginEvent;
+
+  switch (aEventType)//~~~
+  {
+    case NS_MOUSE_LEFT_BUTTON_DOWN:
+      pluginEvent.event = WM_LBUTTONDOWN;
+      break;
+    case NS_MOUSE_LEFT_BUTTON_UP:
+      pluginEvent.event = WM_LBUTTONUP;
+      break;
+    case NS_MOUSE_LEFT_DOUBLECLICK:
+      pluginEvent.event = WM_LBUTTONDBLCLK;
+      break;
+    case NS_MOUSE_RIGHT_BUTTON_DOWN:
+      pluginEvent.event = WM_RBUTTONDOWN;
+      break;
+    case NS_MOUSE_RIGHT_BUTTON_UP:
+      pluginEvent.event = WM_RBUTTONUP;
+      break;
+    case NS_MOUSE_RIGHT_DOUBLECLICK:
+      pluginEvent.event = WM_RBUTTONDBLCLK;
+      break;
+    case NS_MOUSE_MIDDLE_BUTTON_DOWN:
+      pluginEvent.event = WM_MBUTTONDOWN;
+      break;
+    case NS_MOUSE_MIDDLE_BUTTON_UP:
+      pluginEvent.event = WM_MBUTTONUP;
+      break;
+    case NS_MOUSE_MIDDLE_DOUBLECLICK:
+      pluginEvent.event = WM_MBUTTONDBLCLK;
+      break;
+    case NS_MOUSE_MOVE:
+      pluginEvent.event = WM_MOUSEMOVE;
+      break;
+    default:
+      break;
+  }
+
+  pluginEvent.wParam = 0;
+  pluginEvent.wParam |= (event.isShift) ? MK_SHIFT : 0;
+  pluginEvent.wParam |= (event.isControl) ? MK_CONTROL : 0;
+  pluginEvent.lParam = MAKELONG(event.point.x, event.point.y);
+
+  event.nativeMsg = (void *)&pluginEvent;
 
   // call the event callback 
   if (nsnull != mEventCallback) {
