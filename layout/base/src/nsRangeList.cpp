@@ -784,7 +784,7 @@ nsRangeList::HandleKeyEvent(nsGUIEvent *aGuiEvent)
               weakNodeUsed = mDomSelections[SELECTION_NORMAL]->FetchAnchorNode();
             }
             result = mDomSelections[SELECTION_NORMAL]->Collapse(weakNodeUsed,offsetused);
-
+            return NS_OK;
            } break;
         case nsIDOMUIEvent::DOM_VK_RIGHT : 
         case nsIDOMUIEvent::DOM_VK_DOWN  : {
@@ -797,12 +797,12 @@ nsRangeList::HandleKeyEvent(nsGUIEvent *aGuiEvent)
               weakNodeUsed = mDomSelections[SELECTION_NORMAL]->FetchFocusNode();
             }
             result = mDomSelections[SELECTION_NORMAL]->Collapse(weakNodeUsed,offsetused);
+            return NS_OK;
            } break;
         
       }
-      if (keyEvent->keyCode == nsIDOMUIEvent::DOM_VK_UP || keyEvent->keyCode == nsIDOMUIEvent::DOM_VK_DOWN)
-        SetDesiredX(desiredX);
-      return NS_OK;
+//      if (keyEvent->keyCode == nsIDOMUIEvent::DOM_VK_UP || keyEvent->keyCode == nsIDOMUIEvent::DOM_VK_DOWN)
+//        SetDesiredX(desiredX);
     }
 
     offsetused = mDomSelections[SELECTION_NORMAL]->FetchFocusOffset();
@@ -816,7 +816,6 @@ nsRangeList::HandleKeyEvent(nsGUIEvent *aGuiEvent)
     pos.SetData(mTracker, desiredX, amount, eDirPrevious, offsetused, PR_FALSE,PR_TRUE);
     switch (keyEvent->keyCode){
       case nsIDOMUIEvent::DOM_VK_RIGHT : 
-          InvalidateDesiredX();
           pos.mDirection = eDirNext;
           mHint = HINTLEFT;//stick to this line
         break;
