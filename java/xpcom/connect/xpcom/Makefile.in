@@ -57,8 +57,8 @@ EXPORTS = \
 	  ../public/bcIThread.h
 
 	  
-CXXFLAGS        += -I../public -I../src
-ifeq ($(CCC),CC)
+CXXFLAGS        += -I../public -I../src 
+ifeq ($(notdir $(CCC)),CC)
   CXXFLAGS += -library=iostream
 endif
 
