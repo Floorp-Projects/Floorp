@@ -2369,7 +2369,9 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
     static UINT vkKeyCached = 0;                // caches VK code fon WM_KEYDOWN
     static BOOL firstTime = TRUE;                // for mouse wheel logic
     static int  iDeltaPerLine, iAccumDelta ;     // for mouse wheel logic
+#ifdef LOSER
     ULONG       ulScrollLines ;                  // for mouse wheel logic
+#endif
 
     PRBool        result = PR_FALSE; // call the default nsWindow proc
     nsPaletteInfo palInfo;
@@ -2868,7 +2870,6 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
 			break;
 		}
 		case WM_IME_STARTCOMPOSITION: {
-			COMPOSITIONFORM compForm;
 			HIMC hIMEContext;
 
 			mIMEIsComposing = PR_TRUE;
@@ -2890,7 +2891,6 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
 			break;
 
 		case WM_IME_COMPOSITION: {
-			//COMPOSITIONFORM compForm;
 			HIMC hIMEContext;
 
 			result = PR_FALSE;					// will change this if an IME message we handle
@@ -3668,9 +3668,11 @@ DWORD nsWindow::GetBorderStyle(nsBorderStyle aBorderStyle)
 
 NS_METHOD nsWindow::SetTitle(const nsString& aTitle) 
 {
-  NS_ALLOC_STR_BUF(buf, aTitle, 256);
-  ::SendMessage(mWnd, WM_SETTEXT, (WPARAM)0, (LPARAM)(LPCTSTR)buf);
-  NS_FREE_STR_BUF(buf);
+  char* title = GetACPString(aTitle);
+  if (title) {
+    ::SendMessage(mWnd, WM_SETTEXT, (WPARAM)0, (LPARAM)(LPCTSTR)title);
+    delete [] title;
+  }
   return NS_OK;
 } 
 
@@ -3832,7 +3834,9 @@ nsWindow::HandleEndComposition(void)
 void 
 nsWindow::MapDBCSAtrributeArrayToUnicodeOffsets(PRUint32* textRangeListLengthResult,nsTextRangeArray* textRangeListResult)
 {
-	PRUint32	i,rangePointer;
+	PRUint32	rangePointer;
+	PRInt32		ictr;
+	PRUint32	uctr;
 	size_t		lastUnicodeOffset, substringLength, lastMBCSOffset;
 	
 	//
@@ -3856,8 +3860,8 @@ nsWindow::MapDBCSAtrributeArrayToUnicodeOffsets(PRUint32* textRangeListLengthRes
 	} else {
 		
 		*textRangeListLengthResult = 1;
-		for(i=0;i<mIMECompClauseStringLength;i++) {
-			if (mIMECompClauseString[i]!=0x00) 
+		for(ictr=0;ictr<mIMECompClauseStringLength;ictr++) {
+			if (mIMECompClauseString[ictr]!=0x00) 
 				(*textRangeListLengthResult)++;
 		}
 
@@ -3882,49 +3886,49 @@ nsWindow::MapDBCSAtrributeArrayToUnicodeOffsets(PRUint32* textRangeListLengthRes
 		lastUnicodeOffset = 0;
 		lastMBCSOffset = 0;
 		rangePointer = 1;
-		for(i=0;i<mIMECompClauseStringLength;i++) {
-			if (mIMECompClauseString[i]!=0) {
+		for(ictr=0;ictr<mIMECompClauseStringLength;ictr++) {
+			if (mIMECompClauseString[ictr]!=0) {
 				(*textRangeListResult)[rangePointer].mStartOffset = lastUnicodeOffset;
 				substringLength = ::MultiByteToWideChar(mCurrentKeyboardCP,MB_PRECOMPOSED,mIMECompositionString+lastMBCSOffset,
-										mIMECompClauseString[i]-lastMBCSOffset,NULL,0);
+										mIMECompClauseString[ictr]-lastMBCSOffset,NULL,0);
 				(*textRangeListResult)[rangePointer].mEndOffset = lastUnicodeOffset + substringLength;
-				(*textRangeListResult)[rangePointer].mRangeType = mIMEAttributeString[mIMECompClauseString[i]-1];
+				(*textRangeListResult)[rangePointer].mRangeType = mIMEAttributeString[mIMECompClauseString[ictr]-1];
 				lastUnicodeOffset+= substringLength;
-				lastMBCSOffset = mIMECompClauseString[i];
+				lastMBCSOffset = mIMECompClauseString[ictr];
 				rangePointer++;
 			}
 		}
 	}
 
 #ifdef DEBUG_tague
-	printf("rangeCount =%d\n",*textRangeListLengthResult);
-	for(i=0;i<*textRangeListLengthResult;i++) {
-		printf("range %d: rangeStart=%d\trangeEnd=%d ",i,(*textRangeListResult)[i].mStartOffset,
-			(*textRangeListResult)[i].mEndOffset);
-		if ((*textRangeListResult)[i].mRangeType==ATTR_INPUT) printf("ATTR_INPUT\n");
-		if ((*textRangeListResult)[i].mRangeType==ATTR_TARGET_CONVERTED) printf("ATTR_TARGET_CONVERTED\n");
-		if ((*textRangeListResult)[i].mRangeType==ATTR_CONVERTED) printf("ATTR_CONVERTED\n");
-		if ((*textRangeListResult)[i].mRangeType==ATTR_TARGET_NOTCONVERTED) printf("ATTR_TARGET_NOTCONVERTED\n");
-		if ((*textRangeListResult)[i].mRangeType==ATTR_INPUT_ERROR) printf("ATTR_INPUT_ERROR\n");
-		if ((*textRangeListResult)[i].mRangeType==ATTR_FIXEDCONVERTED) printf("ATTR_FIXEDCONVERTED\n");
+	printf("rangeCount =%lu\n",*textRangeListLengthResult);
+	for(uctr=0;uctr<*textRangeListLengthResult;uctr++) {
+		printf("range %ld: rangeStart=%lu\trangeEnd=%lu ",uctr,(*textRangeListResult)[uctr].mStartOffset,
+			(*textRangeListResult)[uctr].mEndOffset);
+		if ((*textRangeListResult)[uctr].mRangeType==ATTR_INPUT) printf("ATTR_INPUT\n");
+		if ((*textRangeListResult)[uctr].mRangeType==ATTR_TARGET_CONVERTED) printf("ATTR_TARGET_CONVERTED\n");
+		if ((*textRangeListResult)[uctr].mRangeType==ATTR_CONVERTED) printf("ATTR_CONVERTED\n");
+		if ((*textRangeListResult)[uctr].mRangeType==ATTR_TARGET_NOTCONVERTED) printf("ATTR_TARGET_NOTCONVERTED\n");
+		if ((*textRangeListResult)[uctr].mRangeType==ATTR_INPUT_ERROR) printf("ATTR_INPUT_ERROR\n");
+		if ((*textRangeListResult)[uctr].mRangeType==ATTR_FIXEDCONVERTED) printf("ATTR_FIXEDCONVERTED\n");
 	}
 #endif
 
 	//
 	// convert from windows attributes into nsGUI/DOM attributes
 	//
-	for(i=0;i<*textRangeListLengthResult;i++) {
-		if ((*textRangeListResult)[i].mRangeType==ATTR_INPUT)
-			(*textRangeListResult)[i].mRangeType=NS_TEXTRANGE_RAWINPUT;
+	for(uctr=0;uctr<*textRangeListLengthResult;uctr++) {
+		if ((*textRangeListResult)[uctr].mRangeType==ATTR_INPUT)
+			(*textRangeListResult)[uctr].mRangeType=NS_TEXTRANGE_RAWINPUT;
 		else 
-			if ((*textRangeListResult)[i].mRangeType==ATTR_TARGET_CONVERTED)
-				(*textRangeListResult)[i].mRangeType=NS_TEXTRANGE_SELECTEDCONVERTEDTEXT;
+			if ((*textRangeListResult)[uctr].mRangeType==ATTR_TARGET_CONVERTED)
+				(*textRangeListResult)[uctr].mRangeType=NS_TEXTRANGE_SELECTEDCONVERTEDTEXT;
 		else
-			if ((*textRangeListResult)[i].mRangeType==ATTR_CONVERTED)
-				(*textRangeListResult)[i].mRangeType=NS_TEXTRANGE_CONVERTEDTEXT;
+			if ((*textRangeListResult)[uctr].mRangeType==ATTR_CONVERTED)
+				(*textRangeListResult)[uctr].mRangeType=NS_TEXTRANGE_CONVERTEDTEXT;
 		else
-			if ((*textRangeListResult)[i].mRangeType==ATTR_TARGET_NOTCONVERTED)
-				(*textRangeListResult)[i].mRangeType=NS_TEXTRANGE_RAWINPUT;
+			if ((*textRangeListResult)[uctr].mRangeType==ATTR_TARGET_NOTCONVERTED)
+				(*textRangeListResult)[uctr].mRangeType=NS_TEXTRANGE_RAWINPUT;
 	}
 
 }
