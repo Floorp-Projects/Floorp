@@ -42,6 +42,8 @@ CPPSRCS		= \
 		nsRegionPh.cpp \
 		nsGraphicsStatePh.cpp \
 		nsRenderingContextPh.cpp \
+		nsScreenPh.cpp \
+		nsScreenManagerPh.cpp \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk

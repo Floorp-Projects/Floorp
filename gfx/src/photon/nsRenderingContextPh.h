@@ -23,7 +23,7 @@
 #ifndef nsRenderingContextPh_h___
 #define nsRenderingContextPh_h___
 
-#include "nsIRenderingContext.h"
+#include "nsRenderingContextImpl.h"
 #include "nsUnitConversion.h"
 #include "nsFont.h"
 #include "nsIFontMetrics.h"
@@ -41,7 +41,7 @@
 #include "nsDrawingSurfacePh.h"
 #include "nsRegionPh.h"
 
-class nsRenderingContextPh : public nsIRenderingContext
+class nsRenderingContextPh : public nsRenderingContextImpl
 {
 public:
   nsRenderingContextPh();
