@@ -462,17 +462,12 @@ nsLineLayout::UpdateFrames()
   NS_ASSERTION(nsnull != mRootSpan, "UpdateFrames with no active spans");
 
   PerSpanData* psd = mRootSpan;
-  if (NS_STYLE_DIRECTION_LTR == psd->mDirection) {
-    if (PLACED_LEFT & mPlacedFloats) {
-      PerFrameData* pfd = psd->mFirstFrame;
-      while (nsnull != pfd) {
-        pfd->mBounds.x = psd->mX;
-        pfd = pfd->mNext;
-      }
+  if (PLACED_LEFT & mPlacedFloats) {
+    PerFrameData* pfd = psd->mFirstFrame;
+    while (nsnull != pfd) {
+      pfd->mBounds.x = psd->mX;
+      pfd = pfd->mNext;
     }
-  }
-  else if (PLACED_RIGHT & mPlacedFloats) {
-    // XXX handle DIR=right-to-left
   }
 }
 
