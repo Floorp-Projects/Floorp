@@ -172,7 +172,7 @@ protected:
                             const nsPoint& aPoint,
                             nsPoint& aResult);
 
-  PRBool GetAnchorHREFAndTarget(nsString& aHref, nsString& aTarget);
+  PRBool GetAnchorHREFAndTarget(nsIURI** aHref, nsString& aTarget);
 
   void MeasureString(const PRUnichar*     aString,
                      PRInt32              aLength,
