@@ -78,7 +78,7 @@ calItemBase.prototype = {
 
         m.mAttendees = [];
         for (var i = 0; i < this.mAttendees.length; i++)
-            mAttendees[i] = this.mAttendees[i].clone();
+            m.mAttendees[i] = this.mAttendees[i].clone();
 
 
         m.mAttachments = this.mAttachments;
