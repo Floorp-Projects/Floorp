@@ -394,11 +394,17 @@ static nsresult platformUnregister(NSQuickRegisterData regd, const char *aLibrar
 	
 	RKEY key;
 	NR_RegAddKey(hreg, classesKey, "CLSID", &key);
+	RKEY cidKey;
+	NR_RegAddKey(hreg, key, (char *)regd->CIDString, &cidKey);
+	char progID[MAXREGNAMELEN];
+	uint32 plen = sizeof(progID);
+	if (NR_RegGetEntryString(hreg, cidKey, "ProgID", progID, plen) == REGERR_OK)
+	{
+		NR_RegDeleteKey(hreg, classesKey, progID);
+	}
+
 	NR_RegDeleteKey(hreg, key, (char *)regd->CIDString);
 	
-	if (regd->progID)
-		NR_RegDeleteKey(hreg, classesKey, (char *)regd->progID);
-
 	RKEY xpcomKey;
 	if (NR_RegAddKey(hreg, ROOTKEY_COMMON, "Software/Netscape/XPCOM", &xpcomKey) != REGERR_OK)
 	{
@@ -620,6 +626,65 @@ nsresult nsRepository::FindFactory(const nsCID &aClass,
 	return res;
 }
 
+
+nsresult nsRepository::ProgIDToCLSID(const char *aProgID,
+                                   nsCID *aClass) 
+{
+	nsresult res = NS_ERROR_FACTORY_NOT_REGISTERED;
+	HREG hreg;
+
+	checkInitialized();
+	if (PR_LOG_TEST(logmodule, PR_LOG_ALWAYS))
+	{
+		PR_LogPrint("nsRepository: ProgIDToCLSID(%s)", aProgID);
+	}
+	
+	PR_ASSERT(aClass != NULL);
+	
+	REGERR err = NR_RegOpen(NULL, &hreg);
+	if (err != REGERR_OK)
+	{
+		return (NS_ERROR_FAILURE);
+	}
+
+	RKEY classesKey;
+	if (NR_RegAddKey(hreg, ROOTKEY_COMMON, "Classes", &classesKey) != REGERR_OK)
+	{
+		NR_RegClose(hreg);
+		return (NS_ERROR_FAILURE);
+	}
+
+	RKEY key;
+	err = NR_RegGetKey(hreg, classesKey, (char *)aProgID, &key);
+	if (err != REGERR_OK)
+	{
+		NR_RegClose(hreg);
+		return (NS_ERROR_FAILURE);
+	}
+
+	char cidString[MAXREGNAMELEN];
+	err = NR_RegGetEntryString(hreg, key, "CLSID", cidString, MAXREGNAMELEN);
+	if (err != REGERR_OK)
+	{
+		NR_RegClose(hreg);
+		return (NS_ERROR_FAILURE);
+	}
+
+	NR_RegClose(hreg);
+
+	if (!(aClass->Parse(cidString)))
+	{
+		return (NS_ERROR_FAILURE);
+	}
+	res = NS_OK;
+
+	PR_LOG(logmodule, PR_LOG_WARNING, ("nsRepository: ProgIDToCLSID() %s",
+		res == NS_OK ? "succeeded" : "FAILED"));
+	
+	return res;
+}
+
+
 nsresult nsRepository::checkInitialized(void) 
 {
 	nsresult res = NS_OK;
@@ -691,6 +756,7 @@ nsresult nsRepository::CreateInstance(const nsCID &aClass,
 	PR_LOG(logmodule, PR_LOG_ALWAYS, ("\t\tCreateInstance() FAILED."));
 	return NS_ERROR_FACTORY_NOT_REGISTERED;
 }
+
 
 #if 0
 /*
@@ -847,6 +913,75 @@ nsresult nsRepository::RegisterFactory(const nsCID &aClass,
 	return NS_OK;
 }
 
+
+nsresult nsRepository::RegisterComponent(const nsCID &aClass,
+                                       const char *aClassName,
+                                       const char *aProgID,
+                                       const char *aLibrary,
+                                       PRBool aReplace,
+                                       PRBool aPersist)
+{
+	checkInitialized();
+	if (PR_LOG_TEST(logmodule, PR_LOG_ALWAYS))
+	{
+		char *buf = aClass.ToString();
+		PR_LogPrint("nsRepository: RegisterComponent(%s, %s, %s, %s), replace = %d, persist = %d.", buf, aClassName, aProgID, aLibrary, (int)aReplace, (int)aPersist);
+		delete [] buf;
+	}
+
+	nsIFactory *old = NULL;
+	FindFactory(aClass, &old);
+	
+	if (old != NULL)
+	{
+		old->Release();
+		if (!aReplace)
+		{
+			PR_LOG(logmodule, PR_LOG_WARNING,("\t\tFactory already registered."));
+			return NS_ERROR_FACTORY_EXISTS;
+		}
+		else
+		{
+			PR_LOG(logmodule, PR_LOG_WARNING,("\t\tdeleting registered Factory."));
+		}
+	}
+	
+	PR_EnterMonitor(monitor);
+	
+#ifdef USE_REGISTRY
+	if (aPersist == PR_TRUE)
+	{
+		// Add it to the registry
+		nsDll *dll = new nsDll(aLibrary);
+		// XXX temp hack until we get the dll to give us the entire
+		// XXX NSQuickRegisterClassData
+		NSQuickRegisterClassData cregd = {0};
+		cregd.CIDString = aClass.ToString();
+		cregd.className = aClassName;
+		cregd.progID = aProgID;
+		platformRegister(&cregd, dll);
+		delete [] (char *)cregd.CIDString;
+		delete dll;
+	} 
+	else
+#endif
+	{
+		nsDll *dll = new nsDll(aLibrary);
+		nsIDKey key(aClass);
+		factories->Put(&key, new FactoryEntry(aClass, aLibrary,
+			dll->GetLastModifiedTime(), dll->GetSize()));
+		delete dll;
+	}
+	
+	PR_ExitMonitor(monitor);
+	
+	PR_LOG(logmodule, PR_LOG_WARNING,
+		("\t\tFactory register succeeded."));
+	
+	return NS_OK;
+}
+
+
 nsresult nsRepository::UnregisterFactory(const nsCID &aClass,
                                          nsIFactory *aFactory)
 {
@@ -882,6 +1017,60 @@ nsresult nsRepository::UnregisterFactory(const nsCID &aClass,
 	
 	return res;
 }
+
+
+nsresult nsRepository::UnregisterComponent(const nsCID &aClass,
+                                         const char *aLibrary)
+{
+	checkInitialized();
+	if (PR_LOG_TEST(logmodule, PR_LOG_ALWAYS))
+	{
+		char *buf = aClass.ToString();
+		PR_LogPrint("nsRepository: Unregistering Factory.");
+		PR_LogPrint("nsRepository: + %s in \"%s\".", buf, aLibrary);
+		delete [] buf;
+	}
+	
+	nsIDKey key(aClass);
+	FactoryEntry *old = (FactoryEntry *) factories->Get(&key);
+	
+	nsresult res = NS_ERROR_FACTORY_NOT_REGISTERED;
+	
+	PR_EnterMonitor(monitor);
+	
+	if (old != NULL && old->dll != NULL)
+	{
+		if (old->dll->GetFullPath() != NULL &&
+#ifdef XP_UNIX
+			PL_strcasecmp(old->dll->GetFullPath(), aLibrary)
+#else
+			PL_strcmp(old->dll->GetFullPath(), aLibrary)
+#endif
+			)
+		{
+			FactoryEntry *entry = (FactoryEntry *) factories->Remove(&key);
+			delete entry;
+			res = NS_OK;
+		}
+#ifdef USE_REGISTRY
+		// XXX temp hack until we get the dll to give us the entire
+		// XXX NSQuickRegisterClassData
+		NSQuickRegisterClassData cregd = {0};
+		cregd.CIDString = aClass.ToString();
+		res = platformUnregister(&cregd, aLibrary);
+		delete [] (char *)cregd.CIDString;
+#endif
+	}
+	
+	PR_ExitMonitor(monitor);
+	
+	PR_LOG(logmodule, PR_LOG_WARNING,
+		("nsRepository: ! Factory unregister %s.", 
+		res == NS_OK ? "succeeded" : "failed"));
+	
+	return res;
+}
+
 
 nsresult nsRepository::UnregisterFactory(const nsCID &aClass,
                                          const char *aLibrary)
@@ -934,6 +1123,7 @@ nsresult nsRepository::UnregisterFactory(const nsCID &aClass,
 	
 	return res;
 }
+
 
 static PRBool freeLibraryEnum(nsHashKey *aKey, void *aData, void* closure) 
 {
