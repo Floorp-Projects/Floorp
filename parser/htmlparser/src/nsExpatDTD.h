@@ -18,6 +18,12 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ * This Original Code has been modified by IBM Corporation. Modifications made by IBM 
+ * described herein are Copyright (c) International Business Machines Corporation, 2000.
+ * Modifications to Mozilla code or documentation identified per MPL Section 3.3
+ *
+ * Date             Modified by     Description of modification
+ * 04/20/2000       IBM Corp.      OS/2 VisualAge build.
  */
 
 /**
@@ -247,30 +253,30 @@ protected:
     void SetupExpatCallbacks(void);
 
     /* The callback handlers that get called from the expat parser */
-    static void HandleStartElement(void *userData, const XML_Char *name, const XML_Char **atts);
-    static void HandleEndElement(void *userData, const XML_Char *name);
-    static void HandleCharacterData(void *userData, const XML_Char *s, int len);
-    static void HandleProcessingInstruction(void *userData, 
+    static void PR_CALLBACK HandleStartElement(void *userData, const XML_Char *name, const XML_Char **atts);
+    static void PR_CALLBACK HandleEndElement(void *userData, const XML_Char *name);
+    static void PR_CALLBACK HandleCharacterData(void *userData, const XML_Char *s, int len);
+    static void PR_CALLBACK HandleProcessingInstruction(void *userData, 
       const XML_Char *target, 
       const XML_Char *data);
-    static void HandleDefault(void *userData, const XML_Char *s, int len);
-    static void HandleUnparsedEntityDecl(void *userData, 
+    static void PR_CALLBACK HandleDefault(void *userData, const XML_Char *s, int len);
+    static void PR_CALLBACK HandleUnparsedEntityDecl(void *userData, 
       const XML_Char *entityName, 
       const XML_Char *base, 
       const XML_Char *systemId, 
       const XML_Char *publicId,
       const XML_Char *notationName);
-    static void HandleNotationDecl(void *userData,
+    static void PR_CALLBACK HandleNotationDecl(void *userData,
       const XML_Char *notationName,
       const XML_Char *base,
       const XML_Char *systemId,
       const XML_Char *publicId);
-    static void HandleExternalEntityRef(XML_Parser parser,
+    static void PR_CALLBACK HandleExternalEntityRef(XML_Parser parser,
       const XML_Char *openEntityNames,
       const XML_Char *base,
       const XML_Char *systemId,
       const XML_Char *publicId);
-    static void HandleUnknownEncoding(void *encodingHandlerData,
+    static void PR_CALLBACK HandleUnknownEncoding(void *encodingHandlerData,
       const XML_Char *name,
       XML_Encoding *info);
   
