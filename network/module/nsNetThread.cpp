@@ -349,6 +349,10 @@ void PR_CALLBACK ProxyEvent::DestroyPLEvent(PLEvent* aEvent)
     delete ev;
 }
 
+#if defined(XP_UNIX)
+extern PLEventQueue* gWebShell_UnixEventQueue;
+#endif
+
 void ProxyEvent::Fire() 
 {
     PLEventQueue* eventQueue;
