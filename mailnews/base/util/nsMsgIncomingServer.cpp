@@ -625,15 +625,13 @@ nsMsgIncomingServer::SetCharValue(const char *prefname,
     return NS_OK;
   }
   
-  char *defaultVal=nsnull;
-  rv = getDefaultCharPref(prefname, &defaultVal);
+  nsXPIDLCString defaultVal;
+  rv = getDefaultCharPref(prefname, getter_Copies(defaultVal));
   
-  if (NS_SUCCEEDED(rv) && strcmp(defaultVal, val) == 0)
+  if (NS_SUCCEEDED(rv) && defaultVal.Equals(val))
     m_prefBranch->ClearUserPref(fullPrefName.get());
   else
     rv = m_prefBranch->SetCharPref(fullPrefName.get(), val);
-  
-  PR_FREEIF(defaultVal);
   
   return rv;
 }
