@@ -1546,9 +1546,9 @@ PresShell::Init(nsIDocument* aDocument,
     NS_WITH_SERVICE(nsIPref, prefs, kPrefServiceCID, &result);
     if (NS_SUCCEEDED(result)) {
       if (mReflowCountMgr != nsnull) {
-        PRBool paintFrameCounts;
-        PRBool dumpFrameCounts;
-        PRBool dumpFrameByFrameCounts;
+        PRBool paintFrameCounts       = PR_FALSE;
+        PRBool dumpFrameCounts        = PR_FALSE;
+        PRBool dumpFrameByFrameCounts = PR_FALSE;
         prefs->GetBoolPref("layout.reflow.showframecounts", &paintFrameCounts);
         prefs->GetBoolPref("layout.reflow.dumpframecounts", &dumpFrameCounts);
         prefs->GetBoolPref("layout.reflow.dumpframebyframecounts", &dumpFrameByFrameCounts);
