@@ -34,6 +34,7 @@
 
 #include "nsILocale.h"
 #include "nsLocaleCID.h"
+#include "nsMsgMimeCID.h"
 #include "nsILocaleFactory.h"
 
 static NS_DEFINE_CID(kCMorkFactory, NS_MORK_CID);

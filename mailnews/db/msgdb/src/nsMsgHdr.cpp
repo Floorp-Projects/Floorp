@@ -21,6 +21,7 @@
 #include "nsMsgDatabase.h"
 #include "nsMsgUtils.h"
 #include "nsIMsgHeaderParser.h"
+#include "nsMsgMimeCID.h"
 #include "nsIMimeConverter.h"
 
 NS_IMPL_ISUPPORTS(nsMsgHdr, nsIMsgDBHdr::GetIID())
