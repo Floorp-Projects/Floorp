@@ -85,6 +85,7 @@ protected:
   PRInt32               mWidth;
   PRInt32               mHeight;
   nsRect                mClientRect;
+  PRBool                mClientRectConverted;
   nsIDeviceContextSpec  *mSpec;
 
 public:
