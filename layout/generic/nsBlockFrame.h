@@ -45,8 +45,7 @@ class nsFirstLineFrame;
  * Additional frame-state bits. There are more of these bits
  * defined in nsHTMLParts.h (XXX: note: this should be cleaned up)
  */
-#define NS_BLOCK_FRAME_HAS_OUTSIDE_BULLET 0x80000000
-#define NS_BLOCK_IS_HTML_PARAGRAPH        0x40000000
+#define NS_BLOCK_FRAME_HAS_OUTSIDE_BULLET 0x40000000
 #define NS_BLOCK_HAS_FIRST_LETTER_STYLE   0x20000000
 
 #define nsBlockFrameSuper nsHTMLContainerFrame
