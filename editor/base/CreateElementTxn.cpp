@@ -110,7 +110,7 @@ NS_IMETHODIMP CreateElementTxn::Do(void)
     nsCOMPtr<nsIDOMElement>newElement;
  
     //new call to use instead to get proper HTML element, bug# 39919
-    mEditor->CreateHTMLContent(mTag, getter_AddRefs(newContent));
+    result = mEditor->CreateHTMLContent(mTag, getter_AddRefs(newContent));
     newElement = do_QueryInterface(newContent);
     if (NS_FAILED(result)) return result;
     if (!newElement) return NS_ERROR_NULL_POINTER;
