@@ -2065,6 +2065,22 @@ nsresult nsPluginStreamListenerPeer::SetUpStreamListener(nsIRequest *request,
 
   mPluginStreamInfo->SetSeekable(bSeekable);
  
+  PRUint32 length = -1;
+  mPluginStreamInfo->GetLength(&length);
+  if (bSeekable && length == -1 && httpChannel) {
+    nsXPIDLCString tmp;
+	httpChannel->GetResponseHeader("Content-Length", getter_Copies(tmp));
+    if (tmp.get()) {
+        PRInt32 ignore;
+        nsCString lenString (tmp.get());
+    	length = lenString.ToInteger(&ignore);
+    	mPluginStreamInfo->SetLength(length);
+    }
+  }
+  if (length == -1)
+	mPluginStreamInfo->SetSeekable(PR_FALSE);
+
+	  // we require a content len
   // get Last-Modified header for plugin info
   if (httpChannel) 
   {
