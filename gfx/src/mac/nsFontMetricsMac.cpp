@@ -243,7 +243,7 @@ nsFontMetricsMac :: GetStrikeout(nscoord& aOffset, nscoord& aSize)
   float  dev2app;
   mContext->GetDevUnitsToAppUnits(dev2app);
   aOffset = NSToCoordRound(float(mMaxAscent / 2) - dev2app);
-  aSize   = dev2app;
+  aSize = NSToCoordRound(dev2app);
   return NS_OK;
 }
 
