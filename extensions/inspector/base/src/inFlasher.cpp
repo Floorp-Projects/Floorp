@@ -145,7 +145,7 @@ inFlasher::RepaintElement(nsIDOMElement* aElement)
   nsIFrame* frame = inLayoutUtils::GetFrameFor(aElement, presShell);
   if (!frame) return NS_OK;
 
-  nsIFrame* parentWithView = frame->GetAncestorWithView();
+  nsIFrame* parentWithView = frame->GetAncestorWithViewExternal();
   if (parentWithView) {
     nsIView* view = parentWithView->GetViewExternal();
     if (view) {
