@@ -30,7 +30,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: rsa.c,v 1.14 2000/09/19 06:18:04 mcgreer%netscape.com Exp $
+ * $Id: rsa.c,v 1.15 2000/09/22 16:24:16 mcgreer%netscape.com Exp $
  */
 
 #include "secerr.h"
@@ -275,20 +275,17 @@ RSA_PublicKeyOp(RSAPublicKey  *key,
     modLen = rsa_modulusLen(&key->modulus);
     /* 1.  Obtain public key (n, e) */
     SECITEM_TO_MPINT(key->modulus, &n);
-#ifdef USE_MPI_EXPT_D
-    /* XXX convert exponent to mp_digit */
-#else
     SECITEM_TO_MPINT(key->publicExponent, &e);
-#endif
     /* 2.  Represent message as integer in range [0..n-1] */
     CHECK_MPI_OK( mp_read_unsigned_octets(&m, input, modLen) );
     /* 3.  Compute c = m**e mod n */
 #ifdef USE_MPI_EXPT_D
     /* XXX see which is faster */
-    CHECK_MPI_OK( mp_exptmod_d(&m, exp, &n, &c) );
-#else
-    CHECK_MPI_OK( mp_exptmod(&m, &e, &n, &c) );
+    if (MP_USED(&e) == 1) {
+	CHECK_MPI_OK( mp_exptmod_d(&m, MP_DIGIT(&e, 0), &n, &c) );
+    } else
 #endif
+    CHECK_MPI_OK( mp_exptmod(&m, &e, &n, &c) );
     /* 4.  result c is ciphertext */
     err = mp_to_fixlen_octets(&c, output, modLen);
     if (err >= 0) err = MP_OKAY;
