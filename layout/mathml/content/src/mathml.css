@@ -251,6 +251,8 @@ merror {
 
 mtable {
   display: table;
+  border-collapse: separate;
+  border-spacing: 0;
 }
 mtable[frame="none"] {
   border: none;
