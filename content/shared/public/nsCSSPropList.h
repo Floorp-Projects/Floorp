@@ -312,7 +312,7 @@ CSS_PROP_BORDER(border-right-color, border_right_color, BorderRightColor, Margin
 CSS_PROP_BORDER(-moz-border-right-colors, border_right_colors, MozBorderRightColors, Margin, mBorderColors.mRight, eCSSType_ValueList, PR_FALSE, nsnull)
 CSS_PROP_BORDER(border-right-style, border_right_style, BorderRightStyle, Margin, mBorderStyle.mRight, eCSSType_Value, PR_FALSE, kBorderStyleKTable)  // on/off will need reflow
 CSS_PROP_BORDER(border-right-width, border_right_width, BorderRightWidth, Margin, mBorderWidth.mRight, eCSSType_Value, PR_FALSE, kBorderWidthKTable)
-CSS_PROP_SHORTHAND(border-spacing, border_spacing, BorderSpacing)
+CSS_PROP_TABLEBORDER(border-spacing, border_spacing, BorderSpacing, Table, mBorderSpacing, eCSSType_ValuePair, PR_FALSE, nsnull) // XXX bug 3935
 CSS_PROP_SHORTHAND(border-style, border_style, BorderStyle)  // on/off will need reflow
 CSS_PROP_SHORTHAND(border-top, border_top, BorderTop)
 CSS_PROP_BORDER(border-top-color, border_top_color, BorderTopColor, Margin, mBorderColor.mTop, eCSSType_Value, PR_FALSE, kBorderColorKTable)
@@ -320,10 +320,6 @@ CSS_PROP_BORDER(-moz-border-top-colors, border_top_colors, MozBorderTopColors, M
 CSS_PROP_BORDER(border-top-style, border_top_style, BorderTopStyle, Margin, mBorderStyle.mTop, eCSSType_Value, PR_FALSE, kBorderStyleKTable)  // on/off will need reflow
 CSS_PROP_BORDER(border-top-width, border_top_width, BorderTopWidth, Margin, mBorderWidth.mTop, eCSSType_Value, PR_FALSE, kBorderWidthKTable)
 CSS_PROP_SHORTHAND(border-width, border_width, BorderWidth)
-#ifndef CSS_PROP_LIST_EXCLUDE_INTERNAL
-CSS_PROP_TABLEBORDER(-x-border-x-spacing, border_x_spacing, BorderXSpacing, Table, mBorderSpacingX, eCSSType_Value, PR_FALSE, nsnull) // XXX bug 3935
-CSS_PROP_TABLEBORDER(-x-border-y-spacing, border_y_spacing, BorderYSpacing, Table, mBorderSpacingY, eCSSType_Value, PR_FALSE, nsnull) // XXX bug 3935
-#endif /* !defined (CSS_PROP_LIST_EXCLUDE_INTERNAL) */
 CSS_PROP_POSITION(bottom, bottom, Bottom, Position, mOffset.mBottom, eCSSType_Value, PR_TRUE, nsnull)
 CSS_PROP_POSITION(-moz-box-sizing, box_sizing, MozBoxSizing, Position, mBoxSizing, eCSSType_Value, PR_FALSE, kBoxSizingKTable) // XXX bug 3935
 CSS_PROP_TABLEBORDER(caption-side, caption_side, CaptionSide, Table, mCaptionSide, eCSSType_Value, PR_FALSE, kCaptionSideKTable)
@@ -441,20 +437,12 @@ CSS_PROP_BACKENDONLY(pause-after, pause_after, PauseAfter, Aural, mPauseAfter, e
 CSS_PROP_BACKENDONLY(pause-before, pause_before, PauseBefore, Aural, mPauseBefore, eCSSType_Value, PR_FALSE, nsnull)
 CSS_PROP_BACKENDONLY(pitch, pitch, Pitch, Aural, mPitch, eCSSType_Value, PR_FALSE, kPitchKTable)
 CSS_PROP_BACKENDONLY(pitch-range, pitch_range, PitchRange, Aural, mPitchRange, eCSSType_Value, PR_FALSE, nsnull)
-CSS_PROP_SHORTHAND(play-during, play_during, PlayDuring)
-#ifndef CSS_PROP_LIST_EXCLUDE_INTERNAL
-CSS_PROP_BACKENDONLY(-x-play-during-flags, play_during_flags, PlayDuringFlags, Aural, mPlayDuringFlags, eCSSType_Value, PR_FALSE, kPlayDuringKTable) // XXX why is this here?
-CSS_PROP_BACKENDONLY(-x-play-during-uri, play_during_uri, PlayDuringURI, Aural, mPlayDuring, eCSSType_Value, PR_FALSE, nsnull) // XXX why is this here?
-#endif /* !defined (CSS_PROP_LIST_EXCLUDE_INTERNAL) */
+CSS_PROP_BACKENDONLY(play-during, play_during, PlayDuring, Aural, mPlayDuring, eCSSType_ValuePair, PR_FALSE, kPlayDuringKTable)
 CSS_PROP_DISPLAY(position, position, Position, Display, mPosition, eCSSType_Value, PR_FALSE, kPositionKTable)
 CSS_PROP_QUOTES(quotes, quotes, Quotes, Content, mQuotes, eCSSType_Quotes, PR_FALSE, nsnull)
 CSS_PROP_BACKENDONLY(richness, richness, Richness, Aural, mRichness, eCSSType_Value, PR_FALSE, nsnull)
 CSS_PROP_POSITION(right, right, Right, Position, mOffset.mRight, eCSSType_Value, PR_TRUE, nsnull)
-CSS_PROP_SHORTHAND(size, size, Size)
-#ifndef CSS_PROP_LIST_EXCLUDE_INTERNAL
-CSS_PROP_BACKENDONLY(-x-size-height, size_height, SizeHeight, Page, mSizeHeight, eCSSType_Value, PR_FALSE, kPageSizeKTable) // XXX bug 3935
-CSS_PROP_BACKENDONLY(-x-size-width, size_width, SizeWidth, Page, mSizeWidth, eCSSType_Value, PR_FALSE, kPageSizeKTable) // XXX bug 3935
-#endif /* !defined (CSS_PROP_LIST_EXCLUDE_INTERNAL) */
+CSS_PROP_BACKENDONLY(size, size, Size, Page, mSize, eCSSType_ValuePair, PR_FALSE, kPageSizeKTable)
 CSS_PROP_BACKENDONLY(speak, speak, Speak, Aural, mSpeak, eCSSType_Value, PR_FALSE, kSpeakKTable)
 CSS_PROP_BACKENDONLY(speak-header, speak_header, SpeakHeader, Aural, mSpeakHeader, eCSSType_Value, PR_FALSE, kSpeakHeaderKTable)
 CSS_PROP_BACKENDONLY(speak-numeral, speak_numeral, SpeakNumeral, Aural, mSpeakNumeral, eCSSType_Value, PR_FALSE, kSpeakNumeralKTable)

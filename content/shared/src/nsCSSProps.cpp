@@ -1215,12 +1215,6 @@ static const nsCSSProperty gBorderRightSubpropTable[] = {
   eCSSProperty_UNKNOWN
 };
 
-static const nsCSSProperty gBorderSpacingSubpropTable[] = {
-  eCSSProperty_border_x_spacing,
-  eCSSProperty_border_y_spacing,
-  eCSSProperty_UNKNOWN
-};
-
 static const nsCSSProperty gBorderStyleSubpropTable[] = {
   // Code relies on these being in top-right-bottom-left order.
   eCSSProperty_border_top_style,
@@ -1382,18 +1376,6 @@ static const nsCSSProperty gMozPaddingEndSubpropTable[] = {
 static const nsCSSProperty gPauseSubpropTable[] = {
   eCSSProperty_pause_after,
   eCSSProperty_pause_before,
-  eCSSProperty_UNKNOWN
-};
-
-static const nsCSSProperty gPlayDuringSubpropTable[] = {
-  eCSSProperty_play_during_uri,
-  eCSSProperty_play_during_flags,
-  eCSSProperty_UNKNOWN
-};
-
-static const nsCSSProperty gSizeSubpropTable[] = {
-  eCSSProperty_size_width,
-  eCSSProperty_size_height,
   eCSSProperty_UNKNOWN
 };
 

@@ -1085,17 +1085,17 @@ MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
       // cellspacing 
       const nsAttrValue* value = aAttributes->GetAttr(nsHTMLAtoms::cellspacing);
       if (value && value->Type() == nsAttrValue::eInteger) {
-        if (aData->mTableData->mBorderSpacingX.GetUnit() == eCSSUnit_Null)
-          aData->mTableData->mBorderSpacingX.SetFloatValue((float)value->GetIntegerValue(), eCSSUnit_Pixel);
-        if (aData->mTableData->mBorderSpacingY.GetUnit() == eCSSUnit_Null)
-          aData->mTableData->mBorderSpacingY.SetFloatValue((float)value->GetIntegerValue(), eCSSUnit_Pixel);
+        if (aData->mTableData->mBorderSpacing.mXValue.GetUnit() == eCSSUnit_Null)
+          aData->mTableData->mBorderSpacing.mXValue.SetFloatValue((float)value->GetIntegerValue(), eCSSUnit_Pixel);
+        if (aData->mTableData->mBorderSpacing.mYValue.GetUnit() == eCSSUnit_Null)
+          aData->mTableData->mBorderSpacing.mYValue.SetFloatValue((float)value->GetIntegerValue(), eCSSUnit_Pixel);
       }
       else if (value && value->Type() == nsAttrValue::ePercent && eCompatibility_NavQuirks == mode) {
         // in quirks mode, treat a % cellspacing value a pixel value.
-        if (aData->mTableData->mBorderSpacingX.GetUnit() == eCSSUnit_Null)
-          aData->mTableData->mBorderSpacingX.SetFloatValue(100.0f * value->GetPercentValue(), eCSSUnit_Pixel);
-        if (aData->mTableData->mBorderSpacingY.GetUnit() == eCSSUnit_Null)
-          aData->mTableData->mBorderSpacingY.SetFloatValue(100.0f * value->GetPercentValue(), eCSSUnit_Pixel);
+        if (aData->mTableData->mBorderSpacing.mXValue.GetUnit() == eCSSUnit_Null)
+          aData->mTableData->mBorderSpacing.mXValue.SetFloatValue(100.0f * value->GetPercentValue(), eCSSUnit_Pixel);
+        if (aData->mTableData->mBorderSpacing.mYValue.GetUnit() == eCSSUnit_Null)
+          aData->mTableData->mBorderSpacing.mYValue.SetFloatValue(100.0f * value->GetPercentValue(), eCSSUnit_Pixel);
       }
     }
   } 

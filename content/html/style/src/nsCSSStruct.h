@@ -199,6 +199,47 @@ struct nsCSSRect {
   static const side_type sides[4];
 };
 
+MOZ_DECL_CTOR_COUNTER(nsCSSValuePair)
+
+struct nsCSSValuePair {
+  nsCSSValuePair()
+  {
+    MOZ_COUNT_CTOR(nsCSSValuePair);
+  }
+  nsCSSValuePair(const nsCSSValuePair& aCopy)
+    : mXValue(aCopy.mXValue),
+      mYValue(aCopy.mYValue)
+  { 
+    MOZ_COUNT_CTOR(nsCSSValuePair);
+  }
+  ~nsCSSValuePair()
+  {
+    MOZ_COUNT_DTOR(nsCSSValuePair);
+  }
+
+  PRBool operator==(const nsCSSValuePair& aOther) const {
+    return mXValue == aOther.mXValue &&
+           mYValue == aOther.mYValue;
+  }
+
+  PRBool operator!=(const nsCSSValuePair& aOther) const {
+    return mXValue != aOther.mXValue ||
+           mYValue != aOther.mYValue;
+  }
+
+  void SetBothValuesTo(const nsCSSValue& aValue) {
+    mXValue = aValue;
+    mYValue = aValue;
+  }
+
+#ifdef DEBUG
+  void AppendToString(nsAString& aString, nsCSSProperty aPropName) const;
+#endif
+  
+  nsCSSValue mXValue;
+  nsCSSValue mYValue;
+};
+
 struct nsCSSValueListRect {
   nsCSSValueListRect(void);
   nsCSSValueListRect(const nsCSSValueListRect& aCopy);
@@ -338,8 +379,7 @@ struct nsCSSTable : public nsCSSStruct  { // NEW
 #endif
 
   nsCSSValue mBorderCollapse;
-  nsCSSValue mBorderSpacingX;
-  nsCSSValue mBorderSpacingY;
+  nsCSSValuePair mBorderSpacing;
   nsCSSValue mCaptionSide;
   nsCSSValue mEmptyCells;
   
@@ -384,8 +424,7 @@ struct nsCSSPage : public nsCSSStruct  { // NEW
 #endif
 
   nsCSSValue mMarks;
-  nsCSSValue mSizeWidth;
-  nsCSSValue mSizeHeight;
+  nsCSSValuePair mSize;
 };
 
 struct nsRuleDataPage : public nsCSSPage {
@@ -473,8 +512,7 @@ struct nsCSSAural : public nsCSSStruct  { // NEW
   nsCSSValue mPauseBefore;
   nsCSSValue mPitch;
   nsCSSValue mPitchRange;
-  nsCSSValue mPlayDuring;
-  nsCSSValue mPlayDuringFlags;
+  nsCSSValuePair mPlayDuring; // mXValue is URI, mYValue are flags
   nsCSSValue mRichness;
   nsCSSValue mSpeak;
   nsCSSValue mSpeakHeader;
