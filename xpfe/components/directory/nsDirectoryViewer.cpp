@@ -147,8 +147,6 @@ public:
 
 
 
-nsIRDFService		*gDirRDF = nsnull;
-
 nsrefcnt nsHTTPIndexParser::gRefCntParser = 0;
 nsIRDFService* nsHTTPIndexParser::gRDF;
 nsITextToSubURI *nsHTTPIndexParser::gTextToSubURI;
@@ -912,28 +910,22 @@ nsHTTPIndex::~nsHTTPIndex()
 	NS_IF_RELEASE(kTrueLiteral);
 	NS_IF_RELEASE(kFalseLiteral);
 
-    	if (mTimer)
-    	{
-    		// be sure to cancel the timer, as it holds a
-    		// weak reference back to nsHTTPIndex
-    		mTimer->Cancel();
-    		mTimer = nsnull;
-    	}
+    if (mTimer)
+    {
+        // be sure to cancel the timer, as it holds a
+        // weak reference back to nsHTTPIndex
+        mTimer->Cancel();
+        mTimer = nsnull;
+    }
 
-        mConnectionList = nsnull;
-        mNodeList = nsnull;
+    mConnectionList = nsnull;
+    mNodeList = nsnull;
 
-	if (gDirRDF)
+	if (mDirRDF)
 	{
-		// this may fail; just ignore errors
-		gDirRDF->UnregisterDataSource(this);
-	}
-
-	if (gDirRDF)
-	{
-		nsServiceManager::ReleaseService(kRDFServiceCID, gDirRDF);
-		gDirRDF = nsnull;
-	}
+		// UnregisterDataSource() may fail; just ignore errors
+		mDirRDF->UnregisterDataSource(this);
+    }
 }
 
 
@@ -946,10 +938,12 @@ nsHTTPIndex::CommonInit()
 	// set initial/default encoding to ISO-8859-1 (not UTF-8)
 	mEncoding = "ISO-8859-1";
 
-	rv = nsServiceManager::GetService(kRDFServiceCID,
-		NS_GET_IID(nsIRDFService), (nsISupports**) &gDirRDF);
+    mDirRDF = do_GetService(kRDFServiceCID, &rv);
 	NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get RDF service");
-	if (NS_FAILED(rv)) return rv;
+	if (NS_FAILED(rv))
+	{
+	    return(rv);
+	}
 
 	if (NS_FAILED(rv = nsComponentManager::CreateInstance(kRDFInMemoryDataSourceCID,
 			nsnull, NS_GET_IID(nsIRDFDataSource), (void**) getter_AddRefs(mInner))))
@@ -957,12 +951,12 @@ nsHTTPIndex::CommonInit()
 		return(rv);
 	}
 
-	gDirRDF->GetResource(NC_NAMESPACE_URI "child",   &kNC_Child);
-	gDirRDF->GetResource(NC_NAMESPACE_URI "loading", &kNC_loading);
+	mDirRDF->GetResource(NC_NAMESPACE_URI "child",   &kNC_Child);
+	mDirRDF->GetResource(NC_NAMESPACE_URI "loading", &kNC_loading);
 
-    rv = gDirRDF->GetLiteral(NS_ConvertASCIItoUCS2("true").GetUnicode(), &kTrueLiteral);
+    rv = mDirRDF->GetLiteral(NS_ConvertASCIItoUCS2("true").GetUnicode(), &kTrueLiteral);
     if (NS_FAILED(rv)) return(rv);
-    rv = gDirRDF->GetLiteral(NS_ConvertASCIItoUCS2("false").GetUnicode(), &kFalseLiteral);
+    rv = mDirRDF->GetLiteral(NS_ConvertASCIItoUCS2("false").GetUnicode(), &kFalseLiteral);
     if (NS_FAILED(rv)) return(rv);
 
     rv = NS_NewISupportsArray(getter_AddRefs(mConnectionList));
@@ -987,7 +981,7 @@ nsHTTPIndex::Init()
 	if (NS_FAILED(rv))	return(rv);
 
 	// (do this last) register this as a named data source with the RDF service
-	rv = gDirRDF->RegisterDataSource(this, PR_FALSE);
+	rv = mDirRDF->RegisterDataSource(this, PR_FALSE);
 	if (NS_FAILED(rv)) return(rv);
 
 	return(NS_OK);

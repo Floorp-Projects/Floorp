@@ -32,6 +32,7 @@
 #include "nsIContentViewer.h"
 #include "nsIDocument.h"
 #include "nsIHTTPIndex.h"
+#include "nsIRDFService.h"
 #include "nsIRDFDataSource.h"
 #include "nsIDocumentLoaderFactory.h"
 #include "nsITimer.h"
@@ -77,6 +78,8 @@ private:
 	nsIRDFResource		*kNC_loading;
 	nsIRDFLiteral		*kTrueLiteral;
 	nsIRDFLiteral		*kFalseLiteral;
+
+	nsCOMPtr<nsIRDFService> mDirRDF;
 
 protected:
 	// We grab a reference to the content viewer container (which
