@@ -550,8 +550,10 @@ nsBox::SetBounds(nsBoxLayoutState& aState, const nsRect& aRect)
 
     
     if (!(flags & NS_FRAME_NO_MOVE_VIEW))
-    { 
+    {
       nsContainerFrame::PositionFrameView(presContext, frame);
+      if ((rect.x != aRect.x) || (rect.y != aRect.y))
+        nsContainerFrame::PositionChildViews(presContext, frame);
     }
   
 

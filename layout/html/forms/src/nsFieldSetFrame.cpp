@@ -521,6 +521,10 @@ nsFieldSetFrame::Reflow(nsIPresContext*          aPresContext,
       if ((curOrigin.x != mLegendRect.x) || (curOrigin.y != mLegendRect.y)) {
           mLegendFrame->MoveTo(aPresContext,  actualLegendRect.x , actualLegendRect.y);
           nsContainerFrame::PositionFrameView(aPresContext, mLegendFrame);
+
+          // We need to recursively process the legend frame's
+          // children since we're moving the frame after Reflow.
+          nsContainerFrame::PositionChildViews(aPresContext, mLegendFrame);
       }
     }
 

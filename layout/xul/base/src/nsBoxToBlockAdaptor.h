@@ -77,8 +77,6 @@ protected:
                    nscoord aHeight,
                    PRBool aMoveFrame = PR_TRUE);
 
-  virtual void PlaceChild(nsIPresContext* aPresContext, nsIFrame* aFrame, nscoord aX, nscoord aY);
-
   nsIFrame* mFrame;
   nsSize mPrefSize;
   nsSize mMinSize;
