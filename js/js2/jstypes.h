@@ -420,7 +420,7 @@ namespace JSTypes {
 	    typedef gc_allocator<JSFunction, traits> allocator;
 		
     public:
-        static void JSFunction::initFunctionObject(JSScope *g);
+        static void initFunctionObject(JSScope *g);
 
         JSFunction(ICodeModule* iCode)
             : JSObject(FunctionPrototypeObject),

@@ -114,7 +114,7 @@ JavaScript::Debugger::Shell jsd(world, stdin, JavaScript::stdOut,
                                 JavaScript::stdOut, &ResolveFile);
 #endif
 
-static JSValue print(Context *cx, const JSValues &argv)
+static JSValue print(Context *, const JSValues &argv)
 {
     size_t n = argv.size();
     if (n > 1) {                // the 'this' parameter is un-interesting
@@ -126,7 +126,7 @@ static JSValue print(Context *cx, const JSValues &argv)
     return kUndefinedValue;
 }
 
-static JSValue dump(Context *cx, const JSValues &argv)
+static JSValue dump(Context *, const JSValues &argv)
 {
     size_t n = argv.size();
     if (n > 1) {                // the 'this' parameter is un-interesting

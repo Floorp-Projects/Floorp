@@ -231,7 +231,7 @@ namespace JSClasses {
             JSMethods::iterator end = mMethods.end();
             for (JSMethods::iterator i = mMethods.begin(); i != end; i++) {
                 if (i->first == name) {
-                    index = i - mMethods.begin();
+                    index = static_cast<uint32>(i - mMethods.begin());
                     return true;
                 }
             }
