@@ -34,7 +34,7 @@
 /*
  * CMS contentInfo methods.
  *
- * $Id: cmscinfo.c,v 1.5 2003/12/04 00:39:24 nelsonb%netscape.com Exp $
+ * $Id: cmscinfo.c,v 1.6 2004/01/07 00:09:16 nelsonb%netscape.com Exp $
  */
 
 #include "cmslocal.h"
@@ -209,7 +209,10 @@ NSS_CMSContentInfo_SetContent_EncryptedData(NSSCMSMessage *cmsg, NSSCMSContentIn
 void *
 NSS_CMSContentInfo_GetContent(NSSCMSContentInfo *cinfo)
 {
-    switch (cinfo->contentTypeTag->offset) {
+    SECOidTag tag = (cinfo && cinfo->contentTypeTag) 
+	                ? cinfo->contentTypeTag->offset 
+	                : SEC_OID_UNKNOWN;
+    switch (tag) {
     case SEC_OID_PKCS7_DATA:
     case SEC_OID_PKCS7_SIGNED_DATA:
     case SEC_OID_PKCS7_ENVELOPED_DATA:
@@ -230,22 +233,28 @@ SECItem *
 NSS_CMSContentInfo_GetInnerContent(NSSCMSContentInfo *cinfo)
 {
     NSSCMSContentInfo *ccinfo;
+    SECOidTag          tag;
+    SECItem           *pItem = NULL;
 
-    switch (NSS_CMSContentInfo_GetContentTypeTag(cinfo)) {
+    tag = NSS_CMSContentInfo_GetContentTypeTag(cinfo);
+    switch (tag) {
     case SEC_OID_PKCS7_DATA:
-	return cinfo->content.data;	/* end of recursion - every message has to have a data cinfo */
+	/* end of recursion - every message has to have a data cinfo */
+	pItem = cinfo->content.data; 
+	break;
     case SEC_OID_PKCS7_DIGESTED_DATA:
     case SEC_OID_PKCS7_ENCRYPTED_DATA:
     case SEC_OID_PKCS7_ENVELOPED_DATA:
     case SEC_OID_PKCS7_SIGNED_DATA:
-	if ((ccinfo = NSS_CMSContentInfo_GetChildContentInfo(cinfo)) == NULL)
-	    break;
-	return NSS_CMSContentInfo_GetContent(ccinfo);
+	ccinfo = NSS_CMSContentInfo_GetChildContentInfo(cinfo);
+	if (ccinfo != NULL)
+	    pItem = NSS_CMSContentInfo_GetContent(ccinfo);
+	break;
     default:
 	PORT_Assert(0);
 	break;
     }
-    return NULL;
+    return pItem;
 }
 
 /*

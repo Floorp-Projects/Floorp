@@ -34,7 +34,7 @@
 /*
  * CMS signedData methods.
  *
- * $Id: cmssigdata.c,v 1.26 2003/12/19 22:54:20 wchang0222%aol.com Exp $
+ * $Id: cmssigdata.c,v 1.27 2004/01/07 00:09:17 nelsonb%netscape.com Exp $
  */
 
 #include "cmslocal.h"
@@ -1028,8 +1028,10 @@ NSS_CMSSignedData_GetDigestValue(NSSCMSSignedData *sigd, SECOidTag digestalgtag)
         return NULL;
     }
 
-    if (sigd->digestAlgorithms == NULL)
+    if (sigd->digestAlgorithms == NULL || sigd->digests == NULL) {
+        PORT_SetError(SEC_ERROR_DIGEST_NOT_FOUND);
 	return NULL;
+    }
 
     n = NSS_CMSAlgArray_GetIndexByAlgTag(sigd->digestAlgorithms, digestalgtag);
 
