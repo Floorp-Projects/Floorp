@@ -617,8 +617,11 @@ nsEventStateManager::PreHandleEvent(nsIPresContext* aPresContext,
             nsCOMPtr<nsIPresShell> shell;
             nsCOMPtr<nsIPresContext> context;
             document->GetShellAt(0, getter_AddRefs(shell));
-            shell->GetPresContext(getter_AddRefs(context));
-            focusContent->SetFocus(context);
+            NS_ASSERTION(shell, "Focus events should not be getting thru when this is null!");
+            if (shell) {
+              shell->GetPresContext(getter_AddRefs(context));
+              focusContent->SetFocus(context);
+            }
           }
         }  
       }
