@@ -269,8 +269,8 @@ char* MacFileHelpers::MacPathFromUnixPath(const char* unixPath, Boolean hexDecod
 		    *dst++ = c;
 		} while (c);
 		if (hexDecode)
-			nsUnescape(dst);	// Hex Decode
-		MacFileHelpers::SwapSlashColon(dst);
+			nsUnescape(result);	// Hex Decode
+		MacFileHelpers::SwapSlashColon(result);
 	}
 	return result;
 } // MacFileHelpers::MacPathFromUnixPath
