@@ -37,7 +37,6 @@ REQUIRES        = xpcom \
                   lwbrk \
                   gfx \
                   widget \
-                  webBrowser_core \
                   unicharutil \
                   $(NULL)
 

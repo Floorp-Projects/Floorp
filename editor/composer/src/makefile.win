@@ -54,12 +54,9 @@ REQUIRES    = xpcom \
               gfx \
               widget \
               txtsvc \
-              appshell \
               appcomps \
               windowwatcher \
               chrome \
-              exthandler \
-              mimetype \
               editor \
               content_xul \
               imglib2 \

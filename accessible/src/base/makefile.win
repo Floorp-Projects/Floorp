@@ -28,9 +28,6 @@ REQUIRES = \
   docshell \
   dom \
   gfx \
-  gfx2 \
-  htmlparser \
-  imglib2 \
   intl \
   layout \
   locale \
@@ -41,7 +38,6 @@ REQUIRES = \
   webshell \
   widget \
   xpcom \
-  webBrowser_core \
   $(NULL)
 
 

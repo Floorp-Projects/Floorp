@@ -24,24 +24,19 @@ MODULE = accessibility
 LIBRARY_NAME = accessibility_html_s
 REQUIRES = \
   content \
-  content_xul \
-  docshell \
   dom \
   gfx \
   gfx2 \
   htmlparser \
   imglib2 \
-  intl \
   layout \
   locale \
   necko \
   string \
   uriloader \
-  view \
   webshell \
   widget \
   xpcom \
-  webBrowser_core \
   $(NULL)
 
 CPP_OBJS = \

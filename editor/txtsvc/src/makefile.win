@@ -30,7 +30,6 @@ REQUIRES	= xpcom \
 		  dom \
 		  widget \
 		  gfx \
-      webBrowser_core \
 		  unicharutil \
 		  $(NULL)
 LIBRARY_NAME=txtsvc
