@@ -272,7 +272,7 @@ nsSegmentEncoder::EncodeSegmentCount(const char *str,
         PRUint32 initLen = result.Length();
 
         // now perform any required escaping
-        if (NS_EscapeURL(str + pos, len, mask|escapeFlags, result))
+        if (NS_EscapeURL(str + pos, len, mask | escapeFlags, result))
             len = result.Length() - initLen;
         else if (str == encBuf.get()) {
             result += encBuf; // append only!!
@@ -945,7 +945,7 @@ nsStandardURL::GetAsciiSpec(nsACString &result)
 
     result = Substring(mSpec, 0, mScheme.mLen + 3);
 
-    NS_EscapeURL(Userpass(PR_TRUE), esc_OnlyNonASCII|esc_AlwaysCopy, result);
+    NS_EscapeURL(Userpass(PR_TRUE), esc_OnlyNonASCII | esc_AlwaysCopy, result);
 
     // get escaped host
     nsCAutoString escHostport;
@@ -960,7 +960,7 @@ nsStandardURL::GetAsciiSpec(nsACString &result)
     }
     result += escHostport;
 
-    NS_EscapeURL(Path(), esc_OnlyNonASCII|esc_AlwaysCopy, result);
+    NS_EscapeURL(Path(), esc_OnlyNonASCII | esc_AlwaysCopy, result);
     return NS_OK;
 }
 
@@ -1150,13 +1150,17 @@ nsStandardURL::SetUserPass(const nsACString &input)
     if (usernameLen > 0) {
         GET_SEGMENT_ENCODER(encoder);
         usernameLen = encoder.EncodeSegmentCount(userpass.get(),
-                                                 URLSegment(usernamePos, usernameLen),
-                                                 esc_Username|esc_AlwaysCopy, buf);
+                                                 URLSegment(usernamePos,
+                                                            usernameLen),
+                                                 esc_Username | esc_AlwaysCopy,
+                                                 buf);
         if (passwordLen >= 0) {
             buf.Append(':');
             passwordLen = encoder.EncodeSegmentCount(userpass.get(),
-                                                     URLSegment(passwordPos, passwordLen),
-                                                     esc_Password|esc_AlwaysCopy, buf);
+                                                     URLSegment(passwordPos,
+                                                                passwordLen),
+                                                     esc_Password |
+                                                     esc_AlwaysCopy, buf);
         }
         if (mUsername.mLen < 0)
             buf.Append('@');
@@ -1863,16 +1867,20 @@ nsStandardURL::SetFilePath(const nsACString &input)
 
         // append encoded filepath components
         if (dirLen > 0)
-            encoder.EncodeSegment(Substring(filepath + dirPos, filepath + dirLen),
-                                  esc_Directory|esc_AlwaysCopy, spec);
+            encoder.EncodeSegment(Substring(filepath + dirPos,
+                                            filepath + dirPos + dirLen),
+                                  esc_Directory | esc_AlwaysCopy, spec);
         if (baseLen > 0)
-            encoder.EncodeSegment(Substring(filepath + basePos, filepath + baseLen),
-                                  esc_FileBaseName|esc_AlwaysCopy, spec);
+            encoder.EncodeSegment(Substring(filepath + basePos,
+                                            filepath + basePos + baseLen),
+                                  esc_FileBaseName | esc_AlwaysCopy, spec);
         if (extLen >= 0) {
             spec.Append('.');
             if (extLen > 0)
-                encoder.EncodeSegment(Substring(filepath + extPos, filepath + extLen),
-                                      esc_FileExtension|esc_AlwaysCopy, spec);
+                encoder.EncodeSegment(Substring(filepath + extPos,
+                                                filepath + extPos + extLen),
+                                      esc_FileExtension | esc_AlwaysCopy,
+                                      spec);
         }
 
         // compute the ending position of the current filepath
@@ -2085,7 +2093,8 @@ nsStandardURL::SetFileName(const nsACString &input)
 	        nsCAutoString newFilename;
             GET_SEGMENT_ENCODER(encoder);
             basename.mLen = encoder.EncodeSegmentCount(filename, basename,
-                                                       esc_FileBaseName|esc_AlwaysCopy,
+                                                       esc_FileBaseName |
+                                                       esc_AlwaysCopy,
                                                        newFilename);
 	        if (extension.mLen >= 0) {
 	            newFilename.Append('.');
