@@ -33,7 +33,7 @@ DEPTH = ..\..
 #//
 #//------------------------------------------------------------------------
 
-DLLNAME		= xpaccount$(MOZ_BITS)
+DLLNAME		= xpacct$(MOZ_BITS)
 DLL1NAME	= xaccount$(MOZ_BITS)
 PDBFILE		= $(DLLNAME).pdb
 MAPFILE		= $(DLLNAME).map
