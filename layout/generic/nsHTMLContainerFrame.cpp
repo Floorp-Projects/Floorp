@@ -468,10 +468,7 @@ nsHTMLContainerFrame::CreateViewForFrame(nsIPresContext* aPresContext,
           aStyleContext->GetStyleData(eStyleStruct_Position);
 
         if (NS_STYLE_POSITION_FIXED == position->mPosition) {
-          nsRect rect;
-          view->GetBounds(rect);
-          if (! rect.IsEmpty())
-            view->CreateWidget(kCChildCID);
+          view->CreateWidget(kCChildCID);
         }
 
         viewManager->SetViewOpacity(view, color->mOpacity);
