@@ -90,6 +90,10 @@ LCFLAGS=$(LCFLAGS) -DSMART_MAIL
 LCFLAGS=$(LCFLAGS) -DMOZ_TRACE_XPCOM_REFCNT
 !endif
 
+!ifdef MOZ_SMOOTH_PROGRESS
+LCFLAGS=$(LCFLAGS) -DSMOOTH_PROGRESS
+!endif
+
 
 ## Include support for MOZ_LITE/MOZ_MEDIUM
 include <$(DEPTH)/config/liteness.mak>
