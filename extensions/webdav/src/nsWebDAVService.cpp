@@ -511,7 +511,7 @@ nsWebDAVService::Put(nsIWebDAVResourceWithData *resource,
 
 NS_IMETHODIMP
 nsWebDAVService::Remove(nsIWebDAVResource *resource,
-                        nsIWebDAVOperationListener *listener)
+                        nsIWebDAVDetailedOperationListener *listener)
 {
     nsCOMPtr<nsIHttpChannel> channel;
     nsresult rv = ChannelFromResource(resource, getter_AddRefs(channel));

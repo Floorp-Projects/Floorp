@@ -86,7 +86,7 @@ interface nsIWebDAVService : nsISupports
              in nsIWebDAVOperationListener listener);
 
     void remove(in nsIWebDAVResource resource,
-                in nsIWebDAVOperationListener listener);
+                in nsIWebDAVDetailedOperationListener listener);
 
     void moveTo(in nsIWebDAVResourceWithTarget resource,
                 in nsIWebDAVOperationListener listener);

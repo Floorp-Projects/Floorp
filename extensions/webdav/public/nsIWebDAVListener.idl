@@ -80,3 +80,10 @@ interface nsIWebDAVOperationListener : nsISupports
     void onMakeCollectionResult(in unsigned long aStatusCode,
                                 in nsIWebDAVResource aResource);
 };
+
+[scriptable,uuid(be99d517-9161-4a7d-8bee-2ee98c1c2c6f)]
+interface nsIWebDAVDetailedOperationListener : nsIWebDAVOperationListener
+{
+    void onResultDetail(in unsigned long statusCode, in AUTF8String resource,
+                        in AString method);
+};
