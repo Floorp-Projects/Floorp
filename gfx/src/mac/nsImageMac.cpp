@@ -212,7 +212,7 @@ NS_IMETHODIMP nsImageMac :: Draw(nsIRenderingContext &aContext, nsDrawingSurface
 	::RGBForeColor(&rgbblack);
 	::RGBBackColor(&rgbwhite);
 	
-	::CopyBits((BitMap*)&mThePixelmap,(BitMap*)destpix,&srcrect,&dstrect,ditherCopy,0L);
+	::CopyBits((BitMap*)&mThePixelmap, (BitMap*)destpix, &srcrect, &dstrect, ditherCopy, 0L);
 
   return NS_OK;
 }
@@ -241,6 +241,23 @@ void nsImageMac::CompositeImage(nsIImage *aTheImage, nsPoint *aULLocation,nsBlen
 // lets build an alpha mask from this image
 PRBool nsImageMac::SetAlphaMask(nsIImage *aTheMask)
 {
+PRInt32   num;
+PRUint8   *srcBits;
+
+  if (aTheMask && (((nsImageMac*)aTheMask)->mThePixelmap.pixelSize == 8)){
+    mLocation.x = 0;
+    mLocation.y = 0;
+    mAlphaDepth = 8;
+    mAlphaWidth = aTheMask->GetWidth();
+    mAlphaHeight = aTheMask->GetHeight();
+    num = mAlphaWidth*mAlphaHeight;
+    mARowBytes = aTheMask->GetLineStride();
+    mAlphaBits = new unsigned char[mARowBytes * mAlphaHeight];
+    srcBits = aTheMask->GetBits();
+    memcpy(mAlphaBits,srcBits,num); 
+    return(PR_TRUE);
+  }
+
   return(PR_FALSE);
 }
 
