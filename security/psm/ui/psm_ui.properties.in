@@ -483,7 +483,7 @@ http_error_content:
 :http_error_content
 
 ; In the normal header: 0=additional headers, 1=content type
-http_header_template="HTTP/1.0 200 OK<psm:cr><psm:lf>%1$sContent-Type: %2$s<psm:cr><psm:lf>Connection: close<psm:cr><psm:lf><psm:cr><psm:lf>"
+http_header_template="HTTP/1.0 200 OK<psm:cr><psm:lf>%1$sContent-Type: %2$s<psm:cr><psm:lf>Connection: close<psm:cr><psm:lf>Pragma: no-cache<psm:cr><psm:lf><psm:cr><psm:lf>"
 
 ; Standard preamble for most HTML pages
 html_start=<html><head><psm:cr><psm:lf><meta http-equiv="Content-Type" content="text/html; charset={nsm_charset}">{disable_right_click_js}</head><body bgcolor=#{$1}>
