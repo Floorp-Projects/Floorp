@@ -33,7 +33,6 @@
 #define _PROTO_H_
 
 #include "ntypes.h"
-#include "lo_ele.h"
 
 XP_BEGIN_PROTOS
 

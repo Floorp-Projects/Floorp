@@ -101,7 +101,7 @@ il_partial(
     if (!ic->new_data_for_fe) {
         ic->update_start_row = row;
         ic->update_end_row = row + row_count - 1;
-        ic->new_data_for_fe = TRUE;
+        ic->new_data_for_fe = PR_TRUE;
     } else {
         if (row < ic->update_start_row)
             ic->update_start_row = row;
@@ -216,7 +216,7 @@ il_flush_image_data(il_container *ic)
     /* Notify observers of image progress. */
     il_progress_notify(ic);
 
-    ic->new_data_for_fe = FALSE;
+    ic->new_data_for_fe = PR_FALSE;
     ic->update_end_row = ic->update_start_row = 0;
 }
 
@@ -1223,7 +1223,7 @@ il_emit_row(
 
 #ifndef M12N                    /* Clean this up */
     if (ic->image->pixmap_depth == 1)
-        do_dither = TRUE;
+        do_dither = PR_TRUE;
     else
         do_dither = ic->converter && (row_count <= 4) &&
             ((ic->dither_mode == IL_Dither) ||
@@ -1233,7 +1233,7 @@ il_emit_row(
     if ((nsCRT::strncasecmp(ic->type, "image/gif",9)==0)||
         (nsCRT::strncasecmp(ic->type, "image/png",9)==0) &&
         (!ic->converter || (row_count > 4)))
-              do_dither = FALSE;
+              do_dither = PR_FALSE;
    
 #endif /* M12N */   
 

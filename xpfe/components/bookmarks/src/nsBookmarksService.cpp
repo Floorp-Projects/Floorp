@@ -1999,7 +1999,7 @@ nsBookmarksService::FireTimer(nsITimer* aTimer, void* aClosure)
 						}
 						if (NS_SUCCEEDED(rv = channel->AsyncRead(bmks, nsnull)))
 						{
-							bmks->busySchedule = TRUE;
+							bmks->busySchedule = PR_TRUE;
 						}
 					}
 				}

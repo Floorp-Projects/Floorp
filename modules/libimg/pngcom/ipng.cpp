@@ -312,7 +312,7 @@ info_callback(png_structp png_ptr, png_infop info_ptr)
 #endif
                  ic->image->header.alpha_bits = 1;  
         ic->image->header.alpha_shift = 0;
-        ic->image->header.is_interleaved_alpha = TRUE;
+        ic->image->header.is_interleaved_alpha = PR_TRUE;
     }
 
     ic->imgdcb->ImgDCBImageSize();

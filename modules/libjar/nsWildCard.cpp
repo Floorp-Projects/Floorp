@@ -265,7 +265,7 @@ XP_RegExpMatch(char *str, char *xp, PRBool case_insensitive) {
             break;
         }
     }
-    if(_shexp_match(str,expr, FALSE) == MATCH) {
+    if(_shexp_match(str,expr, PR_FALSE) == MATCH) {
         PR_Free(expr);
         return 0;
     }
@@ -289,7 +289,7 @@ XP_RegExpSearch(char *str, char *expr)
         case NON_SXP:
             return (strcmp(expr,str) ? 1 : 0);
         default:
-            return XP_RegExpMatch(str, expr, FALSE);
+            return XP_RegExpMatch(str, expr, PR_FALSE);
       }
 }
 

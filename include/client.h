@@ -45,18 +45,5 @@
 #include "structs.h"
 #include "merrors.h"
 
-#ifndef XP_MAC /* don't include everything in the world */
-
-/* --------------------------------------------------------------------- */
-/* include other bits of the Netscape client library */
-#include "lo_ele.h"  /* Layout structures */
-#include "net.h"
-#include "gui.h"
-#include "shist.h"
-#include "glhist.h"
-#include "mime.h"
-
-#endif /* !XP_MAC */
-
 #endif /* _CLIENT_H_ */
 

@@ -8,7 +8,6 @@ ctxtfunc.h
 edttypes.h
 fe_proto.h
 libc_r.h
-lo_ele.h
 merrors.h
 minicom.h
 mk_cx_fn.h

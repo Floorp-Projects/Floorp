@@ -260,10 +260,10 @@ printf( "top %f bottom %f left %f right %f\n", top, bottom, left, right );
     mPrintSetup->header = "header";
     mPrintSetup->footer = "footer";
     mPrintSetup->sizes = NULL;
-    mPrintSetup->landscape = FALSE;            // Rotated output 
-    mPrintSetup->underline = TRUE;             // underline links 
-    mPrintSetup->scale_images = TRUE;          // Scale unsized images which are too big 
-    mPrintSetup->scale_pre = FALSE;		        // do the pre-scaling thing 
+    mPrintSetup->landscape = PR_FALSE;            // Rotated output 
+    mPrintSetup->underline = PR_TRUE;             // underline links 
+    mPrintSetup->scale_images = PR_TRUE;          // Scale unsized images which are too big 
+    mPrintSetup->scale_pre = PR_FALSE;		        // do the pre-scaling thing 
     // scale margins (specified in inches) to dots.
 
     mPrintSetup->top = (int) (top * mPrintSetup->dpi);     

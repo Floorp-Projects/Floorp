@@ -36,7 +36,6 @@
 #include "xp_mcom.h"
 
 #include "il_types.h"
-#include "lo_ele.h"
 #include "shistele.h"
 #include "edttypes.h"
 
