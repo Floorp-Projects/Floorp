@@ -53,6 +53,11 @@
 static NS_DEFINE_IID(kIWindowMediatorIID,NS_IWINDOWMEDIATOR_IID);
 static NS_DEFINE_CID(kWindowMediatorCID, NS_WINDOWMEDIATOR_CID);
 
+#define PREF_GENERAL_STARTUP_BROWSER "general.startup.browser"
+#define PREF_GENERAL_STARTUP_MAIL "general.startup.mail"
+#define PREF_GENERAL_STARTUP_NEWS "general.startup.news"
+#define PREF_GENERAL_STARTUP_EDITOR "general.startup.editor"
+#define PREF_GENERAL_STARTUP_CALENDAR "general.startup.calendar"
 
 #ifdef DEBUG
 #include "prlog.h"
@@ -174,7 +179,7 @@ static PRBool CheckAndRunPrefs(nsICmdLineService* cmdLineArgs)
   // the application.
   char* cmdResult;
   nsresult rv = cmdLineArgs->GetCmdLineValue("-pref", &cmdResult);
-  if (NS_SUCCEEDED(rv) && cmdResult && (strcmp("1",cmdResult) == 0))
+  if (NS_SUCCEEDED(rv) && cmdResult && (PL_strcmp("1",cmdResult) == 0))
   {
     nsIPrefWindow* prefWindow;
     rv = nsComponentManager::CreateInstance(
@@ -228,17 +233,22 @@ static void InitFullCircle()
 #endif
 }
 
-static nsresult HandleEditorStartup( nsICmdLineService* cmdLineArgs )
+static nsresult HandleEditorStartup( nsICmdLineService* cmdLineArgs, nsIPref *prefs,  PRBool heedGeneralStartupPrefs)
 {
 	char* cmdResult = nsnull;
 	char *  urlstr=nsnull;
 	nsString withArgs;
 	nsresult rv;
+	PRBool forceLaunchEditor = PR_FALSE;
+
+	if (heedGeneralStartupPrefs) {
+		prefs->GetBoolPref(PREF_GENERAL_STARTUP_EDITOR,&forceLaunchEditor);
+	}
   
 	rv = cmdLineArgs->GetCmdLineValue("-edit", &cmdResult);
   if (NS_SUCCEEDED(rv))
   {
-    if (cmdResult && (strcmp("1",cmdResult)==0)) {
+    if (forceLaunchEditor || (cmdResult && (PL_strcmp("1",cmdResult)==0))) {
       urlstr = "chrome://editor/content/";
       withArgs = "chrome://editor/content/EditorInitPage.html";
      
@@ -254,7 +264,7 @@ static nsresult HandleEditorStartup( nsICmdLineService* cmdLineArgs )
       rv = cmdLineArgs->GetCmdLineValue("-editor", &cmdResult);
       if (NS_SUCCEEDED(rv))
       {
-        if (cmdResult && (strcmp("1",cmdResult)==0)) {
+        if (cmdResult && (PL_strcmp("1",cmdResult)==0)) {
           printf(" -editor no longer supported, use -edit instead!\n");
           return NS_ERROR_FAILURE;		
         }
@@ -284,12 +294,15 @@ static nsresult OpenChromURL( char * urlstr, PRInt32 height = NS_SIZETOCONTENT, 
   return rv;
 }
 
-static nsresult HandleMailStartup( nsICmdLineService* cmdLineArgs )
+static nsresult HandleMailStartup( nsICmdLineService* cmdLineArgs, nsIPref *prefs,  PRBool heedGeneralStartupPrefs)
 {
 	char* cmdResult = nsnull;
 	char *  urlstr=nsnull;
 	nsString withArgs;
 	nsresult rv;
+	PRBool forceLaunchMail = PR_FALSE;
+	PRBool forceLaunchNews = PR_FALSE;
+
 	
 	PRInt32 height  = NS_SIZETOCONTENT;
 	PRInt32 width  = NS_SIZETOCONTENT;
@@ -312,10 +325,13 @@ static nsresult HandleMailStartup( nsICmdLineService* cmdLineArgs )
 	  
 	
 
+  if (heedGeneralStartupPrefs) {
+                prefs->GetBoolPref(PREF_GENERAL_STARTUP_MAIL,&forceLaunchMail);
+  }    
   rv = cmdLineArgs->GetCmdLineValue("-mail", &cmdResult);
   if (NS_SUCCEEDED(rv))
   {
-    if (cmdResult && (strcmp("1",cmdResult)==0))
+    if (forceLaunchMail || (cmdResult && (PL_strcmp("1",cmdResult)==0)))
     {
       OpenChromURL("chrome://messenger/content/", height, width);
           
@@ -323,17 +339,20 @@ static nsresult HandleMailStartup( nsICmdLineService* cmdLineArgs )
   }
 
 
+  if (heedGeneralStartupPrefs) {
+                prefs->GetBoolPref(PREF_GENERAL_STARTUP_NEWS,&forceLaunchNews);
+  }    
   rv = cmdLineArgs->GetCmdLineValue("-news", &cmdResult);
   if (NS_SUCCEEDED(rv))
   {
-    if (cmdResult && (strcmp("1",cmdResult)==0))
+    if (forceLaunchNews || (cmdResult && (PL_strcmp("1",cmdResult)==0)))
       OpenChromURL("chrome://messenger/content/", height, width);
   }
 	
   rv = cmdLineArgs->GetCmdLineValue("-compose", &cmdResult);
   if (NS_SUCCEEDED(rv))
   {
-    if (cmdResult && (strcmp("1",cmdResult)==0))
+    if (cmdResult && (PL_strcmp("1",cmdResult)==0))
     {
       urlstr = "chrome://messengercompose/content/";
       withArgs = "chrome://editor/content/EditorInitPage.html";
@@ -349,19 +368,20 @@ static nsresult HandleMailStartup( nsICmdLineService* cmdLineArgs )
   rv = cmdLineArgs->GetCmdLineValue("-addressbook", &cmdResult);
   if (NS_SUCCEEDED(rv))
   {
-    if (cmdResult && (strcmp("1",cmdResult)==0))
+    if (cmdResult && (PL_strcmp("1",cmdResult)==0))
       OpenChromURL("chrome://addressbook/content/",height, width);
   }
 	
 	return NS_OK;    
 }
 
-static nsresult HandleBrowserStartup( nsICmdLineService* cmdLineArgs)
+static nsresult HandleBrowserStartup( nsICmdLineService* cmdLineArgs, nsIPref *prefs,  PRBool heedGeneralStartupPrefs)
 {
 	char* cmdResult = nsnull;
 	
 	nsString withArgs;
 	nsresult rv;
+	PRBool forceLaunchBrowser = PR_FALSE;
 	
 	PRInt32 height  = NS_SIZETOCONTENT;
 	PRInt32 width  = NS_SIZETOCONTENT;
@@ -384,30 +404,35 @@ static nsresult HandleBrowserStartup( nsICmdLineService* cmdLineArgs)
 	if (tempString)
 		PR_sscanf(tempString, "%d", &height);
 	
-
+  if (heedGeneralStartupPrefs) {
+  	prefs->GetBoolPref(PREF_GENERAL_STARTUP_BROWSER,&forceLaunchBrowser);
+  }  
   rv = cmdLineArgs->GetCmdLineValue("-chrome", &cmdResult); 
-  if ( NS_SUCCEEDED(rv) && cmdResult )
-    OpenChromURL(cmdResult, height, width);
-	 
+  if (forceLaunchBrowser) {
+	rv = OpenChromURL("chrome://navigator/content/", height, width ); 
+  }
+  else if (NS_SUCCEEDED(rv) && cmdResult) {
+    rv = OpenChromURL(cmdResult, height, width);
+  }
   
-	return NS_OK;    
+	return rv;    
 }
 
 // This should be done by app shell enumeration someday
-static nsresult DoCommandLines( nsICmdLineService* cmdLine )
+static nsresult DoCommandLines( nsICmdLineService* cmdLine, PRBool heedGeneralStartupPrefs )
 {
 	nsresult  rv;
 	
-	rv = HandleEditorStartup( cmdLine );
-	if ( NS_FAILED( rv ) )
-		return rv;
+	NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &rv); 
+	if (NS_FAILED(rv)) return rv;
+
+	rv = HandleEditorStartup( cmdLine, prefs, heedGeneralStartupPrefs);
+	if ( NS_FAILED( rv ) ) return rv;
 		
-	rv = HandleMailStartup( cmdLine );
-	if ( NS_FAILED( rv ) )
-		return rv;
+	rv = HandleMailStartup( cmdLine, prefs, heedGeneralStartupPrefs);
+	if ( NS_FAILED( rv ) ) return rv;
 	
-	rv = HandleBrowserStartup( cmdLine );
-	
+	rv = HandleBrowserStartup( cmdLine, prefs, heedGeneralStartupPrefs);
 	return rv;
 }
 
@@ -526,6 +551,8 @@ static nsresult main1(int argc, char* argv[])
   // Presumably an application will init it's own cookie service a 
   // different way (this way works too though).
   NS_WITH_SERVICE(nsICookieService, cookieService, kCookieServiceCID, &rv);
+  // quiet the compiler
+  (void)cookieService;
 #ifndef XP_MAC
   // Until the cookie manager actually exists on the Mac we don't want to bail here
   if (NS_FAILED(rv))
@@ -537,7 +564,10 @@ static nsresult main1(int argc, char* argv[])
 	appShell->EnumerateAndInitializeComponents();
 	
 	// This will go away once Components are handling there own commandlines
-	rv = DoCommandLines( cmdLineArgs );
+	// if we have no command line arguments, we need to heed the
+	// "general.startup.*" prefs
+	// if we had no command line arguments, argc == 1.
+	rv = DoCommandLines( cmdLineArgs, (argc == 1) );
 	if ( NS_FAILED(rv) )
     return rv;
      
