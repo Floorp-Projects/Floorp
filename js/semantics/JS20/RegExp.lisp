@@ -56,12 +56,12 @@
        
        
        (%section "Regular Expression Definitions")
-       (deftype r-e-input (tuple (str string) (ignore-case boolean) (multiline boolean) (simple boolean)))
+       (deftype r-e-input (tuple (str string) (ignore-case boolean) (multiline boolean) (span boolean)))
        (%text :semantics
          "Field " (:field str r-e-input) " is the input string. "
          (:field ignore-case r-e-input) ", "
          (:field multiline r-e-input) ", and "
-         (:field simple r-e-input) " are the corresponding regular expression flags.")
+         (:field span r-e-input) " are the corresponding regular expression flags.")
        
        (deftype r-e-result (oneof (success r-e-match) failure))
        (deftype r-e-match (tuple (end-index integer)
@@ -340,7 +340,7 @@
          (production :atom (#\.) atom-dot
            ((gen-matcher (paren-index integer :unused))
             (function ((t r-e-input) (x r-e-match) (c continuation))
-              ((character-set-matcher (if (& simple t) (set-of character) line-terminators) true) t x c)))
+              ((character-set-matcher (if (& span t) (set-of character) line-terminators) true) t x c)))
            (count-parens 0))
          (production :atom (:null-escape) atom-null-escape
            ((gen-matcher (paren-index integer :unused))
@@ -586,10 +586,10 @@
   (defparameter *rg* (lexer-grammar *rl*)))
 
 
-(defun run-regexp (regexp input &key ignore-case multiline simple)
+(defun run-regexp (regexp input &key ignore-case multiline span)
   (let ((exec (first (lexer-parse *rl* regexp))))
     (dotimes (i (length input) '(failure))
-      (let ((result (funcall exec (list input ignore-case multiline simple) i)))
+      (let ((result (funcall exec (list input ignore-case multiline span) i)))
         (ecase (first result)
           (success
            (return (list* i (subseq input i (second result)) (cddr result))))
@@ -648,7 +648,7 @@
 (run-regexp "a." "AAab")
 (run-regexp "a." "AAab" :ignore-case t)
 (run-regexp "a.." (concatenate 'string "a" (string #\newline) "bacd"))
-(run-regexp "a.." (concatenate 'string "a" (string #\newline) "bacd") :simple t)
+(run-regexp "a.." (concatenate 'string "a" (string #\newline) "bacd") :span t)
 |#
 
 #+allegro (clean-grammar *rg*) ;Remove this line if you wish to print the grammar's state tables.
