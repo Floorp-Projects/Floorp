@@ -2283,7 +2283,7 @@ nsHTMLEditor::GetFirstSelectedCellInTable(nsIDOMElement **aCell, PRInt32 *aRowIn
       {
         // Then save the left-most cell in that row
         if (startRowIndex < firstRowIndex || 
-            startColIndex < startColIndex)
+            startColIndex < firstColIndex)
         {
           firstCell = cell;
           firstRowIndex = startRowIndex;
