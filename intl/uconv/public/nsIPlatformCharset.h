@@ -47,7 +47,9 @@ typedef enum {
      kPlatformCharsetSel_PlainTextInClipboard = 0,
      kPlatformCharsetSel_FileName = 1,
      kPlatformCharsetSel_Menu = 2,
-     kPlatformCharsetSel_4xBookmarkFile = 3
+     kPlatformCharsetSel_4xBookmarkFile = 3,
+     kPlatformCharsetSel_KeyboardInput = 4,
+     kPlatformCharsetSel_WindowManager = 5
 } nsPlatformCharsetSel;
 
 class nsIPlatformCharset : public nsISupports
