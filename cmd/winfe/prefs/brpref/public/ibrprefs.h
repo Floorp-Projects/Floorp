@@ -92,5 +92,68 @@ DECLARE_INTERFACE_(IBrowserPrefs, IUnknown)
 	STDMETHOD(RemoveFileType)(THIS_ NET_cdataStruct *) PURE;
 };
 
+
+/////////////////////////////////////////////////////////////////////////////
+// IAdvancedPrefs interface
+
+#ifdef __cplusplus
+interface IAdvancedPrefs;
+#else
+typedef interface IAdvancedPrefs IAdvancedPrefs;
+#endif
+
+typedef IAdvancedPrefs FAR* LPADVANCEDPREFS;
+
+#undef  INTERFACE
+#define INTERFACE IAdvancedPrefs
+
+DECLARE_INTERFACE_(IAdvancedPrefs, IUnknown)
+{
+	// IUnknown methods
+	STDMETHOD(QueryInterface)(THIS_ REFIID riid, LPVOID FAR* ppvObj) PURE;
+	STDMETHOD_(ULONG,AddRef)(THIS) PURE;
+	STDMETHOD_(ULONG,Release)(THIS) PURE;
+};
+
+#ifdef MOZ_SMARTUPDATE
+
+/////////////////////////////////////////////////////////////////////////////
+// ISmartUpdatePrefs interface
+
+#ifdef __cplusplus
+interface ISmartUpdatePrefs;
+#else
+typedef interface ISmartUpdatePrefs ISmartUpdatePrefs;
+#endif
+
+typedef ISmartUpdatePrefs FAR* LPSMARTUPDATEPREFS;
+
+#undef  INTERFACE
+#define INTERFACE ISmartUpdatePrefs
+
+typedef struct _PACKAGEINFO {
+	char	userPackageName[MAX_PATH];  
+    char	regPackageName[MAX_PATH];
+} PACKAGEINFO, FAR *LPPACKAGEINFO;
+
+// IBrowserPrefs provides the preference UI code with a way to get at
+// various state maintained by the Navigator
+DECLARE_INTERFACE_(ISmartUpdatePrefs, IUnknown)
+{
+	// IUnknown methods
+	STDMETHOD(QueryInterface)(THIS_ REFIID riid, LPVOID FAR* ppvObj) PURE;
+	STDMETHOD_(ULONG,AddRef)(THIS) PURE;
+	STDMETHOD_(ULONG,Release)(THIS) PURE;
+
+	// IBrowserPrefs methods
+	STDMETHOD_(LONG,RegPack)(THIS) PURE;
+    STDMETHOD_(LONG,Uninstall)(THIS_ char* regPackageName) PURE;
+    STDMETHOD_(LONG,EnumUninstall)(THIS_ void** context, char* packageName,
+                                    LONG len1, char*regPackageName, LONG len2) PURE;
+
+};
+
+#endif /* MOZ_SMARTUPDATE */
+
 #endif /* __IBRPREFS_H_ */
 

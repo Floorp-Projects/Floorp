@@ -145,7 +145,7 @@ IDD_ADVANCED DIALOG DISCARDABLE  0, 0, 256, 190
 STYLE WS_CHILD | WS_CLIPSIBLINGS
 FONT 8, "MS Sans Serif"
 BEGIN
-    GROUPBOX        "",-1,7,7,242,93,WS_GROUP
+    GROUPBOX        "",-1,7,7,242,81,WS_GROUP
     CONTROL         "Automatically load &images",IDC_CHECK1,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,17,18,97,10
     CONTROL         "Enable &Java",IDC_CHECK2,"Button",BS_AUTOCHECKBOX | 
@@ -154,20 +154,18 @@ BEGIN
                     WS_TABSTOP,17,44,73,10
     CONTROL         "Enable &style sheets",IDC_CHECK4,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,17,57,147,10
-    CONTROL         "Enable Au&toInstall",IDC_CHECK5,"Button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP,17,70,73,10
     CONTROL         "Send &email address as anonymous FTP password",
-                    IDC_CHECK6,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,17,83,
+                    IDC_CHECK6,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,17,71,
                     172,10
-    GROUPBOX        "Cookies",-1,7,108,242,72
+    GROUPBOX        "Cookies",-1,7,98,242,80
     CONTROL         "&Accept all cookies",IDC_RADIO1,"Button",
-                    BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP,17,119,74,10
+                    BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP,17,117,74,10
     CONTROL         "Accept &only cookies that get sent back to the originating server",
-                    IDC_RADIO2,"Button",BS_AUTORADIOBUTTON,17,132,215,10
+                    IDC_RADIO2,"Button",BS_AUTORADIOBUTTON,17,130,215,10
     CONTROL         "&Disable cookies",IDC_RADIO3,"Button",
-                    BS_AUTORADIOBUTTON,17,145,66,10
+                    BS_AUTORADIOBUTTON,17,143,66,10
     CONTROL         "&Warn me before accepting a cookie",IDC_CHECK7,"Button",
-                    BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP,18,163,139,10
+                    BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP,18,161,139,10
 END
 
 IDD_CACHE DIALOG DISCARDABLE  0, 0, 256, 190
@@ -433,6 +431,28 @@ BEGIN
     PUSHBUTTON      "Cancel",IDCANCEL,159,101,50,14
 END
 
+#ifdef MOZ_SMARTUPDATE
+
+IDD_SMARTUPDATE DIALOG DISCARDABLE  0, 0, 256, 212
+STYLE WS_CHILD | WS_CLIPSIBLINGS
+FONT 8, "MS Sans Serif"
+BEGIN
+    DEFPUSHBUTTON   "Compress Client Registry",IDC_BUTTON1,7,55,122,14
+    PUSHBUTTON      "Uninstall",IDC_BUTTON2,189,96,50,14
+    GROUPBOX        "",IDC_STATIC,7,7,242,40
+    CONTROL         "Enable SmartUpdate",IDC_CHECK1,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,17,17,226,10
+    CONTROL         "Require manual confirmation of each install",IDC_CHECK2,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,17,30,225,10
+    GROUPBOX        "",IDC_STATIC,7,72,242,127
+    LISTBOX         IDC_LIST1,15,95,169,99,LBS_SORT | LBS_NOINTEGRALHEIGHT | 
+                    WS_VSCROLL | WS_TABSTOP
+    LTEXT           "To uninstall, select from the following list and click the Uninstall button.",
+                    IDC_STATIC,13,83,230,10
+END
+
+#endif /* MOZ_SMARTUPDATE */
+
 IDD_SMARTBROWSING DIALOG DISCARDABLE  0, 0, 256, 211
 STYLE WS_CHILD | WS_CLIPSIBLINGS
 FONT 8, "MS Sans Serif"
@@ -445,6 +465,8 @@ BEGIN
     CONTROL         "Enable Internet &Keywords",IDC_CHECK2,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,17,109,97,10
 END
+
+
 
 
 /////////////////////////////////////////////////////////////////////////////
@@ -574,6 +596,16 @@ BEGIN
         TOPMARGIN, 7
         BOTTOMMARGIN, 119
     END
+
+#ifdef MOZ_SMARTUPDATE
+    IDD_SMARTUPDATE, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 249
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 205
+    END
+#endif /* MOZ_SMARTUPDATE */
 
     IDD_SMARTBROWSING, DIALOG
     BEGIN
@@ -763,6 +795,17 @@ BEGIN
     IDS_MORE_DISK_SPACE     "More disk space"
     IDD_SMARTBROWSING       "Smart Browsing\nConfigure browsing aids"
 END
+
+#ifdef MOZ_SMARTUPDATE
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDD_SMARTUPDATE         "SmartUpdate\nEnable and uninstall SmartUpdates"
+    IDS_CONTINUE_UNINSTALL  "Are you sure you want to uninstall ""%s"" ?"
+    IDS_UNINSTALL           "Uninstall"
+    IDS_ERROR_UNINSTALL     "Error in uninstall."
+END
+#endif /* MOZ_SMARTUPDATE */
+
 
 #endif    // English (U.S.) resources
 /////////////////////////////////////////////////////////////////////////////

@@ -354,20 +354,27 @@ CAdvancedCategory::CSpecifyAdvancedPageObjects::GetPageObjects(CAPPAGE *pPages)
 	if (!pPages)
 		return ResultFromScode(E_POINTER);
 
-#ifdef MOZ_MAIL_NEWS
-	pPages->cElems = 4;
-#else
 	pPages->cElems = 3;
+#ifdef MOZ_SMARTUPDATE
+  	pPages->cElems++;
+#endif /* MOZ_SMARTUPDATE */
+#ifdef MOZ_MAIL_NEWS
+	pPages->cElems++;
 #endif /* MOZ_MAIL_NEWS */
+
 	pPages->pElems = (LPPROPERTYPAGE *)CoTaskMemAlloc(pPages->cElems * sizeof(LPPROPERTYPAGE));
 	if (!pPages->pElems)
 		return ResultFromScode(E_OUTOFMEMORY);
 
-	pPages->pElems[0] = new CAdvancedPrefs;
-	pPages->pElems[1] = new CCachePrefs;
-	pPages->pElems[2] = new CProxiesPrefs;
+    ULONG j = 0;
+	pPages->pElems[j++] = new CAdvancedPrefs;
+	pPages->pElems[j++] = new CCachePrefs;
+	pPages->pElems[j++] = new CProxiesPrefs;
+#ifdef MOZ_SMARTUPDATE
+    pPages->pElems[j++] = new CSmartUpdatePrefs;
+#endif /* MOZ_SMARTUPDATE */
 #ifdef MOZ_MAIL_NEWS   
-	pPages->pElems[3] = new CDiskSpacePrefs;
+	pPages->pElems[j++] = new CDiskSpacePrefs;
 #endif /* MOZ_MAIL_NEWS */
 	
 	for (ULONG i = 0; i < pPages->cElems; i++)
@@ -502,8 +509,10 @@ CGeneralPrefsDll::GetClassObject(REFCLSID rClsid, REFIID riid, LPVOID *ppObj)
     // See if we have that particular class object.
     if (rClsid == CLSID_AppearancePrefs ||
 		rClsid == CLSID_BrowserPrefs ||
+#ifdef MOZ_SMARTUPDATE
+        rClsid == CLSID_SmartUpdatePrefs ||
+#endif /* MOZ_SMARTUPDATE */
 		rClsid == CLSID_AdvancedPrefs) {
-
         // Create a class object
         CPropertyPageFactory *pFactory = new CPropertyPageFactory(rClsid);
 
@@ -528,13 +537,22 @@ CGeneralPrefsDll::GetClassObject(REFCLSID rClsid, REFIID riid, LPVOID *ppObj)
 const CLSID **
 CGeneralPrefsDll::GetCLSIDs()
 {
+#ifndef MOZ_SMARTUPDATE
     const CLSID **ppRetval = (const CLSID **)CoTaskMemAlloc(sizeof(CLSID *) * 4);
+#else
+    const CLSID **ppRetval = (const CLSID **)CoTaskMemAlloc(sizeof(CLSID *) * 5);
+#endif /* MOZ_SMARTUPDATE */
 
     if (ppRetval) {
         ppRetval[0] = &CLSID_AppearancePrefs;
         ppRetval[1] = &CLSID_BrowserPrefs;
         ppRetval[2] = &CLSID_AdvancedPrefs;
+#ifndef MOZ_SMARTUPDATE
         ppRetval[3] = NULL;
+#else
+        ppRetval[3] = &CLSID_SmartUpdatePrefs;
+        ppRetval[4] = NULL;
+#endif /* MOZ_SMARTUPDATE */
     }
 
     return ppRetval;

@@ -277,7 +277,6 @@ class CAdvancedPrefs : public CBrowserPropertyPage {
 		BOOL	m_bEnableJavaScript;
 		BOOL	m_bEnableStyleSheets;
 		BOOL	m_bSendEmailAddressForFTPPassword;
-		BOOL	m_bEnableAutoInstall;
 		int		m_nCookieAcceptance;
 		BOOL	m_bWarnAboutCookies;
 };
@@ -361,6 +360,31 @@ class CDiskSpacePrefs : public CBrowserPropertyPage {
 		BOOL	m_bRemoveBody;
 		int		m_nRemoveDays;
 };
+
+#ifdef MOZ_SMARTUPDATE
+
+/////////////////////////////////////////////////////////////////////////////
+// CSmartUpdatePrefs
+
+class CSmartUpdatePrefs : public CBrowserPropertyPage {
+	public:
+		CSmartUpdatePrefs();
+
+	protected:
+		STDMETHODIMP Activate(HWND hwndParent, LPCRECT lprc, BOOL bModal);
+		BOOL		 DoTransfer(BOOL bSaveAndValidate);
+		BOOL		 ApplyChanges();
+		BOOL		 InitDialog();
+
+		// Event Processing
+		BOOL		OnCommand(int id, HWND hwndCtl, UINT notifyCode);
+	
+	private:
+        BOOL	m_bEnableAutoInstall;
+        BOOL	m_bEnableConfirmInstall;
+   };
+
+#endif /* MOZ_SMARTUPDATE */
 
 #endif /* __PAGES_H_ */
 

@@ -25,6 +25,10 @@
 #include "xp_help.h"
 #include "net.h"
 #include "prefapi.h"
+#include "brprefid.h"
+#ifdef MOZ_SMARTUPDATE
+#include "VerReg.h"
+#endif /* MOZ_SMARTUPDATE */
 #ifdef _WIN32
 #include <shlobj.h>
 #endif
@@ -64,7 +68,6 @@ CAdvancedPrefs::InitDialog()
 	CheckIfLockedPref("security.enable_java", IDC_CHECK2);
 	CheckIfLockedPref("javascript.enabled", IDC_CHECK3);
 	CheckIfLockedPref("browser.enable_style_sheets", IDC_CHECK4);
-	CheckIfLockedPref("autoupdate.enabled", IDC_CHECK5);
 	CheckIfLockedPref("security.email_as_ftp_password", IDC_CHECK6);
 
 	if (PREF_PrefIsLocked("network.cookie.cookieBehavior")) {
@@ -86,7 +89,6 @@ CAdvancedPrefs::Activate(HWND hwndParent, LPCRECT lprc, BOOL bModal)
 		PREF_GetBoolPref("security.enable_java", &m_bEnableJava);
 		PREF_GetBoolPref("javascript.enabled", &m_bEnableJavaScript);
 		PREF_GetBoolPref("browser.enable_style_sheets", &m_bEnableStyleSheets);
-		PREF_GetBoolPref("autoupdate.enabled", &m_bEnableAutoInstall);
 		PREF_GetBoolPref("security.email_as_ftp_password", &m_bSendEmailAddressForFTPPassword);
 
 		int32	n;
@@ -107,7 +109,6 @@ CAdvancedPrefs::DoTransfer(BOOL bSaveAndValidate)
 	CheckBoxTransfer(IDC_CHECK2, m_bEnableJava, bSaveAndValidate);
 	CheckBoxTransfer(IDC_CHECK3, m_bEnableJavaScript, bSaveAndValidate);
 	CheckBoxTransfer(IDC_CHECK4, m_bEnableStyleSheets, bSaveAndValidate);
-	CheckBoxTransfer(IDC_CHECK5, m_bEnableAutoInstall, bSaveAndValidate);
 	CheckBoxTransfer(IDC_CHECK6, m_bSendEmailAddressForFTPPassword, bSaveAndValidate);
 	RadioButtonTransfer(IDC_RADIO1, m_nCookieAcceptance, bSaveAndValidate);
 	CheckBoxTransfer(IDC_CHECK7, m_bWarnAboutCookies, bSaveAndValidate);
@@ -122,7 +123,6 @@ CAdvancedPrefs::ApplyChanges()
 	PREF_SetBoolPref("security.enable_java", m_bEnableJava);
 	PREF_SetBoolPref("javascript.enabled", m_bEnableJavaScript);
 	PREF_SetBoolPref("browser.enable_style_sheets", m_bEnableStyleSheets);
-	PREF_SetBoolPref("autoupdate.enabled", m_bEnableAutoInstall);
 	PREF_SetBoolPref("security.email_as_ftp_password", m_bSendEmailAddressForFTPPassword);
 	PREF_SetIntPref("network.cookie.cookieBehavior", (int32)m_nCookieAcceptance);
 	PREF_SetBoolPref("network.cookie.warnAboutCookies", m_bWarnAboutCookies);
@@ -785,3 +785,204 @@ CDiskSpacePrefs::OnCommand(int id, HWND hwndCtl, UINT notifyCode)
 	}
 	return CBrowserPropertyPage::OnCommand(id, hwndCtl, notifyCode);
 }
+
+#ifdef MOZ_SMARTUPDATE
+
+/////////////////////////////////////////////////////////////////////////////
+// CSmartUpdatePrefs implementation
+
+CSmartUpdatePrefs::CSmartUpdatePrefs()
+	: CBrowserPropertyPage(IDD_SMARTUPDATE, HELP_PREFS_ADVANCED_SMARTUPDATE)
+{
+}
+
+
+// Initialize member data using XP preferences
+STDMETHODIMP
+CSmartUpdatePrefs::Activate(HWND hwndParent, LPCRECT lprc, BOOL bModal)
+{
+	if (!m_bHasBeenActivated) {
+        PREF_GetBoolPref("autoupdate.enabled", &m_bEnableAutoInstall);
+        PREF_GetBoolPref("autoupdate.confirm_install", &m_bEnableConfirmInstall);
+	}
+
+	return CBrowserPropertyPage::Activate(hwndParent, lprc, bModal);
+}
+
+BOOL
+CSmartUpdatePrefs::DoTransfer(BOOL bSaveAndValidate)
+{
+    CheckBoxTransfer(IDC_CHECK1, m_bEnableAutoInstall, bSaveAndValidate);
+    CheckBoxTransfer(IDC_CHECK2, m_bEnableConfirmInstall, bSaveAndValidate);
+  	return TRUE;
+}
+
+// Apply changes using XP preferences
+BOOL
+CSmartUpdatePrefs::ApplyChanges()
+{
+    PREF_SetBoolPref("autoupdate.enabled", m_bEnableAutoInstall);
+    PREF_SetBoolPref("autoupdate.confirm_install", m_bEnableConfirmInstall);
+	return TRUE;
+}
+
+BOOL
+CSmartUpdatePrefs::InitDialog()
+{
+	// Check for locked preferences
+    CheckIfLockedPref("autoupdate.enabled", IDC_CHECK1);
+    CheckIfLockedPref("autoupdate.confirm_install", IDC_CHECK2);
+
+    HWND    hList = GetDlgItem(m_hwndDlg, IDC_LIST1);
+	int		nIndex;
+
+    
+	// Fill the list box with the list of helper applications
+    assert(m_pObject);
+	if (m_pObject) {
+        LPADVANCEDPREFS lpAdvancedPrefs;
+        if (SUCCEEDED(m_pObject->QueryInterface(IID_IAdvancedPrefs, (void **)&lpAdvancedPrefs))) {
+
+		    LPSMARTUPDATEPREFS lpSmartUpdatePrefs;
+
+		    // Request the ISmartUpdatePrefs interface from our data object
+		    if (SUCCEEDED(lpAdvancedPrefs->QueryInterface(IID_ISmartUpdatePrefs, (void **)&lpSmartUpdatePrefs))) {
+			    
+                LONG err;
+                void* context = NULL;
+                LPPACKAGEINFO packageInfo = new PACKAGEINFO;
+                LPPACKAGEINFO pInfo;
+                *(packageInfo->userPackageName) = '\0';
+                *(packageInfo->regPackageName) = '\0';
+
+                if (packageInfo != NULL) {
+                    err = lpSmartUpdatePrefs->EnumUninstall(&context, packageInfo->userPackageName, sizeof(packageInfo->userPackageName),
+                                              packageInfo->regPackageName, sizeof(packageInfo->regPackageName));
+                    while (err == REGERR_OK) {
+                        if (*(packageInfo->regPackageName) != '\0' &&
+                            strcmp(packageInfo->regPackageName, UNINSTALL_NAV_STR) !=0 ) 
+                        {
+                            pInfo = new PACKAGEINFO;
+                            if (*(packageInfo->userPackageName) != '\0') {
+                                lstrcpy(pInfo->userPackageName, packageInfo->userPackageName);
+                            } else {
+                                lstrcpy(pInfo->userPackageName, packageInfo->regPackageName);
+                            }
+                            lstrcpy(pInfo->regPackageName, packageInfo->regPackageName);
+                            nIndex = ListBox_AddString(hList, pInfo->userPackageName);
+                            int lvalue;
+				            lvalue = ListBox_SetItemData(hList, nIndex, pInfo);
+                            if (lvalue == LB_ERR) {
+                                delete pInfo;
+                            }
+                        }
+                        *(packageInfo->regPackageName) = '\0';
+                        *(packageInfo->userPackageName) = '\0';
+                        err = lpSmartUpdatePrefs->EnumUninstall(&context, packageInfo->userPackageName, sizeof(packageInfo->userPackageName),
+                                                      packageInfo->regPackageName, sizeof(packageInfo->regPackageName));
+                    }
+                }
+                lpSmartUpdatePrefs->Release();
+            }  
+        }
+	}
+    // Select the first item in the list
+	ListBox_SetCurSel(hList, 0);
+    return CBrowserPropertyPage::InitDialog();
+}
+
+BOOL
+CSmartUpdatePrefs::OnCommand(int id, HWND hwndCtl, UINT notifyCode)
+{
+	if (id == IDC_BUTTON1 && notifyCode == BN_CLICKED) {
+       	assert(m_pObject);
+		if (m_pObject) {
+            LPADVANCEDPREFS lpAdvancedPrefs;
+
+            if (SUCCEEDED(m_pObject->QueryInterface(IID_IAdvancedPrefs, (void **)&lpAdvancedPrefs))) {
+
+			    LPSMARTUPDATEPREFS lpSmartUpdatePrefs;
+
+			    if (SUCCEEDED(lpAdvancedPrefs->QueryInterface(IID_ISmartUpdatePrefs, (void **)&lpSmartUpdatePrefs))) {
+				    
+				    lpSmartUpdatePrefs->RegPack();
+				    lpSmartUpdatePrefs->Release();
+			    }
+            }
+		}
+
+		return TRUE;
+
+	} else if (id == IDC_BUTTON2 && notifyCode == BN_CLICKED) {
+        LPPACKAGEINFO packageInfo = NULL;
+	    HWND			 hList = GetDlgItem(m_hwndDlg, IDC_LIST1);
+	    int				 nIndex = 0;
+        int              count = 0;
+        int              err;
+
+        char	        szCaption[256];
+        char	        szMessage[256];
+        LPSTR           lpszText;
+                		
+        // Get the currently selected item
+	    nIndex = ListBox_GetCurSel(hList);
+	 
+        if (nIndex != LB_ERR) {
+            // Get the packageInfo data structure
+	        packageInfo = (LPPACKAGEINFO)ListBox_GetItemData(hList, nIndex);
+	                   
+            if (packageInfo != NULL) {
+                if (*(packageInfo->regPackageName) != '\0') {
+
+                    // Load the caption for the message box and message string
+                    LoadString(m_hInstance, IDS_CONTINUE_UNINSTALL, szMessage, sizeof(szMessage));
+		            LoadString(m_hInstance, IDS_UNINSTALL, szCaption, sizeof(szCaption));
+
+                    // Format the text
+				    lpszText = (LPSTR)CoTaskMemAlloc(lstrlen(szMessage) + sizeof(packageInfo->userPackageName));
+				    wsprintf(lpszText, szMessage, (LPCSTR)(packageInfo->userPackageName));
+
+		            if (MessageBox(GetParent(m_hwndDlg), (LPCSTR)lpszText, (LPCSTR)szCaption,
+                        MB_YESNO | MB_ICONQUESTION) == IDYES) {
+                        CoTaskMemFree(lpszText);
+                        assert(m_pObject);
+		                if (m_pObject) {
+                            LPADVANCEDPREFS lpAdvancedPrefs;
+
+                            if (SUCCEEDED(m_pObject->QueryInterface(IID_IAdvancedPrefs, (void **)&lpAdvancedPrefs))) {
+
+			                    LPSMARTUPDATEPREFS lpSmartUpdatePrefs;
+
+			                    if (SUCCEEDED(lpAdvancedPrefs->QueryInterface(IID_ISmartUpdatePrefs, (void **)&lpSmartUpdatePrefs))) {
+				                    
+				                    err = lpSmartUpdatePrefs->Uninstall(packageInfo->regPackageName);
+                                    if (err == REGERR_OK) {
+                                        count = ListBox_GetCount(hList);
+                                        ListBox_DeleteString(hList, nIndex);
+                                        delete packageInfo;
+                                        if ((count == LB_ERR) || (nIndex == 0))
+                                            ListBox_SetCurSel(hList, 0);
+                                        else if (nIndex < count-1)
+	                                        ListBox_SetCurSel(hList, nIndex);
+                                        else
+                                            ListBox_SetCurSel(hList, nIndex-1);
+                                    } else {
+                                        LoadString(m_hInstance, IDS_UNINSTALL, szCaption, sizeof(szCaption));
+                                        LoadString(m_hInstance, IDS_ERROR_UNINSTALL, szMessage, sizeof(szMessage));
+                                        MessageBox(GetParent(m_hwndDlg), (LPCSTR)szMessage, (LPCSTR)szCaption, MB_OK );
+                                    }
+				                    lpSmartUpdatePrefs->Release();
+			                    }
+                            }
+		                }
+                    }
+                }
+            }
+        }
+   		return TRUE;
+	}
+
+	return CBrowserPropertyPage::OnCommand(id, hwndCtl, notifyCode);
+}
+
+#endif /* MOZ_SMARTUPDATE */

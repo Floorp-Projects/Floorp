@@ -124,7 +124,13 @@
 #define IDS_DISK_SPACE                  140
 #define IDS_NUMERIC_ONLY                141
 #define IDS_MORE_DISK_SPACE             142
-#define IDD_SMARTBROWSING               143
+#ifdef MOZ_SMARTUPDATE
+#define IDD_SMARTUPDATE                 143
+#define IDS_CONTINUE_UNINSTALL          144
+#define IDS_UNINSTALL                   145
+#define IDS_ERROR_UNINSTALL             146
+#endif /* MOZ_SMARTUPDATE */
+#define IDD_SMARTBROWSING               147
 #define IDC_EXTENSION                   309
 #define IDC_ICON1                       316
 #define IDC_ICON2                       317
