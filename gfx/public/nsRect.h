@@ -152,7 +152,9 @@ struct NS_GFX nsRect {
   nscoord YMost() const {return y + height;}
 };
 
+#ifdef DEBUG
 // Diagnostics
 extern NS_GFX FILE* operator<<(FILE* out, const nsRect& rect);
+#endif // DEBUG
 
 #endif /* NSRECT_H */

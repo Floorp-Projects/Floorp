@@ -203,6 +203,7 @@ nsRect& nsRect::ScaleRoundIn(const float aScale)
   return *this;
 }
 
+#ifdef DEBUG
 // Diagnostics
 
 FILE* operator<<(FILE* out, const nsRect& rect)
@@ -222,3 +223,5 @@ FILE* operator<<(FILE* out, const nsRect& rect)
   fputs(NS_LossyConvertUCS2toASCII(tmp).get(), out);
   return out;
 }
+
+#endif // DEBUG
