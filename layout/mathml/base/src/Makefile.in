@@ -72,6 +72,7 @@ LOCAL_INCLUDES = \
 	-I$(srcdir)/../../../base/src \
         -I$(srcdir)/../../../html/table/src \
 	-I$(srcdir)/../../content/src \
+	-I$(srcdir)/../../../xul/base/src \
 	$(NULL)
 
 CPPSRCS =         nsMathMLChar.cpp		        \

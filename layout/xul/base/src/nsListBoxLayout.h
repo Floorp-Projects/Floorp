@@ -41,8 +41,8 @@
 #define nsListBoxLayout_h___
 
 #include "nsGridRowGroupLayout.h"
+#include "nsIFrame.h"
 
-class nsIBox;
 class nsBoxLayoutState;
 
 class nsListBoxLayout : public nsGridRowGroupLayout

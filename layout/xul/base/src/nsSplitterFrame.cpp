@@ -339,14 +339,11 @@ nsSplitterFrame::Init(nsPresContext*  aPresContext,
 
   // determine orientation of parent, and if vertical, set orient to vertical
   // on splitter content, then re-resolve style
-  nsIBox* boxParent;
-  if (aParent)
-    CallQueryInterface(aParent, &boxParent);
   // |newContext| to Release the reference after the call to nsBoxFrame::Init
   nsRefPtr<nsStyleContext> newContext;
-  if (boxParent) {
+  if (aParent && aParent->IsBoxFrame()) {
     PRBool isHorizontal;
-    boxParent->GetOrientation(isHorizontal);
+    aParent->GetOrientation(isHorizontal);
     if (!isHorizontal) {
       nsAutoString str;
       aContent->GetAttr(kNameSpaceID_None, nsXULAtoms::orient, str);
@@ -390,10 +387,7 @@ nsSplitterFrame::Init(nsPresContext*  aPresContext,
 NS_IMETHODIMP
 nsSplitterFrame::DoLayout(nsBoxLayoutState& aState)
 {
-  nsIFrame* frame;
-  GetFrame(&frame);
-
-  if (frame->GetStateBits() & NS_FRAME_FIRST_REFLOW) 
+  if (GetStateBits() & NS_FRAME_FIRST_REFLOW) 
   {
     GetParentBox(&mInner->mParentBox);
     mInner->UpdateState();
@@ -648,8 +642,6 @@ nsSplitterFrameInner::MouseDrag(nsPresContext* aPresContext, nsGUIEvent* aEvent)
 void
 nsSplitterFrameInner::AddListener(nsPresContext* aPresContext)
 {
-  nsIFrame* thumbFrame = mOuter->GetFirstChild(nsnull);
-
   nsCOMPtr<nsIDOMEventReceiver>
     receiver(do_QueryInterface(mOuter->GetContent()));
 
@@ -784,10 +776,7 @@ nsSplitterFrameInner::MouseDown(nsIDOMEvent* aMouseEvent)
 
   while (nsnull != childBox) 
   { 
-    nsIFrame* childFrame = nsnull;
-    childBox->GetFrame(&childFrame);
-
-    nsIContent* content = childFrame->GetContent();
+    nsIContent* content = childBox->GetContent();
     nsCOMPtr<nsIAtom> atom;
     nsresult rv;
     nsCOMPtr<nsIXBLService> xblService = 
@@ -819,8 +808,7 @@ nsSplitterFrameInner::MouseDown(nsIDOMEvent* aMouseEvent)
 
         nsMargin margin(0,0,0,0);
         childBox->GetMargin(margin);
-        nsRect r(0,0,0,0);
-        childBox->GetBounds(r);
+        nsRect r(childBox->GetRect());
         r.Inflate(margin);
 
         nsAutoString fixed, hidden;
@@ -986,9 +974,7 @@ nsSplitterFrameInner::UpdateState()
       nsFrameNavigator::GetChildBeforeAfter(mOuter->mPresContext, splitter,
                                             (direction == Before));
     if (splitterSibling) {
-      nsIFrame* splitterSiblingFrame = nsnull;
-      splitterSibling->GetFrame(&splitterSiblingFrame);
-      nsIContent* sibling = splitterSiblingFrame->GetContent();
+      nsIContent* sibling = splitterSibling->GetContent();
       if (sibling) {
         if (mState == Collapsed) {
           // Collapsed -> Open
@@ -1011,10 +997,7 @@ nsSplitterFrameInner::UpdateState()
 void
 nsSplitterFrameInner::EnsureOrient()
 {
-  nsIFrame* frame = nsnull;
-  mParentBox->GetFrame(&frame);
-
-  PRBool isHorizontal = !(frame->GetStateBits() & NS_STATE_IS_HORIZONTAL);
+  PRBool isHorizontal = !(mParentBox->GetStateBits() & NS_STATE_IS_HORIZONTAL);
   if (isHorizontal)
     mOuter->mState |= NS_STATE_IS_HORIZONTAL;
   else
@@ -1035,14 +1018,11 @@ nsSplitterFrameInner::AdjustChildren(nsPresContext* aPresContext)
 
    
   if (realTimeDrag) {
-    nsIFrame* frame = nsnull;
-    mParentBox->GetFrame(&frame);
-
-    nsIView* view = frame->GetView();
+    nsIView* view = mParentBox->GetView();
 
     if (!view) {
         nsPoint   offset;
-        frame->GetOffsetFromView(aPresContext, offset, &view);
+        mParentBox->GetOffsetFromView(aPresContext, offset, &view);
         NS_ASSERTION(nsnull != view, "no view");
     }
     aPresContext->PresShell()->FlushPendingNotifications(Flush_Display);
@@ -1088,8 +1068,7 @@ nsSplitterFrameInner::SetPreferredSize(nsBoxLayoutState& aState, nsIBox* aChildB
  
   nscoord current = 0;
 
-  nsRect rect(0,0,0,0);
-  aChildBox->GetBounds(rect);
+  nsRect rect(aChildBox->GetRect());
   if (aIsHorizontal) 
     current = rect.width;
   else
@@ -1120,10 +1099,7 @@ nsSplitterFrameInner::SetPreferredSize(nsBoxLayoutState& aState, nsIBox* aChildB
     attribute = nsHTMLAtoms::height;
   }
 
-  nsIFrame* childFrame = nsnull;
-  aChildBox->GetFrame(&childFrame);
-
-  nsIContent* content = childFrame->GetContent();
+  nsIContent* content = aChildBox->GetContent();
 
   // set its preferred size.
   nsAutoString prefValue;

@@ -74,6 +74,7 @@
 #include "nsReadableUtils.h"
 #include "nsUnicharUtils.h"
 #include "nsCSSFrameConstructor.h"
+#include "nsIBoxLayout.h"
 #ifdef XP_WIN
 #include "nsISound.h"
 #endif
@@ -262,15 +263,14 @@ nsMenuPopupFrame::MarkStyleChange(nsBoxLayoutState& aState)
      return parent->RelayoutDirtyChild(aState, this);
   else {
     nsIPopupSetFrame* popupSet = GetPopupSetFrame(mPresContext);
-    nsIBox *box;
-    if (popupSet && NS_SUCCEEDED(CallQueryInterface(popupSet, &box))) {
+    nsIFrame *frame;
+    CallQueryInterface(popupSet, &frame);
+    if (frame && frame->IsBoxFrame()) {
       nsBoxLayoutState state(mPresContext);
-      box->MarkDirtyChildren(state); // Mark the popupset as dirty.
+      frame->MarkDirtyChildren(state); // Mark the popupset as dirty.
     }
     else {
-      nsIFrame* frame = nsnull;
-      GetFrame(&frame);
-      return frame->GetParent()->ReflowDirtyChild(aState.PresShell(), frame);
+      return GetParent()->ReflowDirtyChild(aState.PresShell(), frame);
     }
   }
   return NS_OK;
@@ -281,25 +281,22 @@ nsMenuPopupFrame::MarkDirty(nsBoxLayoutState& aState)
 {
   NeedsRecalc();
 
-  nsIFrame* frame;
-  GetFrame(&frame);
-
   // only reflow if we aren't already dirty.
-  if (frame->GetStateBits() & NS_FRAME_IS_DIRTY) {      
+  if (GetStateBits() & NS_FRAME_IS_DIRTY) {      
 #ifdef DEBUG_COELESCED
     Coelesced();
 #endif
     return NS_OK;
   }
 
-  frame->AddStateBits(NS_FRAME_IS_DIRTY);
+  AddStateBits(NS_FRAME_IS_DIRTY);
 
   nsCOMPtr<nsIBoxLayout> layout;
   GetLayoutManager(getter_AddRefs(layout));
   if (layout)
     layout->BecameDirty(this, aState);
 
-  if (frame->GetStateBits() & NS_FRAME_HAS_DIRTY_CHILDREN) {   
+  if (GetStateBits() & NS_FRAME_HAS_DIRTY_CHILDREN) {   
 #ifdef DEBUG_COELESCED
     Coelesced();
 #endif
@@ -315,10 +312,11 @@ nsMenuPopupFrame::MarkDirty(nsBoxLayoutState& aState)
      return parent->RelayoutDirtyChild(aState, this);
   else {
     nsIPopupSetFrame* popupSet = GetPopupSetFrame(mPresContext);
-    nsIBox *box;
-    if (popupSet && NS_SUCCEEDED(CallQueryInterface(popupSet, &box))) {
+    nsIFrame *frame;
+    CallQueryInterface(popupSet, &frame);
+    if (frame && frame->IsBoxFrame()) {
       nsBoxLayoutState state(mPresContext);
-      box->MarkDirtyChildren(state); // Mark the popupset as dirty.
+      frame->MarkDirtyChildren(state); // Mark the popupset as dirty.
     }
     else {
       return frame->GetParent()->ReflowDirtyChild(aState.PresShell(), frame);
@@ -331,9 +329,6 @@ nsMenuPopupFrame::MarkDirty(nsBoxLayoutState& aState)
 NS_IMETHODIMP
 nsMenuPopupFrame::RelayoutDirtyChild(nsBoxLayoutState& aState, nsIBox* aChild)
 {
-  nsIFrame* frame;
-  GetFrame(&frame);
-
   if (aChild != nsnull) {
     nsCOMPtr<nsIBoxLayout> layout;
     GetLayoutManager(getter_AddRefs(layout));
@@ -342,9 +337,9 @@ nsMenuPopupFrame::RelayoutDirtyChild(nsBoxLayoutState& aState, nsIBox* aChild)
   }
 
   // if we are not dirty mark ourselves dirty and tell our parent we are dirty too.
-  if (!(frame->GetStateBits() & NS_FRAME_HAS_DIRTY_CHILDREN)) {      
+  if (!(GetStateBits() & NS_FRAME_HAS_DIRTY_CHILDREN)) {      
     // Mark yourself as dirty and needing to be recalculated
-    frame->AddStateBits(NS_FRAME_HAS_DIRTY_CHILDREN);
+    AddStateBits(NS_FRAME_HAS_DIRTY_CHILDREN);
     NeedsRecalc();
 
     nsIBox* parentBox = nsnull;
@@ -356,10 +351,11 @@ nsMenuPopupFrame::RelayoutDirtyChild(nsBoxLayoutState& aState, nsIBox* aChild)
       return parentBox->RelayoutDirtyChild(aState, this);
     else {
       nsIPopupSetFrame* popupSet = GetPopupSetFrame(mPresContext);
-      nsIBox *box;
-      if (popupSet && NS_SUCCEEDED(CallQueryInterface(popupSet, &box))) {
+      nsIFrame *frame;
+      CallQueryInterface(popupSet, &frame);
+      if (frame && frame->IsBoxFrame()) {
         nsBoxLayoutState state(mPresContext);
-        box->MarkDirtyChildren(state); // Mark the popupset as dirty.
+        frame->MarkDirtyChildren(state); // Mark the popupset as dirty.
       }
       else 
         return nsBox::RelayoutDirtyChild(aState, aChild);

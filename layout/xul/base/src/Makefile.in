@@ -75,8 +75,6 @@ CPPSRCS		= \
 		nsBox.cpp \
 		nsBoxFrame.cpp \
 		nsBoxLayoutState.cpp \
-		nsBoxToBlockAdaptor.cpp \
-		nsContainerBox.cpp \
 		nsSprocketLayout.cpp \
 		nsStackFrame.cpp \
 		nsStackLayout.cpp \

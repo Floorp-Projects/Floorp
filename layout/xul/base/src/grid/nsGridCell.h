@@ -49,7 +49,6 @@
 
 class nsBoxLayoutState;
 struct nsSize;
-class nsIBox;
 
 /*
  * Grid cell is what makes up the cellmap in the grid. Each GridCell contains

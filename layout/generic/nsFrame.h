@@ -38,7 +38,7 @@
 #ifndef nsFrame_h___
 #define nsFrame_h___
 
-#include "nsIFrame.h"
+#include "nsBox.h"
 #include "nsRect.h"
 #include "nsString.h"
 #include "prlog.h"
@@ -116,6 +116,8 @@ void SetFontFromStyle(nsIRenderingContext* aRC, nsStyleContext* aSC);
 
 //----------------------------------------------------------------------
 
+struct nsBoxLayoutMetrics;
+
 /**
  * Implementation of a simple frame that's not splittable and has no
  * child frames.
@@ -123,7 +125,7 @@ void SetFontFromStyle(nsIRenderingContext* aRC, nsStyleContext* aSC);
  * Sets the NS_FRAME_SYNCHRONIZE_FRAME_AND_VIEW bit, so the default
  * behavior is to keep the frame and view position and size in sync.
  */
-class nsFrame : public nsIFrame
+class nsFrame : public nsBox
 #ifdef NS_DEBUG
   , public nsIFrameDebug
 #endif
@@ -144,6 +146,10 @@ public:
   // XXX Would like to make this private some day, but our UNIX compilers can't 
   // deal with it.
   void operator delete(void* aPtr, size_t sz);
+
+  // We compute and store the HTML content's overflow area. So don't
+  // try to compute it in the box code.
+  virtual PRBool ComputesOwnOverflowArea() { return PR_TRUE; }
 
 private:
   // The normal operator new is disallowed on nsFrames.
@@ -186,6 +192,7 @@ public:
   virtual nsStyleContext* GetAdditionalStyleContext(PRInt32 aIndex) const;
   virtual void SetAdditionalStyleContext(PRInt32 aIndex,
                                          nsStyleContext* aStyleContext);
+  NS_IMETHOD  SetParent(const nsIFrame* aParent);
   virtual nsIAtom* GetAdditionalChildListName(PRInt32 aIndex) const;
   virtual nsIFrame* GetFirstChild(nsIAtom* aListName) const;
   NS_IMETHOD  Paint(nsPresContext*      aPresContext,
@@ -324,6 +331,16 @@ public:
                                     nsPresContext* aPresContext,
                                     PRBool aJumpLines);
 
+
+  // Box layout methods
+  NS_IMETHOD GetPrefSize(nsBoxLayoutState& aBoxLayoutState, nsSize& aSize);
+  NS_IMETHOD GetMinSize(nsBoxLayoutState& aBoxLayoutState, nsSize& aSize);
+  NS_IMETHOD GetMaxSize(nsBoxLayoutState& aBoxLayoutState, nsSize& aSize);
+  NS_IMETHOD GetFlex(nsBoxLayoutState& aBoxLayoutState, nscoord& aFlex);
+  NS_IMETHOD GetAscent(nsBoxLayoutState& aBoxLayoutState, nscoord& aAscent);
+  NS_IMETHOD SetIncludeOverflow(PRBool aInclude);
+  NS_IMETHOD GetOverflow(nsSize& aOverflow);
+  NS_IMETHOD NeedsRecalc();
 
   //--------------------------------------------------
   // Additional methods
@@ -499,6 +516,47 @@ protected:
   // member function assumes that the caller has checked that the clip property
   // applies to its situation.
   void SetOverflowClipRect(nsIRenderingContext& aRenderingContext);
+
+  NS_IMETHOD DoLayout(nsBoxLayoutState& aBoxLayoutState);
+
+#ifdef DEBUG_LAYOUT
+  virtual void GetBoxName(nsAutoString& aName);
+#endif
+  virtual PRBool HasStyleChange();
+  virtual void SetStyleChangeFlag(PRBool aDirty);
+
+  virtual PRBool GetWasCollapsed(nsBoxLayoutState& aState);
+  virtual void SetWasCollapsed(nsBoxLayoutState& aState, PRBool aWas);
+
+  void InitBoxMetrics(PRBool aClear);
+  nsBoxLayoutMetrics* BoxMetrics() const;
+
+private:
+  nsresult BoxReflow(nsBoxLayoutState& aState,
+                     nsPresContext*    aPresContext,
+                     nsHTMLReflowMetrics&     aDesiredSize,
+                     const nsHTMLReflowState& aReflowState,
+                     nsReflowStatus&          aStatus,
+                     nscoord aX,
+                     nscoord aY,
+                     nscoord aWidth,
+                     nscoord aHeight,
+                     PRBool aMoveFrame = PR_TRUE);
+
+  void HandleIncrementalReflow(nsBoxLayoutState& aState, 
+                               const nsHTMLReflowState& aReflowState, 
+                               nsReflowReason& aReason,
+                               nsReflowPath** aReflowPath,
+                               PRBool& aRedrawNow,
+                               PRBool& aNeedReflow,
+                               PRBool& aRedrawAfterReflow,
+                               PRBool& aMoveFrame);
+
+  PRBool CanSetMaxElementWidth(nsBoxLayoutState& aState,
+                               nsReflowReason& aReason,
+                               nsReflowPath **aReflowPath);
+
+  NS_IMETHODIMP RefreshSizeCache(nsBoxLayoutState& aState);
 
 protected:
   NS_IMETHOD_(nsrefcnt) AddRef(void);

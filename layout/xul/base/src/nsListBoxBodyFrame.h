@@ -138,6 +138,7 @@ public:
 
 protected:
   void ComputeTotalRowCount();
+  void RemoveChildFrame(nsBoxLayoutState &aState, nsIFrame *aChild);
 
   // We don't own this. (No addref/release allowed, punk.)
   nsCSSFrameConstructor* mFrameConstructor;

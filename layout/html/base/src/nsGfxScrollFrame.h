@@ -117,11 +117,9 @@ public:
   void RestoreState(nsIPresState* aState);
 
   nsIFrame* GetScrolledFrame() const {
-    nsIBox* childBox;
-    nsIFrame* frame;
+    nsIFrame* childBox;
     mScrollAreaBox->GetChildBox(&childBox);
-    childBox->GetFrame(&frame);
-    return frame;
+    return childBox;
   }
 
   void ScrollbarChanged(nsPresContext* aPresContext, nscoord aX, nscoord aY, PRUint32 aFlags);

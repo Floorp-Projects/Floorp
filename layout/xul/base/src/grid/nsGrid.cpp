@@ -1460,9 +1460,7 @@ nsGrid::GetScrolledBox(nsIBox* aChild)
       if (scrollFrame) {
          nsIFrame* scrolledFrame = scrollFrame->GetScrolledFrame();
          NS_ASSERTION(scrolledFrame,"Error no scroll frame!!");
-         nsIBox *box = nsnull;
-         CallQueryInterface(scrolledFrame, &box);
-         return box;
+         return scrolledFrame->IsBoxFrame() ? scrolledFrame : nsnull;
       }
 
       return aChild;

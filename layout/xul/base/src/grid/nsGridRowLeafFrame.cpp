@@ -71,8 +71,8 @@ nsGridRowLeafFrame::nsGridRowLeafFrame(nsIPresShell* aPresShell, PRBool aIsRoot,
 }
 
 /*
- * Our border and padding could be affected by our columns or rows
- * Lets go check it out.
+ * Our border and padding could be affected by our columns or rows.
+ * Let's go check it out.
  */
 NS_IMETHODIMP
 nsGridRowLeafFrame::GetBorderAndPadding(nsMargin& aBorderAndPadding)

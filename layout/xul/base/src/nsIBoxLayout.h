@@ -42,7 +42,6 @@
 #include "nsIFrame.h"
 
 class nsPresContext;
-class nsIBox;
 class nsBoxLayout;
 class nsBoxLayoutState;
 class nsIRenderingContext;

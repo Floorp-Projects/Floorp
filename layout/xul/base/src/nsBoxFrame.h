@@ -48,7 +48,6 @@
 
 #include "nsCOMPtr.h"
 #include "nsContainerFrame.h"
-#include "nsContainerBox.h"
 class nsBoxLayoutState;
 
 class nsHTMLReflowCommand;
@@ -58,29 +57,28 @@ class nsHTMLInfo;
 #define NS_FRAME_BOX_SIZE_VALID    0x0001
 #define NS_FRAME_BOX_IS_COLLAPSED  0x0002
 #define NS_FRAME_BOX_NEEDS_RECALC  0x0004
-#define NS_FRAME_IS_BOX            0x0008
 
 
 // flags from box
 #define NS_STATE_BOX_CHILD_RESERVED      0x00100000
 #define NS_STATE_STACK_NOT_POSITIONED    0x00200000
-#define NS_STATE_IS_HORIZONTAL           0x00400000
+//#define NS_STATE_IS_HORIZONTAL           0x00400000  moved to nsIFrame.h
 #define NS_STATE_AUTO_STRETCH            0x00800000
-#define NS_STATE_IS_ROOT                 0x01000000
+//#define NS_STATE_IS_ROOT                 0x01000000  moved to nsIFrame.h
 #define NS_STATE_CURRENTLY_IN_DEBUG      0x02000000
-#define NS_STATE_SET_TO_DEBUG            0x04000000
-#define NS_STATE_DEBUG_WAS_SET           0x08000000
+//#define NS_STATE_SET_TO_DEBUG            0x04000000  moved to nsIFrame.h
+//#define NS_STATE_DEBUG_WAS_SET           0x08000000  moved to nsIFrame.h
 #define NS_STATE_IS_COLLAPSED            0x10000000
-#define NS_STATE_STYLE_CHANGE            0x20000000
+//#define NS_STATE_STYLE_CHANGE            0x20000000  moved to nsIFrame.h
 #define NS_STATE_EQUAL_SIZE              0x40000000
-#define NS_STATE_IS_DIRECTION_NORMAL     0x80000000
+//#define NS_STATE_IS_DIRECTION_NORMAL     0x80000000  moved to nsIFrame.h
 
 nsresult NS_NewBoxFrame(nsIPresShell* aPresShell, 
                         nsIFrame** aNewFrame, 
                         PRBool aIsRoot = PR_FALSE,
                         nsIBoxLayout* aLayoutManager = nsnull);
 
-class nsBoxFrame : public nsContainerFrame, public nsContainerBox
+class nsBoxFrame : public nsContainerFrame
 {
 public:
 
@@ -97,6 +95,10 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
 
   // ------ nsIBox -------------
+  NS_IMETHOD SetLayoutManager(nsIBoxLayout* aLayout);
+  NS_IMETHOD GetLayoutManager(nsIBoxLayout** aLayout);
+  NS_IMETHOD RelayoutChildAtOrdinal(nsBoxLayoutState& aState, nsIBox* aChild);
+  NS_IMETHOD GetIndexOf(nsIBox* aChild, PRInt32* aIndex);
 
   NS_IMETHOD GetPrefSize(nsBoxLayoutState& aBoxLayoutState, nsSize& aSize);
   NS_IMETHOD GetMinSize(nsBoxLayoutState& aBoxLayoutState, nsSize& aSize);
@@ -106,17 +108,16 @@ public:
 #ifdef DEBUG_LAYOUT
   NS_IMETHOD SetDebug(nsBoxLayoutState& aBoxLayoutState, PRBool aDebug);
   NS_IMETHOD GetDebug(PRBool& aDebug);
+
+  NS_IMETHOD GetInset(nsMargin& aInset);
 #endif
-  NS_IMETHOD GetFrame(nsIFrame** aFrame);
   NS_IMETHOD GetVAlign(Valignment& aAlign);
   NS_IMETHOD GetHAlign(Halignment& aAlign);
   NS_IMETHOD NeedsRecalc();
-  NS_IMETHOD GetInset(nsMargin& aInset);
-  NS_IMETHOD BeginLayout(nsBoxLayoutState& aBoxLayoutState);
   NS_IMETHOD DoLayout(nsBoxLayoutState& aBoxLayoutState);
-  NS_IMETHOD SetParent(const nsIFrame* aParent);
 
-  //NS_IMETHOD GetMouseThrough(PRBool& aMouseThrough);
+  NS_IMETHOD GetMouseThrough(PRBool& aMouseThrough);
+  virtual PRBool ComputesOwnOverflowArea() { return PR_FALSE; }
 
   // ----- child and sibling operations ---
 
@@ -182,14 +183,9 @@ public:
                        const nsHTMLReflowState*  aReflowState,
                        nsDidReflowStatus         aStatus);
 
-  virtual PRBool IsHorizontal() const;
-  virtual PRBool IsNormalDirection() const;
-
   virtual ~nsBoxFrame();
 
   virtual nsresult GetContentOf(nsIContent** aContent);
-  virtual nsresult SyncLayout(nsBoxLayoutState& aBoxLayoutState);
-  virtual void CheckFrameOrder();
   
   nsBoxFrame(nsIPresShell* aPresShell, PRBool aIsRoot = nsnull, nsIBoxLayout* aLayoutManager = nsnull);
  
@@ -204,19 +200,29 @@ public:
                     nsFramePaintLayer    aWhichLayer,
                     PRUint32             aFlags = 0);
 
+
   // returns true if it is an Initial Reflow and doing Print Preview
   static PRBool IsInitialReflowForPrintPreview(nsBoxLayoutState& aState, PRBool& aIsChrome);
+
+  nsIBox* GetBoxAt(PRInt32 aIndex) { return mFrames.FrameAt(aIndex); }
+  PRInt32 GetChildCount() { return mFrames.GetLength(); }
+  
+#ifdef DEBUG_LAYOUT
+    virtual void SetDebugOnChildList(nsBoxLayoutState& aState, nsIBox* aChild, PRBool aDebug);
+#endif
+
+  static nsresult LayoutChildAt(nsBoxLayoutState& aState, nsIBox* aBox, const nsRect& aRect);
 
 protected:
 #ifdef DEBUG_LAYOUT
     virtual void GetBoxName(nsAutoString& aName);
-    virtual void PropagateDebug(nsBoxLayoutState& aState);
 #endif
 
     virtual PRBool HasStyleChange();
     virtual void SetStyleChangeFlag(PRBool aDirty);
 
-
+    virtual PRBool GetWasCollapsed(nsBoxLayoutState& aState);
+    virtual void SetWasCollapsed(nsBoxLayoutState& aState, PRBool aWas);
 
 
     // Paint one child frame
@@ -248,6 +254,8 @@ protected:
     nscoord mFlex;
     nscoord mAscent;
 
+    nsCOMPtr<nsIBoxLayout> mLayoutManager;
+
 protected:
     nsresult RegUnregAccessKey(nsPresContext* aPresContext,
                                PRBool aDoReg);
@@ -258,6 +266,8 @@ protected:
                                            nsIFrame*         aChild,
                                            PRBool            aCheckMouseThrough,
                                            nsIFrame**        aFrame);
+
+  NS_HIDDEN_(void) CheckBoxOrder(nsBoxLayoutState& aState);
 
 private: 
 
@@ -307,6 +317,8 @@ private:
     // instance variables.
     Halignment mHalign;
     Valignment mValign;
+
+    eMouseThrough mMouseThrough;
 
     nsPresContext* mPresContext;
 

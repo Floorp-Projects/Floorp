@@ -80,4 +80,5 @@ include $(topsrcdir)/config/rules.mk
 LOCAL_INCLUDES = \
   -I$(srcdir)/../base \
   -I$(srcdir)/../../../layout/html/base/src \
+  -I$(srcdir)/../../../layout/xul/base/src \
   $(NULL)

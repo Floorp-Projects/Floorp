@@ -92,25 +92,19 @@ nsSprocketLayout::nsSprocketLayout()
 PRBool 
 nsSprocketLayout::IsHorizontal(nsIBox* aBox)
 {
-   nsIFrame* frame = nsnull;
-   aBox->GetFrame(&frame);
-   return frame->GetStateBits() & NS_STATE_IS_HORIZONTAL;
+   return (aBox->GetStateBits() & NS_STATE_IS_HORIZONTAL) != 0;
 }
 
 void
 nsSprocketLayout::GetFrameState(nsIBox* aBox, nsFrameState& aState)
 {
-   nsIFrame* frame = nsnull;
-   aBox->GetFrame(&frame);
-   aState = frame->GetStateBits();
+   aState = aBox->GetStateBits();
 }
 
 static PRUint8
 GetFrameDirection(nsIBox* aBox)
 {
-   nsIFrame* frame = nsnull;
-   aBox->GetFrame(&frame);
-   return frame->GetStyleVisibility()->mDirection;
+   return aBox->GetStyleVisibility()->mDirection;
 }
 
 static void
@@ -223,7 +217,7 @@ nsSprocketLayout::Layout(nsIBox* aBox, nsBoxLayoutState& aState)
     aBox->GetChildBox(&child);
     while(child) 
     {
-      nsContainerBox::LayoutChildAt(aState, child, nsRect(0,0,0,0));  
+      nsBoxFrame::LayoutChildAt(aState, child, nsRect(0,0,0,0));  
       child->GetNextBox(&child);
     }
     return NS_OK;
@@ -509,10 +503,9 @@ nsSprocketLayout::Layout(nsIBox* aBox, nsBoxLayoutState& aState)
       // We computed a childRect.  Now we want to set the bounds of the child to be that rect.
       // If our old rect is different, then we know our size changed and we cache that fact
       // in the |sizeChanged| variable.
-      nsRect oldRect(0,0,0,0);
+      nsRect oldRect(child->GetRect());
       PRBool sizeChanged = PR_FALSE;
 
-      child->GetBounds(oldRect);
       child->SetBounds(aState, childRect);
       sizeChanged = (childRect.width != oldRect.width || childRect.height != oldRect.height);
 
@@ -549,8 +542,7 @@ nsSprocketLayout::Layout(nsIBox* aBox, nsBoxLayoutState& aState)
       
       // If the child was a block or inline (e.g., HTML) it may have changed its rect *during* layout. 
       // We have to check for this.
-      nsRect newChildRect;
-      child->GetBounds(newChildRect);
+      nsRect newChildRect(child->GetRect());
 
       if (newChildRect != childRect) {
 #ifdef DEBUG_GROW
@@ -669,8 +661,7 @@ nsSprocketLayout::Layout(nsIBox* aBox, nsBoxLayoutState& aState)
     if (tmpClientRect.width > contentRect.width || tmpClientRect.height > contentRect.height)
     {
       // if it did reset our bounds.
-      nsRect bounds(0,0,0,0);
-      aBox->GetBounds(bounds);
+      nsRect bounds(aBox->GetRect());
       if (tmpClientRect.width > contentRect.width)
         bounds.width = tmpClientRect.width;
 
@@ -695,8 +686,7 @@ nsSprocketLayout::Layout(nsIBox* aBox, nsBoxLayoutState& aState)
 
     while (child) 
     {
-      nsRect childRect;
-      child->GetBounds(childRect);
+      nsRect childRect(child->GetRect());
       childRect.x += (x - origX);
       childRect.y += (y - origY);
       child->SetBounds(aState, childRect);

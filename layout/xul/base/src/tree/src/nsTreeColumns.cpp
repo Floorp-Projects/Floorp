@@ -43,7 +43,6 @@
 #include "nsIDOMElement.h"
 #include "nsIBoxObject.h"
 #include "nsIDocument.h"
-#include "nsIBox.h"
 #include "nsTreeColumns.h"
 #include "nsTreeUtils.h"
 #include "nsStyleContext.h"
@@ -512,23 +511,18 @@ nsTreeColumns::EnsureColumns()
     if (!colsFrame)
       return;
 
-    nsIBox* colsBox;
-    CallQueryInterface(colsFrame, &colsBox);
-
     nsIBox* colBox = nsnull;
-    colsBox->GetChildBox(&colBox);
+    colsFrame->GetChildBox(&colBox);
 
     NS_IF_RELEASE(mFirstColumn);
     nsTreeColumn* currCol = nsnull;
     while (colBox) {
-      nsIFrame* colFrame = nsnull;
-      colBox->GetFrame(&colFrame);
-      nsIContent* colContent = colFrame->GetContent();
+      nsIContent* colContent = colBox->GetContent();
 
       nsINodeInfo *ni = colContent->GetNodeInfo();
       if (ni && ni->Equals(nsXULAtoms::treecol, kNameSpaceID_XUL)) { 
         // Create a new column structure.
-        nsTreeColumn* col = new nsTreeColumn(this, colFrame);
+        nsTreeColumn* col = new nsTreeColumn(this, colBox);
         if (!col)
           return;
 

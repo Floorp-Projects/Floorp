@@ -324,9 +324,8 @@ nsGridRowLeafLayout::ComputeChildSizes(nsIBox* aBox,
        if (scrollable) {
           nsMargin scrollbarSizes = scrollable->GetActualScrollbarSizes();
 
-          nsRect ourRect;
+          nsRect ourRect(scrollbox->GetRect());
           nsMargin padding(0,0,0,0);
-          scrollbox->GetBounds(ourRect);
           scrollbox->GetBorderAndPadding(padding);
           ourRect.Deflate(padding);
           scrollbox->GetInset(padding);

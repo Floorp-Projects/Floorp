@@ -82,7 +82,7 @@ public:
                   nsStyleContext*  aContext,
                   nsIFrame*        aPrevInFlow);
 
-  NS_IMETHOD ChildrenMustHaveWidgets(PRBool& aMust);
+  NS_IMETHOD ChildrenMustHaveWidgets(PRBool& aMust) const;
 
 #ifdef NS_DEBUG
   NS_IMETHOD GetFrameName(nsAString& aResult) const

@@ -93,7 +93,7 @@ nsDeckFrame::nsDeckFrame(nsIPresShell* aPresShell,
  * Hack for deck who requires that all its children has widgets
  */
 NS_IMETHODIMP
-nsDeckFrame::ChildrenMustHaveWidgets(PRBool& aMust)
+nsDeckFrame::ChildrenMustHaveWidgets(PRBool& aMust) const
 {
   aMust = PR_TRUE;
   return NS_OK;
@@ -138,10 +138,7 @@ nsDeckFrame::Init(nsPresContext* aPresContext,
 void
 nsDeckFrame::HideBox(nsPresContext* aPresContext, nsIBox* aBox)
 {
-  nsIFrame* frame = nsnull;
-  aBox->GetFrame(&frame);
-
-  nsIView* view = frame->GetView();
+  nsIView* view = aBox->GetView();
 
   if (view) {
     nsIViewManager* viewManager = view->GetViewManager();
@@ -153,11 +150,8 @@ nsDeckFrame::HideBox(nsPresContext* aPresContext, nsIBox* aBox)
 void
 nsDeckFrame::ShowBox(nsPresContext* aPresContext, nsIBox* aBox)
 {
-  nsIFrame* frame = nsnull;
-  aBox->GetFrame(&frame);
-
-  nsRect rect = frame->GetRect();
-  nsIView* view = frame->GetView();
+  nsRect rect = aBox->GetRect();
+  nsIView* view = aBox->GetView();
   if (view) {
     nsIViewManager* viewManager = view->GetViewManager();
     rect.x = rect.y = 0;
@@ -240,11 +234,7 @@ nsDeckFrame::Paint(nsPresContext*      aPresContext,
   // only paint the seleced box
   nsIBox* box = GetSelectedBox();
   if (box) {
-    nsIFrame* frame = nsnull;
-    box->GetFrame(&frame);
-
-    if (frame)
-      PaintChild(aPresContext, aRenderingContext, aDirtyRect, frame, aWhichLayer);
+    PaintChild(aPresContext, aRenderingContext, aDirtyRect, box, aWhichLayer);
   }
 
   return NS_OK;
@@ -266,13 +256,10 @@ nsDeckFrame::GetFrameForPoint(nsPresContext*   aPresContext,
   // get the selected frame and see if the point is in it.
   nsIBox* selectedBox = GetSelectedBox();
   if (selectedBox) {
-    nsIFrame* selectedFrame = nsnull;
-    selectedBox->GetFrame(&selectedFrame);
-
     nsPoint tmp(aPoint.x - mRect.x, aPoint.y - mRect.y);
 
-    if (NS_SUCCEEDED(selectedFrame->GetFrameForPoint(aPresContext, tmp,
-                                                     aWhichLayer, aFrame)))
+    if (NS_SUCCEEDED(selectedBox->GetFrameForPoint(aPresContext, tmp,
+                                                   aWhichLayer, aFrame)))
       return NS_OK;
   }
     

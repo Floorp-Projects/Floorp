@@ -128,6 +128,7 @@ public:
                           nsIAtom*        aListName,
                           nsIFrame*       aOldFrame);
   virtual nsIFrame* GetFirstChild(nsIAtom* aListName) const;
+  NS_IMETHOD  SetParent(const nsIFrame* aParent);
   virtual nsIAtom* GetAdditionalChildListName(PRInt32 aIndex) const;
   NS_IMETHOD Destroy(nsPresContext* aPresContext);
   NS_IMETHOD IsSplittable(nsSplittableType& aIsSplittable) const;

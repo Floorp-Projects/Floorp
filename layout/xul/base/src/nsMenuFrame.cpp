@@ -804,9 +804,7 @@ nsMenuFrame::OpenMenuInternal(PRBool aActivateFlag)
          mPresContext->PresShell()->FlushPendingNotifications(Flush_OnlyReflow);
       }
 
-      nsRect curRect;
-      menuPopup->GetBounds(curRect);
-
+      nsRect curRect(menuPopup->GetRect());
       menuPopup->SetBounds(state, nsRect(0,0,mLastPref.width, mLastPref.height));
 
       nsIView* view = menuPopup->GetView();
@@ -815,11 +813,10 @@ nsMenuFrame::OpenMenuInternal(PRBool aActivateFlag)
         vm->SetViewVisibility(view, nsViewVisibility_kHide);
       }
       menuPopup->SyncViewWithFrame(mPresContext, popupAnchor, popupAlign, this, -1, -1);
-      nsRect rect;
-      menuPopup->GetBounds(rect);
+      nscoord newHeight = menuPopup->GetRect().height;
 
       // if the height is different then reflow. It might need scrollbars force a reflow
-      if (curRect.height != rect.height || mLastPref.height != rect.height)
+      if (curRect.height != newHeight || mLastPref.height != newHeight)
       {
          menuPopup->MarkDirty(state);
          mPresContext->PresShell()->FlushPendingNotifications(Flush_OnlyReflow);
@@ -973,18 +970,17 @@ nsMenuFrame::DoLayout(nsBoxLayoutState& aState)
 
   if (popupChild) {
     PRBool sizeToPopup = IsSizedToPopup(mContent, PR_FALSE);
-    nsIBox* ibox = nsnull;
-    nsresult rv2 = popupChild->QueryInterface(NS_GET_IID(nsIBox), (void**)&ibox);
-    NS_ASSERTION(NS_SUCCEEDED(rv2) && ibox,"popupChild is not box!!");
+    
+    NS_ASSERTION(popupChild->IsBoxFrame(), "popupChild is not box!!");
 
     // then get its preferred size
     nsSize prefSize(0,0);
     nsSize minSize(0,0);
     nsSize maxSize(0,0);
 
-    ibox->GetPrefSize(aState, prefSize);
-    ibox->GetMinSize(aState, minSize);
-    ibox->GetMaxSize(aState, maxSize);
+    popupChild->GetPrefSize(aState, prefSize);
+    popupChild->GetMinSize(aState, minSize);
+    popupChild->GetMaxSize(aState, maxSize);
 
     BoundsCheck(minSize, prefSize, maxSize);
 
@@ -994,37 +990,36 @@ nsMenuFrame::DoLayout(nsBoxLayoutState& aState)
     // if the pref size changed then set bounds to be the pref size
     // and sync the view. And set new pref size.
     if (mLastPref != prefSize) {
-      ibox->SetBounds(aState, nsRect(0,0,prefSize.width, prefSize.height));
+      popupChild->SetBounds(aState, nsRect(0,0,prefSize.width, prefSize.height));
       RePositionPopup(aState);
       mLastPref = prefSize;
     }
 
     // is the new size too small? Make sure we handle scrollbars correctly
     nsIBox* child;
-    ibox->GetChildBox(&child);
+    popupChild->GetChildBox(&child);
 
-    nsRect bounds(0,0,0,0);
-    ibox->GetBounds(bounds);
+    nsRect bounds(popupChild->GetRect());
 
     nsCOMPtr<nsIScrollableFrame> scrollframe(do_QueryInterface(child));
     if (scrollframe &&
         scrollframe->GetScrollbarStyles().mVertical == NS_STYLE_OVERFLOW_AUTO) {
       if (bounds.height < prefSize.height) {
         // layout the child
-        ibox->Layout(aState);
+        popupChild->Layout(aState);
 
         nsMargin scrollbars = scrollframe->GetActualScrollbarSizes();
         if (bounds.width < prefSize.width + scrollbars.left + scrollbars.right)
         {
           bounds.width += scrollbars.left + scrollbars.right;
           //printf("Width=%d\n",width);
-          ibox->SetBounds(aState, bounds);
+          popupChild->SetBounds(aState, bounds);
         }
       }
     }
     
     // layout the child
-    ibox->Layout(aState);
+    popupChild->Layout(aState);
 
     // Only size the popups view if open.
     if (mMenuOpen) {
@@ -1050,11 +1045,8 @@ nsMenuFrame::MarkChildrenStyleChange()
   nsIFrame* popupChild = mPopupFrames.FirstChild();
 
   if (popupChild) {
-    nsIBox* ibox = nsnull;
-    nsresult rv2 = popupChild->QueryInterface(NS_GET_IID(nsIBox), (void**)&ibox);
-    NS_ASSERTION(NS_SUCCEEDED(rv2) && ibox,"popupChild is not box!!");
-
-    return ibox->MarkChildrenStyleChange();
+    NS_ASSERTION(popupChild->IsBoxFrame(), "popupChild is not box!!");
+    return popupChild->MarkChildrenStyleChange();
   }
 
   return rv;
@@ -1085,12 +1077,10 @@ nsMenuFrame::SetDebug(nsBoxLayoutState& aState, nsIFrame* aList, PRBool aDebug)
           return NS_OK;
 
       while (aList) {
-          nsIBox* ibox = nsnull;
-          if (NS_SUCCEEDED(aList->QueryInterface(NS_GET_IID(nsIBox), (void**)&ibox)) && ibox) {
-              ibox->SetDebug(aState, aDebug);
-          }
+        if (aList->IsBoxFrame())
+          aList->SetDebug(aState, aDebug);
 
-          aList = aList->GetNextSibling();
+        aList = aList->GetNextSibling();
       }
 
       return NS_OK;
@@ -1842,10 +1832,7 @@ nsMenuFrame::InsertFrames(nsPresContext* aPresContext,
 
   nsIMenuParent *menuPar;
   if (aFrameList && NS_SUCCEEDED(CallQueryInterface(aFrameList, &menuPar))) {
-    nsIBox *menupopup;
-    CallQueryInterface(aFrameList, &menupopup);
-    NS_ASSERTION(menupopup,"Popup is not a box!!!");
-    menupopup->SetParentBox(this);
+    NS_ASSERTION(aFrameList->IsBoxFrame(),"Popup is not a box!!!");
     mPopupFrames.InsertFrames(nsnull, nsnull, aFrameList);
 
     nsBoxLayoutState state(aPresContext);
@@ -1873,10 +1860,7 @@ nsMenuFrame::AppendFrames(nsPresContext* aPresContext,
 
   nsIMenuParent *menuPar;
   if (aFrameList && NS_SUCCEEDED(CallQueryInterface(aFrameList, &menuPar))) {
-    nsIBox *menupopup;
-    CallQueryInterface(aFrameList, &menupopup);
-    NS_ASSERTION(menupopup,"Popup is not a box!!!");
-    menupopup->SetParentBox(this);
+    NS_ASSERTION(aFrameList->IsBoxFrame(),"Popup is not a box!!!");
 
     mPopupFrames.AppendFrames(nsnull, aFrameList);
     nsBoxLayoutState state(aPresContext);
@@ -1928,11 +1912,9 @@ nsMenuFrame::GetPrefSize(nsBoxLayoutState& aState, nsSize& aSize)
         if (!frame) return NS_OK;
       }
     
-      nsIBox* ibox = nsnull;
-      nsresult rv2 = frame->QueryInterface(NS_GET_IID(nsIBox), (void**)&ibox);
-      NS_ASSERTION(NS_SUCCEEDED(rv2) && ibox,"popupChild is not box!!");
+      NS_ASSERTION(frame->IsBoxFrame(), "popupChild is not box!!");
 
-      ibox->GetPrefSize(aState, tmpSize);
+      frame->GetPrefSize(aState, tmpSize);
       aSize.width = tmpSize.width;
 
       // We now need to ensure that aSize is within the min size - max size range.
@@ -2040,10 +2022,8 @@ nsMenuFrame::GetBoxInfo(nsPresContext* aPresContext, const nsHTMLReflowState& aR
         frame = mPopupFrames.FirstChild();
       }
       
-      nsIBox *box;
-      CallQueryInterface(frame, &box);
       nsCalculatedBoxInfo childInfo(frame);
-      box->GetBoxInfo(aPresContext, aReflowState, childInfo);
+      frame->GetBoxInfo(aPresContext, aReflowState, childInfo);
       GetRedefinedMinPrefMax(aPresContext, this, childInfo);
       aSize.prefSize.width = childInfo.prefSize.width;
     }

@@ -877,6 +877,8 @@ nsListBoxBodyFrame::InternalPositionChanged(PRBool aUp, PRInt32 aDelta, PRBool a
   if (aDelta == 0)
     return NS_OK;
 
+  nsBoxLayoutState state(mPresContext);
+
   // begin timing how long it takes to scroll a row
   PRTime start = PR_Now();
 
@@ -903,17 +905,10 @@ nsListBoxBodyFrame::InternalPositionChanged(PRBool aUp, PRInt32 aDelta, PRBool a
   else {
     // We have scrolled so much that all of our current frames will
     // go off screen, so blow them all away. Weeee!
-    nsIBox* currBox;
-    GetChildBox(&currBox);
-    nsBoxLayoutState state(mPresContext);
+    nsIFrame *currBox = mFrames.FirstChild();
     while (currBox) {
-      nsIBox* nextBox;
-      currBox->GetNextBox(&nextBox);
-      nsIFrame* frame;
-      currBox->QueryInterface(NS_GET_IID(nsIFrame), (void**)&frame); 
-      mFrameConstructor->RemoveMappingsForFrameSubtree(mPresContext, frame, nsnull);
-      Remove(state, frame);
-      mFrames.DestroyFrame(mPresContext, frame);
+      nsIFrame *nextBox = currBox->GetNextSibling();
+      RemoveChildFrame(state, currBox);
       currBox = nextBox;
     }
   }
@@ -922,7 +917,6 @@ nsListBoxBodyFrame::InternalPositionChanged(PRBool aUp, PRInt32 aDelta, PRBool a
   mTopFrame = mBottomFrame = nsnull; 
   
   mYPosition = mCurrentIndex*mRowHeight;
-  nsBoxLayoutState state(mPresContext);
   mScrolling = PR_TRUE;
   MarkDirtyChildren(state);
   // Flush calls CreateRows
@@ -1054,19 +1048,18 @@ nsListBoxBodyFrame::DestroyRows(PRInt32& aRowsToLose)
   // We need to destroy frames until our row count has been properly
   // reduced.  A reflow will then pick up and create the new frames.
   nsIFrame* childFrame = GetFirstFrame();
+  nsBoxLayoutState state(mPresContext);
+
   while (childFrame && aRowsToLose > 0) {
     --aRowsToLose;
-    
-    nsIFrame* nextFrame = childFrame->GetNextSibling();
-    mFrameConstructor->RemoveMappingsForFrameSubtree(mPresContext, childFrame, nsnull);
-    nsBoxLayoutState state(mPresContext);
 
-    Remove(state, childFrame);
-    mFrames.DestroyFrame(mPresContext, childFrame);
-    MarkDirtyChildren(state);
+    nsIFrame* nextFrame = childFrame->GetNextSibling();
+    RemoveChildFrame(state, childFrame);
 
     mTopFrame = childFrame = nextFrame;
   }
+
+  MarkDirtyChildren(state);
 }
 
 void
@@ -1075,20 +1068,19 @@ nsListBoxBodyFrame::ReverseDestroyRows(PRInt32& aRowsToLose)
   // We need to destroy frames until our row count has been properly
   // reduced.  A reflow will then pick up and create the new frames.
   nsIFrame* childFrame = GetLastFrame();
+  nsBoxLayoutState state(mPresContext);
+
   while (childFrame && aRowsToLose > 0) {
     --aRowsToLose;
     
     nsIFrame* prevFrame;
     prevFrame = mFrames.GetPrevSiblingFor(childFrame);
-    mFrameConstructor->RemoveMappingsForFrameSubtree(mPresContext, childFrame, nsnull);
-    nsBoxLayoutState state(mPresContext);
-
-    Remove(state, childFrame);
-    mFrames.DestroyFrame(mPresContext, childFrame);
-    MarkDirtyChildren(state);
+    RemoveChildFrame(state, childFrame);
 
     mBottomFrame = childFrame = prevFrame;
   }
+
+  MarkDirtyChildren(state);
 }
 
 //
@@ -1105,9 +1097,7 @@ nsListBoxBodyFrame::GetFirstItemBox(PRInt32 aOffset, PRBool* aCreated)
   mBottomFrame = mTopFrame;
 
   if (mTopFrame) {
-    nsIBox *box;
-    CallQueryInterface(mTopFrame, &box);
-    return box;
+    return mTopFrame->IsBoxFrame() ? mTopFrame : nsnull;
   }
 
   // top frame was cleared out
@@ -1115,9 +1105,7 @@ nsListBoxBodyFrame::GetFirstItemBox(PRInt32 aOffset, PRBool* aCreated)
   mBottomFrame = mTopFrame;
 
   if (mTopFrame && mRowsToPrepend <= 0) {
-    nsIBox *box;
-    CallQueryInterface(mTopFrame, &box);
-    return box;
+    return mTopFrame->IsBoxFrame() ? mTopFrame : nsnull;
   }
 
   // At this point, we either have no frames at all, 
@@ -1155,9 +1143,7 @@ nsListBoxBodyFrame::GetFirstItemBox(PRInt32 aOffset, PRBool* aCreated)
 
       mBottomFrame = mTopFrame;
 
-      nsIBox *box;
-      CallQueryInterface(mTopFrame, &box);
-      return box;
+      return mTopFrame->IsBoxFrame() ? mTopFrame : nsnull;
     } else
       return GetFirstItemBox(++aOffset, 0);
   }
@@ -1176,13 +1162,11 @@ nsListBoxBodyFrame::GetNextItemBox(nsIBox* aBox, PRInt32 aOffset,
   if (aCreated)
     *aCreated = PR_FALSE;
 
-  nsIFrame* frame = nsnull;
-  aBox->GetFrame(&frame);
-  nsIFrame* result = frame->GetNextSibling();
+  nsIFrame* result = aBox->GetNextSibling();
 
   if (!result || result == mLinkupFrame || mRowsToPrepend > 0) {
     // No result found. See if there's a content node that wants a frame.
-    nsIContent* prevContent = frame->GetContent();
+    nsIContent* prevContent = aBox->GetContent();
     nsIContent* parentContent = prevContent->GetParent();
 
     PRInt32 i = parentContent->IndexOf(prevContent);
@@ -1194,7 +1178,7 @@ nsListBoxBodyFrame::GetNextItemBox(nsIBox* aBox, PRInt32 aOffset,
 
       // Either append the new frame, or insert it after the current frame
       PRBool isAppend = result != mLinkupFrame && mRowsToPrepend <= 0;
-      nsIFrame* prevFrame = isAppend ? nsnull : frame;
+      nsIFrame* prevFrame = isAppend ? nsnull : aBox;
       mFrameConstructor->CreateListBoxContent(mPresContext, this, prevFrame,
                                               nextContent, &result, isAppend,
                                               PR_FALSE, nsnull);
@@ -1214,9 +1198,7 @@ nsListBoxBodyFrame::GetNextItemBox(nsIBox* aBox, PRInt32 aOffset,
 
   mBottomFrame = result;
 
-  nsIBox *box;
-  CallQueryInterface(result, &box);
-  return box;
+  return result->IsBoxFrame() ? result : nsnull;
 }
 
 PRBool
@@ -1238,12 +1220,7 @@ nsListBoxBodyFrame::ContinueReflow(nscoord height)
 
       while (currFrame) {
         nsIFrame* nextFrame = currFrame->GetNextSibling();
-        mFrameConstructor->RemoveMappingsForFrameSubtree(mPresContext, currFrame, nsnull);
-        
-        Remove(state, currFrame);
-
-        mFrames.DestroyFrame(mPresContext, currFrame);
-
+        RemoveChildFrame(state, currFrame);
         currFrame = nextFrame;
       }
 
@@ -1260,8 +1237,9 @@ nsListBoxBodyFrame::ListBoxAppendFrames(nsIFrame* aFrameList)
 {
   // append them after
   nsBoxLayoutState state(mPresContext);
-  Append(state,aFrameList);
   mFrames.AppendFrames(nsnull, aFrameList);
+  if (mLayoutManager)
+    mLayoutManager->ChildrenAppended(this, state, aFrameList);
   MarkDirtyChildren(state);
   
   return NS_OK;
@@ -1272,8 +1250,9 @@ nsListBoxBodyFrame::ListBoxInsertFrames(nsIFrame* aPrevFrame, nsIFrame* aFrameLi
 {
   // insert the frames to our info list
   nsBoxLayoutState state(mPresContext);
-  Insert(state, aPrevFrame, aFrameList);
   mFrames.InsertFrames(nsnull, aPrevFrame, aFrameList);
+  if (mLayoutManager)
+    mLayoutManager->ChildrenInserted(this, state, aPrevFrame, aFrameList);
   MarkDirtyChildren(state);
 
   return NS_OK;
@@ -1382,10 +1361,8 @@ nsListBoxBodyFrame::OnContentRemoved(nsPresContext* aPresContext, nsIFrame* aChi
   // Go ahead and delete the frame.
   nsBoxLayoutState state(aPresContext);
   if (aChildFrame) {
-    mFrameConstructor->RemoveMappingsForFrameSubtree(aPresContext, aChildFrame, nsnull);
-
-    Remove(state, aChildFrame);
-    mFrames.DestroyFrame(aPresContext, aChildFrame);
+    RemoveChildFrame(state, aChildFrame);
+    aChildFrame->Destroy(mPresContext);
   }
 
   MarkDirtyChildren(state);
@@ -1439,6 +1416,18 @@ nsListBoxBodyFrame::GetListItemNextSibling(nsIContent* aListItem, nsIContent** a
   }
 
   aSiblingIndex = -1; // no match, so there is no next sibling
+}
+
+void
+nsListBoxBodyFrame::RemoveChildFrame(nsBoxLayoutState &aState,
+                                     nsIFrame         *aFrame)
+{
+  mFrameConstructor->RemoveMappingsForFrameSubtree(mPresContext, aFrame, nsnull);
+
+  mFrames.RemoveFrame(aFrame);
+  if (mLayoutManager)
+    mLayoutManager->ChildrenRemoved(this, aState, aFrame);
+  aFrame->Destroy(mPresContext);
 }
 
 //////////////////////////////////////////////////////////////////////////

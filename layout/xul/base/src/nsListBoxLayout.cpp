@@ -40,7 +40,7 @@
 #include "nsListBoxLayout.h"
 
 #include "nsListBoxBodyFrame.h"
-#include "nsIBox.h"
+#include "nsIFrame.h"
 #include "nsBox.h"
 #include "nsBoxLayoutState.h"
 #include "nsIScrollableFrame.h"
@@ -207,8 +207,7 @@ nsListBoxLayout::LayoutInternal(nsIBox* aBox, nsBoxLayoutState& aState)
     box->IsDirty(dirty);
     box->HasDirtyChildren(dirtyChildren);
        
-    nsRect childRect;
-    box->GetBounds(childRect);
+    nsRect childRect(box->GetRect());
     box->GetMargin(margin);
     
     // relayout if we must or we are dirty or some of our children are dirty
@@ -261,8 +260,7 @@ nsListBoxLayout::LayoutInternal(nsIBox* aBox, nsBoxLayoutState& aState)
   // before them then redraw everything under the inserted rows. The inserted
   // rows will automatically be redrawn because the were marked dirty on insertion.
   if (redrawStart > -1) {
-    nsRect bounds;
-    aBox->GetBounds(bounds);
+    nsRect bounds(aBox->GetRect());
     nsRect tempRect(0,redrawStart,bounds.width, bounds.height - redrawStart);
     aBox->Redraw(aState, &tempRect);
   }

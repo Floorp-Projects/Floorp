@@ -48,7 +48,6 @@
 #include "nsIFrame.h"
 #include "nsIAtom.h"
 #include "nsCOMPtr.h"
-class nsIBox;
 
 class nsFrameNavigator 
 {

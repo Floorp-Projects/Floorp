@@ -139,14 +139,11 @@ nsGroupBoxFrame::Paint(nsPresContext*      aPresContext,
         nsIBox* groupBox = GetCaptionBox(aPresContext, groupRect);
 
         if (groupBox) {        
-            nsIFrame* groupFrame;
-            groupBox->GetFrame(&groupFrame);
-
             // if the border is smaller than the legend. Move the border down
             // to be centered on the legend. 
 
             nsMargin groupMargin;
-            groupFrame->GetStyleMargin()->GetMargin(groupMargin);
+            groupBox->GetStyleMargin()->GetMargin(groupMargin);
             groupRect.Inflate(groupMargin);
          
             if (border.top < groupRect.height)
@@ -254,9 +251,8 @@ nsGroupBoxFrame::GetCaptionBox(nsPresContext* aPresContext, nsRect& aCaptionRect
 
     if (child) {
        // convert to our coordinates.
-       nsRect parentRect;
-       box->GetBounds(parentRect);
-       child->GetBounds(aCaptionRect);
+       nsRect parentRect(box->GetRect());
+       aCaptionRect = child->GetRect();
        aCaptionRect.x += parentRect.x;
        aCaptionRect.y += parentRect.y;
     }

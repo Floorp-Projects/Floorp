@@ -40,7 +40,6 @@
 
 #include "nsISupports.h"
 #include "nsFrame.h"
-#include "nsIBox.h"
 
 class nsGridRowGroupLayout;
 class nsGrid;
