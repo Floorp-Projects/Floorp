@@ -13,15 +13,15 @@
 ]>
 
 
-<window title="&window.title.label;" style="width:100%; height:100%" align="horizontal" flex="100%"
+<window title="&window.title.label;" style="width: 100%; height: 100%" align="vertical"
 	xmlns:html="http://www.w3.org/TR/REC-html40"
 	xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
 	xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
 	<html:script src="search.js" />
 
-	<box id="sidebox" align="vertical" flex="100%">
-		<box class="sidebartitle" align="horizontal">
+	<box id="sidebox" align="vertical" flex="100%" style="height: 100%; width: 100%;" >
+		<box class="sidebartitle" align="horizontal" style="width: 100%;" >
 			<titledbutton value="&find.title.label;" onclick="return loadPage('find');" />
 			<spring align="horizontal" flex="5%"/>
 			<titledbutton value="&internet.title.label;" onclick="return loadPage('internet');" />
@@ -32,10 +32,9 @@
 			<spring align="horizontal" flex="100%" />
 		</box>
 		
-		<html:iframe flex="100%" id="content" src="about:blank" />
-		<html:iframe flex="100%" id="results" src="about:blank" />
+		<html:iframe style="height: 50%; width: 100%;" flex="100%" id="content" src="about:blank" />
+		<html:iframe style="height: 50%; width: 100%;" flex="100%" id="results" src="about:blank" />
 	</box>
-	<spring flex="100%" align="horizontal" />
 
 	<html:script>
 		// load initial page

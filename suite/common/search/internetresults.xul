@@ -15,90 +15,82 @@
 ]>
 
 
-<window title="&window.title.label;" style="width:100%; height:100%; background-color:white" align="horizontal" flex="100%"
+<window title="&window.title.label;" style="width:100%; height:100%; background-color:white" align="vertical"
 	xmlns:html="http://www.w3.org/TR/REC-html40"
 	xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
 	xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
 	<html:script src="shared.js" />
 
-	<html:table>
-	<html:tr>
-		<html:td>
-			<titledbutton id="internetresultssummary" value="&results.title.label;" />
-		</html:td>
-	</html:tr>
+	<box align="horizontal" style="width: 100%;" >
+		<titledbutton style="width: 100%;" id="internetresultssummary" value="&results.title.label;" />
+	</box>
 
-	<html:tr>
-		<html:td>
-			<tree id="internetresultstree" flex="100%" datasources="rdf:internetsearch" ondblclick="return OpenURL(event, event.target.parentNode.parentNode);">
-				<treecol id="NameColumn" rdf:resource="http://home.netscape.com/NC-rdf#Name"/>
-				<treecol id="RelevanceColumn" rdf:resource="http://home.netscape.com/NC-rdf#Relevance" sortActive="true" sortDirection="descending" />
-				<treecol id="SiteColumn" rdf:resource="http://home.netscape.com/NC-rdf#Site"/>
-				<treecol id="EngineColumn" rdf:resource="http://home.netscape.com/NC-rdf#Engine"/>
+	<tree id="internetresultstree" style="height: 100%; width: 100%;" flex="100%" datasources="rdf:internetsearch" ondblclick="return OpenURL(event, event.target.parentNode.parentNode);">
+		<treecol id="NameColumn" rdf:resource="http://home.netscape.com/NC-rdf#Name"/>
+		<treecol id="RelevanceColumn" rdf:resource="http://home.netscape.com/NC-rdf#Relevance" sortActive="true" sortDirection="descending" />
+		<treecol id="SiteColumn" rdf:resource="http://home.netscape.com/NC-rdf#Site"/>
+		<treecol id="EngineColumn" rdf:resource="http://home.netscape.com/NC-rdf#Engine"/>
 
-				<template>
-					<rule rdf:type="http://home.netscape.com/NC-rdf#BookmarkSeparator" rootcontainment="treechildren" subcontainment="treechildren">
-						<treeitem uri="...">
-							<treerow>
-								<treecell>
-									<html:hr width="75%" align="center" size="1" />
-								</treecell>
-							</treerow>
-						</treeitem>  		
-					</rule>
-
-					<rule rootcontainment="treechildren" subcontainment="treechildren">
-						<treeitem uri="...">
-							<treerow>
-								<treecell>
-									<treeindentation />
-									<titledbutton value="rdf:http://home.netscape.com/NC-rdf#Name" align="right" />
-								</treecell>
-								<treecell>
-									<progressmeter value="rdf:http://home.netscape.com/NC-rdf#Relevance" align="horizontal" mode="normal" />
-									<titledbutton value="rdf:http://home.netscape.com/NC-rdf#Relevance" align="left" style="list-style-image: none;" />
-								</treecell>
-								<treecell>
-									<titledbutton value="rdf:http://home.netscape.com/NC-rdf#Site" align="right" style="list-style-image: none;" />
-								</treecell>
-								<treecell>
-									<titledbutton value="rdf:http://home.netscape.com/NC-rdf#Engine" align="right" style="list-style-image: none;" />
-								</treecell>
-							</treerow>
-						</treeitem>
-					</rule>
-				</template>
-
-				<treehead>
+		<template>
+			<rule rdf:type="http://home.netscape.com/NC-rdf#BookmarkSeparator" rootcontainment="treechildren" subcontainment="treechildren">
+				<treeitem uri="...">
 					<treerow>
-						<treecell resource="http://home.netscape.com/NC-rdf#Name" onclick="return doSort('NameColumn');">
-							<observes element="NameColumn" attribute="sortActive"/>
-							<observes element="NameColumn" attribute="sortDirection"/>
-							&name.column.label;
-						</treecell>
-						<treecell resource="http://home.netscape.com/NC-rdf#Relevance" onclick="return doSort('RelevanceColumn');" sortActive="true" sortDirection="descending" >
-							<observes element="RelevanceColumn" attribute="sortActive"/>
-							<observes element="RelevanceColumn" attribute="sortDirection"/>
-							&relevance.column.label;
-						</treecell>
-						<treecell resource="http://home.netscape.com/NC-rdf#Site" onclick="return doSort('SiteColumn');">
-							<observes element="SiteColumn" attribute="sortActive"/>
-							<observes element="SiteColumn" attribute="sortDirection"/>
-							&site.column.label;
-						</treecell>
-						<treecell resource="http://home.netscape.com/NC-rdf#Engine" onclick="return doSort('EngineColumn');">
-							<observes element="EngineColumn" attribute="sortActive"/>
-							<observes element="EngineColumn" attribute="sortDirection"/>
-							&engine.column.label;
+						<treecell>
+							<html:hr width="75%" align="center" size="1" />
 						</treecell>
 					</treerow>
-				</treehead>
+				</treeitem>  		
+			</rule>
 
-				<treechildren open="true" />
+			<rule rootcontainment="treechildren" subcontainment="treechildren">
+				<treeitem uri="...">
+					<treerow>
+						<treecell>
+							<treeindentation />
+							<titledbutton value="rdf:http://home.netscape.com/NC-rdf#Name" align="right" />
+						</treecell>
+						<treecell>
+							<progressmeter value="rdf:http://home.netscape.com/NC-rdf#Relevance" align="horizontal" mode="normal" />
+							<titledbutton value="rdf:http://home.netscape.com/NC-rdf#Relevance" align="left" style="list-style-image: none;" />
+						</treecell>
+						<treecell>
+							<titledbutton value="rdf:http://home.netscape.com/NC-rdf#Site" align="right" style="list-style-image: none;" />
+						</treecell>
+						<treecell>
+							<titledbutton value="rdf:http://home.netscape.com/NC-rdf#Engine" align="right" style="list-style-image: none;" />
+						</treecell>
+					</treerow>
+				</treeitem>
+			</rule>
+		</template>
 
-			</tree>
-		</html:td>
-	</html:tr>
-	</html:table>
+		<treehead>
+			<treerow>
+				<treecell resource="http://home.netscape.com/NC-rdf#Name" onclick="return doSort('NameColumn');">
+					<observes element="NameColumn" attribute="sortActive"/>
+					<observes element="NameColumn" attribute="sortDirection"/>
+					&name.column.label;
+				</treecell>
+				<treecell resource="http://home.netscape.com/NC-rdf#Relevance" onclick="return doSort('RelevanceColumn');" sortActive="true" sortDirection="descending" >
+					<observes element="RelevanceColumn" attribute="sortActive"/>
+					<observes element="RelevanceColumn" attribute="sortDirection"/>
+					&relevance.column.label;
+				</treecell>
+				<treecell resource="http://home.netscape.com/NC-rdf#Site" onclick="return doSort('SiteColumn');">
+					<observes element="SiteColumn" attribute="sortActive"/>
+					<observes element="SiteColumn" attribute="sortDirection"/>
+					&site.column.label;
+				</treecell>
+				<treecell resource="http://home.netscape.com/NC-rdf#Engine" onclick="return doSort('EngineColumn');">
+					<observes element="EngineColumn" attribute="sortActive"/>
+					<observes element="EngineColumn" attribute="sortDirection"/>
+					&engine.column.label;
+				</treecell>
+			</treerow>
+		</treehead>
+
+		<treechildren open="true" />
+
+	</tree>
 </window>
