@@ -33,6 +33,7 @@ XPIDLSRCS	= \
 		nsIStreamConverter.idl \
 		nsIStreamConverterService.idl \
 		mozITXTToHTMLConv.idl \
+		nsITXTToHTMLConv.idl \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk
