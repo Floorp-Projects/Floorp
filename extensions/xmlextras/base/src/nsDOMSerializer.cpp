@@ -39,6 +39,7 @@
 #include "nsIDOMNode.h"
 #include "nsIDOMClassInfo.h"
 #include "nsIOutputStream.h"
+#include "nsIContent.h"
 #include "nsIDocument.h"
 #include "nsIDOMDocument.h"
 #include "nsIDocumentEncoder.h"
@@ -126,54 +127,59 @@ SetUpEncoder(nsIDOMNode *aRoot, const nsACString& aCharset,
 static nsresult
 CheckSameOrigin(nsIDOMNode *aRoot)
 {
-  // Get JSContext from stack.
-  nsCOMPtr<nsIJSContextStack> stack =
-    do_GetService("@mozilla.org/js/xpc/ContextStack;1");
+  // Make sure that the caller has permission to access the root
 
-  JSContext *cx = nsnull;
-  nsresult rv = NS_OK;
+  // Be sure to QI to either nsIContent or nsIDocument to make sure
+  // we're passed a naitve object.
 
-  if (stack) {
-    rv = stack->Peek(&cx);
-    NS_ENSURE_SUCCESS(rv, rv);
+  nsCOMPtr<nsIContent> content(do_QueryInterface(aRoot));
+  nsCOMPtr<nsIDocument> doc;
+
+  if (content) {
+    doc = content->GetOwnerDoc();
+
+    if (!doc) {
+      // Orphan node, permit access.
+
+      return NS_OK;
+    }
+  } else {
+    doc = do_QueryInterface(aRoot);
+
+    if (!doc) {
+      // We got a non-native object.
+
+      return NS_ERROR_INVALID_POINTER;
+    }
   }
 
-  if (cx) {
-    // We're called from script, make sure the caller and the root are
-    // from the same origin...
+  nsCOMPtr<nsIURI> root_uri;
 
-    nsCOMPtr<nsIDOMDocument> owner_doc(do_QueryInterface(aRoot));
+  nsIPrincipal *principal = doc->GetPrincipal();
 
-    if (!owner_doc) {
-      aRoot->GetOwnerDocument(getter_AddRefs(owner_doc));
+  if (principal) {
+    principal->GetURI(getter_AddRefs(root_uri));
+  }
+
+  if (root_uri) {
+    nsresult rv;
+    nsCOMPtr<nsIScriptSecurityManager> secMan = 
+      do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    PRBool ubrEnabled = PR_FALSE;
+    rv = secMan->IsCapabilityEnabled("UniversalBrowserRead", &ubrEnabled);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    if (ubrEnabled) {
+      // UniversalBrowserRead is enabled (or we're not called from
+      // script), permit access.
+      return NS_OK;
     }
 
-    nsCOMPtr<nsIDocument> doc(do_QueryInterface(owner_doc));
-
-    if (doc) {
-      nsCOMPtr<nsIURI> root_uri;
-
-      nsIPrincipal *principal = doc->GetPrincipal();
-
-      if (principal) {
-        principal->GetURI(getter_AddRefs(root_uri));
-      }
-
-      if (root_uri) {
-        nsCOMPtr<nsIScriptSecurityManager> secMan = 
-          do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
-        NS_ENSURE_SUCCESS(rv, rv);
-
-        rv = secMan->CheckSameOrigin(cx, root_uri);
-
-        if (NS_FAILED(rv)) {
-          // The node that's being serialized comes from a different
-          // origin than the calling script comes from...
-
-          return rv;
-        }
-      }
-    }      
+    // Check if the caller (if any) is from the same origin that the
+    // root is from.
+    return secMan->CheckSameOrigin(nsnull, root_uri);
   }
 
   return NS_OK;
