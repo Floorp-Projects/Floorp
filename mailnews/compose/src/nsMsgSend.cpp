@@ -1238,7 +1238,7 @@ nsMsgComposeAndSend::GetBodyFromEditor()
   //
   nsString  format; format.AssignWithConversion(TEXT_HTML);
   PRUint32  flags = 0;
-  PRUnichar *bodyText = NULL;
+  PRUnichar *bodyText = nsnull;
   nsresult rv;
   PRUnichar *origHTMLBody = nsnull;
 
@@ -1290,7 +1290,7 @@ nsMsgComposeAndSend::GetBodyFromEditor()
   }
 	
   // Convert body to mail charset
-	char      *outCString;
+	char      *outCString = nsnull;
   const char  *aCharset = mCompFields->GetCharacterSet();
 
   if (aCharset && *aCharset)
@@ -1331,8 +1331,9 @@ nsMsgComposeAndSend::GetBodyFromEditor()
     {
       PR_FREEIF(attachment1_body);
       attachment1_body = outCString;
-      Recycle(bodyText);
     }
+    else
+      PR_FREEIF(outCString);
 
     // If we have an origHTMLBody that is not null, this means that it is
     // different than the bodyText because of formatting conversions. Because of
@@ -1348,11 +1349,11 @@ nsMsgComposeAndSend::GetBodyFromEditor()
         origHTMLBody = (PRUnichar *)newBody;
       }
     }
+
+    Recycle(bodyText);    //Don't need it anymore
   }
   else
-  {
-    attachment1_body = (char *)bodyText;
-  }
+    return NS_ERROR_FAILURE;
 
   // If our holder for the orignal body text is STILL null, then just 
   // just copy what we have as the original body text.
@@ -1363,7 +1364,11 @@ nsMsgComposeAndSend::GetBodyFromEditor()
     mOriginalHTMLBody = (char *)origHTMLBody;
 
   attachment1_body_length = PL_strlen(attachment1_body);
-  return SnarfAndCopyBody(attachment1_body, attachment1_body_length, attachment1_type);
+
+  rv = SnarfAndCopyBody(attachment1_body, attachment1_body_length, attachment1_type);
+  PR_FREEIF (attachment1_body);
+
+  return rv;
 }
 
 //
@@ -2488,10 +2493,7 @@ nsMsgComposeAndSend::SnarfAndCopyBody(const char  *attachment1_body,
       attachment1_body_length--;
     }
 
-    if (attachment1_body_length <= 0)
-      attachment1_body = 0;
-    
-    if (attachment1_body)
+    if (attachment1_body_length > 0)
     {
       char *newb = (char *) PR_Malloc (attachment1_body_length + 1);
       if (! newb)
