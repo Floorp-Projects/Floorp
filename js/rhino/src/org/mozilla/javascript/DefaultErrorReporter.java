@@ -48,16 +48,31 @@ class DefaultErrorReporter implements ErrorReporter {
         // do nothing
     }
 
+    private String generateErrorMessage(String message, String sourceName, int line) {
+        StringBuffer buf = new StringBuffer(message);
+        buf.append(" (");
+        if (sourceName != null) {
+            buf.append(sourceName);
+            buf.append("; ");
+        }
+        if (line > 0) {
+            buf.append("line ");
+            buf.append(line);
+        }
+        buf.append(')');
+        return buf.toString();
+    }
+    
     public void error(String message, String sourceName, int line,
                       String lineSource, int lineOffset)
     {
-        throw new EvaluatorException(message);
+        throw new EvaluatorException(generateErrorMessage(message, sourceName, line));
     }
 
     public EvaluatorException runtimeError(String message, String sourceName,
                                            int line, String lineSource,
                                            int lineOffset)
     {
-        return new EvaluatorException(message);
+        return new EvaluatorException(generateErrorMessage(message, sourceName, line));
     }
 }
