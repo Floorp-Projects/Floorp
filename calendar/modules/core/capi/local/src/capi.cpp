@@ -57,13 +57,19 @@ char *CAPI_mktemp( char *psTemplate )
 {
 // XXX: Port this
 #ifdef XP_PC
-    return _mktemp(psTemplate);
+  return _mktemp(psTemplate);
+#else
+  return (nsnull);
 #endif
 }
 
 int CAPI_access( const char *path, int mode )
 {
-    return JXP_ACCESS(path,mode);
+#ifdef XP_PC
+    return _access(path,mode);
+#else
+  return (0);
+#endif
 }
 
 void *CAPI_malloc(size_t i)
