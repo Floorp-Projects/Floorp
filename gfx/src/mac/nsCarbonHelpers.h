@@ -24,6 +24,8 @@
 #ifndef CarbonHelpers_h__
 #define CarbonHelpers_h__
 
+#include <ConditionalMacros.h>
+
 #if (UNIVERSAL_INTERFACES_VERSION >= 0x0330)
 #include <ControlDefinitions.h>
 #else

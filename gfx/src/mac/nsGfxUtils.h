@@ -27,6 +27,21 @@
 #include "nsCarbonHelpers.h"
 #endif // CarbonHelpers_h__
 
+#include <LowMem.h>
+
+
+/** ------------------------------------------------------------
+ *	Used to assert that we're not clobbering a bad port
+ */
+inline PRBool CurrentPortIsWMPort()
+{
+  GrafPtr curPort;
+  ::GetPort(&curPort);
+  
+  return (curPort == ::LMGetWMgrPort());
+}
+
+
 //------------------------------------------------------------------------
 // utility port setting class
 //------------------------------------------------------------------------
@@ -52,7 +67,6 @@ protected:
 	GrafPtr		mOldPort;
 };
 
-
 //------------------------------------------------------------------------
 // utility text state save/restore class
 //------------------------------------------------------------------------
@@ -62,21 +76,12 @@ class StTextStyleSetter
 public:
 	StTextStyleSetter(SInt16 fontID, SInt16 fontSize, SInt16 fontFace)
 	{
-	  GrafPtr curPort;
-	  ::GetPort(&curPort);
-	  
-    mFontID = ::GetPortTextFont(curPort);
-    mFontSize = ::GetPortTextSize(curPort);
-    mFontSize = ::GetPortTextFace(curPort);		
-	  
-  	::TextFont(fontID);
-  	::TextSize(fontSize);
-  	::TextFace(fontFace);
+	  SetPortFontStyle(fontID, fontSize, fontFace);
 	}
 	
 	StTextStyleSetter(TextStyle& theStyle)
 	{
-	  StTextStyleSetter(theStyle.tsFont, theStyle.tsSize, theStyle.tsFace);
+	  SetPortFontStyle(theStyle.tsFont, theStyle.tsSize, theStyle.tsFace);
 	}
 	
 	~StTextStyleSetter()
@@ -84,6 +89,24 @@ public:
   	::TextFont(mFontID);
   	::TextSize(mFontSize);
   	::TextFace(mFontFace);
+	}
+
+protected:
+
+  void SetPortFontStyle(SInt16 fontID, SInt16 fontSize, SInt16 fontFace)
+	{
+	  GrafPtr curPort;
+	  ::GetPort(&curPort);
+	  
+    NS_ASSERTION(!CurrentPortIsWMPort(), "Setting window manager port font");
+
+    mFontID = ::GetPortTextFont(curPort);
+    mFontSize = ::GetPortTextSize(curPort);
+    mFontFace = ::GetPortTextFace(curPort);
+	  
+  	::TextFont(fontID);
+  	::TextSize(fontSize);
+  	::TextFace(fontFace);
 	}
 
 protected:

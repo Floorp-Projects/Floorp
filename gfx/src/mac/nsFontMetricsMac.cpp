@@ -20,9 +20,6 @@
  * Contributor(s): 
  */
 
-#include <Fonts.h>		// for FetchFontInfo 
-#include <LowMem.h>   // forgive me father
-
 #include "nsCarbonHelpers.h"
 
 #include "nsFontMetricsMac.h"
@@ -57,51 +54,7 @@ nsFontMetricsMac :: ~nsFontMetricsMac()
 NS_IMPL_ISUPPORTS(nsFontMetricsMac, kIFontMetricsIID);
 
 
-//------------------------------------------------------------------------
-// FetchFontInfo moved from the FontManager lib to InterfaceLib between
-// Mac OS 8.5 and 8.6. The build expects it to be in InterfaceLib, so
-// when running on 8.5, we have to go grovel for it manually.
-//------------------------------------------------------------------------
-typedef pascal OSErr (*FetchFontInfoProc)(SInt16, SInt16, SInt16, FontInfo *);
-
-static OSErr MyFetchFontInfo(SInt16 fontID, SInt16 fontSize, SInt16 fontStyle, FontInfo* fInfo)
-{
-  static Boolean            sTriedToGetSymbol = false;
-  static FetchFontInfoProc  sFetchFontInfoCall = FetchFontInfo;
-
-  if (!sFetchFontInfoCall && !sTriedToGetSymbol)    // this happens on 8.5
-  {
-	  CFragConnectionID    connectionID;
-	  Str255               errName;
-	  
-	  OSErr err = ::GetSharedLibrary("\pFontManager", kCompiledCFragArch, kReferenceCFrag, &connectionID, nsnull, errName);
-	  if (err == noErr && connectionID)
-	  {
-	  	err = ::FindSymbol(connectionID, "\pFetchFontInfo", (Ptr *)&sFetchFontInfoCall, nsnull);
-	  	if (err != noErr)
-  	  	sFetchFontInfoCall = nsnull;
-	  }
-
-    ::CloseConnection(&connectionID);
-    sTriedToGetSymbol = true;
-  }
-  
-  if (sFetchFontInfoCall)
-    return (*sFetchFontInfoCall)(fontID, fontSize, fontStyle, fInfo);
-  
-  // evil hack
-  {
-    StPortSetter      portSetter(::LMGetWMgrPort());
-    StTextStyleSetter styleSetter(fontID, fontSize, fontStyle);
-    GetFontInfo(fInfo);
-  }
-  
-  return cfragNoSymbolErr;
-}
-
-
-
-NS_IMETHODIMP nsFontMetricsMac :: Init(const nsFont& aFont, nsIAtom* aLangGroup, nsIDeviceContext* aCX)
+NS_IMETHODIMP nsFontMetricsMac::Init(const nsFont& aFont, nsIAtom* aLangGroup, nsIDeviceContext* aCX)
 {
   NS_ASSERTION(!(nsnull == aCX), "attempt to init fontmetrics with null device context");
 
@@ -113,18 +66,12 @@ NS_IMETHODIMP nsFontMetricsMac :: Init(const nsFont& aFont, nsIAtom* aLangGroup,
 	TextStyle		theStyle;
 	nsFontMetricsMac::GetNativeTextStyle(*this, *mContext, theStyle);
 	
+  StTextStyleSetter styleSetter(theStyle);
+  
   FontInfo fInfo;
-  // FetchFontInfo gets the font info without having to touch a grafport. It's 8.5 only
-#if !TARGET_CARBON
-	OSErr error = MyFetchFontInfo(mFontNum, theStyle.tsSize, theStyle.tsFace, &fInfo);
-  NS_ASSERTION(error == noErr, "Error in FetchFontInfo");
-#else
-  // pinkerton - hack because this routine isn't yet in carbon.
-  fInfo.ascent = theStyle.tsSize;
-  fInfo.descent = 3;
-  fInfo.widMax = 12;
-  fInfo.leading = 3;
-#endif
+  GetFontInfo(&fInfo);
+  
+  FetchFontInfo(theStyle.tsFont, theStyle.tsSize, theStyle.tsFace, &fInfo);
   
   float  dev2app;
   mContext->GetDevUnitsToAppUnits(dev2app);
@@ -138,35 +85,29 @@ NS_IMETHODIMP nsFontMetricsMac :: Init(const nsFont& aFont, nsIAtom* aLangGroup,
   mMaxAscent  = mEmAscent;
   mMaxDescent = mEmDescent;
 
-	GrafPtr thePort;
-	::GetPort(&thePort);
-  NS_ASSERTION(thePort != nil, "GrafPort is nil in nsFontMetricsMac::Init");
-	if (thePort == nil)
-	{
-		mMaxAdvance = 0;
-		mSpaceWidth = 0;
-		return NS_ERROR_FAILURE;
-	}
-
-  StTextStyleSetter styleSetter(theStyle);
-  
   mMaxAdvance = NSToCoordRound(float(::CharWidth('M')) * dev2app);	// don't use fInfo.widMax here
   mSpaceWidth = NSToCoordRound(float(::CharWidth(' ')) * dev2app);
 
   return NS_OK;
 }
 
-nsUnicodeFontMappingMac* nsFontMetricsMac :: GetUnicodeFontMapping()
+nsUnicodeFontMappingMac* nsFontMetricsMac::GetUnicodeFontMapping()
 {
-	// we should pass the documentCharset from the nsIDocument level and
-	// the lang attribute from the tag level to here.
-	// XXX hard code to some value till peterl pass them down.
-	nsAutoString lang;
-	nsAutoString langGroup; langGroup.AssignWithConversion("ja");
-	if(mLangGroup)
-		mLangGroup->ToString(langGroup);
-	if(! mFontMapping)
-		mFontMapping = nsUnicodeFontMappingMac::GetCachedInstance(mFont, mContext,langGroup, lang);
+  if (!mFontMapping)
+  {
+  	// we should pass the documentCharset from the nsIDocument level and
+  	// the lang attribute from the tag level to here.
+  	// XXX hard code to some value till peterl pass them down.
+  	nsAutoString langGroup;
+  	if (mLangGroup)
+  		mLangGroup->ToString(langGroup);
+    else
+      langGroup.AssignWithConversion("ja");
+      
+  	nsString lang;
+  	mFontMapping = nsUnicodeFontMappingMac::GetCachedInstance(mFont, mContext, langGroup, lang);
+  }
+  
 	return mFontMapping;
 }
 
@@ -244,7 +185,7 @@ void nsFontMetricsMac::RealizeFont()
 
 
 NS_IMETHODIMP
-nsFontMetricsMac :: Destroy()
+nsFontMetricsMac::Destroy()
 {
   return NS_OK;
 }
