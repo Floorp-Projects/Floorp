@@ -212,7 +212,7 @@ nsBufferedStream::~nsBufferedStream()
     TRACEMSG(("nsBufferedStream is being destroyed...\n"));
 
     if (m_Buffer) {
-        free(m_Buffer);
+        delete (m_Buffer);
         m_Buffer = NULL;
     }
 }
