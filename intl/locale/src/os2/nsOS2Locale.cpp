@@ -131,7 +131,7 @@ nsOS2Locale::GetXPLocale(const char* os2Locale, nsString* locale)
 PRBool
 nsOS2Locale::ParseLocaleString(const char* locale_string, char* language, char* country, char* extra, char separator)
 {
-  PRUint32 len = PL_strlen(locale_string);
+  PRUint32 len = strlen(locale_string);
 
   *language = '\0';
   *country = '\0';
@@ -152,7 +152,7 @@ nsOS2Locale::ParseLocaleString(const char* locale_string, char* language, char* 
     country[2]='\0';
   }
   else if (4 <= len && '.' == locale_string[2]) {
-    PL_strcpy(extra, &locale_string[3]);
+    strcpy(extra, &locale_string[3]);
     language[0]=locale_string[0];
     language[1]=locale_string[1];
     language[2]='\0';
@@ -161,7 +161,7 @@ nsOS2Locale::ParseLocaleString(const char* locale_string, char* language, char* 
     country[2]='\0';
   }
   else if (7 <= len && '.' == locale_string[5]) {
-    PL_strcpy(extra, &locale_string[6]);
+    strcpy(extra, &locale_string[6]);
     language[0]=locale_string[0];
     language[1]=locale_string[1];
     language[2]='\0';
