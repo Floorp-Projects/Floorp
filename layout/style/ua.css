@@ -22,7 +22,7 @@
 // comes from the PresentationContext.
 
 BODY {
-  font-family: "Times Roman", serif;
+  font-family: serif;
   font-style: normal;
   font-variant: normal;
   font-weight: normal;
@@ -37,7 +37,7 @@ BODY {
 
 // XXX Use this!
 FRAMESET {
-  font-family: "Times Roman", serif;
+  font-family: serif;
   font-style: normal;
   font-variant: normal;
   font-weight: normal;
