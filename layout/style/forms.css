@@ -227,7 +227,13 @@ optgroup[disabled],
 select[disabled],
 select[disabled]:-moz-display-comboboxcontrol-frame {
   color: GrayText;
+  background-color: ThreeDFace;
   cursor: default;
+}
+
+option[disabled],
+optgroup[disabled] {
+  background-color: -moz-field;
 }
 
 /* hidden inputs */
@@ -324,7 +330,6 @@ input[type="checkbox"][disabled]:hover,
 input[type="checkbox"][disabled]:hover:active {
   padding: 1px;
   border-color: ThreeDShadow;
-  background-color: GrayText;
 
   border-width: 1px !important;
   border-style: inset !important;
