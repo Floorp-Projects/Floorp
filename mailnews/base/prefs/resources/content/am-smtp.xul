@@ -23,7 +23,7 @@
 
   <separator/>
 
-  <hbox id="smtpServerEditor"/>
+  <vbox id="smtpServerEditor"/>
 
   <separator/>
   
