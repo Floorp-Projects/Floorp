@@ -574,11 +574,7 @@ static const char *kObjectGetCaseStr =
 
 static const char *kXPIDLObjectGetCaseStr =
 "          // get the js object\n"
-"#ifdef XPIDL_JS_STUBS\n"
-"          *vp = OBJECT_TO_JSVAL(%s::GetJSObject(cx, prop));\n"
-"#else\n"
-"          nsJSUtils::nsConvertXPCObjectToJSVal(prop, %s::GetIID(), cx, vp);\n"
-"#endif\n";
+"          nsJSUtils::nsConvertXPCObjectToJSVal(prop, %s::GetIID(), cx, vp);\n";
 
 static const char *kStringGetCaseStr = 
 "          nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);\n";
@@ -702,7 +698,11 @@ static const char *kObjectSetCaseStr =
 "          return JS_FALSE;\n"
 "        }\n";
 
-static const char *kXPIDLObjectSetCaseStr = kObjectSetCaseStr;
+static const char *kXPIDLObjectSetCaseStr = 
+"        if (PR_FALSE == nsJSUtils::nsConvertJSValToXPCObject((nsISupports **) &prop,\n"
+"                                                kI%sIID, cx, *vp)) {\n"
+"          return JS_FALSE;\n"
+"        }\n";
 
 static const char *kObjectSetCaseEndStr = "NS_IF_RELEASE(prop);";
 
@@ -765,7 +765,7 @@ JSStubGen::GeneratePropSetter(ofstream *file,
         if (p[0] == 'n' && p[1] == 's' && p[2] == 'I')
           p += 3;
 
-        sprintf(case_buf, kXPIDLObjectSetCaseStr, p, p);
+        sprintf(case_buf, kXPIDLObjectSetCaseStr, p);
       }
       break;
     default:
@@ -939,11 +939,17 @@ static const char *kMethodObjectParamStr = "\n"
             paramType, paramNum)
 
 
-static const char *kMethodXPIDLObjectParamStr = kMethodObjectParamStr;
+static const char *kMethodXPIDLObjectParamStr = "\n"
+"    if (JS_FALSE == nsJSUtils::nsConvertJSValToXPCObject((nsISupports**)&b%d,\n"
+"                                           kI%sIID, cx, argv[%d])) {\n"
+"      return JS_FALSE;\n"
+"    }\n";
 
 #define JSGEN_GENERATE_XPIDL_OBJECTPARAM(buffer, paramNum, paramType) \
-    sprintf(buffer, kMethodXPIDLObjectParamStr, paramNum, paramType,  \
-            paramType, paramNum)
+    sprintf(buffer, kMethodXPIDLObjectParamStr, paramNum, \
+            (((paramType)[0] == 'n' && (paramType)[1] == 's' && (paramType)[2] == 'I') \
+             ? ((paramType) + 3) : (paramType)), \
+            paramNum)
 
 static const char *kMethodStringParamStr = "\n"
 "    nsJSUtils::nsConvertJSValToString(b%d, cx, argv[%d]);\n";
@@ -1001,7 +1007,7 @@ static const char *kMethodObjectRetStr =
 "    nsJSUtils::nsConvertObjectToJSVal(nativeRet, cx, rval);\n";
 
 static const char *kMethodXPIDLObjectRetStr =
-"    *rval = %s::GetJSObject(cx, nativeRet);\n";
+"    nsJSUtils::nsConvertXPCObjectToJSVal(nativeRet, %s::GetIID(), cx, rval);\n";
 
 static const char *kMethodStringRetStr = 
 "    nsJSUtils::nsConvertStringToJSVal(nativeRet, cx, rval);\n";
