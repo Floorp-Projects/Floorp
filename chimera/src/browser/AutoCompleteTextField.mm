@@ -19,7 +19,7 @@
 *
 * Contributor(s):
 *   Joe Hewitt <hewitt@netscape.com> (Original Author)
-*   David Haas <haas@cae.wisc.edu> 
+*   David Haas <haasd@cae.wisc.edu> 
 */
 
 #import "CHAutoCompleteTextField.h"
@@ -33,6 +33,17 @@
 static const int kMaxRows = 6;
 static const int kFrameMargin = 1;
 static const int kEscapeKeyCode = 53;
+
+@interface AutoCompleteWindow : NSWindow
+- (BOOL)isKeyWindow;
+@end
+
+@implementation AutoCompleteWindow
+- (BOOL)isKeyWindow
+{
+  return YES;
+}
+@end
 
 class AutoCompleteListener : public nsIAutoCompleteListener
 {  
@@ -95,8 +106,8 @@ NS_IMPL_ISUPPORTS1(AutoCompleteListener, nsIAutoCompleteListener)
   [self setSession:@"history"];
   
   // construct and configure the popup window
-  mPopupWin = [[[NSWindow alloc] initWithContentRect:NSMakeRect(0,0,0,0)
-                      styleMask:NSBorderlessWindowMask backing:NSBackingStoreBuffered defer:NO] retain];
+  mPopupWin = [[AutoCompleteWindow alloc] initWithContentRect:NSMakeRect(0,0,0,0)
+                      styleMask:NSBorderlessWindowMask backing:NSBackingStoreBuffered defer:NO];
   [mPopupWin setReleasedWhenClosed:NO];
   [mPopupWin setLevel:NSFloatingWindowLevel];
   [mPopupWin setHasShadow:YES];
