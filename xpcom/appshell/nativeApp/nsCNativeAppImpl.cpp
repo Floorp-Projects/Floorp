@@ -39,7 +39,7 @@ nsCNativeAppImpl::~nsCNativeAppImpl()
 {
 }
 
-NS_METHOD nsCNativeAppImpl::Create(nsISupports* aOuter, const nsIID& aIID, 
+NS_IMETHODIMP nsCNativeAppImpl::Create(nsISupports* aOuter, const nsIID& aIID, 
 	void** ppv)
 {
 	NS_ENSURE_ARG_POINTER(ppv);
