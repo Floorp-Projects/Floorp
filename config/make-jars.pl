@@ -58,7 +58,7 @@ if (defined($::opt_l)) {
 if ($verbose) {
     print "make-jars "
         . "-v -d $chromeDir "
-        . ($fileformat ? "-f $fileformat" : "")
+        . ($fileformat ? "-f $fileformat " : "")
         . ($nofilelocks ? "-l " : "")
         . ($baseFilesDir ? "-s $baseFilesDir " : "")
         . "\n";
