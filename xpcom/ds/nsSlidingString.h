@@ -160,9 +160,6 @@ class NS_COM nsSlidingString
     friend class nsSlidingSubstring;
 
     public:
-      typedef nsSlidingSharedBufferList::Buffer   Buffer;
-      typedef nsSlidingSharedBufferList::Position Position;
-
       nsSlidingString( PRUnichar* aStorageStart, PRUnichar* aDataEnd, PRUnichar* aStorageEnd );
         // ...created by consuming ownership of a buffer ... |aStorageStart| must point to something
         //  that it will be OK for the slidking string to call |nsMemory::Free| on
@@ -180,15 +177,7 @@ class NS_COM nsSlidingString
     protected:
       virtual const PRUnichar* GetReadableFragment( nsReadableFragment<PRUnichar>&, nsFragmentRequest, PRUint32 ) const;
 
-        // |using| doesn't work everywhere, so we have to provide accessors for derived classes
-      Position& StartPosition()                             { return mStart; }
-      const Position& StartPosition() const                 { return mStart; }
-
-      Position& EndPosition()                               { return mEnd; }
-      const Position& EndPosition() const                   { return mEnd; }
-
-      nsSlidingSharedBufferList*  BufferList()              { return mBufferList; }
-      const nsSlidingSharedBufferList*  BufferList() const  { return mBufferList; }
+      void InsertReadable( const nsAReadableString&, const nsReadingIterator<PRUnichar>& ); // ...to implement |nsScannerString::UngetReadable| 
 
     private:
 

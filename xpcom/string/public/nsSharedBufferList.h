@@ -185,6 +185,14 @@ class NS_COM nsSharedBufferList
 
       static
       Buffer*
+      NewSingleAllocationBuffer( const nsAReadableString& aReadable, PRUint32 aAdditionalCapacity = 1 )
+        {
+          typedef Buffer* Buffer_ptr;
+          return NS_AllocateContiguousHandleWithData(Buffer_ptr(0), aReadable, aAdditionalCapacity);
+        }
+
+      static
+      Buffer*
       NewWrappingBuffer( PRUnichar* aDataStart, PRUnichar* aDataEnd, PRUnichar* aStorageEnd )
         {
           return new Buffer(aDataStart, aDataEnd, aDataStart, aStorageEnd);

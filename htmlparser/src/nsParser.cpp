@@ -1899,8 +1899,8 @@ nsresult nsParser::ResumeParse(PRBool allowIteration, PRBool aIsFinalChunk) {
             // -- Ref: Bug# 22485 --
             // Insert the unused input into the source buffer 
             // as if it was read from the input stream. 
-            // Adding Insert() per vidur!!
-            mParserContext->mScanner->Insert(mUnusedInput);
+            // Adding UngetReadable() per vidur!!
+            mParserContext->mScanner->UngetReadable(mUnusedInput);
             mUnusedInput.Truncate(0);
           }
         }

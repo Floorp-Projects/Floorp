@@ -38,29 +38,6 @@ nsScannerString::nsScannerString(PRUnichar* aStorageStart,
 }
 
 void
-nsScannerString::InsertData(const PRUnichar* aDataStart, 
-                            const PRUnichar* aDataEnd)
-  /*
-   * Warning: this routine manipulates the shared buffer list in an unexpected way.
-   *  The original design did not really allow for insertions, but this call promises
-   *  that if called for a point after then end of all extant token strings, that no token string
-   *  nor the work string will be invalidated.
-   */
-{
-  BufferList()->SplitBuffer(StartPosition(), nsSharedBufferList::kSplitCopyRightData);
-    // splitting to the right keeps the work string and any extant token pointing to and
-    //  holding a reference count on the same buffer
-
-  Buffer* new_buffer = nsSharedBufferList::NewSingleAllocationBuffer(aDataStart, aDataEnd-aDataStart, 0);
-    // make a new buffer with all the data to insert...
-    //  BULLSHIT ALERT: we may have empty space to re-use in the split buffer, measure the cost
-    //  of this and decide if we should do the work to fill it
-
-  Buffer* buffer_to_split = StartPosition().mBuffer;
-  BufferList()->LinkBuffer(buffer_to_split, new_buffer, buffer_to_split->mNext);
-}
-
-void
 nsScannerString::ReplaceCharacter(nsReadingIterator<PRUnichar>& aPosition,
                                   PRUnichar aChar)
 {
@@ -279,10 +256,13 @@ void nsScanner::Mark() {
  * @update  harishd 01/12/99
  * @return  error code 
  */
-PRBool nsScanner::Insert(const nsAReadableString& aBuffer) {
-  // XXX This is where insertion of a buffer at the head 
-  // of the buffer list will take place pending checkins
-  // from scc.
+PRBool nsScanner::UngetReadable(const nsAReadableString& aBuffer) {
+
+  mSlidingBuffer->UngetReadable(aBuffer,mCurrentPosition);
+  mSlidingBuffer->BeginReading(mCurrentPosition); // Insertion invalidated our iterators
+  mSlidingBuffer->EndReading(mEndPosition);
+  mTotalRead += aBuffer.Length();
+      
   return PR_TRUE;
 }
 

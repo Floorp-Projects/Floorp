@@ -104,6 +104,7 @@ nsSharedBufferList::SplitBuffer( const Position& aSplitPosition, SplitDispositio
 
       // if the caller specifically asked to split off the right side of the buffer-to-be-split
       //  or else if they asked for the minimum amount of work, and that turned out to be the right side...
+    ptrdiff_t savedLength = mTotalDataLength;
     if ( aSplitDirection==kSplitCopyRightData ||
         ( aSplitDirection==kSplitCopyLeastData && ((bufferToSplit->DataLength() >> 1) <= splitOffset) ) )
       {
@@ -119,6 +120,8 @@ nsSharedBufferList::SplitBuffer( const Position& aSplitPosition, SplitDispositio
         LinkBuffer(bufferToSplit->mPrev, new_buffer, bufferToSplit);
         bufferToSplit->DataStart(aSplitPosition.mPosInBuffer);
       }
+    mTotalDataLength = savedLength; 
+      // duh! splitting a buffer doesn't change the length.
   }
 
 
