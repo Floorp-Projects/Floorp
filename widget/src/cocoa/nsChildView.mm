@@ -810,11 +810,16 @@ NS_IMETHODIMP nsChildView::ConstrainPosition(PRBool aAllowSlop,
 //-------------------------------------------------------------------------
 NS_IMETHODIMP nsChildView::Move(PRInt32 aX, PRInt32 aY)
 {
+  return MoveWithRepaintOption(aX, aY, PR_TRUE);
+}
+
+NS_IMETHODIMP nsChildView::MoveWithRepaintOption(PRInt32 aX, PRInt32 aY, PRBool aRepaint)
+{
   if ((mBounds.x != aX) || (mBounds.y != aY))
   {
     // Invalidate the current location
-    if (mVisible)
-        [[mView superview] setNeedsDisplayInRect: [mView frame]];    //XXX needed?
+    if (mVisible && aRepaint)
+      [[mView superview] setNeedsDisplayInRect: [mView frame]];    //XXX needed?
     
     // Set the bounds
     mBounds.x = aX;
@@ -824,7 +829,7 @@ NS_IMETHODIMP nsChildView::Move(PRInt32 aX, PRInt32 aY)
     ConvertGeckoToCocoaRect(mBounds, r);
     [mView setFrame:r];
 
-    if (mVisible)
+    if (mVisible && aRepaint)
       [mView setNeedsDisplay:YES];
     
     // Report the event
@@ -846,7 +851,7 @@ NS_IMETHODIMP nsChildView::Resize(PRInt32 aWidth, PRInt32 aHeight, PRBool aRepai
     mBounds.width  = aWidth;
     mBounds.height = aHeight;
 
-    if (mVisible)
+    if (mVisible && aRepaint)
       [[mView superview] setNeedsDisplayInRect: [mView frame]];    //XXX needed?
     
   // Recalculate the regions
@@ -855,7 +860,7 @@ NS_IMETHODIMP nsChildView::Resize(PRInt32 aWidth, PRInt32 aHeight, PRBool aRepai
     ConvertGeckoToCocoaRect(mBounds, r);
     [mView setFrame:r];
 
-    if (mVisible)
+    if (mVisible && aRepaint)
       [mView setNeedsDisplay:YES];
 
     // Report the event
@@ -872,7 +877,7 @@ NS_IMETHODIMP nsChildView::Resize(PRInt32 aWidth, PRInt32 aHeight, PRBool aRepai
 //-------------------------------------------------------------------------
 NS_IMETHODIMP nsChildView::Resize(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight, PRBool aRepaint)
 {
-  Move(aX, aY);
+  MoveWithRepaintOption(aX, aY, aRepaint);
   Resize(aWidth, aHeight, aRepaint);
   return NS_OK;
 }
@@ -1230,10 +1235,15 @@ NS_IMETHODIMP nsChildView::Scroll(PRInt32 aDx, PRInt32 aDy, nsRect *aClipRect)
         nsCOMPtr<nsISupports> child;
         if (NS_SUCCEEDED(children->CurrentItem(getter_AddRefs(child)))) {
             nsCOMPtr<nsIWidget> widget = do_QueryInterface(child);
-            
+
+            // We use resize rather than move since it gives us control
+            // over repainting.  In the case of blitting, Quickdraw views
+            // draw their child widgets on the blit, so we can scroll
+            // like a bat out of hell by not wasting time invalidating
+            // the widgets, since it's completely unnecessary to do so.
             nsRect bounds;
             widget->GetBounds(bounds);
-            widget->Move(bounds.x + aDx, bounds.y + aDy);
+            widget->Resize(bounds.x + aDx, bounds.y + aDy, bounds.width, bounds.height, PR_FALSE);
         }
         } while (NS_SUCCEEDED(children->Next()));     
     }
