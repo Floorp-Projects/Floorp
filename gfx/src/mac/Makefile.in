@@ -105,6 +105,7 @@ EXTRA_DSO_LDOPTS = \
 
 LOCAL_INCLUDES	= \
 		-I$(srcdir)/../shared \
+		-I$(srcdir)/.. \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk

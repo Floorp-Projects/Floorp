@@ -58,6 +58,9 @@ public:
 
   NS_IMETHOD  Init(nsNativeWidget aNativeWidget);  
 
+  /* The following line tells the compiler that we are using the parent class'
+     functions, unless explicitly overridden.  Avoids an ugly warning */
+  using DeviceContextImpl::CreateRenderingContext;
   NS_IMETHOD  CreateRenderingContext(nsIRenderingContext *&aContext);
   NS_IMETHOD  SupportsNativeWidgets(PRBool &aSupportsWidgets);
 

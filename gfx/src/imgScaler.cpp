@@ -52,6 +52,13 @@ Tomas Mšller
 */
 
 static void
+Stretch32(unsigned x1, unsigned x2, unsigned y1, unsigned y2,
+	  unsigned yr, unsigned yw,
+	  unsigned aStartRow, unsigned aStartColumn, unsigned aEndColumn,
+	  unsigned char *aSrcImage, unsigned aSrcStride,
+	  unsigned char *aDstImage, unsigned aDstStride);
+
+static void
 Stretch24(unsigned x1, unsigned x2, unsigned y1, unsigned y2,
 	  unsigned yr, unsigned yw,
 	  unsigned aStartRow, unsigned aStartColumn, unsigned aEndColumn,
@@ -125,6 +132,9 @@ RectStretch(unsigned aSrcWidth, unsigned aSrcHeight,
 //	    aSrcStride, aDstStride, aDepth);
 
     switch (aDepth) {
+    case 32:
+	Stretch = Stretch32;
+	break;
     case 24:
 	Stretch = Stretch24;
 	break;
@@ -166,6 +176,41 @@ RectStretch(unsigned aSrcWidth, unsigned aSrcHeight,
 	yr    - y-coordinate of source line
 	yw    - y-coordinate of destination line
 **********************************************************/
+
+static void
+Stretch32(unsigned x1, unsigned x2, unsigned y1, unsigned y2,
+	  unsigned yr, unsigned yw,
+	  unsigned aStartRow, unsigned aStartColumn, unsigned aEndColumn,
+	  unsigned char *aSrcImage, unsigned aSrcStride,
+	  unsigned char *aDstImage, unsigned aDstStride)
+{
+    int e;
+    unsigned dx, dy, d;
+    unsigned char *src, *dst;
+
+    dx = x2 - x1;
+    dy = y2 - y1;
+    e = dy - dx;
+    dy += 1;
+    src = aSrcImage + yr * aSrcStride + 4 * y1;
+    dst = aDstImage + (yw - aStartRow) * aDstStride;
+    if (!dx)
+	dx = 1;
+    for (d = 0; d <= aEndColumn; d++) {
+	if (d >= aStartColumn) {
+	    *dst++ = src[0];
+	    *dst++ = src[1];
+	    *dst++ = src[2];
+	    *dst++ = src[3];
+	}
+	while (e >= 0) {
+	    src += 4;
+	    e -= dx;
+	}
+	e += dy;
+    }
+}
+
 static void
 Stretch24(unsigned x1, unsigned x2, unsigned y1, unsigned y2,
 	  unsigned yr, unsigned yw,
