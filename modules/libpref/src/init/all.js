@@ -104,6 +104,7 @@ pref("browser.show_about_as_stupid_modal_window", false);
 pref("browser.search.defaulturl", "http://search.netscape.com/cgi-bin/search?search=");
 pref("browser.search.opensidebarsearchpanel", true);
 pref("browser.search.powermode", 0);
+pref("browser.search.use_double_clicks", false);
 
 localDefPref("browser.bookmark_location",       "");
 localDefPref("browser.addressbook_location",    "");
