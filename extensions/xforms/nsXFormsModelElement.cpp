@@ -898,100 +898,35 @@ nsXFormsModelElement::ValidateNode(nsIDOMNode *aInstanceNode, PRBool *aResult)
 }
 
 /*
-   Validates an instance data subtree for submission by recursively walking it.
-   It makes sure that all nodes are valid, and that all required nodes have an
-   XForms value.  It skips non-relevant nodes and their children, since those
-   won't be submitted per the spec.
+ *  SUBMIT_SERIALIZE_NODE   - node is to be serialized
+ *  SUBMIT_SKIP_NODE        - node is not to be serialized
+ *  SUBMIT_ABORT_SUBMISSION - abort submission (invalid node or empty required node)
  */
 NS_IMETHODIMP
-nsXFormsModelElement::ValidateInstanceDataForSubmission(nsIDOMNode *aInstanceDataNode, PRBool *aResult)
+nsXFormsModelElement::HandleInstanceDataNode(nsIDOMNode *aInstanceDataNode, unsigned short *aResult)
 {
-  NS_ENSURE_ARG_POINTER(aResult);
-  NS_ENSURE_ARG_POINTER(aInstanceDataNode);
-
-  nsresult rv;
-  PRBool isValid = *aResult = PR_FALSE;
+  // abort by default
+  *aResult = SUBMIT_ABORT_SUBMISSION;
 
   const nsXFormsNodeState* ns;
   ns = mMDG.GetNodeState(aInstanceDataNode);
   NS_ENSURE_STATE(ns);
 
-  PRBool isRequired = ns->IsRequired();
-  PRBool isNodeRelevant = ns->IsRelevant();
-  PRBool isNodeValid = ns->IsValid();
-
-  // if not relevant, don't handle subtree
-  if (!isNodeRelevant) {
-    *aResult = PR_TRUE;
-    return NS_OK;
+  if (!ns->IsRelevant()) {
+    // not relevant, thus skip
+    *aResult = SUBMIT_SKIP_NODE;
+  } else if (ns->IsRequired()) {
+    // required and has a value, continue
+    nsAutoString value;
+    nsXFormsUtils::GetNodeValue(aInstanceDataNode, value);
+    if (!value.IsEmpty() && ns->IsValid())
+      *aResult = SUBMIT_SERIALIZE_NODE;
+  } else if (ns->IsValid()) {
+    // valid
+    *aResult = SUBMIT_SERIALIZE_NODE;
   }
 
-  // if invalid abort.
-  if (!isNodeValid) {
-    *aResult = PR_FALSE;
-    return NS_OK;
-  }
-
-  PRBool hasChildren;
-  rv = aInstanceDataNode->HasChildNodes(&hasChildren);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // if required and no children, its empty and thus invalid.
-  if (isRequired && !hasChildren) {
-    *aResult = PR_FALSE;
-    return NS_OK;
-  }
-
-  nsCOMPtr<nsIDOMNode> node;
-  nsCOMPtr<nsIDOMNodeList> children;
-  rv = aInstanceDataNode->GetChildNodes(getter_AddRefs(children));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  PRUint32 length;
-  children->GetLength(&length);
-
-  PRBool foundElementNode = PR_FALSE;
-  PRUint16 run = 0;
-  PRBool done = PR_FALSE;
-  PRUint16 nodeType;
-
-  while (!done && (run < length)) {
-    // If there is an nsIDOMNode::ELEMENT_NODE child, we recurse.
-    children->Item(run, getter_AddRefs(node));
-    node->GetNodeType(&nodeType);
-
-    if (nodeType == nsIDOMNode::ELEMENT_NODE) {
-      rv = ValidateInstanceDataForSubmission(node, &isValid);
-      NS_ENSURE_SUCCESS(rv, rv);
-      if (!isValid)
-        done = PR_TRUE;
-
-      foundElementNode = PR_TRUE;
-    }
-
-    ++run;
-  }
-
-  /*
-     If all children are text nodes and the node is required, check its nodevalue.
-     XXX: it is unclear what happens for an required node that has both element
-          and text nodes as children or that only has element nodes as children.
-          Different XForms processors seem to handle it differently.  Currently,
-          if a required node has no text children it will pass as GetNodeValue
-          won't get called.
-   */
-  if (!foundElementNode) {
-    if (isRequired) {
-      nsAutoString value;
-      nsXFormsUtils::GetNodeValue(node, value);
-      isValid = !value.IsEmpty();
-    } else {
-      isValid = PR_TRUE;
-    }
-  }
-
-  *aResult = isValid;
-  return rv;
+  return NS_OK;
 }
 
 // internal methods

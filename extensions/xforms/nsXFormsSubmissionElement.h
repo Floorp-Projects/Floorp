@@ -109,8 +109,6 @@ private:
 
   // input end of pipe, which contains response data.
   nsCOMPtr<nsIInputStream> mPipeIn;
-
-  PRBool CheckChildren(nsIDOMNode *aNode);
 };
 
 NS_HIDDEN_(nsresult)

@@ -95,8 +95,13 @@ interface nsIModelElementPrivate : nsIXFormsModelElement
    */
   PRBool validateNode(in nsIDOMNode aInstanceNode);
 
+  const unsigned short SUBMIT_SERIALIZE_NODE   = 1;
+  const unsigned short SUBMIT_SKIP_NODE        = 2;
+  const unsigned short SUBMIT_ABORT_SUBMISSION = 3;
+
   /**
-   * Validates the instance node and its children if it can be submitted.
+   * Handles an instance data node and returns one of the above 3 values.
    */
-  PRBool validateInstanceDataForSubmission(in nsIDOMNode aInstanceDataNode);
+  unsigned short handleInstanceDataNode(in nsIDOMNode aInstanceDataNode);
+
 };

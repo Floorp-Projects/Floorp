@@ -470,16 +470,6 @@ nsXFormsSubmissionElement::LoadReplaceAll(nsIChannel *channel)
   return docshell->LoadStream(mPipeIn, uri, contentType, contentCharset, nsnull);
 }
 
-PRBool
-nsXFormsSubmissionElement::CheckChildren(nsIDOMNode *aNode) {
-  PRBool isValid = PR_FALSE;
-
-  nsCOMPtr<nsIModelElementPrivate> model = GetModel();
-  model->ValidateInstanceDataForSubmission(aNode, &isValid);
-
-  return isValid;
-}
-
 nsresult
 nsXFormsSubmissionElement::Submit()
 {
@@ -512,10 +502,6 @@ nsXFormsSubmissionElement::Submit()
   //    serialization)
 
   // XXX call nsISchemaValidator::validate on each node
-
-  PRBool isValid = CheckChildren(data);
-  if (!isValid)
-    return NS_ERROR_FAILURE;
 
 
   // 4. serialize instance data
@@ -684,12 +670,12 @@ nsXFormsSubmissionElement::SerializeDataXML(nsIDOMNode *data,
 
   // clone and possibly modify the document for submission
   nsCOMPtr<nsIDOMDocument> newDoc;
-  CreateSubmissionDoc(doc, encoding, attachments, getter_AddRefs(newDoc));
+  nsresult rv = CreateSubmissionDoc(doc, encoding, attachments, getter_AddRefs(newDoc));
+  NS_ENSURE_SUCCESS(rv, rv);
   NS_ENSURE_TRUE(newDoc, NS_ERROR_UNEXPECTED);
-  
-  nsresult rv =
-      serializer->SerializeToStream(newDoc, sink,
-                                    NS_LossyConvertUTF16toASCII(encoding));
+
+  rv = serializer->SerializeToStream(newDoc, sink,
+                                     NS_LossyConvertUTF16toASCII(encoding));
   NS_ENSURE_SUCCESS(rv, rv);
 
   // close the output stream, so that the input stream will not return
@@ -738,14 +724,15 @@ nsXFormsSubmissionElement::CreateSubmissionDoc(nsIDOMDocument *source,
     nsCOMPtr<nsIDOMProcessingInstruction> pi;
     doc->CreateProcessingInstruction(NS_LITERAL_STRING("xml"), buf,
                                      getter_AddRefs(pi));
-    
+
     nsCOMPtr<nsIDOMNode> newChild;
     doc->AppendChild(pi, getter_AddRefs(newChild));
   }
-  
+
   // recursively walk the source document, copying nodes as appropriate
 
-  CopyChildren(source, doc, doc, attachments, cdataElements, indent, 0);
+  nsresult rv = CopyChildren(source, doc, doc, attachments, cdataElements, indent, 0);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   NS_ADDREF(*result = doc);
   return NS_OK;
@@ -759,6 +746,8 @@ nsXFormsSubmissionElement::CopyChildren(nsIDOMNode *source, nsIDOMNode *dest,
                                         PRBool indent, PRUint32 depth)
 {
   nsCOMPtr<nsIDOMNode> sourceChild, node, destChild;
+  nsCOMPtr<nsIModelElementPrivate> model = GetModel();
+
   source->GetFirstChild(getter_AddRefs(sourceChild));
   while (sourceChild)
   {
@@ -821,6 +810,25 @@ nsXFormsSubmissionElement::CopyChildren(nsIDOMNode *source, nsIDOMNode *dest,
     }
     else
     {
+
+     PRUint16 handleNodeResult;
+     model->HandleInstanceDataNode(sourceChild, &handleNodeResult);
+
+      /*
+       *  SUBMIT_SERIALIZE_NODE   - node is to be serialized
+       *  SUBMIT_SKIP_NODE        - node is not to be serialized
+       *  SUBMIT_ABORT_SUBMISSION - abort submission (invalid node or empty required node)
+       */
+      if (handleNodeResult == nsIModelElementPrivate::SUBMIT_SKIP_NODE) {
+         // skip node and subtree
+         sourceChild->GetNextSibling(getter_AddRefs(node));
+         sourceChild.swap(node);
+         continue;
+      } else if (handleNodeResult == nsIModelElementPrivate::SUBMIT_ABORT_SUBMISSION) {
+        // abort
+        return NS_ERROR_ILLEGAL_VALUE;
+      }
+
       // if |destChild| is an element node of type 'xsd:anyURI', and if we have
       // an attachments array, then we need to perform multipart/related
       // processing (i.e., generate a ContentID for the child of this element,
