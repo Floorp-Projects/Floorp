@@ -11,7 +11,6 @@ CompanyName=MyIsp
 HomePageURL=http://home.netscape.com
 HelpMenuCommandName=
 HelpMenuCommandURL=
-CustomBookmarkFile=%Root%Configs\MyIsp\Workspace\Bkmarks\bookmarks.html
 ProgramFolderName=MyIsp
 CreateReadmeIcon=0
 CreateLicenseIcon=0
