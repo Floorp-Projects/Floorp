@@ -728,6 +728,25 @@ void nsFormFrame::ProcessAsURLEncoded(PRBool isPost, nsString& aData, nsIFormCon
 	}
   NS_IF_RELEASE(encoder);
 
+    // Use the base URL as a referer for now
+    nsIURI* docURL = nsnull;
+    nsIDocument* doc = nsnull;
+    mContent->GetDocument(doc);
+    while (doc && !docURL) {
+      doc->GetBaseURL(docURL);
+      if (!docURL) {
+        doc = GetParentHTMLFrameDocument(doc);
+        if (!doc) break;
+      }
+    }
+    NS_IF_RELEASE(doc);
+	char* spec = nsnull;
+	if (docURL)
+	{
+		docURL->GetSpec(&spec);
+	}
+	NS_IF_RELEASE(docURL);
+
   aData.SetLength(0);
   if (isPost) {
     char size[16];
@@ -740,6 +759,13 @@ void nsFormFrame::ProcessAsURLEncoded(PRBool isPost, nsString& aData, nsIFormCon
     aData += charset;
 #endif
     aData += CRLF;
+	if (spec)
+	{
+		aData += "Referer: ";
+		aData += spec;
+		nsCRT::free(spec);
+		aData += CRLF;
+	}
     aData += "Content-Length: ";
     aData += size;
     aData += CRLF;
