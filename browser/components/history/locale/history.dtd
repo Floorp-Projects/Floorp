@@ -60,3 +60,5 @@
 <!ENTITY byLastVisited.accesskey "L">
 <!ENTITY byDayAndSite.label "By Date and Site">
 <!ENTITY byDayAndSite.accesskey "t">
+<!ENTITY openInNewWindow.label "Open in New Window">
+<!ENTITY openInNewWindow.accesskey "W">
