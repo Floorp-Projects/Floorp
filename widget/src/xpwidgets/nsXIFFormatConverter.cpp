@@ -21,6 +21,9 @@
 #include "nsVoidArray.h"
 #include "nsRepository.h"
 
+#include "nsITransferable.h" // for mime defs
+
+
 // These are temporary
 #if defined(XP_UNIX) || defined(XP_MAC)
 #include <strstream.h>
