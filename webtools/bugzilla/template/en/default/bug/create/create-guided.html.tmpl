@@ -143,6 +143,16 @@ function PutDescription() {
     <input type="hidden" name="order" value="relevance desc">
     <input type="hidden" name="bug_status" value="__all__">
     <input type="hidden" name="product" value="[% product FILTER html %]">
+    [% IF product == "Firefox" OR 
+          product == "Thunderbird" OR 
+          product == "Mozilla Application Suite" OR
+          product == "Camino" %]
+      <input type="hidden" name="product" value="Core">
+      <input type="hidden" name="product" value="Toolkit">
+      <input type="hidden" name="product" value="PSM">
+      <input type="hidden" name="product" value="NSPR">
+      <input type="hidden" name="product" value="NSS">
+    [% END %]      
     <input type="hidden" name="chfieldfrom" value="-6m">
     <input type="hidden" name="chfieldto" value="Now">
     <input type="hidden" name="chfield" value="[Bug creation]">
