@@ -85,3 +85,8 @@ NS_METHOD nsSound::Play(nsIURL *aURL)
 #endif /* DEBUG_faulkner */
   return NS_OK;	
 }
+
+NS_IMETHODIMP nsSound::PlaySystemSound(const char *aSoundAlias)
+{
+  return Beep();
+}

@@ -180,3 +180,8 @@ PRBool nsSound::HaveQuickTime()
   OSErr err = Gestalt (gestaltQuickTime, &gestResult);
   return (err == noErr) && ((long)EnterMovies != kUnresolvedCFragSymbolAddress);
 }
+
+NS_IMETHODIMP nsSound::PlaySystemSound(const char *aSoundAlias)
+{
+  return Beep();
+}

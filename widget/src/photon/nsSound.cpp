@@ -114,3 +114,7 @@ NS_IMETHODIMP nsSound::OnStreamComplete(nsIStreamLoader *aLoader,
   return rv;
 }
 
+NS_IMETHODIMP nsSound::PlaySystemSound(const char *aSoundAlias)
+{
+  return Beep();
+}
