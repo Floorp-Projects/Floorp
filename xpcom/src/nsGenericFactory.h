@@ -38,11 +38,23 @@ public:
 
 	NS_IMETHOD LockFactory(PRBool aLock);
 
+	/**
+	 * Establishes the generic factory's constructor function, which will be called
+	 * by CreateInstance.
+	 */
     NS_IMETHOD SetConstructor(ConstructorProcPtr constructor);
+
+	/**
+	 * Establishes the generic factory's destructor function, which will be called
+	 * whe the generic factory is deleted. This is used to notify the DLL that
+	 * an instance of one of its generic factories is going away.
+	 */
+    NS_IMETHOD SetDestructor(DestructorProcPtr destructor);
 
 	static NS_METHOD Create(nsISupports* outer, const nsIID& aIID, void* *aInstancePtr);
 private:
 	ConstructorProcPtr mConstructor;
+	DestructorProcPtr mDestructor;
 };
 
 #endif /* nsGenericFactory_h___ */
