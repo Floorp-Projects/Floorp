@@ -64,7 +64,7 @@ nsStandardURL::AggregatedQueryInterface(const nsIID& aIID, void** aInstancePtr)
         aIID.Equals(nsCOMTypeInfo<nsIURL>::GetIID()) ||
         aIID.Equals(nsCOMTypeInfo<nsIURI>::GetIID()) ||
         aIID.Equals(nsCOMTypeInfo<nsISupports>::GetIID())) {
-        *aInstancePtr = NS_STATIC_CAST(nsIURI*, this);
+        *aInstancePtr = NS_STATIC_CAST(nsIURL*, this);
         NS_ADDREF_THIS();
         return NS_OK;
     }
