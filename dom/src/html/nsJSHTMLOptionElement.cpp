@@ -16,8 +16,6 @@
  * Communications Corporation.  Portions created by Netscape are
  * Copyright (C) 1998 Netscape Communications Corporation. All
  * Rights Reserved.
- *
- * Contributor(s): 
  */
 /* AUTO-GENERATED. DO NOT EDIT!!! */
 
@@ -280,6 +278,20 @@ SetHTMLOptionElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         
         break;
       }
+      case HTMLOPTIONELEMENT_TEXT:
+      {
+        PRBool ok = PR_FALSE;
+        secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLOPTIONELEMENT_TEXT, PR_TRUE, &ok);
+        if (!ok) {
+          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
+        }
+        nsAutoString prop;
+        nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
+      
+        a->SetText(prop);
+        
+        break;
+      }
       case HTMLOPTIONELEMENT_INDEX:
       {
         PRBool ok = PR_FALSE;
@@ -427,7 +439,7 @@ static JSPropertySpec HTMLOptionElementProperties[] =
 {
   {"form",    HTMLOPTIONELEMENT_FORM,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {"defaultSelected",    HTMLOPTIONELEMENT_DEFAULTSELECTED,    JSPROP_ENUMERATE},
-  {"text",    HTMLOPTIONELEMENT_TEXT,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"text",    HTMLOPTIONELEMENT_TEXT,    JSPROP_ENUMERATE},
   {"index",    HTMLOPTIONELEMENT_INDEX,    JSPROP_ENUMERATE},
   {"disabled",    HTMLOPTIONELEMENT_DISABLED,    JSPROP_ENUMERATE},
   {"label",    HTMLOPTIONELEMENT_LABEL,    JSPROP_ENUMERATE},
