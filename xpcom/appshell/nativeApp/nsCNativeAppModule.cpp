@@ -21,65 +21,12 @@
  */
 
 #include "nsIGenericFactory.h"
-#include "nsIComponentManager.h"
-#include "nsIServiceManager.h"
 
-#include "nsCNativeAppImpl.h"
-
-static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
-static NS_DEFINE_CID(kNativeAppCID, NS_NATIVE_APP_CID);
-
-//*****************************************************************************
-//*** Library Exports
-//*****************************************************************************
-
-extern "C" PR_IMPLEMENT(nsresult)
-NSGetFactory(nsISupports* aServMgr,
-             const nsCID &aClass,
-             const char *aClassName,
-             const char *aProgID,
-             nsIFactory **aFactory)
+static nsModuleComponentInfo components[] =
 {
-	NS_ENSURE_ARG_POINTER(aFactory);
-   nsresult rv;
+  { "Native App Service", NS_NATIVE_APP_CID, NS_NATIVE_APP_PROGID,
+    nsCNativeAppImpl::Create
+  }
+};
 
-   nsIGenericFactory* fact;
-
-	if(aClass.Equals(kNativeAppCID))
-		rv = NS_NewGenericFactory(&fact, nsCNativeAppImpl::Create);
-   else 
-		rv = NS_NOINTERFACE;
-
-	if(NS_SUCCEEDED(rv))
-		*aFactory = fact;
-	return rv;
-}
-
-extern "C" PR_IMPLEMENT(nsresult)
-NSRegisterSelf(nsISupports* aServMgr , const char* aPath)
-{
-	nsresult rv;
-	NS_WITH_SERVICE1(nsIComponentManager, compMgr, aServMgr, kComponentManagerCID, &rv);
-	NS_ENSURE_SUCCESS(rv, rv);
-
-	rv = compMgr->RegisterComponent(kNativeAppCID,  
-											"Native App Service",
-											NS_NATIVE_APP_PROGID,
-											aPath, PR_TRUE, PR_TRUE);
-	NS_ENSURE_SUCCESS(rv, rv);
-
-	return rv;
-}
-
-extern "C" PR_IMPLEMENT(nsresult)
-NSUnregisterSelf(nsISupports* aServMgr, const char* aPath)
-{
-	nsresult rv;
-
-	NS_WITH_SERVICE1(nsIComponentManager, compMgr, aServMgr, kComponentManagerCID, &rv);
-	NS_ENSURE_SUCCESS(rv, rv);
-	rv = compMgr->UnregisterComponent(kNativeAppCID, aPath);
-	NS_ENSURE_SUCCESS(rv, rv);
-
-	return rv;
-}
+NS_IMPL_NSGETMODULE("nsCNativeAppModule", components)
