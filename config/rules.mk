@@ -524,17 +524,20 @@ endif
 	$(AR) $(OBJS) $(LOBJS) $(SUB_LOBJS)
 	$(RANLIB) $@
 	@rm -f foodummyfilefoo $(SUB_LOBJS)
+	$(MOZ_POST_AR_LIB_COMMAND) $@
 else
 ifdef OS2_IMPLIB
 $(LIBRARY): $(OBJS) $(DEF_FILE)
 	rm -f $@
 	$(IMPLIB) $@ $(DEF_FILE)
 	$(RANLIB) $@
+	$(MOZ_POST_AR_LIB_COMMAND) $@
 else
 $(LIBRARY): $(OBJS)
 	rm -f $@
 	$(AR) $(LIBOBJS),,
 	$(RANLIB) $@
+	$(MOZ_POST_AR_LIB_COMMAND) $@
 endif
 endif
 
@@ -543,11 +546,13 @@ $(SHARED_LIBRARY): $(OBJS) $(LOBJS)
 	rm -f $@
 	$(MKSHLIB) -o $@ $(OBJS) $(LOBJS) $(EXTRA_DSO_LDOPTS)
 	chmod +x $@
+	$(MOZ_POST_DSO_LIB_COMMAND) $@
 else
 $(SHARED_LIBRARY): $(OBJS) $(DEF_FILE)
 	rm -f $@
 	$(LINK_DLL) $(OBJS) $(OS_LIBS) $(EXTRA_LIBS) $(DEF_FILE)
 	chmod +x $@
+	$(MOZ_POST_DSO_LIB_COMMAND) $@
 endif
 
 ifneq (,$(filter OS2 WINNT,$(OS_ARCH)))
