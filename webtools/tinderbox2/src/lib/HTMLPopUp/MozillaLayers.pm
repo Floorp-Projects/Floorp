@@ -15,8 +15,8 @@
 
 
 
-# $Revision: 1.13 $ 
-# $Date: 2002/05/10 22:48:33 $ 
+# $Revision: 1.14 $ 
+# $Date: 2002/05/10 22:51:05 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/HTMLPopUp/MozillaLayers.pm,v $ 
 # $Name:  $ 
@@ -281,7 +281,13 @@ sub Link {
     $name = "name=\"$args{'name'}\"";
   }
 
-
+    
+  if (!($args{'windowtxt'})) {
+      $out .= "<a $name href=\"$args{'href'}\">";
+      $out .= "$args{'linktxt'}</a>\n";
+      
+      return $out;
+  }
 
   if (! scalar(@POPUPTXT)) {
     # Make the first item blank so we can shut down the windows.
@@ -320,14 +326,6 @@ sub Link {
     $args{'windowwidth'} = ($args{'windowwidth'} ||
                             $HTMLPopUp::DEFAULT_POPUP_WIDTH);
 
-
-    
-    if (!($args{'windowtxt'})) {
-        $out .= "<a $name href=\"$args{'href'}\">";
-        $out .= "$args{'linktxt'}</a>\n";
-        
-        return $out;
-    }
 
     if ($args{'windowtxt'}) {
 
