@@ -261,7 +261,18 @@ public:
   
 	virtual nsresult GetDBFolderInfoAndDB(nsIDBFolderInfo **folderInfo, nsIMsgDatabase **db) = 0;
 	NS_IMETHOD DeleteMessages(nsISupportsArray *messages, 
-                            nsITransactionManager *txnMgr, PRBool deleteStorage) = 0;
+                            nsITransactionManager *txnMgr, PRBool
+                            deleteStorage) = 0;
+  NS_IMETHOD CopyMessages(nsIMsgFolder* srcFolder,
+                          nsISupportsArray *messages,
+                          PRBool isMove,
+                          nsITransactionManager* txnMgr);
+  NS_IMETHOD CopyFileMessage(nsIFileSpec* fileSpec,
+                             nsIMessage* messageToReplace,
+                             PRBool isDraft,
+                             nsISupports* aSupport,
+                             nsITransactionManager* txnMgr);
+
 	NS_IMETHOD GetNewMessages();
 
 	NS_IMETHOD GetCharset(PRUnichar * *aCharset) = 0;

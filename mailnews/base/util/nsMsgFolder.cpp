@@ -1384,6 +1384,25 @@ nsMsgFolder::GetPath(nsIFileSpec * *aPath)
 	return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+NS_IMETHODIMP
+nsMsgFolder::CopyMessages(nsIMsgFolder* srcFolder,
+                          nsISupportsArray *messages,
+                          PRBool isMove,
+                          nsITransactionManager* txnMgr)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsMsgFolder::CopyFileMessage(nsIFileSpec* fileSpec,
+                             nsIMessage* messageToReplace,
+                             PRBool isDraft,
+                             nsISupports* aSupport,
+                             nsITransactionManager* txnMgr)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
 nsresult nsMsgFolder::NotifyPropertyChanged(char *property, char *oldValue, char* newValue)
 {
 	nsCOMPtr<nsISupports> supports;
