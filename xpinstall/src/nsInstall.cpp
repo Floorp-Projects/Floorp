@@ -2383,29 +2383,20 @@ nsInstall::GetQualifiedRegName(const nsString& name, nsString& qualifiedRegName 
     nsString startOfName;
     name.Left(startOfName, 7);
 
-    nsString usr ();
-
     if ( startOfName.Equals(NS_LITERAL_STRING("=COMM=/")) || startOfName.Equals(NS_LITERAL_STRING("=USER=/")))
     {
-        qualifiedRegName = name;
-        qualifiedRegName.Cut( 0, 7 );
+        qualifiedRegName = startOfName;
     }
-    else if ( name.CharAt(0) != '/' )
+    else if (name.CharAt(0) != '/' &&
+             !mRegistryPackageName.IsEmpty())
     {
-        if (!mRegistryPackageName.IsEmpty())
-        {
-            qualifiedRegName = mRegistryPackageName;
-            qualifiedRegName.Append(NS_LITERAL_STRING("/"));
-            qualifiedRegName += name;
-        }
-        else
-        {
-            qualifiedRegName = name;
-        }
+        qualifiedRegName = mRegistryPackageName
+                         + NS_LITERAL_STRING("/")
+                         + name;
     }
     else
     {
-       qualifiedRegName = name;
+        qualifiedRegName = name;
     }
 
     if (BadRegName(qualifiedRegName))
