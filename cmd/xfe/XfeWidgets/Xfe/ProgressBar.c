@@ -86,7 +86,7 @@ static void			CheckCylonWidth		(Widget);
 /* XfeProgressBar Resources												*/
 /*																		*/
 /*----------------------------------------------------------------------*/
-static const XtResource resources[] = 
+static XtResource resources[] = 
 {
     /* Resources */
     { 

@@ -146,7 +146,7 @@ static void	DefaultRaiseBackground	(Widget,int,XrmValue *);
 /* XfeButton Resources													*/
 /*																		*/
 /*----------------------------------------------------------------------*/
-static const XtResource resources[] = 
+static XtResource resources[] = 
 {
     /* Callback resources */     	
     { 
@@ -507,7 +507,7 @@ static const XtResource resources[] =
 /* XfeButton Synthetic Resources										*/
 /*																		*/
 /*----------------------------------------------------------------------*/
-static const XmSyntheticResource syn_resources[] =
+static XmSyntheticResource syn_resources[] =
 {
     { 
 		XmNarmOffset,

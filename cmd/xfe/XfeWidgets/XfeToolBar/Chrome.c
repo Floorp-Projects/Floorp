@@ -118,7 +118,7 @@ static void ChromRegisterRepTypes(void);
 /* XfeChrome resources													*/
 /*																		*/
 /*----------------------------------------------------------------------*/
-static const XtResource resources[] = 	
+static XtResource resources[] = 	
 {					
     /* Resources */
 	{ 
@@ -247,7 +247,7 @@ static const XtResource resources[] =
 /* XfeChrome synthetic resources										*/
 /*																		*/
 /*----------------------------------------------------------------------*/
-static const XmSyntheticResource synthetic_resources[] =
+static XmSyntheticResource synthetic_resources[] =
 {
    { 
        XmNspacing,
@@ -263,7 +263,7 @@ static const XmSyntheticResource synthetic_resources[] =
 /* XfeChrome constraint resources										*/
 /*																		*/
 /*----------------------------------------------------------------------*/
-static const XtResource constraint_resources[] = 
+static XtResource constraint_resources[] = 
 {
     { 
 		XmNchromeChildType,

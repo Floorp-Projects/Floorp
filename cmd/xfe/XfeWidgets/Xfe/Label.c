@@ -85,7 +85,7 @@ static void		InvokeSelectionChangedCallback		(Widget,XEvent *);
 /* XfeLabel Resources													*/
 /*																		*/
 /*----------------------------------------------------------------------*/
-static const XtResource resources[] = 
+static XtResource resources[] = 
 {
     /* Callback resources */     	
     { 

@@ -70,7 +70,7 @@ static void	FillTabHorizontal	(Widget,Pixmap,Dimension,Dimension);
 /* XfeTab Resources														*/
 /*																		*/
 /*----------------------------------------------------------------------*/
-static const XtResource resources[] = 
+static XtResource resources[] = 
 {
     /* Resources */
     { 

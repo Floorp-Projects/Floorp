@@ -55,7 +55,7 @@ static void GetManagerForeground(Widget w, int, XrmValue *value);
 static void CreateDefaultPixmaps(XmLTreeWidget t);
 static XmLTreeWidget WidgetToTree(Widget w, char *funcname);
 
-static const XtResource resources[] =
+static XtResource resources[] =
 	{
 		{
 		XmNcollapseCallback, XmCCallback,

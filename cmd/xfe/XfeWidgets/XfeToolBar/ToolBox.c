@@ -170,7 +170,7 @@ static void	DescendantEH		(Widget,XtPointer,XEvent *,Boolean *);
 /* XfeToolBox Resources											        */
 /*																		*/
 /*----------------------------------------------------------------------*/
-static const XtResource resources[] = 	
+static XtResource resources[] = 	
 {					
     /* Callback resources */     	
     { 
@@ -502,7 +502,7 @@ static const XtResource resources[] =
 /* XfeBoxBar Synthetic Resources										*/
 /*																		*/
 /*----------------------------------------------------------------------*/
-static const XmSyntheticResource syn_resources[] =
+static XmSyntheticResource syn_resources[] =
 {
 	{ 
 		XmNverticalSpacing,
@@ -546,7 +546,7 @@ static const XmSyntheticResource syn_resources[] =
 /* XfeToolBox constraint resources										*/
 /*																		*/
 /*----------------------------------------------------------------------*/
-static const XtResource constraint_resources[] = 
+static XtResource constraint_resources[] = 
 {
     { 
 		XmNopen,

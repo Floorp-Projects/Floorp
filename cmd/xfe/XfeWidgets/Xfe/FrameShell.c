@@ -90,7 +90,7 @@ static void		MappingEH			(Widget,XtPointer,XEvent *,Boolean *);
 /* XfeFrameShell resources												*/
 /*																		*/
 /*----------------------------------------------------------------------*/
-static const XtResource resources[] = 	
+static XtResource resources[] = 	
 {					
 	/* Realization callback resources */
 	{ 

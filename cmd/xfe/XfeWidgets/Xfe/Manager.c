@@ -142,7 +142,7 @@ static Boolean	ConstraintSetValuesPostHook		(Widget,Widget,Widget);
 /* XfeManager Resources													*/
 /*																		*/
 /*----------------------------------------------------------------------*/
-static const XtResource resources[] = 
+static XtResource resources[] = 
 {
 	/* Callback resources */
     { 
@@ -523,7 +523,7 @@ static const XtResource resources[] =
 /* XfeManager Synthetic Resources										*/
 /*																		*/
 /*----------------------------------------------------------------------*/
-static const XmSyntheticResource syn_resources[] =
+static XmSyntheticResource syn_resources[] =
 {
     { 
 		XmNmarginBottom,
@@ -576,7 +576,7 @@ static const XmSyntheticResource syn_resources[] =
 /* XfeManager Constraint Resources										*/
 /*																		*/
 /*----------------------------------------------------------------------*/
-static const XtResource constraint_resources[] = 
+static XtResource constraint_resources[] = 
 {
     { 
 		XmNmanagerChildType,

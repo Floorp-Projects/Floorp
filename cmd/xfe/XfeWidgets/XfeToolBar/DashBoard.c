@@ -113,7 +113,7 @@ static void		FloatingCloseCB			(Widget,XtPointer,XtPointer);
 /* XfeDashBoard Resources                                               */
 /*																		*/
 /*----------------------------------------------------------------------*/
-static const XtResource resources[] = 	
+static XtResource resources[] = 	
 {					
     /* Callback resources */     	
     { 
@@ -258,7 +258,7 @@ static const XtResource resources[] =
 /* XfeDashBoard Synthetic Resources										*/
 /*																		*/
 /*----------------------------------------------------------------------*/
-static const XmSyntheticResource syn_resources[] =
+static XmSyntheticResource syn_resources[] =
 {
    { 
        XmNspacing,

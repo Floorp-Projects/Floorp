@@ -88,7 +88,7 @@ static void	ArrowRegisterRepTypes(void);
 /* XfeArrow Resources													*/
 /*																		*/
 /*----------------------------------------------------------------------*/
-static const XtResource resources[] = 
+static XtResource resources[] = 
 {
     /* Arrow resources */
     { 
@@ -185,7 +185,7 @@ static const XtResource resources[] =
 /* XfeButton Synthetic Resources										*/
 /*																		*/
 /*----------------------------------------------------------------------*/
-static const XmSyntheticResource syn_resources[] =
+static XmSyntheticResource syn_resources[] =
 {
     { 
 		XmNarrowHeight,

@@ -446,7 +446,7 @@ static char unhideButtonTranslations[] =
 "<BtnDown>,<BtnUp>:                      XmLGridUnhideColumn()";
 #endif /*0*/
 
-static const XtResource resources[] =
+static XtResource resources[] =
 	{
 		/* Grid Resources */
 		{

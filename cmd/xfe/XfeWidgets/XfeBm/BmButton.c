@@ -89,7 +89,7 @@ static void		AccentErase				(Widget);
 /* XfeBmButton Resources												*/
 /*																		*/
 /*----------------------------------------------------------------------*/
-static const XtResource resources[] = 
+static XtResource resources[] = 
 {
     /* Pixmap resources */
     { 

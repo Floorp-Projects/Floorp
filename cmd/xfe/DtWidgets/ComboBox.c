@@ -173,7 +173,7 @@ static XtActionsRec ComboBoxActionTable[] = {
  * DtComboBoxWidget resources 
  */
 #define offset(field) XtOffset(DtComboBoxWidget, field)
-static const XtResource resources[] = {
+static XtResource resources[] = {
     {XmNshadowThickness, XmCShadowThickness, XmRHorizontalDimension, 
 	 sizeof(Dimension), offset(manager.shadow_thickness),
 	 XmRImmediate, (XtPointer)TEXT_FIELD_SHADOW},
@@ -269,7 +269,7 @@ static const XtResource resources[] = {
 /*
  * List resources (used for GetValues).
  */
-static const XmSyntheticResource syn_resources[] = {
+static XmSyntheticResource syn_resources[] = {
     {XmNarrowSize, sizeof(Dimension), offset(combo_box.arrow_size), 
 	 _DtComboBoxGetArrowSize, _XmSetSyntheticResForChild},
     {XmNlabelString, sizeof(XmString), offset(combo_box.label_string), 

@@ -195,7 +195,7 @@ static void	PaneRegisterRepTypes(void);
 /* XfePane resources													*/
 /*																		*/
 /*----------------------------------------------------------------------*/
-static const XtResource resources[] = 	
+static XtResource resources[] = 	
 {					
     /* Sash resources */
 	{
@@ -432,7 +432,7 @@ static const XtResource resources[] =
 /* XfePane synthetic resources											*/
 /*																		*/
 /*----------------------------------------------------------------------*/
-static const XmSyntheticResource synthetic_resources[] =
+static XmSyntheticResource synthetic_resources[] =
 {
     { 
 		XmNsashOffset,
@@ -469,7 +469,7 @@ static const XmSyntheticResource synthetic_resources[] =
 /* XfePane constraint resources											*/
 /*																		*/
 /*----------------------------------------------------------------------*/
-static const XtResource constraint_resources[] = 
+static XtResource constraint_resources[] = 
 {
     { 
 		XmNpaneMaximum,
@@ -541,7 +541,7 @@ static const XtResource constraint_resources[] =
 /* XfePane constraint synthetic resources								*/
 /*																		*/
 /*----------------------------------------------------------------------*/
-static const XmSyntheticResource constraint_synthetic_resources[] =
+static XmSyntheticResource constraint_synthetic_resources[] =
 {
     { 
 		XmNpaneMaximum,

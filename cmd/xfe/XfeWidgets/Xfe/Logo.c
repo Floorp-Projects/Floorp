@@ -83,7 +83,7 @@ static void	AddTimeout			(Widget);
 /* XfeLogo Resources													*/
 /*																		*/
 /*----------------------------------------------------------------------*/
-static const XtResource resources[] = 
+static XtResource resources[] = 
 {
     /* Callback resources */     	
     { 

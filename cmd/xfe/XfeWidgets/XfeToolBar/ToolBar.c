@@ -199,7 +199,7 @@ static void ToolBarRegisterRepTypes(void);
 /* XfeToolBar Resources                                                 */
 /*																		*/
 /*----------------------------------------------------------------------*/
-static const XtResource resources[] = 	
+static XtResource resources[] = 	
 {					
     /* Callback resources */     	
     { 
@@ -443,7 +443,7 @@ static const XtResource resources[] =
 /* XfeToolBar Synthetic Resources										*/
 /*																		*/
 /*----------------------------------------------------------------------*/
-static const XmSyntheticResource syn_resources[] =
+static XmSyntheticResource syn_resources[] =
 {
     { 
 		XmNraiseBorderThickness,
@@ -459,7 +459,7 @@ static const XmSyntheticResource syn_resources[] =
 /* XfeToolBar constraint resources										*/
 /*																		*/
 /*----------------------------------------------------------------------*/
-static const XtResource constraint_resources[] = 
+static XtResource constraint_resources[] = 
 {
     { 
 		XmNforceDimensionToMax,

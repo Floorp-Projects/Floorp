@@ -91,7 +91,7 @@ static void		MappingEH			(Widget,XtPointer,XEvent *,Boolean *);
 /* XfeBypassShell resources												*/
 /*																		*/
 /*----------------------------------------------------------------------*/
-static const XtResource resources[] = 	
+static XtResource resources[] = 	
 {					
 	/* Realization callback resources */
 	{ 

@@ -60,7 +60,7 @@ static void		LayoutStaticChildren	(Widget);
 /* XfeToolItem Resources												*/
 /*																		*/
 /*----------------------------------------------------------------------*/
-static const XtResource resources[] = 	
+static XtResource resources[] = 	
 {					
     /* Components */
     { 
@@ -97,7 +97,7 @@ static const XtResource resources[] =
 /* XfeToolItem Synthetic Resources										*/
 /*																		*/
 /*----------------------------------------------------------------------*/
-static const XmSyntheticResource syn_resources[] =
+static XmSyntheticResource syn_resources[] =
 {
    { 
        XmNspacing,

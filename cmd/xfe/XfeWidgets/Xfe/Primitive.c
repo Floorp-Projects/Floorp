@@ -109,7 +109,7 @@ static void	PrimitiveRegisterRepTypes	(void);
 /* XfePrimitive Resources												*/
 /*																		*/
 /*----------------------------------------------------------------------*/
-static const XtResource resources[] = 
+static XtResource resources[] = 
 {
 	/* Callback resources */
 	{ 
@@ -369,7 +369,7 @@ static const XtResource resources[] =
 /* XfePrimitive Synthetic Resources										*/
 /*																		*/
 /*----------------------------------------------------------------------*/
-static const XmSyntheticResource syn_resources[] =
+static XmSyntheticResource syn_resources[] =
 {
 	{ 
 		XmNmarginBottom,

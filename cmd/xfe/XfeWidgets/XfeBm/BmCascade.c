@@ -97,7 +97,7 @@ static void		AccentErase				(Widget);
 /* XfeBmCascade Resources												*/
 /*																		*/
 /*----------------------------------------------------------------------*/
-static const XtResource resources[] = 
+static XtResource resources[] = 
 {
     /* Pixmap resources */
     { 

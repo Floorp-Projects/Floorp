@@ -75,7 +75,7 @@ static void		DividerRegisterRepTypes	(void);
 /* XfeDivider resources													*/
 /*																		*/
 /*----------------------------------------------------------------------*/
-static const XtResource resources[] = 	
+static XtResource resources[] = 	
 {					
 
 	/* Divider resources */

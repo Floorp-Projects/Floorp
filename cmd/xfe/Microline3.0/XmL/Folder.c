@@ -131,7 +131,7 @@ static char primTranslations[] =
 "<FocusIn>: XmLFolderPrimFocusIn() PrimitiveFocusIn()\n\
 <FocusOut>: XmLFolderPrimFocusOut() PrimitiveFocusOut()";
 
-static const XtResource resources[] =
+static XtResource resources[] =
 	{
 		/* Folder Resources */
 		{
@@ -293,7 +293,7 @@ static const XtResource resources[] =
 		},
     };
 
-static const XtResource constraint_resources[] =
+static XtResource constraint_resources[] =
 	{
 		/* Folder Constraint Resources */
 		{

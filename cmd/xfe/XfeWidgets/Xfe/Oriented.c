@@ -108,7 +108,7 @@ static void 	DescendantPrimitiveCursorCB	(Widget,XtPointer,XtPointer);
 /* XfeOriented Resources												*/
 /*																		*/
 /*----------------------------------------------------------------------*/
-static const XtResource resources[] = 	
+static XtResource resources[] = 	
 {					
     /* Orientation resources */
     { 
@@ -188,7 +188,7 @@ static const XtResource resources[] =
 /* XfeToolBar Synthetic Resources										*/
 /*																		*/
 /*----------------------------------------------------------------------*/
-static const XmSyntheticResource syn_resources[] =
+static XmSyntheticResource syn_resources[] =
 {
 	{ 
 		XmNspacing,
@@ -204,7 +204,7 @@ static const XmSyntheticResource syn_resources[] =
 /* XfeOriented constraint resources										*/
 /*																		*/
 /*----------------------------------------------------------------------*/
-static const XtResource constraint_resources[] = 
+static XtResource constraint_resources[] = 
 {
     { 
 		XmNallowDrag,
