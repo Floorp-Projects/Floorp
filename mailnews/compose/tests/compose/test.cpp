@@ -59,8 +59,7 @@
 #include "nsCRT.h"
 #include "prmem.h"
 #include "nsIURL.h"
-#include "xp_core.h"
-#include "nsMimeTypes.h"
+#include "xp.h"
 
 #ifdef XP_PC
 #define XPCOM_DLL  "xpcom32.dll"
