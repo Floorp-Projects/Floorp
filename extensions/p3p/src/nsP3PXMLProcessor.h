@@ -42,7 +42,7 @@
 
 #include "nsINetModuleMgr.h"
 #include "nsIURI.h"
-#include "nsIHTTPChannel.h"
+#include "nsIHttpChannel.h"
 
 #include "nsISupportsArray.h"
 
@@ -76,9 +76,9 @@ public:
                                     nsIP3PXMLListener  *aXMLListener,
                                     nsISupports        *aReaderData );
 
-  NS_METHOD             ModifyRequest( nsISupports  *aContext );
+  NS_METHOD             OnModifyRequest( nsIHttpChannel *aHttpChannel );
 
-  NS_METHOD             AsyncExamineResponse( nsISupports  *aContext );
+  NS_METHOD             OnExamineResponse( nsIHttpChannel *aHttpChannel );
 
   NS_METHOD             HandleEvent( nsIDOMEvent  *aEvent );
 
@@ -112,9 +112,9 @@ protected:
 
   NS_METHOD_( void )    RemoveDOMEventListener( );
 
-  NS_METHOD_( void )    ClearSafeZoneHeaders( nsIHTTPChannel  *aHTTPChannel );
+  NS_METHOD_( void )    ClearSafeZoneHeaders( nsIHttpChannel  *aHTTPChannel );
 
-  NS_METHOD_( void )    RequestFreshCopy( nsIHTTPChannel  *aHTTPChannel );
+  NS_METHOD_( void )    RequestFreshCopy( nsIHttpChannel  *aHTTPChannel );
 
   NS_METHOD_( void )    GetCacheRelatedHeaders( );
 
@@ -135,12 +135,6 @@ protected:
   PRTime                          mTime;              // Time initialized
 
   nsCOMPtr<nsINetModuleMgr>       mNetModuleMgr;      // The Network Module Manager Service
-
-  nsCOMPtr<nsIAtom>               mUserAgentHeader,   // Various request and response header types
-                                  mRefererHeader,
-                                  mCookieHeader,
-                                  mCacheControlHeader,
-                                  mPragmaHeader;
 
   nsString                        mDateValue,         // The value of the "Date" header
                                   mCacheControlValue, // The value of the "Cache-Control" header
@@ -166,7 +160,7 @@ protected:
 
   nsCOMPtr<nsIP3PCService>        mP3PService;        // The P3P Service
 
-  nsCOMPtr<nsIHTTPNotify>         mHTTPNotify;        // The HTTP Notify listener
+  nsCOMPtr<nsIHttpNotify>         mHTTPNotify;        // The HTTP Notify listener
   nsCOMPtr<nsIDOMEventListener>   mDOMEventListener;  // The DOM Event listener
 
   PRTime                          mExpirationTime;    // The date/time when the document expires
@@ -201,11 +195,11 @@ PRBool                  NotifyXMLProcessorReaders( nsISupports  *aElement,
                                                    void         *aData );
 
 
-class nsP3PXMLProcessorHTTPNotify : public nsIHTTPNotify {
+class nsP3PXMLProcessorHTTPNotify : public nsIHttpNotify {
   // nsISupports
   NS_DECL_ISUPPORTS
 
-  // nsIHTTPNotify methods
+  // nsIHttpNotify methods
   NS_DECL_NSIHTTPNOTIFY
 
   // nsP3PXMLProcessorReadRequest methods
@@ -218,7 +212,7 @@ protected:
 
 extern
 NS_EXPORT NS_METHOD     NS_NewP3PXMLProcessorHTTPNotify( nsP3PXMLProcessor  *aXMLProcessor,
-                                                         nsIHTTPNotify     **aXMLProcessorHTTPNotify );
+                                                         nsIHttpNotify     **aXMLProcessorHTTPNotify );
 
 
 class nsP3PXMLProcessorDOMEventListener : public nsIDOMEventListener {
@@ -227,7 +221,7 @@ public:
   NS_DECL_ISUPPORTS
 
   // nsIDOMEventListener
-  nsresult              HandleEvent( nsIDOMEvent  *aEvent );
+  NS_IMETHOD            HandleEvent( nsIDOMEvent  *aEvent );
 
   // nsP3PXMLProcessorReadRequest methods
   nsP3PXMLProcessorDOMEventListener( nsP3PXMLProcessor  *aXMLProcessor );

@@ -31,18 +31,18 @@
 #include "nsIDOMElement.h"
 #include "nsIDOMEventTarget.h"
 #include "nsIDOMNSDocument.h"
+#include "nsIDOMEvent.h"
 
 #include "nsIChannel.h"
 #include "nsIInputStream.h"
 #include "nsIDOMParser.h"
 
-#include "nsIHTTPChannel.h"
+#include "nsIHttpChannel.h"
 
 #include "nsLayoutCID.h"
 
 #include "nsNetUtil.h"
 
-#include "nsIHTTPHeader.h"
 #include "nsIDocument.h"
 
 
@@ -158,66 +158,6 @@ nsP3PXMLProcessor::Init( nsString&  aURISpec ) {
       PR_LOG( gP3PLogModule,
               PR_LOG_ERROR,
               ("P3PXMLProcessor:  %s Init, do_CreateInstance for read request supports array failed - %X.\n", (const char *)mcsURISpec, rv) );
-    }
-  }
-
-  if (NS_SUCCEEDED( rv )) {
-    // Create the "User-Agent" atom
-    mUserAgentHeader = NS_NewAtom( P3P_HTTP_USERAGENT_KEY );
-    if (!mUserAgentHeader) {
-      PR_LOG( gP3PLogModule,
-              PR_LOG_ERROR,
-              ("P3PXMLProcessor:  Init, NS_NewAtom for \"User-Agent\" failed.\n") );
-
-      rv = NS_ERROR_OUT_OF_MEMORY;
-    }
-  }
-
-  if (NS_SUCCEEDED( rv )) {
-    // Create the "Referer" atom
-    mRefererHeader = NS_NewAtom( P3P_HTTP_REFERER_KEY );
-    if (!mRefererHeader) {
-      PR_LOG( gP3PLogModule,
-              PR_LOG_ERROR,
-              ("P3PXMLProcessor:  Init, NS_NewAtom for \"Referer\" failed.\n") );
-
-      rv = NS_ERROR_OUT_OF_MEMORY;
-    }
-  }
-
-  if (NS_SUCCEEDED( rv )) {
-    // Create the "Cookie" atom
-    mCookieHeader = NS_NewAtom( P3P_HTTP_COOKIE_KEY );
-    if (!mCookieHeader) {
-      PR_LOG( gP3PLogModule,
-              PR_LOG_ERROR,
-              ("P3PXMLProcessor:  Init, NS_NewAtom for \"Cookie\" failed.\n") );
-
-      rv = NS_ERROR_OUT_OF_MEMORY;
-    }
-  }
-
-  if (NS_SUCCEEDED( rv )) {
-    // Create the "Cache-Control" atom
-    mCacheControlHeader = NS_NewAtom( P3P_HTTP_CACHECONTROL_KEY );
-    if (!mCacheControlHeader) {
-      PR_LOG( gP3PLogModule,
-              PR_LOG_ERROR,
-              ("P3PXMLProcessor:  Init, NS_NewAtom for \"CacheControl\" failed.\n") );
-
-      rv = NS_ERROR_OUT_OF_MEMORY;
-    }
-  }
-
-  if (NS_SUCCEEDED( rv )) {
-    // Create the "Pragma" atom
-    mPragmaHeader = NS_NewAtom( P3P_HTTP_PRAGMA_KEY );
-    if (!mPragmaHeader) {
-      PR_LOG( gP3PLogModule,
-              PR_LOG_ERROR,
-              ("P3PXMLProcessor:  Init, NS_NewAtom for \"Pragma\" failed.\n") );
-
-      rv = NS_ERROR_OUT_OF_MEMORY;
     }
   }
 
@@ -411,55 +351,49 @@ nsP3PXMLProcessor::InlineRead( nsIDOMNode         *aDOMNode,
   return rv;
 }
 
-// P3P XML Processor: ModifyRequest
+// P3P XML Processor: OnModifyRequest
 //
 // Function:  Allows modification to the request headers before they are sent to the server.
 //
 // Parms:     1. In     The HTTPChannel object of the request
 //
 NS_IMETHODIMP
-nsP3PXMLProcessor::ModifyRequest( nsISupports  *aContext ) {
+nsP3PXMLProcessor::OnModifyRequest( nsIHttpChannel *aHttpChannel ) {
 
   nsresult                  rv;
 
-  nsCOMPtr<nsIHTTPChannel>  pHTTPChannel;
+  nsCOMPtr<nsIHttpChannel>  pRequestHTTPChannel;
 
-  nsCOMPtr<nsIHTTPChannel>  pRequestHTTPChannel;
+  nsCOMPtr<nsIChannel> channel;
+  rv = mXMLHttpRequest->GetChannel( getter_AddRefs( channel ) );
+  pRequestHTTPChannel = do_QueryInterface(channel);
 
-
-  pHTTPChannel = do_QueryInterface( aContext,
-                                   &rv );
-
-  if (NS_SUCCEEDED( rv )) {
-    rv = mXMLHttpRequest->GetChannel( getter_AddRefs( pRequestHTTPChannel ) );
-
-    if (NS_SUCCEEDED( rv ) && (pHTTPChannel == pRequestHTTPChannel)) {
+  if (NS_SUCCEEDED( rv ) && (aHttpChannel == pRequestHTTPChannel)) {
 #ifdef DEBUG_P3P
-      { printf( "P3P:  Clearing \"Safe Zone\" headers and requesting \"no-cache\" for P3P request\n" );
-      }
+    { printf( "P3P:  Clearing \"Safe Zone\" headers and requesting \"no-cache\" for P3P request\n" );
+    }
 #endif
 
-      PR_LOG( gP3PLogModule,
-              PR_LOG_NOTICE,
-              ("P3PXMLProcessor:  ModifyRequest, clearing safe zone headers and requesting fresh copies for P3P URI request - %s.\n", (const char *)mcsURISpec) );
+    PR_LOG( gP3PLogModule,
+            PR_LOG_NOTICE,
+            ("P3PXMLProcessor:  ModifyRequest, clearing safe zone headers and requesting fresh copies for P3P URI request - %s.\n", (const char *)mcsURISpec) );
 
-      // Clear certain request headers as part of the P3P safe zone
-      ClearSafeZoneHeaders( pHTTPChannel );
+    // Clear certain request headers as part of the P3P safe zone
+    ClearSafeZoneHeaders( aHttpChannel );
 
-      // Request a non-cached version of the P3P document
-      RequestFreshCopy( pHTTPChannel );
+    // Request a non-cached version of the P3P document
+    RequestFreshCopy( aHttpChannel );
 
 #ifdef DEBUG_P3P
-      { P3P_PRINT_REQUEST_HEADERS( pHTTPChannel );
-      }
+    { P3P_PRINT_REQUEST_HEADERS( aHttpChannel );
+    }
 #endif
-    }
-    else if (NS_FAILED( rv )) {
-      PR_LOG( gP3PLogModule,
-              PR_LOG_ERROR,
-              ("P3PXMLProcessor:  %s ModifyRequest, mXMLHttpRequest->GetChannel failed - %X.\n", (const char *)mcsURISpec, rv) );
-    }
   }
+  else if (NS_FAILED( rv )) {
+    PR_LOG( gP3PLogModule,
+            PR_LOG_ERROR,
+            ("P3PXMLProcessor:  %s ModifyRequest, mXMLHttpRequest->GetChannel failed - %X.\n", (const char *)mcsURISpec, rv) );
+    }
 
   return NS_OK;
 }
@@ -471,68 +405,64 @@ nsP3PXMLProcessor::ModifyRequest( nsISupports  *aContext ) {
 // Parms:     1. In     The HTTPChannel object of the response
 //
 NS_METHOD
-nsP3PXMLProcessor::AsyncExamineResponse( nsISupports  *aContext ) {
+nsP3PXMLProcessor::OnExamineResponse( nsIHttpChannel *aHttpChannel ) {
 
   nsresult                  rv;
 
-  nsCOMPtr<nsIHTTPChannel>  pHTTPChannel;
-
-  nsCOMPtr<nsIHTTPChannel>  pRequestHTTPChannel;
+  nsCOMPtr<nsIHttpChannel>  pRequestHTTPChannel;
 
   PRUint32                  uiResponseStatus,
                             uiResponseClass;
 
 
-  pHTTPChannel = do_QueryInterface( aContext,
-                                   &rv );
+  nsCOMPtr<nsIChannel> channel;
+  rv = mXMLHttpRequest->GetChannel( getter_AddRefs( channel ) );
+  pRequestHTTPChannel = do_QueryInterface(channel);
 
-  if (NS_SUCCEEDED( rv )) {
-    rv = mXMLHttpRequest->GetChannel( getter_AddRefs( pRequestHTTPChannel ) );
-
-    if (NS_SUCCEEDED( rv ) && (pHTTPChannel == pRequestHTTPChannel)) {
+  if (NS_SUCCEEDED( rv ) && (aHttpChannel == pRequestHTTPChannel)) {
 #ifdef DEBUG_P3P
-      { P3P_PRINT_RESPONSE_HEADERS( pHTTPChannel );
-      }
+    { P3P_PRINT_RESPONSE_HEADERS( aHttpChannel );
+    }
 #endif
 
-      rv = pHTTPChannel->GetResponseStatus(&uiResponseStatus );
+    rv = aHttpChannel->GetResponseStatus(&uiResponseStatus );
 
-      if (NS_SUCCEEDED( rv )) {
-        uiResponseClass = uiResponseStatus / 100;
+    if (NS_SUCCEEDED( rv )) {
+      uiResponseClass = uiResponseStatus / 100;
 
-        switch (uiResponseClass) {
-          case 3:
-            switch (uiResponseStatus) {
-              case 301:
-              case 302:
-              case 303:
-              case 307:
-                PR_LOG( gP3PLogModule,
-                        PR_LOG_NOTICE,
-                        ("P3PXMLProcessor:  %s AsyncExamineResponse, request has been redirected.\n", (const char *)mcsURISpec) );
+      // XXX this is not the correct way to determine if a redirect occured --darin
+      switch (uiResponseClass) {
+        case 3:
+          switch (uiResponseStatus) {
+            case 301:
+            case 302:
+            case 303:
+            case 307:
+              PR_LOG( gP3PLogModule,
+                      PR_LOG_NOTICE,
+                      ("P3PXMLProcessor:  %s AsyncExamineResponse, request has been redirected.\n", (const char *)mcsURISpec) );
 
-                mRedirected = PR_TRUE;
-                break;
+              mRedirected = PR_TRUE;
+              break;
 
-              default:
-                break;
-            }
+            default:
+              break;
+          }
 
-          default:
-            break;
-        }
-      }
-      else {
-        PR_LOG( gP3PLogModule,
-                PR_LOG_ERROR,
-                ("P3PXMLProcessor:  %s AsyncExamineResponse, pHTTPChannel-GetResponseStatus failed - %X.\n", (const char *)mcsURISpec, rv) );
+        default:
+          break;
       }
     }
-    else if (NS_FAILED( rv )) {
+    else {
       PR_LOG( gP3PLogModule,
               PR_LOG_ERROR,
-              ("P3PXMLProcessor:  %s AsyncExamineResponse, mXMLHttpRequest->GetChannel failed - %X.\n", (const char *)mcsURISpec, rv) );
+              ("P3PXMLProcessor:  %s AsyncExamineResponse, aHttpChannel-GetResponseStatus failed - %X.\n", (const char *)mcsURISpec, rv) );
     }
+  }
+  else if (NS_FAILED( rv )) {
+    PR_LOG( gP3PLogModule,
+            PR_LOG_ERROR,
+            ("P3PXMLProcessor:  %s AsyncExamineResponse, mXMLHttpRequest->GetChannel failed - %X.\n", (const char *)mcsURISpec, rv) );
   }
 
   return NS_OK;
@@ -1310,24 +1240,30 @@ nsP3PXMLProcessor::AddDOMEventListener( ) {
                                               getter_AddRefs( mDOMEventListener ) );
 
   if (NS_SUCCEEDED( rv )) {
-    // Add the load event listener
-    rv = mXMLHttpRequest->AddEventListener( "load",
-                                            mDOMEventListener );
+    nsCOMPtr<nsIDOMEventTarget> pDOMEventTarget(do_QueryInterface(mXMLHttpRequest,&rv));
 
-    if (NS_SUCCEEDED( rv )) {
-      rv = mXMLHttpRequest->AddEventListener( "error",
-                                              mDOMEventListener );
+    if(NS_SUCCEEDED(rv)) {
+      // Add the load event listener
+      rv = pDOMEventTarget->AddEventListener( NS_LITERAL_STRING("load"),
+                                              mDOMEventListener,
+                                              PR_FALSE );
 
-      if (NS_FAILED( rv )) {
+      if (NS_SUCCEEDED( rv )) {
+        rv = pDOMEventTarget->AddEventListener( NS_LITERAL_STRING("error"),
+                                                mDOMEventListener,
+                                                PR_FALSE );
+
+        if (NS_FAILED( rv )) {
+          PR_LOG( gP3PLogModule,
+                  PR_LOG_ERROR,
+                  ("P3PXMLProcessor:  %s AddDOMEventListener, pDOMEventTarget->AddEventListener for errors failed - %X.\n", (const char *)mcsURISpec, rv) );
+        }
+      }
+      else {
         PR_LOG( gP3PLogModule,
                 PR_LOG_ERROR,
-                ("P3PXMLProcessor:  %s AddDOMEventListener, mXMLHttpRequest->AddEventListener for errors failed - %X.\n", (const char *)mcsURISpec, rv) );
+                ("P3PXMLProcessor:  %s AddDOMEventListener, pDOMEventTarget->AddEventListener for loads failed - %X.\n", (const char *)mcsURISpec, rv) );
       }
-    }
-    else {
-      PR_LOG( gP3PLogModule,
-              PR_LOG_ERROR,
-              ("P3PXMLProcessor:  %s AddDOMEventListener, mXMLHttpRequest->AddEventListener for loads failed - %X.\n", (const char *)mcsURISpec, rv) );
     }
   }
   else {
@@ -1349,26 +1285,31 @@ NS_METHOD_( void )
 nsP3PXMLProcessor::RemoveDOMEventListener( ) {
 
   nsresult  rv;
+  
+  nsCOMPtr<nsIDOMEventTarget> pDOMEventTarget(do_QueryInterface(mXMLHttpRequest,&rv));
 
+  if(NS_SUCCEEDED(rv)) {
+    // Remove the load event listener
+    rv = pDOMEventTarget->RemoveEventListener( NS_LITERAL_STRING("load"),
+                                               mDOMEventListener,
+                                               PR_FALSE );
 
-  // Remove the load event listener
-  rv = mXMLHttpRequest->RemoveEventListener( "load",
-                                             mDOMEventListener );
+    if (NS_FAILED( rv )) {
+      PR_LOG( gP3PLogModule,
+              PR_LOG_ERROR,
+              ("P3PXMLProcessor:  %s RemoveDOMEventListener, pDOMEventTarget->RemoveEventListener for loads failed - %X.\n", (const char *)mcsURISpec, rv) );
+    }
 
-  if (NS_FAILED( rv )) {
-    PR_LOG( gP3PLogModule,
-            PR_LOG_ERROR,
-            ("P3PXMLProcessor:  %s RemoveDOMEventListener, mXMLHttpRequest->RemoveEventListener for loads failed - %X.\n", (const char *)mcsURISpec, rv) );
-  }
+    // Remove the error event listener
+    rv = pDOMEventTarget->RemoveEventListener( NS_LITERAL_STRING("error"),
+                                               mDOMEventListener,
+                                               PR_FALSE );
 
-  // Remove the error event listener
-  rv = mXMLHttpRequest->RemoveEventListener( "error",
-                                             mDOMEventListener );
-
-  if (NS_FAILED( rv )) {
-    PR_LOG( gP3PLogModule,
-            PR_LOG_ERROR,
-            ("P3PXMLProcessor:  %s RemoveDOMEventListener, mXMLHttpRequest->RemoveEventListener for errors failed - %X.\n", (const char *)mcsURISpec, rv) );
+    if (NS_FAILED( rv )) {
+      PR_LOG( gP3PLogModule,
+              PR_LOG_ERROR,
+              ("P3PXMLProcessor:  %s RemoveDOMEventListener, pDOMEventTarget->RemoveEventListener for errors failed - %X.\n", (const char *)mcsURISpec, rv) );
+    }
   }
 
   mDOMEventListener = nsnull;
@@ -1383,15 +1324,15 @@ nsP3PXMLProcessor::RemoveDOMEventListener( ) {
 // Parms:     1. In     The HTTPChannel object of the request
 //
 NS_METHOD_( void )
-nsP3PXMLProcessor::ClearSafeZoneHeaders( nsIHTTPChannel  *aHTTPChannel ) {
+nsP3PXMLProcessor::ClearSafeZoneHeaders( nsIHttpChannel  *aHTTPChannel ) {
 
-  aHTTPChannel->SetRequestHeader( mUserAgentHeader,
+  aHTTPChannel->SetRequestHeader( P3P_HTTP_USERAGENT_KEY,
                                   nsnull );
 
-  aHTTPChannel->SetRequestHeader( mRefererHeader,
+  aHTTPChannel->SetRequestHeader( P3P_HTTP_REFERER_KEY,
                                   nsnull );
 
-  aHTTPChannel->SetRequestHeader( mCookieHeader,
+  aHTTPChannel->SetRequestHeader( P3P_HTTP_COOKIE_KEY,
                                   nsnull );
 
   return;
@@ -1405,12 +1346,12 @@ nsP3PXMLProcessor::ClearSafeZoneHeaders( nsIHTTPChannel  *aHTTPChannel ) {
 // Parms:     1. In     The HTTPChannel object of the request
 //
 NS_METHOD_( void )
-nsP3PXMLProcessor::RequestFreshCopy( nsIHTTPChannel  *aHTTPChannel ) {
+nsP3PXMLProcessor::RequestFreshCopy( nsIHttpChannel  *aHTTPChannel ) {
 
-  aHTTPChannel->SetRequestHeader( mPragmaHeader,
+  aHTTPChannel->SetRequestHeader( P3P_HTTP_PRAGMA_KEY,
                                   P3P_PRAGMA_NOCACHE );
 
-  aHTTPChannel->SetRequestHeader( mCacheControlHeader,
+  aHTTPChannel->SetRequestHeader( P3P_HTTP_CACHECONTROL_KEY,
                                   P3P_CACHECONTROL_NOCACHE );
 
   return;
@@ -1685,13 +1626,13 @@ nsP3PXMLProcessorReadRequest::~nsP3PXMLProcessorReadRequest( ) {
 // ****************************************************************************
 
 // P3P XML Processor HTTP Notify: nsISupports
-NS_IMPL_ISUPPORTS2( nsP3PXMLProcessorHTTPNotify, nsIHTTPNotify,
+NS_IMPL_ISUPPORTS2( nsP3PXMLProcessorHTTPNotify, nsIHttpNotify,
                                                  nsINetNotify );
 
 // P3P XML Processor HTTP Notify: Creation routine
 NS_METHOD
 NS_NewP3PXMLProcessorHTTPNotify( nsP3PXMLProcessor  *aXMLProcessor,
-                                 nsIHTTPNotify     **aXMLProcessorHTTPNotify ) {
+                                 nsIHttpNotify     **aXMLProcessorHTTPNotify ) {
 
   nsresult                     rv;
 
@@ -1707,7 +1648,7 @@ NS_NewP3PXMLProcessorHTTPNotify( nsP3PXMLProcessor  *aXMLProcessor,
   if (pNewXMLProcessorHTTPNotify) {
     NS_ADDREF( pNewXMLProcessorHTTPNotify );
 
-    rv = pNewXMLProcessorHTTPNotify->QueryInterface( NS_GET_IID( nsIHTTPNotify ),
+    rv = pNewXMLProcessorHTTPNotify->QueryInterface( NS_GET_IID( nsIHttpNotify ),
                                             (void **)aXMLProcessorHTTPNotify );
 
     NS_RELEASE( pNewXMLProcessorHTTPNotify );
@@ -1737,23 +1678,23 @@ nsP3PXMLProcessorHTTPNotify::~nsP3PXMLProcessorHTTPNotify( ) {
 
 
 // ****************************************************************************
-// nsIHTTPNotify routines
+// nsIHttpNotify routines
 // ****************************************************************************
 
-// P3P XML Processor HTTP Notify: ModifyRequest
+// P3P XML Processor HTTP Notify: OnModifyRequest
 NS_IMETHODIMP
-nsP3PXMLProcessorHTTPNotify::ModifyRequest( nsISupports  *aContext ) {
+nsP3PXMLProcessorHTTPNotify::OnModifyRequest( nsIHttpChannel *aHttpChannel ) {
 
-  mXMLProcessor->ModifyRequest( aContext );
+  mXMLProcessor->OnModifyRequest( aHttpChannel );
 
   return NS_OK;
 }
 
-// P3P XML Processor HTTP Notify: AsyncExamineResponse
+// P3P XML Processor HTTP Notify: OnExamineResponse
 NS_IMETHODIMP
-nsP3PXMLProcessorHTTPNotify::AsyncExamineResponse( nsISupports  *aContext ) {
+nsP3PXMLProcessorHTTPNotify::OnExamineResponse( nsIHttpChannel *aHttpChannel ) {
 
-  mXMLProcessor->AsyncExamineResponse( aContext );
+  mXMLProcessor->OnExamineResponse( aHttpChannel );
 
   return NS_OK;
 }
@@ -1819,7 +1760,7 @@ nsP3PXMLProcessorDOMEventListener::~nsP3PXMLProcessorDOMEventListener( ) {
 // ****************************************************************************
 
 // P3P XML Processor DOM Event Listener: HandleEvent
-nsresult
+NS_IMETHODIMP
 nsP3PXMLProcessorDOMEventListener::HandleEvent( nsIDOMEvent  *aEvent ) {
 
   mXMLProcessor->HandleEvent( aEvent );

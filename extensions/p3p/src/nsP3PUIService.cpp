@@ -27,6 +27,7 @@
 #include "nsP3PLogging.h"
 
 #include "nsIGenericFactory.h"
+#include "nsIServiceManager.h"
 #include "nsIP3PUI.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIScriptGlobalObjectOwner.h"

@@ -28,7 +28,6 @@
 
 #include "nsIServiceManager.h"
 
-#include "nsIHTTPHeader.h"
 #include "nsIURI.h"
 #include "nsILoadGroup.h"
 
@@ -46,12 +45,12 @@
 static NS_DEFINE_CID( kNetModuleMgrCID, NS_NETMODULEMGR_CID );
 
 // P3P HTTP Notify: nsISupports
-NS_IMPL_ISUPPORTS2( nsP3PHTTPNotify, nsIHTTPNotify,
+NS_IMPL_ISUPPORTS2( nsP3PHTTPNotify, nsIHttpNotify,
                                      nsINetNotify );
 
 // P3P HTTP Notify: Creation routine
 NS_METHOD
-NS_NewP3PHTTPNotify( nsIHTTPNotify **aHTTPNotify ) {
+NS_NewP3PHTTPNotify( nsIHttpNotify **aHTTPNotify ) {
 
   nsresult         rv;
 
@@ -74,7 +73,7 @@ NS_NewP3PHTTPNotify( nsIHTTPNotify **aHTTPNotify ) {
     rv = pNewHTTPNotify->Init( );
 
     if (NS_SUCCEEDED( rv )) {
-      rv = pNewHTTPNotify->QueryInterface( NS_GET_IID( nsIHTTPNotify ),
+      rv = pNewHTTPNotify->QueryInterface( NS_GET_IID( nsIHttpNotify ),
                                   (void **)aHTTPNotify );
     }
 
@@ -125,97 +124,48 @@ nsP3PHTTPNotify::Init( ) {
           PR_LOG_NOTICE,
           ("P3PHTTPNotify:  Init, initializing.\n") );
 
-  // Create the "P3P" atom
-  mP3PHeader = NS_NewAtom( P3P_HTTPEXT_P3P_KEY );
-  if (!mP3PHeader) {
-    PR_LOG( gP3PLogModule,
-            PR_LOG_ERROR,
-            ("P3PHTTPNotify:  Init, NS_NewAtom for \"P3P\" failed.\n") );
-    NS_ASSERTION( 0, "P3P:  P3PHTTPNotify unable to create \"P3P\" atom.\n" );
-    rv = NS_ERROR_OUT_OF_MEMORY;
-  }
+  // Get the Network Module Manager service to register the listeners
+  mNetModuleMgr = do_GetService( kNetModuleMgrCID,
+                                &rv );
 
   if (NS_SUCCEEDED( rv )) {
-    // Create the "Set-Cookie" atom
-    mSetCookieHeader = NS_NewAtom( P3P_HTTP_SETCOOKIE_KEY );
-    if (!mSetCookieHeader) {
-      PR_LOG( gP3PLogModule,
-              PR_LOG_ERROR,
-              ("P3PHTTPNotify:  Init, NS_NewAtom for \"Set-Cookie\" failed.\n") );
-      NS_ASSERTION( 0, "P3P:  P3PHTTPNotify unable to create \"Set-Cookie\" atom.\n" );
-      rv = NS_ERROR_OUT_OF_MEMORY;
-    }
-  }
-
-  if (NS_SUCCEEDED( rv )) {
-    // Create the "Content-Type" atom
-    mContentTypeHeader = NS_NewAtom( P3P_HTTP_CONTENTTYPE_KEY );
-    if (!mContentTypeHeader) {
-      PR_LOG( gP3PLogModule,
-              PR_LOG_ERROR,
-              ("P3PHTTPNotify:  Init, NS_NewAtom for \"Content-Type\" failed.\n") );
-      NS_ASSERTION( 0, "P3P:  P3PHTTPNotify unable to create \"Content-Type\" atom.\n" );
-      rv = NS_ERROR_OUT_OF_MEMORY;
-    }
-  }
-
-  if (NS_SUCCEEDED( rv )) {
-    // Create the "Referer" atom
-    mRefererHeader = NS_NewAtom( P3P_HTTP_REFERER_KEY );
-    if (!mRefererHeader) {
-      PR_LOG( gP3PLogModule,
-              PR_LOG_ERROR,
-              ("P3PHTTPNotify:  Init, NS_NewAtom for \"Referer\" failed.\n") );
-      NS_ASSERTION( 0, "P3P:  P3PHTTPNotify unable to create \"Referer\" atom.\n" );
-      rv = NS_ERROR_OUT_OF_MEMORY;
-    }
-  }
-
-  if (NS_SUCCEEDED( rv )) {
-    // Get the Network Module Manager service to register the listeners
-    mNetModuleMgr = do_GetService( kNetModuleMgrCID,
-                                  &rv );
+    // Register this object to listen for response headers
+    rv = mNetModuleMgr->RegisterModule( NS_NETWORK_MODULE_MANAGER_HTTP_RESPONSE_CONTRACTID,
+                                        this );
 
     if (NS_SUCCEEDED( rv )) {
-      // Register this object to listen for response headers
-      rv = mNetModuleMgr->RegisterModule( NS_NETWORK_MODULE_MANAGER_HTTP_RESPONSE_CONTRACTID,
+#ifdef DEBUG_P3P
+      // Only register for request headers for debug build
+      rv = mNetModuleMgr->RegisterModule( NS_NETWORK_MODULE_MANAGER_HTTP_REQUEST_CONTRACTID,
                                           this );
 
-      if (NS_SUCCEEDED( rv )) {
-#ifdef DEBUG_P3P
-        // Only register for request headers for debug build
-        rv = mNetModuleMgr->RegisterModule( NS_NETWORK_MODULE_MANAGER_HTTP_REQUEST_CONTRACTID,
-                                            this );
-
-        if (NS_FAILED( rv )) {
-          printf( "P3P:  HTTPNotify Request registration failed: %X\n", rv );
-
-          PR_LOG( gP3PLogModule,
-                  PR_LOG_ERROR,
-                  ("P3PHTTPNotify:  Init, mNetModuleMgr->RegisterModule for HTTP responses failed - %X.\n", rv) );
-        }
-#endif
-      }
-      else {
-#ifdef DEBUG_P3P
-        printf( "P3P:  HTTPNotify Response registration failed: %X\n", rv );
-#endif
+      if (NS_FAILED( rv )) {
+        printf( "P3P:  HTTPNotify Request registration failed: %X\n", rv );
 
         PR_LOG( gP3PLogModule,
                 PR_LOG_ERROR,
                 ("P3PHTTPNotify:  Init, mNetModuleMgr->RegisterModule for HTTP responses failed - %X.\n", rv) );
       }
+#endif
     }
     else {
 #ifdef DEBUG_P3P
-      printf( "P3P:  Unable to obtain Network Module Manager Service: %X\n", rv );
+      printf( "P3P:  HTTPNotify Response registration failed: %X\n", rv );
 #endif
 
       PR_LOG( gP3PLogModule,
               PR_LOG_ERROR,
-              ("P3PHTTPNotify:  Init, do_GetService for Network Module Manager service failed - %X.\n", rv) );
+              ("P3PHTTPNotify:  Init, mNetModuleMgr->RegisterModule for HTTP responses failed - %X.\n", rv) );
     }
+  }
+  else {
+#ifdef DEBUG_P3P
+    printf( "P3P:  Unable to obtain Network Module Manager Service: %X\n", rv );
+#endif
 
+    PR_LOG( gP3PLogModule,
+            PR_LOG_ERROR,
+            ("P3PHTTPNotify:  Init, do_GetService for Network Module Manager service failed - %X.\n", rv) );
   }
 
   return rv;
@@ -223,23 +173,21 @@ nsP3PHTTPNotify::Init( ) {
 
 
 // ****************************************************************************
-// nsIHTTPNotify routines
+// nsIHttpNotify routines
 // ****************************************************************************
 
-// P3P HTTP Notify: ModifyRequest
+// P3P HTTP Notify: OnModifyRequest
 //
 // Function:  Allows modification to the request headers before they are sent to the server.
 //
 // Parms:     1. In     The HTTPChannel object of the request
 //
 NS_IMETHODIMP
-nsP3PHTTPNotify::ModifyRequest( nsISupports  *aContext ) {
+nsP3PHTTPNotify::OnModifyRequest( nsIHttpChannel* aHttpChannel ) {
 
   // Not used in retail build, just satisfying the interface
 #ifdef DEBUG_P3P
   nsresult                       rv;
-
-  nsCOMPtr<nsIHTTPChannel>       pHTTPChannel;
 
   nsCOMPtr<nsIURI>               pURI;
 
@@ -248,19 +196,12 @@ nsP3PHTTPNotify::ModifyRequest( nsISupports  *aContext ) {
   rv = GetP3PService( );
 
   if (NS_SUCCEEDED( rv ) && mP3PIsEnabled) {
-    // Make sure we have an HTTP channel
-    pHTTPChannel = do_QueryInterface( aContext,
-                                     &rv );
+    rv = aHttpChannel->GetURI( getter_AddRefs( pURI ) );
 
     if (NS_SUCCEEDED( rv )) {
 
-      rv = pHTTPChannel->GetURI( getter_AddRefs( pURI ) );
-
-      if (NS_SUCCEEDED( rv )) {
-
-        if (!mP3PService->IsP3PRelatedURI( pURI )) {
-          P3P_PRINT_REQUEST_HEADERS( pHTTPChannel );
-        }
+      if (!mP3PService->IsP3PRelatedURI( pURI )) {
+        P3P_PRINT_REQUEST_HEADERS( pHTTPChannel );
       }
     }
   }
@@ -276,11 +217,9 @@ nsP3PHTTPNotify::ModifyRequest( nsISupports  *aContext ) {
 // Parms:     1. In     The HTTPChannel object of the response
 //
 NS_IMETHODIMP
-nsP3PHTTPNotify::AsyncExamineResponse( nsISupports  *aContext ) {
+nsP3PHTTPNotify::OnExamineResponse( nsIHttpChannel* aHttpChannel ) {
 
   nsresult                       rv;
-
-  nsCOMPtr<nsIHTTPChannel>       pHTTPChannel;
 
   nsXPIDLCString                 xcsURISpec,
                                  xcsStatus;
@@ -292,8 +231,6 @@ nsP3PHTTPNotify::AsyncExamineResponse( nsISupports  *aContext ) {
 
   nsCOMPtr<nsIURI>               pURI;
 
-  nsCOMPtr<nsIAtom>              pRequestMethod;
-
   nsAutoString                   sRequestMethod;
 
   nsCOMPtr<nsIDocShellTreeItem>  pDocShellTreeItem;
@@ -303,131 +240,126 @@ nsP3PHTTPNotify::AsyncExamineResponse( nsISupports  *aContext ) {
   rv = GetP3PService( );
 
   if (NS_SUCCEEDED( rv ) && mP3PIsEnabled) {
-    // Make sure we have an HTTP channel
-    pHTTPChannel = do_QueryInterface( aContext,
-                                     &rv );
+
+    rv = aHttpChannel->GetURI( getter_AddRefs( pURI ) );
 
     if (NS_SUCCEEDED( rv )) {
 
-      rv = pHTTPChannel->GetURI( getter_AddRefs( pURI ) );
-
-      if (NS_SUCCEEDED( rv )) {
-
-        if (!mP3PService->IsP3PRelatedURI( pURI )) {
+      if (!mP3PService->IsP3PRelatedURI( pURI )) {
 #ifdef DEBUG_P3P
-          { P3P_PRINT_RESPONSE_HEADERS( pHTTPChannel );
-          }
+        { P3P_PRINT_RESPONSE_HEADERS( aHttpChannel );
+        }
 #endif
 
-          pURI->GetSpec( getter_Copies( xcsURISpec ) );
-          pHTTPChannel->GetResponseStatus(&uiStatus );
-          pHTTPChannel->GetResponseString( getter_Copies( xcsStatus ) );
-          PR_LOG( gP3PLogModule,
-                  PR_LOG_NOTICE,
-                  ("P3PHTTPNotify:  AsyncExamineRequest, Receiving document %s - %i %s.\n", (const char *)xcsURISpec, uiStatus, (const char *)xcsStatus) );
+        pURI->GetSpec( getter_Copies( xcsURISpec ) );
+        aHttpChannel->GetResponseStatus(&uiStatus );
+        aHttpChannel->GetResponseStatusText( getter_Copies( xcsStatus ) );
+        PR_LOG( gP3PLogModule,
+                PR_LOG_NOTICE,
+                ("P3PHTTPNotify:  AsyncExamineRequest, Receiving document %s - %i %s.\n", (const char *)xcsURISpec, uiStatus, xcsStatus.get()) );
 
-          // Process the request headers related to and important to P3P
-          ProcessRequestHeaders( pHTTPChannel );
+        // Process the request headers related to and important to P3P
+        ProcessRequestHeaders( aHttpChannel );
 
-          // Process the response headers related to and important to P3P
-          ProcessResponseHeaders( pHTTPChannel );
+        // Process the response headers related to and important to P3P
+        ProcessResponseHeaders( aHttpChannel );
 
-          if (((uiStatus / 100) != 1) && ((uiStatus / 100) != 3)) {
-            // Not an informational or redirection status
+        if (((uiStatus / 100) != 1) && ((uiStatus / 100) != 3)) {
+          // Not an informational or redirection status
 
-            // Look for the "content-type" response header
-            rv = pHTTPChannel->GetResponseHeader( mContentTypeHeader,
-                                                  getter_Copies( xcsHeaderValue ) );
+          // Look for the "content-type" response header
+          rv = aHttpChannel->GetResponseHeader( P3P_HTTP_CONTENTTYPE_KEY,
+                                                getter_Copies( xcsHeaderValue ) );
 
-            if (NS_SUCCEEDED( rv )) {
-              PRBool  bCheckPrivacy = PR_FALSE;
+          if (NS_SUCCEEDED( rv )) {
+            PRBool  bCheckPrivacy = PR_FALSE;
 
-              if ((uiStatus / 100) == 2) {
-                // OK response, so "content-type" should be valid
-                if (xcsHeaderValue) {
-                  nsCAutoString  csHeaderValue((const char *)xcsHeaderValue );
+            if ((uiStatus / 100) == 2) {
+              // OK response, so "content-type" should be valid
+              if (xcsHeaderValue) {
+                nsCAutoString  csHeaderValue((const char *)xcsHeaderValue );
 
-                  if (!IsHTMLorXML( csHeaderValue )) {
-                    // Not HTML or XML, so we don't have to wait for <LINK> tag detection
-                    bCheckPrivacy = PR_TRUE;
-                  }
-                }
-                else {
-                  // No "content-type" header, check privacy
+                if (!IsHTMLorXML( csHeaderValue )) {
+                  // Not HTML or XML, so we don't have to wait for <LINK> tag detection
                   bCheckPrivacy = PR_TRUE;
                 }
               }
               else {
-                // Not an OK response, so perform the check
+                // No "content-type" header, check privacy
                 bCheckPrivacy = PR_TRUE;
               }
+            }
+            else {
+              // Not an OK response, so perform the check
+              bCheckPrivacy = PR_TRUE;
+            }
 
-              if (bCheckPrivacy) {
-                // Privacy Check to be performed now
+            if (bCheckPrivacy) {
+              // Privacy Check to be performed now
 #ifdef DEBUG_P3P
-                { printf( "P3P:  Non HTML/XML or unknown content encountered, complete processing\n" );
-                }
+              { printf( "P3P:  Non HTML/XML or unknown content encountered, complete processing\n" );
+              }
 #endif
 
-                PR_LOG( gP3PLogModule,
-                        PR_LOG_NOTICE,
-                        ("P3PHTTPNotify:  AsyncExamineRequest, Non HTML/XML or unknown content encountered.\n") );
+              PR_LOG( gP3PLogModule,
+                      PR_LOG_NOTICE,
+                      ("P3PHTTPNotify:  AsyncExamineRequest, Non HTML/XML or unknown content encountered.\n") );
 
-                // Obtain the request method used
-                rv = pHTTPChannel->GetRequestMethod( getter_AddRefs( pRequestMethod ) );
+              // Obtain the request method used
+              nsXPIDLCString requestMethod;
+              rv = aHttpChannel->GetRequestMethod( getter_Copies( requestMethod ) );
 
-                if (NS_SUCCEEDED( rv )) {
-                  rv = pRequestMethod->ToString( sRequestMethod );
+              if (NS_SUCCEEDED( rv )) {
+                sRequestMethod.AssignWithConversion(requestMethod);
+
+                if (!sRequestMethod.IsEmpty()) {
+                  // Get the DocShellTreeItem associated with the request
+                  rv = GetDocShellTreeItem( aHttpChannel,
+                                            getter_AddRefs( pDocShellTreeItem ) );
 
                   if (NS_SUCCEEDED( rv )) {
-                    // Get the DocShellTreeItem associated with the request
-                    rv = GetDocShellTreeItem( pHTTPChannel,
-                                              getter_AddRefs( pDocShellTreeItem ) );
+                    // Check the privacy
+                    rv = mP3PService->CheckPrivacy( sRequestMethod,
+                                                    pURI,
+                                                    pDocShellTreeItem,
+                                                    nsnull );
 
-                    if (NS_SUCCEEDED( rv )) {
-                      // Check the privacy
-                      rv = mP3PService->CheckPrivacy( sRequestMethod,
-                                                      pURI,
-                                                      pDocShellTreeItem,
-                                                      nsnull );
-
-                      if (rv == P3P_PRIVACY_NOT_MET) {
-                        // Delete set-cookie header and the cookie
+                    if (rv == P3P_PRIVACY_NOT_MET) {
+                      // Delete set-cookie header and the cookie
 #ifdef DEBUG_P3P
-                        { printf( "P3P:    Privacy not met, removing \"Set-Cookie\" header and cookie\n" );
-                        }
+                      { printf( "P3P:    Privacy not met, removing \"Set-Cookie\" header and cookie\n" );
+                      }
 #endif
 
-                        rv = DeleteCookies( pHTTPChannel );
-                      }
+                      rv = DeleteCookies( aHttpChannel );
                     }
-                  }
-                  else {
-                    PR_LOG( gP3PLogModule,
-                            PR_LOG_ERROR,
-                            ("P3PHTTPNotify:  AsyncExamineResponse, pRequestMethod->ToString failed - %X.\n", rv) );
                   }
                 }
                 else {
                   PR_LOG( gP3PLogModule,
                           PR_LOG_ERROR,
-                          ("P3PHTTPNotify:  AsyncExamineResponse, pHTTPChannel->GetRequestMethod failed - %X.\n", rv) );
+                          ("P3PHTTPNotify:  AsyncExamineResponse, AssignWithConversion failed - %X.\n", rv) );
                 }
               }
+              else {
+                PR_LOG( gP3PLogModule,
+                        PR_LOG_ERROR,
+                        ("P3PHTTPNotify:  AsyncExamineResponse, aHttpChannel->GetRequestMethod failed - %X.\n", rv) );
+              }
             }
-            else {
-              PR_LOG( gP3PLogModule,
-                      PR_LOG_ERROR,
-                      ("P3PHTTPNotify:  AsyncExamineResponse, pHTTPChannel->GetResponseHeader failed - %X.\n", rv) );
-            }
+          }
+          else {
+            PR_LOG( gP3PLogModule,
+                    PR_LOG_ERROR,
+                    ("P3PHTTPNotify:  AsyncExamineResponse, aHttpChannel->GetResponseHeader failed - %X.\n", rv) );
           }
         }
       }
-      else {
-        PR_LOG( gP3PLogModule,
-                PR_LOG_ERROR,
-                ("P3PHTTPNotify:  AsyncExamineResponse, pHTTPChannel->GetURI failed - %X.\n", rv) );
-      }
+    }
+    else {
+      PR_LOG( gP3PLogModule,
+              PR_LOG_ERROR,
+              ("P3PHTTPNotify:  AsyncExamineResponse, aHttpChannel->GetURI failed - %X.\n", rv) );
     }
   }
 
@@ -448,7 +380,7 @@ nsP3PHTTPNotify::AsyncExamineResponse( nsISupports  *aContext ) {
 // Parms:     1. In     The HTTPChannel object of the response
 //
 NS_METHOD_( void )
-nsP3PHTTPNotify::ProcessRequestHeaders( nsIHTTPChannel  *aHTTPChannel ) {
+nsP3PHTTPNotify::ProcessRequestHeaders( nsIHttpChannel  *aHTTPChannel ) {
 
   nsresult                       rv;
 
@@ -465,7 +397,7 @@ nsP3PHTTPNotify::ProcessRequestHeaders( nsIHTTPChannel  *aHTTPChannel ) {
 
   if (NS_SUCCEEDED( rv )) {
     // Look for the "referer" request header
-    rv = aHTTPChannel->GetRequestHeader( mRefererHeader,
+    rv = aHTTPChannel->GetRequestHeader( P3P_HTTP_REFERER_KEY,
                                          getter_Copies( xcsRefererValue ) );
 
     if (NS_SUCCEEDED( rv )) {
@@ -485,7 +417,7 @@ nsP3PHTTPNotify::ProcessRequestHeaders( nsIHTTPChannel  *aHTTPChannel ) {
     else if (NS_FAILED( rv )) {
       PR_LOG( gP3PLogModule,
               PR_LOG_ERROR,
-              ("P3PHTTPNotify:  ProcessRequestHeaders, pHTTPChannel->GetRequestHeader \"Referer\" failed - %X.\n", rv) );
+              ("P3PHTTPNotify:  ProcessRequestHeaders, aHttpChannel->GetRequestHeader \"Referer\" failed - %X.\n", rv) );
     }
   }
 
@@ -505,7 +437,7 @@ nsP3PHTTPNotify::ProcessRequestHeaders( nsIHTTPChannel  *aHTTPChannel ) {
 // Parms:     1. In     The HTTPChannel object of the response
 //
 NS_METHOD_( void )
-nsP3PHTTPNotify::ProcessResponseHeaders( nsIHTTPChannel  *aHTTPChannel ) {
+nsP3PHTTPNotify::ProcessResponseHeaders( nsIHttpChannel  *aHTTPChannel ) {
 
   nsresult                       rv;
 
@@ -528,7 +460,7 @@ nsP3PHTTPNotify::ProcessResponseHeaders( nsIHTTPChannel  *aHTTPChannel ) {
 
   if (NS_SUCCEEDED( rv )) {
     // Look for the "P3P" response header
-    rv = aHTTPChannel->GetResponseHeader( mP3PHeader,
+    rv = aHTTPChannel->GetResponseHeader( P3P_HTTPEXT_P3P_KEY,
                                           getter_Copies( xcsP3PValue ) );
 
     if (NS_SUCCEEDED( rv ) && xcsP3PValue) {
@@ -551,7 +483,7 @@ nsP3PHTTPNotify::ProcessResponseHeaders( nsIHTTPChannel  *aHTTPChannel ) {
 
   if (NS_SUCCEEDED( rv )) {
     // Look for the "set-cookie" response header
-    rv = aHTTPChannel->GetResponseHeader( mSetCookieHeader,
+    rv = aHTTPChannel->GetResponseHeader( P3P_HTTP_SETCOOKIE_KEY,
                                           getter_Copies( xcsSetCookieValues ) );
 
     if (NS_SUCCEEDED( rv ) && xcsSetCookieValues) {
@@ -571,7 +503,7 @@ nsP3PHTTPNotify::ProcessResponseHeaders( nsIHTTPChannel  *aHTTPChannel ) {
     else if (NS_FAILED( rv )) {
       PR_LOG( gP3PLogModule,
               PR_LOG_ERROR,
-              ("P3PHTTPNotify:  ProcessResponseHeaders, pHTTPChannel->GetResponseHeader \"Set-Cookie\" failed - %X.\n", rv) );
+              ("P3PHTTPNotify:  ProcessResponseHeaders, aHttpChannel->GetResponseHeader \"Set-Cookie\" failed - %X.\n", rv) );
     }
   }
 
@@ -587,7 +519,7 @@ nsP3PHTTPNotify::ProcessResponseHeaders( nsIHTTPChannel  *aHTTPChannel ) {
 //
 NS_METHOD
 nsP3PHTTPNotify::ProcessP3PHeaders( nsCString&       aP3PValues,
-                                    nsIHTTPChannel  *aHTTPChannel ) {
+                                    nsIHttpChannel  *aHTTPChannel ) {
 
   nsresult       rv;
 
@@ -630,7 +562,7 @@ nsP3PHTTPNotify::ProcessP3PHeaders( nsCString&       aP3PValues,
 //
 NS_METHOD
 nsP3PHTTPNotify::ProcessIndividualP3PHeader( nsCString&      aP3PValue,
-                                             nsIHTTPChannel *aHTTPChannel ) {
+                                             nsIHttpChannel *aHTTPChannel ) {
 
   nsresult                       rv;
 
@@ -739,7 +671,7 @@ nsP3PHTTPNotify::IsHTMLorXML( nsCString&  aContentType ) {
 //            2. Out    The DocShellTreeItem object
 //
 NS_METHOD
-nsP3PHTTPNotify::GetDocShellTreeItem( nsIHTTPChannel       *aHTTPChannel,
+nsP3PHTTPNotify::GetDocShellTreeItem( nsIHttpChannel       *aHTTPChannel,
                                       nsIDocShellTreeItem **aDocShellTreeItem ) {
 
   nsresult                         rv;
@@ -864,7 +796,7 @@ nsP3PHTTPNotify::GetDocShellTreeItem( nsIHTTPChannel       *aHTTPChannel,
 // Parms:     1. In     The HTTPChannel object of the request
 //
 NS_METHOD
-nsP3PHTTPNotify::DeleteCookies( nsIHTTPChannel  *aHTTPChannel ) {
+nsP3PHTTPNotify::DeleteCookies( nsIHttpChannel  *aHTTPChannel ) {
 
   nsresult        rv;
 
@@ -876,7 +808,7 @@ nsP3PHTTPNotify::DeleteCookies( nsIHTTPChannel  *aHTTPChannel ) {
           ("P3PHTTPNotify:  DeleteCookies, deleting \"Set-Cookie\" response header.\n") );
 
   // Look for the "set-cookie" response header
-  rv = aHTTPChannel->GetResponseHeader( mSetCookieHeader,
+  rv = aHTTPChannel->GetResponseHeader( P3P_HTTP_SETCOOKIE_KEY,
                                         getter_Copies( xcsSetCookieValues ) );
 
   if (NS_SUCCEEDED( rv ) && xcsSetCookieValues) {
@@ -885,11 +817,11 @@ nsP3PHTTPNotify::DeleteCookies( nsIHTTPChannel  *aHTTPChannel ) {
 #endif
 
     // Clear the "set-cookie" response header
-    aHTTPChannel->SetResponseHeader( mSetCookieHeader,
+    aHTTPChannel->SetResponseHeader( P3P_HTTP_SETCOOKIE_KEY,
                                      nsnull );
 #ifdef DEBUG_P3P
     {
-      aHTTPChannel->GetResponseHeader( mSetCookieHeader,
+      aHTTPChannel->GetResponseHeader( P3P_HTTP_SETCOOKIE_KEY,
                                        getter_Copies( xcsSetCookieValues ) );
       if (xcsSetCookieValues) {
         printf( "P3P:  Set-Cookie: %s\n", (const char *)xcsSetCookieValues );

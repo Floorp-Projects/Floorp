@@ -43,7 +43,7 @@
 
 #include "nsIGenericFactory.h"
 
-#include "nsIHTTPProtocolHandler.h"
+#include "nsIHttpProtocolHandler.h"
 
 #include "nsLayoutCID.h"
 #include "nsINameSpaceManager.h"
@@ -2913,16 +2913,16 @@ nsP3PService::GetFormRequestMethod( nsIContent  *aFormContent,
   nsAutoString       sName;
 
 
-  rv = aFormContent->GetAttributeCount( iAttributeCount );
+  rv = aFormContent->GetAttrCount( iAttributeCount );
 
   if (NS_SUCCEEDED( rv )) {
     for (iCount = 0, bAttributeFound = PR_FALSE;
            NS_SUCCEEDED( rv ) && (iCount < iAttributeCount);
              iCount++) {
-      rv = aFormContent->GetAttributeNameAt( iCount,
-                                             iNameSpaceID,
-                                             *getter_AddRefs( pName ),
-                                             *getter_AddRefs( pInclude ) );
+      rv = aFormContent->GetAttrNameAt( iCount,
+                                        iNameSpaceID,
+                                        *getter_AddRefs( pName ),
+                                        *getter_AddRefs( pInclude ) );
 
       if (NS_SUCCEEDED( rv )) {
         rv = pName->ToString( sName );
@@ -2932,10 +2932,10 @@ nsP3PService::GetFormRequestMethod( nsIContent  *aFormContent,
           if (sName.EqualsIgnoreCase( "method" )) {
             bAttributeFound = PR_TRUE;
 
-            rv = aFormContent->GetAttribute( iNameSpaceID,
-                                             pName,
-                                             *getter_AddRefs( pInclude ),
-                                             aURIMethod );
+            rv = aFormContent->GetAttr( iNameSpaceID,
+                                        pName,
+                                        *getter_AddRefs( pInclude ),
+                                        aURIMethod );
 
             if (NS_FAILED( rv )) {
               PR_LOG( gP3PLogModule,

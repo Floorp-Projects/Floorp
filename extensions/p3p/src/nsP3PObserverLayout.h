@@ -35,6 +35,7 @@
 
 #include "nsIDocShell.h"
 #include "nsIURI.h"
+#include "nsIURILoader.h"
 
 
 class nsP3PObserverLayout : public nsIObserver,

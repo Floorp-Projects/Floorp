@@ -44,7 +44,7 @@
 
 #include "nsIObserver.h"
 
-#include "nsIHTTPChannel.h"
+#include "nsIHttpChannel.h"
 #include "nsIHttpNotify.h"
 
 #include "nsDeque.h"
@@ -200,7 +200,7 @@ protected:
 
   nsSupportsHashtable             mBrowserWindowBusyMap; // "Busy" DocShellTreeItem object to BrowserWindowData object mapping
 
-  nsCOMPtr<nsIHTTPNotify>         mHTTPNotify;        // The HTTP Notify Listener
+  nsCOMPtr<nsIHttpNotify>         mHTTPNotify;        // The HTTP Notify Listener
   nsCOMPtr<nsIObserver>           mObserverHTML;      // The HTML Tag observer
   nsCOMPtr<nsIObserver>           mObserverXML;       // The XML Tag observer
   nsCOMPtr<nsIObserver>           mObserverLayout;    // The Layout observer

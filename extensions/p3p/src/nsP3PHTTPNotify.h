@@ -32,19 +32,19 @@
 
 #include "nsINetModuleMgr.h"
 
-#include "nsIHTTPChannel.h"
+#include "nsIHttpChannel.h"
 
 #include "nsIDocShellTreeItem.h"
 
 #include "nsIAtom.h"
 
 
-class nsP3PHTTPNotify : public nsIHTTPNotify {
+class nsP3PHTTPNotify : public nsIHttpNotify {
 public:
   // nsISupports
   NS_DECL_ISUPPORTS
 
-  // nsIHTTPNotify methods
+  // nsIHttpNotify methods
   NS_DECL_NSIHTTPNOTIFY
 
   // nsP3PHTTPNotify methods
@@ -54,20 +54,20 @@ public:
   NS_METHOD             Init( );
 
 protected:
-  NS_METHOD_( void )    ProcessRequestHeaders( nsIHTTPChannel  *aHTTPChannel );
+  NS_METHOD_( void )    ProcessRequestHeaders( nsIHttpChannel  *aHTTPChannel );
 
-  NS_METHOD_( void )    ProcessResponseHeaders( nsIHTTPChannel  *aHTTPChannel );
+  NS_METHOD_( void )    ProcessResponseHeaders( nsIHttpChannel  *aHTTPChannel );
 
   NS_METHOD             ProcessP3PHeaders( nsCString&       aP3PValues,
-                                           nsIHTTPChannel  *aHTTPChannel );
+                                           nsIHttpChannel  *aHTTPChannel );
   NS_METHOD             ProcessIndividualP3PHeader( nsCString&       aP3PValue,
-                                                    nsIHTTPChannel  *aHTTPChannel );
+                                                    nsIHttpChannel  *aHTTPChannel );
   NS_METHOD_( PRBool )  IsHTMLorXML( nsCString&  aContentType );
 
-  NS_METHOD             GetDocShellTreeItem( nsIHTTPChannel       *aHTTPChannel,
+  NS_METHOD             GetDocShellTreeItem( nsIHttpChannel       *aHTTPChannel,
                                              nsIDocShellTreeItem **aDocShellTreeItem );
 
-  NS_METHOD             DeleteCookies( nsIHTTPChannel  *aHTTPChannel );
+  NS_METHOD             DeleteCookies( nsIHttpChannel  *aHTTPChannel );
 
   NS_METHOD             GetP3PService( );
 
@@ -77,15 +77,10 @@ protected:
   PRBool                     mP3PIsEnabled;           // An indicator as to whether the P3P Service is enabled
 
   nsCOMPtr<nsINetModuleMgr>  mNetModuleMgr;           // The Network Module Manager
-
-  nsCOMPtr<nsIAtom>          mP3PHeader,              // Various request and response header types
-                             mSetCookieHeader,
-                             mContentTypeHeader,
-                             mRefererHeader;
 };
 
 
 extern
-NS_EXPORT NS_METHOD     NS_NewP3PHTTPNotify( nsIHTTPNotify **aHTTPNotify );
+NS_EXPORT NS_METHOD     NS_NewP3PHTTPNotify( nsIHttpNotify **aHTTPNotify );
 
 #endif                                           /* nsP3PHTTPNotify_h___      */

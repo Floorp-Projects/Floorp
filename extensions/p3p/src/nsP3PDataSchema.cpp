@@ -30,9 +30,9 @@
 #include "nsP3PLogging.h"
 
 #include "nsIDirectoryService.h"
+#include "nsDirectoryServiceDefs.h"
 #include "nsIProperties.h"
 #include "nsIFile.h"
-#include "nsStdURL.h"
 
 #include "nsNetUtil.h"
 
@@ -135,25 +135,19 @@ nsP3PDataSchema::PostInit( nsString&  aURISpec ) {
       // Create a URL of the components directory
       rv = compsDir->GetURL( getter_Copies( xcsPath ) );
       if (NS_SUCCEEDED( rv )) {
-            // Make the local path the URI to be read
-            mUseDOMParser = PR_TRUE;
-            mReadURISpec.AssignWithConversion((const char *)xcsPath );
-            mReadURISpec.AppendWithConversion( P3P_BASE_DATASCHEMA_LOCAL_NAME );
-            mcsReadURISpec.AssignWithConversion( mReadURISpec );
-            PR_LOG( gP3PLogModule,
-                    PR_LOG_NOTICE,
-                    ("P3PDataSchema:  %s PostInit, redirecting base DataSchema to %s.\n", (const char *)mcsURISpec, (const char *)mcsReadURISpec) );
-          }
-          else {
-            PR_LOG( gP3PLogModule,
-                    PR_LOG_ERROR,
-                    ("P3PDataSchema:  %s PostInit, compsDirURI->GetSpec failed - %X, using remote base DataSchema.\n", (const char *)mcsURISpec, rv) );
-          }
-        }
-        else {
+        // Make the local path the URI to be read
+        mUseDOMParser = PR_TRUE;
+        mReadURISpec.AssignWithConversion((const char *)xcsPath );
+        mReadURISpec.AppendWithConversion( P3P_BASE_DATASCHEMA_LOCAL_NAME );
+        mcsReadURISpec.AssignWithConversion( mReadURISpec );
+        PR_LOG( gP3PLogModule,
+                PR_LOG_NOTICE,
+                ("P3PDataSchema:  %s PostInit, redirecting base DataSchema to %s.\n", (const char *)mcsURISpec, (const char *)mcsReadURISpec) );
+      }
+      else {
         PR_LOG( gP3PLogModule,
                 PR_LOG_ERROR,
-                ("P3PDataSchema:  %s PostInit, Creation of nsIFileURL failed - %X, using remote base DataSchema.\n", (const char *)mcsURISpec, rv) );
+                ("P3PDataSchema:  %s PostInit, GetURL failed - %X, using remote base DataSchema.\n", (const char *)mcsURISpec, rv) );
       }
     }
     else {

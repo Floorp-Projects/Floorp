@@ -246,7 +246,7 @@ nsP3PObserverXML::Notify( PRUint32          aDocumentID,
                                               &rv );
 
         if (NS_SUCCEEDED( rv )) {
-          pDocument->GetDocumentURL( getter_AddRefs(pURI) );
+          pDocument->GetDocumentURL( &pURI );
 
           if (pURI) {
             rv = nsP3PObserverUtils::ExamineLINKTag( pURI,
@@ -311,7 +311,7 @@ nsP3PObserverXML::Notify( PRUint32          aDocumentID,
                                               &rv );
 
         if (NS_SUCCEEDED( rv )) {
-          pDocument->GetDocumentURL( getter_AddRefs(pURI) );
+          pDocument->GetDocumentURL( &pURI );
 
           if (pURI) {
             rv = nsP3PObserverUtils::ExamineLINKTag( pURI,

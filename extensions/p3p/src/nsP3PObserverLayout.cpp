@@ -37,7 +37,7 @@
 #include "nsCURILoader.h"
 #include "nsIURILoader.h"
 #include "nsILoadGroup.h"
-#include "nsIHTTPChannel.h"
+#include "nsIHttpChannel.h"
 #include "nsISimpleEnumerator.h"
 
 #include "nsString.h"
@@ -309,11 +309,9 @@ nsP3PObserverLayout::GetRequestMethod( nsIDocShell  *aDocShell,
 
   nsCOMPtr<nsIRequest>           pRequest;
 
-  nsCOMPtr<nsIHTTPChannel>       pHTTPChannel;
+  nsCOMPtr<nsIHttpChannel>       pHTTPChannel;
 
   nsCOMPtr<nsIURI>               pURI;
-
-  nsCOMPtr<nsIAtom>              pRequestMethod;
 
 
   // Get the load group associated with this DocShell
@@ -345,16 +343,11 @@ nsP3PObserverLayout::GetRequestMethod( nsIDocShell  *aDocShell,
 
               if (bURIMatch) {
                 // They match, so get the request method
-                rv = pHTTPChannel->GetRequestMethod( getter_AddRefs( pRequestMethod ) );
+                nsXPIDLCString requestMethod;
+                rv = pHTTPChannel->GetRequestMethod( getter_Copies( requestMethod ) );
 
                 if (NS_SUCCEEDED( rv )) {
-                  rv = pRequestMethod->ToString( aRequestMethod );
-
-                  if (NS_FAILED( rv )) {
-                    PR_LOG( gP3PLogModule,
-                            PR_LOG_ERROR,
-                            ("P3PObserverLayout:  GetRequestMethod, pRequestMethod->ToString failed - %X.\n", rv) );
-                  }
+                  aRequestMethod.AssignWithConversion(requestMethod);
                 }
                 else {
                   PR_LOG( gP3PLogModule,

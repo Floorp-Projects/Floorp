@@ -271,7 +271,7 @@
     printf( "P3P:    Request Method: %s\n", (const char *)csMethodDebug );                   \
                                                                                              \
     nsCOMPtr<nsISimpleEnumerator>  pHeadersDebug;                                            \
-    nsCOMPtr<nsIHTTPHeader>        pHeaderDebug;                                             \
+    nsCOMPtr<nsIHttpHeader>        pHeaderDebug;                                             \
     nsXPIDLCString                 xcsKeyDebug, xcsValueDebug;                               \
     PRBool                         bMoreElementsDebug;                                       \
                                                                                              \
@@ -305,7 +305,7 @@
     printf( "P3P:    Response: %i %s\n", uiStatusDebug, (const char *)xcsStatusDebug );      \
                                                                                              \
     nsCOMPtr<nsISimpleEnumerator>  pHeadersDebug;                                            \
-    nsCOMPtr<nsIHTTPHeader>        pHeaderDebug;                                             \
+    nsCOMPtr<nsIHttpHeader>        pHeaderDebug;                                             \
     nsXPIDLCString                 xcsKeyDebug, xcsValueDebug;                               \
     PRBool                         bMoreElementsDebug;                                       \
                                                                                              \
