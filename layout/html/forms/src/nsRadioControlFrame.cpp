@@ -46,6 +46,7 @@ static NS_DEFINE_IID(kIDOMHTMLInputElementIID, NS_IDOMHTMLINPUTELEMENT_IID);
 #define NS_DESIRED_RADIOBOX_SIZE  12
 
 
+nsresult NS_NewRadioControlFrame(nsIFrame*& aResult);
 nsresult
 NS_NewRadioControlFrame(nsIFrame*& aResult)
 {

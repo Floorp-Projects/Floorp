@@ -85,6 +85,7 @@ private:
 
 
 
+nsresult NS_NewRangeList(nsICollection **);
 nsresult NS_NewRangeList(nsICollection **aRangeList)
 {
   nsRangeList *rlist = new nsRangeList;

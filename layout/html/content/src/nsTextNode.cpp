@@ -79,6 +79,7 @@ protected:
   nsGenericDOMDataNode mInner;
 };
 
+nsresult NS_NewTextNode(nsIHTMLContent** aInstancePtrResult);
 nsresult
 NS_NewTextNode(nsIHTMLContent** aInstancePtrResult)
 {
