@@ -1693,6 +1693,9 @@ main(int argc, char **argv)
 	nss_DumpCertificateCacheInfo();
     }
 
+    free(nickName);
+    free(passwd);
+
     NSS_Shutdown();
     PR_Cleanup();
     printf("selfserv: normal termination\n");
