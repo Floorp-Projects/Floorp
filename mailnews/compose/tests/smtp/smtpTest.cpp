@@ -50,8 +50,8 @@
 
 #ifdef XP_PC
 #define XPCOM_DLL  "xpcom32.dll"
-#define PREF_DLL   "d:\\mozilla\\dist\\win32_d.obj\\bin\\xppref32.dll"
-#define APPSHELL_DLL "d:\\mozilla\\dist\\win32_d.obj\\bin\\nsappshell.dll"
+#define PREF_DLL   "xppref32.dll"
+#define APPSHELL_DLL "nsappshell.dll"
 #else
 #ifdef XP_MAC
 #include "nsMacRepository.h"

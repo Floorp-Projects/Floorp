@@ -519,10 +519,26 @@ nsresult nsMsgCompose::SetEditor(nsIEditorShell * aEditor)
   // Make sure we setup to listen for editor state changes...
   m_editor->RegisterDocumentStateListener(mDocumentListener);
 
+  //
+  // Have to check to see if there is a body stored in the 
+  // comp fields...
+  //
+  PRBool    bodyInCompFields = PR_FALSE;
+  if (m_compFields)
+  {
+    PRUnichar     *bod;
+
+    m_compFields->GetBody(&bod);
+    if ((bod) && (*bod))
+      bodyInCompFields = PR_TRUE;
+  }
+
   // Now, do the appropriate startup operation...signature only
   // or quoted message and signature...
   if ( QuotingToFollow() )
     return BuildQuotedMessageAndSignature();
+  else if (bodyInCompFields)
+    return BuildBodyMessage();
   else
     return ProcessSignature(nsnull);
 } 
@@ -1535,5 +1551,41 @@ nsMsgCompose::ProcessSignature(nsOutputFileStream *aAppendFileStream)
     // else // We are punting on putting a default signature on a quoted message!
   }
   
+  return NS_OK;
+}
+
+nsresult
+nsMsgCompose::BuildBodyMessage()
+{
+  PRUnichar   *bod;
+
+  // 
+  // This should never happen...if it does, just bail out...
+  //
+  if (!m_editor)
+    return NS_ERROR_FAILURE;
+
+  // Since we have a body in the comp fields, we need to create a 
+  // body of this old body...
+  //  
+  mTempComposeFileSpec = nsMsgCreateTempFileSpec(m_composeHTML ? "nscomp.html" : "nscomp.txt");
+  if (!mTempComposeFileSpec)
+    return NS_MSG_ERROR_WRITING_FILE;
+  
+  nsOutputFileStream tempFile(*(mTempComposeFileSpec));
+  if (!tempFile.is_open())
+    return NS_MSG_ERROR_WRITING_FILE;
+ 
+  m_compFields->GetBody(&bod);
+
+  nsString     tempBody(bod);
+  tempFile.write(nsAutoCString(tempBody), tempBody.Length());
+  tempFile.close();
+
+  //
+  // Now load the URL...
+  //  
+  nsString urlStr = nsMsgPlatformFileToURL(mTempComposeFileSpec->GetNativePathCString());
+  m_editor->LoadUrl(urlStr.GetUnicode());
   return NS_OK;
 }

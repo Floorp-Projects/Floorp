@@ -97,6 +97,7 @@ class nsMsgCompose : public nsIMsgCompose
   nsresult                      LoadAsQuote(nsString  aTextToLoad);
   nsresult                      ConvertHTMLToText(char *aSigFile, nsString &aSigData);
   nsresult                      ConvertTextToHTML(char *aSigFile, nsString &aSigData);
+  nsresult                      BuildBodyMessage();
 
   nsString                      mQuoteURI;
   nsFileSpec                    *mSigFileSpec;

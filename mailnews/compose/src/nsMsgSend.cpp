@@ -2184,6 +2184,30 @@ nsMsgComposeAndSend::DeliverMessage()
   return NS_OK;
 }
 
+// strip out non-printable characters 
+static void 
+strip_nonprintable(char *string) 
+{
+  char *dest, *src;
+  
+  if ( (!string) || (!*string) ) return;
+  dest=src=string;
+  while (*src) 
+  {
+    if  ( (isprint(*src)) && (*src != ' ') )
+    {
+      (*dest)=(*src);
+      src++; dest++;
+    } 
+    else 
+    {
+      src++;
+    }
+  }
+
+  (*dest)='\0';
+}
+
 nsresult
 nsMsgComposeAndSend::DeliverFileAsMail()
 {
@@ -2214,6 +2238,18 @@ nsMsgComposeAndSend::DeliverFileAsMail()
 		if (*buf2) PL_strcat (buf2, ",");
 			PL_strcat (buf2, mCompFields->GetBcc());
 	}
+
+  // Ok, now MIME II encode this to prevent 8bit problems...
+  char *convbuf = nsMsgI18NEncodeMimePartIIStr((char *)buf, mCompFields->GetCharacterSet(),
+												                       nsMsgMIMEGetConformToStandard());
+  if (convbuf) 
+  {     
+    // MIME-PartII conversion 
+    PR_FREEIF(buf);
+    buf = convbuf;
+  }
+
+  strip_nonprintable(buf);
 
   nsresult rv = NS_OK;
   NS_WITH_SERVICE(nsISmtpService, smtpService, kSmtpServiceCID, &rv);
