@@ -607,8 +607,10 @@ BOOL CInterpret::interpret(CString cmds, WIDGET *curWidget)
 				{
 					WIDGET *w = findWidget(parms);
 					if (w)
-						if((wNotifyCode == CBN_SELCHANGE) || (wNotifyCode == CBN_CLOSEUP) || (wNotifyCode == CBN_SELENDOK))
+						if (wNotifyCode == CBN_SELCHANGE)
+						{
 							IsSameCache = FALSE;
+						}
 				}
 				else if (strcmp(pcmd, "VerifyVal") == 0)
 				{
@@ -733,6 +735,14 @@ BOOL CInterpret::interpret(CString cmds, WIDGET *curWidget)
 					CSumDlg sumdlg;
 					int retVal = sumdlg.DoModal();
 				}
+				else if (strcmp(pcmd, "ShowSummary") == 0)
+				{
+					interpret("Reload(%Root%Configs\\%CustomizationList%)",curWidget);
+					interpret("ShowSum()",curWidget);
+					interpret("Reload(%Root%)",curWidget);
+
+				}
+
 				else if (strcmp(pcmd, "NewNCIDialog") == 0)
 				{
 					CString entryName;
