@@ -19,6 +19,7 @@
  *
  * Contributors:
  *     Daniel Veditz <dveditz@netscape.com>
+ *     Edward Kandrot <kandrot@netscape.com>
  */
 
 /*------------------------------------------------------------------------
@@ -50,6 +51,7 @@
 #include "nr_bufio.h"
 
 
+#define BUFIO_BUFSIZE_DEFAULT   0x10000
 
 #define STARTS_IN_BUF(f) ((f->fpos >= f->datastart) && \
                          (f->fpos < (f->datastart+f->datasize)))
@@ -62,17 +64,6 @@ static num_reads = 0;
 #endif
 
 
-#define BUFIO_BUFSIZE   0x10000
-
-struct BufioBufStruct
-{
-    PRInt32     datastart;  /* The file position for the buffer start */
-    PRInt32     datasize;   /* the amount of data in the buffer */
-    PRBool      dirty;      /* if the buffer has been written to */
-    PRInt32     dirtystart; /* lowest offset written to */
-    PRInt32     dirtyend;   /* end of the written area */
-} BufioBuf;
-
 struct BufioFileStruct 
 {
     FILE    *fd;        /* real file descriptor */
@@ -80,6 +71,7 @@ struct BufioFileStruct
     PRInt32 fpos;       /* our logical position in the file */
     PRInt32 datastart;  /* the file position at which the buffer starts */
     PRInt32 datasize;   /* the amount of data actually in the buffer*/
+    PRInt32 bufsize;	/* size of the in memory buffer */
     PRBool  bufdirty;   /* whether the buffer been written to */
     PRInt32 dirtystart;
     PRInt32 dirtyend;
@@ -115,8 +107,9 @@ BufioFile*  bufio_Open(const char* name, const char* mode)
         if ( file )
         {
             file->fd = fd;
+            file->bufsize = BUFIO_BUFSIZE_DEFAULT;  /* set the default buffer size */
 
-            file->data = (char*)PR_Malloc( BUFIO_BUFSIZE );
+            file->data = (char*)PR_Malloc( file->bufsize );
             if ( file->data )
             {
                 /* get file size to finish initialization of bufio */
@@ -442,14 +435,14 @@ PRUint32 bufio_Write(BufioFile* file, const char* src, PRUint32 count)
     startOffset = file->fpos - file->datastart;
     endOffset = startOffset + count;
 
-    if ( startOffset >= 0 && startOffset <  BUFIO_BUFSIZE )
+    if ( startOffset >= 0 && startOffset <  file->bufsize )
     {
         /* the area we want to write starts in the buffer */
 
-        if ( endOffset <= BUFIO_BUFSIZE )
+        if ( endOffset <= file->bufsize )
             bytesCopied = count;
         else
-            bytesCopied = BUFIO_BUFSIZE - startOffset;
+            bytesCopied = file->bufsize - startOffset;
 
         memcpy( file->data + startOffset, src, bytesCopied );
         file->bufdirty = PR_TRUE;
@@ -473,7 +466,7 @@ PRUint32 bufio_Write(BufioFile* file, const char* src, PRUint32 count)
     else
     {
         /* range doesn't start in the loaded buffer but it might end there */
-        if ( endOffset > 0 && endOffset <= BUFIO_BUFSIZE )
+        if ( endOffset > 0 && endOffset <= file->bufsize )
             bytesCopied = endOffset;
         else
             bytesCopied = 0;
@@ -575,7 +568,7 @@ static PRBool _bufio_loadBuf( BufioFile* file, PRUint32 count )
     PRUint32    bytesRead;
 
     /* no point in buffering more than the physical buffer will hold */
-    if ( count > BUFIO_BUFSIZE )
+    if ( count > (PRUint32)file->bufsize )
         return PR_FALSE;
 
     /* Is caller asking for data we already have? */
@@ -591,9 +584,9 @@ static PRBool _bufio_loadBuf( BufioFile* file, PRUint32 count )
 
     /* For now we're not trying anything smarter than simple paging. */
     /* Slide over if necessary to fit the entire request             */
-    startBuf = ( file->fpos / BUFIO_BUFSIZE ) * BUFIO_BUFSIZE;
+    startBuf = ( file->fpos / file->bufsize ) * file->bufsize;
     endPos = file->fpos + count;
-    endBuf = startBuf + BUFIO_BUFSIZE;
+    endBuf = startBuf + file->bufsize;
     if ( endPos > endBuf )
         startBuf += (endPos - endBuf);
 
@@ -604,11 +597,11 @@ static PRBool _bufio_loadBuf( BufioFile* file, PRUint32 count )
 #if DEBUG_dougt
         ++num_reads;
 #endif
-        bytesRead = fread( file->data, 1, BUFIO_BUFSIZE, file->fd );
+        bytesRead = fread( file->data, 1, file->bufsize, file->fd );
         file->datastart  = startBuf;
         file->datasize   = bytesRead;
         file->bufdirty   = PR_FALSE;
-        file->dirtystart = BUFIO_BUFSIZE;
+        file->dirtystart = file->bufsize;
         file->dirtyend   = 0;
 #ifdef DEBUG_dveditzbuf
         printf("REG: buffer read %d (%d) after %d reads\n",startBuf,file->fpos,file->reads);
@@ -643,12 +636,59 @@ static int _bufio_flushBuf( BufioFile* file )
             file->writes = 0;
 #endif
             file->bufdirty   = PR_FALSE;
-            file->dirtystart = BUFIO_BUFSIZE;
+            file->dirtystart = file->bufsize;
             file->dirtyend   = 0;
             return 0;
         }
     }
     return -1;
 }
+
+
+
+/*
+*  sets the file buffer size to bufsize, clearing the buffer in the process.
+*
+*  accepts bufsize of -1 to mean default buffer size, defined by BUFIO_BUFSIZE_DEFAULT
+*  returns new buffers size, or -1 if error occured
+*/
+
+int bufio_SetBufferSize(BufioFile* file, int bufsize)
+{
+    char    *newBuffer;
+    int     retVal = -1;
+
+    PR_ASSERT(file);
+    if (!file)
+        return retVal;
+
+    if (bufsize == -1)
+        bufsize = BUFIO_BUFSIZE_DEFAULT;
+    if (bufsize == file->bufsize)
+        return bufsize;
+
+    newBuffer = (char*)PR_Malloc( bufsize );
+    if (newBuffer)
+    {
+        /* if the buffer's dirty make sure we successfully flush it */
+        if ( file->bufdirty && _bufio_flushBuf(file) != 0 )
+        {
+            PR_Free( newBuffer );
+            return -1;
+        }
+
+
+        file->bufsize = bufsize;
+        if ( file->data )
+            PR_Free( file->data );
+        file->data = newBuffer;
+        file->datasize = 0;
+        file->datastart = 0;
+        retVal = bufsize;
+    }
+ 
+    return retVal;
+}
+
 
 /* EOF nr_bufio.c */

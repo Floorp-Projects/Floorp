@@ -1715,6 +1715,7 @@ static REGERR  nr_RegOpen( char *filename, HREG *hReg );
 static REGERR  nr_RegClose( HREG hReg );
 static char*   nr_GetUsername();
 static char*   nr_GetRegName (char *name);
+static int     nr_RegSetBufferSize( HREG hReg, int bufsize );
 
 /* --------------------------------------------------------------------- */
 
@@ -2002,6 +2003,31 @@ static REGERR nr_RegDeleteKey( REGFILE *reg, RKEY key, char *path, XP_Bool raw )
 
 
 
+static int nr_RegSetBufferSize( HREG hReg, int bufsize )
+{
+    REGERR      err = REGERR_OK;
+    REGHANDLE*  reghnd = (REGHANDLE*)hReg;
+    REGFILE*    reg;
+    XP_Bool     needDelete = FALSE;
+    int         newSize;
+
+    /* verify handle */
+    err = VERIFY_HREG( hReg );
+    if ( err != REGERR_OK )
+        return -1;
+
+    reg = reghnd->pReg;
+
+    PR_Lock( reg->lock );
+ 
+    newSize = XP_FileSetBufferSize( reg->fh, bufsize );
+
+    PR_Unlock( reg->lock );
+
+    return newSize;
+}
+
+
 
 static REGERR nr_RegOpen( char *filename, HREG *hReg )
 {
@@ -2233,6 +2259,28 @@ VR_INTERFACE(REGERR) NR_RegGetUsername(char **name)
 }
 
 
+/* ---------------------------------------------------------------------
+ * NR_RegSetBufferSize - Set the buffer size
+ *
+ * Parameters:
+ *     name     - name of the current user
+ *
+ * Output:
+ * ---------------------------------------------------------------------
+ */
+
+VR_INTERFACE(int) NR_RegSetBufferSize( HREG hReg, int bufsize )
+{
+    int      newSize;
+
+    PR_Lock( reglist_lock );
+
+    newSize = nr_RegSetBufferSize( hReg, bufsize );
+
+    PR_Unlock(reglist_lock);
+
+    return newSize;
+}
 
 
 /* ---------------------------------------------------------------------

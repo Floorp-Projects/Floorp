@@ -93,6 +93,7 @@
 #define XP_FileTell(file)               ftell(file)
 #define XP_FileFlush(file)              fflush(file)
 #define XP_FileClose(file)              fclose(file)
+#define XP_FileSetBufferSize(file,bufsize) (-1)
 
 #define XP_ASSERT(x)        ((void)0)
 
@@ -145,6 +146,7 @@ typedef FILE          * XP_File;
 #define XP_FileClose(file)              mmio_FileClose(file)
 #define XP_FileOpen(path, mode)         mmio_FileOpen((path), mode )
 #define XP_FileFlush(file)              ((void)1)
+#define XP_FileSetBufferSize(file, bufsize) (-1)
 
 typedef MmioFile* XP_File;
 
@@ -163,7 +165,7 @@ typedef MmioFile* XP_File;
 #define XP_FileClose(file)              bufio_Close(file)
 #define XP_FileOpen(path, mode)         bufio_Open((path), (mode))
 #define XP_FileFlush(file)              bufio_Flush(file)
-
+#define XP_FileSetBufferSize(file,bufsize) bufio_SetBufferSize(file,bufsize)
 
 
 typedef BufioFile* XP_File;
@@ -186,6 +188,7 @@ typedef BufioFile* XP_File;
 #define XP_FileOpen(path, mode)         PR_Open((path), mode )
 #define XP_FileClose(file)              PR_Close(file)
 #define XP_FileFlush(file)              PR_Sync(file)
+#define XP_FileSetBufferSize(file,bufsize) (-1)
 
 typedef PRFileDesc* XP_File;
 
