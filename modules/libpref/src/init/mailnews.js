@@ -342,6 +342,7 @@ pref("mail.warn_on_send_accel_key", true);
 pref("mail.enable_autocomplete",true);
 pref("mailnews.html_domains","");
 pref("mailnews.plaintext_domains","");
+pref("mailnews.global_html_domains.version",1);
 
 pref("mail.biff.play_sound",true);
 
