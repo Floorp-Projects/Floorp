@@ -289,12 +289,22 @@ nsHTMLDocument::StartDocumentLoad(nsIURL *aURL,
   if (NS_OK == rv) { 
     nsIHTMLContentSink* sink;
 
+    nsAutoString defaultHTMLCharset = "ISO-8859-1"; // fallback value in case webShell return error
+    nsCharsetSource charsetSource = kCharsetFromDocTypeDefault;
+
+
 #ifdef rickgdebug
     rv = NS_New_HTML_ContentSinkStream(&sink);
 #else
     NS_PRECONDITION(nsnull != aContainer, "No content viewer container");
     aContainer->QueryInterface(kIWebShellIID, (void**)&webShell);
     rv = NS_NewHTMLContentSink(&sink, this, aURL, webShell);
+    if (NS_OK == rv) {
+		const PRUnichar* defaultFromWebShell = NULL;
+		rv = webShell->GetDefaultCharacterSet(&defaultFromWebShell);
+		defaultHTMLCharset = defaultFromWebShell;
+                charsetSource = kCharsetFromUserDefault;
+    }
     NS_IF_RELEASE(webShell);
 #endif
 
@@ -313,6 +323,7 @@ nsHTMLDocument::StartDocumentLoad(nsIURL *aURL,
 //        nsIDTD* theDTD=0;
 //        NS_NewNavHTMLDTD(&theDTD);
 //        mParser->RegisterDTD(theDTD);
+        mParser->SetDocumentCharset( defaultHTMLCharset, charsetSource);
         mParser->SetCommand(aCommand);
         mParser->SetContentSink(sink); 
         mParser->Parse(aURL);
