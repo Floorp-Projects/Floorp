@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: list.c,v $ $Revision: 1.7 $ $Date: 2001/11/16 19:36:43 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: list.c,v $ $Revision: 1.8 $ $Date: 2001/11/28 16:23:35 $ $Name:  $";
 #endif /* DEBUG */
 
 /*
@@ -138,8 +138,17 @@ nssList_Create
 NSS_IMPLEMENT PRStatus
 nssList_Destroy(nssList *list)
 {
-    if (list->lock) PZ_DestroyLock(list->lock);
-    NSSArena_Destroy(list->arena);
+    PZLock *lock = list->lock;
+    if (list->arena) {
+	NSSArena_Destroy(list->arena);
+	list = NULL;
+    } else {
+	nssList_Clear(list, NULL);
+    }
+    if (lock) {
+	PZ_DestroyLock(lock);
+    }
+    nss_ZFreeIf(list);
     return PR_SUCCESS;
 }
 
@@ -162,22 +171,23 @@ nssList_GetCompareFunction(nssList *list)
     return list->compareFunc;
 }
 
-NSS_IMPLEMENT PRStatus
-nssList_DestroyElements(nssList *list, nssListElementDestructorFunc destructor)
+NSS_IMPLEMENT void
+nssList_Clear(nssList *list, nssListElementDestructorFunc destructor)
 {
     PRCList *link;
-    nssListElement *node;
+    nssListElement *node, *tmp;
     NSSLIST_LOCK_IF(list);
     node = list->head;
     while (node && list->count > 0) {
-	(*destructor)(node->data);
+	if (destructor) (*destructor)(node->data);
 	link = &node->link;
-	node = (nssListElement *)PR_NEXT_LINK(link);
+	tmp = (nssListElement *)PR_NEXT_LINK(link);
 	PR_REMOVE_LINK(link);
+	nss_ZFreeIf(node);
+	node = tmp;
 	--list->count;
     }
     NSSLIST_UNLOCK_IF(list);
-    return nssList_Destroy(list);
 }
 
 static PRStatus
@@ -271,7 +281,7 @@ nssList_Get(nssList *list, void *data)
     NSSLIST_LOCK_IF(list);
     node = nsslist_get_matching_element(list, data);
     NSSLIST_UNLOCK_IF(list);
-    return node->data;
+    return (node) ? node->data : NULL;
 }
 
 NSS_IMPLEMENT PRUint32
@@ -286,14 +296,14 @@ nssList_GetArray(nssList *list, void **rvArray, PRUint32 maxElements)
     nssListIterator *iter;
     void *el;
     PRUint32 i = 0;
+    PR_ASSERT(maxElements > 0);
     iter = nssList_CreateIterator(list);
     for (el = nssListIterator_Start(iter); el != NULL;
          el = nssListIterator_Next(iter)) 
     {
 	rvArray[i++] = el;
-	if (maxElements > 0 && i == maxElements) break;
+	if (i == maxElements) break;
     }
-    rvArray[i] = NULL;
     nssListIterator_Finish(iter);
     nssListIterator_Destroy(iter);
     return PR_SUCCESS;

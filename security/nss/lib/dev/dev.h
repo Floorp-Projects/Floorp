@@ -35,7 +35,7 @@
 #define DEV_H
 
 #ifdef DEBUG
-static const char DEV_CVS_ID[] = "@(#) $RCSfile: dev.h,v $ $Revision: 1.13 $ $Date: 2001/11/09 00:36:10 $ $Name:  $";
+static const char DEV_CVS_ID[] = "@(#) $RCSfile: dev.h,v $ $Revision: 1.14 $ $Date: 2001/11/28 16:23:38 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef DEVT_H
@@ -63,10 +63,6 @@ static const char DEV_CVS_ID[] = "@(#) $RCSfile: dev.h,v $ $Revision: 1.13 $ $Da
  *  | NSSModule |---> NSSSlot <--> NSSToken
  *  |-----------|---> NSSSlot <--> NSSToken
  */
-
-#ifndef DEVT_H
-#include "devt.h"
-#endif /* DEVT_H */
 
 PR_BEGIN_EXTERN_C
 
@@ -248,16 +244,24 @@ nssToken_GetName
   NSSToken *tok
 );
 
-/* Given a raw attribute template, import an object 
- * (certificate, public key, private key, symmetric key)
- */
-NSS_EXTERN CK_OBJECT_HANDLE
-nssToken_ImportObject
+NSS_EXTERN PRStatus
+nssToken_ImportCertificate
 (
   NSSToken *tok,
   nssSession *sessionOpt,
-  CK_ATTRIBUTE_PTR objectTemplate,
-  CK_ULONG otsize
+  NSSCertificate *cert,
+  NSSTrustDomain *td,
+  NSSCryptoContext *cc
+);
+ 
+NSS_EXTERN PRStatus
+nssToken_ImportTrust
+(
+  NSSToken *tok,
+  nssSession *sessionOpt,
+  NSSTrust *trust,
+  NSSTrustDomain *trustDomain,
+  NSSCryptoContext *cryptoContext
 );
 
 NSS_EXTERN NSSPublicKey *
@@ -280,30 +284,15 @@ nssToken_GenerateSymmetricKey
 NSS_EXTERN PRStatus
 nssToken_DeleteStoredObject
 (
-  NSSToken *tok,
-  nssSession *sessionOpt,
-  CK_OBJECT_HANDLE object
+  nssCryptokiInstance *instance
 );
 
-NSS_EXTERN CK_OBJECT_HANDLE
-nssToken_FindObjectByTemplate
+NSS_EXTERN NSSTrust *
+nssToken_FindTrustForCert
 (
-  NSSToken *tok,
+  NSSToken *token,
   nssSession *sessionOpt,
-  CK_ATTRIBUTE_PTR cktemplate,
-  CK_ULONG ctsize
-);
-
-NSS_EXTERN PRStatus
-nssToken_TraverseCertificatesByTemplate
-(
-  NSSToken *tok,
-  nssSession *sessionOpt,
-  nssList *cachedList,
-  CK_ATTRIBUTE_PTR cktemplate,
-  CK_ULONG ctsize,
-  PRStatus (*callback)(NSSCertificate *c, void *arg),
-  void *arg
+  NSSCertificate *c
 );
 
 NSS_EXTERN PRStatus
@@ -311,8 +300,95 @@ nssToken_TraverseCertificates
 (
   NSSToken *tok,
   nssSession *sessionOpt,
-  PRStatus (*callback)(NSSCertificate *c, void *arg),
-  void *arg
+  nssTokenCertSearch *search
+);
+
+NSS_EXTERN PRStatus
+nssToken_TraverseCertificatesBySubject
+(
+  NSSToken *token,
+  nssSession *sessionOpt,
+  NSSDER *subject,
+  nssTokenCertSearch *search
+);
+
+NSS_EXTERN PRStatus
+nssToken_TraverseCertificatesByNickname
+(
+  NSSToken *token,
+  nssSession *sessionOpt,
+  NSSUTF8 *name,
+  nssTokenCertSearch *search
+);
+
+NSS_EXTERN PRStatus
+nssToken_TraverseCertificatesByEmail
+(
+  NSSToken *token,
+  nssSession *sessionOpt,
+  NSSASCII7 *email,
+  nssTokenCertSearch *search
+);
+
+NSS_EXTERN NSSCertificate *
+nssToken_FindCertificateByIssuerAndSerialNumber
+(
+  NSSToken *token,
+  nssSession *sessionOpt,
+  NSSDER *issuer,
+  NSSDER *serial
+);
+
+NSS_EXTERN NSSCertificate *
+nssToken_FindCertificateByEncodedCertificate
+(
+  NSSToken *token,
+  nssSession *sessionOpt,
+  NSSBER *encodedCertificate
+);
+
+NSS_EXTERN NSSTrust *
+nssToken_FindTrustForCert
+(
+  NSSToken *token,
+  nssSession *session,
+  NSSCertificate *c
+);
+
+NSS_EXTERN NSSItem *
+nssToken_Digest
+(
+  NSSToken *tok,
+  nssSession *sessionOpt,
+  NSSAlgorithmAndParameters *ap,
+  NSSItem *data,
+  NSSItem *rvOpt,
+  NSSArena *arenaOpt
+);
+
+NSS_EXTERN PRStatus
+nssToken_BeginDigest
+(
+  NSSToken *tok,
+  nssSession *sessionOpt,
+  NSSAlgorithmAndParameters *ap
+);
+
+NSS_EXTERN PRStatus
+nssToken_ContinueDigest
+(
+  NSSToken *tok,
+  nssSession *sessionOpt,
+  NSSItem *item
+);
+
+NSS_EXTERN NSSItem *
+nssToken_FinishDigest
+(
+  NSSToken *tok,
+  nssSession *sessionOpt,
+  NSSItem *rvOpt,
+  NSSArena *arenaOpt
 );
 
 NSS_EXTERN PRStatus
@@ -342,9 +418,17 @@ nssSession_IsReadWrite
   nssSession *s
 );
 
-#ifdef DEBUG
-void nssModule_Debug(NSSModule *m);
-#endif
+NSS_EXTERN NSSAlgorithmAndParameters *
+NSSAlgorithmAndParameters_CreateSHA1Digest
+(
+  NSSArena *arenaOpt
+);
+
+NSS_EXTERN NSSAlgorithmAndParameters *
+NSSAlgorithmAndParameters_CreateMD5Digest
+(
+  NSSArena *arenaOpt
+);
 
 PR_END_EXTERN_C
 

@@ -32,12 +32,8 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: ckhelper.c,v $ $Revision: 1.10 $ $Date: 2001/11/07 16:15:28 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: ckhelper.c,v $ $Revision: 1.11 $ $Date: 2001/11/28 16:23:38 $ $Name:  $";
 #endif /* DEBUG */
-
-#ifndef PKIT_H
-#include "pkit.h"
-#endif /* PKIT_H */
 
 #ifndef DEV_H
 #include "dev.h"

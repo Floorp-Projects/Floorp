@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: item.c,v $ $Revision: 1.1 $ $Date: 2000/03/31 19:50:14 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: item.c,v $ $Revision: 1.2 $ $Date: 2001/11/28 16:23:35 $ $Name:  $";
 #endif /* DEBUG */
 
 /*
@@ -114,6 +114,19 @@ nssItem_Create
   }
 
   return (NSSItem *)NULL;
+}
+
+NSS_IMPLEMENT void
+nssItem_Destroy
+(
+  NSSItem *item
+)
+{
+  nss_ClearErrorStack();
+
+  nss_ZFreeIf(item->data);
+  nss_ZFreeIf(item);
+
 }
 
 /*

@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: devmod.c,v $ $Revision: 1.1 $ $Date: 2001/11/08 00:14:52 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: devmod.c,v $ $Revision: 1.2 $ $Date: 2001/11/28 16:23:39 $ $Name:  $";
 #endif /* DEBUG */
 
 #include "nspr.h"
@@ -367,12 +367,6 @@ nssModule_TraverseCertificates
   void *arg
 )
 {
-    PRUint32 i;
-    for (i=0; i<mod->numSlots; i++) {
-	/* might as well skip straight to token, right? or is this slot? */
-	nssToken_TraverseCertificates(mod->slots[i]->token, 
-	                              NULL, callback, arg);
-    }
     return NULL;
 }
 
