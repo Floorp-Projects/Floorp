@@ -34,6 +34,9 @@ public:
 
     NS_IMETHOD SetFragmentRoot(nsIRDFResource* aContent) = 0;
     NS_IMETHOD GetFragmentRoot(nsIRDFResource** aContent) = 0;
+
+    // Used for popup child documents
+    NS_IMETHOD LayoutPopupDocument() = 0;
 };
 
 #endif // nsIXULChildDocument_h__

@@ -24,6 +24,7 @@
 #include "nsIDOMElement.h"
 #include "nsIXULPopupListener.h"
 #include "nsIDOMMouseListener.h"
+#include "nsIDOMFocusListener.h"
 #include "nsRDFCID.h"
 
 #include "nsIScriptGlobalObject.h"
@@ -41,6 +42,7 @@ static NS_DEFINE_IID(kISupportsIID,           NS_ISUPPORTS_IID);
 
 static NS_DEFINE_IID(kIDomNodeIID,            NS_IDOMNODE_IID);
 static NS_DEFINE_IID(kIDomElementIID,         NS_IDOMELEMENT_IID);
+static NS_DEFINE_IID(kIDomEventListenerIID,   NS_IDOMEVENTLISTENER_IID);
 
 ////////////////////////////////////////////////////////////////////////
 // PopupListenerImpl
@@ -49,7 +51,8 @@ static NS_DEFINE_IID(kIDomElementIID,         NS_IDOMELEMENT_IID);
 //   and tooltips.
 //
 class XULPopupListenerImpl : public nsIXULPopupListener,
-                             public nsIDOMMouseListener
+                             public nsIDOMMouseListener,
+                             public nsIDOMFocusListener
 {
 public:
     XULPopupListenerImpl(void);
@@ -69,6 +72,10 @@ public:
     virtual nsresult MouseDblClick(nsIDOMEvent* aMouseEvent) { return NS_OK; };
     virtual nsresult MouseOver(nsIDOMEvent* aMouseEvent) { return NS_OK; };
     virtual nsresult MouseOut(nsIDOMEvent* aMouseEvent) { return NS_OK; };
+
+    // nsIDOMFocusListener
+    virtual nsresult Focus(nsIDOMEvent* aEvent) { return NS_OK; };
+    virtual nsresult Blur(nsIDOMEvent* aEvent);
 
     // nsIDOMEventListener
     virtual nsresult HandleEvent(nsIDOMEvent* anEvent) { return NS_OK; };
@@ -113,8 +120,13 @@ XULPopupListenerImpl::QueryInterface(REFNSIID iid, void** result)
         NS_ADDREF_THIS();
         return NS_OK;
     }
-    else if (iid.Equals(nsIDOMEventListener::GetIID())) {
-        *result = NS_STATIC_CAST(nsIDOMEventListener*, this);
+    else if (iid.Equals(nsIDOMFocusListener::GetIID())) {
+        *result = NS_STATIC_CAST(nsIDOMMouseListener*, this);
+        NS_ADDREF_THIS();
+        return NS_OK;
+    }
+    else if (iid.Equals(kIDomEventListenerIID)) {
+        *result = (nsIDOMEventListener*)(nsIDOMMouseListener*)this;
         NS_ADDREF_THIS();
         return NS_OK;
     }
@@ -220,13 +232,13 @@ XULPopupListenerImpl::LaunchPopup(nsIDOMEvent* anEvent)
         nsString popupAlignment("topleft");
         element->GetAttribute("popupalign", popupAlignment);
 
-		// Set the popup in the document for the duration of this call.
-		xulDocument->SetPopup(element);
+		    // Set the popup in the document for the duration of this call.
+		    xulDocument->SetPopup(element);
         if (anchorAlignment == "") {
           // We aren't anchored. Create on the point.
           // Retrieve our x and y position.
           PRInt32 xPos = 50;
-		  PRInt32 yPos = 50; // For now, hardcode to (50,50), since screen doesn't work.
+		      PRInt32 yPos = 50; // For now, hardcode to (50,50), since screen doesn't work.
           anEvent->GetScreenX(&xPos); 
           anEvent->GetScreenY(&yPos); 
                  
@@ -248,6 +260,36 @@ XULPopupListenerImpl::LaunchPopup(nsIDOMEvent* anEvent)
   NS_IF_RELEASE(owner);
 
   return NS_OK;
+}
+
+nsresult
+XULPopupListenerImpl::Blur(nsIDOMEvent* aMouseEvent)
+{
+  nsresult rv = NS_OK;
+
+  // Try to find the popup content.
+  nsCOMPtr<nsIDocument> document;
+  nsCOMPtr<nsIContent> content = do_QueryInterface(element);
+  if (NS_FAILED(rv = content->GetDocument(*getter_AddRefs(document)))) {
+    NS_ERROR("Unable to retrieve the document.");
+    return rv;
+  }
+
+  // Blur events don't bubble, so this means our window lost focus.
+  // Close up, baby.
+  // We have some popup content. Obtain our window.
+  nsIScriptContextOwner* owner = document->GetScriptContextOwner();
+  nsCOMPtr<nsIScriptContext> context;
+  if (NS_OK == owner->GetScriptContext(getter_AddRefs(context))) {
+    nsIScriptGlobalObject* global = context->GetGlobalObject();
+    if (global) {
+      // Get the DOM window
+      nsCOMPtr<nsIDOMWindow> domWindow = do_QueryInterface(global);
+      domWindow->Close();
+    }
+  }
+
+  return rv;
 }
 
 ////////////////////////////////////////////////////////////////

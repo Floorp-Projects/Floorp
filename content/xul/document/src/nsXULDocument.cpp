@@ -615,10 +615,11 @@ public:
     NS_IMETHOD    GetContentViewerContainer(nsIContentViewerContainer** aContainer);
     NS_IMETHOD    GetCommand(nsString& aCommand);
     NS_IMETHOD    CreatePopupDocument(nsIContent* aPopupElement, nsIDocument** aResult); 
-
+    
     // nsIXULChildDocument Interface
     NS_IMETHOD    SetFragmentRoot(nsIRDFResource* aFragmentRoot);
     NS_IMETHOD    GetFragmentRoot(nsIRDFResource** aFragmentRoot);
+    NS_IMETHOD    LayoutPopupDocument();
 
     // nsIDOMNode interface
     NS_IMETHOD    GetNodeName(nsString& aNodeName);
@@ -2908,6 +2909,12 @@ XULDocumentImpl::GetCommand(nsString& aCommand)
     return NS_OK;
 }
 
+NS_IMETHODIMP
+XULDocumentImpl::LayoutPopupDocument()
+{
+    StartLayout();
+    return NS_OK;
+}
 
 NS_IMETHODIMP
 XULDocumentImpl::CreatePopupDocument(nsIContent* aPopupElement, nsIDocument** aResult)
