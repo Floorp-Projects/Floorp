@@ -150,6 +150,13 @@ nsDOMDocumentType::GetTag(nsIAtom*& aResult) const
   return NS_OK;
 }
 
+NS_IMETHODIMP 
+nsDOMDocumentType::GetNodeInfo(nsINodeInfo*& aResult) const
+{
+  aResult = nsnull;
+  return NS_OK;
+}
+
 NS_IMETHODIMP
 nsDOMDocumentType::GetNodeName(nsString& aNodeName)
 {

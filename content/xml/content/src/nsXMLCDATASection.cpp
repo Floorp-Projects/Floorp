@@ -134,6 +134,13 @@ nsXMLCDATASection::GetTag(nsIAtom*& aResult) const
   return NS_OK;
 }
 
+NS_IMETHODIMP 
+nsXMLCDATASection::GetNodeInfo(nsINodeInfo*& aResult) const
+{
+  aResult = nsnull;
+  return NS_OK;
+}
+
 NS_IMETHODIMP
 nsXMLCDATASection::GetNodeName(nsString& aNodeName)
 {

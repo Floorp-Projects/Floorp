@@ -214,6 +214,13 @@ nsXMLProcessingInstruction::GetTag(nsIAtom*& aResult) const
   return NS_OK;
 }
 
+NS_IMETHODIMP 
+nsXMLProcessingInstruction::GetNodeInfo(nsINodeInfo*& aResult) const
+{
+  aResult = nsnull;
+  return NS_OK;
+}
+
 NS_IMETHODIMP
 nsXMLProcessingInstruction::GetNodeName(nsString& aNodeName)
 {

@@ -171,6 +171,7 @@ public:
   }
   nsresult GetNameSpaceID(PRInt32& aNameSpaceID) const;
   nsresult GetTag(nsIAtom*& aResult) const;
+  nsresult GetNodeInfo(nsINodeInfo*& aResult) const;
   nsresult HandleDOMEvent(nsIPresContext* aPresContext,
                           nsEvent* aEvent,
                           nsIDOMEvent** aDOMEvent,
@@ -544,6 +545,9 @@ public:
   NS_IMETHOD GetTag(nsIAtom*& aResult) const {                             \
     return _g.GetTag(aResult);                                             \
   }                                                                        \
+  NS_IMETHOD GetNodeInfo(nsINodeInfo*& aResult) const {                    \
+    return _g.GetNodeInfo(aResult);                                        \
+  }                                                                        \
   NS_IMETHOD ParseAttributeString(const nsString& aStr,                    \
                                   nsIAtom*& aName,                         \
                                   PRInt32& aNameSpaceID) {                 \
@@ -662,6 +666,9 @@ public:
   }                                                                        \
   NS_IMETHOD GetTag(nsIAtom*& aResult) const {                             \
     return _g.GetTag(aResult);                                             \
+  }                                                                        \
+  NS_IMETHOD GetNodeInfo(nsINodeInfo*& aResult) const {                    \
+    return _g.GetNodeInfo(aResult);                                        \
   }                                                                        \
   NS_IMETHOD ParseAttributeString(const nsString& aStr,                    \
                                   nsIAtom*& aName,                         \
@@ -782,6 +789,9 @@ public:
   NS_IMETHOD GetTag(nsIAtom*& aResult) const {                             \
     return _g.GetTag(aResult);                                             \
   }                                                                        \
+  NS_IMETHOD GetNodeInfo(nsINodeInfo*& aResult) const {                    \
+    return _g.GetNodeInfo(aResult);                                        \
+  }                                                                        \
   NS_IMETHOD ParseAttributeString(const nsString& aStr,                    \
                                   nsIAtom*& aName,                         \
                                   PRInt32& aNameSpaceID) {                 \
@@ -898,6 +908,9 @@ public:
   }                                                                        \
   NS_IMETHOD GetTag(nsIAtom*& aResult) const {                             \
     return _g.GetTag(aResult);                                             \
+  }                                                                        \
+  NS_IMETHOD GetNodeInfo(nsINodeInfo*& aResult) const {                    \
+    return _g.GetNodeInfo(aResult);                                        \
   }                                                                        \
   NS_IMETHOD ParseAttributeString(const nsString& aStr,                    \
                                   nsIAtom*& aName,                         \
@@ -1020,6 +1033,9 @@ public:
   NS_IMETHOD GetTag(nsIAtom*& aResult) const {                             \
     return _g.GetTag(aResult);                                             \
   }                                                                        \
+  NS_IMETHOD GetNodeInfo(nsINodeInfo*& aResult) const {                    \
+    return _g.GetNodeInfo(aResult);                                        \
+  }                                                                        \
   NS_IMETHOD ParseAttributeString(const nsString& aStr,                    \
                                   nsIAtom*& aName,                         \
                                   PRInt32& aNameSpaceID) {                 \
@@ -1132,6 +1148,9 @@ public:
   }                                                                        \
   NS_IMETHOD GetTag(nsIAtom*& aResult) const {                             \
     return _g.GetTag(aResult);                                             \
+  }                                                                        \
+  NS_IMETHOD GetNodeInfo(nsINodeInfo*& aResult) const {                    \
+    return _g.GetNodeInfo(aResult);                                        \
   }                                                                        \
   NS_IMETHOD ParseAttributeString(const nsString& aStr,                    \
                                   nsIAtom*& aName,                         \

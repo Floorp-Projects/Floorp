@@ -127,6 +127,13 @@ nsTextNode::GetTag(nsIAtom*& aResult) const
   return NS_OK;
 }
 
+NS_IMETHODIMP 
+nsTextNode::GetNodeInfo(nsINodeInfo*& aResult) const
+{
+  aResult = nsnull;
+  return NS_OK;
+}
+
 NS_IMETHODIMP
 nsTextNode::GetNodeName(nsString& aNodeName)
 {

@@ -227,6 +227,13 @@ nsXMLEntity::GetTag(nsIAtom*& aResult) const
   return NS_OK;
 }
 
+NS_IMETHODIMP 
+nsXMLEntity::GetNodeInfo(nsINodeInfo*& aResult) const
+{
+  aResult = nsnull;
+  return NS_OK;
+}
+
 NS_IMETHODIMP
 nsXMLEntity::GetNodeName(nsString& aNodeName)
 {

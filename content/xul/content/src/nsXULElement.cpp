@@ -1427,6 +1427,14 @@ nsXULElement::GetTagName(nsString& aTagName)
     return NodeInfo()->GetQualifiedName(aTagName);
 }
 
+NS_IMETHODIMP
+nsXULElement::GetNodeInfo(nsINodeInfo*& aResult) const
+{
+    aResult = NodeInfo();
+    NS_IF_ADDREF(aResult);
+
+    return NS_OK;
+}
 
 NS_IMETHODIMP
 nsXULElement::GetAttribute(const nsString& aName, nsString& aReturn)

@@ -107,6 +107,11 @@ public:
     return NS_OK;
   }
 
+  NS_IMETHOD GetNodeInfo(nsINodeInfo*& aResult) const {
+    aResult = nsnull;
+    return NS_OK;
+  }
+
 
   NS_IMETHOD ParseAttributeString(const nsString& aStr, 
                                 nsIAtom*& aName,

@@ -50,6 +50,7 @@ class nsIStyleContext;
 class nsIStyleRule;
 class nsISupportsArray;
 class nsIDOMText;
+class nsINodeInfo;
 
 struct nsGenericDOMDataNode {
   nsGenericDOMDataNode();
@@ -477,6 +478,7 @@ struct nsGenericDOMDataNode {
     return _g.GetNameSpaceID(aID);                                         \
   }                                                                        \
   NS_IMETHOD GetTag(nsIAtom*& aResult) const;                              \
+  NS_IMETHOD GetNodeInfo(nsINodeInfo*& aResult) const;                     \
   NS_IMETHOD ParseAttributeString(const nsString& aStr,                    \
                                   nsIAtom*& aName,                         \
                                   PRInt32& aNameSpaceID) {                 \

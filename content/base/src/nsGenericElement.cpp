@@ -1031,6 +1031,15 @@ nsGenericElement::GetTag(nsIAtom*& aResult) const
   return mNodeInfo->GetNameAtom(aResult);
 }
 
+nsresult
+nsGenericElement::GetNodeInfo(nsINodeInfo*& aResult) const
+{
+  aResult = mNodeInfo;
+  NS_IF_ADDREF(aResult);
+
+  return NS_OK;
+}
+
 
 nsresult
 nsGenericElement::HandleDOMEvent(nsIPresContext* aPresContext,

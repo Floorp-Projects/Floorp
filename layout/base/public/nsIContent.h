@@ -68,6 +68,8 @@ public:
 
   NS_IMETHOD GetTag(nsIAtom*& aResult) const = 0;
 
+  NS_IMETHOD GetNodeInfo(nsINodeInfo*& aResult) const = 0;
+
   NS_IMETHOD CanContainChildren(PRBool& aResult) const = 0;
 
   NS_IMETHOD ChildCount(PRInt32& aResult) const = 0;

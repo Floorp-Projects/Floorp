@@ -112,6 +112,9 @@ public:
   NS_IMETHOD GetTag(nsIAtom*& aResult) const {                             
     return mInner.GetTag(aResult);                                             
   }                                                                        
+  NS_IMETHOD GetNodeInfo(nsINodeInfo*& aResult) const {
+    return mInner.GetNodeInfo(aResult);
+  }
   NS_IMETHOD ParseAttributeString(const nsString& aStr,                    
                                   nsIAtom*& aName,                         
                                   PRInt32& aNameSpaceID) {                 
