@@ -105,6 +105,8 @@ protected:
 
   friend class TransactionFactory;
 
+  friend class nsDerivedSafe<InsertTextTxn>; // work around for a compiler bug
+
 };
 
 #endif
