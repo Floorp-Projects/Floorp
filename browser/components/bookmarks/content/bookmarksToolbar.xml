@@ -701,6 +701,8 @@
                                          this.parentNode.parentNode.parentNode.parentNode.updateOverflowMenu(this);"/>
           </xul:toolbarbutton>
         </xul:hbox>
+        <xul:toolbarbutton class="bookmark-item bookmarks-toolbar-customize" mousethrough="never"
+           label="Bookmarks Toolbar Items"/>
       </xul:stack>
     </content>
   </binding>
