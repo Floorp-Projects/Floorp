@@ -82,6 +82,7 @@ CPPSRCS=				\
 	nsHTMLTextAreaElement.cpp	\
 	nsHTMLTitleElement.cpp		\
 	nsHTMLUListElement.cpp		\
+	nsHTMLWBRElement.cpp		\
 	$(NULL)
 
 CPP_OBJS=						\
@@ -144,6 +145,7 @@ CPP_OBJS=						\
 	.\$(OBJDIR)\nsHTMLTextAreaElement.obj		\
 	.\$(OBJDIR)\nsHTMLTitleElement.obj		\
 	.\$(OBJDIR)\nsHTMLUListElement.obj		\
+	.\$(OBJDIR)\nsHTMLWBRElement.obj		\
 	$(NULL)
 
 LINCS=-I$(PUBLIC)\xpcom -I$(PUBLIC)\raptor -I$(PUBLIC)\js	\

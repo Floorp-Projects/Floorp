@@ -80,6 +80,7 @@ CPPSRCS=				\
 	nsHTMLTextAreaElement.cpp	\
 	nsHTMLTitleElement.cpp		\
 	nsHTMLUListElement.cpp		\
+	nsHTMLWBRElement.cpp		\
 	$(NULL)
 
 MODULE = raptor
