@@ -101,7 +101,7 @@ void HandleMouseDown(EventRecord* evt)
 	}
 }
 
-static sInstallStarted = false;
+static Boolean sInstallStarted = false;
 
 void HandleKeyDown(EventRecord* evt)
 {
@@ -118,7 +118,7 @@ void HandleKeyDown(EventRecord* evt)
 	{		
 		case '\r':
 		case '\3':
-			if (gControls->nextB)
+			if (gControls->nextB && !sInstallStarted)
 			{
 				HiliteControl(gControls->nextB, 1);
 				Delay(8, &finalTicks);
@@ -160,7 +160,8 @@ void HandleKeyDown(EventRecord* evt)
 					return;
 				case kTerminalID:
 					if (!sInstallStarted)
-					{
+					{		    
+					    DisableNavButtons();
 					    ClearSiteSelector();
 						SpawnSDThread(Install, &tid);
 						sInstallStarted = true;
