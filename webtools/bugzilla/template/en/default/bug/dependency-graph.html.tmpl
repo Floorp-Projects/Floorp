@@ -1,0 +1,98 @@
+<!-- 1.0@bugzilla.org -->
+[%# The contents of this file are subject to the Mozilla Public
+  # License Version 1.1 (the "License"); you may not use this file
+  # except in compliance with the License. You may obtain a copy of
+  # the License at http://www.mozilla.org/MPL/
+  #
+  # Software distributed under the License is distributed on an "AS
+  # IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+  # implied. See the License for the specific language governing
+  # rights and limitations under the License.
+  #
+  # The Original Code is the Bugzilla Bug Tracking System.
+  #
+  # The Initial Developer of the Original Code is Netscape Communications
+  # Corporation. Portions created by Netscape are
+  # Copyright (C) 1998 Netscape Communications Corporation. All
+  # Rights Reserved.
+  #
+  # Contributor(s): Gervase Markham <gerv@gerv.net>
+  #%]
+
+[%# INTERFACE:
+  # bug_id: integer. The number of the bug(s).
+  # multiple_bugs: boolean. True if bug_id contains > 1 bug number.
+  # doall: boolean. True if we are displaying every bug in the database.
+  # showsummary: boolean. True if we are showing bug summaries.
+  # rankdir: string. "TB" if we are ranking top-to-bottom, 
+                     "LR" if left-to-right.
+  # image_url: string. The URL of the graphic showing the dependencies.
+  # map_url: string. The URL of the map file for the image.                   
+  #%]
+
+[% title = "Dependency Graph"
+   h1 = title
+ %]
+ 
+[% IF NOT multiple_bugs %]
+  [% title = "$title for bug $bug_id"
+     h1 = "$h1 for bug <a href='show_bug.cgi?id=$bug_id'>$bug_id</a>" 
+   %]
+[% END %]
+
+[% INCLUDE global/header %]
+
+<p>
+  Green circles represent open bugs.
+</p>
+
+<a href="[% map_url %]">
+  <img src="[% image_url %]" ismap> 
+</a>
+
+<hr>
+
+<form>
+  <table>
+    <tr>
+      <td>
+        Bug numbers:
+        <input name="id" value="[% bug_id %]">
+      </td>
+    </tr>
+    
+    <tr>
+      <td>
+        <input type="checkbox" name="doall" 
+        [% " checked" IF doall %]>
+        Show <b>every</b> bug in the system with dependencies
+      </td>
+    </tr>
+    
+    <tr>
+      <td colspan="3">
+        <input type="checkbox" name="showsummary" 
+          [% " checked" IF showsummary %]>
+        Show the summaries of all displayed bugs
+      </td>
+    </tr>
+    
+    <tr>
+      <td colspan="3">
+        <select name="rankdir">
+          <option value="TB"
+            [% " selected" IF rankdir == "TB" %]>
+            Orient top-to-bottom
+          </option>
+          <option value="LR"
+            [% " selected" IF rankdir == "LR" %]>
+            Orient left-to-right
+          </option>
+        </select>
+      </td>
+    </tr>
+  </table>
+  <input type="submit" value="Change Parameters">
+</form>
+
+[% INCLUDE global/footer %]

@@ -1,0 +1,161 @@
+<!-- 1.0@bugzilla.org -->
+[%# The contents of this file are subject to the Mozilla Public
+  # License Version 1.1 (the "License"); you may not use this file
+  # except in compliance with the License. You may obtain a copy of
+  # the License at http://www.mozilla.org/MPL/
+  #
+  # Software distributed under the License is distributed on an "AS
+  # IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+  # implied. See the License for the specific language governing
+  # rights and limitations under the License.
+  #
+  # The Original Code is the Bugzilla Bug Tracking System.
+  #
+  # The Initial Developer of the Original Code is Netscape Communications
+  # Corporation. Portions created by Netscape are
+  # Copyright (C) 1998 Netscape Communications Corporation. All
+  # Rights Reserved.
+  #
+  # Contributor(s): Myk Melez <myk@mozilla.org>
+  #%]
+
+[%############################################################################%]
+[%# Template Initialization                                                  #%]
+[%############################################################################%]
+
+[% DEFAULT title = "Bug List" %]
+[% style_url = "css/buglist.css" %]
+
+
+[%############################################################################%]
+[%# Page Header                                                              #%]
+[%############################################################################%]
+
+[% PROCESS global/header
+  title = title
+  style = style
+%]
+
+<div align="center">
+  <b>[% currenttime %]</b><br />
+
+  [% IF debug %]
+    <p>[% query FILTER html %]</p>
+  [% END %]
+
+  [% IF quip %]
+    <a href="quips.cgi"><i>[% quip FILTER html %]</i></a>
+  [% END %]
+
+</div>
+
+[% IF toolong %]
+  <h2>
+    This list is too long for Bugzilla's little mind; the 
+    Next/Prev/First/Last buttons won't appear on individual bugs.
+  </h2>
+[% END %]
+
+<hr />
+
+
+[%############################################################################%]
+[%# Preceding Status Line                                                    #%]
+[%############################################################################%]
+
+[% IF bugs.size > 9 %]
+  [% bugs.size %] bugs found.
+[% END %]
+
+
+[%############################################################################%]
+[%# Start of Change Form                                                     #%]
+[%############################################################################%]
+
+[% IF dotweak %]
+  <form name="changeform" method="post" action="process_bug.cgi">
+[% END %]
+
+
+[%############################################################################%]
+[%# Bug Table                                                                #%]
+[%############################################################################%]
+
+[% FLUSH %]
+[% PROCESS buglist/table.tmpl %]
+
+[%############################################################################%]
+[%# Succeeding Status Line                                                   #%]
+[%############################################################################%]
+
+[% IF bugs.size == 0 %]
+  Zarro Boogs found.
+  <p>
+    <a href="query.cgi">Query Page</a>
+    &nbsp;&nbsp;<a href="enter_bug.cgi">Enter New Bug</a>
+    <a href="query.cgi?[% urlquerypart %]">Edit this query</a>
+  </p>
+
+[% ELSIF bugs.size == 1 %]
+  One bug found.
+
+[% ELSE %]
+  [% bugs.size %] bugs found.
+
+[% END %]
+
+<br />
+
+
+[%############################################################################%]
+[%# Rest of Change Form                                                      #%]
+[%############################################################################%]
+
+[% IF dotweak %]
+
+  [% PROCESS "buglist/change-form.tmpl" %]
+  
+  </form>
+
+  <hr />
+
+[% END %]
+
+
+[%############################################################################%]
+[%# Navigation Bar                                                           #%]
+[%############################################################################%]
+
+[% IF bugs.size > 0 %]
+  <form method="post" action="long_list.cgi">
+    <input type="hidden" name="buglist" value="[% buglist %]">
+    <input type="submit" value="Long Format">
+
+    <a href="query.cgi">Query Page</a> &nbsp;&nbsp;
+    <a href="enter_bug.cgi">Enter New Bug</a> &nbsp;&nbsp;
+    <a href="colchange.cgi?[% urlquerypart %]">Change Columns</a> &nbsp;&nbsp;
+
+    [% IF bugs.size > 1 && caneditbugs && !dotweak %]
+      <a href="buglist.cgi?[% urlquerypart %]
+        [%- "&order=$order" FILTER uri html IF order %]&tweak=1">Change Several 
+        Bugs at Once</a>
+      &nbsp;&nbsp;
+    [% END %]
+
+    [% IF bugowners %]
+      <a href="mailto:[% bugowners %]">Send Mail to Bug Owners</a> &nbsp;&nbsp;
+    [% END %]
+
+    <a href="query.cgi?[% urlquerypart %]">Edit this Query</a> &nbsp;&nbsp;
+
+  </form>
+
+[% END %]
+
+
+[%############################################################################%]
+[%# Page Footer                                                              #%]
+[%############################################################################%]
+
+[% PROCESS global/footer %]
+
