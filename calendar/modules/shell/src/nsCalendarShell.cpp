@@ -922,8 +922,7 @@ nsEventStatus nsCalendarShell::HandleEvent(nsGUIEvent *aEvent)
       case NS_DESTROY:
       {
         if (mShellInstance->GetApplicationWidget() == aEvent->widget)
-        {
-          mShellInstance->ExitApplication() ;
+        {          
           result = mDocumentContainer->HandleEvent(aEvent);
           Exit();
           return result;
