@@ -283,6 +283,18 @@ test_insert( basic_nsAWritableString<CharT>& aWritable )
   }
 
 
+template <class CharT>
+int
+test_cut( basic_nsAWritableString<CharT>& aWritable )
+  {
+    int tests_failed = 0;
+
+    aWritable.Cut(0, aWritable.Length()+5);
+
+    return tests_failed;
+  }
+
+
 
 template <class CharT>
 int
@@ -307,6 +319,7 @@ test_writable( basic_nsAWritableString<CharT>& aWritable )
 
     tests_failed += test_SetLength(aWritable);
     tests_failed += test_insert(aWritable);
+    tests_failed += test_cut(aWritable);
 
     return tests_failed;
   }

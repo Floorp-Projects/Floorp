@@ -155,6 +155,7 @@ class nsWritingIterator
           while ( n )
             {
               difference_type one_hop = NS_MIN(n, size_forward());
+              NS_ASSERTION(one_hop>0, "Infinite loop: can't advance a writable iterator beyond the end of a string");
               mPosition += one_hop;
               normalize_forward();
               n -= one_hop;
@@ -172,6 +173,7 @@ class nsWritingIterator
           while ( n )
             {
               difference_type one_hop = NS_MIN(n, size_backward());
+              NS_ASSERTION(one_hop>0, "Infinite loop: can't advance (backward) a writable iterator beyond the end of a string");
               mPosition -= one_hop;
               normalize_backward();
               n -= one_hop;
@@ -622,8 +624,12 @@ template <class CharT>
 void
 basic_nsAWritableString<CharT>::Cut( PRUint32 cutStart, PRUint32 cutLength )
   {
-    copy_string(BeginReading(cutStart+cutLength), EndReading(), BeginWriting(cutStart));
-    SetLength(Length()-cutLength);
+    PRUint32 myLength = Length();
+    cutLength = NS_MIN(cutLength, myLength-cutStart);
+    PRUint32 cutEnd = cutStart + cutLength;
+    if ( cutEnd < myLength )
+      copy_string(BeginReading(cutEnd), EndReading(), BeginWriting(cutStart));
+    SetLength(myLength-cutLength);
   }
 
 
