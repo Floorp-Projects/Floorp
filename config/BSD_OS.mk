@@ -34,7 +34,7 @@ MOTIF			= $(NS_LIB)/Xm
 MOTIFLIB		= -lXm
 OS_LIBS			= -lcompat
 
-PLATFORM_FLAGS		= -Wall -Wno-format -DBSDI -D__386BSD__ -DBSD -Di386
+PLATFORM_FLAGS		= -Wall -Wno-format -DBSDI -D__386BSD__ -Di386
 MOVEMAIL_FLAGS		= -DHAVE_STRERROR
 PORT_FLAGS		= -DSW_THREADS -DNEED_BSDREGEX -DNTOHL_ENDIAN_H -DUSE_NODL_TABS -DNEED_SYS_WAIT_H -DNO_TZNAME -DHAVE_NETINET_IN_H -DNO_INT64_T -DNEED_UINT_T -DHAVE_SYS_SELECT_H -DHAVE_SNPRINTF
 PDJAVA_FLAGS		=
@@ -67,11 +67,14 @@ endif
 ifeq ($(OS_RELEASE),2.1)
 PLATFORM_FLAGS		+= -DBSDI_2
 PORT_FLAGS		+= -DHAVE_FILIO_H
+OS_LIBS			+= -ldl
 UNZIP_PROG		= $(CONTRIB_BIN)unzip
 endif
-ifeq ($(OS_RELEASE),3.0)
+ifeq ($(OS_RELEASE),3.1)
 PLATFORM_FLAGS		+= -DBSDI_2 -DBSDI_3
 PORT_FLAGS		+= -DHAVE_FILIO_H
+OS_INCLUDES		+= -I/usr/motif/include/X11
+OS_LIBS			+= -ldl
 endif
 
 ######################################################################
@@ -81,6 +84,10 @@ endif
 EMACS			= /usr/bin/true
 PERL			= /usr/bin/perl
 RANLIB			= /usr/bin/ranlib
+
+ifdef NETSCAPE_HIERARCHY
+PERL			= perl5
+endif
 
 ######################################################################
 # Other
