@@ -32,7 +32,7 @@
                 goHome = id; 
                 importBookmarks = id; 
                 infoLink = id; 
-                manageSidebar = id; 
+                manageBookmarks = id; 
                 newTab = id; 
                 newWindow = id; 
                 nextTab = id; 
@@ -45,11 +45,10 @@
                 reloadWithCharset = id; 
                 savePage = id; 
                 sendURL = id; 
-                showAboutBox = id; 
+                showHistory = id; 
                 smallerTextSize = id; 
                 toggleBookmarksToolbar = id; 
                 toggleOfflineMode = id; 
-                toggleSidebar = id; 
                 viewSource = id; 
             }; 
             CLASS = MainController; 

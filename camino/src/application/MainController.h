@@ -117,14 +117,14 @@
 -(IBAction) connectToServer:(id)aSender;
 
 // View menu actions.
--(IBAction) toggleSidebar:(id)sender;
 -(IBAction) toggleBookmarksToolbar:(id)aSender;
 -(IBAction) doReload:(id)aSender;
 -(IBAction) doStop:(id)aSender;
 -(IBAction) biggerTextSize:(id)aSender;
 -(IBAction) smallerTextSize:(id)aSender;
 -(IBAction) viewSource:(id)aSender;
--(IBAction) manageSidebar: (id)aSender;
+-(IBAction) manageBookmarks: (id)aSender;
+-(IBAction) showHistory:(id)aSender;
 -(IBAction) reloadWithCharset:(id)aSender;
 
 // Bookmarks menu actions.

@@ -388,6 +388,10 @@ static NSArray* sToolbarDefaults = nil;
   // ensure that the browser is visible when we close.
   [self ensureBrowserVisible:self];
   
+  // we have to manually enable/disable the bookmarks menu items, because we
+  // turn autoenabling off for that menu
+  [[NSApp delegate] adjustBookmarksMenuItemsEnabling:NO];
+
   [[NSNotificationCenter defaultCenter] removeObserver:self];
 
   // autorelease just in case we're here because of a window closing
@@ -1125,14 +1129,34 @@ static NSArray* sToolbarDefaults = nil;
   mCachedBMVC = aVC;
 }
 
+//
+// - manageBookmarks:
+//
+// Toggle the bookmark manager in all cases. This is what users
+// expect to happen. When the manager is displayed, retain the 
+// last selected collection, regardless of what it is.
+//
 -(IBAction)manageBookmarks: (id)aSender
 {
-  if ( ![mContentView isBookmarkManagerVisible] )
-    [self toggleBookmarkManager: self];
-
-  [mBookmarkViewController selectContainer:kBookmarkMenuContainerIndex];
+  [self toggleBookmarkManager: self];
 }
 
+//
+// -manageHistory:
+//
+// History is a slightly different beast from bookmarks. Unlike 
+// bookmarks, which acts as a toggle, history ensures the manager
+// is visible and selects the history collection. If the manager
+// is already visible, selects the history collection.
+//
+// An alternate solution would be to have it select history when
+// it wasn't the selected container, and hide when history was
+// the selected collection (toggling in that one case). This makes
+// me feel dirty as the command does two different things depending
+// on the (possibly undiscoverable to the user) context in which it is
+// invoked. For that reason, I've chosen to not have history be a 
+// toggle and see the fallout.
+//
 -(IBAction)manageHistory: (id)aSender
 {
   if ( ![mContentView isBookmarkManagerVisible] )
@@ -2604,6 +2628,10 @@ static NSArray* sToolbarDefaults = nil;
     if (browserView)
       [browserView setActive:YES];
   }
+
+  // we have to manually update the bookmarks menu items, because we
+  // turn autoenabling off for that menu
+  [[NSApp delegate] adjustBookmarksMenuItemsEnabling:[[self window] isMainWindow]];
 }
 
 //

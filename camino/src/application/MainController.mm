@@ -617,11 +617,29 @@ const int kReuseWindowOnAE = 2;
 	[[ProgressDlgController sharedDownloadController] showWindow:aSender];
 }
 
-- (void)adjustBookmarksMenuItemsEnabling:(BOOL)inBrowserWindowFrontmost;
+//
+// -adjustBookmarksMenuItemsEnabling:
+//
+// We've turned off auto-enabling for the bookmarks menu because of the unknown
+// number of bookmarks in the list so we have to manage it manually. This routine
+// should be called whenever a window goes away, becomes main, or is no longer main.
+//
+- (void)adjustBookmarksMenuItemsEnabling:(BOOL)inBrowserWindowFrontmost
 {
   [mAddBookmarkMenuItem setEnabled:inBrowserWindowFrontmost];
   [mCreateBookmarksFolderMenuItem setEnabled:inBrowserWindowFrontmost];
   [mCreateBookmarksSeparatorMenuItem setEnabled:YES];
+
+  [mToggleSidebarMenuItem setEnabled:YES];     // always enabled. 
+  BrowserWindowController* browserController = (BrowserWindowController*)[[self getFrontmostBrowserWindow] windowController];
+  if (browserController) {
+    if ([browserController bookmarksAreVisible:NO])
+      [mToggleSidebarMenuItem setTitle:NSLocalizedString(@"Hide All Bookmarks", @"")];
+    else
+      [mToggleSidebarMenuItem setTitle:NSLocalizedString(@"Show All Bookmarks", @"")];
+  }
+  else
+    [mToggleSidebarMenuItem setTitle:NSLocalizedString(@"Show All Bookmarks", @"")];
 }
 
 - (NSView*)getSavePanelView
@@ -815,12 +833,12 @@ const int kReuseWindowOnAE = 2;
 }
 
 //
-// manageSizebar:
+// -showHistory:
 //
-// opens the appropriate sidebar panel (creating a new window if needed)
-// depending on the tag of the menu item
+// show the history in the bookmark manager. Creates a new window if
+// one isn't already there. history isn't a toggle, hence the name.
 //
--(IBAction)manageSidebar: (id)aSender
+-(IBAction) showHistory:(id)aSender
 {
   NSWindow* browserWindow = [self getFrontmostBrowserWindow];
   if (!browserWindow) {
@@ -828,10 +846,23 @@ const int kReuseWindowOnAE = 2;
     browserWindow = [mApplication mainWindow];
   }
 
-  if ( [aSender tag] == 0 )
-    [[browserWindow windowController] manageBookmarks: aSender];
-  else
-    [[browserWindow windowController] manageHistory: aSender];
+  [[browserWindow windowController] manageHistory: aSender];
+}
+
+//
+// manageBookmarks:
+//
+// toggle the bookmark manager (creating a new window if needed)
+//
+-(IBAction)manageBookmarks: (id)aSender
+{
+  NSWindow* browserWindow = [self getFrontmostBrowserWindow];
+  if (!browserWindow) {
+    [self newWindow:self];
+    browserWindow = [mApplication mainWindow];
+  }
+
+  [[browserWindow windowController] manageBookmarks: aSender];
 }
 
 - (MVPreferencesController *)preferencesController
@@ -967,7 +998,7 @@ const int kReuseWindowOnAE = 2;
   // disable items that aren't relevant if there's no main browser window open
   SEL action = [aMenuItem action];
 
-  //NSLog(@"MainController validateMenuItem for %@ (%s)", [aMenuItem title], action);
+  // NSLog(@"MainController validateMenuItem for %@ (%s)", [aMenuItem title], action);
   
   if (action == @selector(printPage:) ||
         /* ... many more items go here ... */
@@ -981,7 +1012,7 @@ const int kReuseWindowOnAE = 2;
   {
     return (browserController != nil);
   }
-
+  
   if (action == @selector(newTab:))
     return (browserController && [browserController newTabsAllowed]);
   
@@ -1011,13 +1042,6 @@ const int kReuseWindowOnAE = 2;
       return NO;
   }
 
-  if (action == @selector(toggleSidebar:)) {
-    if (browserController)
-      return YES;
-    else
-      return NO;
-  }
-  
   if ( action == @selector(getInfo:) )
     return (browserController && [browserController canGetInfo]);
 
@@ -1067,14 +1091,6 @@ const int kReuseWindowOnAE = 2;
 
   // default return
   return YES;
-}
-
--(IBAction) toggleSidebar:(id)sender
-{
-    BrowserWindowController *browserController = [self getMainWindowBrowserController];
-    if (!browserController) return;
-
-    [browserController toggleSidebar:sender];
 }
 
 -(IBAction) toggleBookmarksToolbar:(id)aSender
