@@ -185,7 +185,9 @@ nssRWLock_AtomicCreate( NSSRWLock  ** prwlock,
     while (NULL == (rwlock = *prwlock)) {
         PRInt32 myAttempt = PR_AtomicIncrement(&initializers);
         if (myAttempt == 1) {
-	    *prwlock = rwlock = NSSRWLock_New(lock_rank, lock_name);
+            if (NULL == (rwlock = *prwlock)) {
+                *prwlock = rwlock = NSSRWLock_New(lock_rank, lock_name);
+            }
             (void) PR_AtomicDecrement(&initializers);
             break;
         }
