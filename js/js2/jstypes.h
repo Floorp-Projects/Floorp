@@ -237,9 +237,18 @@ namespace JSTypes {
         ICodeModule* mICode;
     protected:
         JSFunction() : mICode(0) {}
+
+   	    typedef JavaScript::gc_traits_finalizable<JSFunction> traits;
+	    typedef gc_allocator<JSFunction, traits> allocator;
+		
     public:
         virtual bool isNative()         { return false; }
         JSFunction(ICodeModule* iCode) : mICode(iCode) {}
+        ~JSFunction();
+    
+        void* operator new(size_t) { return allocator::allocate(1); }
+        void operator delete(void* ptr) {}
+
         ICodeModule* getICode() { return mICode; }
     };
 
@@ -326,8 +335,6 @@ namespace JSTypes {
             return setProperty(name, value);
         }
         
-        // FIXME:  need to copy the ICodeModule's instruction stream.
-        // why? it belongs to the ICodeModule exclusively
         JSValue& defineFunction(const String& name, ICodeModule* iCode)
         {
             JSValue value(new JSFunction(iCode));

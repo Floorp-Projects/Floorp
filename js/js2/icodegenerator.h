@@ -87,6 +87,7 @@ namespace ICG {
             its_iCode(iCode), itsVariables(variables),
             itsParameterCount(maxParameter), itsMaxRegister(maxRegister),
             mID(++sMaxID) { }
+        ~ICodeModule()      { delete its_iCode; delete itsVariables; }
 
         Formatter& print(Formatter& f);
         
@@ -232,7 +233,8 @@ namespace ICG {
         
         void returnStatement() { iCode->push_back(new ReturnVoid()); }
         void returnStatement(Register result) \
-            { iCode->push_back(new Return(result)); resetStatement(); }
+            { if (result == NotARegister) returnStatement(); \
+              else iCode->push_back(new Return(result)); resetStatement(); }
         
         void beginWhileStatement(uint32 pos);
         void endWhileExpression(Register condition);
