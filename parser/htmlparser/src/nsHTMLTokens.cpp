@@ -489,6 +489,7 @@ nsresult CTextToken::Consume(PRUnichar aChar, nsScanner& aScanner,PRInt32 aFlag)
 
 /*
  *  Consume as much clear text from scanner as possible.
+ *  The scanner is left on the < of the perceived end tag.
  *
  *  @update  gess 3/25/98
  *  @param   aChar -- last char consumed from stream
@@ -496,7 +497,8 @@ nsresult CTextToken::Consume(PRUnichar aChar, nsScanner& aScanner,PRInt32 aFlag)
  *  @return  error result
  */
 nsresult CTextToken::ConsumeUntil(PRUnichar aChar,PRBool aIgnoreComments,nsScanner& aScanner,
-                                  nsString& aEndTagName,PRInt32 aFlag,PRBool& aFlushTokens){
+                                  const nsAString& aEndTagName,PRInt32 aFlag,
+                                  PRBool& aFlushTokens){
   nsresult      result=NS_OK;
   nsScannerIterator theStartOffset, theCurrOffset, theTermStrPos, theStartCommentPos, theAltTermStrPos, endPos;
   PRBool        done=PR_FALSE;
@@ -584,15 +586,10 @@ nsresult CTextToken::ConsumeUntil(PRUnichar aChar,PRBool aIgnoreComments,nsScann
         }
       }
 
-      // Make sure to preserve the end tag's representation if needed
-      if(aFlag & (NS_IPARSER_FLAG_VIEW_SOURCE | NS_IPARSER_FLAG_PRESERVE_CONTENT)) {
-        CopyUnicodeTo(ltOffset.advance(2),gtOffset,aEndTagName);
-      }
-
       aScanner.BindSubstring(mTextValue, theStartOffset, theTermStrPos);
-      aScanner.SetPosition(gtOffset.advance(1));
+      aScanner.SetPosition(ltOffset);
       
-      // We found </SCRIPT>...permit flushing -> Ref: Bug 22485
+      // We found </SCRIPT> or </STYLE>...permit flushing -> Ref: Bug 22485
       aFlushTokens=PR_TRUE;
       done = PR_TRUE;
     }
@@ -1633,9 +1630,6 @@ nsresult CAttributeToken::Consume(PRUnichar aChar, nsScanner& aScanner,PRInt32 a
 
   nsresult result;
  
-  //I changed a bit of this method to use aRetain so that we do the right
-  //thing in viewsource. The ws/cr/lf sequences are now maintained, and viewsource looks good.
-
   nsScannerIterator wsstart, wsend;
   
   if (aFlag & NS_IPARSER_FLAG_VIEW_SOURCE) {
@@ -1750,6 +1744,15 @@ nsresult CAttributeToken::Consume(PRUnichar aChar, nsScanner& aScanner,PRInt32 a
 
     if (NS_OK==result) {
       result=aScanner.Peek(aChar);
+
+      if (mTextValue.Length() == 0 && mTextKey.Length() == 0 && 
+          aChar == kLessThan) {
+        // This attribute is completely bogus, tell the tokenizer.
+        // This happens when we have stuff like:
+        // <script>foo()</script  <p>....
+        return NS_ERROR_HTMLPARSER_BADATTRIBUTE;
+      }
+
 #ifdef DEBUG
       mLastAttribute = (kGreaterThan == aChar || kEOF == result);
 #endif
