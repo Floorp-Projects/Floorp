@@ -37,6 +37,7 @@ EXPORTS =                 \
 CPPSRCS		= \
 		nsMultiMixedConv.cpp \
 		nsFTPDirListingConv.cpp \
+		nsGopherDirListingConv.cpp \
 		mozTXTToHTMLConv.cpp \
 		nsUnknownDecoder.cpp \
 		nsHTTPChunkConv.cpp \

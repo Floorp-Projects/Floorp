@@ -1,0 +1,426 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ *
+ * The contents of this file are subject to the Mozilla Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ *
+ * The Original Code is the gopher-directory to http-index code.
+ *
+ * The Initial Developer of the Original Code is Bradley Baetz.
+ * Portions created by Bradley Baetz are Copyright (C) 2000 Bradley Baetz.
+ * All Rights Reserved.
+ *
+ * Contributor(s): 
+ *  Bradley Baetz <bbaetz@student.usyd.edu.au>
+ */
+
+/* This code is based on the ftp directory translation code */
+
+#include "plstr.h"
+#include "nsMemory.h"
+#include "nsCRT.h"
+#include "nsIServiceManager.h"
+#include "nsIGenericFactory.h"
+#include "nsString.h"
+#include "nsCOMPtr.h"
+#include "nsIURI.h"
+#include "nsEscape.h"
+#include "nsIStreamListener.h"
+#include "nsIStreamConverter.h"
+#include "nsIStringStream.h"
+#include "nsIStreamObserver.h"
+#include "nsNetUtil.h"
+
+#include "nsGopherDirListingConv.h"
+
+// nsISupports implementation
+NS_IMPL_THREADSAFE_ISUPPORTS3(nsGopherDirListingConv,
+                              nsIStreamConverter,
+                              nsIStreamListener,
+                              nsIStreamObserver);
+
+// nsIStreamConverter implementation
+
+#define CONV_BUF_SIZE (4*1024)
+
+NS_IMETHODIMP
+nsGopherDirListingConv::Convert(nsIInputStream *aFromStream,
+                                const PRUnichar *aFromType,
+                                const PRUnichar *aToType,
+                                nsISupports *aCtxt, nsIInputStream **_retval) {
+    
+    nsresult rv;
+
+    char buffer[CONV_BUF_SIZE];
+    int i = 0;
+    while (i < CONV_BUF_SIZE) {
+        buffer[i] = '\0';
+        i++;
+    }
+    CBufDescriptor desc(buffer, PR_TRUE, CONV_BUF_SIZE);
+    nsCAutoString aBuffer(desc);
+    nsCAutoString convertedData;
+
+    NS_ASSERTION(aCtxt, "Gopher dir conversion needs the context");
+    // build up the 300: line
+    nsXPIDLCString spec;
+    mUri = do_QueryInterface(aCtxt, &rv);
+    if (NS_FAILED(rv)) return rv;
+    
+    rv = mUri->GetSpec(getter_Copies(spec));
+    if (NS_FAILED(rv)) return rv;
+
+    convertedData.Append("300: ");
+    convertedData.Append(spec);
+    convertedData.Append(LF);
+    // END 300:
+    
+    //Column headings
+    // We should also send the content-type, probably. The stuff in
+    // nsGopherChannel::GetContentType should then be moved out - 
+    // maybe into an nsIGopherURI interface/class?
+
+    // Should also possibly use different hosts as a symlink, but the directory
+    // viewer stuff doesn't support SYM-FILE or SYM-DIRECTORY
+    convertedData.Append("200: description filename file-type\n");
+
+    // build up the body
+    while (1) {
+        PRUint32 amtRead = 0;
+
+        rv = aFromStream->Read(buffer+aBuffer.Length(),
+                               CONV_BUF_SIZE-aBuffer.Length(), &amtRead);
+        if (NS_FAILED(rv)) return rv;
+
+        if (!amtRead) {
+            // EOF
+            break;
+        }
+
+        aBuffer = DigestBufferLines(buffer, convertedData);
+    }
+    
+    // send the converted data out.
+    nsCOMPtr<nsIInputStream> inputData;
+    nsCOMPtr<nsISupports>    inputDataSup;
+
+    rv = NS_NewCStringInputStream(getter_AddRefs(inputDataSup), convertedData);
+    if (NS_FAILED(rv)) return rv;
+
+    inputData = do_QueryInterface(inputDataSup, &rv);
+    if (NS_FAILED(rv)) return rv;
+    
+    *_retval = inputData.get();
+    NS_ADDREF(*_retval);
+    
+    return NS_OK;
+}
+
+// Stream converter service calls this to initialize the actual
+// stream converter (us).
+NS_IMETHODIMP
+nsGopherDirListingConv::AsyncConvertData(const PRUnichar *aFromType,
+                                         const PRUnichar *aToType,
+                                         nsIStreamListener *aListener,
+                                         nsISupports *aCtxt) {
+    NS_ASSERTION(aListener && aFromType && aToType,
+                 "null pointer passed into gopher dir listing converter");
+    nsresult rv;
+
+    // hook up our final listener. this guy gets the various On*() calls
+    // we want to throw at him.
+    mFinalListener = aListener;
+    NS_ADDREF(mFinalListener);
+    
+    // we need our own channel that represents the content-type of the
+    // converted data.
+    NS_ASSERTION(aCtxt, "Gopher dir listing needs a context (the uri)");
+    mUri = do_QueryInterface(aCtxt,&rv);
+    if (NS_FAILED(rv)) return rv;
+
+    rv = NS_NewInputStreamChannel(&mPartChannel,
+                                  mUri,
+                                  nsnull,
+                                  "application/http-index-format",
+                                  -1);
+    if (NS_FAILED(rv)) return rv;
+
+    return NS_OK;
+}
+
+// nsIStreamListener implementation
+NS_IMETHODIMP
+nsGopherDirListingConv::OnDataAvailable(nsIRequest *request,
+                                        nsISupports *ctxt,
+                                        nsIInputStream *inStr,
+                                        PRUint32 sourceOffset,
+                                        PRUint32 count) {
+    nsresult rv;
+
+    PRUint32 read, streamLen;
+    nsCAutoString indexFormat;
+    indexFormat.SetCapacity(72); // quick guess 
+
+    rv = inStr->Available(&streamLen);
+    if (NS_FAILED(rv)) return rv;
+
+    char *buffer = (char*)nsMemory::Alloc(streamLen + 1);
+    rv = inStr->Read(buffer, streamLen, &read);
+    if (NS_FAILED(rv)) return rv;
+
+    // the dir listings are ascii text, null terminate this sucker.
+    buffer[streamLen] = '\0';
+
+    if (!mBuffer.IsEmpty()) {
+        // we have data left over from a previous OnDataAvailable() call.
+        // combine the buffers so we don't lose any data.
+        mBuffer.Append(buffer);
+        nsMemory::Free(buffer);
+        buffer = mBuffer.ToNewCString();
+        mBuffer.Truncate();
+    }
+
+    if (!mSentHeading) {
+        // build up the 300: line
+        nsXPIDLCString spec;
+        rv = mUri->GetSpec(getter_Copies(spec));
+        if (NS_FAILED(rv)) return rv;
+
+        //printf("spec is %s\n",spec.get());
+        
+        indexFormat.Append("300: ");
+        indexFormat.Append(spec.get());
+        indexFormat.Append(LF);
+        // END 300:
+
+        // build up the column heading; 200:
+        indexFormat.Append("200: description filename file-type\n");
+        // END 200:
+        
+        mSentHeading = PR_TRUE;
+    }
+    char *line = buffer;
+    line = DigestBufferLines(line, indexFormat);
+    // if there's any data left over, buffer it.
+    if (line && *line) {
+        mBuffer.Append(line);
+    }
+    
+    nsMemory::Free(buffer);
+    
+    // send the converted data out.
+    nsCOMPtr<nsIInputStream> inputData;
+    nsCOMPtr<nsISupports>    inputDataSup;
+    
+    rv = NS_NewCStringInputStream(getter_AddRefs(inputDataSup), indexFormat);
+    if (NS_FAILED(rv)) return rv;
+    
+    inputData = do_QueryInterface(inputDataSup, &rv);
+    if (NS_FAILED(rv)) return rv;
+    
+    rv = mFinalListener->OnDataAvailable(mPartChannel, ctxt, inputData,
+                                         0, indexFormat.Length());
+    if (NS_FAILED(rv)) return rv;
+    
+    return NS_OK;
+}
+
+// nsIStreamObserver implementation
+NS_IMETHODIMP
+nsGopherDirListingConv::OnStartRequest(nsIRequest *request, nsISupports *ctxt) {
+    // we don't care about start. move along... but start masqeurading 
+    // as the http-index channel now.
+    return mFinalListener->OnStartRequest(mPartChannel, ctxt);
+}
+
+NS_IMETHODIMP
+nsGopherDirListingConv::OnStopRequest(nsIRequest *request, nsISupports *ctxt,
+                                      nsresult aStatus,
+                                      const PRUnichar* aStatusArg) {
+    // we don't care about stop. move along...
+    nsCOMPtr<nsILoadGroup> loadgroup;
+    nsresult rv = mPartChannel->GetLoadGroup(getter_AddRefs(loadgroup));
+    if (NS_FAILED(rv)) return rv;
+    if (loadgroup)
+        (void)loadgroup->RemoveRequest(mPartChannel, nsnull,
+                                       aStatus, aStatusArg);
+
+    return mFinalListener->OnStopRequest(mPartChannel, ctxt,
+                                         aStatus, aStatusArg);
+}
+
+// nsGopherDirListingConv methods
+nsGopherDirListingConv::nsGopherDirListingConv() {
+    NS_INIT_ISUPPORTS();
+    mFinalListener      = nsnull;
+    mPartChannel        = nsnull;
+    mSentHeading        = PR_FALSE;
+}
+
+nsGopherDirListingConv::~nsGopherDirListingConv() {
+    NS_IF_RELEASE(mFinalListener);
+    NS_IF_RELEASE(mPartChannel);
+}
+
+nsresult
+nsGopherDirListingConv::Init() {
+    return NS_OK;
+}
+
+char*
+nsGopherDirListingConv::DigestBufferLines(char* aBuffer, nsCAutoString& aString) {
+    char *line = aBuffer;
+    char *eol;
+    PRBool cr = PR_FALSE;
+
+    // while we have new lines, parse 'em into application/http-index-format.
+    while (line && (eol = PL_strchr(line, LF)) ) {
+        // yank any carriage returns too.
+        if (eol > line && *(eol-1) == CR) {
+            eol--;
+            *eol = '\0';
+            cr = PR_TRUE;
+        } else {
+            *eol = '\0';
+            cr = PR_FALSE;
+        }
+
+        if (line[0]=='.' && line[1]=='\0') {
+            if (cr)
+                line = eol+2;
+            else
+                line = eol+1;
+            continue;
+        }
+
+        char type;
+        nsCAutoString desc, selector, host;
+        PRInt32 port = GOPHER_PORT;
+
+        type = line[0];
+        line++;
+        char* tabPos = PL_strchr(line,'\t');
+
+        /* Get the description */
+        if (tabPos) {
+            char* descStr = PL_strndup(line,tabPos-line);
+            char* escName = nsEscape(descStr,url_Path);
+            desc = escName;
+            nsMemory::Free(escName);
+            nsMemory::Free(descStr);
+
+            line = tabPos+1;
+            tabPos = PL_strchr(line,'\t');
+        }
+
+        /* Get selector */
+        if (tabPos) {
+            char* sel = PL_strndup(line,tabPos-line);
+            char* escName = nsEscape(sel,url_Path);
+            selector = escName;
+            nsMemory::Free(escName);
+            nsMemory::Free(sel);
+            line = tabPos+1;
+            tabPos = PL_strchr(line,'\t');
+        }
+
+        /* Host and Port - put together because there is
+           no tab after the port */
+        if (tabPos) {
+            host = nsCString(line,tabPos-line);
+            line = tabPos+1;
+            tabPos = PL_strchr(line,'\t');
+            if (tabPos==NULL)
+                tabPos = PL_strchr(line,'\0');
+
+            /* Port */
+            nsCAutoString portStr(line,tabPos-line);
+            port = atol(portStr.get());
+            line = tabPos+1;
+        }
+        
+        // Now create the url
+        nsCAutoString filename;
+        if (type != '8' && type != 'T') {
+            filename.Assign("gopher://");
+            filename.Append(host);
+            if (port != GOPHER_PORT) {
+                filename.Append(':');
+                filename.AppendInt(port);
+            }
+            filename.Append('/');
+            filename.Append(type);
+            filename.Append(selector);
+        } else {
+            // construct telnet/tn3270 url.
+            // Moz doesn't support these, so this is UNTESTED!!!!!
+            // (I do get the correct error message though)
+            if (type == '8')
+                // telnet
+                filename.Assign("telnet://");
+            else
+                // tn3270
+                filename.Assign("tn3270://");
+            if (!selector.IsEmpty()) {
+                filename.Append(selector);
+                filename.Append('@');
+            }
+            filename.Append(host);
+            if (port != 23) { // telnet port
+                filename.Append(':');
+                filename.AppendInt(port);
+            }
+        }
+
+        if (tabPos) {
+            /* Don't display error messages or informative messages
+               because they could be selected, and they'll be sorted
+               out of order.
+               If FTP displays .messages/READMEs ever, then I could use the
+               same method to display these
+            */
+            if (type != '3' && type != 'i') {
+                aString.Append("201: ");
+                aString.Append(desc);
+                aString.Append(' ');
+                aString.Append(filename);
+                aString.Append(' ');
+                if (type == '1')
+                    aString.Append("DIRECTORY");
+                else
+                    aString.Append("FILE");
+                aString.Append(LF);
+            }
+        } else {
+            NS_WARNING("Error parsing gopher directory response.\n");
+            //printf("Got: %s\n",filename.get());
+        }
+        
+        if (cr)
+            line = eol+2;
+        else
+            line = eol+1;
+    }
+    return line;
+}
+
+nsresult
+NS_NewGopherDirListingConv(nsGopherDirListingConv** aGopherDirListingConv)
+{
+    NS_PRECONDITION(aGopherDirListingConv, "null ptr");
+    if (! aGopherDirListingConv)
+        return NS_ERROR_NULL_POINTER;
+
+    *aGopherDirListingConv = new nsGopherDirListingConv();
+    if (! *aGopherDirListingConv)
+        return NS_ERROR_OUT_OF_MEMORY;
+
+    NS_ADDREF(*aGopherDirListingConv);
+    return (*aGopherDirListingConv)->Init();
+}

@@ -71,8 +71,8 @@ protected:
     PRBool                              mActAsObserver;
 
     PRInt32                             mPort;
-    nsXPIDLCString                      mHost;
-    nsXPIDLCString                      mUser;
+    nsCString                           mHost;
+    nsCString                           mUser;
 
     nsXPIDLCString                      mRequest;
 

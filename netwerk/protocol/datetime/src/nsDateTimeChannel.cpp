@@ -88,7 +88,6 @@ nsDateTimeChannel::Create(nsISupports* aOuter, const nsIID& aIID, void* *aResult
 NS_IMETHODIMP
 nsDateTimeChannel::GetName(PRUnichar* *result)
 {
-    NS_NOTREACHED("nsDateTimeChannel::GetName");
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 

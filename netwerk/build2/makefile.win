@@ -34,6 +34,7 @@ CPP_OBJS=                            \
 
 LLIBS=                          \
         $(DIST)\lib\xpcom.lib   \
+        $(DIST)\lib\nkgopher_s.lib \
         $(DIST)\lib\nkftp_s.lib \
         $(DIST)\lib\nkfinger_s.lib \
         $(DIST)\lib\nkdatetm_s.lib \
@@ -41,6 +42,7 @@ LLIBS=                          \
 
 INCS = $(INCS)                               \
         -I$(DEPTH)\dist\include              \
+        -I$(DEPTH)\netwerk\protocol\gopher\src \
         -I$(DEPTH)\netwerk\protocol\ftp\src \
         -I$(DEPTH)\netwerk\protocol\finger\src \
         -I$(DEPTH)\netwerk\protocol\datetime\src \
