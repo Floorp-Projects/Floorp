@@ -74,10 +74,32 @@ console._scriptHook = {
 
 console._executionHook = {
     onExecute: function exehook (frame, type, rv) {
+                   var hookReturn = jsdIExecutionHook.RETURN_CONTINUE;
+
                    if (frame.script && frame.script.fileName != MSG_VAL_CONSOLE)
-                       return debugTrap(frame, type, rv);
-                   ASSERT (frame.script, "Execution hook called with no script");
-                   return jsdIExecutionHook.RETURN_CONTINUE;
+                   {
+                       var ex;
+                       
+                       frame.executionContext.scriptsEnabled = false;
+                       
+                       try
+                       {
+                           hookReturn = debugTrap(frame, type, rv);
+                       }
+                       catch (ex)
+                       {
+                           display (MSG_ERR_INTERNAL_BPT, MT_ERROR);
+                           display (formatException(ex), MT_ERROR);
+                       }
+                       
+                       frame.executionContext.scriptsEnabled = true;
+                   }
+                   else
+                       ASSERT (frame.script,
+                               "Execution hook called with no script");
+
+                   delete console.frames;
+                   return hookReturn;
                }
 };
 
@@ -141,7 +163,6 @@ function initDebugger()
                                               /* return code for the most     */
                                               /* recent debugTrap().          */
     console.scripts = new Object();
-    console._stopLevel = 0;                   /* nest level.                  */
     
     /* create the debugger instance */
     if (!Components.classes[JSD_CTRID])
@@ -185,12 +206,15 @@ function initDebugger()
     console.scriptsView.freeze();
     console.jsds.enumerateScripts(enumer);
     console.scriptsView.thaw();
+
     dd ("} initDebugger");
-    
 }
 
 function detachDebugger()
 {
+    if ("frames" in console)
+        console.jsds.exitNestedEventLoop();
+    
     console.jsds.topLevelHook = null;
     console.jsds.functionHook = null;
     console.jsds.breakpointHook = null;
@@ -202,13 +226,6 @@ function detachDebugger()
     console.jsds.clearFilters();
     if (!console.jsds.initAtStartup)
         console.jsds.off();
-
-    if (console._stopLevel > 0)
-    {
-        --console._stopLevel;
-        console.jsds.exitNestedEventLoop();
-    }
-
 }
 
 function realizeScript(script)
@@ -357,7 +374,6 @@ function debugTrap (frame, type, rv)
     }
 
     console.jsds.functionHook = null;
-    ++console._stopLevel;
 
     /* set our default return value */
     console._continueCodeStack.push (retcode);
@@ -392,24 +408,17 @@ function debugTrap (frame, type, rv)
      * console.dbg.exitNestedEventLoop() 
      */
 
-    if (console._stopLevel > 0)
-    {
-        --console._stopLevel;
-        console.jsds.exitNestedEventLoop();
-    }
-
+    clearCurrentFrame();
+    delete console.frames;
+    delete console.trapType;
+    rv.value = (0 in $) ? $[0] : null;
+    $ = new Array();
+    
     console.onDebugContinue();
 
     if (tn)
         display (getMsg(MSN_CONT, tn), MT_CONT);
 
-    rv.value = (0 in $) ? $[0] : null;
-
-    $ = new Array();
-    clearCurrentFrame();
-    delete console.frames;
-    delete console.trapType;
-    
     return console._continueCodeStack.pop();
 }
 
@@ -658,7 +667,7 @@ function displaySource (url, line, contextLines)
  
     if (!rec)
     {
-        display (MSG_ERR_NO_SOURCE, MT_ERROR);
+        display (getMsg(MSN_ERR_NO_SCRIPT, url), MT_ERROR);
         return;
     }
     

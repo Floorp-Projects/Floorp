@@ -36,7 +36,8 @@
 function initDev()
 {
     var cmdary =
-        [["dumpfilters",   cmdDumpFilters,   CMD_CONSOLE | CMD_NO_HELP],
+        [["dumpcontexts",  cmdDumpContexts,  CMD_CONSOLE | CMD_NO_HELP],
+         ["dumpfilters",   cmdDumpFilters,   CMD_CONSOLE | CMD_NO_HELP],
          ["reloadui",      cmdReloadUI,      CMD_CONSOLE | CMD_NO_HELP],
          ["testargs",      cmdTestArgs,      CMD_CONSOLE | CMD_NO_HELP],
          ["testargs1",     cmdTestArgs,      CMD_CONSOLE | CMD_NO_HELP],
@@ -50,6 +51,40 @@ function initDev()
     return "Venkman development functions loaded OK.";
 }
 
+function cmdDumpContexts()
+{
+    console.contexts = new Array();
+    var i = 0;
+    
+    var enumer = {
+        enumerateContext: function _ec (context) {
+                              if (!context.isValid)
+                              {
+                                  dd("enumerate got invalid context");
+                              }
+                              else
+                              {
+                                  var v = context.globalObject;
+                                  var prop = v.getProperty("title");
+                                  var title = "<n/a>";
+                                  if (prop)
+                                      title = prop.value.stringValue;
+                              
+                                  dd ("enumerateContext: Index " + i +
+                                      ", Version " + context.version +
+                                      ", Tag " + context.tag +
+                                      ", Title " + title +
+                                      ", Scripts Enabled " +
+                                      context.scriptsEnabled);
+                              }
+                              console.contexts[i++] = context;
+                          }
+    };
+    
+    console.jsds.enumerateContexts(enumer);
+    return true;
+}
+    
 function cmdDumpFilters()
 {
     var i = 0;
@@ -66,10 +101,6 @@ function cmdDumpFilters()
 
 function cmdReloadUI()
 {
-    if (typeof console != "udefined" && 
-        ("_stopLevel" in console) && console._stopLevel != 0)
-        return;
-    
     var bs = Components.classes["@mozilla.org/intl/stringbundle;1"];
     bs = bs.createInstance(Components.interfaces.nsIStringBundleService);
     bs.flushBundles();

@@ -100,10 +100,10 @@ const exceptionMsgNames = ["err.notimplemented",
                            "err.no.stack"];
 
 /* message values for non-parameterized messages */
-const MSG_ERR_NO_STACK    = getMsg("msg.err.nostack");
-const MSG_ERR_DISABLED    = getMsg("msg.err.disabled");
-const MSG_ERR_NO_SOURCE   = getMsg("msg.err.nosource");
-const MSG_ERR_CANT_CLOSE  = getMsg("msg.err.cant.close");
+const MSG_ERR_NO_STACK     = getMsg("msg.err.nostack");
+const MSG_ERR_DISABLED     = getMsg("msg.err.disabled");
+const MSG_ERR_CANT_CLOSE   = getMsg("msg.err.cant.close");
+const MSG_ERR_INTERNAL_BPT = getMsg("msg.err.internal.bpt");
 
 const MSG_TYPE_BOOLEAN    = getMsg("msg.type.boolean");
 const MSG_TYPE_DOUBLE     = getMsg("msg.type.double");
@@ -175,6 +175,7 @@ const MSG_DOC_DESCRIPTION  = getMsg("msg.doc.description");
 const MSG_HELP_TITLE       = getMsg("msg.help.title");
 
 /* message names for parameterized messages */
+const MSN_ERR_NO_SCRIPT    = "msg.err.noscript";
 const MSN_IASMODE          = "msg.iasmode";
 const MSN_EXTRA_PARAMS     = "msg.extra.params";
 const MSN_DOC_COMMANDLABEL = "msg.doc.commandlabel";

@@ -311,7 +311,6 @@ function cmdCommands (e)
 function cmdCont (e)
 {
     disableDebugCommands();
-    --console._stopLevel;
     console.stackView.saveState();
     console.jsds.exitNestedEventLoop();
 }
@@ -437,7 +436,6 @@ function cmdFinish (e)
     setStopState(false);
     console.jsds.functionHook = console._callHook;
     disableDebugCommands()
-    --console._stopLevel;
     console.stackView.saveState();
     console.jsds.exitNestedEventLoop();
     return true;
@@ -495,7 +493,7 @@ function cmdFindURL (e)
     
     if (!(e.url in console.scripts))
     {
-        display (getMsg (MSN_ERR_NO_SOURCE, e.url), MT_ERROR);
+        display (getMsg (MSN_ERR_NO_SCRIPT, e.url), MT_ERROR);
         return false;
     }
 
@@ -778,7 +776,6 @@ function cmdStep()
         console._stepPast += topFrame.line;
     }
     disableDebugCommands()
-    --console._stopLevel;
     console.stackView.saveState();
     console.jsds.exitNestedEventLoop();
     return true;
