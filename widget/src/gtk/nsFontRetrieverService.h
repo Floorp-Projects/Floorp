@@ -36,7 +36,8 @@ public:
   // nsIFontRetrieverService
 	NS_IMETHOD CreateFontNameIterator( nsIFontNameIterator** aIterator );
 
-	NS_IMETHOD CreateFontSizeIterator( const nsString * aFontName, nsIFontSizeIterator** aIterator );
+	NS_IMETHOD CreateFontSizeIterator( const nsString & aFontName, nsIFontSizeIterator** aIterator );
+	NS_IMETHOD IsFontScalable( const nsString & aFontName, PRBool* aResult );
 
   // nsIFontNameIterator
 
