@@ -31,7 +31,6 @@
 #include "nsIWidget.h"
 #include "nsMacMessageSink.h"
 #include "nsMacMessagePump.h"
-#include "nsSelectionMgr.h"
 #include "nsToolKit.h"
 #include <Quickdraw.h>
 #include <Fonts.h>
@@ -71,10 +70,6 @@ NS_IMETHODIMP nsAppShell::SetDispatchListener(nsDispatchListener* aDispatchListe
 NS_IMETHODIMP nsAppShell::Create(int* argc, char ** argv)
 {
 	mToolKit = auto_ptr<nsToolkit>( new nsToolkit() );
-
-  // Create the selection manager
-  if (!mSelectionMgr)
-      NS_NewSelectionMgr(&mSelectionMgr);
 
   mMacSink = new nsMacMessageSink();
   mMacPump = auto_ptr<nsMacMessagePump>( new nsMacMessagePump(mToolKit.get(), mMacSink) );
@@ -170,7 +165,6 @@ nsAppShell::nsAppShell()
   }
   mRefCnt = 0;
   mExitCalled = PR_FALSE;
-  mSelectionMgr = 0;
   mMacSink = 0;
 }
 
@@ -181,7 +175,6 @@ nsAppShell::nsAppShell()
 //-------------------------------------------------------------------------
 nsAppShell::~nsAppShell()
 {
-  NS_IF_RELEASE(mSelectionMgr);
 }
 
 //-------------------------------------------------------------------------
@@ -293,14 +286,4 @@ nsAppShell::DispatchNativeEvent(PRBool aRealEvent, void *aEvent)
 
 	mMacPump->DispatchEvent(aRealEvent, (EventRecord *) aEvent);
 	return NS_OK;
-}
-
-NS_METHOD
-nsAppShell::GetSelectionMgr(nsISelectionMgr** aSelectionMgr)
-{
-  *aSelectionMgr = mSelectionMgr;
-  NS_IF_ADDREF(mSelectionMgr);
-  if (!mSelectionMgr)
-    return NS_ERROR_NOT_INITIALIZED;
-  return NS_OK;
 }
