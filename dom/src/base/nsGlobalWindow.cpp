@@ -138,6 +138,8 @@ GlobalWindowImpl::~GlobalWindowImpl()
 
 void GlobalWindowImpl::CleanUp()
 {
+  if (mContext)
+    mContext->RemoveReference(&mScriptObject, mScriptObject);
    mContext = nsnull; // Forces Release
    mDocument = nsnull; // Forces Release
    NS_IF_RELEASE(mNavigator);
@@ -208,6 +210,12 @@ NS_IMETHODIMP GlobalWindowImpl::SetScriptObject(void *aScriptObject)
 
 NS_IMETHODIMP GlobalWindowImpl::SetContext(nsIScriptContext *aContext)
 {
+   // if setting the context to null, then we won't get to clean up the
+   // named reference, so do it now
+   if (!aContext) {
+     NS_WARNING("Possibly early removal of script object, see bug #41608");
+     mContext->RemoveReference(&mScriptObject, mScriptObject);
+   }
    mContext = aContext;
    return NS_OK; 
 }
