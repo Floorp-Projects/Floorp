@@ -72,6 +72,17 @@ endif
 ifeq ($(CPU_ARCH),x86)
 PLATFORM_FLAGS		+= -mno-486 -DLINUX1_2 -Di386
 endif
+ifeq ($(CPU_ARCH),m68k)
+#
+# gcc on Linux/m68k either has a bug or triggers a code-sequence
+# bug in the 68060 which causes gcc to crash.  The simplest way to
+# avoid this is to enable a minimum level of optimization.
+#
+ifndef BUILD_OPT
+OPTIMIZER		+= -O
+endif
+PLATFORM_FLAGS		+= -m68020-40 -DLINUX1_2
+endif
 
 ifeq ($(OS_RELEASE),2.0)
 PLATFORM_FLAGS		+= -DLINUX2_0

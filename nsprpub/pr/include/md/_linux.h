@@ -31,6 +31,8 @@
 #define _PR_SI_ARCHITECTURE "ppc"
 #elif defined(__alpha)
 #define _PR_SI_ARCHITECTURE "alpha"
+#elif defined(__mc68000__)
+#define _PR_SI_ARCHITECTURE "m68k"
 #else
 #define _PR_SI_ARCHITECTURE "x86"
 #endif
@@ -92,6 +94,22 @@ extern void _MD_CleanupBeforeExit(void);
 #else
 #define _MD_GET_SP(_t) (_t)->md.context[0].__jmpbuf[0].__sp
 #define _MD_SP_TYPE __ptr_t
+#endif /* defined(__GLIBC__) && __GLIBC__ >= 2 */
+
+/* XXX not sure if this is correct, or maybe it should be 17? */
+#define PR_NUM_GCREGS 9
+
+#elif defined(__mc68000__)
+/* m68k based Linux */
+
+/*
+ * On the m68k, glibc still uses the old style sigjmp_buf, even
+ * in glibc 2.0.7.
+ */
+#if defined(__GLIBC__) && __GLIBC__ >= 2
+#define _MD_GET_SP(_t) (_t)->md.context[0].__jmpbuf[0].__sp
+#else
+#define _MD_GET_SP(_t) (_t)->md.context[0].__jmpbuf[0].__sp
 #endif /* defined(__GLIBC__) && __GLIBC__ >= 2 */
 
 /* XXX not sure if this is correct, or maybe it should be 17? */
