@@ -1509,7 +1509,7 @@ nsURI2Path(const char* rootURI, const char* uriStr, nsFileSpec& pathResult)
 {
   nsresult rv;
 
-#ifdef DEBUG
+#ifdef DEBUG_sspitzer
   /* examples: */
   /* nsURI2Path(mailbox:/, mailbox:/, ??)->/home/sspitzer/mozillamail */
   /* nsURI2Path(mailbox:/, mailbox://Drafts, ??)->/home/sspitzer/mozillamail/Drafts */
@@ -1585,7 +1585,7 @@ nsURI2Path(const char* rootURI, const char* uriStr, nsFileSpec& pathResult)
   if(path.Length() > 0)
 	  pathResult +=path;
 
-#ifdef DEBUG
+#ifdef DEBUG_sspitzer
   printf("->%s\n", (const char *)pathResult);
 #endif
   return NS_OK;
@@ -1596,7 +1596,7 @@ nsPath2URI(const char* rootURI, const nsFileSpec& spec, char **uri)
 {
   nsresult rv;
 
-#ifdef DEBUG
+#ifdef DEBUG_sspitzer
   /* examples: */
   /* nsPath2URI(mailbox_message:/, /home/sspitzer/mozillamail/Drafts, ??)->mailbox_message://Drafts */
   /* nsPath2URI(news_message:/, /tmp/mozillanews/news.mozilla.org/netscape.public.mozilla.unix, ??)->news_message://news.mozilla.org/netscape.public.mozilla.unix */
@@ -1663,7 +1663,7 @@ nsPath2URI(const char* rootURI, const nsFileSpec& spec, char **uri)
     uriStr += folderName;
   }
   *uri = uriStr.ToNewCString();
-#ifdef DEBUG
+#ifdef DEBUG_sspitzer
   printf("->%s\n", *uri);
 #endif
   return NS_OK;
