@@ -757,46 +757,52 @@ XfeMenuType(Widget menu)
 /*																		*/
 /*----------------------------------------------------------------------*/
 /* extern */ void
-XfeDestroyMenuWidgetTree(WidgetList		children,
-						 int			num_children,
-						 Boolean		skip_private_components)
+XfeDestroyMenuWidgetTree(WidgetList	children,
+						 int		num_children,
+						 Boolean	skip_private_components)
 {
-	int			i;
+    int i;
 
-	if ((num_children <= 0) || (children == NULL))
+    if (num_children <= 0)
 	{
 		return;
 	}
-    
-	for (i = num_children - 1; i >= 0; i--) 
+	
+    for (i = num_children - 1; i >= 0; i--) 
 	{
 		Boolean		skip = False;
-/* 		Widget		submenu = XfeCascadeGetSubMenu(children[i]); */
- 		Widget		submenu;
+		Widget		submenu = NULL;
+		WidgetList	more_children = NULL;
+		int			num_more_children = 0;
+		
+		XtVaGetValues (children[i], XmNsubMenuId, &submenu, 0);
 
-		XtVaGetValues(children[i],XmNsubMenuId,&submenu,NULL);
-
+		/* If a submenu exists, then this item has descendants */
 		if (submenu) 
 		{
-			/*
-			 * I think we should use submenu instead of children[i],
-             * but this is how the original code was written.
-			 *
-			 * I need to think about this some more...
-             */
-			if (_XfemChildren(children[i]) && _XfemNumChildren(children[i]))
+			XtVaGetValues(children[i],
+						  XmNchildren,		&more_children,
+						  XmNnumChildren,	&num_more_children,
+						  NULL);
+
+			if (num_more_children > 0) 
 			{
-				XfeDestroyMenuWidgetTree(_XfemChildren(children[i]),
-										 _XfemNumChildren(children[i]),
+				XfeDestroyMenuWidgetTree(more_children,
+										 num_more_children,
 										 skip_private_components);
 			}
 		}
-		
+
+		/*
+		 * Skip destruction of this widget if its requested and its
+		 * parent is an XfeManager and its a private component - not
+		 * meant to be messed with.
+		 */
 		skip = (skip_private_components &&
 				XfeIsAlive(_XfeParent(children[i])) &&
 				XfeIsManager(_XfeParent(children[i])) &&
 				_XfeManagerPrivateComponent(children[i]));
-
+		
 		if (!skip)
 		{
 			XtDestroyWidget(children[i]);
