@@ -1422,7 +1422,8 @@ GC_bool GC_stopped_mark(); /* Stop world and mark from all roots	*/
 			/* and rescuers.			*/
 void GC_clear_hdr_marks(/* hhdr */);  /* Clear the mark bits in a header */
 void GC_set_hdr_marks(/* hhdr */);  /* Set the mark bits in a header */
-void GC_add_roots_inner();
+void GC_add_roots_inner GC_PROTO((char * b, char * e, GC_bool tmp));
+void GC_remove_roots_inner GC_PROTO((char * b, char * e));
 GC_bool GC_is_static_root(/* ptr_t p */);
 		/* Is the address p in one of the registered static	*/
 		/* root sections?					*/
