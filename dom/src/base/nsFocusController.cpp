@@ -490,10 +490,12 @@ nsFocusController::SetActive(PRBool aActive)
   // (see nsEventStateManager::PreHandleEvent/NS_ACTIVATE)
   // If this is the case, we need to queue a notification of the
   // WindowWatcher until SetFocusedWindow is called.
-  if (mCurrentWindow)
-    UpdateWWActiveWindow();
-  else
-    mUpdateWindowWatcher = PR_TRUE;
+  if (mActive) {
+    if (mCurrentWindow)
+      UpdateWWActiveWindow();
+    else
+      mUpdateWindowWatcher = PR_TRUE;
+  }
 
   return NS_OK;
 }
