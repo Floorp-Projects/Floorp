@@ -1014,18 +1014,7 @@ treechildren::-moz-tree-cell-text(lc-black, selected) {
   border-top: 1px solid ThreeDShadow;
   border-left: 1px solid ThreeDShadow;
   border-right: 0px;
-  border-bottom: 1px solid ThreeDShadow;
-}
-
-#messagepane {
-  border-top: 1px solid -moz-Field;
-  border-left: 0px;
-  border-right: 0px;
-  border-bottom: 1px solid -moz-Field;
-}
-
-#messagepanebox[focusring="true"] > #messagepane {
-  border-color: #000000;
+  border-bottom: 0px;
 }
 
 /* ..... smart update statusbar panel ..... */
