@@ -18,6 +18,7 @@
  */
 #include "nsCOMPtr.h"
 #include "nsXMLContentSink.h"
+#include "nsIXMLElementFactory.h"
 #include "nsIParser.h"
 #include "nsIUnicharInputStream.h"
 #include "nsIUnicharStreamLoader.h"
@@ -1881,3 +1882,71 @@ nsXMLContentSink::RefreshIfEnabled(nsIViewManager* vm)
   }
   return NS_OK;
 }
+
+
+////////////////////////////////////////////////////////////////////////
+//
+//   XML Element Factory
+//
+
+class XMLElementFactoryImpl : public nsIXMLElementFactory
+{
+protected:
+  XMLElementFactoryImpl();
+  virtual ~XMLElementFactoryImpl();
+
+public:
+  friend
+  nsresult
+  NS_NewXMLElementFactory(nsIXMLElementFactory** aResult);
+
+  // nsISupports interface
+  NS_DECL_ISUPPORTS
+
+  // nsIXMLElementFactory interface
+  NS_IMETHOD CreateInstanceByTag(const nsString& aTag, nsIXMLContent** aResult);
+
+};
+
+
+XMLElementFactoryImpl::XMLElementFactoryImpl()
+{
+  NS_INIT_REFCNT();
+}
+
+XMLElementFactoryImpl::~XMLElementFactoryImpl()
+{
+}
+
+
+NS_IMPL_ISUPPORTS(XMLElementFactoryImpl, NS_GET_IID(nsIXMLElementFactory));
+
+
+nsresult
+NS_NewXMLElementFactory(nsIXMLElementFactory** aResult)
+{
+  NS_PRECONDITION(aResult != nsnull, "null ptr");
+  if (! aResult)
+    return NS_ERROR_NULL_POINTER;
+
+  XMLElementFactoryImpl* result = new XMLElementFactoryImpl();
+  if (! result)
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  NS_ADDREF(result);
+  *aResult = result;
+  return NS_OK;
+}
+
+
+
+NS_IMETHODIMP
+XMLElementFactoryImpl::CreateInstanceByTag(const nsString& aTag, nsIXMLContent** aResult)
+{
+  nsCOMPtr<nsIAtom> tag = dont_AddRef(NS_NewAtom(aTag));
+  if (! tag)
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  return NS_NewXMLElement(aResult, tag);
+}
+
