@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: trustdomain.c,v $ $Revision: 1.45 $ $Date: 2002/09/03 19:42:13 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: trustdomain.c,v $ $Revision: 1.46 $ $Date: 2002/09/23 21:32:35 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef DEV_H
@@ -73,8 +73,7 @@ extern const NSSError NSS_ERROR_NOT_FOUND;
 typedef PRUint32 nssUpdateLevel;
 
 NSS_IMPLEMENT NSSTrustDomain *
-NSSTrustDomain_Create
-(
+NSSTrustDomain_Create (
   NSSUTF8 *moduleOpt,
   NSSUTF8 *uriOpt,
   NSSUTF8 *opaqueOpt,
@@ -113,8 +112,7 @@ token_destructor(void *t)
 }
 
 NSS_IMPLEMENT PRStatus
-NSSTrustDomain_Destroy
-(
+NSSTrustDomain_Destroy (
   NSSTrustDomain *td
 )
 {
@@ -134,8 +132,7 @@ NSSTrustDomain_Destroy
 
 /* XXX uses tokens until slot list is in place */
 static NSSSlot **
-nssTrustDomain_GetActiveSlots
-(
+nssTrustDomain_GetActiveSlots (
   NSSTrustDomain *td,
   nssUpdateLevel *updateLevel
 )
@@ -165,8 +162,7 @@ nssTrustDomain_GetActiveSlots
 
 /* XXX */
 static nssSession *
-nssTrustDomain_GetSessionForToken
-(
+nssTrustDomain_GetSessionForToken (
   NSSTrustDomain *td,
   NSSToken *token
 )
@@ -175,8 +171,7 @@ nssTrustDomain_GetSessionForToken
 }
 
 NSS_IMPLEMENT PRStatus
-NSSTrustDomain_SetDefaultCallback
-(
+NSSTrustDomain_SetDefaultCallback (
   NSSTrustDomain *td,
   NSSCallback *newCallback,
   NSSCallback **oldCallbackOpt
@@ -190,8 +185,7 @@ NSSTrustDomain_SetDefaultCallback
 }
 
 NSS_IMPLEMENT NSSCallback *
-nssTrustDomain_GetDefaultCallback
-(
+nssTrustDomain_GetDefaultCallback (
   NSSTrustDomain *td,
   PRStatus *statusOpt
 )
@@ -203,8 +197,7 @@ nssTrustDomain_GetDefaultCallback
 }
 
 NSS_IMPLEMENT NSSCallback *
-NSSTrustDomain_GetDefaultCallback
-(
+NSSTrustDomain_GetDefaultCallback (
   NSSTrustDomain *td,
   PRStatus *statusOpt
 )
@@ -213,8 +206,7 @@ NSSTrustDomain_GetDefaultCallback
 }
 
 NSS_IMPLEMENT PRStatus
-NSSTrustDomain_LoadModule
-(
+NSSTrustDomain_LoadModule (
   NSSTrustDomain *td,
   NSSUTF8 *moduleOpt,
   NSSUTF8 *uriOpt,
@@ -226,8 +218,7 @@ NSSTrustDomain_LoadModule
 }
 
 NSS_IMPLEMENT PRStatus
-NSSTrustDomain_DisableToken
-(
+NSSTrustDomain_DisableToken (
   NSSTrustDomain *td,
   NSSToken *token,
   NSSError why
@@ -238,8 +229,7 @@ NSSTrustDomain_DisableToken
 }
 
 NSS_IMPLEMENT PRStatus
-NSSTrustDomain_EnableToken
-(
+NSSTrustDomain_EnableToken (
   NSSTrustDomain *td,
   NSSToken *token
 )
@@ -249,8 +239,7 @@ NSSTrustDomain_EnableToken
 }
 
 NSS_IMPLEMENT PRStatus
-NSSTrustDomain_IsTokenEnabled
-(
+NSSTrustDomain_IsTokenEnabled (
   NSSTrustDomain *td,
   NSSToken *token,
   NSSError *whyOpt
@@ -261,8 +250,7 @@ NSSTrustDomain_IsTokenEnabled
 }
 
 NSS_IMPLEMENT NSSSlot *
-NSSTrustDomain_FindSlotByName
-(
+NSSTrustDomain_FindSlotByName (
   NSSTrustDomain *td,
   NSSUTF8 *slotName
 )
@@ -272,8 +260,7 @@ NSSTrustDomain_FindSlotByName
 }
 
 NSS_IMPLEMENT NSSToken *
-NSSTrustDomain_FindTokenByName
-(
+NSSTrustDomain_FindTokenByName (
   NSSTrustDomain *td,
   NSSUTF8 *tokenName
 )
@@ -295,8 +282,7 @@ NSSTrustDomain_FindTokenByName
 }
 
 NSS_IMPLEMENT NSSToken *
-NSSTrustDomain_FindTokenBySlotName
-(
+NSSTrustDomain_FindTokenBySlotName (
   NSSTrustDomain *td,
   NSSUTF8 *slotName
 )
@@ -306,8 +292,7 @@ NSSTrustDomain_FindTokenBySlotName
 }
 
 NSS_IMPLEMENT NSSToken *
-NSSTrustDomain_FindTokenForAlgorithm
-(
+NSSTrustDomain_FindTokenForAlgorithm (
   NSSTrustDomain *td,
   NSSOID *algorithm
 )
@@ -317,8 +302,7 @@ NSSTrustDomain_FindTokenForAlgorithm
 }
 
 NSS_IMPLEMENT NSSToken *
-NSSTrustDomain_FindBestTokenForAlgorithms
-(
+NSSTrustDomain_FindBestTokenForAlgorithms (
   NSSTrustDomain *td,
   NSSOID *algorithms[], /* may be null-terminated */
   PRUint32 nAlgorithmsOpt /* limits the array if nonzero */
@@ -329,8 +313,7 @@ NSSTrustDomain_FindBestTokenForAlgorithms
 }
 
 NSS_IMPLEMENT PRStatus
-NSSTrustDomain_Login
-(
+NSSTrustDomain_Login (
   NSSTrustDomain *td,
   NSSCallback *uhhOpt
 )
@@ -340,8 +323,7 @@ NSSTrustDomain_Login
 }
 
 NSS_IMPLEMENT PRStatus
-NSSTrustDomain_Logout
-(
+NSSTrustDomain_Logout (
   NSSTrustDomain *td
 )
 {
@@ -350,8 +332,7 @@ NSSTrustDomain_Logout
 }
 
 NSS_IMPLEMENT NSSCertificate *
-NSSTrustDomain_ImportCertificate
-(
+NSSTrustDomain_ImportCertificate (
   NSSTrustDomain *td,
   NSSCertificate *c
 )
@@ -361,8 +342,7 @@ NSSTrustDomain_ImportCertificate
 }
 
 NSS_IMPLEMENT NSSCertificate *
-NSSTrustDomain_ImportPKIXCertificate
-(
+NSSTrustDomain_ImportPKIXCertificate (
   NSSTrustDomain *td,
   /* declared as a struct until these "data types" are defined */
   struct NSSPKIXCertificateStr *pc
@@ -373,8 +353,7 @@ NSSTrustDomain_ImportPKIXCertificate
 }
 
 NSS_IMPLEMENT NSSCertificate *
-NSSTrustDomain_ImportEncodedCertificate
-(
+NSSTrustDomain_ImportEncodedCertificate (
   NSSTrustDomain *td,
   NSSBER *ber
 )
@@ -384,8 +363,7 @@ NSSTrustDomain_ImportEncodedCertificate
 }
 
 NSS_IMPLEMENT NSSCertificate **
-NSSTrustDomain_ImportEncodedCertificateChain
-(
+NSSTrustDomain_ImportEncodedCertificateChain (
   NSSTrustDomain *td,
   NSSBER *ber,
   NSSCertificate *rvOpt[],
@@ -398,8 +376,7 @@ NSSTrustDomain_ImportEncodedCertificateChain
 }
 
 NSS_IMPLEMENT NSSPrivateKey *
-NSSTrustDomain_ImportEncodedPrivateKey
-(
+NSSTrustDomain_ImportEncodedPrivateKey (
   NSSTrustDomain *td,
   NSSBER *ber,
   NSSItem *passwordOpt, /* NULL will cause a callback */
@@ -412,8 +389,7 @@ NSSTrustDomain_ImportEncodedPrivateKey
 }
 
 NSS_IMPLEMENT NSSPublicKey *
-NSSTrustDomain_ImportEncodedPublicKey
-(
+NSSTrustDomain_ImportEncodedPublicKey (
   NSSTrustDomain *td,
   NSSBER *ber
 )
@@ -437,8 +413,7 @@ get_certs_from_list(nssList *list)
 }
 
 NSS_IMPLEMENT NSSCertificate **
-nssTrustDomain_FindCertificatesByNickname
-(
+nssTrustDomain_FindCertificatesByNickname (
   NSSTrustDomain *td,
   NSSUTF8 *name,
   NSSCertificate *rvOpt[],
@@ -534,8 +509,7 @@ loser:
 }
 
 NSS_IMPLEMENT NSSCertificate **
-NSSTrustDomain_FindCertificatesByNickname
-(
+NSSTrustDomain_FindCertificatesByNickname (
   NSSTrustDomain *td,
   NSSUTF8 *name,
   NSSCertificate *rvOpt[],
@@ -551,8 +525,7 @@ NSSTrustDomain_FindCertificatesByNickname
 }
 
 NSS_IMPLEMENT NSSCertificate *
-nssTrustDomain_FindBestCertificateByNickname
-(
+nssTrustDomain_FindBestCertificateByNickname (
   NSSTrustDomain *td,
   NSSUTF8 *name,
   NSSTime *timeOpt,
@@ -577,8 +550,7 @@ nssTrustDomain_FindBestCertificateByNickname
 }
 
 NSS_IMPLEMENT NSSCertificate *
-NSSTrustDomain_FindBestCertificateByNickname
-(
+NSSTrustDomain_FindBestCertificateByNickname (
   NSSTrustDomain *td,
   NSSUTF8 *name,
   NSSTime *timeOpt,
@@ -594,8 +566,7 @@ NSSTrustDomain_FindBestCertificateByNickname
 }
 
 NSS_IMPLEMENT NSSCertificate **
-nssTrustDomain_FindCertificatesBySubject
-(
+nssTrustDomain_FindCertificatesBySubject (
   NSSTrustDomain *td,
   NSSDER *subject,
   NSSCertificate *rvOpt[],
@@ -684,8 +655,7 @@ loser:
 }
 
 NSS_IMPLEMENT NSSCertificate **
-NSSTrustDomain_FindCertificatesBySubject
-(
+NSSTrustDomain_FindCertificatesBySubject (
   NSSTrustDomain *td,
   NSSDER *subject,
   NSSCertificate *rvOpt[],
@@ -701,8 +671,7 @@ NSSTrustDomain_FindCertificatesBySubject
 }
 
 NSS_IMPLEMENT NSSCertificate *
-nssTrustDomain_FindBestCertificateBySubject
-(
+nssTrustDomain_FindBestCertificateBySubject (
   NSSTrustDomain *td,
   NSSDER *subject,
   NSSTime *timeOpt,
@@ -727,8 +696,7 @@ nssTrustDomain_FindBestCertificateBySubject
 }
 
 NSS_IMPLEMENT NSSCertificate *
-NSSTrustDomain_FindBestCertificateBySubject
-(
+NSSTrustDomain_FindBestCertificateBySubject (
   NSSTrustDomain *td,
   NSSDER *subject,
   NSSTime *timeOpt,
@@ -744,8 +712,7 @@ NSSTrustDomain_FindBestCertificateBySubject
 }
 
 NSS_IMPLEMENT NSSCertificate *
-NSSTrustDomain_FindBestCertificateByNameComponents
-(
+NSSTrustDomain_FindBestCertificateByNameComponents (
   NSSTrustDomain *td,
   NSSUTF8 *nameComponents,
   NSSTime *timeOpt,
@@ -758,8 +725,7 @@ NSSTrustDomain_FindBestCertificateByNameComponents
 }
 
 NSS_IMPLEMENT NSSCertificate **
-NSSTrustDomain_FindCertificatesByNameComponents
-(
+NSSTrustDomain_FindCertificatesByNameComponents (
   NSSTrustDomain *td,
   NSSUTF8 *nameComponents,
   NSSCertificate *rvOpt[],
@@ -772,8 +738,7 @@ NSSTrustDomain_FindCertificatesByNameComponents
 }
 
 NSS_IMPLEMENT NSSCertificate *
-nssTrustDomain_FindCertificateByIssuerAndSerialNumber
-(
+nssTrustDomain_FindCertificateByIssuerAndSerialNumber (
   NSSTrustDomain *td,
   NSSDER *issuer,
   NSSDER *serial
@@ -852,8 +817,7 @@ loser:
 }
 
 NSS_IMPLEMENT NSSCertificate *
-NSSTrustDomain_FindCertificateByIssuerAndSerialNumber
-(
+NSSTrustDomain_FindCertificateByIssuerAndSerialNumber (
   NSSTrustDomain *td,
   NSSDER *issuer,
   NSSDER *serial
@@ -865,8 +829,7 @@ NSSTrustDomain_FindCertificateByIssuerAndSerialNumber
 }
 
 NSS_IMPLEMENT NSSCertificate *
-nssTrustDomain_FindCertificateByEncodedCertificate
-(
+nssTrustDomain_FindCertificateByEncodedCertificate (
   NSSTrustDomain *td,
   NSSBER *ber
 )
@@ -893,8 +856,7 @@ finish:
 }
 
 NSS_IMPLEMENT NSSCertificate *
-NSSTrustDomain_FindCertificateByEncodedCertificate
-(
+NSSTrustDomain_FindCertificateByEncodedCertificate (
   NSSTrustDomain *td,
   NSSBER *ber
 )
@@ -903,8 +865,7 @@ NSSTrustDomain_FindCertificateByEncodedCertificate
 }
 
 NSS_IMPLEMENT NSSCertificate *
-NSSTrustDomain_FindBestCertificateByEmail
-(
+NSSTrustDomain_FindBestCertificateByEmail (
   NSSTrustDomain *td,
   NSSASCII7 *email,
   NSSTime *timeOpt,
@@ -916,8 +877,7 @@ NSSTrustDomain_FindBestCertificateByEmail
 }
 
 NSS_IMPLEMENT NSSCertificate **
-NSSTrustDomain_FindCertificatesByEmail
-(
+NSSTrustDomain_FindCertificatesByEmail (
   NSSTrustDomain *td,
   NSSASCII7 *email,
   NSSCertificate *rvOpt[],
@@ -930,8 +890,7 @@ NSSTrustDomain_FindCertificatesByEmail
 }
 
 NSS_IMPLEMENT NSSCertificate *
-NSSTrustDomain_FindCertificateByOCSPHash
-(
+NSSTrustDomain_FindCertificateByOCSPHash (
   NSSTrustDomain *td,
   NSSItem *hash
 )
@@ -941,8 +900,7 @@ NSSTrustDomain_FindCertificateByOCSPHash
 }
 
 NSS_IMPLEMENT NSSCertificate *
-NSSTrustDomain_FindBestUserCertificate
-(
+NSSTrustDomain_FindBestUserCertificate (
   NSSTrustDomain *td,
   NSSTime *timeOpt,
   NSSUsage *usage,
@@ -954,8 +912,7 @@ NSSTrustDomain_FindBestUserCertificate
 }
 
 NSS_IMPLEMENT NSSCertificate **
-NSSTrustDomain_FindUserCertificates
-(
+NSSTrustDomain_FindUserCertificates (
   NSSTrustDomain *td,
   NSSTime *timeOpt,
   NSSUsage *usageOpt,
@@ -970,8 +927,7 @@ NSSTrustDomain_FindUserCertificates
 }
 
 NSS_IMPLEMENT NSSCertificate *
-NSSTrustDomain_FindBestUserCertificateForSSLClientAuth
-(
+NSSTrustDomain_FindBestUserCertificateForSSLClientAuth (
   NSSTrustDomain *td,
   NSSUTF8 *sslHostOpt,
   NSSDER *rootCAsOpt[], /* null pointer for none */
@@ -985,8 +941,7 @@ NSSTrustDomain_FindBestUserCertificateForSSLClientAuth
 }
 
 NSS_IMPLEMENT NSSCertificate **
-NSSTrustDomain_FindUserCertificatesForSSLClientAuth
-(
+NSSTrustDomain_FindUserCertificatesForSSLClientAuth (
   NSSTrustDomain *td,
   NSSUTF8 *sslHostOpt,
   NSSDER *rootCAsOpt[], /* null pointer for none */
@@ -1003,8 +958,7 @@ NSSTrustDomain_FindUserCertificatesForSSLClientAuth
 }
 
 NSS_IMPLEMENT NSSCertificate *
-NSSTrustDomain_FindBestUserCertificateForEmailSigning
-(
+NSSTrustDomain_FindBestUserCertificateForEmailSigning (
   NSSTrustDomain *td,
   NSSASCII7 *signerOpt,
   NSSASCII7 *recipientOpt,
@@ -1018,8 +972,7 @@ NSSTrustDomain_FindBestUserCertificateForEmailSigning
 }
 
 NSS_IMPLEMENT NSSCertificate **
-NSSTrustDomain_FindUserCertificatesForEmailSigning
-(
+NSSTrustDomain_FindUserCertificatesForEmailSigning (
   NSSTrustDomain *td,
   NSSASCII7 *signerOpt,
   NSSASCII7 *recipientOpt,
@@ -1043,8 +996,7 @@ collector(nssCryptokiObject *instance, void *arg)
 }
 
 NSS_IMPLEMENT PRStatus *
-NSSTrustDomain_TraverseCertificates
-(
+NSSTrustDomain_TraverseCertificates (
   NSSTrustDomain *td,
   PRStatus (*callback)(NSSCertificate *c, void *arg),
   void *arg
@@ -1124,8 +1076,7 @@ loser:
  * search for Public and Private keys first
  */
 NSS_IMPLEMENT PRStatus *
-NSSTrustDomain_TraverseUserCertificates
-(
+NSSTrustDomain_TraverseUserCertificates (
   NSSTrustDomain *td,
   PRStatus (*callback)(NSSCertificate *c, void *arg),
   void *arg
@@ -1218,8 +1169,7 @@ loser:
 #endif
 
 NSS_IMPLEMENT NSSTrust *
-nssTrustDomain_FindTrustForCertificate
-(
+nssTrustDomain_FindTrustForCertificate (
   NSSTrustDomain *td,
   NSSCertificate *c
 )
@@ -1281,8 +1231,7 @@ loser:
 }
 
 NSS_IMPLEMENT NSSCRL **
-nssTrustDomain_FindCRLsBySubject
-(
+nssTrustDomain_FindCRLsBySubject (
   NSSTrustDomain *td,
   NSSDER *subject
 )
@@ -1341,8 +1290,7 @@ loser:
 }
 
 NSS_IMPLEMENT PRStatus
-NSSTrustDomain_GenerateKeyPair
-(
+NSSTrustDomain_GenerateKeyPair (
   NSSTrustDomain *td,
   NSSAlgorithmAndParameters *ap,
   NSSPrivateKey **pvkOpt,
@@ -1357,8 +1305,7 @@ NSSTrustDomain_GenerateKeyPair
 }
 
 NSS_IMPLEMENT NSSSymmetricKey *
-NSSTrustDomain_GenerateSymmetricKey
-(
+NSSTrustDomain_GenerateSymmetricKey (
   NSSTrustDomain *td,
   NSSAlgorithmAndParameters *ap,
   PRUint32 keysize,
@@ -1371,8 +1318,7 @@ NSSTrustDomain_GenerateSymmetricKey
 }
 
 NSS_IMPLEMENT NSSSymmetricKey *
-NSSTrustDomain_GenerateSymmetricKeyFromPassword
-(
+NSSTrustDomain_GenerateSymmetricKeyFromPassword (
   NSSTrustDomain *td,
   NSSAlgorithmAndParameters *ap,
   NSSUTF8 *passwordOpt, /* if null, prompt */
@@ -1385,8 +1331,7 @@ NSSTrustDomain_GenerateSymmetricKeyFromPassword
 }
 
 NSS_IMPLEMENT NSSSymmetricKey *
-NSSTrustDomain_FindSymmetricKeyByAlgorithmAndKeyID
-(
+NSSTrustDomain_FindSymmetricKeyByAlgorithmAndKeyID (
   NSSTrustDomain *td,
   NSSOID *algorithm,
   NSSItem *keyID,
@@ -1398,8 +1343,7 @@ NSSTrustDomain_FindSymmetricKeyByAlgorithmAndKeyID
 }
 
 NSS_IMPLEMENT NSSCryptoContext *
-nssTrustDomain_CreateCryptoContext
-(
+nssTrustDomain_CreateCryptoContext (
   NSSTrustDomain *td,
   NSSCallback *uhhOpt
 )
@@ -1408,8 +1352,7 @@ nssTrustDomain_CreateCryptoContext
 }
 
 NSS_IMPLEMENT NSSCryptoContext *
-NSSTrustDomain_CreateCryptoContext
-(
+NSSTrustDomain_CreateCryptoContext (
   NSSTrustDomain *td,
   NSSCallback *uhhOpt
 )
@@ -1418,8 +1361,7 @@ NSSTrustDomain_CreateCryptoContext
 }
 
 NSS_IMPLEMENT NSSCryptoContext *
-NSSTrustDomain_CreateCryptoContextForAlgorithm
-(
+NSSTrustDomain_CreateCryptoContextForAlgorithm (
   NSSTrustDomain *td,
   NSSOID *algorithm
 )
@@ -1429,8 +1371,7 @@ NSSTrustDomain_CreateCryptoContextForAlgorithm
 }
 
 NSS_IMPLEMENT NSSCryptoContext *
-NSSTrustDomain_CreateCryptoContextForAlgorithmAndParameters
-(
+NSSTrustDomain_CreateCryptoContextForAlgorithmAndParameters (
   NSSTrustDomain *td,
   NSSAlgorithmAndParameters *ap
 )
