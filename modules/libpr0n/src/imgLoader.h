@@ -50,6 +50,8 @@ public:
   imgLoader();
   virtual ~imgLoader();
 
+  static nsresult GetMimeTypeFromContent(const char* aContents, PRUint32 aLength, char** aContentType);
+
 private:
   nsresult CreateNewProxyForRequest(imgRequest *aRequest, nsILoadGroup *aLoadGroup,
                                     imgIDecoderObserver *aObserver, nsISupports *cx,
