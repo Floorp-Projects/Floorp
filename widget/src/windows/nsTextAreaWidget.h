@@ -37,8 +37,10 @@ public:
     nsTextAreaWidget();
     virtual                 ~nsTextAreaWidget();
 
-      // nsISupports
-    NS_DECL_ISUPPORTS
+    // nsISupports
+    NS_IMETHOD QueryInterface(REFNSIID aIID, void** aInstancePtr);                           
+    NS_IMETHOD_(nsrefcnt) AddRef(void);                                       
+    NS_IMETHOD_(nsrefcnt) Release(void);          
     
     // nsIWidget Overrides
     virtual PRBool          OnMove(PRInt32 aX, PRInt32 aY);
