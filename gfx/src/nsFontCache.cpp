@@ -123,6 +123,7 @@ NS_IMETHODIMP FontCacheImpl::Flush()
   PRInt32 i, n = mFontMetrics.Count();
   for (i = 0; i < n; i++) {
     nsIFontMetrics* fm = (nsIFontMetrics*) mFontMetrics.ElementAt(i);
+    fm->Destroy();
     NS_RELEASE(fm);
   }
   mFontMetrics.Clear();
