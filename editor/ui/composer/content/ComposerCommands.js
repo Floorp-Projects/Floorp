@@ -1066,20 +1066,11 @@ var nsValidateCommand =
 // XXX THIS CODE IS WORK IN PROGRESS (only exposed in the debug menu).
 
 // Variables used across all the links being checked:
-const kIOSERVICE_CONTRACTID = "@mozilla.org/network/io-service;1";
-const nsIIOService = Components.interfaces['nsIIOService'];
-var gIOService = 0;
 var gNumLinksToCheck = 0;     // The number of nsILinkCheckers
 var gLinksBeingChecked;       // holds the array of nsILinkCheckers
 var gNumLinksCalledBack = 0;
 var gStartedAllChecks = false;
 var gLinkCheckTimerID = 0;
-
-function GetIOService()
-{
-  if (gIOService == 0)
-    gIOService = Components.classes[kIOSERVICE_CONTRACTID].getService(nsIIOService);
-}
 
 function nsLinkCheckTimeOut()
 {
@@ -1125,9 +1116,6 @@ var nsCheckLinksCommand =
     gNumLinksCalledBack = 0;
     gStartedAllChecks = false;
     gLinkCheckTimerID = setTimeout("nsLinkCheckTimeOut()", 5000);
-
-    // We'll need the IO service if we don't already have one:
-    //GetIOService();
 
     // Loop over the nodes that have links:
     for (gNumLinksToCheck = 0; gNumLinksToCheck < objects.Count();
@@ -1218,10 +1206,10 @@ var nsHLineCommand =
 
       if (hLine) {
         // We change the default attributes to those saved in the user prefs
-
-        if (gPrefs) {
+        var prefs = GetPrefs();
+        if (prefs) {
           try {
-            var align = gPrefs.getIntPref("editor.hrule.align");
+            var align = prefs.getIntPref("editor.hrule.align");
             if (align == 0 ) {
               hLine.setAttribute("align", "left");
             } else if (align == 2) {
@@ -1230,17 +1218,17 @@ var nsHLineCommand =
 
             //Note: Default is center (don't write attribute)
   	  
-            var width = gPrefs.getIntPref("editor.hrule.width");
-            var percent = gPrefs.getBoolPref("editor.hrule.width_percent");
+            var width = prefs.getIntPref("editor.hrule.width");
+            var percent = prefs.getBoolPref("editor.hrule.width_percent");
             if (percent)
               width = width +"%";
 
             hLine.setAttribute("width", width);
 
-            var height = gPrefs.getIntPref("editor.hrule.height");
+            var height = prefs.getIntPref("editor.hrule.height");
             hLine.setAttribute("size", String(height));
 
-            var shading = gPrefs.getBoolPref("editor.hrule.shading");
+            var shading = prefs.getBoolPref("editor.hrule.shading");
             if (shading) {
               hLine.removeAttribute("noshade");
             } else {
