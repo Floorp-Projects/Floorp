@@ -54,9 +54,11 @@ enum
 	eChooseApplicationButton,
 	eFileTypePopupMenu,
 	eSaveRButton,
-	eUnknownRButton,
-	eResourceCheckbox,
-	eOutgoingCheckbox
+	eUnknownRButton
+#ifdef ANTHRAX	
+	, eAppletButton,
+	eAppletPopupMenu
+#endif
 };
 
 #pragma mark --CMimeCell--
@@ -352,6 +354,11 @@ void CMimeTableView::DrawCell(
 		case CMimeMapper::Plugin:
 			handlerName = mapper->GetPluginName();
 			break;
+#ifdef ANTHRAX
+		case CMimeMapper::Applet:
+			handlerName = mapper->GetAppletName();
+			break;
+#endif /* ANTHRAX */
 	}
 
 	textRect.left = offsetHandler;
@@ -448,6 +455,13 @@ private:
 			void				BuildPluginList();
 			void				DeletePluginList();
 			void				BuildFileTypeMenu();
+#ifdef ANTHRAX
+			void				SyncAppletControls(Boolean mimeTypeChanged);
+			void				BuildAppletList();
+			void				BuildAppletMenu();
+			void				DeleteAppletList();
+#endif
+
 			CMimeMapper::LoadAction GetLoadAction();
 
 			Boolean				mInitialized;		// Initialized with fCellInfo yet?
@@ -468,8 +482,6 @@ private:
 			LGARadioButton		*mRadioInternal;
 			LGARadioButton		*mRadioUnknown;
 			LGARadioButton		*mRadioPlugin;
-			LGACheckbox			*mSendResouceFork;
-			LGACheckbox			*mOutgoingCheckbox;
 //			CFilePicker			*mAppPicker;
 			LCaption			*mAppName;
 			LButton				*mAppButton;
@@ -477,6 +489,12 @@ private:
 			CStr255 			mAppStr;
 			OSType				mAppSig;
 			Boolean				mLocked;
+#ifdef ANTHRAX
+			LGARadioButton		*mRadioApplet;
+			LGAPopup			*mAppletPopup;
+			char**				mAppletList;
+			uint32				mAppletCount;
+#endif
 }; // class CEditMIMEWindow
 
 //-----------------------------------
@@ -485,6 +503,10 @@ CEditMIMEWindow::CEditMIMEWindow(LStream* inStream):
 	LGADialogBox(inStream),
 	mModified(false),
 	mInitialized(false),
+#ifdef ANTHRAX
+	mAppletList(nil),
+	mAppletCount(0),
+#endif
 	mPluginList(nil),
 	mPluginCount(0),
 	mLocked( false )
@@ -497,6 +519,9 @@ CEditMIMEWindow::~CEditMIMEWindow()
 //-----------------------------------
 {
 	DeletePluginList();
+#ifdef ANTHRAX
+	DeleteAppletList();
+#endif
 }
 
 
@@ -536,6 +561,14 @@ void CEditMIMEWindow::FinishCreateSelf()
 
 	mRadioPlugin = (LGARadioButton *)FindPaneByID(ePluginRButton);
 	XP_ASSERT(mRadioPlugin);
+	
+#ifdef ANTHRAX
+	mRadioApplet = (LGARadioButton *)FindPaneByID(eAppletButton);
+	XP_ASSERT(mRadioApplet);
+	
+	mAppletPopup = (LGAPopup *)FindPaneByID(eAppletPopupMenu);
+	XP_ASSERT(mAppletPopup);
+#endif /* ANTHRAX */
 
 //	mAppPicker = (CFilePicker *)FindPaneByID(eApplicationFilePicker);
 //	XP_ASSERT(mAppPicker);
@@ -546,9 +579,6 @@ void CEditMIMEWindow::FinishCreateSelf()
 	mAppButton = (LButton *)FindPaneByID(eChooseApplicationButton); 
 	XP_ASSERT(mAppButton);
 
-	mSendResouceFork = (LGACheckbox* ) ( FindPaneByID(eResourceCheckbox) );
-	mOutgoingCheckbox = (LGACheckbox* ) ( FindPaneByID(eOutgoingCheckbox) );
-	XP_ASSERT( mSendResouceFork );
 //	mAppMenuLabel = (LCaption *)FindPaneByID(pref8AppMenuLabel);
 //	XP_ASSERT(mAppMenuLabel);
 
@@ -667,6 +697,82 @@ void CEditMIMEWindow::BuildPluginMenu()
 		}
 	}
 }
+
+#ifdef ANTHRAX
+void CEditMIMEWindow::DeleteAppletList()
+{
+	if (mAppletList)
+	{	
+		uint32 index = 0;
+		
+		while (mAppletList[index++])
+		{
+			free(mAppletList[index]);
+		}
+		free(mAppletList);
+		mAppletList = nil;
+	}
+}
+
+void CEditMIMEWindow::BuildAppletList()
+{
+	// Delete the old list
+	DeleteAppletList();
+	
+	// Get the new list from XP code - HACK!!!! for now
+	mAppletList = NPL_FindAppletsForType(mCellInfo->mMapper->GetMimeName());
+
+	// Count how many are in the list
+	mAppletCount = 0;
+	if (mAppletList)
+	{
+		while (mAppletList[mAppletCount])
+			mAppletCount++;
+	}
+}
+
+void CEditMIMEWindow::BuildAppletMenu()
+{
+	uint32 oldCount = mAppletCount;
+	
+	BuildAppletList();
+	
+	if (oldCount || mAppletCount)
+	{
+		SetMenuSizeForLGAPopup(mAppletPopup, mAppletCount);
+
+		MenuHandle menuH = mAppletPopup->GetMacMenuH();
+		uint32 index = 0;
+		uint32 desiredValue = 1;		// Default desired value is first item
+		while (mAppletList[index])
+		{
+			SetMenuItemText(menuH, index+1, CStr255(mAppletList[index]));
+			::EnableItem(menuH, index+1);
+			if (mCellInfo->mMapper->GetAppletName() == mAppletList[index])
+			{
+				desiredValue = index + 1;
+			}
+			index++;
+		}
+		
+		//
+		// If the previously-selected applet name is in this list,
+		// select it; otherwise just select the first item.
+		// If we didn't change the control value, make sure it
+		// redraws since the contents of the list have changed.
+		//
+		uint32 previousValue = mAppletPopup->GetValue();
+		if (desiredValue != previousValue)
+		{
+			mAppletPopup->SetValue(desiredValue);
+		}
+		else
+		{
+			mAppletPopup->Refresh();
+		}
+	}
+}
+#endif /* ANTHRAX */
 
 //struct BNDLIds
 //{	// Utility structure for bundle parsing
@@ -857,6 +963,11 @@ void CEditMIMEWindow::UpdateRadioUItoMapper()
 		case CMimeMapper::Plugin:	
 				mRadioPlugin->SetValue(1);
 			break;
+#ifdef ANTHRAX	
+		case CMimeMapper::Applet:
+				mRadioApplet->SetValue(1);
+			break;
+#endif
 	}
 }
 
@@ -997,6 +1108,41 @@ void CEditMIMEWindow::SyncPluginControls(Boolean mimeTypeChanged)
 	
 }
 
+#ifdef ANTHRAX
+void CEditMIMEWindow::SyncAppletControls(Boolean mimeTypeChanged)
+{
+	if (mimeTypeChanged)
+	{
+		BuildAppletMenu();
+	}
+	//
+	// If we have an Applet installed, enable the radio button
+	//
+	if (mAppletCount > 0)
+	{
+		mRadioApplet->Enable();
+	}
+	else
+	{
+		mRadioApplet->Disable();
+		if (mRadioApplet->GetValue() == 1)
+			mRadioUnknown->SetValue(1);
+	}
+
+	//
+	// Determine the Applet popup control enabled state
+	//
+
+	if (GetLoadAction() == CMimeMapper::Applet && mAppletCount > 0)
+	{
+		mAppletPopup->Enable();
+	}
+	else
+	{
+		mAppletPopup->Disable();
+	}
+}
+#endif /* ANTHRAX */
 
 CMimeMapper::LoadAction CEditMIMEWindow::GetLoadAction()
 {
@@ -1005,6 +1151,9 @@ CMimeMapper::LoadAction CEditMIMEWindow::GetLoadAction()
 	if ( mRadioInternal->GetValue() )	return CMimeMapper::Internal;
 	if ( mRadioUnknown->GetValue() )	return CMimeMapper::Unknown;
 	if (mRadioPlugin ->GetValue() )		return CMimeMapper::Plugin;
+#ifdef ANTHRAX
+	if(mRadioApplet->GetValue()) return CMimeMapper::Applet;
+#endif
 	return CMimeMapper::Unknown;
 }
 
@@ -1014,13 +1163,17 @@ void CEditMIMEWindow::ListenToMessage(MessageT inMessage, void *ioParam)
 //-----------------------------------
 {
 	if (!mInitialized)
-	{
 		return;
-	}	
+		
 	if ( ioParam == mRadioLaunch)
 		SyncApplicationControls(false);
 	if ( ioParam == mRadioPlugin )
 		SyncPluginControls(false);
+#ifdef ANTHRAX
+	if(ioParam == mRadioApplet)
+		SyncAppletControls(false);
+#endif
+
 	switch (inMessage)
 	{
 		// Pick a handler
@@ -1029,8 +1182,9 @@ void CEditMIMEWindow::ListenToMessage(MessageT inMessage, void *ioParam)
 		case eCommunicatorRButton:
 		case eUnknownRButton:
 		case ePluginRButton:
-		case eResourceCheckbox:
-		case eOutgoingCheckbox:
+#ifdef ANTHRAX
+		case eAppletButton:
+#endif
 			mModified = TRUE;
 			break;
 		
@@ -1068,6 +1222,15 @@ void CEditMIMEWindow::ListenToMessage(MessageT inMessage, void *ioParam)
 			break;
 		}
 
+#ifdef ANTHRAX
+		case eAppletPopupMenu:
+		{
+			SyncAppletControls(false);
+			mModified = TRUE;
+			break;
+		}
+#endif /* ANTHRAX */
+
 		// Edit some text
 		case msg_EditField2:
 		{
@@ -1083,7 +1246,7 @@ void CEditMIMEWindow::ListenToMessage(MessageT inMessage, void *ioParam)
 			mModified = TRUE;
 			break;
 		}
-
+		
 		case msg_OK:
 			UpdateMapperToUI();
 			break;
@@ -1108,17 +1271,23 @@ void CEditMIMEWindow::UpdateUIToMapper()
 	UpdateRadioUItoMapper();
 	SyncTextControls();
 	SyncInternalControl();
+#ifdef ANTHRAX
+	SyncAppletControls(true);
+#endif
 	SyncApplicationControls(true);
 	SyncPluginControls(true);
 	Int32 fileFlags = mCellInfo->mMapper->GetFileFlags();
-	Boolean flag =  ( fileFlags & ICmap_resource_fork_mask )  > 0; 
-	mSendResouceFork->SetValue(flag );
+	Boolean flag =  ( fileFlags & ICmap_resource_fork_mask )  > 0;
+	
 	flag = (!(fileFlags & ICmap_not_outgoing_mask) )> 0;
-	mOutgoingCheckbox->SetValue( flag );
 	mLocked = PREF_PrefIsLocked( CPrefs::Concat(mCellInfo->mMapper->GetBasePref(), ".mimetype") );
 	if( mLocked )
 	{	
-		for( PaneIDT i = eDescriptionField ; i<= eOutgoingCheckbox ; i++ )
+#ifdef ANTHRAX
+		for( PaneIDT i = eDescriptionField ; i<= eAppletPopupMenu ; i++ )
+#else
+		for( PaneIDT i = eDescriptionField ; i<= eUnknownRButton ; i++ )
+#endif
 		{
 			LPane* pane = FindPaneByID( i );
 			if( pane )
@@ -1170,6 +1339,19 @@ void CEditMIMEWindow::UpdateMapperToUI()
 				mCellInfo->mMapper->SetPluginName(plugin);
 		}
 	}
+#ifdef ANTHRAX
+	else if(mRadioApplet->GetValue() == 1)
+	{
+		uint32 item = mAppletPopup->GetValue();	
+		XP_ASSERT(item > 0);	
+		if (mAppletList && item > 0 && item <= mAppletCount)
+		{
+			char* applet = mAppletList[item - 1];		// Menu is 1-based, list is 0-based
+			if (applet)
+				mCellInfo->mMapper->SetAppletName(applet);
+		}
+	}
+#endif
 	else
 		mCellInfo->mMapper->SetPluginName( "\p" );
 	
@@ -1179,11 +1361,9 @@ void CEditMIMEWindow::UpdateMapperToUI()
 		::DisposeIconSuite( mCellInfo->mIcon , true);
 		mCellInfo->mIcon = nil;
 	}
+	
+	// XXX this file flag stuff might no longer be needed, but I'm not sure
 	Int32	fileFlags = 0;
-	if( mSendResouceFork->GetValue( ) )
-		fileFlags = fileFlags  | ICmap_resource_fork_mask ;
-	if( !mOutgoingCheckbox->GetValue() )
-		fileFlags = fileFlags | ICmap_not_outgoing_mask ;
 	mCellInfo->mMapper->SetFileFlags( fileFlags );
 }
 #pragma mark --CBrowserApplicationsMediator--

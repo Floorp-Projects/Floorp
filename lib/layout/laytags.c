@@ -90,9 +90,14 @@
 /* Added to encapsulate code that was previously in six different places in LO_LayoutTag()! */
 static void lo_ProcessFontTag( lo_DocState *state, PA_Tag *tag, int32 fontSpecifier, int32 attrSpecifier );
 
+static void lo_AddParam(PA_Tag* tag, char* aName, char* aValue);
+
 #ifdef OJI
 #define JAVA_PLUGIN_MIMETYPE "application/x-java-vm"
-static void lo_AddParam(PA_Tag* tag, char* aName, char* aValue);
+#endif
+
+#ifdef ANTHRAX
+static void lo_RemoveParam(PA_Tag* tag, char* name);
 #endif
 
 /*************************************
@@ -1316,7 +1321,7 @@ static void
 lo_process_span_tag(MWContext *context, lo_DocState *state, PA_Tag *tag)
 {
   LO_SpanStruct *span;
-  PA_Block buff;
+  PA_Block buf;
   lo_DocLists *doc_lists;
   
   doc_lists = lo_GetCurrentDocLists(state);
@@ -6605,6 +6610,12 @@ XP_TRACE(("lo_LayoutTag(%d)\n", tag->type));
 		case P_EMBED:
 			if (tag->is_end == FALSE && !state->hide_content)
 			{
+#ifdef ANTHRAX
+				PA_Block buff;
+				NET_cinfo* fileInfo;
+				char* str;
+				char* appletName;
+#endif
 				/*
 				 * If we have started loading an EMBED we are
 				 * out if the HEAD section of the HTML
@@ -6612,7 +6623,44 @@ XP_TRACE(("lo_LayoutTag(%d)\n", tag->type));
 				 */
 				state->top_state->in_head = FALSE;
 				state->top_state->in_body = TRUE;
+				
+#ifdef ANTHRAX				
+				/* determine the mimetype */
+				buff = lo_FetchParamValue(context, tag, PARAM_TYPE);
+				if(buff == NULL)
+					{
+					/* get SRC */
+					buff = lo_FetchParamValue(context, tag, PARAM_SRC);
+					PA_LOCK(str, char *, buff);
+					
+					/* if we didn't find a type param, look for an association in the SRC */
+					fileInfo = NET_cinfo_find_type(str);
+					str = fileInfo->type;
+					}
+				else
+					PA_LOCK(str, char *, buff);
+				
+				/* check to see if this mimetype has an applet handler */
+				if((appletName = NPL_FindAppletEnabledForMimetype(str)) != NULL)
+					{
+					PA_UNLOCK(buff);
+					if(buff)
+						XP_FREE(buff);
+						
+					//lo_AddParam(tag, "CODE", appletName);
+					//lo_RemoveParam(tag, "type");
+					//lo_AddParam(tag, "TYPE", "application/x-java-vm");
+					//lo_FormatEmbed(context, state, tag);
+					
+					lo_ProcessObjectTag(context, state, tag, FALSE);
+					tag->is_end = TRUE;
+					lo_ProcessObjectTag(context, state, tag, FALSE);
+					}
+				else
+					lo_FormatEmbed(context, state, tag);
+#else
 				lo_FormatEmbed(context, state, tag);
+#endif /* ANTHRAX */
 			}
 			break;
 
@@ -7581,7 +7629,41 @@ void lo_PostLayoutTag(MWContext * context, lo_DocState *state, PA_Tag *tag, XP_B
 #endif /* PICS_SUPPORT */
 }
 
-#ifdef OJI
+#ifdef ANTHRAX
+static void lo_RemoveParam(PA_Tag* tag, char* name)
+{
+	char* start, *end;
+	char* tagData = (char*)tag->data;
+	start = XP_STRCASESTR(tagData, name);
+	if(start != NULL)
+		{
+		end = start;
+		
+		/* advance to the = */
+		while(*end != '=')
+			++end;
+		
+		/* skip the = */
+		++end;
+		
+		/* advance through whitespace */
+		while(*end == ' ')
+			++end;
+		
+		/* advance until we hit whitespace again */
+		while(*end != ' ')
+			++end;
+		
+		/* clear it out */	
+		while(start != end)
+			{
+			*start = ' ';
+			++start;
+			}
+		}
+}
+#endif
+
 static void lo_AddParam(PA_Tag* tag, char* aName, char* aValue)
 {
 	uint32 nameLen, valueLen, oldTagLen, newTagLen;
@@ -7607,5 +7689,4 @@ static void lo_AddParam(PA_Tag* tag, char* aName, char* aValue)
 
 	tag->data_len = newTagLen;
 }
-#endif /* OJI */
 

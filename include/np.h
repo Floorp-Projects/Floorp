@@ -43,6 +43,7 @@ typedef enum { NP_FullPage = 1, NP_Embedded } NPPageType;
 typedef void* NPReference;
 #define NPRefFromStart ((NPReference)NULL)
 
+#define ANTHRAX
 
 /* it's lame that this is supposed to support more than plugins but
 it has plugin specific junk (wdata) in it -jg */
@@ -124,7 +125,8 @@ extern XP_Bool			NPL_IsForcingRedraw();
 #ifdef ANTHRAX
 extern char**			NPL_FindAppletsForType(const char* typeToFind);
 extern char* 			NPL_FindAppletEnabledForMimetype(const char* mimetype);
-extern NPError			NPL_RegisterAppletType(NPMIMEType type);
+extern NPError			NPL_RegisterAppletType(NPMIMEType type, char* filename);
+extern void				NPL_InstallAppletHandler(char* appletName, char* mimetype, char* extension);
 #endif /* ANTHRAX */
 
 PR_EXTERN(void)         NPL_SetPluginWindow(void *data);

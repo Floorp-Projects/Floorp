@@ -106,6 +106,10 @@ static const char* Pref_LoadAction = ".load_action";
 static const char* Pref_LatentPlugin = ".latent_plug_in";
 static const char* Pref_FileFlags	= ".file_flags";
 
+#ifdef ANTHRAX
+static const char* Pref_AppletName = ".applet";
+#endif
+
 // CreateMapperFor converts an xp pref name into a mimetype mapper.
 // Finds an existing mapper or creates a new one, and
 // populates its fields from user pref values.
@@ -215,6 +219,15 @@ void CMimeMapper::ReadMimePrefs()
 				::BlockMoveData( value, (Ptr) &fFileType, sizeof(OSType) );
 		}
 	}
+
+#ifdef ANTHRAX
+	err = PREF_GetCharPref( CPrefs::Concat(fBasePref, Pref_AppletName), value, &size );
+	if (PREF_NOERROR == err)
+	{
+		fNumChildrenFound++;
+		fAppletName = value;
+	}
+#endif
 	
 	err = PREF_GetCharPref( CPrefs::Concat(fBasePref, Pref_AppName), value, &size );
 	if (PREF_NOERROR == err)
@@ -431,6 +444,10 @@ CMimeMapper::CMimeMapper( const CMimeMapper& clone )
 	fIsLocked = clone.fIsLocked;
 	
 	fNumChildrenFound = clone.fNumChildrenFound;
+
+#ifdef ANTHRAX
+	fAppletName = clone.fAppletName;
+#endif
 }
 
 // Copies values from the mapper to xp user pref tree.
@@ -470,6 +487,10 @@ void CMimeMapper::WriteMimePrefs( Boolean )
 	PREF_SetCharPref( CPrefs::Concat(fBasePref, Pref_MimeType), fMimeType );
 	PREF_SetCharPref( CPrefs::Concat(fBasePref, Pref_AppName), fAppName );
 	PREF_SetCharPref( CPrefs::Concat(fBasePref, Pref_PluginName), fPluginName );
+#ifdef ANTHRAX
+	PREF_SetCharPref( CPrefs::Concat(fBasePref, Pref_AppletName), fAppletName );
+	++fNumChildrenFound;
+#endif
 	fNumChildrenFound += 3;
 	// store appsig and filetype as 4-byte character strings, if possible.
 	// otherwise, store as binary.
@@ -508,6 +529,9 @@ CMimeMapper::CMimeMapper(
 	fDescription = "";
 	fLatentPlugin = false;
 	fBasePref = nil;
+#ifdef ANTHRAX
+	fAppletName = "";
+#endif
 }
 
 // Disposes of all allocated structures
@@ -529,8 +553,18 @@ CMimeMapper & CMimeMapper::operator= (const CMimeMapper& mapper)
 	fDescription = mapper.fDescription;
 	fLatentPlugin = mapper.fLatentPlugin;
 	fFileFlags  = mapper.fFileFlags;
+#ifdef ANTHRAX
+	fAppletName = mapper.fAppletName;
+#endif
 	return *this;
 }
+
+#ifdef ANTHRAX
+void CMimeMapper::SetAppletName(const CStr255& newAppletName)
+{
+	fAppletName = newAppletName;
+}
+#endif /* ANTHRAX */
 
 void CMimeMapper::SetAppName(const CStr255& newName) 
 {
@@ -935,7 +969,12 @@ CMimeMapper* CMimeList::FindMimeType(const FSSpec& inFileSpec)
 		// on type and/or creator.  bing: If we decide to support Mac file
 		// types for plug-ins, we should check the file type here.
 		//
+#ifdef ANTHRAX
+		if(map->GetLoadAction() == CMimeMapper::Plugin || 
+			map->GetLoadAction() == CMimeMapper::Applet)
+#else
 		if (map->GetLoadAction() == CMimeMapper::Plugin)
+#endif /* ANTHRAX */
 		{
 			if (cinfo && (map->GetMimeName() == cinfo->type))
 				return map;
@@ -1041,7 +1080,12 @@ void CMimeList::HandleRegisterViewerEvent(const AppleEvent	&inAppleEvent,
 		
 		// If the type is being handled by a plug-in, donÕt let the AE override
 		Boolean result = false;
+#ifdef ANTHRAX // is this addition for anthrax correct? - amusil
+		if (mapper->GetLoadAction() != CMimeMapper::Plugin &&
+			mapper->GetLoadAction() != CMimeMapper::Applet)
+#else
 		if (mapper->GetLoadAction() != CMimeMapper::Plugin)
+#endif /* ANTHRAX */
 		{
 			mapper->RegisterViewer(appSign, fileType);
 			result = true;

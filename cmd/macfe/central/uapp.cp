@@ -1183,7 +1183,13 @@ void CFrontApp::RegisterMimeType(CMimeMapper * mapper)
 			if (pdesc)
 				NPL_RegisterPluginType(mimeName, mapper->GetExtensions(), mapper->GetDescription(), nil, pdesc, true);
 			return;		// XP code will take care of the cdata
-			
+
+#ifdef ANTHRAX					
+		case CMimeMapper::Applet:
+		
+			NPL_RegisterAppletType(mimeName, mapper->GetAppletName());
+			break;
+#endif
 		default:
 			// Disable the previous plug-in, if any
 			if (pdesc)

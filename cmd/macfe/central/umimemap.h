@@ -28,6 +28,8 @@
 #include "PascalString.h"
 #include "ICKeys.h" // Needed for fileflags
 
+#define ANTHRAX
+
 class LFileBufferStream;
 class CPrefs;
 
@@ -43,7 +45,11 @@ typedef struct URL_Struct_ URL_Struct;
 class CMimeMapper {
 public:
 		// All these must be non-zero because of a presumed bug in back end
+#ifdef ANTHRAX
+	enum LoadAction { Save = 0, Launch = 1, Internal = 2, Unknown = 3, Plugin = 4, Applet = 5};
+#else
 	enum LoadAction { Save = 0, Launch = 1, Internal = 2, Unknown = 3, Plugin = 4};
+#endif
 	
 	// ее Constructors/destructors
 	void		InitMapper();
@@ -68,6 +74,9 @@ public:
 	// ее Access
 	
 		// Set functions are used by app setup box
+#ifdef ANTHRAX
+	void SetAppletName(const CStr255& newAppletName);
+#endif
 	void SetAppName(const CStr255& newName);
 	void SetMimeType(const CStr255& newType);
 	void SetExtensions(const CStr255& newExtensions);
@@ -87,6 +96,9 @@ public:
 	Boolean IsViewerRegistered() const { return fRegisteredViewer; }
 
 		// Get functions
+#ifdef ANTHRAX
+	CStr255 GetAppletName() {return fAppletName;}
+#endif
 	CStr255 GetAppName() {return fAppName;};
 	CStr255 GetMimeName() {return fMimeType;};
 	CStr255 GetExtensions() {return fExtensions;};
@@ -144,7 +156,10 @@ private:
 	char*		fBasePref;			// Corresponding XP pref branch name
 	Int32		fFileFlags;			// IC style FileFlags
 	Boolean		fIsLocked;			// If the mimetype pref is locked (for Mission Control functionality)
-	
+
+#ifdef ANTHRAX
+	CStr255		fAppletName;
+#endif
 };
 
 

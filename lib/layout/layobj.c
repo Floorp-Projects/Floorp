@@ -42,9 +42,11 @@ Bool lo_CheckObjectBlockage(MWContext*, lo_DocState*, lo_ObjectStack*);
 static void lo_SetClassID(PA_Tag* tag, char* appletName);
 static char* lo_GetNextName(char** index);
 static char* lo_GetNextValue(char** index);
-static void lo_SetJavaArgs(char* tag, LO_JavaAppStruct* current_java);
+static void lo_SetArgs(char* tag, lo_ObjectStack* top);
 static void lo_itoa(uint32 n, char* s);
 static void lo_ReverseString(char* s);
+static void lo_AddParam(PA_Tag* tag, char* aName, char* aValue);
+static void lo_RemoveParam(PA_Tag* tag, char* name);
 #endif	/* ANTHRAX */
 
 void
@@ -60,7 +62,6 @@ lo_FormatObject(MWContext* context, lo_DocState* state, PA_Tag* tag)
 	char* pluginName;
 
 #ifdef	ANTHRAX
-	XP_Bool javaMimetypeHandler = FALSE;
 	char* appletName;
 	NET_cinfo* fileInfo;
 #endif /* ANTHRAX */
@@ -256,7 +257,7 @@ lo_FormatObject(MWContext* context, lo_DocState* state, PA_Tag* tag)
 			We do a lookup and if there is an association, the name
 			of the applet is placed into "appletName".  
 			
-			NOTE: PREF_CopyCharPref() allocates memory for appletName
+			NOTE: NPL_FindAppletEnabledForMimetype() allocates memory for appletName
 					and we must free it.
 					
 			9.23.97		amusil
@@ -265,13 +266,31 @@ lo_FormatObject(MWContext* context, lo_DocState* state, PA_Tag* tag)
 		if((appletName = NPL_FindAppletEnabledForMimetype(str)) != NULL)
 			{
 			/* Set the type */
-			type = LO_JAVA;
+			type = LO_EMBED;
+			sub_type = LO_JAVA;
 			
 			/* set the CLASSID to whatever was put into "appletName" */
-			lo_SetClassID(tag, appletName);
+			/*lo_SetClassID(tag, appletName);*/
+			
+			lo_AddParam(tag, "CODE", appletName);
+			lo_SetArgs((char*)tag->data, top);
+			lo_RemoveParam(tag, "type");
+			lo_RemoveParam(tag, "src");
+			lo_RemoveParam(tag, "data");
+			lo_AddParam(tag, "TYPE", JAVA_PLUGIN_MIMETYPE);
+			
+						
+			/* do the same for the clone_tag */
+			if(top->clone_tag)
+				{
+				lo_AddParam(top->clone_tag, "CODE", appletName);
+				lo_RemoveParam(top->clone_tag, "type");
+				lo_RemoveParam(top->clone_tag, "src");
+				lo_RemoveParam(top->clone_tag, "data");
+				lo_AddParam(top->clone_tag, "TYPE", JAVA_PLUGIN_MIMETYPE);
+				}
 			
 			/* set this so that we know later to translate the DATA/SRC param to a Java arg */
-			javaMimetypeHandler = TRUE;
 			XP_FREE(appletName);
 			}
 #endif	/* ANTHRAX */	
@@ -323,14 +342,30 @@ lo_FormatObject(MWContext* context, lo_DocState* state, PA_Tag* tag)
 		if((appletName = NPL_FindAppletEnabledForMimetype(str)) != NULL)
 			{
 			/* Set the type */
-			type = LO_JAVA;
+			type = LO_EMBED;
+			sub_type = LO_JAVA;
 			
 			/* set the CLASSID to whatever was put into "appletName" */
-			lo_SetClassID(tag, appletName);
+			/*lo_SetClassID(tag, appletName);*/
 			
-			/* set this so that we know later to translate the DATA/SRC param to a Java arg */
-			javaMimetypeHandler = TRUE;
-			XP_FREE(appletName);			/* do we need to free this regardless? */	
+			lo_SetArgs((char*)tag->data, top);
+			lo_RemoveParam(tag, "type");
+			lo_RemoveParam(tag, "src");
+			lo_RemoveParam(tag, "data");
+			lo_AddParam(tag, "TYPE", JAVA_PLUGIN_MIMETYPE);
+			lo_AddParam(tag, "CODE", appletName);
+			
+			/* do the same for the clone_tag */
+			if(top->clone_tag)
+				{
+				lo_AddParam(top->clone_tag, "CODE", appletName);
+				lo_RemoveParam(top->clone_tag, "type");
+				lo_RemoveParam(top->clone_tag, "src");
+				lo_RemoveParam(top->clone_tag, "data");
+				lo_AddParam(top->clone_tag, "TYPE", JAVA_PLUGIN_MIMETYPE);
+				}
+			
+			XP_FREE(appletName);			/* do we need to free this regardless? */
 			}
 		if(buff)
 			XP_FREE(buff);
@@ -341,10 +376,10 @@ lo_FormatObject(MWContext* context, lo_DocState* state, PA_Tag* tag)
 	if (type == LO_EMBED)
 	{
 		object->lo_element.lo_plugin.type = LO_EMBED;
-  if(sub_type == LO_JAVA)
-  {
-    object->lo_element.lo_plugin.sub_type = LO_JAVA;
-  }
+  		if(sub_type == LO_JAVA)
+  		{
+    	object->lo_element.lo_plugin.sub_type = LO_JAVA;
+  		}
 	}
 	else if (type == LO_BUILTIN)
 	{
@@ -364,18 +399,6 @@ lo_FormatObject(MWContext* context, lo_DocState* state, PA_Tag* tag)
 				
 			object->lo_element.lo_plugin.type = LO_JAVA;
 			lo_FormatJavaObject(context, state, tag, (LO_JavaAppStruct*) object);
-			
-			/* 
-				If we determined previously that this is an applet to mimetype
-				association, we must set up the SRC or DATA as an arg for the 
-				applet.
-				
-				9.8.97		amusil
-			*/
-#ifdef	ANTHRAX
-			if(javaMimetypeHandler)
-				lo_SetJavaArgs((char*)tag->data, state->current_java);
-#endif	/* ANTHRAX */
 		}
 	}
 #endif /* JAVA */
@@ -1129,7 +1152,6 @@ static void lo_SetClassID(PA_Tag* tag, char* appletName)
 {
 	uint32 appletNameLen, oldTagLen, newTagLen;
 	char* tagData;
-	char foo;
 	
 	appletNameLen = XP_STRLEN(appletName);
 	oldTagLen = XP_STRLEN((char*)tag->data);
@@ -1273,23 +1295,21 @@ static char* lo_GetNextValue(char** tag)
 
 
 /*	
-	lo_SetJavaArgs
+	lo_SetArgs
 	--------------
-	Extracts every param and passes them as arguements to the Java applet.  
+	Extracts every param and passes them as arguments to the Java applet.  
 	Here is the mapping: <... X=Y ...> becomes equivalent to <PARAM NAME=x VALUE=y>
 	
 	NOTE: lo_GetNextName() lo_GetNextValue() and allocates new memory for the return values.
 	
 	10.7.97		amusil
 */
-#ifdef JAVA
-static void lo_SetJavaArgs(char* tag, LO_JavaAppStruct* current_java)
+
+static void lo_SetArgs(char* tag, lo_ObjectStack* top)
 {
 	char* paramName;
 	char* paramValue;
 	char* index;
-	Bool is_percent;
-	int32 val;
 		
 	index = tag;
 	while(TRUE)
@@ -1299,52 +1319,26 @@ static void lo_SetJavaArgs(char* tag, LO_JavaAppStruct* current_java)
 				break;
 
 			/* always map data to src */
-			if(!strcasecomp(paramName, "data"))
+			if(!XP_STRCASECMP(paramName, "data"))
 				{
 				XP_FREE(paramName);
 				paramName = XP_STRDUP("src");
 				}				
 
 			paramValue  = lo_GetNextValue(&index);
-
-			/* Check if the user specified a % for height and width */
-			if(!strcasecmp(paramName, "height"))
-				{
-				val = lo_ValueOrPercent(paramValue, &is_percent);
-				if(is_percent)
-					{
-					XP_FREE(paramValue);
-					/* int32 cannot exceed 10 digits */
-					paramValue = XP_ALLOC(11 * sizeof(char));
-					lo_itoa(current_java->height, paramValue);
-					}
-				}
-		
-			if(!strcasecmp(paramName, "width"))
-				{
-				val = lo_ValueOrPercent(paramValue, &is_percent);
-				if(is_percent)
-					{
-					XP_FREE(paramValue);
-					/* int32 cannot exceed 10 digits */
-					paramValue = XP_ALLOC(11 * sizeof(char));
-					lo_itoa(current_java->width, paramValue);
-					}
-				}
 				
 			/* increment and resize array */
-			++(current_java->parameters.n);
-			current_java->parameters.names = XP_REALLOC(current_java->parameters.names, current_java->parameters.n*sizeof(char*));
-			XP_ASSERT(current_java->parameters.names);
-			current_java->parameters.values = XP_REALLOC(current_java->parameters.values, current_java->parameters.n*sizeof(char*));
-			XP_ASSERT(current_java->parameters.values);
+			++(top->parameters.n);
+			top->parameters.names = XP_REALLOC(top->parameters.names, top->parameters.n*sizeof(char*));
+			XP_ASSERT(top->parameters.names);
+			top->parameters.values = XP_REALLOC(top->parameters.values, top->parameters.n*sizeof(char*));
+			XP_ASSERT(top->parameters.values);
 			
 			/* point the new array elements to the newly allocated paramName and paramValue */
-			current_java->parameters.names[current_java->parameters.n-1] = paramName;
-			current_java->parameters.values[current_java->parameters.n-1] = paramValue;
+			top->parameters.names[top->parameters.n-1] = paramName;
+			top->parameters.values[top->parameters.n-1] = paramValue;
 		}
 }
-#endif
 
 static void lo_itoa(uint32 n, char* s)
 {
@@ -1374,6 +1368,65 @@ static void lo_ReverseString(char* s)
 		s[i] = s[j];
 		s[j] = c;
 		}
+}
+
+static void lo_RemoveParam(PA_Tag* tag, char* name)
+{
+	char* start, *end;
+	char* tagData = (char*)tag->data;
+	start = XP_STRCASESTR(tagData, name);
+	if(start != NULL)
+		{
+		end = start;
+		
+		/* advance to the = */
+		while(*end != '=')
+			++end;
+		
+		/* skip the = */
+		++end;
+		
+		/* advance through whitespace */
+		while(*end == ' ')
+			++end;
+		
+		/* advance until we hit whitespace again */
+		while(*end != ' ')
+			++end;
+		
+		/* clear it out */	
+		while(start != end)
+			{
+			*start = ' ';
+			++start;
+			}
+		}
+}
+
+static void lo_AddParam(PA_Tag* tag, char* aName, char* aValue)
+{
+	uint32 nameLen, valueLen, oldTagLen, newTagLen;
+	char* tagData;
+
+	nameLen = XP_STRLEN(aName);
+	valueLen = XP_STRLEN(aValue);
+	oldTagLen = XP_STRLEN((char*)(tag->data));
+	newTagLen = oldTagLen + nameLen + valueLen + 3;
+
+	tag->data = XP_REALLOC(tag->data, newTagLen+1);
+
+	/* Remove the '>' character */
+	tagData = (char*)(tag->data);
+	tagData[oldTagLen-1] = 0;
+
+	/* Add "aName=aValue" */
+	XP_STRCAT(tagData, " ");
+	XP_STRCAT(tagData, aName);
+	XP_STRCAT(tagData, "=");
+	XP_STRCAT(tagData, aValue);
+	XP_STRCAT(tagData, " >");
+
+	tag->data_len = newTagLen;
 }
 
 #endif	/* ANTHRAX */

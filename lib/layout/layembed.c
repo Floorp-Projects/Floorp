@@ -27,10 +27,6 @@
 #include "laystyle.h"
 #include "layers.h"
 
-#ifdef ANTHRAX /* 9.23.97 amusil */
-#include "prefapi.h"
-#endif /* ANTHRAX */
-
 #ifdef XP_WIN16
 #define SIZE_LIMIT              32000
 #endif /* XP_WIN16 */
@@ -183,78 +179,30 @@ lo_FormatEmbed(MWContext *context, lo_DocState *state, PA_Tag *tag)
 {
 	LO_EmbedStruct *embed;
 	
-#ifdef	ANTHRAX
-	LO_ObjectStruct* object;
-	PA_Block buff;
-	NET_cinfo* fileInfo;
-	char* str;
-	char* appletName;
-	uint32 src_len;
-	
-	/* check to see if the type maps to an applet */
-	buff = lo_FetchParamValue(context, tag, PARAM_TYPE);
-	if(buff == NULL)
-		{
-		/* get SRC */
-		buff = lo_FetchParamValue(context, tag, PARAM_SRC);
-		PA_LOCK(str, char *, buff);
-		
-		/* if we didn't find a type param, look for an association in the SRC */
-		fileInfo = NET_cinfo_find_type(str);
-		str = fileInfo->type;
-		}
-	else
-		PA_LOCK(str, char *, buff);
-	
-	/* check to see if this mimetype has an applet handler */
-	if((appletName = NPL_FindAppletEnabledForMimetype(str)) != NULL)
-		{
-		PA_UNLOCK(buff);
-		if(buff)
-			XP_FREE(buff);
+	embed = (LO_EmbedStruct *)lo_NewElement(context, state, LO_EMBED, NULL, 0);
+	if (embed == NULL)
+	{
+		return;
+	}
 
-		/* just pass it to our object handler */
-		lo_FormatObject(context, state, tag);
-		
-		/* manually close the java app - this is normally done in lo_ProcessObjectTag */
-		lo_CloseJavaApp(context, state, state->current_java);
-		
-		XP_FREE(appletName);
-		}
-	else
-		{
-		PA_UNLOCK(buff);
-		if(buff)
-			XP_FREE(buff);
-#endif	/* ANTHRAX */
+	embed->objTag.type = LO_EMBED;
+	embed->objTag.ele_id = NEXT_ELEMENT;
+	embed->objTag.x = state->x;
+	embed->objTag.x_offset = 0;
+	embed->objTag.y = state->y;
+	embed->objTag.y_offset = 0;
+	embed->objTag.width = 0;
+	embed->objTag.height = 0;
+	embed->objTag.next = NULL;
+	embed->objTag.prev = NULL;
 
-		embed = (LO_EmbedStruct *)lo_NewElement(context, state, LO_EMBED, NULL, 0);
-		if (embed == NULL)
-		{
-			return;
-		}
+    LO_NVList_Init( &embed->attributes );
+    LO_NVList_Init( &embed->parameters );
 
-		embed->objTag.type = LO_EMBED;
-		embed->objTag.ele_id = NEXT_ELEMENT;
-		embed->objTag.x = state->x;
-		embed->objTag.x_offset = 0;
-		embed->objTag.y = state->y;
-		embed->objTag.y_offset = 0;
-		embed->objTag.width = 0;
-		embed->objTag.height = 0;
-		embed->objTag.next = NULL;
-		embed->objTag.prev = NULL;
+	embed->attributes.n = PA_FetchAllNameValues(tag,
+		&(embed->attributes.names), &(embed->attributes.values), CS_FE_ASCII);
 
-        LO_NVList_Init( &embed->attributes );
-        LO_NVList_Init( &embed->parameters );
-
-		embed->attributes.n = PA_FetchAllNameValues(tag,
-			&(embed->attributes.names), &(embed->attributes.values), CS_FE_ASCII);
-
-		lo_FormatEmbedInternal(context, state, tag, embed, FALSE, FALSE);
-#ifdef	ANTHRAX
-		}
-#endif /* ANTHRAX */
+	lo_FormatEmbedInternal(context, state, tag, embed, FALSE, FALSE);
 }
 
 
@@ -347,8 +295,6 @@ lo_FormatEmbedObject(MWContext* context, lo_DocState* state,
 
 	if (param_count > 0)
 	{
-        int i;
-
         /* Add all <PARAM> tag parameters to the parameters list */
         embed->parameters.names = (char**) PA_ALLOC(param_count*sizeof(char*));
         embed->parameters.values = (char**) PA_ALLOC(param_count*sizeof(char*));

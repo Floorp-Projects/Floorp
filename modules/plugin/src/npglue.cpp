@@ -1366,7 +1366,10 @@ np_posturlinternal(NPP npp, const char* relativeURL, const char *target,
 		}
 	}
 	else
-		return NPERR_OUT_OF_MEMORY_ERROR;
+		{		
+		err = NPERR_OUT_OF_MEMORY_ERROR;
+ 		goto error;
+ 		}
  	
 	/* 
 	 * FTP protocol requires that the data be in a file.
@@ -3163,7 +3166,7 @@ NPL_NewPresentStream(FO_Present_Types format_out, void* type, URL_Struct* urls, 
 		
 		strLen = XP_STRLEN(fileName);
 		
-		newTag = XP_ALLOC((36+strLen)*sizeof(char));
+		newTag = (char*)XP_ALLOC((36+strLen)*sizeof(char));
 		newTag[0] = 0;
 		
 		XP_STRCAT(newTag, "<embed src=");
@@ -5363,7 +5366,7 @@ NPL_FindAppletsForType(const char* mimetype)
 */
 
 NPError
-NPL_RegisterAppletType(NPMIMEType type)
+NPL_RegisterAppletType(NPMIMEType type, char* filename)
 {
 	/*
 	 * Is this Applet the wildcard (a.k.a. null) plugin?
@@ -5373,10 +5376,11 @@ NPL_RegisterAppletType(NPMIMEType type)
 	 */
 	XP_Bool wildtype = (strcmp(type, "*") == 0);
 	np_handle* handle = NULL;
+	char* newPref;
 	
 	for(handle = np_alist; handle != NULL; handle = handle->next)
 		{
-		if(!XP_STRCMP(handle->name, type))
+		if(!XP_STRCMP(handle->name, type) && !XP_STRCMP(handle->filename, filename))
 			break;
 		}
 
@@ -5387,6 +5391,7 @@ NPL_RegisterAppletType(NPMIMEType type)
 			return NPERR_OUT_OF_MEMORY_ERROR;
 		
 		StrAllocCopy(handle->name, type);
+		StrAllocCopy(handle->filename, filename);
 		
 		handle->pdesc = NULL;
 		handle->next = np_alist;
@@ -5397,25 +5402,75 @@ NPL_RegisterAppletType(NPMIMEType type)
     /* EmbedStream does some Windows FE work and then calls NPL_NewStream */
 	if (!wildtype)
         NET_RegisterContentTypeConverter(type, FO_PRESENT, handle, EmbedStream);
-    NET_RegisterContentTypeConverter(type, FO_EMBED, handle, EmbedStream); /* XXX I dont think this does anything useful */
 #else
 	if (!wildtype)
-	  {
         NET_RegisterContentTypeConverter(type, FO_PRESENT, handle, NPL_NewPresentStream);
-#ifdef XP_UNIX
-		/* While printing we use the FO_SAVE_AS_POSTSCRIPT format type. We want
-		 * plugin to possibly handle that case too. Hence this.
-		 */
-        NET_RegisterContentTypeConverter(type, FO_SAVE_AS_POSTSCRIPT, handle,
-										 NPL_NewPresentStream);
-#endif /* XP_UNIX */
-	  }
-    NET_RegisterContentTypeConverter(type, FO_EMBED, handle, NPL_NewEmbedStream);
 #endif
-    NET_RegisterContentTypeConverter(type, FO_PLUGIN, handle, np_newpluginstream);
-    NET_RegisterContentTypeConverter(type, FO_BYTERANGE, handle, np_newbyterangestream);
+
+	newPref = np_CreateMimePref(type, "load_action");
+	PREF_SetIntPref(newPref, 5);
+	XP_FREE(newPref);    
     
     return NPERR_NO_ERROR;
+}
+
+void
+NPL_InstallAppletHandler(char* appletName, char* mimetype, char* extension)
+{
+	char* newPref;
+	char buffer[100];
+	int32 numApplets;
+	int bufLen = 100;
+
+	/* check if it's an entirely new mimetype */
+	newPref = np_CreateMimePref(mimetype, "mimetype");
+	if(PREF_GetCharPref(newPref, buffer, &bufLen) != PREF_OK)
+		{
+		PREF_SetCharPref(newPref, mimetype);
+		XP_FREE(newPref);
+		
+		newPref = np_CreateMimePref(mimetype, "extension");
+		PREF_SetCharPref(newPref, extension);
+		}
+	XP_FREE(newPref);	
+	
+	newPref = np_CreateMimePref(mimetype, "num_applets");
+
+	/* check if this is the first applet installed for this mimetype */
+	if(PREF_GetIntPref(newPref, &numApplets) != PREF_OK)
+		{
+		/* First Applet installed for mimetype */
+		PREF_SetIntPref(newPref, 1);
+		XP_FREE(newPref);
+		
+		newPref = np_CreateMimePref(mimetype, "applet1");
+		PREF_SetCharPref(newPref, appletName);
+		XP_FREE(newPref);
+		
+		newPref = np_CreateMimePref(mimetype, "applet");
+		PREF_SetCharPref(newPref, appletName);
+		XP_FREE(newPref);
+		}
+	else
+		{
+		char appletN[] = { 'a', 'p', 'p', 'l', 'e', 't', '1', '\0'};
+		++numApplets;
+		PREF_SetIntPref(newPref, numApplets);
+		XP_FREE(newPref);
+		
+		XP_ASSERT(numApplets < 10);
+		appletN[6] = (numApplets+48);
+		newPref = np_CreateMimePref(mimetype, appletN);
+		PREF_SetCharPref(newPref, appletName);
+		XP_FREE(newPref);
+		
+		/* Set the new Applet as the default */
+		newPref = np_CreateMimePref(mimetype, "applet");
+		PREF_SetCharPref(newPref, appletName);
+		XP_FREE(newPref);
+		}
+		
+	NPL_RegisterAppletType(mimetype, appletName);
 }
 
 /* ANTHRAX STATIC FUNCTIONS */
@@ -5500,7 +5555,7 @@ static char* np_CreateMimePref(const char* mimetype, const char* pref)
 	
 	len = XP_STRLEN("mime..") + XP_STRLEN(mimetype) + XP_STRLEN(pref);
 	
-	prefName = XP_ALLOC((len+1)*sizeof(char));
+	prefName = (char*)XP_ALLOC((len+1)*sizeof(char));
 	XP_ASSERT(prefName);
 	if(!prefName)
 		return NULL;
