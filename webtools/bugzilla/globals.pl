@@ -1678,6 +1678,9 @@ $::vars =
 
     # Generic linear search function
     'lsearch' => \&lsearch ,
+
+    # UserInGroup - you probably want to cache this
+    'UserInGroup' => \&UserInGroup ,
   };
 
 1;
