@@ -45,7 +45,7 @@ LLIBS = \
 	$(DIST)\lib\netlib.lib \
 	$(DIST)\lib\nspr3.lib \
 	$(DIST)\lib\plds3.lib \
-	$(DEPTH)\xpfe\bootstrap\WIN32_D.OBJ\nsSetupRegistry.obj \
+	$(DEPTH)\xpfe\bootstrap\$(OBJDIR)\nsSetupRegistry.obj \
 	$(NULL)  
 
 	# $(DIST)\lib\raptorbase.lib \
@@ -70,8 +70,9 @@ BrowserControlMozillaShim.h:
 
 install:: $(DLL)
 	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).dll $(DIST)\bin
-	@echo +++ Creating .\$(OBJDIR)\runem.bat.  Use this to run the test browser.
-	@echo $(JAVA) -Djava.library.path=$(MOZ_SRC)\mozilla\dist\WIN32_D.OBJ\bin -classpath $(JAVAC_CLASSPATH) org.mozilla.webclient.test.EmbeddedMozilla %1% > .\$(OBJDIR)\runem.bat
+	@echo +++ Creating $(MOZ_SRC)\mozilla\java\webclient\src\$(OBJDIR)\runem.bat.  Use this to run the test browser.
+	@echo set PATH=$(MOZ_SRC)\mozilla\dist\$(OBJDIR)\bin;$(PATH) > .\$(OBJDIR)\runem.bat
+	@echo $(JAVA) -Djava.library.path=$(MOZ_SRC)\mozilla\dist\$(OBJDIR)\bin -classpath $(JAVAC_CLASSPATH) org.mozilla.webclient.test.EmbeddedMozilla %1% >> .\$(OBJDIR)\runem.bat
 
 clobber_all:: clobber
 
