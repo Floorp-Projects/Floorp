@@ -42,3 +42,6 @@ packages/chatzilla.jar:
 	chatzilla/locale/chatzillaOverlay.dtd        (xul/locale/en-US/chatzillaOverlay.dtd) 
 	chatzilla/locale/pref-irc.dtd                (xul/locale/en-US/pref-irc.dtd) 
 	manifest.rdf                                 (xul/manifest.rdf)
+
+locales/en-US.jar:
+	communicator/locale/pref/pref-irc.dtd        (xul/locale/en-US/pref-irc.dtd)
