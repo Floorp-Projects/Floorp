@@ -1129,7 +1129,7 @@ nsresult nsMsgAsyncWriteProtocol::UpdateSuspendedReadBytes(PRUint32 aNewBytes, P
 
 nsresult nsMsgAsyncWriteProtocol::PostDataFinished()
 {
-  SendData(nsnull, CRLF "." CRLF);
+  SendData(nsnull, "." CRLF);
   mGenerateProgressNotifications = PR_FALSE;
   mPostDataStream = nsnull;
   return NS_OK;
