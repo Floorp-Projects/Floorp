@@ -56,8 +56,7 @@ class GConfProxy;
 // on the gconf platform.
 ////////////////////////////////////////////////////////////////////////////
 
-class nsSystemPrefService : public nsIPrefBranch,
-                            public nsIPrefBranchInternal
+class nsSystemPrefService : public nsIPrefBranchInternal
 {
 public:
     NS_DECL_ISUPPORTS
