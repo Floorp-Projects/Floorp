@@ -52,18 +52,11 @@ public:
               nsIToolkit *aToolkit = nsnull,
               nsWidgetInitData *aInitData = nsnull);
 
-  NS_IMETHOD Create(nsNativeWidget aParent,
-              const nsRect &aRect,
-              EVENT_CALLBACK aHandleEventFunction,
-              nsIDeviceContext *aContext = nsnull,
-              nsIAppShell *aAppShell = nsnull,
-              nsIToolkit *aToolkit = nsnull,
-              nsWidgetInitData *aInitData = nsnull);
-
-
-  virtual PRBool  OnPaint(nsPaintEvent & aEvent);
-  virtual PRBool  OnResize(nsSizeEvent &aEvent);
   NS_IMETHOD SetPassword(PRBool aIsPassword);
+
+  virtual PRBool OnMove(PRInt32 aX, PRInt32 aY) { return PR_FALSE; }
+  virtual PRBool OnPaint(nsPaintEvent & aEvent) { return PR_FALSE; }
+  virtual PRBool OnResize(nsSizeEvent &aEvent) { return PR_FALSE; }
 
 protected:
   PRBool mIsPasswordCallBacksInstalled;
