@@ -623,6 +623,7 @@ xpmenuchildren > xpmenuitem[menuactive="true"] {
 }
 
 xpmenuchildren > xpmenu > titledbutton {
+  padding-left: 2px;
   list-style-image: url(chrome://global/skin/menuArrow.gif);
 }
 
