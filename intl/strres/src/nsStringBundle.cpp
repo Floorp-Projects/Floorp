@@ -34,14 +34,14 @@ static PRInt32 gLockCount = 0;
 
 NS_DEFINE_IID(kIFactoryIID, NS_IFACTORY_IID);
 NS_DEFINE_IID(kIStringBundleIID, NS_ISTRINGBUNDLE_IID);
-NS_DEFINE_IID(kIStringBundleFactoryIID, NS_ISTRINGBUNDLEFACTORY_IID);
-NS_DEFINE_IID(kStringBundleFactoryCID, NS_STRINGBUNDLEFACTORY_CID);
+NS_DEFINE_IID(kIStringBundleServiceIID, NS_ISTRINGBUNDLESERVICE_IID);
+NS_DEFINE_IID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
 
 static NS_DEFINE_IID(kINetServiceIID, NS_INETSERVICE_IID);
 static NS_DEFINE_IID(kIPropertiesIID, NS_IPROPERTIES_IID);
 static NS_DEFINE_IID(kNetServiceCID, NS_NETSERVICE_CID);
 
-class nsStringBundle : public nsISupports
+class nsStringBundle : public nsIStringBundle
 {
 public:
   nsStringBundle(nsIURL* aURL, nsILocale* aLocale, nsresult* aResult);
@@ -58,6 +58,8 @@ public:
 nsStringBundle::nsStringBundle(nsIURL* aURL, nsILocale* aLocale,
   nsresult* aResult)
 {
+  NS_INIT_REFCNT();
+
   mProps = nsnull;
 
   nsINetService* pNetService = nsnull;
@@ -107,44 +109,31 @@ nsStringBundle::GetStringFromName(const nsString& aName, nsString& aResult)
   return ret;
 }
 
-class nsStringBundleFactory : public nsIStringBundleFactory
+class nsStringBundleService : public nsIStringBundleService
 {
 public:
-  NS_DECL_ISUPPORTS
-  
-  nsStringBundleFactory() { NS_INIT_ISUPPORTS(); }
+  nsStringBundleService();
+  virtual ~nsStringBundleService();
 
-  NS_IMETHOD CreateInstance(nsISupports* aOuter, REFNSIID aIID, void** aResult);
-  NS_IMETHOD LockFactory(PRBool aLock);
+  NS_DECL_ISUPPORTS
 
   NS_IMETHOD CreateBundle(nsIURL* aURL, nsILocale* aLocale,
     nsIStringBundle** aResult);
 };
 
-NS_IMPL_ISUPPORTS(nsStringBundleFactory, kIStringBundleFactoryIID)
-
-NS_IMETHODIMP
-nsStringBundleFactory::CreateInstance(nsISupports* aOuter, REFNSIID aIID,
-  void** aResult)
+nsStringBundleService::nsStringBundleService()
 {
-  return NS_OK;
+  NS_INIT_REFCNT();
 }
 
-NS_IMETHODIMP
-nsStringBundleFactory::LockFactory(PRBool aLock)
+nsStringBundleService::~nsStringBundleService()
 {
-  if (aLock) {
-    PR_AtomicIncrement(&gLockCount);
-  }
-  else {
-    PR_AtomicDecrement(&gLockCount);
-  }
-
-  return NS_OK;
 }
 
+NS_IMPL_ISUPPORTS(nsStringBundleService, kIStringBundleServiceIID)
+
 NS_IMETHODIMP
-nsStringBundleFactory::CreateBundle(nsIURL* aURL, nsILocale* aLocale,
+nsStringBundleService::CreateBundle(nsIURL* aURL, nsILocale* aLocale,
   nsIStringBundle** aResult)
 {
   nsresult ret = NS_OK;
@@ -164,12 +153,65 @@ nsStringBundleFactory::CreateBundle(nsIURL* aURL, nsILocale* aLocale,
   return ret;
 }
 
+class nsStringBundleServiceFactory : public nsIFactory
+{
+public:
+  nsStringBundleServiceFactory();
+  virtual ~nsStringBundleServiceFactory();
+
+  NS_DECL_ISUPPORTS
+
+  NS_IMETHOD CreateInstance(nsISupports* aOuter, REFNSIID aIID, void** aResult);
+  NS_IMETHOD LockFactory(PRBool aLock);
+};
+
+nsStringBundleServiceFactory::nsStringBundleServiceFactory()
+{
+  NS_INIT_REFCNT();
+}
+
+nsStringBundleServiceFactory::~nsStringBundleServiceFactory()
+{
+}
+
+NS_IMPL_ISUPPORTS(nsStringBundleServiceFactory, kIFactoryIID)
+
+NS_IMETHODIMP
+nsStringBundleServiceFactory::CreateInstance(nsISupports* aOuter,
+  REFNSIID aIID, void** aResult)
+{
+  nsStringBundleService* service = new nsStringBundleService();
+  if (!service) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+  nsresult ret = service->QueryInterface(aIID, aResult);
+  if (NS_FAILED(ret)) {
+    delete service;
+    return ret;
+  }
+
+  return ret;
+}
+
+NS_IMETHODIMP
+nsStringBundleServiceFactory::LockFactory(PRBool aLock)
+{
+  if (aLock) {
+    PR_AtomicIncrement(&gLockCount);
+  }
+  else {
+    PR_AtomicDecrement(&gLockCount);
+  }
+
+  return NS_OK;
+}
+
 extern "C" NS_EXPORT nsresult
 NSRegisterSelf(const char* path)
 {
   nsresult ret;
 
-  ret = nsRepository::RegisterFactory(kStringBundleFactoryCID, path,
+  ret = nsRepository::RegisterFactory(kStringBundleServiceCID, path,
     PR_TRUE, PR_TRUE);
   if (NS_FAILED(ret)) {
     return ret;
@@ -183,7 +225,7 @@ NSUnregisterSelf(const char* path)
 {
   nsresult ret;
 
-  ret = nsRepository::UnregisterFactory(kStringBundleFactoryCID, path);
+  ret = nsRepository::UnregisterFactory(kStringBundleServiceCID, path);
   if (NS_FAILED(ret)) {
     return ret;
   }
@@ -200,12 +242,12 @@ NSGetFactory(const nsCID& aClass, nsISupports* aServMgr, nsIFactory** aFactory)
     return NS_ERROR_NULL_POINTER;
   }
 
-  if (aClass.Equals(kStringBundleFactoryCID)) {
-    nsStringBundleFactory* factory = new nsStringBundleFactory();
+  if (aClass.Equals(kStringBundleServiceCID)) {
+    nsStringBundleServiceFactory* factory = new nsStringBundleServiceFactory();
     if (!factory) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
-    res = factory->QueryInterface(kIStringBundleFactoryIID, (void**) aFactory);
+    res = factory->QueryInterface(kIFactoryIID, (void**) aFactory);
     if (NS_FAILED(res)) {
       *aFactory = nsnull;
       delete factory;

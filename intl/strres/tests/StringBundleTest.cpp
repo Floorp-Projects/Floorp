@@ -32,20 +32,20 @@
 static NS_DEFINE_IID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 static NS_DEFINE_IID(kIEventQueueServiceIID, NS_IEVENTQUEUESERVICE_IID);
 static NS_DEFINE_IID(kINetServiceIID, NS_INETSERVICE_IID);
-static NS_DEFINE_IID(kIStringBundleFactoryIID, NS_ISTRINGBUNDLEFACTORY_IID);
+static NS_DEFINE_IID(kIStringBundleServiceIID, NS_ISTRINGBUNDLESERVICE_IID);
 static NS_DEFINE_IID(kNetServiceCID, NS_NETSERVICE_CID);
-static NS_DEFINE_IID(kStringBundleFactoryCID, NS_STRINGBUNDLEFACTORY_CID);
+static NS_DEFINE_IID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
 
 int
 main(int argc, char *argv[])
 {
   nsresult ret;
 
-  nsIStringBundleFactory* factory = nsnull;
-  ret = nsRepository::FindFactory(kStringBundleFactoryCID,
-    (nsIFactory**) &factory);
+  nsIStringBundleService* service = nsnull;
+  ret = nsServiceManager::GetService(kStringBundleServiceCID,
+    kIStringBundleServiceIID, (nsISupports**) &service);
   if (NS_FAILED(ret)) {
-    printf("cannot create factory\n");
+    printf("cannot create service\n");
     return 1;
   }
 
@@ -83,7 +83,7 @@ main(int argc, char *argv[])
   nsILocale* locale = nsnull;
 
   nsIStringBundle* bundle = nsnull;
-  ret = factory->CreateBundle(url, locale, &bundle);
+  ret = service->CreateBundle(url, locale, &bundle);
   if (NS_FAILED(ret)) {
     printf("cannot create instance\n");
     return 1;
