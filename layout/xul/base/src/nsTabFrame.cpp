@@ -119,9 +119,9 @@ nsTabFrame::GetChildWithTag(nsIAtom* atom, nsIContent* start, nsIContent*& tabpa
      start->ChildAt(i,child);
 
      // see if it is the child
-     nsIAtom* tag = nsnull;
-     child->GetTag(tag);
-     if (tag == atom)
+     nsCOMPtr<nsIAtom> tag;
+     child->GetTag(*getter_AddRefs(tag));
+     if (tag.get() == atom)
      {
        tabpanel = child;
        return NS_OK;
@@ -148,8 +148,8 @@ nsTabFrame::GetTabControl(nsIContent* content, nsIContent*& tabcontrol)
       content->GetParent(content);
 
       if (content) {
-        nsIAtom* atom;
-        if (content->GetTag(atom) == NS_OK && atom == nsXULAtoms::tabcontrol) {
+        nsCOMPtr<nsIAtom> atom;
+        if (content->GetTag(*getter_AddRefs(atom)) == NS_OK && atom == nsXULAtoms::tabcontrol) {
            tabcontrol = content;
            return NS_OK;
         }
