@@ -188,3 +188,4 @@ file:///s:/mozilla/layout/html/tests/block/bugs/125506.html
 file:///s:/mozilla/layout/html/tests/block/bugs/126213-1.html
 file:///s:/mozilla/layout/html/tests/block/bugs/126213-2.html
 file:///s:/mozilla/layout/html/tests/block/bugs/148245.html
+file:///s:/mozilla/layout/html/tests/block/bugs/151620.html
