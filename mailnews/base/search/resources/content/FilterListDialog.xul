@@ -17,66 +17,59 @@ The Initial Developer of the Original Code is Netscape
 Communications Corporation. Portions created by Netscape are
  Copyright (C) 1998-1999 Netscape Communications Corporation. All
 Rights Reserved.
+
+Contributor(s):  Håkan Waara <hwaara@chello.se>
+
 -->
 
 <?xml-stylesheet href="chrome://messenger/skin/messenger.css" type="text/css"?>
 <?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
 
-<!DOCTYPE window SYSTEM "chrome://messenger/locale/FilterListDialog.dtd" >
-<window class="dialog"
-  xmlns:nc="http://home.netscape.com/NC-rdf#"
+<!DOCTYPE window SYSTEM "chrome://messenger/locale/FilterListDialog.dtd">
+<window class="dialog" id="filterListDialog"
+  xmlns:NC="http://home.netscape.com/NC-rdf#"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
   orient="vertical"
   onload="onLoad();"
-  style="width: 34em;"
+  width="440"
+  height="320"
+  persist="width height"
   title="&window.title;">
 
   <script language="JavaScript" src="chrome://messenger/content/FilterListDialog.js"/>
-  <stringbundle id="bundle_filter" src="chrome://messenger/locale/filter.properties"/>
-
-  <!-- <script src="resource:/res/samples/DumpDOM.js"/> -->
 
   <keyset id="dialogKeys"/>
+
+  <hbox autostretch="never">
+    <text class="label" value="&filtersForPrefix.label;"/>
+      <menulist oncommand="onServerClick(event);" id="serverMenu">
+        <menupopup datasources="rdf:msgaccountmanager"
+                   containment="http://home.netscape.com/NC-rdf#child" ref="msgaccounts:/">
+          <template>
+            <rule nc:SupportsFilters="true">
+              <menuitem uri="..." value="..." label="rdf:http://home.netscape.com/NC-rdf#Name"/>
+            </rule>
+          </template>
+        </menupopup>
+      </menulist>
+  </hbox>
 
   <grid flex="1">
     <columns>
       <column flex="1"/>
       <column/>
-      <column/>
     </columns>
     <rows>
       <row>
-        <text class="label" value="&filtersForPrefix.label;"/>
-        <box/>
-        <box/>
-      </row>
-      <row>
-        <menulist oncommand="onServerClick(event);" id="serverMenu">
-          <menupopup datasources="rdf:msgaccountmanager"
-                     containment="http://home.netscape.com/NC-rdf#child"
-                     ref="msgaccounts:/">
-            <template>
-              <rule nc:SupportsFilters="true">
-                <menuitem uri="..." value="..." label="rdf:http://home.netscape.com/NC-rdf#Name"/>
-              </rule>
-            </template>
-          </menupopup>
-        </menulist>
-        <box/>
-        <box/>
-      </row>
-      <row>
         <separator/>
-        <box/>
-        <box/>
       </row>
-      <row >
-          <html>&filterHeader.label;</html>
+      <row>
+        <html>&filterHeader.label;</html>
       </row>
       
       
-      <row  flex="1">
-        <box orient="vertical" flex="1">
+      <row flex="1">
+        <vbox>
           <tree id="filterTree" class="inset" flex="1"
                 onselect="onFilterSelect(event);"
                 ondblclick="onFilterDoubleClick(event);"
@@ -85,10 +78,10 @@ Rights Reserved.
 
             <treehead>
               <treerow>
+                <treecell indent="true" class="treecell-header treecell-inset-header" 
+                          persist="width" label="&nameColumn.label;"/>
                 <treecell class="treecell-header treecell-inset-header" 
-                          persist="hidden width" label="&nameColumn.label;"/>
-                <treecell class="treecell-header treecell-inset-header" 
-                          persist="hidden width" label="&activeColumn.label;"/>
+                          persist="width" label="&activeColumn.label;"/>
               </treerow>
             </treehead>
 
@@ -97,9 +90,9 @@ Rights Reserved.
                 <treechildren>
                   <treeitem uri="..." open="true"
                             Enabled="rdf:http://home.netscape.com/NC-rdf#Enabled">
-                    <treerow >
+                    <treerow>
                       <treecell indent="true" label="rdf:http://home.netscape.com/NC-rdf#Name"/>
-                      <treecell allowevents="true"
+                      <treecell allowevents="true" align="center"
                                 class="enabledcol treecell-image"
                                 Enabled="rdf:http://home.netscape.com/NC-rdf#Enabled"
                                 onclick="onToggleEnabled(event);"/>
@@ -110,29 +103,25 @@ Rights Reserved.
             </template>
           
             <treecolgroup>
-              <treecol style="width: 0px" flex="1" resource="http://home.netscape.com/NC-rdf#Name" id="nameColumn"/>
-              <treecol id="activeColumn"/>
+              <treecol flex="85%" resource="http://home.netscape.com/NC-rdf#Name" id="nameColumn"/>
+              <splitter class="tree-splitter"/>
+              <treecol flex="15%" id="activeColumn"/>
             </treecolgroup>
           
             <treechildren flex="1"/>
             
           </tree>
-        </box>
+        </vbox>
 
-        <box orient="vertical" align="top">
-
+        <vbox>
           <button id="newButton" label="&newButton.label;" oncommand="onNewFilter();"/>
           <button id="editButton" label="&editButton.label;" oncommand="onEditFilter();"/>
           <button id="deleteButton" label="&deleteButton.label;" oncommand="onDeleteFilter();"/>
           <spring flex="1"/>
-          <button id="reorderUpButton" class="reorder-up" label="&reorderUpButton.label;" oncommand="onUp(event);"/>
-          <button id="reorderDownButton" class="reorder-down" label="&reorderDownButton.label;" oncommand="onDown(event);"/>
+          <button id="reorderUpButton" label="&reorderUpButton.label;" oncommand="onUp(event);"/>
+          <button id="reorderDownButton" label="&reorderDownButton.label;" oncommand="onDown(event);"/>
           <spring flex="1"/>
-          <!-- take out for PR2
-            <button label="&runFiltersNow.label;" width="0em"/>
-            <button oncommand="DumpDOM(document.getElementById('filterTree'));" label="dump"/>
-          -->
-        </box>
+        </vbox>
       </row>
     </rows>
   </grid>
