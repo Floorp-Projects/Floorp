@@ -1,5 +1,6 @@
-!define VERSION "v1.5"
-!define DISTDIR "d:\m\source\mozilla\dist\Embed"
+!include "local.nsh"
+
+!define PRODUCT "Mozilla ActiveX Control ${VERSION}"
 
 Name "Mozilla ActiveX Control ${VERSION}"
 
@@ -11,16 +12,19 @@ DirText "This will install the Mozilla ActiveX Control ${VERSION} on your comput
 
 Section "Mozilla Control (required)"
 
-  SetOutPath $INSTDIR
-  File /r "${DISTDIR}\*.*"
+  !include "files.nsh"
+
+  ; TODO install MSVC++ redistributable DLLs - msvcrt.dll & msvcp60.dll
   
-  RegDLL mozctlx.dll
+  RegDLL "$INSTDIR\mozctlx.dll"
   
+  WriteUninstaller Uninst.exe
+
 SectionEnd
 
 Section "uninstall"
 
-  UnRegDLL mozctlx.dll
+  UnRegDLL "$INSTDIR\mozctlx.dll"
   Delete $INSTDIR\Uninst.exe
   RMDir /r $INSTDIR
 
