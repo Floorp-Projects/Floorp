@@ -453,7 +453,7 @@ CertReq(SECKEYPrivateKey *privk, SECKEYPublicKey *pubk, KeyType keyType,
 	    SECU_PrintSystemError(progName, "write error");
 	    return SECFailure;
 	}
-	PR_fprintf(outFile, "%s\n", NS_CERTREQ_TRAILER);
+	PR_fprintf(outFile, "\n%s\n", NS_CERTREQ_TRAILER);
     } else {
 	numBytes = PR_Write(outFile, result.data, result.len);
 	if (numBytes != (int)result.len) {
@@ -533,7 +533,6 @@ printCertCB(CERTCertificate *cert, void *arg)
 static SECStatus
 DumpChain(CERTCertDBHandle *handle, char *name)
 {
-    SECStatus rv;
     CERTCertificate *the_cert;
     CERTCertificateList *chain;
     int i, j;
@@ -563,7 +562,6 @@ static SECStatus
 listCerts(CERTCertDBHandle *handle, char *name, PK11SlotInfo *slot,
           PRBool raw, PRBool ascii, PRFileDesc *outfile, void *pwarg)
 {
-    CERTCertificate *cert;
     SECItem data;
     PRInt32 numBytes;
     SECStatus rv = SECFailure;
@@ -1228,22 +1226,15 @@ MakeV1Cert(	CERTCertDBHandle *	handle,
 		CERTCertificateRequest *req,
 	    	char *			issuerNickName, 
 		PRBool 			selfsign, 
-		int 			serialNumber,
+		unsigned int 		serialNumber,
 		int 			warpmonths,
                 int                     validitylength)
 {
     CERTCertificate *issuerCert = NULL;
     CERTValidity *validity;
     CERTCertificate *cert = NULL;
-#ifndef NSPR20    
-    PRTime printableTime;
-    int64 now, after;
-#else
     PRExplodedTime printableTime;
     PRTime now, after;
-#endif    
-   
-    
 
     if ( !selfsign ) {
 	issuerCert = CERT_FindCertByNicknameOrEmailAddr(handle, issuerNickName);
@@ -1255,43 +1246,23 @@ MakeV1Cert(	CERTCertDBHandle *	handle,
     }
 
     now = PR_Now();
-#ifndef NSPR20
-    PR_ExplodeGMTTime (&printableTime, now);
-#else    
     PR_ExplodeTime (now, PR_GMTParameters, &printableTime);
-#endif
     if ( warpmonths ) {
-#ifndef	NSPR20    
-	printableTime.tm_mon += warpmonths;
-	now = PR_ImplodeTime (&printableTime, 0, 0);
-	PR_ExplodeGMTTime (&printableTime, now);
-#else
 	printableTime.tm_month += warpmonths;
 	now = PR_ImplodeTime (&printableTime);
 	PR_ExplodeTime (now, PR_GMTParameters, &printableTime);
-#endif
     }
-#ifndef	NSPR20  
-    printableTime.tm_mon += validitylength;  
-    printableTime.tm_mon += 3;
-    after = PR_ImplodeTime (&printableTime, 0, 0);
-
-#else
     printableTime.tm_month += validitylength;
     printableTime.tm_month += 3;
     after = PR_ImplodeTime (&printableTime);
-#endif    
 
     /* note that the time is now in micro-second unit */
     validity = CERT_CreateValidity (now, after);
 
-    if ( selfsign ) {
-	cert = CERT_CreateCertificate
-	    (serialNumber,&(req->subject), validity, req);
-    } else {
-	cert = CERT_CreateCertificate
-	    (serialNumber,&(issuerCert->subject), validity, req);
-    }
+    cert = CERT_CreateCertificate(serialNumber, 
+				  (selfsign ? &req->subject 
+				            : &issuerCert->subject), 
+	                          validity, req);
     
     CERT_DestroyValidity(validity);
     if ( issuerCert ) {
@@ -1896,7 +1867,7 @@ CreateCert(
 	PRFileDesc *outFile, 
 	SECKEYPrivateKey *selfsignprivkey,
 	void 	*pwarg,
-	int     serialNumber, 
+	unsigned int serialNumber, 
 	int     warpmonths,
 	int     validitylength,
 	PRBool  ascii,
@@ -1912,7 +1883,6 @@ CreateCert(
     SECItem *	certDER;
     PRArenaPool *arena			= NULL;
     CERTCertificate *subjectCert 	= NULL;
-    /*CERTCertificate *issuerCert 	= NULL;*/
     CERTCertificateRequest *certReq	= NULL;
     SECStatus 	rv 			= SECSuccess;
     SECItem 	reqDER;
@@ -2149,7 +2119,7 @@ main(int argc, char **argv)
     char *      name            = NULL;
     int	        keysize	        = DEFAULT_KEY_BITS;
     int         publicExponent  = 0x010001;
-    int         serialNumber    = 0;
+    unsigned int serialNumber   = 0;
     int         warpmonths      = 0;
     int         validitylength  = 0;
     int         commandsEntered = 0;
@@ -2223,12 +2193,13 @@ main(int argc, char **argv)
 
     /*  -m serial number */
     if (certutil.options[opt_SerialNumber].activated) {
-	serialNumber = PORT_Atoi(certutil.options[opt_SerialNumber].arg);
-	if (serialNumber < 0) {
+	int sn = PORT_Atoi(certutil.options[opt_SerialNumber].arg);
+	if (sn < 0) {
 	    PR_fprintf(PR_STDERR, "%s -m:  %s is not a valid serial number.\n",
 	               progName, certutil.options[opt_SerialNumber].arg);
 	    return 255;
 	}
+	serialNumber = sn;
     }
 
     /*  -P certdb name prefix */
@@ -2387,8 +2358,8 @@ main(int argc, char **argv)
          !certutil.options[opt_SerialNumber].activated) {
 	/*  Make a default serial number from the current time.  */
 	PRTime now = PR_Now();
-	serialNumber = LL_L2I(serialNumber, now);
-	if (serialNumber < 0) serialNumber *= -1;
+	LL_USHR(now, now, 19);
+	LL_L2UI(serialNumber, now);
     }
 
     /*  Validation needs the usage to validate for.  */
