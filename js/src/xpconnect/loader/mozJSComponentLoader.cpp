@@ -1149,14 +1149,11 @@ mozJSComponentLoader::UnloadAll(PRInt32 aWhen)
         PL_HashTableEnumerateEntries(mModules, UnloadAndReleaseModules,
                                      mCompMgr);
         
-        JSContext* cx;
-        {
-            // scope this so that it ends its request before we gc. 
-            JSCLAutoContext auto_cx(mRuntime);
-            cx = auto_cx;
-        }
-        if (cx)
+        JSContext* cx = JS_NewContext(mRuntime, 256);
+        if (cx) {
             JS_MaybeGC(cx);
+            JS_DestroyContext(cx);
+        }
     }
 
 #ifdef DEBUG_shaver_off
