@@ -12,6 +12,7 @@ classic.jar:
         skin/classic/browser/pageInfo.css 
         skin/classic/browser/page-themes.png 
         skin/classic/browser/Search-bar.png 
+        skin/classic/browser/search-arrow.gif
         skin/classic/browser/Secure.png 
         skin/classic/browser/Security-broken.png 
         skin/classic/browser/Throbber.png 
