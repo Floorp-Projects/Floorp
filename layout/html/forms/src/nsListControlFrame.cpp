@@ -3983,6 +3983,11 @@ nsListControlFrame::GetStateType(nsIPresContext* aPresContext,
 NS_IMETHODIMP
 nsListControlFrame::SaveStateInternal(nsIPresContext* aPresContext, nsIPresState** aState)
 {
+  // Don't save state before we are initialized
+  if (!mHasBeenInitialized) {
+    return NS_OK;
+  }
+
   PRBool saveState = PR_FALSE;
   nsresult res = NS_OK;
 

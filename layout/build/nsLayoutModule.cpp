@@ -324,6 +324,7 @@ static Components gComponents[] = {
 
   { "CSS Frame Constructor", NS_CSSFRAMECONSTRUCTOR_CID, nsnull, },
   { "Frame Traversal", NS_FRAMETRAVERSAL_CID, nsnull, },
+  { "Layout History State", NS_LAYOUT_HISTORY_STATE_CID, nsnull, },
 
   // XXX ick
   { "Presentation shell", NS_PRESSHELL_CID, nsnull, },

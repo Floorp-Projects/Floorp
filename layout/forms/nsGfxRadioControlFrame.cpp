@@ -389,6 +389,11 @@ nsGfxRadioControlFrame::SaveState(nsIPresContext* aPresContext, nsIPresState** a
 {
   NS_ENSURE_ARG_POINTER(aState);
 
+  // Don't save state before we are initialized
+  if (!mDidInit) {
+    return NS_OK;
+  }
+
   nsresult res = NS_OK;
   PRBool stateBool = GetRadioState();
   PRBool defaultStateBool = GetDefaultChecked();

@@ -626,6 +626,11 @@ NS_IMETHODIMP nsGfxCheckboxControlFrame::SaveState(nsIPresContext* aPresContext,
 {
   NS_ENSURE_ARG_POINTER(aState);
 
+  // Don't save state before we are initialized
+  if (!mDidInit) {
+    return NS_OK;
+  }
+
   CheckState stateCheck = GetCheckboxState();
   PRBool defaultStateBool = PR_FALSE;
   nsresult res = GetDefaultCheckState(&defaultStateBool);
