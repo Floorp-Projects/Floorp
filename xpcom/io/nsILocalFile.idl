@@ -25,6 +25,10 @@
 
 #include "nsIFile.idl"
 
+/**
+ * @status UNDER_REVIEW
+ */
+
 %{C++
 #include "prio.h"
 #include "prlink.h"

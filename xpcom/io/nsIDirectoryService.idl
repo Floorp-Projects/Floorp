@@ -23,6 +23,11 @@
 #include "nsISupports.idl"
 #include "nsIFile.idl"
 
+/**
+ * @status FROZEN
+ * @version 1.0
+ */
+
 [scriptable, uuid(bbf8cab0-d43a-11d3-8cc2-00609792278c)]
 interface nsIDirectoryServiceProvider: nsISupports
 {

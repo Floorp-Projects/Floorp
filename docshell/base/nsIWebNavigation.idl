@@ -28,6 +28,8 @@
  * It provides methods and attributes to direct an object to navigate to a new
  * location, stop or restart an in process load or determine where the object,
  * has previously gone.   
+ *
+ * @status UNDER_REVIEW
  */
  
 interface nsISHistory;				

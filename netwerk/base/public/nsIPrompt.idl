@@ -20,6 +20,10 @@
  * Contributor(s): 
  */
 
+/**
+ * @status UNDER_REVIEW
+ */
+
 #include "nsISupports.idl"
 
 [scriptable, uuid(a63f70c0-148b-11d3-9333-00104ba0fd40)]

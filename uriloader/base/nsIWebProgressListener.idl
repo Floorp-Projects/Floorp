@@ -25,6 +25,8 @@
 /**
  * The nsIWebProgressListener interface is implemented by clients wishing to 
  * listen in on the progress associated with the loading of documents.
+ *
+ * @status UNDER_REVIEW
  */
 
 interface nsIRequest;

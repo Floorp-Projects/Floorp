@@ -27,6 +27,8 @@ interface nsIDocShellTreeItem;
 
 /**
  * The nsIWebBrowserChrome
+ *
+ * @status UNDER_REVIEW
  */
 
 [scriptable, uuid(BA434C60-9D52-11d3-AFB0-00A024FFC08C)]

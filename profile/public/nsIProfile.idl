@@ -23,7 +23,6 @@
 #include "nsISupports.idl"
 #include "nsIFile.idl"
 
-
 %{C++
       
 #define NS_PROFILE_CID                                 \
@@ -40,6 +39,13 @@
 #define NS_PROFILE_STARTUP_CATEGORY \
         "profile-startup-category"
 %}
+
+/**
+ * nsIProfile
+ * 
+ * @status FROZEN
+ * @version 1.0
+ */
 
 [scriptable, uuid(02b0625a-e7f3-11d2-9f5a-006008a6efe9)]
 interface nsIProfile : nsISupports {

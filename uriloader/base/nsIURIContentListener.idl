@@ -20,12 +20,15 @@
  * Contributor(s): 
  */
 
-/* nsIURIContentListener is an interface used by classes which
-   want to know (and have a chance to handle) a particular content type.
-   Typical useage scenarios will include running applications which register
-   a nsIURIContentListener for each of its content windows with the uri dispatcher
-   service. 
-*/ 
+/**
+ *  nsIURIContentListener is an interface used by classes which
+ *  want to know (and have a chance to handle) a particular content type.
+ *  Typical useage scenarios will include running applications which register
+ *  a nsIURIContentListener for each of its content windows with the uri dispatcher
+ *  service. 
+ * 
+ * @status UNDER_REVIEW
+ */ 
 
 #include "nsISupports.idl"
 #include "nsIURILoader.idl"

@@ -35,6 +35,8 @@
  * (hopefully short-lived) owning reference on demand, through which clients
  * can get useful access to the referent, while it still exists.
  *
+ * @status FROZEN
+ * @version 1.0
  * @see nsISupportsWeakReference
  * @see nsWeakReference
  * @see nsWeakPtr

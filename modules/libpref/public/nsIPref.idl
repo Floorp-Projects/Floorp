@@ -24,6 +24,10 @@
 #include "nsILocalFile.idl"
 #include "nsIObserver.idl"
 
+/**
+ * @status UNDER_REVIEW
+ */
+
 %{C++
 
 
