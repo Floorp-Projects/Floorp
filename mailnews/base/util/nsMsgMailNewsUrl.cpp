@@ -138,7 +138,7 @@ nsresult nsMsgMailNewsUrl::GetErrorMessage (char ** errorMessage)
 NS_IMETHODIMP nsMsgMailNewsUrl::SetStatusFeedback(nsIMsgStatusFeedback *aMsgFeedback)
 {
 	if (aMsgFeedback)
-		m_statusFeedback = aMsgFeedback; // don't ref count this...we don't own it
+		m_statusFeedback = dont_QueryInterface(aMsgFeedback);
 	return NS_OK;
 }
 
@@ -148,7 +148,10 @@ NS_IMETHODIMP nsMsgMailNewsUrl::GetStatusFeedback(nsIMsgStatusFeedback **aMsgFee
 	// it's possible the url really doesn't have status feedback
 	nsresult rv = NS_OK;
 	if (aMsgFeedback)
+	{
 		*aMsgFeedback = m_statusFeedback;
+		NS_IF_ADDREF(*aMsgFeedback);
+	}
 	else
 		rv = NS_ERROR_NULL_POINTER;
 	return rv;

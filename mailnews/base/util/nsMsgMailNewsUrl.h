@@ -23,9 +23,9 @@
 #include "nsISupports.h"
 #include "nsIUrlListener.h"
 #include "nsIUrlListenerManager.h"
+#include "nsIMsgStatusFeedback.h"
 #include "nsCOMPtr.h"
 #include "nsIMsgMailNewsUrl.h"
-#include "nsIMsgStatusFeedback.h"
 #include "nsIURL.h"
 
 ///////////////////////////////////////////////////////////////////////////////////
@@ -126,14 +126,7 @@ protected:
 	virtual ~nsMsgMailNewsUrl();
 
 	nsCOMPtr<nsIURL> m_baseURL;
-
-	// ownership model --> the status feedback has the same lifetime as the 
-	// root webshell for the window. This has a life time greater than all
-	// mailnews urls running in that root window. So we should NOT own the status
-	// feedback object in the individual urls. Please don't change this to a com ptr
-	// without thinking long and hard about why you need to do it. 
-	
-	nsIMsgStatusFeedback * m_statusFeedback;
+	nsCOMPtr<nsIMsgStatusFeedback> m_statusFeedback;
 	char		*m_errorMessage;
 	PRBool		m_runningUrl;
 
