@@ -167,7 +167,6 @@ nsXMLContentSink::nsXMLContentSink()
   mDocumentBaseURL = nsnull;
   mWebShell = nsnull;
   mParser = nsnull;
-  mRootElement = nsnull;
   mDocElement = nsnull;
   mContentStack = nsnull;
   mNameSpaceStack = nsnull;
@@ -178,7 +177,6 @@ nsXMLContentSink::nsXMLContentSink()
   mInTitle = PR_FALSE;
   mStyleSheetCount = 0;
   mCSSLoader       = nsnull;
-  mXSLTransformMediator = nsnull;
   mNeedToBlockParser = PR_FALSE;
 }
 
@@ -194,7 +192,6 @@ nsXMLContentSink::~nsXMLContentSink()
   NS_IF_RELEASE(mDocumentBaseURL);
   NS_IF_RELEASE(mWebShell);
   NS_IF_RELEASE(mParser);
-  NS_IF_RELEASE(mRootElement);
   NS_IF_RELEASE(mDocElement);
   if (nsnull != mNameSpaceStack) {
     // There shouldn't be any here except in an error condition
@@ -241,7 +238,6 @@ nsXMLContentSink::Init(nsIDocument* aDoc,
 
   mState = eXMLContentSinkState_InProlog;
   mDocElement = nsnull;
-  mRootElement = nsnull;
 
   nsIHTMLContentContainer* htmlContainer = nsnull;
   if (NS_SUCCEEDED(aDoc->QueryInterface(NS_GET_IID(nsIHTMLContentContainer), (void**)&htmlContainer))) {
@@ -434,17 +430,19 @@ nsXMLContentSink::DidBuildModel(PRInt32 aQualityLevel)
 }
 
 // The observe method is called on completion of the transform.  The nsISupports argument is an
-// nsIDOMElement interface to the root node of the output content model.
+// nsIContent interface to the root node of the output content model.
 NS_IMETHODIMP
 nsXMLContentSink::Observe(nsISupports *aSubject, const char *aTopic, const PRUnichar *someData)
 {
   nsresult rv = NS_OK;
 
   if (!nsCRT::strcmp(aTopic, "xslt-done")) {
-    nsCOMPtr<nsIContent> content;
+    nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(mWebShell));
+    nsCOMPtr<nsIContentViewer> contentViewer;
+    docShell->GetContentViewer(getter_AddRefs(contentViewer));
 
     // Set the output content model on the document
-    content = do_QueryInterface(aSubject, &rv);
+    nsCOMPtr<nsIContent> content = do_QueryInterface(aSubject, &rv);
     if (NS_SUCCEEDED(rv)) {
       nsCOMPtr<nsIDOMDocument> resultDOMDoc;
       mXSLTransformMediator->GetResultDocument(getter_AddRefs(resultDOMDoc));
@@ -465,33 +463,52 @@ nsXMLContentSink::Observe(nsISupports *aSubject, const char *aTopic, const PRUni
 
       // Start the layout process
       StartLayout();
+
+#if 0 /* Disable until this works for XML */
+      //  Scroll to Anchor only if the document was *not* loaded through history means. 
+      PRUint32 documentLoadType = 0;
+      docShell->GetLoadType(&documentLoadType);
+      if (!(documentLoadType & nsIDocShell::LOAD_CMD_HISTORY)) {
+        ScrollToRef();
+      }
+#else
+      ScrollToRef();
+#endif
+
       sourceDoc->EndLoad();
 
-      nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(mWebShell));
-      nsCOMPtr<nsIContentViewer> contentViewer;
-      rv = docShell->GetContentViewer(getter_AddRefs(contentViewer));
-      if (NS_SUCCEEDED(rv) && contentViewer) {
+      if (contentViewer) {
         contentViewer->LoadComplete(NS_OK);
       }
     }
     else
     {
       // Transform failed
-      nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(mWebShell));
-      nsCOMPtr<nsIContentViewer> contentViewer;
-      rv = docShell->GetContentViewer(getter_AddRefs(contentViewer));
       nsCOMPtr<nsIDocumentViewer> documentViewer(do_QueryInterface(contentViewer));
       if (documentViewer) {
         documentViewer->SetTransformMediator(nsnull);
       }
 
-      mXSLTransformMediator = nsnull;
       mDocument->SetRootContent(mDocElement);
 
       // Start the layout process
       StartLayout();
+
+#if 0 /* Disable until this works for XML */
+      //  Scroll to Anchor only if the document was *not* loaded through history means. 
+      PRUint32 documentLoadType = 0;
+      docShell->GetLoadType(&documentLoadType);
+      if (!(documentLoadType & nsIDocShell::LOAD_CMD_HISTORY)) {
+        ScrollToRef();
+      }
+#else
+      ScrollToRef();
+#endif
+
       mDocument->EndLoad();
     }
+
+    mXSLTransformMediator = nsnull;
   }
   return rv;
 }
@@ -1661,11 +1678,15 @@ nsXMLContentSink::HandleStartElement(const PRUnichar *aName,
     mDocument->GetAndIncrementContentID(&id);
     content->SetContentID(id);
 
-    nsCOMPtr<nsIStyleSheetLinkingElement> ssle(do_QueryInterface(content));
+    if (isHTML &&
+        ((tagAtom == nsHTMLAtoms::link) ||
+         (tagAtom == nsHTMLAtoms::style))) {
+      nsCOMPtr<nsIStyleSheetLinkingElement> ssle(do_QueryInterface(content));
 
-    if (ssle) {
-      ssle->InitStyleLinkElement(mParser, PR_FALSE);
-      ssle->SetEnableUpdates(PR_FALSE);
+      if (ssle) {
+        ssle->InitStyleLinkElement(mParser, PR_FALSE);
+        ssle->SetEnableUpdates(PR_FALSE);
+      }
     }
 
     content->SetDocument(mDocument, PR_FALSE, PR_TRUE);
@@ -1720,10 +1741,9 @@ nsXMLContentSink::HandleEndElement(const PRUnichar *aName)
   FlushText();
 
   nsCOMPtr<nsIContent> currentContent(dont_AddRef(GetCurrentContent()));
+  nsCOMPtr<nsIAtom> tagAtom;
 
   if (currentContent && currentContent->IsContentOfType(nsIContent::eHTML)) {
-    nsCOMPtr<nsIAtom> tagAtom;
-
     currentContent->GetTag(*getter_AddRefs(tagAtom));
 
     if (tagAtom.get() == nsHTMLAtoms::script) {
@@ -1772,16 +1792,21 @@ nsXMLContentSink::HandleEndElement(const PRUnichar *aName)
   nsINameSpace* nameSpace = PopNameSpaces();
   NS_IF_RELEASE(nameSpace);
 
-  nsCOMPtr<nsIStyleSheetLinkingElement> ssle(do_QueryInterface(content));
+  if (currentContent &&
+      currentContent->IsContentOfType(nsIContent::eHTML) &&
+      ((tagAtom == nsHTMLAtoms::link) ||
+       (tagAtom == nsHTMLAtoms::style))) {
+    nsCOMPtr<nsIStyleSheetLinkingElement> ssle(do_QueryInterface(content));
 
-  if (ssle) {
-    ssle->SetEnableUpdates(PR_TRUE);
-    result = ssle->UpdateStyleSheet(nsnull, mStyleSheetCount);
-    if (NS_SUCCEEDED(result) || (result == NS_ERROR_HTMLPARSER_BLOCK)) {
-      if (result == NS_ERROR_HTMLPARSER_BLOCK && mParser) {
-        mParser->BlockParser();
+    if (ssle) {
+      ssle->SetEnableUpdates(PR_TRUE);
+      result = ssle->UpdateStyleSheet(nsnull, mStyleSheetCount);
+      if (NS_SUCCEEDED(result) || (result == NS_ERROR_HTMLPARSER_BLOCK)) {
+        if (result == NS_ERROR_HTMLPARSER_BLOCK && mParser) {
+          mParser->BlockParser();
+         }
+        mStyleSheetCount++;
       }
-      mStyleSheetCount++;
     }
   }
 
@@ -1931,8 +1956,8 @@ nsXMLContentSink::HandleProcessingInstruction(const PRUnichar *aTarget,
 
   nsresult result = NS_OK;
   const nsDependentString target(aTarget);
-  nsAutoString data(aData); // XXX replace this with nsDependentString. Change nsParserUtils APIs
-  
+  const nsDependentString data(aData);
+
   nsCOMPtr<nsIContent> node;
 
   // ParseProcessingInstruction(text, target, data);
@@ -2011,6 +2036,19 @@ nsXMLContentSink::ReportError(const PRUnichar* aErrorText,
     }
   }
   NS_IF_RELEASE(mDocElement); 
+
+  if (mXSLTransformMediator) {
+    // Get rid of the transform mediator.
+    nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(mWebShell));
+    nsCOMPtr<nsIContentViewer> contentViewer;
+    rv = docShell->GetContentViewer(getter_AddRefs(contentViewer));
+    nsCOMPtr<nsIDocumentViewer> documentViewer(do_QueryInterface(contentViewer));
+    if (documentViewer) {
+      documentViewer->SetTransformMediator(nsnull);
+    }
+    mXSLTransformMediator->SetEnabled(PR_FALSE);
+    mXSLTransformMediator = nsnull;
+  }
 
   NS_NAMED_LITERAL_STRING(name, "xmlns");
   NS_NAMED_LITERAL_STRING(value, "http://www.mozilla.org/newlayout/xml/parsererror.xml");

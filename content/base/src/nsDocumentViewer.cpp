@@ -1377,6 +1377,8 @@ DocumentViewerImpl::InitInternal(nsIWidget* aParentWidget,
                                  const nsRect& aBounds,
                                  PRBool aDoCreation)
 {
+  mTransformMediator = nsnull;
+   
 #ifdef NS_PRINT_PREVIEW
   mParentWidget = aParentWidget; // not ref counted
 #endif
@@ -5259,8 +5261,9 @@ nsresult DocumentViewerImpl::DocumentReadyForPrinting()
 NS_IMETHODIMP
 DocumentViewerImpl::SetTransformMediator(nsITransformMediator* aMediator)
 {
-  NS_ASSERTION(nsnull == mTransformMediator, "nsXMLDocument::SetTransformMediator(): \
-    Cannot set a second transform mediator\n");
+  NS_ASSERTION(!mTransformMediator || !aMediator, 
+               "nsXMLDocument::SetTransformMediator(): \
+                Cannot set a second transform mediator\n");
   mTransformMediator = aMediator;
   return NS_OK;
 }

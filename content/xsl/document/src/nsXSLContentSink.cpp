@@ -37,11 +37,13 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsXSLContentSink.h"
+#include "nsHTMLAtoms.h"
 #include "nsIDocument.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMElement.h"
-#include "nsITransformMediator.h"
 #include "nsIParser.h"
+#include "nsIStyleSheetLinkingElement.h"
+#include "nsITransformMediator.h"
 #include "nsIURL.h"
 #include "nsString.h"
 #include "nsEscape.h"
@@ -89,8 +91,14 @@ nsXSLContentSink::Init(nsITransformMediator* aTM,
 {
   nsresult rv;
   rv = nsXMLContentSink::Init(aDoc, aURL, aContainer, nsnull);
+  NS_ENSURE_SUCCESS(rv, rv);
+
   mXSLTransformMediator = aTM;
 
+  nsCOMPtr<nsIScriptLoader> loader;
+  rv = mDocument->GetScriptLoader(getter_AddRefs(loader));
+  NS_ENSURE_SUCCESS(rv, rv);
+  loader->Suspend();
   return rv;
 }
 
@@ -150,5 +158,76 @@ nsXSLContentSink::ProcessStyleLink(nsIContent* aElement,
                                    const nsString& aType,
                                    const nsString& aMedia)
 {
-    return NS_OK;
+  return NS_OK;
+}
+
+NS_IMETHODIMP 
+nsXSLContentSink::HandleStartElement(const PRUnichar *aName, 
+                                     const PRUnichar **aAtts, 
+                                     PRUint32 aAttsCount, 
+                                     PRUint32 aIndex, 
+                                     PRUint32 aLineNumber)
+{
+  nsresult rv = nsXMLContentSink::HandleStartElement(aName, aAtts,
+                                                     aAttsCount, 
+                                                     aIndex,
+                                                     aLineNumber);
+
+  nsCOMPtr<nsIContent> currentContent(dont_AddRef(GetCurrentContent()));
+
+  if (currentContent &&
+      currentContent->IsContentOfType(nsIContent::eHTML)) {
+    nsCOMPtr<nsIAtom> tagAtom;
+    currentContent->GetTag(*getter_AddRefs(tagAtom));
+    if ((tagAtom == nsHTMLAtoms::link) ||
+        (tagAtom == nsHTMLAtoms::style)) {
+      nsCOMPtr<nsIStyleSheetLinkingElement> ssle =
+        do_QueryInterface(currentContent);
+      if (ssle) {
+        ssle->InitStyleLinkElement(nsnull, PR_TRUE);
+      }
+    }
+  }
+  return  rv;
+}
+
+NS_IMETHODIMP
+nsXSLContentSink::HandleProcessingInstruction(const PRUnichar *aTarget, 
+                                              const PRUnichar *aData)
+{
+  FlushText();
+
+  const nsDependentString target(aTarget);
+  const nsDependentString data(aData);
+
+  nsCOMPtr<nsIContent> node;
+
+  nsresult rv = NS_NewXMLProcessingInstruction(getter_AddRefs(node),
+                                               target, data);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIStyleSheetLinkingElement> ssle(do_QueryInterface(node));
+  if (ssle) {
+    ssle->InitStyleLinkElement(nsnull, PR_TRUE);
+  }
+
+  rv = AddContentAsLeaf(node);
+  return rv;
+}
+
+NS_IMETHODIMP
+nsXSLContentSink::ReportError(const PRUnichar* aErrorText, 
+                              const PRUnichar* aSourceText)
+{
+  // nsXMLContentSink::ReportError sets mXSLTransformMediator to nsnull
+  nsCOMPtr<nsITransformMediator> mediator = mXSLTransformMediator;
+
+  nsXMLContentSink::ReportError(aErrorText, aSourceText);
+
+  if (mediator) {
+    nsCOMPtr<nsIDOMNode> styleNode = do_QueryInterface(mDocElement);
+    mediator->SetStyleInvalid(PR_TRUE);
+    mediator->SetStyleSheetContentModel(styleNode);
+  }
+  return NS_OK;
 }
