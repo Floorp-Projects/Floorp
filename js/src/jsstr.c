@@ -3908,7 +3908,7 @@ static JSBool decode(JSContext *cx, JSString *str, JSString *reservedSet, jsval 
             B = JS7_UNHEX(str->chars[k + 1]) * 16 + JS7_UNHEX(str->chars[k + 2]);
             k += 2;
             if (!(B & 0x80))
-                C = B;
+                C = (jschar)B;
             else {
                 n = 1;
                 while (B & (0x80 >> n)) n++;

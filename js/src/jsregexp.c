@@ -1320,9 +1320,17 @@ static const jschar *greedyRecurse(GreedyState *grState, const jschar *cp, const
 {
     const jschar *kidMatch;
     const jschar *match;
+    int num;
 
+/*
+*    when the kid match fails, we reset the parencount and run any 
+*    previously succesful kid in order to restablish it's paren
+*    contents.
+*/
+    num = grState->state->parenCount;
     kidMatch = matchRENodes(grState->state, grState->kid, grState->next, cp);
     if (kidMatch == NULL) {
+        grState->state->parenCount = num;
         if (previousKid != NULL)
             matchRENodes(grState->state, grState->kid, grState->next, previousKid);
         return matchRENodes(grState->state, grState->next, grState->stop, cp);
@@ -1331,11 +1339,18 @@ static const jschar *greedyRecurse(GreedyState *grState, const jschar *cp, const
         if (kidMatch == cp) return kidMatch;    /* no point pursuing an empty match forever */
         if ((grState->maxKid == 0) || (++grState->kidCount < grState->maxKid)) {
             match = greedyRecurse(grState, kidMatch, cp);
-            --grState->kidCount;
             if (match != NULL) return match;
+            --grState->kidCount;
+            grState->state->parenCount = num;
+            matchRENodes(grState->state, grState->kid, grState->next, cp);
         }
-        matchRENodes(grState->state, grState->kid, grState->next, cp);
-        return matchRENodes(grState->state, grState->next, grState->stop, kidMatch);
+        match = matchRENodes(grState->state, grState->next, grState->stop, kidMatch);
+        if (match != NULL) return match;
+/* No subsequent kid could complete; final backtrack attempt with zero kids */        
+        grState->state->parenCount = num;
+        if (previousKid != NULL)
+            matchRENodes(grState->state, grState->kid, grState->next, previousKid);
+        return matchRENodes(grState->state, grState->next, grState->stop, cp);
     }
 }
 
@@ -1664,7 +1679,7 @@ static const jschar *matchRENodes(MatchState *state, RENode *ren, RENode *stop,
           if (kidMatch == NULL)
               return NULL;
           if ((ren->flags & RENODE_MINIMAL) == 0)
-              return matchGreedyKid(state, ren, stop, 1, cp, NULL);
+              return matchGreedyKid(state, ren, stop, 1, kidMatch, cp);
           cp = matchNonGreedyKid(state, ren, 1, 0, kidMatch);
           if (cp == NULL) return NULL;
           break;
