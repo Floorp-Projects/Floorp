@@ -328,10 +328,13 @@ public:
                         nscoord& aSubScriptShift1, 
                         nscoord& aSubScriptShift2)
     {
+      GetSubShifts(fm, aSubScriptShift1, aSubScriptShift2);
+#if 0
       // XXX for now an alias for GetSubscriptOffset
       fm->GetSubscriptOffset (aSubScriptShift1);
       aSubScriptShift2 = aSubScriptShift1 
         = NSToCoordRound(0.5f * aSubScriptShift1);
+#endif
     }
 
   // 3 levels of superscript shifts
@@ -341,10 +344,13 @@ public:
                         nscoord& aSupScriptShift2, 
                         nscoord& aSupScriptShift3)
     {
+      GetSupShifts(fm, aSupScriptShift1, aSupScriptShift2, aSupScriptShift3);
+#if 0
       // XXX for now an alias for GetSupscriptOffset
       fm->GetSuperscriptOffset (aSupScriptShift1);
       aSupScriptShift2 = aSupScriptShift3 = aSupScriptShift1
         = NSToCoordRound(0.75f * aSupScriptShift1); 
+#endif
     }
 
   // these are TeX specific params not found in ordinary fonts
