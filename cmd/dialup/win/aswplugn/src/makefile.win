@@ -13,7 +13,6 @@
 # Copyright (C) 1998 Netscape Communications Corporation.  All Rights
 # Reserved.
 
-VERBOSE=1
 IGNORE_MANIFEST=1
 DEPTH=..\..\..\..\.. 
 DIRS=JRI
@@ -93,8 +92,8 @@ CPP_OBJS=.\$(OBJDIR)\winplugn.obj \
 #################################################################
 
 MAKE_OBJ_TYPE=DLL
-LIBNAME = np$(MOZ_BITS)asw
-PDBFILE	= $(LIBNAME).pdb
+LIBRARY_NAME = np$(MOZ_BITS)asw
+PDBFILE	= $(LIBRARY_NAME).pdb
 
 #make link shut up about this...
 LFLAGS=/MACHINE:Ix86 $(LFLAGS)
@@ -123,14 +122,9 @@ DLL_LIBS=mapi32.lib \
 	$(DLL_LIBS)
 !endif
 
-DLL     = .\$(OBJDIR)\$(LIBNAME).dll
-
 #################################################################
 
 !include "$(DEPTH)\config\rules.mak"
 
-# Stupid rules.mak doesn't automatically build DLLs
-all:: $(DLL)
-
 install::
-	$(MAKE_INSTALL) .\$(OBJDIR)\$(LIBNAME).dll $(DIST)\lib
+	$(MAKE_INSTALL) .\$(OBJDIR)\$(LIBRARY_NAME).dll $(DIST)\lib
