@@ -35,10 +35,6 @@
 #include "nsIHTMLEditor.h"
 // end for testing only
 
-#ifdef NS_DEBUG
-#include "TextEditorTest.h"
-#endif
-
 static NS_DEFINE_IID(kIDOMElementIID, NS_IDOMELEMENT_IID);
 static NS_DEFINE_IID(kIDOMCharacterDataIID, NS_IDOMCHARACTERDATA_IID);
 
@@ -116,35 +112,6 @@ nsTextEditorKeyListener::HandleEvent(nsIDOMEvent* aEvent)
 }
 
 
-#define HAVE_EVENT_CHARCODE				// on when we have the charCode in the event
-
-nsresult
-nsTextEditorKeyListener::GetCharFromKeyCode(PRUint32 aKeyCode, PRBool aIsShift, char *aChar)
-{
-  /* This is completely temporary to get this working while I check out Unicode conversion code. */
-#ifdef XP_MAC
-  if (aChar) {
-    *aChar = (char)aKeyCode;
-    return NS_OK;
-    }
-#else
-  if (aKeyCode >= 0x41 && aKeyCode <= 0x5A) {
-    if (aIsShift) {
-      *aChar = (char)aKeyCode;
-    }
-    else {
-      *aChar = (char)(aKeyCode + 0x20);
-    }
-    return NS_OK;
-  }
-  else if ((aKeyCode >= 0x30 && aKeyCode <= 0x39) || aKeyCode == 0x20) {
-      *aChar = (char)aKeyCode;
-      return NS_OK;
-  }
-#endif
-  return NS_ERROR_FAILURE;
-}
-
 nsresult
 nsTextEditorKeyListener::KeyDown(nsIDOMEvent* aKeyEvent)
 {
@@ -210,30 +177,14 @@ nsTextEditorKeyListener::KeyDown(nsIDOMEvent* aKeyEvent)
       default:
         {
           nsAutoString  key;
-#ifdef HAVE_EVENT_CHARCODE
           PRUint32     character;
-          // do we convert to Unicode here, or has this already been done? (sfraser)
+          // the charcode should be in Unicode already
           if (NS_SUCCEEDED(uiEvent->GetCharCode(&character)))
           {
             key += character;
             if (0!=character)
               mEditor->InsertText(key);
           }
-#else
-          char character;
-          // XXX Replace with x-platform NS-virtkeycode transform.
-          if (NS_OK == GetCharFromKeyCode(keyCode, isShift, & character)) {
-            if (0!=character)
-            {
-              nsAutoString key;
-              key += character;
-              if (!isShift) {
-                key.ToLowerCase();
-              }
-              mEditor->InsertText(key);
-            }
-          }
-#endif
         }
         break;
       }
@@ -262,7 +213,7 @@ nsTextEditorKeyListener::KeyPress(nsIDOMEvent* aKeyEvent)
 /* these includes are for debug only.  this module should never instantiate it's own transactions */
 #include "SplitElementTxn.h"
 #include "TransactionFactory.h"
-static NS_DEFINE_IID(kSplitElementTxnIID,   SPLIT_ELEMENT_TXN_IID);
+
 nsresult
 nsTextEditorKeyListener::ProcessShortCutKeys(nsIDOMEvent* aKeyEvent, PRBool& aProcessed)
 {
@@ -749,11 +700,11 @@ nsTextEditorKeyListener::ProcessShortCutKeys(nsIDOMEvent* aKeyEvent, PRBool& aPr
           aProcessed=PR_TRUE;
           if (mEditor)
           {
-            TextEditorTest *tester = new TextEditorTest();
-            if (tester)
-            {
-              tester->Run(mEditor);
-            }
+            PRInt32  numTests, numFailed;
+            // the unit tests are only exposed through nsIEditor
+            nsCOMPtr<nsIEditor>  editor = do_QueryInterface(mEditor);
+            if (editor)
+	            editor->DebugUnitTests(&numTests, &numFailed);
           }
         }
         break;
