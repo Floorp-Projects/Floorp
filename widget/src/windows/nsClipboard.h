@@ -75,10 +75,12 @@ public:
   static nsresult GetGlobalData(HGLOBAL aHGBL, void ** aData, PRUint32 * aLen);
   static UINT     GetFormat(const char* aMimeStr);
 
+  static UINT     CF_HTML;
+  
 protected:
   NS_IMETHOD SetNativeClipboardData ( PRInt32 aWhichClipboard );
   NS_IMETHOD GetNativeClipboardData ( nsITransferable * aTransferable, PRInt32 aWhichClipboard );
-
+  
   static PRBool IsInternetShortcut ( const char* inFileName ) ;
   static PRBool FindURLFromLocalFile ( IDataObject* inDataObject, UINT inIndex, void** outData, PRUint32* outDataLen ) ;
   static PRBool FindUnicodeFromPlainText ( IDataObject* inDataObject, UINT inIndex, void** outData, PRUint32* outDataLen ) ;
