@@ -122,8 +122,6 @@
       <!-- public implementation -->
       <property name="label"      onset="return this.setAttribute('label',val);"
                                   onget="return this.getAttribute('label');"/>
-      <property name="value"      onset="return this.setAttribute('value',val);"
-                                  onget="return this.getAttribute('value');"/>
       <property name="crop"       onset="return this.setAttribute('crop',val);"
                                   onget="return this.getAttribute('crop');"/>
       <property name="disabled"   onset="if (val) this.setAttribute('disabled', 'true');
