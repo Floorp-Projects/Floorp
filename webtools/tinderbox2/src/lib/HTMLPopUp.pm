@@ -12,8 +12,8 @@
 # the completed string before it is returned.
 
 
-# $Revision: 1.20 $ 
-# $Date: 2002/05/01 03:11:20 $ 
+# $Revision: 1.21 $ 
+# $Date: 2002/05/07 22:49:14 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/HTMLPopUp.pm,v $ 
 # $Name:  $ 
@@ -104,11 +104,7 @@ $VERSION = '#tinder_version#';
 # HTML standard says to use "&nbsp;" to signify an empty cell but I
 # find this hard to ready so I set a variable.
 
-if (defined($TinderConfig::EMPTY_TABLE_CELL)) {
-    $EMPTY_TABLE_CELL = $TinderConfig::EMPTY_TABLE_CELL;
-} else {
-    $EMPTY_TABLE_CELL ="&nbsp;";
-}
+$EMPTY_TABLE_CELL ="&nbsp;";
 
 # default settings for the popup_windows in HTML.pm
 
