@@ -41,16 +41,6 @@
 #include "prgc.h"
 
 
-
-enum {
-	uppExitToShellProcInfo 				= kPascalStackBased,
-	uppStackSpaceProcInfo				= kRegisterBased 
-										  | RESULT_SIZE(SIZE_CODE(sizeof(long)))
-										  | REGISTER_RESULT_LOCATION(kRegisterD0)
-		 								  | REGISTER_ROUTINE_PARAMETER(1, kRegisterD1, SIZE_CODE(sizeof(UInt16)))
-};
-
-
 #define UNIMPLEMENTED_ROUTINE			\
 	DebugStr("\pNot Implemented Yet");	\
 	return 0;
@@ -64,19 +54,27 @@ unsigned char GarbageCollectorCacheFlusher(PRUint32 size);
 extern PRThread *gPrimaryThread;
 
 
-UniversalProcPtr	gStackSpacePatchCallThru = NULL;
-pascal long StackSpacePatch(UInt16);
-
-typedef CALLBACK_API( long , StackSpacePatchPtr )(UInt16 trapNo);
-typedef REGISTER_UPP_TYPE(StackSpacePatchPtr)	StackSpacePatchUPP;
-#define NewStackSpaceProc(userRoutine)	(StackSpacePatchUPP)NewRoutineDescriptor((ProcPtr)(userRoutine), uppStackSpaceProcInfo, GetCurrentArchitecture())
-StackSpacePatchUPP	gStackSpacePatchUPP = NULL;
 
 //##############################################################################
 //##############################################################################
 #pragma mark -
 #pragma mark CREATING MACINTOSH THREAD STACKS
 
+
+enum {
+	uppExitToShellProcInfo 				= kPascalStackBased,
+	uppStackSpaceProcInfo				= kRegisterBased 
+										  | RESULT_SIZE(SIZE_CODE(sizeof(long)))
+										  | REGISTER_RESULT_LOCATION(kRegisterD0)
+		 								  | REGISTER_ROUTINE_PARAMETER(1, kRegisterD1, SIZE_CODE(sizeof(UInt16)))
+};
+
+typedef CALLBACK_API( long , StackSpacePatchPtr )(UInt16 trapNo);
+typedef REGISTER_UPP_TYPE(StackSpacePatchPtr)	StackSpacePatchUPP;
+
+StackSpacePatchUPP	  gStackSpacePatchUPP = NULL;
+UniversalProcPtr	  gStackSpacePatchCallThru = NULL;
+long				(*gCallOSTrapUniversalProc)(UniversalProcPtr,ProcInfoType,...) = NULL;
 
 
 pascal long StackSpacePatch(UInt16 trapNo)
@@ -92,11 +90,70 @@ pascal long StackSpacePatch(UInt16 trapNo)
 	if ((thisThread == gPrimaryThread) || 	
 		(&tos < thisThread->stack->stackBottom) || 
 		(&tos > thisThread->stack->stackTop)) {
-		return CallOSTrapUniversalProc(gStackSpacePatchCallThru, uppStackSpaceProcInfo, trapNo);
+		return gCallOSTrapUniversalProc(gStackSpacePatchCallThru, uppStackSpaceProcInfo, trapNo);
 	}
 	else {
 		return &tos - thisThread->stack->stackBottom;
 	}
+}
+
+
+static void InstallStackSpacePatch(void)
+{
+	long				systemVersion;
+	OSErr				err;
+	CFragConnectionID	connID;
+	Str255				errMessage;
+	Ptr					interfaceLibAddr;
+	CFragSymbolClass	symClass;
+	UniversalProcPtr	(*getOSTrapAddressProc)(UInt16);
+	void				(*setOSTrapAddressProc)(UniversalProcPtr, UInt16);
+	UniversalProcPtr	(*newRoutineDescriptorProc)(ProcPtr,ProcInfoType,ISAType);
+	
+
+	err = Gestalt(gestaltSystemVersion,&systemVersion);
+	if (systemVersion >= 0x00000A00)	// we don't need to patch StackSpace()
+		return;
+
+	// open connection to "InterfaceLib"
+	err = GetSharedLibrary("\pInterfaceLib", kPowerPCCFragArch, kFindCFrag,
+											&connID, &interfaceLibAddr, errMessage);
+	PR_ASSERT(err == noErr);
+	if (err != noErr)
+		return;
+
+	// get symbol GetOSTrapAddress
+	err = FindSymbol(connID, "\pGetOSTrapAddress", &(Ptr)getOSTrapAddressProc, &symClass);
+	if (err != noErr)
+		return;
+
+	// get symbol SetOSTrapAddress
+	err = FindSymbol(connID, "\pSetOSTrapAddress", &(Ptr)setOSTrapAddressProc, &symClass);
+	if (err != noErr)
+		return;
+	
+	// get symbol NewRoutineDescriptor
+	err = FindSymbol(connID, "\pNewRoutineDescriptor", &(Ptr)newRoutineDescriptorProc, &symClass);
+	if (err != noErr)
+		return;
+	
+	// get symbol CallOSTrapUniversalProc
+	err = FindSymbol(connID, "\pCallOSTrapUniversalProc", &(Ptr)gCallOSTrapUniversalProc, &symClass);
+	if (err != noErr)
+		return;
+
+	// get and set trap address for StackSpace (A065)
+	gStackSpacePatchCallThru = getOSTrapAddressProc(0x0065);
+	if (gStackSpacePatchCallThru)
+	{
+		gStackSpacePatchUPP =
+			(StackSpacePatchUPP)newRoutineDescriptorProc((ProcPtr)(StackSpacePatch), uppStackSpaceProcInfo, GetCurrentArchitecture());
+		setOSTrapAddressProc(gStackSpacePatchUPP, 0x0065);
+	}
+
+#if DEBUG
+	StackSpace();
+#endif
 }
 
 
@@ -213,8 +270,6 @@ void _MD_GetRegisters(PRUint32 *to)
 void _MD_EarlyInit()
 {
 	Handle				environmentVariables;
-	long				systemVersion;
-	OSErr				err;
 
 #if !defined(MAC_NSPR_STANDALONE)
 	// MacintoshInitializeMemory();  Moved to mdmacmem.c: AllocateRawMemory(Size blockSize)
@@ -256,40 +311,7 @@ void _MD_EarlyInit()
 	_MD_PutEnv ("NSPR_LOG_MODULES=clock:6,cmon:6,io:6,mon:6,linker:6,cvar:6,sched:6,thread:6");
 #endif
 
-	err = Gestalt(gestaltSystemVersion,&systemVersion);
-	if (systemVersion < 0x00000A00)	// we still need to patch StackSpace()
-	{
-		CFragConnectionID	connID;
-		Str255				errMessage;
-		Ptr					interfaceLibAddr;
-		CFragSymbolClass	symClass;
-		UniversalProcPtr	(*getOSTrapAddressProc)(UInt16);
-		void				(*setOSTrapAddressProc)(UniversalProcPtr, UInt16);
-
-		// open connection to "InterfaceLib"
-		err = GetSharedLibrary("\pInterfaceLib", kPowerPCCFragArch, kFindCFrag,
-												&connID, &interfaceLibAddr, errMessage);
-		PR_ASSERT(err == noErr);
-
-		// get symbol GetOSTrapAddress and get trap address for StackSpace (A065)
-		err = FindSymbol(connID, "\pGetOSTrapAddress", &(Ptr)getOSTrapAddressProc, &symClass);
-		PR_ASSERT(err == noErr);
-		PR_ASSERT(symClass == kTVectorCFragSymbol);
-		if (err == noErr)
-		{
-			gStackSpacePatchCallThru = getOSTrapAddressProc(0x0065); 
-		}
-		
-		// get symbol SetOSTrapAddress and set trap address for _StackSpace (A065)
-		err = FindSymbol(connID, "\pSetOSTrapAddress", &(Ptr)setOSTrapAddressProc, &symClass);
-		PR_ASSERT(err == noErr);
-		PR_ASSERT(symClass == kTVectorCFragSymbol);
-		if (err == noErr && gStackSpacePatchCallThru)
-		{
-			gStackSpacePatchUPP = NewStackSpaceProc(StackSpacePatch);
-			setOSTrapAddressProc(gStackSpacePatchUPP, 0x0065);
-		}
-	}
+	InstallStackSpacePatch();
 }
 
 void _MD_FinalInit()
@@ -435,9 +457,7 @@ char *strdup(const char *source)
 	char 	*newAllocation;
 	size_t	stringLength;
 
-#ifdef DEBUG
 	PR_ASSERT(source);
-#endif
 	
 	stringLength = strlen(source) + 1;
 	
