@@ -606,7 +606,17 @@ NS_METHOD nsTableRowFrame::Paint(nsIPresContext*      aPresContext,
 #endif
 
   if (!(aFlags && (NS_ROW_FRAME_PAINT_SKIP_CELLS == aFlags))) {
+    const nsStyleDisplay* disp = (const nsStyleDisplay*)
+    mStyleContext->GetStyleData(eStyleStruct_Display);
+    if (disp && (NS_STYLE_OVERFLOW_HIDDEN == disp->mOverflow)) {
+      aRenderingContext.PushState();
+      SetOverflowClipRect(aRenderingContext);
+    }
     PaintChildren(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer);
+    if (disp && (NS_STYLE_OVERFLOW_HIDDEN == disp->mOverflow)) {
+      PRBool clipState;
+      aRenderingContext.PopState(clipState);
+    }
   }
   return NS_OK;
 

@@ -473,17 +473,9 @@ nsTableCellFrame::Paint(nsIPresContext*      aPresContext,
   }
   else{
     if ((NS_STYLE_OVERFLOW_HIDDEN == disp->mOverflow) || HasPctOverHeight()) {
-      const nsStylePadding* myPadding =
-        (const nsStylePadding*)mStyleContext->GetStyleData(eStyleStruct_Padding);
-      nsMargin padding;
-      nsRect clipRect(0, 0, mRect.width, mRect.height);
-      if (myPadding->GetPadding(padding)) {
-        clipRect.Deflate(padding);
-      }
-	  
       aRenderingContext.PushState();
-      aRenderingContext.SetClipRect(clipRect,nsClipCombine_kIntersect, clipState);
-    }
+      SetOverflowClipRect(aRenderingContext);
+    }    
   }
   PaintChildren(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer);
   if ((0 != offset.x) || (0 != offset.y)) {
