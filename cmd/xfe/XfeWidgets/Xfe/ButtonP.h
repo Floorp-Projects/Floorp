@@ -91,6 +91,7 @@ typedef struct _XfeButtonPart
     /* Arm resources */
     Boolean				armed;					/* Armed ?				*/
     Pixel				arm_background;			/* Arm background		*/
+    Pixel				arm_foreground;			/* Arm foreground		*/
     Dimension			arm_offset;				/* Arm offset			*/
     Boolean				fill_on_arm;			/* Fill on arm ?		*/
 
@@ -114,9 +115,11 @@ typedef struct _XfeButtonPart
     Cursor				transparent_cursor;		/* Transparent cursor	*/
 
     /* Private Data Members */
-    GC					label_raised_GC;		/* Label raised gc		*/
-    GC					armed_GC;				/* Armed gc				*/
     GC					raised_GC;				/* Raised gc			*/
+    GC					label_raised_GC;		/* Label raised gc		*/
+
+    GC					armed_GC;				/* Armed gc				*/
+    GC					label_armed_GC;			/* Label armed gc		*/
 
     GC					pixmap_GC;				/* Pixmap gc			*/
     XRectangle			pixmap_rect;			/* Box rectangle		*/

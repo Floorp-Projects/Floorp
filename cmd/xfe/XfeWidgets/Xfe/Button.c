@@ -343,6 +343,15 @@ static XtResource resources[] =
 		(XtPointer) DefaultArmBackground
     },
     { 
+		XmNarmForeground,
+		XmCArmForeground,
+		XmRPixel,
+		sizeof(Pixel),
+		XtOffsetOf(XfeButtonRec , xfe_button . arm_foreground),
+		XmRCallProc, 
+		(XtPointer) _XfeCallProcCopyForeground
+    },
+    { 
 		XmNarmOffset,
 		XmCArmOffset,
 		XmRHorizontalDimension,
@@ -709,6 +718,12 @@ Initialize(Widget rw,Widget nw,ArgList args,Cardinal *nargs)
 											  bp->raise_foreground,
 											  None,True);
 
+
+    /* Allocate the label armed GCs */
+    bp->label_armed_GC = XfeAllocateStringGc(nw,lp->font_list,
+											 bp->arm_foreground,
+											 None,True);
+
     /* Allocate the armed GCs */
     bp->armed_GC = XfeAllocateColorGc(nw,bp->arm_background,None,True);
     
@@ -744,10 +759,13 @@ Destroy(Widget w)
     XfeButtonPart * bp = _XfeButtonPart(w);
 
     /* Release GCs */
-    XtReleaseGC(w,bp->armed_GC);
-    XtReleaseGC(w,bp->label_raised_GC);
-    XtReleaseGC(w,bp->pixmap_GC);
     XtReleaseGC(w,bp->raised_GC);
+    XtReleaseGC(w,bp->label_raised_GC);
+
+    XtReleaseGC(w,bp->armed_GC);
+    XtReleaseGC(w,bp->label_armed_GC);
+
+    XtReleaseGC(w,bp->pixmap_GC);
 
     /* Remove all CallBacks */
     /* XtRemoveAllCallbacks(w,XmNactivateCallback); */
@@ -761,9 +779,12 @@ SetValues(Widget ow,Widget rw,Widget nw,ArgList args,Cardinal *nargs)
     XfeButtonPart *	np = _XfeButtonPart(nw);
     XfeButtonPart *	op = _XfeButtonPart(ow);
     XfeLabelPart *	nlp = _XfeLabelPart(nw);
-    Boolean			label_raised_gc_flag = False;
-    Boolean			armed_gc_flag = False;
+
     Boolean			raised_gc_flag = False;
+    Boolean			label_raised_gc_flag = False;
+
+    Boolean			armed_gc_flag = False;
+    Boolean			label_armed_gc_flag = False;
 
     /* button_type */
     if (np->button_type != op->button_type)
@@ -975,6 +996,18 @@ SetValues(Widget ow,Widget rw,Widget nw,ArgList args,Cardinal *nargs)
 		}
     }
 
+    /* arm_foreground */
+    if (np->arm_foreground != op->arm_foreground)
+    {
+		label_armed_gc_flag = True;   
+
+		if (np->armed)
+		{
+			_XfeConfigFlags(nw) |= XfeConfigExpose;
+		}
+    }
+
+
     /* fill_on_arm */
     if (np->fill_on_arm != op->fill_on_arm)
     {
@@ -1015,17 +1048,28 @@ SetValues(Widget ow,Widget rw,Widget nw,ArgList args,Cardinal *nargs)
 		}
     }
 
-
     /* Update the label raised GC */
     if (label_raised_gc_flag)
     {
-		/* Release the old label GC */
+		/* Release the old label raised GC */
 		XtReleaseGC(nw,np->label_raised_GC);
 	
-		/* Allocate the new label GC */
+		/* Allocate the new label raised GC */
 		np->label_raised_GC = XfeAllocateStringGc(nw,nlp->font_list,
 												  np->raise_foreground,
 												  None,True);
+    }
+
+    /* Update the label armed GC */
+    if (label_armed_gc_flag)
+    {
+		/* Release the old label armed GC */
+		XtReleaseGC(nw,np->label_armed_GC);
+	
+		/* Allocate the new label armed GC */
+		np->label_armed_GC = XfeAllocateStringGc(nw,nlp->font_list,
+												 np->arm_foreground,
+												 None,True);
     }
 
     /* Update the armed GC */
@@ -1354,8 +1398,18 @@ GetLabelGC(Widget w)
 {
     XfeButtonPart *	bp = _XfeButtonPart(w);
     XfeLabelPart *	lp = _XfeLabelPart(w);
+	GC				gc = lp->label_GC;
 
-	return bp->raised ? bp->label_raised_GC : lp->label_GC;
+	if (bp->armed)
+	{
+		gc = bp->label_armed_GC;
+	}
+	else if (bp->raised)
+	{
+		gc = bp->label_raised_GC;
+	}
+
+	return gc;
 }
 /*----------------------------------------------------------------------*/
 
