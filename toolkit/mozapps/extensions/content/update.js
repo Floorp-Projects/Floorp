@@ -43,6 +43,13 @@ var gUpdateDialog = {
       os.removeObserver(this, this._messages[i]);
   },
   
+  cancel: function ()
+  {
+    // This will cause uninit to be called, removing our listener, so the extension manager's
+    // notifications will go nowhere. 
+    window.close();
+  },
+  
   observe: function (aSubject, aTopic, aData)
   {
     switch (aTopic) {
