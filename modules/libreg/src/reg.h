@@ -26,6 +26,7 @@
 
 #ifndef STANDALONE_REGISTRY
 #include "prmon.h"
+#include "prlock.h"
 #endif
 
 /* --------------------------------------------------------------------
@@ -156,7 +157,7 @@ typedef struct _regfile
     struct _regfile *next;
     struct _regfile *prev;
 #ifndef STANDALONE_REGISTRY
-    PRMonitor       *monitor;
+    PRLock          *lock;
 #endif
 } REGFILE;
 

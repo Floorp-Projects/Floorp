@@ -113,6 +113,9 @@
 #define XP_MEMCPY(d, s, l)	memcpy((d), (s), (l))
 #define XP_MEMSET(d, c, l)  memset((d), (c), (l))
 
+#define PR_Lock(a)          ((void)0)
+#define PR_Unlock(a)        ((void)0)
+
 #ifdef XP_PC
   #define XP_STRCASECMP(x,y)  stricmp((x),(y))
   #define XP_STRNCASECMP(x,y,n) strnicmp((x),(y),(n))
