@@ -165,7 +165,15 @@ void* nsAllocator::Clone(const void* ptr,  PRUint32 size)
     void* p = mAllocator->Alloc(size);
     if(p) memcpy(p, ptr, size);
     return p;
-}        
+}
+
+NS_EXPORT nsIAllocator* 
+nsAllocator::GetGlobalAllocator()
+{
+    if(!EnsureAllocator()) return nsnull;
+    NS_ADDREF(mAllocator);
+    return mAllocator;
+}
 
 // private:
 
