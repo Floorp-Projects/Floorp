@@ -266,6 +266,11 @@ MonthView.prototype.refreshEvents = function( )
          eventBox.setAttribute( "name", "month-view-event-box-"+calendarEventDisplay.event.id );
          eventBox.setAttribute( "event"+calendarEventDisplay.event.id, true );
          eventBox.setAttribute( "class", "month-day-event-box-class" );
+         if( calendarEventDisplay.event.categories && calendarEventDisplay.event.categories != "" )
+         {
+            eventBox.setAttribute( calendarEventDisplay.event.categories, "true" );
+         }
+            
          eventBox.setAttribute( "eventbox", "monthview" );
          eventBox.setAttribute( "onclick", "gCalendarWindow.monthView.clickEventBox( this, event )" );
          eventBox.setAttribute( "ondblclick", "monthEventBoxDoubleClickEvent( this, event )" );

@@ -339,6 +339,10 @@ DayView.prototype.createEventBox = function ( calendarEventDisplay )
    eventBox.setAttribute( "onmouseover", "gCalendarWindow.mouseOverInfo( calendarEventDisplay, event )" );
    eventBox.setAttribute( "tooltip", "savetip" );
    eventBox.setAttribute( "name", "day-view-event-box-"+calendarEventDisplay.event.id );
+   if( calendarEventDisplay.event.categories && calendarEventDisplay.event.categories != "" )
+   {
+      eventBox.setAttribute( calendarEventDisplay.event.categories, "true" );
+   }
 
    var eventHTMLElement = document.createElement( "label" );
    eventHTMLElement.setAttribute( "id", "day-view-event-html"+calendarEventDisplay.event.id );
