@@ -155,6 +155,9 @@ nsProxyObjectManager::GetProxyForObject(nsIEventQueue *destQueue,
                                         PRInt32 proxyType, 
                                         void** aProxyObject)
 {
+    if (!aObj) return NS_ERROR_NULL_POINTER;
+    if (!aProxyObject) return NS_ERROR_NULL_POINTER;
+
     nsresult rv;
     nsCOMPtr<nsIEventQueue> postQ;
     
@@ -202,7 +205,7 @@ nsProxyObjectManager::GetProxy(  nsIEventQueue *destQueue,
                                  PRInt32 proxyType, 
                                  void** aProxyObject)
 {
-
+    if (!aProxyObject) return NS_ERROR_NULL_POINTER;
     *aProxyObject = nsnull;
     
     // 1. Create a proxy for creating an instance on another thread.
