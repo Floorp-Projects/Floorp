@@ -31,6 +31,7 @@
 #include "nsISupports.idl"
 
 interface nsIURI;
+interface nsIFile;
 
 [scriptable, uuid(100FD4B3-4557-11d4-98D0-001083010E9B)]
 interface nsIExternalProtocolService : nsISupports
@@ -42,4 +43,16 @@ interface nsIExternalProtocolService : nsISupports
   // used to load a url via an external protocol handler (if one exists)
   // aURL --> the url to load
   void loadUrl (in nsIURI aURL);  
-};
+
+    // i may need to find a better interface for the following two methods. I'm not sure yet
+  // (mscott)
+  // open --> Ask the operating system to attempt to open aFile. This is used as a quick
+  // and easy way for one to automatically open a file using the application associated 
+  // with that file.
+  void open(in nsIFile aFile);
+  // openFolder --> Ask the operating system to open the folder and select the file 
+  // specified by aFile. If aFile doesn't include the actual file and is just a folder
+  // name then we'll just open that folder. this routine only works on platforms which 
+  // support the ability to open a folder...
+  void openFolder(in nsIFile aFile);
+}; 
