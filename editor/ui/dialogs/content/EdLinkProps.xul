@@ -30,6 +30,7 @@
 <!DOCTYPE window SYSTEM "chrome://editor/locale/EditorLinkProperties.dtd">
 
 <window title="&windowTitle.label;"
+   class="dialog"
 	 xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
 	 xmlns:html="http://www.w3.org/TR/REC-html40"
    onload = "Startup()"
@@ -65,7 +66,7 @@
           </box>
         </box>
         <!-- ***** The style: width setting is need to cover a bug in button width resizing when text changes ***** -->
-        <html:div><titledbutton id="MoreFewerButton" align="left" style="width: 6em" onclick="onMoreFewer()"/></html:div>
+        <html:div><titledbutton id="MoreFewerButton" align="left" style="width: 10em" onclick="onMoreFewer()"/></html:div>
         <box id="MoreSection" align="vertical">
           <spring class="spacer"/>
           <html:div>&NamedAnchorMsg.label;</html:div>

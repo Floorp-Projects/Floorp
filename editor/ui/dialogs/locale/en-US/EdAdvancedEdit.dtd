@@ -31,9 +31,9 @@
 <!ENTITY tree.attributeHeader.label     "Attribute">
 <!ENTITY tree.valueHeader.label         "Value">
 <!ENTITY tabHTML.label                  "HTML Attributes">
-<!ENTITY tabCSS.label                   "Style/Appearance">
+<!ENTITY tabCSS.label                   "Inline Style">
 <!ENTITY tabJSE.label                   "JavaScript Events">
 
 <!ENTITY AddJSEAttributeLabel.label     "Add a JavaScript Event Handler">
 <!ENTITY AddHTMLAttributeLabel.label    "Add a HTML Attribute">
-<!ENTITY AddCSSAttributeLabel.label     "Add a CSS/Style Attribute">
+<!ENTITY AddCSSAttributeLabel.label     "Add a Style Attribute">

@@ -293,24 +293,22 @@ function onMoreFewer()
 {
   if (SeeMore)
   {
+    SeeMore = false;
 // This doesn't work very well - lots of layout bugs
 //    MoreSection.setAttribute("style","visibility:collapse");
     MoreSection.setAttribute("style","display: none");
-    MoreFewerButton.setAttribute("value",GetString("More"));
+    MoreFewerButton.setAttribute("value",GetString("MoreAttributes"));
     MoreFewerButton.removeAttribute("more");
     //AdvancedEditSection.setAttribute("style","display: none");
-    dump("Set button text\n");
-
-    SeeMore = false;
   }
   else
   {
+    SeeMore = true;
 //    MoreSection.setAttribute("style","visibility: inherit");
     MoreSection.setAttribute("style","display: inherit");
-    MoreFewerButton.setAttribute("value",GetString("Fewer"));
+    MoreFewerButton.setAttribute("value",GetString("FewerAttributes"));
     MoreFewerButton.setAttribute("more","1");
     //AdvancedEditSection.setAttribute("style","display: inherit");
-    SeeMore = true;
   }
   window.sizeToContent();
 }

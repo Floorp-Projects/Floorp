@@ -138,14 +138,7 @@
     </tr>
     <tr>
       <td>
-      
-        <button 
-                id              = "MoreFewerButton" 
-                class           = "disabled" 
-                onclick         = "onMoreFewer()">
-
-          &FewerButton.label;
-        </button>  
+        <xul:titledbutton id="MoreFewerButton" align="left" style="width: 10em" onclick="onMoreFewer()"/>
       </td>
       <td/>
     </tr>
@@ -481,13 +474,13 @@
 <!-- from EdDialogOverlay -->
 <xul:box id="AdvancedEditButtonNoHR"/>
 
-</div> <!-- END of "MoreRow" block that is hidden by More/Fewer button -->
+</div> <!-- END of block that is hidden by More/Less button -->
 
 <!-- ///////////////////// End Parent Table //////////////////////////////////// -->
    </td>
   </tr>
 </table>
-<div><hr width="100%"/></div>
+<div class="separator" align="horizontal"/>
 <!-- ////////////////////////// OK CANCEL Box /////////////////////////////// -->
 
   <!-- from global dialogOverlay -->
