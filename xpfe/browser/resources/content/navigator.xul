@@ -72,7 +72,7 @@ Contributor(s): ______________________________________. -->
      onclick="return opener.BookmarkPopupSingleClick(window,event.target.parentNode.parentNode);">
   
     <template>
-      <rule rdf:type="http://home.netscape.com/NC-rdf#Bookmarkmenuseparator">
+      <rule rdf:type="http://home.netscape.com/NC-rdf#BookmarkSeparator">
         <treechildren>
     <treeitem uri="..." type="rdf:http://home.netscape.com/NC-rdf#type">
       <treerow>
@@ -346,7 +346,7 @@ Contributor(s): ______________________________________. -->
 	  </menupopup>
     </menu>
     <menu accesskey="b" value="&bookmarksMenu.label;"
-                           datasources="rdf:bookmarks rdf:files rdf:find" id="NC:BookmarksRoot">
+                           datasources="rdf:bookmarks rdf:files rdf:find rdf:internetsearch" id="NC:BookmarksRoot">
 		<template>
 			<rule iscontainer="true">
 			  <menupopup>
