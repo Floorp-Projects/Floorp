@@ -44,7 +44,7 @@ class nsSVGPoint : public nsIDOMSVGPoint,
                    public nsSVGValue
 {
 public:
-  nsSVGPoint(float x, float y); // addrefs
+  nsSVGPoint(float x, float y);
 
   // nsISupports interface:
   NS_DECL_ISUPPORTS
@@ -71,12 +71,12 @@ NS_NewSVGPoint(nsIDOMSVGPoint** result, float x, float y)
   *result = new nsSVGPoint(x, y);
   if (!*result)
     return NS_ERROR_OUT_OF_MEMORY;
-
+  NS_ADDREF(*result);
   return NS_OK;
 }
 
 nsSVGPoint::nsSVGPoint(float x, float y)
-    : mRefCnt(1), mX(x), mY(y)
+    : mX(x), mY(y)
 {
 }
 

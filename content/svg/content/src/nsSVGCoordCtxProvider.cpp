@@ -45,8 +45,7 @@
 // nsSVGCoordCtxHolder implementation
 
 nsSVGCoordCtxHolder::nsSVGCoordCtxHolder()
-    : mRefCnt(1),
-      mCtxX(dont_AddRef(new nsSVGCoordCtx)),
+    : mCtxX(dont_AddRef(new nsSVGCoordCtx)),
       mCtxY(dont_AddRef(new nsSVGCoordCtx)),
       mCtxUnspec(dont_AddRef(new nsSVGCoordCtx))
 {}

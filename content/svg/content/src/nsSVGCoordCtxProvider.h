@@ -98,8 +98,7 @@ class nsSVGCoordCtxProvider : public nsISupports
 public:
   NS_DEFINE_STATIC_IID_ACCESSOR(NS_SVGCOORDCTXPROVIDER_IID)
 
-  nsSVGCoordCtxProvider() :
-      mInner(dont_AddRef(new nsSVGCoordCtxHolder)) {}
+  nsSVGCoordCtxProvider() : mInner(new nsSVGCoordCtxHolder) {}
     
   already_AddRefed<nsSVGCoordCtx> GetContextX() { return mInner ? mInner->GetContextX() : nsnull; }
   already_AddRefed<nsSVGCoordCtx> GetContextY() { return mInner ? mInner->GetContextY() : nsnull; }

@@ -47,7 +47,7 @@ class nsSVGMatrix : public nsIDOMSVGMatrix,
                     public nsSVGValue
 {
 public:
-  nsSVGMatrix(float a, float b, float c, float d, float e, float f); // addrefs
+  nsSVGMatrix(float a, float b, float c, float d, float e, float f);
   
   // nsISupports interface:
   NS_DECL_ISUPPORTS
@@ -74,13 +74,13 @@ NS_NewSVGMatrix(nsIDOMSVGMatrix** result,
   *result = new nsSVGMatrix(a, b, c, d, e, f);
   if (!*result)
     return NS_ERROR_OUT_OF_MEMORY;
-
+  NS_ADDREF(*result);
   return NS_OK;
 }
 
 nsSVGMatrix::nsSVGMatrix(float a, float b, float c,
                          float d, float e, float f)
-  : mRefCnt(1), mA(a), mB(b), mC(c), mD(d), mE(e), mF(f)
+  : mA(a), mB(b), mC(c), mD(d), mE(e), mF(f)
 {
 }
 
