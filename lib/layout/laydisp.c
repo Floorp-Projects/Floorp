@@ -828,6 +828,7 @@ lo_DisplayElement(MWContext *context, LO_Element *tptr,
       break;
     case LO_FLOAT:
     case LO_LAYER:
+    case LO_SPACER:
       break;
     default:
 		XP_TRACE(("lo_DisplayElement(%p) skip element type = %d\n", tptr, tptr->type));
