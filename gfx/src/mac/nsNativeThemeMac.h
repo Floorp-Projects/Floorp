@@ -63,6 +63,12 @@ public:
                              nsIFrame* aFrame,
                              PRUint8 aWidgetType,
                              nsMargin* aResult);
+
+  virtual PRBool GetWidgetPadding(nsIDeviceContext* aContext,
+                                  nsIFrame* aFrame,
+                                  PRUint8 aWidgetType,
+                                  nsMargin* aResult);
+
   NS_IMETHOD GetMinimumWidgetSize(nsIRenderingContext* aContext, nsIFrame* aFrame,
                                   PRUint8 aWidgetType,
                                   nsSize* aResult, PRBool* aIsOverridable);
