@@ -306,6 +306,13 @@
     {0x83, 0xcf, 0x09, 0x09, 0xe1, 0x8a, 0x09, 0x3a} \
 }
 
+#define NS_HTTPDIGESTAUTH_CID \
+{ /* 17491ba4-1dd2-11b2-aae3-de6b92dab620 */         \
+    0x17491ba4,                                      \
+    0x1dd2,                                          \
+    0x11b2,                                          \
+    {0xaa, 0xe3, 0xde, 0x6b, 0x92, 0xda, 0xb6, 0x20} \
+}
 
 /******************************************************************************
  * netwerk/protocol/res/ classes

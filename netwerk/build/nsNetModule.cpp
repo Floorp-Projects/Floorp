@@ -113,6 +113,9 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsStorageTransport)
 #include "nsHttpBasicAuth.h"
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsHttpBasicAuth)
 
+#include "nsHttpDigestAuth.h"
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsHttpDigestAuth)
+
 ///////////////////////////////////////////////////////////////////////////////
 
 #include "nsResProtocolHandler.h"
@@ -911,6 +914,11 @@ static nsModuleComponentInfo gNetModuleInfo[] = {
       NS_HTTPBASICAUTH_CID,
       NS_HTTP_AUTHENTICATOR_CONTRACTID_PREFIX "basic",
       nsHttpBasicAuthConstructor },
+
+    { "HTTP Digest Auth Encoder",
+      NS_HTTPDIGESTAUTH_CID,
+      NS_HTTP_AUTHENTICATOR_CONTRACTID_PREFIX "digest",
+      nsHttpDigestAuthConstructor },
 
     // from netwerk/protocol/data:
     { "Data Protocol Handler", 
