@@ -32,7 +32,7 @@
  */
 
 /*
- * $Id: cmsreclist.h,v 1.2 2000/06/13 21:56:31 chrisk%netscape.com Exp $
+ * $Id: cmsreclist.h,v 1.3 2001/01/18 16:36:36 wtc%netscape.com Exp $
  */
 
 #ifndef _CMSRECLIST_H
@@ -42,7 +42,7 @@ struct NSSCMSRecipientStr {
     int				riIndex;	/* this recipient's index in recipientInfo array */
     int				subIndex;	/* index into recipientEncryptedKeys */
 						/* (only in NSSCMSKeyAgreeRecipientInfoStr) */
-    enum {RLIssuerSN, RLSubjKeyID} kind;	/* for conversion recipientinfos -> recipientlist */
+    enum {RLIssuerSN=0, RLSubjKeyID=1} kind;	/* for conversion recipientinfos -> recipientlist */
     union {
 	CERTIssuerAndSN *	issuerAndSN;
 	SECItem *		subjectKeyID;

@@ -33,7 +33,7 @@
 /*
  * certt.h - public data structures for the certificate library
  *
- * $Id: certt.h,v 1.4 2001/01/07 09:21:23 nelsonb%netscape.com Exp $
+ * $Id: certt.h,v 1.5 2001/01/18 16:36:24 wtc%netscape.com Exp $
  */
 #ifndef _CERTT_H_
 #define _CERTT_H_
@@ -173,10 +173,10 @@ struct CERTCertTrustStr {
  * defined the types of trust that exist
  */
 typedef enum {
-    trustSSL,
-    trustEmail,
-    trustObjectSigning,
-    trustTypeNone
+    trustSSL = 0,
+    trustEmail = 1,
+    trustObjectSigning = 2,
+    trustTypeNone = 3
 } SECTrustType;
 
 #define SEC_GET_TRUST_FLAGS(trust,type) \
@@ -451,36 +451,36 @@ struct CERTDistNamesStr {
 			 NS_CERT_TYPE_OBJECT_SIGNING_CA | \
 			 EXT_KEY_USAGE_STATUS_RESPONDER )
 typedef enum {
-    certUsageSSLClient,
-    certUsageSSLServer,
-    certUsageSSLServerWithStepUp,
-    certUsageSSLCA,
-    certUsageEmailSigner,
-    certUsageEmailRecipient,
-    certUsageObjectSigner,
-    certUsageUserCertImport,
-    certUsageVerifyCA,
-    certUsageProtectedObjectSigner,
-    certUsageStatusResponder,
-    certUsageAnyCA
+    certUsageSSLClient = 0,
+    certUsageSSLServer = 1,
+    certUsageSSLServerWithStepUp = 2,
+    certUsageSSLCA = 3,
+    certUsageEmailSigner = 4,
+    certUsageEmailRecipient = 5,
+    certUsageObjectSigner = 6,
+    certUsageUserCertImport = 7,
+    certUsageVerifyCA = 8,
+    certUsageProtectedObjectSigner = 9,
+    certUsageStatusResponder = 10,
+    certUsageAnyCA = 11
 } SECCertUsage;
 
 /*
  * Does the cert belong to the user, a peer, or a CA.
  */
 typedef enum {
-    certOwnerUser,
-    certOwnerPeer,
-    certOwnerCA
+    certOwnerUser = 0,
+    certOwnerPeer = 1,
+    certOwnerCA = 2
 } CERTCertOwner;
 
 /*
  * This enum represents the state of validity times of a certificate
  */
 typedef enum {
-    secCertTimeValid,
-    secCertTimeExpired,
-    secCertTimeNotValidYet
+    secCertTimeValid = 0,
+    secCertTimeExpired = 1,
+    secCertTimeNotValidYet = 2
 } SECCertTimeValidity;
 
 /*
@@ -727,11 +727,11 @@ typedef char * (*CERTDBNameFunc)(void *arg, int dbVersion);
  * types of cert packages that we can decode
  */
 typedef enum {
-    certPackageNone,
-    certPackageCert,
-    certPackagePKCS7,
-    certPackageNSCertSeq,
-    certPackageNSCertWrap
+    certPackageNone = 0,
+    certPackageCert = 1,
+    certPackagePKCS7 = 2,
+    certPackageNSCertSeq = 3,
+    certPackageNSCertWrap = 4
 } CERTPackageType;
 
 /*

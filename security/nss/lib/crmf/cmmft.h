@@ -42,9 +42,9 @@
  * choices available for the CMMFCertOrEncCert structure.
  */
 typedef enum {
-    cmmfNoCertOrEncCert,
-    cmmfCertificate,
-    cmmfEncryptedCert
+    cmmfNoCertOrEncCert = 0,
+    cmmfCertificate = 1,
+    cmmfEncryptedCert = 2
 } CMMFCertOrEncCertChoice;
 
 /*
@@ -52,15 +52,15 @@ typedef enum {
  * represent the CMMF type PKIStatus
  */
 typedef enum {
-    cmmfGranted,
-    cmmfGrantedWithMods,
-    cmmfRejection,
-    cmmfWaiting,
-    cmmfRevocationWarning,
-    cmmfRevocationNotification,
-    cmmfKeyUpdateWarning,
-    cmmfNumPKIStatus,
-    cmmfNoPKIStatus
+    cmmfNoPKIStatus = -1,
+    cmmfGranted = 0,
+    cmmfGrantedWithMods = 1,
+    cmmfRejection = 2,
+    cmmfWaiting = 3,
+    cmmfRevocationWarning = 4,
+    cmmfRevocationNotification = 5,
+    cmmfKeyUpdateWarning = 6,
+    cmmfNumPKIStatus
 } CMMFPKIStatus;
 
 /*
@@ -68,16 +68,16 @@ typedef enum {
  * in PKIFailureInfo defined in CMMF.
  */
 typedef enum {
-    cmmfBadAlg,
-    cmmfBadMessageCheck,
-    cmmfBadRequest,
-    cmmfBadTime,
-    cmmfBadCertId,
-    cmmfBadDataFormat,
-    cmmfWrongAuthority,
-    cmmfIncorrectData,
-    cmmfMissingTimeStamp,
-    cmmfNoFailureInfo
+    cmmfBadAlg = 0,
+    cmmfBadMessageCheck = 1,
+    cmmfBadRequest = 2,
+    cmmfBadTime = 3,
+    cmmfBadCertId = 4,
+    cmmfBadDataFormat = 5,
+    cmmfWrongAuthority = 6,
+    cmmfIncorrectData = 7,
+    cmmfMissingTimeStamp = 8,
+    cmmfNoFailureInfo = 9
 } CMMFPKIFailureInfo;
 
 typedef struct CMMFPKIStatusInfoStr          CMMFPKIStatusInfo;

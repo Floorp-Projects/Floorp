@@ -34,7 +34,7 @@
 /*
  * Header for pkcs7 types.
  *
- * $Id: pkcs7t.h,v 1.1 2000/03/31 19:16:07 relyea%netscape.com Exp $
+ * $Id: pkcs7t.h,v 1.2 2001/01/18 16:36:33 wtc%netscape.com Exp $
  */
 
 #ifndef _PKCS7T_H_
@@ -221,9 +221,9 @@ struct SEC_PKCS7AttributeStr {
    scenario and data specifics. */
 typedef enum
 {
-	SECKEAUsesSkipjack,
-	SECKEAUsesNonSkipjack,
-	SECKEAUsesNonSkipjackWithPaddedEncKey
+	SECKEAUsesSkipjack = 0,
+	SECKEAUsesNonSkipjack = 1,
+	SECKEAUsesNonSkipjackWithPaddedEncKey = 2
 } SECKEATemplateSelector;
 
 /* ### mwelch - S/MIME KEA parameters. These don't really fit here,

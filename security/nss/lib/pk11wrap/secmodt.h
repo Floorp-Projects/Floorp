@@ -149,20 +149,20 @@ struct PK11DefaultArrayEntryStr {
  * hack.
  */
 typedef enum {
-	PK11_OriginNULL,	/* There is not key, it's a null SymKey */
-	PK11_OriginDerive,	/* Key was derived from some other key */
-	PK11_OriginGenerated,	/* Key was generated (also PBE keys) */
-	PK11_OriginFortezzaHack,/* Key was marked for fortezza hack */
-	PK11_OriginUnwrap	/* Key was unwrapped or decrypted */
+    PK11_OriginNULL = 0,	/* There is not key, it's a null SymKey */
+    PK11_OriginDerive = 1,	/* Key was derived from some other key */
+    PK11_OriginGenerated = 2,	/* Key was generated (also PBE keys) */
+    PK11_OriginFortezzaHack = 3,/* Key was marked for fortezza hack */
+    PK11_OriginUnwrap = 4	/* Key was unwrapped or decrypted */
 } PK11Origin;
 
 /* PKCS #11 disable reasons */
 typedef enum {
     PK11_DIS_NONE = 0,
-    PK11_DIS_USER_SELECTED,
-    PK11_DIS_COULD_NOT_INIT_TOKEN,
-    PK11_DIS_TOKEN_VERIFY_FAILED,
-    PK11_DIS_TOKEN_NOT_PRESENT
+    PK11_DIS_USER_SELECTED = 1,
+    PK11_DIS_COULD_NOT_INIT_TOKEN = 2,
+    PK11_DIS_TOKEN_VERIFY_FAILED = 3,
+    PK11_DIS_TOKEN_NOT_PRESENT = 4
 } PK11DisableReasons;
 
 /* function pointer type for password callback function.

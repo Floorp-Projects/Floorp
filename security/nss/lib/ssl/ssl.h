@@ -32,7 +32,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: ssl.h,v 1.5 2001/01/06 20:56:40 nelsonb%netscape.com Exp $
+ * $Id: ssl.h,v 1.6 2001/01/18 16:36:41 wtc%netscape.com Exp $
  */
 
 #ifndef __ssl_h_
@@ -258,9 +258,9 @@ SSL_IMPORT int SSL_BadCertHook(PRFileDesc *fd, SSLBadCertHandler f, void *arg);
 /* Key Exchange values */
 typedef enum {
     kt_null = 0,
-    kt_rsa,
-    kt_dh,
-    kt_fortezza,
+    kt_rsa = 1,
+    kt_dh = 2,
+    kt_fortezza = 3,
     kt_kea_size
 } SSLKEAType;
 
