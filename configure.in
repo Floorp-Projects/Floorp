@@ -2270,7 +2270,7 @@ if test "$ac_cv_func_gnu_get_libc_version" = "yes"; then
 fi
 
 case $target_os in
-    os2*|msvc*|mks*|cygwin*|mingw*)
+    os2*|msvc*|mks*|cygwin*|mingw*|darwin*)
         ;;
     *)
     
