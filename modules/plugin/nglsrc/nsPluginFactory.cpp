@@ -18,7 +18,7 @@
 
 #include "nscore.h"
 #include "nsIFactory.h"
-#include "nsISupports.h"
+#include "nsCOMPtr.h"
 
 //#include "nsPluginsCID.h"
 #include "nsPluginHostImpl.h"
@@ -158,12 +158,11 @@ NSGetFactory(nsISupports* serviceMgr,
     return NS_ERROR_NULL_POINTER;
   }
 
-  nsIServiceManager *pnsIServiceManager = NULL;
-  if (NS_FAILED(serviceMgr->QueryInterface(kIServiceManagerIID, (void**) &pnsIServiceManager)))
-    return NS_ERROR_FAILURE;
+  nsresult rv;
+  nsCOMPtr<nsIServiceManager> servMgr = do_QueryInterface(serviceMgr, &rv);
+  if (NS_FAILED(rv)) return rv;
 
-  *aFactory = new nsPluginFactory(aClass, pnsIServiceManager);
-  serviceMgr->Release();
+  *aFactory = new nsPluginFactory(aClass, servMgr);
 
   if (nsnull == aFactory) {
     return NS_ERROR_OUT_OF_MEMORY;
