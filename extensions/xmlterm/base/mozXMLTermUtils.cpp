@@ -293,11 +293,12 @@ mozXMLTermUtils::GetNodeAttribute(nsIDOMNode* aDOMNode,
 
   nsCOMPtr<nsIDOMElement> domElement = do_QueryInterface(aDOMNode);
   if (!domElement) {
-    aAttValue = "";
+    aAttValue.SetLength(0);
     return NS_OK;
   }
 
-  nsAutoString attName = aAttName;
+  nsAutoString attName;
+  attName.AssignWithConversion(aAttName);
   return domElement->GetAttribute(attName, aAttValue);
 }
 
@@ -324,7 +325,7 @@ NS_IMETHODIMP mozXMLTermUtils::TimeStamp(PRInt32 deltaSec, PRTime& lastTime,
   LL_I2L(deltaTime, deltaSec*1000000);
   if (LL_CMP(difTime, <, deltaTime)) {
     // Not enough time has elapsed for a new time stamp
-    aTimeStamp = "";
+    aTimeStamp.SetLength(0);
     return NS_OK;
   }
 
@@ -344,7 +345,7 @@ NS_IMETHODIMP mozXMLTermUtils::TimeStamp(PRInt32 deltaSec, PRTime& lastTime,
 
   XMLT_LOG(mozXMLTermUtils::LocalTime,99,("localTime=%s\n", dateStr));
 
-  aTimeStamp = dateStr;
+  aTimeStamp.AssignWithConversion(dateStr);
   return NS_OK;
 }
 
@@ -382,7 +383,7 @@ NS_IMETHODIMP mozXMLTermUtils::RandomCookie(nsString& aCookie)
   }
   cookie[11] = '\0';
 
-  aCookie = cookie;
+  aCookie.AssignWithConversion(cookie);
 
   return NS_OK;
 }

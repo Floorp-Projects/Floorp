@@ -98,7 +98,7 @@ mozLineTerm::mozLineTerm() :
   mSuspended(PR_FALSE),
   mEchoFlag(PR_TRUE),
   mObserver(nsnull),
-  mCookie(""),
+  mCookie(nsAutoString()),
   mLastTime(LL_ZERO)
 {
   NS_INIT_REFCNT();
@@ -345,7 +345,7 @@ NS_IMETHODIMP mozLineTerm::OpenAux(const PRUnichar *command,
       return NS_ERROR_FAILURE;
 
   // Ensure that cookie attribute of document is defined
-  nsAutoString cookiePrefix ( "xmlterm=" );
+  nsAutoString cookiePrefix ( NS_ConvertASCIItoUCS2("xmlterm=") );
   nsAutoString cookieStr;
   result = domHTMLDoc->GetCookie(cookieStr);
 
@@ -381,7 +381,8 @@ NS_IMETHODIMP mozLineTerm::OpenAux(const PRUnichar *command,
   XMLT_LOG(mozLineTerm::Open,22, ("mCookie=%s\n", cookieCStr));
 
   // Convert initInput to CString
-  nsCAutoString initCStr (initInput);
+  nsCAutoString initCStr;
+  initCStr.AssignWithConversion(initInput);
   XMLT_LOG(mozLineTerm::Open,22, ("initInput=%s\n", initCStr.GetBuffer()));
 
   // List of prompt delimiters
@@ -455,7 +456,7 @@ NS_IMETHODIMP mozLineTerm::SuspendAux(PRBool aSuspend)
  */
 NS_IMETHODIMP mozLineTerm::Close(const PRUnichar* aCookie)
 {
-  if (!mCookie.Equals(aCookie)) {
+  if (!mCookie.EqualsWithConversion(aCookie)) {
     XMLT_ERROR("mozLineTerm::Close: Error - Cookie mismatch\n");
     return NS_ERROR_FAILURE;
   }
@@ -523,7 +524,7 @@ NS_IMETHODIMP mozLineTerm::ResizeAux(PRInt32 nRows, PRInt32 nCols)
 NS_IMETHODIMP mozLineTerm::Write(const PRUnichar *buf,
                                  const PRUnichar* aCookie)
 {
-  if (!mCookie.Equals(aCookie)) {
+  if (!mCookie.EqualsWithConversion(aCookie)) {
     XMLT_ERROR("mozLineTerm::Write: Error - Cookie mismatch\n");
     return NS_ERROR_FAILURE;
   }
@@ -592,7 +593,7 @@ NS_IMETHODIMP mozLineTerm::Read(PRInt32 *opcodes, PRInt32 *opvals,
                                 const PRUnichar* aCookie,
                                 PRUnichar **_retval)
 {
-  if (!mCookie.Equals(aCookie)) {
+  if (!mCookie.EqualsWithConversion(aCookie)) {
     XMLT_ERROR("mozLineTerm::Read: Error - Cookie mismatch\n");
     return NS_ERROR_FAILURE;
   }

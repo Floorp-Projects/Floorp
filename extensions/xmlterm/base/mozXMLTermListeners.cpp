@@ -278,7 +278,7 @@ mozXMLTermKeyListener::KeyPress(nsIDOMEvent* aKeyEvent)
 
     PRUint32 keyChar = 0;
     PRUint32 escPrefix = 0;
-    nsAutoString JSCommand = "";
+    nsAutoString JSCommand; JSCommand.SetLength(0);
 
     PRBool screenMode = 0;
     result = mXMLTerminal->GetScreenMode(&screenMode);
@@ -329,43 +329,43 @@ mozXMLTermKeyListener::KeyPress(nsIDOMEvent* aKeyEvent)
         keyChar = U_ESCAPE;
         break;
       case nsIDOMKeyEvent::DOM_VK_HOME:
-        JSCommand = "ScrollHomeKey";
+        JSCommand.AssignWithConversion("ScrollHomeKey");
         break;
       case nsIDOMKeyEvent::DOM_VK_END:
-        JSCommand = "ScrollEndKey";
+        JSCommand.AssignWithConversion("ScrollEndKey");
         break;
       case nsIDOMKeyEvent::DOM_VK_PAGE_UP:
-        JSCommand = "ScrollPageUpKey";
+        JSCommand.AssignWithConversion("ScrollPageUpKey");
         break;
       case nsIDOMKeyEvent::DOM_VK_PAGE_DOWN:
-        JSCommand = "ScrollPageDownKey";
+        JSCommand.AssignWithConversion("ScrollPageDownKey");
         break;
       case nsIDOMKeyEvent::DOM_VK_F1:
-        JSCommand = "F1Key";
+        JSCommand.AssignWithConversion("F1Key");
         break;
       case nsIDOMKeyEvent::DOM_VK_F2:
-        JSCommand = "F2Key";
+        JSCommand.AssignWithConversion("F2Key");
         break;
       case nsIDOMKeyEvent::DOM_VK_F3:
-        JSCommand = "F3Key";
+        JSCommand.AssignWithConversion("F3Key");
         break;
       case nsIDOMKeyEvent::DOM_VK_F4:
-        JSCommand = "F4Key";
+        JSCommand.AssignWithConversion("F4Key");
         break;
       case nsIDOMKeyEvent::DOM_VK_F5:
-        JSCommand = "F5Key";
+        JSCommand.AssignWithConversion("F5Key");
         break;
       case nsIDOMKeyEvent::DOM_VK_F6:
-        JSCommand = "F6Key";
+        JSCommand.AssignWithConversion("F6Key");
         break;
       case nsIDOMKeyEvent::DOM_VK_F7:
-        JSCommand = "F7Key";
+        JSCommand.AssignWithConversion("F7Key");
         break;
       case nsIDOMKeyEvent::DOM_VK_F8:
-        JSCommand = "F8Key";
+        JSCommand.AssignWithConversion("F8Key");
         break;
       case nsIDOMKeyEvent::DOM_VK_F9:
-        JSCommand = "F9Key";
+        JSCommand.AssignWithConversion("F9Key");
         break;
       default: 
         if ( (ctrlKey && (keyCode ==nsIDOMKeyEvent::DOM_VK_SPACE)) ||
@@ -396,12 +396,12 @@ mozXMLTermKeyListener::KeyPress(nsIDOMEvent* aKeyEvent)
 
       if (NS_SUCCEEDED(result) && domDocument) {
         nsAutoString JSInput = JSCommand;
-        nsAutoString JSOutput = "";
-        JSInput.Append("(");
-        JSInput.Append(shiftKey,10);
-        JSInput.Append(",");
-        JSInput.Append(ctrlKey,10);
-        JSInput.Append(");");
+        nsAutoString JSOutput; JSOutput.SetLength(0);
+        JSInput.AppendWithConversion("(");
+        JSInput.AppendInt(shiftKey,10);
+        JSInput.AppendWithConversion(",");
+        JSInput.AppendInt(ctrlKey,10);
+        JSInput.AppendWithConversion(");");
         result = mozXMLTermUtils::ExecuteScript(domDocument,
                                                 JSInput,
                                                 JSOutput);
@@ -410,7 +410,7 @@ mozXMLTermKeyListener::KeyPress(nsIDOMEvent* aKeyEvent)
 
     if (!mSuspend && (keyChar > 0) && (keyChar <= 0xFFFDU)) {
       // Transmit valid non-null Unicode character
-      nsAutoString keyString = "";
+      nsAutoString keyString; keyString.SetLength(0);
       if (escPrefix) {
         keyString.Append((PRUnichar) U_ESCAPE);
         keyString.Append((PRUnichar) U_LBRACKET);
@@ -638,7 +638,7 @@ mozXMLTermMouseListener::MouseClick(nsIDOMEvent* aMouseEvent)
   if (!selCon)
     return NS_ERROR_FAILURE;
   nsCOMPtr<nsIDOMSelection> selection;
-  result = selCon->GetSelection(SELECTION_NORMAL,
+  result = selCon->GetSelection(nsISelectionController::SELECTION_NORMAL,
                                      getter_AddRefs(selection));
 
   if (NS_FAILED(result) || !selection)
