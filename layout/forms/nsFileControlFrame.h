@@ -31,9 +31,14 @@
 #include "nsCOMPtr.h"
 #include "nsIHTMLContent.h"
 
+#ifndef ENDER_LITE
+#include "nsGfxTextControlFrame.h"
+typedef   nsGfxTextControlFrame nsNewFrame;
+#else
 #include "nsGfxTextControlFrame2.h"
 #include "nsFormControlHelper.h"
 typedef   nsGfxTextControlFrame2 nsNewFrame;
+#endif
 
 class nsIPresState;
 class nsFormFrame;
