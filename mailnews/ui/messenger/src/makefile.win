@@ -23,14 +23,17 @@ MAKE_OBJ_TYPE = DLL
 MODULE=messenger
 EXPORTS = \
 	nsMsgAppCore.h	\
+	nsJSMsgAppCore.h \
 	$(NULL)
 
-DLL=.\$(OBJDIR)\$(MODULE).dll
+DLLNAME=messenger.dll
+LIBNAME=messenger.lib
+DLL=.\$(OBJDIR)\$(DLLNAME)
 
 DEFINES=-D_IMPL_NS_DOM -DWIN32_LEAN_AND_MEAN
 
 OBJS = \
-	.\$(OBJDIR)\nsMessengerFactory.obj	\
+    .\$(OBJDIR)\nsMessengerFactory.obj	\
     .\$(OBJDIR)\nsJSMsgAppCore.obj       \
     .\$(OBJDIR)\nsMsgAppCore.obj         \
     $(NULL)
@@ -52,6 +55,8 @@ LINCS= \
     -I$(XPDIST)\public\pref 	\
 	-I$(XPDIST)\public\raptor   \
 	-I$(XPDIST)\public\appcores \
+	-I$(XPDIST)\public\mailnews	\
+	-I$(XPDIST)\public\security \
     $(NULL)
 
 LLIBS =				            \
@@ -65,15 +70,17 @@ LLIBS =				            \
     $(DIST)\lib\raptorgfxwin.lib	\
     $(LIBNSPR)		            \
     $(DIST)\lib\libplc21.lib    \
+    $(DIST)\lib\nntp.lib    \
+    $(DIST)\lib\msgCore.lib    \
     $(NULL)
 
 include <$(DEPTH)\config\rules.mak>
 
 clobber::
-	rm -f $(DIST)\lib\$(MODULE).lib
-	rm -f $(DIST)\bin\$(MODULE).dll
+	rm -f $(DIST)\lib\$(LIBNAME)
+	rm -f $(DIST)\bin\$(DLLNAME)
 
 install:: $(DLL)
-	$(MAKE_INSTALL) .\$(OBJDIR)\$(MODULE).dll $(DIST)\bin
-	$(MAKE_INSTALL) .\$(OBJDIR)\$(MODULE).lib $(DIST)\lib
+	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME) $(DIST)\bin
+	$(MAKE_INSTALL) .\$(OBJDIR)\$(LIBNAME) $(DIST)\lib
 	$(MAKE_INSTALL) $(DLL) $(DIST)\bin

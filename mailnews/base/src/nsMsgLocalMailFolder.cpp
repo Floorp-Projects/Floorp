@@ -21,10 +21,12 @@
 #include "nsMsgLocalMailFolder.h"	 
 #include "nsMsgFolderFlags.h"
 #include "prprf.h"
+#include "nsIRDFResourceFactory.h"
 
 nsMsgLocalMailFolder::nsMsgLocalMailFolder(const char* uri)
-:nsMsgFolder(uri)
+  :nsMsgFolder(uri)
 {
+  NS_INIT_REFCNT();
 	mHaveReadNameFromDB = PR_FALSE;
 	mPathName = nsnull;
 }
@@ -661,3 +663,59 @@ NS_IMETHODIMP nsMsgLocalMailFolder::SetPathName(char * aPathName)
 	return NS_OK;
 }
 
+/**
+ * This class creates resources for message folder URIs. It should be
+ * registered for the "mailnewsfolder:" prefix.
+ */
+class nsMsgFolderResourceFactoryImpl : public nsIRDFResourceFactory
+{
+public:
+  nsMsgFolderResourceFactoryImpl(void);
+  virtual ~nsMsgFolderResourceFactoryImpl(void);
+
+  NS_DECL_ISUPPORTS
+
+  NS_IMETHOD CreateResource(const char* aURI, nsIRDFResource** aResult);
+};
+
+nsMsgFolderResourceFactoryImpl::nsMsgFolderResourceFactoryImpl(void)
+{
+  NS_INIT_REFCNT();
+}
+
+nsMsgFolderResourceFactoryImpl::~nsMsgFolderResourceFactoryImpl(void)
+{
+}
+
+NS_IMPL_ISUPPORTS(nsMsgFolderResourceFactoryImpl, nsIRDFResourceFactory::IID());
+
+NS_IMETHODIMP
+nsMsgFolderResourceFactoryImpl::CreateResource(const char* aURI, nsIRDFResource** aResult)
+{
+  if (! aResult)
+    return NS_ERROR_NULL_POINTER;
+
+  nsMsgLocalMailFolder *folder = new nsMsgLocalMailFolder(aURI);
+  if (! folder)
+    return NS_ERROR_OUT_OF_MEMORY;
+
+	folder->QueryInterface(nsIRDFResource::IID(), (void**)aResult);
+    return NS_OK;
+}
+
+nsresult
+NS_NewRDFMsgFolderResourceFactory(nsIRDFResourceFactory** aResult)
+{
+  if (! aResult)
+    return NS_ERROR_NULL_POINTER;
+
+  nsMsgFolderResourceFactoryImpl* factory =
+		new nsMsgFolderResourceFactoryImpl();
+
+  if (! factory)
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  NS_ADDREF(factory);
+  *aResult = factory;
+  return NS_OK;
+}

@@ -195,7 +195,7 @@ NS_IMETHODIMP nsMSGFolderDataSource::Init(const char* uri)
 		{
 			rootFolder->SetName("Mail and News");
 			rootFolder->SetDepth(0);
-			nsNativeFileSpec startPath("your mail path here", PR_FALSE);
+			nsNativeFileSpec startPath("d:\\users\\warren\\Mail", PR_FALSE);
 			if (NS_FAILED(rv = InitLocalFolders(rootFolder, startPath, 1)))
 				return rv;
 
@@ -437,7 +437,7 @@ nsMSGFolderDataSource::InitLocalFolders(nsIMsgFolder* aParentFolder, nsNativeFil
 			char *fileurl = (char*)PR_Malloc( fileurlSize + 1);
 			nsIRDFResource* resource;
 
-			PR_snprintf(fileurl, fileurlSize, "mailbox:%s", pathStr);
+			PR_snprintf(fileurl, fileurlSize + 1, "mailbox:%s", pathStr);
 			gRDFService->GetResource(fileurl, (nsIRDFResource**)&resource);
 
 			PR_Free(fileurl);
@@ -476,7 +476,7 @@ nsMSGFolderDataSource::InitLocalFolders(nsIMsgFolder* aParentFolder, nsNativeFil
 		char *fileurl = (char*)PR_Malloc( fileurlSize + 1);
 		nsIRDFResource* resource;
 
-		PR_snprintf(fileurl, fileurlSize, "mailbox:%s", pathStr);
+		PR_snprintf(fileurl, fileurlSize + 1, "mailbox:%s", pathStr);
 		gRDFService->GetResource(fileurl, (nsIRDFResource**)&resource);
 
 		PR_Free(fileurl);

@@ -7,7 +7,7 @@
 <window xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
 	xmlns:html="http://www.w3.org/TR/REC-html40">
 
-<xul:tree>
+<xul:tree xul:datasources="rdf:bookmarks rdf:mail"> 
   <xul:treehead>
     <xul:treerow>
       <xul:treecell>Name</xul:treecell>

@@ -324,12 +324,13 @@ MsgAppCore(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 //
 // MsgAppCore class initialization
 //
-nsresult NS_InitMsgAppCoreClass(nsIScriptContext *aContext, void **aPrototype)
+extern "C" NS_DOM nsresult
+NS_InitMsgAppCoreClass(nsIScriptContext *aContext, void **aPrototype, JSObject * aParentProto)
 {
   JSContext *jscontext = (JSContext *)aContext->GetNativeContext();
   JSObject *proto = nsnull;
   JSObject *constructor = nsnull;
-  JSObject *parent_proto = nsnull;
+  JSObject *parent_proto = aParentProto;
   JSObject *global = JS_GetGlobalObject(jscontext);
   jsval vp;
 
@@ -339,9 +340,12 @@ nsresult NS_InitMsgAppCoreClass(nsIScriptContext *aContext, void **aPrototype)
       (PR_TRUE != JS_LookupProperty(jscontext, JSVAL_TO_OBJECT(vp), "prototype", &vp)) || 
       !JSVAL_IS_OBJECT(vp)) {
 
+#if 0
     if (NS_OK != NS_InitBaseAppCoreClass(aContext, (void **)&parent_proto)) {
       return NS_ERROR_FAILURE;
     }
+#endif
+
     proto = JS_InitClass(jscontext,     // context
                          global,        // global object
                          parent_proto,  // parent proto 
@@ -398,7 +402,7 @@ extern "C" NS_DOM nsresult NS_NewScriptMsgAppCore(nsIScriptContext *aContext, ns
     return NS_ERROR_FAILURE;
   }
 
-  if (NS_OK != NS_InitMsgAppCoreClass(aContext, (void **)&proto)) {
+  if (NS_OK != NS_InitMsgAppCoreClass(aContext, (void **)&proto, parent)) {
     return NS_ERROR_FAILURE;
   }
 

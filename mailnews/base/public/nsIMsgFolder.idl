@@ -17,19 +17,9 @@
  */
  
 #include "nsISupportsArray.idl"
+#include "nsISupports.idl"
 #include "nsIMsg.idl"
 
-/* XXX replaced by QueryInterface for nsIMsgFolder subtypes:
-enum FolderType {
-	FOLDER_MAIL,
-	FOLDER_IMAPMAIL,
-	FOLDER_NEWSGROUP,
-	FOLDER_CONTAINERONLY,
-	FOLDER_CATEGORYCONTAINER,
-	FOLDER_IMAPSERVERCONTAINER,
-	FOLDER_UNKNOWN
-};
-*/
 
 [uuid(85e39ff0-b248-11d2-b7ef-00805f05ffa5)]
 interface nsIMsgFolder : nsISupports {
@@ -43,7 +33,6 @@ interface nsIMsgFolder : nsISupports {
 
 	string GetNameFromPathName(in string pathName);
 
-  // Accessing sub-folders:
 	boolean HasSubFolders();
 	unsigned long GetNumSubFolders() ;
 	unsigned long GetNumSubFoldersToDisplay();
@@ -52,7 +41,6 @@ interface nsIMsgFolder : nsISupports {
 	void AddSubFolder(in nsIMsgFolder folder);
 	void RemoveSubFolder(in nsIMsgFolder folder);
 
-  // Accessing messages:
 	boolean HasMessages();
 	unsigned long GetNumMessages() ;
 	unsigned long GetNumMessagesToDisplay();
@@ -130,17 +118,16 @@ interface nsIMsgFolder : nsISupports {
 
 };
 
-////////////////////////////////////////////////////////////////////////////////
-
 [uuid(27D2DE40-BAF1-11d2-9578-00805F8AC615)]
 interface nsIMsgLocalMailFolder : nsISupports {
 
 	attribute string pathName;
 };
 
-////////////////////////////////////////////////////////////////////////////////
 
+[uuid(FBFEBE79-C1DD-11d2-8A40-0060B0FC04D2)]
 interface nsIMsgImapMailFolder : nsISupports {
 
 };
+
 

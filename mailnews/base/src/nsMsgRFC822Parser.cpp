@@ -22,6 +22,7 @@
 #include "nsIMsgRFC822Parser.h"
 #include "nsMsgRFC822Parser.h"	 
 #include "libi18n.h"
+#include "prmem.h"
 
 // the following three functions are only here for test purposes.....because I18N stuff is not getting built
 // yet!!!!

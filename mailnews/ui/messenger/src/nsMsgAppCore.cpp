@@ -274,6 +274,8 @@ nsMsgAppCore::OpenURL(nsAutoString& url)
 {
     // here's where we call mscott's LoadURL
     // LoadURL(mWebShell, url);
+    NS_ASSERTION(0, "not implemented");
+    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 //  to load the webshell!

@@ -88,8 +88,8 @@ char *xpFileTypeToName(XP_FileType type) {
             return PL_strdup("%USER%%COOKIE_F%");
         case (xpHTTPCookiePermission):
             return PL_strdup("%USER%%COOKIE_PERMISSION_F%");
-        case (xpHTTPSingleSignon):
-            return PL_strdup("%USER%%SIGNON_F%");
+     //   case (xpHTTPSingleSignon):
+     //       return PL_strdup("%USER%%SIGNON_F%");
 
         default:
             break;

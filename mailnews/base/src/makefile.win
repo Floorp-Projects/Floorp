@@ -34,7 +34,6 @@ CPPSRCS=                         \
 	nsMsgLocalMailFolder.cpp \
 	nsMsgImapMailFolder.cpp  \
 	nsMsgGroupRecord.cpp     \
-	nsMsgRDFFolder.cpp       \
 	nsLocalFolderSummarySpec.cpp	\
 	nsMsgLineBuffer.cpp		 \
 	nsNewsSet.cpp            \
@@ -49,11 +48,9 @@ CPP_OBJS=                                    \
 	.\$(OBJDIR)\nsMsgLocalMailFolder.obj \
 	.\$(OBJDIR)\nsMsgImapMailFolder.obj  \
 	.\$(OBJDIR)\nsMsgGroupRecord.obj     \
-	.\$(OBJDIR)\nsMsgRDFFolder.obj       \
 	.\$(OBJDIR)\nsNewsSet.obj            \
 	.\$(OBJDIR)\nsMsgLineBuffer.obj            \
 	$(NULL)
-
 
 EXPORTS=                    \
         nsMsgRFC822Parser.h \
