@@ -79,7 +79,6 @@ CPPSRCS		= \
 		nsChromeRegistry.cpp \
 		nsChromeUIDataSource.cpp \
 		nsChromeProtocolHandler.cpp \
-		nsChromeURL.cpp \
 		$(NULL)
 
 EXTRA_DSO_LDOPTS = \
