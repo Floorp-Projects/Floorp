@@ -277,7 +277,7 @@ xpmenu {
 
 
 /* xpmenu visibility rules */
--moz-dropdown-menu {
+:-moz-dropdown-menu {
   background-color:inherit;
   color: inherit;
   border: 1px white outset;
