@@ -159,6 +159,9 @@ function EditorStartup(editorType, editorElement)
     gSourceModeButton  = document.getElementById("SourceModeButton");
     gPreviewModeButton = document.getElementById("PreviewModeButton");
 
+    // mark first tab as selected
+    document.getElementById("EditModeTabbox").selectedTab = gNormalModeButton;
+
     // XUL elements we use when switching from normal editor to edit source
     gContentWindowDeck = document.getElementById("ContentWindowDeck");
     gFormatToolbar = document.getElementById("FormatToolbar");
@@ -995,10 +998,14 @@ function SetDisplayMode(mode)
     editorShell.SetDisplayMode(mode);
 
     // Set the UI states
-    gPreviewModeButton.setAttribute("selected",Number(mode == DisplayModePreview));
-    gNormalModeButton.setAttribute("selected",Number(mode == DisplayModeNormal));
-    gTagModeButton.setAttribute("selected",Number(mode == DisplayModeAllTags));
-    gSourceModeButton.setAttribute("selected", Number(mode == DisplayModeSource));
+    var selectedTab = null;
+    if (mode == DisplayModePreview) selectedTab = gPreviewModeButton;
+    if (mode == DisplayModeNormal) selectedTab = gNormalModeButton;
+    if (mode == DisplayModeAllTags) selectedTab = gTagModeButton;
+    if (mode == DisplayModeSource) selectedTab = gSourceModeButton;
+    if (selectedTab) {
+      document.getElementById("EditModeTabbox").selectedTab = selectedTab;
+    }
 
     if (mode == DisplayModeSource)
     {
