@@ -1029,7 +1029,7 @@ static NSString *PrintToolbarItemIdentifier	= @"Print Toolbar Item";
 {
   static NSImage* sInsecureIcon = nil;
   if ( !sInsecureIcon )
-    sInsecureIcon = [NSImage imageNamed:@"globe_ico"];
+    sInsecureIcon = [[NSImage imageNamed:@"globe_ico"] retain];
   return sInsecureIcon;
 }
 
@@ -1037,7 +1037,7 @@ static NSString *PrintToolbarItemIdentifier	= @"Print Toolbar Item";
 {
   static NSImage* sSecureIcon = nil;
   if ( !sSecureIcon )
-    sSecureIcon = [NSImage imageNamed:@"security_lock"];
+    sSecureIcon = [[NSImage imageNamed:@"security_lock"] retain];
   return sSecureIcon;
 }
 
@@ -1045,7 +1045,7 @@ static NSString *PrintToolbarItemIdentifier	= @"Print Toolbar Item";
 {
   static NSImage* sBrokenIcon = nil;
   if ( !sBrokenIcon )
-    sBrokenIcon = [NSImage imageNamed:@"security_broken"];
+    sBrokenIcon = [[NSImage imageNamed:@"security_broken"] retain];
   return sBrokenIcon;
 }
 
