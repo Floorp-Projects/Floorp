@@ -39,6 +39,7 @@ public:
   virtual void MouseClicked(nsIPresContext* aPresContext);
   NS_IMETHOD MoveTo(nscoord aX, nscoord aY);
   NS_IMETHOD SizeTo(nscoord aWidth, nscoord aHeight);
+  static PRInt32 gSpacing;
 
 protected:
   virtual ~nsInputFileFrame();

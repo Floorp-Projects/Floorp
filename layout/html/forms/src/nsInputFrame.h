@@ -94,6 +94,8 @@ public:
                          nsGUIEvent* aEvent,
                          nsEventStatus& aEventStatus);
 
+  virtual PRInt32 GetBorderSpacing(nsIPresContext& aPresContext);
+
   NS_IMETHOD  SetRect(const nsRect& aRect);
 
   /**

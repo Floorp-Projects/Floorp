@@ -1,5 +1,23 @@
 <html>
+<head>
 <title>Example 8</title>
+<style>
+INPUT#input1 {
+  font-size: large;
+}
+INPUT#input2 {
+  font-size: medium;
+}
+TEXTAREA#textarea1 {
+  width: 300px;
+	height: 120px;
+  font-size: large;
+}
+SELECT#select1 {
+	font-size: large;
+}
+</style>
+</head>
 <body>
 
 <H1>Example 8: Forms</H1>
@@ -13,20 +31,20 @@
    &nbsp;&nbsp;password:&nbsp;&nbsp;<INPUT TYPE="PASSWORD">
 </FORM>
 
-<BR>
+<BR><BR>
 <FORM METHOD="GET" ACTION="http://www.mcp.com/cgi-bin/post-query" NAME="echo">
-<textarea name=a textarea rows=4 cols=20 value="a textarea">A TEXTAREA</textarea>
-&nbsp;&nbsp; a checkbox: <input type=checkbox name=check1 checked>
-&nbsp;&nbsp; radio buttons:
+<textarea name=a rows=4 cols=10 value="a textarea">a textarea</textarea>
+&nbsp;&nbsp;
+<textarea name=a id=textarea1 value="a textarea">another textarea
+size, font set by css</textarea>
+<BR><BR>
+a checkbox: <input type=checkbox name=check1 checked>
+<BR><BR>
 <input type=radio name=group1>  radio1
-<input type=radio name=group1 checked>  radio2
 <BR>
-<P>select/option examples - the combo box is not aligned properly</P>
-<select name=select1 size=2>
-  <option selected>option 1</option>
-  <option>option 2</option>
-</select>
-<select name=select2 size=4 multiple>
+<input type=radio name=group1 checked>  radio2
+<BR><BR>
+<select name=select2 id=select1 size=4 multiple>
   <option>option 1</option>
   <option>option 2</option>
   <option selected>option 3</option>
@@ -34,16 +52,19 @@
   <option>option 5</option>
   <option>option 6</option>
 </select>
+<select name=select1 size=2>
+  <option selected>option 1</option>
+  <option>option 2</option>
+</select>
 <select name=select3 size=1>
   <option selected>option 1</option>
   <option>option 2</option>
 </select>
+<BR><BR>
+<input type=file size=20 name=file value=myfile>&nbsp;&nbsp;file content not being sent yet
 <BR>
-<P>input type=file - currently, file content is not being sent</P>
-<input type=file size=20 name=file value=myfile>
-<BR>
-<input type=reset name=reset value="RESET"> 
-<input type=submit name=submit value="SUBMIT">
+<input type=reset name=reset id=input2 value="RESET"> 
+<input type=submit id=input1 name=submit value="SUBMIT">
 <input type=image src=raptor.jpg width=50 height=50 name=imageSubmit> an image submit. For now, click twice.
 
 </form>

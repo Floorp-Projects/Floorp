@@ -56,8 +56,6 @@ public:
 
   virtual const nsIID& GetIID();
 
-  NS_IMETHOD SizeTo(nscoord aWidth, nscoord aHeight);
-
 protected:
 
   virtual ~nsSelectFrame();
@@ -214,31 +212,28 @@ nsSelectFrame::GetDesiredSize(nsIPresContext* aPresContext,
   PRInt32 numRows = CalculateSize(aPresContext, this, styleSize, textSpec, 
                                   calcSize, widthExplicit, heightExplicit, rowHeight);
 
-  if (!heightExplicit) {
-    calcSize.height += 100;
-  }
-
   // here it is determined whether we are a combo box
   PRInt32 sizeAttr = select->GetSize();
   if (!select->GetMultiple() && ((1 == sizeAttr) || ((ATTR_NOTSET == sizeAttr) && (1 >= numRows)))) {
     mIsComboBox = PR_TRUE;
   }
-  // account for vertical scrollbar, if present
-  if (heightExplicit) {
-    aDesiredLayoutSize.width = calcSize.width;
+
+  aDesiredLayoutSize.width = calcSize.width;
+  // account for vertical scrollbar, if present  
+  if (!widthExplicit && ((numRows < select->ChildCount()) || mIsComboBox)) {
+    aDesiredLayoutSize.width += gScrollBarWidth;
   }
-  else {
-    aDesiredLayoutSize.width = ((numRows < select->ChildCount()) || mIsComboBox) 
-      ? calcSize.width + gScrollBarWidth : calcSize.width + 100; // XXX why the 100 padding
-  }
-  aDesiredLayoutSize.height = calcSize.height;
+
+  // XXX put this in widget library, combo boxes are fixed height (visible part)
+  aDesiredLayoutSize.height = (mIsComboBox) ? 350 : calcSize.height; 
   aDesiredLayoutSize.ascent = aDesiredLayoutSize.height;
   aDesiredLayoutSize.descent = 0;
 
   aDesiredWidgetSize.width  = aDesiredLayoutSize.width;
-  aDesiredWidgetSize.height = 
-    (mIsComboBox && !heightExplicit) ? aDesiredLayoutSize.height + (rowHeight * numChildren) + 100 
-                                     : aDesiredLayoutSize.height;
+  aDesiredWidgetSize.height = aDesiredLayoutSize.height;
+  if (mIsComboBox) {  // add in pull down size
+    aDesiredWidgetSize.height += (rowHeight * numChildren) + 100;
+  }
 
   NS_RELEASE(select);
 }
@@ -265,13 +260,6 @@ nsSelectFrame::GetWidgetInitData(nsIPresContext& aPresContext)
   }
 }
 
-NS_METHOD
-nsSelectFrame::SizeTo(nscoord aWidth, nscoord aHeight)
-{
-  nscoord height = (mIsComboBox) ? mWidgetSize.height : aHeight;
-  return nsInputFrame::SizeTo(aWidth, height);
-}
-
 void 
 nsSelectFrame::PostCreateWidget(nsIPresContext* aPresContext, nsIView *aView)
 {
@@ -283,7 +271,12 @@ nsSelectFrame::PostCreateWidget(nsIPresContext* aPresContext, nsIView *aView)
 
   nsIListWidget* list;
   nsresult stat = view->QueryInterface(kListWidgetIID, (void **) &list);
-  NS_ASSERTION((NS_OK == stat), "invalid widget");
+  if (NS_OK != stat) {
+    NS_ASSERTION((NS_OK == stat), "invalid widget");
+    return;
+  }
+
+  list->SetFont(GetFont(aPresContext));
 
   PRInt32 numChildren = select->ChildCount();
   for (int i = 0; i < numChildren; i++) {
