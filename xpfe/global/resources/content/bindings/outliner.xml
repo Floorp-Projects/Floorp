@@ -622,6 +622,9 @@
                  colNode.removeAttribute("collapsed");
                else
                  colNode.setAttribute("collapsed", "true");
+
+               // now that columns have changed, we need to invalidate
+               colNode.parentNode.outlinerBoxObject.invalidate();
              }
            ]]>
          </body>
