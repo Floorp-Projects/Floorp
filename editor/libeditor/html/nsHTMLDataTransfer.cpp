@@ -883,7 +883,7 @@ nsHTMLEditor::ParseCFHTML(nsCString & aCfhtml, PRUnichar **aStuffToPaste, PRUnic
   
   // translate platform linebreaks for context
   newStr = 0;
-  oldLengthInChars = cntxtUcs2Str.Length();  // +1 to include null terminator
+  oldLengthInChars = cntxtUcs2Str.Length() + 1;  // +1 to include null terminator
   newLengthInChars = 0;
   *aCfcontext = nsLinebreakConverter::ConvertUnicharLineBreaks(cntxtUcs2Str.get(),
                                                            nsLinebreakConverter::eLinebreakAny, 
