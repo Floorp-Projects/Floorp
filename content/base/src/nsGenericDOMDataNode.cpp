@@ -37,6 +37,7 @@
 #include "nsIPrivateDOMEvent.h"
 #include "nsISizeOfHandler.h"
 #include "nsDOMEvent.h"
+#include "nsIDOMText.h"
 #include "nsIDOMScriptObjectFactory.h"
 #include "nsIScriptContextOwner.h"
 #include "prprf.h"
@@ -49,6 +50,8 @@ NS_DEFINE_IID(kIDOMCharacterDataIID, NS_IDOMCHARACTERDATA_IID);
 static NS_DEFINE_IID(kIPrivateDOMEventIID, NS_IPRIVATEDOMEVENT_IID);
 static NS_DEFINE_IID(kIEnumeratorIID, NS_IENUMERATOR_IID);
 static NS_DEFINE_IID(kIDOMDocumentIID, NS_IDOMDOCUMENT_IID);
+static NS_DEFINE_IID(kIDOMTextIID, NS_IDOMTEXT_IID);
+static NS_DEFINE_IID(kITextContentIID, NS_ITEXT_CONTENT_IID);
 
 //----------------------------------------------------------------------
 
@@ -133,49 +136,73 @@ nsGenericDOMDataNode::GetParentNode(nsIDOMNode** aParentNode)
 }
 
 nsresult
-nsGenericDOMDataNode::GetPreviousSibling(nsIDOMNode** aNode)
+nsGenericDOMDataNode::GetPreviousSibling(nsIDOMNode** aPrevSibling)
 {
+  nsIContent* sibling = nsnull;
+  nsresult result = NS_OK;
+
   if (nsnull != mParent) {
     PRInt32 pos;
     mParent->IndexOf(mContent, pos);
-    if (pos > -1) {
-      nsIContent* prev;
-      mParent->ChildAt(--pos, prev);
-      if (nsnull != prev) {
-        nsresult res = prev->QueryInterface(kIDOMNodeIID, (void**)aNode);
-        NS_ASSERTION(NS_OK == res, "Must be a DOM Node");
-        NS_RELEASE(prev); // balance the AddRef in ChildAt()
-        return res;
-      }
+    if (pos > -1 ) {
+      mParent->ChildAt(--pos, sibling);
     }
   }
-  // XXX Nodes that are just below the document (their parent is the
-  // document) need to go to the document to find their previous sibling.
-  *aNode = nsnull;
-  return NS_OK;
+  else if (nsnull != mDocument) {
+    // Nodes that are just below the document (their parent is the
+    // document) need to go to the document to find their next sibling.
+    PRInt32 pos;
+    mDocument->IndexOf(mContent, pos);
+    if (pos > -1 ) {
+      mDocument->ChildAt(--pos, sibling);
+    }    
+  }
+
+  if (nsnull != sibling) {
+    result = sibling->QueryInterface(kIDOMNodeIID,(void**)aPrevSibling);
+    NS_ASSERTION(NS_OK == result, "Must be a DOM Node");
+    NS_RELEASE(sibling); // balance the AddRef in ChildAt()
+  }
+  else {
+    *aPrevSibling = nsnull;
+  }
+  
+  return result;
 }
 
 nsresult
 nsGenericDOMDataNode::GetNextSibling(nsIDOMNode** aNextSibling)
 {
+  nsIContent* sibling = nsnull;
+  nsresult result = NS_OK;
+
   if (nsnull != mParent) {
     PRInt32 pos;
     mParent->IndexOf(mContent, pos);
     if (pos > -1 ) {
-      nsIContent* prev;
-      mParent->ChildAt(++pos, prev);
-      if (nsnull != prev) {
-        nsresult res = prev->QueryInterface(kIDOMNodeIID,(void**)aNextSibling);
-        NS_ASSERTION(NS_OK == res, "Must be a DOM Node");
-        NS_RELEASE(prev); // balance the AddRef in ChildAt()
-        return res;
-      }
+      mParent->ChildAt(++pos, sibling);
     }
   }
-  // XXX Nodes that are just below the document (their parent is the
-  // document) need to go to the document to find their next sibling.
-  *aNextSibling = nsnull;
-  return NS_OK;
+  else if (nsnull != mDocument) {
+    // Nodes that are just below the document (their parent is the
+    // document) need to go to the document to find their next sibling.
+    PRInt32 pos;
+    mDocument->IndexOf(mContent, pos);
+    if (pos > -1 ) {
+      mDocument->ChildAt(++pos, sibling);
+    }    
+  }
+
+  if (nsnull != sibling) {
+    result = sibling->QueryInterface(kIDOMNodeIID,(void**)aNextSibling);
+    NS_ASSERTION(NS_OK == result, "Must be a DOM Node");
+    NS_RELEASE(sibling); // balance the AddRef in ChildAt()
+  }
+  else {
+    *aNextSibling = nsnull;
+  }
+  
+  return result;
 }
 
 nsresult    
@@ -773,5 +800,143 @@ nsresult
 nsGenericDOMDataNode::GetRangeList(nsVoidArray*& aResult) const
 {
   aResult = mRangeList;
+  return NS_OK;
+}
+
+
+//----------------------------------------------------------------------
+
+// Implementation of the nsIDOMText interface
+
+nsresult
+nsGenericDOMDataNode::SplitText(PRUint32 aOffset, nsIDOMText** aReturn)
+{
+  nsresult result = NS_OK;
+  nsIContent* newNode;
+  nsITextContent* text;
+  nsAutoString cutText;
+  nsIContent* parentNode;
+  PRUint32 length;
+
+  GetLength(&length);
+  // Cut the second part out of the original text node
+  result = SubstringData(aOffset, length-aOffset, cutText);
+  if (NS_OK == result) {
+    result = DeleteData(aOffset, length-aOffset);
+    if (NS_OK == result) {
+      // Create a new text node and set its data to the
+      // string we just cut out
+      result = NS_NewTextNode(&newNode);
+      if (NS_OK == result) {
+        result = newNode->QueryInterface(kITextContentIID, (void**)&text);
+        if (NS_OK == result) {
+          text->SetText(cutText, cutText.Length(), PR_FALSE);
+          // Find the parent of the current node and insert the
+          // new text node as a child after the current node
+          GetParent(parentNode);
+          if (nsnull != parentNode) {
+            PRInt32 index;
+
+            result = parentNode->IndexOf(mContent, index);
+            if (NS_OK == result) {
+              result = parentNode->InsertChildAt(newNode, index+1, PR_TRUE);
+            }
+            NS_RELEASE(parentNode);
+          }
+          result = text->QueryInterface(kIDOMTextIID, (void**)aReturn);
+          NS_RELEASE(text);
+        }
+        NS_RELEASE(newNode);
+      }
+    }
+  }
+
+  return result;
+}
+
+//----------------------------------------------------------------------
+
+// Implementation of the nsITextContent interface
+
+nsresult
+nsGenericDOMDataNode::GetText(const nsTextFragment*& aFragmentsResult,
+                              PRInt32& aNumFragmentsResult)
+{
+  aFragmentsResult = &mText;
+  aNumFragmentsResult = 1;
+  return NS_OK;
+}
+
+nsresult
+nsGenericDOMDataNode::SetText(const PRUnichar* aBuffer, PRInt32 aLength,
+                              PRBool aNotify)
+{
+  NS_PRECONDITION((aLength >= 0) && (nsnull != aBuffer), "bad args");
+  if (aLength < 0) {
+    return NS_ERROR_ILLEGAL_VALUE;
+  }
+  if (nsnull == aBuffer) {
+    return NS_ERROR_NULL_POINTER;
+  }
+  mText.SetTo(aBuffer, aLength);
+
+  // Trigger a reflow
+  if (aNotify && (nsnull != mDocument)) {
+    mDocument->ContentChanged(mContent, nsnull);
+  }
+  return NS_OK;
+}
+
+nsresult
+nsGenericDOMDataNode::SetText(const char* aBuffer, 
+                              PRInt32 aLength,
+                              PRBool aNotify)
+{
+  NS_PRECONDITION((aLength >= 0) && (nsnull != aBuffer), "bad args");
+  if (aLength < 0) {
+    return NS_ERROR_ILLEGAL_VALUE;
+  }
+  if (nsnull == aBuffer) {
+    return NS_ERROR_NULL_POINTER;
+  }
+  mText.SetTo(aBuffer, aLength);
+
+  // Trigger a reflow
+  if (aNotify && (nsnull != mDocument)) {
+    mDocument->ContentChanged(mContent, nsnull);
+  }
+  return NS_OK;
+}
+
+
+nsresult
+nsGenericDOMDataNode::IsOnlyWhitespace(PRBool* aResult)
+{
+  nsTextFragment& frag = mText;
+  if (frag.Is2b()) {
+    const PRUnichar* cp = frag.Get2b();
+    const PRUnichar* end = cp + frag.GetLength();
+    while (cp < end) {
+      PRUnichar ch = *cp++;
+      if (!XP_IS_SPACE(ch)) {
+        *aResult = PR_FALSE;
+        return NS_OK;
+      }
+    }
+  }
+  else {
+    const char* cp = frag.Get1b();
+    const char* end = cp + frag.GetLength();
+    while (cp < end) {
+      PRUnichar ch = PRUnichar(*(unsigned char*)cp);
+      cp++;
+      if (!XP_IS_SPACE(ch)) {
+        *aResult = PR_FALSE;
+        return NS_OK;
+      }
+    }
+  }
+
+  *aResult = PR_TRUE;
   return NS_OK;
 }

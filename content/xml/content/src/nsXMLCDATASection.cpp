@@ -17,7 +17,7 @@
  * Netscape Communications Corporation.  All Rights Reserved.
  */
 
-#include "nsIDOMText.h"
+#include "nsIDOMCDATASection.h"
 #include "nsIScriptObjectOwner.h"
 #include "nsIDOMEventReceiver.h"
 #include "nsIContent.h"
@@ -27,19 +27,21 @@
 #include "nsIDocument.h"
 #include "nsCRT.h"
 #include "nsLayoutAtoms.h"
+#include "nsIXMLContent.h"
 
+static NS_DEFINE_IID(kIDOMCDATASectionIID, NS_IDOMCDATASECTION_IID);
 static NS_DEFINE_IID(kIDOMTextIID, NS_IDOMTEXT_IID);
 static NS_DEFINE_IID(kITextContentIID, NS_ITEXT_CONTENT_IID);
 
-class nsTextNode : public nsIDOMText,
-                   public nsIScriptObjectOwner,
-                   public nsIDOMEventReceiver,
-                   public nsIContent,
-                   public nsITextContent
+class nsXMLCDATASection : public nsIDOMCDATASection,
+                          public nsIScriptObjectOwner,
+                          public nsIDOMEventReceiver,
+                          public nsIContent,
+                          public nsITextContent
 {
 public:
-  nsTextNode();
-  ~nsTextNode();
+  nsXMLCDATASection();
+  virtual ~nsXMLCDATASection();
 
   // nsISupports
   NS_DECL_ISUPPORTS
@@ -69,39 +71,43 @@ protected:
   nsGenericDOMDataNode mInner;
 };
 
-nsresult NS_NewTextNode(nsIContent** aInstancePtrResult);
 nsresult
-NS_NewTextNode(nsIContent** aInstancePtrResult)
+NS_NewXMLCDATASection(nsIContent** aInstancePtrResult)
 {
   NS_PRECONDITION(nsnull != aInstancePtrResult, "null ptr");
   if (nsnull == aInstancePtrResult) {
     return NS_ERROR_NULL_POINTER;
   }
-  nsTextNode* it;
-  NS_NEWXPCOM(it, nsTextNode);
+  nsIContent* it = new nsXMLCDATASection();
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
   return it->QueryInterface(kIContentIID, (void **) aInstancePtrResult);
 }
 
-nsTextNode::nsTextNode()
+nsXMLCDATASection::nsXMLCDATASection()
 {
   NS_INIT_REFCNT();
   mInner.Init(this);
 }
 
-nsTextNode::~nsTextNode()
+nsXMLCDATASection::~nsXMLCDATASection()
 {
 }
 
-NS_IMPL_ADDREF(nsTextNode)
-NS_IMPL_RELEASE(nsTextNode)
+NS_IMPL_ADDREF(nsXMLCDATASection)
+NS_IMPL_RELEASE(nsXMLCDATASection)
 
 NS_IMETHODIMP
-nsTextNode::QueryInterface(REFNSIID aIID, void** aInstancePtr)
+nsXMLCDATASection::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 {
   NS_IMPL_DOM_DATA_QUERY_INTERFACE(aIID, aInstancePtr, this)
+  if (aIID.Equals(kIDOMCDATASectionIID)) {
+    nsIDOMCDATASection* tmp = this;
+    *aInstancePtr = (void*) tmp;
+    NS_ADDREF_THIS();
+    return NS_OK;
+  }
   if (aIID.Equals(kIDOMTextIID)) {
     nsIDOMText* tmp = this;
     *aInstancePtr = (void*) tmp;
@@ -118,7 +124,7 @@ nsTextNode::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 }
 
 NS_IMETHODIMP 
-nsTextNode::GetTag(nsIAtom*& aResult) const
+nsXMLCDATASection::GetTag(nsIAtom*& aResult) const
 {
   aResult = nsLayoutAtoms::textTagName;
   NS_ADDREF(aResult);
@@ -126,24 +132,24 @@ nsTextNode::GetTag(nsIAtom*& aResult) const
 }
 
 NS_IMETHODIMP
-nsTextNode::GetNodeName(nsString& aNodeName)
+nsXMLCDATASection::GetNodeName(nsString& aNodeName)
 {
-  aNodeName.SetString("#text");
+  aNodeName.SetString("#cdata-section");
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsTextNode::GetNodeType(PRUint16* aNodeType)
+nsXMLCDATASection::GetNodeType(PRUint16* aNodeType)
 {
-  *aNodeType = (PRUint16)nsIDOMNode::TEXT_NODE;
+  *aNodeType = (PRUint16)nsIDOMNode::CDATA_SECTION_NODE;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsTextNode::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
+nsXMLCDATASection::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 {
-  nsTextNode* it;
-  NS_NEWXPCOM(it, nsTextNode);
+  nsXMLCDATASection* it;
+  NS_NEWXPCOM(it, nsXMLCDATASection);
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -160,14 +166,14 @@ nsTextNode::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 }
 
 NS_IMETHODIMP
-nsTextNode::List(FILE* out, PRInt32 aIndent) const
+nsXMLCDATASection::List(FILE* out, PRInt32 aIndent) const
 {
   NS_PRECONDITION(nsnull != mInner.mDocument, "bad content");
 
   PRInt32 index;
   for (index = aIndent; --index >= 0; ) fputs("  ", out);
 
-  fprintf(out, "Text refcount=%d<", mRefCnt);
+  fprintf(out, "CDATASection refcount=%d<", mRefCnt);
 
   nsAutoString tmp;
   mInner.ToCString(tmp, 0, mInner.mText.GetLength());
@@ -178,11 +184,11 @@ nsTextNode::List(FILE* out, PRInt32 aIndent) const
 }
 
 NS_IMETHODIMP
-nsTextNode::HandleDOMEvent(nsIPresContext& aPresContext,
-                           nsEvent* aEvent,
-                           nsIDOMEvent** aDOMEvent,
-                           PRUint32 aFlags,
-                           nsEventStatus& aEventStatus)
+nsXMLCDATASection::HandleDOMEvent(nsIPresContext& aPresContext,
+                                  nsEvent* aEvent,
+                                  nsIDOMEvent** aDOMEvent,
+                                  PRUint32 aFlags,
+                                  nsEventStatus& aEventStatus)
 {
   return mInner.HandleDOMEvent(aPresContext, aEvent, aDOMEvent,
                                aFlags, aEventStatus);

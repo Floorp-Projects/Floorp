@@ -549,8 +549,62 @@ PRInt32 nsPostData::GetDataLength()
   return mDataLen;
 }
 
+// ==================================================================
+// =
+// ==================================================================
+nsDocumentChildNodes::nsDocumentChildNodes(nsIDocument* aDocument)
+{
+  // We don't reference count our document reference (to avoid circular
+  // references). We'll be told when the document goes away.
+  mDocument = aDocument;
+}
+ 
+nsDocumentChildNodes::~nsDocumentChildNodes()
+{
+}
+
+NS_IMETHODIMP
+nsDocumentChildNodes::GetLength(PRUint32* aLength)
+{
+  if (nsnull != mDocument) {
+    PRInt32 count;
+    mDocument->GetChildCount(count);
+    *aLength = (PRUint32)count;
+  }
+  else {
+    *aLength = 0;
+  }
+  
+  return NS_OK;
+}
+
+NS_IMETHODIMP    
+nsDocumentChildNodes::Item(PRUint32 aIndex, nsIDOMNode** aReturn)
+{
+  nsresult result = NS_OK;
+  nsIContent* content = nsnull;
+
+  *aReturn = nsnull;
+  if (nsnull != mDocument) {
+    result = mDocument->ChildAt(aIndex, content);
+    if ((NS_OK == result) && (nsnull != content)) {
+      result = content->QueryInterface(kIDOMNodeIID, (void**)aReturn);
+    }
+  }
+
+  return result;
+}
+
+void 
+nsDocumentChildNodes::DropReference()
+{
+  mDocument = nsnull;
+}
 
 
+// ==================================================================
+// =
+// ==================================================================
 
 nsDocument::nsDocument()
 {
@@ -572,6 +626,9 @@ nsDocument::nsDocument()
   mNameSpaceManager = nsnull;
   mHeaderData = nsnull;
   mLineBreaker = nsnull;
+  mProlog = nsnull;
+  mEpilog = nsnull;
+  mChildNodes = nsnull;
   mWordBreaker = nsnull;
 
   Init();/* XXX */
@@ -585,7 +642,7 @@ nsDocument::~nsDocument()
   // This notification will occur only after the reference has
   // been dropped.
   mInDestructor = PR_TRUE;
-  PRInt32 index;
+  PRInt32 index, count;
   for (index = 0; index < mObservers.Count(); index++) {
     nsIDocumentObserver*  observer = (nsIDocumentObserver*)mObservers.ElementAt(index);
     observer->DocumentWillBeDestroyed(this);
@@ -615,6 +672,29 @@ nsDocument::~nsDocument()
     nsIStyleSheet* sheet = (nsIStyleSheet*) mStyleSheets.ElementAt(index);
     sheet->SetOwningDocument(nsnull);
     NS_RELEASE(sheet);
+  }
+
+  nsIContent* content;
+  if (nsnull != mProlog) {
+    count = mProlog->Count();
+    for (index = 0; index < count; index++) {
+      content = (nsIContent*)mProlog->ElementAt(index);
+      NS_RELEASE(content);
+    }
+    delete mProlog;
+  }
+  if (nsnull != mEpilog) {
+    count = mEpilog->Count();
+    for (index = 0; index < count; index++) {
+      content = (nsIContent*)mEpilog->ElementAt(index);
+      NS_RELEASE(content);
+    }
+    delete mEpilog;
+  }
+
+  if (nsnull != mChildNodes) {
+    mChildNodes->DropReference();
+    NS_RELEASE(mChildNodes);
   }
 
   NS_IF_RELEASE(mArena);
@@ -1045,6 +1125,103 @@ void nsDocument::SetRootContent(nsIContent* aRoot)
     mRootContent = aRoot;
     NS_ADDREF(aRoot);
   }
+}
+
+NS_IMETHODIMP 
+nsDocument::AppendToProlog(nsIContent* aContent)
+{
+  if (nsnull == mProlog) {
+    mProlog = new nsVoidArray();
+  }
+
+  mProlog->AppendElement((void *)aContent);
+  NS_ADDREF(aContent);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP 
+nsDocument::AppendToEpilog(nsIContent* aContent)
+{
+  if (nsnull == mEpilog) {
+    mEpilog = new nsVoidArray();
+  }
+
+  mEpilog->AppendElement((void *)aContent);
+  NS_ADDREF(aContent);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP 
+nsDocument::ChildAt(PRInt32 aIndex, nsIContent*& aResult) const
+{
+  nsIContent* content = nsnull;
+  PRInt32 prolog = 0;
+
+  if (nsnull != mProlog) {
+    prolog = mProlog->Count();
+    if (aIndex < prolog) {
+      // It's in the prolog
+      content = (nsIContent*)mProlog->ElementAt(aIndex);
+    }
+  }
+  
+  if (aIndex == prolog) {
+    // It's the document element
+    content = mRootContent;
+  }
+  else if ((aIndex > prolog) && (nsnull != mEpilog)) {
+    // It's in the epilog
+    content = (nsIContent*)mEpilog->ElementAt(aIndex-prolog-1);
+  }
+
+  NS_IF_ADDREF(content);
+  aResult = content;
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP 
+nsDocument::IndexOf(nsIContent* aPossibleChild, PRInt32& aIndex) const
+{
+  PRInt32 index = -1;
+  PRInt32 prolog = 0;
+
+  if (nsnull != mProlog) {
+    index = mProlog->IndexOf(aPossibleChild);
+    prolog = mProlog->Count();
+  }
+
+  if (-1 == index) {
+    if (aPossibleChild == mRootContent) {
+      index = prolog;
+    }
+    else if (nsnull != mEpilog) {
+      index = mEpilog->IndexOf(aPossibleChild);
+      if (-1 != index) {
+        index += (prolog+1);
+      }
+    }
+  }
+  
+  aIndex = index;
+  
+  return NS_OK;
+}
+
+NS_IMETHODIMP 
+nsDocument::GetChildCount(PRInt32& aCount)
+{
+  aCount = 1;
+  if (nsnull != mProlog) {
+    aCount += mProlog->Count();
+  }
+  if (nsnull != mEpilog) {
+    aCount += mEpilog->Count();
+  }
+
+  return NS_OK;
 }
 
 PRInt32 nsDocument::GetNumberOfStyleSheets()
@@ -1504,6 +1681,7 @@ nsDocument::CreateTextNode(const nsString& aData, nsIDOMText** aReturn)
   if (NS_OK == rv) {
     rv = text->QueryInterface(kIDOMTextIID, (void**)aReturn);
     (*aReturn)->AppendData(aData);
+    NS_RELEASE(text);
   }
 
   return rv;
@@ -1524,6 +1702,7 @@ nsDocument::CreateComment(const nsString& aData, nsIDOMComment** aReturn)
   if (NS_OK == rv) {
     rv = comment->QueryInterface(kIDOMCommentIID, (void**)aReturn);
     (*aReturn)->AppendData(aData);
+    NS_RELEASE(comment);
   }
 
   return rv;
@@ -1663,29 +1842,71 @@ nsDocument::GetParentNode(nsIDOMNode** aParentNode)
 NS_IMETHODIMP    
 nsDocument::GetChildNodes(nsIDOMNodeList** aChildNodes)
 {
-  // Should be implemented by subclass
-  return NS_ERROR_NOT_IMPLEMENTED;
+  if (nsnull == mChildNodes) {
+    mChildNodes = new nsDocumentChildNodes(this);
+    if (nsnull == mChildNodes) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+    NS_ADDREF(mChildNodes);
+  }
+
+  return mChildNodes->QueryInterface(kIDOMNodeListIID, (void**)aChildNodes);
 }
 
 NS_IMETHODIMP    
 nsDocument::HasChildNodes(PRBool* aHasChildNodes)
 {
-  // Should be implemented by subclass
-  return NS_ERROR_NOT_IMPLEMENTED;
+  *aHasChildNodes = PR_TRUE;
+  return NS_OK;
 }
 
 NS_IMETHODIMP    
 nsDocument::GetFirstChild(nsIDOMNode** aFirstChild)
 {
-  // Should be implemented by subclass
-  return NS_ERROR_NOT_IMPLEMENTED;
+  nsresult result = NS_OK;
+
+  if ((nsnull != mProlog) && (0 != mProlog->Count())) {
+    nsIContent* content;
+    content = (nsIContent *)mProlog->ElementAt(0);
+
+    if (nsnull != content) {
+      result = content->QueryInterface(kIDOMNodeIID, (void**)aFirstChild);
+    }
+  }
+  else {
+    nsIDOMElement* element;
+    result = GetDocumentElement(&element);
+    if (NS_OK == result) {
+      result = element->QueryInterface(kIDOMNodeIID, (void**)aFirstChild);
+      NS_RELEASE(element);
+    }
+  }
+
+  return result;
 }
 
 NS_IMETHODIMP    
 nsDocument::GetLastChild(nsIDOMNode** aLastChild)
 {
-  // Should be implemented by subclass
-  return NS_ERROR_NOT_IMPLEMENTED;
+  nsresult result = NS_OK;
+
+  if ((nsnull != mEpilog) && (0 != mEpilog->Count())) {
+    nsIContent* content;
+    content = (nsIContent *)mEpilog->ElementAt(mEpilog->Count()-1);
+    if (nsnull != content) {
+      result = content->QueryInterface(kIDOMNodeIID, (void**)aLastChild);
+    }
+  }
+  else {
+    nsIDOMElement* element;
+    result = GetDocumentElement(&element);
+    if (NS_OK == result) {
+      result = element->QueryInterface(kIDOMNodeIID, (void**)aLastChild);
+      NS_RELEASE(element);
+    }
+  }
+
+  return result;
 }
 
 NS_IMETHODIMP    
@@ -1712,29 +1933,194 @@ nsDocument::GetAttributes(nsIDOMNamedNodeMap** aAttributes)
 NS_IMETHODIMP    
 nsDocument::InsertBefore(nsIDOMNode* aNewChild, nsIDOMNode* aRefChild, nsIDOMNode** aReturn)
 {
-  // Should be implemented by subclass
-  return NS_ERROR_NOT_IMPLEMENTED;
+  NS_ASSERTION(nsnull != aNewChild, "null ptr");
+  nsresult result = NS_OK;
+  PRInt32 index;
+  PRUint16 nodeType;
+  nsIContent *content, *refContent = nsnull;
+
+  if (nsnull == aNewChild) {
+    return NS_ERROR_INVALID_ARG;
+  }
+
+  aNewChild->GetNodeType(&nodeType);
+  if ((COMMENT_NODE != nodeType) && (PROCESSING_INSTRUCTION_NODE != nodeType)) {
+    return NS_ERROR_INVALID_ARG;
+  }
+
+  result = aNewChild->QueryInterface(kIContentIID, (void**)&content);
+  if (NS_OK != result) {
+    return result;
+  }
+
+  if (nsnull == aRefChild) {
+    AppendToEpilog(content);
+  }
+  else {
+    result = aRefChild->QueryInterface(kIContentIID, (void**)&refContent);
+    if (NS_OK != result) {
+      NS_RELEASE(content);
+      return result;
+    }
+
+    if ((nsnull != mProlog) && (0 != mProlog->Count())) {
+      index = mProlog->IndexOf(refContent);
+      if (-1 != index) {
+        mProlog->InsertElementAt(content, index);
+        NS_ADDREF(content);
+      }
+    }
+
+    if (refContent == mRootContent) {
+      AppendToProlog(content);
+    }
+    else if ((nsnull != mEpilog) && (0 != mEpilog->Count())) {
+      index = mEpilog->IndexOf(refContent);
+      if (-1 != index) {
+        mEpilog->InsertElementAt(content, index);
+        NS_ADDREF(content);
+      }
+    }
+    NS_RELEASE(refContent);
+  }
+
+  if (NS_OK == result) {
+    content->SetDocument(this, PR_TRUE);
+    *aReturn = aNewChild;
+    NS_ADDREF(aNewChild);
+  }
+  else {
+    *aReturn = nsnull;
+  }
+
+  NS_RELEASE(content);  
+
+  return result;
 }
 
 NS_IMETHODIMP    
 nsDocument::ReplaceChild(nsIDOMNode* aNewChild, nsIDOMNode* aOldChild, nsIDOMNode** aReturn)
 {
-  // Should be implemented by subclass
-  return NS_ERROR_NOT_IMPLEMENTED;
+  NS_ASSERTION(((nsnull != aNewChild) && (nsnull != aOldChild)), "null ptr");
+  nsresult result = NS_OK;
+  PRInt32 index;
+  PRUint16 nodeType;
+  nsIContent *content, *refContent;
+  
+  if ((nsnull == aNewChild) || (nsnull == aOldChild)) {
+    return NS_ERROR_INVALID_ARG;
+  }
+
+  aNewChild->GetNodeType(&nodeType);
+  if ((COMMENT_NODE != nodeType) && (PROCESSING_INSTRUCTION_NODE != nodeType)) {
+    return NS_ERROR_INVALID_ARG;
+  }
+
+  result = aNewChild->QueryInterface(kIContentIID, (void**)&content);
+  if (NS_OK != result) {
+    return result;
+  }
+
+  result = aOldChild->QueryInterface(kIContentIID, (void**)&refContent);
+  if (NS_OK != result) {
+    NS_RELEASE(content);
+    return result;
+  }
+
+  if ((nsnull != mProlog) && (0 != mProlog->Count())) {
+    index = mProlog->IndexOf(refContent);
+    if (-1 != index) {
+      nsIContent* oldContent;
+      oldContent = (nsIContent*)mProlog->ElementAt(index);
+      NS_RELEASE(oldContent);
+      mProlog->ReplaceElementAt(content, index);
+      NS_ADDREF(content);
+    }
+  }
+
+  if (refContent == mRootContent) {
+    result = NS_ERROR_INVALID_ARG;
+  }
+  else if ((nsnull != mEpilog) && (0 != mEpilog->Count())) {
+    index = mEpilog->IndexOf(refContent);
+    if (-1 != index) {
+      nsIContent* oldContent;
+      oldContent = (nsIContent*)mEpilog->ElementAt(index);
+      NS_RELEASE(oldContent);
+      mEpilog->ReplaceElementAt(content, index);
+      NS_ADDREF(content);
+    }
+  }
+
+  if (NS_OK == result) {
+    content->SetDocument(this, PR_TRUE);
+    refContent->SetDocument(nsnull, PR_TRUE);
+    *aReturn = aNewChild;
+    NS_ADDREF(aNewChild);
+  }
+  else {
+    *aReturn = nsnull;
+  }
+
+  NS_RELEASE(content);
+  NS_RELEASE(refContent);
+
+  return result;
 }
 
 NS_IMETHODIMP    
 nsDocument::RemoveChild(nsIDOMNode* aOldChild, nsIDOMNode** aReturn)
 {
-  // Should be implemented by subclass
-  return NS_ERROR_NOT_IMPLEMENTED;
+  NS_ASSERTION(nsnull != aOldChild, "null ptr");
+  nsresult result = NS_OK;
+  PRInt32 index;
+  nsIContent *content;
+  
+  if (nsnull == aOldChild) {
+    return NS_ERROR_INVALID_ARG;
+  }
+
+  result = aOldChild->QueryInterface(kIContentIID, (void**)&content);
+  if (NS_OK != result) {
+    return result;
+  }
+
+  if ((nsnull != mProlog) && (0 != mProlog->Count())) {
+    index = mProlog->IndexOf(content);
+    if (-1 != index) {
+      // Don't drop reference count since we're going
+      // to return this element anyway.
+      mProlog->RemoveElementAt(index);
+    }
+  }
+
+  if (content == mRootContent) {
+    result = NS_ERROR_INVALID_ARG;
+  }
+  else if ((nsnull != mEpilog) && (0 != mEpilog->Count())) {
+    index = mEpilog->IndexOf(content);
+    if (-1 != index) {
+      mEpilog->RemoveElementAt(index);
+    }
+  }
+
+  if (NS_OK == result) {
+    content->SetDocument(nsnull, PR_TRUE);
+    *aReturn = aOldChild;
+  }
+  else {
+    *aReturn = nsnull;
+  }
+
+  NS_RELEASE(content);
+  
+  return result;
 }
 
 NS_IMETHODIMP    
 nsDocument::AppendChild(nsIDOMNode* aNewChild, nsIDOMNode** aReturn)
 {
-  // Should be implemented by subclass
-  return NS_ERROR_NOT_IMPLEMENTED;
+  return InsertBefore(aNewChild, nsnull, aReturn);
 }
 
 NS_IMETHODIMP    

@@ -26,6 +26,7 @@
 #include "nsTextFragment.h"
 #include "nsVoidArray.h"
 #include "nsINameSpaceManager.h"
+#include "nsITextContent.h"
 
 extern const nsIID kIDOMCharacterDataIID;
 extern const nsIID kIDOMNodeIID;
@@ -43,6 +44,7 @@ class nsIFrame;
 class nsIStyleContext;
 class nsIStyleRule;
 class nsISupportsArray;
+class nsIDOMText;
 
 struct nsGenericDOMDataNode {
   nsGenericDOMDataNode();
@@ -205,6 +207,18 @@ struct nsGenericDOMDataNode {
   nsresult RemoveChildAt(PRInt32 aIndex, PRBool aNotify) {
     return NS_OK;
   }
+
+  nsresult SplitText(PRUint32 aOffset, nsIDOMText** aReturn);
+
+  nsresult GetText(const nsTextFragment*& aFragmentsResult,
+                   PRInt32& aNumFragmentsResult);
+  nsresult SetText(const PRUnichar* aBuffer,
+                   PRInt32 aLength,
+                   PRBool aNotify);
+  nsresult SetText(const char* aBuffer,
+                   PRInt32 aLength,
+                   PRBool aNotify);
+  nsresult IsOnlyWhitespace(PRBool* aResult);
 
   //----------------------------------------
 
@@ -463,6 +477,38 @@ struct nsGenericDOMDataNode {
   NS_IMETHOD GetRangeList(nsVoidArray*& aResult) const {                   \
     return _g.GetRangeList(aResult);                                       \
   }                                                                        
+
+/**
+ * Implement the nsIDOMText API by forwarding the methods to a
+ * generic character data content object.
+ */
+#define NS_IMPL_IDOMTEXT_USING_GENERIC_DOM_DATA(_g) \
+  NS_IMETHOD SplitText(PRUint32 aOffset, nsIDOMText** aReturn){            \
+    return _g.SplitText(aOffset, aReturn);                                 \
+  }
+
+/**
+ * Implement the nsITextContent API by forwarding the methods to a
+ * generic character data content object.
+ */
+#define NS_IMPL_ITEXTCONTENT_USING_GENERIC_DOM_DATA(_g) \
+  NS_IMETHOD GetText(const nsTextFragment*& aFragmentsResult,              \
+                     PRInt32& aNumFragmentsResult){                        \
+    return mInner.GetText(aFragmentsResult, aNumFragmentsResult);          \
+  }                                                                        \
+  NS_IMETHOD SetText(const PRUnichar* aBuffer,                             \
+                     PRInt32 aLength,                                      \
+                     PRBool aNotify){                                      \
+    return mInner.SetText(aBuffer, aLength, aNotify);                      \
+  }                                                                        \
+  NS_IMETHOD SetText(const char* aBuffer,                                  \
+                     PRInt32 aLength,                                      \
+                     PRBool aNotify){                                      \
+    return mInner.SetText(aBuffer, aLength, aNotify);                      \
+  }                                                                        \
+  NS_IMETHOD IsOnlyWhitespace(PRBool* aResult){                            \
+    return mInner.IsOnlyWhitespace(aResult);                               \
+  }
 
 /**
  * This macro implements the portion of query interface that is

@@ -60,6 +60,7 @@ public:
   // Alphabetical list of pseudo tag names for non-element content
   static nsIAtom* commentTagName;
   static nsIAtom* textTagName;
+  static nsIAtom* processingInstructionTagName;
   static nsIAtom* viewportPseudo;
   static nsIAtom* pagePseudo;
 

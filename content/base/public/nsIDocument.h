@@ -158,6 +158,22 @@ public:
   virtual void SetRootContent(nsIContent* aRoot) = 0;
 
   /**
+   * Methods to append to the prolog and epilog of
+   * a document. The prolog is the content before the document
+   * element, the epilog after.
+   */
+  NS_IMETHOD AppendToProlog(nsIContent* aContent) = 0;
+  NS_IMETHOD AppendToEpilog(nsIContent* aContent) = 0;
+
+  /** 
+   * Get the direct children of the document - content in
+   * the prolog, the root content and content in the epilog.
+   */
+  NS_IMETHOD ChildAt(PRInt32 aIndex, nsIContent*& aResult) const = 0;
+  NS_IMETHOD IndexOf(nsIContent* aPossibleChild, PRInt32& aIndex) const = 0;
+  NS_IMETHOD GetChildCount(PRInt32& aCount) = 0;
+
+  /**
    * Get the style sheets owned by this document.
    * Style sheets are ordered, most significant last.
    */

@@ -1068,7 +1068,8 @@ static PRBool SelectorMatches(nsIPresContext* aPresContext,
                 nsIAtom* tag;
                 firstChild->GetTag(tag);
                 if ((tag != nsLayoutAtoms::textTagName) && 
-                    (tag != nsLayoutAtoms::commentTagName)) {
+                    (tag != nsLayoutAtoms::commentTagName) &&
+                    (tag != nsLayoutAtoms::processingInstructionTagName)) {
                   NS_IF_RELEASE(tag);
                   break;
                 }

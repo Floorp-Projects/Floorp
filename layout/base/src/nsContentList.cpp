@@ -331,7 +331,8 @@ nsContentList::Match(nsIContent *aContent, PRBool *aMatch)
     // If we have to match all, only do those that have
     // a tagName i.e. only the elements.
     if (mMatchAll && (nsLayoutAtoms::textTagName != name) &&
-        (nsLayoutAtoms::commentTagName != name)) {
+        (nsLayoutAtoms::commentTagName != name) &&
+        (nsLayoutAtoms::processingInstructionTagName != name)) {
       *aMatch = PR_TRUE;
     }
     // XXX We don't yet match on namespace. Maybe we should??

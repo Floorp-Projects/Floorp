@@ -46,4 +46,13 @@ public:
 extern nsresult
 NS_NewXMLElement(nsIXMLContent** aResult, nsIAtom* aTag);
 
+// XXX These belongs elsewhere
+extern nsresult
+NS_NewXMLProcessingInstruction(nsIContent** aInstancePtrResult,
+                               const nsString& aTarget,
+                               const nsString& aData);
+
+extern nsresult
+NS_NewXMLCDATASection(nsIContent** aInstancePtrResult);
+
 #endif // nsIXMLContent_h___

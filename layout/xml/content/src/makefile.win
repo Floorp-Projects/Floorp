@@ -26,11 +26,15 @@ DEFINES=-D_IMPL_NS_HTML -DWIN32_LEAN_AND_MEAN
 CPPSRCS=					\
 	nsXMLElement.cpp			\
 	nsGenericXMLElement.cpp			\
+	nsXMLCDATASection.cpp			\
+	nsXMLProcessingInstruction.cpp		\
 	$(NULL)
 
 CPP_OBJS=					\
 	.\$(OBJDIR)\nsXMLElement.obj		\
 	.\$(OBJDIR)\nsGenericXMLElement.obj	\
+	.\$(OBJDIR)\nsXMLCDATASection.obj	\
+	.\$(OBJDIR)\nsXMLProcessingInstruction.obj \
 	$(NULL)
 
 EXPORTS =					\

@@ -46,6 +46,7 @@ nsIAtom* nsLayoutAtoms::floaterList;
 // pseudo tag names for non-element content
 nsIAtom* nsLayoutAtoms::commentTagName;
 nsIAtom* nsLayoutAtoms::textTagName;
+nsIAtom* nsLayoutAtoms::processingInstructionTagName;
 nsIAtom* nsLayoutAtoms::viewportPseudo;
 nsIAtom* nsLayoutAtoms::pagePseudo;
 
@@ -90,6 +91,7 @@ void nsLayoutAtoms::AddrefAtoms()
 
     commentTagName = NS_NewAtom("__moz_comment");
     textTagName = NS_NewAtom("__moz_text");
+    processingInstructionTagName = NS_NewAtom("__moz_pi");
     viewportPseudo = NS_NewAtom(":-moz-viewport");
     pagePseudo = NS_NewAtom(":-moz-page");
 
@@ -135,6 +137,7 @@ void nsLayoutAtoms::ReleaseAtoms()
 
     NS_RELEASE(commentTagName);
     NS_RELEASE(textTagName);
+    NS_RELEASE(processingInstructionTagName);
     NS_RELEASE(viewportPseudo);
     NS_RELEASE(pagePseudo);
     

@@ -2962,6 +2962,17 @@ nsCSSFrameConstructor::ResolveStyleContext(nsIPresContext*   aPresContext,
                                                     parentStyleContext,
                                                     PR_FALSE,
                                                     aStyleContext);
+    } else if (nsLayoutAtoms::processingInstructionTagName == aTag) {
+    // Use a special pseudo element style context for comments
+    nsCOMPtr<nsIContent> parentContent;
+    if (nsnull != aParentFrame) {
+      aParentFrame->GetContent(getter_AddRefs(parentContent));
+    }
+    rv = aPresContext->ResolvePseudoStyleContextFor(parentContent, 
+                                                    nsHTMLAtoms::processingInstructionPseudo, 
+                                                    parentStyleContext,
+                                                    PR_FALSE,
+                                                    aStyleContext);
   } else {
     rv = aPresContext->ResolveStyleContextFor(aContent, parentStyleContext,
                                               PR_FALSE,
@@ -3016,6 +3027,17 @@ nsCSSFrameConstructor::ConstructFrame(nsIPresContext*  aPresContext,
     }
     rv = aPresContext->ResolvePseudoStyleContextFor(parentContent, 
                                                     nsHTMLAtoms::commentPseudo, 
+                                                    parentStyleContext,
+                                                    PR_FALSE,
+                                                    getter_AddRefs(styleContext));
+  } else if (nsLayoutAtoms::processingInstructionTagName == tag) {
+    // Use a special pseudo element style context for comments
+    nsCOMPtr<nsIContent> parentContent;
+    if (nsnull != aParentFrame) {
+      aParentFrame->GetContent(getter_AddRefs(parentContent));
+    }
+    rv = aPresContext->ResolvePseudoStyleContextFor(parentContent, 
+                                                    nsHTMLAtoms::processingInstructionPseudo, 
                                                     parentStyleContext,
                                                     PR_FALSE,
                                                     getter_AddRefs(styleContext));
