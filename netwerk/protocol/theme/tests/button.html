@@ -11,6 +11,8 @@
 <SCRIPT>
 
 var buttonURI = "theme:button?width=40&height=20&title=OK";
+var isMouseDown = false;
+var inAlert = false;
 
 if (document.images) {
 	buttonImages = new Array();
@@ -30,21 +32,27 @@ function buttonUp()
 	document.button.src = buttonImages[0].src;
 }
 
-var isMouseDown=false;
-var inButton=false;
+function buttonPressed()
+{
+    if (!inAlert) {
+        inAlert = true;
+        alert('Well OK!');
+        inAlert = false;
+    }
+}
 </SCRIPT>
 </HEAD>
-<BODY BGCOLOR="#FFFFFF" onMouseUp="isMouseDown=inButton=false;">
+<BODY BGCOLOR="#FFFFFF" onMouseUp="isMouseDown=false;">
 <H1>Button Test</H1>
 <IMG
 	id="button"
 	name="button"
 	src="theme:button?width=40&height=20&title=OK"
 	border=0
-	onMouseDown="buttonDown(); event.preventDefault(); isMouseDown=inButton=true;"
-	onMouseOver="if (isMouseDown) { buttonDown(); inButton=true; }"
-	onMouseUp="buttonUp(); isMouseDown=inButton=false; alert('Well OK!');"
-	onMouseOut="if (isMouseDown) { buttonUp(); inButton=false; }"
+	onMouseDown="buttonDown(); event.preventDefault(); isMouseDown=true;"
+	onMouseOver="if (isMouseDown) { buttonDown(); }"
+	onMouseUp="buttonUp(); isMouseDown=false; buttonPressed();"
+	onMouseOut="if (isMouseDown) { buttonUp(); }"
 	>
 </BODY>
 </HTML>
