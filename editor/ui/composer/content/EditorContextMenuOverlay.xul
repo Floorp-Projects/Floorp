@@ -32,18 +32,18 @@
 <popupset id="editorContentContextSet">
  <popup id="editorContentContext"   
    onpopupshowing="EditorFillContextMenu(event, this);"> 
-    <menuitem id="menu_undo_cm"   label="&undoCmd.label;" accesskey="&undo.accesskey;"  oncommand="goDoCommand('cmd_undo')"/>
-    <menuitem id="menu_redo_cm"   label="&redoCmd.label;" accesskey="&redo.accesskey;"  oncommand="goDoCommand('cmd_redo')"/>
+    <menuitem id="menu_undo_cm"   label="&undoCmd.label;" accesskey="&undo.accesskey;"  observes="cmd_undo"/>
+    <menuitem id="menu_redo_cm"   label="&redoCmd.label;" accesskey="&redo.accesskey;"  observes="cmd_redo"/>
     <menuseparator id="undoredo-separator"/>
     
-    <menuitem id="menu_cut_cm"    label="&cutCmd.label;"    accesskey="&cut.accesskey;"    oncommand="goDoCommand('cmd_cut')"/>
-    <menuitem id="menu_copy_cm"   label="&copyCmd.label;"   accesskey="&copy.accesskey;"   oncommand="goDoCommand('cmd_copy')"/>
-    <menuitem id="menu_paste_cm"  label="&pasteCmd.label;"  accesskey="&paste.accesskey;"  oncommand="goDoCommand('cmd_paste')"/>
-    <menuitem id="menu_delete_cm" label="&deleteCmd.label;" accesskey="&delete.accesskey;" oncommand="goDoCommand('cmd_delete')"/>
+    <menuitem id="menu_cut_cm"    label="&cutCmd.label;"    accesskey="&cut.accesskey;"    observes="cmd_cut"/>
+    <menuitem id="menu_copy_cm"   label="&copyCmd.label;"   accesskey="&copy.accesskey;"   observes="cmd_copy"/>
+    <menuitem id="menu_paste_cm"  label="&pasteCmd.label;"  accesskey="&paste.accesskey;"  observes="cmd_paste"/>
+    <menuitem id="menu_delete_cm" label="&deleteCmd.label;" accesskey="&delete.accesskey;" observes="cmd_delete"/>
     <menuseparator id="edit-separator"/>
     
     <menuitem id="menu_selectAll_cm" label="&selectAllCmd.label;" accesskey="&selectall.accesskey;" 
-          oncommand="goDoCommand('cmd_selectAll')"/>
+          observes="cmd_selectAll"/>
     <menuseparator id="selectAll-separator"/>
     
     <!-- label and accesskey set at runtime from strings -->
