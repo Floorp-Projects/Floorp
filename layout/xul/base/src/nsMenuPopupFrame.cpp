@@ -71,6 +71,7 @@
 #include "nsIRootBox.h"
 #include "nsIDocShellTreeItem.h"
 #include "nsITimerInternal.h"
+#include "nsUnicharUtils.h"
 #ifdef XP_WIN
 #include "nsISound.h"
 #endif
@@ -1613,7 +1614,7 @@ NS_IMETHODIMP nsMenuPopupFrame::SetCurrentMenuItem(nsIMenuFrame* aMenuItem)
 NS_IMETHODIMP
 nsMenuPopupFrame::Escape(PRBool& aHandledFlag)
 {
-  mIncrementalString = NS_LITERAL_STRING("");
+  mIncrementalString.Truncate();
 
   // See if we have a context menu open.
   nsCOMPtr<nsIMenuParent> contextMenu;
@@ -1652,7 +1653,7 @@ nsMenuPopupFrame::Escape(PRBool& aHandledFlag)
 NS_IMETHODIMP
 nsMenuPopupFrame::Enter()
 {
-  mIncrementalString = NS_LITERAL_STRING("");
+  mIncrementalString.Truncate();
 
   // See if we have a context menu open.
   nsCOMPtr<nsIMenuParent> contextMenu;
@@ -1742,18 +1743,24 @@ nsMenuPopupFrame::FindMenuWithShortcut(nsIDOMKeyEvent* aKeyEvent, PRBool& doActi
     return nsnull;
   }
   else {
-    nsAutoString pressKey(NS_STATIC_CAST(PRUnichar, charCode));
-    // UpperCase to compare-no-case
-    ToUpperCase(pressKey);
+    PRUnichar uniChar = ToLowerCase(NS_STATIC_CAST(PRUnichar, charCode));
     if (isMenu || // Menu supports only first-letter navigation
         keyTime - lastKeyTime > INC_TYP_INTERVAL) // Interval too long, treat as new typing
-      mIncrementalString = pressKey;
+      mIncrementalString = uniChar;
     else {
-      if (mIncrementalString.Length() != 1 ||
-          mIncrementalString.First() != pressKey.First())
-          // If user typed the same key more than once, we should do a cycled one-key navigation
-      mIncrementalString.do_AppendFromElement(pressKey.First());
+      mIncrementalString.Append(uniChar);
     }
+  }
+
+  // See bug 188199 & 192346, if all letters in incremental string are same, just try to match the first one
+  nsAutoString incrementalString(mIncrementalString);
+  PRUint32 charIndex = 1, stringLength = incrementalString.Length();
+  while (charIndex < stringLength && incrementalString[charIndex] == incrementalString[charIndex - 1]) {
+    charIndex++;
+  }
+  if (charIndex == stringLength) {
+    incrementalString.Truncate(1);
+    stringLength = 1;
   }
 
   lastKeyTime = keyTime;
@@ -1786,8 +1793,7 @@ nsMenuPopupFrame::FindMenuWithShortcut(nsIDOMKeyEvent* aKeyEvent, PRBool& doActi
       else
         isShortcut = PR_TRUE;
 
-      ToUpperCase(textKey);
-      if (Substring(textKey, 0, mIncrementalString.Length()) == mIncrementalString) {
+      if (Substring(textKey, 0, stringLength).Equals(incrementalString, nsCaseInsensitiveStringComparator())) {
         // mIncrementalString is a prefix of textKey
         nsCOMPtr<nsIMenuFrame> menuFrame = do_QueryInterface(currFrame);
         if (menuFrame) {
@@ -1818,7 +1824,7 @@ nsMenuPopupFrame::FindMenuWithShortcut(nsIDOMKeyEvent* aKeyEvent, PRBool& doActi
       current->GetAttr(kNameSpaceID_None, nsXULAtoms::menuactive, activeKey);
       if (activeKey == NS_LITERAL_STRING("true")) {
         foundActive = PR_TRUE;
-        if (mIncrementalString.Length() > 1) {
+        if (stringLength > 1) {
           // If there is more than one char typed, the current item has highest priority,
           //   otherwise the item next to current has highest priority
           nsCOMPtr<nsIMenuFrame> menuFrame = do_QueryInterface(currFrame);
@@ -1896,7 +1902,7 @@ nsMenuPopupFrame::KeyboardNavigation(PRUint32 aKeyCode, PRBool& aHandledFlag)
   nsNavigationDirection theDirection;
   NS_DIRECTION_FROM_KEY_CODE(theDirection, aKeyCode);
 
-  mIncrementalString = NS_LITERAL_STRING("");
+  mIncrementalString.Truncate();
 
   // This method only gets called if we're open.
   if (!mCurrentMenu && NS_DIRECTION_IS_INLINE(theDirection)) {
