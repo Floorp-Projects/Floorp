@@ -590,8 +590,17 @@ endif #STRICT_CPLUSPLUS_SUFFIX
 %: %.sh
 	rm -f $@; cp $< $@; chmod +x $@
 
-%.h: %.idl
+
+# these rules only apply when the XPIDL compiler is available
+ifdef BUILD_XPIDL
+%.h: %.idl $(IDL_COMPILE)
 	$(IDL_COMPILE) -m header -w -I $(DIST)/idl $<
+
+
+%.cpp: %.idl $(IDL_COMPILE)
+	$(IDL_COMPILE) -m stub -w -I $(DIST)/idl $<
+
+endif
 
 ifdef DIRS
 $(DIRS)::
