@@ -28,8 +28,6 @@
 #include "nsIURL.h"
 #include "nsIJARURI.h"
 #include "nspr.h"
-#include "plstr.h"
-#include "nsCOMPtr.h"
 #include "nsJSPrincipals.h"
 #include "nsSystemPrincipal.h"
 #include "nsCodebasePrincipal.h"
@@ -39,7 +37,6 @@
 #include "nsXPIDLString.h"
 #include "nsIJSContextStack.h"
 #include "nsDOMError.h"
-#include "xpcexception.h"
 #include "nsDOMCID.h"
 #include "jsdbgapi.h"
 #include "nsIXPConnect.h"
@@ -1105,17 +1102,25 @@ nsScriptSecurityManager::GetFunctionObjectPrincipal(JSContext *cx,
                                                     nsIPrincipal **result) 
 {
     JSFunction *fun = (JSFunction *) JS_GetPrivate(cx, obj);
-
     JSScript *script = JS_GetFunctionScript(cx, fun);
-    if (script && JS_GetFunctionObject(fun) != obj)
+
+    nsCOMPtr<nsIPrincipal> scriptPrincipal;
+    if (script)
+        if (NS_FAILED(GetScriptPrincipal(cx, script, getter_AddRefs(scriptPrincipal))))
+            return NS_ERROR_FAILURE;
+
+    if (script && (JS_GetFunctionObject(fun) != obj) &&
+        (scriptPrincipal.get() == mSystemPrincipal))
     {
-        // Scripted function has been cloned; get principals from obj's
-        // parent-linked scope chain.  We do not get object principals for a
-        // cloned *native* function, because the subject in that case is a
-        // script or function further down the stack who is calling us.
+        // Function is brutally-shared chrome. For this case only,
+        // get a principal from the object's scope instead of the
+        // principal compiled into the function.
         return GetObjectPrincipal(cx, obj, result);
     }
-    return GetScriptPrincipal(cx, script, result);
+
+    *result = scriptPrincipal.get();
+    NS_IF_ADDREF(*result);
+    return NS_OK;
 }
 
 nsresult
