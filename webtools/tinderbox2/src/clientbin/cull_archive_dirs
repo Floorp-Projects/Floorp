@@ -25,8 +25,8 @@
 # complete rewrite by Ken Estes, Mail.com (kestes@staff.mail.com).
 # Contributor(s): 
 
-# $Revision: 1.10 $
-# $Date: 2002/05/10 21:21:59 $
+# $Revision: 1.11 $
+# $Date: 2002/12/09 18:15:06 $
 # $Author: kestes%walrus.com $
 # $Name:  $
 
@@ -140,9 +140,10 @@ sub untaint_digits {
 
 sub format_digits_human_readable {
     my ($num) = @_;
+    my $char = "G";
 
     my $break = 1000_000_000;
-    my $char = "G";
+    $char = "G";
     if ($num >= $break) {
 	my $trunc = ( $num - ($num % $break) ) / $break;
 	$out = $trunc;
@@ -151,7 +152,7 @@ sub format_digits_human_readable {
     }
 
     $break = $break / 1000;
-    my $char = "M";
+    $char = "M";
     if ($num >= $break) {
 	my $trunc = ( $num - ($num % $break) ) / $break;
 	$out = $trunc;
@@ -160,7 +161,7 @@ sub format_digits_human_readable {
     }
 
     $break = $break / 1000;
-    my $char = "K";
+    $char = "K";
     if ($num >= $break) {
 	my $trunc = ( $num - ($num % $break) ) / $break;
 	$out = $trunc;
