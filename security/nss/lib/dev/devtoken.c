@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: devtoken.c,v $ $Revision: 1.4 $ $Date: 2001/12/07 01:35:54 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: devtoken.c,v $ $Revision: 1.5 $ $Date: 2002/02/01 17:25:11 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef DEV_H
@@ -194,6 +194,63 @@ nssToken_GetName
 )
 {
     return tok->name;
+}
+
+NSS_IMPLEMENT PRBool
+nssToken_IsPresent
+(
+  NSSToken *token
+)
+{
+    CK_RV ckrv;
+    PRStatus nssrv;
+    nssSession *session;
+    CK_SLOT_INFO slotInfo;
+    NSSSlot *slot = token->slot;
+    session = token->defaultSession;
+    nssSession_EnterMonitor(session);
+    /* First obtain the slot info */
+    ckrv = CKAPI(slot)->C_GetSlotInfo(slot->slotID, &slotInfo);
+    if (ckrv != CKR_OK) {
+	nssSession_ExitMonitor(session);
+	return PR_FALSE;
+    }
+    slot->ckFlags = slotInfo.flags;
+    /* check for the presence of the token */
+    if ((slot->ckFlags & CKF_TOKEN_PRESENT) == 0) {
+	/* token is not present */
+	if (session->handle != CK_INVALID_SESSION) {
+	    /* session is valid, close and invalidate it */
+	    CKAPI(slot)->C_CloseSession(session->handle);
+	    session->handle = CK_INVALID_SESSION;
+	}
+	nssSession_ExitMonitor(session);
+	return PR_FALSE;
+    }
+    /* token is present, use the session info to determine if the card
+     * has been removed and reinserted.
+     */
+    if (session != CK_INVALID_SESSION) {
+	CK_SESSION_INFO sessionInfo;
+	ckrv = CKAPI(slot)->C_GetSessionInfo(session->handle, &sessionInfo);
+	if (ckrv != CKR_OK) {
+	    /* session is screwy, close and invalidate it */
+	    CKAPI(slot)->C_CloseSession(session->handle);
+	    session->handle = CK_INVALID_SESSION;
+	}
+    }
+    nssSession_ExitMonitor(session);
+    /* token not removed, finished */
+    if (session->handle != CK_INVALID_SESSION) {
+	return PR_TRUE;
+    } else {
+	/* token has been removed, need to refresh with new session */
+	nssrv = nssSlot_Refresh(slot);
+	if (nssrv != PR_SUCCESS) {
+	    return PR_FALSE;
+	}
+	return PR_TRUE;
+    }
 }
 
 NSS_IMPLEMENT NSSItem *

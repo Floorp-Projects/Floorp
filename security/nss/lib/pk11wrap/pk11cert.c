@@ -745,7 +745,12 @@ PK11_DeleteTokenCertAndKey(CERTCertificate *cert,void *wincx)
 
     pubKey = pk11_FindPubKeyByAnyCert(cert, &slot, wincx);
     if (privKey) {
+#ifdef NSS_CLASSIC
     	PK11_DestroyTokenObject(cert->slot,cert->pkcs11ID);
+#else
+	/* For 3.4, utilize the generic cert delete function */
+	SEC_DeletePermCertificate(cert);
+#endif
 	PK11_DeleteTokenPrivateKey(privKey);
     }
     if ((pubKey != CK_INVALID_HANDLE) && (slot != NULL)) { 
@@ -999,12 +1004,25 @@ pk11_TraverseAllSlots( SECStatus (*callback)(PK11SlotInfo *,void *),
     return SECSuccess;
 }
 
+struct fake_der_cb_argstr
+{
+    SECStatus(* callback)(CERTCertificate*, SECItem *, void *);
+    void *arg;
+};
+
+static PRStatus fake_der_cb(CERTCertificate *c, void *a)
+{
+    struct fake_der_cb_argstr *fda = (struct fake_der_cb_argstr *)a;
+    return (*fda->callback)(c, &c->derCert, fda->arg);
+}
+
 /*
  * Extract all the certs on a card from a slot.
  */
 SECStatus
 PK11_TraverseSlotCerts(SECStatus(* callback)(CERTCertificate*,SECItem *,void *),
 						void *arg, void *wincx) {
+#ifdef NSS_CLASSIC
     pk11DoCertCallback caller;
     pk11TraverseSlot creater;
     CK_ATTRIBUTE theTemplate;
@@ -1022,6 +1040,17 @@ PK11_TraverseSlotCerts(SECStatus(* callback)(CERTCertificate*,SECItem *,void *),
     creater.templateCount = 1;
 
     return pk11_TraverseAllSlots(PK11_TraverseSlot, &creater, wincx);
+#else
+    NSSTrustDomain *defaultTD = STAN_GetDefaultTrustDomain();
+    struct fake_der_cb_argstr fda;
+    struct nss3_cert_cbstr pk11cb;
+    fda.callback = callback;
+    fda.arg = arg;
+    pk11cb.callback = fake_der_cb;
+    pk11cb.arg = &fda;
+    NSSTrustDomain_TraverseCertificates(defaultTD, convert_cert, &pk11cb);
+    return SECSuccess;
+#endif
 }
 
 /*
@@ -1181,7 +1210,106 @@ get_newest_cert(NSSCertificate *c, void *arg)
     return PR_SUCCESS;
 }
 
-   
+struct token_cbstr {
+    NSSToken *token;
+    PRStatus (* callback)(NSSCertificate *c, void *arg);
+    void *cbarg;
+};
+
+/* This callback matches all certs on a given token.  It is used to filter
+ * cert lists to only those certs on a particular token.
+ */
+static PRStatus 
+token_callback(NSSCertificate *c, void *arg)
+{
+    nssListIterator *instances;
+    nssCryptokiInstance *instance;
+    PRBool isToken = PR_FALSE;
+    struct token_cbstr *token_cb = (struct token_cbstr *)arg;
+    instances = c->object.instances;
+    for (instance  = (nssCryptokiInstance *)nssListIterator_Start(instances);
+         instance != (nssCryptokiInstance *)NULL;
+         instance  = (nssCryptokiInstance *)nssListIterator_Next(instances))
+    {
+	if (instance->token == token_cb->token) {
+	    isToken = PR_TRUE;
+	    break;
+	}
+    }
+    nssListIterator_Finish(instances);
+    if (isToken) {
+	return (*token_cb->callback)(c, token_cb->cbarg);
+    } else {
+	return PR_SUCCESS;
+    }
+}
+
+/* match all token certs with a nickname */
+static nssList *
+filter_token_certs_nickname(NSSToken *token, NSSUTF8 *nickname)
+{
+    nssListIterator *certs;
+    NSSCertificate *cert;
+    PRStatus nssrv;
+    nssList *rvList;
+    certs = nssList_CreateIterator(token->certList);
+    if (!certs) return NULL;
+    rvList = nssList_Create(NULL, PR_FALSE);
+    if (!rvList) {
+	nssListIterator_Destroy(certs);
+	return NULL;
+    }
+    for (cert  = (NSSCertificate *)nssListIterator_Start(certs);
+         cert != (NSSCertificate *)NULL;
+         cert  = (NSSCertificate *)nssListIterator_Next(certs))
+    {
+	if (!cert->nickname) continue;
+	if (nssUTF8_Equal(cert->nickname, nickname, &nssrv)) {
+	    nssList_Add(rvList, nssCertificate_AddRef(cert));
+	}
+    }
+    nssListIterator_Finish(certs);
+    nssListIterator_Destroy(certs);
+    if (nssList_Count(rvList) == 0) {
+	nssList_Destroy(rvList);
+	rvList = NULL;
+    }
+    return rvList;
+}
+
+/* match all token certs with an email address */
+static nssList *
+filter_token_certs_email(NSSToken *token, NSSASCII7 *email)
+{
+    nssListIterator *certs;
+    NSSCertificate *cert;
+    PRStatus nssrv;
+    nssList *rvList;
+    certs = nssList_CreateIterator(token->certList);
+    if (!certs) return NULL;
+    rvList = nssList_Create(NULL, PR_FALSE);
+    if (!rvList) {
+	nssListIterator_Destroy(certs);
+	return NULL;
+    }
+    for (cert  = (NSSCertificate *)nssListIterator_Start(certs);
+         cert != (NSSCertificate *)NULL;
+         cert  = (NSSCertificate *)nssListIterator_Next(certs))
+    {
+	if (!cert->email) continue;
+	if (nssUTF8_Equal(cert->email, email, &nssrv)) {
+	    nssList_Add(rvList, nssCertificate_AddRef(cert));
+	}
+    }
+    nssListIterator_Finish(certs);
+    nssListIterator_Destroy(certs);
+    if (nssList_Count(rvList) == 0) {
+	nssList_Destroy(rvList);
+	rvList = NULL;
+    }
+    return rvList;
+}
+
 CERTCertificate *
 PK11_FindCertFromNickname(char *nickname, void *wincx) {
 #ifdef NSS_CLASSIC
@@ -1202,12 +1330,14 @@ PK11_FindCertFromNickname(char *nickname, void *wincx) {
     NSSUsage usage;
     NSSToken *token;
     PK11SlotInfo *slot = NULL;
+    char *nickCopy;
     char *delimit = NULL;
     char *tokenName;
     NSSTrustDomain *defaultTD = STAN_GetDefaultTrustDomain();
     usage.anyUsage = PR_TRUE;
-    if ((delimit = PORT_Strchr(nickname,':')) != NULL) {
-	tokenName = nickname;
+    nickCopy = PORT_Strdup(nickname);
+    if ((delimit = PORT_Strchr(nickCopy,':')) != NULL) {
+	tokenName = nickCopy;
 	nickname = delimit + 1;
 	*delimit = '\0';
 	/* find token by name */
@@ -1220,6 +1350,7 @@ PK11_FindCertFromNickname(char *nickname, void *wincx) {
     }
     if (token) {
 	nssTokenCertSearch search;
+	struct token_cbstr token_cb;
 	nssList *certList;
 	if (!PK11_IsFriendly(slot)) {
 	    if (PK11_Authenticate(slot, PR_TRUE, wincx) != SECSuccess) {
@@ -1227,32 +1358,76 @@ PK11_FindCertFromNickname(char *nickname, void *wincx) {
 		return NULL;
 	    }
 	}
-	certList = nssList_Create(NULL, PR_FALSE);
-	(void)nssTrustDomain_GetCertsForNicknameFromCache(defaultTD, 
-	                                                  nickname, 
-	                                                  certList);
-	/* set the search criteria */
-	search.callback = get_newest_cert;
-	search.cbarg = (void *)&cert;
-	search.cached = certList;
-	search.searchType = nssTokenSearchType_TokenOnly;
 	/* find best cert on token */
-	nssToken_TraverseCertificatesByNickname(token, NULL, 
-	                                        (NSSUTF8 *)nickname,
-	                                        &search);
-	nssList_Clear(certList, cert_destructor);
-	nssList_Destroy(certList);
-	if (!cert) {
+	if (!nssToken_SearchCerts(token)) {
+	    /* token certs are in cache, filter the list of token certs to
+	     * match the nickname
+	     */
+	    certList = filter_token_certs_nickname(token, nickname);
+	    if (certList) {
+		nssCertificateList_DoCallback(certList, 
+		                              get_newest_cert, 
+		                              (void *)&cert);
+	    }
+	} else {
+	    /* find matching certs on the token */
 	    certList = nssList_Create(NULL, PR_FALSE);
-	    (void)nssTrustDomain_GetCertsForEmailAddressFromCache(defaultTD, 
-	                                                          nickname, 
-	                                                          certList);
+	    if (!certList) return NULL;
+	    /* first, get all matching certs from the cache */
+	    (void)nssTrustDomain_GetCertsForNicknameFromCache(defaultTD, 
+	                                                      nickname, 
+	                                                      certList);
+	    /* set the search criteria */
+	    token_cb.callback = get_newest_cert;
+	    token_cb.cbarg = (void *)&cert;
+	    token_cb.token = token;
+	    search.callback = token_callback;
+	    search.cbarg = &token_cb;
 	    search.cached = certList;
-	    nssToken_TraverseCertificatesByEmail(token, NULL, 
-	                                         (NSSASCII7 *)nickname,
-	                                         &search);
+	    search.searchType = nssTokenSearchType_TokenOnly;
+	    /* then filter the list of cached certs for only those on the
+	     * token
+	     */
+	    nssCertificateList_DoCallback(certList, 
+	                                  token_callback, 
+	                                  &token_cb);
+	    /* now search the token */
+	    nssToken_TraverseCertificatesByNickname(token, NULL, 
+	                                            (NSSUTF8 *)nickname,
+	                                            &search);
+	}
+	if (certList) {
 	    nssList_Clear(certList, cert_destructor);
 	    nssList_Destroy(certList);
+	}
+	/* if it wasn't found, repeat the process for email address */
+	if (!cert) {
+	    if (!nssToken_SearchCerts(token)) {
+		certList = filter_token_certs_email(token, nickname);
+		if (certList) {
+		    nssCertificateList_DoCallback(certList, 
+		                                  get_newest_cert, 
+		                                  (void *)&cert);
+		}
+	    } else {
+		certList = nssList_Create(NULL, PR_FALSE);
+		if (!certList) return NULL;
+		(void)nssTrustDomain_GetCertsForEmailAddressFromCache(
+		                                                  defaultTD, 
+	                                                          nickname, 
+	                                                          certList);
+		search.cached = certList;
+		nssCertificateList_DoCallback(certList, 
+		                              token_callback,
+		                              &token_cb);
+		nssToken_TraverseCertificatesByEmail(token, NULL, 
+		                                     (NSSASCII7 *)nickname,
+		                                     &search);
+	    }
+	    if (certList) {
+		nssList_Clear(certList, cert_destructor);
+		nssList_Destroy(certList);
+	    }
 	}
 	if (cert) {
 	    (void)nssTrustDomain_AddCertsToCache(defaultTD, &cert, 1);
@@ -1262,6 +1437,7 @@ PK11_FindCertFromNickname(char *nickname, void *wincx) {
     if (slot) {
 	PK11_FreeSlot(slot);
     }
+    if (nickCopy) PORT_Free(nickCopy);
     return rvCert;
 #endif
 }
@@ -1306,6 +1482,7 @@ PK11_FindCertsFromNickname(char *nickname, void *wincx) {
     return certList;
 #else
     PRStatus nssrv;
+    char *nickCopy;
     char *delimit = NULL;
     char *tokenName;
     int i;
@@ -1315,8 +1492,9 @@ PK11_FindCertsFromNickname(char *nickname, void *wincx) {
     NSSCertificate *c;
     NSSToken *token;
     PK11SlotInfo *slot;
-    if ((delimit = PORT_Strchr(nickname,':')) != NULL) {
-	tokenName = nickname;
+    nickCopy = PORT_Strdup(nickname);
+    if ((delimit = PORT_Strchr(nickCopy,':')) != NULL) {
+	tokenName = nickCopy;
 	nickname = delimit + 1;
 	*delimit = '\0';
 	/* find token by name */
@@ -1337,25 +1515,33 @@ PK11_FindCertsFromNickname(char *nickname, void *wincx) {
 		return NULL;
 	    }
 	}
-	nameList = nssList_Create(NULL, PR_FALSE);
-	(void)nssTrustDomain_GetCertsForNicknameFromCache(defaultTD,
-	                                                  nickname, 
-	                                                  nameList);
-	/* set the search criteria */
-	search.callback = collect_certs;
-	search.cbarg = nameList;
-	search.cached = nameList;
-	search.searchType = nssTokenSearchType_TokenOnly;
-	nssrv = nssToken_TraverseCertificatesByNickname(token, NULL, 
-	                                                nickname, &search);
-	count = nssList_Count(nameList);
-	foundCerts = nss_ZNEWARRAY(NULL, NSSCertificate *, count + 1);
-	nssList_GetArray(nameList, (void **)foundCerts, count);
-	nssList_Destroy(nameList);
+	if (!nssToken_SearchCerts(token)) {
+	    nameList = filter_token_certs_nickname(token, nickname);
+	} else {
+	    nameList = nssList_Create(NULL, PR_FALSE);
+	    if (!nameList) return NULL;
+	    (void)nssTrustDomain_GetCertsForNicknameFromCache(defaultTD,
+	                                                      nickname, 
+	                                                      nameList);
+	    /* set the search criteria */
+	    search.callback = collect_certs;
+	    search.cbarg = nameList;
+	    search.cached = nameList;
+	    search.searchType = nssTokenSearchType_TokenOnly;
+	    nssrv = nssToken_TraverseCertificatesByNickname(token, NULL, 
+	                                                    nickname, &search);
+	}
+	if (nameList) {
+	    count = nssList_Count(nameList);
+	    foundCerts = nss_ZNEWARRAY(NULL, NSSCertificate *, count + 1);
+	    nssList_GetArray(nameList, (void **)foundCerts, count);
+	    nssList_Destroy(nameList);
+	}
     }
     if (slot) {
 	PK11_FreeSlot(slot);
     }
+    if (nickCopy) PORT_Free(nickCopy);
     if (foundCerts) {
 	certList = CERT_NewCertList();
 	for (i=0, c = *foundCerts; c; c = foundCerts[++i]) {
@@ -1504,6 +1690,7 @@ PK11_ImportCert(PK11SlotInfo *slot, CERTCertificate *cert,
     CK_RV crv;
     SECCertUsage *certUsage = NULL;
     SECItem derSerial = { 0 };
+    NSSToken *token;
 
     if (keyID == NULL) {
 	PORT_SetError(SEC_ERROR_ADDING_CERT);
@@ -1603,6 +1790,16 @@ PK11_ImportCert(PK11SlotInfo *slot, CERTCertificate *cert,
 	} else {
 	    cert->nssCertificate = STAN_GetNSSCertificate(cert);
 	}
+    }
+    cert->trust = nssTrust_GetCERTCertTrustForCert(cert->nssCertificate, cert);
+    token = PK11Slot_GetNSSToken(slot);
+    if (token->certList) {
+	/* create a persistent reference for the token */
+	NSSTrustDomain *td = STAN_GetDefaultTrustDomain();
+	nssCertificate_AddRef(cert->nssCertificate);
+	nssList_Add(token->certList, cert->nssCertificate);
+	/* and add the cert to the cache */
+	nssTrustDomain_AddCertsToCache(td, &cert->nssCertificate, 1);
     }
 
 done:
@@ -2368,6 +2565,72 @@ PK11_TraverseCertsForSubject(CERTCertificate *cert,
     return PK11_TraverseCertsForSubjectInSlot(cert, cert->slot, callback, arg);
 }
 
+/* Find all certs with a given subject in the list of token certs */
+static nssList *
+filter_token_certs_subject(NSSToken *token, NSSDER *subject)
+{
+    nssListIterator *certs;
+    NSSCertificate *cert;
+    PRStatus nssrv;
+    nssList *rvList;
+    certs = nssList_CreateIterator(token->certList);
+    if (!certs) return NULL;
+    rvList = nssList_Create(NULL, PR_FALSE);
+    if (!rvList) {
+	nssListIterator_Destroy(certs);
+	return NULL;
+    }
+    for (cert  = (NSSCertificate *)nssListIterator_Start(certs);
+         cert != (NSSCertificate *)NULL;
+         cert  = (NSSCertificate *)nssListIterator_Next(certs))
+    {
+	if (nssItem_Equal(&cert->subject, subject, &nssrv)) {
+	    nssList_Add(rvList, nssCertificate_AddRef(cert));
+	}
+    }
+    nssListIterator_Finish(certs);
+    nssListIterator_Destroy(certs);
+    if (nssList_Count(rvList) == 0) {
+	nssList_Destroy(rvList);
+	rvList = NULL;
+    }
+    return rvList;
+}
+
+/* remove all certs in a list that are not on the given token */
+static void 
+filter_list_for_token_certs(nssList *certList, NSSToken *token)
+{
+    nssListIterator *instances, *certs;
+    nssCryptokiInstance *instance;
+    NSSCertificate *c;
+    PRBool isToken = PR_FALSE;
+    certs = nssList_CreateIterator(certList);
+    if (!certs) return;
+    for (c  = (NSSCertificate *)nssListIterator_Start(certs);
+         c != (NSSCertificate *)NULL;
+         c  = (NSSCertificate *)nssListIterator_Next(certs)) {
+	instances = c->object.instances;
+	for (instance  = (nssCryptokiInstance *)nssListIterator_Start(instances);
+	     instance != (nssCryptokiInstance *)NULL;
+	     instance  = (nssCryptokiInstance *)nssListIterator_Next(instances))
+	{
+	    if (instance->token == token) {
+		isToken = PR_TRUE;
+		break;
+	    }
+	}
+	nssListIterator_Finish(instances);
+	if (!isToken) {
+	    /* safe since iterator is copied */
+	    nssList_Remove(certList, c);
+	    NSSCertificate_Destroy(c);
+	}
+    }
+    nssListIterator_Finish(certs);
+    nssListIterator_Destroy(certs);
+}
+
 SECStatus
 PK11_TraverseCertsForSubjectInSlot(CERTCertificate *cert, PK11SlotInfo *slot,
 	SECStatus(* callback)(CERTCertificate*, void *), void *arg)
@@ -2401,7 +2664,7 @@ PK11_TraverseCertsForSubjectInSlot(CERTCertificate *cert, PK11SlotInfo *slot,
     return PK11_TraverseSlot(slot, &callarg);
 #else
     struct nss3_cert_cbstr pk11cb;
-    PRStatus nssrv;
+    PRStatus nssrv = PR_SUCCESS;
     NSSToken *token;
     NSSDER subject;
     NSSTrustDomain *td;
@@ -2411,19 +2674,38 @@ PK11_TraverseCertsForSubjectInSlot(CERTCertificate *cert, PK11SlotInfo *slot,
     pk11cb.arg = arg;
     td = STAN_GetDefaultTrustDomain();
     NSSITEM_FROM_SECITEM(&subject, &cert->derSubject);
-    subjectList = nssList_Create(NULL, PR_FALSE);
-    (void)nssTrustDomain_GetCertsForSubjectFromCache(td, &subject, subjectList);
-    /* set the search criteria */
-    search.callback = convert_and_cache_cert;
-    search.cbarg = &pk11cb;
-    search.cached = subjectList;
-    search.searchType = nssTokenSearchType_TokenOnly;
-    pk11cb.cached = subjectList;
     token = PK11Slot_GetNSSToken(slot);
-    nssrv = nssToken_TraverseCertificatesBySubject(token, NULL, 
-                                                   &subject, &search);
-    nssList_Clear(subjectList, cert_destructor);
-    nssList_Destroy(subjectList);
+    if (!nssToken_SearchCerts(token)) {
+	subjectList = filter_token_certs_subject(token, &subject);
+	if (subjectList) {
+	    nssrv = nssCertificateList_DoCallback(subjectList, 
+	                                          convert_cert, &pk11cb);
+	}
+    } else {
+	subjectList = nssList_Create(NULL, PR_FALSE);
+	if (!subjectList) {
+	    return SECFailure;
+	}
+	(void)nssTrustDomain_GetCertsForSubjectFromCache(td, &subject, 
+	                                                 subjectList);
+	filter_list_for_token_certs(subjectList, token);
+	/* set the search criteria */
+	search.callback = convert_and_cache_cert;
+	search.cbarg = &pk11cb;
+	search.cached = subjectList;
+	search.searchType = nssTokenSearchType_TokenOnly;
+	pk11cb.cached = subjectList;
+	nssrv = nssCertificateList_DoCallback(subjectList, 
+	                                      convert_cert, &pk11cb);
+	if (nssrv == PR_SUCCESS) {
+	    nssrv = nssToken_TraverseCertificatesBySubject(token, NULL, 
+                                                           &subject, &search);
+	}
+    }
+    if (subjectList) {
+	nssList_Clear(subjectList, cert_destructor);
+	nssList_Destroy(subjectList);
+    }
     return (nssrv == PR_SUCCESS) ? SECSuccess : SECFailure;
 #endif
 }
@@ -2466,7 +2748,7 @@ PK11_TraverseCertsForNicknameInSlot(SECItem *nickname, PK11SlotInfo *slot,
     return PK11_TraverseSlot(slot, &callarg);
 #else
     struct nss3_cert_cbstr pk11cb;
-    PRStatus nssrv;
+    PRStatus nssrv = PR_SUCCESS;
     NSSToken *token;
     NSSTrustDomain *td;
     NSSUTF8 *nick;
@@ -2477,25 +2759,40 @@ PK11_TraverseCertsForNicknameInSlot(SECItem *nickname, PK11SlotInfo *slot,
     pk11cb.arg = arg;
     if (nickname->data[nickname->len-1] != '\0') {
 	nick = nssUTF8_Create(NULL, nssStringType_UTF8String, 
-	                      nickname->data, nickname->len-1);
+	                      nickname->data, nickname->len);
 	created = PR_TRUE;
     } else {
 	nick = (NSSUTF8 *)nickname->data;
     }
     td = STAN_GetDefaultTrustDomain();
-    nameList = nssList_Create(NULL, PR_FALSE);
-    (void)nssTrustDomain_GetCertsForNicknameFromCache(td, nick, nameList);
-    /* set the search criteria */
-    search.callback = convert_and_cache_cert;
-    search.cbarg = &pk11cb;
-    search.cached = nameList;
-    search.searchType = nssTokenSearchType_TokenOnly;
-    pk11cb.cached = nameList;
     token = PK11Slot_GetNSSToken(slot);
-    nssrv = nssToken_TraverseCertificatesByNickname(token, NULL, 
-                                                    nick, &search);
-    nssList_Clear(nameList, cert_destructor);
-    nssList_Destroy(nameList);
+    if (!nssToken_SearchCerts(token)) {
+	nameList = filter_token_certs_nickname(token, nick);
+	if (nameList) {
+	    nssrv = nssCertificateList_DoCallback(nameList, 
+	                                          convert_cert, &pk11cb);
+	}
+    } else {
+	nameList = nssList_Create(NULL, PR_FALSE);
+	(void)nssTrustDomain_GetCertsForNicknameFromCache(td, nick, nameList);
+	filter_list_for_token_certs(nameList, token);
+	/* set the search criteria */
+	search.callback = convert_and_cache_cert;
+	search.cbarg = &pk11cb;
+	search.cached = nameList;
+	search.searchType = nssTokenSearchType_TokenOnly;
+	pk11cb.cached = nameList;
+	nssrv = nssCertificateList_DoCallback(nameList, 
+	                                      convert_cert, &pk11cb);
+	if (nssrv == PR_SUCCESS) {
+	    nssrv = nssToken_TraverseCertificatesByNickname(token, NULL, 
+                                                            nick, &search);
+	}
+    }
+    if (nameList) {
+	nssList_Clear(nameList, cert_destructor);
+	nssList_Destroy(nameList);
+    }
     if (created) nss_ZFreeIf(nick);
     return (nssrv == PR_SUCCESS) ? SECSuccess : SECFailure;
 #endif
@@ -2535,27 +2832,60 @@ PK11_TraverseCertsInSlot(PK11SlotInfo *slot,
     NSSTrustDomain *td = STAN_GetDefaultTrustDomain();
     struct nss3_cert_cbstr pk11cb;
     NSSToken *tok;
-    nssList *certList = nssList_Create(NULL, PR_FALSE);
+    nssList *certList = NULL;
     nssTokenCertSearch search;
     pk11cb.callback = callback;
     pk11cb.arg = arg;
-    (void *)nssTrustDomain_GetCertsFromCache(td, certList);
-    /* set the search criteria */
-    search.callback = convert_and_cache_cert;
-    search.cbarg = &pk11cb;
-    search.cached = certList;
-    search.searchType = nssTokenSearchType_TokenOnly;
-    pk11cb.cached = certList;
     tok = PK11Slot_GetNSSToken(slot);
-    if (tok) {
-	nssrv = nssToken_TraverseCertificates(tok, NULL, &search);
+    if (!nssToken_SearchCerts(tok)) {
+	certList = tok->certList;
+	nssrv = nssCertificateList_DoCallback(certList, convert_cert, &pk11cb);
     } else {
-	nssrv = PR_FAILURE;
+	certList = nssList_Create(NULL, PR_FALSE);
+	if (!certList) {
+	    return SECFailure;
+	}
+	(void *)nssTrustDomain_GetCertsFromCache(td, certList);
+	filter_list_for_token_certs(certList, tok);
+	/* set the search criteria */
+	search.callback = convert_and_cache_cert;
+	search.cbarg = &pk11cb;
+	search.cached = certList;
+	search.searchType = nssTokenSearchType_TokenOnly;
+	pk11cb.cached = certList;
+	nssrv = nssCertificateList_DoCallback(certList, 
+	                                      convert_cert, &pk11cb);
+	if (nssrv == PR_SUCCESS) {
+	    nssrv = nssToken_TraverseCertificates(tok, NULL, &search);
+	}
+	nssList_Clear(certList, cert_destructor);
+	nssList_Destroy(certList);
     }
-    nssList_Clear(certList, cert_destructor);
-    nssList_Destroy(certList);
     return (nssrv == PR_SUCCESS) ? SECSuccess : SECFailure;
 #endif
+}
+
+static NSSCertificate *
+filter_token_certs_DER(NSSToken *token, NSSDER *der)
+{
+    nssListIterator *certs;
+    NSSCertificate *cert, *rvCert;
+    PRStatus nssrv;
+    certs = nssList_CreateIterator(token->certList);
+    if (!certs) return NULL;
+    rvCert = NULL;
+    for (cert  = (NSSCertificate *)nssListIterator_Start(certs);
+         cert != (NSSCertificate *)NULL;
+         cert  = (NSSCertificate *)nssListIterator_Next(certs))
+    {
+	if (nssItem_Equal(&cert->encoding, der, &nssrv)) {
+	    rvCert = nssCertificate_AddRef(cert);
+	    break;
+	}
+    }
+    nssListIterator_Finish(certs);
+    nssListIterator_Destroy(certs);
+    return rvCert;
 }
 
 /*
@@ -2599,11 +2929,19 @@ PK11_FindCertFromDERCert(PK11SlotInfo *slot, CERTCertificate *cert,
     NSSCertificate *c;
     NSSDER derCert;
     NSSToken *tok;
+    NSSTrustDomain *td = STAN_GetDefaultTrustDomain();
     tok = PK11Slot_GetNSSToken(slot);
     NSSITEM_FROM_SECITEM(&derCert, &cert->derCert);
-    /* XXX login to slots */
-    c = nssToken_FindCertificateByEncodedCertificate(tok, NULL, &derCert,
+    if (!nssToken_SearchCerts(tok)) {
+	c = filter_token_certs_DER(tok, &derCert);
+    } else {
+	c = nssTrustDomain_GetCertByDERFromCache(td, &derCert);
+	if (!c) {
+	    c = nssToken_FindCertificateByEncodedCertificate(tok, NULL, 
+	                                        &derCert,
                                                 nssTokenSearchType_TokenOnly);
+	}
+    }
     if (c) {
 	rvCert = STAN_GetCERTCertificate(c);
     }

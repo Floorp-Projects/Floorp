@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: certificate.c,v $ $Revision: 1.27 $ $Date: 2002/01/24 00:26:24 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: certificate.c,v $ $Revision: 1.28 $ $Date: 2002/02/01 17:25:15 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef NSSPKI_H
@@ -110,13 +110,28 @@ NSSCertificate_DeleteStoredObject
          instance != (nssCryptokiInstance *)NULL;
          instance  = (nssCryptokiInstance *)nssListIterator_Next(instances)) 
     {
+	/* XXX this should be fixed to understand read-only tokens, for
+	 * now, to handle the builtins, just make the attempt.
+	 */
 	nssrv = nssToken_DeleteStoredObject(instance);
-	if (nssrv != PR_SUCCESS) {
-	    break;
+	if (nssrv == PR_SUCCESS) {
+	    nssList_Remove(c->object.instanceList, instance);
+#ifdef NSS_3_4_CODE
+	    if (instance->token->certList) {
+		/* If the cert has been cached locally on the token, remove
+		 * that reference
+		 */
+		nssList_Remove(instance->token->certList, c);
+		NSSCertificate_Destroy(c);
+	    }
+#endif
 	}
     }
     nssListIterator_Finish(instances);
-    return nssrv;
+    c->object.instances = nssList_CreateIterator(c->object.instanceList);
+    nssListIterator_Destroy(instances);
+    /* XXX for now, always success */
+    return PR_SUCCESS;
 }
 
 NSS_IMPLEMENT PRStatus
@@ -801,5 +816,29 @@ nssSMIMEProfile_Create
 loser:
     nssPKIObject_Destroy(&rvProfile->object);
     return NULL;
+}
+
+/* execute a callback function on all members of a cert list */
+NSS_EXTERN PRStatus
+nssCertificateList_DoCallback
+(
+  nssList *certList, 
+  PRStatus (* callback)(NSSCertificate *c, void *arg),
+  void *arg
+)
+{
+    nssListIterator *certs;
+    NSSCertificate *cert;
+    PRStatus nssrv;
+    certs = nssList_CreateIterator(certList);
+    for (cert  = (NSSCertificate *)nssListIterator_Start(certs);
+         cert != (NSSCertificate *)NULL;
+         cert  = (NSSCertificate *)nssListIterator_Next(certs))
+    {
+	nssrv = (*callback)(cert, arg);
+    }
+    nssListIterator_Finish(certs);
+    nssListIterator_Destroy(certs);
+    return PR_SUCCESS;
 }
 

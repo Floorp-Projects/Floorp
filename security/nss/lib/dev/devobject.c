@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: devobject.c,v $ $Revision: 1.14 $ $Date: 2002/01/23 17:00:34 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: devobject.c,v $ $Revision: 1.15 $ $Date: 2002/02/01 17:25:10 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef DEV_H
@@ -462,12 +462,13 @@ static PRStatus
 retrieve_cert(NSSToken *t, nssSession *session, CK_OBJECT_HANDLE h, void *arg)
 {
     PRStatus nssrv;
-    PRBool found;
+    PRBool found, inCache;
     nssTokenCertSearch *search = (nssTokenCertSearch *)arg;
     NSSCertificate *cert = NULL;
     nssListIterator *instances;
     nssCryptokiInstance *ci;
     CK_ATTRIBUTE derValue = { CKA_VALUE, NULL, 0 };
+    inCache = PR_FALSE;
     if (search->cached) {
 	NSSCertificate csi; /* a fake cert for indexing */
 	nssrv = nssCKObject_GetAttributes(h, &derValue, 1,
@@ -478,13 +479,19 @@ retrieve_cert(NSSToken *t, nssSession *session, CK_OBJECT_HANDLE h, void *arg)
     }
     found = PR_FALSE;
     if (cert) {
+	inCache = PR_TRUE;
 	nssCertificate_AddRef(cert);
 	instances = cert->object.instances;
 	for (ci  = (nssCryptokiInstance *)nssListIterator_Start(instances);
 	     ci != (nssCryptokiInstance *)NULL;
 	     ci  = (nssCryptokiInstance *)nssListIterator_Next(instances))
 	{
-	    if (ci->handle == h && ci->token == t) {
+	    /* The builtins token will not return the same handle for objects
+	     * during the lifetime of the token.  Thus, assuming the found
+	     * object is the same as the cached object if there is already an
+	     * instance for the token.
+	     */
+	    if (ci->token == t) {
 		found = PR_TRUE;
 		break;
 	    }
@@ -509,7 +516,11 @@ retrieve_cert(NSSToken *t, nssSession *session, CK_OBJECT_HANDLE h, void *arg)
 	nssListIterator_Destroy(cert->object.instances);
 	cert->object.instances = nssList_CreateIterator(cert->object.instanceList);
     }
-    nssrv = (*search->callback)(cert, search->cbarg);
+    if (!inCache) {
+	nssrv = (*search->callback)(cert, search->cbarg);
+    } else {
+	nssrv = PR_SUCCESS; /* cached entries already handled */
+    }
     NSSCertificate_Destroy(cert);
     return nssrv;
 }

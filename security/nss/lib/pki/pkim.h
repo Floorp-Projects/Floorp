@@ -35,7 +35,7 @@
 #define PKIM_H
 
 #ifdef DEBUG
-static const char PKIM_CVS_ID[] = "@(#) $RCSfile: pkim.h,v $ $Revision: 1.14 $ $Date: 2002/01/31 17:08:32 $ $Name:  $";
+static const char PKIM_CVS_ID[] = "@(#) $RCSfile: pkim.h,v $ $Revision: 1.15 $ $Date: 2002/02/01 17:25:15 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef BASE_H
@@ -278,6 +278,14 @@ NSS_EXTERN PRStatus
 nssBestCertificate_Callback
 (
   NSSCertificate *c, 
+  void *arg
+);
+
+NSS_EXTERN PRStatus
+nssCertificateList_DoCallback
+(
+  nssList *certList, 
+  PRStatus (* callback)(NSSCertificate *c, void *arg),
   void *arg
 );
 
