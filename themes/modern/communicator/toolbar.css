@@ -4,7 +4,7 @@
 toolbar
   {
     background-color      : #394B6E;
-    border-bottom         : 1px solid #677684;
+    border-bottom         : 1px solid #000000;
     border-top			  : 1px solid #A9B7D8;
   }
 
@@ -81,22 +81,22 @@ toolbar[collapsed="true"] > toolbargrippy
   
 .toolbar-primary-image-left
   {
-    background		      : url("chrome://global/skin/navbar-bg-leftcap.png") no-repeat;
+    background		      : url("chrome://global/skin/navbar-bg-leftcap.gif") no-repeat;
     width				  : 24px;
-    max-height			  : 43px;
+    height				  : 46px;
   }
 
 .toolbar-primary-image-middle
   {
-    background            : url("chrome://global/skin/navbar-bg.png") repeat-x;
-    max-height			  : 43px;
+    background            : url("chrome://global/skin/navbar-bg.gif") repeat-x;
+    height			  	  : 46px;
   }
 
 .toolbar-primary-image-right
   {
-  	background			  : url("chrome://global/skin/navbar-bg-rightcap.png") no-repeat;
+  	background			  : url("chrome://global/skin/navbar-bg-rightcap.gif") no-repeat;
   	width				  : 24px;
-  	max-height			  : 43px;
+  	height				  : 46px;
   }
 
 .toolbary-primary-grippy

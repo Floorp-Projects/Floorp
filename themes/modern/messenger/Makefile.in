@@ -37,6 +37,9 @@ EXPORT_RESOURCE_SAMPLES = \
 	check.gif \
 	dot.gif \
 	fieldMapImport.css \
+	file-clicked.gif \
+	file-disabled.gif \
+	file-hover.gif \
 	file.gif \
 	flagcol.gif \
 	flaggedmail.gif \
@@ -79,9 +82,16 @@ EXPORT_RESOURCE_SAMPLES = \
 	folder-trash-share.gif \
 	folder-trash.gif \
 	folderPane.css \
+	forward-clicked.gif \
+	forward-disabled.gif \
+	forward-hover.gif \
 	forward.gif \
 	frown.gif \
+	getmsg-clicked.gif \
+	getmsg-disabled.gif \
+	getmsg-hover.gif \
 	getmsg.gif \
+	importDialog.css \
 	inbox.gif \
 	less.gif \
 	local-mailhost.gif \
@@ -96,15 +106,27 @@ EXPORT_RESOURCE_SAMPLES = \
 	messenger.css \
 	more.gif \
 	msgHdrViewOverlay.css \
+	newmsg-clicked.gif \
+	newmsg-disabled.gif \
+	newmsg-hover.gif \
 	newmsg.gif \
 	newshost.gif \
+	next-clicked.gif \
+	next-disabled.gif \
+	next-hover.gif \
 	next.gif \
 	open-mailfolder.gif \
 	outbox.gif \
 	pref-mailnews.css \
 	readcol.gif \
 	readmail.gif \
+	reply-clicked.gif \
+	reply-disabled.gif \
+	reply-hover.gif \
 	reply.gif \
+	replyall-clicked.gif \
+	replyall-disabled.gif \
+	replyall-hover.gif \
 	replyall.gif \
 	server-local-new.gif \
 	server-local.gif \
@@ -120,6 +142,9 @@ EXPORT_RESOURCE_SAMPLES = \
 	subscribe.css \
 	threadPane.css \
 	threadcol.gif \
+	trash-clicked.gif \
+	trash-disabled.gif \
+	trash-hover.gif \
 	trash.gif \
 	unreadmail.gif \
 	unthreadcol.gif \
@@ -127,7 +152,6 @@ EXPORT_RESOURCE_SAMPLES = \
 	wink.gif \
 	winwide.gif \
 	wizard.css \
-	importDialog.css \
 	$(NULL)
 
 DIRS = addressbook messengercompose

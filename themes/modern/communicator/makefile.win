@@ -29,34 +29,33 @@ include <$(THEME_ROOT_DEPTH)\theme.mk>
 
 install:: 
 	$(MAKE_INSTALL) box.css $(DIST)\bin\chrome\skins\$(THEME)\communicator\skin
-	$(MAKE_INSTALL) securityOverlay.css $(DIST)\bin\chrome\skins\$(THEME)\communicator\skin
-	$(MAKE_INSTALL) menubuttonBindings.xml $(DIST)\bin\chrome\skins\$(THEME)\communicator\skin
 	$(MAKE_INSTALL) brand.css $(DIST)\bin\chrome\skins\$(THEME)\communicator\skin
+	$(MAKE_INSTALL) broken.gif $(DIST)\bin\chrome\skins\$(THEME)\communicator\skin
 	$(MAKE_INSTALL) button.css $(DIST)\bin\chrome\skins\$(THEME)\communicator\skin
 	$(MAKE_INSTALL) communicator.css $(DIST)\bin\chrome\skins\$(THEME)\communicator\skin
-	$(MAKE_INSTALL) formatting.css $(DIST)\bin\chrome\skins\$(THEME)\communicator\skin
-	$(MAKE_INSTALL) menu.css $(DIST)\bin\chrome\skins\$(THEME)\communicator\skin
-	$(MAKE_INSTALL) menubutton.css $(DIST)\bin\chrome\skins\$(THEME)\communicator\skin
-	$(MAKE_INSTALL) navbar-endbox.gif $(DIST)\bin\chrome\skins\$(THEME)\communicator\skin
-	$(MAKE_INSTALL) splitter.css $(DIST)\bin\chrome\skins\$(THEME)\communicator\skin
-	$(MAKE_INSTALL) tb-menubutton-dm.gif $(DIST)\bin\chrome\skins\$(THEME)\communicator\skin
-	$(MAKE_INSTALL) tb-menubutton-dm-disabled.gif $(DIST)\bin\chrome\skins\$(THEME)\communicator\skin
-	$(MAKE_INSTALL) offline.gif $(DIST)\bin\chrome\skins\$(THEME)\communicator\skin
-	$(MAKE_INSTALL) online.gif $(DIST)\bin\chrome\skins\$(THEME)\communicator\skin
-	$(MAKE_INSTALL) toolbar.css $(DIST)\bin\chrome\skins\$(THEME)\communicator\skin
-	$(MAKE_INSTALL) document.gif $(DIST)\bin\chrome\skins\$(THEME)\communicator\skin
-	$(MAKE_INSTALL) document-error.gif $(DIST)\bin\chrome\skins\$(THEME)\communicator\skin
-	$(MAKE_INSTALL) lock.gif $(DIST)\bin\chrome\skins\$(THEME)\communicator\skin
-	$(MAKE_INSTALL) unlock.gif $(DIST)\bin\chrome\skins\$(THEME)\communicator\skin
-	$(MAKE_INSTALL) broken.gif $(DIST)\bin\chrome\skins\$(THEME)\communicator\skin
-	$(MAKE_INSTALL) tasksOverlay.css $(DIST)\bin\chrome\skins\$(THEME)\communicator\skin
-	$(MAKE_INSTALL) dialogOverlay.css $(DIST)\bin\chrome\skins\$(THEME)\communicator\skin
-	$(MAKE_INSTALL) prefpanels.css $(DIST)\bin\chrome\skins\$(THEME)\communicator\skin
 	$(MAKE_INSTALL) content-large.gif $(DIST)\bin\chrome\skins\$(THEME)\communicator\skin
 	$(MAKE_INSTALL) content-small.gif $(DIST)\bin\chrome\skins\$(THEME)\communicator\skin
-	$(MAKE_INSTALL) tb-menubutton-dm-clicked.png $(DIST)\bin\chrome\skins\$(THEME)\communicator\skin
-	$(MAKE_INSTALL) tb-menubutton-dm-hover.png $(DIST)\bin\chrome\skins\$(THEME)\communicator\skin
-	$(MAKE_INSTALL) tb-menubutton-dm.png $(DIST)\bin\chrome\skins\$(THEME)\communicator\skin
+	$(MAKE_INSTALL) dialogOverlay.css $(DIST)\bin\chrome\skins\$(THEME)\communicator\skin
+	$(MAKE_INSTALL) document-error.gif $(DIST)\bin\chrome\skins\$(THEME)\communicator\skin
+	$(MAKE_INSTALL) document.gif $(DIST)\bin\chrome\skins\$(THEME)\communicator\skin
+	$(MAKE_INSTALL) formatting.css $(DIST)\bin\chrome\skins\$(THEME)\communicator\skin
+	$(MAKE_INSTALL) lock.gif $(DIST)\bin\chrome\skins\$(THEME)\communicator\skin
+	$(MAKE_INSTALL) menu.css $(DIST)\bin\chrome\skins\$(THEME)\communicator\skin
+	$(MAKE_INSTALL) menubutton.css $(DIST)\bin\chrome\skins\$(THEME)\communicator\skin
+	$(MAKE_INSTALL) menubuttonBindings.xml $(DIST)\bin\chrome\skins\$(THEME)\communicator\skin
+	$(MAKE_INSTALL) navbar-endbox.gif $(DIST)\bin\chrome\skins\$(THEME)\communicator\skin
+	$(MAKE_INSTALL) offline.gif $(DIST)\bin\chrome\skins\$(THEME)\communicator\skin
+	$(MAKE_INSTALL) online.gif $(DIST)\bin\chrome\skins\$(THEME)\communicator\skin
+	$(MAKE_INSTALL) prefpanels.css $(DIST)\bin\chrome\skins\$(THEME)\communicator\skin
+	$(MAKE_INSTALL) securityOverlay.css $(DIST)\bin\chrome\skins\$(THEME)\communicator\skin
+	$(MAKE_INSTALL) splitter.css $(DIST)\bin\chrome\skins\$(THEME)\communicator\skin
+	$(MAKE_INSTALL) tasksOverlay.css $(DIST)\bin\chrome\skins\$(THEME)\communicator\skin
+	$(MAKE_INSTALL) tb-menubutton-dm-clicked.gif $(DIST)\bin\chrome\skins\$(THEME)\communicator\skin
+	$(MAKE_INSTALL) tb-menubutton-dm-disabled.gif $(DIST)\bin\chrome\skins\$(THEME)\communicator\skin
+	$(MAKE_INSTALL) tb-menubutton-dm-hover.gif $(DIST)\bin\chrome\skins\$(THEME)\communicator\skin
+	$(MAKE_INSTALL) tb-menubutton-dm.gif $(DIST)\bin\chrome\skins\$(THEME)\communicator\skin
+	$(MAKE_INSTALL) toolbar.css $(DIST)\bin\chrome\skins\$(THEME)\communicator\skin
+	$(MAKE_INSTALL) unlock.gif $(DIST)\bin\chrome\skins\$(THEME)\communicator\skin
 
 clobber::
 	rm -f $(DIST)\chrome\$(THEME)\communicator\skin\*.*

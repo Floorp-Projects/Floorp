@@ -44,7 +44,7 @@ window[chromehidden~="extrachrome"] .chromeclass-extrachrome {
 #back-button 
   {
   	margin-left			  : 0px;
-    list-style-image      : url("chrome://navigator/skin/back.png");
+    list-style-image      : url("chrome://navigator/skin/back.gif");
   }
 
 #back-button[disabled="true"],
@@ -54,22 +54,22 @@ window[chromehidden~="extrachrome"] .chromeclass-extrachrome {
 #back-button[disabled="true"] > .menubutton-dual-stack > .menubutton-dual-button:hover,
 #back-button[disabled="true"] > .menubutton-dual-stack > .menubutton-dual-button:hover:active
   {
-    list-style-image      : url("chrome://navigator/skin/back-disabled.png");
+    list-style-image      : url("chrome://navigator/skin/back-disabled.gif");
   }
 
 #back-button > .menubutton-dual-stack > .menubutton-dual-button:hover
   {
-    list-style-image      : url("chrome://navigator/skin/back-hover.png");
+    list-style-image      : url("chrome://navigator/skin/back-hover.gif");
   }
 
 #back-button > .menubutton-dual-stack > .menubutton-dual-button:hover:active
   {
-    list-style-image      : url("chrome://navigator/skin/back-clicked.png");
+    list-style-image      : url("chrome://navigator/skin/back-clicked.gif");
   }
 
 #forward-button 
   {
-    list-style-image      : url("chrome://navigator/skin/forward.png");
+    list-style-image      : url("chrome://navigator/skin/forward.gif");
   }
 
 #forward-button[disabled="true"],
@@ -79,68 +79,68 @@ window[chromehidden~="extrachrome"] .chromeclass-extrachrome {
 #forward-button[disabled="true"] > .menubutton-dual-stack > .menubutton-dual-button:hover,
 #forward-button[disabled="true"] > .menubutton-dual-stack > .menubutton-dual-button:hover:active
   {
-    list-style-image      : url("chrome://navigator/skin/forward-disabled.png");
+    list-style-image      : url("chrome://navigator/skin/forward-disabled.gif");
   }
 
 #forward-button > .menubutton-dual-stack > .menubutton-dual-button:hover
   {
-    list-style-image      : url("chrome://navigator/skin/forward-hover.png");
+    list-style-image      : url("chrome://navigator/skin/forward-hover.gif");
   }
 
 #forward-button > .menubutton-dual-stack > .menubutton-dual-button:hover:active
   {
-    list-style-image      : url("chrome://navigator/skin/forward-clicked.png");
+    list-style-image      : url("chrome://navigator/skin/forward-clicked.gif");
   }
 
 #stop-button 
   {
-	  list-style-image      : url("chrome://navigator/skin/stop.png");
+	  list-style-image      : url("chrome://navigator/skin/stop.gif");
   } 
 
 #stop-button[disabled="true"],
 #stop-button[disabled="true"]:hover,
 #stop-button[disabled="true"]:hover:active
   {
-    list-style-image      : url("chrome://navigator/skin/stop-disabled.png");
+    list-style-image      : url("chrome://navigator/skin/stop-disabled.gif");
   } 
 
 #stop-button:hover
   {
-    list-style-image      : url("chrome://navigator/skin/stop-hover.png");
+    list-style-image      : url("chrome://navigator/skin/stop-hover.gif");
   } 
 
 #stop-button:hover:active
   {
-    list-style-image      : url("chrome://navigator/skin/stop-clicked.png");
+    list-style-image      : url("chrome://navigator/skin/stop-clicked.gif");
   } 
 
 #reload-button 
   {
-    list-style-image        : url("chrome://navigator/skin/reload.png");
+    list-style-image        : url("chrome://navigator/skin/reload.gif");
   }
   
 #reload-button[disabled="true"],
 #reload-button[disabled="true"]:hover,
 #reload-button[disabled="true"]:hover:active
   {
-	 ist-style-image      : url("chrome://navigator/skin/reload.png");
+	 ist-style-image      : url("chrome://navigator/skin/reload-disabled.gif");
   }
 
 #reload-button:hover
   {
-    list-style-image        : url("chrome://navigator/skin/reload-hover.png");
+    list-style-image        : url("chrome://navigator/skin/reload-hover.gif");
   }
 
 #reload-button:hover:active
   {
-    list-style-image        : url("chrome://navigator/skin/reload-clicked.png");
+    list-style-image        : url("chrome://navigator/skin/reload-clicked.gif");
   }
 
 #print-button 
   {
     behavior              : url("chrome://communicator/skin/menubuttonBindings.xml#menubutton-dual-foo");
-    list-style-image      : url("chrome://global/skin/print.png");
-	margin				  : 7px 6px 10px 6px;
+    list-style-image	  : url("chrome://global/skin/print.gif");
+	margin				  : 6px 6px 10px 6px;
   }
 
 #print-button[disabled="true"],
@@ -150,27 +150,40 @@ window[chromehidden~="extrachrome"] .chromeclass-extrachrome {
 #print-button[disabled="true"] > .menubutton-dual-stack > .menubutton-dual-button:hover,
 #print-button[disabled="true"] > .menubutton-dual-stack > .menubutton-dual-button:hover:active
   {
-    list-style-image      : url("chrome://global/skin/print-disabled.png");
+    list-style-image      : url("chrome://global/skin/print-disabled.gif");
   }
 
 #print-button > .menubutton-dual-stack > .menubutton-dual-button:hover
   {
-    list-style-image      : url("chrome://global/skin/print-hover.png");
+    list-style-image      : url("chrome://global/skin/print-hover.gif");
   }
 
 #print-button > .menubutton-dual-stack > .menubutton-dual-button:hover:active
   {
-    list-style-image      : url("chrome://global/skin/print-clicked.png");
+    list-style-image      : url("chrome://global/skin/print-clicked.gif");
   }
 
 #print-button > .menubutton-dual-stack > .menubutton-dual-dropmarker-box
   {
-    margin-left             : 18px;
-    margin-top				: 21px;
+    margin-left             : 19px;
+    margin-top				: 22px;
+  }
+
+
+/* Hides text below the above buttons */
+.button-toolbar-1 > .button-internal-box > .button-text-container
+  {
+  	display					: none;
   }
 
 
 /*all the urlbar stuff*/
+
+#nav-bar > .toolbar-primary-image-left, #nav-bar > .toolbar-primary-image-middle,
+#nav-bar > .toolbar-primary-image-right
+  {
+  	max-height				: 43px;
+  }
 
 #nav-bar-inner
   {
@@ -181,7 +194,7 @@ window[chromehidden~="extrachrome"] .chromeclass-extrachrome {
 
 .navbar-inner-groove-image-left
   {
-  	list-style-image	  : url("chrome://navigator/skin/navbar-inner-groove-left.png");
+  	list-style-image	  : url("chrome://navigator/skin/navbar-inner-groove-left.gif");
   	width				  : 6px;
   	height				  : 31px;
   }
@@ -190,9 +203,9 @@ window[chromehidden~="extrachrome"] .chromeclass-extrachrome {
 
 .navbar-inner-border-outer
   {
-  	border-top			  : 1px solid #A0B3C6;
+  	border-top			  : 1px solid #A0B3C7;
   	border-bottom		  : 1px solid #7C92AF;
-  	height				  : 31px;
+  	height				  : 30px;
   }
 
 .navbar-inner-border-middle
@@ -203,13 +216,13 @@ window[chromehidden~="extrachrome"] .chromeclass-extrachrome {
  
 .navbar-inner-border-inner
   {
-  	border-top			  : 1px solid #BBCCE2;
+  	border-top			  : 1px solid #BBCDE3;
   	border-bottom		  : 1px solid #556D8B;
   }
 	
 .navbar-inner-groove-image-right
   {
-  	list-style-image	  : url("chrome://navigator/skin/navbar-inner-groove-right.png");
+  	list-style-image	  : url("chrome://navigator/skin/navbar-inner-groove-right.gif");
   	width				  : 6px;
   	height				  : 31px;
   }
@@ -222,7 +235,7 @@ window[chromehidden~="extrachrome"] .chromeclass-extrachrome {
 
 .urlbar-image-left
   {
-  	list-style-image	  : url("chrome://navigator/skin/urlbar-left.png");
+  	list-style-image	  : url("chrome://navigator/skin/urlbar-left.gif");
   	width				  : 3px;
   	height				  : 18px;
   }
@@ -239,7 +252,7 @@ window[chromehidden~="extrachrome"] .chromeclass-extrachrome {
   
 .urlbar-image-right
   {
-  	list-style-image	  : url("chrome://navigator/skin/urlbar-right.png");
+  	list-style-image	  : url("chrome://navigator/skin/urlbar-right.gif");
   	width				  : 4px;
   	height				  : 18px;
   }
@@ -248,7 +261,7 @@ window[chromehidden~="extrachrome"] .chromeclass-extrachrome {
   {
   	margin-left			  : 0px;
   	margin-right		  : 2px;
-  	margin-top			  : -1px;
+  	margin-top			  : 0px;
     list-style-image      : url("chrome://communicator/skin/bookmarks/bookmark-item.png"); 
 	cursor                : grab;
   } 
@@ -268,7 +281,7 @@ window[chromehidden~="extrachrome"] .chromeclass-extrachrome {
   {
     margin                : 2px 4px 9px 3px;
     width                 : 10px; 
-    list-style-image      : url("chrome://navigator/skin/ubhist-keyword-popup.png");
+    list-style-image      : url("chrome://navigator/skin/ubhist-keyword-popup.gif");
     background-color	  : transparent;
     border				  : 0px;
   } 
@@ -282,7 +295,7 @@ window[chromehidden~="extrachrome"] .chromeclass-extrachrome {
   {
     margin                : 2px 4px 9px 3px;
     width                 : 10px; 
-    list-style-image      : url("chrome://navigator/skin/ubhist-keyword-popup-active.png"); 
+    list-style-image      : url("chrome://navigator/skin/ubhist-keyword-popup-active.gif"); 
   } 
 
 /*************************************/
@@ -344,14 +357,4 @@ window[chromehidden~="extrachrome"] .chromeclass-extrachrome {
 .menuitem-iconic
   {
     padding               : 2px;
-  }
-
-#PersonalToolbar
-  {
-  	behavior			  : url("chrome://global/skin/globalBindings.xml#toolbar-bordered");
-  }
-
-#PersonalToolbar > .inner-box
-  {
-    border-bottom         : 1px solid #000000;
   }

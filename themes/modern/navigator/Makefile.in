@@ -32,8 +32,14 @@ SAMPLES_DIR	= $(DIST)/bin/chrome/skins/$(THEME)/navigator/skin
 
 EXPORT_RESOURCE_SAMPLES = \
 	alertl.gif \
+	back-clicked.gif \
+	back-disabled.gif \
+	back-hover.gif \
 	back.gif \
 	errorl.gif \
+	forward-clicked.gif \
+	forward-disabled.gif \
+	forward-hover.gif \
 	forward.gif \
 	home.gif \
 	location-hover.gif \
@@ -41,36 +47,26 @@ EXPORT_RESOURCE_SAMPLES = \
 	messagel.gif \
 	mynetscape.gif \
 	n-box-persbar.gif \
+	navbar-inner-groove-left.gif \
+	navbar-inner-groove-middle.gif \
+	navbar-inner-groove-right.gif \
 	navigator.css \
 	print.gif \
 	questionl.gif \
+	reload-clicked.gif \
+	reload-disabled.gif \
+	reload-hover.gif \
 	reload.gif \
 	search.gif \
+	stop-clicked.gif \
+	stop-disabled.gif \
+	stop-hover.gif \
 	stop.gif \
-	back-clicked.png \
-	back-disabled.png \
-	back-hover.png \
-	forward-clicked.png \
-	forward-disabled.png \
-	forward-hover.png \
-	navbar-inner-groove-left.png \
-	navbar-inner-groove-middle.png \
-	navbar-inner-groove-right.png \
-	reload-clicked.png \
-	reload-disabled.png \
-	reload-hover.png \
-	stop-clicked.png \
-	stop-disabled.png \
-	stop-hover.png \
-	urlbar-left.png \
-	urlbar-middle.png \
-	urlbar-right.png \
-	back.png \
-	forward.png \
-	reload.png \
-	stop.png \
-	ubhist-keyword-popup-active.png \
-	ubhist-keyword-popup.png \
+	ubhist-keyword-popup-active.gif \
+	ubhist-keyword-popup.gif \
+	urlbar-left.gif \
+	urlbar-middle.gif \
+	urlbar-right.gif \
     $(NULL)
 
 include $(topsrcdir)/config/rules.mk

@@ -54,8 +54,8 @@ EXPORT_RESOURCE_SAMPLES_1 = \
 	checkbox.css \
 	closedtwisty-selected.gif \
 	closedtwisty.gif \
-	columnselect.gif \
 	columnselect-hover.gif \
+	columnselect.gif \
 	commonDialog.css \
 	console.css \
 	dir-closed.gif \
@@ -74,6 +74,7 @@ EXPORT_RESOURCE_SAMPLES_1 = \
 	lessCOls_dis.gif \
 	lessCols.gif \
 	lessCols_mo.gif \
+	mb-single-arrow.gif \
 	menu-arrow-disabled.gif \
 	menu-arrow-hover.gif \
 	menu-arrow.gif \
@@ -99,28 +100,33 @@ EXPORT_RESOURCE_SAMPLES_1 = \
 	opentwisty.gif \
 	otherbutton28-bg-active.gif \
 	otherbutton28-bg-hover.gif \
+	print-clicked.gif \
+	print-disabled.gif \
+	print-hover.gif \
 	print.gif \
 	progressmeter-busy.gif \
 	question-icon.gif \
 	radio.css \
-	mb-single-arrow.png \
-	navbar-bg.png \
-	taskbar-addressbook-clicked.png \
-	taskbar-mail.png \
-	taskbar-navigator-clicked.png \
-	taskbar-navigator.png \
-	print-disabled.png \
-	print-hover.png \
-	print-clicked.png \
-	print.png \
 	return-disabled.gif \
 	return.gif
+	taskbar-addressbook-clicked.gif \
+	taskbar-navigator-clicked.gif \
 
 EXPORT_RESOURCE_SAMPLES_2 = \
-	arrow-up.gif \
 	arrow-down.gif \
 	arrow-left.gif \
 	arrow-right.gif \
+	arrow-up.gif \
+	button-3slice-active-left.gif \
+	button-3slice-active-middle.gif \
+	button-3slice-active-right.gif \
+	button-3slice-normal-left.gif \
+	button-3slice-normal-middle.gif \
+	button-3slice-normal-right.gif \
+	globalBindings.xml \
+	loading.gif \
+	navbar-bg-leftcap.gif \
+	navbar-bg-rightcap.gif \
 	scroll-down-disabled.gif \
 	scroll-down-hover.gif \
 	scroll-down.gif \
@@ -145,11 +151,24 @@ EXPORT_RESOURCE_SAMPLES_2 = \
 	seltab-rightedge.gif \
 	sortAscending.gif \
 	sortDescending.gif \
+	splitter.css \
 	stop.gif \
+	stop-clicked.gif \
+	stop-disabled.gif \
+	stop-hover.gif \
 	tab-leftedge.gif \
 	tab-rightedge.gif \
+	tabcontrol.css \
 	taskbar-addressbook.gif \
+	taskbar-bg-left.gif \
+	taskbar-bg-right.gif \
+	taskbar-bg.gif \
+	taskbar-composer-clicked.gif \
 	taskbar-composer.gif \
+	taskbar-groove-left.gif \
+	taskbar-groove-middle.gif \
+	taskbar-groove-right.gif \
+	taskbar-mail-clicked.gif \
 	taskbar-mail.gif \
 	taskbar-mailnew.gif \
 	taskbar-navigator.gif \
@@ -158,6 +177,10 @@ EXPORT_RESOURCE_SAMPLES_2 = \
 	taskbar-tab-minimized.gif \
 	taskbar-tab-trans.gif \
 	taskbar-tab.gif \
+	tb-grippy-down-clicked.png \
+	tb-grippy-down.png \
+	tb-grippy-up-clicked.png \
+	tb-grippy-up.png \
 	textfield.css \
 	toolbar-begincap.gif \
 	toolbar-dropdown-hover.gif \
@@ -169,32 +192,6 @@ EXPORT_RESOURCE_SAMPLES_2 = \
 	toolbar.css \
 	tree.css \
 	wizardOverlay.css \
-	splitter.css \
-	tabcontrol.css \
-	loading.gif \
-	globalBindings.xml \
-	button-3slice-active-left.png \
-	button-3slice-active-middle.png \
-	button-3slice-active-right.png \
-	button-3slice-normal-left.png \
-	button-3slice-normal-middle.png \
-	button-3slice-normal-right.png \
-	navbar-bg-leftcap.png \
-	navbar-bg-rightcap.png \
-	taskbar-addressbook.png \
-	taskbar-bg-left.png \
-	taskbar-bg-right.png \
-	taskbar-bg.png \
-	taskbar-composer-clicked.png \
-	taskbar-composer.png \
-	taskbar-groove-left.png \
-	taskbar-groove-middle.png \
-	taskbar-groove-right.png \
-	taskbar-mail-clicked.png \
-	tb-grippy-down.png \
-	tb-grippy-up-clicked.png \
-	tb-grippy-up.png \
-	tb-grippy-down-clicked.png \
 	$(NULL)
 
 include $(topsrcdir)/config/rules.mk

@@ -32,19 +32,6 @@
     </content>
   </binding>
 
-  <binding id="toolbar-bordered" extends="chrome://global/content/toolbarBindings.xml#toolbar">
-  	<content inherits="false">
-   		<xul:box class="inner-box" flex="1">
-       		<xul:toolbargrippy inherits="grippytooltiptext:tooltiptext,grippytooltip:tooltip,last-toolbar"
-           		                onclick="this.grippyClicked();" tbattr="toolbar-grippy"
-            	                class="toolbar-primary-grippy"/>
-        	<xul:box flex="1" class="toolbar-holder" inherits="collapsed,last-toolbar,tborient:orient,tbautostretch:autostretch" autostretch="never">
-        	  <children/>
-        	</xul:box>
-      	</xul:box>
-    </content>
-  </binding>
-
   <binding id="nav-bar-inner" extends="xul:box">
     <content>
  		<xul:image class="navbar-inner-groove-image-left"/>

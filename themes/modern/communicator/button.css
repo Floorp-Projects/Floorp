@@ -74,8 +74,8 @@
   /* outer frame */
   .button-toolbar-1
     {
-      color               : #CCFFFF;
-      margin              : 3px 3px 9px 3px;
+      color               : #D0E7E7;
+      margin              : 3px 2px 9px 2px;
       font-size           : smaller;
       border              : 0px;
       padding			  : 0px;
@@ -98,7 +98,7 @@
   .button-toolbar-1[disabled="true"]:hover,
   .button-toolbar-1[disabled="true"]:hover:active
     {
-      margin              : 3px 3px 9px 3px;
+      margin              : 3px 2px 9px 2px;
       border              : none;
     }
     
@@ -122,7 +122,6 @@
     
   .button-toolbar-1 > .button-internal-box > .button-text-container 
     {
-      display             : none;
       text-align          : center;
     }
     
@@ -132,38 +131,31 @@
  **/
   .button-toolbar-2
     {
-      background-repeat   : no-repeat;
-      background-position : 50% 0px;
-      background-color    : transparent;
-      background-image    : url("chrome://global/skin/button28-bg.gif");
-      color               : #CCFFFF;
-      min-width           : 28px;
-      min-height          : 28px;
-      margin              : 4px 7px 1px 1px;
-      padding             : 3px 0px 0px 1px;
+      color               : #D0E7E7;
+      margin              : 3px 3px 0px 3px;
       font-size           : smaller;
-      border              : none;
+      border              : 0px;
+      padding			  : 0px;
     }
     
   .button-toolbar-2:hover 
     {
-      background-image    : url("chrome://global/skin/button28-bg-hover.gif");
-      border              : none;
+      border              : 0px;
+      padding			  : 0px;
     } 
 
   .button-toolbar-2:hover:active
     {
-      margin              : 5px 6px 0px 2px;
-      border              : none;
+      border              : 0px;
+      padding			  : 0px;
     }
 
   .button-toolbar-2[disabled="true"],
   .button-toolbar-2[disabled="true"]:hover,
   .button-toolbar-2[disabled="true"]:hover:active
     {
-      background-image    : url("chrome://global/skin/button28-bg-disabled.gif");
-      margin              : 4px 7px 1px 1px;
-      border              : none;
+      border              : 0px;
+      padding			  : 0px;
     }
     
 /* internal frame */
@@ -171,7 +163,8 @@
   .button-toolbar-2[disabled="true"]:hover > .button-internal-box,
   .button-toolbar-2[disabled="true"]:hover:active > .button-internal-box
     {
-      border              : none;
+      border              : 0px;
+      padding			  : 0px;
       vertical-align      : middle;
     }
       
@@ -179,14 +172,17 @@
   .button-toolbar-2:hover > .button-internal-box,
   .button-toolbar-2:hover:active > .button-internal-box
     {
-      border              : none;
+      border              : 0px;
+      padding			  : 0px;
     }
   
 /* text wrapper frame */
   .button-toolbar-2 > .button-internal-box > .button-text-container 
     {
-      padding-top         : 6px;
       text-align          : center;
+      margin			  : 0px;
+      border              : 0px;
+      margin-top		  : -2px;
     }
 
 
@@ -199,7 +195,7 @@
       font-weight           : bold;
       background-color      : transparent;
       border				: 0px;
-      margin				: 3px 7px 3px 0px;
+      margin				: 2px 7px 3px 0px;
       color					: #2F405D;
     }
 
@@ -209,13 +205,13 @@
     }
 
   .three-slice-button-image-left {
-	list-style-image	: url(chrome://global/skin/button-3slice-normal-left.png);
+	list-style-image	: url(chrome://global/skin/button-3slice-normal-left.gif);
 	width				: 5px;
 	height				: 20px;
   }
 
   .three-slice-button-image-middle {
-	background			: url(chrome://global/skin/button-3slice-normal-middle.png) repeat-x;
+	background			: url(chrome://global/skin/button-3slice-normal-middle.gif) repeat-x;
   }
 
   .three-slice-button-text-box {
@@ -226,7 +222,7 @@
   }
 
   .three-slice-button-image-right {
-	list-style-image	: url(chrome://global/skin/button-3slice-normal-right.png);
+	list-style-image	: url(chrome://global/skin/button-3slice-normal-right.gif);
 	width				: 4px;
 	height				: 20px;
   }
@@ -244,15 +240,15 @@
   }
   
   button.button-toolbar-3:hover:active > .three-slice-button-image-left {
-	list-style-image	: url(chrome://global/skin/button-3slice-active-left.png);
+	list-style-image	: url(chrome://global/skin/button-3slice-active-left.gif);
   }
 
   button.button-toolbar-3:hover:active > .three-slice-button-image-middle {
-	background			: url(chrome://global/skin/button-3slice-active-middle.png) repeat-x;
+	background			: url(chrome://global/skin/button-3slice-active-middle.gif) repeat-x;
   }
 
   button.button-toolbar-3:hover:active > .three-slice-button-image-right {
-	list-style-image	: url(chrome://global/skin/button-3slice-active-right.png);
+	list-style-image	: url(chrome://global/skin/button-3slice-active-right.gif);
   }
   
 /** Expanding Region Button **/
@@ -324,7 +320,7 @@ menubutton.button-toolbar-4
 
 .button-toolbar-4 > .menubutton-internal-box > .menubutton-single-icon
   {
-      list-style-image	  : url(chrome://global/skin/mb-single-arrow.png);
+      list-style-image	  : url(chrome://global/skin/mb-single-arrow.gif);
   }
 
 .button-toolbar-4 > .button-internal-box,

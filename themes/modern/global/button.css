@@ -18,7 +18,7 @@
   button[disabled="true"]:hover:active 
     {
       border              : 1px solid #999999;
-      color               : #999999;
+      color               : #48617F;
     }
         
 /* internal frame */

@@ -32,8 +32,18 @@ install::
 	$(MAKE_INSTALL) alert-icon.gif $(DIST)\bin\chrome\skins\$(THEME)\global\skin
 	$(MAKE_INSTALL) animthrob.gif $(DIST)\bin\chrome\skins\$(THEME)\global\skin
 	$(MAKE_INSTALL) animthrob_single.gif $(DIST)\bin\chrome\skins\$(THEME)\global\skin
+	$(MAKE_INSTALL) arrow-down.gif $(DIST)\bin\chrome\skins\$(THEME)\global\skin
+	$(MAKE_INSTALL) arrow-left.gif  $(DIST)\bin\chrome\skins\$(THEME)\global\skin
+	$(MAKE_INSTALL) arrow-right.gif $(DIST)\bin\chrome\skins\$(THEME)\global\skin
+	$(MAKE_INSTALL) arrow-up.gif    $(DIST)\bin\chrome\skins\$(THEME)\global\skin
 	$(MAKE_INSTALL) blank.gif $(DIST)\bin\chrome\skins\$(THEME)\global\skin
 	$(MAKE_INSTALL) box.css $(DIST)\bin\chrome\skins\$(THEME)\global\skin
+	$(MAKE_INSTALL) button-3slice-active-left.gif $(DIST)\bin\chrome\skins\$(THEME)\global\skin
+	$(MAKE_INSTALL) button-3slice-active-middle.gif $(DIST)\bin\chrome\skins\$(THEME)\global\skin
+	$(MAKE_INSTALL) button-3slice-active-right.gif $(DIST)\bin\chrome\skins\$(THEME)\global\skin
+	$(MAKE_INSTALL) button-3slice-normal-left.gif $(DIST)\bin\chrome\skins\$(THEME)\global\skin
+	$(MAKE_INSTALL) button-3slice-normal-middle.gif $(DIST)\bin\chrome\skins\$(THEME)\global\skin
+	$(MAKE_INSTALL) button-3slice-normal-right.gif $(DIST)\bin\chrome\skins\$(THEME)\global\skin
 	$(MAKE_INSTALL) button.css $(DIST)\bin\chrome\skins\$(THEME)\global\skin
 	$(MAKE_INSTALL) button28-bg-active.gif $(DIST)\bin\chrome\skins\$(THEME)\global\skin
 	$(MAKE_INSTALL) button28-bg-disabled.gif $(DIST)\bin\chrome\skins\$(THEME)\global\skin
@@ -50,8 +60,8 @@ install::
 	$(MAKE_INSTALL) checkbox.css $(DIST)\bin\chrome\skins\$(THEME)\global\skin
 	$(MAKE_INSTALL) closedtwisty-selected.gif $(DIST)\bin\chrome\skins\$(THEME)\global\skin
 	$(MAKE_INSTALL) closedtwisty.gif $(DIST)\bin\chrome\skins\$(THEME)\global\skin
-	$(MAKE_INSTALL) columnselect.gif $(DIST)\bin\chrome\skins\$(THEME)\global\skin
 	$(MAKE_INSTALL) columnselect-hover.gif $(DIST)\bin\chrome\skins\$(THEME)\global\skin
+	$(MAKE_INSTALL) columnselect.gif $(DIST)\bin\chrome\skins\$(THEME)\global\skin
 	$(MAKE_INSTALL) commonDialog.css $(DIST)\bin\chrome\skins\$(THEME)\global\skin
 	$(MAKE_INSTALL) console.css $(DIST)\bin\chrome\skins\$(THEME)\global\skin
 	$(MAKE_INSTALL) dir-closed.gif $(DIST)\bin\chrome\skins\$(THEME)\global\skin
@@ -60,6 +70,7 @@ install::
 	$(MAKE_INSTALL) filepicker.css $(DIST)\bin\chrome\skins\$(THEME)\global\skin
 	$(MAKE_INSTALL) formatting.css $(DIST)\bin\chrome\skins\$(THEME)\global\skin
 	$(MAKE_INSTALL) global.css $(DIST)\bin\chrome\skins\$(THEME)\global\skin
+	$(MAKE_INSTALL) globalBindings.xml $(DIST)\bin\chrome\skins\$(THEME)\global\skin
 	$(MAKE_INSTALL) gray-bottomleft.gif $(DIST)\bin\chrome\skins\$(THEME)\global\skin
 	$(MAKE_INSTALL) gray-bottomright.gif $(DIST)\bin\chrome\skins\$(THEME)\global\skin
 	$(MAKE_INSTALL) gray-topright.gif $(DIST)\bin\chrome\skins\$(THEME)\global\skin
@@ -70,6 +81,8 @@ install::
 	$(MAKE_INSTALL) lessCOls_dis.gif $(DIST)\bin\chrome\skins\$(THEME)\global\skin
 	$(MAKE_INSTALL) lessCols.gif $(DIST)\bin\chrome\skins\$(THEME)\global\skin
 	$(MAKE_INSTALL) lessCols_mo.gif $(DIST)\bin\chrome\skins\$(THEME)\global\skin
+	$(MAKE_INSTALL) loading.gif $(DIST)\bin\chrome\skins\$(THEME)\global\skin
+	$(MAKE_INSTALL) mb-single-arrow.gif $(DIST)\bin\chrome\skins\$(THEME)\global\skin
 	$(MAKE_INSTALL) menu-arrow-disabled.gif $(DIST)\bin\chrome\skins\$(THEME)\global\skin
 	$(MAKE_INSTALL) menu-arrow-hover.gif $(DIST)\bin\chrome\skins\$(THEME)\global\skin
 	$(MAKE_INSTALL) menu-arrow.gif $(DIST)\bin\chrome\skins\$(THEME)\global\skin
@@ -89,22 +102,23 @@ install::
 	$(MAKE_INSTALL) n-box-navbar.gif $(DIST)\bin\chrome\skins\$(THEME)\global\skin
 	$(MAKE_INSTALL) n-box.gif $(DIST)\bin\chrome\skins\$(THEME)\global\skin
 	$(MAKE_INSTALL) navbar-bg-begincap.gif $(DIST)\bin\chrome\skins\$(THEME)\global\skin
+	$(MAKE_INSTALL) navbar-bg-leftcap.gif $(DIST)\bin\chrome\skins\$(THEME)\global\skin
+	$(MAKE_INSTALL) navbar-bg-rightcap.gif $(DIST)\bin\chrome\skins\$(THEME)\global\skin
 	$(MAKE_INSTALL) navbar-bg.gif $(DIST)\bin\chrome\skins\$(THEME)\global\skin
 	$(MAKE_INSTALL) navbar-endcap.gif $(DIST)\bin\chrome\skins\$(THEME)\global\skin
 	$(MAKE_INSTALL) opentwisty-selected.gif $(DIST)\bin\chrome\skins\$(THEME)\global\skin
 	$(MAKE_INSTALL) opentwisty.gif $(DIST)\bin\chrome\skins\$(THEME)\global\skin
 	$(MAKE_INSTALL) otherbutton28-bg-active.gif $(DIST)\bin\chrome\skins\$(THEME)\global\skin
 	$(MAKE_INSTALL) otherbutton28-bg-hover.gif $(DIST)\bin\chrome\skins\$(THEME)\global\skin
+	$(MAKE_INSTALL) print-clicked.gif $(DIST)\bin\chrome\skins\$(THEME)\global\skin
+	$(MAKE_INSTALL) print-disabled.gif $(DIST)\bin\chrome\skins\$(THEME)\global\skin
+	$(MAKE_INSTALL) print-hover.gif $(DIST)\bin\chrome\skins\$(THEME)\global\skin
 	$(MAKE_INSTALL) print.gif $(DIST)\bin\chrome\skins\$(THEME)\global\skin
 	$(MAKE_INSTALL) progressmeter-busy.gif $(DIST)\bin\chrome\skins\$(THEME)\global\skin
 	$(MAKE_INSTALL) question-icon.gif $(DIST)\bin\chrome\skins\$(THEME)\global\skin
 	$(MAKE_INSTALL) radio.css $(DIST)\bin\chrome\skins\$(THEME)\global\skin
 	$(MAKE_INSTALL) return-disabled.gif $(DIST)\bin\chrome\skins\$(THEME)\global\skin
 	$(MAKE_INSTALL) return.gif $(DIST)\bin\chrome\skins\$(THEME)\global\skin
-	$(MAKE_INSTALL) arrow-up.gif    $(DIST)\bin\chrome\skins\$(THEME)\global\skin
-	$(MAKE_INSTALL) arrow-down.gif $(DIST)\bin\chrome\skins\$(THEME)\global\skin
-	$(MAKE_INSTALL) arrow-left.gif  $(DIST)\bin\chrome\skins\$(THEME)\global\skin
-	$(MAKE_INSTALL) arrow-right.gif $(DIST)\bin\chrome\skins\$(THEME)\global\skin
 	$(MAKE_INSTALL) scroll-down-disabled.gif $(DIST)\bin\chrome\skins\$(THEME)\global\skin
 	$(MAKE_INSTALL) scroll-down-hover.gif $(DIST)\bin\chrome\skins\$(THEME)\global\skin
 	$(MAKE_INSTALL) scroll-down.gif $(DIST)\bin\chrome\skins\$(THEME)\global\skin
@@ -130,20 +144,37 @@ install::
 	$(MAKE_INSTALL) sortAscending.gif $(DIST)\bin\chrome\skins\$(THEME)\global\skin
 	$(MAKE_INSTALL) sortDescending.gif $(DIST)\bin\chrome\skins\$(THEME)\global\skin
 	$(MAKE_INSTALL) splitter.css $(DIST)\bin\chrome\skins\$(THEME)\global\skin
-	$(MAKE_INSTALL) tabcontrol.css $(DIST)\bin\chrome\skins\$(THEME)\global\skin
 	$(MAKE_INSTALL) stop.gif $(DIST)\bin\chrome\skins\$(THEME)\global\skin
+	$(MAKE_INSTALL) stop-clicked.gif $(DIST)\bin\chrome\skins\$(THEME)\global\skin
+	$(MAKE_INSTALL) stop-disabled.gif $(DIST)\bin\chrome\skins\$(THEME)\global\skin
+	$(MAKE_INSTALL) stop-hover.gif $(DIST)\bin\chrome\skins\$(THEME)\global\skin
 	$(MAKE_INSTALL) tab-leftedge.gif $(DIST)\bin\chrome\skins\$(THEME)\global\skin
 	$(MAKE_INSTALL) tab-rightedge.gif $(DIST)\bin\chrome\skins\$(THEME)\global\skin
+	$(MAKE_INSTALL) tabcontrol.css $(DIST)\bin\chrome\skins\$(THEME)\global\skin
+	$(MAKE_INSTALL) taskbar-addressbook-clicked.gif $(DIST)\bin\chrome\skins\$(THEME)\global\skin
 	$(MAKE_INSTALL) taskbar-addressbook.gif $(DIST)\bin\chrome\skins\$(THEME)\global\skin
+	$(MAKE_INSTALL) taskbar-bg-left.gif $(DIST)\bin\chrome\skins\$(THEME)\global\skin
+	$(MAKE_INSTALL) taskbar-bg-right.gif $(DIST)\bin\chrome\skins\$(THEME)\global\skin
+	$(MAKE_INSTALL) taskbar-bg.gif $(DIST)\bin\chrome\skins\$(THEME)\global\skin
+	$(MAKE_INSTALL) taskbar-composer-clicked.gif $(DIST)\bin\chrome\skins\$(THEME)\global\skin
 	$(MAKE_INSTALL) taskbar-composer.gif $(DIST)\bin\chrome\skins\$(THEME)\global\skin
+	$(MAKE_INSTALL) taskbar-groove-left.gif $(DIST)\bin\chrome\skins\$(THEME)\global\skin
+	$(MAKE_INSTALL) taskbar-groove-middle.gif $(DIST)\bin\chrome\skins\$(THEME)\global\skin
+	$(MAKE_INSTALL) taskbar-groove-right.gif $(DIST)\bin\chrome\skins\$(THEME)\global\skin
+	$(MAKE_INSTALL) taskbar-mail-clicked.gif $(DIST)\bin\chrome\skins\$(THEME)\global\skin
 	$(MAKE_INSTALL) taskbar-mail.gif $(DIST)\bin\chrome\skins\$(THEME)\global\skin
 	$(MAKE_INSTALL) taskbar-mailnew.gif $(DIST)\bin\chrome\skins\$(THEME)\global\skin
+	$(MAKE_INSTALL) taskbar-navigator-clicked.gif $(DIST)\bin\chrome\skins\$(THEME)\global\skin
 	$(MAKE_INSTALL) taskbar-navigator.gif $(DIST)\bin\chrome\skins\$(THEME)\global\skin
 	$(MAKE_INSTALL) taskbar-popup-arrow.gif $(DIST)\bin\chrome\skins\$(THEME)\global\skin
 	$(MAKE_INSTALL) taskbar-tab-hover.gif $(DIST)\bin\chrome\skins\$(THEME)\global\skin
 	$(MAKE_INSTALL) taskbar-tab-minimized.gif $(DIST)\bin\chrome\skins\$(THEME)\global\skin
 	$(MAKE_INSTALL) taskbar-tab-trans.gif $(DIST)\bin\chrome\skins\$(THEME)\global\skin
 	$(MAKE_INSTALL) taskbar-tab.gif $(DIST)\bin\chrome\skins\$(THEME)\global\skin
+	$(MAKE_INSTALL) tb-grippy-down-clicked.png $(DIST)\bin\chrome\skins\$(THEME)\global\skin
+	$(MAKE_INSTALL) tb-grippy-down.png $(DIST)\bin\chrome\skins\$(THEME)\global\skin
+	$(MAKE_INSTALL) tb-grippy-up-clicked.png $(DIST)\bin\chrome\skins\$(THEME)\global\skin
+	$(MAKE_INSTALL) tb-grippy-up.png $(DIST)\bin\chrome\skins\$(THEME)\global\skin
 	$(MAKE_INSTALL) textfield.css $(DIST)\bin\chrome\skins\$(THEME)\global\skin
 	$(MAKE_INSTALL) toolbar-begincap.gif $(DIST)\bin\chrome\skins\$(THEME)\global\skin
 	$(MAKE_INSTALL) toolbar-dropdown-hover.gif $(DIST)\bin\chrome\skins\$(THEME)\global\skin
@@ -155,37 +186,3 @@ install::
 	$(MAKE_INSTALL) toolbar.css $(DIST)\bin\chrome\skins\$(THEME)\global\skin
 	$(MAKE_INSTALL) tree.css $(DIST)\bin\chrome\skins\$(THEME)\global\skin
 	$(MAKE_INSTALL) wizardOverlay.css $(DIST)\bin\chrome\skins\$(THEME)\global\skin
-	$(MAKE_INSTALL) loading.gif $(DIST)\bin\chrome\skins\$(THEME)\global\skin
-	$(MAKE_INSTALL) globalBindings.xml $(DIST)\bin\chrome\skins\$(THEME)\global\skin
-	$(MAKE_INSTALL) button-3slice-active-left.png $(DIST)\bin\chrome\skins\$(THEME)\global\skin
-	$(MAKE_INSTALL) button-3slice-active-middle.png $(DIST)\bin\chrome\skins\$(THEME)\global\skin
-	$(MAKE_INSTALL) button-3slice-active-right.png $(DIST)\bin\chrome\skins\$(THEME)\global\skin
-	$(MAKE_INSTALL) button-3slice-normal-left.png $(DIST)\bin\chrome\skins\$(THEME)\global\skin
-	$(MAKE_INSTALL) button-3slice-normal-middle.png $(DIST)\bin\chrome\skins\$(THEME)\global\skin
-	$(MAKE_INSTALL) button-3slice-normal-right.png $(DIST)\bin\chrome\skins\$(THEME)\global\skin
-	$(MAKE_INSTALL) navbar-bg-leftcap.png $(DIST)\bin\chrome\skins\$(THEME)\global\skin
-	$(MAKE_INSTALL) navbar-bg-rightcap.png $(DIST)\bin\chrome\skins\$(THEME)\global\skin
-	$(MAKE_INSTALL) taskbar-addressbook.png $(DIST)\bin\chrome\skins\$(THEME)\global\skin
-	$(MAKE_INSTALL) taskbar-bg-left.png $(DIST)\bin\chrome\skins\$(THEME)\global\skin
-	$(MAKE_INSTALL) taskbar-bg-right.png $(DIST)\bin\chrome\skins\$(THEME)\global\skin
-	$(MAKE_INSTALL) taskbar-bg.png $(DIST)\bin\chrome\skins\$(THEME)\global\skin
-	$(MAKE_INSTALL) taskbar-composer-clicked.png $(DIST)\bin\chrome\skins\$(THEME)\global\skin
-	$(MAKE_INSTALL) taskbar-composer.png $(DIST)\bin\chrome\skins\$(THEME)\global\skin
-	$(MAKE_INSTALL) taskbar-groove-left.png $(DIST)\bin\chrome\skins\$(THEME)\global\skin
-	$(MAKE_INSTALL) taskbar-groove-middle.png $(DIST)\bin\chrome\skins\$(THEME)\global\skin
-	$(MAKE_INSTALL) taskbar-groove-right.png $(DIST)\bin\chrome\skins\$(THEME)\global\skin
-	$(MAKE_INSTALL) taskbar-mail-clicked.png $(DIST)\bin\chrome\skins\$(THEME)\global\skin
-	$(MAKE_INSTALL) mb-single-arrow.png $(DIST)\bin\chrome\skins\$(THEME)\global\skin
-	$(MAKE_INSTALL) navbar-bg.png $(DIST)\bin\chrome\skins\$(THEME)\global\skin
-	$(MAKE_INSTALL) taskbar-addressbook-clicked.png $(DIST)\bin\chrome\skins\$(THEME)\global\skin
-	$(MAKE_INSTALL) taskbar-mail.png $(DIST)\bin\chrome\skins\$(THEME)\global\skin
-	$(MAKE_INSTALL) taskbar-navigator-clicked.png $(DIST)\bin\chrome\skins\$(THEME)\global\skin
-	$(MAKE_INSTALL) taskbar-navigator.png $(DIST)\bin\chrome\skins\$(THEME)\global\skin
-	$(MAKE_INSTALL) print-disabled.png $(DIST)\bin\chrome\skins\$(THEME)\global\skin
-	$(MAKE_INSTALL) print-hover.png $(DIST)\bin\chrome\skins\$(THEME)\global\skin
-	$(MAKE_INSTALL) print-clicked.png $(DIST)\bin\chrome\skins\$(THEME)\global\skin
-	$(MAKE_INSTALL) print.png $(DIST)\bin\chrome\skins\$(THEME)\global\skin
-	$(MAKE_INSTALL) tb-grippy-down.png $(DIST)\bin\chrome\skins\$(THEME)\global\skin
-	$(MAKE_INSTALL) tb-grippy-up-clicked.png $(DIST)\bin\chrome\skins\$(THEME)\global\skin
-	$(MAKE_INSTALL) tb-grippy-up.png $(DIST)\bin\chrome\skins\$(THEME)\global\skin
-	$(MAKE_INSTALL) tb-grippy-down-clicked.png $(DIST)\bin\chrome\skins\$(THEME)\global\skin

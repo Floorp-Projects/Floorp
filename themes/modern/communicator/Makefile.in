@@ -29,35 +29,34 @@ include $(DEPTH)/config/autoconf.mk
 include $(THEME_ROOT_DEPTH)/theme.mk
 
 EXPORT_RESOURCE = \
-		$(srcdir)/brand.css \
-		$(srcdir)/securityOverlay.css \
 		$(srcdir)/box.css \
+		$(srcdir)/brand.css \
+		$(srcdir)/broken.gif \
 		$(srcdir)/button.css \
 		$(srcdir)/communicator.css \
-		$(srcdir)/formatting.css \
-		$(srcdir)/menu.css \
-		$(srcdir)/menubuttonBindings.xml \
-		$(srcdir)/menubutton.css \
-		$(srcdir)/splitter.css \
-		$(srcdir)/toolbar.css \
-		$(srcdir)/navbar-endbox.gif \
-		$(srcdir)/tb-menubutton-dm.gif \
-		$(srcdir)/tb-menubutton-dm-disabled.gif \
-		$(srcdir)/online.gif \
-		$(srcdir)/offline.gif \
-		$(srcdir)/document.gif \
-		$(srcdir)/document-error.gif \
-		$(srcdir)/lock.gif \
-		$(srcdir)/unlock.gif \
-		$(srcdir)/broken.gif \
-		$(srcdir)/tasksOverlay.css \
-		$(srcdir)/dialogOverlay.css \
-		$(srcdir)/prefpanels.css \
 		$(srcdir)/content-large.gif \
 		$(srcdir)/content-small.gif \
-		$(srcdir)/tb-menubutton-dm-clicked.png \
-		$(srcdir)/tb-menubutton-dm-hover.png \
-		$(srcdir)/tb-menubutton-dm.png \
+		$(srcdir)/dialogOverlay.css \
+		$(srcdir)/document-error.gif \
+		$(srcdir)/document.gif \
+		$(srcdir)/formatting.css \
+		$(srcdir)/lock.gif \
+		$(srcdir)/menu.css \
+		$(srcdir)/menubutton.css \
+		$(srcdir)/menubuttonBindings.xml \
+		$(srcdir)/navbar-endbox.gif \
+		$(srcdir)/offline.gif \
+		$(srcdir)/online.gif \
+		$(srcdir)/prefpanels.css \
+		$(srcdir)/securityOverlay.css \
+		$(srcdir)/splitter.css \
+		$(srcdir)/tasksOverlay.css \
+		$(srcdir)/tb-menubutton-dm-clicked.gif \
+		$(srcdir)/tb-menubutton-dm-disabled.gif \
+		$(srcdir)/tb-menubutton-dm-hover.gif \
+		$(srcdir)/tb-menubutton-dm.gif \
+		$(srcdir)/toolbar.css \
+		$(srcdir)/unlock.gif \
 		$(NULL)
 
 DIRS = search xpinstall sidebar bookmarks directory profile regviewer related 
