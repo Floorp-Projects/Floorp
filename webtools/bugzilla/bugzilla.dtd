@@ -1,13 +1,14 @@
 <!ELEMENT bugzilla (bug+)>
-<!ATTLIST bugzilla exporter CDATA #IMPLIED>
 <!ATTLIST bugzilla version CDATA #REQUIRED>
 <!ATTLIST bugzilla urlbase CDATA #REQUIRED>
 <!ATTLIST bugzilla maintainer CDATA #REQUIRED>
+<!ATTLIST bugzilla exporter CDATA #IMPLIED>
 <!ELEMENT bug (bug_id, exporter, urlbase, bug_status, resolution?, product, 
 priority, version, rep_platform, assigned_to, delta_ts, component, 
 reporter, target_milestone?, bug_severity, creation_ts, qa_contact?, 
 status_whiteboard?, op_sys, short_desc?, keywords*, dependson*, 
 blocks*, cc*, long_desc?, attachment*)>
+<!ATTLIST bug error (NotFound|NotPermitted) #IMPLIED>
 <!ELEMENT bug_id (#PCDATA)>
 <!ELEMENT short_desc (#PCDATA)>
 <!ELEMENT bug_status (#PCDATA)>
