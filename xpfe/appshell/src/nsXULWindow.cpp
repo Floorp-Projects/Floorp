@@ -317,7 +317,8 @@ NS_IMETHODIMP nsXULWindow::Destroy()
    ActivateParent();
 #endif
 
-#ifdef XP_MAC // Anyone still using native menus should add themselves here.
+// Anyone still using native menus should add themselves here.
+#if defined(XP_MAC) || defined(XP_MACOSX)
   {
   // unregister as document listener
   // this is needed for menus

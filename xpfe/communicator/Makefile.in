@@ -30,14 +30,20 @@ DIRS		= resources
 
 include $(topsrcdir)/config/rules.mk
 
+ifeq (mac,$(MOZ_WIDGET_TOOLKIT))
+CHROME_PLATFORM = mac
+else
+ifeq ($(OS_ARCH),OS2)
+CHROME_PLATFORM = win
+else
+CHROME_PLATFORM = unix
+endif
+endif
+
 install::
 	@$(REGCHROME) content communicator comm.jar
 	@$(REGCHROME) content communicator-region comm.jar
 	@$(REGCHROME) content communicator-platform comm.jar
 	@$(REGCHROME) locale en-US/communicator en-US.jar
 	@$(REGCHROME) locale US/communicator-region US.jar
-ifeq ($(OS_ARCH),OS2)
-	@$(REGCHROME) locale en-US/communicator-platform en-win.jar
-else
-	@$(REGCHROME) locale en-US/communicator-platform en-unix.jar
-endif
+	@$(REGCHROME) locale en-US/communicator-platform en-$(CHROME_PLATFORM).jar
