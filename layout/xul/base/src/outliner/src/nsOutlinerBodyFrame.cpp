@@ -978,6 +978,9 @@ nsOutlinerBodyFrame :: AdjustEventCoordsToBoxCoordSpace ( PRInt32 inX, PRInt32 i
 NS_IMETHODIMP nsOutlinerBodyFrame::GetCellAt(PRInt32 aX, PRInt32 aY, PRInt32* aRow, PRUnichar** aColID,
                                              PRUnichar** aChildElt)
 {
+  if (!mView)
+    return NS_OK;
+
   // Ensure we have a row height.
   if (mRowHeight == 0)
     mRowHeight = GetRowHeight();
@@ -987,6 +990,14 @@ NS_IMETHODIMP nsOutlinerBodyFrame::GetCellAt(PRInt32 aX, PRInt32 aY, PRInt32* aR
   
   // Now just mod by our total inner box height and add to our top row index.
   *aRow = (y/mRowHeight)+mTopRowIndex;
+
+  // Check if the coordinates are actually in our space.
+  PRInt32 rowCount;
+  mView->GetRowCount(&rowCount);
+  if (*aRow < 0 || *aRow >= rowCount) {
+    *aRow = -1;
+    return NS_OK;
+  }
 
   // Determine the column hit.
   nscoord currX = mInnerBox.x;
@@ -2921,38 +2932,43 @@ nsOutlinerBodyFrame :: OnDragOver ( nsIDOMEvent* inEvent )
       mOpenTimerRow = -1;
     }
 
-    if (!mOpenTimer) {
-      // either there wasn't a timer running or it was just killed above.
-      // if over a folder, start up a timer to open the folder.
-      PRBool isContainer = PR_FALSE;
-      mView->IsContainer(newRow, &isContainer);
-      if (isContainer) {
-        PRBool isOpen = PR_FALSE;
-        mView->IsContainerOpen(newRow, &isOpen);
-        if (!isOpen) {
-          // this node isn't expanded - set a timer to expand it
-          mOpenTimerRow = newRow;
-          mOpenTimer = do_CreateInstance("@mozilla.org/timer;1");
-          mOpenTimer->Init(this, 1000, NS_PRIORITY_HIGHEST);
-        }
-      }
-    }
-
     // cache the new row and orientation regardless so we can check if it changed
     // for next time.
     mDropRow = newRow;
     mDropOrient = newOrient;
 
-    PRBool canDropAtNewLocation = PR_FALSE;
-    if ( newOrient == kOnRow )
-      mView->CanDropOn ( newRow, &canDropAtNewLocation );
-    else
-      mView->CanDropBeforeAfter ( newRow, newOrient == kBeforeRow ? PR_TRUE : PR_FALSE, &canDropAtNewLocation );
-      
-    if ( canDropAtNewLocation )
-      DrawDropFeedback ( newRow, newOrient, kDrawFeedback );         // draw it at old loc, if we are allowed
+    mDropAllowed = PR_FALSE;
 
-    mDropAllowed = canDropAtNewLocation;
+
+    if (mDropRow >= 0) {
+      if (!mOpenTimer) {
+        // either there wasn't a timer running or it was just killed above.
+        // if over a folder, start up a timer to open the folder.
+        PRBool isContainer = PR_FALSE;
+        mView->IsContainer(mDropRow, &isContainer);
+        if (isContainer) {
+          PRBool isOpen = PR_FALSE;
+          mView->IsContainerOpen(mDropRow, &isOpen);
+          if (!isOpen) {
+            // this node isn't expanded - set a timer to expand it
+            mOpenTimerRow = mDropRow;
+            mOpenTimer = do_CreateInstance("@mozilla.org/timer;1");
+            mOpenTimer->Init(this, 1000, NS_PRIORITY_HIGHEST);
+          }
+        }
+      }
+
+      PRBool canDropAtNewLocation = PR_FALSE;
+      if ( mDropOrient == kOnRow )
+        mView->CanDropOn ( mDropRow, &canDropAtNewLocation );
+      else
+        mView->CanDropBeforeAfter ( mDropRow, mDropOrient == kBeforeRow ? PR_TRUE : PR_FALSE, &canDropAtNewLocation );
+      
+      if ( canDropAtNewLocation ) {
+        DrawDropFeedback ( mDropRow, mDropOrient, kDrawFeedback );         // draw it at old loc, if we are allowed
+        mDropAllowed = canDropAtNewLocation;
+      }
+    }
   }
   
   // alert the drag session we accept the drop. We have to do this every time
@@ -3060,49 +3076,38 @@ nsOutlinerBodyFrame :: ComputeDropPosition ( nsIDOMEvent* inEvent, PRInt32* outR
     PRInt32 x = 0, y = 0;
     mouseEvent->GetClientX(&x); mouseEvent->GetClientY(&y);
     
-    PRInt32 row = kIllegalRow;
     nsXPIDLString colID, child;
-    GetCellAt ( x, y, &row, getter_Copies(colID), getter_Copies(child) );
-    
-    // GetCellAt() will just blindly report a row even if there is no content there
-    // (ie, dragging below the end of the tree). If that's the case, set the reported row
-    // to after the final row. If we're not off the end, then check the coords w/in the cell
-    // to see if we are dropping before/on/after.
-    PRInt32 totalNumRows = 0;
-    mView->GetRowCount ( &totalNumRows );
-    if ( row > totalNumRows - 1 ) {             // doh, we're off the end of the tree
-      row = (totalNumRows-1) - mTopRowIndex;
-      *outOrient = kAfterRow;
+    GetCellAt ( x, y, outRow, getter_Copies(colID), getter_Copies(child) );
+    if (*outRow == -1) {
+      *outOrient = kNoOrientation;
+      return;
     }
-    else {                                              // w/in a cell, check above/below/on
-      // Compute the top/bottom of the row in question. We need to convert
-      // our y coord to twips since |mRowHeight| is in twips.
-      PRInt32 yTwips, xTwips;
-      AdjustEventCoordsToBoxCoordSpace ( x, y, &xTwips, &yTwips );
-      PRInt32 rowTop = mRowHeight * (row - mTopRowIndex);
-      PRInt32 yOffset = yTwips - rowTop;
+    
+    // Compute the top/bottom of the row in question. We need to convert
+    // our y coord to twips since |mRowHeight| is in twips.
+    PRInt32 yTwips, xTwips;
+    AdjustEventCoordsToBoxCoordSpace ( x, y, &xTwips, &yTwips );
+    PRInt32 rowTop = mRowHeight * (*outRow - mTopRowIndex);
+    PRInt32 yOffset = yTwips - rowTop;
    
-      PRBool isContainer = PR_FALSE;
-      mView->IsContainer ( row, &isContainer );
-      if ( isContainer ) {
-        // for a container, use a 25%/50%/25% breakdown
-        if ( yOffset < mRowHeight / 4 )
-          *outOrient = kBeforeRow;
-        else if ( yOffset > mRowHeight - (mRowHeight / 4) )
-          *outOrient = kAfterRow;
-        else
-          *outOrient = kOnRow;
-      }
-      else {
-        // for a non-container use a 50%/50% breakdown
-        if ( yOffset < mRowHeight / 2 )
-          *outOrient = kBeforeRow;
-        else
-          *outOrient = kAfterRow;        
-      }
+    PRBool isContainer = PR_FALSE;
+    mView->IsContainer ( *outRow, &isContainer );
+    if ( isContainer ) {
+      // for a container, use a 25%/50%/25% breakdown
+      if ( yOffset < mRowHeight / 4 )
+        *outOrient = kBeforeRow;
+      else if ( yOffset > mRowHeight - (mRowHeight / 4) )
+        *outOrient = kAfterRow;
+      else
+        *outOrient = kOnRow;
     }
-    
-    *outRow = row;
+    else {
+      // for a non-container use a 50%/50% breakdown
+      if ( yOffset < mRowHeight / 2 )
+        *outOrient = kBeforeRow;
+      else
+        *outOrient = kAfterRow;        
+    }
   }
   
 } // ComputeDropPosition

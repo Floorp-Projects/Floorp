@@ -1405,7 +1405,7 @@
            var x = aEvent.screenX - this.boxObject.screenX + this.boxObject.x;
            var y = aEvent.screenY - this.boxObject.screenY + this.boxObject.y;
            this.textbox.view.outlinerBoxObject.getCellAt(x, y, row, col, obj);
-           if (row.value >= 0 && row.value < this.textbox.view.rowCount)
+           if (row.value >= 0)
              return {row: row.value, column: col.value};
            else
             return null;

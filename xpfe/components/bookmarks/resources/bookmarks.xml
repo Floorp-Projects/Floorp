@@ -1589,7 +1589,7 @@
           var col = {};
           var obj = {};
           this.outlinerBoxObject.getCellAt(aEvent.clientX, aEvent.clientY, row, col, obj);
-          if (obj.value == "twisty")
+          if (row.value == -1 || obj.value == "twisty")
             return false;
           return true;
         ]]></body>
