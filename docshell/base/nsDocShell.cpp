@@ -1794,14 +1794,6 @@ nsDocShell::FireEndDocumentLoad(nsIDocumentLoader* aLoader,
                                     nsresult           aStatus,
                                     nsIDocumentLoaderObserver * aDocLoadObserver)
 {
-#ifdef MOZ_PERF_METRICS
-  RAPTOR_STOPWATCH_DEBUGTRACE(("Stop: nsWebShell::OnEndDocumentLoad(), this=%p\n", this));
-  NS_STOP_STOPWATCH(mTotalTime)
-  RAPTOR_STOPWATCH_TRACE(("Total (Layout + Page Load) Time (webshell=%p): ", this));
-  mTotalTime.Print();
-  RAPTOR_STOPWATCH_TRACE(("\n"));
-#endif
-
   NS_ENSURE_ARG_POINTER(aLoader);
   NS_ENSURE_ARG_POINTER(aChannel);
   // null aDocLoadObserver is legal
