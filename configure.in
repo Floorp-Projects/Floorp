@@ -1871,12 +1871,6 @@ MOZ_ARG_DISABLE_BOOL(tests,
 [  --disable-tests         Dont build the tests],
   ENABLE_TESTS= )
 
-
-dnl Toolbar drag & drop
-MOZ_ARG_ENABLE_BOOL(toolbar_dd,
-[  --enable-toolbar-dd  Enable toolbar drag and drop.],
-  AC_DEFINE(TOOLBAR_DD))
-
 dnl Build browsing profile; off by default
 MOZ_ARG_ENABLE_BOOL(brprof,
 [  --enable-brprof        Enable browsing profile cookie],
@@ -2283,7 +2277,6 @@ AC_SUBST(MOZ_WIDGET_TOOLKIT)
 AC_SUBST(MOZ_GFX_TOOLKIT)
 AC_SUBST(MOZ_UPDATE_XTERM)
 AC_SUBST(NECKO)
-AC_SUBST(TOOLBAR_DD)
 AC_SUBST(TOOLKIT_EXORCISM)
 AC_SUBST(MOZ_SECURITY)
 dnl AC_SUBST(MOZ_NETCAST)
