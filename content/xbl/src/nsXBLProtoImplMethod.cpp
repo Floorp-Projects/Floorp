@@ -48,6 +48,7 @@
 #include "nsXBLProtoImplMethod.h"
 #include "nsIScriptContext.h"
 #include "nsContentUtils.h"
+#include "nsIScriptSecurityManager.h"
 
 MOZ_DECL_CTOR_COUNTER(nsXBLProtoImplMethod)
 
@@ -288,9 +289,15 @@ nsXBLProtoImplAnonymousMethod::Execute(nsIContent* aBoundElement)
   if (NS_FAILED(rv))
     return rv;
 
-  jsval retval;
-  JSBool ok = ::JS_CallFunctionValue(cx, thisObject, OBJECT_TO_JSVAL(method),
-                              0 /* argc */, nsnull /* argv */, &retval);
+  // Check whether it's OK to call the method.
+  rv = nsContentUtils::GetSecurityManager()->CheckFunctionAccess(cx, method, thisObject);
+
+  JSBool ok = JS_TRUE;
+  if (NS_SUCCEEDED(rv)) {
+    jsval retval;
+    ok = ::JS_CallFunctionValue(cx, thisObject, OBJECT_TO_JSVAL(method),
+                                0 /* argc */, nsnull /* argv */, &retval);
+  }
   cxstack->Pop(&cx);
 
   if (!ok) {
