@@ -816,6 +816,10 @@ nsresult NS_COM NS_ShutdownXPCOM(nsIServiceManager* servMgr)
     return NS_OK;
 }
 
+#define GET_FUNC(_tag, _decl, _name)                        \
+  functions->_tag = (_decl) PR_FindSymbol(xpcomLib, _name); \
+  if (!functions->_tag) goto end
+
 nsresult NS_COM PR_CALLBACK
 NS_GetFrozenFunctions(XPCOMFunctions *functions, const char* libraryPath)
 {
@@ -825,76 +829,31 @@ NS_GetFrozenFunctions(XPCOMFunctions *functions, const char* libraryPath)
     if (functions->version != XPCOM_GLUE_VERSION)
         return NS_ERROR_FAILURE;
 
-    PRLibrary *xpcomLib = nsnull;
-    xpcomLib = PR_LoadLibrary(libraryPath);
+    PRLibrary *xpcomLib = PR_LoadLibrary(libraryPath);
     if (!xpcomLib)
         return NS_ERROR_FAILURE;
 
-    functions->init = (InitFunc) PR_FindSymbol(xpcomLib, "NS_InitXPCOM2");
-    if (! functions->init) {
-        PR_UnloadLibrary(xpcomLib);
-        return NS_ERROR_FAILURE;
-    }
-    functions->shutdown = (ShutdownFunc) PR_FindSymbol(xpcomLib, "NS_ShutdownXPCOM");
-    if (! functions->shutdown) {
-        PR_UnloadLibrary(xpcomLib);
-        return NS_ERROR_FAILURE;
-    }
-    functions->getServiceManager = (GetServiceManagerFunc) PR_FindSymbol(xpcomLib, "NS_GetServiceManager");
-    if (! functions->getServiceManager) {
-        PR_UnloadLibrary(xpcomLib);
-        return NS_ERROR_FAILURE;
-    }
-    functions->getComponentManager = (GetComponentManagerFunc) PR_FindSymbol(xpcomLib, "NS_GetComponentManager");
-    if (! functions->getComponentManager) {
-        PR_UnloadLibrary(xpcomLib);
-        return NS_ERROR_FAILURE;
-    }
-    functions->getComponentRegistrar = (GetComponentRegistrarFunc) PR_FindSymbol(xpcomLib, "NS_GetComponentRegistrar");
-    if (! functions->getComponentRegistrar) {
-        PR_UnloadLibrary(xpcomLib);
-        return NS_ERROR_FAILURE;
-    }
-    functions->getMemoryManager = (GetMemoryManagerFunc) PR_FindSymbol(xpcomLib, "NS_GetMemoryManager");
-    if (! functions->getMemoryManager) {
-        PR_UnloadLibrary(xpcomLib);
-        return NS_ERROR_FAILURE;
-    }
-    functions->newLocalFile = (NewLocalFileFunc) PR_FindSymbol(xpcomLib, "NS_NewLocalFile");
-    if (! functions->newLocalFile) {
-        PR_UnloadLibrary(xpcomLib);
-        return NS_ERROR_FAILURE;
-    }
-    functions->newNativeLocalFile = (NewNativeLocalFileFunc)PR_FindSymbol(xpcomLib, "NS_NewNativeLocalFile");
-    if (! functions->newNativeLocalFile) {
-        PR_UnloadLibrary(xpcomLib);
-        return NS_ERROR_FAILURE;
-    }
-    functions->registerExitRoutine = (RegisterXPCOMExitRoutineFunc) PR_FindSymbol(xpcomLib, "NS_RegisterXPCOMExitRoutine");
-    if (! functions->registerExitRoutine) {
-        PR_UnloadLibrary(xpcomLib);
-        return NS_ERROR_FAILURE;
-    }
-    functions->unregisterExitRoutine = (UnregisterXPCOMExitRoutineFunc) PR_FindSymbol(xpcomLib, "NS_UnregisterXPCOMExitRoutine");
-    if (! functions->unregisterExitRoutine) {
-        PR_UnloadLibrary(xpcomLib);
-        return NS_ERROR_FAILURE;
+    nsresult rv = NS_ERROR_FAILURE;
+
+    GET_FUNC(init,                  InitFunc,                       "NS_InitXPCOM2");
+    GET_FUNC(shutdown,              ShutdownFunc,                   "NS_ShutdownXPCOM");
+    GET_FUNC(getServiceManager,     GetServiceManagerFunc,          "NS_GetServiceManager");
+    GET_FUNC(getComponentManager,   GetComponentManagerFunc,        "NS_GetComponentManager");
+    GET_FUNC(getComponentRegistrar, GetComponentRegistrarFunc,      "NS_GetComponentRegistrar");
+    GET_FUNC(getMemoryManager,      GetMemoryManagerFunc,           "NS_GetMemoryManager");
+    GET_FUNC(newLocalFile,          NewLocalFileFunc,               "NS_NewLocalFile");
+    GET_FUNC(newNativeLocalFile,    NewNativeLocalFileFunc,         "NS_NewNativeLocalFile");
+    GET_FUNC(registerExitRoutine,   RegisterXPCOMExitRoutineFunc,   "NS_RegisterXPCOMExitRoutine");
+    GET_FUNC(unregisterExitRoutine, UnregisterXPCOMExitRoutineFunc, "NS_UnregisterXPCOMExitRoutine");
+
+    // these functions were added post 1.4 (need to check size of |functions|)
+    if (functions->size >= sizeof(XPCOMFunctions)) {
+        GET_FUNC(getDebug,          GetDebugFunc,                   "NS_GetDebug");
+        GET_FUNC(getTraceRefcnt,    GetTraceRefcntFunc,             "NS_GetTraceRefcnt");
     }
 
-    functions->getDebug = (GetDebugFunc) PR_FindSymbol(xpcomLib, "NS_GetDebug");
-    if (! functions->getDebug) {
-        PR_UnloadLibrary(xpcomLib);
-        return NS_ERROR_FAILURE;
-    }
-
-    functions->getTraceRefcnt = (GetTraceRefcntFunc) PR_FindSymbol(xpcomLib, "NS_GetTraceRefcnt");
-    if (! functions->getTraceRefcnt) {
-        PR_UnloadLibrary(xpcomLib);
-        return NS_ERROR_FAILURE;
-    }
-
+    rv = NS_OK;
+end:
     PR_UnloadLibrary(xpcomLib); // the library is refcnt'ed above by the caller.
-    xpcomLib = nsnull;
-
-    return NS_OK;
+    return rv;
 }
