@@ -68,6 +68,8 @@ public:
 
   typedef enum {eLTR=0, eRTL=1} Direction;
 
+  static nsString& GetTextNodeTag();
+
   static const nsIID& GetIID() { static nsIID iid = NS_IEDITOR_IID; return iid; }
 
   /**
@@ -220,11 +222,11 @@ public:
                        PRBool       aNodeToKeepIsFirst)=0;
   
   /**
-   * The handler for RETURN keys and CTRL-RETURN keys.<br>
-   * It may enter a character, split a node in the tree, etc.
-   * @param aCtrlKey  was the CtrlKey down?
+   * Insert a break into the content model.<br>
+   * The interpretation of a break is up to the rule system:
+   * it may enter a character, split a node in the tree, etc.
    */
-  NS_IMETHOD InsertBreak(PRBool aCtrlKey)=0;
+  NS_IMETHOD InsertBreak()=0;
 
   /** turn the undo system on or off
     * @param aEnable  if PR_TRUE, the undo system is turned on if it is available
@@ -301,6 +303,9 @@ public:
     *                        PR_FALSE if the end of the selection is to be scrolled into view
     */
   NS_IMETHOD ScrollIntoView(PRBool aScrollToBegin)=0;
+
+  /** sets the document selection to the entire contents of the document */
+  NS_IMETHOD SelectAll()=0;
 
 };
 

@@ -105,11 +105,9 @@ public:
 
   /**
    * The handler for the ENTER key.
-   * Its action depends on the selection at the time.  
-   * It may insert a <BR> or a <P> or activate the properties of the element
-   * @param aCtrlKey  was the CtrlKey down?
+   * @see nsIEditor::InsertBreak
    */
-  NS_IMETHOD InsertBreak(PRBool aCtrlKey)=0;
+  NS_IMETHOD InsertBreak()=0;
 
   /** turn the undo system on or off
     * @param aEnable  if PR_TRUE, the undo system is turned on if it is available
@@ -213,6 +211,9 @@ public:
     * @param aExtendSelection
     */
   NS_IMETHOD SelectPrevious(nsIAtom *aIncrement, PRBool aExtendSelection)=0;
+
+  /** select the entire contents of the document */
+  NS_IMETHOD SelectAll()=0;
 
   /** scroll the viewport up (towards the beginning of the document.)
     * @param aIncrement  the amount to scroll

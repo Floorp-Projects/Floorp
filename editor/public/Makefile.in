@@ -27,6 +27,7 @@ EXPORTS =		\
     nsIEditor.h	\
     nsIHTMLEditor.h	\
     nsITextEditor.h	\
+    nsIEditRules.h \
     nsEditorCID.h	\
     $(NULL)
 

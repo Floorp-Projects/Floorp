@@ -18,11 +18,12 @@
 DEPTH=..\..
 IGNORE_MANIFEST=1
 
-EXPORTS =		\
-    nsIEditor.h	\
+EXPORTS =		        \
+    nsIEditor.h	    \
     nsITextEditor.h	\
     nsIHTMLEditor.h	\
-    nsEditorCID.h	\
+    nsIEditRules.h  \
+    nsEditorCID.h	  \
     nsIContextLoader.h	\
     $(NULL)
 
