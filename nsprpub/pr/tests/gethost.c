@@ -47,7 +47,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#define DEFAULT_HOST_NAME "www.mozilla.org"
+#define DEFAULT_HOST_NAME "mcom.com"
 
 static void Help(void)
 {
