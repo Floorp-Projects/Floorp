@@ -841,6 +841,18 @@ RDFXULBuilderImpl::OnSetNodeValue(nsIDOMNode* aNode, const nsString& aValue)
 NS_IMETHODIMP
 RDFXULBuilderImpl::OnInsertBefore(nsIDOMNode* aParent, nsIDOMNode* aNewChild, nsIDOMNode* aRefChild)
 {
+    NS_PRECONDITION(aParent != nsnull, "null ptr");
+    if (!aParent)
+        return NS_ERROR_NULL_POINTER;
+
+    NS_PRECONDITION(aNewChild != nsnull, "null ptr");
+    if (!aNewChild)
+        return NS_ERROR_NULL_POINTER;
+
+    NS_PRECONDITION(aRefChild != nsnull, "null ptr");
+    if (!aRefChild)
+        return NS_ERROR_NULL_POINTER;
+
     nsresult rv;
 
     // Translate each of the DOM nodes into the RDF resource for which
@@ -931,6 +943,18 @@ RDFXULBuilderImpl::OnInsertBefore(nsIDOMNode* aParent, nsIDOMNode* aNewChild, ns
 NS_IMETHODIMP
 RDFXULBuilderImpl::OnReplaceChild(nsIDOMNode* aParent, nsIDOMNode* aNewChild, nsIDOMNode* aOldChild)
 {
+    NS_PRECONDITION(aParent != nsnull, "null ptr");
+    if (!aParent)
+        return NS_ERROR_NULL_POINTER;
+
+    NS_PRECONDITION(aNewChild != nsnull, "null ptr");
+    if (!aNewChild)
+        return NS_ERROR_NULL_POINTER;
+
+    NS_PRECONDITION(aOldChild != nsnull, "null ptr");
+    if (!aOldChild)
+        return NS_ERROR_NULL_POINTER;
+
     nsresult rv;
 
     // Translate each of the DOM nodes into the RDF resource for which
@@ -993,6 +1017,14 @@ RDFXULBuilderImpl::OnReplaceChild(nsIDOMNode* aParent, nsIDOMNode* aNewChild, ns
 NS_IMETHODIMP
 RDFXULBuilderImpl::OnRemoveChild(nsIDOMNode* aParent, nsIDOMNode* aOldChild)
 {
+    NS_PRECONDITION(aParent != nsnull, "null ptr");
+    if (!aParent)
+        return NS_ERROR_NULL_POINTER;
+
+    NS_PRECONDITION(aOldChild != nsnull, "null ptr");
+    if (!aOldChild)
+        return NS_ERROR_NULL_POINTER;
+
     nsresult rv;
 
     // XXX may want to check _here_ to make sure that aOldChild is
@@ -1036,6 +1068,14 @@ RDFXULBuilderImpl::OnRemoveChild(nsIDOMNode* aParent, nsIDOMNode* aOldChild)
 NS_IMETHODIMP
 RDFXULBuilderImpl::OnAppendChild(nsIDOMNode* aParent, nsIDOMNode* aNewChild)
 {
+    NS_PRECONDITION(aParent != nsnull, "null ptr");
+    if (!aParent)
+        return NS_ERROR_NULL_POINTER;
+
+    NS_PRECONDITION(aNewChild != nsnull, "null ptr");
+    if (!aNewChild)
+        return NS_ERROR_NULL_POINTER;
+
     nsresult rv;
 
     // XXX If aNewChild doesn't have a resource, then somebody is
