@@ -71,17 +71,6 @@ PRIVATE_EXPORTS = \
 MPI_HDRS = mpi-config.h mpi.h mpi-priv.h mplogic.h mpprime.h logtab.h mp_gf2m.h
 MPI_SRCS = mpprime.c mpmontg.c mplogic.c mpi.c mp_gf2m.c
 
-ifdef MOZILLA_BSAFE_BUILD
-CSRCS = \
-	fblstdlib.c \
-	sha_fast.c \
-	md2.c \
-	md5.c \
-	blapi_bsf.c \
-	$(MPI_SRCS) \
-	dh.c \
-	$(NULL)
-else
 CSRCS = \
 	ldvector.c \
 	prng_fips1861.c \
@@ -107,7 +96,6 @@ CSRCS = \
 	shvfy.c \
 	$(MPI_SRCS) \
 	$(NULL)
-endif
 
 ALL_CSRCS := $(CSRCS)
 
