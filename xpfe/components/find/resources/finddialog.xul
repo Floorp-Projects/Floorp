@@ -45,8 +45,8 @@ Contributor(s): Stuart Parmenter <pavlov@netscape.com>
   persist="screenX screenY"
   screenX="24" screenY="24">
 
-  <html:script language="JavaScript" src="chrome://global/content/finddialog.js"/>
-
+  <script language="JavaScript" src="chrome://global/content/finddialog.js"/>
+  <stringbundle id="findBundle" src="chrome://global/locale/finddialog.properties"/>
   <box>
   
     <!-- hack. we seem to need this separator to get it to render -->
