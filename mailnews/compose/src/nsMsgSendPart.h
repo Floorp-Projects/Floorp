@@ -39,7 +39,7 @@ typedef int (*MSG_SendPartWriteFunc)(const char* line, PRInt32 size,
 
 class nsMsgSendPart : public MSG_ZapIt {
 public:
-    nsMsgSendPart(nsMsgSendMimeDeliveryState* state, PRInt16 part_csid = 0);
+    nsMsgSendPart(nsMsgSendMimeDeliveryState* state, const char *part_charset = NULL);
     virtual ~nsMsgSendPart();	// Note that the destructor also destroys
 								// any children that were added.
 
@@ -55,7 +55,7 @@ public:
     virtual int SetType(const char* type);
     const char* GetType() {return m_type;}
     
-    PRInt16 GetCSID() { return m_csid; }
+    const char* GetCharsetName() {return m_charset_name;}
 
     virtual int SetOtherHeaders(const char* other);
     const char* SetOtherHeaders() {return m_other;}
@@ -97,7 +97,7 @@ protected:
 	char* m_buffer;
     char* m_type;
     char* m_other;
-	PRInt16 m_csid;	// charset ID associated with this part
+  char m_charset_name[64+1];        // charset name associated with this part
 	PRBool m_strip_sensitive_headers;
 	MimeEncoderData *m_encoder_data;  /* Opaque state for base64/qp encoder. */
 

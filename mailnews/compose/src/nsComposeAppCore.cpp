@@ -80,6 +80,13 @@ NS_BEGIN_EXTERN_C
 
 NS_END_EXTERN_C
 
+// defined in msgCompGlue.cpp
+extern char * INTL_GetDefaultMailCharset(void);
+extern nsresult ConvertFromUnicode(const nsString aCharset, 
+                                   const nsString inString,
+                                   char** outCString);
+extern const char *msgCompHeaderInternalCharset(void);
+
 // we need this because of an egcs 1.0 (and possibly gcc) compiler bug
 // that doesn't allow you to call ::nsISupports::GetIID() inside of a class
 // that multiply inherits from nsISupports
@@ -664,14 +671,64 @@ NS_IMETHODIMP nsComposeAppCore::SendMessage(nsAutoString& aAddrTo,
 
 //	nsIMsgCompose *pMsgCompose; 
 	if (mMsgCompFields) { 
+    // Get the default charset from pref, use this as a mail charset for now.
+    // TODO: For reply/forward, original charset need to be used instead.
+    // TODO: Also need to update charset for the charset menu.
+    mMsgCompFields->SetCharacterSet(INTL_GetDefaultMailCharset(), NULL);
+
+    nsString aString;
+    nsString aCharset(msgCompHeaderInternalCharset());
+    char *outCString;
+
+    // Pref values are supposed to be stored as UTF-8, so no conversion
 		mMsgCompFields->SetFrom((char *)pCompPrefs.GetUserEmail(), NULL);
 		mMsgCompFields->SetReplyTo((char *)pCompPrefs.GetReplyTo(), NULL);
 		mMsgCompFields->SetOrganization((char *)pCompPrefs.GetOrganization(), NULL);
-		mMsgCompFields->SetTo(aAddrTo.ToNewCString(), NULL);
-		mMsgCompFields->SetCc(aAddrCc.ToNewCString(), NULL);
-		mMsgCompFields->SetBcc(aAddrBcc.ToNewCString(), NULL);
-		mMsgCompFields->SetSubject(aSubject.ToNewCString(), NULL);
-		mMsgCompFields->SetBody(aMsg.ToNewCString(), NULL);
+
+    // Convert fields to UTF-8
+    if (NS_SUCCEEDED(ConvertFromUnicode(aCharset, aAddrTo, &outCString))) {
+      mMsgCompFields->SetTo(outCString, NULL);
+      PR_Free(outCString);
+    }
+    else {
+      mMsgCompFields->SetTo(aAddrTo.ToNewCString(), NULL);
+    }
+
+    if (NS_SUCCEEDED(ConvertFromUnicode(aCharset, aAddrCc, &outCString))) {
+      mMsgCompFields->SetCc(outCString, NULL);
+      PR_Free(outCString);
+    }
+    else {
+      mMsgCompFields->SetCc(aAddrCc.ToNewCString(), NULL);
+    }
+
+    if (NS_SUCCEEDED(ConvertFromUnicode(aCharset, aAddrBcc, &outCString))) {
+      mMsgCompFields->SetBcc(outCString, NULL);
+      PR_Free(outCString);
+    }
+    else {
+      mMsgCompFields->SetBcc(aAddrBcc.ToNewCString(), NULL);
+    }
+
+    if (NS_SUCCEEDED(ConvertFromUnicode(aCharset, aSubject, &outCString))) {
+      mMsgCompFields->SetSubject(outCString, NULL);
+      PR_Free(outCString);
+    }
+    else {
+      mMsgCompFields->SetSubject(aSubject.ToNewCString(), NULL);
+    }
+
+    // Convert body to mail charset not to utf-8 (because we don't manipulate body text)
+    char *mail_charset;
+    mMsgCompFields->GetCharacterSet(&mail_charset);
+    aCharset.SetString(mail_charset);
+    if (NS_SUCCEEDED(ConvertFromUnicode(aCharset, aMsg, &outCString))) {
+      mMsgCompFields->SetBody(outCString, NULL);
+      PR_Free(outCString);
+    }
+    else {
+      mMsgCompFields->SetBody(aMsg.ToNewCString(), NULL);
+    }
 
 		if (mMsgSend)
 			mMsgSend->SendMessage(mMsgCompFields, NULL);

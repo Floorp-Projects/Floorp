@@ -74,7 +74,6 @@ static NS_DEFINE_CID(kNetServiceCID, NS_NETSERVICE_CID);
 
 // defined in msgCompGlue.cpp
 extern char * INTL_EncodeMimePartIIStr(const char *header, const char *charset, XP_Bool bUseMime);
-extern char * INTL_GetDefaultMailCharset(void);
 extern PRBool INTL_stateful_charset(const char *charset);
 
 extern "C"
@@ -2179,17 +2178,6 @@ int nsMsgSendMimeDeliveryState::GatherMimeAttachments ()
 	char *buffer_tail = 0;
 	char* error_msg = 0;
  
-  // to news is true if we have a m_field and we have a Newsgroup and it is not empty
-	PRBool tonews = PR_FALSE;
-	if (m_fields) {
-		const char* pstrzNewsgroup = m_fields->GetNewsgroups();
-		if (pstrzNewsgroup && *pstrzNewsgroup)
-			tonews = PR_TRUE;
-	}
-
-	INTL_MessageSendToNews(tonews);			// hack to make Korean Mail/News work correctly 
-											// Look at libi18n/doc_ccc.c for details 
-											// temp solution for bug 30725
 
 	nsMsgSendPart* toppart = NULL;			// The very top most container of the message
 											// that we are going to send.
@@ -2392,8 +2380,7 @@ int nsMsgSendMimeDeliveryState::GatherMimeAttachments ()
 		m_fields->SetMessageId(msg_generate_message_id (), NULL);
 #endif /* GENERATE_MESSAGE_ID */
 
-  /*TODO: should be m_fields->GetCharacterSet(), change nsMsgSendPart to take charset instead of csid*/
-	mainbody = new nsMsgSendPart(this, 0/*mail_csid*/);
+	mainbody = new nsMsgSendPart(this, m_fields->GetCharacterSet());
 	if (!mainbody)
 		goto FAILMEM;
   
@@ -4442,7 +4429,7 @@ nsMsgSendMimeDeliveryState::Init(
   // Get the default charset from pref, use this for the charset for now.
   // TODO: For reply/forward, original charset need to be used instead.
   // TODO: Also need to update charset for the charset menu.
-  m_fields->SetCharacterSet(INTL_GetDefaultMailCharset(), NULL);
+  m_fields->SetCharacterSet(fields->GetCharacterSet(), NULL);
 
 	m_fields->SetOwner(pane);
 

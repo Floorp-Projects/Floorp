@@ -46,9 +46,9 @@ static char *mime_mailto_stream_read_buffer = 0;
 PRInt32 nsMsgSendPart::M_counter = 0;
 
 
-nsMsgSendPart::nsMsgSendPart(nsMsgSendMimeDeliveryState* state, PRInt16 part_csid)
+nsMsgSendPart::nsMsgSendPart(nsMsgSendMimeDeliveryState* state, const char *part_charset)
 {
-	m_csid = part_csid;
+  PL_strcpy(m_charset_name, part_charset ? part_charset : "us-ascii");
 	m_children = NULL;
 	m_numchildren = 0;
 
@@ -589,12 +589,9 @@ int nsMsgSendPart::Write()
 			NS_ASSERTION(m_type && *m_type, "null ptr");
 			PRBool needsCharset = mime_type_needs_charset(m_type ? m_type : TEXT_PLAIN);
 			if (needsCharset) {
-				char tmpCSName[64];
-				tmpCSName[0] = '\0';
-				INTL_CharSetIDToName(m_csid, tmpCSName);
 				content_type_header =
 				PR_smprintf("Content-Type: %s; charset=%s" CRLF,
-					(m_type ? m_type : TEXT_PLAIN), tmpCSName);
+					(m_type ? m_type : TEXT_PLAIN), m_charset_name);
 			}
 			else
 				content_type_header =
