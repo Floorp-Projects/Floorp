@@ -443,6 +443,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsLocalStringService)
 ////////////////////////////////////////////////////////////////////////////////
 // msgdb factories
 ////////////////////////////////////////////////////////////////////////////////
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsMsgDBService)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsMailDatabase)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsNewsDatabase)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsImapMailDatabase)
@@ -1026,9 +1027,10 @@ static const nsModuleComponentInfo gComponents[] = {
     ////////////////////////////////////////////////////////////////////////////////
     // msgdb components
     ////////////////////////////////////////////////////////////////////////////////
-    { "Mail DB", NS_MAILDB_CID, nsnull, nsMailDatabaseConstructor },
-    { "News DB", NS_NEWSDB_CID, nsnull, nsNewsDatabaseConstructor },
-    { "Imap DB", NS_IMAPDB_CID, nsnull, nsImapMailDatabaseConstructor },
+    { "Msg DB Service", NS_MSGDB_SERVICE_CID, NS_MSGDB_SERVICE_CONTRACTID, nsMsgDBServiceConstructor },
+    { "Mail DB", NS_MAILDB_CID, NS_MAILBOXDB_CONTRACTID, nsMailDatabaseConstructor },
+    { "News DB", NS_NEWSDB_CID, NS_NEWSDB_CONTRACTID, nsNewsDatabaseConstructor },
+    { "Imap DB", NS_IMAPDB_CID, NS_IMAPDB_CONTRACTID, nsImapMailDatabaseConstructor },
     { "Msg Retention Settings", NS_MSG_RETENTIONSETTINGS_CID,
       NS_MSG_RETENTIONSETTINGS_CONTRACTID, nsMsgRetentionSettingsConstructor },
     { "Msg Download Settings", NS_MSG_DOWNLOADSETTINGS_CID,
