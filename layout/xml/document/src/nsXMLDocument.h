@@ -22,7 +22,7 @@
 
 #include "nsMarkupDocument.h"
 #include "nsIXMLDocument.h"
-#include "plhash.h"
+#include "nsIHTMLContentContainer.h"
 
 class nsIParser;
 
@@ -33,7 +33,8 @@ typedef struct {
 } nsXMLNameSpace;
 
 class nsXMLDocument : public nsMarkupDocument,
-		      public nsIXMLDocument 
+                      public nsIXMLDocument,
+                      public nsIHTMLContentContainer
 {
 public:
   nsXMLDocument();
@@ -47,7 +48,7 @@ public:
   NS_IMETHOD StartDocumentLoad(nsIURL *aUrl, 
                                nsIContentViewerContainer* aContainer,
                                nsIStreamListener **aDocListener,
-			       const char* aCommand);
+                               const char* aCommand);
 
   NS_IMETHOD EndLoad();
 
@@ -64,7 +65,7 @@ public:
 
   // nsIXMLDocument interface
   NS_IMETHOD RegisterNameSpace(nsIAtom *aPrefix, const nsString& aURI, 
-			       PRInt32& aNameSpaceId);
+                               PRInt32& aNameSpaceId);
 
   NS_IMETHOD GetNameSpaceURI(PRInt32 aNameSpaceId, nsString& aURI);
   NS_IMETHOD GetNameSpacePrefix(PRInt32 aNameSpaceId, nsIAtom*& aPrefix);
@@ -77,6 +78,7 @@ public:
   NS_IMETHOD EpilogCount(PRInt32* aCount);
   NS_IMETHOD AppendToEpilog(nsIContent* aContent);
 
+  // nsIHTMLContentContainer
   NS_IMETHOD GetAttributeStyleSheet(nsIHTMLStyleSheet** aResult);
 
 protected:

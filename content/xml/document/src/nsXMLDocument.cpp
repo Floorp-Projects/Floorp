@@ -44,6 +44,7 @@ static NS_DEFINE_IID(kIWebShellIID, NS_IWEB_SHELL_IID);
 static NS_DEFINE_IID(kIDOMCommentIID, NS_IDOMCOMMENT_IID);
 static NS_DEFINE_IID(kIDOMElementIID, NS_IDOMELEMENT_IID);
 static NS_DEFINE_IID(kIDOMTextIID, NS_IDOMTEXT_IID);
+static NS_DEFINE_IID(kIHTMLContentContainerIID, NS_IHTMLCONTENTCONTAINER_IID);
 
 
 NS_LAYOUT nsresult
@@ -97,6 +98,11 @@ nsXMLDocument::QueryInterface(REFNSIID aIID,
   if (aIID.Equals(kIXMLDocumentIID)) {
     NS_ADDREF_THIS();
     *aInstancePtr = (void**) (nsIXMLDocument *)this;
+    return NS_OK;
+  }
+  if (aIID.Equals(kIHTMLContentContainerIID)) {
+    NS_ADDREF_THIS();
+    *aInstancePtr = (void**) (nsIHTMLContentContainer *)this;
     return NS_OK;
   }
   return nsDocument::QueryInterface(aIID, aInstancePtr);

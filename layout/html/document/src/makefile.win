@@ -43,6 +43,7 @@ CPP_OBJS=					\
 
 EXPORTS =					\
 	nsIHTMLDocument.h			\
+	nsIHTMLContentContainer.h		\
 	$(NULL)
 
 LINCS=-I$(PUBLIC)\xpcom -I$(PUBLIC)\raptor -I$(PUBLIC)\js \

@@ -35,10 +35,6 @@ class nsIHTMLStyleSheet;
  */
 class nsIXMLDocument : public nsISupports {
 public:
-  // XXX A HTMLStyleSheet for attributes of HTML content within
-  // this document
-  NS_IMETHOD GetAttributeStyleSheet(nsIHTMLStyleSheet** aResult)=0;
-
   NS_IMETHOD RegisterNameSpace(nsIAtom* aPrefix, const nsString& aURI, 
 			       PRInt32& aNameSpaceId)=0;
 

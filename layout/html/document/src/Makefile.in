@@ -48,7 +48,8 @@ CPPSRCS =				\
 	$(NULL)
 
 EXPORTS = \
-	nsIHTMLDocument.h	\
+	nsIHTMLDocument.h			\
+	nsIHTMLContentContainer.h		\
 	$(NULL)
 
 EXPORTS := $(addprefix $(srcdir)/, $(EXPORTS))

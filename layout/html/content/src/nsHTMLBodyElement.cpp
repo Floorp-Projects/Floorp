@@ -34,11 +34,13 @@
 #include "nsIStyleRule.h"
 #include "nsIWebShell.h"
 #include "nsIHTMLAttributes.h"
+#include "nsIHTMLContentContainer.h"
 
 static NS_DEFINE_IID(kIHTMLDocumentIID, NS_IHTMLDOCUMENT_IID);
 static NS_DEFINE_IID(kIStyleRuleIID, NS_ISTYLE_RULE_IID);
 static NS_DEFINE_IID(kIWebShellIID, NS_IWEB_SHELL_IID);
 static NS_DEFINE_IID(kIDOMHTMLBodyElementIID, NS_IDOMHTMLBODYELEMENT_IID);
+static NS_DEFINE_IID(kIHTMLContentContainerIID, NS_IHTMLCONTENTCONTAINER_IID);
 
 class BodyRule;
 
@@ -363,11 +365,11 @@ MapAttributesInto(nsIHTMLAttributes* aAttributes,
     if (nsnull != presShell) {
       nsIDocument*  doc = presShell->GetDocument();
       if (nsnull != doc) {
-        nsIHTMLDocument*  htmlDoc;
-        if (NS_OK == doc->QueryInterface(kIHTMLDocumentIID,
-                                         (void**)&htmlDoc)) {
+        nsIHTMLContentContainer*  htmlContainer;
+        if (NS_OK == doc->QueryInterface(kIHTMLContentContainerIID,
+                                         (void**)&htmlContainer)) {
           nsIHTMLStyleSheet* styleSheet;
-          if (NS_OK == htmlDoc->GetAttributeStyleSheet(&styleSheet)) {
+          if (NS_OK == htmlContainer->GetAttributeStyleSheet(&styleSheet)) {
             aAttributes->GetAttribute(nsHTMLAtoms::link, value);
             if (eHTMLUnit_Color == value.GetUnit()) {
               styleSheet->SetLinkColor(value.GetColorValue());
@@ -393,7 +395,7 @@ MapAttributesInto(nsIHTMLAttributes* aAttributes,
             }
             NS_RELEASE(styleSheet);
           }
-          NS_RELEASE(htmlDoc);
+          NS_RELEASE(htmlContainer);
         }
         NS_RELEASE(doc);
       }
