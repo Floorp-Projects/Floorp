@@ -208,7 +208,7 @@ NS_IMETHODIMP nsMsgHdr::SetProperty(const char *propertyName, nsString &property
 
 		yarn.mYarn_Grow = NULL;
 		err = m_mdbRow->AddColumn(m_mdb->GetEnv(), property_token, m_mdb->nsStringToYarn(&yarn, &propertyStr));
-		delete[] yarn.mYarn_Buf;	// won't need this when we have nsCString
+		delete[] (char *)yarn.mYarn_Buf;	// won't need this when we have nsCString
 	}
 	return err;
 }
