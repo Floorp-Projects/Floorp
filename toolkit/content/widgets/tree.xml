@@ -11,7 +11,7 @@
     </resources>
   </binding>
 
-  <binding id="tree" extends="chrome://global/content/bindings/tree.xml#tree-base">
+  <binding id="tree" extends="chrome://global/content/widgets/tree.xml#tree-base">
     <content>
       <children includes="treecols"/>
       <xul:treerows class="tree-rows" flex="1">
@@ -20,12 +20,6 @@
     </content>
     
     <implementation implements="nsIAccessibleProvider">
-      <constructor>
-        this.addEventListener("DOMMouseScroll", this._handleMouseScroll, true);
-#ifdef XP_MAC
-        this.pageUpOrDownMovesSelection = false;
-#endif
-      </constructor>
 
       <!-- ///////////////// nsIAccessibleProvider ///////////////// -->
 
@@ -44,17 +38,23 @@
       <property name="view"
                 onget="return this.treeBoxObject.view;"
                 onset="return this.treeBoxObject.view=val;"/>
+# contentView is obsolete (see bug 202391)
       <property name="contentView"
-                onget="return this.view.QueryInterface(Components.interfaces.nsITreeContentView);"
+                onget="return this.treeBoxObject.view; /*.QueryInterface(Components.interfaces.nsITreeContentView)*/"
                 readonly="true"/>
+# builderView is obsolete (see bug 202393)
       <property name="builderView"
-                onget="return this.view.QueryInterface(Components.interfaces.nsIXULTreeBuilder);"
+                onget="return this.treeBoxObject.view; /*.QueryInterface(Components.interfaces.nsIXULTreeBuilder)*/"
                 readonly="true"/>
       <property name="currentIndex"
                 onget="return this.treeBoxObject.selection.currentIndex;"
                 onset="return this.treeBoxObject.selection.currentIndex=val;"/>
       <field name="pageUpOrDownMovesSelection">
+#ifdef XP_MACOSX
+        false
+#else
         true
+#endif
       </field>
       <field name="selectionHead">
         -1
@@ -62,10 +62,6 @@
       <field name="selectionTail">
         -1
       </field>
-      <property name="singleSelection"
-                onget="return this.getAttribute('seltype') == 'single'"
-                readonly="true"/>
-
       <property name="enableColumnDrag"
                 onget="return this.hasAttribute('enableColumnDrag');"
                 onset="if (val) this.setAttribute('enableColumnDrag', 'true');
@@ -93,23 +89,6 @@
                 onset="this.setAttribute('_selectDelay', val);"
                 onget="return this.getAttribute('_selectDelay') || 50;"/>
       <field name="_columnsDirty">true</field>
-      <field name="_handleMouseScroll">
-      <![CDATA[
-        ({
-          subject: this,
-          handleEvent: function(aEvent)
-          {
-            var rows = aEvent.detail;
-            if (rows == NSUIEvent.SCROLL_PAGE_UP)
-              this.subject.treeBoxObject.scrollByPages(-1);
-            else if (rows == NSUIEvent.SCROLL_PAGE_DOWN)
-              this.subject.treeBoxObject.scrollByPages(1);
-            else
-              this.subject.treeBoxObject.scrollByLines(aEvent.detail);
-          }
-        })
-      ]]>
-      </field>
       <field name="_lastKeyTime">0</field>
       <field name="_incrementalString">""</field>
 
@@ -128,7 +107,7 @@
             var i;
             for (i = 0; i < cols.length; ++i)
               cols[i].setAttribute("ordinal", (i*2)+1);
-              
+
             // update the ordinal positions of splitters to even numbers, so that 
             // they are in between columns
             var splitters = this.getElementsByTagName("splitter");
@@ -212,6 +191,17 @@
     </implementation>
     
     <handlers>
+      <handler event="DOMMouseScroll" phase="capturing">
+        <![CDATA[
+          var rows = event.detail;
+          if (rows == NSUIEvent.SCROLL_PAGE_UP)
+            this.treeBoxObject.scrollByPages(-1);
+          else if (rows == NSUIEvent.SCROLL_PAGE_DOWN)
+            this.treeBoxObject.scrollByPages(1);
+          else
+            this.treeBoxObject.scrollByLines(rows);
+        ]]>
+      </handler>
       <handler event="focus" action="this.treeBoxObject.focused = true;"/>
       <handler event="blur" action="this.treeBoxObject.focused = false;"/>
   
@@ -288,7 +278,7 @@
       </handler>
       <handler event="keypress" keycode="vk_up" modifiers="shift">
         <![CDATA[
-         if (this.singleSelection)
+         if (this.treeBoxObject.selection.single)
            return;
          var c = this.currentIndex;
          if (c == -1 || c == 0)
@@ -313,7 +303,7 @@
       </handler>
       <handler event="keypress" keycode="vk_down" modifiers="shift">
         <![CDATA[
-         if (this.singleSelection)
+         if (this.treeBoxObject.selection.single)
            return;
          var c = this.currentIndex;
          try { if (c+1 == this.treeBoxObject.view.rowCount)
@@ -407,7 +397,7 @@
       </handler>
       <handler event="keypress" keycode="vk_page_up" modifiers="shift">
         <![CDATA[
-         if (this.singleSelection)
+         if (this.treeBoxObject.selection.single)
            return;
          var c = this.currentIndex;
          if (c == 0)
@@ -446,7 +436,7 @@
       </handler>
       <handler event="keypress" keycode="vk_page_down" modifiers="shift">
         <![CDATA[
-         if (this.singleSelection)
+         if (this.treeBoxObject.selection.single)
            return;
          var c = this.currentIndex;
          var l = this.treeBoxObject.view.rowCount - 1;
@@ -546,7 +536,7 @@
       </handler>
       <handler event="keypress" keycode="vk_home" modifiers="shift">
         <![CDATA[
-         if (this.singleSelection)
+         if (this.treeBoxObject.selection.single)
            return;
          var c = this.currentIndex;
          if (c == 0)
@@ -562,7 +552,7 @@
       </handler>
       <handler event="keypress" keycode="vk_end" modifiers="shift">
         <![CDATA[
-         if (this.singleSelection)
+         if (this.treeBoxObject.selection.single)
            return;
          var c = this.currentIndex;
          var l = this.treeBoxObject.view.rowCount - 1;
@@ -607,18 +597,27 @@
            key = key.toLowerCase();
            if (event.timeStamp - this._lastKeyTime > 1000)
              this._incrementalString = key;
-           else {
-             if (this._incrementalString.length != 1 || this._incrementalString.charAt(0) != key.charAt(0))
-               this._incrementalString += key;
-           }
+           else
+             this._incrementalString += key;
            this._lastKeyTime = event.timeStamp;
            
+           var length = this._incrementalString.length;
+           var incrementalString = this._incrementalString;
+           var charIndex = 1;
+           while (charIndex < length && incrementalString[charIndex] == incrementalString[charIndex - 1])
+             charIndex++;
+           // If all letters in incremental string are same, just try to match the first one
+           if (charIndex == length) {
+             length = 1;
+             incrementalString = incrementalString.substring(0, length);
+           }
+
            var primarycol = this.treeBoxObject.getKeyColumnIndex();
            var colID = this.treeBoxObject.getColumnID(primarycol);
            var rowCount = this.treeBoxObject.view.rowCount;
            var start = 1;
            
-           if (this._incrementalString.length > 1) {
+           if (length > 1) {
              start = 0;
              if (c < 0)
                c = 0;
@@ -627,8 +626,8 @@
            for (var i = 0; i < rowCount; i++) {
              var l = (i + start + c) % rowCount;
              var cellText = this.treeBoxObject.view.getCellText(l, colID);
-             cellText = cellText.toLowerCase();
-             if (cellText.search(this._incrementalString) == 0) {
+             cellText = cellText.substring(0, length).toLowerCase();
+             if (cellText == incrementalString) {
                this.selectionHead = -1;
                this.selectionTail = -1;
                this.treeBoxObject.selection.timedSelect(l, this._selectDelay);
@@ -642,10 +641,10 @@
     </handlers>    
   </binding>
 
-  <binding id="treecols" extends="chrome://global/content/bindings/tree.xml#tree-base">
+  <binding id="treecols" extends="chrome://global/content/widgets/tree.xml#tree-base">
     <content>
       <children includes="treecol|splitter"/>
-      <xul:treecolpicker class="treecol-image" fixed="true" ordinal="2147483647"/>
+      <xul:treecolpicker class="treecol-image" fixed="true" ordinal="2147483647" xbl:inherits="tooltiptext=pickertooltiptext"/>
     </content>
     <implementation implements="nsIAccessibleProvider">
       <property name="accessible">
@@ -659,7 +658,7 @@
     </implementation>
   </binding>
 
-  <binding id="treerows" extends="chrome://global/content/bindings/tree.xml#tree-base">
+  <binding id="treerows" extends="chrome://global/content/widgets/tree.xml#tree-base">
     <content>
       <xul:hbox flex="1" class="tree-bodybox">
         <children/>
@@ -682,7 +681,7 @@
     </handlers>
   </binding>
 
-  <binding id="treebody" extends="chrome://global/content/bindings/tree.xml#tree-base">
+  <binding id="treebody" extends="chrome://global/content/widgets/tree.xml#tree-base">
     <implementation>
       <constructor>
         if ("_ensureColumnOrder" in this.parentNode)
@@ -698,8 +697,9 @@
            click, so that drags work correctly. -->
       <handler event="mousedown">
       <![CDATA[
-         if ((!event.ctrlKey && !event.shiftKey && !event.metaKey) ||
-             this.parentNode.singleSelection) {
+         if (((!event.ctrlKey || !this.parentNode.pageUpOrDownMovesSelection) &&
+             !event.shiftKey && !event.metaKey) ||
+             this.parentNode.treeBoxObject.selection.single) {
            var row = {};
            var col = {};
            var obj = {};
@@ -755,7 +755,7 @@
           return;
         }
 
-        if (! this.parentNode.singleSelection) {
+        if (! this.parentNode.treeBoxObject.selection.single) {
           var augment = event.ctrlKey || event.metaKey;
           if (event.shiftKey) {
             b.selection.rangedSelect(-1, row.value, augment);
@@ -812,7 +812,7 @@
     </handlers>
   </binding>
 
-  <binding id="treecol-base" extends="chrome://global/content/bindings/tree.xml#tree-base">
+  <binding id="treecol-base" extends="chrome://global/content/widgets/tree.xml#tree-base">
     <implementation>
       <constructor>
         this.parentNode.parentNode._columnsDirty = true;
@@ -978,7 +978,7 @@
     </handlers>
   </binding>
 
-  <binding id="treecol" extends="chrome://global/content/bindings/tree.xml#treecol-base">
+  <binding id="treecol" extends="chrome://global/content/widgets/tree.xml#treecol-base">
     <content>
       <xul:label class="treecol-text" xbl:inherits="crop,value=label" flex="1" crop="right"/>
       <xul:image class="treecol-sortdirection" xbl:inherits="sortDirection"/>
@@ -995,11 +995,11 @@
     </implementation>
 
     <handlers>
-      <handler event="click" button="0" action="if (event.originalTarget == this) { this.parentNode.parentNode.treeBoxObject.view.cycleHeader(this.id, this); }"/>
+      <handler event="click" button="0" phase="target" action="this.parentNode.parentNode.treeBoxObject.view.cycleHeader(this.id, this);"/>
     </handlers>
   </binding>
 
-  <binding id="treecol-image" extends="chrome://global/content/bindings/tree.xml#treecol-base">
+  <binding id="treecol-image" extends="chrome://global/content/widgets/tree.xml#treecol-base">
     <content>
       <xul:image class="treecol-icon" xbl:inherits="src"/>
     </content>
@@ -1009,7 +1009,7 @@
   </binding>
 
   <binding id="columnpicker" display="xul:button"
-           extends="chrome://global/content/bindings/tree.xml#tree-base">
+           extends="chrome://global/content/widgets/tree.xml#tree-base">
     <content>
       <xul:image class="tree-columnpicker-icon"/>
       <xul:menupopup anonid="popup"/>
