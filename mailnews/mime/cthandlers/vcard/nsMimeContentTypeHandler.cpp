@@ -30,7 +30,7 @@ nsresult NS_NewMimeContentTypeHandler(nsIMimeContentTypeHandler ** aInstancePtrR
 {
 	/* note this new macro for assertions...they can take 
      a string describing the assertion */
-	nsresult result = NS_OK;
+  //nsresult result = NS_OK;
 	NS_PRECONDITION(nsnull != aInstancePtrResult, "nsnull ptr");
 	if (nsnull != aInstancePtrResult)
 	{

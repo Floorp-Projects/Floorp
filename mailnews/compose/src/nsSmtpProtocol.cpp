@@ -1258,7 +1258,7 @@ PRInt32 nsSmtpProtocol::LoadURL(nsIURL * aURL)
 	nsresult rv = NS_OK;
     PRInt32 status = 0; 
 	m_continuationResponse = -1;  /* init */
-	nsISmtpUrl * smtpUrl = nsnull;
+	//nsISmtpUrl * smtpUrl = nsnull;
 	HG77067
 
 	if (aURL)
