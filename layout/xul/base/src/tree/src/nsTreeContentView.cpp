@@ -234,7 +234,7 @@ nsOutlinerContentView::GetCellProperties(PRInt32 aRow, const PRUnichar* aColID, 
 
   Row* row = (Row*)mRows[aRow];
   nsCOMPtr<nsIContent> realRow;
-  GetImmediateChild(row->mContent, nsXULAtoms::outlinerrow, getter_AddRefs(realRow));
+  nsOutlinerUtils::GetImmediateChild(row->mContent, nsXULAtoms::outlinerrow, getter_AddRefs(realRow));
   if (realRow) {
     nsCOMPtr<nsIContent> cell;
     GetNamedCell(realRow, aColID, getter_AddRefs(cell));
@@ -417,7 +417,7 @@ nsOutlinerContentView::GetCellText(PRInt32 aRow, const PRUnichar* aColID, nsAStr
 
   Row* row = (Row*)mRows[aRow];
   nsCOMPtr<nsIContent> realRow;
-  GetImmediateChild(row->mContent, nsXULAtoms::outlinerrow, getter_AddRefs(realRow));
+  nsOutlinerUtils::GetImmediateChild(row->mContent, nsXULAtoms::outlinerrow, getter_AddRefs(realRow));
   if (realRow) {
     nsCOMPtr<nsIContent> cell;
     GetNamedCell(realRow, aColID, getter_AddRefs(cell));
@@ -444,15 +444,13 @@ nsOutlinerContentView::ToggleOpenState(PRInt32 aIndex)
   if (aIndex < 0 || aIndex >= mRows.Count())
     return NS_ERROR_INVALID_ARG;   
 
+  // We don't serialize content right here, since content might be generated
+  // lazily.
   Row* row = (Row*)mRows[aIndex];
-  if (row->IsOpen()) {
-    CloseContainer(aIndex);
-    row->mContent->UnsetAttr(kNameSpaceID_None, nsXULAtoms::open, PR_FALSE);
-  }
-  else {
-    OpenContainer(aIndex);
-    row->mContent->SetAttr(kNameSpaceID_None, nsXULAtoms::open, NS_LITERAL_STRING("true"), PR_FALSE);
-  }
+  if (row->IsOpen())
+    row->mContent->UnsetAttr(kNameSpaceID_None, nsXULAtoms::open, PR_TRUE);
+  else
+    row->mContent->SetAttr(kNameSpaceID_None, nsXULAtoms::open, NS_LITERAL_STRING("true"), PR_TRUE);
 
   return NS_OK;
 }
@@ -544,8 +542,12 @@ nsOutlinerContentView::SetRoot(nsIDOMElement* aRoot)
       mDocument = document;
     }
 
-    PRInt32 index = 0;
-    Serialize(mRoot, -1, &index, mRows);
+    nsCOMPtr<nsIContent> child;
+    nsOutlinerUtils::GetImmediateChild(mRoot, nsXULAtoms::outlinerchildren, getter_AddRefs(child));
+    if (child) {
+      PRInt32 index = 0;
+      Serialize(child, -1, &index, mRows);
+    }
   }
 
   return NS_OK;
@@ -926,7 +928,7 @@ nsOutlinerContentView::SerializeItem(nsIContent* aContent, PRInt32 aParentIndex,
   aRows.AppendElement(row);
 
   nsCOMPtr<nsIContent> realRow;
-  GetImmediateChild(aContent, nsXULAtoms::outlinerrow, getter_AddRefs(realRow));
+  nsOutlinerUtils::GetImmediateChild(aContent, nsXULAtoms::outlinerrow, getter_AddRefs(realRow));
   if (realRow)
     ParseProperties(realRow, &row->mProperty);
 
@@ -939,7 +941,7 @@ nsOutlinerContentView::SerializeItem(nsIContent* aContent, PRInt32 aParentIndex,
     if (open.Equals(NS_LITERAL_STRING("true"))) {
       row->SetOpen(PR_TRUE);
       nsCOMPtr<nsIContent> child;
-      GetImmediateChild(aContent, nsXULAtoms::outlinerchildren, getter_AddRefs(child));
+      nsOutlinerUtils::GetImmediateChild(aContent, nsXULAtoms::outlinerchildren, getter_AddRefs(child));
       if (child) {
         // Now, recursively serialize our child.
         PRInt32 count = aRows.Count();
@@ -985,7 +987,7 @@ nsOutlinerContentView::GetIndexInSubtree(nsIContent* aContainer, nsIContent* aCo
         content->GetAttr(kNameSpaceID_None, nsXULAtoms::open, open);
         if (open.Equals(NS_LITERAL_STRING("true"))) {
           nsCOMPtr<nsIContent> child;
-          GetImmediateChild(content, nsXULAtoms::outlinerchildren, getter_AddRefs(child));
+          nsOutlinerUtils::GetImmediateChild(content, nsXULAtoms::outlinerchildren, getter_AddRefs(child));
           if (child)
             GetIndexInSubtree(child, aContent, aIndex);
         }
@@ -1001,7 +1003,7 @@ nsOutlinerContentView::EnsureSubtree(PRInt32 aIndex, PRInt32* aCount)
 {
   Row* row = (Row*)mRows[aIndex];
   nsCOMPtr<nsIContent> child;
-  GetImmediateChild(row->mContent, nsXULAtoms::outlinerchildren, getter_AddRefs(child));
+  nsOutlinerUtils::GetImmediateChild(row->mContent, nsXULAtoms::outlinerchildren, getter_AddRefs(child));
   if (! child) {
     *aCount = 0;
     return;
@@ -1018,7 +1020,7 @@ nsOutlinerContentView::EnsureSubtree(PRInt32 aIndex, PRInt32* aCount)
 
   // Update parent indexes, but skip newly added rows.
   // They already have correct values.
-  UpdateParentIndexes(aIndex, count, count);
+  UpdateParentIndexes(aIndex, count + 1, count);
 
   *aCount = count;
 }
@@ -1103,6 +1105,7 @@ nsOutlinerContentView::OpenContainer(PRInt32 aIndex)
 
   PRInt32 count;
   EnsureSubtree(aIndex, &count);
+  mBoxObject->InvalidateRow(aIndex);
   mBoxObject->RowCountChanged(aIndex + 1, count);
 }
 
@@ -1115,6 +1118,7 @@ nsOutlinerContentView::CloseContainer(PRInt32 aIndex)
 
   PRInt32 count;
   RemoveSubtree(aIndex, &count);
+  mBoxObject->InvalidateRow(aIndex);
   mBoxObject->RowCountChanged(aIndex + 1, -count);
 }
 
@@ -1150,87 +1154,10 @@ nsOutlinerContentView::UpdateParentIndexes(PRInt32 aIndex, PRInt32 aSkip, PRInt3
 }
 
 nsresult
-nsOutlinerContentView::GetImmediateChild(nsIContent* aContainer, nsIAtom* aTag, nsIContent** aResult)
-{
-  PRInt32 childCount;
-  aContainer->ChildCount(childCount);
-  for (PRInt32 i = 0; i < childCount; i++) {
-    nsCOMPtr<nsIContent> child;
-    aContainer->ChildAt(i, *getter_AddRefs(child));
-    nsCOMPtr<nsIAtom> tag;
-    child->GetTag(*getter_AddRefs(tag));
-    if (tag == aTag) {
-      NS_ADDREF(*aResult = child);
-      return NS_OK;
-    }
-  }
-
-  *aResult = nsnull;
-  return NS_OK;
-}
-
-nsresult
-nsOutlinerContentView::GetColIndex(const PRUnichar* aColID, PRInt32* aResult)
-{
-  *aResult = -1;
-
-  // First, try to find col index by already set "colIndex" attribute.
-  nsCOMPtr<nsIDOMDocument> domDocument = do_QueryInterface(mDocument);
-  nsCOMPtr<nsIDOMElement> domElement;
-  domDocument->GetElementById(nsDependentString(aColID), getter_AddRefs(domElement));
-  if (domElement) {
-    nsAutoString colIndexValue;
-    domElement->GetAttribute(NS_LITERAL_STRING("colIndex"), colIndexValue);
-    if (colIndexValue.Length()) {
-      PRInt32 rv;
-      *aResult = colIndexValue.ToInteger(&rv);
-    }
-  }
-
-  if (*aResult == -1) {
-    // No "colIndex" attribute, traverse through cols
-    nsCOMPtr<nsIContent> parent;
-    mRoot->GetParent(*getter_AddRefs(parent));
-    if (parent) {
-      nsCOMPtr<nsIContent> cols;
-      GetImmediateChild(parent, nsXULAtoms::outlinercols, getter_AddRefs(cols));
-      if (cols) {
-        PRInt32 childCount;
-        cols->ChildCount(childCount);
-        PRInt32 index = 0;
-        for (PRInt32 i = 0; i < childCount; i++) {
-          nsCOMPtr<nsIContent> child;
-          cols->ChildAt(i, *getter_AddRefs(child));
-          nsCOMPtr<nsIAtom> tag;
-          child->GetTag(*getter_AddRefs(tag));
-          if (tag == nsXULAtoms::outlinercol) {
-            nsAutoString id;
-            child->GetAttr(kNameSpaceID_None, nsHTMLAtoms::id, id);
-            if (id.Equals(aColID)) {
-              // Found it, set "colIndex" attribute to speed up next call.
-              nsCOMPtr<nsIAtom> colIndexAtom;
-              colIndexAtom = dont_AddRef(NS_NewAtom(NS_LITERAL_STRING("colIndex")));
-              nsAutoString colIndexValue;
-              colIndexValue.AppendInt(index);
-              child->SetAttr(kNameSpaceID_None, colIndexAtom, colIndexValue, PR_FALSE);
-              *aResult = index;
-              break;
-            }
-            index++;
-          }
-        }
-      }
-    }
-  }
-
-  return NS_OK;
-}
-
-nsresult
 nsOutlinerContentView::GetNamedCell(nsIContent* aContainer, const PRUnichar* aColID, nsIContent** aResult)
 {
   PRInt32 colIndex;
-  GetColIndex(aColID, &colIndex);
+  mBoxObject->GetColumnIndex(aColID, &colIndex);
 
   // Traverse through cells, try to find the cell by "ref" attribute or by cell
   // index in a row. "ref" attribute has higher priority.
@@ -1246,7 +1173,7 @@ nsOutlinerContentView::GetNamedCell(nsIContent* aContainer, const PRUnichar* aCo
     if (tag == nsXULAtoms::outlinercell) {
       nsAutoString ref;
       cell->GetAttr(kNameSpaceID_None, nsXULAtoms::ref, ref);
-      if (ref.Equals(aColID)) {
+      if (!ref.IsEmpty() && ref.Equals(aColID)) {
         *aResult = cell;
         break;
       }

@@ -75,6 +75,11 @@ interface nsIOutlinerBoxObject : nsISupports
   readonly attribute long rowHeight;
 
   /**
+   * Get the index of the specified column.
+   */
+  long getColumnIndex(in wstring colID);
+
+  /**
    * Get the index of the first visible row.
    */
   long getFirstVisibleRow();
@@ -118,6 +123,7 @@ interface nsIOutlinerBoxObject : nsISupports
    * Invalidation methods for fine-grained painting control.
    */
   void invalidate();
+  void invalidateColumn(in wstring colID);
   void invalidateRow(in long index);
   void invalidateCell(in long row, in wstring colID);
   void invalidateRange(in long startIndex, in long endIndex);

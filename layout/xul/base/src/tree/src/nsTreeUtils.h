@@ -41,6 +41,7 @@
 
 #include "nsString.h"
 #include "nsISupportsArray.h"
+#include "nsIContent.h"
 
 class nsOutlinerUtils
 {
@@ -51,6 +52,9 @@ class nsOutlinerUtils
      */
     static nsresult
     TokenizeProperties(const nsAString& aProperties, nsISupportsArray* aPropertiesArray);
+
+    static nsresult
+    GetImmediateChild(nsIContent* aContainer, nsIAtom* aTag, nsIContent** aResult);
 };
 
 #endif // nsOutlinerUtils_h__

@@ -1514,7 +1514,7 @@ nsXULContentBuilder::IsLazyWidgetItem(nsIContent* aElement)
     if ((tag.get() == nsXULAtoms::tree) || (tag.get() == nsXULAtoms::treeitem) ||
         (tag.get() == nsXULAtoms::menu) || (tag.get() == nsXULAtoms::menulist) ||
         (tag.get() == nsXULAtoms::menubutton) || (tag.get() == nsXULAtoms::toolbarbutton) ||
-        (tag.get() == nsXULAtoms::button))
+        (tag.get() == nsXULAtoms::button) || (tag == nsXULAtoms::outlineritem))
         return PR_TRUE;
 
     return PR_FALSE;

@@ -1295,7 +1295,7 @@ nsXULOutlinerBuilder::CompileCondition(nsIAtom* aTag,
 {
     nsresult rv;
 
-    if (aTag == nsXULAtoms::outlinerrow)
+    if (aTag == nsXULAtoms::outlineritem)
         rv = CompileOutlinerRowCondition(aRule, aCondition, aParentNode, aResult);
     else
         rv = nsXULTemplateBuilder::CompileCondition(aTag, aRule, aCondition, aParentNode, aResult);
@@ -1309,9 +1309,9 @@ nsXULOutlinerBuilder::CompileOutlinerRowCondition(nsTemplateRule* aRule,
                                                   InnerNode* aParentNode,
                                                   TestNode** aResult)
 {
-    // Compile a <outlinerrow> condition, which must be of the form:
+    // Compile a <outlineritem> condition, which must be of the form:
     //
-    //   <outlinerrow uri="?uri" />
+    //   <outlineritem uri="?uri" />
     //
     // Right now, exactly one <row> condition is required per rule. It
     // creates an nsOutlinerRowTestNode, binding the test's variable
@@ -1367,9 +1367,17 @@ nsXULOutlinerBuilder::GetTemplateActionRowFor(PRInt32 aRow, nsIContent** aResult
     nsCOMPtr<nsIContent> action;
     row.mMatch->mRule->GetContent(getter_AddRefs(action));
 
-    return nsXULContentUtils::FindChildByTag(action, kNameSpaceID_XUL,
-                                             nsXULAtoms::outlinerrow,
-                                             aResult);
+    nsCOMPtr<nsIContent> children;
+    nsXULContentUtils::FindChildByTag(action, kNameSpaceID_XUL, nsXULAtoms::outlinerchildren, getter_AddRefs(children));
+    if (children) {
+        nsCOMPtr<nsIContent> item;
+        nsXULContentUtils::FindChildByTag(children, kNameSpaceID_XUL, nsXULAtoms::outlineritem, getter_AddRefs(item));
+        if (item)
+            return nsXULContentUtils::FindChildByTag(item, kNameSpaceID_XUL, nsXULAtoms::outlinerrow, aResult);
+    }
+
+    *aResult = nsnull;
+    return NS_OK;
 }
 
 nsresult
@@ -1377,37 +1385,37 @@ nsXULOutlinerBuilder::GetTemplateActionCellFor(PRInt32 aRow,
                                                const PRUnichar* aColID,
                                                nsIContent** aResult)
 {
+    *aResult = nsnull;
+
     nsCOMPtr<nsIContent> row;
     GetTemplateActionRowFor(aRow, getter_AddRefs(row));
     if (row) {
+        PRInt32 colIndex;
+        mBoxObject->GetColumnIndex(aColID, &colIndex);
+
         PRInt32 count;
         row->ChildCount(count);
-
+        PRInt32 j = 0;
         for (PRInt32 i = 0; i < count; ++i) {
             nsCOMPtr<nsIContent> child;
             row->ChildAt(i, *getter_AddRefs(child));
-
-            if (! child)
-                continue;
-
-            // XXX get base tag here?
             nsCOMPtr<nsIAtom> tag;
             child->GetTag(*getter_AddRefs(tag));
-
-            if (tag != nsXULAtoms::outlinercell)
-                continue;
-
-            nsAutoString ref;
-            child->GetAttr(kNameSpaceID_None, nsXULAtoms::ref, ref);
-
-            if (ref.Equals(aColID)) {
-                NS_ADDREF(*aResult = child.get());
-                return NS_OK;
+            if (tag == nsXULAtoms::outlinercell) {
+                nsAutoString ref;
+                child->GetAttr(kNameSpaceID_None, nsXULAtoms::ref, ref);
+                if (!ref.IsEmpty() && ref.Equals(aColID)) {
+                    *aResult = child;
+                    break;
+                }
+                else if (j == colIndex)
+                    *aResult = child;
+                j++;
             }
         }
     }
+    NS_IF_ADDREF(*aResult);
 
-    *aResult = nsnull;
     return NS_OK;
 }
 

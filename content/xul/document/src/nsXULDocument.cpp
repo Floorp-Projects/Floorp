@@ -6385,41 +6385,50 @@ nsXULDocument::CheckTemplateBuilder(nsIContent* aElement)
     if (xblService)
         xblService->ResolveTag(aElement, &nameSpaceID, getter_AddRefs(baseTag));
 
+    // By default, we build content for outliner and then we attach
+    // the outliner content view.
+    // Flag "dont-build-content" is used to identify that we shouldn't build
+    // content and just attach the outliner builder view.
     if ((nameSpaceID == kNameSpaceID_XUL) &&
         (baseTag.get() == nsXULAtoms::outlinerbody)) {
-        nsCOMPtr<nsIXULTemplateBuilder> builder =
-            do_CreateInstance("@mozilla.org/xul/xul-outliner-builder;1");
+        nsAutoString flags;
+        aElement->GetAttr(kNameSpaceID_None, nsXULAtoms::flags, flags);
+        if (flags.Find(NS_LITERAL_STRING("dont-build-content").get()) >= 0) {
+            nsCOMPtr<nsIXULTemplateBuilder> builder =
+                do_CreateInstance("@mozilla.org/xul/xul-outliner-builder;1");
 
-        if (! builder)
-            return NS_ERROR_FAILURE;
+            if (! builder)
+                return NS_ERROR_FAILURE;
 
-        // Because the outliner box object won't be created until the
-        // frame is available, we need to tuck the template builder
-        // away in the binding manager so there's at least one
-        // reference to it.
-        nsCOMPtr<nsIXULDocument> xuldoc = do_QueryInterface(doc);
-        if (xuldoc)
-            xuldoc->SetTemplateBuilderFor(aElement, builder);
+            // Because the outliner box object won't be created until the
+            // frame is available, we need to tuck the template builder
+            // away in the binding manager so there's at least one
+            // reference to it.
+            nsCOMPtr<nsIXULDocument> xuldoc = do_QueryInterface(doc);
+            if (xuldoc)
+                xuldoc->SetTemplateBuilderFor(aElement, builder);
+
+            return NS_OK;
+        }
+    }
+
+    nsCOMPtr<nsIRDFContentModelBuilder> builder
+        = do_CreateInstance("@mozilla.org/xul/xul-template-builder;1");
+
+    if (! builder)
+        return NS_ERROR_FAILURE;
+
+    builder->SetRootContent(aElement);
+
+    nsCOMPtr<nsIXULContent> xulcontent = do_QueryInterface(aElement);
+    if (xulcontent) {
+        // Mark the XUL element as being lazy, so the template builder
+        // will run when layout first asks for these nodes.
+        xulcontent->SetLazyState(nsIXULContent::eChildrenMustBeRebuilt);
     }
     else {
-        nsCOMPtr<nsIRDFContentModelBuilder> builder
-            = do_CreateInstance("@mozilla.org/xul/xul-template-builder;1");
-
-        if (! builder)
-            return NS_ERROR_FAILURE;
-
-        builder->SetRootContent(aElement);
-
-        nsCOMPtr<nsIXULContent> xulcontent = do_QueryInterface(aElement);
-        if (xulcontent) {
-            // Mark the XUL element as being lazy, so the template builder
-            // will run when layout first asks for these nodes.
-            xulcontent->SetLazyState(nsIXULContent::eChildrenMustBeRebuilt);
-        }
-        else {
-            // Force construction of immediate template sub-content _now_.
-            builder->CreateContents(aElement);
-        }
+        // Force construction of immediate template sub-content _now_.
+        builder->CreateContents(aElement);
     }
 
     return NS_OK;
