@@ -2982,8 +2982,33 @@ GlobalWindowImpl::Open(nsIDOMWindow **_retval)
     }
   }
 
-  return OpenInternal(url, name, options, PR_FALSE, nsnull, 0, nsnull,
-                      _retval);
+  rv = OpenInternal(url, name, options, PR_FALSE, nsnull, 0, nsnull, _retval);
+
+  nsCOMPtr<nsIDOMChromeWindow> chrome_win(do_QueryInterface(*_retval));
+
+  if (NS_SUCCEEDED(rv) && !chrome_win) {
+    // A new non-chrome window was created from a call to
+    // window.open() from JavaScript, make sure there's a document in
+    // the new window. We do this by simply asking the new window for
+    // its document, this will synchronously create an empty document
+    // if there is no document in the window.
+
+#ifdef DEBUG_jst
+    {
+      nsCOMPtr<nsPIDOMWindow> pidomwin(do_QueryInterface(*_retval));
+
+      nsCOMPtr<nsIDOMDocument> temp;
+      pidomwin->GetExtantDocument(getter_AddRefs(temp));
+
+      NS_ASSERTION(temp, "No document in new window!!!");
+    }
+#endif
+
+    nsCOMPtr<nsIDOMDocument> doc;
+    (*_retval)->GetDocument(getter_AddRefs(doc));
+  }
+
+  return rv;
 }
 
 // like Open, but attaches to the new window any extra parameters past
@@ -4288,11 +4313,8 @@ GlobalWindowImpl::OpenInternal(const nsAString& aUrl,
                                nsISupports *aExtraArgument,
                                nsIDOMWindow **aReturn)
 {
-  nsCOMPtr<nsIDOMWindow> domReturn;
-  char *features = nsnull;
-  char *name = nsnull;
-  char *url = nsnull;
   nsresult rv = NS_OK;
+  nsXPIDLCString url;
 
   *aReturn = nsnull;
 
@@ -4331,51 +4353,47 @@ GlobalWindowImpl::OpenInternal(const nsAString& aUrl,
         escapedURL = unescapedURL;
     }
 
-    if (!escapedURL.IsEmpty())
-      url = ToNewCString(escapedURL);
+    if (!escapedURL.IsEmpty()) {
+      CopyUCS2toASCII(escapedURL, url);
+    }
 
     /* Check whether the URI is allowed, but not for dialogs --
        see bug 56851. The security of this function depends on
        window.openDialog being inaccessible from web scripts */
-    if (url && !aDialog)
-      rv = SecurityCheckURL(url);
+    if (url.get() && !aDialog)
+      rv = SecurityCheckURL(url.get());
   }
 
-  if (!aName.IsEmpty()) {
-    name = ToNewUTF8String(aName);
-  }
-
-  if (!aOptions.IsEmpty() /* IsNullDOMString(aOptions) */) {
-    features = ToNewUTF8String(aOptions);
-  }
+  nsCOMPtr<nsIDOMWindow> domReturn;
 
   if (NS_SUCCEEDED(rv)) {
-    nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService(NS_WINDOWWATCHER_CONTRACTID, &rv));
+    nsCOMPtr<nsIWindowWatcher> wwatch =
+      do_GetService(NS_WINDOWWATCHER_CONTRACTID, &rv);
+
     if (wwatch) {
+      NS_ConvertUCS2toUTF8 options(aOptions);
+      NS_ConvertUCS2toUTF8 name(aName);
+
+      const char *options_ptr = aOptions.IsEmpty() ? nsnull : options.get();
+      const char *name_ptr = aName.IsEmpty() ? nsnull : name.get();
+
       if (argc) {
         nsCOMPtr<nsPIWindowWatcher> pwwatch(do_QueryInterface(wwatch));
         NS_ENSURE_TRUE(pwwatch, NS_ERROR_UNEXPECTED);
 
-        PRUint32 extraArgc = argc >= 3 ? argc-3 : 0;
-        rv = pwwatch->OpenWindowJS(this, url, name, features, aDialog,
-                                   extraArgc, argv+3,
+        PRUint32 extraArgc = argc >= 3 ? argc - 3 : 0;
+        rv = pwwatch->OpenWindowJS(this, url.get(), name_ptr, options_ptr,
+                                   aDialog, extraArgc, argv + 3,
                                    getter_AddRefs(domReturn));
       } else {
-        rv = wwatch->OpenWindow(this, url, name, features, aExtraArgument,
-                                getter_AddRefs(domReturn));
+        rv = wwatch->OpenWindow(this, url.get(), name_ptr, options_ptr,
+                                aExtraArgument, getter_AddRefs(domReturn));
       }
 
       if (domReturn)
         CallQueryInterface(domReturn, aReturn);
     }
   }
-
-  if (features)
-    nsMemory::Free(features);
-  if (name)
-    nsMemory::Free(name);
-  if (url)
-    nsMemory::Free(url);
 
   return rv;
 }
