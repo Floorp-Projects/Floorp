@@ -289,6 +289,7 @@
     </content>
     <implementation>
       <property name="internalAttribute">null</property>
+      <property name="internalValue">null</property>
       <!-- parentValue forwards to the attribute -->
       <property name="parentValue" onset="return this.searchAttribute=val;"
                                    onget="return this.searchAttribute;"/>
@@ -400,6 +401,8 @@
   </binding>
   <binding id="searchterm" name="searchTerm" extends="xul:box">
     <implementation>
+      <property name="internalSearchTerm">null</property>
+      <property name="internalBooleanAnd">null</property>
       <!-- the actual nsIMsgSearchTerm object -->
       <property name="searchTerm" onget="return this.internalSearchTerm">
         <setter>
