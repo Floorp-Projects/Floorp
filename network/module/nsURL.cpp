@@ -633,16 +633,13 @@ nsIInputStream* URLImpl::Open(PRInt32* aErrorCode)
     PR_Free(fileName);
   } 
 
-    nsINetService *service;
-
-    rv = nsServiceManager::GetService(kNetServiceCID,
-                                          kINetServiceIID,
-                                          (nsISupports **)&inet);
-
+  rv = nsServiceManager::GetService(kNetServiceCID,
+                                    kINetServiceIID,
+                                    (nsISupports **)&inet);
   if (NS_OK == rv) {
     rv = inet->OpenBlockingStream(this, NULL, &in);
+    NS_RELEASE(inet);
   }
-  NS_IF_RELEASE(inet);
 
   *aErrorCode = rv;
   return in;
@@ -663,12 +660,12 @@ nsresult URLImpl::Open(nsIStreamListener *aListener)
   } 
 
   rv = nsServiceManager::GetService(kNetServiceCID,
-                                          kINetServiceIID,
-                                          (nsISupports **)&inet);
+                                    kINetServiceIID,
+                                    (nsISupports **)&inet);
   if (NS_OK == rv) {
     rv = inet->OpenStream(this, aListener);
+    NS_RELEASE(inet);
   }
-  NS_IF_RELEASE(inet);
   return rv;
 }
 
