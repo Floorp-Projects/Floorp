@@ -71,16 +71,16 @@ nsHeaderEntry::GetValue(char ** aResult)
 
 nsHTTPHeaderArray::nsHTTPHeaderArray()
 {
-  (void)NS_NewISupportsArray(getter_AddRefs(m_pHTTPHeaders));
+  (void)NS_NewISupportsArray(getter_AddRefs(mHTTPHeaders));
 }
 
 
 nsHTTPHeaderArray::~nsHTTPHeaderArray()
 {
-  if (m_pHTTPHeaders) {
-    m_pHTTPHeaders->Clear();
+  if (mHTTPHeaders) {
+    mHTTPHeaders->Clear();
   }
-  m_pHTTPHeaders = null_nsCOMPtr();
+  mHTTPHeaders = null_nsCOMPtr();
 }
 
 
@@ -89,8 +89,8 @@ nsresult nsHTTPHeaderArray::SetHeader(nsIAtom* aHeader, const char* aValue)
   nsHeaderEntry *entry = nsnull;
   PRInt32 i;
 
-  NS_ASSERTION(m_pHTTPHeaders, "header array doesn't exist.");
-  if (!m_pHTTPHeaders) {
+  NS_ASSERTION(mHTTPHeaders, "header array doesn't exist.");
+  if (!mHTTPHeaders) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
@@ -100,7 +100,7 @@ nsresult nsHTTPHeaderArray::SetHeader(nsIAtom* aHeader, const char* aValue)
   //
   if (!aValue) {
     if (entry) {
-      m_pHTTPHeaders->RemoveElementAt(i);
+      mHTTPHeaders->RemoveElementAt(i);
       NS_RELEASE(entry);
     }
     return NS_OK;
@@ -115,7 +115,7 @@ nsresult nsHTTPHeaderArray::SetHeader(nsIAtom* aHeader, const char* aValue)
       return NS_ERROR_OUT_OF_MEMORY;
     }
     NS_ADDREF(entry);
-    m_pHTTPHeaders->AppendElement(entry);
+    mHTTPHeaders->AppendElement(entry);
   } 
   // 
   // Append the new value to the existing string
@@ -141,8 +141,8 @@ nsresult nsHTTPHeaderArray::GetHeader(nsIAtom* aHeader, char* *aResult)
 
   *aResult = nsnull;
 
-  NS_ASSERTION(m_pHTTPHeaders, "header array doesn't exist.");
-  if (!m_pHTTPHeaders) {
+  NS_ASSERTION(mHTTPHeaders, "header array doesn't exist.");
+  if (!mHTTPHeaders) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
@@ -166,12 +166,12 @@ PRInt32 nsHTTPHeaderArray::GetEntry(nsIAtom* aHeader, nsHeaderEntry** aResult)
   *aResult = nsnull;  
 
   count = 0;
-  (void)m_pHTTPHeaders->Count(&count);
+  (void)mHTTPHeaders->Count(&count);
   for (i = 0; i < count; i++) {
     nsISupports *entry = nsnull;
     nsHeaderEntry* element;
     
-    entry   = m_pHTTPHeaders->ElementAt(i);
+    entry   = mHTTPHeaders->ElementAt(i);
     element = NS_STATIC_CAST(nsHeaderEntry*, entry);
     if (aHeader == element->mAtom.get()) {
       *aResult = element;
@@ -188,12 +188,12 @@ nsresult nsHTTPHeaderArray::GetEnumerator(nsISimpleEnumerator** aResult)
   nsresult rv = NS_OK;
   nsISimpleEnumerator* enumerator;
 
-  NS_ASSERTION(m_pHTTPHeaders, "header array doesn't exist.");
-  if (!m_pHTTPHeaders) {
+  NS_ASSERTION(mHTTPHeaders, "header array doesn't exist.");
+  if (!mHTTPHeaders) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  enumerator = new nsHTTPHeaderEnumerator(m_pHTTPHeaders);
+  enumerator = new nsHTTPHeaderEnumerator(mHTTPHeaders);
   if (enumerator) {
     NS_ADDREF(enumerator);
   } else {

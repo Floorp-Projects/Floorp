@@ -107,14 +107,14 @@ public:
     nsresult            SetContentType(const char* aContentType);
 
 protected:
-    nsCOMPtr<nsIURI>            m_URI;
-    PRBool                      m_bConnected; 
-    nsCOMPtr<nsHTTPHandler>     m_pHandler;
-    HTTPState                   m_State;
-    nsCOMPtr<nsIHTTPEventSink>  m_pEventSink;
-    nsHTTPRequest*              m_pRequest;
-    nsHTTPResponse*             m_pResponse;
-    nsIStreamListener*          m_pResponseDataListener;
+    nsCOMPtr<nsIURI>            mURI;
+    PRBool                      mConnected; 
+    nsCOMPtr<nsHTTPHandler>     mHandler;
+    HTTPState                   mState;
+    nsCOMPtr<nsIHTTPEventSink>  mEventSink;
+    nsHTTPRequest*              mRequest;
+    nsHTTPResponse*             mResponse;
+    nsIStreamListener*          mResponseDataListener;
     PRUint32                    mLoadAttributes;
 
     nsCOMPtr<nsISupports>       mResponseContext;

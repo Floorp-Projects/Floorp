@@ -147,13 +147,13 @@ protected:
         return methods[i_Method];
     }
 
-    HTTPMethod                  m_Method;
-    nsCOMPtr<nsIURL>            m_pURI;
-    HTTPVersion                 m_Version;
+    HTTPMethod                  mMethod;
+    nsCOMPtr<nsIURL>            mURI;
+    HTTPVersion                 mVersion;
     // The actual request stream! 
-    nsIBufferInputStream*       m_Request; 
-    nsIChannel*                 m_pTransport;
-    nsHTTPChannel*              m_pConnection;
+    nsIBufferInputStream*       mRequest; 
+    nsIChannel*                 mTransport;
+    nsHTTPChannel*              mConnection;
 
     nsHTTPHeaderArray           mHeaders;
 };

@@ -146,7 +146,7 @@ private:
 
 	// This is the array of connections that the handler thread maintains to 
     // verify unique requests. 
-	nsCOMPtr<nsISupportsArray> m_pConnections;
+	nsCOMPtr<nsISupportsArray> mConnections;
     nsCOMPtr<nsISupportsArray> mPendingChannelList;
     nsCOMPtr<nsISupportsArray> mTransportList;
 };

@@ -41,10 +41,10 @@ void ReplaceDotMess(char* io_Path);
 class nsParsePath
 {
 public:
-	nsParsePath(nsStdURL* i_URL): m_URL(i_URL) {}
-	virtual ~nsParsePath() {m_URL->ParsePath();}
+	nsParsePath(nsStdURL* i_URL): mURL(i_URL) {}
+	virtual ~nsParsePath() {mURL->ParsePath();}
 private:
-	nsStdURL* m_URL;
+	nsStdURL* mURL;
 };
 
 nsStdURL::nsStdURL(const char* i_Spec, nsISupports* outer)
