@@ -161,8 +161,7 @@ public:
     NS_DECL_NSISAFEFILEOUTPUTSTREAM
 
     nsSafeFileOutputStream() :
-        mWriteSucceeded(PR_FALSE), 
-        mInternalWriteSucceeded(PR_TRUE) {}
+        mWriteResult(NS_OK) {}
 
     virtual ~nsSafeFileOutputStream() { nsSafeFileOutputStream::Close(); }
 
@@ -174,9 +173,8 @@ protected:
     nsCOMPtr<nsIFile>         mTargetFile;
     nsCOMPtr<nsIFile>         mTempFile;
 
-    PRBool mTargetFileExists;
-    PRBool mWriteSucceeded;         // Consumer reported
-    PRBool mInternalWriteSucceeded; // Internally detected in Write()
+    PRBool   mTargetFileExists;
+    nsresult mWriteResult; // Internally set in Write()
 };
 
 ////////////////////////////////////////////////////////////////////////////////
