@@ -24,6 +24,7 @@
 #include "nsIDOMEventReceiver.h"
 #include "nsIHTMLContent.h"
 #include "nsGenericHTMLElement.h"
+#include "nsILink.h"
 #include "nsHTMLAtoms.h"
 #include "nsHTMLIIDs.h"
 #include "nsIStyleContext.h"
@@ -33,6 +34,8 @@
 #include "nsIDOMStyleSheet.h"
 #include "nsIStyleSheet.h"
 #include "nsIStyleSheetLinkingElement.h"
+#include "nsHTMLUtils.h"
+#include "nsIURL.h"
 
 static NS_DEFINE_IID(kIDOMHTMLLinkElementIID, NS_IDOMHTMLLINKELEMENT_IID);
 static NS_DEFINE_IID(kIStyleSheetLinkingElementIID, NS_ISTYLESHEETLINKINGELEMENT_IID);
@@ -40,6 +43,7 @@ static NS_DEFINE_IID(kIDOMStyleSheetIID, NS_IDOMSTYLESHEET_IID);
 
 class nsHTMLLinkElement : public nsIDOMHTMLLinkElement,
                           public nsIJSScriptObject,
+                          public nsILink,
                           public nsIHTMLContent,
                           public nsIStyleSheetLinkingElement
 {
@@ -82,6 +86,11 @@ public:
   // nsIJSScriptObject
   NS_IMPL_IJSSCRIPTOBJECT_USING_GENERIC(mInner)
 
+  // nsILink
+  NS_IMETHOD    GetLinkState(nsLinkState &aState);
+  NS_IMETHOD    SetLinkState(nsLinkState aState);
+  NS_IMETHOD    GetHrefCString(char* &aBuf);
+
   // nsIContent
   NS_IMPL_ICONTENT_USING_GENERIC(mInner)
 
@@ -95,6 +104,9 @@ public:
 protected:
   nsGenericHTMLLeafElement mInner;
   nsIStyleSheet* mStyleSheet;
+
+  // The cached visited state
+  nsLinkState mLinkState;
 };
 
 nsresult
@@ -113,15 +125,18 @@ NS_NewHTMLLinkElement(nsIHTMLContent** aInstancePtrResult,
 
 
 nsHTMLLinkElement::nsHTMLLinkElement(nsINodeInfo *aNodeInfo)
+  : mLinkState(eLinkState_Unknown)
 {
   NS_INIT_REFCNT();
   mInner.Init(this, aNodeInfo);
   mStyleSheet = nsnull;
+  nsHTMLUtils::AddRef(); // for GetHrefCString
 }
 
 nsHTMLLinkElement::~nsHTMLLinkElement()
 {
   NS_IF_RELEASE(mStyleSheet);
+  nsHTMLUtils::Release(); // for GetHrefCString
 }
 
 NS_IMPL_ADDREF(nsHTMLLinkElement)
@@ -141,6 +156,11 @@ nsHTMLLinkElement::QueryInterface(REFNSIID aIID, void** aInstancePtr)
   if (aIID.Equals(kIStyleSheetLinkingElementIID)) {
     nsIStyleSheetLinkingElement* tmp = this;
     *aInstancePtr = (void*) tmp;
+    NS_ADDREF_THIS();
+    return NS_OK;
+  }
+  if (aIID.Equals(NS_GET_IID(nsILink))) {
+    *aInstancePtr = (void*)(nsILink*) this;
     NS_ADDREF_THIS();
     return NS_OK;
   }
@@ -198,13 +218,36 @@ nsHTMLLinkElement::SetDisabled(PRBool aDisabled)
 }
 
 NS_IMPL_STRING_ATTR(nsHTMLLinkElement, Charset, charset)
-NS_IMPL_STRING_ATTR(nsHTMLLinkElement, Href, href)
 NS_IMPL_STRING_ATTR(nsHTMLLinkElement, Hreflang, hreflang)
 NS_IMPL_STRING_ATTR(nsHTMLLinkElement, Media, media)
 NS_IMPL_STRING_ATTR(nsHTMLLinkElement, Rel, rel)
 NS_IMPL_STRING_ATTR(nsHTMLLinkElement, Rev, rev)
 NS_IMPL_STRING_ATTR(nsHTMLLinkElement, Target, target)
 NS_IMPL_STRING_ATTR(nsHTMLLinkElement, Type, type)
+
+NS_IMETHODIMP
+nsHTMLLinkElement::GetHref(nsString& aValue)
+{
+  char *buf;
+  nsresult rv = GetHrefCString(buf);
+  if (NS_FAILED(rv)) return rv;
+  if (buf) {
+    aValue.AssignWithConversion(buf);
+    nsCRT::free(buf);
+  }
+  // NS_IMPL_STRING_ATTR does nothing where we have (buf == null)
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHTMLLinkElement::SetHref(const nsString& aValue)
+{
+  // Clobber our "cache", so we'll recompute it the next time
+  // somebody asks for it.
+  mLinkState = eLinkState_Unknown;
+
+  return mInner.SetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::href, aValue, PR_TRUE);
+}
 
 NS_IMETHODIMP 
 nsHTMLLinkElement::SetStyleSheet(nsIStyleSheet* aStyleSheet)
@@ -288,4 +331,48 @@ NS_IMETHODIMP
 nsHTMLLinkElement::SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const
 {
   return mInner.SizeOf(aSizer, aResult, sizeof(*this));
+}
+
+NS_IMETHODIMP
+nsHTMLLinkElement::GetLinkState(nsLinkState &aState)
+{
+  aState = mLinkState;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHTMLLinkElement::SetLinkState(nsLinkState aState)
+{
+  mLinkState = aState;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHTMLLinkElement::GetHrefCString(char* &aBuf)
+{
+  // Get href= attribute (relative URL).
+  nsAutoString relURLSpec;
+
+  if (NS_CONTENT_ATTR_HAS_VALUE ==
+      mInner.GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::href, relURLSpec)) {
+    // Get base URL.
+    nsCOMPtr<nsIURI> baseURL;
+    mInner.GetBaseURL(*getter_AddRefs(baseURL));
+
+    if (baseURL) {
+      // Get absolute URL.
+      NS_MakeAbsoluteURIWithCharset(&aBuf, relURLSpec, mInner.mDocument, baseURL,
+                                    nsHTMLUtils::IOService, nsHTMLUtils::CharsetMgr);
+    }
+    else {
+      // Absolute URL is same as relative URL.
+      aBuf = relURLSpec.ToNewUTF8String();
+    }
+  }
+  else {
+    // Absolute URL is empty because we have no HREF.
+    aBuf = PL_strdup(""); // use a dummy empty string
+  }
+
+  return NS_OK;
 }

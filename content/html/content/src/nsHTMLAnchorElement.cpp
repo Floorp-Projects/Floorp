@@ -27,6 +27,7 @@
 #include "nsIDOMEventReceiver.h"
 #include "nsIHTMLContent.h"
 #include "nsGenericHTMLElement.h"
+#include "nsILink.h"
 #include "nsHTMLAtoms.h"
 #include "nsHTMLIIDs.h"
 #include "nsIStyleContext.h"
@@ -56,6 +57,7 @@ static NS_DEFINE_IID(kIDOMHTMLAnchorElementIID, NS_IDOMHTMLANCHORELEMENT_IID);
 class nsHTMLAnchorElement : public nsIDOMHTMLAnchorElement,
                             public nsIDOMNSHTMLAnchorElement,
                             public nsIJSScriptObject,
+                            public nsILink,
                             public nsIHTMLContent
 {
 public:
@@ -115,6 +117,11 @@ public:
   // nsIJSScriptObject
   NS_IMPL_IJSSCRIPTOBJECT_USING_GENERIC(mInner)
 
+  // nsILink
+  NS_IMETHOD    GetLinkState(nsLinkState &aState);
+  NS_IMETHOD    SetLinkState(nsLinkState aState);
+  NS_IMETHOD    GetHrefCString(char* &aBuf);
+
   // nsIContent
   //NS_IMPL_ICONTENT_NO_FOCUS_USING_GENERIC(mInner)
   NS_IMPL_ICONTENT_NO_SETPARENT_NO_SETDOCUMENT_NO_FOCUS_USING_GENERIC(mInner)
@@ -126,10 +133,8 @@ protected:
   nsresult RegUnRegAccessKey(PRBool aDoReg);
   nsGenericHTMLContainerElement mInner;
 
-  // The "cached" canonical URL that the anchor really points to. This
-  // value is derived on-demand when someone asks for the ".href"
-  // property.
-  char* mCanonicalHref;
+  // The cached visited state
+  nsLinkState mLinkState;
 };
 
 nsresult
@@ -147,19 +152,16 @@ NS_NewHTMLAnchorElement(nsIHTMLContent** aInstancePtrResult,
 }
 
 nsHTMLAnchorElement::nsHTMLAnchorElement(nsINodeInfo *aNodeInfo)
-  : mCanonicalHref(nsnull)
+  : mLinkState(eLinkState_Unknown)
 {
   NS_INIT_REFCNT();
   mInner.Init(this, aNodeInfo);
-  nsHTMLUtils::AddRef();
+  nsHTMLUtils::AddRef(); // for GetHrefCString
 }
 
 nsHTMLAnchorElement::~nsHTMLAnchorElement()
 {
-  if (mCanonicalHref)
-    nsCRT::free(mCanonicalHref);
-
-  nsHTMLUtils::Release();
+  nsHTMLUtils::Release(); // for GetHrefCString
 }
 
 NS_IMPL_ADDREF(nsHTMLAnchorElement)
@@ -178,6 +180,11 @@ nsHTMLAnchorElement::QueryInterface(REFNSIID aIID, void** aInstancePtr)
   }
   else if (aIID.Equals(NS_GET_IID(nsIDOMNSHTMLAnchorElement))) {
     *aInstancePtr = (void*)(nsIDOMNSHTMLAnchorElement*) this;
+    NS_ADDREF_THIS();
+    return NS_OK;
+  }
+  else if (aIID.Equals(NS_GET_IID(nsILink))) {
+    *aInstancePtr = (void*)(nsILink*) this;
     NS_ADDREF_THIS();
     return NS_OK;
   }
@@ -415,46 +422,23 @@ nsHTMLAnchorElement::HandleDOMEvent(nsIPresContext* aPresContext,
 NS_IMETHODIMP
 nsHTMLAnchorElement::GetHref(nsString& aValue)
 {
-  // Return the canonical URI that this link refers to.
-  nsresult rv = NS_OK;
-
-  if (! mCanonicalHref) {
-    // We don't have a cached value: compute it from scratch.
-
-    // Get href= attribute (relative URL).
-    nsAutoString relURLSpec;
-    mInner.GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::href, relURLSpec);
-
-    if (relURLSpec.Length()) {
-      // Get base URL.
-      nsCOMPtr<nsIURI> baseURL;
-      mInner.GetBaseURL(*getter_AddRefs(baseURL));
-
-      if (baseURL) {
-        // Get absolute URL.
-        NS_MakeAbsoluteURIWithCharset(&mCanonicalHref, relURLSpec, mInner.mDocument, baseURL,
-                                      nsHTMLUtils::IOService, nsHTMLUtils::CharsetMgr);
-      }
-      else {
-        // Absolute URL is same as relative URL.
-        mCanonicalHref = relURLSpec.ToNewUTF8String();
-      }
-    }
+  char *buf;
+  nsresult rv = GetHrefCString(buf);
+  if (NS_FAILED(rv)) return rv;
+  if (buf) {
+    aValue.AssignWithConversion(buf);
+    nsCRT::free(buf);
   }
-
-  aValue.AssignWithConversion(mCanonicalHref);
-  return rv;
+  // NS_IMPL_STRING_ATTR does nothing where we have (buf == null)
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 nsHTMLAnchorElement::SetHref(const nsString& aValue)
 {
-  if (mCanonicalHref) {
-    // Clobber our "cache", so we'll recompute it the next time
-    // somebody asks for it.
-    nsCRT::free(mCanonicalHref);
-    mCanonicalHref = nsnull;
-  }
+  // Clobber our "cache", so we'll recompute it the next time
+  // somebody asks for it.
+  mLinkState = eLinkState_Unknown;
 
   return mInner.SetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::href, aValue, PR_TRUE);
 }
@@ -679,3 +663,46 @@ nsHTMLAnchorElement::GetText(nsString& aText)
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+NS_IMETHODIMP
+nsHTMLAnchorElement::GetLinkState(nsLinkState &aState)
+{
+  aState = mLinkState;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHTMLAnchorElement::SetLinkState(nsLinkState aState)
+{
+  mLinkState = aState;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHTMLAnchorElement::GetHrefCString(char* &aBuf)
+{
+  // Get href= attribute (relative URL).
+  nsAutoString relURLSpec;
+
+  if (NS_CONTENT_ATTR_HAS_VALUE ==
+      mInner.GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::href, relURLSpec)) {
+    // Get base URL.
+    nsCOMPtr<nsIURI> baseURL;
+    mInner.GetBaseURL(*getter_AddRefs(baseURL));
+
+    if (baseURL) {
+      // Get absolute URL.
+      NS_MakeAbsoluteURIWithCharset(&aBuf, relURLSpec, mInner.mDocument, baseURL,
+                                    nsHTMLUtils::IOService, nsHTMLUtils::CharsetMgr);
+    }
+    else {
+      // Absolute URL is same as relative URL.
+      aBuf = relURLSpec.ToNewUTF8String();
+    }
+  }
+  else {
+    // Absolute URL is null to say we have no HREF.
+    aBuf = nsnull;
+  }
+
+  return NS_OK;
+}

@@ -34,9 +34,11 @@ struct nsGUIEvent;
  { 0xa6cf905b, 0x15b3, 0x11d2,{0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32}}
 
 enum nsLinkState {
-  eLinkState_Unvisited  = 0,
-  eLinkState_Visited    = 1, 
-  eLinkState_OutOfDate  = 2   // visited, but the cache is stale
+  eLinkState_Unknown    = 0,
+  eLinkState_Unvisited  = 1,
+  eLinkState_Visited    = 2, 
+  eLinkState_OutOfDate  = 3,   // visited, but the cache is stale
+  eLinkState_NotLink    = 4
 };
 
 // XXX Verb to use for link actuation. These are the verbs specified
@@ -82,7 +84,7 @@ public:
   /**
    * Get the state of a link to a given absolute URL
    */
-  NS_IMETHOD GetLinkState(const nsString& aLinkURI, nsLinkState& aState) = 0;
+  NS_IMETHOD GetLinkState(const char* aLinkURI, nsLinkState& aState) = 0;
 };
 
 #endif /* nsILinkHandler_h___ */

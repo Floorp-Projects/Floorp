@@ -92,7 +92,7 @@ public:
   NS_IMETHOD OnOverLink(nsIContent* aContent,
                         const PRUnichar* aURLSpec,
                         const PRUnichar* aTargetSpec);
-  NS_IMETHOD GetLinkState(const nsString& aLinkURI, nsLinkState& aState);
+  NS_IMETHOD GetLinkState(const char* aLinkURI, nsLinkState& aState);
 
 
   NS_IMETHOD FindNext(const PRUnichar * aSearchStr, PRBool aMatchCase, PRBool aSearchDown, PRBool &aIsFound);

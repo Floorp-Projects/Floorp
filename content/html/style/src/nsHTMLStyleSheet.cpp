@@ -33,15 +33,13 @@
 #include "nsCRT.h"
 #include "nsIAtom.h"
 #include "nsIURL.h"
-#include "nsIIOService.h"
-#include "nsIURL.h"
 #include "nsIServiceManager.h"
-#include "nsNetUtil.h"
-static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 #include "nsISupportsArray.h"
 #include "nsHashtable.h"
 #include "nsIHTMLContent.h"
 #include "nsIHTMLAttributes.h"
+#include "nsILink.h"
+#include "nsStyleUtil.h"
 #include "nsIStyleRuleProcessor.h"
 #include "nsIStyleRule.h"
 #include "nsIFrame.h"
@@ -49,7 +47,6 @@ static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 #include "nsIMutableStyleContext.h"
 #include "nsHTMLAtoms.h"
 #include "nsIPresContext.h"
-#include "nsILinkHandler.h"
 #include "nsIEventStateManager.h"
 #include "nsIDocument.h"
 #include "nsHTMLIIDs.h"
@@ -850,69 +847,40 @@ HTMLStyleSheetImpl::RulesMatching(nsIPresContext* aPresContext,
       styledContent->GetTag(tag);
       // if we have anchor colors, check if this is an anchor with an href
       if (tag == nsHTMLAtoms::a) {
-        if ((nsnull != mLinkRule) || (nsnull != mVisitedRule)) {
-          // test link state
-          nsILinkHandler* linkHandler;
-
-          if (NS_OK == aPresContext->GetLinkHandler(&linkHandler)) {
-            nsAutoString base, href;
-            nsresult attrState = styledContent->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::href, href);
-
-            if (NS_CONTENT_ATTR_HAS_VALUE == attrState) {
-
-              if (! linkHandler) {
+        if (mLinkRule || mVisitedRule || mActiveRule) {
+          nsLinkState state;
+          if (nsStyleUtil::IsHTMLLink(aContent, tag, aPresContext, &state)) {
+            switch (state) {
+              case eLinkState_Unvisited:
                 if (nsnull != mLinkRule) {
                   aResults->AppendElement(mLinkRule);
                 }
-              }
-              else {
-                nsIHTMLContent* htmlContent;
-                if (NS_SUCCEEDED(styledContent->QueryInterface(kIHTMLContentIID, (void**)&htmlContent))) {
-                  
-                  nsCOMPtr<nsIURI> baseURI;
-                  htmlContent->GetBaseURL(*getter_AddRefs(baseURI));
-               
-                  nsAutoString linkURI;
-                  (void) NS_MakeAbsoluteURI(linkURI, href, baseURI);
-
-                  nsLinkState  state;
-                  if (NS_OK == linkHandler->GetLinkState(linkURI, state)) {
-                    switch (state) {
-                      case eLinkState_Unvisited:
-                        if (nsnull != mLinkRule) {
-                          aResults->AppendElement(mLinkRule);
-                        }
-                        break;
-                      case eLinkState_Visited:
-                        if (nsnull != mVisitedRule) {
-                          aResults->AppendElement(mVisitedRule);
-                        }
-                        break;
-                      default:
-                        break;
-                    }
-                  }
-                  NS_RELEASE(htmlContent);
+                break;
+              case eLinkState_Visited:
+                if (nsnull != mVisitedRule) {
+                  aResults->AppendElement(mVisitedRule);
                 }
-              }
+                break;
+              default:
+                break;
             }
-          }
-          NS_IF_RELEASE(linkHandler);
-        } // end link/visited rules
-        if (nsnull != mActiveRule) {  // test active state of link
-          nsIEventStateManager* eventStateManager;
+            // No need to add to the active rule if it's not a link
+            if (mActiveRule) {  // test active state of link
+              nsIEventStateManager* eventStateManager;
 
-          if ((NS_OK == aPresContext->GetEventStateManager(&eventStateManager)) &&
-              (nsnull != eventStateManager)) {
-            PRInt32 state;
-            if (NS_OK == eventStateManager->GetContentState(aContent, state)) {
-              if (0 != (state & NS_EVENT_STATE_ACTIVE)) {
-                aResults->AppendElement(mActiveRule);
+              if ((NS_OK == aPresContext->GetEventStateManager(&eventStateManager)) &&
+                  (nsnull != eventStateManager)) {
+                PRInt32 state;
+                if (NS_OK == eventStateManager->GetContentState(aContent, state)) {
+                  if (0 != (state & NS_EVENT_STATE_ACTIVE)) {
+                    aResults->AppendElement(mActiveRule);
+                  }
+                }
+                NS_RELEASE(eventStateManager);
               }
-            }
-            NS_RELEASE(eventStateManager);
+            } // end active rule
           }
-        } // end active rule
+        } // end link/visited/active rules
       } // end A tag
       // add the quirks background compatibility rule if in quirks mode
       // and/or the Table TH rule for handling <TH> differently than <TD>

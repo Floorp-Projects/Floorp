@@ -28,6 +28,16 @@
 #include "nsStyleConsts.h"
 #include "nsUnitConversion.h"
 
+#include "nsHTMLAtoms.h"
+#include "nsILinkHandler.h"
+#include "nsILink.h"
+#include "nsIXMLContent.h"
+#include "nsIHTMLContent.h"
+#include "nsIDocument.h"
+#include "nsINameSpaceManager.h"
+#include "nsIURI.h"
+#include "nsNetUtil.h"
+
 #include "nsIServiceManager.h"
 #include "nsIPref.h"
 
@@ -476,6 +486,129 @@ const nsStyleColor* nsStyleUtil::FindNonTransparentBackground(nsIStyleContext* a
   return result;
 }
 
+/*static*/
+PRBool nsStyleUtil::IsHTMLLink(nsIContent *aContent, nsIAtom *aTag, nsIPresContext *aPresContext, nsLinkState *aState)
+{
+  NS_ASSERTION(aContent && aState, "null arg in IsHTMLLink");
+
+  // check for:
+  //  - HTML ANCHOR with valid HREF
+  //  - HTML LINK with valid HREF
+  //  - HTML AREA with valid HREF
+
+  PRBool result = PR_FALSE;
+
+  if ((aTag == nsHTMLAtoms::a) ||
+      (aTag == nsHTMLAtoms::link) ||
+      (aTag == nsHTMLAtoms::area)) {
+
+    nsCOMPtr<nsILink> link( do_QueryInterface(aContent) );
+    // In XML documents, this can be null.
+    if (link) {
+      nsLinkState linkState;
+      link->GetLinkState(linkState);
+      if (linkState == eLinkState_Unknown) {
+        // if it is an anchor, area or link then check the href attribute
+        // make sure this anchor has a link even if we are not testing state
+        // if there is no link, then this anchor is not really a linkpseudo.
+        // bug=23209
+
+        char* href;
+        link->GetHrefCString(href);
+
+        if (href) {
+          nsILinkHandler *linkHandler = nsnull;
+          aPresContext->GetLinkHandler(&linkHandler);
+          if (linkHandler) {
+            linkHandler->GetLinkState(href, linkState);
+            NS_RELEASE(linkHandler);
+          }
+          else {
+            // no link handler?  then all links are unvisited
+            linkState = eLinkState_Unvisited;
+          }
+          nsCRT::free(href);
+        } else {
+          linkState = eLinkState_NotLink;
+        }
+        link->SetLinkState(linkState);
+      }
+      if (linkState != eLinkState_NotLink) {
+        *aState = linkState;
+        result = PR_TRUE;
+      }
+    }
+  }
+
+  return result;
+}
+
+/*static*/ 
+PRBool nsStyleUtil::IsSimpleXlink(nsIContent *aContent, nsIPresContext *aPresContext, nsLinkState *aState)
+{
+  // XXX PERF This function will cause serious performance problems on
+  // pages with lots of XLinks.  We should be caching the visited
+  // state of the XLinks.  Where???
+
+  NS_ASSERTION(aContent && aState, "invalid call to IsXlink with null content");
+
+  PRBool rv = PR_FALSE;
+
+  if (aContent && aState) {
+    // first see if we have an XML element
+    nsCOMPtr<nsIXMLContent> xml(do_QueryInterface(aContent));
+    if (xml) {
+      // see if it is type=simple (we don't deal with other types)
+      nsAutoString val;
+      aContent->GetAttribute(kNameSpaceID_XLink, nsHTMLAtoms::type, val);
+      if (val == NS_LITERAL_STRING("simple")) {
+        // see if there is an xlink namespace'd href attribute: 
+        // - get it if there is, if not no big deal, it is not required for xlinks
+        // is it bad to re-use val here?
+        aContent->GetAttribute(kNameSpaceID_XLink, nsHTMLAtoms::href, val);
+
+        // It's an XLink. Resolve it relative to its document.
+        nsCOMPtr<nsIURI> baseURI;
+        nsCOMPtr<nsIHTMLContent> htmlContent = do_QueryInterface(aContent);
+        if (htmlContent) {
+          // XXX why do this? will nsIHTMLContent's
+          // GetBaseURL() may return something different
+          // than the URL of the document it lives in?
+          htmlContent->GetBaseURL(*getter_AddRefs(baseURI));
+        }
+        else {
+          nsCOMPtr<nsIDocument> doc;
+          aContent->GetDocument(*getter_AddRefs(doc));
+          if (doc) {
+            doc->GetBaseURL(*getter_AddRefs(baseURI));
+          }
+        }
+
+        // convert here, rather than twice in NS_MakeAbsoluteURI and
+        // back again
+        char * href = val.ToNewCString();
+        char * absHREF = nsnull;
+        (void) NS_MakeAbsoluteURI(&absHREF, href, baseURI);
+        nsCRT::free(href);
+
+        nsILinkHandler *linkHandler = nsnull;
+        aPresContext->GetLinkHandler(&linkHandler);
+        if (linkHandler) {
+          linkHandler->GetLinkState(absHREF, *aState);
+          NS_RELEASE(linkHandler);
+        }
+        else {
+          // no link handler?  then all links are unvisited
+          *aState = eLinkState_Unvisited;
+        }
+        nsCRT::free(absHREF);
+
+        rv = PR_TRUE;
+      }
+    }
+  }
+  return rv;
+}
 
 //------------------------------------------------------------------------------
 //
