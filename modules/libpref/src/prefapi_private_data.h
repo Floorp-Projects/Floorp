@@ -37,7 +37,6 @@
 
 /* Data shared between prefapi.c and nsPref.cpp */
 
-extern JSContext *			gMochaContext;
 extern PRBool				gErrorOpeningUserPrefs;
 extern PLDHashTable			gHashTable;
 extern PRBool               gDirty;
@@ -53,4 +52,4 @@ struct pref_saveArgs {
 PLDHashOperator PR_CALLBACK pref_savePref(PLDHashTable*, PLDHashEntryHdr *, PRUint32, void *arg);
 
 int PR_CALLBACK pref_CompareStrings(const void *v1, const void *v2, void* unused);
-extern JSBool pref_InitInitialObjects(void);
+extern PRBool pref_InitInitialObjects(void);

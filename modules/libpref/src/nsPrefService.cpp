@@ -220,7 +220,6 @@ NS_IMETHODIMP nsPrefService::ReadUserPrefs(nsIFile *aFile)
 
     NotifyServiceObservers(NS_PREFSERVICE_READ_TOPIC_ID);
 
-    JS_MaybeGC(gMochaContext);
   } else {
     rv = ReadAndOwnUserPrefFile(aFile);
   }
@@ -627,11 +626,10 @@ static nsresult openPrefFile(nsIFile* aFile, PRBool aIsErrorFatal,
   if (NS_FAILED(rv)) 
     return rv;        
 
+  // XXX maybe we should read the file in chunks instead??
   readBuf = (char *)PR_Malloc(fileSize);
   if (!readBuf) 
     return NS_ERROR_OUT_OF_MEMORY;
-
-  JS_BeginRequest(gMochaContext);
 
   PRUint32 amtRead = 0;
   rv = inStr->Read(readBuf, fileSize, &amtRead);
@@ -654,8 +652,6 @@ static nsresult openPrefFile(nsIFile* aFile, PRBool aIsErrorFatal,
   }
 
   PR_Free(readBuf);
-  JS_EndRequest(gMochaContext);
-
   return rv;        
 }
 
@@ -692,7 +688,7 @@ inplaceSortCallback(const void *data1, const void *data2, void *privateData)
 }
 
 //----------------------------------------------------------------------------------------
-JSBool pref_InitInitialObjects()
+PRBool pref_InitInitialObjects()
 // Initialize default preference JavaScript buffers from
 // appropriate TEXT resources
 //----------------------------------------------------------------------------------------
@@ -726,7 +722,7 @@ JSBool pref_InitInitialObjects()
 
   rv = NS_GetSpecialDirectory(NS_APP_PREF_DEFAULTS_50_DIR, getter_AddRefs(defaultPrefDir));
   if (NS_FAILED(rv))
-    return JS_FALSE;
+    return PR_FALSE;
 
   nsIFile **defaultPrefFiles = (nsIFile **)nsMemory::Alloc(INITIAL_MAX_DEFAULT_PREF_FILES * sizeof(nsIFile *));
   int maxDefaultPrefFiles = INITIAL_MAX_DEFAULT_PREF_FILES;
@@ -737,13 +733,13 @@ JSBool pref_InitInitialObjects()
   rv = defaultPrefDir->GetDirectoryEntries(getter_AddRefs(dirIterator));
   if (!dirIterator) {
     NS_ASSERTION(NS_SUCCEEDED(rv), "ERROR: Could not make a directory iterator.");
-    return JS_FALSE;
+    return PR_FALSE;
   }
 
   dirIterator->HasMoreElements(&hasMoreElements);
   if (!hasMoreElements) {
     NS_ASSERTION(NS_SUCCEEDED(rv), "ERROR: Prefs directory is empty.");
-    return JS_FALSE;
+    return PR_FALSE;
   }
 
   while (hasMoreElements) {
@@ -802,29 +798,5 @@ JSBool pref_InitInitialObjects()
     }
   }
 
-  JS_MaybeGC(gMochaContext);
-  return JS_TRUE;
+  return PR_TRUE;
 }
-
-
-JSRuntime* PREF_GetJSRuntime()
-{
-  nsresult rv;
-
-  if (!gJSRuntimeService) {
-    rv = CallGetService("@mozilla.org/js/xpc/RuntimeService;1",
-                        &gJSRuntimeService);
-    if (NS_FAILED(rv)) {
-      NS_WARNING("nsJSRuntimeService is missing");
-      gJSRuntimeService = nsnull;
-      return nsnull;
-    }
-  }
-
-  JSRuntime* rt;
-  rv = gJSRuntimeService->GetRuntime(&rt);
-  if (NS_SUCCEEDED(rv))
-    return rt;
-  return nsnull;
-}
-

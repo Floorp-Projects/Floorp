@@ -42,10 +42,7 @@
 #define PREFAPI_H
 
 #include "prtypes.h"
-#include "jsapi.h"
 #include "pldhash.h"
-
-#define NEW_PREF_ARCH
 
 #if defined(VMS)
 /* Deal with case naming conflicts */
@@ -58,21 +55,12 @@
 
 NSPR_BEGIN_EXTERN_C
 
-/*
-// <font color=blue>
-// Error codes
-// </font>
-*/
-
-typedef int PROFILE_ERROR;
-
 typedef union
 {
     char*       stringVal;
     PRInt32     intVal;
     PRBool      boolVal;
 } PrefValue;
- 
 
 struct PrefHashEntry : PLDHashEntryHdr
 {
@@ -146,7 +134,7 @@ PREF_Cleanup();
 void
 PREF_CleanupPrefs();
 
-JSBool
+PRBool
 PREF_EvaluateConfigScript(const char * js_buffer, size_t length,
 	const char* filename, PRBool bGlobalContext, PRBool bCallbacks,
 	PRBool skipFirstLine);

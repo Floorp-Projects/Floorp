@@ -37,8 +37,8 @@
 
 #include "prefapi.h"
 #include "prefapi_private_data.h"
+#include "prefread.h"
 #include "nsReadableUtils.h"
-#include "jsapi.h"
 #include "nsCRT.h"
 
 #define PL_ARENA_CONST_ALIGN_MASK 3
@@ -82,8 +82,6 @@
 #include "Alert.h"
 #endif
 
-extern JSRuntime* PREF_GetJSRuntime();
-
 #define BOGUS_DEFAULT_INT_PREF_VALUE (-5632)
 #define BOGUS_DEFAULT_BOOL_PREF_VALUE (-2)
 
@@ -117,53 +115,10 @@ matchPrefEntry(PLDHashTable*, const PLDHashEntryHdr* entry,
     return (strcmp(prefEntry->key, otherKey) == 0);
 }
 
-PR_STATIC_CALLBACK(JSBool) pref_NativeDefaultPref(JSContext *cx, JSObject *obj, unsigned int argc, jsval *argv, jsval *rval);
-PR_STATIC_CALLBACK(JSBool) pref_NativeUserPref(JSContext *cx, JSObject *obj, unsigned int argc, jsval *argv, jsval *rval);
-/*----------------------------------------------------------------------------------------*/
-
-JS_STATIC_DLL_CALLBACK(JSBool)
-global_enumerate(JSContext *cx, JSObject *obj)
-{
-    return JS_EnumerateStandardClasses(cx, obj);
-}
-
-JS_STATIC_DLL_CALLBACK(JSBool)
-global_resolve(JSContext *cx, JSObject *obj, jsval id)
-{
-    JSBool resolved;
-
-    return JS_ResolveStandardClass(cx, obj, id, &resolved);
-}
-
-JSContext *       gMochaContext = NULL;
 PRBool              gErrorOpeningUserPrefs = PR_FALSE;
 PLDHashTable        gHashTable = { nsnull };
 static PLArenaPool  gPrefNameArena;
 PRBool              gDirty = PR_FALSE;
-
-static JSRuntime *       gMochaTaskState = NULL;
-static JSObject *        gMochaPrefObject = NULL;
-static JSObject *        gGlobalConfigObject = NULL;
-static JSClass      global_class = {
-                    "global", 0,
-                    JS_PropertyStub, JS_PropertyStub, JS_PropertyStub, JS_PropertyStub,
-                    global_enumerate, global_resolve, JS_ConvertStub, JS_FinalizeStub,
-                    JSCLASS_NO_OPTIONAL_MEMBERS
-                    };
-static JSClass      autoconf_class = {
-                    "PrefConfig", 0,
-                    JS_PropertyStub, JS_PropertyStub, JS_PropertyStub, JS_PropertyStub,
-                    JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub, JS_FinalizeStub,
-                    JSCLASS_NO_OPTIONAL_MEMBERS
-                    };
-static JSPropertySpec autoconf_props[] = {
-                    {0,0,0,0,0}
-                    };
-static JSFunctionSpec autoconf_methods[] = {
-                    { "pref",               pref_NativeDefaultPref, 2,0,0 },
-                    { "user_pref",          pref_NativeUserPref,    2,0,0 },
-                    { NULL,                 NULL,                   0,0,0 }
-                    };
 
 static struct CallbackNode* gCallbacks = NULL;
 static PRBool       gCallbacksEnabled = PR_FALSE;
@@ -218,7 +173,7 @@ static char *ArenaStrDup(const char* str, PLArenaPool* aArena)
 #define PREF_HAS_USER_VALUE(pref)       ((pref)->flags & PREF_USERSET)
 #define PREF_TYPE(pref)                 (PrefType)((pref)->flags & PREF_VALUETYPE_MASK)
 
-static JSBool pref_HashJSPref(unsigned int argc, jsval *argv, PrefAction action);
+static void   pref_ReaderCallback(void *closure, const char *pref, PrefValue, PrefType, PrefAction);
 static PRBool pref_ValueChanged(PrefValue oldValue, PrefValue newValue, PrefType type);
 
 /* -- Privates */
@@ -233,17 +188,12 @@ struct CallbackNode {
 static PrefResult pref_DoCallback(const char* changed_pref);
 
 
-PR_STATIC_CALLBACK(JSBool) pref_BranchCallback(JSContext *cx, JSScript *script);
-PR_STATIC_CALLBACK(void) pref_ErrorReporter(JSContext *cx, const char *message,JSErrorReport *report);
-static void pref_Alert(char* msg);
 static PrefResult pref_HashPref(const char *key, PrefValue value, PrefType type, PrefAction action);
 static inline PrefHashEntry* pref_HashTableLookup(const void *key);
   
 
 PRBool PREF_Init(const char *filename)
 {
-    PRBool ok = PR_TRUE, request = PR_FALSE;
-
     if (!gHashTable.ops) {
         if (!PL_DHashTableInit(&gHashTable, &pref_HashTableOps, nsnull,
                                sizeof(PrefHashEntry), 1024))
@@ -252,71 +202,13 @@ PRBool PREF_Init(const char *filename)
         PL_INIT_ARENA_POOL(&gPrefNameArena, "PrefNameArena",
                            PREFNAME_ARENA_SIZE);
     }
-        
-    if (!gMochaTaskState)
-    {
-        gMochaTaskState = PREF_GetJSRuntime();
-        if (!gMochaTaskState)
-            return PR_FALSE;
-    }
 
-    if (!gMochaContext)
-    {
-        ok = PR_FALSE;
-        gMochaContext = JS_NewContext(gMochaTaskState, 8192);
-        if (!gMochaContext)
-            goto out;
-
-        JS_BeginRequest(gMochaContext);
-        request = PR_TRUE;
-
-        gGlobalConfigObject = JS_NewObject(gMochaContext, &global_class, NULL,
-                                           NULL);
-        if (!gGlobalConfigObject)
-            goto out;
-
-        /* MLM - need a global object for set version call now. */
-        JS_SetGlobalObject(gMochaContext, gGlobalConfigObject);
-
-        JS_SetVersion(gMochaContext, JSVERSION_1_5);
-
-        JS_SetBranchCallback(gMochaContext, pref_BranchCallback);
-        JS_SetErrorReporter(gMochaContext, NULL);
-
-        gMochaPrefObject = JS_DefineObject(gMochaContext, 
-                                            gGlobalConfigObject, 
-                                            "PrefConfig",
-                                            &autoconf_class, 
-                                            NULL, 
-                                            JSPROP_ENUMERATE|JSPROP_READONLY);
-        
-        if (gMochaPrefObject)
-        {
-            if (!JS_DefineProperties(gMochaContext,
-                                     gMochaPrefObject,
-                                     autoconf_props))
-            {
-                goto out;
-            }
-            if (!JS_DefineFunctions(gMochaContext,
-                                    gMochaPrefObject,
-                                    autoconf_methods))
-            {
-                goto out;
-            }
-        }
-
-        ok = pref_InitInitialObjects();
-    }
- out:
-    if (request)
-        JS_EndRequest(gMochaContext);
-
+    PRBool ok = pref_InitInitialObjects();
     if (!ok)
         gErrorOpeningUserPrefs = PR_TRUE;
 
     return ok;
-} /*PREF_Init*/
+}
 
 /* Frees the callback list. */
 void PREF_Cleanup()
@@ -339,34 +231,11 @@ void PREF_Cleanup()
 /* Frees up all the objects except the callback list. */
 void PREF_CleanupPrefs()
 {
-    gMochaTaskState = NULL; /* We -don't- destroy this. */
-
-    if (gMochaContext) {
-        JSRuntime *rt;
-        gMochaPrefObject = NULL;
-
-        if (gGlobalConfigObject) {
-            JS_SetGlobalObject(gMochaContext, NULL);
-            gGlobalConfigObject = NULL;
-        }
-
-        rt = PREF_GetJSRuntime();
-        if (rt == JS_GetRuntime(gMochaContext)) {
-            JS_DestroyContext(gMochaContext);
-            gMochaContext = NULL;
-        } else {
-#ifdef DEBUG
-            fputs("Runtime mismatch, so leaking context!\n", stderr);
-#endif
-        }
-    }
-
     if (gHashTable.ops) {
         PL_DHashTableFinish(&gHashTable);
         gHashTable.ops = nsnull;
         PL_FinishArenaPool(&gPrefNameArena);
     }
-
 
     if (gSavedLine)
         free(gSavedLine);
@@ -374,69 +243,19 @@ void PREF_CleanupPrefs()
 }
 
 /* This is more recent than the below 3 routines which should be obsoleted */
-JSBool
+PRBool
 PREF_EvaluateConfigScript(const char * js_buffer, size_t length,
     const char* filename, PRBool bGlobalContext, PRBool bCallbacks,
     PRBool skipFirstLine)
 {
-    JSBool ok;
-    jsval result;
-    JSObject* scope;
-    JSErrorReporter errReporter;
-    
-    if (bGlobalContext)
-        scope = gGlobalConfigObject;
-    else
-        scope = gMochaPrefObject;
-        
-    if (!gMochaContext || !scope)
-        return JS_FALSE;
+    NS_ASSERTION(bCallbacks, "no support for disabling callbacks");
 
-    errReporter = JS_SetErrorReporter(gMochaContext, pref_ErrorReporter);
-    gCallbacksEnabled = bCallbacks;
+    PrefParseState ps;
+    PREF_InitParseState(&ps, pref_ReaderCallback, NULL);
+    PREF_ParseBuf(&ps, js_buffer, length); 
+    PREF_FinalizeParseState(&ps);
 
-    if (skipFirstLine)
-    {
-        /* In order to protect the privacy of the JavaScript preferences file 
-         * from loading by the browser, we make the first line unparseable
-         * by JavaScript. We must skip that line here before executing 
-         * the JavaScript code.
-         */
-        unsigned int i=0;
-        while (i < length)
-        {
-            char c = js_buffer[i++];
-            if (c == '\r')
-            {
-                if (js_buffer[i] == '\n')
-                    i++;
-                break;
-            }
-            if (c == '\n')
-                break;
-        }
-
-        /* Free up gSavedLine to avoid MLK. */
-        if (gSavedLine) 
-            free(gSavedLine);
-        gSavedLine = (char *)malloc(i + 1);
-        if (!gSavedLine)
-            return JS_FALSE;
-        memcpy(gSavedLine, js_buffer, i);
-        gSavedLine[i] = '\0';
-        length -= i;
-        js_buffer += i;
-    }
-
-    JS_BeginRequest(gMochaContext);
-    ok = JS_EvaluateScript(gMochaContext, scope,
-            js_buffer, length, filename, 0, &result);
-    JS_EndRequest(gMochaContext);
-    
-    gCallbacksEnabled = PR_TRUE;        /* ?? want to enable after reading user/lock file */
-    JS_SetErrorReporter(gMochaContext, errReporter);
-    
-    return ok;
+    return PR_TRUE;
 }
 
 // note that this appends to aResult, and does not assign!
@@ -1057,18 +876,6 @@ PREF_GetPrefType(const char *pref_name)
     return PREF_INVALID;
 }
 
-PR_STATIC_CALLBACK(JSBool) pref_NativeDefaultPref
-    (JSContext *cx, JSObject *obj, unsigned int argc, jsval *argv, jsval *rval)
-{
-    return pref_HashJSPref(argc, argv, PREF_SETDEFAULT);
-}
-
-PR_STATIC_CALLBACK(JSBool) pref_NativeUserPref
-    (JSContext *cx, JSObject *obj, unsigned int argc, jsval *argv, jsval *rval)
-{
-    return pref_HashJSPref(argc, argv, PREF_SETUSER);
-}
-
 /* -- */
 
 PRBool
@@ -1153,141 +960,11 @@ static PrefResult pref_DoCallback(const char* changed_pref)
     return result;
 }
 
-#define MAYBE_GC_BRANCH_COUNT_MASK  4095
-
-PR_STATIC_CALLBACK(JSBool)
-pref_BranchCallback(JSContext *cx, JSScript *script)
-{ 
-    static PRUint32 count = 0;
-    
-    /*
-     * If we've been running for a long time, then try a GC to 
-     * free up some memory.
-     */ 
-    if ( (++count & MAYBE_GC_BRANCH_COUNT_MASK) == 0 )
-        JS_MaybeGC(cx); 
-
-    return JS_TRUE;
-}
-
-/* copied from libmocha */
-void
-pref_ErrorReporter(JSContext *cx, const char *message,
-                 JSErrorReport *report)
+static void pref_ReaderCallback(void       *closure,
+                                const char *pref,
+                                PrefValue   value,
+                                PrefType    type,
+                                PrefAction  action)
 {
-    char *last;
-
-    const char *s, *t;
-
-    last = PR_sprintf_append(0, "An error occurred reading the startup configuration file.  "
-        "Please contact your administrator.");
-
-#if defined(XP_MAC)
-    /* StandardAlert doesn't handle linefeeds. Use spaces to avoid garbage characters. */
-    last = PR_sprintf_append(last, "  ");
-#else
-    last = PR_sprintf_append(last, NS_LINEBREAK NS_LINEBREAK);
-#endif
-    if (!report)
-        last = PR_sprintf_append(last, "%s\n", message);
-    else
-    {
-        if (report->filename)
-            last = PR_sprintf_append(last, "%s, ",
-                                     report->filename, report->filename);
-        if (report->lineno)
-            last = PR_sprintf_append(last, "line %u: ", report->lineno);
-        last = PR_sprintf_append(last, "%s. ", message);
-        if (report->linebuf)
-        {
-            for (s = t = report->linebuf; *s != '\0'; s = t)
-            {
-                for (; t != report->tokenptr && *t != '<' && *t != '\0'; t++)
-                    ;
-                last = PR_sprintf_append(last, "%.*s", t - s, s);
-                if (*t == '\0')
-                    break;
-                last = PR_sprintf_append(last, (*t == '<') ? "" : "%c", *t);
-                t++;
-            }
-        }
-    }
-
-    if (last)
-    {
-        pref_Alert(last);
-        PR_Free(last);
-    }
+    pref_HashPref(pref, value, type, action);
 }
-
-#if defined(XP_MAC)
-
-#include <Dialogs.h>
-#include <Memory.h>
-
-void pref_Alert(char* msg)
-{
-    Str255 pmsg;
-    SInt16 itemHit;
-    pmsg[0] = PL_strlen(msg);
-    BlockMoveData(msg, pmsg + 1, pmsg[0]);
-    StandardAlert(kAlertPlainAlert, "\pConfiguration Warning", pmsg, NULL, &itemHit);
-}
-
-#else
-
-/* Platform specific alert messages */
-void pref_Alert(char* msg)
-{
-#if defined(XP_UNIX) || defined(XP_OS2) || defined(XP_BEOS)
-#if defined(XP_UNIX) || defined(XP_OS2) || defined(XP_BEOS)
-    if ( getenv("NO_PREF_SPAM") == NULL )
-#endif
-    fputs(msg, stderr);
-#endif
-#if defined(XP_WIN)
-      MessageBox (NULL, msg, "Configuration Warning", MB_OK);
-#elif defined(XP_OS2)
-      WinMessageBox (HWND_DESKTOP, 0, msg, "Configuration Warning", 0, MB_WARNING | MB_OK | MB_APPLMODAL | MB_MOVEABLE);
-#elif defined(XP_BEOS)
-      BAlert *alert = new BAlert("Configuration Warning", msg, "OK", NULL, NULL, B_WIDTH_AS_USUAL, B_WARNING_ALERT);
-      // Calling Go() runs the BAlert and waits for the user to close the window.  Go will delete the BAlert when it finishes.
-      alert->Go();
-#endif
-}
-
-#endif
-
-
-/*--------------------------------------------------------------------------------------*/
-static JSBool pref_HashJSPref(unsigned int argc, jsval *argv, PrefAction action)
-/* Native implementations of JavaScript functions
-    pref        -> pref_NativeDefaultPref
-    userPref    -> pref_NativeUserPref
- *--------------------------------------------------------------------------------------*/
-{   
-    if (argc >= 2 && JSVAL_IS_STRING(argv[0]))
-    {
-        PrefValue value;
-        const char *key = JS_GetStringBytes(JSVAL_TO_STRING(argv[0]));
-        
-        if (JSVAL_IS_STRING(argv[1]))
-        {
-            value.stringVal = JS_GetStringBytes(JSVAL_TO_STRING(argv[1]));
-            pref_HashPref(key, value, PREF_STRING, action);
-        }
-        else if (JSVAL_IS_INT(argv[1]))
-        {
-            value.intVal = JSVAL_TO_INT(argv[1]);
-            pref_HashPref(key, value, PREF_INT, action);
-        }
-        else if (JSVAL_IS_BOOLEAN(argv[1]))
-        {
-            value.boolVal = JSVAL_TO_BOOLEAN(argv[1]);
-            pref_HashPref(key, value, PREF_BOOL, action);
-        }
-    }
-
-    return JS_TRUE;
-}
-
