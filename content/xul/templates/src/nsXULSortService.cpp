@@ -85,6 +85,10 @@
 #include "nsIDOMXULTreeElement.h"
 #include "nsIDOMXULElement.h"
 
+#include "nsILocale.h"
+#include "nsLocaleCID.h"
+#include "nsILocaleFactory.h"
+
 #define	XUL_BINARY_INSERTION_SORT	1
 
 
@@ -113,6 +117,11 @@ static NS_DEFINE_IID(kIDomXulElementIID,      NS_IDOMXULELEMENT_IID);
 
 static NS_DEFINE_CID(kCollationFactoryCID,    NS_COLLATIONFACTORY_CID);
 static NS_DEFINE_IID(kICollationFactoryIID,   NS_ICOLLATIONFACTORY_IID);
+
+static NS_DEFINE_CID(kLocaleFactoryCID, NS_LOCALEFACTORY_CID);
+static NS_DEFINE_IID(kILocaleFactoryIID, NS_ILOCALEFACTORY_IID);
+static NS_DEFINE_CID(kLocaleCID, NS_LOCALE_CID);
+static NS_DEFINE_IID(kILocaleIID, NS_ILOCALE_IID);
 
 // XXX This is sure to change. Copied from mozilla/layout/xul/content/src/nsXULAtoms.cpp
 static const char kXULNameSpaceURI[]
@@ -271,19 +280,41 @@ XULSortServiceImpl::XULSortServiceImpl(void)
 			NS_ERROR("couldn't create rdf service");
 		}
 
-		nsICollationFactory	*colFactory;
-		if (NS_SUCCEEDED(rv = nsComponentManager::CreateInstance(kCollationFactoryCID, NULL,
-				kICollationFactoryIID, (void**) &colFactory)))
+		nsILocaleFactory	*localeFactory = nsnull; 
+		nsILocale		*locale = nsnull;
+
+		// get a locale factory 
+		if (NS_SUCCEEDED(rv = nsComponentManager::FindFactory(kLocaleFactoryCID, (nsIFactory**)&localeFactory))
+			&& (localeFactory))
 		{
-			// Temporary: pass null until bug#3867 is fixed
-			if (NS_FAILED(rv = colFactory->CreateCollation(nsnull/*locale*/, &collationService)))
+			if (NS_SUCCEEDED(rv = localeFactory->GetApplicationLocale(&locale)) && (locale))
 			{
-				NS_ERROR("couldn't create collation instance");
+				nsICollationFactory	*colFactory;
+				if (NS_SUCCEEDED(rv = nsComponentManager::CreateInstance(kCollationFactoryCID, NULL,
+						kICollationFactoryIID, (void**) &colFactory)))
+				{
+					if (NS_FAILED(rv = colFactory->CreateCollation(locale, &collationService)))
+					{
+						NS_ERROR("couldn't create collation instance");
+					}
+				}
+				else
+				{
+					NS_ERROR("couldn't create instance of collation factory");
+				}
+				NS_RELEASE(locale);
+				locale = nsnull;
 			}
+			else
+			{
+				NS_ERROR("unable to get application locale");
+			}
+			NS_RELEASE(localeFactory);
+			localeFactory = nsnull;
 		}
 		else
 		{
-			NS_ERROR("couldn't create instance of collation factory");
+			NS_ERROR("couldn't get locale factory");
 		}
 
 		gRDFService->GetResource(kURINC_Name, &kNC_Name);
@@ -296,9 +327,7 @@ XULSortServiceImpl::XULSortServiceImpl(void)
 		                           kINameSpaceManagerIID,
 		                           (void**) &mgr)))
 		{
-
-static const char kRDFNameSpaceURI[]
-    = RDF_NAMESPACE_URI;
+			static const char kRDFNameSpaceURI[] = RDF_NAMESPACE_URI;
 
 			rv = mgr->RegisterNameSpace(kXULNameSpaceURI, kNameSpaceID_XUL);
 			NS_ASSERTION(NS_SUCCEEDED(rv), "unable to register XUL namespace");
