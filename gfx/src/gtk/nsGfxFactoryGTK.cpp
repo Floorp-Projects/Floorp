@@ -53,19 +53,19 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsScreenManagerGtk)
 
 // our custom constructors
 
-static nsresult nsScriptableRegionConstructor(nsISupports *aOuter, REFNSIID aIID, void **aResult)
+static NS_IMETHODIMP nsScriptableRegionConstructor(nsISupports *aOuter, REFNSIID aIID, void **aResult)
 {
   nsresult rv;
 
   nsIScriptableRegion *inst;
 
-  if ( NULL == aResult )
+  if ( !aResult )
   {
     rv = NS_ERROR_NULL_POINTER;
     return rv;
   }
-  *aResult = NULL;
-  if (NULL != aOuter)
+  *aResult = nsnull;
+  if (aOuter)
   {
     rv = NS_ERROR_NO_AGGREGATION;
     return rv;
@@ -78,7 +78,7 @@ static nsresult nsScriptableRegionConstructor(nsISupports *aOuter, REFNSIID aIID
     nsCOMPtr<nsIScriptableRegion> scriptableRgn = new nsScriptableRegion(rgn);
     inst = scriptableRgn;
   }
-  if (NULL == inst)
+  if (!inst)
   {
     rv = NS_ERROR_OUT_OF_MEMORY;
     return rv;
@@ -94,13 +94,13 @@ static nsresult nsImageManagerConstructor(nsISupports *aOuter, REFNSIID aIID, vo
 {
     nsresult rv;
 
-  if ( NULL == aResult )
+  if ( !aResult )
   {
     rv = NS_ERROR_NULL_POINTER;
     return rv;
   }
-  *aResult = NULL;
-  if (NULL != aOuter)
+  *aResult = nsnull;
+  if (aOuter)
   {
     rv = NS_ERROR_NO_AGGREGATION;
     return rv;
