@@ -580,14 +580,14 @@ nsIOService::PrefsChanged(nsIPrefBranch *prefs, const char *pref)
     if (!prefs) return;
 
     // Look for extra ports to block
-    if (!pref || PL_strcmp(pref, PORT_PREF("banned")) == 0)
+    if (!pref || strcmp(pref, PORT_PREF("banned")) == 0)
         ParsePortList(prefs, PORT_PREF("banned"), PR_FALSE);
 
     // ...as well as previous blocks to remove.
-    if (!pref || PL_strcmp(pref, PORT_PREF("banned.override")) == 0)
+    if (!pref || strcmp(pref, PORT_PREF("banned.override")) == 0)
         ParsePortList(prefs, PORT_PREF("banned.override"), PR_TRUE);
 
-    if (!pref || PL_strcmp(pref, AUTODIAL_PREF) == 0) {
+    if (!pref || strcmp(pref, AUTODIAL_PREF) == 0) {
         PRBool enableAutodial = PR_FALSE;
         nsresult rv = prefs->GetBoolPref(AUTODIAL_PREF, &enableAutodial);
         // If pref not found, default to disabled.
