@@ -48,7 +48,7 @@
 //
 // External Defines...
 //
-extern nsFileSpec *nsMsgCreateTempFileSpec(char *tFileName);
+extern nsFileSpec *nsMsgCreateTempFileSpec(const char *tFileName);
 
 /* See mimepbuf.h for a description of the mission of this file.
 

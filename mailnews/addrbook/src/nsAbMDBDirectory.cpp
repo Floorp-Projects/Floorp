@@ -202,7 +202,7 @@ NS_IMETHODIMP nsAbMDBDirectory::DeleteDirectory(nsIAbDirectory *directory)
 	return rv;
 }
 
-nsresult nsAbMDBDirectory::NotifyPropertyChanged(char *property, PRUnichar* oldValue, PRUnichar* newValue)
+nsresult nsAbMDBDirectory::NotifyPropertyChanged(const char *property, PRUnichar* oldValue, PRUnichar* newValue)
 {
 	nsCOMPtr<nsISupports> supports;
 	if(NS_SUCCEEDED(QueryInterface(NS_GET_IID(nsISupports), getter_AddRefs(supports))))

@@ -645,7 +645,7 @@ PRInt32 nsIMAPBodypart::GenerateEmptyFilling(PRBool stream, PRBool prefetch)
 	if (prefetch)
 		return 0;	// don't need to prefetch anything
 
-	char *emptyString = "This body part will be downloaded on demand.";
+	const char emptyString[] = "This body part will be downloaded on demand.";
 	// XP_GetString(MK_IMAP_EMPTY_MIME_PART);  ### need to be able to localize
 	if (emptyString)
 	{

@@ -217,8 +217,10 @@ NS_IMETHODIMP nsAddressBook::DeleteAddressBooks
 	return rv;
 }
 
-nsresult nsAddressBook::DoCommand(nsIRDFCompositeDataSource* db, char *command,
-						nsISupportsArray *srcArray, nsISupportsArray *argumentArray)
+nsresult nsAddressBook::DoCommand(nsIRDFCompositeDataSource* db,
+                                  const char *command,
+                                  nsISupportsArray *srcArray,
+                                  nsISupportsArray *argumentArray)
 {
 
 	nsresult rv = NS_OK;

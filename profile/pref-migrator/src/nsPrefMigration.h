@@ -119,7 +119,7 @@ class nsPrefMigration: public nsIPrefMigration
       nsresult GetDirFromPref(nsIFileSpec* oldProfilePath,
                               nsIFileSpec* newProfilePath, 
                               const char* newDirName,
-                              char* pref, 
+                              const char* pref, 
                               nsIFileSpec* newPath, 
                               nsIFileSpec* oldPath);
 

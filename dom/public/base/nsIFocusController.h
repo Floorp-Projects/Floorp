@@ -47,7 +47,7 @@ public:
   NS_IMETHOD SetFocusedWindow(nsIDOMWindowInternal* aResult)=0;
 
   NS_IMETHOD GetSuppressFocus(PRBool* aSuppressFlag)=0;
-  NS_IMETHOD SetSuppressFocus(PRBool aSuppressFlag, char* aReason)=0;
+  NS_IMETHOD SetSuppressFocus(PRBool aSuppressFlag, const char* aReason)=0;
 
   NS_IMETHOD GetSuppressFocusScroll(PRBool* aSuppressFlag)=0;
   NS_IMETHOD SetSuppressFocusScroll(PRBool aSuppressFlag)=0;

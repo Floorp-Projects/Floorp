@@ -289,7 +289,7 @@ net_pop3_write_state(Pop3UidlHost* host, nsIFileSpec *mailDirectory)
 
   nsOutputFileStream outFileStream(fileSpec, PR_WRONLY | PR_CREATE_FILE |
                                    PR_TRUNCATE);
-	char* tmpBuffer =
+	const char tmpBuffer[] =
         "# POP3 State File" MSG_LINEBREAK
         "# This is a generated file!  Do not edit." MSG_LINEBREAK
         MSG_LINEBREAK;

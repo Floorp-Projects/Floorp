@@ -781,7 +781,7 @@ nsSocketTransportService::GetNeckoStringByName (const char *aName, PRUnichar **a
 	nsAutoString	resultString; resultString.AssignWithConversion(aName);
 
     if (!m_stringBundle) {
-        char*  propertyURL = NECKO_MSGS_URL;
+        const char propertyURL[] = NECKO_MSGS_URL;
         // make sure that we get this service on the UI thread.
         NS_WITH_PROXIED_SERVICE(nsIStringBundleService, sBundleService, kStringBundleServiceCID, 
                                 NS_UI_THREAD_EVENTQ, &res);

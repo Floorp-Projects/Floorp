@@ -463,7 +463,7 @@ wallet_DumpStopwatch() {
 #define PROPERTIES_URL "chrome://communicator/locale/wallet/wallet.properties"
 
 PUBLIC PRUnichar *
-Wallet_Localize(char* genericString) {
+Wallet_Localize(const char* genericString) {
   nsresult ret;
   nsAutoString v;
 

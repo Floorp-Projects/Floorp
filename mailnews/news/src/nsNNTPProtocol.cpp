@@ -208,7 +208,7 @@ if (NNTP==NULL) \
     NNTP = PR_NewLogModule("NNTP"); \
 PR_LOG(NNTP, out, ("(%p) %s",this, buf)) ;
 
-char *stateLabels[] = {
+const char *const stateLabels[] = {
 "NNTP_RESPONSE",
 #ifdef BLOCK_UNTIL_AVAILABLE_CONNECTION
 "NNTP_BLOCK_UNTIL_CONNECTIONS_ARE_AVAILABLE",

@@ -36,9 +36,9 @@ static NS_DEFINE_IID(kCDragServiceCID,  NS_DRAGSERVICE_CID);
 
 static PRLogModuleInfo *sDragLm = NULL;
 
-static char *gMimeListType = "application/x-moz-internal-item-list";
-static char *gMozUrlType = "_NETSCAPE_URL";
-static char *gTextUriListType = "text/uri-list";
+static const char gMimeListType[] = "application/x-moz-internal-item-list";
+static const char gMozUrlType[] = "_NETSCAPE_URL";
+static const char gTextUriListType[] = "text/uri-list";
 
 NS_IMPL_ADDREF_INHERITED(nsDragService, nsBaseDragService)
 NS_IMPL_RELEASE_INHERITED(nsDragService, nsBaseDragService)
@@ -776,7 +776,7 @@ nsDragService::GetSourceList(void)
     GtkTargetList *multiTargetList = 0;
     GdkAtom listAtom = gdk_atom_intern(gMimeListType, FALSE);
     GtkTargetEntry target;
-    target.target = gMimeListType;
+    target.target = (gchar*)gMimeListType;
     target.flags = 0;
     target.info = listAtom;
     multiTargetList = gtk_target_list_new(&target, 1);

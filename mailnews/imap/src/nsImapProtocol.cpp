@@ -626,7 +626,7 @@ nsresult nsImapProtocol::SetupWithUrl(nsIURI * aURL, nsISupports* aConsumer)
 
         ClearFlag(IMAP_CONNECTION_IS_OPEN); 
         PRBool isSecure = PR_FALSE;
-        char *connectionType = nsnull;
+        const char *connectionType = nsnull;
         
         if (NS_SUCCEEDED(server->GetIsSecure(&isSecure)) && isSecure) 
           connectionType = "ssl-forcehandshake";
@@ -2508,7 +2508,7 @@ nsImapProtocol::FetchMessage(const char * messageIds,
 
         case kEveryThingRFC822Peek:
           {
-            char *formatString = "";
+            const char *formatString = "";
             PRUint32 server_capabilityFlags = GetServerStateParser().GetCapabilityFlag();
             
             GetServerStateParser().SetFetchingEverythingRFC822(PR_TRUE);
@@ -3387,11 +3387,11 @@ void nsImapProtocol::Log(const char *logSubName, const char *extraInfo, const ch
 {
   if (PR_LOG_TEST(IMAP, PR_LOG_ALWAYS))
   {
-    static char *nonAuthStateName = "NA";
-    static char *authStateName = "A";
-    static char *selectedStateName = "S";
-      //  static char *waitingStateName = "W";
-    char *stateName = NULL;
+    static const char nonAuthStateName[] = "NA";
+    static const char authStateName[] = "A";
+    static const char selectedStateName[] = "S";
+      //  static const char waitingStateName[] = "W";
+    const char *stateName = NULL;
       const char *hostName = GetImapHostName();  // initilize to empty string
     switch (GetServerStateParser().GetIMAPstate())
     {
@@ -4239,7 +4239,7 @@ nsImapProtocol::Store(const char * messageList, const char * messageData,
 {
   IncrementCommandTagNumber();
     
-  char *formatString;
+  const char *formatString;
   if (idsAreUid)
       formatString = "%s uid store %s %s\015\012";
   else

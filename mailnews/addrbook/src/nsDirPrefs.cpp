@@ -218,7 +218,7 @@ typedef struct DIR_DefaultAttribute
 {
 	DIR_AttributeId id;
 	PRInt32 resourceId;
-	char *name;
+	const char *name;
 } DIR_DefaultAttribute;
 
 /* DIR_Filter.flags */

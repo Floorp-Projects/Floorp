@@ -221,7 +221,7 @@ nsresult NS_MsgGetStringForOperator(PRInt16 op, const char **string)
 
 void NS_MsgGetUntranslatedStatusName (uint32 s, nsCString *outName)
 {
-	char *tmpOutName = NULL;
+	const char *tmpOutName = NULL;
 #define MSG_STATUS_MASK (MSG_FLAG_READ | MSG_FLAG_REPLIED | MSG_FLAG_FORWARDED | MSG_FLAG_NEW)
 	PRUint32 maskOut = (s & MSG_STATUS_MASK);
 

@@ -70,7 +70,7 @@ static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIDTDIID,      NS_IDTD_IID);
 static NS_DEFINE_IID(kClassIID,     NS_IOTHERHTML_DTD_IID); 
   static NS_DEFINE_IID(kParserServiceCID, NS_PARSERSERVICE_CID);
-static char*        kVerificationDir = "c:/temp";
+static const char kVerificationDir[] = "c:/temp";
  
 
 #ifdef  ENABLE_CRC

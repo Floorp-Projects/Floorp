@@ -625,8 +625,8 @@ nsMimeXULEmitter::DumpRestOfHeaders()
     
     if (userAgent)
     {
-      char  *compVal = "Mozilla 5.0";
-      if (!nsCRT::strncasecmp(userAgent, compVal, nsCRT::strlen(compVal)))
+      const char compVal[] = "Mozilla 5.0";
+      if (!nsCRT::strncasecmp(userAgent, compVal, sizeof(compVal) - 1))
       {
         UtilityWriteCRLF("<toolbar>");
         UtilityWriteCRLF("<box name=\"header-seamonkey\" align=\"vertical\" flex=\"1\">");

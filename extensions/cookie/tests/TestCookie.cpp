@@ -107,7 +107,7 @@ int main(PRInt32 argc, char *argv[])
     if (NS_SUCCEEDED(rv))
     {
         nsCOMPtr<nsIStringBundle> stringBundle;
-        char*  propertyURL = "chrome://necko/locale/necko.properties";
+        const char propertyURL[] = "chrome://necko/locale/necko.properties";
         rv = bundleService->CreateBundle(propertyURL, getter_AddRefs(stringBundle));
     }
 

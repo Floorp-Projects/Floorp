@@ -1303,8 +1303,8 @@ NS_IMETHODIMP nsHTMLEditor::CanPaste(PRInt32 aSelectionType, PRBool *aCanPaste)
   if (NS_FAILED(rv)) return rv;
   
   // the flavors that we can deal with
-  char* textEditorFlavors[] = { kUnicodeMime, nsnull };
-  char* htmlEditorFlavors[] = { kJPEGImageMime, kHTMLMime, nsnull };
+  const char* const textEditorFlavors[] = { kUnicodeMime, nsnull };
+  const char* const htmlEditorFlavors[] = { kJPEGImageMime, kHTMLMime, nsnull };
 
   nsCOMPtr<nsISupportsArray> flavorsList;
   rv = nsComponentManager::CreateInstance(NS_SUPPORTSARRAY_CONTRACTID, nsnull, 
@@ -1315,7 +1315,7 @@ NS_IMETHODIMP nsHTMLEditor::CanPaste(PRInt32 aSelectionType, PRBool *aCanPaste)
   GetFlags(&editorFlags);
   
   // add the flavors for all editors
-  for (char** flavor = textEditorFlavors; *flavor; flavor++)
+  for (const char* const* flavor = textEditorFlavors; *flavor; flavor++)
   {
     nsCOMPtr<nsISupportsString> flavorString;            
     nsComponentManager::CreateInstance(NS_SUPPORTS_STRING_CONTRACTID, nsnull, 
@@ -1330,7 +1330,9 @@ NS_IMETHODIMP nsHTMLEditor::CanPaste(PRInt32 aSelectionType, PRBool *aCanPaste)
   // add the HTML-editor only flavors
   if ((editorFlags & eEditorPlaintextMask) == 0)
   {
-    for (char** htmlFlavor = htmlEditorFlavors; *htmlFlavor; htmlFlavor++)
+    for (const char* const* htmlFlavor = htmlEditorFlavors;
+         *htmlFlavor;
+         htmlFlavor++)
     {
       nsCOMPtr<nsISupportsString> flavorString;            
       nsComponentManager::CreateInstance(NS_SUPPORTS_STRING_CONTRACTID, nsnull, 

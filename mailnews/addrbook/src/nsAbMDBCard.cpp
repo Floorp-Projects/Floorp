@@ -194,7 +194,7 @@ NS_IMETHODIMP nsAbMDBCard::OnCardEntryChange
 
 // protected class methods
 
-nsresult nsAbMDBCard::NotifyPropertyChanged(char *property, PRUnichar* oldValue, PRUnichar* newValue)
+nsresult nsAbMDBCard::NotifyPropertyChanged(const char *property, PRUnichar* oldValue, PRUnichar* newValue)
 {
 	nsCOMPtr<nsISupports> supports;
 	if(NS_SUCCEEDED(QueryInterface(NS_GET_IID(nsISupports), getter_AddRefs(supports))))

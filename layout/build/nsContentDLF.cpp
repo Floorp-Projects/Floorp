@@ -75,7 +75,7 @@ static NS_DEFINE_IID(kXULDocumentCID, NS_XULDOCUMENT_CID);
 
 extern nsresult NS_NewDocumentViewer(nsIDocumentViewer** aResult);
 
-static char* gHTMLTypes[] = {
+static const char* const gHTMLTypes[] = {
   "text/html",
   "text/plain",
   "text/css",
@@ -89,7 +89,7 @@ static char* gHTMLTypes[] = {
   0
 };
   
-static char* gXMLTypes[] = {
+static const char* const gXMLTypes[] = {
   "text/xml",
   "application/xml",
   "application/xhtml+xml",
@@ -100,7 +100,7 @@ static char* gXMLTypes[] = {
 };
 
 
-static char* gRDFTypes[] = {
+static const char* const gRDFTypes[] = {
   "text/rdf",
   "application/vnd.mozilla.xul+xml",
   "mozilla.application/cached-xul",
@@ -109,7 +109,7 @@ static char* gRDFTypes[] = {
   0
 };
 
-static char* gImageTypes[] = {
+static const char* const gImageTypes[] = {
   "image/gif",
   "image/jpeg",
   "image/jpg",
@@ -538,12 +538,12 @@ RegisterTypes(nsIComponentManager* aCompMgr,
               nsIFile* aPath,
               const char *aLocation,
               const char *aType,
-              char** aTypes)
+              const char* const* aTypes)
 {
   nsresult rv = NS_OK;
   while (*aTypes) {
     char contractid[500];
-    char* contentType = *aTypes++;
+    const char* contentType = *aTypes++;
     PR_snprintf(contractid, sizeof(contractid),
                 NS_DOCUMENT_LOADER_FACTORY_CONTRACTID_PREFIX "%s;1?type=%s",
                 aCommand, contentType);

@@ -2041,9 +2041,7 @@ nsresult nsImapIncomingServer::GetStringBundle()
   nsresult res;
 	if (!m_stringBundle)
 	{
-		char*       propertyURL = NULL;
-
-		propertyURL = IMAP_MSGS_URL;
+		static const char propertyURL[] = IMAP_MSGS_URL;
 
 		nsCOMPtr<nsIStringBundleService> sBundleService = do_GetService(NS_STRINGBUNDLE_CONTRACTID, &res); 
 		if (NS_SUCCEEDED(res) && (nsnull != sBundleService)) 

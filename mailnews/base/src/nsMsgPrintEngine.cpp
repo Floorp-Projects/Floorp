@@ -399,7 +399,7 @@ nsMsgPrintEngine::GetString(const PRUnichar *aStringName)
 
 	if (!mStringBundle)
 	{
-		char    *propertyURL = MESSENGER_STRING_URL;
+		static const char propertyURL[] = MESSENGER_STRING_URL;
 
 		nsCOMPtr<nsIStringBundleService> sBundleService = 
 		         do_GetService(kStringBundleServiceCID, &res); 

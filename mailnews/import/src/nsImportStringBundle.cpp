@@ -58,7 +58,7 @@ nsIStringBundle *nsImportStringBundle::GetStringBundle( void)
 		return( m_pBundle);
 
 	nsresult			rv;
-	char*				propertyURL = IMPORT_MSGS_URL;
+	const char			propertyURL[] = IMPORT_MSGS_URL;
 	nsIStringBundle*	sBundle = nsnull;
 
 

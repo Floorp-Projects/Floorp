@@ -1531,7 +1531,7 @@ nsScriptSecurityManager::IsCapabilityEnabled(const char *capability,
 #define PROPERTIES_URL "chrome://communicator/locale/security/security.properties"
 
 nsresult
-Localize(char *genericString, nsString &result)
+Localize(const char *genericString, nsString &result)
 {
     nsresult ret;
 

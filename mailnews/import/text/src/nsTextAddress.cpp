@@ -536,7 +536,7 @@ nsresult nsTextAddress::ProcessLine( const char *pLine, PRInt32 len, nsString& e
 
 // Some common ldif fields, it an ldif file has NONE of these entries
 // then it is most likely NOT an ldif file!
-static char *sLDIFFields[] = {
+static const char *const sLDIFFields[] = {
 	"objectclass",
 	"sn",
 	"dn",

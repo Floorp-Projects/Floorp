@@ -876,7 +876,7 @@ nsStreamConverter::OnDataAvailable(nsIRequest *request, nsISupports    *ctxt,
   if (mWrapperOutput)
   {
     char        outBuf[1024];
-char *output = "\
+const char output[] = "\
 <HTML>\
 <FRAMESET ROWS=\"30%%,70%%\">\
 <FRAME NAME=messageHeader SRC=\"%s?header=only\">\

@@ -70,9 +70,7 @@ nsCOMPtr<nsIStringBundle> stringBundle = nsnull;
 
 	if (!stringBundle)
 	{
-		char*       propertyURL = NULL;
-
-		propertyURL = SMIME_PROPERTIES_URL;
+		static const char propertyURL[] = SMIME_PROPERTIES_URL;
 
 		nsCOMPtr<nsIStringBundleService> sBundleService = 
 		         do_GetService(kStringBundleServiceCID, &res); 

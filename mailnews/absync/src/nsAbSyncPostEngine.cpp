@@ -798,7 +798,7 @@ nsAbSyncPostEngine::KickTheSyncOperation(void)
   mProtocolResponse = NS_ConvertASCIItoUCS2("");
   mPostEngineState = nsIAbSyncPostEngineState::nsIAbSyncPostRunning;
 
-  char    *postHeader = "Content-Type: application/x-www-form-urlencoded\r\nContent-Length: %d\r\nCookie: %s\r\n\r\n%s";
+  const char postHeader[] = "Content-Type: application/x-www-form-urlencoded\r\nContent-Length: %d\r\nCookie: %s\r\n\r\n%s";
   protString = PR_smprintf("%s%s", mSyncProtocolRequestPrefix, mSyncProtocolRequest);
   if (protString)
     mMessageSize = nsCRT::strlen(protString);

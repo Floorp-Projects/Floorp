@@ -209,7 +209,7 @@ private:
   nsresult InitCacheMenu(nsISupportsArray * aDecs, nsIRDFResource * aResource,
     const char * aKey, nsVoidArray * aArray);
   nsresult InitMoreMenu(nsISupportsArray * aDecs, nsIRDFResource * aResource, 
-    char * aFlag);
+    const char * aFlag);
   nsresult InitMoreSubmenus(nsISupportsArray * aDecs);
 
   nsresult AddCharsetToItemArray(nsVoidArray * aArray, nsIAtom * aCharset, 
@@ -217,22 +217,23 @@ private:
   nsresult AddCharsetArrayToItemArray(nsVoidArray * aArray, 
     nsISupportsArray * aCharsets);
   nsresult AddMenuItemToContainer(nsIRDFContainer * aContainer, 
-    nsMenuEntry * aItem, nsIRDFResource * aType, char * aIDPrefix, 
+    nsMenuEntry * aItem, nsIRDFResource * aType, const char * aIDPrefix, 
     PRInt32 aPlace);
   nsresult AddMenuItemArrayToContainer(nsIRDFContainer * aContainer, 
     nsVoidArray * aArray, nsIRDFResource * aType);
   nsresult AddCharsetToContainer(nsVoidArray * aArray, 
-    nsIRDFContainer * aContainer, nsIAtom * aCharset, char * aIDPrefix, 
+    nsIRDFContainer * aContainer, nsIAtom * aCharset, const char * aIDPrefix, 
     PRInt32 aPlace, PRInt32 aRDFPlace);
 
   nsresult AddFromPrefsToMenu(nsVoidArray * aArray, 
     nsIRDFContainer * aContainer, const char * aKey, nsISupportsArray * aDecs,
-    char * aIDPrefix);
+    const char * aIDPrefix);
   nsresult AddFromNolocPrefsToMenu(nsVoidArray * aArray, 
     nsIRDFContainer * aContainer, const char * aKey, nsISupportsArray * aDecs,
-    char * aIDPrefix);
+    const char * aIDPrefix);
   nsresult AddFromStringToMenu(char * aCharsetList, nsVoidArray * aArray, 
-    nsIRDFContainer * aContainer, nsISupportsArray * aDecs, char * aIDPrefix);
+    nsIRDFContainer * aContainer, nsISupportsArray * aDecs,
+    const char * aIDPrefix);
 
   nsresult AddSeparatorToContainer(nsIRDFContainer * aContainer);
   nsresult AddCharsetToCache(nsIAtom * aCharset, nsVoidArray * aArray, 
@@ -1091,7 +1092,7 @@ nsresult nsCharsetMenu::InitAutodetMenu()
 nsresult nsCharsetMenu::InitMoreMenu(
                         nsISupportsArray * aDecs, 
                         nsIRDFResource * aResource, 
-                        char * aFlag)
+                        const char * aFlag)
 {
   NS_TIMELINE_START_TIMER("nsCharsetMenu::InitMoreMenu");
 
@@ -1139,11 +1140,11 @@ nsresult nsCharsetMenu::InitMoreSubmenus(nsISupportsArray * aDecs)
   nsCOMPtr<nsIRDFContainer> container3;
   nsCOMPtr<nsIRDFContainer> container4;
   nsCOMPtr<nsIRDFContainer> container5;
-  char * key1 = "intl.charsetmenu.browser.more1";
-  char * key2 = "intl.charsetmenu.browser.more2";
-  char * key3 = "intl.charsetmenu.browser.more3";
-  char * key4 = "intl.charsetmenu.browser.more4";
-  char * key5 = "intl.charsetmenu.browser.more5";
+  const char key1[] = "intl.charsetmenu.browser.more1";
+  const char key2[] = "intl.charsetmenu.browser.more2";
+  const char key3[] = "intl.charsetmenu.browser.more3";
+  const char key4[] = "intl.charsetmenu.browser.more4";
+  const char key5[] = "intl.charsetmenu.browser.more5";
 
   res = NewRDFContainer(mInner, kNC_BrowserMore1CharsetMenuRoot, 
     getter_AddRefs(container1));
@@ -1248,7 +1249,7 @@ nsresult nsCharsetMenu::AddMenuItemToContainer(
                         nsIRDFContainer * aContainer,
                         nsMenuEntry * aItem,
                         nsIRDFResource * aType,
-                        char * aIDPrefix,
+                        const char * aIDPrefix,
                         PRInt32 aPlace) 
 {
   nsresult res = NS_OK;
@@ -1331,7 +1332,7 @@ nsresult nsCharsetMenu::AddCharsetToContainer(
                         nsVoidArray * aArray, 
                         nsIRDFContainer * aContainer, 
                         nsIAtom * aCharset, 
-                        char * aIDPrefix,
+                        const char * aIDPrefix,
                         PRInt32 aPlace,
 						PRInt32 aRDFPlace)
 {
@@ -1359,7 +1360,7 @@ nsresult nsCharsetMenu::AddFromPrefsToMenu(
                         nsIRDFContainer * aContainer, 
                         const char * aKey, 
                         nsISupportsArray * aDecs, 
-                        char * aIDPrefix)
+                        const char * aIDPrefix)
 {
   nsresult res = NS_OK;
 
@@ -1383,7 +1384,7 @@ nsresult nsCharsetMenu::AddFromNolocPrefsToMenu(
                         nsIRDFContainer * aContainer, 
                         const char * aKey, 
                         nsISupportsArray * aDecs, 
-                        char * aIDPrefix)
+                        const char * aIDPrefix)
 {
   nsresult res = NS_OK;
 
@@ -1404,7 +1405,7 @@ nsresult nsCharsetMenu::AddFromStringToMenu(
                         nsVoidArray * aArray, 
                         nsIRDFContainer * aContainer, 
                         nsISupportsArray * aDecs, 
-                        char * aIDPrefix)
+                        const char * aIDPrefix)
 {
   nsresult res = NS_OK;
   char * p = aCharsetList;

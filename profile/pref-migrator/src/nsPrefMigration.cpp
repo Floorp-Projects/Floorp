@@ -1237,7 +1237,7 @@ nsPrefMigration::CreateNewUser5Tree(nsIFileSpec * oldProfilePath, nsIFileSpec * 
  *
  *--------------------------------------------------------------------------------*/
 nsresult
-nsPrefMigration::GetDirFromPref(nsIFileSpec * oldProfilePath, nsIFileSpec * newProfilePath, const char *newDirName, char* pref, nsIFileSpec* newPath, nsIFileSpec* oldPath)
+nsPrefMigration::GetDirFromPref(nsIFileSpec * oldProfilePath, nsIFileSpec * newProfilePath, const char *newDirName, const char* pref, nsIFileSpec* newPath, nsIFileSpec* oldPath)
 {
   nsresult rv;
   

@@ -131,7 +131,7 @@
 //
 // External Defines...
 //
-extern nsFileSpec *nsMsgCreateTempFileSpec(char *tFileName);
+extern nsFileSpec *nsMsgCreateTempFileSpec(const char *tFileName);
 
 #define MIME_SUPERCLASS mimeMultipartClass
 MimeDefClass(MimeMultipartRelated, MimeMultipartRelatedClass,

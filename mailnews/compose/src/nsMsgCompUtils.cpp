@@ -75,7 +75,7 @@ static NS_DEFINE_CID(kHTTPHandlerCID, NS_HTTPPROTOCOLHANDLER_CID);
 // on the local machine. Caller must free memory
 //
 nsFileSpec * 
-nsMsgCreateTempFileSpec(char *tFileName)
+nsMsgCreateTempFileSpec(const char *tFileName)
 {
   if ((!tFileName) || (!*tFileName))
     tFileName = "nsmail.tmp";
@@ -97,7 +97,7 @@ nsMsgCreateTempFileSpec(char *tFileName)
 // returned
 //
 char * 
-nsMsgCreateTempFileName(char *tFileName)
+nsMsgCreateTempFileName(const char *tFileName)
 {
   if ((!tFileName) || (!*tFileName))
     tFileName = "nsmail.tmp";
@@ -1879,8 +1879,8 @@ mime_gen_content_id(PRUint32 aPartNum, const char *aEmailAddress)
   PRInt32           randLen = 5;
   unsigned char     rand_buf1[5]; 
   unsigned char     rand_buf2[5]; 
-  char              *domain = nsnull;
-  char              *defaultDomain = "@netscape.com";
+  const char        *domain = nsnull;
+  const char        *defaultDomain = "@netscape.com";
 
   nsCRT::memset(rand_buf1, 0, randLen-1);
   nsCRT::memset(rand_buf2, 0, randLen-1);
@@ -1890,7 +1890,7 @@ mime_gen_content_id(PRUint32 aPartNum, const char *aEmailAddress)
 
   // Find the @domain.com string...
   if (aEmailAddress && *aEmailAddress)
-    domain = PL_strchr(aEmailAddress, '@');
+    domain = NS_CONST_CAST(const char*, PL_strchr(aEmailAddress, '@'));
 
   if (!domain)
     domain = defaultDomain;

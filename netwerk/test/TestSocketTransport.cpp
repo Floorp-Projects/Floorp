@@ -602,7 +602,7 @@ main(int argc, char* argv[])
 ///  }
 
   PRBool bIsAsync = PR_TRUE;
-  char* hostName = nsnull;
+  const char* hostName = nsnull;
   int i;
 
 

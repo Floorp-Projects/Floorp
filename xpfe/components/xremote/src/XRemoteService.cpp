@@ -49,12 +49,12 @@
 NS_DEFINE_CID(kWindowCID, NS_WINDOW_CID);
 
 // protocol strings
-static char *s200ExecutedCommand     = "200 executed command:";
-static char *s500ParseCommand        = "500 command not parsable:";
-static char *s501UnrecognizedCommand = "501 unrecognized command:";
+static const char s200ExecutedCommand[]     = "200 executed command:";
+static const char s500ParseCommand[]        = "500 command not parsable:";
+static const char s501UnrecognizedCommand[] = "501 unrecognized command:";
 // not used
-//static char *s502NoWindow            = "502 no appropriate window for:";
-static char *s509InternalError       = "509 internal error";
+//static const char s502NoWindow[]            = "502 no appropriate window for:";
+static const char s509InternalError[]       = "509 internal error";
 
 XRemoteService::XRemoteService()
 {

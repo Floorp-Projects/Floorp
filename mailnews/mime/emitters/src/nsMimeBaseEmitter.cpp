@@ -209,9 +209,7 @@ nsMimeBaseEmitter::MimeGetStringByName(const char *aHeaderName)
 
 	if (!m_stringBundle)
 	{
-		char*       propertyURL = NULL;
-
-		propertyURL = MIME_URL;
+		static const char propertyURL[] = MIME_URL;
 
 		nsCOMPtr<nsIStringBundleService> sBundleService = 
 		         do_GetService(kStringBundleServiceCID, &res); 

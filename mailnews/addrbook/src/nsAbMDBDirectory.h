@@ -112,7 +112,7 @@ public:
 	PRBool IsMailingList(){ return (mIsMailingList == 1); }
 
 protected:
-	nsresult NotifyPropertyChanged(char *property, PRUnichar* oldValue, PRUnichar* newValue);
+	nsresult NotifyPropertyChanged(const char *property, PRUnichar* oldValue, PRUnichar* newValue);
 	nsresult NotifyItemAdded(nsISupports *item);
 	nsresult NotifyItemDeleted(nsISupports *item);
 	nsresult AddChildCards(nsAutoString name, nsIAbCard **childDir);

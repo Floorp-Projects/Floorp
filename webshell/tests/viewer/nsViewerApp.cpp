@@ -1156,7 +1156,7 @@ nsViewerApp::CreateRobot(nsBrowserWindow* aWindow)
 static nsBrowserWindow* gWinData;
 static int gTop100Pointer = 0;
 static int gTop100LastPointer = 0;
-static char * gTop100List[] = {
+static const char *const gTop100List[] = {
    "http://www.yahoo.com",
    "http://www.netscape.com",
    "http://www.mozilla.org",
@@ -1386,7 +1386,7 @@ PRBool CreateSiteDialog(nsIWidget * aParent)
 {
   // Dynamically find the index of the last pointer
   gTop100LastPointer = 0;
-  char * p;
+  const char * p;
   do {
     p = gTop100List[gTop100LastPointer++];
   } while (p);

@@ -56,7 +56,7 @@
 ----------------------------------------------------------------------------*/
 static const char* GetLinebreakString(nsLinebreakConverter::ELinebreakType aBreakType)
 {
-  static char* sLinebreaks[] = {
+  static const char* const sLinebreaks[] = {
     "",             // any
     NS_LINEBREAK,   // platform
     LFSTR,          // content

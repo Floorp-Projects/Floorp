@@ -124,7 +124,7 @@ Wallet_Decrypt(const nsString& crypt, nsString& text);
 
 extern nsresult Wallet_ProfileDirectory(nsFileSpec& dirSpec);
 
-extern PRUnichar * Wallet_Localize(char * genericString);
+extern PRUnichar * Wallet_Localize(const char * genericString);
 
 extern char* Wallet_RandomName(char* suffix);
 

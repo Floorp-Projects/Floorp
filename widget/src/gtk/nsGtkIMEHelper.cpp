@@ -1362,7 +1362,7 @@ nsIMEGtkIC::SetPreeditFont(GdkFont *aFontset) {
 }
 
 void
-nsIMEGtkIC::SetStatusText(char *aText) {
+nsIMEGtkIC::SetStatusText(const char *aText) {
   if (!aText) {
     return;
   }

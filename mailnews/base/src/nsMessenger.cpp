@@ -996,7 +996,7 @@ nsMessenger::Alert(const char *stringName)
 }
 
 nsresult
-nsMessenger::DoCommand(nsIRDFCompositeDataSource* db, char *command,
+nsMessenger::DoCommand(nsIRDFCompositeDataSource* db, const char *command,
                        nsISupportsArray *srcArray, 
                        nsISupportsArray *argumentArray)
 {
@@ -1128,7 +1128,7 @@ nsMessenger::CopyFolders(nsIRDFCompositeDataSource *database,
 
 	folderArray->AppendElement(dstResource);
 	
-	return DoCommand(database, isMoveFolder ? (char *)NC_RDF_MOVEFOLDER : (char *)NC_RDF_COPYFOLDER, folderArray, argumentArray);
+	return DoCommand(database, isMoveFolder ? NC_RDF_MOVEFOLDER : NC_RDF_COPYFOLDER, folderArray, argumentArray);
 	
 }
 
@@ -1773,7 +1773,7 @@ nsMessenger::InitStringBundle()
     nsresult res = NS_OK;
     if (!mStringBundle)
     {
-		char    *propertyURL = MESSENGER_STRING_URL;
+		const char propertyURL[] = MESSENGER_STRING_URL;
 
 		nsCOMPtr<nsIStringBundleService> sBundleService = 
 		         do_GetService(kStringBundleServiceCID, &res);

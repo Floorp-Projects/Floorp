@@ -1126,7 +1126,7 @@ static void intl_copy_uncoded_header(char **output, const char *input,
   }
 }
 
-static char *especials = "()<>@,;:\\\"/[]?.=";
+static const char especials[] = "()<>@,;:\\\"/[]?.=";
 
 static
 char *intl_decode_mime_part2_str(const char *header,

@@ -202,7 +202,7 @@ PRUnichar * nsMsgDBView::GetString(const PRUnichar *aStringName)
 
 	if (!mMessengerStringBundle)
 	{
-		char    *propertyURL = MESSENGER_STRING_URL;
+		static const char propertyURL[] = MESSENGER_STRING_URL;
     nsCOMPtr<nsIStringBundleService> sBundleService = do_GetService(kStringBundleServiceCID, &res);
 		if (NS_SUCCEEDED(res) && sBundleService) 
 			res = sBundleService->CreateBundle(propertyURL, getter_AddRefs(mMessengerStringBundle));

@@ -70,7 +70,7 @@ public:
 
 private:
   // Output Generation calls to create the HTML output 
-  NS_METHOD    GenerateHTMLOutputChannel(char *aHtmlOutput,
+  NS_METHOD    GenerateHTMLOutputChannel(const char *aHtmlOutput,
                                          PRInt32  aHtmlOutputSize,
                                          nsIAddbookUrl *addbookUrl,
                                          nsIURI *aURI, 

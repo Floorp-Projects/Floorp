@@ -275,7 +275,7 @@ nsresult nsMsgOfflineManager::ShowStatus(const char *statusMsgName)
   nsresult res = NS_OK;
   if (!mStringBundle)
   {
-    char    *propertyURL = MESSENGER_STRING_URL;
+    static const char propertyURL[] = MESSENGER_STRING_URL;
 
     nsCOMPtr<nsIStringBundleService> sBundleService = 
              do_GetService(kStringBundleServiceCID, &res);

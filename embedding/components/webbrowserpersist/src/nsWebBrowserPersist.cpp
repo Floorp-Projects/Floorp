@@ -1200,7 +1200,7 @@ nsWebBrowserPersist::CloneNodeWithFixedUpURIAttributes(
 
 nsresult
 nsWebBrowserPersist::StoreURIAttribute(
-    nsIDOMNode *aNode, char *aAttribute, PRBool aNeedsPersisting,
+    nsIDOMNode *aNode, const char *aAttribute, PRBool aNeedsPersisting,
     URIData **aData)
 {
     NS_ENSURE_ARG_POINTER(aNode);
@@ -1235,7 +1235,8 @@ nsWebBrowserPersist::StoreURIAttribute(
 }
 
 nsresult
-nsWebBrowserPersist::FixupNodeAttribute(nsIDOMNode *aNode, char *aAttribute)
+nsWebBrowserPersist::FixupNodeAttribute(nsIDOMNode *aNode,
+                                        const char *aAttribute)
 {
     NS_ENSURE_ARG_POINTER(aNode);
     NS_ENSURE_ARG_POINTER(aAttribute);

@@ -241,7 +241,7 @@ private:
   nsresult        AddNewUsers();
   nsresult        AddValueToNewCard(nsIAbCard *aCard, nsString *aTagName, nsString *aTagValue);
 
-  PRBool          TagHit(char *aTag, PRBool advanceToNextLine); // See if we are sitting on a particular tag...and advance if asked 
+  PRBool          TagHit(const char *aTag, PRBool advanceToNextLine); // See if we are sitting on a particular tag...and advance if asked 
   PRBool          ErrorFromServer(char **errString);      // Return true if the server returned an error...
   nsresult        ProcessOpReturn();
   nsresult        ProcessNewRecords();

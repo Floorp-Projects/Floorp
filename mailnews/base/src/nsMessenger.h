@@ -66,7 +66,7 @@ public:
 
 protected:
 	nsresult DoDelete(nsIRDFCompositeDataSource* db, nsISupportsArray *srcArray, nsISupportsArray *deletedArray);
-	nsresult DoCommand(nsIRDFCompositeDataSource *db, char * command, nsISupportsArray *srcArray, 
+	nsresult DoCommand(nsIRDFCompositeDataSource *db, const char * command, nsISupportsArray *srcArray, 
 					   nsISupportsArray *arguments);
   PRUnichar *GetString(const PRUnichar *aStringName);
   nsresult InitStringBundle();

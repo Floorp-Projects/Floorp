@@ -410,7 +410,7 @@ nsFocusController::GetSuppressFocus(PRBool* aSuppressFocus)
 }
 
 NS_IMETHODIMP
-nsFocusController::SetSuppressFocus(PRBool aSuppressFocus, char* aReason)
+nsFocusController::SetSuppressFocus(PRBool aSuppressFocus, const char* aReason)
 {
   if(aSuppressFocus) {
     ++mSuppressFocus;

@@ -78,9 +78,9 @@ public:
   nsCString mPlatformHTMLBindingStr;
   nsCString mUserHTMLBindingStr;
 
-  static char* sHTMLBindingStr;
-  static char* sPlatformHTMLBindingStr;
-  static char* sUserHTMLBindingStr;
+  static const char sHTMLBindingStr[];
+  static const char sPlatformHTMLBindingStr[];
+  static const char sUserHTMLBindingStr[];
 
   PRBool mInitialized;
 
@@ -97,11 +97,11 @@ public:
   nsXBLSpecialDocInfo() : mInitialized(PR_FALSE) {};
 };
 
-char* nsXBLSpecialDocInfo::sHTMLBindingStr = "resource:///res/builtin/htmlBindings.xml";
-char* nsXBLSpecialDocInfo::sPlatformHTMLBindingStr = "resource:///res/builtin/platformHTMLBindings.xml";
+const char nsXBLSpecialDocInfo::sHTMLBindingStr[] = "resource:///res/builtin/htmlBindings.xml";
+const char nsXBLSpecialDocInfo::sPlatformHTMLBindingStr[] = "resource:///res/builtin/platformHTMLBindings.xml";
 // Allow for a userHTMLBindings.xml.
 // XXX Should be in the user profile directory, when we have a urlspec for that
-char* nsXBLSpecialDocInfo::sUserHTMLBindingStr = "resource:///res/builtin/userHTMLBindings.xml";
+const char nsXBLSpecialDocInfo::sUserHTMLBindingStr[] = "resource:///res/builtin/userHTMLBindings.xml";
 
 void nsXBLSpecialDocInfo::LoadDocInfo()
 {

@@ -101,7 +101,7 @@ static NS_DEFINE_CID(kPrefCID,                NS_PREF_CID);
 // on the local machine. Caller must free memory
 //
 nsFileSpec * 
-nsMsgCreateTempFileSpec(char *tFileName)
+nsMsgCreateTempFileSpec(const char *tFileName)
 {
   //Calling NS_MsgHashIfNecessary so that when Replies are forwarded - the ':' in the subject line doesn't cause problems
   nsFileSpec *tmpSpec = new nsFileSpec(nsSpecialSystemDirectory(nsSpecialSystemDirectory::OS_TemporaryDirectory));

@@ -54,8 +54,8 @@ NS_BEGIN_EXTERN_C
 // Create a file spec or file name using the name passed
 // in as a template
 //
-nsFileSpec  *nsMsgCreateTempFileSpec(char *tFileName);
-char        *nsMsgCreateTempFileName(char *tFileName);
+nsFileSpec  *nsMsgCreateTempFileSpec(const char *tFileName);
+char        *nsMsgCreateTempFileName(const char *tFileName);
 
 
 //

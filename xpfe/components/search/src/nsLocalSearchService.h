@@ -48,7 +48,7 @@
 
 typedef	struct	_findTokenStruct
 {
-	char			*token;
+	const char		*token;
 	nsString	    value;
 } findTokenStruct, *findTokenPtr;
 

@@ -35,9 +35,9 @@
 */
 
 #ifndef HAVE_64BIT_OS
-char* GenerateIdFunctionCall::printfFmt = "id0x%08p";
+const char GenerateIdFunctionCall::printfFmt[] = "id0x%08p";
 #else
-char* GenerateIdFunctionCall::printfFmt = "id0x%016p";
+const char GenerateIdFunctionCall::printfFmt[] = "id0x%016p";
 #endif
 
 /**

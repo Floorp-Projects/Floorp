@@ -91,9 +91,10 @@ private:
     nsresult MakeFilenameFromURI(
         nsIURI *aURI, nsString &aFilename);
     nsresult StoreURIAttribute(
-        nsIDOMNode *aNode, char *aAttribute, PRBool aNeedsPersisting = PR_TRUE,
+        nsIDOMNode *aNode, const char *aAttribute,
+        PRBool aNeedsPersisting = PR_TRUE,
         URIData **aData = nsnull);
-    nsresult FixupNodeAttribute(nsIDOMNode *aNode, char *aAttribute);
+    nsresult FixupNodeAttribute(nsIDOMNode *aNode, const char *aAttribute);
     nsresult FixupAnchor(nsIDOMNode *aNode);
     nsresult StoreAndFixupStyleSheet(nsIStyleSheet *aStyleSheet);
     nsresult SaveDocumentToFileWithFixup(

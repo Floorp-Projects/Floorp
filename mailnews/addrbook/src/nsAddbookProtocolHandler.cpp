@@ -145,7 +145,7 @@ nsAddbookProtocolHandler::AllowPort(PRInt32 port, const char *scheme, PRBool *_r
 }
 
 NS_IMETHODIMP
-nsAddbookProtocolHandler::GenerateHTMLOutputChannel( char *aHtmlOutput,
+nsAddbookProtocolHandler::GenerateHTMLOutputChannel( const char *aHtmlOutput,
                                                      PRInt32  aHtmlOutputSize,
                                                      nsIAddbookUrl *addbookUrl,
                                                      nsIURI *aURI, 
@@ -199,7 +199,7 @@ nsAddbookProtocolHandler::NewChannel(nsIURI *aURI, nsIChannel **_retval)
       rv = GeneratePrintOutput(addbookUrl, &outBuf);
       if ((NS_FAILED(rv) || (!outBuf)))
       {
-        char          *eMsg = "Unsupported format/operation requested for \"addbook:\" URL.";
+        const char    *eMsg = "Unsupported format/operation requested for \"addbook:\" URL.";
         PRInt32       eSize = nsCRT::strlen(eMsg);
         rv = GenerateHTMLOutputChannel(eMsg, eSize, addbookUrl, aURI, _retval);
         break;
@@ -219,7 +219,7 @@ nsAddbookProtocolHandler::NewChannel(nsIURI *aURI, nsIChannel **_retval)
     case nsIAddbookUrlOperation::ImportTitle: 
     case nsIAddbookUrlOperation::InvalidUrl:
     default:
-      char          *eMsg = "Unsupported format/operation requested for \"addbook:\" URL.";
+      const char    *eMsg = "Unsupported format/operation requested for \"addbook:\" URL.";
       PRInt32       eSize = nsCRT::strlen(eMsg);
 
       rv = GenerateHTMLOutputChannel(eMsg, eSize, addbookUrl, aURI, _retval);

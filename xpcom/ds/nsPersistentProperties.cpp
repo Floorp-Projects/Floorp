@@ -144,7 +144,7 @@ nsPersistentProperties::Load(nsIInputStream *aIn)
       if (c < 0) {
         break;
       }
-      char *trimThese = " \t";
+      static const char trimThese[] = " \t";
       key.Trim(trimThese, PR_FALSE, PR_TRUE);
       c = Read();
       nsAutoString value;

@@ -763,7 +763,7 @@ nsAbSync::GenerateProtocolForCard(nsIAbCard *aCard, PRBool aAddId, nsString &pro
   nsString      tProtLine;
   PRInt32       phoneCount = 1;
   PRBool        foundPhone = PR_FALSE;
-  char          *phoneType;
+  const char    *phoneType;
 
   protLine = NS_ConvertASCIItoUCS2("");
 
@@ -2128,7 +2128,7 @@ nsAbSync::AdvanceToNextSection()
 
 // See if we are sitting on a particular tag...and eat if if we are
 PRBool          
-nsAbSync::TagHit(char *aTag, PRBool advanceToNextLine)
+nsAbSync::TagHit(const char *aTag, PRBool advanceToNextLine)
 {
   if ((!aTag) || (!*aTag))
     return PR_FALSE;
@@ -3013,7 +3013,7 @@ nsAbSync::GetString(const PRUnichar *aStringName)
 
 	if (!mStringBundle)
 	{
-		char    *propertyURL = AB_STRING_URL;
+		static const char propertyURL[] = AB_STRING_URL;
 
 		nsCOMPtr<nsIStringBundleService> sBundleService = 
 		         do_GetService(kStringBundleServiceCID, &res); 

@@ -3308,8 +3308,8 @@ InternetSearchDataSource::updateAtom(nsIRDFDataSource *db, nsIRDFResource *src,
 
 struct	encodings
 {
-	char		*numericEncoding;
-	char		*stringEncoding;
+	const char	*numericEncoding;
+	const char	*stringEncoding;
 };
 
 

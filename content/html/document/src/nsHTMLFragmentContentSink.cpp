@@ -481,7 +481,7 @@ nsHTMLFragmentContentSink::AddBaseTagInfo(nsIHTMLContent* aContent)
   }
 }
 
-static char* kSentinelStr = "endnote";
+static const char kSentinelStr[] = "endnote";
 
 NS_IMETHODIMP 
 nsHTMLFragmentContentSink::OpenContainer(const nsIParserNode& aNode)

@@ -59,8 +59,8 @@ static PRThread *gEventQueueLogThread = 0;
 #endif
 
 // in a real system, these would be members in a header class...
-static char *gActivatedNotification = "nsIEventQueueActivated";
-static char *gDestroyedNotification = "nsIEventQueueDestroyed";
+static const char gActivatedNotification[] = "nsIEventQueueActivated";
+static const char gDestroyedNotification[] = "nsIEventQueueDestroyed";
 
 nsEventQueueImpl::nsEventQueueImpl()
 {

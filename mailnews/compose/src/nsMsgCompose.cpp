@@ -813,7 +813,7 @@ nsresult nsMsgCompose::_SendMsg(MSG_DeliverMode deliverMode, nsIMsgIdentity *ide
       PRBool      newBody = PR_FALSE;
       char        *bodyString = (char *)m_compFields->GetBody();
       PRInt32     bodyLength;
-      char        *attachment1_type = TEXT_HTML;  // we better be "text/html" at this point
+      const char  attachment1_type[] = TEXT_HTML;  // we better be "text/html" at this point
 
       if (!entityConversionDone)
       {

@@ -49,10 +49,9 @@ NS_IMETHODIMP nsCNullSecurityContext::GetOrigin(char* buf, int len)
     if (buf == NULL)
        return NS_ERROR_NULL_POINTER;
     
-    char* origin = "file:///";
-    PRInt32 originLen = (PRInt32) nsCRT::strlen(origin);
+    const char origin[] = "file:///";
+    PRInt32 originLen = (PRInt32) (sizeof(origin) - 1);
     if (len <= originLen) {
-        nsCRT::free(origin);
         return NS_ERROR_NULL_POINTER;
     }
     // Copy origin

@@ -243,7 +243,7 @@ nsAbSyncDriver::GetString(const PRUnichar *aStringName)
 
 	if (!mStringBundle)
 	{
-		char    *propertyURL = AB_STRING_URL;
+		static const char propertyURL[] = AB_STRING_URL;
 
 		nsCOMPtr<nsIStringBundleService> sBundleService = 
 		         do_GetService(kStringBundleServiceCID, &res); 

@@ -40,7 +40,7 @@ nsIStringBundle *nsTextStringBundle::GetStringBundle( void)
 		return( m_pBundle);
 
 	nsresult			rv;
-	char*				propertyURL = TEXT_MSGS_URL;
+	static const char	propertyURL[] = TEXT_MSGS_URL;
 	nsIStringBundle*	sBundle = nsnull;
 
 

@@ -111,7 +111,7 @@ static NS_DEFINE_CID(kChromeRegistryCID, NS_CHROMEREGISTRY_CID);
 #define UILOCALE_CMD_LINE_ARG "-UILocale"
 #define CONTENTLOCALE_CMD_LINE_ARG "-contentLocale"
 
-extern "C" void ShowOSAlert(char* aMessage);
+extern "C" void ShowOSAlert(const char* aMessage);
 
 #define HELP_SPACER_1   "\t"
 #define HELP_SPACER_2   "\t\t"
@@ -271,7 +271,7 @@ static void InitializeMacOSXApp(int argc, char* argv[])
 /* Define Class IDs */
 static NS_DEFINE_CID(kAppShellServiceCID,   NS_APPSHELL_SERVICE_CID);
 static NS_DEFINE_CID(kCmdLineServiceCID,    NS_COMMANDLINE_SERVICE_CID);
-static char *sWatcherServiceContractID = "@mozilla.org/embedcomp/window-watcher;1";
+static const char sWatcherServiceContractID[] = "@mozilla.org/embedcomp/window-watcher;1";
 
 
 #include "nsNativeAppSupport.h"
@@ -942,11 +942,11 @@ static nsresult InitializeWindowCreator()
 // Maximum allowed / used length of alert message is 255 chars, due to restrictions on Mac.
 // Please make sure that file contents and fallback_alert_text are at most 255 chars.
 // Fallback_alert_text must be non-const, because of inplace conversion on Mac.
-static void ShowOSAlertFromFile(int argc, char **argv, const char *alert_filename, char* fallback_alert_text)
+static void ShowOSAlertFromFile(int argc, char **argv, const char *alert_filename, const char* fallback_alert_text)
 {
   char message[256] = { 0 };
   PRInt32 numRead = 0;
-  char *messageToShow = fallback_alert_text;
+  const char *messageToShow = fallback_alert_text;
   nsresult rv;
   nsCOMPtr<nsILocalFile> fileName;
   nsCOMPtr<nsIProperties> directoryService;
@@ -1002,7 +1002,7 @@ static nsresult VerifyInstallation(int argc, char **argv)
   if (exists)
   {
     nsCOMPtr<nsIFile> binPath;
-    char* lastResortMessage = "A previous install did not complete correctly.  Finishing install.";
+    const char lastResortMessage[] = "A previous install did not complete correctly.  Finishing install.";
 
     ShowOSAlertFromFile(argc, argv, CLEANUP_MESSAGE_FILENAME, lastResortMessage);
 
@@ -1033,13 +1033,13 @@ static nsresult VerifyPsmAbsentOrSane(int argc, char **argv)
     // In case the security component can not do its internal initialization,
     // we must warn the user and exit.
 
-    char *panicMsg = "Could not initialize the browser's security component. "
+    const char panicMsg[] = "Could not initialize the browser's security component. "
                      "The most likely cause is problems with files in your "
                      "browser's profile directory. Please check that this "
                      "directory has no read/write restrictions and your "
                      "hard disk is not full or close to full.";
 
-    char *panicMessageFilename = "nssifail.txt";
+    const char panicMessageFilename[] = "nssifail.txt";
 
     ShowOSAlertFromFile(argc, argv, panicMessageFilename, panicMsg);
 
