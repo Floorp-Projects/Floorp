@@ -19,9 +19,11 @@
 #include "nsIHTMLContentSink.h"
 #include "nsIParser.h"
 #include "nsICSSStyleSheet.h"
+#include "nsICSSLoader.h"
 #include "nsIUnicharInputStream.h"
 #include "nsIUnicharStreamLoader.h"
 #include "nsIHTMLContent.h"
+#include "nsIHTMLContentContainer.h"
 #include "nsIURL.h"
 #include "nsIURLGroup.h"
 #include "nsIHttpURL.h"
@@ -85,6 +87,7 @@ static NS_DEFINE_IID(kIHTMLContentSinkIID, NS_IHTML_CONTENT_SINK_IID);
 static NS_DEFINE_IID(kIHTTPURLIID, NS_IHTTPURL_IID);
 static NS_DEFINE_IID(kIScrollableViewIID, NS_ISCROLLABLEVIEW_IID);
 static NS_DEFINE_IID(kIHTMLDocumentIID, NS_IHTMLDOCUMENT_IID);
+static NS_DEFINE_IID(kIHTMLContentContainerIID, NS_IHTMLCONTENTCONTAINER_IID);
 static NS_DEFINE_IID(kIStreamListenerIID, NS_ISTREAMLISTENER_IID);
 static NS_DEFINE_IID(kIStyleSheetLinkingElementIID, NS_ISTYLESHEETLINKINGELEMENT_IID);
 
@@ -220,21 +223,13 @@ public:
 
   nsString mPreferredStyle;
   PRInt32 mStyleSheetCount;
-  nsVoidArray mSheetMap;
+  nsICSSLoader* mCSSLoader;
 
   void StartLayout();
 
   void ScrollToRef();
 
   void AddBaseTagInfo(nsIHTMLContent* aContent);
-
-  nsresult LoadStyleSheet(nsIURL* aURL,
-                          nsIUnicharInputStream* aUIN,
-                          PRBool aActive,
-                          const nsString& aTitle,
-                          const nsString& aMedia,
-                          nsIHTMLContent* aOwner,
-                          PRInt32 aIndex);
 
   nsresult ProcessLink(nsIHTMLContent* aElement, const nsString& aLinkData);
   nsresult ProcessStyleLink(nsIHTMLContent* aElement,
@@ -1393,6 +1388,7 @@ HTMLContentSink::HTMLContentSink()
   mBody            = nsnull;
   mFrameset        = nsnull;
   mStyleSheetCount = 0;
+  mCSSLoader       = nsnull;
 }
 
 HTMLContentSink::~HTMLContentSink()
@@ -1408,6 +1404,7 @@ HTMLContentSink::~HTMLContentSink()
   NS_IF_RELEASE(mDocumentBaseURL);
   NS_IF_RELEASE(mWebShell);
   NS_IF_RELEASE(mParser);
+  NS_IF_RELEASE(mCSSLoader);
 
   NS_IF_RELEASE(mCurrentForm);
   NS_IF_RELEASE(mCurrentMap);
@@ -1465,6 +1462,12 @@ HTMLContentSink::Init(nsIDocument* aDoc,
   NS_ADDREF(aURL);
   mWebShell = aContainer;
   NS_ADDREF(aContainer);
+
+  nsIHTMLContentContainer* htmlContainer = nsnull;
+  if (NS_SUCCEEDED(aDoc->QueryInterface(kIHTMLContentContainerIID, (void**)&htmlContainer))) {
+    htmlContainer->GetCSSLoader(mCSSLoader);
+    NS_RELEASE(htmlContainer);
+  }
 
   // XXX this presumes HTTP header info is alread set in document
   // XXX if it isn't we need to set it here...
@@ -2230,52 +2233,6 @@ HTMLContentSink::ProcessBASETag(const nsIParserNode& aNode)
   return NS_OK;
 }
 
-typedef struct {
-  nsString mTitle;
-  nsString mMedia;
-  PRBool mIsActive;
-  PRBool mBlocked;
-  nsIURL* mURL;
-  nsIHTMLContent* mElement;
-  HTMLContentSink* mSink;
-  PRInt32 mIndex;
-} nsAsyncStyleProcessingDataHTML;
-
-static void
-nsDoneLoadingStyle(nsIUnicharStreamLoader* aLoader,
-                   nsString& aData,
-                   void* aRef,
-                   nsresult aStatus)
-{
-  nsresult rv = NS_OK;
-  nsAsyncStyleProcessingDataHTML* d = (nsAsyncStyleProcessingDataHTML*)aRef;
-  nsIUnicharInputStream* uin = nsnull;
-
-  if ((NS_OK == aStatus) && (0 < aData.Length())) {
-    // wrap the string with the CSS data up in a unicode
-    // input stream.
-    rv = NS_NewStringUnicharInputStream(&uin, new nsString(aData));
-    if (NS_OK == rv) {
-      // XXX We have no way of indicating failure. Silently fail?
-      rv = d->mSink->LoadStyleSheet(d->mURL, uin, d->mIsActive, 
-                                    d->mTitle, d->mMedia, d->mElement, d->mIndex);
-      NS_RELEASE(uin);
-    }
-  }
-
-  if (d->mBlocked) {
-    d->mSink->ResumeParsing();
-  }
-    
-  NS_RELEASE(d->mURL);
-  NS_IF_RELEASE(d->mElement);
-  NS_RELEASE(d->mSink);
-  delete d;
-
-  // We added a reference when the loader was created. This
-  // release should destroy it.
-  NS_RELEASE(aLoader);
-}
 
 const PRUnichar kSemiCh = PRUnichar(';');
 const PRUnichar kCommaCh = PRUnichar(',');
@@ -2455,56 +2412,23 @@ HTMLContentSink::ProcessStyleLink(nsIHTMLContent* aElement,
         return NS_OK; // The URL is bad, move along, don't propogate the error (for now)
       }
 
-      PRBool isPersistent = PR_FALSE;
-      PRBool isPreferred  = PR_FALSE;
-      PRBool isAlternate  = PR_FALSE;
       if (aRel.EqualsIgnoreCase("stylesheet")) {
-        if (0 == aTitle.Length()) {
-          isPersistent = PR_TRUE;
-        }
-        else {
+        if (0 < aTitle.Length()) {  // possibly preferred sheet
           if (0 == mPreferredStyle.Length()) {
-            isPreferred = PR_TRUE;
             mPreferredStyle = aTitle;
+            mCSSLoader->SetPreferredSheet(aTitle);
             mDocument->SetHeaderData(nsHTMLAtoms::headerDefaultStyle, aTitle);
           }
-          else {
-            if (aTitle.EqualsIgnoreCase(mPreferredStyle)) {
-              isPreferred = PR_TRUE;
-            }
-            else {
-              isAlternate = PR_TRUE;
-            }
-          }
         }
       }
-      else {
-        isAlternate = PR_TRUE;
-      }
 
-      nsAsyncStyleProcessingDataHTML* d = new nsAsyncStyleProcessingDataHTML;
-      if (nsnull == d) {
-        return NS_ERROR_OUT_OF_MEMORY;
-      }
-      d->mTitle=aTitle;
-      d->mMedia=aMedia;
-      d->mIsActive = isPersistent;
-      d->mBlocked = aBlockParser;
-      d->mURL = url;
-      NS_ADDREF(url);
-      d->mElement = aElement;
-      NS_IF_ADDREF(aElement);
-      d->mSink = this;
-      NS_ADDREF(this);
-      d->mIndex = mStyleSheetCount++; // preserve ordering
-      
-      nsIUnicharStreamLoader* loader;
-      result = NS_NewUnicharStreamLoader(&loader,
-                                         url, 
-                                         (nsStreamCompleteFunc)nsDoneLoadingStyle, 
-                                         (void *)d);
+      PRBool doneLoading;
+      result = mCSSLoader->LoadStyleLink(aElement, url, aTitle, aMedia,
+                                         mStyleSheetCount++, 
+                                        ((aBlockParser) ? mParser : nsnull),
+                                        doneLoading);
       NS_RELEASE(url);
-      if (NS_SUCCEEDED(result) && aBlockParser) {
+      if (NS_SUCCEEDED(result) && aBlockParser && (! doneLoading)) {
         result = NS_ERROR_HTMLPARSER_BLOCK;
       }
     }
@@ -2678,6 +2602,7 @@ HTMLContentSink::ProcessMETATag(const nsIParserNode& aNode)
 
           if (fieldAtom == nsHTMLAtoms::headerDefaultStyle) {
             mPreferredStyle = result;
+            mCSSLoader->SetPreferredSheet(mPreferredStyle);
           }
           else if (fieldAtom == nsHTMLAtoms::link) {
             rv = ProcessLink(it, result);
@@ -2945,7 +2870,6 @@ HTMLContentSink::ProcessSCRIPTTag(const nsIParserNode& aNode)
 
 // 3 ways to load a style sheet: inline, style src=, link tag
 // XXX What does nav do if we have SRC= and some style data inline?
-// XXX This code and ProcessSCRIPTTag share alot in common; clean that up!
 
 nsresult
 HTMLContentSink::ProcessSTYLETag(const nsIParserNode& aNode)
@@ -2957,7 +2881,6 @@ HTMLContentSink::ProcessSTYLETag(const nsIParserNode& aNode)
   nsAutoString title; 
   nsAutoString type; 
   nsAutoString media; 
-  PRBool blockParser = PR_FALSE;
 
   nsIScriptContextOwner* sco = mDocument->GetScriptContextOwner();
   for (index = 0; index < count; index++) {
@@ -2976,9 +2899,6 @@ HTMLContentSink::ProcessSTYLETag(const nsIParserNode& aNode)
     }
     else if (key.EqualsIgnoreCase("media")) {
       GetAttributeValueAt(aNode, index, media, sco);  // case sensative
-    }
-    else if (key.EqualsIgnoreCase("wait")) {
-      blockParser = PR_TRUE;
     }
   }
 
@@ -3006,6 +2926,7 @@ HTMLContentSink::ProcessSTYLETag(const nsIParserNode& aNode)
   if ((0 == type.Length()) || type.EqualsIgnoreCase("text/css")) { 
     // The skipped content contains the inline style data
     const nsString& content = aNode.GetSkippedContent();
+    PRBool doneLoading = PR_FALSE;
 
     nsIUnicharInputStream* uin = nsnull;
     if (0 == src.Length()) {
@@ -3018,8 +2939,9 @@ HTMLContentSink::ProcessSTYLETag(const nsIParserNode& aNode)
 
       // Now that we have a url and a unicode input stream, parse the
       // style sheet.
-      rv = LoadStyleSheet(mDocumentBaseURL, uin, PR_TRUE, title, media, element,
-                          mStyleSheetCount++);
+      rv = mCSSLoader->LoadInlineStyle(element, uin, title, media, 
+                                       mStyleSheetCount++, mParser,
+                                       doneLoading);
       NS_RELEASE(uin);
     } 
     else {
@@ -3040,31 +2962,13 @@ HTMLContentSink::ProcessSTYLETag(const nsIParserNode& aNode)
         return rv;
       }
 
-      nsAsyncStyleProcessingDataHTML* d = new nsAsyncStyleProcessingDataHTML;
-      if (nsnull == d) {
-        return NS_ERROR_OUT_OF_MEMORY;
-      }
-      d->mTitle=title;
-      d->mMedia=media;
-      d->mIsActive = PR_TRUE;
-      d->mBlocked = blockParser;
-      d->mURL = url;
-      NS_ADDREF(url);
-      d->mElement = element;
-      NS_ADDREF(element);
-      d->mSink = this;
-      NS_ADDREF(this);
-      d->mIndex = mStyleSheetCount++; // preserve ordering
-
-      nsIUnicharStreamLoader* loader;
-      rv = NS_NewUnicharStreamLoader(&loader,
-                                     url, 
-                                     (nsStreamCompleteFunc)nsDoneLoadingStyle, 
-                                     (void *)d);
+      rv = mCSSLoader->LoadStyleLink(element, url, title, media, 
+                                     mStyleSheetCount++, 
+                                     mParser, doneLoading);
       NS_RELEASE(url);
-      if (NS_SUCCEEDED(rv) && blockParser) {
-        rv = NS_ERROR_HTMLPARSER_BLOCK;
-      }
+    }
+    if (NS_SUCCEEDED(rv) && (! doneLoading)) {
+      rv = NS_ERROR_HTMLPARSER_BLOCK;
     }
   }
 
@@ -3073,157 +2977,6 @@ HTMLContentSink::ProcessSTYLETag(const nsIParserNode& aNode)
   return rv;
 }
 
-
-typedef PRBool (*nsStringEnumFunc)(const nsString& aSubString, void *aData);
-const PRUnichar kHyphenCh = PRUnichar('-');
-
-static PRBool EnumerateMediaString(const nsString& aStringList, nsStringEnumFunc aFunc, void* aData)
-{
-  PRBool    running = PR_TRUE;
-
-  nsAutoString  stringList(aStringList); // copy to work buffer
-  nsAutoString  subStr;
-
-  stringList.Append(kNullCh);  // put an extra null at the end
-
-  PRUnichar* start = (PRUnichar*)(const PRUnichar*)stringList.GetUnicode();
-  PRUnichar* end   = start;
-
-  while (running && (kNullCh != *start)) {
-    PRBool  quoted = PR_FALSE;
-
-    while ((kNullCh != *start) && nsString::IsSpace(*start)) {  // skip leading space
-      start++;
-    }
-
-    if ((kApostrophe == *start) || (kQuote == *start)) { // quoted string
-      PRUnichar quote = *start++;
-      quoted = PR_TRUE;
-      end = start;
-      while (kNullCh != *end) {
-        if (quote == *end) {  // found closing quote
-          *end++ = kNullCh;     // end string here
-          while ((kNullCh != *end) && (kComma != *end)) { // keep going until comma
-            end++;
-          }
-          break;
-        }
-        end++;
-      }
-    }
-    else {  // non-quoted string or ended
-      end = start;
-
-      while ((kNullCh != *end) && (kComma != *end)) { // look for comma
-        end++;
-      }
-      *end = kNullCh; // end string here
-    }
-
-    // truncate at first non letter, digit or hyphen
-    PRUnichar* test = start;
-    while (test <= end) {
-      if ((PR_FALSE == nsString::IsAlpha(*test)) && 
-          (PR_FALSE == nsString::IsDigit(*test)) && (kHyphenCh != *test)) {
-        *test = kNullCh;
-        break;
-      }
-      test++;
-    }
-    subStr = start;
-
-    if (PR_FALSE == quoted) {
-      subStr.CompressWhitespace(PR_FALSE, PR_TRUE);
-    }
-
-    if (0 < subStr.Length()) {
-      running = (*aFunc)(subStr, aData);
-    }
-
-    start = ++end;
-  }
-
-  return running;
-}
-
-static PRBool MediumEnumFunc(const nsString& aSubString, void *aData)
-{
-  nsIAtom*  medium = NS_NewAtom(aSubString);
-  ((nsICSSStyleSheet*)aData)->AppendMedium(medium);
-  return PR_TRUE;
-}
-
-nsresult
-HTMLContentSink::LoadStyleSheet(nsIURL* aURL,
-                                nsIUnicharInputStream* aUIN,
-                                PRBool aActive,
-                                const nsString& aTitle,
-                                const nsString& aMedia,
-                                nsIHTMLContent* aOwner,
-                                PRInt32 aIndex)
-{
-  /* XXX use repository */
-  nsICSSParser* parser;
-  nsresult rv = NS_NewCSSParser(&parser);
-  if (NS_OK == rv) {
-    nsICSSStyleSheet* sheet = nsnull;
-    // XXX note: we are ignoring rv until the error code stuff in the
-    // input routines is converted to use nsresult's
-    parser->SetCaseSensitive(PR_FALSE);
-    parser->Parse(aUIN, aURL, sheet);
-    if (nsnull != sheet) {
-      sheet->SetTitle(aTitle);
-      if (aActive) {
-        sheet->SetEnabled(PR_TRUE);
-      }
-      else {  // is alternate, test if preferred
-        NS_ASSERTION(0 < aTitle.Length(), "alternate sheets need titles");
-        sheet->SetEnabled(aTitle.EqualsIgnoreCase(mPreferredStyle));
-      }
-      if (0 < aMedia.Length()) {
-        EnumerateMediaString(aMedia, MediumEnumFunc, sheet);
-      }
-      if (nsnull != aOwner) {
-        nsIDOMNode* domNode = nsnull;
-        if (NS_SUCCEEDED(aOwner->QueryInterface(kIDOMNodeIID, (void**)&domNode))) {
-          sheet->SetOwningNode(domNode);
-          NS_RELEASE(domNode);
-        }
-
-        nsIStyleSheetLinkingElement* element;
-        if (NS_SUCCEEDED(aOwner->QueryInterface(kIStyleSheetLinkingElementIID,
-                                                (void**)&element))) {
-          element->SetStyleSheet(sheet);
-          NS_RELEASE(element);
-        }
-      }
-
-      PRInt32 insertIndex = mSheetMap.Count();
-      PRBool notify = PRBool((mSheetMap.Count() + 1) == mStyleSheetCount);
-        // always notify on last sheet
-      while (0 <= --insertIndex) {
-        PRInt32 targetIndex = (PRInt32)mSheetMap.ElementAt(insertIndex);
-        if (targetIndex < aIndex) {
-          mHTMLDocument->InsertStyleSheetAt(sheet, insertIndex + 1, notify);
-          mSheetMap.InsertElementAt((void*)aIndex, insertIndex + 1);
-          NS_RELEASE(sheet);
-          break;
-        }
-      }
-      if (nsnull != sheet) { // didn't insert yet
-        mHTMLDocument->InsertStyleSheetAt(sheet, 0, notify);
-        mSheetMap.InsertElementAt((void*)aIndex, 0);
-        NS_RELEASE(sheet);
-      }
-
-      rv = NS_OK;
-    } else {
-      rv = NS_ERROR_OUT_OF_MEMORY;/* XXX */
-    }
-    NS_RELEASE(parser);
-  }
-  return rv;
-}
 
 NS_IMETHODIMP 
 HTMLContentSink::NotifyError(const nsParserError* aError)
