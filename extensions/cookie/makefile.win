@@ -43,11 +43,7 @@ CPP_OBJS=				\
  .\$(OBJDIR)\nsCookieHTTPNotify.obj	\
  $(NULL)
 
-!ifdef NECKO
 LINCS = -I$(DEPTH)\include \
-!else
-LINCS = -I$(DEPTH)\netwerk\dist\include \
-!endif
 
 MAKE_OBJ_TYPE = DLL
 DLLNAME = cookie
@@ -66,7 +62,11 @@ LLIBS	= \
  $(DIST)\lib\js$(MOZ_BITS)$(VERSION_NUMBER).lib \
  $(DIST)\lib\xplib.lib		\
  $(DIST)\lib\xpcom.lib \
+!ifdef NECKO
+ $(DIST)\lib\necko.lib \
+!else
  $(DIST)\lib\netwerk.lib \
+!endif
  $(DIST)\lib\xppref32.lib \
  $(DIST)\lib\secfreenav32.lib	\
  $(HASHLIBS)
