@@ -141,7 +141,7 @@ outputToStream (XMLFile f, char* s)
      return;
   }
 #ifdef DEBUG
-  FE_Trace(s);
+/*  FE_Trace(s); */
 #endif
   if (f->outputBuffer == NULL) f->outputBuffer = getMem(OUTPUT_BUFFER_SIZE+1);
   if ((strlen(s) > OUTPUT_BUFFER_SIZE)) {
