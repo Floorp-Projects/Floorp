@@ -71,3 +71,15 @@ treeitem[type="http://home.netscape.com/NC-rdf#Folder"][id="NC:PersonalToolbarFo
 treeitem[type="http://home.netscape.com/NC-rdf#Bookmark"] > treecell > titledbutton {
  list-style-image: url("resource:/res/rdf/bookmark-item.gif");
 }
+
+treeitem[type="http://home.netscape.com/NC-rdf#FileSystemObject"][container="true"][open="true"] > treecell > titledbutton {
+ list-style-image: url("resource:/res/rdf/folder-open.gif");
+}
+
+treeitem[type="http://home.netscape.com/NC-rdf#FileSystemObject"][container="true"] > treecell > titledbutton {
+ list-style-image: url("resource:/res/rdf/folder-closed.gif");
+}
+
+treeitem[type="http://home.netscape.com/NC-rdf#FileSystemObject"] > treecell > titledbutton {
+ list-style-image: url("resource:/res/rdf/article.gif");
+}
