@@ -103,7 +103,6 @@ nsHTTPHandlerFactory::CreateInstance(nsISupports *aOuter,
     if (!inst)
         return NS_ERROR_OUT_OF_MEMORY;
 
-    NS_ADDREF(inst);
     inst->QueryInterface(aIID, aResult);
     NS_RELEASE(inst);
     return rv;
