@@ -75,6 +75,14 @@
 #include "nsIPref.h"
 #include "nsLegendFrame.h"
 
+#include "nsIDOMWindow.h"
+#include "nsPIDOMWindow.h"
+#ifdef INCLUDE_XUL
+#include "nsIDOMXULCommandDispatcher.h"
+#include "nsIDOMXULDocument.h"
+#endif
+
+
 #include "nsInlineFrame.h"
 #include "nsBlockFrame.h"
 
@@ -2392,6 +2400,41 @@ nsCSSFrameConstructor::ConstructDocElementFrame(nsIPresShell*        aPresShell,
     }
   }
 
+#ifdef INCLUDE_XUL
+  // XXX This is a terrible place for this, but you aren't able to send
+  // events to a presshell until a frame exists.  
+  // Restore focus if we're the active window.
+  nsCOMPtr<nsIDocument> document;
+  aDocElement->GetDocument(*getter_AddRefs(document));
+  nsCOMPtr<nsIScriptGlobalObject> globalObject;
+  document->GetScriptGlobalObject(getter_AddRefs(globalObject));  
+  nsCOMPtr<nsIDOMWindow> rootWindow;
+  nsCOMPtr<nsPIDOMWindow> ourWindow = do_QueryInterface(globalObject);
+  ourWindow->GetPrivateRoot(getter_AddRefs(rootWindow));
+  nsCOMPtr<nsIDOMDocument> rootDocument;
+  rootWindow->GetDocument(getter_AddRefs(rootDocument));
+
+  nsCOMPtr<nsIDOMXULCommandDispatcher> commandDispatcher;
+  nsCOMPtr<nsIDOMXULDocument> xulDoc = do_QueryInterface(rootDocument);
+  if (xulDoc) {
+    // See if we have a command dispatcher attached.
+    xulDoc->GetCommandDispatcher(getter_AddRefs(commandDispatcher));
+    if (commandDispatcher) {
+      // Suppress the command dispatcher.
+      commandDispatcher->SetSuppressFocus(PR_TRUE);
+      nsCOMPtr<nsIDOMWindow> focusedWindow;
+      commandDispatcher->GetFocusedWindow(getter_AddRefs(focusedWindow));
+      nsCOMPtr<nsIDOMWindow> domWindow = do_QueryInterface(ourWindow);
+      if (domWindow == focusedWindow) {
+        // We need to restore focus and make sure we null
+        // out the focused element.
+        commandDispatcher->SetFocusedElement(nsnull);
+        domWindow->Focus();
+      }
+      commandDispatcher->SetSuppressFocus(PR_FALSE);
+    }
+  }
+#endif
   return NS_OK;
 }
 
