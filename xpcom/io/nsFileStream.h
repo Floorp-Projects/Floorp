@@ -243,7 +243,8 @@ public:
                                       }
     void                              close()
                                       {
-                                          mOutputStream->Close();
+                                          if (mOutputStream)
+                                            mOutputStream->Close();
                                       }
     void                              put(char c);
     PRInt32                           write(const void* s, PRInt32 n);
