@@ -105,7 +105,7 @@
           <vbox>
             <hbox align="center">
               <spacer flex="1"/>
-              <label value="&marginTop.label;"/>
+              <label value="&marginTop.label;" control="topInput"/>
               <textbox id="topInput" size="5" oninput="changeMargin(this)" onfocus="this.select()" tabindex="1"/>
               <!-- This invisible label (with same content as the visible one!) is used
                    to ensure that the <textbox> is centered above the page.  The same
@@ -117,7 +117,7 @@
               <spacer flex="1"/>
               <vbox>
                 <spacer flex="1"/>
-                <label value="&marginLeft.label;"/>
+                <label value="&marginLeft.label;" control="leftInput"/>
                 <textbox id="leftInput" size="5" oninput="changeMargin(this)" onfocus="this.select()" tabindex="1"/>
                 <label value="&marginLeft.label;" style="visibility: hidden;"/>
                 <spacer flex="1"/>
@@ -137,7 +137,7 @@
               </vbox>
               <vbox>
                 <spacer flex="1"/>
-                <label value="&marginRight.label;"/>
+                <label value="&marginRight.label;" control="rightInput"/>
                 <textbox id="rightInput" size="5" oninput="changeMargin(this)" onfocus="this.select()" tabindex="1"/>
                 <label value="&marginRight.label;" style="visibility: hidden;"/>
                 <spacer flex="1"/>
@@ -146,7 +146,7 @@
             </hbox>
             <hbox align="center">
               <spacer flex="1"/>
-              <label value="&marginBottom.label;"/>
+              <label value="&marginBottom.label;" control="bottomInput"/>
               <textbox id="bottomInput" size="5" oninput="changeMargin(this)" onfocus="this.select()" tabindex="1"/>
               <label value="&marginBottom.label;" style="visibility: hidden;"/>
               <spacer flex="1"/>

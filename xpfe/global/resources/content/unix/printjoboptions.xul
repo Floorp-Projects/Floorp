@@ -71,7 +71,7 @@
 
       <row id="paperGroup">
         <hbox align="center" pack="end">
-          <label id="paperLabel" value="&paperInput.label;"/>
+          <label id="paperLabel" value="&paperInput.label;" control="paperList"/>
         </hbox>
         <menulist id="paperList" flex="1">
           <menupopup/>
@@ -106,7 +106,7 @@
       </row>
 
       <row id="cmdGroup">
-        <label id="cmdLabel" value="&cmdInput.label;"/>
+        <label id="cmdLabel" value="&cmdInput.label;" control="cmdInput"/>
         <textbox id="cmdInput" flex="1"/>
       </row>
 
