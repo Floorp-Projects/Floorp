@@ -219,7 +219,7 @@ static void PRMJ_basetime(JSInt64 tsecs, PRMJTime *prtm);
 JSInt32
 PRMJ_LocalGMTDifference()
 {
-#if defined(XP_UNIX) || defined(XP_PC) || defined(XP_BEOS)
+#if defined(XP_UNIX) || defined(XP_WIN) || defined(XP_OS2) || defined(XP_BEOS)
     struct tm ltime;
 
     /* get the difference between this time zone and GMT */
@@ -469,7 +469,7 @@ PRMJ_DSTOffset(JSInt64 local_time)
 size_t
 PRMJ_FormatTime(char *buf, int buflen, char *fmt, PRMJTime *prtm)
 {
-#if defined(XP_UNIX) || defined(XP_PC) || defined(XP_MAC) || defined(XP_BEOS)
+#if defined(XP_UNIX) || defined(XP_WIN) || defined(XP_OS2) || defined(XP_MAC) || defined(XP_BEOS)
     struct tm a;
 
     /* Zero out the tm struct.  Linux, SunOS 4 struct tm has extra members int

@@ -186,7 +186,7 @@ js_ValueToBoolean(JSContext *cx, jsval v, JSBool *bp)
     JSBool b;
     jsdouble d;
 
-#if defined XP_PC && defined _MSC_VER && _MSC_VER <= 800
+#if defined _MSC_VER && _MSC_VER <= 800
     /* MSVC1.5 coredumps */
     if (!bp)
 	return JS_TRUE;
@@ -222,7 +222,7 @@ js_ValueToBoolean(JSContext *cx, jsval v, JSBool *bp)
 	d = *JSVAL_TO_DOUBLE(v);
 	b = (!JSDOUBLE_IS_NaN(d) && d != 0) ? JS_TRUE : JS_FALSE;
     } ELSE
-#if defined XP_PC && defined _MSC_VER && _MSC_VER <= 800
+#if defined _MSC_VER && _MSC_VER <= 800
     if (JSVAL_IS_BOOLEAN(v)) {
 	b = JSVAL_TO_BOOLEAN(v);
     }

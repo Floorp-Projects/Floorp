@@ -865,7 +865,7 @@ fun_getProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     jsint slot;
     JSFunction *fun;
     JSStackFrame *fp;
-#if defined XP_PC && defined _MSC_VER &&_MSC_VER <= 800
+#if defined _MSC_VER &&_MSC_VER <= 800
     /* MSVC1.5 coredumps */
     jsval bogus = *vp;
 #endif
@@ -937,7 +937,7 @@ fun_getProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       default:
         /* XXX fun[0] and fun.arguments[0] are equivalent. */
         if (fp && fp->fun && (uintN)slot < fp->fun->nargs)
-#if defined XP_PC && defined _MSC_VER &&_MSC_VER <= 800
+#if defined _MSC_VER &&_MSC_VER <= 800
           /* MSVC1.5 coredumps */
           if (bogus == *vp)
 #endif

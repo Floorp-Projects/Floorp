@@ -82,7 +82,7 @@
 #define JS_BYTES_PER_DWORD_LOG2  3L
 #define PR_WORDS_PER_DWORD_LOG2  1L
 
-#elif defined(XP_PC)
+#elif defined(XP_WIN) || defined(XP_OS2)
 
 #if defined( _WIN32) || defined(XP_OS2)
 #define IS_LITTLE_ENDIAN 1
@@ -184,7 +184,7 @@
 
 #else
 
-#error "Must define one of XP_MAC, XP_PC, XP_UNIX, or XP_BEOS"
+#error "Must define one of XP_BEOS, XP_MAC, XP_OS2, XP_WIN, or XP_UNIX"
 
 #endif
 

@@ -58,7 +58,7 @@
 // all this crap is needed to do the interactive shell stuff
 #include <stdlib.h>
 #include <errno.h>
-#ifdef XP_PC
+#if defined(XP_WIN) || defined(XP_OS2)
 #include <io.h>     /* for isatty() */
 #elif defined(XP_UNIX) || defined(XP_BEOS)
 #include <unistd.h>     /* for isatty() */

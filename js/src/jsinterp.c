@@ -1225,7 +1225,7 @@ js_CheckRedeclaration(JSContext *cx, JSObject *obj, jsid id, uintN attrs,
 #ifndef MAX_INTERP_LEVEL
 #if defined(XP_OS2)
 #define MAX_INTERP_LEVEL 250
-#elif defined(XP_PC) && defined(_MSC_VER) && _MSC_VER <= 800
+#elif defined _MSC_VER && _MSC_VER <= 800
 #define MAX_INTERP_LEVEL 30
 #else
 #define MAX_INTERP_LEVEL 1000
@@ -2052,7 +2052,7 @@ js_Interpret(JSContext *cx, jsval *result)
             BITWISE_OP(&);
             break;
 
-#ifdef XP_PC
+#if defined(XP_WIN) || defined(XP_OS2)
 #define COMPARE_DOUBLES(LVAL, OP, RVAL, IFNAN)                                \
     ((JSDOUBLE_IS_NaN(LVAL) || JSDOUBLE_IS_NaN(RVAL))                         \
      ? (IFNAN)                                                                \
@@ -2317,7 +2317,7 @@ js_Interpret(JSContext *cx, jsval *result)
             FETCH_NUMBER(cx, -2, d);
             sp--;
             if (d2 == 0) {
-#ifdef XP_PC
+#if defined(XP_WIN) || defined(XP_OS2)
                 /* XXX MSVC miscompiles such that (NaN == 0) */
                 if (JSDOUBLE_IS_NaN(d2))
                     rval = DOUBLE_TO_JSVAL(rt->jsNaN);
@@ -2343,7 +2343,7 @@ js_Interpret(JSContext *cx, jsval *result)
             if (d2 == 0) {
                 STORE_OPND(-1, DOUBLE_TO_JSVAL(rt->jsNaN));
             } else {
-#ifdef XP_PC
+#if defined(XP_WIN) || defined(XP_OS2)
               /* Workaround MS fmod bug where 42 % (1/0) => NaN, not 42. */
               if (!(JSDOUBLE_IS_FINITE(d) && JSDOUBLE_IS_INFINITE(d2)))
 #endif

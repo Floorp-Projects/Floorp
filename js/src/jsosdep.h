@@ -38,14 +38,14 @@
  * OS (and machine, and compiler XXX) dependent information.
  */
 
-#ifdef XP_PC
+#if defined(XP_WIN) || defined(XP_OS2)
 
 #if defined(_WIN32) || defined (XP_OS2)
 #define JS_HAVE_LONG_LONG
 #else
 #undef JS_HAVE_LONG_LONG
 #endif
-#endif /* XP_PC */
+#endif /* XP_WIN || XP_OS2 */
 
 #ifdef XP_MAC
 #define JS_HAVE_LONG_LONG

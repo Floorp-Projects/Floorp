@@ -3180,7 +3180,7 @@ FoldBinaryNumeric(JSContext *cx, JSOp op, JSParseNode *pn1, JSParseNode *pn2,
 
       case JSOP_DIV:
         if (d2 == 0) {
-#ifdef XP_PC
+#if defined(XP_WIN) || defined(XP_OS2)
             /* XXX MSVC miscompiles such that (NaN == 0) */
             if (JSDOUBLE_IS_NaN(d2))
                 d = *cx->runtime->jsNaN;
@@ -3201,7 +3201,7 @@ FoldBinaryNumeric(JSContext *cx, JSOp op, JSParseNode *pn1, JSParseNode *pn2,
         if (d2 == 0) {
             d = *cx->runtime->jsNaN;
         } else {
-#ifdef XP_PC
+#if defined(XP_WIN) || defined(XP_OS2)
           /* Workaround MS fmod bug where 42 % (1/0) => NaN, not 42. */
           if (!(JSDOUBLE_IS_FINITE(d) && JSDOUBLE_IS_INFINITE(d2)))
 #endif

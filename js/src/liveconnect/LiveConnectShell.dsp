@@ -43,7 +43,7 @@ RSC=rc.exe
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /W3 /GX /O2 /D "WIN32" /D "NDEBUG" /D "_CONSOLE" /D "_MBCS" /YX /FD /c
-# ADD CPP /nologo /MD /W3 /GX /O2 /I "$(JDK)\include" /I "$(JDK)\include\win32" /I "." /D "_WIN32" /D "WIN32" /D "NDEBUG" /D "XP_PC" /D "_WINDOWS" /D "JSFILE" /D "LIVECONNECT" /YX /FD /c
+# ADD CPP /nologo /MD /W3 /GX /O2 /I "$(JDK)\include" /I "$(JDK)\include\win32" /I "." /D "_WIN32" /D "WIN32" /D "NDEBUG" /D "XP_WIN" /D "_WINDOWS" /D "JSFILE" /D "LIVECONNECT" /YX /FD /c
 # ADD BASE RSC /l 0x409 /d "NDEBUG"
 # ADD RSC /l 0x409 /d "NDEBUG"
 BSC32=bscmake.exe
@@ -72,7 +72,7 @@ PostBuild_Cmds=COPY ..\Release\js32.dll .\Release
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /W3 /Gm /GX /Zi /Od /D "WIN32" /D "_DEBUG" /D "_CONSOLE" /D "_MBCS" /YX /FD /c
-# ADD CPP /nologo /MDd /W3 /Gm /GX /Zi /Od /I "$(JDK)\include" /I "$(JDK)\include\win32" /I "." /D "LIVECONNECT" /D "_WIN32" /D "WIN32" /D "_DEBUG" /D "DEBUG" /D "XP_PC" /D "_WINDOWS" /D "JSFILE" /FR /YX /FD /c
+# ADD CPP /nologo /MDd /W3 /Gm /GX /Zi /Od /I "$(JDK)\include" /I "$(JDK)\include\win32" /I "." /D "LIVECONNECT" /D "_WIN32" /D "WIN32" /D "_DEBUG" /D "DEBUG" /D "XP_WIN" /D "_WINDOWS" /D "JSFILE" /FR /YX /FD /c
 # SUBTRACT CPP /u
 # ADD BASE RSC /l 0x409 /d "_DEBUG"
 # ADD RSC /l 0x409 /d "_DEBUG"
