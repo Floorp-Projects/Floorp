@@ -659,7 +659,7 @@ nsCSSDeclaration::GetValue(nsCSSProperty aProperty,
                    "Someone changed the storage type of play-during!");
       const nsCSSValuePair *pair = NS_STATIC_CAST(const nsCSSValuePair*, storage);
       AppendCSSValueToString(aProperty, pair->mXValue, aValue);
-      if (pair->mYValue != eCSSUnit_Null) {
+      if (pair->mYValue.GetUnit() != eCSSUnit_Null) {
         aValue.Append(PRUnichar(' '));
         PRInt32 intValue = pair->mYValue.GetIntValue();
         if ((NS_STYLE_PLAY_DURING_MIX & intValue) != 0) {
