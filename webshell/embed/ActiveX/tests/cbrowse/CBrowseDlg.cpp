@@ -57,6 +57,8 @@ CBrowseDlg::CBrowseDlg(CWnd* pParent /*=NULL*/)
 	m_pBrowseDlg = this;
 	m_pControlSite = NULL;
 	m_clsid = CLSID_NULL;
+	m_bUseCustomPopupMenu = FALSE;
+	m_bUseCustomDropTarget = FALSE;
 }
 
 void CBrowseDlg::DoDataExchange(CDataExchange* pDX)
@@ -306,6 +308,8 @@ HRESULT CBrowseDlg::CreateWebBrowser()
 
 	PropertyList pl;
 	m_pControlSite->AddRef();
+	m_pControlSite->m_bUseCustomPopupMenu = m_bUseCustomPopupMenu;
+	m_pControlSite->m_bUseCustomDropTarget = m_bUseCustomDropTarget;
 	m_pControlSite->Create(m_clsid, pl);
 	hr = m_pControlSite->Attach(GetSafeHwnd(), rcMarker, NULL);
 	if (hr != S_OK)

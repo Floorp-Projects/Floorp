@@ -82,6 +82,8 @@ BOOL CBrowseApp::InitInstance()
 
 	m_pDlg = new CBrowseDlg;
 	m_pDlg->m_clsid = pickerDlg.m_clsid;
+	m_pDlg->m_bUseCustomDropTarget = pickerDlg.m_bUseCustom;
+	m_pDlg->m_bUseCustomPopupMenu = pickerDlg.m_bUseCustom;
 	m_pDlg->Create(IDD_CBROWSE_DIALOG);
 	m_pMainWnd = m_pDlg;
 

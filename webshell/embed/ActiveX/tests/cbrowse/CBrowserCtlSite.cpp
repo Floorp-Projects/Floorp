@@ -3,15 +3,87 @@
 #include "Cbrowse.h"
 #include "CBrowserCtlSite.h"
 
+#include <tchar.h>
+#include <string.h>
+
 /////////////////////////////////////////////////////////////////////////////
 // CBrowserCtlSite
+
+CBrowserCtlSite::CBrowserCtlSite()
+{
+	m_bUseCustomPopupMenu = TRUE;
+	m_bUseCustomDropTarget = FALSE;
+}
+
+void _InsertMenuItem(HMENU hmenu, int nPos, int nID, const TCHAR *szItemText)
+{
+	MENUITEMINFO mii;
+	memset(&mii, 0, sizeof(mii));
+	mii.cbSize = sizeof(mii);
+	mii.fMask = MIIM_TYPE;
+	mii.fType = MFT_STRING;
+	mii.fState = MFS_ENABLED;
+	mii.dwTypeData = (LPTSTR) szItemText;
+	mii.cch = _tcslen(szItemText);
+	InsertMenuItem(hmenu, nPos, TRUE, &mii);
+}
+
+void _InsertMenuSeperator(HMENU hmenu, int nPos)
+{
+	MENUITEMINFO mii;
+	memset(&mii, 0, sizeof(mii));
+	mii.cbSize = sizeof(mii);
+	mii.fMask = MIIM_TYPE;
+	mii.fType = MFT_SEPARATOR;
+	mii.fState = MFS_ENABLED;
+	InsertMenuItem(hmenu, nPos, TRUE, &mii);
+}
 
 /////////////////////////////////////////////////////////////////////////////
 // IDocHostUIHandler
 
 HRESULT STDMETHODCALLTYPE CBrowserCtlSite::ShowContextMenu(/* [in] */ DWORD dwID, /* [in] */ POINT __RPC_FAR *ppt, /* [in] */ IUnknown __RPC_FAR *pcmdtReserved, /* [in] */ IDispatch __RPC_FAR *pdispReserved)
 {
-	return E_NOTIMPL;
+	if (m_bUseCustomPopupMenu)
+	{
+		tstring szMenuText(_T("Unknown context"));
+		HMENU hmenu = CreatePopupMenu();
+		_InsertMenuItem(hmenu, 0, 1, _T("CBrowse context popup"));
+		_InsertMenuSeperator(hmenu, 1);
+		switch (dwID)
+		{
+		case CONTEXT_MENU_DEFAULT:
+			szMenuText = _T("Default context");
+			break;
+		case CONTEXT_MENU_IMAGE:
+			szMenuText = _T("Image context");
+			break;
+		case CONTEXT_MENU_CONTROL:
+			szMenuText = _T("Control context");
+			break;
+		case CONTEXT_MENU_TABLE:
+			szMenuText = _T("Table context");
+			break;
+		case CONTEXT_MENU_TEXTSELECT:
+			szMenuText = _T("TextSelect context");
+			break;
+		case CONTEXT_MENU_ANCHOR:
+			szMenuText = _T("Anchor context");
+			break;
+		case CONTEXT_MENU_UNKNOWN:
+			szMenuText = _T("Unknown context");
+			break;
+		}
+
+		_InsertMenuItem(hmenu, 2, 2, szMenuText.c_str());
+
+		POINT pt;
+		GetCursorPos(&pt);
+		TrackPopupMenu(hmenu, TPM_RETURNCMD, pt.x, pt.y, 0, AfxGetMainWnd()->GetSafeHwnd(), NULL);
+		DestroyMenu(hmenu);
+		return S_OK;
+	}
+	return S_FALSE;
 }
 
 HRESULT STDMETHODCALLTYPE CBrowserCtlSite::GetHostInfo(/* [out][in] */ DOCHOSTUIINFO __RPC_FAR *pInfo)
