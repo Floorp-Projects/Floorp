@@ -178,6 +178,7 @@ fips_140_1()
   echo "mangling ${SOFTOKEN}"
   echo "mangle -i ${SOFTOKEN} -o 60000 -b 5"
   mangle -i ${SOFTOKEN} -o 60000 -b 5 2>&1
+  diff ${SOFTOKEN} ${TMP}/softokn3.sav
   echo "dbtest -r  -d ${P_R_FIPSDIR} "
 # suppress the expected failure message
   dbtest -r  -d ${P_R_FIPSDIR}  > ${TMP}/dbtestoutput.txt 2>&1
