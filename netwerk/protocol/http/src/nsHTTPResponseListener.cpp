@@ -281,7 +281,9 @@ nsresult nsHTTPResponseListener::FireOnHeadersAvailable(nsISupports* aContext)
         // Notify the event sink that response headers are available...
         nsIHTTPEventSink* pSink= nsnull;
         m_pConnection->GetEventSink(&pSink);
-        pSink->OnHeadersAvailable(aContext);
+        if (pSink) {
+            pSink->OnHeadersAvailable(aContext);
+        }
 
         // Check for any modules that want to receive headers once they've arrived.
         NS_WITH_SERVICE(nsINetModuleMgr, pNetModuleMgr, kNetModuleMgrCID, &rv);
