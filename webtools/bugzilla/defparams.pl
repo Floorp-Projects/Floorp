@@ -500,8 +500,8 @@ X-Bugzilla-Reason: %reasonsheader%
 %diffs%
 
 --%space%
-Configure bugmail: %urlbase%userprefs.cgi?tab=email'
-%reasonsbody%
+Configure bugmail: %urlbase%userprefs.cgi?tab=email
+%reasonsbody%'
   },
 
   {
