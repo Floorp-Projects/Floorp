@@ -15,7 +15,7 @@
 
 CFLAGS         +=-D_IMPL_NS_TREXTEST -DNSPR20 -I$(GDEPTH)/include 
 
-PROGRAM        = trextest
+PROGRAM        = zulutest
 
 OS_LIBS += $(GUI_LIBS) 
 
