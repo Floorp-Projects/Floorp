@@ -29,9 +29,6 @@
 #include "nsJSEditorLog.h"
 #include "nsCOMPtr.h"
 
-#include "EditAggregateTxn.h"
-#include "InsertTextTxn.h"
-
 #define LOCK_LOG(doc)
 #define UNLOCK_LOG(doc)
 
@@ -43,10 +40,34 @@ nsJSEditorLog::nsJSEditorLog(nsIEditor *aEditor)
   mEditor = aEditor;
   mDepth  = 0;
   mLocked = -1;
+
+  nsresult result = NS_NewFileSpec(getter_AddRefs(mFileSpec));
+
+  if (NS_SUCCEEDED(result))
+  {
+    if (mFileSpec)
+    {
+      result = mFileSpec->SetUnixStyleFilePath("journal.js.NEW");
+
+      if (NS_SUCCEEDED(result))
+      {
+        result = mFileSpec->openStreamForWriting();
+      }
+    }
+    else
+      result = NS_ERROR_NULL_POINTER;
+  }
+
+  if (NS_FAILED(result))
+  {
+    mFileSpec = nsCOMPtr<nsIFileSpec>();
+  }
 }
 
 nsJSEditorLog::~nsJSEditorLog()
 {
+  if (mFileSpec)
+    /* nsresult result = */ mFileSpec->closeStream();
 }
 
 #define DEBUG_JS_EDITOR_LOG_REFCNT 1
@@ -112,15 +133,15 @@ nsJSEditorLog::SetTextProperty(nsIAtom *aProperty, const nsString *aAttribute, c
   aProperty->ToString(propStr);
 
   PrintSelection();
-  printf("window.editorShell.SetTextProperty(\"");
+  Write("window.editorShell.SetTextProperty(\"");
   PrintUnicode(propStr);
-  printf("\", \"");
+  Write("\", \"");
   if (aAttribute)
     PrintUnicode(*aAttribute);
-  printf("\", \"");
+  Write("\", \"");
   if (aValue)
     PrintUnicode(*aValue);
-  printf("\");\n");
+  Write("\");\n");
 
   return NS_OK;
 }
@@ -144,9 +165,9 @@ nsJSEditorLog::SetParagraphFormat(const nsString& aParagraphFormat)
     return NS_OK;
 
   PrintSelection();
-  printf("window.editorShell.SetParagraphFormat(\"");
+  Write("window.editorShell.SetParagraphFormat(\"");
   PrintUnicode(aParagraphFormat);
-  printf("\");\n");
+  Write("\");\n");
 
   return NS_OK;
 }
@@ -162,12 +183,12 @@ nsJSEditorLog::RemoveTextProperty(nsIAtom *aProperty, const nsString *aAttribute
   aProperty->ToString(propStr);
 
   PrintSelection();
-  printf("window.editorShell.RemoveTextProperty(\"");
+  Write("window.editorShell.RemoveTextProperty(\"");
   PrintUnicode(propStr);
-  printf("\", \"");
+  Write("\", \"");
   if (aAttribute)
     PrintUnicode(*aAttribute);
-  printf("\");\n");
+  Write("\");\n");
 
   return NS_OK;
 }
@@ -179,7 +200,9 @@ nsJSEditorLog::DeleteSelection(nsIEditor::ECollapsedSelectionAction aAction)
     return NS_OK;
 
   PrintSelection();
-  printf("window.editorShell.DeleteSelection(%d);\n", aAction);
+  Write("window.editorShell.DeleteSelection(");
+  WriteInt("%d", aAction);
+  Write(");\n");
 
   return NS_OK;
 }
@@ -192,9 +215,9 @@ nsJSEditorLog::InsertText(const nsString& aStringToInsert)
 
   PrintSelection();
 
-  printf("window.editorShell.InsertText(\"");
+  Write("window.editorShell.InsertText(\"");
   PrintUnicode(aStringToInsert);
-  printf("\");\n");
+  Write("\");\n");
 
   return NS_OK;
 }
@@ -206,7 +229,7 @@ nsJSEditorLog::InsertBreak()
     return NS_OK;
 
   PrintSelection();
-  printf("window.editorShell.InsertBreak();\n");
+  Write("window.editorShell.InsertBreak();\n");
 
   return NS_OK;
 }
@@ -223,7 +246,7 @@ nsJSEditorLog::Undo(PRUint32 aCount)
   if (mLocked)
     return NS_OK;
 
-  printf("window.editorShell.Undo();\n");
+  Write("window.editorShell.Undo();\n");
 
   return NS_OK;
 }
@@ -240,7 +263,7 @@ nsJSEditorLog::Redo(PRUint32 aCount)
   if (mLocked)
     return NS_OK;
 
-  printf("window.editorShell.Redo();\n");
+  Write("window.editorShell.Redo();\n");
 
   return NS_OK;
 }
@@ -257,7 +280,7 @@ nsJSEditorLog::BeginTransaction()
   if (mLocked)
     return NS_OK;
 
-  printf("window.editorShell.BeginBatchChanges();\n");
+  Write("window.editorShell.BeginBatchChanges();\n");
 
   return NS_OK;
 }
@@ -268,7 +291,7 @@ nsJSEditorLog::EndTransaction()
   if (mLocked)
     return NS_OK;
 
-  printf("window.editorShell.EndBatchChanges();\n");
+  Write("window.editorShell.EndBatchChanges();\n");
 
   return NS_OK;
 }
@@ -315,7 +338,7 @@ nsJSEditorLog::SelectAll()
   if (mLocked)
     return NS_OK;
 
-  printf("window.editorShell.SelectAll();\n");
+  Write("window.editorShell.SelectAll();\n");
 
   return NS_OK;
 }
@@ -326,7 +349,7 @@ nsJSEditorLog::BeginningOfDocument()
   if (mLocked)
     return NS_OK;
 
-  printf("window.editorShell.BeginningOfDocument();\n");
+  Write("window.editorShell.BeginningOfDocument();\n");
 
   return NS_OK;
 }
@@ -337,7 +360,7 @@ nsJSEditorLog::EndOfDocument()
   if (mLocked)
     return NS_OK;
 
-  printf("window.editorShell.EndOfDocument();\n");
+  Write("window.editorShell.EndOfDocument();\n");
 
   return NS_OK;
 }
@@ -381,7 +404,7 @@ nsJSEditorLog::Cut()
     return NS_OK;
 
   PrintSelection();
-  printf("window.editorShell.Cut();\n");
+  Write("window.editorShell.Cut();\n");
 
   return NS_OK;
 }
@@ -393,7 +416,7 @@ nsJSEditorLog::Copy()
     return NS_OK;
 
   PrintSelection();
-  printf("window.editorShell.Copy();\n");
+  Write("window.editorShell.Copy();\n");
 
   return NS_OK;
 }
@@ -405,7 +428,7 @@ nsJSEditorLog::Paste()
     return NS_OK;
 
   PrintSelection();
-  printf("window.editorShell.Paste();\n");
+  Write("window.editorShell.Paste();\n");
 
   return NS_OK;
 }
@@ -417,7 +440,7 @@ nsJSEditorLog::PasteAsQuotation()
     return NS_OK;
 
   PrintSelection();
-  printf("window.editorShell.PasteAsQuotation();\n");
+  Write("window.editorShell.PasteAsQuotation();\n");
 
   return NS_OK;
 }
@@ -429,9 +452,9 @@ nsJSEditorLog::PasteAsCitedQuotation(const nsString& aCitation)
     return NS_OK;
 
   PrintSelection();
-  printf("window.editorShell.PasteAsCitedQuotation(\"");
+  Write("window.editorShell.PasteAsCitedQuotation(\"");
   PrintUnicode(aCitation);
-  printf("\");\n");
+  Write("\");\n");
 
   return NS_OK;
 }
@@ -443,9 +466,9 @@ nsJSEditorLog::InsertAsQuotation(const nsString& aQuotedText)
     return NS_OK;
 
   PrintSelection();
-  printf("window.editorShell.InsertAsQuotation(\"");
+  Write("window.editorShell.InsertAsQuotation(\"");
   PrintUnicode(aQuotedText);
-  printf("\");\n");
+  Write("\");\n");
 
   return NS_OK;
 }
@@ -457,11 +480,11 @@ nsJSEditorLog::InsertAsCitedQuotation(const nsString& aQuotedText, const nsStrin
     return NS_OK;
 
   PrintSelection();
-  printf("window.editorShell.InsertAsCitedQuotation(\"");
+  Write("window.editorShell.InsertAsCitedQuotation(\"");
   PrintUnicode(aQuotedText);
-  printf("\", \"");
+  Write("\", \"");
   PrintUnicode(aCitation);
-  printf("\");\n");
+  Write("\");\n");
 
   return NS_OK;
 }
@@ -508,9 +531,9 @@ nsJSEditorLog::SetBackgroundColor(const nsString& aColor)
   if (mLocked)
     return NS_OK;
 
-  printf("window.editorShell.SetBackgroundColor(\"");
+  Write("window.editorShell.SetBackgroundColor(\"");
   PrintUnicode(aColor);
-  printf("\");\n");
+  Write("\");\n");
 
   return NS_OK;
 }
@@ -521,11 +544,11 @@ nsJSEditorLog::SetBodyAttribute(const nsString& aAttr, const nsString& aValue)
   if (mLocked)
     return NS_OK;
 
-  printf("window.editorShell.SetBodyAttribute(\"");
+  Write("window.editorShell.SetBodyAttribute(\"");
   PrintUnicode(aAttr);
-  printf("\", \"");
+  Write("\", \"");
   PrintUnicode(aValue);
-  printf("\");\n");
+  Write("\");\n");
 
   return NS_OK;
 }
@@ -568,9 +591,9 @@ nsJSEditorLog::InsertLink(nsString& aURL)
 
   PrintSelection();
 
-  printf("window.editorShell.InsertLink(\"");
+  Write("window.editorShell.InsertLink(\"");
   PrintUnicode(aURL);
-  printf("\");\n");
+  Write("\");\n");
 
   return NS_OK;
 }
@@ -585,23 +608,23 @@ nsJSEditorLog::InsertImage(nsString& aURL, nsString& aWidth, nsString& aHeight,
 
   PrintSelection();
 
-  printf("window.editorShell.InsertImage(\"");
+  Write("window.editorShell.InsertImage(\"");
   PrintUnicode(aURL);
-  printf("\", \"");
+  Write("\", \"");
   PrintUnicode(aWidth);
-  printf("\", \"");
+  Write("\", \"");
   PrintUnicode(aHeight);
-  printf("\", \"");
+  Write("\", \"");
   PrintUnicode(aHspace);
-  printf("\", \"");
+  Write("\", \"");
   PrintUnicode(aVspace);
-  printf("\", \"");
+  Write("\", \"");
   PrintUnicode(aBorder);
-  printf("\", \"");
+  Write("\", \"");
   PrintUnicode(aAlt);
-  printf("\", \"");
+  Write("\", \"");
   PrintUnicode(aAlignment);
-  printf("\");\n");
+  Write("\");\n");
 
   return NS_OK;
 }
@@ -614,9 +637,9 @@ nsJSEditorLog::InsertList(const nsString& aListType)
 
   PrintSelection();
 
-  printf("window.editorShell.InsertList(\"");
+  Write("window.editorShell.InsertList(\"");
   PrintUnicode(aListType);
-  printf("\");\n");
+  Write("\");\n");
 
   return NS_OK;
 }
@@ -629,9 +652,9 @@ nsJSEditorLog::Indent(const nsString& aIndent)
 
   PrintSelection();
 
-  printf("window.editorShell.Indent(\"");
+  Write("window.editorShell.Indent(\"");
   PrintUnicode(aIndent);
-  printf("\");\n");
+  Write("\");\n");
 
   return NS_OK;
 }
@@ -644,9 +667,9 @@ nsJSEditorLog::Align(const nsString& aAlign)
 
   PrintSelection();
 
-  printf("window.editorShell.Align(\"");
+  Write("window.editorShell.Align(\"");
   PrintUnicode(aAlign);
-  printf("\");\n");
+  Write("\");\n");
 
   return NS_OK;
 }
@@ -676,7 +699,9 @@ nsJSEditorLog::InsertElement(nsIDOMElement* aElement, PRBool aDeleteSelection)
 
   PrintSelection();
   PrintNode(node, 0);
-  printf("window.editorShell.InsertElement(n0, %s);\n", aDeleteSelection ? "true" : "false");
+  Write("window.editorShell.InsertElement(n0, ");
+  Write(aDeleteSelection ? "true" : "false");
+  Write(");\n");
 
   return NS_OK;
 }
@@ -694,7 +719,7 @@ nsJSEditorLog::InsertLinkAroundSelection(nsIDOMElement* aAnchorElement)
 
   PrintSelection();
   PrintNode(node, 0);
-  printf("window.editorShell.InsertLinkAroundSelection(n0);\n");
+  Write("window.editorShell.InsertLinkAroundSelection(n0);\n");
 
   return NS_OK;
 }
@@ -783,37 +808,49 @@ nsJSEditorLog::EndComposition(void)
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-const char *
-nsJSEditorLog::GetString(nsITransaction *aTransaction)
+nsresult
+nsJSEditorLog::Write(const char *aBuffer)
 {
-  static char buf[256];
+  nsresult result;
 
-  nsString str = "";
+  if (!aBuffer)
+    return NS_ERROR_NULL_POINTER;
 
-  aTransaction->GetRedoString(&str);
+  PRInt32 len = strlen(aBuffer);
 
-  if (str.Length() == 0)
+  if (mFileSpec)
   {
-    EditAggregateTxn *at = NS_STATIC_CAST(EditAggregateTxn*, aTransaction);
+    PRInt32 retval;
 
-    if (at)
-    {
-      nsIAtom *atom = 0;
+    result = mFileSpec->write(aBuffer, len, &retval);
 
-      at->GetName(&atom);
+    if (NS_FAILED(result))
+      return result;
 
-      if (atom)
-        atom->ToString(str);
-    }
+    result = mFileSpec->flush();
 
-    if (str.Length() == 0)
-      str = "<NULL>";
+    if (NS_FAILED(result))
+      return result;
   }
+  else
+  {
+    fwrite(aBuffer, 1, len, stdout);
+    fflush(stdout);
+  }
+  return NS_OK;
+}
 
-  buf[0] = '\0';
-  str.ToCString(buf, 256);
+nsresult
+nsJSEditorLog::WriteInt(const char *aFormat, PRInt32 aInt)
+{
+  if (!aFormat)
+    return NS_ERROR_NULL_POINTER;
 
-  return buf;
+  char buf[256];
+
+  sprintf(buf, aFormat, aInt);
+
+  return Write(buf);
 }
 
 nsresult
@@ -821,25 +858,20 @@ nsJSEditorLog::PrintUnicode(const nsString &aString)
 {
   const PRUnichar *uc = aString.GetUnicode();
   PRInt32 i, len = aString.Length();
+  char buf[10];
 
   for (i = 0; i < len; i++)
   {
     if (nsString::IsAlpha(uc[i]) || nsString::IsDigit(uc[i]) || uc[i] == ' ')
-      printf("%c", uc[i]);
+      sprintf(buf, "%c", uc[i]);
     else
-      printf("\\u%.4x", uc[i]);
+      sprintf(buf, "\\u%.4x", uc[i]);
+
+    nsresult result = Write(buf);
+
+    if (NS_FAILED(result))
+      return result;
   }
-
-  return NS_OK;
-}
-
-nsresult
-nsJSEditorLog::PrintIndent(PRInt32 aIndentLevel)
-{
-  PRInt32 i;
-
-  for (i = 0; i < aIndentLevel; i++)
-    printf("  ");
 
   return NS_OK;
 }
@@ -867,7 +899,7 @@ nsJSEditorLog::PrintSelection()
   if (NS_FAILED(result))
     return result;
 
-  printf("selRanges = [ ");
+  Write("selRanges = [ ");
 
   PRInt32 i, j;
   nsCOMPtr<nsIDOMRange> range;
@@ -917,18 +949,20 @@ nsJSEditorLog::PrintSelection()
       return result;
 
     if (i != 0)
-      printf(",\n              ");
+      Write(",\n              ");
 
-    printf("[ [[");
+    Write("[ [[");
 
     for (j = 0; j < arrayLength; j++)
     {
       if (j != 0)
-        printf(", ");
-      printf("%d", offsetArray[j]);
+        Write(", ");
+      WriteInt("%d", offsetArray[j]);
     }
 
-    printf("], %3d], ", startOffset);
+    Write("], ");
+    WriteInt("%3d", startOffset);
+    Write("], ");
 
     if (startNode != endNode)
     {
@@ -942,21 +976,23 @@ nsJSEditorLog::PrintSelection()
         return result;
     }
 
-    printf("[[");
+    Write("[[");
 
     for (j = 0; j < arrayLength; j++)
     {
       if (j != 0)
-        printf(", ");
-      printf("%d", offsetArray[j]);
+        Write(", ");
+      WriteInt("%d", offsetArray[j]);
     }
 
     delete []offsetArray;
 
-    printf("], %3d] ]", endOffset);
+    Write("], ");
+    WriteInt("%3d", endOffset);
+    Write("] ]");
   }
 
-  printf(" ];\nEditorSetSelectionFromOffsets(selRanges);\n");
+  Write(" ];\nEditorSetSelectionFromOffsets(selRanges);\n");
   return NS_OK;
 }
 
@@ -976,9 +1012,11 @@ nsJSEditorLog::PrintElementNode(nsIDOMNode *aNode, PRInt32 aDepth)
   if (NS_FAILED(result))
     return result;
 
-  printf("n%d = window.editorShell.editorDocument.createElement(\"", aDepth);
+  Write("n");
+  WriteInt("%d", aDepth);
+  Write(" = window.editorShell.editorDocument.createElement(\"");
   PrintUnicode(tag);
-  printf("\");\n");
+  Write("\");\n");
 
   result = aNode->GetAttributes(getter_AddRefs(map));
 
@@ -1033,20 +1071,28 @@ nsJSEditorLog::PrintAttributeNode(nsIDOMNode *aNode, PRInt32 aDepth)
   if (NS_FAILED(result))
     return result;
 
-  printf("a%d = window.editorShell.editorDocument.createAttribute(\"", aDepth);
+  Write("a");
+  WriteInt("%d", aDepth);
+  Write(" = window.editorShell.editorDocument.createAttribute(\"");
   PrintUnicode(str);
-  printf("\");\n");
+  Write("\");\n");
 
   result = attr->GetValue(str);
 
   if (NS_FAILED(result))
     return result;
 
-  printf("a%d.value = \"", aDepth);
+  Write("a");
+  WriteInt("%d", aDepth);
+  Write(".value = \"");
   PrintUnicode(str);
-  printf("\";\n");
+  Write("\";\n");
   
-  printf("n%d.setAttributeNode(a%d);\n", aDepth, aDepth);
+  Write("n");
+  WriteInt("%d", aDepth);
+  Write(".setAttributeNode(a");
+  WriteInt("%d", aDepth);
+  Write(");\n");
 
   return NS_OK;
 }
@@ -1092,7 +1138,11 @@ nsJSEditorLog::PrintNodeChildren(nsIDOMNode *aNode, PRInt32 aDepth)
     if (NS_FAILED(result))
       return result;
 
-    printf("n%d.appendChild(n%d);\n", aDepth, aDepth+1);
+    Write("n");
+    WriteInt("%d", aDepth);
+    Write(".appendChild(n");
+    WriteInt("%d", aDepth+1);
+    Write(");\n");
   }
 
   return NS_OK;
@@ -1115,9 +1165,11 @@ nsJSEditorLog::PrintTextNode(nsIDOMNode *aNode, PRInt32 aDepth)
   if (NS_FAILED(result))
     return result;
 
-  printf("n%d = window.editorShell.editorDocument.createTextNode(\"", aDepth);
+  Write("n");
+  WriteInt("%d", aDepth);
+  Write(" = window.editorShell.editorDocument.createTextNode(\"");
   PrintUnicode(str);
-  printf("\");\n");
+  Write("\");\n");
 
   return NS_OK;
 }

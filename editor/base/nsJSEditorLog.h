@@ -20,6 +20,8 @@
 #define nsJSEditorLog_h__
 
 #include "nsIHTMLEditor.h"
+#include "nsIFileSpec.h"
+#include "nsCOMPtr.h"
 
 /** implementation of a transaction listener object.
  *
@@ -28,6 +30,7 @@ class nsJSEditorLog : public nsIHTMLEditor
 {
 private:
 
+  nsCOMPtr<nsIFileSpec> mFileSpec;
   nsIEditor *mEditor;
   PRInt32   mLocked;
   PRInt32   mDepth;
@@ -138,9 +141,9 @@ public:
   NS_IMETHOD EndComposition(void);
 
   /* nsJSEditorLog public methods. */
-  const char *GetString(nsITransaction *aTransaction);
+  nsresult Write(const char *aBuffer);
+  nsresult WriteInt(const char *aFormat, PRInt32 aInt);
   nsresult PrintUnicode(const nsString &aString);
-  nsresult PrintIndent(PRInt32 aIndentLevel);
   nsresult PrintSelection();
   nsresult PrintNode(nsIDOMNode *aNode, PRInt32 aDepth=0);
   nsresult PrintElementNode(nsIDOMNode *aNode, PRInt32 aDepth);
