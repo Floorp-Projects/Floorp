@@ -838,12 +838,13 @@ nsHTTPIndexParser::ParseLiteral(nsIRDFResource *arc, const nsString& aValue, nsI
 nsresult
 nsHTTPIndexParser::ParseDate(nsIRDFResource *arc, const nsString& aValue, nsIRDFNode** aResult)
 {
+  *aResult = nsnull;
   PRTime tm;
   nsCAutoString avalueC;
   avalueC.AssignWithConversion(aValue);
   PRStatus err = PR_ParseTimeString(avalueC, PR_FALSE, &tm);
   if (err != PR_SUCCESS)
-    return NS_ERROR_FAILURE;
+    return NS_OK;   // if unable to parse the date/time string, that's OK, just return no value
 
   nsresult rv;
   nsCOMPtr<nsIRDFDate> result;
