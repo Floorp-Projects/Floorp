@@ -1734,6 +1734,17 @@ nsChildView::GetQuickDrawPort()
 
 -(NSMenu*)menuForEvent:(NSEvent*)theEvent
 {
+  int button = [theEvent buttonNumber];
+  if (button == 1) {
+    // The right mouse went down.  Fire off a right mouse down and
+    // then send the context menu event.
+    nsMouseEvent geckoEvent;
+    geckoEvent.eventStructType = NS_MOUSE_EVENT;
+    [self convert: theEvent message: NS_MOUSE_RIGHT_BUTTON_DOWN toGeckoEvent:&geckoEvent];
+    geckoEvent.clickCount = 1;
+    mGeckoChild->DispatchMouseEvent(geckoEvent);
+  }
+
   // Fire the context menu event into Gecko.
   nsMouseEvent geckoEvent;
   geckoEvent.eventStructType = NS_MOUSE_EVENT;
@@ -1742,10 +1753,9 @@ nsChildView::GetQuickDrawPort()
   
   // send event into Gecko by going directly to the
   // the widget.
-  PRBool result = mGeckoChild->DispatchMouseEvent(geckoEvent);
+  mGeckoChild->DispatchMouseEvent(geckoEvent);
   
-  // XXX If we don't get an ignore status, then we now need to go up our
-  // view chain and ask for a menu to return.
+  // Go up our view chain to fetch the correct menu to return.
   return nil;
 }
 
@@ -2065,11 +2075,8 @@ const PRInt32 kNumLines = 8;
       mGeckoChild->DispatchWindowEvent(geckoEvent);
     }
   }
-  else {
-    // XXXdwh. Check to see if we're a context menu key.  If so,
-    // fire a context menu event instead.
+  else
     mGeckoChild->DispatchWindowEvent(geckoEvent);
-  }
 }
 
 - (void)keyUp:(NSEvent*)theEvent;
