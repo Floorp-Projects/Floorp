@@ -304,20 +304,15 @@ nsresult nsComboBox::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 //-------------------------------------------------------------------------
 NS_METHOD  nsComboBox::CreateNative(GtkWidget *parentWindow)
 {
-/* there is a bug in gtkcombo
-   add it inside an alignment  set the usize on it..
-   (set xscale yscale for the alignment to 1.0)
-*/
   mWidget = ::gtk_event_box_new();
 
-  mAlign = ::gtk_alignment_new(1.0,1.0,1.0,1.0);
   ::gtk_widget_set_name(mWidget, "nsComboBox");
   mCombo = ::gtk_combo_new();
   gtk_widget_show(mCombo);
-  gtk_widget_show(mAlign);
+
   /* make the stuff uneditable */
   gtk_entry_set_editable(GTK_ENTRY(GTK_COMBO(mCombo)->entry), PR_FALSE);
-  gtk_container_add(GTK_CONTAINER(mAlign), mCombo);
+
   gtk_signal_connect(GTK_OBJECT(mCombo),
                      "destroy",
                      GTK_SIGNAL_FUNC(DestroySignal),
@@ -327,7 +322,7 @@ NS_METHOD  nsComboBox::CreateNative(GtkWidget *parentWindow)
                      GTK_SIGNAL_FUNC(UnmapSignal),
                      this);
 
-  gtk_container_add(GTK_CONTAINER(mWidget), mAlign);
+  gtk_container_add(GTK_CONTAINER(mWidget), mCombo);
 
   return NS_OK;
 }
