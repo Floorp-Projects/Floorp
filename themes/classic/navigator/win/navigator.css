@@ -6,6 +6,13 @@
 @import url(chrome://navigator/skin/personalToolbar.css);
 @import url(chrome://communicator/skin/sidebar/sidebar.css);
 
+/********** resource bundle binding **********/
+
+#resource_bundle_navigator
+  {
+    -moz-binding            : url('chrome://navigator/skin/resources.xml#resource_bundle_navigator')      
+  } 
+
 #content
   {
     border-left           : 1px solid ThreeDDarkShadow;

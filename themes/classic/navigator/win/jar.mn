@@ -1,2 +1,4 @@
 classic.jar:
        skin/classic/navigator/navigator.css
+       skin/classic/navigator/resources.xml
+      

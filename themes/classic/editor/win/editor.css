@@ -26,6 +26,11 @@
    in order to share with all users of editor
 */
 
+/********* image pre-cacheing ********/
+#resource_bundle_editor{
+  -moz-binding            : url('chrome://editor/skin/resources.xml#resource_bundle_editor') 
+}
+
 #content-frame { 
   min-width: 10px; 
   min-height: 10px;

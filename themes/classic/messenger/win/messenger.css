@@ -29,7 +29,14 @@
       display               : none;
   } 
 
-/**
+/*** image precacheing **/
+ 
+#resource_bundle_messenger 
+{
+   -moz-binding          : url("chrome://messenger/skin/resources.xml#resource_bundle_messenger");
+}
+ 
+ /**
  * toolbar button images
  */
 #button-getmsg 
