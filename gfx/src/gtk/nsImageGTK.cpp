@@ -313,100 +313,190 @@ nsImageGTK::Draw(nsIRenderingContext &aContext, nsDrawingSurface aSurface,
 
 //------------------------------------------------------------
 // 8-bit alpha composite drawing...
-void
-nsImageGTK::DrawComposited(nsIRenderingContext &aContext,
-                           nsDrawingSurface aSurface,
-                           PRInt32 aX, PRInt32 aY,
-                           PRInt32 aWidth, PRInt32 aHeight)
+// Most of this will disappear with gtk+-1.4
+
+static unsigned
+findIndex32(unsigned mask)
 {
-  if ((aWidth != mWidth) || (aHeight != mHeight)) {
-    aWidth = mWidth;
-    aHeight = mHeight;
+  switch (mask) {
+  case 0xff:
+    return 3;
+  case 0xff00:
+    return 2;
+  case 0xff0000:
+    return 1;
+  case 0xff000000:
+    return 0;
+  default:
+    return 0;
+  }
+}
+
+static unsigned
+findIndex24(unsigned mask)
+{
+  switch (mask) {
+  case 0xff:
+    return 2;
+  case 0xff00:
+    return 1;
+  case 0xff0000:
+    return 0;
+  default:
+    return 0;
+  }
+}
+
+// 32-bit (888) truecolor convert/composite function
+void
+nsImageGTK::DrawComposited32(PRBool isLSB, PRBool flipBytes,
+                             unsigned offsetX, unsigned offsetY,
+                             unsigned width, unsigned height,
+                             XImage *ximage, unsigned char *readData)
+{
+  GdkVisual *visual   = gdk_rgb_get_visual();
+  unsigned redIndex   = findIndex32(visual->red_mask);
+  unsigned greenIndex = findIndex32(visual->green_mask);
+  unsigned blueIndex  = findIndex32(visual->blue_mask);
+
+  if (flipBytes^isLSB) {
+    redIndex   = 3-redIndex;
+    greenIndex = 3-greenIndex;
+    blueIndex  = 3-blueIndex;
   }
 
-  nsDrawingSurfaceGTK* drawing = (nsDrawingSurfaceGTK*) aSurface;
+//  fprintf(stderr, "startX=%u startY=%u activeX=%u activeY=%u\n",
+//          startX, startY, activeX, activeY);
+//  fprintf(stderr, "width=%u height=%u\n", ximage->width, ximage->height);
 
-  GdkImage *image;
-  GdkColormap *colormap;
-  GdkVisual *visual;
-    
-//  image = gdk_image_get(drawing->GetDrawable(), aX, aY, aWidth, aHeight);
-//  XImage *ximage = GDK_IMAGE_XIMAGE(image);
-  colormap = gdk_rgb_get_cmap();
-  visual = gdk_rgb_get_visual();
-    
-  unsigned char *target, *readData = new unsigned char[3*aWidth*aHeight];
-  target = readData;
+  for (unsigned y=0; y<height; y++) {
+    unsigned char *baseRow   = (unsigned char *)ximage->data 
+                                            +y*ximage->bytes_per_line;
+    unsigned char *targetRow = readData     +3*(y*ximage->width);
+    unsigned char *imageRow  = mImageBits   +(y+offsetY)*mRowBytes+3*offsetX;
+    unsigned char *alphaRow  = mAlphaBits   +(y+offsetY)*mAlphaRowBytes+offsetX;
 
-  Display *dpy = GDK_WINDOW_XDISPLAY(drawing->GetDrawable());
-  Drawable drawable = GDK_WINDOW_XWINDOW(drawing->GetDrawable());
-
-  // I hate clipping...
-  PRUint32 surfaceWidth, surfaceHeight;
-  drawing->GetDimensions(&surfaceWidth, &surfaceHeight);
-  
-  XImage *ximage = XCreateImage(dpy, GDK_VISUAL_XVISUAL(visual),
-                                visual->depth, ZPixmap, 0, 0,
-                                aWidth, aHeight, 8, 0);
-  unsigned char *data = (unsigned char *)malloc(ximage->bytes_per_line*aHeight);
-  ximage->data = (char *)data;
-
-  int readX, readY;
-  unsigned readWidth, readHeight, destX, destY;
-
-  readX = aX; readY = aY;
-  readWidth = aWidth; readHeight = aHeight;
-  destX = 0;
-  destY = 0;
-  if (readY<0) {
-    destY = -readY;
-    readY = 0;
+    for (unsigned i=0; i<width;
+         i++, baseRow+=4, targetRow+=3, imageRow+=3, alphaRow++) {
+      targetRow[0] = 
+        (unsigned(baseRow[redIndex])   * (255-*alphaRow) + 
+         unsigned(imageRow[0]) * *alphaRow) >> 8;
+      targetRow[1] = 
+        (unsigned(baseRow[greenIndex]) * (255-*alphaRow) +
+         unsigned(imageRow[1]) * *alphaRow) >> 8;
+      targetRow[2] = 
+        (unsigned(baseRow[blueIndex])  * (255-*alphaRow) +
+         unsigned(imageRow[2]) * *alphaRow) >> 8;
+    }
   }
-  if (readX<0) {
-    destX = -readX;
-    readX = 0;
-  }
-  if (aY+aHeight>surfaceHeight) {
-    readHeight = surfaceHeight-readY;
-  }
-  if (aX+aWidth>surfaceWidth) {
-    readWidth = surfaceWidth-readX;
+}
+
+// 24-bit (888) truecolor convert/composite function
+void
+nsImageGTK::DrawComposited24(PRBool isLSB, PRBool flipBytes,
+                             unsigned offsetX, unsigned offsetY,
+                             unsigned width, unsigned height,
+                             XImage *ximage, unsigned char *readData)
+{
+  GdkVisual *visual   = gdk_rgb_get_visual();
+  unsigned redIndex   = findIndex24(visual->red_mask);
+  unsigned greenIndex = findIndex24(visual->green_mask);
+  unsigned blueIndex  = findIndex24(visual->blue_mask);
+
+  if (flipBytes^isLSB) {
+    redIndex   = 2-redIndex;
+    greenIndex = 2-greenIndex;
+    blueIndex  = 2-blueIndex;
   }
 
-//  fprintf(stderr, "aX=%d aY=%d, aWidth=%u aHeight=%u\n", aX, aY, aWidth, aHeight);
-//  fprintf(stderr, "surfaceWidth=%u surfaceHeight=%u\n", surfaceWidth, surfaceHeight);
-//  fprintf(stderr, "readX=%u readY=%u readWidth=%u readHeight=%u destX=%u destY=%u\n",
-//          readX, readY, readWidth, readHeight, destX, destY);
-    
-  XGetSubImage(dpy, drawable, readX, readY, readWidth, readHeight, AllPlanes,
-               ZPixmap, ximage, destX, destY);
+  for (unsigned y=0; y<height; y++) {
+    unsigned char *baseRow   = (unsigned char *)ximage->data 
+                                            +y*ximage->bytes_per_line;
+    unsigned char *targetRow = readData     +3*(y*ximage->width);
+    unsigned char *imageRow  = mImageBits   +(y+offsetY)*mRowBytes+3*offsetX;
+    unsigned char *alphaRow  = mAlphaBits   +(y+offsetY)*mAlphaRowBytes+offsetX;
 
-//  XImage *ximage = XGetImage(dpy, drawable, 
-//                             aX, aY, aWidth, aHeight, AllPlanes, ZPixmap);
-//
-//  unsigned char *data = (unsigned char *)ximage->data;
+    for (unsigned i=0; i<width;
+         i++, baseRow+=3, targetRow+=3, imageRow+=3, alphaRow++) {
+      targetRow[0] = 
+        (unsigned(baseRow[redIndex])   * (255-*alphaRow) +
+         unsigned(imageRow[0]) * *alphaRow) >> 8;
+      targetRow[1] = 
+        (unsigned(baseRow[greenIndex]) * (255-*alphaRow) + 
+         unsigned(imageRow[1]) * *alphaRow) >> 8;
+      targetRow[2] = 
+        (unsigned(baseRow[blueIndex])  * (255-*alphaRow) + 
+         unsigned(imageRow[2]) * *alphaRow) >> 8;
+    }
+  }
+}
 
-  PRBool isLSB;
+unsigned nsImageGTK::scaled6[1<<6] = {
+  3,   7,  11,  15,  19,  23,  27,  31,  35,  39,  43,  47,  51,  55,  59,  63,
+ 67,  71,  75,  79,  83,  87,  91,  95,  99, 103, 107, 111, 115, 119, 123, 127,
+131, 135, 139, 143, 147, 151, 155, 159, 163, 167, 171, 175, 179, 183, 187, 191,
+195, 199, 203, 207, 211, 215, 219, 223, 227, 231, 235, 239, 243, 247, 251, 255
+};
 
-  unsigned test = 1;
-  isLSB = (((char *)&test)[0]) ? 1 : 0;
+unsigned nsImageGTK::scaled5[1<<5] = {
+  7,  15,  23,  31,  39,  47,  55,  63,  71,  79,  87,  95, 103, 111, 119, 127,
+135, 143, 151, 159, 167, 175, 183, 191, 199, 207, 215, 223, 231, 239, 247, 255
+};
 
-#if 0
-  // set flipBits appropriately...
-  PRBool flipBits =
-    ( isLSB && ximage->bit_order != LSBFirst) ||
-    (!isLSB && ximage->bit_order == LSBFirst);
+// 16-bit ([56][56][56]) truecolor convert/composite function
+void
+nsImageGTK::DrawComposited16(PRBool isLSB, PRBool flipBytes,
+                             unsigned offsetX, unsigned offsetY,
+                             unsigned width, unsigned height,
+                             XImage *ximage, unsigned char *readData)
+{
+  GdkVisual *visual   = gdk_rgb_get_visual();
 
-  // flip bits
-  if (flipBits)
-    for (int i=0; i<ximage->height*ximage->bytes_per_line; i++)
-      data[i] = 255-data[i];
-#endif
+  unsigned *redScale   = (visual->red_prec   == 5) ? scaled5 : scaled6;
+  unsigned *greenScale = (visual->green_prec == 5) ? scaled5 : scaled6;
+  unsigned *blueScale  = (visual->blue_prec  == 5) ? scaled5 : scaled6;
 
-  // set flipBytes appropriately...
-  PRBool flipBytes = 
-    ( isLSB && ximage->byte_order != LSBFirst) ||
-    (!isLSB && ximage->byte_order == LSBFirst);
+  for (unsigned y=0; y<height; y++) {
+    unsigned char *baseRow   = (unsigned char *)ximage->data 
+                                            +y*ximage->bytes_per_line;
+    unsigned char *targetRow = readData     +3*(y*ximage->width);
+    unsigned char *imageRow  = mImageBits   +(y+offsetY)*mRowBytes+3*offsetX;
+    unsigned char *alphaRow  = mAlphaBits   +(y+offsetY)*mAlphaRowBytes+offsetX;
+
+    for (unsigned i=0; i<width;
+         i++, baseRow+=2, targetRow+=3, imageRow+=3, alphaRow++) {
+      unsigned pix;
+      if (flipBytes) {
+        unsigned char tmp[2];
+        tmp[0] = baseRow[1];
+        tmp[1] = baseRow[0]; 
+        pix = *((short *)tmp); 
+      } else
+        pix = *((short *)baseRow);
+      targetRow[0] =  
+        (redScale[(pix&visual->red_mask)>>visual->red_shift] * 
+         (255-*alphaRow) + unsigned(imageRow[0]) * *alphaRow) >> 8;
+      targetRow[1] = 
+        (greenScale[(pix&visual->green_mask)>>visual->green_shift] * 
+         (255-*alphaRow) + unsigned(imageRow[1]) * *alphaRow) >> 8;
+      targetRow[2] = 
+        (blueScale[(pix&visual->blue_mask)>>visual->blue_shift] * 
+         (255-*alphaRow) + unsigned(imageRow[2]) * *alphaRow) >> 8;
+    }
+  }
+}
+
+// Generic convert/composite function
+void
+nsImageGTK::DrawCompositedGeneral(PRBool isLSB, PRBool flipBytes,
+                                  unsigned offsetX, unsigned offsetY,
+                                  unsigned width, unsigned height,
+                                  XImage *ximage, unsigned char *readData)
+{
+  GdkVisual *visual     = gdk_rgb_get_visual();
+  GdkColormap *colormap = gdk_rgb_get_cmap();
+
+  unsigned char *target = readData;
 
   // flip bytes
   if (flipBytes && (ximage->bits_per_pixel>=16)) {
@@ -514,18 +604,12 @@ nsImageGTK::DrawComposited(nsIRenderingContext &aContext,
         break;
         
       case GDK_VISUAL_TRUE_COLOR:
-        if (ximage->bits_per_pixel>=24) {
-          *target++ = ((pix&visual->red_mask)>>visual->red_shift);
-          *target++ = ((pix&visual->green_mask)>>visual->green_shift);
-          *target++ = ((pix&visual->blue_mask)>>visual->blue_shift);
-        } else {
-          *target++ = 
-            redFill|((pix&visual->red_mask)>>visual->red_shift)<<redScale;
-          *target++ = 
-            greenFill|((pix&visual->green_mask)>>visual->green_shift)<<greenScale;
-          *target++ = 
-            blueFill|((pix&visual->blue_mask)>>visual->blue_shift)<<blueScale;
-        }
+        *target++ = 
+          redFill|((pix&visual->red_mask)>>visual->red_shift)<<redScale;
+        *target++ = 
+          greenFill|((pix&visual->green_mask)>>visual->green_shift)<<greenScale;
+        *target++ = 
+          blueFill|((pix&visual->blue_mask)>>visual->blue_shift)<<blueScale;
         break;
       }
     }
@@ -533,25 +617,109 @@ nsImageGTK::DrawComposited(nsIRenderingContext &aContext,
 
   // now composite
   for (int y=0; y<mHeight; y++) {
+    unsigned char *targetRow = readData+3*y*mWidth;
+    unsigned char *imageRow  = mImageBits   +(y+offsetY)*mRowBytes+3*offsetX;
+    unsigned char *alphaRow  = mAlphaBits   +(y+offsetY)*mAlphaRowBytes+offsetX;
+    
     for (int i=0; i<mWidth; i++) {
-      unsigned char *targetRow = readData+3*y*mWidth;
-      unsigned char *imageRow = mImageBits+y*mRowBytes;
-      unsigned char *alphaRow = mAlphaBits+y*mAlphaRowBytes;
-
-      targetRow[3*i] =   (targetRow[3*i]*(255-alphaRow[i]) +
-                           imageRow[3*i]*alphaRow[i])>>8;
-      targetRow[3*i+1] = (targetRow[3*i+1]*(255-alphaRow[i]) +
-                           imageRow[3*i+1]*alphaRow[i])>>8;
-      targetRow[3*i+2] = (targetRow[3*i+2]*(255-alphaRow[i]) +
-                           imageRow[3*i+2]*alphaRow[i])>>8;
+      targetRow[3*i] =   (unsigned(targetRow[3*i])*(255-alphaRow[i]) +
+                           unsigned(imageRow[3*i])*alphaRow[i])>>8;
+      targetRow[3*i+1] = (unsigned(targetRow[3*i+1])*(255-alphaRow[i]) +
+                           unsigned(imageRow[3*i+1])*alphaRow[i])>>8;
+      targetRow[3*i+2] = (unsigned(targetRow[3*i+2])*(255-alphaRow[i]) +
+                           unsigned(imageRow[3*i+2])*alphaRow[i])>>8;
     }
   }
+}
+
+void
+nsImageGTK::DrawComposited(nsIRenderingContext &aContext,
+                           nsDrawingSurface aSurface,
+                           PRInt32 aX, PRInt32 aY,
+                           PRInt32 aWidth, PRInt32 aHeight)
+{
+  if ((aWidth != mWidth) || (aHeight != mHeight)) {
+    aWidth = mWidth;
+    aHeight = mHeight;
+  }
+
+  nsDrawingSurfaceGTK* drawing = (nsDrawingSurfaceGTK*) aSurface;
+  GdkVisual *visual = gdk_rgb_get_visual();
+    
+  Display *dpy = GDK_WINDOW_XDISPLAY(drawing->GetDrawable());
+  Drawable drawable = GDK_WINDOW_XWINDOW(drawing->GetDrawable());
+
+  // I hate clipping...
+  PRUint32 surfaceWidth, surfaceHeight;
+  drawing->GetDimensions(&surfaceWidth, &surfaceHeight);
+  
+  int readX, readY;
+  unsigned readWidth, readHeight, destX, destY;
+
+  readX = aX; readY = aY;
+  destX = 0;  destY = 0;
+  if (readY<0) {
+    destY = -readY;
+    readY = 0;
+  }
+  if (readX<0) {
+    destX = -readX;
+    readX = 0;
+  }
+  readHeight = aHeight-destY;
+  readWidth = aWidth-destX;
+  if (aY+aHeight>surfaceHeight)
+    readHeight = surfaceHeight-readY;
+  if (aX+aWidth>surfaceWidth)
+    readWidth = surfaceWidth-readX;
+
+
+//  fprintf(stderr, "aX=%d aY=%d, aWidth=%u aHeight=%u\n", aX, aY, aWidth, aHeight);
+//  fprintf(stderr, "surfaceWidth=%u surfaceHeight=%u\n", surfaceWidth, surfaceHeight);
+//  fprintf(stderr, "readX=%u readY=%u readWidth=%u readHeight=%u destX=%u destY=%u\n\n",
+//          readX, readY, readWidth, readHeight, destX, destY);
+
+  XImage *ximage = XGetImage(dpy, drawable,
+                             readX, readY, readWidth, readHeight, 
+                             AllPlanes, ZPixmap);
+  unsigned char *readData = new unsigned char[3*readWidth*readHeight];
+
+
+  PRBool isLSB;
+  unsigned test = 1;
+  isLSB = (((char *)&test)[0]) ? 1 : 0;
+
+  PRBool flipBytes = 
+    ( isLSB && ximage->byte_order != LSBFirst) ||
+    (!isLSB && ximage->byte_order == LSBFirst);
+
+  if ((ximage->bits_per_pixel==32) &&
+      (visual->red_prec == 8) &&
+      (visual->green_prec == 8) &&
+      (visual->blue_prec == 8))
+    DrawComposited32(isLSB, flipBytes, destX, destY, readWidth, readHeight, 
+                     ximage, readData);
+  else if ((ximage->bits_per_pixel==24) &&
+           (visual->red_prec == 8) && 
+           (visual->green_prec == 8) &&
+           (visual->blue_prec == 8))
+    DrawComposited24(isLSB, flipBytes, destX, destY, readWidth, readHeight, 
+                     ximage, readData);
+  else if ((ximage->bits_per_pixel==16) &&
+           ((visual->red_prec == 5)   || (visual->red_prec == 6)) &&
+           ((visual->green_prec == 5) || (visual->green_prec == 6)) &&
+           ((visual->blue_prec == 5)  || (visual->blue_prec == 6)))
+    DrawComposited16(isLSB, flipBytes, destX, destY, readWidth, readHeight, 
+                     ximage, readData);
+  else
+    DrawCompositedGeneral(isLSB, flipBytes, destX, destY, readWidth, readHeight, 
+                          ximage, readData);
 
   GdkGC *imageGC = gdk_gc_new(drawing->GetDrawable());
   gdk_draw_rgb_image(drawing->GetDrawable(), imageGC,
-                     aX, aY, mWidth, mHeight,
+                     readX, readY, readWidth, readHeight,
                      GDK_RGB_DITHER_MAX,
-                     readData, 3*mWidth);
+                     readData, 3*readWidth);
   gdk_gc_unref(imageGC);
 
   XDestroyImage(ximage);
