@@ -159,8 +159,12 @@ nsresult nsDocumentOpenInfo::Open(nsIURI *aURI,
   if (NS_SUCCEEDED(rv))
   {
     nsCOMPtr<nsIChannel> aChannel;
+    nsLoadFlags loadFlags = nsIChannel::LOAD_NORMAL;
+    if (aCommand == nsIURILoader::viewNormalBackground)
+      loadFlags = nsIChannel::LOAD_BACKGROUND;
+
     rv = pNetService->NewChannelFromURI("", aURI, aLoadGroup, requestor,
-                                        nsIChannel::LOAD_NORMAL, aReferringURI, 0, 0,
+                                        loadFlags, aReferringURI, 0, 0,
                                         getter_AddRefs(aChannel));
     if (NS_FAILED(rv)) return rv; // uhoh we were unable to get a channel to handle the url!!!
     // figure out if we need to set the post data stream on the channel...right now, 

@@ -112,6 +112,7 @@ interface nsIURILoader : nsISupports
     const long viewSource = 1;
     const long viewUserClick = 2;
 	const long viewNewWindow = 3;
+	const long viewNormalBackground = 4;
 
   /* mscott -> I'm going to move this out into a separate private interface
    */
