@@ -4,8 +4,8 @@
 # have installed perforce with P4DB to let your webserver render html
 # pages of your VC repository.
 
-# $Revision: 1.1 $ 
-# $Date: 2003/05/10 20:00:12 $ 
+# $Revision: 1.2 $ 
+# $Date: 2003/05/11 01:29:03 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/VCDisplay/Perforce_P4DB.pm,v $ 
 # $Name:  $ 
@@ -78,7 +78,7 @@ $P4DB_URL = ( $TinderConfig::P4DB_URL ||
                 "http://public.perforce.com/cgi-bin/p4db");
 
 $QUERY = $P4DB_URL."/changeList.cgi";
-$TIMEQUERY = $P4DB_URL."/filesChangedSince.cgi.cgi";
+$TIMEQUERY = $P4DB_URL."/filesChangedSince.cgi";
 
 $BLAME = $P4DB_URL."/fileViewer.cgi";
 $GUESS = $P4DB_URL."/fileSearch.cgi";
@@ -233,8 +233,12 @@ sub guess {
 
   $args{'href'} = ("$GUESS?".join('&', @url_args));
 
-  ($args{'line'}) &&
-      ($args{'href'} .= '#L'.HTMLPopUp::escapeURL($goto_line) );
+  # there is no way to pass a line number to the fileSearch.cgi so
+  # that when the user picks a file he is transfered to the
+  # fileViewer.cgi with that line number in the URL
+
+#  ($args{'line'}) &&
+#      ($args{'href'} .= '#L'.HTMLPopUp::escapeURL($goto_line) );
 
   my $output = HTMLPopUp::Link(%args);
   
