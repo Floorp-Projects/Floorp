@@ -69,6 +69,13 @@ if (defined($login)) {
           || ThrowTemplateError($template->error());
         exit;
     }
+
+    my $createexp = Param('createemailregexp');
+    if (!($createexp)
+        || ($login !~ /$createexp/)) {
+        ThrowUserError("account_creation_disabled");
+        exit;
+    }
     
     # Create account
     my $password = InsertNewUser($login, $realname);

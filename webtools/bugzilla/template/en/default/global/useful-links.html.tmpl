@@ -121,7 +121,9 @@
       
     [% ELSE %]    
       <td valign="middle" align="right">
-        <a href="createaccount.cgi">New&nbsp;Account</a> | 
+        [% IF Param('createemailregexp') %]
+          <a href="createaccount.cgi">New&nbsp;Account</a> | 
+        [% END %]
         <a href="query.cgi?GoAheadAndLogIn=1">Log&nbsp;In</a>
       </td>
     </tr>

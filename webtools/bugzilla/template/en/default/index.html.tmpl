@@ -65,7 +65,9 @@ function addSidebar() {
   <a href="relogin.cgi">Logout [% username FILTER html %]</a><br>
 [% ELSE %]
   <a href="query.cgi?GoAheadAndLogIn=1">Log in to an existing account</a><br>
-  <a href="createaccount.cgi">Open a new Bugzilla account</a><br>
+  [% IF Param('createemailregexp') %]
+    <a href="createaccount.cgi">Open a new Bugzilla account</a><br>
+  [% END %]
 [% END %]
   </p><p>
   <a href="javascript:addSidebar()">Add to Sidebar</a> (Requires Mozilla or Netscape 6)<br>

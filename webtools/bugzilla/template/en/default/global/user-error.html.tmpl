@@ -41,6 +41,12 @@
     to any [% parameters %] which you may have set before calling
     ThrowUserError.
 
+  [% ELSIF error == "account_creation_disabled" %]
+    [% title = "Account Creation Disabled" %]
+    Account self-creation has been disabled or restricted.
+    <hr>
+    New accounts must be created by an administrator.
+
   [% ELSIF error == "account_disabled" %]
     [% title = "Account Disabled" %]
     [% disabled_reason %]

@@ -694,6 +694,19 @@ You will get this message once a day until you\'ve dealt with these bugs!
   },
 
   {
+   name => 'createemailregexp',
+   desc => 'This defines the regexp to use for email addresses that are ' .
+           'permitted to self-register using a "New Account" feature. The ' .
+           'default (.*) permits any account matching the emailregexp ' .
+           'to be created.  If this parameter is left blank, no users ' .
+           'will be permitted to create their own accounts and all accounts ' .
+           'will have to be created by an administrator',
+   type => 't',
+   default => q:.*:,
+   checker => \&check_regexp
+  },
+
+  {
    name => 'voteremovedmail',
    desc => 'This is a mail message to send to anyone who gets a vote removed ' .
            'from a bug for any reason.  %to% gets replaced by the person who ' .

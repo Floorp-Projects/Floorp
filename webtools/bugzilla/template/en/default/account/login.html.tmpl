@@ -102,10 +102,12 @@
 [% UNLESS Param("useLDAP") %]
   <hr>
 
-  <p>
-    If you don't have a Bugzilla account, you can 
-    <a href="createaccount.cgi">create a new account</a>.
-  </p>
+  [% IF Param("createemailregexp") %]
+    <p>
+      If you don't have a Bugzilla account, you can 
+      <a href="createaccount.cgi">create a new account</a>.
+    </p>
+  [% END %]
 
   <form method="get" action="token.cgi">
     <input type="hidden" name="a" value="reqpw">
