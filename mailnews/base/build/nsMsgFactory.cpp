@@ -440,8 +440,15 @@ NSRegisterSelf(nsISupports* aServMgr, const char* path)
                                   NS_RDF_DATASOURCE_PROGID_PREFIX "msgservers",
                                   path, PR_TRUE, PR_TRUE);
   if (NS_FAILED(rv)) goto done;
+
+#ifdef DEBUG_bienvenu  
+  printf("register filter service\n");
+  rv = compMgr->RegisterComponent(kMsgFilterServiceCID,
+                                  "Message Filter Service", nsnull,
+                                  path, PR_TRUE, PR_TRUE);
+  if (NS_FAILED(rv)) goto done;
+#endif   
   
-                                  
 #ifdef NS_DEBUG
   printf("mailnews registering from %s\n",path);
 #endif
@@ -493,6 +500,10 @@ NSUnregisterSelf(nsISupports* aServMgr, const char* path)
   if(NS_FAILED(rv)) goto done;
   rv = compMgr->UnregisterComponent(kMsgServerDataSourceCID, path);
   if(NS_FAILED(rv)) goto done;
+#ifdef DEBUG_bienvenu
+  rv = compMgr->UnregisterComponent(kMsgFilterServiceCID, path);
+  if(NS_FAILED(rv)) goto done;
+#endif
 
   done:
   (void)servMgr->ReleaseService(kComponentManagerCID, compMgr);
