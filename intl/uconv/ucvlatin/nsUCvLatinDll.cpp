@@ -29,12 +29,19 @@
 #include "nsUCvLatinDll.h"
 #include "nsISO88591ToUnicode.h"
 #include "nsISO88592ToUnicode.h"
+#include "nsISO88593ToUnicode.h"
+#include "nsISO88594ToUnicode.h"
+#include "nsISO88595ToUnicode.h"
+#include "nsISO88596ToUnicode.h"
 #include "nsISO88597ToUnicode.h"
+#include "nsISO88598ToUnicode.h"
 #include "nsISO88599ToUnicode.h"
 #include "nsCP1250ToUnicode.h"
+#include "nsCP1251ToUnicode.h"
 #include "nsCP1252ToUnicode.h"
 #include "nsCP1253ToUnicode.h"
 #include "nsCP1254ToUnicode.h"
+#include "nsCP1257ToUnicode.h"
 #include "nsMacRomanToUnicode.h"
 #include "nsMacCEToUnicode.h"
 #include "nsMacGreekToUnicode.h"
@@ -42,12 +49,19 @@
 #include "nsUTF8ToUnicode.h"
 #include "nsUnicodeToISO88591.h"
 #include "nsUnicodeToISO88592.h"
+#include "nsUnicodeToISO88593.h"
+#include "nsUnicodeToISO88594.h"
+#include "nsUnicodeToISO88595.h"
+#include "nsUnicodeToISO88596.h"
 #include "nsUnicodeToISO88597.h"
+#include "nsUnicodeToISO88598.h"
 #include "nsUnicodeToISO88599.h"
 #include "nsUnicodeToCP1250.h"
+#include "nsUnicodeToCP1251.h"
 #include "nsUnicodeToCP1252.h"
 #include "nsUnicodeToCP1253.h"
 #include "nsUnicodeToCP1254.h"
+#include "nsUnicodeToCP1257.h"
 #include "nsUnicodeToMacRoman.h"
 #include "nsUnicodeToMacCE.h"
 #include "nsUnicodeToMacGreek.h"
@@ -97,9 +111,39 @@ FactoryData g_FactoryData[] =
     "Unicode"
   },
   {
+    &kISO88593ToUnicodeCID,
+    nsISO88593ToUnicode::CreateInstance,
+    "ISO-8859-3",
+    "Unicode"
+  },
+  {
+    &kISO88594ToUnicodeCID,
+    nsISO88594ToUnicode::CreateInstance,
+    "ISO-8859-4",
+    "Unicode"
+  },
+  {
+    &kISO88595ToUnicodeCID,
+    nsISO88595ToUnicode::CreateInstance,
+    "ISO-8859-5",
+    "Unicode"
+  },
+  {
+    &kISO88596ToUnicodeCID,
+    nsISO88596ToUnicode::CreateInstance,
+    "ISO-8859-6",
+    "Unicode"
+  },
+  {
     &kISO88597ToUnicodeCID,
     nsISO88597ToUnicode::CreateInstance,
     "ISO-8859-7",
+    "Unicode"
+  },
+  {
+    &kISO88598ToUnicodeCID,
+    nsISO88598ToUnicode::CreateInstance,
+    "ISO-8859-8",
     "Unicode"
   },
   {
@@ -112,6 +156,12 @@ FactoryData g_FactoryData[] =
     &kCP1250ToUnicodeCID,
     nsCP1250ToUnicode::CreateInstance,
     "windows-1250",
+    "Unicode"
+  },
+  {
+    &kCP1251ToUnicodeCID,
+    nsCP1251ToUnicode::CreateInstance,
+    "windows-1251",
     "Unicode"
   },
   {
@@ -130,6 +180,12 @@ FactoryData g_FactoryData[] =
     &kCP1254ToUnicodeCID,
     nsCP1254ToUnicode::CreateInstance,
     "windows-1254",
+    "Unicode"
+  },
+  {
+    &kCP1257ToUnicodeCID,
+    nsCP1257ToUnicode::CreateInstance,
+    "windows-1257",
     "Unicode"
   },
   {
@@ -175,10 +231,40 @@ FactoryData g_FactoryData[] =
     "ISO-8859-2"
   },
   {
+    &kUnicodeToISO88593CID,
+    nsUnicodeToISO88593::CreateInstance,
+    "Unicode",
+    "ISO-8859-3"
+  },
+  {
+    &kUnicodeToISO88594CID,
+    nsUnicodeToISO88594::CreateInstance,
+    "Unicode",
+    "ISO-8859-4"
+  },
+  {
+    &kUnicodeToISO88595CID,
+    nsUnicodeToISO88595::CreateInstance,
+    "Unicode",
+    "ISO-8859-5"
+  },
+  {
+    &kUnicodeToISO88596CID,
+    nsUnicodeToISO88596::CreateInstance,
+    "Unicode",
+    "ISO-8859-6"
+  },
+  {
     &kUnicodeToISO88597CID,
     nsUnicodeToISO88597::CreateInstance,
     "Unicode",
     "ISO-8859-7"
+  },
+  {
+    &kUnicodeToISO88598CID,
+    nsUnicodeToISO88598::CreateInstance,
+    "Unicode",
+    "ISO-8859-8"
   },
   {
     &kUnicodeToISO88599CID,
@@ -191,6 +277,12 @@ FactoryData g_FactoryData[] =
     nsUnicodeToCP1250::CreateInstance,
     "Unicode",
     "windows-1250"
+  },
+  {
+    &kUnicodeToCP1251CID,
+    nsUnicodeToCP1251::CreateInstance,
+    "Unicode",
+    "windows-1251"
   },
   {
     &kUnicodeToCP1252CID,
@@ -209,6 +301,12 @@ FactoryData g_FactoryData[] =
     nsUnicodeToCP1254::CreateInstance,
     "Unicode",
     "windows-1254"
+  },
+  {
+    &kUnicodeToCP1257CID,
+    nsUnicodeToCP1257::CreateInstance,
+    "Unicode",
+    "windows-1257"
   },
   {
     &kUnicodeToMacRomanCID,

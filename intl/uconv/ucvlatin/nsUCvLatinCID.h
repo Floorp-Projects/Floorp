@@ -32,10 +32,35 @@ NS_DECLARE_ID(kISO88591ToUnicodeCID,
 NS_DECLARE_ID(kISO88592ToUnicodeCID,
   0x7c657d11, 0xec5e, 0x11d2, 0x8a, 0xac, 0x0, 0x60, 0x8, 0x11, 0xa8, 0x36);
 
+// Class ID for our ISO88593ToUnicode charset converter
+// {660D8CA0-F763-11d2-8AAD-00600811A836}
+NS_DECLARE_ID(kISO88593ToUnicodeCID,
+  0x660d8ca0, 0xf763, 0x11d2, 0x8a, 0xad, 0x0, 0x60, 0x8, 0x11, 0xa8, 0x36);
+
+// Class ID for our ISO88594ToUnicode charset converter
+// {660D8CA1-F763-11d2-8AAD-00600811A836}
+NS_DECLARE_ID(kISO88594ToUnicodeCID,
+  0x660d8ca1, 0xf763, 0x11d2, 0x8a, 0xad, 0x0, 0x60, 0x8, 0x11, 0xa8, 0x36);
+
+// Class ID for our ISO88595ToUnicode charset converter
+// {660D8CA2-F763-11d2-8AAD-00600811A836}
+NS_DECLARE_ID(kISO88595ToUnicodeCID,
+  0x660d8ca2, 0xf763, 0x11d2, 0x8a, 0xad, 0x0, 0x60, 0x8, 0x11, 0xa8, 0x36);
+
+// Class ID for our ISO88596ToUnicode charset converter
+// {660D8CA3-F763-11d2-8AAD-00600811A836}
+NS_DECLARE_ID(kISO88596ToUnicodeCID,
+  0x660d8ca3, 0xf763, 0x11d2, 0x8a, 0xad, 0x0, 0x60, 0x8, 0x11, 0xa8, 0x36);
+
 // Class ID for our ISO88597ToUnicode charset converter
 // {AF7A9951-AA48-11d2-B3AE-00805F8A6670}
 NS_DECLARE_ID(kISO88597ToUnicodeCID, 
   0xaf7a9951, 0xaa48, 0x11d2, 0xb3, 0xae, 0x0, 0x80, 0x5f, 0x8a, 0x66, 0x70);
+
+// Class ID for our ISO88598ToUnicode charset converter
+// {660D8CA4-F763-11d2-8AAD-00600811A836}
+NS_DECLARE_ID(kISO88598ToUnicodeCID, 
+  0x660d8ca4, 0xf763, 0x11d2, 0x8a, 0xad, 0x0, 0x60, 0x8, 0x11, 0xa8, 0x36);
 
 // Class ID for our ISO88599ToUnicode charset converter
 // {7C657D13-EC5E-11d2-8AAC-00600811A836}
@@ -46,6 +71,11 @@ NS_DECLARE_ID(kISO88599ToUnicodeCID,
 // {7C657D14-EC5E-11d2-8AAC-00600811A836}
 NS_DECLARE_ID(kCP1250ToUnicodeCID, 
   0x7c657d14, 0xec5e, 0x11d2, 0x8a, 0xac, 0x0, 0x60, 0x8, 0x11, 0xa8, 0x36);
+
+// Class ID for our CP1251ToUnicode charset converter
+// {A578E0A1-F76B-11d2-8AAD-00600811A836}
+NS_DECLARE_ID(kCP1251ToUnicodeCID, 
+  0xa578e0a1, 0xf76b, 0x11d2, 0x8a, 0xad, 0x0, 0x60, 0x8, 0x11, 0xa8, 0x36);
 
 // Class ID for our CP1252ToUnicode charset converter
 // {7C657D15-EC5E-11d2-8AAC-00600811A836}
@@ -61,6 +91,11 @@ NS_DECLARE_ID(kCP1253ToUnicodeCID,
 // {7C657D17-EC5E-11d2-8AAC-00600811A836}
 NS_DECLARE_ID(kCP1254ToUnicodeCID, 
   0x7c657d17, 0xec5e, 0x11d2, 0x8a, 0xac, 0x0, 0x60, 0x8, 0x11, 0xa8, 0x36);
+
+// Class ID for our CP1257ToUnicode charset converter
+// {A578E0A2-F76B-11d2-8AAD-00600811A836}
+NS_DECLARE_ID(kCP1257ToUnicodeCID, 
+  0xa578e0a2, 0xf76b, 0x11d2, 0x8a, 0xad, 0x0, 0x60, 0x8, 0x11, 0xa8, 0x36);
 
 // Class ID for our MacRomanToUnicode charset converter
 // {7B8556A1-EC79-11d2-8AAC-00600811A836}
@@ -97,10 +132,35 @@ NS_DECLARE_ID(kUnicodeToISO88591CID,
 NS_DECLARE_ID(kUnicodeToISO88592CID, 
   0x7b8556a6, 0xec79, 0x11d2, 0x8a, 0xac, 0x0, 0x60, 0x8, 0x11, 0xa8, 0x36);
 
+// Class ID for our UnicodeToISO88593 charset converter
+// {660D8CA5-F763-11d2-8AAD-00600811A836}
+NS_DECLARE_ID(kUnicodeToISO88593CID, 
+  0x660d8ca5, 0xf763, 0x11d2, 0x8a, 0xad, 0x0, 0x60, 0x8, 0x11, 0xa8, 0x36);
+
+// Class ID for our UnicodeToISO88594 charset converter
+// {660D8CA6-F763-11d2-8AAD-00600811A836}
+NS_DECLARE_ID(kUnicodeToISO88594CID, 
+  0x660d8ca6, 0xf763, 0x11d2, 0x8a, 0xad, 0x0, 0x60, 0x8, 0x11, 0xa8, 0x36);
+
+// Class ID for our UnicodeToISO88595 charset converter
+// {660D8CA7-F763-11d2-8AAD-00600811A836}
+NS_DECLARE_ID(kUnicodeToISO88595CID, 
+  0x660d8ca7, 0xf763, 0x11d2, 0x8a, 0xad, 0x0, 0x60, 0x8, 0x11, 0xa8, 0x36);
+
+// Class ID for our UnicodeToISO88596 charset converter
+// {660D8CA8-F763-11d2-8AAD-00600811A836}
+NS_DECLARE_ID(kUnicodeToISO88596CID, 
+  0x660d8ca8, 0xf763, 0x11d2, 0x8a, 0xad, 0x0, 0x60, 0x8, 0x11, 0xa8, 0x36);
+
 // Class ID for our UnicodeToISO88597 charset converter
 // {7B8556A8-EC79-11d2-8AAC-00600811A836}
 NS_DECLARE_ID(kUnicodeToISO88597CID, 
   0x7b8556a8, 0xec79, 0x11d2, 0x8a, 0xac, 0x0, 0x60, 0x8, 0x11, 0xa8, 0x36);
+
+// Class ID for our UnicodeToISO88598 charset converter
+// {660D8CA9-F763-11d2-8AAD-00600811A836}
+NS_DECLARE_ID(kUnicodeToISO88598CID, 
+  0x660d8ca9, 0xf763, 0x11d2, 0x8a, 0xad, 0x0, 0x60, 0x8, 0x11, 0xa8, 0x36);
 
 // Class ID for our UnicodeToISO88599 charset converter
 // {7B8556A9-EC79-11d2-8AAC-00600811A836}
@@ -111,6 +171,11 @@ NS_DECLARE_ID(kUnicodeToISO88599CID,
 // {7B8556AA-EC79-11d2-8AAC-00600811A836}
 NS_DECLARE_ID(kUnicodeToCP1250CID, 
   0x7b8556aa, 0xec79, 0x11d2, 0x8a, 0xac, 0x0, 0x60, 0x8, 0x11, 0xa8, 0x36);
+
+// Class ID for our UnicodeToCP1251 charset converter
+// {A578E0A3-F76B-11d2-8AAD-00600811A836}
+NS_DECLARE_ID(kUnicodeToCP1251CID, 
+  0xa578e0a3, 0xf76b, 0x11d2, 0x8a, 0xad, 0x0, 0x60, 0x8, 0x11, 0xa8, 0x36);
 
 // Class ID for our UnicodeToCP1252 charset converter
 // {7B8556AC-EC79-11d2-8AAC-00600811A836}
@@ -126,6 +191,11 @@ NS_DECLARE_ID(kUnicodeToCP1253CID,
 // {7B8556AE-EC79-11d2-8AAC-00600811A836}
 NS_DECLARE_ID(kUnicodeToCP1254CID, 
   0x7b8556ae, 0xec79, 0x11d2, 0x8a, 0xac, 0x0, 0x60, 0x8, 0x11, 0xa8, 0x36);
+
+// Class ID for our UnicodeToCP1257 charset converter
+// {A578E0A4-F76B-11d2-8AAD-00600811A836}
+NS_DECLARE_ID(kUnicodeToCP1257CID, 
+  0xa578e0a4, 0xf76b, 0x11d2, 0x8a, 0xad, 0x0, 0x60, 0x8, 0x11, 0xa8, 0x36);
 
 // Class ID for our UnicodeToMacRoman charset converter
 // {7B8556AF-EC79-11d2-8AAC-00600811A836}
