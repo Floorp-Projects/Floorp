@@ -46,7 +46,11 @@ static NS_DEFINE_CID(kAppShellServiceCID, NS_APPSHELL_SERVICE_CID);
 class MSG_Master;
 #endif
 
-// we have a HAVE_XPGETSTRING in this file which needs fixed once we have XP_GetString
+#include "nsXPIDLString.h"
+#include "nsIMsgAccountManager.h"
+#include "nsIMsgIncomingServer.h"
+#include "nsINntpIncomingServer.h"
+#include "nsMsgBaseCID.h"
 
 #include "nsNNTPNewsgroupList.h"
 
@@ -82,8 +86,7 @@ class MSG_Master;
 
 #include "nsIPref.h"
 
-#define PREF_NEWS_MAX_ARTICLES "news.max_articles"
-#define PREF_NEWS_MARK_OLD_READ "news.mark_old_read"
+#define DOWNLOAD_HEADERS_URL "chrome://messenger/content/downloadheaders.xul"
 
 static NS_DEFINE_CID(kCNewsDB, NS_NEWSDB_CID);
 static NS_DEFINE_CID(kCPrefServiceCID, NS_PREF_CID);
@@ -93,6 +96,10 @@ extern PRInt32 net_NewsChunkSize;
 nsNNTPNewsgroupList::nsNNTPNewsgroupList()
 {
     NS_INIT_REFCNT();
+
+	m_username = nsnull;
+	m_hostname = nsnull;
+	m_uri = nsnull;
 }
 
 
@@ -107,15 +114,17 @@ NS_IMPL_ISUPPORTS(nsNNTPNewsgroupList, nsINNTPNewsgroupList::GetIID());
 nsresult
 nsNNTPNewsgroupList::Initialize(nsINNTPHost *host, nsINntpUrl *runningURL, nsINNTPNewsgroup *newsgroup, const char *username, const char *hostname, const char *groupname)
 {
-	m_newsDB = nsnull;
 	m_groupName = PL_strdup(groupname);
-        
-        if (username) {
+    m_hostname = PL_strdup(hostname);
+	m_username = PL_strdup(username);
+    
+    if (username) {
 		m_uri = PR_smprintf("%s/%s@%s/%s",kNewsRootURI,username,hostname,groupname);
 	}
-        else {
+    else {
 		m_uri = PR_smprintf("%s/%s/%s",kNewsRootURI,hostname,groupname);
 	}
+
 	m_lastProcessedNumber = 0;
 	m_lastMsgNumber = 0;
 	m_set = nsnull;
@@ -145,8 +154,10 @@ nsNNTPNewsgroupList::Initialize(nsINNTPHost *host, nsINntpUrl *runningURL, nsINN
 
 nsresult
 nsNNTPNewsgroupList::CleanUp() {
-	PR_Free(m_uri);
-	PR_Free(m_groupName);
+	PR_FREEIF(m_username);
+	PR_FREEIF(m_hostname);
+	PR_FREEIF(m_uri);
+	PR_FREEIF(m_groupName);
     
 	if (m_newsDB) {
 		m_newsDB->Commit(nsMsgDBCommitType::kSessionCommit);
@@ -402,54 +413,78 @@ nsNNTPNewsgroupList::GetRangeOfArtsToDownload(
 		{
 			if (!m_getOldMessages && !m_promptedAlready && notifyMaxExceededOn)
 			{
-                PRBool download = PR_TRUE;  // yes, I'd like some news messages
-#ifdef HAVE_PANES
-				nsINNTPNewsgroup *newsFolder = m_pane->GetMaster()->FindNewsFolder(m_host, m_groupName, PR_FALSE);
-				download = FE_NewsDownloadPrompt(m_pane->GetContext(),
-													*last - *first + 1,
-													&m_downloadAll, newsFolder);
-#else
+                PRBool download = PR_TRUE;  
+				m_downloadAll = PR_FALSE;   
+			
+				// todo list:
+				// if they hit cancel, download should be false
+				// if they clicked on download all,  m_downloadAll should be true
+				// m_promptedAlready may not be saved
+				// m_getOldMessages may not be set.
+			
 #ifdef DEBUG_NEWS
 				printf("Download Header Dialog:  %d\n",*last - *first + 1);
+				printf("download = %d\n", download);
 				printf("download all = %d\n", m_downloadAll);
 #endif /* DEBUG_NEWS */
 				nsAutoString args = "";
 				args.Append(*last - *first + 1);
 				args.Append(",");
 				args.Append(m_groupName);
-				rv = openWindow( nsString("chrome://messenger/content/downloadheaders.xul").GetUnicode(), args.GetUnicode() ); 
+
+				PRInt32 dialogMaxArticles = 0;
+				PRBool dialogMarkOldRead = PR_FALSE;
+
+				// get the incoming msg server
+				NS_WITH_SERVICE(nsIMsgAccountManager, accountManager, NS_MSGACCOUNTMANAGER_PROGID, &rv)
+				if (NS_FAILED(rv)) return rv;
+				nsCOMPtr<nsIMsgIncomingServer> server;
+				rv = accountManager->FindServer(m_username,m_hostname,"nntp", getter_AddRefs(server));
+				if (NS_FAILED(rv)) return rv;
+		
+				// QI to get the nntp incoming msg server
+				nsCOMPtr<nsINntpIncomingServer> nntpServer;
+				rv = server->QueryInterface(nsINntpIncomingServer::GetIID(), getter_AddRefs(nntpServer));
+				if (NS_FAILED(rv)) return rv;
+
+				// get the max articles for this server
+				rv = nntpServer->GetMaxArticles(&dialogMaxArticles);
+				if (NS_FAILED(rv)) dialogMaxArticles = 0;
+				args.Append(dialogMaxArticles);
+				args.Append(",");
+
+				// get the marked read value for this server
+				rv = nntpServer->GetMarkOldRead(&dialogMarkOldRead);
+				if (NS_FAILED(rv)) dialogMarkOldRead = PR_FALSE;
+				if (dialogMarkOldRead) {
+					args.Append("true,");
+				}
+				else {
+					args.Append("false,");
+				}
+
+				// get the server key
+				nsXPIDLCString serverKey;
+				rv = server->GetKey(getter_Copies(serverKey));
+				if (NS_FAILED(rv)) return rv;
+				args.Append((const char *)serverKey);
+
+				rv = openWindow( nsString(DOWNLOAD_HEADERS_URL).GetUnicode(), args.GetUnicode() ); 
 				NS_ASSERTION(NS_SUCCEEDED(rv), "failed to open download headers dialog");
-#endif /* HAVE_PANES */
-				if (download)
-				{
+				if (download) {
 					m_maxArticles = 0;
 
-#ifdef DEBUG_NEWS
-		    printf("todo: this should be per server!\n");
-#endif /* DEBUG_NEWS */
-                    rv = prefs->GetIntPref(PREF_NEWS_MAX_ARTICLES, &m_maxArticles);
-                    if (NS_FAILED(rv)) {
-#ifdef DEBUG_NEWS
-                        printf("get pref of PREF_NEWS_MAX_ARTICLES failed\n");
-#endif /* DEBUG_NEWS */
-                        m_maxArticles = 0;
-                    }
+                    rv = nntpServer->GetMaxArticles(&m_maxArticles); 
+					if (NS_FAILED(rv)) m_maxArticles = 0; 
                     
                     net_NewsChunkSize = m_maxArticles;
 					maxextra = m_maxArticles;
 					if (!m_downloadAll)
 					{
 						PRBool markOldRead = PR_FALSE;
-#ifdef DEBUG_NEWS
-		    				printf("todo: this should be per server!\n");
-#endif /* DEBUG_NEWS */
 
-						rv = prefs->GetBoolPref(PREF_NEWS_MARK_OLD_READ, &markOldRead);
-                        if (NS_FAILED(rv)) {
-#ifdef DEBUG_NEWS
-                            printf("get pref of PREF_NEWS_MARK_OLD_READ failed\n");
-#endif /* DEBUG_NEWS */
-                        }
+						rv = nntpServer->GetMarkOldRead(&markOldRead);
+                        if (NS_FAILED(rv)) markOldRead = PR_FALSE;
 
 						if (markOldRead && m_set)
 							m_set->AddRange(*first, *last - maxextra); 
@@ -853,7 +888,7 @@ nsNNTPNewsgroupList::ProcessXOVERLINE(const char *line, PRUint32 *status)
 #else
 			SetProgressStatus(statusString);
 #endif
-			PR_Free(statusString);
+			PR_FREEIF(statusString);
 		}
 	}
     
@@ -969,7 +1004,7 @@ nsNNTPNewsgroupList::FinishXOVERLINE(int status, int *newstatus)
 #else
 				SetProgressStatus(statusString);
 #endif
-				PR_Free(statusString);
+				PR_FREEIF(statusString);
 			}
 		}
 #ifdef HAVE_PANES

@@ -27,19 +27,35 @@ var Bundle = srGetStrBundle("chrome://messenger/locale/news.properties");
 var prefs = Components.classes['component://netscape/preferences'].getService();
 prefs = prefs.QueryInterface(Components.interfaces.nsIPref); 
 
+var serverid = null;
+var max_articles_value = 0;
+var mark_old_read_value = true;
+var markreadElement = null;
+var numberElement = null;
+
 function OnLoad()
 {
-	//dump("OnLoad()\n");
+	doSetOKCancel(OkButtonCallback, null);
 
 	if (window.arguments && window.arguments[0]) {
-		var args = window.arguments[0];
-		// args will be of the form <number>,<newsgroup name>
-		var commapos = args.indexOf(',');
-		newmessages = args.substring(0,commapos);
-		newsgroupname = args.substring(commapos+1);
+		var args = window.arguments[0].split(",");
+		// args will be of the form <number>,<newsgroup name>,<max>,<mark>,<serverid>
+		newmessages = args[0];
+		newsgroupname = args[1];
+		max_articles_value = max_articles_value + args[2];
+		if (args[3] == "true") {
+			mark_old_read_value = true;
+		}
+		else {
+			mark_old_read_value = false;
+		}
+		serverid = args[4];
 
-		//dump("new message count = " + newmessages + "\n");
-		//dump("newsgroup name = " + newsgroupname + "\n");
+		dump("new message count = " + newmessages + "\n");
+		dump("newsgroup name = " + newsgroupname + "\n");
+		dump("max_articles_value = " + max_articles_value + "\n");
+		dump("mark_old_read_value = " + mark_old_read_value + "\n");
+		dump("serverid = " + serverid + "\n");
 
 		var downloadHeadersTitlePrefix = Bundle.GetStringFromName("downloadHeadersTitlePrefix");
 		var downloadHeadersInfoText1 = Bundle.GetStringFromName("downloadHeadersInfoText1");
@@ -51,14 +67,11 @@ function OnLoad()
 		setDivText('info',infotext);
 	}
 
-	//dump("TODO: max_articles and mark_old read should be passed in, and per server\n");
-	var max_articles_value = prefs.GetIntPref("news.max_articles");
-	var mark_old_read_value = prefs.GetBoolPref("news.mark_old_read");
 
-	var numberElement = document.getElementById("number");
+	numberElement = document.getElementById("number");
 	numberElement.value = max_articles_value;
 
-	var markreadElement = document.getElementById("markread");
+	markreadElement = document.getElementById("markread");
 	markreadElement.checked = mark_old_read_value;
 
 	return true;
@@ -72,3 +85,11 @@ function setDivText(divname, value) {
     div.appendChild(document.createTextNode(value));
 }
 
+function OkButtonCallback() {
+	var accountManager = Components.classes["component://netscape/messenger/account-manager"].getService(Components.interfaces.nsIMsgAccountManager);
+	var server = accountManager.getIncomingServer(serverid);
+	var nntpServer = server.QueryInterface(Components.interfaces.nsINntpIncomingServer);
+
+	nntpServer.maxArticles = numberElement.value;
+	nntpServer.markOldRead= markreadElement.checked;
+}

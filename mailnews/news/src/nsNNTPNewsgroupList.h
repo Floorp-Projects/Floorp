@@ -112,7 +112,9 @@ protected:
   char			*m_groupName;
   nsINNTPHost	*m_host;
   nsINNTPNewsgroup *m_newsgroup;
-  char			*m_uri;			
+  char 			*m_username;			
+  char 			*m_hostname;
+  char			*m_uri;
 #ifdef HAVE_MASTER
   MSG_Master		*m_master;
 #endif
