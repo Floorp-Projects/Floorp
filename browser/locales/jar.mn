@@ -38,6 +38,8 @@
     locale/browser/pref/pref-features.dtd          (@AB_CD@/chrome/browser/pref/pref-features.dtd)
     locale/browser/pref/pref-features-images.dtd   (@AB_CD@/chrome/browser/pref/pref-features-images.dtd)
     locale/browser/pref/pref-fonts.dtd             (@AB_CD@/chrome/browser/pref/pref-fonts.dtd)
+    locale/browser/pref/pref-languages.dtd         (@AB_CD@/chrome/browser/pref/pref-languages.dtd)
+    locale/browser/pref/pref-languages.properties  (@AB_CD@/chrome/browser/pref/pref-languages.properties)
     locale/browser/pref/pref-navigator.dtd         (@AB_CD@/chrome/browser/pref/pref-navigator.dtd)
     locale/browser/pref/pref-privacy.dtd           (@AB_CD@/chrome/browser/pref/pref-privacy.dtd)
     locale/browser/pref/pref-themes.dtd            (@AB_CD@/chrome/browser/pref/pref-themes.dtd)

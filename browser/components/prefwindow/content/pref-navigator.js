@@ -242,3 +242,8 @@ function checkNow()
   }
 }
 #endif
+
+function showLanguages()
+{
+  openDialog("chrome://browser/content/pref/pref-languages.xul", "", "modal,centerscreen,resizable");
+}

@@ -18,18 +18,18 @@
 <!-- XXXben oh please, can we do better than this text-wise? -->
 <!ENTITY showConnections.label      "Connection Settings...">
 <!ENTITY showConnections.accesskey  "o">
-
 <!ENTITY proxiesInfo.label          "Set up Proxies for accessing the internet.">
 <!ENTITY connectionsInfo.caption    "Connection">
 
-<!-- XXXben can we do better than this text-wise? -->
-<!ENTITY fonts.label                        "Fonts &amp; Colors">
-<!ENTITY fontsInfo.caption                  "Fonts &amp; Colors Settings">
-<!ENTITY fontsInfo.label                    "Select default Fonts and Colors used when displaying pages.">
-
+<!ENTITY fonts.caption                      "Fonts &amp; Colors">
+<!ENTITY fontsInfo.label                    "Select default Fonts and Colors for web pages.">
 <!ENTITY showFontsAndColors.label           "Fonts &amp; Colors...">
-<!ENTITY showFontsAndColors.accesskey       "f">
+<!ENTITY showFontsAndColors.accesskey       "F">
 
+<!ENTITY languages.caption                  "Languages">
+<!ENTITY languagesInfo.label                "Select default Languages and Character Encoding for web pages.">
+<!ENTITY showLanguages.label                "Languages...">
+<!ENTITY showLanguages.accesskey            "L">
 
 <!ENTITY checkForDefault.label              "&brandShortName; should check to see if it is the default browser when starting.">
 <!ENTITY checkForDefault.accesskey          "d">

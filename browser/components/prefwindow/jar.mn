@@ -12,6 +12,8 @@ browser.jar:
 *   content/browser/pref/pref-features.js                  (content/pref-features.js)
 *   content/browser/pref/pref-fonts.xul                    (content/pref-fonts.xul)
 *   content/browser/pref/pref-fonts.js                     (content/pref-fonts.js)
+*   content/browser/pref/pref-languages.xul                (content/pref-languages.xul)
+*   content/browser/pref/pref-languages.js                 (content/pref-languages.js)
 *   content/browser/pref/pref-navigator.js                 (content/pref-navigator.js)
 *   content/browser/pref/pref-calibrate-screen.xul         (content/pref-calibrate-screen.xul)
 *   content/browser/pref/pref-navigator.xul                (content/pref-navigator.xul)

@@ -86,14 +86,24 @@
   </groupbox>
 
   <groupbox>
-    <caption label="&fonts.label;"/>
+    <caption label="&fonts.caption;"/>
     <hbox align="center">
       <description flex="1">&fontsInfo.label;</description>
       <button label="&showFontsAndColors.label;" 
               accesskey="&showFontsAndColors.accesskey;" 
               oncommand="showFontsAndColors();"/>
     </hbox>
-  </groupbox>    
+  </groupbox>
+
+ <groupbox>
+    <caption label="&languages.caption;"/>
+    <hbox align="center">
+      <description flex="1">&languagesInfo.label;</description>
+      <button label="&showLanguages.label;"
+              accesskey="&showLanguages.accesskey;"
+              oncommand="showLanguages();"/>
+    </hbox>
+  </groupbox>
 
 #ifdef HAVE_SHELL_SERVICE
   <groupbox orient="horizontal" id="defaultBrowserPrefs">
