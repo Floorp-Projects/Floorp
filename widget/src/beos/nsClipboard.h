@@ -42,6 +42,7 @@
 #include "nsBaseClipboard.h"
 #include <Clipboard.h>
 
+class BView;
 class nsITransferable;
 
 /**
