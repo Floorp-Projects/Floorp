@@ -104,7 +104,7 @@ NS_METHOD nsDialog::Create(nsNativeWidget aParent,
                       nsIToolkit *aToolkit,
                       nsWidgetInitData *aInitData)
 {
-  return NS_ERORR_FAILURE;
+  return NS_ERROR_FAILURE;
 }
 
 //-------------------------------------------------------------------------

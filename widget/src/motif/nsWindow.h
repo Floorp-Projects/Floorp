@@ -35,6 +35,8 @@
 
 #include "nsXtManageWidget.h"
 
+class nsFont;
+
 #define NSRGB_2_COLOREF(color) \
             RGB(NS_GET_R(color),NS_GET_G(color),NS_GET_B(color))
 
@@ -55,7 +57,7 @@ public:
     // nsISupports
     NS_DECL_ISUPPORTS
 
-    NS_IMETHOD ConvertToDeviceCoordinates(nscoord &aX, nscoord &aY) {};
+    virtual void ConvertToDeviceCoordinates(nscoord &aX, nscoord &aY);
  
 
 
@@ -80,9 +82,11 @@ public:
     NS_IMETHOD            Destroy();
     virtual nsIWidget*      GetParent(void);
     virtual nsIEnumerator*  GetChildren();
-    NS_IMETHOD            AddChild(nsIWidget* aChild);
-    NS_IMETHOD            RemoveChild(nsIWidget* aChild);
+    virtual void            AddChild(nsIWidget* aChild);
+    virtual void            RemoveChild(nsIWidget* aChild);
     NS_IMETHOD            Show(PRBool bState);
+    NS_IMETHOD            IsVisible(PRBool & aState);
+
     NS_IMETHOD            Move(PRUint32 aX, PRUint32 aY);
     NS_IMETHOD            Resize(PRUint32 aWidth,
                                    PRUint32 aHeight,
@@ -122,6 +126,9 @@ public:
     NS_IMETHOD            AddEventListener(nsIEventListener * aListener);
     NS_IMETHOD            BeginResizingChildren(void);
     NS_IMETHOD            EndResizingChildren(void);
+    NS_IMETHOD            SetMenuBar(nsIMenuBar * aMenuBar); 
+    NS_IMETHOD            GetPreferredSize(PRInt32& aWidth, PRInt32& aHeight);
+    NS_IMETHOD            SetPreferredSize(PRInt32 aWidth, PRInt32 aHeight);
 
     virtual PRBool IsChild() { return(PR_FALSE); };
 
@@ -204,6 +211,14 @@ protected:
   PRBool      mVisible;
   PRBool      mDisplayed;
   void*       mClientData;
+
+  // XXX Temporary, should not be caching the font
+  nsFont *    mFont;
+
+  PRInt32     mPreferredWidth;
+  PRInt32     mPreferredHeight;
+
+
 
   // Resize event management
   nsRect mResizeRect;

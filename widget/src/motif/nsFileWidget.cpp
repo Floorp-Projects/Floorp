@@ -241,7 +241,7 @@ PRBool nsFileWidget::Show()
 //
 //-------------------------------------------------------------------------
 
-NS_METHOD nsFileWidget::GetFilterListArray(nsString& aFilterList)
+void nsFileWidget::GetFilterListArray(nsString& aFilterList)
 {
   aFilterList.SetLength(0);
   for (PRUint32 i = 0; i < mNumberOfFilters; i++) {

@@ -19,6 +19,7 @@
 #include "nsWindow.h"
 #include "nsIFontMetrics.h"
 #include "nsIFontCache.h"
+#include "nsFont.h"
 #include "nsGUIEvent.h"
 #include "nsIRenderingContext.h"
 #include "nsIDeviceContext.h"
@@ -95,6 +96,8 @@ nsWindow::nsWindow():
   mLowerLeft = PR_FALSE;
   mCursor = eCursor_standard;
   mClientData = nsnull;
+  mPreferredWidth  = 0;
+  mPreferredHeight = 0;
 }
 
 //-------------------------------------------------------------------------
@@ -112,12 +115,19 @@ nsWindow::~nsWindow()
   }
 }
 
+//-------------------------------------------------------------------------
+void nsWindow::ConvertToDeviceCoordinates(nscoord &aX, nscoord &aY)
+{
+  return NS_OK;
+}
 
+//-------------------------------------------------------------------------
 NS_METHOD nsWindow::WidgetToScreen(const nsRect& aOldRect, nsRect& aNewRect)
 {
   return NS_OK;
 }
 
+//-------------------------------------------------------------------------
 NS_METHOD nsWindow::ScreenToWidget(const nsRect& aOldRect, nsRect& aNewRect)
 {
 } 
@@ -608,7 +618,7 @@ nsIEnumerator* nsWindow::GetChildren()
 // Add a child to the list of children
 //
 //-------------------------------------------------------------------------
-NS_METHOD nsWindow::AddChild(nsIWidget* aChild)
+void nsWindow::AddChild(nsIWidget* aChild)
 {
   return NS_OK;
 }
@@ -619,7 +629,7 @@ NS_METHOD nsWindow::AddChild(nsIWidget* aChild)
 // Remove a child from the list of children
 //
 //-------------------------------------------------------------------------
-NS_METHOD nsWindow::RemoveChild(nsIWidget* aChild)
+void nsWindow::RemoveChild(nsIWidget* aChild)
 {
   return NS_OK;
 }
@@ -639,6 +649,13 @@ NS_METHOD nsWindow::Show(PRBool bState)
   else
     XtUnmanageChild(mWidget);
 
+  return NS_OK;
+}
+
+//-------------------------------------------------------------------------
+NS_METHOD nsWindow::IsVisible(PRBool & aState)
+{
+  aState = mShown;
   return NS_OK;
 }
 
@@ -740,10 +757,9 @@ NS_METHOD nsWindow::SetFocus(void)
 // Get this component dimension
 //
 //-------------------------------------------------------------------------
-NS_METHOD nsWindow::SetBounds(const nsRect &aRect)
+void nsWindow::SetBounds(const nsRect &aRect)
 {
  mBounds = aRect;
-  return NS_OK;
 }
 
 //-------------------------------------------------------------------------
@@ -819,8 +835,8 @@ NS_METHOD nsWindow::SetBackgroundColor(const nscolor &aColor)
 //-------------------------------------------------------------------------
 nsIFontMetrics* nsWindow::GetFont(void)
 {
-    NS_NOTYETIMPLEMENTED("GetFont not yet implemented"); // to be implemented
-    return nsnull;
+  NS_NOTYETIMPLEMENTED("GetFont not yet implemented"); // to be implemented
+  return nsnull;
 }
 
     
@@ -868,6 +884,14 @@ NS_METHOD nsWindow::SetFont(const nsFont &aFont)
       printf("****** Error: FontCache is NULL!\n");
       return NS_ERROR_FAILURE;
     }
+
+     // XXX Temporary, should not be caching the font
+    if (mFont == nsnull) {
+      mFont = new nsFont(aFont);
+    } else {
+      *mFont  = aFont;
+    }
+
   return NS_OK;
 }
 
@@ -1543,4 +1567,22 @@ extern "C" void nsWindow_ResizeWidget(Widget w)
   win->SetResized(PR_TRUE);
 }
 
+NS_METHOD nsWindow::SetMenuBar(nsIMenuBar * aMenuBar) 
+{
+  return NS_ERROR_FAILURE;
+} 
+
+NS_METHOD nsWindow::GetPreferredSize(PRInt32& aWidth, PRInt32& aHeight)
+{
+  aWidth  = mPreferredWidth;
+  aHeight = mPreferredHeight;
+  return NS_ERROR_FAILURE;
+}
+
+NS_METHOD nsWindow::SetPreferredSize(PRInt32 aWidth, PRInt32 aHeight)
+{
+  mPreferredWidth  = aWidth;
+  mPreferredHeight = aHeight;
+  return NS_OK;
+}
 
