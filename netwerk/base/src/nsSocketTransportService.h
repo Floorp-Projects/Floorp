@@ -69,8 +69,6 @@ public:
   static NS_METHOD
   Create(nsISupports *aOuter, REFNSIID aIID, void **aResult);
 
-  nsresult Init(void);
-
   nsresult AddToWorkQ(nsSocketTransport* aTransport);
 
   // XXX: Should these use intervals or Milliseconds?

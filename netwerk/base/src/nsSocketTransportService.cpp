@@ -107,7 +107,8 @@ nsSocketTransportService::Create(nsISupports *aOuter, REFNSIID aIID, void **aRes
     return rv;
 }
 
-nsresult nsSocketTransportService::Init(void)
+NS_IMETHODIMP
+nsSocketTransportService::Init(void)
 {
   nsresult rv = NS_OK;
 
