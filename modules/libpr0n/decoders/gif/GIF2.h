@@ -88,7 +88,6 @@ typedef struct gif_struct {
     /* Parsing state machine */
     gstate state;               /* Curent decoder master state */
     PRUint8 *hold;                /* Accumulation buffer */
-    int32 hold_size;            /* Capacity, in bytes, of accumulation buffer */
     PRUint8 *gather_head;         /* Next byte to read in accumulation buffer */
     int32 gather_request_size;  /* Number of bytes to accumulate */
     int32 gathered;             /* bytes accumulated so far*/
@@ -122,15 +121,11 @@ typedef struct gif_struct {
     /* Parameters for image frame currently being decoded*/
     PRUintn x_offset, y_offset;    /* With respect to "screen" origin */
     PRUintn height, width;
-    PRUintn last_x_offset, last_y_offset; /* With respect to "screen" origin */
-    PRUintn last_height, last_width;
     int interlaced;             /* TRUE, if scanlines arrive interlaced order */
     int tpixel;                 /* Index of transparent pixel */
     int is_transparent;         /* TRUE, if tpixel is valid */
     int control_extension;      /* TRUE, if image control extension present */
-    int is_local_colormap_defined;
     gdispose disposal_method;   /* Restore to background, leave in place, etc.*/
-    gdispose last_disposal_method;
     PRUint8 *local_colormap;    /* Per-image colormap */
     int local_colormap_size;    /* Size of local colormap array. */
     PRUint32 delay_time;        /* Display time, in milliseconds,
@@ -144,30 +139,21 @@ typedef struct gif_struct {
     PRUint8 *global_colormap;   /* Default colormap if local not supplied  */
     int global_colormap_size;   /* Size of global colormap array. */
     int images_decoded;         /* Counts images for multi-part GIFs */
-    int destroy_pending;        /* Stream has ended */
     int progressive_display;    /* If TRUE, do Haeberli interlace hack */
     int loop_count;             /* Netscape specific extension block to control
                                    the number of animation loops a GIF renders. */
 } gif_struct;
 
 
-/* Create a new gif_struct */
-extern PRBool gif_create(gif_struct **gs);
-
 /* These are the APIs that the client calls to intialize,
 push data to, and shut down the GIF decoder. */
 PRBool GIFInit(gif_struct* gs, void* aClientData);
 
-extern void gif_destroy(gif_struct* aGIFStruct);
+void gif_destroy(gif_struct* aGIFStruct);
 
 PRStatus gif_write(gif_struct* aGIFStruct, const PRUint8 * buf, PRUint32 numbytes);
 
 PRBool gif_write_ready(const gif_struct* aGIFStruct);
 
-extern void gif_complete(gif_struct** aGIFStruct);
-extern void gif_delay_time_callback(/* void *closure */);
-
-
-    
 #endif
 
