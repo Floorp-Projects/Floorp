@@ -226,6 +226,7 @@ pref("network.hosts.pop_server",            "mail");
 
 // pref("network.http.max-connections",  8);
 // pref("network.http.keep-alive.max-connections", 30); // max connections to be kept alive
+// pref("network.http.keep-alive.max-connections-per-server", 8);
 
 // pref("network.http.connect.timeout", 30);	// in seconds
 // pref("network.http.request.timeout", 30);	// in seconds
