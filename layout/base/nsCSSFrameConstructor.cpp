@@ -207,7 +207,7 @@ static PRBool gNoisyInlineConstruction = PR_FALSE;
 static PRBool gVerifyFastFindFrame = PR_FALSE;
 
 struct FrameCtorDebugFlags {
-  char*   name;
+  const char* name;
   PRBool* on;
 };
 
@@ -8351,8 +8351,8 @@ nsCSSFrameConstructor::ContentAppended(nsIPresContext* aPresContext,
     //
     nsCOMPtr<nsIDOMHTMLSelectElement> selectContent(do_QueryInterface(aContainer));
     if (!selectContent) {
-      if (WipeContainingBlock(aPresContext, state, blockContent, parentFrame,
-                              frameItems.childList)) {
+      if (WipeContainingBlock(aPresContext, state, containingBlock,
+                              parentFrame, frameItems.childList)) {
         return NS_OK;
       }
     }
@@ -8948,7 +8948,8 @@ nsCSSFrameConstructor::ContentInserted(nsIPresContext*        aPresContext,
   if (!selectContent) {
     // Perform special check for diddling around with the frames in
     // a special inline frame.
-    if (WipeContainingBlock(aPresContext, state, blockContent, parentFrame, frameItems.childList))
+    if (WipeContainingBlock(aPresContext, state, containingBlock, parentFrame,
+                            frameItems.childList))
       return NS_OK;
   }
 
@@ -12898,7 +12899,7 @@ CleanupFrameReferences(nsIPresContext*  aPresContext,
 PRBool
 nsCSSFrameConstructor::WipeContainingBlock(nsIPresContext* aPresContext,
                                            nsFrameConstructorState& aState,
-                                           nsIContent* aBlockContent,
+                                           nsIFrame* aContainingBlock,
                                            nsIFrame* aFrame,
                                            nsIFrame* aFrameList)
 {
@@ -12906,65 +12907,67 @@ nsCSSFrameConstructor::WipeContainingBlock(nsIPresContext* aPresContext,
   // situation: an inline frame that will now contain block
   // frames. This is a no-no and the frame construction logic knows
   // how to fix this.
-  if (!aBlockContent)
+
+  // If we don't have a block within an inline, just return false.
+  // XXX We should be more careful about |aFrame| being something
+  // constructed by tag name (see the SELECT check all callers currenly
+  // do).
+  if (NS_STYLE_DISPLAY_INLINE != aFrame->GetStyleDisplay()->mDisplay ||
+      AreAllKidsInline(aFrameList))
     return PR_FALSE;
 
-  const nsStyleDisplay* parentDisplay = aFrame->GetStyleDisplay();
-  if (NS_STYLE_DISPLAY_INLINE == parentDisplay->mDisplay) {
-    if (!AreAllKidsInline(aFrameList)) {
-      // XXXwaterson temporary code until we figure out why bug 102931
-      // is really happening.
-      NS_ASSERTION(aBlockContent != nsnull, "ack, inline without a containing block");
-      if (! aBlockContent)
-        return PR_FALSE;
+  // Ok, reverse tracks: wipe out the frames we just created
+  nsFrameManager *frameManager = aPresContext->FrameManager();
 
-      // Ok, reverse tracks: wipe out the frames we just created
-      nsFrameManager *frameManager = aPresContext->FrameManager();
+  // Destroy the frames. As we do make sure any content to frame mappings
+  // or entries in the undisplayed content map are removed
+  frameManager->ClearAllUndisplayedContentIn(aFrame->GetContent());
 
-      // Destroy the frames. As we do make sure any content to frame mappings
-      // or entries in the undisplayed content map are removed
-      frameManager->ClearAllUndisplayedContentIn(aFrame->GetContent());
-
-      CleanupFrameReferences(aPresContext, frameManager, aFrameList);
-      if (aState.mAbsoluteItems.childList) {
-        CleanupFrameReferences(aPresContext, frameManager, aState.mAbsoluteItems.childList);
-      }
-      if (aState.mFixedItems.childList) {
-        CleanupFrameReferences(aPresContext, frameManager, aState.mFixedItems.childList);
-      }
-      if (aState.mFloatedItems.childList) {
-        CleanupFrameReferences(aPresContext, frameManager, aState.mFloatedItems.childList);
-      }
-      nsFrameList tmp(aFrameList);
-      tmp.DestroyFrames(aPresContext);
-      tmp.SetFrames(aState.mAbsoluteItems.childList);
-      tmp.DestroyFrames(aPresContext);
-      tmp.SetFrames(aState.mFixedItems.childList);
-      tmp.DestroyFrames(aPresContext);
-      tmp.SetFrames(aState.mFloatedItems.childList);
-      tmp.DestroyFrames(aPresContext);
-      
-      // Tell parent of the containing block to reformulate the
-      // entire block. This is painful and definitely not optimal
-      // but it will *always* get the right answer.
-      nsCOMPtr<nsIContent> parentContainer = aBlockContent->GetParent();
-#ifdef DEBUG
-      if (gNoisyContentUpdates) {
-        printf("nsCSSFrameConstructor::WipeContainingBlock: aBlockContent=%p parentContainer=%p\n",
-               NS_STATIC_CAST(void*, aBlockContent),
-               NS_STATIC_CAST(void*, parentContainer));
-      }
-#endif
-      if (parentContainer) {
-        ReinsertContent(aPresContext, parentContainer, aBlockContent);
-      }
-      else {
-        NS_ERROR("uh oh. the block we need to reframe has no parent!");
-      }
-      return PR_TRUE;
-    }
+  CleanupFrameReferences(aPresContext, frameManager, aFrameList);
+  if (aState.mAbsoluteItems.childList) {
+    CleanupFrameReferences(aPresContext, frameManager, aState.mAbsoluteItems.childList);
   }
-  return PR_FALSE;
+  if (aState.mFixedItems.childList) {
+    CleanupFrameReferences(aPresContext, frameManager, aState.mFixedItems.childList);
+  }
+  if (aState.mFloatedItems.childList) {
+    CleanupFrameReferences(aPresContext, frameManager, aState.mFloatedItems.childList);
+  }
+  nsFrameList tmp(aFrameList);
+  tmp.DestroyFrames(aPresContext);
+  tmp.SetFrames(aState.mAbsoluteItems.childList);
+  tmp.DestroyFrames(aPresContext);
+  tmp.SetFrames(aState.mFixedItems.childList);
+  tmp.DestroyFrames(aPresContext);
+  tmp.SetFrames(aState.mFloatedItems.childList);
+  tmp.DestroyFrames(aPresContext);
+  
+  // Tell parent of the containing block to reformulate the
+  // entire block. This is painful and definitely not optimal
+  // but it will *always* get the right answer.
+
+  // First, if the containing block is really a block wrapper for something
+  // that's really an inline, walk up the parent chain until we hit something
+  // that's not.
+  while (IsFrameSpecial(aContainingBlock))
+    aContainingBlock = aContainingBlock->GetParent();
+
+  nsIContent *blockContent = aContainingBlock->GetContent();
+  nsCOMPtr<nsIContent> parentContainer = blockContent->GetParent();
+#ifdef DEBUG
+  if (gNoisyContentUpdates) {
+    printf("nsCSSFrameConstructor::WipeContainingBlock: blockContent=%p parentContainer=%p\n",
+           NS_STATIC_CAST(void*, blockContent),
+           NS_STATIC_CAST(void*, parentContainer));
+  }
+#endif
+  if (parentContainer) {
+    ReinsertContent(aPresContext, parentContainer, blockContent);
+  }
+  else {
+    NS_ERROR("uh oh. the block we need to reframe has no parent!");
+  }
+  return PR_TRUE;
 }
 
 

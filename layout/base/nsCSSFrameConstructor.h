@@ -845,7 +845,7 @@ private:
 
   PRBool WipeContainingBlock(nsIPresContext*          aPresContext,
                              nsFrameConstructorState& aState,
-                             nsIContent*              blockContent,
+                             nsIFrame*                blockContent,
                              nsIFrame*                aFrame,
                              nsIFrame*                aFrameList);
 
