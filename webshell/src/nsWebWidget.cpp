@@ -40,6 +40,7 @@
 #include "nsIStyleContext.h"
 #include "prprf.h"
 #include "prtime.h"
+#include "prlog.h"
 #include "nsVoidArray.h"
 #include "nscore.h"
 #include "nsIFactory.h"
