@@ -20,7 +20,7 @@ DEPTH=../../..
 LIBRARY_NAME = domhtml_s
 
 CPPSRCS =			\
-	nsJSHMTMLIFrameElement.cpp \
+	nsJSHTMLIFrameElement.cpp \
 	nsJSHTMLAnchorElement.cpp \
 	nsJSHTMLAppletElement.cpp \
 	nsJSHTMLAreaElement.cpp \
