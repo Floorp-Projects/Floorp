@@ -1333,7 +1333,7 @@ protected:
   nsresult AddDummyLayoutRequest(void);
   nsresult RemoveDummyLayoutRequest(void);
 
-  nsresult WillCauseReflow();
+  void     WillCauseReflow() {}
   nsresult DidCauseReflow();
   void     DidDoReflow();
   nsresult ProcessReflowCommands(PRBool aInterruptible);
@@ -6172,19 +6172,8 @@ PresShell::PostReflowEvent()
 }
 
 nsresult
-PresShell::WillCauseReflow()
-{
-  mViewManager->CacheWidgetChanges(PR_TRUE);  
-  return NS_OK;
-}
-
-nsresult
 PresShell::DidCauseReflow()
 {
-  if (mViewManager) {
-    mViewManager->CacheWidgetChanges(PR_FALSE);
-  }
-
   // We may have had more reflow commands appended to the queue during
   // our reflow.  Make sure these get processed at some point.
   if (!gAsyncReflowDuringDocLoad && mDocumentLoading) {
