@@ -34,6 +34,7 @@ use lib ".";
 require "CGI.pl";
 require "globals.pl";
 
+use Bugzilla;
 use Bugzilla::User;
 
 # Shut up misguided -w warnings about "used only once".  "use vars" just
@@ -660,8 +661,7 @@ if ($action eq 'delete') {
 
     SendSQL("DELETE FROM profiles
              WHERE login_name=" . SqlQuote($user));
-    SendSQL("DELETE FROM logincookies
-             WHERE userid=" . $userid);
+    Bugzilla->logout_user_by_id($userid);
     print "User deleted.<BR>\n";
 
     PutTrailer($localtrailer);
@@ -818,7 +818,7 @@ if ($action eq 'update') {
                      FROM profiles
                      WHERE login_name=" . SqlQuote($userold));
             my $userid = FetchOneColumn();
-            InvalidateLogins($userid);
+            Bugzilla->logout_user_by_id($userid);
             print "Updated password.<BR>\n";
         } else {
             print "Did not update password: $passworderror<br>\n";
@@ -838,7 +838,7 @@ if ($action eq 'update') {
                  FROM profiles
                  WHERE login_name=" . SqlQuote($userold));
         my $userid = FetchOneColumn();
-        InvalidateLogins($userid);
+        Bugzilla->logout_user_by_id($userid);
         print "Updated disabled text.<BR>\n";
     }
     if ($editall && $user ne $userold) {

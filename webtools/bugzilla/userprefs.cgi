@@ -26,6 +26,7 @@ use strict;
 use lib qw(.);
 
 use Bugzilla;
+use Bugzilla::Constants;
 
 require "CGI.pl";
 
@@ -108,8 +109,9 @@ sub SaveAccount {
             SendSQL("UPDATE profiles 
                      SET    cryptpassword = $cryptedpassword 
                      WHERE  userid = $userid");
+
             # Invalidate all logins except for the current one
-            InvalidateLogins($userid, $cgi->cookie("Bugzilla_logincookie"));
+            Bugzilla->logout(LOGOUT_KEEP_CURRENT);
         }
     }
 

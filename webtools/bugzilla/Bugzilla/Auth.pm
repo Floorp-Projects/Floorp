@@ -73,15 +73,18 @@ Bugzilla::Auth - Authentication handling for Bugzilla users
 
 Handles authentication for Bugzilla users.
 
-Authentication from Bugzilla involves two sets of modules. One set is used to
-obtain the data (from CGI, email, etc), and the other set uses this data to
-authenticate against the datasource (the Bugzilla DB, LDAP, cookies, etc).
+Authentication from Bugzilla involves two sets of modules. One set is
+used to obtain the data (from CGI, email, etc), and the other set uses
+this data to authenticate against the datasource (the Bugzilla DB, LDAP,
+cookies, etc).
 
-The handlers for the various types of authentication (DB/LDAP/cookies/etc)
-provide the actual code for each specific method of authentication.
+The handlers for the various types of authentication
+(DB/LDAP/cookies/etc) provide the actual code for each specific method
+of authentication.
 
-The source modules (currently, only L<Bugzilla::Auth::CGI|Bugzilla::Auth::CGI>
-then use those methods to do the authentication.
+The source modules (currently, only
+L<Bugzilla::Auth::CGI|Bugzilla::Auth::CGI>) then use those methods to do
+the authentication.
 
 I<Bugzilla::Auth> itself inherits from the default authentication handler,
 identified by the I<loginmethod> param.
@@ -96,16 +99,16 @@ authentication or login modules.
 =item C<Bugzilla::Auth::get_netaddr($ipaddr)>
 
 Given an ip address, this returns the associated network address, using
-C<Param('loginnetmask')> at the netmask. This can be used to obtain data in
-order to restrict weak authentication methods (such as cookies) to only some
-addresses.
+C<Param('loginnetmask')> as the netmask. This can be used to obtain data
+in order to restrict weak authentication methods (such as cookies) to
+only some addresses.
 
 =back
 
 =head1 AUTHENTICATION
 
-Authentication modules check a users's credentials (username, password, etc) to
-verify who the user is.
+Authentication modules check a user's credentials (username, password,
+etc) to verify who the user is.
 
 =head2 METHODS
 
@@ -113,19 +116,21 @@ verify who the user is.
 
 =item C<authenticate($username, $pass)>
 
-This method is passed a username and a password, and returns a list containing
-up to four return values, depending on the results of the authentication.
+This method is passed a username and a password, and returns a list
+containing up to four return values, depending on the results of the
+authentication.
 
 The first return value is one of the status codes defined in
-L<Bugzilla::Constants|Bugzilla::Constants> and described below.  The rest of
-the return values are status code-specific and are explained in the status
-code descriptions.
+L<Bugzilla::Constants|Bugzilla::Constants> and described below.  The
+rest of the return values are status code-specific and are explained in
+the status code descriptions.
 
 =over 4
 
 =item C<AUTH_OK>
 
-Authentication succeeded. The second variable is the userid of the new user.
+Authentication succeeded. The second variable is the userid of the new
+user.
 
 =item C<AUTH_NODATA>
 
@@ -162,41 +167,52 @@ information.
 
 =item C<AUTH_DISABLED>
 
-The user successfully logged in, but their account has been disabled. The
-second argument in the returned array is the userid, and the third is some
-text explaining why the account was disabled. This text would typically come
-from the C<disabledtext> field in the C<profiles> table. Note that this 
-argument is a string, not a tag.
+The user successfully logged in, but their account has been disabled.
+The second argument in the returned array is the userid, and the third
+is some text explaining why the account was disabled. This text would
+typically come from the C<disabledtext> field in the C<profiles> table.
+Note that this argument is a string, not a tag.
 
 =back
 
 =item C<can_edit>
 
 This determines if the user's account details can be modified. If this
-method returns a C<true> value, then accounts can be created and modified
-through the Bugzilla user interface. Forgotten passwords can also be
-retrieved through the L<Token interface|Bugzilla::Token>.
+method returns a C<true> value, then accounts can be created and
+modified through the Bugzilla user interface. Forgotten passwords can
+also be retrieved through the L<Token interface|Bugzilla::Token>.
 
 =back
 
 =head1 LOGINS
 
-A login module can be used to try to log in a Bugzilla user in a particular
-way. For example, L<Bugzilla::Auth::CGI|Bugzilla::Auth::CGI> logs in users
-from CGI scripts, first by trying database authentication against the
-Bugzilla C<profiles> table, and then by trying cookies as a fallback.
+A login module can be used to try to log in a Bugzilla user in a
+particular way. For example, L<Bugzilla::Auth::CGI|Bugzilla::Auth::CGI>
+logs in users from CGI scripts, first by using form variables, and then
+by trying cookies as a fallback.
 
-A login module consists of a single method, C<login>, which takes a C<$type>
-argument, using constants found in C<Bugzilla::Constants>.
+The login interface consists of the following methods:
+
+=item C<login>, which takes a C<$type> argument, using constants found in
+C<Bugzilla::Constants>.
+
+The login method may use various authentication modules (described
+above) to try to authenticate a user, and should return the userid on
+success, or C<undef> on failure.
+
+When a login is required, but data is not present, it is the job of the
+login method to prompt the user for this data.
+
+The constants accepted by C<login> include the following:
 
 =over 4
 
 =item C<LOGIN_OPTIONAL>
 
-A login is never required to access this data. Attempting to login is still 
-useful, because this allows the page to be personalised. Note that an 
-incorrect login will still trigger an error, even though the lack of a login 
-will be OK.
+A login is never required to access this data. Attempting to login is
+still useful, because this allows the page to be personalised. Note that
+an incorrect login will still trigger an error, even though the lack of
+a login will be OK.
 
 =item C<LOGIN_NORMAL>
 
@@ -209,12 +225,30 @@ A login is always required to access this data.
 
 =back
 
-The login module uses various authentication modules to try to authenticate
-a user, and returns the userid on success, or C<undef> on failure.
+=item C<logout>, which takes a C<Bugzilla::User> argument for the user
+being logged out, and an C<$option> argument. Possible values for
+C<$option> include:
 
-When a login is required, but data is not present, it is the job of the login
-module to prompt the user for this data.
+=over 4
+
+=item C<LOGOUT_CURRENT>
+
+Log out the user and invalidate his currently registered session.
+
+=item C<LOGOUT_ALL>
+
+Log out the user, and invalidate all sessions the user has registered in
+Bugzilla.
+
+=item C<LOGOUT_KEEP_CURRENT>
+
+Invalidate all sessions the user has registered excluding his current
+session; this option should leave the user logged in. This is useful for
+user-performed password changes.
+
+=back
 
 =head1 SEE ALSO
 
 L<Bugzilla::Auth::CGI>, L<Bugzilla::Auth::Cookie>, L<Bugzilla::Auth::DB>
+

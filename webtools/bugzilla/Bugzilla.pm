@@ -83,33 +83,53 @@ sub login {
         # so it needs to be set.
         $::COOKIE{'Bugzilla_login'} = $_user->login;
     } else {
-        # Old compat stuff
-
-        undef $_user;
-        $::userid = 0;
-        delete $::COOKIE{'Bugzilla_login'};
-        delete $::COOKIE{'Bugzilla_logincookie'};
-        # NB - Can't delete from $cgi->cookie, so the cookie data will
-        # remain there
-        # People shouldn't rely on the cookie param for the username
-        # - use Bugzilla->user instead!
+        logout_request();
     }
 
     return $_user;
 }
 
 sub logout {
+    my ($class, $option) = @_;
+    if (! $_user) {
+        # If we're not logged in, go away
+        return;
+    }
+    $option = LOGOUT_CURRENT unless defined $option;
+
     use Bugzilla::Auth::CGI;
-    # remove cookies and clean up database state
-    Bugzilla::Auth::CGI->logout();
-    logout_request();
+    Bugzilla::Auth::CGI->logout($_user, $option);
+    if ($option != LOGOUT_KEEP_CURRENT) {
+        Bugzilla::Auth::CGI->clear_browser_cookies();
+        logout_request();
+    }
 }
 
+sub logout_user {
+    my ($class, $user) = @_;
+    # When we're logging out another user we leave cookies alone, and
+    # therefore avoid calling logout() directly.
+    use Bugzilla::Auth::CGI;
+    Bugzilla::Auth::CGI->logout($user, LOGOUT_ALL);
+}
+
+# just a compatibility front-end to logout_user that gets a user by id
+sub logout_user_by_id {
+    my ($class, $id) = @_;
+    my $user = new Bugzilla::User($id);
+    $class->logout_user($user);
+}
+
+# hack that invalidates credentials for a single request
 sub logout_request {
     undef $_user;
     $::userid = 0;
+    # XXX clean these up eventually
     delete $::COOKIE{"Bugzilla_login"};
-    delete $::COOKIE{"Bugzilla_logincookie"};
+    # NB - Can't delete from $cgi->cookie, so the logincookie data will
+    # remain there; it's only used in Bugzilla::Auth::CGI->logout anyway
+    # People shouldn't rely on the cookie param for the username
+    # - use Bugzilla->user instead!
 }
 
 my $_dbh;
@@ -264,7 +284,7 @@ method for those scripts/templates which are only use via CGI, though.
 
 =item C<user>
 
-The current L<Bugzilla::User>. C<undef> if there is no currently logged in user
+The current C<Bugzilla::User>. C<undef> if there is no currently logged in user
 or if the login code has not yet been run.
 
 =item C<login>
@@ -273,15 +293,29 @@ Logs in a user, returning a C<Bugzilla::User> object, or C<undef> if there is
 no logged in user. See L<Bugzilla::Auth|Bugzilla::Auth> and
 L<Bugzilla::User|Bugzilla::User>.
 
-=item C<logout>
+=item C<logout($option)>
 
-Logs out the current user.
+Logs out the current user, which involves invalidating user sessions and
+cookies. Three options are available from
+L<Bugzilla::Constants|Bugzilla::Constants>: LOGOUT_CURRENT (the
+default), LOGOUT_ALL or LOGOUT_KEEP_CURRENT.
+
+=item C<logout_user($user)>
+
+Logs out the specified user (invalidating all his sessions), taking a
+Bugzilla::User instance.
+
+=item C<logout_by_id($id)>
+
+Logs out the user with the id specified. This is a compatibility
+function to be used in callsites where there is only a userid and no
+Bugzilla::User instance.
 
 =item C<logout_request>
 
-Essentially, causes calls to C<user> to return C<undef>. This has the
+Essentially, causes calls to C<Bugzilla->user> to return C<undef>. This has the
 effect of logging out a user for the current request only; cookies and
-database state are left intact. 
+database sessions are left intact. 
 
 =item C<dbh>
 

@@ -201,7 +201,7 @@ sub changePassword {
     SendSQL("DELETE FROM tokens WHERE token = $::quotedtoken");
     SendSQL("UNLOCK TABLES");
 
-    InvalidateLogins($userid);
+    Bugzilla->logout_user_by_id($userid);
 
     $vars->{'message'} = "password_changed";
 

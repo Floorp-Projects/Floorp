@@ -425,19 +425,6 @@ sub InsertNewUser {
     return $password;
 }
 
-# Removes all entries from logincookies for $userid, except for the
-# optional $keep, which refers the logincookies.cookie primary key.
-# (This is useful so that a user changing their password stays logged in)
-sub InvalidateLogins {
-    my ($userid, $keep) = @_;
-
-    my $remove = "DELETE FROM logincookies WHERE userid = $userid";
-    if (defined $keep) {
-        $remove .= " AND cookie != " . SqlQuote($keep);
-    }
-    SendSQL($remove);
-}
-
 sub GenerateRandomPassword {
     my ($size) = @_;
 
