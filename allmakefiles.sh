@@ -94,7 +94,7 @@ extensions/wallet/editor/Makefile
 extensions/wallet/cookieviewer/Makefile
 extensions/wallet/signonviewer/Makefile
 extensions/wallet/walletpreview/Makefile
-#extensions/wallet/build/Makefile
+extensions/wallet/build/Makefile
 extensions/pics/Makefile
 extensions/pics/public/Makefile
 extensions/pics/src/Makefile
