@@ -55,8 +55,10 @@
 *
 *
 * We'll try the largest possible array first, then a couple others.
-* Try to be good about memory by nulling each array variable afterwards.
-* This will tell the garbage collector the memory is no longer needed.
+* We're just testing that we don't crash on Array.sort().
+*
+* Try to be good about memory by nulling each array variable after it is
+* used. This will tell the garbage collector the memory is no longer needed.
 */
 //-----------------------------------------------------------------------------
 var bug = 157652;
@@ -74,21 +76,20 @@ printStatus(summary);
  * Note this terminates the test with exit code 1 in Rhino
  * and exit code 3 in SpiderMonkey.
  *
- * Therefore we include |expectExitCode(n = 1,3)| below.
+ * Therefore we put |expectExitCode(n = 1,3)| below.
  *
- * The only problem will arise when the JS shell ever DOES
+ * The only problem will arise if the JS shell ever DOES
  * have enough memory to do the sort. Then this test will
  * terminate with the normal exit code 0 and fail.
  *
  * Right now, I can't see any other way to do this, because
  * "out of memory" is not a catchable error: it cannot be
- * caught with try...catch.
+ * trapped with try...catch.
  */
 if (inRhino())
   expectExitCode(1);
 else
   expectExitCode(3);
-
 
 
 /*
