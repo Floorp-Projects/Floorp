@@ -107,7 +107,8 @@ NS_IMETHODIMP nsSchemaValidator::ValidateString(const nsAString & aValue,
   printf("\n --------- nsSchemaValidator::ValidateString called ---------");
 #endif
 
-  if (aValue.IsEmpty() || aType.IsEmpty() || aNamespace.IsEmpty())
+  // empty namespace is valid
+  if (aValue.IsEmpty() || aType.IsEmpty())
     return NS_ERROR_NOT_AVAILABLE;
 
   // no schemas loaded and type is not builtin, abort

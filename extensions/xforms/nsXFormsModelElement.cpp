@@ -786,17 +786,20 @@ nsXFormsModelElement::GetTypeForControl(nsIXFormsControl  *aControl,
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsXFormsSchemaValidator validator;
-  nsCOMPtr<nsISchema> schema = do_QueryInterface(mSchemas);
+  nsCOMPtr<nsISchemaCollection> schemaColl = do_QueryInterface(mSchemas);
+  nsCOMPtr<nsISchema> schema;
+  schemaColl->GetSchema(schemaTypeNamespace, getter_AddRefs(schema));
   validator.LoadSchema(schema);
+
   return validator.GetType(schemaTypeName, schemaTypeNamespace, aType);
 }
 
 /* static */ nsresult
-nsXFormsModelElement::GetTypeAndNSFromNode(nsIDOMNode *aInstanceData, 
+nsXFormsModelElement::GetTypeAndNSFromNode(nsIDOMNode *aInstanceData,
                                            nsAString &aType, nsAString &aNSUri)
 {
   nsAutoString schemaTypePrefix;
-  nsresult rv = nsXFormsUtils::ParseTypeFromNode(aInstanceData, aType, 
+  nsresult rv = nsXFormsUtils::ParseTypeFromNode(aInstanceData, aType,
                                                  schemaTypePrefix);
 
   if(rv == NS_ERROR_NOT_AVAILABLE) {
@@ -805,11 +808,15 @@ nsXFormsModelElement::GetTypeAndNSFromNode(nsIDOMNode *aInstanceData,
     aType.Assign(NS_LITERAL_STRING("string"));
     rv = NS_OK;
   } else {
-    // get the namespace url from the prefix
-    nsCOMPtr<nsIDOM3Node> domNode3 = do_QueryInterface(mElement, &rv);
-    NS_ENSURE_SUCCESS(rv, rv);
-  
-    rv = domNode3->LookupNamespaceURI(schemaTypePrefix, aNSUri);
+    if (schemaTypePrefix.IsEmpty()) {
+      aNSUri.AssignLiteral("");
+    } else {
+      // get the namespace url from the prefix
+      nsCOMPtr<nsIDOM3Node> domNode3 = do_QueryInterface(mElement, &rv);
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      rv = domNode3->LookupNamespaceURI(schemaTypePrefix, aNSUri);
+    }
   }
   return rv;
 }
@@ -905,7 +912,9 @@ nsXFormsModelElement::ValidateNode(nsIDOMNode *aInstanceNode, PRBool *aResult)
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsXFormsSchemaValidator validator;
-  nsCOMPtr<nsISchema> schema = do_QueryInterface(mSchemas);
+  nsCOMPtr<nsISchemaCollection> schemaColl = do_QueryInterface(mSchemas);
+  nsCOMPtr<nsISchema> schema;
+  schemaColl->GetSchema(schemaTypeNamespace, getter_AddRefs(schema));
   validator.LoadSchema(schema);
 
   nsAutoString value;
@@ -1076,6 +1085,38 @@ nsXFormsModelElement::BackupOrRestoreInstanceData(PRBool restore)
 nsresult
 nsXFormsModelElement::FinishConstruction()
 {
+  // process inline schemas that aren't referenced via the schema attribute
+  nsCOMPtr<nsIDOMNodeList> children;
+  mElement->GetChildNodes(getter_AddRefs(children));
+
+  if (children) {
+    PRUint32 childCount = 0;
+    children->GetLength(&childCount);
+
+    nsCOMPtr<nsIDOMNode> node;
+    nsCOMPtr<nsIDOMElement> element;
+    nsAutoString nsURI, localName, targetNamespace;
+
+    for (PRUint32 i = 0; i < childCount; ++i) {
+      children->Item(i, getter_AddRefs(node));
+
+      element = do_QueryInterface(node);
+      if (!element)
+        continue;
+
+      node->GetNamespaceURI(nsURI);
+      node->GetLocalName(localName);
+      if (nsURI.EqualsLiteral(NS_NAMESPACE_XML_SCHEMA) &&
+          localName.EqualsLiteral("schema")) {
+        // we don't have to check if the schema was already added because
+        // nsSchemaLoader::ProcessSchemaElement takes care of that.
+        nsCOMPtr<nsISchema> schema;
+        nsresult rv = mSchemas->ProcessSchemaElement(element, nsnull,
+                                                     getter_AddRefs(schema));
+      }
+    }
+  }
+
   // 3. if applicable, initialize P3P
 
   // 4. construct instance data from initial instance data.  apply all
@@ -1128,7 +1169,7 @@ nsXFormsModelElement::MaybeNotifyCompletion()
     NS_NOTREACHED("no model list property");
     return;
   }
-  
+
   PRInt32 i;
 
   // Nothing to be done if any model is incomplete or hasn't seen

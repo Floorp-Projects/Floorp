@@ -1082,14 +1082,17 @@ nsXFormsUtils::ParseTypeFromNode(nsIDOMNode *aInstanceData,
 
   // split type (ns:type) into namespace and type.
   PRInt32 separator = typeAttribute.FindChar(':');
-  if ((separator == kNotFound) || 
-      ((PRUint32) separator == typeAttribute.Length())) {
+  if ((PRUint32) separator == typeAttribute.Length()) {
     return NS_ERROR_UNEXPECTED;
-  // xxx send error to console
+    // xxx send error to console
+  } else if (separator == kNotFound) {
+    // no namespace prefix, which is valid;
+    aNSPrefix.AssignLiteral("");
+    aType.Assign(typeAttribute);
+  } else {
+    aNSPrefix.Assign(Substring(typeAttribute, 0, separator));
+    aType.Assign(Substring(typeAttribute, ++separator, typeAttribute.Length()));
   }
-
-  aNSPrefix.Assign(Substring(typeAttribute, 0, separator));
-  aType.Assign(Substring(typeAttribute, ++separator, typeAttribute.Length()));
 
   return NS_OK;
 }
