@@ -259,6 +259,10 @@ rdf/brprof/Makefile
 rdf/brprof/public/Makefile
 rdf/brprof/src/Makefile
 rdf/brprof/build/Makefile
+rdf/chrome/Makefile
+rdf/chrome/build/Makefile
+rdf/chrome/public/Makefile
+rdf/chrome/src/Makefile
 rdf/util/Makefile
 rdf/util/public/Makefile
 rdf/util/src/Makefile
