@@ -48,36 +48,36 @@
 <!ENTITY calendar.timezone.label    "Saját időzóna">
 
 <!ENTITY prefWindow.title            "Naptár beállításai">
-<!ENTITY prefWindow.size             "width: 52.3em; height: 41em;">
+<!ENTITY prefWindow.size             "width: 62.3em; height: 41em;">
 <!ENTITY prefWindow.category         "Kategória">
 
 <!ENTITY pref.mainbox.label         "Általános beállítások" >
-<!ENTITY pref.alarmgoesoff.label "Amikor egy értesítés esedékes">
-<!ENTITY pref.playasound  "Hang lejátszása" >
+<!ENTITY pref.alarmgoesoff.label "Amikor egy értesítés esedékes:">
+<!ENTITY pref.playasound  "Hangjelzés" >
 
 <!ENTITY pref.alarmbox.label    "Értesítések" >
 <!ENTITY pref.showalarmbox    "Értesítőablak megjelenítése" >
-<!ENTITY pref.defaultemail.label "Az e-mail értesítés alapértelmezett címzettje">
-<!ENTITY pref.defaulttext.label "Alapértelmezett szöveg az értesítésekhez">
+<!ENTITY pref.defaultemail.label "Az e-mail értesítés alapértelmezett címzettje:">
+<!ENTITY pref.defaulttext.label "Alapértelmezett szöveg az értesítésekhez:">
 <!ENTITY pref.missedalarms    "Az elmulasztott értesítések megjelenítése" >
-<!ENTITY pref.defalarm4events.label "Események alapértelmezett értesítési beállítása">
-<!ENTITY pref.defalarm4todos.label "Feladatok  alapértelmezett értesítési beállítása">
+<!ENTITY pref.defalarm4events.label "Események alapértelmezett értesítési beállítása:">
+<!ENTITY pref.defalarm4todos.label "Feladatok alapértelmezett értesítési beállítása:">
 <!ENTITY pref.alarm.on "Be">
 <!ENTITY pref.alarm.off "Ki">
-<!ENTITY pref.defalarmlen4events.label "Értesítés kikapcsolása az esemény előtt">
-<!ENTITY pref.defalarmlen4todos.label "Értesítés kikapcsolása a feladat előtt">
+<!ENTITY pref.defalarmlen4events.label "Értesítés kikapcsolása az esemény előtt:">
+<!ENTITY pref.defalarmlen4todos.label "Értesítés kikapcsolása a feladat előtt:">
 
-<!ENTITY pref.dateformat.label      "Dátumszöveg formátuma" >
+<!ENTITY pref.dateformat.label      "Dátumszöveg formátuma:" >
 <!ENTITY pref.dateformat.long       "Hosszú" >
 <!ENTITY pref.dateformat.short      "Rövid"  >
 <!ENTITY pref.dateformat.storeingmt "Időpont tárolása UTC-ben" >
-<!ENTITY pref.defaultlength.label   "Alapértelmezett eseményhossz" >
-<!ENTITY pref.defaultsnoozelength.label   "Alapértelmezett szundihossz" >
+<!ENTITY pref.defaultlength.label   "Alapértelmezett eseményhossz:" >
+<!ENTITY pref.defaultsnoozelength.label   "Alapértelmezett szundihossz:" >
 
-<!ENTITY pref.weekstarts.label     "A hét első napja" >
+<!ENTITY pref.weekstarts.label     "A hét első napja:" >
 <!ENTITY pref.daysoff.label     "A hét szabadnapjai:" >
 
-<!ENTITY pref.numberofweeks.label     "Alapértelmezett összes hetek száma" >
+<!ENTITY pref.numberofweeks.label     "Alapértelmezett összes hetek száma:" >
 <!ENTITY pref.numberofweeks.0      "Nincs" >
 <!ENTITY pref.numberofweeks.1      "1 hét" >
 <!ENTITY pref.numberofweeks.2      "2 hét" >
@@ -85,9 +85,9 @@
 <!ENTITY pref.numberofweeks.4      "4 hét" >
 <!ENTITY pref.numberofweeks.5      "5 hét" >
 <!ENTITY pref.numberofweeks.6      "6 hét" >
-<!ENTITY pref.numberofpreviousweeks.label     "A megelőző hetek száma" >
+<!ENTITY pref.numberofpreviousweeks.label     "A megelőző hetek száma:" >
 
-<!ENTITY pref.hour.help.description    "Ha esemény van ezeken kívül, akkor felülbírálásra kerül" >
+<!ENTITY pref.hour.help.description    "Felülbírálva, ha az események ezeken az idkőkön kívül esnek" >
 <!ENTITY pref.hour.00    "00:00" >
 <!ENTITY pref.hour.01    "01:00" >
 <!ENTITY pref.hour.02    "02:00" >
@@ -116,13 +116,13 @@
 <!ENTITY pref.calendar.view.allview.caption "Általános">
 <!ENTITY pref.calendar.view.dayview.caption "Napi nézet">
 <!ENTITY pref.calendar.view.weekview.caption "Heti nézet">
-<!ENTITY pref.calendar.view.weekanddayview.caption "Többheti és napi nézet">
+<!ENTITY pref.calendar.view.weekanddayview.caption "Heti és napi nézetek">
 <!ENTITY pref.calendar.view.monthview.caption "Havi nézet">
 <!ENTITY pref.calendar.view.multiweekview.caption "Többheti nézet">
 
 <!ENTITY pref.calendar.view.restrict.label "A nézet korlátozása ">
-<!ENTITY pref.calendar.view.starttime.label "Kezdési időpont">
-<!ENTITY pref.calendar.view.endtime.label   "Befejezési időpont">
+<!ENTITY pref.calendar.view.starttime.label "Kezdési időpont:">
+<!ENTITY pref.calendar.view.endtime.label   "Befejezési időpont:">
 
 <!ENTITY pref.categories.label   "Kategóriák" >
 
@@ -143,12 +143,12 @@
 <!-- Calendar Timezone preferences information -->
 <!ENTITY pref.calendar.timezone.label "Saját időzóna">
 <!ENTITY pref.calendar.timezone.caption "Időzóna">
-<!ENTITY pref.calendar.timezone.description "Timezone ID is (continent or ocean)/(largest city in legal timezone region).">
-<!ENTITY pref.defaultzone.label     "Alapértelmezett időzóna" >
+<!ENTITY pref.calendar.timezone.description "Az időzóna azonosítója a (kontinens vagy óceán)/(legnagyobb város a körzetben).">
+<!ENTITY pref.defaultzone.label     "Alapértelmezett időzóna:" >
 
 <!ENTITY pref.timezone.Africa.Abidjan "Afrika/Abidjan" >
 <!ENTITY pref.timezone.Africa.Accra "Afrika/Accra" >
-<!ENTITY pref.timezone.Africa.Addis_Ababa "Afrika/Addis Ababa" >
+<!ENTITY pref.timezone.Africa.Addis_Ababa "Afrika/Addis_Ababa" >
 <!ENTITY pref.timezone.Africa.Algiers "Afrika/Algiers" >
 <!ENTITY pref.timezone.Africa.Asmera "Afrika/Asmera" >
 <!ENTITY pref.timezone.Africa.Bamako "Afrika/Bamako" >

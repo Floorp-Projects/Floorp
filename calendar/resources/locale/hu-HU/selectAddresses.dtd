@@ -36,8 +36,8 @@
 
 <!-- Select addresses for mail message dialog -->
 <!ENTITY ab-selectAddressesDialog.title "E-mail címek kiválasztása">
-<!ENTITY ab-selectAddressesDialogHeader.label "Válasszon címeket">
-<!ENTITY ab-selectAddressesDialogLookIn.label "Nézze meg itt: ">
+<!ENTITY ab-selectAddressesDialogHeader.label "Címzettek kiválasztása">
+<!ENTITY ab-selectAddressesDialogLookIn.label "Keresés itt: ">
 <!ENTITY ab-selectAddressesDialogNameColumn.label "Név">
 <!ENTITY ab-selectAddressesDialogEmailColumn.label "E-mail cím">
 <!ENTITY ab-selectAddressesDialogFor.label "számára: ">
@@ -45,7 +45,7 @@
 <!ENTITY ab-selectAddressesDialogToButton.label "Címzett ">
 <!ENTITY ab-selectAddressesDialogCcButton.label "Másolat ">
 <!ENTITY ab-selectAddressesDialogBccButton.label "Rejtett másolat ">
-<!ENTITY ab-selectAddressesDialogRemoveButton.label "Eltávolítása">
+<!ENTITY ab-selectAddressesDialogRemoveButton.label "Eltávolítás">
 <!ENTITY ab-selectAddressesDialogAddressTo.label "Az üzenet címzettje:">
 <!ENTITY ab-selectAddressesDialogPrefixTo.label "Címzett: ">
 <!ENTITY ab-selectAddressesDialogPrefixCc.label "Másolat: ">
@@ -53,4 +53,4 @@
 <!ENTITY ab-selectAddressesDialogNoEmailMessage.label "Nincs e-mail cím">
 <!ENTITY ab-selectAddressesDialogInvite.label "Meghívó">
 <!ENTITY ab-selectAddressesDialogUninvite.label "Eltávolítás">
-<!ENTITY ab-selectAddressesDialogInviteList.label "Meghívó lista:">
+<!ENTITY ab-selectAddressesDialogInviteList.label "Meghívottak listája:">

@@ -48,7 +48,7 @@
 
   <!-- locale information -->
   <RDF:Description about="urn:mozilla:hu-HU"
-                   chrome:displayName="Hungarian"
+                   chrome:displayName="Magyar"
                    chrome:name="hu-HU">
     <chrome:packages>
       <RDF:Seq about="urn:mozilla:locale:hu-HU:packages">

@@ -47,35 +47,35 @@
 <!ENTITY event.new.event.key                    "N">
 <!ENTITY event.new.event.accesskey              "e">
 
-<!ENTITY event.new.todo                         "Új tennivaló…">
+<!ENTITY event.new.todo                         "Új feladat…">
 <!ENTITY event.new.todo.key                     "T">
-<!ENTITY event.new.todo.accesskey               "t">
+<!ENTITY event.new.todo.accesskey               "f">
 
-<!ENTITY calendar.new.server.label              "Új naptár fájl…">
+<!ENTITY calendar.new.server.label              "Új naptárfájl…">
 <!ENTITY calendar.new.server.key                "L">
-<!ENTITY calendar.new.server.accesskey          "p">
+<!ENTITY calendar.new.server.accesskey          "n">
 
-<!ENTITY calendar.open.file.label               "Megnyitás naptár fajl…">
+<!ENTITY calendar.open.file.label               "Naptárfájl megnyitása…">
 <!ENTITY calendar.open.file.key                 "O">
-<!ENTITY calendar.open.file.accesskey           "M">
+<!ENTITY calendar.open.file.accesskey           "m">
 
 <!ENTITY event.edit.event                       "Szerkesztés…">
 <!ENTITY event.edit.event.key                   "E">
 <!ENTITY event.edit.event.accesskey             "z">
 
-<!ENTITY event.delete.event                     "Kiválasztott események törlése">
-<!ENTITY event.delete.event.accesskey           "e">
+<!ENTITY event.delete.event                     "Kijelölt események törlése">
+<!ENTITY event.delete.event.accesskey           "t">
 
-<!ENTITY event.delete.tasks                     "Kiválasztott tennivalók törlése">
-<!ENTITY event.delete.tasks.accesskey           "t">
+<!ENTITY event.delete.tasks                     "Kijelölt feladatok törlése">
+<!ENTITY event.delete.tasks.accesskey           "e">
 
-<!ENTITY event.mail.event                       "Kiválasztott események elküldése…">
+<!ENTITY event.mail.event                       "Kijelölt események elküldése…">
 <!ENTITY event.mail.event.key                   "M">
-<!ENTITY event.mail.event.accesskey             "e">
+<!ENTITY event.mail.event.accesskey             "k">
 
-<!ENTITY calendar.print.label                   "Az aktív naptár nyomtatása...">
+<!ENTITY calendar.print.label                   "Aktív naptárak nyomtatása...">
 <!ENTITY calendar.print.key                     "P">
-<!ENTITY calendar.print.accesskey               "n">
+<!ENTITY calendar.print.accesskey               "A">
 
 <!ENTITY calendar.printpreview.label            "Nyomtatási kép">
 <!ENTITY calendar.printpreview.accesskey        "t">
@@ -110,16 +110,16 @@
 <!ENTITY calendar.copy.key                      "C">
 <!ENTITY calendar.copy.accesskey                "M">
 
-<!ENTITY calendar.paste.label                   "Beszúrás">
+<!ENTITY calendar.paste.label                   "Beillesztés">
 <!ENTITY calendar.paste.key                     "V">
 <!ENTITY calendar.paste.accesskey               "B">
 
-<!ENTITY calendar.selectall.label               "Mindent kiválaszt">
+<!ENTITY calendar.selectall.label               "Mindet kijelöli">
 <!ENTITY calendar.selectall.key                 "A">
 <!ENTITY calendar.selectall.accesskey           "i">
 
 <!ENTITY calendar.preferences.label             "Beállítások...">
-<!ENTITY calendar.preferences.accesskey         "l">
+<!ENTITY calendar.preferences.accesskey         "B">
 
 <!ENTITY goMenu.label                           "Ugrás">
 <!ENTITY goMenu.accesskey                       "U">
@@ -136,19 +136,19 @@
 <!ENTITY goNextCmd.label                        "Következő">
 <!ENTITY goNextCmd.accesskey                    "K">
 
-<!ENTITY taskMenu.label                         "Tennivaló">
-<!ENTITY taskMenu.accesskey                     "T">
+<!ENTITY taskMenu.label                         "Feladatok">
+<!ENTITY taskMenu.accesskey                     "F">
 
-<!ENTITY toolsMenu.label                        "Feladatok">
-<!ENTITY toolsMenu.accesskey                    "F">
+<!ENTITY toolsMenu.label                        "Eszközök">
+<!ENTITY toolsMenu.accesskey                    "E">
 
-<!ENTITY javaScriptConsoleCmd.label             "JavaScript Console">
-<!ENTITY javaScriptConsoleCmd.accesskey         "J">
+<!ENTITY javaScriptConsoleCmd.label             "JavaScript-konzol">
+<!ENTITY javaScriptConsoleCmd.accesskey         "s">
 
 <!ENTITY navigatorCmd.label                     "Böngésző">
 <!ENTITY navigatorCmd.accesskey                 "B">
 
-<!ENTITY messengerCmd.label                     "Levelező és hírolvasó">
+<!ENTITY messengerCmd.label                     "Levelező">
 <!ENTITY messengerCmd.accesskey                 "L">
 
 <!ENTITY addressBookCmd.label                   "Címjegyzék">
@@ -178,8 +178,8 @@
 <!ENTITY aboutCmd.accesskey                     "A">
 
 <!-- Mac OS X "Window" menu items -->
-<!ENTITY windowMenu.label                       "Window">
-<!ENTITY minimizeWindow.label                   "Minimize">
-<!ENTITY zoomWindow.label                       "Zoom">
+<!ENTITY windowMenu.label                       "Ablak">
+<!ENTITY minimizeWindow.label                   "Kis méret">
+<!ENTITY zoomWindow.label                       "Nagyítás">
 <!ENTITY minimizeWindow.key                     "M">
-<!ENTITY bringAllToFront.label                  "Bring All to Front">
+<!ENTITY bringAllToFront.label                  "Előtérbe hozás">
