@@ -112,7 +112,9 @@ function toOpenWindowByType( inType, uri )
                 		startpage = "about:blank";
     	  }
   	}
-  	window.open(startpage);
+  //	window.open(startpage); // This doesn't size the window properly.
+     window.openDialog( "chrome://navigator/content/navigator.xul", "_blank", "chrome,all,dialog=no", startpage );
+
   }
 
 
