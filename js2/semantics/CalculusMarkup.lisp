@@ -56,7 +56,7 @@
 ;;; SEMANTIC DEPICTION UTILITIES
 
 (defparameter *semantic-keywords*
-  '(not and or xor mod new eltof
+  '(not and or xor mod new
     some every satisfies
     such that
     tag tuple record
@@ -798,8 +798,15 @@
 
 ; (elt-of <elt-expr>)
 (defun depict-elt-of (markup-stream world level set-annotated-expr)
-  (depict-expr-parentheses (markup-stream level %min-max%)
-    (depict-semantic-keyword markup-stream 'eltof :after)
+  (depict-expr-parentheses (markup-stream level %expr%)
+    (depict markup-stream "any element of ")
+    (depict-expression markup-stream world set-annotated-expr %prefix%)))
+
+
+; (unique-elt-of <elt-expr>)
+(defun depict-unique-elt-of (markup-stream world level set-annotated-expr)
+  (depict-expr-parentheses (markup-stream level %expr%)
+    (depict markup-stream "the one element of ")
     (depict-expression markup-stream world set-annotated-expr %prefix%)))
 
 
