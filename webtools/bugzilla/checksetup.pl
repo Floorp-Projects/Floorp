@@ -1874,7 +1874,8 @@ if(scalar(@isam_tables)) {
 
 
 # Get a list of the existing tables (if any) in the database
-my @tables = map { $_ =~ s/.*\.//; $_ } $dbh->tables;
+$sth = $dbh->table_info(undef, undef, undef, "TABLE");
+my @tables = @{$dbh->selectcol_arrayref($sth, { Columns => [3] })};
 #print 'Tables: ', join " ", @tables, "\n";
 
 # add lines here if you add more --LOCAL-- config vars that end up in the enums:
