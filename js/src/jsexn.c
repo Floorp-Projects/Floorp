@@ -176,7 +176,8 @@ exn_newPrivate(JSContext *cx, JSErrorReport *report)
 
     if (report->ucmessage != NULL) {
         capacity = js_strlen(report->ucmessage) + 1;
-        newReport->ucmessage = (const jschar *)JS_malloc(cx, capacity * sizeof(jschar));
+        newReport->ucmessage = (const jschar *)
+            JS_malloc(cx, capacity * sizeof(jschar));
         if (!newReport->ucmessage)
             goto error;
         js_strncpy((jschar *)newReport->ucmessage, report->ucmessage, capacity);
@@ -312,7 +313,7 @@ static struct JSExnSpec exceptions[] = {
     { JSEXN_ERR,        js_SyntaxError_str,     SyntaxError },
     { JSEXN_ERR,        js_TypeError_str,       TypeError },
     { JSEXN_ERR,        js_URIError_str,        URIError },
-    {0,0,NULL}
+    {0,NULL,NULL}
 };
 
 static JSBool
