@@ -58,7 +58,7 @@ NS_INTERFACE_MAP_BEGIN(nsXPathExpression)
   NS_INTERFACE_MAP_ENTRY_EXTERNAL_DOM_CLASSINFO(XPathExpression)
 NS_INTERFACE_MAP_END
 
-nsXPathExpression::nsXPathExpression(Expr* aExpression,
+nsXPathExpression::nsXPathExpression(nsAutoPtr<Expr>& aExpression,
                                      txResultRecycler* aRecycler)
     : mExpression(aExpression),
       mRecycler(aRecycler)
@@ -67,7 +67,6 @@ nsXPathExpression::nsXPathExpression(Expr* aExpression,
 
 nsXPathExpression::~nsXPathExpression()
 {
-    delete mExpression;
 }
 
 NS_IMETHODIMP
