@@ -278,7 +278,7 @@ static const char sWatcherServiceContractID[] = "@mozilla.org/embedcomp/window-w
 /*********************************************/
 // Default implemenations for nativeAppSupport
 // If your platform implements these functions if def out this code.
-#if !defined (XP_MAC ) && !defined(NTO) && !defined( XP_PC ) && !defined( XP_BEOS )
+#if !defined (XP_MAC ) && !defined(NTO) && !defined( XP_PC ) && !defined( XP_BEOS ) && !defined(MOZ_WIDGET_GTK)
 
 nsresult NS_CreateSplashScreen( nsISplashScreen **aResult )
 {
@@ -312,7 +312,7 @@ PRBool NS_CanRun()
 //       then rely on nsINativeAppSupport and its use of
 //       nsISplashScreen will be removed.
 //
-#if !defined( XP_PC ) && !defined( XP_BEOS )
+#if !defined( XP_PC ) && !defined( XP_BEOS ) && !defined(MOZ_WIDGET_GTK)
 
 nsresult NS_CreateNativeAppSupport( nsINativeAppSupport **aResult )
 {

@@ -74,7 +74,7 @@ nsNativeAppSupportBase::Quit() {
 NS_IMETHODIMP
 nsNativeAppSupportBase::ShowSplashScreen() {
     if ( !mSplash ) {
-        nsresult rv = CreateSplashScreen( getter_AddRefs( mSplash ) );
+        CreateSplashScreen( getter_AddRefs( mSplash ) );
     }
     if ( mSplash ) {
         mSplash->Show();

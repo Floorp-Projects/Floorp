@@ -20,11 +20,12 @@
  * Contributor(s): 
  * syd@netscape.com 2/12/00. 
  * pavlov@netscape.com 2/13/00.
+ * bryner@netscape.com 11/20/01.
  */
 
-#include "nsNativeAppSupport.h"
+#include "nsNativeAppSupportBase.h"
 #include "gdk/gdk.h"
-#include "gdk/gdkprivate.h"
+#include "splash.xpm"
 
 class nsSplashScreenGtk : public nsISplashScreen {
 public:
@@ -36,16 +37,21 @@ public:
 
   NS_DECL_ISUPPORTS
 
+private:
   GdkWindow *mDialog;
 }; // class nsSplashScreenGtk
 
-NS_IMPL_ISUPPORTS0(nsSplashScreenGtk)
+class nsNativeAppSupportGtk : public nsNativeAppSupportBase {
+  // We don't have any methods to override.
+};
+
+NS_IMPL_ISUPPORTS1(nsSplashScreenGtk, nsISplashScreen)
 
 nsSplashScreenGtk::nsSplashScreenGtk()
 {
-  NS_INIT_REFCNT();
+  NS_INIT_ISUPPORTS();
   // if this fails, we exit
-  gdk_init( 0, NULL );
+  gdk_init(0, NULL);
 }
 
 nsSplashScreenGtk::~nsSplashScreenGtk()
@@ -55,106 +61,58 @@ nsSplashScreenGtk::~nsSplashScreenGtk()
 
 NS_IMETHODIMP nsSplashScreenGtk::Show()
 {
-  GdkPixmap *pmap;
-  GdkBitmap *mask;
-  GdkWindowAttr attr;
-  int c, width, height, num_cols, cpp;
-
-  FILE *fp;
-  GdkColor transparentColor;
-
-  /* figure out what we are dealing with here */
-
-  if ( ( fp = fopen( "splash.xpm", "r" ) ) == (FILE *) NULL ) 
-    return NS_ERROR_FAILURE;
- 
-  // find the first '"'
- 
-  while ( !feof( fp ) ) {
-    c = fgetc( fp );
-    if ( c == '"' )
-      break;
-  } 
-  
-  if (feof(fp)) {
-    fclose( fp );
-    return NS_ERROR_FAILURE;
-  }
-  
-  /* read size info */
-
-  fscanf( fp, "%d %d %d %d", &width, &height, &num_cols, &cpp );
-
-  fclose( fp );
-
-  /* create a window */
-
-  attr.window_type = GDK_WINDOW_TOPLEVEL;
-  attr.wclass = GDK_INPUT_OUTPUT;
-  attr.x = gdk_screen_width() >> 1; attr.x -= width >> 1;
-  attr.y = gdk_screen_height() >> 1; attr.y -= height >> 1;
-  attr.width = width;
-  attr.height = height;
-  attr.event_mask = 0;
-
-  mDialog = gdk_window_new( NULL, &attr, GDK_WA_X | GDK_WA_Y );	
-  gdk_window_set_override_redirect(mDialog, PR_TRUE);
-  gdk_window_show( mDialog );
-
-  gdk_flush();
-
   /* create a pixmap based on xpm data */
+  GdkPixmap* pmap = gdk_pixmap_colormap_create_from_xpm_d(NULL,
+                                                    gdk_colormap_get_system(),
+                                                    NULL, NULL, splash_xpm);
 
-  pmap = gdk_pixmap_colormap_create_from_xpm(mDialog, 
-                                             gdk_colormap_get_system(),
-                                             &mask,
-                                             &transparentColor,
-                                             "splash.xpm" );
-
-  if ( !pmap ) {
+  if (!pmap) {
     gdk_window_destroy(mDialog);
     mDialog = nsnull;
     return NS_ERROR_FAILURE;
   }
 
-  GdkGC *gc;
+  gint width, height;
+  gdk_window_get_size(pmap, &width, &height);
 
-  gc = gdk_gc_new( mDialog );
+  GdkWindowAttr attr;
+  attr.window_type = GDK_WINDOW_TEMP;
+  attr.wclass = GDK_INPUT_OUTPUT;
+  attr.x = (gdk_screen_width() >> 1) - (width >> 1);
+  attr.y = (gdk_screen_height() >> 1) - (height >> 1);
+  attr.width = width;
+  attr.height = height;
+  attr.event_mask = 0;
+  mDialog = gdk_window_new(NULL, &attr, GDK_WA_X | GDK_WA_Y);
 
-  gdk_window_copy_area( mDialog, gc, 0, 0, pmap, 0, 0, width, height );
+  gdk_window_set_back_pixmap(mDialog, pmap, FALSE);
+  gdk_window_show(mDialog);
 
-  gdk_flush();
-
-  gdk_gc_destroy(gc);
-  
   return NS_OK;
 }
 
 NS_IMETHODIMP nsSplashScreenGtk::Hide()
 {
-	if (mDialog) {
+  if (mDialog) {
     gdk_window_destroy(mDialog);
     mDialog = nsnull;
-	}
+  }
   return NS_OK;
 }
 
-nsresult NS_CreateSplashScreen(nsISplashScreen**aResult)
-{
-  if ( aResult ) {	
-    *aResult = new nsSplashScreenGtk;
-    if ( *aResult ) {
-      NS_ADDREF( *aResult );
-      return NS_OK;
-    } else {
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
-  } else {
-    return NS_ERROR_NULL_POINTER;
-  }
+nsresult NS_CreateNativeAppSupport(nsINativeAppSupport** aNativeApp) {
+  *aNativeApp = new nsNativeAppSupportGtk;
+  NS_ADDREF(*aNativeApp);
+  return NS_OK;
 }
 
-PRBool NS_CanRun() 
+nsresult NS_CreateSplashScreen(nsISplashScreen** aSplash) {
+  *aSplash = new nsSplashScreenGtk;
+  NS_ADDREF(*aSplash);
+  return NS_OK;
+}
+
+PRBool NS_CanRun()
 {
-	return PR_TRUE;
+  return PR_TRUE;
 }
