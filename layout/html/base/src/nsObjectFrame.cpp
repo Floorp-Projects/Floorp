@@ -38,13 +38,19 @@
 #include "nsISupportsArray.h"
 #include "plstr.h"
 #include "nsILinkHandler.h"
+#include "nsIJVMPluginTagInfo.h"
+#include "nsIWebShell.h"
+#include "nsIBrowserWindow.h"
 
 // XXX For temporary paint code
 #include "nsIStyleContext.h"
 
 class nsObjectFrame;
 
-class nsPluginInstanceOwner : public nsIPluginInstanceOwner {
+class nsPluginInstanceOwner : public nsIPluginInstanceOwner,
+                              public nsIPluginTagInfo2,
+                              public nsIJVMPluginTagInfo
+{
 public:
   nsPluginInstanceOwner();
   ~nsPluginInstanceOwner();
@@ -61,14 +67,56 @@ public:
 
   NS_IMETHOD GetMode(nsPluginMode *aMode);
 
+  NS_IMETHOD CreateWidget(void);
+
+  NS_IMETHOD GetURL(const char *aURL, const char *aTarget, void *aPostData);
+
+  NS_IMETHOD ShowStatus(const char *aStatusMsg);
+
+  //nsIPluginTagInfo interface
+
   NS_IMETHOD GetAttributes(PRUint16& n, const char*const*& names,
                            const char*const*& values);
 
   NS_IMETHOD GetAttribute(const char* name, const char* *result);
 
-  NS_IMETHOD CreateWidget(void);
+  //nsIPluginTagInfo2 interface
 
-  NS_IMETHOD GetURL(const char *aURL, const char *aTarget, void *aPostData);
+  NS_IMETHOD GetTagType(nsPluginTagType *result);
+
+  NS_IMETHOD GetTagText(const char* *result);
+
+  NS_IMETHOD GetParameters(PRUint16& n, const char*const*& names, const char*const*& values);
+
+  NS_IMETHOD GetParameter(const char* name, const char* *result);
+  
+  NS_IMETHOD GetDocumentBase(const char* *result);
+  
+  NS_IMETHOD GetDocumentEncoding(const char* *result);
+  
+  NS_IMETHOD GetAlignment(const char* *result);
+  
+  NS_IMETHOD GetWidth(PRUint32 *result);
+  
+  NS_IMETHOD GetHeight(PRUint32 *result);
+  
+  NS_IMETHOD GetBorderVertSpace(PRUint32 *result);
+  
+  NS_IMETHOD GetBorderHorizSpace(PRUint32 *result);
+
+  NS_IMETHOD GetUniqueID(PRUint32 *result);
+
+  //nsIJVMPluginTagInfo interface
+
+  NS_IMETHOD GetCode(const char* *result);
+
+  NS_IMETHOD GetCodeBase(const char* *result);
+
+  NS_IMETHOD GetArchive(const char* *result);
+
+  NS_IMETHOD GetName(const char* *result);
+
+  NS_IMETHOD GetMayScript(PRBool *result);
 
   //locals
 
@@ -81,6 +129,9 @@ private:
   PRInt32           mNumAttrs;
   char              **mAttrNames;
   char              **mAttrVals;
+  PRInt32           mNumParams;
+  char              **mParamNames;
+  char              **mParamVals;
   nsIWidget         *mWidget;
   nsIPresContext    *mContext;
 };
@@ -90,6 +141,8 @@ private:
 class nsObjectFrame : public nsObjectFrameSuper {
 public:
   nsObjectFrame(nsIContent* aContent, nsIFrame* aParentFrame);
+
+//  NS_IMETHOD Init(nsIPresContext& aPresContext, nsIFrame *aChildList);
 
   NS_IMETHOD Reflow(nsIPresContext&      aPresContext,
                     nsReflowMetrics&     aDesiredSize,
@@ -123,6 +176,7 @@ private:
   nsString              *mURLSpec;
   nsString              *mBaseHREF;
   nsString              *mFullURL;
+  nsIFrame              *mFirstChild;
 };
 
 nsObjectFrame::nsObjectFrame(nsIContent* aContent, nsIFrame* aParentFrame)
@@ -156,6 +210,13 @@ nsObjectFrame::~nsObjectFrame()
 static NS_DEFINE_IID(kViewCID, NS_VIEW_CID);
 static NS_DEFINE_IID(kIViewIID, NS_IVIEW_IID);
 static NS_DEFINE_IID(kWidgetCID, NS_CHILD_CID);
+
+//NS_IMETHODIMP
+//nsObjectFrame::Init(nsIPresContext& aPresContext, nsIFrame *aChildList)
+//{
+//  mFirstChild = aChildList;
+//  return NS_OK;
+//}
 
 nsresult
 nsObjectFrame::CreateWidget(nscoord aWidth, nscoord aHeight, PRBool aViewOnly)
@@ -294,39 +355,64 @@ nsObjectFrame::Reflow(nsIPresContext&      aPresContext,
   nsIAtom* atom;
   mContent->GetTag(atom);
   if ((nsnull != atom) && (nsnull == mInstanceOwner)) {
-    //don't make a view for an applet since we know we can't support them yet...
-    if (atom != nsHTMLAtoms::applet) {
-      static NS_DEFINE_IID(kIPluginHostIID, NS_IPLUGINHOST_IID);
-      static NS_DEFINE_IID(kIContentViewerContainerIID, NS_ICONTENT_VIEWER_CONTAINER_IID);
+    static NS_DEFINE_IID(kIPluginHostIID, NS_IPLUGINHOST_IID);
+    static NS_DEFINE_IID(kIContentViewerContainerIID, NS_ICONTENT_VIEWER_CONTAINER_IID);
 
-      nsISupports               *container;
-      nsIPluginHost             *pm;
-      nsIContentViewerContainer *cv;
-      nsresult                  rv;
+    nsISupports               *container;
+    nsIPluginHost             *pm;
+    nsIContentViewerContainer *cv;
+    nsresult                  rv;
 
-      mInstanceOwner = new nsPluginInstanceOwner();
+    mInstanceOwner = new nsPluginInstanceOwner();
 
-      if (nsnull != mInstanceOwner) {
-        NS_ADDREF(mInstanceOwner);
-        mInstanceOwner->Init(&aPresContext, this);
+    if (nsnull != mInstanceOwner) {
+      NS_ADDREF(mInstanceOwner);
+      mInstanceOwner->Init(&aPresContext, this);
 
-        rv = aPresContext.GetContainer(&container);
+      rv = aPresContext.GetContainer(&container);
+
+      if (NS_OK == rv) {
+        rv = container->QueryInterface(kIContentViewerContainerIID, (void **)&cv);
 
         if (NS_OK == rv) {
-          rv = container->QueryInterface(kIContentViewerContainerIID, (void **)&cv);
+          rv = cv->QueryCapability(kIPluginHostIID, (void **)&pm);
 
           if (NS_OK == rv) {
-            rv = cv->QueryCapability(kIPluginHostIID, (void **)&pm);
+            nsAutoString    type;
+            char            *buf = nsnull;
+            PRInt32         buflen;
+            nsPluginWindow  *window;
+            float           t2p = aPresContext.GetTwipsToPixels();
+            nsAutoString    src, base, fullurl;
 
-            if (NS_OK == rv) {
-              nsAutoString    type;
-              char            *buf = nsnull;
-              PRInt32         buflen;
-              nsPluginWindow  *window;
-              float           t2p = aPresContext.GetTwipsToPixels();
 
-              mInstanceOwner->GetWindow(window);
+            mInstanceOwner->GetWindow(window);
 
+            if (atom == nsHTMLAtoms::applet) {
+              buf = (char *)PR_Malloc(PL_strlen("application/x-java-vm") + 1);
+              PL_strcpy(buf, "application/x-java-vm");
+
+              if (NS_CONTENT_ATTR_HAS_VALUE == mContent->GetAttribute("CODE", src)) {
+                SetURL(src);
+
+                if (NS_CONTENT_ATTR_HAS_VALUE == mContent->GetAttribute("CODEBASE", base))
+                  SetBaseHREF(base);
+
+                nsIPresShell  *shell = aPresContext.GetShell();
+                nsIDocument   *doc = shell->GetDocument();
+                nsIURL        *docURL = doc->GetDocumentURL();
+
+                // Create an absolute URL
+                nsresult rv = NS_MakeAbsoluteURL(docURL, base, *mURLSpec, fullurl);
+
+                SetFullURL(fullurl);
+
+                NS_RELEASE(shell);
+                NS_RELEASE(docURL);
+                NS_RELEASE(doc);
+              }
+            }
+            else {
               mContent->GetAttribute(nsString("type"), type);
 
               buflen = type.Length();
@@ -337,8 +423,6 @@ nsObjectFrame::Reflow(nsIPresContext&      aPresContext,
                 if (nsnull != buf)
                   type.ToCString(buf, buflen + 1);
               }
-
-              nsAutoString src, base, fullurl;
 
               //stream in the object source if there is one...
 
@@ -361,35 +445,35 @@ nsObjectFrame::Reflow(nsIPresContext&      aPresContext,
                 NS_RELEASE(docURL);
                 NS_RELEASE(doc);
               }
+            }
 
-              nsIView *parentWithView;
-              nsPoint origin;
+            nsIView *parentWithView;
+            nsPoint origin;
 
-              GetOffsetFromView(origin, parentWithView);
+            GetOffsetFromView(origin, parentWithView);
 
-              window->x = NSTwipsToIntPixels(origin.x, t2p);
-              window->y = NSTwipsToIntPixels(origin.y, t2p);
-              window->width = NSTwipsToIntPixels(aMetrics.width, t2p);
-              window->height = NSTwipsToIntPixels(aMetrics.height, t2p);
-              window->clipRect.top = 0;
-              window->clipRect.left = 0;
+            window->x = NSTwipsToIntPixels(origin.x, t2p);
+            window->y = NSTwipsToIntPixels(origin.y, t2p);
+            window->width = NSTwipsToIntPixels(aMetrics.width, t2p);
+            window->height = NSTwipsToIntPixels(aMetrics.height, t2p);
+            window->clipRect.top = 0;
+            window->clipRect.left = 0;
 //              window->clipRect.top = NSTwipsToIntPixels(origin.y, t2p);
 //              window->clipRect.left = NSTwipsToIntPixels(origin.x, t2p);
-              window->clipRect.bottom = NSTwipsToIntPixels(aMetrics.height, t2p);
-              window->clipRect.right = NSTwipsToIntPixels(aMetrics.width, t2p);
+            window->clipRect.bottom = NSTwipsToIntPixels(aMetrics.height, t2p);
+            window->clipRect.right = NSTwipsToIntPixels(aMetrics.width, t2p);
 #ifdef XP_UNIX
-              window->ws_info = nsnull;   //XXX need to figure out what this is. MMP
+            window->ws_info = nsnull;   //XXX need to figure out what this is. MMP
 #endif
-              rv = pm->InstantiatePlugin(buf, fullurl, mInstanceOwner);
+            rv = pm->InstantiatePlugin(buf, fullurl, mInstanceOwner);
 
-              PR_Free((void *)buf);
+            PR_Free((void *)buf);
 
-              NS_RELEASE(pm);
-            }
-            NS_RELEASE(cv);
+            NS_RELEASE(pm);
           }
-          NS_RELEASE(container);
+          NS_RELEASE(cv);
         }
+        NS_RELEASE(container);
       }
     }
     NS_RELEASE(atom);
@@ -559,10 +643,15 @@ nsPluginInstanceOwner :: nsPluginInstanceOwner()
   mAttrVals = nsnull;
   mWidget = nsnull;
   mContext = nsnull;
+  mNumParams = 0;
+  mParamNames = nsnull;
+  mParamVals = nsnull;
 }
 
 nsPluginInstanceOwner :: ~nsPluginInstanceOwner()
 {
+  PRInt32 cnt;
+
   if (nsnull != mInstance)
   {
     mInstance->Stop();
@@ -572,7 +661,7 @@ nsPluginInstanceOwner :: ~nsPluginInstanceOwner()
 
   mOwner = nsnull;
 
-  for (PRInt32 cnt = 0; cnt < mNumAttrs; cnt++)
+  for (cnt = 0; cnt < mNumAttrs; cnt++)
   {
     if ((nsnull != mAttrNames) && (nsnull != mAttrNames[cnt]))
     {
@@ -599,15 +688,93 @@ nsPluginInstanceOwner :: ~nsPluginInstanceOwner()
     mAttrVals = nsnull;
   }
 
+  for (cnt = 0; cnt < mNumParams; cnt++)
+  {
+    if ((nsnull != mParamNames) && (nsnull != mParamNames[cnt]))
+    {
+      PR_Free(mParamNames[cnt]);
+      mParamNames[cnt] = nsnull;
+    }
+
+    if ((nsnull != mParamVals) && (nsnull != mParamVals[cnt]))
+    {
+      PR_Free(mParamVals[cnt]);
+      mParamVals[cnt] = nsnull;
+    }
+  }
+
+  if (nsnull != mParamNames)
+  {
+    PR_Free(mParamNames);
+    mParamNames = nsnull;
+  }
+
+  if (nsnull != mParamVals)
+  {
+    PR_Free(mParamVals);
+    mParamVals = nsnull;
+  }
+
   NS_IF_RELEASE(mWidget);
   mContext = nsnull;
 }
 
 static NS_DEFINE_IID(kIPluginInstanceOwnerIID, NS_IPLUGININSTANCEOWNER_IID); 
+static NS_DEFINE_IID(kIPluginTagInfoIID, NS_IPLUGINTAGINFO_IID); 
+static NS_DEFINE_IID(kIPluginTagInfo2IID, NS_IPLUGINTAGINFO2_IID); 
+static NS_DEFINE_IID(kIJVMPluginTagInfoIID, NS_IPLUGINTAGINFO2_IID); 
+static NS_DEFINE_IID(kIWebShellIID, NS_IWEB_SHELL_IID); 
+static NS_DEFINE_IID(kIBrowserWindowIID, NS_IBROWSER_WINDOW_IID); 
+static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 
-NS_IMPL_QUERY_INTERFACE(nsPluginInstanceOwner, kIPluginInstanceOwnerIID);
 NS_IMPL_ADDREF(nsPluginInstanceOwner);
 NS_IMPL_RELEASE(nsPluginInstanceOwner);
+
+nsresult nsPluginInstanceOwner :: QueryInterface(const nsIID& aIID,
+                                                 void** aInstancePtrResult)
+{
+  NS_PRECONDITION(nsnull != aInstancePtrResult, "null pointer");
+
+  if (nsnull == aInstancePtrResult)
+    return NS_ERROR_NULL_POINTER;
+
+  if (aIID.Equals(kIPluginInstanceOwnerIID))
+  {
+    *aInstancePtrResult = (void *)((nsIPluginInstanceOwner *)this);
+    AddRef();
+    return NS_OK;
+  }
+
+  if (aIID.Equals(kIPluginTagInfoIID))
+  {
+    *aInstancePtrResult = (void *)((nsIPluginTagInfo *)this);
+    AddRef();
+    return NS_OK;
+  }
+
+  if (aIID.Equals(kIPluginTagInfo2IID))
+  {
+    *aInstancePtrResult = (void *)((nsIPluginTagInfo2 *)this);
+    AddRef();
+    return NS_OK;
+  }
+
+  if (aIID.Equals(kIJVMPluginTagInfoIID))
+  {
+    *aInstancePtrResult = (void *)((nsIJVMPluginTagInfo *)this);
+    AddRef();
+    return NS_OK;
+  }
+
+  if (aIID.Equals(kISupportsIID))
+  {
+    *aInstancePtrResult = (void *)((nsISupports *)((nsIPluginTagInfo *)this));
+    AddRef();
+    return NS_OK;
+  }
+
+  return NS_NOINTERFACE;
+}
 
 NS_IMETHODIMP nsPluginInstanceOwner :: SetInstance(nsIPluginInstance *aInstance)
 {
@@ -626,7 +793,6 @@ NS_IMETHODIMP nsPluginInstanceOwner :: GetWindow(nsPluginWindow *&aWindow)
 
 NS_IMETHODIMP nsPluginInstanceOwner :: GetMode(nsPluginMode *aMode)
 {
-printf("instance owner getmode called\n");
   *aMode = nsPluginMode_Embedded;
   return NS_OK;
 }
@@ -642,7 +808,7 @@ NS_IMETHODIMP nsPluginInstanceOwner :: GetAttributes(PRUint16& n,
   nsIHTMLContent    *content;
   nsIContent        *icontent;
 
-  if (nsnull == mAttrNames)
+  if ((nsnull == mAttrNames) && (nsnull != mOwner))
   {
     rv = mOwner->GetContent(icontent);
 
@@ -751,10 +917,10 @@ NS_IMETHODIMP nsPluginInstanceOwner :: GetAttribute(const char* name, const char
     }
   }
 
-  if (count < mNumAttrs)
-    return NS_OK;
-  else
-    return NS_ERROR_FAILURE;
+  if (count >= mNumAttrs)
+    *result = "";
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsPluginInstanceOwner :: GetInstance(nsIPluginInstance *&aInstance)
@@ -823,6 +989,414 @@ NS_IMETHODIMP nsPluginInstanceOwner :: GetURL(const char *aURL, const char *aTar
     rv = NS_ERROR_FAILURE;
 
   return rv;
+}
+
+NS_IMETHODIMP nsPluginInstanceOwner :: ShowStatus(const char *aStatusMsg)
+{
+  nsresult  rv = NS_ERROR_FAILURE;
+
+  if (nsnull != mContext)
+  {
+    nsISupports *cont;
+
+    rv = mContext->GetContainer(&cont);
+
+    if ((NS_OK == rv) && (nsnull != cont))
+    {
+      nsIWebShell *ws;
+
+      rv = cont->QueryInterface(kIWebShellIID, (void **)&ws);
+
+      if (NS_OK == rv)
+      {
+        nsIWebShell *rootWebShell;
+
+        ws->GetRootWebShell(rootWebShell);
+
+        if (nsnull != rootWebShell)
+        {
+          nsIWebShellContainer *rootContainer;
+
+          rv = rootWebShell->GetContainer(rootContainer);
+
+          if (nsnull != rootContainer)
+          {
+            nsIBrowserWindow *browserWindow;
+
+            if (NS_OK == rootContainer->QueryInterface(kIBrowserWindowIID, (void**)&browserWindow))
+            {
+              nsAutoString  msg = nsAutoString(aStatusMsg);
+
+              rv = browserWindow->SetStatus(msg.GetUnicode());
+              NS_RELEASE(browserWindow);
+            }
+
+            NS_RELEASE(rootContainer);
+          }
+
+          NS_RELEASE(rootWebShell);
+        }
+
+        NS_RELEASE(ws);
+      }
+
+      NS_RELEASE(cont);
+    }
+  }
+
+  return rv;
+}
+
+NS_IMETHODIMP nsPluginInstanceOwner :: GetTagType(nsPluginTagType *result)
+{
+  nsresult rv = NS_ERROR_FAILURE;
+
+  *result = nsPluginTagType_Unknown;
+
+  if (nsnull != mOwner)
+  {
+    nsIContent  *cont;
+
+    mOwner->GetContent(cont);
+
+    if (nsnull != cont)
+    {
+      nsIAtom     *atom;
+
+      cont->GetTag(atom);
+
+      if (nsnull != atom)
+      {
+        if (atom == nsHTMLAtoms::applet)
+          *result = nsPluginTagType_Applet;
+        else if (atom == nsHTMLAtoms::embed)
+          *result = nsPluginTagType_Embed;
+        else if (atom == nsHTMLAtoms::object)
+          *result = nsPluginTagType_Object;
+
+        rv = NS_OK;
+        NS_RELEASE(atom);
+      }
+
+      NS_RELEASE(cont);
+    }
+  }
+
+  return rv;
+}
+
+NS_IMETHODIMP nsPluginInstanceOwner :: GetTagText(const char* *result)
+{
+printf("instance owner gettagtext called\n");
+  *result = "";
+  return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP nsPluginInstanceOwner :: GetParameters(PRUint16& n, const char*const*& names, const char*const*& values)
+{
+  nsresult rv = NS_ERROR_FAILURE;
+
+  if ((nsnull == mParamNames) && (nsnull != mOwner))
+  {
+    nsIContent  *cont;
+
+    mOwner->GetContent(cont);
+
+    if (nsnull != cont)
+    {
+      PRBool  haskids = PR_FALSE;
+
+      cont->CanContainChildren(haskids);
+
+      if (PR_TRUE == haskids)
+      {
+        PRInt32 numkids, idx, numparams = 0;
+
+        cont->ChildCount(numkids);
+
+        //first pass, count number of param tags...
+
+        for (idx = 0; idx < numkids; idx++)
+        {
+          nsIContent  *kid;
+
+          cont->ChildAt(idx, kid);
+
+          if (nsnull != kid)
+          {
+            nsIAtom     *atom;
+
+            kid->GetTag(atom);
+
+            if (nsnull != atom)
+            {
+              if (atom == nsHTMLAtoms::param)
+                numparams++;
+
+              NS_RELEASE(atom);
+            }
+
+            NS_RELEASE(kid);
+          }
+        }
+
+        if (numparams > 0)
+        {
+          //now we need to create arrays
+          //representing the parameter name/value pairs...
+
+          mParamNames = (char **)PR_Calloc(sizeof(char *) * numparams, 1);
+          mParamVals = (char **)PR_Calloc(sizeof(char *) * numparams, 1);
+
+          if ((nsnull != mParamNames) && (nsnull != mParamVals))
+          {
+            for (idx = 0; idx < numkids; idx++)
+            {
+              nsIContent  *kid;
+
+              cont->ChildAt(idx, kid);
+
+              if (nsnull != kid)
+              {
+                nsIAtom     *atom;
+
+                kid->GetTag(atom);
+
+                if (nsnull != atom)
+                {
+                  if (atom == nsHTMLAtoms::param)
+                  {
+                    nsAutoString  val, name;
+
+                    //add param to list...
+
+                    if ((NS_CONTENT_ATTR_HAS_VALUE == kid->GetAttribute("NAME", name)) &&
+                        (NS_CONTENT_ATTR_HAS_VALUE == kid->GetAttribute("VALUE", val)))
+                    {
+                      mParamNames[mNumParams] = (char *)PR_Malloc(name.Length() + 1);
+                      mParamVals[mNumParams] = (char *)PR_Malloc(val.Length() + 1);
+
+                      if ((nsnull != mParamNames[mNumParams]) &&
+                          (nsnull != mParamVals[mNumParams]))
+                      {
+                        name.ToCString(mParamNames[mNumParams], name.Length() + 1);
+                        val.ToCString(mParamVals[mNumParams], val.Length() + 1);
+
+                        mNumParams++;
+                      }
+                      else
+                      {
+                        if (nsnull != mParamNames[mNumParams])
+                        {
+                          PR_Free(mParamNames[mNumParams]);
+                          mParamNames[mNumParams] = nsnull;
+                        }
+
+                        if (nsnull != mParamVals[mNumParams])
+                        {
+                          PR_Free(mParamVals[mNumParams]);
+                          mParamVals[mNumParams] = nsnull;
+                        }
+                      }
+                    }
+                  }
+
+                  NS_RELEASE(atom);
+                }
+              }
+
+              NS_RELEASE(kid);
+            }
+          }
+        }
+      }
+
+      rv = NS_OK;
+      NS_RELEASE(cont);
+    }
+  }
+
+  n = mNumParams;
+  names = (const char **)mParamNames;
+  values = (const char **)mParamVals;
+
+  return rv;
+}
+
+NS_IMETHODIMP nsPluginInstanceOwner :: GetParameter(const char* name, const char* *result)
+{
+  PRInt32 count;
+
+  if (nsnull == mParamNames)
+  {
+    PRUint16  numattrs;
+    const char * const *names, * const *vals;
+
+    GetParameters(numattrs, names, vals);
+  }
+
+  for (count = 0; count < mNumParams; count++)
+  {
+    if (0 == PL_strcasecmp(mParamNames[count], name))
+    {
+      *result = mParamVals[count];
+      break;
+    }
+  }
+
+  if (count >= mNumParams)
+    *result = "";
+
+  return NS_OK;
+}
+  
+NS_IMETHODIMP nsPluginInstanceOwner :: GetDocumentBase(const char* *result)
+{
+  if (nsnull != mContext)
+  {
+    nsIPresShell  *shell = mContext->GetShell();
+    nsIDocument   *doc = shell->GetDocument();
+    nsIURL        *docURL = doc->GetDocumentURL();
+
+    *result = docURL->GetSpec();
+
+    NS_RELEASE(shell);
+    NS_RELEASE(docURL);
+    NS_RELEASE(doc);
+
+    return NS_OK;
+  }
+  else
+  {
+    *result = "";
+    return NS_ERROR_FAILURE;
+  }
+}
+  
+NS_IMETHODIMP nsPluginInstanceOwner :: GetDocumentEncoding(const char* *result)
+{
+printf("instance owner getdocumentencoding called\n");
+  return NS_ERROR_FAILURE;
+}
+  
+NS_IMETHODIMP nsPluginInstanceOwner :: GetAlignment(const char* *result)
+{
+  return GetAttribute("ALIGN", result);
+}
+  
+NS_IMETHODIMP nsPluginInstanceOwner :: GetWidth(PRUint32 *result)
+{
+  nsresult    rv;
+  const char  *width;
+
+  rv = GetAttribute("WIDTH", &width);
+
+  if (NS_OK == rv)
+  {
+    if (*result != 0)
+      *result = (PRUint32)atol(width);
+    else
+      *result = 0;
+  }
+  else
+    *result = 0;
+
+  return rv;
+}
+  
+NS_IMETHODIMP nsPluginInstanceOwner :: GetHeight(PRUint32 *result)
+{
+  nsresult    rv;
+  const char  *height;
+
+  rv = GetAttribute("HEIGHT", &height);
+
+  if (NS_OK == rv)
+  {
+    if (*result != 0)
+      *result = (PRUint32)atol(height);
+    else
+      *result = 0;
+  }
+  else
+    *result = 0;
+
+  return rv;
+}
+  
+NS_IMETHODIMP nsPluginInstanceOwner :: GetBorderVertSpace(PRUint32 *result)
+{
+  nsresult    rv;
+  const char  *vspace;
+
+  rv = GetAttribute("VSPACE", &vspace);
+
+  if (NS_OK == rv)
+  {
+    if (*result != 0)
+      *result = (PRUint32)atol(vspace);
+    else
+      *result = 0;
+  }
+  else
+    *result = 0;
+
+  return rv;
+}
+  
+NS_IMETHODIMP nsPluginInstanceOwner :: GetBorderHorizSpace(PRUint32 *result)
+{
+  nsresult    rv;
+  const char  *hspace;
+
+  rv = GetAttribute("HSPACE", &hspace);
+
+  if (NS_OK == rv)
+  {
+    if (*result != 0)
+      *result = (PRUint32)atol(hspace);
+    else
+      *result = 0;
+  }
+  else
+    *result = 0;
+
+  return rv;
+}
+
+NS_IMETHODIMP nsPluginInstanceOwner :: GetUniqueID(PRUint32 *result)
+{
+  *result = (PRUint32)mContext;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsPluginInstanceOwner :: GetCode(const char* *result)
+{
+  return GetAttribute("CODE", result);
+}
+
+NS_IMETHODIMP nsPluginInstanceOwner :: GetCodeBase(const char* *result)
+{
+  return GetAttribute("CODEBASE", result);
+}
+
+NS_IMETHODIMP nsPluginInstanceOwner :: GetArchive(const char* *result)
+{
+printf("instance owner getarchive called\n");
+  *result = "";
+  return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP nsPluginInstanceOwner :: GetName(const char* *result)
+{
+  return GetAttribute("NAME", result);
+}
+
+NS_IMETHODIMP nsPluginInstanceOwner :: GetMayScript(PRBool *result)
+{
+printf("instance owner getmayscript called\n");
+  *result = PR_FALSE;
+  return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP nsPluginInstanceOwner :: Init(nsIPresContext* aPresContext, nsObjectFrame *aFrame)
