@@ -48,7 +48,7 @@ interface nsIMsgFilterList;
 interface nsIMsgRetentionSettings;
 interface nsIMsgDownloadSettings;
 interface nsISpamSettings;
-
+interface nsIMsgFilterPlugin;
 /*
  * Interface for incoming mail/news host
  * this is the base interface for all mail server types (imap, pop, nntp, etc)
@@ -367,6 +367,7 @@ interface nsIMsgIncomingServer : nsISupports {
    * spam settings
    */
   attribute nsISpamSettings spamSettings;
+  readonly attribute nsIMsgFilterPlugin spamFilterPlugin;
 };
 
 %{C++

@@ -59,6 +59,16 @@
 #include "nsIPrompt.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIInterfaceRequestorUtils.h"
+#include "nsAbBaseCID.h"
+#include "nsIAbMDBDirectory.h"
+#include "nsISpamSettings.h"
+#include "nsIMsgFilterPlugin.h"
+#include "nsIMsgMailSession.h"
+#include "nsIRDFService.h"
+#ifdef DEBUG_bienvenu
+#define DO_FILTER_PLUGIN
+#endif
+
 
 #include <time.h>
 
@@ -1675,3 +1685,136 @@ nsMsgDBFolder::SetStringProperty(const char *propertyName, const char *propertyV
   }
   return NS_OK;
 }
+
+// sub-classes need to override
+nsresult
+nsMsgDBFolder::SpamFilterClassifyMessage(const char *aURI, nsIJunkMailPlugin *aJunkMailPlugin)
+{
+  return aJunkMailPlugin->ClassifyMessage(aURI, nsnull);   
+}
+
+/**
+ * Call the filter plugins (XXX currently just one)
+ */
+NS_IMETHODIMP
+nsMsgDBFolder::CallFilterPlugins()
+{
+
+    nsCOMPtr<nsIMsgIncomingServer> server;
+    nsCOMPtr<nsISpamSettings> spamSettings;
+    nsCOMPtr<nsIAbMDBDirectory> whiteListDirectory;
+    PRBool useWhiteList = PR_FALSE;
+    PRInt32 spamLevel = 0;
+    nsXPIDLCString whiteListAbURI;
+    
+    nsresult rv = GetServer(getter_AddRefs(server));
+    NS_ENSURE_SUCCESS(rv, rv); 
+    rv = server->GetSpamSettings(getter_AddRefs(spamSettings));
+    nsCOMPtr <nsIMsgFilterPlugin> filterPlugin;
+    server->GetSpamFilterPlugin(getter_AddRefs(filterPlugin));
+    if (!filterPlugin) // it's not an error not to have the filter plugin.
+      return NS_OK;
+
+    NS_ENSURE_SUCCESS(rv, rv); 
+    spamSettings->GetLevel(&spamLevel);
+    if (spamLevel == 0)
+      return NS_OK;
+    nsCOMPtr<nsIMsgMailSession> mailSession = 
+        do_GetService(NS_MSGMAILSESSION_CONTRACTID, &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+    
+    if (!mDatabase) 
+    {
+        rv = GetDatabase(nsnull);   // XXX is nsnull a reasonable arg here?
+        NS_ENSURE_SUCCESS(rv, rv);
+    }
+
+    // get the list of new messages
+    //
+    nsMsgKeyArray *newMessageKeys;
+    rv = mDatabase->GetNewList(&newMessageKeys);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    // if there weren't any, just return 
+    //
+    if (!newMessageKeys) 
+        return NS_OK;
+
+    spamSettings->GetUseWhiteList(&useWhiteList);
+    if (useWhiteList)
+    {
+      spamSettings->GetWhiteListAbURI(getter_Copies(whiteListAbURI));
+      NS_ENSURE_SUCCESS(rv, rv);
+      if (!whiteListAbURI.IsEmpty())
+      {
+        nsCOMPtr <nsIRDFService> rdfService = do_GetService("@mozilla.org/rdf/rdf-service;1",&rv);
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        nsCOMPtr <nsIRDFResource> resource;
+        rv = rdfService->GetResource(whiteListAbURI, getter_AddRefs(resource));
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        whiteListDirectory = do_QueryInterface(resource, &rv);
+        NS_ENSURE_SUCCESS(rv, rv);
+      }
+      // if we can't get the db, we probably want to continue firing spam filters.
+    }
+
+    // tell the plugin this is the beginning of a batch
+    //
+    (void)filterPlugin->SetBatchUpdate(PR_TRUE);
+
+    // for each message...
+    //
+    nsXPIDLCString uri;
+    nsXPIDLCString url;
+
+    PRUint32 numNewMessages = newMessageKeys->GetSize();
+    PRInt32 numClassifyRequests = 0;
+    for ( PRUint32 i=0 ; i < numNewMessages ; ++i ) 
+    {
+      // check whitelist first:
+        if (whiteListDirectory)
+        {
+          nsCOMPtr <nsIMsgDBHdr> msgHdr;
+          rv = mDatabase->GetMsgHdrForKey(newMessageKeys->GetAt(i), getter_AddRefs(msgHdr));
+          if (NS_SUCCEEDED(rv))
+          {
+            PRBool cardExists = PR_FALSE;
+            nsXPIDLCString author;
+            msgHdr->GetAuthor(getter_Copies(author));
+            rv = whiteListDirectory->HasCardForEmailAddress(author, &cardExists);
+            if (NS_SUCCEEDED(rv) && cardExists)
+              continue; // skip this msg since it's in the white list
+          }
+        }
+
+        // generate a URI for the message
+        //
+        rv = GenerateMessageURI(newMessageKeys->GetAt(i), getter_Copies(uri));
+        if (NS_FAILED(rv)) 
+        {
+            NS_WARNING("nsMsgDBFolder::CallFilterPlugins(): could not"
+                       " generate URI for message");
+            continue; // continue through the array
+        }
+
+        // filterMsg
+        //
+        nsCOMPtr <nsIJunkMailPlugin> junkMailPlugin = do_QueryInterface(filterPlugin);
+        rv = SpamFilterClassifyMessage(uri, junkMailPlugin); 
+        if (NS_FAILED(rv)) 
+        {
+            NS_WARNING("nsMsgDBFolder::CallFilterPlugins(): filter plugin"
+                       " call failed");
+            continue; // continue through the array
+        }
+    }
+
+    // this batch is done
+    (void)filterPlugin->SetBatchUpdate(PR_FALSE);
+
+    NS_DELETEXPCOM(newMessageKeys);
+    return rv;
+}
+

@@ -45,6 +45,7 @@ REQUIRES	= xpcom \
 		  rdfutil \
 		  mime \
 		  msgcompose \
+      addrbook \
 		  docshell \
 		  webshell \
 		  uriloader \

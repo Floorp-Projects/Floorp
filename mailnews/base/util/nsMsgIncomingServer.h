@@ -49,6 +49,7 @@
 #include "nsIMsgDatabase.h"
 #include "nsIFileSpec.h"
 #include "nsISpamSettings.h"
+#include "nsIMsgFilterPlugin.h"
 
 class nsIMsgFolderCache;
 class nsIMsgProtocolInfo;
@@ -105,6 +106,7 @@ private:
   PRUint32 m_biffState;
   PRPackedBool m_serverBusy;
   nsCOMPtr <nsISpamSettings> mSpamSettings;
+  nsCOMPtr<nsIMsgFilterPlugin> mFilterPlugin;  // XXX should be a list
 
 protected:
   // member variable for canHaveFilters

@@ -50,6 +50,7 @@
 #include "nsITransport.h"
 #include "nsIMsgStringService.h"
 class nsIMsgFolderCacheElement;
+class nsIJunkMailPlugin;
 
  /* 
   * nsMsgDBFolder
@@ -121,6 +122,7 @@ public:
   NS_IMETHOD SetDBTransferInfo(nsIDBFolderInfo *aTransferInfo);
   NS_IMETHOD GetStringProperty(const char *propertyName, char **propertyValue);
   NS_IMETHOD SetStringProperty(const char *propertyName, const char *propertyValue);
+  NS_IMETHOD CallFilterPlugins();
 
 
 protected:
@@ -147,6 +149,9 @@ protected:
   nsresult MsgFitsDownloadCriteria(nsMsgKey msgKey, PRBool *result);
   nsresult GetPromptPurgeThreshold(PRBool *aPrompt);
   nsresult GetPurgeThreshold(PRInt32 *aThreshold);
+
+  virtual nsresult SpamFilterClassifyMessage(const char *aURI, nsIJunkMailPlugin *aJunkMailPlugin);
+
 protected:
   nsCOMPtr<nsIMsgDatabase> mDatabase;
   nsString mCharset;

@@ -347,8 +347,7 @@ public:
                              const char *destFolder,
                              nsIMsgFilter *filter,
                              nsIMsgWindow *msgWindow);
-    nsresult InitializeFilterPlugins(void);
-    nsresult CallFilterPlugins(void);
+  virtual nsresult SpamFilterClassifyMessage(const char *aURI, nsIJunkMailPlugin *aJunkMailPlugin);
 
   static nsresult  AllocateUidStringFromKeys(nsMsgKey *keys, PRInt32 numKeys, nsCString &msgIds);
 protected:

@@ -102,8 +102,6 @@
 #include "nsMsgMessageFlags.h"
 #include "nsIMimeHeaders.h"
 #include "nsIMsgMdnGenerator.h"
-#include "nsAbBaseCID.h"
-#include "nsIAbMDBDirectory.h"
 #include "nsISpamSettings.h"
 #include <time.h>
 
@@ -625,30 +623,6 @@ nsresult nsImapMailFolder::GetDatabase(nsIMsgWindow *aMsgWindow)
   return folderOpen;
 }
 
-/**
- * Initialize any message filtering plugin objects to be used by
- * this server.
- *
- * XXX note this currently only initializes the one m_filterPlugin;
- * it should really be initializing a list
- */
-nsresult
-nsImapMailFolder::InitializeFilterPlugins(void)
-{
-    nsresult rv;
-
-    // create the plugin object
-    //
-    m_filterPlugin = do_CreateInstance(
-        "@mozilla.org/messenger/filter-plugin;1?name=bayesianfilter", &rv);
-
-    if (NS_FAILED(rv)) {
-        NS_ERROR("nsImapMailFolder::InitializeFilterPlugins():" 
-                 " error creating filter plugin");
-        return rv;
-    }
-    return NS_OK;
-}
 
 NS_IMETHODIMP
 nsImapMailFolder::UpdateFolder(nsIMsgWindow *msgWindow)
@@ -663,13 +637,6 @@ nsImapMailFolder::UpdateFolder(nsIMsgWindow *msgWindow)
         }
     }
 
-    // Initialize filter plugins.  If this fails; just continue.
-    //
-#ifdef DO_FILTER_PLUGIN
-    if (!m_filterPlugin) {
-        (void)InitializeFilterPlugins();
-    }
-#endif
     if (m_filterList) {
         nsCOMPtr<nsIMsgIncomingServer> server;
         rv = GetServer(getter_AddRefs(server));
@@ -4941,9 +4908,12 @@ nsImapMailFolder::HeaderFetchCompleted(nsIImapProtocol* aProtocol)
     else
       aProtocol->NotifyBodysToDownload(nsnull, 0/*keysToFetch.GetSize() */);
   }
-
+#ifdef DEBUG_bienvenu
+#define DO_FILTER_PLUGIN
+#endif
+#ifdef DO_FILTER_PLUGIN
   CallFilterPlugins();
-
+#endif
   if (m_filterList)
     (void)m_filterList->FlushLogIfNecessary();
  
@@ -7127,6 +7097,14 @@ nsresult nsImapMailFolder::GetMoveCoalescer()
    return NS_OK;
 }
 
+nsresult
+nsImapMailFolder::SpamFilterClassifyMessage(const char *aURI, nsIJunkMailPlugin *aJunkMailPlugin)
+{
+  ++m_numFilterClassifyRequests;
+  return aJunkMailPlugin->ClassifyMessage(aURI, this);   
+}
+
+
 NS_IMETHODIMP
 nsImapMailFolder::OnMessageClassified(const char *aMsgURL, nsMsgJunkStatus aClassification)
 {
@@ -7136,8 +7114,8 @@ nsImapMailFolder::OnMessageClassified(const char *aMsgURL, nsMsgJunkStatus aClas
   nsCOMPtr <nsIMsgDBHdr> msgHdr;
   rv = GetMsgDBHdrFromURI(aMsgURL, getter_AddRefs(msgHdr));
   NS_ENSURE_SUCCESS(rv, rv);
-  msgHdr->SetStringProperty("score", (aClassification == nsIJunkMailPlugin::JUNK) ? "100" : "0");
-  if (aClassification == nsIJunkMailPlugin::JUNK)
+  msgHdr->SetStringProperty("junkscore", (aClassification == nsIJunkMailPlugin::JUNK) ? "100" : "0");
+  if (aClassification == nsIJunkMailPlugin::JUNK && ! (mFlags & MSG_FOLDER_FLAG_JUNK))
   {
     nsCOMPtr<nsISpamSettings> spamSettings;
     nsXPIDLCString spamFolderURI;
@@ -7194,131 +7172,13 @@ nsImapMailFolder::GetShouldDownloadAllHeaders(PRBool *aResult)
     if (*aResult)
       return rv;
   }
-  // m_filterPlugin should already be initialized, if present
-  return (m_filterPlugin) ? m_filterPlugin->GetShouldDownloadAllHeaders(aResult) : NS_OK;
+  nsCOMPtr <nsIMsgFilterPlugin> filterPlugin;
+  nsCOMPtr<nsIMsgIncomingServer> server;
+
+  if (NS_SUCCEEDED(GetServer(getter_AddRefs(server))))
+    server->GetSpamFilterPlugin(getter_AddRefs(filterPlugin));
+
+  return (filterPlugin) ? filterPlugin->GetShouldDownloadAllHeaders(aResult) : NS_OK;
 }
 
-
-/**
- * Call the filter plugins (XXX currently just one)
- */
-nsresult
-nsImapMailFolder::CallFilterPlugins(void)
-{
-    if (!m_filterPlugin) 
-        return NS_OK;
-
-    nsCOMPtr<nsIMsgIncomingServer> server;
-    nsCOMPtr<nsISpamSettings> spamSettings;
-    nsCOMPtr<nsIAbMDBDirectory> whiteListDB;
-    PRBool useWhiteList = PR_FALSE;
-    PRInt32 spamLevel = 0;
-    nsXPIDLCString whiteListAbURI;
-    
-    nsresult rv = GetServer(getter_AddRefs(server));
-    NS_ENSURE_SUCCESS(rv, rv); 
-    rv = server->GetSpamSettings(getter_AddRefs(spamSettings));
-    NS_ENSURE_SUCCESS(rv, rv); 
-    spamSettings->GetLevel(&spamLevel);
-    if (spamLevel == 0)
-      return NS_OK;
-    nsCOMPtr<nsIMsgMailSession> mailSession = 
-        do_GetService(NS_MSGMAILSESSION_CONTRACTID, &rv);
-    NS_ENSURE_SUCCESS(rv, rv);
-    
-    if (!mDatabase) 
-    {
-        rv = GetDatabase(nsnull);   // XXX is nsnull a reasonable arg here?
-        NS_ENSURE_SUCCESS(rv, rv);
-    }
-
-    // get the list of new messages
-    //
-    nsMsgKeyArray *newMessageKeys;
-    rv = mDatabase->GetNewList(&newMessageKeys);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    // if there weren't any, just return 
-    //
-    if (!newMessageKeys) 
-        return NS_OK;
-
-    spamSettings->GetUseWhiteList(&useWhiteList);
-    if (useWhiteList)
-    {
-      spamSettings->GetWhiteListAbURI(getter_Copies(whiteListAbURI));
-      NS_ENSURE_SUCCESS(rv, rv);
-      if (!whiteListAbURI.IsEmpty())
-      {
-        nsCOMPtr <nsIRDFService> rdfService = do_GetService("@mozilla.org/rdf/rdf-service;1",&rv);
-        NS_ENSURE_SUCCESS(rv, rv);
-
-        nsCOMPtr <nsIRDFResource> resource;
-        rv = rdfService->GetResource(whiteListAbURI, getter_AddRefs(resource));
-        NS_ENSURE_SUCCESS(rv, rv);
-
-        whiteListDB = do_QueryInterface(resource, &rv);
-        NS_ENSURE_SUCCESS(rv, rv);
-      }
-      // if we can't get the db, we probably want to continue firing spam filters.
-    }
-
-    // tell the plugin this is the beginning of a batch
-    //
-    (void)m_filterPlugin->SetBatchUpdate(PR_TRUE);
-
-    // for each message...
-    //
-    nsXPIDLCString uri;
-    nsXPIDLCString url;
-
-    PRUint32 numNewMessages = newMessageKeys->GetSize();
-    PRInt32 numClassifyRequests = 0;
-    for ( PRUint32 i=0 ; i < numNewMessages ; ++i ) 
-    {
-      // check whitelist first:
-        if (whiteListDB)
-        {
-          nsCOMPtr <nsIMsgDBHdr> msgHdr;
-          rv = mDatabase->GetMsgHdrForKey(newMessageKeys->GetAt(i), getter_AddRefs(msgHdr));
-          if (NS_SUCCEEDED(rv))
-          {
-            PRBool cardExists = PR_FALSE;
-            nsXPIDLCString author;
-            msgHdr->GetAuthor(getter_Copies(author));
-            rv = whiteListDB->HasCardForEmailAddress(author, &cardExists);
-            if (NS_SUCCEEDED(rv) && cardExists)
-              continue; // skip this msg since it's in the white list
-          }
-        }
-
-        // generate a URI for the message
-        //
-        rv = GenerateMessageURI(newMessageKeys->GetAt(i), getter_Copies(uri));
-        if (NS_FAILED(rv)) 
-        {
-            NS_WARNING("nsImapMailFolder::CallFilterPlugins(): could not"
-                       " generate URI for message");
-            continue; // continue through the array
-        }
-
-        // filterMsg
-        //
-        nsCOMPtr <nsIJunkMailPlugin> junkMailPlugin = do_QueryInterface(m_filterPlugin);
-        m_numFilterClassifyRequests++;
-        rv = junkMailPlugin->ClassifyMessage(uri, this); 
-        if (NS_FAILED(rv)) 
-        {
-            NS_WARNING("nsImapMailFolder::CallFilterPlugins(): filter plugin"
-                       " call failed");
-            continue; // continue through the array
-        }
-    }
-
-    // this batch is done
-    (void)m_filterPlugin->SetBatchUpdate(PR_FALSE);
-
-    NS_DELETEXPCOM(newMessageKeys);
-    return rv;
-}
 

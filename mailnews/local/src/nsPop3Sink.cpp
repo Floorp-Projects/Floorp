@@ -239,7 +239,12 @@ nsPop3Sink::EndMailDelivery()
 
   nsresult rv = ReleaseFolderLock();
   NS_ASSERTION(NS_SUCCEEDED(rv),"folder lock not released successfully");
-
+#ifdef DEBUG_bienvenu
+#define DO_FILTER_PLUGIN
+#endif
+#ifdef DO_FILTER_PLUGIN
+  m_folder->CallFilterPlugins();
+#endif
   nsCOMPtr<nsIMsgIncomingServer> server = do_QueryInterface(m_popServer);
   if (server) {
     nsCOMPtr <nsIMsgFilterList> filterList;

@@ -1242,7 +1242,7 @@ nsMsgIncomingServer::SetRealUsername(const char *aUsername)
   nsresult rv = GetRealUsername(getter_Copies(oldName));
   NS_ENSURE_SUCCESS(rv, rv);
   rv = SetCharValue("realuserName", aUsername);
-  if (nsCRT::strcasecmp(aUsername, oldName.get()))
+  if (!oldName.Equals(aUsername))
     rv = OnUserOrHostNameChanged(oldName.get(), aUsername);
 
   return rv;
@@ -1979,3 +1979,28 @@ nsMsgIncomingServer::GetSpamSettings(nsISpamSettings **aSpamSettings)
   NS_ADDREF(*aSpamSettings = mSpamSettings);
   return NS_OK;
 }
+
+NS_IMETHODIMP
+nsMsgIncomingServer::GetSpamFilterPlugin(nsIMsgFilterPlugin **aFilterPlugin)
+{
+  NS_ENSURE_ARG_POINTER(aFilterPlugin);
+  if (!mFilterPlugin)
+  {
+    nsresult rv;
+
+    // create the plugin object
+    //
+    mFilterPlugin = do_CreateInstance(
+        "@mozilla.org/messenger/filter-plugin;1?name=bayesianfilter", &rv);
+
+    if (NS_FAILED(rv)) {
+        NS_ERROR("nsMsgIncomingServer::InitializeFilterPlugins():" 
+                 " error creating filter plugin");
+        return rv;
+    }
+  }
+  NS_IF_ADDREF(*aFilterPlugin = mFilterPlugin);
+  return NS_OK;
+}
+
+

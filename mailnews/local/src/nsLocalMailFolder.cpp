@@ -96,7 +96,7 @@
 #include "nsEscape.h"
 #include "nsLocalStringBundle.h"
 #include "nsIMsgMailNewsUrl.h"
-
+#include "nsISpamSettings.h"
 static NS_DEFINE_CID(kRDFServiceCID,							NS_RDFSERVICE_CID);
 static NS_DEFINE_CID(kMailboxServiceCID,					NS_MAILBOXSERVICE_CID);
 static NS_DEFINE_CID(kCMailDB, NS_MAILDB_CID);
@@ -147,7 +147,7 @@ nsLocalMailCopyState::~nsLocalMailCopyState()
 nsMsgLocalMailFolder::nsMsgLocalMailFolder(void)
   : mHaveReadNameFromDB(PR_FALSE), mGettingMail(PR_FALSE),
     mInitialized(PR_FALSE), mCopyState(nsnull), mType(nsnull),
-    mCheckForNewMessagesAfterParsing(PR_FALSE)
+    mCheckForNewMessagesAfterParsing(PR_FALSE), mNumFilterClassifyRequests(0)
 {
 //  NS_INIT_ISUPPORTS(); done by superclass
 }
@@ -158,10 +158,11 @@ nsMsgLocalMailFolder::~nsMsgLocalMailFolder(void)
 
 NS_IMPL_ADDREF_INHERITED(nsMsgLocalMailFolder, nsMsgFolder)
 NS_IMPL_RELEASE_INHERITED(nsMsgLocalMailFolder, nsMsgFolder)
-NS_IMPL_QUERY_INTERFACE_INHERITED2(nsMsgLocalMailFolder,
+NS_IMPL_QUERY_INTERFACE_INHERITED3(nsMsgLocalMailFolder,
                                    nsMsgDBFolder,
                                    nsICopyMessageListener,
-                                   nsIMsgLocalMailFolder)
+                                   nsIMsgLocalMailFolder,
+                                   nsIJunkMailClassificationListener)
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -3363,5 +3364,84 @@ NS_IMETHODIMP nsMsgLocalMailFolder::Shutdown(PRBool shutdownChildren)
 {
   mInitialized = PR_FALSE;
   return nsMsgDBFolder::Shutdown(shutdownChildren);
+}
+
+nsresult
+nsMsgLocalMailFolder::SpamFilterClassifyMessage(const char *aURI, nsIJunkMailPlugin *aJunkMailPlugin)
+{
+  ++mNumFilterClassifyRequests;
+  return aJunkMailPlugin->ClassifyMessage(aURI, this);   
+}
+
+
+NS_IMETHODIMP
+nsMsgLocalMailFolder::OnMessageClassified(const char *aMsgURL, nsMsgJunkStatus aClassification)
+{
+  nsCOMPtr<nsIMsgIncomingServer> server;
+  nsresult rv = GetServer(getter_AddRefs(server));
+  NS_ENSURE_SUCCESS(rv, rv);
+  nsCOMPtr <nsIMsgDBHdr> msgHdr;
+  rv = GetMsgDBHdrFromURI(aMsgURL, getter_AddRefs(msgHdr));
+  NS_ENSURE_SUCCESS(rv, rv);
+  msgHdr->SetStringProperty("junkscore", (aClassification == nsIJunkMailPlugin::JUNK) ? "100" : "0");
+  nsCOMPtr<nsISpamSettings> spamSettings;
+  nsXPIDLCString spamFolderURI;
+  PRBool moveOnSpam = PR_FALSE;
+  
+  rv = GetServer(getter_AddRefs(server));
+  NS_ENSURE_SUCCESS(rv, rv); 
+  rv = server->GetSpamSettings(getter_AddRefs(spamSettings));
+  NS_ENSURE_SUCCESS(rv, rv); 
+  if (aClassification == nsIJunkMailPlugin::JUNK && ! (mFlags & MSG_FOLDER_FLAG_JUNK))
+  {
+
+    spamSettings->GetMoveOnSpam(&moveOnSpam);
+    if (moveOnSpam)
+    {
+        nsMsgKey msgKey;
+        msgHdr->GetMessageKey(&msgKey);
+        mSpamKeysToMove.Add(msgKey);
+    }
+  }
+  if (--mNumFilterClassifyRequests == 0 && mSpamKeysToMove.GetSize() > 0)
+  {
+    spamSettings->GetSpamFolderURI(getter_Copies(spamFolderURI));
+    if (!spamFolderURI.IsEmpty())
+    {
+        nsMsgKey msgKey;
+        msgHdr->GetMessageKey(&msgKey);
+        nsCOMPtr <nsIRDFService> rdfService = do_GetService("@mozilla.org/rdf/rdf-service;1",&rv);
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        nsCOMPtr<nsIRDFResource> res;
+        rv = rdfService->GetResource(spamFolderURI, getter_AddRefs(res));
+        if (NS_FAILED(rv))
+          return rv;
+
+        nsCOMPtr<nsIMsgFolder> folder(do_QueryInterface(res, &rv));
+        if (NS_FAILED(rv))
+          return rv;      
+        nsCOMPtr<nsISupportsArray> messages;
+        NS_NewISupportsArray(getter_AddRefs(messages));
+        for (PRUint32 keyIndex = 0; keyIndex < mSpamKeysToMove.GetSize(); keyIndex++)
+        {
+          nsCOMPtr<nsIMsgDBHdr> mailHdr = nsnull;
+          rv = GetMessageHeader(mSpamKeysToMove.ElementAt(keyIndex), getter_AddRefs(mailHdr));
+          if (NS_SUCCEEDED(rv) && mailHdr)
+          {
+            nsCOMPtr<nsISupports> iSupports = do_QueryInterface(mailHdr);
+            messages->AppendElement(iSupports);
+          }
+        }
+        folder->CreateStorageIfMissing(nsnull);
+        nsCOMPtr<nsIMsgCopyService> copySvc = do_GetService(NS_MSGCOPYSERVICE_CONTRACTID);
+        if (copySvc)
+          rv = copySvc->CopyMessages(this, messages, folder, PR_TRUE,
+          /*nsIMsgCopyServiceListener* listener*/ nsnull, nsnull, PR_FALSE /*allowUndo*/);
+    }
+    mSpamKeysToMove.RemoveAll();
+  }
+
+  return NS_OK;
 }
 

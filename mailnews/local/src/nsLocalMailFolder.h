@@ -55,7 +55,7 @@
 #include "nsITransactionManager.h"
 #include "nsIMsgLocalMailFolder.h"
 #include "nsIMsgStringService.h"
-
+#include "nsIMsgFilterPlugin.h"
 #define COPY_BUFFER_SIZE 16384
 
 struct nsLocalMailCopyState
@@ -95,13 +95,15 @@ struct nsLocalMailCopyState
 
 class nsMsgLocalMailFolder : public nsMsgDBFolder,
                              public nsIMsgLocalMailFolder,
-                             public nsICopyMessageListener
+                             public nsICopyMessageListener,
+                             public nsIJunkMailClassificationListener
 {
 public:
 	nsMsgLocalMailFolder(void);
 	virtual ~nsMsgLocalMailFolder(void);
   NS_DECL_NSICOPYMESSAGELISTENER
   NS_DECL_NSIMSGLOCALMAILFOLDER
+  NS_DECL_NSIJUNKMAILCLASSIFICATIONLISTENER
   NS_DECL_ISUPPORTS_INHERITED
 #if 0
   static nsresult GetRoot(nsIMsgFolder* *result);
@@ -209,6 +211,7 @@ protected:
                          PRBool isMove, nsIMsgCopyServiceListener* listener, nsIMsgWindow *msgWindow, PRBool isMoveFolder, PRBool allowUndo);
   nsresult OnCopyCompleted(nsISupports *srcSupport, PRBool moveCopySucceeded);
 	virtual nsresult CreateBaseMessageURI(const char *aURI);
+  nsresult SpamFilterClassifyMessage(const char *aURI, nsIJunkMailPlugin *aJunkMailPlugin);
 protected:
 	PRBool		mHaveReadNameFromDB;
 	PRBool		mGettingMail;
@@ -218,7 +221,8 @@ protected:
   const char *mType;
   PRBool      mCheckForNewMessagesAfterParsing;
   nsCOMPtr<nsIMsgStringService> mMsgStringService;
-
+  PRInt32 mNumFilterClassifyRequests;
+  nsMsgKeyArray mSpamKeysToMove;
   nsresult setSubfolderFlag(const char *aFolderName, PRUint32 flags);
 };
 
