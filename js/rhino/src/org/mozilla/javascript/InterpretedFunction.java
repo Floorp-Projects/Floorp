@@ -38,8 +38,8 @@ package org.mozilla.javascript;
 import java.io.Serializable;
 import org.mozilla.javascript.debug.DebuggableScript;
 
-class InterpretedFunction extends NativeFunction
-                          implements DebuggableScript, Serializable
+final class InterpretedFunction extends NativeFunction
+    implements DebuggableScript, Serializable
 {
 
     static final long serialVersionUID = -6235150451107527319L;
@@ -72,7 +72,9 @@ class InterpretedFunction extends NativeFunction
                        Object[] args)
         throws JavaScriptException
     {
-        return Interpreter.interpret(cx, scope, thisObj, args, this, itsData);
+        return Interpreter.interpret(cx, scope, thisObj,
+                                     args, null, 0, args.length,
+                                     this, itsData);
     }
 
     public boolean isFunction() {

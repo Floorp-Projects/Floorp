@@ -39,7 +39,9 @@ import org.mozilla.javascript.debug.*;
 
 import java.util.*;
 
-public class InterpretedScript extends NativeScript implements DebuggableScript {
+final class InterpretedScript extends NativeScript
+    implements DebuggableScript
+{
 
     InterpretedScript(Context cx, InterpreterData theData)
     {
@@ -52,14 +54,16 @@ public class InterpretedScript extends NativeScript implements DebuggableScript 
     public Object exec(Context cx, Scriptable scope)
         throws JavaScriptException
     {
-        return call(cx, scope, scope, null);
+        return call(cx, scope, scope, ScriptRuntime.emptyArgs);
     }
 
     public Object call(Context cx, Scriptable scope,
                        Scriptable thisObj, Object[] args)
         throws JavaScriptException
     {
-        return Interpreter.interpret(cx, scope, thisObj, args, this, itsData);
+        return Interpreter.interpret(cx, scope, thisObj,
+                                     args, null, 0, args.length,
+                                     this, itsData);
     }
 
     public boolean isFunction() {

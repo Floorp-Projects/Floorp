@@ -1520,15 +1520,17 @@ public class Interpreter {
         }
     }
 
-    public static Object interpret(Context cx, Scriptable scope,
-                                   Scriptable thisObj, Object[] args,
-                                   NativeFunction fnOrScript,
-                                   InterpreterData idata)
+    static Object interpret(Context cx, Scriptable scope, Scriptable thisObj,
+                            Object[] args, double[] argsDbl,
+                            int argShift, int argCount,
+                            NativeFunction fnOrScript,
+                            InterpreterData idata)
         throws JavaScriptException
     {
         if (cx.interpreterSecurityDomain != idata.securityDomain) {
-            return execWithNewDomain(cx, scope, thisObj, args, fnOrScript,
-                                     idata);
+            return execWithNewDomain(cx, scope, thisObj,
+                                     args, argsDbl, argShift, argCount,
+                                     fnOrScript, idata);
         }
 
         final Object DBL_MRK = Interpreter.DBL_MRK;
@@ -1559,10 +1561,12 @@ public class Interpreter {
         int tryStackTop = 0; // add TRY_STACK_SHFT to get real index
 
         int definedArgs = fnOrScript.argCount;
-        if (definedArgs != 0) {
-            if (definedArgs > args.length) { definedArgs = args.length; }
-            for (int i = 0; i != definedArgs; ++i) {
-                stack[VAR_SHFT + i] = args[i];
+        if (definedArgs > argCount) { definedArgs = argCount; }
+        for (int i = 0; i != definedArgs; ++i) {
+            Object arg = args[argShift + i];
+            stack[VAR_SHFT + i] = arg;
+            if (arg == DBL_MRK) {
+                sDbl[VAR_SHFT + i] = argsDbl[argShift + i];
             }
         }
         for (int i = definedArgs; i != maxVars; ++i) {
@@ -1587,6 +1591,11 @@ public class Interpreter {
             }
 
             if (idata.itsNeedsActivation) {
+                if (argsDbl != null) {
+                    args = getArgsArray(args, argsDbl, argShift, argCount);
+                    argShift = 0;
+                    argsDbl = null;
+                }
                 scope = ScriptRuntime.initVarObj(cx, scope, fnOrScript,
                                                  thisObj, args);
             }
@@ -1607,6 +1616,11 @@ public class Interpreter {
 
         boolean useActivationVars = false;
         if (debuggerFrame != null) {
+            if (argsDbl != null) {
+                args = getArgsArray(args, argsDbl, argShift, argCount);
+                argShift = 0;
+                argsDbl = null;
+            }
             if (idata.itsFunctionType != 0 && !idata.itsNeedsActivation) {
                 useActivationVars = true;
                 scope = ScriptRuntime.initVarObj(cx, scope, fnOrScript,
@@ -2075,8 +2089,8 @@ public class Interpreter {
         int lineNum = getShort(iCode, pc + 1);
         String name = strings[getShort(iCode, pc + 3)];
         int count = getShort(iCode, pc + 5);
-        Object[] outArgs = getArgsArray(stack, sDbl, stackTop, count);
         stackTop -= count;
+        Object[] outArgs = getArgsArray(stack, sDbl, stackTop + 1, count);
         Object rhs = stack[stackTop];
         if (rhs == DBL_MRK) rhs = doubleWrap(sDbl[stackTop]);
         --stackTop;
@@ -2097,23 +2111,46 @@ public class Interpreter {
         }
         cx.instructionCount = instructionCount;
         int count = getShort(iCode, pc + 3);
-        Object[] outArgs = getArgsArray(stack, sDbl, stackTop, count);
         stackTop -= count;
+        int calleeArgShft = stackTop + 1;
         Object rhs = stack[stackTop];
         if (rhs == DBL_MRK) rhs = doubleWrap(sDbl[stackTop]);
         --stackTop;
         Object lhs = stack[stackTop];
-        if (lhs == DBL_MRK) lhs = doubleWrap(sDbl[stackTop]);
-        if (lhs == undefined) {
-            int i = getShort(iCode, pc + 1);
-            if (i != -1) lhs = strings[i];
-        }
+
         Scriptable calleeScope = scope;
         if (idata.itsNeedsActivation) {
             calleeScope = ScriptableObject.getTopLevelScope(scope);
         }
-        stack[stackTop] = ScriptRuntime.call(cx, lhs, rhs, outArgs,
-                                             calleeScope);
+
+        Scriptable calleeThis;
+        if (rhs instanceof Scriptable || rhs == null) {
+            calleeThis = (Scriptable)rhs;
+        } else {
+            calleeThis = ScriptRuntime.toObject(cx, calleeScope, rhs);
+        }
+
+        if (lhs instanceof InterpretedFunction) {
+            InterpretedFunction f = (InterpretedFunction)lhs;
+            stack[stackTop] = interpret(cx, calleeScope, calleeThis,
+                                        stack, sDbl, calleeArgShft, count,
+                                        f, f.itsData);
+        } else if (lhs instanceof Function) {
+            Function f = (Function)lhs;
+            Object[] outArgs = getArgsArray(stack, sDbl, calleeArgShft, count);
+            stack[stackTop] = f.call(cx, calleeScope, calleeThis, outArgs);
+        } else {
+            if (lhs == DBL_MRK) lhs = doubleWrap(sDbl[stackTop]);
+            else if (lhs == undefined) {
+                // special code for better error message for call
+                // to undefined
+                int i = getShort(iCode, pc + 1);
+                if (i != -1) lhs = strings[i];
+            }
+            throw NativeGlobal.typeError1
+                ("msg.isnt.function", ScriptRuntime.toString(lhs), calleeScope);
+        }
+
         pc += 4;
         instructionCount = cx.instructionCount;
         break;
@@ -2125,16 +2162,26 @@ public class Interpreter {
             instructionCount = -1;
         }
         int count = getShort(iCode, pc + 3);
-        Object[] outArgs = getArgsArray(stack, sDbl, stackTop, count);
         stackTop -= count;
+        int calleeArgShft = stackTop + 1;
         Object lhs = stack[stackTop];
-        if (lhs == DBL_MRK) lhs = doubleWrap(sDbl[stackTop]);
-        if (lhs == undefined && getShort(iCode, pc + 1) != -1) {
-            // special code for better error message for call
-            //  to undefined
-            lhs = strings[getShort(iCode, pc + 1)];
+
+        if (lhs instanceof Function) {
+            Function f = (Function)lhs;
+            Object[] outArgs = getArgsArray(stack, sDbl, calleeArgShft, count);
+            stack[stackTop] = f.construct(cx, scope, outArgs);
+        } else {
+            if (lhs == DBL_MRK) lhs = doubleWrap(sDbl[stackTop]);
+            else if (lhs == undefined) {
+                // special code for better error message for call
+                // to undefined
+                int i = getShort(iCode, pc + 1);
+                if (i != -1) lhs = strings[i];
+            }
+            throw NativeGlobal.typeError1
+                ("msg.isnt.function", ScriptRuntime.toString(lhs), scope);
+
         }
-        stack[stackTop] = ScriptRuntime.newObject(cx, lhs, outArgs, scope);
         pc += 4;                                                                         instructionCount = cx.instructionCount;
         break;
     }
@@ -2515,7 +2562,6 @@ public class Interpreter {
             }
             cx.instructionCount = instructionCount;
         }
-
         return result;
     }
 
@@ -2745,19 +2791,17 @@ public class Interpreter {
     }
 
     private static Object[] getArgsArray(Object[] stack, double[] sDbl,
-                                         int stackTop, int count)
+                                         int shift, int count)
     {
         if (count == 0) {
             return ScriptRuntime.emptyArgs;
         }
         Object[] args = new Object[count];
-        do {
-            Object val = stack[stackTop];
-            if (val == DBL_MRK)
-                val = doubleWrap(sDbl[stackTop]);
-            args[--count] = val;
-            --stackTop;
-        } while (count != 0);
+        for (int i = 0; i != count; ++i, ++shift) {
+            Object val = stack[shift];
+            if (val == DBL_MRK) val = doubleWrap(sDbl[shift]);
+            args[i] = val;
+        }
         return args;
     }
 
@@ -2782,6 +2826,9 @@ public class Interpreter {
     private static Object execWithNewDomain(Context cx, Scriptable scope,
                                             final Scriptable thisObj,
                                             final Object[] args,
+                                            final double[] argsDbl,
+                                            final int argShift,
+                                            final int argCount,
                                             final NativeFunction fnOrScript,
                                             final InterpreterData idata)
         throws JavaScriptException
@@ -2793,7 +2840,9 @@ public class Interpreter {
             public Object exec(Context cx, Scriptable scope)
                 throws JavaScriptException
             {
-                return interpret(cx, scope, thisObj, args, fnOrScript, idata);
+                return interpret(cx, scope, thisObj,
+                                 args, argsDbl, argShift, argCount,
+                                 fnOrScript, idata);
             }
         };
 
