@@ -116,6 +116,22 @@ VIEWER MENU DISCARDABLE
   {
     MENUITEM "&JavaScript Console", JS_CONSOLE
     MENUITEM "&Editor Mode", EDITOR_MODE
+    MENUITEM SEPARATOR
+    POPUP    "Editor Tests"
+    {
+      MENUITEM  "Insert Table",   VIEWER_EDIT_INSERT_TABLE  
+      MENUITEM  "Insert Cell",    VIEWER_EDIT_INSERT_CELL   
+      MENUITEM  "Insert Column",  VIEWER_EDIT_INSERT_COLUMN 
+      MENUITEM  "Insert Row",     VIEWER_EDIT_INSERT_ROW    
+      MENUITEM SEPARATOR
+      MENUITEM  "Delete Table",   VIEWER_EDIT_DELETE_TABLE
+      MENUITEM  "Delete Cell",    VIEWER_EDIT_DELETE_CELL   
+      MENUITEM  "Delete Column",  VIEWER_EDIT_DELETE_COLUMN 
+      MENUITEM  "Delete Row",     VIEWER_EDIT_DELETE_ROW    
+      MENUITEM SEPARATOR
+      MENUITEM  "Join with cell to right",     VIEWER_EDIT_JOIN_CELL_RIGHT
+      MENUITEM  "Join with cell below",        VIEWER_EDIT_JOIN_CELL_BELOW
+    }
   }
 }
 

@@ -488,6 +488,9 @@ nsBrowserWindow::DispatchMenuItem(PRInt32 aID)
 
   }
 
+  // Any menu IDs that the editor uses will be processed here
+  DoEditorTest(mWebShell, aID);
+
   return nsEventStatus_eIgnore;
 }
 
@@ -2323,6 +2326,41 @@ nsBrowserWindow::DoEditorMode(nsIWebShell *aWebShell)
     }
   }
 }
+
+// Same as above, but calls NS_DoEditorTest instead of starting an editor
+void
+nsBrowserWindow::DoEditorTest(nsIWebShell *aWebShell, PRInt32 aCommandID)
+{
+  PRInt32 i, n;
+  if (nsnull != aWebShell) {
+    nsIContentViewer* mCViewer;
+    aWebShell->GetContentViewer(&mCViewer);
+    if (nsnull != mCViewer) {
+      nsIDocumentViewer* mDViewer;
+      if (NS_OK == mCViewer->QueryInterface(kIDocumentViewerIID, (void**) &mDViewer)) 
+      {
+	      nsIDocument* mDoc;
+	      mDViewer->GetDocument(mDoc);
+	      if (nsnull != mDoc) {
+	        nsIDOMDocument* mDOMDoc;
+	        if (NS_OK == mDoc->QueryInterface(kIDOMDocumentIID, (void**) &mDOMDoc)) 
+          {
+            NS_DoEditorTest(aCommandID);
+	          NS_RELEASE(mDOMDoc);
+	        }
+	        NS_RELEASE(mDoc);
+	      }
+	      NS_RELEASE(mDViewer);
+      }
+      NS_RELEASE(mCViewer);
+    }
+    // Do we need to do all the children as in DoEditorMode?
+    // Its seems to work if we don't do that
+  }
+}
+
+
+
 
 #ifdef NS_DEBUG
 #include "nsIContent.h"
