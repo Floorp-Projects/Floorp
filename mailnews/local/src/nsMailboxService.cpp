@@ -30,6 +30,7 @@
 #include "nsIMsgDatabase.h"
 #include "nsMsgDBCID.h"
 #include "nsMsgKeyArray.h"
+#include "nsLocalUtils.h"
 
 // we need this because of an egcs 1.0 (and possibly gcc) compiler bug
 // that doesn't allow you to call ::nsISupports::GetIID() inside of a class
@@ -143,9 +144,9 @@ nsresult nsMailboxService::CopyMessage(const char * aSrcMailboxURI, nsIStreamLis
 			nsFileSpec folderPath ("");
 			nsMsgKey msgKey;
 			
-			nsParseMessageURI(aSrcMailboxURI, folderURI, &msgKey);
+			nsParseLocalMessageURI(aSrcMailboxURI, folderURI, &msgKey);
 			char *rootURI = folderURI.ToNewCString();
-			nsURI2Path(kMailboxMessageRootURI, rootURI, folderPath);
+			nsLocalURI2Path(kMailboxMessageRootURI, rootURI, folderPath);
 
 			nsFilePath filePath(folderPath); // convert to file url representation...
 			urlSpec = PR_smprintf("mailboxMessage://%s?number=%d", (const char *) filePath, msgKey);
@@ -203,8 +204,8 @@ nsresult nsMailboxService::DisplayMessage(const char* aMessageURI, nsISupports *
 			nsFileSpec folderSpec;
 			nsMsgKey msgIndex;
 
-			nsParseMessageURI(aMessageURI, folderURI, &msgIndex);
-			nsURI2Path(kMailboxMessageRootURI, nsAutoCString(folderURI), folderSpec);
+			nsParseLocalMessageURI(aMessageURI, folderURI, &msgIndex);
+			nsLocalURI2Path(kMailboxMessageRootURI, nsAutoCString(folderURI), folderSpec);
 
 			nsFilePath filePath(folderSpec); // convert to file url representation...
 			urlSpec = PR_smprintf("mailboxMessage://%s?number=%d", (const char *) filePath, msgIndex);

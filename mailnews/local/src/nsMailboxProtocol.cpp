@@ -24,6 +24,7 @@
 #include "nsIOutputStream.h"
 #include "nsINetService.h"
 #include "nsIMsgDatabase.h"
+#include "nsIMsgHdr.h"
 #include "nsMsgLineBuffer.h"
 #include "nsIMessage.h"
 #include "nsMsgDBCID.h"
@@ -298,7 +299,7 @@ PRInt32 nsMailboxProtocol::SetupMessageExtraction()
 		nsIMsgDatabase * mailDBFactory = nsnull;
 		nsIMsgDatabase *mailDB;
 
-		nsIMessage * msgHdr = nsnull;
+		nsIMsgDBHdr * msgHdr = nsnull;
 		nsresult rv = nsComponentManager::CreateInstance(kCMailDB, nsnull, nsIMsgDatabase::GetIID(), (void **) &mailDBFactory);
 		if (NS_SUCCEEDED(rv) && mailDBFactory)
 		{

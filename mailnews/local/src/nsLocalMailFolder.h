@@ -96,6 +96,7 @@ public:
   virtual nsresult GetDBFolderInfoAndDB(nsIDBFolderInfo **folderInfo, nsIMsgDatabase **db);
 
  	NS_IMETHOD DeleteMessage(nsIMessage *message);
+	NS_IMETHOD CreateMessageFromMsgDBHdr(nsIMsgDBHdr *msgDBHdr, nsIMessage **message);
 
 	// nsIMsgMailFolder
   NS_IMETHOD GetPath(nsNativeFileSpec& aPathName);
@@ -142,5 +143,6 @@ protected:
 	nsIMsgDatabase* mMailDatabase;
 	nsLocalMailCopyState *mCopyState; //We will only allow one of these at a time
 };
+
 
 #endif // nsMsgLocalMailFolder_h__
