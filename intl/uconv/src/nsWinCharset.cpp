@@ -107,7 +107,7 @@ nsWinCharset::GetDefaultCharsetForLocale(const PRUnichar* localeName, PRUnichar*
 	//
 	// load property file and convert from LCID->charset
 	//
-
+	// XXX - this should be cached for the lifetime of the component, nicht wahr?
 	nsAutoString property_url("resource:/res/wincharset.properties");
 	nsURLProperties *charset_properties = new nsURLProperties(property_url);
 	if (!charset_properties) { *_retValue = charset.ToNewUnicode(); return NS_ERROR_OUT_OF_MEMORY; }
@@ -116,6 +116,7 @@ nsWinCharset::GetDefaultCharsetForLocale(const PRUnichar* localeName, PRUnichar*
 	 acp_key.Append(acp_name);
 	 result = charset_properties->Get(acp_key,charset);
 	
+	 delete [] charset_properties;	
 	 *_retValue = charset.ToNewUnicode();
 	 return result;
 }
