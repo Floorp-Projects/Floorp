@@ -44,7 +44,7 @@
 # hack on me! required reading:
 #
 # Net::IRC web page:
-#   http://netirc.betterbox.net/
+#   http://sourceforge.net/projects/net-irc/
 #   (free software)
 #   or get it from CPAN @ http://www.perl.com/CPAN
 #
@@ -290,6 +290,17 @@ my %authenticatedUsers; # hash of user@hostname=>users who have authenticated
 ################################
 # Net::IRC handler subroutines #
 ################################
+
+sub setEventArgs {
+    my $event = shift;
+    if ($Net::IRC::VERSION == 0.75) {
+        # curses. This version of Net::IRC is broken. Work around
+        # it here.
+        return $event->args(\@_);
+    } else {
+        return $event->args(@_);
+    }
+}
 
 my $lastNick;
 
@@ -752,7 +763,7 @@ sub on_public {
     my $data = join(' ', $event->args);
     if (defined($_ = targetted($data, quotemeta($nicks[$nick])))) {
         if ($_ ne '') {
-            $event->args($_);
+            setEventArgs($event, $_);
             $event->{'__mozbot__fulldata'} = $data;
             &do($self, $event, 'Told', 'Baffled');
         } else {
@@ -786,7 +797,7 @@ sub on_private {
         # we do this so that you can say 'mozbot do this' in both channels
         # and /query screens alike (otherwise, in /query screens you would
         # have to remember to omit the bot name).
-        $event->args($2);
+        setEventArgs($event, $2);
     }
     &do($self, $event, 'Told', 'Baffled');
 }
@@ -796,7 +807,7 @@ sub on_me {
     my ($self, $event) = @_;
     my @data = $event->args;
     my $data = join(' ', @data);
-    $event->args($data);
+    setEventArgs($event, $data);
     my $nick = quotemeta($nicks[$nick]);
     if ($data =~ /(?:^|[\s":<([])$nick(?:[])>.,?!\s'&":]|$)/is) {
         &do($self, $event, 'Felt');
@@ -814,7 +825,7 @@ sub on_topic {
         # server notification
         # need to parse data
         my (undef, $channel, $topic) = $event->args;
-        $event->args($topic);
+        setEventArgs($event, $topic);
         $event->to($channel);
     }
     &do(@_, 'SpottedTopicChange');
@@ -827,7 +838,7 @@ sub on_kick {
     my $who = $event->to;
     $event->to($channel);
     foreach (@$who) {
-        $event->args($_);
+        setEventArgs($event, $_);
         if ($_ eq $nicks[$nick]) {
             &do(@_, 'Kicked');
         } else {
