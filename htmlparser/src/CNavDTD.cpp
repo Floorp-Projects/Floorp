@@ -450,16 +450,19 @@ nsresult CNavDTD::BuildModel(nsIParser* aParser,nsITokenizer* aTokenizer,nsIToke
       if(mSink) {
 
         if(!mBodyContext->GetCount()) {
-            //if the content model is empty, then begin by opening <html>...
-          CStartToken *theToken=(CStartToken*)mTokenRecycler->CreateTokenOfType(eToken_start,eHTMLTag_html,NS_ConvertToString("html"));
-          HandleStartToken(theToken); //this token should get pushed on the context stack, don't recycle it.
-
+          CStartToken* theToken=nsnull;
           if(ePlainText==mDocType) {
-              //we do this little trick for text files, in both normal and viewsource mode...
-            CStartToken *theToken2=(CStartToken*)mTokenRecycler->CreateTokenOfType(eToken_start,eHTMLTag_pre);
-            HandleStartToken(theToken2); 
+            //we do this little trick for text files, in both normal and viewsource mode...
+            theToken=(CStartToken*)mTokenRecycler->CreateTokenOfType(eToken_start,eHTMLTag_pre);
+            if(theToken) {
+              mTokenizer->PushTokenFront(theToken);
+            }
           }
-
+            //if the content model is empty, then begin by opening <html>...
+          theToken=(CStartToken*)mTokenRecycler->CreateTokenOfType(eToken_start,eHTMLTag_html,NS_ConvertToString("html"));
+          if(theToken) {
+            mTokenizer->PushTokenFront(theToken); //this token should get pushed on the context stack.
+          }
         }
 
         while(NS_SUCCEEDED(result)){
@@ -522,6 +525,15 @@ nsresult CNavDTD::DidBuildModel(nsresult anErrorCode,PRBool aNotifySink,nsIParse
             theEndToken=(CHTMLToken*)mTokenRecycler->CreateTokenOfType(eToken_end,mSkipTarget);
             if(theEndToken) {
               result=HandleToken(theEndToken,mParser);
+            }
+          }
+          if(!mBodyContext->mHadDocTypeDecl) {
+            CToken* theDocTypeToken=mTokenRecycler->CreateTokenOfType(eToken_doctypeDecl,eHTMLTag_markupDecl);
+            if(theDocTypeToken) {
+              nsAutoString theDocTypeStr;
+              theDocTypeStr.AssignWithConversion("<!DOCTYPE \"-//W3C//DTD HTML 3.2 Final//EN\">");
+              theDocTypeToken->Reinitialize(eHTMLTag_markupDecl,theDocTypeStr);
+              result=HandleToken(theDocTypeToken,mParser);
             }
           }
           if(result==NS_OK) {
@@ -2060,6 +2072,10 @@ nsresult CNavDTD::HandleDocTypeDeclToken(CToken* aToken){
 
   nsresult result=NS_OK;
 
+  if(mBodyContext) {
+    mBodyContext->mHadDocTypeDecl=PR_TRUE; 
+  }
+
   #ifdef  RICKG_DEBUG
     WriteTokenToLog(aToken);
   #endif
@@ -2542,7 +2558,8 @@ eHTMLTags CNavDTD::GetTopNode() const {
 nsresult CNavDTD::OpenTransientStyles(eHTMLTags aChildTag){
   nsresult result=NS_OK;
 
-  if(mStyleHandlingEnabled  && (eHTMLTag_newline!=aChildTag)) {
+  // No need to open transient styles in head context - Fix for 41427
+  if(mStyleHandlingEnabled  && (eHTMLTag_newline!=aChildTag) && !mHasOpenHead) {
 
 #ifdef  ENABLE_RESIDUALSTYLE
 

@@ -944,9 +944,21 @@ PRBool nsXIFDTD::IsHTMLContainer(eHTMLTags aTag) const {
   PRBool result=PR_TRUE; // by default everything is a container
 
   switch(aTag) {
-    case eHTMLTag_meta:
+    case eHTMLTag_area:
+    case eHTMLTag_base:
+    case eHTMLTag_basefont:
     case eHTMLTag_br:
+    case eHTMLTag_col:
+    case eHTMLTag_frame:
     case eHTMLTag_hr:
+    case eHTMLTag_img:
+    case eHTMLTag_image:
+    case eHTMLTag_input:
+    case eHTMLTag_isindex:
+    case eHTMLTag_link:
+    case eHTMLTag_meta:
+    case eHTMLTag_param:
+    case eHTMLTag_sound:
       result=PR_FALSE;
       break;
     default:

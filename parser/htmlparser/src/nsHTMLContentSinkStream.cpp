@@ -815,10 +815,21 @@ nsHTMLContentSinkStream::AddLeaf(const nsIParserNode& aNode)
   if (mHTMLStackPos > 0)
     tag = mHTMLTagStack[mHTMLStackPos-1];
   
-  if (type == eHTMLTag_br ||
-      type == eHTMLTag_hr ||
-      type == eHTMLTag_meta || 
-      type == eHTMLTag_style)
+  if (type ==  eHTMLTag_area     ||
+      type ==  eHTMLTag_base     ||
+      type ==  eHTMLTag_basefont ||
+      type ==  eHTMLTag_br       ||
+      type ==  eHTMLTag_col      ||
+      type ==  eHTMLTag_frame    ||
+      type ==  eHTMLTag_hr       ||
+      type ==  eHTMLTag_img      ||
+      type ==  eHTMLTag_image    ||
+      type ==  eHTMLTag_input    ||
+      type ==  eHTMLTag_isindex  ||
+      type ==  eHTMLTag_link     ||
+      type ==  eHTMLTag_meta     ||
+      type ==  eHTMLTag_param    ||
+      type ==  eHTMLTag_sound)
   {
     AddStartTag(aNode);
     mHTMLTagStack[--mHTMLStackPos] = eHTMLTag_unknown;

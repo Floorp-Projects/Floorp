@@ -371,6 +371,7 @@ nsDTDContext::nsDTDContext() : mStack(), mEntities(0){
   mTableStates=0;
   mHadBody=PR_FALSE; 
   mHadFrameset=PR_TRUE;
+  mHadDocTypeDecl=PR_FALSE;
   ResetCounters();
 
 #ifdef  NS_DEBUG
