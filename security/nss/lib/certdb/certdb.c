@@ -34,7 +34,7 @@
 /*
  * Certificate handling code
  *
- * $Id: certdb.c,v 1.21 2002/01/03 20:19:55 ian.mcgreer%sun.com Exp $
+ * $Id: certdb.c,v 1.22 2002/01/10 00:43:39 relyea%netscape.com Exp $
  */
 
 #include "nssilock.h"
@@ -2349,12 +2349,7 @@ CERT_UnlockCertTrust(CERTCertificate *cert)
 CERTStatusConfig *
 CERT_GetStatusConfig(CERTCertDBHandle *handle)
 {
-#ifdef notdef
   return handle->statusConfig;
-#else
-  /*PORT_Assert(0);  */
-  return NULL;
-#endif
 }
 
 /*
@@ -2364,10 +2359,6 @@ CERT_GetStatusConfig(CERTCertDBHandle *handle)
 void
 CERT_SetStatusConfig(CERTCertDBHandle *handle, CERTStatusConfig *statusConfig)
 {
-#ifdef notdef
   PORT_Assert(handle->statusConfig == NULL);
   handle->statusConfig = statusConfig;
-#else
-  PORT_Assert(0); 
-#endif
 }
