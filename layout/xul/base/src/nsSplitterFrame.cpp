@@ -900,19 +900,20 @@ nsSplitterFrameInner::UpdateState()
                                             (direction == Before));
     if (splitterSibling) {
       nsCOMPtr<nsIContent> sibling;
-      splitterSibling->GetContent(getter_AddRefs(sibling));
-
-      if (mState == Collapsed) {
-        // Collapsed -> Open
-        // Collapsed -> Dragging
-        sibling->UnsetAttribute(kNameSpaceID_None, nsXULAtoms::collapsed,
-                                PR_TRUE);
-      } else if ((mState == Open || mState == Dragging) 
-                 && newState == Collapsed) {
-        // Open -> Collapsed
-        // Dragging -> Collapsed
-        sibling->SetAttribute(kNameSpaceID_None, nsXULAtoms::collapsed,
-                              "true", PR_TRUE);
+      if (NS_SUCCEEDED(splitterSibling->GetContent(getter_AddRefs(sibling)))
+          && sibling) {
+        if (mState == Collapsed) {
+          // Collapsed -> Open
+          // Collapsed -> Dragging
+          sibling->UnsetAttribute(kNameSpaceID_None, nsXULAtoms::collapsed,
+                                  PR_TRUE);
+        } else if ((mState == Open || mState == Dragging) 
+                   && newState == Collapsed) {
+          // Open -> Collapsed
+          // Dragging -> Collapsed
+          sibling->SetAttribute(kNameSpaceID_None, nsXULAtoms::collapsed,
+                                "true", PR_TRUE);
+        }
       }
     }
   }
