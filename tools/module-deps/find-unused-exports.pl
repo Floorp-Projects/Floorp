@@ -14,6 +14,13 @@ foreach $arg (@ARGV) {
   }
 }
 
+if (!$export_file|| $#import_files == 0) {
+  print "Usage: $ARGV[0] <exporter>.dll [ importer [ importer ..]]\n";
+  print "  Builds up a list of exporters from <exporter>.dll,\n";
+  print "  and then lists all exports that are rarely or never used.\n";
+  exit;
+}
+
 open EXPORTS, "dumpbin /exports $export_file|";
 
 my %exports;
@@ -136,4 +143,15 @@ foreach $func (sort keys %demangle ) {
   } elsif ($exports{$func} == 1) {
     print "$demangle{$func}: One consumer: $last_consumer_of{$func}\n";
   }
+
+  if ($demangle{$func} =~ /(\S+)::\S+/) {
+    $classes{$1} ++;
+  }
+}
+
+print "\n";
+print "Classes that might be worth trimming:\n";
+foreach $class (sort keys %classes) {
+  print "$class: $classes{$class} unused/minorly used methods\n"
+    if ($classes{$class} > 3)
 }
