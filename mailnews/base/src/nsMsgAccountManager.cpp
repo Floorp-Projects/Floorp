@@ -1478,6 +1478,8 @@ nsMsgAccountManager::Convert4XUri(const char *old_uri, const char *default_folde
     return NS_ERROR_UNEXPECTED;
   }
 
+  const char *folderPath;
+
   // mail_directory_value is already in UNIX style at this point...
   if (PL_strncasecmp(MAILBOX_SCHEMA,old_uri,MAILBOX_SCHEMA_LENGTH) == 0) {
 #ifdef DEBUG_ACCOUNTMANAGER
@@ -1485,13 +1487,28 @@ nsMsgAccountManager::Convert4XUri(const char *old_uri, const char *default_folde
 #endif
 	// the extra -1 is because in 4.x, we had this:
 	// mailbox:<PATH> instead of mailbox:/<PATH> 
-	*new_uri = PR_smprintf("%s/%s/%s",MAILBOX_SCHEMA,usernameAtHostname,old_uri + MAILBOX_SCHEMA_LENGTH + PL_strlen(mail_directory_value) -1); 
+	folderPath = old_uri + MAILBOX_SCHEMA_LENGTH + PL_strlen(mail_directory_value) -1;
   }
   else {
 #ifdef DEBUG_ACCOUNTMANAGER
     printf("turn %s into %s/%s/(%s - %s)\n",old_uri,MAILBOX_SCHEMA,usernameAtHostname,old_uri,mail_directory_value);
 #endif
-    *new_uri = PR_smprintf("%s/%s/%s",MAILBOX_SCHEMA,usernameAtHostname,old_uri + PL_strlen(mail_directory_value));
+	folderPath = old_uri + PL_strlen(mail_directory_value);
+  }
+  
+
+  // if folder path is "", then the URI was mailbox:/<foobar>
+  // and the directory pref was <foobar>
+  // this meant it was reall <foobar>/<default folder name>
+  // this insanity only happened on mac and windows.
+  if (!folderPath || (PL_strlen(folderPath) == 0)) {
+	*new_uri = PR_smprintf("%s/%s/%s",MAILBOX_SCHEMA,usernameAtHostname, default_folder_name);
+  }
+  else {
+	// if the folder path starts with a /, we don't need to add one.
+	// the reason for this is on UNIX, we store mail.directory as "/home/sspitzer/nsmail"
+	// but on windows, its "C:\foo\bar\mail"
+	*new_uri = PR_smprintf("%s/%s%s%s",MAILBOX_SCHEMA,usernameAtHostname,(folderPath[0] == '/')?"":"/",folderPath);
   }
 
   if (!*new_uri) {
