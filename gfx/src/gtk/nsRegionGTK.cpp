@@ -17,7 +17,9 @@
  */
 
 #include <gtk/gtk.h>
+#include <gdk/gdkprivate.h>
 #include "nsRegionGTK.h"
+#include "xregion.h"
 
 static NS_DEFINE_IID(kRegionIID, NS_IREGION_IID);
 
@@ -198,6 +200,27 @@ PRBool nsRegionGTK::ContainsRect(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32
 
 PRBool nsRegionGTK::ForEachRect(nsRectInRegionFunc *func, void *closure)
 {
+  GdkRegionPrivate *priv = (GdkRegionPrivate *)mRegion;
+  Region pRegion = priv->xregion;
+  int nbox;
+  BOX *pbox;
+  nsRect rect;
+
+  NS_ASSERTION(!(nsnull == func), "no callback");
+
+  pbox = pRegion->rects;
+  nbox = pRegion->numRects;
+
+  while (nbox--)
+  {
+    rect.x = pbox->x1;
+    rect.width = (pbox->x2 - pbox->x1) + 1;
+    rect.y = pbox->y1;
+    rect.height = (pbox->y2 - pbox->y1) + 1;
+    (*func)(closure, rect);
+    pbox++;
+  }
+
   return PR_FALSE;
 }
 
