@@ -1,0 +1,35 @@
+<!--
+  The contents of this file are subject to the Netscape Public License Version
+  1.1 (the "License"); you may not use this file except in compliance with the
+  License. You may obtain a copy of the License at http://www.mozilla.org/NPL/ 
+  
+  Software distributed under the License is distributed on an "AS IS" basis, 
+  WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License for
+  the specific language governing rights and limitations under the License. 
+  
+  The Original Code is Mozilla Communicator client code, released March 31, 
+  1998. 
+  
+  The Initial Developer of the Original Code is Netscape Communications 
+  Corporation. Portions created by Netscape are Copyright (C) 1999 Netscape
+  Communications Corporation. All Rights Reserved. 
+  
+  Contributor(s):	Henrik Lynggaard<Lynggaard@netscape.net>. 
+-->
+<!-- Translated with MozillaTranslator -->
+<!ENTITY  lHeader "Cache">
+<!ENTITY  rHeader "Angiv størelsen af cachen">
+<!ENTITY  title.label "Cache">
+<!ENTITY cachePara "Cachen bliver brugt til at gemme lokale kopier af sider du besøger tit
+   og reducerer derved tiden du er på nettet.Opdater knappen vil altid
+   sammenligne siden fra cachen med siden fra nettet og vise den nyeste.">
+<!ENTITY clearDiskcacheButton.label "Tøm disk cahcen">
+<!ENTITY clearMemcacheButton.label "Tøm hukomelses cachen">
+<!ENTITY diskCache "Disk Cache:">
+<!ENTITY diskCacheFolder "Mappe til Disk Cachen:">
+<!ENTITY docCache "Sider i cachen bliver sammenlignet med siden på nettet:">
+<!ENTITY everyTimeRadio.label "Hver gang">
+<!ENTITY kbyes "KBytes">
+<!ENTITY memCache "Hukomelses cache:">
+<!ENTITY neverRadio.label "Aldrigr">
+<!ENTITY oncePsessionRadio.label "En gang per programkørsel">

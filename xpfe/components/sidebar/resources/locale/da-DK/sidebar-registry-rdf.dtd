@@ -1,0 +1,42 @@
+<!--
+  The contents of this file are subject to the Netscape Public License Version
+  1.1 (the "License"); you may not use this file except in compliance with the
+  License. You may obtain a copy of the License at http://www.mozilla.org/NPL/ 
+  
+  Software distributed under the License is distributed on an "AS IS" basis, 
+  WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License for
+  the specific language governing rights and limitations under the License. 
+  
+  The Original Code is Mozilla Communicator client code, released March 31, 
+  1998. 
+  
+  The Initial Developer of the Original Code is Netscape Communications 
+  Corporation. Portions created by Netscape are Copyright (C) 1999 Netscape
+  Communications Corporation. All Rights Reserved. 
+  
+  Contributor(s):	Henrik Lynggaard<Lynggaard@netscape.net>. 
+-->
+<!-- Translated with MozillaTranslator -->
+<!ENTITY sidebar.panel.addressbook.label "Adressbog">
+<!ENTITY sidebar.panel.announcements.label "Anonseringer ???">
+<!ENTITY sidebar.panel.bookmarks.label "Bogmærker">
+<!ENTITY sidebar.panel.calculator.label "Lommeregner">
+<!ENTITY sidebar.panel.calendar.label "Kalender">
+<!ENTITY sidebar.panel.delivery.label "Levering">
+<!ENTITY sidebar.panel.fishcam.label "Fishcam">
+<!ENTITY sidebar.panel.horoscopes.label "Horoskoper">
+<!ENTITY sidebar.panel.localevent.label "Locale begivenheder">
+<!ENTITY sidebar.panel.localmovie.label "Local film">
+<!ENTITY sidebar.panel.localnews.label "Locale nyheder">
+<!ENTITY sidebar.panel.maps.label "Kort">
+<!ENTITY sidebar.panel.memberdirectory.label "Medlems kartotek">
+<!ENTITY sidebar.panel.netcenter.label "Netcenter">
+<!ENTITY sidebar.panel.netcenterservices.label "Netcenter Services">
+<!ENTITY sidebar.panel.netscape.label "Netscape">
+<!ENTITY sidebar.panel.newsedge.label "Top historier">
+<!ENTITY sidebar.panel.reuters.label "Overskrifter">
+<!ENTITY sidebar.panel.search.label "Søg">
+<!ENTITY sidebar.panel.sports.label "Sport">
+<!ENTITY sidebar.panel.travel.label "Rejser">
+<!ENTITY sidebar.panel.weather.label "Vejret">
+<!ENTITY sidebar.panel.whiteyellowpages.label "White &amp; Yellow Pages">
