@@ -319,6 +319,7 @@ nsPlainTextSerializer::AppendText(nsIDOMText* aText,
 
 NS_IMETHODIMP 
 nsPlainTextSerializer::AppendElementStart(nsIDOMElement *aElement,
+                                          PRBool aHasChildren,
                                           nsAString& aStr)
 {
   NS_ENSURE_ARG(aElement);

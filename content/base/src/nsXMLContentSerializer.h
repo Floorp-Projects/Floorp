@@ -75,6 +75,7 @@ class nsXMLContentSerializer : public nsIContentSerializer {
                            nsAString& aStr);
 
   NS_IMETHOD AppendElementStart(nsIDOMElement *aElement,
+                                PRBool aHasChildren,
                                 nsAString& aStr);
   
   NS_IMETHOD AppendElementEnd(nsIDOMElement *aElement,

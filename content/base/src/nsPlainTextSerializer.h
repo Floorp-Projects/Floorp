@@ -80,6 +80,7 @@ public:
   NS_IMETHOD AppendDoctype(nsIDOMDocumentType *aDoctype,
                            nsAString& aStr)  { return NS_OK; }
   NS_IMETHOD AppendElementStart(nsIDOMElement *aElement,
+                                PRBool aHasChildren,
                                 nsAString& aStr); 
   NS_IMETHOD AppendElementEnd(nsIDOMElement *aElement,
                               nsAString& aStr);
