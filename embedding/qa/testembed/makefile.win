@@ -59,7 +59,7 @@ LLIBS=					\
     $(DIST)\lib\baseembed_s.lib		\
     $(DIST)\lib\gkgfx.lib		\
     $(DIST)\lib\xpcom.lib		\
-    $(DIST)\lib\mfcEmbedComponents.lib  \
+    $(DIST)\lib\testEmbedComponents.lib  \
     $(LIBNSPR)				\
     $(NULL)
 

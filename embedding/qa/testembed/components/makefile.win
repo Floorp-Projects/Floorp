@@ -21,7 +21,7 @@
 DEPTH=..\..\..\..
 
 MAKE_OBJ_TYPE=DLL
-DLLNAME=mfcEmbedComponents
+DLLNAME=testEmbedComponents
 DLL=.\$(OBJDIR)\$(DLLNAME).dll
 RESFILE=Dialogs.res
 
