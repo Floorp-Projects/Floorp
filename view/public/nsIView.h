@@ -189,7 +189,7 @@ public:
    * @param width new width
    * @param height new height
    */
-  virtual void SetDimensions(nscoord width, nscoord height) = 0;
+  virtual void SetDimensions(nscoord width, nscoord height, PRBool aPaint = PR_TRUE) = 0;
   virtual void GetDimensions(nscoord *width, nscoord *height) = 0;
 
   /**
@@ -197,7 +197,7 @@ public:
    * been changed.
    * @param aBounds new bounds
    */
-  virtual void SetBounds(const nsRect &aBounds) = 0;
+  virtual void SetBounds(const nsRect &aBounds, PRBool aPaint = PR_TRUE) = 0;
 
   /**
    * Called to indicate that the dimensions and position of the view have
@@ -207,7 +207,9 @@ public:
    * @param aWidth new width
    * @param aHeight new height
    */
-  virtual void SetBounds(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight) = 0;
+  virtual void SetBounds(nscoord aX, nscoord aY,
+                         nscoord aWidth, nscoord aHeight,
+                         PRBool aPaint = PR_TRUE) = 0;
 
   /**
    * Called to get the dimensions and position of the view.

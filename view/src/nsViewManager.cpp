@@ -154,19 +154,6 @@ nsresult nsViewManager::Init(nsIPresContext* aPresContext)
   return rv;
 }
 
-nsIWidget * nsViewManager :: GetRootWindow()
-{
-  NS_IF_ADDREF(mRootWindow);
-  return mRootWindow;
-}
-
-void nsViewManager :: SetRootWindow(nsIWidget *aRootWindow)
-{
-  NS_IF_RELEASE(mRootWindow);
-  mRootWindow = aRootWindow;
-  NS_IF_ADDREF(mRootWindow);
-}
-
 nsIView * nsViewManager :: GetRootView()
 {
   return mRootView;
@@ -178,6 +165,12 @@ void nsViewManager :: SetRootView(nsIView *aView)
   // Do NOT destroy the current root view. It's the caller's responsibility
   // to destroy it
   mRootView = aView;
+
+  //now get the window too.
+  NS_IF_RELEASE(mRootWindow);
+
+  if (nsnull != mRootView)
+    mRootWindow = mRootView->GetWidget();
 }
 
 PRUint32 nsViewManager :: GetFrameRate()

@@ -47,7 +47,7 @@ public:
 					nsViewVisibility aVisibilityFlag = nsViewVisibility_kShow);
 
   //overrides
-  virtual void SetDimensions(nscoord width, nscoord height);
+  virtual void SetDimensions(nscoord width, nscoord height, PRBool aPaint = PR_TRUE);
   virtual void SetPosition(nscoord aX, nscoord aY);
   virtual void HandleScrollEvent(nsGUIEvent *aEvent, PRUint32 aEventFlags);
   virtual nsEventStatus HandleEvent(nsGUIEvent *aEvent, PRUint32 aEventFlags);

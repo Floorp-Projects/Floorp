@@ -41,9 +41,6 @@ public:
 
   virtual nsresult Init(nsIPresContext* aPresContext);
 
-  virtual void SetRootWindow(nsIWidget *aRootWindow);
-  virtual nsIWidget *GetRootWindow();
-
   virtual nsIView *GetRootView();
   virtual void SetRootView(nsIView *aView);
 

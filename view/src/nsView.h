@@ -64,10 +64,10 @@ public:
   virtual nsEventStatus HandleEvent(nsGUIEvent *event, PRUint32 aEventFlags);
   virtual void SetPosition(nscoord x, nscoord y);
   virtual void GetPosition(nscoord *x, nscoord *y);
-  virtual void SetDimensions(nscoord width, nscoord height);
+  virtual void SetDimensions(nscoord width, nscoord height, PRBool aPaint = PR_TRUE);
   virtual void GetDimensions(nscoord *width, nscoord *height);
-  virtual void SetBounds(const nsRect &aBounds);
-  virtual void SetBounds(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight);
+  virtual void SetBounds(const nsRect &aBounds, PRBool aPaint = PR_TRUE);
+  virtual void SetBounds(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight, PRBool aPaint = PR_TRUE);
   virtual void GetBounds(nsRect &aBounds) const;
   virtual void SetClip(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight);
   virtual PRBool GetClip(nscoord *aLeft, nscoord *aTop, nscoord *aRight, nscoord *aBottom);
