@@ -16,7 +16,7 @@
  * Reserved.
  */
 
-#include "nsIProfile.h"
+#include "nsProfile.h"
 #include "nsIPref.h"
 
 #include "pratom.h"
@@ -24,20 +24,16 @@
 #include "plstr.h"
 #include "prenv.h"
 
-#include "nsIRegistry.h"
 #include "NSReg.h"
 #include "nsIFactory.h"
 #include "nsIComponentManager.h"
 #include "nsIEnumerator.h"
 #include "nsXPIDLString.h"
 #include "nsIFileSpec.h"
-#include "nsFileSpec.h"
-#include "nsString.h"
 #include "nsIFileLocator.h"
 #include "nsFileLocations.h"
 #include "nsEscape.h"
 #include "nsIURL.h"
-#include "nsIFactory.h"
 
 #include "nsIAppShellService.h"
 #include "nsAppShellCIDs.h"
@@ -56,6 +52,8 @@
 #include "nsIServiceManager.h"
 #include "nsCOMPtr.h"
 #include "nsIBookmarksService.h"
+#include "nsIModule.h"
+#include "nsIGenericFactory.h"
 
 #if 0
 #define AUTOMATICALLY_MIGRATE_IF_ONLY_ONE_PROFILE 1
@@ -72,9 +70,6 @@
 #include <direct.h>
 #define OLD_REGISTRY_FILE_NAME "nsreg.dat"
 #endif /* XP_UNIX */
-
-#define _MAX_LENGTH		256
-#define _MAX_NUM_PROFILES	50
 
 // PREG information
 #define PREG_COOKIE		"NS_REG2_PREG"
@@ -114,7 +109,6 @@
 
 
 // IID and CIDs of all the services needed
-static NS_DEFINE_CID(kProfileCID, NS_PROFILE_CID);
 static NS_DEFINE_CID(kIProfileIID, NS_IPROFILE_IID);
 static NS_DEFINE_CID(kBookmarksCID, NS_BOOKMARKS_SERVICE_CID);      
 static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
@@ -148,55 +142,6 @@ nsresult GetStringFromSpec(nsFileSpec inSpec, char **string)
 		return rv;
 	}
 }
-class nsProfile: public nsIProfile
-{
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSIPROFILE
-
-private:
-  nsCOMPtr <nsIRegistry> m_reg;
-
-  nsresult ProcessArgs(nsICmdLineService *service,
-                       PRBool *profileDirSet,
-                       nsCString & profileURLStr);
-  nsresult LoadDefaultProfileDir(nsCString & profileURLStr);
-  nsresult OpenRegistry();
-  nsresult CloseRegistry();
-
-  char mNewProfileData[_MAX_NUM_PROFILES][_MAX_LENGTH];
-  char mProfiles[_MAX_NUM_PROFILES][_MAX_LENGTH];
-  PRInt32 mCount;
-  PRInt32 mNumProfiles;
-  PRInt32 mNumOldProfiles;
-  PRBool mRenameCurrProfile;
-  char mOldProfiles[_MAX_NUM_PROFILES][_MAX_LENGTH];
-  char mOldProfLocations[_MAX_NUM_PROFILES][_MAX_LENGTH];
-    
-public:
-    nsProfile();
-    virtual ~nsProfile();
-
-	// Creates associated user directories on the creation of a new profile
-    void		CreateUserDirectories(const nsFileSpec& profileDir);
-
-	// Deletes associated user directories
-	void		DeleteUserDirectories(const nsFileSpec& profileDir);
-
-	// Sets profile information recived from the Javascript (routed via core service) into an array
-    void		SetDataArray(nsString data);
-
-	// Gets a particular value from the DataArray
-    char*		GetValue(char *name);
-
-	// Copies all the registry keys from old profile to new profile
-	nsresult	CopyRegKey(const char *oldProfile, const char *newProfile);
-
-	// Fills the global array mProfiles by enumerating registry entries
-	void		GetAllProfiles();
-
-    NS_IMETHOD ProfileExists(const char *profileName);
-	NS_IMETHOD UpdateMozProfileRegistry();
-};
 
 /*
  * Constructor/Destructor
@@ -2454,148 +2399,4 @@ NS_IMETHODIMP nsProfile::CloneProfile(const char* newProfile)
 #endif
 
 	return rv;
-}
-
-/***************************************************************************************/
-/***********                           PROFILE FACTORY                      ************/
-/***************************************************************************************/
-static PRInt32 g_InstanceCount = 0;
-static PRInt32 g_LockCount = 0; 
-
-// Factory
-class nsProfileFactory: public nsIFactory {
-public:
-  NS_DECL_ISUPPORTS
-
-  NS_IMETHOD CreateInstance(nsISupports *aDelegate,
-                            const nsIID &aIID,
-                            void **aResult);
-
-  NS_IMETHOD LockFactory(PRBool aLock);
-  
-  nsProfileFactory(const nsCID &aClass,
-                   const char* aClassName,
-                   const char* aProgID);
-
-protected:
-  virtual ~nsProfileFactory();
-
-  nsCID mClassID;
-  char* mClassName;
-  char* mProgID; 
-};
-
-nsProfileFactory::nsProfileFactory(const nsCID &aClass,
-                           const char* aClassName,
-                           const char* aProgID)
-  : mClassID(aClass),
-    mClassName(nsCRT::strdup(aClassName)),
-    mProgID(nsCRT::strdup(aProgID))
-{
-    NS_INIT_REFCNT();
-}  
-
-nsProfileFactory::~nsProfileFactory()
-{
-    NS_ASSERTION(mRefCnt == 0, "non-zero refcnt at destruction");
-    
-    PL_strfree(mClassName);
-    PL_strfree(mProgID);
-}    
-
-NS_IMPL_ADDREF(nsProfileFactory)
-NS_IMPL_RELEASE(nsProfileFactory)
-NS_IMPL_QUERY_INTERFACE(nsProfileFactory,kIFactoryIID)
-    
-nsresult nsProfileFactory::CreateInstance(nsISupports *aDelegate,
-                                            const nsIID &aIID,
-                                            void **aResult)
-{
-  nsresult rv;
-
-  if (!aResult)
-	return NS_ERROR_NULL_POINTER;
-
-  *aResult = nsnull;
-
-   if (mClassID.Equals(kProfileCID)) {
-    nsProfile *profile = new nsProfile();
-    if (profile)
-      rv = profile->QueryInterface(aIID, aResult);
-    else
-      rv = NS_ERROR_OUT_OF_MEMORY;
-
-    if (NS_FAILED(rv) && profile)
-      delete profile;
-   }
-   else {
-	return NS_NOINTERFACE;
-   }
-
-   if (NS_SUCCEEDED(rv))
-    PR_AtomicIncrement(&g_InstanceCount);
-   return rv;
-}
-
-nsresult
-nsProfileFactory::LockFactory(PRBool aLock)
-{
-    if (aLock)
-        PR_AtomicIncrement(&g_LockCount);
-    else
-        PR_AtomicDecrement(&g_LockCount);
-    
-    return NS_OK;
-} 
-
-// return the proper factory to the caller.
-extern "C" NS_EXPORT nsresult NSGetFactory(nsISupports* /*aServMgr */,
-                                           const nsCID &aClass,
-                                           const char *aClassName,
-                                           const char *aProgID,
-                                           nsIFactory **aFactory)
-{
-    if (nsnull == aFactory)
-        return NS_ERROR_NULL_POINTER;
-    
-    *aFactory = new nsProfileFactory(aClass, aClassName, aProgID);
-    if (aFactory)
-        return (*aFactory)->QueryInterface(nsCOMTypeInfo<nsIFactory>::GetIID(),
-                                           (void**)aFactory);
-    else
-        return NS_ERROR_OUT_OF_MEMORY;
-}     
-
-extern "C" NS_EXPORT PRBool NSCanUnload(nsISupports* serviceMgr)
-{
-    return PRBool(g_InstanceCount == 0 && g_LockCount == 0);
-}
-
-extern "C" NS_EXPORT nsresult NSRegisterSelf(nsISupports* aServMgr, const char *path)
-{
-    nsresult rv;
-    
-    NS_WITH_SERVICE1(nsIComponentManager, compMgr, aServMgr,
-                     kComponentManagerCID, &rv);
-    if (NS_FAILED(rv)) return rv;
-    
-    rv = compMgr->RegisterComponent(kProfileCID,
-                                    "Profile Manager",
-                                    NS_PROFILE_PROGID, path, 
-                                    PR_TRUE, PR_TRUE);
-    
-    return rv;
-}
-
-extern "C" NS_EXPORT nsresult NSUnregisterSelf(nsISupports* aServMgr, const char *path)
-{
-    nsresult rv;
-    
-    NS_WITH_SERVICE1(nsIComponentManager, compMgr, aServMgr,
-                     kComponentManagerCID, &rv);
-    if (NS_FAILED(rv)) return rv;
-    
-    rv = compMgr->UnregisterComponent(kProfileCID, path);
-    
-    return rv;
 }
