@@ -37,9 +37,9 @@
 static nsURLProperties *gInfo = nsnull;
 static PRInt32 gCnt= 0;
 
-NS_IMPL_ISUPPORTS1(PlatformCharset, nsIPlatformCharset);
+NS_IMPL_ISUPPORTS1(nsPlatformCharset, nsIPlatformCharset);
 
-PlatformCharset::PlatformCharset()
+nsPlatformCharset::nsPlatformCharset()
 {
   NS_INIT_REFCNT();
   PR_AtomicIncrement(&gCnt); // count for gInfo
@@ -69,7 +69,7 @@ PlatformCharset::PlatformCharset()
   }
 }
 
-PlatformCharset::~PlatformCharset()
+nsPlatformCharset::~nsPlatformCharset()
 {
   PR_AtomicDecrement(&gCnt);
   if(0 == gCnt) {
@@ -79,7 +79,7 @@ PlatformCharset::~PlatformCharset()
 }
 
 NS_IMETHODIMP
-PlatformCharset::GetCharset(nsPlatformCharsetSel selector, nsAWritableString& oResult)
+nsPlatformCharset::GetCharset(nsPlatformCharsetSel selector, nsAWritableString& oResult)
 {
   if (selector == kPlatformCharsetSel_4xBookmarkFile) {
     if ((mCharset.Find("IBM850", IGNORE_CASE) != -1) || (mCharset.Find("IBM437", IGNORE_CASE) != -1)) 
