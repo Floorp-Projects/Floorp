@@ -25,6 +25,9 @@
 #define nsHttpConnection_h__
 
 #include "nsHttp.h"
+#include "nsHttpConnectionInfo.h"
+#include "nsAHttpConnection.h"
+#include "nsAHttpTransaction.h"
 #include "nsIStreamListener.h"
 #include "nsIStreamProvider.h"
 #include "nsISocketTransport.h"
@@ -33,23 +36,18 @@
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsIEventQueue.h"
 #include "nsIInputStream.h"
-#include "nsIProxyInfo.h"
-#include "nsCOMPtr.h"
 #include "nsXPIDLString.h"
-#include "plstr.h"
-#include "prclist.h"
-#include "nsCRT.h"
+#include "nsCOMPtr.h"
 #include "prlock.h"
 
 class nsHttpHandler;
-class nsHttpConnectionInfo;
-class nsHttpTransaction;
 
 //-----------------------------------------------------------------------------
 // nsHttpConnection - represents a connection to a HTTP server (or proxy)
 //-----------------------------------------------------------------------------
 
-class nsHttpConnection : public nsIStreamListener
+class nsHttpConnection : public nsAHttpConnection
+                       , public nsIStreamListener
                        , public nsIStreamProvider
                        , public nsIProgressEventSink
                        , public nsIInterfaceRequestor
@@ -74,18 +72,7 @@ public:
 
     // SetTransaction causes the given transaction to be processed on this
     // connection.  It fails if there is already an existing transaction.
-    nsresult SetTransaction(nsHttpTransaction *);
-
-    // called by the transaction to inform the connection that all of the
-    // headers are available.
-    nsresult OnHeadersAvailable(nsHttpTransaction *, PRBool *reset);
-
-    // called by the transaction to inform the connection that it is done.
-    nsresult OnTransactionComplete(nsHttpTransaction *, nsresult status);
-
-    // called by the transaction to suspend/resume a read-in-progress
-    nsresult Suspend();
-    nsresult Resume();
+    nsresult SetTransaction(nsAHttpTransaction *, PRUint8 capabilities);
 
     // called to cause the underlying socket to start speaking SSL
     nsresult ProxyStepUp();
@@ -96,10 +83,18 @@ public:
                              mKeepAlive = PR_FALSE;
                              mIdleTimeout = 0; }
 
-    void DropTransaction();
-
-    nsHttpTransaction    *Transaction()    { return mTransaction; }
+    nsAHttpTransaction   *Transaction()    { return mTransaction; }
     nsHttpConnectionInfo *ConnectionInfo() { return mConnectionInfo; }
+
+    // nsAHttpConnection methods:
+    nsresult OnHeadersAvailable(nsAHttpTransaction *, nsHttpResponseHead *, PRBool *reset);
+    nsresult OnTransactionComplete(nsAHttpTransaction *, nsresult status);
+    nsresult OnSuspend();
+    nsresult OnResume();
+    void     GetConnectionInfo(nsHttpConnectionInfo **ci) { NS_IF_ADDREF(*ci = mConnectionInfo); }
+    void     DropTransaction(nsAHttpTransaction *);
+    PRBool   IsPersistent() { return IsKeepAlive(); }
+    nsresult PushBack(char *data, PRUint32 length) { return NS_OK; }
 
 private:
     nsresult ActivateConnection();
@@ -116,7 +111,7 @@ private:
 
     nsCOMPtr<nsIInputStream>        mSSLProxyConnectStream;
 
-    nsHttpTransaction              *mTransaction;    // hard ref
+    nsAHttpTransaction             *mTransaction;    // hard ref
     nsHttpConnectionInfo           *mConnectionInfo; // hard ref
 
     PRLock                         *mLock;
@@ -130,101 +125,6 @@ private:
     PRPackedBool                    mKeepAliveMask;
     PRPackedBool                    mWriteDone;
     PRPackedBool                    mReadDone;
-};
-
-//-----------------------------------------------------------------------------
-// nsHttpConnectionInfo - holds the properties of a connection
-//-----------------------------------------------------------------------------
-
-class nsHttpConnectionInfo
-{
-public:
-    nsHttpConnectionInfo(const char *host, PRInt32 port,
-                         nsIProxyInfo* proxyInfo,
-                         PRBool usingSSL=PR_FALSE)
-        : mRef(0)
-        , mProxyInfo(proxyInfo)
-        , mUsingSSL(usingSSL) 
-    {
-        LOG(("Creating nsHttpConnectionInfo @%x\n", this));
-
-        mUsingHttpProxy = (proxyInfo && !nsCRT::strcmp(proxyInfo->Type(), "http"));
-
-        SetOriginServer(host, port);
-    }
-    
-   ~nsHttpConnectionInfo()
-    {
-        LOG(("Destroying nsHttpConnectionInfo @%x\n", this));
-    }
-
-    nsrefcnt AddRef()
-    {
-        return PR_AtomicIncrement((PRInt32 *) &mRef);
-    }
-
-    nsrefcnt Release()
-    {
-        nsrefcnt n = PR_AtomicDecrement((PRInt32 *) &mRef);
-        if (n == 0)
-            delete this;
-        return n;
-    }
-
-    nsresult SetOriginServer(const char* host, PRInt32 port)
-    {
-        if (host)
-            mHost.Adopt(nsCRT::strdup(host));
-        mPort = port == -1 ? DefaultPort() : port;
-        
-        return NS_OK;
-    }
-
-    const char *ProxyHost() const { return mProxyInfo ? mProxyInfo->Host() : nsnull; }
-    PRInt32     ProxyPort() const { return mProxyInfo ? mProxyInfo->Port() : -1; }
-    const char *ProxyType() const { return mProxyInfo ? mProxyInfo->Type() : nsnull; }
-
-    // Compare this connection info to another...
-    // Two connections are 'equal' if they end up talking the same
-    // protocol to the same server. This is needed to properly manage
-    // persistent connections to proxies
-    // Note that we don't care about transparent proxies - 
-    // it doesn't matter if we're talking via socks or not, since
-    // a request will end up at the same host.
-    PRBool Equals(const nsHttpConnectionInfo *info)
-    {
-        // Strictly speaking, we could talk to a proxy on the same port
-        // and reuse the connection. Its not worth the extra strcmp.
-        if ((info->mUsingHttpProxy != mUsingHttpProxy) ||
-            (info->mUsingSSL != mUsingSSL))
-            return PR_FALSE;
-
-        // if its a proxy, then compare the proxy servers.
-        if (mUsingHttpProxy && !mUsingSSL)
-            return (!PL_strcasecmp(info->ProxyHost(), ProxyHost()) &&
-                    info->ProxyPort() == ProxyPort());
-
-        // otherwise, just check the hosts
-        return (!PL_strcasecmp(info->mHost, mHost) &&
-                info->mPort == mPort);
-
-    }
-
-    const char   *Host()           { return mHost; }
-    PRInt32       Port()           { return mPort; }
-    nsIProxyInfo *ProxyInfo()      { return mProxyInfo; }
-    PRBool        UsingHttpProxy() { return mUsingHttpProxy; }
-    PRBool        UsingSSL()       { return mUsingSSL; }
-
-    PRInt32       DefaultPort()    { return mUsingSSL ? 443 : 80; }
-            
-private:
-    nsrefcnt               mRef;
-    nsXPIDLCString         mHost;
-    PRInt32                mPort;
-    nsCOMPtr<nsIProxyInfo> mProxyInfo;
-    PRPackedBool           mUsingHttpProxy;
-    PRPackedBool           mUsingSSL;
 };
 
 #endif // nsHttpConnection_h__

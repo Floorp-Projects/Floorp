@@ -476,7 +476,7 @@ nsHttpHandler::ProcessTransactionQ()
 nsresult
 nsHttpHandler::CancelTransaction(nsHttpTransaction *trans, nsresult status)
 {
-    nsHttpConnection *conn;
+    nsAHttpConnection *conn;
 
     LOG(("nsHttpHandler::CancelTransaction [trans=%x status=%x]\n",
         trans, status));
@@ -797,7 +797,7 @@ nsHttpHandler::InitiateTransaction_Locked(nsHttpTransaction *trans,
     // we must not hold the connection lock while making this call
     // as it could lead to deadlocks.
     PR_Unlock(mConnectionLock);
-    rv = conn->SetTransaction(trans);
+    rv = conn->SetTransaction(trans, trans->Capabilities());
     PR_Lock(mConnectionLock);
 
     if (NS_FAILED(rv)) {

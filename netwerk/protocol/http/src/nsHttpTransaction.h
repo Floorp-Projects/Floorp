@@ -26,6 +26,8 @@
 
 #include "nsHttp.h"
 #include "nsHttpHeaderArray.h"
+#include "nsAHttpTransaction.h"
+#include "nsAHttpConnection.h"
 #include "nsIStreamListener.h"
 #include "nsIInputStream.h"
 #include "nsIInterfaceRequestor.h"
@@ -37,7 +39,6 @@
 
 class nsHttpRequestHead;
 class nsHttpResponseHead;
-class nsHttpConnection;
 class nsHttpChunkedDecoder;
 
 //-----------------------------------------------------------------------------
@@ -45,7 +46,8 @@ class nsHttpChunkedDecoder;
 // intended to run on the socket thread.
 //-----------------------------------------------------------------------------
 
-class nsHttpTransaction : public nsIRequest
+class nsHttpTransaction : public nsAHttpTransaction
+                        , public nsIRequest
                         , public nsIInputStream
 {
 public:
@@ -57,43 +59,32 @@ public:
     nsHttpTransaction(nsIStreamListener *, nsIInterfaceRequestor *, PRUint8 caps);
     virtual ~nsHttpTransaction();
 
-    nsrefcnt RefCnt() { return mRefCnt; }
-
-    // Called when assigned to a connection
-    nsresult SetConnection(nsHttpConnection *);
-
-    // Called by the connection to set the associated socket security info
-    void     SetSecurityInfo(nsISupports *info) { mSecurityInfo = info; }
-
     // Called to initialize the transaction
     nsresult SetupRequest(nsHttpRequestHead *, nsIInputStream *);
 
     nsIStreamListener     *Listener()       { return mListener; }
-    nsHttpConnection      *Connection()     { return mConnection; }
+    nsAHttpConnection     *Connection()     { return mConnection; }
     nsHttpRequestHead     *RequestHead()    { return mRequestHead; }
     nsHttpResponseHead    *ResponseHead()   { return mHaveAllHeaders ? mResponseHead : nsnull; }
     nsIInterfaceRequestor *Callbacks()      { return mCallbacks; } 
     nsIEventQueue         *ConsumerEventQ() { return mConsumerEventQ; }
     nsISupports           *SecurityInfo()   { return mSecurityInfo; }
-    PRBool                 IsDone()         { return mTransactionDone; }
-    nsresult               Status()         { return mStatus; } 
     PRUint8                Capabilities()   { return mCapabilities; }
 
     // Called to take ownership of the response headers; the transaction
     // will drop any reference to the response headers after this call.
     nsHttpResponseHead *TakeResponseHead();
 
-    // Called to write data to the socket until return NS_BASE_STREAM_CLOSED
+    // nsAHttpTransaction methods:
+    void     SetConnection(nsAHttpConnection *conn) { NS_IF_ADDREF(mConnection = conn); }
+    void     SetSecurityInfo(nsISupports *info) { mSecurityInfo = info; }
+    void     GetNotificationCallbacks(nsIInterfaceRequestor **cb) { NS_IF_ADDREF(*cb = mCallbacks); }
     nsresult OnDataWritable(nsIOutputStream *);
-
-    // Called to read data from the socket buffer
     nsresult OnDataReadable(nsIInputStream *);
-
-    // Called when the transaction should stop, possibly prematurely with an error.
     nsresult OnStopTransaction(nsresult);
-
-    // Called by the connection to report socket status
     void     OnStatus(nsresult status, const PRUnichar *statusText);
+    PRBool   IsDone() { return mTransactionDone; }
+    nsresult Status() { return mStatus; }
 
 private:
     nsresult Restart();
@@ -114,7 +105,7 @@ private:
     nsCOMPtr<nsIEventQueue>         mConsumerEventQ;
     nsCOMPtr<nsISupports>           mSecurityInfo;
 
-    nsHttpConnection               *mConnection;      // hard ref
+    nsAHttpConnection              *mConnection;      // hard ref
 
     nsCString                       mReqHeaderBuf;    // flattened request headers
     nsCOMPtr<nsIInputStream>        mReqHeaderStream; // header data stream
