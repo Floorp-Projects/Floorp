@@ -68,7 +68,6 @@
 
 // Interfaces Needed
 #include "nsIUploadChannel.h"
-#include "nsIHttpChannel.h"
 #include "nsIDataChannel.h"
 #include "nsIProgressEventSink.h"
 #include "nsIWebProgress.h"
@@ -83,6 +82,7 @@
 #include "nsIDOMDocument.h"
 #include "nsICachingChannel.h"
 #include "nsICacheEntryDescriptor.h"
+#include "nsIMultiPartChannel.h"
 
 // The following are for bug #13871: Prevent frameset spoofing
 #include "nsICodebasePrincipal.h"
@@ -4648,6 +4648,11 @@ nsDocShell::OnNewURI(nsIURI * aURI, nsIChannel * aChannel,
     nsCOMPtr<nsIInputStream> inputStream;
     if (aChannel) {
         nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(aChannel));
+        
+        // Check if the HTTPChannel is hiding under a multiPartChannel
+        if (!httpChannel)  {
+            GetHttpChannel(aChannel, getter_AddRefs(httpChannel));
+        }
 
         if (httpChannel) {
             httpChannel->GetUploadStream(getter_AddRefs(inputStream));
@@ -5105,7 +5110,11 @@ nsDocShell::AddToSessionHistory(nsIURI * aURI,
             cacheChannel->GetCacheToken(getter_AddRefs(cacheToken));
         }
         nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(aChannel));
-
+        
+        // Check if the httpChannel is hiding under a multipartChannel
+        if (!httpChannel) {
+            GetHttpChannel(aChannel, getter_AddRefs(httpChannel));
+        }
         if (httpChannel) {
             httpChannel->GetUploadStream(getter_AddRefs(inputStream));
             httpChannel->GetReferrer(getter_AddRefs(referrerURI));
@@ -5367,6 +5376,7 @@ nsDocShell::CloneAndReplace(nsISHEntry * src, PRUint32 aCloneID,
 
 }
 
+
 nsresult
 nsDocShell::GetRootSessionHistory(nsISHistory ** aReturn)
 {
@@ -5382,6 +5392,24 @@ nsDocShell::GetRootSessionHistory(nsISHistory ** aReturn)
         rv = rootAsWebnav->GetSessionHistory(aReturn);
     }
     return rv;
+}
+
+nsresult
+nsDocShell::GetHttpChannel(nsIChannel * aChannel, nsIHttpChannel ** aReturn)
+{
+    NS_ENSURE_ARG_POINTER(aReturn);
+    if (!aChannel)
+        return NS_ERROR_FAILURE;
+
+    nsCOMPtr<nsIMultiPartChannel>  multiPartChannel(do_QueryInterface(aChannel));
+    if (multiPartChannel) {
+        nsCOMPtr<nsIChannel> baseChannel;
+        multiPartChannel->GetBaseChannel(getter_AddRefs(baseChannel));
+        nsCOMPtr<nsIHttpChannel>  httpChannel(do_QueryInterface(baseChannel));
+        *aReturn = httpChannel;
+        NS_IF_ADDREF(*aReturn);
+    }
+    return NS_OK;
 }
 
 //*****************************************************************************
