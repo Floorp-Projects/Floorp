@@ -65,7 +65,7 @@ if (defined($login)) {
     CheckEmailSyntax($login);
     $vars->{'login'} = $login;
     
-    if (DBname_to_id($login) != 0) {
+    if (!ValidateNewUser($login)) {
         # Account already exists        
         $template->process("admin/account_exists.tmpl", $vars)
           || DisplayError("Template process failed: " . $template->error());

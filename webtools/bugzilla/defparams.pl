@@ -625,6 +625,12 @@ DefParam("allowbugdeletion",
          0);
 
 
+DefParam("allowemailchange",
+         q{Users can change their own email address through the preferences.  Note that the change is validated by emailing both addresses, so switching this option on will not let users use an invalid address.},
+         "b",
+         0);
+
+
 DefParam("allowuserdeletion",
          q{The pages to edit users can also let you delete a user.  But there is no code that goes and cleans up any references to that user in other tables, so such deletions are kinda scary.  So, you have to turn on this option before any such deletions will ever happen.},
          "b",

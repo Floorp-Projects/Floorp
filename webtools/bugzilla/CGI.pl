@@ -814,6 +814,12 @@ sub confirm_login {
         # If this is a new user, generate a password, insert a record
         # into the database, and email their password to them.
         if ( defined $::FORM{"PleaseMailAPassword"} && !$userid ) {
+            # Ensure the new login is valid
+            if(!ValidateNewUser($enteredlogin)) {
+                DisplayError("Account Exists");
+                exit;
+            }
+
             my $password = InsertNewUser($enteredlogin, "");
             # There's a template for this - account_created.tmpl - but
             # it's easier to wait to use it until templatisation has progressed

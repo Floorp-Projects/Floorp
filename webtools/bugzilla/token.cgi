@@ -69,16 +69,33 @@ if ($::FORM{'t'}) {
       exit;
   }
 
+
+  Token::CleanTokenTable();
+
   # Make sure the token exists in the database.
   SendSQL( "SELECT tokentype FROM tokens WHERE token = $::quotedtoken" );
   (my $tokentype = FetchSQLData())
-    || DisplayError("The token you submitted does not exist.")
+    || DisplayError("The token you submitted does not exist, has expired, or has been cancelled.")
     && exit;
 
   # Make sure the token is the correct type for the action being taken.
   if ( grep($::action eq $_ , qw(cfmpw cxlpw chgpw)) && $tokentype ne 'password' ) {
     DisplayError("That token cannot be used to change your password.");
     Token::Cancel($::token, "user tried to use token to change password");
+    exit;
+  }
+  if ( ($::action eq 'cxlem') 
+      && (($tokentype ne 'emailold') && ($tokentype ne 'emailnew')) ) {
+    DisplayError("That token cannot be used to cancel an email address change.");
+    Token::Cancel($::token, 
+                  "user tried to use token to cancel email address change");
+    exit;
+  }
+  if ( grep($::action eq $_ , qw(cfmem chgem)) 
+      && ($tokentype ne 'emailnew') ) {
+    DisplayError("That token cannot be used to change your email address.");
+    Token::Cancel($::token, 
+                  "user tried to use token to confirm email address change");
     exit;
   }
 }
@@ -132,6 +149,12 @@ if ($::action eq 'reqpw') {
     cancelChangePassword(); 
 } elsif ($::action eq 'chgpw') { 
     changePassword(); 
+} elsif ($::action eq 'cfmem') {
+    confirmChangeEmail();
+} elsif ($::action eq 'cxlem') {
+    cancelChangeEmail();
+} elsif ($::action eq 'chgem') {
+    changeEmail();
 } else { 
     # If the action that the user wants to take (specified in the "a" form field)
     # is none of the above listed actions, display an error telling the user 
@@ -210,6 +233,110 @@ sub changePassword {
       && exit;
 }
 
+sub confirmChangeEmail {
+    # Return HTTP response headers.
+    print "Content-Type: text/html\n\n";
 
+    $vars->{'title'} = "Confirm Change Email";
+    $vars->{'token'} = $::token;
 
+    $template->process("token/confirmemail.html.tmpl", $vars)
+      || &::DisplayError("Template process failed: " . $template->error())
+      && exit;
+}
+
+sub changeEmail {
+
+    # Get the user's ID from the tokens table.
+    SendSQL("SELECT userid, eventdata FROM tokens 
+              WHERE token = $::quotedtoken");
+    my ($userid, $eventdata) = FetchSQLData();
+    my ($old_email, $new_email) = split(/:/,$eventdata);
+    my $quotednewemail = SqlQuote($new_email);
+
+    # Check the user entered the correct old email address
+    if($::FORM{'email'} ne $old_email) {
+        DisplayError("Email Address confirmation failed");
+        exit;
+    }
+    # The new email address should be available as this was 
+    # confirmed initially so cancel token if it is not still available
+    if (! ValidateNewUser($new_email,$old_email)) {
+        DisplayError("Account $new_email already exists.");
+        Token::Cancel($::token,"Account $new_email already exists.");
+        exit;
+    } 
+
+    # Update the user's login name in the profiles table and delete the token
+    # from the tokens table.
+    SendSQL("LOCK TABLES profiles WRITE , tokens WRITE");
+    SendSQL("UPDATE   profiles
+         SET      login_name = $quotednewemail
+         WHERE    userid = $userid");
+    SendSQL("DELETE FROM tokens WHERE token = $::quotedtoken");
+    SendSQL("DELETE FROM tokens WHERE userid = $userid 
+                                  AND tokentype = 'emailnew'");
+    SendSQL("UNLOCK TABLES");
+
+    # Return HTTP response headers.
+    print "Content-Type: text/html\n\n";
+
+    # Let the user know their email address has been changed.
+
+    $vars->{'title'} = "Bugzilla Login Changed";
+    $vars->{'message'} = "Your Bugzilla login has been changed.";
+
+    $template->process("global/message.html.tmpl", $vars)
+      || &::DisplayError("Template process failed: " . $template->error())
+      && exit;
+}
+
+sub cancelChangeEmail {
+    # Get the user's ID from the tokens table.
+    SendSQL("SELECT userid, tokentype, eventdata FROM tokens 
+             WHERE token = $::quotedtoken");
+    my ($userid, $tokentype, $eventdata) = FetchSQLData();
+    my ($old_email, $new_email) = split(/:/,$eventdata);
+
+    if($tokentype eq "emailold") {
+        $vars->{'message'} = "The request to change the email address " .
+            "for your account to $new_email has been cancelled.";
+
+        SendSQL("SELECT login_name FROM profiles WHERE userid = $userid");
+        my $actualemail = FetchSQLData();
+        
+        # check to see if it has been altered
+        if($actualemail ne $old_email) {
+            my $quotedoldemail = SqlQuote($old_email);
+
+            SendSQL("LOCK TABLES profiles WRITE");
+            SendSQL("UPDATE   profiles
+                 SET      login_name = $quotedoldemail
+                 WHERE    userid = $userid");
+            SendSQL("UNLOCK TABLES");
+            $vars->{'message'} .= 
+                "  Your old account settings have been reinstated.";
+        } 
+    } 
+    else {
+        $vars->{'message'} = "The request to change the email address " .
+            "for the $old_email account to $new_email has been cancelled.";
+    }
+    Token::Cancel($::token, $vars->{'message'});
+
+    SendSQL("LOCK TABLES tokens WRITE");
+    SendSQL("DELETE FROM tokens 
+             WHERE userid = $userid 
+             AND tokentype = 'emailold' OR tokentype = 'emailnew'");
+    SendSQL("UNLOCK TABLES");
+
+    # Return HTTP response headers.
+    print "Content-Type: text/html\n\n";
+
+    $vars->{'title'} = "Cancel Request to Change Email Address";
+
+    $template->process("global/message.html.tmpl", $vars)
+      || &::DisplayError("Template process failed: " . $template->error())
+      && exit;
+}
 

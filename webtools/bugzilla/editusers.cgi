@@ -451,7 +451,7 @@ if ($action eq 'new') {
         PutTrailer($localtrailer);
         exit;
     }
-    if (TestUser($user)) {
+    if (!ValidateNewUser($user)) {
         print "The user '$user' does already exist. Please press\n";
         print "<b>Back</b> and try again.\n";
         PutTrailer($localtrailer);

@@ -671,6 +671,8 @@ sub GetVersionTable {
         $mtime = 0;
     }
     if (time() - $mtime > 3600) {
+        use Token;
+        Token::CleanTokenTable();
         GenerateVersionTable();
     }
     require 'data/versioncache';
@@ -685,6 +687,31 @@ sub GetVersionTable {
     $::VersionTableLoaded = 1;
 }
 
+
+# Validates a given username as a new username
+# returns 1 if valid, 0 if invalid
+sub ValidateNewUser {
+    my ($username, $old_username) = @_;
+
+    if(DBname_to_id($username) != 0) {
+        return 0;
+    }
+
+    # Reject if the new login is part of an email change which is 
+    # still in progress
+    SendSQL("SELECT eventdata FROM tokens WHERE tokentype = 'emailold' 
+                AND eventdata like '%:$username' 
+                 OR eventdata like '$username:%'");
+    if (my ($eventdata) = FetchSQLData()) {
+        # Allow thru owner of token
+        if($old_username && ($eventdata eq "$old_username:$username")) {
+            return 1;
+        }
+        return 0;
+    }
+
+    return 1;
+}
 
 sub InsertNewUser {
     my ($username, $realname) = (@_);
@@ -963,10 +990,12 @@ sub DBNameToIdAndCheck {
         return $result;
     }
     if ($forceok) {
-        InsertNewUser($name, "");
-        $result = DBname_to_id($name);
-        if ($result > 0) {
-            return $result;
+        if(ValidateNewUser($name)) {
+            InsertNewUser($name, "");
+            $result = DBname_to_id($name);
+            if ($result > 0) {
+                return $result;
+            }
         }
         print "Yikes; couldn't create user $name.  Please report problem to " .
             Param("maintainer") ."\n";
