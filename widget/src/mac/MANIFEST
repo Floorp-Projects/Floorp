@@ -4,3 +4,4 @@
 
 nsMacMessageSink.h
 nsMacMessagePump.h
+nsIChangeManager.idl
