@@ -270,7 +270,7 @@ nsFTPDirListingConv::OnDataAvailable(nsIChannel *channel, nsISupports *ctxt,
             }
 
             rv = ParseLSLine(line, thisEntry);
-            if ( NS_FAILED(rv) || (thisEntry->mName == "..") || (thisEntry->mName == ".") ) {
+            if ( NS_FAILED(rv) || (thisEntry->mName.Equals("..")) || (thisEntry->mName.Equals(".")) ) {
                 NS_DELETEXPCOM(thisEntry);
                 if (cr)
                     line = eol+2;
