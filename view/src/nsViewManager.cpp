@@ -2434,7 +2434,6 @@ nsEventStatus nsViewManager::HandleEvent(nsView* aView, nsGUIEvent* aEvent, PRBo
   // accessibility events and key events are dispatched directly to the focused view
   if (aEvent->eventStructType == NS_ACCESSIBLE_EVENT
       || aEvent->message == NS_CONTEXTMENU_KEY
-      || aEvent->message == NS_MOUSE_EXIT
       || NS_IS_KEY_EVENT(aEvent) || NS_IS_IME_EVENT(aEvent) || NS_IS_FOCUS_EVENT(aEvent)) {
     nsEventStatus status = nsEventStatus_eIgnore;
     if (obs) {
@@ -3598,7 +3597,7 @@ PRBool nsViewManager::CreateDisplayList(nsView *aView,
     if (isClipView) {
       aDamageRect = &irect;
     }
-    if (aEventProcessing && aRealView == aView) {
+    if (aEventProcessing && aTopView == aView) {
       // Always deliver an event somewhere, at least to the top-level target.
       // There may be mouse capturing going on.
       overlap = PR_TRUE;
