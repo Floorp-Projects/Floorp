@@ -43,7 +43,7 @@ class nsIHTMLContent;
 class nsIEditor;
 class nsISelectionController;
 class nsTextAreaSelectionImpl;
-
+class nsTextAreaKeyListener;
 
 
 
@@ -138,6 +138,8 @@ public:
   NS_IMETHOD GetText(nsString* aText, PRBool aInitialValue);
 
   NS_DECL_ISUPPORTS_INHERITED
+public: //for methods who access nsGfxTextControlFrame2 directly
+  void SubmitAttempt();
 protected:
   nsString *GetCachedString();
   virtual PRIntn GetSkipSides() const;
@@ -225,6 +227,7 @@ private:
   PRBool mIsProcessing;
   nsFormFrame *mFormFrame;
   nsTextAreaSelectionImpl *mTextSelImpl;
+  nsTextAreaKeyListener *mTextKeyListener;
 };
 
 #endif
