@@ -27,7 +27,6 @@
 
 
 extern "C" char *fe_GetConfigDir(void) {
-  printf("XXX: return /tmp for fe_GetConfigDir\n");
   return strdup("/tmp");
 }
 
