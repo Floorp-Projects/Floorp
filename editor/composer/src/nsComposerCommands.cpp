@@ -141,7 +141,10 @@ nsBaseStateUpdatingCommand::DoCommand(const PRUnichar *aCommand, nsISupports * r
   nsCOMPtr<nsIEditorShell> editorShell = do_QueryInterface(refCon);
   if (!editorShell) return NS_ERROR_NOT_INITIALIZED;
 
-  return ToggleState(editorShell, mTagName);
+  nsresult rv = ToggleState(editorShell, mTagName);
+  if (NS_FAILED(rv)) return rv;
+  
+  return UpdateCommandState(aCommand, refCon);
 }
 
 NS_IMETHODIMP
