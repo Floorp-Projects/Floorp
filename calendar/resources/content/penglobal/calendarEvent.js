@@ -2140,7 +2140,7 @@ CalendarEvent.prototype.convertToMcalEvent = function( )
       case CalendarEvent.kAlarmUnit_minutes : 
          mCalLibEvent.AlarmLength = this.alarmLength;                        
          break;
-   }
+   } 
     
    this.recurType = 0;
    

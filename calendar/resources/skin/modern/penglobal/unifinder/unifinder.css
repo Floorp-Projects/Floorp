@@ -131,7 +131,6 @@ toolbargrippy:hover:active {
 
 toolbargrippy[tbgrippy-collapsed="true"] {
   background-image: none;
-  width: 200px;
 }
 
 toolbargrippy[tbgrippy-collapsed="true"] > .toolbargrippy-collapsed-left {
@@ -193,7 +192,6 @@ tabpanels {
    -moz-binding        : url("chrome://calendar/content/penBindings.xml#penButton");
    margin              : 0px;
    border              : 0px;
-   min-width           : 0px;
    -moz-user-focus     : ignore !important;
 }
 
@@ -202,7 +200,6 @@ tabpanels {
    -moz-binding        : url("chrome://calendar/content/penBindings.xml#penButton");
    margin              : 0px;
    border              : 0px;
-   min-width           : 0px;
    max-height          : 18px;
    -moz-user-focus     : ignore !important;
 }
@@ -212,7 +209,6 @@ tabpanels {
    -moz-binding        : url("chrome://calendar/content/penBindings.xml#penButton");
    margin              : 0px;
    border              : 0px;
-   min-width           : 0px;
    max-height          : 12px;
    -moz-user-focus     : ignore !important;
 }

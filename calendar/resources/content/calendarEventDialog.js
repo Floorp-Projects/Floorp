@@ -184,7 +184,7 @@ function loadCalendarEventDialog()
    
    setFieldValue( "alarm-checkbox", gEvent.alarm, "checked" );
    setFieldValue( "alarm-length-field", gEvent.alarmLength );
-   setFieldValue( "alarm-length-units", gEvent.alarmUnits, "data" );  
+   setFieldValue( "alarm-length-units", gEvent.alarmUnits, "value" );  
    if ( gEvent.alarmEmailAddress && gEvent.alarmEmailAddress != "" ) 
    {
       setFieldValue( "alarm-email-checkbox", true, "checked" );
