@@ -619,7 +619,7 @@ BulletFrame::InlineReflow(nsCSSLineLayout&     aLineLayout,
     aMetrics.maxElementSize->width = aMetrics.width;
     aMetrics.maxElementSize->height = aMetrics.height;
   }
-  return NS_INLINE_REFLOW_COMPLETE;
+  return NS_FRAME_COMPLETE;
 }
 
 NS_IMETHODIMP
