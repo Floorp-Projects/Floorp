@@ -1267,7 +1267,9 @@ PRInt32 FieldToValue(
         }
         resume = nsnull;
         itemList = nsnull;
-        return 0;
+        if (value.Length()>0) {
+          return 0;
+        }
       }
     }
   } else {
