@@ -41,7 +41,9 @@ class nsICachedNetData; /* forward decl */
 class nsISimpleEnumerator; /* forward decl */
 class nsIFile; /* forward decl */
 
-#define CURRENT_CACHE_VERSION   2
+// 2 : cache that never deleted entires
+// 3 : Evict works. Number of records and entries matched up and limited.
+#define CURRENT_CACHE_VERSION   3
 
 /* starting interface:    nsNetDiskCache */
 
