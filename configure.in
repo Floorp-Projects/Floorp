@@ -3280,6 +3280,17 @@ then
             AC_DEFINE(MOZ_DEMANGLE_SYMBOLS)
         fi
 	;;
+    *-solaris*)
+        # Demangle only for debug builds which are using the Gnu compiler.
+        if test "$GNU_CC"
+        then
+            if test "$MOZ_DEBUG"
+            then
+                MOZ_DEMANGLE_SYMBOLS=1
+                AC_DEFINE(MOZ_DEMANGLE_SYMBOLS)
+            fi
+        fi
+    ;;
   esac
 fi
 
