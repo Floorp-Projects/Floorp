@@ -20,12 +20,9 @@ IGNORE_MANIFEST=1
 
 include <$(DEPTH)\config\config.mak>
 
-# LIBRARY_NAME=msgcoreutil
+LIBRARY_NAME=msgcoreutil
 MODULE= mailnews
 REQUIRES=xpcom js nspr dom
-DLLNAME=msgcoreutil
-MAPFILE=msgcoreutil.map
-DLL=.\$(OBJDIR)\$(DLLNAME).dll
 
 DEFINES=-D_IMPL_NS_HTML -DWIN32_LEAN_AND_MEAN
 
@@ -80,7 +77,6 @@ LLIBS=										\
 			$(DIST)\lib\xplib.lib       	\
 			$(DIST)\lib\plc3.lib		\
 			$(DIST)\lib\js32$(VERSION_NUMBER).lib	\
-			$(DIST)\lib\msgcoreutil.lib			\
 			$(DIST)\lib\appcores.lib	\
 			$(DIST)\lib\nntp.lib		\
 			$(DIST)\lib\netlib.lib		\
@@ -98,11 +94,11 @@ LCFLAGS = \
 
 include <$(DEPTH)\config\rules.mak>
 
-install:: $(DLL)
-	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).dll $(DIST)\bin
+#install:: $(DLL)
+#	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).dll $(DIST)\bin
 
-# libs:: $(LIBRARY)
-#	$(MAKE_INSTALL) $(LIBRARY) $(DIST)\lib
+libs:: $(LIBRARY)
+       $(MAKE_INSTALL) $(LIBRARY) $(DIST)\lib
 
 clobber::
 	rm -f $(DIST)\lib\$(LIBRARY_NAME).lib
