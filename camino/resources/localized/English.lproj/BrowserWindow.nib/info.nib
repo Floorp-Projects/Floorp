@@ -13,7 +13,7 @@
 		<key>314</key>
 		<string>55 435 213 150 0 0 1280 832 </string>
 		<key>336</key>
-		<string>374 699 213 206 0 0 1280 938 </string>
+		<string>329 615 213 187 0 0 1152 848 </string>
 		<key>365</key>
 		<string>97 563 93 162 0 0 1280 832 </string>
 		<key>463</key>
@@ -29,10 +29,10 @@
 		<key>894</key>
 		<string>276 641 156 66 0 0 1152 746 </string>
 		<key>919</key>
-		<string>337 397 606 458 0 0 1280 938 </string>
+		<string>273 353 606 458 0 0 1152 848 </string>
 	</dict>
 	<key>IBFramework Version</key>
-	<string>349.0</string>
+	<string>362.0</string>
 	<key>IBGroupedObjects</key>
 	<dict>
 		<key>7</key>
@@ -51,10 +51,11 @@
 	</array>
 	<key>IBOpenObjects</key>
 	<array>
-		<integer>919</integer>
+		<integer>394</integer>
 		<integer>336</integer>
+		<integer>919</integer>
 	</array>
 	<key>IBSystem Version</key>
-	<string>7D24</string>
+	<string>7B85</string>
 </dict>
 </plist>
