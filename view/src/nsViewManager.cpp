@@ -567,10 +567,10 @@ void nsViewManager :: RenderViews(nsIView *aRootView, nsIRenderingContext& aRC, 
 #ifdef NEW_COMPOSITOR
 
   PRInt32           flatlen = 0, cnt;
-  PRInt32           state = FRONT_TO_BACK_RENDER;
+  PRInt32           state = FRONT_TO_BACK_RENDER, prevstate;
   PRInt32           transprop = 0;
   PRInt32           increment = DISPLAYLIST_INC;
-  PRInt32           loopstart = 0;
+  PRInt32           loopstart = 0, backstart;
   PRInt32           loopend;
   PRInt32           accumstart;
   float             t2p, p2t;
@@ -682,11 +682,13 @@ void nsViewManager :: RenderViews(nsIView *aRootView, nsIRenderingContext& aRC, 
             mBlueCX->PopState(clipstate);
 
             pushcnt--;
+            NS_ASSERTION(!((PRInt32)pushcnt < 0), "underflow");
           }
           else if (state == BACK_TO_FRONT_TRANS)
           {
             aRC.PopState(clipstate);
             pushcnt--;
+            NS_ASSERTION(!((PRInt32)pushcnt < 0), "underflow");
           }
           else
           {
@@ -729,6 +731,7 @@ void nsViewManager :: RenderViews(nsIView *aRootView, nsIRenderingContext& aRC, 
           {
             aRC.PopState(clipstate);
             pushcnt--;
+            NS_ASSERTION(!((PRInt32)pushcnt < 0), "underflow");
           }
 
           if (state == FRONT_TO_BACK_POP_SEARCH)
@@ -736,7 +739,7 @@ void nsViewManager :: RenderViews(nsIView *aRootView, nsIRenderingContext& aRC, 
             aRC.SetClipRect(*currect, nsClipCombine_kSubtract, clipstate);
 
             if (!clipstate)
-              state = FRONT_TO_BACK_RENDER;
+              state = prevstate;
             else if (pushcnt == 0)
               aResult = clipstate;
           }
@@ -797,7 +800,10 @@ void nsViewManager :: RenderViews(nsIView *aRootView, nsIRenderingContext& aRC, 
                     if (clipstate)
                     {
                       if (pushcnt > 0)
+                      {
+                        prevstate = state;
                         state = FRONT_TO_BACK_POP_SEARCH;
+                      }
                       else
                         aResult = clipstate;
                     }
@@ -822,7 +828,7 @@ void nsViewManager :: RenderViews(nsIView *aRootView, nsIRenderingContext& aRC, 
 
                   if (!isBottom)
                   {
-  //printf("adding %d %d %d %d\n", trect.x, trect.y, trect.width, trect.height);
+//printf("adding %d %d %d %d\n", trect.x, trect.y, trect.width, trect.height);
                     if (trans || translucent)
                       mTransRgn->Union(trect.x, trect.y, trect.width, trect.height);
                     else
@@ -834,11 +840,22 @@ void nsViewManager :: RenderViews(nsIView *aRootView, nsIRenderingContext& aRC, 
                   RenderView(curview, aRC, aRect, *currect, aResult);
 
                   if (aResult == PR_FALSE)
-  {
-  PRBool clipstate;
+                  {
+                    PRBool clipstate;
+
                     aRC.SetClipRect(*currect, nsClipCombine_kSubtract, clipstate);
-  //                  aRC.SetClipRect(*currect, nsClipCombine_kSubtract, aResult);
-  }
+
+                    if (clipstate)
+                    {
+                      if (pushcnt > 0)
+                      {
+                        prevstate = state;
+                        state = FRONT_TO_BACK_POP_SEARCH;
+                      }
+                      else
+                        aResult = clipstate;
+                    }
+                  }
                 }
   
                 break;
@@ -864,11 +881,22 @@ void nsViewManager :: RenderViews(nsIView *aRootView, nsIRenderingContext& aRC, 
                   RenderView(curview, aRC, localrect, *currect, aResult);
 
                   if (aResult == PR_FALSE)
-  {
-  PRBool clipstate;
+                  {
+                    PRBool clipstate;
+
                     aRC.SetClipRect(*currect, nsClipCombine_kSubtract, clipstate);
-  //                  aRC.SetClipRect(*currect, nsClipCombine_kSubtract, aResult);
-  }
+
+                    if (clipstate)
+                    {
+                      if (pushcnt > 0)
+                      {
+                        prevstate = state;
+                        state = FRONT_TO_BACK_POP_SEARCH;
+                      }
+                      else
+                        aResult = clipstate;
+                    }
+                  }
                 }
 
                 break;
@@ -890,10 +918,10 @@ void nsViewManager :: RenderViews(nsIView *aRootView, nsIRenderingContext& aRC, 
                       {
                         mRedCX->SetColor(NS_RGB(255, 0, 0));
                         mRedCX->FillRect(blendrect);
-  #ifdef SHOW_RECTS
+#ifdef SHOW_RECTS
                         mRedCX->SetColor(NS_RGB(255 - evenodd, evenodd, 255 - evenodd));
                         mRedCX->DrawLine(blendrect.x, blendrect.y, blendrect.x + blendrect.width, blendrect.y + blendrect.height);
-  #endif
+#endif
                       }
 
                       RenderView(curview, *mRedCX, localrect, *currect, clipstate);
@@ -902,10 +930,10 @@ void nsViewManager :: RenderViews(nsIView *aRootView, nsIRenderingContext& aRC, 
                       {
                         mBlueCX->SetColor(NS_RGB(0, 0, 255));
                         mBlueCX->FillRect(blendrect);
-  #ifdef SHOW_RECTS
+#ifdef SHOW_RECTS
                         mBlueCX->SetColor(NS_RGB(255 - evenodd, evenodd, 255 - evenodd));
                         mBlueCX->DrawLine(blendrect.x, blendrect.y, blendrect.x + blendrect.width, blendrect.y + blendrect.height);
-  #endif
+#endif
                         RenderView(curview, *mBlueCX, localrect, *currect, clipstate);
                       }
 
@@ -958,9 +986,13 @@ void nsViewManager :: RenderViews(nsIView *aRootView, nsIRenderingContext& aRC, 
       }
     }
 
+    NS_ASSERTION(!((PRInt32)pushcnt < 0), "underflow");
+
     while (pushcnt--)
     {
       PRBool  clipstate;
+
+      NS_ASSERTION(!((PRInt32)pushcnt < 0), "underflow");
 
       if (pushing == BACK_TO_FRONT_OPACITY)
       {
@@ -977,8 +1009,15 @@ void nsViewManager :: RenderViews(nsIView *aRootView, nsIRenderingContext& aRC, 
       case FRONT_TO_BACK_ACCUMULATE:
         state = (transprop & (1 << TRANS_PROPERTY_OPACITY)) ? BACK_TO_FRONT_OPACITY : BACK_TO_FRONT_TRANS;
 
-        //render the bottom most view
-        RenderView(curview, aRC, aRect, *currect, aResult);
+        if ((curflags & (POP_CLIP | PUSH_CLIP)) || (state == BACK_TO_FRONT_OPACITY))
+          backstart = flatlen - DISPLAYLIST_INC;
+        else
+        {
+          backstart = flatlen - (DISPLAYLIST_INC << 1);
+
+          //render the bottom most view
+          RenderView(curview, aRC, aRect, *currect, aResult);
+        }
 
         //get a snapshot of the current clip so that we can exclude areas
         //already excluded in it from the transparency region
@@ -1071,11 +1110,7 @@ void nsViewManager :: RenderViews(nsIView *aRootView, nsIRenderingContext& aRC, 
 
         if (rgnrect < (PRInt32)rectset->mNumRects)
         {
-          if (state == BACK_TO_FRONT_OPACITY)
-            loopstart = flatlen - DISPLAYLIST_INC;
-          else
-            loopstart = flatlen - (DISPLAYLIST_INC << 1);
-
+          loopstart = backstart;
           loopend = accumstart - DISPLAYLIST_INC;
           increment = -DISPLAYLIST_INC;
 
