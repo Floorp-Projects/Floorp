@@ -1,38 +1,8 @@
 
-#skin directory
+#dialogs:content directory
 
-images:ED_Center.gif
-images:ED_Copy.gif
-images:ED_Dedent.gif
-images:ED_HLine.gif
-images:ED_Indent.gif
-images:ED_Left.gif
-images:ED_Numbers.gif
-images:ED_Redo.gif
-images:ED_Spell.gif
-images:ED_Target.gif
-images:ED_Undo.gif
-images:ED_Bullets.gif
-images:ED_Center.gif
-images:ED_ClearStyle.gif
-images:ED_Copy.gif
-images:ED_Cut.gif
-images:ED_Dedent.gif
-images:ED_Find.gif
-images:ED_HLine.gif
-images:ED_Image.gif
-images:ED_Indent.gif
-images:ED_Italic.gif
-images:ED_Left.gif
-images:ED_Link.gif
-images:ED_Numbers.gif
-images:ED_Paste.gif
-images:ED_Redo.gif
-images:ED_Right.gif
-images:ED_Spell.gif
-images:ED_Table.gif
-images:ED_Target.gif
-images:ED_Underline.gif
-images:ED_Undo.gif
-images:ED_Bold.gif
+EdCharacterProps.xul
+EdImageProps.xul
+EdLinkProps.js
+EdLinkProps.xul
 
