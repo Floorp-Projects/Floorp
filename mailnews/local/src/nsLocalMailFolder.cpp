@@ -470,7 +470,7 @@ nsMsgLocalMailFolder::CreateSubFolders(nsFileSpec &path)
 	nsCOMPtr<nsIMsgFolder> child;
 
 	for (nsDirectoryIterator dir(path, PR_FALSE); dir.Exists(); dir++) {
-		nsFileSpec currentFolderPath = (nsFileSpec&)dir;
+		nsFileSpec currentFolderPath = dir.Spec();
 
     currentFolderPath.GetLeafName(currentFolderNameStr);
 		if (nsShouldIgnoreFile(currentFolderNameStr))

@@ -281,7 +281,7 @@ nsresult nsImapMailFolder::CreateSubFolders(nsFileSpec &path)
   char *folderName;
   for (nsDirectoryIterator dir(path, PR_FALSE); dir.Exists(); dir++) 
   {
-    nsFileSpec currentFolderPath = (nsFileSpec&)dir;
+    nsFileSpec currentFolderPath = dir.Spec();
     folderName = currentFolderPath.GetLeafName();
     currentFolderNameStr.AssignWithConversion(folderName);
     if (nsShouldIgnoreFile(currentFolderNameStr))
