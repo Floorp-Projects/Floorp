@@ -1276,7 +1276,8 @@ void oeICalEventImpl::ParseIcalComponent( icalcomponent *vcalendar )
     }
 }
 
-#define ICALEVENT_VERSION "1.1"
+#define ICALEVENT_VERSION "2.0"
+#define ICALEVENT_PRODID "PRODID:-//Mozilla.org/NONSGML Mozilla Calendar V1.0//EN" // ggf
 
 icalcomponent* oeICalEventImpl::AsIcalComponent()
 {
@@ -1295,6 +1296,10 @@ icalcomponent* oeICalEventImpl::AsIcalComponent()
 
     //version
     icalproperty *prop = icalproperty_new_version( ICALEVENT_VERSION );
+    icalcomponent_add_property( newcalendar, prop );
+
+    //prodid - ggf
+    prop = icalproperty_new_prodid( ICALEVENT_PRODID );
     icalcomponent_add_property( newcalendar, prop );
 
     icalcomponent *vevent = icalcomponent_new_vevent();
