@@ -47,26 +47,15 @@
 #include "nsIDOMElement.h"
 #include "nsIDOMXULCommandDispatcher.h"
 #include "nsIDOMXULDocument.h"
-#include "nsIDOMMouseListener.h"
-#include "nsIDOMMouseMotionListener.h"
-#include "nsIDOMLoadListener.h"
-#include "nsIDOMFocusListener.h"
-#include "nsIDOMPaintListener.h"
-#include "nsIDOMKeyListener.h"
-#include "nsIDOMFormListener.h"
-#include "nsIDOMMenuListener.h"
-#include "nsIDOMScrollListener.h"
-#include "nsIDOMDragListener.h"
 #include "nsIRDFNode.h"
 #include "nsINameSpace.h"
 #include "nsINameSpaceManager.h"
-#include "nsIPref.h"
 #include "nsIRDFService.h"
 #include "nsIServiceManager.h"
 #include "nsITextContent.h"
 #include "nsIURL.h"
 #include "nsIXMLContent.h"
-#include "nsIXULContentUtils.h"
+#include "nsXULContentUtils.h"
 #include "nsIXULPrototypeCache.h"
 #include "nsLayoutCID.h"
 #include "nsNetUtil.h"
@@ -77,7 +66,6 @@
 #include "prlog.h"
 #include "prtime.h"
 #include "rdf.h"
-#include "rdfutil.h"
 
 #include "nsIDateTimeFormat.h"
 #include "nsDateTimeFormatCID.h"
@@ -89,171 +77,17 @@ static NS_DEFINE_CID(kDateTimeFormatIID,    NS_IDATETIMEFORMAT_IID);
 static NS_DEFINE_CID(kNameSpaceManagerCID,  NS_NAMESPACEMANAGER_CID);
 static NS_DEFINE_CID(kRDFServiceCID,        NS_RDFSERVICE_CID);
 static NS_DEFINE_CID(kTextNodeCID,          NS_TEXTNODE_CID);
-static NS_DEFINE_CID(kXULPrototypeCacheCID, NS_XULPROTOTYPECACHE_CID);
 
 //------------------------------------------------------------------------
-
-class nsXULContentUtils : public nsIXULContentUtils
-{
-protected:
-    nsXULContentUtils();
-    nsresult Init();
-    virtual ~nsXULContentUtils();
-
-    friend NS_IMETHODIMP
-    NS_NewXULContentUtils(nsISupports* aOuter, const nsIID& aIID, void** aResult);
-
-    static nsrefcnt gRefCnt;
-    static nsIRDFService* gRDF;
-    static nsINameSpaceManager* gNameSpaceManager;
-    static nsIDateTimeFormat* gFormat;
-
-    struct EventHandlerMapEntry {
-        const char*  mAttributeName;
-        nsIAtom*     mAttributeAtom;
-        const nsIID* mHandlerIID;
-    };
-
-    static EventHandlerMapEntry kEventHandlerMap[];
-
-    static PRBool gDisableXULCache;
-
-    static int PR_CALLBACK
-    DisableXULCacheChangedCallback(const char* aPrefName, void* aClosure);
-
-public:
-    // nsISupports methods
-    NS_DECL_ISUPPORTS
-
-    // nsIXULContentUtils methods
-    NS_IMETHOD
-    AttachTextNode(nsIContent* parent, nsIRDFNode* value);
-    
-    NS_IMETHOD
-    FindChildByTag(nsIContent *aElement,
-                   PRInt32 aNameSpaceID,
-                   nsIAtom* aTag,
-                   nsIContent **aResult);
-
-    NS_IMETHOD
-    FindChildByResource(nsIContent* aElement,
-                        nsIRDFResource* aResource,
-                        nsIContent** aResult);
-
-    NS_IMETHOD
-    GetElementResource(nsIContent* aElement, nsIRDFResource** aResult);
-
-    NS_IMETHOD
-    GetElementRefResource(nsIContent* aElement, nsIRDFResource** aResult);
-
-    NS_IMETHOD
-    GetTextForNode(nsIRDFNode* aNode, nsAWritableString& aResult);
-
-    NS_IMETHOD
-    GetElementLogString(nsIContent* aElement, nsAWritableString& aResult);
-
-    NS_IMETHOD
-    GetAttributeLogString(nsIContent* aElement, PRInt32 aNameSpaceID, nsIAtom* aTag, nsAWritableString& aResult);
-
-    NS_IMETHOD
-    MakeElementURI(nsIDocument* aDocument, const nsAReadableString& aElementID, nsCString& aURI);
-
-    NS_IMETHOD
-    MakeElementResource(nsIDocument* aDocument, const nsAReadableString& aElementID, nsIRDFResource** aResult);
-
-    NS_IMETHOD
-    MakeElementID(nsIDocument* aDocument, const nsAReadableString& aURI, nsAWritableString& aElementID);
-
-    NS_IMETHOD_(PRBool)
-    IsContainedBy(nsIContent* aElement, nsIContent* aContainer);
-
-    NS_IMETHOD
-    GetResource(PRInt32 aNameSpaceID, nsIAtom* aAttribute, nsIRDFResource** aResult);
-
-    NS_IMETHOD
-    GetResource(PRInt32 aNameSpaceID, const nsAReadableString& aAttribute, nsIRDFResource** aResult);
-
-    NS_IMETHOD
-    SetCommandUpdater(nsIDocument* aDocument, nsIContent* aElement);
-
-    NS_IMETHOD
-    GetEventHandlerIID(nsIAtom* aName, nsIID* aIID, PRBool* aFound);
-
-    NS_IMETHOD_(PRBool)
-    UseXULCache();
-};
 
 nsrefcnt nsXULContentUtils::gRefCnt;
 nsIRDFService* nsXULContentUtils::gRDF;
 nsINameSpaceManager* nsXULContentUtils::gNameSpaceManager;
 nsIDateTimeFormat* nsXULContentUtils::gFormat;
 
-nsXULContentUtils::EventHandlerMapEntry
-nsXULContentUtils::kEventHandlerMap[] = {
-    { "onclick",         nsnull, &NS_GET_IID(nsIDOMMouseListener)       },
-    { "ondblclick",      nsnull, &NS_GET_IID(nsIDOMMouseListener)       },
-    { "onmousedown",     nsnull, &NS_GET_IID(nsIDOMMouseListener)       },
-    { "onmouseup",       nsnull, &NS_GET_IID(nsIDOMMouseListener)       },
-    { "onmouseover",     nsnull, &NS_GET_IID(nsIDOMMouseListener)       },
-    { "onmouseout",      nsnull, &NS_GET_IID(nsIDOMMouseListener)       },
-
-    { "onmousemove",     nsnull, &NS_GET_IID(nsIDOMMouseMotionListener) },
-
-    { "onkeydown",       nsnull, &NS_GET_IID(nsIDOMKeyListener)         },
-    { "onkeyup",         nsnull, &NS_GET_IID(nsIDOMKeyListener)         },
-    { "onkeypress",      nsnull, &NS_GET_IID(nsIDOMKeyListener)         },
-
-    { "onload",          nsnull, &NS_GET_IID(nsIDOMLoadListener)        },
-    { "onunload",        nsnull, &NS_GET_IID(nsIDOMLoadListener)        },
-    { "onabort",         nsnull, &NS_GET_IID(nsIDOMLoadListener)        },
-    { "onerror",         nsnull, &NS_GET_IID(nsIDOMLoadListener)        },
-
-    { "oncreate",        nsnull, &NS_GET_IID(nsIDOMMenuListener)        },
-    { "onclose",         nsnull, &NS_GET_IID(nsIDOMMenuListener)        },
-    { "ondestroy",       nsnull, &NS_GET_IID(nsIDOMMenuListener)        },
-    { "oncommand",       nsnull, &NS_GET_IID(nsIDOMMenuListener)        },
-    { "onbroadcast",     nsnull, &NS_GET_IID(nsIDOMMenuListener)        },
-    { "oncommandupdate", nsnull, &NS_GET_IID(nsIDOMMenuListener)        },
-
-    { "onoverflow",       nsnull, &NS_GET_IID(nsIDOMScrollListener)     },
-    { "onunderflow",      nsnull, &NS_GET_IID(nsIDOMScrollListener)     },
-    { "onoverflowchanged",nsnull, &NS_GET_IID(nsIDOMScrollListener)     },
-
-    { "onfocus",         nsnull, &NS_GET_IID(nsIDOMFocusListener)       },
-    { "onblur",          nsnull, &NS_GET_IID(nsIDOMFocusListener)       },
-
-    { "onsubmit",        nsnull, &NS_GET_IID(nsIDOMFormListener)        },
-    { "onreset",         nsnull, &NS_GET_IID(nsIDOMFormListener)        },
-    { "onchange",        nsnull, &NS_GET_IID(nsIDOMFormListener)        },
-    { "onselect",        nsnull, &NS_GET_IID(nsIDOMFormListener)        },
-    { "oninput",         nsnull, &NS_GET_IID(nsIDOMFormListener)        },
-
-    { "onpaint",         nsnull, &NS_GET_IID(nsIDOMPaintListener)       },
-    
-    { "ondragenter",     nsnull, &NS_GET_IID(nsIDOMDragListener)        },
-    { "ondragover",      nsnull, &NS_GET_IID(nsIDOMDragListener)        },
-    { "ondragexit",      nsnull, &NS_GET_IID(nsIDOMDragListener)        },
-    { "ondragdrop",      nsnull, &NS_GET_IID(nsIDOMDragListener)        },
-    { "ondraggesture",   nsnull, &NS_GET_IID(nsIDOMDragListener)        },
-
-    { nsnull,            nsnull, nsnull                                 }
-};
-
-
-// Enabled by default. Must be over-ridden to disable
-PRBool nsXULContentUtils::gDisableXULCache = PR_FALSE;
-
-
-static const char kDisableXULCachePref[] = "nglayout.debug.disable_xul_cache";
-
 //------------------------------------------------------------------------
 // Constructors n' stuff
 //
-
-nsXULContentUtils::nsXULContentUtils()
-{
-    NS_INIT_REFCNT();
-}
 
 nsresult
 nsXULContentUtils::Init()
@@ -277,33 +111,15 @@ nsXULContentUtils::Init()
                                                 (void**) &gFormat);
 
         if (NS_FAILED(rv)) return rv;
-
-        EventHandlerMapEntry* entry = kEventHandlerMap;
-        while (entry->mAttributeName) {
-            entry->mAttributeAtom = NS_NewAtom(entry->mAttributeName);
-            ++entry;
-        }
-
-        NS_WITH_SERVICE(nsIPref, prefs, NS_PREF_CONTRACTID, &rv);
-        if (NS_SUCCEEDED(rv)) {
-            // XXX Ignore return values.
-            prefs->GetBoolPref(kDisableXULCachePref, &gDisableXULCache);
-            prefs->RegisterCallback(kDisableXULCachePref, DisableXULCacheChangedCallback, nsnull);
-        }
-
-        nsXULAtoms::AddRef();
     }
-    return NS_OK;
+
+    return gRefCnt;
 }
 
 
-nsXULContentUtils::~nsXULContentUtils()
+nsresult
+nsXULContentUtils::Finish()
 {
-#ifdef DEBUG_REFS
-    --gInstanceCount;
-    fprintf(stdout, "%d - RDF: nsXULContentUtils\n", gInstanceCount);
-#endif
-
     if (--gRefCnt == 0) {
         if (gRDF) {
             nsServiceManager::ReleaseService(kRDFServiceCID, gRDF);
@@ -312,57 +128,16 @@ nsXULContentUtils::~nsXULContentUtils()
 
         NS_IF_RELEASE(gNameSpaceManager);
         NS_IF_RELEASE(gFormat);
-
-        EventHandlerMapEntry* entry = kEventHandlerMap;
-        while (entry->mAttributeName) {
-            NS_IF_RELEASE(entry->mAttributeAtom);
-            ++entry;
-        }
-
-        nsXULAtoms::Release();
-    }
-}
-
-NS_IMETHODIMP
-NS_NewXULContentUtils(nsISupports* aOuter, const nsIID& aIID, void** aResult)
-{
-    NS_PRECONDITION(aResult != nsnull, "null ptr");
-    if (! aResult)
-        return NS_ERROR_NULL_POINTER;
-
-    NS_PRECONDITION(aOuter == nsnull, "no aggregation");
-    if (aOuter)
-        return NS_ERROR_NO_AGGREGATION;
-
-    nsXULContentUtils* result = new nsXULContentUtils();
-    if (! result)
-        return NS_ERROR_OUT_OF_MEMORY;
-
-    nsresult rv;
-    rv = result->Init();
-    if (NS_FAILED(rv)) {
-        delete result;
-        return rv;
     }
 
-    NS_ADDREF(result);
-    rv = result->QueryInterface(aIID, aResult);
-    NS_RELEASE(result);
-
-    return rv;
+    return gRefCnt;
 }
 
-
-
-//------------------------------------------------------------------------
-// nsISupports methods
-
-NS_IMPL_ISUPPORTS1(nsXULContentUtils, nsIXULContentUtils)
 
 //------------------------------------------------------------------------
 // nsIXULContentUtils methods
 
-NS_IMETHODIMP
+nsresult
 nsXULContentUtils::AttachTextNode(nsIContent* parent, nsIRDFNode* value)
 {
     nsresult rv;
@@ -390,7 +165,7 @@ nsXULContentUtils::AttachTextNode(nsIContent* parent, nsIRDFNode* value)
 }
 
 
-NS_IMETHODIMP
+nsresult
 nsXULContentUtils::FindChildByTag(nsIContent* aElement,
                                   PRInt32 aNameSpaceID,
                                   nsIAtom* aTag,
@@ -431,43 +206,7 @@ nsXULContentUtils::FindChildByTag(nsIContent* aElement,
 }
 
 
-NS_IMETHODIMP
-nsXULContentUtils::FindChildByResource(nsIContent* aElement,
-                                       nsIRDFResource* aResource,
-                                       nsIContent** aResult)
-{
-    nsresult rv;
-
-    PRInt32 count;
-    if (NS_FAILED(rv = aElement->ChildCount(count)))
-        return rv;
-
-    for (PRInt32 i = 0; i < count; ++i) {
-        nsCOMPtr<nsIContent> kid;
-        if (NS_FAILED(rv = aElement->ChildAt(i, *getter_AddRefs(kid))))
-            return rv; // XXX fatal
-
-        // Now get the resource ID from the RDF:ID attribute. We do it
-        // via the content model, because you're never sure who
-        // might've added this stuff in...
-        nsCOMPtr<nsIRDFResource> resource;
-        rv = GetElementResource(kid, getter_AddRefs(resource));
-        if (NS_FAILED(rv)) continue;
-
-        if (resource.get() != aResource)
-            continue; // not the resource we want
-
-        // Fount it!
-        *aResult = kid;
-        NS_ADDREF(*aResult);
-        return NS_OK;
-    }
-
-    return NS_RDF_NO_VALUE; // not found
-}
-
-
-NS_IMETHODIMP
+nsresult
 nsXULContentUtils::GetElementResource(nsIContent* aElement, nsIRDFResource** aResult)
 {
     // Perform a reverse mapping from an element in the content model
@@ -501,7 +240,7 @@ nsXULContentUtils::GetElementResource(nsIContent* aElement, nsIRDFResource** aRe
 }
 
 
-NS_IMETHODIMP
+nsresult
 nsXULContentUtils::GetElementRefResource(nsIContent* aElement, nsIRDFResource** aResult)
 {
     // Perform a reverse mapping from an element in the content model
@@ -526,12 +265,11 @@ nsXULContentUtils::GetElementRefResource(nsIContent* aElement, nsIRDFResource** 
         if (! url)
             return NS_ERROR_UNEXPECTED;
 
-    		nsCAutoString uriStr;
-        uriStr.Assign(NS_ConvertUCS2toUTF8(uri));
-        rv = rdf_MakeAbsoluteURI(url, uriStr);
-        if (NS_FAILED(rv)) return rv;
+        // N.B. that if this fails (e.g., because necko doesn't grok
+        // the protocol), uriStr will be untouched.
+        NS_MakeAbsoluteURI(uri, uri, url);
 
-        rv = gRDF->GetResource(uriStr.GetBuffer(), aResult);
+        rv = gRDF->GetUnicodeResource(uri.GetUnicode(), aResult);
     }
     else {
         rv = GetElementResource(aElement, aResult);
@@ -546,7 +284,7 @@ nsXULContentUtils::GetElementRefResource(nsIContent* aElement, nsIRDFResource** 
 	Note: this routine is similiar, yet distinctly different from, nsBookmarksService::GetTextForNode
 */
 
-NS_IMETHODIMP
+nsresult
 nsXULContentUtils::GetTextForNode(nsIRDFNode* aNode, nsAWritableString& aResult)
 {
     if (! aNode) {
@@ -613,7 +351,7 @@ nsXULContentUtils::GetTextForNode(nsIRDFNode* aNode, nsAWritableString& aResult)
     return NS_ERROR_UNEXPECTED;
 }
 
-NS_IMETHODIMP
+nsresult
 nsXULContentUtils::GetElementLogString(nsIContent* aElement, nsAWritableString& aResult)
 {
     nsresult rv;
@@ -690,7 +428,7 @@ nsXULContentUtils::GetElementLogString(nsIContent* aElement, nsAWritableString& 
 }
 
 
-NS_IMETHODIMP
+nsresult
 nsXULContentUtils::GetAttributeLogString(nsIContent* aElement, PRInt32 aNameSpaceID, nsIAtom* aTag, nsAWritableString& aResult)
 {
     nsresult rv;
@@ -734,7 +472,7 @@ nsXULContentUtils::GetAttributeLogString(nsIContent* aElement, PRInt32 aNameSpac
 }
 
 
-NS_IMETHODIMP
+nsresult
 nsXULContentUtils::MakeElementURI(nsIDocument* aDocument, const nsAReadableString& aElementID, nsCString& aURI)
 {
     // Convert an element's ID to a URI that can be used to refer to
@@ -785,7 +523,7 @@ nsXULContentUtils::MakeElementURI(nsIDocument* aDocument, const nsAReadableStrin
 }
 
 
-NS_IMETHODIMP
+nsresult
 nsXULContentUtils::MakeElementResource(nsIDocument* aDocument, const nsAReadableString& aID, nsIRDFResource** aResult)
 {
     nsresult rv;
@@ -804,7 +542,7 @@ nsXULContentUtils::MakeElementResource(nsIDocument* aDocument, const nsAReadable
 
 
 
-NS_IMETHODIMP
+nsresult
 nsXULContentUtils::MakeElementID(nsIDocument* aDocument, const nsAReadableString& aURI, nsAWritableString& aElementID)
 {
     // Convert a URI into an element ID that can be accessed from the
@@ -838,7 +576,7 @@ nsXULContentUtils::MakeElementID(nsIDocument* aDocument, const nsAReadableString
     return NS_OK;
 }
 
-NS_IMETHODIMP_(PRBool)
+PRBool
 nsXULContentUtils::IsContainedBy(nsIContent* aElement, nsIContent* aContainer)
 {
     nsCOMPtr<nsIContent> element( dont_QueryInterface(aElement) );
@@ -859,7 +597,7 @@ nsXULContentUtils::IsContainedBy(nsIContent* aElement, nsIContent* aContainer)
 }
 
 
-NS_IMETHODIMP
+nsresult
 nsXULContentUtils::GetResource(PRInt32 aNameSpaceID, nsIAtom* aAttribute, nsIRDFResource** aResult)
 {
     // construct a fully-qualified URI from the namespace/tag pair.
@@ -877,7 +615,7 @@ nsXULContentUtils::GetResource(PRInt32 aNameSpaceID, nsIAtom* aAttribute, nsIRDF
 }
 
 
-NS_IMETHODIMP
+nsresult
 nsXULContentUtils::GetResource(PRInt32 aNameSpaceID, const nsAReadableString& aAttribute, nsIRDFResource** aResult)
 {
     // construct a fully-qualified URI from the namespace/tag pair.
@@ -910,7 +648,7 @@ nsXULContentUtils::GetResource(PRInt32 aNameSpaceID, const nsAReadableString& aA
 }
 
 
-NS_IMETHODIMP
+nsresult
 nsXULContentUtils::SetCommandUpdater(nsIDocument* aDocument, nsIContent* aElement)
 {
     // Deal with setting up a 'commandupdater'. Pulls the 'events' and
@@ -963,49 +701,4 @@ nsXULContentUtils::SetCommandUpdater(nsIDocument* aDocument, nsIContent* aElemen
     return NS_OK;
 }
 
-NS_IMETHODIMP
-nsXULContentUtils::GetEventHandlerIID(nsIAtom* aName, nsIID* aIID, PRBool* aFound)
-{
-    *aFound = PR_FALSE;
 
-    EventHandlerMapEntry* entry = kEventHandlerMap;
-    while (entry->mAttributeAtom) {
-        if (entry->mAttributeAtom == aName) {
-            *aIID = *entry->mHandlerIID;
-            *aFound = PR_TRUE;
-            break;
-        }
-        ++entry;
-    }
-
-    return NS_OK;
-}
-
-
-NS_IMETHODIMP_(PRBool)
-nsXULContentUtils::UseXULCache()
-{
-    return !gDisableXULCache;
-}
-
-
-//----------------------------------------------------------------------
-
-int
-nsXULContentUtils::DisableXULCacheChangedCallback(const char* aPref, void* aClosure)
-{
-    nsresult rv;
-
-    NS_WITH_SERVICE(nsIPref, prefs, NS_PREF_CONTRACTID, &rv);
-    if (NS_SUCCEEDED(rv)) {
-        prefs->GetBoolPref(kDisableXULCachePref, &gDisableXULCache);
-    }
-
-    // Flush the cache, regardless
-    NS_WITH_SERVICE(nsIXULPrototypeCache, cache, kXULPrototypeCacheCID, &rv);
-    if (NS_SUCCEEDED(rv)) {
-        cache->Flush();
-    }
-
-    return 0;
-}

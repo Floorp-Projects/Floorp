@@ -44,6 +44,7 @@ SHARED_LIBRARY_LIBS = \
 		$(DIST)/lib/libjsdomrange_s.$(LIB_SUFFIX) \
 		$(DIST)/lib/libjsdomhtml_s.$(LIB_SUFFIX) \
 		$(DIST)/lib/libjsdomcss_s.$(LIB_SUFFIX) \
+		$(DIST)/lib/libjsdomxul_s.$(LIB_SUFFIX) \
 		$(NULL)
 
 EXTRA_DSO_LDOPTS = \

@@ -231,7 +231,7 @@ nsresult nsEditorController::GetEditorCommandManager(nsIControllerCommandManager
   if (!cmdManager)
   {
     nsresult rv;
-    cmdManager = do_CreateInstance("@mozilla.org/rdf/controller-command-manager;1", &rv);
+    cmdManager = do_CreateInstance("@mozilla.org/content/controller-command-manager;1", &rv);
     if (NS_FAILED(rv)) return rv;
 
     // register the commands. This just happens once per instance
@@ -268,7 +268,7 @@ NS_IMETHODIMP nsComposerController::Init(nsISupports *aCommandRefCon)
   rv = nsEditorController::Init(aCommandRefCon);
   if (NS_FAILED(rv)) return rv;  
   
-  mCommandManager = do_CreateInstance("@mozilla.org/rdf/controller-command-manager;1", &rv);
+  mCommandManager = do_CreateInstance("@mozilla.org/content/controller-command-manager;1", &rv);
   if (NS_FAILED(rv)) return rv;
 
   // register the commands.

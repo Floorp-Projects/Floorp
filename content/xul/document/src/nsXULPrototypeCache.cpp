@@ -39,6 +39,7 @@
 #include "plstr.h"
 #include "nsIDocument.h"
 #include "nsIXBLDocumentInfo.h"
+#include "nsIPref.h"
 
 class nsXULPrototypeCache : public nsIXULPrototypeCache
 {
@@ -60,6 +61,8 @@ public:
     NS_IMETHOD FlushXBLInformation();
 
     NS_IMETHOD Flush();
+
+    NS_IMETHOD GetEnabled(PRBool* aIsEnabled);
 
 protected:
     friend NS_IMETHODIMP
@@ -98,6 +101,32 @@ protected:
     };
 };
 
+static PRBool gDisableXULCache = PR_FALSE; // enabled by default
+static const char kDisableXULCachePref[] = "nglayout.debug.disable_xul_cache";
+
+//----------------------------------------------------------------------
+
+static int
+DisableXULCacheChangedCallback(const char* aPref, void* aClosure)
+{
+    nsresult rv;
+
+    nsCOMPtr<nsIPref> prefs = do_GetService(NS_PREF_CONTRACTID, &rv);
+    if (prefs)
+        prefs->GetBoolPref(kDisableXULCachePref, &gDisableXULCache);
+
+    // Flush the cache, regardless
+    static NS_DEFINE_CID(kXULPrototypeCacheCID, NS_XULPROTOTYPECACHE_CID);
+    nsCOMPtr<nsIXULPrototypeCache> cache =
+        do_GetService(kXULPrototypeCacheCID, &rv);
+
+    if (cache)
+        cache->Flush();
+
+    return 0;
+}
+
+//----------------------------------------------------------------------
 
 
 nsXULPrototypeCache::nsXULPrototypeCache()
@@ -126,6 +155,13 @@ NS_NewXULPrototypeCache(nsISupports* aOuter, REFNSIID aIID, void** aResult)
         return NS_ERROR_OUT_OF_MEMORY;
 
     nsresult rv;
+
+    NS_WITH_SERVICE(nsIPref, prefs, NS_PREF_CONTRACTID, &rv);
+    if (NS_SUCCEEDED(rv)) {
+        // XXX Ignore return values.
+        prefs->GetBoolPref(kDisableXULCachePref, &gDisableXULCache);
+        prefs->RegisterCallback(kDisableXULCachePref, DisableXULCacheChangedCallback, nsnull);
+    }
 
     NS_ADDREF(result);
     rv = result->QueryInterface(aIID, aResult);
@@ -241,6 +277,13 @@ nsXULPrototypeCache::Flush()
     FlushPrototypes();
     FlushStyleSheets();
     FlushXBLInformation();
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXULPrototypeCache::GetEnabled(PRBool* aIsEnabled)
+{
+    *aIsEnabled = !gDisableXULCache;
     return NS_OK;
 }
 

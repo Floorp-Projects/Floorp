@@ -26,7 +26,7 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS		= base util content datasource resources chrome build
+DIRS		= base util datasource resources chrome build
 
 ifdef ENABLE_TESTS
 DIRS		+= tests

@@ -21,8 +21,13 @@
 
 DEPTH=..\..
 
+include <$(DEPTH)\config\config.mak>
 
 DIRS=base coreDom coreEvents range events html css
+
+!ifdef MOZ_XUL
+DIRS=$(DIRS) xul
+!endif
 
 XPIDLSRCS = .\domstubs.idl \
 				.\nsIScriptContextOwner.idl \

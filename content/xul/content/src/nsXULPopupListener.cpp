@@ -40,7 +40,7 @@
 #include "nsIDOMMouseListener.h"
 #include "nsIDOMMouseMotionListener.h"
 #include "nsIDOMKeyListener.h"
-#include "nsRDFCID.h"
+#include "nsContentCID.h"
 
 #include "nsIScriptGlobalObject.h"
 #include "nsIDOMWindowInternal.h"

@@ -60,6 +60,7 @@ CPPSRCS		= \
 		nsTextNode.cpp \
 		nsXMLContentSerializer.cpp \
 		nsHTMLContentSerializer.cpp \
+		nsParserUtils.cpp \
 		nsPlainTextSerializer.cpp \
 		$(NULL)
 

@@ -25,6 +25,7 @@
 #include "nsIHTMLContentSink.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIParser.h"
+#include "nsParserUtils.h"
 #include "nsICSSStyleSheet.h"
 #include "nsICSSLoader.h"
 #include "nsICSSLoaderObserver.h"
@@ -4466,39 +4467,6 @@ HTMLContentSink::ProcessMETATag(const nsIParserNode& aNode)
   return rv;
 }
 
-// Returns PR_TRUE if the language name is a version of JavaScript and
-// PR_FALSE otherwise
-static PRBool
-IsJavaScriptLanguage(const nsString& aName, const char* *aVersion)
-{
-  JSVersion version = JSVERSION_UNKNOWN;
-
-  if (aName.EqualsIgnoreCase("JavaScript") ||
-      aName.EqualsIgnoreCase("LiveScript") ||
-      aName.EqualsIgnoreCase("Mocha")) {
-    version = JSVERSION_DEFAULT;
-  }
-  else if (aName.EqualsIgnoreCase("JavaScript1.1")) {
-    version = JSVERSION_1_1;
-  }
-  else if (aName.EqualsIgnoreCase("JavaScript1.2")) {
-    version = JSVERSION_1_2;
-  }
-  else if (aName.EqualsIgnoreCase("JavaScript1.3")) {
-    version = JSVERSION_1_3;
-  }
-  else if (aName.EqualsIgnoreCase("JavaScript1.4")) {
-    version = JSVERSION_1_4;
-  }
-  else if (aName.EqualsIgnoreCase("JavaScript1.5")) {
-    version = JSVERSION_1_5;
-  }
-  if (version == JSVERSION_UNKNOWN)
-    return PR_FALSE;
-  *aVersion = JS_VersionToString(version);
-  return PR_TRUE;
-}
-
 #ifdef DEBUG
 void
 HTMLContentSink::ForceReflow()
@@ -4884,7 +4852,7 @@ HTMLContentSink::ProcessSCRIPTTag(const nsIParserNode& aNode)
       nsAutoString  lang;
        
       GetAttributeValueAt(aNode, i, lang);
-      isJavaScript = IsJavaScriptLanguage(lang, &jsVersionString);
+      isJavaScript = nsParserUtils::IsJavaScriptLanguage(lang, &jsVersionString);
     }
     else if (key.EqualsIgnoreCase("charset")) {
       //charset from script charset tag

@@ -54,6 +54,7 @@ LINCS=-I$(PUBLIC)\xpcom -I$(PUBLIC)\raptor -I$(PUBLIC)\dom \
 	-I$(PUBLIC)\js -I..\html\base\src -I..\base\src \
 	-I..\html\style\src \
 	-I..\xul\content\src \
+        -I..\xul\templates\src \
 	-I..\xul\base\src \
 	-I..\events\src \
   -I$(PUBLIC)\rdf
@@ -69,6 +70,8 @@ LLIBS=					\
  $(DIST)\lib\contentxmldoc_s.lib		\
  $(DIST)\lib\contentxsldoc_s.lib		\
  $(DIST)\lib\contentxulcontent_s.lib	\
+ $(DIST)\lib\contentxuldocument_s.lib   \
+ $(DIST)\lib\contentxultemplates_s.lib  \
  $(DIST)\lib\contentxbl_s.lib \
  $(DIST)\lib\contentevents_s.lib		\
  $(DIST)\lib\xpcom.lib		\

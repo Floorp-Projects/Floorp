@@ -223,7 +223,7 @@ function doSort(sortColName, naturalOrderResource)
 		}
 	}
 
-	var isupports = Components.classes["@mozilla.org/rdf/xul-sort-service;1"].getService();
+	var isupports = Components.classes["@mozilla.org/xul/xul-sort-service;1"].getService();
 	if (!isupports)    return(false);
 	var xulSortService = isupports.QueryInterface(Components.interfaces.nsIXULSortService);
 	if (!xulSortService)    return(false);

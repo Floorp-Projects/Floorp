@@ -71,6 +71,7 @@
 #include "prmem.h"
 #include "nsXSLContentSink.h"
 #include "nsParserCIID.h"
+#include "nsParserUtils.h"
 #include "nsIDocumentViewer.h"
 
 // XXX misnamed header file, but oh well
@@ -861,90 +862,6 @@ nsXMLContentSink::AddCDATASection(const nsIParserNode& aNode)
   return result;
 }
 
-// This method starts at aOffSet in aStr and tries to find aChar. It keeps 
-// skipping whitespace till it finds aChar or some other non-whitespace character.  If
-// it finds aChar, it returns aChar's offset.  If it finds some other non-whitespace character
-// or runs into the end of the string, it returns -1.
-static PRInt32
-FindWhileSkippingWhitespace(nsString& aStr, PRUnichar aChar, PRInt32 aOffset)
-{
-  PRInt32 i = aOffset;
-  PRUnichar ch = aStr.CharAt(i);
-  PRInt32 index = -1;
-
-  while (ch == '\n' || ch == '\t' || ch == '\r') {
-    ch = aStr.CharAt(++i);
-  }
-
-  if (ch == aChar)
-    index = i;
-
-  return index;
-}
-
-static nsresult
-GetQuotedAttributeValue(nsString& aSource,
-                        const nsString& aAttribute,
-                        nsString& aValue)
-{  
-  PRInt32 startOfAttribute = 0;     // Index into aSource where the attribute name starts
-  PRInt32 startOfValue = 0;         // Index into aSource where the attribute value starts
-  PRInt32 posnOfValueDelimeter = 0; 
-  nsresult result = NS_ERROR_FAILURE;
-
-  // While there are more characters to look at
-  while (startOfAttribute != -1) {
-    // Find the attribute starting at offset
-    startOfAttribute = aSource.Find(aAttribute, PR_FALSE, startOfAttribute);
-    // If attribute found
-    if (startOfAttribute != -1) { 
-      // Find the '=' character while skipping whitespace
-      startOfValue = FindWhileSkippingWhitespace(aSource, '=', startOfAttribute + aAttribute.Length());
-      // If '=' found
-      if (startOfValue != -1) {
-        PRUnichar delimeter = kQuote;
-        // Find the quote or apostrophe while skipping whitespace
-        posnOfValueDelimeter = FindWhileSkippingWhitespace(aSource, kQuote, startOfValue + 1);
-        if (posnOfValueDelimeter == -1) {
-          posnOfValueDelimeter = FindWhileSkippingWhitespace(aSource, kApostrophe, startOfValue + 1);
-          delimeter = kApostrophe;
-        }
-        // If quote or apostrophe found
-        if (posnOfValueDelimeter != -1) {
-          startOfValue = posnOfValueDelimeter + 1;
-          // Find the ending quote or apostrophe
-          posnOfValueDelimeter = aSource.FindChar(delimeter, PR_FALSE, startOfValue);
-          // If found
-          if (posnOfValueDelimeter != -1) {
-            // Set the value of the attibute and exit the loop
-            // The attribute value starts at startOfValue and ends at (posnOfValueDelimeter - 1)
-            aSource.Mid(aValue, startOfValue, posnOfValueDelimeter - startOfValue);
-            result = NS_OK;
-            break;
-          }
-          else {
-            // Try to find the attribute in the remainder of the string
-            startOfAttribute++;
-            continue;
-          } // Endif found  
-        }
-        else {
-          // Try to find the attribute in the remainder of the string
-          startOfAttribute++;
-          continue;
-        } // Endif quote or apostrophe found
-      } 
-      else {
-        // Try to find the attribute in the remainder of the string
-        startOfAttribute++;
-        continue;
-      } // Endif '=' found
-    } // Endif attribute found
-  } // End while
-  
-  return result;
-}
-
 static void
 ParseProcessingInstruction(const nsString& aText,
                            nsString& aTarget,
@@ -1165,25 +1082,25 @@ nsXMLContentSink::AddProcessingInstruction(const nsIParserNode& aNode)
 
     // If it's a stylesheet PI...
     if (target.EqualsWithConversion(kStyleSheetPI)) {
-      result = GetQuotedAttributeValue(text, NS_ConvertASCIItoUCS2("href"), href);
+      result = nsParserUtils::GetQuotedAttributeValue(text, NS_ConvertASCIItoUCS2("href"), href);
       // If there was an error or there's no href, we can't do
       // anything with this PI
       if ((NS_OK != result) || (0 == href.Length())) {
         return result;
       }
-      result = GetQuotedAttributeValue(text, NS_ConvertASCIItoUCS2("type"), type);
+      result = nsParserUtils::GetQuotedAttributeValue(text, NS_ConvertASCIItoUCS2("type"), type);
       if (NS_FAILED(result)) {
         type.AssignWithConversion("text/css");  // Default the type attribute to the mime type for CSS
       }
-      result = GetQuotedAttributeValue(text, NS_ConvertASCIItoUCS2("title"), title);
+      result = nsParserUtils::GetQuotedAttributeValue(text, NS_ConvertASCIItoUCS2("title"), title);
       if (NS_SUCCEEDED(result)) {
         title.CompressWhitespace();
       }
-      result = GetQuotedAttributeValue(text, NS_ConvertASCIItoUCS2("media"), media);
+      result = nsParserUtils::GetQuotedAttributeValue(text, NS_ConvertASCIItoUCS2("media"), media);
       if (NS_SUCCEEDED(result)) {
         media.ToLowerCase();
       }
-      result = GetQuotedAttributeValue(text, NS_ConvertASCIItoUCS2("alternate"), alternate);
+      result = nsParserUtils::GetQuotedAttributeValue(text, NS_ConvertASCIItoUCS2("alternate"), alternate);
       result = ProcessStyleLink(node, href, alternate.EqualsWithConversion("yes"),
                                 title, type, media);
     }
@@ -1616,41 +1533,6 @@ nsXMLContentSink::ProcessEndSCRIPTTag(const nsIParserNode& aNode)
   return result;
 }
 
-// XXX Stolen from nsHTMLContentSink. Needs to be shared.
-// XXXbe share also with nsRDFParserUtils.cpp and nsHTMLContentSink.cpp
-// Returns PR_TRUE if the language name is a version of JavaScript and
-// PR_FALSE otherwise
-static PRBool
-IsJavaScriptLanguage(const nsString& aName, const char* *aVersion)
-{
-  JSVersion version = JSVERSION_UNKNOWN;
-
-  if (aName.EqualsIgnoreCase("JavaScript") ||
-      aName.EqualsIgnoreCase("LiveScript") ||
-      aName.EqualsIgnoreCase("Mocha")) {
-    version = JSVERSION_DEFAULT;
-  }
-  else if (aName.EqualsIgnoreCase("JavaScript1.1")) {
-    version = JSVERSION_1_1;
-  }
-  else if (aName.EqualsIgnoreCase("JavaScript1.2")) {
-    version = JSVERSION_1_2;
-  }
-  else if (aName.EqualsIgnoreCase("JavaScript1.3")) {
-    version = JSVERSION_1_3;
-  }
-  else if (aName.EqualsIgnoreCase("JavaScript1.4")) {
-    version = JSVERSION_1_4;
-  }
-  else if (aName.EqualsIgnoreCase("JavaScript1.5")) {
-    version = JSVERSION_1_5;
-  }
-  if (version == JSVERSION_UNKNOWN)
-    return PR_FALSE;
-  *aVersion = JS_VersionToString(version);
-  return PR_TRUE;
-}
-
 NS_IMETHODIMP
 nsXMLContentSink::OnStreamComplete(nsIStreamLoader* aLoader,
                                    nsISupports* context,
@@ -1735,7 +1617,7 @@ nsXMLContentSink::ProcessStartSCRIPTTag(const nsIParserNode& aNode)
     }
     else if (key.EqualsIgnoreCase("language")) {
       const nsString& lang = aNode.GetValueAt(i);
-      isJavaScript = IsJavaScriptLanguage(lang, &jsVersionString);
+      isJavaScript = nsParserUtils::IsJavaScriptLanguage(lang, &jsVersionString);
     }
   }
 

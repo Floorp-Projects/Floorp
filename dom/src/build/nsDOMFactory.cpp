@@ -137,6 +137,12 @@
 #include "nsIDOMCRMFObject.h"
 #include "nsIDOMPkcs11.h"
 #include "nsIDOMCSSPrimitiveValue.h"
+#include "nsIDOMXULCommandDispatcher.h" // XXX not really `XUL specific'
+#if defined(MOZ_XUL)
+#include "nsIDOMXULDocument.h"
+#include "nsIDOMXULElement.h"
+#include "nsIDOMXULTreeElement.h"
+#endif
 #include "plhash.h"
 #include "nsIPref.h"
 
@@ -273,6 +279,12 @@ public:
                                  void **aReturn);
 
   NS_IMETHOD    NewScriptXMLElement(const nsString &aTagName, 
+                                    nsIScriptContext *aContext, 
+                                    nsISupports *aElement, 
+                                    nsISupports *aParent, 
+                                    void **aReturn);
+  
+  NS_IMETHOD    NewScriptXULElement(const nsString &aTagName, 
                                     nsIScriptContext *aContext, 
                                     nsISupports *aElement, 
                                     nsISupports *aParent, 
@@ -583,6 +595,24 @@ nsDOMScriptObjectFactory::NewScriptXMLElement(const nsString &aTagName,
   return NS_NewScriptElement(aContext, aElement, aParent, aReturn);
 }
 
+NS_IMETHODIMP
+nsDOMScriptObjectFactory::NewScriptXULElement(const nsString &aTagName, 
+                                              nsIScriptContext *aContext, 
+                                              nsISupports *aElement, 
+                                              nsISupports *aParent, 
+                                              void **aReturn)
+{
+#if defined(MOZ_XUL)
+  // XXX hyatt, fix this once you get <tree> into XBL
+  if (aTagName.Equals(NS_LITERAL_STRING("tree")))
+    return NS_NewScriptXULTreeElement(aContext, aElement, aParent, aReturn);
+  else return NS_NewScriptXULElement(aContext, aElement, aParent, aReturn);
+#else
+  NS_NOTREACHED("MOZ_XUL not defined");
+  return NS_ERROR_NOT_IMPLEMENTED;
+#endif
+}
+
 NS_IMETHODIMP    
 nsDOMScriptObjectFactory::NewScriptHTMLCollection(nsIScriptContext *aContext, 
                                                   nsISupports *aCollection, 
@@ -797,6 +827,10 @@ void XXXDomNeverCalled()
     NS_NewScriptNSHTMLOptionCollection(0, 0, 0, 0);
     NS_NewScriptMediaList(0, 0, 0, 0);
     NS_NewScriptCSSPrimitiveValue(0, 0, 0, 0);
+    NS_NewScriptXULCommandDispatcher(0, 0, 0, 0);
+#if defined(MOZ_XUL)
+    NS_NewScriptXULDocument(0, 0, 0, 0);
+#endif
   }
 }
 

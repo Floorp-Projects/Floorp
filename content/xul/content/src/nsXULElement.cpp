@@ -54,13 +54,22 @@
 #include "nsDOMError.h"
 #include "nsIDOMEvent.h"
 #include "nsIPrivateDOMEvent.h"
-#include "nsForwardReference.h"
 #include "nsHTMLValue.h"
 #include "nsHashtable.h"
 #include "nsIAtom.h"
 #include "nsIDOMAttr.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMElement.h"
+#include "nsIDOMMouseListener.h"
+#include "nsIDOMMouseMotionListener.h"
+#include "nsIDOMLoadListener.h"
+#include "nsIDOMFocusListener.h"
+#include "nsIDOMPaintListener.h"
+#include "nsIDOMKeyListener.h"
+#include "nsIDOMFormListener.h"
+#include "nsIDOMMenuListener.h"
+#include "nsIDOMScrollListener.h"
+#include "nsIDOMDragListener.h"
 #include "nsIDOMEventListener.h"
 #include "nsIDOMEventReceiver.h"
 #include "nsIDOMNodeList.h"
@@ -79,7 +88,6 @@
 #include "nsIPresShell.h"
 #include "nsIPrincipal.h"
 #include "nsIRDFCompositeDataSource.h"
-#include "nsIRDFContentModelBuilder.h"
 #include "nsIRDFNode.h"
 #include "nsIRDFService.h"
 #include "nsIScriptContext.h"
@@ -94,7 +102,6 @@
 #include "nsISupportsArray.h"
 #include "nsIURL.h"
 #include "nsIXULContent.h"
-#include "nsIXULContentUtils.h"
 #include "nsIXULDocument.h"
 #include "nsIXULPopupListener.h"
 #include "nsIXULPrototypeDocument.h"
@@ -123,7 +130,6 @@
 
 #include "prlog.h"
 #include "rdf.h"
-#include "rdfutil.h"
 
 #include "nsIControllers.h"
 
@@ -166,10 +172,11 @@ static NS_DEFINE_CID(kEventListenerManagerCID,    NS_EVENTLISTENERMANAGER_CID);
 static NS_DEFINE_IID(kIDOMEventTargetIID,         NS_IDOMEVENTTARGET_IID);
 static NS_DEFINE_CID(kNameSpaceManagerCID,        NS_NAMESPACEMANAGER_CID);
 static NS_DEFINE_CID(kRDFServiceCID,              NS_RDFSERVICE_CID);
-static NS_DEFINE_CID(kXULContentUtilsCID,         NS_XULCONTENTUTILS_CID);
 
 static NS_DEFINE_IID(kIXULPopupListenerIID,       NS_IXULPOPUPLISTENER_IID);
 static NS_DEFINE_CID(kXULPopupListenerCID,        NS_XULPOPUPLISTENER_CID);
+
+static NS_DEFINE_CID(kDOMScriptObjectFactoryCID,  NS_DOM_SCRIPT_OBJECT_FACTORY_CID);
 
 //----------------------------------------------------------------------
 
@@ -214,6 +221,105 @@ RemoveJSGCRoot(void* aScriptObjectRef)
 
     return NS_OK;
 }
+
+//----------------------------------------------------------------------
+
+struct EventHandlerMapEntry {
+    const char*  mAttributeName;
+    nsIAtom*     mAttributeAtom;
+    const nsIID* mHandlerIID;
+};
+
+static EventHandlerMapEntry kEventHandlerMap[] = {
+    { "onclick",         nsnull, &NS_GET_IID(nsIDOMMouseListener)       },
+    { "ondblclick",      nsnull, &NS_GET_IID(nsIDOMMouseListener)       },
+    { "onmousedown",     nsnull, &NS_GET_IID(nsIDOMMouseListener)       },
+    { "onmouseup",       nsnull, &NS_GET_IID(nsIDOMMouseListener)       },
+    { "onmouseover",     nsnull, &NS_GET_IID(nsIDOMMouseListener)       },
+    { "onmouseout",      nsnull, &NS_GET_IID(nsIDOMMouseListener)       },
+
+    { "onmousemove",     nsnull, &NS_GET_IID(nsIDOMMouseMotionListener) },
+
+    { "onkeydown",       nsnull, &NS_GET_IID(nsIDOMKeyListener)         },
+    { "onkeyup",         nsnull, &NS_GET_IID(nsIDOMKeyListener)         },
+    { "onkeypress",      nsnull, &NS_GET_IID(nsIDOMKeyListener)         },
+
+    { "onload",          nsnull, &NS_GET_IID(nsIDOMLoadListener)        },
+    { "onunload",        nsnull, &NS_GET_IID(nsIDOMLoadListener)        },
+    { "onabort",         nsnull, &NS_GET_IID(nsIDOMLoadListener)        },
+    { "onerror",         nsnull, &NS_GET_IID(nsIDOMLoadListener)        },
+
+    { "oncreate",        nsnull, &NS_GET_IID(nsIDOMMenuListener)        },
+    { "onclose",         nsnull, &NS_GET_IID(nsIDOMMenuListener)        },
+    { "ondestroy",       nsnull, &NS_GET_IID(nsIDOMMenuListener)        },
+    { "oncommand",       nsnull, &NS_GET_IID(nsIDOMMenuListener)        },
+    { "onbroadcast",     nsnull, &NS_GET_IID(nsIDOMMenuListener)        },
+    { "oncommandupdate", nsnull, &NS_GET_IID(nsIDOMMenuListener)        },
+
+    { "onoverflow",       nsnull, &NS_GET_IID(nsIDOMScrollListener)     },
+    { "onunderflow",      nsnull, &NS_GET_IID(nsIDOMScrollListener)     },
+    { "onoverflowchanged",nsnull, &NS_GET_IID(nsIDOMScrollListener)     },
+
+    { "onfocus",         nsnull, &NS_GET_IID(nsIDOMFocusListener)       },
+    { "onblur",          nsnull, &NS_GET_IID(nsIDOMFocusListener)       },
+
+    { "onsubmit",        nsnull, &NS_GET_IID(nsIDOMFormListener)        },
+    { "onreset",         nsnull, &NS_GET_IID(nsIDOMFormListener)        },
+    { "onchange",        nsnull, &NS_GET_IID(nsIDOMFormListener)        },
+    { "onselect",        nsnull, &NS_GET_IID(nsIDOMFormListener)        },
+    { "oninput",         nsnull, &NS_GET_IID(nsIDOMFormListener)        },
+
+    { "onpaint",         nsnull, &NS_GET_IID(nsIDOMPaintListener)       },
+    
+    { "ondragenter",     nsnull, &NS_GET_IID(nsIDOMDragListener)        },
+    { "ondragover",      nsnull, &NS_GET_IID(nsIDOMDragListener)        },
+    { "ondragexit",      nsnull, &NS_GET_IID(nsIDOMDragListener)        },
+    { "ondragdrop",      nsnull, &NS_GET_IID(nsIDOMDragListener)        },
+    { "ondraggesture",   nsnull, &NS_GET_IID(nsIDOMDragListener)        },
+
+    { nsnull,            nsnull, nsnull                                 }
+};
+
+
+static nsresult
+GetEventHandlerIID(nsIAtom* aName, nsIID* aIID, PRBool* aFound)
+{
+    *aFound = PR_FALSE;
+
+    EventHandlerMapEntry* entry = kEventHandlerMap;
+    while (entry->mAttributeAtom) {
+        if (entry->mAttributeAtom == aName) {
+            *aIID = *entry->mHandlerIID;
+            *aFound = PR_TRUE;
+            break;
+        }
+        ++entry;
+    }
+
+    return NS_OK;
+}
+
+static void
+InitEventHandlerMap()
+{
+    EventHandlerMapEntry* entry = kEventHandlerMap;
+    while (entry->mAttributeName) {
+        entry->mAttributeAtom = NS_NewAtom(entry->mAttributeName);
+        ++entry;
+    }
+}
+
+
+static void
+FinishEventHandlerMap()
+{
+    EventHandlerMapEntry* entry = kEventHandlerMap;
+    while (entry->mAttributeName) {
+        NS_IF_RELEASE(entry->mAttributeAtom);
+        ++entry;
+    }
+}
+
 
 //----------------------------------------------------------------------
 
@@ -374,7 +480,6 @@ static PRBool HasMutationListeners(nsIContent* aContent, PRUint32 aType)
 nsrefcnt             nsXULElement::gRefCnt;
 nsIRDFService*       nsXULElement::gRDFService;
 nsINameSpaceManager* nsXULElement::gNameSpaceManager;
-nsIXULContentUtils*  nsXULElement::gXULUtils;
 PRInt32              nsXULElement::kNameSpaceID_RDF;
 PRInt32              nsXULElement::kNameSpaceID_XUL;
 
@@ -434,13 +539,7 @@ nsXULElement::Init()
             gNameSpaceManager->RegisterNameSpace(NS_ConvertASCIItoUCS2(kXULNameSpaceURI), kNameSpaceID_XUL);
         }
 
-        rv = nsServiceManager::GetService(kXULContentUtilsCID,
-                                          NS_GET_IID(nsIXULContentUtils),
-                                          (nsISupports**) &gXULUtils);
-        NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get XUL content utils");
-        if (NS_FAILED(rv)) return rv;
-
-        nsXULAtoms::AddRef();
+        InitEventHandlerMap();
     }
 
     return NS_OK;
@@ -463,20 +562,14 @@ nsXULElement::~nsXULElement()
 
     // Clean up shared statics
     if (--gRefCnt == 0) {
+        FinishEventHandlerMap();
+
         if (gRDFService) {
             nsServiceManager::ReleaseService(kRDFServiceCID, gRDFService);
             gRDFService = nsnull;
         }
         
-
         NS_IF_RELEASE(gNameSpaceManager);
-
-        if (gXULUtils) {
-            nsServiceManager::ReleaseService(kXULContentUtilsCID, gXULUtils);
-            gXULUtils = nsnull;
-        }
-
-        nsXULAtoms::Release();
     }
 }
 
@@ -528,7 +621,7 @@ nsXULElement::Create(nsXULPrototypeElement* aPrototype,
                 PRBool found;
                 nsCOMPtr<nsIAtom> name;
                 attr->mNodeInfo->GetNameAtom(*getter_AddRefs(name));
-                rv = gXULUtils->GetEventHandlerIID(name, &iid, &found);
+                rv = GetEventHandlerIID(name, &iid, &found);
                 if (NS_FAILED(rv)) return rv;
 
                 if (found) {
@@ -1932,32 +2025,57 @@ nsXULElement::GetScriptObject(nsIScriptContext* aContext, void** aScriptObject)
     nsresult rv = NS_OK;
 
     if (! mScriptObject) {
-        // The actual script object that we create will depend on our
-        // tag...
-        nsresult (*PR_CALLBACK fn)(nsIScriptContext* aContext, nsISupports* aSupports, nsISupports* aParent, void** aReturn);
+        // Use the XBL service to get the `base' tag, which'll be how
+        // we determine what kind of script object to cook up.
+        nsCOMPtr<nsIXBLService> xblService = do_GetService("@mozilla.org/xbl;1", &rv);
+        NS_ASSERTION(xblService != nsnull, "couldn't get XBL service");
+        if (! xblService)
+            return NS_ERROR_UNEXPECTED;
 
         nsCOMPtr<nsIAtom> tag;
         PRInt32 dummy;
-        NS_WITH_SERVICE(nsIXBLService, xblService, "@mozilla.org/xbl;1", &rv);
         xblService->ResolveTag(NS_STATIC_CAST(nsIStyledContent*, this), &dummy, getter_AddRefs(tag));
 
+        // Use the DOM's script object factory to cough up a script
+        // object
+        nsAutoString tagStr;
+        tag->ToString(tagStr);
+
+        nsCOMPtr<nsIDOMScriptObjectFactory> factory
+            = do_GetService(kDOMScriptObjectFactoryCID, &rv);
+
+        NS_ASSERTION(factory != nsnull, "couldn't get script object factory");
+        if (! factory)
+            return NS_ERROR_UNEXPECTED;
+
+        // We'll either be parented by the element that encloses us
+        // (if there is one), or the document.
+        nsISupports* parent =  mParent
+            ? NS_STATIC_CAST(nsISupports*, mParent)
+            : NS_STATIC_CAST(nsISupports*, mDocument);
+
+        rv = factory->NewScriptXULElement(tagStr, aContext,
+                                          NS_STATIC_CAST(nsIStyledContent*, this),
+                                          parent,
+                                          &mScriptObject);
+                                          
+
+        // The actual script object that we created will depend on our
+        // tag's name
         const char* rootname;
         if (tag.get() == nsXULAtoms::tree) {
-            fn = NS_NewScriptXULTreeElement;
             rootname = "nsXULTreeElement::mScriptObject";
         }
         else {
-            fn = NS_NewScriptXULElement;
             rootname = "nsXULElement::mScriptObject";
         }
 
-        // Create the script object; N.B. that if |mDocument| is null,
-        // the script object's |parent| will refer to the class's
-        // ctor. This is distinctly different from an element that
-        // lives "in" the document when its script object is created.
-        rv = fn(aContext, (nsIDOMXULElement*) this, mDocument, (void**) &mScriptObject);
-
-        // Ensure that a reference exists to this element
+        // Ensure that a reference exists to this element.
+        //
+        // XXX This is different from nsGenericElement, which doesn't
+        // root until the element is in the document; however, we're
+        // screwed, and GC will cause us to lose properties if we
+        // don't eagerly root.
         aContext->AddNamedReference((void*) &mScriptObject, mScriptObject, rootname);
 
         // See if we have a frame.
@@ -2285,7 +2403,7 @@ nsXULElement::SetDocument(nsIDocument* aDocument, PRBool aDeep, PRBool aCompileE
                 if (nameSpaceID == kNameSpaceID_None) {
                     if (aCompileEventHandlers) {
                         nsIID iid;
-                        rv = gXULUtils->GetEventHandlerIID(attr, &iid, &reset);
+                        rv = GetEventHandlerIID(attr, &iid, &reset);
                         if (NS_FAILED(rv)) return rv;
                     }
 
@@ -2830,7 +2948,7 @@ nsXULElement::SetAttribute(nsINodeInfo* aNodeInfo,
         nsIID iid;
         PRBool found;
 
-        rv = gXULUtils->GetEventHandlerIID(attrName, &iid, &found);
+        rv = GetEventHandlerIID(attrName, &iid, &found);
         if (NS_FAILED(rv)) return rv;
 
         if (found) {

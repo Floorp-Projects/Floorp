@@ -69,7 +69,7 @@
 #include "nsIStyleSet.h"
 #include "nsISizeOfHandler.h"
 #include "nsStyleUtil.h"
-#ifdef INCLUDE_XUL
+#ifdef MOZ_XUL
 #include "nsIXULContent.h"
 #endif
 
@@ -2737,7 +2737,7 @@ SelectorMatchesData::SelectorMatchesData(nsIPresContext* aPresContext, nsIConten
 
     // check for HTMLContent and Link status
     //
-#ifdef INCLUDE_XUL
+#ifdef MOZ_XUL
 #ifndef DONT_OPTIMIZE_ISHTMLCONTENT_FOR_XUL
     // check for HTML content
     // NOTE: optimization to first check for XULContent since asking a XUL element to 

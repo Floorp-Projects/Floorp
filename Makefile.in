@@ -95,6 +95,7 @@ DIRS		+= \
 		modules/oji \
 		modules/libjar \
 		caps \
+		rdf \
 		expat \
 		htmlparser \
 		gfx \
@@ -105,7 +106,6 @@ DIRS		+= \
 		content \
 		layout \
 		db \
-		rdf \
 		docshell \
 		webshell \
 		embedding \

@@ -57,6 +57,8 @@ SHARED_LIBRARY_LIBS = \
 		$(DIST)/lib/libgkconxmldoc_s.$(LIB_SUFFIX) \
 		$(DIST)/lib/libgkconxsldoc_s.$(LIB_SUFFIX) \
 		$(DIST)/lib/libgkconxulcon_s.$(LIB_SUFFIX) \
+		$(DIST)/lib/libgkconxuldoc_s.$(LIB_SUFFIX) \
+		$(DIST)/lib/libgkconxultmpl_s.$(LIB_SUFFIX) \
 		$(DIST)/lib/libgkconxbl_s.$(LIB_SUFFIX) \
 		$(DIST)/lib/libgkconbase_s.$(LIB_SUFFIX) \
 		$(NULL)
@@ -89,6 +91,7 @@ INCLUDES	+= -I$(srcdir)/../base/src \
 		   -I$(srcdir)/../html/style/src \
 		   -I$(srcdir)/../xul/content/src \
 		   -I$(srcdir)/../xul/base/src \
+		   -I$(srcdir)/../xul/templates/src \
 		   -I$(srcdir)/../events/src \
 		   $(NULL)
 

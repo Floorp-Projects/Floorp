@@ -89,6 +89,5 @@ public:
 };
 
 extern nsresult NS_NewXULTemplateBuilder(nsIRDFContentModelBuilder** aResult);
-extern nsresult NS_NewRDFXULBuilder(nsIRDFContentModelBuilder** aResult);
 
 #endif // nsIRDFContentModelBuilder_h__

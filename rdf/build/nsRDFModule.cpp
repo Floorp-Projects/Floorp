@@ -25,15 +25,11 @@
 
 #include "nsRDFModule.h"
 #include "nsIFactory.h"
-#include "nsILocalStore.h"
 #include "nsIRDFContainer.h"
 #include "nsIRDFContainerUtils.h"
 #include "nsIRDFCompositeDataSource.h"
-#include "nsIRDFContentModelBuilder.h"
 #include "nsIRDFContentSink.h"
 #include "nsIRDFService.h"
-#include "nsIXULContentSink.h"
-#include "nsIXULPrototypeCache.h"
 #include "nsISupports.h"
 #include "nsRDFBaseDataSources.h"
 #include "nsRDFBuiltInDataSources.h"
@@ -41,15 +37,8 @@
 #include "nsRDFCID.h"
 #include "nsIComponentManager.h"
 #include "rdf.h"
-#include "nsIXULContentUtils.h"
-#include "nsIXULDocument.h"
-#include "nsIXULSortService.h"
-#include "nsIXULPopupListener.h"
 #include "nsIServiceManager.h"
-#include "nsIElementFactory.h"
-#include "nsIControllerCommand.h"
-
-extern nsresult NS_NewXULElementFactory(nsIElementFactory** aResult);
+#include "nsILocalStore.h"
 
 //----------------------------------------------------------------------
 
@@ -84,29 +73,16 @@ CreateNew##_func(nsISupports* aOuter, REFNSIID aIID, void **aResult) \
 extern nsresult
 NS_NewDefaultResource(nsIRDFResource** aResult);
 
-extern NS_IMETHODIMP
-NS_NewXULControllers(nsISupports* aOuter, REFNSIID aIID, void** aResult);
-
-
 MAKE_CTOR(RDFService,RDFService,RDFService)
-MAKE_CTOR(XULSortService,XULSortService,XULSortService)
-MAKE_CTOR(XULPopupListener,XULPopupListener,XULPopupListener)
-MAKE_CTOR(XULElementFactory, XULElementFactory, ElementFactory)
 MAKE_CTOR(RDFXMLDataSource,RDFXMLDataSource,RDFDataSource)
 MAKE_CTOR(RDFFileSystemDataSource,RDFFileSystemDataSource,RDFDataSource)
 MAKE_CTOR(RDFCompositeDataSource,RDFCompositeDataSource,RDFCompositeDataSource)
 MAKE_CTOR(RDFContainer,RDFContainer,RDFContainer)
 
 MAKE_CTOR(RDFContainerUtils,RDFContainerUtils,RDFContainerUtils)
-MAKE_CTOR(XULDocument,XULDocument,XULDocument)
-MAKE_CTOR(XULTemplateBuilder,XULTemplateBuilder,RDFContentModelBuilder)
 
 MAKE_CTOR(RDFContentSink,RDFContentSink,RDFContentSink)
-MAKE_CTOR(XULContentSink,XULContentSink,XULContentSink)
 MAKE_CTOR(RDFDefaultResource,DefaultResource,RDFResource)
-MAKE_CTOR(LocalStore,LocalStore,LocalStore)
-
-MAKE_CTOR(ControllerCommandManager,ControllerCommandManager,ControllerCommandManager)
 
 // The list of components we register
 static nsModuleComponentInfo components[] = 
@@ -131,12 +107,6 @@ static nsModuleComponentInfo components[] =
       NS_NewRDFInMemoryDataSource
     },
 
-    { "Local Store", 
-      NS_LOCALSTORE_CID,
-      NS_RDF_DATASOURCE_CONTRACTID_PREFIX "local-store", 
-      CreateNewLocalStore
-    },
-    
     { "RDF XML Data Source", 
       NS_RDFXMLDATASOURCE_CID,
       NS_RDF_DATASOURCE_CONTRACTID_PREFIX "xml-datasource", 
@@ -175,66 +145,10 @@ static nsModuleComponentInfo components[] =
       NS_RDF_CONTRACTID "/rdf-service;1",
       CreateNewRDFService 
     },
-    
-    { "XUL Sort Service", 
-      NS_XULSORTSERVICE_CID,
-      NS_RDF_CONTRACTID "/xul-sort-service;1", 
-      CreateNewXULSortService
-    },
-        
-    { "XUL Template Builder", 
-      NS_XULTEMPLATEBUILDER_CID,
-      NS_RDF_CONTRACTID "/xul-template-builder;1", 
-      CreateNewXULTemplateBuilder      
-    },
-    
-    { "XUL Content Sink", 
-      NS_XULCONTENTSINK_CID,
-      NS_RDF_CONTRACTID "/xul-content-sink;1", 
-      CreateNewXULContentSink
-    },
-    
-    { "XUL Document", 
-      NS_XULDOCUMENT_CID,
-      NS_RDF_CONTRACTID "/xul-document;1", 
-      CreateNewXULDocument
-    },
-    
-    { "XUL PopupListener", 
-      NS_XULPOPUPLISTENER_CID,
-      NS_RDF_CONTRACTID "/xul-popup-listener;1", 
-      CreateNewXULPopupListener
-    },
-    
-    { "XUL Controllers", 
-      NS_XULCONTROLLERS_CID,
-      NS_RDF_CONTRACTID "/xul-controllers;1", 
-      NS_NewXULControllers
-    },
 
-    { "XUL Content Utilities", 
-      NS_XULCONTENTUTILS_CID ,
-      NS_RDF_CONTRACTID "/xul-content-utils;1", 
-      NS_NewXULContentUtils
-    },
-    
-    { "XUL Prototype Cache", 
-      NS_XULPROTOTYPECACHE_CID,
-      NS_RDF_CONTRACTID "/xul-prototype-cache;1", 
-      NS_NewXULPrototypeCache
-    },
-
-    { "XUL Element Factory",
-      NS_XULELEMENTFACTORY_CID,
-      NS_ELEMENT_FACTORY_CONTRACTID_PREFIX "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul",
-      CreateNewXULElementFactory
-    },
-
-    { "Controller Command Manager",
-      NS_CONTROLLERCOMMANDMANAGER_CID,
-      NS_RDF_CONTRACTID "/controller-command-manager;1",
-      CreateNewControllerCommandManager
-    },
+    // XXX move this to XPFE at some point.
+    { "Local Store", NS_LOCALSTORE_CID,
+      NS_LOCALSTORE_CONTRACTID, NS_NewLocalStore },
 };
 
 NS_IMPL_NSGETMODULE("nsRDFModule", components);

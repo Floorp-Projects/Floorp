@@ -61,6 +61,11 @@
 #include "nsContentPolicyUtils.h"
 #define PRODUCT_NAME "Gecko"
 
+#ifdef MOZ_XUL
+#include "nsXULAtoms.h"
+#include "nsXULContentUtils.h"
+#endif
+
 static NS_DEFINE_CID(kHTTPHandlerCID, NS_IHTTPHANDLER_CID);
 static nsContentModule *gModule = NULL;
 
@@ -195,6 +200,11 @@ nsContentModule::Initialize()
   nsHTMLAtoms::AddRefAtoms();
   nsLayoutAtoms::AddRefAtoms();
 
+#ifdef MOZ_XUL
+  nsXULAtoms::AddRefAtoms();
+  nsXULContentUtils::Init();
+#endif
+
   // XXX Initialize the script name set thingy-ma-jigger
   if (!gRegistry) {
     rv = nsServiceManager::GetService(kCScriptNameSetRegistryCID,
@@ -229,6 +239,10 @@ nsContentModule::Shutdown()
   nsCSSAtoms::ReleaseAtoms();
   nsHTMLAtoms::ReleaseAtoms();
   nsLayoutAtoms::ReleaseAtoms();
+
+#ifdef MOZ_XUL
+  nsXULAtoms::ReleaseAtoms();
+#endif
 
   NS_IF_RELEASE(gRegistry);
   NS_IF_RELEASE(gUAStyleSheet);
@@ -340,7 +354,28 @@ static Components gComponents[] = {
   { "Content policy service", NS_CONTENTPOLICY_CID, NS_CONTENTPOLICY_CONTRACTID },
   { "NodeInfoManager", NS_NODEINFOMANAGER_CID, NS_NODEINFOMANAGER_CONTRACTID },
   { "DOM CSS Computed Style Declaration", NS_COMPUTEDDOMSTYLE_CID,
-    "@mozilla.org/DOM/Level2/CSS/computedStyleDeclaration;1" }
+    "@mozilla.org/DOM/Level2/CSS/computedStyleDeclaration;1" },
+
+#ifdef MOZ_XUL
+  { "XUL Sort Service", NS_XULSORTSERVICE_CID,
+    "@mozilla.org/xul/xul-sort-service;1", },
+  { "XUL Template Builder", NS_XULTEMPLATEBUILDER_CID,
+    "@mozilla.org/xul/xul-template-builder;1", },
+  { "XUL Content Sink", NS_XULCONTENTSINK_CID,
+    "@mozilla.org/xul/xul-content-sink;1", },
+  { "XUL Document", NS_XULDOCUMENT_CID,
+    "@mozilla.org/xul/xul-document;1", },
+  { "XUL PopupListener", NS_XULPOPUPLISTENER_CID,
+    "@mozilla.org/xul/xul-popup-listener;1", },
+  { "XUL Controllers", NS_XULCONTROLLERS_CID,
+    "@mozilla.org/xul/xul-controllers;1", },
+  { "XUL Prototype Cache", NS_XULPROTOTYPECACHE_CID,
+    "@mozilla.org/xul/xul-prototype-cache;1", },
+  { "XUL Element Factory", NS_XULELEMENTFACTORY_CID,
+    NS_ELEMENT_FACTORY_CONTRACTID_PREFIX "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul", },
+#endif
+  { "Controller Command Manager", NS_CONTROLLERCOMMANDMANAGER_CID,
+    "@mozilla.org/content/controller-command-manager;1", },
 };
 #define NUM_COMPONENTS (sizeof(gComponents) / sizeof(gComponents[0]))
 

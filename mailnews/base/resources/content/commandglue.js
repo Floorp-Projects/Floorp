@@ -642,7 +642,7 @@ function SortFolderPane(column, sortKey)
 function SortColumn(node, sortKey, secondarySortKey, direction)
 {
 	//dump('In SortColumn\n');
-	var xulSortService = Components.classes["@mozilla.org/rdf/xul-sort-service;1"].getService();
+	var xulSortService = Components.classes["@mozilla.org/xul/xul-sort-service;1"].getService();
 
 	if (xulSortService)
 	{

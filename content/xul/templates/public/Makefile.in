@@ -26,11 +26,15 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE		= rdf
+MODULE		= xultmpl
+
+XPIDLSRCS	= \
+		nsIXULSortService.idl \
+		nsIXULTemplateBuilder.idl \
+		$(NULL)
 
 EXPORTS		= \
-                nsIXULPopupListener.h \
-		nsIXULContent.h \
+                nsIRDFContentModelBuilder.h \
 		$(NULL)
 
 EXPORTS		:= $(addprefix $(srcdir)/, $(EXPORTS))

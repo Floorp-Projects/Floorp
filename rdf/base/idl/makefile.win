@@ -36,12 +36,6 @@ XPIDLSRCS=      .\nsIRDFNode.idl                  \
                 .\nsIRDFRemoteDataSource.idl      \
                 .\nsIRDFXMLSink.idl               \
                 .\nsIRDFXMLSource.idl             \
-                .\nsIController.idl               \
-                .\nsIControllers.idl              \
-                .\nsIControllerCommand.idl        \
-                .\nsIXULSortService.idl           \
-                .\nsIXULTemplateBuilder.idl       \
-                .\xulstubs.idl                    \
                 $(NULL)
 
 include <$(DEPTH)\config\rules.mak>

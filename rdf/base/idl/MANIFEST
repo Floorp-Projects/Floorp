@@ -11,7 +11,3 @@ nsIRDFResource.idl
 nsIRDFService.idl
 nsIRDFXMLSink.idl
 nsIRDFXMLSource.idl
-nsIXULSortService.idl
-nsIXULTemplateBuilder.idl
-nsIControllerCommand.idl
-xulstubs.idl

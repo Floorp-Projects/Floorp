@@ -21,7 +21,14 @@
 
 DEPTH=..\..
 
+include <$(DEPTH)\config\config.mak>
 
-DIRS = base coreDOM html css events range jsurl build
+DIRS = base coreDOM html css events range jsurl
+
+!ifdef MOZ_XUL
+DIRS = $(DIRS) xul
+!endif
+
+DIRS = $(DIRS) build
 
 include <$(DEPTH)\config\rules.mak>

@@ -376,7 +376,7 @@ function SortResultPane(column, sortKey)
 
 function DoSort(column, key, direction)
 {
-  var isupports = Components.classes["@mozilla.org/rdf/xul-sort-service;1"].getService();
+  var isupports = Components.classes["@mozilla.org/xul/xul-sort-service;1"].getService();
   if (!isupports)
     return false;
   

@@ -3713,6 +3713,19 @@ MOZ_ARG_ENABLE_BOOL(ldap,
   MOZ_LDAP_XPCOM=1
     )
 
+dnl --disable-xul
+dnl
+MOZ_XUL=1
+MOZ_ARG_DISABLE_BOOL(xul,
+[  --disable-xul           Disable XUL ],
+  MOZ_XUL= )
+if test "$MOZ_XUL"; then
+  AC_DEFINE(MOZ_XUL)
+  AC_DEFINE(INCLUDE_XUL)
+fi
+AC_SUBST(MOZ_XUL)
+AC_SUBST(INCLUDE_XUL)
+
 dnl --enable mathml
 dnl TODO: handle include files here ?
 dnl

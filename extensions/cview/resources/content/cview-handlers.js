@@ -60,7 +60,7 @@ function onSortCol(sortColName)
      * moment.
      */
     const nsIXULSortService = Components.interfaces.nsIXULSortService;
-    const isupports_uri = "@mozilla.org/rdf/xul-sort-service;1";
+    const isupports_uri = "@mozilla.org/xul/xul-sort-service;1";
     
     var node = document.getElementById(sortColName);
     // determine column resource to sort on

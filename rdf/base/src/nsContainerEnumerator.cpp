@@ -63,66 +63,75 @@ static NS_DEFINE_CID(kRDFContainerUtilsCID, NS_RDFCONTAINERUTILS_CID);
 class ContainerEnumeratorImpl : public nsISimpleEnumerator {
 private:
     // pseudo-constants
-    static nsrefcnt        gRefCnt;
-    static nsIRDFResource* kRDF_nextVal;
+    static nsrefcnt              gRefCnt;
+    static nsIRDFResource*       kRDF_nextVal;
+    static nsIRDFContainerUtils* gRDFC;
 
     nsCOMPtr<nsIRDFDataSource>      mDataSource;
     nsCOMPtr<nsIRDFResource>        mContainer;
     nsCOMPtr<nsIRDFResource>        mOrdinalProperty;
 
-    nsISimpleEnumerator* mCurrent;
-    nsIRDFNode*       mResult;
+    nsCOMPtr<nsISimpleEnumerator>   mCurrent;
+    nsCOMPtr<nsIRDFNode>            mResult;
     PRInt32 mNextIndex;
 
 public:
     ContainerEnumeratorImpl(nsIRDFDataSource* ds, nsIRDFResource* container);
-    virtual ~ContainerEnumeratorImpl(void);
+    virtual ~ContainerEnumeratorImpl();
+
+    nsresult Init();
 
     NS_DECL_ISUPPORTS
-
     NS_DECL_NSISIMPLEENUMERATOR
 };
 
-nsrefcnt        ContainerEnumeratorImpl::gRefCnt;
-nsIRDFResource* ContainerEnumeratorImpl::kRDF_nextVal;
+nsrefcnt              ContainerEnumeratorImpl::gRefCnt;
+nsIRDFResource*       ContainerEnumeratorImpl::kRDF_nextVal;
+nsIRDFContainerUtils* ContainerEnumeratorImpl::gRDFC;
 
 
 ContainerEnumeratorImpl::ContainerEnumeratorImpl(nsIRDFDataSource* aDataSource,
                                                  nsIRDFResource* aContainer)
-    : mCurrent(nsnull),
-      mResult(nsnull),
-      mNextIndex(1)
+    : mNextIndex(1)
 {
     NS_INIT_REFCNT();
-
     mDataSource = dont_QueryInterface(aDataSource);
     mContainer  = dont_QueryInterface(aContainer);
+}
 
+nsresult
+ContainerEnumeratorImpl::Init()
+{
     if (gRefCnt++ == 0) {
         nsresult rv;
-        NS_WITH_SERVICE(nsIRDFService, service, kRDFServiceCID, &rv);
-        NS_ASSERTION(NS_SUCCEEDED(rv), "unable to acquire resource manager");
-        if (NS_FAILED(rv))
-            return;
+        nsCOMPtr<nsIRDFService> rdf = do_GetService(kRDFServiceCID);
+        NS_ASSERTION(rdf != nsnull, "unable to acquire resource manager");
+        if (! rdf)
+            return NS_ERROR_FAILURE;
 
-        rv = service->GetResource(RDF_NAMESPACE_URI "nextVal", &kRDF_nextVal);
+        rv = rdf->GetResource(RDF_NAMESPACE_URI "nextVal", &kRDF_nextVal);
         NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get resource");
+        if (NS_FAILED(rv)) return rv;
+
+        rv = nsServiceManager::GetService(kRDFContainerUtilsCID,
+                                          NS_GET_IID(nsIRDFContainerUtils),
+                                          NS_REINTERPRET_CAST(nsISupports**, &gRDFC));
+        if (NS_FAILED(rv)) return rv;
     }
+
+    return NS_OK;
 }
 
 
-ContainerEnumeratorImpl::~ContainerEnumeratorImpl(void)
+ContainerEnumeratorImpl::~ContainerEnumeratorImpl()
 {
-#ifdef DEBUG_REFS
-    --gInstanceCount;
-    fprintf(stdout, "%d - RDF: ContainerEnumeratorImpl\n", gInstanceCount);
-#endif
-
-    NS_IF_RELEASE(mResult);
-    NS_IF_RELEASE(mCurrent);
-
     if (--gRefCnt == 0) {
         NS_IF_RELEASE(kRDF_nextVal);
+
+        if (gRDFC) {
+            nsServiceManager::ReleaseService(kRDFContainerUtilsCID, gRDFC);
+            gRDFC = nsnull;
+        }
     }
 }
 
@@ -150,7 +159,11 @@ ContainerEnumeratorImpl::HasMoreElements(PRBool* aResult)
     // possible that we're targeting a composite datasource, we'll need to
     // "GetTargets()" and take the maximum value of "nextVal" to know the
     // upper bound.
-    PRInt32 count = 0;
+    //
+    // Remember that since nextVal is the next index that we'd assign
+    // to an element in a container, it's *one more* than count of
+    // elements in the container.
+    PRInt32 max = 0;
 
     nsCOMPtr<nsISimpleEnumerator> targets;
     rv = mDataSource->GetTargets(mContainer, kRDF_nextVal, PR_TRUE, getter_AddRefs(targets));
@@ -175,34 +188,34 @@ ContainerEnumeratorImpl::HasMoreElements(PRBool* aResult)
          PRInt32 err;
          PRInt32 nextVal = nsAutoString(nextValStr).ToInteger(&err);
 
-         if (nextVal > count)
-             count = nextVal;
+         if (nextVal > max)
+             max = nextVal;
     }
 
-    // Now iterate through each index.
-    while (mCurrent || mNextIndex < count) {
+    // Now pre-fetch our next value into mResult.
+    while (mCurrent || mNextIndex < max) {
+
+        // If mCurrent has been depleted, then conjure up a new one
         if (! mCurrent) {
-            NS_WITH_SERVICE(nsIRDFContainerUtils, rdfc, kRDFContainerUtilsCID, &rv);
+            rv = gRDFC->IndexToOrdinalResource(mNextIndex, getter_AddRefs(mOrdinalProperty));
             if (NS_FAILED(rv)) return rv;
 
-            rv = rdfc->IndexToOrdinalResource(mNextIndex, getter_AddRefs(mOrdinalProperty));
-            if (NS_FAILED(rv)) return rv;
-
-            rv = mDataSource->GetTargets(mContainer, mOrdinalProperty, PR_TRUE, &mCurrent);
+            rv = mDataSource->GetTargets(mContainer, mOrdinalProperty, PR_TRUE, getter_AddRefs(mCurrent));
             if (NS_FAILED(rv)) return rv;
 
             ++mNextIndex;
         }
 
-        do {
+        if (mCurrent) {
             PRBool hasMore;
             rv = mCurrent->HasMoreElements(&hasMore);
             if (NS_FAILED(rv)) return rv;
 
-            // Is the current enumerator depleted?
+            // Is the current enumerator depleted? If so, iterate to
+            // the next index.
             if (! hasMore) {
-                NS_RELEASE(mCurrent);
-                break;
+                mCurrent = nsnull;
+                continue;
             }
 
             // "Peek" ahead and pull out the next target.
@@ -210,12 +223,12 @@ ContainerEnumeratorImpl::HasMoreElements(PRBool* aResult)
             rv = mCurrent->GetNext(getter_AddRefs(result));
             if (NS_FAILED(rv)) return rv;
 
-            rv = result->QueryInterface(NS_GET_IID(nsIRDFNode), (void**) &mResult);
+            mResult = do_QueryInterface(result, &rv);
             if (NS_FAILED(rv)) return rv;
 
             *aResult = PR_TRUE;
             return NS_OK;
-        } while (1);
+        }
     }
 
     // If we get here, we ran out of elements. The cursor is empty.
@@ -236,8 +249,7 @@ ContainerEnumeratorImpl::GetNext(nsISupports** aResult)
     if (! hasMore)
         return NS_ERROR_UNEXPECTED;
 
-    // Don't AddRef: we "transfer" ownership to the caller
-    *aResult = mResult;
+    NS_ADDREF(*aResult = mResult);
     mResult = nsnull;
 
     return NS_OK;
@@ -268,7 +280,11 @@ NS_NewContainerEnumerator(nsIRDFDataSource* aDataSource,
         return NS_ERROR_OUT_OF_MEMORY;
 
     NS_ADDREF(result);
-    *aResult = result;
 
-    return NS_OK;
+    nsresult rv = result->Init();
+    if (NS_FAILED(rv))
+        NS_RELEASE(result);
+
+    *aResult = result;
+    return rv;
 }

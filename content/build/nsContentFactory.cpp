@@ -131,6 +131,8 @@ static NS_DEFINE_CID(kNodeInfoManagerCID, NS_NODEINFOMANAGER_CID);
 static NS_DEFINE_CID(kContentPolicyCID, NS_CONTENTPOLICY_CID);
 static NS_DEFINE_CID(kComputedDOMStyleCID, NS_COMPUTEDDOMSTYLE_CID);
 
+static NS_DEFINE_CID(kControllerCommandManagerCID, NS_CONTROLLERCOMMANDMANAGER_CID);
+
 extern nsresult NS_NewAnonymousContent2(nsIContent** aInstancePtrResult);
 
 extern nsresult NS_NewSelection(nsIFrameSelection** aResult);
@@ -156,6 +158,31 @@ extern nsresult NS_NewBindingManager(nsIBindingManager** aResult);
 extern nsresult NS_NewNodeInfoManager(nsINodeInfoManager** aResult);
 
 extern nsresult NS_NewContentPolicy(nsIContentPolicy** aResult);
+
+
+#ifdef MOZ_XUL
+#include "nsIXULSortService.h"
+#include "nsIRDFContentModelBuilder.h"
+#include "nsIXULContentSink.h"
+#include "nsIXULDocument.h"
+#include "nsIXULPopupListener.h"
+#include "nsIXULPrototypeCache.h"
+#include "nsIController.h"
+#include "nsIControllers.h"
+#include "nsIControllerCommand.h"
+
+static NS_DEFINE_CID(kXULSortServiceCID,     NS_XULSORTSERVICE_CID);
+static NS_DEFINE_CID(kXULTemplateBuilderCID, NS_XULTEMPLATEBUILDER_CID);
+static NS_DEFINE_CID(kXULContentSinkCID,     NS_XULCONTENTSINK_CID);
+static NS_DEFINE_CID(kXULDocumentCID,        NS_XULDOCUMENT_CID);
+static NS_DEFINE_CID(kXULPopupListenerCID,   NS_XULPOPUPLISTENER_CID);
+static NS_DEFINE_CID(kXULElementFactoryCID,  NS_XULELEMENTFACTORY_CID);
+static NS_DEFINE_CID(kXULPrototypeCacheCID,  NS_XULPROTOTYPECACHE_CID);
+static NS_DEFINE_CID(kXULControllersCID,     NS_XULCONTROLLERS_CID);
+
+extern nsresult NS_NewXULElementFactory(nsIElementFactory** aResult);
+extern NS_IMETHODIMP NS_NewXULControllers(nsISupports* aOuter, REFNSIID aIID, void** aResult);
+#endif
 
 
 //----------------------------------------------------------------------
@@ -503,6 +530,71 @@ nsContentFactory::CreateInstance(nsISupports *aOuter,
       return res;
     }
   }
+#if defined(MOZ_XUL)
+  else if (mClassID.Equals(kXULSortServiceCID)) {
+    res = NS_NewXULSortService((nsIXULSortService**) &inst);
+    if (NS_FAILED(res)) {
+      LOG_NEW_FAILURE("NS_NewXULSortService", res);
+      return res;
+    }
+  }
+  else if (mClassID.Equals(kXULTemplateBuilderCID)) {
+    res = NS_NewXULTemplateBuilder((nsIRDFContentModelBuilder**) &inst);
+    if (NS_FAILED(res)) {
+      LOG_NEW_FAILURE("NS_NewXULTemplateBuilder", res);
+      return res;
+    }
+  }
+  else if (mClassID.Equals(kXULContentSinkCID)) {
+    res = NS_NewXULContentSink((nsIXULContentSink**) &inst);
+    if (NS_FAILED(res)) {
+      LOG_NEW_FAILURE("NS_NewXULContentSink", res);
+      return res;
+    }
+  }
+  else if (mClassID.Equals(kXULDocumentCID)) {
+    res = NS_NewXULDocument((nsIXULDocument**) &inst);
+    if (NS_FAILED(res)) {
+      LOG_NEW_FAILURE("NS_NewXULDocument", res);
+      return res;
+    }
+  }
+  else if (mClassID.Equals(kXULPopupListenerCID)) {
+    res = NS_NewXULPopupListener((nsIXULPopupListener**) &inst);
+    if (NS_FAILED(res)) {
+      LOG_NEW_FAILURE("NS_NewXULPopupListener", res);
+      return res;
+    }
+  }
+  else if (mClassID.Equals(kXULElementFactoryCID)) {
+    res = NS_NewXULElementFactory((nsIElementFactory**) &inst);
+    if (NS_FAILED(res)) {
+      LOG_NEW_FAILURE("NS_NewXULElementFactory", res);
+      return res;
+    }
+  }
+  else if (mClassID.Equals(kXULPrototypeCacheCID)) {
+    res = NS_NewXULPrototypeCache(nsnull, NS_GET_IID(nsIXULPrototypeCache), (void**) &inst);
+    if (NS_FAILED(res)) {
+      LOG_NEW_FAILURE("NS_NewXULPrototypeCache", res);
+      return res;
+    }
+  }
+  else if (mClassID.Equals(kXULControllersCID)) {
+    res = NS_NewXULControllers(nsnull, NS_GET_IID(nsIControllers), (void**) &inst);
+    if (NS_FAILED(res)) {
+      LOG_NEW_FAILURE("NS_NewXULControllers", res);
+      return res;
+    }
+  }
+  else if (mClassID.Equals(kControllerCommandManagerCID)) {
+    res = NS_NewControllerCommandManager((nsIControllerCommandManager**) &inst);
+    if (NS_FAILED(res)) {
+      LOG_NEW_FAILURE("NS_NewControllerCommandManager", res);
+      return res;
+    }
+  }
+#endif
   else {
     return NS_NOINTERFACE;
   }
