@@ -74,9 +74,10 @@ Rights Reserved.
 <commands id="commands">
   <commandset id="msgComposeCommandUpdate"
     commandupdater="true"
-    events="focus,tree-select"
+    events="create, focus,tree-select"
     oncommandupdate="CommandUpdate_MsgCompose()"
   />
+
   <commandset id="globalEditMenuItems"/>
   <commandset id="selectEditMenuItems"/>
   <commandset id="undoEditMenuItems"/>
@@ -93,27 +94,90 @@ Rights Reserved.
 
 <broadcasterset id="broadcasterset">
 	<!-- File Menu -->
-	<broadcaster id="cmd_newNavigator"/>
-	<broadcaster id="cmd_newEditor"/>
-	<broadcaster id="cmd_close" oncommand="if (ComposeCanClose()) CloseWindow()"/>
+	<broadcaster id="cmd_attachFile" oncommand="goDoCommand('cmd_attachFile')"/>
+	<broadcaster id="cmd_attachPage" oncommand="goDoCommand('cmd_attachPage')"/>
+	<broadcaster id="cmd_close" oncommand="goDoCommand('cmd_close')"/>
 	<broadcaster id="cmd_saveDefault" oncommand="goDoCommand('cmd_saveDefault')"/>
 	<broadcaster id="cmd_saveAsDraft" oncommand="goDoCommand('cmd_saveAsDraft')"/>
 	<broadcaster id="cmd_saveAsTemplate" oncommand="goDoCommand('cmd_saveAsTemplate')"/>
-	<broadcaster id="cmd_attachFile" oncommand="goDoCommand('cmd_attachFile')"/>
-	<broadcaster id="cmd_selectAddress" oncommand="goDoCommand('cmd_selectAddress')"/>
 	<broadcaster id="cmd_sendNow" oncommand="goDoCommand('cmd_sendNow')"/>
 	<broadcaster id="cmd_sendLater" oncommand="goDoCommand('cmd_sendLater')"/>
-	<broadcaster id="cmd_print" oncommand="nsCmd:BrowserPrint"/>
- 	<broadcaster id="cmd_quit"/>
+	<!--broadcaster id="cmd_quit"/-->
+
 	<!-- Edit Menu -->
-	<broadcaster id="cmd_undo"/>
-	<broadcaster id="cmd_redo"/>
-	<broadcaster id="cmd_cut"/>
-	<broadcaster id="cmd_copy"/>
-	<broadcaster id="cmd_paste"/>
-	<broadcaster id="cmd_delete"/>
-	<broadcaster id="cmd_selectAll"/>
-	<broadcaster id="cmd_preferences"/>
+	<!--broadcaster id="cmd_pasteQuote"/  DO NOT INCLUDE THOSE PBROCASTER ESLE THE EDIT MENU WILL BE BROKEN! -->
+	<!--broadcaster id="cmd_find"/-->
+	<!--broadcaster id="cmd_findNext"/-->
+	<broadcaster id="cmd_account" oncommand="goDoCommand('cmd_account')"/>
+	<broadcaster id="cmd_preferences" oncommand="goDoCommand('cmd_preferences')"/>
+
+  <!-- View Menu -->
+  <broadcaster id="cmd_showComposeToolbar" oncommand="goDoCommand('cmd_showComposeToolbar')"/>
+  <broadcaster id="cmd_showFormatToolbar" oncommand="goDoCommand('cmd_showFormatToolbar')"/>
+  
+  <!-- Insert Menu -->
+  <broadcaster id="cmd_insert"/>
+  <!--broadcaster id="cmd_link"/-->
+  <!--broadcaster id="cmd_anchor"/-->
+  <!--broadcaster id="cmd_image"/-->
+  <!--broadcaster id="cmd_hline"/-->
+  <!--broadcaster id="cmd_table"/-->
+  <!--broadcaster id="cmd_insertHTML"/-->
+  <!--broadcaster id="cmd_insertChars"/-->
+  <!--broadcaster id="cmd_insertBreak"/-->
+  <!--broadcaster id="cmd_insertBreakAll"/-->
+  
+  <!-- Format Menu -->
+  <broadcaster id="cmd_format"/>
+  <!--broadcaster id="cmd_decreaseFont"/-->
+  <!--broadcaster id="cmd_increaseFont"/-->
+  <!--broadcaster id="cmd_bold"/-->
+  <!--broadcaster id="cmd_italic"/-->
+  <!--broadcaster id="cmd_underline"/-->
+  <!--broadcaster id="cmd_strikethrough"/-->
+  <!--broadcaster id="cmd_superscript"/-->
+  <!--broadcaster id="cmd_subscript"/-->
+  <!--broadcaster id="cmd_nobreak"/-->
+  <!--broadcaster id="cmd_em"/-->
+  <!--broadcaster id="cmd_strong"/-->
+  <!--broadcaster id="cmd_cite"/-->
+  <!--broadcaster id="cmd_abbr"/-->
+  <!--broadcaster id="cmd_acronym"/-->
+  <!--broadcaster id="cmd_code"/-->
+  <!--broadcaster id="cmd_samp"/-->
+  <!--broadcaster id="cmd_var"/-->
+  <!--broadcaster id="cmd_removeList"/-->
+  <!--broadcaster id="cmd_ul"/-->
+  <!--broadcaster id="cmd_ol"/-->
+  <!--broadcaster id="cmd_dt"/-->
+  <!--broadcaster id="cmd_dd"/-->
+  <!--broadcaster id="cmd_listProperties"/-->
+  <!--broadcaster id="cmd_indent"/-->
+  <!--broadcaster id="cmd_outdent"/-->
+  <!--broadcaster id="cmd_objectProperties"/-->
+  <!--broadcaster id="cmd_InsertTable"/-->
+  <!--broadcaster id="cmd_InsertRowAbove"/-->
+  <!--broadcaster id="cmd_InsertRowBelow"/-->
+  <!--broadcaster id="cmd_InsertColumnBefore"/-->
+  <!--broadcaster id="cmd_InsertColumnAfter"/-->
+  <!--broadcaster id="cmd_SelectTable"/-->
+  <!--broadcaster id="cmd_SelectRow"/-->
+  <!--broadcaster id="cmd_SelectColumn"/-->
+  <!--broadcaster id="cmd_SelectCell"/-->
+  <!--broadcaster id="cmd_SelectAllCells"/-->
+  <!--broadcaster id="cmd_DeleteTable"/-->
+  <!--broadcaster id="cmd_DeleteRow"/-->
+  <!--broadcaster id="cmd_DeleteColumn"/-->
+  <!--broadcaster id="cmd_DeleteCell"/-->
+  <!--broadcaster id="cmd_DeleteCellContents"/-->
+  <!--broadcaster id="cmd_NormalizeTable"/-->
+  <!--broadcaster id="cmd_tableJoinCells"/-->
+  <!--broadcaster id="cmd_tableSplitCell"/-->
+  <!--broadcaster id="cmd_editTable"/-->
+  
+  <!-- Options Menu -->
+	<broadcaster id="cmd_selectAddress" oncommand="goDoCommand('cmd_selectAddress')"/>
+	<broadcaster id="cmd_outputFormat" oncommand="OutputFormatMenuSelect(event.target)"/>
 
 	<broadcaster id="broadcaster_throbber" busy="false"/>
 </broadcasterset>
@@ -130,53 +194,26 @@ Rights Reserved.
 </popupset>
 <popupset id="aTooltipSet"/>
 
-<keyset id="keyset">
+<keyset id="defaultKeySet"/> <!-- defined in editorOverlay.xul-->
+
+<keyset id="msgComposeKeySet">
 	<!-- File Menu -->
 	<key id="key_newNavigator"/>
 	<key id="key_close"/>
 	<key id="key_save" xulkey="true" key="&saveCmd.key;" observes="cmd_saveDefault"/>
-	<!-- key id="key_attachFile" xulkey="true" key="&attachFileCmd.key;" observes="cmd_attachFile"/ -->
-	<!-- key id="key_selectAddresses" xulkey="true" key="&selectAddressCmd.key;" observes="cmd_selectAddress"/ -->
 	<!-- key id="key_sendNow" xulkey="true" keycode="&sendNowCmd.keycode;" observes="cmd_sendNow"/ -->
 	<!-- key id="key_sendLater" xulkey="true" keycode="&sendLaterCmd.keycode;" shift="true" observes="cmd_sendLater"/ -->
-	<key id="key_print" xulkey="true" key="&printCmd.key;" disabled="true" observes="cmd_print"/>
 	<key id="key_quit"/>
+	
 	<!-- Edit Menu -->
-	<key id="key_undo"/>
-	<key id="key_redo"/>
-	<key id="key_cut"/>
-	<key id="key_copy"/>
-	<key id="key_paste"/>
-	<key id="key_delete"/>
-	<key id="key_selectAll"/>
 	<key id="key_find" xulkey="true" key="&findCmd.key;"  observes="cmd_find"/>
-	<key id="key_findAgain" xulkey="true" key="&findAgainCmd.key;" observes="cmd_findAgain"/>
-	<key id="key_preferences"/>
+	<key id="key_findNext" xulkey="true" key="&findAgainCmd.key;" observes="cmd_findNext"/>
+
 	<!-- Options Menu -->
-    <key id="key_checkspelling" xulkey="true" key="&checkSpellingCmd.key;" observes="cmd_spelling" />
+	<!-- key id="key_selectAddresses" xulkey="true" key="&selectAddressCmd.key;" observes="cmd_selectAddress"/ -->
+  <key id="key_checkspelling" xulkey="true" key="&checkSpellingCmd.key;" observes="cmd_spelling" />
 	
 </keyset>
-
-<!--- REMOVE KEYSET UNTIL IT WORKS CORRECTLY ON MAC!
-ACTUALLY, EVERY TIME YOU TYPE ANY OF THE KEY DEFINED HERE AFTER WITHOUT ANY OF THE MODIFIERS PRESSED, THE COMMAND IS EXECUTED.
-
-These also need to call goDoCommand(), not editor JS functions. - - smfr
-<keyset id="defaultKeySet">
-	<key id="acmdkey" disabled="false" shift="false" xulkey="true" alt="false" key="a" onkeypress="EditorSelectAll()" />
-	<key id="bcmdkey" disabled="false" shift="false" xulkey="true" alt="false" key="b" onkeypress="EditorApplyStyle('b')"/>
-	<key id="ccmdkey" disabled="false" shift="false" xulkey="true" alt="false" key="c" onkeypress="EditorCopy()" />
-	<key id="fcmdkey" disabled="false" shift="false" xulkey="true" alt="false" key="f" onkeypress="EditorFind()" />
-	<key id="gcmdkey" disabled="false" shift="false" xulkey="true" alt="false" key="g" onkeypress="EditorFindNext()" />
-	<key id="icmdkey" disabled="false" shift="false" xulkey="true" alt="false" key="i" onkeypress="EditorApplyStyle('i')"/>
-	<key id="kcmdkey" disabled="false" shift="false" xulkey="true" alt="false" key="k" onkeypress="CheckSpelling()" />
-	<key id="ucmdkey" disabled="false" shift="false" xulkey="true" alt="false" key="u" onkeypress="EditorApplyStyle('u')"/>
-	<key id="vcmdkey" disabled="false" shift="false" xulkey="true" alt="false" key="v" onkeypress="EditorPaste()" />
-	<key id="xcmdkey" disabled="false" shift="false" xulkey="true" alt="false" key="x" onkeypress="EditorCut()" />
-	<key id="ycmdkey" disabled="false" shift="false" xulkey="true" alt="false" key="y" onkeypress="EditorRedo()" />
-	<key id="zcmdkey" disabled="false" shift="false" xulkey="true" alt="false" key="z" onkeypress="EditorUndo()" />
-</keyset>
-
--->
 
 <popupset>
   <popup id="TextColorPopup"/>
@@ -187,41 +224,36 @@ These also need to call goDoCommand(), not editor JS functions. - - smfr
 <toolbox class="toolbox-top">
   <menubar>
 	<menu id="menu_File">
-      <menupopup id="menu_FilePopup">
-        <menuitem value="&newMessage.label;" accessKey="&newMessage.accesskey;" key="key_newMessage" observes="cmd_newMessage"/>
-        <menu id="menu_New">
-          <menupopup id="menu_NewPopup">
-            <menuitem id="menu_newNavigator"/>
-            <menuitem id="menu_newEditor"/>
-          </menupopup>
-        </menu>
+    <menupopup id="menu_FilePopup">
+      <menuitem value="&newMessage.label;" accessKey="&newMessage.accesskey;" key="key_newMessage" observes="cmd_newMessage"/>
+      <menu id="menu_New">
+        <menupopup id="menu_NewPopup">
+          <menuitem id="menu_newNavigator"/>
+          <menuitem id="menu_newEditor"/>
+        </menupopup>
+      </menu>
+    <menuitem value="&attachFileCmd.label;" accesskey="&attachFileCmd.accesskey;" observes="cmd_attachFile"/>
+    <menuitem value="&attachPageCmd.label;" accesskey="&attachPageCmd.accesskey;" observes="cmd_attachPage"/>
 		<menuseparator/>
 
 		<menuitem id="menu_close"/>
 		<menuitem value="&saveCmd.label;" key="key_save" observes="cmd_saveDefault"/>
 		<menu value="&saveAsCmd.label;" accessKey="&saveAsCmd.accesskey;">
-          <menupopup>
-            <menuitem value="&saveAsFileCmd.label;" disabled="true" accessKey="&saveAsFileCmd.accesskey;"/>
-            <menuseparator/>
-            <menuitem value="&saveAsDraftCmd.label;" accessKey="&saveAsDraftCmd.accesskey;" observes="cmd_saveAsDraft"/>
-            <menuitem value="&saveAsTemplateCmd.label;" accessKey="&saveAsTemplateCmd.accesskey;" observes="cmd_saveAsTemplate"/>
-          </menupopup>
+      <menupopup>
+        <menuitem value="&saveAsFileCmd.label;" disabled="true" accessKey="&saveAsFileCmd.accesskey;"/>
+        <menuseparator/>
+        <menuitem value="&saveAsDraftCmd.label;" accessKey="&saveAsDraftCmd.accesskey;" observes="cmd_saveAsDraft"/>
+        <menuitem value="&saveAsTemplateCmd.label;" accessKey="&saveAsTemplateCmd.accesskey;" observes="cmd_saveAsTemplate"/>
+      </menupopup>
 		</menu>
 		<menuseparator/>
-
-		<menuitem value="&attachFileCmd.label;" accesskey="&attachFileCmd.accesskey;" observes="cmd_attachFile"/>
-		<menuitem value="&attachPageCmd.label;" accesskey="&attachPageCmd.accesskey;" oncommand="AttachPage()"/>
-	    <menuseparator/>
 		
 		<menuitem value="&sendNowCmd.label;" accessKey="&sendNowCmd.accesskey;" observes="cmd_sendNow"/>
 		<menuitem value="&sendLaterCmd.label;" accessKey="&sendLaterCmd.accesskey;" observes="cmd_sendLater"/>
 		<menuseparator/>
-		<menuitem id="menu_pageSetup" disabled="true"/>
-		<menuitem value="&printPreviewCmd.label;" disabled="true" accessKey="&printPreviewCmd.accesskey;" oncommand="nsCmd:BrowserPrintPreview"/>
-		<menuitem value="&printCmd.label;" disabled="true" key="key_print" accessKey="&printCmd.accesskey;" observes="cmd_print"/>
-		<menuseparator/>
 		</menupopup>
 	</menu>
+
 	<menu id="menu_Edit">
 		<menupopup>
 			<menuitem id="menu_undo"/>
@@ -230,16 +262,16 @@ These also need to call goDoCommand(), not editor JS functions. - - smfr
 			<menuitem id="menu_cut"/>
 			<menuitem id="menu_copy"/>
 			<menuitem id="menu_paste"/>
-            <menuitem id="menu_pasteQuote"/>
+      <menuitem id="menu_pasteQuote"/>
 			<menuitem id="menu_delete"/>
 			<menuseparator/>
 			<menuitem id="menu_selectAll"/>
 			<menuseparator/>
 			<menuitem value="&findCmd.label;"      key="key_find"      accesskey="&findCmd.accesskey;"      observes="cmd_find"/>
-			<menuitem value="&findAgainCmd.label;" key="key_findAgain" accesskey="&findAgainCmd.accesskey;" observes="cmd_findAgain"/>
+			<menuitem value="&findAgainCmd.label;" key="key_findNext" accesskey="&findAgainCmd.accesskey;" observes="cmd_findNext"/>
 			<menuseparator/>
-			<menuitem value="&accountManagerCmd.label;" accesskey="&accountManagerCmd.accesskey;" oncommand="MsgAccountManager();"/>
-			<menuitem id="menu_preferences" oncommand="goPreferences('messengercompose.xul', 'chrome://messenger/content/messengercompose/pref-messages.xul')"/>
+			<menuitem value="&accountManagerCmd.label;" accesskey="&accountManagerCmd.accesskey;" observes="cmd_account"/>
+			<menuitem id="menu_preferences" observes="cmd_preferences"/>
 		</menupopup>
 	</menu>
 	<menu id="menu_View">
@@ -248,23 +280,18 @@ These also need to call goDoCommand(), not editor JS functions. - - smfr
 				<menupopup>
 		            <menuitem id="menu_showComposeToolbar"
 		                      value="&showComposeToolbarCmd.label;"
+		                      observes="cmd_showComposeToolbar"
 		                      accesskey="&showComposeToolbarCmd.accesskey;"
-		                      oncommand="goToggleToolbar('composeToolbar', 'menu_showComposeToolbar')"
 		                      checked="true"/>
 		            <menuitem id="menu_showFormatToolbar"
 		                      value="&showFormatToolbarCmd.label;"
+		                      observes="cmd_showFormatToolbar"
 		                      accesskey="&showFormatToolbarCmd.accesskey;"
-		                      oncommand="goToggleToolbar('FormatToolbar', 'menu_showFormatToolbar')"
 		                      checked="true"/>
-		            <menuitem id="menu_showStatusbar"
-		                      value="&showStatusbarCmd.label;"
-		                      accesskey="&showStatusbarCmd.accesskey;"
-		                      oncommand="goToggleToolbar('status-bar', 'menu_showStatusbar')"
-		                      checked="true" disabled="true"/>
 					<menuitem id="menu_showTaskbar"/>
 				</menupopup>
 			</menu>
-			<menuitem value="&showParagraphMarksCmd.label;" disabled="true" cmd="nsCmd:ComposeNYI"/>
+			<menuitem id="viewParagraphMarks"/>
 			<menuseparator/>
 			<menuitem value="&pageInfoCmd.label;" disabled="true" accesskey="&pageInfoCmd.accesskey;" cmd="nsCmd:ComposeNYI"/>
 			<menuseparator/>
@@ -274,10 +301,10 @@ These also need to call goDoCommand(), not editor JS functions. - - smfr
 
 
 	<!-- entire menus comes from editorOverlay -->
-	<menu id="insertMenu"/>
+	<menu id="insertMenu" observes="cmd_insert"/>
 	
 	<!-- menu items come from editorOverlay -->
-	<menu id="formatMenu" value="&formatMenu.label;" accesskey="&formatmenu.accesskey;">
+	<menu id="formatMenu" value="&formatMenu.label;" accesskey="&formatmenu.accesskey;" observes="cmd_format">
     <menupopup id="formatMenuPopup">
   		<menu id="tableMenu"/>
      	<menuseparator/>
@@ -293,24 +320,23 @@ These also need to call goDoCommand(), not editor JS functions. - - smfr
         <menuitem value="&checkSpellingCmd.label;" id="menu_checkspelling" accesskey="&checkSpellingCmd.accesskey;" key="key_checkspelling" observes="cmd_spelling"/>
 		<menuitem value="&quoteOrigCmd.label;" accesskey="&quoteOrigCmd.accesskey;" disabled="true" oncommand="nsCmd:ComposeQuote"/>	
 		<menuitem value="&editRewrapCmd.label;" oncommand="editorShell.Rewrap(false)"/>
-	    <menuseparator/>
+	  <menuseparator/>
 	    
-	   	<menu value="&outputFormatMenu.label;" oncommand="OutputFormatMenuSelect(event.target);">
-    		<menupopup>
-			<menuitem value="&askmeFormatCmd.label;" id="1"/>
-    		<menuitem value="&plainTextFormatCmd.label;" id="2"/>
-    		<menuitem value="&htmlFormatCmd.label;" id="3"/>
-    		<menuitem value="&bothFormatCmd.label;" id="4"/>
+	  <menu value="&outputFormatMenu.label;" observes="cmd_outputFormat">
+      <menupopup>
+			  <menuitem type="radio" name="output_format" value="&askmeFormatCmd.label;" id="1" checked="true"/>
+    		<menuitem type="radio" name="output_format" value="&plainTextFormatCmd.label;" id="2"/>
+    		<menuitem type="radio" name="output_format" value="&htmlFormatCmd.label;" id="3"/>
+    		<menuitem type="radio" name="output_format" value="&bothFormatCmd.label;" id="4"/>
 			</menupopup>
-	   	</menu>
-    	<menuitem value="&returnReceiptCmd.label;" oncommand="ReturnReceiptMenuSelect();"/>
+	  </menu>
 		<menu value="&priorityMenu.label;" oncommand="PriorityMenuSelect(event.target);">
-    		<menupopup>
-			<menuitem value="&lowestPriorityCmd.label;" id="lowest"/>
-    		<menuitem value="&lowPriorityCmd.label;" id="low"/>
-    		<menuitem value="&normalPriorityCmd.label;" id="normal"/>
-    		<menuitem value="&highPriorityCmd.label;" id="high"/>
-    		<menuitem value="&highestPriorityCmd.label;" id="highest"/>
+      <menupopup>
+			  <menuitem type="radio" name="priority" value="&lowestPriorityCmd.label;" id="lowest"/>
+    		<menuitem type="radio" name="priority" value="&lowPriorityCmd.label;" id="low"/>
+    		<menuitem type="radio" name="priority" value="&normalPriorityCmd.label;" id="normal" checked="true"/>
+    		<menuitem type="radio" name="priority" value="&highPriorityCmd.label;" id="high"/>
+    		<menuitem type="radio" name="priority" value="&highestPriorityCmd.label;" id="highest"/>
 			</menupopup>
 	   	</menu>
 
@@ -327,7 +353,7 @@ These also need to call goDoCommand(), not editor JS functions. - - smfr
 				IsServer="rdf:http://home.netscape.com/NC-rdf#IsServer"
 				ServerType="rdf:http://home.netscape.com/NC-rdf#ServerType">
                 <menupopup>
-                  <menuitem uri="..." value="&fileHereMenu.label;" 
+                  <menuitem uri="..." value="&fileHereMenu.label;"
 				oncommand="MessageFcc(event.target)"
 				SpecialFolder="rdf:http://home.netscape.com/NC-rdf#SpecialFolder"
 				BiffState="rdf:http://home.netscape.com/NC-rdf#BiffState"
@@ -355,7 +381,8 @@ These also need to call goDoCommand(), not editor JS functions. - - smfr
 		</rule>
 		<rule nc:CanFileMessages="true">
             <menupopup>
-			<menuitem uri="..." class="folderMenuItem" value="rdf:http://home.netscape.com/NC-rdf#Name" oncommand="MessageFcc(event.target)" 
+			<menuitem uri="..." class="folderMenuItem" value="rdf:http://home.netscape.com/NC-rdf#Name"
+			  oncommand="MessageFcc(event.target)" 
 				SpecialFolder="rdf:http://home.netscape.com/NC-rdf#SpecialFolder"
 				BiffState="rdf:http://home.netscape.com/NC-rdf#BiffState"
 				IsServer="rdf:http://home.netscape.com/NC-rdf#IsServer"
@@ -365,6 +392,8 @@ These also need to call goDoCommand(), not editor JS functions. - - smfr
         </template>
 		</menu>	    
 
+		<menuitem value="&UuencodeAttachmentCmd.label;" type="checkbox" oncommand="UUEncodeMenuSelect(event.target)"/>    	
+    <menuseparator/>
 		<menuitem value="&addSignatureCmd.label;" disabled="true" oncommand=""/>    	
 		<menuitem value="&attachVCardCmd.label;" disabled="true" accesskey="&attachVCardCmd.accesskey;" oncommand="AttachVCard()"/>    	
     </menupopup>
@@ -489,7 +518,7 @@ These also need to call goDoCommand(), not editor JS functions. - - smfr
     </toolbar>
 </toolbox>
 
-    <!-- The main mail three pane frame -->
+    <!-- The mail message body frame -->
     <editor type="content-primary" id="content-frame" src="about:blank" name="browser.message.body" flex="100%"
 		onkeypress="if (event.which == 9)
 		                if (event.shiftKey == true) {

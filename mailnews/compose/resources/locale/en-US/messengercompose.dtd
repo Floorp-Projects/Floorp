@@ -9,7 +9,7 @@
 
 <!-- File menu items -->
 <!ENTITY newMessage.label				"New Message">  
-	<!ENTITY newMessage.accesskey			"n">  
+	<!ENTITY newMessage.accesskey			"M">  
 <!ENTITY saveCmd.label "Save">
 	<!ENTITY saveCmd.key "S">
 <!ENTITY saveAsCmd.label "Save As">
@@ -18,8 +18,8 @@
 	<!ENTITY saveAsFileCmd.accesskey "F">
 <!ENTITY saveAsDraftCmd.label "Draft">
 	<!ENTITY saveAsDraftCmd.accesskey "D">
-<!ENTITY saveAsTemplateCmd.label "Stationery">
-	<!ENTITY saveAsTemplateCmd.accesskey "S">
+<!ENTITY saveAsTemplateCmd.label "Template">
+	<!ENTITY saveAsTemplateCmd.accesskey "T">
 <!ENTITY attachFileCmd.label "Attach File...">
 	<!ENTITY attachFileCmd.key "">
 	<!ENTITY attachFileCmd.accesskey "F">
@@ -53,8 +53,6 @@
 	<!ENTITY showComposeToolbarCmd.accesskey "o">
 <!ENTITY showFormatToolbarCmd.label "Formatting Toolbar">
 	<!ENTITY showFormatToolbarCmd.accesskey "F">
-<!ENTITY showStatusbarCmd.label ".Statusbar">
-	<!ENTITY showStatusbarCmd.accesskey "S">
 <!ENTITY showParagraphMarksCmd.label ".Show Paragraph Marks">
 <!ENTITY pageSourceCmd.label ".Page Source">
 	<!ENTITY pageSourceCmd.accesskey "u">
@@ -115,13 +113,14 @@
 <!ENTITY highPriorityCmd.label "High">
 <!ENTITY highestPriorityCmd.label "Highest">
 
-<!ENTITY returnReceiptCmd.label "Return receipt">
-
 <!ENTITY outputFormatMenu.label "Format">
-<!ENTITY askmeFormatCmd.label "Ask me">
-<!ENTITY plainTextFormatCmd.label "Plain Text only">
-<!ENTITY htmlFormatCmd.label "HTML only">
-<!ENTITY bothFormatCmd.label "Plain Text and HTML">
+<!ENTITY askmeFormatCmd.label "Auto Detect">
+<!ENTITY plainTextFormatCmd.label "Plain Text Only">
+<!ENTITY htmlFormatCmd.label "Rich Text (HTML) Only">
+<!ENTITY bothFormatCmd.label "Plain and Rich (HTML) Text">
+
+<!ENTITY UuencodeAttachmentCmd.label "Uuencode instead of MIME for Attachments">
+
 
 <!ENTITY fileCarbonCopyCmd.label "File Sent Message">
 <!ENTITY fileHereMenu.label "File Here">

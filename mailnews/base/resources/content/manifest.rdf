@@ -23,6 +23,7 @@
     <RDF:li resource="chrome://navigator/content/navigatorOverlay.xul"/>
     <RDF:li resource="chrome://messenger/content/messenger.xul"/>
     <RDF:li resource="chrome://messenger/content/mail3PaneWindowVertLayout.xul"/>
+    <RDF:li resource="chrome://messenger/content/messengercompose/messengercompose.xul"/>
     <RDF:li resource="chrome://messenger/content/addressbook/addressbook.xul"/>
     <RDF:li resource="chrome://editor/content/editor.xul"/>
   </RDF:Seq>

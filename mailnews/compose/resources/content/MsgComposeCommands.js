@@ -89,76 +89,352 @@ var defaultController =
   {
     switch (command)
     {
-      case "cmd_sendNow":
-      case "cmd_sendLater":
+      //File Menu
+      case "cmd_attachFile":
+      case "cmd_attachPage":
+      case "cmd_close":
       case "cmd_saveDefault":
       case "cmd_saveAsDraft":
       case "cmd_saveAsTemplate":
-      case "cmd_attachFile":
+      case "cmd_sendNow":
+      case "cmd_sendLater":
+      case "cmd_quit":
+      
+      //Edit Menu
+      case "cmd_pasteQuote":
+      case "cmd_find":
+      case "cmd_findNext":
+      case "cmd_account":
+      case "cmd_preferences":
+      
+      //View Menu
+      case "cmd_showComposeToolbar":
+      case "cmd_showFormatToolbar":
+
+      //Insert Menu
+      case "cmd_insert":
+      case "cmd_link":
+      case "cmd_anchor":
+      case "cmd_image":
+      case "cmd_hline":
+      case "cmd_table":
+      case "cmd_insertHTML":
+      case "cmd_insertChars":
+      case "cmd_insertBreak":
+      case "cmd_insertBreakAll":
+
+      //Format Menu
+      case "cmd_format":
+      case "cmd_decreaseFont":
+      case "cmd_increaseFont":
+      case "cmd_bold":
+      case "cmd_italic":
+      case "cmd_underline":
+      case "cmd_strikethrough":
+      case "cmd_superscript":
+      case "cmd_subscript":
+      case "cmd_nobreak":
+      case "cmd_em":
+      case "cmd_strong":
+      case "cmd_cite":
+      case "cmd_abbr":
+      case "cmd_acronym":
+      case "cmd_code":
+      case "cmd_samp":
+      case "cmd_var":
+      case "cmd_removeList":
+      case "cmd_ul":
+      case "cmd_ol":
+      case "cmd_dt":
+      case "cmd_dd":
+      case "cmd_listProperties":
+      case "cmd_indent":
+      case "cmd_outdent":
+      case "cmd_objectProperties":
+      case "cmd_InsertTable":
+      case "cmd_InsertRowAbove":
+      case "cmd_InsertRowBelow":
+      case "cmd_InsertColumnBefore":
+      case "cmd_InsertColumnAfter":
+      case "cmd_SelectTable":
+      case "cmd_SelectRow":
+      case "cmd_SelectColumn":
+      case "cmd_SelectCell":
+      case "cmd_SelectAllCells":
+      case "cmd_DeleteTable":
+      case "cmd_DeleteRow":
+      case "cmd_DeleteColumn":
+      case "cmd_DeleteCell":
+      case "cmd_DeleteCellContents":
+      case "cmd_NormalizeTable":
+      case "cmd_tableJoinCells":
+      case "cmd_tableSplitCell":
+      case "cmd_editTable":
+
+      //Options Menu
       case "cmd_selectAddress":
+      case "cmd_outputFormat":
+
         return true;
 
-      default: return false;
+      default:
+//        dump("##MsgCompose: command " + command + "no supported!\n");
+        return false;
     }
   },
   
   isCommandEnabled: function(command)
   {
+    //For some reason, when editor has the focus, focusedElement is null!.
+    var focusedElement = top.document.commandDispatcher.focusedElement;
+
     switch (command)
     {
-      case "cmd_sendNow":
-      case "cmd_sendLater":
+      //File Menu
+      case "cmd_attachFile":
+      case "cmd_attachPage":
+      case "cmd_close":
       case "cmd_saveDefault":
       case "cmd_saveAsDraft":
       case "cmd_saveAsTemplate":
-      case "cmd_attachFile":
+      case "cmd_sendNow":
+      case "cmd_sendLater":
+        return !windowLocked;
+      case "cmd_quit":
+        return true;
+
+      //Edit Menu
+      case "cmd_pasteQuote":
+      case "cmd_find":
+      case "cmd_findNext":
+        //Disable the editor specific edit commands if the focus is not into the body
+        return /*!focusedElement*/false;
+      case "cmd_account":
+      case "cmd_preferences":
+        return true;
+
+      //View Menu
+      case "cmd_showComposeToolbar":
+        return true;
+      case "cmd_showFormatToolbar":
+        return msgCompose.composeHTML;
+
+      //Insert Menu
+      case "cmd_insert":
+        return !focusedElement;
+      case "cmd_link":
+      case "cmd_anchor":
+      case "cmd_image":
+      case "cmd_hline":
+      case "cmd_table":
+      case "cmd_insertHTML":
+      case "cmd_insertChars":
+      case "cmd_insertBreak":
+      case "cmd_insertBreakAll":
+        return /*!focusedElement*/false;
+    
+      //Options Menu
       case "cmd_selectAddress":
         return !windowLocked;
+      case "cmd_outputFormat":
+        return msgCompose.composeHTML;        
+      
+      //Format Menu
+      case "cmd_format":
+        return !focusedElement;
+      case "cmd_decreaseFont":
+      case "cmd_increaseFont":
+      case "cmd_bold":
+      case "cmd_italic":
+      case "cmd_underline":
+      case "cmd_strikethrough":
+      case "cmd_superscript":
+      case "cmd_subscript":
+      case "cmd_nobreak":
+      case "cmd_em":
+      case "cmd_strong":
+      case "cmd_cite":
+      case "cmd_abbr":
+      case "cmd_acronym":
+      case "cmd_code":
+      case "cmd_samp":
+      case "cmd_var":
+      case "cmd_removeList":
+      case "cmd_ul":
+      case "cmd_ol":
+      case "cmd_dt":
+      case "cmd_dd":
+      case "cmd_listProperties":
+      case "cmd_indent":
+      case "cmd_outdent":
+      case "cmd_objectProperties":
+      case "cmd_InsertTable":
+      case "cmd_InsertRowAbove":
+      case "cmd_InsertRowBelow":
+      case "cmd_InsertColumnBefore":
+      case "cmd_InsertColumnAfter":
+      case "cmd_SelectTable":
+      case "cmd_SelectRow":
+      case "cmd_SelectColumn":
+      case "cmd_SelectCell":
+      case "cmd_SelectAllCells":
+      case "cmd_DeleteTable":
+      case "cmd_DeleteRow":
+      case "cmd_DeleteColumn":
+      case "cmd_DeleteCell":
+      case "cmd_DeleteCellContents":
+      case "cmd_NormalizeTable":
+      case "cmd_tableJoinCells":
+      case "cmd_tableSplitCell":
+      case "cmd_editTable":
+        return /*!focusedElement*/false;
 
-      default: return false;
+      default:
+//        dump("##MsgCompose: command " + command + " disabled!\n");
+        return false;
     }
   },
   
   doCommand: function(command)
   {
-    dump("DefaultController:doCommand\n");
-    /* Because disabled button still fire oncommand event, we need to test again!!! */
-    if (defaultController.isCommandEnabled(command))
-      switch (command)
-      {
-        case "cmd_sendNow"        : SendMessage();        break;
-        case "cmd_sendLater"      : SendMessageLater();   break;
-        case "cmd_saveDefault"    : SaveAsDraft();        break; /* TEMPORARY: We should save either as file, as draft or template, depending of last save type */
-        case "cmd_saveAsDraft"    : SaveAsDraft();        break;
-        case "cmd_saveAsTemplate" : SaveAsTemplate();     break;
-        case "cmd_attachFile"     : AttachFile();         break;
-        case "cmd_selectAddress"  : SelectAddress();     break;
+    switch (command)
+    {
+      //File Menu
+      case "cmd_attachFile"         : if (defaultController.isCommandEnabled(command)) AttachFile();           break;
+      case "cmd_attachPage"         : AttachPage();           break;
+      case "cmd_close"              : DoCommandClose();       break;
+      case "cmd_saveDefault"        : SaveAsDraft();          break; /* TEMPORARY: We should save either as file, as draft or template, depending of last save type */
+      case "cmd_saveAsDraft"        : SaveAsDraft();          break;
+      case "cmd_saveAsTemplate"     : SaveAsTemplate();       break;
+      case "cmd_sendNow"            : if (defaultController.isCommandEnabled(command)) SendMessage();          break;
+      case "cmd_sendLater"          : if (defaultController.isCommandEnabled(command)) SendMessageLater();     break;
+      case "cmd_account"            : MsgAccountManager();    break;
+      case "cmd_preferences"        : DoCommandPreferences(); break;
 
-        default: return;
-      }
+      //View Menu
+      case "cmd_showComposeToolbar" : goToggleToolbar('composeToolbar', 'menu_showComposeToolbar'); break;
+      case "cmd_showFormatToolbar"  : goToggleToolbar('FormatToolbar', 'menu_showFormatToolbar');   break;
+
+      //Options Menu
+      case "cmd_selectAddress"      : if (defaultController.isCommandEnabled(command)) SelectAddress();         break;
+
+      default: 
+//        dump("##MsgCompose: don't know what to do with command " + command + "!\n");
+        return;
+    }
   },
   
   onEvent: function(event)
   {
-    dump("DefaultController:onEvent\n");
+//    dump("DefaultController:onEvent\n");
   }
 }
 
 function SetupCommandUpdateHandlers()
 {
-  dump("SetupCommandUpdateHandlers\n");
+//  dump("SetupCommandUpdateHandlers\n");
   top.controllers.insertControllerAt(0, defaultController);
 }
 
 function CommandUpdate_MsgCompose()
 {
-  goUpdateCommand("cmd_sendNow");
-  goUpdateCommand("cmd_sendLater");
+//  dump("\nCommandUpdate_MsgCompose\n");
+  //File Menu
+  goUpdateCommand("cmd_attachFile");
+  goUpdateCommand("cmd_attachPage");
+  goUpdateCommand("cmd_close");
   goUpdateCommand("cmd_saveDefault");
   goUpdateCommand("cmd_saveAsDraft");
   goUpdateCommand("cmd_saveAsTemplate");
-  goUpdateCommand("cmd_attachFile");
+  goUpdateCommand("cmd_sendNow");
+  goUpdateCommand("cmd_sendLater");
+  goUpdateCommand("cmd_quit");
+
+  //Edit Menu
+  goUpdateCommand("cmd_pasteQuote");
+  goUpdateCommand("cmd_find");
+  goUpdateCommand("cmd_findNext");
+  goUpdateCommand("cmd_account");
+  goUpdateCommand("cmd_preferences");
+
+  //View Menu
+  goUpdateCommand("cmd_showComposeToolbar");
+  goUpdateCommand("cmd_showFormatToolbar");
+  
+  //Insert Menu
+  goUpdateCommand("cmd_insert");
+  goUpdateCommand("cmd_link");
+  goUpdateCommand("cmd_anchor");
+  goUpdateCommand("cmd_image");
+  goUpdateCommand("cmd_hline");
+  goUpdateCommand("cmd_table");
+  goUpdateCommand("cmd_insertHTML");
+  goUpdateCommand("cmd_insertChars");
+  goUpdateCommand("cmd_insertBreak");
+  goUpdateCommand("cmd_insertBreakAll");
+  
+  //Format Menu
+  goUpdateCommand("cmd_format");
+  goUpdateCommand("cmd_decreaseFont");
+  goUpdateCommand("cmd_increaseFont");
+  goUpdateCommand("cmd_bold");
+  goUpdateCommand("cmd_italic");
+  goUpdateCommand("cmd_underline");
+  goUpdateCommand("cmd_strikethrough");
+  goUpdateCommand("cmd_superscript");
+  goUpdateCommand("cmd_subscript");
+  goUpdateCommand("cmd_nobreak");
+  goUpdateCommand("cmd_em");
+  goUpdateCommand("cmd_strong");
+  goUpdateCommand("cmd_cite");
+  goUpdateCommand("cmd_abbr");
+  goUpdateCommand("cmd_acronym");
+  goUpdateCommand("cmd_code");
+  goUpdateCommand("cmd_samp");
+  goUpdateCommand("cmd_var");
+  goUpdateCommand("cmd_removeList");
+  goUpdateCommand("cmd_ul");
+  goUpdateCommand("cmd_ol");
+  goUpdateCommand("cmd_dt");
+  goUpdateCommand("cmd_dd");
+  goUpdateCommand("cmd_listProperties");
+  goUpdateCommand("cmd_indent");
+  goUpdateCommand("cmd_outdent");
+  goUpdateCommand("cmd_objectProperties");
+  goUpdateCommand("cmd_InsertTable");
+  goUpdateCommand("cmd_InsertRowAbove");
+  goUpdateCommand("cmd_InsertRowBelow");
+  goUpdateCommand("cmd_InsertColumnBefore");
+  goUpdateCommand("cmd_InsertColumnAfter");
+  goUpdateCommand("cmd_SelectTable");
+  goUpdateCommand("cmd_SelectRow");
+  goUpdateCommand("cmd_SelectColumn");
+  goUpdateCommand("cmd_SelectCell");
+  goUpdateCommand("cmd_SelectAllCells");
+  goUpdateCommand("cmd_DeleteTable");
+  goUpdateCommand("cmd_DeleteRow");
+  goUpdateCommand("cmd_DeleteColumn");
+  goUpdateCommand("cmd_DeleteCell");
+  goUpdateCommand("cmd_DeleteCellContents");
+  goUpdateCommand("cmd_NormalizeTable");
+  goUpdateCommand("cmd_tableJoinCells");
+  goUpdateCommand("cmd_tableSplitCell");
+  goUpdateCommand("cmd_editTable");
+
+  //Options Menu
   goUpdateCommand("cmd_selectAddress");
+  goUpdateCommand("cmd_outputFormat");
+}
+
+function DoCommandClose()
+{
+  if (ComposeCanClose())
+    CloseWindow()
+}
+
+function DoCommandPreferences()
+{
+  goPreferences('messengercompose.xul', 'chrome://messenger/content/messengercompose/pref-messages.xul')
 }
 
 function ToggleWindowLock()
@@ -323,6 +599,8 @@ function ComposeStartup()
 			    document.getElementById("FormatToolbar").setAttribute("hidden", true);
 			    document.getElementById("formatMenu").setAttribute("hidden", true);
 			    document.getElementById("insertMenu").setAttribute("hidden", true);
+			    document.getElementById("menu_showFormatToolbar").setAttribute("checked", false);
+
 
 				window.editorShell.SetEditorType("textmail");
 				dump("editor initialized in PLAIN TEXT mode\n");
@@ -390,6 +668,7 @@ function ComposeStartup()
 			// call updateCommands to disable while we're loading the page
 			window.updateCommands("create");
 			
+//	    SetupCommandUpdateHandlers();
 			WaitFinishLoadingDocument(args.type);
 		}
 	}
@@ -762,24 +1041,16 @@ function ReturnReceiptMenuSelect()
 	}
 }
 
-function UUEncodeMenuSelect()
+function UUEncodeMenuSelect(target)
 {
 	if (msgCompose)
 	{
 		var msgCompFields = msgCompose.compFields;
 		if (msgCompFields)
-		{
-			if (msgCompFields.GetUUEncodeAttachments())
-			{
-				dump("Set Return UUEncodeAttachments to FALSE\n");
-				msgCompFields.SetUUEncodeAttachments(false);
-			}
-			else
-			{
-				dump("Set Return UUEncodeAttachments to TRUE\n");
+			if (target.getAttribute("checked") == "true")
 				msgCompFields.SetUUEncodeAttachments(true);
-			}
-		}
+			else
+				msgCompFields.SetUUEncodeAttachments(false);
 	}
 }
 
@@ -797,8 +1068,7 @@ function OutputFormatMenuSelect(target)
     		    case "1": sendFormat = msgCompSendFormat.AskUser;     break;
     		    case "2": sendFormat = msgCompSendFormat.PlainText;   break;
     		    case "3": sendFormat = msgCompSendFormat.HTML;        break;
-                case "4": sendFormat = msgCompSendFormat.Both;        break;
-    		    default: break;		
+            case "4": sendFormat = msgCompSendFormat.Both;        break;
     	    }
         }
 	}
