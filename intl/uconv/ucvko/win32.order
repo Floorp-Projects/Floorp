@@ -1,1 +1,3 @@
-_NSGetModule ; 1
+nsMultiTableEncoderSupport::ConvertNoBuffNoErr ; 4
+NSGetModule ; 1
+nsMultiTableEncoderSupport::ConvertNoBuffNoErr ; 1

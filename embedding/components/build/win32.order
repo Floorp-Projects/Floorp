@@ -1,1 +1,38 @@
-_NSGetModule ; 1
+nsWindowWatcher::WinHasOption ; 216
+nsCOMPtr_base::assign_assuming_AddRef ; 49
+nsReadingIterator<unsigned short>::normalize_forward ; 49
+nsWindowWatcher::GetWindowTreeItem ; 14
+JSContextAutoPopper::JSContextAutoPopper ; 14
+nsWindowWatcher::AddRef ; 10
+nsWindowWatcher::Release ; 10
+nsWindowWatcher::QueryInterface ; 8
+nsWWJSUtils::nsGetStaticScriptGlobal ; 7
+nsWindowWatcher::GetExtantJSContext ; 7
+nsWindowWatcher::OpenWindowJS ; 7
+basic_nsAReadableString<unsigned short>::BeginReading ; 7
+nsCOMPtr<nsISupports>::nsCOMPtr<nsISupports> ; 7
+nsWindowWatcher::ReadyOpenedDocShellItem ; 7
+nsWindowWatcher::URIfromURL ; 7
+NS_NewURI ; 7
+nsWindowWatcher::CheckWindowName ; 7
+nsWindowWatcher::SizeOpenedDocShellItem ; 7
+EventQueueAutoPopper::~EventQueueAutoPopper ; 7
+JSContextAutoPopper::~JSContextAutoPopper ; 7
+nsWindowWatcher::GetWindowTreeOwner ; 7
+nsWindowWatcher::GetWindowScriptObject ; 7
+nsWWJSUtils::nsGetStaticScriptContext ; 7
+nsWindowWatcher::CalculateChromeFlags ; 7
+basic_nsAWritableString<unsigned short>::Assign ; 7
+nsGetInterface::nsGetInterface ; 7
+do_GetIOService ; 7
+NS_MakeAbsoluteURI ; 6
+nsWindowWatcher::AttachArguments ; 6
+EventQueueAutoPopper::Push ; 2
+do_GetService ; 2
+nsWindowWatcher::~nsWindowWatcher ; 1
+NSGetModule ; 1
+nsWindowWatcher::SetWindowCreator ; 1
+nsWindowWatcher::Init ; 1
+nsWindowWatcher::nsWindowWatcher ; 1
+NSGetModule ; 1
+nsWindowWatcher::`vector deleting destructor' ; 1

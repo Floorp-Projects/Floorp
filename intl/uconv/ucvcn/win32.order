@@ -1,1 +1,3 @@
-_NSGetModule ; 1
+nsEncoderSupport::SetOutputErrorBehavior ; 1
+NSGetModule ; 1
+nsEncoderSupport::SetOutputErrorBehavior ; 1

@@ -1,1 +1,11 @@
-_NSGetModule ; 1
+nsBasicDecoderSupport::Release ; 24
+nsBasicDecoderSupport::AddRef ; 24
+nsISO2022JPToUnicodeV2::`scalar deleting destructor' ; 8
+nsISO2022JPToUnicodeV2::Convert ; 8
+nsShiftJISToUnicode::GetMaxLength ; 8
+nsBasicDecoderSupport::nsBasicDecoderSupport ; 8
+nsBasicDecoderSupport::QueryInterface ; 8
+nsISO2022JPToUnicodeV2::nsISO2022JPToUnicodeV2 ; 8
+nsEUCJPToUnicodeV2::`vector deleting destructor' ; 8
+nsBasicDecoderSupport::~nsBasicDecoderSupport ; 8
+NSGetModule ; 1

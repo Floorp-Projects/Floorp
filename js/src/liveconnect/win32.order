@@ -1,4 +1,6 @@
-?AddRef@nsCLiveconnectFactory@@UAGKXZ ; 2
-?Release@nsCLiveconnectFactory@@UAGKXZ ; 1
-_JSJ_RegisterLiveConnectFactory ; 1
-??0nsCLiveconnectFactory@@QAE@XZ ; 1
+nsCLiveconnectFactory::AddRef ; 2
+nsCLiveconnectFactory::Release ; 2
+nsCLiveconnectFactory::~nsCLiveconnectFactory ; 1
+JSJ_RegisterLiveConnectFactory ; 1
+nsCLiveconnectFactory::nsCLiveconnectFactory ; 1
+nsCLiveconnectFactory::`vector deleting destructor' ; 1
