@@ -34,7 +34,6 @@ CPPSRCS=				\
 	nsBulletFrame.cpp		\
 	nsContainerFrame.cpp		\
 	nsFrame.cpp			\
-	nsHTMLReflowState.cpp		\
 	nsGlobalVariables.cpp		\
 	nsHRFrame.cpp			\
 	nsHTMLAtoms.cpp			\
@@ -42,6 +41,7 @@ CPPSRCS=				\
 	nsHTMLIIDs.cpp			\
 	nsHTMLFrame.cpp			\
 	nsHTMLReflowCommand.cpp		\
+	nsHTMLReflowState.cpp		\
 	nsImageFrame.cpp		\
 	nsImageMap.cpp			\
 	nsInlineFrame.cpp		\
@@ -71,7 +71,6 @@ CPP_OBJS=					\
 	.\$(OBJDIR)\nsBulletFrame.obj		\
 	.\$(OBJDIR)\nsContainerFrame.obj	\
 	.\$(OBJDIR)\nsFrame.obj			\
-	.\$(OBJDIR)\nsHTMLReflowState.obj	\
 	.\$(OBJDIR)\nsGlobalVariables.obj	\
 	.\$(OBJDIR)\nsHRFrame.obj		\
 	.\$(OBJDIR)\nsHTMLAtoms.obj		\
@@ -79,6 +78,7 @@ CPP_OBJS=					\
 	.\$(OBJDIR)\nsHTMLFrame.obj		\
 	.\$(OBJDIR)\nsHTMLIIDs.obj		\
 	.\$(OBJDIR)\nsHTMLReflowCommand.obj	\
+	.\$(OBJDIR)\nsHTMLReflowState.obj	\
 	.\$(OBJDIR)\nsImageFrame.obj		\
 	.\$(OBJDIR)\nsImageMap.obj		\
 	.\$(OBJDIR)\nsInlineFrame.obj		\

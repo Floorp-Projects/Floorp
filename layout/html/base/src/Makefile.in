@@ -38,10 +38,10 @@ CPPSRCS=				\
 	nsHRFrame.cpp			\
 	nsHTMLAtoms.cpp			\
 	nsHTMLContainerFrame.cpp	\
-	nsHTMLReflowState.cpp		\
 	nsHTMLIIDs.cpp			\
 	nsHTMLFrame.cpp			\
 	nsHTMLReflowCommand.cpp		\
+	nsHTMLReflowState.cpp		\
 	nsImageFrame.cpp		\
 	nsImageMap.cpp			\
 	nsInlineFrame.cpp		\
