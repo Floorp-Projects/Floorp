@@ -639,7 +639,7 @@ function mircChangeColor (colorInfo, containerTag, data)
     }
     if (fgColor == 1)
         delete data.currFgColor;
-    if (ary.length >= 4)
+    if (arrayHasElementAt(ary, 4))
     {
         var bgColor = ary[3];
         if (bgColor > 16)
