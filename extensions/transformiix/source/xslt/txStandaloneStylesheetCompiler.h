@@ -40,6 +40,7 @@
 #define __TX_STANDALONE_STYLESHEET_COMPILER_H__
 
 #include "txStylesheet.h"
+#include "txURIUtils.h"
 
 /**
  * API to load XML files into compiled stylesheets.
@@ -50,6 +51,6 @@
  * Parse a stylesheet from the aPath.
  */
 nsresult
-TX_CompileStylesheetPath(const nsAString& aHref, txStylesheet** aResult);
+TX_CompileStylesheetPath(const txParsedURL& aURL, txStylesheet** aResult);
 
 #endif // __TX_STANDALONE_STYLESHEET_COMPILER_H__

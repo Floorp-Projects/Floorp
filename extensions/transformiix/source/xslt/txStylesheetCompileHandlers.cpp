@@ -52,6 +52,7 @@
 
 txHandlerTable* gTxIgnoreHandler = 0;
 txHandlerTable* gTxRootHandler = 0;
+txHandlerTable* gTxEmbedHandler = 0;
 txHandlerTable* gTxTopHandler = 0;
 txHandlerTable* gTxTemplateHandler = 0;
 txHandlerTable* gTxTextHandler = 0;
@@ -514,6 +515,37 @@ txFnEndLREStylesheet(txStylesheetCompilerState& aState)
     aState.closeInstructionContainer();
 
     return NS_OK;
+}
+
+nsresult
+txFnStartEmbed(PRInt32 aNamespaceID,
+               nsIAtom* aLocalName,
+               nsIAtom* aPrefix,
+               txStylesheetAttr* aAttributes,
+               PRInt32 aAttrCount,
+               txStylesheetCompilerState& aState)
+{
+    if (!aState.handleEmbeddedSheet()) {
+        return NS_OK;
+    }
+    if (aNamespaceID != kNameSpaceID_XSLT ||
+        (aLocalName != txXSLTAtoms::stylesheet &&
+         aLocalName != txXSLTAtoms::transform)) {
+        return NS_ERROR_XSLT_PARSE_FAILURE;
+    }
+    return txFnStartStylesheet(aNamespaceID, aLocalName, aPrefix,
+                               aAttributes, aAttrCount, aState);
+}
+
+nsresult
+txFnEndEmbed(txStylesheetCompilerState& aState)
+{
+    if (!aState.handleEmbeddedSheet()) {
+        return NS_OK;
+    }
+    nsresult rv = txFnEndStylesheet(aState);
+    aState.doneEmbedding();
+    return rv;
 }
 
 
@@ -2614,6 +2646,17 @@ txHandlerTableData gTxRootTableData = {
   txFnTextError
 };
 
+txHandlerTableData gTxEmbedTableData = {
+  // Handlers
+  { { 0, 0, 0, 0 } },
+  // Other
+  { 0, 0, txFnStartEmbed, txFnEndEmbed },
+  // LRE
+  { 0, 0, txFnStartElementIgnore, txFnEndElementIgnore },
+  // Text
+  txFnTextIgnore
+};
+
 txHandlerTableData gTxTopTableData = {
   // Handlers
   { { kNameSpaceID_XSLT, "attribute-set", txFnStartAttributeSet, txFnEndAttributeSet },
@@ -2858,6 +2901,7 @@ txHandlerTable::init()
     nsresult rv = NS_OK;
 
     INIT_HANDLER(Root);
+    INIT_HANDLER(Embed);
     INIT_HANDLER(Top);
     INIT_HANDLER(Ignore);
     INIT_HANDLER(Template);
