@@ -120,8 +120,7 @@ protected:
                             nsSize&              aKidMaxElementSize);
 
   void ShrinkWrapChildren(nsIPresContext* aPresContext, 
-                          nsReflowMetrics& aDesiredSize,
-                          nsSize* aMaxElementSize);
+                          nsReflowMetrics& aDesiredSize);
 
   nsresult AdjustSiblingsAfterReflow(nsIPresContext*      aPresContext,
                                      RowGroupReflowState& aState,
