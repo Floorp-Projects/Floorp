@@ -45,11 +45,12 @@ public:
     int             Show(int aDirection);
     int             Hide(int aDirection);
 
-    static void     *WorkDammitWork(void *arg); // install start
-
     static void     XPIProgressCB(const char *aMsg, int aVal, int aMax);
     static void     MajorProgressCB(char *aName, int aNum, int aTotal, 
                                     int aActivity);
+    static int      DownloadCB(int aBytesRd, int aTotal);
+    static void     SetDownloadComp(char *aName, int aNum, int aTotal);
+    static void     ClearRateLabel();
 
     enum
     {
@@ -65,6 +66,10 @@ public:
     char            *GetMsg0();
 
 private:
+    static void     *WorkDammitWork(void *arg); // install start
+    static void     ShowCompleteDlg();
+    static void     CompleteOK(GtkWidget *aWidget, gpointer aData);
+
     char            *mMsg0;
 };
 
