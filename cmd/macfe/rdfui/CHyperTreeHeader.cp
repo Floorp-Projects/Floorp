@@ -57,6 +57,7 @@ CHyperTreeHeader::SetUpColumns(HT_Cursor columnCursor)
 	paneInfo.superView = this;
 
 	DeleteAllSubPanes();
+	mColumnInfo.clear();
 
 	// initialize LTableHeader::SColumnData fields that don't change	
 	columnData.columnPosition = 0;
