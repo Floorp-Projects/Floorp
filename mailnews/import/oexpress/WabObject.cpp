@@ -214,7 +214,7 @@ HRESULT CWAB::IterateWABContents(CWabIterator *pIter, int *pDone)
  	LPSRowSet		lpRowAB = NULL;
     LPABCONT		lpContainer = NULL;
 	int				cNumRows = 0;
-	PRBool			keepGoing = PR_TRUE;
+	nsresult			keepGoing;
 
     HRESULT			hr = E_FAIL;
 
@@ -330,7 +330,7 @@ HRESULT CWAB::IterateWABContents(CWabIterator *pIter, int *pDone)
         }
 		
 
-	} while ( SUCCEEDED(hr) && cNumRows && lpRowAB && keepGoing)  ;
+	} while ( SUCCEEDED(hr) && cNumRows && lpRowAB && NS_SUCCEEDED(keepGoing) )  ;
 
 	hr = lpAB->SeekRow( BOOKMARK_BEGINNING, 0, NULL );
 
@@ -381,7 +381,7 @@ HRESULT CWAB::IterateWABContents(CWabIterator *pIter, int *pDone)
 		    FreeProws(lpRowAB );		
         }
 
-	} while ( SUCCEEDED(hr) && cNumRows && lpRowAB && keepGoing)  ;
+	} while ( SUCCEEDED(hr) && cNumRows && lpRowAB && NS_SUCCEEDED(keepGoing) )  ;
 
 
 exit:
