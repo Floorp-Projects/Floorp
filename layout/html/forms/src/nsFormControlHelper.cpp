@@ -97,26 +97,21 @@ nsFormControlHelper::~nsFormControlHelper()
 
 void nsFormControlHelper::ForceDrawFrame(nsIPresContext* aPresContext, nsIFrame * aFrame)
 {
-
-  if (aFrame == nsnull) {
+  if (!aFrame) {
     return;
   }
-  nsRect    rect;
   nsIView * view;
   nsPoint   pnt;
   aFrame->GetOffsetFromView(aPresContext, pnt, &view);
-  aFrame->GetRect(rect);
+  nsRect rect = aFrame->GetRect();
   rect.x = pnt.x;
   rect.y = pnt.y;
-  if (view != nsnull) {
-    nsIViewManager * viewMgr;
-    view->GetViewManager(viewMgr);
-    if (viewMgr != nsnull) {
+  if (view) {
+    nsIViewManager* viewMgr = view->GetViewManager();
+    if (viewMgr) {
       viewMgr->UpdateView(view, rect, NS_VMREFRESH_NO_SYNC);
-      NS_RELEASE(viewMgr);
     }
   }
-  
 }
 
 void nsFormControlHelper::PlatformToDOMLineBreaks(nsString &aString)
@@ -499,10 +494,7 @@ nsFormControlHelper::GetLocalizedString(const char * aPropFileName, const PRUnic
 nsresult
 nsFormControlHelper::Reset(nsIFrame* aFrame, nsIPresContext* aPresContext)
 {
-  nsCOMPtr<nsIContent> controlContent;
-  aFrame->GetContent(getter_AddRefs(controlContent));
-
-  nsCOMPtr<nsIFormControl> control = do_QueryInterface(controlContent);
+  nsCOMPtr<nsIFormControl> control = do_QueryInterface(aFrame->GetContent());
   if (control) {
     control->Reset();
     return NS_OK;

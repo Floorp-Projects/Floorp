@@ -271,14 +271,10 @@ nsImageControlFrame::Init(nsIPresContext*  aPresContext,
   if (!HasView()) {
     nsIView* view;
     nsresult result = CallCreateInstance(kViewCID, &view);
-    nsCOMPtr<nsIPresShell> presShell;
-    aPresContext->GetShell(getter_AddRefs(presShell));
-    nsCOMPtr<nsIViewManager> viewMan;
-    presShell->GetViewManager(getter_AddRefs(viewMan));
+    nsIViewManager* viewMan = aPresContext->GetViewManager();
 
-    nsIFrame* parWithView;
-    GetParentWithView(aPresContext, &parWithView);
-    nsIView *parView = parWithView->GetView(aPresContext);
+    nsIFrame* parWithView = GetAncestorWithView();
+    nsIView *parView = parWithView->GetView();
     // the view's size is not know yet, but its size will be kept in synch with our frame.
     nsRect boundBox(0, 0, 0, 0); 
     result = view->Init(viewMan, boundBox, parView);
@@ -290,7 +286,7 @@ nsImageControlFrame::Init(nsIPresContext*  aPresContext,
 
     // XXX put the view last in document order until we know how to do better
     viewMan->InsertChild(parView, view, nsnull, PR_TRUE);
-    SetView(aPresContext, view);
+    SetView(view);
   }
 
   return rv;
@@ -380,11 +376,9 @@ nsImageControlFrame::GetTranslatedRect(nsIPresContext* aPresContext, nsRect& aRe
   nsIView* view;
   nsPoint viewOffset(0,0);
   GetOffsetFromView(aPresContext, viewOffset, &view);
-  while (nsnull != view) {
-    nsPoint tempOffset;
-    view->GetPosition(&tempOffset.x, &tempOffset.y);
-    viewOffset += tempOffset;
-    view->GetParent(view);
+  while (view) {
+    viewOffset += view->GetPosition();
+    view = view->GetParent();
   }
   aRect = nsRect(viewOffset.x, viewOffset.y, mRect.width, mRect.height);
 }
@@ -432,12 +426,9 @@ nsImageControlFrame::GetFont(nsIPresContext* aPresContext,
 NS_IMETHODIMP
 nsImageControlFrame::GetFormContent(nsIContent*& aContent) const
 {
-  nsIContent* content;
-  nsresult    rv;
-
-  rv = GetContent(&content);
-  aContent = content;
-  return rv;
+  aContent = GetContent();
+  NS_IF_ADDREF(aContent);
+  return NS_OK;
 }
 
 nscoord 

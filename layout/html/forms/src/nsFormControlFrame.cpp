@@ -496,17 +496,14 @@ nsFormControlFrame::DidReflow(nsIPresContext*           aPresContext,
   // The view is created hidden; once we have reflowed it and it has been
   // positioned then we show it.
   if (NS_FRAME_REFLOW_FINISHED == aStatus) {
-    nsIView* view = GetView(aPresContext);
+    nsIView* view = GetView();
     if (view) {
       nsViewVisibility newVis = GetStyleVisibility()->IsVisible()
                                   ? nsViewVisibility_kShow
                                   : nsViewVisibility_kHide;
-      nsViewVisibility oldVis;
       // only change if different.
-      view->GetVisibility(oldVis);
-      if (newVis != oldVis) {
-        nsCOMPtr<nsIViewManager> vm;
-        view->GetViewManager(*getter_AddRefs(vm));
+      if (newVis != view->GetVisibility()) {
+        nsIViewManager* vm = view->GetViewManager();
         if (vm) {
           vm->SetViewVisibility(view, newVis);
         }
@@ -573,9 +570,8 @@ nsFormControlFrame::RegUnRegAccessKey(nsIPresContext* aPresContext, nsIFrame * a
   nsresult rv = NS_ERROR_FAILURE;
   nsAutoString accessKey;
 
-  if (aFrame != nsnull) {
-    nsCOMPtr<nsIContent> content;
-    if (NS_SUCCEEDED(aFrame->GetContent(getter_AddRefs(content)))) {
+  if (aFrame) {
+    nsIContent* content = aFrame->GetContent();
 #if 1
       nsAutoString resultValue;
       rv = content->GetAttr(kNameSpaceID_None,
@@ -606,18 +602,15 @@ nsFormControlFrame::RegUnRegAccessKey(nsIPresContext* aPresContext, nsIFrame * a
         }
       }
 #endif
-    }
   }
 
   if (NS_CONTENT_ATTR_NOT_THERE != rv) {
     nsCOMPtr<nsIEventStateManager> stateManager;
     if (NS_SUCCEEDED(aPresContext->GetEventStateManager(getter_AddRefs(stateManager)))) {
-      nsCOMPtr<nsIContent> content;
-      aFrame->GetContent(getter_AddRefs(content));
       if (aDoReg) {
-        return stateManager->RegisterAccessKey(content, (PRUint32)accessKey.First());
+        return stateManager->RegisterAccessKey(aFrame->GetContent(), (PRUint32)accessKey.First());
       } else {
-        return stateManager->UnregisterAccessKey(content, (PRUint32)accessKey.First());
+        return stateManager->UnregisterAccessKey(aFrame->GetContent(), (PRUint32)accessKey.First());
       }
     }
   }
@@ -784,12 +777,9 @@ nsFormControlFrame::GetStyleSize(nsIPresContext* aPresContext,
 NS_IMETHODIMP
 nsFormControlFrame::GetFormContent(nsIContent*& aContent) const
 {
-  nsIContent* content;
-  nsresult    rv;
-
-  rv = GetContent(&content);
-  aContent = content;
-  return rv;
+  aContent = GetContent();
+  NS_IF_ADDREF(aContent);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -909,7 +899,7 @@ nsFormControlFrame::GetAbsoluteFramePosition(nsIPresContext* aPresContext,
 {
   nsresult rv = NS_OK;
  
-  aFrame->GetRect(aAbsoluteTwipsRect);
+  aAbsoluteTwipsRect = aFrame->GetRect();
   // zero these out, 
   // because the GetOffsetFromView figures them out
   // XXXbz why do we need to do this, really?  Will we ever fail to
@@ -931,21 +921,18 @@ nsFormControlFrame::GetAbsoluteFramePosition(nsIPresContext* aPresContext,
   if (NS_SUCCEEDED(rv) && view) {
     aAbsoluteTwipsRect.MoveTo(frameOffset);
 
-    nsCOMPtr<nsIWidget> widget;
+    nsIWidget* widget;
     // Walk up the views, looking for a widget
     do { 
       // add in the offset of the view from its parent.
-      nsPoint viewPosition;
-      view->GetPosition(&viewPosition.x, &viewPosition.y);
-      aAbsoluteTwipsRect += viewPosition;
+      aAbsoluteTwipsRect += view->GetPosition();
 
-      view->GetWidget(*getter_AddRefs(widget));
+      widget = view->GetWidget();
       if (widget) {
         // account for space above and to the left of the view origin.
         // the widget is aligned with view's bounds, not its origin
         
-        nsRect bounds;
-        view->GetBounds(bounds);
+        nsRect bounds = view->GetBounds();
         aAbsoluteTwipsRect.x -= bounds.x;
         aAbsoluteTwipsRect.y -= bounds.y;
 
@@ -960,7 +947,7 @@ nsFormControlFrame::GetAbsoluteFramePosition(nsIPresContext* aPresContext,
         break;
       }
 
-      view->GetParent(view);
+      view = view->GetParent();
     } while (view);
   }
   
