@@ -42,6 +42,13 @@
   {
     parent.initPanel('chrome://cookie/content/pref-cookies.xul');
     setDisables();
+
+    const NS_COOKIECONSENT_CONTRACTID = '@mozilla.org/cookie-consent;1';
+    if (NS_COOKIECONSENT_CONTRACTID in Components.classes) {
+      var p3pRadioButton = document.getElementById("p3pRadioButton");
+      p3pRadioButton.removeAttribute("hidden");
+    }
+
   }
 
   const cookies_disabled = "2";
@@ -94,7 +101,7 @@
              accesskey="&disableCookies.accesskey;" oncommand="setDisables();"/>
       <radio value="1" label="&accOrgCookiesRadio.label;"
              accesskey="&accOrgCookiesRadio.accesskey;" oncommand="setDisables();"/>
-      <hbox>
+      <hbox id="p3pRadioButton" hidden="true">
         <radio value="3" label="&accP3PCookiesRadio.label;"
                accesskey="&accP3PCookiesRadio.accesskey;" oncommand="setDisables();"/>
         <button label="&viewP3P.label;" accesskey="&viewP3P.accesskey;" oncommand="viewP3P();"
