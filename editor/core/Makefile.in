@@ -30,6 +30,7 @@ CPPSRCS =                       \
     nsEditFactory.cpp           \
     ChangeAttributeTxn.cpp      \
     EditTxn.cpp                 \
+    InsertTextTxn.cpp           \
     $(NULL)
 
 MODULE = editor
