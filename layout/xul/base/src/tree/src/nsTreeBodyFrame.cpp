@@ -3508,7 +3508,7 @@ nsTreeBodyFrame::OnDragOver(nsIDOMEvent* aEvent)
           if (!isOpen) {
             // this node isn't expanded - set a timer to expand it
             mOpenTimer = do_CreateInstance("@mozilla.org/timer;1");
-            mOpenTimer->Init(this, 1000, NS_PRIORITY_HIGHEST);
+            mOpenTimer->Init(this, 1000, PR_FALSE);
           }
         }
       }

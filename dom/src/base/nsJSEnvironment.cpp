@@ -1627,7 +1627,7 @@ nsJSContext::FireGCTimer()
   static PRBool first = PR_TRUE;
 
   sGCTimer->Init(this, first ? NS_FIRST_GC_DELAY : NS_GC_DELAY,
-                 NS_PRIORITY_LOWEST);
+                 PR_TRUE);
 
   first = PR_FALSE;
 }

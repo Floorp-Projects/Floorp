@@ -50,13 +50,6 @@
 [scriptable,uuid(84271f22-c023-4b01-8050-d71c0c6a6235)]
 interface nsIScriptableTimer : nsISupports
 {
-  /* Timer priorities */
-  const short PRIORITY_HIGHEST        = 10;
-  const short PRIORITY_HIGH           = 8;
-  const short PRIORITY_NORMAL         = 5;
-  const short PRIORITY_LOW            = 2;
-  const short PRIORITY_LOWEST         = 0;
-
   /* Timer types */
   const short TYPE_ONE_SHOT           = 0;
   const short TYPE_REPEATING_SLACK    = 1;
@@ -76,11 +69,11 @@ interface nsIScriptableTimer : nsISupports
    *                              wstring data          =>  null
    *
    * @param aDelay      delay in milliseconds for timer to fire
-   * @param aPriority   timer priority per PRIORITY* consts defined above
+   * @param aIdle       whether the timer is an idle timer
    * @param aType       timer type per TYPE* consts defined above
    */
   void init(in nsIObserver aObserver, in unsigned long aDelay, 
-            in unsigned long aPriority, in unsigned long aType);
+            in boolean aIdle, in unsigned long aType);
 
   /**
    * Cancellation of timers applies to repeating timers 

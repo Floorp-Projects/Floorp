@@ -4339,7 +4339,7 @@ GlobalWindowImpl::SetTimeoutOrInterval(PRBool aIsInterval, PRInt32 *aReturn)
   }
 
   err = timeout->timer->Init(TimerCallback, timeout, (PRInt32)interval,
-                             NS_PRIORITY_LOWEST);
+                             PR_FALSE);
   if (NS_OK != err) {
     DropTimeout(timeout);
     return err;
@@ -4577,7 +4577,7 @@ GlobalWindowImpl::RunTimeout(nsTimeoutImpl *aTimeout)
 
         if (timeout->timer) {
           rv = timeout->timer->Init(TimerCallback, timeout, delay32,
-                                    NS_PRIORITY_LOWEST);
+                                    PR_TRUE);
 
           // Likewise, don't return early even if we fail to
           // initialize the new OS timer.

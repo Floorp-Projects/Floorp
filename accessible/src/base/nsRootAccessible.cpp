@@ -379,7 +379,7 @@ NS_IMETHODIMP nsRootAccessible::ScrollPositionDidChange(nsIScrollableView *aScro
     mTimer = do_CreateInstance("@mozilla.org/timer;1", &rv);
     if (NS_SUCCEEDED(rv)) {
       const PRUint32 kScrollPosCheckWait = 50;
-      mTimer->Init(NS_STATIC_CAST(nsITimerCallback*, this), kScrollPosCheckWait, NS_PRIORITY_NORMAL, NS_TYPE_REPEATING_SLACK);
+      mTimer->Init(NS_STATIC_CAST(nsITimerCallback*, this), kScrollPosCheckWait, PR_TRUE, NS_TYPE_REPEATING_SLACK);
     }
     mScrollPositionChangedTicks = 1;
     mLastScrolledPresShell = weakShell;

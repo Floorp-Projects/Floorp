@@ -601,7 +601,7 @@ nsSystemSoundRequest::PlaySound()
   
   const PRInt32   kSoundTimerInterval = 250;      // 250 milliseconds
   rv = mTimer->Init(NS_STATIC_CAST(nsITimerCallback*, this), kSoundTimerInterval,
-          NS_PRIORITY_NORMAL, NS_TYPE_REPEATING_PRECISE);
+          PR_TRUE, NS_TYPE_REPEATING_PRECISE);
   if (NS_FAILED(rv)) {
     Cleanup();
     return rv;
@@ -805,7 +805,7 @@ nsMovieSoundRequest::PlaySound()
     
     const PRInt32   kMovieTimerInterval = 250;      // 250 milliseconds
     rv = mTimer->Init(NS_STATIC_CAST(nsITimerCallback*, this), kMovieTimerInterval,
-            NS_PRIORITY_NORMAL, NS_TYPE_REPEATING_PRECISE);
+            PR_TRUE, NS_TYPE_REPEATING_PRECISE);
     if (NS_FAILED(rv)) {
       Cleanup();
       return rv;

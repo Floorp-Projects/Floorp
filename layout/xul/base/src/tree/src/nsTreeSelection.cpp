@@ -317,7 +317,7 @@ NS_IMETHODIMP nsTreeSelection::TimedSelect(PRInt32 aIndex, PRInt32 aMsec)
         mSelectTimer->Cancel();
 
       mSelectTimer = do_CreateInstance("@mozilla.org/timer;1");
-      mSelectTimer->Init(SelectCallback, this, aMsec, NS_PRIORITY_HIGH);
+      mSelectTimer->Init(SelectCallback, this, aMsec, PR_TRUE);
     }
   }
 

@@ -1728,7 +1728,7 @@ nsGlobalHistory::SetDirty()
   
   mDirty = PR_TRUE;
   mSyncTimer->Init(fireSyncTimer, this, HISTORY_SYNC_TIMEOUT,
-                   NS_PRIORITY_LOWEST, NS_TYPE_ONE_SHOT);
+                   PR_TRUE, NS_TYPE_ONE_SHOT);
   
 
   return NS_OK;
@@ -1747,7 +1747,7 @@ nsGlobalHistory::GetNow()
 
     if (mExpireNowTimer)
       mExpireNowTimer->Init(expireNowTimer, this, HISTORY_EXPIRE_NOW_TIMEOUT,
-                            NS_PRIORITY_LOWEST, NS_TYPE_ONE_SHOT);
+                            PR_TRUE, NS_TYPE_ONE_SHOT);
   }
   
   return mLastNow;

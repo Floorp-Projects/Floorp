@@ -535,7 +535,7 @@ nsMenuFrame::HandleEvent(nsIPresContext* aPresContext,
 
       // We're a menu, we're built, we're closed, and no timer has been kicked off.
       mOpenTimer = do_CreateInstance("@mozilla.org/timer;1");
-      mOpenTimer->Init(this, menuDelay, NS_PRIORITY_HIGHEST);
+      mOpenTimer->Init(this, menuDelay, PR_FALSE);
     }
   }
   

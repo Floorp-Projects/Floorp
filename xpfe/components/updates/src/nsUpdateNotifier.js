@@ -80,7 +80,7 @@ var nsUpdateNotifier =
         const kIScriptableTimer = Components.interfaces.nsIScriptableTimer;
         mTimer = Components.classes["@mozilla.org/timer;1"].
           createInstance(kIScriptableTimer);
-        mTimer.init(this, kUpdateCheckDelay, kIScriptableTimer.PRIORITY_NORMAL,
+        mTimer.init(this, kUpdateCheckDelay, true,
           kIScriptableTimer.TYPE_ONE_SHOT);
 
         // we are no longer interested in the ``domwindowopened'' topic

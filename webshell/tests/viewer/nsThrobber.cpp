@@ -364,7 +364,7 @@ nsThrobber::LoadThrobberImages(const nsString& aFileNameMask, PRInt32 aNumImages
   if (NS_OK != rv) {
     return rv;
   }
-  mTimer->Init(ThrobTimerCallback, this, 33, NS_PRIORITY_NORMAL, NS_TYPE_REPEATING_SLACK);
+  mTimer->Init(ThrobTimerCallback, this, 33, PR_TRUE, NS_TYPE_REPEATING_SLACK);
   
   char * mask = ToNewCString(aFileNameMask);
   for (PRInt32 cnt = 0; cnt < mNumImages; cnt++)

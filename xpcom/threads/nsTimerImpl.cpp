@@ -209,7 +209,7 @@ void nsTimerImpl::Shutdown()
 NS_IMETHODIMP nsTimerImpl::Init(nsTimerCallbackFunc aFunc,
                                 void *aClosure,
                                 PRUint32 aDelay,
-                                PRUint32 aPriority,
+                                PRBool aIdle,
                                 PRUint32 aType)
 {
   if (!gThread)
@@ -220,7 +220,7 @@ NS_IMETHODIMP nsTimerImpl::Init(nsTimerCallbackFunc aFunc,
 
   mClosure = aClosure;
 
-  mPriority = (PRUint8)aPriority;
+  mIdle = aIdle;
   mType = (PRUint8)aType;
 
   SetDelayInternal(aDelay);
@@ -230,7 +230,7 @@ NS_IMETHODIMP nsTimerImpl::Init(nsTimerCallbackFunc aFunc,
 
 NS_IMETHODIMP nsTimerImpl::Init(nsITimerCallback *aCallback,
                                 PRUint32 aDelay,
-                                PRUint32 aPriority,
+                                PRBool aIdle,
                                 PRUint32 aType)
 {
   if (!gThread)
@@ -240,7 +240,7 @@ NS_IMETHODIMP nsTimerImpl::Init(nsITimerCallback *aCallback,
   NS_ADDREF(mCallback.i);
   mCallbackType = CALLBACK_TYPE_INTERFACE;
 
-  mPriority = (PRUint8)aPriority;
+  mIdle = aIdle;
   mType = (PRUint8)aType;
 
   SetDelayInternal(aDelay);
@@ -250,7 +250,7 @@ NS_IMETHODIMP nsTimerImpl::Init(nsITimerCallback *aCallback,
 
 NS_IMETHODIMP nsTimerImpl::Init(nsIObserver *aObserver,
                                 PRUint32 aDelay,
-                                PRUint32 aPriority,
+                                PRBool aIdle,
                                 PRUint32 aType)
 {
   if (!gThread)
@@ -262,7 +262,7 @@ NS_IMETHODIMP nsTimerImpl::Init(nsIObserver *aObserver,
   NS_ADDREF(mCallback.o);
   mCallbackType = CALLBACK_TYPE_OBSERVER;
 
-  mPriority = (PRUint8)aPriority;
+  mIdle = aIdle;
   mType = (PRUint8)aType;
 
   return gThread->AddTimer(this);
@@ -289,11 +289,6 @@ NS_IMETHODIMP_(void) nsTimerImpl::SetDelay(PRUint32 aDelay)
 
   if (!mFiring && gThread)
     gThread->TimerDelayChanged(this);
-}
-
-NS_IMETHODIMP_(void) nsTimerImpl::SetPriority(PRUint32 aPriority)
-{
-  mPriority = (PRUint8)aPriority;
 }
 
 NS_IMETHODIMP_(void) nsTimerImpl::SetType(PRUint32 aType)
@@ -393,7 +388,7 @@ void* handleTimerEvent(TimerEventType* event)
 #endif
 
   if (gFireOnIdle) {
-    if (NS_STATIC_CAST(nsTimerImpl*, event->e.owner)->GetPriority() < NS_PRIORITY_HIGHEST) {
+    if (NS_STATIC_CAST(nsTimerImpl*, event->e.owner)->IsIdle()) {
       nsCOMPtr<nsIThread> currentThread, mainThread;
       nsIThread::GetCurrent(getter_AddRefs(currentThread));
       nsIThread::GetMainThread(getter_AddRefs(mainThread));
@@ -487,14 +482,14 @@ void nsTimerImpl::SetDelayInternal(PRUint32 aDelay)
 
 nsresult
 NS_NewTimer(nsITimer* *aResult, nsTimerCallbackFunc aCallback, void *aClosure,
-            PRUint32 aDelay, PRUint32 aPriority, PRUint32 aType)
+            PRUint32 aDelay, PRBool aIdle, PRUint32 aType)
 {
     nsTimerImpl* timer = new nsTimerImpl();
     if (timer == nsnull)
         return NS_ERROR_OUT_OF_MEMORY;
     NS_ADDREF(timer);
 
-    nsresult rv = timer->Init(aCallback, aClosure, aDelay, aPriority, aType);
+    nsresult rv = timer->Init(aCallback, aClosure, aDelay, aIdle, aType);
     if (NS_FAILED(rv)) {
         NS_RELEASE(timer);
         return rv;

@@ -467,7 +467,7 @@ nsresult nsCaret::PrimeTimer()
     if (NS_FAILED(err))
       return err;
     
-    mBlinkTimer->Init(CaretBlinkCallback, this, mBlinkRate, NS_PRIORITY_HIGH, NS_TYPE_REPEATING_PRECISE);
+    mBlinkTimer->Init(CaretBlinkCallback, this, mBlinkRate, PR_TRUE, NS_TYPE_REPEATING_PRECISE);
   }
 
   return NS_OK;

@@ -721,7 +721,7 @@ else
 	search->mTimer = do_CreateInstance("@mozilla.org/timer;1", &rv);
 	if (NS_FAILED(rv) || (!search->mTimer)) return;
 	search->mTimer->Init(InternetSearchDataSource::FireTimer, search,
-		SEARCH_UPDATE_TIMEOUT, NS_PRIORITY_LOWEST, NS_TYPE_REPEATING_SLACK);
+		SEARCH_UPDATE_TIMEOUT, PR_TRUE, NS_TYPE_REPEATING_SLACK);
 	// Note: don't addref "this" as we'll cancel the timer in the InternetSearchDataSource destructor
 #endif
 }
@@ -924,7 +924,7 @@ InternetSearchDataSource::Init()
 		if (mTimer)
 		{
 			mTimer->Init(InternetSearchDataSource::FireTimer, this,
-			     SEARCH_UPDATE_TIMEOUT, NS_PRIORITY_LOWEST, NS_TYPE_REPEATING_SLACK);
+			     SEARCH_UPDATE_TIMEOUT, PR_TRUE, NS_TYPE_REPEATING_SLACK);
 			// Note: don't addref "this" as we'll cancel the timer in the
 			//       InternetSearchDataSource destructor
 		}

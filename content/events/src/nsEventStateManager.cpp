@@ -978,7 +978,7 @@ nsEventStateManager :: CreateClickHoldTimer ( nsIPresContext* inPresContext, nsG
 
   mClickHoldTimer = do_CreateInstance("@mozilla.org/timer;1");
   if ( mClickHoldTimer )
-    mClickHoldTimer->Init(sClickHoldCallback, this, kClickHoldDelay, NS_PRIORITY_HIGH);
+    mClickHoldTimer->Init(sClickHoldCallback, this, kClickHoldDelay, PR_TRUE);
 
   mEventPoint = inMouseDownEvent->point;
   mEventRefPoint = inMouseDownEvent->refPoint;

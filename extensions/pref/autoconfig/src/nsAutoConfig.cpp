@@ -379,7 +379,7 @@ nsresult nsAutoConfig::downloadAutoConfig()
             mTimer = do_CreateInstance("@mozilla.org/timer;1",&rv);
             if (NS_FAILED(rv)) 
                 return rv;
-            rv = mTimer->Init(this, minutes * 60 * 1000, NS_PRIORITY_NORMAL, 
+            rv = mTimer->Init(this, minutes * 60 * 1000, PR_TRUE, 
                              NS_TYPE_REPEATING_SLACK);
             if (NS_FAILED(rv)) 
                 return rv;

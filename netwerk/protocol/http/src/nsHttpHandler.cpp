@@ -270,7 +270,7 @@ nsHttpHandler::Init()
     // may not be cleaned up as aggressively.
     if (mTimer)
         mTimer->Init(DeadConnectionCleanupCB, this, 15*1000, // 15 seconds
-                     NS_PRIORITY_NORMAL,
+                     PR_TRUE,
                      NS_TYPE_REPEATING_SLACK);
  
     return NS_OK;

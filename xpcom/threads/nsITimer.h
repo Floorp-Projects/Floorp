@@ -67,14 +67,6 @@ typedef void
 { 0x497eed20, 0xb740, 0x11d1,  \
 { 0x9b, 0xc3, 0x00, 0x60, 0x08, 0x8c, 0xa6, 0xb3 } }
 
-// --- Timer priorities ---
-// These are going away, so just use NORMAL for now.  See bug 115473 
-#define NS_PRIORITY_HIGHEST 10
-#define NS_PRIORITY_HIGH 8
-#define NS_PRIORITY_NORMAL 5
-#define NS_PRIORITY_LOW 2
-#define NS_PRIORITY_LOWEST 0
-
 // --- Timer types ---
 enum nsTimerType {
   /**
@@ -121,14 +113,14 @@ public:
    * @param aFunc - The function to invoke
    * @param aClosure - an opaque pointer to pass to that function
    * @param aDelay - The millisecond interval
-   * @param aPriority - The timer priority
+   * @param aIdle - Whether this is an idle timer
    * @param aType - The timer type : one shot or repeating
    * @result - NS_OK if this operation was successful
    */
   NS_IMETHOD Init(nsTimerCallbackFunc aFunc,
                   void *aClosure,
                   PRUint32 aDelay,
-                  PRUint32 aPriority = NS_PRIORITY_NORMAL,
+                  PRBool aIdle = PR_TRUE,
                   PRUint32 aType = NS_TYPE_ONE_SHOT) = 0;
 
   /**
@@ -138,35 +130,35 @@ public:
    *
    * @param aCallback - The interface to notify
    * @param aDelay - The millisecond interval
-   * @param aPriority - The timer priority
+   * @param aIdle - Whether this is an idle timer
    * @param aType - The timer type : one shot or repeating
    * @result - NS_OK if this operation was successful
    */
   NS_IMETHOD Init(nsITimerCallback *aCallback,
                   PRUint32 aDelay,
-                  PRUint32 aPriority = NS_PRIORITY_NORMAL,
+                  PRBool aIdle = PR_TRUE,
                   PRUint32 aType = NS_TYPE_ONE_SHOT) = 0;
 
   /// Cancels the timeout
   NS_IMETHOD Cancel() = 0;
 
+  /// @return true if the timer is an idle timer, false otherwise
+  NS_IMETHOD_(PRBool) IsIdle() const = 0;
+
   /// @return the millisecond delay of the timeout
-  NS_IMETHOD_(PRUint32) GetDelay() = 0;
+  NS_IMETHOD_(PRUint32) GetDelay() const = 0;
 
   /// Change the millisecond interval for the timeout
   NS_IMETHOD_(void) SetDelay(PRUint32 aDelay) = 0;
 
-  NS_IMETHOD_(PRUint32) GetPriority() = 0;
-  NS_IMETHOD_(void) SetPriority(PRUint32 aPriority) = 0;
-
-  NS_IMETHOD_(PRUint32) GetType() = 0;
+  NS_IMETHOD_(PRUint32) GetType() const = 0;
   NS_IMETHOD_(void) SetType(PRUint32 aType) = 0;
 
   /// @return the opaque pointer
-  NS_IMETHOD_(void*) GetClosure()  = 0;
+  NS_IMETHOD_(void*) GetClosure() const = 0;
 };
 
 extern NS_COM nsresult
 NS_NewTimer(nsITimer* *aResult, nsTimerCallbackFunc aCallback, void *aClosure,
-            PRUint32 aDelay, PRUint32 aPriority, PRUint32 aType);
+            PRUint32 aDelay, PRBool aIdle, PRUint32 aType);
 #endif // nsITimer_h___
