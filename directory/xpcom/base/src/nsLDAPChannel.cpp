@@ -52,8 +52,8 @@
 
 NS_METHOD lds(class nsLDAPChannel *chan, const char *);
 
-NS_IMPL_THREADSAFE_ISUPPORTS3(nsLDAPChannel, nsIChannel, nsIRequest,	
-			      nsIRunnable);
+NS_IMPL_THREADSAFE_ISUPPORTS4(nsLDAPChannel, nsIChannel, nsIRequest,	
+			      nsIRunnable, nsILDAPMessageListener);
 
 nsLDAPChannel::nsLDAPChannel()
 {
@@ -577,8 +577,7 @@ nsLDAPChannel::Run(void)
 
   // since the LDAP SDK does all the socket management, we don't have
   // an underlying transport channel to create an nsIInputStream to hand
-  // back to the nsIStreamListener.  So (only on the first call to AsyncRead)
-  // we do it ourselves:
+  // back to the nsIStreamListener.  So we do it ourselves:
   //
   if (!mReadPipeIn) {
     
@@ -646,3 +645,86 @@ nsLDAPChannel::pipeWrite(char *str)
   mReadPipeOffset += bytesWritten;
   return NS_OK;
 }
+
+// methods for nsILDAPMessageListener
+//
+// void OnLDAPSearchEntry (in nsILDAPMessage aMessage); 
+//
+NS_IMETHODIMP 
+nsLDAPChannel::OnLDAPSearchEntry(nsILDAPMessage *aMessage)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+// void OnLDAPSearchReference (in nsILDAPMessage aMessage);
+//
+NS_IMETHODIMP 
+nsLDAPChannel::OnLDAPSearchReference(nsILDAPMessage *aMessage)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+// void OnLDAPSearchResult (in nsILDAPMessage aMessage);
+//
+// XXX need to addref my message? deal with scope?
+//
+NS_IMETHODIMP 
+nsLDAPChannel::OnLDAPSearchResult(nsILDAPMessage *aMessage)
+{
+    PRInt32 errorCode;	// the LDAP error code
+    nsresult rv;
+
+#ifdef DEBUG_dmose
+    PR_fprintf(PR_STDERR, "\nresult returned: \n");
+#endif
+
+    // XXX should use GetErrorString here?
+    //
+    rv = aMessage->GetErrorCode(&errorCode);
+    if ( NS_FAILED(rv) ) {
+	PR_fprintf(PR_STDERR, " %s\n", ldap_err2string(errorCode));
+	return NS_ERROR_FAILURE;
+    }
+
+#ifdef DEBUG_dmose
+    PR_fprintf(PR_STDERR, "success\n");
+#endif
+
+    // done with this message; cause nsCOMPtr to call the destructor
+    //
+    aMessage = 0;
+
+    // XXX need to destroy the connection (to unbind) here
+    // the old code that did this in ldapSearch.cpp is pasted below
+    // 
+#if 0
+#ifdef DEBUG_dmose
+    PR_fprintf(PR_STDERR,"unbinding\n");
+#endif    
+
+    myConnection = 0;
+
+#ifdef DEBUG_dmose
+    PR_fprintf(PR_STDERR,"unbound\n");
+#endif
+#endif
+
+    return NS_OK;
+}
+
+// void OnLDAPError ();
+//
+NS_IMETHODIMP 
+nsLDAPChannel::OnLDAPError()
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+// void OnLDAPTimeout ();
+//
+NS_IMETHODIMP 
+nsLDAPChannel::OnLDAPTimeout()
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+

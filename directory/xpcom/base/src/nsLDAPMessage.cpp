@@ -101,7 +101,6 @@ NS_IMETHODIMP
 nsLDAPMessage::Init(nsILDAPOperation *aOperation, LDAPMessage *aMsgHandle)
 {
     nsresult rv;
-    nsCOMPtr<nsILDAPConnection> connection; 
 
     NS_ENSURE_ARG_POINTER(aOperation);
     NS_ENSURE_ARG_POINTER(aMsgHandle);
@@ -113,10 +112,10 @@ nsLDAPMessage::Init(nsILDAPOperation *aOperation, LDAPMessage *aMsgHandle)
 
     // cache the connection handle associated with this operation
     //
-    rv = mOperation->GetConnection(getter_AddRefs(connection));
+    rv = mOperation->GetConnection(getter_AddRefs(mConnection));
     NS_ENSURE_SUCCESS(rv,rv);
 
-    rv = connection->GetConnectionHandle(&mConnectionHandle);
+    rv = mConnection->GetConnectionHandle(&mConnectionHandle);
     NS_ENSURE_SUCCESS(rv,rv);
 
     return NS_OK;
@@ -205,7 +204,26 @@ nsLDAPMessage::NextAttribute(char* *aAttribute)
     if (*aAttribute) {
 	return NS_OK;
     } else {
-	return NS_ERROR_FAILURE;
+	// figure out whether this returned NULL because it was the
+	// last attribute (which is OK), or because there was an error
+	//
+	nsresult rv;
+	PRInt32 lderr;
+
+	rv = mConnection->GetLdErrno(NULL, NULL, &lderr);
+	if (NS_FAILED(rv)) { 
+	    // some sort of internal error; propagate upwards
+	    //
+	    return rv;
+        }
+
+	if (lderr == LDAP_SUCCESS) {
+	    return NS_OK;
+	} else {
+	    // XXX should really propagate lderr upwards
+	    //
+	    return NS_ERROR_FAILURE;
+	}
     }
 }
 
@@ -220,7 +238,7 @@ nsLDAPMessage::Type(void)
 // wrapper for ldap_get_dn
 //
 NS_IMETHODIMP
-nsLDAPMessage::GetDN(char* *aDN)
+nsLDAPMessage::GetDn(char* *aDN)
 {
     NS_ENSURE_ARG_POINTER(aDN);
 

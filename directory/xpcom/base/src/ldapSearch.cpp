@@ -53,7 +53,6 @@ lds(class nsLDAPChannel *chan, const char *url)
     PRInt32 lden;
     nsresult rv;
 
-
     // create an LDAP connection
     //
     myConnection = do_CreateInstance("mozilla.network.ldapconnection", &rv);
@@ -149,7 +148,6 @@ lds(class nsLDAPChannel *chan, const char *url)
     while ( returnCode != LDAP_RES_SEARCH_RESULT ) {
 
 	char *dn, *attr;
-	int rc2;
 
 	PR_fprintf(PR_STDERR,".");
 
@@ -179,7 +177,7 @@ lds(class nsLDAPChannel *chan, const char *url)
 	    // get the DN
 	    // XXX better err handling
 	    //
-	    rv = myMessage->GetDN(&dn);
+	    rv = myMessage->GetDn(&dn);
 	    NS_ENSURE_SUCCESS(rv, rv);
 
 	    chan->pipeWrite("dn: ");
@@ -258,18 +256,7 @@ lds(class nsLDAPChannel *chan, const char *url)
 	    break;
 
 	case LDAP_RES_SEARCH_RESULT: // all done (the while condition sees this)
-#ifdef DEBUG_dmose
-	    PR_fprintf(PR_STDERR, "\nresult returned: \n");
-#endif
-
-	    // XXX should use GetErrorString here?
-	    //
-	    rv = myMessage->GetErrorCode(&rc2);
-	    if ( NS_FAILED(rv) ) {
-		PR_fprintf(PR_STDERR, " %s\n", ldap_err2string(rc2));
-		return NS_ERROR_FAILURE;
-	    }
-	    PR_fprintf(PR_STDERR, "success\n");
+	    chan->OnLDAPSearchResult(myMessage);
 	    break;
 	  
 	default:
@@ -281,16 +268,6 @@ lds(class nsLDAPChannel *chan, const char *url)
 
 	PR_Sleep(200);
     }
-
-#ifdef DEBUG_dmose
-    PR_fprintf(PR_STDERR,"unbinding\n");
-#endif    
-
-    myConnection = 0;
-
-#ifdef DEBUG_dmose
-    PR_fprintf(PR_STDERR,"unbound\n");
-#endif
 
     return NS_OK;
 }

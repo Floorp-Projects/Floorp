@@ -44,15 +44,18 @@
 #include "nsIStreamListener.h"
 #include "nsIBufferInputStream.h"
 #include "nsIBufferOutputStream.h"
+#include "nsILDAPMessageListener.h"
 
 /* Header file */
-class nsLDAPChannel : public nsIChannel, public nsIRunnable
+class nsLDAPChannel : public nsIChannel, public nsIRunnable, 
+    public nsILDAPMessageListener
 {
 public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIREQUEST
   NS_DECL_NSICHANNEL
   NS_DECL_NSIRUNNABLE
+  NS_DECL_NSILDAPMESSAGELISTENER
 
   nsLDAPChannel();
   virtual ~nsLDAPChannel();
