@@ -1,3 +1,4 @@
+
 <!-- ***** BEGIN LICENSE BLOCK *****
    - Version: MPL 1.1/GPL 2.0/LGPL 2.1
    -
@@ -20,7 +21,6 @@
    -
    - Contributor(s): Mike Potter <mikep@oeone.com>
    -                 ArentJan Banck <ajbanck@planet.nl>
-   -                 Eric Belhaire <belhaire@ief.u-psud.fr>
    -
    - Alternatively, the contents of this file may be used under the terms of
    - either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -36,20 +36,20 @@
    -
    - ***** END LICENSE BLOCK ***** -->
 
-<!ENTITY calendar.label             "Calendar" >
-<!ENTITY calendarPanel.label        "Calendar" >
-<!ENTITY calendar.accesskey         "c" >
-<!ENTITY calendar.publish.label     "Publishing">
+<!ENTITY calendar.label             "Kalender" >
+<!ENTITY calendarPanel.label        "Kalender" >
+<!ENTITY calendar.accesskey         "K" >
+<!ENTITY calendar.publish.label     "Veröffentlichen">
 <!ENTITY calendar.alarms.label      "Alarms">
 <!ENTITY calendar.views.label       "Views">
 <!ENTITY calendar.timezone.label    "My Timezone">
 
-<!ENTITY pref.mainbox.label         "General Settings" >
-<!ENTITY pref.alarmgoesoff.label "When an alarm goes off:">
-<!ENTITY pref.playasound  "Play a sound" >
+<!ENTITY pref.mainbox.label         "Einstellungen" >
+<!ENTITY pref.alarmgoesoff.label "Wenn ein Alarm beendet ist:">
+<!ENTITY pref.playasound  "Sound abspielen" >
 
 <!ENTITY pref.alarmbox.label    "Alarms" >
-<!ENTITY pref.showalarmbox    "Show an alarm box" >
+<!ENTITY pref.showalarmbox    "Eine Alarm-Meldung anzeigen" >
 <!ENTITY pref.defaultemail.label "Default address to send alarms to:">
 <!ENTITY pref.defaulttext.label "Default text for alarms:">
 <!ENTITY pref.missedalarms    "Show missed alarms" >
@@ -58,20 +58,20 @@
 <!ENTITY pref.alarm.on "On">
 <!ENTITY pref.alarm.off "Off">
 
-<!ENTITY pref.dateformat.label      "Date Text Format:" >
-<!ENTITY pref.dateformat.long       "Long" >
-<!ENTITY pref.dateformat.short      "Short"  >
-<!ENTITY pref.defaultlength.label   "Default Event Length:" >
-<!ENTITY pref.defaultsnoozelength.label   "Default Snooze Length:" >
+<!ENTITY pref.dateformat.label      "Datumsformat:" >
+<!ENTITY pref.dateformat.long       "Lang" >
+<!ENTITY pref.dateformat.short      "Kurz"  >
+<!ENTITY pref.defaultlength.label   "Standard Ereignisslänge:" >
+<!ENTITY pref.defaultsnoozelength.label   "Standard Pausenlänge:" >
 
-<!ENTITY pref.weekstarts.label     "First Day Of The Week:" >
-<!ENTITY pref.weekstarts.sunday    "Sunday" >
-<!ENTITY pref.weekstarts.monday    "Monday" >
-<!ENTITY pref.weekstarts.tuesday   "Tuesday" >
-<!ENTITY pref.weekstarts.wednesday "Wednesday" >
-<!ENTITY pref.weekstarts.thursday  "Thursday" >
-<!ENTITY pref.weekstarts.friday    "Friday" >
-<!ENTITY pref.weekstarts.saturday  "Saturday" >
+<!ENTITY pref.weekstarts.label     "Erster Tag der Woche:" >
+<!ENTITY pref.weekstarts.sunday    "Sonntag" >
+<!ENTITY pref.weekstarts.monday    "Montag" >
+<!ENTITY pref.weekstarts.tuesday   "Dienstag" >
+<!ENTITY pref.weekstarts.wednesday "Mittwoch" >
+<!ENTITY pref.weekstarts.thursday  "Donnerstag" >
+<!ENTITY pref.weekstarts.friday    "Freitag" >
+<!ENTITY pref.weekstarts.saturday  "Samstag" >
 
 <!ENTITY pref.numberofweeks.label     "Default total number of Weeks:" >
 <!ENTITY pref.numberofweeks.0      "None" >
@@ -121,15 +121,15 @@
 <!ENTITY pref.calendar.view.starttime.label "Start time:"> 
 <!ENTITY pref.calendar.view.endtime.label   "End time:"> 
 
-<!ENTITY pref.categories.label   "Categories" >
+<!ENTITY pref.categories.label   "Kategorien" >
 
-<!ENTITY pref.categories.help.description   "Use a comma between each category you want to add.">
+<!ENTITY pref.categories.help.description   "Verwenden Sie ein Komma zwischen den Kategorien die Sie hinzufügen möchten.">
 
-<!ENTITY pref.reloadonlaunch       "Reload Remote Calendars On Startup">
+<!ENTITY pref.reloadonlaunch       "Aktualisiere entfernet Kalender beim Starten">
 
-<!ENTITY pref.publish.caption        "Publishing Settings">
-<!ENTITY pref.publish.path.label     "Default Remote Filename">
-<!ENTITY pref.publish.username.label "Username">
+<!ENTITY pref.publish.caption        "Veröffentlichungs-Einstellungen">
+<!ENTITY pref.publish.path.label     "Pfad zum Server">
+<!ENTITY pref.publish.username.label "Benutzer">
 <!ENTITY pref.publish.password.label "Password">
 
 <!ENTITY pref.minutes.label "Minutes">

@@ -1,3 +1,4 @@
+
 <!-- ***** BEGIN LICENSE BLOCK *****
    - Version: MPL 1.1/GPL 2.0/LGPL 2.1
    -
@@ -20,7 +21,6 @@
    -
    - Contributor(s): Mike Potter <mikep@oeone.com>
    -                 ArentJan Banck <ajbanck@planet.nl>
-   -                 Eric Belhaire <belhaire@ief.u-psud.fr>
    -
    - Alternatively, the contents of this file may be used under the terms of
    - either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -36,42 +36,42 @@
    -
    - ***** END LICENSE BLOCK ***** -->
 
-<!ENTITY calendar.label             "Calendar" >
-<!ENTITY calendarPanel.label        "Calendar" >
+<!ENTITY calendar.label             "Kalender" >
+<!ENTITY calendarPanel.label        "Kalender" >
 <!ENTITY calendar.accesskey         "c" >
-<!ENTITY calendar.publish.label     "Publishing">
-<!ENTITY calendar.alarms.label      "Alarms">
-<!ENTITY calendar.views.label       "Views">
+<!ENTITY calendar.publish.label     "Publiceren">
+<!ENTITY calendar.alarms.label      "Waarschuwingen">
+<!ENTITY calendar.views.label       "Overzichten">
 <!ENTITY calendar.timezone.label    "My Timezone">
 
-<!ENTITY pref.mainbox.label         "General Settings" >
-<!ENTITY pref.alarmgoesoff.label "When an alarm goes off:">
-<!ENTITY pref.playasound  "Play a sound" >
+<!ENTITY pref.mainbox.label         "Algemen instellingen" >
+<!ENTITY pref.alarmgoesoff.label "Als een waarschuwing gegeven wordt:">
+<!ENTITY pref.playasound  "Speel een geluid af" >
 
-<!ENTITY pref.alarmbox.label    "Alarms" >
-<!ENTITY pref.showalarmbox    "Show an alarm box" >
-<!ENTITY pref.defaultemail.label "Default address to send alarms to:">
-<!ENTITY pref.defaulttext.label "Default text for alarms:">
+<!ENTITY pref.alarmbox.label    "Waarschuwingen" >
+<!ENTITY pref.showalarmbox    "Toon een waarschuwingsvenster" >
+<!ENTITY pref.defaultemail.label "Standaard adres om waarschuwingen naartoe te sturen:">
+<!ENTITY pref.defaulttext.label "Standaard waarschuwingstekst:">
 <!ENTITY pref.missedalarms    "Show missed alarms" >
 <!ENTITY pref.defalarm4events.label "Default alarm setting for events:">
 <!ENTITY pref.defalarm4todos.label "Default alarm setting for tasks:">
 <!ENTITY pref.alarm.on "On">
 <!ENTITY pref.alarm.off "Off">
 
-<!ENTITY pref.dateformat.label      "Date Text Format:" >
-<!ENTITY pref.dateformat.long       "Long" >
-<!ENTITY pref.dateformat.short      "Short"  >
-<!ENTITY pref.defaultlength.label   "Default Event Length:" >
-<!ENTITY pref.defaultsnoozelength.label   "Default Snooze Length:" >
+<!ENTITY pref.dateformat.label      "Datum/Tijd formaat:" >
+<!ENTITY pref.dateformat.long       "Lang" >
+<!ENTITY pref.dateformat.short      "Kort"  >
+<!ENTITY pref.defaultlength.label   "Standaard gebeurtenisduur:" >
+<!ENTITY pref.defaultsnoozelength.label   "Standaard snooze-duur:" >
 
-<!ENTITY pref.weekstarts.label     "First Day Of The Week:" >
-<!ENTITY pref.weekstarts.sunday    "Sunday" >
-<!ENTITY pref.weekstarts.monday    "Monday" >
-<!ENTITY pref.weekstarts.tuesday   "Tuesday" >
-<!ENTITY pref.weekstarts.wednesday "Wednesday" >
-<!ENTITY pref.weekstarts.thursday  "Thursday" >
-<!ENTITY pref.weekstarts.friday    "Friday" >
-<!ENTITY pref.weekstarts.saturday  "Saturday" >
+<!ENTITY pref.weekstarts.label     "Eerste dag van de week:" >
+<!ENTITY pref.weekstarts.sunday    "Zondag" >
+<!ENTITY pref.weekstarts.monday    "Maandag" >
+<!ENTITY pref.weekstarts.tuesday   " Dinsdag" >
+<!ENTITY pref.weekstarts.wednesday "Woensdag" >
+<!ENTITY pref.weekstarts.thursday  "Donderdag" >
+<!ENTITY pref.weekstarts.friday    "Vrijdag" >
+<!ENTITY pref.weekstarts.saturday  "Zaterdag" >
 
 <!ENTITY pref.numberofweeks.label     "Default total number of Weeks:" >
 <!ENTITY pref.numberofweeks.0      "None" >
@@ -84,7 +84,7 @@
 <!ENTITY pref.numberofpreviousweeks.label     "Number of Previous Weeks:" >
 
 
-<!ENTITY pref.hour.help.description    "Overwritten if events are outside these times" >
+<!ENTITY pref.hour.help.description    "Overschrijven als gebeurtenissen buiten deze tijden vallen" >
 <!ENTITY pref.hour.00    "00:00" >
 <!ENTITY pref.hour.01    "01:00" >
 <!ENTITY pref.hour.02    "02:00" >
@@ -111,28 +111,28 @@
 <!ENTITY pref.hour.23    "23:00" >
 
 <!ENTITY pref.calendar.view.allview.caption "General"> 
-<!ENTITY pref.calendar.view.dayview.caption "Day View"> 
-<!ENTITY pref.calendar.view.weekview.caption "Week View"> 
+<!ENTITY pref.calendar.view.dayview.caption "Dagoverzicht"> 
+<!ENTITY pref.calendar.view.weekview.caption "Weekoverzicht"> 
 <!ENTITY pref.calendar.view.weekanddayview.caption "Week and Day Views"> 
 <!ENTITY pref.calendar.view.monthview.caption "Month View"> 
 <!ENTITY pref.calendar.view.multiweekview.caption "Multiweek View"> 
 
-<!ENTITY pref.calendar.view.restrict.label "Restrict Views to "> 
-<!ENTITY pref.calendar.view.starttime.label "Start time:"> 
-<!ENTITY pref.calendar.view.endtime.label   "End time:"> 
+<!ENTITY pref.calendar.view.restrict.label "Beperk overzichten tot "> 
+<!ENTITY pref.calendar.view.starttime.label "Starttijd:"> 
+<!ENTITY pref.calendar.view.endtime.label   "Eindtijd:"> 
 
-<!ENTITY pref.categories.label   "Categories" >
+<!ENTITY pref.categories.label   "Categori&#xEB;n" >
 
-<!ENTITY pref.categories.help.description   "Use a comma between each category you want to add.">
+<!ENTITY pref.categories.help.description   "Gebruik een komma tussen elke categorie die u wilt toevoegen.">
 
-<!ENTITY pref.reloadonlaunch       "Reload Remote Calendars On Startup">
+<!ENTITY pref.reloadonlaunch       "Herlaad kalenders op andere computers tijdens het opstarten">
 
-<!ENTITY pref.publish.caption        "Publishing Settings">
-<!ENTITY pref.publish.path.label     "Default Remote Filename">
-<!ENTITY pref.publish.username.label "Username">
-<!ENTITY pref.publish.password.label "Password">
+<!ENTITY pref.publish.caption        "Publiceer gebeurtenissen">
+<!ENTITY pref.publish.path.label     "Standaard bestandsnaam op andere computer">
+<!ENTITY pref.publish.username.label "Gebruikersnaam">
+<!ENTITY pref.publish.password.label "Wachtwoord">
 
-<!ENTITY pref.minutes.label "Minutes">
+<!ENTITY pref.minutes.label "Minuten">
 
 <!-- Calendar Timezone preferences information -->        
         

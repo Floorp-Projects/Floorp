@@ -1,0 +1,24 @@
+<!-- Translated to Japanese by Teiji Matsuba <matsuba@dream.com>, 2003/03/30 -->
+<!-- INSERT OPEN OEONE LICENSE -->
+
+<!-- Select addresses for mail message dialog -->
+<!ENTITY ab-selectAddressesDialog.title "Internet 応用ダイアログ- アドレス選択">
+<!ENTITY ab-selectAddressesDialogHeader.label "アドレスを選択">
+<!ENTITY ab-selectAddressesDialogLookIn.label "場所: ">
+<!ENTITY ab-selectAddressesDialogNameColumn.label "名前">
+<!ENTITY ab-selectAddressesDialogEmailColumn.label "メールアドレス">
+<!ENTITY ab-selectAddressesDialogFor.label "for: ">
+<!ENTITY ab-selectAddressesDialogClearButton.label "クリア">
+<!ENTITY ab-selectAddressesDialogToButton.label "宛先 ">
+<!ENTITY ab-selectAddressesDialogCcButton.label "Cc ">
+<!ENTITY ab-selectAddressesDialogBccButton.label "Bcc ">
+<!ENTITY ab-selectAddressesDialogRemoveButton.label "削除">
+<!ENTITY ab-selectAddressesDialogAddressTo.label "メッセージ通知アドレス:">
+<!ENTITY ab-selectAddressesDialogPrefixTo.label "宛先: ">
+<!ENTITY ab-selectAddressesDialogPrefixCc.label "CC: ">
+<!ENTITY ab-selectAddressesDialogPrefixBcc.label "Bcc: ">
+<!ENTITY ab-selectAddressesDialogNoEmailMessage.label "メールアドレスなし">
+<!ENTITY ab-selectAddressesDialogInvite.label "招待">
+<!ENTITY ab-selectAddressesDialogUninvite.label "削除">
+<!ENTITY ab-selectAddressesDialogInviteList.label "招待リスト:">
+

@@ -1,0 +1,23 @@
+<!-- INSERT OPEN OEONE LICENSE -->
+
+<!-- Select addresses for mail message dialog -->
+<!ENTITY ab-selectAddressesDialog.title "Internet Hilfsmittel Dialog- Adressen auswählen">
+<!ENTITY ab-selectAddressesDialogHeader.label "Markierte Adressen">
+<!ENTITY ab-selectAddressesDialogLookIn.label "Suche in: ">
+<!ENTITY ab-selectAddressesDialogNameColumn.label "Name">
+<!ENTITY ab-selectAddressesDialogEmailColumn.label "Sende Adresse">
+<!ENTITY ab-selectAddressesDialogFor.label "für: ">
+<!ENTITY ab-selectAddressesDialogClearButton.label "Bereinigen">
+<!ENTITY ab-selectAddressesDialogToButton.label "An ">
+<!ENTITY ab-selectAddressesDialogCcButton.label "Cc ">
+<!ENTITY ab-selectAddressesDialogBccButton.label "Bcc ">
+<!ENTITY ab-selectAddressesDialogRemoveButton.label "Entfernen">
+<!ENTITY ab-selectAddressesDialogAddressTo.label "Adressiere Mail an:">
+<!ENTITY ab-selectAddressesDialogPrefixTo.label "An: ">
+<!ENTITY ab-selectAddressesDialogPrefixCc.label "CC: ">
+<!ENTITY ab-selectAddressesDialogPrefixBcc.label "Bcc: ">
+<!ENTITY ab-selectAddressesDialogNoEmailMessage.label "Keine Mailadresse">
+<!ENTITY ab-selectAddressesDialogInvite.label "Einladen">
+<!ENTITY ab-selectAddressesDialogUninvite.label "Entfernen">
+<!ENTITY ab-selectAddressesDialogInviteList.label "Liste einladen:">
+

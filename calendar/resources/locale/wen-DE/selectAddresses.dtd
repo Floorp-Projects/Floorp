@@ -1,0 +1,23 @@
+<!-- INSERT OPEN OEONE LICENSE -->
+
+<!-- Select addresses for mail message dialog -->
+<!ENTITY ab-selectAddressesDialog.title "Internetny Připrawjenski dialog - Adresy wubrać">
+<!ENTITY ab-selectAddressesDialogHeader.label "Adresy wubrać">
+<!ENTITY ab-selectAddressesDialogLookIn.label "Hladać do: ">
+<!ENTITY ab-selectAddressesDialogNameColumn.label "Mjeno">
+<!ENTITY ab-selectAddressesDialogEmailColumn.label "Emailowa Adresa">
+<!ENTITY ab-selectAddressesDialogFor.label "za: ">
+<!ENTITY ab-selectAddressesDialogClearButton.label "Wuprózdnić">
+<!ENTITY ab-selectAddressesDialogToButton.label "Na ">
+<!ENTITY ab-selectAddressesDialogCcButton.label "Cc ">
+<!ENTITY ab-selectAddressesDialogBccButton.label "Bcc ">
+<!ENTITY ab-selectAddressesDialogRemoveButton.label "Wotstronić">
+<!ENTITY ab-selectAddressesDialogAddressTo.label "Z Powěsću wobroćić:">
+<!ENTITY ab-selectAddressesDialogPrefixTo.label "Na: ">
+<!ENTITY ab-selectAddressesDialogPrefixCc.label "CC: ">
+<!ENTITY ab-selectAddressesDialogPrefixBcc.label "Bcc: ">
+<!ENTITY ab-selectAddressesDialogNoEmailMessage.label "Žana emailowa adresa">
+<!ENTITY ab-selectAddressesDialogInvite.label "Přeprosyć">
+<!ENTITY ab-selectAddressesDialogUninvite.label "Wotstronić">
+<!ENTITY ab-selectAddressesDialogInviteList.label "Přeprošenska lisćina:">
+
