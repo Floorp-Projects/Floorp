@@ -507,6 +507,9 @@ protected:
     nsVoidArray                         mChildren;           // [OWNER]
     nsCOMPtr<nsIEventListenerManager>   mListenerManager;    // [OWNER]
     void*                               mScriptObject;       // [OWNER]
+#ifdef DEBUG
+    PRBool                              mIsScriptObjectRooted;
+#endif
     PRInt32                             mContentId;
 
     // The state of our sloth for lazy content model construction via

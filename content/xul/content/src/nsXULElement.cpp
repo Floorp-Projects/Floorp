@@ -502,6 +502,9 @@ nsXULElement::nsXULElement()
       mDocument(nsnull),
       mParent(nsnull),
       mScriptObject(nsnull),
+#ifdef DEBUG
+      mIsScriptObjectRooted(PR_FALSE),
+#endif
       mContentId(0),
       mLazyState(0),
       mBindingParent(nsnull),
@@ -547,6 +550,11 @@ nsXULElement::Init()
 
 nsXULElement::~nsXULElement()
 {
+    // At this point, we'd better *not* be rooted. If we are, then we
+    // might be running into a weird situation (like bug 71141) where
+    // we created two JS objects for a single DOM element.
+    NS_ASSERTION(! mIsScriptObjectRooted, "nsXULElement still rooted in its dtor");
+
     delete mSlots;
 
     //NS_IF_RELEASE(mDocument); // not refcounted
@@ -707,7 +715,7 @@ nsXULElement::QueryInterface(REFNSIID iid, void** result)
     else if (iid.Equals(NS_GET_IID(nsIDOMXULElement)) ||
              iid.Equals(kIDOMElementIID) ||
              iid.Equals(kIDOMNodeIID)) {
-        *result = NS_STATIC_CAST(nsIDOMElement*, this);
+        *result = NS_STATIC_CAST(nsIDOMXULElement*, this);
     }
     else if (iid.Equals(kIScriptObjectOwnerIID)) {
         *result = NS_STATIC_CAST(nsIScriptObjectOwner*, this);
@@ -2054,21 +2062,43 @@ nsXULElement::GetScriptObject(nsIScriptContext* aContext, void** aScriptObject)
             ? NS_STATIC_CAST(nsISupports*, mParent)
             : NS_STATIC_CAST(nsISupports*, mDocument);
 
+        void* scriptObject;
         rv = factory->NewScriptXULElement(tagStr, aContext,
                                           NS_STATIC_CAST(nsIStyledContent*, this),
                                           parent,
-                                          &mScriptObject);
-                                          
+                                          &scriptObject);
+        if (NS_FAILED(rv)) return rv;
 
-        // The actual script object that we created will depend on our
+        if (mScriptObject) {
+            // We must have re-entered; discard the newly created
+            // script object and use the one created during the
+            // nesting instead.
+            JSContext* cx = NS_STATIC_CAST(JSContext*, aContext->GetNativeContext());
+            ::JS_SetPrivate(cx, NS_STATIC_CAST(JSObject*, scriptObject), nsnull);
+
+            // Since we've eagerly cleared the transient script
+            // object's native pointer, we now need to ``manually''
+            // balance the reference that it had to us
+            Release();
+
+            *aScriptObject = mScriptObject;
+            return NS_OK;
+        }
+
+        mScriptObject = scriptObject;
+
+        // Only root if a script object was actually created.
+        if (! mScriptObject) {
+            *aScriptObject = nsnull;
+            return NS_OK;
+        }
+
         // tag's name
         const char* rootname;
-        if (tag.get() == nsXULAtoms::tree) {
+        if (tag.get() == nsXULAtoms::tree)
             rootname = "nsXULTreeElement::mScriptObject";
-        }
-        else {
+        else
             rootname = "nsXULElement::mScriptObject";
-        }
 
         // Ensure that a reference exists to this element.
         //
@@ -2077,6 +2107,10 @@ nsXULElement::GetScriptObject(nsIScriptContext* aContext, void** aScriptObject)
         // screwed, and GC will cause us to lose properties if we
         // don't eagerly root.
         aContext->AddNamedReference((void*) &mScriptObject, mScriptObject, rootname);
+
+#ifdef DEBUG
+        mIsScriptObjectRooted = PR_TRUE;
+#endif
 
         // See if we have a frame.
         if (mDocument) {
@@ -2128,7 +2162,6 @@ nsXULElement::GetScriptObject(nsIScriptContext* aContext, void** aScriptObject)
 NS_IMETHODIMP 
 nsXULElement::SetScriptObject(void *aScriptObject)
 {
-    // XXX Drop reference to previous object if there was one?
     mScriptObject = aScriptObject;
     return NS_OK;
 }
@@ -2345,6 +2378,9 @@ nsXULElement::SetDocument(nsIDocument* aDocument, PRBool aDeep, PRBool aCompileE
                     global->GetContext(getter_AddRefs(context));
                     if (context) {
                         context->RemoveReference((void*) &mScriptObject, mScriptObject);
+#ifdef DEBUG
+                        mIsScriptObjectRooted = PR_FALSE;
+#endif
                     }
                 }
             }
@@ -2382,6 +2418,10 @@ nsXULElement::SetDocument(nsIDocument* aDocument, PRBool aDeep, PRBool aCompileE
                     global->GetContext(getter_AddRefs(context));
                     if (context) {
                         context->AddNamedReference((void*) &mScriptObject, mScriptObject, "nsXULElement::mScriptObject");
+
+#ifdef DEBUG
+                        mIsScriptObjectRooted = PR_TRUE;
+#endif
                     }
                 }
             }

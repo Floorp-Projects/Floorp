@@ -1807,14 +1807,34 @@ nsGenericElement::GetScriptObject(nsIScriptContext* aContext,
 
     nsAutoString tag;
     mNodeInfo->GetName(tag);
+
+    void* scriptObject;
     res = factory->NewScriptElement(tag, aContext,
                                     NS_STATIC_CAST(nsIHTMLContent *, this),
                                     mParent ? (nsISupports*)mParent : (nsISupports*)mDocument,
-                                    (void**)&slots->mScriptObject);
+                                    (void**)&scriptObject);
     NS_RELEASE(factory);
 
-    NS_WARN_IF_FALSE(slots->mScriptObject,
+    NS_WARN_IF_FALSE(scriptObject,
                      "Eeek! Cound't create script object!");
+
+    if (slots->mScriptObject) {
+      // We must have re-entered; discard the newly created
+      // script object and use the one created during the
+      // nesting instead.
+      JSContext* cx = NS_STATIC_CAST(JSContext*, aContext->GetNativeContext());
+      ::JS_SetPrivate(cx, NS_STATIC_CAST(JSObject*, scriptObject), nsnull);
+
+      // Since we've eagerly cleared the transient script
+      // object's native pointer, we now need to ``manually''
+      // balance the reference that it had to us
+      Release();
+
+      *aScriptObject = slots->mScriptObject;
+      return NS_OK;
+    }
+
+    slots->mScriptObject = scriptObject;
 
     if (mDocument && slots->mScriptObject) {
       aContext->AddNamedReference((void *)&slots->mScriptObject,
