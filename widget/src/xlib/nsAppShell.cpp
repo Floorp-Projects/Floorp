@@ -321,7 +321,18 @@ nsAppShell::DispatchEvent(XEvent *event)
   case MotionNotify:
     HandleMotionNotifyEvent(event, widget);
     break;
-
+  case KeyPress:
+    HandleKeyPressEvent(event, widget);
+    break;
+  case KeyRelease:
+    HandleKeyReleaseEvent(event, widget);
+    break;
+  case FocusIn:
+    HandleFocusInEvent(event, widget);
+    break;
+  case FocusOut:
+    HandleFocusOutEvent(event, widget);
+    break;
   case NoExpose:
     break;
 
@@ -440,4 +451,32 @@ nsAppShell::HandleConfigureNotifyEvent(XEvent *event, nsWidget *aWidget)
   aWidget->OnResize(sevent);
   NS_RELEASE(aWidget);
   delete sevent.windowSize;
+}
+
+void
+nsAppShell::HandleKeyPressEvent(XEvent *event, nsWidget *aWidget)
+{
+  PR_LOG(XlibWidgetsLM, PR_LOG_DEBUG, ("KeyPress event for window 0x%lx\n",
+                                       event->xkey.window));
+}
+
+void
+nsAppShell::HandleKeyReleaseEvent(XEvent *event, nsWidget *aWidget)
+{
+  PR_LOG(XlibWidgetsLM, PR_LOG_DEBUG, ("KeyRelease event for window 0x%lx\n",
+                                       event->xkey.window));
+}
+
+void
+nsAppShell::HandleFocusInEvent(XEvent *event, nsWidget *aWidget)
+{
+  PR_LOG(XlibWidgetsLM, PR_LOG_DEBUG, ("FocusIn event for window 0x%lx\n",
+                                       event->xfocus.window));
+}
+
+void
+nsAppShell::HandleFocusOutEvent(XEvent *event, nsWidget *aWidget)
+{
+  PR_LOG(XlibWidgetsLM, PR_LOG_DEBUG, ("FocusOut event for window 0x%lx\n",
+                                       event->xfocus.window));
 }
