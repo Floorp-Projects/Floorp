@@ -204,6 +204,8 @@ public:
 
   static nsresult LayoutChildAt(nsBoxLayoutState& aState, nsIBox* aBox, const nsRect& aRect);
 
+  void FireDOMEvent(const nsAString& aDOMEventName);
+
 protected:
 #ifdef DEBUG_LAYOUT
     virtual void GetBoxName(nsAutoString& aName);
@@ -250,7 +252,6 @@ protected:
 protected:
     nsresult RegUnregAccessKey(nsPresContext* aPresContext,
                                PRBool aDoReg);
-    void FireDOMEvent(nsPresContext *aPresContext, const nsAString& aDOMEventName);
     virtual nsresult GetFrameForPointChild(const nsPoint&    aPoint,
                                            nsFramePaintLayer aWhichLayer,    
                                            nsIFrame*         aChild,

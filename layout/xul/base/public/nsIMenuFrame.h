@@ -57,7 +57,7 @@ class nsIMenuFrame : public nsISupports {
 public:
   NS_DEFINE_STATIC_IID_ACCESSOR(NS_IMENUFRAME_IID)
 
-  NS_IMETHOD ActivateMenu(PRBool aFlag) = 0;
+  NS_IMETHOD ActivateMenu(PRBool aActivate) = 0;
   NS_IMETHOD SelectMenu(PRBool aFlag) = 0;
   NS_IMETHOD OpenMenu(PRBool aFlag) = 0;
 

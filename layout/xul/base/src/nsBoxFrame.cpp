@@ -2565,18 +2565,19 @@ nsBoxFrame::RegUnregAccessKey(nsPresContext* aPresContext, PRBool aDoReg)
 
 
 void
-nsBoxFrame::FireDOMEvent(nsPresContext *aPresContext, const nsAString& aDOMEventName)
+nsBoxFrame::FireDOMEvent(const nsAString& aDOMEventName)
 {
-  if (mContent) {
+  if (mContent && mPresContext) {
     // Fire a DOM event for the title change.
     nsCOMPtr<nsIDOMEvent> event;
     nsCOMPtr<nsIEventListenerManager> manager;
     mContent->GetListenerManager(getter_AddRefs(manager));
-    if (manager &&
-        NS_SUCCEEDED(manager->CreateEvent(aPresContext, nsnull, NS_LITERAL_STRING("Events"), getter_AddRefs(event)))) {
+    if (manager && NS_SUCCEEDED(manager->CreateEvent(mPresContext, nsnull,
+                                                     NS_LITERAL_STRING("Events"),
+                                                     getter_AddRefs(event)))) {
       event->InitEvent(aDOMEventName, PR_TRUE, PR_TRUE);
       PRBool noDefault;
-      aPresContext->EventStateManager()->DispatchNewEvent(mContent, event,
+      mPresContext->EventStateManager()->DispatchNewEvent(mContent, event,
                                                           &noDefault);
     }
   }
