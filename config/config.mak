@@ -71,7 +71,11 @@ WINOS=$(WINOS: =)^
 #//-----------------------------------------------------------------------
 
 XPDIST=$(DEPTH)\dist
+!if defined(MOZ_TRACK_MODULE_DEPS) && defined(MODULE)
+PUBLIC=$(XPDIST)\include\$(MODULE)
+!else
 PUBLIC=$(XPDIST)\include
+!endif
 
 !ifdef NGLAYOUT_BUILD_PREFIX
 DIST_PREFIX=NGL
@@ -125,8 +129,22 @@ NGLAYOUT_DIST=$(XPDIST)\NGL$(MOZ_BITS)_D.OBJ
 #//-----------------------------------------------------------------------
 
 CFGFILE=$(OBJDIR)\cmd.cfg
+INCS=$(INCS) -I$(PUBLIC) -I$(DIST)\include -I$(XPDIST)\include\nspr
 
-INCS=$(INCS) -I$(PUBLIC) -I$(DIST)\include -I$(PUBLIC)\nspr
+!ifdef MOZ_TRACK_MODULE_DEPS
+# use perl to translate REQUIRES into a proper include line
+# using \1 instead of $1 because nmake barfs on $1
+!if [echo $(REQUIRES) | perl -pe "s/(\w+)/-I$(XPDIST:\=\\)\\include\\\1/g; print \"REQINCS=$_\";" > reqincs.inc]
+!endif
+
+!include reqincs.inc
+
+# delete the temporary file
+!if [del reqincs.inc]
+!endif
+
+INCS=$(INCS) $(REQINCS)
+!endif
 
 !if "$(MOZ_BITS)" == "16"
 CFLAGS=$(MOZ_JAVA_FLAG) -DEDITOR $(OS_CFLAGS) $(MOZ_CFLAGS)
