@@ -568,7 +568,7 @@ NS_IMETHODIMP nsNetSupportDialog::PromptPassword(const PRUnichar *text,
 #endif
 }
 
-nsresult nsNetSupportDialog::Select(const PRUnichar *inDialogTitle, const PRUnichar *inMsg, PRUint32 inCount, const char **inList, PRInt32 *outSelection, PRBool *_retval)
+nsresult nsNetSupportDialog::Select(const PRUnichar *inDialogTitle, const PRUnichar *inMsg, PRUint32 inCount, const PRUnichar **inList, PRInt32 *outSelection, PRBool *_retval)
 {
 	 nsresult rv;
 	 NS_WITH_SERVICE(nsIAppShellService, appshellservice, kAppShellServiceCID, &rv);

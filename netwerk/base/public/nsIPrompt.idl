@@ -75,7 +75,7 @@ interface nsIPrompt : nsISupports
     boolean select(in wstring inDialogTitle,
                    in wstring inMsg,
                    in  PRUint32 inCount,
-                   [array, size_is(inCount)] in string inList,
+                   [array, size_is(inCount)] in wstring inList,
                    out long outSelection);
 
     /**

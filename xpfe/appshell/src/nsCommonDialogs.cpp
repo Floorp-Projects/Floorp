@@ -387,7 +387,7 @@ NS_IMETHODIMP nsCommonDialogs::PromptPassword(nsIDOMWindow *inParent,  const PRU
 
 
 
-nsresult nsCommonDialogs::Select(nsIDOMWindow *inParent, const PRUnichar *inDialogTitle, const PRUnichar* inMsg, PRUint32 inCount, const char **inList, PRInt32 *outSelection, PRBool *_retval)
+nsresult nsCommonDialogs::Select(nsIDOMWindow *inParent, const PRUnichar *inDialogTitle, const PRUnichar* inMsg, PRUint32 inCount, const PRUnichar **inList, PRInt32 *outSelection, PRBool *_retval)
 {	
 	nsresult rv;
 	const PRInt32 eSelection = 2 ;
