@@ -22,6 +22,7 @@
 #include "nsTextFragment.h"
 #include "nsISupports.h"
 
+class nsIContent;
 class nsIFrame;
 class nsTextRun;
 class nsILineBreaker;
@@ -46,6 +47,8 @@ class nsIWordBreaker;
 class nsTextTransformer {
 public:
 
+  // The text transformer does not hold a reference to the line breaker
+  // and work breaker objects
   nsTextTransformer(PRUnichar* aBuffer, PRInt32 aBufLen, 
                     nsILineBreaker* aLineBreaker, nsIWordBreaker *aWordBreaker);
 
@@ -56,8 +59,8 @@ public:
    * occurs. Subsequent calls to GetTransformedTextFor will just
    * return the result of the single transformation.
    */
-  nsresult Init(/*nsTextRun& aTextRun, XXX*/
-                nsIFrame* aFrame,
+  nsresult Init(nsIFrame* aFrame,
+                nsIContent* aContent,
                 PRInt32 aStartingOffset);
 
   PRInt32 GetContentLength() const {
@@ -101,8 +104,8 @@ protected:
   PRUint8 mTextTransform;
   PRUint8 mPreformatted;
 
-  nsILineBreaker* mLineBreaker;
-  nsIWordBreaker* mWordBreaker;
+  nsILineBreaker* mLineBreaker;  // does NOT hold reference
+  nsIWordBreaker* mWordBreaker;  // does NOT hold reference
 };
 
 #endif /* nsTextTransformer_h___ */
