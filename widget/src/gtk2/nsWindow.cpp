@@ -59,6 +59,7 @@
 #include "nsIServiceManager.h"
 
 #ifdef ACCESSIBILITY
+#include "nsPIAccessNode.h"
 #include "prenv.h"
 #include "stdlib.h"
 static PRBool sAccessibilityChecked = PR_FALSE;
@@ -381,7 +382,7 @@ nsWindow::Destroy(void)
 
 #ifdef ACCESSIBILITY
     if (mRootAccessible) {
-        nsCOMPtr<nsIAccessNode> accNode(do_QueryInterface(mRootAccessible));
+        nsCOMPtr<nsPIAccessNode> accNode(do_QueryInterface(mRootAccessible));
         if (accNode)
             accNode->Shutdown();
         mRootAccessible = nsnull;
