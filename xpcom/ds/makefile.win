@@ -38,7 +38,6 @@ EXPORTS =                          \
         nsIProperties.h            \
         nsISimpleEnumerator.h      \
         nsISizeOfHandler.h         \
-        nsIString.h                \
         nsISupportsArray.h         \
         nsIUnicharBuffer.h         \
         nsIVariant.h               \
@@ -101,7 +100,6 @@ CPP_OBJS =                                        \
         .\$(OBJDIR)\nsStr.obj                     \
         .\$(OBJDIR)\nsString.obj                  \
         .\$(OBJDIR)\nsString2.obj                 \
-        .\$(OBJDIR)\nsStringImpl.obj              \
         .\$(OBJDIR)\nsSupportsArray.obj           \
         .\$(OBJDIR)\nsSupportsArrayEnumerator.obj \
         .\$(OBJDIR)\nsUnicharBuffer.obj           \

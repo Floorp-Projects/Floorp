@@ -12,7 +12,6 @@ nsIPageManager.h
 nsIProperties.h
 nsISimpleEnumerator.h
 nsISizeOfHandler.h
-nsIString.h
 nsISupportsArray.h
 nsIUnicharBuffer.h
 nsIVariant.h
