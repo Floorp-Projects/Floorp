@@ -55,11 +55,7 @@ function set_assign_to() {
         var component = components[index];
         if (assigned_to == last_default_owner
             || assigned_to == owner
-            || assigned_to == ''
-            || confirm('Would you like to change\n\n' +
-                       '     "Assign To: ' + assigned_to + '"\n\n' +
-                       'to the default "' + component + '" owner:\n\n' +
-                       '     ' + owner + "?")) {
+            || assigned_to == '') {
             form.assigned_to.value = owner;
             last_default_owner = owner;
         }
