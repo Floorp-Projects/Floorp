@@ -136,6 +136,10 @@ nsRenderingContextUnix :: ~nsRenderingContextUnix()
   NS_IF_RELEASE(mFontCache);
   NS_IF_RELEASE(mContext);
 
+  if (nsnull != mDrawStringBuf) {
+    PR_Free(mDrawStringBuf);
+  }
+
 }
 
 NS_IMPL_QUERY_INTERFACE(nsRenderingContextUnix, kRenderingContextIID)
@@ -1013,10 +1017,32 @@ void nsRenderingContextUnix :: DrawString(const PRUnichar *aString, PRUint32 aLe
 
   mTMatrix->TransformCoord(&x, &y);
 
+  // Make the temporary buffer larger if needed.
+  if (nsnull == mDrawStringBuf) {
+    mDrawStringBuf = (XChar2b *) PR_Malloc(aLength);
+    mDrawStringSize = aLength;
+  }
+  else {
+    if (mDrawStringSize < PRInt32(aLength)) {
+      mDrawStringBuf = (XChar2b *) PR_Realloc(mDrawStringBuf, aLength);
+      mDrawStringSize = aLength;
+    }
+  }
+
+  // Translate the unicode data into XChar2b's
+  XChar2b* xc = mDrawStringBuf;
+  XChar2b* end = xc + aLength;
+  while (xc < end) {
+    PRUnichar ch = *aString++;
+    xc->byte2 = (ch & 0xff);
+    xc->byte1 = (ch & 0xff00) >> 8;
+    xc++;
+  }
+
   ::XDrawString16(mRenderingSurface->display, 
                 mRenderingSurface->drawable,
                 mRenderingSurface->gc,
-                x, y, (XChar2b *)aString, aLength);
+                x, y, mDrawStringBuf, aLength);
 
   if (mFontMetrics)
   {
