@@ -137,7 +137,7 @@ protected:
                              nsIWebBrowserFind **aWebBrowserFind);
   void StartTimeout();
   nsresult Init();
-  void ShutDown();
+  void Shutdown();
   nsresult UseInWindow(nsIDOMWindow *aDomWin);
   void SetSelectionLook(nsIPresShell *aPresShell, PRBool aChangeColor, 
                         PRBool aEnabled);
