@@ -55,10 +55,23 @@ extern nsISupports *NEW_SCRIPTABLE_DATEFORMAT(void);
 
 [scriptable, uuid(0c89efb0-1aae-11d3-9141-006008a6edf6)]
 interface nsIScriptableDateFormat : nsISupports {
+
+    const long dateFormatNone = 0;                 // do not include the date  in the format string
+    const long dateFormatLong =1;                  // provides the long date format for the given locale
+    const long dateFormatShort =2;                 // provides the short date format for the given locale
+    const long dateFormatYearMonth =3;             // formats using only the year and month 
+    const long dateFormatWeekday = 4;              // week day (e.g. Mon, Tue)
+
+    const long timeFormatNone = 0;                 // don't include the time in the format string
+    const long timeFormatSeconds = 1;              // provides the time format with seconds in the  given locale 
+    const long timeFormatNoSeconds = 2;            // provides the time format without seconds in the given locale
+    const long timeFormatSecondsForce24Hour = 3;   // forces the time format to use the 24 clock, regardless of the locale conventions
+    const long timeFormatNoSecondsForce24Hour = 4; // forces the time format to use the 24 clock, regardless of the locale conventions
+
     // format date and time, locale is language country pair (e.g. en-US) or empty string for application default
     wstring FormatDateTime(in wstring locale, 
-                           in nsDateFormatSelector dateFormatSelector, 
-                           in nsTimeFormatSelector timeFormatSelector,
+                           in long dateFormatSelector, 
+                           in long timeFormatSelector,
                            in long year, 
                            in long month, 
                            in long day, 
@@ -67,13 +80,13 @@ interface nsIScriptableDateFormat : nsISupports {
                            in long second);
     // format date, locale is language country pair (e.g. en-US) or empty string for application default
     wstring FormatDate(in wstring locale, 
-                       in nsDateFormatSelector dateFormatSelector, 
+                       in long dateFormatSelector, 
                        in long year, 
                        in long month, 
                        in long day);
     // format time, locale is language country pair (e.g. en-US) or empty string for application default
     wstring FormatTime(in wstring locale, 
-                       in nsTimeFormatSelector timeFormatSelector,
+                       in long timeFormatSelector,
                        in long hour, 
                        in long minute, 
                        in long second);
