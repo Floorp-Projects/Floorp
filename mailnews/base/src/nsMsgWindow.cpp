@@ -424,12 +424,19 @@ NS_IMETHODIMP nsMsgWindow::OnStartURIOpen(nsIURI* aURI, PRBool* aAbortOpen)
   // I promise this will be removed once we figure out a better way. 
   nsCAutoString scheme;
   aURI->GetScheme(scheme);
+
+  nsCAutoString spec;
+  aURI->GetSpec(spec);
                                           
   static const char kMailToURI[] = "mailto";                                    
   static const char kNewsURI[] = "news";                                        
   static const char kSnewsURI[] = "snews";                                      
   static const char kNntpURI[] = "nntp";                                        
   static const char kImapURI[] = "imap"; 
+  static const char kJarURI[]  = "jar";
+  static const char kChromeURI[]  = "chrome";
+  static const char kAboutBlankURI[] = "about:blank";
+
   if (scheme.EqualsIgnoreCase(kMailToURI)) 
   {
     // the scheme is mailto, we can handle it
@@ -440,14 +447,29 @@ NS_IMETHODIMP nsMsgWindow::OnStartURIOpen(nsIURI* aURI, PRBool* aAbortOpen)
   } 
   else if (scheme.EqualsIgnoreCase(kSnewsURI)) 
   {
-     // the scheme is snews, we can handle it
+    // the scheme is snews, we can handle it
   } 
   else if (scheme.EqualsIgnoreCase(kNntpURI)) 
   {
      // the scheme is nntp, we can handle it 
   } else if (scheme.EqualsIgnoreCase(kImapURI)) 
   {
-      // the scheme is imap, we can handle it
+    // the scheme is imap, we can handle it
+  } else if (scheme.EqualsIgnoreCase(kJarURI))
+  {
+    // XXX: yet another hack. JAR urls may be kicked off internallying into the message pane browser instance
+    // we need to allow those to load. But of course we don't want jar urls clicked on in messages to load in this docshell.
+    // for now, let it happen 
+  }else if (scheme.EqualsIgnoreCase(kChromeURI))
+  {
+    // XXX: yet another hack. chrome urls may be kicked off internallying into the message pane browser instance
+    // we need to allow those to load. But of course we don't want jar urls clicked on in messages to load in this docshell.
+    // for now, let it happen 
+  }else if (spec.EqualsIgnoreCase(kAboutBlankURI)) // XXX hack alert....allow about:blank
+  {
+    // XXX note to self...with this new way of kicking urls out to the desktop, we are having problems
+    // when html content legitimately trys to load in the message pane browser element such as the start page,
+    // or about:blank. We need to find a way to distinguish these load attempts so we can allow them.
   }
   else 
   {
