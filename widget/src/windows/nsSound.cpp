@@ -34,6 +34,42 @@
 NS_IMPL_ISUPPORTS2(nsSound, nsISound, nsIStreamLoaderObserver)
 
 ////////////////////////////////////////////////////////////////////////
+// This hidden class is used to load the winmm.dll when it's needed.
+
+class CWinMM {
+  typedef int (CALLBACK *PlayPtr)(const char*,HMODULE,DWORD);
+
+public:
+
+  static CWinMM& GetModule() {
+    static CWinMM gSharedWinMM;  //construct this only after you *really* need it.
+    return gSharedWinMM;
+  }
+
+
+  CWinMM(const char* aModuleName="WINMM.DLL") {
+    mInstance=::LoadLibrary(aModuleName);  
+    mPlay=(mInstance) ? (PlayPtr)GetProcAddress(mInstance,"PlaySound") : 0;
+  }
+
+  ~CWinMM() {
+    if(mInstance)
+      ::FreeLibrary(mInstance);
+    mInstance=0;
+    mPlay=0;
+  }
+
+  BOOL PlaySound(const char *aSoundFile,HMODULE aModule,DWORD aOptions) {
+    return (mPlay) ? mPlay(aSoundFile, aModule, aOptions) : FALSE;
+  }
+
+private:
+  HINSTANCE mInstance;  
+  PlayPtr mPlay;
+};
+
+////////////////////////////////////////////////////////////////////////
+
 nsSound::nsSound()
 {
   NS_INIT_REFCNT();
@@ -78,7 +114,13 @@ NS_IMETHODIMP nsSound::OnStreamComplete(nsIStreamLoader *aLoader,
     // We shouldn't have to hold on to this and free it.
     //char *playBuf = (char *) PR_Malloc(stringLen /* * sizeof(char) ?*/  );
     //memcpy(playBuf, string, stringLen);
+#if 1
     ::PlaySound(string, nsnull, SND_MEMORY | SND_NODEFAULT | SND_SYNC);
+#else
+    CWinMM& theMM=CWinMM::GetModule();
+    theMM.PlaySound(string, nsnull, SND_MEMORY | SND_NODEFAULT | SND_SYNC);
+#endif
+
   }
 
   return NS_OK;
