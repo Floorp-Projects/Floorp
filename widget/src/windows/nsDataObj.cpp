@@ -16,15 +16,12 @@
  * Reserved.
  */
 
-#include "Ddcomm.h"
-//#include "DragDrop.h"
 #include "nsDataObj.h"
 #include "nsString.h"
 #include "nsVoidArray.h"
 #include "nsITransferable.h"
 #include "IENUMFE.h"
 
-//#include "OLEIDL.h"
 #include "OLE2.h"
 #include "URLMON.h"
 

@@ -16,7 +16,6 @@
  * Reserved.
  */
 
-#include "Ddcomm.h"
 #include "nsDataObjCollection.h"
 #include "nsString.h"
 #include "nsVoidArray.h"
@@ -183,7 +182,7 @@ STDMETHODIMP nsDataObjCollection::QueryGetData(LPFORMATETC pFE)
   }
 
 
-  for (PRUint32 i=0;i<mDataObjects->Count();i++) {
+  for (PRInt32 i=0;i<mDataObjects->Count();i++) {
     IDataObject * dataObj = (IDataObject *)mDataObjects->ElementAt(i);
     if (S_OK == dataObj->QueryGetData(pFE)) {
       return S_OK;

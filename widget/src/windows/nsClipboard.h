@@ -70,4 +70,14 @@ protected:
 
 };
 
+#define SET_FORMATETC(fe, cf, td, asp, li, med)   \
+	 {\
+	 (fe).cfFormat=cf;\
+	 (fe).ptd=td;\
+	 (fe).dwAspect=asp;\
+	 (fe).lindex=li;\
+	 (fe).tymed=med;\
+	 }
+
+
 #endif // nsClipboard_h__
