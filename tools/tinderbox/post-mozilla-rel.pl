@@ -657,9 +657,10 @@ sub PreBuild {
     if (cacheit($c_hour,$c_yday,$Settings::build_hour,$last_build_day)) {
 	TinderUtils::print_log "starting nightly release build\n";
 	# clobber the tree
-	system("rm -rf mozilla");
+	TinderUtils::run_shell_command "rm -rf mozilla";
 	$cachebuild = 1;
       } else {
+	TinderUtils::print_log "starting non-release build\n";
 	$cachebuild = 0;
       }
 }
