@@ -439,12 +439,6 @@ PL_DestroyEvent(PLEvent* self);
 PR_EXTERN(void)
 PL_DequeueEvent(PLEvent* self, PLEventQueue* queue);
 
-#if defined(_WIN32) || defined(WIN16) || defined(XP_OS2)
-PR_EXTERN(HWND)
-PR_GetEventReceiverWindow();
-#endif
-
-
 /*******************************************************************************
  * Private Stuff
  ******************************************************************************/
@@ -465,14 +459,6 @@ struct PLEvent {
 **
 */
 #ifdef XP_PC
-PR_EXTERN(PLEventQueue *)
-    PL_GetMainEventQueue(void);
-/*
-** Initializes the main event queue.
-*/
-PR_EXTERN(void)
-    PL_InitializeEventsLib(char *name);
-
 /* -----------------------------------------------------------------------
 ** FUNCTION: PL_GetNativeEventReceiverWindow()
 ** 

@@ -48,7 +48,11 @@ endif
 endif
 
 ifeq ($(OS_ARCH),AIX)
-MDCPUCFG_H = _aix.cfg
+ifeq ($(USE_64),1)
+MDCPUCFG_H = _aix64.cfg
+else
+MDCPUCFG_H = _aix32.cfg
+endif
 endif
 
 ifeq ($(OS_ARCH),BSD_OS)

@@ -42,7 +42,9 @@
  * Make sure _PRSockLen_t is 32-bit, because we will cast a PRUint32* or
  * PRInt32* pointer to a _PRSockLen_t* pointer.
  */
-#if defined(IRIX) || defined(HPUX) || defined(OSF1) || defined(SOLARIS) \
+#if defined(HAVE_SOCKLEN_T)
+#define _PRSockLen_t socklen_t
+#elif defined(IRIX) || defined(HPUX) || defined(OSF1) || defined(SOLARIS) \
     || defined(AIX4_1) || defined(LINUX) || defined(SONY) \
     || defined(BSDI) || defined(SCO) || defined(NEC) || defined(SNI) \
     || defined(SUNOS4) || defined(NCR) || defined(RHAPSODY) \

@@ -154,23 +154,30 @@ static PRFileDesc* PR_CALLBACK pl_TopAccept (
 {
     PRStatus rv;
     PRFileDesc *newfd;
+    PRFileDesc *newstack;
 
     PR_ASSERT(fd != NULL);
     PR_ASSERT(fd->lower != NULL);
 
-    newfd = (fd->lower->methods->accept)(fd->lower, addr, timeout);
-    if (newfd != NULL)
+    newstack = PR_NEW(PRFileDesc);
+    if (NULL == newstack)
     {
-        PRFileDesc *newstack = PR_NEW(PRFileDesc);
-        if (NULL != newstack)
-        {
-            *newstack = *fd;  /* make a copy of the accepting layer */
-            rv = PR_PushIOLayer(newfd, PR_TOP_IO_LAYER, newstack);
-            if (PR_SUCCESS == rv) return newfd;  /* that's it */
-        }
-        PR_Close(newfd);  /* we failed for local reasons */
+        PR_SetError(PR_OUT_OF_MEMORY_ERROR, 0);
+        return NULL;
     }
-    return NULL;
+    *newstack = *fd;  /* make a copy of the accepting layer */
+
+    newfd = (fd->lower->methods->accept)(fd->lower, addr, timeout);
+    if (NULL == newfd)
+    {
+        PR_DELETE(newstack);
+        return NULL;
+    }
+
+    /* this PR_PushIOLayer call cannot fail */
+    rv = PR_PushIOLayer(newfd, PR_TOP_IO_LAYER, newstack);
+    PR_ASSERT(PR_SUCCESS == rv);
+    return newfd;  /* that's it */
 }
 
 static PRStatus PR_CALLBACK pl_DefBind (PRFileDesc *fd, const PRNetAddr *addr)
@@ -253,10 +260,33 @@ static PRInt32 PR_CALLBACK pl_DefAcceptread (
     PRFileDesc *sd, PRFileDesc **nd, PRNetAddr **raddr, void *buf,
     PRInt32 amount, PRIntervalTime t)
 {
+    PRInt32 nbytes;
+    PRStatus rv;
+    PRFileDesc *newstack;
+
     PR_ASSERT(sd != NULL);
     PR_ASSERT(sd->lower != NULL);
 
-    return sd->lower->methods->acceptread(sd->lower, nd, raddr, buf, amount, t);
+    newstack = PR_NEW(PRFileDesc);
+    if (NULL == newstack)
+    {
+        PR_SetError(PR_OUT_OF_MEMORY_ERROR, 0);
+        return -1;
+    }
+    *newstack = *sd;  /* make a copy of the accepting layer */
+
+    nbytes = sd->lower->methods->acceptread(
+        sd->lower, nd, raddr, buf, amount, t);
+    if (-1 == nbytes)
+    {
+        PR_DELETE(newstack);
+        return nbytes;
+    }
+
+    /* this PR_PushIOLayer call cannot fail */
+    rv = PR_PushIOLayer(*nd, PR_TOP_IO_LAYER, newstack);
+    PR_ASSERT(PR_SUCCESS == rv);
+    return nbytes;
 }
 
 static PRInt32 PR_CALLBACK pl_DefTransmitfile (
