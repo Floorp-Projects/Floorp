@@ -34,7 +34,7 @@
 #include "nsIMsgMessageService.h"
 #include "nsMsgUtils.h"
 
-static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
+static  NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 
 ///////////////////////////////////////////////////////////////////////////
 // Mac Specific Attachment Handling for AppleDouble Encoded Files
@@ -44,18 +44,19 @@ static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 #include "errors.h"
 #include "m_cvstrm.h"
 
-////////////////////////////////////////////////////////////////////////////
-// GET RID OF THIS STUFF!!!!
-////////////////////////////////////////////////////////////////////////////
-PRBool nsMsgIsMacFile(char    *aUrlString) { return PR_FALSE; }
-void   MacGetFileType(nsFileSpec *fs, PRBool *useDefault, char **type, char **encoding) { *useDefault = PR_TRUE;}
-////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////
+#define AD_WORKING_BUFF_SIZE	                8192
 
-/**********
+#ifdef RICHIE_APPLE_DOUBLE
+
 extern PRBool       nsMsgIsMacFile(char       *aUrlString);
 extern void         MacGetFileType(nsFileSpec *fs, PRBool *useDefault, char **type, char **encoding);
-**********/
+
+#else
+
+PRBool nsMsgIsMacFile(char    *aUrlString) { return PR_FALSE; }
+void   MacGetFileType(nsFileSpec *fs, PRBool *useDefault, char **type, char **encoding) { *useDefault = PR_TRUE;}
+
+#endif
 
 #endif /* XP_MAC */
 
@@ -115,6 +116,11 @@ nsMsgAttachmentHandler::nsMsgAttachmentHandler()
 
 nsMsgAttachmentHandler::~nsMsgAttachmentHandler()
 {
+#ifdef XP_MAC
+  if (mAppleFileSpec)
+    delete mAppleFileSpec;
+#endif
+
   PR_FREEIF(m_uri);
 }
 
@@ -546,7 +552,11 @@ nsMsgAttachmentHandler::SnarfAttachment(nsMsgCompFields *compFields)
 		// Only use appledouble if we aren't uuencoding.
 	  if( isAMacFile && (! UseUUEncode_p()) )
 		{
-		  char	*separator;
+		  char	          *separator;
+      nsInputStream   inputFile(nsFileSpec(url_string));
+
+      if (!inputFile.Exists())
+        return NS_ERROR_OUT_OF_MEMORY;
 
 		  separator = mime_make_separator("ad");
 		  if (!separator)
@@ -555,7 +565,13 @@ nsMsgAttachmentHandler::SnarfAttachment(nsMsgCompFields *compFields)
 			  return NS_ERROR_OUT_OF_MEMORY;
       }
 						
-		  mAppleFileSpec = nsMsgCreateTempFileSpec("nsmail.tmp");
+		  mAppleFileSpec = nsMsgCreateTempFileSpec("appledouble");
+      if (!mAppleFileSpec) 
+      {
+        PR_FREEIF(separator);
+        PR_FREEIF(src_filename);
+			  return NS_ERROR_OUT_OF_MEMORY;
+      }
 
       //
       // RICHIE_MAC - ok, here's the deal, we have a file that we need
@@ -563,36 +579,77 @@ nsMsgAttachmentHandler::SnarfAttachment(nsMsgCompFields *compFields)
       // location, then patch the new file spec into the array and send this
       // file instead. 
       // 
-      // To make this really work, we need something that will do the job of
-      // the old fe_MakeAppleDoubleEncodeStream() stream in 4.x
-      // 
-/*********************
-		  ad_encode_stream = (NET_StreamClass *) fe_MakeAppleDoubleEncodeStream (FO_CACHE_AND_MAIL_TO,
-											NULL,
-											m_url,
-											m_mime_delivery_state->GetContext(),
-											src_filename,
-											m_ap_filename,
-											separator);
+#ifdef RICHIE_APPLE_DOUBLE
 
-		  if (ad_encode_stream == NULL)
-			{
-			  FREEIF(separator);
-			  return MK_OUT_OF_MEMORY;
-			}
-
-		  do 
+      AppleDoubleEncodeObject     *obj = new (AppleDoubleEncodeObject);
+      if (obj == NULL) 
       {
-  			status = (*ad_encode_stream->put_block)((NET_StreamClass *)ad_encode_stream->data_object, NULL, 1024);
-		  } while (status == noErr);
+        delete mAppleFileSpec;
+        PR_FREEIF(src_filename);
+        PR_FREEIF(separator);
+			  return NS_ERROR_OUT_OF_MEMORY;
+      }
+   
+	    obj->fileStream = new nsIOFileStream(*mAppleFileSpec, (PR_RDWR | PR_CREATE_FILE | PR_TRUNCATE));
+      if ( (!obj->fileStream) || (obj->fileStream->is_open()) )
+	    {
+        PR_FREEIF(src_filename);
+        PR_FREEIF(separator);
+        delete obj;
+		    return NS_ERROR_OUT_OF_MEMORY;
+	    }
 
-		  if (status >= 0)
-			  ad_encode_stream->complete ((NET_StreamClass *)ad_encode_stream->data_object);
-		  else
-			  ad_encode_stream->abort ((NET_StreamClass *)ad_encode_stream->data_object, status);
+      PRInt32     bSize = AD_WORKING_BUFF_SIZE;
 
-		  XP_FREE(ad_encode_stream);
-*****************************/
+      char  *working_buf = nsnull;
+      while (!working_buff && (bSize >= 512))
+	    {
+        working_buff = (char *)PR_CALLOC(bSize);
+        if (!working_buff)
+          bSize /= 2;
+	    }
+
+      if (!working_buf)
+	    {
+        PR_FREEIF(src_filename);
+        PR_FREEIF(separator);
+        delete obj;
+		    return NS_ERROR_OUT_OF_MEMORY;
+	    }
+
+	    obj->buff	= working_buff;
+	    obj->s_buff = bSize;	
+
+	    //
+	    // 	Setup all the need information on the apple double encoder.
+	    //
+	    ap_encode_init(&(obj->ap_encode_obj), src_filename,	separator);
+
+      PRInt32   size, count;
+
+      status = noErr;
+      while ( (inputFile.read(obj->buff, obj->s_buff, &size) > 0) &&
+              (status == noErr || status == errDone) )
+      {      
+        status = ap_encode_next(&(obj->ap_encode_obj), obj->buff, size, &count);
+        if (status == noErr || status == errDone)
+        {
+	        //
+	        // we got the encode data, so call the next stream to write it to the disk.
+	        //
+	        if (obj->fileStream->write(obj->buff, count) != count)
+		        status = errFileWrite;
+        }
+      } 
+        
+      ap_encode_end(&(obj->ap_encode_obj), (status >= 0)); // if this is true, ok, false abort
+     	if (obj->fileStream)
+        obj->fileStream->close();
+
+      PR_FREEIF(obj->buff);								/* free the working buff.		*/
+      PR_FREEIF(obj);
+
+#endif
 
       //
       // Now that we have morphed this file, we need to change where mURL is pointing.

@@ -32,6 +32,20 @@
 // Forward declarations...
 class    nsMsgComposeAndSend;
 
+#ifdef XP_MAC
+
+#include "nsFileStream.h"
+
+typedef struct _AppledoubleEncodeObject
+{
+	appledouble_encode_object   ap_encode_obj;
+	char                        *buff;					// the working buff
+	PRInt32	                    s_buff;         // the working buff size
+  nsIOFileStream              *fileStream;    // file to hold the encoding
+} AppleDoubleEncodeObject;
+
+#endif  // XP_MAC
+
 //
 // This is a class that deals with processing remote attachments. It implements
 // an nsIStreamListener interface to deal with incoming data
