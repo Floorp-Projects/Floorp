@@ -911,6 +911,61 @@ nsJSContext::InitializeLiveConnectClasses()
   return NS_OK;
 }
 
+#ifdef NS_TRACE_MALLOC
+
+#include <errno.h>              // XXX assume Linux if NS_TRACE_MALLOC
+#include <fcntl.h>
+#include <unistd.h>
+#include "nsTraceMalloc.h"
+
+static JSBool
+TraceMallocDisable(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+    NS_TraceMallocDisable();
+    return JS_TRUE;
+}
+
+static JSBool
+TraceMallocEnable(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+    NS_TraceMallocEnable();
+    return JS_TRUE;
+}
+
+static JSBool
+TraceMallocChangeLogFile(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+    int fd, oldfd;
+    JSString *str;
+    char *filename;
+
+    if (JSVAL_IS_VOID(argv[0])) {
+        fd = -1;
+    } else {
+        str = JS_ValueToString(cx, argv[0]);
+        if (!str)
+            return JS_FALSE;
+        filename = JS_GetStringBytes(str);
+        fd = open(filename, O_CREAT | O_WRONLY | O_TRUNC, 0644);
+        if (fd < 0) {
+            JS_ReportError(cx, "can't open %s: %s", filename, strerror(errno));
+            return JS_FALSE;
+        }
+    }
+    oldfd = NS_TraceMallocChangeLogFD(fd);
+    *rval = INT_TO_JSVAL(oldfd);
+    return JS_TRUE;
+}
+
+static JSFunctionSpec TraceMallocFunctions[] = {
+    {"TraceMallocDisable",        TraceMallocDisable,       0, 0, 0},
+    {"TraceMallocEnable",         TraceMallocEnable,        0, 0, 0},
+    {"TraceMallocChangeLogFile",  TraceMallocChangeLogFile, 1, 0, 0},
+    {NULL,                        NULL,                     0, 0, 0}
+};
+
+#endif /* NS_TRACE_MALLOC */
+
 NS_IMETHODIMP
 nsJSContext::InitClasses()
 {
@@ -942,6 +997,13 @@ nsJSContext::InitClasses()
     }
     NS_ASSERTION(NS_SUCCEEDED(rv), "unable to init xpconnect classes");
   }
+
+#ifdef NS_TRACE_MALLOC
+  // Attempt to initialize TraceMalloc functions
+  ::JS_DefineFunctions(mContext, ::JS_GetGlobalObject(mContext),
+                       TraceMallocFunctions);
+#endif
+
   mIsInitialized = PR_TRUE;
   return rv;
 }

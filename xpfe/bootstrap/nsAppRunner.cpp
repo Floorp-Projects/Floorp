@@ -63,6 +63,13 @@
 #include "nsIXULWindow.h"
 #include "nsIWebBrowserChrome.h"
 
+#ifdef NS_TRACE_MALLOC
+#include <unistd.h>
+#include <errno.h>
+#include <fcntl.h>
+#include "nsTraceMalloc.h"
+#endif
+
 
 #if !defined(XP_MAC) && !defined(RHAPSODY)
 #include "nsTimeBomb.h"
@@ -757,6 +764,11 @@ static nsresult main1(int argc, char* argv[], nsISplashScreen *splashScreen )
   // Start main event loop
   rv = appShell->Run();
   NS_ASSERTION(NS_SUCCEEDED(rv), "failed to run appshell");
+
+#ifdef NS_TRACE_MALLOC
+  // XXX we crash somewhere under nsAppShellService::Shutdown...
+  NS_TraceMallocShutdown();
+#endif
   
   /*
    * Shut down the Shell instance...  This is done even if the Run(...)
@@ -803,13 +815,6 @@ void DumpVersion(char *appname)
 {
 	printf("%s: version info\n", appname);
 }
-
-#ifdef NS_TRACE_MALLOC
-#include <unistd.h>
-#include <errno.h>
-#include <fcntl.h>
-#include "nsTraceMalloc.h"
-#endif
 
 int main(int argc, char* argv[])
 {
@@ -860,12 +865,12 @@ int main(int argc, char* argv[])
   for (i = 1; i < argc; i++) {
     if (PL_strcasecmp(argv[i], "--trace-malloc") == 0 && i < argc-1) {
       char *logfile;
-      int logfd, pipefds[2];
+      int logfd, sitefd, pipefds[2];
 
       logfile = argv[i+1];
+      logfd = sitefd = -1;
       switch (*logfile) {
         case '|':
-          logfd = -1;
           if (pipe(pipefds) == 0) {
             pid_t pid = fork();
             if (pid == 0) {
@@ -906,19 +911,37 @@ int main(int argc, char* argv[])
               logfd = pipefds[1];
             }
           }
+          if (logfd < 0) {
+            fprintf(stderr,
+                    "%s: can't pipe to trace-malloc child process %s: %s\n",
+                    argv[0], logfile, strerror(errno));
+            return 1;
+          }
+          break;
+
+        case '^':
+          logfile++;
+          sitefd = open(logfile, O_CREAT | O_WRONLY | O_TRUNC, 0644);
+          if (sitefd < 0) {
+            fprintf(stderr,
+                    "%s: can't create trace-malloc callsite logfile %s: %s\n",
+                    argv[0], logfile, strerror(errno));
+            return 1;
+          }
           break;
 
         default:
           logfd = open(logfile, O_CREAT | O_WRONLY | O_TRUNC, 0644);
+          if (logfd < 0) {
+            fprintf(stderr,
+                    "%s: can't create trace-malloc logfile %s: %s\n",
+                    argv[0], logfile, strerror(errno));
+            return 1;
+          }
           break;
       }
 
-      if (logfd < 0) {
-        fprintf(stderr, "%s: can't open %s: %s\n", argv[0], logfile, strerror(errno));
-        return 1;
-      }
-
-      NS_TraceMalloc(logfd);
+      NS_TraceMallocStartup(logfd, sitefd);
 
       /* Now remove --trace-malloc and its argument from argv. */
       for (argc -= 2; i < argc; i++)
@@ -927,7 +950,7 @@ int main(int argc, char* argv[])
       break;
     }
   }
-#endif
+#endif /* NS_TRACE_MALLOC */
     
   // Call the code to install our handler
 #ifdef MOZ_JPROF
