@@ -2774,9 +2774,7 @@ nsresult nsMsgDatabase::RowCellColumnToAddressCollationKey(nsIMdbRow *row, mdb_t
     }
     if (NS_SUCCEEDED(ret))
     {
-        nsAutoString nameStr;
-        nameStr.AssignWithConversion(name);
-        ret = CreateCollationKey(nameStr.get(), result, len);
+        ret = CreateCollationKey(NS_ConvertUTF8toUCS2(name).get(), result, len);
     }
 
     return ret;
