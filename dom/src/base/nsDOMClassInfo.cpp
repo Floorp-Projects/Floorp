@@ -2775,13 +2775,10 @@ nsWindowSH::doCheckPropertyAccess(JSContext *cx, JSObject *obj, jsval id,
     return NS_OK;
   }
 
-  // Don't check when getting the document, window, or Components
-  // property, since we check its properties anyway. This will help
-  // performance.
+  // Don't check when getting the Components property, since we check
+  // its properties anyway. This will help performance.
   if (accessMode == nsIXPCSecurityManager::ACCESS_GET_PROPERTY &&
-      (id == STRING_TO_JSVAL(sDocument_id) ||
-       id == STRING_TO_JSVAL(sWindow_id) ||
-       id == STRING_TO_JSVAL(sComponents_id))) {
+      id == STRING_TO_JSVAL(sComponents_id)) {
     return NS_OK;
   }
 
