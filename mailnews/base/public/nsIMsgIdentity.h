@@ -24,10 +24,7 @@
 
 class nsIMsgIdentity : public nsISupports {
  public: 
-  static const nsIID& GetIID() {
-    static nsIID iid = NS_IMSGIDENTITY_IID;
-    return iid;
-  }
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IMSGIDENTITY_IID)
 
   /* attribute string key; */
   NS_IMETHOD GetKey(char * *aKey) = 0;
@@ -56,6 +53,14 @@ class nsIMsgIdentity : public nsISupports {
   /* attribute boolean useHtml; */
   NS_IMETHOD GetUseHtml(PRBool *aUseHtml) = 0;
   NS_IMETHOD SetUseHtml(PRBool aUseHtml) = 0;
+
+  /* attribute boolean attachSignature; */
+  NS_IMETHOD GetAttachSignature(PRBool *aAttachSignature) = 0;
+  NS_IMETHOD SetAttachSignature(PRBool aAttachSignature) = 0;
+
+  /* attribute boolean attachVCard; */
+  NS_IMETHOD GetAttachVCard(PRBool *aAttachVCard) = 0;
+  NS_IMETHOD SetAttachVCard(PRBool aAttachVCard) = 0;
 
   /* attribute nsIMsgSignature signature; */
   NS_IMETHOD GetSignature(nsIMsgSignature * *aSignature) = 0;

@@ -62,6 +62,10 @@ public:
   NS_IMETHOD GetUseHtml(PRBool *aUseHtml);
   NS_IMETHOD SetUseHtml(PRBool aUseHtml);
 
+  /* attribute boolean attachSignature */
+  NS_IMETHOD GetAttachSignature(PRBool *aAttachSignature);
+  NS_IMETHOD SetAttachSignature(PRBool aAttachSignature);
+
   /* attribute nsIMsgSignature signature; */
   NS_IMETHOD GetSignature(nsIMsgSignature * *aSignature);
   NS_IMETHOD SetSignature(nsIMsgSignature * aSignature);
@@ -69,6 +73,10 @@ public:
   /* attribute nsIMsgVCard vCard; */
   NS_IMETHOD GetVCard(nsIMsgVCard * *aVCard);
   NS_IMETHOD SetVCard(nsIMsgVCard * aVCard);
+  
+  /* attribute attachVCard; */
+  NS_IMETHOD GetAttachVCard(PRBool *attachVCard);
+  NS_IMETHOD SetAttachVCard(PRBool attachVCard);
 
   /* attribute string smtpHostname; */
   NS_IMETHOD GetSmtpHostname(char * *aSmtpHostname);

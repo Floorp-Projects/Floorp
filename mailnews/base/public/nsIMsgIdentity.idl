@@ -31,6 +31,8 @@ interface nsIMsgIdentity : nsISupports {
   attribute string replyTo;
   attribute string organization;
   attribute boolean useHtml;
+  attribute boolean attachSignature;
+  attribute boolean attachVCard;
   attribute nsIMsgSignature signature;
   attribute nsIMsgVCard vCard;
   attribute string smtpHostname;

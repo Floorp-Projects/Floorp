@@ -130,4 +130,5 @@ NS_IMPL_IDPREF_STR(Organization, "organization");
 NS_IMPL_IDPREF_BOOL(UseHtml, "send_html");
 NS_IMPL_IDPREF_STR(SmtpHostname, "smtp_server");
 NS_IMPL_IDPREF_STR(SmtpUsername, "smtp_name");
-
+NS_IMPL_IDPREF_BOOL(AttachVCard, "attach_vcard");
+NS_IMPL_IDPREF_BOOL(AttachSignature, "attach_signature");
