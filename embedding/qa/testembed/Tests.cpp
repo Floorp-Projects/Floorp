@@ -105,6 +105,7 @@ BEGIN_MESSAGE_MAP(CTests, CWnd)
 	ON_COMMAND(ID_TESTS_NSIPROTOCOLHANDLERNEWURI, OnTestsProtocolHandlerNewURI)
 	ON_COMMAND(ID_TOOLS_REMOVEGHPAGE, OnToolsRemoveGHPage)
 	ON_COMMAND(ID_TOOLS_REMOVEALLGH, OnToolsRemoveAllGH)
+	ON_COMMAND(ID_TOOLS_VIEWLOGFILE, OnToolsViewLogfile)
 	ON_COMMAND(ID_TOOLS_TESTYOURMETHOD, OnToolsTestYourMethod)
 	ON_COMMAND(ID_TOOLS_TESTYOURMETHOD2, OnToolsTestYourMethod2)
 	ON_COMMAND(ID_VERIFYBUGS_70228, OnVerifybugs70228)
@@ -778,10 +779,19 @@ void CTests::OnToolsRemoveAllGH()
 	QAOutput("End removal of all pages from the GH file.", 2);
 }
 
+void CTests::OnToolsViewLogfile()
+{
+	char theUri[1024];
+
+	strcpy(theUri, "file://C|/temp/TestOutput.txt");
+	rv = qaWebNav->LoadURI(NS_ConvertASCIItoUCS2(theUri).get(),
+		 nsIWebNavigation::LOAD_FLAGS_NONE, nsnull,nsnull, nsnull);
+}
+
 // ***********************************************************************
 
 void CTests::OnToolsTestYourMethod()
-{
+{	
 	// place your test code here
 }
 

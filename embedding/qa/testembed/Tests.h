@@ -121,6 +121,7 @@ protected:
 	afx_msg void OnInterfacesNsifile();
 	afx_msg void OnToolsRemoveGHPage();
 	afx_msg void OnToolsRemoveAllGH();
+	afx_msg void OnToolsViewLogfile();
 	afx_msg void OnToolsTestYourMethod();
 	afx_msg void OnToolsTestYourMethod2();
 	afx_msg void OnVerifybugs70228();
