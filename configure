@@ -8776,7 +8776,7 @@ else
 #include "confdefs.h"
 #include <locale.h>
 int main() {
-int catagory = LC_MESSAGES;
+int category = LC_MESSAGES;
 ; return 0; }
 EOF
 if { (eval echo configure:8783: \"$ac_compile\") 1>&5; (eval $ac_compile) 2>&5; }; then
