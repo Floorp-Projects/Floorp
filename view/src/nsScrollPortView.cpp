@@ -56,8 +56,6 @@ static NS_DEFINE_IID(kWidgetCID, NS_CHILD_CID);
 static NS_DEFINE_IID(kLookAndFeelCID, NS_LOOKANDFEEL_CID);
 static NS_DEFINE_IID(kIClipViewIID, NS_ICLIPVIEW_IID);
 
-// the percentage of the page that is scrolled on a page up or down
-#define PAGE_SCROLL_PERCENT 0.9
 
 nsScrollPortView::nsScrollPortView()
 {
