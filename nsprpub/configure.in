@@ -634,6 +634,7 @@ case "$target" in
         DSO_LDOPTS=
         AIX_LINK_OPTS='-bnso -berok'
         LIBNSPR='-L$(dist_libdir) -lnspr$(MOD_MAJOR_VERSION)_shr'
+        LIBPLC='-L$(dist_libdir) -lplc$(MOD_MAJOR_VERSION)_shr'
         ;;
     aix4.2*)
         AC_DEFINE(AIX_TIMERS)

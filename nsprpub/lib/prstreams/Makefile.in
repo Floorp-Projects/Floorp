@@ -83,20 +83,17 @@ CXXSRCS = \
 
 OBJS = $(addprefix $(OBJDIR)/,$(CSRCS:.c=.$(OBJ_SUFFIX)) $(CXXSRCS:.cpp=.$(OBJ_SUFFIX)))
 
-LIBRARY_NAME    = prstrms
-LIBRARY_VERSION = $(MOD_MAJOR_VERSION)
-
-RELEASE_HEADERS = $(HEADERS)
-RELEASE_HEADERS_DEST = $(RELEASE_INCLUDE_DIR)
-RELEASE_LIBS    = $(TARGETS)
-
-include $(topsrcdir)/config/rules.mk
-
 ifeq ($(OS_ARCH), WINNT)
         DLLBASE=/BASE:0x30000000
         RES=$(OBJDIR)/prstrms.res
         RESNAME=prstrms.rc
+        OS_LIBS = user32.lib
 else
+    ifeq ($(OS_ARCH),OS2)
+      ifneq ($(MOZ_OS2_TOOLS),VACPP)
+         OS_LIBS = -lstdcpp
+      endif
+    else
     ifeq ($(OS_ARCH), AIX)
       ifeq ($(OS_RELEASE), 4.1)
         ifeq ($(CLASSIC_NSPR),1)
@@ -115,7 +112,18 @@ else
         OS_LIBS += -ldl
       endif
     endif
+    endif
 endif
+
+ifeq ($(OS_ARCH),BeOS)
+    OS_LIBS = -lstdc++.r4
+endif
+
+ifeq ($(OS_ARCH), UNIXWARE)
+    OS_LIBS += -lC
+endif
+
+EXTRA_LIBS = $(LIBNSPR)
 
 # On NCR and SCOOS, we can't link with extra libraries when
 # we build a shared library.  If we do so, the linker doesn't
@@ -127,24 +135,19 @@ endif
 ifeq ($(OS_ARCH),SCOOS)
     EXTRA_LIBS =
 endif
-ifeq ($(OS_ARCH),BeOS)
-    EXTRA_LIBS = -lstdc++.r4 -L$(dist_libdir) -lnspr$(MOD_MAJOR_VERSION)
-endif
-
-ifeq ($(OS_ARCH), UNIXWARE)
-    OS_LIBS += -lC
-endif
-
-ifeq ($(OS_ARCH),WINNT)
-OS_LIBS	+= user32.lib
-endif
-
-EXTRA_LIBS = $(LIBNSPR)
 
 ifdef RESOLVE_LINK_SYMBOLS
 EXTRA_LIBS += $(OS_LIBS)
 endif
 
+LIBRARY_NAME    = prstrms
+LIBRARY_VERSION = $(MOD_MAJOR_VERSION)
+
+RELEASE_HEADERS = $(HEADERS)
+RELEASE_HEADERS_DEST = $(RELEASE_INCLUDE_DIR)
+RELEASE_LIBS    = $(TARGETS)
+
+include $(topsrcdir)/config/rules.mk
 
 #
 # Version information generation (begin)

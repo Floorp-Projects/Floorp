@@ -57,6 +57,7 @@ CSRCS =             \
 	affinity.c		\
 	alarm.c			\
 	anonfm.c		\
+	append.c		\
 	atomic.c		\
 	attach.c		\
 	bigfile.c		\
@@ -70,7 +71,9 @@ CSRCS =             \
 	dceemu.c		\
 	dlltest.c		\
 	dtoa.c			\
+	env.c			\
 	errcodes.c		\
+	errset.c		\
 	exit.c  		\
 	fdcach.c		\
 	fileio.c		\
@@ -100,6 +103,7 @@ CSRCS =             \
 	lockfile.c      \
 	logger.c		\
 	makedir.c		\
+	mbcs.c			\
 	multiacc.c		\
 	multiwait.c		\
 	many_cv.c		\
@@ -139,7 +143,7 @@ CSRCS =             \
 	prpollml.c		\
 	ranfile.c       \
 	randseed.c      \
-	rmdir.c 	        \
+	rmdir.c			\
 	rwlocktest.c    \
 	sel_spd.c  		\
 	selct_er.c	    \
@@ -293,10 +297,7 @@ endif
 # AIX
 ifeq ($(OS_ARCH),AIX)
     LDOPTS += -blibpath:$(ABSOLUTE_LIB_DIR):/usr/lib:/lib
-    ifeq ($(OS_ARCH)$(OS_RELEASE),AIX4.1)
-        LIBNSPR = -lnspr$(MOD_MAJOR_VERSION)_shr
-        LIBPLC = -lplc$(MOD_MAJOR_VERSION)_shr
-    else
+    ifneq ($(OS_ARCH)$(OS_RELEASE),AIX4.1)
         LDOPTS += -brtl
         EXTRA_LIBS = -ldl
     endif
@@ -399,19 +400,6 @@ endif
 
 ifeq ($(OS_ARCH), UNIXWARE)
 export LD_RUN_PATH = $(ABSOLUTE_LIB_DIR)
-endif
-
-ifeq ($(OS_ARCH),FreeBSD)
-ifeq ($(USE_PTHREADS),1)
-LDOPTS += -pthread
-endif
-LDOPTS += -Xlinker -R $(ABSOLUTE_LIB_DIR)
-endif
-
-ifeq ($(OS_ARCH),OpenBSD)
-ifeq ($(USE_PTHREADS),1)
-LDOPTS += -pthread
-endif
 endif
 
 ifeq ($(OS_ARCH),FreeBSD)
