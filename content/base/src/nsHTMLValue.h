@@ -92,8 +92,9 @@ public:
   void  SetColorValue(nscolor aValue);
   void  SetEmptyValue(void);
 
+#ifdef DEBUG
   void  AppendToString(nsAWritableString& aBuffer) const;
-  void  ToString(nsAWritableString& aBuffer) const;
+#endif
 
 protected:
   nsHTMLUnit  mUnit;

@@ -144,6 +144,7 @@ struct HTMLAttribute {
     mValue.SetStringValue(aValue);
   }
 
+#ifdef DEBUG
   void AppendToString(nsString& aBuffer) const
   {
     if (nsnull != mAttribute) {
@@ -173,6 +174,7 @@ struct HTMLAttribute {
       aBuffer.AssignWithConversion("null");
     }
   }
+#endif // DEBUG
 
   static void
   CopyHTMLAttributes(HTMLAttribute* aSource, HTMLAttribute** aDest)

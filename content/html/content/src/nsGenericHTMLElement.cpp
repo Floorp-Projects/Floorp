@@ -2099,6 +2099,18 @@ nsGenericHTMLElement::SetHTMLAttribute(nsIAtom* aAttribute,
   GetMappedAttributeImpact(aAttribute, nsIDOMMutationEvent::MODIFICATION, impact);
   nsCOMPtr<nsIHTMLStyleSheet> sheet;
   if (mDocument) {
+    PRBool haveListeners =
+      nsGenericElement::HasMutationListeners(this,
+                                             NS_EVENT_BITS_MUTATION_ATTRMODIFIED);
+    PRBool modification = PR_TRUE;
+    nsAutoString oldValueStr;
+    if (haveListeners) {
+      // save the old attribute so we can set up the mutation event
+      // properly
+      modification =
+        (NS_CONTENT_ATTR_NOT_THERE !=
+         GetAttr(kNameSpaceID_None, aAttribute, oldValueStr));
+    }
     if (aNotify) {
       mDocument->BeginUpdate();
 
@@ -2107,7 +2119,11 @@ nsGenericHTMLElement::SetHTMLAttribute(nsIAtom* aAttribute,
       if (nsHTMLAtoms::style == aAttribute) {
         nsHTMLValue oldValue;
         PRInt32 oldImpact = NS_STYLE_HINT_NONE;
-        if (NS_CONTENT_ATTR_NOT_THERE != GetHTMLAttribute(aAttribute,
+        // Either we have no listeners or it's a real modification. To
+        // cover the former case we need to check the return value of
+        // GetHTMLAttribute
+        if (modification &&
+            NS_CONTENT_ATTR_NOT_THERE != GetHTMLAttribute(aAttribute,
                                                           oldValue)) {
           oldImpact = GetStyleImpactFrom(oldValue);
         }
@@ -2131,10 +2147,7 @@ nsGenericHTMLElement::SetHTMLAttribute(nsIAtom* aAttribute,
     if (binding)
       binding->AttributeChanged(aAttribute, kNameSpaceID_None, PR_TRUE);
 
-    if (nsGenericElement::HasMutationListeners(this, NS_EVENT_BITS_MUTATION_ATTRMODIFIED)) {
-      // XXX Figure out how to get the old value, so I can fill in
-      // the prevValue field and so that I can correctly indicate
-      // MODIFICATIONs/ADDITIONs.
+    if (haveListeners) {
       nsCOMPtr<nsIDOMEventTarget> node(do_QueryInterface(NS_STATIC_CAST(nsIContent *, this)));
       nsMutationEvent mutation;
       mutation.eventStructType = NS_MUTATION_EVENT;
@@ -2148,11 +2161,16 @@ nsGenericHTMLElement::SetHTMLAttribute(nsIAtom* aAttribute,
       mutation.mRelatedNode = attrNode;
 
       mutation.mAttrName = aAttribute;
-      nsAutoString value;
-      aValue.ToString(value);
-      if (!value.IsEmpty())
-        mutation.mNewAttrValue = getter_AddRefs(NS_NewAtom(value));
-      mutation.mAttrChange = nsIDOMMutationEvent::MODIFICATION;
+      nsAutoString newValueStr;
+      GetAttr(kNameSpaceID_None, aAttribute, newValueStr);
+      if (!newValueStr.IsEmpty())
+        mutation.mNewAttrValue = getter_AddRefs(NS_NewAtom(newValueStr));
+      if (!oldValueStr.IsEmpty())
+        mutation.mPrevAttrValue = getter_AddRefs(NS_NewAtom(oldValueStr));
+      if (modification)
+        mutation.mAttrChange = nsIDOMMutationEvent::MODIFICATION;
+      else
+        mutation.mAttrChange = nsIDOMMutationEvent::ADDITION;
       nsEventStatus status = nsEventStatus_eIgnore;
       HandleDOMEvent(nsnull, &mutation, nsnull,
                      NS_EVENT_FLAG_INIT, &status);
@@ -2240,10 +2258,8 @@ nsGenericHTMLElement::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute, PRBoo
 
       mutation.mAttrName = aAttribute;
 
-      nsHTMLValue oldAttr;
-      GetHTMLAttribute(aAttribute, oldAttr);
       nsAutoString attr;
-      oldAttr.ToString(attr);
+      GetAttr(aNameSpaceID, aAttribute, attr);
       if (!attr.IsEmpty())
         mutation.mPrevAttrValue = getter_AddRefs(NS_NewAtom(attr));
       mutation.mAttrChange = nsIDOMMutationEvent::REMOVAL;
@@ -2316,7 +2332,6 @@ nsGenericHTMLElement::GetAttr(PRInt32 aNameSpaceID, nsIAtom *aAttribute,
   nsresult  result = mAttributes ? mAttributes->GetAttribute(aAttribute, &value) :
                      NS_CONTENT_ATTR_NOT_THERE;
 
-  nscolor color;
   if (NS_CONTENT_ATTR_HAS_VALUE == result) {
     // Try subclass conversion routine first
     if (NS_CONTENT_ATTR_HAS_VALUE ==
@@ -2324,6 +2339,7 @@ nsGenericHTMLElement::GetAttr(PRInt32 aNameSpaceID, nsIAtom *aAttribute,
       return result;
     }
 
+    nscolor color;
     // Provide default conversions for most everything
     switch (value->GetUnit()) {
     case eHTMLUnit_Null:
