@@ -67,6 +67,8 @@ XUL_ATOM(menuitem, "menuitem") // The menu element
 XUL_ATOM(menubar, "menubar") // The menubar element
 XUL_ATOM(menu, "menu") // A single menu item
 
+XUL_ATOM(open, "open") // Whether or not a menu, tree, etc. is open
+
 XUL_ATOM(xpmenubar, "xpmenubar") // An XP menu bar.
 XUL_ATOM(xpmenu, "xpmenu") // Represents an XP menu
 XUL_ATOM(xpmenubutton, "xpmenubutton") // A titled button (with improved behavior) inside an XP menu.
