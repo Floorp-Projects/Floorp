@@ -142,32 +142,38 @@ function CompFields2Recipients(msgCompFields, msgType)
 	}
 }
 
-function _awSetInputAndPopup(inputValue, popupValue, parentNode, templateNode)
+function awSetInputAndPopupValue(inputElem, inputValue, popupElem, popupValue, rowNumber)
 {
 	// remove leading spaces
 	while (inputValue[0] == " " )
 		inputValue = inputValue.substring(1, inputValue.length);
 	
+  inputElem.setAttribute("value", inputValue);
+  inputElem.value = inputValue;
+
+  popupElem.selectedItem = popupElem.childNodes[0].childNodes[awGetSelectItemIndex(popupValue)];
+  
+  if (rowNumber >= 0)
+  {
+    inputElem.setAttribute("id", "msgRecipient#" + rowNumber);
+  	popupElem.setAttribute("id", "msgRecipientType#" + rowNumber);
+	}
+  
+  _awDisableAutoComplete(popupElem, inputElem);
+}
+
+function _awSetInputAndPopup(inputValue, popupValue, parentNode, templateNode)
+{
     top.MAX_RECIPIENTS++;
 
     var newNode = templateNode.cloneNode(true);
     parentNode.appendChild(newNode); // we need to insert the new node before we set the value of the select element!
 
     var input = newNode.getElementsByTagName(awInputElementName());
-    if ( input && input.length == 1 )
-    {
-	    input[0].setAttribute("value", inputValue);
-	    input[0].value = inputValue;
-	    input[0].setAttribute("id", "msgRecipient#" + top.MAX_RECIPIENTS);
-	}
     var select = newNode.getElementsByTagName(awSelectElementName());
-    if ( select && select.length == 1 )
-    {
-        select[0].selectedItem = select[0].childNodes[0].childNodes[awGetSelectItemIndex(popupValue)];
-	    select[0].setAttribute("id", "msgRecipientType#" + top.MAX_RECIPIENTS);
-	    if (input)
-            _awDisableAutoComplete(select[0], input[0]);
-	}
+
+    if (input && input.length == 1 && select && select.length == 1)
+      awSetInputAndPopupValue(input[0], inputValue, select[0], popupValue, top.MAX_RECIPIENTS)
 }
 
 function awSetInputAndPopup(inputValue, popupValue, parentNode, templateNode)
@@ -188,6 +194,80 @@ function awSetInputAndPopupFromArray(inputArray, popupValue, parentNode, templat
 		for ( var index = 0; index < inputArray.count; index++ )
 		    _awSetInputAndPopup(inputArray.StringAt(index), popupValue, parentNode, templateNode);
 	}
+}
+
+function awRemoveRecipients(msgCompFields, recipientType, recipientsList)
+{
+  if (!msgCompFields)
+    return;
+
+  var recipientArray = msgCompFields.SplitRecipients(recipientsList, false);
+  if (! recipientArray)
+    return;
+  
+  for ( var index = 0; index < recipientArray.count; index++ )
+    for (var row = 1; row <= top.MAX_RECIPIENTS; row ++)
+    {
+      var popup = awGetPopupElement(row);
+      if (popup.selectedItem.getAttribute("data") == recipientType)
+      {
+        var input = awGetInputElement(row);
+        if (input.value == recipientArray.StringAt(index))
+        {
+          awSetInputAndPopupValue(input, "", popup, "addr_to", -1);
+          break;
+        }
+      }
+    } 
+}
+
+function awAddRecipients(msgCompFields, recipientType, recipientsList)
+{
+  if (!msgCompFields)
+    return;
+
+  var recipientArray = msgCompFields.SplitRecipients(recipientsList, false);
+  if (! recipientArray)
+    return;
+  
+  for ( var index = 0; index < recipientArray.count; index++ )
+  {
+    for (var row = 1; row <= top.MAX_RECIPIENTS; row ++)
+    {
+      if (awGetInputElement(row).value == "")
+        break;
+    }
+    if (row > top.MAX_RECIPIENTS)
+      awAppendNewRow(false);
+  
+    awSetInputAndPopupValue(awGetInputElement(row), recipientArray.StringAt(index), awGetPopupElement(row), recipientType, row);
+
+    /* be sure we still have an empty row left at the end */
+    if (row == top.MAX_RECIPIENTS)
+    {
+      awAppendNewRow(true);
+      awSetInputAndPopupValue(awGetInputElement(top.MAX_RECIPIENTS), "", awGetPopupElement(top.MAX_RECIPIENTS), "addr_to", top.MAX_RECIPIENTS);
+    }
+  }
+}
+
+function awCleanupRows()
+{
+  var maxRecipients = top.MAX_RECIPIENTS;
+  var rowID = 1;
+
+  for (var row = 1; row <= maxRecipients; row ++)
+  {
+    var inputElem = awGetInputElement(row);
+    if (inputElem.value == "" && row < maxRecipients)
+      awRemoveRow(row);
+    else
+    {
+      inputElem.setAttribute("id", "msgRecipient#" + rowID);
+  	  awGetPopupElement(row).setAttribute("id", "msgRecipientType#" + rowID);
+      rowID ++;
+    }
+  }
 }
 
 function awNotAnEmptyArea(event)
@@ -356,7 +436,7 @@ function awRemoveRow(row)
 	
 	awRemoveNodeAndChildren(body, awGetTreeItem(row));
 
-	top.MAX_RECIPIENTS--;
+	top.MAX_RECIPIENTS --;
 }
 
 function awRemoveNodeAndChildren(parent, nodeToRemove)

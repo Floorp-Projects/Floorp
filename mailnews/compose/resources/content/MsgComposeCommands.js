@@ -39,6 +39,7 @@ var currentAttachment = null;
 var documentLoaded = false;
 var windowLocked = false;
 var contentChanged = false;
+var currentIdentity = null;
 
 var Bundle = srGetStrBundle("chrome://messenger/locale/messengercompose/composeMsgs.properties"); 
 
@@ -1175,16 +1176,67 @@ function LoadIdentity(startup)
 {
     var identityElement = document.getElementById("msgIdentity");
     
+    prevIdentity = currentIdentity;
+    
     if (identityElement) {
         var item = identityElement.selectedItem;
         idKey = item.getAttribute('id');
-        var identity = accountManager.getIdentity(idKey);
+        currentIdentity = accountManager.getIdentity(idKey);
+
+        if (!startup && prevIdentity && idKey != prevIdentity.key)
+        {
+          var prevReplyTo = prevIdentity.replyTo;
+          var prevBcc = "";
+          if (prevIdentity.bccSelf)
+            prevBcc += prevIdentity.email;
+          if (prevIdentity.bccOthers)
+          {
+            if (prevBcc != "")
+              prevBcc += ","
+            prevBcc += prevIdentity.bccList; 
+          }
+          
+          var newReplyTo = currentIdentity.replyTo;
+          var newBcc = "";
+          if (currentIdentity.bccSelf)
+            newBcc += currentIdentity.email;
+          if (currentIdentity.bccOthers)
+          {
+            if (newBcc != "")
+              newBcc += ","
+            newBcc += currentIdentity.bccList; 
+          }
+
+          var needToCleanUp = false;
+          var msgCompFields = msgCompose.compFields;
+
+          if (newReplyTo != prevReplyTo)
+          {
+            needToCleanUp = true;
+            if (prevReplyTo != "")
+              awRemoveRecipients(msgCompFields, "addr_reply", prevReplyTo);
+            if (newReplyTo != "")
+              awAddRecipients(msgCompFields, "addr_reply", newReplyTo);
+          }
+          
+          if (newBcc != prevBcc)
+          {
+            needToCleanUp = true;
+            if (prevBcc != "")
+              awRemoveRecipients(msgCompFields, "addr_bcc", prevBcc);
+            if (newReplyTo != "")
+              awAddRecipients(msgCompFields, "addr_bcc", newBcc);
+          }          
+          
+          if (needToCleanUp)
+            awCleanupRows();
+        }
         
         //Setup autocomplete session, we can doit from here as it's use as a service
         var session = Components.classes["component://netscape/autocompleteSession&type=addrbook"].getService(Components.interfaces.nsIAbAutoCompleteSession);
         if (session)
         {
-            var emailAddr = identity.email;
+            var emailAddr = currentIdentity.email;
             var start = emailAddr.lastIndexOf("@");
             session.defaultDomain = emailAddr.slice(start + 1, emailAddr.length);
         }
