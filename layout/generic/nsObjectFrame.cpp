@@ -81,6 +81,7 @@
 #include "nsIDOMMouseListener.h"
 #include "nsIDOMMouseMotionListener.h"
 #include "nsIDOMFocusListener.h"
+#include "nsIDOMContextMenuListener.h"
 #include "nsIDOMEventReceiver.h"
 #include "nsIDOMNSEvent.h"
 #include "nsIPrivateDOMEvent.h"
@@ -135,6 +136,28 @@ static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
 
 static nsresult GetContainingBlock(nsIFrame *aFrame, nsIFrame **aContainingBlock);
 
+
+// special class for handeling DOM context menu events
+// because for some reason it starves other mouse events if implemented on the same class
+class nsPluginDOMContextMenuListener : public nsIDOMContextMenuListener,
+                                       public nsIEventListener
+{
+public:
+  nsPluginDOMContextMenuListener();
+  virtual ~nsPluginDOMContextMenuListener();
+
+  NS_DECL_ISUPPORTS
+
+  NS_IMETHOD ContextMenu(nsIDOMEvent* aContextMenuEvent) { return NS_ERROR_FAILURE; /* means consume event */ }
+  
+  nsresult Init(nsObjectFrame *aFrame);
+  nsresult Destroy(nsObjectFrame *aFrame);
+  
+  NS_IMETHOD HandleEvent(nsIDOMEvent* aEvent) { return NS_OK; }
+  nsEventStatus ProcessEvent(const nsGUIEvent& anEvent) { return nsEventStatus_eConsumeNoDefault; }
+};
+
+
 class nsPluginInstanceOwner : public nsIPluginInstanceOwner,
                               public nsIPluginTagInfo2,
                               public nsIJVMPluginTagInfo,
@@ -144,7 +167,7 @@ class nsPluginInstanceOwner : public nsIPluginInstanceOwner,
                               public nsIDOMMouseMotionListener,
                               public nsIDOMKeyListener,
                               public nsIDOMFocusListener
-                              
+
 {
 public:
   nsPluginInstanceOwner();
@@ -296,6 +319,8 @@ private:
   PRUint16          mNumCachedParams;
   char              **mCachedAttrParamNames;
   char              **mCachedAttrParamValues;
+  
+  nsPluginDOMContextMenuListener * mCXMenuListener;  // pointer to wrapper for nsIDOMContextMenuListener
   
   nsresult DispatchKeyToPlugin(nsIDOMEvent* aKeyEvent);
   nsresult DispatchMouseToPlugin(nsIDOMEvent* aMouseEvent);
@@ -1975,6 +2000,64 @@ NS_NewObjectFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame)
   return NS_OK;
 }
 
+
+// nsPluginDOMContextMenuListener class implementation
+
+nsPluginDOMContextMenuListener::nsPluginDOMContextMenuListener()
+{
+  NS_INIT_REFCNT();
+}
+
+nsPluginDOMContextMenuListener::~nsPluginDOMContextMenuListener()
+{
+}
+
+NS_IMPL_ISUPPORTS2(nsPluginDOMContextMenuListener, nsIDOMContextMenuListener, nsIEventListener);
+
+nsresult nsPluginDOMContextMenuListener::Init(nsObjectFrame *aFrame)
+{
+  nsCOMPtr<nsIContent> content;
+  aFrame->GetContent(getter_AddRefs(content));
+
+  // Register context menu listener
+  if (content) {
+    nsCOMPtr<nsIDOMEventReceiver> receiver(do_QueryInterface(content));
+    if (receiver) {
+      nsCOMPtr<nsIDOMContextMenuListener> cxMenuListener;
+      QueryInterface(NS_GET_IID(nsIDOMContextMenuListener), getter_AddRefs(cxMenuListener));
+      if (cxMenuListener) {
+        receiver->AddEventListener(NS_LITERAL_STRING("contextmenu"), cxMenuListener, PR_TRUE);
+        return NS_OK;
+      }
+    }
+  }
+
+  return NS_ERROR_NO_INTERFACE;
+}
+
+nsresult nsPluginDOMContextMenuListener::Destroy(nsObjectFrame *aFrame)
+{
+  nsCOMPtr<nsIContent> content;
+  aFrame->GetContent(getter_AddRefs(content));
+
+  // Unregister context menu listener
+  if (content) {
+    nsCOMPtr<nsIDOMEventReceiver> receiver(do_QueryInterface(content));
+    if (receiver) {
+      nsCOMPtr<nsIDOMContextMenuListener> cxMenuListener;
+      QueryInterface(NS_GET_IID(nsIDOMContextMenuListener), getter_AddRefs(cxMenuListener));
+      if (cxMenuListener) { 
+        receiver->RemoveEventListenerByIID(cxMenuListener, NS_GET_IID(nsIDOMContextMenuListener));
+      }
+      else NS_ASSERTION(PR_FALSE, "Unable to remove event listener for plugin");
+    }
+    else NS_ASSERTION(PR_FALSE, "plugin was not an event listener");
+  }
+  else NS_ASSERTION(PR_FALSE, "plugin had no content");
+
+  return NS_OK;
+}
+
 //plugin instance owner
 
 nsPluginInstanceOwner::nsPluginInstanceOwner()
@@ -3270,6 +3353,12 @@ nsPluginInstanceOwner::Destroy()
   nsCOMPtr<nsIContent> content;
   mOwner->GetContent(getter_AddRefs(content));
 
+  // unregister context menu listener
+  if (mCXMenuListener) {
+    mCXMenuListener->Destroy(mOwner);    
+    NS_RELEASE(mCXMenuListener);
+  }
+
   // Unregister focus event listener
   if (content) {
     nsCOMPtr<nsIDOMEventReceiver> receiver(do_QueryInterface(content));
@@ -3457,6 +3546,13 @@ NS_IMETHODIMP nsPluginInstanceOwner::Init(nsIPresContext* aPresContext, nsObject
     }
   }
 
+  // register context menu listener
+  mCXMenuListener = new nsPluginDOMContextMenuListener();
+  if (mCXMenuListener) {    
+    NS_ADDREF(mCXMenuListener);    
+    mCXMenuListener->Init(aFrame);
+  }
+
   // Register focus listener
   if (content) {
     nsCOMPtr<nsIDOMEventReceiver> receiver(do_QueryInterface(content));
@@ -3486,6 +3582,7 @@ NS_IMETHODIMP nsPluginInstanceOwner::Init(nsIPresContext* aPresContext, nsObject
       }
     }
   }
+
   // Register key listener
   if (content) {
     nsCOMPtr<nsIDOMEventReceiver> receiver(do_QueryInterface(content));
