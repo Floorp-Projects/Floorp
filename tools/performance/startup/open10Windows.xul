@@ -3,11 +3,14 @@
 <!DOCTYPE window>
 
 <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-        onload="openWindows(10);">
+        onload="window.setTimeout( 'onload(11);', 2000 );">
     <script type="application/x-javascript">
         <![CDATA[
-            function openWindows(n) {
-                window.openDialog("chrome://navigator/content/miniXul.xul","_blank","chrome,all", n);
+            function onload(n) {
+                if ( n ) {
+                    window.openDialog("chrome://navigator/content/miniXul.xul","_blank","chrome,all");
+                    window.setTimeout( 'onload(n-1);', 2000 );
+                }
             }
         ]]>
     </script>
