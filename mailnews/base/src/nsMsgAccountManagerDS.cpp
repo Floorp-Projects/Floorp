@@ -446,5 +446,6 @@ nsresult
 NS_NewMsgAccountManagerDataSource(const nsIID& iid, void ** result)
 {
   nsMsgAccountManagerDataSource *amds = new nsMsgAccountManagerDataSource();
+  if (!amds) return NS_ERROR_OUT_OF_MEMORY;
   return amds->QueryInterface(iid, result);
 }

@@ -175,6 +175,7 @@ nsresult
 NS_NewMsgServerDataSource(const nsIID& iid, void **result)
 {
   nsMsgServerDataSource *ids = new nsMsgServerDataSource();
+  if (!ids) return NS_ERROR_OUT_OF_MEMORY;
   return ids->QueryInterface(iid, result);
 }
 

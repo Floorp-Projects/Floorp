@@ -234,6 +234,7 @@ nsresult
 NS_NewMsgAccountDataSource(const nsIID& iid, void **result)
 {
   nsMsgAccountDataSource *ads = new nsMsgAccountDataSource();
+  if (!ads) return NS_ERROR_OUT_OF_MEMORY;
   return ads->QueryInterface(iid, result);
 }
 

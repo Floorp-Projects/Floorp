@@ -134,7 +134,8 @@ nsCopySource::~nsCopySource()
 // ************ nsCopyRequest *****************
 // 
 nsCopyRequest::nsCopyRequest() :
-    m_isMoveOrDraft(PR_FALSE), m_requestType(nsCopyMessagesType),
+    m_requestType(nsCopyMessagesType),
+    m_isMoveOrDraft(PR_FALSE),
     m_processed(PR_FALSE)
 {
 }

@@ -190,6 +190,7 @@ nsresult
 NS_NewMsgIdentityDataSource(const nsIID& iid, void **result)
 {
   nsMsgIdentityDataSource *ids = new nsMsgIdentityDataSource();
+  if (!ids) return NS_ERROR_OUT_OF_MEMORY;
   return ids->QueryInterface(iid, result);
 }
 

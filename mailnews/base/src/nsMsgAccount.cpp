@@ -297,7 +297,8 @@ NS_NewMsgAccount(const nsIID& iid, void **result)
   if (!result) return NS_ERROR_NULL_POINTER;
   
   nsMsgAccount *account = new nsMsgAccount;
-
+  if (!account) return NS_ERROR_OUT_OF_MEMORY;
+  
   return account->QueryInterface(iid, result);
 }
 
