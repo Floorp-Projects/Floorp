@@ -935,8 +935,7 @@ PRBool nsImapProtocol::ProcessCurrentURL()
 
 	if (!TestFlag(IMAP_CONNECTION_IS_OPEN) && m_channel)
 	{
-		nsCOMPtr<nsISupports> sprts = do_QueryInterface (m_runningUrl);
-		m_channel->AsyncRead(0, -1, sprts,this /* stream observer */);
+		m_channel->AsyncRead(0, -1, nsnull,this /* stream observer */);
 		SetFlag(IMAP_CONNECTION_IS_OPEN);
 	}
     
