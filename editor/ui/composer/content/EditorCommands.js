@@ -1014,7 +1014,7 @@ function onDirtyChange()
 {
   // this should happen through style, but that doesn't seem to work.
   var theButton = document.getElementById("SaveButton");
-   if (theButton)
+  if (theButton)
   {
 	var isDirty = theButton.getAttribute("dirty");
     if (isDirty == "true") {
@@ -1028,10 +1028,25 @@ function onDirtyChange()
 function onParagraphFormatChange()
 {
   var theButton = document.getElementById("ParagraphPopup");
-   if (theButton)
+  if (theButton)
   {
 	var theFormat = theButton.getAttribute("format");
     theButton.setAttribute("value", gTagToFormat[theFormat]);
     dump("Setting value\n");
   }
+}
+
+function onListFormatChange(listType)
+{
+  var theButton = document.getElementById(listType + "Button");
+  if (theButton)
+  {
+	var listFormat = theButton.getAttribute("format");
+	if (listFormat == listType) {
+      theButton.setAttribute("toggled", 1);
+    } else {
+      theButton.setAttribute("toggled", 0);
+    }
+  }
+  
 }
