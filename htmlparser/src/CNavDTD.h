@@ -32,6 +32,7 @@
 #include "nshtmlpars.h"
 #include "nsParserNode.h"
 #include "nsTokenHandler.h"
+#include "nsVoidArray.h"
 #include "nsDeque.h"
 
 
@@ -680,12 +681,12 @@ protected:
 
     CTokenHandler*      mTokenHandlers[eToken_last];
 
-    PRBool              mLeafBits[4096];
-    eHTMLTags           mContextStack[4096];
+    nsVoidArray         mLeafBits;
+    nsVoidArray         mContextStack;
     PRInt32             mContextStackPos;
-
-    eHTMLTags           mStyleStack[4096];
+    nsVoidArray         mStyleStack;
     PRInt32             mStyleStackPos;
+
     PRBool              mHasOpenForm;
     PRBool              mHasOpenMap;
     nsDeque             mTokenDeque;

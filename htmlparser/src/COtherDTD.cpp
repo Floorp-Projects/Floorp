@@ -343,8 +343,8 @@ PRInt32 COtherDTD::HandleToken(CToken* aToken){
 
     if(aHandler) {
       result=(*aHandler)(theToken,this);
-      if (mDTDDebug)
-         mDTDDebug->Verify(this, mParser, mContextStackPos, mContextStack, mFilename);
+//      if (mDTDDebug)
+//         mDTDDebug->Verify(this, mParser, mContextStackPos, mContextStack, mFilename);
     }
 
   }//if

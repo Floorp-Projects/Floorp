@@ -27,6 +27,7 @@
 
 #include "CNavDTD.h"
 #include "nsHTMLTokens.h"
+#include "nsVoidArray.h"
 #include "nsParser.h"
 #include "nsIDTDDebug.h"
 #include "nsCRT.h"
@@ -66,7 +67,7 @@ public:
 
     void SetVerificationDirectory(char * verify_dir);
     void SetRecordStatistics(PRBool bval);
-    PRBool Verify(nsIDTD * aDTD,  nsParser * aParser, int ContextStackPos, eHTMLTags aContextStack[], char * aURLRef);
+    PRBool Verify(nsIDTD * aDTD,  nsParser * aParser, int ContextStackPos, nsVoidArray &aContextStack, char * aURLRef);
     void DumpVectorRecord(void);
 
     // global table for storing vector statistics and the size
@@ -78,7 +79,7 @@ private:
     PRBool mRecordingStatistics;
 
     PRBool DebugRecord(char * path, char * pURLRef, char * filename);
-    void NoteVector(eHTMLTags aTags[],PRInt32 count, PRBool good_vector);
+    void NoteVector(nsVoidArray & aTags,PRInt32 count, PRBool good_vector);
     void MakeVectorString(char * vector_string, VectorInfo * pInfo);
 };
 
@@ -309,7 +310,7 @@ static int compare( const void *arg1, const void *arg2 )
  *  @return
  */
 
-void CDTDDebug::NoteVector(eHTMLTags aTags[],PRInt32 count, PRBool good_vector)
+void CDTDDebug::NoteVector(nsVoidArray & aTags,PRInt32 count, PRBool good_vector)
 {
     // if the table doesn't exist, create it
 	if (!mVectorInfoArray) {
@@ -317,17 +318,26 @@ void CDTDDebug::NoteVector(eHTMLTags aTags[],PRInt32 count, PRBool good_vector)
 	} 
 	else {
         // attempt to look up the vector
-		for (PRInt32 i = 0; i < mVectorCount; i++)
+		for (PRInt32 i = 0; i < mVectorCount; i++) 
 
             // check the vector only if they are the same size, if they
             // match then just return without doing further work
-			if (mVectorInfoArray[i]->count == count)
-				if (!memcmp(mVectorInfoArray[i]->vector, aTags, sizeof(eHTMLTags)*count)) {
+			if (mVectorInfoArray[i]->count == count) {
 
+            PRBool match = PR_TRUE;
+
+            for (PRInt32 j = 0; j < count; j++)
+               if (mVectorInfoArray[i]->vector[j] != (eHTMLTags)(int)aTags[j]) {
+                  match = PR_FALSE;
+                  break;
+               }
+
+            if (match) {
                     // bzzzt. and we have a winner.. bump the ref count
 					mVectorInfoArray[i]->references++;
 					return;
-				}
+            }
+			}
 	}
 
     // the context vector hasn't been noted, so allocate it and
@@ -337,7 +347,8 @@ void CDTDDebug::NoteVector(eHTMLTags aTags[],PRInt32 count, PRBool good_vector)
 	pVectorInfo->count = count;
 	pVectorInfo->good_vector = good_vector;
 	pVectorInfo->vector = (eHTMLTags*)PR_Malloc(count*sizeof(eHTMLTags));
-	memcpy(pVectorInfo->vector,aTags,sizeof(eHTMLTags)*count);
+   for (PRInt32 i = 0; i < count; i++)
+      pVectorInfo->vector[i] = (eHTMLTags)(int)aTags[i];
 	mVectorInfoArray[mVectorCount++] = pVectorInfo;
 
     // have we maxed out the table?  grow it.. sort it.. love it. 
@@ -456,7 +467,7 @@ void CDTDDebug::DumpVectorRecord(void)
  * @return  TRUE if we know how to handle it, else false
  */
 
-PRBool CDTDDebug::Verify(nsIDTD * aDTD,  nsParser * aParser, int aContextStackPos, eHTMLTags aContextStack[], char * aURLRef) 
+PRBool CDTDDebug::Verify(nsIDTD * aDTD,  nsParser * aParser, int aContextStackPos, nsVoidArray &aContextStack, char * aURLRef) 
 {
    PRBool  result=PR_TRUE;
 
@@ -466,7 +477,7 @@ PRBool CDTDDebug::Verify(nsIDTD * aDTD,  nsParser * aParser, int aContextStackPo
 
       if(aDTD && aContextStackPos>1) {
          for (int i = 0; i < aContextStackPos-1; i++)
-            if (!aDTD->CanContain(aContextStack[i],aContextStack[i+1])) {
+            if (!aDTD->CanContain((eHTMLTags)(int)aContextStack[i],(eHTMLTags)(int)aContextStack[i+1])) {
                result = PR_FALSE;
                break;
             }
@@ -484,7 +495,7 @@ PRBool CDTDDebug::Verify(nsIDTD * aDTD,  nsParser * aParser, int aContextStackPo
       int i=0;      
       for(i=0;i<aContextStackPos;i++){
          strcat(path,"/");
-         const char* name=GetTagName(aContextStack[i]);
+         const char* name=GetTagName((eHTMLTags)(int)aContextStack[i]);
          strcat(path,name);
          PR_MkDir(path,0);
       }
