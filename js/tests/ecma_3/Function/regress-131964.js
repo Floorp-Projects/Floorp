@@ -44,7 +44,7 @@
 //-----------------------------------------------------------------------------
 var UBound = 0;
 var bug =   131964;
-var summary = 'Function defined in global or function scope are {DontDelete}';
+var summary = 'Functions defined in global or function scope are {DontDelete}';
 var status = '';
 var statusitems = [];
 var actual = '';
