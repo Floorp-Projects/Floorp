@@ -1,5 +1,5 @@
 #############################################################################
-# $Id: Utils.pm,v 1.7 1998/07/30 10:06:56 leif Exp $
+# $Id: Utils.pm,v 1.8 1998/08/09 01:16:55 leif Exp $
 #
 # The contents of this file are subject to the Mozilla Public License
 # Version 1.0 (the "License"); you may not use this file except in
@@ -208,8 +208,8 @@ sub askPassword
 #
 sub ldapArgs
 {
-  my($bind, $base) = @_;
-  my(%ld);
+  my ($bind, $base) = @_;
+  my (%ld);
 
   $main::opt_v = $main::opt_n if $main::opt_n;
   $main::opt_p = LDAPS_PORT unless ($main::opt_p || ($main::opt_P eq ""));
@@ -292,3 +292,73 @@ sub answer
   return "Y" if /^[yY]/;
   return "N" if /^[nN]/;
 }
+
+
+#############################################################################
+# POD documentation...
+#
+__END__
+
+=head1 NAME
+
+  Mozilla::LDAP::Utils.pm - Collection of useful little utilities.
+
+=head1 SYNOPSIS
+
+  use Mozilla::LDAP::Utils;
+
+=head1 ABSTRACT
+
+
+=head1 DESCRIPTION
+
+
+=head1 OBJECT CLASS METHODS
+
+=over 13
+
+=item B<normalizeDN>
+
+This function will remove all extraneous white spaces in the DN, and also
+change all upper case characters to lower case. The only argument is the
+DN string to normalize, and the return value is the new, clean DN.
+
+=back
+
+=head1 EXAMPLES
+
+There are plenty of examples to look at, in the examples directory. We are
+adding more examples every day (almost).
+
+=head1 INSTALLATION
+
+Installing this package is part of the Makefile supplied in the
+package. See the installation procedures which are part of this package.
+
+=head1 AVAILABILITY
+
+This package can be retrieved from a number of places, including:
+
+    http://www.mozilla.org/
+    Your local CPAN server
+
+=head1 AUTHOR INFORMATION
+
+Address bug reports and comments to:
+xxx@netscape.com
+
+=head1 CREDITS
+
+Most of this code was developed by Leif Hedstrom, Netscape Communications
+Corporation. 
+
+=head1 BUGS
+
+None. :)
+
+=head1 SEE ALSO
+
+L<Mozilla::LDAP::Conn>, L<Mozilla::LDAP::Entry>, L<Mozilla::LDAP::API>, and
+of course L<Perl>.
+
+=cut

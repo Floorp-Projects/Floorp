@@ -1,5 +1,5 @@
 #############################################################################
-# $Id: LDIF.pm,v 1.2 1998/07/23 05:31:22 leif Exp $
+# $Id: LDIF.pm,v 1.3 1998/08/09 01:16:54 leif Exp $
 #
 # The contents of this file are subject to the Mozilla Public License
 # Version 1.0 (the "License"); you may not use this file except in
@@ -28,17 +28,51 @@ package Mozilla::LDAP::LDIF;
 
 
 #############################################################################
-# Read the next $entry from an ::LDIF object.
+# Creator, the argument (optional) is the file handle.
 #
-sub readEntry
+sub new
 {
-  my($fh) = @_;
-  my($attr, $val, $entry, $base64);
+  my ($class, $fh) = @_;
+  my $self = {};
+
+  if ($fh)
+    {
+      $self->{_fh_} = $fh;
+      $self->{_canRead_} = 1;
+      $self->{_canWrite_} = 1;
+    }
+  else
+    {
+      $self->{_fh_} = STDOUT;
+      $self->{_canRead_} = 1;
+      $self->{_canWrite_} = 0;
+    }
+
+  return bless $self, $class;
+}
+
+
+#############################################################################
+# Destructor, close file descriptors etc. (???)
+#
+sub DESTROY
+{
+  my $self = shift;
+}
+
+
+#############################################################################
+# Read the next $entry from an ::LDIF object. No arguments
+#
+sub readOneEntry
+{
+  my ($self) = @_;
+  my ($attr, $val, $entry, $base64);
   local $_;
 
   # Skip leading empty lines.
-  $entry = new Ldapp::Entry;
-  while (<$fh>)
+  $entry = new Mozilla::LDAP::Entry;
+  while (<$self->{_fh_}>)
     {
       chop;
       last unless /^\s*$/;
@@ -78,11 +112,11 @@ sub readEntry
 	    }
 	}
 
-      $_ = <$fh>;
+      $_ = <$self->{_fh_}>;
       chop;
     } until /^\s*$/;
 
-  # Do the last attribute...
+  # Do the last attribute... Icky.
   if ($attr && ($attr ne "dn"))
     {
       $val = decode_base64($val) if $base64;
@@ -90,6 +124,57 @@ sub readEntry
     }
 
   return $entry;
+}
+*readEntry = \readOneEntry;
+
+
+#############################################################################
+# Print one entry, to the file handle. Note that we actually use some
+# internals from the ::Entry object here, which is a no-no...
+#
+sub writeOneEntry
+{
+  my ($self, $entry) = @_;
+
+  print $self->{_fh_} "dn: ", $self->getDN(),"\n";
+  foreach $attr (@{$self->{_oc_order_}})
+    {
+      next if ($attr =~ /^_.+_$/);
+      next if $self->{"_${attr}_deleted_"};
+      grep((print $self->{_fh_} "$attr: $_\n"), @{$self->{$attr}});
+    }
+
+  print $self->{_fh_} "\n";
+}
+*writeEntry = \writeOneEntry;
+
+
+#############################################################################
+# Read multiple entries, and return an array of Entry objects. The argument
+# is the number to read, or read them all if not specified.
+#
+sub readEntries
+{
+  my ($self, $num) = @_;
+  my $entry;
+  my (@entries);
+
+  return @entries;
+}
+
+
+#############################################################################
+# Write multiple entries, the argument is the array of Entry objects.
+#
+sub writeEntries
+{
+  my ($self, @entries) = @_;
+  local $_;
+  
+  foreach (@entries)
+    {
+      $self->writeOneEntry($_);
+    }
 }
 
 
@@ -122,51 +207,38 @@ LDIF rules...
 
 =head1 EXAMPLES
 
-There are plenty of examples to look at, in the is-ldap/perl directory. If
-you don't have these files, get the distribution from one of the sites below. 
+There are plenty of examples to look at, in the examples directory. We are
+adding more examples every day (almost).
 
 =head1 INSTALLATION
 
 Installing this package is part of the Makefile supplied in the
-package. To install and use this module, you'll first need to download and
-install the LDAP SDK (e.g. from http://developer.netscape.com). To build
-the Perl modules, just do
-
-    perl5 Makefile.PL
-    make
-    make install
-
-You'll get some questions during the first step, asking you to specify
-where your LDAP SDK installed, and how to configure the package.
+package. See the installation procedures which are part of this package.
 
 =head1 AVAILABILITY
 
-The latest version of this script, and other related packages, are
-available from
+This package can be retrieved from a number of places, including:
 
-  
+    http://www.mozilla.org/
+    Your local CPAN server
+
 =head1 AUTHOR INFORMATION
 
 Address bug reports and comments to:
+xxx@netscape.com
 
 =head1 CREDITS
 
+Most of this code was developed by Leif Hedstrom, Netscape Communications
+Corporation. 
 
+=head1 BUGS
 
-=head1 BUGS and TODO
-
-None :).
-
-=over 4
-
-=item *
-
-Finish it.
-
-=back
+None. :)
 
 =head1 SEE ALSO
 
-L<Mozilla::LDAP::API>, L<Mozilla::LDAP::Entry> and L<Perl>
+L<Mozilla::LDAP::Conn>, L<Mozilla::LDAP::Entry>, L<Mozilla::LDAP::API>,
+and of course L<Perl>.
 
 =cut
