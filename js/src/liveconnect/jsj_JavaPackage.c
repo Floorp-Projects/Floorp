@@ -189,8 +189,10 @@ JavaPackage_resolve(JSContext *cx, JSObject *obj, jsval id)
 
         /* beard: this has to be done here, so built-in classes will be defined. */
         /* Painful hack for pre_define_java_packages() */
-        if (quiet_resolve_failure)
-            return JS_FALSE;
+        if (quiet_resolve_failure) {
+            ok = JS_FALSE;
+            goto out;
+        }
 
         /*
          * If there's no class of the given name, then we must be referring to
@@ -218,7 +220,8 @@ JavaPackage_resolve(JSContext *cx, JSObject *obj, jsval id)
                     free((char*)msg);
                 }
                                
-                return JS_FALSE;
+                ok = JS_FALSE;
+                goto out;
             }
         }
 
