@@ -430,7 +430,15 @@ nsFrameLoader::EnsureDocShell()
   nsCOMPtr<nsIDocShellTreeItem> docShellAsItem(do_QueryInterface(mDocShell));
   NS_ENSURE_TRUE(docShellAsItem, NS_ERROR_FAILURE);
   nsAutoString frameName;
-  mOwnerContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::name, frameName);
+
+  // Don't use mOwnerContent->GetNameSpaceID() here since it returns
+  // kNameSpaceID_XHTML for both HTML and XHTML, see bug 183683.
+  nsINodeInfo* ni = mOwnerContent->GetNodeInfo();
+  if (ni && ni->NamespaceID() == kNameSpaceID_XHTML) {
+    mOwnerContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::id, frameName);
+  } else {
+    mOwnerContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::name, frameName);
+  }
 
   if (!frameName.IsEmpty()) {
     docShellAsItem->SetName(frameName.get());
