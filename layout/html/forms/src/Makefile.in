@@ -42,13 +42,22 @@ CPPSRCS =				\
   nsTextControlFrame.cpp  	\
 	nsNativeTextControlFrame.cpp  	\
   nsGfxTextControlFrame.cpp  	\
-	nsSelectControlFrame.cpp        \
+	nsNativeSelectControlFrame.cpp        \
 	nsFieldSetFrame.cpp   \
 	nsLegendFrame.cpp   \
 	nsHTMLButtonControlFrame.cpp   \
 	nsLabelFrame.cpp   \
 	nsImageControlFrame.cpp \
   nsButtonFrameRenderer.cpp \
+  nsGfxButtonControlFrame.cpp \
+  nsGfxCheckboxControlFrame.cpp \
+  nsGfxRadioControlFrame.cpp \
+  nsNativeButtonControlFrame.cpp \
+  nsNativeCheckboxControlFram.cpp \
+  nsNativeFormControlFrame.cpp \
+  nsNativeRadioControlFrame.cpp \
+  nsNativeSelectControlFrame.cpp \
+  nsRadioControlGroup.cpp \
 	$(NULL)
 
 MODULE=layout

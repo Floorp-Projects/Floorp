@@ -57,6 +57,13 @@ enum nsWidgetRendering {
   eWidgetRendering_PartialGfx = 3
 };
 
+enum nsWidgetType {
+  eWidgetType_Button  	= 1,
+  eWidgetType_Checkbox	= 2,
+  eWidgetType_Radio			= 3,
+  eWidgetType_Text			= 4
+};
+
 // An interface for presentation contexts. Presentation contexts are
 // objects that provide an outer context for a presentation shell.
 class nsIPresContext : public nsISupports {

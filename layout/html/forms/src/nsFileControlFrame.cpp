@@ -416,19 +416,6 @@ NS_IMETHODIMP nsFileControlFrame::GetProperty(nsIAtom* aName, nsString& aValue)
   return NS_OK;
 }
 
-PRBool 
-nsFileControlFrame::HasWidget()
-{
-  PRBool hasWidget = PR_FALSE;
-  nsIWidget* widget;
-  mTextFrame->GetWidget(&widget);
-  if (widget) {
-    NS_RELEASE(widget);
-    hasWidget = PR_TRUE;
-  } 
-  return(hasWidget);
-}
-
 
 
 

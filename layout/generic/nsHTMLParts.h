@@ -315,18 +315,21 @@ extern nsresult NS_NewFirstLineFrame(nsIFrame** aNewFrame);
 
 // forms
 extern nsresult NS_NewFormFrame(nsIFrame** aResult);
-extern nsresult NS_NewButtonControlFrame(nsIFrame** aResult);
+extern nsresult NS_NewGfxButtonControlFrame(nsIFrame** aResult);
+extern nsresult NS_NewNativeButtonControlFrame(nsIFrame** aResult);
 extern nsresult NS_NewImageControlFrame(nsIFrame** aResult);
 extern nsresult NS_NewHTMLButtonControlFrame(nsIFrame** aResult);
-extern nsresult NS_NewCheckboxControlFrame(nsIFrame** aResult);
+extern nsresult NS_NewGfxCheckboxControlFrame(nsIFrame** aResult);
+extern nsresult NS_NewNativeCheckboxControlFrame(nsIFrame** aResult);
 extern nsresult NS_NewFieldSetFrame(nsIFrame** aResult);
 extern nsresult NS_NewFileControlFrame(nsIFrame** aResult);
 extern nsresult NS_NewLabelFrame(nsIFrame** aResult);
 extern nsresult NS_NewLegendFrame(nsIFrame** aResult);
 extern nsresult NS_NewNativeTextControlFrame(nsIFrame** aNewFrame);
 extern nsresult NS_NewGfxTextControlFrame(nsIFrame** aNewFrame);
-extern nsresult NS_NewRadioControlFrame(nsIFrame** aResult);
-extern nsresult NS_NewSelectControlFrame(nsIFrame** aResult);
+extern nsresult NS_NewGfxRadioControlFrame(nsIFrame** aResult);
+extern nsresult NS_NewNativeRadioControlFrame(nsIFrame** aResult);
+extern nsresult NS_NewNativeSelectControlFrame(nsIFrame** aResult);
 extern nsresult NS_NewListControlFrame(nsIFrame** aResult);
 extern nsresult NS_NewComboboxControlFrame(nsIFrame** aResult);
 

@@ -26,6 +26,9 @@ class nsIPresContext;
 
 class nsNativeTextControlFrame : public nsTextControlFrame
 {
+private:
+	typedef nsNativeFormControlFrame Inherited;
+
 public:
        // nsIFormControlFrame
   NS_IMETHOD SetProperty(nsIAtom* aName, const nsString& aValue);

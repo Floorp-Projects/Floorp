@@ -20,6 +20,7 @@
 
 #include "nsIStyleFrameConstruction.h"
 #include "nslayout.h"
+#include "nsIPresContext.h"
 
 class nsIDocument;
 struct nsFrameItems;
@@ -404,10 +405,19 @@ protected:
                                         nsIFrame*        aParentFrame,
                                         nsIFrame*&       aFrame);
 
+	nsWidgetRendering GetFormElementRenderingMode(nsIPresContext*       aPresContext,
+																								nsWidgetType					aWidgetType);
+
   nsresult ConstructRadioControlFrame(nsIPresContext*    aPresContext,
                                       nsIFrame*&         aNewFrame,
                                       nsIContent*        aContent,
                                       nsIStyleContext*   aStyleContext);
+
+  nsresult ConstructCheckboxControlFrame(nsIPresContext*      aPresContext,
+                                     nsIFrame*&               aNewFrame);
+
+  nsresult ConstructButtonControlFrame(nsIPresContext*      	aPresContext,
+                                     nsIFrame*&               aNewFrame);
 
   nsresult ConstructTextControlFrame(nsIPresContext*          aPresContext,
                                      nsIFrame*&               aNewFrame);
