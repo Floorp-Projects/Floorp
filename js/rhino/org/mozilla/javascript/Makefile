@@ -106,8 +106,10 @@ RESOURCES = $(RESOURCEDIR)/*.properties
 # This must be evaluated in some context where the classes can be
 # found; we can't use a simple translation from sources, because a
 # .java file may produce more than one .class file.
+# (use org/mozilla/classfile explicitly for now; should be replaced
+# with something parameterized, but jar doesn't understand ..)
 CLASSES = $(PATH_PREFIX)/*.class $(PATH_PREFIX)/regexp/*.class \
-	$(PATH_PREFIX)/../classfile/*.class
+	org/mozilla/classfile/*.class
 
 # A class or set of classes as visible from the top level.  For want
 # of ${subst ,,}.  This variable is only used to trigger dependency
