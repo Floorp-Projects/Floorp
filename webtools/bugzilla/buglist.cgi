@@ -42,7 +42,6 @@ if ($serverpush) {
 use vars @::legal_platform,
     @::versions,
     @::legal_product,
-    @::legal_component,
     %::MFORM,
     @::components,
     @::legal_severity,
@@ -564,7 +563,7 @@ document.write(\" <input type=button value=\\\"Uncheck All\\\" onclick=\\\"SetCh
     my @list = @prod_list;
     my @legal_versions;
     my @legal_component;
-    if ($#prod_list == 1) {
+    if (1 == @prod_list) {
         @legal_versions = @{$::versions{$prod_list[0]}};
         @legal_component = @{$::components{$prod_list[0]}};
     }
@@ -573,7 +572,7 @@ document.write(\" <input type=button value=\\\"Uncheck All\\\" onclick=\\\"SetCh
     my $platform_popup = make_options(\@::legal_platform, $::dontchange);
     my $priority_popup = make_options(\@::legal_priority, $::dontchange);
     my $sev_popup = make_options(\@::legal_severity, $::dontchange);
-    my $component_popup = make_options(\@::legal_component, $::dontchange);
+    my $component_popup = make_options(\@legal_component, $::dontchange);
     my $product_popup = make_options(\@::legal_product, $::dontchange);
 
 
