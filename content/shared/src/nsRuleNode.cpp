@@ -455,7 +455,8 @@ nsRuleNode::Transition(nsIStyleRule* aRule, nsRuleNode** aResult)
   }
   else {
     if (mChildren) {
-      for (nsRuleList* curr = mChildren; curr && curr->mRuleNode->mRule != aRule; curr = curr->mNext);
+      nsRuleList* curr = mChildren;
+      for ( ; curr && curr->mRuleNode->mRule != aRule; curr = curr->mNext);
       if (curr)
         next = curr->mRuleNode;
     }
