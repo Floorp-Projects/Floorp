@@ -20,7 +20,10 @@
 #include "nsInstall.h"
 #include "nsInstallFileOpEnums.h"
 #include "nsInstallFileOpItem.h"
+
+#ifdef _WINDOWS
 #include "nsWinShortcut.h"
+#endif
 
 /* Public Methods */
 
