@@ -2332,21 +2332,14 @@ nsIView*
 nsIFrame::GetView() const
 {
   // Check the frame state bit and see if the frame has a view
-  if (!(mState & NS_FRAME_HAS_VIEW))
+  if (!(GetStateBits() & NS_FRAME_HAS_VIEW))
     return nsnull;
 
   // Check for a property on the frame
-  nsCOMPtr<nsIPresShell> presShell;
-  GetPresContext()->GetShell(getter_AddRefs(presShell));
-
-  nsCOMPtr<nsIFrameManager>  frameManager;
-  presShell->GetFrameManager(getter_AddRefs(frameManager));
-  
   void* value;
-  nsresult rv =
-    frameManager->GetFrameProperty(NS_CONST_CAST(nsIFrame*, this),
-                                   nsLayoutAtoms::viewProperty,
-                                   0, &value);
+  nsresult rv = GetPresContext()->GetFrameManager()->
+    GetFrameProperty(NS_CONST_CAST(nsIFrame*, this),
+                     nsLayoutAtoms::viewProperty, 0, &value);
   NS_ENSURE_SUCCESS(rv, nsnull);
   NS_ASSERTION(value, "frame state bit was set but frame has no view");
   return NS_STATIC_CAST(nsIView*, value);
@@ -2365,34 +2358,18 @@ nsIFrame::SetView(nsIView* aView)
     aView->SetClientData(this);
 
     // Set a property on the frame
-    nsCOMPtr<nsIPresShell>  presShell;
-    GetPresContext()->GetShell(getter_AddRefs(presShell));
-    
-    nsCOMPtr<nsIFrameManager> frameManager;
-    presShell->GetFrameManager(getter_AddRefs(frameManager));
-  
-    nsresult rv =
-      frameManager->SetFrameProperty(this, nsLayoutAtoms::viewProperty,
-                                     aView, nsnull);
+    nsresult rv = GetPresContext()->GetFrameManager()->
+      SetFrameProperty(this, nsLayoutAtoms::viewProperty, aView, nsnull);
     NS_ENSURE_SUCCESS(rv, rv);
 
     // Set the frame state bit that says the frame has a view
-    mState |= NS_FRAME_HAS_VIEW;
+    AddStateBits(NS_FRAME_HAS_VIEW);
 
-     
-    // Let all of the containing frames know they have a child 
-    // with a view until a frame is hit that has the 
-    // NS_FRAME_HAS_CHILD_WITH_VIEW bit set already or a we
-    // reached the top of the frame tree.
-    nsIFrame* parent = GetParent();
-    
-    while (parent) {
-      if (parent->GetStateBits() & NS_FRAME_HAS_CHILD_WITH_VIEW)
-        break;
-
-      parent->AddStateBits(NS_FRAME_HAS_CHILD_WITH_VIEW);
-      parent = parent->GetParent();
-    }
+    // Let all of the ancestors know they have a descendant with a view.
+    for (nsIFrame* f = GetParent();
+         f && !(f->GetStateBits() & NS_FRAME_HAS_CHILD_WITH_VIEW);
+         f = f->GetParent())
+      f->AddStateBits(NS_FRAME_HAS_CHILD_WITH_VIEW);
   }
 
   return NS_OK;
