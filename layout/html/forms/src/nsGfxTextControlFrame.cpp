@@ -47,6 +47,8 @@
 #include "nsIScrollbar.h"
 #include "nsIScrollableFrame.h"
 #include "nsIScriptGlobalObject.h"
+#include "nsIDocShell.h"
+#include "nsIWebShell.h"
 
 #include "nsCSSRendering.h"
 #include "nsIDeviceContext.h"
@@ -54,7 +56,6 @@
 #include "nsILookAndFeel.h"
 #include "nsIComponentManager.h"
 
-#include "nsIWebShell.h"
 #include "nsIBaseWindow.h"
 #include "nsIMarkupDocumentViewer.h"
 #include "nsIDocumentLoader.h"
@@ -108,7 +109,6 @@ static NS_DEFINE_IID(kIDOMHTMLTextAreaElementIID, NS_IDOMHTMLTEXTAREAELEMENT_IID
 static NS_DEFINE_IID(kIDOMHTMLInputElementIID, NS_IDOMHTMLINPUTELEMENT_IID);
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
-static NS_DEFINE_IID(kIWebShellContainerIID, NS_IWEB_SHELL_CONTAINER_IID);
 static NS_DEFINE_IID(kWebShellCID, NS_WEB_SHELL_CID);
 static NS_DEFINE_IID(kIViewIID, NS_IVIEW_IID);
 static NS_DEFINE_IID(kCViewCID, NS_VIEW_CID);
@@ -121,8 +121,6 @@ static NS_DEFINE_IID(kIDocumentViewerIID, NS_IDOCUMENT_VIEWER_IID);
 
 #define EMPTY_DOCUMENT "about:blank"
 #define PASSWORD_REPLACEMENT_CHAR '*'
-
-#define NEW_WEBSHELL_INTERFACES
 
 //#define NOISY
 const nscoord kSuggestedNotSet = -1;
@@ -234,12 +232,12 @@ nsGfxTextControlFrame::GetFrameType(nsIAtom** aType) const
 
 
 NS_IMETHODIMP
-nsGfxTextControlFrame::GetWebShell(nsIWebShell **aWebShell)
+nsGfxTextControlFrame::GetDocShell(nsIDocShell **aDocShell)
 {
-  NS_ENSURE_ARG_POINTER(aWebShell);
+  NS_ENSURE_ARG_POINTER(aDocShell);
 
-  *aWebShell = mWebShell;
-  NS_IF_ADDREF(*aWebShell);
+  *aDocShell = mDocShell;
+  NS_IF_ADDREF(*aDocShell);
   return NS_OK;
 }
 
@@ -255,7 +253,7 @@ nsGfxTextControlFrame::CreateEditor()
 {
   nsresult result = NS_OK;
 
-  mWebShell       = nsnull;
+  mDocShell       = nsnull;
   mCreatingViewer = PR_FALSE;
 
   // create the stream observer
@@ -322,7 +320,7 @@ nsGfxTextControlFrame::CreateEditor()
 }
 
 nsGfxTextControlFrame::nsGfxTextControlFrame()
-: mWebShell(0), mCreatingViewer(PR_FALSE),
+: mCreatingViewer(PR_FALSE),
   mTempObserver(0), mDocObserver(0),
   mNotifyOnInput(PR_FALSE),
   mIsProcessing(PR_FALSE),
@@ -360,9 +358,10 @@ nsGfxTextControlFrame::~nsGfxTextControlFrame()
   }
   if (mTempObserver)
   {
-    if (mWebShell) {
+    nsCOMPtr<nsIWebShell> webShell(do_QueryInterface(mDocShell));
+    if (webShell) {
       nsCOMPtr<nsIDocumentLoader> docLoader;
-      mWebShell->GetDocumentLoader(*getter_AddRefs(docLoader));
+      webShell->GetDocumentLoader(*getter_AddRefs(docLoader));
       if (docLoader) {
         docLoader->RemoveObserver(mTempObserver);
       }
@@ -490,11 +489,12 @@ nsGfxTextControlFrame::~nsGfxTextControlFrame()
     }
   }
 
-  mEditor = 0;  // editor must be destroyed before the webshell!
-   nsCOMPtr<nsIBaseWindow> webShellWin(do_QueryInterface(mWebShell));
-   if(webShellWin)
-      webShellWin->Destroy();
-   mWebShell = nsnull; // This is where it was released before.  Not sure if
+  mEditor = 0;  // editor must be destroyed before the docshell!
+   nsCOMPtr<nsIBaseWindow> docShellWin(do_QueryInterface(mDocShell));
+   if(docShellWin)
+      docShellWin->Destroy();
+   docShellWin = nsnull;
+   mDocShell = nsnull; // This is where it was released before.  Not sure if
                         // there is ordering depending on it.
   if (mDocObserver)
   {
@@ -550,10 +550,10 @@ NS_METHOD nsGfxTextControlFrame::HandleEvent(nsIPresContext* aPresContext,
       if (eGotDown != mPassThroughMouseEvents)
       {
         mPassThroughMouseEvents = eGotDown;
-        if (!mWebShell) {
+        if (!mDocShell) {
           NS_ENSURE_SUCCESS(CreateSubDoc(nsnull), NS_ERROR_FAILURE);
         }
-        NS_ENSURE_TRUE(mWebShell, NS_ERROR_FAILURE);
+        NS_ENSURE_TRUE(mDocShell, NS_ERROR_FAILURE);
         return RedispatchMouseEventToSubDoc(aPresContext, aEvent, aEventStatus, PR_TRUE);
       }
       break;
@@ -565,7 +565,7 @@ NS_METHOD nsGfxTextControlFrame::HandleEvent(nsIPresContext* aPresContext,
       if (eGotDown==mPassThroughMouseEvents)
       {
         mPassThroughMouseEvents = eGotUp;
-        NS_ENSURE_TRUE(mWebShell, NS_ERROR_FAILURE);
+        NS_ENSURE_TRUE(mDocShell, NS_ERROR_FAILURE);
         return RedispatchMouseEventToSubDoc(aPresContext, aEvent, aEventStatus, PR_FALSE);
       }
       break;
@@ -578,7 +578,7 @@ NS_METHOD nsGfxTextControlFrame::HandleEvent(nsIPresContext* aPresContext,
       if (eGotUp==mPassThroughMouseEvents)
       {
         mPassThroughMouseEvents = eGotClick;
-        NS_ENSURE_TRUE(mWebShell, NS_ERROR_FAILURE);
+        NS_ENSURE_TRUE(mDocShell, NS_ERROR_FAILURE);
         return RedispatchMouseEventToSubDoc(aPresContext, aEvent, aEventStatus, PR_FALSE);
       }
       break;
@@ -587,7 +587,7 @@ NS_METHOD nsGfxTextControlFrame::HandleEvent(nsIPresContext* aPresContext,
     case NS_MOUSE_MIDDLE_DOUBLECLICK:
     case NS_MOUSE_RIGHT_DOUBLECLICK:
       mPassThroughMouseEvents = eGotClick;
-      NS_ENSURE_TRUE(mWebShell, NS_ERROR_FAILURE);
+      NS_ENSURE_TRUE(mDocShell, NS_ERROR_FAILURE);
       return RedispatchMouseEventToSubDoc(aPresContext, aEvent, aEventStatus, PR_FALSE);
       break;
 
@@ -595,7 +595,7 @@ NS_METHOD nsGfxTextControlFrame::HandleEvent(nsIPresContext* aPresContext,
       // only pass through the mouseMove if we're the one who handled the mouseDown
       if (eGotDown==mPassThroughMouseEvents)
       {
-        if (mWebShell) {
+        if (mDocShell) {
           return RedispatchMouseEventToSubDoc(aPresContext, aEvent, aEventStatus, PR_FALSE);
         }
       }
@@ -610,7 +610,7 @@ NS_METHOD nsGfxTextControlFrame::HandleEvent(nsIPresContext* aPresContext,
       
     case NS_DRAGDROP_GESTURE:
       // this currently seems to have no effect
-      NS_ENSURE_TRUE(mWebShell, NS_ERROR_FAILURE);
+      NS_ENSURE_TRUE(mDocShell, NS_ERROR_FAILURE);
       return RedispatchMouseEventToSubDoc(aPresContext, aEvent, aEventStatus, PR_FALSE);
       break;
 
@@ -647,7 +647,7 @@ nsGfxTextControlFrame::RedispatchMouseEventToSubDoc(nsIPresContext* aPresContext
   NS_ENSURE_ARG_POINTER(aEventStatus);
 
   nsCOMPtr<nsIContentViewer> viewer;
-  NS_ENSURE_SUCCESS(mWebShell->GetContentViewer(getter_AddRefs(viewer)), NS_ERROR_FAILURE);
+  NS_ENSURE_SUCCESS(mDocShell->GetContentViewer(getter_AddRefs(viewer)), NS_ERROR_FAILURE);
   if (viewer) 
   {
     nsCOMPtr<nsIDocumentViewer> docv;
@@ -992,7 +992,7 @@ nsGfxTextControlFrame::CreateSubDoc(nsRect *aSizeOfSubdocContainer)
     // initialize the subdoc, if it hasn't already been constructed
     // if the size is not 0 and there is a src, create the web shell
   
-    if (!mWebShell) 
+    if (!mDocShell) 
     {
       nsSize  size;
       GetSize(size);
@@ -1021,20 +1021,19 @@ nsGfxTextControlFrame::CreateSubDoc(nsRect *aSizeOfSubdocContainer)
         subBounds.height = NSToCoordRound(subBounds.height * t2p);
       }
 
-      rv = CreateWebShell(mFramePresContext, size);
+      rv = CreateDocShell(mFramePresContext, size);
       NS_ENSURE_SUCCESS(rv, rv);
-      NS_ENSURE_TRUE(mWebShell, NS_ERROR_FAILURE);
+      NS_ENSURE_TRUE(mDocShell, NS_ERROR_FAILURE);
 #ifdef NOISY 
-      printf("%p webshell in CreateSubDoc set to bounds: x=%d, y=%d, w=%d, h=%d\n", mWebShell.get(), subBounds.x, subBounds.y, subBounds.width, subBounds.height);
+      printf("%p docshell in CreateSubDoc set to bounds: x=%d, y=%d, w=%d, h=%d\n", mDocShell.get(), subBounds.x, subBounds.y, subBounds.width, subBounds.height);
 #endif
-      nsCOMPtr<nsIBaseWindow> webShellWin(do_QueryInterface(mWebShell));
-      NS_ENSURE_TRUE(webShellWin, NS_ERROR_FAILURE);
-      webShellWin->SetPositionAndSize(subBounds.x, subBounds.y, 
+      nsCOMPtr<nsIBaseWindow> docShellWin(do_QueryInterface(mDocShell));
+      NS_ENSURE_TRUE(docShellWin, NS_ERROR_FAILURE);
+      docShellWin->SetPositionAndSize(subBounds.x, subBounds.y, 
          subBounds.width, subBounds.height, PR_FALSE);
     }
     mCreatingViewer=PR_TRUE;
 
-#ifdef NEW_WEBSHELL_INTERFACES
     // create document
     nsCOMPtr<nsIDocument> doc;
     rv = NS_NewHTMLDocument(getter_AddRefs(doc));
@@ -1068,20 +1067,16 @@ nsGfxTextControlFrame::CreateSubDoc(nsRect *aSizeOfSubdocContainer)
     rv = htmlElement->AppendChildTo(bodyElement, PR_FALSE);
     if (NS_FAILED(rv)) { return rv; }
     
-    // load the document into the webshell
+    // load the document into the docshell
     nsCOMPtr<nsIDOMDocument> domDoc = do_QueryInterface(doc);
     if (!domDoc) { return NS_ERROR_NULL_POINTER; }
     nsCOMPtr<nsIDOMElement> htmlDOMElement = do_QueryInterface(htmlElement);
     if (!htmlDOMElement) { return NS_ERROR_NULL_POINTER; }
-    rv = mWebShell->SetDocument(domDoc, htmlDOMElement);
-#else
-    nsAutoString url(EMPTY_DOCUMENT);
-    rv = mWebShell->LoadURL(url.GetUnicode());  // URL string with a default nsnull value for post Data
-#endif
+    rv = mDocShell->SetDocument(domDoc, htmlDOMElement);
 
     // force an incremental reflow of the text control
-    /* XXX: this is to get the view/webshell positioned correctly.
-            I don't know why it's required, it looks like this code positions the view and webshell
+    /* XXX: this is to get the view/docshell positioned correctly.
+            I don't know why it's required, it looks like this code positions the view and docshell
             exactly the same way reflow does, but reflow works and the code above does not
             when the text control is in a view which is scrolled.
     */
@@ -1187,7 +1182,7 @@ nsGfxTextControlFrame::PaintTextControlBackground(nsIPresContext* aPresContext,
                                                   const nsRect& aDirtyRect,
                                                   nsFramePaintLayer aWhichLayer)
 {
-  // we paint our own border, but everything else is painted by the mWebshell
+  // we paint our own border, but everything else is painted by the mDocshell
   if (NS_FRAME_PAINT_LAYER_FOREGROUND == aWhichLayer) 
   {
     nsAutoString text(" ");
@@ -1289,7 +1284,7 @@ nsGfxTextControlFrame::PaintTextControl(nsIPresContext* aPresContext,
                                     aDirtyRect, rect,  *color, *mySpacing, 0, 0);
     nsCSSRendering::PaintBorder(aPresContext, aRenderingContext, this,
                                 aDirtyRect, rect, *mySpacing, aStyleContext, skipSides);
-    if (!mWebShell)
+    if (!mDocShell)
     {
       if (mDisplayFrame) {
         PaintChild(aPresContext, aRenderingContext, aDirtyRect, mDisplayFrame, NS_FRAME_PAINT_LAYER_FOREGROUND);
@@ -1471,37 +1466,37 @@ void nsGfxTextControlFrame::SetFocus(PRBool aOn, PRBool aRepaint)
   //
   // If removing any of this code PLEASE read comment below
   nsresult result = NS_OK;
-  if (!mWebShell)
+  if (!mDocShell)
   {
     result = CreateSubDoc(nsnull);
     if (NS_FAILED(result)) return;
   }
   if (aOn) {
 
-    nsIContentViewer *viewer = nsnull;
-    mWebShell->GetContentViewer(&viewer);
+    nsCOMPtr<nsIContentViewer> viewer;
+    mDocShell->GetContentViewer(getter_AddRefs(viewer));
     if (viewer) {
-      nsIDocumentViewer* docv = nsnull;
-      viewer->QueryInterface(kIDocumentViewerIID, (void**) &docv);
-      if (nsnull != docv) {
-        nsIPresContext* cx = nsnull;
-        docv->GetPresContext(cx);
-        if (nsnull != cx) {
-          nsIPresShell  *shell = nsnull;
-          cx->GetShell(&shell);
-          if (nsnull != shell) {
+      nsCOMPtr<nsIDocumentViewer> docv(do_QueryInterface(viewer));
+      if (docv) {
+        nsCOMPtr<nsIPresContext> cx;
+        docv->GetPresContext(*getter_AddRefs(cx));
+        if (cx) {
+          nsCOMPtr<nsIPresShell>  shell;
+          cx->GetShell(getter_AddRefs(shell));
+          if (shell) {
             nsIFrame * rootFrame;
             shell->GetRootFrame(&rootFrame);
 
-            nsIViewManager  *vm = nsnull;
-            shell->GetViewManager(&vm);
+            nsCOMPtr<nsIViewManager>  vm;
+            shell->GetViewManager(getter_AddRefs(vm));
             if (nsnull != vm) {
               nsIView *rootview = nsnull;
               vm->GetRootView(rootview);
               if (rootview) {
                 // instead of using the rootview's widget we must find the deepest
                 // the deepest view and use its widget
-                nsIWidget* widget = GetDeepestWidget(rootview);
+                nsCOMPtr<nsIWidget> 
+                           widget(getter_AddRefs(GetDeepestWidget(rootview)));
                 if (widget) {
                   // XXX Here we need to remember whether we set focus on the widget
                   // Later this is used to decided to continue to dispatch a Focus 
@@ -1512,23 +1507,17 @@ void nsGfxTextControlFrame::SetFocus(PRBool aOn, PRBool aRepaint)
                   // See: nsEnderEventListener::Focus
                   result = widget->SetFocus();
                   mDidSetFocus = PR_TRUE;
-                  NS_RELEASE(widget);
                 }
               }
-              NS_RELEASE(vm);
             }
-            NS_RELEASE(shell);
           }
-          NS_RELEASE(cx);
         }
-        NS_RELEASE(docv);
       }
-      NS_RELEASE(viewer);
     }
   }
   else 
   {
-    /* experimental code, since mWebshell->removeFocus is a noop */
+    /* experimental code, since mDocshell->removeFocus is a noop */
     /* this code doesn't seem to have any effect either.  bug 19392
     nsIView*  view;
     GetView(mFramePresContext, &view);
@@ -1541,33 +1530,33 @@ void nsGfxTextControlFrame::SetFocus(PRBool aOn, PRBool aRepaint)
       }
     }
     */
-    // since the embedded webshell is not in the webshell hierarchy, RemoveFocus has no effect
+    // since the embedded docshell is not in the docshell hierarchy, RemoveFocus has no effect
     // that's why we find the widget attached to this and set focus on it explicitly
-    //mWebShell->RemoveFocus();
+    //mDocShell->RemoveFocus();
   }
 }
 /* --------------------- Ender methods ---------------------- */
 
 
 nsresult
-nsGfxTextControlFrame::CreateWebShell(nsIPresContext* aPresContext,
+nsGfxTextControlFrame::CreateDocShell(nsIPresContext* aPresContext,
                                       const nsSize& aSize)
 {
   nsresult rv;
 
-  mWebShell = do_CreateInstance(kWebShellCID);
-  NS_ENSURE_TRUE(mWebShell, NS_ERROR_FAILURE);
+  mDocShell = do_CreateInstance(kWebShellCID);
+  NS_ENSURE_TRUE(mDocShell, NS_ERROR_FAILURE);
 
   // pass along marginwidth and marginheight so sub document can use it
-  mWebShell->SetMarginWidth(0);
-  mWebShell->SetMarginHeight(0);
+  mDocShell->SetMarginWidth(0);
+  mDocShell->SetMarginHeight(0);
   
-  /* our parent must be a webshell.  we need to get our prefs from our parent */
+  /* our parent must be a docshell.  we need to get our prefs from our parent */
   nsCOMPtr<nsISupports> container;
   aPresContext->GetContainer(getter_AddRefs(container));
   NS_ENSURE_TRUE(container, NS_ERROR_UNEXPECTED);
 
-  nsCOMPtr<nsIWebShell> outerShell = do_QueryInterface(container);
+  nsCOMPtr<nsIDocShell> outerShell = do_QueryInterface(container);
   NS_ENSURE_TRUE(outerShell, NS_ERROR_UNEXPECTED);
 
   float t2p;
@@ -1612,39 +1601,29 @@ nsGfxTextControlFrame::CreateWebShell(nsIPresContext* aPresContext,
   nsMargin border;
   spacing->CalcBorderFor(this, border);
 
-  nsIWidget* widget;
-  view->GetWidget(widget);
-  nsRect webBounds(NSToCoordRound(border.left * t2p), 
-                   NSToCoordRound(border.top * t2p), 
-                   NSToCoordRound((aSize.width  - border.right) * t2p), 
-                   NSToCoordRound((aSize.height - border.bottom) * t2p));
+  nsCOMPtr<nsIWidget> widget;
+  view->GetWidget(*getter_AddRefs(widget));
 
-  rv = mWebShell->Init(widget->GetNativeData(NS_NATIVE_WIDGET), 
-                       webBounds.x, webBounds.y,
-                       webBounds.width, webBounds.height,
-                       nsScrollPreference_kAuto, // auto scrolling
-                       PR_FALSE                  // turn off plugin hosting
-                       );
-  if (NS_FAILED(rv)) { return rv; }
-  NS_RELEASE(widget);
+  mDocShell->SetAllowPlugins(PR_FALSE);
+  nsCOMPtr<nsIBaseWindow> docShellAsWin(do_QueryInterface(mDocShell));
+
+  PRInt32 x = NSToCoordRound(border.left * t2p);
+  PRInt32 y = NSToCoordRound(border.top * t2p);
+  PRInt32 cx = NSToCoordRound((aSize.width  - border.right) * t2p);
+  PRInt32 cy = NSToCoordRound((aSize.height - border.bottom) * t2p);
+  NS_ENSURE_SUCCESS(docShellAsWin->InitWindow(nsnull, widget, (x >= 0) ? x : 0,
+      (y >= 0) ? y : 0, cx, cy), NS_ERROR_FAILURE);
+  NS_ENSURE_SUCCESS(docShellAsWin->Create(), NS_ERROR_FAILURE);
+
   // move the view to the proper location
   viewMan->MoveViewTo(view, origin.x, origin.y);
 
-#ifdef NEW_WEBSHELL_INTERFACES
-  mWebShell->SetDocLoaderObserver(mTempObserver);
-#else
-  nsCOMPtr<nsIDocumentLoader> docLoader;
-  mWebShell->GetDocumentLoader(*getter_AddRefs(docLoader));
-  if (docLoader) {
-    docLoader->AddObserver(mTempObserver);
-  }
-#endif
-  nsCOMPtr<nsIBaseWindow> webShellWin(do_QueryInterface(mWebShell));
-  NS_ENSURE_TRUE(webShellWin, NS_ERROR_FAILURE);
+  mDocShell->SetDocLoaderObserver(mTempObserver);
+ 
   PRInt32 type;
   GetType(&type);
   if ((PR_FALSE==IsSingleLineTextControl()) || (NS_FORM_INPUT_PASSWORD == type)) {
-    webShellWin->SetVisibility(PR_TRUE);
+    docShellAsWin->SetVisibility(PR_TRUE);
   }
   return NS_OK;
 }
@@ -2198,8 +2177,8 @@ nsGfxTextControlFrame::Reflow(nsIPresContext* aPresContext,
     subBoundsInPixels.height = NSToCoordRound(subBounds.height * t2p);
     if (eReflowReason_Initial == aReflowState.reason)
     {
-      if (!mWebShell)
-      { // if we haven't already created a webshell, then create something to hold the initial text
+      if (!mDocShell)
+      { // if we haven't already created a docshell, then create something to hold the initial text
         PRInt32 type;
         GetType(&type);
         if ((PR_FALSE==IsSingleLineTextControl()) || (NS_FORM_INPUT_PASSWORD == type))
@@ -2338,23 +2317,23 @@ nsGfxTextControlFrame::Reflow(nsIPresContext* aPresContext,
         }
       }
     }
-    nsCOMPtr<nsIBaseWindow> webShellWin(do_QueryInterface(mWebShell));
-    if (webShellWin) 
+    nsCOMPtr<nsIBaseWindow> docShellWin(do_QueryInterface(mDocShell));
+    if (docShellWin) 
     {
       if (mDisplayFrame) 
       {
-        webShellWin->SetVisibility(PR_TRUE);
+        docShellWin->SetVisibility(PR_TRUE);
         mFrameConstructor->RemoveMappingsForFrameSubtree(aPresContext, mDisplayFrame, nsnull);
         mDisplayFrame->Destroy(mFramePresContext);
         mDisplayFrame = nsnull;
       }
 #ifdef NOISY
-      printf("%p webshell in reflow set to bounds: x=%d, y=%d, w=%d, h=%d\n", mWebShell.get(), subBoundsInPixels.x, subBoundsInPixels.y, subBoundsInPixels.width, subBoundsInPixels.height);
+      printf("%p docshell in reflow set to bounds: x=%d, y=%d, w=%d, h=%d\n", mDocShell.get(), subBoundsInPixels.x, subBoundsInPixels.y, subBoundsInPixels.width, subBoundsInPixels.height);
 #endif
 #ifdef DEBUG
       mDebugReflowsThatMovedSubdoc++;
 #endif
-      webShellWin->SetPositionAndSize(subBoundsInPixels.x, subBoundsInPixels.y,
+      docShellWin->SetPositionAndSize(subBoundsInPixels.x, subBoundsInPixels.y,
          subBoundsInPixels.width, subBoundsInPixels.height, PR_FALSE);
     }
     else
@@ -2363,7 +2342,7 @@ nsGfxTextControlFrame::Reflow(nsIPresContext* aPresContext,
 //      mDisplayFrame->SetSuggestedSize(subBounds.width, subBounds.height);
       if (mDisplayFrame)
       {
-        // fix any possible pixel roundoff error (the webshell is sized in whole pixel units, 
+        // fix any possible pixel roundoff error (the docshell is sized in whole pixel units, 
         // and we need to make sure the text is painted in exactly the same place using either frame or shell.)
         subBounds.x = NSToCoordRound(subBoundsInPixels.x * p2t);
         subBounds.y = NSToCoordRound(subBoundsInPixels.y * p2t);
@@ -2486,31 +2465,28 @@ nsGfxTextControlFrame::RequiresWidget(PRBool &aRequiresWidget)
 }
 
 NS_IMETHODIMP
-nsGfxTextControlFrame::GetPresShellFor(nsIWebShell* aWebShell, nsIPresShell** aPresShell)
+nsGfxTextControlFrame::GetPresShellFor(nsIDocShell* aDocShell, nsIPresShell** aPresShell)
 {
-  if (!aWebShell || !aPresShell) { return NS_ERROR_NULL_POINTER; }
-  nsresult result = NS_ERROR_NULL_POINTER;
+  NS_ENSURE_ARG(aDocShell);
+  NS_ENSURE_ARG_POINTER(aPresShell);
   *aPresShell = nsnull;
-  nsIContentViewer* cv = nsnull;
-  aWebShell->GetContentViewer(&cv);
-  if (nsnull != cv) 
+
+  nsCOMPtr<nsIContentViewer> cv;
+  aDocShell->GetContentViewer(getter_AddRefs(cv));
+  if (cv) 
   {
-    nsIDocumentViewer* docv = nsnull;
-    cv->QueryInterface(kIDocumentViewerIID, (void**) &docv);
-    if (nsnull != docv) 
+    nsCOMPtr<nsIDocumentViewer> docv(do_QueryInterface(cv));
+    if (docv) 
     {
-      nsIPresContext* cx;
-      docv->GetPresContext(cx);
-	    if (nsnull != cx) 
+      nsCOMPtr<nsIPresContext> cx;
+      docv->GetPresContext(*getter_AddRefs(cx));
+	    if (cx) 
       {
-	      result = cx->GetShell(aPresShell);
-	      NS_RELEASE(cx);
+	      NS_ENSURE_SUCCESS(cx->GetShell(aPresShell), NS_ERROR_FAILURE);
 	    }
-      NS_RELEASE(docv);
     }
-    NS_RELEASE(cv);
   }
-  return result;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -2619,7 +2595,7 @@ nsGfxTextControlFrame::InstallEditor()
   if (mEditor)
   {
     nsCOMPtr<nsIPresShell> presShell;
-    result = GetPresShellFor(mWebShell, getter_AddRefs(presShell));
+    result = GetPresShellFor(mDocShell, getter_AddRefs(presShell));
     if (NS_FAILED(result)) { return result; }
     if (!presShell) { return NS_ERROR_NULL_POINTER; }
 
@@ -2688,7 +2664,7 @@ nsGfxTextControlFrame::InstallEditor()
     result = mEditor->PostCreate();
 		if (NS_FAILED(result)) { return result; }
 
-    // check to see if mContent has focus, and if so tell the webshell.
+    // check to see if mContent has focus, and if so tell the docshell.
     nsIEventStateManager *manager;
     result = mFramePresContext->GetEventStateManager(&manager);
     if (NS_FAILED(result)) { return result; }
@@ -2701,7 +2677,7 @@ nsGfxTextControlFrame::InstallEditor()
     {
       if (mContent==focusContent)
       {
-        // XXX WebShell redesign work
+        // XXX DocShell redesign work
         SetFocus();
       }
     }
@@ -2721,9 +2697,9 @@ nsGfxTextControlFrame::InstallEventListeners()
   result = mDoc->QueryInterface(NS_GET_IID(nsIDOMEventReceiver), getter_AddRefs(er));
   if (!er) { result = NS_ERROR_NULL_POINTER; }
 
-  // get the view from the webshell
+  // get the view from the docshell
   nsCOMPtr<nsIPresShell> presShell;
-  result = GetPresShellFor(mWebShell, getter_AddRefs(presShell));
+  result = GetPresShellFor(mDocShell, getter_AddRefs(presShell));
   if (NS_FAILED(result)) { return result; }
   if (!presShell) { return NS_ERROR_NULL_POINTER; }
   nsCOMPtr<nsIViewManager> vm;
@@ -2854,7 +2830,7 @@ nsGfxTextControlFrame::InitializeTextControl(nsIPresShell *aPresShell, nsIDOMDoc
   if (!aPresShell || !aDoc) { return NS_ERROR_NULL_POINTER; }
 
   /* needing a frame here is a hack.  We can't remove this hack until we can
-   * set presContext info before style resolution on the webshell
+   * set presContext info before style resolution on the docshell
    */
   nsIFrame *frame;
   result = aPresShell->GetRootFrame(&frame);
@@ -2873,8 +2849,8 @@ nsGfxTextControlFrame::InitializeTextControl(nsIPresShell *aPresShell, nsIDOMDoc
   if (!presContext) { return NS_ERROR_NULL_POINTER; }
 
   /* set all style that propogates from the text control to its content
-   * into the presContext for the webshell.
-   * what I would prefer to do is hand the webshell my own 
+   * into the presContext for the docshell.
+   * what I would prefer to do is hand the docshell my own 
    * pres context at creation, rather than having it create its own.
    */
 
@@ -2903,7 +2879,7 @@ nsGfxTextControlFrame::InitializeTextControl(nsIPresShell *aPresShell, nsIDOMDoc
    * since I don't yet have a hook for setting info on the pres context before style is
    * resolved, I need to call remap style on the root frame's style context.
    * The above code for setting presContext data should happen on a presContext that
-   * I create and pass into the webshell, rather than having the webshell create its own
+   * I create and pass into the docshell, rather than having the docshell create its own
    */
   nsCOMPtr<nsIStyleContext> sc;
   result = frame->GetStyleContext(getter_AddRefs(sc));
@@ -3263,9 +3239,9 @@ nsGfxTextControlFrame::List(nsIPresContext* aPresContext, FILE* out, PRInt32 aIn
   fputs("<\n", out);
 
   // Dump out frames contained in interior web-shell
-  if (mWebShell) {
+  if (mDocShell) {
     nsCOMPtr<nsIContentViewer> viewer;
-    mWebShell->GetContentViewer(getter_AddRefs(viewer));
+    mDocShell->GetContentViewer(getter_AddRefs(viewer));
     if (viewer) {
       nsCOMPtr<nsIDocumentViewer> docv(do_QueryInterface(viewer));
       if (docv) {
@@ -4557,15 +4533,6 @@ NS_IMETHODIMP
 EnderTempObserver::OnEndURLLoad(nsIDocumentLoader* loader,
                                 nsIChannel* channel,
                                 nsresult aStatus)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-EnderTempObserver::HandleUnknownContentType(nsIDocumentLoader* loader,
-                                            nsIChannel* channel,
-                                            const char *aContentType,
-                                            const char *aCommand)
 {
   return NS_OK;
 }
