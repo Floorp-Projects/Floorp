@@ -173,12 +173,11 @@ nsImageControlFrame::SetInitialChildList(nsIPresContext& aPresContext,
                                          nsIAtom*        aListName,
                                          nsIFrame*       aChildList)
 {
+  // add ourself as an nsIFormControlFrame
   nsFormFrame::AddFormControlFrame(aPresContext, *this);
   if (nsnull == mFormFrame) {
     return NS_OK;
   }
-  // add ourself as an nsIFormControlFrame
-  nsFormFrame::AddFormControlFrame(aPresContext, *this);
 
   // create our view, we need a view to grab the mouse 
   nsIView* view;
@@ -210,8 +209,8 @@ nsImageControlFrame::SetInitialChildList(nsIPresContext& aPresContext,
 
 NS_METHOD 
 nsImageControlFrame::HandleEvent(nsIPresContext& aPresContext, 
-                         nsGUIEvent* aEvent,
-                         nsEventStatus& aEventStatus)
+                                 nsGUIEvent* aEvent,
+                                 nsEventStatus& aEventStatus)
 {
   if (nsFormFrame::GetDisabled(this)) { // XXX cache disabled
     return NS_OK;
@@ -222,22 +221,29 @@ nsImageControlFrame::HandleEvent(nsIPresContext& aPresContext,
 
   switch (aEvent->message) {
     case NS_MOUSE_LEFT_BUTTON_DOWN:
-	    mLastMouseState = eMouseDown;
+    {
+      // Store click point for GetNamesValues
+      float t2p = aPresContext.GetTwipsToPixels();
+      mLastClickPoint.x = NSTwipsToIntPixels(aEvent->point.x, t2p);
+      mLastClickPoint.y = NSTwipsToIntPixels(aEvent->point.y, t2p);
+
+      mLastMouseState = eMouseDown;
       mGotFocus = PR_TRUE;
       aEventStatus = nsEventStatus_eConsumeNoDefault;
       return NS_OK;
-	    break;
+      break;
+    }
     case NS_MOUSE_LEFT_BUTTON_UP: 
     {
       if (eMouseDown == mLastMouseState) {
         if (nsEventStatus_eConsumeNoDefault != aEventStatus) {
           MouseClicked(&aPresContext);
         }
-	    } 
-	    mLastMouseState = eMouseUp;
+      } 
+      mLastMouseState = eMouseUp;
       aEventStatus = nsEventStatus_eConsumeNoDefault;
       return NS_OK;
-	    break;
+      break;
     }
   }
   return nsImageControlFrameSuper::HandleEvent(aPresContext, aEvent,
@@ -289,11 +295,7 @@ nsImageControlFrame::GetName(nsString* aResult)
 PRBool
 nsImageControlFrame::IsSuccessful(nsIFormControlFrame* aSubmitter)
 {
-  if (this == (aSubmitter)) {
-    nsAutoString name;
-    return (NS_CONTENT_ATTR_HAS_VALUE == GetName(&name));
-  }
-  return PR_FALSE;
+  return (this == (aSubmitter));
 }
 
 PRInt32
@@ -307,14 +309,9 @@ PRBool
 nsImageControlFrame::GetNamesValues(PRInt32 aMaxNumValues, PRInt32& aNumValues,
                                      nsString* aValues, nsString* aNames)
 {
-  nsAutoString name;
-  nsresult result = GetName(&name);
-  if ((aMaxNumValues <= 0) || (NS_CONTENT_ATTR_HAS_VALUE != result)) {
+  if (aMaxNumValues <= 0) {
     return PR_FALSE;
   }
-
-  nsAutoString value;
-  nsresult valResult = nsFormFrame::GetValue(this, value);
 
   char buf[20];
   aNumValues = 2;
@@ -323,15 +320,23 @@ nsImageControlFrame::GetNamesValues(PRInt32 aMaxNumValues, PRInt32& aNumValues,
   sprintf(&buf[0], "%d", mLastClickPoint.x);
   aValues[0].Append(&buf[0]);
 
-  aNames[0] = name;
-  aNames[0].Append(".x");
-
   aValues[1].SetLength(0);
   sprintf(&buf[0], "%d", mLastClickPoint.y);
   aValues[1].Append(&buf[0]);
 
-  aNames[1] = name;
-  aNames[1].Append(".y");
+  nsAutoString name;
+  nsresult result = GetName(&name);
+  if (NS_CONTENT_ATTR_HAS_VALUE == result) {
+    aNames[0] = name;
+    aNames[0].Append(".x");
+    aNames[1] = name;
+    aNames[1].Append(".y");
+  } else {
+    // If the Image Element has no name, simply return x and y
+    // to Nav and IE compatability.
+    aNames[0] = "x";
+    aNames[1] = "y";
+  }
 
   return PR_TRUE;
 }
