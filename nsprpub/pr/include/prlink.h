@@ -86,6 +86,74 @@ PR_EXTERN(void) PR_FreeLibraryName(char *mem);
 PR_EXTERN(PRLibrary*) PR_LoadLibrary(const char *name);
 
 /*
+** Each operating system has its preferred way of specifying
+** a file in the file system.  Most operating systems use
+** a pathname.  Mac OS, on the other hand, uses the FSSpec
+** structure to specify a file. PRLibSpec allows NSPR clients
+** to use the type of file specification that is most efficient
+** for a particular platform.
+**
+** On some operating systems such as Mac OS, a shared library may
+** contain code fragments that can be individually loaded.
+** PRLibSpec also allows NSPR clients to identify a code fragment
+** in a library, if code fragments are supported by the OS.
+** A code fragment can be specified by name or by an integer index.
+**
+** Right now PRLibSpec supports three types of library specification:
+** a pathname, a Mac code fragment by name, and a Mac code fragment
+** by index.
+*/
+
+typedef enum PRLibSpecType {
+    PR_LibSpec_Pathname,
+    PR_LibSpec_MacNamedFragment,
+    PR_LibSpec_MacIndexedFragment
+} PRLibSpecType;
+
+struct FSSpec; /* Mac OS FSSpec */
+
+typedef struct PRLibSpec {
+    PRLibSpecType type;
+    union {
+        /* if type is PR_LibSpec_Pathname */
+        const char *pathname;
+
+        /* if type is PR_LibSpec_MacNamedFragment */
+        struct {
+            const struct FSSpec *fsspec;
+            const char *name;
+        } mac_named_fragment;
+
+        /* if type is PR_LibSpec_MacIndexedFragment */
+        struct {
+            const struct FSSpec *fsspec;
+            PRUint32 index;
+        } mac_indexed_fragment;
+    } value;
+} PRLibSpec;
+
+/*
+** The following bit flags may be or'd together and passed
+** as the 'flags' argument to PR_LoadLibraryWithFlags.
+** Flags not supported by the underlying OS are ignored.
+*/
+
+#define PR_LD_LAZY   0x1  /* equivalent to RTLD_LAZY on Unix */
+#define PR_LD_NOW    0x2  /* equivalent to RTLD_NOW on Unix */
+#define PR_LD_GLOBAL 0x4  /* equivalent to RTLD_GLOBAL on Unix */
+#define PR_LD_LOCAL  0x8  /* equivalent to RTLD_LOCAL on Unix */
+
+/*
+** Load the specified library, in the manner specified by 'flags'.
+*/
+
+PR_EXTERN(PRLibrary *)
+PR_LoadLibraryWithFlags(
+    PRLibSpec libSpec,    /* the shared library */
+    PRIntn flags          /* flags that affect the loading */
+);
+
+/*
 ** Unload a previously loaded library. If the library was a static
 ** library then the static link table will no longer be referenced. The
 ** associated PRLibrary object is freed.

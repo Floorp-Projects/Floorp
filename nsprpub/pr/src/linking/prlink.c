@@ -39,11 +39,6 @@
 #ifdef XP_UNIX
 #ifdef USE_DLFCN
 #include <dlfcn.h>
-#ifdef LINUX
-#define  _PR_DLOPEN_FLAGS RTLD_NOW
-#else
-#define  _PR_DLOPEN_FLAGS RTLD_LAZY
-#endif /* LINUX */
 #elif defined(USE_HPSHL)
 #include <dl.h>
 #elif defined(USE_MACH_DYLD)
@@ -55,6 +50,8 @@
 #define RTLD_LAZY RTLD_NOW
 #endif
 #endif /* XP_UNIX */
+
+#define _PR_DEFAULT_LD_FLAGS PR_LD_LAZY
 
 /*
  * On these platforms, symbols have a leading '_'.
@@ -102,6 +99,14 @@ static PRLibrary *pr_loadmap;
 static PRLibrary *pr_exe_loadmap;
 static PRMonitor *pr_linker_lock;
 static char* _pr_currentLibPath = NULL;
+
+static PRLibrary *pr_LoadLibraryByPathname(const char *name, PRIntn flags);
+#ifdef XP_MAC
+static PRLibrary *pr_Mac_LoadNamedFragment(const FSSpec *fileSpec,
+    const char* fragmentName);
+static PRLibrary *pr_Mac_LoadIndexedFragment(const FSSpec *fileSpec,
+    PRUint32 fragIndex);
+#endif /* XP_MAC */
 
 /************************************************************************/
 
@@ -174,7 +179,7 @@ void _PR_InitLinker(void)
 #elif defined(XP_UNIX)
 #ifdef HAVE_DLL
 #ifdef USE_DLFCN
-    h = dlopen(0, _PR_DLOPEN_FLAGS );
+    h = dlopen(0, RTLD_LAZY);
     if (!h) {
         char *error;
         
@@ -417,12 +422,47 @@ pr_UnlockedFindLibrary(const char *name)
     return NULL;
 }
 
+PR_IMPLEMENT(PRLibrary*)
+PR_LoadLibraryWithFlags(PRLibSpec libSpec, PRIntn flags)
+{
+    if (flags == 0) {
+        flags = _PR_DEFAULT_LD_FLAGS;
+    }
+    switch (libSpec.type) {
+        case PR_LibSpec_Pathname:
+            return pr_LoadLibraryByPathname(libSpec.value.pathname, flags);
+#ifdef XP_MAC
+        case PR_LibSpec_MacNamedFragment:
+            return pr_Mac_LoadNamedFragment(
+                libSpec.value.mac_named_fragment.fsspec,
+                libSpec.value.mac_named_fragment.name);
+        case PR_LibSpec_MacIndexedFragment:
+            return pr_Mac_LoadIndexedFragment(
+                libSpec.value.mac_indexed_fragment.fsspec,
+                libSpec.value.mac_indexed_fragment.index);
+#endif /* XP_MAC */
+        default:
+            PR_SetError(PR_INVALID_ARGUMENT_ERROR, 0);
+            return NULL;
+    }
+}
+            
+PR_IMPLEMENT(PRLibrary*) 
+PR_LoadLibrary(const char *name)
+{
+    PRLibSpec libSpec;
+
+    libSpec.type = PR_LibSpec_Pathname;
+    libSpec.value.pathname = name;
+    return PR_LoadLibraryWithFlags(libSpec, 0);
+}
+
 /*
 ** Dynamically load a library. Only load libraries once, so scan the load
 ** map first.
 */
-PR_IMPLEMENT(PRLibrary*) 
-PR_LoadLibrary(const char *name)
+static PRLibrary*
+pr_LoadLibraryByPathname(const char *name, PRIntn flags)
 {
     PRLibrary *lm;
     PRLibrary* result;
@@ -647,9 +687,34 @@ PR_LoadLibrary(const char *name)
 #ifdef HAVE_DLL
     {
 #if defined(USE_DLFCN)
-    void *h = dlopen(name, _PR_DLOPEN_FLAGS );
+    int dl_flags = 0;
+    void *h;
+
+    if (flags & PR_LD_LAZY) {
+        dl_flags |= RTLD_LAZY;
+    }
+    if (flags & PR_LD_NOW) {
+        dl_flags |= RTLD_NOW;
+    }
+    if (flags & PR_LD_GLOBAL) {
+        dl_flags |= RTLD_GLOBAL;
+    }
+    if (flags & PR_LD_LOCAL) {
+        dl_flags |= RTLD_LOCAL;
+    }
+    h = dlopen(name, dl_flags);
 #elif defined(USE_HPSHL)
-    shl_t h = shl_load(name, BIND_DEFERRED | DYNAMIC_PATH, 0L);
+    int shl_flags = DYNAMIC_PATH;
+    shl_t h;
+
+    if (flags & PR_LD_LAZY) {
+        shl_flags |= BIND_DEFERRED;
+    }
+    if (flags & PR_LD_NOW) {
+        shl_flags |= BIND_IMMEDIATE;
+    }
+    /* No equivalent of PR_LD_GLOBAL and PR_LD_LOCAL. */
+    h = shl_load(name, shl_flags, 0L);
 #elif defined(USE_MACH_DYLD)
     NSObjectFileImage ofi;
     NSModule h = NULL;
@@ -732,6 +797,17 @@ PR_FindLibrary(const char *name)
 PR_IMPLEMENT(PRLibrary*) 
 PR_LoadNamedFragment(const FSSpec *fileSpec, const char* fragmentName)
 {
+    PRLibSpec libSpec;
+
+    libSpec.type = PR_LibSpec_MacNamedFragment;
+    libSpec.value.mac_named_fragment.fsspec = fileSpec;
+    libSpec.value.mac_named_fragment.name = fragmentName;
+    return PR_LoadLibraryWithFlags(libSpec, 0);
+}
+
+static PRLibrary*
+pr_Mac_LoadNamedFragment(const FSSpec *fileSpec, const char* fragmentName)
+{
 	PRLibrary*					newLib = NULL;
 	PRLibrary* 					result;
 	FSSpec							resolvedSpec = *fileSpec;
@@ -788,6 +864,17 @@ unlock:
 
 PR_EXTERN(PRLibrary*)
 PR_LoadIndexedFragment(const FSSpec *fileSpec, PRUint32 fragIndex)
+{
+    PRLibSpec libSpec;
+
+    libSpec.type = PR_LibSpec_MacIndexedFragment;
+    libSpec.value.mac_indexed_fragment.fsspec = fileSpec;
+    libSpec.value.mac_indexed_fragment.index = fragIndex;
+    return PR_LoadLibraryWithFlags(libSpec, 0);
+}
+
+static PRLibrary*
+pr_Mac_LoadIndexedFragment(const FSSpec *fileSpec, PRUint32 fragIndex)
 {
 	PRLibrary*					newLib = NULL;
 	PRLibrary* 					result;
