@@ -3,8 +3,8 @@
 # Utils.pm - General purpose utility functions.  Every project needs a
 # kludge bucket for common access.
 
-# $Revision: 1.21 $ 
-# $Date: 2001/08/14 16:34:36 $ 
+# $Revision: 1.22 $ 
+# $Date: 2001/10/05 22:11:48 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/Utils.pm,v $ 
 # $Name:  $ 
@@ -73,7 +73,7 @@ sub security_check_data_dir {
    $atime,$mtime,$ctime,$blksize,$blocks) =
      CORE::stat($dir);
 
-  my $tinderbox_uid = $<;
+  my $tinderbox_uid = $>;
 
   ( $uid == $tinderbox_uid ) ||
     die("Security Error. dir: $dir, owner: $uid is not owned by ".
@@ -189,60 +189,28 @@ sub get_env {
 
   $HOSTNAME = Sys::Hostname::hostname();
 
-  # check both real and effective uid of the process to see if we have
+  # check  effective uid of the process to see if we have
   # been configured to run with too much privileges.
 
   # Ideally we do not want the tinderbox application running with the
   # priveledges of a restricted user id (like: root, daemon, bin,
-  # mail, adm) however the webserver is often given a low uid to run
-  # by many 'modern' unicies.
+  # mail, adm) this should not happen because users configure it
+  # (dangerous) or because of some security accident.
 
-  # On RedHat Linux
-  #	user nobody has uid 99
-  #	user apache has uid 48
-  #	All CGI scripts run as user nobody by defult in RedHat 6.2
-  #	All CGI scripts run as user apache by defult in RedHat 7.0
+  $tinderbox_uid = $TinderConfig::TINDERBOX_UID;
+  $tinderbox_gid = $TinderConfig::TINDERBOX_GID;
 
-  # Debian uses www-data uid 33 to run the web server
-
-  # The largest Solaris daemon ids is lp at 71 the webserver does not
-  # have a system uid
-
-  my $max_uid = 33;
-
-  ( $< >= $max_uid ) ||
+  ( $> == $tinderbox_uid ) ||
     die("Security Error. ".
-        "Must not run this program using restricted user id. ".
-        "id: $< id must be less then $max_uid\n");
+        "Must not run this program using an effective user id ".
+        "which is different then the tinderbox user id. ".
+        "id: $> id must be $tinderbox_uid\n");
 
-  ( $> >= $max_uid ) ||
+  ( $) == $tinderbox_gid) ||
     die("Security Error. ".
-        "Must not run this program using restricted user id. ".
-        "id: $> id must be less then $max_uid\n");
-
-  # Check both real and effective gid of the process to see if we have
-  # been configured to run with too much privileges.
-
-  # On RedHat Linux
-  #	the wheel group is group 10
-  #	the ftp group is group 50
-
-  # Debian uses www-data gid 33 to run the web server
-
-  # The largest Solaris daemon group is 15  the webserver does not
-  # have a system gid.
-
-  my $max_gid = 33;
-
-  ( $( >= $max_gid ) ||
-    die("Security Error. ".
-        "Must not run this program using restricted group id. ".
-        "id: $( must be less then $max_gid\n");
-
-  ( $) >= $max_gid ) ||
-    die("Security Error. ".
-        "Must not run this program using restricted group id.".
-        "id: $) must be less then $max_gid\n");
+        "Must not run this program using effective group id ".
+        "different then tinderbox group id.".
+        "id: $) must be $tinderbox_gid\n");
 
 
   my ($logdir) = File::Basename::dirname($ERROR_LOG);

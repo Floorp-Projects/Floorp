@@ -4,8 +4,8 @@
 # mailprocessing program.
 
 
-# $Revision: 1.8 $ 
-# $Date: 2001/08/02 20:04:25 $ 
+# $Revision: 1.9 $ 
+# $Date: 2001/10/05 22:11:48 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/MailProcess.pm,v $ 
 # $Name:  $ 
@@ -94,6 +94,8 @@ sub fatal_mailprocessing_error {
 # log errors to the log file on the server end and send them to stderr
 # so that sendmail can put the error message in the bounced mail.
 
+  *LOG = *main::LOG;
+  
   my  @error = @_;
   foreach $_ (@error) {
     print LOG "[$main::LOCALTIME] $_";
