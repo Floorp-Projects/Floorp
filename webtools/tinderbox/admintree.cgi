@@ -30,13 +30,14 @@ $|=1;
 
 print "Content-type: text/html\n\n<HTML>\n";
 
-EmitHtmlHeader("administer tinderbox", "tree: $tree");
-
 $form{noignore} = 1;            # Force us to load all build info, not
                                 # paying any attention to ignore_builds stuff.
 $maxdate = time();
 $mindate = $maxdate - 24*60*60;
 tb_load_data();
+
+EmitHtmlHeader("administer tinderbox", "tree: $tree");
+
 
 if (defined($tree)) {
     if( -r "$tree/mod.pl" ){
