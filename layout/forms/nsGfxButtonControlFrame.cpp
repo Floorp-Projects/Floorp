@@ -578,19 +578,8 @@ nsGfxButtonControlFrame::HandleEvent(nsIPresContext* aPresContext,
   // from being called. The nsFrame::HandleEvent causes the button label
   // to be selected (Drawn with an XOR rectangle over the label)
  
-  // if disabled do nothing
-  if (mRenderer.isDisabled()) {
-    return NS_OK;
-  }
-
-   // lets see if the button was clicked
-  switch (aEvent->message) {
-     case NS_MOUSE_LEFT_CLICK:
-       if (nsEventStatus_eConsumeNoDefault != *aEventStatus) { 
-         MouseClicked(aPresContext);
-       }
-     break;
-  }
+  // Do nothing here, nsHTMLInputElement::HandleDOMEvent
+  // takes cares of calling MouseClicked for us.
 
   return NS_OK;
 
