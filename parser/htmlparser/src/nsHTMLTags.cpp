@@ -199,8 +199,6 @@ static const PRUnichar sHTMLTagUnicodeName_p[] =
   {'p', '\0'};
 static const PRUnichar sHTMLTagUnicodeName_param[] =
   {'p', 'a', 'r', 'a', 'm', '\0'};
-static const PRUnichar sHTMLTagUnicodeName_parsererror[] =
-  {'p', 'a', 'r', 's', 'e', 'r', 'e', 'r', 'r', 'o', 'r', '\0'};
 static const PRUnichar sHTMLTagUnicodeName_plaintext[] =
   {'p', 'l', 'a', 'i', 'n', 't', 'e', 'x', 't', '\0'};
 static const PRUnichar sHTMLTagUnicodeName_pre[] =
@@ -221,8 +219,6 @@ static const PRUnichar sHTMLTagUnicodeName_small[] =
   {'s', 'm', 'a', 'l', 'l', '\0'};
 static const PRUnichar sHTMLTagUnicodeName_sound[] =
   {'s', 'o', 'u', 'n', 'd', '\0'};
-static const PRUnichar sHTMLTagUnicodeName_sourcetext[] =
-  {'s', 'o', 'u', 'r', 'c', 'e', 't', 'e', 'x', 't', '\0'};
 static const PRUnichar sHTMLTagUnicodeName_spacer[] =
   {'s', 'p', 'a', 'c', 'e', 'r', '\0'};
 static const PRUnichar sHTMLTagUnicodeName_span[] =
@@ -310,7 +306,7 @@ HTMLTagsKeyCompareUCPtr(const void *key1, const void *key2)
 
 
 static PRUint32 sMaxTagNameLength;
-#define NS_HTMLTAG_NAME_MAX_LENGTH 11
+#define NS_HTMLTAG_NAME_MAX_LENGTH 10
 
 // static
 nsresult

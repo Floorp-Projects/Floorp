@@ -944,15 +944,6 @@ void InitializeElementTable(void) {
       /*special parents,kids,skip*/       &gParamParents,0,eHTMLTag_unknown);
 
     Initialize( 
-      /*tag*/                             eHTMLTag_parsererror,
-      /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
-	    /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
-      /*autoclose starttags and endtags*/ &gDivAutoClose,0,0,0,
-      /*parent,incl,exclgroups*/          kNone, (kSelf|kFlowEntity), kNone,	
-      /*special props, prop-range*/       0, kNoPropRange,
-      /*special parents,kids,skip*/       0,0,eHTMLTag_unknown);
-
-    Initialize( 
       /*tag*/                             eHTMLTag_plaintext,
       /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
 	    /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
@@ -1041,15 +1032,6 @@ void InitializeElementTable(void) {
       /*autoclose starttags and endtags*/ 0,0,0,0,
       /*parent,incl,exclgroups*/          (kFlowEntity|kHeadContent), kNone, kNone,	 // Added kFlowEntity|kHeadContent & kNonContainer in
       /*special props, prop-range*/       kNonContainer,kDefaultPropRange,           // Ref. to Bug 25749
-      /*special parents,kids,skip*/       0,0,eHTMLTag_unknown);
-
-    Initialize( 
-      /*tag*/                             eHTMLTag_sourcetext,
-      /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
-	    /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
-      /*autoclose starttags and endtags*/ &gDivAutoClose,0,0,0,
-      /*parent,incl,exclgroups*/          kNone, (kSelf|kFlowEntity), kNone,	
-      /*special props, prop-range*/       0,kDefaultPropRange,
       /*special parents,kids,skip*/       0,0,eHTMLTag_unknown);
 
     Initialize( 
