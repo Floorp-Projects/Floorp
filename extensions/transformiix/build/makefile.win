@@ -49,6 +49,7 @@ CPP_OBJS=							\
 	..\source\base\$(OBJDIR)\Tokenizer.obj \
 	..\source\base\$(OBJDIR)\MozillaString.obj \
 	..\source\net\$(OBJDIR)\URIUtils.obj \
+	..\source\xml\dom\mozImpl\$(OBJDIR)\MozillaObjectWrapper.obj \
 	..\source\xml\dom\mozImpl\$(OBJDIR)\MozillaAttr.obj \
 	..\source\xml\dom\mozImpl\$(OBJDIR)\MozillaCDATASection.obj \
 	..\source\xml\dom\mozImpl\$(OBJDIR)\MozillaCharacterData.obj \
