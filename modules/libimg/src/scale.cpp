@@ -25,6 +25,7 @@
 #include "if.h"                 /* Image library internal declarations */
 #include "il.h"                 /* Image library external API */
 #include "il_strm.h"            /* For image types. */
+#include "prmem.h"
 
 #include "nsVoidArray.h"        
 #include "nsITimer.h"
@@ -201,7 +202,6 @@ il_flush_image_data(il_container *ic)
         img_cx->img_cb->UpdatePixmap(img_cx->dpy_cx, mask, 0, row,
                                      mask_header->width, end_row - row + 1);
     }
-
     /* Update the displayable area of the pixmap. */
     ic->displayable_rect.x_origin = 0;
     ic->displayable_rect.y_origin = 0;
@@ -334,12 +334,29 @@ il_scale_CI_row(
 #define SCALE_XCOORD(ih, sh, x)                        \
     ((int)((uint32)(x) * (ih)->width / (sh)->width))
 
-
+/* Add a bit to the row of mask bits.  Flush accumulator to memory if full. */
+#define SHIFT_IMAGE_MASK(not_transparent_flag)			  \
+    {																		  \
+        fgmask32 |=  ((uint32)not_transparent_flag    ) << M32(mask_bit);     \
+        bgmask32 |=  ((uint32)not_transparent_flag ^ 1) << M32(mask_bit);     \
+																			  \
+        /* Filled up 32-bit mask word.  Write it to memory. */		  \
+        if (mask_bit-- == 0) {                                                \
+            uint32 mtmp = *m;                                                 \
+            mtmp |= fgmask32;                                                 \
+         	if (draw_mode == ilErase)                                     \
+                mtmp &= ~bgmask32;                                            \
+            *m++ = mtmp;                                                      \
+            mask_bit = 31;													  \
+            bgmask32 = 0;                                                     \
+            fgmask32 = 0;                                                     \
+        }																	  \
+        output_bits_remaining--;                                              \
+    }
 /*-----------------------------------------------------------------------------
- * 24 bit transparency:
- * Create an alpha mask bitmap.  Perform horizontal scaling if
- * requested using a Bresenham algorithm. Accumulate the mask in
- * 32-bit chunks for efficiency.
+ * 
+ * Create a 1 bit mask bitmap from alpha channel. 
+ * Accumulate the mask in 32-bit chunks for efficiency.
  *---------------------------------------------------------------------------*/
 static void
 il_alpha_mask(
@@ -370,26 +387,6 @@ il_alpha_mask(
        of the mask. */
     if (!src)
         return;
-
-/* Add a bit to the row of mask bits.  Flush accumulator to memory if full. */
-#define SHIFT_IMAGE_MASK(not_transparent_flag)			  \
-    {																		  \
-        fgmask32 |=  ((uint32)not_transparent_flag    ) << M32(mask_bit);     \
-        bgmask32 |=  ((uint32)not_transparent_flag ^ 1) << M32(mask_bit);     \
-																			  \
-        /* Filled up 32-bit mask word.  Write it to memory. */		  \
-        if (mask_bit-- == 0) {                                                \
-            uint32 mtmp = *m;                                                 \
-            mtmp |= fgmask32;                                                 \
-         	if (draw_mode == ilErase)                                     \
-                mtmp &= ~bgmask32;                                            \
-            *m++ = mtmp;                                                      \
-            mask_bit = 31;													  \
-            bgmask32 = 0;                                                     \
-            fgmask32 = 0;                                                     \
-        }																	  \
-        output_bits_remaining--;                                              \
-    }
 
     /* Two cases */
     /* Scaling down ? (or source and dest same size) ... */   
@@ -433,8 +430,6 @@ il_alpha_mask(
     }
   
 }
-
-
 /*-----------------------------------------------------------------------------
  * Create a transparency mask bitmap.  Perform horizontal scaling if
  * requested using a Bresenham algorithm. Accumulate the mask in
@@ -554,12 +549,9 @@ il_generate_scaled_transparency_mask(
      if (!src)
          return;
  
-     /* Three cases */
- //	if (src_len == mask_len)
-     /* No scaling (source and dest same size) ... */   
- //		XP_MEMCPY(maskp, src, src_len);
- //    else
- 	if (src_len >= mask_len)     /* Scaling down */   
+
+ 
+  if (src_len >= mask_len)     /* Scaling down */   
   {      
       while (output_bits_remaining ) {
  			   not_transparent = ((*src & ((uint8)1 << src_bit)) != 0);
@@ -735,6 +727,54 @@ il_overlay(uint8 *src, uint8 *dest, uint8 *byte_mask, int num_cols,
     }
 }
 
+/*-----------------------------------------------------------------------------
+ * Scale a row of packed RGB pixels using the Bresenham algorithm.
+ * Output is also packed RGB pixels.
+ *---------------------------------------------------------------------------*/
+
+static void
+il_scale_alpha8(
+    uint8 XP_HUGE *src, /* Source row of packed RGB pixels */
+    int src_len,        /* Number of pixels in source row  */
+    uint8 *dest,        /* Destination, packed RGB pixels */
+    int dest_len)       /* Length of target row, in pixels */
+{
+    uint8 *dest_end = dest + dest_len;
+    int n = 0;
+    
+    PR_ASSERT(dest);
+    PR_ASSERT(src_len != dest_len);
+
+    /* Two cases */
+
+    /* Scaling down ? ... */
+    if (src_len > dest_len)
+    {
+        while (dest < dest_end) {
+            *dest= *src;
+            dest ++;
+            n += src_len;
+            while (n >= dest_len) {
+                src++;
+                n -= dest_len;
+            }
+        }
+    }
+    else
+    /* Scaling up. */
+    {
+        while (dest < dest_end) {
+            n += dest_len;
+            while (n >= src_len) {
+                *dest = *src;
+                dest ++;
+                n -= src_len;
+            }
+            src ++;
+        }
+    }
+}
+
 static uint8 il_tmpbuf[MAX_IMAGE_WIDTH];
     
 /*-----------------------------------------------------------------------------
@@ -743,6 +783,8 @@ static uint8 il_tmpbuf[MAX_IMAGE_WIDTH];
  *  for pseudocolor displays, scaling and transparency, including mask
  *  generation, if necessary.  If sufficient data is accumulated, the screen
  *  image is updated, as well.
+ *  
+ * PN note: Function too long. Needs to be split.
  *---------------------------------------------------------------------------*/
 void
 il_emit_row(
@@ -771,7 +813,7 @@ il_emit_row(
     uint8 XP_HUGE *dp;
     uint8 XP_HUGE *mp;
 	  uint8 XP_HUGE *maskp = NULL;
-    uint8 XP_HUGE *alphabits = NULL;
+    uint8 XP_HUGE *alphabits, *alphabitstart = NULL;
     uint8 *byte_mask = NULL;
 	  uint8 XP_HUGE *srcbuf = rgbbuf;
     uint8 *p = cbuf;
@@ -856,40 +898,58 @@ il_emit_row(
                                           IL_LOCK_BITS);
 
 #ifdef _USD
-        alphabits = (uint8 XP_HUGE *)mask->bits + 
+        alphabitstart = maskp = (uint8 XP_HUGE *)mask->bits + 
             (mask_header->height - drow_start - 1) * mask_header->widthBytes;
 #else
-        alphabits = (uint8 XP_HUGE *)mask->bits +
+        alphabitstart = maskp = (uint8 XP_HUGE *)mask->bits +
             drow_start * mask_header->widthBytes;
 #endif
        if(img_header->alpha_bits == 1)
        {
+         // picks off alphachannel, packs it for 1bit mask and scales if necessary
          il_alpha_mask(rgbbuf, (int)len, dcolumn_start, 
-                alphabits, column_count,draw_mode);  
+                alphabitstart, column_count, draw_mode);  
 
-         uint8 *tmpbuf;
+         uint8 *tmpbuf, *rgbbuf_p;
          int i;
 
-         tmpbuf = rgbbuf;
-         for(i=0; i < column_count; i++){
-                *rgbbuf++ = *tmpbuf++;
-                *rgbbuf++ = *tmpbuf++;
-                *rgbbuf++ = *tmpbuf++;
+         rgbbuf_p = tmpbuf = rgbbuf;
+         for(i=0; i < len; i++){
+                *rgbbuf_p++ = *tmpbuf++;
+                *rgbbuf_p++ = *tmpbuf++;
+                *rgbbuf_p++ = *tmpbuf++;
                 tmpbuf++;  /* strip off alpha channel */
-            }
+          } 
        }
        else{ /* alpha_bits=8*/
 
-          uint8 *tmpbuf;
+          uint8 *tmpbuf, *rgbbuf_p;
           int i;
+          unsigned char *scalemask;
 
-          tmpbuf = rgbbuf;
-            for(i=0; i < column_count; i++){
-                *rgbbuf++ = *tmpbuf++;
-                *rgbbuf++ = *tmpbuf++;
-                *rgbbuf++ = *tmpbuf++;
+          rgbbuf_p = tmpbuf = rgbbuf;
+          alphabits= alphabitstart;
+
+            for(i=0; i < len; i++){
+                *rgbbuf_p++ = *tmpbuf++;
+                *rgbbuf_p++ = *tmpbuf++;
+                *rgbbuf_p++ = *tmpbuf++;
+
                 *alphabits++ = *tmpbuf++;  /* put alpha channel in separate buffer */
             }
+            
+            alphabits = alphabitstart;
+            if(len != column_count ){
+                if (!(scalemask= (unsigned char *)PR_MALLOC(column_count)))
+                {
+                          ILTRACE(0,("il: MEM scaledmask"));
+                           return ;
+                }
+                il_scale_alpha8( alphabitstart, len, scalemask, column_count);
+                XP_MEMCPY(alphabitstart, scalemask, column_count);
+                PR_Free(scalemask);
+            }
+            
        } /* else */
        img_cx->img_cb->ControlPixmapBits(img_cx->dpy_cx, mask,
                                           IL_UNLOCK_BITS);
@@ -911,9 +971,9 @@ il_emit_row(
             drow_start * mask_header->widthBytes;
 #endif
 
-               /* We know this mask is prescaled: */
+         /* We know this mask is prescaled: */
          if (ic->type == IL_ART){
-                       /* No scaling needed*/
+              /* No scaling needed*/
               if (len == column_count)
                  XP_MEMCPY(maskp, cbuf, mask_header->widthBytes);
               else /* Scale */
@@ -1059,6 +1119,7 @@ il_emit_row(
 
 			/* Scale the pixel data (mask data already scaled) */
             il_scale_RGB_row(src, src_len, dest, dest_len);
+
 		}
 
         img_cx->img_cb->ControlPixmapBits(img_cx->dpy_cx, image,
@@ -1080,6 +1141,7 @@ il_emit_row(
             }
         }
 
+      
         
         /*
          * Convert RGB to display depth.  If display is pseudocolor, this may
@@ -1124,7 +1186,7 @@ il_emit_row(
             ((ic->dither_mode == IL_Dither) || (ic->type == IL_JPEG));
 #else
     do_dither = (ic->dither_mode == IL_Dither);
-    if ((ic->type == IL_GIF) && (!ic->converter || (row_count > 4)))
+    if ((ic->type == IL_GIF)||(ic->type == IL_PNG) && (!ic->converter || (row_count > 4)))
         do_dither = FALSE;
    
 #endif /* M12N */   
