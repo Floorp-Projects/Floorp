@@ -73,8 +73,8 @@ extern nsresult PERMISSION_Enumerate
 extern void PERMISSION_Remove(const nsACString & host, PRInt32 type);
 
 extern PRBool Permission_Check
-  (nsIPrompt *aPrompter, const char * hostname, PRInt32 type,
-   PRBool warningPref, cookie_CookieStruct * cookie_s, const char * message_string, int count_for_message);
+  (nsIPrompt *aPrompter, const char *aHostname, PRInt32 aType,
+   PRBool aWarningPref, nsICookie *aCookie, int aCookiesFromHost, PRBool aChangingCookie);
 extern nsresult Permission_AddHost
   (const nsAFlatCString &host, PRBool permission, PRInt32 type, PRBool save);
 extern nsresult permission_CheckFromList

@@ -5,3 +5,4 @@ nsIPermission.idl
 nsIPermissionManager.idl
 nsICookieConsent.idl
 nsICookieAcceptDialog.idl
+nsICookiePromptService.idl

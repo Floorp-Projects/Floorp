@@ -67,17 +67,17 @@ class nsCookieEnumerator : public nsISimpleEnumerator
 
         NS_IMETHOD GetNext(nsISupports **result) 
         {
-          char *name;
-          char *value;
+          nsCAutoString name;
+          nsCAutoString value;
           PRBool isDomain;
-          char * host;
-          char * path;
+          nsCAutoString host;
+          nsCAutoString path;
           PRBool isSecure;
           PRUint64 expires;
           nsCookieStatus status;
           nsCookiePolicy policy;
           nsresult rv = COOKIE_Enumerate
-            (mCookieCount++, &name, &value, &isDomain, &host, &path, &isSecure, &expires,
+            (mCookieCount++, name, value, &isDomain, host, path, &isSecure, &expires,
               &status, &policy);
           if (NS_SUCCEEDED(rv)) {
             nsICookie *cookie =

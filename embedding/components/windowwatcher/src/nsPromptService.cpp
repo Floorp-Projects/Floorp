@@ -338,7 +338,9 @@ nsPromptService::ConfirmEx(nsIDOMWindow *parent,
 
   if (checkMsg && checkValue) {
     block->SetString(eCheckboxMsg, checkMsg);
-    block->SetInt(eCheckboxState, *checkValue);
+    // since we're setting a PRInt32, we have to sanitize the PRBool first.
+    // (myBool != PR_FALSE) is guaranteed to return either 1 or 0.
+    block->SetInt(eCheckboxState, *checkValue != PR_FALSE);
   }
   
   /* perform the dialog */
@@ -352,8 +354,12 @@ nsPromptService::ConfirmEx(nsIDOMWindow *parent,
   if (buttonPressed)
     block->GetInt(eButtonPressed, buttonPressed);
 
-  if (checkMsg && checkValue)
-    block->GetInt(eCheckboxState, checkValue);
+  if (checkMsg && checkValue) {
+    // GetInt returns a PRInt32; we need to sanitize it into PRBool
+    PRInt32 tempValue;
+    block->GetInt(eCheckboxState, &tempValue);
+    *checkValue = (tempValue == 1);
+  }
 
   return rv;
 }

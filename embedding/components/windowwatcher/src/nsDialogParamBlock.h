@@ -40,6 +40,8 @@
 #define __nsDialogParamBlock_h
 
 #include "nsIDialogParamBlock.h"
+#include "nsIArray.h"
+#include "nsCOMPtr.h"
 
 // {4E4AAE11-8901-46cc-8217-DAD7C5415873}
 #define NS_DIALOGPARAMBLOCK_CID \
@@ -66,7 +68,8 @@ private:
   
   PRInt32 mInt[kNumInts];
   PRInt32 mNumStrings;
-  nsString* mString;  	
+  nsString* mString;
+  nsCOMPtr<nsIMutableArray> mObjects;	
 };
 
 #endif

@@ -65,6 +65,7 @@ CPPSRCS		= \
 		nsPermissions.cpp \
 		nsUtils.cpp \
 		nsCookieHTTPNotify.cpp \
+		nsCookiePromptService.cpp \
 		$(NULL)
 
 SDK_XPIDLSRCS   = \
@@ -77,7 +78,8 @@ XPIDLSRCS	= \
 		nsIImgManager.idl \
 		nsIPermissionManager.idl \
 		nsIPermission.idl \
-                nsICookieAcceptDialog.idl \
+		nsICookieAcceptDialog.idl \
+		nsICookiePromptService.idl \
 		nsICookieManager2.idl \
 		$(NULL)
 

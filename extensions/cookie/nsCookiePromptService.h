@@ -14,8 +14,8 @@
  * The Original Code is cookie manager code.
  *
  * The Initial Developer of the Original Code is
- * Michiel van Leeuwen.
- * Portions created by the Initial Developer are Copyright (C) 2002
+ * Michiel van Leeuwen (mvl@exedo.nl).
+ * Portions created by the Initial Developer are Copyright (C) 2003
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
@@ -34,20 +34,27 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsISupports.idl"
+#ifndef nsCookiePromptService_h__
+#define nsCookiePromptService_h__
 
-/*
+#include "nsICookiePromptService.h"
 
-  This file contains some constants for the cookie accept dialog
-  
-  */
+class nsCookiePromptService : public nsICookiePromptService {
 
-[scriptable, uuid(3F2F0D2C-BDEA-4B5A-AFC6-FCF18F66B97E)]
-interface nsICookieAcceptDialog: nsISupports {
+public:
 
-  const short ACCEPT_COOKIE=0;
-  const short REMEMBER_DECISION=1;
-  const short HOSTNAME=2;
-  const short COOKIESFROMHOST=3;
-  const short CHANGINGCOOKIE=4;
+  nsCookiePromptService();
+  virtual ~nsCookiePromptService();
+
+  NS_DECL_NSICOOKIEPROMPTSERVICE
+  NS_DECL_ISUPPORTS
+
+private:
+
 };
+
+// {CE002B28-92B7-4701-8621-CC925866FB87}
+#define NS_COOKIEPROMPTSERVICE_CID \
+ {0xCE002B28, 0x92B7, 0x4701, {0x86, 0x21, 0xCC, 0x92, 0x58, 0x66, 0xFB, 0x87}}
+
+#endif

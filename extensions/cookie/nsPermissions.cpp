@@ -46,10 +46,6 @@
 #include "nsReadableUtils.h"
 #include "nsIFileSpec.h"
 #include "nsIPrompt.h"
-#include "nsIWindowWatcher.h"
-#include "nsIDOMWindow.h"
-#include "nsIDOMWindowInternal.h"
-#include "nsIDialogParamBlock.h"
 #include "nsVoidArray.h"
 #include "prmem.h"
 #include "nsAppDirectoryServiceDefs.h"
@@ -58,8 +54,10 @@
 #include "nsTextFormatter.h"
 #include "nsIObserverService.h"
 #include "nsComObsolete.h"
+#include "nsIWindowWatcher.h"
 
 #include "nsICookieAcceptDialog.h"
+#include "nsCookiePromptService.h"
 
 static const char *kCookiesPermFileName = "cookperm.txt";
 
@@ -82,63 +80,31 @@ PRIVATE PRBool window_rememberChecked;
 PRIVATE nsVoidArray * permission_list=0;
 
 PRBool
-permission_CheckConfirmYN(nsIPrompt *aPrompter, PRUnichar * szMessage, PRUnichar * szCheckMessage, cookie_CookieStruct *cookie_s, PRBool* checkValue) {
+permission_CheckConfirmYN(nsIPrompt *aPrompter,
+                          nsICookie *aCookie,
+                          const char *aHostname,
+                          int aCookiesFromHost,
+                          PRBool aChangingCookie,
+                          PRBool* aCheckValue) {
 
-  nsresult res;
-  PRInt32 buttonPressed = 1; /* in case user exits dialog by clickin X */
-  PRUnichar * confirm_string = CKutil_Localize(NS_LITERAL_STRING("Confirm").get());
+  nsresult rv;
+  PRBool acceptThis = PR_TRUE;
 
-  if (cookie_s) {
-    nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService("@mozilla.org/embedcomp/window-watcher;1"));
-    if (!wwatch) {
-      *checkValue = 0;
-      return PR_FALSE;
-    }
+  if (aCookie) {
+    nsCOMPtr<nsICookiePromptService> cookiePromptService = do_GetService(NS_COOKIEPROMPTSERVICE_CONTRACTID,&rv);
+    if (NS_FAILED(rv)) return rv;
 
-    nsCOMPtr<nsIDOMWindowInternal> activeParent;
-    nsCOMPtr<nsIDOMWindow> active;
-    wwatch->GetActiveWindow(getter_AddRefs(active));
-
-    nsCOMPtr<nsIDialogParamBlock> block(do_CreateInstance("@mozilla.org/embedcomp/dialogparam;1"));
-    if (!block) {
-      *checkValue = 0;
-      buttonPressed = 1;
-      return PR_TRUE;
-    }
-    block->SetString(nsICookieAcceptDialog::MESSAGETEXT, szMessage);
-    block->SetInt(nsICookieAcceptDialog::REMEMBER_DECISION, *checkValue);
-
-    NS_ConvertASCIItoUCS2 cookieName(cookie_s->name);
-    NS_ConvertASCIItoUCS2 cookieValue(cookie_s->cookie);
-    NS_ConvertASCIItoUCS2 cookieHost(cookie_s->host);
-    NS_ConvertASCIItoUCS2 cookiePath(cookie_s->path);
-    block->SetString(nsICookieAcceptDialog::COOKIE_NAME, cookieName.get());
-    block->SetString(nsICookieAcceptDialog::COOKIE_VALUE, cookieValue.get());
-    block->SetString(nsICookieAcceptDialog::COOKIE_HOST, cookieHost.get());
-    block->SetString(nsICookieAcceptDialog::COOKIE_PATH, cookiePath.get());
-    block->SetInt(nsICookieAcceptDialog::COOKIE_IS_SECURE, cookie_s->isSecure);
-    block->SetInt(nsICookieAcceptDialog::COOKIE_EXPIRES, cookie_s->expires);
-    block->SetInt(nsICookieAcceptDialog::COOKIE_IS_DOMAIN, cookie_s->isDomain);
-
-    nsCOMPtr<nsIDOMWindow> dialogwin; 
-    res = wwatch->OpenWindow(active, "chrome://cookie/content/cookieAcceptDialog.xul", "_blank",
-                             "centerscreen,chrome,modal,titlebar", block,
-                             getter_AddRefs(dialogwin));
-
-    if (NS_FAILED(res)) {
-      *checkValue = 0;
-      buttonPressed = 1;
-    }
-    else {
-      /* get back output parameters */
-      PRInt32 acceptCookie;
-      block->GetInt(nsICookieAcceptDialog::ACCEPT_COOKIE, &acceptCookie);
-      buttonPressed = acceptCookie ? 0 : 1;
-      block->GetInt(nsICookieAcceptDialog::REMEMBER_DECISION, checkValue);
+    rv = cookiePromptService->
+           CookieDialog(nsnull, aCookie, nsDependentCString(aHostname), 
+                        aCookiesFromHost, aChangingCookie, aCheckValue, 
+                        &acceptThis);
+    if (NS_FAILED(rv)) {
+      *aCheckValue = PR_FALSE;
     }
   }
   else {
     nsCOMPtr<nsIPrompt> dialog;
+    PRInt32 buttonPressed = 1; /* In case the user closed the dialog using a window manager feature */
 
     if (aPrompter)
       dialog = aPrompter;
@@ -148,27 +114,34 @@ permission_CheckConfirmYN(nsIPrompt *aPrompter, PRUnichar * szMessage, PRUnichar
         wwatch->GetNewPrompter(0, getter_AddRefs(dialog));
     }
     if (!dialog) {
-      *checkValue = 0;
+      *aCheckValue = PR_FALSE;
       return PR_FALSE;
     }
 
-    res = dialog->ConfirmEx(confirm_string, szMessage,
+    PRUnichar * confirm_string = CKutil_Localize(NS_LITERAL_STRING("Confirm").get());
+    PRUnichar * message_fmt = CKutil_Localize(NS_LITERAL_STRING("PermissionToAcceptImage").get());
+    PRUnichar * message = nsTextFormatter::smprintf(message_fmt,
+                              aHostname ? aHostname : "", aCookiesFromHost);
+    PRUnichar * remember_string = CKutil_Localize(NS_LITERAL_STRING("RememberThisDecision").get());
+
+    rv = dialog->ConfirmEx(confirm_string, message,
                             (nsIPrompt::BUTTON_TITLE_YES * nsIPrompt::BUTTON_POS_0) +
                             (nsIPrompt::BUTTON_TITLE_NO * nsIPrompt::BUTTON_POS_1),
-                            nsnull, nsnull, nsnull, szCheckMessage, checkValue, &buttonPressed);
+                            nsnull, nsnull, nsnull, remember_string, aCheckValue, &buttonPressed);
 
-    if (NS_FAILED(res)) {
-      *checkValue = 0;
+    nsTextFormatter::smprintf_free(message);
+    nsMemory::Free(confirm_string);
+    nsMemory::Free(remember_string);
+    nsMemory::Free(message_fmt);
+
+    if (NS_FAILED(rv)) {
+      *aCheckValue = PR_FALSE;
     }
+
+    acceptThis = (buttonPressed == 1);
   }
 
-  if (*checkValue!=0 && *checkValue!=1) {
-    NS_ASSERTION(PR_FALSE, "Bad result from checkbox");
-    *checkValue = 0; /* this should never happen but it is happening!!! */
-  }
-  Recycle(confirm_string);
-
-  return (buttonPressed == 0);
+  return acceptThis;
 }
 
 /*
@@ -244,51 +217,43 @@ permission_SetRememberChecked(PRInt32 type, PRBool value) {
 PUBLIC PRBool
 Permission_Check(
      nsIPrompt *aPrompter,
-     const char * hostname,
-     PRInt32 type,
-     PRBool warningPref,
-     cookie_CookieStruct *cookie_s,
-     const char * message_string,
-     int count_for_message)
+     const char *aHostname,
+     PRInt32 aType,
+     PRBool aWarningPref,
+     nsICookie *aCookie,
+     int aCookiesFromHost,
+     PRBool aChangingCookie)
 {
   PRBool permission;
 
   /* try to make decision based on saved permissions */
-  if (NS_SUCCEEDED(permission_CheckFromList(hostname, permission, type))) {
+  if (NS_SUCCEEDED(permission_CheckFromList(aHostname, permission, aType))) {
     return permission;
   }
 
   /* see if we need to prompt */
-  if(!warningPref) {
+  if(!aWarningPref) {
     return PR_TRUE;
   }
 
   /* we need to prompt */
-  PRUnichar * message_fmt =
-      CKutil_Localize(NS_ConvertASCIItoUCS2(message_string).get());
-  PRUnichar * message = nsTextFormatter::smprintf(message_fmt,
-                            hostname ? hostname : "", count_for_message);
-  PRBool rememberChecked = permission_GetRememberChecked(type);
-  PRUnichar * remember_string = CKutil_Localize(NS_LITERAL_STRING("RememberThisDecision").get());
-  permission = permission_CheckConfirmYN(aPrompter, message, remember_string, cookie_s, &rememberChecked);
-  nsTextFormatter::smprintf_free(message);
-  nsMemory::Free(message_fmt);
+  PRBool rememberChecked = permission_GetRememberChecked(aType);
+  permission = permission_CheckConfirmYN(aPrompter, aCookie, aHostname, aCookiesFromHost, aChangingCookie, &rememberChecked);
 
   /* see if we need to remember this decision */
   if (rememberChecked) {
     /* ignore leading periods in host name */
-    const char * hostnameAfterDot = hostname;
+    const char * hostnameAfterDot = aHostname;
     while (hostnameAfterDot && (*hostnameAfterDot == '.')) {
       hostnameAfterDot++;
     }
-    Permission_AddHost(nsDependentCString(hostnameAfterDot), permission, type, PR_TRUE);
+    Permission_AddHost(nsDependentCString(hostnameAfterDot), permission, aType, PR_TRUE);
   }
-  if (rememberChecked != permission_GetRememberChecked(type)) {
-    permission_SetRememberChecked(type, rememberChecked);
+  if (rememberChecked != permission_GetRememberChecked(aType)) {
+    permission_SetRememberChecked(aType, rememberChecked);
     permission_changed = PR_TRUE;
     Permission_Save(PR_TRUE);
   }
-  Recycle(remember_string);
   return permission;
 }
 
