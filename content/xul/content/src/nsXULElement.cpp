@@ -168,26 +168,33 @@ static NS_DEFINE_CID(kDOMScriptObjectFactoryCID,  NS_DOM_SCRIPT_OBJECT_FACTORY_C
 //----------------------------------------------------------------------
 
 #include "nsIJSRuntimeService.h"
-static nsIJSRuntimeService* gJSRuntimeService;
-static JSRuntime* gScriptRuntime;
-static PRInt32 gScriptRuntimeRefcnt;
+static nsIJSRuntimeService* gJSRuntimeService = nsnull;
+static JSRuntime* gScriptRuntime = nsnull;
+static PRInt32 gScriptRuntimeRefcnt = 0;
 
 static nsresult
-AddJSGCRoot(JSContext* cx, void* aScriptObjectRef, const char* aName)
+AddJSGCRoot(void* aScriptObjectRef, const char* aName)
 {
-    PRBool ok;
-    ok = ::JS_AddNamedRoot(cx, aScriptObjectRef, aName);
-    if (! ok) return NS_ERROR_OUT_OF_MEMORY;
-
-    if (gScriptRuntimeRefcnt++ == 0) {
-        nsServiceManager::GetService("@mozilla.org/js/xpc/RuntimeService;1", // contractid
-                                     NS_GET_IID(nsIJSRuntimeService),
-                                     (nsISupports**) &gJSRuntimeService);
-
-        if (! gJSRuntimeService)
+    if (++gScriptRuntimeRefcnt == 1 || !gScriptRuntime) {
+        CallGetService("@mozilla.org/js/xpc/RuntimeService;1",
+                       &gJSRuntimeService);
+        if (! gJSRuntimeService) {
+            NS_NOTREACHED("couldn't add GC root");
             return NS_ERROR_FAILURE;
+        }
 
         gJSRuntimeService->GetRuntime(&gScriptRuntime);
+        if (! gScriptRuntime) {
+            NS_NOTREACHED("couldn't add GC root");
+            return NS_ERROR_FAILURE;
+        }
+    }
+
+    PRBool ok;
+    ok = ::JS_AddNamedRootRT(gScriptRuntime, aScriptObjectRef, aName);
+    if (! ok) {
+        NS_NOTREACHED("couldn't add GC root");
+        return NS_ERROR_OUT_OF_MEMORY;
     }
 
     return NS_OK;
@@ -196,8 +203,10 @@ AddJSGCRoot(JSContext* cx, void* aScriptObjectRef, const char* aName)
 static nsresult
 RemoveJSGCRoot(void* aScriptObjectRef)
 {
-    if (! gScriptRuntime)
+    if (! gScriptRuntime) {
+        NS_NOTREACHED("couldn't remove GC root");
         return NS_ERROR_FAILURE;
+    }
 
     ::JS_RemoveRootRT(gScriptRuntime, aScriptObjectRef);
 
@@ -2315,7 +2324,8 @@ nsXULElement::CompileEventHandler(nsIScriptContext* aContext,
                     if (!cx)
                         return NS_ERROR_UNEXPECTED;
 
-                    rv = AddJSGCRoot(cx, &attr->mEventHandler, "nsXULPrototypeAttribute::mEventHandler");
+                    rv = AddJSGCRoot(&attr->mEventHandler,
+                                     "nsXULPrototypeAttribute::mEventHandler");
                     if (NS_FAILED(rv)) return rv;
                 }
 
@@ -4801,13 +4811,13 @@ nsXULPrototypeScript::nsXULPrototypeScript(PRInt32 aLineNo, const char *aVersion
       mLangVersion(aVersion)
 {
     MOZ_COUNT_CTOR(nsXULPrototypeScript);
+    AddJSGCRoot(&mJSObject, "nsXULPrototypeScript::mJSObject");
 }
 
 
 nsXULPrototypeScript::~nsXULPrototypeScript()
 {
-    if (mJSObject)
-        RemoveJSGCRoot(&mJSObject);
+    RemoveJSGCRoot(&mJSObject);
     MOZ_COUNT_DTOR(nsXULPrototypeScript);
 }
 
@@ -4918,9 +4928,6 @@ nsXULPrototypeScript::Deserialize(nsIObjectInputStream* aStream,
                 if (! mJSObject) {
                     rv = NS_ERROR_OUT_OF_MEMORY;    // certain error
                     ::JS_DestroyScript(cx, script);
-                } else {
-                    rv = AddJSGCRoot(cx, &mJSObject,
-                                     "nsXULPrototypeScript::mJSObject");
                 }
             }
 
@@ -5045,10 +5052,6 @@ nsXULPrototypeScript::Compile(const PRUnichar* aText,
                                             context->GetNativeContext());
         if (!cx)
             return NS_ERROR_UNEXPECTED;
-
-        rv = AddJSGCRoot(cx, &mJSObject, "nsXULPrototypeScript::mJSObject");
-        if (NS_FAILED(rv))
-            return rv;
 
         // XXXbe temporary, until we serialize/deserialize everything from the
         //       nsXULPrototypeDocument on down...
