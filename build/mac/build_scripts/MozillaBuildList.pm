@@ -288,6 +288,9 @@ sub InstallComponentFiles()
 
     # intl
     InstallResources(":mozilla:embedding:components:intl:MANIFEST",                        "$components_dir");
+
+    # resetPref
+    InstallResources(":mozilla:xpfe:components:resetPref:MANIFEST",                        "$components_dir");
     
     print("--- Done Text Components copying ----\n");
 }
