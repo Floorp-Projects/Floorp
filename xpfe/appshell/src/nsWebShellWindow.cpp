@@ -1270,8 +1270,7 @@ nsWebShellWindow::CreatePopup(nsIDOMElement* aElement, nsIDOMElement* aPopupCont
     DoContextMenu(nsnull, rootElement, mWindow, aXPos, aYPos, aPopupAlignment, anAnchorAlignment);
 
     // Fire the destroy DOM event to give JS/C++ a chance to destroy the popup contents
-    nsEventStatus status = nsEventStatus_eIgnore;
-    nsMouseEvent event;
+    status = nsEventStatus_eIgnore;
     event.eventStructType = NS_EVENT;
     event.message = NS_MENU_DESTROY;
     rv = popupContent->HandleDOMEvent(*presContext, &event, nsnull, NS_EVENT_FLAG_INIT, status);
@@ -1285,9 +1284,6 @@ nsWebShellWindow::CreatePopup(nsIDOMElement* aElement, nsIDOMElement* aPopupCont
   
   // (1) Create a top-level chromeless window. The size of the window can be specified
   // on the window tag contained inside.  Retrieve the webshell from the new nsWebShellWindow.
-  NS_WITH_SERVICE(nsIAppShellService, appShell, kAppShellServiceCID, &rv);
-  if (NS_FAILED(rv))
-    return rv;
 
   nsCOMPtr<nsIWebShellWindow> newWindow;
   
@@ -2145,6 +2141,7 @@ void nsWebShellWindow::ShowAppropriateChrome()
   nsCOMPtr<nsIDOMXULElement> xulRoot;
   nsCOMPtr<nsIDOMDocument>   chromeDoc;
   nsCOMPtr<nsIDOMWindow>     domWindow;
+  PRUint32                   chromeMask;
 
   // get this window's document
   if (NS_FAILED(ConvertWebShellToDOMWindow(mWebShell, getter_AddRefs(domWindow))))
@@ -2153,6 +2150,21 @@ void nsWebShellWindow::ShowAppropriateChrome()
     return;
   if (NS_FAILED(chromeDoc->GetDocumentElement(getter_AddRefs(rootElement))) || !rootElement)
     return;
+
+  // calculate a special version of the chrome mask. we store the actual
+  // value sent, but we make local changes depending on whether defaults
+  // were asked for.  Note that only internal (not OS-) chrome matters
+  // at this point, so the OS chrome is not calculated.
+  chromeMask = mChromeMask;
+  if (chromeMask & NS_CHROME_DEFAULT_CHROME)
+    if (chromeMask & NS_CHROME_OPEN_AS_DIALOG)
+      chromeMask &= ~(NS_CHROME_MENU_BAR_ON | NS_CHROME_TOOL_BAR_ON |
+                      NS_CHROME_LOCATION_BAR_ON | NS_CHROME_STATUS_BAR_ON |
+                      NS_CHROME_PERSONAL_TOOLBAR_ON | NS_CHROME_SCROLLBARS_ON);
+    else
+      // theoretically, this won't happen (only dialogs can have defaults)
+      // but, we cover this case anyway
+      chromeMask |= NS_CHROME_ALL_CHROME;
 
   // special treatment for the menubar
   ShowMenuBar(mChromeMask & NS_CHROME_MENU_BAR_ON ? PR_TRUE : PR_FALSE);
@@ -2177,7 +2189,10 @@ void nsWebShellWindow::ShowAppropriateChrome()
           // show or hide the element according to its chromeclass and the chromemask
           domElement->GetAttribute("chromeclass", chromeClass);
           makeChange = PR_FALSE;
-          if (chromeClass == "toolbar") {
+          if (chromeClass == "menubar") {
+            makeChange = PR_TRUE;
+            flag = mChromeMask & NS_CHROME_MENU_BAR_ON;
+          } else if (chromeClass == "toolbar") {
             makeChange = PR_TRUE;
             flag = mChromeMask & NS_CHROME_TOOL_BAR_ON;
           } else if (chromeClass == "location") {
@@ -2733,7 +2748,6 @@ nsWebShellWindow::HandleUrl(const PRUnichar * aCommand,
 
   PRInt32 offset2= url.Find("mailto:", PR_TRUE);
 
-  PRInt32  ret=0;
   if (offset2 == 0) {
     topic += "mailto";
 

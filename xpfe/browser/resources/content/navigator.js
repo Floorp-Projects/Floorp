@@ -596,7 +596,7 @@ function OpenSearch(tabName)
 
   function BrowserEditBookmarks()
   {
-    window.open("resource:/res/samples/bookmarks.xul", "BookmarksWindow", "chrome");
+    window.open("resource:/res/samples/bookmarks.xul", "BookmarksWindow", "chrome,menubar,resizable,scrollbars");
   }
 
   function BrowserPrintPreview()
@@ -779,12 +779,12 @@ function OpenSearch(tabName)
 
   function OpenMessenger()
   {
-	window.open("chrome://messenger/content/", "_new", "chrome");
+	window.open("chrome://messenger/content/", "_new", "chrome,menubar,toolbar,resizable");
   }
 
   function OpenAddressbook()
   {
-	window.open("chrome://addressbook/content/", "_new", "chrome");
+	window.open("chrome://addressbook/content/", "_new", "chrome,menubar,toolbar,resizable");
   }
 
   function MsgNewMessage()

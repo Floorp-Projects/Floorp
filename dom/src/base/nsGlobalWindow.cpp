@@ -1971,7 +1971,7 @@ nsresult
 GlobalWindowImpl::OpenInternal(JSContext *cx,
                        jsval *argv, 
                        PRUint32 argc, 
-                       PRBool aAttachArguments,
+                       PRBool aDialog,
                        nsIDOMWindow** aReturn)
 {
   PRUint32 chromeFlags;
@@ -2037,7 +2037,7 @@ GlobalWindowImpl::OpenInternal(JSContext *cx,
     }
     options = JS_GetStringBytes(str);
   }
-  chromeFlags = CalculateChromeFlags(options);
+  chromeFlags = CalculateChromeFlags(options, aDialog);
 
   nsIWebShell *newOuterShell = nsnull;
   nsIWebShellContainer *webShellContainer;
@@ -2061,11 +2061,11 @@ GlobalWindowImpl::OpenInternal(JSContext *cx,
 
     if (nsnull != newOuterShell) {
       if (NS_SUCCEEDED(ReadyOpenedWebShell(newOuterShell, aReturn))) {
-        if (aAttachArguments && argc > 3)
+        if (aDialog && argc > 3)
           AttachArguments(*aReturn, argv+3, argc-3);
         newOuterShell->SetName(name.GetUnicode());
         newOuterShell->LoadURL(mAbsURL.GetUnicode());
-        SizeAndShowOpenedWebShell(newOuterShell, options, windowIsNew);
+        SizeAndShowOpenedWebShell(newOuterShell, options, windowIsNew, aDialog);
       }
       NS_RELEASE(newOuterShell);
     }
@@ -2114,19 +2114,40 @@ GlobalWindowImpl::AttachArguments(nsIDOMWindow *aWindow, jsval *argv, PRUint32 a
 }
 
 
+/**
+ * Calculate the chrome bitmask from a string list of features.
+ * @param aFeatures a string containing a list of named chrome features
+ * @param aDialog affects the assumptions made about unnamed features
+ * @return the chrome bitmask
+ */
 PRUint32
-GlobalWindowImpl::CalculateChromeFlags(char *aFeatures) {
+GlobalWindowImpl::CalculateChromeFlags(char *aFeatures, PRBool aDialog) {
 
   PRUint32  chromeFlags;
 
   if (nsnull == aFeatures)
-    return NS_CHROME_ALL_CHROME;
+    if (aDialog)
+      return NS_CHROME_ALL_CHROME |
+             NS_CHROME_OPEN_AS_DIALOG | NS_CHROME_OPEN_AS_CHROME;
+    else
+      return NS_CHROME_ALL_CHROME;
 
   PRBool presenceFlag = PR_FALSE;
 
-  chromeFlags = NS_CHROME_WINDOW_BORDERS_ON;
+  /* This function has become complicated since browser windows and
+     dialogs diverged. The difference is, browser windows assume all
+     chrome not explicitly mentioned is off, if the features string
+     is not null. Exceptions are some OS border chrome new with Mozilla.
+     Dialogs interpret a (mostly) empty features string to mean
+     "OS's choice," and also support an "all" flag explicitly disallowed
+     in the standards-compliant window.(normal)open. */
 
-  // ((only) titlebars default to "on" if not mentioned)
+  chromeFlags = NS_CHROME_WINDOW_BORDERS_ON;
+  if (aDialog && WinHasOption(aFeatures, "all", presenceFlag))
+    chromeFlags = NS_CHROME_ALL_CHROME;
+
+  /* Next, allow explicitly named options to override the initial settings */
+
   chromeFlags |= WinHasOption(aFeatures, "titlebar", presenceFlag) ? NS_CHROME_TITLEBAR_ON : 0;
   chromeFlags |= WinHasOption(aFeatures, "close", presenceFlag) ? NS_CHROME_WINDOW_CLOSE_ON : 0;
   chromeFlags |= WinHasOption(aFeatures, "toolbar", presenceFlag) ? NS_CHROME_TOOL_BAR_ON : 0;
@@ -2137,34 +2158,48 @@ GlobalWindowImpl::CalculateChromeFlags(char *aFeatures) {
   chromeFlags |= WinHasOption(aFeatures, "menubar", presenceFlag) ? NS_CHROME_MENU_BAR_ON : 0;
   chromeFlags |= WinHasOption(aFeatures, "scrollbars", presenceFlag) ? NS_CHROME_SCROLLBARS_ON : 0;
   chromeFlags |= WinHasOption(aFeatures, "resizable", presenceFlag) ? NS_CHROME_WINDOW_RESIZE_ON : 0;
-  // default to "on" if titlebar, closebox, or resizable aren't mentioned
+
+  /* OK.
+       Normal browser windows, in spite of a stated pattern of turning off
+     all chrome not mentioned explicitly, will want the new OS chrome (window
+     borders, titlebars, closebox) on, unless explicitly turned off.
+       Dialogs, on the other hand, take the absence of any explicit settings
+     to mean "OS' choice." */
+
+  // default titlebar and closebox to "on," if not mentioned at all
   if (!PL_strcasestr(aFeatures, "titlebar"))
     chromeFlags |= NS_CHROME_TITLEBAR_ON;
   if (!PL_strcasestr(aFeatures, "close"))
     chromeFlags |= NS_CHROME_WINDOW_CLOSE_ON;
-  if (!PL_strcasestr(aFeatures, "resizable"))
-    chromeFlags |= NS_CHROME_WINDOW_RESIZE_ON;
 
-  // From this point onward, if the above features weren't specified at all,
-  // we will assume that all chrome is present.
+  if (aDialog && !presenceFlag)
+    chromeFlags = NS_CHROME_DEFAULT_CHROME;
 
-  //XXX This is incorrect.  Except for the last three, if the
-  //    feature wasn't mentioned its not there -joki
-  //if (!presenceFlag) 
-  //  chromeFlags |= NS_CHROME_ALL_CHROME;
+  /* Finally, once all the above normal chrome has been divined, deal
+     with the features that are more operating hints than appearance
+     instructions. */
 
   chromeFlags |= WinHasOption(aFeatures, "chrome", presenceFlag) ? NS_CHROME_OPEN_AS_CHROME : 0;
   chromeFlags |= WinHasOption(aFeatures, "modal", presenceFlag) ? NS_CHROME_MODAL : 0;
   chromeFlags |= WinHasOption(aFeatures, "dialog", presenceFlag) ? NS_CHROME_OPEN_AS_DIALOG : 0;
 
+  /* and dialogs need to have the last word. assume dialogs are dialogs,
+     and opened as chrome, unless explicitly told otherwise. */
+  if (aDialog) {
+    if (!PL_strcasestr(aFeatures, "dialog"))
+      chromeFlags |= NS_CHROME_OPEN_AS_DIALOG;
+    if (!PL_strcasestr(aFeatures, "chrome"))
+      chromeFlags |= NS_CHROME_OPEN_AS_CHROME;
+  }
+
   /*z-ordering, history, dependent
   chromeFlags->topmost         = WinHasOption(aFeatures, "alwaysRaised");
-  chromeFlags->bottommost              = WinHasOption(aFeatures, "alwaysLowered");
+  chromeFlags->bottommost      = WinHasOption(aFeatures, "alwaysLowered");
   chromeFlags->z_lock          = WinHasOption(aFeatures, "z-lock");
-  chromeFlags->is_modal            = WinHasOption(aFeatures, "modal");
+  chromeFlags->is_modal        = WinHasOption(aFeatures, "modal");
   chromeFlags->hide_title_bar  = !(WinHasOption(aFeatures, "titlebar"));
-  chromeFlags->dependent              = WinHasOption(aFeatures, "dependent");
-  chromeFlags->copy_history           = FALSE;
+  chromeFlags->dependent       = WinHasOption(aFeatures, "dependent");
+  chromeFlags->copy_history    = FALSE;
   */
 
   /* Allow disabling of commands only if there is no menubar */
@@ -2184,8 +2219,8 @@ GlobalWindowImpl::CalculateChromeFlags(char *aFeatures) {
 
 // set the newly opened webshell's (window) size, and show it
 nsresult
-GlobalWindowImpl::SizeAndShowOpenedWebShell(nsIWebShell *aOuterShell, char *aFeatures,
-                                            PRBool aNewWindow)
+GlobalWindowImpl::SizeAndShowOpenedWebShell(nsIWebShell *aOuterShell,
+                  char *aFeatures, PRBool aNewWindow, PRBool aDialog)
 {
   if (nsnull == aOuterShell)
     return NS_ERROR_NULL_POINTER;
@@ -2220,8 +2255,8 @@ GlobalWindowImpl::SizeAndShowOpenedWebShell(nsIWebShell *aOuterShell, char *aFea
 
     nsRect   contentOffsets; // constructor sets all values to 0
     PRBool   sizeSpecified = PR_FALSE;
-    PRUint32 chromeFlags = CalculateChromeFlags(aFeatures);
-    PRBool   openAsContent = ((chromeFlags & NS_CHROME_OPEN_AS_CHROME) == 0);
+    PRUint32 chromeFlags = CalculateChromeFlags(aFeatures, aDialog);
+    PRBool   openAsContent = (chromeFlags & NS_CHROME_OPEN_AS_CHROME) == 0;
 
     // if it's an extant window, we are already our default size
     if (!aNewWindow)
@@ -2237,7 +2272,7 @@ GlobalWindowImpl::SizeAndShowOpenedWebShell(nsIWebShell *aOuterShell, char *aFea
         openedWindow->GetWindowBounds(defaultBounds);
 
     if (nsnull != aFeatures) {
-      PRBool presenceFlag = PR_FALSE; // Unused. Yuck.
+      PRBool   presenceFlag = PR_FALSE; // Unused. Yuck.
       if (openAsContent) {
         width = WinHasOption(aFeatures, "innerWidth", presenceFlag) | WinHasOption(aFeatures, "width", presenceFlag);
         height = WinHasOption(aFeatures, "innerHeight", presenceFlag) | WinHasOption(aFeatures, "height", presenceFlag);
@@ -2369,11 +2404,11 @@ GlobalWindowImpl::CreatePopup(nsIDOMElement* aElement, nsIDOMElement* aPopupCont
 nsresult 
 GlobalWindowImpl::CheckWindowName(JSContext *cx, nsString& aName)
 {
-  PRInt32 index;
+  PRInt32 strIndex;
   PRUnichar mChar;
 
-  for (index = 0; index < aName.Length(); index++) {
-    mChar = aName.CharAt(index);
+  for (strIndex = 0; strIndex < aName.Length(); strIndex++) {
+    mChar = aName.CharAt(strIndex);
     if (!nsString::IsAlpha(mChar) && !nsString::IsDigit(mChar) && mChar != '_') {
       char* cp = aName.ToNewCString();
       JS_ReportError(cx,
