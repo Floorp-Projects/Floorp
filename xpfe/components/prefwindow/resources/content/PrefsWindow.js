@@ -119,31 +119,31 @@ function createInstance( progid, iidName ) {
   var iid = eval( "Components.interfaces." + iidName );
   return Components.classes[ progid ].createInstance( iid );
 }
-
+const nsIFilePicker = Components.interfaces.nsIFilePicker;
 function PrefNavSelectFile(prefID) {
-    // Get filespecwithui component.            
-    var fileSpec = createInstance( "component://netscape/filespecwithui", "nsIFileSpecWithUI" );
-    try {
-        var url = fileSpec.chooseFile( "" );
-        var field = document.getElementById(prefID);
-        field.setAttribute( "value", fileSpec.nativePath );
-    }
-    catch( exception ) {
-        // Just a cancel, probably.
-    }
+
+  try {
+    var fp = Components.classes["component://mozilla/filepicker"].createInstance(nsIFilePicker);
+    /* XXX    no title here */
+    fp.init(window, "", nsIFilePicker.modeOpen);
+    fp.setFilters(nsIFilePicker.filterAll);
+    fp.show();
+    var field = document.getElementById(prefID);
+    field.setAttribute("value", fp.file.path);
+  } catch(ex) { }
 }
 
 function PrefCacheSelectFolder() {
-    // Get filespecwithui component.            
-    var fileSpec = createInstance( "component://netscape/filespecwithui", "nsIFileSpecWithUI" );
-    try {
-        var url = fileSpec.chooseDirectory( "" );
-        var field = document.getElementById( "pref:string:browser.cache.directory" );
-        field.setAttribute( "value", fileSpec.nativePath );
-    }
-    catch( exception ) {
-        // Just a cancel, probably.
-    }
+    // Get filespecwithui component.     
+  try {
+    var fp = Components.classes["component://mozilla/filepicker"].createInstance(nsIFilePicker);
+    /* XXX    no title here */
+    fp.init(window, "", nsIFilePicker.modeGetFolder);
+    fp.setFilters(nsIFilePicker.filterAll);
+    fp.show();
+    var field = document.getElementById "pref:string:browser.cache.directory");
+    field.setAttribute("value", fp.file.path);
+  } catch(ex) { }
 }
 
 function OpenProxyManualDialog() {

@@ -65,15 +65,12 @@ function initFields()
 function chooseProfileFolder( aRootFolder )
 {
   if( !aRootFolder ) {
-	  try {
-      var fileSpec = Components.classes["component://netscape/filespecwithui"].createInstance();
-      if(fileSpec) {
-        fileSpec = fileSpec.QueryInterface(Components.interfaces.nsIFileSpecWithUI);
-        fileSpec.URLString = fileSpec.chooseDirectory( bundle.GetStringFromName("chooseFolder"));    
-        aRootFolder = fileSpec.nativePath;
-      } 
-      else
-        aRootFolder = null;
+    try {
+      var fp = Components.classes["component://mozilla/filepicker"].createInstance(Components.interfaces.nsIFilePicker);
+      fp.init(window, bundle.GetStringFromName("chooseFolder"), Components.interfaces.nsIFilePicker.modeGetFolder);
+      fp.setFilters(Components.interfaces.nsIFilePicker.filterAll);
+      fp.show();
+      aRootFolder = fp.file.path;
     }
     catch(e) {
       aRootFolder = null;
