@@ -22,7 +22,7 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-LIBRARY_NAME = expat
+LIBRARY_NAME = expat_s
 
 ifdef MOZ_STRIP_NOT_EXPORTED
 DEFINES += -DXMLPARSEAPI="__attribute__ ((dllexport))"
@@ -43,7 +43,11 @@ MODULE=expat
 
 LOCAL_INCLUDES = -I$(srcdir)/../xmltok
 
-include $(topsrcdir)/config/config.mk
+MKSHLIB :=
+
+# We want only the static lib, not the shared lib
+override NO_SHARED_LIB=1
+override NO_STATIC_LIB=
 
 include $(topsrcdir)/config/rules.mk
 

@@ -58,8 +58,6 @@ LIBS		+= \
 		-lmozreg \
 		-lxp \
 		-lraptorhtmlpars \
-		-lexpat \
-		-lxmltok \
 		-ljsurl \
 		-ljsdom \
 		$(ZLIB_LIBS) \
