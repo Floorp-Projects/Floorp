@@ -174,6 +174,13 @@ nsJSContext::RemoveReference(void *aSlot, void *aScriptObject)
   }
 }
 
+nsresult
+nsJSContext::GC()
+{
+  JS_GC(mContext);
+  return NS_OK;
+}
+
 nsJSEnvironment *nsJSEnvironment::sTheEnvironment = nsnull;
 
 // Class to manage destruction of the singleton
