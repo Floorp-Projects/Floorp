@@ -31,7 +31,7 @@ var SECTION = "10.1.3";
 var VERSION = "ECMA_1";
 startTest();
 var TITLE   = "Variable instantiation";
-VAR BUGNUMBER = "20256";
+var BUGNUMBER = "20256";
 
 writeHeaderToLog( SECTION + " "+ TITLE);
 
