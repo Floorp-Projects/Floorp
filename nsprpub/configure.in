@@ -895,9 +895,9 @@ case "$target" in
     fi
 
     # do the right thing for panther SDK support
-    if test "NEXT_ROOT"; then
-        CFLAGS="-I$(NEXT_ROOT)/usr/include $CFLAGS"
-        CXXFLAGS="-I$(NEXT_ROOT)/usr/include $CXXFLAGS"
+    if test "$NEXT_ROOT"; then
+        CFLAGS="-I${NEXT_ROOT}/usr/include $CFLAGS"
+        CXXFLAGS="-I${NEXT_ROOT}/usr/include $CXXFLAGS"
     fi
     ;;
 
