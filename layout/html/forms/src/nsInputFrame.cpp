@@ -34,6 +34,7 @@
 #include "nsViewsCID.h"
 #include "nsRepository.h"
 #include "nsGUIEvent.h"
+#include "nsDOMEvent.h"
 #include "nsIFontCache.h"
 #include "nsIFontMetrics.h"
 #include "nsIFormManager.h"
@@ -361,7 +362,11 @@ NS_METHOD nsInputFrame::HandleEvent(nsIPresContext& aPresContext,
                                     nsGUIEvent* aEvent,
                                     nsEventStatus& aEventStatus)
 {
-	// make sure that the widget in the event is this
+  if (nsnull != mContent) {
+    mContent->HandleDOMEvent(aPresContext, (nsEvent*)aEvent, nsnull, DOM_EVENT_INIT, aEventStatus);
+  }
+
+  // make sure that the widget in the event is this
   // XXX if there is no view, it could be an image button. Unfortunately,
   // every image button will get every event.
   nsIView* view;

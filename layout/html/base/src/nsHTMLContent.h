@@ -135,6 +135,7 @@ public:
   // nsIDOMEventReceiver interface
   NS_IMETHOD AddEventListener(nsIDOMEventListener *aListener, const nsIID& aIID);
   NS_IMETHOD RemoveEventListener(nsIDOMEventListener *aListener, const nsIID& aIID);
+  NS_IMETHOD GetListenerManager(nsIEventListenerManager** aInstancePtrResult);
   NS_IMETHOD GetNewListenerManager(nsIEventListenerManager** aInstancePtrResult);
 
   NS_IMETHOD HandleDOMEvent(nsIPresContext& aPresContext,
@@ -154,8 +155,6 @@ protected:
   nsIDocument* mDocument;
   nsIContent* mParent;
   void* mScriptObject;
-
-  nsresult GetListenerManager(nsIEventListenerManager** aInstancePtrResult);
 
   nsIEventListenerManager* mListenerManager;
 };

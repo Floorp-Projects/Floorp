@@ -20,6 +20,7 @@
 #include "nsIDOMKeyListener.h"
 #include "nsIDOMMouseMotionListener.h"
 #include "nsIDOMFocusListener.h"
+#include "nsIDOMFormListener.h"
 #include "nsIDOMLoadListener.h"
 #include "nsIDOMDragListener.h"
 
@@ -27,5 +28,6 @@ NS_DEFINE_IID(kIDOMMouseListenerIID, NS_IDOMMOUSELISTENER_IID);
 NS_DEFINE_IID(kIDOMKeyListenerIID, NS_IDOMKEYLISTENER_IID);
 NS_DEFINE_IID(kIDOMMouseMotionListenerIID, NS_IDOMMOUSEMOTIONLISTENER_IID);
 NS_DEFINE_IID(kIDOMFocusListenerIID, NS_IDOMFOCUSLISTENER_IID);
+NS_DEFINE_IID(kIDOMFormListenerIID, NS_IDOMFORMLISTENER_IID);
 NS_DEFINE_IID(kIDOMLoadListenerIID, NS_IDOMLOADLISTENER_IID);
 NS_DEFINE_IID(kIDOMDragListenerIID, NS_IDOMDRAGLISTENER_IID);
