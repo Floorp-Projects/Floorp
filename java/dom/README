@@ -24,7 +24,8 @@ Building
      JDKHOME environment variable set to your JDK dir
      CLASSPATH environment cvariable set to contain 
         org.w3c.dom classes. The sources can be found at	
-        http://www.w3.org/TR/WD-DOM-Level-2/java-binding.zip
+        http://www.w3.org/TR/2000/CR-DOM-Level-2-20000307/java-binding.html
+        and the binaries can be found at http://www.mozilla.org/projects/blackwood/webclient/bin/m3/dom2-20000307.jar
 
      Solaris specific
      ----------------
