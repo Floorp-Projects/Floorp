@@ -895,7 +895,7 @@ function makePreview(row)
   {
     // fallback image for protocols not allowed (e.g., data: or javascript:) 
     // or elements not [yet] handled (e.g., object, embed). XXX blank??
-    newImage.src = "resource://gre/re/loading-image.gif";
+    newImage.src = "resource://gre/res/loading-image.gif";
     newImage.width = 40;
     newImage.height = 40;
   }
