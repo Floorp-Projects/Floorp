@@ -129,7 +129,7 @@ XUL_ATOM(menu, "menu") // Represents an XP menu
 XUL_ATOM(menuitem, "menuitem") // Represents an XP menu item
 XUL_ATOM(menupopup, "menupopup") // The XP menu's children.
 XUL_ATOM(menutobedisplayed, "menutobedisplayed") // The menu is about to be displayed at the next sync w/ frame
-XUL_ATOM(menuactive, "menuactive") // Whether or not a menu is active (without necessarily being open)
+XUL_ATOM(menuactive, "_moz-menuactive") // Whether or not a menu is active (without necessarily being open)
 XUL_ATOM(accesskey, "accesskey") // The shortcut key for a menu or menu item
 XUL_ATOM(acceltext, "acceltext") // Text to use for the accelerator
 XUL_ATOM(popupgroup, "popupgroup") // Contains popup menus, context menus, and tooltips

@@ -41,7 +41,7 @@
 #include "nsAccessible.h"
 #include "nsIAccessible.h"
 #include "nsIDOMElement.h"
-#include "nsIMenuElement.h"
+#include "nsIDOMXULPopupElement.h"
 
 // ------------------------ Menu Item -----------------------------
 
@@ -56,18 +56,14 @@ NS_IMETHODIMP nsXULMenuitemAccessible::GetAccState(PRUint32 *_retval)
   nsAccessible::GetAccState(_retval);
 
   // Focused?
-  nsCOMPtr<nsIContent> content = do_QueryInterface(mDOMNode);
-  nsCOMPtr<nsIContent> parent;
-  content->GetParent(*getter_AddRefs(parent));
-  if (parent) {
-    nsCOMPtr<nsIMenuElement> menuEl = do_QueryInterface(parent);
-    if (content == menuEl->GetActiveItem())
-      *_retval |= STATE_FOCUSED;
-  }
-
-  // Has Popup?
   nsCOMPtr<nsIDOMElement> element(do_QueryInterface(mDOMNode));
   NS_ASSERTION(element, "No DOM element for menu  node!");
+  PRBool isFocused = PR_FALSE;
+  element->HasAttribute(NS_LITERAL_STRING("_moz-menuactive"), &isFocused); 
+  if (isFocused)
+    *_retval |= STATE_FOCUSED;
+
+  // Has Popup?
   nsAutoString tagName;
   element->GetLocalName(tagName);
   if (tagName.Equals(NS_LITERAL_STRING("menu")))

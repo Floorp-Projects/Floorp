@@ -48,7 +48,6 @@ EXPORTS =				\
 	nsIContentSerializer.h		\
 	nsIHTMLToTextSink.h		\
 	nsIContentList.h		\
-	nsIMenuElement.h		\
 	$(NULL)
 
 MODULE=content

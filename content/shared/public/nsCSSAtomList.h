@@ -85,7 +85,6 @@ CSS_ATOM(langPseudo, ":lang")
 CSS_ATOM(linkPseudo, ":link")
 
 CSS_ATOM(menuPseudo, ":menu")
-CSS_ATOM(menuActivePseudo, ":-moz-menuactive")
 
 CSS_ATOM(notPseudo, ":not")
 

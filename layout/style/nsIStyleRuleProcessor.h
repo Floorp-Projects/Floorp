@@ -93,7 +93,6 @@ struct RuleProcessorData {
   PRPackedBool      mIsQuirkMode;   // Possibly remove use of this in SelectorMatches?
   PRPackedBool      mHasAttributes; // if content, content->GetAttrCount() > 0
   PRPackedBool      mIsChecked;     // checked/selected attribute for option and select elements
-  PRPackedBool      mIsMenuActive;  // menuactive state for options/menus/menuitems
   nsLinkState       mLinkState;     // if a link, this is the state, otherwise unknown
   PRInt32           mEventState;    // if content, eventStateMgr->GetContentState()
   PRInt32           mNameSpaceID;   // if content, content->GetNameSapce()
