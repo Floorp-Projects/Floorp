@@ -163,7 +163,7 @@ protected:
                              nsresult &    aRowStatus);
 
   NS_IMETHOD ReflowStandard(nsIPresContext*          aPresContext,
-                            nsHTMLReflowMetrics&     aDesiredSize,
+                            nsSize&                  aDesiredSize,
                             const nsHTMLReflowState& aReflowState,
                             nsReflowStatus&          aStatus,
                             nsMargin&                aBorder,
@@ -172,12 +172,9 @@ protected:
   PRInt32 CalculateSizeStandard (nsIPresContext*       aPresContext, 
                                   nsIRenderingContext*  aRendContext,
                                   nsIFormControlFrame*  aFrame,
-                                  const nsSize&         aCSSSize, 
                                   nsInputDimensionSpec& aSpec, 
                                   nsSize&               aDesiredSize, 
                                   nsSize&               aMinSize, 
-                                  PRBool&               aWidthExplicit, 
-                                  PRBool&               aHeightExplicit, 
                                   nscoord&              aRowHeight,
                                   nsMargin&             aBorder,
                                   nsMargin&             aPadding);
@@ -185,19 +182,16 @@ protected:
   PRInt32 CalculateSizeNavQuirks (nsIPresContext*       aPresContext, 
                                   nsIRenderingContext*  aRendContext,
                                   nsIFormControlFrame*  aFrame,
-                                  const nsSize&         aCSSSize, 
                                   nsInputDimensionSpec& aSpec, 
                                   nsSize&               aDesiredSize, 
                                   nsSize&               aMinSize, 
-                                  PRBool&               aWidthExplicit, 
-                                  PRBool&               aHeightExplicit, 
                                   nscoord&              aRowHeight,
                                   nsMargin&             aBorder,
                                   nsMargin&             aPadding);
 
 
   NS_IMETHOD ReflowNavQuirks(nsIPresContext*          aPresContext,
-                              nsHTMLReflowMetrics&     aDesiredSize,
+                              nsSize&                 aDesiredSize,
                               const nsHTMLReflowState& aReflowState,
                               nsReflowStatus&          aStatus,
                               nsMargin&                aBorder,
@@ -233,6 +227,7 @@ private:
   nsString*    mCachedState;
   nscoord      mSuggestedWidth;
   nscoord      mSuggestedHeight;
+  nsSize       mSize;
 
   PRBool mIsProcessing;
   nsFormFrame *mFormFrame;
