@@ -120,7 +120,13 @@ struct nsWatcherWindowEntry {
 #else
     mWindow = inWindow;
 #endif
-    mChrome = inChrome;
+    nsCOMPtr<nsISupportsWeakReference> supportsweak(do_QueryInterface(inChrome));
+    if (supportsweak) {
+      supportsweak->GetWeakReference(getter_AddRefs(mChromeWeak));
+    } else {
+      mChrome = inChrome;
+      mChromeWeak = 0;
+    }
     ReferenceSelf();
   }
   ~nsWatcherWindowEntry() {}
@@ -135,6 +141,7 @@ struct nsWatcherWindowEntry {
   nsIDOMWindow              *mWindow;
 #endif
   nsIWebBrowserChrome       *mChrome;
+  nsWeakPtr                  mChromeWeak;
   // each struct is in a circular, doubly-linked list
   nsWatcherWindowEntry      *mYounger, // next younger in sequence
                             *mOlder;
@@ -891,7 +898,13 @@ nsWindowWatcher::AddWindow(nsIDOMWindow *aWindow, nsIWebBrowserChrome *aChrome)
     // its chrome mapping and return
     info = FindWindowEntry(aWindow);
     if (info) {
-      info->mChrome = aChrome;
+      nsCOMPtr<nsISupportsWeakReference> supportsweak(do_QueryInterface(aChrome));
+      if (supportsweak) {
+        supportsweak->GetWeakReference(getter_AddRefs(info->mChromeWeak));
+      } else {
+        info->mChrome = aChrome;
+        info->mChromeWeak = 0;
+      }
       return NS_OK;
     }
   
@@ -1024,6 +1037,11 @@ nsWindowWatcher::GetChromeForWindow(nsIDOMWindow *aWindow, nsIWebBrowserChrome *
   nsAutoLock lock(mListLock);
   nsWatcherWindowEntry *info = FindWindowEntry(aWindow);
   if (info) {
+    if (info->mChromeWeak != nsnull) {
+      return info->mChromeWeak->
+                            QueryReferent(NS_GET_IID(nsIWebBrowserChrome),
+                                          NS_REINTERPRET_CAST(void**, _retval));
+    }
     *_retval = info->mChrome;
     NS_IF_ADDREF(*_retval);
   }

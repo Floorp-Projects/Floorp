@@ -400,13 +400,13 @@ NS_IMETHODIMP nsWebBrowser::GetContainerWindow(nsIWebBrowserChrome** aTopWindow)
 {
    NS_ENSURE_ARG_POINTER(aTopWindow);
 
-   if(mDocShellTreeOwner)
-      *aTopWindow = mDocShellTreeOwner->mWebBrowserChrome;
-   else
+   if(mDocShellTreeOwner) {
+      *aTopWindow = mDocShellTreeOwner->GetWebBrowserChrome().get();
+   } else {
       *aTopWindow = nsnull;
-   NS_IF_ADDREF(*aTopWindow);
+   }
 
-   return NS_OK;   
+   return NS_OK;
 }
 
 NS_IMETHODIMP nsWebBrowser::SetContainerWindow(nsIWebBrowserChrome* aTopWindow)
