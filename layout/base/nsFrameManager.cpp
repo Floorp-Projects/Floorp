@@ -304,6 +304,7 @@ public:
   // Undisplayed content functions
   virtual nsStyleContext* GetUndisplayedContent(nsIContent* aContent);
   virtual void SetUndisplayedContent(nsIContent* aContent, nsStyleContext* aStyleContext);
+  virtual void ChangeUndisplayedContent(nsIContent* aContent, nsStyleContext* aStyleContext);
   NS_IMETHOD ClearUndisplayedContentIn(nsIContent* aContent, nsIContent* aParentContent);
   NS_IMETHOD ClearAllUndisplayedContentIn(nsIContent* aParentContent);
   NS_IMETHOD ClearUndisplayedContentMap();
@@ -859,6 +860,32 @@ FrameManager::SetUndisplayedContent(nsIContent* aContent,
       mUndisplayedMap->AddNodeFor(parent, aContent, aStyleContext);
     }
   }
+}
+
+void
+FrameManager::ChangeUndisplayedContent(nsIContent* aContent, 
+                                       nsStyleContext* aStyleContext)
+{
+  if (!mPresShell)
+    return;
+  NS_ASSERTION(mUndisplayedMap, "no existing undisplayed content");
+  
+#ifdef DEBUG_UNDISPLAYED_MAP
+   static int i = 0;
+   printf("ChangeUndisplayedContent(%d): p=%p \n", i++, (void *)aContent);
+#endif
+
+  nsCOMPtr<nsIContent> parent;
+  aContent->GetParent(getter_AddRefs(parent));
+  for (UndisplayedNode* node = mUndisplayedMap->GetFirstNode(parent);
+         node; node = node->mNext) {
+    if (node->mContent == aContent) {
+      node->mStyle = aStyleContext;
+      return;
+    }
+  }
+
+  NS_NOTREACHED("no existing undisplayed content");
 }
 
 NS_IMETHODIMP

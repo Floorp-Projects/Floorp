@@ -110,6 +110,8 @@ public:
   virtual nsStyleContext* GetUndisplayedContent(nsIContent* aContent) = 0;
   virtual void SetUndisplayedContent(nsIContent* aContent,
                                      nsStyleContext* aStyleContext) = 0;
+  virtual void ChangeUndisplayedContent(nsIContent* aContent,
+                                        nsStyleContext* aStyleContext) = 0;
   NS_IMETHOD ClearUndisplayedContentIn(nsIContent* aContent, nsIContent* aParentContent) = 0;
   NS_IMETHOD ClearAllUndisplayedContentIn(nsIContent* aParentContent) = 0;
   NS_IMETHOD ClearUndisplayedContentMap() = 0;
