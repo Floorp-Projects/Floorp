@@ -44,6 +44,8 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= rdfutil
 LIBRARY_NAME	= rdfutil_s
+MOZILLA_INTERNAL_API = 1
+
 REQUIRES	= xpcom \
 		  string \
 		  rdf \

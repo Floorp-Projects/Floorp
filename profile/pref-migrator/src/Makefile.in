@@ -47,6 +47,7 @@ LIBRARY_NAME	= nsprefm
 EXPORT_LIBRARY = 1
 IS_COMPONENT	= 1
 MODULE_NAME	= nsPrefMigrationModule
+MOZILLA_INTERNAL_API = 1
 
 PACKAGE_FILE = prefmigr.pkg
 

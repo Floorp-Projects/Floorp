@@ -44,6 +44,8 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= TestStreamConv
 PROGRAM		= TestStreamConv$(BIN_SUFFIX)
+MOZILLA_INTERNAL_API = 1
+
 REQUIRES	= necko \
 		  xpcom \
 		  string \
