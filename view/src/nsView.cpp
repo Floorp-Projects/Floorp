@@ -142,6 +142,34 @@ nsEventStatus PR_CALLBACK HandleEvent(nsGUIEvent *aEvent)
   return result;
 }
 
+// this should be added to nsView. maybe
+
+nsIWidget * GetWindowTemp(nsIView *aView, nscoord *aDx, nscoord *aDy)
+{
+  nsIWidget *window = nsnull;
+  nsIView   *ancestor = aView;
+
+  while (nsnull != ancestor)
+  {
+	  if (nsnull != (window = ancestor->GetWidget()))
+	    return window;
+
+	  ancestor = ancestor->GetParent();
+
+    if ((nsnull != aDx) && (nsnull != aDy))
+    {
+      nscoord offx, offy;
+
+      ancestor->GetPosition(&offx, &offy);
+
+      *aDx += offx;
+      *aDy += offy;
+    }
+  }
+
+  return nsnull;
+}
+
 nsView :: nsView()
 {
   mVis = nsViewVisibility_kShow;
@@ -227,22 +255,6 @@ nsresult nsView :: QueryInterface(const nsIID& aIID, void** aInstancePtr)
     return mInnerWindow->QueryInterface(aIID, aInstancePtr);
 
   return NS_NOINTERFACE;
-}
-
-// this should be added to nsView
-nsIWidget*
-GetWindowTemp(nsIView *aView)
-{
-  nsIWidget *window = nsnull;
-
-  nsIView *ancestor = aView;
-  while (nsnull != ancestor) {
-	  if (nsnull != (window = ancestor->GetWidget())) {
-	    return window;
-	  }
-	  ancestor = ancestor->GetParent();
-  }
-  return nsnull;
 }
 
 nsrefcnt nsView::AddRef() 
@@ -341,7 +353,7 @@ nsresult nsView :: Init(nsIViewManager* aManager,
         mWindow->Create(aNative, trect, ::HandleEvent, dx, nsnull, aWidgetInitData);
       else
       {
-        nsIWidget *parent = GetWindowTemp(aParent); 
+        nsIWidget *parent = GetWindowTemp(aParent, nsnull, nsnull); 
         mWindow->Create(parent, trect, ::HandleEvent, dx, nsnull, aWidgetInitData);
         NS_IF_RELEASE(parent);
       }
@@ -615,12 +627,22 @@ void nsView :: SetPosition(nscoord x, nscoord y)
   if (nsnull != mWindow)
   {
     nsIPresContext  *px = mViewManager->GetPresContext();
-    nscoord         offx, offy;
+    nscoord         offx, offy, parx = 0, pary = 0;
     float           scale = px->GetTwipsToPixels();
-
+    nsIView         *par = GetParent();
+  
     mViewManager->GetWindowOffsets(&offx, &offy);
+
+    if (nsnull != par)
+    {
+      nsIWidget *pwidget = nsnull;
+  
+      pwidget = GetWindowTemp(par, &parx, &pary);
+      NS_IF_RELEASE(pwidget);
+    }
     
-    mWindow->Move(NS_TO_INT_ROUND((x + offx) * scale), NS_TO_INT_ROUND((y + offy) * scale));
+    mWindow->Move(NS_TO_INT_ROUND((x + parx + offx) * scale),
+                  NS_TO_INT_ROUND((y + pary + offy) * scale));
 
     NS_RELEASE(px);
   }

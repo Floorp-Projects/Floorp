@@ -245,6 +245,19 @@ void nsScrollingView :: SetDimensions(nscoord width, nscoord height)
   NS_RELEASE(cx);
 }
 
+PRBool nsScrollingView :: Paint(nsIRenderingContext& rc, const nsRect& rect,
+                                PRUint32 aPaintFlags, nsIView *aBackstop)
+{
+  PRBool  retval;
+
+  rc.PushState();
+  rc.Translate(-mOffsetX, -mOffsetY);
+  retval = nsView::Paint(rc, rect, aPaintFlags, aBackstop);
+  rc.PopState();
+
+  return retval;
+}
+
 nsEventStatus nsScrollingView :: HandleEvent(nsGUIEvent *aEvent, PRUint32 aEventFlags)
 {
   nsEventStatus retval =  nsEventStatus_eIgnore; 
@@ -316,7 +329,11 @@ nsEventStatus nsScrollingView :: HandleEvent(nsGUIEvent *aEvent, PRUint32 aEvent
           if (dy != 0)
           {
             AdjustChildWidgets(0, dy);
-            mWindow->Scroll(0, dy, &clip);
+
+            if (nsnull != mWindow)
+              mWindow->Scroll(0, dy, &clip);
+            else
+              mViewManager->UpdateView(this, nsnull, 0);
           }
 
           if (nsnull != thiswin)
@@ -377,7 +394,11 @@ nsEventStatus nsScrollingView :: HandleEvent(nsGUIEvent *aEvent, PRUint32 aEvent
           if (dx != 0)
           {
             AdjustChildWidgets(dx, 0);
-            mWindow->Scroll(dx, 0, &clip);
+
+            if (nsnull != mWindow)
+              mWindow->Scroll(dx, 0, &clip);
+            else
+              mViewManager->UpdateView(this, nsnull, 0);
           }
 
           if (nsnull != thiswin)

@@ -321,16 +321,12 @@ void nsViewManager :: Refresh(nsIView *aView, nsIRenderingContext *aContext, nsI
   localcx->SetClipRegion(*region, nsClipCombine_kReplace);
   region->Offset(NS_TO_INT_ROUND(xoff * scale), NS_TO_INT_ROUND(yoff * scale));
 
-  localcx->Translate(-xoff, -yoff);
-
   nsRect trect;
 
   region->GetBoundingBox(&trect.x, &trect.y, &trect.width, &trect.height);
   trect *= mContext->GetPixelsToTwips();
 
-  localcx->PushState();
   aView->Paint(*localcx, trect, 0);
-  localcx->PopState();
 
   if (aUpdateFlags & NS_VMREFRESH_DOUBLE_BUFFER)
     localcx->CopyOffScreenBits(wrect);
@@ -386,18 +382,17 @@ void nsViewManager :: Refresh(nsIView *aView, nsIRenderingContext *aContext, nsR
 
   GetWindowOffsets(&xoff, &yoff);
 
-  localcx->Translate(-xoff, -yoff); 
-
   nsRect trect = *rect;
 
   if (aUpdateFlags & NS_VMREFRESH_SCREEN_RECT)
     trect.MoveBy(xoff, yoff);
   else
+  {
+    trect.MoveBy(-xoff, -yoff);
     localcx->SetClipRect(trect, nsClipCombine_kReplace);
+  }
 
-  localcx->PushState();
   aView->Paint(*localcx, trect, 0);
-  localcx->PopState();
 
   if (aUpdateFlags & NS_VMREFRESH_DOUBLE_BUFFER)
     localcx->CopyOffScreenBits(wrect);
