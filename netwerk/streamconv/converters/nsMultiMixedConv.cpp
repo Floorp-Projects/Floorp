@@ -35,6 +35,8 @@ NS_IMPL_ISUPPORTS2(nsMultiMixedConv, nsIStreamConverter, nsIStreamListener);
 
 
 // nsIStreamConverter implementation
+
+// No syncronous conversion at this time.
 NS_IMETHODIMP
 nsMultiMixedConv::Convert(nsIInputStream *aFromStream,
                           const PRUnichar *aFromType,
@@ -43,11 +45,18 @@ nsMultiMixedConv::Convert(nsIInputStream *aFromStream,
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+// Stream converter service calls this to initialize the actual stream converter (us).
 NS_IMETHODIMP
 nsMultiMixedConv::AsyncConvertData(const PRUnichar *aFromType, const PRUnichar *aToType,
                                    nsIStreamListener *aListener, nsISupports *aCtxt) {
     NS_ASSERTION(aListener && aFromType && aToType, "null pointer passed into multi mixed converter");
 
+    // hook up our final listener. this guy gets the various On*() calls we want to throw
+    // at him.
+    //
+    // WARNING: this listener must be able to handle multiple OnStartRequest, OnDataAvail()
+    //  and OnStopRequest() call combinations. We call of series of these for each sub-part
+    //  in the raw stream.
     mFinalListener = aListener;
     NS_ADDREF(mFinalListener);
 
@@ -60,10 +69,8 @@ NS_IMETHODIMP
 nsMultiMixedConv::OnDataAvailable(nsIChannel *channel, nsISupports *ctxt,
                                   nsIInputStream *inStr, PRUint32 sourceOffset, PRUint32 count) {
     nsresult rv;
-    char *buffer = nsnull, *rootMemPtr = nsnull, *delimiter = nsnull, *bndry = nsnull;
+    char *buffer = nsnull, *rootMemPtr = nsnull;
     PRUint32 bufLen, read;
-    rv = inStr->GetLength(&bufLen);
-    if (NS_FAILED(rv)) return rv;
 
     NS_ASSERTION(channel, "multimixed converter needs a channel");
 
@@ -73,6 +80,7 @@ nsMultiMixedConv::OnDataAvailable(nsIChannel *channel, nsISupports *ctxt,
         nsIHTTPChannel *httpChannel = nsnull;
         rv = channel->QueryInterface(NS_GET_IID(nsIHTTPChannel), (void**)&httpChannel);
         if (NS_SUCCEEDED(rv)) {
+            char *bndry = nsnull, *delimiter = nsnull;
             nsIAtom *header = NS_NewAtom("content-type");
             if (!header) return NS_ERROR_OUT_OF_MEMORY;
             rv = httpChannel->GetResponseHeader(header, &delimiter);
@@ -81,23 +89,27 @@ nsMultiMixedConv::OnDataAvailable(nsIChannel *channel, nsISupports *ctxt,
             if (NS_FAILED(rv)) return rv;
 
             bndry = PL_strstr(delimiter, "boundary");
-            if (!bndry) {
-                // if we dont' have a boundary we're hosed.
-                return NS_ERROR_FAILURE;
-            }
+            if (!bndry) return NS_ERROR_FAILURE;
 
             bndry = PL_strchr(bndry, '=');
             if (!bndry) return NS_ERROR_FAILURE;
 
-            bndry += 1;
+            bndry++; // move past the equals sign
 
             nsString2 boundaryString(bndry, eOneByte);
             boundaryString.StripWhitespace();
             mBoundaryCStr = boundaryString.ToNewCString();
             if (!mBoundaryCStr) return NS_ERROR_OUT_OF_MEMORY;
             mBoundaryStrLen = boundaryString.Length();
+        } else {
+            // we couldn't get at the boundary and we need one.
+            NS_ASSERTION(0, "no http channel to get the multipart boundary from");
+            return NS_ERROR_FAILURE;
         }
     }
+
+    rv = inStr->GetLength(&bufLen);
+    if (NS_FAILED(rv)) return rv;
 
     rootMemPtr = buffer = (char*)nsAllocator::Alloc(bufLen + 1);
     if (!buffer) return NS_ERROR_OUT_OF_MEMORY;
@@ -106,7 +118,17 @@ nsMultiMixedConv::OnDataAvailable(nsIChannel *channel, nsISupports *ctxt,
     if (NS_FAILED(rv)) return rv;
     buffer[bufLen] = '\0';
 
-    // search the buffered data for the delimiting token.
+    // Break up the stream into it sub parts and send off an On*() triple combination
+    // for each subpart.
+
+    // This design of HTTP's multipart/x-mixed-replace (see nsMultiMixedConv.h for more info)
+    // was flawed from the start. This parsing makes the following, poor, assumption about
+    // the data coming from the server:
+    // 
+    //  - The server will never send a partial boundary token
+    // 
+    // This assumption is necessary in order for this type to be handled. Also note that
+    // the server doesn't send any Content-Length information.
     char *boundaryLoc = PL_strstr(buffer, mBoundaryCStr);
     do {
         if (boundaryLoc) {
@@ -218,8 +240,6 @@ nsMultiMixedConv::OnDataAvailable(nsIChannel *channel, nsISupports *ctxt,
                         rv = SendData(buffer, mPartChannel, ctxt);
                         if (NS_FAILED(rv)) return rv;
                     }
-                    // XXX we can probably break out of the loop here instead of iterating
-                    // XXX again.
                     boundaryLoc = PL_strstr(buffer, mBoundaryCStr);
                 }
             } else {
@@ -261,10 +281,10 @@ nsMultiMixedConv::OnStopRequest(nsIChannel *channel, nsISupports *ctxt,
 // nsMultiMixedConv methods
 nsMultiMixedConv::nsMultiMixedConv() {
     NS_INIT_ISUPPORTS();
-    mFinalListener = nsnull;
-    mBoundaryCStr = nsnull;
-    mBoundaryStrLen = mPartCount = 0;
-    mPartChannel = nsnull;
+    mFinalListener      = nsnull;
+    mBoundaryCStr       = nsnull;
+    mPartChannel        = nsnull;
+    mBoundaryStrLen     = mPartCount = 0;
 }
 
 nsMultiMixedConv::~nsMultiMixedConv() {
@@ -387,9 +407,7 @@ MultiMixedFactory::CreateInstance(nsISupports *aOuter,
 }
 
 nsresult
-MultiMixedFactory::LockFactory(PRBool aLock)
-{
-    // Not implemented in simplest case.
+MultiMixedFactory::LockFactory(PRBool aLock){
     return NS_OK;
 }
 
@@ -399,8 +417,7 @@ NSGetFactory(nsISupports* aServMgr,
              const nsCID &aClass,
              const char *aClassName,
              const char *aProgID,
-             nsIFactory **aFactory)
-{
+             nsIFactory **aFactory) {
     nsresult rv;
     if (aFactory == nsnull)
         return NS_ERROR_NULL_POINTER;
@@ -421,8 +438,7 @@ NSGetFactory(nsISupports* aServMgr,
 
 
 extern "C" PR_IMPLEMENT(nsresult)
-NSRegisterSelf(nsISupports* aServMgr , const char* aPath)
-{
+NSRegisterSelf(nsISupports* aServMgr , const char* aPath) {
     nsresult rv;
 
     nsCOMPtr<nsIServiceManager> servMgr(do_QueryInterface(aServMgr, &rv));
@@ -443,8 +459,7 @@ NSRegisterSelf(nsISupports* aServMgr , const char* aPath)
 
 
 extern "C" PR_IMPLEMENT(nsresult)
-NSUnregisterSelf(nsISupports* aServMgr, const char* aPath)
-{
+NSUnregisterSelf(nsISupports* aServMgr, const char* aPath) {
     nsresult rv;
 
     nsCOMPtr<nsIServiceManager> servMgr(do_QueryInterface(aServMgr, &rv));
