@@ -49,7 +49,7 @@ protected:
   virtual ~nsInputCheckboxFrame();
   PRBool   mCacheState;
   virtual void GetDesiredSize(nsIPresContext* aPresContext,
-                              const nsSize& aMaxSize,
+                              const nsReflowState& aReflowState,
                               nsReflowMetrics& aDesiredLayoutSize,
                               nsSize& aDesiredWidgetSize);
 };
@@ -93,7 +93,7 @@ PRInt32 nsInputCheckboxFrame::GetPadding() const
 
 void
 nsInputCheckboxFrame::GetDesiredSize(nsIPresContext* aPresContext,
-                                     const nsSize& aMaxSize,
+                                     const nsReflowState& aReflowState,
                                      nsReflowMetrics& aDesiredLayoutSize,
                                      nsSize& aDesiredWidgetSize)
 {
@@ -109,6 +109,8 @@ nsInputCheckboxFrame::GetDesiredSize(nsIPresContext* aPresContext,
   float p2t = aPresContext->GetPixelsToTwips();
   aDesiredWidgetSize.width  = (int)(12 * p2t);
   aDesiredWidgetSize.height = (int)(12 * p2t);
+  // XXX Why is padding being added? GetDesiredSize() as defined by nsLeafFrame
+  // should return the size of the content area only...
   PRInt32 padding = GetPadding();
   aDesiredLayoutSize.width  = aDesiredWidgetSize.width  + (2 * padding);
   aDesiredLayoutSize.height = aDesiredWidgetSize.height;

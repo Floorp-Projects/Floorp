@@ -52,7 +52,7 @@ protected:
   virtual ~nsInputRadioFrame();
 
   virtual void GetDesiredSize(nsIPresContext* aPresContext,
-                              const nsSize& aMaxSize,
+                              const nsReflowState& aReflowState,
                               nsReflowMetrics& aDesiredLayoutSize,
                               nsSize& aDesiredWidgetSize);
 };
@@ -96,7 +96,7 @@ nsInputRadioFrame::GetCID()
 
 void 
 nsInputRadioFrame::GetDesiredSize(nsIPresContext* aPresContext,
-                                  const nsSize& aMaxSize,
+                                  const nsReflowState& aReflowState,
                                   nsReflowMetrics& aDesiredLayoutSize,
                                   nsSize& aDesiredWidgetSize)
 {
@@ -104,6 +104,8 @@ nsInputRadioFrame::GetDesiredSize(nsIPresContext* aPresContext,
   aDesiredWidgetSize.width  = (int)(12 * p2t);
   aDesiredWidgetSize.height = (int)(12 * p2t);
   PRInt32 padding = GetPadding();
+  // XXX Why is padding being added? GetDesiredSize() as defined by nsLeafFrame
+  // should return the size of the content area only...
   aDesiredLayoutSize.width  = aDesiredWidgetSize.width  + (2 * padding);
   aDesiredLayoutSize.height = aDesiredWidgetSize.height;
   aDesiredLayoutSize.ascent = aDesiredLayoutSize.height;

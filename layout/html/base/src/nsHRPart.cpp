@@ -81,7 +81,6 @@ protected:
 
   virtual void GetDesiredSize(nsIPresContext* aPresContext,
                               const nsReflowState& aReflowState,
-                              const nsSize& aMaxSize,
                               nsReflowMetrics& aDesiredSize);
 };
 
@@ -227,7 +226,6 @@ HRuleFrame::Paint(nsIPresContext&      aPresContext,
 void
 HRuleFrame::GetDesiredSize(nsIPresContext* aPresContext,
                            const nsReflowState& aReflowState,
-                           const nsSize& aMaxSize,
                            nsReflowMetrics& aDesiredSize)
 {
   nsStylePosition* position = (nsStylePosition*)
@@ -237,18 +235,18 @@ HRuleFrame::GetDesiredSize(nsIPresContext* aPresContext,
   }
   else if (position->mWidth.GetUnit() == eStyleUnit_Percent) {
     float pct = position->mWidth.GetPercentValue();
-    aDesiredSize.width = nscoord(pct * aMaxSize.width);
+    aDesiredSize.width = nscoord(pct * aReflowState.maxSize.width);
   }
   else {
-    if (aMaxSize.width == NS_UNCONSTRAINEDSIZE) {
+    if (aReflowState.maxSize.width == NS_UNCONSTRAINEDSIZE) {
       aDesiredSize.width = 1;
     } else {
-      aDesiredSize.width = aMaxSize.width;
+      aDesiredSize.width = aReflowState.maxSize.width;
     }
   }
-  if (aMaxSize.width != NS_UNCONSTRAINEDSIZE) {
-    if (aDesiredSize.width  < aMaxSize.width) {
-      aDesiredSize.width = aMaxSize.width;
+  if (aReflowState.maxSize.width != NS_UNCONSTRAINEDSIZE) {
+    if (aDesiredSize.width  < aReflowState.maxSize.width) {
+      aDesiredSize.width = aReflowState.maxSize.width;
     }
   }
 

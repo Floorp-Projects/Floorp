@@ -190,7 +190,6 @@ nsInputFrame::IsHidden()
 void 
 nsInputFrame::GetDesiredSize(nsIPresContext* aPresContext,
                              const nsReflowState& aReflowState,
-                             const nsSize& aMaxSize,
                              nsReflowMetrics& aDesiredLayoutSize,
                              nsSize& aDesiredWidgetSize)
 {
@@ -210,11 +209,10 @@ nsInputFrame::GetDesiredSize(nsIPresContext* aPresContext,
 void 
 nsInputFrame::GetDesiredSize(nsIPresContext* aPresContext,
                              const nsReflowState& aReflowState,
-                             const nsSize& aMaxSize,
                              nsReflowMetrics& aDesiredSize)
 {
   nsSize ignore;
-  GetDesiredSize(aPresContext, aReflowState, aMaxSize, aDesiredSize, ignore);
+  GetDesiredSize(aPresContext, aReflowState, aDesiredSize, ignore);
 }
 
 NS_METHOD
@@ -244,8 +242,7 @@ nsInputFrame::Reflow(nsIPresContext*      aPresContext,
 	  nsIPresShell   *presShell = aPresContext->GetShell();     // need to release
 	  nsIViewManager *viewMan   = presShell->GetViewManager();  // need to release
 
-    GetDesiredSize(aPresContext, aReflowState, aReflowState.maxSize,
-                   aDesiredSize, mWidgetSize);
+    GetDesiredSize(aPresContext, aReflowState, aDesiredSize, mWidgetSize);
 
     //nsRect boundBox(0, 0, mWidgetSize.width, mWidgetSize.height); 
     nsRect boundBox(0, 0, aDesiredSize.width, aDesiredSize.height); 
@@ -292,8 +289,7 @@ nsInputFrame::Reflow(nsIPresContext*      aPresContext,
 	  NS_IF_RELEASE(presShell); 
   }
   else {
-    GetDesiredSize(aPresContext, aReflowState, aReflowState.maxSize,
-                   aDesiredSize, mWidgetSize);
+    GetDesiredSize(aPresContext, aReflowState, aDesiredSize, mWidgetSize);
 
     // If we are being reflowed and have a view, hide the view until
     // we are told to paint (which is when our location will have

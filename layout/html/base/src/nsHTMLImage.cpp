@@ -69,7 +69,6 @@ protected:
 
   virtual void GetDesiredSize(nsIPresContext* aPresContext,
                               const nsReflowState& aReflowState,
-                              const nsSize& aMaxSize,
                               nsReflowMetrics& aDesiredSize);
 
   nsIImageMap* GetImageMap();
@@ -229,7 +228,6 @@ nsHTMLImageLoader::LoadImage(nsIPresContext* aPresContext,
 void
 nsHTMLImageLoader::GetDesiredSize(nsIPresContext* aPresContext,
                                   const nsReflowState& aReflowState,
-                                  const nsSize& aMaxSize,
                                   nsReflowMetrics& aDesiredSize)
 {
   nsSize styleSize;
@@ -363,7 +361,6 @@ ImageFrame::DeleteFrame()
 void
 ImageFrame::GetDesiredSize(nsIPresContext* aPresContext,
                            const nsReflowState& aReflowState,
-                           const nsSize& aMaxSize,
                            nsReflowMetrics& aDesiredSize)
 {
   // Setup url before starting the image load
@@ -371,8 +368,7 @@ ImageFrame::GetDesiredSize(nsIPresContext* aPresContext,
   if (eContentAttr_HasValue == mContent->GetAttribute("SRC", src)) {
     mImageLoader.SetURL(src);
   }
-  mImageLoader.GetDesiredSize(aPresContext, aReflowState,
-                              aMaxSize, aDesiredSize);
+  mImageLoader.GetDesiredSize(aPresContext, aReflowState, aDesiredSize);
 }
 
 NS_METHOD
