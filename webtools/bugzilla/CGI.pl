@@ -353,21 +353,21 @@ sub navigation_links($) {
             my $cur = lsearch(\@bugs, $::FORM{"id"});
 
             if ($cur > 0) {
-                $retval .= "<link rel=\"First\" href=\"show_bug.cgi?id=$bugs[0]\" />\n";
-                $retval .= "<link rel=\"Prev\" href=\"show_bug.cgi?id=$bugs[$cur - 1]\" />\n";
+                $retval .= "<link rel=\"First\" href=\"show_bug.cgi?id=$bugs[0]\">\n";
+                $retval .= "<link rel=\"Prev\" href=\"show_bug.cgi?id=$bugs[$cur - 1]\">\n";
             } 
             if ($cur < $#bugs) {
-                $retval .= "<link rel=\"Next\" href=\"show_bug.cgi?id=$bugs[$cur + 1]\" />\n";
-                $retval .= "<link rel=\"Last\" href=\"show_bug.cgi?id=$bugs[$#bugs]\" />\n";
+                $retval .= "<link rel=\"Next\" href=\"show_bug.cgi?id=$bugs[$cur + 1]\">\n";
+                $retval .= "<link rel=\"Last\" href=\"show_bug.cgi?id=$bugs[$#bugs]\">\n";
             }
 
-            $retval .= "<link rel=\"Up\" href=\"buglist.cgi?regetlastlist=1\" />\n";
-            $retval .= "<link rel=\"Contents\" href=\"buglist.cgi?regetlastlist=1\" />\n";
+            $retval .= "<link rel=\"Up\" href=\"buglist.cgi?regetlastlist=1\">\n";
+            $retval .= "<link rel=\"Contents\" href=\"buglist.cgi?regetlastlist=1\">\n";
         } else {
             # We are on a bug list
-            $retval .= "<link rel=\"First\" href=\"show_bug.cgi?id=$bugs[0]\" />\n";
-            $retval .= "<link rel=\"Next\" href=\"show_bug.cgi?id=$bugs[0]\" />\n";
-            $retval .= "<link rel=\"Last\" href=\"show_bug.cgi?id=$bugs[$#bugs]\" />\n";
+            $retval .= "<link rel=\"First\" href=\"show_bug.cgi?id=$bugs[0]\">\n";
+            $retval .= "<link rel=\"Next\" href=\"show_bug.cgi?id=$bugs[0]\">\n";
+            $retval .= "<link rel=\"Last\" href=\"show_bug.cgi?id=$bugs[$#bugs]\">\n";
         }
     }
     
@@ -972,7 +972,7 @@ sub ThrowTemplateError {
             send it to $maintainer with details of what you were doing at the 
             time this message appeared.
           </p>
-          <script> <!--
+          <script type="text/javascript"> <!--
             document.write("<p>URL: " + document.location + "</p>");
           // -->
           </script>

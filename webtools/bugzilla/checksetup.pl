@@ -806,14 +806,14 @@ if ($my_index_html) {
         open HTML, ">index.html";
         print HTML <<'END';
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
-<HTML>
-<HEAD>
-<META HTTP-EQUIV="REFRESH" CONTENT="0; URL=index.cgi">
-</HEAD>
-<BODY>
-<H1>I think you are looking for <a href="index.cgi">index.cgi</a></H1>
-</BODY>
-</HTML>
+<html>
+<head>
+<meta http-equiv="Refresh" content="0; URL=index.cgi">
+</head>
+<body>
+<h1>I think you are looking for <a href="index.cgi">index.cgi</a></h1>
+</body>
+</html>
 END
         close HTML;
     }

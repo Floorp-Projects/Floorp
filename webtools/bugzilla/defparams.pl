@@ -204,7 +204,7 @@ DefParam("LDAPmailattribute",
 
 
 DefParam("mostfreqthreshold",
-         "The minimum number of duplicates a bug needs to show up on the <A HREF=\"duplicates.cgi\">most frequently reported bugs page</a>. If you have a large database and this page takes a long time to load, try increasing this number.",
+         "The minimum number of duplicates a bug needs to show up on the <a href=\"duplicates.cgi\">most frequently reported bugs page</a>. If you have a large database and this page takes a long time to load, try increasing this number.",
          "t",
          "2");
 

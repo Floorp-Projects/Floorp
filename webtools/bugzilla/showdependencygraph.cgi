@@ -45,10 +45,10 @@ sub CreateImagemap {
     open MAP, "<$mapfilename";
     while(my $line = <MAP>) {
         if($line =~ /^default ([^ ]*)(.*)$/) {
-            $default = qq{<area shape="default" href="$1">\n};
+            $default = qq{<area alt="" shape="default" href="$1">\n};
         }
         if ($line =~ /^rectangle \((.*),(.*)\) \((.*),(.*)\) (http[^ ]*)(.*)?$/) {
-            $map .= qq{<area name="bug$6" shape="rect" href="$5" coords="$1,$4,$3,$2">\n};
+            $map .= qq{<area alt="bug$6" name="bug$6" shape="rect" href="$5" coords="$1,$4,$3,$2">\n};
         }
     }
     close MAP;

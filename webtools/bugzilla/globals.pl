@@ -947,7 +947,7 @@ sub DBNameToIdAndCheck {
     }
 
     $name = html_quote($name);
-    ThrowUserError("The name <TT>$name</TT> is not a valid username.  
+    ThrowUserError("The name <tt>$name</tt> is not a valid username.  
                     Either you misspelled it, or the person has not
                     registered for a Bugzilla account.");
 }

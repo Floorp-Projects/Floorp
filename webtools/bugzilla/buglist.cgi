@@ -832,7 +832,7 @@ sub GenerateSQL {
             $F{"type$chart-$row-$col"} = shift(@$ref);
             $F{"value$chart-$row-$col"} = shift(@$ref);
             if ($debug) {
-                print qq{<P>$F{"field$chart-$row-$col"} | $F{"type$chart-$row-$col"} | $F{"value$chart-$row-$col"}*\n};
+                print qq{<p>$F{"field$chart-$row-$col"} | $F{"type$chart-$row-$col"} | $F{"value$chart-$row-$col"}*</p>\n};
             }
             $col++;
 
@@ -971,7 +971,7 @@ sub GenerateSQL {
                     if ("$f,$t" =~ m/$key/) {
                         my $ref = $funcsbykey{$key};
                         if ($debug) {
-                            print "<P>$key ($f , $t ) => ";
+                            print "<p>$key ($f , $t ) => ";
                         }
                         $ff = $f;
                         if ($f !~ /\./) {
@@ -979,7 +979,7 @@ sub GenerateSQL {
                         }
                         &$ref;
                         if ($debug) {
-                            print "$f , $t , $term";
+                            print "$f , $t , $term</p>";
                         }
                         if ($term) {
                             last;
@@ -1020,7 +1020,7 @@ sub GenerateSQL {
     $query = SelectVisible($query, $::userid, $::usergroupset);
 
     if ($debug) {
-        print "<P><CODE>" . value_quote($query) . "</CODE><P>\n";
+        print "<p><code>" . value_quote($query) . "</code></p>\n";
         exit;
     }
     return $query;

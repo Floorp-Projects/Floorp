@@ -55,17 +55,17 @@ my $offervotecacherebuild = 0;
 
 sub Status {
     my ($str) = (@_);
-    print "$str <P>\n";
+    print "$str <p>\n";
 }
 
 sub Alert {
     my ($str) = (@_);
-    Status("<font color=red>$str</font>");
+    Status("<font color=\"red\">$str</font>");
 }
 
 sub BugLink {
     my ($id) = (@_);
-    return "<a href='show_bug.cgi?id=$id'>$id</a>";
+    return "<a href=\"show_bug.cgi?id=$id\">$id</a>";
 }
 
 sub AlertBadVoteCache {
@@ -142,7 +142,7 @@ if (exists $::FORM{'rebuildvotecache'}) {
     Status("Vote cache has been rebuilt.");
 }
 
-print "OK, now running sanity checks.<P>\n";
+print "OK, now running sanity checks.<p>\n";
 
 # This one goes first, because if this is wrong, then the below tests
 # will probably fail too

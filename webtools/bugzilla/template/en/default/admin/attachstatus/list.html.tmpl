@@ -55,10 +55,10 @@
       <td>[% statusdef.sortkey %]</td>
       <td>[% statusdef.product FILTER html %]</td>
       <td>
-        <a href="editattachstatuses.cgi?action=edit&id=[% statusdef.id %]">
+        <a href="editattachstatuses.cgi?action=edit&amp;id=[% statusdef.id %]">
             Edit</a>
         &nbsp;|&nbsp;
-        <a href="editattachstatuses.cgi?action=confirmdelete&id=[% statusdef.id %]" 
+        <a href="editattachstatuses.cgi?action=confirmdelete&amp;id=[% statusdef.id %]" 
          onclick="return confirmDelete([% statusdef.attachcount %],
                                        '[% statusdef.name FILTER js %]',
                                        [% statusdef.id %]);">
@@ -76,7 +76,7 @@
   </tr>
 
 </table>
-<script language="JavaScript">
+<script language="JavaScript" type="text/javascript"><!--
   function confirmDelete(attachcount, name, id)
   {
     if (attachcount > 0) {
@@ -94,6 +94,7 @@
     }
     return false;
   }
+-->
 </script>
 
 [% PROCESS global/footer.html.tmpl %]

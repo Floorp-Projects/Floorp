@@ -88,8 +88,8 @@ if (defined $::FORM{'rememberedquery'}) {
     print "Set-Cookie: SPLITHEADER=$::FORM{'splitheader'} ; path=$cookiepath ; expires=Sun, 30-Jun-2029 00:00:00 GMT\n";
     print "Refresh: 0; URL=buglist.cgi?$::FORM{'rememberedquery'}\n";
     print "\n";
-    print "<META HTTP-EQUIV=Refresh CONTENT=\"1; URL=$urlbase"."buglist.cgi?$::FORM{'rememberedquery'}\">\n";
-    print "<TITLE>What a hack.</TITLE>\n";
+    print "<meta http-equiv=\"Refresh\" content=\"1; URL=$urlbase"."buglist.cgi?$::FORM{'rememberedquery'}\">\n";
+    print "<title>What a hack.</title>\n";
     PutHeader ("Change columns");
     print "Resubmitting your query with new columns...\n";
     exit;

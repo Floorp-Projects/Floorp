@@ -53,7 +53,7 @@
       var contentType = '[% contenttype %]';
       if ( contentType == 'text/plain' )
         {
-          theContent = theContent.replace( /^<html><head\/><body><pre>/i , "" );
+          theContent = theContent.replace( /^<html><head\/?><body><pre>/i , "" );
           theContent = theContent.replace( /<\/pre><\/body><\/html>$/i , "" );
           theContent = theContent.replace( /&lt;/gi , "<" );
           theContent = theContent.replace( /&gt;/gi , ">" );

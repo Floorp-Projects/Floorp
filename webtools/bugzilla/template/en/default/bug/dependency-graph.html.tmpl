@@ -51,16 +51,16 @@
 </p>
 
 [% IF image_map %]
-  <img src="[% image_url %]" usemap="#imagemap"> 
+  <img src="[% image_url %]" alt="Dependency graph" usemap="#imagemap"> 
 [% ELSE %]
   <a href="[% map_url %]">
-    <img src="[% image_url %]" ismap="ismap"> 
+    <img src="[% image_url %]" alt="Dependency graph" ismap="ismap"> 
   </a>
 [% END %]
 
 <hr>
 
-<form>
+<form action="showdependencygraph.cgi">
   <table>
     <tr>
       <td>

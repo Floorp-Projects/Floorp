@@ -43,7 +43,7 @@
         Actions:
       </td>
       
-      <td valign="middle" nowrap>
+      <td valign="middle" nowrap="nowrap">
         <a href="enter_bug.cgi">New</a> | 
         <a href="query.cgi">Query</a> |
         
@@ -63,19 +63,19 @@
 
       <td valign="middle">
         Edit <a href="userprefs.cgi">prefs</a>
-        [% ", <a href='editparams.cgi'>parameters</a>" 
+        [% ', <a href="editparams.cgi">parameters</a>' 
                                                    IF user.groups.tweakparams %]
-        [% ", <a href='editusers.cgi'>users</a>"     IF user.groups.editusers 
+        [% ', <a href="editusers.cgi">users</a>'     IF user.groups.editusers 
                                                   || (user.blessgroupset > 0) %]
-        [% ", <a href='editproducts.cgi'>products</a>" 
+        [% ', <a href="editproducts.cgi">products</a>' 
                                                 IF user.groups.editcomponents %]
-        [% ", <a href='editattachstatuses.cgi'> attachment&nbsp;statuses</a>" 
+        [% ', <a href="editattachstatuses.cgi"> attachment&nbsp;statuses</a>'
                                                 IF user.groups.editcomponents %]
-        [% ", <a href='editgroups.cgi'>groups</a>" 
+        [% ', <a href="editgroups.cgi">groups</a>' 
                                                   IF user.groups.creategroups %]
-        [% ", <a href='editkeywords.cgi'>keywords</a>" 
+        [% ', <a href="editkeywords.cgi">keywords</a>' 
                                                   IF user.groups.editkeywords %]
-        [% " | <a href='sanitycheck.cgi'>Sanity&nbsp;check</a>" 
+        [% ' | <a href="sanitycheck.cgi">Sanity&nbsp;check</a>' 
                                                    IF user.groups.tweakparams %]
 
         | <a href="relogin.cgi">Log&nbsp;out</a>&nbsp;[% user.login %]
