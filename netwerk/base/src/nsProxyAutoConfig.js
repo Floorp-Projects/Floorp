@@ -125,7 +125,21 @@ nsProxyAutoConfig.prototype = {
         // don't cache the PAC content
         channel.loadFlags |= nsIRequest.LOAD_BYPASS_CACHE;
         pacURL = uri.spec;
+        channel.notificationCallbacks = this;
         channel.asyncOpen(this, null);
+        Components.returnCode = Components.results.NS_OK;
+    },
+
+    // nsIInterfaceRequestor interface
+    getInterface: function(iid, instance) {
+        if (iid.equals(Components.interfaces.nsIAuthPrompt)) {
+            // use the window watcher service to get a nsIAuthPrompt impl
+            var ww = Components.classes["@mozilla.org/embedcomp/window-watcher;1"]
+                               .getService(Components.interfaces.nsIWindowWatcher);
+            return ww.getNewAuthPrompter(null);
+        }
+        Components.returnCode = Components.results.NS_ERROR_NO_INTERFACE;
+        return null;
     },
 
     // nsIStreamListener interface
