@@ -567,7 +567,7 @@ nsHTMLToTXTSinkStream::SetParser(nsIParser* aParser) {
 }
 
 NS_IMETHODIMP 
-nsHTMLToTXTSinkStream::NotifyError(nsresult aErrorResult)
+nsHTMLToTXTSinkStream::NotifyError(const nsParserError* aError)
 {
   return NS_OK;
 }
