@@ -43,9 +43,6 @@ sub login {
 
     # Avoid double-logins, which may confuse the auth code
     # (double cookies, odd compat code settings, etc)
-    # This is particularly important given the munging for
-    # $::COOKIE{'Bugzilla_login'} from a userid to a loginname
-    # (for backwards compat)
     if (defined $user) {
         return $user;
     }
@@ -71,11 +68,6 @@ sub login {
 
         # Compat stuff
         $::userid = $userid;
-
-        # Evil compat hack. The cookie stores the id now, not the name, but
-        # old code still looks at this to get the current user's email
-        # so it needs to be set.
-        $::COOKIE{'Bugzilla_login'} = $user->login;
     } else {
         Bugzilla->logout_request();
     }
