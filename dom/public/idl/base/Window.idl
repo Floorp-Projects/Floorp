@@ -80,6 +80,7 @@ interface Window {
 
 				DOMString escape(in DOMString str);
         DOMString unescape(in DOMString str);
+        Selection getSelection();
 };
 
 interface EventTarget {

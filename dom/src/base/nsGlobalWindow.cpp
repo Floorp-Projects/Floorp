@@ -80,6 +80,8 @@
 #include "nsIScriptGlobalObjectOwner.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsISelectionController.h"
+#include "nsIDOMSelection.h"
+#include "nsIFrameSelection.h"
 #include "nsISidebar.h"                // XXX for sidebar HACK, see bug 20721
 #include "nsIStyleContext.h"
 #include "nsIWebNavigation.h"
@@ -1808,6 +1810,32 @@ NS_IMETHODIMP GlobalWindowImpl::Unescape(const nsString& aStr, nsString& aReturn
 
    return NS_OK;
 }
+
+NS_IMETHODIMP
+GlobalWindowImpl::GetSelection(nsIDOMSelection** aSelection)
+{
+  NS_ENSURE_ARG_POINTER(aSelection);
+  *aSelection = nsnull;
+
+  if (!mDocShell)
+    return NS_OK;
+
+  nsCOMPtr<nsIPresShell> presShell;
+  mDocShell->GetPresShell(getter_AddRefs(presShell));
+
+  if (!presShell)
+    return NS_OK;
+
+  nsCOMPtr<nsIFrameSelection> selection;
+  presShell->GetFrameSelection(getter_AddRefs(selection));  
+
+  if (!selection)
+    return NS_OK;
+
+  return selection->GetSelection(nsISelectionController::SELECTION_NORMAL,
+                                 aSelection);
+}
+
 
 //*****************************************************************************
 // GlobalWindowImpl::nsIJSScriptObject
