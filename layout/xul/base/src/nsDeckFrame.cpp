@@ -32,9 +32,10 @@
 #include "nsHTMLIIDs.h"
 #include "nsUnitConversion.h"
 #include "nsINameSpaceManager.h"
-#include "nsHTMLAtoms.h"
 #include "nsXULAtoms.h"
+#include "nsHTMLAtoms.h"
 #include "nsIReflowCommand.h"
+
 
 nsresult
 NS_NewDeckFrame ( nsIFrame*& aNewFrame )
@@ -62,6 +63,7 @@ nsDeckFrame::Init(nsIPresContext&  aPresContext,
               nsIStyleContext* aContext,
               nsIFrame*        aPrevInFlow)
 {
+   // Get the element's tag
   nsresult  rv = nsHTMLContainerFrame::Init(aPresContext, aContent, aParent, aContext, aPrevInFlow);
   mSelectedChanged = PR_TRUE;
   return rv;
@@ -80,48 +82,30 @@ nsDeckFrame::AttributeChanged(nsIPresContext* aPresContext,
 
    // if the index changed hide the old element and make the now element visible
   if (aAttribute == nsHTMLAtoms::value) {
-      if (nsnull != mSelected) {
-        nsCOMPtr<nsIContent> content;
-        mSelected->GetContent(getter_AddRefs(content));
-         content->SetAttribute(kNameSpaceID_None, nsHTMLAtoms::style, "visibility: hidden ! important", PR_TRUE);
-      }
+
+    /*
+      nsCOMPtr<nsIAtom> show (do_QueryInterface(NS_NewAtom(":-moz-deck-showing")));
+      nsCOMPtr<nsIAtom> hide (do_QueryInterface(NS_NewAtom(":-moz-deck-hidden")));
+
+      if (nsnull != mSelected) 
+        ForceResolveToPseudoElement(*aPresContext,mSelected, hide);
+      */
 
       nsIFrame* frame = GetSelectedFrame();
+      mSelected = frame;
+
+      /*
       if (nsnull != frame)
       {
          mSelected = frame;
-         nsCOMPtr<nsIContent> content;
-         mSelected->GetContent(getter_AddRefs(content));
-         content->SetAttribute(kNameSpaceID_None, nsHTMLAtoms::style, "visibility: visible ! important", PR_TRUE);
+         ForceResolveToPseudoElement(*aPresContext,mSelected, show);
       }
-
+*/
 	  nsRect rect(0, 0, mRect.width, mRect.height);
     Invalidate(rect, PR_TRUE);
   }
 
-  /*
-  // if the index changed hide the old element and make the now element visible
-  if (aAttribute == nsHTMLAtoms::value) {
-      if (nsnull != mSelected) {
-        nsCOMPtr<nsIContent> content;
-        mSelected->GetContent(getter_AddRefs(content));
-        content->UnsetAttribute(kNameSpaceID_None, nsHTMLAtoms::value, PR_TRUE);
-      }
 
-      nsIFrame* frame = GetSelectedFrame();
-      if (nsnull != frame)
-      {
-         mSelected = frame;
-         nsCOMPtr<nsIContent> content;
-         mSelected->GetContent(getter_AddRefs(content));
-         content->SetAttribute(kNameSpaceID_None, nsHTMLAtoms::value, "visible", PR_TRUE);
-      }
-
-	  nsRect rect(0, 0, mRect.width, mRect.height);
-    Invalidate(rect, PR_TRUE);
-  }
-  */
-  
   
 
   if (NS_OK != rv) {
@@ -178,18 +162,6 @@ nsDeckFrame::Paint(nsIPresContext& aPresContext,
 
    
   nsHTMLContainerFrame::Paint(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer);
- 
-  /*
-  nsIFrame* selectedFrame = GetSelectedFrame();
-
-  // draw nothing if the index is out of bounds
-  if (nsnull == selectedFrame)
-     return NS_OK;
-
-  // paint the child
-  selectedFrame->Paint(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer);
-*/
-
   return NS_OK;
 }
 
@@ -201,60 +173,32 @@ nsDeckFrame::Reflow(nsIPresContext&   aPresContext,
                      nsReflowStatus&          aStatus)
 {
 
-   if (mSelectedChanged)
-    {
-    
-      mSelectedChanged = PR_FALSE;
-    }
-
+  // if there is incremental we need to tell all nsIBoxes below to blow away the
+  // cached values for the children in the reflow list
   nsIFrame* incrementalChild = nsnull;
   if ( aReflowState.reason == eReflowReason_Incremental ) {
-    nsIFrame* targetFrame;
-    
-    // See if it's targeted at us
-    aReflowState.reflowCommand->GetTarget(targetFrame);
-
-    if (this == targetFrame) {
-       // if we are the target then we are done.
-       aDesiredSize.width = mRect.width;
-       aDesiredSize.height = mRect.height;
-       return NS_OK;
-    } else {
-       aReflowState.reflowCommand->GetNext(incrementalChild);
-
-       // ensure that the child's parent is us. If its not
-       // something very bad has happened.
-       nsIFrame* parent;
-       incrementalChild->GetParent(&parent);
-       NS_ASSERTION(this == parent,"incremental reflow error!");
-    }
+    Dirty(aReflowState,incrementalChild);
   } 
 
+  // get our available size
+  nsSize availableSize(aReflowState.computedWidth,aReflowState.computedHeight);
+
+  // if the width or height are intrinsic then lay us our children out at our preferred size
+  if (aReflowState.computedWidth == NS_INTRINSICSIZE || aReflowState.computedHeight == NS_INTRINSICSIZE)
+  {
+    // get our size
+    nsBoxInfo ourSize;
+    GetBoxInfo(aPresContext, aReflowState, ourSize);
+
+    if (aReflowState.computedWidth == NS_INTRINSICSIZE)
+       availableSize.width = ourSize.prefSize.width;
+  
+    if (aReflowState.computedHeight == NS_INTRINSICSIZE)
+       availableSize.height = ourSize.prefSize.height;
+  }
+  
   aDesiredSize.width = 0;
   aDesiredSize.height = 0;
-
-  // get our available size
-  nsSize availableSize(0,0);
-
-  PRBool fixedWidthContent = aReflowState.HaveFixedContentWidth();
-  if (NS_INTRINSICSIZE == aReflowState.computedWidth) {
-		fixedWidthContent = PR_FALSE;
-  }
-
-  PRBool fixedHeightContent = aReflowState.HaveFixedContentHeight();
-  if (NS_INTRINSICSIZE == aReflowState.computedHeight) {
-		fixedHeightContent = PR_FALSE;
-  }
- 
-  if (fixedWidthContent) {
-	    availableSize.width = aReflowState.computedWidth;
-  } else
-      availableSize.width = aReflowState.availableWidth;
-
-  if (fixedHeightContent) {
-	    availableSize.height = aReflowState.computedHeight;
-  } else
-      availableSize.height = aReflowState.availableHeight;
 
   // iterate though each child
   PRBool finished = PR_FALSE;
@@ -273,79 +217,7 @@ nsDeckFrame::Reflow(nsIPresContext&   aPresContext,
       if (changedChild == childFrame)
           break;
 
-      // make sure we make the child as big as we are
-      const nsStylePosition* pos;
-      childFrame->GetStyleData(eStyleStruct_Position, (const nsStyleStruct*&)pos);
-
-      nsStyleCoord* w = (nsStyleCoord*)&pos->mWidth;
-      nsStyleCoord wcopy(*w);
-      *w = nsStyleCoord();
-      w->SetPercentValue(1);
-
-      nsStyleCoord* h = (nsStyleCoord*)&pos->mHeight;
-      nsStyleCoord hcopy(*h);
-      *h = nsStyleCoord();
-      h->SetPercentValue(1);
-
-      aDesiredSize.width = 0;
-      aDesiredSize.height = 0;
-
-      // get its margin
-      const nsStyleSpacing* spacing;
-      nsresult rv = childFrame->GetStyleData(eStyleStruct_Spacing,
-                     (const nsStyleStruct*&) spacing);
-
-      nsMargin margin;
-      spacing->GetMargin(margin);
-      nsMargin border;
-      spacing->GetBorderPadding(border);
-      nsMargin total = margin + border;
-
-      nsSize childSize(availableSize);
-
-      // flow it
-      nsHTMLReflowState reflowState(aPresContext, aReflowState, childFrame, childSize);
-
-      // if we are incremental
-      if (reflowState.reason == eReflowReason_Incremental) {
-        // if it is this child then reset the incrementalChild
-        if (incrementalChild == childFrame) {
-          incrementalChild = nsnull;
-        } else {
-          // if not our child reflow as a resize
-          reflowState.reason = eReflowReason_Resize;
-        }
-      }
-
-      reflowState.computedWidth = childSize.width;
-      reflowState.computedHeight = childSize.height;
-
-      // only subrtact margin and border if the size is not intrinsic
-      if (NS_INTRINSICSIZE != reflowState.computedWidth) 
-        reflowState.computedWidth -= (total.left + total.right);
-
-
-      if (NS_INTRINSICSIZE != reflowState.computedHeight) 
-        reflowState.computedHeight -= (total.top + total.bottom);
-
-      nsIHTMLReflow*      htmlReflow;
-
-      rv = childFrame->QueryInterface(kIHTMLReflowIID, (void**)&htmlReflow);
-      NS_ASSERTION(rv == NS_OK,"failed to get htmlReflow interface.");
-
-      htmlReflow->WillReflow(aPresContext);
-      htmlReflow->Reflow(aPresContext, aDesiredSize, reflowState, aStatus);
-      NS_ASSERTION(NS_FRAME_IS_COMPLETE(aStatus), "bad status");
-
-      *w = wcopy;
-      *h = hcopy;
-
-      // set the rect
-      childFrame->SetRect(nsRect(margin.left,margin.right,aDesiredSize.width, aDesiredSize.height));
-
-      // add the margin back in. The child should add its border automatically
-      aDesiredSize.height += (margin.top + margin.bottom);
-      aDesiredSize.width += (margin.left + margin.right);
+      FlowChildAt(childFrame, aPresContext, aDesiredSize, aReflowState, aStatus, availableSize, incrementalChild);
 
       // if the area returned is greater than our size
       if (aDesiredSize.height > availableSize.height || aDesiredSize.width > availableSize.width)
@@ -354,15 +226,18 @@ nsDeckFrame::Reflow(nsIPresContext&   aPresContext,
          changedChild = childFrame;
 
          // set our size to be the new size
-         availableSize.width = aDesiredSize.width;
-         availableSize.height = aDesiredSize.height;
+         if (aDesiredSize.width > availableSize.width)
+             availableSize.width = aDesiredSize.width;
+
+         if (aDesiredSize.height > availableSize.height)
+            availableSize.height = aDesiredSize.height;
 
          // indicate we need to start another pass
          finished = PR_FALSE;
       }
 
       // get the next child
-      rv = childFrame->GetNextSibling(&childFrame);
+      nsresult rv = childFrame->GetNextSibling(&childFrame);
       count++;
     }
 
@@ -389,6 +264,92 @@ nsDeckFrame::Reflow(nsIPresContext&   aPresContext,
 
   return NS_OK;
 }
+
+nsresult
+nsDeckFrame::FlowChildAt(nsIFrame* childFrame, 
+                     nsIPresContext& aPresContext,
+                     nsHTMLReflowMetrics&     desiredSize,
+                     const nsHTMLReflowState& aReflowState,
+                     nsReflowStatus&          aStatus,
+                     const nsSize& size,
+                     nsIFrame*& incrementalChild)
+{
+
+      // subtract out the childs margin and border 
+      const nsStyleSpacing* spacing;
+      nsresult rv = childFrame->GetStyleData(eStyleStruct_Spacing,
+                     (const nsStyleStruct*&) spacing);
+
+      nsMargin margin;
+      spacing->GetMargin(margin);
+      nsMargin border;
+      spacing->GetBorderPadding(border);
+      nsMargin total = margin + border;
+
+      const nsStylePosition* position;
+      rv = childFrame->GetStyleData(eStyleStruct_Position,
+                     (const nsStyleStruct*&) position);
+
+      nsReflowReason reason = aReflowState.reason;
+      PRBool shouldReflow = PR_TRUE;
+
+      // so if we are incremental and have already reflowed the incremental child or there is an incremental child
+      // and its not this one make sure we change the reason to resize.
+      if (reason == eReflowReason_Incremental && (nsnull == incrementalChild || incrementalChild != childFrame)) {
+          reason = eReflowReason_Resize;
+          nsRect currentSize;
+          childFrame->GetRect(currentSize);
+
+          if (currentSize.width > 0 && currentSize.height > 0)
+          {
+            desiredSize.width = currentSize.width;
+            desiredSize.height = currentSize.height;
+
+            if (currentSize.width == size.width && currentSize.height == size.height)
+                  shouldReflow = PR_FALSE;
+          }
+      }      
+
+      // ok now reflow the child into the springs calculated space
+      if (shouldReflow) {
+
+        desiredSize.width = 0;
+        desiredSize.height = 0;
+
+        // create a reflow state to tell our child to flow at the given size.
+        nsHTMLReflowState   reflowState(aPresContext, aReflowState, childFrame, nsSize(NS_INTRINSICSIZE, NS_INTRINSICSIZE));
+        reflowState.reason = reason;
+
+        reflowState.computedWidth = size.width;
+        reflowState.computedHeight = size.height;
+
+        // only subrtact margin and border.
+        reflowState.computedWidth -= (total.left + total.right);
+        reflowState.computedHeight -= (total.top + total.bottom);
+
+        nsSize maxElementSize(NS_INTRINSICSIZE, NS_INTRINSICSIZE);
+        
+        // do the flow
+        nsIHTMLReflow*      htmlReflow;
+
+        rv = childFrame->QueryInterface(kIHTMLReflowIID, (void**)&htmlReflow);
+        NS_ASSERTION(rv == NS_OK,"failed to get htmlReflow interface.");
+
+        htmlReflow->WillReflow(aPresContext);
+        htmlReflow->Reflow(aPresContext, desiredSize, reflowState, aStatus);
+        NS_ASSERTION(NS_FRAME_IS_COMPLETE(aStatus), "bad status");
+
+        // set the rect
+        childFrame->SetRect(nsRect(aReflowState.mComputedBorderPadding.left,aReflowState.mComputedBorderPadding.top,desiredSize.width, desiredSize.height));
+      }
+
+      // add the margin back in. The child should add its border automatically
+      desiredSize.height += (margin.top + margin.bottom);
+      desiredSize.width += (margin.left + margin.right);
+    
+      return NS_OK;
+}
+
 
 /*
 NS_IMETHODIMP
@@ -434,6 +395,7 @@ NS_IMETHODIMP  nsDeckFrame::GetFrameForPoint(const nsPoint& aPoint,
   return NS_OK;
 }
 
+/*
 NS_IMETHODIMP
 nsDeckFrame::SetInitialChildList(nsIPresContext& aPresContext,
                                               nsIAtom*        aListName,
@@ -442,18 +404,47 @@ nsDeckFrame::SetInitialChildList(nsIPresContext& aPresContext,
   nsresult r = nsHTMLContainerFrame::SetInitialChildList(aPresContext, aListName, aChildList);
 
   nsIFrame* frame = GetSelectedFrame();
-  if (nsnull != frame)
-  {
-     mSelected = frame;
-     nsCOMPtr<nsIContent> content;
-     mSelected->GetContent(getter_AddRefs(content));
-     content->SetAttribute(kNameSpaceID_None, nsHTMLAtoms::style, "visibility: visible ! important", PR_FALSE);
+
+  nsIFrame* childFrame = mFrames.FirstChild(); 
+  while (nsnull != childFrame) 
+  {  
+      // if we hit the child that cause us to do a second pass
+      // then break.
+      if (childFrame != frame)
+      {
+        mSelected = frame;
+        AddStyle(mSelected, gVisibleStyle);
+        mSelected->ReResolveStyleContext(&aPresContext, mStyleContext, 
+                                         NS_STYLE_HINT_REFLOW,
+                                         nsnull, nsnull);
+      } else {
+        RemoveStyle(mSelected, gHiddenStyle);
+        mSelected->ReResolveStyleContext(&aPresContext, mStyleContext, 
+                                         NS_STYLE_HINT_REFLOW,
+                                         nsnull, nsnull);
+
+      }
   }
 
   return r;
 }
+*/
 
 
+NS_IMETHODIMP
+nsDeckFrame::SetInitialChildList(nsIPresContext& aPresContext,
+                                              nsIAtom*        aListName,
+                                              nsIFrame*       aChildList)
+{
+  nsresult r = nsHTMLContainerFrame::SetInitialChildList(aPresContext, aListName, aChildList);
+
+  // now that all the children are added. ReResolve our children
+  // so we hide everything that is hidden in the deck
+  ReResolveStyleContext(&aPresContext, mStyleContext, 
+                        NS_STYLE_HINT_REFLOW,
+                        nsnull, nsnull);
+  return r;
+}
 
 
 NS_IMETHODIMP
@@ -488,3 +479,292 @@ nsDeckFrame::AppendFrames(nsIPresContext& aPresContext,
    mFrames.AppendFrames(nsnull, aFrameList); 
    return nsHTMLContainerFrame::AppendFrames(aPresContext, aPresShell, aListName, aFrameList); 
 }
+
+/**
+ * Goes though each child asking for its size to determine our size. Returns our deck size minus our border.
+ * This method is defined in nsIBox interface.
+ */
+NS_IMETHODIMP
+nsDeckFrame::GetBoxInfo(nsIPresContext& aPresContext, const nsHTMLReflowState& aReflowState, nsBoxInfo& aSize)
+{
+   nsresult rv;
+
+   aSize.clear();
+
+   // run through all the children and get there min, max, and preferred sizes
+   // return us the size of the deck
+   nscoord count = 0;
+   nsIFrame* childFrame = mFrames.FirstChild(); 
+
+   while (nsnull != childFrame) 
+   {  
+      nsBoxInfo info;
+      // get the size of the child. This is the min, max, preferred, and spring constant
+      // it does not include its border.
+      rv = GetChildBoxInfo(aPresContext, aReflowState, childFrame, info);
+      NS_ASSERTION(rv == NS_OK,"failed to get child box info");
+      if (NS_FAILED(rv))
+         return rv;
+
+      // add in the child's margin and border/padding if there is one.
+      const nsStyleSpacing* spacing;
+      nsresult rv = childFrame->GetStyleData(eStyleStruct_Spacing,
+                    (const nsStyleStruct*&) spacing);
+
+      NS_ASSERTION(rv == NS_OK,"failed to get spacing info");
+      if (NS_FAILED(rv))
+         return rv;
+
+      nsMargin margin;
+      spacing->GetMargin(margin);
+      nsSize m(margin.left+margin.right,margin.top+margin.bottom);
+      info.minSize += m;
+      info.prefSize += m;
+
+      spacing->GetBorderPadding(margin);
+      nsSize b(margin.left+margin.right,margin.top+margin.bottom);
+      info.minSize += b;
+      info.prefSize += b;
+
+      // largest preferred size
+      if (info.prefSize.width > aSize.prefSize.width)
+        aSize.prefSize.width = info.prefSize.width;
+
+      if (info.prefSize.height > aSize.prefSize.height)
+        aSize.prefSize.height = info.prefSize.height;
+
+      // largest min size
+      if (info.minSize.width > aSize.minSize.width)
+        aSize.minSize.width = info.minSize.width;
+
+      if (info.minSize.height > aSize.minSize.height)
+        aSize.minSize.height = info.minSize.height;
+
+      // smallest max size
+      if (info.maxSize.width < aSize.maxSize.width)
+        aSize.maxSize.width = info.maxSize.width;
+
+      if (info.maxSize.height < aSize.maxSize.height)
+        aSize.maxSize.height = info.maxSize.height;
+
+    rv = childFrame->GetNextSibling(&childFrame);
+    NS_ASSERTION(rv == NS_OK,"failed to get next child");
+    if (NS_FAILED(rv))
+       return rv;
+
+    count++;
+  }
+
+  return rv;
+}
+
+nsresult
+nsDeckFrame::GetChildBoxInfo(nsIPresContext& aPresContext, const nsHTMLReflowState& aReflowState, nsIFrame* aFrame, nsBoxInfo& aSize)
+{
+  aSize.clear();
+
+  // see if the frame implements IBox interface
+  nsCOMPtr<nsIBox> ibox = do_QueryInterface(aFrame);
+
+  // if it does ask it for its BoxSize and we are done
+  if (ibox) {
+     ibox->GetBoxInfo(aPresContext, aReflowState, aSize); 
+     // add in the border, padding, width, min, max
+     GetRedefinedMinPrefMax(aFrame, aSize);
+     return NS_OK;
+  } else {
+     GetRedefinedMinPrefMax(aFrame, aSize);
+  }
+
+
+
+  // set the pref width and height to be intrinsic.
+  aSize.prefWidthIntrinsic = PR_TRUE;
+  aSize.prefHeightIntrinsic = PR_TRUE;;
+
+  return NS_OK;
+}
+
+/** 
+ * Looks at the given frame and sees if its redefined preferred, min, or max sizes
+ * if so it used those instead. Currently it gets its values from css
+ */
+void 
+nsDeckFrame::GetRedefinedMinPrefMax(nsIFrame* aFrame, nsBoxInfo& aSize)
+{
+  // add in the css min, max, pref
+    const nsStylePosition* position;
+    nsresult rv = aFrame->GetStyleData(eStyleStruct_Position,
+                  (const nsStyleStruct*&) position);
+
+    // see if the width or height was specifically set
+    if (position->mWidth.GetUnit() == eStyleUnit_Coord)  {
+        aSize.prefSize.width = position->mWidth.GetCoordValue();
+        aSize.prefWidthIntrinsic = PR_FALSE;
+    }
+
+    if (position->mHeight.GetUnit() == eStyleUnit_Coord) {
+        aSize.prefSize.height = position->mHeight.GetCoordValue();     
+        aSize.prefHeightIntrinsic = PR_FALSE;
+    }
+    
+    // same for min size. Unfortunately min size is always set to 0. So for now
+    // we will assume 0 means not set.
+    if (position->mMinWidth.GetUnit() == eStyleUnit_Coord) {
+        nscoord min = position->mMinWidth.GetCoordValue();
+        if (min != 0)
+           aSize.minSize.width = min;
+    }
+
+    if (position->mMinHeight.GetUnit() == eStyleUnit_Coord) {
+        nscoord min = position->mMinHeight.GetCoordValue();
+        if (min != 0)
+           aSize.minSize.height = min;
+    }
+
+    // and max
+    if (position->mMaxWidth.GetUnit() == eStyleUnit_Coord) {
+        nscoord max = position->mMaxWidth.GetCoordValue();
+        aSize.maxSize.width = max;
+    }
+
+    if (position->mMaxHeight.GetUnit() == eStyleUnit_Coord) {
+        nscoord max = position->mMaxHeight.GetCoordValue();
+        aSize.maxSize.height = max;
+    }
+}
+
+/**
+ * Called with a reflow command. This will dirty all boxes who need to be reflowed.
+ * return the last child that is not a box. Part of nsIBox interface.
+ */
+NS_IMETHODIMP
+nsDeckFrame::Dirty(const nsHTMLReflowState& aReflowState, nsIFrame*& incrementalChild)
+{
+  incrementalChild = nsnull;
+  nsresult rv = NS_OK;
+
+  // Dirty any children that need it.
+  nsIFrame* frame;
+  aReflowState.reflowCommand->GetNext(frame);
+  nscoord count = 0;
+  nsIFrame* childFrame = mFrames.FirstChild(); 
+  while (nsnull != childFrame) 
+  {
+    if (childFrame == frame) {
+        // clear the spring so it is recalculated on the flow
+        nsCOMPtr<nsIBox> ibox = do_QueryInterface(childFrame);
+        if (ibox) 
+            ibox->Dirty(aReflowState, incrementalChild);
+        else
+            incrementalChild = frame;
+        break;
+    }
+
+    rv = childFrame->GetNextSibling(&childFrame);
+    NS_ASSERTION(rv == NS_OK,"failed to get next child");
+    if (NS_FAILED(rv))
+      return rv;
+
+    count++;
+  }
+
+  return rv;
+}
+
+NS_IMETHODIMP nsDeckFrame::QueryInterface(REFNSIID aIID, void** aInstancePtr)      
+{           
+  if (NULL == aInstancePtr) {                                            
+    return NS_ERROR_NULL_POINTER;                                        
+  }                                                                      
+                                                                         
+  *aInstancePtr = NULL;                                                  
+                                                                                        
+  if (aIID.Equals(kIBoxIID)) {                                         
+    *aInstancePtr = (void*)(nsIBox*) this;                                        
+    NS_ADDREF_THIS();                                                    
+    return NS_OK;                                                        
+  }   
+
+  return nsHTMLContainerFrame::QueryInterface(aIID, aInstancePtr);                                     
+}
+
+NS_IMETHODIMP_(nsrefcnt) 
+nsDeckFrame::AddRef(void)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP_(nsrefcnt) 
+nsDeckFrame::Release(void)
+{
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDeckFrame :: ReResolveStyleContext ( nsIPresContext* aPresContext, nsIStyleContext* aParentContext,
+                                               PRInt32 aParentChange, nsStyleChangeList* aChangeList,
+                                               PRInt32* aLocalChange)
+{
+  // calculate our style context
+  PRInt32 ourChange = aParentChange;
+  nsresult result = nsFrame::ReResolveStyleContext(aPresContext, aParentContext, 
+                                                   ourChange, aChangeList, &ourChange);
+  if (NS_FAILED(result)) {
+    return result;
+  }
+
+  if (aLocalChange) {
+    *aLocalChange = ourChange;
+  }
+
+  // get our hidden pseudo
+  nsCOMPtr<nsIAtom> hide (do_QueryInterface(NS_NewAtom(":-moz-deck-hidden")));
+
+  nsIStyleContext* newSC;
+
+  // get a style content for the hidden pseudo element
+  aPresContext->ResolvePseudoStyleContextFor(mContent,
+                                          hide,
+                                          mStyleContext,
+                                          PR_FALSE, &newSC);
+
+  // get the index from the tab
+  int index = 0;
+
+  // get the index attribute
+  nsAutoString value;
+  if (NS_CONTENT_ATTR_HAS_VALUE == mContent->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::value, value))
+  {
+    PRInt32 error;
+
+    // convert it to an integer
+    index = value.ToInteger(&error);
+  } 
+
+  // resolve all our children that are not selected with the hidden pseudo elements
+  // style context
+    nsIFrame* childFrame = mFrames.FirstChild(); 
+    PRInt32 count = 0;
+    while (nsnull != childFrame) 
+    {
+      
+      if (count == index)
+      {
+
+        childFrame->ReResolveStyleContext(aPresContext, mStyleContext, 
+                                              ourChange, aChangeList, &ourChange);
+      } else {
+        // use hidden style context
+        childFrame->ReResolveStyleContext(aPresContext, newSC, 
+                                              ourChange, aChangeList, &ourChange);
+
+      }
+      childFrame->GetNextSibling(&childFrame); 
+      count++;
+    }
+
+  return result;
+  
+} // ReResolveStyleContext
+

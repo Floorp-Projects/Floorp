@@ -472,20 +472,22 @@ nsHTMLButtonControlFrame::Reflow(nsIPresContext& aPresContext,
   nsIFrame* firstKid = mFrames.FirstChild();
   nsSize availSize(aReflowState.computedWidth, aReflowState.computedHeight);
 
-  nsMargin borderPadding = mRenderer.GetFullButtonBorderAndPadding();
+  // indent the child inside us by the the focus border. We must do this separate from the
+  // regular border.
+  nsMargin focusPadding = mRenderer.GetAddedButtonBorderAndPadding();
 
   if (NS_INTRINSICSIZE != availSize.width) {
-    availSize.width -= borderPadding.left + borderPadding.right;
+    availSize.width -= focusPadding.left + focusPadding.right;
     availSize.width = PR_MAX(availSize.width,0);
   }
   if (NS_AUTOHEIGHT != availSize.height) {
-    availSize.height -= borderPadding.top + borderPadding.bottom;
+    availSize.height -= focusPadding.top + focusPadding.bottom;
     availSize.height = PR_MAX(availSize.height,0);
   }
 
   nsHTMLReflowState reflowState(aPresContext, aReflowState, firstKid, availSize);
   // XXX remove the following when the reflow state is fixed
-  ButtonHack(reflowState, "html4 button's area");
+  //ButtonHack(reflowState, "html4 button's area");
 
   // XXX Proper handling of incremental reflow...
   if (eReflowReason_Incremental == aReflowState.reason) {
@@ -507,16 +509,19 @@ nsHTMLButtonControlFrame::Reflow(nsIPresContext& aPresContext,
   ReflowChild(firstKid, aPresContext, aDesiredSize, reflowState, aStatus);
 
   // Place the child
-  nsRect rect = nsRect(borderPadding.left, borderPadding.top, aDesiredSize.width, aDesiredSize.height);
+  nsRect rect = nsRect(focusPadding.left + aReflowState.mComputedBorderPadding.left, focusPadding.top + aReflowState.mComputedBorderPadding.top, aDesiredSize.width, aDesiredSize.height);
   firstKid->SetRect(rect);
 
   // add in our border and padding to the size of the child
-  aDesiredSize.width  += borderPadding.left + borderPadding.right;
-  aDesiredSize.height += borderPadding.top + borderPadding.bottom;
+  aDesiredSize.width  += focusPadding.left + focusPadding.right;
+  aDesiredSize.height += focusPadding.top + focusPadding.bottom;
+
+  aDesiredSize.width  += aReflowState.mComputedBorderPadding.left + aReflowState.mComputedBorderPadding.right;
+  aDesiredSize.height += aReflowState.mComputedBorderPadding.top + aReflowState.mComputedBorderPadding.bottom;
 
   //adjust our max element size, if necessary
   if (aDesiredSize.maxElementSize) {
-    aDesiredSize.AddBorderPaddingToMaxElementSize(borderPadding);
+    aDesiredSize.AddBorderPaddingToMaxElementSize(aReflowState.mComputedBorderPadding);
   }
 
   // if we are constrained and the child is smaller, use the constrained values

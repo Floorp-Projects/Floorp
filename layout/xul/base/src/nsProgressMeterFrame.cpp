@@ -608,8 +608,6 @@ nsProgressMeterFrame :: Reflow ( nsIPresContext&          aPresContext,
   else 
 	 gStripeAnimator->RemoveFrame(this);
 
-  GetDesiredSize(&aPresContext, aReflowState, aDesiredSize);
-
   return nsLeafFrame::Reflow ( aPresContext, aDesiredSize, aReflowState, aStatus );
 
 } // Reflow 
@@ -619,34 +617,16 @@ nsProgressMeterFrame::GetDesiredSize(nsIPresContext* aPresContext,
                              const nsHTMLReflowState& aReflowState,
                              nsHTMLReflowMetrics& aDesiredSize)
 {
-   // Determine whether the image has fixed content width and height
- 
-  
-   PRBool fixedWidthContent;
-   PRBool fixedHeightContent;
- 
-	fixedWidthContent = aReflowState.HaveFixedContentWidth();
-	if (NS_INTRINSICSIZE == aReflowState.computedWidth) {
-		fixedWidthContent = PR_FALSE;
-	}
 
-	fixedHeightContent = aReflowState.HaveFixedContentHeight();
-	if (NS_INTRINSICSIZE == aReflowState.computedHeight) {
-		fixedHeightContent = PR_FALSE;
-	}
-  
   CalcSize(*aPresContext,aDesiredSize.width,aDesiredSize.height);
 
-  		// if the width is set
-	if (fixedWidthContent) 
-	    aDesiredSize.width = aReflowState.computedWidth;
+   // if the width is set use it
+	if (NS_INTRINSICSIZE != aReflowState.computedWidth) 
+	  aDesiredSize.width = aReflowState.computedWidth;
 
-	// if the height is set
- 	if (fixedHeightContent) 
+	// if the height is set use it
+ 	if (NS_INTRINSICSIZE != aReflowState.computedHeight) 
 		aDesiredSize.height = aReflowState.computedHeight;
-
-
-	
 }
 
 

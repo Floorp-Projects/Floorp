@@ -29,17 +29,29 @@
 #define nsDeckFrame_h___
 
 #include "nsHTMLContainerFrame.h"
+#include "nsIBox.h"
 
-
-class nsDeckFrame : public nsHTMLContainerFrame
+class nsDeckFrame : public nsHTMLContainerFrame, public nsIBox
 {
 public:
 
   friend nsresult NS_NewDeckFrame(nsIFrame*& aNewFrame);
 
- 
+  NS_IMETHOD GetBoxInfo(nsIPresContext& aPresContext, const nsHTMLReflowState& aReflowState, nsBoxInfo& aSize);
+  NS_IMETHOD Dirty(const nsHTMLReflowState& aReflowState, nsIFrame*& incrementalChild);
 
-    NS_IMETHOD  Init(nsIPresContext&  aPresContext,
+  NS_IMETHOD QueryInterface(REFNSIID aIID, void** aInstancePtr); 
+
+  NS_IMETHOD_(nsrefcnt) AddRef(void);
+  NS_IMETHOD_(nsrefcnt) Release(void);
+
+  NS_IMETHOD  ReResolveStyleContext ( nsIPresContext* aPresContext, 
+                                      nsIStyleContext* aParentContext,
+                                      PRInt32 aParentChange,
+                                      nsStyleChangeList* aChangeList,
+                                      PRInt32* aLocalChange) ;
+
+  NS_IMETHOD  Init(nsIPresContext&  aPresContext,
                    nsIContent*      aContent,
                    nsIFrame*        aParent,
                    nsIStyleContext* aContext,
@@ -95,6 +107,16 @@ public:
 protected:
 
   virtual nsIFrame* GetSelectedFrame();
+  virtual nsresult GetChildBoxInfo(nsIPresContext& aPresContext, const nsHTMLReflowState& aReflowState, nsIFrame* aFrame, nsBoxInfo& aSize);
+  virtual void GetRedefinedMinPrefMax(nsIFrame* aFrame, nsBoxInfo& aSize);
+  virtual nsresult FlowChildAt(nsIFrame* frame, 
+                     nsIPresContext& aPresContext,
+                     nsHTMLReflowMetrics&     aDesiredSize,
+                     const nsHTMLReflowState& aReflowState,
+                     nsReflowStatus&          aStatus,
+                     const nsSize& size,
+                     nsIFrame*& incrementalChild);
+
 
 private:
 
