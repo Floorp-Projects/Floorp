@@ -22,6 +22,7 @@
 #include "nsGUIEvent.h"
 #include "nsIRenderingContext.h"
 #include "nsIDeviceContext.h"
+#include "nsDeviceContextUnix.h"
 #include "nsRect.h"
 #include "nsTransform2D.h"
 #include "nsGfxCIID.h"
@@ -188,8 +189,8 @@ nsWindow::nsWindow(nsISupports *aOuter):
 {
   strcpy(gInstanceClassName, "nsWindow");
   // XXX Til can deal with ColorMaps!
-  SetForegroundColor(1);
-  SetBackgroundColor(2);
+  //SetForegroundColor(NS_RGB(0,0,0));
+  //SetBackgroundColor(NS_RGB(255,255,255));
   mBounds.x = 0;
   mBounds.y = 0;
   mBounds.width = 0;
@@ -726,6 +727,7 @@ void nsWindow::Resize(PRUint32 aX, PRUint32 aY, PRUint32 aWidth, PRUint32 aHeigh
 //-------------------------------------------------------------------------
 void nsWindow::Enable(PRBool bState)
 {
+  XtVaSetValues(mWidget, XmNsensitive, bState, nsnull);
 }
 
     
@@ -786,6 +788,8 @@ nscolor nsWindow::GetForegroundColor(void)
 void nsWindow::SetForegroundColor(const nscolor &aColor)
 {
   mForeground = aColor;
+  PRUint32 pixel = ((nsDeviceContextUnix *)mContext)->ConvertPixel(aColor);
+  XtVaSetValues(mWidget, XtNforeground, pixel, nsnull);
 }
 
     
@@ -808,6 +812,8 @@ nscolor nsWindow::GetBackgroundColor(void)
 void nsWindow::SetBackgroundColor(const nscolor &aColor)
 {
   mBackground = aColor ;
+  PRUint32 pixel = ((nsDeviceContextUnix *)mContext)->ConvertPixel(aColor);
+  XtVaSetValues(mWidget, XtNbackground, pixel, nsnull);
 }
 
     
