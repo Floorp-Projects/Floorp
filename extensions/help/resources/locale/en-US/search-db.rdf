@@ -5,11 +5,336 @@
 <rdf:Description about="urn:root">
    <nc:subheadings>
      <rdf:Seq><rdf:li>
-       <rdf:Description ID="Setting Preferences"
-         nc:name="Setting Preferences"
-	 nc:link="chrome://help/locale/nav_help.html#Setting PreferencesSDX"/>
+       <rdf:Description ID="add_bookmark"
+         nc:name="add bookmark"
+	 nc:link="chrome://help/locale/customize_help.html#add_bookmarkSDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
-</rdf:Description>
+</rdf:Description
+<rdf:Description about="urn:root">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="add_bookmarks"
+         nc:name="add bookmarks"
+	 nc:link="chrome://help/locale/customize_help.html#add_bookmarksSDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description
+<rdf:Description about="urn:root">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="adding_bookmarks"
+         nc:name="adding bookmarks"
+	 nc:link="chrome://help/locale/customize_help.html#adding_bookmarksSDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description
+<rdf:Description about="urn:root">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="autocomplete"
+         nc:name="autocomplete"
+	 nc:link="chrome://help/locale/cs_nav_prefs_navigator.html#autocompleteSDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description
+<rdf:Description about="urn:root">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="bookmark_folder"
+         nc:name="bookmark folder"
+	 nc:link="chrome://help/locale/customize_help.html#bookmark_folderSDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description
+<rdf:Description about="urn:root">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="buttons"
+         nc:name="buttons"
+	 nc:link="chrome://help/locale/cs_nav_prefs_navigator.html#buttonsSDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description
+<rdf:Description about="urn:root">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="cache"
+         nc:name="cache"
+	 nc:link="chrome://help/locale/cs_nav_prefs_advanced.html#cacheSDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description
+<rdf:Description about="urn:root">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="character_coding"
+         nc:name="character coding"
+	 nc:link="chrome://help/locale/cs_nav_prefs_navigator.html#character_codingSDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description
+<rdf:Description about="urn:root">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="cipher"
+         nc:name="cipher"
+	 nc:link="chrome://help/locale/ssl_help.html#cipherSDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description
+<rdf:Description about="urn:root">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="creating_bookmarks"
+         nc:name="creating bookmarks"
+	 nc:link="chrome://help/locale/customize_help.html#creating_bookmarksSDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description
+<rdf:Description about="urn:root">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="disable_Quick_Launch"
+         nc:name="disable Quick Launch"
+	 nc:link="chrome://help/locale/cs_nav_prefs_advanced.html#disable_Quick_LaunchSDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description
+<rdf:Description about="urn:root">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="disable_QuickLaunch"
+         nc:name="disable QuickLaunch"
+	 nc:link="chrome://help/locale/cs_nav_prefs_advanced.html#disable_QuickLaunchSDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description
+<rdf:Description about="urn:root">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="download"
+         nc:name="download"
+	 nc:link="chrome://help/locale/cs_nav_prefs_navigator.html#downloadSDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description
+<rdf:Description about="urn:root">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="downloading"
+         nc:name="downloading"
+	 nc:link="chrome://help/locale/cs_nav_prefs_navigator.html#downloadingSDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description
+<rdf:Description about="urn:root">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="enable_Quick_Launch"
+         nc:name="enable Quick Launch"
+	 nc:link="chrome://help/locale/cs_nav_prefs_advanced.html#enable_Quick_LaunchSDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description
+<rdf:Description about="urn:root">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="folder"
+         nc:name="folder"
+	 nc:link="chrome://help/locale/customize_help.html#folderSDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description
+<rdf:Description about="urn:root">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="home_page"
+         nc:name="home page"
+	 nc:link="chrome://help/locale/cs_nav_prefs_navigator.html#home_pageSDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description
+<rdf:Description about="urn:root">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="internet_keywords"
+         nc:name="internet keywords"
+	 nc:link="chrome://help/locale/cs_nav_prefs_navigator.html#internet_keywordsSDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description
+<rdf:Description about="urn:root">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="javascript"
+         nc:name="javascript"
+	 nc:link="chrome://help/locale/cs_nav_prefs_advanced.html#javascriptSDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description
 
+<rdf:Description about="urn:root">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="JavaScript"
+         nc:name="JavaScript"
+	 nc:link="chrome://help/locale/cs_nav_prefs_advanced.html#JavaScriptSDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description
+
+<rdf:Description about="urn:root">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="keywords"
+         nc:name="keywords"
+	 nc:link="chrome://help/locale/cs_nav_prefs_navigator.html#keywordsSDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description
+<rdf:Description about="urn:root">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="languages"
+         nc:name="languages"
+	 nc:link="chrome://help/locale/cs_nav_prefs_navigator.html#languagesSDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description
+<rdf:Description about="urn:root">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="mail_security_settings"
+         nc:name="mail security settings"
+	 nc:link="chrome://help/locale/mail_help.html#mail_security_settingsSDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description
+<rdf:Description about="urn:root">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="memory"
+         nc:name="memory"
+	 nc:link="chrome://help/locale/cs_nav_prefs_advanced.html#memorySDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description
+<rdf:Description about="urn:root">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="newsgroup_security_settings"
+         nc:name="newsgroup security settings"
+	 nc:link="chrome://help/locale/mail_help.html#newsgroup_security_settingsSDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description
+<rdf:Description about="urn:root">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="opening_files"
+         nc:name="opening files"
+	 nc:link="chrome://help/locale/cs_nav_prefs_navigator.html#opening_filesSDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description
+<rdf:Description about="urn:root">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="personal_toolbar"
+         nc:name="personal toolbar"
+	 nc:link="chrome://help/locale/customize_help.html#personal_toolbarSDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description
+<rdf:Description about="urn:root">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="printing_messages"
+         nc:name="printing messages"
+	 nc:link="chrome://help/locale/mail_help.html#printing_messagesSDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description
+<rdf:Description about="urn:root">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="Quick_Launch"
+         nc:name="Quick Launch"
+	 nc:link="chrome://help/locale/nav_help.html#Quick_LaunchSDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description
+<rdf:Description about="urn:root">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="QuickLaunch"
+         nc:name="QuickLaunch"
+	 nc:link="chrome://help/locale/nav_help.html#QuickLaunchSDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description
+<rdf:Description about="urn:root">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="search"
+         nc:name="search"
+	 nc:link="chrome://help/locale/cs_nav_prefs_navigator.html#searchSDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description
+<rdf:Description about="urn:root">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="search_engine"
+         nc:name="search engine"
+	 nc:link="chrome://help/locale/cs_nav_prefs_navigator.html#search_engineSDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description
+<rdf:Description about="urn:root">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="security_settings"
+         nc:name="security settings"
+	 nc:link="chrome://help/locale/mail_help.html#security_settingsSDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description
+<rdf:Description about="urn:root">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="tab"
+         nc:name="tab"
+	 nc:link="chrome://help/locale/cs_nav_prefs_navigator.html#tabSDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description
+<rdf:Description about="urn:root">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="tabbed_browsing"
+         nc:name="tabbed browsing"
+	 nc:link="chrome://help/locale/cs_nav_prefs_navigator.html#tabbed_browsingSDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description
+<rdf:Description about="urn:root">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="whats_related"
+         nc:name="whats related"
+	 nc:link="chrome://help/locale/cs_nav_prefs_navigator.html#whats_relatedSDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description
+<rdf:Description about="urn:root">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="windows"
+         nc:name="windows"
+	 nc:link="chrome://help/locale/cs_nav_prefs_advanced.html#windowsSDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description
 </rdf:RDF>
