@@ -25,7 +25,7 @@ class nsRegionGTK : public nsIRegion
 {
 public:
   nsRegionGTK();
-  ~nsRegionGTK();
+  virtual ~nsRegionGTK();
 
     NS_DECL_ISUPPORTS
 

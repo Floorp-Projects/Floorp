@@ -202,8 +202,6 @@ NS_IMETHODIMP nsRenderingContextGTK::GetDeviceContext(nsIDeviceContext *&aContex
 
 NS_IMETHODIMP nsRenderingContextGTK::PushState(void)
 {
-  nsRect rect;
-
   GraphicsState * state = new GraphicsState();
 
   // Push into this state object, add to vector
@@ -314,18 +312,21 @@ NS_IMETHODIMP nsRenderingContextGTK::GetClipRect(nsRect &aRect, PRBool &aClipVal
     GdkRectangle gdk_rect;
     ::gdk_region_get_clipbox(mRegion, &gdk_rect);
     aRect.SetRect(gdk_rect.x, gdk_rect.y, gdk_rect.width, gdk_rect.height);
+    aClipValid = PR_TRUE;
   } else {
     aRect.SetRect(0,0,0,0);
-    aClipValid = PR_TRUE;
-    return NS_OK;
+    aClipValid = PR_FALSE;
   }
 
+  return NS_OK;
+/*
   if (::gdk_region_empty (mRegion))
     aClipValid = PR_TRUE;
   else
     aClipValid = PR_FALSE;
 
   return NS_OK;
+*/
 }
 
 NS_IMETHODIMP nsRenderingContextGTK::SetClipRegion(const nsIRegion& aRegion,
@@ -433,8 +434,6 @@ NS_IMETHODIMP nsRenderingContextGTK::SetLineStyle(nsLineStyle aLineStyle)
 {
   if (aLineStyle != mCurrentLineStyle)
   {
-    XGCValues values ;
-
     switch(aLineStyle)
     { 
       case nsLineStyle_kSolid:
@@ -507,8 +506,6 @@ NS_IMETHODIMP nsRenderingContextGTK::CreateDrawingSurface(nsRect *aBounds,
 {
   GdkPixmap *pixmap;
 
-  gint attributes_mask;
-    
   if (nsnull == mRenderingSurface) {
     aSurface = nsnull;
     return NS_ERROR_FAILURE;
@@ -560,7 +557,7 @@ NS_IMETHODIMP nsRenderingContextGTK::DrawLine(nscoord aX0, nscoord aY0, nscoord 
 
 NS_IMETHODIMP nsRenderingContextGTK::DrawPolyline(const nsPoint aPoints[], PRInt32 aNumPoints)
 {
-  PRUint32 i ;
+  PRUint32 i;
 
   g_return_val_if_fail(mTMatrix != NULL, NS_ERROR_FAILURE);
   g_return_val_if_fail(mRenderingSurface != NULL, NS_ERROR_FAILURE);
@@ -1072,80 +1069,45 @@ nsRenderingContextGTK::SetClipRectInPixels(const nsRect& aRect,
   g_return_val_if_fail(mRenderingSurface->drawable != NULL, NS_ERROR_FAILURE);
   g_return_val_if_fail(mRenderingSurface->gc != NULL, NS_ERROR_FAILURE);
 
-  PRBool bEmpty = PR_FALSE;
-
-  nsRect  trect = aRect;
+  if (mRegion == nsnull)
+    mRegion = ::gdk_region_new();
 
   GdkRectangle gdk_rect;
-  GdkRegion *tRegion;
 
-  gdk_rect.x = trect.x;
-  gdk_rect.y = trect.y;
-  gdk_rect.width = trect.width;
-  gdk_rect.height = trect.height;
+  gdk_rect.x = aRect.x;
+  gdk_rect.y = aRect.y;
+  gdk_rect.width = aRect.width;
+  gdk_rect.height = aRect.height;
 
-  tRegion = ::gdk_region_new();
-  GdkRegion *a = ::gdk_region_union_with_rect(tRegion, &gdk_rect);
-  gdk_region_destroy (tRegion);
+  GdkRegion *a = ::gdk_region_union_with_rect(mRegion, &gdk_rect);
 
-  if (aCombine == nsClipCombine_kIntersect)
+  GdkRegion *nrgn=nsnull;
+  switch(aCombine)
   {
-    if (nsnull != mRegion) {
-      tRegion = gdk_regions_intersect (mRegion, a);
-      ::gdk_region_destroy(mRegion);
-      ::gdk_region_destroy(a);
-      mRegion = tRegion;
-    } else {
+    case nsClipCombine_kIntersect:
+      nrgn = ::gdk_regions_intersect (mRegion,a);
+      gdk_region_destroy(mRegion);
+      mRegion = nrgn;
+      break;
+    case nsClipCombine_kUnion:
+      nrgn = ::gdk_regions_union (mRegion,a);
+      gdk_region_destroy(mRegion);
+      mRegion = nrgn;
+      break;
+    case nsClipCombine_kSubtract:
+      nrgn = ::gdk_regions_subtract (mRegion,a);
+      gdk_region_destroy(mRegion);
+      mRegion = nrgn;
+      break;
+    case nsClipCombine_kReplace:
+      gdk_region_destroy(mRegion);
       mRegion = a;
-    }
-
+      break;
   }
-  else if (aCombine == nsClipCombine_kUnion)
-  {
-    if (nsnull != mRegion) {
-      tRegion = gdk_regions_union (mRegion, a);
-      ::gdk_region_destroy(mRegion);
-      ::gdk_region_destroy(a);
-      mRegion = tRegion;
-    } else {
-      mRegion = a;
-    }
+  
+  aClipEmpty = ::gdk_region_empty(mRegion);
 
-  }
-  else if (aCombine == nsClipCombine_kSubtract)
-  {
-    if (nsnull != mRegion) {
-      tRegion = gdk_regions_subtract (mRegion, a);
-      ::gdk_region_destroy(mRegion);
-      ::gdk_region_destroy(a);
-      mRegion = tRegion;
-    } else {
-      mRegion = a;
-    }
-
-  }
-  else if (aCombine == nsClipCombine_kReplace)
-  {
-    if (nsnull != mRegion)
-      ::gdk_region_destroy(mRegion);
-
-    mRegion = a;
-
-  }
-  else
-    NS_ASSERTION(PR_FALSE, "illegal clip combination");
-
-  if (::gdk_region_empty(mRegion) == True) {
-
-    bEmpty = PR_TRUE;
-    ::gdk_gc_set_clip_region(mRenderingSurface->gc, nsnull);
-
-  } else {
-
-    ::gdk_gc_set_clip_region(mRenderingSurface->gc, mRegion);
-  }
-
-  aClipEmpty = bEmpty;
+  ::gdk_gc_set_clip_region(mRenderingSurface->gc, mRegion);
 
   return NS_OK;
 }

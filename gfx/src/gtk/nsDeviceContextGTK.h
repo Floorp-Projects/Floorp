@@ -32,6 +32,7 @@ class nsDeviceContextGTK : public DeviceContextImpl
 {
 public:
   nsDeviceContextGTK();
+  virtual ~nsDeviceContextGTK();
 
   NS_DECL_ISUPPORTS
 
@@ -63,9 +64,6 @@ public:
 
   NS_IMETHOD BeginPage(void);
   NS_IMETHOD EndPage(void);
-
-protected:
-  ~nsDeviceContextGTK();
 
 private:
   PRUint32      mDepth;
