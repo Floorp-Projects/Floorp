@@ -62,13 +62,6 @@ pass_1(TreeState *state)
             fputc('\n', state->file);
             g_hash_table_foreach(state->includes, write_header, state);
         }
-        if (emit_js_stub_decls) {
-            fputs("\n"
-                  "#ifdef XPIDL_JS_STUBS\n"
-                  "#include \"jsapi.h\"\n"
-                  "#endif\n",
-                  state->file);
-        }
     } else {
         fprintf(state->file, "\n#endif /* __gen_%s_h__ */\n", define);
     }
@@ -103,15 +96,8 @@ interface(TreeState *state)
     fprintf(state->file,   "\n/* starting interface:    %s */\n",
             className);
 
-#ifndef LIBIDL_MAJOR_VERSION
-    /* pre-VERSIONing libIDLs put the attributes on the interface */
-    name_space = IDL_tree_property_get(iface, "namespace");
-    iid = IDL_tree_property_get(iface, "uuid");
-#else
-    /* post-VERSIONing (>= 0.5.11) put the attributes on the ident */
     name_space = IDL_tree_property_get(IDL_INTERFACE(iface).ident, "namespace");
     iid = IDL_tree_property_get(IDL_INTERFACE(iface).ident, "uuid");
-#endif
 
     if (name_space) {
         fprintf(state->file, "/* namespace:             %s */\n",
@@ -155,15 +141,6 @@ interface(TreeState *state)
         if (!write_classname_iid_define(state->file, className))
             return FALSE;
         fputs(")\n", state->file);
-/* XX remove this old code... emitting the macro instead */
-/*
-        fputs("  static const nsIID& GetIID() {\n"
-              "    static nsIID iid = ",
-              state->file);
-        if (!write_classname_iid_define(state->file, className))
-            return FALSE;
-        fputs(";\n    return iid;\n  }\n", state->file);
-*/
     }
 
     state->tree = IDL_INTERFACE(iface).body;
@@ -171,23 +148,6 @@ interface(TreeState *state)
     if (state->tree && !xpidl_process_node(state))
         return FALSE;
 
-    /*
-     * XXXbe keep this statement until -m stub dies
-     * shaver sez: use the #ifdef to prevent pollution of non-stubbed headers.
-     *
-     * IMPORTANT: Only _static_ things can go here (inside the
-     * #ifdef), or you lose the vtable invariance upon which so much
-     * of (XP)COM is based.
-     */
-    if (emit_js_stub_decls) {
-        fprintf(state->file,
-            "\n"
-            "#ifdef XPIDL_JS_STUBS\n"
-            "  static NS_EXPORT_(JSObject *) InitJSClass(JSContext *cx);\n"
-            "  static NS_EXPORT_(JSObject *) GetJSObject(JSContext *cx, %s *priv);\n"
-            "#endif\n",
-            className);
-    }
     fputs("};\n", state->file);
 
     return TRUE;

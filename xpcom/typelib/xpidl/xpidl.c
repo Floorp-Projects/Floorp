@@ -24,7 +24,6 @@
 
 static ModeData modes[] = {
     {"header",  "Generate C++ header",         "h",    xpidl_header_dispatch},
-    {"stub",    "Generate C++ JS API stubs",   "cpp",  xpidl_stub_dispatch},
     {"typelib", "Generate XPConnect typelib",  "xpt",  xpidl_typelib_dispatch},
     {"doc",     "Generate HTML documentation", "html", xpidl_doc_dispatch},
     {0}
@@ -44,7 +43,6 @@ FindMode(char *mode)
 gboolean enable_debug       = FALSE;
 gboolean enable_warnings    = FALSE;
 gboolean verbose_mode       = FALSE;
-gboolean emit_js_stub_decls = FALSE;
 
 static char xpidl_usage_str[] =
 "Usage: %s [-m mode] [-w] [-v] [-I path] [-o basename] filename.idl\n"
@@ -52,7 +50,6 @@ static char xpidl_usage_str[] =
 "       -v verbose mode (NYI)\n"
 "       -I add entry to start of include path for ``#include \"nsIThing.idl\"''\n"
 "       -o use basename (e.g. ``/tmp/nsIThing'') for output\n"
-"       -s emit JS stub declarations in headers for use with -m stub\n"
 "       -m specify output mode:\n";
 
 static void
@@ -140,9 +137,6 @@ int main(int argc, char *argv[])
             break;
           case 'v':
             verbose_mode = TRUE;
-            break;
-          case 's':
-            emit_js_stub_decls = TRUE;
             break;
           case 'I':
             if (argv[i][2] == '\0' && i == argc) {
