@@ -2165,6 +2165,7 @@ HTMLContentSink::ProcessTEXTAREATag(nsIHTMLContent** aInstancePtrResult,
       rv = (*aInstancePtrResult)->QueryInterface(kIFormControlIID, (void **)&control);
       if (NS_OK == rv) {
         control->SetContent(content);
+        NS_RELEASE(control);
       }
     }
   }
