@@ -1349,6 +1349,9 @@ PresShell::IntraLineMove(PRBool aForward, PRBool aExtend)
 NS_IMETHODIMP 
 PresShell::PageMove(PRBool aForward, PRBool aExtend)
 {
+  return ScrollPage(aForward);
+#if 0
+
   nsCOMPtr<nsIViewManager> viewManager;
   nsresult result = GetViewManager(getter_AddRefs(viewManager));
   if (NS_SUCCEEDED(result) && viewManager)
@@ -1361,6 +1364,7 @@ PresShell::PageMove(PRBool aForward, PRBool aExtend)
     }
   }
   return result;
+#endif //0
 }
 
 NS_IMETHODIMP 
@@ -1422,13 +1426,24 @@ PresShell::ScrollHorizontal(PRBool aLeft)
 NS_IMETHODIMP
 PresShell::CompleteScroll(PRBool aForward)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  nsCOMPtr<nsIViewManager> viewManager;
+  nsresult result = GetViewManager(getter_AddRefs(viewManager));
+  if (NS_SUCCEEDED(result) && viewManager)
+  {
+    nsIScrollableView *scrollView;
+    result = viewManager->GetRootScrollableView(&scrollView);
+    if (NS_SUCCEEDED(result) && scrollView)
+    {
+      scrollView->ScrollByWhole(!aForward);//TRUE = top, aForward TRUE=bottom
+    }
+  }
+  return result;
 }
 
 NS_IMETHODIMP
 PresShell::CompleteMove(PRBool aForward, PRBool aExtend)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  return CompleteScroll(aForward);
 }
 
 NS_IMETHODIMP 
