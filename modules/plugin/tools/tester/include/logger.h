@@ -94,7 +94,7 @@ public:
   void closeLogToFile();
 };
 
-#define LOGGER_DEFAULT_STRING_WRAP    10
+#define LOGGER_DEFAULT_STRING_WRAP    32
 
 // Preferences profile stuff
 #define SECTION_LOG           "Log"
