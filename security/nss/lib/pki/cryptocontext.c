@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: cryptocontext.c,v $ $Revision: 1.8 $ $Date: 2001/12/14 17:32:18 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: cryptocontext.c,v $ $Revision: 1.9 $ $Date: 2002/02/06 19:58:54 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef NSSPKI_H
@@ -68,6 +68,9 @@ NSSCryptoContext_Destroy
   NSSCryptoContext *cc
 )
 {
+    if (cc->certStore) {
+	nssCertificateStore_Destroy(cc->certStore);
+    }
     nssArena_Destroy(cc->arena);
     return PR_SUCCESS;
 }
