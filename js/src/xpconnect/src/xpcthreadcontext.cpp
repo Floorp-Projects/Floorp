@@ -336,10 +336,14 @@ xpcPerThreadData::GetSafeJSContext()
 nsresult
 xpcPerThreadData::SetSafeJSContext(JSContext *cx)
 {
-    NS_ASSERTION(cx, "SetSafeJSContext called with a null context");
+    if(mOwnSafeJSContext && 
+       mOwnSafeJSContext == mSafeJSContext &&
+       mOwnSafeJSContext != cx)
+    {
+        JS_DestroyContext(mOwnSafeJSContext);
+        mOwnSafeJSContext = nsnull;
+    }
 
-    if(!cx)
-        return NS_ERROR_INVALID_ARG;
     mSafeJSContext = cx;
     return NS_OK;
 }
