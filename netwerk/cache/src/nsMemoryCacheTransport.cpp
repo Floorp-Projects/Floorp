@@ -22,13 +22,33 @@
  */
 
 #include "nsMemoryCacheTransport.h"
+#include "nsIProxyObjectManager.h"
+#include "nsIServiceManager.h"
 #include "nsCRT.h"
 #include "prmem.h"
 #include "netCore.h"
 
+#define MAX_IO_CHUNK 8192 // maximum count reported per OnDataAvailable
+
+static NS_DEFINE_CID(kProxyObjectManagerCID, NS_PROXYEVENT_MANAGER_CID);
+
 //----------------------------------------------------------------------------
 // helper functions...
 //----------------------------------------------------------------------------
+
+static NS_METHOD
+nsWriteToBuffer(nsIInputStream *aInput,
+                void *aClosure,
+                const char *aFromBuf,
+                PRUint32 aOffset,
+                PRUint32 aCount,
+                PRUint32 *aWriteCount)
+{
+    char *toBuf = NS_REINTERPRET_CAST(char *, aClosure);
+    nsCRT::memcpy(toBuf + aOffset, aFromBuf, aCount);
+    *aWriteCount = aCount;
+    return NS_OK;
+}
 
 static NS_METHOD
 nsReadFromBuffer(nsIOutputStream *aOutput,
@@ -62,15 +82,16 @@ nsReadFromInputStream(nsIOutputStream *aOutput,
 
 nsMemoryCacheTransport::nsMemoryCacheTransport()
     : mOutputStream(nsnull)
-    , mInputStreams(nsnull)
-    , mReadRequests(nsnull)
     , mSegmentSize(NS_MEMORY_CACHE_SEGMENT_SIZE)
     , mMaxSize(NS_MEMORY_CACHE_BUFFER_SIZE)
-    , mWriteCursor(0)
     , mSegments(nsnull)
     , mWriteSegment(nsnull)
+    , mWriteCursor(0)
 {
     NS_INIT_ISUPPORTS();
+
+    PR_INIT_CLIST(&mReadRequests);
+    PR_INIT_CLIST(&mInputStreams);
 }
 
 nsMemoryCacheTransport::~nsMemoryCacheTransport()
@@ -78,8 +99,7 @@ nsMemoryCacheTransport::~nsMemoryCacheTransport()
     if (mOutputStream)
         CloseOutputStream();
 
-    if (mSegments)
-        DeleteSegments();
+    DeleteAllSegments();
 }
 
 nsresult
@@ -93,6 +113,18 @@ nsMemoryCacheTransport::Init(PRUint32 aBufSegmentSize, PRUint32 aBufMaxSize)
 nsresult
 nsMemoryCacheTransport::GetReadSegment(PRUint32 aOffset, char **aPtr, PRUint32 *aCount)
 {
+    *aPtr = nsnull;
+    *aCount = 0;
+
+    if (aOffset < mWriteCursor) {
+        PRUint32 index = aOffset / mSegmentSize;
+        nsSegment *s = GetNthSegment(index);
+        if (s) {
+            PRUint32 offset = aOffset % mSegmentSize;
+            *aPtr = s->Data() + offset;
+            *aCount = mSegmentSize - offset;
+        }
+    }
     return NS_OK;
 }
 
@@ -125,7 +157,14 @@ nsMemoryCacheTransport::AddToBytesWritten(PRUint32 aCount)
     if (!(mWriteCursor % mSegmentSize))
         mWriteSegment = nsnull;
 
-    // XXX wake up blocked readers
+    // process waiting readers
+    PRCList *link = PR_LIST_HEAD(&mReadRequests);
+    for (; link != &mReadRequests; link = PR_NEXT_LINK(link)) {
+        nsMemoryCacheReadRequest *req = 
+            NS_STATIC_CAST(nsMemoryCacheReadRequest *, link);
+        if (req->IsWaitingForWrite())
+            req->Process();
+    }
 
     return NS_OK;
 }
@@ -139,6 +178,25 @@ nsMemoryCacheTransport::CloseOutputStream()
 
         // XXX wake up blocked reads
     }
+    return NS_OK;
+}
+
+nsresult
+nsMemoryCacheTransport::ReadRequestCompleted(nsMemoryCacheReadRequest *aReader)
+{
+    // remove the reader from the list of readers
+    PRCList *link = PR_LIST_HEAD(&mReadRequests);
+    while ((link != aReader) && (link != &mReadRequests)) link = PR_NEXT_LINK(link);
+    PR_REMOVE_LINK(link);
+
+    aReader->SetTransport(nsnull);
+    return NS_OK;
+}
+
+nsresult
+nsMemoryCacheTransport::Available(PRUint32 aStartingFrom, PRUint32 *aCount)
+{
+    *aCount = mWriteCursor - aStartingFrom;
     return NS_OK;
 }
 
@@ -170,13 +228,49 @@ nsMemoryCacheTransport::AppendSegment(nsSegment *aSegment)
 }
 
 void
-nsMemoryCacheTransport::DeleteSegments()
+nsMemoryCacheTransport::DeleteSegments(nsSegment *segments)
 {
-    while (mSegments) {
-        nsSegment *s = mSegments->next;
-        PR_Free(mSegments);
-        mSegments = s;
+    while (segments) {
+        nsSegment *s = segments->next;
+        PR_Free(segments);
+        segments = s;
     }
+}
+
+void
+nsMemoryCacheTransport::TruncateTo(PRUint32 aOffset)
+{
+    if (aOffset < mWriteCursor) {
+        if (aOffset == 0) {
+            DeleteSegments(mSegments);
+            mSegments = nsnull;
+            mWriteSegment = nsnull;
+        }
+        else {
+            PRUint32 offset = 0;
+            nsSegment *s = mSegments;
+            for (; s; s = s->next) {
+                if ((offset + mSegmentSize) > aOffset)
+                    break;
+                offset += mSegmentSize;
+            }
+            // "s" now points to the last segment that we should keep
+            if (s->next) {
+                DeleteSegments(s->next);
+                s->next = nsnull;
+            }
+            mWriteSegment = s;
+        }
+    }
+    mWriteCursor = aOffset;
+}
+
+nsMemoryCacheTransport::nsSegment *
+nsMemoryCacheTransport::GetNthSegment(PRUint32 index)
+{
+    nsSegment *s = mSegments;
+    for (; s && index; s = s->next, --index);
+    return s;
 }
 
 NS_IMPL_THREADSAFE_ISUPPORTS1(nsMemoryCacheTransport,
@@ -220,16 +314,21 @@ nsMemoryCacheTransport::OpenOutputStream(PRUint32 aOffset,
                                          nsIOutputStream **aOutput)
 {
     NS_ENSURE_TRUE(!mOutputStream, NS_ERROR_IN_PROGRESS);
+    
+    if (!PR_CLIST_IS_EMPTY(&mInputStreams) || !PR_CLIST_IS_EMPTY(&mReadRequests)) {
+        NS_NOTREACHED("Attempt to open a memory cache output stream while "
+                      "read is in progress!");
+        return NS_ERROR_FAILURE;
+    }
 
     NS_NEWXPCOM(mOutputStream, nsMemoryCacheBOS);
     if (!mOutputStream)
         return NS_ERROR_OUT_OF_MEMORY;
 
     mOutputStream->SetTransport(this);
+    mOutputStream->SetTransferCount(aCount);
 
-    // SetWriteOffset(aOffset)
-    // SetWriteCount(aCount)
-    // SetWriteFlags(aFlags)
+    TruncateTo(aOffset);
 
     NS_ADDREF(*aOutput = mOutputStream);
     return NS_OK;
@@ -243,7 +342,33 @@ nsMemoryCacheTransport::AsyncRead(nsIStreamListener *aListener,
                                   PRUint32 aFlags,
                                   nsIRequest **aRequest)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+    nsresult rv = NS_OK;
+
+    nsMemoryCacheReadRequest *reader;
+    NS_NEWXPCOM(reader, nsMemoryCacheReadRequest);
+    if (!reader)
+        return NS_ERROR_OUT_OF_MEMORY;
+
+    reader->SetTransport(this);
+    reader->SetTransferOffset(aOffset);
+    reader->SetTransferCount(aCount);
+
+    // append the read request to the list of existing read requests.
+    // it is important to do this before the possibility of failure.
+    PR_APPEND_LINK(reader, &mReadRequests);
+
+    rv = reader->SetListener(aListener, aContext);
+    if (NS_FAILED(rv)) goto error;
+
+    rv = reader->Process();
+    if (NS_FAILED(rv)) goto error;
+
+    NS_ADDREF(*aRequest = reader);
+    return NS_OK;
+
+error:
+    NS_DELETEXPCOM(reader);
+    return rv;
 }
 
 NS_IMETHODIMP
@@ -263,22 +388,104 @@ nsMemoryCacheTransport::AsyncWrite(nsIStreamProvider *aProvider,
 
 nsMemoryCacheReadRequest::nsMemoryCacheReadRequest()
     : mTransport(nsnull)
-    , mInputStream(nsnull)
-    , mOffset(0)
-    , mCountRemaining(0)
+    , mTransferOffset(0)
+    , mTransferCount(NS_TRANSFER_COUNT_UNKNOWN)
     , mStatus(NS_OK)
     , mCanceled(PR_FALSE)
+    , mOnStartFired(PR_FALSE)
+    , mWaitingForWrite(PR_FALSE)
 {
     NS_INIT_ISUPPORTS();
+    PR_INIT_CLIST(this);
 }
 
 nsMemoryCacheReadRequest::~nsMemoryCacheReadRequest()
 {
+    if (mTransport)
+        mTransport->ReadRequestCompleted(this);
 }
 
-NS_IMPL_THREADSAFE_ISUPPORTS2(nsMemoryCacheReadRequest,
+nsresult
+nsMemoryCacheReadRequest::SetListener(nsIStreamListener *aListener,
+                                      nsISupports *aListenerContext)
+{
+    nsresult rv = NS_OK;
+
+    mListener = aListener;
+    mListenerContext = aListenerContext;
+
+    // We proxy listener events to ourself and then forward them onto
+    // the real listener (on the listener's thread).
+ 
+    nsCOMPtr<nsIProxyObjectManager> proxyMgr =
+        do_GetService(kProxyObjectManagerCID, &rv);
+
+    if (NS_SUCCEEDED(rv))
+        rv = proxyMgr->GetProxyForObject(NS_CURRENT_EVENTQ,
+                                         NS_GET_IID(nsIStreamListener),
+                                         NS_STATIC_CAST(nsIStreamListener *, this),
+                                         PROXY_ASYNC | PROXY_ALWAYS,
+                                         getter_AddRefs(mListenerProxy));
+    return rv;
+}
+
+nsresult
+nsMemoryCacheReadRequest::Process()
+{
+    nsresult rv = NS_OK;
+
+    // this method must always be called on the client's thread
+
+    NS_ENSURE_TRUE(mTransport, NS_ERROR_NOT_INITIALIZED);
+
+    // always clear this flag initially
+    mWaitingForWrite = PR_FALSE;
+
+    PRUint32 count = 0;
+
+    rv = mTransport->Available(mTransferOffset, &count);
+    if (NS_FAILED(rv)) return rv; 
+
+    if (!mOnStartFired) {
+        // no need to proxy this callback
+        (void) mListener->OnStartRequest(this, mListenerContext);
+        mOnStartFired = PR_TRUE;
+    }
+
+    count = PR_MIN(count, mTransferCount);
+
+    if (count) {
+        count = PR_MIN(count, MAX_IO_CHUNK);
+
+        // proxy this callback
+        (void) mListenerProxy->OnDataAvailable(this, mListenerContext,
+                                               this,
+                                               mTransferOffset,
+                                               count);
+    }
+    else if ((mTransferCount == 0) || !mTransport->HasWriter()) {
+
+        // there is no more data to read and there is no writer, so we
+        // must stop this read request.
+
+        // first let the transport know that we are done
+        mTransport->ReadRequestCompleted(this);
+
+        // no need to proxy this callback
+        (void) mListener->OnStopRequest(this, mListenerContext, mStatus, nsnull);
+    }
+    else
+        mWaitingForWrite = PR_TRUE;
+
+    return rv;
+}
+
+NS_IMPL_THREADSAFE_ISUPPORTS5(nsMemoryCacheReadRequest,
                               nsITransportRequest,
-                              nsIRequest)
+                              nsIRequest,
+                              nsIStreamListener,
+                              nsIStreamObserver,
+                              nsIInputStream)
 
 NS_IMETHODIMP
 nsMemoryCacheReadRequest::GetTransport(nsITransport **aTransport)
@@ -332,52 +539,110 @@ nsMemoryCacheReadRequest::Resume()
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-//----------------------------------------------------------------------------
-// nsMemoryCacheIS
-//----------------------------------------------------------------------------
-
-nsMemoryCacheIS::nsMemoryCacheIS()
-    : mRequest(nsnull)
+NS_IMETHODIMP
+nsMemoryCacheReadRequest::OnStartRequest(nsIRequest *aRequest,
+                                         nsISupports *aContext)
 {
-    NS_INIT_ISUPPORTS();
+    NS_NOTREACHED("nsMemoryCacheReadRequest::OnStartRequest");
+    return NS_ERROR_FAILURE;
 }
-
-nsMemoryCacheIS::~nsMemoryCacheIS()
-{
-}
-
-NS_IMPL_THREADSAFE_ISUPPORTS1(nsMemoryCacheIS,
-                              nsIInputStream)
 
 NS_IMETHODIMP
-nsMemoryCacheIS::Close()
+nsMemoryCacheReadRequest::OnStopRequest(nsIRequest *aRequest,
+                                        nsISupports *aContext,
+                                        nsresult aStatus,
+                                        const PRUnichar *aStatusText)
+{
+    NS_NOTREACHED("nsMemoryCacheReadRequest::OnStopRequest");
+    return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP
+nsMemoryCacheReadRequest::OnDataAvailable(nsIRequest *aRequest,
+                                          nsISupports *aContext,
+                                          nsIInputStream *aInput,
+                                          PRUint32 aOffset,
+                                          PRUint32 aCount)
+{
+    nsresult rv = NS_OK;
+
+    rv = mListener->OnDataAvailable(aRequest, aContext, aInput, aOffset, aCount);
+
+    NS_ASSERTION(rv != NS_BASE_STREAM_WOULD_BLOCK, "not implemented");
+
+    if (NS_FAILED(rv)) return rv;
+
+    // post the next message...
+    return Process();
+}
+
+NS_IMETHODIMP
+nsMemoryCacheReadRequest::Close()
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-nsMemoryCacheIS::Available(PRUint32 *aCount)
+nsMemoryCacheReadRequest::Available(PRUint32 *aCount)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-nsMemoryCacheIS::Read(char *aBuf, PRUint32 aCount, PRUint32 *aBytesRead)
+nsMemoryCacheReadRequest::Read(char *aBuf, PRUint32 aCount, PRUint32 *aBytesRead)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+    return ReadSegments(nsWriteToBuffer, aBuf, aCount, aBytesRead);
 }
 
 NS_IMETHODIMP
-nsMemoryCacheIS::ReadSegments(nsWriteSegmentFun aWriter,
-                              void *aClosure,
-                              PRUint32 aCount,
-                              PRUint32 *aBytesRead)
+nsMemoryCacheReadRequest::ReadSegments(nsWriteSegmentFun aWriter,
+                                       void *aClosure,
+                                       PRUint32 aCount,
+                                       PRUint32 *aBytesRead)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+    NS_ENSURE_TRUE(mTransport, NS_BASE_STREAM_CLOSED);
+
+    nsresult rv = NS_OK;
+
+    *aBytesRead = 0;
+
+    // limit the number of bytes that can be read
+    aCount = PR_MIN(aCount, mTransferCount);
+
+    while (aCount) {
+        char *ptr = nsnull;
+        PRUint32 count = 0;
+
+        rv = mTransport->GetReadSegment(mTransferOffset, &ptr, &count);
+        if (NS_FAILED(rv)) return rv;
+
+        count = PR_MIN(count, aCount);
+
+        while (count) {
+            PRUint32 writeCount = 0;
+
+            rv = aWriter(this, aClosure, ptr, *aBytesRead, count, &writeCount);
+
+            if (rv == NS_BASE_STREAM_WOULD_BLOCK)
+                return NS_OK; // mask this error
+            else if (NS_FAILED(rv))
+                return rv;
+
+            ptr += writeCount;
+            count -= writeCount;
+            aCount -= writeCount;
+            *aBytesRead += writeCount;
+
+            // decrement the total number of bytes remaining to be read
+            mTransferCount -= writeCount;
+            mTransferOffset += writeCount;
+        }
+    }
+    return rv;
 }
 
 NS_IMETHODIMP
-nsMemoryCacheIS::GetNonBlocking(PRBool *aNonBlocking)
+nsMemoryCacheReadRequest::GetNonBlocking(PRBool *aNonBlocking)
 {
     NS_ENSURE_ARG_POINTER(aNonBlocking);
     *aNonBlocking = PR_TRUE;
@@ -385,7 +650,7 @@ nsMemoryCacheIS::GetNonBlocking(PRBool *aNonBlocking)
 }
 
 NS_IMETHODIMP
-nsMemoryCacheIS::GetObserver(nsIInputStreamObserver **aObserver)
+nsMemoryCacheReadRequest::GetObserver(nsIInputStreamObserver **aObserver)
 {
     NS_ENSURE_ARG_POINTER(aObserver);
     *aObserver = nsnull;
@@ -393,7 +658,7 @@ nsMemoryCacheIS::GetObserver(nsIInputStreamObserver **aObserver)
 }
 
 NS_IMETHODIMP
-nsMemoryCacheIS::SetObserver(nsIInputStreamObserver *aObserver)
+nsMemoryCacheReadRequest::SetObserver(nsIInputStreamObserver *aObserver)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }
@@ -404,7 +669,7 @@ nsMemoryCacheIS::SetObserver(nsIInputStreamObserver *aObserver)
 
 nsMemoryCacheBS::nsMemoryCacheBS()
     : mTransport(nsnull)
-    , mCountRemaining(0)
+    , mTransferCount(NS_TRANSFER_COUNT_UNKNOWN)
 {
 }
 
@@ -537,7 +802,7 @@ nsMemoryCacheBOS::WriteSegments(nsReadSegmentFun aReader,
 
     *aBytesWritten = 0;
 
-    // XXX need to honor mCountRemaining
+    // XXX need to honor mTransferCount
 
     while (aCount) {
         char *ptr;
