@@ -22,7 +22,9 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS=wallet
+ifdef ClientWallet
+DIRS += wallet
+endif
 
 ifdef ENABLE_PICS
 DIRS += pics
