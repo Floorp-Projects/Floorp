@@ -27,6 +27,8 @@
 #include "nsIOutlinerView.h"
 #include "nsICSSPseudoComparator.h"
 #include "nsIScrollbarMediator.h"
+#include "nsIRenderingContext.h"
+#include "nsIDragSession.h"
 #include "nsIWidget.h"
 #include "nsHashtable.h"
 
@@ -152,6 +154,7 @@ public:
 
   nscoord GetWidth();
   const PRUnichar* GetID() { return mID.GetUnicode(); };
+  void GetID(nsString& aID) { aID = mID; };
 
   void GetIDAtom(nsIAtom** aResult) { *aResult = mIDAtom; NS_IF_ADDREF(*aResult); };
 
@@ -345,6 +348,9 @@ protected:
 
   // Our internal scroll method, used by all the public scroll methods.
   nsresult ScrollInternal(PRInt32 aRow);
+  
+  // convert pixels, probably from an event, into twips in our coordinate space
+  void AdjustEventCoordsToBoxCoordSpace ( PRInt32 inX, PRInt32 inY, PRInt32* outX, PRInt32* outY ) ;
 
 protected: // Data Members
   // Our cached pres context.
@@ -386,12 +392,34 @@ protected: // Data Members
   PRInt32 mTopRowIndex;
   PRInt32 mPageCount;
 
-  // Cached heights.and indent info.
+  // Cached heights and indent info.
   nsRect mInnerBox;
   PRInt32 mRowHeight;
   PRInt32 mIndentation;
 
   // A scratch array used when looking up cached style contexts.
   nsCOMPtr<nsISupportsArray> mScratchArray;
+  
+  enum { kIllegalRow = -1 } ;
+  enum { kDrawFeedback = PR_TRUE, kUndrawFeedback = PR_FALSE } ;
+  enum DropOrientation { kNoOrientation, kBeforeRow = 1, kOnRow = 2, kAfterRow = 3 } ;
+  
+    // draw (or undraw) feedback at the given location with the given orientation
+  void DrawDropFeedback ( PRInt32 inDropRow, DropOrientation inDropOrient, PRBool inDrawFeedback ) ;
+  
+    // calc the row and above/below/on status given where the mouse currently is hovering
+  void ComputeDropPosition ( nsIDOMEvent* inEvent, PRInt32* outRow, DropOrientation* outOrient ) ;
+
+    // calculate if we're in the region in which we want to auto-scroll the outliner
+  PRBool IsInDragScrollRegion ( nsIDOMEvent* inEvent, PRBool* outScrollUp ) ;
+  
+  PRInt32 mDropRow;               // the row the mouse is hovering over during a drop
+  DropOrientation mDropOrient;    // where we want to draw feedback (above/below/on this row) if allowed
+  PRBool mDropAllowed;            // if the drop is actually allowed here or not. we draw if this is true
+  PRBool mIsSortRectDrawn;        // have we already drawn the sort rectangle?
+  PRBool mAlreadyUndrewDueToScroll;   // we undraw early during auto-scroll; did we do this already?
+  
+  nsCOMPtr<nsIDragSession> mDragSession;
+  nsCOMPtr<nsIRenderingContext> mRenderingContext;
 
 }; // class nsOutlinerBodyFrame

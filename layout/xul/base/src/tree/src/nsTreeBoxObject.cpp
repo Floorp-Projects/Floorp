@@ -320,6 +320,16 @@ NS_IMETHODIMP nsOutlinerBoxObject::GetCellAt(PRInt32 x, PRInt32 y, PRInt32 *row,
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsOutlinerBoxObject::GetCoordsForCellItem(PRInt32 aRow, const PRUnichar *aColID, const PRUnichar *aCellItem, 
+                                          PRInt32 *aX, PRInt32 *aY, PRInt32 *aWidth, PRInt32 *aHeight)
+{
+  nsIOutlinerBoxObject* body = GetOutlinerBody();
+  if (body)
+    return body->GetCoordsForCellItem(aRow, aColID, aCellItem, aX, aY, aWidth, aHeight);
+  return NS_OK;
+}
+
 NS_IMETHODIMP nsOutlinerBoxObject::RowCountChanged(PRInt32 aIndex, PRInt32 aDelta)
 {
   nsIOutlinerBoxObject* body = GetOutlinerBody();
@@ -327,6 +337,40 @@ NS_IMETHODIMP nsOutlinerBoxObject::RowCountChanged(PRInt32 aIndex, PRInt32 aDelt
     return body->RowCountChanged(aIndex, aDelta);
   return NS_OK;
 }
+
+NS_IMETHODIMP nsOutlinerBoxObject::OnDragEnter(nsIDOMEvent* inEvent)
+{
+  nsIOutlinerBoxObject* body = GetOutlinerBody();
+  if (body)
+    return body->OnDragEnter(inEvent);
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsOutlinerBoxObject::OnDragExit(nsIDOMEvent* inEvent)
+{
+  nsIOutlinerBoxObject* body = GetOutlinerBody();
+  if (body)
+    return body->OnDragExit(inEvent);
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsOutlinerBoxObject::OnDragOver(nsIDOMEvent* inEvent)
+{
+  nsIOutlinerBoxObject* body = GetOutlinerBody();
+  if (body)
+    return body->OnDragOver(inEvent);
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsOutlinerBoxObject::OnDragDrop(nsIDOMEvent* inEvent)
+{
+  nsIOutlinerBoxObject* body = GetOutlinerBody();
+  if (body)
+    return body->OnDragDrop(inEvent);
+  return NS_OK;
+}
+
+
 
 // Creation Routine ///////////////////////////////////////////////////////////////////////
 

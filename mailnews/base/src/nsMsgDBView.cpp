@@ -4318,3 +4318,55 @@ nsresult nsMsgDBView::GetImapDeleteModel(nsIMsgFolder *folder)
      imapServer->GetDeleteModel(&mDeleteModel);       
    return rv;
 }
+
+
+//
+// CanDropOn
+//
+// Can't drop on the thread pane.
+//
+NS_IMETHODIMP nsMsgDBView::CanDropOn(PRInt32 index, PRBool *_retval)
+{
+  NS_ENSURE_ARG_POINTER(_retval);
+  *_retval = PR_FALSE;
+  
+  return NS_OK;
+}
+
+//
+// CanDropBeforeAfter
+//
+// Can't drop on the thread pane.
+//
+NS_IMETHODIMP nsMsgDBView::CanDropBeforeAfter(PRInt32 index, PRBool before, PRBool *_retval)
+{
+  NS_ENSURE_ARG_POINTER(_retval);
+  *_retval = PR_FALSE;
+  
+  return NS_OK;
+}
+
+
+//
+// Drop
+//
+// Can't drop on the thread pane.
+//
+NS_IMETHODIMP nsMsgDBView::Drop(PRInt32 row, PRInt32 orient)
+{
+  return NS_OK;
+}
+
+
+//
+// IsSorted
+//
+// ...
+//
+NS_IMETHODIMP nsMsgDBView::IsSorted(PRBool *_retval)
+{
+  *_retval = PR_FALSE;
+  return NS_OK;
+}
+
+
