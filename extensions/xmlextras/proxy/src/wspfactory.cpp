@@ -147,8 +147,8 @@ WSPAsyncProxyCreator::OnError(nsresult status, const nsAString & statusMessage)
   // XXX need to build an exception. It would be nice to have a generic
   // exception class!
 
-  nsCAutoString temp(ToNewUTF8String(statusMessage));
-  nsCOMPtr<nsIException> e = new WSPException(status, temp.get(), nsnull);
+  nsCOMPtr<nsIException> e = new WSPException(status, 
+    NS_ConvertUCS2toUTF8(statusMessage).get(), nsnull);
   if (!e) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
