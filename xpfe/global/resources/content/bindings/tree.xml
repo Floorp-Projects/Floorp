@@ -754,16 +754,17 @@
 
           var tree = col.parentNode.parentNode;
           var sib;
+          var column;
           if (col.mTargetCol) {
             // remove previous insertbefore/after attributes
             col.mTargetCol.removeAttribute("insertbefore");
             col.mTargetCol.removeAttribute("insertafter");
-            var column = tree.columns.getColumnFor(col.mTargetCol);
+            column = tree.columns.getColumnFor(col.mTargetCol);
             tree.treeBoxObject.invalidateColumn(column);
             sib = col.mTargetCol._previousVisibleColumn;
             if (sib) {
               sib.removeAttribute("insertafter");
-              var column = tree.columns.getColumnFor(sib);
+              column = tree.columns.getColumnFor(sib);
               tree.treeBoxObject.invalidateColumn(column);
             }
             col.mTargetCol = null;
@@ -779,11 +780,11 @@
               sib = targetCol._previousVisibleColumn;
               if (sib) {
                 sib.setAttribute("insertafter", "true");
-                var column = tree.columns.getColumnFor(sib);
+                column = tree.columns.getColumnFor(sib);
                 tree.treeBoxObject.invalidateColumn(column);
               }
             }
-            var column = tree.columns.getColumnFor(targetCol);
+            column = tree.columns.getColumnFor(targetCol);
             tree.treeBoxObject.invalidateColumn(column);
             col.mTargetCol = targetCol;
             col.mTargetDir = pos.value;
