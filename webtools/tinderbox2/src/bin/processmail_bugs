@@ -2,17 +2,19 @@
 # -*- Mode: perl; indent-tabs-mode: nil -*-
 #
 
-# processmail - the mail processing engine for tinderbox.  The build
-# machines (clients) send their build logs to the server to report on
-# the status of the builds and this program accepts the mail (via an
-# MTA like sendmail) and acts as the MDA (mail delivery agent).  This
-# program process the build logs for the tinderbox server (tinder.cgi)
-# and enforms the server of any status updates.  It also stores the
-# logs in compressed form for future reference.
+# processmail_bugs - The 'bug tracking' mail processing engine for
+# tinderbox.  The bug tracking server (bugzilla, aim, remedy) send
+# mail to the tinderbox server, when bug tickets change state. This
+# program will parse the most common mail formats and and tell the
+# tinderbox server about the tickets.  Tinderbox will display summary
+# information about these tickets on the same page as the build and
+# version control information.  The Bug Tracking modules are designed
+# to be very flexible and work with any bug tracking system, they may
+# require technical configurations.
 
 
-# $Revision: 1.1 $ 
-# $Date: 2000/09/22 15:17:14 $ 
+# $Revision: 1.2 $ 
+# $Date: 2000/10/18 20:22:57 $ 
 # $Author: kestes%staff.mail.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/bin/processmail_bugs,v $ 
 # $Name:  $ 
@@ -176,18 +178,10 @@ Bug/Defect/Feature(s)-]
 
 =cut
 
-
 # untaint the variable and values parsed from trouble ticket mail.
 
 sub clean_bug_input {
   my ($var, $value) = @_;
-
-  # Single quotes seem to always break the popup window, even if they
-  # are HTML escaped.  I wonder if this is a bug in netscape or if the
-  # javascript requires the expansion of metacharacters before
-  # interpretation.
-
-  $value =~ s/\'/\"/g;
 
   # untaint data for safety
 
@@ -219,19 +213,15 @@ sub clean_bug_input {
 
 sub parse_bt_vars {
 
-  # Ignore all lines in the mail till we find the tinderbox lines, so
-  # the lines we want should be at the top of the mail.  We parse the
-  # whole mail message because some formats are hard to tell when we
-  # are done AND we do not need to keep the long descriptions anyway.
-
   # Lines will be diffs, and this will cause the variables to appear
   # twice in the data with different vaules.  We keep the LAST
   # assignment of each variable.  This means that long varaibles can
   # not be split up to multiple lines.
 
-  # This function does not use any other functions and failures are
-  # expected to be rare.
-  
+  # We parse the whole mail message because some formats are hard to
+  # tell when we are done AND we do not need to keep the long
+  # descriptions anyway.
+
   my ($found_vars)= 0;
   my ($line) = '';
 
@@ -240,12 +230,6 @@ sub parse_bt_vars {
     my ($num_colons) = scalar($line =~ tr/://);
     my ($num_pipes) = scalar($line =~ tr/|//);
 
-    # Note: there are some standard bugzilla variables with unusual
-    # characters in them:
-    #
-    #       Bug#: 1999
-    #       OS/Version: 
-    
     if ( 
         ($num_colons == 1) && 
         ($line =~ m/^[ \t\+\!]*[A-Z]/) && 
@@ -264,11 +248,11 @@ sub parse_bt_vars {
       if ( $line =~ m!
 	   ^[ \t\+\!]*                # line may begin with 'diff characters'
                                       #       (skip diff deletions)
-	   ([a-zA-Z0-9._/ \#\-]+)     # variable identifier
+	   ($BTData::VAR_PATTERN)     # variable identifier
 	   \s*\:\s+                   # followed by a colon-space separator
 	   (.+)                       # value of the variable
 	   \n$                        # go till end of line 
-	   !x ) {
+	   !ox ) {
 	
 	my ($var, $value) = ($1, $2);
 
@@ -296,13 +280,13 @@ sub parse_bt_vars {
       
       if ( $line =~ m!
 	   ^[ \t]*                    # line may begin with white space
-	   ([a-zA-Z0-9._/ \#\-]+)     # variable identifier
+	   ($BTData::VAR_PATTERN)     # variable identifier
 	   \s*\|\s*                   # followed by a pipe-space separator
 	   ([^|]+)                    # old value of the variable
 	   \s*\|\s*                   # followed by a pipe-space separator
 	   ([^|]+)                    # new value of the variable
 	   \n$                        # go till end of line 
-	   !x ) {
+	   !ox ) {
 	
 	my ($var, $value) = ($1, $3);
 
