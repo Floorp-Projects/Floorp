@@ -125,7 +125,7 @@ nsHttpHandler::nsHttpHandler()
     , mConnectionLock(nsnull)
     , mUserAgentIsDirty(PR_TRUE)
     , mUseCache(PR_TRUE)
-    , mSendSecureXSiteReferrer(PR_FALSE)
+    , mSendSecureXSiteReferrer(PR_TRUE)
 {
     NS_INIT_ISUPPORTS();
 
