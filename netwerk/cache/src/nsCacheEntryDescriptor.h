@@ -35,10 +35,10 @@ public:
     NS_DECL_NSITRANSPORT
     NS_DECL_NSICACHEENTRYDESCRIPTOR
     
-    nsCacheEntryDescriptor(nsCacheEntry * entry, PRUint32  flags);
+    nsCacheEntryDescriptor(nsCacheEntry * entry, nsCacheAccessMode  mode);
     virtual ~nsCacheEntryDescriptor();
 
-    static nsresult Create(nsCacheEntry * entry, PRUint32  accessGranted,
+    static nsresult Create(nsCacheEntry * entry, nsCacheAccessMode  accessGranted,
                            nsICacheEntryDescriptor ** result);
 
     /**
@@ -54,9 +54,9 @@ public:
     
 protected:
     
-    PRCList        mListLink;
-    nsCacheEntry * mCacheEntry; // we are a child of the entry
-    PRUint32       mAccessGranted;
+    PRCList           mListLink;
+    nsCacheEntry    * mCacheEntry; // we are a child of the entry
+    nsCacheAccessMode mAccessGranted;
 };
 
 
