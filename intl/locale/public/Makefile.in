@@ -34,6 +34,7 @@ EXPORTS		= \
 		nsICollation.h \
 		nsIDateTimeFormat.h \
 		nsILocaleFactory.h \
+		nsIOS2Locale.h \
 		nsIPosixLocale.h \
 		nsLocaleCID.h \
 		$(NULL)
