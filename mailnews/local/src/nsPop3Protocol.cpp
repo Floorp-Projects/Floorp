@@ -2209,8 +2209,13 @@ nsPop3Protocol::RetrResponse(nsIInputStream* inputStream,
         if (!m_senderInfo.IsEmpty())
             flags |= MSG_FLAG_SENDER_AUTHED;
         
-        if(m_pop3ConData->cur_msg_size < 0)
+        if(m_pop3ConData->cur_msg_size <= 0)
+        {
+          if (m_pop3ConData->msg_info)
+            m_pop3ConData->cur_msg_size = m_pop3ConData->msg_info[m_pop3ConData->last_accessed_msg].size;
+          else
             m_pop3ConData->cur_msg_size = 0;
+        }
 
         if (m_pop3ConData->msg_info && 
             m_pop3ConData->msg_info[m_pop3ConData->last_accessed_msg].uidl)
@@ -2279,25 +2284,24 @@ nsPop3Protocol::RetrResponse(nsIInputStream* inputStream,
     
     if (m_pop3ConData->msg_closure)	/* not done yet */
     {
-		// buffer the line we just read in, and buffer all remaining lines in the stream
-		status = buffer_size;
-		do
-		{
-			PRInt32 res = BufferInput(line, buffer_size);
-            if (res < 0) return(Error(POP3_MESSAGE_WRITE_ERROR));
-			// BufferInput(CRLF, 2);
-            res = BufferInput(MSG_LINEBREAK, MSG_LINEBREAK_LEN);
-            if (res < 0) return(Error(POP3_MESSAGE_WRITE_ERROR));
+		  // buffer the line we just read in, and buffer all remaining lines in the stream
+		  status = buffer_size;
+		  do
+      {
+			  PRInt32 res = BufferInput(line, buffer_size);
+        if (res < 0) return(Error(POP3_MESSAGE_WRITE_ERROR));
+			  // BufferInput(CRLF, 2);
+        res = BufferInput(MSG_LINEBREAK, MSG_LINEBREAK_LEN);
+        if (res < 0) return(Error(POP3_MESSAGE_WRITE_ERROR));
 
-            m_pop3ConData->parsed_bytes += (buffer_size+2); // including CRLF
-    
-			// now read in the next line
-			PR_FREEIF(line);
+        m_pop3ConData->parsed_bytes += (buffer_size+2); // including CRLF
+			  // now read in the next line
+			  PR_FREEIF(line);
 		    line = m_lineStreamBuffer->ReadNextLine(inputStream, buffer_size,
                                                     pauseForMoreData);
-            PR_LOG(POP3LOGMODULE, PR_LOG_ALWAYS,("RECV: %s", line));
-			status += (buffer_size+2); // including CRLF
-		} while (/* !pauseForMoreData && */ line);
+        PR_LOG(POP3LOGMODULE, PR_LOG_ALWAYS,("RECV: %s", line));
+			  status += (buffer_size+2); // including CRLF
+      } while (/* !pauseForMoreData && */ line);
     }
 
 	buffer_size = status;  // status holds # bytes we've actually buffered so far...
