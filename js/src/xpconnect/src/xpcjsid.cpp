@@ -409,7 +409,7 @@ public:
 private:
     CIDGetService(); // not implemented
 
-    static CIDGetServiceScriptable* CIDGetService::GetScriptable();
+    static CIDGetServiceScriptable* GetScriptable();
     nsJSCID* mCID;
 };
 
