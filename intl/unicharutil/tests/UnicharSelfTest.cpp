@@ -197,7 +197,7 @@ static PRUnichar t3result[T3LEN+1] =  {
   0x00  
 };
 // test data for ToTitle 
-static PRUnichar t4data  [T4LEN+1] =  {
+static PRUnichar t4data  [T4LEN+2] =  {
   0x0031 ,  //  0
   0x0019 ,  //  1
   0x0043 ,  //  2
@@ -227,10 +227,11 @@ static PRUnichar t4data  [T4LEN+1] =  {
   0x01F1 ,  // 26
   0x01F2 ,  // 27
   0x01F3 ,  // 28
+  0x0041 ,  // Dummy entry to prevent overflow
   0x00  
 };
 // expected result for ToTitle 
-static PRUnichar t4result[T4LEN+1] =  {
+static PRUnichar t4result[T4LEN+2] =  {
   0x0031 ,  //  0
   0x0019 ,  //  1
   0x0043 ,  //  2
@@ -238,7 +239,7 @@ static PRUnichar t4result[T4LEN+1] =  {
   0x00C8 ,  //  4
   0x00C9 ,  //  5
   0x0147 ,  //  6
-  0x01C5 ,  //  7
+  0x01C4 ,  //  7
   0x01C5 ,  //  8
   0x01C5 ,  //  9
   0x03A0 ,  // 10
@@ -251,15 +252,16 @@ static PRUnichar t4result[T4LEN+1] =  {
   0x5189 ,  // 17
   0xC013 ,  // 18
   0xFF32 ,  // 19
-  0x01C8 ,  // 20
+  0x01C7 ,  // 20
   0x01C8 ,  // 21
   0x01C8 ,  // 22
-  0x01CB ,  // 23
+  0x01CA ,  // 23
   0x01CB ,  // 24
   0x01CB ,  // 25
-  0x01F2 ,  // 26
+  0x01F1 ,  // 26
   0x01F2 ,  // 27
   0x01F2 ,  // 28
+  0x0041 ,  // Dummy entry to prevent overflow
   0x00  
 };
 
@@ -357,8 +359,28 @@ void TestCaseConversion()
        }
     }
 
+    /* 
+     * It would be pointless to test ToTitle() with the whole buffer, since
+     *  the expected result would be that only the first character would be
+     *  transformed. Instead, pass a series of 2-character buffers starting
+     *  with each character of the test cases, and check that the first
+     *  character is transformed as expected and the second remains unchanged
+     */
      printf("Test 7 - ToTitle(PRUnichar*, PRUnichar*, PRUint32):\n");
-     printf("!!! To Be Implemented !!!\n");
+     for (i = 0; i < T4LEN; i++)
+     {
+       PRUnichar* titleTest = t4data + i;
+       res = t->ToTitle(titleTest, buf, 2);
+       if(NS_FAILED(res)) {
+         printf("\tFailed!! return value != NS_OK\n");
+       } else {
+         if (buf[0] != t4result[i] || buf[1] != t4data[i + 1])
+         {
+           printf("\tFailed!! result unexpected %d\n", i);
+           break;
+         }
+       }
+     }
 
    NS_RELEASE(t);
    }
