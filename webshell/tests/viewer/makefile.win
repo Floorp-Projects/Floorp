@@ -150,6 +150,8 @@ install:: $(PROGRAM)
 	$(MAKE_INSTALL) samples\test11.html $(DIST)\bin\res\samples
 	$(MAKE_INSTALL) samples\test12.html $(DIST)\bin\res\samples
 	$(MAKE_INSTALL) samples\test13.html $(DIST)\bin\res\samples
+	$(MAKE_INSTALL) samples\test14.html $(DIST)\bin\res\samples
+	$(MAKE_INSTALL) samples\test15.html $(DIST)\bin\res\samples
 	$(MAKE_INSTALL) samples\test_pr.html $(DIST)\bin\res\samples
 	$(MAKE_INSTALL) samples\test_gfx.html $(DIST)\bin\res\samples
 	$(MAKE_INSTALL) samples\test_lbox.html $(DIST)\bin\res\samples
