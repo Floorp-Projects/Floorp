@@ -131,7 +131,7 @@ Rights Reserved.
 <!ENTITY dcharMenu.label "Character Set  ISO">
 <!ENTITY dcharMenu1.label "Character Set  Multibyte">
 <!ENTITY dcharMenu2.label "Character Set  Cyrillic">
-<!ENTITY dcharMenu3.label "Character Set  SE Asian/Armenian/Semitic">
+<!ENTITY dcharMenu3.label "Character Set  SE Asian/Armenian">
 <!ENTITY dcharMenu4.label "Character Set  Macintosh">
 <!ENTITY dcharMenu5.label "Character Set  Windows">
 <!ENTITY dcharIso1Cmd.label "Western (ISO-8859-1)">
