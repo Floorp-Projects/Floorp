@@ -419,18 +419,21 @@ function getAbsoluteID(root, node)
 
 function OpenURL(event, node, root)
 {
-  if (event.clickCount != 2 || node.nodeName != "treeitem") return(false);
+	if ((event.button != 1) || (event.clickCount != 2) || (node.nodeName != "treeitem"))
+		return(false);
 
-  if (node.getAttribute('container') == "true")	return(false);
+	if (node.getAttribute("container") == "true")
+		return(false);
 
-  var url = getAbsoluteID(root, node);
+	var url = getAbsoluteID(root, node);
 
-  // Ignore "NC:" urls.
-  if (url.substring(0, 3) == "NC:")	return(false);
+	// Ignore "NC:" urls.
+	if (url.substring(0, 3) == "NC:")
+		return(false);
 
-  // get right sized window
-  window.openDialog( "chrome://navigator/content/navigator.xul", "_blank", "chrome,all,dialog=no", url );
-  return(true);
+	// get right sized window
+	window.openDialog( "chrome://navigator/content/navigator.xul", "_blank", "chrome,all,dialog=no", url );
+	return(true);
 }
 
 

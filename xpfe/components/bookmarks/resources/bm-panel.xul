@@ -33,13 +33,16 @@
   align="vertical">
 
   <html:script src="chrome://bookmarks/content/bm-panel.js" />
+  <html:script src="chrome://bookmarks/content/bookmarks.js" />
   <html:script src="chrome://bookmarks/content/bookmarksDD.js"/>
 
   <html:div style="width:100px;height:100px" flex="1">
 
-    <popup id="contextual" oncreate="return fillContextMenu('contextual');" >
-      <menu />
-    </popup>
+<popupset>
+<popup id="contextual" oncreate="return fillContextMenu('contextual');" >
+	<menu />
+</popup>
+</popupset>
 
     <tree id="bookmarksTree" context="contextual" ref="NC:BookmarksRoot"
       style="height: 100%; width:100%;"

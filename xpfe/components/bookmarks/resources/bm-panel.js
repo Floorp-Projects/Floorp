@@ -17,7 +17,9 @@
  * Copyright (C) 1999 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): Stephen Lamm <slamm@netscape.com>
+ * Contributor(s):
+ *	Stephen Lamm             <slamm@netscape.com>
+ *	Robert John Churchill    <rjc@netscape.com>
  */
 
 /*
@@ -26,10 +28,10 @@
 
 function clicked(event, target)
 {
-	if ((event.button != 1) || (event.clickCount != 2))
+	if ((event.button != 1) || (event.clickCount != 2) || (target.nodeName != "treeitem"))
 		return(false);
 
-	if (target.getAttribute('container') == 'true')
+	if (target.getAttribute("container") == "true")
 		return(false);
 
 	OpenBookmarkURL(target, document.getElementById('bookmarksTree').database);
@@ -40,12 +42,14 @@ function clicked(event, target)
 
 function OpenBookmarkURL(node, datasources)
 {
-    if (node.getAttribute('container') == "true") {
-        return false;
-    }
+	if (node.getAttribute("container") == "true")
+	{
+		return(false);
+	}
 
-	var url = node.getAttribute('id');
-	try {
+	var url = node.getAttribute("id");
+	try
+	{
 		// add support for IE favorites under Win32, and NetPositive URLs under BeOS
 		var rdf = Components.classes["component://netscape/rdf/rdf-service"].getService();
 		if (rdf) rdf = rdf.QueryInterface(Components.interfaces.nsIRDFService);
@@ -58,55 +62,23 @@ function OpenBookmarkURL(node, datasources)
 			if (target)	url = target;
 		}
 	}
-	catch(ex) {
-	}
-
-    // Ignore "NC:" urls.
-    if (url.substring(0, 3) == "NC:") {
-        return false;
-    }
-	// Check if we have a browser window
-	if (window.content == null) {
-		window.openDialog( "chrome://navigator/content/navigator.xul", "_blank", "chrome,all,dialog=no", url ); 
-	}
-	else {
-        window.content.location = url;
-  	}
-}
-
-
-function getAbsoluteID(root, node)
-{
-	var url = node.getAttribute("ref");
-	if ((url == null) || (url == ""))
-	{
-		url = node.getAttribute("id");
-	}
-	try
-	{
-		var rootNode = document.getElementById(root);
-		var ds = null;
-		if (rootNode)
-		{
-			ds = rootNode.database;
-		}
-
-		// add support for anonymous resources such as Internet Search results,
-		// IE favorites under Win32, and NetPositive URLs under BeOS
-		var rdf = Components.classes["component://netscape/rdf/rdf-service"].getService();
-		if (rdf)   rdf = rdf.QueryInterface(Components.interfaces.nsIRDFService);
-		if (rdf && ds)
-		{
-			var src = rdf.GetResource(url, true);
-			var prop = rdf.GetResource("http://home.netscape.com/NC-rdf#URL", true);
-			var target = ds.GetTarget(src, prop, true);
-			if (target)	target = target.QueryInterface(Components.interfaces.nsIRDFLiteral);
-			if (target)	target = target.Value;
-			if (target)	url = target;
-		}
-	}
 	catch(ex)
 	{
 	}
-	return(url);
+
+	// Ignore "NC:" urls.
+	if (url.substring(0, 3) == "NC:")
+	{
+		return(false);
+	}
+  
+	// Check if we have a browser window
+	if (window.content == null)
+	{
+		window.openDialog( "chrome://navigator/content/navigator.xul", "_blank", "chrome,all,dialog=no", url ); 
+	}
+	else
+	{
+        window.content.location = url;
+  	}
 }
