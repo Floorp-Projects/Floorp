@@ -90,10 +90,10 @@ nsXMLDocument::nsXMLDocument()
   mCSSLoader = nsnull;
   
   // XXX The XML world depends on the html atoms
-  nsHTMLAtoms::AddrefAtoms();
+  nsHTMLAtoms::AddRefAtoms();
 #ifdef INCLUDE_XUL
   // XUL world lives within XML world until it gets a place of its own
-  nsXULAtoms::AddrefAtoms();
+  nsXULAtoms::AddRefAtoms();
 #endif
 #ifdef XSL
   mTransformMediator = nsnull;
@@ -388,8 +388,6 @@ nsXMLDocument::CreateProcessingInstruction(const nsString& aTarget,
   return rv;
 }
  
-static char kNameSpaceSeparator[] = ":";
-
 NS_IMETHODIMP    
 nsXMLDocument::CreateElement(const nsString& aTagName, 
                               nsIDOMElement** aReturn)
