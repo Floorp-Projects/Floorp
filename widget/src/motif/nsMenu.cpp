@@ -25,6 +25,8 @@
 
 #include <Xm/CascadeBG.h>
 #include <Xm/SeparatoG.h>
+#include <Xm/RowColumn.h>
+#include <Xm/PushB.h>
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kMenuIID, NS_IMENU_IID);
