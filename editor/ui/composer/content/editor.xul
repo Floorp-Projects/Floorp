@@ -44,7 +44,7 @@
 %brandDTD;
 ]> 
 
-<window id="main-window" xmlns:html="http://www.w3.org/1999/xhtml"
+<window id="editorWindow" xmlns:html="http://www.w3.org/1999/xhtml"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         onload="EditorOnLoad()"
         onunload="EditorShutdown()"
