@@ -155,46 +155,39 @@ NS_IMETHODIMP nsDrawingSurfacePh :: Lock(PRInt32 aX, PRInt32 aY,
   mLockHeight = aHeight;
   mLockFlags = aFlags;
 
-  // Obtain an ximage from the pixmap.
-#ifdef USE_SHM
-  if (gdk_get_use_xshm())
-  {
-    mImage = gdk_image_new(GDK_IMAGE_FASTEST,
-                           gdk_rgb_get_visual(),
-                           mLockWidth,
-                           mLockHeight);
-    
-    XShmGetImage(GDK_DISPLAY(),
-                 GDK_WINDOW_XWINDOW(mPixmap),
-                 GDK_IMAGE_XIMAGE(mImage),
-                 mLockX, mLockY,
-                 0xFFFFFFFF);
+  PhImage_t *image;
+  PhDim_t dim;
+  short               bytes_per_pixel = 3;
 
-    gdk_flush();
-  }
-  else
-  {
-#endif /* USE_SHM */
-//    mImage = ::gdk_image_get(mPixmap, mLockX, mLockY, mLockWidth, mLockHeight);
-  mImage = mPixmap;
-#ifdef USE_SHM
-  }
-#endif /* USE_SHM */
+  image = malloc(sizeof(PhImage_t));
+  mImage = image;
 
-//  *aBits = GDK_IMAGE_XIMAGE(mImage)->data;
-//  *aWidthBytes = GDK_IMAGE_XIMAGE(mImage)->bytes_per_line;
-//  *aStride = GDK_IMAGE_XIMAGE(mImage)->bytes_per_line;
+  dim.w = mLockWidth;
+  dim.h = mLockHeight;
 
-  *aBits = mImage->image+mLockX*3+mLockY*mImage->bpl;
+  memset( image, 0, sizeof(PhImage_t) );
+  image->type = Pg_IMAGE_DIRECT_888; // 3 bytes per pixel with this type
+  image->size = dim;
+//  image->image = (char *) PgShmemCreate( dim.w * dim.h * bytes_per_pixel, NULL);
+  image->image = (char *) malloc( dim.w * dim.h * bytes_per_pixel);
+  image->bpl = bytes_per_pixel*dim.w;
+
+int y;
+for (y=0;y<dim.h;y++)
+	memcpy(image->image+y*dim.w*3,mPixmap->image+3*mLockX+(mLockY+y)*mPixmap->bpl,dim.w*3);
+
+//  *aBits = mImage->image+mLockX*3+mLockY*mImage->bpl;
+  *aBits = mImage->image;
   *aWidthBytes = aWidth*3;
   *aStride = mImage->bpl;
 
   return NS_OK;
 }
 
+extern void *Mask;
 NS_IMETHODIMP nsDrawingSurfacePh :: Unlock(void)
 {
-//printf ("unlock\n");
+//printf ("unlock: %p\n",Mask);
   if (!mLocked)
   {
     NS_ASSERTION(0, "attempting to unlock an DS that isn't locked");
@@ -204,23 +197,26 @@ NS_IMETHODIMP nsDrawingSurfacePh :: Unlock(void)
   // If the lock was not read only, put the bits back on the pixmap
   if (!(mLockFlags & NS_LOCK_SURFACE_READ_ONLY))
   {
-//printf ("put data back\n");
-/*    gdk_draw_image(mPixmap,
-                   mGC,
-                   mImage,
-                   0, 0,
-                   mLockX, mLockY,
-                   mLockWidth, mLockHeight);
-*/
+//printf ("really put data back: %d %d %d %d (%d %d)\n",mLockX,mLockY,mLockWidth,mLockHeight,mImage->size.w,mImage->size.h);
+  PhPoint_t pos = { mLockX, mLockY };
+
+    Select();
+    if (Mask)
+    {
+//      printf ("use mask\n");
+int bpl;
+   bpl = (mLockWidth+7)/8;
+   bpl = (bpl + 3) & ~0x3;
+      PgDrawTImage( mImage->image, mImage->type, &pos, &mImage->size, mImage->bpl, 0 ,Mask,bpl);
+    }
+    else
+      PgDrawImage( mImage->image, mImage->type, &pos, &mImage->size, mImage->bpl, 0 );
+
   }
 
-  // FIXME if we are using shared mem, we shouldn't destroy the image...
-/*
-  if (mImage)
-    ::gdk_image_destroy(mImage);
-*/
+  free(mImage->image);
+  free(mImage);
   mImage = nsnull;
-
   mLocked = PR_FALSE;
 
   return NS_OK;
@@ -341,16 +337,19 @@ NS_IMETHODIMP nsDrawingSurfacePh :: ReleaseGC( void )
 NS_IMETHODIMP nsDrawingSurfacePh :: Select( void )
 {
   if (mholdGC==nsnull) mholdGC = mGC;
+ 
+//PhGC_t *gc=PgGetGC();
+//printf ("current gc: %p\n",gc);
 
   if (mIsOffscreen)
   {
-//printf ("going offscreen\n"); fflush(stdout);
+//printf ("going offscreen: %p\n",mGC); fflush(stdout);
     PmMemStart( (PmMemoryContext_t *) mGC);
     PgSetRegion(mGC->rid);
   }
   else
   {
-//printf ("going onscreen\n"); fflush(stdout);
+//printf ("going onscreen: %p\n",mGC); fflush(stdout);
 	PgSetGC(mGC);
 	PgSetRegion(mGC->rid);
   }
