@@ -62,6 +62,8 @@
 #include "mozXMLTermUtils.h"
 #include "mozXMLTermStream.h"
 
+static NS_DEFINE_CID(kSimpleURICID,            NS_SIMPLEURI_CID);
+
 /////////////////////////////////////////////////////////////////////////
 // mozXMLTermStream factory
 /////////////////////////////////////////////////////////////////////////
@@ -249,72 +251,80 @@ NS_IMETHODIMP mozXMLTermStream::Open(nsIDOMWindowInternal* aDOMWindow,
     return NS_ERROR_FAILURE;
 
 #ifdef NO_WORKAROUND
-  printf("mozXMLTermStream::Open, NO_WORKAROUND\n");
+  printf("mozXMLTermStream::Open, NO_WORKAROUND, url=%s\n", contentURL);
 
   nsCOMPtr<nsIInputStream> inputStream = this;
 
-  nsCOMPtr<nsIURI> uri;
-  result = NS_NewURI(getter_AddRefs(uri), contentURL, nsnull);
+  // Create a simple URI
+  nsCOMPtr<nsIURI> uri = do_CreateInstance(kSimpleURICID, &result);
   if (NS_FAILED(result))
     return result;
 
-  result = NS_NewLoadGroup(nsnull, getter_AddRefs(mLoadGroup));
+  result = uri->SetSpec(contentURL);
   if (NS_FAILED(result))
     return result;
 
-  PRInt32 contentLength = 1024; // ??? What's this length
-  result = NS_NewInputStreamChannel(uri, contentType, contentLength,
-                                    inputStream, mLoadGroup,
-                                    nsnull,  // notificationCallbacks
-                                    nsIChannel::LOAD_NORMAL, 
-                                    nsnull, 0, 0,
-                                    getter_AddRefs(mChannel));
+
+  // Create a new load group
+  result = NS_NewLoadGroup(getter_AddRefs(mLoadGroup), nsnull);
   if (NS_FAILED(result))
     return result;
 
-  // Determine Class ID for viewing specified mimetype
-  nsCID classID;
+  // Create an input stream channel
+  PRInt32 contentLength = 1024;
+  result = NS_NewInputStreamChannel(getter_AddRefs(mChannel),
+                                    uri,
+                                    inputStream,
+                                    contentType, contentLength);
+  if (NS_FAILED(result))
+    return result;
+
+  // Set channel's load group
+  result = mChannel->SetLoadGroup(mLoadGroup);
+  if (NS_FAILED(result))
+    return result;
+
+  // Create document loader for specified command and content type
   static const char command[] = "view";
   nsCAutoString contractID(NS_DOCUMENT_LOADER_FACTORY_CONTRACTID_PREFIX);
   contractID += command;
-  contractID += "/";
+  contractID += ";1?type=";
   contractID += contentType;
 
-  result = nsComponentManager::ContractIDToClassID(contractID.GetBuffer(),
-                                             &classID);
-  if (NS_FAILED(result))
-    return result;
-
   nsCOMPtr<nsIDocumentLoaderFactory> docLoaderFactory;
-  result = nsComponentManager::CreateInstance(classID, nsnull,
-                                         NS_GET_IID(nsIDocumentLoaderFactory),
-                                         getter_AddRefs(docLoaderFactory));
+  docLoaderFactory = do_CreateInstance(contractID, &result);
   if (NS_FAILED(result))
     return result;
 
+  nsCOMPtr<nsIContentViewerContainer> contViewContainer =
+                                             do_QueryInterface(docShell);
   nsCOMPtr<nsIContentViewer> contentViewer;
   result = docLoaderFactory->CreateInstance(command,
                                             mChannel,
                                             mLoadGroup,
                                             contentType,
-                                            docShell,
+                                            contViewContainer,
                                             nsnull,
                                             getter_AddRefs(mStreamListener),
                                             getter_AddRefs(contentViewer) );
   if (NS_FAILED(result))
     return result;
 
-  nsCOMPtr<nsIContentViewerContainer> contViewContainer =
-                                             do_QueryInterface(docShell);
+  // Set container for content view
   result = contentViewer->SetContainer(contViewContainer);
   if (NS_FAILED(result))
     return result;
 
-  // ****NOTE**** Need to embed contentViewer in docShell
+  // Embed contentViewer in containing docShell
+  result = contViewContainer->Embed(contentViewer, "view", nsnull);
+  if (NS_FAILED(result))
+    return result;
 
+  // Start request
   result = mStreamListener->OnStartRequest(mChannel, mContext);
   if (NS_FAILED(result))
     return result;
+
 #else // !NO_WORKAROUND
   printf("mozXMLTermStream::Open, WORKAROUND\n");
 

@@ -316,7 +316,7 @@ NS_IMETHODIMP mozXMLTermSession::Resize(mozILineTermAux* lineTermAux)
   mTopScrollRow = mScreenRows - 1;
   mBotScrollRow = 0;
 
-  XMLT_LOG(mozXMLTermSession::Resize,0,
+  XMLT_LOG(mozXMLTermSession::Resize,72,
        ("Resizing XMLterm, nRows=%d, nCols=%d\n", mScreenRows, mScreenCols));
 
   if (lineTermAux) {
@@ -503,7 +503,7 @@ NS_IMETHODIMP mozXMLTermSession::ReadAll(mozILineTermAux* lineTermAux,
       // Terminate screen mode
       mOutputType = LINE_OUTPUT;
 
-      XMLT_LOG(mozXMLTermSession::ReadAll,0,
+      XMLT_LOG(mozXMLTermSession::ReadAll,62,
                ("Terminating screen mode\n"));
 
       // Delete screen element
@@ -1410,7 +1410,7 @@ NS_IMETHODIMP mozXMLTermSession::InitStream(const nsString& streamURL,
       break;
     }
 
-    nsCAutoString url(streamURL.GetBuffer());
+    nsCAutoString url; url.AssignWithConversion(streamURL);
     result = mXMLTermStream->Open(outerDOMWindow, iframeName.GetBuffer(),
                                   url.GetBuffer(),
                                   contentType.GetBuffer(), 800);
@@ -2237,7 +2237,7 @@ NS_IMETHODIMP mozXMLTermSession::AppendLineLS(const nsString& aString,
 #if 0
   mCurrentDebugNode = mOutputDisplayNode;
   mMetaCommandType = TREE_META_COMMAND;
-  XMLT_LOG(mozXMLTermSession::AppendLineLS,0,("tree:\n"));
+  XMLT_LOG(mozXMLTermSession::AppendLineLS,62,("tree:\n"));
 #endif  /* 0 */
 
   return NS_OK;
@@ -3304,7 +3304,7 @@ NS_IMETHODIMP mozXMLTermSession::NewScreen(void)
 {
   nsresult result;
 
-  XMLT_LOG(mozXMLTermSession::NewScreen,0,("\n"));
+  XMLT_LOG(mozXMLTermSession::NewScreen,70,("\n"));
 
   // Create screen element and append as child of session element
   nsCOMPtr<nsIDOMNode> divNode;

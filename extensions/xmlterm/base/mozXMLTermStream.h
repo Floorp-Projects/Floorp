@@ -30,6 +30,8 @@
 #include "mozXMLT.h"
 #include "mozIXMLTermStream.h"
 
+#define NO_WORKAROUND
+
 class mozXMLTermStream : public mozIXMLTermStream
 {
   public:
@@ -79,13 +81,13 @@ class mozXMLTermStream : public mozIXMLTermStream
   nsCOMPtr<nsIDOMElement> mDOMIFrameElement;
 
 #ifdef NO_WORKAROUND
-  /** Context for stream display (what's this??) */
+  /** Context for stream display */
   nsCOMPtr<nsISupports> mContext;
 
-  /** Load group for stream display (what's this??) */
+  /** Load group for stream display */
   nsCOMPtr<nsILoadGroup> mLoadGroup;
 
-  /** Channel for stream display (what's this??) */
+  /** Channel for stream display */
   nsCOMPtr<nsIChannel> mChannel;
 
   /** Stream listener object */

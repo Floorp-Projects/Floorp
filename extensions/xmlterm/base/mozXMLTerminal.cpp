@@ -243,12 +243,6 @@ NS_IMETHODIMP mozXMLTerminal::Init(nsIDocShell* aDocShell,
 
   nsresult result = NS_OK;
 
-  printf("mozXMLTerminal::Init, check1\n");
-  nsCOMPtr<nsIContentViewer> contViewer;
-  result = aDocShell->GetContentViewer(getter_AddRefs(contViewer));
-  printf("mozXMLTerminal::Init, check2, result=%x, contViewer=%x\n",
-         result, (unsigned int) contViewer.get());
-
   // NOTE: Need to parse args string!!!
   mCommand.SetLength(0);
   mPromptExpr.SetLength(0);
@@ -736,6 +730,8 @@ NS_IMETHODIMP mozXMLTerminal::ShowCaret(void)
   // especially when one starts mucking around with the display:
   // style property.
   // Under those circumstances, call this method to re-display the caret.
+
+  XMLT_LOG(mozXMLTerminal::ShowCaret,70,("\n"));
 
   if (!mPresShell)
     return NS_ERROR_FAILURE;

@@ -123,7 +123,7 @@ function (aContentType, aCommand, aWindowTarget, aSourceContext, aChannel)
           aChannel.URI.spec + ")\n");
 
     var xmltermChromeURL = "chrome://xmlterm/content/xmlterm.xul?"+aChannel.URI.spec;
-    dump("telnetLoader:xmltermChromeURL = " + xmltermChromeURL + "\n");
+    //dump("telnetLoader:xmltermChromeURL = " + xmltermChromeURL + "\n");
 
     var windowManager =
         Components.classes[MEDIATOR_CONTRACTID].getService(nsIWindowMediator);
@@ -189,7 +189,7 @@ TelnetProtocolHandler.prototype.newChannel =
 function (aURI)
 {
     var uriSpec = aURI.spec
-    dump("TelnetProtocolHandler.newChannel: uriSpec="+uriSpec+"\n");
+    //dump("TelnetProtocolHandler.newChannel: uriSpec="+uriSpec+"\n");
 
     if (uriSpec != "telnet:xmlterm")
        return new BogusChannel (aURI);
@@ -199,16 +199,10 @@ function (aURI)
     var ioServ = Components.classesByID[NS_IOSERVICE_CID_STR].getService();
     ioServ = ioServ.QueryInterface(nsIIOService);
 
-    dump(ioServ+"\n");
-
     // Open temporary XUL channel
     var xulURI = ioServ.newURI("chrome://xmlterm/content/xmltermDummy.xul",
                                null);
-    dump("xulURI="+xulURI+"\n");
-    dump("xulURI.spec="+xulURI.spec+"\n");
     var temChannel = ioServ.newChannelFromURI(xulURI);
-
-    dump("temChannel="+temChannel+"\n");
 
     // Get owner of XUL channel
     var xulOwner = temChannel.owner;
@@ -221,7 +215,7 @@ function (aURI)
        gSystemPrincipal = xulOwner;
     }
 
-    dump("gSystemPrincipal="+gSystemPrincipal+"\n");
+    //dump("gSystemPrincipal="+gSystemPrincipal+"\n");
 
     // Cancel XUL request and release channel
     temChannel.cancel(Components.results.NS_BINDING_ABORTED);
@@ -237,7 +231,7 @@ function (aURI)
     file.append("chrome");
     file.append("xmlterm.jar");
 
-    dump("file="+file.path+"\n");
+    //dump("file="+file.path+"\n");
 
     // Contruct JAR URI spec for xmlterm.html
     // Use file: rather than resource: or chrome: scheme to allow
@@ -246,8 +240,6 @@ function (aURI)
     var jarURI = "jar:file:"+file.path+"!/content/xmlterm/xmlterm.html";
 
     var newChannel = ioServ.newChannel(jarURI, null);
-
-    dump(newChannel+"\n");
 
     // Make new channel owned by system principal
     newChannel.owner = gSystemPrincipal;
