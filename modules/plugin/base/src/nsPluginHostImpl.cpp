@@ -4644,7 +4644,11 @@ NS_IMETHODIMP nsPluginHostImpl::LoadPlugins()
   nsCOMPtr<nsIComponentManager> compManager = do_GetService(kComponentManagerCID, &rv);
   if (NS_SUCCEEDED(rv) && compManager) 
   {
-    PRBool gotLayoutPath = NS_SUCCEEDED(compManager->SpecForRegistryLocation(REL_PLUGIN_DLL, getter_AddRefs(layoutPath)));
+    PRBool gotLayoutPath;
+    if (NS_SUCCEEDED(compManager->SpecForRegistryLocation(REL_PLUGIN_DLL, getter_AddRefs(layoutPath))))
+      gotLayoutPath = PR_TRUE;
+    else
+      gotLayoutPath = PR_FALSE;
     rv = LoadXPCOMPlugins(compManager, layoutPath);
     if (!gotLayoutPath)
         layoutPath = nsnull;
