@@ -120,7 +120,7 @@ REBASE=
 rebase:
 !if defined(MOZILLA_OFFICIAL)
 !if defined(FIND)
-!if defined(REBASE)
+!if "$(REBASE)" != ""
 	echo rebasing $(DIST)
         $(FIND) $(DIST) -name "*.dll" > rebase.lst
         $(REBASE) -b 60000000 -R . -G rebase.lst
