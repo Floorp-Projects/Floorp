@@ -39,6 +39,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+
+
 #if !defined __mozce_internal_h
 #define __mozce_internal_h
 

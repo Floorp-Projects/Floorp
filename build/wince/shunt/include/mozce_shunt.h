@@ -208,7 +208,7 @@
 #define CreateDCA2                mozce_CreateDCA2
 #define CreateDirectoryA          mozce_CreateDirectoryA
 
-#pragma warning(disable : 4005) // OK to have no return value
+#pragma warning(disable : 4005) // 
 // We use a method named CreateEvent.  We do not want to map
 // CreateEvent to CreateEventA
 #define CreateEvent               CreateEvent

@@ -271,4 +271,15 @@ typedef struct mozce_OUTLINETEXTMETRIC
 #define MM_TEXT             1
 #endif
 
+
+typedef struct _BLENDFUNCTION 
+{
+  BYTE     BlendOp;
+  BYTE     BlendFlags;
+  BYTE     SourceConstantAlpha;
+  BYTE     AlphaFormat;
+} BLENDFUNCTION, *PBLENDFUNCTION, *LPBLENDFUNCTION;
+
+#define AC_SRC_OVER 0
+
 #endif
