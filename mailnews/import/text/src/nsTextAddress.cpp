@@ -1135,7 +1135,7 @@ void nsTextAddress::AddLdifColToDatabase(nsIMdbRow* newRow, char* typeSlot, char
         m_database->AddHomeAddress2(newRow, column.get());
       else if (colType.Equals(MOZ_AB_LDIF_PREFIX "homelocalityname"))
         m_database->AddHomeCity(newRow, column.get());
-      else if (colType.Equals(MOZ_AB_LDIF_PREFIX "homestreet"))
+      else if (colType.Equals(MOZ_AB_LDIF_PREFIX "homestate"))
         m_database->AddHomeState(newRow, column.get());
       else if (colType.Equals(MOZ_AB_LDIF_PREFIX "homepostalcode"))
         m_database->AddHomeZipCode(newRow, column.get());

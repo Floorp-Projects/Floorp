@@ -135,7 +135,7 @@ static ExportAttributesTableStruct EXPORT_ATTRIBUTES_TABLE[] = {
   {kHomeAddressColumn, "homePostalAddress", PR_TRUE},
   {kHomeAddress2Column, MOZ_AB_LDIF_PREFIX "HomePostalAddress2", PR_TRUE},
   {kHomeCityColumn, MOZ_AB_LDIF_PREFIX "HomeLocalityName", PR_TRUE},
-  {kHomeStateColumn, MOZ_AB_LDIF_PREFIX "HomeStreet", PR_TRUE},
+  {kHomeStateColumn, MOZ_AB_LDIF_PREFIX "HomeState", PR_TRUE},
   {kHomeZipCodeColumn, MOZ_AB_LDIF_PREFIX "HomePostalCode", PR_TRUE},
   {kHomeCountryColumn, MOZ_AB_LDIF_PREFIX "HomeCountryName", PR_TRUE},
   {kWorkAddressColumn, "postalAddress", PR_TRUE},
