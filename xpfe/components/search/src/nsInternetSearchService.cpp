@@ -52,11 +52,12 @@
 #include "prprf.h"
 #include "prio.h"
 #include "rdf.h"
-#include "nsFileLocations.h"
+#include "nsIDirectoryService.h"
+#include "nsDirectoryServiceDefs.h"
+#include "nsAppDirectoryServiceDefs.h"
 #include "nsIFileSpec.h"
 #include "nsFileSpec.h"
 #include "nsFileStream.h"
-#include "nsSpecialSystemDirectory.h"
 #include "nsEnumeratorUtils.h"
 #include "nsIRDFRemoteDataSource.h"
 #include "nsICharsetConverterManager.h"
@@ -107,7 +108,6 @@ static NS_DEFINE_CID(kRDFInMemoryDataSourceCID,    NS_RDFINMEMORYDATASOURCE_CID)
 static NS_DEFINE_CID(kRDFXMLDataSourceCID,         NS_RDFXMLDATASOURCE_CID);
 static NS_DEFINE_CID(kCharsetConverterManagerCID,  NS_ICHARSETCONVERTERMANAGER_CID);
 static NS_DEFINE_CID(kTextToSubURICID,             NS_TEXTTOSUBURI_CID);
-static NS_DEFINE_CID(kFileLocatorCID,              NS_FILELOCATOR_CID);
 static NS_DEFINE_CID(kPrefCID,                     NS_PREF_CID);
 
 static const char kURINC_SearchEngineRoot[]                   = "NC:SearchEngineRoot";
@@ -380,10 +380,10 @@ friend	int		searchModePrefCallback(const char *pref, void *aClosure);
 	nsresult	validateEngine(nsIRDFResource *engine);
 	nsresult	DoSearch(nsIRDFResource *source, nsIRDFResource *engine, const nsString &fullURL, const nsString &text);
 	nsresult	MapEncoding(const nsString &numericEncoding, nsString &stringEncoding);
-	nsresult	SaveEngineInfoIntoGraph(const nsFileSpec *file, const nsFileSpec *icon, const PRUnichar *hint, const PRUnichar *data, PRBool checkMacFileType);
-	nsresult	GetSearchEngineList(nsFileSpec spec, PRBool checkMacFileType);
+	nsresult	SaveEngineInfoIntoGraph(nsIFile *file, nsIFile *icon, const PRUnichar *hint, const PRUnichar *data, PRBool checkMacFileType);
+	nsresult	GetSearchEngineList(nsIFile *spec, PRBool checkMacFileType);
 	nsresult	GetCategoryList();
-	nsresult	GetSearchFolder(nsFileSpec &spec);
+	nsresult	GetSearchFolder(nsIFile **spec);
 	nsresult	ReadFileContents(const nsFileSpec &baseFilename, nsString & sourceContents);
 	nsresult	GetData(const PRUnichar *data, const char *sectionToFind, PRUint32 sectionNum, const char *attribToFind, nsString &value);
 	nsresult	GetNumInterpretSections(const PRUnichar *data, PRUint32 &numInterpretSections);
@@ -1044,8 +1044,8 @@ InternetSearchDataSource::DeferredInit()
 		mEngineListBuilt = PR_TRUE;
 
 		// get available search engines
-		nsFileSpec			nativeDir;
-		if (NS_SUCCEEDED(rv = GetSearchFolder(nativeDir)))
+		nsCOMPtr<nsIFile>			nativeDir;
+		if (NS_SUCCEEDED(rv = GetSearchFolder(getter_AddRefs(nativeDir))))
 		{
 			rv = GetSearchEngineList(nativeDir, PR_FALSE);
 			
@@ -1055,9 +1055,11 @@ InternetSearchDataSource::DeferredInit()
 
 #ifdef	XP_MAC
 		// on Mac, use system's search files too
-		nsSpecialSystemDirectory	searchSitesDir(nsSpecialSystemDirectory::Mac_InternetSearchDirectory);
-		nativeDir = searchSitesDir;
-		rv = GetSearchEngineList(nativeDir, PR_TRUE);
+      	nsCOMPtr<nsIFile> macSearchDir;
+
+        rv = NS_GetSpecialDirectory(NS_MAC_INTERNET_SEARCH_DIR, getter_AddRefs(macSearchDir));
+        if (NS_SUCCEEDED(rv))
+      		rv = GetSearchEngineList(macSearchDir, PR_TRUE);
 #endif
 	}
 	return(rv);
@@ -1337,15 +1339,16 @@ InternetSearchDataSource::GetCategoryList()
 	if (!remoteCategoryDataSource)	return(NS_ERROR_UNEXPECTED);
 
 	// get search.rdf
-	NS_WITH_SERVICE(nsIFileLocator, locator, kFileLocatorCID, &rv);
-	if (NS_FAILED(rv) || !locator)	return(NS_ERROR_FAILURE);
+		
+	  nsCOMPtr<nsIFile> searchFile;
+    nsXPIDLCString filePath;
 
-	nsCOMPtr<nsIFileSpec>	dirSpec;
-	if (NS_FAILED(rv = locator->GetFileLocation(nsSpecialFileSpec::App_SearchFile50,
-		getter_AddRefs(dirSpec))))			return(rv);
-	nsFileSpec		fileSpec;
-	if (NS_FAILED(rv = dirSpec->GetFileSpec(&fileSpec)))	return(rv);
-	nsFileURL		fileURL(fileSpec);
+    rv = NS_GetSpecialDirectory(NS_APP_SEARCH_50_FILE, getter_AddRefs(searchFile));
+    if (NS_FAILED(rv)) return rv;
+    rv = searchFile->GetPath(getter_Copies(filePath));
+    if (NS_FAILED(rv)) return rv;
+    nsFileSpec fileSpec(filePath);
+	  nsFileURL	 fileURL(fileSpec);
 	if (NS_FAILED(rv = remoteCategoryDataSource->Init(fileURL.GetURLString())))	return(rv);
 
 	// synchronous read
@@ -2459,8 +2462,8 @@ InternetSearchDataSource::saveContents(nsIChannel* channel, nsIInternetSearchCon
 		}
 	}
 
-	nsFileSpec	nativeDir;
-	if (NS_FAILED(rv = GetSearchFolder(nativeDir)))		return(rv);
+	nsCOMPtr<nsIFile>	outFile;
+	if (NS_FAILED(rv = GetSearchFolder(getter_AddRefs(outFile))))		return(rv);
 
 	const PRUnichar	*dataBuf = nsnull;
 	if (NS_FAILED(rv = context->GetBufferConst(&dataBuf)))	return(rv);
@@ -2470,16 +2473,22 @@ InternetSearchDataSource::saveContents(nsIChannel* channel, nsIInternetSearchCon
 	PRInt32		bufferLength = 0;
 	if (NS_FAILED(context->GetBufferLength(&bufferLength)))	return(rv);
 	if (bufferLength < 1)	return(NS_OK);
-
-	nsFileSpec	fileSpec(nativeDir);
-	fileSpec += baseName;
-
+	
+	rv = outFile->AppendUnicode(baseName.GetUnicode());
+	if (NS_FAILED(rv)) return rv;
+	
 	// save data to file
 	// Note: write out one character at a time, as we might be dealing
 	//       with binary data (such as 0x00) [especially for images]
-	fileSpec.Delete(PR_FALSE);
+	outFile->Delete(PR_FALSE);
 
-	nsOutputFileStream	outputStream(fileSpec);
+     // Make an nsFileSpec from file so we can use nsOutputFileStream
+     nsXPIDLCString pathBuf;
+     rv = outFile->GetPath(getter_Copies(pathBuf));
+     if (NS_FAILED(rv)) return rv;
+     nsFileSpec  outFileSpec((const char *)pathBuf);
+
+	nsOutputFileStream	outputStream(outFileSpec);
 	if (!outputStream.failed())
 	{
 		for (PRInt32 loop=0; loop < bufferLength; loop++)
@@ -2494,7 +2503,9 @@ InternetSearchDataSource::saveContents(nsIChannel* channel, nsIInternetSearchCon
 		{
 #ifdef	XP_MAC
 			// set appropriate Mac file type/creator for search engine files
-			fileSpec.SetFileTypeAndCreator('issp', 'fndf');
+			nsCOMPtr<nsILocalFileMac> macFile(do_QueryInterface(outFile));
+			if (macFile)
+			  macFile->SetFileTypeAndCreator('issp', 'fndf');
 #endif
 
 			// check suggested category hint
@@ -2502,12 +2513,12 @@ InternetSearchDataSource::saveContents(nsIChannel* channel, nsIInternetSearchCon
 			rv = context->GetHintConst(&hintUni);
 
 			// update graph with various required info
-			SaveEngineInfoIntoGraph(&fileSpec, nsnull, hintUni, dataBuf, PR_FALSE);
+			SaveEngineInfoIntoGraph(outFile, nsnull, hintUni, dataBuf, PR_FALSE);
 		}
 		else if (contextType == nsIInternetSearchContext::ICON_DOWNLOAD_CONTEXT)
 		{
 			// update graph with icon info
-			SaveEngineInfoIntoGraph(nsnull, &fileSpec, nsnull, nsnull, PR_FALSE);
+			SaveEngineInfoIntoGraph(nsnull, outFile, nsnull, nsnull, PR_FALSE);
 		}
 	}
 
@@ -3739,25 +3750,24 @@ InternetSearchDataSource::DoSearch(nsIRDFResource *source, nsIRDFResource *engin
 
 
 nsresult
-InternetSearchDataSource::GetSearchFolder(nsFileSpec &spec)
+InternetSearchDataSource::GetSearchFolder(nsIFile **searchDir)
 {
-	nsresult		rv;
-	NS_WITH_SERVICE(nsIFileLocator, locator, kFileLocatorCID, &rv);
-	if (NS_FAILED(rv) || !locator)	return NS_ERROR_FAILURE;
-
-	nsCOMPtr<nsIFileSpec>	dirSpec;
-	if (NS_FAILED(rv = locator->GetFileLocation(nsSpecialFileSpec::App_SearchDirectory50,
-		getter_AddRefs(dirSpec))))			return(rv);
-
-	if (NS_FAILED(rv = dirSpec->GetFileSpec(&spec)))	return(rv);
-
-	return(NS_OK);
+  NS_ENSURE_ARG_POINTER(searchDir);
+  *searchDir = nsnull;
+	
+  nsCOMPtr<nsIFile> aDir;
+  nsresult rv = NS_GetSpecialDirectory(NS_APP_SEARCH_DIR, getter_AddRefs(aDir));
+  if (NS_FAILED(rv)) return rv;
+  
+  *searchDir = aDir;
+  NS_ADDREF(*searchDir);
+  return NS_OK;
 }
 
 
 
 nsresult
-InternetSearchDataSource::SaveEngineInfoIntoGraph(const nsFileSpec *file, const nsFileSpec *icon,
+InternetSearchDataSource::SaveEngineInfoIntoGraph(nsIFile *file, nsIFile *icon,
 		const PRUnichar *categoryHint, const PRUnichar *dataUni, PRBool checkMacFileType)
 {
 	nsresult			rv = NS_OK;
@@ -3766,22 +3776,28 @@ InternetSearchDataSource::SaveEngineInfoIntoGraph(const nsFileSpec *file, const 
 
 	nsCOMPtr<nsIRDFResource>	searchRes;
 	nsCOMPtr<nsIRDFResource>	categoryRes;
-	nsNativeFileSpec		native;
+	nsCOMPtr<nsIFile>		native;
 
 	if (icon != nsnull)
 	{
-		native = *icon;
+		native = icon;
 	}
 
 	if (file != nsnull)
 	{
-		native = *file;
+		native = file;
 	}
 
-	if (!native.Exists())	return(NS_ERROR_UNEXPECTED);
+  PRBool exists;
+  rv = native->Exists(&exists);
+	if (NS_FAILED(rv)) return(rv);
+	if (!exists) return(NS_ERROR_UNEXPECTED);
 
-	nsAutoString	basename;
-	native.GetLeafName(basename);
+	nsAutoString   basename;
+	nsXPIDLCString leafCName;
+	rv = native->GetLeafName(getter_Copies(leafCName));
+	if (NS_FAILED(rv)) return rv;
+	basename.AssignWithConversion((const char *)leafCName);
 
 	// ensure that the basename points to the search engine file
 	PRInt32		extensionOffset;
@@ -3791,11 +3807,14 @@ InternetSearchDataSource::SaveEngineInfoIntoGraph(const nsFileSpec *file, const 
 		basename.AppendWithConversion(".src");
 	}
 
+  nsXPIDLCString filePath;
+  rv = native->GetPath(getter_Copies(filePath));
+  if (NS_FAILED(rv)) return rv;
+  nsFileSpec nativeSpec((const char *)filePath);
+  
 	nsAutoString	searchURL;
 	searchURL.AssignWithConversion(kEngineProtocol);
-	const char	*uriC = native;
-	if (!uriC)	return(NS_ERROR_NULL_POINTER);
-	char		*uriCescaped = nsEscape(uriC, url_Path);
+	char		*uriCescaped = nsEscape((const char *)filePath, url_Path);
 	if (!uriCescaped)	return(NS_ERROR_NULL_POINTER);
 	searchURL.AppendWithConversion(uriCescaped);
 	nsCRT::free(uriCescaped);
@@ -3833,7 +3852,10 @@ InternetSearchDataSource::SaveEngineInfoIntoGraph(const nsFileSpec *file, const 
 
 	if (icon)
 	{
-		nsFileURL	iconFileURL(*icon);
+	  nsXPIDLCString iconPath;
+	  icon->GetPath(getter_Copies(iconPath));
+	  nsFileSpec iconSpec((const char *)iconPath);
+		nsFileURL	iconFileURL(iconSpec);
 		nsAutoString	iconURL;
 		iconURL.AssignWithConversion(iconFileURL.GetURLString());
 
@@ -3940,37 +3962,50 @@ InternetSearchDataSource::SaveEngineInfoIntoGraph(const nsFileSpec *file, const 
 
 
 nsresult
-InternetSearchDataSource::GetSearchEngineList(nsFileSpec nativeDir, PRBool checkMacFileType)
+InternetSearchDataSource::GetSearchEngineList(nsIFile *searchDir, PRBool checkMacFileType)
 {
         nsresult			rv = NS_OK;
 
-	if (!mInner)
+    if (!mInner)
+    {
+    	return(NS_RDF_NO_VALUE);
+    }
+
+    PRBool hasMore = PR_FALSE;
+    nsCOMPtr<nsISimpleEnumerator> dirIterator;
+    rv = searchDir->GetDirectoryEntries(getter_AddRefs(dirIterator));
+    if (NS_FAILED(rv)) return rv;
+
+    nsCOMPtr<nsIFile> dirEntry;
+	while ((rv = dirIterator->HasMoreElements(&hasMore)) == NS_OK && hasMore)
 	{
-		return(NS_RDF_NO_VALUE);
-	}
+		rv = dirIterator->GetNext((nsISupports**)getter_AddRefs(dirEntry));
+        if (NS_FAILED(rv))
+          continue;
 
-	for (nsDirectoryIterator i(nativeDir, PR_TRUE); i.Exists(); i++)
-	{
-		const nsFileSpec	fileSpec = i.Spec();
-		if (fileSpec.IsHidden())
-		{
-			// Ignore hidden files/directories
-			continue;
-		}
+        // Ignore hidden files/directories
+        PRBool isHidden;
+        rv = dirEntry->IsHidden(&isHidden);
+        if (NS_FAILED(rv) || isHidden)
+          continue;
 
-		if (fileSpec.IsDirectory())
-		{
-			GetSearchEngineList(fileSpec, checkMacFileType);
-			continue;
-		}
-
-		const char	*childURL = fileSpec;
-		if (childURL == nsnull)
-		{
-			continue;
-		}
+        PRBool isDirectory;
+        rv = dirEntry->IsDirectory(&isDirectory);
+        if (NS_FAILED(rv))
+          continue;
+        if (isDirectory)
+        {
+          GetSearchEngineList(dirEntry, checkMacFileType);
+          continue;
+        }
+    
+        nsXPIDLCString pathBuf;
+        rv = dirEntry->GetPath(getter_Copies(pathBuf));
+        if (NS_FAILED(rv))
+        continue;
+      
 		nsAutoString	uri;
-		uri.AssignWithConversion(childURL);
+		uri.AssignWithConversion((const char *)pathBuf);
 		PRInt32		len = uri.Length();
 		if (len < 5)
 		{
@@ -3980,15 +4015,13 @@ InternetSearchDataSource::GetSearchEngineList(nsFileSpec nativeDir, PRBool check
 #ifdef	XP_MAC
 		if (checkMacFileType == PR_TRUE)
 		{
-			CInfoPBRec	cInfo;
-			OSErr		err;
-
-			err = fileSpec.GetCatInfo(cInfo);
-			if ((err) || (cInfo.hFileInfo.ioFlFndrInfo.fdType != 'issp') ||
-				(cInfo.hFileInfo.ioFlFndrInfo.fdCreator != 'fndf'))
-			{
-				continue;
-			}
+            nsCOMPtr<nsILocalFileMac> macFile(do_QueryInterface(dirEntry));
+            if (!macFile)
+                continue;
+            OSType type, creator;
+            rv = macFile->GetFileTypeAndCreator(&type, &creator);
+            if (NS_FAILED(rv) || type != 'issp' || creator != 'fndf')
+                continue;  
 		}
 #endif
 
@@ -4003,6 +4036,8 @@ InternetSearchDataSource::GetSearchEngineList(nsFileSpec nativeDir, PRBool check
 		PRBool		foundIconFlag = PR_FALSE;
 		nsFileSpec	iconSpec;
 		nsAutoString	temp;
+		
+		nsCOMPtr<nsILocalFile> iconFile;
 
 		uri.Left(temp, uri.Length()-4);
 		temp.AppendWithConversion(".gif");
@@ -4045,10 +4080,15 @@ InternetSearchDataSource::GetSearchEngineList(nsFileSpec nativeDir, PRBool check
 				foundIconFlag = PR_TRUE;
 			}
 		}
+		
+		if (foundIconFlag)
+		{
+		  NS_NewLocalFile((const char *)iconSpec, PR_TRUE, getter_AddRefs(iconFile));
+		}
 
-		SaveEngineInfoIntoGraph(&fileSpec, (foundIconFlag == PR_TRUE) ? &iconSpec : nsnull,
-			nsnull, nsnull, checkMacFileType);
+		SaveEngineInfoIntoGraph(dirEntry, iconFile, nsnull, nsnull, checkMacFileType);
 	}
+	
 	return(rv);
 }
 
