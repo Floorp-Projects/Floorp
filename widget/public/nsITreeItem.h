@@ -35,7 +35,7 @@ class nsITreeItem : public nsIDMItem
 public:
 	// Inspectors
 	NS_IMETHOD GetTriggerImage(nsIImage*& pImage, nsIImageGroup* pGroup) = 0;
-	NS_IMETHOD GetIndentationLevel(int& indentation) = 0;
+	NS_IMETHOD GetIndentationLevel(PRUint32& indentation) = 0;
 	
 	// Setters
 

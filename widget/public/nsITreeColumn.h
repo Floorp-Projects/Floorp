@@ -38,13 +38,13 @@ class nsITreeColumn : public nsISupports
 {
 public:
 	// Inspectors
-	NS_IMETHOD GetPixelWidth(int& width) = 0;
+	NS_IMETHOD GetPixelWidth(PRUint32& width) = 0;
 	NS_IMETHOD GetDesiredPercentage(double& percentage) = 0;
 	NS_IMETHOD GetSortState(nsColumnSortState& answer) = 0;
 	NS_IMETHOD GetColumnName(nsString& name) = 0;
 
 	// Setters
-	NS_IMETHOD SetPixelWidth(int newWidth) = 0;
+	NS_IMETHOD SetPixelWidth(PRUint32 newWidth) = 0;
 };
 
 #endif /* nsITreeColumn_h___ */
