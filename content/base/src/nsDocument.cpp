@@ -3465,7 +3465,37 @@ NS_IMETHODIMP
 nsDocument::FlushPendingNotifications(PRBool aFlushReflows,
                                       PRBool aUpdateViews)
 {
-  if (aFlushReflows) {
+  if (aFlushReflows && mScriptGlobalObject) {
+    // We should be able to replace all this nsIDocShell* code with
+    // code that uses mParentDocument, but mParentDocument is never
+    // set in the current code!
+
+    nsCOMPtr<nsIDocShell> docShell;
+    mScriptGlobalObject->GetDocShell(getter_AddRefs(docShell));
+
+    nsCOMPtr<nsIDocShellTreeItem> docShellAsItem =
+      do_QueryInterface(docShell);
+
+    if (docShellAsItem) {
+      nsCOMPtr<nsIDocShellTreeItem> docShellParent;
+      docShellAsItem->GetSameTypeParent(getter_AddRefs(docShellParent));
+
+      nsCOMPtr<nsIDOMWindow> win(do_GetInterface(docShellParent));
+
+      if (win) {
+        nsCOMPtr<nsIDOMDocument> dom_doc;
+        win->GetDocument(getter_AddRefs(dom_doc));
+
+        nsCOMPtr<nsIDocument> doc(do_QueryInterface(dom_doc));
+
+        if (doc) {
+          // If we have a parent we must flush the parent too to ensure
+          // that our container is reflown if its size was changed.
+
+          doc->FlushPendingNotifications(aFlushReflows, aUpdateViews);
+        }
+      }
+    }
 
     PRInt32 i, count = mPresShells.Count();
 
