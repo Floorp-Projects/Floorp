@@ -752,7 +752,7 @@ nsGlobalHistory::SetPageTitle(const char *aURL, const PRUnichar *aTitle)
   nsCOMPtr<nsIRDFLiteral> oldname;
   if (cell) {
     cell->AliasYarn(mEnv, &yarn);
-    nsAutoString str((const PRUnichar*) yarn.mYarn_Buf, (yarn.mYarn_Fill / sizeof(PRUnichar)));
+    nsAutoString str((const PRUnichar*) yarn.mYarn_Buf, PRInt32(yarn.mYarn_Fill / sizeof(PRUnichar)));
 
     rv = gRDFService->GetLiteral(str.GetUnicode(), getter_AddRefs(oldname));
     if (NS_FAILED(rv)) return rv;
@@ -974,7 +974,7 @@ nsGlobalHistory::GetTarget(nsIRDFResource* aSource,
 
       cell->AliasYarn(mEnv, &yarn);
 
-      nsAutoString str((const PRUnichar*) yarn.mYarn_Buf, (yarn.mYarn_Fill / sizeof(PRUnichar)));
+      nsAutoString str((const PRUnichar*) yarn.mYarn_Buf, PRInt32(yarn.mYarn_Fill / sizeof(PRUnichar)));
 
       nsCOMPtr<nsIRDFLiteral> name;
       rv = gRDFService->GetLiteral(str.GetUnicode(), getter_AddRefs(name));
