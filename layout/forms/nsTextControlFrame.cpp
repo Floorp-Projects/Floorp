@@ -44,7 +44,7 @@
 #include "nsIDeviceContext.h"
 #include "nsIFontMetrics.h"
 #include "nsILookAndFeel.h"
-#include "nsRepository.h"
+#include "nsIComponentManager.h"
 
 #ifdef SingleSignon
 #include "nsIDocument.h"
@@ -110,7 +110,7 @@ nsTextControlFrame::GetVerticalInsidePadding(float aPixToTwip,
   PRInt32 vertPad;
   PRInt32 shouldUseVertPad;
   nsILookAndFeel * lookAndFeel;
-  if (NS_OK == nsRepository::CreateInstance(kLookAndFeelCID, nsnull, kILookAndFeelIID, (void**)&lookAndFeel)) {
+  if (NS_OK == nsComponentManager::CreateInstance(kLookAndFeelCID, nsnull, kILookAndFeelIID, (void**)&lookAndFeel)) {
    lookAndFeel->GetMetric(nsILookAndFeel::eMetricFloat_TextAreaVerticalInsidePadding,  padTextArea);
    lookAndFeel->GetMetric(nsILookAndFeel::eMetricFloat_TextFieldVerticalInsidePadding,  padTextField);
    // These two (below) are really only needed for GTK
@@ -154,7 +154,7 @@ nsTextControlFrame::GetHorizontalInsidePadding(nsIPresContext& aPresContext,
   PRInt32 shouldUsePadMinText;
 
   nsILookAndFeel * lookAndFeel;
-  if (NS_OK == nsRepository::CreateInstance(kLookAndFeelCID, nsnull, kILookAndFeelIID, (void**)&lookAndFeel)) {
+  if (NS_OK == nsComponentManager::CreateInstance(kLookAndFeelCID, nsnull, kILookAndFeelIID, (void**)&lookAndFeel)) {
    lookAndFeel->GetMetric(nsILookAndFeel::eMetricFloat_TextFieldHorizontalInsidePadding,  padTextField);
    lookAndFeel->GetMetric(nsILookAndFeel::eMetricFloat_TextAreaHorizontalInsidePadding,  padTextArea);
    lookAndFeel->GetMetric(nsILookAndFeel::eMetric_TextHorizontalInsideMinimumPadding,  padMinText);

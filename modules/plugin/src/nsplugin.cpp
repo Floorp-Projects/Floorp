@@ -281,7 +281,7 @@ nsPluginManager::GetCapsManager(const nsIID& aIID)
 
         NS_DEFINE_CID(kCCapsManagerCID, NS_CCAPSMANAGER_CID);
         nsresult err    = NS_OK;
-        err = nsRepository::CreateInstance(kCCapsManagerCID, 
+        err = nsComponentManager::CreateInstance(kCCapsManagerCID, 
                                            (nsIPluginManager*)this,    /* outer */
                                            kISupportsIID,
                                            (void **)&fCapsManager);
@@ -322,7 +322,7 @@ nsPluginManager::GetLiveconnect(const nsIID& aIID)
  		      threadAttached = PR_AttachThread(PR_USER_THREAD, PR_PRIORITY_NORMAL, NULL);
 	     }
       NS_DEFINE_CID(kCLiveconnectCID, NS_CLIVECONNECT_CID);
-      err = nsRepository::CreateInstance(kCLiveconnectCID, 
+      err = nsComponentManager::CreateInstance(kCLiveconnectCID, 
                                          (nsIPluginManager*)this,    /* outer */
                                          kISupportsIID,
                                          (void **)&fLiveconnect);

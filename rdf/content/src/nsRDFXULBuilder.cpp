@@ -270,7 +270,7 @@ RDFXULBuilderImpl::RDFXULBuilderImpl(void)
 
     if (gRefCnt++ == 0) {
         nsresult rv;
-        if (NS_SUCCEEDED(rv = nsRepository::CreateInstance(kNameSpaceManagerCID,
+        if (NS_SUCCEEDED(rv = nsComponentManager::CreateInstance(kNameSpaceManagerCID,
                                                            nsnull,
                                                            kINameSpaceManagerIID,
                                                            (void**) &gNameSpaceManager))) {
@@ -1676,7 +1676,7 @@ RDFXULBuilderImpl::CreateBuilder(const nsCID& aBuilderCID, nsIContent* aElement,
 
     // construct a new builder
     nsCOMPtr<nsIRDFContentModelBuilder> builder;
-    if (NS_FAILED(rv = nsRepository::CreateInstance(aBuilderCID,
+    if (NS_FAILED(rv = nsComponentManager::CreateInstance(aBuilderCID,
                                                     nsnull,
                                                     kIRDFContentModelBuilderIID,
                                                     (void**) getter_AddRefs(builder)))) {
@@ -1691,7 +1691,7 @@ RDFXULBuilderImpl::CreateBuilder(const nsCID& aBuilderCID, nsIContent* aElement,
 
     // create a database for the builder
     nsCOMPtr<nsIRDFCompositeDataSource> db;
-    if (NS_FAILED(rv = nsRepository::CreateInstance(kRDFCompositeDataSourceCID,
+    if (NS_FAILED(rv = nsComponentManager::CreateInstance(kRDFCompositeDataSourceCID,
                                                     nsnull,
                                                     kIRDFCompositeDataSourceIID,
                                                     (void**) getter_AddRefs(db)))) {

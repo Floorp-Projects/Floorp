@@ -18,7 +18,7 @@
  */
 
 #include "pratom.h"
-#include "nsRepository.h"
+#include "nsIComponentManager.h"
 #include "nsSJIS2Unicode.h"
 #include "nsUCVJADll.h"
 
@@ -74,7 +74,7 @@ NS_IMETHODIMP nsSJIS2Unicode::Convert(PRUnichar * aDest, PRInt32 aDestOffset,
   if(nsnull == mUtil)
   {
      nsresult res = NS_OK;
-     res = nsRepository::CreateInstance(
+     res = nsComponentManager::CreateInstance(
              kCharsetConverterManagerCID, 
              NULL,
              kIUnicodeDecodeUtilIID,

@@ -36,7 +36,7 @@
 #include "nsParserCIID.h"
 #include "nsRDFCID.h"
 #include "nsRDFCID.h"
-#include "nsRepository.h"
+#include "nsIComponentManager.h"
 #include "nsXPComCIID.h"
 #include "plevent.h"
 #include "plstr.h"
@@ -110,20 +110,20 @@ static nsresult
 SetupRegistry(void)
 {
     // netlib
-    nsRepository::RegisterComponent(kNetServiceCID,            NULL, NULL, NETLIB_DLL, PR_FALSE, PR_FALSE);
+    nsComponentManager::RegisterComponent(kNetServiceCID,            NULL, NULL, NETLIB_DLL, PR_FALSE, PR_FALSE);
 
     // parser
-    nsRepository::RegisterComponent(kParserCID,                NULL, NULL, PARSER_DLL, PR_FALSE, PR_FALSE);
-    nsRepository::RegisterComponent(kWellFormedDTDCID,         NULL, NULL, PARSER_DLL, PR_FALSE, PR_FALSE);
+    nsComponentManager::RegisterComponent(kParserCID,                NULL, NULL, PARSER_DLL, PR_FALSE, PR_FALSE);
+    nsComponentManager::RegisterComponent(kWellFormedDTDCID,         NULL, NULL, PARSER_DLL, PR_FALSE, PR_FALSE);
 
     // layout
-    nsRepository::RegisterComponent(kNameSpaceManagerCID,      NULL, NULL, LAYOUT_DLL, PR_FALSE, PR_FALSE);
+    nsComponentManager::RegisterComponent(kNameSpaceManagerCID,      NULL, NULL, LAYOUT_DLL, PR_FALSE, PR_FALSE);
 
     // dom
-    nsRepository::RegisterComponent(kScriptNameSetRegistryCID, NULL, NULL, DOM_DLL,    PR_FALSE, PR_FALSE);
+    nsComponentManager::RegisterComponent(kScriptNameSetRegistryCID, NULL, NULL, DOM_DLL,    PR_FALSE, PR_FALSE);
 
     // xpcom
-    nsRepository::RegisterComponent(kEventQueueServiceCID,     NULL, NULL, XPCOM_DLL,  PR_FALSE, PR_FALSE);
+    nsComponentManager::RegisterComponent(kEventQueueServiceCID,     NULL, NULL, XPCOM_DLL,  PR_FALSE, PR_FALSE);
 
     return NS_OK;
 }
@@ -199,7 +199,7 @@ main(int argc, char** argv)
     // Create a stream data source and initialize it on argv[1], which
     // is hopefully a "file:" URL. (Actually, we can do _any_ kind of
     // URL, but only a "file:" URL will be written back to disk.)
-    if (NS_FAILED(rv = nsRepository::CreateInstance(kRDFXMLDataSourceCID,
+    if (NS_FAILED(rv = nsComponentManager::CreateInstance(kRDFXMLDataSourceCID,
                                                     nsnull,
                                                     kIRDFXMLDataSourceIID,
                                                     (void**) &ds))) {

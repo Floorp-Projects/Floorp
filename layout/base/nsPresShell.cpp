@@ -557,7 +557,7 @@ PresShell::Init(nsIDocument* aDocument,
   NS_ADDREF(aStyleSet);
 
   nsCOMPtr<nsIDOMSelection>domselection;
-  nsresult result = nsRepository::CreateInstance(kRangeListCID, nsnull,
+  nsresult result = nsComponentManager::CreateInstance(kRangeListCID, nsnull,
                                                  kIDOMSelectionIID,
                                                  getter_AddRefs(domselection));
   if (!NS_SUCCEEDED(result))
@@ -570,7 +570,7 @@ PresShell::Init(nsIDocument* aDocument,
   // XXX This code causes the document object (and the entire content model) to be leaked...
 #if 0
   nsCOMPtr<nsIDOMRange>range;
-  if (NS_SUCCEEDED(nsRepository::CreateInstance(kCRangeCID, nsnull, kIDOMRangeIID, getter_AddRefs(range)))){ //create an irange
+  if (NS_SUCCEEDED(nsComponentManager::CreateInstance(kCRangeCID, nsnull, kIDOMRangeIID, getter_AddRefs(range)))){ //create an irange
     nsCOMPtr<nsIDocument>doc(GetDocument());
     nsCOMPtr<nsIDOMDocument>domDoc(doc);
     if (domDoc){
@@ -1493,7 +1493,7 @@ PresShell::DoCopy(nsISelectionMgr* aSelectionMgr)
     static NS_DEFINE_IID(kCParserIID, NS_IPARSER_IID);
     static NS_DEFINE_IID(kCParserCID, NS_PARSER_IID);
 
-    nsresult rv = nsRepository::CreateInstance(kCParserCID, 
+    nsresult rv = nsComponentManager::CreateInstance(kCParserCID, 
                                                nsnull, 
                                                kCParserIID, 
                                                (void **)&parser);
@@ -2200,7 +2200,7 @@ PresShell::VerifyIncrementalReflow()
   void* nativeParentWidget = rootWidget->GetNativeData(NS_NATIVE_WIDGET);
 
   // Create a new view manager.
-  rv = nsRepository::CreateInstance(kViewManagerCID, nsnull, kIViewManagerIID,
+  rv = nsComponentManager::CreateInstance(kViewManagerCID, nsnull, kIViewManagerIID,
                                     (void**) &vm);
   if ((NS_OK != rv) || (NS_OK != vm->Init(dc))) {
     NS_ASSERTION(NS_OK == rv, "failed to create view manager");
@@ -2212,7 +2212,7 @@ PresShell::VerifyIncrementalReflow()
   // Create a view
   nsRect tbounds;
   mPresContext->GetVisibleArea(tbounds);
-  rv = nsRepository::CreateInstance(kScrollingViewCID, nsnull, kIViewIID,
+  rv = nsComponentManager::CreateInstance(kScrollingViewCID, nsnull, kIViewIID,
                                     (void **) &view);
   if ((NS_OK != rv) || (NS_OK != view->Init(vm, tbounds, nsnull))) {
     NS_ASSERTION(NS_OK == rv, "failed to create scroll view");

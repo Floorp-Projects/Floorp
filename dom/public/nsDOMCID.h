@@ -21,7 +21,7 @@
 
 #include "nsISupports.h"
 #include "nsIFactory.h"
-#include "nsRepository.h"
+#include "nsIComponentManager.h"
 
 #define NS_DOM_SCRIPT_OBJECT_FACTORY_CID            \
  { /* 9eb760f0-4380-11d2-b328-00805f8a3859 */       \

@@ -338,7 +338,7 @@ static HWND CreateTopLevel(const char* clazz, const char* title,
 
   nsRect rect(0, 0, aWidth, aHeight);  
 
-  nsresult rv = nsRepository::CreateInstance(kCChildWindowIID, NULL, kIWidgetIID, (void**)&gWindow);
+  nsresult rv = nsComponentManager::CreateInstance(kCChildWindowIID, NULL, kIWidgetIID, (void**)&gWindow);
 
   if (NS_OK == rv) {
       gWindow->Create((nsNativeWidget)window, rect, MyHandleEvent, NULL);
@@ -357,19 +357,19 @@ WinMain(HINSTANCE instance, HINSTANCE prevInstance, LPSTR cmdParam, int nCmdShow
 {
   gInstance = instance;
 
-  nsRepository::RegisterComponent(kCWindowIID, NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
-  nsRepository::RegisterComponent(kCChildWindowIID, NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
-  nsRepository::RegisterComponent(kCScrollbarIID, NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
+  nsComponentManager::RegisterComponent(kCWindowIID, NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
+  nsComponentManager::RegisterComponent(kCChildWindowIID, NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
+  nsComponentManager::RegisterComponent(kCScrollbarIID, NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
 
   static NS_DEFINE_IID(kCRenderingContextIID, NS_RENDERING_CONTEXT_CID);
   static NS_DEFINE_IID(kCDeviceContextIID, NS_DEVICE_CONTEXT_CID);
   static NS_DEFINE_IID(kCFontMetricsIID, NS_FONT_METRICS_CID);
   static NS_DEFINE_IID(kCImageIID, NS_IMAGE_CID);
 
-  nsRepository::RegisterComponent(kCRenderingContextIID, NULL, NULL, GFXWIN_DLL, PR_FALSE, PR_FALSE);
-  nsRepository::RegisterComponent(kCDeviceContextIID, NULL, NULL, GFXWIN_DLL, PR_FALSE, PR_FALSE);
-  nsRepository::RegisterComponent(kCFontMetricsIID, NULL, NULL, GFXWIN_DLL, PR_FALSE, PR_FALSE);
-  nsRepository::RegisterComponent(kCImageIID, NULL, NULL, GFXWIN_DLL, PR_FALSE, PR_FALSE);
+  nsComponentManager::RegisterComponent(kCRenderingContextIID, NULL, NULL, GFXWIN_DLL, PR_FALSE, PR_FALSE);
+  nsComponentManager::RegisterComponent(kCDeviceContextIID, NULL, NULL, GFXWIN_DLL, PR_FALSE, PR_FALSE);
+  nsComponentManager::RegisterComponent(kCFontMetricsIID, NULL, NULL, GFXWIN_DLL, PR_FALSE, PR_FALSE);
+  nsComponentManager::RegisterComponent(kCImageIID, NULL, NULL, GFXWIN_DLL, PR_FALSE, PR_FALSE);
 
   if (!prevInstance) {
     WNDCLASS wndClass;

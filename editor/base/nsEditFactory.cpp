@@ -20,7 +20,7 @@
 #include "nsIEditor.h"
 #include "nsEditor.h"
 #include "nsEditorCID.h"
-#include "nsRepository.h"
+#include "nsIComponentManager.h"
 
 static NS_DEFINE_IID(kISupportsIID,    NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIFactoryIID,     NS_IFACTORY_IID);
@@ -119,7 +119,7 @@ nsEditFactory::nsEditFactory(const nsCID &aClass)
 
 nsEditFactory::~nsEditFactory()
 {
-  //nsRepository::UnregisterFactory(mCID, (nsIFactory *)this); //we are out of ref counts anyway
+  //nsComponentManager::UnregisterFactory(mCID, (nsIFactory *)this); //we are out of ref counts anyway
 }
 
 

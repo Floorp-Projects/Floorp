@@ -17,6 +17,7 @@
  * Netscape Communications Corporation.  All Rights Reserved.
  */
 #include "nsIServiceManager.h"
+#include "nsIComponentManager.h"
 #include "nsIURL.h"
 #include "nsIWidget.h"
 #include "plevent.h"
@@ -241,10 +242,10 @@ int main(int argc, char* argv[])
 
     NS_DEFINE_CID(kCMessengerBootstrapCID, NS_MESSENGERBOOTSTRAP_CID);
     
-    result = nsRepository::CreateInstance(kCMessengerBootstrapCID,
-                                          nsnull,
-                                          nsIAppShellService::GetIID(),
-                                          (void **)&messenger);
+    result = nsComponentManager::CreateInstance(kCMessengerBootstrapCID,
+                                                nsnull,
+                                                nsIAppShellService::GetIID(),
+                                                (void **)&messenger);
     if (NS_SUCCEEDED(result)) {
       printf("The Messenger component is available. Initializing...\n");
       result = messenger->Initialize();

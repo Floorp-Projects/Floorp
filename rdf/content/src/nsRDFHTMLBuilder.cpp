@@ -39,6 +39,7 @@
 #include "nsISupportsArray.h"
 #include "nsRDFContentUtils.h"
 #include "rdfutil.h"
+#include "prlog.h"
 
 ////////////////////////////////////////////////////////////////////////
 

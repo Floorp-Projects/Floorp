@@ -18,7 +18,7 @@
  */
 #define NS_IMPL_IDS
 #include "nsIPref.h"
-#include "nsRepository.h"
+#include "nsIComponentManager.h"
 #include "nsWidgetsCID.h"
 #include "nsGfxCIID.h"
 #include "nsViewsCID.h"
@@ -148,62 +148,62 @@ static NS_DEFINE_IID(kCXULCommandCID, NS_XULCOMMAND_CID);
 extern "C" void
 NS_SetupRegistry()
 {
-  nsRepository::RegisterComponent(kLookAndFeelCID, NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
-  nsRepository::RegisterComponent(kCWindowIID, NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
-  nsRepository::RegisterComponent(kCScrollbarIID, NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
-  nsRepository::RegisterComponent(kCHScrollbarIID, NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
-  nsRepository::RegisterComponent(kCDialogCID, NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
-  nsRepository::RegisterComponent(kCLabelCID, NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
-  nsRepository::RegisterComponent(kCButtonCID, NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
-  nsRepository::RegisterComponent(kCComboBoxCID, NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
-  nsRepository::RegisterComponent(kCFileWidgetCID, NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
-  nsRepository::RegisterComponent(kCListBoxCID, NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
-  nsRepository::RegisterComponent(kCRadioButtonCID, NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
-  nsRepository::RegisterComponent(kCTextAreaCID, NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
-  nsRepository::RegisterComponent(kCTextFieldCID, NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
-  nsRepository::RegisterComponent(kCCheckButtonIID, NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
-  nsRepository::RegisterComponent(kCChildIID, NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
-  nsRepository::RegisterComponent(kCAppShellCID, NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
-  nsRepository::RegisterComponent(kCToolkitCID, NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
-  nsRepository::RegisterComponent(kCRenderingContextIID, NULL, NULL, GFXWIN_DLL, PR_FALSE, PR_FALSE);
-  nsRepository::RegisterComponent(kCDeviceContextIID, NULL, NULL, GFXWIN_DLL, PR_FALSE, PR_FALSE);
-  nsRepository::RegisterComponent(kCFontMetricsIID, NULL, NULL, GFXWIN_DLL, PR_FALSE, PR_FALSE);
-  nsRepository::RegisterComponent(kCImageIID, NULL, NULL, GFXWIN_DLL, PR_FALSE, PR_FALSE);
-  nsRepository::RegisterComponent(kCRegionIID, NULL, NULL, GFXWIN_DLL, PR_FALSE, PR_FALSE);
-  nsRepository::RegisterComponent(kCBlenderIID, NULL, NULL, GFXWIN_DLL, PR_FALSE, PR_FALSE);
-  nsRepository::RegisterComponent(kCDeviceContextSpecCID, NULL, NULL, GFXWIN_DLL, PR_FALSE, PR_FALSE);
-  nsRepository::RegisterComponent(kCDeviceContextSpecFactoryCID, NULL, NULL, GFXWIN_DLL, PR_FALSE, PR_FALSE);
-  nsRepository::RegisterComponent(kCViewManagerCID, NULL, NULL, VIEW_DLL, PR_FALSE, PR_FALSE);
-  nsRepository::RegisterComponent(kCViewCID, NULL, NULL, VIEW_DLL, PR_FALSE, PR_FALSE);
-  nsRepository::RegisterComponent(kCScrollingViewCID, NULL, NULL, VIEW_DLL, PR_FALSE, PR_FALSE);
-  nsRepository::RegisterComponent(kWebShellCID, NULL, NULL, WEB_DLL, PR_FALSE, PR_FALSE);
-  nsRepository::RegisterComponent(kCDocumentLoaderCID, NULL, NULL, WEB_DLL, PR_FALSE, PR_FALSE);
-  nsRepository::RegisterComponent(kThrobberCID, NULL, NULL, WEB_DLL, PR_FALSE, PR_FALSE);
-  nsRepository::RegisterComponent(kPrefCID, NULL, NULL, PREF_DLL, PR_FALSE, PR_FALSE);
-  nsRepository::RegisterComponent(kCPluginHostCID, NULL, NULL, PLUGIN_DLL, PR_FALSE, PR_FALSE);
-  nsRepository::RegisterComponent(kCParserCID, NULL, NULL, PARSER_DLL, PR_FALSE, PR_FALSE);
-  nsRepository::RegisterComponent(kCDOMScriptObjectFactory, NULL, NULL, DOM_DLL, PR_FALSE, PR_FALSE);
-  nsRepository::RegisterComponent(kCDOMNativeObjectRegistry, NULL, NULL, DOM_DLL, PR_FALSE, PR_FALSE);
-  nsRepository::RegisterComponent(kCHTMLDocument, NULL, NULL, LAYOUT_DLL, PR_FALSE, PR_FALSE);
-  nsRepository::RegisterComponent(kCXMLDocument, NULL, NULL, LAYOUT_DLL, PR_FALSE, PR_FALSE);
-  nsRepository::RegisterComponent(kCImageDocument, NULL, NULL, LAYOUT_DLL, PR_FALSE, PR_FALSE);
-  nsRepository::RegisterComponent(kCRangeListCID, NULL, NULL, LAYOUT_DLL, PR_FALSE, PR_FALSE);
-  nsRepository::RegisterComponent(kCRangeCID, NULL, NULL, LAYOUT_DLL, PR_FALSE, PR_FALSE);
-  nsRepository::RegisterComponent(kCHTMLImageElement, NULL, NULL, LAYOUT_DLL, PR_FALSE, PR_FALSE);
+  nsComponentManager::RegisterComponent(kLookAndFeelCID, NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
+  nsComponentManager::RegisterComponent(kCWindowIID, NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
+  nsComponentManager::RegisterComponent(kCScrollbarIID, NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
+  nsComponentManager::RegisterComponent(kCHScrollbarIID, NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
+  nsComponentManager::RegisterComponent(kCDialogCID, NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
+  nsComponentManager::RegisterComponent(kCLabelCID, NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
+  nsComponentManager::RegisterComponent(kCButtonCID, NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
+  nsComponentManager::RegisterComponent(kCComboBoxCID, NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
+  nsComponentManager::RegisterComponent(kCFileWidgetCID, NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
+  nsComponentManager::RegisterComponent(kCListBoxCID, NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
+  nsComponentManager::RegisterComponent(kCRadioButtonCID, NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
+  nsComponentManager::RegisterComponent(kCTextAreaCID, NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
+  nsComponentManager::RegisterComponent(kCTextFieldCID, NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
+  nsComponentManager::RegisterComponent(kCCheckButtonIID, NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
+  nsComponentManager::RegisterComponent(kCChildIID, NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
+  nsComponentManager::RegisterComponent(kCAppShellCID, NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
+  nsComponentManager::RegisterComponent(kCToolkitCID, NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
+  nsComponentManager::RegisterComponent(kCRenderingContextIID, NULL, NULL, GFXWIN_DLL, PR_FALSE, PR_FALSE);
+  nsComponentManager::RegisterComponent(kCDeviceContextIID, NULL, NULL, GFXWIN_DLL, PR_FALSE, PR_FALSE);
+  nsComponentManager::RegisterComponent(kCFontMetricsIID, NULL, NULL, GFXWIN_DLL, PR_FALSE, PR_FALSE);
+  nsComponentManager::RegisterComponent(kCImageIID, NULL, NULL, GFXWIN_DLL, PR_FALSE, PR_FALSE);
+  nsComponentManager::RegisterComponent(kCRegionIID, NULL, NULL, GFXWIN_DLL, PR_FALSE, PR_FALSE);
+  nsComponentManager::RegisterComponent(kCBlenderIID, NULL, NULL, GFXWIN_DLL, PR_FALSE, PR_FALSE);
+  nsComponentManager::RegisterComponent(kCDeviceContextSpecCID, NULL, NULL, GFXWIN_DLL, PR_FALSE, PR_FALSE);
+  nsComponentManager::RegisterComponent(kCDeviceContextSpecFactoryCID, NULL, NULL, GFXWIN_DLL, PR_FALSE, PR_FALSE);
+  nsComponentManager::RegisterComponent(kCViewManagerCID, NULL, NULL, VIEW_DLL, PR_FALSE, PR_FALSE);
+  nsComponentManager::RegisterComponent(kCViewCID, NULL, NULL, VIEW_DLL, PR_FALSE, PR_FALSE);
+  nsComponentManager::RegisterComponent(kCScrollingViewCID, NULL, NULL, VIEW_DLL, PR_FALSE, PR_FALSE);
+  nsComponentManager::RegisterComponent(kWebShellCID, NULL, NULL, WEB_DLL, PR_FALSE, PR_FALSE);
+  nsComponentManager::RegisterComponent(kCDocumentLoaderCID, NULL, NULL, WEB_DLL, PR_FALSE, PR_FALSE);
+  nsComponentManager::RegisterComponent(kThrobberCID, NULL, NULL, WEB_DLL, PR_FALSE, PR_FALSE);
+  nsComponentManager::RegisterComponent(kPrefCID, NULL, NULL, PREF_DLL, PR_FALSE, PR_FALSE);
+  nsComponentManager::RegisterComponent(kCPluginHostCID, NULL, NULL, PLUGIN_DLL, PR_FALSE, PR_FALSE);
+  nsComponentManager::RegisterComponent(kCParserCID, NULL, NULL, PARSER_DLL, PR_FALSE, PR_FALSE);
+  nsComponentManager::RegisterComponent(kCDOMScriptObjectFactory, NULL, NULL, DOM_DLL, PR_FALSE, PR_FALSE);
+  nsComponentManager::RegisterComponent(kCDOMNativeObjectRegistry, NULL, NULL, DOM_DLL, PR_FALSE, PR_FALSE);
+  nsComponentManager::RegisterComponent(kCHTMLDocument, NULL, NULL, LAYOUT_DLL, PR_FALSE, PR_FALSE);
+  nsComponentManager::RegisterComponent(kCXMLDocument, NULL, NULL, LAYOUT_DLL, PR_FALSE, PR_FALSE);
+  nsComponentManager::RegisterComponent(kCImageDocument, NULL, NULL, LAYOUT_DLL, PR_FALSE, PR_FALSE);
+  nsComponentManager::RegisterComponent(kCRangeListCID, NULL, NULL, LAYOUT_DLL, PR_FALSE, PR_FALSE);
+  nsComponentManager::RegisterComponent(kCRangeCID, NULL, NULL, LAYOUT_DLL, PR_FALSE, PR_FALSE);
+  nsComponentManager::RegisterComponent(kCHTMLImageElement, NULL, NULL, LAYOUT_DLL, PR_FALSE, PR_FALSE);
 
-  nsRepository::RegisterComponent(kNetServiceCID, NULL, NULL, NETLIB_DLL, PR_FALSE, PR_FALSE);
+  nsComponentManager::RegisterComponent(kNetServiceCID, NULL, NULL, NETLIB_DLL, PR_FALSE, PR_FALSE);
 
-  nsRepository::RegisterComponent(kCImageButtonCID, NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
-  nsRepository::RegisterComponent(kCToolbarCID, NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
-  nsRepository::RegisterComponent(kCToolbarManagerCID, NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
-  nsRepository::RegisterComponent(kCToolbarItemHolderCID, NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
-  nsRepository::RegisterComponent(kCPopUpMenuCID, NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
-  nsRepository::RegisterComponent(kCMenuButtonCID, NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
-  nsRepository::RegisterComponent(kCMenuBarCID, NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
-  nsRepository::RegisterComponent(kCMenuCID, NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
-  nsRepository::RegisterComponent(kCMenuItemCID, NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
-  nsRepository::RegisterComponent(kCXULCommandCID, NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
+  nsComponentManager::RegisterComponent(kCImageButtonCID, NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
+  nsComponentManager::RegisterComponent(kCToolbarCID, NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
+  nsComponentManager::RegisterComponent(kCToolbarManagerCID, NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
+  nsComponentManager::RegisterComponent(kCToolbarItemHolderCID, NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
+  nsComponentManager::RegisterComponent(kCPopUpMenuCID, NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
+  nsComponentManager::RegisterComponent(kCMenuButtonCID, NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
+  nsComponentManager::RegisterComponent(kCMenuBarCID, NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
+  nsComponentManager::RegisterComponent(kCMenuCID, NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
+  nsComponentManager::RegisterComponent(kCMenuItemCID, NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
+  nsComponentManager::RegisterComponent(kCXULCommandCID, NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
 #ifndef XP_MAC		// temporary
-  nsRepository::RegisterComponent(kCEditorCID, NULL, NULL, EDITOR_DLL, PR_FALSE, PR_FALSE);
+  nsComponentManager::RegisterComponent(kCEditorCID, NULL, NULL, EDITOR_DLL, PR_FALSE, PR_FALSE);
 #endif // XP_MAC
 }

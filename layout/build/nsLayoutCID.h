@@ -21,7 +21,7 @@
 
 #include "nsISupports.h"
 #include "nsIFactory.h"
-#include "nsRepository.h"
+#include "nsIComponentManager.h"
 
 #define NS_HTMLDOCUMENT_CID                       \
 { /* 5d0fcdd0-4daa-11d2-b328-00805f8a3859 */      \

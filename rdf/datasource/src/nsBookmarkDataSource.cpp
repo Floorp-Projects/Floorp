@@ -37,6 +37,8 @@
 #include "prio.h"
 #include "rdf.h"
 #include "rdfutil.h"
+#include "prlog.h"
+#include "nsIComponentManager.h"
 
 ////////////////////////////////////////////////////////////////////////
 
@@ -641,7 +643,7 @@ BookmarkDataSourceImpl::Init(const char* uri)
 {
     nsresult rv;
 
-    if (NS_FAILED(rv = nsRepository::CreateInstance(kRDFInMemoryDataSourceCID,
+    if (NS_FAILED(rv = nsComponentManager::CreateInstance(kRDFInMemoryDataSourceCID,
                                                     nsnull,
                                                     kIRDFDataSourceIID,
                                                     (void**) &mInner)))

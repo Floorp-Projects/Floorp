@@ -953,7 +953,7 @@ nsXMLContentSink::LoadXSLStyleSheet(const nsIURL* aUrl)
   static NS_DEFINE_IID(kCParserCID, NS_PARSER_IID);
 
   // Create the XML parser
-  rv = nsRepository::CreateInstance(kCParserCID, 
+  rv = nsComponentManager::CreateInstance(kCParserCID, 
                                     nsnull, 
                                     kCParserIID, 
                                     (void **)&parser);

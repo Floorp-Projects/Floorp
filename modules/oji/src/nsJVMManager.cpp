@@ -596,7 +596,7 @@ nsJVMManager::MaybeStartupLiveConnect(void)
 		if (!registeredLiveConnectFactory) {
             NS_DEFINE_CID(kCLiveconnectCID, NS_CLIVECONNECT_CID);
             registeredLiveConnectFactory = 
-                (nsRepository::RegisterComponent(kCLiveconnectCID, NULL, NULL,
+                (nsComponentManager::RegisterComponent(kCLiveconnectCID, NULL, NULL,
                                                (const char *)JSJDLL, PR_FALSE,
                                                PR_FALSE) == NS_OK);
         }

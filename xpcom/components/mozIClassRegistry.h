@@ -18,7 +18,7 @@
 #ifndef __mozIClassRegistry_h
 #define __mozIClassRegistry_h
 
-#include "nsRepository.h"
+#include "nsIComponentManager.h"
 
 /*---------------------------- mozIClassRegistry -------------------------------
 | This interface provides access to a mapping from mnemonic interface names    |
@@ -40,7 +40,7 @@
 | name of the shared library that contains the implementation.                 |
 |                                                                              |
 | The class registry object will register those classes with the "repository"  |
-| (see nsRepository.h) the first time a request is made to create an           |
+| (see nsComponentManager.h) the first time a request is made to create an           |
 | instance.  Subsequent requests will simply be forwarded to the repository    |
 | after the appropriate interface and class IDs are determined.                |
 |                                                                              |

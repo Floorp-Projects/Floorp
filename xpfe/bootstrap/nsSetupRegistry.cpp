@@ -92,17 +92,17 @@ NS_SetupRegistry_1()
    */
   NS_SetupRegistry();
 
-  nsRepository::RegisterComponent(kCAppShellServiceCID, NULL, NULL, APPSHELL_DLL, PR_FALSE, PR_FALSE);
-  nsRepository::RegisterComponent(kCCmdLineServiceCID,  NULL, NULL, APPSHELL_DLL, PR_FALSE, PR_FALSE);
+  nsComponentManager::RegisterComponent(kCAppShellServiceCID, NULL, NULL, APPSHELL_DLL, PR_FALSE, PR_FALSE);
+  nsComponentManager::RegisterComponent(kCCmdLineServiceCID,  NULL, NULL, APPSHELL_DLL, PR_FALSE, PR_FALSE);
 
 //#if defined(XP_PC) || defined(XP_MAC)
-  nsRepository::RegisterComponent(kAppCoresManagerCID,       NULL, NULL, APPCORES_DLL, PR_FALSE, PR_FALSE);
-  nsRepository::RegisterComponent(kToolkitCoreCID,    NULL, NULL, APPCORES_DLL, PR_FALSE, PR_FALSE);
-  nsRepository::RegisterComponent(kMailCoreCID,       NULL, NULL, APPCORES_DLL, PR_FALSE, PR_FALSE);
-  nsRepository::RegisterComponent(kToolbarCoreCID,    NULL, NULL, APPCORES_DLL, PR_FALSE, PR_FALSE);
-  nsRepository::RegisterComponent(kBrowserAppCoreCID, NULL, NULL, APPCORES_DLL, PR_FALSE, PR_FALSE);
-  nsRepository::RegisterComponent(kEditorAppCoreCID,  NULL, NULL, APPCORES_DLL, PR_FALSE, PR_FALSE);
+  nsComponentManager::RegisterComponent(kAppCoresManagerCID,       NULL, NULL, APPCORES_DLL, PR_FALSE, PR_FALSE);
+  nsComponentManager::RegisterComponent(kToolkitCoreCID,    NULL, NULL, APPCORES_DLL, PR_FALSE, PR_FALSE);
+  nsComponentManager::RegisterComponent(kMailCoreCID,       NULL, NULL, APPCORES_DLL, PR_FALSE, PR_FALSE);
+  nsComponentManager::RegisterComponent(kToolbarCoreCID,    NULL, NULL, APPCORES_DLL, PR_FALSE, PR_FALSE);
+  nsComponentManager::RegisterComponent(kBrowserAppCoreCID, NULL, NULL, APPCORES_DLL, PR_FALSE, PR_FALSE);
+  nsComponentManager::RegisterComponent(kEditorAppCoreCID,  NULL, NULL, APPCORES_DLL, PR_FALSE, PR_FALSE);
   //All Editor registration is done in webshell/tests/viewer/nsSetupregistry.cpp
 //#endif
-///  nsRepository::RegisterComponent(kCBrowserControllerCID, NULL, NULL, BROWSER_DLL, PR_FALSE, PR_FALSE);
+///  nsComponentManager::RegisterComponent(kCBrowserControllerCID, NULL, NULL, BROWSER_DLL, PR_FALSE, PR_FALSE);
 }

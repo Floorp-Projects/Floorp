@@ -21,7 +21,7 @@
 
 #include "nsISupports.h"
 #include "nsIFactory.h"
-#include "nsRepository.h"
+#include "nsIComponentManager.h"
 
 #define NS_PLUGIN_HOST_CID \
 { 0xadea1880, 0x1a8e, 0x11d2, \

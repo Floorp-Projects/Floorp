@@ -81,10 +81,11 @@
 #include "plhash.h"
 #include "plstr.h"
 #include "rdfutil.h"
-
+#include "prlog.h"
 
 #include "nsILineBreakerFactory.h"
 #include "nsLWBrkCIID.h"
+
 ////////////////////////////////////////////////////////////////////////
 
 static NS_DEFINE_IID(kICSSParserIID,          NS_ICSS_PARSER_IID); // XXX grr..
@@ -640,7 +641,7 @@ XULDocumentImpl::XULDocumentImpl(void)
     nsresult rv;
 
     // construct a selection object
-    if (NS_FAILED(rv = nsRepository::CreateInstance(kRangeListCID,
+    if (NS_FAILED(rv = nsComponentManager::CreateInstance(kRangeListCID,
                                                     nsnull,
                                                     kIDOMSelectionIID,
                                                     (void**) &mSelection))) {
@@ -803,7 +804,7 @@ XULDocumentImpl::StartDocumentLoad(nsIURL *aURL,
 
     // Create an HTML style sheet for the HTML content.
     nsIHTMLStyleSheet* sheet;
-    if (NS_SUCCEEDED(rv = nsRepository::CreateInstance(kHTMLStyleSheetCID,
+    if (NS_SUCCEEDED(rv = nsComponentManager::CreateInstance(kHTMLStyleSheetCID,
                                                        nsnull,
                                                        kIHTMLStyleSheetIID,
                                                        (void**) &sheet))) {
@@ -824,7 +825,7 @@ XULDocumentImpl::StartDocumentLoad(nsIURL *aURL,
     // Create an inline style sheet for inline content that contains a style 
     // attribute.
     nsIHTMLCSSStyleSheet* inlineSheet;
-    if (NS_SUCCEEDED(rv = nsRepository::CreateInstance(kHTMLCSSStyleSheetCID,
+    if (NS_SUCCEEDED(rv = nsComponentManager::CreateInstance(kHTMLCSSStyleSheetCID,
                                                        nsnull,
                                                        kIHTMLCSSStyleSheetIID,
                                                        (void**) &inlineSheet))) {
@@ -845,7 +846,7 @@ XULDocumentImpl::StartDocumentLoad(nsIURL *aURL,
     // Create a composite data source that'll tie together local and
     // remote stores.
     nsIRDFCompositeDataSource* db;
-    if (NS_FAILED(rv = nsRepository::CreateInstance(kRDFCompositeDataSourceCID,
+    if (NS_FAILED(rv = nsComponentManager::CreateInstance(kRDFCompositeDataSourceCID,
                                                     nsnull,
                                                     kIRDFCompositeDataSourceIID,
                                                     (void**) &db))) {
@@ -855,7 +856,7 @@ XULDocumentImpl::StartDocumentLoad(nsIURL *aURL,
 
     // Create a XUL content model builder
     NS_IF_RELEASE(mXULBuilder);
-    if (NS_FAILED(rv = nsRepository::CreateInstance(kRDFXULBuilderCID,
+    if (NS_FAILED(rv = nsComponentManager::CreateInstance(kRDFXULBuilderCID,
                                                     nsnull,                     
                                                     kIRDFContentModelBuilderIID,
                                                     (void**) &mXULBuilder))) {
@@ -881,7 +882,7 @@ XULDocumentImpl::StartDocumentLoad(nsIURL *aURL,
     // XXX This needs to be cloned across windows, and the final
     // instance needs to be flushed to disk. It may be that this is
     // really an RDFXML data source...
-    if (NS_FAILED(rv = nsRepository::CreateInstance(kRDFInMemoryDataSourceCID,
+    if (NS_FAILED(rv = nsComponentManager::CreateInstance(kRDFInMemoryDataSourceCID,
                                                     nsnull,
                                                     kIRDFDataSourceIID,
                                                     (void**) &mLocalDataSource))) {
@@ -909,7 +910,7 @@ XULDocumentImpl::StartDocumentLoad(nsIURL *aURL,
     // meantime, add us as an nsIRDFXMLDataSourceObserver so that
     // we'll be notified when we need to load style sheets, etc.
     NS_IF_RELEASE(mDocumentDataSource);
-    if (NS_FAILED(rv = nsRepository::CreateInstance(kRDFInMemoryDataSourceCID,
+    if (NS_FAILED(rv = nsComponentManager::CreateInstance(kRDFInMemoryDataSourceCID,
                                                     nsnull,
                                                     kIRDFDataSourceIID,
                                                     (void**) &mDocumentDataSource))) {
@@ -928,7 +929,7 @@ XULDocumentImpl::StartDocumentLoad(nsIURL *aURL,
     }
 
     nsCOMPtr<nsIXULContentSink> sink;
-    if (NS_FAILED(rv = nsRepository::CreateInstance(kXULContentSinkCID,
+    if (NS_FAILED(rv = nsComponentManager::CreateInstance(kXULContentSinkCID,
                                                     nsnull,
                                                     kIXULContentSinkIID,
                                                     (void**) getter_AddRefs(sink)))) {
@@ -946,7 +947,7 @@ XULDocumentImpl::StartDocumentLoad(nsIURL *aURL,
         }
     }
 
-    if (NS_FAILED(rv = nsRepository::CreateInstance(kParserCID,
+    if (NS_FAILED(rv = nsComponentManager::CreateInstance(kParserCID,
                                                     nsnull,
                                                     kIParserIID,
                                                     (void**) &mParser))) {
@@ -960,7 +961,7 @@ XULDocumentImpl::StartDocumentLoad(nsIURL *aURL,
     }
 
     nsCOMPtr<nsIDTD> dtd;
-    if (NS_FAILED(rv = nsRepository::CreateInstance(kWellFormedDTDCID,
+    if (NS_FAILED(rv = nsComponentManager::CreateInstance(kWellFormedDTDCID,
                                                     nsnull,
                                                     kIDTDIID,
                                                     (void**) getter_AddRefs(dtd)))) {
@@ -1078,7 +1079,7 @@ XULDocumentImpl::CreateShell(nsIPresContext* aContext,
     nsresult rv;
 
     nsIPresShell* shell;
-    if (NS_FAILED(rv = nsRepository::CreateInstance(kPresShellCID,
+    if (NS_FAILED(rv = nsComponentManager::CreateInstance(kPresShellCID,
                                                     nsnull,
                                                     kIPresShellIID,
                                                     (void**) &shell)))
@@ -2821,7 +2822,7 @@ XULDocumentImpl::LoadCSSStyleSheet(nsIURL* url)
     }
       
     nsICSSParser* parser;
-    rv = nsRepository::CreateInstance(kCSSParserCID,
+    rv = nsComponentManager::CreateInstance(kCSSParserCID,
                                       nsnull,
                                       kICSSParserIID,
                                       (void**) &parser);
@@ -2887,7 +2888,7 @@ XULDocumentImpl::Init(void)
         return rv;
 
     // Create a namespace manager so we can manage tags
-    if (NS_FAILED(rv = nsRepository::CreateInstance(kNameSpaceManagerCID,
+    if (NS_FAILED(rv = nsComponentManager::CreateInstance(kNameSpaceManagerCID,
                                                     nsnull,
                                                     kINameSpaceManagerIID,
                                                     (void**) &mNameSpaceManager)))

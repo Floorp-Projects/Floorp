@@ -17,7 +17,7 @@
  */
 
 #include "nsFileUtilities.h"
-#include "nsRepository.h"
+#include "nsIComponentManager.h"
 #include "xp.h"
 
 ////////////////////////////////////////////////////////////////////////////////

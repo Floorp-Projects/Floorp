@@ -17,7 +17,7 @@
  * Netscape Communications Corporation.  All Rights Reserved.
  */
 #include "nscore.h"
-#include "nsRepository.h"
+#include "nsIComponentManager.h"
 
 #include "nspr.h"
 #include "plevent.h"

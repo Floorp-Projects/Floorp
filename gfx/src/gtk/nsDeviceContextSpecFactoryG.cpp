@@ -65,7 +65,7 @@ NS_IMETHODIMP nsDeviceContextSpecFactoryGTK :: CreateDeviceContextSpec(nsIDevice
 nsresult  						rv = NS_ERROR_FAILURE;
 nsIDeviceContextSpec  *devSpec = nsnull;
 
-	nsRepository::CreateInstance(kDeviceContextSpecCID, nsnull, kIDeviceContextSpecIID, (void **)&devSpec);
+	nsComponentManager::CreateInstance(kDeviceContextSpecCID, nsnull, kIDeviceContextSpecIID, (void **)&devSpec);
 
 	if (nsnull != devSpec){
 	  if (NS_OK == ((nsDeviceContextSpecGTK *)devSpec)->Init(aQuiet)){

@@ -471,6 +471,11 @@ unmangle:: $(DIRS)
     -$(MAKE_UNMANGLE)
 
 
+alltags::
+        echo Making emacs tags
+	c:\\mksnt\\find . -name dist -prune -o ( -name '*.[hc]' -o -name '*.cpp' ) -print | c:\\mksnt\\xargs etags -a
+
+
 #//------------------------------------------------------------------------
 #//
 #// Rule to create the object directory (if necessary)
@@ -628,3 +633,4 @@ CFLAGS = $(CFLAGS) -DNO_JNI_STUBS
 !endif
 
 !endif # CONFIG_RULES_MAK
+

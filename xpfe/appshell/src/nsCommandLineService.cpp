@@ -20,7 +20,7 @@
 
 #include "nsICmdLineService.h"
 #include "nsVoidArray.h"
-#include "nsRepository.h"
+#include "nsIComponentManager.h"
 #include "nsString.h"
 #include "plstr.h"
 

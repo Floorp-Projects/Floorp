@@ -41,7 +41,7 @@
 #include "nsIHTMLAttributes.h"
 #include "nsGenericHTMLElement.h"
 #include "nsIWidget.h"
-#include "nsRepository.h"
+#include "nsIComponentManager.h"
 #include "nsIView.h"
 #include "nsIViewManager.h"
 #include "nsViewsCID.h"
@@ -423,7 +423,7 @@ nsLabelFrame::Reflow(nsIPresContext&          aPresContext,
     nsIView* view;
     GetView(&view);
     if (!view) {
-      nsresult result = nsRepository::CreateInstance(kViewCID, nsnull, kIViewIID,
+      nsresult result = nsComponentManager::CreateInstance(kViewCID, nsnull, kIViewIID,
                                                     (void **)&view);
 	    nsCOMPtr<nsIPresShell> presShell;
       aPresContext.GetShell(getter_AddRefs(presShell));

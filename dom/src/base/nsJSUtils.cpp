@@ -32,7 +32,7 @@
 #include "nsIScriptGlobalObject.h"
 #include "nsString.h"
 #include "nsIScriptNameSpaceManager.h"
-#include "nsRepository.h"
+#include "nsIComponentManager.h"
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIJSScriptObjectIID, NS_IJSSCRIPTOBJECT_IID);
@@ -78,7 +78,7 @@ nsJSUtils::nsLookupGlobalName(nsISupports* aSupports,
       result = manager->LookupName(name, PR_FALSE, classID);
       NS_RELEASE(manager);
       if (NS_OK == result) {
-        result = nsRepository::CreateInstance(classID,
+        result = nsComponentManager::CreateInstance(classID,
                                               nsnull,
                                               kISupportsIID,
                                               (void **)&native);
@@ -284,7 +284,7 @@ nsJSUtils::nsGlobalResolve(JSContext* aContext,
       result = manager->LookupName(name, PR_FALSE, classID);
       NS_RELEASE(manager);
       if (NS_OK == result) {
-        result = nsRepository::CreateInstance(classID,
+        result = nsComponentManager::CreateInstance(classID,
                                               nsnull,
                                               kISupportsIID,
                                               (void **)&native);

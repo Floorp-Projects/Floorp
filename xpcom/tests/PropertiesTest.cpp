@@ -24,7 +24,7 @@
 #include "nsIProperties.h"
 #include "nsIServiceManager.h"
 #include "nsIURL.h"
-#include "nsRepository.h"
+#include "nsIComponentManager.h"
 #ifdef XP_PC
 #include "plevent.h"
 #endif
@@ -60,9 +60,9 @@ extern "C" void NS_SetupRegistry();
 int
 main(int argc, char *argv[])
 {
-  nsRepository::RegisterComponent(kNetServiceCID, NULL, NULL, NETLIB_DLL,
+  nsComponentManager::RegisterComponent(kNetServiceCID, NULL, NULL, NETLIB_DLL,
     PR_FALSE, PR_FALSE);
-  nsRepository::RegisterComponent(kEventQueueServiceCID, NULL, NULL, XPCOM_DLL,
+  nsComponentManager::RegisterComponent(kEventQueueServiceCID, NULL, NULL, XPCOM_DLL,
     PR_FALSE, PR_FALSE);
 #ifdef XP_MAC    // have not build this on PC and UNIX yet so make it #ifdef XP_MAC
   NS_SetupRegistry(); 
@@ -102,7 +102,7 @@ main(int argc, char *argv[])
     return 1;
   }
   nsIProperties *props = nsnull;
-  ret = nsRepository::CreateInstance(kPropertiesCID, NULL,
+  ret = nsComponentManager::CreateInstance(kPropertiesCID, NULL,
     kIPropertiesIID, (void**) &props);
   if (NS_FAILED(ret)) {
     printf("create nsIProperties failed\n");

@@ -217,7 +217,7 @@ XULSortServiceImpl::XULSortServiceImpl(void)
 	        // Register the XUL and RDF namespaces: these'll just retrieve
 	        // the IDs if they've already been registered by someone else.
 		nsINameSpaceManager* mgr;
-		if (NS_SUCCEEDED(rv = nsRepository::CreateInstance(kNameSpaceManagerCID,
+		if (NS_SUCCEEDED(rv = nsComponentManager::CreateInstance(kNameSpaceManagerCID,
 		                           nsnull,
 		                           kINameSpaceManagerIID,
 		                           (void**) &mgr)))

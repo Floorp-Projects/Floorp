@@ -26,13 +26,15 @@
 #include "nsEditorAppCoreFactory.h"
 #include "nsToolkitCoreFactory.h"
 #include "nsIFactory.h"
-#include "nsRepository.h"
-
+#include "nsIComponentManager.h"
 #include "pratom.h"
+#include <stdio.h>
+#include "nsIServiceManager.h"
 
 static PRInt32 gLockCnt = 0;
 static PRInt32 gInstanceCnt = 0;
 
+static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
 static NS_DEFINE_IID(kIFactoryIID,        NS_IFACTORY_IID);
 static NS_DEFINE_IID(kMailCoreCID,        NS_MAILCORE_CID);
 static NS_DEFINE_IID(kRDFCoreCID,         NS_RDFCORE_CID);
@@ -57,13 +59,13 @@ extern "C" NS_EXPORT nsresult
 NSRegisterSelf(nsISupports* serviceMgr, const char *path)
 {
     printf("*** AppCores is being registered\n");
-    nsRepository::RegisterComponent(kAppCoresManagerCID, NULL, NULL, path, PR_TRUE, PR_TRUE);
-    nsRepository::RegisterComponent(kMailCoreCID, NULL, NULL, path, PR_TRUE, PR_TRUE);
-    nsRepository::RegisterComponent(kRDFCoreCID, NULL, NULL, path, PR_TRUE, PR_TRUE);
-    nsRepository::RegisterComponent(kToolbarCoreCID, NULL, NULL, path, PR_TRUE, PR_TRUE);
-    nsRepository::RegisterComponent(kToolkitCoreCID, NULL, NULL, path, PR_TRUE, PR_TRUE);
-    nsRepository::RegisterComponent(kBrowserAppCoreCID, NULL, NULL, path, PR_TRUE, PR_TRUE);
-    nsRepository::RegisterComponent(kEditorAppCoreCID, NULL, NULL, path, PR_TRUE, PR_TRUE);
+    nsComponentManager::RegisterComponent(kAppCoresManagerCID, NULL, NULL, path, PR_TRUE, PR_TRUE);
+    nsComponentManager::RegisterComponent(kMailCoreCID, NULL, NULL, path, PR_TRUE, PR_TRUE);
+    nsComponentManager::RegisterComponent(kRDFCoreCID, NULL, NULL, path, PR_TRUE, PR_TRUE);
+    nsComponentManager::RegisterComponent(kToolbarCoreCID, NULL, NULL, path, PR_TRUE, PR_TRUE);
+    nsComponentManager::RegisterComponent(kToolkitCoreCID, NULL, NULL, path, PR_TRUE, PR_TRUE);
+    nsComponentManager::RegisterComponent(kBrowserAppCoreCID, NULL, NULL, path, PR_TRUE, PR_TRUE);
+    nsComponentManager::RegisterComponent(kEditorAppCoreCID, NULL, NULL, path, PR_TRUE, PR_TRUE);
     return NS_OK;
 }
 
@@ -72,13 +74,13 @@ NSUnregisterSelf(nsISupports* serviceMgr, const char *path)
 {
     printf("*** AppCores is being unregistered\n");
     
-    nsRepository::UnregisterFactory(kAppCoresManagerCID, path);
-    nsRepository::UnregisterFactory(kMailCoreCID, path);
-    nsRepository::UnregisterFactory(kRDFCoreCID, path);
-    nsRepository::UnregisterFactory(kToolbarCoreCID, path);
-    nsRepository::UnregisterFactory(kToolkitCoreCID, path);
-    nsRepository::UnregisterFactory(kBrowserAppCoreCID, path);
-    nsRepository::UnregisterFactory(kEditorAppCoreCID, path);
+    nsComponentManager::UnregisterFactory(kAppCoresManagerCID, path);
+    nsComponentManager::UnregisterFactory(kMailCoreCID, path);
+    nsComponentManager::UnregisterFactory(kRDFCoreCID, path);
+    nsComponentManager::UnregisterFactory(kToolbarCoreCID, path);
+    nsComponentManager::UnregisterFactory(kToolkitCoreCID, path);
+    nsComponentManager::UnregisterFactory(kBrowserAppCoreCID, path);
+    nsComponentManager::UnregisterFactory(kEditorAppCoreCID, path);
     
     return NS_OK;
 }

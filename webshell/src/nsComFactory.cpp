@@ -21,7 +21,7 @@
 
 //
 // This is a terrible hack which *must* go away soon!!!  
-// We need some other mechanism to prime the nsRepository...
+// We need some other mechanism to prime the nsComponentManager...
 //
 #include "../tests/viewer/nsSetupRegistry.cpp"
 

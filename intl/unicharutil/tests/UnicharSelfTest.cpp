@@ -18,6 +18,7 @@
 #include <iostream.h>
 #include "nsISupports.h"
 #include "nsIServiceManager.h"
+#include "nsIComponentManager.h"
 #include "nsICaseConversion.h"
 #include "nsUnicharUtilCIID.h"
 
@@ -347,7 +348,7 @@ void TestCaseConversion()
 void RegisterFactories()
 {
    nsresult res;
-   res = nsRepository::RegisterComponent(kUnicharUtilCID,
+   res = nsComponentManager::RegisterComponent(kUnicharUtilCID,
                                  NULL,
                                  NULL,
                                  UNICHARUTIL_DLL_NAME,
@@ -370,11 +371,11 @@ int main(int argc, char** argv) {
    // --------------------------------------------
    cout << "Finish All The Test Cases\n";
    nsresult res = NS_OK;
-   res = nsRepository::FreeLibraries();
+   res = nsComponentManager::FreeLibraries();
 
    if(NS_FAILED(res))
-      cout << "nsRepository failed\n";
+      cout << "nsComponentManager failed\n";
    else
-      cout << "nsRepository FreeLibraries Done\n";
+      cout << "nsComponentManager FreeLibraries Done\n";
    return 0;
 }

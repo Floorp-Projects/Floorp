@@ -19,12 +19,12 @@
 
 #include <stdio.h>
 
-#include "nsRepository.h"
+#include "nsIComponentManager.h"
 #include "nsIAppRunner.h"
 
 static nsresult registerLib( const nsCID &cid, const char *libName ) {
     printf( "Registering library %s...", libName );
-    nsresult rv = nsRepository::RegisterComponent( cid,       // Class ID.
+    nsresult rv = nsComponentManager::RegisterComponent( cid,       // Class ID.
                                                  NULL,   // Class name.
                                                  NULL,   // Program ID.
                                                  libName,   // Library name.
@@ -42,7 +42,7 @@ static nsresult registerLib( const nsCID &cid, const char *libName ) {
 
 int main(int argc, char* argv[]) {
     // Fire up the XPCOM repository with our NS Registry file.
-    nsresult rv = nsRepository::Initialize("mozilla.reg");
+    nsresult rv = nsComponentManager::Initialize("mozilla.reg");
 
     // Register required libraries.
     if ( rv == NS_OK ) {

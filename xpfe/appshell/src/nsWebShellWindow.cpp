@@ -20,7 +20,7 @@
 
 #include "nsWebShellWindow.h"
 
-#include "nsRepository.h"
+#include "nsIComponentManager.h"
 #include "nsIServiceManager.h"
 #include "nsIURL.h"
 
@@ -192,7 +192,7 @@ nsresult nsWebShellWindow::Initialize(nsIWidget* aParent,
   }
 
   // Create top level window
-  rv = nsRepository::CreateInstance(kWindowCID, nsnull, kIWidgetIID,
+  rv = nsComponentManager::CreateInstance(kWindowCID, nsnull, kIWidgetIID,
                                     (void**)&mWindow);
   if (NS_OK != rv) {
     return rv;
@@ -212,7 +212,7 @@ nsresult nsWebShellWindow::Initialize(nsIWidget* aParent,
   mWindow->SetBackgroundColor(NS_RGB(192,192,192));
 
   // Create web shell
-  rv = nsRepository::CreateInstance(kWebShellCID, nsnull,
+  rv = nsComponentManager::CreateInstance(kWebShellCID, nsnull,
                                     kIWebShellIID,
                                     (void**)&mWebShell);
   if (NS_OK != rv) {
@@ -248,7 +248,7 @@ nsresult nsWebShellWindow::Initialize(nsIWidget* aParent,
   aControllerIID.ToCString(str, sizeof(str));
   iid.Parse(str);
 
-  //rv = nsRepository::CreateInstance(iid, nsnull,
+  //rv = nsComponentManager::CreateInstance(iid, nsnull,
   //                                  kIWidgetControllerIID,
   //                                  (void**)&mController);
   return rv;
@@ -374,7 +374,7 @@ NS_IMETHODIMP nsWebShellWindow::CreateMenu(nsIMenuBar * aMenuBar,
 {
   // Create nsMenu
   nsIMenu * pnsMenu = nsnull;
-  nsresult rv = nsRepository::CreateInstance(kMenuCID, nsnull, kIMenuIID, (void**)&pnsMenu);
+  nsresult rv = nsComponentManager::CreateInstance(kMenuCID, nsnull, kIMenuIID, (void**)&pnsMenu);
   if (NS_OK == rv) {
     // Call Create
     pnsMenu->Create(aMenuBar, aMenuName);
@@ -424,7 +424,7 @@ NS_IMETHODIMP nsWebShellWindow::LoadMenuItem(
   menuitemElement->GetAttribute(nsAutoString("cmd"), menuitemCmd);
   // Create nsMenuItem
   nsIMenuItem * pnsMenuItem = nsnull;
-  nsresult rv = nsRepository::CreateInstance(kMenuItemCID, nsnull, kIMenuItemIID, (void**)&pnsMenuItem);
+  nsresult rv = nsComponentManager::CreateInstance(kMenuItemCID, nsnull, kIMenuItemIID, (void**)&pnsMenuItem);
   if (NS_OK == rv) {
     pnsMenuItem->Create(pParentMenu, menuitemName, 0);                 
     // Set nsMenuItem Name
@@ -478,7 +478,7 @@ void nsWebShellWindow::LoadSubMenu(
 
   // Create nsMenu
   nsIMenu * pnsMenu = nsnull;
-  nsresult rv = nsRepository::CreateInstance(kMenuCID, nsnull, kIMenuIID, (void**)&pnsMenu);
+  nsresult rv = nsComponentManager::CreateInstance(kMenuCID, nsnull, kIMenuIID, (void**)&pnsMenu);
   if (NS_OK == rv) {
     // Call Create
     pnsMenu->Create(pParentMenu, menuName);
@@ -529,7 +529,7 @@ void nsWebShellWindow::LoadMenus(nsIDOMDocument * aDOMDoc, nsIWidget * aParentWi
   nsCOMPtr<nsIDOMNode> menubarNode(FindNamedDOMNode(nsAutoString("menubar"), window, endCount, 1));
   if (menubarNode) {
     nsIMenuBar * pnsMenuBar = nsnull;
-    rv = nsRepository::CreateInstance(kMenuBarCID, nsnull, kIMenuBarIID, (void**)&pnsMenuBar);
+    rv = nsComponentManager::CreateInstance(kMenuBarCID, nsnull, kIMenuBarIID, (void**)&pnsMenuBar);
     if (NS_OK == rv) {
       if (nsnull != pnsMenuBar) {
         pnsMenuBar->Create(aParentWindow);

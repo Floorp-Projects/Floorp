@@ -317,7 +317,7 @@ nsObjectFrame::CreateWidget(nscoord aWidth, nscoord aHeight, PRBool aViewOnly)
   // Create our view and widget
 
   nsresult result = 
-    nsRepository::CreateInstance(kViewCID, nsnull, kIViewIID,
+    nsComponentManager::CreateInstance(kViewCID, nsnull, kIViewIID,
                                  (void **)&view);
   if (NS_OK != result) {
     return result;
@@ -532,7 +532,7 @@ nsObjectFrame::Reflow(nsIPresContext&          aPresContext,
 				nsRect r = nsRect(x, y, width, height);
 				
 				static NS_DEFINE_IID(kIWidgetIID, NS_IWIDGET_IID);
-				nsresult rv = nsRepository::CreateInstance(aWidgetCID, nsnull, kIWidgetIID,
+				nsresult rv = nsComponentManager::CreateInstance(aWidgetCID, nsnull, kIWidgetIID,
 									   (void**)&mWidget);
         // XXX use rv!
 				nsIWidget *parent;

@@ -146,7 +146,7 @@ nsScrollFrame::CreateScrollingView()
   parentView->GetViewManager(viewManager);
 
   // Create the scrolling view
-  nsresult rv = nsRepository::CreateInstance(kScrollingViewCID, 
+  nsresult rv = nsComponentManager::CreateInstance(kScrollingViewCID, 
                                              nsnull, 
                                              kIViewIID, 
                                              (void **)&view);

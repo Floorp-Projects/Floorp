@@ -21,7 +21,7 @@
 #include "nsILocale.h"
 #include "nsINetService.h"
 #include "nsIServiceManager.h"
-#include "nsRepository.h"
+#include "nsIComponentManager.h"
 #include "nsXPComCIID.h"
 
 #define TEST_URL "resource:/res/strres.properties"
@@ -49,7 +49,7 @@ main(int argc, char *argv[])
     return 1;
   }
 
-  nsRepository::RegisterComponent(kEventQueueServiceCID, NULL, NULL, XPCOM_DLL,
+  nsComponentManager::RegisterComponent(kEventQueueServiceCID, NULL, NULL, XPCOM_DLL,
     PR_FALSE, PR_FALSE);
   nsIEventQueueService* pEventQueueService = nsnull;
   ret = nsServiceManager::GetService(kEventQueueServiceCID,
@@ -64,7 +64,7 @@ main(int argc, char *argv[])
     return 1;
   }
 
-  nsRepository::RegisterComponent(kNetServiceCID, NULL, NULL, NETLIB_DLL, PR_FALSE, PR_FALSE);
+  nsComponentManager::RegisterComponent(kNetServiceCID, NULL, NULL, NETLIB_DLL, PR_FALSE, PR_FALSE);
   nsINetService* pNetService = nsnull;
   ret = nsServiceManager::GetService(kNetServiceCID, kINetServiceIID,
     (nsISupports**) &pNetService);

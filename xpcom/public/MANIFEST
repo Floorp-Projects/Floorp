@@ -16,6 +16,7 @@ nsISupportsUtils.h
 nsIPtr.h
 nsIRegistry.h
 nsIServiceManager.h
+nsIComponentManager.h
 nsISupportsArray.h
 nsRepository.h
 nsIEnumerator.h

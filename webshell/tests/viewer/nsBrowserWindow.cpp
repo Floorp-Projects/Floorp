@@ -38,13 +38,13 @@
 #include "nsIURL.h"
 #include "nsIFileWidget.h"
 #include "nsILookAndFeel.h"
-#include "nsRepository.h"
+#include "nsIComponentManager.h"
 #include "nsIFactory.h"
 #include "nsCRT.h"
 #include "nsWidgetsCID.h"
 #include "nsViewerApp.h"
 #include "prprf.h"
-#include "nsRepository.h"
+#include "nsIComponentManager.h"
 #include "nsParserCIID.h"
 #include "nsIEnumerator.h"
 #include "nsCOMPtr.h"
@@ -533,7 +533,7 @@ static PRBool GetFileNameFromFileSelector(nsIWidget* aParentWindow,
   PRBool selectedFileName = PR_FALSE;
   nsIFileWidget *fileWidget;
   nsString title("Open HTML");
-  nsresult rv = nsRepository::CreateInstance(kFileWidgetCID,
+  nsresult rv = nsComponentManager::CreateInstance(kFileWidgetCID,
 					     nsnull,
 					     kIFileWidgetIID,
 					     (void**)&fileWidget);
@@ -795,7 +795,7 @@ nsBrowserWindow::DoFind()
   nsString title("Find");
 
   nsXPBaseWindow * dialog = nsnull;
-  nsresult rv = nsRepository::CreateInstance(kXPBaseWindowCID, nsnull,
+  nsresult rv = nsComponentManager::CreateInstance(kXPBaseWindowCID, nsnull,
                                              kIXPBaseWindowIID,
                                              (void**) &dialog);
   if (rv == NS_OK) {
@@ -951,7 +951,7 @@ nsBrowserWindow::Init(nsIAppShell* aAppShell,
   mAllowPlugins = aAllowPlugins;
 
   // Create top level window
-  nsresult rv = nsRepository::CreateInstance(kWindowCID, nsnull, kIWindowIID,
+  nsresult rv = nsComponentManager::CreateInstance(kWindowCID, nsnull, kIWindowIID,
 					     (void**)&mWindow);
   if (NS_OK != rv) {
     return rv;
@@ -965,7 +965,7 @@ nsBrowserWindow::Init(nsIAppShell* aAppShell,
   mWindow->GetClientBounds(r);
 
   // Create web shell
-  rv = nsRepository::CreateInstance(kWebShellCID, nsnull,
+  rv = nsComponentManager::CreateInstance(kWebShellCID, nsnull,
 				    kIWebShellIID,
 				    (void**)&mWebShell);
   if (NS_OK != rv) {
@@ -1029,7 +1029,7 @@ nsBrowserWindow::Init(nsIAppShell* aAppShell,
   mAllowPlugins = aAllowPlugins;
 
   // Create top level window
-  nsresult rv = nsRepository::CreateInstance(kWindowCID, nsnull, kIWidgetIID,
+  nsresult rv = nsComponentManager::CreateInstance(kWindowCID, nsnull, kIWidgetIID,
                                              (void**)&mWindow);
   if (NS_OK != rv) {
     return rv;
@@ -1040,7 +1040,7 @@ nsBrowserWindow::Init(nsIAppShell* aAppShell,
   mWindow->GetClientBounds(r);
 
   // Create web shell
-  rv = nsRepository::CreateInstance(kWebShellCID, nsnull,
+  rv = nsComponentManager::CreateInstance(kWebShellCID, nsnull,
                                     kIWebShellIID,
                                     (void**)&mWebShell);
   if (NS_OK != rv) {
@@ -1114,7 +1114,7 @@ nsBrowserWindow::CreateToolBar(PRInt32 aWidth)
   NS_RELEASE(dc);
 
   // Create and place back button
-  rv = nsRepository::CreateInstance(kButtonCID, nsnull, kIButtonIID,
+  rv = nsComponentManager::CreateInstance(kButtonCID, nsnull, kIButtonIID,
                                     (void**)&mBack);
   if (NS_OK != rv) {
     return rv;
@@ -1133,7 +1133,7 @@ nsBrowserWindow::CreateToolBar(PRInt32 aWidth)
 
   // Create and place forward button
   r.SetRect(BUTTON_WIDTH, 0, BUTTON_WIDTH, BUTTON_HEIGHT);  
-  rv = nsRepository::CreateInstance(kButtonCID, nsnull, kIButtonIID,
+  rv = nsComponentManager::CreateInstance(kButtonCID, nsnull, kIButtonIID,
 				    (void**)&mForward);
   if (NS_OK != rv) {
     return rv;
@@ -1152,7 +1152,7 @@ nsBrowserWindow::CreateToolBar(PRInt32 aWidth)
   r.SetRect(2*BUTTON_WIDTH, 0,
 	    aWidth - 2*BUTTON_WIDTH - THROBBER_WIDTH,
 	    BUTTON_HEIGHT);
-  rv = nsRepository::CreateInstance(kTextFieldCID, nsnull, kITextWidgetIID,
+  rv = nsComponentManager::CreateInstance(kTextFieldCID, nsnull, kITextWidgetIID,
 				    (void**)&mLocation);
   if (NS_OK != rv) {
     return rv;
@@ -1171,7 +1171,7 @@ nsBrowserWindow::CreateToolBar(PRInt32 aWidth)
   // Create and place throbber
   r.SetRect(aWidth - THROBBER_WIDTH, 0,
 	    THROBBER_WIDTH, THROBBER_HEIGHT);
-  rv = nsRepository::CreateInstance(kThrobberCID, nsnull, kIThrobberIID,
+  rv = nsComponentManager::CreateInstance(kThrobberCID, nsnull, kIThrobberIID,
 				    (void**)&mThrobber);
   if (NS_OK != rv) {
     return rv;
@@ -1196,7 +1196,7 @@ nsBrowserWindow::CreateStatusBar(PRInt32 aWidth)
   NS_RELEASE(dc);
 
   nsRect r(0, 0, aWidth, THROBBER_HEIGHT);
-  rv = nsRepository::CreateInstance(kTextFieldCID, nsnull, kITextWidgetIID,
+  rv = nsComponentManager::CreateInstance(kTextFieldCID, nsnull, kITextWidgetIID,
 				    (void**)&mStatus);
   if (NS_OK != rv) {
     return rv;
@@ -1229,7 +1229,7 @@ nsBrowserWindow::Layout(PRInt32 aWidth, PRInt32 aHeight)
 {
   nscoord txtHeight;
   nsILookAndFeel * lookAndFeel;
-  if (NS_OK == nsRepository::CreateInstance(kLookAndFeelCID, nsnull, kILookAndFeelIID, (void**)&lookAndFeel)) {
+  if (NS_OK == nsComponentManager::CreateInstance(kLookAndFeelCID, nsnull, kILookAndFeelIID, (void**)&lookAndFeel)) {
     lookAndFeel->GetMetric(nsILookAndFeel::eMetric_TextFieldHeight, txtHeight);
     NS_RELEASE(lookAndFeel);
   } else {
@@ -1896,7 +1896,7 @@ void nsBrowserWindow::DoPrintSetup()
   nsString title("Print Setup");
 
   nsXPBaseWindow * dialog = nsnull;
-  nsresult rv = nsRepository::CreateInstance(kXPBaseWindowCID, nsnull,
+  nsresult rv = nsComponentManager::CreateInstance(kXPBaseWindowCID, nsnull,
                                              kIXPBaseWindowIID,
                                              (void**) &dialog);
   if (rv == NS_OK) {
@@ -1977,7 +1977,7 @@ void nsBrowserWindow::DoTableInspector()
     nsString title("Table Inspector");
 
     nsXPBaseWindow * xpWin = nsnull;
-    nsresult rv = nsRepository::CreateInstance(kXPBaseWindowCID, nsnull,
+    nsresult rv = nsComponentManager::CreateInstance(kXPBaseWindowCID, nsnull,
                                                kIXPBaseWindowIID,
                                                (void**) &xpWin);
     if (rv == NS_OK) {
@@ -2010,7 +2010,7 @@ void nsBrowserWindow::DoImageInspector()
     nsString title("Image Inspector");
 
     nsXPBaseWindow * xpWin = nsnull;
-    nsresult rv = nsRepository::CreateInstance(kXPBaseWindowCID, nsnull, kIXPBaseWindowIID, (void**) &xpWin);
+    nsresult rv = nsComponentManager::CreateInstance(kXPBaseWindowCID, nsnull, kIXPBaseWindowIID, (void**) &xpWin);
     if (rv == NS_OK) {
       xpWin->Init(eXPBaseWindowType_dialog, mAppShell, nsnull, printHTML, title, rect, PRUint32(~0), PR_FALSE);
       xpWin->SetVisible(PR_TRUE);
@@ -2381,7 +2381,7 @@ static PRBool GetSaveFileNameFromFileSelector(nsIWidget* aParentWindow,
   PRBool selectedFileName = PR_FALSE;
   nsIFileWidget *fileWidget;
   nsString title("Save HTML");
-  nsresult rv = nsRepository::CreateInstance(kFileWidgetCID,
+  nsresult rv = nsComponentManager::CreateInstance(kFileWidgetCID,
 					     nsnull,
 					     kIFileWidgetIID,
 					     (void**)&fileWidget);
@@ -2448,7 +2448,7 @@ nsBrowserWindow::DoDebugSave()
       static NS_DEFINE_IID(kCParserIID, NS_IPARSER_IID);
       static NS_DEFINE_IID(kCParserCID, NS_PARSER_IID);
 
-      nsresult rv = nsRepository::CreateInstance(kCParserCID, 
+      nsresult rv = nsComponentManager::CreateInstance(kCParserCID, 
                                                  nsnull, 
                                                  kCParserIID, 
                                                  (void **)&parser);

@@ -487,6 +487,7 @@ nsresult nsWindow::StandardWindowCreate(nsIWidget *aParent,
     //
   
     nsToolkit* toolkit = (nsToolkit *)mToolkit;
+    if (toolkit) {
     if (!toolkit->IsGuiThread()) {
         DWORD args[7];
         args[0] = (DWORD)aParent;
@@ -509,6 +510,7 @@ nsresult nsWindow::StandardWindowCreate(nsIWidget *aParent,
           toolkit->CallMethod(&info);
           return NS_OK;
         }
+    }
     }
  
     HWND parent;
@@ -2143,7 +2145,7 @@ for (x = 0; x < 10000000; x++);
             static NS_DEFINE_IID(kRenderingContextIID, NS_IRENDERING_CONTEXT_IID);
             static NS_DEFINE_IID(kRenderingContextWinIID, NS_IRENDERING_CONTEXT_WIN_IID);
 
-            if (NS_OK == nsRepository::CreateInstance(kRenderingContextCID, nsnull, kRenderingContextIID, (void **)&event.renderingContext))
+            if (NS_OK == nsComponentManager::CreateInstance(kRenderingContextCID, nsnull, kRenderingContextIID, (void **)&event.renderingContext))
             {
               nsIRenderingContextWin *winrc;
 

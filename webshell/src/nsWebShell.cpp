@@ -30,7 +30,7 @@
 #include "nsIDocumentLoaderObserver.h"
 #include "nsDOMEvent.h"
 #include "nsIPresContext.h"
-#include "nsRepository.h"
+#include "nsIComponentManager.h"
 #include "nsIServiceManager.h"
 #include "nsIEventQueueService.h"
 #include "nsXPComCIID.h"
@@ -771,7 +771,7 @@ nsWebShell::Init(nsNativeWidget aNativeParent,
   mDocLoader->AddObserver((nsIDocumentLoaderObserver*)this);
 
   // Create device context
-  rv = nsRepository::CreateInstance(kDeviceContextCID, nsnull,
+  rv = nsComponentManager::CreateInstance(kDeviceContextCID, nsnull,
                                     kIDeviceContextIID,
                                     (void **)&mDeviceContext);
   if (NS_FAILED(rv)) {
@@ -788,7 +788,7 @@ nsWebShell::Init(nsNativeWidget aNativeParent,
   mDeviceContext->SetGamma(1.0f);
 
   // Create a Native window for the shell container...
-  rv = nsRepository::CreateInstance(kChildCID, nsnull, kIWidgetIID, (void**)&mWindow);
+  rv = nsComponentManager::CreateInstance(kChildCID, nsnull, kIWidgetIID, (void**)&mWindow);
   if (NS_FAILED(rv)) {
     goto done;
   }

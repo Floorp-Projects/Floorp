@@ -26,7 +26,7 @@
 #include "nsIFrameSelection.h"
 #include "nsIDOMSelection.h"
 #include "nsIFocusTracker.h"
-#include "nsRepository.h"
+#include "nsIComponentManager.h"
 #include "nsLayoutCID.h"
 #include "nsIContent.h"
 #include "nsIDOMNode.h"
@@ -1187,7 +1187,7 @@ nsRangeList::Collapse(nsIDOMNode* aParentNode, PRInt32 aOffset)
   Clear();
 
   nsCOMPtr<nsIDOMRange> range;
-  result = nsRepository::CreateInstance(kRangeCID, nsnull,
+  result = nsComponentManager::CreateInstance(kRangeCID, nsnull,
                                      kIDOMRangeIID,
                                      getter_AddRefs(range));
   if (NS_FAILED(result))

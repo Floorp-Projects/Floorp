@@ -48,7 +48,7 @@
 #include "nsIDeviceContext.h"
 #include "nsIFontMetrics.h"
 #include "nsILookAndFeel.h"
-#include "nsRepository.h"
+#include "nsIComponentManager.h"
 
 static NS_DEFINE_IID(kIDOMHTMLSelectElementIID, NS_IDOMHTMLSELECTELEMENT_IID);
 static NS_DEFINE_IID(kIDOMHTMLOptionElementIID, NS_IDOMHTMLOPTIONELEMENT_IID);
@@ -219,7 +219,7 @@ nsSelectControlFrame::GetVerticalInsidePadding(float aPixToTwip,
   PRInt32 padInside;
   PRInt32 shouldUsePadInside;
   nsILookAndFeel * lookAndFeel;
-  if (NS_OK == nsRepository::CreateInstance(kLookAndFeelCID, nsnull, kILookAndFeelIID, (void**)&lookAndFeel)) {
+  if (NS_OK == nsComponentManager::CreateInstance(kLookAndFeelCID, nsnull, kILookAndFeelIID, (void**)&lookAndFeel)) {
    lookAndFeel->GetMetric(nsILookAndFeel::eMetricFloat_ListVerticalInsidePadding,  pad);
    // These two (below) are really only needed for GTK
    lookAndFeel->GetMetric(nsILookAndFeel::eMetric_ListVerticalInsidePadding,  padInside);
@@ -254,7 +254,7 @@ nsSelectControlFrame::GetHorizontalInsidePadding(nsIPresContext& aPresContext,
   PRInt32 padMin;
   PRInt32 shouldUsePadMin;
   nsILookAndFeel * lookAndFeel;
-  if (NS_OK == nsRepository::CreateInstance(kLookAndFeelCID, nsnull, kILookAndFeelIID, (void**)&lookAndFeel)) {
+  if (NS_OK == nsComponentManager::CreateInstance(kLookAndFeelCID, nsnull, kILookAndFeelIID, (void**)&lookAndFeel)) {
    lookAndFeel->GetMetric(nsILookAndFeel::eMetricFloat_ListHorizontalInsidePadding,  pad);
    lookAndFeel->GetMetric(nsILookAndFeel::eMetric_ListHorizontalInsideMinimumPadding,  padMin);
    // This one (below) is really only needed for GTK

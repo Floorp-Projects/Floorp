@@ -25,7 +25,7 @@
 #include "nsIFactory.h"
 #include "nsISupports.h"
 
-#include "nsRepository.h"
+#include "nsIComponentManager.h"
 
 #include "nsIScriptObjectOwner.h"
 #include "nsIScriptGlobalObject.h"
@@ -58,6 +58,9 @@
 
 #include "nsIBrowserWindow.h"
 #include "nsIWebShell.h"
+#include "nsIServiceManager.h"
+
+static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
 
 // Globals
 
@@ -428,10 +431,10 @@ nsSilentDownloadManager::Startup()
     /* Create an instance of INet so that we can see if the network is busy */
     /************************************************************************/
 
-    result = nsRepository::CreateInstance(kInetServiceCID,   
-                                          nsnull,
-                                          kInetServiceIID,
-                                          (void**)&gInetService);
+    result = nsComponentManager::CreateInstance(kInetServiceCID,   
+                                                nsnull,
+                                                kInetServiceIID,
+                                                (void**)&gInetService);
 
     if (result != NS_OK)
         return result;
@@ -637,9 +640,9 @@ nsSilentDownloadTask::LoadScript(void)
 
     if (mWindow == nsnull)
     {
-        nsresult rv = nsRepository::CreateInstance(kBrowserWindowCID, nsnull,
-                                                   kIBrowserWindowIID,
-                                                   (void**) &mWindow);
+        nsresult rv = nsComponentManager::CreateInstance(kBrowserWindowCID, nsnull,
+                                                         kIBrowserWindowIID,
+                                                         (void**) &mWindow);
         if (rv == NS_OK) 
         {
             nsRect rect(0, 0, 275, 300);
@@ -1424,35 +1427,49 @@ nsSilentDownloadListener::SetSilentDownloadInfo(nsIDOMSilentDownloadTask* con)
 ////////////////////////////////////////////////////////////////////////////////
 
 extern "C" NS_EXPORT PRBool
-NSCanUnload(nsISupports* serviceMgr)
+NSCanUnload(nsISupports* aServMgr)
 {
     return PRBool (gInstanceCnt == 0 && gLockCnt == 0);
 }
 
 extern "C" NS_EXPORT nsresult
-NSRegisterSelf(nsISupports* serviceMgr, const char *path)
+NSRegisterSelf(nsISupports* aServMgr, const char *path)
 {
+    nsresult rv;
+    nsService<nsIComponentManager> compMgr(aServMgr, kComponentManagerCID, &rv);
+    if (NS_FAILED(rv)) return rv;
+
+#ifdef NS_DEBUG
     printf("*** SilentDownload is being registered\n");
-    nsRepository::RegisterComponent(kSilentDownloadCID, NULL, NULL, path, PR_TRUE, PR_TRUE);
-    nsRepository::RegisterComponent(kSilentDownloadTaskCID, NULL, NULL, path, PR_TRUE, PR_TRUE);
-    return NS_OK;
+#endif
+
+    rv = compMgr->RegisterComponent(kSilentDownloadCID, NULL, NULL, path, PR_TRUE, PR_TRUE);
+    if (NS_FAILED(rv)) return rv;
+    rv = compMgr->RegisterComponent(kSilentDownloadTaskCID, NULL, NULL, path, PR_TRUE, PR_TRUE);
+    return rv;
 }
 
 extern "C" NS_EXPORT nsresult
-NSUnregisterSelf(nsISupports* serviceMgr, const char *path)
+NSUnregisterSelf(nsISupports* aServMgr, const char *path)
 {
+    nsresult rv;
+    nsService<nsIComponentManager> compMgr(aServMgr, kComponentManagerCID, &rv);
+    if (NS_FAILED(rv)) return rv;
+
+#ifdef NS_DEBUG
     printf("*** SilentDownload is being unregistered\n");
+#endif
     
-    nsRepository::UnregisterFactory(kSilentDownloadCID, path);
-    nsRepository::UnregisterFactory(kSilentDownloadTaskCID, path);
-    
-    return NS_OK;
+    rv = compMgr->UnregisterFactory(kSilentDownloadCID, path);
+    if (NS_FAILED(rv)) return rv;
+    rv = compMgr->UnregisterFactory(kSilentDownloadTaskCID, path);
+    return rv;
 }
 
 
 
 extern "C" NS_EXPORT nsresult
-NSGetFactory(nsISupports* serviceMgr,
+NSGetFactory(nsISupports* aServMgr,
              const nsCID &aClass,
              const char *aClassName,
              const char *aProgID,

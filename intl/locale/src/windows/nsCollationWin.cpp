@@ -18,7 +18,7 @@
 
 
 #include "nsCollationWin.h"
-#include "nsRepository.h"
+#include "nsIComponentManager.h"
 #include "nsLocaleCID.h"
 #include "nsIWin32Locale.h"
 #include <windows.h>
@@ -62,7 +62,7 @@ nsresult nsCollationWin::Initialize(nsILocale* locale)
     }
   
 	  nsIWin32Locale* win32Locale;
-	  res = nsRepository::CreateInstance(kWin32LocaleFactoryCID, NULL, kIWin32LocaleIID, (void**)&win32Locale);
+	  res = nsComponentManager::CreateInstance(kWin32LocaleFactoryCID, NULL, kIWin32LocaleIID, (void**)&win32Locale);
     if (NS_FAILED(res)) {
       return res;
     }

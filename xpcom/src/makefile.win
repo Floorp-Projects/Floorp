@@ -47,51 +47,53 @@ CSRCS =				\
 	plvector.c		\
 	$(NULL)
 
-C_OBJS = \
-	.\$(OBJDIR)\plvector.obj		\
+C_OBJS =                              \
+	.\$(OBJDIR)\plvector.obj      \
 	$(NULL)
 
-CPPSRCS =			\
-	nsDebug.cpp		\
-	nsHashtable.cpp		\
-	nsID.cpp		\
-	nsCOMPtr.cpp      \
-        nsProxyEvent.cpp    \
-	nsRepository.cpp	\
-	nsServiceManager.cpp	\
-	nsSupportsArray.cpp	\
-	nsSupportsArrayEnumerator.cpp	\
-	nsConjoiningEnumerator.cpp	\
-	nsTraceRefcnt.cpp	\
-	nsRegistry.cpp \
-        nsXPComFactory.cpp      \
-        nsEventQueueService.cpp \
-        nsAllocator.cpp         \
-	xcDll.cpp \
-	xcDllStore.cpp \
-	nsGenericFactory.cpp \
-	$(NULL)
+CPPSRCS =                             \
+        nsDebug.cpp                   \
+        nsHashtable.cpp               \
+        nsID.cpp                      \
+        nsCOMPtr.cpp                  \
+        nsProxyEvent.cpp              \
+        nsComponentManager.cpp        \
+        nsRepository.cpp              \
+        nsServiceManager.cpp          \
+        nsSupportsArray.cpp           \
+        nsSupportsArrayEnumerator.cpp \
+        nsConjoiningEnumerator.cpp    \
+        nsTraceRefcnt.cpp             \
+        nsRegistry.cpp                \
+        nsXPComFactory.cpp            \
+        nsEventQueueService.cpp       \
+        nsAllocator.cpp               \
+        xcDll.cpp                     \
+        xcDllStore.cpp                \
+        nsGenericFactory.cpp          \
+        $(NULL)
 
-CPP_OBJS = \
-	.\$(OBJDIR)\nsDebug.obj			\
-	.\$(OBJDIR)\nsHashtable.obj		\
-	.\$(OBJDIR)\nsID.obj			\
-      .\$(OBJDIR)\nsCOMPtr.obj            \
-    .\$(OBJDIR)\nsProxyEvent.obj    \
-	.\$(OBJDIR)\nsRepository.obj		\
-	.\$(OBJDIR)\nsServiceManager.obj	\
-	.\$(OBJDIR)\nsSupportsArray.obj		\
-	.\$(OBJDIR)\nsSupportsArrayEnumerator.obj		\
-	.\$(OBJDIR)\nsConjoiningEnumerator.obj		\
-	.\$(OBJDIR)\nsTraceRefcnt.obj		\
-	.\$(OBJDIR)\nsRegistry.obj     \
-        .\$(OBJDIR)\nsXPComFactory.obj          \
-        .\$(OBJDIR)\nsEventQueueService.obj     \
-        .\$(OBJDIR)\nsAllocator.obj             \
-    .\$(OBJDIR)\xcDll.obj \
-	.\$(OBJDIR)\xcDllStore.obj \
-	.\$(OBJDIR)\nsGenericFactory.obj \
-	$(NULL)
+CPP_OBJS =                                        \
+        .\$(OBJDIR)\nsDebug.obj                   \
+        .\$(OBJDIR)\nsHashtable.obj               \
+        .\$(OBJDIR)\nsID.obj                      \
+        .\$(OBJDIR)\nsCOMPtr.obj                  \
+        .\$(OBJDIR)\nsProxyEvent.obj              \
+        .\$(OBJDIR)\nsComponentManager.obj        \
+        .\$(OBJDIR)\nsRepository.obj              \
+        .\$(OBJDIR)\nsServiceManager.obj          \
+        .\$(OBJDIR)\nsSupportsArray.obj           \
+        .\$(OBJDIR)\nsSupportsArrayEnumerator.obj \
+        .\$(OBJDIR)\nsConjoiningEnumerator.obj    \
+        .\$(OBJDIR)\nsTraceRefcnt.obj             \
+        .\$(OBJDIR)\nsRegistry.obj                \
+        .\$(OBJDIR)\nsXPComFactory.obj            \
+        .\$(OBJDIR)\nsEventQueueService.obj       \
+        .\$(OBJDIR)\nsAllocator.obj               \
+        .\$(OBJDIR)\xcDll.obj                     \
+        .\$(OBJDIR)\xcDllStore.obj                \
+        .\$(OBJDIR)\nsGenericFactory.obj          \
+        $(NULL)
 
 MODULE = xpcom 
 

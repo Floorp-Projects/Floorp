@@ -46,7 +46,7 @@ static NS_DEFINE_IID(kAllocatorCID, NS_ALLOCATOR_CID);
 
 static void RegAllocator()
 {
-    nsRepository::RegisterComponent(kAllocatorCID, NULL, NULL, XPCOM_DLL, 
+    nsComponentManager::RegisterComponent(kAllocatorCID, NULL, NULL, XPCOM_DLL, 
                                     PR_FALSE, PR_FALSE);
 }    
 

@@ -39,7 +39,7 @@
 #include "nsIDOMHTMLInputElement.h"
 #include "nsINameSpaceManager.h"
 #include "nsILookAndFeel.h"
-#include "nsRepository.h"
+#include "nsIComponentManager.h"
 
 static NS_DEFINE_IID(kIRadioIID, NS_IRADIOBUTTON_IID);
 static NS_DEFINE_IID(kIFormControlIID, NS_IFORMCONTROL_IID);
@@ -87,7 +87,7 @@ nsRadioControlFrame::GetRadioboxSize(float aPixToTwip) const
 {
   nsILookAndFeel * lookAndFeel;
   PRInt32 radioboxSize = 0;
-  if (NS_OK == nsRepository::CreateInstance(kLookAndFeelCID, nsnull, kILookAndFeelIID, (void**)&lookAndFeel)) {
+  if (NS_OK == nsComponentManager::CreateInstance(kLookAndFeelCID, nsnull, kILookAndFeelIID, (void**)&lookAndFeel)) {
    lookAndFeel->GetMetric(nsILookAndFeel::eMetric_RadioboxSize,  radioboxSize);
    NS_RELEASE(lookAndFeel);
   }

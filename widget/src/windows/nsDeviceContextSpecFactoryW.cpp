@@ -93,7 +93,7 @@ printf("printer: driver %s, device %s\n", driver, device);
 
     nsIDeviceContextSpec  *devspec = nsnull;
 
-    nsRepository::CreateInstance(kDeviceContextSpecCID, nsnull, kIDeviceContextSpecIID, (void **)&devspec);
+    nsComponentManager::CreateInstance(kDeviceContextSpecCID, nsnull, kIDeviceContextSpecIID, (void **)&devspec);
 
     if (nsnull != devspec)
     {

@@ -21,7 +21,7 @@
 #include "nsTextEditor.h"
 #include "nsEditor.h"
 #include "nsEditorCID.h"
-#include "nsRepository.h"
+#include "nsIComponentManager.h"
 
 static NS_DEFINE_IID(kISupportsIID,    NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIFactoryIID,     NS_IFACTORY_IID);
@@ -123,5 +123,5 @@ nsTextEditFactory::nsTextEditFactory(const nsCID &aClass)
 
 nsTextEditFactory::~nsTextEditFactory()
 {
-  //nsRepository::UnregisterFactory(mCID, (nsIFactory *)this); //we are out of ref counts anyway
+  //nsComponentManager::UnregisterFactory(mCID, (nsIFactory *)this); //we are out of ref counts anyway
 }

@@ -30,7 +30,7 @@
 #include "nsIFileWidget.h"
 #include "nsITextWidget.h"
 #include "nsWidgetsCID.h"
-#include "nsRepository.h"
+#include "nsIComponentManager.h"
 #include "nsIView.h"
 #include "nsHTMLParts.h"
 #include "nsIDOMHTMLInputElement.h"

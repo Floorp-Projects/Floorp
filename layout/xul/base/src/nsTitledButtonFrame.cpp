@@ -1107,7 +1107,7 @@ NS_IMETHODIMP nsTitledButtonFrame::CreateMenu(nsIPopUpMenu * aPopUpMenu,
                                            nsString   & aMenuName) 
 {
   // Create and place back button
-  nsresult rv = nsRepository::CreateInstance(kPopUpMenuCID, nsnull, kIPopUpMenuIID,
+  nsresult rv = nsComponentManager::CreateInstance(kPopUpMenuCID, nsnull, kIPopUpMenuIID,
                                              (void**)&mPopUpMenu);
   if (NS_OK != rv) 
     return rv;
@@ -1165,7 +1165,7 @@ NS_IMETHODIMP nsWebShellWindow::LoadMenuItem(
   menuitemElement->GetAttribute(nsAutoString("cmd"), menuitemCmd);
   // Create nsMenuItem
   nsIMenuItem * pnsMenuItem = nsnull;
-  nsresult rv = nsRepository::CreateInstance(kMenuItemCID, nsnull, kIMenuItemIID, (void**)&pnsMenuItem);
+  nsresult rv = nsComponentManager::CreateInstance(kMenuItemCID, nsnull, kIMenuItemIID, (void**)&pnsMenuItem);
   if (NS_OK == rv) {
     pnsMenuItem->Create(pParentMenu); //, menuitemName, 0);                 
     // Set nsMenuItem Name
@@ -1219,7 +1219,7 @@ void nsWebShellWindow::LoadSubMenu(
 
   // Create nsMenu
   nsIMenu * pnsMenu = nsnull;
-  nsresult rv = nsRepository::CreateInstance(kMenuCID, nsnull, kIMenuIID, (void**)&pnsMenu);
+  nsresult rv = nsComponentManager::CreateInstance(kMenuCID, nsnull, kIMenuIID, (void**)&pnsMenu);
   if (NS_OK == rv) {
     // Call Create
     pnsMenu->Create(pParentMenu, menuName);
@@ -1264,7 +1264,7 @@ void nsTitledButtonFrame::CreatePopUpMenu()
   }
 
   // Create and place back button
-  nsresult rv = nsRepository::CreateInstance(kPopUpMenuCID, nsnull, kIPopUpMenuIID,
+  nsresult rv = nsComponentManager::CreateInstance(kPopUpMenuCID, nsnull, kIPopUpMenuIID,
                                              (void**)&mPopUpMenu);
   if (NS_OK == rv) {
     nsIWidget * menuParentWidget;
@@ -1301,7 +1301,7 @@ NS_METHOD nsTitledButtonFrame::AddMenuItem(const nsString& aMenuLabel, PRInt32 a
   CreatePopUpMenu();
 
   nsIMenuItem * menuItem = nsnull;
-  nsresult rv = nsRepository::CreateInstance(kMenuItemCID, nsnull,  kIMenuItemIID,  (void**)&menuItem);
+  nsresult rv = nsComponentManager::CreateInstance(kMenuItemCID, nsnull,  kIMenuItemIID,  (void**)&menuItem);
   menuItem->Create(mPopUpMenu, aMenuLabel, aCommand);
   if (NS_OK == rv) {
     mPopUpMenu->AddItem(menuItem);

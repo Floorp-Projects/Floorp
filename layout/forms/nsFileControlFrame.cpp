@@ -30,7 +30,7 @@
 #include "nsIFileWidget.h"
 #include "nsITextWidget.h"
 #include "nsWidgetsCID.h"
-#include "nsRepository.h"
+#include "nsIComponentManager.h"
 #include "nsIView.h"
 #include "nsHTMLParts.h"
 #include "nsIDOMHTMLInputElement.h"
@@ -157,7 +157,7 @@ void nsFileControlFrame::MouseClicked(nsIPresContext* aPresContext)
   nsIFileWidget *fileWidget;
 
   nsString title("FileWidget Title <here> mode = save");
-  nsRepository::CreateInstance(kCFileWidgetCID, nsnull, kIFileWidgetIID, (void**)&fileWidget);
+  nsComponentManager::CreateInstance(kCFileWidgetCID, nsnull, kIFileWidgetIID, (void**)&fileWidget);
   
   nsString titles[] = {"all files"};
   nsString filters[] = {"*.*"};

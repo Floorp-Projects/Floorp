@@ -73,7 +73,7 @@ typedef long int32;
 #include "prthread.h"
 #include "prprf.h"
 #include "plevent.h"
-#include "nsRepository.h"
+#include "nsIComponentManager.h"
 #include "nsIServiceManager.h"
 #include "nsIEventQueueService.h"
 #include "nsXPComCIID.h"

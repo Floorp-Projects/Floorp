@@ -21,6 +21,7 @@
 #include "nsIServiceManager.h"
 #include "nsIRDFService.h"
 #include "nsRDFCID.h"
+#include "prlog.h"
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
@@ -74,7 +75,7 @@ nsRDFResource::QueryInterface(REFNSIID iid, void** result)
         iid.Equals(nsIRDFNode::GetIID()) ||
         iid.Equals(kISupportsIID)) {
         *result = NS_STATIC_CAST(nsIRDFResource*, this);
-        AddRef();
+        NS_ADDREF_THIS();
         return NS_OK;
     }
 
@@ -91,7 +92,8 @@ nsRDFResource::Init(const char* uri)
     if (mURI == nsnull)
         return NS_ERROR_OUT_OF_MEMORY;
 
-    return gRDFService->RegisterResource(this, PR_TRUE);
+    // don't replace an existing resource with the same URI automatically
+    return gRDFService->RegisterResource(this, PR_FALSE);
 }
 
 NS_IMETHODIMP

@@ -18,6 +18,7 @@
 
 #include "MyService.h"
 #include "nsIServiceManager.h"
+#include "nsIComponentManager.h"
 #include <stdio.h>
 
 static NS_DEFINE_IID(kIMyServiceCID, NS_IMYSERVICE_CID);
@@ -103,7 +104,7 @@ AsyncShutdown(int testNumber)
     // thread, we'd have to protect all accesses to myServ throughout this
     // code with a monitor.
 
-    err = nsServiceManager::ShutdownService(kIMyServiceCID);
+    err = nsServiceManager::UnregisterService(kIMyServiceCID);
     if (err == NS_ERROR_SERVICE_IN_USE) {
         printf("async shutdown -- service still in use\n");
         return NS_OK;
@@ -182,8 +183,8 @@ SetupFactories(void)
 {
     nsresult err;
     // seed the repository (hack)
-    err = nsRepository::RegisterComponent(kIMyServiceCID, NULL, NULL, "MyService.dll",
-                                        PR_TRUE, PR_FALSE);
+    err = nsComponentManager::RegisterComponent(kIMyServiceCID, NULL, NULL, "MyService.dll",
+                                                PR_TRUE, PR_FALSE);
     NS_ASSERTION(err == NS_OK, "failed to register my factory");
 }
 

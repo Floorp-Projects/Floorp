@@ -19,7 +19,7 @@
 #define NS_IMPL_IDS
 #include "nsIServiceManager.h"
 #include "nsICharsetConverterManager.h"
-#include "nsRepository.h"
+#include "nsIComponentManager.h"
 #include "nsCollation.h"
 #include "nsCollationCID.h"
 #include "nsUnicharUtilCIID.h"
@@ -40,7 +40,7 @@ nsresult nsCollationFactory::CreateCollation(nsILocale* locale, nsICollation** i
   nsICollation *inst;
   nsresult res;
   
-  res = nsRepository::CreateInstance(kCollationCID, NULL, kICollationIID, (void**) &inst);
+  res = nsComponentManager::CreateInstance(kCollationCID, NULL, kICollationIID, (void**) &inst);
   if (NS_FAILED(res)) {
     return res;
   }
@@ -59,7 +59,7 @@ NS_DEFINE_IID(kCaseConversionIID, NS_ICASECONVERSION_IID);
 nsCollation::nsCollation()
 {
   mCaseConversion = NULL;
-  nsresult res = nsRepository::CreateInstance(kUnicharUtilCID, NULL, kCaseConversionIID, (void**) &mCaseConversion);
+  nsresult res = nsComponentManager::CreateInstance(kUnicharUtilCID, NULL, kCaseConversionIID, (void**) &mCaseConversion);
   NS_ASSERTION(NS_SUCCEEDED(res), "CreateInstance failed for kCaseConversionIID");
 }
 

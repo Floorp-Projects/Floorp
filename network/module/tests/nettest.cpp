@@ -30,7 +30,7 @@
 #include "nsIInputStream.h"
 #include "nsIURL.h"
 #include "nsINetService.h"
-#include "nsRepository.h"
+#include "nsIComponentManager.h"
 #include "nsIServiceManager.h"
 #include "nsIEventQueueService.h"
 #include "nsXPComCIID.h"
@@ -231,8 +231,8 @@ int main(int argc, char **argv)
         return 0;
     }
 
-    nsRepository::RegisterComponent(kEventQueueServiceCID, NULL, NULL, XPCOM_DLL, PR_FALSE, PR_FALSE);
-    nsRepository::RegisterComponent(kNetServiceCID, NULL, NULL, NETLIB_DLL, PR_FALSE, PR_FALSE);
+    nsComponentManager::RegisterComponent(kEventQueueServiceCID, NULL, NULL, XPCOM_DLL, PR_FALSE, PR_FALSE);
+    nsComponentManager::RegisterComponent(kNetServiceCID, NULL, NULL, NETLIB_DLL, PR_FALSE, PR_FALSE);
 
     // Create the Event Queue for this thread...
     pEventQService = nsnull;

@@ -61,29 +61,29 @@ public:
 
 class nsISupportsKey : public nsHashKey {
 private:
-    nsISupports* mKey;
+  nsISupports* mKey;
   
 public:
-    nsISupportsKey(nsISupports* key) {
-        mKey = key;
-        NS_IF_ADDREF(mKey);
-    }
+  nsISupportsKey(nsISupports* key) {
+    mKey = key;
+    NS_IF_ADDREF(mKey);
+  }
   
-    ~nsISupportsKey(void) {
-        NS_IF_RELEASE(mKey);
-    }
+  ~nsISupportsKey(void) {
+    NS_IF_RELEASE(mKey);
+  }
   
-    PRUint32 HashValue(void) const {
-        return (PRUint32)mKey;
-    }
+  PRUint32 HashValue(void) const {
+    return (PRUint32)mKey;
+  }
 
-    PRBool Equals(const nsHashKey *aKey) const {
-        return (mKey == ((nsISupportsKey *) aKey)->mKey);
-    }
+  PRBool Equals(const nsHashKey *aKey) const {
+    return (mKey == ((nsISupportsKey *) aKey)->mKey);
+  }
 
-    nsHashKey *Clone(void) const {
-        return new nsISupportsKey(mKey);
-    }
+  nsHashKey *Clone(void) const {
+    return new nsISupportsKey(mKey);
+  }
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -91,24 +91,24 @@ public:
 
 class nsVoidKey : public nsHashKey {
 private:
-    const void* mKey;
+  const void* mKey;
   
 public:
-    nsVoidKey(const void* key) {
-        mKey = key;
-    }
+  nsVoidKey(const void* key) {
+    mKey = key;
+  }
   
-    PRUint32 HashValue(void) const {
-        return (PRUint32)mKey;
-    }
+  PRUint32 HashValue(void) const {
+    return (PRUint32)mKey;
+  }
 
-    PRBool Equals(const nsHashKey *aKey) const {
-        return (mKey == ((const nsVoidKey *) aKey)->mKey);
-    }
+  PRBool Equals(const nsHashKey *aKey) const {
+    return (mKey == ((const nsVoidKey *) aKey)->mKey);
+  }
 
-    nsHashKey *Clone(void) const {
-        return new nsVoidKey(mKey);
-    }
+  nsHashKey *Clone(void) const {
+    return new nsVoidKey(mKey);
+  }
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -118,24 +118,65 @@ public:
 
 class nsIDKey : public nsHashKey {
 private:
-    nsID mID;
+  nsID mID;
   
 public:
-    nsIDKey(const nsID &aID) {
-        mID = aID;
-    }
+  nsIDKey(const nsID &aID) {
+    mID = aID;
+  }
   
-    PRUint32 HashValue(void) const {
-        return mID.m0;
+  PRUint32 HashValue(void) const {
+    return mID.m0;
+  }
+
+  PRBool Equals(const nsHashKey *aKey) const {
+    return (mID.Equals(((const nsIDKey *) aKey)->mID));
+  }
+
+  nsHashKey *Clone(void) const {
+    return new nsIDKey(mID);
+  }
+};
+
+////////////////////////////////////////////////////////////////////////////////
+// nsProgIDKey: Where keys are ProgIDs (char[64])
+
+#include "plstr.h"
+
+class nsProgIDKey : public nsHashKey {
+private:
+  char  mProgIDBuf[64];
+  char* mProgID;
+
+public:
+  nsProgIDKey(const char* aProgID) : mProgID(mProgIDBuf) {
+    PRInt32 len = PL_strlen(aProgID);
+    if (len >= sizeof(mProgIDBuf)) {
+      mProgID = new char[PL_strlen(aProgID) + 1];
+      NS_ASSERTION(mProgID, "out of memory");
+      if (! mProgID)
+        return;
     }
 
-    PRBool Equals(const nsHashKey *aKey) const {
-        return (mID.Equals(((const nsIDKey *) aKey)->mID));
-    }
+    PL_strcpy(mProgID, aProgID);
+  }
 
-    nsHashKey *Clone(void) const {
-        return new nsIDKey(mID);
-    }
+  virtual ~nsProgIDKey(void) {
+    if (mProgID != mProgIDBuf)
+      delete[] mProgID;
+  }
+
+  virtual PRUint32 HashValue(void) const {
+    return (PRUint32) PL_HashString((const void*) mProgID);
+  }
+
+  virtual PRBool Equals(const nsHashKey* aKey) const {
+    return PL_strcmp( ((nsProgIDKey*)aKey)->mProgID, mProgID ) == 0;
+  }
+
+  virtual nsHashKey* Clone() const {
+    return new nsProgIDKey(mProgID);
+  }
 };
 
 #endif

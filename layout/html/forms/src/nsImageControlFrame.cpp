@@ -187,7 +187,7 @@ nsImageControlFrame::SetInitialChildList(nsIPresContext& aPresContext,
   nsIView* view;
   GetView(&view);
   if (!view) {
-    nsresult result = nsRepository::CreateInstance(kViewCID, nsnull, kIViewIID, (void **)&view);
+    nsresult result = nsComponentManager::CreateInstance(kViewCID, nsnull, kIViewIID, (void **)&view);
 	  nsCOMPtr<nsIPresShell> presShell;
     aPresContext.GetShell(getter_AddRefs(presShell));
 	  nsCOMPtr<nsIViewManager> viewMan;

@@ -17,7 +17,8 @@
  * Netscape Communications Corporation.  All Rights Reserved.
  */
 
-#include "nsRepository.h"
+#include "nsIComponentManager.h"
+#include "nsCOMPtr.h"
 #include "nsIFactory.h"
 
 #include "nsILocaleFactory.h"
@@ -30,6 +31,10 @@
 #include "nsIWin32LocaleFactory.h"
 #include "nsDateTimeFormatCID.h"
 #include "nsCollationCID.h"
+#include "nsIServiceManager.h"
+
+static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
+
 //
 // kLocaleFactory for the nsILocaleFactory interface and friends
 //
@@ -113,66 +118,70 @@ extern "C" NS_EXPORT nsresult NSGetFactory(nsISupports* serviceMgr,
 	return res;
 }
 
-extern "C" NS_EXPORT nsresult NSRegisterSelf(nsISupports* serviceMgr, const char * path)
+extern "C" NS_EXPORT nsresult NSRegisterSelf(nsISupports* aServMgr, const char * path)
 {
-	nsresult	res;
+  nsresult rv;
+  nsService<nsIComponentManager> compMgr(aServMgr, kComponentManagerCID, &rv);
+  if (NS_FAILED(rv)) return rv;
 
 	//
 	// register the generic factory
 	//
-	res = nsRepository::RegisterComponent(kLocaleFactoryCID,NULL,NULL,path,PR_TRUE,PR_TRUE);
-	NS_ASSERTION(res==NS_OK,"nsLocaleTest: RegisterFactory failed.");
-	if (res!=NS_OK) return res;
+	rv = compMgr->RegisterComponent(kLocaleFactoryCID,NULL,NULL,path,PR_TRUE,PR_TRUE);
+	NS_ASSERTION(rv==NS_OK,"nsLocaleTest: RegisterFactory failed.");
+	if (rv!=NS_OK) return rv;
 
 	//
 	// register the windows specific factory
 	//
-	res = nsRepository::RegisterComponent(kWin32LocaleFactoryCID,NULL,NULL,path,PR_TRUE,PR_TRUE);
-	NS_ASSERTION(res==NS_OK,"nsLocaleTest: Register nsIWin32LocaleFactory failed.");
-	if (res!=NS_OK) return res;
+	rv = compMgr->RegisterComponent(kWin32LocaleFactoryCID,NULL,NULL,path,PR_TRUE,PR_TRUE);
+	NS_ASSERTION(rv==NS_OK,"nsLocaleTest: Register nsIWin32LocaleFactory failed.");
+	if (rv!=NS_OK) return rv;
 
 	//
 	// register the collation factory
 	//
-	res = nsRepository::RegisterComponent(kCollationFactoryCID, NULL, NULL, path, PR_TRUE, PR_TRUE);
-	NS_ASSERTION(res==NS_OK,"nsLocaleTest: Register CollationFactory failed.");
-	if (NS_FAILED(res)) return res;
+	rv = compMgr->RegisterComponent(kCollationFactoryCID, NULL, NULL, path, PR_TRUE, PR_TRUE);
+	NS_ASSERTION(rv==NS_OK,"nsLocaleTest: Register CollationFactory failed.");
+	if (NS_FAILED(rv)) return rv;
 	
 	//
 	// register the collation interface
 	//
-	res = nsRepository::RegisterComponent(kCollationCID, NULL, NULL, path, PR_TRUE, PR_TRUE);
-	NS_ASSERTION(res==NS_OK,"nsLocaleTest: Register Collation failed.");
-	if (NS_FAILED(res)) return res;
+	rv = compMgr->RegisterComponent(kCollationCID, NULL, NULL, path, PR_TRUE, PR_TRUE);
+	NS_ASSERTION(rv==NS_OK,"nsLocaleTest: Register Collation failed.");
+	if (NS_FAILED(rv)) return rv;
 	
 	//
 	// register the date time formatter
 	//
-	res = nsRepository::RegisterComponent(kDateTimeFormatCID, NULL, NULL, path, PR_TRUE, PR_TRUE);
-	NS_ASSERTION(res==NS_OK,"nsLocaleTest: Register DateTimeFormat failed.");
-	if (NS_FAILED(res)) return res;
+	rv = compMgr->RegisterComponent(kDateTimeFormatCID, NULL, NULL, path, PR_TRUE, PR_TRUE);
+	NS_ASSERTION(rv==NS_OK,"nsLocaleTest: Register DateTimeFormat failed.");
+	if (NS_FAILED(rv)) return rv;
 
 	return NS_OK;
 }
 
-extern "C" NS_EXPORT nsresult NSUnregisterSelf(nsISupports* serviceMgr, const char * path)
+extern "C" NS_EXPORT nsresult NSUnregisterSelf(nsISupports* aServMgr, const char * path)
 {
-	nsresult res;
+  nsresult rv;
+  nsService<nsIComponentManager> compMgr(aServMgr, kComponentManagerCID, &rv);
+  if (NS_FAILED(rv)) return rv;
 
-	res = nsRepository::UnregisterFactory(kLocaleFactoryCID, path);
-	if (res!=NS_OK) return res;
+	rv = compMgr->UnregisterFactory(kLocaleFactoryCID, path);
+	if (rv!=NS_OK) return rv;
 
-	res = nsRepository::UnregisterFactory(kWin32LocaleFactoryCID, path);
-	if (res!=NS_OK) return res;
+	rv = compMgr->UnregisterFactory(kWin32LocaleFactoryCID, path);
+	if (rv!=NS_OK) return rv;
 
-	res = nsRepository::UnregisterFactory(kCollationFactoryCID, path);
-	if (res!=NS_OK) return res;
+	rv = compMgr->UnregisterFactory(kCollationFactoryCID, path);
+	if (rv!=NS_OK) return rv;
 
-	res = nsRepository::UnregisterFactory(kCollationCID, path);
-	if (res!=NS_OK) return res;
+	rv = compMgr->UnregisterFactory(kCollationCID, path);
+	if (rv!=NS_OK) return rv;
 
-	res = nsRepository::UnregisterFactory(kDateTimeFormatCID, path);
-	if (res!=NS_OK) return res;
+	rv = compMgr->UnregisterFactory(kDateTimeFormatCID, path);
+	if (rv!=NS_OK) return rv;
 
 	return NS_OK;
 }

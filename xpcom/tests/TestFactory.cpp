@@ -19,7 +19,7 @@
 #include <iostream.h>
 #include "TestFactory.h"
 #include "nsISupports.h"
-#include "nsRepository.h"
+#include "nsIComponentManager.h"
 
 NS_DEFINE_IID(kFactoryIID, NS_IFACTORY_IID);
 NS_DEFINE_CID(kTestFactoryCID, NS_TESTFACTORY_CID);
@@ -30,7 +30,7 @@ int main(int argc, char **argv) {
   RegisterTestFactories();
 
   ITestClass *t = NULL;
-  nsRepository::CreateInstance(kTestFactoryCID,
+  nsComponentManager::CreateInstance(kTestFactoryCID,
                                NULL,
                                kTestClassIID,
                                (void **) &t);
@@ -44,7 +44,7 @@ int main(int argc, char **argv) {
 
   t = NULL;
 
-  nsRepository::CreateInstance(kTestLoadedFactoryCID,
+  nsComponentManager::CreateInstance(kTestLoadedFactoryCID,
                                NULL,
                                kTestClassIID,
                                (void **) &t);
@@ -56,7 +56,7 @@ int main(int argc, char **argv) {
     cout << "Dynamic CreateInstance failed\n";
   }
 
-  nsRepository::FreeLibraries();
+  nsComponentManager::FreeLibraries();
 
   return 0;
 }
@@ -130,12 +130,12 @@ nsresult TestFactory::CreateInstance(nsISupports *aDelegate,
  */
 
 extern "C" void RegisterTestFactories() {
-  nsRepository::RegisterFactory(kTestFactoryCID, 0, 0,
+  nsComponentManager::RegisterFactory(kTestFactoryCID, 0, 0,
                                 new TestFactory(), PR_FALSE);
 
   // Windows can use persistant registry  
 #ifndef USE_NSREG
-  nsRepository::RegisterComponent(kTestLoadedFactoryCID, NULL, NULL,
+  nsComponentManager::RegisterComponent(kTestLoadedFactoryCID, NULL, NULL,
                                 "libtestdynamic.so",
                                 PR_FALSE,
                                 PR_TRUE);

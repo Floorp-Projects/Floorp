@@ -33,7 +33,7 @@
 #include "nsITimer.h"
 #include "nsIAtom.h"
 #include "nsIFrameUtil.h"
-#include "nsRepository.h"
+#include "nsIComponentManager.h"
 #include "nsLayoutCID.h"
 #include "nsRect.h"
 #include "plhash.h"
@@ -780,7 +780,7 @@ nsWebCrawler::PerformRegressionTest(const nsString& aOutputName)
 {
   // First load the trees
   nsIFrameUtil* fu;
-  nsresult rv = nsRepository::CreateInstance(kFrameUtilCID, nsnull,
+  nsresult rv = nsComponentManager::CreateInstance(kFrameUtilCID, nsnull,
                                              kIFrameUtilIID, (void **)&fu);
   if (NS_FAILED(rv)) {
     printf("Can't find nsIFrameUtil implementation\n");

@@ -55,7 +55,7 @@ NSGetFactory(nsISupports* serviceMgr,
     rv = NS_NewAppShellServiceFactory(aFactory);
   }
   else if (aClass.Equals(kCmdLineServiceCID)) {
-     rv = NS_NewCmdLineServiceFactory(aFactory);
+    rv = NS_NewCmdLineServiceFactory(aFactory);
   }
 
   return rv;

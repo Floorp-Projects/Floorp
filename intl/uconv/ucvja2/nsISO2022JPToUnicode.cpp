@@ -18,7 +18,7 @@
  */
 
 #include "pratom.h"
-#include "nsRepository.h"
+#include "nsIComponentManager.h"
 #include "nsISO2022JPToUnicode.h"
 #include "nsUCVJA2Dll.h"
 
@@ -81,7 +81,7 @@ nsresult nsISO2022JPToUnicode::ConvertBuffer(const char ** aSrc,
 
   if (mHelper == nsnull) {
     // XXX change the helper object to have its own CID!
-    res = nsRepository::CreateInstance(kCharsetConverterManagerCID, NULL, 
+    res = nsComponentManager::CreateInstance(kCharsetConverterManagerCID, NULL, 
         kIUnicodeDecodeUtilIID, (void**) & mHelper);
     
     if (NS_FAILED(res)) return res;

@@ -22,7 +22,7 @@
 
 #include "nsCCapsManager.h"
 #include "nsCCapsManagerFactory.h"
-#include "nsRepository.h"
+#include "nsIComponentManager.h"
 
 static NS_DEFINE_IID(kISupportsIID,    NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIFactoryIID,     NS_IFACTORY_IID);
@@ -137,7 +137,7 @@ nsCCapsManagerFactory::nsCCapsManagerFactory(void)
       if ( (err == NS_OK) && (m_pNSIFactory != NULL) )
       {
          NS_DEFINE_CID(kCCapsManagerCID, NS_CCAPSMANAGER_CID);
-         nsRepository::RegisterFactory(kCCapsManagerCID, 0, 0,
+         nsComponentManager::RegisterFactory(kCCapsManagerCID, 0, 0,
                                        m_pNSIFactory, PR_FALSE);
       }
 }
@@ -147,7 +147,7 @@ nsCCapsManagerFactory::~nsCCapsManagerFactory()
     if(mRefCnt == 0)
     {
       NS_DEFINE_CID(kCCapsManagerCID, NS_CCAPSMANAGER_CID);
-      nsRepository::UnregisterFactory(kCCapsManagerCID, (nsIFactory *)m_pNSIFactory);
+      nsComponentManager::UnregisterFactory(kCCapsManagerCID, (nsIFactory *)m_pNSIFactory);
       
     }
 }

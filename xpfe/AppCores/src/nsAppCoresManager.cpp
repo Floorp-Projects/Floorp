@@ -28,7 +28,7 @@
 #include "nsIFactory.h"
 #include "nsISupports.h"
 
-#include "nsRepository.h"
+#include "nsIComponentManager.h"
 
 #include "nsIScriptObjectOwner.h"
 #include "nsIScriptGlobalObject.h"

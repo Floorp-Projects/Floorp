@@ -160,7 +160,7 @@ RDFGenericBuilderImpl::RDFGenericBuilderImpl(void)
 
         // Register the XUL and RDF namespaces: these'll just retrieve
         // the IDs if they've already been registered by someone else.
-        if (NS_SUCCEEDED(rv = nsRepository::CreateInstance(kNameSpaceManagerCID,
+        if (NS_SUCCEEDED(rv = nsComponentManager::CreateInstance(kNameSpaceManagerCID,
                                                            nsnull,
                                                            kINameSpaceManagerIID,
                                                            (void**) &gNameSpaceManager))) {

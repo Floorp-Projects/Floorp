@@ -24,11 +24,15 @@
 #include "nscore.h"
 #include "nsILocale.h"
 #include "nsINetService.h"
-#include "nsIServiceManager.h"
 #include "nsIURL.h"
-#include "nsRepository.h"
+#include "nsIComponentManager.h"
+#include "nsIServiceManager.h"
+#include "nsCOMPtr.h"
 #include "nsString.h"
 #include "pratom.h"
+#include "nsIServiceManager.h"
+
+static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
 
 static PRInt32 gLockCount = 0;
 
@@ -66,19 +70,25 @@ nsStringBundle::nsStringBundle(nsIURL* aURL, nsILocale* aLocale,
   *aResult = nsServiceManager::GetService(kNetServiceCID,
     kINetServiceIID, (nsISupports**) &pNetService);
   if (NS_FAILED(*aResult)) {
+#ifdef NS_DEBUG
     printf("cannot get net service\n");
+#endif
     return;
   }
   nsIInputStream *in = nsnull;
   *aResult = pNetService->OpenBlockingStream(aURL, nsnull, &in);
   if (NS_FAILED(*aResult)) {
+#ifdef NS_DEBUG
     printf("cannot open stream\n");
+#endif
     return;
   }
-  *aResult = nsRepository::CreateInstance(kPropertiesCID, NULL,
+  *aResult = nsComponentManager::CreateInstance(kPropertiesCID, NULL,
     kIPropertiesIID, (void**) &mProps);
   if (NS_FAILED(*aResult)) {
+#ifdef NS_DEBUG
     printf("create nsIProperties failed\n");
+#endif
     return;
   }
   *aResult = mProps->Load(in);
@@ -208,34 +218,38 @@ nsStringBundleServiceFactory::LockFactory(PRBool aLock)
 }
 
 extern "C" NS_EXPORT nsresult
-NSRegisterSelf(nsISupports* serviceMgr, const char* path)
+NSRegisterSelf(nsISupports* aServMgr, const char* path)
 {
-  nsresult ret;
+  nsresult rv;
+  nsService<nsIComponentManager> compMgr(aServMgr, kComponentManagerCID, &rv);
+  if (NS_FAILED(rv)) return rv;
 
-  ret = nsRepository::RegisterComponent(kStringBundleServiceCID, NULL, NULL, path,
+  rv = compMgr->RegisterComponent(kStringBundleServiceCID, NULL, NULL, path,
     PR_TRUE, PR_TRUE);
-  if (NS_FAILED(ret)) {
-    return ret;
+  if (NS_FAILED(rv)) {
+    return rv;
   }
 
-  return ret;
+  return rv;
 }
 
 extern "C" NS_EXPORT nsresult
-NSUnregisterSelf(nsISupports* serviceMgr, const char* path)
+NSUnregisterSelf(nsISupports* aServMgr, const char* path)
 {
-  nsresult ret;
+  nsresult rv;
+  nsService<nsIComponentManager> compMgr(aServMgr, kComponentManagerCID, &rv);
+  if (NS_FAILED(rv)) return rv;
 
-  ret = nsRepository::UnregisterFactory(kStringBundleServiceCID, path);
-  if (NS_FAILED(ret)) {
-    return ret;
+  rv = compMgr->UnregisterFactory(kStringBundleServiceCID, path);
+  if (NS_FAILED(rv)) {
+    return rv;
   }
 
-  return ret;
+  return rv;
 }
 
 extern "C" NS_EXPORT nsresult
-NSGetFactory(nsISupports* serviceMgr,
+NSGetFactory(nsISupports* aServMgr,
              const nsCID &aClass,
              const char *aClassName,
              const char *aProgID,

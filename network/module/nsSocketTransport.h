@@ -19,7 +19,7 @@
 #ifndef nsSocketTransport_h__
 #define nsSocketTransport_h__
 
-#include "nsRepository.h"
+#include "nsIComponentManager.h"
 #include "nsITransport.h"
 #include "nsIStreamListener.h"
 #include "nsIInputStream.h"

@@ -22,7 +22,7 @@
 
 #include "nsAppRunner.h"
 #include "nsIAppShellService.h"
-#include "nsRepository.h"
+#include "nsIComponentManager.h"
 #include "nsIServiceManager.h"
 #include "xp_core.h"
 #include "xp_mcom.h"
@@ -298,7 +298,7 @@ nsAppRunner &nsAppRunner::SetAppShell( nsIAppShellService *newAppShell ) {
 #if 0
 // nsAppRunnerFactory
 //
-// Means by which instances are created via nsRepository.
+// Means by which instances are created via nsComponentManager.
 // This code is somewhat temporary as the CreateInstance should really
 // go in platform-specific code in order to create an instance specific
 // to the platform on which we're running.

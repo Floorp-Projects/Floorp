@@ -23,18 +23,6 @@
 #include "nsISupports.h"
 
 /*
- * Datatypes and helper macros
- */
-
-typedef nsID nsCID;
-
-// Define an CID
-#define NS_DEFINE_CID(_name, _cidspec) \
-  const nsCID _name = _cidspec
-
-#define REFNSCID const nsCID&
-
-/*
  * nsIFactory interface
  */
 

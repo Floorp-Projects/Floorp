@@ -43,25 +43,6 @@
 #include "prio.h"
 
 ////////////////////////////////////////////////////////////////////////////////
-// DLL Entry Points:
-////////////////////////////////////////////////////////////////////////////////
-extern "C" NS_EXPORT nsresult
-NSGetFactory(nsISupports* serviceMgr,
-             const nsCID &aClass,
-             const char *aClassName,
-             const char *aProgID,
-             nsIFactory **aFactory);
-
-extern "C" NS_EXPORT PRBool
-NSCanUnload(nsISupports* serviceMgr);
-
-extern "C" NS_EXPORT nsresult
-NSRegisterSelf(nsISupports* serviceMgr, const char *path);
-
-extern "C" NS_EXPORT nsresult
-NSUnregisterSelf(nsISupports* serviceMgr, const char *path);
-
-////////////////////////////////////////////////////////////////////////////////
 // nsSilentDownloadListener:
 ////////////////////////////////////////////////////////////////////////////////
 

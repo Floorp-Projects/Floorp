@@ -28,7 +28,7 @@
 #include "nsString.h"
 #include "nsIDOMSilentDownloadTask.h"
 #include "nsIScriptNameSpaceManager.h"
-#include "nsRepository.h"
+#include "nsIComponentManager.h"
 #include "nsDOMCID.h"
 
 
@@ -543,7 +543,7 @@ SilentDownloadTask(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval 
     return JS_FALSE;
   }
 
-  result = nsRepository::CreateInstance(classID,
+  result = nsComponentManager::CreateInstance(classID,
                                         nsnull,
                                         kIDOMSilentDownloadTaskIID,
                                         (void **)&nativeThis);

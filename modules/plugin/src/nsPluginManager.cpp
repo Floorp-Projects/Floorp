@@ -225,7 +225,7 @@ nsPluginManager::GetCapsManager(const nsIID& aIID)
 
         NS_DEFINE_CID(kCCapsManagerCID, NS_CCAPSMANAGER_CID);
         nsresult err    = NS_OK;
-        err = nsRepository::CreateInstance(kCCapsManagerCID, 
+        err = nsComponentManager::CreateInstance(kCCapsManagerCID, 
                                            (nsIPluginManager*)this,    /* outer */
                                            kISupportsIID,
                                            (void **)&fCapsManager);
@@ -266,7 +266,7 @@ nsPluginManager::GetLiveconnect(const nsIID& aIID)
  		      threadAttached = PR_AttachThread(PR_USER_THREAD, PR_PRIORITY_NORMAL, NULL);
 	     }
       NS_DEFINE_CID(kCLiveconnectCID, NS_CLIVECONNECT_CID);
-      err = nsRepository::CreateInstance(kCLiveconnectCID, 
+      err = nsComponentManager::CreateInstance(kCLiveconnectCID, 
                                          (nsIPluginManager*)this,    /* outer */
                                          kISupportsIID,
                                          (void **)&fLiveconnect);
@@ -1036,21 +1036,21 @@ np_RegisterPluginMgr(void)
         return NS_ERROR_OUT_OF_MEMORY;
 
     pluginFact->AddRef();
-    nsRepository::RegisterFactory(kPluginManagerCID,    NULL, NULL, pluginFact, PR_TRUE);
+    nsComponentManager::RegisterFactory(kPluginManagerCID,    NULL, NULL, pluginFact, PR_TRUE);
 
     pluginFact->AddRef();
-    nsRepository::RegisterFactory(kJNIEnvCID,           NULL, NULL, pluginFact, PR_TRUE);
+    nsComponentManager::RegisterFactory(kJNIEnvCID,           NULL, NULL, pluginFact, PR_TRUE);
 
 #if 0
     pluginFact->AddRef();
-    nsRepository::RegisterFactory(kJRIEnvCID,           NULL, NULL, pluginFact, PR_TRUE);
+    nsComponentManager::RegisterFactory(kJRIEnvCID,           NULL, NULL, pluginFact, PR_TRUE);
 #endif
 
     pluginFact->AddRef();
-    nsRepository::RegisterFactory(kMallocCID,           NULL, NULL, pluginFact, PR_TRUE);
+    nsComponentManager::RegisterFactory(kMallocCID,           NULL, NULL, pluginFact, PR_TRUE);
 
     pluginFact->AddRef();
-    nsRepository::RegisterFactory(kFileUtilitiesCID,    NULL, NULL, pluginFact, PR_TRUE);
+    nsComponentManager::RegisterFactory(kFileUtilitiesCID,    NULL, NULL, pluginFact, PR_TRUE);
 
     return NS_OK;
 }

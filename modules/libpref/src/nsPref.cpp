@@ -20,12 +20,15 @@
 #include "prefapi.h"
 #define NS_IMPL_IDS
 #include "nsIFactory.h"
-#include "nsRepository.h"
+#include "nsIComponentManager.h"
 #include "nsIPref.h"
 #ifdef XP_MAC
 #include "nsINetSupport.h"
 #include "nsIStreamListener.h"
 #endif
+#include "nsIServiceManager.h"
+
+static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
 
 class nsPref: public nsIPref {
   NS_DECL_ISUPPORTS
@@ -610,14 +613,22 @@ extern "C" NS_EXPORT PRBool NSCanUnload(nsISupports* serviceMgr)
   return PRBool(g_InstanceCount == 0 && g_LockCount == 0);
 }
 
-extern "C" NS_EXPORT nsresult NSRegisterSelf(nsISupports* serviceMgr, const char *path)
+extern "C" NS_EXPORT nsresult NSRegisterSelf(nsISupports* aServMgr, const char *path)
 {
-  return nsRepository::RegisterComponent(kPrefCID, NULL, NULL, path, 
-                                       PR_TRUE, PR_TRUE);
+  nsresult rv;
+  nsService<nsIComponentManager> compMgr(aServMgr, kComponentManagerCID, &rv);
+  if (NS_FAILED(rv)) return rv;
+
+  return compMgr->RegisterComponent(kPrefCID, NULL, NULL, path, 
+                                    PR_TRUE, PR_TRUE);
 }
 
-extern "C" NS_EXPORT nsresult NSUnregisterSelf(nsISupports* serviceMgr, const char *path)
+extern "C" NS_EXPORT nsresult NSUnregisterSelf(nsISupports* aServMgr, const char *path)
 {
-  return nsRepository::UnregisterFactory(kPrefCID, path);
+  nsresult rv;
+  nsService<nsIComponentManager> compMgr(aServMgr, kComponentManagerCID, &rv);
+  if (NS_FAILED(rv)) return rv;
+
+  return compMgr->UnregisterFactory(kPrefCID, path);
 }
 

@@ -29,7 +29,7 @@
 
 #include "nsCLiveconnect.h"
 #include "nsCLiveconnectFactory.h"
-#include "nsRepository.h"
+#include "nsIComponentManager.h"
 
 static NS_DEFINE_IID(kISupportsIID,    NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIFactoryIID,     NS_IFACTORY_IID);

@@ -20,7 +20,7 @@
 #ifndef ns1ByteToUnicodeBase_h__
 #define ns1ByteToUnicodeBase_h__
 
-#include "nsRepository.h"
+#include "nsIComponentManager.h"
 #include "nsIUnicodeDecoder.h"
 #include "nsIUnicodeDecodeUtil.h"
 

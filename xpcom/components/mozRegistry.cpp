@@ -1168,7 +1168,7 @@ mozRegistryFactory::LockFactory(PRBool aLock)
 }
 
 // This is a temporary hack; needs work to support dynamic binding
-// via nsRepository and support for multiple factories per DLL.
+// via nsComponentManager and support for multiple factories per DLL.
 extern "C" NS_EXPORT nsresult
 mozRegistry_GetFactory(const nsCID &cid, nsISupports* servMgr, nsIFactory** aFactory ) {
     nsresult rv = NS_OK;

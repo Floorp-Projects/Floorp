@@ -19,7 +19,7 @@
 #include <stdlib.h>
 #include "nsITransactionManager.h"
 #include "nsTransactionManagerCID.h"
-#include "nsRepository.h"
+#include "nsIComponentManager.h"
 
 static PRInt32 sConstructorCount     = 0;
 static PRInt32 sDestructorCount      = 0;
@@ -865,7 +865,7 @@ quick_test(TestTransactionFactory *factory)
   nsITransaction *r1 = 0, *r2 = 0;
   nsresult result;
 
-  result = nsRepository::CreateInstance(kCTransactionManagerFactoryCID, nsnull,
+  result = nsComponentManager::CreateInstance(kCTransactionManagerFactoryCID, nsnull,
                                         kITransactionManagerIID, (void **)&mgr);
 
   if (NS_FAILED(result) || !mgr) {
@@ -2734,7 +2734,7 @@ quick_batch_test(TestTransactionFactory *factory)
   nsITransaction *r1 = 0, *r2 = 0;
   nsresult result;
 
-  result = nsRepository::CreateInstance(kCTransactionManagerFactoryCID, nsnull,
+  result = nsComponentManager::CreateInstance(kCTransactionManagerFactoryCID, nsnull,
                                         kITransactionManagerIID, (void **)&mgr);
 
   if (NS_FAILED(result) || !mgr) {
@@ -4348,7 +4348,7 @@ stress_test(TestTransactionFactory *factory, PRInt32 iterations)
   nsITransaction *tx          = 0;
   nsresult result;
 
-  result = nsRepository::CreateInstance(kCTransactionManagerFactoryCID, nsnull,
+  result = nsComponentManager::CreateInstance(kCTransactionManagerFactoryCID, nsnull,
                                         kITransactionManagerIID, (void **)&mgr);
 
   if (NS_FAILED(result) || !mgr) {
@@ -4542,7 +4542,7 @@ main (int argc, char *argv[])
 {
   nsresult result;
 
-  nsRepository::RegisterComponent(kCTransactionManagerFactoryCID, NULL, NULL,
+  nsComponentManager::RegisterComponent(kCTransactionManagerFactoryCID, NULL, NULL,
                                 TRANSACTION_MANAGER_DLL, PR_FALSE, PR_FALSE);
 
   result = simple_test();

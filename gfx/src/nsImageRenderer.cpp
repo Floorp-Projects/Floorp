@@ -81,7 +81,7 @@ ImageRendererImpl::NewPixmap(void* aDisplayContext,
   static NS_DEFINE_IID(kImageIID, NS_IIMAGE_IID);
 
   // Create a new image object
-  rv = nsRepository::CreateInstance(kImageCID, nsnull, kImageIID, (void **)&img);
+  rv = nsComponentManager::CreateInstance(kImageCID, nsnull, kImageIID, (void **)&img);
   if (NS_OK != rv) {
     // XXX What about error handling?
     return;

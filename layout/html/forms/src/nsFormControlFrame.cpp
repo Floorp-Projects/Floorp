@@ -31,7 +31,7 @@
 #include "nsCoord.h"
 #include "nsWidgetsCID.h"
 #include "nsViewsCID.h"
-#include "nsRepository.h"
+#include "nsIComponentManager.h"
 #include "nsGUIEvent.h"
 #include "nsDOMEvent.h"
 #include "nsIFontMetrics.h"
@@ -255,7 +255,7 @@ nsFormControlFrame::Reflow(nsIPresContext&          aPresContext,
       nsIView* view = nsnull;
       GetView(&view);
       if (nsnull == view) {
-        result = nsRepository::CreateInstance(kViewCID, nsnull, kIViewIID, (void **)&view);
+        result = nsComponentManager::CreateInstance(kViewCID, nsnull, kIViewIID, (void **)&view);
 	      if (!NS_SUCCEEDED(result)) {
 	        NS_ASSERTION(0, "Could not create view for form control"); 
           aStatus = NS_FRAME_NOT_COMPLETE;

@@ -20,7 +20,7 @@
 
 #include "nsIAppShellService.h"
 #include "nsISupportsArray.h"
-#include "nsRepository.h"
+#include "nsIComponentManager.h"
 #include "nsIURL.h"
 #include "nsIServiceManager.h"
 #include "nsIEventQueueService.h"
@@ -135,7 +135,7 @@ nsAppShellService::Initialize(void)
   }
 
   // Create widget application shell
-  rv = nsRepository::CreateInstance(kAppShellCID, nsnull, kIAppShellIID,
+  rv = nsComponentManager::CreateInstance(kAppShellCID, nsnull, kIAppShellIID,
                                     (void**)&mAppShell);
   if (NS_FAILED(rv)) {
     goto done;

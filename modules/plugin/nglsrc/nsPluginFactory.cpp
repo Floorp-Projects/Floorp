@@ -158,7 +158,7 @@ NSGetFactory(nsISupports* serviceMgr,
     return NS_ERROR_NULL_POINTER;
   }
 
-  nsIServiceManager  *pnsIServiceManager = NULL;
+  nsIServiceManager *pnsIServiceManager = NULL;
   if (NS_FAILED(serviceMgr->QueryInterface(kIServiceManagerIID, (void**) &pnsIServiceManager)))
     return NS_ERROR_FAILURE;
 

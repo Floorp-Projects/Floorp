@@ -19,7 +19,7 @@
 #include <iostream.h>
 #include "plstr.h"
 #include "prlink.h"
-#include "nsRepository.h"
+#include "nsIComponentManager.h"
 #include "nsIServiceManager.h"
 
 static PRBool gUnreg = PR_FALSE;
@@ -55,11 +55,11 @@ nsresult Register(const char *path)
     nsRegisterProc proc = (nsRegisterProc) PR_FindSymbol(instance,
                                                          "NSRegisterSelf");
     if (proc != NULL) {
-      nsIServiceManager* serviceMgr = NULL;
-      res = nsServiceManager::GetGlobalServiceManager(&serviceMgr);
+      nsIServiceManager* servMgr = NULL;
+      res = nsServiceManager::GetGlobalServiceManager(&servMgr);
       if (res == NS_OK)
       {
-        res = proc(serviceMgr, path);
+        res = proc(servMgr, path);
       }
     }
     PR_UnloadLibrary(instance);
@@ -76,13 +76,13 @@ nsresult Unregister(const char *path)
   PRLibrary *instance = GetLib(path);
   if (instance != NULL) {
     nsUnregisterProc proc = (nsUnregisterProc) PR_FindSymbol(instance,
-                                                           "NSUnregisterSelf");
+                                                             "NSUnregisterSelf");
     if (proc != NULL) {
-      nsIServiceManager* serviceMgr = NULL;
-      res = nsServiceManager::GetGlobalServiceManager(&serviceMgr);
+      nsIServiceManager* servMgr = NULL;
+      res = nsServiceManager::GetGlobalServiceManager(&servMgr);
       if (res == NS_OK)
       {
-        res = proc(serviceMgr, path);
+        res = proc(servMgr, path);
       }
     }
     PR_UnloadLibrary(instance);

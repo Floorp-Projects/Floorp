@@ -65,6 +65,7 @@
 #include "prio.h"
 #include "prthread.h"
 #include "rdfutil.h"
+#include "prlog.h"
 
 ////////////////////////////////////////////////////////////////////////
 
@@ -360,7 +361,7 @@ RDFXMLDataSourceImpl::RDFXMLDataSourceImpl(void)
       mNameSpaces(nsnull)
 {
     nsresult rv;
-    if (NS_FAILED(rv = nsRepository::CreateInstance(kRDFInMemoryDataSourceCID,
+    if (NS_FAILED(rv = nsComponentManager::CreateInstance(kRDFInMemoryDataSourceCID,
                                                     nsnull,
                                                     kIRDFDataSourceIID,
                                                     (void**) &mInner)))
@@ -531,13 +532,13 @@ static const char kResourceURIPrefix[] = "resource:";
     if (NS_FAILED(rv = rdfService->RegisterDataSource(this)))
         goto done;
 
-    if (NS_FAILED(rv = nsRepository::CreateInstance(kNameSpaceManagerCID,
+    if (NS_FAILED(rv = nsComponentManager::CreateInstance(kNameSpaceManagerCID,
                                                     nsnull,
                                                     kINameSpaceManagerIID,
                                                     (void**) &ns)))
         goto done;
 
-    if (NS_FAILED(rv = nsRepository::CreateInstance(kRDFContentSinkCID,
+    if (NS_FAILED(rv = nsComponentManager::CreateInstance(kRDFContentSinkCID,
                                                     nsnull,
                                                     kIRDFContentSinkIID,
                                                     (void**) &sink)))
@@ -551,7 +552,7 @@ static const char kResourceURIPrefix[] = "resource:";
     if (NS_FAILED(rv = sink->SetDataSource(this)))
         goto done;
 
-    if (NS_FAILED(rv = nsRepository::CreateInstance(kParserCID,
+    if (NS_FAILED(rv = nsComponentManager::CreateInstance(kParserCID,
                                                     nsnull,
                                                     kIParserIID,
                                                     (void**) &parser)))
@@ -562,7 +563,7 @@ static const char kResourceURIPrefix[] = "resource:";
     // XXX this should eventually be kRDFDTDCID (oh boy, that's a
     // pretty identifier). The RDF DTD will be a much more
     // RDF-resilient parser.
-    if (NS_FAILED(rv = nsRepository::CreateInstance(kWellFormedDTDCID,
+    if (NS_FAILED(rv = nsComponentManager::CreateInstance(kWellFormedDTDCID,
                                                     nsnull,
                                                     kIDTDIID,
                                                     (void**) &dtd)))

@@ -23,7 +23,7 @@
 #include "nsHTTreeItem.h"
 #include "nsHTTreeDataModel.h"
 #include "nsWidgetsCID.h"
-#include "nsRepository.h"
+#include "nsIComponentManager.h"
 #include "nsIImageObserver.h"
 #include "nsIImageRequest.h"
 #include "nsIImageGroup.h"

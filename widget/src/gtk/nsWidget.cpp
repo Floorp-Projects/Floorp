@@ -20,7 +20,7 @@
 #include "nsIDeviceContext.h"
 #include "nsIAppShell.h"
 #include "nsGfxCIID.h"
-#include "nsRepository.h"
+#include "nsIComponentManager.h"
 #include "nsGtkEventHandler.h"
 #include "nsIFontMetrics.h"
 #include <gdk/gdkx.h>
@@ -43,7 +43,7 @@ nsWidget::nsWidget()
 
   // get the proper color from the look and feel code
   nsILookAndFeel * lookAndFeel;
-  if (NS_OK == nsRepository::CreateInstance(kLookAndFeelCID, nsnull, kILookAndFeelIID, (void**)&lookAndFeel)) {
+  if (NS_OK == nsComponentManager::CreateInstance(kLookAndFeelCID, nsnull, kILookAndFeelIID, (void**)&lookAndFeel)) {
     lookAndFeel->GetColor(nsILookAndFeel::eColor_WindowBackground, mBackground);
   }
   mWidget = nsnull;

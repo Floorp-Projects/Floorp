@@ -29,7 +29,7 @@
 #include "nsIDOMEditorAppCore.h"
 #include "nsIDOMWindow.h"
 #include "nsIScriptNameSpaceManager.h"
-#include "nsRepository.h"
+#include "nsIComponentManager.h"
 #include "nsDOMCID.h"
 
 
@@ -493,7 +493,7 @@ EditorAppCore(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval
     return JS_FALSE;
   }
 
-  result = nsRepository::CreateInstance(classID,
+  result = nsComponentManager::CreateInstance(classID,
                                         nsnull,
                                         kIDOMEditorAppCoreIID,
                                         (void **)&nativeThis);

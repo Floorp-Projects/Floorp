@@ -28,7 +28,7 @@
 #include "nsHTMLDelegate.h"
 #include "nsIParser.h"
 #include "nsHTMLContentSink.h"
-#include "nsRepository.h"
+#include "nsIComponentManager.h"
 #include "nsParserCIID.h"
 
 #ifdef XP_PC
@@ -117,7 +117,7 @@ void parseFile (const char* aFilename,int size)
     static NS_DEFINE_IID(kCParserIID, NS_IPARSER_IID);
     static NS_DEFINE_IID(kCParserCID, NS_PARSER_IID);
 
-    nsresult rv = nsRepository::CreateInstance(kCParserCID, 
+    nsresult rv = nsComponentManager::CreateInstance(kCParserCID, 
                                                nsnull, 
                                                kCParserIID, 
                                                (void **)&parser);
@@ -203,7 +203,7 @@ int main(int argc, char* argv [])
   else _getcwd(buffer,_MAX_PATH);
 
   static NS_DEFINE_IID(kCParserCID, NS_PARSER_IID);
-  nsRepository::RegisterComponent(kCParserCID, NULL, NULL, PARSER_DLL, PR_FALSE, PR_FALSE);
+  nsComponentManager::RegisterComponent(kCParserCID, NULL, NULL, PARSER_DLL, PR_FALSE, PR_FALSE);
 
   walkDirectoryTree(buffer);
   return 0;

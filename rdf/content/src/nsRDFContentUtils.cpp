@@ -31,6 +31,7 @@
 #include "nsLayoutCID.h"
 #include "nsRDFContentUtils.h"
 #include "nsString.h"
+#include "prlog.h"
 
 static NS_DEFINE_IID(kIContentIID,     NS_ICONTENT_IID);
 static NS_DEFINE_IID(kIRDFResourceIID, NS_IRDFRESOURCE_IID);
@@ -70,7 +71,7 @@ nsRDFContentUtils::AttachTextNode(nsIContent* parent, nsIRDFNode* value)
         goto error;
     }
 
-    if (NS_FAILED(rv = nsRepository::CreateInstance(kTextNodeCID,
+    if (NS_FAILED(rv = nsComponentManager::CreateInstance(kTextNodeCID,
                                                     nsnull,
                                                     kIContentIID,
                                                     (void**) &node)))

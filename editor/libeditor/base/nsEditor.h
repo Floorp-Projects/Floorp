@@ -28,7 +28,7 @@
 #include "nsCOMPtr.h"
 #include "nsITransactionManager.h"
 #include "TransactionFactory.h"
-#include "nsRepository.h"
+#include "nsIComponentManager.h"
 
 class nsIDOMCharacterData;
 class nsIDOMRange;
