@@ -39,6 +39,7 @@
 #include <prerror.h>
 #include <sslerr.h>
 #include <jni.h>
+#include <nspr.h>
 
 typedef struct {
     PRErrorCode native;
