@@ -20,10 +20,6 @@ then
     QASCRIPT_DIR=`dirname $0`
 fi
 
-
-#FIXME - where do we need the OLDPATH
-
-OLDPATH="$PATH"
 PATH=.:$HOME/bin:/tools/ns/bin:/bin:/usr/bin:/usr/sbin:/usr/ccs/bin:/usr/dist/local/exe:/usr/bin/X11:/usr/audio/bin:/u/sonmi/bin:$PATH
 
 CVSROOT=:pserver:svbld@cvsserver:/m/src
@@ -119,9 +115,7 @@ then
     os_name="Windows"
     O_CYGNUS=ON
     O_WIN=ON
-    OLDPATH=`echo "$OLDPATH" | sed -e 's/\\\/\//g'`
     PATH="`dirname $0`:.:/cygdrive/c/cygwin/bin:/cygdrive/z/nstools/bin:/cygdrive/z/nstools/perl5:/cygdrive/z/bin:/cygdrive/c/WINNT/System32:/cygdrive/c/WINNT"
-#:$OLDPATH:
     RM=/cygdrive/c/cygwin/bin/rm.exe    #FIXME - in case we cant cporrect 
                                         #these with the PATH alone
     PATH=`perl $QASCRIPT_DIR/path_uniq "$PATH"`
@@ -133,8 +127,6 @@ elif [ "$os_name" = "Windows_95" -o \
     "$os_name" = "Windows_98" ]
 then
     #FIXME net use, mount the neccessary pnetwork drives and partitiones first
-    #OLDPATH=`echo "$OLDPATH" | sed -e 's/\\\/\//g'` FIXME - MKS shell 
-            # interprets \bin as <backspace>in...
     PATH=`echo $SHELL | sed -e "s/.ksh.exe//g"  -e "s/.sh.exe//g"`
     PATH="Z:/nstools/bin;Z:/nstools/perl5;z:/bin;$PATH"
 
