@@ -20,8 +20,6 @@
 #define nsAppShell_h__
 
 #include "nsIAppShell.h"
-#include "nsMacMessagePump.h"
-#include "nsToolKit.h"
 #include <Fonts.h>
 #include <TextEdit.h>
 #include <Dialogs.h>
@@ -29,6 +27,11 @@
 #include <Events.h>
 #include <Menus.h>
 
+#include <memory>
+
+class nsMacMessagePump;
+class nsMacMessageSink;
+class nsToolkit;
 
 /**
  * Native MAC Application shell wrapper
@@ -37,10 +40,11 @@
 class nsAppShell : public nsIAppShell
 {
   private:
-    nsDispatchListener		*mDispatchListener;
-    nsToolkit				*mToolKit;
-    nsMacMessagePump		*mMacPump;
-		PRBool							mExitCalled;
+    nsDispatchListener             *mDispatchListener;
+    auto_ptr<nsToolkit>            mToolKit;
+    auto_ptr<nsMacMessagePump>     mMacPump;
+    nsMacMessageSink               *mMacSink;   //еее this will be COM, so use scc's COM_auto_ptr
+    PRBool                         mExitCalled;
 
 	// CLASS METHODS
 	private:		    

@@ -18,11 +18,13 @@
 
 #include "nsAppShell.h"
 #include "nsIAppShell.h"
-#include "nsWindow.h"
-#include <stdlib.h>
-#include "nsMacMessagePump.h"
 
-//XtAppContext gAppContext;
+#include "nsMacMessageSink.h"	//еее until this is moved into XP
+#include "nsMacMessagePump.h"
+#include "nsToolKit.h"
+
+#include <stdlib.h>
+
 
 //-------------------------------------------------------------------------
 //
@@ -46,7 +48,7 @@ NS_IMETHODIMP nsAppShell::SetDispatchListener(nsDispatchListener* aDispatchListe
 
 NS_IMETHODIMP nsAppShell::Create(int* argc, char ** argv)
 {
-	mToolKit = new nsToolkit();
+	mToolKit = auto_ptr<nsToolkit>( new nsToolkit() );
 	return NS_OK;
 }
 
@@ -57,11 +59,9 @@ NS_IMETHODIMP nsAppShell::Create(int* argc, char ** argv)
 //-------------------------------------------------------------------------
 nsresult nsAppShell::Run()
 {
-	mMacPump = new nsMacMessagePump(mToolKit);
+	mMacSink = new nsMacMessageSink();
+	mMacPump = auto_ptr<nsMacMessagePump>( new nsMacMessagePump(mToolKit.get(), mMacSink) );
 	mMacPump->DoMessagePump();
-
-	delete mMacPump;
-	mMacPump = nsnull;
 
   //if (mDispatchListener)
     //mDispatchListener->AfterDispatch();
@@ -83,7 +83,7 @@ nsresult nsAppShell::Run()
 //-------------------------------------------------------------------------
 NS_IMETHODIMP nsAppShell::Exit()
 {
-	if (mMacPump)
+	if (mMacPump.get())
 	{
 		mMacPump->StopRunning();
 
@@ -104,8 +104,6 @@ NS_IMETHODIMP nsAppShell::Exit()
 nsAppShell::nsAppShell()
 { 
   mRefCnt = 0;
-  mDispatchListener = 0;
-  mMacPump = nsnull;
   mExitCalled = PR_FALSE;
 }
 
