@@ -37,7 +37,7 @@ include $(DEPTH)/config/autoconf.mk
 # Question: how come this works on windows?
 # From makefile.win:
 # DIRS = public base db local news compose mime ui
-DIRS = public base/util db news base local compose mime ui
+DIRS = public base/util base/public db news base local compose mime ui
 
 include $(topsrcdir)/config/config.mk
 
