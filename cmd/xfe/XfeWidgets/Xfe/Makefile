@@ -31,124 +31,211 @@ MODULE			= XfeWidgets/Xfe
 
 LIBRARY_NAME	= XfeWidgets
 
-# There are unused widgets.  They are currently not needed to build Mozilla.
-# Some of them are works in progress for new features.  Some of them are
-# ideas partially implemented, but never used.  Most of them are likely to
-# be used in the future in some form.  They also might contain usefull code,
-# so leave them alone.
-ifdef XFE_WIDGETS_BUILD_UNUSED
+# Hardcode everything to on for now.
+XFE_WIDGETS_WANT_ARROW=1
+XFE_WIDGETS_WANT_BUTTON=1
+XFE_WIDGETS_WANT_BYPASS_SHELL=1
+XFE_WIDGETS_WANT_CASCADE=1
+XFE_WIDGETS_WANT_DIVIDER=1
+XFE_WIDGETS_WANT_DYNAMIC_MANAGER=1
+XFE_WIDGETS_WANT_FONT_CHOOSER=1
+XFE_WIDGETS_WANT_FRAME_SHELL=1
+XFE_WIDGETS_WANT_LABEL=1
+XFE_WIDGETS_WANT_LOGO=1
+XFE_WIDGETS_WANT_MANAGER=1
+XFE_WIDGETS_WANT_ORIENTED=1
+XFE_WIDGETS_WANT_PANE=1
+XFE_WIDGETS_WANT_PRIMITIVE=1
+XFE_WIDGETS_WANT_PROGRESS_BAR=1
 
-XFE_EXTRA_DEFINES += -DXFE_WIDGETS_BUILD_UNUSED
-
-UNUSED_CSRCS	= \
-				FontChooser.c \
-				$(NULL)
-
-UNUSED_EXPORTS	= \
-				FontChooser.h \
-				FontChooserP.h \
-				$(NULL)
-endif
-
-
-CSRCS			= \
-				$(DEMO_CSRCS) \
-				$(UNUSED_CSRCS) \
-				Arrow.c \
-				Button.c \
-				BypassShell.c \
+# Main XfeWidgets stuff
+MAIN_CSRCS = \
 				CallProcs.c \
-				Cascade.c \
-				ChildrenUtil.c \
 				ClientData.c \
 				Converters.c \
 				Cursor.c \
 				Debug.c \
-				DialogUtil.c \
-				Divider.c \
 				Draw.c \
-				DynamicManager.c \
 				Find.c \
-				FrameShell.c \
-				GcUtil.c \
 				Geometry.c \
-				Label.c \
 				Linked.c \
-				ListUtil.c \
-				Logo.c \
-				Manager.c \
-				ManagerChildren.c \
-				MenuUtil.c \
-				Oriented.c \
-				Pane.c \
-				PixmapUtil.c \
-				Primitive.c \
 				Private.c \
-				ProgressBar.c \
 				Resources.c \
 				SetValues.c \
+				$(NULL)
+
+MAIN_EXPORTS = \
+				BasicDefines.h \
+				ClientData.h \
+				Converters.h \
+				Debug.h \
+				Draw.h \
+				Find.h \
+				Geometry.h \
+				GeometryP.h \
+				Linked.h \
+				LinkedP.h \
+				Resources.h \
+				Xfe.h \
+				XfeP.h \
+				$(NULL)
+
+# Misc utilities
+UTIL_CSRCS = \
+				ChildrenUtil.c \
+				DialogUtil.c \
+				GcUtil.c \
+				MenuUtil.c \
+				ListUtil.c \
+				PixmapUtil.c \
 				ShellUtil.c \
 				StringUtil.c \
 				Util.c \
 				WmUtil.c \
 				$(NULL)
 
-REQUIRES		= XfeWidgets
-
-EXPORTS			= \
-				$(DEMO_EXPORTS) \
-				$(UNUSED_EXPORTS) \
-				Arrow.h \
-				ArrowP.h \
-				BasicDefines.h \
-				Button.h \
-				ButtonP.h \
-				BypassShell.h \
-				BypassShellP.h \
-				Cascade.h \
-				CascadeP.h \
+UTIL_EXPORTS = \
 				ChildrenUtil.h \
-				ClientData.h \
-				Converters.h \
-				Debug.h \
 				DialogUtil.h \
-				Divider.h \
-				DividerP.h \
-				Draw.h \
-				DynamicManager.h \
-				DynamicManagerP.h \
-				Find.h \
-				FrameShell.h \
-				FrameShellP.h \
-				Geometry.h \
-				GeometryP.h \
-				Label.h \
-				LabelP.h \
-				Linked.h \
-				LinkedP.h \
 				ListUtil.h \
 				ListUtilP.h \
-				Logo.h \
-				LogoP.h \
-				Manager.h \
-				ManagerP.h \
 				MenuUtil.h \
-				Oriented.h \
-				OrientedP.h \
-				Pane.h \
-				PaneP.h \
-				Primitive.h \
-				PrimitiveP.h \
-				ProgressBar.h \
-				ProgressBarP.h \
-				Resources.h \
 				ShellUtil.h \
 				StringUtil.h \
 				WmUtil.h \
-				Xfe.h \
-				XfeP.h \
+				$(NULL)
+
+# XfeArrow
+ifdef XFE_WIDGETS_WANT_ARROW
+ARROW_CSRCS				= Arrow.c
+ARROW_EXPORTS			= Arrow.h ArrowP.h
+endif
+
+# XfeButton
+ifdef XFE_WIDGETS_WANT_BUTTON
+BUTTON_CSRCS			= Button.c
+BUTTON_EXPORTS			= Button.h ButtonP.h
+endif
+
+# XfeBypassShell
+ifdef XFE_WIDGETS_WANT_BYPASS_SHELL
+BYPASS_SHELL_CSRCS		= BypassShell.c
+BYPASS_SHELL_EXPORTS	= BypassShell.h BypassShellP.h
+endif
+
+# XfeCascade
+ifdef XFE_WIDGETS_WANT_CASCADE
+CASCADE_CSRCS			= Cascade.c
+CASCADE_EXPORTS			= Cascade.h CascadeP.h
+endif
+
+# XfeDivider
+ifdef XFE_WIDGETS_WANT_DIVIDER
+DIVIDER_CSRCS			= Divider.c
+DIVIDER_EXPORTS			= Divider.h DividerP.h
+endif
+
+# XfeDynamicManager
+ifdef XFE_WIDGETS_WANT_DYNAMIC_MANAGER
+DYNAMIC_MANAGER_CSRCS	= DynamicManager.c
+DYNAMIC_MANAGER_EXPORTS	= DynamicManager.h DynamicManagerP.h
+endif
+
+# XfeFontChooser
+ifdef XFE_WIDGETS_WANT_FONT_CHOOSER
+FONT_CHOOSER_CSRCS		= FontChooser.c
+FONT_CHOOSER_EXPORTS	= FontChooser.h FontChooserP.h
+endif
+
+# XfeFrameShell
+ifdef XFE_WIDGETS_WANT_FRAME_SHELL
+FRAME_SHELL_CSRCS		= FrameShell.c
+FRAME_SHELL_EXPORTS		= FrameShell.h FrameShellP.h
+endif
+
+# XfeLabel
+ifdef XFE_WIDGETS_WANT_LABEL
+LABEL_CSRCS				= Label.c
+LABEL_EXPORTS			= Label.h LabelP.h
+endif
+
+# XfeLogo
+ifdef XFE_WIDGETS_WANT_LOGO
+LOGO_CSRCS				= Logo.c
+LOGO_EXPORTS			= Logo.h LogoP.h
+endif
+
+# XfeManager
+ifdef XFE_WIDGETS_WANT_MANAGER
+MANAGER_CSRCS			= Manager.c ManagerChildren.c
+MANAGER_EXPORTS			= Manager.h ManagerP.h
+endif
+
+# XfeOriented
+ifdef XFE_WIDGETS_WANT_ORIENTED
+ORIENTED_CSRCS			= Oriented.c
+ORIENTED_EXPORTS		= Oriented.h OrientedP.h
+endif
+
+# XfePane
+ifdef XFE_WIDGETS_WANT_PANE
+PANE_CSRCS				= Pane.c
+PANE_EXPORTS			= Pane.h PaneP.h
+endif
+
+# XfePrimitive
+ifdef XFE_WIDGETS_WANT_PRIMITIVE
+PRIMITIVE_CSRCS			= Primitive.c
+PRIMITIVE_EXPORTS		= Primitive.h PrimitiveP.h
+endif
+
+# XfeProgressBar
+ifdef XFE_WIDGETS_WANT_PROGRESS_BAR
+PROGRESS_BAR_CSRCS		= ProgressBar.c
+PROGRESS_BAR_EXPORTS	= ProgressBar.h ProgressBarP.h
+endif
+
+
+CSRCS			= \
+				$(MAIN_CSRCS) \
+				$(UTIL_CSRCS) \
+				$(ARROW_CSRCS) \
+				$(BUTTON_CSRCS) \
+				$(BYPASS_SHELL_CSRCS) \
+				$(CASCADE_CSRCS) \
+				$(DIVIDER_CSRCS) \
+				$(DYNAMIC_MANAGER_CSRCS) \
+				$(FONT_CHOOSER_CSRCS) \
+				$(FRAME_SHELL_CSRCS) \
+				$(LABEL_CSRCS) \
+				$(LOGO_CSRCS) \
+				$(MANAGER_CSRCS) \
+				$(ORIENTED_CSRCS) \
+				$(PANE_CSRCS) \
+				$(PRIMITIVE_CSRCS) \
+				$(PROGRESS_BAR_CSRCS) \
+				$(NULL)
+
+REQUIRES		= XfeWidgets
+
+EXPORTS			= \
+				$(MAIN_EXPORTS) \
+				$(UTIL_EXPORTS) \
+				$(ARROW_EXPORTS) \
+				$(BUTTON_EXPORTS) \
+				$(BYPASS_SHELL_EXPORTS) \
+				$(CASCADE_EXPORTS) \
+				$(DIVIDER_EXPORTS) \
+				$(DYNAMIC_MANAGER_EXPORTS) \
+				$(FONT_CHOOSER_EXPORTS) \
+				$(FRAME_SHELL_EXPORTS) \
+				$(LABEL_EXPORTS) \
+				$(LOGO_EXPORTS) \
+				$(MANAGER_EXPORTS) \
+				$(ORIENTED_EXPORTS) \
+				$(PANE_EXPORTS) \
+				$(PRIMITIVE_EXPORTS) \
+				$(PROGRESS_BAR_EXPORTS) \
 				$(NULL)
 
 include $(DEPTH)/config/rules.mk
-
-DEFINES		+= $(XFE_EXTRA_DEFINES)
