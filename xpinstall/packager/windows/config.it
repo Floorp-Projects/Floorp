@@ -206,6 +206,11 @@ confirm_install=false
 exe=
 exe_param=
 
+[Check Instance0]
+Class Name=NetscapeWindowClass
+Window Name=
+Message=Setup has detected that an instance of Seamonkey is currently running.  Please quit Seamonkey before continuing Setup.
+
 ; These are the components to be offered to the user (shown in the Select
 ; Components dialog) for installation.
 ; There is no limit to the number of components to install.
