@@ -60,6 +60,7 @@
 #include "nsIDirectoryService.h"
 #include "nsDirectoryServiceDefs.h"
 #include "nsAppDirectoryServiceDefs.h"
+#include "nsCOMArray.h"
 #include "nsCRT.h"
 #include "nsEnumeratorUtils.h"
 #include "nsIRDFRemoteDataSource.h"
@@ -368,6 +369,7 @@ nsCOMPtr<nsISupportsArray>	InternetSearchDataSource::mUpdateArray;
 nsCOMPtr<nsIRDFDataSource>	InternetSearchDataSource::mLocalstore;
 nsCOMPtr<nsIRDFDataSource>	InternetSearchDataSource::categoryDataSource;
 PRBool				InternetSearchDataSource::gEngineListBuilt = PR_FALSE;
+PRBool        InternetSearchDataSource::gReorderedEngineList = PR_FALSE;
 nsCOMPtr<nsILoadGroup>		InternetSearchDataSource::mBackgroundLoadGroup;
 nsCOMPtr<nsILoadGroup>		InternetSearchDataSource::mLoadGroup;
 nsCOMPtr<nsIPref>		InternetSearchDataSource::prefs;
@@ -1201,7 +1203,94 @@ InternetSearchDataSource::GetTarget(nsIRDFResource *source,
 	return(rv);
 }
 
+#ifdef MOZ_PHOENIX
+void
+InternetSearchDataSource::ReorderEngineList()
+{
+  // XXXben - a temporary, inelegant solution to search list ordering until 
+  //          after 1.0 when we replace all of this with something better 
+  //          suited to our needs. 
+  nsresult rv;
+  nsCOMArray<nsIRDFResource> engineList;
 
+  // Load all data for sherlock files...
+  nsCOMPtr<nsISimpleEnumerator> engines;
+  rv = GetTargets(kNC_SearchEngineRoot, kNC_Child, PR_TRUE, getter_AddRefs(engines));
+  if (NS_FAILED(rv)) return; // Not Fatal. 
+
+  do {
+    PRBool hasMore;
+    engines->HasMoreElements(&hasMore);
+    if (!hasMore)
+      break;
+
+    nsCOMPtr<nsISupports> supp;
+    engines->GetNext(getter_AddRefs(supp));
+    nsCOMPtr<nsIRDFResource> engineResource(do_QueryInterface(supp));
+
+    nsCOMPtr<nsIRDFLiteral> data;
+    FindData(engineResource, getter_AddRefs(data));
+  }
+  while (PR_TRUE);
+
+  // Build the ordered items first...
+  nsCOMPtr<nsIPrefBranch> pserv(do_QueryInterface(prefs));
+  char prefNameBuf[1096];
+  PRInt32 i = 0; 
+  do {
+    ++i;
+    sprintf(prefNameBuf, "browser.search.order.%d", i);
+
+    nsCOMPtr<nsIPrefLocalizedString> engineName;
+    rv = pserv->GetComplexValue(prefNameBuf, 
+                                NS_GET_IID(nsIPrefLocalizedString),
+                                getter_AddRefs(engineName));
+    if (NS_FAILED(rv)) break;
+
+    nsXPIDLString data;
+    engineName->GetData(getter_Copies(data));
+
+    nsCOMPtr<nsIRDFLiteral> engineNameLiteral;
+    gRDFService->GetLiteral(data, getter_AddRefs(engineNameLiteral));
+
+    nsCOMPtr<nsIRDFResource> engineResource;
+    rv = mInner->GetSource(kNC_Name, engineNameLiteral, PR_TRUE, getter_AddRefs(engineResource));
+    if (NS_FAILED(rv)) continue;
+
+    engineList.AppendObject(engineResource);
+  }
+  while (PR_TRUE);
+
+  // Now add the rest...
+  rv = GetTargets(kNC_SearchEngineRoot, kNC_Child, PR_TRUE, getter_AddRefs(engines));
+  if (NS_FAILED(rv)) return; // Not Fatal. 
+
+  do {
+    PRBool hasMore;
+    engines->HasMoreElements(&hasMore);
+    if (!hasMore)
+      break;
+
+    nsCOMPtr<nsISupports> supp;
+    engines->GetNext(getter_AddRefs(supp));
+    nsCOMPtr<nsIRDFResource> engineResource(do_QueryInterface(supp));
+
+    if (engineList.IndexOfObject(engineResource) == -1) 
+      engineList.AppendObject(engineResource);
+
+    // Unhook the item from the list, so we can rebuild it in the right
+    // order. Failures are benign.
+    Unassert(kNC_SearchEngineRoot, kNC_Child, engineResource);
+  }
+  while (PR_TRUE);
+
+  PRInt32 engineCount = engineList.Count();
+  for (i = 0; i < engineCount; ++i)
+    Assert(kNC_SearchEngineRoot, kNC_Child, engineList[i], PR_TRUE);
+
+  gReorderedEngineList = PR_TRUE;
+}
+#endif
 
 NS_IMETHODIMP
 InternetSearchDataSource::GetTargets(nsIRDFResource *source,
@@ -1265,7 +1354,7 @@ InternetSearchDataSource::GetTargets(nsIRDFResource *source,
 			DeferredInit();
 		}
 
-		rv = mInner->GetTargets(source, property, tv, targets);
+    rv = mInner->GetTargets(source, property, tv, targets);
 	}
 	if (isSearchURI(source))
 	{
@@ -4219,8 +4308,6 @@ InternetSearchDataSource::SaveEngineInfoIntoGraph(nsIFile *file, nsIFile *icon,
 	return(NS_OK);
 }
 
-
-
 nsresult
 InternetSearchDataSource::GetSearchEngineList(nsIFile *searchDir,
               PRBool isSystemSearchFile, PRBool checkMacFileType)
@@ -4335,11 +4422,13 @@ InternetSearchDataSource::GetSearchEngineList(nsIFile *searchDir,
 		
 		SaveEngineInfoIntoGraph(dirEntry, iconFile, nsnull, nsnull, isSystemSearchFile, checkMacFileType);
 	}
-	
+
+#ifdef MOZ_PHOENIX
+    if (!gReorderedEngineList)
+      ReorderEngineList();
+#endif
 	return(rv);
 }
-
-
 
 nsresult
 InternetSearchDataSource::ReadFileContents(nsILocalFile *localFile, nsString& sourceContents)
@@ -4756,36 +4845,21 @@ InternetSearchDataSource::GetInputs(const PRUnichar *dataUni, nsString &engineNa
       if (NS_FAILED(rv)) 
         break;
 
-      nsCOMPtr<nsIPrefLocalizedString> parameterName;
-      rv = pb->GetComplexValue("name", 
-                               NS_GET_IID(nsIPrefLocalizedString),
-                               getter_AddRefs(parameterName));
-      if (NS_FAILED(rv)) 
+      nsCOMPtr<nsIPrefLocalizedString> parameter;
+      nsXPIDLString parameterStr;
+      rv = pb->GetComplexValue(engineIsNotDefault ? "custom" : "default", 
+                               NS_GET_IID(nsIPrefLocalizedString), 
+                               getter_AddRefs(parameter));
+      if (NS_FAILED(rv))
         break;
 
-      nsXPIDLString parameterNameStr;
-      parameterName->GetData(getter_Copies(parameterNameStr));
-
-      if (!parameterNameStr.IsEmpty()) 
+      parameter->GetData(getter_Copies(parameterStr));
+      
+      if (!parameterStr.IsEmpty()) 
       {
         if (!input.IsEmpty())
           input.Append(NS_LITERAL_STRING("&"));
-
-        input += parameterNameStr;
-
-        nsCOMPtr<nsIPrefLocalizedString> parameterValue;
-        nsXPIDLString parameterValueStr;
-        rv = pb->GetComplexValue(engineIsNotDefault ? "custom" : "default", 
-                                NS_GET_IID(nsIPrefLocalizedString), 
-                                getter_AddRefs(parameterValue));
-        if (NS_SUCCEEDED(rv))
-          parameterValue->GetData(getter_Copies(parameterValueStr));
-        
-        if (!parameterValueStr.IsEmpty()) 
-        {
-          input.Append(NS_LITERAL_STRING("="));
-          input += parameterValueStr;
-        }
+        input += parameterStr;
       }
     }
     while (1);
@@ -4803,28 +4877,75 @@ InternetSearchDataSource::GetInputs(const PRUnichar *dataUni, nsString &engineNa
 
     nsAutoString keyTemplate(NS_LITERAL_STRING("browser.search.param."));
     keyTemplate += engineName;
-    keyTemplate.Append(NS_LITERAL_STRING(".release."));
+    keyTemplate.Append(NS_LITERAL_STRING(".release"));
 
-    nsAutoString releaseNameKey = keyTemplate + NS_LITERAL_STRING("name");
-    nsAutoString releaseValueKey = keyTemplate + NS_LITERAL_STRING("value");
-
-    nsXPIDLString releaseName, releaseValue;
-    bundle->GetStringFromName(releaseNameKey.get(), getter_Copies(releaseName));
+    nsXPIDLString releaseValue;
     const PRUnichar* strings[] = { langName.get() };
-    bundle->FormatStringFromName(releaseValueKey.get(), strings, 1, getter_Copies(releaseValue));
+    bundle->FormatStringFromName(keyTemplate.get(), strings, 1, getter_Copies(releaseValue));
 
-    if (!releaseName.IsEmpty()) 
+    if (!releaseValue.IsEmpty()) 
     {
       if (!input.IsEmpty())
         input.Append(NS_LITERAL_STRING("&"));
-      input += releaseName;
+      input += releaseValue;
+    }
 
-      if (!releaseValue.IsEmpty())
+    // Now add order parameters.
+    nsCOMPtr<nsIPrefBranch> pb;
+    rv = pserv->GetBranch("", getter_AddRefs(pb));
+    if (NS_FAILED(rv)) return rv;
+
+    i = 0;
+    do {
+      ++i;
+      sprintf(prefNameBuf, "browser.search.order.%d", i);
+
+      nsCOMPtr<nsIPrefLocalizedString> orderEngineName;
+      rv = pb->GetComplexValue(prefNameBuf, 
+                               NS_GET_IID(nsIPrefLocalizedString),
+                               getter_AddRefs(orderEngineName));
+      if (NS_FAILED(rv)) 
+        break;
+
+      nsXPIDLString orderEngineNameStr;
+      orderEngineName->GetData(getter_Copies(orderEngineNameStr));
+      if (orderEngineNameStr.Equals(engineName))
+        break;
+    }
+    while (PR_TRUE);
+
+    if (NS_SUCCEEDED(rv))
+    {
+      sprintf(prefNameBuf, "browser.search.order.%s.%d",
+              NS_ConvertUCS2toUTF8(engineName).get(), i);
+      
+      nsCOMPtr<nsIPrefLocalizedString> orderParam;
+      rv = rootBranch->GetComplexValue(prefNameBuf, 
+                                       NS_GET_IID(nsIPrefLocalizedString),
+                                       getter_AddRefs(orderParam));
+      if (NS_FAILED(rv))
       {
-        input.Append(NS_LITERAL_STRING("="));
-        input += releaseValue;
+        sprintf(prefNameBuf, "browser.search.order.%s",
+                NS_ConvertUCS2toUTF8(engineName).get(), i);
+        rv = rootBranch->GetComplexValue(prefNameBuf, 
+                                         NS_GET_IID(nsIPrefLocalizedString),
+                                         getter_AddRefs(orderParam));
+      }
+    
+      if (NS_SUCCEEDED(rv)) 
+      {
+        nsXPIDLString orderParamStr;
+        orderParam->GetData(getter_Copies(orderParamStr));
+
+        if (!orderParamStr.IsEmpty())
+        {
+          if (!input.IsEmpty())
+            input.Append(NS_LITERAL_STRING("&"));
+          input += orderParamStr;
+        }
       }
     }
+
     rv = NS_OK;
   }
 
