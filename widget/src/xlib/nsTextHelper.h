@@ -53,6 +53,7 @@ public:
   virtual PRBool    AutoErase();
   
  protected:
+  nsString          mText;
 };
 
 #endif // nsTextHelper_h__

@@ -30,11 +30,16 @@ NS_METHOD nsTextHelper::SetMaxTextLength(PRUint32 aChars)
 
 NS_METHOD  nsTextHelper::GetText(nsString& aTextBuffer, PRUint32 aBufferSize, PRUint32& aActualSize)
 {
+  aTextBuffer.SetLength(0);
+  aTextBuffer.Append(mText);
+  aActualSize = mText.Length();
   return NS_OK;
 }
 
 NS_METHOD  nsTextHelper::SetText(const nsString &aText, PRUint32& aActualSize)
-{ 
+{
+  aActualSize = aText.Length();
+  mText = aText;
   return NS_OK;
 }
 
