@@ -30,22 +30,8 @@
  *
  * Date             Modified by     Description of modification
  * 03/23/2000       IBM Corp.      Fixed bug where 2 char or less profile names treated as drive letters.
+ * 06/20/2000       IBM Corp.      Make it more like Windows version.
  */
-
-// This file is #include-d by nsFileSpec.cpp and contains OS/2 specific
-// routines.
-//
-// Let me try & summarise what's going on here:
-//
-//    nsFileSpec:   "C:\foo\bar\b az.ext"
-//
-//    nsFilePath:   "/C|/foo/bar/b az.ext"
-//   
-//    nsFileURL:    "file:///C|/foo/bar/b%20az.ext"
-//
-// We don't share the Windoze code 'cos it delves into the Win32 api.
-// When things stabilize, we should push to merge some of the duplicated stuff.
-//
 
 #define INCL_DOSERRORS
 #define INCL_DOS
@@ -53,7 +39,6 @@
 #include <os2.h>
 
 #ifdef XP_OS2_VACPP
-#include <fcntl.h> /* for O_RDWR */
 #include <direct.h>
 #endif
 
@@ -63,478 +48,855 @@
 #include <ctype.h>
 #include <io.h>
 
-// General helper routines --------------------------------------------------
-
-// Takes a "unix path" in the nsFilePath sense, full or relative, and returns
-// the os/2 equivalent.
-//
-// OS/2 [==dos]-style paths are unaffected.
-void nsFileSpecHelpers::UnixToNative( nsSimpleCharString &ioPath)
+//----------------------------------------------------------------------------------------
+void nsFileSpecHelpers::Canonify(nsSimpleCharString& ioPath, PRBool inMakeDirs)
+// Canonify, make absolute, and check whether directories exist. This
+// takes a (possibly relative) native path and converts it into a
+// fully qualified native path.
+//----------------------------------------------------------------------------------------
 {
-   if( !ioPath.IsEmpty())
-   {
-      // Skip any leading slash
-      char *c = (char*) ioPath;
-      if( '/' == *c)
-      {
-         nsSimpleCharString tmp = c + 1;
-         ioPath = tmp;
-      }
-
-      // flip slashes
-      for( c = (char*)ioPath; *c; c++)
-         if( *c == '/') *c = '\\';
-   
-      // do the drive portion
-      if( ioPath[1] == '|')
-         ioPath[1] = ':';
-   
-      // yucky specialcase for drive roots: "H:" is not valid, has to be "H:\"
-      if(( ioPath[2] == '\0') && (ioPath[1] == ':')  && (ioPath[0] != '\0'))
-      {
-         char dl = ioPath[0];
-         ioPath = " :\\";
-         ioPath[0] = dl;
-      }
-   }
-}
-
-// Take a FQPN (os/2-style) and return a "unix path" in the nsFilePath sense
-void nsFileSpecHelpers::NativeToUnix( nsSimpleCharString &ioPath)
-{
-   if( !ioPath.IsEmpty())
-   {
-      // unix path is one character longer
-      nsSimpleCharString result( "/");
-      result += ioPath;
-   
-      // flip slashes
-      for( char *c = result; *c; c++)
-         if( *c == '\\') *c = '/';
-   
-      // colon to pipe
-      result[2] = '|';
-
-      ioPath = result;
-   }
-}
-
-// Canonify, make absolute, and check whether directories exist.
-// The path given is a NATIVE path.
-void nsFileSpecHelpers::Canonify( nsSimpleCharString &ioPath, PRBool inMakeDirs)
-{
-   PRUint32 lenstr = ioPath.Length();
-   if( lenstr)
-   {
-      char &lastchar = ioPath[lenstr - 1];
-
-      // Strip off any trailing backslash UNLESS it's the backslash that
-      // comes after "X:".  Note also that "\" is valid.  Sheesh.
-      //
-      if( lastchar == '\\' && (lenstr != 3 || ioPath[1] != ':') && lenstr != 1)
-         lastchar = '\0';
-
-      // Canonify path: makes absolute and does the right thing with ".." etc.
-      char full_native[ CCHMAXPATH] = "";
-      DosQueryPathInfo( (char*) ioPath, FIL_QUERYFULLNAME,
-                        full_native, CCHMAXPATH);
-   
-      ioPath = full_native;
-   
-      // if required, make directories.
-      if( inMakeDirs)
-      {
-         nsSimpleCharString unix_path( ioPath);
-         nsFileSpecHelpers::NativeToUnix( unix_path);
-         nsFileSpecHelpers::MakeAllDirectories( unix_path, 0700 /* hmm */);
-      }
-   }
-}
-
-// nsFileSpec <-> nsFilePath ------------------------------------------------
-
-// We assume that input is valid.  Garbage in, garbage out.
-
-void nsFileSpec::operator = ( const nsFilePath &inPath)
-{
-   mPath = (const char*) inPath;
-   nsFileSpecHelpers::UnixToNative( mPath);
-   mError = NS_OK;
-}
-
-void nsFilePath::operator = ( const nsFileSpec &inSpec)
-{
-   mPath = inSpec.mPath;
-   nsFileSpecHelpers::NativeToUnix(mPath);
-}
-
-// nsFilePath constructor
-nsFilePath::nsFilePath( const nsFileSpec &inSpec)
-{
-   *this = inSpec;
-}
-
-// nsFileSpec implementation ------------------------------------------
-
-nsFileSpec::nsFileSpec( const nsFilePath &inPath)
-{
-// NS_ASSERTION(0, "nsFileSpec is unsupported - use nsIFile!");
-   *this = inPath;
-}
-
-void nsFileSpec::SetLeafName( const char *inLeafName)
-{
-   mPath.LeafReplace( '\\', inLeafName);
-}
-
-char *nsFileSpec::GetLeafName() const
-{
-   return mPath.GetLeaf( '\\');
-}
-
-PRBool nsFileSpec::Exists() const
-{
-   struct stat st;
-   return !mPath.IsEmpty() && 0 == stat(nsNSPRPath(*this), &st); 
-}
-
-// These stat tests are done somewhat verbosely 'cos the VACPP version
-// of sys/stat.h is sadly lacking in #defines.
-
-PRBool nsFileSpec::IsFile() const
-{
-   struct stat st;
-   return (!mPath.IsEmpty() && 0 == stat(nsNSPRPath(*this), &st)) && (S_IFREG == (st.st_mode & S_IFREG));
-}
-
-PRBool nsFileSpec::IsDirectory() const
-{
-   struct stat st;
-   return (!mPath.IsEmpty() && 0 == stat(nsNSPRPath(*this), &st)) && (S_IFDIR == (st.st_mode & S_IFDIR));
-}
-
-// Really should factor out DosQPI() call to an internal GetFS3() method and then use
-// here, in IsDirectory(), IsFile(), GetModDate(), GetFileSize() [and a future IsReadOnly()]
-// and lose the clumsy stat() calls.  Exists() too.
-
-PRBool nsFileSpec::IsHidden() const
-{
-   FILESTATUS3 fs3;
-   APIRET rc;
-   PRBool bHidden = PR_FALSE;
-
-   if (!mPath.IsEmpty()) {
-     rc = DosQueryPathInfo( mPath, FIL_STANDARD, &fs3, sizeof fs3);
-     if(!rc)
-       bHidden = fs3.attrFile & FILE_HIDDEN ? PR_TRUE : PR_FALSE;
-   }
-   return bHidden; 
-}
-
-// On FAT or HPFS there's no such thing as a symlink; it's possible that JFS
-// (new with Warp Server for e-business) does know what they are.  Someone
-// with a recent toolkit should check it out, but this will be OK for now.
-PRBool nsFileSpec::IsSymlink() const
-{
-    return PR_FALSE;
-} 
-
-nsresult nsFileSpec::ResolveSymlink(PRBool& wasAliased)
-{
-    return NS_OK;
-} 
-
-void nsFileSpec::GetModDate( TimeStamp& outStamp) const
-{
-   struct stat st;
-   if(!mPath.IsEmpty() && stat(nsNSPRPath(*this), &st) == 0) 
-      outStamp = st.st_mtime; 
-   else
-      outStamp = 0;
-}
-
-PRUint32 nsFileSpec::GetFileSize() const
-{
-   struct stat st;
-   PRUint32 size = 0;
-   if(!mPath.IsEmpty() && stat(nsNSPRPath(*this), &st) == 0) 
-      size = (PRUint32) st.st_size;
-   return size;
-}
-
-// Okay, this is a really weird place to put this method!
-// And it ought to return a PRInt64.
-//
-PRInt64 nsFileSpec::GetDiskSpaceAvailable() const
-{
-   ULONG      ulDriveNo = toupper(mPath[0]) + 1 - 'A';
-   FSALLOCATE fsAllocate = { 0 };
-   APIRET     rc = NO_ERROR;
-   PRUint32   cbAvail = UINT_MAX; // XXX copy windows...
-
-   rc = DosQueryFSInfo( ulDriveNo, FSIL_ALLOC,
-                        &fsAllocate, sizeof fsAllocate);
-
-   if( NO_ERROR == rc)
-   {
-      // XXX check for overflows and do UINT_MAX if necessary
-      cbAvail = fsAllocate.cUnitAvail  *
-                fsAllocate.cSectorUnit *
-                fsAllocate.cbSector;
-   }
-   
-   PRInt64 space64;
-
-   LL_I2L(space64 , cbAvail);
-
-   return space64;
-}
-
-void nsFileSpec::GetParent( nsFileSpec &outSpec) const
-{
-   outSpec.mPath = mPath;
-   char *slash = strrchr( (char *) outSpec.mPath, '\\'); // XXX wrong for dbcs
-   if( slash)
-      *slash = '\0';
-}
-
-void nsFileSpec::operator += ( const char *inRelativePath)
-{
-   if( !inRelativePath || mPath.IsEmpty())
-      return;
-
-   if( mPath[mPath.Length() - 1] == '\\')
-      mPath += "x";
-   else
-      mPath +="\\x";
-	
-   // If it's a (unix) relative path, make it native
-   nsSimpleCharString relPath = inRelativePath;
-   nsFileSpecHelpers::UnixToNative( relPath);
-   SetLeafName( relPath);
-}
-
-void nsFileSpec::CreateDirectory( int mode)
-{
-   // Note that mPath is canonical.
-   // This means that all directories above us are meant to exist.
-  // mode is ignored
-  if (!mPath.IsEmpty())
-    PR_MkDir(nsNSPRPath(*this), PR_CREATE_FILE);
-}
-
-void nsFileSpec::Delete( PRBool inRecursive) const
-{
-   // Un-readonly ourselves
-   chmod( mPath, S_IREAD | S_IWRITE);
-   if( IsDirectory())
-   {
-      if( inRecursive)
-      {
-         for( nsDirectoryIterator i(*this, PR_FALSE); i.Exists(); i++)
-         {
-            nsFileSpec &child = (nsFileSpec &) i;
-            child.Delete( inRecursive);
-         }
-      }
-      PR_RmDir(nsNSPRPath(*this));
-   }
-   else if (!mPath.IsEmpty())
-   {
-      remove(nsNSPRPath(*this));
-   }
-}
-
-// XXX what format is this string?  Who knows!
-nsresult nsFileSpec::Rename( const char *inNewName)
-{
-   nsresult rc = NS_FILE_FAILURE;
-
-   if( inNewName == nsnull)
-      rc = NS_ERROR_NULL_POINTER;
-   else if( !strchr( inNewName, '/') && !strchr( inNewName, '\\')) // XXX DBCS
-   {
-      // PR_Rename just calls DosMove() on what you give it.
-
-      char *oldPath = nsCRT::strdup(mPath);
-      SetLeafName( inNewName);
-      APIRET ret = DosMove( oldPath, (const char*) mPath);
-      if( NO_ERROR == ret)
-	rc = NS_OK;
-      else
-      {
-#ifdef DEBUG
-         printf( "DosMove %s %s returned %ld\n", (char*)mPath, oldPath, ret);
-#endif
-         mPath = oldPath;
-      }
-      nsCRT::free(oldPath);
-   }
-   return rc;
-}
-
-nsresult nsFileSpec::CopyToDir( const nsFileSpec &inParentDirectory) const
-{
-   // Copy the file this filespec represents into the given directory.
-   nsresult rc = NS_FILE_FAILURE;
-
-   if( !IsDirectory() && inParentDirectory.IsDirectory())
-   {
-      char *myLeaf = GetLeafName();
-      nsSimpleCharString copyTo( inParentDirectory.GetCString());
-      copyTo += "\\";
-      copyTo += myLeaf;
-      nsCRT::free(myLeaf);
-
-      APIRET ret = DosCopy( (const char*) mPath, (const char*) copyTo, DCPY_EXISTING);
-
-      if( NO_ERROR == ret)
-         rc = NS_OK;
-      else
-	{
-#ifdef DEBUG
-	  printf( "DosCopy %s %s returned %ld\n",
-		  (const char*) mPath, (const char*) copyTo, ret);
-#endif
-	  rc = NS_FILE_FAILURE;
-	}
-   }
-
-   return rc;
-}
-
-// XXX not sure about the semantics of this method...
-nsresult nsFileSpec::MoveToDir( const nsFileSpec &inNewParentDirectory)
-{
-   // Copy first & then delete self to avoid drive-clashes
-   nsresult rc = CopyToDir( inNewParentDirectory);
-   if( NS_SUCCEEDED(rc))
-   {
-      Delete( PR_FALSE); // XXX why no return code
-      *this = inNewParentDirectory + GetLeafName();
-   }
-   return rc;
-}
-
-nsresult nsFileSpec::Execute(const char *inArgs) const
-{
-    nsresult result = NS_FILE_FAILURE;
-    
-    if (!mPath.IsEmpty() && !IsDirectory())
+    if (ioPath.IsEmpty())
+        return;
+  
+    NS_ASSERTION(strchr((const char*)ioPath, '/') == 0,
+		"This smells like a Unix path. Native path expected! "
+		"Please fix.");
+	if (inMakeDirs)
     {
-       nsSimpleCharString fileNameWithArgs = mPath + " " + inArgs;
-       result = NS_FILE_RESULT(system(fileNameWithArgs));
-    } 
-    return result;
-}
+        const int mode = 0700;
+        nsSimpleCharString unixStylePath = ioPath;
+        nsFileSpecHelpers::NativeToUnix(unixStylePath);
+        nsFileSpecHelpers::MakeAllDirectories((const char*)unixStylePath, mode);
+    }
+    char buffer[_MAX_PATH];
+    errno = 0;
+    *buffer = '\0';
+#ifdef XP_OS2
+    PRBool removedBackslash = PR_FALSE;
+    PRUint32 lenstr = ioPath.Length();
+    char &lastchar = ioPath[lenstr -1];
 
-// nsDirectoryIterator ------------------------------------------------------
+    // Strip off any trailing backslash UNLESS it's the backslash that
+    // comes after "X:".  Note also that "\" is valid.  Sheesh.
+    //
+    if( lastchar == '\\' && (lenstr != 3 || ioPath[1] != ':') && lenstr != 1)
+    {
+       lastchar = '\0';
+       removedBackslash = PR_TRUE;
+    }
 
-nsDirectoryIterator::nsDirectoryIterator(	const nsFileSpec &aDirectory,
-                                            PRBool resolveSymlinks)
-: mCurrent( aDirectory), 
-  mExists(PR_FALSE), 
-  mResoveSymLinks(resolveSymlinks), 
-  mStarting( aDirectory),
-  mDir( nsnull)
+    char canonicalPath[CCHMAXPATH] = "";
+
+    DosQueryPathInfo( (char*) ioPath, 
+                                          FIL_QUERYFULLNAME,
+                                          canonicalPath, 
+                                          CCHMAXPATH);
+#else
+    char* canonicalPath = _fullpath(buffer, ioPath, _MAX_PATH);
+#endif
+
+	if (canonicalPath)
+	{
+		NS_ASSERTION( canonicalPath[0] != '\0', "Uh oh...couldn't convert" );
+		if (canonicalPath[0] == '\0')
+			return;
+#ifdef XP_OS2
+                // If we removed that backslash, add it back onto the fullpath
+                if (removedBackslash)
+                   strcat( canonicalPath, "\\");
+#endif
+	}
+    ioPath = canonicalPath;
+} // nsFileSpecHelpers::Canonify
+
+//----------------------------------------------------------------------------------------
+void nsFileSpecHelpers::UnixToNative(nsSimpleCharString& ioPath)
+// This just does string manipulation.  It doesn't check reality, or canonify, or
+// anything
+//----------------------------------------------------------------------------------------
 {
-   mDir = PR_OpenDir( aDirectory);
-   mCurrent += "dummy";
-   mStarting += "dummy";
-   ++(*this);
+	// Allow for relative or absolute.  We can do this in place, because the
+	// native path is never longer.
+	
+	if (ioPath.IsEmpty())
+		return;
+		
+  // Strip initial slash for an absolute path
+	char* src = (char*)ioPath;
+  if (*src == '/') {
+    if (PL_strlen(src+1)==0) {
+      // allocate new string by copying from ioPath[1]
+      nsSimpleCharString temp = src + 1;
+      ioPath = temp;
+      return;
+    }
+	  // Since it was an absolute path, check for the drive letter
+		char* colonPointer = src + 2;
+		if (strstr(src, "|/") == colonPointer)
+	    *colonPointer = ':';
+	  // allocate new string by copying from ioPath[1]
+	  nsSimpleCharString temp = src + 1;
+	  ioPath = temp;
+	}
+
+	src = (char*)ioPath;
+		
+    if (*src) {
+	    // Convert '/' to '\'.
+	    while (*++src)
+        {
+            if (*src == '/')
+                *src = '\\';
+        }
+    }
+} // nsFileSpecHelpers::UnixToNative
+
+//----------------------------------------------------------------------------------------
+void nsFileSpecHelpers::NativeToUnix(nsSimpleCharString& ioPath)
+// This just does string manipulation.  It doesn't check reality, or canonify, or
+// anything.  The unix path is longer, so we can't do it in place.
+//----------------------------------------------------------------------------------------
+{
+	if (ioPath.IsEmpty())
+		return;
+		
+	// Convert the drive-letter separator, if present
+	nsSimpleCharString temp("/");
+
+	char* cp = (char*)ioPath + 1;
+	if (strstr(cp, ":\\") == cp)
+		*cp = '|';    // absolute path
+    else
+        temp[0] = '\0'; // relative path
+	
+	// Convert '\' to '/'
+	for (; *cp; cp++)
+    {
+#ifdef XP_OS2
+      // OS2TODO - implement equivalent of IsDBCSLeadByte
+#else
+      if(IsDBCSLeadByte(*cp) && *(cp+1) != nsnull)
+      {
+         cp++;
+         continue;
+      }
+#endif
+      if (*cp == '\\')
+        *cp = '/';
+    }
+	// Add the slash in front.
+	temp += ioPath;
+	ioPath = temp;
 }
 
+//----------------------------------------------------------------------------------------
+nsFileSpec::nsFileSpec(const nsFilePath& inPath)
+//----------------------------------------------------------------------------------------
+{
+//    NS_ASSERTION(0, "nsFileSpec is unsupported - use nsIFile!");
+	*this = inPath;
+}
+
+//----------------------------------------------------------------------------------------
+void nsFileSpec::operator = (const nsFilePath& inPath)
+//----------------------------------------------------------------------------------------
+{
+	mPath = (const char*)inPath;
+	nsFileSpecHelpers::UnixToNative(mPath);
+	mError = NS_OK;
+} // nsFileSpec::operator =
+
+//----------------------------------------------------------------------------------------
+nsFilePath::nsFilePath(const nsFileSpec& inSpec)
+//----------------------------------------------------------------------------------------
+{
+	*this = inSpec;
+} // nsFilePath::nsFilePath
+
+//----------------------------------------------------------------------------------------
+void nsFilePath::operator = (const nsFileSpec& inSpec)
+//----------------------------------------------------------------------------------------
+{
+	mPath = inSpec.mPath;
+	nsFileSpecHelpers::NativeToUnix(mPath);
+} // nsFilePath::operator =
+
+//----------------------------------------------------------------------------------------
+void nsFileSpec::SetLeafName(const char* inLeafName)
+//----------------------------------------------------------------------------------------
+{
+	NS_ASSERTION(inLeafName, "Attempt to SetLeafName with a null string");
+	mPath.LeafReplace('\\', inLeafName);
+} // nsFileSpec::SetLeafName
+
+//----------------------------------------------------------------------------------------
+char* nsFileSpec::GetLeafName() const
+//----------------------------------------------------------------------------------------
+{
+    return mPath.GetLeaf('\\');
+} // nsFileSpec::GetLeafName
+
+//----------------------------------------------------------------------------------------
+PRBool nsFileSpec::Exists() const
+//----------------------------------------------------------------------------------------
+{
+	struct stat st;
+	return !mPath.IsEmpty() && 0 == stat(nsNSPRPath(*this), &st); 
+} // nsFileSpec::Exists
+
+//----------------------------------------------------------------------------------------
+void nsFileSpec::GetModDate(TimeStamp& outStamp) const
+//----------------------------------------------------------------------------------------
+{
+	struct stat st;
+    if (!mPath.IsEmpty() && stat(nsNSPRPath(*this), &st) == 0) 
+        outStamp = st.st_mtime; 
+    else
+        outStamp = 0;
+} // nsFileSpec::GetModDate
+
+//----------------------------------------------------------------------------------------
+PRUint32 nsFileSpec::GetFileSize() const
+//----------------------------------------------------------------------------------------
+{
+	struct stat st;
+    if (!mPath.IsEmpty() && stat(nsNSPRPath(*this), &st) == 0) 
+        return (PRUint32)st.st_size; 
+    return 0;
+} // nsFileSpec::GetFileSize
+
+//----------------------------------------------------------------------------------------
+PRBool nsFileSpec::IsFile() const
+//----------------------------------------------------------------------------------------
+{
+  struct stat st;
+#ifdef XP_OS2
+  return !mPath.IsEmpty() && 0 == stat(nsNSPRPath(*this), &st) && (  S_IFREG & st.st_mode);
+#else
+  return !mPath.IsEmpty() && 0 == stat(nsNSPRPath(*this), &st) && (_S_IFREG & st.st_mode);
+#endif
+} // nsFileSpec::IsFile
+
+//----------------------------------------------------------------------------------------
+PRBool nsFileSpec::IsDirectory() const
+//----------------------------------------------------------------------------------------
+{
+	struct stat st;
+#ifdef XP_OS2
+        return !mPath.IsEmpty() && 0 == stat(nsNSPRPath(*this), &st) && (  S_IFDIR & st.st_mode);
+#else
+	return !mPath.IsEmpty() && 0 == stat(nsNSPRPath(*this), &st) && (_S_IFDIR & st.st_mode);
+#endif
+} // nsFileSpec::IsDirectory
+
+//----------------------------------------------------------------------------------------
+PRBool nsFileSpec::IsHidden() const
+//----------------------------------------------------------------------------------------
+{
+    PRBool hidden = PR_FALSE;
+    if (!mPath.IsEmpty())
+    {
+#ifdef XP_OS2
+        FILESTATUS3 fs3;
+        APIRET rc;
+
+        rc = DosQueryPathInfo( mPath,
+                                         FIL_STANDARD, 
+                                         &fs3,
+                                         sizeof fs3);
+        if(!rc)
+          hidden = fs3.attrFile & FILE_HIDDEN ? PR_TRUE : PR_FALSE;
+#else
+        DWORD attr = GetFileAttributes(mPath);
+        if (FILE_ATTRIBUTE_HIDDEN & attr)
+            hidden = PR_TRUE;
+#endif
+    }
+    return hidden;
+}
+// nsFileSpec::IsHidden
+
+//----------------------------------------------------------------------------------------
+PRBool nsFileSpec::IsSymlink() const
+//----------------------------------------------------------------------------------------
+{
+#ifdef XP_OS2
+    return PR_FALSE;                // No symlinks on OS/2
+#else
+    HRESULT hres; 
+    IShellLink* psl; 
+    
+    PRBool isSymlink = PR_FALSE;
+    
+    CoInitialize(NULL);
+    // Get a pointer to the IShellLink interface. 
+    hres = CoCreateInstance(CLSID_ShellLink, NULL, CLSCTX_INPROC_SERVER, IID_IShellLink, (void**)&psl); 
+    if (SUCCEEDED(hres)) 
+    { 
+        IPersistFile* ppf; 
+        
+        // Get a pointer to the IPersistFile interface. 
+        hres = psl->QueryInterface(IID_IPersistFile, (void**)&ppf); 
+        
+        if (SUCCEEDED(hres)) 
+        {
+            WORD wsz[MAX_PATH]; 
+            // Ensure that the string is Unicode. 
+            MultiByteToWideChar(CP_ACP, 0, mPath, -1, wsz, MAX_PATH); 
+ 
+            // Load the shortcut. 
+            hres = ppf->Load(wsz, STGM_READ); 
+            if (SUCCEEDED(hres)) 
+            {
+                isSymlink = PR_TRUE;
+            }
+            
+            // Release the pointer to the IPersistFile interface. 
+            ppf->Release(); 
+        }
+        
+        // Release the pointer to the IShellLink interface. 
+        psl->Release();
+    }
+
+    CoUninitialize();
+
+    return isSymlink;
+#endif
+}
+
+
+//----------------------------------------------------------------------------------------
+nsresult nsFileSpec::ResolveSymlink(PRBool& wasSymlink)
+//----------------------------------------------------------------------------------------
+{
+#ifdef XP_OS2
+    return NS_OK;           // no symlinks on OS/2
+#else
+    wasSymlink = PR_FALSE;  // assume failure
+
+	if (Exists())
+		return NS_OK;
+
+
+    HRESULT hres; 
+    IShellLink* psl; 
+
+    CoInitialize(NULL);
+
+    // Get a pointer to the IShellLink interface. 
+    hres = CoCreateInstance(CLSID_ShellLink, NULL, CLSCTX_INPROC_SERVER, IID_IShellLink, (void**)&psl); 
+    if (SUCCEEDED(hres)) 
+    { 
+        IPersistFile* ppf; 
+        
+        // Get a pointer to the IPersistFile interface. 
+        hres = psl->QueryInterface(IID_IPersistFile, (void**)&ppf); 
+        
+        if (SUCCEEDED(hres)) 
+        {
+            WORD wsz[MAX_PATH]; 
+            // Ensure that the string is Unicode. 
+            MultiByteToWideChar(CP_ACP, 0, mPath, -1, wsz, MAX_PATH); 
+ 
+            // Load the shortcut. 
+            hres = ppf->Load(wsz, STGM_READ); 
+            if (SUCCEEDED(hres)) 
+            {
+                wasSymlink = PR_TRUE;
+
+                // Resolve the link. 
+                hres = psl->Resolve(nsnull, SLR_NO_UI ); 
+                if (SUCCEEDED(hres)) 
+                { 
+                    char szGotPath[MAX_PATH]; 
+                    WIN32_FIND_DATA wfd; 
+
+                    // Get the path to the link target. 
+                    hres = psl->GetPath( szGotPath, MAX_PATH, &wfd, SLGP_UNCPRIORITY ); 
+
+                    if (SUCCEEDED(hres))
+                    {
+                        // Here we modify the nsFileSpec;
+                        mPath = szGotPath;
+                        mError = NS_OK;
+                    }
+                } 
+            }
+            else {
+                // It wasn't a shortcut. Oh well. Leave it like it was.
+                hres = 0;
+            }
+
+            // Release the pointer to the IPersistFile interface. 
+            ppf->Release(); 
+        }
+        // Release the pointer to the IShellLink interface. 
+        psl->Release();
+    }
+
+    CoUninitialize();
+
+    if (SUCCEEDED(hres))
+        return NS_OK;
+
+    return NS_FILE_FAILURE;
+#endif
+}
+
+
+
+//----------------------------------------------------------------------------------------
+void nsFileSpec::GetParent(nsFileSpec& outSpec) const
+//----------------------------------------------------------------------------------------
+{
+	outSpec.mPath = mPath;
+	char* chars = (char*)outSpec.mPath;
+	chars[outSpec.mPath.Length() - 1] = '\0'; // avoid trailing separator, if any
+    char* cp = strrchr(chars, '\\');
+    if (cp++)
+	    outSpec.mPath.SetLength(cp - chars); // truncate.
+} // nsFileSpec::GetParent
+
+//----------------------------------------------------------------------------------------
+void nsFileSpec::operator += (const char* inRelativePath)
+//----------------------------------------------------------------------------------------
+{
+	NS_ASSERTION(inRelativePath, "Attempt to do += with a null string");
+
+	if (!inRelativePath || mPath.IsEmpty())
+		return;
+	
+	if (mPath[mPath.Length() - 1] == '\\')
+		mPath += "x";
+	else
+		mPath += "\\x";
+	
+	// If it's a (unix) relative path, make it native
+	nsSimpleCharString dosPath = inRelativePath;
+	nsFileSpecHelpers::UnixToNative(dosPath);
+	SetLeafName(dosPath);
+} // nsFileSpec::operator +=
+
+//----------------------------------------------------------------------------------------
+void nsFileSpec::CreateDirectory(int /*mode*/)
+//----------------------------------------------------------------------------------------
+{
+	// Note that mPath is canonical!
+	if (!mPath.IsEmpty())
+#ifdef XP_OS2
+	    // OS2TODO - vacpp complains about mkdir but PR_MkDir should be ok?
+            PR_MkDir(nsNSPRPath(*this), PR_CREATE_FILE);
+#else
+	    mkdir(nsNSPRPath(*this));
+#endif
+} // nsFileSpec::CreateDirectory
+
+//----------------------------------------------------------------------------------------
+void nsFileSpec::Delete(PRBool inRecursive) const
+//----------------------------------------------------------------------------------------
+{
+    if (IsDirectory())
+    {
+	    if (inRecursive)
+        {
+            for (nsDirectoryIterator i(*this, PR_FALSE); i.Exists(); i++)
+                {
+                    nsFileSpec& child = i.Spec();
+                    child.Delete(inRecursive);
+                }		
+        }
+#ifdef XP_OS2
+            // OS2TODO - vacpp complains if use rmdir but PR_RmDir should be ok?
+            PR_RmDir(nsNSPRPath(*this));
+#else
+	    rmdir(nsNSPRPath(*this));
+#endif
+    }
+	else if (!mPath.IsEmpty())
+    {
+        remove(nsNSPRPath(*this));
+    }
+} // nsFileSpec::Delete
+
+
+//----------------------------------------------------------------------------------------
+void nsFileSpec::RecursiveCopy(nsFileSpec newDir) const
+//----------------------------------------------------------------------------------------
+{
+    if (IsDirectory())
+    {
+		if (!(newDir.Exists()))
+		{
+			newDir.CreateDirectory();
+		}
+
+		for (nsDirectoryIterator i(*this, PR_FALSE); i.Exists(); i++)
+		{
+			nsFileSpec& child = i.Spec();
+
+			if (child.IsDirectory())
+			{
+				nsFileSpec tmpDirSpec(newDir);
+
+				char *leafname = child.GetLeafName();
+				tmpDirSpec += leafname;
+				nsCRT::free(leafname);
+
+				child.RecursiveCopy(tmpDirSpec);
+			}
+			else
+			{
+   				child.RecursiveCopy(newDir);
+			}
+		}
+    }
+    else if (!mPath.IsEmpty())
+    {
+		nsFileSpec& filePath = (nsFileSpec&) *this;
+
+		if (!(newDir.Exists()))
+		{
+			newDir.CreateDirectory();
+		}
+
+        filePath.CopyToDir(newDir);
+    }
+} // nsFileSpec::RecursiveCopy
+
+//----------------------------------------------------------------------------------------
+nsresult
+nsFileSpec::Truncate(PRInt32 aNewFileLength) const
+//----------------------------------------------------------------------------------------
+{
+#ifdef XP_OS2
+    APIRET rc;
+    HFILE hFile;
+    ULONG actionTaken;
+
+    rc = DosOpen(mPath,
+                       &hFile,
+                       &actionTaken,
+                       0,                 
+                       FILE_NORMAL,
+                       OPEN_ACTION_FAIL_IF_NEW | OPEN_ACTION_OPEN_IF_EXISTS,
+                       OPEN_SHARE_DENYREADWRITE | OPEN_ACCESS_READWRITE,
+                       NULL);
+                                 
+    if (rc != NO_ERROR)
+        return NS_FILE_FAILURE;
+
+    rc = DosSetFileSize(hFile, aNewFileLength);
+
+    if (rc == NO_ERROR) 
+        DosClose(hFile);
+    else
+        goto error; 
+#else
+    DWORD status;
+    HANDLE hFile;
+
+    // Leave it to Microsoft to open an existing file with a function
+    // named "CreateFile".
+    hFile = CreateFile(mPath,
+                       GENERIC_WRITE, 
+                       FILE_SHARE_READ, 
+                       NULL, 
+                       OPEN_EXISTING, 
+                       FILE_ATTRIBUTE_NORMAL, 
+                       NULL); 
+    if (hFile == INVALID_HANDLE_VALUE)
+        return NS_FILE_FAILURE;
+
+    // Seek to new, desired end of file
+    status = SetFilePointer(hFile, aNewFileLength, NULL, FILE_BEGIN);
+    if (status == 0xffffffff)
+        goto error;
+
+    // Truncate file at current cursor position
+    if (!SetEndOfFile(hFile))
+        goto error;
+
+    if (!CloseHandle(hFile))
+        return NS_FILE_FAILURE;
+#endif
+
+    return NS_OK;
+
+ error:
+#ifdef XP_OS2
+    DosClose(hFile);
+#else
+    CloseHandle(hFile);
+#endif
+    return NS_FILE_FAILURE;
+
+} // nsFileSpec::Truncate
+
+//----------------------------------------------------------------------------------------
+nsresult nsFileSpec::Rename(const char* inNewName)
+//----------------------------------------------------------------------------------------
+{
+	NS_ASSERTION(inNewName, "Attempt to Rename with a null string");
+
+    // This function should not be used to move a file on disk. 
+    if (strchr(inNewName, '/')) 
+        return NS_FILE_FAILURE;
+
+    char* oldPath = nsCRT::strdup(mPath);
+    
+    SetLeafName(inNewName);        
+
+    if (PR_Rename(oldPath, mPath) != NS_OK)
+    {
+        // Could not rename, set back to the original.
+        mPath = oldPath;
+        return NS_FILE_FAILURE;
+    }
+    
+    nsCRT::free(oldPath);
+    
+    return NS_OK;
+} // nsFileSpec::Rename
+
+//----------------------------------------------------------------------------------------
+nsresult nsFileSpec::CopyToDir(const nsFileSpec& inParentDirectory) const
+//----------------------------------------------------------------------------------------
+{
+    // We can only copy into a directory, and (for now) can not copy entire directories
+    if (inParentDirectory.IsDirectory() && (! IsDirectory() ) )
+    {
+        char *leafname = GetLeafName();
+        nsSimpleCharString destPath(inParentDirectory.GetCString());
+        destPath += "\\";
+        destPath += leafname;
+        nsCRT::free(leafname);
+        
+        // CopyFile returns non-zero if succeeds
+#ifdef XP_OS2
+        APIRET rc;
+        PRBool copyOK;
+
+        rc = DosCopy(GetCString(), (PSZ)destPath, DCPY_EXISTING);
+
+        if (rc == NO_ERROR)
+            copyOK = PR_TRUE;
+        else
+            copyOK = PR_FALSE;
+#else
+        int copyOK = CopyFile(GetCString(), destPath, PR_TRUE);
+#endif
+        if (copyOK)
+            return NS_OK;
+    }
+    return NS_FILE_FAILURE;
+} // nsFileSpec::CopyToDir
+
+//----------------------------------------------------------------------------------------
+nsresult nsFileSpec::MoveToDir(const nsFileSpec& inNewParentDirectory)
+//----------------------------------------------------------------------------------------
+{
+    // We can only copy into a directory, and (for now) can not copy entire directories
+    if (inNewParentDirectory.IsDirectory() && (! IsDirectory() ) )
+    {
+        char *leafname = GetLeafName();
+        nsSimpleCharString destPath(inNewParentDirectory.GetCString());
+        destPath += "\\";
+        destPath += leafname;
+        nsCRT::free(leafname);
+
+        // MoveFile returns non-zero if succeeds
+#ifdef XP_OS2
+        int copyOK = 0;
+#else
+        int copyOK = MoveFile(GetCString(), destPath);
+#endif
+
+        if (copyOK)
+        {
+            *this = inNewParentDirectory + GetLeafName(); 
+            return NS_OK;
+        }
+        
+    }
+    return NS_FILE_FAILURE;
+} // nsFileSpec::MoveToDir
+
+//----------------------------------------------------------------------------------------
+nsresult nsFileSpec::Execute(const char* inArgs ) const
+//----------------------------------------------------------------------------------------
+{    
+    if (!IsDirectory())
+    {
+#ifdef XP_OS2
+        nsresult result = NS_FILE_FAILURE;
+    
+        if (!mPath.IsEmpty())
+        {
+            nsSimpleCharString fileNameWithArgs = mPath + " " + inArgs;   
+            result = NS_FILE_RESULT(system(fileNameWithArgs));
+        } 
+        return result;
+#else
+        nsSimpleCharString fileNameWithArgs = "\"";
+        fileNameWithArgs += mPath + "\" " + inArgs;
+        int execResult = WinExec( fileNameWithArgs, SW_NORMAL );     
+        if (execResult > 31)
+            return NS_OK;
+#endif
+    }
+    return NS_FILE_FAILURE;
+} // nsFileSpec::Execute
+
+
+//----------------------------------------------------------------------------------------
+PRInt64 nsFileSpec::GetDiskSpaceAvailable() const
+//----------------------------------------------------------------------------------------
+{
+#ifdef XP_OS2
+    PRInt64 nBytes = 0;
+    PRUint32 cbAvail = UINT_MAX;    // OS2TODO - compare w/Windows
+    ULONG ulDriveNo = toupper(mPath[0]) + 1 - 'A';
+    FSALLOCATE fsAllocate;
+    APIRET rc;
+
+    rc = DosQueryFSInfo(ulDriveNo,
+                                 FSIL_ALLOC,
+                                 &fsAllocate,
+                                 sizeof(fsAllocate));
+
+    if (rc == NO_ERROR) 
+    {
+       cbAvail = (PRInt64)(fsAllocate.cUnitAvail  *
+                                   fsAllocate.cSectorUnit *
+                                   (ULONG)fsAllocate.cbSector);
+       LL_I2L(nBytes , cbAvail);
+    }
+    else
+    {
+       // Note that nBytes will be 0 on error path.
+    }
+
+    return nBytes;
+#else
+    PRInt64 int64;
+    
+    LL_I2L(int64 , LONG_MAX);
+
+    char aDrive[_MAX_DRIVE + 2];
+	_splitpath( (const char*)mPath, aDrive, NULL, NULL, NULL);
+
+	if (aDrive[0] == '\0')
+	{
+        // The back end is always trying to pass us paths that look
+        //   like /c|/netscape/mail.  See if we've got one of them
+        if (mPath.Length() > 2 && mPath[0] == '/' && mPath[2] == '|')
+        {
+            aDrive[0] = mPath[1];
+            aDrive[1] = ':';
+            aDrive[2] = '\0';
+        }
+        else
+        {
+            // Return bogus large number and hope for the best
+            return int64; 
+        }
+    }
+
+	strcat(aDrive, "\\");
+
+    // Check disk space
+    DWORD dwSecPerClus, dwBytesPerSec, dwFreeClus, dwTotalClus;
+    ULARGE_INTEGER liFreeBytesAvailableToCaller, liTotalNumberOfBytes, liTotalNumberOfFreeBytes;
+    double nBytes = 0;
+
+    BOOL (WINAPI* getDiskFreeSpaceExA)(LPCTSTR lpDirectoryName, 
+                                       PULARGE_INTEGER lpFreeBytesAvailableToCaller,
+                                       PULARGE_INTEGER lpTotalNumberOfBytes,    
+                                       PULARGE_INTEGER lpTotalNumberOfFreeBytes) = NULL;
+
+    HINSTANCE hInst = LoadLibrary("KERNEL32.DLL");
+    NS_ASSERTION(hInst != NULL, "COULD NOT LOAD KERNEL32.DLL");
+    if (hInst != NULL)
+    {
+        getDiskFreeSpaceExA =  (BOOL (WINAPI*)(LPCTSTR lpDirectoryName, 
+                                               PULARGE_INTEGER lpFreeBytesAvailableToCaller,
+                                               PULARGE_INTEGER lpTotalNumberOfBytes,    
+                                               PULARGE_INTEGER lpTotalNumberOfFreeBytes)) 
+        GetProcAddress(hInst, "GetDiskFreeSpaceExA");
+        FreeLibrary(hInst);
+    }
+
+    if (getDiskFreeSpaceExA && (*getDiskFreeSpaceExA)(aDrive,
+                                                      &liFreeBytesAvailableToCaller, 
+                                                      &liTotalNumberOfBytes,  
+                                                      &liTotalNumberOfFreeBytes))
+    {
+        nBytes = (double)(signed __int64)liFreeBytesAvailableToCaller.QuadPart;
+    }
+    else if ( GetDiskFreeSpace(aDrive, &dwSecPerClus, &dwBytesPerSec, &dwFreeClus, &dwTotalClus))
+    {
+        nBytes = (double)dwFreeClus*(double)dwSecPerClus*(double) dwBytesPerSec;
+    }
+    return (PRInt64)nBytes;
+#endif
+}
+
+
+
+//========================================================================================
+//								nsDirectoryIterator
+//========================================================================================
+
+//----------------------------------------------------------------------------------------
+nsDirectoryIterator::nsDirectoryIterator(const nsFileSpec& inDirectory, PRBool resolveSymlink)
+//----------------------------------------------------------------------------------------
+	: mCurrent(inDirectory)
+	, mDir(nsnull)
+    , mStarting(inDirectory)
+	, mExists(PR_FALSE)
+    , mResoveSymLinks(resolveSymlink)
+{
+    mDir = PR_OpenDir(inDirectory);
+	mCurrent += "dummy";
+    mStarting += "dummy";
+    ++(*this);
+} // nsDirectoryIterator::nsDirectoryIterator
+
+//----------------------------------------------------------------------------------------
 nsDirectoryIterator::~nsDirectoryIterator()
+//----------------------------------------------------------------------------------------
 {
-   if( mDir)
-      PR_CloseDir( mDir);
-}
+    if (mDir)
+	    PR_CloseDir(mDir);
+} // nsDirectoryIterator::nsDirectoryIterator
 
-nsDirectoryIterator &nsDirectoryIterator::operator ++ ()
+//----------------------------------------------------------------------------------------
+nsDirectoryIterator& nsDirectoryIterator::operator ++ ()
+//----------------------------------------------------------------------------------------
 {
-   mExists = PR_FALSE;
-   if( !mDir)
-      return *this;
-   PRDirEntry *entry = PR_ReadDir( mDir, PR_SKIP_BOTH);
-   if( entry)
-   {
+	mExists = PR_FALSE;
+	if (!mDir)
+		return *this;
+    PRDirEntry* entry = PR_ReadDir(mDir, PR_SKIP_BOTH); // Ignore '.' && '..'
+	if (entry)
+    {
       mExists = PR_TRUE;
       mCurrent = mStarting;
-      mCurrent.SetLeafName( entry->name);
+      mCurrent.SetLeafName(entry->name);
       if (mResoveSymLinks)
       {   
           PRBool ignore;
           mCurrent.ResolveSymlink(ignore);
       }
-   }
-   return *this;
-}
+    }
+	return *this;
+} // nsDirectoryIterator::operator ++
 
+//----------------------------------------------------------------------------------------
 nsDirectoryIterator& nsDirectoryIterator::operator -- ()
+//----------------------------------------------------------------------------------------
 {
-   return ++(*this); // can't go backwards without much pain & suffering.
-}
+	return ++(*this); // can't do it backwards.
+} // nsDirectoryIterator::operator --
 
-void nsFileSpec::RecursiveCopy(nsFileSpec newDir) const
-{
-  if (IsDirectory())
-    {
-      if (!(newDir.Exists()))
-	{
-	  newDir.CreateDirectory();
-	}
-
-      for (nsDirectoryIterator i(*this, PR_FALSE); i.Exists(); i++)
-	{
-	  nsFileSpec& child = (nsFileSpec&)i;
-	  
-	  if (child.IsDirectory())
-	    {
-	      nsFileSpec tmpDirSpec(newDir);
-	      
-	      char *leafname = child.GetLeafName();
-	      tmpDirSpec += leafname;
-	      nsCRT::free(leafname);
-
-	      child.RecursiveCopy(tmpDirSpec);
-	    }
-	  else
-	    {
-	      child.RecursiveCopy(newDir);
-	    }
-	}
-    }
-  else if (!mPath.IsEmpty())
-    {
-      nsFileSpec& filePath = (nsFileSpec&) *this;
-      
-      if (!(newDir.Exists()))
-	{
-	  newDir.CreateDirectory();
-	}
-
-      filePath.CopyToDir(newDir);
-    }
-}
-
-nsresult nsFileSpec::Truncate(PRInt32 offset) const
-{
-    char* Path = nsCRT::strdup(mPath);
-    int rv = 0;
-
-#ifdef XP_OS2_VACPP
-    int fh = open(Path, O_RDWR);
-
-    if (fh != -1)
-      rv = _chsize(fh, offset);
-#else
-    truncate(Path, offset);
-#endif
-
-    nsCRT::free(Path);
-
-    if(!rv) 
-        return NS_OK;
-    else
-        return NS_ERROR_FAILURE;
-}
