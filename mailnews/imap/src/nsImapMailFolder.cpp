@@ -3731,6 +3731,7 @@ nsImapMailFolder::CopyMessages(nsIMsgFolder* srcFolder,
     rv = GetServer(getter_AddRefs(dstServer));
     if(NS_FAILED(rv)) goto done;
 
+    NS_ENSURE_TRUE(dstServer, NS_ERROR_NULL_POINTER);
     PRBool sameServer;
     rv = dstServer->Equals(srcServer, &sameServer);
     if (NS_FAILED(rv)) goto done;
