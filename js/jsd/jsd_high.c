@@ -57,7 +57,8 @@ void JSD_ASSERT_VALID_CONTEXT(JSDContext* jsdc)
 static JSClass global_class = {
     "JSDGlobal", 0,
     JS_PropertyStub,  JS_PropertyStub,  JS_PropertyStub,  JS_PropertyStub,
-    JS_EnumerateStub, JS_ResolveStub,   JS_ConvertStub,   JS_FinalizeStub
+    JS_EnumerateStub, JS_ResolveStub,   JS_ConvertStub,   JS_FinalizeStub,
+    JSCLASS_NO_OPTIONAL_MEMBERS
 };
 
 static JSBool
@@ -124,6 +125,7 @@ _newJSDContext(JSRuntime*         jsrt,
     if( ! JS_InitStandardClasses(jsdc->dumbContext, jsdc->glob) )
         goto label_newJSDContext_failure;
 
+    jsdc->data = NULL;
     jsdc->inited = JS_TRUE;
 
     JSD_LOCK();
@@ -244,6 +246,20 @@ jsd_SetUserCallbacks(JSRuntime* jsrt, JSD_UserCallbacks* callbacks, void* user)
         memcpy(&_callbacks, callbacks, sizeof(JSD_UserCallbacks));
     else
         memset(&_callbacks, 0 , sizeof(JSD_UserCallbacks));
+}
+
+void*
+jsd_SetContextPrivate(JSDContext* jsdc, void *data)
+{
+    void *rval = jsdc->data;
+    jsdc->data = data;
+    return data;
+}
+
+void*
+jsd_GetContextPrivate(JSDContext* jsdc)
+{
+    return jsdc->data;
 }
 
 JSDContext*
