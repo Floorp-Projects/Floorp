@@ -45,6 +45,7 @@ CPPSRCS		= \
 		TestCallbacks.cpp \
         TestSyncHTTP.cpp \
 		TestDBMAccess.cpp \
+        TestMCTransport.cpp \
 		$(NULL)
 
 SIMPLE_PROGRAMS	= $(CPPSRCS:.cpp=$(BIN_SUFFIX))
