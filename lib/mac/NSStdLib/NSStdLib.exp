@@ -1165,18 +1165,18 @@ __dt__Q33std8ios_base7failureFv
 ### std::ios_base::
 #{code}
 getloc__Q23std8ios_baseCFv
-# good__Q23std8ios_baseCFv
+good__Q23std8ios_baseCFv
 imbue__Q23std8ios_baseFRCQ23std6locale
 #{data}
-# index___Q23std8ios_base
+index___Q23std8ios_base
 #{code}
-# init__Q23std8ios_baseFPv
+init__Q23std8ios_baseFPv
 iword__Q23std8ios_baseFi
 pword__Q23std8ios_baseFi
-# rdstate__Q23std8ios_baseCFv
+rdstate__Q23std8ios_baseCFv
 register_callback__Q23std8ios_baseFPFQ33std8ios_base5eventRQ23std8ios_basei_vi
-# setstate__Q23std8ios_baseFQ33std8ios_base7iostate
-# state__Q23std8ios_baseFv
+setstate__Q23std8ios_baseFQ33std8ios_base7iostate
+state__Q23std8ios_baseFv
 __dt__Q23std8ios_baseFv
 
 ### std::length_error::
