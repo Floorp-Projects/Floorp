@@ -156,7 +156,7 @@ NS_METHOD nsAppShell::Spindown()
 
 //-------------------------------------------------------------------------
 //
-// GetNativeData
+// Run
 //
 //-------------------------------------------------------------------------
 NS_METHOD nsAppShell::Run()
@@ -249,6 +249,13 @@ NS_METHOD nsAppShell::GetNativeEvent(PRBool &aRealEvent, void *& aEvent)
 NS_METHOD nsAppShell::DispatchNativeEvent(PRBool aRealEvent, void *aEvent)
 {
   return NS_ERROR_FAILURE;
+}
+
+NS_METHOD nsAppShell::EventIsForModalWindow(PRBool aRealEvent, void *aEvent,
+    nsIWidget *aWidget, PRBool *aForWindow)
+{
+  *aForWindow = PR_TRUE;
+  return NS_OK;
 }
 
 NS_METHOD
