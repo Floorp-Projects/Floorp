@@ -37,6 +37,8 @@
 namespace JavaScript {
 namespace JSTypes {
 
+//    using JavaScript::StringAtom;
+
 // the canonical undefined value.
 const JSValue kUndefinedValue;
 
@@ -81,6 +83,60 @@ Formatter& operator<<(Formatter& f, const JSValue& value)
     }
     return f;
 }
+
+
+JSValue *JSValue::valueToString(JSValue *v) // can assume v is not a string
+{
+    char *chrp;
+    char buf[dtosStandardBufferSize];
+    switch (v->tag) {
+    case JSValue::i32_tag:
+        chrp = doubleToStr(buf, dtosStandardBufferSize, v->i32, dtosStandard, 0);
+        break;
+    case JSValue::f64_tag:
+        chrp = doubleToStr(buf, dtosStandardBufferSize, v->f64, dtosStandard, 0);
+        break;
+    case JSValue::object_tag:
+        chrp = "object";
+        break;
+    case JSValue::array_tag:
+        chrp = "array";
+        break;
+    case JSValue::function_tag:
+        chrp = "function";
+        break;
+    case JSValue::string_tag:
+        return v;
+    default:
+        chrp = "undefined";
+        break;
+    }
+    return new JSValue(new String(widenCString(chrp)));
+}
+
+JSValue *JSValue::valueToNumber(JSValue *v)// can assume v is not a number
+{
+    switch (v->tag) {
+    case JSValue::i32_tag:
+    case JSValue::f64_tag:
+        return v;
+    case JSValue::string_tag: 
+        {
+            int length = v->string->length();
+            const char16 *s = v->string->c_str();
+            const char16 *numEnd;
+	        double d = stringToDouble(s, s + length, numEnd);
+            return new JSValue(d);
+        }
+    case JSValue::object_tag:
+    case JSValue::array_tag:
+    case JSValue::function_tag:
+    default:
+        break;
+    }
+    return new JSValue();
+}
+
 
 } /* namespace JSTypes */    
 } /* namespace JavaScript */

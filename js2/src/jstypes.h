@@ -101,8 +101,17 @@ namespace JSTypes {
         JSObject*& operator=(JSObject* object)          { return (tag = object_tag, this->object = object); }
         JSArray*& operator=(JSArray* array)             { return (tag = array_tag, this->array = array); }
         JSFunction*& operator=(JSFunction* function)    { return (tag = function_tag, this->function = function); }
-        const String*& operator=(String* string)        { return (tag = string_tag, this->string = string); }
+        String*& operator=(String* string)              { return (tag = string_tag, this->string = string); }
         
+        bool isString()                                 { return (tag == string_tag); }
+        bool isNumber()                                 { return ((tag == f64_tag) || (tag == i32_tag)); }
+
+        JSValue *toString()                             { if (isString()) return this; else return valueToString(this); }
+        JSValue *toNumber()                             { if (isNumber()) return this; else return valueToNumber(this); }
+
+        static JSValue *valueToString(JSValue *v);
+        static JSValue *valueToNumber(JSValue *v);
+
         int operator==(const JSValue& value) const;
     };
 
@@ -234,9 +243,21 @@ namespace JSTypes {
      */
     class JSFunction : public JSObject {
         ICodeModule* mICode;
+    protected:
+        JSFunction() : mICode(0) {}
     public:
+        virtual bool isNative()         { return false; }
         JSFunction(ICodeModule* iCode) : mICode(iCode) {}
         ICodeModule* getICode() { return mICode; }
+    };
+
+    typedef JSValue * (*NativeFunction)(const JSValues& argv);
+
+    class JSNativeFunction : public JSFunction {
+    public:
+        NativeFunction mCode;
+        JSNativeFunction(NativeFunction code) : mCode(code) {}
+        virtual bool isNative()         { return true; }
     };
         
     class JSException : public gc_base {
@@ -288,10 +309,17 @@ namespace JSTypes {
             return setProperty(name, value);
         }
         
-        // FIXME:  need to copy the ICodeModule's instruction stream.    
+        // FIXME:  need to copy the ICodeModule's instruction stream.
+        // why? it belongs to the ICodeModule exclusively
         JSValue& defineFunction(const String& name, ICodeModule* iCode)
         {
             JSValue value(new JSFunction(iCode));
+            return defineVariable(name, value);
+        }
+
+        JSValue& defineNativeFunction(const String& name, NativeFunction code)
+        {
+            JSValue value(new JSNativeFunction(code));
             return defineVariable(name, value);
         }
     };

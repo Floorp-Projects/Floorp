@@ -158,12 +158,27 @@ JSValue Context::interpret(ICodeModule* iCode, const JSValues& args)
             case CALL:
                 {
                     Call* call = static_cast<Call*>(instruction);
-                    mLinkage = new Linkage(mLinkage, ++mPC, begin_pc,
-                                           mActivation, op1(call));
-                    iCode = (*registers)[op2(call)].function->getICode();
-                    mActivation = new Activation(iCode, mActivation, op3(call));
-                    registers = &mActivation->mRegisters;
-                    begin_pc = mPC = iCode->its_iCode->begin();
+                    JSFunction *target = (*registers)[op2(call)].function;
+                    if (target->isNative()) {
+                        RegisterList &params = op3(call);
+                        JSValues argv(params.size());
+                        int i = 0;
+                        for (RegisterList::const_iterator src = params.begin(), end = params.end();
+                                        src != end; ++src, ++i) {
+                            argv[i] = (*registers)[*src];
+                        }
+                        if (op2(call) != NotARegister)
+                            (*registers)[op2(call)] = *static_cast<JSNativeFunction*>(target)->mCode(argv);
+                        break;
+                    }
+                    else {
+                        mLinkage = new Linkage(mLinkage, ++mPC, begin_pc,
+                                               mActivation, op1(call));
+                        iCode = target->getICode();
+                        mActivation = new Activation(iCode, mActivation, op3(call));
+                        registers = &mActivation->mRegisters;
+                        begin_pc = mPC = iCode->its_iCode->begin();
+                    }
                 }
                 continue;
 
@@ -285,6 +300,12 @@ JSValue Context::interpret(ICodeModule* iCode, const JSValues& args)
                     (*registers)[dst(li)] = JSValue(src1(li));
                 }
                 break;
+            case LOAD_STRING:
+                {
+                    LoadString* ls = static_cast<LoadString*>(instruction);
+                    (*registers)[dst(ls)] = JSValue(src1(ls));
+                }
+                break;
             case BRANCH:
                 {
                     GenericBranch* bra =
@@ -355,11 +376,21 @@ JSValue Context::interpret(ICodeModule* iCode, const JSValues& args)
                 break;
             case ADD:
                 {
+                    // LEAKING like a sieve here because the toXXX are returning pointers
+                    // to possibly new JSValues.
+
                     // could get clever here with Functional forms.
                     Arithmetic* add = static_cast<Arithmetic*>(instruction);
-                    (*registers)[dst(add)] = 
-                        JSValue((*registers)[src1(add)].f64 +
-                                (*registers)[src2(add)].f64);
+                    if ((*registers)[src1(add)].isString()
+                            || (*registers)[src2(add)].isString()) {
+                        JSValue *s = (*registers)[src1(add)].toString();
+                        *(s->string) += *((*registers)[src2(add)].toString()->string);
+                        (*registers)[dst(add)] = *s;
+                    }
+                    else {
+                        (*registers)[dst(add)] = (*registers)[src1(add)].toNumber()->f64
+                                                    + (*registers)[src2(add)].toNumber()->f64;
+                    }
                 }
                 break;
             case SUBTRACT:
@@ -399,6 +430,18 @@ JSValue Context::interpret(ICodeModule* iCode, const JSValues& args)
                          (*registers)[src2(cmp)].f64);
                     (*registers)[dst(cmp)] = 
                         JSValue(int32(diff == 0.0 ? 0 : (diff > 0.0 ? 1 : -1)));
+                }
+                break;
+            case NEGATE:
+                {
+                    Negate* neg = static_cast<Negate*>(instruction);
+                    (*registers)[dst(neg)] = JSValue(-(*registers)[src1(neg)].toNumber()->f64);
+                }
+                break;
+            case POSATE:
+                {
+                    Posate* pos = static_cast<Posate*>(instruction);
+                    (*registers)[dst(pos)] = *(*registers)[src1(pos)].toNumber();
                 }
                 break;
             case NOT:

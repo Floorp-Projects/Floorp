@@ -189,6 +189,7 @@ namespace ICG {
         Register op(ICodeOp op, Register source);
         Register op(ICodeOp op, Register source1, Register source2);
         Register call(Register target, RegisterList args);
+        void callVoid(Register target, RegisterList args);
 
         void move(Register destination, Register source);
         void complement(Register destination, Register source);

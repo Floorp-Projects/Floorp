@@ -256,6 +256,12 @@ namespace ICG {
         return dest;
     }
 
+    void ICodeGenerator::callVoid(Register target, RegisterList args)
+    {
+        Call *instr = new Call(NotARegister, target, args);
+        iCode->push_back(instr);
+    }
+
     void ICodeGenerator::branch(Label *label)
     {
         Branch *instr = new Branch(label);
