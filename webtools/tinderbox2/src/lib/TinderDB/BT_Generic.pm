@@ -30,15 +30,13 @@
 # Rights Reserved.
 #
 
-# complete rewrite by Ken Estes:
-#	 kestes@staff.mail.com Old work.
-#	 kestes@reefedge.com New work.
-#	 kestes@walrus.com Home.
+# complete rewrite by Ken Estes for contact info see the
+#     mozilla/webtools/tinderbox2/Contact file.
 # Contributor(s): 
 
 
-# $Revision: 1.23 $ 
-# $Date: 2003/08/16 18:31:09 $ 
+# $Revision: 1.24 $ 
+# $Date: 2003/08/17 01:37:52 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/TinderDB/BT_Generic.pm,v $ 
 # $Name:  $ 
@@ -78,7 +76,7 @@ use VCDisplay;
 use TinderDB::Notice;
 
 
-$VERSION = ( qw $Revision: 1.23 $ )[1];
+$VERSION = ( qw $Revision: 1.24 $ )[1];
 
 @ISA = qw(TinderDB::BasicTxtDB);
 

@@ -22,16 +22,14 @@
 # Rights Reserved.
 #
 
-# complete rewrite by Ken Estes:
-#	 kestes@staff.mail.com Old work.
-#	 kestes@reefedge.com New work.
-#	 kestes@walrus.com Home.
+# complete rewrite by Ken Estes for contact info see the
+#     mozilla/webtools/tinderbox2/Contact file.
 # Contributor(s): 
 
 
 
-# $Revision: 1.12 $ 
-# $Date: 2003/06/18 15:49:50 $ 
+# $Revision: 1.13 $ 
+# $Date: 2003/08/17 01:37:52 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/TinderDB/Time.pm,v $ 
 # $Name:  $ 
@@ -48,7 +46,7 @@ use VCDisplay;
 
 
 
-$VERSION = ( qw $Revision: 1.12 $ )[1];
+$VERSION = ( qw $Revision: 1.13 $ )[1];
 
 
 sub new {
