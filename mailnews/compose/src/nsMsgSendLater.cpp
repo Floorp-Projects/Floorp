@@ -68,6 +68,8 @@
 #include "nsIChannel.h"
 #include "prlog.h"
 #include "nsMsgSimulateError.h"
+#include "nsIMimeConverter.h"
+#include "nsMsgMimeCID.h"
 
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 static NS_DEFINE_CID(kCMsgMailSessionCID, NS_MSGMAILSESSION_CID);
@@ -75,6 +77,7 @@ static NS_DEFINE_CID(kSmtpServiceCID, NS_SMTPSERVICE_CID);
 static NS_DEFINE_CID(kMsgCompFieldsCID, NS_MSGCOMPFIELDS_CID); 
 static NS_DEFINE_CID(kMsgSendCID, NS_MSGSEND_CID); 
 static NS_DEFINE_CID(kISupportsArrayCID, NS_SUPPORTSARRAY_CID);
+static NS_DEFINE_CID(kCMimeConverterCID, NS_MIME_CONVERTER_CID);
 
 NS_IMPL_ISUPPORTS2(nsMsgSendLater, nsIMsgSendLater, nsIStreamListener)
 
@@ -501,6 +504,9 @@ nsCOMPtr<nsIMsgSend>        pMsgSend = nsnull;
     return NS_ERROR_FACTORY_NOT_LOADED;
   }
 
+  nsCOMPtr<nsIMimeConverter> mimeConverter = do_GetService(kCMimeConverterCID, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+
   // Since we have already parsed all of the headers, we are simply going to
   // set the composition fields and move on.
   //
@@ -509,16 +515,29 @@ nsCOMPtr<nsIMsgSend>        pMsgSend = nsnull;
 
   nsMsgCompFields * fields = (nsMsgCompFields *)compFields.get();
 
-  fields->SetFrom(author.get());
+  nsXPIDLCString decodedString;
+  // decoded string is null if the input is not MIME encoded
+  mimeConverter->DecodeMimeHeader(author.get(), getter_Copies(decodedString));
+
+  fields->SetFrom(decodedString.IsEmpty() ? author.get() : decodedString.get());
 
   if (m_to)
-    fields->SetTo(m_to);
+  {
+    mimeConverter->DecodeMimeHeader(m_to, getter_Copies(decodedString));
+    fields->SetTo(decodedString.IsEmpty() ? m_to : decodedString.get());
+  }
 
   if (m_bcc)
-    fields->SetBcc(m_bcc);
+  {
+    mimeConverter->DecodeMimeHeader(m_bcc, getter_Copies(decodedString));
+    fields->SetBcc(decodedString.IsEmpty() ? m_bcc : decodedString.get());
+  }
 
   if (m_fcc)
-    fields->SetFcc(m_fcc);
+  {
+    mimeConverter->DecodeMimeHeader(m_fcc, getter_Copies(decodedString));
+    fields->SetFcc(decodedString.IsEmpty() ? m_fcc : decodedString.get());
+  }
 
   if (m_newsgroups)
     fields->SetNewsgroups(m_newsgroups);
