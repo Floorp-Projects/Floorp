@@ -42,32 +42,20 @@
     var _elementIDs = ["mailnewsStartPageEnabled", "mailnewsStartPageUrl", "mailPaneConfig", "mailnewsDoubleClick2NewWindow", "mailRememberLastMsg",
                        "mailnewsSoundFileUrl", "newMailNotification", "newMailNotificationType",
                        "newMailNotificationAlert"];
-#ifdef XP_WIN
-    _elementIDs.push("mailnewsEnableMapi");
-    _elementIDs.push("mailnewsEnableNews");
-#endif
-
   ]]>
   </script>
   
   <groupbox align="start">
     <caption label="&generalSettings.label;"/>
     
-#ifdef XP_WIN
-      <checkbox id="mailnewsEnableMapi" label="&setDefaultMailClient.label;"
-              accesskey="&setDefaultMailClient.accesskey;" 
-              oncommand="onEnableMapi();"
-              startupFunc="registerCallback();"/>
+    <hbox id="mapi"/>
 
-      <checkbox id="mailnewsEnableNews" label="&setDefaultNewsClient.label;"
-              accesskey="&setDefaultNewsClient.accesskey;" 
-              oncommand="onEnableNews();"/>
-#endif
-    <separator class="thin"/>
     <checkbox id="mailRememberLastMsg" label="&rememberLastMsg.label;"
               prefstring="mailnews.remember_selected_message"
               accesskey="&rememberLastMsg.accesskey;"/>
 
+    <separator class="thin"/>
+    
   </groupbox>
   
   <hbox>
