@@ -358,7 +358,8 @@ gtk_xtbin_new (GdkWindow *parent_window, String * f)
   xtbin->xtdisplay = xtbin->xtclient.xtdisplay;
   gtk_widget_set_parent_window(GTK_WIDGET(xtbin), parent_window);
   gdk_window_get_user_data(xtbin->parent_window, &user_data);
-  gtk_container_add( GTK_CONTAINER(user_data), GTK_WIDGET(xtbin));
+  if (user_data)
+    gtk_container_add(GTK_CONTAINER(user_data), GTK_WIDGET(xtbin));
 
   return GTK_WIDGET (xtbin);
 }
@@ -808,8 +809,9 @@ xt_client_focus_listener( Widget w, XtPointer user_data, XEvent *event)
     case ReparentNotify:
       if(event->xreparent.parent == win) {
         /* I am the new parent */
-        xt_add_focus_listener_tree(XtWindowToWidget(dpy, event->xreparent.window),
-                                   user_data);
+        Widget child=XtWindowToWidget(dpy, event->xreparent.window);
+        if (child)
+          xt_add_focus_listener_tree( child, user_data);
       }
       else if(event->xreparent.window == win) {
         /* I am the new child */
@@ -887,8 +889,9 @@ xt_add_focus_listener_tree ( Widget treeroot, XtPointer user_data)
     return;
 
   for(i=0; i<nchildren; ++i) {
-    xt_add_focus_listener_tree(XtWindowToWidget(dpy, children[i]), 
-                               user_data);
+    Widget child = XtWindowToWidget(dpy, children[i]);
+    if (child) 
+      xt_add_focus_listener_tree( child, user_data);
   }
   XFree((void*)children);
 
