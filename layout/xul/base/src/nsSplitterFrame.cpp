@@ -53,6 +53,7 @@
 #include "nsBoxLayoutState.h"
 #include "nsIXBLService.h"
 #include "nsIServiceManager.h"
+#include "nsHTMLContainerFrame.h"
 
 #define REAL_TIME_DRAG
 

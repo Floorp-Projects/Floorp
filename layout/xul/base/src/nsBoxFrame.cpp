@@ -81,6 +81,7 @@
 #include "nsLayoutAtoms.h"
 #include "nsViewsCID.h"
 #include "nsIScrollableView.h"
+#include "nsHTMLContainerFrame.h"
 
 static NS_DEFINE_IID(kWidgetCID, NS_CHILD_CID);
 static NS_DEFINE_IID(kScrollViewIID, NS_ISCROLLABLEVIEW_IID);
@@ -275,7 +276,7 @@ nsBoxFrame::SetInitialChildList(nsIPresContext* aPresContext,
   nsCOMPtr<nsIPresShell> shell;
   aPresContext->GetShell(getter_AddRefs(shell));
 
-  nsresult r = nsHTMLContainerFrame::SetInitialChildList(aPresContext, aListName, aChildList);
+  nsresult r = nsContainerFrame::SetInitialChildList(aPresContext, aListName, aChildList);
   if (r == NS_OK) {
     // initialize our list of infos.
     nsBoxLayoutState state(shell);
@@ -308,7 +309,7 @@ nsBoxFrame::Init(nsIPresContext*  aPresContext,
 {
   mInner->mPresContext = aPresContext;
 
-  nsresult  rv = nsHTMLContainerFrame::Init(aPresContext, aContent, aParent, aContext, aPrevInFlow);
+  nsresult  rv = nsContainerFrame::Init(aPresContext, aContent, aParent, aContext, aPrevInFlow);
 
   // see if we need a widget. Get our parent. Querty interface the parent we are given. 
   nsCOMPtr<nsIBox> parent (do_QueryInterface(aParent));
@@ -998,7 +999,7 @@ nsBoxFrame::Destroy(nsIPresContext* aPresContext)
   mInner->Recycle(shell);
   mInner = nsnull;
 
-  return nsHTMLContainerFrame::Destroy(aPresContext);
+  return nsContainerFrame::Destroy(aPresContext);
 } 
 
 NS_IMETHODIMP
@@ -1170,7 +1171,7 @@ nsBoxFrame::AttributeChanged(nsIPresContext* aPresContext,
                                nsIAtom* aAttribute,
                                PRInt32 aHint)
 {
-    nsresult rv = nsHTMLContainerFrame::AttributeChanged(aPresContext, aChild,
+    nsresult rv = nsContainerFrame::AttributeChanged(aPresContext, aChild,
                                               aNameSpaceID, aAttribute, aHint);
 
     if (aAttribute == nsHTMLAtoms::width ||
@@ -1285,35 +1286,6 @@ nsBoxFrame::SyncLayout(nsBoxLayoutState& aState)
   return rv;
 }
 
-
-NS_IMETHODIMP
-nsBoxFrame :: Paint ( nsIPresContext* aPresContext,
-                      nsIRenderingContext& aRenderingContext,
-                      const nsRect& aDirtyRect,
-                      nsFramePaintLayer aWhichLayer)
-{
-  const nsStyleDisplay* disp = (const nsStyleDisplay*)
-  mStyleContext->GetStyleData(eStyleStruct_Display);
-
-  // if collapsed nothing is drawn
-  if (disp->mVisible == NS_STYLE_VISIBILITY_COLLAPSE) 
-   return NS_OK;
-
-  // if we are visible then tell our superclass to paint
-  nsresult r = nsHTMLContainerFrame::Paint(aPresContext, aRenderingContext, aDirtyRect,
-                       aWhichLayer);
-
-  /*
-  if (NS_FRAME_PAINT_LAYER_FOREGROUND == aWhichLayer) {
-        if (mState & NS_STATE_CURRENTLY_IN_DEBUG) {
-          mInner->PaintDebug(this, aPresContext, aRenderingContext, aDirtyRect, aWhichLayer);
-        }
-  }
-  */
- 
-  return r;
-}
-
 void
 nsBoxFrameInner::GetDebugPref(nsIPresContext* aPresContext)
 {
@@ -1324,7 +1296,69 @@ nsBoxFrameInner::GetDebugPref(nsIPresContext* aPresContext)
     }
 }
 
-// Paint one child frame
+NS_IMETHODIMP
+nsBoxFrame::Paint(nsIPresContext* aPresContext,
+                            nsIRenderingContext& aRenderingContext,
+                            const nsRect& aDirtyRect,
+                            nsFramePaintLayer aWhichLayer)
+{
+
+   const nsStyleDisplay* disp = (const nsStyleDisplay*)
+   mStyleContext->GetStyleData(eStyleStruct_Display);
+
+   // if collapsed nothing is drawn
+   if (disp->mVisible == NS_STYLE_VISIBILITY_COLLAPSE) 
+     return NS_OK;
+
+  if (NS_FRAME_IS_UNFLOWABLE & mState) {
+    return NS_OK;
+  }
+  if (NS_FRAME_PAINT_LAYER_BACKGROUND == aWhichLayer) {
+    const nsStyleDisplay* disp = (const nsStyleDisplay*)
+      mStyleContext->GetStyleData(eStyleStruct_Display);
+    if (disp->IsVisible() && mRect.width && mRect.height) {
+      // Paint our background and border
+      PRIntn skipSides = GetSkipSides();
+      const nsStyleColor* color = (const nsStyleColor*)
+        mStyleContext->GetStyleData(eStyleStruct_Color);
+      const nsStyleSpacing* spacing = (const nsStyleSpacing*)
+        mStyleContext->GetStyleData(eStyleStruct_Spacing);
+
+      nsRect  rect(0, 0, mRect.width, mRect.height);
+      nsCSSRendering::PaintBackground(aPresContext, aRenderingContext, this,
+                                      aDirtyRect, rect, *color, *spacing, 0, 0);
+      nsCSSRendering::PaintBorder(aPresContext, aRenderingContext, this,
+                                  aDirtyRect, rect, *spacing, mStyleContext, skipSides);
+      nsCSSRendering::PaintOutline(aPresContext, aRenderingContext, this,
+                                  aDirtyRect, rect, *spacing, mStyleContext, 0);
+      
+      // The sole purpose of this is to trigger display
+      //  of the selection window for Named Anchors,
+      //  which don't have any children and normally don't
+      //  have any size, but in Editor we use CSS to display
+      //  an image to represent this "hidden" element.
+      if (!mFrames.FirstChild())
+      {
+        nsFrame::Paint(aPresContext,
+                       aRenderingContext, aDirtyRect, aWhichLayer);
+      }
+    }
+  }
+
+  // Now paint the kids. Note that child elements have the opportunity to
+  // override the visibility property and display even if their parent is
+  // hidden
+
+  PaintChildren(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer);
+
+  // see if we have to draw a selection frame around this container
+  return nsFrame::Paint(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer);
+}
+
+/**
+ * Redefined to handle collapsed as well as removing unneeded crap having to
+ * do with frame state and overlapping that only applied to HTML not XUL
+ */
 void
 nsBoxFrame::PaintChild(nsIPresContext*      aPresContext,
                              nsIRenderingContext& aRenderingContext,
@@ -1332,14 +1366,41 @@ nsBoxFrame::PaintChild(nsIPresContext*      aPresContext,
                              nsIFrame*            aFrame,
                              nsFramePaintLayer    aWhichLayer)
 {
-      const nsStyleDisplay* disp;
-      aFrame->GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)disp));
+  const nsStyleDisplay* disp;
+  aFrame->GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)disp));
 
-      // if collapsed don't paint the child.
-      if (disp->mVisible == NS_STYLE_VISIBILITY_COLLAPSE) 
-         return;
+  // if collapsed don't paint the child.
+  if (disp->mVisible == NS_STYLE_VISIBILITY_COLLAPSE) 
+     return;
 
-      nsHTMLContainerFrame::PaintChild(aPresContext, aRenderingContext, aDirtyRect, aFrame, aWhichLayer);
+  nsIView *pView;
+  aFrame->GetView(aPresContext, &pView);
+  if (nsnull == pView) {
+    nsRect kidRect;
+    aFrame->GetRect(kidRect);
+ 
+    nsRect damageArea;
+    PRBool overlap;
+    // Compute the intersection of the dirty rect and the childs
+    // rect (both are in our coordinate space). This limits the
+    // damageArea to just the portion that intersects the childs
+    // rect.
+    overlap = damageArea.IntersectRect(aDirtyRect, kidRect); 
+
+    if (overlap) {
+      // Translate damage area into the kids coordinate
+      // system. Translate rendering context into the kids
+      // coordinate system.
+      damageArea.x -= kidRect.x;
+      damageArea.y -= kidRect.y;
+      aRenderingContext.Translate(kidRect.x, kidRect.y);
+
+      // Paint the kid
+      aFrame->Paint(aPresContext, aRenderingContext, damageArea, aWhichLayer);
+      // don't use PushState and PopState, because they're slow
+      aRenderingContext.Translate(-kidRect.x, -kidRect.y);
+    }
+  }
 }
 
 void
@@ -1578,7 +1639,7 @@ NS_INTERFACE_MAP_BEGIN(nsBoxFrame)
   NS_INTERFACE_MAP_ENTRY(nsIFrameDebug)
 #endif
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIBox)
-NS_INTERFACE_MAP_END_INHERITING(nsHTMLContainerFrame)
+NS_INTERFACE_MAP_END_INHERITING(nsContainerFrame)
 
 NS_IMETHODIMP
 nsBoxFrame::GetFrame(nsIFrame** aFrame)
@@ -1775,7 +1836,7 @@ nsBoxFrame::GetCursor(nsIPresContext* aPresContext,
              return rv;
     }
 
-    nsresult rv = nsHTMLContainerFrame::GetCursor(aPresContext, aPoint, aCursor);
+    nsresult rv = nsContainerFrame::GetCursor(aPresContext, aPoint, aCursor);
 
     return rv;
 }
