@@ -669,7 +669,6 @@ PK11_ExtractPublicKey(PK11SlotInfo *slot,KeyType keyType,CK_OBJECT_HANDLE id)
 
         pk11KeyType = PK11_ReadULongAttribute(slot,id,CKA_KEY_TYPE);
 	if (pk11KeyType ==  CK_UNAVAILABLE_INFORMATION) {
-	    PORT_SetError( PK11_MapError(crv) );
 	    return NULL;
 	}
 	switch (pk11KeyType) {
@@ -2626,7 +2625,7 @@ static PK11SymKey *
 pk11_HandUnwrap(PK11SlotInfo *slot, CK_OBJECT_HANDLE wrappingKey,
                 CK_MECHANISM *mech, SECItem *inKey, CK_MECHANISM_TYPE target, 
 		CK_ATTRIBUTE *keyTemplate, unsigned int templateCount, 
-		int key_size, void * wincx)
+		int key_size, void * wincx, CK_RV *crvp)
 {
     CK_ULONG len;
     SECItem outKey;
@@ -2646,6 +2645,7 @@ pk11_HandUnwrap(PK11SlotInfo *slot, CK_OBJECT_HANDLE wrappingKey,
     outKey.data = (unsigned char*)PORT_Alloc(inKey->len);
     if (outKey.data == NULL) {
 	PORT_SetError( SEC_ERROR_NO_MEMORY );
+	if (crvp) *crvp = CKR_HOST_MEMORY;
 	return NULL;
     }
     len = inKey->len;
@@ -2659,6 +2659,7 @@ pk11_HandUnwrap(PK11SlotInfo *slot, CK_OBJECT_HANDLE wrappingKey,
 	pk11_CloseSession(slot,session,owner);
 	PORT_Free(outKey.data);
 	PORT_SetError( PK11_MapError(crv) );
+	if (crvp) *crvp =crv;
 	return NULL;
     }
     crv = PK11_GETTAB(slot)->C_Decrypt(session,inKey->data,inKey->len,
@@ -2668,6 +2669,7 @@ pk11_HandUnwrap(PK11SlotInfo *slot, CK_OBJECT_HANDLE wrappingKey,
     if (crv != CKR_OK) {
 	PORT_Free(outKey.data);
 	PORT_SetError( PK11_MapError(crv) );
+	if (crvp) *crvp =crv;
 	return NULL;
     }
 
@@ -2682,6 +2684,7 @@ pk11_HandUnwrap(PK11SlotInfo *slot, CK_OBJECT_HANDLE wrappingKey,
 	if (slot == NULL) {
 	    PORT_SetError( SEC_ERROR_NO_MODULE );
 	    PORT_Free(outKey.data);
+	    if (crvp) *crvp = CKR_DEVICE_ERROR; 
 	    return NULL;
 	}
 	symKey = pk11_ImportSymKeyWithTempl(slot, target, PK11_OriginUnwrap, 
@@ -2690,6 +2693,8 @@ pk11_HandUnwrap(PK11SlotInfo *slot, CK_OBJECT_HANDLE wrappingKey,
 	PK11_FreeSlot(slot);
     }
     PORT_Free(outKey.data);
+
+    if (crvp) *crvp = symKey? CKR_OK : CKR_DEVICE_ERROR; 
     return symKey;
 }
 
@@ -2791,10 +2796,17 @@ pk11_AnyUnwrapKey(PK11SlotInfo *slot, CK_OBJECT_HANDLE wrappingKey,
 				&& !PK11_DoesMechanism(slot,target)) {
 	symKey = pk11_HandUnwrap(slot, wrappingKey, &mechanism, wrappedKey, 
 	                         target, keyTemplate, templateCount, keySize, 
-				 wincx);
+				 wincx, &crv);
 	if (symKey) {
 	    if (param_free) SECITEM_FreeItem(param_free,PR_TRUE);
 	    return symKey;
+	}
+	/*
+	 * if the RSA OP simply failed, don't try to unwrap again 
+	 * with this module.
+	 */
+	if (crv == CKR_DEVICE_ERROR){
+	   return NULL;
 	}
 	/* fall through, maybe they incorrectly set CKF_DECRYPT */
     }
@@ -2815,12 +2827,12 @@ pk11_AnyUnwrapKey(PK11SlotInfo *slot, CK_OBJECT_HANDLE wrappingKey,
 							  &symKey->objectID);
     pk11_ExitKeyMonitor(symKey);
     if (param_free) SECITEM_FreeItem(param_free,PR_TRUE);
-    if (crv != CKR_OK) {
+    if ((crv != CKR_OK) && (crv != CKR_DEVICE_ERROR)) {
 	/* try hand Unwrapping */
 	PK11_FreeSymKey(symKey);
 	symKey = pk11_HandUnwrap(slot, wrappingKey, &mechanism, wrappedKey, 
 	                         target, keyTemplate, templateCount, keySize, 
-				 wincx);
+				 wincx, NULL);
    }
 
    return symKey;
