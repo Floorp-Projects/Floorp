@@ -27,7 +27,7 @@ an MFC Windows application
 Mainly demonstrates the use of the following interfaces:
 
 	nsIWebBrowserChrome
-	nsIBaseWindow
+	nsIWebBrowserSiteWindow
 	nsIWebProgressListener
 	nsIContextMenuListener
 	nsIPrompt

@@ -288,7 +288,15 @@ PRBool CBrowserFrame::BrowserFrameGlueObj::CreateNewBrowserFrame(PRUint32 chrome
 	// size (all are -1) and then it calls the SizeBrowserTo() method to set
 	// the proper window size. If this window were to be visible then you'll see
 	// the window size changes on the screen causing an unappealing flicker
-	CBrowserFrame* pFrm = pApp->CreateNewBrowserFrame(chromeMask, x, y, cx, cy, PR_FALSE);
+	//
+	// Changing the last param back to TRUE since the latest nsIWebBrowserSiteWindow
+	// changes have gotten rid of the SetVisibility() method which we were using
+	// to finally show the browser window. I think we need that functionality
+	// back in
+	//				Chak 
+	//				Feb 2, 2001
+
+	CBrowserFrame* pFrm = pApp->CreateNewBrowserFrame(chromeMask, x, y, cx, cy, PR_TRUE);
     if(!pFrm)
 		return PR_FALSE;
 
