@@ -563,16 +563,13 @@ nsInstallPatch::HashFilePath(const nsFilePath& aPath)
     if(cPath != nsnull) 
     {
         char  ch;
-        char* filePath = PL_strdup(cPath);
-        char* pathIndex = filePath;
+        char* pathIndex = cPath;
 
         while ((ch = *pathIndex++) != 0) 
         {
             // FYI: rv = rv*37 + ch
             rv = ((rv << 5) + (rv << 2) + rv) + ch;
         }
-        
-		PL_strfree(filePath);
     }
 
 	PL_strfree(cPath);
