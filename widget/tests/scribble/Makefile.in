@@ -129,7 +129,7 @@ EX_LIBS += \
 	$(NULL)
 endif
 
-PROGS   = $(addprefix $(OBJDIR)/, $(CPPSRCS:.cpp=))
+PROGS   = main
 
 TARGETS = $(PROGS)
 
