@@ -69,7 +69,8 @@
 #include "nsIDocumentEncoder.h"
 #include "nsNetUtil.h"
 #include "nsINamespaceManager.h"
-#include "nsIXBLService.h"
+#include "nsISyncLoadDOMService.h"
+#include "nsIChannel.h"
 #include "nsIWebBrowser.h"
 
 #include "nsIEnumerator.h"
@@ -564,10 +565,12 @@ BookmarksService::ReadBookmarks()
   //     or failed. sigh.
   // Actually, we do. We check for a root <parsererror> node. This relies on the XMLContentSink
   // behaviour.
-  nsCOMPtr<nsIXBLService> xblService(do_GetService("@mozilla.org/xbl;1"));    
-  xblService->FetchSyncXMLDocument(uri, &gBookmarksDocument);   // addref here
-
-  nsCOMPtr<nsIDOMDocument> bookmarksDOMDoc = do_QueryInterface(gBookmarksDocument);
+  nsCOMPtr<nsIDOMDocument> bookmarksDOMDoc;
+  nsCOMPtr<nsISyncLoadDOMService> loader = do_GetService("@mozilla.org/content/syncload-dom-service;1");
+  nsCOMPtr<nsIChannel> channel;
+  NS_NewChannel(getter_AddRefs(channel), uri, nsnull, nsnull);
+  loader->LoadLocalDocument(channel, nsnull, getter_AddRefs(domDoc));
+  CallQueryInterface(domDoc, &gBookmarksDocument);  // addrefs
 
   // test for a parser error. The XML parser replaces the document with one
   // that has a <parsererror> node as the root.
