@@ -182,9 +182,9 @@
             <title value="&AddJSEAttributeLabel.label;"/>
             <box autostretch="never">
               <text class="label" for="AddJSEAttributeNameInput" value="&AttName.label;"/>
-              <textfield flex="1" id="AddJSEAttributeNameInput" oninput="doCSSEnabling()" onkeyup="if (event.keyCode == 13) onAddJSAttribute();"/>
+              <textfield flex="1" id="AddJSEAttributeNameInput" oninput="doJSEEnabling()" onkeyup="if (event.keyCode == 13) onAddJSAttribute();"/>
               <text class="label" for="AddJSEAttributeValueInput" value="&AttValue.label;"/>
-          	  <textfield flex="1" id="AddJSEAttributeValueInput" oninput="doCSSEnabling()" onkeyup="if (event.keyCode == 13) onAddJSAttribute();"/>
+          	  <textfield flex="1" id="AddJSEAttributeValueInput" oninput="doJSEEnabling()" onkeyup="if (event.keyCode == 13) onAddJSAttribute();"/>
               <button class="dialog" id="AddJSEAttribute" oncommand="onAddJSEAttribute()" value="&AddAttributeButton.label;" disabled="true"/>
             </box>
           </titledbox>

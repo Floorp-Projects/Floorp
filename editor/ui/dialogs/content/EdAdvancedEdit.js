@@ -139,7 +139,7 @@ function CheckAttributeNameSimilarity(attName, attArray)
 {
   for(var i = 0; i < attArray.length; i++)
   {
-    if(attName == attArray[i]) 
+    if(attName.toLowerCase() == attArray[i].toLowerCase()) 
       return false;
   }
   return true;
@@ -156,7 +156,7 @@ function CheckAttributeNotRemoved( attName, attArray )
 {
   for( var i = 0; i < attArray.length; i++ ) 
   {
-    if( attName == attArray[i] )
+    if(attName.toLowerCase() == attArray[i].toLowerCase()) 
       return false;
   }
   return true;
@@ -189,20 +189,20 @@ function RemoveAttribute( treeId )
         HTMLRAttrs[HTMLRAttrs.length] = attr;
         if (newIndex >= (HTMLAttrs.length-1))
           newIndex--;
-        RemoveNameFromAttArray(HTMLAttrs, attr);
+        RemoveNameFromAttArray(attr, HTMLAttrs);
         break;
       case "CSSATree":   
         // We write a completely new "style" string, so we don't need "remove" array
         //CSSRAttrs[CSSRAttrs.length] = attr;
         if (newIndex >= (CSSAttrs.length-1))
           newIndex--;
-        RemoveNameFromAttArray(CSSAttrs, attr);
+        RemoveNameFromAttArray(attr, CSSAttrs);
         break;
       case "JSEATree":
         JSERAttrs[JSERAttrs.length] = attr;
         if (newIndex >= (JSEAttrs.length-1))
           newIndex--;
-        RemoveNameFromAttArray(JSEAttrs, attr);
+        RemoveNameFromAttArray(attr, JSEAttrs);
         break;      
       default: break;
     }
@@ -215,11 +215,11 @@ function RemoveAttribute( treeId )
     SelectTreeItem(tree);
   }
 }
-function RemoveNameFromAttArray(attArray, name)
+function RemoveNameFromAttArray(attName, attArray)
 {
   for (var i=0; i < attArray.length; i++)
   {
-    if (attArray[i] == name)
+    if(attName.toLowerCase() == attArray[i].toLowerCase()) 
     {
       // Remove 1 array item
       attArray.splice(i,1);
@@ -262,7 +262,7 @@ function AddTreeItem ( name, value, treekidsId, attArray, valueCaseFunc )
   var treerow     = document.createElementNS ( XUL_NS, "treerow" );
   var attrcell    = document.createElementNS ( XUL_NS, "treecell" );
   attrcell.setAttribute( "class", "propertylist" );
-  attrcell.setAttribute( "value", name.toLowerCase() );
+  attrcell.setAttribute( "value", name );
   // Modify treerow selection to better show focus in textfield
   treeitem.setAttribute( "class", "ae-selection");
 
