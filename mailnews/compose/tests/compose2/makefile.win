@@ -37,9 +37,9 @@ MAKE_OBJ_TYPE=EXE
 #// Define any Public Make Variables here: (ie. PDFFILE, MAPFILE, ...)
 #//
 #//------------------------------------------------------------------------
-EXENAME=TestMSGCompose2
-PDBFILE=TestMSGCompose2.pdb
-MAPFILE=TestMSGCompose2.map
+EXENAME=TestMSGSave
+PDBFILE=TestMSGSave.pdb
+MAPFILE=TestMSGSave.map
 
 #//------------------------------------------------------------------------
 #// 

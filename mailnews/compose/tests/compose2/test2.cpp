@@ -128,17 +128,112 @@ nsMsgCreateTempFileSpec(char *tFileName)
   return tmpSpec;
 }
 
-nsresult
-CallMe(nsresult aExitCode, void *tagData, nsFileSpec *fs)
+////////////////////////////////////////////////////////////////////////////////////
+// This is the listener class for the send operation. We have to create this class 
+// to listen for message send completion and eventually notify the caller
+////////////////////////////////////////////////////////////////////////////////////
+class nsMsgSendLater;
+class SendOperationListener : public nsIMsgSendListener
 {
-  nsIMsgSend  *ptr = (nsIMsgSend  *)tagData;
-  
-  printf("Called ME!\n");
-  printf("Exit code = %d\n", aExitCode);
+public:
+  SendOperationListener(void);
+  virtual ~SendOperationListener(void);
 
-  ptr->Release();
+  // nsISupports interface
+  NS_DECL_ISUPPORTS
+
+  /* void OnStartSending (in string aMsgID, in PRUint32 aMsgSize); */
+  NS_IMETHOD OnStartSending(const char *aMsgID, PRUint32 aMsgSize);
+  
+  /* void OnProgress (in string aMsgID, in PRUint32 aProgress, in PRUint32 aProgressMax); */
+  NS_IMETHOD OnProgress(const char *aMsgID, PRUint32 aProgress, PRUint32 aProgressMax);
+  
+  /* void OnStatus (in string aMsgID, in wstring aMsg); */
+  NS_IMETHOD OnStatus(const char *aMsgID, const PRUnichar *aMsg);
+  
+  /* void OnStopSending (in string aMsgID, in nsresult aStatus, in wstring aMsg, in nsIFileSpec returnFileSpec); */
+  NS_IMETHOD OnStopSending(const char *aMsgID, nsresult aStatus, const PRUnichar *aMsg, 
+                           nsIFileSpec *returnFileSpec);
+  
+private:
+  nsMsgSendLater    *mSendLater;
+};
+
+////////////////////////////////////////////////////////////////////////////////////
+// This is the listener class for the send operation. We have to create this class 
+// to listen for message send completion and eventually notify the caller
+////////////////////////////////////////////////////////////////////////////////////
+NS_IMPL_ISUPPORTS(SendOperationListener, nsIMsgSendListener::GetIID());
+
+SendOperationListener::SendOperationListener(void) 
+{ 
+  mSendLater = nsnull;
+  NS_INIT_REFCNT(); 
+}
+
+SendOperationListener::~SendOperationListener(void) 
+{
+}
+
+nsresult
+SendOperationListener::OnStartSending(const char *aMsgID, PRUint32 aMsgSize)
+{
+#ifdef NS_DEBUG
+  printf("SendOperationListener::OnStartSending()\n");
+#endif
+  return NS_OK;
+}
+  
+nsresult
+SendOperationListener::OnProgress(const char *aMsgID, PRUint32 aProgress, PRUint32 aProgressMax)
+{
+#ifdef NS_DEBUG
+  printf("SendOperationListener::OnProgress()\n");
+#endif
+  return NS_OK;
+}
+
+nsresult
+SendOperationListener::OnStatus(const char *aMsgID, const PRUnichar *aMsg)
+{
+#ifdef NS_DEBUG
+  printf("SendOperationListener::OnStatus()\n");
+#endif
 
   return NS_OK;
+}
+  
+nsresult
+SendOperationListener::OnStopSending(const char *aMsgID, nsresult aStatus, const PRUnichar *aMsg, 
+                                     nsIFileSpec *returnFileSpec)
+{
+  nsresult                    rv = NS_OK;
+
+  if (NS_SUCCEEDED(aStatus))
+  {
+    printf("Save Mail File Operation Completed Successfully!\n");
+  }
+  else
+  {
+    printf("Save Mail File Operation FAILED!\n");
+  }
+
+  printf("Exit code = [%d]\n", aStatus);
+  return NS_OK;
+}
+
+nsIMsgSendListener **
+CreateListenerArray(nsIMsgSendListener *listener)
+{
+  if (!listener)
+    return nsnull;
+
+  nsIMsgSendListener **tArray = (nsIMsgSendListener **)PR_Malloc(sizeof(nsIMsgSendListener *) * 2);
+  if (!tArray)
+    return nsnull;
+  nsCRT::memset(tArray, 0, sizeof(nsIMsgSendListener *) * 2);
+  tArray[0] = listener;
+  return tArray;
 }
 
 char *email = {"\
@@ -222,8 +317,15 @@ int main(int argc, char *argv[])
   NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &rv); 
   if (NS_FAILED(rv) || (prefs == nsnull)) 
   {
+    printf("Failed to get the prefs service...\n");
     exit(rv);
   }
+  if (NS_FAILED(prefs->ReadUserPrefs()))
+  {
+    printf("Failed on reading user prefs!\n");
+    exit(rv);
+  }
+
 
   NS_WITH_SERVICE(nsIMsgMailSession, mailSession, kCMsgMailSessionCID, &rv);
   if (NS_FAILED(rv)) 
@@ -241,7 +343,7 @@ int main(int argc, char *argv[])
   } 
   
   printf("Creating temp mail file...\n");
-  mailFile = nsMsgCreateTempFileSpec("mailTest.tmp");
+  mailFile = nsMsgCreateTempFileSpec("mailTest.eml");
 
   if (NS_FAILED(WriteTempMailFile(mailFile)))
   {
@@ -258,13 +360,28 @@ int main(int argc, char *argv[])
     if (rv == NS_OK && pMsgCompFields)
     { 
       pMsgCompFields->SetTo("rhp@netscape.com", NULL);
+
+            // Create the listener for the send operation...
+      SendOperationListener *mSendListener = new SendOperationListener();
+      if (!mSendListener)
+      {
+        return NS_ERROR_FAILURE;
+      }
+      
+      // set this object for use on completion...
+      nsIMsgSendListener **tArray = CreateListenerArray(mSendListener);
+      if (!tArray)
+      {
+        printf("Error creating listener array.\n");
+        return NS_ERROR_FAILURE;
+      }
+
       pMsgSend->SendMessageFile(pMsgCompFields, // nsIMsgCompFields                  *fields,
                           mailFile,             // nsFileSpec                        *sendFileSpec,
                           PR_TRUE,              // PRBool                            deleteSendFileOnCompletion,
 						              PR_FALSE,             // PRBool                            digest_p,
 						              nsMsgDeliverNow,      // nsMsgDeliverMode                  mode,
-                          CallMe,               // nsMsgSendCompletionCallback       completionCallback,
-                          pMsgSend);              // void                              *tagData);
+                          tArray);              // nsIMsgSendListener array
     }    
   }
 

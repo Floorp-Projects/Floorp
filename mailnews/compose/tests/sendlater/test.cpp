@@ -164,6 +164,12 @@ int main(int argc, char *argv[])
     if (NS_FAILED(rv) || (prefs == nsnull)) {
         exit(rv);
     }
+ if (NS_FAILED(prefs->ReadUserPrefs()))
+ {
+   printf("Failed on reading user prefs!\n");
+   exit(-1);
+ }
+
 
   NS_WITH_SERVICE(nsIMsgMailSession, mailSession, kCMsgMailSessionCID, &rv);
   if (NS_FAILED(rv)) 
