@@ -35,14 +35,14 @@ static PRBool gsDebug = PR_FALSE;
 static const PRBool gsDebug = PR_FALSE;
 #endif
 
-
 static NS_DEFINE_IID(kStyleFontSID, NS_STYLEFONT_SID);
 static NS_DEFINE_IID(kStyleColorSID, NS_STYLECOLOR_SID);
 static NS_DEFINE_IID(kStyleSpacingSID, NS_STYLESPACING_SID);
 static NS_DEFINE_IID(kStyleBorderSID, NS_STYLEBORDER_SID);
 static NS_DEFINE_IID(kStyleListSID, NS_STYLELIST_SID);
 static NS_DEFINE_IID(kStylePositionSID, NS_STYLEPOSITION_SID);
-static NS_DEFINE_IID(kStyleMoleculeSID, NS_STYLEMOLECULE_SID);
+static NS_DEFINE_IID(kStyleTextSID, NS_STYLETEXT_SID);
+static NS_DEFINE_IID(kStyleDisplaySID, NS_STYLEDISPLAY_SID);
 
 static NS_DEFINE_IID(kIStyleContextIID, NS_ISTYLECONTEXT_IID);
 
@@ -85,6 +85,9 @@ void StyleFontImpl::InheritFrom(const nsStyleFont& aCopy)
 // --------------------
 // nsStyleColor
 //
+nsStyleColor::nsStyleColor() { }
+nsStyleColor::~nsStyleColor() { }
+
 struct StyleColorImpl: public nsStyleColor {
   StyleColorImpl(void)
   {
@@ -93,6 +96,7 @@ struct StyleColorImpl: public nsStyleColor {
     mBackgroundRepeat = NS_STYLE_BG_REPEAT_OFF;
 
     mBackgroundColor = NS_RGB(192,192,192);
+    mCursor = NS_STYLE_CURSOR_INHERIT;
   }
 
   ~StyleColorImpl(void)
@@ -110,8 +114,8 @@ private:  // These are not allowed
 
 void StyleColorImpl::InheritFrom(const nsStyleColor& aCopy)
 {
-  mColor  = aCopy.mColor;
-
+  mColor = aCopy.mColor;
+  mCursor = NS_STYLE_CURSOR_INHERIT;/* XXX right? */
   mBackgroundFlags = NS_STYLE_BG_COLOR_TRANSPARENT;
 }
 
@@ -187,6 +191,9 @@ void StyleBorderImpl::InheritFrom(const nsStyleBorder& aCopy)
 // --------------------
 // nsStyleList
 //
+nsStyleList::nsStyleList() { }
+nsStyleList::~nsStyleList() { }
+
 struct StyleListImpl: public nsStyleList {
   StyleListImpl(void)
   {
@@ -214,6 +221,9 @@ void StyleListImpl::InheritFrom(const nsStyleList& aCopy)
 // --------------------
 // nsStylePosition
 //
+nsStylePosition::nsStylePosition() { }
+nsStylePosition::~nsStylePosition() { }
+
 struct StylePositionImpl: public nsStylePosition {
   StylePositionImpl(void)
   {
@@ -248,47 +258,79 @@ void StylePositionImpl::InheritFrom(const nsStylePosition& aCopy)
   // positioning values not inherited
 }
 
-
 // --------------------
-// nsStyleMolecule
+// nsStyleText
 //
-nsStyleMolecule::nsStyleMolecule()
-{
-}
 
-nsStyleMolecule::~nsStyleMolecule()
-{
-}
+nsStyleText::nsStyleText() { }
+nsStyleText::~nsStyleText() { }
 
-struct StyleMoleculeImpl : public nsStyleMolecule {
-  StyleMoleculeImpl(void)
-  {}
-  ~StyleMoleculeImpl(void)
-  {}
+struct StyleTextImpl: public nsStyleText {
+  StyleTextImpl() {
+    mTextAlign = NS_STYLE_TEXT_ALIGN_LEFT;
+    mTextDecoration = NS_STYLE_TEXT_DECORATION_NONE;
+    mTextTransform = NS_STYLE_TEXT_TRANSFORM_NONE;
+    mVerticalAlign = NS_STYLE_VERTICAL_ALIGN_BASELINE;
+    mWhiteSpace = NS_STYLE_WHITESPACE_NORMAL;
+    mLetterSpacing = 0;
+    mLineHeight = 0;
+    mTextIndent = 0;
+    mWordSpacing = 0;
+  }
+  ~StyleTextImpl() {
+  }
 
-  virtual const nsID& GetID(void)
-  { return kStyleMoleculeSID;  }
+  virtual const nsID& GetID() {
+    return kStyleTextSID;
+  }
 
-  virtual void InheritFrom(const nsStyleMolecule& aCopy);
-
-private:  // These are not allowed
-  StyleMoleculeImpl(const StyleMoleculeImpl& aOther);
-  StyleMoleculeImpl& operator=(const StyleMoleculeImpl& aOther);
+  virtual void InheritFrom(const nsStyleText& aCopy);
 };
 
-void StyleMoleculeImpl::InheritFrom(const nsStyleMolecule& aCopy)
+void StyleTextImpl::InheritFrom(const nsStyleText& aCopy)
 {
-  cursor            = aCopy.cursor;
-  direction         = aCopy.direction;
+  // Properties not listed here are not inherited: mVerticalAlign,
+  // mTextDecoration
+  mTextAlign = aCopy.mTextAlign;
+  mTextTransform = aCopy.mTextTransform;
+  mWhiteSpace = aCopy.mWhiteSpace;
 
-  textDecoration    = aCopy.textDecoration;
-
-  textAlign         = aCopy.textAlign;
-  whiteSpace        = aCopy.whiteSpace;
-
-//  lineHeight        = aCopy.lineHeight;
+  mLetterSpacing = aCopy.mLetterSpacing;
+  mLineHeight = aCopy.mLineHeight;
+  mTextIndent = aCopy.mTextIndent;
+  mWordSpacing = aCopy.mWordSpacing;
 }
 
+// --------------------
+// nsStyleDisplay
+//
+
+nsStyleDisplay::nsStyleDisplay() { }
+nsStyleDisplay::~nsStyleDisplay() { }
+
+struct StyleDisplayImpl: public nsStyleDisplay {
+  StyleDisplayImpl() {
+    mDirection = NS_STYLE_DIRECTION_LTR;
+    mDisplay = NS_STYLE_DISPLAY_INLINE;
+    mFloats = NS_STYLE_FLOAT_NONE;
+    mBreakType = NS_STYLE_CLEAR_NONE;
+    mBreakBefore = PR_FALSE;
+    mBreakAfter = PR_FALSE;
+  }
+  ~StyleDisplayImpl() {
+  }
+
+  virtual const nsID& GetID() {
+    return kStyleDisplaySID;
+  }
+
+  virtual void InheritFrom(const nsStyleDisplay& aCopy);
+};
+
+void StyleDisplayImpl::InheritFrom(const nsStyleDisplay& aCopy)
+{
+  mDirection = aCopy.mDirection;
+}
 
 //----------------------------------------------------------------------
 
@@ -316,10 +358,6 @@ public:
   virtual void InheritFrom(const StyleContextImpl& aParent);
   virtual void PostProcessData(void);
 
-  virtual void HackStyleFor(nsIPresContext* aPresContext,
-                            nsIContent* aContent,
-                            nsIFrame* aFrame);
-
   nsIStyleContext*  mParent;
   PRUint32          mHashValid: 1;
   PRUint32          mHashValue: 31;
@@ -332,15 +370,16 @@ public:
   StyleBorderImpl   mBorder;
   StyleListImpl     mList;
   StylePositionImpl mPosition;
-// xxx backward support hack
-  StyleMoleculeImpl mMolecule;
+  StyleTextImpl     mText;
+  StyleDisplayImpl  mDisplay;
 };
 
 #ifdef DEBUG_REFS
 static PRInt32 gInstanceCount;
 #endif
 
-StyleContextImpl::StyleContextImpl(nsIStyleContext* aParent, nsISupportsArray* aRules, 
+StyleContextImpl::StyleContextImpl(nsIStyleContext* aParent,
+                                   nsISupportsArray* aRules, 
                                    nsIPresContext* aPresContext)
   : mParent(aParent), // weak ref
     mRules(aRules),
@@ -349,7 +388,9 @@ StyleContextImpl::StyleContextImpl(nsIStyleContext* aParent, nsISupportsArray* a
     mSpacing(),
     mBorder(),
     mList(),
-    mMolecule()
+    mPosition(),
+    mText(),
+    mDisplay()
 {
   NS_INIT_REFCNT();
   NS_IF_ADDREF(mRules);
@@ -457,8 +498,11 @@ nsStyleStruct* StyleContextImpl::GetData(const nsIID& aSID)
   if (aSID.Equals(kStylePositionSID)) {
     return &mPosition;
   }
-  if (aSID.Equals(kStyleMoleculeSID)) {
-    return &mMolecule;
+  if (aSID.Equals(kStyleTextSID)) {
+    return &mText;
+  }
+  if (aSID.Equals(kStyleDisplaySID)) {
+    return &mDisplay;
   }
   return nsnull;
 }
@@ -470,7 +514,9 @@ void StyleContextImpl::InheritFrom(const StyleContextImpl& aParent)
   mSpacing.InheritFrom(aParent.mSpacing);
   mBorder.InheritFrom(aParent.mBorder);
   mList.InheritFrom(aParent.mList);
-  mMolecule.InheritFrom(aParent.mMolecule);
+  mText.InheritFrom(aParent.mText);
+  mPosition.InheritFrom(aParent.mPosition);
+  mDisplay.InheritFrom(aParent.mDisplay);
 }
 
 static void CalcBorderSize(nscoord& aSize, PRUint8 aFlag)
@@ -494,240 +540,6 @@ void StyleContextImpl::PostProcessData(void)
   mSpacing.mBorder = mBorder.mSize;
   mSpacing.mBorderPadding = mSpacing.mPadding;
   mSpacing.mBorderPadding += mBorder.mSize;
-
-  // XXX hack fill in molecule
-  mMolecule.border = mBorder.mSize;
-  mMolecule.margin = mSpacing.mMargin;
-  mMolecule.borderPadding = mSpacing.mBorderPadding;
-}
-
-void StyleContextImpl::HackStyleFor(nsIPresContext* aPresContext,
-                                    nsIContent* aContent,
-                                    nsIFrame* aParentFrame)
-{
-
-  mMolecule.display = NS_STYLE_DISPLAY_BLOCK;
-  mMolecule.whiteSpace = NS_STYLE_WHITESPACE_NORMAL;
-  mMolecule.verticalAlign = NS_STYLE_VERTICAL_ALIGN_BASELINE;
-  mMolecule.textAlign = NS_STYLE_TEXT_ALIGN_LEFT;
-
-  mMolecule.floats = 0;
-
-  // XXX If it's a B guy then make it inline
-  nsIAtom* tag = aContent->GetTag();
-  nsAutoString buf;
-  if (tag != nsnull) {
-    tag->ToString(buf);
-    NS_RELEASE(tag);
-    if (buf.EqualsIgnoreCase("B")) {
-//      float p2t = aPresContext->GetPixelsToTwips();
-      mMolecule.display = NS_STYLE_DISPLAY_INLINE;
-    } else if (buf.EqualsIgnoreCase("A")) {
-      mMolecule.display = NS_STYLE_DISPLAY_INLINE;
-      mMolecule.cursor = NS_STYLE_CURSOR_HAND;
-    } else if (buf.EqualsIgnoreCase("BR")) {
-      mMolecule.display = NS_STYLE_DISPLAY_INLINE;
-      nsString  align("CLEAR");
-      nsString  value;
-      if (eContentAttr_HasValue == aContent->GetAttribute(align, value)) {
-        if (0 == value.Compare("left", PR_TRUE)) {
-          mMolecule.clear = NS_STYLE_CLEAR_LEFT;
-        } else if (0 == value.Compare("right", PR_TRUE)) {
-          mMolecule.clear = NS_STYLE_CLEAR_RIGHT;
-        } else if (0 == value.Compare("all", PR_TRUE)) {
-          mMolecule.clear = NS_STYLE_CLEAR_BOTH;
-        }
-      }
-    } else if (buf.EqualsIgnoreCase("SPACER")) {
-      mMolecule.display = NS_STYLE_DISPLAY_INLINE;
-    } else if (buf.EqualsIgnoreCase("WBR")) {
-      mMolecule.display = NS_STYLE_DISPLAY_INLINE;
-    } else if (buf.EqualsIgnoreCase("INPUT")) {
-      mMolecule.display = NS_STYLE_DISPLAY_INLINE;
-    } else if (buf.EqualsIgnoreCase("I")) {
-      mMolecule.display = NS_STYLE_DISPLAY_INLINE;
-    } else if (buf.EqualsIgnoreCase("S")) {
-      mMolecule.display = NS_STYLE_DISPLAY_INLINE;
-    } else if (buf.EqualsIgnoreCase("PRE")) {
-      mMolecule.whiteSpace = NS_STYLE_WHITESPACE_PRE;
-      mSpacing.mMargin.top = NS_POINTS_TO_TWIPS_INT(3);
-      mSpacing.mMargin.bottom = NS_POINTS_TO_TWIPS_INT(3);
-    } else if (buf.EqualsIgnoreCase("U")) {
-      mMolecule.display = NS_STYLE_DISPLAY_INLINE;
-    } else if (buf.EqualsIgnoreCase("FONT")) {
-      mMolecule.display = NS_STYLE_DISPLAY_INLINE;
-    } else if (buf.EqualsIgnoreCase("THREED")) {
-      mMolecule.display = NS_STYLE_DISPLAY_INLINE;
-      mFont.mThreeD = 1;
-    } else if (buf.EqualsIgnoreCase("TT")) {
-      mMolecule.display = NS_STYLE_DISPLAY_INLINE;
-    } else if (buf.EqualsIgnoreCase("IMG")) {
-      float p2t = aPresContext->GetPixelsToTwips();
-      mMolecule.display = NS_STYLE_DISPLAY_INLINE;
-      mSpacing.mPadding.top = nscoord(2 * p2t);
-      mSpacing.mPadding.right = nscoord(2 * p2t);
-      mSpacing.mPadding.bottom = nscoord(2 * p2t);
-      mSpacing.mPadding.left = nscoord(2 * p2t);
-      nsString  align("ALIGN");
-      nsString  value;
-      if (eContentAttr_HasValue == aContent->GetAttribute(align, value)) {
-        if (0 == value.Compare("left", PR_TRUE)) {
-          mMolecule.floats = NS_STYLE_FLOAT_LEFT;
-        } else if (0 == value.Compare("right", PR_TRUE)) {
-          mMolecule.floats = NS_STYLE_FLOAT_RIGHT;
-        }
-      }
-    } else if (buf.EqualsIgnoreCase("P")) {
-      nsString align("align");
-      nsString value;
-      if (eContentAttr_NotThere != aContent->GetAttribute(align, value)) {
-        if (0 == value.Compare("center", PR_TRUE)) {
-          mMolecule.textAlign = NS_STYLE_TEXT_ALIGN_CENTER;
-        }
-        if (0 == value.Compare("right", PR_TRUE)) {
-          mMolecule.textAlign = NS_STYLE_TEXT_ALIGN_RIGHT;
-        }
-      }
-//      mSpacing.mMargin.top = NS_POINTS_TO_TWIPS_INT(2);
-//      mSpacing.mMargin.bottom = NS_POINTS_TO_TWIPS_INT(2);
-    } else if (buf.EqualsIgnoreCase("BODY")) {
-      float p2t = aPresContext->GetPixelsToTwips();
-      mSpacing.mPadding.top = nscoord(5 * p2t);
-      mSpacing.mPadding.right = nscoord(5 * p2t);
-      mSpacing.mPadding.bottom = nscoord(5 * p2t);
-      mSpacing.mPadding.left = nscoord(5 * p2t);
-      mBorder.mSize.top = nscoord(1 * p2t);
-      mBorder.mSize.right = nscoord(1 * p2t);
-      mBorder.mSize.bottom = nscoord(1 * p2t);
-      mBorder.mSize.left = nscoord(1 * p2t);
-      for (int i = 0; i < 4; i++) {
-        mBorder.mStyle[i] = NS_STYLE_BORDER_STYLE_SOLID;
-        mBorder.mColor[i] = NS_RGB(0, 255, 0);
-      }
-    } else if (buf.EqualsIgnoreCase("LI")) {
-      mMolecule.display = NS_STYLE_DISPLAY_LIST_ITEM;
-    } else if (buf.EqualsIgnoreCase("UL") || buf.EqualsIgnoreCase("OL")) {
-      float p2t = aPresContext->GetPixelsToTwips();
-      mSpacing.mPadding.left = nscoord(40 * p2t);
-      mSpacing.mMargin.top = NS_POINTS_TO_TWIPS_INT(5);
-      mSpacing.mMargin.bottom = NS_POINTS_TO_TWIPS_INT(5);
-    } else if (buf.EqualsIgnoreCase("TABLE")) {                     // TABLE
-      mBorder.mSize.top = NS_POINTS_TO_TWIPS_INT(1);
-      mBorder.mSize.bottom = NS_POINTS_TO_TWIPS_INT(1);
-      mBorder.mSize.right = NS_POINTS_TO_TWIPS_INT(1);
-      mBorder.mSize.left = NS_POINTS_TO_TWIPS_INT(1);
-      mBorder.mStyle[0] = mBorder.mStyle[1] =
-      mBorder.mStyle[2] = mBorder.mStyle[3] = NS_STYLE_BORDER_STYLE_SOLID;
-      mMolecule.fixedWidth = -1;
-      mMolecule.proportionalWidth = -1;
-      nsString  align("ALIGN");
-      nsString  value;
-      if (eContentAttr_HasValue == aContent->GetAttribute(align, value)) {
-        if (0 == value.Compare("left", PR_TRUE)) {
-          mMolecule.floats = NS_STYLE_FLOAT_LEFT;
-        } else if (0 == value.Compare("right", PR_TRUE)) {
-          mMolecule.floats = NS_STYLE_FLOAT_RIGHT;
-        }
-      }
-    } else if (buf.EqualsIgnoreCase("CAPTION")) {                   // table captions
-      mMolecule.verticalAlign = NS_STYLE_VERTICAL_ALIGN_TOP;
-    } else if (buf.EqualsIgnoreCase("TBODY") ||
-               buf.EqualsIgnoreCase("THEAD") ||
-               buf.EqualsIgnoreCase("TFOOT") ) {                    // table rowgroups
-      mMolecule.padding.top = NS_POINTS_TO_TWIPS_INT(0);
-      mMolecule.padding.bottom = NS_POINTS_TO_TWIPS_INT(0);
-      mMolecule.padding.right = NS_POINTS_TO_TWIPS_INT(0);
-      mMolecule.padding.left = NS_POINTS_TO_TWIPS_INT(0);
-    } else if (buf.EqualsIgnoreCase("TR")) {                        // table rows
-      mMolecule.padding.top = NS_POINTS_TO_TWIPS_INT(0);
-      mMolecule.padding.bottom = NS_POINTS_TO_TWIPS_INT(0);
-      mMolecule.padding.right = NS_POINTS_TO_TWIPS_INT(0);
-      mMolecule.padding.left = NS_POINTS_TO_TWIPS_INT(0);
-    } else if (buf.EqualsIgnoreCase("TD") ||
-               buf.EqualsIgnoreCase("TH")) {                        // table cells
-      float p2t = aPresContext->GetPixelsToTwips();
-      
-      
-      // Set padding to twenty for testing purposes
-      int cellPadding = 1;
-      if (gsDebug==PR_TRUE)
-        cellPadding = 20;
-      mMolecule.verticalAlign = NS_STYLE_VERTICAL_ALIGN_MIDDLE;
-        
-      mSpacing.mPadding.top = NS_POINTS_TO_TWIPS_INT(cellPadding);
-      mSpacing.mPadding.bottom = NS_POINTS_TO_TWIPS_INT(cellPadding);
-      mSpacing.mPadding.right = NS_POINTS_TO_TWIPS_INT(cellPadding);
-      mSpacing.mPadding.left = NS_POINTS_TO_TWIPS_INT(cellPadding);
-      mBorder.mSize.top = nscoord(1 * p2t);
-      mBorder.mSize.right = nscoord(1 * p2t);
-      mBorder.mSize.bottom = nscoord(1 * p2t);
-      mBorder.mSize.left = nscoord(1 * p2t);
-      for (int i = 0; i < 4; i++) {
-        mBorder.mStyle[i] = NS_STYLE_BORDER_STYLE_SOLID;
-        mBorder.mColor[i] = NS_RGB(128, 128, 128);
-      }
-      mMolecule.fixedWidth = -1;
-      mMolecule.proportionalWidth = -1;
-      mMolecule.fixedHeight = -1;
-      mMolecule.proportionalHeight = -1;
-
-    } else if (buf.EqualsIgnoreCase("COL")) {
-      mMolecule.fixedWidth = -1;
-      mMolecule.proportionalWidth = -1;
-      mMolecule.fixedHeight = -1;
-      mMolecule.proportionalHeight = -1;
-    }
-  } else {
-    // It's text (!)
-    mMolecule.display = NS_STYLE_DISPLAY_INLINE;
-    mMolecule.cursor = NS_STYLE_CURSOR_IBEAM;
-    nsIContent* content;
-     
-    aParentFrame->GetContent(content);
-    nsIAtom* parentTag = content->GetTag();
-    parentTag->ToString(buf);
-    NS_RELEASE(content);
-    NS_RELEASE(parentTag);
-    if (buf.EqualsIgnoreCase("B")) {
-    } else if (buf.EqualsIgnoreCase("A")) {
-      // This simulates a <PRE><A>text inheritance rule
-      // Check the parent of the A
-      nsIFrame* parentParentFrame;
-       
-      aParentFrame->GetGeometricParent(parentParentFrame);
-      if (nsnull != parentParentFrame) {
-        nsIContent* parentParentContent;
-         
-        parentParentFrame->GetContent(parentParentContent);
-        nsIAtom* parentParentTag = parentParentContent->GetTag();
-        parentParentTag->ToString(buf);
-        NS_RELEASE(parentParentTag);
-        NS_RELEASE(parentParentContent);
-        if (buf.EqualsIgnoreCase("PRE")) {
-          mMolecule.whiteSpace = NS_STYLE_WHITESPACE_PRE;
-        }
-      }
-    } else if (buf.EqualsIgnoreCase("THREED")) {
-      mFont.mThreeD = 1;
-    } else if (buf.EqualsIgnoreCase("I")) {
-    } else if (buf.EqualsIgnoreCase("BLINK")) {
-    } else if (buf.EqualsIgnoreCase("TT")) {
-    } else if (buf.EqualsIgnoreCase("S")) {
-    } else if (buf.EqualsIgnoreCase("U")) {
-    } else if (buf.EqualsIgnoreCase("PRE")) {
-      mMolecule.whiteSpace = NS_STYLE_WHITESPACE_PRE;
-    }
-  }
-
-#if 0
-  if ((NS_STYLE_DISPLAY_BLOCK == mMolecule.display) ||
-      (NS_STYLE_DISPLAY_LIST_ITEM == mMolecule.display)) {
-    // Always justify text (take that ie)
-    mMolecule.textAlign = NS_STYLE_TEXT_ALIGN_JUSTIFY;
-  }
-#endif
-
-
 }
 
 NS_LAYOUT nsresult
@@ -753,7 +565,6 @@ NS_NewStyleContext(nsIStyleContext** aInstancePtrResult,
   if (nsnull == context) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  context->HackStyleFor(aPresContext, aContent, aParentFrame);
   context->PostProcessData();
 
   return context->QueryInterface(kIStyleContextIID, (void **) aInstancePtrResult);
