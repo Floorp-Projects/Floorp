@@ -48,8 +48,7 @@ EXTRA_DSO_LDOPTS = \
 		-lrdfutil_s		\
 		-lmsgbaseutil	\
 		-lgmbasegtk		\
-		-lgtk			\
-		-lgdk			\
+		$(TK_LIBS)		\
 		-lxpcom			\
 		-lreg			\
 		-lappcores		\
