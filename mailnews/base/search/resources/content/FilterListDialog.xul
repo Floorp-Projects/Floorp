@@ -187,7 +187,7 @@ Contributor(s):  Hkan Waara <hwaara@chello.se>
                   runlabel="&runFilters.label;" 
                   runaccesskey="&runFilters.accesskey;" 
                   stoplabel="&stopFilters.label;" 
-                  stopaccesskey="&stopFilters.label;" 
+                  stopaccesskey="&stopFilters.accesskey;"
                   oncommand="runSelectedFilters();" disabled="true"/>
         </vbox>
       </row>
