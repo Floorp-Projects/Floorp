@@ -69,35 +69,67 @@
   background-color: #999999;
   overflow:      hidden;
 }
-
-.EditModeButton {
-  -moz-border-radius: 0px 0px 8px 8px;
+/* BORDERS ARE NOT WORKING! globalb class="plain" is fighting us! */
+button.plain:hover, button.plain:hover:active,
+button.plain {
+  -moz-border-radius: 0px 0px 7px 7px;
+  padding: 0px 4px 1px 4px;
+  margin: 0px;
+  color: black;
+  background-color: #CCCCCC;
   border-top: 1px solid #CCCCCC; /* Must be same as background */
   border-bottom: 1px solid #666666;
   border-left: 1px solid white;
   border-right: 1px solid #666666;
-  padding: 0px 4px 0px 4px;
-  margin: 0px;
-  color: black;
-  background-color: #CCCCCC;
 }
 
-.EditModeButton:hover {
+button.plain:hover {
   border:  1px solid white;
 }
 
-.EditModeButton:active {
-  padding: 1px 5px -1px 3px;
+button.plain:hover:active {
+  padding: 1px 5px 0px 3px;
+  border:  1px solid white;
 }
 
-.EditModeButton[selected="1"] {
-  padding: 0px 4px 0px 4px;
+button.plain[selected="1"] {
+  padding: 0px 4px 1px 4px;
   margin: -1px 0px 0px 0px;
-  font-weight: bold;
+/* Not resizing well! - use color instead
+  font-weight: bold; 
+*/
+  background-color: #FFFFFF;
 }
 
-.EditModeButton[selected="1"]:active {
-  padding: 1px 5px -1px 3px;
+button.plain[selected="1"]:active,
+button.plain[selected="1"]:hover:active {
+  padding: 1px 5px 0px 3px;
+}
+
+#NormalModeButton[type="image"] {
+  list-style-image:url(chrome://editor/skin/images/editmode-normal.gif); 
+}
+
+#TagModeButton[type="image"] {
+  list-style-image:url(chrome://editor/skin/images/editmode-tags.gif); 
+}
+#SourceModeButton[type="image"] {
+  list-style-image:url(chrome://editor/skin/images/editmode-html.gif); 
+}
+#PreviewModeButton[type="image"] {
+  list-style-image:url(chrome://editor/skin/images/editmode-preview.gif); 
+}
+#ToggleEditModeType {
+  list-style-image:url(chrome://editor/skin/images/editmode-toggle.gif); 
+  border: 1px outset #CCCCCC;
+}
+
+#ToggleEditModeType:hover {
+  border: 1px solid white;
+}
+
+#ToggleEditModeType:hover:active {
+  border: 1px inset #CCCCCC;
 }
 
 /* Image URLs for all Editor toolbar buttons */

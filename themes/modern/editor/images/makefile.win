@@ -84,3 +84,8 @@ install::
 	$(MAKE_INSTALL) table-white.gif $(DIST)\bin\chrome\$(THEME)\editor\skin\images
 	$(MAKE_INSTALL) table.gif $(DIST)\bin\chrome\$(THEME)\editor\skin\images
 	$(MAKE_INSTALL) underline.gif $(DIST)\bin\chrome\$(THEME)\editor\skin\images
+	$(MAKE_INSTALL) editmode-normal.gif $(DIST)\bin\chrome\$(THEME)\editor\skin\images
+	$(MAKE_INSTALL) editmode-tags.gif $(DIST)\bin\chrome\$(THEME)\editor\skin\images
+	$(MAKE_INSTALL) editmode-html.gif $(DIST)\bin\chrome\$(THEME)\editor\skin\images
+	$(MAKE_INSTALL) editmode-preview.gif $(DIST)\bin\chrome\$(THEME)\editor\skin\images
+	$(MAKE_INSTALL) editmode-toggle.gif $(DIST)\bin\chrome\$(THEME)\editor\skin\images

@@ -86,6 +86,11 @@ EXPORT_RESOURCE_SAMPLES = \
 	table-white.gif \
 	table.gif \
 	underline.gif \
+	editmode-normal.gif \
+	editmode-tags.gif \
+	editmode-html.gif \
+	editmode-preview.gif \
+	editmode-toggle.gif \
     $(NULL)
 
 include $(topsrcdir)/config/rules.mk
