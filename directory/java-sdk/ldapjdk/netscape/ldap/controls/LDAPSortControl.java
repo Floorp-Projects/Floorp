@@ -265,7 +265,7 @@ public class LDAPSortControl extends LDAPControl {
 	BERSequence seq = (BERSequence)BERElement.getElement(decoder, inStream,
 							     nRead );
 	/* First is result code */
-	int m_resultCode = ((BEREnumerated)seq.elementAt( 0 )).getValue();
+	m_resultCode = ((BEREnumerated)seq.elementAt( 0 )).getValue();
 	/* Then, possibly an attribute that failed sorting */
 	if(seq.size() == 1) {
 	    return;

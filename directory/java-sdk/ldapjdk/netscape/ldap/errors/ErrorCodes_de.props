@@ -27,9 +27,9 @@
 48=Unpassende Echtheitsprüfung
 49=Ungültige Echtheitsnachweise
 50=Ungenügender Zugriff
-51=DSA ist belegt
-52=DSA ist nicht verfügbar
-53=DSA ist nicht zur Durchführung bereit
+51=LDAP-Server ist belegt
+52=LDAP-Server ist nicht verfügbar
+53=LDAP-Server ist nicht zur Durchführung bereit
 54=Schleife festgestellt
 64=Verstoß gegen Benennungsregeln
 65=Verstoß gegen Objektklasse
@@ -37,7 +37,7 @@
 67=Operation nicht für RDN zulässig
 68=Bereits vorhanden
 69=Objektklasse kann nicht geändert werden
-71=Wirkt sich auf mehrere DSAs aus
+71=Wirkt sich auf mehrere LDAP-Servers aus
 80=Unbekannter Fehler
 81=Verbindung zu LDAP-Server nicht möglich
 85=Client-Zeitbeschränkung überschritten

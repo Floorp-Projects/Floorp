@@ -107,7 +107,8 @@ public class JDAPSearchRequest extends JDAPBaseDNRequest
         m_time_limit = time_limit;
         m_attrs_only = attrs_only;
         m_filter = (filter == null) ? DEFAULT_FILTER : filter;
-        m_parsedFilter = JDAPFilter.getFilter(m_filter);
+        m_parsedFilter = JDAPFilter.getFilter(
+            JDAPFilterOpers.convertLDAPv2Escape(m_filter));
         if (m_parsedFilter == null){
             throw new IllegalArgumentException("Bad search filter");
         }        

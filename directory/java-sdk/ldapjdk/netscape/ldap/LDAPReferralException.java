@@ -149,4 +149,20 @@ public class LDAPReferralException extends LDAPException {
         }
         return res;
     }
+    
+   /**
+     * Gets the string representation of the referral exception,
+     * which includes the result code, the message sent back
+     *  from the LDAP server and the list of referrals.
+     *
+     * @return string representation of exception.
+     * @see netscape.ldap.LDAPException#errorCodeToString(int)
+     */
+    public String toString() {
+        String str = super.toString();
+        for (int i=0; i < m_referrals.length; i++) {
+            str += "\n" + m_referrals[i];
+        }
+        return str;
+    }
 }

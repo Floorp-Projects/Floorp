@@ -510,11 +510,21 @@ public class LDAPAttribute implements java.io.Serializable {
                 }
                 byte[] val = (byte[])values[i];
                 try {
-                    sb.append(new String(val, "UTF8"));
+                    String sval = new String(val, "UTF8");
+                    if (sval.length() == 0 && val.length > 0) {
+                        sb.append("<binary value, length:");
+                        sb.append(val.length);
+                        sb.append(">");
+                    }
+                    else {
+                        sb.append(sval);
+                    }
+                     
                 } catch (Exception e) {
                     if (val != null) {
+                        sb.append("<binary value, length:");
                         sb.append(val.length);
-                        sb.append(" bytes");
+                        sb.append(">");
                     }
                     else {
                         sb.append("null value");

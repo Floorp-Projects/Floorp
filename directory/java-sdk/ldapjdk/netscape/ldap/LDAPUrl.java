@@ -24,14 +24,16 @@ package netscape.ldap;
 import java.util.*;
 import java.io.*;
 import java.net.MalformedURLException;
+import netscape.ldap.factory.*;
 
 /**
  * Represents an LDAP URL. The complete specification for LDAP URLs is in
  * <A HREF="http://ds.internic.net/rfc/rfc1959.txt"
- * TARGET="_blank">RFC 1959</A>.  LDAP URLs have the following format:
+ * TARGET="_blank">RFC 1959</A>. In addition, the secure ldap (ldaps://) is also
+ * supported. LDAP URLs have the following format:
  *
  * <PRE>
- * "ldap://" [ <I>hostName</I> [":" <I>portNumber</I>] ] "/"
+ * "ldap[s]://" [ <I>hostName</I> [":" <I>portNumber</I>] ] "/"
  *                      <I>distinguishedName</I>
  *          ["?" <I>attributeList</I> ["?" <I>scope</I>
  *                      "?" <I>filterString</I> ] ]
@@ -82,13 +84,22 @@ public class LDAPUrl implements java.io.Serializable {
     static final long serialVersionUID = -3245440798565713640L;
     public static String defaultFilter = "(objectClass=*)";
 
-    private String hostName;
-    private int portNumber;
-    private String DN;
-    private Vector attributes;
-    private int scope;
-    private String filter;
-    private String URL;
+    private String m_hostName;
+    private int m_portNumber;
+    private String m_DN;
+    private Vector m_attributes;
+    private int m_scope;
+    private String m_filter;
+    private String m_URL;
+    private boolean m_secure;
+    
+    private static LDAPSocketFactory m_factory;
+
+    /**
+     * The default port number for secure LDAP connections.
+     * @see netscape.ldap.LDAPUrl#LDAPUrl(java.lang.String, int, java.lang.String, java.lang.String[], int, java.lang.String, boolean)
+     */    
+    public static final int DEFAULT_SECURE_PORT = 636;
 
     /**
      * Constructs a URL object with the specified string as URL.
@@ -96,65 +107,90 @@ public class LDAPUrl implements java.io.Serializable {
      * @exception MalformedURLException failed to parse URL
      */
     public LDAPUrl (String url) throws java.net.MalformedURLException {
-        attributes = null;
-        scope = LDAPv2.SCOPE_BASE;
-        filter = defaultFilter;
-        URL = url;
+        m_attributes = null;
+        m_scope = LDAPv2.SCOPE_BASE;
+        m_filter = defaultFilter;
+        m_URL = url;
 
         parseUrl(url);
     }
 
     /**
-     * Parse URL as defined in RFC 1959
+     * Parse URL as defined in RFC 1959. Beyond the RFC, the secure ldap
+     * (ldaps) is also supported.
      */
     private void parseUrl(String url) throws MalformedURLException {
         StringTokenizer urlParser = new StringTokenizer (url, ":/?", true);
         String currentToken;
         String str = null;
 
-        currentToken = urlParser.nextToken();
-        if (!currentToken.equalsIgnoreCase ("LDAP"))
-            throw new MalformedURLException ();
+        try {
+            currentToken = urlParser.nextToken();
+            if (currentToken.equalsIgnoreCase ("LDAPS")) {
+                m_secure = true;
+            }
+            else if (!currentToken.equalsIgnoreCase ("LDAP")) {
+                throw new MalformedURLException ();
+            }
 
-        currentToken = urlParser.nextToken();
-        if (!currentToken.equals(":")) {
+            currentToken = urlParser.nextToken();
+            if (!currentToken.equals(":")) {
+                throw new MalformedURLException ();
+            }
+            currentToken = urlParser.nextToken();
+            if (!currentToken.equals("/")) {
+                throw new MalformedURLException ();
+            }
+            currentToken = urlParser.nextToken();
+            if (!currentToken.equals("/")) {
+                throw new MalformedURLException ();
+            }
+        
+            currentToken = urlParser.nextToken();
+        }
+        catch (NoSuchElementException e) {
             throw new MalformedURLException ();
         }
-        currentToken = urlParser.nextToken();
-        if (!currentToken.equals("/")) {
-            throw new MalformedURLException ();
-        }
-        currentToken = urlParser.nextToken();
-        if (!currentToken.equals("/")) {
-            throw new MalformedURLException ();
-        }
-
-        currentToken = urlParser.nextToken();
-
+            
+        // host-port
         if (currentToken.equals ("/")) {
-            hostName = null;
-            portNumber = LDAPv2.DEFAULT_PORT;
+            m_hostName = null;
+            m_portNumber = m_secure ? DEFAULT_SECURE_PORT : LDAPv2.DEFAULT_PORT;
+        } else if (currentToken.equals (":")) {
+                // port number without host name is not allowed
+               throw new MalformedURLException ("No hostname");
+        } else if (currentToken.equals ("?")) {
+            throw new MalformedURLException ("No host[:port]");
         } else {
-            hostName = currentToken;
+            m_hostName = currentToken;
             if (urlParser.countTokens() == 0) {
-                portNumber = LDAPv2.DEFAULT_PORT;
+                m_portNumber = m_secure ? DEFAULT_SECURE_PORT : LDAPv2.DEFAULT_PORT;
                 return;
             }
             currentToken = urlParser.nextToken (); // either ":" or "/"
 
             if (currentToken.equals (":")) {
                 try {
-                    portNumber = Integer.parseInt (urlParser.nextToken());
+                    m_portNumber = Integer.parseInt (urlParser.nextToken());
                 } catch (NumberFormatException nf) {
-                    throw new MalformedURLException ();
+                    throw new MalformedURLException ("Port not a number");
+                } catch (NoSuchElementException ex) {
+                    throw new MalformedURLException ("No port number");
                 }
                     
                 if (urlParser.countTokens() == 0) {
                     return;
                 }
-                urlParser.nextToken ();   // "/"
-            } else
-                portNumber = LDAPv2.DEFAULT_PORT;
+                else if (! urlParser.nextToken().equals("/")) {
+                   throw new MalformedURLException ();
+                }
+
+            } else if (currentToken.equals ("/")) {
+                m_portNumber = m_secure ? DEFAULT_SECURE_PORT : LDAPv2.DEFAULT_PORT;
+            } else {
+                // expecting ":" or "/"
+                throw new MalformedURLException ();
+            }
         }
 
 
@@ -162,11 +198,11 @@ public class LDAPUrl implements java.io.Serializable {
         if (!urlParser.hasMoreTokens ()) {
             return;
         }
-        DN = decode(readNextConstruct(urlParser));
-        if (DN.equals("?")) {
-            DN = "";
+        m_DN = decode(readNextConstruct(urlParser));
+        if (m_DN.equals("?")) {
+            m_DN = "";
         }
-        else if (DN.equals("/")) {
+        else if (m_DN.equals("/")) {
             throw new MalformedURLException ();
         }            
             
@@ -178,10 +214,10 @@ public class LDAPUrl implements java.io.Serializable {
         if (!str.equals("?")) {
             StringTokenizer attributeParser = new
                 StringTokenizer (decode(str), ", ");
-            attributes = new Vector ();
+            m_attributes = new Vector ();
 
             while (attributeParser.hasMoreTokens()) {
-                attributes.addElement (attributeParser.nextToken());
+                m_attributes.addElement (attributeParser.nextToken());
             }
         }
 
@@ -191,8 +227,8 @@ public class LDAPUrl implements java.io.Serializable {
         }
         str = readNextConstruct(urlParser);
         if (!str.equals("?")) {
-            scope = getScope(str);
-            if (scope < 0) {
+            m_scope = getScope(str);
+            if (m_scope < 0) {
                 throw new MalformedURLException("Bad scope:" + str);
             }
         }
@@ -202,10 +238,10 @@ public class LDAPUrl implements java.io.Serializable {
             return;
         }
         str = readNextConstruct(urlParser);
-        filter = decode(str);
-        checkBalancedParentheses(filter);
-        if (!filter.startsWith("(") && !filter.endsWith(")")) {
-            filter = "(" + filter + ")";
+        m_filter = decode(str);
+        checkBalancedParentheses(m_filter);
+        if (!m_filter.startsWith("(") && !m_filter.endsWith(")")) {
+            m_filter = "(" + m_filter + ")";
         }
 
         // Nothing after the filter is allowed
@@ -243,21 +279,7 @@ public class LDAPUrl implements java.io.Serializable {
      * @param DN distinguished name of the object
      */
     public LDAPUrl (String host, int port, String DN) {
-        if (host != null) {
-            if (port != LDAPv2.DEFAULT_PORT)
-                URL = "LDAP://" + host + ":" + String.valueOf (port) +
-                  "/" + encode (DN);
-            else
-                URL = "LDAP://" + host + "/" + encode (DN);
-        } else
-            URL = "LDAP:///" + encode (DN);
-
-        this.hostName = host;
-        this.DN = DN;
-        portNumber = port;
-        filter = defaultFilter;
-        attributes = null;
-        scope = LDAPv2.SCOPE_BASE;
+        initialize(host, port, DN, null, LDAPv2.SCOPE_BASE, defaultFilter, false);
     }
 
     /**
@@ -276,15 +298,7 @@ public class LDAPUrl implements java.io.Serializable {
     public LDAPUrl (String host, int port, String DN,
         String attributes[], int scope, String filter) {
 
-        if (attributes != null) {
-            Vector list = new Vector();
-            for (int k = 0; k < attributes.length; k++) {
-                list.addElement(attributes[k]);
-            }
-            initialize(host, port, DN, list.elements(), scope, filter);
-        } else {
-            initialize(host, port, DN, null, scope, filter);
-        }
+        this(host, port, DN, attributes, scope, filter, false);
     }
 
     /**
@@ -303,37 +317,66 @@ public class LDAPUrl implements java.io.Serializable {
     public LDAPUrl (String host, int port, String DN,
       Enumeration attributes, int scope, String filter) {
 
-        initialize(host, port, DN, attributes, scope, filter);
+        initialize(host, port, DN, attributes, scope, filter, false);
     }
+
+    /**
+     * Constructs a full-blown LDAP URL to specify an LDAP search operation.
+     * @param host host name of the LDAP server, or null for "nearest X.500/LDAP"
+     * @param port port number of the LDAP server (use LDAPv2.DEFAULT_PORT for
+     * the default non-secure port or LDAPUrl.DEFAULT_SECURE_PORT for the default
+     * secure port)
+     * @param DN distinguished name of the object
+     * @param attributes list of the attributes to return. Use null for "all
+     * attributes."
+     * @param scope depth of the search (in DN namespace). Use one of the LDAPv2 scopes: 
+     * SCOPE_BASE, SCOPE_ONE, or SCOPE_SUB.
+     * @param filter LDAP filter string (as defined in RFC 1558). Use null for
+     * no filter (this effectively makes the URL reference a single object).
+     * @param secure flag if secure ldap protocol (ldaps) is to be used.
+     */
+    public LDAPUrl (String host, int port, String DN,
+      String[] attributes, int scope, String filter, boolean secure) {
+
+        if (attributes != null) {
+            Vector list = new Vector();
+            for (int k = 0; k < attributes.length; k++) {
+                list.addElement(attributes[k]);
+            }
+            initialize(host, port, DN, list.elements(), scope, filter, secure);
+        } else {
+            initialize(host, port, DN, null, scope, filter, secure);
+        }
+    }
+
 
     /**
      * Initializes URL object.
      */
     private void initialize (String host, int port, String DN,
-      Enumeration attributes, int scope, String filter) {
+      Enumeration attributes, int scope, String filter, boolean secure) {
 
-        this.hostName = host;
-        this.DN = DN;
-        portNumber = port;
-        this.filter = (filter != null) ? filter : defaultFilter;
-        this.scope = scope;
+        m_hostName = host;
+        m_DN = DN;
+        m_portNumber = port;
+        m_filter = (filter != null) ? filter : defaultFilter;
+        m_scope = scope;
+        m_secure = secure;
 
         if (attributes != null) {
-            this.attributes = new Vector ();
+            m_attributes = new Vector ();
             while (attributes.hasMoreElements()) {
-                this.attributes.addElement (attributes.nextElement());
+                m_attributes.addElement (attributes.nextElement());
             }
         } else
-            this.attributes = null;
+            m_attributes = null;
 
-        StringBuffer url = new StringBuffer ("LDAP://");
+        StringBuffer url = new StringBuffer (secure ? "LDAPS://" :"LDAP://");
 
         if (host != null) {
             url.append (host);
-            if (port != LDAPv2.DEFAULT_PORT) {
-                url.append (':');
-                url.append (String.valueOf (port));
-            }
+            url.append (':');
+            url.append (String.valueOf (port));
         }
 
         url.append ('/');
@@ -341,7 +384,7 @@ public class LDAPUrl implements java.io.Serializable {
 
         if (attributes != null) {
             url.append ('?');
-            Enumeration attrList = this.attributes.elements();
+            Enumeration attrList = m_attributes.elements();
             boolean firstElement = true;
 
             while (attrList.hasMoreElements()) {
@@ -374,7 +417,7 @@ public class LDAPUrl implements java.io.Serializable {
             url.append (filter);
         }
 
-        URL = url.toString();
+        m_URL = url.toString();
     }
 
     /**
@@ -382,7 +425,7 @@ public class LDAPUrl implements java.io.Serializable {
      * @return LDAP host.
      */
     public String getHost () {
-        return hostName;
+        return m_hostName;
     }
 
     /**
@@ -390,7 +433,7 @@ public class LDAPUrl implements java.io.Serializable {
      * @return port number.
      */
     public int getPort () {
-        return portNumber;
+        return m_portNumber;
     }
 
     /**
@@ -398,7 +441,7 @@ public class LDAPUrl implements java.io.Serializable {
      * @return target distinguished name.
      */
     public String getDN () {
-        return DN;
+        return m_DN;
     }
 
     /**
@@ -407,10 +450,10 @@ public class LDAPUrl implements java.io.Serializable {
      * @return enumeration of attributes.
      */
     public Enumeration getAttributes () {
-        if (attributes == null)
+        if (m_attributes == null)
             return null;
         else
-            return attributes.elements();
+            return m_attributes.elements();
     }
 
     /**
@@ -419,10 +462,10 @@ public class LDAPUrl implements java.io.Serializable {
      * @return string array of attributes.
      */
     public String[] getAttributeArray () {
-        if (attributes == null)
+        if (m_attributes == null)
             return null;
         else {
-            String[] attrNames = new String[attributes.size()];
+            String[] attrNames = new String[m_attributes.size()];
             Enumeration attrs = getAttributes();
             int i = 0;
 
@@ -440,7 +483,7 @@ public class LDAPUrl implements java.io.Serializable {
      * @return search scope.
      */
     public int getScope () {
-        return scope;
+        return m_scope;
     }
 
     /**
@@ -469,7 +512,7 @@ public class LDAPUrl implements java.io.Serializable {
      * @return the search filter.
      */
     public String getFilter () {
-        return filter;
+        return m_filter;
     }
 
     /**
@@ -477,9 +520,66 @@ public class LDAPUrl implements java.io.Serializable {
      * @return the LDAP search expression in URL form.
      */
     public String getUrl () {
-        return URL;
+        return m_URL;
     }
 
+    /**
+     * Returns true if the secure ldap protocol is used.
+     * @return true if ldaps is used.
+     */
+    public boolean isSecure() {
+        return m_secure;
+    }
+
+    /**
+     * Gets the socket factory to be used for ldaps:// URLs.
+     * <P>
+     * If the factory is not explicitly specified with
+     * <CODE>LDAPUrl.setSocketFactory</CODE>, the method will
+     * attempt the determine the default factory based on the
+     * available factories in the netscape.ldap.factory package.
+     *
+     * @return the socket factory to be used for ldaps:// URLs
+     */
+    public static LDAPSocketFactory getSocketFactory() {
+
+        if (m_factory == null) {
+
+            // No factory explicity set, try to determine
+            // the default one.
+            try {
+                //  First try iPlanet JSSSocketFactory
+                m_factory = new JSSSocketFactory();
+            }
+            catch (Throwable e) {
+            }
+
+            if (m_factory != null) {
+                return m_factory;
+            }
+
+            try {
+                // then try Sun JSSESocketFactory
+                m_factory = new JSSESocketFactory(null);
+            }
+            catch (Throwable e) {
+            }
+        }
+
+        return m_factory;
+    }
+
+    /**
+     * Sets the socket factory to be used for ldaps:// URLs.
+     * Overrides the default factory assigned by the LDAPUrl
+     * class.
+     * @param the socket factory to be used for ldaps:// URLs
+     * @see netscape.ldap.LDAPUrl#getSocketFactory
+     */
+    public static void setSocketFactory(LDAPSocketFactory factory) {
+        m_factory = factory;
+    }
+            
     /**
      * Reads next construct from the given string parser.
      * @param parser the string parser
@@ -649,16 +749,16 @@ public class LDAPUrl implements java.io.Serializable {
             return false;
         }
 
-        if ( attributes == null ) {
-            if ( url.attributes != null ) {
+        if ( m_attributes == null ) {
+            if ( url.m_attributes != null ) {
                 return false;
             }
-        } else if ( attributes.size() != url.attributes.size() ) {
+        } else if ( m_attributes.size() != url.m_attributes.size() ) {
             return false;
         } else {
-            for( int i = 0; i < attributes.size(); i++ ) {
-                if ( attributes.elementAt( i ) !=
-                     url.attributes.elementAt( i ) ) {
+            for( int i = 0; i < m_attributes.size(); i++ ) {
+                if ( m_attributes.elementAt( i ) !=
+                     url.m_attributes.elementAt( i ) ) {
                     return false;
                 }
             }

@@ -260,11 +260,11 @@ public class LDAPConnection
     /**
      * Properties
      */
-    private final static Float SdkVersion = new Float(4.12f);
+    private final static Float SdkVersion = new Float(4.13f);
     private final static Float ProtocolVersion = new Float(3.0f);
     private final static String SecurityVersion = new String("none,simple,sasl");
     private final static Float MajorVersion = new Float(4.0f);
-    private final static Float MinorVersion = new Float(0.12f);
+    private final static Float MinorVersion = new Float(0.13f);
     private final static String DELIM = "#";
     private final static String PersistSearchPackageName =
       "netscape.ldap.controls.LDAPPersistSearchControl";
@@ -2107,7 +2107,14 @@ public class LDAPConnection
         if (results == null) {
             return null;
         }
-        return results.next ();
+        LDAPEntry entry = results.next();
+        
+        // cleanup required for referral connections
+        while (results.hasMoreElements()) {
+            ; // do nothing
+        }
+        
+        return entry;
     }
 
     /**
@@ -2180,6 +2187,15 @@ public class LDAPConnection
         LDAPEntry returnValue;
 
         LDAPConnection connection = new LDAPConnection ();
+        if (toGet.isSecure()) {
+            LDAPSocketFactory factory = toGet.getSocketFactory();
+            if (factory == null) {
+                throw new LDAPException("No socket factory for LDAPUrl",
+                                         LDAPException.OTHER);
+            }
+            System.err.println(factory);
+            connection.setSocketFactory(factory);
+        }
         connection.connect (host, port);
 
         returnValue = connection.read (DN, attributes);
@@ -2318,6 +2334,14 @@ public class LDAPConnection
         int scope = toGet.getScope ();
 
         LDAPConnection connection = new LDAPConnection ();
+        if (toGet.isSecure()) {
+            LDAPSocketFactory factory = toGet.getSocketFactory();
+            if (factory == null) {
+                throw new LDAPException("No socket factory for LDAPUrl",
+                                         LDAPException.OTHER);
+            }
+            connection.setSocketFactory(factory);
+        }        
         connection.connect (host, port);
 
         LDAPSearchResults results;
@@ -5321,7 +5345,7 @@ public class LDAPConnection
 
     /**
      * Reports if the class is running in a Netscape browser.
-     * @return <CODE>true</TRUE> if the class is running in a Netscape browser.
+     * @return <CODE>true</CODE> if the class is running in a Netscape browser.
      */
     public static boolean isNetscape() {
         return isCommunicator;
@@ -5333,6 +5357,49 @@ public class LDAPConnection
         }
     }
 
+    /**
+     * Returns the string representation for this <CODE>LDAPConnection</CODE>.
+     * <P>
+     * For example:
+     *
+     * <PRE>LDAPConnection {ldap://dilly:389 (2) ldapVersion:3 bindDN:"uid=admin,o=iplanet.com"}</PRE>
+     * 
+     * For cloned connections, the number of LDAPConnection instances sharing the 
+     * same physical connection is shown in parenthesis following the ldap url. 
+     * If a LDAPConnection is not cloned, this number is omitted from the string
+     * representation.
+     *
+     * @return string representation of the connection.
+     * @see netscape.ldap.LDAPConnection#clone
+     */    
+    public String toString() {
+        int cloneCnt = (m_thread == null) ? 0 : m_thread.getClientCount();
+        StringBuffer sb = new StringBuffer("LDAPConnection {");
+        //url
+        sb.append((m_factory == null ? "ldap" : "ldaps"));
+        sb.append("://");
+        sb.append(getHost());
+        sb.append(":");
+        sb.append(getPort());
+        // clone count
+        if (cloneCnt > 1) {
+            sb.append(" (");
+            sb.append(cloneCnt);
+            sb.append(")");
+        }
+        // ldap version
+        sb.append(" ldapVersion:");
+        sb.append(m_protocolVersion);
+        // bind DN
+        sb.append(" bindDN:\"");
+        if (getAuthenticationDN() != null) {
+            sb.append(getAuthenticationDN());
+        }
+        sb.append("\"}");
+        
+        return sb.toString();
+    }
+                                                                     
     /**
      * Prints out the LDAP Java SDK version and the highest LDAP
      * protocol version supported by the SDK. To view this

@@ -27,9 +27,9 @@
 48=Inappropriate authentication
 49=Invalid credentials
 50=Insufficient access
-51=DSA is busy
-52=DSA is unavailable
-53=DSA is unwilling to perform
+51=LDAP server is busy
+52=LDAP server is unavailable
+53=LDAP server is unwilling to perform
 54=Loop detected
 64=Naming violation
 65=Object class violation
@@ -37,7 +37,7 @@
 67=Operation not allowed on RDN
 68=Already exists
 69=Cannot modify object class
-71=Affects multiple DSAs
+71=Affects multiple LDAP servers
 80=Unknown error
 81=Cannot contact LDAP server
 85=Client Timelimit exceeded

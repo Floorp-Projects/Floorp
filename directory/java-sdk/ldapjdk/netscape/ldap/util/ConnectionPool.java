@@ -193,7 +193,43 @@ public class ConnectionPool {
         }
         return con;
     }
-            
+
+    /**
+     * Gets a connection from the pool within a time limit.
+     *
+     * If no connections are available, the pool will be
+     * extended if the number of connections is less than
+     * the maximum; if the pool cannot be extended, the method
+     * blocks until a free connection becomes available or the
+     * time limit is exceeded. 
+     *
+     * @param timeout timeout in milliseconds
+     * @return an active connection or <CODE>null</CODE> if timed out. 
+     */
+    public LDAPConnection getConnection(int timeout) {
+        LDAPConnection con;
+
+        while( (con = getConnFromPool()) == null ) {
+            long t1, t0 = System.currentTimeMillis();
+
+            if (timeout <= 0) {
+                return con;
+            }
+
+            synchronized( pool ) {
+                try {
+                    pool.wait(timeout);
+                } catch ( InterruptedException e ) {
+                    return null;
+                }
+            }
+
+            t1 = System.currentTimeMillis();
+            timeout -= (t1 - t0);
+        }
+        return con;
+    }
+
     /**
      * Gets a connection from the pool
      *

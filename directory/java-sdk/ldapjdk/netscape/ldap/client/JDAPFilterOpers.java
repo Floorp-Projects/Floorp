@@ -31,7 +31,7 @@ import netscape.ldap.ber.stream.*;
  * returns the ber octet string for the specified string with escape
  * characters.
  */
-class JDAPFilterOpers {
+public class JDAPFilterOpers {
 
     private static final String escapeKey = "\\";
     private static final boolean m_debug = false;
@@ -49,6 +49,54 @@ class JDAPFilterOpers {
             return new BEROctetString(str);
     }
 
+    /**
+     * Preprocess the LDAPv2 RFC1960 style filter escape sequences (precede
+     * a character with a a backslash) and convert them into the
+     * LDAPv3 style RFC2254 escape sequences (encode a character as a backslash
+     * followed by the two hex digits representing the character ASCII value).
+     * 
+     * LDAPv3 style unescaping is done from the getByteValues()method. We must 
+     * process LDAPv2 escaped characters earlier to get rid of possible "\(" \)"
+     * sequences which would make filter parsing in the JDAPFilter operate incorrectly.
+     */
+    public static String convertLDAPv2Escape(String filter) {
+       
+        if (filter.indexOf('\\') < 0) {
+            return filter;
+        }
+        
+        StringBuffer sb = new StringBuffer();
+        int i=0, start=0, len=filter.length();
+        while(start < len && (i = filter.indexOf('\\', start)) >= 0 ) {
+            sb.append(filter.substring(start, i+1)); // include also '\'
+            try {
+                char c = filter.charAt(i+1);
+
+                if ((c >= ' ' && c < 127) && !isHexDigit(c)) {    
+                    sb.append(Integer.toHexString(c));
+                }
+                else {
+                    sb.append(c);
+                }
+                
+                start = i + 2;
+            }
+            catch (IndexOutOfBoundsException e) {
+                throw new IllegalArgumentException("Bad search filter");
+            }
+        }
+        
+        if (start < len) {
+            sb.append(filter.substring(start));
+        }
+        
+        return sb.toString();
+    }
+
+    private static boolean isHexDigit(char c) {
+        return (c >= '0' && c <= '9') || (c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F');
+    }
+    
     /**
      * This method converts the given string into bytes. It also handles
      * the escape characters embedded in the given string.

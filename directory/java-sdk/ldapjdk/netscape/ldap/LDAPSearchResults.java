@@ -286,7 +286,12 @@ public class LDAPSearchResults implements Enumeration, java.io.Serializable {
             while (referralResults.size() > 0) {
                 Object obj = null;
                 if ((obj=nextReferralElement()) != null) {
-                    entries.addElement(obj);
+                    if (obj instanceof LDAPException) {
+                        add((LDAPException)obj); // put it back
+                    }                    
+                    else {
+                        entries.addElement(obj);                      
+                    }
                 }
             }
         }
@@ -476,17 +481,18 @@ public class LDAPSearchResults implements Enumeration, java.io.Serializable {
      * @return count of search results immediatly available for processing
      */
     public int getCount() {
-        int count = entries.size();
 
+        while (resultSource != null && resultSource.getMessageCount() > 0) {
+            fetchResult();
+        }
+
+        int count = entries.size();
+        
         for ( int i = 0; i < referralResults.size(); i++ ) {
             LDAPSearchResults res =
                 (LDAPSearchResults)referralResults.elementAt(i);
             count += res.getCount();
         } 
-
-        if ( resultSource != null ) {
-          count += resultSource.getMessageCount();
-        }
 
         if ( exceptions != null ) {
             count += exceptions.size();

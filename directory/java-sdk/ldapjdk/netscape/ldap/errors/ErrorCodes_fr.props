@@ -27,9 +27,9 @@
 48=Authentification inadéquate
 49=Références non valides
 50=Accès insuffisant
-51=DSA est occupé
-52=DSA n'est pas disponible
-53=DSA ne veut pas trater la demande
+51=Le serveur LDAP est occupé
+52=Le serveur LDAP n'est pas disponible
+53=Le serveur LDAP ne veut pas traiter la demande
 54=Boucle détectée
 64=Violation d'attribution de nom
 65=Violation de classe d'objet
@@ -37,7 +37,7 @@
 67=Opération non autorisée sur RDN
 68=Existe déjà
 69=Impossible de modifier la classe d'objet
-71=Concerne plusieurs DSA
+71=Concerne plusieurs serveurs LDAP
 80=Erreur inconnue
 81=Impossible de contacter le serveur LDAP
 85=Client délai dépassé

@@ -80,8 +80,12 @@ public abstract class JDAPFilter {
     public static JDAPFilter getFilter(String filter) {
         String f = new String(filter);
         f.trim();
-        if (f.startsWith("(") && f.endsWith(")")) {
-            return getFilterComp(f.substring(1,f.length()-1));
+        if (f.startsWith("(") || f.endsWith(")")) {
+            if (f.startsWith("(") && f.endsWith(")")) {
+                return getFilterComp(f.substring(1,f.length()-1));
+            }
+            //unbalanced parentheses
+            throw new IllegalArgumentException("Bad search filter");
         }
         return getFilterComp(filter);
     }
@@ -177,6 +181,11 @@ public abstract class JDAPFilter {
 
         String type = item.substring(0, idx).trim();
         String value = item.substring(idx+1).trim(); /* skip = */
+
+        // Only values can contain escape sequences
+        if (type.indexOf('\\') >= 0) {
+            throw new IllegalArgumentException("Bad search filter");
+        }
 
         /* make decision by looking at the type */
         type.trim();

@@ -94,13 +94,13 @@ public class DSMLWriter extends LDAPWriter {
             while( attrs.hasMoreElements() ) {
                 printString( "      <dsml:attribute ref=\"#" +
                              (String)attrs.nextElement() +
-                             " required=\"true\"/>" );
+                             "\" required=\"true\"/>" );
             }
             attrs = s.getOptionalAttributes();
             while( attrs.hasMoreElements() ) {
                 printString( "      <dsml:attribute ref=\"#" +
                              (String)attrs.nextElement() +
-                             " required=\"false\"/>" );
+                             "\" required=\"false\"/>" );
             }
             printString( "    </dsml:class>" );
         }

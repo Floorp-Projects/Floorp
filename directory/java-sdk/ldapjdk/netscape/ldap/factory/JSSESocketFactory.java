@@ -80,11 +80,11 @@ public class JSSESocketFactory
             }
         } catch (UnknownHostException e) {
             throw new LDAPException("SSL connection to " + host +
-                                    ":" + port,
+                                    ":" + port + ", " + e.getMessage(),
                                     LDAPException.CONNECT_ERROR);
         } catch (IOException f) {
             throw new LDAPException("SSL connection to " + host +
-                                    ":" + port,
+                                    ":" + port + ", " + f.getMessage(),
                                     LDAPException.CONNECT_ERROR);
         }
   
