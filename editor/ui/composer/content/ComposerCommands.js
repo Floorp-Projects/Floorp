@@ -81,7 +81,7 @@ function SetupHTMLEditorCommands()
   commandManager.registerCommand("cmd_hline",         nsHLineCommand);
   commandManager.registerCommand("cmd_link",          nsLinkCommand);
   commandManager.registerCommand("cmd_anchor",        nsAnchorCommand);
-  commandManager.registerCommand("cmd_insertHTML",    nsInsertHTMLCommand);
+  commandManager.registerCommand("cmd_insertHTMLWithDialog", nsInsertHTMLWithDialogCommand);
   commandManager.registerCommand("cmd_insertBreak",   nsInsertBreakCommand);
   commandManager.registerCommand("cmd_insertBreakAll",nsInsertBreakAllCommand);
 
@@ -1158,7 +1158,7 @@ var gEditorOutputProgressListener =
 
         // Notify progress dialog that we're finished
         //  and keep open to show error
-        gProgressDialog.SetProgressFinished(null,0);
+        gProgressDialog.SetProgressFinished(null, 0);
 
         // We don't want to change location or reset mod count, etc.
         return;
@@ -1245,7 +1245,7 @@ var gEditorOutputProgressListener =
           // We previously aborted publishing because of error:
           //   Calling gPersistObj.cancelSave() resulted in a non-zero gPersistObj.result,
           //   so notify progress dialog we're finished
-          gProgressDialog.SetProgressFinished(null,0);
+          gProgressDialog.SetProgressFinished(null, 0);
         }
       }
     }
@@ -1396,7 +1396,7 @@ var gEditorOutputProgressListener =
                                       dlgTitle, text, pwObj, checkBoxLabel, savePWObj);
 
       if (!ret)
-        setTimeout(CancelPublishing,0);
+        setTimeout(CancelPublishing(), 0);
 
       if (ret && gPublishData)
         UpdateUsernamePasswordFromPrompt(gPublishData, gPublishData.username, pwObj.value, savePWObj.value);
@@ -1408,7 +1408,7 @@ var gEditorOutputProgressListener =
   {
     var ret = PromptUsernameAndPassword(dlgTitle, text, savePWObj.value, userObj, pwObj);
     if (!ret)
-      setTimeout(CancelPublishing,0);
+      setTimeout(CancelPublishing(), 0);
 
     return ret;
   },
@@ -1432,7 +1432,7 @@ var gEditorOutputProgressListener =
     var ret = promptServ.prompt(gProgressDialog ? gProgressDialog : window,
                                 dlgTitle, text, defaultText, pwrealm, savePWObj);
     if (!ret)
-      setTimeout(CancelPublishing,0);
+      setTimeout(CancelPublishing(), 0);
     return ret;
   },
 
@@ -1440,7 +1440,7 @@ var gEditorOutputProgressListener =
   {
     var ret = PromptUsernameAndPassword(dlgTitle, text, savePW, userObj, pwObj);
     if (!ret)
-      setTimeout(CancelPublishing,0);
+      setTimeout(CancelPublishing(), 0);
     return ret;
   },
 
@@ -1465,7 +1465,7 @@ var gEditorOutputProgressListener =
                                       dlgTitle, text, pwObj, GetString("SavePassword"), savePWObj);
 
       if (!ret)
-        setTimeout(CancelPublishing,0);
+        setTimeout(CancelPublishing(), 0);
 
       if (ret && gPublishData)
         UpdateUsernamePasswordFromPrompt(gPublishData, gPublishData.username, pwObj.value, savePWObj.value);
@@ -2775,7 +2775,7 @@ var nsAnchorCommand =
 };
 
 //-----------------------------------------------------------------------------------
-var nsInsertHTMLCommand =
+var nsInsertHTMLWithDialogCommand =
 {
   isCommandEnabled: function(aCommand, dummy)
   {
