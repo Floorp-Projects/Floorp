@@ -56,6 +56,10 @@ PBE_CreateContext(SECOidTag hashAlgorithm, PBEBitGenID bitGenPurpose,
 
 SECItem *
 PBE_GenerateBits(PBEBitGenContext *context);
+
+void
+PBE_DestroyContext(PBEBitGenContext *context);
+
 /***********************************************************************
  *
  * PK11KeyGenerator.generateNormal
@@ -84,10 +88,8 @@ Java_org_mozilla_jss_pkcs11_PK11KeyGenerator_generateNormal
     PR_ASSERT(mech != CKM_INVALID_MECHANISM);
 
     /*
-     * HACK...to workaround bug 333440.
-     * You can't actually pass a keygen mech into PK11_KeyGen. You have
-     * to pass in an actual crypto mech, and it will translate it internally
-     * to the appropriate keygen mech. Very lame bug with an easy fix.
+     * This translation code can come out once we start using a version
+     * of NSS that has a fix for bug 162761.
      */
     switch(mech) {
     case CKM_DES_KEY_GEN:
@@ -99,8 +101,12 @@ Java_org_mozilla_jss_pkcs11_PK11KeyGenerator_generateNormal
     case CKM_RC4_KEY_GEN:
         mech = CKM_RC4;
         break;
-    default:
+    case CKM_AES_KEY_GEN:
+        mech = CKM_AES_CBC;
         break;
+    default:
+        JSS_throwMsg(env, TOKEN_EXCEPTION, "Unsupported keygen algorithm");
+        goto finish;
     }
 
     /* generate the key */
@@ -108,7 +114,7 @@ Java_org_mozilla_jss_pkcs11_PK11KeyGenerator_generateNormal
                     strength/8 /*in bytes*/, NULL /*wincx*/ );
 
     if(skey==NULL) {
-        JSS_throwMsg(env, TOKEN_EXCEPTION, "KeyGen failed on token");
+        JSS_throwMsgPrErr(env, TOKEN_EXCEPTION, "KeyGen failed on token");
         goto finish;
     }
 
