@@ -35,7 +35,8 @@ EXPORTS		= \
 		nsFileLocations.h \
 		nsIDOMXPConnectFactory.h \
 		nsINetSupportDialogService.h \
-        nsISplashScreen.h \
+		nsISplashScreen.h \
+		nsINativeAppSupport.h \
 		$(NULL)
 
 XPIDLSRCS	= \
