@@ -13,6 +13,7 @@ comm.jar:
     content/communicator/pref/pref-advanced.xul                 (prefwindow/resources/content/pref-advanced.xul)
     content/communicator/pref/pref-appearance.xul               (prefwindow/resources/content/pref-appearance.xul)
     content/communicator/pref/pref-applications.xul             (prefwindow/resources/content/pref-applications.xul)
+    content/communicator/pref/pref-download.js                  (prefwindow/resources/content/pref-download.js)
     content/communicator/pref/pref-applications.js              (prefwindow/resources/content/pref-applications.js)
     content/communicator/pref/pref-applications-edit.xul        (prefwindow/resources/content/pref-applications-edit.xul)
     content/communicator/pref/overrideHandler.js                (prefwindow/resources/content/overrideHandler.js)
