@@ -34,7 +34,7 @@
 /*
  * Certificate handling code
  *
- * $Id: certdb.c,v 1.20 2002/01/03 20:09:27 ian.mcgreer%sun.com Exp $
+ * $Id: certdb.c,v 1.21 2002/01/03 20:19:55 ian.mcgreer%sun.com Exp $
  */
 
 #include "nssilock.h"
@@ -64,6 +64,7 @@
 #define NSS_3_4_CODE
 #endif /* NSS_3_4_CODE */
 #include "pki.h"
+#include "pki3hack.h"
 
 /*
  * Certificate database handling code
