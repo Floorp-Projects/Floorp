@@ -441,7 +441,7 @@ NS_IMETHODIMP nsWebShellWindow::LoadMenuItem(
       return NS_ERROR_FAILURE;
     }
 
-    nsAutoString cmdAtom("onClick");
+    nsAutoString cmdAtom("onclick");
     nsString cmdName;
 
     domElement->GetAttribute(cmdAtom, cmdName);
