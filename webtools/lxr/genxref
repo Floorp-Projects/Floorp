@@ -1,5 +1,5 @@
-#!/usr/bonsaitools/perl
-# $Id: genxref,v 1.1 1998/06/11 23:56:15 jwz Exp $
+#!/usr/bonsaitools/bin/perl
+# $Id: genxref,v 1.2 1998/06/12 18:55:52 jwz Exp $
 
 # genxref.pl --	Finds identifiers in a set of C files using an
 #		extremely fuzzy algorithm.  It sort of works.
