@@ -97,6 +97,20 @@ class nsXULAttribute : public nsIDOMAttr,
                        public nsIScriptObjectOwner
 {
 protected:
+    static PRInt32 gRefCnt;
+    static nsIAtom* kIdAtom;
+
+    // A global fixed-size allocator for nsXULAttribute
+    // objects. |kBlockSize| is the number of nsXULAttribute objects
+    // the live together in a contiguous block of memory.
+    static const PRInt32 kBlockSize;
+
+    // The head of the free list for free nsXULAttribute objects.
+    static nsXULAttribute* gFreeList;
+
+    static void* operator new(size_t aSize);
+    static void  operator delete(void* aObject, size_t aSize);
+
     nsXULAttribute(nsIContent* aContent,
                    PRInt32 aNameSpaceID,
                    nsIAtom* aName,
@@ -131,9 +145,14 @@ public:
     PRInt32 GetNameSpaceID() const { return mNameSpaceID; }
     nsIAtom* GetName() const { return mName; }
     nsresult SetValueInternal(const nsString& aValue);
+    nsresult GetValueAsAtom(nsIAtom** aResult);
 
 protected:
-    nsIContent* mContent;      // The content object that owns the attribute
+    union {
+        nsIContent* mContent;  // The content object that owns the attribute
+        nsXULAttribute* mNext; // For objects on the freelist
+    };
+
     void*       mScriptObject; // The attribute's script object, if reified
     PRInt32     mNameSpaceID;  // The attribute namespace
     nsIAtom*    mName;         // The attribute name
