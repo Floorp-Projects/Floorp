@@ -220,7 +220,7 @@ extern "C" NS_EXPORT nsresult NSRegisterSelf(nsISupports* aServMgr, const char *
   if (NS_FAILED(rv) && (NS_ERROR_FACTORY_EXISTS != rv)) goto done;
 
   //
-  // register the scriptable date time formatter
+  // register the language atom service
   //
   rv = compMgr->RegisterComponent(kLanguageAtomServiceCID,
     "Language Atom Service", NS_LANGUAGEATOMSERVICE_PROGID, path, PR_TRUE,
