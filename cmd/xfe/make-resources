@@ -22,6 +22,7 @@ CLASS=$1; shift
 VERSIONN=$1; shift
 STRS=$1; shift
 RESOURCES=$1; shift
+RES_TRANS=$1; shift
 MOZ_USER_DIR=$1; shift
 VSUFFIX=$1; shift
 SS=$1; shift
@@ -90,7 +91,7 @@ cat ${RESOURCES} ${LOCALE_MAP} ${STRS} | sed \
 	 s/@URLVERSION@/${VERS}/g;
 	 s/@MOZ_USER_DIR@/${MOZ_USER_DIR}/g;
 	 /@INCLUDE resources-translations@.*/ {
-	   r resources-translations
+	   r ${RES_TRANS}
 	   d
 	   }" > ${DEST}
 

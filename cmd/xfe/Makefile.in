@@ -1199,7 +1199,7 @@ e_kit_resources.h: e_kit.ad
 	@echo ';' >> $@
 
 $(OBJDIR)/Netscape-nis-export.ad $(OBJDIR)/Netscape-export.ad: Makefile resources resources-translations versionn.h strs make-resources $(LOCALE_MAP)
-	@$(srcdir)/make-resources $@ Netscape Netscape $(srcdir)/versionn.h $(srcdir)/strs $(srcdir)/resources $(MOZ_USER_DIR) "" export $(LOCALES)
+	@$(srcdir)/make-resources $@ Netscape Netscape $(srcdir)/versionn.h $(srcdir)/strs $(srcdir)/resources $(srcdir)/resources-translations $(MOZ_USER_DIR) "" export $(LOCALES)
 
 #######################################################################
 # The "-export" targets
