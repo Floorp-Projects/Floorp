@@ -21,7 +21,6 @@
 #include "nsIViewManager.h"
 #include "nsIFrame.h"
 #include "nsIPresContext.h"
-#include "nsIPresShell.h"
 #include "nsIWidget.h"
 #include "nsIButton.h"
 #include "nsIScrollbar.h"
