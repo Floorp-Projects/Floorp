@@ -238,71 +238,6 @@ GetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         }
         break;
       }
-      case WINDOW_TOP:
-      {
-        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_TOP, PR_FALSE);
-        if (NS_SUCCEEDED(rv)) {
-          nsIDOMWindow* prop;
-          rv = a->GetTop(&prop);
-          if (NS_SUCCEEDED(rv)) {
-            // get the js object
-            nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, obj, vp);
-          }
-        }
-        break;
-      }
-      case WINDOW_MENUBAR:
-      {
-        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_MENUBAR, PR_FALSE);
-        if (NS_SUCCEEDED(rv)) {
-          nsIDOMBarProp* prop;
-          rv = a->GetMenubar(&prop);
-          if (NS_SUCCEEDED(rv)) {
-            // get the js object
-            nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, obj, vp);
-          }
-        }
-        break;
-      }
-      case WINDOW_TOOLBAR:
-      {
-        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_TOOLBAR, PR_FALSE);
-        if (NS_SUCCEEDED(rv)) {
-          nsIDOMBarProp* prop;
-          rv = a->GetToolbar(&prop);
-          if (NS_SUCCEEDED(rv)) {
-            // get the js object
-            nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, obj, vp);
-          }
-        }
-        break;
-      }
-      case WINDOW_LOCATIONBAR:
-      {
-        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_LOCATIONBAR, PR_FALSE);
-        if (NS_SUCCEEDED(rv)) {
-          nsIDOMBarProp* prop;
-          rv = a->GetLocationbar(&prop);
-          if (NS_SUCCEEDED(rv)) {
-            // get the js object
-            nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, obj, vp);
-          }
-        }
-        break;
-      }
-      case WINDOW_PERSONALBAR:
-      {
-        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_PERSONALBAR, PR_FALSE);
-        if (NS_SUCCEEDED(rv)) {
-          nsIDOMBarProp* prop;
-          rv = a->GetPersonalbar(&prop);
-          if (NS_SUCCEEDED(rv)) {
-            // get the js object
-            nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, obj, vp);
-          }
-        }
-        break;
-      }
       case WINDOW_STATUSBAR:
       {
         rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_STATUSBAR, PR_FALSE);
@@ -847,6 +782,67 @@ SetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
 /***********************************************************************/
 //
+// top Property Getter
+//
+PR_STATIC_CALLBACK(JSBool)
+WindowtopGetter(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
+{
+  nsIDOMWindow *a = (nsIDOMWindow*)nsJSUtils::nsGetNativeThis(cx, obj);
+
+  // If there's no private data, this must be the prototype, so ignore
+  if (nsnull == a) {
+    return JS_TRUE;
+  }
+
+  nsresult rv;
+  nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
+  if (!secMan)
+      return PR_FALSE;
+  rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_TOP, PR_FALSE);
+  if (NS_FAILED(rv)) {
+    return nsJSUtils::nsReportError(cx, obj, rv);
+  }
+
+          nsIDOMWindow* prop;
+          rv = a->GetTop(&prop);
+          if (NS_SUCCEEDED(rv)) {
+            // get the js object
+            nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, obj, vp);
+          }
+
+  return PR_TRUE;
+}
+
+/***********************************************************************/
+//
+// top Property Setter
+//
+PR_STATIC_CALLBACK(JSBool)
+WindowtopSetter(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
+{
+  nsIDOMWindow *a = (nsIDOMWindow*)nsJSUtils::nsGetNativeThis(cx, obj);
+
+  // If there's no private data, this must be the prototype, so ignore
+  if (nsnull == a) {
+    return JS_TRUE;
+  }
+
+  nsresult rv;
+  nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
+  if (!secMan)
+      return PR_FALSE;
+  rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_TOP, PR_TRUE);
+  if (NS_FAILED(rv)) {
+    return nsJSUtils::nsReportError(cx, obj, rv);
+  }
+
+
+  JS_DefineProperty(cx, obj, "top", *vp, nsnull, nsnull, JSPROP_ENUMERATE);
+  return PR_TRUE;
+}
+
+/***********************************************************************/
+//
 // _content Property Getter
 //
 PR_STATIC_CALLBACK(JSBool)
@@ -1025,6 +1021,250 @@ WindowprompterSetter(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
 
   JS_DefineProperty(cx, obj, "prompter", *vp, nsnull, nsnull, JSPROP_ENUMERATE);
+  return PR_TRUE;
+}
+
+/***********************************************************************/
+//
+// menubar Property Getter
+//
+PR_STATIC_CALLBACK(JSBool)
+WindowmenubarGetter(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
+{
+  nsIDOMWindow *a = (nsIDOMWindow*)nsJSUtils::nsGetNativeThis(cx, obj);
+
+  // If there's no private data, this must be the prototype, so ignore
+  if (nsnull == a) {
+    return JS_TRUE;
+  }
+
+  nsresult rv;
+  nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
+  if (!secMan)
+      return PR_FALSE;
+  rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_MENUBAR, PR_FALSE);
+  if (NS_FAILED(rv)) {
+    return nsJSUtils::nsReportError(cx, obj, rv);
+  }
+
+          nsIDOMBarProp* prop;
+          rv = a->GetMenubar(&prop);
+          if (NS_SUCCEEDED(rv)) {
+            // get the js object
+            nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, obj, vp);
+          }
+
+  return PR_TRUE;
+}
+
+/***********************************************************************/
+//
+// menubar Property Setter
+//
+PR_STATIC_CALLBACK(JSBool)
+WindowmenubarSetter(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
+{
+  nsIDOMWindow *a = (nsIDOMWindow*)nsJSUtils::nsGetNativeThis(cx, obj);
+
+  // If there's no private data, this must be the prototype, so ignore
+  if (nsnull == a) {
+    return JS_TRUE;
+  }
+
+  nsresult rv;
+  nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
+  if (!secMan)
+      return PR_FALSE;
+  rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_MENUBAR, PR_TRUE);
+  if (NS_FAILED(rv)) {
+    return nsJSUtils::nsReportError(cx, obj, rv);
+  }
+
+
+  JS_DefineProperty(cx, obj, "menubar", *vp, nsnull, nsnull, JSPROP_ENUMERATE);
+  return PR_TRUE;
+}
+
+/***********************************************************************/
+//
+// toolbar Property Getter
+//
+PR_STATIC_CALLBACK(JSBool)
+WindowtoolbarGetter(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
+{
+  nsIDOMWindow *a = (nsIDOMWindow*)nsJSUtils::nsGetNativeThis(cx, obj);
+
+  // If there's no private data, this must be the prototype, so ignore
+  if (nsnull == a) {
+    return JS_TRUE;
+  }
+
+  nsresult rv;
+  nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
+  if (!secMan)
+      return PR_FALSE;
+  rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_TOOLBAR, PR_FALSE);
+  if (NS_FAILED(rv)) {
+    return nsJSUtils::nsReportError(cx, obj, rv);
+  }
+
+          nsIDOMBarProp* prop;
+          rv = a->GetToolbar(&prop);
+          if (NS_SUCCEEDED(rv)) {
+            // get the js object
+            nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, obj, vp);
+          }
+
+  return PR_TRUE;
+}
+
+/***********************************************************************/
+//
+// toolbar Property Setter
+//
+PR_STATIC_CALLBACK(JSBool)
+WindowtoolbarSetter(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
+{
+  nsIDOMWindow *a = (nsIDOMWindow*)nsJSUtils::nsGetNativeThis(cx, obj);
+
+  // If there's no private data, this must be the prototype, so ignore
+  if (nsnull == a) {
+    return JS_TRUE;
+  }
+
+  nsresult rv;
+  nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
+  if (!secMan)
+      return PR_FALSE;
+  rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_TOOLBAR, PR_TRUE);
+  if (NS_FAILED(rv)) {
+    return nsJSUtils::nsReportError(cx, obj, rv);
+  }
+
+
+  JS_DefineProperty(cx, obj, "toolbar", *vp, nsnull, nsnull, JSPROP_ENUMERATE);
+  return PR_TRUE;
+}
+
+/***********************************************************************/
+//
+// locationbar Property Getter
+//
+PR_STATIC_CALLBACK(JSBool)
+WindowlocationbarGetter(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
+{
+  nsIDOMWindow *a = (nsIDOMWindow*)nsJSUtils::nsGetNativeThis(cx, obj);
+
+  // If there's no private data, this must be the prototype, so ignore
+  if (nsnull == a) {
+    return JS_TRUE;
+  }
+
+  nsresult rv;
+  nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
+  if (!secMan)
+      return PR_FALSE;
+  rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_LOCATIONBAR, PR_FALSE);
+  if (NS_FAILED(rv)) {
+    return nsJSUtils::nsReportError(cx, obj, rv);
+  }
+
+          nsIDOMBarProp* prop;
+          rv = a->GetLocationbar(&prop);
+          if (NS_SUCCEEDED(rv)) {
+            // get the js object
+            nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, obj, vp);
+          }
+
+  return PR_TRUE;
+}
+
+/***********************************************************************/
+//
+// locationbar Property Setter
+//
+PR_STATIC_CALLBACK(JSBool)
+WindowlocationbarSetter(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
+{
+  nsIDOMWindow *a = (nsIDOMWindow*)nsJSUtils::nsGetNativeThis(cx, obj);
+
+  // If there's no private data, this must be the prototype, so ignore
+  if (nsnull == a) {
+    return JS_TRUE;
+  }
+
+  nsresult rv;
+  nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
+  if (!secMan)
+      return PR_FALSE;
+  rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_LOCATIONBAR, PR_TRUE);
+  if (NS_FAILED(rv)) {
+    return nsJSUtils::nsReportError(cx, obj, rv);
+  }
+
+
+  JS_DefineProperty(cx, obj, "locationbar", *vp, nsnull, nsnull, JSPROP_ENUMERATE);
+  return PR_TRUE;
+}
+
+/***********************************************************************/
+//
+// personalbar Property Getter
+//
+PR_STATIC_CALLBACK(JSBool)
+WindowpersonalbarGetter(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
+{
+  nsIDOMWindow *a = (nsIDOMWindow*)nsJSUtils::nsGetNativeThis(cx, obj);
+
+  // If there's no private data, this must be the prototype, so ignore
+  if (nsnull == a) {
+    return JS_TRUE;
+  }
+
+  nsresult rv;
+  nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
+  if (!secMan)
+      return PR_FALSE;
+  rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_PERSONALBAR, PR_FALSE);
+  if (NS_FAILED(rv)) {
+    return nsJSUtils::nsReportError(cx, obj, rv);
+  }
+
+          nsIDOMBarProp* prop;
+          rv = a->GetPersonalbar(&prop);
+          if (NS_SUCCEEDED(rv)) {
+            // get the js object
+            nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, obj, vp);
+          }
+
+  return PR_TRUE;
+}
+
+/***********************************************************************/
+//
+// personalbar Property Setter
+//
+PR_STATIC_CALLBACK(JSBool)
+WindowpersonalbarSetter(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
+{
+  nsIDOMWindow *a = (nsIDOMWindow*)nsJSUtils::nsGetNativeThis(cx, obj);
+
+  // If there's no private data, this must be the prototype, so ignore
+  if (nsnull == a) {
+    return JS_TRUE;
+  }
+
+  nsresult rv;
+  nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
+  if (!secMan)
+      return PR_FALSE;
+  rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_PERSONALBAR, PR_TRUE);
+  if (NS_FAILED(rv)) {
+    return nsJSUtils::nsReportError(cx, obj, rv);
+  }
+
+
+  JS_DefineProperty(cx, obj, "personalbar", *vp, nsnull, nsnull, JSPROP_ENUMERATE);
   return PR_TRUE;
 }
 
@@ -2835,14 +3075,14 @@ static JSPropertySpec WindowProperties[] =
   {"screen",    WINDOW_SCREEN,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {"history",    WINDOW_HISTORY,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {"parent",    WINDOW_PARENT,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {"top",    WINDOW_TOP,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"top",    WINDOW_TOP,    JSPROP_ENUMERATE, WindowtopGetter, WindowtopSetter},
   {"_content",    WINDOW__CONTENT,    JSPROP_ENUMERATE, Window_contentGetter, Window_contentSetter},
   {"sidebar",    WINDOW_SIDEBAR,    JSPROP_ENUMERATE, WindowsidebarGetter, WindowsidebarSetter},
   {"prompter",    WINDOW_PROMPTER,    JSPROP_ENUMERATE, WindowprompterGetter, WindowprompterSetter},
-  {"menubar",    WINDOW_MENUBAR,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {"toolbar",    WINDOW_TOOLBAR,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {"locationbar",    WINDOW_LOCATIONBAR,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {"personalbar",    WINDOW_PERSONALBAR,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"menubar",    WINDOW_MENUBAR,    JSPROP_ENUMERATE, WindowmenubarGetter, WindowmenubarSetter},
+  {"toolbar",    WINDOW_TOOLBAR,    JSPROP_ENUMERATE, WindowtoolbarGetter, WindowtoolbarSetter},
+  {"locationbar",    WINDOW_LOCATIONBAR,    JSPROP_ENUMERATE, WindowlocationbarGetter, WindowlocationbarSetter},
+  {"personalbar",    WINDOW_PERSONALBAR,    JSPROP_ENUMERATE, WindowpersonalbarGetter, WindowpersonalbarSetter},
   {"statusbar",    WINDOW_STATUSBAR,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {"scrollbars",    WINDOW_SCROLLBARS,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {"directories",    WINDOW_DIRECTORIES,    JSPROP_ENUMERATE | JSPROP_READONLY},
