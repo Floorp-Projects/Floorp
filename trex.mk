@@ -64,6 +64,8 @@ build_platform:
 
 
 build_trex:
+	cd $(MOZ_SRC)/mozilla/gconfig; \
+	gmake; \
 	cd $(MOZ_SRC)/mozilla/shell; \
 	gmake; \
 	cd $(MOZ_SRC)/mozilla/trex; \
