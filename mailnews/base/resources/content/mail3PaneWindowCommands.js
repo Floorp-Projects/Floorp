@@ -240,6 +240,7 @@ var DefaultController =
       case "cmd_watchThread":
       case "cmd_killThread":
       case "cmd_toggleWorkOffline":
+      case "cmd_synchronizeOffline":
       case "cmd_close":
       case "cmd_selectThread":
       case "cmd_selectFlagged":
@@ -369,6 +370,7 @@ var DefaultController =
 				return IsFolderCharsetEnabled();
       case "cmd_close":
       case "cmd_toggleWorkOffline":
+      case "cmd_synchronizeOffline":
         return true;
             case "cmd_selectFlagged":
                 // disable select flagged until I finish the code in nsMsgDBView.cpp
@@ -541,6 +543,9 @@ var DefaultController =
 				return;
       case "cmd_toggleWorkOffline":
         MsgToggleWorkOffline();
+        return;
+      case "cmd_synchronizeOffline":
+        MsgSynchronizeOffline();
         return;
             case "cmd_selectThread":
                 gDBView.doCommand(nsMsgViewCommandType.selectThread);
