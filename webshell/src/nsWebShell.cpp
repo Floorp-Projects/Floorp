@@ -1210,6 +1210,7 @@ nsWebShell::AddChild(nsIWebShell* aChild)
   }
   mChildren.AppendElement(aChild);
   aChild->SetParent(this);
+  aChild->SetDefaultCharacterSet(mDefaultCharacterSet); 
   NS_ADDREF(aChild);
 
   return NS_OK;
@@ -2767,6 +2768,13 @@ NS_IMETHODIMP
 nsWebShell::SetDefaultCharacterSet (const PRUnichar*  aDefaultCharacterSet)  
 {
   mDefaultCharacterSet = aDefaultCharacterSet;
+  PRInt32 i, n = mChildren.Count();
+  for (i = 0; i < n; i++) {
+    nsIWebShell* child = (nsIWebShell*) mChildren.ElementAt(i);
+    if (nsnull != child) {
+      child->SetDefaultCharacterSet(aDefaultCharacterSet);
+    }
+  }
   return NS_OK;
 }
 
