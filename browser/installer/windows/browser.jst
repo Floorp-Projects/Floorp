@@ -2,6 +2,7 @@ function registerProgramFolderKey(winreg, fFolderPath)
 {
   var subkey;
   var err;
+  var szCurrentMozillaVersion;
 
   /* set the Program Folder Path in the Mozilla key in the Windows Registry */
   winreg.createKey("SOFTWARE\\$CompanyName$","");
@@ -9,6 +10,18 @@ function registerProgramFolderKey(winreg, fFolderPath)
   subkey  = "SOFTWARE\\$CompanyName$\\$ProductName$";
   winreg.createKey(subkey,"");
   err     = winreg.setValueString(subkey, "CurrentVersion", "$UserAgent$");
+
+  subkey  = "SOFTWARE\\$CompanyName$\\Mozilla";
+  szCurrentMozillaVersion = winreg.getValueString(subkey, "CurrentVersion");
+  logComment("szCurrentMozillaVersion: " + szCurrentMozillaVersion);
+
+  if((szCurrentMozillaVersion == "") || (szCurrentMozillaVersion == null))
+  {
+    /* we *MUST* have a Mozilla CurrentVersion key for the Java plugin to work with Firebird - bug 229627 */
+    subkey  = "SOFTWARE\\$CompanyName$\\Mozilla";
+    winreg.createKey(subkey,"");
+    err     = winreg.setValueString(subkey, "CurrentVersion", "1.6");
+  }
 
   subkey  = "SOFTWARE\\$CompanyName$\\$ProductName$\\$UserAgent$";
   winreg.createKey(subkey,"");
