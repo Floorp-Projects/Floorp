@@ -3699,7 +3699,7 @@ function asyncFocusSearchBox(event)
 function openPreferences()
 {
   var instantApply = gPrefService.getBoolPref("browser.preferences.instantApply");
-  var features = "chrome,titlebar,centerscreen" + (instantApply ? "" : ",modal");
+  var features = "chrome,titlebar,toolbar,centerscreen" + (instantApply ? ",dialog=no" : ",modal");
 
   var wm = Components.classes["@mozilla.org/appshell/window-mediator;1"]
                      .getService(Components.interfaces.nsIWindowMediator);

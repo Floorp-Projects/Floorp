@@ -401,7 +401,7 @@
 #else
              xul:title="&preferencesDefaultTitleMac.title;">
 #endif
-      <xul:radiogroup anonid="selector" orient="horizontal" class="paneSelector"/>
+      <xul:radiogroup anonid="selector" orient="horizontal" class="paneSelector chromeclass-toolbar"/>
       <xul:hbox flex="1" class="paneDeckContainer">
         <xul:deck anonid="paneDeck" flex="1">
           <children includes="prefpane"/>
