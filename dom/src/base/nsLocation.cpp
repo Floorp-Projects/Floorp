@@ -18,7 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s):
- *   Travis Bogard <travis@netscape.com> 
+ *   Travis Bogard <travis@netscape.com>
  *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
@@ -29,7 +29,6 @@
 #include "nsIWebNavigation.h"
 #include "nsIURL.h"
 #include "nsIIOService.h"
-#include "nsIURL.h"
 #include "nsIServiceManager.h"
 #include "nsNetUtil.h"
 #include "plstr.h"
@@ -47,20 +46,13 @@
 #include "nsDOMPropEnums.h"
 #include "nsDOMError.h"
 
-static NS_DEFINE_IID(kIScriptObjectOwnerIID, NS_ISCRIPTOBJECTOWNER_IID);
-static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
-static NS_DEFINE_IID(kIDOMLocationIID, NS_IDOMLOCATION_IID);
-static NS_DEFINE_IID(kIDOMNSLocationIID, NS_IDOMNSLOCATION_IID);
-static NS_DEFINE_IID(kIJSScriptObjectIID, NS_IJSSCRIPTOBJECT_IID);
-static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
-
 LocationImpl::LocationImpl(nsIDocShell *aDocShell)
 {
   NS_INIT_REFCNT();
   mScriptObject = nsnull;
   mDocShell = aDocShell; // Weak Reference
 }
- 
+
 LocationImpl::~LocationImpl()
 {
 }
@@ -76,14 +68,14 @@ NS_INTERFACE_MAP_BEGIN(LocationImpl)
    NS_INTERFACE_MAP_ENTRY(nsIJSScriptObject)
 NS_INTERFACE_MAP_END
 
-nsresult 
+nsresult
 LocationImpl::SetScriptObject(void *aScriptObject)
 {
   mScriptObject = aScriptObject;
   return NS_OK;
 }
 
-nsresult 
+nsresult
 LocationImpl::GetScriptObject(nsIScriptContext *aContext, void** aScriptObject)
 {
   NS_ENSURE_ARG_POINTER(aScriptObject);
@@ -91,11 +83,13 @@ LocationImpl::GetScriptObject(nsIScriptContext *aContext, void** aScriptObject)
   if (!mScriptObject) {
     nsCOMPtr<nsIScriptGlobalObject> global(do_GetInterface(mDocShell));
     NS_ENSURE_TRUE(global, NS_ERROR_FAILURE);
-    NS_ENSURE_SUCCESS(NS_NewScriptLocation(aContext, 
-      NS_STATIC_CAST(nsIDOMLocation*, this),global, &mScriptObject), 
+    NS_ENSURE_SUCCESS(NS_NewScriptLocation(aContext,
+      NS_STATIC_CAST(nsIDOMLocation*, this),global, &mScriptObject),
       NS_ERROR_FAILURE);
   }
+
   *aScriptObject = mScriptObject;
+
   return NS_OK;
 }
 
@@ -104,27 +98,33 @@ NS_IMETHODIMP_(void) LocationImpl::SetDocShell(nsIDocShell *aDocShell)
    mDocShell = aDocShell; // Weak Reference
 }
 
-nsresult 
-LocationImpl::CheckURL(nsIURI* aURL, nsIDocShellLoadInfo** aLoadInfo)
+nsresult
+LocationImpl::CheckURL(nsIURI* aURI, nsIDocShellLoadInfo** aLoadInfo)
 {
   nsresult result;
   // Get JSContext from stack.
-  NS_WITH_SERVICE(nsIJSContextStack, stack, "@mozilla.org/js/xpc/ContextStack;1", 
-                  &result);
+  nsCOMPtr<nsIJSContextStack>
+    stack(do_GetService("@mozilla.org/js/xpc/ContextStack;1", &result));
+
   if (NS_FAILED(result))
     return NS_ERROR_FAILURE;
+
   JSContext *cx;
+
   if (NS_FAILED(stack->Peek(&cx)))
     return NS_ERROR_FAILURE;
 
   // Get security manager.
-  NS_WITH_SERVICE(nsIScriptSecurityManager, secMan,
-                  NS_SCRIPTSECURITYMANAGER_CONTRACTID, &result);
-  if (NS_FAILED(result)) 
+  nsCOMPtr<nsIScriptSecurityManager>
+    secMan(do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &result));
+
+  if (NS_FAILED(result))
     return NS_ERROR_FAILURE;
 
   // Check to see if URI is allowed.
-  if (NS_FAILED(result = secMan->CheckLoadURIFromScript(cx, aURL))) 
+  result = secMan->CheckLoadURIFromScript(cx, aURI);
+
+  if (NS_FAILED(result))
     return result;
 
   // Create load info
@@ -142,106 +142,118 @@ LocationImpl::CheckURL(nsIURI* aURL, nsIDocShellLoadInfo** aLoadInfo)
 
   *aLoadInfo = loadInfo.get();
   NS_ADDREF(*aLoadInfo);
+
   return NS_OK;
 }
 
 
-nsresult 
-LocationImpl::SetURL(nsIURI* aURL)
+nsresult
+LocationImpl::SetURL(nsIURI* aURI)
 {
   if (mDocShell) {
-    
     nsCOMPtr<nsIDocShellLoadInfo> loadInfo;
-    if(NS_FAILED(CheckURL(aURL, getter_AddRefs(loadInfo))))
+
+    if(NS_FAILED(CheckURL(aURI, getter_AddRefs(loadInfo))))
       return NS_ERROR_FAILURE;
 
     loadInfo->SetStopActiveDocument(PR_TRUE);
 
-    return mDocShell->LoadURI(aURL, loadInfo, nsIWebNavigation::LOAD_FLAGS_NONE);
+    return mDocShell->LoadURI(aURI, loadInfo,
+                              nsIWebNavigation::LOAD_FLAGS_NONE);
   }
-  else {
-    return NS_OK;
-  }
+
+  return NS_OK;
 }
 
-NS_IMETHODIMP    
+NS_IMETHODIMP
 LocationImpl::GetHash(nsAWritableString& aHash)
 {
   nsAutoString href;
-  nsIURI *uri;
   nsresult result = NS_OK;
-  
-  result = GetHref(href);
-  if (NS_OK == result) {
-    result = NS_NewURI(&uri, href);
 
-    if (NS_OK == result) {
-      char *ref;
-      nsIURL* url;
-      result = uri->QueryInterface(NS_GET_IID(nsIURL), (void**)&url);
-      if (NS_SUCCEEDED(result)) {
-        result = url->GetRef(&ref);
-        NS_RELEASE(url);
+  result = GetHref(href);
+
+  if (NS_SUCCEEDED(result)) {
+    nsCOMPtr<nsIURI> uri;
+
+    result = NS_NewURI(getter_AddRefs(uri), href);
+
+    if (uri) {
+      nsCOMPtr<nsIURL> url(do_QueryInterface(uri));
+      nsXPIDLCString ref;
+
+      if (url) {
+        result = url->GetRef(getter_Copies(ref));
       }
-      if (result == NS_OK && (nsnull != ref) && ('\0' != *ref)) {
+
+      if (NS_SUCCEEDED(result) && ref && *ref) {
         aHash.Assign(NS_LITERAL_STRING("#"));
         aHash.Append(NS_ConvertASCIItoUCS2(ref));
-        nsCRT::free(ref);
       }
       else {
         aHash.SetLength(0);
       }
-      NS_RELEASE(uri);
     }
   }
 
   return result;
 }
 
-NS_IMETHODIMP    
+NS_IMETHODIMP
 LocationImpl::SetHash(const nsAReadableString& aHash)
 {
   nsAutoString href;
-  nsIURI *uri;
   nsresult result = NS_OK;
 
   result = GetHref(href);
-  if (NS_OK == result) {
-    result = NS_NewURI(&uri, href);
-    if (NS_FAILED(result)) return result;
-    nsIURL* url;
-    result = uri->QueryInterface(NS_GET_IID(nsIURI), (void**)&url);
-    NS_RELEASE(uri);
-    if (NS_OK == result) {
+
+  if (NS_SUCCEEDED(result)) {
+    nsCOMPtr<nsIURI> uri;
+
+    result = NS_NewURI(getter_AddRefs(uri), href);
+
+    if (NS_FAILED(result))
+      return result;
+
+    nsCOMPtr<nsIURL> url(do_QueryInterface(uri, &result));
+
+    if (url) {
       url->SetRef(NS_ConvertUCS2toUTF8(aHash));
+
       SetURL(url);
-      NS_RELEASE(url);      
     }
   }
 
   return result;
 }
 
-NS_IMETHODIMP    
+NS_IMETHODIMP
 LocationImpl::GetHost(nsAWritableString& aHost)
 {
   nsAutoString href;
-  nsIURI *url;
   nsresult result = NS_OK;
-  
+
   result = GetHref(href);
-  if (NS_OK == result) {
-    result = NS_NewURI(&url, href);
-    if (NS_OK == result) {
-      char* host;
-      result = url->GetHost(&host);
-      if (result == NS_OK) {
-        CopyASCIItoUCS2(nsLiteralCString(host), aHost);
-        nsCRT::free(host);
+
+  if (NS_SUCCEEDED(result)) {
+    nsCOMPtr<nsIURI> uri;
+
+    result = NS_NewURI(getter_AddRefs(uri), href);
+
+    if (uri) {
+      nsXPIDLCString host;
+
+      result = uri->GetHost(getter_Copies(host));
+
+      if (NS_SUCCEEDED(result)) {
         PRInt32 port;
-        (void)url->GetPort(&port);
-        if (-1 != port) {
-          aHost.Append(NS_LITERAL_STRING(":"));
+
+        CopyASCIItoUCS2(nsLiteralCString(host), aHost);
+
+        uri->GetPort(&port);
+
+        if (port != -1) {
+          aHost.Append(PRUnichar(':'));
 
           nsAutoString tmpHost;
           tmpHost.AppendInt(port);
@@ -249,89 +261,101 @@ LocationImpl::GetHost(nsAWritableString& aHost)
           aHost.Append(tmpHost);
         }
       }
-      NS_RELEASE(url);
     }
   }
 
   return result;
 }
 
-NS_IMETHODIMP    
+NS_IMETHODIMP
 LocationImpl::SetHost(const nsAReadableString& aHost)
 {
   nsAutoString href;
-  nsIURI *url;
   nsresult result = NS_OK;
 
   result = GetHref(href);
-  if (NS_OK == result) {
-    result = NS_NewURI(&url, href);
-    if (NS_OK == result) {
-      url->SetHost(NS_ConvertUCS2toUTF8(aHost));
-      SetURL(url);
-      NS_RELEASE(url);      
+
+  if (NS_SUCCEEDED(result)) {
+    nsCOMPtr<nsIURI> uri;
+
+    result = NS_NewURI(getter_AddRefs(uri), href);
+
+    if (uri) {
+      uri->SetHost(NS_ConvertUCS2toUTF8(aHost));
+
+      SetURL(uri);
     }
   }
 
   return result;
 }
 
-NS_IMETHODIMP    
+NS_IMETHODIMP
 LocationImpl::GetHostname(nsAWritableString& aHostname)
 {
   nsAutoString href;
-  nsIURI *url;
   nsresult result = NS_OK;
-  
+
   result = GetHref(href);
-  if (NS_OK == result) {
-    result = NS_NewURI(&url, href);
-    if (NS_OK == result) {
-      char* host;
-      result = url->GetHost(&host);
-      if (result == NS_OK) {
+
+  if (NS_SUCCEEDED(result)) {
+    nsCOMPtr<nsIURI> uri;
+
+    result = NS_NewURI(getter_AddRefs(uri), href);
+
+    if (uri) {
+      nsXPIDLCString host;
+
+      result = uri->GetHost(getter_Copies(host));
+
+      if (NS_SUCCEEDED(result)) {
         CopyASCIItoUCS2(nsLiteralCString(host), aHostname);
-        nsCRT::free(host);
       }
-      NS_RELEASE(url);
     }
   }
 
   return result;
 }
 
-NS_IMETHODIMP    
+NS_IMETHODIMP
 LocationImpl::SetHostname(const nsAReadableString& aHostname)
 {
   nsAutoString href;
-  nsIURI *url;
   nsresult result = NS_OK;
 
   result = GetHref(href);
-  if (NS_OK == result) {
-    result = NS_NewURI(&url, href);
-    if (NS_OK == result) {
-      url->SetHost(NS_ConvertUCS2toUTF8(aHostname));
-      SetURL(url);
-      NS_RELEASE(url);      
+
+  if (NS_SUCCEEDED(result)) {
+    nsCOMPtr<nsIURI> uri;
+
+    result = NS_NewURI(getter_AddRefs(uri), href);
+
+    if (uri) {
+      uri->SetHost(NS_ConvertUCS2toUTF8(aHostname));
+      SetURL(uri);
     }
   }
 
   return result;
 }
 
-NS_IMETHODIMP    
+NS_IMETHODIMP
 LocationImpl::GetHref(nsAWritableString& aHref)
 {
   nsresult result = NS_OK;
 
   nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(mDocShell));
+
   if (webNav) {
     nsCOMPtr<nsIURI> uri;
+
     result = webNav->GetCurrentURI(getter_AddRefs(uri));
+
     if (NS_SUCCEEDED(result) && uri) {
       nsXPIDLCString uriString;
+
       result = uri->GetSpec(getter_Copies(uriString));
+
       if (NS_SUCCEEDED(result))
         CopyASCIItoUCS2(nsLiteralCString(uriString), aHref);
     }
@@ -340,19 +364,21 @@ LocationImpl::GetHref(nsAWritableString& aHref)
   return result;
 }
 
-NS_IMETHODIMP    
+NS_IMETHODIMP
 LocationImpl::SetHref(const nsAReadableString& aHref)
 {
   nsAutoString oldHref;
-  nsIURI *oldUrl;
   nsresult result = NS_OK;
 
   result = GetHref(oldHref);
-  if (NS_OK == result) {
-    result = NS_NewURI(&oldUrl, oldHref);
-    if (NS_OK == result) {
-      result = SetHrefWithBase(aHref, oldUrl, PR_FALSE);
-      NS_RELEASE(oldUrl);
+
+  if (NS_SUCCEEDED(result)) {
+    nsCOMPtr<nsIURI> oldUri;
+
+    result = NS_NewURI(getter_AddRefs(oldUri), oldHref);
+
+    if (oldUri) {
+      result = SetHrefWithBase(aHref, oldUri, PR_FALSE);
     }
   }
 
@@ -367,128 +393,145 @@ LocationImpl::SetHrefWithContext(JSContext* cx, jsval val)
 
   // Get the parameter passed in
   nsJSUtils::nsConvertJSValToString(href, cx, val);
-    
+
   // Get the source of the caller
   nsresult result = GetSourceURL(cx, getter_AddRefs(base));
-    
+
   if (NS_FAILED(result)) {
     return result;
   }
 
   return SetHrefWithBase(href, base, PR_FALSE);
-}                                
+}
 
 nsresult
-LocationImpl::SetHrefWithBase(const nsAReadableString& aHref, 
-                              nsIURI* aBase,
-                              PRBool aReplace)
+LocationImpl::SetHrefWithBase(const nsAReadableString& aHref,
+                              nsIURI* aBase, PRBool aReplace)
 {
   nsresult result;
-  nsCOMPtr<nsIURI> newUrl;
+  nsCOMPtr<nsIURI> newUri;
 
-  result = NS_NewURI(getter_AddRefs(newUrl), aHref, aBase);
+  result = NS_NewURI(getter_AddRefs(newUri), aHref, aBase);
 
-  if ((NS_OK == result) && (mDocShell)) {
-
+  if (newUri && mDocShell) {
     nsCOMPtr<nsIDocShellLoadInfo> loadInfo;
-    if(NS_FAILED(CheckURL(newUrl, getter_AddRefs(loadInfo))))
-      return NS_ERROR_FAILURE;
 
-    if (aReplace)
+    nsresult rv = CheckURL(newUri, getter_AddRefs(loadInfo));
+
+    if(NS_FAILED(rv))
+      return rv;
+
+    if (aReplace) {
       loadInfo->SetLoadType(nsIDocShellLoadInfo::loadNormalReplace);
+    }
 
     loadInfo->SetStopActiveDocument(PR_TRUE);
 
-    return mDocShell->LoadURI(newUrl, loadInfo, nsIWebNavigation::LOAD_FLAGS_NONE);
+    return mDocShell->LoadURI(newUri, loadInfo,
+                              nsIWebNavigation::LOAD_FLAGS_NONE);
   }
-  
+
   return result;
 }
 
-NS_IMETHODIMP    
+NS_IMETHODIMP
 LocationImpl::GetPathname(nsAWritableString& aPathname)
 {
   nsAutoString href;
-  nsIURI *uri;
   nsresult result = NS_OK;
-  
+
+  aPathname.Truncate();
+
   result = GetHref(href);
-  if (NS_OK == result) {
-    result = NS_NewURI(&uri, href);
-    if (NS_OK == result) {
-      nsCOMPtr<nsIURL> url = do_QueryInterface(uri);
+
+  if (NS_SUCCEEDED(result)) {
+    nsCOMPtr<nsIURI> uri;
+
+    result = NS_NewURI(getter_AddRefs(uri), href);
+
+    if (uri) {
+      nsCOMPtr<nsIURL> url(do_QueryInterface(uri));
+
       if (url) {
-        char* file;
-        result = url->GetFilePath(&file);
-        if (result == NS_OK) {
+        nsXPIDLCString file;
+        result = url->GetFilePath(getter_Copies(file));
+
+        if (NS_SUCCEEDED(result)) {
           CopyASCIItoUCS2(nsLiteralCString(file), aPathname);
-          nsCRT::free(file);
         }
       }
-      NS_IF_RELEASE(uri);
     }
   }
 
   return result;
 }
 
-NS_IMETHODIMP    
+NS_IMETHODIMP
 LocationImpl::SetPathname(const nsAReadableString& aPathname)
 {
   nsAutoString href;
-  nsIURI *url;
   nsresult result = NS_OK;
 
   result = GetHref(href);
-  if (NS_OK == result) {
-    result = NS_NewURI(&url, href);
-    if (NS_OK == result) {
-      url->SetPath(NS_ConvertUCS2toUTF8(aPathname));
-      SetURL(url);
-      NS_RELEASE(url);      
+
+  if (NS_SUCCEEDED(result)) {
+    nsCOMPtr<nsIURI> uri;
+
+    result = NS_NewURI(getter_AddRefs(uri), href);
+
+    if (uri) {
+      uri->SetPath(NS_ConvertUCS2toUTF8(aPathname));
+      SetURL(uri);
     }
   }
 
   return result;
 }
 
-NS_IMETHODIMP    
+NS_IMETHODIMP
 LocationImpl::GetPort(nsAWritableString& aPort)
 {
   nsAutoString href;
-  nsIURI *url;
   nsresult result = NS_OK;
-  
+
   result = GetHref(href);
-  if (NS_OK == result) {
-    result = NS_NewURI(&url, href);
-    if (NS_OK == result) {
+
+  if (NS_SUCCEEDED(result)) {
+    nsCOMPtr<nsIURI> uri;
+
+    result = NS_NewURI(getter_AddRefs(uri), href);
+
+    if (uri) {
       aPort.SetLength(0);
+
       PRInt32 port;
-      (void)url->GetPort(&port);
+      uri->GetPort(&port);
+
       if (-1 != port) {
         nsAutoString portStr;
         portStr.AppendInt(port);
         aPort.Append(portStr);
       }
-      NS_RELEASE(url);
     }
   }
 
   return result;
 }
 
-NS_IMETHODIMP    
+NS_IMETHODIMP
 LocationImpl::SetPort(const nsAReadableString& aPort)
 {
   nsAutoString href;
-  nsIURI *url;
   nsresult result = NS_OK;
 
   result = GetHref(href);
-  if (NS_OK == result) {
-    result = NS_NewURI(&url, href);
-    if (NS_OK == result) {
+
+  if (NS_SUCCEEDED(result)) {
+    nsCOMPtr<nsIURI> uri;
+
+    result = NS_NewURI(getter_AddRefs(uri), href);
+
+    if (uri) {
       const char *buf = NS_ConvertUCS2toUTF8(aPort).GetBuffer();
       PRInt32 port = -1;
 
@@ -500,168 +543,180 @@ LocationImpl::SetPort(const nsAReadableString& aPort)
           port = atol(buf);
         }
       }
-      url->SetPort(port);
-      SetURL(url);
-      NS_RELEASE(url);      
+      uri->SetPort(port);
+      SetURL(uri);
     }
   }
 
   return result;
 }
 
-NS_IMETHODIMP    
+NS_IMETHODIMP
 LocationImpl::GetProtocol(nsAWritableString& aProtocol)
 {
   nsAutoString href;
-  nsIURI *url;
   nsresult result = NS_OK;
-  
+
   result = GetHref(href);
-  if (NS_OK == result) {
-    result = NS_NewURI(&url, href);
-    if (NS_OK == result) {
-      char* protocol;
-      result = url->GetScheme(&protocol);
-      if (result == NS_OK) {
+
+  if (NS_SUCCEEDED(result)) {
+    nsCOMPtr<nsIURI> uri;
+
+    result = NS_NewURI(getter_AddRefs(uri), href);
+
+    if (uri) {
+      nsXPIDLCString protocol;
+
+      result = uri->GetScheme(getter_Copies(protocol));
+
+      if (NS_SUCCEEDED(result)) {
         aProtocol.Assign(NS_ConvertASCIItoUCS2(protocol));
-        aProtocol.Append(NS_LITERAL_STRING(":"));
-        nsCRT::free(protocol);
+        aProtocol.Append(PRUnichar(':'));
       }
-      NS_RELEASE(url);
     }
   }
 
   return result;
 }
 
-NS_IMETHODIMP    
+NS_IMETHODIMP
 LocationImpl::SetProtocol(const nsAReadableString& aProtocol)
 {
   nsAutoString href;
-  nsIURI *url;
   nsresult result = NS_OK;
 
   result = GetHref(href);
-  if (NS_OK == result) {
-    result = NS_NewURI(&url, href);
-    if (NS_OK == result) {
-      url->SetScheme(NS_ConvertUCS2toUTF8(aProtocol));
-      SetURL(url);
-      NS_RELEASE(url);      
+
+  if (NS_SUCCEEDED(result)) {
+    nsCOMPtr<nsIURI> uri;
+
+    result = NS_NewURI(getter_AddRefs(uri), href);
+
+    if (uri) {
+      uri->SetScheme(NS_ConvertUCS2toUTF8(aProtocol));
+      SetURL(uri);
     }
   }
 
   return result;
 }
 
-NS_IMETHODIMP    
+NS_IMETHODIMP
 LocationImpl::GetSearch(nsAWritableString& aSearch)
 {
   nsAutoString href;
-  nsIURI *uri;
   nsresult result = NS_OK;
 
   result = GetHref(href);
-  if (NS_OK == result) {
-    result = NS_NewURI(&uri, href);
-    if (NS_OK == result) {
-      char *search;
-      nsIURL* url;
-      result = uri->QueryInterface(NS_GET_IID(nsIURL), (void**)&url);
-      if (NS_SUCCEEDED(result)) {
-        result = url->GetEscapedQuery(&search);
-        NS_RELEASE(url);
+
+  if (NS_SUCCEEDED(result)) {
+    nsCOMPtr<nsIURI> uri;
+
+    result = NS_NewURI(getter_AddRefs(uri), href);
+
+    if (uri) {
+      nsXPIDLCString search;
+      nsCOMPtr<nsIURL> url(do_QueryInterface(uri));
+
+      if (url) {
+        result = url->GetEscapedQuery(getter_Copies(search));
       }
-      if (result == NS_OK && (nsnull != search) && ('\0' != *search)) {
+
+      if (NS_SUCCEEDED(result) && search && *search) {
         aSearch.Assign(NS_LITERAL_STRING("?"));
         aSearch.Append(NS_ConvertASCIItoUCS2(search));
-        nsCRT::free(search);
       }
       else {
         aSearch.SetLength(0);
       }
-      NS_RELEASE(uri);
     }
   }
 
   return NS_OK;
 }
 
-NS_IMETHODIMP    
+NS_IMETHODIMP
 LocationImpl::SetSearch(const nsAReadableString& aSearch)
 {
   nsAutoString href;
-  nsIURI *uri;
   nsresult result = NS_OK;
 
   result = GetHref(href);
-  if (NS_OK == result) {
-    result = NS_NewURI(&uri, href);
-    if (NS_OK == result) {
-      nsIURL* url;
-      result = uri->QueryInterface(NS_GET_IID(nsIURL), (void**)&url);
-      if (NS_SUCCEEDED(result)) {
+
+  if (NS_SUCCEEDED(result)) {
+    nsCOMPtr<nsIURI> uri;
+
+    result = NS_NewURI(getter_AddRefs(uri), href);
+
+    if (uri) {
+      nsCOMPtr<nsIURL> url(do_QueryInterface(uri, &result));
+
+      if (url) {
         result = url->SetQuery(NS_ConvertUCS2toUTF8(aSearch));
-        NS_RELEASE(url);
+
+        SetURL(uri);
       }
-      SetURL(uri);
-      NS_RELEASE(uri);      
     }
   }
 
   return result;
 }
 
-NS_IMETHODIMP    
+NS_IMETHODIMP
 LocationImpl::Reload(PRBool aForceget)
 {
-   nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(mDocShell));
-   NS_ENSURE_TRUE(webNav, NS_ERROR_FAILURE);
+  nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(mDocShell));
+  NS_ENSURE_TRUE(webNav, NS_ERROR_FAILURE);
 
-   NS_ENSURE_SUCCESS(webNav->Reload(nsIWebNavigation::LOAD_FLAGS_NONE), 
-      NS_ERROR_FAILURE);
+  NS_ENSURE_SUCCESS(webNav->Reload(nsIWebNavigation::LOAD_FLAGS_NONE),
+                    NS_ERROR_FAILURE);
 
-   return NS_OK;
+  return NS_OK;
 }
 
-NS_IMETHODIMP    
+NS_IMETHODIMP
 LocationImpl::Replace(const nsAReadableString& aUrl)
 {
   nsAutoString oldHref;
-  nsIURI *oldUrl;
   nsresult result = NS_OK;
 
   result = GetHref(oldHref);
-  if (NS_OK == result) {
-    result = NS_NewURI(&oldUrl, oldHref);
-    if (NS_OK == result) {
-      result = SetHrefWithBase(aUrl, oldUrl, PR_TRUE);
-      NS_RELEASE(oldUrl);
+
+  if (NS_SUCCEEDED(result)) {
+    nsCOMPtr<nsIURI> oldUri;
+
+    result = NS_NewURI(getter_AddRefs(oldUri), oldHref);
+
+    if (oldUri) {
+      result = SetHrefWithBase(aUrl, oldUri, PR_TRUE);
     }
   }
 
   return result;
 }
 
-NS_IMETHODIMP    
+NS_IMETHODIMP
 LocationImpl::Assign(const nsAReadableString& aUrl)
 {
   nsAutoString oldHref;
-  nsCOMPtr<nsIURI> oldUrl;
   nsresult result = NS_OK;
 
   result = GetHref(oldHref);
+
   if (NS_SUCCEEDED(result)) {
-    result = NS_NewURI(getter_AddRefs(oldUrl), oldHref);
-    if (NS_SUCCEEDED(result)) {
-      result = SetHrefWithBase(aUrl, oldUrl, PR_FALSE);
+    nsCOMPtr<nsIURI> oldUri;
+
+    result = NS_NewURI(getter_AddRefs(oldUri), oldHref);
+
+    if (oldUri) {
+      result = SetHrefWithBase(aUrl, oldUri, PR_FALSE);
     }
   }
 
   return result;
 }
 
-NS_IMETHODIMP    
+NS_IMETHODIMP
 LocationImpl::Reload(JSContext *cx, jsval *argv, PRUint32 argc)
 {
   // XXX Security manager needs to be called
@@ -674,32 +729,30 @@ LocationImpl::Reload(JSContext *cx, jsval *argv, PRUint32 argc)
   return Reload(force ? PR_TRUE : PR_FALSE);
 }
 
-NS_IMETHODIMP    
+NS_IMETHODIMP
 LocationImpl::Replace(JSContext *cx, jsval *argv, PRUint32 argc)
 {
-  
   nsresult result = NS_OK;
 
   if (argc > 0) {
-    nsIURI* base;
+    nsCOMPtr<nsIURI> base;
     nsAutoString href;
 
     // Get the parameter passed in
     nsJSUtils::nsConvertJSValToString(href, cx, argv[0]);
-    
+
     // Get the source of the caller
-    result = GetSourceURL(cx, &base);
-    
+    result = GetSourceURL(cx, getter_AddRefs(base));
+
     if (NS_SUCCEEDED(result)) {
       result = SetHrefWithBase(href, base, PR_TRUE);
-      NS_RELEASE(base);
     }
   }
-  
+
   return result;
 }
 
-NS_IMETHODIMP    
+NS_IMETHODIMP
 LocationImpl::ToString(nsAWritableString& aReturn)
 {
   return GetHref(aReturn);
@@ -707,7 +760,7 @@ LocationImpl::ToString(nsAWritableString& aReturn)
 
 nsresult
 LocationImpl::GetSourceURL(JSContext* cx,
-                           nsIURI** sourceURL)
+                           nsIURI** sourceURI)
 {
   // XXX Code duplicated from nsHTMLDocument
   // XXX Tom said this reminded him of the "Six Degrees of
@@ -717,14 +770,15 @@ LocationImpl::GetSourceURL(JSContext* cx,
   // I wish there were a better way.
 
   nsresult result = NS_ERROR_FAILURE;
-      
-  // We need to use the dynamically scoped global and assume that the 
+
+  // We need to use the dynamically scoped global and assume that the
   // current JSContext is a DOM context with a nsIScriptGlobalObject so
   // that we can get the url of the caller.
   // XXX This will fail on non-DOM contexts :(
 
   nsCOMPtr<nsIScriptGlobalObject> nativeGlob;
   nsJSUtils::nsGetDynamicScriptGlobal(cx, getter_AddRefs(nativeGlob));
+
   if (nativeGlob) {
     nsCOMPtr<nsIDOMWindow> window = do_QueryInterface(nativeGlob);
 
@@ -733,14 +787,14 @@ LocationImpl::GetSourceURL(JSContext* cx,
 
       result = window->GetDocument(getter_AddRefs(domDoc));
       if (NS_SUCCEEDED(result)) {
-        nsCOMPtr<nsIDocument> doc = do_QueryInterface(domDoc);
+        nsCOMPtr<nsIDocument> doc(do_QueryInterface(domDoc));
 
         if (doc) {
-          result = doc->GetBaseURL(*sourceURL);
+          result = doc->GetBaseURL(*sourceURI);
         }
 
-        if (!*sourceURL) {
-          *sourceURL = doc->GetDocumentURL();
+        if (!*sourceURI) {
+          *sourceURI = doc->GetDocumentURL();
         }
       }
     }
@@ -749,51 +803,61 @@ LocationImpl::GetSourceURL(JSContext* cx,
   return result;
 }
 
-PRBool    
-LocationImpl::AddProperty(JSContext *aContext, JSObject *aObj, jsval aID, jsval *aVp)
+PRBool
+LocationImpl::AddProperty(JSContext *aContext, JSObject *aObj, jsval aID,
+                          jsval *aVp)
 {
   return JS_TRUE;
 }
 
-PRBool    
-LocationImpl::DeleteProperty(JSContext *aContext, JSObject *aObj, jsval aID, jsval *aVp)
+PRBool
+LocationImpl::DeleteProperty(JSContext *aContext, JSObject *aObj, jsval aID,
+                             jsval *aVp)
 {
   return JS_TRUE;
 }
 
 static nsresult
-CheckHrefAccess(JSContext *aContext, JSObject *aObj, PRBool isWrite) 
+CheckHrefAccess(JSContext *aContext, JSObject *aObj, PRBool isWrite)
 {
   nsresult rv;
-  NS_WITH_SERVICE(nsIScriptSecurityManager, secMan,
-                  NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
-  if (NS_FAILED(rv))
+
+  nsCOMPtr<nsIScriptSecurityManager>
+    secMan(do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv));
+
+  if (NS_FAILED(rv)) {
     rv = NS_ERROR_DOM_SECMAN_ERR;
-  else
+  } else {
     rv = secMan->CheckScriptAccess(aContext, aObj, NS_DOM_PROP_LOCATION_HREF,
                                    isWrite);
+  }
+
   if (NS_FAILED(rv)) {
     nsJSUtils::nsReportError(aContext, aObj, rv);
-    return rv;
   }
-  return NS_OK;
+
+  return rv;
 }
 
-PRBool    
-LocationImpl::GetProperty(JSContext *aContext, JSObject *aObj, jsval aID, jsval *aVp)
+PRBool
+LocationImpl::GetProperty(JSContext *aContext, JSObject *aObj, jsval aID,
+                          jsval *aVp)
 {
   PRBool result = PR_TRUE;
 
   if (JSVAL_IS_STRING(aID)) {
-    char* cString = JS_GetStringBytes(JS_ValueToString(aContext, aID));
-    if (PL_strcmp("href", cString) == 0) {
+    const PRUnichar *prop = NS_REINTERPRET_CAST(const PRUnichar *,
+      JS_GetStringChars(JS_ValueToString(aContext, aID)));
+
+    if (NS_LITERAL_STRING("href").Equals(prop)) {
       nsAutoString href;
 
-    if (NS_SUCCEEDED(CheckHrefAccess(aContext, aObj, PR_FALSE)) &&
-        NS_SUCCEEDED(GetHref(href))) 
-    {
+      if (NS_SUCCEEDED(CheckHrefAccess(aContext, aObj, PR_FALSE)) &&
+          NS_SUCCEEDED(GetHref(href))) {
         const PRUnichar* bytes = href.GetUnicode();
+
         JSString* str = JS_NewUCStringCopyZ(aContext, (const jschar*)bytes);
+
         if (str) {
           *aVp = STRING_TO_JSVAL(str);
         }
@@ -806,33 +870,35 @@ LocationImpl::GetProperty(JSContext *aContext, JSObject *aObj, jsval aID, jsval 
       }
     }
   }
+
   return result;
 }
 
-PRBool    
-LocationImpl::SetProperty(JSContext *aContext, JSObject *aObj, jsval aID, jsval *aVp)
+PRBool
+LocationImpl::SetProperty(JSContext *aContext, JSObject *aObj, jsval aID,
+                          jsval *aVp)
 {
   nsresult result = NS_OK;
 
   if (JSVAL_IS_STRING(aID)) {
-    char* cString = JS_GetStringBytes(JS_ValueToString(aContext, aID));
-    
-    if (PL_strcmp("href", cString) == 0) {
-      nsIURI* base;
+    const PRUnichar *prop = NS_REINTERPRET_CAST(const PRUnichar *,
+      JS_GetStringChars(JS_ValueToString(aContext, aID)));
+
+    if (NS_LITERAL_STRING("href").Equals(prop)) {
+      nsCOMPtr<nsIURI> base;
       nsAutoString href;
-      
+
       if (NS_FAILED(CheckHrefAccess(aContext, aObj, PR_TRUE)))
         return PR_FALSE;
 
       // Get the parameter passed in
       nsJSUtils::nsConvertJSValToString(href, aContext, *aVp);
-      
+
       // Get the source of the caller
-      result = GetSourceURL(aContext, &base);
-      
+      result = GetSourceURL(aContext, getter_AddRefs(base));
+
       if (NS_SUCCEEDED(result)) {
         result = SetHrefWithBase(href, base, PR_FALSE);
-        NS_RELEASE(base);
       }
     }
   }
@@ -840,13 +906,13 @@ LocationImpl::SetProperty(JSContext *aContext, JSObject *aObj, jsval aID, jsval 
   return NS_SUCCEEDED(result);
 }
 
-PRBool    
+PRBool
 LocationImpl::EnumerateProperty(JSContext *aContext, JSObject *aObj)
 {
   return JS_TRUE;
 }
 
-PRBool    
+PRBool
 LocationImpl::Resolve(JSContext *aContext, JSObject *aObj, jsval aID,
                       PRBool* aDidDefineProperty)
 {
@@ -860,7 +926,7 @@ LocationImpl::Resolve(JSContext *aContext, JSObject *aObj, jsval aID,
     const jschar *chars = ::JS_GetStringChars(str);
     const PRUnichar *unichars = NS_REINTERPRET_CAST(const PRUnichar*, chars);
 
-    if (!nsCRT::strcmp(unichars, NS_LITERAL_STRING("href").get())) {
+    if (NS_LITERAL_STRING("href").Equals(unichars)) {
       // properties defined as 'noscript' in the IDL needs to be defined
       // lazily here so that unqualified lookups of such properties work
       ::JS_DefineUCProperty(aContext, (JSObject *)mScriptObject,
@@ -874,13 +940,13 @@ LocationImpl::Resolve(JSContext *aContext, JSObject *aObj, jsval aID,
   return JS_TRUE;
 }
 
-PRBool    
+PRBool
 LocationImpl::Convert(JSContext *aContext, JSObject *aObj, jsval aID)
 {
   return JS_TRUE;
 }
 
-void      
+void
 LocationImpl::Finalize(JSContext *aContext, JSObject *aObj)
 {
 }
