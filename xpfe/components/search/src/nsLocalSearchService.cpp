@@ -335,7 +335,7 @@ LocalSearchDataSource::doMatch(nsIRDFLiteral *literal, const nsString &matchMeth
 {
 	PRBool		found = PR_FALSE;
 
-	if ((nsnull == literal) || (nsnull == matchMethod) || (nsnull == matchText))
+	if ((nsnull == literal) || matchMethod.IsEmpty() || matchText.IsEmpty())
 		return(found);
 
 	const	PRUnichar	*str = nsnull;
