@@ -2,6 +2,7 @@ pref("general.useragent.security",       "U");
 
 pref("security.enable_ssl2",             true);
 pref("security.enable_ssl3",             true);
+pref("security.enable_tls",		 true);
 pref("security.default_personal_cert",   "Select Automatically");
 pref("security.ask_for_password",        0);
 pref("security.password_lifetime",       30);
