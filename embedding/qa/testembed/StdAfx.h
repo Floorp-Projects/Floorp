@@ -126,9 +126,10 @@
 
 #include "nsIXPIProgressDialog.h"
 #include "nsIXPIDialogService.h"
-
 #include "nsIWebBrowserSetup.h"
 #include "nsCRT.h"
+#include "nsIURILoader.h"
+#include "nsCURILoader.h"
 
 //#include "nsIURIContentListener.h"
 

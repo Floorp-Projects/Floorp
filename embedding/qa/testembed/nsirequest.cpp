@@ -119,7 +119,7 @@ void CNsIRequest::RunIndividualTests(UINT nMenuID, int reqTotal)
 	{
 		// nsIRequest individual tests
 
-		QAOutput("***** Individual nsIRequest test begins. *****");
+		QAOutput("********** Individual nsIRequest test begins. **********");
 
 		theChannel = GetTheChannel(i, theLoadGroup);
 		nsCOMPtr<nsIRequest> theRequest = do_QueryInterface(theChannel);
@@ -182,7 +182,7 @@ void CNsIRequest::RunAllTests(int reqTotal)
 	{
 		// nsIRequest individual tests
 
-		QAOutput("***** Individual nsIRequest test begins. *****");
+		QAOutput("********** Individual nsIRequest test begins. **********");
 
 		theChannel = GetTheChannel(i, theLoadGroup);
 		nsCOMPtr<nsIRequest> theRequest = do_QueryInterface(theChannel);

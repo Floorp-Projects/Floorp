@@ -131,12 +131,12 @@ NS_INTERFACE_MAP_BEGIN(CBrowserImpl)
    NS_INTERFACE_MAP_ENTRY(nsIWebProgressListener)
    NS_INTERFACE_MAP_ENTRY(nsIContextMenuListener)
    NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
-   NS_INTERFACE_MAP_ENTRY(nsISHistoryListener) // de: added 5/11
-   NS_INTERFACE_MAP_ENTRY(nsIStreamListener) // de: added 6/29
-   NS_INTERFACE_MAP_ENTRY(nsIRequestObserver) // de: added 6/29
-   NS_INTERFACE_MAP_ENTRY(nsITooltipListener) // de: added 7/25
-   NS_INTERFACE_MAP_ENTRY(nsIURIContentListener) 
-//   NS_INTERFACE_MAP_ENTRY(nsITooltipTextProvider) // de: added 7/26
+   NS_INTERFACE_MAP_ENTRY(nsISHistoryListener) // de: added 5/11/01
+   NS_INTERFACE_MAP_ENTRY(nsIStreamListener) // de: added 6/29/01
+   NS_INTERFACE_MAP_ENTRY(nsIRequestObserver) // de: added 6/29/01
+   NS_INTERFACE_MAP_ENTRY(nsITooltipListener) // de: added 7/25/01
+   NS_INTERFACE_MAP_ENTRY(nsIURIContentListener) // de: added 8/8/02
+//   NS_INTERFACE_MAP_ENTRY(nsITooltipTextProvider) // de: added 7/26/01
 NS_INTERFACE_MAP_END
 
 //*****************************************************************************
@@ -199,12 +199,14 @@ NS_IMETHODIMP CBrowserImpl::SetWebBrowser(nsIWebBrowser* aWebBrowser)
 
 NS_IMETHODIMP CBrowserImpl::GetChromeFlags(PRUint32* aChromeMask)
 {
-   return NS_ERROR_NOT_IMPLEMENTED;
+	*aChromeMask = nsIWebBrowserChrome::CHROME_ALL;
+
+	return NS_OK;
 }
 
 NS_IMETHODIMP CBrowserImpl::SetChromeFlags(PRUint32 aChromeMask)
 {
-   return NS_ERROR_NOT_IMPLEMENTED;
+	return NS_OK;
 }
 
 // Gets called in response to create a new browser window. 
@@ -423,19 +425,13 @@ NS_IMETHODIMP CBrowserImpl::OnDataAvailable(nsIRequest *request,
 				nsISupports *ctxt, nsIInputStream *input,
 				PRUint32 offset, PRUint32 count)
 {
-	QAOutput("***** nsIRequest async tests inside nsIStreamListener::OnDataAvailable(). *****");
+	nsCString stringMsg;
 
-	CNsIRequest::IsPendingReqTest(request);
-	CNsIRequest::GetStatusReqTest(request);
+	QAOutput("##### inside nsIStreamListener::OnDataAvailable(). #####");
 
-	CNsIRequest::SuspendReqTest(request);	
-	CNsIRequest::ResumeReqTest(request);	
-
-//	CTests::CancelReqTest(request);	
-
- 	nsCOMPtr<nsILoadGroup> theLoadGroup(do_CreateInstance(NS_LOADGROUP_CONTRACTID));
-	CNsIRequest::SetLoadGroupTest(request, theLoadGroup);	
-	CNsIRequest::GetLoadGroupTest(request);
+	RequestName(request, stringMsg, 1);
+	FormatAndPrintOutput("OnDataAvailable() offset = ", offset, 1);
+	FormatAndPrintOutput("OnDataAvailable() count = ", count, 1);
 
 	return NS_OK;
 }
@@ -443,12 +439,22 @@ NS_IMETHODIMP CBrowserImpl::OnDataAvailable(nsIRequest *request,
 NS_IMETHODIMP CBrowserImpl::OnStartRequest(nsIRequest *request,
 				nsISupports *ctxt)
 {
+	nsCString stringMsg;
+
+	QAOutput("##### BEGIN: nsIStreamListener::OnStartRequest() #####");
+	RequestName(request, stringMsg, 1);
+
 	return NS_OK;
 }
 
 NS_IMETHODIMP CBrowserImpl::OnStopRequest(nsIRequest *request,
 				nsISupports *ctxt, nsresult rv)
 {
+	nsCString stringMsg;
+
+	RequestName(request, stringMsg, 1);
+	QAOutput("##### END: nsIStreamListener::OnStopRequest() #####");
+	
 	return NS_OK;
 }
 
@@ -475,7 +481,7 @@ NS_IMETHODIMP CBrowserImpl::OnHideTooltip()
 //*****************************************************************************   
 //  UriContentListener
 
-NS_IMETHODIMP CBrowserImpl:: OnStartURIOpen(nsIURI *aURI, PRBool *_retval)
+NS_IMETHODIMP CBrowserImpl::OnStartURIOpen(nsIURI *aURI, PRBool *_retval)
 {
 	QAOutput("nsIURIContentListener->OnStartURIOpen()",1);
 
@@ -485,7 +491,7 @@ NS_IMETHODIMP CBrowserImpl:: OnStartURIOpen(nsIURI *aURI, PRBool *_retval)
 	return NS_OK;
 }
 
-NS_IMETHODIMP CBrowserImpl:: DoContent(const char *aContentType, PRBool aIsContentPreferred, nsIRequest *aRequest, nsIStreamListener **aContentHandler, PRBool *_retval)
+NS_IMETHODIMP CBrowserImpl::DoContent(const char *aContentType, PRBool aIsContentPreferred, nsIRequest *aRequest, nsIStreamListener **aContentHandler, PRBool *_retval)
 {
 	nsCString stringMsg;
 
@@ -494,54 +500,59 @@ NS_IMETHODIMP CBrowserImpl:: DoContent(const char *aContentType, PRBool aIsConte
 	FormatAndPrintOutput("DoContent() content type = ", *aContentType, 1);
 	FormatAndPrintOutput("DoContent() aIsContentPreferred = ", aIsContentPreferred, 1);
 	RequestName(aRequest, stringMsg);	// nsIRequest::GetName() test
-	// set nsIStreamListener
+//	*aContentHandler = nsnull;
+	QueryInterface(NS_GET_IID(nsIStreamListener), (void **) aContentHandler);
 
 	*_retval = PR_TRUE;
 	return NS_OK;
 }
-NS_IMETHODIMP CBrowserImpl:: IsPreferred(const char *aContentType, char **aDesiredContentType, PRBool *_retval)
+NS_IMETHODIMP CBrowserImpl::IsPreferred(const char *aContentType, char **aDesiredContentType, PRBool *_retval)
 {
+	nsCAutoString contentStr;
+
 	QAOutput("nsIURIContentListener->IsPreferred()",1);
 
 	FormatAndPrintOutput("IsPreferred() content type = ", *aContentType, 1);
-	FormatAndPrintOutput("IsPreferred() desired content type = ", **aDesiredContentType, 1);
+	*aDesiredContentType = nsCRT::strdup("text/html");
 	*_retval = PR_TRUE;
 	return NS_OK;
 }
 
-NS_IMETHODIMP CBrowserImpl:: CanHandleContent(const char *aContentType, PRBool aIsContentPreferred, char **aDesiredContentType, PRBool *_retval)
+NS_IMETHODIMP CBrowserImpl::CanHandleContent(const char *aContentType, PRBool aIsContentPreferred, char **aDesiredContentType, PRBool *_retval)
 {
 	QAOutput("nsIURIContentListener->CanHandleContent()",1);
 
 	FormatAndPrintOutput("CanHandleContent() content type = ", *aContentType, 1);
 	FormatAndPrintOutput("CanHandleContent() preferred content type = ", aIsContentPreferred, 1);
-	FormatAndPrintOutput("CanHandleContent() desired content type = ", **aDesiredContentType, 1);
+	*aDesiredContentType = nsCRT::strdup("text/html");
 	*_retval = PR_TRUE;
 	return NS_OK;
 }
 
-NS_IMETHODIMP CBrowserImpl:: GetLoadCookie(nsISupports * *aLoadCookie)
+NS_IMETHODIMP CBrowserImpl::GetLoadCookie(nsISupports * *aLoadCookie)
 {
 	QAOutput("nsIURIContentListener->GetLoadCookie()",1);
+	*aLoadCookie = nsnull;
 
 	return NS_OK;
 }
 
-NS_IMETHODIMP CBrowserImpl:: SetLoadCookie(nsISupports * aLoadCookie)
+NS_IMETHODIMP CBrowserImpl::SetLoadCookie(nsISupports * aLoadCookie)
 {
 	QAOutput("nsIURIContentListener->SetLoadCookie()",1);
 
 	return NS_OK;
 }
 
-NS_IMETHODIMP CBrowserImpl:: GetParentContentListener(nsIURIContentListener * *aParentContentListener)
+NS_IMETHODIMP CBrowserImpl::GetParentContentListener(nsIURIContentListener * *aParentContentListener)
 {
 	QAOutput("nsIURIContentListener->GetParentContentListener()",1);
+	*aParentContentListener = nsnull;
 
 	return NS_OK;
 }
 
-NS_IMETHODIMP CBrowserImpl:: SetParentContentListener(nsIURIContentListener * aParentContentListener)
+NS_IMETHODIMP CBrowserImpl::SetParentContentListener(nsIURIContentListener * aParentContentListener)
 {
 	QAOutput("nsIURIContentListener->SetParentContentListener()",1);
 

@@ -56,10 +56,10 @@ class CBrowserImpl :
 	 public nsIWebProgressListener,
 	 public nsIContextMenuListener,
 	 public nsSupportsWeakReference,
-	 public nsISHistoryListener,		// de: added this in 5/11/01   					 
-	 public nsIStreamListener,			// de: added this in 6/29/01
-	 public nsITooltipListener,   		// de: added this in 7/25/01
-	 public nsIURIContentListener
+	 public nsISHistoryListener,		// de: added this 5/11/01   					 
+	 public nsIStreamListener,			// de: added this 6/29/01
+	 public nsITooltipListener,   		// de: added this 7/25/01
+	 public nsIURIContentListener		// de: added this 8/8/02
 {
 public:
     CBrowserImpl();
