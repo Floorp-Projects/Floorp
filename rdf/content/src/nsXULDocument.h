@@ -299,6 +299,9 @@ public:
     NS_IMETHOD SetCurrentPrototype(nsIXULPrototypeDocument* aDocument);
     NS_IMETHOD SetDocumentURL(nsIURI* anURL);
     NS_IMETHOD PrepareStyleSheets(nsIURI* anURL);
+    NS_IMETHOD AddSubtreeToDocument(nsIContent* aElement);
+    NS_IMETHOD RemoveSubtreeFromDocument(nsIContent* aElement);
+
     
     // nsIStreamLoadableDocument interface
     NS_IMETHOD LoadFromStream(nsIInputStream& xulStream,
@@ -386,12 +389,6 @@ protected:
     nsresult OpenWidgetItem(nsIContent* aElement);
     nsresult CloseWidgetItem(nsIContent* aElement);
     nsresult RebuildWidgetItem(nsIContent* aElement);
-
-    nsresult
-    AddSubtreeToDocument(nsIContent* aElement);
-
-    nsresult
-    RemoveSubtreeFromDocument(nsIContent* aElement);
 
     nsresult
     AddElementToMap(nsIContent* aElement);

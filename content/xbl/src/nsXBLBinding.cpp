@@ -41,6 +41,7 @@
 #include "nsIDocument.h"
 #include "nsIXMLContent.h"
 #include "nsIXULContent.h"
+#include "nsIXULDocument.h"
 #include "nsIXMLContentSink.h"
 #include "nsLayoutCID.h"
 #include "nsXMLDocument.h"
@@ -361,7 +362,9 @@ nsXBLBinding::SetAnonymousContent(nsIContent* aParent)
   mBoundElement->GetDocument(*getter_AddRefs(doc));
 
   mContent->SetDocument(doc, PR_TRUE, AllowScripts());
-  
+
+  nsCOMPtr<nsIXULDocument> xuldoc(do_QueryInterface(doc));
+
   // (2) The children's parent back pointer should not be to this synthetic root
   // but should instead point to the bound element.
   PRInt32 childCount;
@@ -371,6 +374,12 @@ nsXBLBinding::SetAnonymousContent(nsIContent* aParent)
     mContent->ChildAt(i, *getter_AddRefs(child));
     child->SetParent(mBoundElement);
     child->SetBindingParent(mBoundElement);
+
+    // To make XUL templates work (and other goodies that happen when
+    // an element is added to a XUL document), we need to notify the
+    // XUL document using its special API.
+    if (xuldoc)
+      xuldoc->AddSubtreeToDocument(child);
   }
 
   return NS_OK;
@@ -1289,9 +1298,25 @@ nsXBLBinding::ChangeDocument(nsIDocument* aOldDocument, nsIDocument* aNewDocumen
     nsCOMPtr<nsIContent> anonymous;
     GetAnonymousContent(getter_AddRefs(anonymous));
     if (anonymous) {
-      if (mIsStyleBinding)
+      // To make XUL templates work (and other XUL-specific stuff),
+      // we'll need to notify it using its add & remove APIs. Grab the
+      // interface now...
+      nsCOMPtr<nsIXULDocument> xuldoc(do_QueryInterface(aOldDocument));
+
+      if (mIsStyleBinding) {
         anonymous->SetDocument(nsnull, PR_TRUE, PR_TRUE); // Kill it.
-      else anonymous->SetDocument(aNewDocument, PR_TRUE, AllowScripts()); // Keep it around.
+        if (xuldoc)
+          xuldoc->RemoveSubtreeFromDocument(anonymous);
+      }
+      else {
+        anonymous->SetDocument(aNewDocument, PR_TRUE, AllowScripts()); // Keep it around.
+        if (xuldoc)
+          xuldoc->RemoveSubtreeFromDocument(anonymous);
+
+        xuldoc = do_QueryInterface(aNewDocument);
+        if (xuldoc)
+          xuldoc->AddSubtreeToDocument(anonymous);
+      }
     }
   }
 
