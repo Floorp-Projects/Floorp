@@ -593,15 +593,17 @@ NS_IMETHODIMP nsDocShell::AddChild(nsIDocShellTreeItem *aChild)
       return NS_OK;
 
    // Do some docShell Specific stuff.
-   PRUnichar *defaultCharset=nsnull;
-   PRUnichar *forceCharset=nsnull;
+   nsXPIDLString defaultCharset;
+   nsXPIDLString forceCharset;
    NS_ENSURE_TRUE(mContentViewer, NS_ERROR_FAILURE);
 
    nsCOMPtr<nsIMarkupDocumentViewer> muDV = do_QueryInterface(mContentViewer);
    if(muDV)
       {
-      NS_ENSURE_SUCCESS(muDV->GetDefaultCharacterSet (&defaultCharset), NS_ERROR_FAILURE);
-      NS_ENSURE_SUCCESS(muDV->GetForceCharacterSet (&forceCharset), NS_ERROR_FAILURE);
+      NS_ENSURE_SUCCESS(muDV->GetDefaultCharacterSet(getter_Copies(defaultCharset)),
+         NS_ERROR_FAILURE);
+      NS_ENSURE_SUCCESS(muDV->GetForceCharacterSet(getter_Copies(forceCharset)),
+         NS_ERROR_FAILURE);
       }
    nsCOMPtr<nsIContentViewer> childCV;
    NS_ENSURE_SUCCESS(childAsDocShell->GetContentViewer(getter_AddRefs(childCV)),
