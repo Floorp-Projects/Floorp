@@ -685,19 +685,18 @@ void ToggleCheck(HWND hwndListBox, DWORD dwIndex)
 
   // Checks to see if the checkbox is checked or not checked, and
   // toggles the node attributes appropriately.
-  if(SiCNodeGetAttributes(dwIndex) & SIC_SELECTED)
-  {
-    SiCNodeSetAttributes(dwIndex, SIC_SELECTED, FALSE);
-  }
-  else
-  {
-    SiCNodeSetAttributes(dwIndex, SIC_SELECTED, TRUE);
-    bMoreToResolve = ResolveDependencies(dwIndex);
-    while(bMoreToResolve)
+    if(SiCNodeGetAttributes(dwIndex, FALSE) & SIC_SELECTED)
     {
-      bMoreToResolve = ResolveDependencies(-1);
+      SiCNodeSetAttributes(dwIndex, SIC_SELECTED, FALSE, FALSE);
     }
-  }
+    else
+    {
+      SiCNodeSetAttributes(dwIndex, SIC_SELECTED, TRUE, FALSE);
+      bMoreToResolve = ResolveDependencies(dwIndex);
+
+      while(bMoreToResolve)
+        bMoreToResolve = ResolveDependencies(-1);
+    }
 
   InvalidateLBCheckbox(hwndListBox);
 }
@@ -796,17 +795,20 @@ LRESULT CALLBACK DlgProcSelectComponents(HWND hDlg, UINT msg, WPARAM wParam, LON
       siCTemp = siComponents;
       if(siCTemp != NULL)
       {
-        lbAddItem(hwndLBComponents, siCTemp);
+        if(!(siCTemp->dwAttributes & SIC_INVISIBLE))
+          lbAddItem(hwndLBComponents, siCTemp);
 
         siCTemp = siCTemp->Next;
         while((siCTemp != siComponents) && (siCTemp != NULL))
         {
-          lbAddItem(hwndLBComponents, siCTemp);
+          if(!(siCTemp->dwAttributes & SIC_INVISIBLE))
+            lbAddItem(hwndLBComponents, siCTemp);
+
           siCTemp = siCTemp->Next;
         }
         SetFocus(hwndLBComponents);
         SendMessage(hwndLBComponents, LB_SETCURSEL, 0, 0);
-        SetDlgItemText(hDlg, IDC_STATIC_DESCRIPTION, SiCNodeGetDescriptionLong(0));
+        SetDlgItemText(hDlg, IDC_STATIC_DESCRIPTION, SiCNodeGetDescriptionLong(0, FALSE));
       }
 
       if(GetClientRect(hDlg, &rDlg))
@@ -945,7 +947,7 @@ LRESULT CALLBACK DlgProcSelectComponents(HWND hDlg, UINT msg, WPARAM wParam, LON
         case IDC_LIST_COMPONENTS:
           /* to update the long description for each component the user selected */
           if((dwIndex = SendMessage(hwndLBComponents, LB_GETCURSEL, 0, 0)) != LB_ERR)
-            SetDlgItemText(hDlg, IDC_STATIC_DESCRIPTION, SiCNodeGetDescriptionLong(dwIndex));
+            SetDlgItemText(hDlg, IDC_STATIC_DESCRIPTION, SiCNodeGetDescriptionLong(dwIndex, FALSE));
           break;
 
         case ID_WIZNEXT:
