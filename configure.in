@@ -2731,6 +2731,7 @@ MOZ_MONOLITHIC_TOOLKIT=1
 dnl The following are the only platforms I tested  -ramiro
 dnl OpenVMS added by Colin Blake
 dnl Tru64   added by Jim Nance
+dnl hpux11 added by John Gaunt workaround for bug 39747
 case "$target" in
     *-*-linux*)   MOZ_MONOLITHIC_TOOLKIT= ;;
     *-*-solaris*) MOZ_MONOLITHIC_TOOLKIT= ;;
@@ -2738,6 +2739,7 @@ case "$target" in
     *-freebsd*)   MOZ_MONOLITHIC_TOOLKIT= ;;
     *-*-aix*)     MOZ_MONOLITHIC_TOOLKIT= ;;
     *-*-osf*)     MOZ_MONOLITHIC_TOOLKIT= ;;
+    *-hpux11.*)   MOZ_MONOLITHIC_TOOLKIT= ;;
 esac
 
 
