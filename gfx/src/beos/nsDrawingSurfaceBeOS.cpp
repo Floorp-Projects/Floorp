@@ -241,7 +241,9 @@ NS_IMETHODIMP nsDrawingSurfaceBeOS :: Init(BView *aView, PRUint32 aWidth,
       
       return NS_ERROR_FAILURE;
     }
-
+    //Setting ViewColor transparent noticeably decreases AppServer load in DrawBitmp()
+    //Applicable here, because Mozilla paints backgrounds explicitly, with images or filling areas.
+	mView->SetViewColor(B_TRANSPARENT_32_BIT);
     mBitmap->AddChild(mView);
   }
   return NS_OK;
