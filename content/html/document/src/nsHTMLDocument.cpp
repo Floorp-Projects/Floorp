@@ -1662,7 +1662,7 @@ NS_IMETHODIMP
 nsHTMLDocument::GetImages(nsIDOMHTMLCollection** aImages)
 {
   if (nsnull == mImages) {
-    mImages = new nsContentList(this, nsHTMLAtoms::img, kNameSpaceID_HTML);
+    mImages = new nsContentList(this, nsHTMLAtoms::img, kNameSpaceID_Unknown);
     if (nsnull == mImages) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
@@ -1679,7 +1679,7 @@ NS_IMETHODIMP
 nsHTMLDocument::GetApplets(nsIDOMHTMLCollection** aApplets)
 {
   if (nsnull == mApplets) {
-    mApplets = new nsContentList(this, nsHTMLAtoms::applet, kNameSpaceID_HTML);
+    mApplets = new nsContentList(this, nsHTMLAtoms::applet, kNameSpaceID_Unknown);
     if (nsnull == mApplets) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
@@ -2446,7 +2446,7 @@ NS_IMETHODIMP
 nsHTMLDocument::GetEmbeds(nsIDOMHTMLCollection** aEmbeds)
 {
   if (nsnull == mEmbeds) {
-    mEmbeds = new nsContentList(this, nsHTMLAtoms::embed, kNameSpaceID_HTML);
+    mEmbeds = new nsContentList(this, nsHTMLAtoms::embed, kNameSpaceID_Unknown);
     if (nsnull == mEmbeds) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
@@ -3829,7 +3829,7 @@ nsHTMLDocument::AddForm(nsIDOMHTMLFormElement *aForm)
     
     // Initialize mForms if necessary...
     if (nsnull == mForms) {
-      mForms = new nsContentList(this, nsHTMLAtoms::form, kNameSpaceID_HTML);
+      mForms = new nsContentList(this, nsHTMLAtoms::form, kNameSpaceID_Unknown);
       NS_ADDREF(mForms);
     }
 
@@ -3845,7 +3845,7 @@ NS_IMETHODIMP
 nsHTMLDocument::GetForms(nsIDOMHTMLCollection** aForms)
 {
   if (nsnull == mForms) {
-    mForms = new nsContentList(this, nsHTMLAtoms::form, kNameSpaceID_HTML);
+    mForms = new nsContentList(this, nsHTMLAtoms::form, kNameSpaceID_Unknown);
     if (nsnull == mForms) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
