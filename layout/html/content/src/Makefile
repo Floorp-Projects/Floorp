@@ -22,6 +22,7 @@ LIBRARY_NAME = nglhtmlcon_s
 # Note the sophisticated alphabetical ordering :-|
 CPPSRCS=				\
 	nsCommentNode.cpp		\
+	nsGenericDOMDataNode.cpp	\
 	nsGenericHTMLElement.cpp	\
 	nsHTMLAnchorElement.cpp		\
 	nsHTMLAppletElement.cpp		\
@@ -81,6 +82,7 @@ CPPSRCS=				\
 	nsHTMLTitleElement.cpp		\
 	nsHTMLUListElement.cpp		\
 	nsHTMLWBRElement.cpp		\
+	nsTextNode.cpp			\
 	$(NULL)
 
 MODULE = raptor
