@@ -47,6 +47,8 @@ class nsIDocumentLoaderObserver;
 class nsIDocumentLoaderFactory : public nsISupports
 {
 public:
+    static const nsIID& GetIID() { static nsIID iid = NS_IDOCUMENTLOADERFACTORY_IID; return iid; }
+
     NS_IMETHOD CreateInstance(nsIURL* aURL,
                               const char* aContentType, 
                               const char *aCommand,
@@ -91,6 +93,8 @@ public:
     NS_IMETHOD CreateDocumentLoader(nsIDocumentLoader** anInstance) = 0;
 
     NS_IMETHOD SetDocumentFactory(nsIDocumentLoaderFactory* aFactory) = 0;
+
+		NS_IMETHOD GetDocumentFactory(nsIDocumentLoaderFactory** aResult) = 0;
 
     NS_IMETHOD AddObserver(nsIDocumentLoaderObserver *aObserver) = 0;
 
