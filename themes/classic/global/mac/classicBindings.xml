@@ -147,6 +147,14 @@
     </content>
   </binding>
 
+  <binding id="menubutton-icon-nostretch">
+    <content includes="menupopup">
+      <xul:box class="menubutton-icon-box" autostretch="never">
+        <xul:image inherits="src" class="menubutton-icon-image"/>
+      </xul:box>
+    </content>
+  </binding>
+
   <binding id="tab" extends="chrome://global/content/tabBindings.xml#tab">
     <content>
       <xul:spring class="tab-image-left" inherits="selected"/>
