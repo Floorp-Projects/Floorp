@@ -50,7 +50,6 @@
 #include "nsTransform2D.h"
 #include "nsIWidget.h"
 #include "nsRect.h"
-#include "nsIImage.h"
 #include "nsIDeviceContext.h"
 #include "nsVoidArray.h"
 #include "nsCOMPtr.h"
@@ -206,17 +205,6 @@ public:
     NS_IMETHOD DrawString(const nsString& aString,nscoord aX,nscoord aY,
                           PRInt32 aFontID,const nscoord* aSpacing);
 
-    NS_IMETHOD DrawImage(nsIImage *aImage, nscoord aX, nscoord aY);
-    NS_IMETHOD DrawImage(nsIImage *aImage,nscoord aX,nscoord aY,
-                         nscoord aWidth,nscoord aHeight); 
-    NS_IMETHOD DrawImage(nsIImage *aImage, const nsRect& aRect);
-    NS_IMETHOD DrawImage(nsIImage *aImage, const nsRect& aSRect, 
-                         const nsRect& aDRect);
-    NS_IMETHOD DrawTile(nsIImage *aImage,nscoord aX0,nscoord aY0,
-                        nscoord aX1,nscoord aY1,
-                        nscoord aWidth,nscoord aHeight);
-    NS_IMETHOD DrawTile(nsIImage *aImage, nscoord aSrcXOffset,
-                        nscoord aSrcYOffset, const nsRect &aTileRect);
     NS_IMETHOD CopyOffScreenBits(nsDrawingSurface aSrcSurf,
                                  PRInt32 aSrcX, PRInt32 aSrcY,
                                  const nsRect &aDestBounds,

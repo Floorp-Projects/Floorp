@@ -134,44 +134,13 @@ public:
   NS_IMETHOD SetRightToLeftText(PRBool aIsRTL);
 #endif // IBMBIDI
 
-#ifdef USE_IMG2
   NS_IMETHOD DrawImage(imgIContainer *aImage, const nsRect * aSrcRect, const nsPoint * aDestPoint);
   NS_IMETHOD DrawScaledImage(imgIContainer *aImage, const nsRect * aSrcRect, const nsRect * aDestRect);
   NS_IMETHOD DrawTile(imgIContainer *aImage, nscoord aXOffset, nscoord aYOffset, const nsRect * aTargetRect);
 
-  // Redeclare the other |DrawImage| methods from nsIRenderingContext,
-  // still as pure virtual, to avoid method-hiding warnings.
-  NS_IMETHOD DrawImage(nsIImage *aImage, nscoord aX, nscoord aY) = 0;
-  NS_IMETHOD DrawImage(nsIImage *aImage, nscoord aX, nscoord aY,
-                       nscoord aWidth, nscoord aHeight) = 0; 
-  NS_IMETHOD DrawImage(nsIImage *aImage, const nsRect& aRect) = 0;
-  NS_IMETHOD DrawImage(nsIImage *aImage, const nsRect& aSRect,
-                       const nsRect& aDRect)=0;
-#endif
-
 
 protected:
   virtual ~nsRenderingContextImpl();
-
-  /** ---------------------------------------------------
-   *  Check to see if the given size of tile can be imaged by the RenderingContext
-   *	@update 03/29/00 dwc
-   *  @param aWidth The width of the tile
-   *  @param aHeight The height of the tile
-   *  @return PR_TRUE the RenderingContext can handle this tile
-   */
-  virtual PRBool CanTile(nscoord aWidth,nscoord aHeight) { return PR_FALSE; }
-
-  
-  /** ---------------------------------------------------
-   *  A bit blitter to tile images to the background recursively
-   *	@update 3/29/00 dwc
-   *  @param aDS -- Target drawing surface for the rendering context
-   *  @param aSrcRect -- Rectangle we are build with the image
-   *  @param aHeight -- height of the tile
-   *  @param aWidth -- width of the tile
-   */
-  void  TileImage(nsDrawingSurface  aDS,nsRect &aSrcRect,PRInt16 aWidth,PRInt16 aHeight);
 
   void cdelete(int i);
   void cinsert(int i,int y,const nsPoint aPointArray[],PRInt32 aNumPts);

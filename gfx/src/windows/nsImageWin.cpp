@@ -1509,7 +1509,6 @@ nsImageWin::GetBits()
 } // GetBits
 
 
-#ifdef USE_IMG2
 /** ---------------------------------------------------
  *  This blends together GIF's for the animation... called by gfxImageFrame   
  *  currently does not support and 8bit blend.  Assumed for animated GIF's only
@@ -1718,7 +1717,6 @@ NS_IMETHODIMP nsImageWin::DrawToImage(nsIImage* aDstImage, nscoord aDX, nscoord 
 }
 
 
-#endif
 
 
 

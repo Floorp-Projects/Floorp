@@ -502,7 +502,6 @@ NS_IMETHODIMP nsImageBeOS::SetDecodedRect(PRInt32 x1, PRInt32 y1, PRInt32 x2, PR
 // Since this function does not touch either the source or destination BBitmap,
 // there is no need to call CreateImage(). The platform independent bits will get
 // copied to the BBitmap if and when it gets blit.
-#ifdef USE_IMG2
 NS_IMETHODIMP nsImageBeOS::DrawToImage(nsIImage *aDstImage, nscoord aDX, nscoord aDY,
 	nscoord aDWidth, nscoord aDHeight) {
 	
@@ -614,4 +613,3 @@ NS_IMETHODIMP nsImageBeOS::DrawToImage(nsIImage *aDstImage, nscoord aDX, nscoord
 	dest->mImageCurrent = PR_FALSE;
 	return NS_OK;	
 }
-#endif
