@@ -69,27 +69,33 @@ void nsFontMetricsUnix::RealizeFont()
   //  ::XSetFont(aRenderingSurface->display, aRenderingSurface->gc, mFontHandle);
 
   // XXX Temp hardcodes
-  mHeight = nscoord(15*f) ;
+  mHeight = nscoord((fs->ascent+fs->descent)*f) ;
+  mMaxAdvance = nscoord(fs->max_bounds.width * f);
 
   PRUint32 i;
-  for (i=0;i<256;i++)
-    mCharWidths[i] = nscoord(9*f) ;
+  for (i=0;i<256;i++) {
+    if (i < fs->min_char_or_byte2 || i > fs->max_char_or_byte2)
+      mCharWidths[i] = mMaxAdvance;
+    else
+      mCharWidths[i] = nscoord((fs->per_char[i-fs->min_char_or_byte2].width) * f);
+  }
 
-  mMaxAdvance = nscoord(15*f);
-  mLeading = nscoord(3*f);
+  
+  mLeading = 0;
 }
 
 nscoord nsFontMetricsUnix :: GetWidth(char ch)
 {
-  return mCharWidths[PRUint8(ch)];
+  if (ch < 256) {
+    return mCharWidths[ch];
+  }
 }
 
 nscoord nsFontMetricsUnix :: GetWidth(PRUnichar ch)
 {
+  if (ch < 256)
+    return mCharWidths[PRUint8(ch)];
   
-  if (ch < 256) {
-    return mCharWidths[ch];
-  }
   return 0;/* XXX */
 }
 
@@ -127,8 +133,8 @@ nscoord nsFontMetricsUnix :: GetWidth(const PRUnichar *aString, PRUint32 aLength
   for (i=0; i<aLength; i++) {
     thischar = (xstring+i);
     aunichar = (PRUint16)(*(aString+i));
-    thischar->byte1 = (aunichar & 0xf);
-    thischar->byte2 = (aunichar & 0xff) >> 8;      
+    thischar->byte2 = (aunichar & 0xff);
+    thischar->byte1 = (aunichar & 0xff00) >> 8;      
   }
 
   mFontHandle = ::XLoadFont((Display *)mContext->GetNativeDeviceContext(), "fixed");
