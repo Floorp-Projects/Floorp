@@ -482,16 +482,12 @@ public:
    *  @return  number of chars copied
    */
 
+  void AppendWithConversion(const char*, PRInt32=-1);
   void AppendWithConversion(PRInt32, PRInt32=10); //radix=8,10 or 16
   void AppendWithConversion(float);
   void AppendWithConversion(char);
 
-#ifdef NEW_STRING_APIS
-  void AppendWithConversion(const char*);
-  void AppendWithConversion(const char*, PRInt32);
-#else
-  void AppendWithConversion(const char*, PRInt32=-1);
-
+#ifndef NEW_STRING_APIS
   /*
    *  Appends n characters from given string to this,
    *  
