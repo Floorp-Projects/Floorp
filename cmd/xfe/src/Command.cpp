@@ -102,6 +102,12 @@ XFE_Command::isSlow()
 }
 
 XP_Bool
+XFE_Command::isViewCommand()
+{
+	return FALSE;
+}
+
+XP_Bool
 XFE_Command::isEnabled(XFE_View*, XFE_CommandInfo*)
 {
 	return TRUE;
@@ -241,6 +247,12 @@ frame_to_view(XFE_Command* command, XFE_Frame* frame, XFE_CommandInfo*)
 		return sub_view;
 	else
 		return NULL;
+}
+
+XP_Bool
+XFE_ViewCommand::isViewCommand()
+{
+	return TRUE;
 }
 
 XP_Bool

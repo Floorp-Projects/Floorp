@@ -448,9 +448,13 @@ XFE_BrowserFrame::showEditorToolbar(XFE_View* view)
 {
   if (m_editorStyleToolbar)
   {
-    m_editorStyleToolbar->show();
     if (view)
       m_editorStyleToolbar->setCommandDispatcher(view);
+    m_editorStyleToolbar->update();
+    // XXX Need to find a way to reset the toolbar to reflect
+    // what's selected in the current view.  This doesn't do it:
+    //m_editorStyleToolbar->updateCommand(0);
+    m_editorStyleToolbar->show();
   }
 }
 

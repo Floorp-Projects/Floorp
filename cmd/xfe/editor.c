@@ -121,6 +121,9 @@ extern int XP_EDT_DRAG_TABLE;
 
 extern void fe_MailComposeDocumentLoaded(MWContext*);
 extern void fe_HackEditorNotifyToolbarUpdated(MWContext* context);
+#ifdef ENDER
+extern void XFE_EmbeddedEditorViewFocus(MWContext*);
+#endif /* ENDER */
 
 static void
 fe_Bell(MWContext* context)
@@ -6161,9 +6164,9 @@ void xfe_GetShiftAndCtrl(XEvent* event, Boolean* shiftP, Boolean* ctrlP)
  * selected cell (if any), which means this code would have to live in
  * EditorView.cpp.  But that means a lot of code change which I won't
  * be able to check in for quite some time due to the stability freeze.
- * So as a TEMPORARY measure, they're implemented as statics and we
+ * So as a temporary measure, they're implemented as statics and we
  * count on the unliklihood of selection-extending in multiple windows
- * at once.  (Safe for drag-select, unsafe for shift-ctrl-click.) Yuck.
+ * at once.  (Safe for drag-select, less so for shift-ctrl-click.) Yuck.
  */
 static LO_Element* edElement = 0;
 static XP_Bool crossedCellBoundary = FALSE;
@@ -6369,7 +6372,16 @@ fe_EditorGrabFocus(MWContext* context, XEvent *event)
           }
       }
       else
+      {
+#ifdef ENDER
+          /* See if we're in an HTML textarea -- if so, we need to fiddle
+           * with toolbars to indicate which area has focus.
+           */
+          if (EDITOR_CONTEXT_DATA(context)->embedded)
+              XFE_EmbeddedEditorViewFocus(context);
+#endif /* ENDER */
           edElement = 0;
+      }
       crossedCellBoundary = FALSE;
   }
 

@@ -22,7 +22,7 @@
  *  EditorToolbar.cpp --- Toolbar for Editor and HTML Mail Compose.
  *
  *  Created: David Williams <djw@netscape.com>, Feb-7-1997
- *  RCSID: "$Id: EditorToolbar.cpp,v 3.2 1998/08/13 21:50:58 akkana%netscape.com Exp $"
+ *  RCSID: "$Id: EditorToolbar.cpp,v 3.3 1998/08/21 23:02:19 akkana%netscape.com Exp $"
  *
  *----------------------------------------------------------------------------
  */
@@ -269,7 +269,15 @@ XFE_ActionMenuItem::getCommandDispatcher()
 void XFE_ActionMenuItem::doCommand(XFE_CommandInfo* info)
 {
   if (m_cmd_handler != NULL)
+  {
+    if (m_cmd_handler->isViewCommand())
+    {
+      XFE_Component* dispatcher = getCommandDispatcher();
+      if (dispatcher && dispatcher->isClassOf("View"))
+        ((XFE_ViewCommand*)m_cmd_handler)->setView((XFE_View*)dispatcher);
+    }
     m_cmd_handler->doCommand(getParentFrame(), info);
+  }
   else
   {
     XFE_Component* dispatcher = getCommandDispatcher();

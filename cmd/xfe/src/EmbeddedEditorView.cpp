@@ -74,6 +74,23 @@ XFE_EmbeddedEditorView::~XFE_EmbeddedEditorView()
       parent_view->removeView(this);
 }
 
+extern "C" XFE_Frame*
+fe_getFrameFromContext(MWContext* context)
+{
+  XFE_Frame *frame = 0;
+  while (context)
+  {
+    frame = ViewGlue_getFrame(context);
+    if (frame)
+      return frame;
+    if (context->grid_parent)
+      context = context->grid_parent;
+    else
+      return 0;
+  }
+  return 0; /* warning control -- shouldn't actually get here */
+}
+
 extern "C" Widget
 XFE_CreateEmbeddedEditor(Widget parent, int32 cols, int32 rows,
 							const char *default_url, MWContext *context)
@@ -81,7 +98,10 @@ XFE_CreateEmbeddedEditor(Widget parent, int32 cols, int32 rows,
   Widget w;
   MWContext *new_context;
 
-  XFE_Frame *frame = (XFE_Frame *)CONTEXT_DATA(context)->view;
+  XFE_Frame *frame = fe_getFrameFromContext(context);
+  XP_ASSERT(frame);
+  if (!frame)
+    return 0;
   XFE_View  *view  = frame->widgetToView(parent);
 
   new_context = fe_CreateNewContext(MWContextEditor, CONTEXT_WIDGET(context),
@@ -131,9 +151,6 @@ XFE_CreateEmbeddedEditor(Widget parent, int32 cols, int32 rows,
     cols2pixels = overall.width;
     rows2pixels = ascent + descent;
     /* could also use CONTEXT_DATA(context)->line_height */
-#ifdef DEBUG_akkana
-    printf("Read the font: %d x %d\n", rows2pixels, cols2pixels);
-#endif
   }
   else
   {
@@ -172,10 +189,31 @@ XFE_CreateEmbeddedEditor(Widget parent, int32 cols, int32 rows,
   return(w);
 }
 
+extern "C" void
+XFE_EmbeddedEditorViewFocus(MWContext* context)
+{
+  XFE_Frame *frame = fe_getFrameFromContext(context);
+  XFE_EmbeddedEditorView* eev = 0;
+  XP_ASSERT(frame);
+  if (frame)
+    eev = (XFE_EmbeddedEditorView*)frame->widgetToView(CONTEXT_DATA(context)->drawing_area);
+  XP_ASSERT(eev);
+  if (!eev)
+    return;
+  XFE_BrowserFrame* bf = (XFE_BrowserFrame*)frame;
+  if (bf)
+  {
+    bf->showEditorToolbar(eev);
+  }
+}
+
 extern "C" MWContext *
 XFE_GetEmbeddedEditorContext(Widget w, MWContext *context)
 {
-  XFE_Frame *frame = (XFE_Frame *)CONTEXT_DATA(context)->view;
+  XFE_Frame *frame = fe_getFrameFromContext(context);
+  XP_ASSERT(frame);
+  if (!frame)
+    return 0;
   XFE_View  *view  = frame->widgetToView(w);
 
   return((view) ? view->getContext() : 0);
@@ -184,7 +222,10 @@ XFE_GetEmbeddedEditorContext(Widget w, MWContext *context)
 extern "C" void
 XFE_DestroyEmbeddedEditor(Widget w, MWContext *context)
 {
-  XFE_Frame *frame = (XFE_Frame *)CONTEXT_DATA(context)->view;
+  XFE_Frame *frame = fe_getFrameFromContext(context);
+  XP_ASSERT(frame);
+  if (!frame)
+    return;
   XFE_View  *view  = frame->widgetToView(w);
   MWContext *vcontext;
 
