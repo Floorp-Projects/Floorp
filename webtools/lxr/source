@@ -1,5 +1,5 @@
 #!/usr/bonsaitools/bin/perl
-# $Id: source,v 1.7 1998/06/19 23:06:50 jwz Exp $
+# $Id: source,v 1.8 1998/06/20 01:09:35 jwz Exp $
 
 # source --	Present sourcecode as html, complete with references
 #
@@ -59,7 +59,7 @@ sub fdescexpand {
 	while(<FILE>){
 	    if($linecount++ > 40) {
 		last;
-	    }elsif (/\$Id: source,v 1.7 1998/06/19 23:06:50 jwz Exp $filename/){
+	    }elsif (/[$]Id: $filename/){
 		#ignore cvs headers
 	    }elsif (/^#/){
 		#ignore cpp directives
