@@ -231,7 +231,7 @@ public class DialogAuthenticator extends Authenticator {
 
     public String getPassword() {
       if (fOK) {
-        return fPasswordField.getText();
+        return new String( fPasswordField.getPassword() );
       } else {
         return null;
       }
