@@ -634,271 +634,151 @@ nsXBLPrototypeHandler::MouseEventMatched(nsIAtom* aEventType, nsIDOMMouseEvent* 
   return NS_OK;
 }
 
+struct keyCodeData {
+  const char* str;
+  size_t strlen;
+  PRUint32 keycode;
+};
+
+// All of these must be uppercase, since the function below does
+// case-insensitive comparison by converting to uppercase.
+// XXX: be sure to check this periodically for new symbol additions!
+static const keyCodeData gKeyCodes[] = {
+
+#define KEYCODE_ENTRY(str) {#str, sizeof(#str) - 1, nsIDOMKeyEvent::DOM_##str}
+#define KEYCODE_ENTRY2(str, code) {str, sizeof(str) - 1, code}
+
+  KEYCODE_ENTRY(VK_CANCEL),
+  KEYCODE_ENTRY2("VK_BACK", nsIDOMKeyEvent::DOM_VK_BACK_SPACE),
+  KEYCODE_ENTRY(VK_TAB),
+  KEYCODE_ENTRY(VK_CLEAR),
+  KEYCODE_ENTRY(VK_RETURN),
+  KEYCODE_ENTRY(VK_ENTER),
+  KEYCODE_ENTRY(VK_SHIFT),
+  KEYCODE_ENTRY(VK_CONTROL),
+  KEYCODE_ENTRY(VK_ALT),
+  KEYCODE_ENTRY(VK_PAUSE),
+  KEYCODE_ENTRY(VK_CAPS_LOCK),
+  KEYCODE_ENTRY(VK_ESCAPE),
+  KEYCODE_ENTRY(VK_SPACE),
+  KEYCODE_ENTRY(VK_PAGE_UP),
+  KEYCODE_ENTRY(VK_PAGE_DOWN),
+  KEYCODE_ENTRY(VK_END),
+  KEYCODE_ENTRY(VK_HOME),
+  KEYCODE_ENTRY(VK_LEFT),
+  KEYCODE_ENTRY(VK_UP),
+  KEYCODE_ENTRY(VK_RIGHT),
+  KEYCODE_ENTRY(VK_DOWN),
+  KEYCODE_ENTRY(VK_PRINTSCREEN),
+  KEYCODE_ENTRY(VK_INSERT),
+  KEYCODE_ENTRY(VK_DELETE),
+  KEYCODE_ENTRY(VK_0),
+  KEYCODE_ENTRY(VK_1),
+  KEYCODE_ENTRY(VK_2),
+  KEYCODE_ENTRY(VK_3),
+  KEYCODE_ENTRY(VK_4),
+  KEYCODE_ENTRY(VK_5),
+  KEYCODE_ENTRY(VK_6),
+  KEYCODE_ENTRY(VK_7),
+  KEYCODE_ENTRY(VK_8),
+  KEYCODE_ENTRY(VK_9),
+  KEYCODE_ENTRY(VK_SEMICOLON),
+  KEYCODE_ENTRY(VK_EQUALS),
+  KEYCODE_ENTRY(VK_A),
+  KEYCODE_ENTRY(VK_B),
+  KEYCODE_ENTRY(VK_C),
+  KEYCODE_ENTRY(VK_D),
+  KEYCODE_ENTRY(VK_E),
+  KEYCODE_ENTRY(VK_F),
+  KEYCODE_ENTRY(VK_G),
+  KEYCODE_ENTRY(VK_H),
+  KEYCODE_ENTRY(VK_I),
+  KEYCODE_ENTRY(VK_J),
+  KEYCODE_ENTRY(VK_K),
+  KEYCODE_ENTRY(VK_L),
+  KEYCODE_ENTRY(VK_M),
+  KEYCODE_ENTRY(VK_N),
+  KEYCODE_ENTRY(VK_O),
+  KEYCODE_ENTRY(VK_P),
+  KEYCODE_ENTRY(VK_Q),
+  KEYCODE_ENTRY(VK_R),
+  KEYCODE_ENTRY(VK_S),
+  KEYCODE_ENTRY(VK_T),
+  KEYCODE_ENTRY(VK_U),
+  KEYCODE_ENTRY(VK_V),
+  KEYCODE_ENTRY(VK_W),
+  KEYCODE_ENTRY(VK_X),
+  KEYCODE_ENTRY(VK_Y),
+  KEYCODE_ENTRY(VK_Z),
+  KEYCODE_ENTRY(VK_NUMPAD0),
+  KEYCODE_ENTRY(VK_NUMPAD1),
+  KEYCODE_ENTRY(VK_NUMPAD2),
+  KEYCODE_ENTRY(VK_NUMPAD3),
+  KEYCODE_ENTRY(VK_NUMPAD4),
+  KEYCODE_ENTRY(VK_NUMPAD5),
+  KEYCODE_ENTRY(VK_NUMPAD6),
+  KEYCODE_ENTRY(VK_NUMPAD7),
+  KEYCODE_ENTRY(VK_NUMPAD8),
+  KEYCODE_ENTRY(VK_NUMPAD9),
+  KEYCODE_ENTRY(VK_MULTIPLY),
+  KEYCODE_ENTRY(VK_ADD),
+  KEYCODE_ENTRY(VK_SEPARATOR),
+  KEYCODE_ENTRY(VK_SUBTRACT),
+  KEYCODE_ENTRY(VK_DECIMAL),
+  KEYCODE_ENTRY(VK_DIVIDE),
+  KEYCODE_ENTRY(VK_F1),
+  KEYCODE_ENTRY(VK_F2),
+  KEYCODE_ENTRY(VK_F3),
+  KEYCODE_ENTRY(VK_F4),
+  KEYCODE_ENTRY(VK_F5),
+  KEYCODE_ENTRY(VK_F6),
+  KEYCODE_ENTRY(VK_F7),
+  KEYCODE_ENTRY(VK_F8),
+  KEYCODE_ENTRY(VK_F9),
+  KEYCODE_ENTRY(VK_F10),
+  KEYCODE_ENTRY(VK_F11),
+  KEYCODE_ENTRY(VK_F12),
+  KEYCODE_ENTRY(VK_F13),
+  KEYCODE_ENTRY(VK_F14),
+  KEYCODE_ENTRY(VK_F15),
+  KEYCODE_ENTRY(VK_F16),
+  KEYCODE_ENTRY(VK_F17),
+  KEYCODE_ENTRY(VK_F18),
+  KEYCODE_ENTRY(VK_F19),
+  KEYCODE_ENTRY(VK_F20),
+  KEYCODE_ENTRY(VK_F21),
+  KEYCODE_ENTRY(VK_F22),
+  KEYCODE_ENTRY(VK_F23),
+  KEYCODE_ENTRY(VK_F24),
+  KEYCODE_ENTRY(VK_NUM_LOCK),
+  KEYCODE_ENTRY(VK_SCROLL_LOCK),
+  KEYCODE_ENTRY(VK_COMMA),
+  KEYCODE_ENTRY(VK_PERIOD),
+  KEYCODE_ENTRY(VK_SLASH),
+  KEYCODE_ENTRY(VK_BACK_QUOTE),
+  KEYCODE_ENTRY(VK_OPEN_BRACKET),
+  KEYCODE_ENTRY(VK_BACK_SLASH),
+  KEYCODE_ENTRY(VK_CLOSE_BRACKET),
+  KEYCODE_ENTRY(VK_QUOTE)
+
+#undef KEYCODE_ENTRY
+#undef KEYCODE_ENTRY2
+
+};
+
 PRInt32 nsXBLPrototypeHandler::GetMatchingKeyCode(const nsAReadableString& aKeyName)
 {
-  nsCAutoString keyName; keyName.AssignWithConversion(aKeyName);
+  nsCAutoString keyName;
+  keyName.AssignWithConversion(aKeyName);
+  ToUpperCase(keyName); // We want case-insensitive comparison with data
+                        // stored as uppercase.
 
-  // XXX: be sure to check this periodically for new symbol additions!
-  if (keyName.EqualsIgnoreCase("VK_CANCEL"))
-    return nsIDOMKeyEvent::DOM_VK_CANCEL;
-  
-  if(keyName.EqualsIgnoreCase("VK_BACK"))
-    return nsIDOMKeyEvent::DOM_VK_BACK_SPACE;
-
-  if(keyName.EqualsIgnoreCase("VK_TAB"))
-    return nsIDOMKeyEvent::DOM_VK_TAB;
-  
-  if(keyName.EqualsIgnoreCase("VK_CLEAR"))
-    return nsIDOMKeyEvent::DOM_VK_CLEAR;
-
-  if(keyName.EqualsIgnoreCase("VK_RETURN"))
-    return nsIDOMKeyEvent::DOM_VK_RETURN;
-
-  if(keyName.EqualsIgnoreCase("VK_ENTER"))
-    return nsIDOMKeyEvent::DOM_VK_ENTER;
-
-  if(keyName.EqualsIgnoreCase("VK_SHIFT"))
-    return nsIDOMKeyEvent::DOM_VK_SHIFT;
-
-  if(keyName.EqualsIgnoreCase("VK_CONTROL"))
-    return nsIDOMKeyEvent::DOM_VK_CONTROL;
-
-  if(keyName.EqualsIgnoreCase("VK_ALT"))
-    return nsIDOMKeyEvent::DOM_VK_ALT;
-
-  if(keyName.EqualsIgnoreCase("VK_PAUSE"))
-    return nsIDOMKeyEvent::DOM_VK_PAUSE;
-
-  if(keyName.EqualsIgnoreCase("VK_CAPS_LOCK"))
-    return nsIDOMKeyEvent::DOM_VK_CAPS_LOCK;
-
-  if(keyName.EqualsIgnoreCase("VK_ESCAPE"))
-    return nsIDOMKeyEvent::DOM_VK_ESCAPE;
-
-   
-  if(keyName.EqualsIgnoreCase("VK_SPACE"))
-    return nsIDOMKeyEvent::DOM_VK_SPACE;
-
-  if(keyName.EqualsIgnoreCase("VK_PAGE_UP"))
-    return nsIDOMKeyEvent::DOM_VK_PAGE_UP;
-
-  if(keyName.EqualsIgnoreCase("VK_PAGE_DOWN"))
-    return nsIDOMKeyEvent::DOM_VK_PAGE_DOWN;
-
-  if(keyName.EqualsIgnoreCase("VK_END"))
-    return nsIDOMKeyEvent::DOM_VK_END;
-
-  if(keyName.EqualsIgnoreCase("VK_HOME"))
-    return nsIDOMKeyEvent::DOM_VK_HOME;
-
-  if(keyName.EqualsIgnoreCase("VK_LEFT"))
-    return nsIDOMKeyEvent::DOM_VK_LEFT;
-
-  if(keyName.EqualsIgnoreCase("VK_UP"))
-    return nsIDOMKeyEvent::DOM_VK_UP;
-
-  if(keyName.EqualsIgnoreCase("VK_RIGHT"))
-    return nsIDOMKeyEvent::DOM_VK_RIGHT;
-
-  if(keyName.EqualsIgnoreCase("VK_DOWN"))
-    return nsIDOMKeyEvent::DOM_VK_DOWN;
-
-  if(keyName.EqualsIgnoreCase("VK_PRINTSCREEN"))
-    return nsIDOMKeyEvent::DOM_VK_PRINTSCREEN;
-
-  if(keyName.EqualsIgnoreCase("VK_INSERT"))
-    return nsIDOMKeyEvent::DOM_VK_INSERT;
-
-  if(keyName.EqualsIgnoreCase("VK_DELETE"))
-    return nsIDOMKeyEvent::DOM_VK_DELETE;
-
-  if(keyName.EqualsIgnoreCase("VK_0"))
-    return nsIDOMKeyEvent::DOM_VK_0;
-
-  if(keyName.EqualsIgnoreCase("VK_1"))
-    return nsIDOMKeyEvent::DOM_VK_1;
-
-  if(keyName.EqualsIgnoreCase("VK_2"))
-    return nsIDOMKeyEvent::DOM_VK_2;
-
-  if(keyName.EqualsIgnoreCase("VK_3"))
-    return nsIDOMKeyEvent::DOM_VK_3;
-
-  if(keyName.EqualsIgnoreCase("VK_4"))
-    return nsIDOMKeyEvent::DOM_VK_4;
-
-  if(keyName.EqualsIgnoreCase("VK_5"))
-    return nsIDOMKeyEvent::DOM_VK_5;
-
-  if(keyName.EqualsIgnoreCase("VK_6"))
-    return nsIDOMKeyEvent::DOM_VK_6;
-
-  if(keyName.EqualsIgnoreCase("VK_7"))
-    return nsIDOMKeyEvent::DOM_VK_7;
-
-  if(keyName.EqualsIgnoreCase("VK_8"))
-    return nsIDOMKeyEvent::DOM_VK_8;
-
-  if(keyName.EqualsIgnoreCase("VK_9"))
-    return nsIDOMKeyEvent::DOM_VK_9;
-
-  if(keyName.EqualsIgnoreCase("VK_SEMICOLON"))
-    return nsIDOMKeyEvent::DOM_VK_SEMICOLON;
-
-  if(keyName.EqualsIgnoreCase("VK_EQUALS"))
-    return nsIDOMKeyEvent::DOM_VK_EQUALS;
-  if(keyName.EqualsIgnoreCase("VK_A"))
-    return nsIDOMKeyEvent::DOM_VK_A;
-  if(keyName.EqualsIgnoreCase("VK_B"))
-    return nsIDOMKeyEvent::DOM_VK_B;
-  if(keyName.EqualsIgnoreCase("VK_C"))
-    return nsIDOMKeyEvent::DOM_VK_C;
-  if(keyName.EqualsIgnoreCase("VK_D"))
-    return nsIDOMKeyEvent::DOM_VK_D;
-  if(keyName.EqualsIgnoreCase("VK_E"))
-    return nsIDOMKeyEvent::DOM_VK_E;
-  if(keyName.EqualsIgnoreCase("VK_F"))
-    return nsIDOMKeyEvent::DOM_VK_F;
-  if(keyName.EqualsIgnoreCase("VK_G"))
-    return nsIDOMKeyEvent::DOM_VK_G;
-  if(keyName.EqualsIgnoreCase("VK_H"))
-    return nsIDOMKeyEvent::DOM_VK_H;
-  if(keyName.EqualsIgnoreCase("VK_I"))
-    return nsIDOMKeyEvent::DOM_VK_I;
-  if(keyName.EqualsIgnoreCase("VK_J"))
-    return nsIDOMKeyEvent::DOM_VK_J;
-  if(keyName.EqualsIgnoreCase("VK_K"))
-    return nsIDOMKeyEvent::DOM_VK_K;
-  if(keyName.EqualsIgnoreCase("VK_L"))
-    return nsIDOMKeyEvent::DOM_VK_L;
-  if(keyName.EqualsIgnoreCase("VK_M"))
-    return nsIDOMKeyEvent::DOM_VK_M;
-  if(keyName.EqualsIgnoreCase("VK_N"))
-    return nsIDOMKeyEvent::DOM_VK_N;
-  if(keyName.EqualsIgnoreCase("VK_O"))
-    return nsIDOMKeyEvent::DOM_VK_O;
-  if(keyName.EqualsIgnoreCase("VK_P"))
-    return nsIDOMKeyEvent::DOM_VK_P;
-  if(keyName.EqualsIgnoreCase("VK_Q"))
-    return nsIDOMKeyEvent::DOM_VK_Q;
-  if(keyName.EqualsIgnoreCase("VK_R"))
-    return nsIDOMKeyEvent::DOM_VK_R;
-  if(keyName.EqualsIgnoreCase("VK_S"))
-    return nsIDOMKeyEvent::DOM_VK_S;
-  if(keyName.EqualsIgnoreCase("VK_T"))
-    return nsIDOMKeyEvent::DOM_VK_T;
-  if(keyName.EqualsIgnoreCase("VK_U"))
-    return nsIDOMKeyEvent::DOM_VK_U;
-  if(keyName.EqualsIgnoreCase("VK_V"))
-    return nsIDOMKeyEvent::DOM_VK_V;
-  if(keyName.EqualsIgnoreCase("VK_W"))
-    return nsIDOMKeyEvent::DOM_VK_W;
-  if(keyName.EqualsIgnoreCase("VK_X"))
-    return nsIDOMKeyEvent::DOM_VK_X;
-  if(keyName.EqualsIgnoreCase("VK_Y"))
-    return nsIDOMKeyEvent::DOM_VK_Y;
-  if(keyName.EqualsIgnoreCase("VK_Z"))
-    return nsIDOMKeyEvent::DOM_VK_Z;
-  if(keyName.EqualsIgnoreCase("VK_NUMPAD0"))
-    return nsIDOMKeyEvent::DOM_VK_NUMPAD0;
-  if(keyName.EqualsIgnoreCase("VK_NUMPAD1"))
-    return nsIDOMKeyEvent::DOM_VK_NUMPAD1;
-  if(keyName.EqualsIgnoreCase("VK_NUMPAD2"))
-    return nsIDOMKeyEvent::DOM_VK_NUMPAD2;
-  if(keyName.EqualsIgnoreCase("VK_NUMPAD3"))
-    return nsIDOMKeyEvent::DOM_VK_NUMPAD3;
-  if(keyName.EqualsIgnoreCase("VK_NUMPAD4"))
-    return nsIDOMKeyEvent::DOM_VK_NUMPAD4;
-  if(keyName.EqualsIgnoreCase("VK_NUMPAD5"))
-    return nsIDOMKeyEvent::DOM_VK_NUMPAD5;
-  if(keyName.EqualsIgnoreCase("VK_NUMPAD6"))
-    return nsIDOMKeyEvent::DOM_VK_NUMPAD6;
-  if(keyName.EqualsIgnoreCase("VK_NUMPAD7"))
-    return nsIDOMKeyEvent::DOM_VK_NUMPAD7;
-  if(keyName.EqualsIgnoreCase("VK_NUMPAD8"))
-    return nsIDOMKeyEvent::DOM_VK_NUMPAD8;
-  if(keyName.EqualsIgnoreCase("VK_NUMPAD9"))
-    return nsIDOMKeyEvent::DOM_VK_NUMPAD9;
-  if(keyName.EqualsIgnoreCase("VK_MULTIPLY"))
-    return nsIDOMKeyEvent::DOM_VK_MULTIPLY;
-  if(keyName.EqualsIgnoreCase("VK_ADD"))
-    return nsIDOMKeyEvent::DOM_VK_ADD;
-  if(keyName.EqualsIgnoreCase("VK_SEPARATOR"))
-    return nsIDOMKeyEvent::DOM_VK_SEPARATOR;
-  if(keyName.EqualsIgnoreCase("VK_SUBTRACT"))
-    return nsIDOMKeyEvent::DOM_VK_SUBTRACT;
-  if(keyName.EqualsIgnoreCase("VK_DECIMAL"))
-    return nsIDOMKeyEvent::DOM_VK_DECIMAL;
-  if(keyName.EqualsIgnoreCase("VK_DIVIDE"))
-    return nsIDOMKeyEvent::DOM_VK_DIVIDE;
-  if(keyName.EqualsIgnoreCase("VK_F1"))
-    return nsIDOMKeyEvent::DOM_VK_F1;
-  if(keyName.EqualsIgnoreCase("VK_F2"))
-    return nsIDOMKeyEvent::DOM_VK_F2;
-  if(keyName.EqualsIgnoreCase("VK_F3"))
-    return nsIDOMKeyEvent::DOM_VK_F3;
-  if(keyName.EqualsIgnoreCase("VK_F4"))
-    return nsIDOMKeyEvent::DOM_VK_F4;
-  if(keyName.EqualsIgnoreCase("VK_F5"))
-    return nsIDOMKeyEvent::DOM_VK_F5;
-  if(keyName.EqualsIgnoreCase("VK_F6"))
-    return nsIDOMKeyEvent::DOM_VK_F6;
-  if(keyName.EqualsIgnoreCase("VK_F7"))
-    return nsIDOMKeyEvent::DOM_VK_F7;
-  if(keyName.EqualsIgnoreCase("VK_F8"))
-    return nsIDOMKeyEvent::DOM_VK_F8;
-  if(keyName.EqualsIgnoreCase("VK_F9"))
-    return nsIDOMKeyEvent::DOM_VK_F9;
-  if(keyName.EqualsIgnoreCase("VK_F10"))
-    return nsIDOMKeyEvent::DOM_VK_F10;
-  if(keyName.EqualsIgnoreCase("VK_F11"))
-    return nsIDOMKeyEvent::DOM_VK_F11;
-  if(keyName.EqualsIgnoreCase("VK_F12"))
-    return nsIDOMKeyEvent::DOM_VK_F12;
-  if(keyName.EqualsIgnoreCase("VK_F13"))
-    return nsIDOMKeyEvent::DOM_VK_F13;
-  if(keyName.EqualsIgnoreCase("VK_F14"))
-    return nsIDOMKeyEvent::DOM_VK_F14;
-  if(keyName.EqualsIgnoreCase("VK_F15"))
-    return nsIDOMKeyEvent::DOM_VK_F15;
-  if(keyName.EqualsIgnoreCase("VK_F16"))
-    return nsIDOMKeyEvent::DOM_VK_F16;
-  if(keyName.EqualsIgnoreCase("VK_F17"))
-    return nsIDOMKeyEvent::DOM_VK_F17;
-  if(keyName.EqualsIgnoreCase("VK_F18"))
-    return nsIDOMKeyEvent::DOM_VK_F18;
-  if(keyName.EqualsIgnoreCase("VK_F19"))
-    return nsIDOMKeyEvent::DOM_VK_F19;
-  if(keyName.EqualsIgnoreCase("VK_F20"))
-    return nsIDOMKeyEvent::DOM_VK_F20;
-  if(keyName.EqualsIgnoreCase("VK_F21"))
-    return nsIDOMKeyEvent::DOM_VK_F21;
-  if(keyName.EqualsIgnoreCase("VK_F22"))
-    return nsIDOMKeyEvent::DOM_VK_F22;
-  if(keyName.EqualsIgnoreCase("VK_F23"))
-    return nsIDOMKeyEvent::DOM_VK_F23;
-  if(keyName.EqualsIgnoreCase("VK_F24"))
-    return nsIDOMKeyEvent::DOM_VK_F24;
-  if(keyName.EqualsIgnoreCase("VK_NUM_LOCK"))
-    return nsIDOMKeyEvent::DOM_VK_NUM_LOCK;
-  if(keyName.EqualsIgnoreCase("VK_SCROLL_LOCK"))
-    return nsIDOMKeyEvent::DOM_VK_SCROLL_LOCK;
-  if(keyName.EqualsIgnoreCase("VK_COMMA"))
-    return nsIDOMKeyEvent::DOM_VK_COMMA;
-  if(keyName.EqualsIgnoreCase("VK_PERIOD"))
-    return nsIDOMKeyEvent::DOM_VK_PERIOD;
-  if(keyName.EqualsIgnoreCase("VK_SLASH"))
-    return nsIDOMKeyEvent::DOM_VK_SLASH;
-  if(keyName.EqualsIgnoreCase("VK_BACK_QUOTE"))
-    return nsIDOMKeyEvent::DOM_VK_BACK_QUOTE;
-  if(keyName.EqualsIgnoreCase("VK_OPEN_BRACKET"))
-    return nsIDOMKeyEvent::DOM_VK_OPEN_BRACKET;
-  if(keyName.EqualsIgnoreCase("VK_BACK_SLASH"))
-    return nsIDOMKeyEvent::DOM_VK_BACK_SLASH;
-  if(keyName.EqualsIgnoreCase("VK_CLOSE_BRACKET"))
-    return nsIDOMKeyEvent::DOM_VK_CLOSE_BRACKET;
-  if(keyName.EqualsIgnoreCase("VK_QUOTE"))
-    return nsIDOMKeyEvent::DOM_VK_QUOTE;
+  PRUint32 keyNameLength = keyName.Length();
+  const char* keyNameStr = keyName.get();
+  for (int i = 0; i < (sizeof(gKeyCodes) / sizeof(gKeyCodes[0])); ++i)
+    if (keyNameLength == gKeyCodes[i].strlen &&
+        !nsCRT::strcmp(gKeyCodes[i].str, keyNameStr))
+      return gKeyCodes[i].keycode;
 
   return 0;
 }
