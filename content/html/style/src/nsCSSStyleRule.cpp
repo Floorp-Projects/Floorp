@@ -1206,25 +1206,25 @@ void MapDeclarationInto(nsICSSDeclaration* aDeclaration,
         }
 
         // border-size: length, enum (percent), inherit
-        if (nsnull != ourMargin->mBorder) {
+        if (nsnull != ourMargin->mBorderWidth) {
           nsStyleCoord  coord;
-          if (SetCoord(ourMargin->mBorder->mLeft, coord, SETCOORD_LPEH, font, aPresContext)) {
+          if (SetCoord(ourMargin->mBorderWidth->mLeft, coord, SETCOORD_LPEH, font, aPresContext)) {
             spacing->mBorder.SetLeft(coord);
           }
-          if (SetCoord(ourMargin->mBorder->mTop, coord, SETCOORD_LPEH, font, aPresContext)) {
+          if (SetCoord(ourMargin->mBorderWidth->mTop, coord, SETCOORD_LPEH, font, aPresContext)) {
             spacing->mBorder.SetTop(coord);
           }
-          if (SetCoord(ourMargin->mBorder->mRight, coord, SETCOORD_LPEH, font, aPresContext)) {
+          if (SetCoord(ourMargin->mBorderWidth->mRight, coord, SETCOORD_LPEH, font, aPresContext)) {
             spacing->mBorder.SetRight(coord);
           }
-          if (SetCoord(ourMargin->mBorder->mBottom, coord, SETCOORD_LPEH, font, aPresContext)) {
+          if (SetCoord(ourMargin->mBorderWidth->mBottom, coord, SETCOORD_LPEH, font, aPresContext)) {
             spacing->mBorder.SetBottom(coord);
           }
         }
 
         // border-style
-        if (nsnull != ourMargin->mStyle) {
-          nsCSSRect* ourStyle = ourMargin->mStyle;
+        if (nsnull != ourMargin->mBorderStyle) {
+          nsCSSRect* ourStyle = ourMargin->mBorderStyle;
           if (ourStyle->mTop.GetUnit() == eCSSUnit_Enumerated) {
             spacing->mBorderStyle[NS_SIDE_TOP] = ourStyle->mTop.GetIntValue();
           }
@@ -1240,8 +1240,8 @@ void MapDeclarationInto(nsICSSDeclaration* aDeclaration,
         }
 
         // border-color
-        if (nsnull != ourMargin->mColor) {
-          nsCSSRect* ourColor = ourMargin->mColor;
+        if (nsnull != ourMargin->mBorderColor) {
+          nsCSSRect* ourColor = ourMargin->mBorderColor;
           if (ourColor->mTop.GetUnit() == eCSSUnit_Color) {
             spacing->mBorderColor[NS_SIDE_TOP] = ourColor->mTop.GetColorValue();
           }
@@ -1280,8 +1280,12 @@ void MapDeclarationInto(nsICSSDeclaration* aDeclaration,
         }
 
         // box offsets: length, percent, auto, inherit
-        SetCoord(ourPosition->mLeft, position->mLeftOffset, SETCOORD_LPAH, font, aPresContext);
-        SetCoord(ourPosition->mTop, position->mTopOffset, SETCOORD_LPAH, font, aPresContext);
+        if (nsnull != ourPosition->mOffset) {
+          SetCoord(ourPosition->mOffset->mTop, position->mTopOffset, SETCOORD_LPAH, font, aPresContext);
+          // XXX right bottom
+          SetCoord(ourPosition->mOffset->mLeft, position->mLeftOffset, SETCOORD_LPAH, font, aPresContext);
+        }
+
         SetCoord(ourPosition->mWidth, position->mWidth, SETCOORD_LPAH, font, aPresContext);
         SetCoord(ourPosition->mHeight, position->mHeight, SETCOORD_LPAH, font, aPresContext);
 
