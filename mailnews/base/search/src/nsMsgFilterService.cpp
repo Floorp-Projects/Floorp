@@ -471,6 +471,7 @@ NS_IMETHODIMP nsMsgFilterAfterTheFact::OnSearchDone(nsresult status)
 NS_IMETHODIMP nsMsgFilterAfterTheFact::OnNewSearch()
 {
   m_searchHits.RemoveAll();
+  m_searchHitHdrs->Clear();
   return NS_OK;
 }
 
@@ -556,7 +557,7 @@ nsresult nsMsgFilterAfterTheFact::ApplyFilter()
           }
           nsCOMPtr<nsIMsgCopyService> copyService = do_GetService(NS_MSGCOPYSERVICE_CONTRACTID, &rv);
           if (copyService)
-          return copyService->CopyMessages(m_curFolder, m_searchHitHdrs, destIFolder, PR_TRUE, this, m_msgWindow, PR_FALSE);
+            return copyService->CopyMessages(m_curFolder, m_searchHitHdrs, destIFolder, PR_TRUE, this, m_msgWindow, PR_FALSE);
         }
       }
         break;
