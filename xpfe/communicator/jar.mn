@@ -20,4 +20,4 @@ locales/en-US.jar:
 	communicator/locale/taskbar.rdf                (resources/locale/en-US/taskbar.rdf) 
 	communicator/locale/tasksOverlay.dtd           (resources/locale/en-US/tasksOverlay.dtd) 
 	communicator/locale/taskbarOverlay.dtd         (resources/locale/en-US/taskbarOverlay.dtd) 
-	communicator/locale/manifest.rdf               (resources/locale/en-US/manifest.rdf) 
+	manifest.rdf                                   (resources/locale/en-US/manifest.rdf) 
