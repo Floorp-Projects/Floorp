@@ -281,12 +281,9 @@ private:
    * size (@see GetMaxWidgetBounds) and the requested size is returned.
    *
    * @param aRequestedSize Requested size for the offscreen.
-   * @param aSurfaceSize contains the surface size if the method returns PR_TRUE. 
-   * It is unmodified if the method returns PR_FALSE;
-   * @returns PR_TRUE if it was able to calculate a discrete surface size, PR_FALSE
-   * otherwise.
+   * @param aSurfaceSize contains the surface size 
 	 */
-  PRBool CalculateDiscreteSurfaceSize(nsRect& aRequestedSize, nsRect& aSize) const;
+  void CalculateDiscreteSurfaceSize(nsRect& aRequestedSize, nsRect& aSize) const;
 
   /**
 	 * Get the size of the offscreen drawing surface..
@@ -330,6 +327,9 @@ private:
   static nsDrawingSurface  gBlue;
   static nsSize            gOffScreenSize;
   static nsSize            gBlendSize;
+
+  // Largest requested offscreen size if larger than a full screen.
+  static nsSize            gLargestRequestedSize;
 
   //list of view managers
   static nsVoidArray       *gViewManagers;
