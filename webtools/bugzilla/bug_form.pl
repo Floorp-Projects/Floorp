@@ -340,10 +340,13 @@ if (Param("usedependencies")) {
 if ($::prodmaxvotes{$bug{'product'}}) {
     print qq{
 <table><tr>
-<th><a href="votehelp.html">Votes</a> for bug $id:</th><td>
-<a href="showvotes.cgi?bug_id=$id">$bug{'votes'}</a>
-&nbsp;&nbsp;&nbsp;<a href="showvotes.cgi?voteon=$id">Vote for this bug</a>
-</td></tr></table>
+<th><a href="votehelp.html">Votes:</a></th>
+<td>
+$bug{'votes'}&nbsp;&nbsp;&nbsp;
+<a href="showvotes.cgi?bug_id=$id">Show votes for this bug</a>&nbsp;&nbsp;&nbsp;
+<a href="showvotes.cgi?voteon=$id">Vote for this bug</a>
+</td>
+</tr></table>
 };
 }
 
