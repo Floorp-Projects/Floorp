@@ -24,10 +24,9 @@
 
 <!-- CHANGE THIS WHEN MOVING FILES -->
 <?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?>
-<?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
 
 <!-- CHANGE THIS WHEN MOVING FILES -->
-<!DOCTYPE window SYSTEM "chrome://communicator/locale/wallet/SignonViewer.dtd" >
+<!DOCTYPE dialog SYSTEM "chrome://communicator/locale/wallet/SignonViewer.dtd" >
 
 <dialog id="signonviewer"
         title="&windowtitle.label;"
