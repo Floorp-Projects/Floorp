@@ -953,8 +953,14 @@ nsTextEditRules::DidDeleteSelection(nsISelection *aSelection,
     if (!strLength)
     {
       res = mEditor->DeleteNode(startNode);
+      if (NS_FAILED(res)) return res;
     }
   }
+  // We prevent the caret from sticking on the left of prior BR
+  // (i.e. the end of previous line) after this deletion.  Bug 92124
+  nsCOMPtr<nsISelectionPrivate> selPriv = do_QueryInterface(aSelection);
+  if (selPriv) res = selPriv->SetInterlinePosition(PR_TRUE);
+
   return res;
 }
 
