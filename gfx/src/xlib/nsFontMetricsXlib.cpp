@@ -462,7 +462,7 @@ void nsFontMetricsXlib::RealizeFont()
   }
 
   /* need better way to calculate this */
-  mStrikeoutOffset = NSToIntRound((mAscent + 1) / 2);
+  mStrikeoutOffset = NSToCoordRound(mXHeight / 2.0);
   mStrikeoutSize = mUnderlineSize;
 
   mLeading = 0;
