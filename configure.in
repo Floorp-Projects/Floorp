@@ -1246,6 +1246,49 @@ dnl =   order matters to the Build Configurator.           =
 dnl =                                                      =
 dnl ========================================================
 
+dnl ========================================================
+dnl =													   =
+dnl = --with-xprint										   =
+dnl = 													   =
+dnl = Xprint support hackery                               =
+dnl = 													   =
+dnl ========================================================
+if test "$no_x" != "yes"
+then
+	AC_ARG_WITH(xprint,
+	[  --with-xprint           Enable Xprint support ],
+	[
+		if test "$withval" = "yes"
+		then
+			MOZ_ENABLE_XPRINT=1
+    	else
+			MOZ_ENABLE_XPRINT=
+    	fi
+	])
+fi
+
+MISSING_XPRINT=
+if test "$MOZ_ENABLE_XPRINT"
+then
+	AC_MSG_CHECKING(for xprint insanity)
+
+	_SAVE_LDFLAGS="$LDFLAGS"
+	LDFLAGS="$XLDFLAGS $LDFLAGS"
+    AC_CHECK_LIB(Xp, XpGetPrinterList, [XPRINT_LIBS="-lXp"],
+	    [MISSING_XPRINT="$MISSING_XPRINT -lXp"], $XEXT_LIBS $XLIBS)
+
+	LDFLAGS="$_SAVE_LDFLAGS"
+
+    MOZ_XPRINT_CFLAGS="$X_CFLAGS"
+    MOZ_XPRINT_LDFLAGS="$XLDFLAGS $XPRINT_LIBS"
+    MOZ_XPRINT_LDFLAGS="$MOZ_XPRINT_LDFLAGS $XEXT_LIBS $X11_LIBS"
+
+fi
+dnl ========================================================
+dnl = 													   =
+dnl = End Xprint support hackery                           =
+dnl = 													   =
+dnl ========================================================
 
 dnl ========================================================
 dnl =													   =
@@ -1527,6 +1570,9 @@ AC_SUBST(MOZ_MOTIF_CFLAGS)
 AC_SUBST(MOZ_MOTIF_LDFLAGS)
 AC_SUBST(MOZ_XLIB_CFLAGS)
 AC_SUBST(MOZ_XLIB_LDFLAGS)
+AC_SUBST(MOZ_XPRINT_CFLAGS)
+AC_SUBST(MOZ_XPRINT_LDFLAGS)
+AC_SUBST(MOZ_ENABLE_XPRINT)
 AC_SUBST(MOZ_QT_CFLAGS)
 AC_SUBST(MOZ_QT_LDFLAGS)
 AC_SUBST(MOZ_DEFAULT_TOOLKIT)
@@ -3600,6 +3646,10 @@ dnl Check for missing components
 if test "$no_x" != "yes"; then
 if test ! -z "$MISSING_X"; then
    AC_MSG_ERROR([ Could not find the following X libraries: $MISSING_X ]);
+fi
+
+if test ! -z "$MISSING_XPRINT"; then
+   AC_MSG_ERROR([ Could not find the following XPRINT libraries: $MISSING_XPRINT ]);
 fi
 
 if test ! -z "$MISSING_MOTIF"; then

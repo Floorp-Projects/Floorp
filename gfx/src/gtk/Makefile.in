@@ -80,6 +80,10 @@ DEFINES		+= -D_TIME_H=1
 endif
 endif
 
+ifdef MOZ_ENABLE_XPRINT
+DEFINES		+= -DUSE_XPRINT
+endif
+
 INCLUDES	+= \
 		-I$(srcdir)/. \
 		-I$(srcdir)/.. \
