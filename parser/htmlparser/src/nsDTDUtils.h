@@ -214,7 +214,6 @@ inline PRBool BufferContainsHTML(nsString& aBuffer){
 }
 
 
-#ifdef  NS_DEBUG
 /******************************************************************************
   This little structure is used to compute CRC32 values for our debug validator
  ******************************************************************************/
@@ -224,8 +223,6 @@ struct CRCStruct {
   eHTMLTags mTag; 
   PRInt32   mOperation; //usually open or close
 };
-
-#endif 
 
 #endif
 
