@@ -60,6 +60,7 @@ public:
     NS_IMETHOD GetAccountManagerChrome(nsAString& aResult);
     NS_IMETHOD PerformBiff(nsIMsgWindow *aMsgWindow);
     NS_IMETHOD GetServerRequiresPasswordForBiff(PRBool *aServerRequiresPasswordForBiff);
+    NS_IMETHOD GetCanSearchMessages(PRBool *canSearchMessages);
 
     nsRssIncomingServer();
     virtual ~nsRssIncomingServer();
