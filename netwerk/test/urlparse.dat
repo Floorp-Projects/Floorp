@@ -77,12 +77,12 @@ http,,,www.mozilla.org,-1,/,,,,,,http://www.mozilla.org/
 
 # testing spaces (15150)
 go.com.au?mozilla bug reports
-,,,go.com.au,-1,/,,,,mozilla bug reports,,go.com.au/?mozilla%20bug%20reports
+,,,go.com.au,-1,/,,,,mozilla%20bug%20reports,,go.com.au/?mozilla%20bug%20reports
 Can not create URL
 
 http://go.com.au?mozilla bug reports
-http,,,go.com.au,-1,/,,,,mozilla bug reports,,http://go.com.au/?mozilla%20bug%20reports
-http,,,go.com.au,-1,/,,,,mozilla bug reports,,http://go.com.au/?mozilla%20bug%20reports
+http,,,go.com.au,-1,/,,,,mozilla%20bug%20reports,,http://go.com.au/?mozilla%20bug%20reports
+http,,,go.com.au,-1,/,,,,mozilla%20bug%20reports,,http://go.com.au/?mozilla%20bug%20reports
 
 # testing for multiple params (14801)
 http://ad.doubleclick.net/ad/cbsmw.button.com/SIDEBAR_BUTTONS;sz=88x31;kw=DBCC;tile=4;ord=1864641213378545414
@@ -96,3 +96,8 @@ Can not create URL
 news:3B5C133C.2080505@foobar.net
 news,3B5C133C.2080505,,foobar.net,-1,/,,,,,,news://3B5C133C.2080505@foobar.net/
 news,3B5C133C.2080505,,foobar.net,-1,/,,,,,,news://3B5C133C.2080505@foobar.net/
+
+http://host/path/%2E%2E/file%2Ehtml
+http,,,host,-1,/,file%2Ehtml,,,,,http://host/file%2Ehtml
+http,,,host,-1,/,file%2Ehtml,,,,,http://host/file%2Ehtml
+

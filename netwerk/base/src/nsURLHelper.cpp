@@ -218,6 +218,7 @@ net_CoalesceDirs(netCoalesceFlags flags, char* path)
      */
     char *fwdPtr = path;
     char *urlPtr = path;
+    char *lastslash = path;
     PRUint32 traversal = 0;
     PRUint32 special_ftp_len = 0;
 
@@ -234,10 +235,34 @@ net_CoalesceDirs(netCoalesceFlags flags, char* path)
             special_ftp_len = 2; 
     }
 
-    /* replace all %2E or %2e with . in the path */ 
+    /* find the last slash before # or ? */
     for(; (*fwdPtr != '\0') && 
             (*fwdPtr != '?') && 
             (*fwdPtr != '#'); ++fwdPtr)
+    {
+    }
+
+    /* found nothing, but go back one only */
+    /* if there is something to go back to */
+    if (fwdPtr != path && *fwdPtr == '\0')
+    {
+        --fwdPtr;
+    }
+
+    /* search the slash */
+    for(; (fwdPtr != path) && 
+            (*fwdPtr != '/'); --fwdPtr)
+    {
+    }
+    lastslash = fwdPtr;
+    fwdPtr = path;
+
+    /* replace all %2E or %2e with . in the path */
+    /* but stop at lastchar if non null */
+    for(; (*fwdPtr != '\0') && 
+            (*fwdPtr != '?') && 
+            (*fwdPtr != '#') &&
+            (*lastslash == '\0' || fwdPtr != lastslash); ++fwdPtr)
     {
         if (*fwdPtr == '%' && *(fwdPtr+1) == '2' && 
             (*(fwdPtr+2) == 'E' || *(fwdPtr+2) == 'e'))
