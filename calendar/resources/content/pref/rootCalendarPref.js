@@ -60,7 +60,7 @@ calendarPrefObserver.prototype =
 
          case "calendar.date.format" :
             this.CalendarPreferences.calendarWindow.currentView.refresh();
-            unifinderRefresh();
+            refreshEventTree( getAndSetEventTable() );
             toDoUnifinderRefresh();
          default :
             break;
