@@ -17,7 +17,6 @@
 # 
 # Contributor(s):
 #   Christopher Blizzard <blizzard@mozilla.org>
-#   Brian Edmond <briane@qnx.com>
 
 DEPTH		= ../../../..
 topsrcdir	= @top_srcdir@
@@ -26,44 +25,45 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE = phembedmoz
+MODULE		= phembedmoz
 LIBRARY_NAME	= phembedmoz
 EXPORT_LIBRARY = 1
-REQUIRES    = xpcom \
-    	      string \
-		      docshell \
-		      webshell \
-		      necko \
-		      widget \
-		      dom \
-		      gfx \
-		      layout \
-		      content \
-		      uriloader \
-		      webbrwsr \
-		      shistory \
-		      embed_base \
-		      pref \
-			  cookie\
-			  view\
-			  windowwatcher \
-			  mpfilelocprovider \
-			  appshell \
-			  exthandler \
-			  helperAppDlg \
-			  mozcomps \
-			  find \
-			  appcomps \
-			  mimetype \
-			  webbrowserpersist \
- 	          $(NULL)
+REQUIRES	= xpcom \
+		  string \
+		  docshell \
+		  webshell \
+		  necko \
+		  widget \
+		  dom \
+		  gfx \
+		  layout \
+		  content \
+		  uriloader \
+		  webbrwsr \
+		  shistory \
+		  embed_base \
+		  pref \
+		  windowwatcher \
+		  mpfilelocprovider \
+		  webbrowserpersist \
+		  find \
+		  exthandler \
+		  helperAppDlg \
+		  $(NULL)
 
 CPPSRCS		= \
-		PhMozEmbedStream.cpp \
+		EmbedPrivate.cpp \
+		EmbedPrintListener.cpp \
+		EmbedWindow.cpp \
+		EmbedProgress.cpp \
+		EmbedContentListener.cpp \
+		EmbedEventListener.cpp \
+		EmbedWindowCreator.cpp \
 		PtMozilla.cpp \
-		WebBrowserContainer.cpp \
+		EmbedStream.cpp \
 		PromptService.cpp \
-		nsUnknownContentTypeHandler.cpp
+		nsUnknownContentTypeHandler.cpp \
+		nsPrintSettingsImpl.cpp
 
 SHARED_LIBRARY_LIBS= \
 		$(DIST)/lib/libembed_base_s.$(LIB_SUFFIX) \
@@ -71,14 +71,25 @@ SHARED_LIBRARY_LIBS= \
 		$(NULL)
 
 EXPORTS		= \
-		PtMozilla.h PhMozEmbedStream.h stdhdrs.h
+		PtMozilla.h
 
 EXTRA_DSO_LDOPTS = \
 		$(MOZ_COMPONENT_LIBS) \
 		$(NULL)
 
-EXTRA_DSO_LDOPTS += $(MOZ_PH_LDFLAGS)
+EXTRA_DSO_LDOPTS += $(MOZ_GTK_LDFLAGS)
 
 include $(topsrcdir)/config/rules.mk
 
-CXXFLAGS        += $(MOZ_PH_CFLAGS)
+ifeq ($(OS_ARCH), SunOS)
+ifndef GNU_CC
+# When using Sun's WorkShop compiler, including
+# /wherever/workshop-5.0/SC5.0/include/CC/std/time.h
+# causes most of these compiles to fail with:
+# line 29: Error: Multiple declaration for std::tm.
+# So, this gets around the problem.
+DEFINES         += -D_TIME_H=1
+endif
+endif
+
+CXXFLAGS        += $(MOZ_GTK_CFLAGS)

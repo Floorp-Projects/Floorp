@@ -43,11 +43,10 @@
 #include "nsIInterfaceRequestor.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsIDocShell.h"
-#include "nsIMIMEInfo.h"
+#include "mimetype/nsIMIMEInfo.h"
 #include "nsIURI.h"
 #include "nsIFile.h"
 
-#include "WebBrowserContainer.h"
 #include "PtMozilla.h"
 
 #include <photon/PtWebClient.h>
@@ -62,7 +61,7 @@ nsUnknownContentTypeHandler::~nsUnknownContentTypeHandler( ) { }
 NS_IMETHODIMP nsUnknownContentTypeHandler::ShowProgressDialog(nsIHelperAppLauncher *aLauncher, nsISupports *aContext ) {
 	nsresult rv = NS_OK;
 
-/* ATENTIE */ printf("ShowProgressDialog!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n\n\n");
+/* ATENTIE */ //printf("ShowProgressDialog!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n\n\n");
 
 	/* we need a dummy listener because the nsExternalAppHandler class verifies that a progress window has been displayed */
 	nsCOMPtr<nsIWebProgressListener> dummy = new nsWebProgressListener;
@@ -73,7 +72,7 @@ NS_IMETHODIMP nsUnknownContentTypeHandler::ShowProgressDialog(nsIHelperAppLaunch
 
 NS_IMETHODIMP nsUnknownContentTypeHandler::Show( nsIHelperAppLauncher *aLauncher, nsISupports *aContext ) {
 	nsresult rv = NS_OK;
-/* ATENTIE */ printf("Show!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n\n\n");
+/* ATENTIE */ //printf("Show!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n\n\n");
 
 	/* try to get the PtMozillawidget_t* pointer form the aContext - use the fact the the WebBrowserContainer is
 		registering itself as nsIDocumentLoaderObserver ( SetDocLoaderObserver ) */
@@ -81,13 +80,15 @@ NS_IMETHODIMP nsUnknownContentTypeHandler::Show( nsIHelperAppLauncher *aLauncher
 	nsCOMPtr<nsIDOMWindow> domw( do_GetInterface( aContext ) );
 	nsIDOMWindow *parent;
 	domw->GetParent( &parent );
-	CWebBrowserContainer *w = GetWebBrowser( parent );
-	PtMozillaWidget_t *moz = ( PtMozillaWidget_t * ) w->m_pOwner;
+	PtWidget_t *w = GetWebBrowser( parent );
+	PtMozillaWidget_t *moz = ( PtMozillaWidget_t * ) w;
 
 	/* go ahead and start the downloading process */
-	nsCOMPtr<nsIWebProgressListener> listener = NS_STATIC_CAST(nsIWebProgressListener*, moz->MyBrowser->WebBrowserContainer );
+//	nsCOMPtr<nsIWebProgressListener> listener = NS_CAST(nsIWebProgressListener *, moz->EmbedRef->mProgress );
+	nsCOMPtr<nsIWebProgressListener> listener;
+	listener = NS_STATIC_CAST(nsIWebProgressListener *, listener);
 	aLauncher->SetWebProgressListener( listener );
-	moz->MyBrowser->WebBrowserContainer->mSkipOnState = 0; /* reinstate nsIWebProgressListener's CWebBrowserContainer::OnStateChange() */
+//	moz->MyBrowser->WebBrowserContainer->mSkipOnState = 0; /* reinstate nsIWebProgressListener's CWebBrowserContainer::OnStateChange() */
 
 	/* get the mime type - need to provide it in the callback info */
 	nsCOMPtr<nsIMIMEInfo> mimeInfo;
@@ -111,8 +112,8 @@ NS_IMETHODIMP nsUnknownContentTypeHandler::Show( nsIHelperAppLauncher *aLauncher
 	cb.action = WWW_ACTION_OK;
 
 	/* pass extra information to the mozilla widget, so that it will know what to do when Pt_ARG_MOZ_UNKNOWN_RESP comes */
-	moz->MyBrowser->app_launcher = aLauncher;
-	moz->MyBrowser->context = aContext;
+	moz->EmbedRef->app_launcher = aLauncher;
+	moz->EmbedRef->context = aContext;
 
 	strcpy( cb.content_type, mimeType );
 	strcpy( cb.url, url );
@@ -123,15 +124,15 @@ NS_IMETHODIMP nsUnknownContentTypeHandler::Show( nsIHelperAppLauncher *aLauncher
 
 /* only Show() method is used - remove this code */
 NS_IMETHODIMP nsUnknownContentTypeHandler::PromptForSaveToFile( nsISupports * aWindowContext, const PRUnichar * aDefaultFile, const PRUnichar * aSuggestedFileExtension, nsILocalFile ** aNewFile ) {
-/* ATENTIE */ printf("PromptForSaveToFile!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n\n\n");
+/* ATENTIE */ //printf("PromptForSaveToFile!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n\n\n");
 	return NS_OK;
 	}
 
 
-CWebBrowserContainer *nsUnknownContentTypeHandler::GetWebBrowser(nsIDOMWindow *aWindow)
+PtWidget_t *nsUnknownContentTypeHandler::GetWebBrowser(nsIDOMWindow *aWindow)
 {
   nsCOMPtr<nsIWebBrowserChrome> chrome;
-  CWebBrowserContainer *val = 0;
+  PtWidget_t *val = 0;
 
   nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService("@mozilla.org/embedcomp/window-watcher;1"));
   if (!wwatch) return nsnull;
@@ -170,8 +171,8 @@ nsWebProgressListener::~nsWebProgressListener() { }
 /* void onProgressChange (in nsIWebProgress aProgress, in nsIRequest aRequest, in long curSelfProgress, in long maxSelfProgress, in long curTotalProgress, in long maxTotalProgress); */
 NS_IMETHODIMP nsWebProgressListener::OnProgressChange(nsIWebProgress *aProgress, nsIRequest *aRequest, PRInt32 curSelfProgress, PRInt32 maxSelfProgress, PRInt32 curTotalProgress, PRInt32 maxTotalProgress) {
 
-/* ATENTIE */ printf("OnProgressChange curSelfProgress=%d maxSelfProgress=%d curTotalProgress=%d maxTotalProgress=%d\n",
-curSelfProgress, maxSelfProgress, curTotalProgress, maxTotalProgress );
+/* ATENTIE */ //printf("OnProgressChange curSelfProgress=%d maxSelfProgress=%d curTotalProgress=%d maxTotalProgress=%d\n",
+//curSelfProgress, maxSelfProgress, curTotalProgress, maxTotalProgress );
 
 	return NS_OK;
 	}
@@ -203,7 +204,7 @@ NS_IMPL_RELEASE( className );
 /* QueryInterface implementation for this class. */
 NS_IMETHODIMP className::QueryInterface( REFNSIID anIID, void **anInstancePtr ) { 
 	nsresult rv = NS_OK; 
-/* ATENTIE */ printf("QueryInterface!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n\n\n");
+/* ATENTIE */ //printf("QueryInterface!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n\n\n");
 
 	/* Check for place to return result. */
 	if( !anInstancePtr ) rv = NS_ERROR_NULL_POINTER;

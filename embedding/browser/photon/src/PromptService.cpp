@@ -51,6 +51,7 @@
 #include "nsIEmbeddingSiteWindow.h"
 #include "nsIFactory.h"
 #include "nsIPromptService.h"
+#include "nsPIPromptService.h"
 #include "nsIServiceManager.h"
 #include "nsIWebBrowserChrome.h"
 #include "nsIWindowWatcher.h"
@@ -61,22 +62,25 @@
 // CPromptService
 //*****************************************************************************
 
-class CPromptService: public nsIPromptService {
+class CPromptService: public nsIPromptService, public nsPIPromptService {
 public:
                  CPromptService();
   virtual       ~CPromptService();
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSIPROMPTSERVICE
+  NS_DECL_NSPIPROMPTSERVICE
 
 private:
 	nsCOMPtr<nsIWindowWatcher> mWWatch;
-	CWebBrowserContainer *GetWebBrowser(nsIDOMWindow *aWindow);
+	PtWidget_t *GetWebBrowser(nsIDOMWindow *aWindow);
+	int InvokeDialogCallback(PtWidget_t *w, int type, char *title, char *text, char *msg, int *value);
 };
 
 //*****************************************************************************
 
-NS_IMPL_ISUPPORTS1(CPromptService, nsIPromptService)
+//NS_IMPL_ISUPPORTS1(CPromptService, nsIPromptService)
+NS_IMPL_ISUPPORTS2(CPromptService, nsIPromptService, nsPIPromptService)
 
 CPromptService::CPromptService() :
 	mWWatch(do_GetService("@mozilla.org/embedcomp/window-watcher;1")) {
@@ -86,10 +90,10 @@ CPromptService::CPromptService() :
 CPromptService::~CPromptService() {
 	}
 
-CWebBrowserContainer *CPromptService::GetWebBrowser(nsIDOMWindow *aWindow)
+PtWidget_t *CPromptService::GetWebBrowser(nsIDOMWindow *aWindow)
 {
   nsCOMPtr<nsIWebBrowserChrome> chrome;
-  CWebBrowserContainer *val = 0;
+  PtWidget_t *val = 0;
 
 	nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService("@mozilla.org/embedcomp/window-watcher;1"));
 	if (!wwatch) return nsnull;
@@ -113,14 +117,43 @@ CWebBrowserContainer *CPromptService::GetWebBrowser(nsIDOMWindow *aWindow)
   return val;
 }
 
+int 
+CPromptService::InvokeDialogCallback(PtWidget_t *w, int type, char *title, char *text, char *msg, int *value)
+{
+    PtMozillaWidget_t   *moz = (PtMozillaWidget_t *) w;
+    PtCallbackList_t    *cb;
+    PtCallbackInfo_t    cbinfo;
+    PtMozillaDialogCb_t dlg;
+    int ret;
+
+    if (!moz->dialog_cb)
+        return NS_OK;
+
+    cb = moz->dialog_cb;
+    memset(&cbinfo, 0, sizeof(cbinfo));
+    cbinfo.reason = Pt_CB_MOZ_DIALOG;
+    cbinfo.cbdata = &dlg;
+
+    memset(&dlg, 0, sizeof(PtMozillaDialogCb_t));
+    dlg.type = type;
+    dlg.title = title;
+    dlg.text = text;
+    if ((type == Pt_MOZ_DIALOG_ALERT_CHECK) || (type == Pt_MOZ_DIALOG_CONFIRM_CHECK))
+        dlg.message = msg;
+
+    ret = PtInvokeCallbackList(cb, (PtWidget_t *)moz, &cbinfo);
+    if (value)
+        *value = dlg.ret_value;
+    return (ret);
+}
 
 NS_IMETHODIMP CPromptService::Alert(nsIDOMWindow *parent, const PRUnichar *dialogTitle,
                                     const PRUnichar *text)
 {
 	nsString 			mTitle(dialogTitle);
 	nsString 			mText(text);
-	CWebBrowserContainer *w = GetWebBrowser( parent );
-	w->InvokeDialogCallback(Pt_MOZ_DIALOG_ALERT, ToNewCString(mTitle), ToNewCString(mText), nsnull, nsnull);
+	PtWidget_t *w = GetWebBrowser( parent );
+	InvokeDialogCallback(w, Pt_MOZ_DIALOG_ALERT, ToNewCString(mTitle), ToNewCString(mText), nsnull, nsnull);
 
 	return NS_OK;
 	}
@@ -135,9 +168,9 @@ NS_IMETHODIMP CPromptService::AlertCheck(nsIDOMWindow *parent,
 	nsString 	mText(text);
 	nsString 	mMsg(checkboxMsg);
 	int 		ret;
-	CWebBrowserContainer *w = GetWebBrowser( parent );
+	PtWidget_t *w = GetWebBrowser( parent );
 
-	w->InvokeDialogCallback(Pt_MOZ_DIALOG_ALERT, ToNewCString(mTitle), ToNewCString(mText), \
+	InvokeDialogCallback(w, Pt_MOZ_DIALOG_ALERT, ToNewCString(mTitle), ToNewCString(mText), \
 			ToNewCString(mMsg), &ret);
 	*checkValue = ret;
 
@@ -152,9 +185,9 @@ NS_IMETHODIMP CPromptService::Confirm(nsIDOMWindow *parent,
 {
 	nsString 			mTitle(dialogTitle);
 	nsString 			mText(text);
-	CWebBrowserContainer *w = GetWebBrowser( parent );
+	PtWidget_t *w = GetWebBrowser( parent );
 
-	if (w->InvokeDialogCallback(Pt_MOZ_DIALOG_CONFIRM, ToNewCString(mTitle), ToNewCString(mText), nsnull, nsnull) == Pt_CONTINUE)
+	if (InvokeDialogCallback(w, Pt_MOZ_DIALOG_CONFIRM, ToNewCString(mTitle), ToNewCString(mText), nsnull, nsnull) == Pt_CONTINUE)
 		*_retval = PR_TRUE;
 	else
 		*_retval = PR_FALSE;
@@ -185,15 +218,16 @@ NS_IMETHODIMP CPromptService::Prompt(nsIDOMWindow *parent,
 	nsString 	mText(text);
 	nsString 	mMsg(checkboxMsg);
 	int 		ret;
-	CWebBrowserContainer *w = GetWebBrowser( parent );
+	PtWidget_t *w = GetWebBrowser( parent );
 
 
-	if (w->InvokeDialogCallback(Pt_MOZ_DIALOG_CONFIRM, ToNewCString(mTitle), ToNewCString(mText), \
+	if (InvokeDialogCallback(w, Pt_MOZ_DIALOG_CONFIRM, ToNewCString(mTitle), ToNewCString(mText), \
 			ToNewCString(mMsg), &ret) == Pt_CONTINUE)
 		*_retval = PR_TRUE;
 	else
 		*_retval = PR_FALSE;
-	*checkValue = ret;
+	if (checkValue)
+		*checkValue = ret;
 
 	return NS_OK;
 }
@@ -207,15 +241,13 @@ NS_IMETHODIMP CPromptService::PromptUsernameAndPassword(nsIDOMWindow *parent,
                                                         PRBool *checkValue,
                                                         PRBool *_retval)
 {
-	CWebBrowserContainer *w = GetWebBrowser( parent );
-	PtMozillaWidget_t 			*moz = (PtMozillaWidget_t *) w->m_pOwner;
+	PtWidget_t *w = GetWebBrowser( parent );
+	PtMozillaWidget_t 			*moz = (PtMozillaWidget_t *) w;
 	PtCallbackList_t 			*cb;
 	PtCallbackInfo_t 			cbinfo;
 	PtMozillaAuthenticateCb_t   auth;
 	nsString 					mTitle(dialogTitle);
 	nsString 					mRealm(checkboxMsg);
-
-/* ATENTIE */ printf( "CWebBrowserContainer::PromptUsernameAndPassword\n" );
 
 	if (!moz->auth_cb)
 	    return NS_OK;
@@ -229,7 +261,7 @@ NS_IMETHODIMP CPromptService::PromptUsernameAndPassword(nsIDOMWindow *parent,
 	auth.title = ToNewCString(mTitle);
 	auth.realm = ToNewCString(mRealm);
 
-  if (PtInvokeCallbackList(cb, (PtWidget_t *)moz, &cbinfo) == Pt_CONTINUE)
+  	if (PtInvokeCallbackList(cb, (PtWidget_t *)moz, &cbinfo) == Pt_CONTINUE)
     {
 		nsCString	mUser(auth.user);
 		nsCString	mPass(auth.pass);
@@ -254,7 +286,6 @@ NS_IMETHODIMP CPromptService::PromptPassword(nsIDOMWindow *parent,
                                              PRBool *checkValue,
                                              PRBool *_retval)
 {
-/* ATENTIE */ printf( "CWebBrowserContainer::PromptPassword\n" );
 	return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -284,6 +315,39 @@ NS_IMETHODIMP CPromptService::ConfirmEx(nsIDOMWindow *parent,
 	if (buttonPressed)
 		*buttonPressed = 0;
 	return NS_OK;
+}
+
+nsresult
+CPromptService::DoDialog(nsIDOMWindow *aParent,
+                   nsIDialogParamBlock *aParamBlock, const char *aChromeURL)
+{
+#if 0
+  NS_ENSURE_ARG(aParamBlock);
+  NS_ENSURE_ARG(aChromeURL);
+  if (!mWatcher)
+    return NS_ERROR_FAILURE;
+
+  nsresult rv = NS_OK;
+
+  // get a parent, if at all possible
+  // (though we'd rather this didn't fail, it's OK if it does. so there's
+  // no failure or null check.)
+  nsCOMPtr<nsIDOMWindow> activeParent; // retain ownership for method lifetime
+  if (!aParent) {
+    mWatcher->GetActiveWindow(getter_AddRefs(activeParent));
+    aParent = activeParent;
+  }
+
+  nsCOMPtr<nsISupports> arguments(do_QueryInterface(aParamBlock));
+  nsCOMPtr<nsIDOMWindow> dialog;
+  rv = mWatcher->OpenWindow(aParent, aChromeURL, "_blank",
+                            "centerscreen,chrome,modal,titlebar", arguments,
+                            getter_AddRefs(dialog));
+
+  return rv;
+#else
+	return NS_OK;
+#endif
 }
  
 //*****************************************************************************
