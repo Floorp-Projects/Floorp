@@ -454,7 +454,7 @@ nsWebShellWindow::HandleEvent(nsGUIEvent *aEvent)
         // event in a different sequence than the deactivate depending on if you're
         // minimizing the window vs. just clicking in a different window to cause
         // the deactivation. Bug #82534
-        if(modeEvent->mSizeMode = nsSizeMode_Minimized) {
+        if(modeEvent->mSizeMode == nsSizeMode_Minimized) {
           nsCOMPtr<nsIDOMWindowInternal> domWindow;
           eventWindow->ConvertWebShellToDOMWindow(webShell, getter_AddRefs(domWindow));
           if (domWindow) {
