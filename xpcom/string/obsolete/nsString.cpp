@@ -74,6 +74,14 @@ nsCString::nsCString()  {
   nsStrPrivate::Initialize(*this,eOneByte);
 }
 
+inline
+nsCString::nsCString(char* aCString, PRUint32 aCapacity, PRUint32 aLength,
+                     eCharSize aCharSize, PRBool aOwnsBuffer) {
+  nsStrPrivate::Initialize(*this, aCString, aCapacity, aLength, aCharSize,
+                           aOwnsBuffer);
+}
+
+
 nsCString::nsCString(const char* aCString) {  
   nsStrPrivate::Initialize(*this,eOneByte);
   Assign(aCString);
@@ -1193,26 +1201,29 @@ NS_LossyConvertUTF16toASCII::NS_LossyConvertUTF16toASCII( const nsAString& aStri
  * Default constructor
  *
  */
-nsCAutoString::nsCAutoString() : nsCString(){
-  nsStrPrivate::Initialize(*this,mBuffer,sizeof(mBuffer)-1,0,eOneByte,PR_FALSE);
+nsCAutoString::nsCAutoString()
+  : nsCString(mBuffer,sizeof(mBuffer)-1,0,eOneByte,PR_FALSE)
+{
   AddNullTerminator(*this);
-
 }
 
-nsCAutoString::nsCAutoString( const nsCString& aString ) : nsCString(){
-  nsStrPrivate::Initialize(*this,mBuffer,sizeof(mBuffer)-1,0,eOneByte,PR_FALSE);
-  AddNullTerminator(*this);
-  Append(aString);
-}
-
-nsCAutoString::nsCAutoString( const nsACString& aString ) : nsCString(){
-  nsStrPrivate::Initialize(*this,mBuffer,sizeof(mBuffer)-1,0,eOneByte,PR_FALSE);
+nsCAutoString::nsCAutoString( const nsCString& aString )
+  : nsCString(mBuffer,sizeof(mBuffer)-1,0,eOneByte,PR_FALSE)
+{
   AddNullTerminator(*this);
   Append(aString);
 }
 
-nsCAutoString::nsCAutoString(const char* aCString) : nsCString() {
-  nsStrPrivate::Initialize(*this,mBuffer,sizeof(mBuffer)-1,0,eOneByte,PR_FALSE);
+nsCAutoString::nsCAutoString( const nsACString& aString )
+  : nsCString(mBuffer,sizeof(mBuffer)-1,0,eOneByte,PR_FALSE)
+{
+  AddNullTerminator(*this);
+  Append(aString);
+}
+
+nsCAutoString::nsCAutoString(const char* aCString)
+  : nsCString(mBuffer,sizeof(mBuffer)-1,0,eOneByte,PR_FALSE)
+{
   AddNullTerminator(*this);
   Append(aCString);
 }
@@ -1221,8 +1232,9 @@ nsCAutoString::nsCAutoString(const char* aCString) : nsCString() {
  * Copy construct from ascii c-string
  * @param   aCString is a ptr to a 1-byte cstr
  */
-nsCAutoString::nsCAutoString(const char* aCString,PRInt32 aLength) : nsCString() {
-  nsStrPrivate::Initialize(*this,mBuffer,sizeof(mBuffer)-1,0,eOneByte,PR_FALSE);
+nsCAutoString::nsCAutoString(const char* aCString,PRInt32 aLength)
+  : nsCString(mBuffer,sizeof(mBuffer)-1,0,eOneByte,PR_FALSE)
+{
   AddNullTerminator(*this);
   Append(aCString,aLength);
 }
@@ -1231,13 +1243,10 @@ nsCAutoString::nsCAutoString(const char* aCString,PRInt32 aLength) : nsCString()
  * Copy construct using an external buffer descriptor
  * @param   aBuffer -- descibes external buffer
  */
-nsCAutoString::nsCAutoString(const CBufDescriptor& aBuffer) : nsCString() {
-  if(!aBuffer.mBuffer) {
-    nsStrPrivate::Initialize(*this,mBuffer,sizeof(mBuffer)-1,0,eOneByte,PR_FALSE);
-  }
-  else {
-    nsStrPrivate::Initialize(*this,aBuffer.mBuffer,aBuffer.mCapacity,aBuffer.mLength,aBuffer.mCharSize,!aBuffer.mStackBased);
-  }
+nsCAutoString::nsCAutoString(const CBufDescriptor& aBuffer)
+  : nsCString(aBuffer.mBuffer,aBuffer.mCapacity,aBuffer.mLength,aBuffer.mCharSize,!aBuffer.mStackBased)
+{
+  NS_ASSERTION(aBuffer.mBuffer, "null buffer");
   if(!aBuffer.mIsConst)
     AddNullTerminator(*this); //this isn't really needed, but it guarantees that folks don't pass string constants.
 }

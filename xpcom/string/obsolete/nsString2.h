@@ -109,6 +109,15 @@ public:
    */
   nsString();
 
+protected:
+  /**
+   * Constructor for the use of derived classes.
+   */
+  inline nsString(PRUnichar* aString, PRUint32 aCapacity, PRUint32 aLength,
+                  eCharSize aCharSize, PRBool aOwnsBuffer);
+
+public:
+
   /**
    * This is our copy constructor 
    * @param   reference to another nsString
