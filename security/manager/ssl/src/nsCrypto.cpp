@@ -373,9 +373,13 @@ nsCrypto::GetScriptPrincipal(JSContext *cx)
     }
   }
 
-  if (!principal) {
-    nsCOMPtr<nsIScriptContext> scriptContext = 
-             NS_REINTERPRET_CAST(nsIScriptContext*,JS_GetContextPrivate(cx));
+  if (principal)
+    return principal;
+
+  if (JS_GetOptions(cx) & JSOPTION_PRIVATE_IS_NSISUPPORTS) {
+    nsISupports* scriptContextSupports =
+      NS_STATIC_CAST(nsISupports*, JS_GetContextPrivate(cx));
+    nsCOMPtr<nsIScriptContext> scriptContext(do_QueryInterface(scriptContextSupports));
     if (scriptContext)
     {
       nsCOMPtr<nsIScriptGlobalObject> global;
