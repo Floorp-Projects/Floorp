@@ -24,11 +24,13 @@
 /*----------------------------------------------------------------------*/
 
 
-
-#include "PersonalToolbar.h"
-#include "ToolbarDrop.h"
-#include "BookmarkMenu.h"
 #include "MozillaApp.h"
+#include "ToolbarDrop.h"
+#ifdef OLD_BOOKMARKS
+#include "PersonalToolbar.h"
+#endif /*OLD_BOOKMARKS*/
+#include "BookmarkMenu.h"
+#include "htrdf.h"
 
 #include <Xfe/Cascade.h>
 #include <Xfe/Button.h>
@@ -179,7 +181,7 @@ XFE_ToolbarDrop::addEntry(const char * /* address */,const char * /* title */)
 {
 }
 //////////////////////////////////////////////////////////////////////////
-
+#if 0
 //
 // XFE_PersonalDrop class
 //
@@ -206,13 +208,12 @@ XFE_PersonalDrop::addEntry(const char * address,const char * title)
 	XP_ASSERT( _personalToolbar != NULL );
 
 	char *		guessed_title = (char *) title;
-	BM_Date		lastAccess = 0;
+	time_t		lastAccess = 0;
 
 	// If no title is given, try to guess a decent one
 	if (!guessed_title)
 	{
 		XFE_BookmarkBase::guessTitle(_personalToolbar->getFrame(),
-									 _personalToolbar->getBookmarkContext(),
 									 address,
 									 isFromSameShell(),
 									 &guessed_title,
@@ -230,7 +231,7 @@ XFE_PersonalDrop::addEntry(const char * address,const char * title)
 	// the personal toolbar will use when adding the new bookmark.
 	if (XfeIsCascade(_dropWidget))
 	{
-		BM_Entry * entry = (BM_Entry *) XfeUserData(_dropWidget);
+		HT_Resource entry = (HT_Resource) XfeUserData(_dropWidget);
 		
 		if (entry != NULL)
 		{
@@ -257,7 +258,7 @@ XFE_PersonalDrop::addEntry(const char * address,const char * title)
 			else if (location == XmINDICATOR_LOCATION_MIDDLE)
 			{
 				// If the folder is empty, then just add the new bm to it
-				if (BM_IsHeader(entry) && !BM_GetChildren(entry))
+				if (HT_IsContainer(entry) && !BM_GetChildren(entry))
 				{
 					_personalToolbar->addEntryToFolder(address,
 													   guessed_title,
@@ -281,7 +282,7 @@ XFE_PersonalDrop::addEntry(const char * address,const char * title)
 	// at the position of the previous item
 	else if (XfeIsButton(_dropWidget))
 	{
-		BM_Entry * entry = (BM_Entry *) XfeUserData(_dropWidget);
+		HT_Resource entry = (HT_Resource) XfeUserData(_dropWidget);
 
 		if (entry)
 		{
@@ -389,7 +390,7 @@ XFE_PersonalDrop::dragMotion()
 			_personalToolbar->setDropTargetItem(target,
 												_dropEventX - XfeX(target));
 
-            // The argument should really be a (BM_Entry *) 
+            // The argument should really be a (HT_Resource) 
 			_personalToolbar->configureIndicatorItem(NULL);
 		}
 		// Otherwise use the last item
@@ -402,7 +403,7 @@ XFE_PersonalDrop::dragMotion()
 			{
 				_personalToolbar->setDropTargetItem(last,10000);
 
-                // The argument should really be a (BM_Entry *) 
+                // The argument should really be a (HT_Resource) 
                 _personalToolbar->configureIndicatorItem(NULL);
 			}
 		}
@@ -437,13 +438,12 @@ XFE_PersonalTabDrop::addEntry(const char * address,const char * title)
 	XP_ASSERT( _personalToolbar != NULL );
 
 	char *		guessed_title = (char *) title;
-	BM_Date		lastAccess = 0;
+	time_t		lastAccess = 0;
 
 	// If no title is given, try to guess a decent one
 	if (!guessed_title)
 	{
 		XFE_BookmarkBase::guessTitle(_personalToolbar->getFrame(),
-									 _personalToolbar->getBookmarkContext(),
 									 address,
 									 isFromSameShell(),
 									 &guessed_title,
@@ -452,12 +452,12 @@ XFE_PersonalTabDrop::addEntry(const char * address,const char * title)
 
 	XP_ASSERT( guessed_title != NULL );
 
-	BM_Entry * personal_folder = XFE_PersonalToolbar::getToolbarFolder();
+	HT_Resource personal_folder = XFE_PersonalToolbar::getToolbarFolder();
 
 	if (personal_folder)
 	{
 		// Access the first entry in the personal toolbar folder
-		BM_Entry * entry = BM_GetChildren(personal_folder);
+		HT_Resource entry = BM_GetChildren(personal_folder);
 
 		// If the first entry exists, add the new entry before it
 		if (entry)
@@ -495,7 +495,7 @@ XFE_PersonalTabDrop::dragIn()
  	{
 		_personalToolbar->setDropTargetItem(first,0);
 		
-		// The argument should really be a (BM_Entry *) 
+		// The argument should really be a (HT_Resource) 
 		_personalToolbar->configureIndicatorItem(NULL);
 	}
 
@@ -516,7 +516,7 @@ XFE_PersonalTabDrop::dragMotion()
 	// Nothing
 }
 //////////////////////////////////////////////////////////////////////////
-
+#endif /*0*/
 
 //
 // XFE_QuickfileDrop class
@@ -543,17 +543,16 @@ XFE_QuickfileDrop::addEntry(const char * address,const char * title)
 	XP_ASSERT( _quickfileMenu != NULL );
 
 	char *		guessed_title = (char *) title;
-	BM_Date		lastAccess = 0;
+	time_t		lastAccess = 0;
 
 	// If no title is given, try to guess a decent one
 	if (!guessed_title)
 	{
-		XFE_BookmarkBase::guessTitle(_quickfileMenu->getFrame(),
-									 _quickfileMenu->getBookmarkContext(),
-									 address,
-									 isFromSameShell(),
-									 &guessed_title,
-									 &lastAccess);
+		XFE_RDFMenuToolbarBase::guessTitle(_quickfileMenu->getFrame(),
+                                           address,
+                                           isFromSameShell(),
+                                           &guessed_title,
+                                           &lastAccess);
 	}
 
 	XP_ASSERT( guessed_title != NULL );

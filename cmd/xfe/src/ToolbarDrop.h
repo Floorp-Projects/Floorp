@@ -30,11 +30,13 @@
 
 #include "DragDrop.h"
 
+#ifdef OLD_BOOKMARKS
 class XFE_PersonalToolbar;
+#endif /*OLD_BOOKMARKS*/
 class XFE_BookmarkMenu;
 
 //
-// XFE_PersonalDrop class
+// XFE_ToolbarDrop class
 //
 
 class XFE_ToolbarDrop : public XFE_DropNetscape
@@ -59,7 +61,7 @@ private:
 //
 // XFE_PersonalDrop class
 //
-
+#if 0
 class XFE_PersonalDrop : public XFE_ToolbarDrop
 {
 public:
@@ -104,7 +106,7 @@ protected:
     virtual void	dragMotion		();
     virtual void	dropComplete	();
 };
-
+#endif /*0*/
 //
 // XFE_QuickfileDrop class
 //
