@@ -28,10 +28,19 @@ function debug(msg)
     //dump(msg+"\n");
 }
 
+function Init() {
+    var tree = document.getElementById("bookmarksTree");
+    debug("adding controller to tree");
+    tree.controllers.appendController(BookmarksController);
+    var children = document.getElementById('treechildren-bookmarks');
+    tree.selectItem(children.firstChild);
+    tree.focus();
+}
+
 var BookmarksController = {
     supportsCommand: function(command)
     {
-        debug("in supports with " + command);
+        debug("bookmarks in supports with " + command);
         switch(command)
         {
             case "cmd_undo":
@@ -49,7 +58,7 @@ var BookmarksController = {
     },
     isCommandEnabled: function(command)
     {
-        debug("in enabled with " + command);
+        debug("bookmarks in enabled with " + command);
         switch(command)
         {
             case "cmd_undo":
@@ -67,7 +76,7 @@ var BookmarksController = {
     },
     doCommand: function(command)
     {
-        debug("in do with " + command);
+        debug("bookmarks in do with " + command);
         switch(command)
         {
             case "cmd_undo":
@@ -92,7 +101,7 @@ var BookmarksController = {
     },
     onEvent: function(event)
     {
-        debug("in event");
+        debug("bookmarks in event");
         // On blur events set the menu item texts back to the normal values
         /*if (event == 'blur' )
           {
@@ -102,19 +111,10 @@ var BookmarksController = {
     }
 };
 
-function Init() {
-    var tree = document.getElementById("bookmarksTree");
-    debug("adding controller to tree");
-    tree.controllers.appendController(BookmarksController);
-    var children = document.getElementById('treechildren-bookmarks');
-    tree.selectItem(children.firstChild);
-}
-
 function CommandUpdate_Bookmarks()
 {
     debug("CommandUpdate_Bookmarks()");
     //goUpdateCommand('button_delete');
-	
     // get selection info from dir pane
     /*
     var oneAddressBookSelected = false;
@@ -131,7 +131,6 @@ function CommandUpdate_Bookmarks()
     //goSetCommandEnabled('cmd_PrintCard', oneAddressBookSelected);
     goSetCommandEnabled('bm_cmd_find', true/*oneAddressBookSelected*/);
 }
-
 
 function copySelectionToClipboard()
 {
@@ -429,7 +428,12 @@ function doDelete(promptFlag)
 
     if (promptFlag == true)
     {
-        var deleteStr = get_localized_string("DeleteItems");
+        var deleteStr = '';
+        if (select_list.length == 1) {
+            deleteStr = get_localized_string("DeleteItem");
+        } else {
+            deleteStr = get_localized_string("DeleteItems");
+        }
         var ok = confirm(deleteStr);
         if (!ok) return false;
     }
@@ -605,25 +609,134 @@ function OpenURL(event, node, root)
     return true;
 }
 
-function doSort(sortColName)
-{
-    var node = document.getElementById(sortColName);
-    // determine column resource to sort on
-    var sortResource = node.getAttribute('resource');
-    if (!node) return false;
 
-    var sortDirection="ascending";
-    var isSortActive = node.getAttribute('sortActive');
-    if (isSortActive == "true")
-    {
-        var currentDirection = node.getAttribute('sortDirection');
-        if (currentDirection == "ascending")
-            sortDirection = "descending";
-        else if (currentDirection == "descending")
-            sortDirection = "natural";
-        else    sortDirection = "ascending";
+function update_sort_menuitems(column, direction) {
+    var unsorted_menuitem = document.getElementById("unsorted_menuitem");
+    var sort_ascending = document.getElementById('sort_ascending');
+    var sort_descending = document.getElementById('sort_descending');
+
+    if (direction == "natural") {
+        unsorted_menuitem.setAttribute('checked','true');
+        sort_ascending.setAttribute('disabled','true');
+        sort_descending.setAttribute('disabled','true');
+        sort_ascending.removeAttribute('checked');
+        sort_descending.removeAttribute('checked');
+    } else {
+        sort_ascending.removeAttribute('disabled');
+        sort_descending.removeAttribute('disabled');
+        if (direction == "ascending") {
+            sort_ascending.setAttribute('checked','true');
+        } else {
+            sort_descending.setAttribute('checked','true');
+        }
+
+        var columns = document.getElementById('theColumns');
+        var column_node = columns.firstChild;
+        var column_name = column.id;
+        var menuitem = document.getElementById('fill_after_this_node');
+        menuitem = menuitem.nextSibling
+        while (1) {
+            var name = menuitem.getAttribute('column_id');
+            debug("update: "+name)
+            if (!name) break;
+            if (column_name == name) {
+                menuitem.setAttribute('checked', 'true');
+                break;
+            }
+            if ("true" == column_node.getAttribute("hidden")) {
+                debug("disabled: " + name);
+                item.setAttribute("disabled", "true");
+            }
+            menuitem = menuitem.nextSibling;
+            column_node = column_node.nextSibling;
+        }
     }
+    enable_sort_menuitems();
+}
 
+function enable_sort_menuitems() {
+    var columns = document.getElementById('theColumns');
+    var column_node = columns.firstChild;
+    var head = document.getElementById('headRow');
+    var tree_column = head.firstChild;
+    var skip_column = document.getElementById('popupCell');
+    var menuitem = document.getElementById('fill_after_this_node');
+    menuitem = menuitem.nextSibling
+    while (column_node) {
+        if (skip_column != tree_column) {
+            if ("true" == column_node.getAttribute("hidden")) {
+                menuitem.setAttribute("disabled", "true");
+            } else {
+                menuitem.removeAttribute("disabled");
+            }
+        }
+        menuitem = menuitem.nextSibling;
+        tree_column = tree_column.nextSibling;
+        column_node = column_node.nextSibling;
+    }
+}
+
+function find_sort_column() {
+    var columns = document.getElementById('theColumns');
+    var column = columns.firstChild;
+    while (column) {
+        if ("true" == column.getAttribute('sortActive')) {
+            return column;
+        }
+        column = column.nextSibling;
+    }
+    return columns.firstChild;
+}
+
+function find_sort_direction(column) {
+    if ("true" == column.getAttribute('sortActive')) {
+        return column.getAttribute('sortDirection');
+    } else {
+        return "natural";
+    }
+}
+
+function SetSortDirection(direction)
+{
+    debug("SetSortDirection("+direction+")");
+    var current_column = find_sort_column();
+    var current_direction = find_sort_direction(current_column);
+    if (current_direction != direction) {
+        sort_column(current_column, direction);
+    }
+}
+
+function SetSortColumn(column_name)
+{
+    debug("SetSortColumn("+column_name+")");
+    var current_column = find_sort_column();
+    var current_direction = find_sort_direction(current_column);
+    var column = document.getElementById(column_name);
+    if (column != current_column || current_direction == "natural") {
+        sort_column(column, "ascending");
+    }
+}
+
+function TriStateColumnSort(column_name)
+{
+    debug("TriStateColumnSort("+column_name+")");
+    var current_column = find_sort_column();
+    var current_direction = find_sort_direction(current_column);
+    var column = document.getElementById(column_name);
+    if (!column) return false;
+    var direction = "ascending";
+    if (column == current_column) {
+        if (current_direction == "ascending") {
+            direction = "descending";
+        } else if (current_direction == "descending") {
+            direction = "natural";
+        }
+    }
+    sort_column(column, direction);
+}
+
+function sort_column(column, direction)
+{
     var isupports_uri = "component://netscape/rdf/xul-sort-service";
     var isupports = Components.classes[isupports_uri].getService();
     if (!isupports) return false;
@@ -631,13 +744,54 @@ function doSort(sortColName)
     if (!xulSortService) return false;
     try
     {
-        xulSortService.Sort(node, sortResource, sortDirection);
+        var sort_resource = column.getAttribute('resource');
+        xulSortService.Sort(column, sort_resource, direction);
     }
     catch(ex)
     {
         debug("Exception calling xulSortService.Sort()");
     }
+    update_sort_menuitems(column, direction);
     return false;
+}
+
+function fillViewMenu(popup)
+{
+  var fill_after = document.getElementById('fill_after_this_node');
+  var fill_before = document.getElementById('fill_before_this_node');
+  var columns = document.getElementById('theColumns');
+  var head = document.getElementById('headRow');
+  var skip_column = document.getElementById('popupCell');
+      
+  if (fill_after.nextSibling == fill_before) {
+      var name_template = get_localized_string("SortMenuItem");
+      var tree_column = head.firstChild;
+      var column_node = columns.firstChild;
+      while (tree_column) {
+          if (skip_column != tree_column) {
+              // Construct an entry for each cell in the row.
+              var column_name = tree_column.getAttribute("value");
+              var item = document.createElement("menuitem");
+              item.setAttribute("type", "radio");
+              item.setAttribute("name", "sort_column");
+              if (column_name == "") {
+                  column_name = tree_column.getAttribute("display");
+              }
+              var name = name_template.replace(/%NAME%/g, column_name);
+              var id = column_node.id;
+              item.setAttribute("value", name);
+              item.setAttribute("oncommand", "SetSortColumn('"+id+"', true);");
+              item.setAttribute("column_id", id);
+              
+              popup.insertBefore(item, fill_before);
+          }
+          tree_column = tree_column.nextSibling;
+          column_node = column_node.nextSibling;
+      }
+  }
+  var sort_column = find_sort_column();
+  var sort_direction = find_sort_direction(sort_column);
+  update_sort_menuitems(sort_column, sort_direction);
 }
 
 function fillContextMenu(name)
@@ -891,8 +1045,9 @@ function doContextCmd(cmdName)
          (cmdName == NC + "command?cmd=deletebookmarkfolder") ||
          (cmdName == NC + "command?cmd=deletebookmarkseparator"))
     {
-        var promptStr = get_localized_string("DeleteItems");
-        if (!confirm(promptStr)) return false;
+        return doDelete(true);
+        //var promptStr = get_localized_string("DeleteItems");
+        //if (!confirm(promptStr)) return false;
     }
     else if (cmdName == NC + "command?cmd=import")
     {
@@ -1107,3 +1262,42 @@ function get_localized_string(name) {
     var bundle = srGetStrBundle(uri);
     return bundle.GetStringFromName(name);
 }
+
+//*==================================================
+// Handy debug routines
+//==================================================
+function dump_attributes(node,depth) {
+  var attributes = node.attributes;
+  var indent = "| | | | | | | | | | | | | | | | | | | | | | | | | | | | | . ";
+
+  if (!attributes || attributes.length == 0) {
+    debug(indent.substr(indent.length - depth*2) + "no attributes");
+  }
+  for (var ii=0; ii < attributes.length; ii++) {
+    var attr = attributes.item(ii);
+    debug(indent.substr(indent.length - depth*2) + attr.name +"="+attr.value);
+  }
+}
+
+function dump_tree(node) {
+  dump_tree_recur(node, 0, 0);
+}
+
+function dump_tree_recur(node, depth, index) {
+  if (!node) {
+    debug("dump_tree: node is null");
+  }
+  var indent = "| | | | | | | | | | | | | | | | | | | | | | | | | | | | | + ";
+  debug(indent.substr(indent.length - depth*2) + index + " " + node.nodeName);
+  if (node.nodeName != "#text") {
+    //debug(" id="+node.getAttribute('id'));
+    dump_attributes(node, depth);
+  }
+  var kids = node.childNodes;
+  for (var ii=0; ii < kids.length; ii++) {
+    dump_tree_recur(kids[ii], depth + 1, ii);
+  }
+}
+//==================================================
+// end of handy debug routines
+//==================================================*/

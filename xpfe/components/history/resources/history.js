@@ -1,97 +1,83 @@
-// -*- Mode: Java -*-
+/* -*- Mode: Java; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ *
+ * The contents of this file are subject to the Netscape Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ *
+ * The Original Code is mozilla.org code.
+ *
+ * The Initial Developer of the Original Code is Netscape
+ * Communications Corporation.  Portions created by Netscape are
+ * Copyright (C) 1998 Netscape Communications Corporation. All
+ * Rights Reserved.
+ *
+ * Contributor(s): 
+ */
 
-function doSort(sortColName)
+// The history window uses JavaScript in bookmarks.js too.
+
+function debug(msg)
 {
-        var node = document.getElementById(sortColName);
-	// determine column resource to sort on
-	var sortResource = node.getAttribute('resource');
-	if (!node)	return(false);
+    // Uncomment for noise
+    //dump(msg+"\n");
+}
 
-        var sortDirection="ascending";
-        var isSortActive = node.getAttribute('sortActive');
-        if (isSortActive == "true")
+function HistoryInit() {
+    var tree = document.getElementById("bookmarksTree");
+    debug("adding controller to tree");
+    tree.controllers.appendController(HistoryController);
+    var children = document.getElementById('treechildren-bookmarks');
+    tree.selectItem(children.firstChild);
+    tree.focus();
+}
+
+var HistoryController = {
+    supportsCommand: function(command)
+    {
+        debug("history in supports with " + command);
+        switch(command)
         {
-                var currentDirection = node.getAttribute('sortDirection');
-                if (currentDirection == "ascending")
-                        sortDirection = "descending";
-                else if (currentDirection == "descending")
-                        sortDirection = "natural";
-                else    sortDirection = "ascending";
+            case "cmd_copy":
+            case "cmd_delete":
+            case "cmd_selectAll":
+                return true;
+            default:
+                return false;
         }
-
-	// get RDF Core service
-	var rdfCore = XPAppCoresManager.Find("RDFCore");
-	if (!rdfCore)
-	{
-		rdfCore = new RDFCore();
-		if (!rdfCore)
-		{
-			return(false);
-		}
-		rdfCore.Init("RDFCore");
-	}
-	// sort!!!
-        rdfCore.doSort(node, sortResource, sortDirection);
-        return(false);
-}
-
-// lifted from bookmarks.js
-var htmlInput = null;
-var saveNode = null;
-var newValue = "";
-var timerID = null;
-var gEditNode = null;
-function OpenURL(event, node)
-{
-    // clear any single-click/edit timeouts
-    if (timerID != null)
+    },
+    isCommandEnabled: function(command)
     {
-        gEditNode = null;
-        clearTimeout(timerID);
-        timerID = null;
-    }
-
-    if (node.getAttribute('container') == "true")
+        debug("history in enabled with " + command);
+        switch(command)
+        {
+            case "cmd_copy":
+            case "cmd_delete":
+            case "cmd_selectAll":
+                return true;
+            default:
+                return false;
+        }
+    },
+    doCommand: function(command)
     {
-        return(false);
-    }
-
-    var url = node.getAttribute('id');
-
-    // Ignore "NC:" urls.
-    if (url.substring(0, 3) == "NC:")
-    {
-        return(false);
-    }
-
-	try
-	{
-		// add support for IE favorites under Win32, and NetPositive URLs under BeOS
-		if (url.indexOf("file://") == 0)
-		{
-			var rdf = Components.classes["component://netscape/rdf/rdf-service"].getService();
-			if (rdf)   rdf = rdf.QueryInterface(Components.interfaces.nsIRDFService);
-			if (rdf)
-			{
-				var fileSys = rdf.GetDataSource("rdf:files");
-				if (fileSys)
-				{
-					var src = rdf.GetResource(url, true);
-					var prop = rdf.GetResource("http://home.netscape.com/NC-rdf#URL", true);
-					var target = fileSys.GetTarget(src, prop, true);
-					if (target)	target = target.QueryInterface(Components.interfaces.nsIRDFLiteral);
-					if (target)	target = target.Value;
-					if (target)	url = target;
-					
-				}
-			}
-		}
-	}
-	catch(ex)
-	{
-	}
-
-   // window.open(url,'history');
-    window.openDialog( getBrowserURL(), "_blank", "chrome,all,dialog=no", url ); // get right sized window
-    return(true);
-}
+        debug("history in do with " + command);
+        switch(command)
+        {
+            case "cmd_copy":
+                doCopy();
+                break;
+            case "cmd_delete":
+                doDelete();
+                break;
+            case "cmd_selectAll":
+                doSelectAll();
+                break;
+        }
+    },
+};
