@@ -91,6 +91,14 @@ private:
     DWORD   mPositionFlag;
     int     mLineIncrement;
     float   mScaleFactor;
+
+    enum InitializationState
+    {
+        eNotInitialized,
+        eInitFailed,
+        eInitSucceeded
+    };
+    static InitializationState sScrollbarInited;
 };
 
 #endif // nsButton_h__

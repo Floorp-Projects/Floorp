@@ -45,6 +45,8 @@
 NS_IMPL_ADDREF(nsScrollbar)
 NS_IMPL_RELEASE(nsScrollbar)
 
+nsScrollbar::InitializationState nsScrollbar::sScrollbarInited = nsScrollbar::eNotInitialized;
+
 //-------------------------------------------------------------------------
 //
 // nsScrollbar constructor
@@ -476,7 +478,25 @@ PRBool nsScrollbar::OnScroll(UINT scrollCode, int cPos)
 //-------------------------------------------------------------------------
 LPCTSTR nsScrollbar::WindowClass()
 {
-    return "SCROLLBAR";
+  static const LPCTSTR subclassedScrollBar = "MozillaScrollBar";
+  static const LPCTSTR classicScrollBarClass = "SCROLLBAR";
+
+  if (eNotInitialized == sScrollbarInited) {
+    sScrollbarInited = eInitFailed;
+    // get the class info for scroll bars
+    WNDCLASS scrollBarClass;
+    if (GetClassInfo(nsToolkit::mDllInstance,
+                     classicScrollBarClass, &scrollBarClass)) {
+      // modify the class name, leave everything else as it is
+      scrollBarClass.lpszClassName = subclassedScrollBar;
+      if (::RegisterClassA(&scrollBarClass))
+        sScrollbarInited = eInitSucceeded;
+    }
+  }
+
+  if (eInitSucceeded == sScrollbarInited) 
+    return subclassedScrollBar;
+  return classicScrollBarClass;
 }
 
 
@@ -522,7 +542,25 @@ NS_METHOD nsScrollbar::GetBounds(nsRect &aRect)
 //-------------------------------------------------------------------------
 LPCWSTR nsScrollbar::WindowClassW()
 {
-    return L"SCROLLBAR";
+  static const LPCWSTR subclassedScrollBar = L"MozillaScrollBar";
+  static const LPCWSTR classicScrollBarClass = L"SCROLLBAR";
+
+  if (eNotInitialized == sScrollbarInited) {
+    sScrollbarInited = eInitFailed;
+    // get the class info for scroll bars
+    WNDCLASSW scrollBarClass;
+    if (GetClassInfoW(nsToolkit::mDllInstance,
+                      classicScrollBarClass, &scrollBarClass)) {
+      // modify the class name, leave everything else as it is
+      scrollBarClass.lpszClassName = subclassedScrollBar;
+      if (::RegisterClassW(&scrollBarClass))
+        sScrollbarInited = eInitSucceeded;
+    }
+  }
+
+  if (eInitSucceeded == sScrollbarInited) 
+    return subclassedScrollBar;
+  return classicScrollBarClass;
 }
 
 #endif
