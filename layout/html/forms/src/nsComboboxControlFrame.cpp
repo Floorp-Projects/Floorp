@@ -88,7 +88,9 @@
 static NS_DEFINE_CID(kTextNodeCID,   NS_TEXTNODE_CID);
 static NS_DEFINE_CID(kHTMLElementFactoryCID,   NS_HTML_ELEMENT_FACTORY_CID);
 
+#ifdef MOZ_XUL
 #include "nsIXULDocument.h" // Temporary fix for Bug 36558
+#endif
 
 #ifdef DO_NEW_REFLOW
 #include "nsIFontMetrics.h"
@@ -392,8 +394,12 @@ nsComboboxControlFrame::Init(nsIPresContext*  aPresContext,
   nsCOMPtr<nsIDocument> document;
   nsresult rv = aContent->GetDocument(*getter_AddRefs(document));
   if (NS_SUCCEEDED(rv) && document) {
+#ifdef MOZ_XUL
     nsCOMPtr<nsIXULDocument> xulDoc(do_QueryInterface(document));
     mGoodToGo = xulDoc?PR_FALSE:PR_TRUE;
+#else
+    mGoodToGo = PR_TRUE;
+#endif
   }
   //-------------------------------
   // Done - Temporary fix for Bug 36558

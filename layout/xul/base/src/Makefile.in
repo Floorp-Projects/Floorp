@@ -24,9 +24,6 @@ topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
 
-DIRS		= tree \
-                  grid
-
 include $(DEPTH)/config/autoconf.mk
 
 MODULE		= layout
@@ -52,9 +49,34 @@ REQUIRES	= xpcom \
 		  js \
 		  $(NULL)
 
+ifdef MOZ_XUL
+DIRS		= tree grid
+endif
+
 CPPSRCS		= \
-		nsScrollBoxObject.cpp \
 		nsScrollBoxFrame.cpp \
+		nsRootBoxFrame.cpp \
+		nsBox.cpp \
+		nsBoxFrame.cpp \
+		nsBoxLayoutState.cpp \
+		nsBoxToBlockAdaptor.cpp \
+		nsContainerBox.cpp \
+		nsSprocketLayout.cpp \
+		nsStackFrame.cpp \
+		nsStackLayout.cpp \
+		nsBoxLayout.cpp \
+		nsScrollbarFrame.cpp \
+		nsScrollbarButtonFrame.cpp \
+		nsButtonBoxFrame.cpp \
+		nsSliderFrame.cpp \
+		nsNativeScrollbarFrame.cpp \
+		nsRepeatService.cpp \
+		nsXULTooltipListener.cpp \
+		$(NULL)
+
+ifdef MOZ_XUL
+CPPSRCS		+= \
+		nsScrollBoxObject.cpp \
 		nsBrowserBoxObject.cpp \
 		nsIFrameBoxObject.cpp \
 		nsEditorBoxObject.cpp \
@@ -63,30 +85,16 @@ CPPSRCS		= \
 		nsListBoxObject.cpp \
 		nsBoxObject.cpp \
 		nsImageBoxFrame.cpp \
-		nsRootBoxFrame.cpp \
 		nsDocElementBoxFrame.cpp \
-		nsBox.cpp \
-		nsBoxLayoutState.cpp \
-		nsBoxToBlockAdaptor.cpp \
-		nsButtonBoxFrame.cpp \
-		nsContainerBox.cpp \
 		nsLeafBoxFrame.cpp \
-		nsSprocketLayout.cpp \
-		nsBoxLayout.cpp \
-		nsStackLayout.cpp \
 		nsTextBoxFrame.cpp \
-		nsStackFrame.cpp \
 		nsSpringFrame.cpp \
 		nsGroupBoxFrame.cpp \
 		nsFrameNavigator.cpp \
 		nsSplitterFrame.cpp \
 		nsGrippyFrame.cpp \
 		nsDeckFrame.cpp \
-		nsBoxFrame.cpp \
 		nsProgressMeterFrame.cpp \
-		nsScrollbarFrame.cpp \
-		nsScrollbarButtonFrame.cpp \
-		nsSliderFrame.cpp \
 		nsMenuPopupFrame.cpp \
 		nsMenuFrame.cpp \
 		nsMenuBarFrame.cpp \
@@ -94,16 +102,13 @@ CPPSRCS		= \
 		nsMenuListener.cpp \
 		nsMenuDismissalListener.cpp \
 		nsPopupSetFrame.cpp \
-		nsRepeatService.cpp \
 		nsTitleBarFrame.cpp \
 		nsResizerFrame.cpp \
-		nsXULTooltipListener.cpp \
 		nsListBoxBodyFrame.cpp \
 		nsListItemFrame.cpp \
 		nsListBoxLayout.cpp \
-		nsNativeScrollbarFrame.cpp \
 		$(NULL)
-
+endif
 
 include $(topsrcdir)/config/config.mk
 

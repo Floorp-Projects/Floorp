@@ -61,7 +61,6 @@
 
 #include "nsRDFCID.h"
 #include "nsIRDFResource.h"
-#include "nsIXULContentSink.h"
 #include "nsIDocStreamLoaderFactory.h"
 
 #include "imgILoader.h"

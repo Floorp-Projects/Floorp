@@ -63,8 +63,10 @@
 #include "nsIServiceManager.h"
 #include "nsIStandardURL.h"
 #include "nsIStreamListener.h"
+#ifdef MOZ_XUL
 #include "nsIXULPrototypeCache.h"
 #include "nsIXULPrototypeDocument.h"
+#endif
 #include "nsNetCID.h"
 #include "nsXPIDLString.h"
 #include "nsString.h"
@@ -75,7 +77,9 @@
 static NS_DEFINE_CID(kEventQueueServiceCID,      NS_EVENTQUEUESERVICE_CID);
 static NS_DEFINE_CID(kIOServiceCID,              NS_IOSERVICE_CID);
 static NS_DEFINE_CID(kStandardURLCID,            NS_STANDARDURL_CID);
+#ifdef MOZ_XUL
 static NS_DEFINE_CID(kXULPrototypeCacheCID,      NS_XULPROTOTYPECACHE_CID);
+#endif
 
 // This comes from nsChromeRegistry.cpp
 extern nsIChromeRegistry* gChromeRegistry;
@@ -644,6 +648,7 @@ nsChromeProtocolHandler::NewChannel(nsIURI* aURI,
     nsresult rv;
     nsCOMPtr<nsIChannel> result;
 
+#ifdef MOZ_XUL
     // Check the prototype cache to see if we've already got the
     // document in the cache.
     nsCOMPtr<nsIXULPrototypeCache> cache =
@@ -675,7 +680,9 @@ nsChromeProtocolHandler::NewChannel(nsIURI* aURI,
         rv = nsCachedChromeChannel::Create(aURI, getter_AddRefs(result));
         if (NS_FAILED(rv)) return rv;
     }
-    else {
+    else
+#endif
+        {
         // Miss. Resolve the chrome URL using the registry and do a
         // normal necko load.
         //nsXPIDLCString oldSpec;
@@ -777,8 +784,10 @@ nsChromeProtocolHandler::NewChannel(nsIURI* aURI,
 
                 if (file) {
                     rv = fastLoadServ->AddDependency(file);
+#ifdef MOZ_XUL
                     if (NS_FAILED(rv))
                         cache->AbortFastLoads();
+#endif
                 }
             }
         }

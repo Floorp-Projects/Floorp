@@ -59,12 +59,21 @@
 #include "nsIScriptGlobalObject.h"
 #include "nsIScrollableView.h"
 #include "nsIServiceManager.h"
-#include "nsITreeSelection.h"
 #include "nsIViewManager.h"
 #include "nsLayoutAtoms.h"
 #include "nsReadableUtils.h"
 #include "nsRootAccessible.h"
+#ifdef MOZ_XUL
 #include "nsXULTreeAccessible.h"
+#include "nsITreeSelection.h"
+#include "nsIXULDocument.h"
+#endif
+#include "nsAccessibilityService.h"
+#include "nsISelectionPrivate.h"
+#include "nsICaret.h"
+#include "nsIAccessibleCaret.h"
+#include "nsIDOMHTMLInputElement.h"
+#include "nsAccessibleEventData.h"
 
 NS_INTERFACE_MAP_BEGIN(nsRootAccessible)
   NS_INTERFACE_MAP_ENTRY(nsIAccessibleEventReceiver)
@@ -413,6 +422,7 @@ NS_IMETHODIMP nsRootAccessible::HandleEvent(nsIDOMEvent* aEvent)
     else if (NS_FAILED(mAccService->GetAccessibleFor(targetNode, getter_AddRefs(accessible))))
       return NS_OK;
 
+#ifdef MOZ_XUL
     // If it's a tree element, need the currently selected item
     PRInt32 treeIndex = -1;
     nsCOMPtr<nsITreeBoxObject> treeBox;
@@ -432,17 +442,20 @@ NS_IMETHODIMP nsRootAccessible::HandleEvent(nsIDOMEvent* aEvent)
         }
       }
     }
+#endif
 
     nsAutoString eventType;
     aEvent->GetType(eventType);
 
 #ifndef MOZ_ACCESSIBILITY_ATK
+#ifdef MOZ_XUL
     // tree event
     if (treeItemAccessible && 
         (eventType.EqualsIgnoreCase("DOMMenuItemActive") || eventType.EqualsIgnoreCase("select"))) {
       HandleEvent(nsIAccessibleEventListener::EVENT_FOCUS, treeItemAccessible, nsnull);
       return NS_OK;
     }
+#endif
 
     if (eventType.EqualsIgnoreCase("focus") || eventType.EqualsIgnoreCase("DOMMenuItemActive")) { 
       if (optionTargetNode &&

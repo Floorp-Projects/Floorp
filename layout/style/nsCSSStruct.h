@@ -115,11 +115,9 @@ typedef nsCSSStruct nsRuleDataStruct;
 #define NS_CSS_AURAL_SID  \
 {0x166d2bb0, 0x5a3b, 0x11d2, {0x80, 0x3b, 0x00, 0x60, 0x08, 0x15, 0x9b, 0x5a}}
 
-#ifdef INCLUDE_XUL
 // {FC075D62-B1CF-47a1-AF4E-CB40E11A4314}
 #define NS_CSS_XUL_SID  \
 { 0xfc075d62, 0xb1cf, 0x47a1, { 0xaf, 0x4e, 0xcb, 0x40, 0xe1, 0x1a, 0x43, 0x14 } }
-#endif
 
 #ifdef MOZ_SVG
 // {9A41A036-027B-45ef-89C9-6E32797839E7}
@@ -502,7 +500,6 @@ struct nsCSSAural : public nsCSSStruct  { // NEW
 struct nsRuleDataAural : public nsCSSAural {
 };
 
-#ifdef INCLUDE_XUL
 struct nsCSSXUL : public nsCSSStruct  {
   nsCSSXUL(void);
   nsCSSXUL(const nsCSSXUL& aCopy);
@@ -523,7 +520,6 @@ struct nsCSSXUL : public nsCSSStruct  {
 
 struct nsRuleDataXUL : public nsCSSXUL {
 };
-#endif
 
 #ifdef MOZ_SVG
 struct nsCSSSVG : public nsCSSStruct {
@@ -570,9 +566,7 @@ struct nsCSSDeclContains
     nsCSSBitField mHasUserInterface:1;    //  8
     nsCSSBitField mHasTable:1;            //  9
     nsCSSBitField mHasContent:1;          // 10
-#if defined(INCLUDE_XUL)
     nsCSSBitField mHasXUL:1;              // 11
-#endif
     nsCSSBitField mHasBreaks:1;           // 12
     nsCSSBitField mHasPage:1;             // 13
     nsCSSBitField mHasAural:1;            // 14
@@ -600,14 +594,8 @@ struct nsCSSDeclContains
 #define CSSDECLIDX_UserInterface(decl) ((decl).mContains.mHasUserInterface + CSSDECLIDX_Position(decl))
 #define CSSDECLIDX_Table(decl)         ((decl).mContains.mHasTable + CSSDECLIDX_UserInterface(decl))
 #define CSSDECLIDX_Content(decl)       ((decl).mContains.mHasContent + CSSDECLIDX_Table(decl))
-#if defined(INCLUDE_XUL)
 #define CSSDECLIDX_XUL(decl)           ((decl).mContains.mHasXUL + CSSDECLIDX_Content(decl))
-#endif
-#if !defined(INCLUDE_XUL)
-#define CSSDECLIDX_Breaks(decl)        ((decl).mContains.mHasBreaks + CSSDECLIDX_Content(decl))
-#else
 #define CSSDECLIDX_Breaks(decl)        ((decl).mContains.mHasBreaks + CSSDECLIDX_XUL(decl))
-#endif
 #define CSSDECLIDX_Page(decl)          ((decl).mContains.mHasPage + CSSDECLIDX_Breaks(decl))
 #define CSSDECLIDX_Aural(decl)         ((decl).mContains.mHasAural + CSSDECLIDX_Page(decl))
 #if defined(MOZ_SVG)

@@ -169,7 +169,6 @@ static const char* kPrintingPromptService = "@mozilla.org/embedcomp/printingprom
 #include "nsIDOMHTMLAreaElement.h"
 #include "nsIDOMHTMLLinkElement.h"
 #include "nsIDOMHTMLImageElement.h"
-#include "nsIXULDocument.h"  // Temporary code for Bug 136185
 #include "nsIContentViewerContainer.h"
 #include "nsIContentViewer.h"
 

@@ -4792,12 +4792,15 @@ dnl disable xul
 dnl ========================================================
 MOZ_XUL=1
 MOZ_ARG_DISABLE_BOOL(xul,
-[  --disable-xul           Disable XUL (standalone modules only)],
+[  --disable-xul           Disable XUL],
     MOZ_XUL= )
 if test "$MOZ_XUL"; then
   AC_DEFINE(MOZ_XUL)
-  AC_DEFINE(INCLUDE_XUL)
+else
+  dnl remove extensions that require XUL
+  MOZ_EXTENSIONS=`echo $MOZ_EXTENSIONS | sed -e 's/inspector//' -e 's/venkman//' -e 's/irc//'`
 fi
+
 AC_SUBST(MOZ_XUL)
 
 dnl ========================================================

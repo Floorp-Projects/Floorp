@@ -90,7 +90,7 @@ CSS_ANON_BOX(viewport, ":-moz-viewport")
 CSS_ANON_BOX(viewportScroll, ":-moz-viewport-scroll")
 CSS_ANON_BOX(selectScrolledContent, ":-moz-select-scrolled-content")
 
-#ifdef INCLUDE_XUL
+#ifdef MOZ_XUL
 CSS_ANON_BOX(moztreerow, ":-moz-tree-row")
 CSS_ANON_BOX(moztreecell, ":-moz-tree-cell")
 CSS_ANON_BOX(moztreecolumn, ":-moz-tree-column")

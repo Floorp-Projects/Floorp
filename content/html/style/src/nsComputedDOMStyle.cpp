@@ -1827,7 +1827,6 @@ nsComputedDOMStyle::GetAppearance(nsIFrame *aFrame,
 }
 
 
-#ifdef INCLUDE_XUL
 nsresult
 nsComputedDOMStyle::GetBoxAlign(nsIFrame *aFrame,
                                 nsIDOMCSSValue** aValue)
@@ -1959,8 +1958,6 @@ nsComputedDOMStyle::GetBoxPack(nsIFrame *aFrame,
 
   return CallQueryInterface(val, aValue);
 }
-
-#endif // INCLUDE_XUL
 
 nsresult
 nsComputedDOMStyle::GetBoxSizing(nsIFrame *aFrame,
@@ -3628,14 +3625,12 @@ nsComputedDOMStyle::GetQueryablePropertyMap(PRUint32* aLength)
     COMPUTED_STYLE_MAP_ENTRY(_moz_border_radius_bottomRight,BorderRadiusBottomRight),
     COMPUTED_STYLE_MAP_ENTRY(_moz_border_radius_topLeft,    BorderRadiusTopLeft),
     COMPUTED_STYLE_MAP_ENTRY(_moz_border_radius_topRight,   BorderRadiusTopRight),
-#ifdef INCLUDE_XUL
     COMPUTED_STYLE_MAP_ENTRY(box_align,                     BoxAlign),
     COMPUTED_STYLE_MAP_ENTRY(box_direction,                 BoxDirection),
     COMPUTED_STYLE_MAP_ENTRY(box_flex,                      BoxFlex),
     COMPUTED_STYLE_MAP_ENTRY(box_ordinal_group,             BoxOrdinalGroup),
     COMPUTED_STYLE_MAP_ENTRY(box_orient,                    BoxOrient),
     COMPUTED_STYLE_MAP_ENTRY(box_pack,                      BoxPack),
-#endif
     COMPUTED_STYLE_MAP_ENTRY(box_sizing,                    BoxSizing),
     COMPUTED_STYLE_MAP_ENTRY(float_edge,                    FloatEdge),
     COMPUTED_STYLE_MAP_ENTRY(opacity,                       Opacity),

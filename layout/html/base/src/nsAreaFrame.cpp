@@ -46,7 +46,7 @@
 #include "nsHTMLParts.h"
 #include "nsLayoutAtoms.h"
 
-#ifdef INCLUDE_XUL
+#ifdef MOZ_XUL
 #include "nsINameSpaceManager.h"
 #include "nsXULAtoms.h"
 #include "nsIEventStateManager.h"
@@ -75,7 +75,7 @@ nsAreaFrame::nsAreaFrame()
 {
 }
 
-#ifdef INCLUDE_XUL
+#ifdef MOZ_XUL
 
 // If you make changes to this function, check its counterparts 
 // in nsBoxFrame and nsTextBoxFrame
@@ -137,7 +137,7 @@ nsAreaFrame::RegUnregAccessKey(nsIPresContext* aPresContext,
 /////////////////////////////////////////////////////////////////////////////
 // nsIFrame
 
-#ifdef INCLUDE_XUL
+#ifdef MOZ_XUL
 NS_IMETHODIMP
 nsAreaFrame::Init(nsIPresContext*  aPresContext,
                   nsIContent*      aContent,

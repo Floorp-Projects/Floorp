@@ -44,7 +44,9 @@
 #include "nsIDOMNSDocument.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMDocumentType.h"
+#ifdef MOZ_XUL
 #include "nsIXULDocument.h"
+#endif
 #include "nsINameSpaceManager.h"
 #include "nsIWebNavigation.h"
 #include "nsIURI.h"
@@ -153,15 +155,17 @@ NS_IMETHODIMP nsDocAccessible::GetMimeType(nsAString& aMimeType)
 
 NS_IMETHODIMP nsDocAccessible::GetDocType(nsAString& aDocType)
 {
-  nsCOMPtr<nsIXULDocument> xulDoc(do_QueryInterface(mDocument));
   nsCOMPtr<nsIDOMDocument> domDoc(do_QueryInterface(mDocument));
   nsCOMPtr<nsIDOMDocumentType> docType;
 
+#ifdef MOZ_XUL
+  nsCOMPtr<nsIXULDocument> xulDoc(do_QueryInterface(mDocument));
   if (xulDoc) {
     aDocType = NS_LITERAL_STRING("window"); // doctype not implemented for XUL at time of writing - causes assertion
     return NS_OK;
-  }
-  else if (domDoc && NS_SUCCEEDED(domDoc->GetDoctype(getter_AddRefs(docType))) && docType) {
+  } else
+#endif
+  if (domDoc && NS_SUCCEEDED(domDoc->GetDoctype(getter_AddRefs(docType))) && docType) {
     return docType->GetName(aDocType);
   }
 

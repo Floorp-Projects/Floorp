@@ -473,9 +473,7 @@ nsStyleContext::CalcStyleDifference(nsStyleContext* aOther)
   // FRAMECHANGE Structs: Display, XUL, Content, UserInterface,
   // Visibility, Quotes
   DO_STRUCT_DIFFERENCE(Display);
-#ifdef INCLUDE_XUL
   DO_STRUCT_DIFFERENCE(XUL);
-#endif
   DO_STRUCT_DIFFERENCE(Content);
   DO_STRUCT_DIFFERENCE(UserInterface);
   DO_STRUCT_DIFFERENCE(Visibility);
@@ -805,7 +803,6 @@ void nsStyleContext::DumpRegressionData(nsIPresContext* aPresContext, FILE* out,
     (int)uiReset->mResizer);
 
   // XUL
-#ifdef INCLUDE_XUL
   IndentBy(out,aIndent);
   const nsStyleXUL* xul = (const nsStyleXUL*)GetStyleData(eStyleStruct_XUL);
   fprintf(out, "<xul data=\"%d %d %d %d %d %d",
@@ -816,7 +813,6 @@ void nsStyleContext::DumpRegressionData(nsIPresContext* aPresContext, FILE* out,
     (int)xul->mBoxPack,
     (int)xul->mBoxOrdinal);
   fprintf(out, "\" />\n");
-#endif
 
   // SVG
 #ifdef MOZ_SVG

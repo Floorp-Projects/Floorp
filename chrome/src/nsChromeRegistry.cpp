@@ -76,7 +76,6 @@
 #include "nsIWindowMediator.h"
 #include "nsIDocument.h"
 #include "nsIDOMDocument.h"
-#include "nsIXULPrototypeCache.h"
 #include "nsIStyleSheet.h"
 #include "nsIHTMLCSSStyleSheet.h"
 #include "nsIHTMLStyleSheet.h"
@@ -86,7 +85,10 @@
 #include "nsIStyleSet.h"
 #include "nsISupportsArray.h"
 #include "nsIDocumentObserver.h"
+#ifdef MOZ_XUL
 #include "nsIXULDocument.h"
+#include "nsIXULPrototypeCache.h"
+#endif
 #include "nsIIOService.h"
 #include "nsIResProtocolHandler.h"
 #include "nsLayoutCID.h"
@@ -1415,11 +1417,13 @@ nsresult nsChromeRegistry::FlushCaches()
 {
   nsresult rv;
 
+#ifdef MOZ_XUL
   // Flush the style sheet cache completely.
   nsCOMPtr<nsIXULPrototypeCache> xulCache =
            do_GetService("@mozilla.org/xul/xul-prototype-cache;1", &rv);
   if (NS_SUCCEEDED(rv) && xulCache)
     xulCache->FlushSkinFiles();
+#endif
 
   // Flush the new imagelib image chrome cache.
   nsCOMPtr<imgICache> imageCache(do_GetService("@mozilla.org/image/cache;1", &rv));
@@ -2926,6 +2930,7 @@ nsChromeRegistry::ReloadChrome()
   // Do a reload of all top level windows.
   nsresult rv = NS_OK;
 
+#ifdef MOZ_XUL
   // Flush the cache completely.
   nsCOMPtr<nsIXULPrototypeCache> xulCache =
     do_GetService("@mozilla.org/xul/xul-prototype-cache;1", &rv);
@@ -2933,6 +2938,7 @@ nsChromeRegistry::ReloadChrome()
     rv = xulCache->Flush();
     if (NS_FAILED(rv)) return rv;
   }
+#endif
 
   nsCOMPtr<nsIStringBundleService> bundleService =
     do_GetService(kStringBundleServiceCID, &rv);

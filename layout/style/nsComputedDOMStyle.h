@@ -142,14 +142,12 @@ private:
   nsresult GetAppearance(nsIFrame *aFrame, nsIDOMCSSValue** aValue);
 
   /* Box properties */
-#ifdef INCLUDE_XUL
   nsresult GetBoxAlign(nsIFrame *aFrame, nsIDOMCSSValue** aValue);
   nsresult GetBoxDirection(nsIFrame *aFrame, nsIDOMCSSValue** aValue);
   nsresult GetBoxFlex(nsIFrame *aFrame, nsIDOMCSSValue** aValue);
   nsresult GetBoxOrdinalGroup(nsIFrame *aFrame, nsIDOMCSSValue** aValue);
   nsresult GetBoxOrient(nsIFrame *aFrame, nsIDOMCSSValue** aValue);
   nsresult GetBoxPack(nsIFrame *aFrame, nsIDOMCSSValue** aValue);
-#endif // INCLUDE_XUL
   nsresult GetBoxSizing(nsIFrame *aFrame, nsIDOMCSSValue** aValue);
 
   nsresult GetWidth(nsIFrame *aFrame, nsIDOMCSSValue** aValue);

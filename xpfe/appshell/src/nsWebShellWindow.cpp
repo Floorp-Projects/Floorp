@@ -64,7 +64,6 @@
 #include "nsIWebNavigation.h"
 #include "nsIWindowWatcher.h"
 
-#include "nsIXULPopupListener.h"
 #include "nsIDOMXULElement.h"
 
 #include "nsGUIEvent.h"

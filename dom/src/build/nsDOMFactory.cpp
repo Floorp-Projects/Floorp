@@ -47,7 +47,9 @@
 #include "nsIObserverService.h"
 #include "nsIJSContextStack.h"
 #include "nsIExceptionService.h"
+#ifdef MOZ_XUL
 #include "nsIXULPrototypeCache.h"
+#endif
 #include "nsCRT.h"
 
 #include "nsScriptNameSpaceManager.h"
@@ -215,6 +217,7 @@ nsDOMSOFactory::Observe(nsISupports *aSubject,
                         const PRUnichar *someData)
 {
   if (!nsCRT::strcmp(aTopic, NS_XPCOM_SHUTDOWN_OBSERVER_ID)) {
+#ifdef MOZ_XUL
     // Flush the XUL cache since it holds JS roots, and we're about to
     // start the final GC.
     static NS_DEFINE_CID(kXULPrototypeCacheCID, NS_XULPROTOTYPECACHE_CID);
@@ -222,6 +225,7 @@ nsDOMSOFactory::Observe(nsISupports *aSubject,
 
     if (cache)
       cache->Flush();
+#endif
 
     nsCOMPtr<nsIThreadJSContextStack> stack =
       do_GetService("@mozilla.org/js/xpc/ContextStack;1");

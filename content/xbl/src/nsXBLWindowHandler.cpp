@@ -65,10 +65,7 @@
 #include "nsIServiceManager.h"
 #include "nsIDOMDocument.h"
 #include "nsISelectionController.h"
-
-#ifdef INCLUDE_XUL
 #include "nsXULAtoms.h"
-#endif
 
 class nsXBLSpecialDocInfo
 {

@@ -49,7 +49,9 @@
 #include "nsHTMLTokens.h"
 #include "nsIURI.h"
 #include "nsTextFragment.h"
+#ifdef MOZ_XUL
 #include "nsXULElement.h"
+#endif
 #include "nsXULAtoms.h"
 #include "nsXBLProtoImplProperty.h"
 #include "nsXBLProtoImplMethod.h"
@@ -727,10 +729,13 @@ nsXBLContentSink::CreateElement(const PRUnichar** aAtts, PRUint32 aAttsCount,
                                 nsINodeInfo* aNodeInfo, PRUint32 aLineNumber,
                                 nsIContent** aResult, PRBool* aAppendContent)
 {
+#ifdef MOZ_XUL
   if (!aNodeInfo->NamespaceEquals(kNameSpaceID_XUL)) {
+#endif
     return nsXMLContentSink::CreateElement(aAtts, aAttsCount, aNodeInfo,
                                            aLineNumber, aResult,
                                            aAppendContent);
+#ifdef MOZ_XUL
   }
 
   *aAppendContent = PR_TRUE;
@@ -750,6 +755,7 @@ nsXBLContentSink::CreateElement(const PRUnichar** aAtts, PRUint32 aAttsCount,
 
   // Following this function call, the prototype's ref count will be 1.
   return nsXULElement::Create(prototype, mDocument, PR_FALSE, aResult);
+#endif
 }
 
 nsresult 
@@ -762,6 +768,7 @@ nsXBLContentSink::AddAttributes(const PRUnichar** aAtts,
   return nsXMLContentSink::AddAttributes(aAtts, aContent);
 }
 
+#ifdef MOZ_XUL
 nsresult
 nsXBLContentSink::AddAttributesToXULPrototype(const PRUnichar **aAtts, 
                                               PRUint32 aAttsCount, 
@@ -848,3 +855,4 @@ nsXBLContentSink::AddAttributesToXULPrototype(const PRUnichar **aAtts,
 
   return NS_OK;
 }
+#endif
