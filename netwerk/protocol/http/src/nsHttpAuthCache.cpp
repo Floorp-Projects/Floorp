@@ -291,7 +291,7 @@ nsEntryList::GetCredentialsForPath(const char *path,
     PRInt32 i;
     for (i=0; i<mList.Count(); ++i) {
         entry = (nsEntry *) mList[i];
-        if (PL_strncmp(path, entry->Path(), PL_strlen(entry->Path())))
+        if (!PL_strncmp(path, entry->Path(), PL_strlen(entry->Path())))
             break;
         entry = nsnull;
     }
