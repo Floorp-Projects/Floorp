@@ -195,19 +195,19 @@ NSPR_LIBS = \
 	$(DIST)/lib/libnspr4.$(DLL_SUFFIX)
 
 I18N_COMPONENTS = \
-	$(DIST)/lib/mimetype.$(DLL_SUFFIX) \
-	$(DIST)/lib/necko.$(DLL_SUFFIX) \
-	$(DIST)/lib/nkfile.$(DLL_SUFFIX) \
-	$(DIST)/lib/nkres.$(DLL_SUFFIX) \
-	$(DIST)/lib/nslocale.$(DLL_SUFFIX) \
-	$(DIST)/lib/strres.$(DLL_SUFFIX) \
-	$(DIST)/lib/ucharuti.$(DLL_SUFFIX) \
-	$(DIST)/lib/uconv.$(DLL_SUFFIX) \
-	$(DIST)/lib/ucvlatin.$(DLL_SUFFIX) \
+	$(DIST)/lib/libmimetype.$(DLL_SUFFIX) \
+	$(DIST)/lib/libnecko.$(DLL_SUFFIX) \
+	$(DIST)/lib/libnecko_file.$(DLL_SUFFIX) \
+	$(DIST)/lib/libnecko_resource.$(DLL_SUFFIX) \
+	$(DIST)/lib/libnslocale.$(DLL_SUFFIX) \
+	$(DIST)/lib/libstrres.$(DLL_SUFFIX) \
+	$(DIST)/lib/libunicharutil.$(DLL_SUFFIX) \
+	$(DIST)/lib/libuconv.$(DLL_SUFFIX) \
+	$(DIST)/lib/libucvlatin.$(DLL_SUFFIX) \
 	$(NULL)
 
 XPCOM_LIBS = \
-	$(DIST)/lib/xpcom.$(DLL_SUFFIX) \
+	$(DIST)/lib/libxpcom.$(DLL_SUFFIX) \
 	$(NULL)
 
 ifeq ($(OS_ARCH), SunOS)
