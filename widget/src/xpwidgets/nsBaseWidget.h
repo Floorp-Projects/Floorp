@@ -31,9 +31,6 @@
 #include "nsISupportsArray.h"
 #include "nsCOMPtr.h"
 
-#define NSRGB_2_COLOREF(color) \
-            RGB(NS_GET_R(color),NS_GET_G(color),NS_GET_B(color))
-
 /**
  * Common widget implementation used as base class for native
  * or crossplatform implementations of Widgets. 
@@ -94,7 +91,10 @@ public:
     virtual void            FreeNativeData(void * data, PRUint32 aDataType) {}//~~~
 protected:
 
-    virtual void            DrawScaledRect(nsIRenderingContext& aRenderingContext, const nsRect & aRect, float aScale, float aAppUnits);
+    virtual void            DrawScaledRect(nsIRenderingContext& aRenderingContext,
+                                           const nsRect & aRect,
+                                           float aScale,
+                                           float aAppUnits);
     virtual void            DrawScaledLine(nsIRenderingContext& aRenderingContext, 
                                            nscoord aSX, nscoord aSY, nscoord aEX, nscoord aEY, 
                                            float   aScale, float aAppUnits, PRBool aIsHorz);
