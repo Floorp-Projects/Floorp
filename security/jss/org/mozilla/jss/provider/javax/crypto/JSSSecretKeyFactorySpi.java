@@ -347,6 +347,7 @@ class JSSSecretKeyFactorySpi extends SecretKeyFactorySpi {
         }
         System.out.println("generated PBE keys are the same");
 
+/* XXX JDK 1.4 ONLY 
         // now try with a JDK 1.4 PBEKeySpec
         PBEKeySpec keySpec = new PBEKeySpec(pw, salt, iterationCount);
         newKey = (SecretKeyFacade) keyFact.generateSecret(keySpec);
@@ -354,6 +355,7 @@ class JSSSecretKeyFactorySpi extends SecretKeyFactorySpi {
             throw new Exception("generated PBE keys are different");
         }
         System.out.println("generated PBE keys are the same");
+*/
         
         System.exit(0);
       } catch(Throwable t) {
