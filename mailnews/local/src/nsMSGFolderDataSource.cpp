@@ -39,9 +39,13 @@
 #include "nsRDFCursorUtils.h"
 #include "nsIMessage.h"
 #include "nsMsgFolder.h"
+#include "nsIMsgRFC822Parser.h"
+#include "nsMsgBaseCID.h"
+
 
 static NS_DEFINE_CID(kRDFServiceCID,              NS_RDFSERVICE_CID);
 static NS_DEFINE_CID(kRDFInMemoryDataSourceCID,    NS_RDFINMEMORYDATASOURCE_CID);
+static NS_DEFINE_CID(kMsgRFC822ParserCID,			NS_MSGRFC822PARSER_CID); 
 
 // we need this because of an egcs 1.0 (and possibly gcc) compiler bug
 // that doesn't allow you to call ::nsISupports::GetIID() inside of a class
@@ -194,6 +198,12 @@ nsMSGFolderDataSource::QueryInterface(REFNSIID iid, void** result)
     AddRef();
     return NS_OK;
   }
+	else if(iid.Equals(nsIFolderListener::GetIID()))
+	{
+    *result = NS_STATIC_CAST(nsIFolderListener*, this);
+    AddRef();
+    return NS_OK;
+	}
   return NS_NOINTERFACE;
 }
 
@@ -272,6 +282,7 @@ NS_IMETHODIMP nsMSGFolderDataSource::GetTarget(nsIRDFResource* source,
   if (! tv)
     return NS_ERROR_RDF_NO_VALUE;
 
+
   nsCOMPtr<nsIMsgFolder> folder(do_QueryInterface(source, &rv));
   if (NS_SUCCEEDED(rv)) {
     if (peq(kNC_Name, property)) {
@@ -324,7 +335,6 @@ NS_IMETHODIMP nsMSGFolderDataSource::GetTarget(nsIRDFResource* source,
 
   nsCOMPtr<nsIMessage> message(do_QueryInterface(source, &rv));
   if (NS_SUCCEEDED(rv)) {
-
     if (peq(kNC_Name, property) ||
         peq(kNC_Subject, property)) {
       nsAutoString subject;
@@ -333,9 +343,10 @@ NS_IMETHODIMP nsMSGFolderDataSource::GetTarget(nsIRDFResource* source,
     }
     else if (peq(kNC_Sender, property))
     {
-      nsAutoString sender;
+      nsAutoString sender, senderUserName;
       rv = message->GetProperty("sender", sender);
-      createNode(sender, target);
+			if(NS_SUCCEEDED(rv = GetSenderName(sender, &senderUserName)))
+				createNode(senderUserName, target);
     }
     else if (peq(kNC_Date, property))
     {
@@ -345,8 +356,34 @@ NS_IMETHODIMP nsMSGFolderDataSource::GetTarget(nsIRDFResource* source,
     }
     return rv;
   }
-  
+	
   return rv;
+}
+
+//sender is the string we need to parse.  senderuserName is the parsed user name we get back.
+nsresult nsMSGFolderDataSource::GetSenderName(nsAutoString& sender, nsAutoString *senderUserName)
+{
+	//XXXOnce we get the csid, use Intl version
+	nsIMsgRFC822Parser *parser; 
+	nsresult rv = NS_OK;
+	if(NS_SUCCEEDED(rv = nsComponentManager::CreateInstance(kMsgRFC822ParserCID, 
+													NULL, 
+													nsIMsgRFC822Parser::GetIID(), 
+													(void **) &parser)))
+	{
+		char *name;
+		char *senderStr = sender.ToNewCString();
+		if(NS_SUCCEEDED(rv = parser->ExtractRFC822AddressName (senderStr, &name)))
+		{
+			*senderUserName = name;
+		}
+		if(name)
+			PL_strfree(name);
+		if(senderStr)
+			delete[] senderStr;
+		NS_RELEASE(parser);
+	}
+	return rv;
 }
 
 NS_IMETHODIMP nsMSGFolderDataSource::GetSources(nsIRDFResource* property,
@@ -364,6 +401,7 @@ NS_IMETHODIMP nsMSGFolderDataSource::GetTargets(nsIRDFResource* source,
                                                 nsIRDFAssertionCursor** targets)
 {
   nsresult rv = NS_ERROR_FAILURE;
+
 
   nsIMsgFolder* folder;
   nsIMessage* message;
@@ -473,6 +511,33 @@ NS_IMETHODIMP nsMSGFolderDataSource::RemoveObserver(nsIRDFObserver* n)
   return NS_OK;
 }
 
+nsresult nsMSGFolderDataSource::NotifyObservers(nsIRDFResource *subject, nsIRDFResource *property,
+												nsIRDFNode *object, PRBool assert)
+{
+	if(mObservers)
+	{
+		PRInt32 numObservers = mObservers->Count();
+		nsIRDFObserver *observer = nsnull;
+		for(PRInt32 i = 0; i < numObservers; i++)
+		{
+			//Get each observer and tell it an assert or unassert happened.
+			observer = (nsIRDFObserver*)mObservers->ElementAt(i);
+			if(observer)
+			{
+				if(assert)
+				{
+					observer->OnAssert(subject, property, object);
+				}
+				else
+				{
+					observer->OnUnassert(subject, property, object);
+				}
+			}
+		}
+	}
+	return NS_OK;
+}
+
 NS_IMETHODIMP nsMSGFolderDataSource::ArcLabelsIn(nsIRDFNode* node,
                                                  nsIRDFArcsInCursor** labels)
 {
@@ -487,6 +552,7 @@ NS_IMETHODIMP nsMSGFolderDataSource::ArcLabelsOut(nsIRDFResource* source,
   NS_NewISupportsArray(&arcs);
   if (arcs == nsnull)
     return NS_ERROR_OUT_OF_MEMORY;
+
   nsIMsgFolder* folder;
   nsIMessage* message;
   if (NS_SUCCEEDED(source->QueryInterface(nsIMsgFolder::GetIID(), (void**)&folder)))
@@ -560,10 +626,28 @@ NS_IMETHODIMP nsMSGFolderDataSource::DoCommand(const char* aCommand,
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-/*
 NS_IMETHODIMP nsMSGFolderDataSource::OnItemAdded(nsIFolder *parentFolder, nsISupports *item)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+	nsIMessage *message;
+	nsIRDFResource *parentResource;
+
+	if(NS_SUCCEEDED(parentFolder->QueryInterface(nsIRDFResource::GetIID(), (void**)&parentResource)))
+	{
+		//If we are adding a message
+		if(NS_SUCCEEDED(item->QueryInterface(nsIMessage::GetIID(), (void**)&message)))
+		{
+			nsIRDFNode *itemNode;
+			if(NS_SUCCEEDED(item->QueryInterface(nsIRDFNode::GetIID(), (void**)&itemNode)))
+			{
+				//Notify folders that a message was added.
+				NotifyObservers(parentResource, kNC_MessageChild, itemNode, PR_TRUE);
+				NS_RELEASE(itemNode);
+			}
+			NS_RELEASE(message);
+		}
+		NS_RELEASE(parentResource);
+	}
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsMSGFolderDataSource::OnItemRemoved(nsIFolder *parentFolder, nsISupports *item)
@@ -576,4 +660,4 @@ NS_IMETHODIMP nsMSGFolderDataSource::OnItemPropertyChanged(nsISupports *item, ch
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-*/
+

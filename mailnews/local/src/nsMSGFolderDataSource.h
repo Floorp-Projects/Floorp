@@ -23,11 +23,12 @@
 #include "nsIRDFNode.h"
 #include "nsIRDFCursor.h"
 #include "nsFileSpec.h"
+#include "nsIFolderListener.h"
 
 /**
  * The mail data source.
  */
-class nsMSGFolderDataSource : public nsIRDFMSGFolderDataSource 
+class nsMSGFolderDataSource : public nsIRDFMSGFolderDataSource, public nsIFolderListener
 {
 private:
   char*         mURI;
@@ -103,7 +104,19 @@ public:
   NS_IMETHOD DoCommand(const char* aCommand,
                        nsIRDFResource* aCommandTarget);
 
+  NS_IMETHOD OnItemAdded(nsIFolder *parentFolder, nsISupports *item);
+
+  NS_IMETHOD OnItemRemoved(nsIFolder *parentFolder, nsISupports *item);
+
+  NS_IMETHOD OnItemPropertyChanged(nsISupports *item, char *property, char *value);
+
   // caching frequently used resources
+protected:
+
+	nsresult  NotifyObservers(nsIRDFResource *subject, nsIRDFResource *property,
+														nsIRDFNode *object, PRBool assert);
+	nsresult  GetSenderName(nsAutoString& sender, nsAutoString *senderUserName);
+
   static nsIRDFResource* kNC_Child;
   static nsIRDFResource* kNC_MessageChild;
   static nsIRDFResource* kNC_Folder;
@@ -114,5 +127,7 @@ public:
   static nsIRDFResource* kNC_Subject;
   static nsIRDFResource* kNC_Sender;
   static nsIRDFResource* kNC_Date;
+
+
 };
 

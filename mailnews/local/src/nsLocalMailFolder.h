@@ -28,8 +28,10 @@
 #include "nsMsgFolder.h" /* include the interface we are going to support */
 #include "nsMailDatabase.h"
 #include "nsFileSpec.h"
+#include "nsIDBChangeListener.h"
 
-class nsMsgLocalMailFolder : public nsMsgFolder, public nsIMsgLocalMailFolder
+class nsMsgLocalMailFolder : public nsMsgFolder, public nsIMsgLocalMailFolder,
+															public nsIDBChangeListener
 {
 public:
 	nsMsgLocalMailFolder(void);
@@ -104,7 +106,18 @@ public:
 	// nsIMsgMailFolder
   NS_IMETHOD GetPath(nsNativeFileSpec& aPathName);
 
+	//nsIDBChangeListener
+	NS_IMETHOD OnKeyChange(nsMsgKey aKeyChanged, int32 aFlags, 
+                         nsIDBChangeListener * aInstigator);
+  NS_IMETHOD OnKeyDeleted(nsMsgKey aKeyChanged, int32 aFlags, 
+                          nsIDBChangeListener * aInstigator);
+  NS_IMETHOD OnKeyAdded(nsMsgKey aKeyChanged, int32 aFlags, 
+                        nsIDBChangeListener * aInstigator);
+  NS_IMETHOD OnAnnouncerGoingAway(nsIDBChangeAnnouncer * instigator);
+
+
 protected:
+	nsresult ParseFolder(nsFileSpec& path);
   nsresult CreateSubFolders(void);
 
 protected:
@@ -113,8 +126,8 @@ protected:
 	PRBool		mHaveReadNameFromDB;
 	PRBool		mGettingMail;
 	PRBool		mInitialized;
-  nsMailDatabase* mMailDatabase;
-
+	nsISupportsArray *mMessages;
+	nsMailDatabase* mMailDatabase;
 };
 
 #endif // nsMsgLocalMailFolder_h__

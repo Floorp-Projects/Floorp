@@ -28,15 +28,22 @@
 #include "nsIServiceManager.h"
 #include "nsIEnumerator.h"
 #include "nsMailDatabase.h"
+#include "nsIMailboxService.h"
+#include "nsParseMailbox.h"
+#include "nsIFolderListener.h"
 #include "nsCOMPtr.h"
 #include "nsIRDFService.h"
+#include "nsIRDFDataSource.h"
 #include "nsRDFCID.h"
 
 // we need this because of an egcs 1.0 (and possibly gcc) compiler bug
 // that doesn't allow you to call ::nsISupports::GetIID() inside of a class
 // that multiply inherits from nsISupports
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
-static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
+static NS_DEFINE_CID(kRDFServiceCID,							NS_RDFSERVICE_CID);
+static NS_DEFINE_CID(kMailboxServiceCID,					NS_MAILBOXSERVICE_CID);
+////////////////////////////////////////////////////////////////////////////////
+
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -132,6 +139,25 @@ nsMsgLocalMailFolder::CreateSubFolders(void)
   return rv;
 }
 
+
+//run the url to parse the mailbox
+nsresult nsMsgLocalMailFolder::ParseFolder(nsFileSpec& path)
+{
+	nsresult rv = NS_OK;
+
+	nsIMailboxService *mailboxService;
+	rv = nsServiceManager::GetService(kMailboxServiceCID, nsIMailboxService::GetIID(),
+																	(nsISupports**)&mailboxService);
+	if (NS_FAILED(rv)) return rv; 
+	nsMsgMailboxParser *parser = new nsMsgMailboxParser;
+	if(!parser)
+		return NS_ERROR_OUT_OF_MEMORY;
+	rv = mailboxService->ParseMailbox(path, parser, nsnull, nsnull);
+
+	nsServiceManager::ReleaseService(kMailboxServiceCID, mailboxService);
+	return rv;
+}
+
 NS_IMETHODIMP
 nsMsgLocalMailFolder::Enumerate(nsIEnumerator* *result)
 {
@@ -221,23 +247,38 @@ nsMsgLocalMailFolder::ReplaceElement(nsISupports* element, nsISupports* newEleme
 NS_IMETHODIMP
 nsMsgLocalMailFolder::GetMessages(nsIEnumerator* *result)
 {
-  if (mMailDatabase == nsnull) {
+  if (mMailDatabase == nsnull)
+  {
     nsNativeFileSpec path;
     nsresult rv = GetPath(path);
     if (NS_FAILED(rv)) return rv;
-	
-    PRBool upgrading = PR_FALSE;
-#ifdef DEBUG_warren
-    upgrading = PR_TRUE;
-#endif
-    rv = nsMailDatabase::Open(path, PR_TRUE, &mMailDatabase, upgrading);
-    if (NS_FAILED(rv)) return rv;
 
-#ifdef DEBUG
-    mMailDatabase->PrePopulate();
-#endif
+	nsresult folderOpen;
+	if(!NS_SUCCEEDED(folderOpen = nsMailDatabase::Open(path, PR_TRUE, &mMailDatabase, PR_FALSE)) &&
+			folderOpen == NS_MSG_ERROR_FOLDER_SUMMARY_OUT_OF_DATE)
+	{
+		// if it's out of date then reopen with upgrade.
+		if(!NS_SUCCEEDED(rv = nsMailDatabase::Open(path, PR_TRUE, &mMailDatabase, PR_TRUE)))
+			return rv;
+	}
+
+	if(mMailDatabase)
+	{
+
+		mMailDatabase->AddListener(this);
+
+		// if we have to regenerate the folder, run the parser url.
+		if(folderOpen == NS_MSG_ERROR_FOLDER_SUMMARY_MISSING || folderOpen == NS_MSG_ERROR_FOLDER_SUMMARY_OUT_OF_DATE)
+		{
+			if(NS_FAILED(rv = ParseFolder(path)))
+				return rv;
+
+
+		}
+	}
   }
   return mMailDatabase->EnumerateMessages(result);
+
 }
 
 NS_IMETHODIMP nsMsgLocalMailFolder::BuildFolderURL(char **url)
@@ -840,4 +881,60 @@ NS_IMETHODIMP nsMsgLocalMailFolder::GetPath(nsFileSpec& aPathName)
   }
   aPathName = mPath;
   return NS_OK;
+}
+
+NS_IMETHODIMP nsMsgLocalMailFolder::OnKeyChange(nsMsgKey aKeyChanged, int32 aFlags, 
+                         nsIDBChangeListener * aInstigator)
+{
+	return NS_OK;
+}
+
+NS_IMETHODIMP nsMsgLocalMailFolder::OnKeyDeleted(nsMsgKey aKeyChanged, int32 aFlags, 
+                          nsIDBChangeListener * aInstigator)
+{
+	return NS_OK;
+}
+
+NS_IMETHODIMP nsMsgLocalMailFolder::OnKeyAdded(nsMsgKey aKeyChanged, int32 aFlags, 
+                        nsIDBChangeListener * aInstigator)
+{
+	nsIMessage *pMessage;
+	mMailDatabase->GetMsgHdrForKey(aKeyChanged, &pMessage);
+	nsString author, subject;
+	nsISupports *msgSupports;
+	if(NS_SUCCEEDED(pMessage->QueryInterface(kISupportsIID, (void**)&msgSupports)))
+	{
+	
+		//XXXX This is a hack for the moment.  I'm assuming the only listener is our rdf:mailnews datasource.
+		//In reality anyone should be able to listen to folder changes. 
+		nsIRDFService* rdfService = nsnull;
+		nsIRDFDataSource* datasource = nsnull;
+
+		nsresult rv = nsServiceManager::GetService(kRDFServiceCID,
+												nsIRDFService::GetIID(),
+												(nsISupports**) &rdfService);
+		if(NS_SUCCEEDED(rv))
+		{
+			if(NS_SUCCEEDED(rv = rdfService->GetDataSource("rdf:mailnews", &datasource)))
+			{
+				nsIFolderListener *folderListener;
+				if(NS_SUCCEEDED(datasource->QueryInterface(nsIFolderListener::GetIID(), (void**)&folderListener)))
+				{
+					folderListener->OnItemAdded(this, msgSupports);
+					NS_RELEASE(folderListener);
+				}
+				NS_RELEASE(datasource);
+			}
+			nsServiceManager::ReleaseService(kRDFServiceCID, rdfService);
+		}
+		NS_RELEASE(msgSupports);
+
+	}
+
+	return NS_OK;
+}
+
+NS_IMETHODIMP nsMsgLocalMailFolder::OnAnnouncerGoingAway(nsIDBChangeAnnouncer * instigator)
+{
+	return NS_OK;
 }
