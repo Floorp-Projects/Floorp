@@ -2686,7 +2686,7 @@ HTMLContentSink::ProcessMETATag(const nsIParserNode& aNode)
         it->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::content, result);
         if (result.Length() > 0) {
 #ifdef NECKO
-          NS_ASSERTION(0, "how does necko add mime headers?");
+          NS_WARNING("need to fix how necko adds mime headers (in HTMLContentSink::ProcessMETATag)");
 #else
           if (nsnull != httpUrl) {
             char* value = result.ToNewCString(), *csHeader;
