@@ -34,6 +34,9 @@
 #include "nsIParserService.h"
 #include "plhash.h"
 #include "jsapi.h"
+#include "rdf.h"
+#include "nsRDFCID.h"
+#include "nsIRDFService.h"
 
 class nsContentList;
 class nsIHTMLStyleSheet;
@@ -235,6 +238,9 @@ protected:
   PLHashTable *mNamedItems;
 
   nsIParser *mParser;
+  
+  static nsrefcnt gRefCntRDFService;
+  static nsIRDFService* gRDF;
 
   // The parser service -- used for NodeIsBlock:
   nsCOMPtr<nsIParserService> mParserService;
