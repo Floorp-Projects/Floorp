@@ -132,7 +132,7 @@ nsMsgSendLater::~nsMsgSendLater()
 
   if (mSendListener)
     NS_RELEASE(mSendListener);
-  NS_RELEASE(mIdentity);
+  NS_IF_RELEASE(mIdentity);
 }
 
 // Stream is done...drive on!
@@ -653,13 +653,10 @@ nsMsgSendLater::SendUnsentMessages(nsIMsgIdentity                   *identity,
                                    nsIMsgSendLaterListener          **listenerArray,
                                    void                             *tagData)
 {
- // RICHIE - for now hack it mIdentity = identity;
-
-nsIMsgIdentity *GetHackIdentity();
-
-  mIdentity = GetHackIdentity();
+  mIdentity = identity;
   if (!mIdentity)
     return NS_ERROR_FAILURE;
+  NS_ADDREF(mIdentity);
 
   // Set the listener array 
   if (listenerArray)
@@ -677,40 +674,6 @@ nsIMsgIdentity *GetHackIdentity();
 
   mFirstTime = PR_TRUE;
 	return StartNextMailFileSend();
-}
-
-nsIMsgIdentity *
-GetHackIdentity()
-{
-nsresult rv;
-
-  NS_WITH_SERVICE(nsIMsgMailSession, mailSession, kCMsgMailSessionCID, &rv);
-  if (NS_FAILED(rv)) 
-  {
-    printf("Failure on Mail Session Init!\n");
-    return nsnull;
-  }  
-
-  nsCOMPtr<nsIMsgIdentity>        identity = nsnull;
-  nsCOMPtr<nsIMsgAccountManager>  accountManager;
-
-  rv = mailSession->GetAccountManager(getter_AddRefs(accountManager));
-  if (NS_FAILED(rv)) 
-  {
-    printf("Failure getting account Manager!\n");
-    return nsnull;
-  }  
-
-  rv = mailSession->GetCurrentIdentity(getter_AddRefs(identity));
-  if (NS_FAILED(rv)) 
-  {
-    printf("Failure getting Identity!\n");
-    return nsnull;
-  }  
-
-  nsIMsgIdentity *tPtr = identity;
-  NS_ADDREF(tPtr);
-  return tPtr;
 }
 
 nsresult
