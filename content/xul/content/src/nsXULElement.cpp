@@ -4011,7 +4011,8 @@ nsXULElement::GetBoxObject(nsIBoxObject** aResult)
     contractID += "-tree;1";
   else if (tag.get() == nsXULAtoms::scrollbox)
     contractID += "-scrollbox;1";
-
+  else
+    contractID += ";1";
 
   mBoxObject = do_CreateInstance(contractID);
   if (!mBoxObject)
