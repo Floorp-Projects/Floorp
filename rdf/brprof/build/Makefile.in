@@ -34,7 +34,7 @@ CPPSRCS		= nsBrowsingProfileFactory.cpp
 
 REQUIRES	= xpcom
 
-SHARED_LIBRARY_LIBS = $(DIST)/lib/libbrprof_s.a
+SHARED_LIBRARY_LIBS = $(DIST)/lib/libbrprof_s.$(LIB_SUFFIX)
 
 EXTRA_DSO_LDOPTS = \
 		$(MKSHLIB_FORCE_ALL) \

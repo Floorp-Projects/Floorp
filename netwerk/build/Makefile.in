@@ -33,9 +33,9 @@ IS_COMPONENT	= 1
 CPPSRCS		= nsNetModule.cpp
 
 SHARED_LIBRARY_LIBS = \
-		$(DIST)/lib/libneckobase_s.a \
-		$(DIST)/lib/libneckodns_s.a \
-		$(DIST)/lib/libneckosocket_s.a \
+		$(DIST)/lib/libneckobase_s.$(LIB_SUFFIX) \
+		$(DIST)/lib/libneckodns_s.$(LIB_SUFFIX) \
+		$(DIST)/lib/libneckosocket_s.$(LIB_SUFFIX) \
 		$(NULL)
 
 LOCAL_INCLUDES	= \

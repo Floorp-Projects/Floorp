@@ -28,6 +28,8 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= raptor
 LIBRARY_NAME	= raptorwebwidget
+SHORT_LIBNAME	= webshell
+EXTRA_DSO_LIBS	= jsdom docshell
 
 ifeq ($(OS_ARCH),Rhapsody)
 IS_COMPONENT	= 1
@@ -42,14 +44,14 @@ CPPSRCS		= \
 EXTRA_DSO_LDOPTS = \
 		$(MOZ_TIMER_LIBS) \
 		-L$(DIST)/bin \
-		-ljsdom \
-		-lmozjs \
+		$(MOZ_JS_LIBS) \
 		$(MOZ_COMPONENT_LIBS) \
-		-ldocshell \
 		$(NULL)
 ifdef MOZ_PERF
 EXTRA_DSO_LDOPTS += \
-		$(DIST)/lib/libmozutil_s.a \
+		$(MKSHLIB_FORCE_ALL) \
+		$(DIST)/lib/libmozutil_s.$(LIB_SUFFIX) \
+		$(MKSHLIB_UNFORCE_ALL) \
 		$(NULL)
 endif
 
