@@ -111,10 +111,10 @@ protected:
   nsCOMPtr<nsIStyleContext>    mGrippyNormalStyle;
   nsCOMPtr<nsIStyleContext>    mGrippyRolloverStyle;
   
-  PRUint32 mSumOfToolbarHeights;
+  unsigned long mSumOfToolbarHeights;
   TabInfo  mGrippies[10];          //*** make this a list or something!!!!!!
-  PRUint32 mNumToolbars;
-  PRUint32 mGrippyHilighted;     // used to indicate which grippy the mouse is inside
+  unsigned short mNumToolbars;
+  short mGrippyHilighted;          // used to indicate which grippy the mouse is inside
 
     // pass-by-value not allowed for a toolbox because it corresponds 1-to-1
     // with an element in the UI.
