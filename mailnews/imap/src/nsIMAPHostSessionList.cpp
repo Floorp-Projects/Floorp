@@ -20,11 +20,6 @@
 #include "nsIMAPHostSessionList.h"
 #include "nsIMAPBodyShell.h"
 #include "nsIMAPNamespace.h"
-
-#ifdef XP_PC
-#include <windows.h>    // for InterlockedIncrement
-#endif
-
 #include "nsISupportsUtils.h"
 
 nsIMAPHostInfo::nsIMAPHostInfo(const char *hostName, const char *userName)
