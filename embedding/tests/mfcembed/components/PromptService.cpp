@@ -167,7 +167,8 @@ NS_IMETHODIMP CPromptService::ConfirmCheck(nsIDOMWindow *parent,
                                            PRBool *checkValue,
                                            PRBool *_retval)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  // TODO implement proper confirmation checkbox dialog
+  return Confirm(parent, dialogTitle, text, _retval);
 }
 
 NS_IMETHODIMP CPromptService::Prompt(nsIDOMWindow *parent,
