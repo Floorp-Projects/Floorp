@@ -52,6 +52,7 @@
 #include "nsIRDFObserver.h"
 #include "nsIRDFService.h"
 #include "nsIServiceManager.h"
+#include "nsIStreamListener.h"
 #include "nsINameSpaceManager.h"
 #include "nsIServiceManager.h"
 #include "nsISupportsArray.h"
