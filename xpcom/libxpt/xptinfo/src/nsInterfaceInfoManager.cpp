@@ -24,7 +24,11 @@
 #include <sys/stat.h>
 #endif
 #include "nscore.h"
+
+// XXX We need to make this work on all platforms
+#ifndef XP_MAC
 #include "nsSpecialSystemDirectory.h" 
+#endif
 
 #include "nsISupports.h"
 #include "nsIInterfaceInfoManager.h"
