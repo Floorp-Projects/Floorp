@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: certificate.c,v $ $Revision: 1.29 $ $Date: 2002/02/02 20:01:18 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: certificate.c,v $ $Revision: 1.30 $ $Date: 2002/02/04 22:34:22 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef NSSPKI_H
@@ -716,7 +716,12 @@ nssBestCertificate_SetArgs
   NSSPolicies *policies
 )
 {
-    best->time = (timeOpt) ? timeOpt : NSSTime_Now(NULL);
+    if (timeOpt) {
+	best->time = timeOpt;
+    } else {
+	NSSTime_Now(&best->sTime);
+	best->time = &best->sTime;
+    }
     best->usage = usage;
     best->policies = policies;
     best->cert = NULL;

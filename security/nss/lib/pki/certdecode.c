@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: certdecode.c,v $ $Revision: 1.10 $ $Date: 2002/01/08 18:51:16 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: certdecode.c,v $ $Revision: 1.11 $ $Date: 2002/02/04 22:34:22 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef PKIT_H
@@ -195,10 +195,6 @@ nssDecodedCert_Destroy
 }
 
 /* Of course none of this belongs here */
-
-struct NSSTimeStr {
-    PRTime prTime;
-};
 
 /* how bad would it be to have a static now sitting around, updated whenever
  * this was called?  would avoid repeated allocs...

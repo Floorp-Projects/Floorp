@@ -35,7 +35,7 @@
 #define PKIT_H
 
 #ifdef DEBUG
-static const char PKIT_CVS_ID[] = "@(#) $RCSfile: pkit.h,v $ $Revision: 1.9 $ $Date: 2001/12/14 17:32:21 $ $Name:  $";
+static const char PKIT_CVS_ID[] = "@(#) $RCSfile: pkit.h,v $ $Revision: 1.10 $ $Date: 2002/02/04 22:34:22 $ $Name:  $";
 #endif /* DEBUG */
 
 /*
@@ -175,7 +175,9 @@ struct NSSCryptoContextStr
     nssCertificateStore *certStore;
 };
 
-struct NSSTimeStr;
+struct NSSTimeStr {
+    PRTime prTime;
+};
 
 struct NSSPoliciesStr;
 
