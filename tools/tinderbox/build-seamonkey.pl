@@ -10,7 +10,7 @@ use Sys::Hostname;
 use POSIX qw(sys_wait_h strftime);
 use Cwd;
 
-$Version = '$Revision: 1.59 $ ';
+$Version = '$Revision: 1.60 $ ';
 
 
 sub PrintUsage {
@@ -784,10 +784,10 @@ sub RunBloatTest {
   # Clear the alarm so we don't kill the next test!
   alarm 0;
 
-  print LOG "Client quit Bloat Test with status $status\n";
+  print LOG "$mozillaBinary quit Bloat Test with status $status\n";
   if ($status <= 0) {
-    print LOG "Error: $Binary has crashed or quit on the BloatTest.  Turn the tree orange now.\n";
-    print LOG "----------- failure Output from mozilla-bin for BloatTest --------------- \n";
+    print LOG "Error: $mozillaBinary has crashed or quit on the BloatTest.  Turn the tree orange now.\n";
+    print LOG "----------- failure Output from $mozillaBinary for BloatTest --------------- \n";
     open READRUNLOG, "$BinaryLog";
     while (<READRUNLOG>) {
       print $_;
@@ -818,7 +818,7 @@ sub RunBloatTest {
   close(DIFF);
   print LOG "######################## END BLOAT STATISTICS\n</a>\n";
   
-  print LOG "----------- success output from mozilla-bin for BloatTest --------------- \n";
+  print LOG "----------- success output from $mozillaBinary for BloatTest --------------- \n";
   open READRUNLOG, "$BinaryLog";
   while (<READRUNLOG>) {
     print $_;
