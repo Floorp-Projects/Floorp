@@ -45,13 +45,20 @@
 #include "nsISVGOuterSVGFrame.h"
 #include "nsIDOMSVGSVGElement.h"
 #include "nsISVGSVGElement.h"
+#include "nsIDOMSVGAnimatedLength.h"
+#include "nsSVGLength.h"
+#include "nsISVGValue.h"
+#include "nsISVGValueObserver.h"
+#include "nsWeakReference.h"
 
 typedef nsContainerFrame nsSVGInnerSVGFrameBase;
 
 class nsSVGInnerSVGFrame : public nsSVGInnerSVGFrameBase,
-                                   public nsISVGChildFrame,
-                                   public nsISVGContainerFrame,
-                                   public nsISVGSVGFrame
+                           public nsISVGChildFrame,
+                           public nsISVGContainerFrame,
+                           public nsISVGValueObserver,
+                           public nsSupportsWeakReference,
+                           public nsISVGSVGFrame
 {
   friend nsresult
   NS_NewSVGInnerSVGFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsIFrame** aNewFrame);
@@ -114,6 +121,13 @@ public:
   already_AddRefed<nsIDOMSVGMatrix> GetCanvasTM();
   already_AddRefed<nsSVGCoordCtxProvider> GetCoordContextProvider();
 
+  // nsISVGValueObserver
+  NS_IMETHOD WillModifySVGObservable(nsISVGValue* observable);
+  NS_IMETHOD DidModifySVGObservable (nsISVGValue* observable);
+
+  // nsISupportsWeakReference
+  // implementation inherited from nsSupportsWeakReference
+
   // nsISVGSVGFrame interface:
   NS_IMETHOD SuspendRedraw();
   NS_IMETHOD UnsuspendRedraw();
@@ -121,6 +135,9 @@ public:
 
 protected:
   nsCOMPtr<nsIDOMSVGMatrix> mCanvasTM;
+
+  nsCOMPtr<nsIDOMSVGLength> mX;
+  nsCOMPtr<nsIDOMSVGLength> mY;
 };
 
 //----------------------------------------------------------------------
@@ -164,11 +181,33 @@ nsresult nsSVGInnerSVGFrame::Init()
     NS_ERROR("invalid container");
     return NS_ERROR_FAILURE;
   }
-  
+
   nsCOMPtr<nsISVGSVGElement> SVGElement = do_QueryInterface(mContent);
   NS_ASSERTION(SVGElement, "wrong content element");
   SVGElement->SetParentCoordCtxProvider(nsRefPtr<nsSVGCoordCtxProvider>(containerFrame->GetCoordContextProvider()));
-  
+
+  {
+    nsCOMPtr<nsIDOMSVGAnimatedLength> length;
+    SVGElement->GetX(getter_AddRefs(length));
+    length->GetAnimVal(getter_AddRefs(mX));
+    NS_ASSERTION(mX, "no x");
+    if (!mX) return NS_ERROR_FAILURE;
+    nsCOMPtr<nsISVGValue> value = do_QueryInterface(mX);
+    if (value)
+      value->AddObserver(this);  // nsISVGValueObserver
+  }
+
+  {
+    nsCOMPtr<nsIDOMSVGAnimatedLength> length;
+    SVGElement->GetY(getter_AddRefs(length));
+    length->GetAnimVal(getter_AddRefs(mY));
+    NS_ASSERTION(mY, "no y");
+    if (!mY) return NS_ERROR_FAILURE;
+    nsCOMPtr<nsISVGValue> value = do_QueryInterface(mY);
+    if (value)
+      value->AddObserver(this);
+  }
+
   return NS_OK;
 }
 
@@ -178,12 +217,15 @@ nsresult nsSVGInnerSVGFrame::Init()
 NS_INTERFACE_MAP_BEGIN(nsSVGInnerSVGFrame)
   NS_INTERFACE_MAP_ENTRY(nsISVGChildFrame)
   NS_INTERFACE_MAP_ENTRY(nsISVGContainerFrame)
+  NS_INTERFACE_MAP_ENTRY(nsISVGValueObserver)
+  NS_INTERFACE_MAP_ENTRY(nsSupportsWeakReference)
   NS_INTERFACE_MAP_ENTRY(nsISVGSVGFrame)
 NS_INTERFACE_MAP_END_INHERITING(nsSVGInnerSVGFrameBase)
 
 
 //----------------------------------------------------------------------
 // nsIFrame methods
+
 NS_IMETHODIMP
 nsSVGInnerSVGFrame::Init(nsPresContext*  aPresContext,
                          nsIContent*     aContent,
@@ -526,6 +568,14 @@ nsSVGInnerSVGFrame::GetCanvasTM()
     svgElement->GetViewboxToViewportTransform(getter_AddRefs(viewBoxToViewportTM));
 
     parentTM->Multiply(viewBoxToViewportTM, getter_AddRefs(mCanvasTM));
+
+    // x and y:
+    float x, y;
+    mX->GetValue(&x);
+    mY->GetValue(&y);
+    nsCOMPtr<nsIDOMSVGMatrix> fini;
+    mCanvasTM->Translate(x, y, getter_AddRefs(fini));
+    mCanvasTM = fini;
   }    
 
   nsIDOMSVGMatrix* retval = mCanvasTM.get();
@@ -543,6 +593,23 @@ nsSVGInnerSVGFrame::GetCoordContextProvider()
   mContent->QueryInterface(NS_GET_IID(nsSVGCoordCtxProvider), (void**)&provider);
 
   NS_IF_ADDREF(provider);
+
+  return provider;
+}
+
+//----------------------------------------------------------------------
+// nsISVGValueObserver methods:
+
+NS_IMETHODIMP
+nsSVGInnerSVGFrame::WillModifySVGObservable(nsISVGValue* observable)
+{
+  return NS_OK;
+}
+	
+NS_IMETHODIMP
+nsSVGInnerSVGFrame::DidModifySVGObservable (nsISVGValue* observable)
+{
+  NotifyViewportChange();
   
-  return provider;  
+  return NS_OK;
 }
