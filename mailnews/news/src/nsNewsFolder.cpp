@@ -587,7 +587,9 @@ NS_IMETHODIMP nsMsgNewsFolder::Delete()
 	rv = nntpServer->RemoveNewsgroup((const char *)name);
 	if (NS_FAILED(rv)) return rv;
 	
-	return NS_OK;
+	rv = SetNewsrcHasChanged(PR_TRUE);
+	
+	return rv;
 }
 
 NS_IMETHODIMP nsMsgNewsFolder::Rename(const PRUnichar *newName)
