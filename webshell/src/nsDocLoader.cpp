@@ -118,22 +118,51 @@ nsDocFactoryImpl::CreateInstance(nsIURL* aURL,
     nsIDocument* doc = nsnull;
     nsIWebWidget* ww = nsnull;
 
+    /*
+     * XXX: 
+     *    All of this code should be replaced by a registry and factories
+     *    for each content type...
+     */
     if (0 != PL_strcmp("text/html", aContentType)) {
         rv = NS_ERROR_FAILURE;
         goto done;
     }
 
+    /*
+     * Create the HTML document...
+     */
     rv = NS_NewHTMLDocument(&doc);
+    if (NS_OK != rv) {
+        goto done;
+    }
 
+    /*
+     * Create the HTML Content Viewer...
+     */
     rv = NS_NewWebWidget(&ww);
+    if (NS_OK != rv) {
+        goto done;
+    }
 
+    /* 
+     * Initialize the document to begin loading the data...
+     *
+     * An nsIStreamListener connected to the parser is returned in
+     * aDocListener.
+     */
     rv = doc->StartDocumentLoad(aURL, ww, aDocListener);
+    if (NS_OK != rv) {
+        goto done;
+    }
 
+    /*
+     * Bind the document to the Content Viewer...
+     */
     rv = ww->BindToDocument(doc, aCommand);
     *aDocViewer = ww;
 
-    NS_RELEASE(doc);
 done:
+    NS_IF_RELEASE(doc);
     return rv;
 }
 
@@ -372,7 +401,7 @@ NS_METHOD nsDocumentBindInfo::OnProgress(PRInt32 aProgress, PRInt32 aProgressMax
 NS_METHOD nsDocumentBindInfo::OnStartBinding(const char *aContentType)
 {
     nsresult rv = NS_OK;
-    nsIDocumentWidget* viewer;
+    nsIDocumentWidget* viewer = nsnull;
 
     /*
      * Now that the content type is available, create a document (and viewer)
@@ -386,6 +415,9 @@ NS_METHOD nsDocumentBindInfo::OnStartBinding(const char *aContentType)
                                                        &viewer);
     } else {
         rv = NS_ERROR_NULL_POINTER;
+    }
+
+    if (NS_OK != rv) {
         goto done;
     }
 
@@ -401,6 +433,8 @@ NS_METHOD nsDocumentBindInfo::OnStartBinding(const char *aContentType)
      * Pass the OnStartBinding(...) notification out to the document 
      * IStreamListener.
      */
+    NS_ASSERTION((nsnull != m_NextStream), "No stream was created!");
+
     if (nsnull != m_NextStream) {
         rv = m_NextStream->OnStartBinding(aContentType);
     }
@@ -412,7 +446,7 @@ NS_METHOD nsDocumentBindInfo::OnStartBinding(const char *aContentType)
     }
 
 done:
-    NS_RELEASE(viewer);
+    NS_IF_RELEASE(viewer);
 
     return rv;
 }
