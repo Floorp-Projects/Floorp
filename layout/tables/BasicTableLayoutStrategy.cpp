@@ -610,6 +610,32 @@ PRBool BasicTableLayoutStrategy::AssignPreliminaryColumnWidths()
             spanList->RemoveElementAt(spanIndex);
             delete spanInfo;
           }
+
+          // begin code that respects column width attribute
+          /* the code below checks to see if the column has a width attribute (either it's own or a cell's)
+           * if so, if it fits within the constraints we computed above, we use it.
+           * why go through all that pain above, then?  because the given width attribute might not
+           * be rational.  So we need to act as if it doesn't exist and then fit it in if it makes sense.
+           * a shortcut that checks for a column width attribute and skips the above computations
+           * would not work without lots of extra computation that would lead you down the same path anyway.
+           */
+          const nsStylePosition* colPosition;
+          colFrame->GetStyleData(eStyleStruct_Position, (const nsStyleStruct*&)colPosition);
+          // Get fixed column width if it has one
+          if (eStyleUnit_Coord==colPosition->mWidth.GetUnit()) 
+          {
+            if (nsTableColFrame::eWIDTH_SOURCE_CELL_WITH_SPAN!=colFrame->GetWidthSource())
+            {
+              nscoord specifiedFixedColWidth = colPosition->mWidth.GetCoordValue();
+              specifiedFixedColWidth += (cellPadding*2);
+              if (specifiedFixedColWidth>=colFrame->GetEffectiveMinColWidth())
+              {
+                mTableFrame->SetColumnWidth(colIndex, specifiedFixedColWidth);
+                colFrame->SetMaxColWidth(specifiedFixedColWidth);
+              }
+            }
+          }
+          // end code that respects column width attribute
         }
       }
     }
