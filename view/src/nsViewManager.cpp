@@ -34,10 +34,14 @@
 #include "nsISupportsArray.h"
 #include "nsICompositeListener.h"
 #include "nsCOMPtr.h"
+#include "nsIEventQueue.h"
+#include "nsIEventQueueService.h"
+#include "nsIServiceManager.h"
 
 static NS_DEFINE_IID(kBlenderCID, NS_BLENDER_CID);
 static NS_DEFINE_IID(kRegionCID, NS_REGION_CID);
 static NS_DEFINE_IID(kRenderingContextCID, NS_RENDERING_CONTEXT_CID);
+static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 
 #define UPDATE_QUANTUM  1000 / 40
 
@@ -103,12 +107,83 @@ static void DestroyZTreeNode(DisplayZTreeNode* aNode) {
   }
 }
 
-inline nscoord max(nscoord x, nscoord y) { return (x > y ? x : y); }
-inline nscoord min(nscoord x, nscoord y) { return (x < y ? x : y); }
 
 #ifdef NS_VM_PERF_METRICS
 #include "nsITimeRecorder.h"
 #endif
+
+//-------------- Begin Invalidate Event Definition ------------------------
+
+struct nsInvalidateEvent : public PLEvent {
+  nsInvalidateEvent(nsIViewManager* aViewManager);
+  ~nsInvalidateEvent() { }
+
+  void HandleEvent() {  
+    NS_ASSERTION(nsnull != mViewManager,"ViewManager is null");
+    // Search for valid view manager before trying to access it
+    // This is just a safety check. We should never have a circumstance
+    // where the view manager has been destroyed and the invalidate event
+    // which it owns is still around. The invalidate event should be destroyed
+    // by the RevokeEvent in the viewmanager's destructor.
+    PRBool found = PR_FALSE;
+    PRInt32 index;
+    PRInt32 count = nsViewManager::GetViewManagerCount();
+    const nsVoidArray* viewManagers = nsViewManager::GetViewManagerArray();
+    for (index = 0; index < count; index++) {
+      nsIViewManager* vm = (nsIViewManager*)viewManagers->ElementAt(index);
+      if (vm == mViewManager) {
+         found = PR_TRUE;
+      }
+    }
+
+    if (found) {
+    ((nsViewManager *)mViewManager)->ProcessInvalidateEvent();
+    } else {
+      NS_ASSERTION(PR_FALSE, "bad view manager asked to process invalidate event");
+    }
+
+  };
+ 
+  nsIViewManager* mViewManager; // Weak Reference. The viewmanager will destroy any pending
+                                // invalidate events in it's destructor.
+};
+
+static void PR_CALLBACK HandlePLEvent(nsInvalidateEvent* aEvent)
+{
+  NS_ASSERTION(nsnull != aEvent,"Event is null");
+  aEvent->HandleEvent();
+}
+
+static void PR_CALLBACK DestroyPLEvent(nsInvalidateEvent* aEvent)
+{
+  NS_ASSERTION(nsnull != aEvent,"Event is null");
+  delete aEvent;
+}
+
+nsInvalidateEvent::nsInvalidateEvent(nsIViewManager* aViewManager)
+{
+  NS_ASSERTION(aViewManager, "null parameter");  
+  mViewManager = aViewManager; // Assign weak reference
+  PL_InitEvent(this, aViewManager,
+               (PLHandleEventProc) ::HandlePLEvent,
+               (PLDestroyEventProc) ::DestroyPLEvent);  
+}
+
+//-------------- End Invalidate Event Definition ---------------------------
+
+
+void
+nsViewManager::PostInvalidateEvent()
+{
+  if (!mPendingInvalidateEvent) {
+    nsInvalidateEvent* ev = new nsInvalidateEvent(NS_STATIC_CAST(nsIViewManager*, this));
+    NS_ASSERTION(nsnull != ev,"InvalidateEvent is null");
+    NS_ASSERTION(nsnull != mEventQueue,"Event queue is null");
+    mEventQueue->PostEvent(ev);
+    mPendingInvalidateEvent = PR_TRUE;  
+  }
+}
+
 
 #ifdef NS_VIEWMANAGER_NEEDS_TIMER
 
@@ -392,6 +467,8 @@ nsViewManager::nsViewManager()
   mY = 0;
   mCachingWidgetChanges = 0;
   mAllowDoubleBuffering = PR_TRUE; 
+  mHasPendingInvalidates = PR_FALSE;
+  mPendingInvalidateEvent = PR_FALSE;
 }
 
 nsViewManager::~nsViewManager()
@@ -401,6 +478,13 @@ nsViewManager::~nsViewManager()
 		mTimer->Cancel();     //XXX this should not be necessary. MMP
 	}
 #endif
+
+      // Revoke pending invalidate events
+  if (mPendingInvalidateEvent) {
+    NS_ASSERTION(nsnull != mEventQueue,"Event queue is null"); 
+    mPendingInvalidateEvent = PR_FALSE;
+    mEventQueue->RevokeEvents(this);
+  }
 
 	NS_IF_RELEASE(mRootWindow);
 
@@ -554,6 +638,16 @@ NS_IMETHODIMP nsViewManager::Init(nsIDeviceContext* aContext, nscoord aX, nscoor
 
   mX = aX;
   mY = aY;
+
+  if (nsnull == mEventQueue) {
+    // Cache the event queue of the current UI thread
+    NS_WITH_SERVICE(nsIEventQueueService, eventService, kEventQueueServiceCID, &rv);
+    if (NS_SUCCEEDED(rv) && (nsnull != eventService)) {                  // XXX this implies that the UI is the current thread.
+      rv = eventService->GetThreadEventQueue(NS_CURRENT_THREAD, getter_AddRefs(mEventQueue));
+    }
+
+    NS_ASSERTION(nsnull != mEventQueue, "event queue is null");
+  }
   
 	return rv;
 }
@@ -1535,6 +1629,7 @@ void nsViewManager::ProcessPendingUpdates(nsIView* aView)
 		ProcessPendingUpdates(childView);
 		childView->GetNextSibling(childView);
 	}
+
 }
 
 NS_IMETHODIMP nsViewManager::Composite()
@@ -1637,6 +1732,7 @@ PRBool nsViewManager::UpdateAllCoveringWidgets(nsIView *aView, nsIView *aTarget,
  	    if (!mRefreshEnabled) {
 		    // accumulate this rectangle in the view's dirty region, so we can process it later.
 		    AddRectToDirtyRegion(aView, bounds);
+        mHasPendingInvalidates = PR_TRUE;
         } else {
             float t2p;
             mContext->GetAppUnitsToDevUnits(t2p);
@@ -2450,8 +2546,8 @@ void nsViewManager::GetMaxWidgetBounds(nsRect& aMaxWidgetBounds) const
     {
       nsRect widgetBounds;
       rootWidget->GetBounds(widgetBounds);
-      aMaxWidgetBounds.width = max(aMaxWidgetBounds.width, widgetBounds.width);
-      aMaxWidgetBounds.height = max(aMaxWidgetBounds.height, widgetBounds.height);
+      aMaxWidgetBounds.width = PR_MAX(aMaxWidgetBounds.width, widgetBounds.width);
+      aMaxWidgetBounds.height = PR_MAX(aMaxWidgetBounds.height, widgetBounds.height);
     }
   }
 
@@ -2550,6 +2646,16 @@ void nsViewManager::GetDrawingSurfaceSize(nsRect& aRequestedSize, nsRect& aNewSi
 { 
   CalculateDiscreteSurfaceSize(aRequestedSize, aNewSize);
   aNewSize.MoveTo(aRequestedSize.x, aRequestedSize.y);
+}
+
+PRInt32 nsViewManager::GetViewManagerCount()
+{
+  return mVMCount;
+}
+
+const nsVoidArray* nsViewManager::GetViewManagerArray() 
+{
+  return gViewManagers;
 }
 
 
@@ -2727,8 +2833,12 @@ NS_IMETHODIMP nsViewManager::EnableRefresh(PRUint32 aUpdateFlags)
 
 	mRefreshEnabled = PR_TRUE;
 
-	if (mUpdateCnt > 0)
-		ProcessPendingUpdates(mRootView);
+  if (aUpdateFlags & NS_VMREFRESH_IMMEDIATE) {
+    ProcessPendingUpdates(mRootView);
+    mHasPendingInvalidates = PR_FALSE;
+  } else {
+    PostInvalidateEvent();
+  }
 
 	if (aUpdateFlags & NS_VMREFRESH_IMMEDIATE) {
    
@@ -3641,6 +3751,23 @@ NS_IMETHODIMP
 nsViewManager::IsPainting(PRBool& aIsPainting)
 {
   aIsPainting = mPainting;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsViewManager::FlushPendingInvalidates()
+{
+  if (mHasPendingInvalidates) {
+    ProcessPendingUpdates(mRootView);
+    mHasPendingInvalidates = PR_FALSE;
+  }
+  return NS_OK;
+}
+
+nsresult
+nsViewManager::ProcessInvalidateEvent() {
+  FlushPendingInvalidates();
+  mPendingInvalidateEvent = PR_FALSE;
   return NS_OK;
 }
 

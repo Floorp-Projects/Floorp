@@ -267,6 +267,7 @@ nsEventStateManager::PreHandleEvent(nsIPresContext* aPresContext,
   mCurrentTarget->SetFrameState(state);
 
   *aStatus = nsEventStatus_eIgnore;
+
   
   NS_ASSERTION(aEvent, "aEvent is null.  this should never happen");
   if (!aEvent) return NS_ERROR_NULL_POINTER;
@@ -300,6 +301,9 @@ nsEventStateManager::PreHandleEvent(nsIPresContext* aPresContext,
     GenerateDragGesture(aPresContext, (nsGUIEvent*)aEvent);
     UpdateCursor(aPresContext, aEvent, mCurrentTarget, aStatus);
     GenerateMouseEnterExit(aPresContext, (nsGUIEvent*)aEvent);
+    // Flush reflows and invalidates to eliminate flicker when both a reflow
+    // and visual change occur in an event callback. See bug  #36849
+    FlushPendingEvents(aPresContext); 
     break;
   case NS_MOUSE_EXIT:
     GenerateMouseEnterExit(aPresContext, (nsGUIEvent*)aEvent);
@@ -748,9 +752,7 @@ nsEventStateManager :: GenerateDragGesture ( nsIPresContext* aPresContext, nsGUI
   }
 
   // Now flush all pending notifications.
-  nsCOMPtr<nsIPresShell> shell;
-  aPresContext->GetShell(getter_AddRefs(shell));
-  shell->FlushPendingNotifications();
+  FlushPendingEvents(aPresContext);
 } // GenerateDragGesture
 
 nsresult
@@ -1839,9 +1841,7 @@ nsEventStateManager::GenerateDragDropEnterExit(nsIPresContext* aPresContext, nsG
   mCurrentTargetContent = targetBeforeEvent;
 
   // Now flush all pending notifications.
-  nsCOMPtr<nsIPresShell> shell;
-  aPresContext->GetShell(getter_AddRefs(shell));
-  shell->FlushPendingNotifications();
+  FlushPendingEvents(aPresContext);
 }
 
 NS_IMETHODIMP
@@ -3067,6 +3067,20 @@ void nsEventStateManager::EnsureDocument(nsIPresContext* aPresContext) {
 void nsEventStateManager::EnsureDocument(nsIPresShell* aPresShell) {
   if (!mDocument && aPresShell)
     aPresShell->GetDocument(&mDocument);
+}
+
+void nsEventStateManager::FlushPendingEvents(nsIPresContext* aPresContext) {
+  NS_PRECONDITION(nsnull != aPresContext, "nsnull ptr");
+  nsCOMPtr<nsIPresShell> shell;
+  aPresContext->GetShell(getter_AddRefs(shell));
+  if (nsnull != shell) {
+    shell->FlushPendingNotifications();
+    nsCOMPtr<nsIViewManager> viewManager;
+    nsresult result = shell->GetViewManager(getter_AddRefs(viewManager));
+    if (nsnull != viewManager) {
+      viewManager->FlushPendingInvalidates();
+    }
+  }
 }
 
 nsresult NS_NewEventStateManager(nsIEventStateManager** aInstancePtrResult)
