@@ -226,7 +226,11 @@ MapFontAttributesInto(const nsIHTMLMappedAttributes* aAttributes,
             font->mFlags |= NS_STYLE_FONT_USE_FIXED;
           }
           else {
-            font->mFixedFont.name = familyList;
+						nsCompatibility mode;
+		        aPresContext->GetCompatibilityMode(&mode);
+		        if (eCompatibility_NavQuirks == mode) {
+            	font->mFixedFont.name = familyList;
+            }
           }
         }
         else {
