@@ -791,6 +791,8 @@ mime_set_url_part(const char *url, char *part, PRBool append_p)
   const char *s;
   char *result;
 
+  if (!url || !part) return 0;
+
   for (s = url; *s; s++)
 	{
 	  if (*s == '?')

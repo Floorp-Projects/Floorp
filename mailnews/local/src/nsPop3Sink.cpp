@@ -179,6 +179,9 @@ nsPop3Sink::BeginMailDelivery(PRBool uidlDownload, PRBool* aBool)
 		rv = NS_OK;
 	}
 
+    if (uidlDownload && m_newMailParser)
+        m_newMailParser->DisableFilters();
+
 #ifdef DEBUG
     printf("Begin mail message delivery.\n");
 #endif 
