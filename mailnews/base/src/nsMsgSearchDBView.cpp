@@ -519,4 +519,26 @@ nsresult nsMsgSearchDBView::ProcessContinuousRequest(nsIMsgWindow *window, nsMsg
     return NS_OK;
 }
 
+NS_IMETHODIMP nsMsgSearchDBView::Sort(nsMsgViewSortTypeValue sortType, nsMsgViewSortOrderValue sortOrder)
+{
+    nsresult rv;
 
+    nsMsgKeyArray preservedSelection;
+    SaveSelection(&preservedSelection);
+    PRInt32 rowCountBeforeSort = GetSize();
+
+    rv = nsMsgDBView::Sort(sortType,sortOrder);
+
+    // the sort may have changed the number of rows
+    // before we restore the selection, tell the outliner
+    PRInt32 rowCountAfterSort = GetSize();
+    if (rowCountBeforeSort != rowCountAfterSort) {
+      mOutliner->RowCountChanged(rowCountBeforeSort, rowCountBeforeSort - rowCountAfterSort);
+    }
+
+    RestoreSelection(&preservedSelection);
+    if (mOutliner) mOutliner->Invalidate();
+
+    NS_ENSURE_SUCCESS(rv,rv);
+    return rv;
+}

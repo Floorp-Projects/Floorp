@@ -396,13 +396,14 @@ nsresult nsMsgDBView::UpdateSortUI(nsIDOMElement * aNewSortColumn)
   return NS_OK;
 }
 
-nsresult nsMsgDBView::SaveSelection(nsMsgKeyArray * aMsgKeyArray)
+nsresult nsMsgDBView::SaveSelection(nsMsgKeyArray *aMsgKeyArray)
 {
   if (!mOutlinerSelection)
     return NS_OK;
 
   // first, freeze selection.
   mOutlinerSelection->SetSelectEventsSuppressed(PR_TRUE);
+
   // second, get an array of view indices for the selection..
   nsUInt32Array selection;
   GetSelectedIndices(&selection);
@@ -424,15 +425,26 @@ nsresult nsMsgDBView::RestoreSelection(nsMsgKeyArray * aMsgKeyArray)
   if (!mOutlinerSelection)  // don't assert.
     return NS_OK;
 
-  // first, unfreeze selection.
+  // unfreeze selection.
   mOutlinerSelection->ClearSelection(); // clear the existing selection.
-  mOutlinerSelection->SetSelectEventsSuppressed(PR_FALSE);
   
-  // second, turn our message keys into corresponding view indices
+  // turn our message keys into corresponding view indices
   PRInt32 arraySize = aMsgKeyArray->GetSize();
   nsMsgViewIndex	currentViewPosition = nsMsgViewIndex_None;
   nsMsgViewIndex	newViewPosition;
-  // first, make sure the currentView was preserved....
+
+  // if we are threaded, we need to do a little more work
+  // we need to find (and expand) all the threads that contain messages 
+  // that we had selected before.
+  if (m_viewFlags & nsMsgViewFlagsType::kThreadedDisplay)
+  {
+    for (PRInt32 index = 0; index < arraySize; index ++) 
+    {
+      FindKey(aMsgKeyArray->GetAt(index), PR_TRUE /* expand */);
+    }
+  }
+
+  // make sure the currentView was preserved....
   if (m_currentlyDisplayedMsgKey != nsMsgKey_None)
   {
     currentViewPosition = FindKey(m_currentlyDisplayedMsgKey, PR_FALSE);
@@ -440,6 +452,10 @@ nsresult nsMsgDBView::RestoreSelection(nsMsgKeyArray * aMsgKeyArray)
     {
       mOutlinerSelection->SetCurrentIndex(currentViewPosition);
       mOutlinerSelection->RangedSelect(currentViewPosition, currentViewPosition, PR_TRUE /* augment */);
+        
+      // make sure the current message is once again visible in the thread pane
+      // so we don't have to go search for it in the thread pane
+      if (mOutliner) mOutliner->EnsureRowIsVisible(currentViewPosition);
     }
   }
 
@@ -452,6 +468,7 @@ nsresult nsMsgDBView::RestoreSelection(nsMsgKeyArray * aMsgKeyArray)
       mOutlinerSelection->RangedSelect(newViewPosition, newViewPosition, PR_TRUE /* augment */);
   }
 
+  mOutlinerSelection->SetSelectEventsSuppressed(PR_FALSE);
   return NS_OK;
 }
 
@@ -659,6 +676,9 @@ NS_IMETHODIMP nsMsgDBView::GetColumnProperties(const PRUnichar *colID, nsIDOMEle
 
 NS_IMETHODIMP nsMsgDBView::GetCellProperties(PRInt32 aRow, const PRUnichar *colID, nsISupportsArray *properties)
 {
+  if (!IsValidIndex(aRow))
+    return NS_MSG_INVALID_DBVIEW_INDEX; 
+
   // this is where we tell the outliner to apply styles to a particular row
   // i.e. if the row is an unread message...
   nsMsgKey key = m_keys.GetAt(aRow);
@@ -698,29 +718,28 @@ NS_IMETHODIMP nsMsgDBView::GetCellProperties(PRInt32 aRow, const PRUnichar *colI
   if (mIsNews)
     properties->AppendElement(kNewsMsgAtom);
     
-  if (colID[0] == 'p') // for the priority column, add special styles....
+  // add special styles for priority
+  nsMsgPriorityValue priority;
+  msgHdr->GetPriority(&priority);
+  switch (priority)
   {
-    nsMsgPriorityValue priority;
-    msgHdr->GetPriority(&priority);
-    switch (priority)
-    {
-    case nsMsgPriority::highest:
-      properties->AppendElement(kHighestPriorityAtom);  
-      break;
-    case nsMsgPriority::high:
-      properties->AppendElement(kHighPriorityAtom);  
-      break;
-    case nsMsgPriority::low:
-      properties->AppendElement(kLowPriorityAtom);  
-      break;
-    case nsMsgPriority::lowest:
-      properties->AppendElement(kLowestPriorityAtom);  
-      break;
-    default:
-      break;
-    }
+  case nsMsgPriority::highest:
+    properties->AppendElement(kHighestPriorityAtom);  
+    break;
+  case nsMsgPriority::high:
+    properties->AppendElement(kHighPriorityAtom);  
+    break;
+  case nsMsgPriority::low:
+    properties->AppendElement(kLowPriorityAtom);  
+    break;
+  case nsMsgPriority::lowest:
+    properties->AppendElement(kLowestPriorityAtom);  
+    break;
+  default:
+    break;
   }
-  else if (colID[0] == 'f')  
+
+  if (colID[0] == 'f')  
   {
     if (m_flags[aRow] & MSG_FLAG_MARKED) 
     {
@@ -1034,9 +1053,6 @@ NS_IMETHODIMP nsMsgDBView::CycleHeader(const PRUnichar * aColID, nsIDOMElement *
     break;
   }
   
-  PRInt32 countBeforeSort;
-  GetRowCount(&countBeforeSort);
-
   if (performSort)
   {
     // if we are already sorted by the same order, then toggle ascending / descending.
@@ -1052,14 +1068,6 @@ NS_IMETHODIMP nsMsgDBView::CycleHeader(const PRUnichar * aColID, nsIDOMElement *
     UpdateSortUI(aElement);
 
   } // if performSort
-
-  PRInt32 countAfterSort;
-  GetRowCount(&countAfterSort);
-
-  if (countBeforeSort != countAfterSort) {
-    mOutliner->RowCountChanged(0, -countBeforeSort);
-    mOutliner->RowCountChanged(0, countAfterSort);
-  }
 
   return NS_OK;
 }
@@ -2143,16 +2151,12 @@ NS_IMETHODIMP nsMsgDBView::Sort(nsMsgViewSortTypeValue sortType, nsMsgViewSortOr
 {
     nsresult rv;
 
-    // null db is OK.
-    nsMsgKeyArray preservedSelection;
-
     if (m_sortType == sortType && m_sortValid) {
         if (m_sortOrder == sortOrder) {
             // same as it ever was.  do nothing
             return NS_OK;
         }   
         else {
-            SaveSelection(&preservedSelection);
             if (m_sortType != nsMsgViewSortType::byThread) {
                 rv = ReverseSort();
                 NS_ENSURE_SUCCESS(rv,rv);
@@ -2164,8 +2168,6 @@ NS_IMETHODIMP nsMsgDBView::Sort(nsMsgViewSortTypeValue sortType, nsMsgViewSortOr
 
             m_sortOrder = sortOrder;
             // we just reversed the sort order...we still need to invalidate the view
-            RestoreSelection(&preservedSelection);
-            mOutliner->Invalidate();
             return NS_OK;
         }
     }
@@ -2173,8 +2175,6 @@ NS_IMETHODIMP nsMsgDBView::Sort(nsMsgViewSortTypeValue sortType, nsMsgViewSortOr
     if (sortType == nsMsgViewSortType::byThread) {
         return NS_OK;
     }
-
-    SaveSelection(&preservedSelection);
 
     // figure out how much memory we'll need, and the malloc it
     PRUint16 maxLen;
@@ -2373,13 +2373,6 @@ NS_IMETHODIMP nsMsgDBView::Sort(nsMsgViewSortTypeValue sortType, nsMsgViewSortOr
 
     m_sortValid = PR_TRUE;
     //m_db->SetSortInfo(sortType, sortOrder);
-
-    // last but not least, invalidate the entire view and restore
-    // the selection.
-    RestoreSelection(&preservedSelection);
-
-    if (mOutliner)
-      mOutliner->Invalidate();
 
     return NS_OK;
 }

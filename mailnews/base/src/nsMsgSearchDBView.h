@@ -41,6 +41,7 @@ public:
   NS_IMETHOD Open(nsIMsgFolder *folder, nsMsgViewSortTypeValue sortType, nsMsgViewSortOrderValue sortOrder, 
         nsMsgViewFlagsTypeValue viewFlags, PRInt32 *pCount);
   NS_IMETHOD Close();
+  NS_IMETHOD Sort(nsMsgViewSortTypeValue sortType, nsMsgViewSortOrderValue sortOrder);
   NS_IMETHOD DoCommand(nsMsgViewCommandTypeValue command);
   NS_IMETHOD DoCommandWithFolder(nsMsgViewCommandTypeValue command, nsIMsgFolder *destFolder);
   // override to get location

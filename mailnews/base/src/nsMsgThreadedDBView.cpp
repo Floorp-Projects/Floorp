@@ -56,7 +56,7 @@ nsresult nsMsgThreadedDBView::InitThreadedView(PRInt32 *pCount)
 {
 	nsresult rv;
 
-  m_keys.RemoveAll();
+    m_keys.RemoveAll();
 	m_flags.RemoveAll();
 	m_levels.RemoveAll(); 
 	m_prevKeys.RemoveAll();
@@ -125,6 +125,13 @@ nsresult nsMsgThreadedDBView::AddKeys(nsMsgKey *pKeys, PRInt32 *pFlags, const ch
 
 NS_IMETHODIMP nsMsgThreadedDBView::Sort(nsMsgViewSortTypeValue sortType, nsMsgViewSortOrderValue sortOrder)
 {
+    nsresult rv;
+
+    nsMsgKeyArray preservedSelection;
+    SaveSelection(&preservedSelection);
+
+    PRInt32 rowCountBeforeSort = GetSize();
+
 	// if the client wants us to forget our cached id arrays, they
 	// should build a new view. If this isn't good enough, we
 	// need a method to do that.
@@ -133,7 +140,7 @@ NS_IMETHODIMP nsMsgThreadedDBView::Sort(nsMsgViewSortTypeValue sortType, nsMsgVi
 		if (sortType == nsMsgViewSortType::byThread)
 		{
 			m_sortType = sortType;
-      m_viewFlags |= nsMsgViewFlagsType::kThreadedDisplay;
+            m_viewFlags |= nsMsgViewFlagsType::kThreadedDisplay;
 			if ( m_havePrevView)
 			{
 				// restore saved id array and flags array
@@ -145,6 +152,16 @@ NS_IMETHODIMP nsMsgThreadedDBView::Sort(nsMsgViewSortTypeValue sortType, nsMsgVi
 				m_levels.InsertAt(0, &m_prevLevels);
 //				m_messageDB->SetSortInfo(sortType, sortOrder);
 				m_sortValid = PR_TRUE;
+
+                // the sort may have changed the number of rows
+                // before we restore the selection, tell the outliner
+                PRInt32 rowCountAfterSort = GetSize();
+                if (rowCountBeforeSort != rowCountAfterSort) {
+                  mOutliner->RowCountChanged(rowCountBeforeSort, rowCountBeforeSort - rowCountAfterSort);
+                }
+
+                RestoreSelection(&preservedSelection);
+                if (mOutliner) mOutliner->Invalidate();
 				return NS_OK;
 			}
 			else
@@ -153,6 +170,16 @@ NS_IMETHODIMP nsMsgThreadedDBView::Sort(nsMsgViewSortTypeValue sortType, nsMsgVi
 				InitThreadedView(nsnull);	// build up thread list.
 				if (sortOrder != nsMsgViewSortOrder::ascending)
 					Sort(sortType, sortOrder);
+
+                // the sort may have changed the number of rows
+                // before we update the selection, tell the outliner
+                PRInt32 rowCountAfterSort = GetSize();
+                if (rowCountBeforeSort != rowCountAfterSort) {
+                  mOutliner->RowCountChanged(rowCountBeforeSort, rowCountBeforeSort - rowCountAfterSort);
+                }
+
+                RestoreSelection(&preservedSelection);
+                if (mOutliner) mOutliner->Invalidate();
 				return NS_OK;
 			}
 		}
@@ -169,14 +196,24 @@ NS_IMETHODIMP nsMsgThreadedDBView::Sort(nsMsgViewSortTypeValue sortType, nsMsgVi
 //			m_idArray.RemoveAll();
 //			m_flags.RemoveAll();
 			m_havePrevView = PR_TRUE;
-      m_viewFlags &= ~nsMsgViewFlagsType::kThreadedDisplay;
+            m_viewFlags &= ~nsMsgViewFlagsType::kThreadedDisplay;
 		}
 	}
   // call the base class in case we're not sorting by thread
-  return nsMsgDBView::Sort(sortType, sortOrder);
+  rv = nsMsgDBView::Sort(sortType, sortOrder);
+
+  // the sort may have changed the number of rows
+  // before we restore the selection, tell the outliner
+  PRInt32 rowCountAfterSort = GetSize();
+  if (rowCountBeforeSort != rowCountAfterSort) {
+    mOutliner->RowCountChanged(rowCountBeforeSort, rowCountBeforeSort - rowCountAfterSort);
+  }
+
+  RestoreSelection(&preservedSelection);
+  if (mOutliner) mOutliner->Invalidate();
+  NS_ENSURE_SUCCESS(rv,rv);
+  return NS_OK;
 }
-
-
 
 // list the ids of the top-level thread ids starting at id == startMsg. This actually returns
 // the ids of the first message in each thread.
@@ -355,7 +392,7 @@ nsresult nsMsgThreadedDBView::InitSort(nsMsgViewSortTypeValue sortType, nsMsgVie
 	{
 		nsMsgDBView::Sort(nsMsgViewSortType::byId, sortOrder); // sort top level threads by id.
 		m_sortType = nsMsgViewSortType::byThread;
-    m_viewFlags |= nsMsgViewFlagsType::kThreadedDisplay;
+        m_viewFlags |= nsMsgViewFlagsType::kThreadedDisplay;
 //		m_db->SetSortInfo(m_sortType, sortOrder);
 	}
   else
