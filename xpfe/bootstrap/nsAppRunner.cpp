@@ -640,17 +640,23 @@ static void	InitCachePrefs()
 {
 	const char * const CACHE_DIR_PREF   = "browser.cache.directory";
 	nsresult rv;
+  PRBool isDir = PR_FALSE;
 	NS_WITH_SERVICE(nsIPref, prefs, NS_PREF_PROGID, &rv);
 	if (NS_FAILED(rv)) return;
 		
 	// If the pref is already set don't do anything
 	nsCOMPtr<nsIFileSpec> cacheSubDir;
 	rv = prefs->GetFilePref(CACHE_DIR_PREF, getter_AddRefs(cacheSubDir));
-	if (NS_SUCCEEDED(rv) && cacheSubDir.get()) return;	
-
+	if (NS_SUCCEEDED(rv) && cacheSubDir.get()){
+    rv = cacheSubDir->IsDirectory(&isDir);
+    if (NS_SUCCEEDED(rv) && isDir)
+      return;
+  }
 // Set up the new pref
-	rv = NS_NewFileSpec(getter_AddRefs(cacheSubDir));
-	if(NS_FAILED(rv)) return;
+  if(!cacheSubDir.get()) {
+	  rv = NS_NewFileSpec(getter_AddRefs(cacheSubDir));
+	  if(NS_FAILED(rv)) return;
+  }
 
 	nsCOMPtr<nsIFileSpec> spec(dont_AddRef(NS_LocateFileOrDirectory(nsSpecialFileSpec::App_UserProfileDirectory50)));	
 	rv = cacheSubDir->FromFileSpec(spec);
