@@ -1824,7 +1824,6 @@ os2*)
 esac
 AC_CHECK_HEADERS(sys/byteorder.h compat.h getopt.h)
 AC_CHECK_HEADERS(sys/bittypes.h memory.h unistd.h sys/filio.h)
-AC_CHECK_HEADERS(sys/ipc.h shm.h sys/shm.h X11/extensions/XShm.h)
 
 dnl These are all the places some variant of statfs can be hiding.
 AC_CHECK_HEADERS(sys/statvfs.h sys/statfs.h sys/vfs.h sys/mount.h)
@@ -2755,21 +2754,6 @@ ENABLE_TESTS=1
 MOZ_ARG_DISABLE_BOOL(tests,
 [  --disable-tests         Dont build the tests],
   ENABLE_TESTS= )
-
-dnl Build w/o X11 shared mem extensions by default
-if test "$no_x" != "yes"; then
-AC_ARG_ENABLE(x11-shm,
-[  --enable-x11-shm        Enable use of X11 shared mem in gfx],
-    [ if test "$enableval" = "yes"; then
-	if test "$ac_cv_header_sys_ipc_h" = "yes" &&
-	   test "$ac_cv_header_sys_shm_h" = "yes" &&
-	   test "$ac_cv_header_X11_extensions_XShm_h" = "yes"; then
-		AC_DEFINE(USE_SHM)
-	else
-	   AC_MSG_WARN("X11 Shared Memory extensions not supported under this configuration.")
-	fi
-      fi])
-fi # ! no_x
 
 dnl ========================================================
 dnl =
