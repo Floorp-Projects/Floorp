@@ -147,6 +147,11 @@ CPPSRCS		:= xptcinvoke_ppc_aix.cpp xptcstubs_ppc_aix.cpp
 ASFILES		:= xptcinvoke_asm_ppc_aix.s xptcstubs_asm_ppc_aix.s
 endif
 
+ifeq ($(OS_ARCH)$(OS_TEST),Linuxppc)
+CPPSRCS		:= xptcinvoke_ppc_linux.cpp xptcstubs_ppc_linux.cpp
+ASFILES		:= xptcinvoke_asm_ppc_linux.s xptcstubs_asm_ppc_linux.s
+endif
+
 ######################################################################
 # SPARC
 ######################################################################
