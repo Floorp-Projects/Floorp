@@ -11,6 +11,8 @@
 #
 # Matt Masson <matthew@zeroknowledge.com>
 #
+# Contributors : Gavin Shelley <bugzilla@chimpychompy.org>
+#
 
 
 use strict;
@@ -22,6 +24,10 @@ require "globals.pl";
 use Bugzilla::Constants;
 use Bugzilla::Config qw(:DEFAULT $datadir);
 
+use vars qw($template $vars);
+
+my $cgi = Bugzilla->cgi;
+
 # TestProduct:  just returns if the specified product does exists
 # CheckProduct: same check, optionally  emit an error text
 # TestMilestone:  just returns if the specified product/version combination exists
@@ -29,118 +35,87 @@ use Bugzilla::Config qw(:DEFAULT $datadir);
 
 sub TestProduct ($)
 {
-    my $prod = shift;
+    my $product = shift;
+
+    trick_taint($product);
 
     # does the product exist?
-    SendSQL("SELECT name
-             FROM products
-             WHERE name=" . SqlQuote($prod));
-    return FetchOneColumn();
+    my $dbh = Bugzilla->dbh;
+    my $sth = $dbh->prepare_cached("SELECT name
+                                    FROM products
+                                    WHERE name = ?");
+    $sth->execute($product);
+
+    my ($row) = $sth->fetchrow_array;
+
+    $sth->finish;
+
+    return $row;
 }
 
 sub CheckProduct ($)
 {
-    my $prod = shift;
+    my $product = shift;
 
     # do we have a product?
-    unless ($prod) {
-        print "Sorry, you haven't specified a product.";
-        PutTrailer();
+    unless ($product) {
+        &::ThrowUserError('product_not_specified');    
         exit;
     }
 
-    unless (TestProduct $prod) {
-        print "Sorry, product '$prod' does not exist.";
-        PutTrailer();
+    # Does it exist in the DB?
+    unless (TestProduct $product) {
+        &::ThrowUserError('product_doesnt_exist',
+                          {'product' => $product});
         exit;
     }
 }
 
 sub TestMilestone ($$)
 {
-    my ($prod,$mile) = @_;
+    my ($product, $milestone) = @_;
+
+    my $dbh = Bugzilla->dbh;
 
     # does the product exist?
-    SendSQL("SELECT products.name, value
+    my $sth = $dbh->prepare_cached("
+             SELECT products.name, value
              FROM milestones, products
-             WHERE milestones.product_id=products.id AND products.name=" . SqlQuote($prod) . " and value=" . SqlQuote($mile));
-    return FetchOneColumn();
+             WHERE milestones.product_id = products.id
+               AND products.name = ?
+               AND value = ?");
+
+    trick_taint($product);
+    trick_taint($milestone);
+
+    $sth->execute($product, $milestone);
+
+    my ($db_milestone) = $sth->fetchrow_array();
+
+    $sth->finish();
+
+    return $db_milestone;
 }
 
 sub CheckMilestone ($$)
 {
-    my ($prod,$mile) = @_;
+    my ($product, $milestone) = @_;
 
-    # do we have the milestone?
-    unless ($mile) {
-        print "Sorry, you haven't specified a milestone.";
-        PutTrailer();
+    # do we have the milestone and product combination?
+    unless ($milestone) {
+        ThrowUserError('milestone_not_specified');
         exit;
     }
 
-    CheckProduct($prod);
+    CheckProduct($product);
 
-    unless (TestMilestone $prod,$mile) {
-        print "Sorry, milestone '$mile' for product '$prod' does not exist.";
-        PutTrailer();
+    unless (TestMilestone $product, $milestone) {
+        ThrowUserError('milestone_not_valid',
+                       {'product' => $product,
+                        'milestone' => $milestone});
         exit;
     }
 }
-
-
-#
-# Displays the form to edit a milestone
-#
-
-sub EmitFormElements ($$$)
-{
-    my ($product, $milestone, $sortkey) = @_;
-
-    print "  <TH ALIGN=\"right\">Milestone:</TH>\n";
-    print "  <TD><INPUT SIZE=64 MAXLENGTH=64 NAME=\"milestone\" VALUE=\"" .
-        value_quote($milestone) . "\">\n";
-    print "</TR><TR>\n";
-    print "  <TH ALIGN=\"right\">Sortkey:</TH>\n";
-    print "  <TD><INPUT SIZE=64 MAXLENGTH=64 NAME=\"sortkey\" VALUE=\"" .
-        value_quote($sortkey) . "\">\n";
-    print "      <INPUT TYPE=HIDDEN NAME=\"product\" VALUE=\"" .
-        value_quote($product) . "\"></TD>\n";
-}
-
-
-#
-# Displays a text like "a.", "a or b.", "a, b or c.", "a, b, c or d."
-#
-
-sub PutTrailer (@)
-{
-    my (@links) = ("Back to the <A HREF=\"query.cgi\">query page</A>", @_);
-    SendSQL("UNLOCK TABLES");
-
-    my $count = $#links;
-    my $num = 0;
-    print "<P>\n";
-    foreach (@links) {
-        print $_;
-        if ($num == $count) {
-            print ".\n";
-        }
-        elsif ($num == $count-1) {
-            print " or ";
-        }
-        else {
-            print ", ";
-        }
-        $num++;
-    }
-    PutFooter();
-}
-
-
-
-
-
-
 
 #
 # Preliminary checks:
@@ -151,10 +126,7 @@ Bugzilla->login(LOGIN_REQUIRED);
 print Bugzilla->cgi->header();
 
 unless (UserInGroup("editcomponents")) {
-    PutHeader("Not allowed");
-    print "Sorry, you aren't a member of the 'editcomponents' group.\n";
-    print "And so, you aren't allowed to add, modify or delete milestones.\n";
-    PutTrailer();
+    ThrowUserError('auth_cant_edit_milestones');    
     exit;
 }
 
@@ -162,44 +134,44 @@ unless (UserInGroup("editcomponents")) {
 #
 # often used variables
 #
-my $product = trim($::FORM{product} || '');
-my $milestone = trim($::FORM{milestone} || '');
-my $sortkey = trim($::FORM{sortkey} || '0');
-my $action  = trim($::FORM{action}  || '');
-my $localtrailer;
-if ($milestone) {
-    $localtrailer = "<A HREF=\"editmilestones.cgi?product=" . url_quote($product) . "\">edit</A> more milestones";
-} else {
-    $localtrailer = "<A HREF=\"editmilestones.cgi\">edit</A> more milestones";
-}
-
-
+my $product = trim($cgi->param('product')     || '');
+my $milestone = trim($cgi->param('milestone') || '');
+my $sortkey = trim($cgi->param('sortkey')     || '0');
+my $action  = trim($cgi->param('action')      || '');
 
 #
 # product = '' -> Show nice list of milestones
 #
 
 unless ($product) {
-    PutHeader("Select product");
 
-    SendSQL("SELECT products.name,products.description
-             FROM products 
-             GROUP BY products.name
-             ORDER BY products.name");
-    print "<TABLE BORDER=1 CELLPADDING=4 CELLSPACING=0><TR BGCOLOR=\"#6666FF\">\n";
-    print "  <TH ALIGN=\"left\">Edit milestones of ...</TH>\n";
-    print "  <TH ALIGN=\"left\">Description</TH>\n";
-    print "</TR>";
-    while ( MoreSQLData() ) {
-        my ($product, $description) = FetchSQLData();
-        $description ||= "<FONT COLOR=\"red\">missing</FONT>";
-        print "<TR>\n";
-        print "  <TD VALIGN=\"top\"><A HREF=\"editmilestones.cgi?product=", url_quote($product), "\"><B>$product</B></A></TD>\n";
-        print "  <TD VALIGN=\"top\">$description</TD>\n";
+    my @products = ();
+
+    my $dbh = Bugzilla->dbh;
+
+    my $sth = $dbh->prepare_cached('SELECT products.name, products.description
+                                    FROM products 
+                                    ORDER BY products.name');
+
+    my $data = $dbh->selectall_arrayref($sth);
+
+    foreach my $aref (@$data) {
+
+        my $prod = {};
+
+        my ($name, $description) = @$aref;
+
+        $prod->{'name'} = $name;
+        $prod->{'description'} = $description;
+
+        push(@products, $prod);
     }
-    print "</TR></TABLE>\n";
 
-    PutTrailer();
+    $vars->{'products'} = \@products;
+    $template->process("admin/milestones/select-product.html.tmpl",
+                       $vars)
+      || ThrowTemplateError($template->error());
+
     exit;
 }
 
@@ -210,37 +182,39 @@ unless ($product) {
 #
 
 unless ($action) {
-    PutHeader("Select milestone for $product");
+
     CheckProduct($product);
     my $product_id = get_product_id($product);
+    my @milestones = ();
 
-    SendSQL("SELECT value,sortkey
-             FROM milestones
-             WHERE product_id=$product_id
-             ORDER BY sortkey,value");
+    my $dbh = Bugzilla->dbh;
 
-    print "<TABLE BORDER=1 CELLPADDING=4 CELLSPACING=0><TR BGCOLOR=\"#6666FF\">\n";
-    print "  <TH ALIGN=\"left\">Edit milestone ...</TH>\n";
-    #print "  <TH ALIGN=\"left\">Bugs</TH>\n";
-    print "  <TH ALIGN=\"left\">Sortkey</TH>\n";
-    print "  <TH ALIGN=\"left\">Action</TH>\n";
-    print "</TR>";
-    while ( MoreSQLData() ) {
-        my ($milestone,$sortkey,$bugs) = FetchSQLData();
-        $bugs ||= 'none';
-        print "<TR>\n";
-        print "  <TD VALIGN=\"top\"><A HREF=\"editmilestones.cgi?product=", url_quote($product), "&milestone=", url_quote($milestone), "&action=edit\"><B>$milestone</B></A></TD>\n";
-        #print "  <TD VALIGN=\"top\">$bugs</TD>\n";
-        print "  <TD VALIGN=\"top\" ALIGN=\"right\">$sortkey</TD>\n";
-        print "  <TD VALIGN=\"top\"><A HREF=\"editmilestones.cgi?product=", url_quote($product), "&milestone=", url_quote($milestone), "&action=del\"><B>Delete</B></A></TD>\n";
-        print "</TR>";
+    my $sth = $dbh->prepare_cached('SELECT value, sortkey
+                                    FROM milestones
+                                    WHERE product_id = ?
+                                    ORDER BY sortkey, value');
+
+    my $data = $dbh->selectall_arrayref($sth,
+                                        undef,
+                                        $product_id);
+
+    foreach my $aref (@$data) {
+
+        my $milestone = {};
+        my ($name, $sortkey) = @$aref;
+
+        $milestone->{'name'} = $name;
+        $milestone->{'sortkey'} = $sortkey;
+
+        push(@milestones, $milestone);
     }
-    print "<TR>\n";
-    print "  <TD VALIGN=\"top\" COLSPAN=\"2\">Add a new milestone</TD>\n";
-    print "  <TD VALIGN=\"top\" ALIGN=\"middle\"><A HREF=\"editmilestones.cgi?product=", url_quote($product) . "&action=add\">Add</A></TD>\n";
-    print "</TR></TABLE>\n";
 
-    PutTrailer();
+    $vars->{'product'} = $product;
+    $vars->{'milestones'} = \@milestones;
+    $template->process("admin/milestones/list.html.tmpl",
+                       $vars)
+      || ThrowTemplateError($template->error());
+
     exit;
 }
 
@@ -254,25 +228,15 @@ unless ($action) {
 #
 
 if ($action eq 'add') {
-    PutHeader("Add milestone for $product");
+
     CheckProduct($product);
     my $product_id = get_product_id($product);
 
-    #print "This page lets you add a new milestone to a $::bugzilla_name tracked product.\n";
+    $vars->{'product'} = $product;
+    $template->process("admin/milestones/create.html.tmpl",
+                       $vars)
+      || ThrowTemplateError($template->error());
 
-    print "<FORM METHOD=POST ACTION=editmilestones.cgi>\n";
-    print "<TABLE BORDER=0 CELLPADDING=4 CELLSPACING=0><TR>\n";
-
-    EmitFormElements($product, $milestone, 0);
-
-    print "</TABLE>\n<HR>\n";
-    print "<INPUT TYPE=SUBMIT VALUE=\"Add\">\n";
-    print "<INPUT TYPE=HIDDEN NAME=\"action\" VALUE=\"new\">\n";
-    print "</FORM>";
-
-    my $other = $localtrailer;
-    $other =~ s/more/other/;
-    PutTrailer($other);
     exit;
 }
 
@@ -283,42 +247,57 @@ if ($action eq 'add') {
 #
 
 if ($action eq 'new') {
-    PutHeader("Adding new milestone for $product");
+
     CheckProduct($product);
     my $product_id = get_product_id($product);
 
     # Cleanups and valididy checks
-
     unless ($milestone) {
-        print "You must enter a text for the new milestone. Please press\n";
-        print "<b>Back</b> and try again.\n";
-        PutTrailer($localtrailer);
+        ThrowUserError('milestone_blank_name',
+                       {'name' => $milestone});
         exit;
     }
+
+    if (length($milestone) > 20) {
+        ThrowUserError('milestone_name_too_long',
+                       {'name' => $milestone});
+        exit;
+    }
+
+    # Need to store in case detaint_natural() clears the sortkey
+    my $stored_sortkey = $sortkey;
     if (!detaint_natural($sortkey)) {
-        print "The sortkey for a milestone must be a number. Please press\n";
-        print "<b>Back</b> and try again.\n";
-        PutTrailer($localtrailer);
+        ThrowUserError('milestone_sortkey_invalid',
+                       {'name' => $milestone,
+                        'sortkey' => $stored_sortkey});
         exit;
     }
-    if (TestMilestone($product,$milestone)) {
-        print "The milestone '$milestone' already exists. Please press\n";
-        print "<b>Back</b> and try again.\n";
-        PutTrailer($localtrailer);
+    if (TestMilestone($product, $milestone)) {
+        ThrowUserError('milestone_already_exists',
+                       {'name' => $milestone,
+                        'product' => $product});
         exit;
     }
 
     # Add the new milestone
-    SendSQL("INSERT INTO milestones ( " .
-          "value, product_id, sortkey" .
-          " ) VALUES ( " .
-          SqlQuote($milestone) . ", $product_id, $sortkey)");
+    my $dbh = Bugzilla->dbh;
+    trick_taint($milestone);
+    $dbh->do('INSERT INTO milestones ( value, product_id, sortkey )
+              VALUES ( ?, ?, ? )',
+             undef,
+             $milestone,
+             $product_id,
+             $sortkey);
 
     # Make versioncache flush
     unlink "$datadir/versioncache";
 
-    print "OK, done.<p>\n";
-    PutTrailer("<A HREF=\"editmilestones.cgi?product=$product&amp;action=add\">add</a> another milestone or $localtrailer");
+    $vars->{'name'} = $milestone;
+    $vars->{'product'} = $product;
+    $template->process("admin/milestones/created.html.tmpl",
+                       $vars)
+      || ThrowTemplateError($template->error());
+
     exit;
 }
 
@@ -332,72 +311,38 @@ if ($action eq 'new') {
 #
 
 if ($action eq 'del') {
-    PutHeader("Delete milestone of $product");
+
     CheckMilestone($product, $milestone);
     my $product_id = get_product_id($product);
 
-    SendSQL("SELECT count(bug_id), product_id, target_milestone
-             FROM bugs
-             GROUP BY product_id, target_milestone
-             HAVING product_id=$product_id
-                AND target_milestone=" . SqlQuote($milestone));
-    my $bugs = FetchOneColumn();
+    my $dbh = Bugzilla->dbh;
 
-    SendSQL("SELECT defaultmilestone FROM products " .
-            "WHERE id=$product_id");
-    my $defaultmilestone = FetchOneColumn();
+    my $sth = $dbh->prepare('SELECT count(bug_id), product_id, target_milestone
+                             FROM bugs
+                             GROUP BY product_id, target_milestone
+                             HAVING product_id = ?
+                                AND target_milestone = ?');
 
-    print "<TABLE BORDER=1 CELLPADDING=4 CELLSPACING=0>\n";
-    print "<TR BGCOLOR=\"#6666FF\">\n";
-    print "  <TH VALIGN=\"top\" ALIGN=\"left\">Part</TH>\n";
-    print "  <TH VALIGN=\"top\" ALIGN=\"left\">Value</TH>\n";
+    trick_taint($milestone);
+    $vars->{'bug_count'} = $dbh->selectrow_array($sth,
+                                                 undef,
+                                                 $product_id,
+                                                 $milestone) || 0;
 
-    print "</TR><TR>\n";
-    print "  <TH ALIGN=\"left\" VALIGN=\"top\">Product:</TH>\n";
-    print "  <TD VALIGN=\"top\">$product</TD>\n";
-    print "</TR><TR>\n";
-    print "  <TH ALIGN=\"left\" VALIGN=\"top\">Milestone:</TH>\n";
-    print "  <TD VALIGN=\"top\">$milestone</TD>\n";
-    print "</TR><TR>\n";
-    print "  <TH ALIGN=\"left\" VALIGN=\"top\">Bugs:</TH>\n";
-    print "  <TD VALIGN=\"top\">", $bugs || 'none' , "</TD>\n";
-    print "</TR></TABLE>\n";
+    $sth = $dbh->prepare('SELECT defaultmilestone
+                          FROM products
+                          WHERE id = ?');
 
-    print "<H2>Confirmation</H2>\n";
+    $vars->{'default_milestone'} = $dbh->selectrow_array($sth,
+                                                         undef,
+                                                         $product_id) || '';
 
-    if ($bugs) {
-        if (!Param("allowbugdeletion")) {
-            print "Sorry, there are $bugs bugs outstanding for this milestone.
-You must reassign those bugs to another milestone before you can delete this
-one.";
-            PutTrailer($localtrailer);
-            exit;
-        }
-        print "<TABLE BORDER=0 CELLPADDING=20 WIDTH=\"70%\" BGCOLOR=\"red\"><TR><TD>\n",
-              "There are bugs entered for this milestone!  When you delete this ",
-              "milestone, <B><BLINK>all</BLINK></B> stored bugs will be deleted, too. ",
-              "You could not even see the bug history for this milestone anymore!\n",
-              "</TD></TR></TABLE>\n";
-    }
+    $vars->{'name'} = $milestone;
+    $vars->{'product'} = $product;
+    $template->process("admin/milestones/confirm-delete.html.tmpl",
+                       $vars)
+      || ThrowTemplateError($template->error());
 
-    if ($defaultmilestone eq $milestone) {
-        print "Sorry; this is the default milestone for this product, and " .
-            "so it can not be deleted.";
-        PutTrailer($localtrailer);
-        exit;
-    }
-
-    print "<P>Do you really want to delete this milestone?<P>\n";
-    print "<FORM METHOD=POST ACTION=editmilestones.cgi>\n";
-    print "<INPUT TYPE=SUBMIT VALUE=\"Yes, delete\">\n";
-    print "<INPUT TYPE=HIDDEN NAME=\"action\" VALUE=\"delete\">\n";
-    print "<INPUT TYPE=HIDDEN NAME=\"product\" VALUE=\"" .
-        value_quote($product) . "\">\n";
-    print "<INPUT TYPE=HIDDEN NAME=\"milestone\" VALUE=\"" .
-        value_quote($milestone) . "\">\n";
-    print "</FORM>";
-
-    PutTrailer($localtrailer);
     exit;
 }
 
@@ -408,55 +353,89 @@ one.";
 #
 
 if ($action eq 'delete') {
-    PutHeader("Deleting milestone of $product");
+
     CheckMilestone($product,$milestone);
     my $product_id = get_product_id($product);
 
+    my $dbh = Bugzilla->dbh;
+
     # lock the tables before we start to change everything:
 
-    SendSQL("LOCK TABLES attachments WRITE,
-                         bugs WRITE,
-                         bugs_activity WRITE,
-                         milestones WRITE,
-                         dependencies WRITE");
+    $dbh->do('LOCK TABLES attachments WRITE,
+                          bugs WRITE,
+                          bugs_activity WRITE,
+                          milestones WRITE,
+                          dependencies WRITE');
 
     # According to MySQL doc I cannot do a DELETE x.* FROM x JOIN Y,
     # so I have to iterate over bugs and delete all the indivial entries
     # in bugs_activies and attachments.
 
+    # Detaint this here, as we may need it if deleting bugs, but will
+    # definitely need it detainted whhen we actually delete the
+    # milestone itself
+    trick_taint($milestone);
+
     if (Param("allowbugdeletion")) {
 
-        SendSQL("SELECT bug_id
-             FROM bugs
-             WHERE product_id=$product_id
-               AND target_milestone=" . SqlQuote($milestone));
-        while (MoreSQLData()) {
-            my $bugid = FetchOneColumn();
+        my $deleted_bug_count = 0;
 
-            PushGlobalSQLState();
-            SendSQL("DELETE FROM attachments WHERE bug_id=$bugid");
-            SendSQL("DELETE FROM bugs_activity WHERE bug_id=$bugid");
-            SendSQL("DELETE FROM dependencies WHERE blocked=$bugid");
-            PopGlobalSQLState();
+        my $sth = $dbh->prepare_cached('SELECT bug_id
+                                        FROM bugs
+                                        WHERE product_id = ?
+                                        AND target_milestone = ?');
+
+        my $data = $dbh->selectall_arrayref($sth,
+                                            undef,
+                                            $product_id,
+                                            $milestone);
+
+        foreach my $aref (@$data) {
+
+            my ($bugid) = @$aref;
+
+            $dbh->do('DELETE FROM attachments WHERE bug_id = ?',
+                     undef,
+                     $bugid);
+            $dbh->do('DELETE FROM bugs_activity WHERE bug_id = ?',
+                     undef,
+                     $bugid);
+            $dbh->do('DELETE FROM dependencies WHERE blocked = ?',
+                     undef,
+                     $bugid);
+
+            $deleted_bug_count++;
         }
-        print "Attachments, bug activity and dependencies deleted.<BR>\n";
 
+        $vars->{'deleted_bug_count'} = $deleted_bug_count;
 
         # Deleting the rest is easier:
 
-        SendSQL("DELETE FROM bugs
-             WHERE product_id=$product_id
-               AND target_milestone=" . SqlQuote($milestone));
-        print "Bugs deleted.<BR>\n";
+        $dbh->do('DELETE FROM bugs
+                  WHERE product_id = ?
+                  AND target_milestone = ?',
+                 undef,
+                 $product_id,
+                 $milestone);
     }
 
-    SendSQL("DELETE FROM milestones
-             WHERE product_id=$product_id
-               AND value=" . SqlQuote($milestone));
-    print "Milestone deleted.<P>\n";
+    $dbh->do('DELETE FROM milestones
+              WHERE product_id = ?
+              AND value = ?',
+             undef,
+             $product_id,
+             $milestone);
+
+    $dbh->do('UNLOCK TABLES');
 
     unlink "$datadir/versioncache";
-    PutTrailer($localtrailer);
+
+
+    $vars->{'name'} = $milestone;
+    $vars->{'product'} = $product;
+    $template->process("admin/milestones/deleted.html.tmpl",
+                       $vars)
+      || ThrowTemplateError($template->error());
     exit;
 }
 
@@ -469,33 +448,31 @@ if ($action eq 'delete') {
 #
 
 if ($action eq 'edit') {
-    PutHeader("Edit milestone of $product");
-    CheckMilestone($product,$milestone);
+
+    CheckMilestone($product, $milestone);
     my $product_id = get_product_id($product);
 
-    SendSQL("SELECT sortkey FROM milestones WHERE product_id=$product_id " .
-            " AND value = " . SqlQuote($milestone));
-    my $sortkey = FetchOneColumn();
+    my $dbh = Bugzilla->dbh;
 
-    print "<FORM METHOD=POST ACTION=editmilestones.cgi>\n";
-    print "<TABLE BORDER=0 CELLPADDING=4 CELLSPACING=0><TR>\n";
+    my $sth = $dbh->prepare_cached('SELECT sortkey
+                                    FROM milestones
+                                    WHERE product_id = ?
+                                    AND value = ?');
 
-    EmitFormElements($product, $milestone, $sortkey);
+    trick_taint($milestone);
 
-    print "</TR></TABLE>\n";
+    $vars->{'sortkey'} = $dbh->selectrow_array($sth,
+                                               undef,
+                                               $product_id,
+                                               $milestone) || 0;
 
-    print "<INPUT TYPE=HIDDEN NAME=\"milestoneold\" VALUE=\"" .
-        value_quote($milestone) . "\">\n";
-    print "<INPUT TYPE=HIDDEN NAME=\"sortkeyold\" VALUE=\"" .
-        value_quote($sortkey) . "\">\n";
-    print "<INPUT TYPE=HIDDEN NAME=\"action\" VALUE=\"update\">\n";
-    print "<INPUT TYPE=SUBMIT VALUE=\"Update\">\n";
+    $vars->{'name'} = $milestone;
+    $vars->{'product'} = $product;
 
-    print "</FORM>";
+    $template->process("admin/milestones/edit.html.tmpl",
+                       $vars)
+      || ThrowTemplateError($template->error());
 
-    my $other = $localtrailer;
-    $other =~ s/more/other/;
-    PutTrailer($other);
     exit;
 }
 
@@ -506,69 +483,117 @@ if ($action eq 'edit') {
 #
 
 if ($action eq 'update') {
-    PutHeader("Update milestone of $product");
 
-    my $milestoneold = trim($::FORM{milestoneold} || '');
-    my $sortkeyold = trim($::FORM{sortkeyold} || '0');
+    my $milestoneold = trim($cgi->param('milestoneold') || '');
+    my $sortkeyold = trim($cgi->param('sortkeyold')     || '0');
 
-    CheckMilestone($product,$milestoneold);
+    CheckMilestone($product, $milestoneold);
     my $product_id = get_product_id($product);
 
-    SendSQL("LOCK TABLES bugs WRITE,
-                         milestones WRITE,
-                         products WRITE");
+    if (length($milestone) > 20) {
+        ThrowUserError('milestone_name_too_long',
+                       {'name' => $milestone});
+        exit;
+    }
 
+    my $dbh = Bugzilla->dbh;
+
+    $dbh->do("LOCK TABLES bugs WRITE,
+                          milestones WRITE,
+                          products WRITE");
+
+    # Need to store because detaint_natural() will delete this if
+    # invalid
+    my $stored_sortkey = $sortkey;
     if ($sortkey != $sortkeyold) {
         if (!detaint_natural($sortkey)) {
-            print "The sortkey for a milestone must be a number. Please press\n";
-            print "<b>Back</b> and try again.\n";
-            PutTrailer($localtrailer);
+
+            $dbh->do('UNLOCK TABLES'); 
+            ThrowUserError('milestone_sortkey_invalid',
+                           {'name' => $milestone,
+                            'sortkey' => $stored_sortkey});
+
             exit;
         }
-        SendSQL("UPDATE milestones SET sortkey=$sortkey
-                 WHERE product_id=" . $product_id . "
-                   AND value=" . SqlQuote($milestoneold));
+
+        trick_taint($milestoneold);
+
+        $dbh->do('UPDATE milestones SET sortkey = ?
+                  WHERE product_id = ?
+                  AND value = ?',
+                 undef,
+                 $sortkey,
+                 $product_id,
+                 $milestoneold);
+
         unlink "$datadir/versioncache";
-        print "Updated sortkey.<BR>\n";
+        $vars->{'updated_sortkey'} = 1;
+        $vars->{'sortkey'} = $sortkey;
     }
+
     if ($milestone ne $milestoneold) {
         unless ($milestone) {
-            print "Sorry, I can't delete the milestone text.";
-            PutTrailer($localtrailer);
+            $dbh->do('UNLOCK TABLES'); 
+            ThrowUserError('milestone_blank_name');
             exit;
         }
-        if (TestMilestone($product,$milestone)) {
-            print "Sorry, milestone '$milestone' is already in use.";
-            PutTrailer($localtrailer);
+        if (TestMilestone($product, $milestone)) {
+            $dbh->do('UNLOCK TABLES'); 
+            ThrowUserError('milestone_already_exists',
+                           {'name' => $milestone,
+                            'product' => $product});
             exit;
         }
-        SendSQL("UPDATE bugs
-                 SET target_milestone=" . SqlQuote($milestone) . ",
-                 delta_ts=delta_ts
-                 WHERE target_milestone=" . SqlQuote($milestoneold) . "
-                   AND product_id=$product_id");
-        SendSQL("UPDATE milestones
-                 SET value=" . SqlQuote($milestone) . "
-                 WHERE product_id=$product_id
-                   AND value=" . SqlQuote($milestoneold));
-        SendSQL("UPDATE products " .
-                "SET defaultmilestone = " . SqlQuote($milestone) .
-                " WHERE id = $product_id" .
-                "  AND defaultmilestone = " . SqlQuote($milestoneold));
+
+        trick_taint($milestone);
+        trick_taint($milestoneold);
+
+        $dbh->do('UPDATE bugs
+                  SET target_milestone = ?,
+                  delta_ts = delta_ts
+                  WHERE target_milestone = ?
+                  AND product_id = ?',
+                 undef,
+                 $milestone,
+                 $milestoneold,
+                 $product_id);
+
+        $dbh->do("UPDATE milestones
+                  SET value = ?
+                  WHERE product_id = ?
+                  AND value = ?",
+                 undef,
+                 $milestone,
+                 $product_id,
+                 $milestoneold);
+
+        $dbh->do("UPDATE products
+                  SET defaultmilestone = ?
+                  WHERE id = ?
+                  AND defaultmilestone = ?",
+                 undef,
+                 $milestone,
+                 $product_id,
+                 $milestoneold);
+
         unlink "$datadir/versioncache";
-        print "Updated milestone.<BR>\n";
+
+        $vars->{'updated_name'} = 1;
     }
 
-    PutTrailer($localtrailer);
+    $dbh->do('UNLOCK TABLES'); 
+
+    $vars->{'name'} = $milestone;
+    $vars->{'product'} = $product;
+    $template->process("admin/milestones/updated.html.tmpl",
+                       $vars)
+      || ThrowTemplateError($template->error());
+
     exit;
 }
-
 
 
 #
 # No valid action found
 #
-
-PutHeader("Error");
-print "I don't have a clue what you want.<BR>\n";
-
+ThrowUserError('milestone_no_action');

@@ -30,7 +30,8 @@
 # Values always used for numbers  - [% (i|j|k|n|count) %]
 # Params                          - [% Param(...
 # Safe functions                  - [% (time2str|GetBugLink)...
-# Safe vmethods                   - [% foo.size %]
+# Safe vmethods                   - [% foo.size %] [% foo.length %]
+#                                   [% foo.push() %]
 # TT loop variables               - [% loop.count %]
 # Already-filtered stuff          - [% wibble FILTER html %]
 #   where the filter is one of html|csv|js|url_quote|quoteUrls|time|uri|xml|none
@@ -557,6 +558,14 @@
 
 'admin/components/select-product.html.tmpl' => [
   'cgi.query_string'
+],
+
+'admin/milestones/confirm-delete.html.tmpl' => [
+  'bug_count'
+],
+
+'admin/milestones/deleted.html.tmpl' => [
+  'deleted_bug_count'
 ],
 
 'account/login.html.tmpl' => [

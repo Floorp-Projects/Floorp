@@ -181,6 +181,11 @@
     Sorry, you aren't a member of the 'editcomponents' group, and so
     you aren't allowed to add, modify or delete components.
 
+  [% ELSIF error == "auth_cant_edit_milestones" %]
+    [% title = "Access Denied" %]
+    Sorry, you aren't a member of the 'editcomponents' group, and so
+    you aren't allowed to add, modify or delete milestones.
+
   [% ELSIF error == "component_already_exists" %]
     [% title = "Component Already Exists" %]
     A component with the name '[% name FILTER html %]' already exists.
@@ -553,12 +558,44 @@
     [% title = "Login Name Required" %]
     You must enter a login name when using your login as a pronoun.
 
+  [% ELSIF error == "milestone_already_exists" %]
+    [% title = "Milestone Already Exists" %]
+    The milestone '[% name FILTER html %]' already exists for product '
+    [%- product FILTER html %]'.
+
+  [% ELSIF error == "milestone_blank_name" %]
+    [% title = "Blank Milestone Name Not Allowed" %]
+    You must enter a name for this milestone.
+
+  [% ELSIF error == "milestone_name_too_long" %]
+    [% title = "Milestone Name Is Too Long" %]
+    The name of a milestone is limited to 20 characters. 
+    '[% name FILTER html %]' is too long ([% name.length %] characters).
+
+  [% ELSIF error == "milestone_no_action" %]
+    [% title = "No valid action specified" %]
+    No valid action was specified when trying to edit milestones.
+
+  [% ELSIF error == "milestone_not_specified" %]
+    [% title = "No Milestone Specified" %]
+    No milestone specified when trying to edit milestones.
+
+  [% ELSIF error == "milestone_not_valid" %]
+    [% title = "Specified Milestone Does Not Exist" %]
+    The milestone '[% milestone FILTER html %]' for product 
+    '[% product FILTER html %]' does not exist.
+
   [% ELSIF error == "milestone_required" %]
     [% title = "Milestone Required" %]
     You must determine a target milestone for [% terms.bug %] 
     [%+ bug_id FILTER html %]
     if you are going to accept it.  Part of accepting 
     [% terms.abug %] is giving an estimate of when it will be fixed.
+
+  [% ELSIF error == "milestone_sortkey_invalid" %]
+    [% title = "Invalid Milestone Sortkey" %]
+    The sortkey '[% sortkey FILTER html %]' for milestone '
+    [% name FILTER html %]' is not a valid (positive) number.
 
   [% ELSIF error == "misarranged_dates" %]
     [% title = "Misarranged Dates" %]
