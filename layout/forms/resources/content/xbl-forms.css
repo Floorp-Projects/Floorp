@@ -46,6 +46,15 @@ select, select[size="1"] {
   -moz-binding: url("chrome://forms/content/select.xml#select");
 }
 
+select[size] > option {
+  -moz-binding: none;
+}
+
+select > option,
+select[size="1"] > option {
+  -moz-binding: url("chrome://forms/content/select.xml#select-option");
+}
+
 /*
  * The following rules are copied from forms.css, for widgets that aren't yet
  * defined in XBL.

@@ -513,5 +513,22 @@
 
    </binding>
  
-  <binding id="select"/>
+  <binding id="select" extends="xul:menu">
+    <content sizetopopup="true">
+        <xul:label flex="1" value="Dummy" style="border: 1px solid red"/>
+        <xul:dropmarker/>
+        <xul:menupopup style="display:-moz-popup!important">
+          <children/>
+        </xul:menupopup>
+    </content>
+  </binding>
+
+  <binding id="select-option" extends="xul:menuitem">
+    <content>
+       <xul:label>
+         <children/>
+      </xul:label>
+    </content>
+  </binding>
+
 </bindings>          
