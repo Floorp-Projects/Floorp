@@ -31,6 +31,7 @@
 #include <Folders.h>
 #include <Resources.h>
 #include <TextUtils.h>
+#include <Aliases.h>
 #include <string.h>
 
 static nsresult getApplicationDir(nsFileSpec& outAppDir)
@@ -120,7 +121,9 @@ static char* GetPluginString(short id, short index)
 nsresult nsPluginFile::GetPluginInfo(nsPluginInfo& info)
 {
 	// need to open the plugin's resource file and read some resources.
-	const FSSpec spec = *this;
+	FSSpec spec = *this;
+	Boolean targetIsFolder, wasAliased;
+	OSErr err = ::ResolveAliasFile(&spec, true, &targetIsFolder, &wasAliased);
 	short refNum = ::FSpOpenResFile(&spec, fsRdPerm);
 	if (refNum != -1) {
 		if (info.fPluginInfoSize >= sizeof(nsPluginInfo)) {
