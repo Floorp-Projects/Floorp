@@ -38,15 +38,28 @@ class nsRuleNode: public nsIRuleNode {
 public:
   NS_DECL_ISUPPORTS
 
+    // for purposes of the RuleDetail (and related code),
+    //  * a non-inherited value is one that is specified as a
+    //    non-"inherit" value or as an "inherit" value that is reflected
+    //    in the struct and to the user of the style system with an
+    //    eCSSUnit_Inherit value
+    //  * an inherited value is one that is specified as "inherit" and
+    //    where the inheritance is computed by the style system
   enum RuleDetail {
     eRuleNone, // No props have been specified at all.
-    eRulePartialMixed,  // At least one prop with a non-inherited val has been specified.  Some props
-                        // may also have been specified with a val of "inherit".  At least one
-                        // prop remains unspecified.
-    eRulePartialInherited,  // Only props with vals of "inherit" have been specified.  At least
-                            // one prop remains unspecified.
-    eRuleFullMixed, // All props have been specified.  At least one has a non-inherited val.
-    eRuleFullInherited // All props have been specified with a val of "inherit"
+    eRulePartialMixed, // At least one prop with a non-inherited value
+                       // has been specified.  Some props may also have
+                       // been specified with an inherited value.  At
+                       // least one prop remains unspecified.
+    eRulePartialInherited, // Only props with inherited values have
+                           // have been specified.  At least one prop
+                           // remains unspecified.
+    eRuleFullMixed, // All props have been specified.  At least one has
+                    // a non-inherited value.
+    eRuleFullInherited, // All props have been specified with inherited
+                        // values.
+    eRuleUnknown // Information unknown (used as a result from a check
+                 // callback to trigger the normal checking codepath)
   };
 
 private:
@@ -88,11 +101,11 @@ protected:
   void PropagateInheritBit(PRUint32 aBit, nsRuleNode* aHighestNode);
   void PropagateNoneBit(PRUint32 aBit, nsRuleNode* aHighestNode);
  
-  PRBool InheritsFromParentRule(const nsStyleStructID& aSID);
+  PRBool InheritsFromParentRule(const nsStyleStructID aSID);
   
-  const nsStyleStruct* SetDefaultOnRoot(const nsStyleStructID& aSID, nsIStyleContext* aContext);
+  const nsStyleStruct* SetDefaultOnRoot(const nsStyleStructID aSID, nsIStyleContext* aContext);
 
-  const nsStyleStruct* WalkRuleTree(const nsStyleStructID& aSID, nsIStyleContext* aContext, 
+  const nsStyleStruct* WalkRuleTree(const nsStyleStructID aSID, nsIStyleContext* aContext, 
                                     nsRuleData* aRuleData,
                                     nsCSSStruct* aSpecificData);
 
@@ -177,32 +190,9 @@ protected:
 
   static ComputeStyleDataFn gComputeStyleDataFn[];
 
-  inline RuleDetail CheckSpecifiedProperties(const nsStyleStructID& aSID, const nsCSSStruct& aCSSStruct);
-  inline RuleDetail CheckDisplayProperties(const nsCSSDisplay& aDisplay);
-  inline RuleDetail CheckVisibilityProperties(const nsCSSDisplay& aDisplay);
-  inline RuleDetail CheckFontProperties(const nsCSSFont& aFont);
-  inline RuleDetail CheckColorProperties(const nsCSSColor& aColor);
-  inline RuleDetail CheckBackgroundProperties(const nsCSSColor& aColor);
-  inline RuleDetail CheckMarginProperties(const nsCSSMargin& aMargin);
-  inline RuleDetail CheckBorderProperties(const nsCSSMargin& aMargin);
-  inline RuleDetail CheckPaddingProperties(const nsCSSMargin& aMargin);
-  inline RuleDetail CheckOutlineProperties(const nsCSSMargin& aMargin);
-  inline RuleDetail CheckListProperties(const nsCSSList& aList);
-  inline RuleDetail CheckPositionProperties(const nsCSSPosition& aPosition);
-  inline RuleDetail CheckTableProperties(const nsCSSTable& aTable);
-  inline RuleDetail CheckTableBorderProperties(const nsCSSTable& aTable);
-  inline RuleDetail CheckContentProperties(const nsCSSContent& aContent);
-  inline RuleDetail CheckQuotesProperties(const nsCSSContent& aContent);
-  inline RuleDetail CheckTextProperties(const nsCSSText& aText);
-  inline RuleDetail CheckTextResetProperties(const nsCSSText& aText);
-  inline RuleDetail CheckUIProperties(const nsCSSUserInterface& aUI);
-  inline RuleDetail CheckUIResetProperties(const nsCSSUserInterface& aUI);
+  inline RuleDetail CheckSpecifiedProperties(const nsStyleStructID aSID, const nsCSSStruct& aCSSStruct);
 
-#ifdef INCLUDE_XUL
-  RuleDetail CheckXULProperties(const nsCSSXUL& aXUL);
-#endif
-
-  const nsStyleStruct* GetParentData(const nsStyleStructID& aSID);
+  const nsStyleStruct* GetParentData(const nsStyleStructID aSID);
   const nsStyleStruct* GetDisplayData(nsIStyleContext* aContext);
   const nsStyleStruct* GetVisibilityData(nsIStyleContext* aContext);
   const nsStyleStruct* GetFontData(nsIStyleContext* aContext);
