@@ -13,16 +13,18 @@
     </resources>
 
     <content sizetopopup="true">
-      <children includes="image|deck">
-        <xul:image class="autocomplete-icon" allowevents="true"/>
-      </children>
+      <xul:hbox class="autocomplete-textbox-container" flex="1">
+        <children includes="image|deck">
+          <xul:image class="autocomplete-icon" allowevents="true"/>
+        </children>
 
-      <xul:hbox class="textbox-input-box" flex="1">
-        <html:input anonid="input" class="autocomplete-textbox textbox-input"
-                    flex="1" allowevents="true"
-                    inherits="onfocus,onblur,value,type,maxlength,disabled,size,readonly,userAction"/>
+        <xul:hbox class="textbox-input-box" flex="1">
+          <html:input anonid="input" class="autocomplete-textbox textbox-input"
+                      flex="1" allowevents="true"
+                      inherits="onfocus,onblur,value,type,maxlength,disabled,size,readonly,userAction"/>
+        </xul:hbox>
       </xul:hbox>
-                                
+                          
       <xul:dropmarker class="autocomplete-history-dropmarker" allowevents="true"
                       inherits="open,hidden=disablehistory"/>
 
