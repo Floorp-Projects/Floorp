@@ -596,7 +596,8 @@
            if (!this.treeBoxObject.selection.isSelected(c))
              this.treeBoxObject.selection.toggleSelect(c);
          }
-         else if (!this.disableKeyNavigation && event.charCode > 0) {
+         else if (!this.disableKeyNavigation && event.charCode > 0 &&
+                  !event.altKey && !event.ctrlKey && !event.shiftKey && !event.metaKey) {
            var key = String.fromCharCode(event.charCode);
            key = key.toLowerCase();
            if (event.timeStamp - this._lastKeyTime > 1000)
