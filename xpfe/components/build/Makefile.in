@@ -95,34 +95,44 @@ EXTRA_DSO_LIBS	+= mozutil_s
 endif
 
 SHARED_LIBRARY_LIBS = \
-	$(DIST)/lib/$(LIB_PREFIX)appcompintl_s.$(LIB_SUFFIX) \
 	$(DIST)/lib/$(LIB_PREFIX)directory_s.$(LIB_SUFFIX) \
+	$(NULL)
+
+ifneq ($(MOZ_BUILD_APP),macbrowser)
+SHARED_LIBRARY_LIBS += \
+	$(DIST)/lib/$(LIB_PREFIX)appcompintl_s.$(LIB_SUFFIX) \
 	$(DIST)/lib/$(LIB_PREFIX)search_s.$(LIB_SUFFIX) \
 	$(DIST)/lib/$(LIB_PREFIX)windowds_s.$(LIB_SUFFIX) \
 	$(DIST)/lib/$(LIB_PREFIX)mozbrwsr_s.$(LIB_SUFFIX) \
 	$(NULL)
+endif
 
 ifndef MOZ_PHOENIX
 ifndef MOZ_XULRUNNER
 SHARED_LIBRARY_LIBS += \
 	$(DIST)/lib/$(LIB_PREFIX)autocomplete_s.$(LIB_SUFFIX) \
-  $(DIST)/lib/$(LIB_PREFIX)bookmarks_s.$(LIB_SUFFIX) \
+	$(NULL)
+
+ifneq ($(MOZ_BUILD_APP),macbrowser)
+SHARED_LIBRARY_LIBS += \
+	$(DIST)/lib/$(LIB_PREFIX)bookmarks_s.$(LIB_SUFFIX) \
 	$(DIST)/lib/$(LIB_PREFIX)downloadmanager_s.$(LIB_SUFFIX) \
 	$(DIST)/lib/$(LIB_PREFIX)history_s.$(LIB_SUFFIX) \
 	$(DIST)/lib/$(LIB_PREFIX)related_s.$(LIB_SUFFIX) \
 	../startup/src/$(LIB_PREFIX)appstartup_s.$(LIB_SUFFIX) \
-  $(NULL)
+	$(NULL)
+endif
 
 ifeq ($(OS_ARCH),WINNT)
 SHARED_LIBRARY_LIBS += \
 	$(DIST)/lib/$(LIB_PREFIX)alerts_s.$(LIB_SUFFIX) \
 	$(DIST)/lib/$(LIB_PREFIX)urlwidgt_s.$(LIB_SUFFIX) \
-  $(DIST)/lib/$(LIB_PREFIX)winhooks_s.$(LIB_SUFFIX) \
+	$(DIST)/lib/$(LIB_PREFIX)winhooks_s.$(LIB_SUFFIX) \
 	$(NULL)
-endif
+endif # WINNT
 
-endif
-endif
+endif # MOZ_XULRUNNER
+endif # MOZ_PHOENIX
 
 LOCAL_INCLUDES	= \
 	-I$(srcdir)/../../browser/src \
@@ -149,9 +159,12 @@ LOCAL_INCLUDES += \
   -I$(srcdir)/../winhooks \
   $(NULL)
 endif
+
 ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
+ifneq ($(MOZ_BUILD_APP),macbrowser)
 SHARED_LIBRARY_LIBS += $(DIST)/lib/$(LIB_PREFIX)appleevents_s.$(LIB_SUFFIX)
 EXTRA_DSO_LDOPTS += $(TK_LIBS)
+endif
 endif
 
 endif # MOZ_XULRUNNER

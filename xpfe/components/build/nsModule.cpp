@@ -34,6 +34,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
 #include "nsIGenericFactory.h"
 #include "nsICategoryManager.h"
 #include "rdf.h"
@@ -45,8 +46,12 @@
 #include "nsFontPackageHandler.h"
 #include "nsWindowDataSource.h"
 #include "nsRDFCID.h"
+
 #if !defined(MOZ_PHOENIX) && !defined(MOZ_XULRUNNER)
 #include "nsAutoComplete.h"
+#endif
+
+#if !defined(MOZ_PHOENIX) && !defined(MOZ_XULRUNNER) && !defined(MOZ_MACBROWSER)
 #include "nsBookmarksService.h"
 #include "nsRelatedLinksHandlerImpl.h"
 #include "nsGlobalHistory.h"
@@ -56,10 +61,13 @@
 #include "nsAppStartup.h"
 #include "nsCommandLineService.h"
 #include "nsUserInfo.h"
+
 #if defined(MOZ_LDAP_XPCOM)
 #include "nsLDAPAutoCompleteSession.h"
-#endif
-#endif
+#endif // defined(MOZ_LDAP_XPCOM)
+
+#endif // !defined(MOZ_PHOENIX) && !defined(MOZ_XULRUNNER) && !defined(MOZ_MACBROWSER)
+
 #if defined(XP_WIN)
 #if !defined(MOZ_PHOENIX) && !defined(MOZ_XULRUNNER)
 #include "nsWindowsHooks.h"
@@ -83,14 +91,23 @@
 // Factory constructors
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsHTTPIndex, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDirectoryViewerFactory)
+
+#if !defined(MOZ_MACBROWSER)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(LocalSearchDataSource, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(InternetSearchDataSource, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsFontPackageHandler)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsWindowDataSource, Init)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsBrowserStatusFilter)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsBrowserInstance)
+#endif
+
 #if !defined(MOZ_PHOENIX) && !defined(MOZ_XULRUNNER)
-NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(RelatedLinksHandlerImpl, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsAutoCompleteItem)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsAutoCompleteResults)
+#endif
+
+#if !defined(MOZ_PHOENIX) && !defined(MOZ_XULRUNNER) && !defined(MOZ_MACBROWSER)
+NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(RelatedLinksHandlerImpl, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsBookmarksService, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsGlobalHistory, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsDownloadManager, Init)
@@ -100,8 +117,9 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsAppStartup)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsUserInfo)
 #if defined(MOZ_LDAP_XPCOM)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsLDAPAutoCompleteSession)
-#endif
-#endif
+#endif // defined(MOZ_LDAP_XPCOM)
+#endif // !defined(MOZ_PHOENIX) && !defined(MOZ_XULRUNNER) && !defined(MOZ_MACBROWSER)
+
 #if defined(XP_WIN)
 #if !defined(MOZ_PHOENIX) && !defined(MOZ_XULRUNNER)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsWindowsHooks)
@@ -110,10 +128,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsUrlWidget, Init)
 #endif
 #endif // Windows
 
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsBrowserStatusFilter)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsBrowserInstance)
-
-#ifndef MOZ_XUL_APP
+#if (!defined(MOZ_XUL_APP)) && !defined(MOZ_MACBROWSER)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsBrowserContentHandler)
 #endif
 
@@ -175,7 +190,15 @@ static const nsModuleComponentInfo components[] = {
       nsHTTPIndexConstructor },
     { "Directory Viewer", NS_HTTPINDEX_SERVICE_CID, NS_HTTPINDEX_DATASOURCE_CONTRACTID,
       nsHTTPIndexConstructor },
+
 #if !defined(MOZ_PHOENIX) && !defined(MOZ_XULRUNNER)
+    { "AutoComplete Search Results", NS_AUTOCOMPLETERESULTS_CID, NS_AUTOCOMPLETERESULTS_CONTRACTID,
+      nsAutoCompleteResultsConstructor},
+    { "AutoComplete Search Item", NS_AUTOCOMPLETEITEM_CID, NS_AUTOCOMPLETEITEM_CONTRACTID,
+      nsAutoCompleteItemConstructor},
+#endif
+
+#if !defined(MOZ_PHOENIX) && !defined(MOZ_XULRUNNER) && !defined(MOZ_MACBROWSER)
     { "Bookmarks", NS_BOOKMARKS_SERVICE_CID, NS_BOOKMARKS_SERVICE_CONTRACTID,
       nsBookmarksServiceConstructor },
     { "Bookmarks", NS_BOOKMARKS_SERVICE_CID,
@@ -187,10 +210,6 @@ static const nsModuleComponentInfo components[] = {
       nsDownloadManagerConstructor },
     { "Download", NS_DOWNLOAD_CID, NS_TRANSFER_CONTRACTID,
       nsDownloadProxyConstructor },
-    { "AutoComplete Search Results", NS_AUTOCOMPLETERESULTS_CID, NS_AUTOCOMPLETERESULTS_CONTRACTID,
-      nsAutoCompleteResultsConstructor},
-    { "AutoComplete Search Item", NS_AUTOCOMPLETEITEM_CID, NS_AUTOCOMPLETEITEM_CONTRACTID,
-      nsAutoCompleteItemConstructor},
     { "Global History", NS_GLOBALHISTORY_CID, NS_GLOBALHISTORY2_CONTRACTID,
       nsGlobalHistoryConstructor },
     { "Global History", NS_GLOBALHISTORY_CID, NS_GLOBALHISTORY_DATASOURCE_CONTRACTID,
@@ -216,10 +235,12 @@ static const nsModuleComponentInfo components[] = {
     { "LDAP Autocomplete Session", NS_LDAPAUTOCOMPLETESESSION_CID,
 	  "@mozilla.org/autocompleteSession;1?type=ldap",
 	  nsLDAPAutoCompleteSessionConstructor },
-#endif
+#endif // defined(MOZ_LDAP_XPCOM)
     { "Related Links Handler", NS_RELATEDLINKSHANDLER_CID, NS_RELATEDLINKSHANDLER_CONTRACTID,
        RelatedLinksHandlerImplConstructor},
-#endif
+#endif // !defined(MOZ_PHOENIX) && !defined(MOZ_XULRUNNER) && !defined(MOZ_MACBROWSER)
+
+#if !defined(MOZ_MACBROWSER)
     { "Local Search", NS_RDFFINDDATASOURCE_CID,
       NS_LOCALSEARCH_SERVICE_CONTRACTID, LocalSearchDataSourceConstructor },
     { "Local Search", NS_RDFFINDDATASOURCE_CID,
@@ -238,21 +259,30 @@ static const nsModuleComponentInfo components[] = {
       NS_WINDOWDATASOURCE_CID,
       NS_RDF_DATASOURCE_CONTRACTID_PREFIX "window-mediator",
       nsWindowDataSourceConstructor, RegisterWindowDS },
+    { NS_BROWSERSTATUSFILTER_CLASSNAME,
+      NS_BROWSERSTATUSFILTER_CID,
+      NS_BROWSERSTATUSFILTER_CONTRACTID,
+      nsBrowserStatusFilterConstructor
+    },
+    { "nsBrowserInstance",
+      NS_BROWSERINSTANCE_CID,
+      NS_BROWSERINSTANCE_CONTRACTID,
+      nsBrowserInstanceConstructor
+    },
+#endif
+
 #if defined(XP_WIN)
 #if !defined(MOZ_PHOENIX) && !defined(MOZ_XULRUNNER)
-    { NS_IURLWIDGET_CLASSNAME, NS_IURLWIDGET_CID, NS_IURLWIDGET_CONTRACTID,
-      nsUrlWidgetConstructor },
-    { "nsAlertsService", NS_ALERTSSERVICE_CID, NS_ALERTSERVICE_CONTRACTID, nsAlertsServiceConstructor},
-    { NS_IWINDOWSHOOKS_CLASSNAME, NS_IWINDOWSHOOKS_CID, NS_IWINDOWSHOOKS_CONTRACTID,
-      nsWindowsHooksConstructor },
+    { NS_IURLWIDGET_CLASSNAME, NS_IURLWIDGET_CID,
+      NS_IURLWIDGET_CONTRACTID, nsUrlWidgetConstructor },
+    { "nsAlertsService", NS_ALERTSSERVICE_CID,
+      NS_ALERTSERVICE_CONTRACTID, nsAlertsServiceConstructor },
+    { NS_IWINDOWSHOOKS_CLASSNAME, NS_IWINDOWSHOOKS_CID,
+      NS_IWINDOWSHOOKS_CONTRACTID, nsWindowsHooksConstructor },
 #endif
-#endif // Windows
-  { "nsBrowserInstance",
-    NS_BROWSERINSTANCE_CID,
-    NS_BROWSERINSTANCE_CONTRACTID,
-    nsBrowserInstanceConstructor
-  },
-#ifndef MOZ_XUL_APP
+#endif // defined(XP_WIN)
+
+#if (!defined(MOZ_XUL_APP)) && !defined(MOZ_MACBROWSER)
   { "Browser Content Handler",
     NS_BROWSERCONTENTHANDLER_CID,
     NS_CONTENT_HANDLER_CONTRACTID_PREFIX"text/html",
@@ -269,7 +299,7 @@ static const nsModuleComponentInfo components[] = {
     NS_CONTENT_HANDLER_CONTRACTID_PREFIX"image/svg+xml",
     nsBrowserContentHandlerConstructor
   },
-#endif
+#endif // MOZ_SVG
   { "Browser Content Handler",
     NS_BROWSERCONTENTHANDLER_CID,
     NS_CONTENT_HANDLER_CONTRACTID_PREFIX"text/rdf",
@@ -357,12 +387,7 @@ static const nsModuleComponentInfo components[] = {
     "@mozilla.org/commandlinehandler/general-startup;1?type=chrome",
     nsBrowserContentHandlerConstructor,
   },
-#endif //!MOZ_XUL_APP
-  { NS_BROWSERSTATUSFILTER_CLASSNAME,
-    NS_BROWSERSTATUSFILTER_CID,
-    NS_BROWSERSTATUSFILTER_CONTRACTID,
-    nsBrowserStatusFilterConstructor
-  }
+#endif //!defined(MOZ_XUL_APP) && !defined(MOZ_MACBROWSER)
 };
 
 NS_IMPL_NSGETMODULE(application, components)
