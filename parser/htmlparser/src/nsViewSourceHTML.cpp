@@ -208,7 +208,7 @@ public:
 CViewSourceHTML::CViewSourceHTML() : nsIDTD(), 
   mStartTag("start"), mEndTag("end"), mCommentTag("comment"), 
   mDocTypeTag("doctype"), mPITag("pi"), mEntityTag("entity"), 
-  mText("txt"), mKey("key"), mValue("val") 
+  mText("txt"), mKey("key"), mValue("val"), mCDATATag("cdata")
 {
   NS_INIT_REFCNT();
   mParser=0;
@@ -875,6 +875,15 @@ NS_IMETHODIMP CViewSourceHTML::HandleToken(CToken* aToken,nsIParser* aParser) {
 
     case eToken_end:
       result=WriteTag(mEndTag,aToken,0,PR_TRUE);
+      break;
+
+    case eToken_cdatasection:
+      {
+        nsString& theStr=aToken->GetStringValueXXX();
+        theStr.Insert("<!",0);
+        theStr.Append("]]>");
+        result=WriteTag(mCDATATag,aToken,0,PR_TRUE);
+      }
       break;
 
     case eToken_comment:

@@ -1935,39 +1935,19 @@ const nsParserError * CErrorToken::GetError(void)
 CDoctypeDeclToken::CDoctypeDeclToken(eHTMLTags aTag) : CHTMLToken(aTag) {
 }
 
+/**
+ *  This method consumes a doctype element.
+ *  Note: I'm rewriting this method to seek to the first <, since quotes can really screw us up.
+ *  
+ *  @update  gess 9/23/98
+ *  @param   
+ *  @return  
+ */
 nsresult CDoctypeDeclToken::Consume(PRUnichar aChar, nsScanner& aScanner,PRInt32 aMode) {
-  nsresult  result=NS_OK;
   
   mTextValue="<!";
   
-  static const char* theTerminals="\">[";
-  PRBool done=PR_FALSE;
-     
-  result=aScanner.ReadUntil(mTextValue,theTerminals,PR_TRUE,PR_FALSE); 
-  
-  while(!done && NS_OK==result){
-    result=aScanner.Peek(aChar);
-    if(result==NS_OK) {
-      if(kQuote==aChar) {
-        result=aScanner.GetChar(aChar);
-        if(NS_OK==result) mTextValue += aChar; // append the quote that you just got
-        result=aScanner.ReadUntil(mTextValue,kQuote,PR_TRUE);
-        if(NS_OK==result && aMode!=eParseMode_noquirks)
-          result=aScanner.ReadWhile(mTextValue,"\"",PR_TRUE,PR_FALSE); // consume multiple quotes
-      }
-      else if(kLeftSquareBracket==aChar) {
-        result=aScanner.ReadUntil(mTextValue,kRightSquareBracket,PR_TRUE);
-      }
-      else if(kGreaterThan==aChar){
-        result=aScanner.ReadUntil(mTextValue,kGreaterThan,PR_TRUE);
-        done=PR_TRUE;
-      }
-      else {
-        result=aScanner.GetChar(aChar);
-        if(result==NS_OK) mTextValue += aChar;
-      }
-    }
-  }
+  nsresult result=aScanner.ReadUntil(mTextValue,'<',PR_FALSE); 
   return result;
 }
 

@@ -123,7 +123,7 @@ class COtherDTD : public CNavDTD {
      *  @param   aTag -- tag to test for containership
      *  @return  PR_TRUE if given tag can contain other tags
      */
-    virtual PRBool CanOmit(eHTMLTags aParent,eHTMLTags aChild,PRInt32 aParentContains)const;
+    virtual PRBool CanOmit(eHTMLTags aParent,eHTMLTags aChild,PRBool& aParentContains) const;
 
     /**
      * Give rest of world access to our tag enums, so that CanContain(), etc,

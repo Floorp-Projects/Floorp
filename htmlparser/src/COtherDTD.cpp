@@ -337,7 +337,7 @@ NS_IMETHODIMP COtherDTD::ConvertEntityToUnicode(const nsString& aEntity, PRInt32
  *  @param   aTag -- tag to test for containership
  *  @return  PR_TRUE if given tag can contain other tags
  */
-PRBool COtherDTD::CanOmit(eHTMLTags aParent,eHTMLTags aChild,PRInt32 aParentContains) const {
+PRBool COtherDTD::CanOmit(eHTMLTags aParent,eHTMLTags aChild,PRBool& aParentContains) const {
   return CNavDTD::CanOmit(aParent,aChild,aParentContains);
 }
 

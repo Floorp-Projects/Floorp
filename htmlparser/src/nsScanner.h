@@ -316,6 +316,7 @@ class nsScanner {
 
   protected:
 
+
     enum {eBufferSizeThreshold=0x1000};  //4K
 
       /**
