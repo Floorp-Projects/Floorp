@@ -12,9 +12,10 @@ use strict;
 # They are not initialized here. The default values are after "__END__".
 $TreeSpecific::name = $TreeSpecific::checkout_target = $TreeSpecific::checkout_clobber_target = $::Version = undef;
 
-$::Version = '$Revision: 1.94 $ ';
+$::Version = '$Revision: 1.95 $ ';
 
 {
+    $ENV{CVSROOT} = ":pserver:$ENV{USER}%netscape.com\@cvs.mozilla.org:/cvsroot";
     TinderUtils::Setup();
     tree_specific_overides();
     TinderUtils::Build();
@@ -26,7 +27,6 @@ $::Version = '$Revision: 1.94 $ ';
 
 
 sub tree_specific_overides {
-    $ENV{CVSROOT} = ":pserver:$ENV{USER}%netscape.com\@cvs.mozilla.org:/cvsroot";
 
 	$TreeSpecific::name = 'mozilla';
 	$TreeSpecific::checkout_target = '';
