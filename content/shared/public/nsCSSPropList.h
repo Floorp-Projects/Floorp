@@ -162,8 +162,8 @@ CSS_PROP_INTERNAL(-x-clip-right, clip_right, ClipRight, nsChangeHint_SyncFrameVi
 CSS_PROP_INTERNAL(-x-clip-top, clip_top, ClipTop, nsChangeHint_SyncFrameView) // XXX bug 3935
 CSS_PROP(color, color, Color, NS_STYLE_HINT_VISUAL)
 CSS_PROP(content, content, Content, NS_STYLE_HINT_FRAMECHANGE)
-CSS_PROP(counter-increment, counter_increment, CounterIncrement, NS_STYLE_HINT_REFLOW)
-CSS_PROP(counter-reset, counter_reset, CounterReset, NS_STYLE_HINT_REFLOW)
+CSS_PROP_NOTIMPLEMENTED(counter-increment, counter_increment, CounterIncrement, NS_STYLE_HINT_REFLOW)
+CSS_PROP_NOTIMPLEMENTED(counter-reset, counter_reset, CounterReset, NS_STYLE_HINT_REFLOW)
 CSS_PROP(-moz-counter-increment, _moz_counter_increment, MozCounterIncrement, NS_STYLE_HINT_REFLOW) // XXX bug 137285
 CSS_PROP(-moz-counter-reset, _moz_counter_reset, MozCounterReset, NS_STYLE_HINT_REFLOW) // XXX bug 137285
 CSS_PROP(cue, cue, Cue, NS_STYLE_HINT_AURAL)
@@ -212,10 +212,10 @@ CSS_PROP(min-height, min_height, MinHeight, NS_STYLE_HINT_REFLOW)
 CSS_PROP(min-width, min_width, MinWidth, NS_STYLE_HINT_REFLOW)
 CSS_PROP(-moz-opacity, opacity, MozOpacity, NS_STYLE_HINT_FRAMECHANGE) // XXX bug 3935
 CSS_PROP(orphans, orphans, Orphans, NS_STYLE_HINT_REFLOW)
-CSS_PROP(outline, outline, Outline, NS_STYLE_HINT_VISUAL)
-CSS_PROP(outline, outline_color, OutlineColor, NS_STYLE_HINT_VISUAL)
-CSS_PROP(outline, outline_style, OutlineStyle, NS_STYLE_HINT_VISUAL)
-CSS_PROP(outline, outline_width, OutlineWidth, NS_STYLE_HINT_VISUAL)
+CSS_PROP_NOTIMPLEMENTED(outline, outline, Outline, NS_STYLE_HINT_VISUAL)
+CSS_PROP_NOTIMPLEMENTED(outline-color, outline_color, OutlineColor, NS_STYLE_HINT_VISUAL)
+CSS_PROP_NOTIMPLEMENTED(outline-style, outline_style, OutlineStyle, NS_STYLE_HINT_VISUAL)
+CSS_PROP_NOTIMPLEMENTED(outline-width, outline_width, OutlineWidth, NS_STYLE_HINT_VISUAL)
 CSS_PROP(-moz-outline, _moz_outline, MozOutline, NS_STYLE_HINT_VISUAL)  // XXX This is temporary fix for nsbeta3+ Bug 48973, turning outline into -moz-outline  XXX bug 48973
 CSS_PROP(-moz-outline-color, _moz_outline_color, MozOutlineColor, NS_STYLE_HINT_VISUAL) // XXX bug 48973
 CSS_PROP(-moz-outline-style, _moz_outline_style, MozOutlineStyle, NS_STYLE_HINT_VISUAL) // XXX bug 48973
