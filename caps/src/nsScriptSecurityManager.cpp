@@ -115,12 +115,11 @@ GetScriptContext(JSContext *cx)
 class ClassInfoData
 {
 public:
-    ClassInfoData(nsIClassInfo *aClassInfo, const char* aName)
+    ClassInfoData(nsIClassInfo *aClassInfo, const char *aName)
         : mClassInfo(aClassInfo), mDidGetFlags(PR_FALSE),
-          mName((char*) aName), mMustFreeName(PR_FALSE)
+          mName(NS_CONST_CAST(char *, aName)), mMustFreeName(PR_FALSE)
     {
     }
-
 
     ~ClassInfoData()
     {
@@ -132,7 +131,6 @@ public:
     {
         if (!mDidGetFlags) {
             if (mClassInfo) {
-                mDidGetFlags = PR_TRUE;
                 nsresult rv = mClassInfo->GetFlags(&mFlags);
                 if (NS_FAILED(rv)) {
                     mFlags = 0;
@@ -140,6 +138,8 @@ public:
             } else {
                 mFlags = 0;
             }
+
+            mDidGetFlags = PR_TRUE;
         }
 
         return mFlags;
@@ -149,6 +149,7 @@ public:
     {
         return GetFlags() & nsIClassInfo::DOM_OBJECT;
     }
+
     PRBool IsContentNode()
     {
         return GetFlags() & nsIClassInfo::CONTENT_NODE;
@@ -156,15 +157,18 @@ public:
 
     const char* GetName()
     {
-        if (!mName)
-        {
-            if (mClassInfo)
+        if (!mName) {
+            if (mClassInfo) {
                 mClassInfo->GetClassDescription(&mName);
-            if (!mName)
-                return "UnnamedClass";
+            }
 
-            mMustFreeName = PR_TRUE;
+            if (mName) {
+                mMustFreeName = PR_TRUE;
+            } else {
+                mName = NS_CONST_CAST(char *, "UnnamedClass");
+            }
         }
+
         return mName;
     }
 
@@ -172,7 +176,7 @@ private:
     nsIClassInfo *mClassInfo; // WEAK
     PRBool mDidGetFlags;
     PRUint32 mFlags;
-    char* mName;
+    char *mName;
     PRBool mMustFreeName;
 };
  
