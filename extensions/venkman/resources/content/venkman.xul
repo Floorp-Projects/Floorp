@@ -110,11 +110,14 @@
     <command id="cmd_tmode_ignore" oncommand="setThrowMode(TMODE_IGNORE);"/>
     <command id="cmd_tmode_trace" oncommand="setThrowMode(TMODE_TRACE);"/>
     <command id="cmd_tmode_break" oncommand="setThrowMode(TMODE_BREAK);"/>
+    <command id="cmd_stop" oncommand="console.doCommandToggleStop();"/>
   </commandset>
 
   <commandset id="venkmanDebuggerCommands">
     <!-- commands in this set will be disabled when we're not stopped -->
+    <command id="cmd_step_over" oncommand="console.doCommandNext();"/>
     <command id="cmd_step_in" oncommand="console.doCommandStep();"/>
+    <command id="cmd_step_out" oncommand="console.doCommandStepOut();"/>
     <command id="cmd_cont" oncommand="console.doCommandCont();"/>
   </commandset>
 
@@ -122,16 +125,19 @@
     <key id="key_reload_ui" observes="cmd_reload_ui" 
       modifiers="control alt" key="R"/>
     <key id="key_focus" observes="cmd_focus" keycode="VK_TAB"/>
+    <key id="key_stop" observes="cmd_stop" keycode="VK_F4"/>
     <key id="key_cont" observes="cmd_cont" keycode="VK_F5"/>
-    <key id="key_cont" observes="cmd_cont" keycode="VK_F5"/>
-    <key id="key_step_in" observes="cmd_step_in" keycode="VK_F10"/>
+    <key id="key_step_over" observes="cmd_step_over" keycode="VK_F10"/>
+    <key id="key_step_in" observes="cmd_step_in" keycode="VK_F11"/>
+    <key id="key_step_out" observes="cmd_step_out" modifiers="shift"
+      keycode="VK_F11"/>
     <key id="key_tmode_cycle" observes="cmd_tmode_cycle"
          modifiers="control" key="T"/>
   </keyset>
 
   <popupset id="tooltip-set">
     <popup id="tooltip-popup" class="tooltip" 
-      onpopupshowing="return fillInTooltip(document.tooltipNode);">
+      oncreate="return fillInTooltip(document.tooltipNode);">
       <box id="tooltipBox" orient="vertical"/>
     </popup>
   </popupset>
@@ -149,18 +155,33 @@
           <menuitem id="menu_close"/>
         </menupopup>
       </menu>
+    <!--
+      <menu id="menu_View">
+        <menupopup id="menu_ViewPopup">
+        </menupopup>        
+      </menu>
+    -->
       <menu id="menu_Debug" label="&Debug.label;" accesskey="&Debug.aKey;">
         <menupopup id="menu_DebugPopup">
+          <menuitem id="menu_Stop" key="key_stop"
+            observes="cmd_stop"
+            label="&Stop.label;" accesskey="&Stop.aKey;"/>
           <menuitem id="menu_Cont" key="key_cont"
             observes="cmd_cont"
             label="&Cont.label;" accesskey="&Cont.aKey;"/>
+          <menuitem id="menu_StepOver" key="key_step_over"
+            observes="cmd_step_over"
+            label="&StepOver.label;" accesskey="&StepOver.aKey;"/>
           <menuitem id="menu_StepInto" key="key_step_in"
             observes="cmd_step_in"
             label="&StepIn.label;" accesskey="&StepIn.aKey;"/>
+          <menuitem id="menu_StepOut" key="key_step_out"
+            observes="cmd_step_out"
+            label="&StepOut.label;" accesskey="&StepOut.aKey;"/>
           <menuseparator/>
-          <menu id="menu_ThrowMode" label = "&TModeMenu.label;"
+          <menu id="menu_ThrowMode" label="&TModeMenu.label;"
                 accesskey="&TModeMenu.aKey;">
-            <menupopup onpopupshowing="console.onTModeMenuCreate();">
+            <menupopup oncreate="console.onTModeMenuCreate();">
               <menuitem id="menu_TModeIgnore"
                         observes="cmd_tmode_ignore" type="radio"
                         label="&TModeIgnore.label;"
@@ -186,82 +207,115 @@
 
     <toolbar class="toolbar-primary chromeclass-toolbar" id="main-toolbar">
       <hbox id="main-toolbar-buttons">
+        <button class="button-toolbar-1 top" id="stop-button"
+                label="&Stop.label;" observes="cmd_stop"/>
+        <toolbarseparator class="toolbarseparator-primary"/>
         <button class="button-toolbar-1 top" id="cont-button"
                 label="&Cont.label;" observes="cmd_cont"/>
+        <button class="button-toolbar-1 top" id="step-over-button"
+                label="&StepOver.label;" observes="cmd_step_over"/>
         <button class="button-toolbar-1 top" id="step-in-button"
                 label="&StepIn.label;" observes="cmd_step_in"/>
+        <button class="button-toolbar-1 top" id="step-out-button"
+                label="&StepOut.label;" observes="cmd_step_out"/>
       </hbox>
     </toolbar>
       
   </toolbox>
 
-  <vbox flex="1">
+  <box flex="1" orient="vertical">
+      <hbox flex="1" id="top-hbox" persist="height">
 
-    <hbox flex="1" id="middle-containing-hbox">
-      <box flex="1" id="side-vbox" orient="vertical">
+        <vbox flex="1" id="top-left-pane" persist="width">
+          <outliner flex="1" id="project-outliner" persist="height"
+            onselect="console.onProjectSelect(event);">
 
-        <outliner flex="1" id="script-list-outliner"
-          onclick="console.onScriptClick(event);">
+            <outlinercol id="project-col-0" label="" primary="true" flex="5"
+              persist="hidden width"/>
+            <splitter class="tree-splitter"/>
+            <outlinercol id="project-col-1" flex="1" label = ""
+              persist="hidden width"/>
+            <splitter class="tree-splitter"/>
+            <outlinercol id="project-col-2" flex="1" label = ""
+              persist="hidden width"/>
+            <splitter class="tree-splitter"/>
+            <outlinercol id="project-col-3" flex="1" label = ""
+              persist="hidden width"/>
 
-          <outlinercol id="script-file-name" label="&FileName.header;" 
-           class="outlinercol-header outlinercol-inset-header" flex="95"
-           persist="hidden width"/>
-          <splitter class="tree-splitter"/>
-          <outlinercol flex="5" id="script-count"
-            label="&ScriptCount.header;" persist="hidden width"
-            class="outlinercol-header outlinercol-inset-header"/>
-          <outlinerbody id="script-list-body" flex="1"/>
-        </outliner>
+            <outlinerbody id="project-body" flex="1"/>
+          </outliner>
+
+          <splitter collapse="before"><grippy/></splitter>
+
+          <outliner flex="1" id="script-list-outliner" persist="height"
+            onselect="console.onScriptSelect(event);"
+            onclick="console.onScriptClick(event);">
+
+            <outlinercol id="script-name" label="&ScriptCol0.header;"
+             primary="true" class="outlinercol-header outlinercol-inset-header"
+             flex="5" persist="hidden width"/>
+            <splitter class="tree-splitter"/>
+            <outlinercol flex="1" id="script-line-start"
+              label="&ScriptCol1.header;" persist="hidden width"
+              class="outlinercol-header outlinercol-inset-header"/>
+            <splitter class="tree-splitter"/>
+            <outlinercol flex="1" id="script-line-extent"
+              label="&ScriptCol2.header;" persist="hidden width" hidden="true"
+              class="outlinercol-header outlinercol-inset-header"/>
+            <outlinerbody id="script-list-body" flex="1"/>
+          </outliner>
+        </vbox>
 
         <splitter collapse="before"><grippy/></splitter>
 
-        <outliner flex="1" id="call-stack-outliner"
-          onclick="console.onStackClick(event);">
-
-          <outlinercol id="current-frame" display="&IsCurrent.header;"
-            persist="hidden width"
-            class="outlinercol-header outlinercol-inset-header" width="20px"/>
-          <outlinercol flex="50" id="function-name"
-            label="&FunctionName.header;" persist="hidden width"
-            class="outlinercol-header outlinercol-inset-header"/>
-          <splitter class="tree-splitter"/>
-          <outlinercol flex="25" id="line-number"
-            label="&LineNumber.header;" persist="hidden width"
-            class="outlinercol-header outlinercol-inset-header"/>
-          <splitter class="tree-splitter"/>
-          <outlinercol flex="50" id="file-name" persist="hidden width"
-            label="&FileName.header;" crop="left"
-            class="outlinercol-header outlinercol-inset-header"/>
-          <outlinerbody id="call-stack-body" flex="1"/>
+        <outliner id="source-outliner" flex="50" persist="width"
+          onclick="console.onSourceClick(event);">
+          <outlinercol id="breakpoint-col" width="20px"
+            display="&SourceCol0.display;" persist="hidden width"
+            class="outlinercol-header outlinercell-inset-header"/>
+          <outlinercol id="source-line-number" flex="5"
+            display="&SourceCol1.display;" persist="hidden width"
+            class="outlinercol-header outlinercell-inset-header"/>
+          <splitter class="tree-splitter"/>          
+          <outlinercol id="source-line-text" flex="95"
+            display="" persist="hidden width"
+            class="outlinercol-header outlinercell-inset-header"/>
+          <outlinerbody id="source-outliner-body" flex="1"/>
         </outliner>
 
-      </box>
-      <splitter collapse="before"><grippy/></splitter>
-      <box flex="3" orient="vertical"> <!-- have to use box instead of vbox -->
-                                       <!-- to get grippy styled right.     -->
+      </hbox>
 
-        <hbox flex="50" style="overflow: auto">
-          <outliner id="source-outliner" flex="1"
-            onclick="console.onSourceClick(event);">
-            <outlinercol id="breakpoint-col" width="20px"
-              display="&Breakpoint.header;" persist="hidden width"
-              class="outlinercol-header outlinercell-inset-header"/>
-            <outlinercol id="source-line-number" flex="5"
-              display="&LineNumber.header;" persist="hidden width"
-              class="outlinercol-header outlinercell-inset-header"/>
-            <splitter class="tree-splitter"/>          
-            <outlinercol id="source-line-text" flex="95"
-              display="&SourceText.header;" persist="hidden width"
-              class="outlinercol-header outlinercell-inset-header"/>
-            <outlinerbody id="source-outliner-body" flex="1"/>
-          </outliner>
-        </hbox>
+      <splitter collapse="after" persist="top"><grippy/></splitter>
 
-        <splitter orient="vertical" collapse="after" autostretch="never">
-          <grippy/>
-        </splitter>
+      <hbox id="bottom-hbox" persist="height">
+        <outliner flex="2" id="stack-outliner" persist="width"
+          onselect="console.onStackSelect(event);">
 
-        <vbox flex="50">
+          <outlinercol id="stack-col-0" flex="1" persist="hidden width"
+            primary="true" label="&StackCol0.header;"
+            class="outlinercol-header outlinercol-inset-header"/>
+          <splitter class="tree-splitter"/>
+
+          <outlinercol flex="2" id="stack-col-1" persist="hidden width"
+            hidden="true" label="&StackCol1.header;"
+            class="outlinercol-header outlinercol-inset-header"/>
+          <splitter class="tree-splitter"/>
+
+          <outlinercol flex="1" id="stack-col-2" persist="hidden width"
+             label="&StackCol2.header;"
+            class="outlinercol-header outlinercol-inset-header"/>
+          <splitter class="tree-splitter"/>
+
+          <outlinercol flex="1" id="stack-col-3" persist="hidden width"
+            label="&StackCol3.header;" hidden="true"
+            class="outlinercol-header outlinercol-inset-header"/>
+
+          <outlinerbody id="stack-body" flex="1"/>
+        </outliner>
+
+        <splitter collapse="after" persist="left"><grippy/></splitter>
+
+        <vbox id="console-box" flex="50" persist="width">
           <iframe id="output-iframe" flex="1" tooltip="tooltip-popup"
             ondraggesture=
               "nsDragAndDrop.startDrag(event, contentAreaDNDObserver);"
@@ -271,9 +325,8 @@
             onkeypress="console.onSingleLineKeypress(event);"/>
         </vbox>
 
-      </box>
-    </hbox>
-  </vbox>
+      </hbox>
+  </box>
 
 </window>
 
