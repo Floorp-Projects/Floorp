@@ -24,6 +24,8 @@
 typedef struct nsHostEnt
 {
     PRHostEnt	hostEnt;
+    PRIntn      bufLen;
+    char *      bufPtr;
     char        buffer[PR_NETDB_BUF_SIZE];
 } nsHostEnt;
 %}
