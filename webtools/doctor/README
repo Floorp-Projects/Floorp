@@ -5,7 +5,7 @@ Then make sure you have the Template, AppConfig, File::Temp, Text::Diff,
 Email::Valid, and MIME::Entity modules (and their dependencies), which you
 can get via CPAN:
 
-perl -MCPAN -e"install Template, AppConfig, File::Temp, Text::Diff, Email::Valid, and MIME::Entity"
+perl -MCPAN -e"install Template, AppConfig, File::Temp, Text::Diff, Email::Valid, MIME::Entity"
 
 Then configure your web server to serve Doctor files correctly.  See the
 .htaccess file for an explanation of the configuration options, but note that
