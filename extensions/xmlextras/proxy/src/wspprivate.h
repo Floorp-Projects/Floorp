@@ -65,7 +65,7 @@
 // WSDL includes
 #include "nsIWSDL.h"
 #include "nsIWSDLLoader.h"
-#include "nsIWSDLSoapBinding.h"
+#include "nsIWSDLSOAPBinding.h"
 
 // iix includes
 #include "nsIGenericInterfaceInfoSet.h"

@@ -115,6 +115,32 @@ nsSchemaComplexType::Resolve()
     }
   }
 
+  if (mArrayInfo) {
+    nsCOMPtr<nsISchemaType> placeHolder;
+    mArrayInfo->GetType(getter_AddRefs(placeHolder));
+    if (placeHolder) {
+      PRUint16 schemaType;
+      placeHolder->GetSchemaType(&schemaType);
+      if (schemaType == nsISchemaType::SCHEMA_TYPE_PLACEHOLDER) {
+        rv = mSchema->ResolveTypePlaceholder(placeHolder, getter_AddRefs(type));
+        if (NS_FAILED(rv)) {
+          return NS_ERROR_FAILURE;
+        }
+        rv = type->Resolve();
+        if (NS_FAILED(rv)) {
+          return NS_ERROR_FAILURE;
+        }
+        SetArrayInfo(type, mArrayInfo->GetDimension());
+      }
+      else {
+         rv = placeHolder->Resolve();
+        if (NS_FAILED(rv)) {
+          return NS_ERROR_FAILURE;
+        }
+      }
+    } 
+  }
+
   return NS_OK;
 }
 

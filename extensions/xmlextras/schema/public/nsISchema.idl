@@ -67,6 +67,7 @@ interface nsISchemaComponent : nsISupports {
 
 [scriptable, uuid(3c14a021-6f4e-11d5-9b46-000064657374)]
 interface nsISchema : nsISchemaComponent {
+  /* Is this necessary? */
   readonly attribute AString schemaNamespace;
 
   readonly attribute PRUint32 typeCount;

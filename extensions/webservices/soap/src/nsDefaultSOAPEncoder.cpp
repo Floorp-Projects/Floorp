@@ -2140,7 +2140,7 @@ static nsresult DecodeStructParticle(nsISOAPEncoding* aEncoding, nsIDOMElement* 
             rc = aElement->GetNamespaceURI(ename);
             if (NS_FAILED(rc))
               return rc;
-            if (!ename.IsEmpty()) {  //  Only get an ename if there is a non-empty namespaceURI
+            if (ename.IsEmpty()) {  //  Only get an ename if there is an empty namespaceURI
               rc = aElement->GetLocalName(ename);
               if (NS_FAILED(rc))
                 return rc;
@@ -2204,7 +2204,7 @@ static nsresult DecodeStructParticle(nsISOAPEncoding* aEncoding, nsIDOMElement* 
               child = dont_AddRef(NS_STATIC_CAST
                     (nsISchemaParticle*, all->ElementAt(i)));
               nsCOMPtr<nsIDOMElement> after;
-              rc = DecodeStructParticle(aEncoding, aElement, child, aAttachments, aDestination, getter_AddRefs(after));
+              rc = DecodeStructParticle(aEncoding, next, child, aAttachments, aDestination, getter_AddRefs(after));
               if (!NS_FAILED(rc)) {
                 next = after;
                 mangled = PR_TRUE;
@@ -2212,6 +2212,7 @@ static nsresult DecodeStructParticle(nsISOAPEncoding* aEncoding, nsIDOMElement* 
                 particleCount--;
                 if (NS_FAILED(rc))
                   return rc;
+                break;
               }
               if (rc != NS_ERROR_NOT_AVAILABLE) {
                 break;

@@ -41,36 +41,6 @@
 #include "wspprivate.h"
 
 /***************************************************************************/
-// SetException sets a global exception representing the given nsresult. It
-// is guaranteed to also return that nsresult. It is to be used when failing.
-//
-// usage:
-//
-//  if (NS_FAILED(rv)) {
-//    return SetException(rv, "got foo, expected bar", someOptionalObject);
-//  }
-//
-
-static nsresult SetException(nsresult aStatus, const char* aMsg, 
-                             nsISupports* aData)
-{
-  nsCOMPtr<nsIException> exception = new WSPException(aStatus, aMsg, aData);
-  if (exception) {
-    nsCOMPtr<nsIExceptionService> xs =
-        do_GetService(NS_EXCEPTIONSERVICE_CONTRACTID);
-    if (xs) {
-      nsCOMPtr<nsIExceptionManager> xm;
-      xs->GetCurrentExceptionManager(getter_AddRefs(xm));
-      if (xm) {
-        xm->SetCurrentException(exception);
-      }
-    }
-  }
-  
-  return aStatus;
-}
-
-/***************************************************************************/
 // IIDX is used as a way to hold and share our commone set of interface indexes.
 
 class IIDX {
@@ -106,15 +76,15 @@ private:
         MAX_TOTAL = 255}; // The typelib format limits us to 255 params.
 
 public:
-  PRUint16 GetCount() const {return mCount;}    
+  PRUint16 GetCount() const {return mCount;}
   XPTParamDescriptor* GetArray() {return mArray;}
   void Clear() {mCount = 0;}
 
   XPTParamDescriptor* GetNextParam();
 
-  ParamAccumulator() 
-    : mArray(mBuiltinSpace), mCount(0), mAvailable(MAX_BUILTIN) {}        
-  ~ParamAccumulator() {if(mArray != mBuiltinSpace) delete [] mArray;}        
+  ParamAccumulator()
+    : mCount(0), mAvailable(MAX_BUILTIN), mArray(mBuiltinSpace) {}
+  ~ParamAccumulator() {if(mArray != mBuiltinSpace) delete [] mArray;}
 private:
   PRUint16            mCount;
   PRUint16            mAvailable;
@@ -257,10 +227,9 @@ static void BuildInterfaceName(const nsAString& qualifier,
                                const nsAString& uri,
                                nsACString& aCIdentifier)
 {
-  nsCAutoString temp;
-  WSPFactory::XML2C(qualifier, temp);
-  aCIdentifier.Assign(temp);
+  WSPFactory::XML2C(qualifier, aCIdentifier);
 
+  nsCAutoString temp;
   WSPFactory::XML2C(name, temp);
   aCIdentifier.Append(temp);
 
@@ -625,7 +594,8 @@ static nsresult GetParamDescOfType(nsIInterfaceInfoSuperManager* iism,
       return rv;
     }
 
-    if (compositor != nsISchemaModelGroup::COMPOSITOR_SEQUENCE) {
+    if (compositor == nsISchemaModelGroup::COMPOSITOR_CHOICE) {
+      // CHOICE not supported
       return NS_ERROR_UNEXPECTED;
     }
 

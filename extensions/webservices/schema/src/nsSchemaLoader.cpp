@@ -963,26 +963,21 @@ static PRUint32 kSchemaNamespacesLength = sizeof(kSchemaNamespaces) / sizeof(con
 
 /* nsISchema processSchemaElement (in nsIDOMElement element); */
 NS_IMETHODIMP 
-nsSchemaLoader::ProcessSchemaElement(nsIDOMElement *element, 
+nsSchemaLoader::ProcessSchemaElement(nsIDOMElement* aElement, 
                                      nsISchema **_retval)
 {
-  NS_ENSURE_ARG(element);
+  NS_ENSURE_ARG(aElement);
   NS_ENSURE_ARG_POINTER(_retval);
 
   nsresult rv = NS_OK;
 
-  // Get target namespace and create the schema instance
-  nsAutoString targetNamespace, schemaNamespace;
-  element->GetAttribute(NS_LITERAL_STRING("targetNamespace"), 
-                        targetNamespace);
-  element->GetNamespaceURI(schemaNamespace);
-  nsSchema* schemaInst = new nsSchema(this, targetNamespace, schemaNamespace);
+  nsSchema* schemaInst = new nsSchema(this, aElement);
   nsCOMPtr<nsISchema> schema = schemaInst;
   if (!schema) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  nsChildElementIterator iterator(element, 
+  nsChildElementIterator iterator(aElement, 
                                   kSchemaNamespaces, kSchemaNamespacesLength);
   nsCOMPtr<nsIDOMElement> childElement;
   nsCOMPtr<nsIAtom> tagName;
@@ -1056,6 +1051,8 @@ nsSchemaLoader::ProcessSchemaElement(nsIDOMElement *element,
     return rv;
   }
 
+  nsAutoString targetNamespace;
+  schema->GetTargetNamespace(targetNamespace);
   nsStringKey key(targetNamespace);
   mSchemas.Put(&key, schema);
 
@@ -1164,11 +1161,18 @@ nsSchemaLoader::ProcessElement(nsSchema* aSchema,
     elementRef->SetMaxOccurs(maxOccurs);
   }
   else {
-    nsAutoString name;
+    nsAutoString value;
     nsSchemaElement* elementInst;
 
-    aElement->GetAttribute(NS_LITERAL_STRING("name"), name);
-    elementInst = new nsSchemaElement(aSchema, name);
+    rv = aElement->GetAttributeNS(NS_LITERAL_STRING(""), 
+                                  NS_LITERAL_STRING("name"), 
+                                  value);
+    
+    if (NS_FAILED(rv))
+      return rv;
+
+    value.Trim(" \r\n\t");
+    elementInst = new nsSchemaElement(aSchema, value);
     if (!elementInst) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
@@ -1178,15 +1182,82 @@ nsSchemaLoader::ProcessElement(nsSchema* aSchema,
     elementInst->SetMaxOccurs(maxOccurs);
 
     nsAutoString defaultValue, fixedValue;
-    aElement->GetAttribute(NS_LITERAL_STRING("default"), defaultValue);
-    aElement->GetAttribute(NS_LITERAL_STRING("fixed"), fixedValue);
+    rv = aElement->GetAttributeNS(NS_LITERAL_STRING(""), 
+                                  NS_LITERAL_STRING("default"),
+                                  defaultValue);
+    if (NS_FAILED(rv))
+      return rv;
+    
+    rv = aElement->GetAttributeNS(NS_LITERAL_STRING(""), 
+                                  NS_LITERAL_STRING("fixed"), 
+                                  fixedValue);
+    if (NS_FAILED(rv))
+      return rv;
+    
     elementInst->SetConstraints(defaultValue, fixedValue);
 
-    nsAutoString nillable, abstract;
-    aElement->GetAttribute(NS_LITERAL_STRING("nillable"), nillable);
-    aElement->GetAttribute(NS_LITERAL_STRING("abstract"), abstract);
-    elementInst->SetFlags(nillable.Equals(NS_LITERAL_STRING("true")),
-                          abstract.Equals(NS_LITERAL_STRING("true")));
+    rv = aElement->GetAttributeNS(NS_LITERAL_STRING(""),
+                                  NS_LITERAL_STRING("nillable"), value);
+    if (NS_FAILED(rv))
+      return rv;
+    value.Trim(" \r\n\t");
+
+    PRInt32 flags = 0;
+    if (value.Equals(NS_LITERAL_STRING("true")))
+      flags |= nsSchemaElement::NILLABLE;
+
+    rv = aElement->GetAttributeNS(NS_LITERAL_STRING(""), 
+                                  NS_LITERAL_STRING("abstract"), value);
+    if (NS_FAILED(rv))
+      return rv;
+    value.Trim(" \r\n\t");
+
+    if (value.Equals(NS_LITERAL_STRING("true")))
+      flags |= nsSchemaElement::ABSTRACT;
+
+    nsCOMPtr<nsIDOMNode> parent;
+    rv = aElement->GetParentNode(getter_AddRefs(parent));
+    if (NS_FAILED(rv))
+      return rv;
+    parent->GetLocalName(value);
+    
+    // Check if the schema element's targetNamespace applies to <element>.
+    // Note: If the <element> element information item has <schema> as its 
+    // parent,then the actual value of the targetNamespace is that of the
+    // parent <schema> element information item, or absent if there is 
+    // none. Otherwise if the <element> element information item has 
+    // <schema> element as an ancestor then if "form" is present and its actual
+    // value is qualified, or if "form" is absent and the actual value of 
+    // elementFormDefault on the <schema> ancestor is qualified, then the
+    // actual value of the  targetNamespace [attribute] is that of the ancestor
+    // <schema> element information item, or absent if there is none.
+    if (value.Equals(NS_LITERAL_STRING("schema"))) {
+      flags |= nsSchemaElement::FORM_QUALIFIED;
+    }
+    else {
+      rv = aElement->GetAttributeNS(NS_LITERAL_STRING(""), 
+                                    NS_LITERAL_STRING("form"), 
+                                    value);
+      if (NS_FAILED(rv))
+        return rv;
+      value.Trim(" \r\n\t");
+      if (value.IsEmpty()) {
+        if (aSchema->IsElementFormQualified()) {
+           flags |= nsSchemaElement::FORM_QUALIFIED;
+        }
+        else {
+           flags &= ~nsSchemaElement::FORM_QUALIFIED;
+        }
+      }
+      else if (value.Equals(NS_LITERAL_STRING("qualified"))) {
+        flags |= nsSchemaElement::FORM_QUALIFIED;
+      }
+      else {
+         flags &= ~nsSchemaElement::FORM_QUALIFIED;
+      }
+    }
+
+    elementInst->SetFlags(flags);
 
     nsCOMPtr<nsISchemaType> schemaType;
     nsAutoString typeStr;

@@ -29,11 +29,25 @@
 //
 ////////////////////////////////////////////////////////////
 nsSchema::nsSchema(nsISchemaCollection* aCollection,
-                   const nsAString& aTargetNamespace,
-                   const nsAString& aSchemaNamespace) 
-  : mTargetNamespace(aTargetNamespace), mSchemaNamespace(aSchemaNamespace)
+                   nsIDOMElement* aSchemaElement) 
 {
   mCollection = aCollection;  // Weak reference
+  
+  if (aSchemaElement) {
+    aSchemaElement->GetAttributeNS(NS_LITERAL_STRING(""), 
+                                   NS_LITERAL_STRING("targetNamespace"), 
+                                   mTargetNamespace);
+    mTargetNamespace.Trim(" \r\n\t");
+    aSchemaElement->GetNamespaceURI(mSchemaNamespace);
+
+    nsAutoString elementFormDefault;
+    aSchemaElement->GetAttributeNS(NS_LITERAL_STRING(""), 
+                                   NS_LITERAL_STRING("elementFormDefault"), 
+                                   elementFormDefault);
+    elementFormDefault.Trim(" \r\n\t");
+    mElementFormQualified = 
+      elementFormDefault.Equals(NS_LITERAL_STRING("qualified"));
+  }
 }
 
 nsSchema::~nsSchema()

@@ -31,6 +31,7 @@
 #include "nsSupportsArray.h"
 #include "nsHashtable.h"
 #include "nsString.h"
+#include "nsIDOMElement.h"
 
 #define NS_SCHEMA_2001_NAMESPACE "http://www.w3.org/2001/XMLSchema"
 #define NS_SCHEMA_1999_NAMESPACE "http://www.w3.org/1999/XMLSchema"
@@ -42,9 +43,7 @@
 class nsSchema : public nsISchema 
 {
 public:
-  nsSchema(nsISchemaCollection* aCollection,
-           const nsAString& aTargetNamespace,
-           const nsAString& aSchemaNamespace);
+  nsSchema(nsISchemaCollection* aCollection, nsIDOMElement* aElement);
   virtual ~nsSchema();
 
   NS_DECL_ISUPPORTS
@@ -59,6 +58,7 @@ public:
   void DropCollectionReference();
   nsresult ResolveTypePlaceholder(nsISchemaType* aPlaceholder,
                                   nsISchemaType** aType);
+  PRBool IsElementFormQualified() { return mElementFormQualified; }
 
 protected:
   nsString mTargetNamespace;
@@ -74,6 +74,7 @@ protected:
   nsSupportsArray mModelGroups;
   nsSupportsHashtable mModelGroupsHash;
   nsISchemaCollection* mCollection;  // [WEAK] it owns me
+  PRPackedBool mElementFormQualified;
 };
 
 class nsSchemaComponentBase {
@@ -335,26 +336,31 @@ class nsSchemaElement : public nsSchemaParticleBase,
                         public nsISchemaElement
 {
 public:
+  enum { NILLABLE       = 1 << 1 };
+  enum { ABSTRACT       = 1 << 2 };
+  enum { FORM_QUALIFIED = 1 << 3 };
+
   nsSchemaElement(nsSchema* aSchema, const nsAString& aName);
   virtual ~nsSchemaElement();
 
   NS_DECL_ISUPPORTS
-  NS_IMPL_NSISCHEMACOMPONENT_USING_BASE
   NS_IMPL_NSISCHEMAPARTICLE_USING_BASE
   NS_DECL_NSISCHEMAELEMENT
 
+  NS_IMETHOD GetTargetNamespace(nsAString& aTargetNamespace);
+  NS_IMETHOD Resolve();
+  NS_IMETHOD Clear();
   NS_IMETHOD SetType(nsISchemaType* aType);
   NS_IMETHOD SetConstraints(const nsAString& aDefaultValue,
                             const nsAString& aFixedValue);
-  NS_IMETHOD SetFlags(PRBool aNillable, PRBool aAbstract);
+  NS_IMETHOD SetFlags(PRInt32 aFlags);
 
 protected:
   nsString mName;
   nsCOMPtr<nsISchemaType> mType;
   nsString mDefaultValue;
   nsString mFixedValue;
-  PRPackedBool mNillable;
-  PRPackedBool mAbstract;
+  PRUint8 mFlags;
 };
 
 class nsSchemaElementRef : public nsSchemaParticleBase,

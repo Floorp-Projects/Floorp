@@ -47,19 +47,11 @@
 const PRUint8 sInt8Val = 2;
 const PRInt16 sInt16Val = 0x1234;
 const PRInt32 sInt32Val = 0x12345678;
-#ifdef HAVE_LONG_LONG
-const PRInt64 sInt64Val = 0x1234567887654321;
-#else
-const PRInt64 sInt64Val = {0x12345678, 0x87654321};
-#endif
+const PRInt64 sInt64Val = LL_INIT(0x12345678, 0x87654321);
 const PRUint8  sUint8Val = 2;
 const PRUint16 sUint16Val = 0x1234;
 const PRUint32 sUint32Val = 0x12345678;
-#ifdef HAVE_LONG_LONG
-const PRUint64 sUint64Val = 0x1234567887654321;
-#else
-const PRUint64 sUint64Val = {0x12345678, 0x87654321};
-#endif
+const PRUint64 sUint64Val = LL_INIT(0x12345678, 0x87654321);
 const PRBool sBoolVal = PR_TRUE;
 const float sFloatVal = 0.0;
 const double sDoubleVal = 0.03;

@@ -486,8 +486,7 @@ nsSchemaAnyParticle::SetNamespace(const nsAString& aNamespace)
 ////////////////////////////////////////////////////////////
 nsSchemaElement::nsSchemaElement(nsSchema* aSchema, 
                                  const nsAString& aName)
-  : nsSchemaParticleBase(aSchema), mName(aName), 
-    mNillable(PR_FALSE), mAbstract(PR_FALSE)
+  : nsSchemaParticleBase(aSchema), mName(aName), mFlags(0)
 {
 }
 
@@ -595,7 +594,7 @@ nsSchemaElement::GetNillable(PRBool *aNillable)
 {
   NS_ENSURE_ARG_POINTER(aNillable);
 
-  *aNillable = mNillable;
+  *aNillable = mFlags & nsSchemaElement::NILLABLE;
 
   return NS_OK;
 }
@@ -606,7 +605,7 @@ nsSchemaElement::GetAbstract(PRBool *aAbstract)
 {
   NS_ENSURE_ARG_POINTER(aAbstract);
 
-  *aAbstract = mAbstract;
+  *aAbstract = mFlags & nsSchemaElement::ABSTRACT;
 
   return NS_OK;
 }
@@ -632,11 +631,19 @@ nsSchemaElement::SetConstraints(const nsAString& aDefaultValue,
 }
 
 NS_IMETHODIMP 
-nsSchemaElement::SetFlags(PRBool aNillable, PRBool aAbstract)
+nsSchemaElement::SetFlags(PRInt32 aFlags)
 {
-  mNillable = aNillable;
-  mAbstract = aAbstract;
+  mFlags = aFlags;
+  return NS_OK;
+}
 
+NS_IMETHODIMP 
+nsSchemaElement::GetTargetNamespace(nsAString& aTargetNamespace)
+{
+  if ((mFlags & nsSchemaElement::FORM_QUALIFIED) && mSchema) {
+    return mSchema->GetTargetNamespace(aTargetNamespace);
+  }
+  aTargetNamespace.Truncate();
   return NS_OK;
 }
 
