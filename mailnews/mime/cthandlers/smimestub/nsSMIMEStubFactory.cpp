@@ -67,7 +67,12 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsMimeContentTypeHandler)
 static nsModuleComponentInfo components[] =
 {
   { "MIME SMIMEStubed Mail Handler", NS_SMIME_CONTENT_TYPE_HANDLER_CID, "@mozilla.org/mimecth;1?type=application/x-pkcs7-mime",
-    nsMimeContentTypeHandlerConstructor, }
+    nsMimeContentTypeHandlerConstructor, },
+
+  { "MIME SMIMEStubed Mail Handler", NS_SMIME_CONTENT_TYPE_HANDLER_CID, "@mozilla.org/mimecth;1?type=application/pkcs7-mime",
+     nsMimeContentTypeHandlerConstructor, }
+
+
 };
 
 ////////////////////////////////////////////////////////////////////////

@@ -28,6 +28,69 @@
 #include "mimeobj.h"
 #include "nsCRT.h"
 
+// String bundles...
+#include "nsIStringBundle.h"
+
+#define SMIME_PROPERTIES_URL          "chrome://messenger/locale/smime.properties"
+#define SMIME_STR_NOT_SUPPORTED_ID    1000
+
+static NS_DEFINE_CID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
+#ifndef XP_MAC
+static nsCOMPtr<nsIStringBundle> stringBundle = nsnull;
+#endif
+
+
+//
+// This is the next generation string retrieval call 
+//
+static char *SMimeGetStringByID(PRInt32 aMsgId)
+{
+  char          *tempString = nsnull;
+	nsresult res = NS_OK;
+
+#ifdef XP_MAC
+nsCOMPtr<nsIStringBundle> stringBundle = nsnull;
+#endif
+
+	if (!stringBundle)
+	{
+		char*       propertyURL = NULL;
+
+		propertyURL = SMIME_PROPERTIES_URL;
+
+		nsCOMPtr<nsIStringBundleService> sBundleService = 
+		         do_GetService(kStringBundleServiceCID, &res); 
+		if (NS_SUCCEEDED(res) && (nsnull != sBundleService)) 
+		{
+			res = sBundleService->CreateBundle(propertyURL, getter_AddRefs(stringBundle));
+		}
+	}
+
+	if (stringBundle)
+	{
+		PRUnichar *ptrv = nsnull;
+		res = stringBundle->GetStringFromID(aMsgId, &ptrv);
+
+		if (NS_FAILED(res)) 
+      return nsCRT::strdup("???");
+		else
+    {
+      nsAutoString v;
+      v.Append(ptrv);
+	    PR_FREEIF(ptrv);
+      tempString = v.ToNewUTF8String();
+    }
+	}
+
+  if (!tempString)
+    return nsCRT::strdup("???");
+  else
+    return tempString;
+}
+
+
+
+
 static int MimeInlineTextSMIMEStub_parse_line (char *, PRInt32, MimeObject *);
 static int MimeInlineTextSMIMEStub_parse_eof (MimeObject *, PRBool);
 static int MimeInlineTextSMIMEStub_parse_begin (MimeObject *obj);
@@ -75,13 +138,16 @@ MimeInlineTextSMIMEStubClassInitialize(MimeInlineTextSMIMEStubClass *clazz)
 int
 GenerateMessage(char** html) 
 {
-  *html = nsCRT::strdup("\
-<BR><text=\"#000000\" bgcolor=\"#FFFFFF\" link=\"#FF0000\" vlink=\"#800080\" alink=\"#0000FF\">\
-<center><table BORDER=1 ><tr>\
-<td><CENTER>This is an <B>ENCRYPTED</B> message. Mozilla Mail does not support encrypted mail.</CENTER></td>\
-</tr>\
-</table></center><BR>");
+  nsCString temp;
+  temp.Append("<BR><text=\"#000000\" bgcolor=\"#FFFFFF\" link=\"#FF0000\" vlink=\"#800080\" alink=\"#0000FF\">");
+  temp.Append("<center><table BORDER=1 ><tr><td><CENTER>");
 
+  char *tString = SMimeGetStringByID(SMIME_STR_NOT_SUPPORTED_ID);
+  temp.Append(tString);
+  PR_FREEIF(tString);
+
+  temp.Append("</CENTER></td></tr></table></center><BR>");
+  *html = temp.ToNewCString();
   return 0;
 }
 

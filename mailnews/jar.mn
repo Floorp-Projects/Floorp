@@ -265,6 +265,7 @@ en-US.jar:
     locale/en-US/messenger/mime.properties                              (mime/resources/mime.properties)
     locale/en-US/messenger/mimeheader.properties                        (mime/resources/mimeheader.properties)
     locale/en-US/messenger/vcard.properties                             (mime/cthandlers/resources/vcard.properties)
+    locale/en-US/messenger/smime.properties                             (mime/cthandlers/resources/smime.properties)  
 
 US.jar:
     locale/US/messenger-region/contents.rdf                             (base/resources/locale/en-US/contents-region.rdf)
