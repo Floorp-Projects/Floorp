@@ -237,6 +237,8 @@ PRBool nsTextAreaWidget::DispatchMouseEvent(nsMouseEvent &aEvent)
 //-------------------------------------------------------------------------
 PRBool nsTextAreaWidget::DispatchWindowEvent(nsGUIEvent &aEvent)
 {
+#define enterKey			0x03		/* ascii code for enter key */
+
 	// filter cursor keys
 	PRBool passKeyEvent = PR_TRUE;
 	switch (aEvent.message)
@@ -246,13 +248,13 @@ PRBool nsTextAreaWidget::DispatchWindowEvent(nsGUIEvent &aEvent)
 		{
 			// hack: if Enter is pressed, pass Return
   			nsKeyEvent* keyEvent = (nsKeyEvent*)&aEvent;
-			if (keyEvent->keyCode == 0x03)
-			{
+			if (keyEvent->keyCode == enterKey)
 				keyEvent->keyCode = NS_VK_RETURN;
-				EventRecord* theOSEvent = (EventRecord*)aEvent.nativeMsg;
-				if (theOSEvent)
-					theOSEvent->message = (theOSEvent->message & ~charCodeMask) + NS_VK_RETURN;
-			}
+
+			EventRecord* theOSEvent = (EventRecord*)aEvent.nativeMsg;
+			if (theOSEvent && ((theOSEvent->message & charCodeMask) == enterKey))
+				theOSEvent->message = (theOSEvent->message & ~charCodeMask) + NS_VK_RETURN;
+
 			switch (keyEvent->keyCode)
 			{
 				case NS_VK_PAGE_UP:
