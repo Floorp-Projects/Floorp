@@ -247,10 +247,10 @@ nsHTMLSelectElement::nsHTMLSelectElement(nsINodeInfo *aNodeInfo)
 
 nsHTMLSelectElement::~nsHTMLSelectElement()
 {
-  if (nsnull != mForm) {
-    // prevent mForm from decrementing its ref count on us
-    mForm->RemoveElement(this, PR_FALSE); 
-    NS_RELEASE(mForm);
+  // Null out form's pointer to us - no ref counting here!
+  if (mForm) {
+    mForm->RemoveElement(this);
+    mForm = nsnull;
   }
   if (nsnull != mOptions) {
     mOptions->Clear();
@@ -262,6 +262,7 @@ nsHTMLSelectElement::~nsHTMLSelectElement()
 // ISupports
 
 NS_IMPL_ADDREF(nsHTMLSelectElement)
+NS_IMPL_RELEASE(nsHTMLSelectElement)
 
 nsresult
 nsHTMLSelectElement::QueryInterface(REFNSIID aIID, void** aInstancePtr)
@@ -298,23 +299,6 @@ nsHTMLSelectElement::QueryInterface(REFNSIID aIID, void** aInstancePtr)
     return NS_OK;
   }
   return NS_NOINTERFACE;
-}
-
-NS_IMETHODIMP_(nsrefcnt)
-nsHTMLSelectElement::Release()
-{
-  --mRefCnt;
-  NS_LOG_RELEASE(this, mRefCnt, "nsHTMLSelectElement");
-  if (mRefCnt <= 0) {
-    delete this;                                       
-    return 0;                                          
-  } else if ((1 == mRefCnt) && mForm) {     
-    NS_LOG_RELEASE(this, mRefCnt, "nsHTMLSelectElement");
-    delete this;
-    return 0;
-  } else {
-    return mRefCnt;
-  }
 }
 
 // nsIDOMHTMLSelectElement
@@ -1163,28 +1147,24 @@ nsHTMLSelectElement::GetType(PRInt32* aType)
 NS_IMETHODIMP
 nsHTMLSelectElement::SetForm(nsIDOMHTMLFormElement* aForm)
 {
-  nsresult result;
-  nsIFormControl *formControl;
-
-  result = QueryInterface(kIFormControlIID, (void**)&formControl);
-  if (NS_FAILED(result))
-    formControl = nsnull;
+  nsCOMPtr<nsIFormControl> formControl;
+  nsresult result = QueryInterface(kIFormControlIID, getter_AddRefs(formControl));
+  if (NS_FAILED(result)) formControl = nsnull;
 
   if (mForm && formControl)
-    mForm->RemoveElement(formControl, PR_TRUE);
+    mForm->RemoveElement(formControl);
 
-  if (nsnull == aForm)
-    mForm = nsnull;
-  else {
-    NS_IF_RELEASE(mForm);
-    if (formControl) {
-      result = aForm->QueryInterface(kIFormIID, (void**)&mForm); // keep the ref
-      if ((NS_OK == result) && mForm) {
-        mForm->AddElement(formControl);
+  if (aForm) {
+    nsCOMPtr<nsIForm> theForm = do_QueryInterface(aForm, &result);
+    mForm = theForm;  // Even if we fail, update mForm (nsnull in failure)
+    if ((NS_OK == result) && theForm) {
+      if (formControl) {
+        theForm->AddElement(formControl);
       }
     }
+  } else {
+    mForm = nsnull;
   }
-  NS_IF_RELEASE(formControl);
 
   mInner.SetForm(mForm);
 
