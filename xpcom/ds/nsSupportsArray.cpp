@@ -70,10 +70,10 @@ nsISupportsArray::operator=(const nsISupportsArray& other)
 }
 
 NS_IMETHODIMP_(nsISupportsArray&) 
-nsSupportsArray::operator=(const nsISupportsArray& aOther)
+nsSupportsArray::operator=(nsISupportsArray const& aOther)
 {
   PRUint32 otherCount = 0;
-  nsresult rv = ((nsISupportsArray&)aOther).Count(&otherCount); // XXX bogus cast -- aOther should not be const
+  nsresult rv = ((nsISupportsArray&)aOther).Count(&otherCount);
   NS_ASSERTION(NS_SUCCEEDED(rv), "this method should return an error!");
 
   if (otherCount > mArraySize) {
@@ -86,20 +86,20 @@ nsSupportsArray::operator=(const nsISupportsArray& aOther)
   }
   mCount = otherCount;
   while (0 < otherCount--) {
-    mArray[otherCount] = aOther.ElementAt(otherCount);
+    mArray[otherCount] = ((nsISupportsArray&)aOther).ElementAt(otherCount);
   }
   return *this;
 }
 
 NS_IMETHODIMP_(PRBool)
-nsSupportsArray::Equals(const nsISupportsArray* aOther) const
+nsSupportsArray::Equals(const nsISupportsArray* aOther)
 {
   if (0 != aOther) {
     const nsSupportsArray* other = (const nsSupportsArray*)aOther;
     if (mCount == other->mCount) {
-      PRUint32 index = mCount;
-      while (0 < index--) {
-        if (mArray[index] != other->mArray[index]) {
+      PRUint32 aIndex = mCount;
+      while (0 < aIndex--) {
+        if (mArray[aIndex] != other->mArray[aIndex]) {
           return PR_FALSE;
         }
       }
@@ -110,7 +110,7 @@ nsSupportsArray::Equals(const nsISupportsArray* aOther) const
 }
 
 NS_IMETHODIMP_(nsISupports*)
-nsSupportsArray::ElementAt(PRUint32 aIndex) const
+nsSupportsArray::ElementAt(PRUint32 aIndex)
 {
   if ((0 <= aIndex) && (aIndex < mCount)) {
     nsISupports*  element = mArray[aIndex];
@@ -121,7 +121,15 @@ nsSupportsArray::ElementAt(PRUint32 aIndex) const
 }
 
 NS_IMETHODIMP_(PRInt32)
-nsSupportsArray::IndexOf(const nsISupports* aPossibleElement, PRUint32 aStartIndex) const
+nsSupportsArray::IndexOf(const nsISupports* aPossibleElement)
+{
+  return IndexOfStartingAt(aPossibleElement, 0);
+}
+  
+
+NS_IMETHODIMP_(PRInt32)
+nsSupportsArray::IndexOfStartingAt(const nsISupports* aPossibleElement,
+                                   PRUint32 aStartIndex)
 {
   if ((0 <= aStartIndex) && (aStartIndex < mCount)) {
     const nsISupports** start = (const nsISupports**)mArray;  // work around goofy compiler behavior
@@ -138,7 +146,7 @@ nsSupportsArray::IndexOf(const nsISupports* aPossibleElement, PRUint32 aStartInd
 }
 
 NS_IMETHODIMP_(PRInt32)
-nsSupportsArray::LastIndexOf(const nsISupports* aPossibleElement) const
+nsSupportsArray::LastIndexOf(const nsISupports* aPossibleElement)
 {
   if (0 < mCount) {
     const nsISupports** start = (const nsISupports**)mArray;  // work around goofy compiler behavior
@@ -280,10 +288,10 @@ nsSupportsArray::AppendElements(nsISupportsArray* aElements)
       }
     }
 
-    PRUint32 index = 0;
-    while (index < elements->mCount) {
-      NS_ADDREF(elements->mArray[index]);
-      mArray[mCount++] = elements->mArray[index++];
+    PRUint32 aIndex = 0;
+    while (aIndex < elements->mCount) {
+      NS_ADDREF(elements->mArray[aIndex]);
+      mArray[mCount++] = elements->mArray[aIndex++];
     }
     return PR_TRUE;
   }
@@ -302,7 +310,7 @@ nsSupportsArray::Clear(void)
   return NS_OK;
 }
 
-NS_IMETHODIMP_(void)
+NS_IMETHODIMP
 nsSupportsArray::Compact(void)
 {
   if ((mArraySize != mCount) && (kAutoArraySize < mArraySize)) {
@@ -319,33 +327,34 @@ nsSupportsArray::Compact(void)
     if (0 == mArray) {
       mArray = oldArray;
       mArraySize = oldArraySize;
-      return;
+      return NS_OK;
     }
     ::memcpy(mArray, oldArray, mCount * sizeof(nsISupports*));
     delete[] oldArray;
   }
+  return NS_OK;
 }
 
 NS_IMETHODIMP_(PRBool)
-nsSupportsArray::EnumerateForwards(nsISupportsArrayEnumFunc aFunc, void* aData) const
+nsSupportsArray::EnumerateForwards(nsISupportsArrayEnumFunc aFunc, void* aData)
 {
-  PRInt32 index = -1;
+  PRInt32 aIndex = -1;
   PRBool  running = PR_TRUE;
 
-  while (running && (++index < (PRInt32)mCount)) {
-    running = (*aFunc)(mArray[index], aData);
+  while (running && (++aIndex < (PRInt32)mCount)) {
+    running = (*aFunc)(mArray[aIndex], aData);
   }
   return running;
 }
 
 NS_IMETHODIMP_(PRBool)
-nsSupportsArray::EnumerateBackwards(nsISupportsArrayEnumFunc aFunc, void* aData) const
+nsSupportsArray::EnumerateBackwards(nsISupportsArrayEnumFunc aFunc, void* aData)
 {
-  PRUint32 index = mCount;
+  PRUint32 aIndex = mCount;
   PRBool  running = PR_TRUE;
 
-  while (running && (0 < index--)) {
-    running = (*aFunc)(mArray[index], aData);
+  while (running && (0 < aIndex--)) {
+    running = (*aFunc)(mArray[aIndex], aData);
   }
   return running;
 }

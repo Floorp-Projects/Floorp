@@ -35,6 +35,7 @@ XPIDLSRCS =			\
 	nsIEnumerator.idl	   \
     nsIObserver.idl        \
     nsIObserverService.idl \
+	nsISupportsArray.idl	\
 	$(NULL)
 
 CPPSRCS =				\
@@ -86,7 +87,6 @@ EXPORTS = \
 	nsISimpleEnumerator.h      \
 	nsISizeOfHandler.h         \
 	nsIString.h                \
-	nsISupportsArray.h         \
 	nsIUnicharBuffer.h         \
 	nsIVariant.h               \
 	nsInt64.h                  \

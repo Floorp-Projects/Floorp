@@ -348,7 +348,7 @@ public:
   NS_IMETHOD GetPseudoType(nsIAtom*& aPseudoTag) const = 0;
 
   NS_IMETHOD FindChildWithRules(const nsIAtom* aPseudoTag, 
-                                const nsISupportsArray* aRules,
+                                nsISupportsArray* aRules,
                                 nsIStyleContext*& aResult) = 0;
 
   // get a style data struct by ID, may return null 
