@@ -74,6 +74,10 @@
 #include "nsContentCID.h"
 static NS_DEFINE_CID(kHTMLElementFactoryCID,   NS_HTML_ELEMENT_FACTORY_CID);
 
+#define SYNC_TEXT 0x1
+#define SYNC_BUTTON 0x2
+#define SYNC_BOTH 0x3
+
 nsresult
 NS_NewFileControlFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame)
 {
@@ -91,7 +95,6 @@ NS_NewFileControlFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame)
 
 nsFileControlFrame::nsFileControlFrame():
   mTextFrame(nsnull), 
-  mTextContent(nsnull),
   mCachedState(nsnull)
 {
     //Shrink the area around it's contents
@@ -100,8 +103,6 @@ nsFileControlFrame::nsFileControlFrame():
 
 nsFileControlFrame::~nsFileControlFrame()
 {
-  NS_IF_RELEASE(mTextContent);
-
   // remove ourself as a listener of the button (bug 40533)
   if (mBrowse) {
     nsCOMPtr<nsIDOMEventReceiver> reciever(do_QueryInterface(mBrowse));
@@ -118,9 +119,7 @@ NS_IMETHODIMP
 nsFileControlFrame::CreateAnonymousContent(nsIPresContext* aPresContext,
                                            nsISupportsArray& aChildList)
 {
-  
-  // create text field
-
+  // Get the NodeInfoManager and tag necessary to create input elements
   nsCOMPtr<nsIDocument> doc;
   mContent->GetDocument(*getter_AddRefs(doc));
   nsCOMPtr<nsINodeInfoManager> nimgr;
@@ -134,17 +133,14 @@ nsFileControlFrame::CreateAnonymousContent(nsIPresContext* aPresContext,
   nsCOMPtr<nsIElementFactory> ef(do_CreateInstance(kHTMLElementFactoryCID,&rv));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCOMPtr<nsIContent> content;
-  rv = ef->CreateInstanceByTag(nodeInfo,getter_AddRefs(content));
+  // Create the text content
+  rv = ef->CreateInstanceByTag(nodeInfo,getter_AddRefs(mTextContent));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = content->QueryInterface(NS_GET_IID(nsIHTMLContent),(void**)&mTextContent);
-
-  if (NS_SUCCEEDED(rv)) {
+  if (mTextContent) {
     mTextContent->SetAttr(kNameSpaceID_None, nsHTMLAtoms::type, NS_LITERAL_STRING("text"), PR_FALSE);
     nsCOMPtr<nsIDOMHTMLInputElement> textControl = do_QueryInterface(mTextContent);
     if (textControl) {
-      textControl->SetDisabled(nsFormControlHelper::GetDisabled(mContent));
       // Initialize value when we create the content in case the value was set
       // before we got here
       nsCOMPtr<nsIDOMHTMLInputElement> fileContent = do_QueryInterface(mContent);
@@ -157,27 +153,22 @@ nsFileControlFrame::CreateAnonymousContent(nsIPresContext* aPresContext,
     aChildList.AppendElement(mTextContent);
   }
 
-  // create browse button
-  rv = ef->CreateInstanceByTag(nodeInfo,getter_AddRefs(content));
+  // Create the browse button
+  rv = ef->CreateInstanceByTag(nodeInfo,getter_AddRefs(mBrowse));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  mBrowse = do_QueryInterface(content,&rv);
-
-  if (NS_SUCCEEDED(rv)) {
+  if (mBrowse) {
     mBrowse->SetAttr(kNameSpaceID_None, nsHTMLAtoms::type, NS_LITERAL_STRING("button"), PR_FALSE);
-    //browse->SetAttr(kNameSpaceID_None, nsHTMLAtoms::value, nsAutoString("browse..."), PR_FALSE);
 
     aChildList.AppendElement(mBrowse);
 
     // register as an event listener of the button to open file dialog on mouse click
-    nsCOMPtr<nsIDOMEventReceiver> reciever(do_QueryInterface(mBrowse));
-    reciever->AddEventListenerByIID(this, NS_GET_IID(nsIDOMMouseListener));
+    nsCOMPtr<nsIDOMEventReceiver> receiver(do_QueryInterface(mBrowse));
+    receiver->AddEventListenerByIID(this, NS_GET_IID(nsIDOMMouseListener));
   }
 
-  nsAutoString value;
-  if (NS_CONTENT_ATTR_HAS_VALUE == mContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::size, value)) {
-    mTextContent->SetAttr(kNameSpaceID_None, nsHTMLAtoms::size, value, PR_FALSE);
-  }
+  SyncAttr(kNameSpaceID_None, nsHTMLAtoms::size,     SYNC_TEXT);
+  SyncAttr(kNameSpaceID_None, nsHTMLAtoms::disabled, SYNC_BOTH);
 
   return NS_OK;
 }
@@ -439,12 +430,6 @@ nsFileControlFrame::SetInitialChildList(nsIPresContext* aPresContext,
 }
 */
 
-/**
- * Given a start node. Find the given text node inside. We need to do this because the 
- * frame constuctor create the frame and its implementation. So we are given the text
- * node from the constructor and we find it in our tree.
- */
-
 nsNewFrame*
 nsFileControlFrame::GetTextControlFrame(nsIPresContext* aPresContext, nsIFrame* aStart)
 {
@@ -516,6 +501,28 @@ nsFileControlFrame::GetName(nsAString* aResult)
   return result;
 }
 
+void
+nsFileControlFrame::SyncAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
+                             PRInt32 aWhichControls)
+{
+  nsAutoString value;
+  nsresult rv = mContent->GetAttr(aNameSpaceID, aAttribute, value);
+  if (rv == NS_CONTENT_ATTR_HAS_VALUE) {
+    if (aWhichControls & SYNC_TEXT && mTextContent) {
+      mTextContent->SetAttr(aNameSpaceID, aAttribute, value, PR_TRUE);
+    }
+    if (aWhichControls & SYNC_BUTTON && mBrowse) {
+      mBrowse->SetAttr(aNameSpaceID, aAttribute, value, PR_TRUE);
+    }
+  } else {
+    if (aWhichControls & SYNC_TEXT && mTextContent) {
+      mTextContent->UnsetAttr(aNameSpaceID, aAttribute, PR_TRUE);
+    }
+    if (aWhichControls & SYNC_BUTTON && mBrowse) {
+      mBrowse->UnsetAttr(aNameSpaceID, aAttribute, PR_TRUE);
+    }
+  }
+}
 
 NS_IMETHODIMP
 nsFileControlFrame::AttributeChanged(nsIPresContext* aPresContext,
@@ -525,21 +532,14 @@ nsFileControlFrame::AttributeChanged(nsIPresContext* aPresContext,
                                        PRInt32         aModType, 
                                        PRInt32         aHint)
 {
-  // set the text control to readonly or not
-  if (nsHTMLAtoms::disabled == aAttribute) {
-    nsCOMPtr<nsIDOMHTMLInputElement> textControl = do_QueryInterface(mTextContent);
-    if (textControl)
-    {
-      textControl->SetDisabled(nsFormControlHelper::GetDisabled(mContent));
-    }
-  } else if (nsHTMLAtoms::size == aAttribute) {
-    nsString value;
-    if (nsnull != mTextContent && NS_CONTENT_ATTR_HAS_VALUE == mContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::size, value)) {
-      mTextContent->SetAttr(kNameSpaceID_None, nsHTMLAtoms::size, value, PR_TRUE);
-      if (aHint != NS_STYLE_HINT_REFLOW) {
-        nsFormControlHelper::StyleChangeReflow(aPresContext, this);
-      }
-    }
+  // propagate disabled to text / button inputs
+  if (aNameSpaceID == kNameSpaceID_None &&
+      aAttribute == nsHTMLAtoms::disabled) {
+    SyncAttr(aNameSpaceID, aAttribute, SYNC_BOTH);
+  // propagate size to text
+  } else if (aNameSpaceID == kNameSpaceID_None &&
+             aAttribute == nsHTMLAtoms::size) {
+    SyncAttr(aNameSpaceID, aAttribute, SYNC_TEXT);
   }
 
   return nsAreaFrame::AttributeChanged(aPresContext, aChild, aNameSpaceID, aAttribute, aModType, aHint);

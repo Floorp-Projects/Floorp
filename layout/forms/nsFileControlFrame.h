@@ -180,16 +180,55 @@ public:
 protected:
   virtual PRIntn GetSkipSides() const;
 
+  /**
+   * The text frame (populated on initial reflow).
+   * @see nsFileControlFrame::Reflow
+   */
   nsNewFrame* mTextFrame;
-  nsIHTMLContent*     mTextContent;
-  nsCOMPtr<nsIHTMLContent> mBrowse;
+  /**
+   * The text box input.
+   * @see nsFileControlFrame::CreateAnonymousContent
+   */
+  nsCOMPtr<nsIContent> mTextContent;
+  /**
+   * The browse button input.
+   * @see nsFileControlFrame::CreateAnonymousContent
+   */
+  nsCOMPtr<nsIContent> mBrowse;
+  /**
+   * The current value, stored during those rare in-between periods where the
+   * file frame is there but the input frame is not.
+   */
   nsString*           mCachedState;
-  // XXX Hack: pres context needed by function MouseClick()
+  /**
+   * The current pres context.
+   * XXX Hack: pres context needed by function MouseClick() and SetFocus()
+   */
   nsIPresContext*     mPresContext;  // weak reference
 
 private:
+  /**
+   * Find the first text frame child (first frame child whose content has input
+   * type=text) of a frame.
+   * XXX this is an awfully complicated implementation of something we could
+   * likely do by just doing GetPrimaryFrame on mTextContent
+   *
+   * @param aPresContext the current pres context
+   * @param aStart the parent frame to search children of
+   * @return the text control frame, or null if not found
+   */
   nsNewFrame* GetTextControlFrame(nsIPresContext* aPresContext,
-                                          nsIFrame* aStart);
+                                  nsIFrame* aStart);
+
+  /**
+   * Copy an attribute from file content to text and button content.
+   * @param aNameSpaceID namespace of attr
+   * @param aAttribute attribute atom
+   * @param aWhichControls which controls to apply to (SYNC_TEXT or SYNC_FILE
+   *        or SYNC_BOTH)
+   */
+  void SyncAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
+                PRBool aWhichControls);
 
   NS_IMETHOD_(nsrefcnt) AddRef() { return NS_OK; }
   NS_IMETHOD_(nsrefcnt) Release() { return NS_OK; }
