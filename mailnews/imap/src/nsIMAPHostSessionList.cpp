@@ -55,7 +55,7 @@ nsIMAPHostInfo::nsIMAPHostInfo(const char *hostName, const char *userName)
 	fPasswordVerifiedOnline = PR_FALSE;
     fDeleteIsMoveToTrash = PR_FALSE;
     fGotNamespaces = PR_FALSE;
-	fNamespacesOverridable = PR_FALSE;
+	fNamespacesOverridable = PR_TRUE;
 }
 
 nsIMAPHostInfo::~nsIMAPHostInfo()
