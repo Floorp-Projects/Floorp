@@ -74,9 +74,7 @@ BINREL_DIST=$(XPDIST)\WIN954.0_DBG.OBJD
 !endif
 !endif
 
-!ifndef MOZ_SECURITY
-HASHLIBS=$(DIST)\lib\secfreenav32.lib
-!else
+!ifdef MOZ_SECURITY
 HASHLIBS=$(BINREL_DIST)\lib\hash.lib $(BINREL_DIST)\lib\secutil.lib 
 !endif
 

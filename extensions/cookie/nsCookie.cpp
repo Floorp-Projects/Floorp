@@ -45,8 +45,6 @@ extern "C" {
 #else
 #include "private/prpriv.h"
 #endif
-#include "sechash.h"
-#include "rosetta.h"
 }
 
 static NS_DEFINE_IID(kIFileLocatorIID, NS_IFILELOCATOR_IID);

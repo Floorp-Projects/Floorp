@@ -27,7 +27,6 @@
 #ifndef _MSGCOM_H_
 #define _MSGCOM_H_
 
-#include "rosetta.h"
 #if 0
 #include "libmime.h"
 #endif
@@ -880,8 +879,6 @@ typedef struct MSG_AttachedFile
   uint32 null_count;
   uint32 max_line_length;
   
-  HG68452
-
 } MSG_AttachedFile;
 
 

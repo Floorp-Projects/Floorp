@@ -69,7 +69,6 @@ LLIBS	= \
 !else
  $(DIST)\lib\netwerk.lib \
 !endif
- $(DIST)\lib\secfreenav32.lib	\
  $(HASHLIBS)
 
 include <$(DEPTH)\config\rules.mak>
