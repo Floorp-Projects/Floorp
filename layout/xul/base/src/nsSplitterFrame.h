@@ -86,7 +86,7 @@ public:
 
 private:
 
-  friend nsSplitterFrameImpl;
+  friend class nsSplitterFrameImpl;
   nsSplitterFrameImpl* mImpl;
 
 }; // class nsSplitterFrame
