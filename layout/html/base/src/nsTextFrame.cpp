@@ -2014,7 +2014,7 @@ nsresult nsTextFrame::GetTextInfoForPainting(nsIPresContext*          aPresConte
   PRInt16 textSel=0; 
   (*aSelectionController)->GetSelectionFlags(&textSel);
   if (!(textSel & nsISelectionDisplay::DISPLAY_TEXT))
-    aDisplayingSelection = false;
+    aDisplayingSelection = PR_FALSE;
 
   // Transform text from content into renderable form
   // XXX If the text fragment is already Unicode and text text wasn't
