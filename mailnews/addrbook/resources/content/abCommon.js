@@ -393,16 +393,17 @@ function SortResultPane(column, sortKey)
 	var node = document.getElementById(column);
 	if (!node)    return(false);
 
-	// sort!!!
-	var sortDirection;
+	var sortDirection = "ascending";
     var currentDirection = node.getAttribute('sortDirection');
-	if ( currentDirection == "descending" )
-		sortDirection = "ascending";
-    else
+	if ( currentDirection == "ascending" )
 		sortDirection = "descending";
+    else
+		sortDirection = "ascending";
+	
+	UpdateSortIndicator(column, sortDirection);
 
 	DoSort(column, sortKey, sortDirection);
-
+    
     SaveSortSetting(column, sortKey, sortDirection);
     return(true);
 }
@@ -450,6 +451,8 @@ function SortToPreviousSettings()
 			if ( !direction )
 				direction = 'ascending';
 			
+			UpdateSortIndicator(column,direction);
+			
 			DoSort(column, key, direction);
 		}	
 	}
@@ -469,3 +472,49 @@ function SaveSortSetting(column, key, direction)
 		}	
 	}
 }
+
+//------------------------------------------------------------
+// Sets the column header sort icon based on the requested 
+// column and direction.
+// 
+// Notes:
+// (1) This function relies on the first part of the 
+//     <treecell id> matching the <treecol id>.  The treecell
+//     id must have a "Header" suffix.
+// (2) By changing the "sortDirection" attribute, a different
+//     CSS style will be used, thus changing the icon based on
+//     the "sortDirection" parameter.
+//------------------------------------------------------------
+function UpdateSortIndicator(column,sortDirection)
+{
+	// Find the <treerow> element
+	var treerow = document.getElementById("headRow");
+	var id = column + "Header";
+	
+	if (treerow)
+	{
+		// Grab all of the <treecell> elements
+		var treecell = treerow.getElementsByTagName("treecell");
+		if (treecell)
+		{
+			// Loop through each treecell...
+			var node_count = treecell.length;
+			for (var i=0; i < node_count; i++)
+			{
+				// Is this the requested column ?
+				if (id == treecell[i].getAttribute("id"))
+				{
+					// Set the sortDirection so the class (CSS) will add the
+					// appropriate icon to the header cell
+					treecell[i].setAttribute('sortDirection',sortDirection);
+				}
+				else
+				{
+					// This is not the sorted row
+					treecell[i].removeAttribute('sortDirection');
+				}
+			}
+		}
+	}
+}
+

@@ -62,10 +62,10 @@ Rights Reserved.
 		
 		<treehead>
 			<treerow id="headRow">
-				<treecell value="&nameColumn.label;" onclick="return top.SortResultPane('NameColumn', 'http://home.netscape.com/NC-rdf#Name');"/>
-				<treecell value="&emailColumn.label;" onclick="return top.SortResultPane('EmailColumn', 'http://home.netscape.com/NC-rdf#PrimaryEmail');"/>
-				<treecell value="&workPhoneColumn.label;" onclick="return top.SortResultPane('WorkPhoneColumn', 'http://home.netscape.com/NC-rdf#WorkPhone');"/>
-				<treecell value="&organizationColumn.label;" onclick="return top.SortResultPane('OrganizationColumn', 'http://home.netscape.com/NC-rdf#Company');"/>
+				<treecell id="NameColumnHeader" value="&nameColumn.label;" class="sortDirectionIndicator" onclick="return top.SortResultPane('NameColumn', 'http://home.netscape.com/NC-rdf#Name');"/>
+				<treecell id="EmailColumnHeader" value="&emailColumn.label;" class="sortDirectionIndicator" onclick="return top.SortResultPane('EmailColumn', 'http://home.netscape.com/NC-rdf#PrimaryEmail');"/>
+				<treecell id="WorkPhoneColumnHeader" value="&workPhoneColumn.label;" class="sortDirectionIndicator" onclick="return top.SortResultPane('WorkPhoneColumn', 'http://home.netscape.com/NC-rdf#WorkPhone');"/>
+				<treecell id="OrganizationColumnHeader" value="&organizationColumn.label;" class="sortDirectionIndicator" onclick="return top.SortResultPane('OrganizationColumn', 'http://home.netscape.com/NC-rdf#Company');"/>
 			</treerow>
 		</treehead>
 
