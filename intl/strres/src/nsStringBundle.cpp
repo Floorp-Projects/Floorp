@@ -263,9 +263,7 @@ nsStringBundle::OnStreamComplete(nsIStreamLoader* aLoader,
                              string, stringLen);
   if (NS_FAILED(rv)) return rv;
       
-  nsCOMPtr<nsIInputStream> in = do_QueryInterface(stringStreamSupports);
-  nsCOMPtr<nsIBinaryInputStream> binaryStream;
-  rv = NS_NewBinaryInputStream(getter_AddRefs(binaryStream), in);
+  nsCOMPtr<nsIInputStream> in = do_QueryInterface(stringStreamSupports, &rv);
   if (NS_FAILED(rv)) return rv;
   
   aStatus = nsComponentManager::CreateInstance(kPersistentPropertiesCID, NULL,
