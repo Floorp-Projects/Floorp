@@ -28,13 +28,10 @@
 #include "gdksuperwin.h"
 
 class nsIWidget;
-class nsIMenuItem;
-class nsIMenu;
 
 gint handle_configure_event(GtkWidget *w, GdkEventConfigure *conf, gpointer p);
 void handle_size_allocate(GtkWidget *w, GtkAllocation *alloc, gpointer p);
 gint handle_expose_event(GtkWidget *w, GdkEventExpose *event, gpointer p);
-
 
 gint handle_key_release_event_for_text(GtkObject *w, GdkEventKey* event, gpointer p);
 gint handle_key_press_event_for_text(GtkObject *w, GdkEventKey* event, gpointer p);
@@ -44,26 +41,7 @@ gint handle_key_press_event(GtkObject *w, GdkEventKey* event, gpointer p);
 
 void handle_scrollbar_value_changed(GtkAdjustment *adjustment, gpointer p);
 
-void menu_item_activate_handler(GtkWidget *w, gpointer p);
-
-void menu_map_handler(GtkWidget *w, gpointer p);
-void menu_unmap_handler(GtkWidget *w, gpointer p);
-
 //----------------------------------------------------
-
-gint nsGtkWidget_FSBCancel_Callback(GtkWidget *w, gpointer p);
-gint nsGtkWidget_FSBOk_Callback(GtkWidget *w, gpointer p);
-
-//----------------------------------------------------
-gint CheckButton_Toggle_Callback(GtkWidget *w, gpointer p);
-
-gint nsGtkWidget_RadioButton_ArmCallback(GtkWidget *w, gpointer p);
-gint nsGtkWidget_RadioButton_DisArmCallback(GtkWidget *w, gpointer p);
-
-gint nsGtkWidget_Text_Callback(GtkWidget *w, GdkEventKey* event, gpointer p);
-gint nsGtkWidget_Expose_Callback(GtkWidget *w, gpointer p);
-
-gint nsGtkWidget_Refresh_Callback(gpointer call_data);
 
 void handle_xlib_shell_event(GdkSuperWin *superwin, XEvent *event, gpointer p);
 void handle_xlib_bin_event(GdkSuperWin *superwin, XEvent *event, gpointer p);

@@ -34,7 +34,6 @@ CPPSRCS		= \
 		nsButton.cpp \
 		nsCheckButton.cpp \
 		nsClipboard.cpp \
-		nsComboBox.cpp \
 		nsDragService.cpp \
 		nsFileWidget.cpp \
 		nsFontRetrieverService.cpp \
@@ -42,12 +41,9 @@ CPPSRCS		= \
 		nsGtkEventHandler.cpp \
 		nsGtkUtils.cpp \
 		nsLabel.cpp \
-		nsListBox.cpp \
 		nsLookAndFeel.cpp \
-		nsRadioButton.cpp \
 		nsScrollbar.cpp \
 		nsSound.cpp \
-		nsTextAreaWidget.cpp \
 		nsTextHelper.cpp \
 		nsTextWidget.cpp \
 		nsToolkit.cpp \
