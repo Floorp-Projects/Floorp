@@ -39,20 +39,10 @@ import org.mozilla.jss.CryptoManager;
  * This class implements the <CODE>LDAPSocketFactory</CODE>
  * interface.
  * <P>
- * <B>NOTE: This class is internal to Netscape and is distributed only with 
- * Netscape products</B>.
- * <P>
- * By default, the factory uses "secmod.db", "key3.db" and "cert7.db"
+ * By default, the factory uses "secmod.db", "key*.db" and "cert*.db"
  * databases in the current directory. If you need to override this default
- * setting, then you should call the static <CODE>initialize</CODE> method
- * before creating the first instance of <CODE>JSSSocketFactory</CODE>.
- * <P>
- * <PRE>
- *       ...
- *       JSSSocketFactory.initialize("../certDir");
- *       LDAPConnection ld = new LDAPConnection(new JSSSocketFactory());
- *       ...
- * </PRE>
+ * setting, then you should use the constructor <CODE>JSSSocketFactory(certdbDir)</CODE>.
+ * 
  * @version 1.1
  * @see LDAPSocketFactory
  * @see LDAPConnection#LDAPConnection(netscape.ldap.LDAPSocketFactory)
@@ -66,31 +56,11 @@ public class JSSSocketFactory implements Serializable,
     static final long serialVersionUID = -6926469178017736903L;
 
     /**
-     * Default security module database path "secmod.db".
-     */
-    public static final String defaultModDB = "secmod.db";
-    
-    /**
-     * Default key database path "key3.db".
-     */
-    public static final String defaultKeyDB = "key3.db";
-    
-    /**
-     * Default certificate database path "cert7.db".
-     */
-    public static final String defaultCertDB = "cert7.db";
-    
-    private static String moddb;
-    private static String keydb;
-    private static String certdb;
-    
-
-    /**
-     * Constructs a new <CODE>JSSSocketFactory</CODE>.
-     * <CODE>CryptoManager.initialize(certdbDir)</CODE> or
-     * JSSSocketFactory.initialize(certdbDir)</CODE> must be called once in the
-     * application before using the object.
-     *
+     * Constructs a new <CODE>JSSSocketFactory</CODE>, initializing the
+     * JSS security system if it has not already been initialized.
+     * <p>
+     * The current directory is assumed to be the certificate database directory.
+     * 
      * @exception LDAPException on initialization error
      * @see netscape.ldap.factory.JSSSocketFactory#JSSSocketFactory(java.lang.String)
      */
@@ -100,7 +70,7 @@ public class JSSSocketFactory implements Serializable,
 
     /**
      * Constructs a new <CODE>JSSSocketFactory</CODE>, initializing the
-     * JSS security system if it has not already been initialized
+     * JSS security system if it has not already been initialized.
      *
      * @param certdbDir The full path, relative or absolute, of the certificate
      * database directory
@@ -115,8 +85,8 @@ public class JSSSocketFactory implements Serializable,
      * <P>
      * This method allows you to override the current directory as the
      * default certificate database directory. The directory is expected
-     * to contain <CODE>secmod.db</CODE>, <CODE>key3.db</CODE> and
-     * <CODE>cert7.db</CODE> files as the security module database, key database
+     * to contain <CODE>secmod.db</CODE>, <CODE>key*.db</CODE> and
+     * <CODE>cert*.db</CODE> files as the security module database, key database
      * and certificate database respectively.
      * <P>
      * The method may be called only once, before the first instance of 
@@ -130,9 +100,6 @@ public class JSSSocketFactory implements Serializable,
      * @see netscape.ldap.factory.JSSSocketFactory#JSSSocketFactory(String)
      */
     public static void initialize( String certdbDir ) throws LDAPException {
-        moddb  = certdbDir + File.separator + JSSSocketFactory.defaultModDB;
-        keydb  = certdbDir + File.separator + JSSSocketFactory.defaultKeyDB;
-        certdb = certdbDir + File.separator + JSSSocketFactory.defaultCertDB;
         try {
             CryptoManager.initialize( certdbDir );
         } catch (AlreadyInitializedException e) {
@@ -141,66 +108,6 @@ public class JSSSocketFactory implements Serializable,
             throw new LDAPException("Failed to initialize JSSSocketFactory: "
                                     + e.getMessage(), LDAPException.OTHER);
         }
-    }
-
-    /**
-     * Initialize the JSS security subsystem.
-     * <P>
-     * This method allows you to override the default name and location of
-     * the security module database, key database and certificate databases.
-     * <P>
-     * The method may be called only once, before the first instance of 
-     * <CODE>JSSSocketFactory</CODE> is created. When creating the first
-     * instance, the constructor will automatically initialize the JSS 
-     * security subsystem using the defaults, unless it is already initialized.
-     * <P>
-     * @param moddb The full path, relative or absolute, of the security
-     *  module database.
-     * @param keydb The full path, relative or absolute, of the key database.
-     * @param keydb The full path, relative or absolute, of the certificate
-     *  database.
-     * @see netscape.ldap.factory.JSSSocketFactory#JSSSocketFactory
-     * @see netscape.ldap.factory.JSSSocketFactory#initialize(java.lang.String)
-     * @exception LDAPException on initialization error
-     * @deprecated Please call <CODE>JSSSocketFactory(String certDir)</CODE> instead
-     */
-    public static void initialize( String moddb, String keydb, String certdb )
-        throws LDAPException {
-        JSSSocketFactory.moddb = moddb;
-        JSSSocketFactory.keydb = keydb;
-        JSSSocketFactory.certdb = certdb;
-        int ind = certdb.lastIndexOf( File.separator );
-        String certdbDir = ( ind == 0 ) ? File.separator :
-            ( ind > 0 ) ? certdb.substring( 0, ind ) : ".";
-        initialize( certdbDir );
-    }
-
-    /**
-     * Returns the full path of the security module
-     * database
-     *
-     * @return The full path, relative or absolute, of the security module database
-     */
-    public static String getModDB() {
-        return moddb;
-    }
-
-    /**
-     * Returns the full path of the key database
-     *
-     * @return The full path, relative or absolute, of the key database
-     */
-    public static String getKeyDB() {
-        return keydb;
-    }
-
-    /**
-     * Returns the full path of the certificate database
-     *
-     * @return The full path, relative or absolute, of the certificate database
-     */
-    public static String getCertDB() {
-        return certdb;
     }
 
     /**
