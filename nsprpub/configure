@@ -3824,8 +3824,8 @@ EOF
         fi
 
         if test -n "$MOZ_DEBUG"; then
-            DLLFLAGS="$DLLFLAGS -DEBUG -DEBUGTYPE:CV"
-            LDFLAGS="$LDFLAGS -DEBUG -DEBUGTYPE:CV"
+            DLLFLAGS="$DLLFLAGS -DEBUG"
+            LDFLAGS="$LDFLAGS -DEBUG"
         fi
         
         if test "$OS_TARGET" = "WINNT"; then
@@ -3877,7 +3877,7 @@ EOF
     fi
 
     OS_DLLFLAGS="-nologo -DLL -SUBSYSTEM:WINDOWS"
-    if test "$MSC_VER" = "1200" -a -z "$MOZ_DEBUG_SYMBOLS"; then
+    if test "$MSC_VER" -le "1200" -a -z "$MOZ_DEBUG_SYMBOLS"; then
         OS_DLLFLAGS="$OS_DLLFLAGS -PDB:NONE"
     fi
 

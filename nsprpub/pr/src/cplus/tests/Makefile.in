@@ -132,7 +132,7 @@ ifeq ($(OS_TARGET), WIN16)
   LIBPR = $(dist_libdir)/nspr$(MOD_MAJOR_VERSION).lib
   LIBPL = $(dist_libdir)/plc$(MOD_MAJOR_VERSION).lib
 else
-  LDOPTS = -NOLOGO -DEBUG -DEBUGTYPE:CV -INCREMENTAL:NO
+  LDOPTS = -NOLOGO -DEBUG -INCREMENTAL:NO
   LIBPR = $(dist_libdir)/libnspr$(MOD_MAJOR_VERSION).$(LIB_SUFFIX)
   LIBPL = $(dist_libdir)/libplc$(MOD_MAJOR_VERSION).$(LIB_SUFFIX)
 endif

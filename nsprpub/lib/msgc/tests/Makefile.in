@@ -84,7 +84,7 @@ ifeq ($(OS_TARGET), WIN16)
   LIBPLC = $(dist_libdir)/plc$(NSPR_VERSION).lib
   LIBGC= $(dist_libdir)/msgc$(GC_VERSION).lib
 else
-  LDOPTS = -NOLOGO -DEBUG -DEBUGTYPE:CV -INCREMENTAL:NO
+  LDOPTS = -NOLOGO -DEBUG -INCREMENTAL:NO
   LIBPR = $(dist_libdir)/libnspr$(NSPR_VERSION).$(LIB_SUFFIX)
   LIBPLC = $(dist_libdir)/libplc$(NSPR_VERSION).$(LIB_SUFFIX)
   LIBGC= $(dist_libdir)/libmsgc$(GC_VERSION).$(LIB_SUFFIX)

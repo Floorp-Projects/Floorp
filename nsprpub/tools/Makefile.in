@@ -83,7 +83,7 @@ ifeq ($(OS_TARGET), WIN16)
   LIBPR = $(dist_libdir)/nspr$(NSPR_VERSION).lib
   LIBPLC= $(dist_libdir)/plc$(NSPR_VERSION).lib
 else
-LDOPTS = -NOLOGO -DEBUG -DEBUGTYPE:CV -INCREMENTAL:NO
+LDOPTS = -NOLOGO -DEBUG -INCREMENTAL:NO
 LIBPR = $(dist_libdir)/libnspr$(NSPR_VERSION).$(LIB_SUFFIX)
 LIBPLC= $(dist_libdir)/libplc$(NSPR_VERSION).$(LIB_SUFFIX)
 endif
