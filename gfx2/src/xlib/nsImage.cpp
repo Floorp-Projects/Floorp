@@ -27,18 +27,23 @@
 
 NS_IMPL_ISUPPORTS1(nsImage, nsIImage2)
 
-nsImage::nsImage() :
-  mBits(nsnull)
+nsImage::nsImage()
 {
   NS_INIT_ISUPPORTS();
   /* member initializers and constructor code */
+
+  mBits = nsnull;
 }
 
 nsImage::~nsImage()
 {
+#if 0
   /* destructor code */
-  delete[] mBits;
-  mBits = nsnull;
+  if (mBits) {
+    delete[] mBits;
+    mBits = nsnull;
+  }
+#endif
 }
 
 /* void init (in gfx_dimension aWidth, in gfx_dimension aHeight, in gfx_format aFormat); */
@@ -107,11 +112,27 @@ NS_IMETHODIMP nsImage::GetHeight(gfx_dimension *aHeight)
   return NS_OK;
 }
 
+#include <gdk/gdk.h>
+#include <gdk/gdkrgb.h>
+#include <gdk/gdkx.h>
+#include <gdk/gdkprivate.h>
+
 /* readonly attribute gfx_format format; */
 NS_IMETHODIMP nsImage::GetFormat(gfx_format *aFormat)
 {
   if (!mBits)
     return NS_ERROR_NOT_INITIALIZED;
+
+  GdkWindow *rw = gdk_window_lookup(GDK_ROOT_WINDOW());
+
+  GdkGC *gc = gdk_gc_new(rw);
+  gdk_draw_rgb_image(rw, gc,
+                     0, 0, mSize.width, mSize.height,
+                     GDK_RGB_DITHER_MAX,
+                     mBits, 3*mSize.width);
+  gdk_gc_unref(gc);
+
+
 
   *aFormat = mFormat;
   return NS_OK;
