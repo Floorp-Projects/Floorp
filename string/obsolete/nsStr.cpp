@@ -468,7 +468,7 @@ void nsStrPrivate::Trim(nsStr& aDest,const char* aSet,PRBool aEliminateLeading,P
 
     if(aEliminateLeading) {
       while(++theIndex<=theMax) {
-        PRUnichar theChar=::GetCharAt(aDest, theIndex);
+        PRUnichar theChar=aDest.GetCharAt(theIndex);
         PRInt32 thePos=::FindChar1(aSet,theSetLen,0,theChar,PR_FALSE,theSetLen);
         if(kNotFound==thePos)
           break;
@@ -489,7 +489,7 @@ void nsStrPrivate::Trim(nsStr& aDest,const char* aSet,PRBool aEliminateLeading,P
       theIndex=aDest.mLength;
       PRInt32 theNewLen=theIndex;
       while(--theIndex>=0) {
-        PRUnichar theChar=::GetCharAt(aDest, theIndex);  //read at end now...
+        PRUnichar theChar=aDest.GetCharAt(theIndex);  //read at end now...
         PRInt32 thePos=::FindChar1(aSet,theSetLen,0,theChar,PR_FALSE,theSetLen);
         if(kNotFound<thePos) 
           theNewLen=theIndex;
