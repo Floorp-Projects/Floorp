@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   David Baron <dbaron@fas.harvard.edu>
  */
 #include "nsBlockReflowContext.h"
 #include "nsLineLayout.h"
@@ -737,15 +738,6 @@ nsBlockReflowContext::PlaceBlock(PRBool aForceFit,
                             mMetrics.height);
 
 
-      // Apply CSS relative positioning to update x,y coordinates
-      const nsStylePosition* stylePos;
-      mFrame->GetStyleData(eStyleStruct_Position,
-                           (const nsStyleStruct*&)stylePos);
-      if (NS_STYLE_POSITION_RELATIVE == stylePos->mPosition) {
-        x += aComputedOffsets.left;
-        y += aComputedOffsets.top;
-      }
-
       // Compute combined-rect in callers coordinate system. The value
       // returned in the reflow metrics is relative to the child
       // frame.
@@ -753,6 +745,18 @@ nsBlockReflowContext::PlaceBlock(PRBool aForceFit,
       aCombinedRect.y = mMetrics.mOverflowArea.y + y;
       aCombinedRect.width = mMetrics.mOverflowArea.width;
       aCombinedRect.height = mMetrics.mOverflowArea.height;
+
+      // Apply CSS relative positioning to update x,y coordinates
+      // Note that this must be done after changing aCombinedRect
+      // since relatively positioned elements should act as if they
+      // were at their original position.
+      const nsStylePosition* stylePos;
+      mFrame->GetStyleData(eStyleStruct_Position,
+                           (const nsStyleStruct*&)stylePos);
+      if (NS_STYLE_POSITION_RELATIVE == stylePos->mPosition) {
+        x += aComputedOffsets.left;
+        y += aComputedOffsets.top;
+      }
 
       // Now place the frame and complete the reflow process
       nsContainerFrame::FinishReflowChild(mFrame, mPresContext, mMetrics, x, y, 0);
