@@ -302,7 +302,7 @@
       <menuitem id="menu_findnext"   accesskey="&editfindnext.accesskey;"        key="findnextkb"     observes="cmd_findNext"/>
       <menuseparator class="hide-in-IM" />
       <menuitem id="menu_checkspelling" accesskey="&editcheckspelling.accesskey;"   key="checkspellingkb" observes="cmd_spelling" value="&checkSpellingCmd.label;"/>
-      <menuseparator class="hide-in-IM"/>
+      <menuseparator id="sep_checkspelling" class="hide-in-IM"/>
       <menuitem class="hide-in-IM" id="menu_editHTML"    accesskey="&HTMLsource.accesskey;"            observes="cmd_editHTML"/>
       <menuseparator/>
       <menuitem id="menu_preferences"                                                                  observes="cmd_preferences"/>
@@ -319,7 +319,7 @@
   		<menuitem value="&taskbarCmd.label;"            accesskey="&taskbarCmd.accesskey;"    observes="cmd_viewtaskbar" />
       </menupopup>
     </menu>
-    <menuitem id="viewSourceMenuitem" value="&viewPageSource.label;"     accesskey="&viewpagesource.accesskey;"     oncommand="EditorViewSource();"/>
+    <menuitem id="viewSourceMenuitem" accesskey="&HTMLsource.accesskey;" observes="cmd_editHTML"/>
     <menuitem id="viewParagraphMarks" value="&viewParagraphMarks.label;" accesskey="&viewparagraphmarks.accesskey;" oncommand="EditorToggleParagraphMarks();" persist="checked"/>
 
     <menu  id="charsetMenu" value="&dcharMenu.label;" accesskey="&viewcharsetmenu.accesskey;">
