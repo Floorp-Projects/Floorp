@@ -1292,8 +1292,10 @@ NS_IMETHODIMP GlobalWindowImpl::Home()
    else 
       homeURL = url;
    PR_FREEIF(url);
-   nsCOMPtr<nsIWebShell> webShell(do_QueryInterface(mDocShell));
-   return webShell->LoadURL(homeURL.GetUnicode());
+   nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(mDocShell));
+   NS_ENSURE_TRUE(webNav, NS_ERROR_FAILURE);
+   NS_ENSURE_SUCCESS(webNav->LoadURI(homeURL.GetUnicode()), NS_ERROR_FAILURE);
+   return NS_OK;
 }
 
 NS_IMETHODIMP GlobalWindowImpl::Stop()
@@ -1943,7 +1945,7 @@ PRBool GlobalWindowImpl::Resolve(JSContext* aContext, JSObject* aObj, jsval aID)
             nsCOMPtr<nsIDocShellTreeItem> child;
             nsAutoString name(JS_GetStringBytes(JS_ValueToString(aContext, aID)));
             if(NS_SUCCEEDED(docShellAsNode->FindChildWithName(name.GetUnicode(),
-               PR_FALSE, nsnull, getter_AddRefs(child)))) 
+               PR_FALSE, PR_FALSE, nsnull, getter_AddRefs(child)))) 
                {
                if(child)
                   {
@@ -2409,12 +2411,18 @@ NS_IMETHODIMP GlobalWindowImpl::OpenInternal(JSContext* cx, jsval* argv,
       newDocShellItem->SetName(nsnull);
 
    nsCOMPtr<nsIWebShell> webShell(do_QueryInterface(newDocShellItem));
-   if (loadURL) {
+   if(loadURL)
+      {
+      //XXXPERFORMANCE, we should get the uri and load it directly
+      //instead of loading with the character string.
+      nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(newDocShellItem));
+      NS_ENSURE_TRUE(webNav, NS_ERROR_FAILURE);
       nsCOMPtr<nsIPrincipal> principal;
       if (NS_FAILED(secMan->GetSubjectPrincipal(getter_AddRefs(principal))))
          return NS_ERROR_FAILURE;
       nsCOMPtr<nsICodebasePrincipal> codebase = do_QueryInterface(principal);
-      if (codebase) {
+      if(codebase)
+         {
          nsCOMPtr<nsIURI> codebaseURI;
          nsresult rv;
          if (NS_FAILED(rv = codebase->GetURI(getter_AddRefs(codebaseURI))))
@@ -2426,10 +2434,10 @@ NS_IMETHODIMP GlobalWindowImpl::OpenInternal(JSContext* cx, jsval* argv,
          webShell->LoadURL(mAbsURL.GetUnicode(), nsnull, PR_TRUE, 
                            nsIChannel::LOAD_NORMAL, 0, nsnull, 
                            referrer.GetUnicode());
-      } else {
-         webShell->LoadURL(mAbsURL.GetUnicode());
+         } 
+      else
+         webNav->LoadURI(mAbsURL.GetUnicode());
       }
-   }
 
    if(windowIsNew)
       SizeOpenedDocShellItem(newDocShellItem, options, chromeFlags);
