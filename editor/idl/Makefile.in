@@ -24,6 +24,7 @@ include $(DEPTH)/config/autoconf.mk
 
 XPIDLSRCS = nsIEditorShell.idl \
 						nsIEditorSpellCheck.idl  \
+						nsIDocumentStateListener.idl \
 						$(NULL)
 
 MODULE	= editor

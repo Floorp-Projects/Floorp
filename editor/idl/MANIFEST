@@ -18,3 +18,4 @@
 
 nsIEditorShell.idl
 nsIEditorSpellCheck.idl
+nsIDocumentStateListener.idl
