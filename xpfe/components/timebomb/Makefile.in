@@ -1,0 +1,29 @@
+DEPTH           = ../../..
+topsrcdir       = @top_srcdir@
+srcdir          = @srcdir@
+VPATH           = @srcdir@
+
+include $(DEPTH)/config/autoconf.mk
+
+IS_COMPONENT    = 1
+
+
+DIRS = tools resources
+
+MODULE          = tbmb
+LIBRARY_NAME    = tbmb
+
+XPIDLSRCS       = nsITimeBomb.idl
+
+CPPSRCS         = \
+                $(srcdir)/nsTimeBomb.cpp \
+                $(NULL)
+
+#REQUIRES        = nsappshell nspr xpcom security layer js jar pref img util rdf
+
+include $(topsrcdir)/config/rules.mk
+
+EXPORTS = \
+                $(srcdir)/nsTimeBomb.h \
+                $(NULL)
+
