@@ -23,7 +23,7 @@
 #include "nsIEnumerator.h"
 #include "nsIMouseListener.h"
 #include "nsIEventListener.h"
-#include "nsIMenuListener.h"
+/*#include "nsIMenuListener.h"*/
 #include "nsIToolkit.h"
 #include "nsStringUtil.h"
 #include "nsString.h"
