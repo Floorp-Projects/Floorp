@@ -263,7 +263,7 @@ void Stopwatch::Print(void) {
 #ifdef MOZ_PERF_METRICS
    RAPTOR_STOPWATCH_TRACE(("Real time %d:%d:%d.%d, CP time %.3f\n", hours, min, sec, ms, CpuTime()));
 #else
-   printf("Real time %d:%d:%d%.%d, CP time %.3f\n", hours, min, sec, ms, CpuTime());
+   printf("Real time %d:%d:%d.%d, CP time %.3f\n", hours, min, sec, ms, CpuTime());
 #endif
 }
 
