@@ -56,7 +56,6 @@ CPPSRCS = \
   nsGenericAccessible.cpp \
   nsRootAccessible.cpp \
   nsCaretAccessible.cpp \
-  nsSelectAccessible.cpp \
   nsTextAccessible.cpp \
   $(NULL)
 

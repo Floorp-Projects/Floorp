@@ -512,6 +512,13 @@ NS_IMETHODIMP nsRootAccessible::HandleEvent(nsIDOMEvent* aEvent)
     if (eventType.EqualsIgnoreCase("focus") || eventType.EqualsIgnoreCase("DOMMenuItemActive")) { 
       if (optionTargetNode &&
           NS_SUCCEEDED(mAccService->GetAccessibleFor(optionTargetNode, getter_AddRefs(accessible)))) {
+        if (eventType.EqualsIgnoreCase("focus")) {
+          nsCOMPtr<nsIAccessible> selectAccessible;
+          mAccService->GetAccessibleFor(targetNode, getter_AddRefs(selectAccessible));
+          if (selectAccessible) {
+            FireAccessibleFocusEvent(selectAccessible, targetNode);
+          }
+        }
         FireAccessibleFocusEvent(accessible, optionTargetNode);
       }
       else
