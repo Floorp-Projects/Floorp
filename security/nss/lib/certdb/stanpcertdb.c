@@ -705,7 +705,6 @@ CERT_SaveSMimeProfile(CERTCertificate *cert, SECItem *emailProfile,
     
     emailAddr = cert->emailAddr;
     
-    PORT_Assert(emailAddr);
     if ( emailAddr == NULL ) {
 	goto loser;
     }
