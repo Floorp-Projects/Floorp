@@ -187,7 +187,7 @@ function addOptions2(oname, iname)
     </html:select>
 <html:br/>
 
-<titledbutton value="Create Account" class="push" />
+<button value="Create Account" class="push" />
 
 
 </html:div>

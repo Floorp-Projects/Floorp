@@ -33,7 +33,7 @@
            
         	<box align="horizontal">
         		<html:input id="dialog.input" flex="100%" onkeyup="onTyping(event.keyCode)"/>
-        		<titledbutton onclick="choose()" value="Choose File..." align="left"/>
+        		<button onclick="choose()" value="Choose File..." align="left"/>
        		 </box>
                               
         	<box align="horizontal" style="margin-bottom: 1em;">
@@ -53,9 +53,9 @@
                    
         	<box align="horizontal">
 				<spring flex="100%"/>
-            	<titledbutton id="dialog.ok" value="ok" onclick="open()" align="left"/>
-				<titledbutton id="dialog.test" value="test" onclick="strresTest()" align="left"/>
-            	<titledbutton id="dialog.cancel" value="cancel: 戻る" onclick="cancel()" align="left"/>
+            	<button id="dialog.ok" value="ok" onclick="open()" align="left"/>
+				<button id="dialog.test" value="test" onclick="strresTest()" align="left"/>
+            	<button id="dialog.cancel" value="cancel: 戻る" onclick="cancel()" align="left"/>
 				<spring flex="100%"/>
         	</box>
                      

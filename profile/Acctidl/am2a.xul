@@ -161,14 +161,14 @@ function SelectCity()
     </html:select>
     
 <html:br/>
-<titledbutton value="SelectCity" class="push" onclick="SelectCity();"/>
+<button value="SelectCity" class="push" onclick="SelectCity();"/>
 <html:br/>
 Phone <html:input type="text" id="phone"/>  This information will not be given to anyone else.<html:br/><html:br/>
 FileName<html:input type="text" id="filename"/> <html:br/><html:br/> 
 Login Name<html:input type="text" id="loginname"/> <html:br/><html:br/> 
 Password<html:input type="text" id="loginpass"/> 
 Enter Again<html:input type="text" id="passagain"/><html:br/><html:br/>
-<titledbutton value="Create Account" class="push" onclick="TestMe();"/>
+<button value="Create Account" class="push" onclick="TestMe();"/>
 
 
 </html:div>

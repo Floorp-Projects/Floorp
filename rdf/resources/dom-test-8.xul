@@ -87,12 +87,12 @@
   </html:script>
 
   <box align="horizontal">
-    <titledbutton onclick="ToBeetle();" value="To Beetle" />
-    <titledbutton onclick="ToPrev();" value="To Previous Sibling" />
-    <titledbutton onclick="ToNext();" value="To Next Sibling" />
-    <titledbutton onclick="ToParent();" value="To Parent" />
-    <titledbutton onclick="ToFirstChild();" value="To First Child" />
-    <titledbutton onclick="ToLastChild();" value="To Last Child" />
+    <button onclick="ToBeetle();" value="To Beetle" />
+    <button onclick="ToPrev();" value="To Previous Sibling" />
+    <button onclick="ToNext();" value="To Next Sibling" />
+    <button onclick="ToParent();" value="To Parent" />
+    <button onclick="ToFirstChild();" value="To First Child" />
+    <button onclick="ToLastChild();" value="To Last Child" />
   </box>
 
 <!--  <tree id="tree" flex="100%" datasources="rdf:bookmarks rdf:mailnewsfolders rdf:msgaccountmanager" style="height:100%;"> -->

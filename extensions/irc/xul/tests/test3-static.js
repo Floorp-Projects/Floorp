@@ -575,7 +575,7 @@ function getTBForObject (source, create)
         var tbi = document.createElement ("toolbaritem");
         tbi.setAttribute ("onclick", "onTBIClick('" + id + "')");
     
-        tb = document.createElement ("titledbutton");
+        tb = document.createElement ("button");
         tb.setAttribute ("class", "activity-button");
         tb.setAttribute ("id", id);
         client.viewsArray.push ({source: source, tb: tb});

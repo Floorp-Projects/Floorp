@@ -548,45 +548,45 @@
 	  onkeyup="if (event.keyCode == 13) { BrowserLoadURL(); }"/>   
 	<spring flex="100%"/>
 	</box>
-	<titledbutton id="Throbber" onclick="window.frames[0].home()">
+	<button id="Throbber" onclick="window.frames[0].home()">
      <observes element="Browser:Throbber" attribute="busy"/>
-  </titledbutton>
+  </button>
    </box>
 
    <box align="horizontal" flex="100%">
 
    <toolbox align="horizontal">
     <toolbar class="main-bar" align="vertical">
-		  <titledbutton id="back-button" align="bottom" value="Back" onclick="BrowserBack()">	
+		  <button id="back-button" align="bottom" value="Back" onclick="BrowserBack()">	
 				  <observes element="canGoBack" attribute="disabled"/>			
-	      </titledbutton>
+	      </button>
 
-	      <titledbutton id="forward-button" align="bottom" value="Forward" 
+	      <button id="forward-button" align="bottom" value="Forward" 
 				onclick="BrowserForward()">
 				  <observes element="canGoForward" attribute="disabled"/>
-	      </titledbutton>
+	      </button>
 
-	      <titledbutton id="reload-button" align="bottom" value="Reload" 
+	      <button id="reload-button" align="bottom" value="Reload" 
 				  onclick="window.frames[0].location.reload()">
 				  <observes element="canReload" attribute="disabled"/>
-	      </titledbutton>
+	      </button>
 
-	      <titledbutton id="stop-button" align="bottom" value="Stop" 
+	      <button id="stop-button" align="bottom" value="Stop" 
 				onclick="window.frames[0].stop()">
 	        <observes element="canStop" attribute="disabled"/>
-	      </titledbutton>
+	      </button>
 	  
-	      <titledbutton id="print-button" align="bottom" value="Print"  
+	      <button id="print-button" align="bottom" value="Print"  
 				onclick="">
 	        <observes element="canPrint" attribute="disabled"/>
-	      </titledbutton>
+	      </button>
 
 	</toolbar>
 
     <toolbar class="main-bar" align="vertical">
-    	<titledbutton id="home-button" align="bottom" value="Home" 
+    	<button id="home-button" align="bottom" value="Home" 
 			onclick="BrowserHome()"/>
-		<titledbutton id="netscape-button" align="bottom" value="Netscape" 
+		<button id="netscape-button" align="bottom" value="Netscape" 
 			onclick="window.frames[0].location.href='http://my.netscape.com'"/>
 		<spring flex="100%"/>
 	</toolbar>
@@ -722,7 +722,7 @@
     <broadcaster id="Browser:Security" secure="false"/>
     <broadcaster id="Browser:Throbber" busy="false"/>
     
-    <titledbutton value="[Notification Component]" onclick="doTests()"/>
+    <button value="[Notification Component]" onclick="doTests()"/>
 
 	<box id="security-box" class="insecure" align="horizontal" flex="100%">
 		<box align="vertical" style="width:100px">
@@ -734,39 +734,39 @@
 			<spring flex="100%"/>
 		</box>
 
-		<titledbutton id="statusText" align="right" flex="1%" value="Document: Done" style="font-family:sans-serif;font-size:2.5mm">
+		<button id="statusText" align="right" flex="1%" value="Document: Done" style="font-family:sans-serif;font-size:2.5mm">
 					   <observes element="Browser:Status" attribute="value" onbroadcast="onStatus()"/>			
-		</titledbutton>
+		</button>
 
 		<spring flex="100%"/>
 
-		<titledbutton align="right" value="Build ID: 99032911" style="font-family:sans-serif;font-size:2.5mm">
-		</titledbutton>
+		<button align="right" value="Build ID: 99032911" style="font-family:sans-serif;font-size:2.5mm">
+		</button>
 
-		<titledbutton id="security-button" class="insecure" value="Secure Conn" align="right" onclick="securityOff();"/>
+		<button id="security-button" class="insecure" value="Secure Conn" align="right" onclick="securityOff();"/>
      </box>
   </box>
 
   <toolbox>
 	  <toolbar id="taskbar">
 	  	  <box align="horizontal">
-  	 	     <titledbutton align="left" class="popup"  value="Web" />
-  	 	     <titledbutton align="left" class="popup"  value="Mail" />
-  	 	     <titledbutton align="left" class="popup"  value="Chat" />
+  	 	     <button align="left" class="popup"  value="Web" />
+  	 	     <button align="left" class="popup"  value="Mail" />
+  	 	     <button align="left" class="popup"  value="Chat" />
 		  </box>
 		  <spring flex="100%"/>
 	 	  <box align="horizontal">
-  	 		<titledbutton align="left"  class="popup"  value="DayPlanner" />
-  	 		<titledbutton align="left"  class="popup"  value="Shopping" />
-  	 		<titledbutton align="left"  class="popup"  value="My Desk" />
+  	 		<button align="left"  class="popup"  value="DayPlanner" />
+  	 		<button align="left"  class="popup"  value="Shopping" />
+  	 		<button align="left"  class="popup"  value="My Desk" />
           </box>
 		  <spring flex="100%"/>
 	   	  <box align="horizontal">
-  			<titledbutton align="left" class="popup" value="Open Windows" />
-  	 		<titledbutton align="left" id="mini-nav" value="" />
-  	 		<titledbutton align="left" id="mini-mail" value="" onclick="OpenMessenger()"/>
-  	 		<titledbutton align="left" id="mini-addr" value="" />
-  	 		<titledbutton align="left" id="mini-comp" value="" />
+  			<button align="left" class="popup" value="Open Windows" />
+  	 		<button align="left" id="mini-nav" value="" />
+  	 		<button align="left" id="mini-mail" value="" onclick="OpenMessenger()"/>
+  	 		<button align="left" id="mini-addr" value="" />
+  	 		<button align="left" id="mini-comp" value="" />
 	      </box>
 	  </toolbar>
 	</toolbox>

@@ -94,7 +94,7 @@
 <!-- ColorPicker #1 -->
 <box id="box1">
 <menu id="menu1">
-  <titledbutton id="button1" value="text1" class="popup" align="right"/>
+  <button id="button1" value="text1" class="popup" align="right"/>
   <html:div id="colorWell1" style="width:30px; background-color:white"/>
   <menupopup id="popup1">
     <colorpicker id="cp1" palettename="standard" onclick="setColorWell(this.parentNode.parentNode);"/>
@@ -106,7 +106,7 @@
 <html:hr/>
 <box id="box2">
 <menu id="menu2">
-  <titledbutton id="button2" value="text2" class="popup" align="right"/>
+  <button id="button2" value="text2" class="popup" align="right"/>
   <html:div id="colorWell2" style="width:30px; background-color:white"/>
   <menupopup id="popup2">
     <colorpicker id="cp2" palettename="gray" onclick="setColorWell(this.parentNode.parentNode);"/>
@@ -118,7 +118,7 @@
 <html:hr/>
 <box id="box3">
 <menu id="menu3">
-  <titledbutton id="button3" value="text3" class="popup" align="right"/>
+  <button id="button3" value="text3" class="popup" align="right"/>
   <html:div id="colorWell3" style="width:30px; background-color:white"/>
   <menupopup id="popup3">
     <colorpicker id="cp3" palettename="web" onclick="setColorWell(this.parentNode.parentNode);"/>

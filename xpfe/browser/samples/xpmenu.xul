@@ -32,49 +32,49 @@ Contributor(s): ______________________________________. -->
 	    <html:div><html:u>F</html:u>ile</html:div>
 		<menupopup> 
 		<menu value="New" accesskey="n" key="newKey">
-		  <titledbutton class="menu-left"/> 
+		  <button class="menu-left"/> 
 		  <html:div><html:u>N</html:u>ew </html:div> 
 	      <spring flex="100%"/> 
 	      <html:div>Ctrl+N</html:div>
-		  <titledbutton class="menu-right"/> 
+		  <button class="menu-right"/> 
 		  <menupopup>
 		    <menuitem value="Lambda" accesskey="a" oncommand="dump('Lambda lambda lambda!\n')"/>
 			<menuitem value="Phi" accesskey="p"/>
 		  </menupopup>
 	    </menu>
 	    <menuitem>
-		  <titledbutton class="menu-left"/> 
+		  <button class="menu-left"/> 
 		  <html:div><html:u>O</html:u>pen...</html:div> 
 	      <spring flex="100%"/> 
 	      <html:div>Ctrl+O</html:div>
-          <titledbutton class="menu-right"/>
+          <button class="menu-right"/>
 	    </menuitem> 
 		  <menuitem>
-		      <titledbutton class="menu-left"/> 
+		      <button class="menu-left"/> 
 			  <html:div><html:u>C</html:u>lose</html:div>
 			  <spring flex="100%"/>
-			  <titledbutton class="menu-right"/>
+			  <button class="menu-right"/>
 		  </menuitem> 
 		  <menuseparator/>
 		  <menuitem disabled="true"> 
-		      <titledbutton class="menu-left"/> 
+		      <button class="menu-left"/> 
 			  <html:div><html:u>S</html:u>ave</html:div>
 		      <spring flex="100%"/> 
 		      <html:div>Ctrl+S</html:div>
-			  <titledbutton class="menu-right"/>  
+			  <button class="menu-right"/>  
 		  </menuitem> 
 		  <menuitem> 
-		      <titledbutton class="menu-left"/> 
+		      <button class="menu-left"/> 
 			  <html:div>S<html:u>a</html:u>ve as...</html:div>
 			  <spring flex="100%"/>
-			  <titledbutton class="menu-right"/>  
+			  <button class="menu-right"/>  
 		  </menuitem> 
 		  <menuitem>
-		      <titledbutton class="menu-left"/> 
+		      <button class="menu-left"/> 
 			  <html:div><html:u>Q</html:u>uit</html:div>
 			  <spring flex="100%"/> 
 		      <html:div>Ctrl+Q</html:div>
-			  <titledbutton class="menu-right"/>  
+			  <button class="menu-right"/>  
 		  </menuitem> 
 	  </menupopup> 
   

@@ -30,9 +30,9 @@
   		  onload="if( parent.handle ) parent.handle.onpageload( 'pref-irc' ); else parent.queuedTag = 'pref-irc';">
 
 	<box class="header" align="horizontal">  
-    <titledbutton class="left-header-text" value="&lHeader;"/>
+    <button class="left-header-text" value="&lHeader;"/>
 	  <spring class="header-spring" flex="1"/>
-	  <titledbutton class="right-header-text" value="&rHeader;"/>
+	  <button class="right-header-text" value="&rHeader;"/>
 	</box>
 
 <html:fieldset style="width: 100%;">

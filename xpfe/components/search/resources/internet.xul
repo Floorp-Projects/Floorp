@@ -62,10 +62,10 @@
 							<html:input type="checkbox" onclick="doCheck(this)" />
 						</treecell>
 						<treecell allowevents="true">
-							<titledbutton class="iconic" flex="1" crop="right" align="left" src="rdf:http://home.netscape.com/NC-rdf#Icon" value="rdf:http://home.netscape.com/NC-rdf#Name" />
+							<button class="iconic" flex="1" crop="right" align="left" src="rdf:http://home.netscape.com/NC-rdf#Icon" value="rdf:http://home.netscape.com/NC-rdf#Name" />
 						</treecell>
 						<treecell allowevents="true">
-							<titledbutton flex="1" crop="right" align="left" value="rdf:http://home.netscape.com/NC-rdf#Description" />
+							<button flex="1" crop="right" align="left" value="rdf:http://home.netscape.com/NC-rdf#Description" />
 						</treecell>
 					</treerow>
 				</treeitem>

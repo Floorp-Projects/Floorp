@@ -146,7 +146,7 @@ Domain Name<html:input type="text" id="domainname"/> <html:br/><html:br/>
 Primary DNS<html:input type="text" id="dnsp"/> <html:br/><html:br/>
 Secondary DNS<html:input type="text" id="dnss"/> <html:br/><html:br/>
 
-<titledbutton value="Create Account" class="push" onclick="TestMe();"/>
+<button value="Create Account" class="push" onclick="TestMe();"/>
 
 
 </html:div>

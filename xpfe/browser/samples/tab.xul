@@ -26,7 +26,7 @@ xmlns:html="http://www.w3.org/1999/xhtml"
 			   <spring flex="100%"/> 
 			   <box align="vertical"> 
 					<spring flex="100%"/> 
-								<titledbutton class="push" value="centered"/>
+								<button class="push" value="centered"/>
 					<!--html:button>This is a test</html:button-->
 					<spring flex="100%"/> 
 			   </box> 
@@ -35,10 +35,10 @@ xmlns:html="http://www.w3.org/1999/xhtml"
 
 			<!-- tab2 -->
 			<box align="horizontal">
-					<titledbutton class="push" value="10%" flex="10%"/>
-   					<titledbutton class="push" value="20%" flex="20%"/>
-					<titledbutton class="push" value="30%" flex="30%"/>
-					<titledbutton class="push" value="40%" flex="40%"/>
+					<button class="push" value="10%" flex="10%"/>
+   					<button class="push" value="20%" flex="20%"/>
+					<button class="push" value="30%" flex="30%"/>
+					<button class="push" value="40%" flex="40%"/>
 			</box> 
 
             <!-- tab3 -->
@@ -50,22 +50,22 @@ xmlns:html="http://www.w3.org/1999/xhtml"
             <!-- tab4 -->
 			<toolbox>  
 			   <toolbar>
-				  <titledbutton id="back-button" align="bottom" value="Back"/>	
-				  <titledbutton src="resource:/res/toolbar/forward.gif" align="bottom" value="Forward"/>
-				  <titledbutton src="resource:/res/toolbar/reload.gif" align="bottom" value="Reload"/>
-				  <titledbutton src="resource:/res/toolbar/stop.gif" align="bottom" value="Stop"/>
-				  <titledbutton src="resource:/res/toolbar/home.gif" align="bottom" value="Home"/>
-				  <titledbutton src="resource:/res/toolbar/print.gif" align="bottom" value="Print"/> 
+				  <button id="back-button" align="bottom" value="Back"/>	
+				  <button src="resource:/res/toolbar/forward.gif" align="bottom" value="Forward"/>
+				  <button src="resource:/res/toolbar/reload.gif" align="bottom" value="Reload"/>
+				  <button src="resource:/res/toolbar/stop.gif" align="bottom" value="Stop"/>
+				  <button src="resource:/res/toolbar/home.gif" align="bottom" value="Home"/>
+				  <button src="resource:/res/toolbar/print.gif" align="bottom" value="Print"/> 
 				
                   <spring flex="100%"/>
 
-			      <titledbutton src="resource:/res/throbber/anims00.gif" align="right"/>
+			      <button src="resource:/res/throbber/anims00.gif" align="right"/>
     
 				</toolbar>
 
 				<toolbar>
-				  <titledbutton align="right" src="resource:/res/toolbar/location.gif" value="Mozilla" />
-				  <titledbutton align="right" src="resource:/res/toolbar/location.gif" value="ABC News"/>
+				  <button align="right" src="resource:/res/toolbar/location.gif" value="Mozilla" />
+				  <button align="right" src="resource:/res/toolbar/location.gif" value="ABC News"/>
 				</toolbar>
 		  </toolbox>
 

@@ -14,8 +14,8 @@
 <html:center>
 <html:div>&intro;</html:div>
 <html:br />
-<titledbutton value="&ok.label;" class="push" onclick="opener.migrateAllProfiles();window.close();" />
-<titledbutton value="&cancel.label;" class="push" onclick="window.close();" />
+<button value="&ok.label;" class="push" onclick="opener.migrateAllProfiles();window.close();" />
+<button value="&cancel.label;" class="push" onclick="window.close();" />
 </html:center>
 
 </html:div>

@@ -112,10 +112,10 @@
             <treerow>
               <treecell>
                 <treeindentation />
-                <titledbutton value="rdf:http://home.netscape.com/NC-rdf#Name" align="right" />
+                <button value="rdf:http://home.netscape.com/NC-rdf#Name" align="right" />
               </treecell>
               <treecell>
-                <titledbutton value="rdf:http://home.netscape.com/NC-rdf#URL" align="right" style="list-style-image: none;" />
+                <button value="rdf:http://home.netscape.com/NC-rdf#URL" align="right" style="list-style-image: none;" />
               </treecell>
             </treerow>
           </treeitem>
