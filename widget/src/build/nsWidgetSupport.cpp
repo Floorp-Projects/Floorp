@@ -398,7 +398,6 @@ NS_MoveWidget(nsISupports* aWidget, PRUint32 aX, PRUint32 aY)
 extern NS_WIDGET nsresult 
 NS_EnableWidget(nsISupports* aWidget, PRBool aEnable)
 {
-	void* 			result = nsnull;
 	nsIWidget* 	widget;
 	if (NS_OK == aWidget->QueryInterface(kIWidgetIID,(void**)&widget))
 	{
