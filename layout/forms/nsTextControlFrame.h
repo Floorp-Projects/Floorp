@@ -147,7 +147,6 @@ public:
                                              nscoord aInnerWidth,
                                              nscoord aCharWidth) const;/**/
   NS_IMETHOD SetSuggestedSize(nscoord aWidth, nscoord aHeight);
-  virtual nsresult RequiresWidget(PRBool &aRequiresWidget);
   NS_IMETHOD GetFont(nsIPresContext* aPresContext, 
                      const nsFont*&  aFont);
   NS_IMETHOD GetFormContent(nsIContent*& aContent) const;

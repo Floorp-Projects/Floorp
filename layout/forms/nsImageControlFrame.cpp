@@ -119,8 +119,6 @@ public:
                                              nscoord aInnerWidth,
                                              nscoord aCharWidth) const;
 
-  virtual nsresult RequiresWidget(PRBool &aRequiresWidget);
-
 
         // nsIFormControlFrame
   NS_IMETHOD SetProperty(nsIPresContext* aPresContext, nsIAtom* aName, const nsAString& aValue);
@@ -354,13 +352,6 @@ nsImageControlFrame::GetHorizontalInsidePadding(nsIPresContext* aPresContext,
 {
   return 0;
 }
-
-nsresult nsImageControlFrame::RequiresWidget(PRBool& aRequiresWidget)
-{
-  aRequiresWidget = PR_FALSE;
-  return NS_OK;
-}
-
 
 NS_IMETHODIMP nsImageControlFrame::SetProperty(nsIPresContext* aPresContext,
                                                nsIAtom* aName,

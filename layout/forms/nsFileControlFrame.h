@@ -118,9 +118,6 @@ public:
                                              nscoord aInnerWidth,
                                              nscoord aCharWidth) const;
 
-  virtual nsresult RequiresWidget(PRBool &aRequiresWidget);
-
-
   // from nsIAnonymousContentCreator
   NS_IMETHOD CreateAnonymousContent(nsIPresContext* aPresContext,
                                     nsISupportsArray& aChildList);

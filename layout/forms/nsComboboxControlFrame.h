@@ -161,7 +161,6 @@ public:
                                              float aPixToTwip, 
                                              nscoord aInnerWidth,
                                              nscoord aCharWidth) const;
-  virtual nsresult RequiresWidget(PRBool &aRequiresWidget);
 
   // nsIFormMouseListener
   virtual void MouseClicked(nsIPresContext* aPresContext);

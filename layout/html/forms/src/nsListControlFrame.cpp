@@ -2227,14 +2227,6 @@ nsListControlFrame::IsInDropDownMode() const
 }
 
 //---------------------------------------------------------
-nsresult 
-nsListControlFrame::RequiresWidget(PRBool& aRequiresWidget)
-{
-  aRequiresWidget = PR_FALSE;
-  return NS_OK;
-}
-
-//---------------------------------------------------------
 NS_IMETHODIMP 
 nsListControlFrame::GetNumberOfOptions(PRInt32* aNumOptions) 
 {
