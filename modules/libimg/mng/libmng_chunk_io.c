@@ -5,7 +5,7 @@
 /* *                                                                        * */
 /* * project   : libmng                                                     * */
 /* * file      : libmng_chunk_io.c         copyright (c) 2000 G.Juyn        * */
-/* * version   : 1.0.0                                                      * */
+/* * version   : 1.0.2                                                      * */
 /* *                                                                        * */
 /* * purpose   : Chunk I/O routines (implementation)                        * */
 /* *                                                                        * */
@@ -141,6 +141,11 @@
 /* *                                                                        * */
 /* *             0.9.5 -  1/25/2001 - G.Juyn                                * */
 /* *             - fixed some small compiler warnings (thanks Nikki)        * */
+/* *                                                                        * */
+/* *             1.0.2 - 05/05/2000 - G.Juyn                                * */
+/* *             - B421427 - writes wrong format in bKGD and tRNS           * */
+/* *             1.0.2 - 06/20/2000 - G.Juyn                                * */
+/* *             - B434583 - compiler-warning if MNG_STORE_CHUNKS undefined * */
 /* *                                                                        * */
 /* ************************************************************************** */
 
@@ -649,7 +654,6 @@ READ_CHUNK (read_ihdr)
     if (pData->fProcessheader)         /* inform the app ? */
       if (!pData->fProcessheader (((mng_handle)pData), pData->iWidth, pData->iHeight))
         MNG_ERROR (pData, MNG_APPMISCERROR)
-
   }
 
   if (!pData->bHasDHDR)
@@ -3043,6 +3047,9 @@ READ_CHUNK (read_loop)
   if (!pData->bHasMHDR)                /* sequence checks */
     MNG_ERROR (pData, MNG_SEQUENCEERROR)
 
+  if (!pData->bCacheplayback)          /* must store playback info to work!! */
+    MNG_ERROR (pData, MNG_LOOPWITHCACHEOFF)
+
 #ifdef MNG_INCLUDE_JNG
   if ((pData->bHasIHDR) || (pData->bHasBASI) || (pData->bHasDHDR) || (pData->bHasJHDR))
 #else
@@ -3661,7 +3668,9 @@ READ_CHUNK (read_clon)
 
 READ_CHUNK (read_past)
 {
+#ifdef MNG_STORE_CHUNKS
   mng_uint32 iCount;
+#endif
 
 #ifdef MNG_SUPPORT_TRACE
   MNG_TRACE (pData, MNG_FN_READ_PAST, MNG_LC_START)
@@ -3681,7 +3690,9 @@ READ_CHUNK (read_past)
   if ((iRawlen < 41) || (((iRawlen - 11) % 30) != 0))
     MNG_ERROR (pData, MNG_INVALIDLENGTH)
 
+#ifdef MNG_STORE_CHUNKS
   iCount = ((iRawlen - 11) / 30);      /* how many entries again */
+#endif
 
 #ifdef MNG_SUPPORT_DISPLAY
   {
@@ -3902,7 +3913,9 @@ READ_CHUNK (read_back)
 READ_CHUNK (read_fram)
 {
   mng_uint8p pTemp;
+#ifdef MNG_STORE_CHUNKS
   mng_uint32 iNamelen;
+#endif
   mng_uint32 iRemain;
   mng_uint32 iRequired = 0;
 
@@ -3922,7 +3935,9 @@ READ_CHUNK (read_fram)
 
   if (iRawlen <= 1)                    /* only framing-mode ? */
   {
+#ifdef MNG_STORE_CHUNKS
     iNamelen = 0;                      /* indicate so */
+#endif
     iRemain  = 0;
     pTemp    = MNG_NULL;
   }
@@ -3933,7 +3948,9 @@ READ_CHUNK (read_fram)
     if ((pTemp - pRawdata) > (mng_int32)iRawlen)
       MNG_ERROR (pData, MNG_NULLNOTFOUND)
 
+#ifdef MNG_STORE_CHUNKS
     iNamelen = (mng_uint32)((pTemp - pRawdata) - 1);
+#endif
     iRemain  = (mng_uint32)(iRawlen - (pTemp - pRawdata) - 1);
                                        /* remains must be empty or at least 4 bytes */
     if ((iRemain != 0) && (iRemain < 4))
@@ -4383,6 +4400,11 @@ READ_CHUNK (read_show)
 
 READ_CHUNK (read_term)
 {
+  mng_uint8   iTermaction;
+  mng_uint8   iIteraction = 0;
+  mng_uint32  iDelay      = 0;
+  mng_uint32  iItermax    = 0;
+
 #ifdef MNG_SUPPORT_TRACE
   MNG_TRACE (pData, MNG_FN_READ_TERM, MNG_LC_START)
 #endif
@@ -4411,25 +4433,24 @@ READ_CHUNK (read_term)
   if ((!pData->bHasSAVE) && (pData->iChunkseq > 2))
     pData->bEMNGMAhack = MNG_TRUE;
 
-#ifdef MNG_SUPPORT_DISPLAY
+  iTermaction = *pRawdata;             /* get the fields */
+
+  if (iRawlen > 1)
   {
-    mng_uint8   iTermaction;
-    mng_uint8   iIteraction = 0;
-    mng_uint32  iDelay      = 0;
-    mng_uint32  iItermax    = 0;
-    mng_retcode iRetcode;
+    iIteraction = *(pRawdata+1);
+    iDelay      = mng_get_uint32 (pRawdata+2);
+    iItermax    = mng_get_uint32 (pRawdata+6);
+  }
 
-    iTermaction = *pRawdata;           /* get the fields */
+  if (pData->fProcessterm)             /* inform the app ? */
+    if (!pData->fProcessterm (((mng_handle)pData), iTermaction, iIteraction,
+                                                   iDelay, iItermax))
+      MNG_ERROR (pData, MNG_APPMISCERROR)
 
-    if (iRawlen > 1)
-    {
-      iIteraction = *(pRawdata+1);
-      iDelay      = mng_get_uint32 (pRawdata+2);
-      iItermax    = mng_get_uint32 (pRawdata+6);
-    }
-                                       /* create the TERM ani-object */
-    iRetcode = create_ani_term (pData, iTermaction, iIteraction,
-                                       iDelay, iItermax);
+#ifdef MNG_SUPPORT_DISPLAY
+  {                                    /* create the TERM ani-object */
+    mng_retcode iRetcode = create_ani_term (pData, iTermaction, iIteraction,
+                                                   iDelay, iItermax);
 
     if (iRetcode)                      /* on error bail out */
       return iRetcode;
@@ -4446,14 +4467,10 @@ READ_CHUNK (read_term)
     if (iRetcode)                      /* on error bail out */
       return iRetcode;
                                        /* store the fields */
-    ((mng_termp)*ppChunk)->iTermaction = *pRawdata;
-
-    if (iRawlen > 1)
-    {
-      ((mng_termp)*ppChunk)->iIteraction = *(pRawdata+1);
-      ((mng_termp)*ppChunk)->iDelay      = mng_get_uint32 (pRawdata+2);
-      ((mng_termp)*ppChunk)->iItermax    = mng_get_uint32 (pRawdata+6);
-    }
+    ((mng_termp)*ppChunk)->iTermaction = iTermaction;
+    ((mng_termp)*ppChunk)->iIteraction = iIteraction;
+    ((mng_termp)*ppChunk)->iDelay      = iDelay;
+    ((mng_termp)*ppChunk)->iItermax    = iItermax;
   }
 #endif /* MNG_STORE_CHUNKS */
 
@@ -6422,16 +6439,16 @@ WRITE_CHUNK (write_trns)
     switch (pTRNS->iType)
     {
       case 0: {
-                iRawlen   = 1;         /* fill the size & output buffer */
-                *pRawdata = (mng_uint8)pTRNS->iGray;
+                iRawlen   = 2;         /* fill the size & output buffer */
+                mng_put_uint16 (pRawdata, pTRNS->iGray);
 
                 break;
               }
       case 2: {
-                iRawlen       = 3;     /* fill the size & output buffer */
-                *pRawdata     = (mng_uint8)pTRNS->iRed;
-                *(pRawdata+1) = (mng_uint8)pTRNS->iGreen;
-                *(pRawdata+2) = (mng_uint8)pTRNS->iBlue;
+                iRawlen       = 6;     /* fill the size & output buffer */
+                mng_put_uint16 (pRawdata,   pTRNS->iRed);
+                mng_put_uint16 (pRawdata+2, pTRNS->iGreen);
+                mng_put_uint16 (pRawdata+4, pTRNS->iBlue);
 
                 break;
               }
@@ -6880,16 +6897,16 @@ WRITE_CHUNK (write_bkgd)
     switch (pBKGD->iType)
     {
       case 0: {                        /* gray */
-                iRawlen   = 1;         /* fill the size & output buffer */
-                *pRawdata = (mng_uint8)pBKGD->iGray;
+                iRawlen = 2;           /* fill the size & output buffer */
+                mng_put_uint16 (pRawdata, pBKGD->iGray);
 
                 break;
               }
       case 2: {                        /* rgb */
-                iRawlen       = 3;     /* fill the size & output buffer */
-                *pRawdata     = (mng_uint8)pBKGD->iRed;
-                *(pRawdata+1) = (mng_uint8)pBKGD->iGreen;
-                *(pRawdata+2) = (mng_uint8)pBKGD->iBlue;
+                iRawlen = 6;           /* fill the size & output buffer */
+                mng_put_uint16 (pRawdata,   pBKGD->iRed);
+                mng_put_uint16 (pRawdata+2, pBKGD->iGreen);
+                mng_put_uint16 (pRawdata+4, pBKGD->iBlue);
 
                 break;
               }

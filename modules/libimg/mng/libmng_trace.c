@@ -5,7 +5,7 @@
 /* *                                                                        * */
 /* * project   : libmng                                                     * */
 /* * file      : libmng_trace.c            copyright (c) 2000 G.Juyn        * */
-/* * version   : 1.0.1                                                      * */
+/* * version   : 1.0.3                                                      * */
 /* *                                                                        * */
 /* * purpose   : Trace functions (implementation)                           * */
 /* *                                                                        * */
@@ -94,6 +94,15 @@
 /* *             1.0.1 - 05/02/2001 - G.Juyn                                * */
 /* *             - added "default" sRGB generation (Thanks Marti!)          * */
 /* *                                                                        * */
+/* *             1.0.2 - 06/23/2001 - G.Juyn                                * */
+/* *             - added optimization option for MNG-video playback         * */
+/* *             - added processterm callback                               * */
+/* *             1.0.2 - 06/25/2001 - G.Juyn                                * */
+/* *             - added option to turn off progressive refresh             * */
+/* *                                                                        * */
+/* *             1.0.3 - 08/06/2001 - G.Juyn                                * */
+/* *             - added get function for last processed BACK chunk         * */
+/* *                                                                        * */
 /* ************************************************************************** */
 
 #include "libmng.h"
@@ -160,6 +169,7 @@
     {MNG_FN_SETCB_PROCESSNEED,         "setcb_processneed"},
     {MNG_FN_SETCB_PROCESSUNKNOWN,      "setcb_processunknown"},
     {MNG_FN_SETCB_PROCESSMEND,         "setcb_processmend"},
+    {MNG_FN_SETCB_PROCESSTERM,         "setcb_processterm"},
 
     {MNG_FN_GETCB_MEMALLOC,            "getcb_memalloc"},
     {MNG_FN_GETCB_MEMFREE,             "getcb_memfree"},
@@ -187,6 +197,7 @@
     {MNG_FN_GETCB_PROCESSNEED,         "getcb_processneed"},
     {MNG_FN_GETCB_PROCESSUNKNOWN,      "getcb_processunknown"},
     {MNG_FN_GETCB_PROCESSMEND,         "getcb_processmend"},
+    {MNG_FN_GETCB_PROCESSTERM,         "getcb_processterm"},
 
     {MNG_FN_SET_USERDATA,              "set_userdata"},
     {MNG_FN_SET_CANVASSTYLE,           "set_canvasstyle"},
@@ -222,6 +233,8 @@
     {MNG_FN_SET_SRGBPROFILE2,          "set_srgbprofile2"},
     {MNG_FN_SET_OUTPUTSRGB,            "set_outputsrgb"},
     {MNG_FN_SET_SRGBIMPLICIT,          "set_srgbimplicit"},
+    {MNG_FN_SET_CACHEPLAYBACK,         "set_cacheplayback"},
+    {MNG_FN_SET_DOPROGRESSIVE,         "set_doprogressive"},
 
     {MNG_FN_GET_USERDATA,              "get_userdata"},
     {MNG_FN_GET_SIGTYPE,               "get_sigtype"},
@@ -276,6 +289,9 @@
     {MNG_FN_GET_ALPHAINTERLACE,        "get_alphainterlace"},
     {MNG_FN_GET_USEBKGD,               "get_usebkgd"},
     {MNG_FN_GET_REFRESHPASS,           "get_refreshpass"},
+    {MNG_FN_GET_CACHEPLAYBACK,         "get_cacheplayback"},
+    {MNG_FN_GET_DOPROGRESSIVE,         "get_doprogressive"},
+    {MNG_FN_GET_LASTBACKCHUNK,         "get_lastbackchunk"},
 
     {MNG_FN_STATUS_ERROR,              "status_error"},
     {MNG_FN_STATUS_READING,            "status_reading"},

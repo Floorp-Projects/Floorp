@@ -5,7 +5,7 @@
 /* *                                                                        * */
 /* * project   : libmng                                                     * */
 /* * file      : libmng_trace.h            copyright (c) 2000 G.Juyn        * */
-/* * version   : 1.0.1                                                      * */
+/* * version   : 1.0.3                                                      * */
 /* *                                                                        * */
 /* * purpose   : Trace functions (definition)                               * */
 /* *                                                                        * */
@@ -103,6 +103,15 @@
 /* *             1.0.1 - 05/02/2001 - G.Juyn                                * */
 /* *             - added "default" sRGB generation (Thanks Marti!)          * */
 /* *                                                                        * */
+/* *             1.0.2 - 06/23/2001 - G.Juyn                                * */
+/* *             - added optimization option for MNG-video playback         * */
+/* *             - added processterm callback                               * */
+/* *             1.0.2 - 06/25/2001 - G.Juyn                                * */
+/* *             - added option to turn off progressive refresh             * */
+/* *                                                                        * */
+/* *             1.0.3 - 08/06/2001 - G.Juyn                                * */
+/* *             - added get function for last processed BACK chunk         * */
+/* *                                                                        * */
 /* ************************************************************************** */
 
 #if defined(__BORLANDC__) && defined(MNG_STRICT_ANSI)
@@ -196,6 +205,7 @@ mng_retcode mng_trace (mng_datap  pData,
 #define MNG_FN_SETCB_PROCESSNEED      124
 #define MNG_FN_SETCB_PROCESSUNKNOWN   125
 #define MNG_FN_SETCB_PROCESSMEND      126
+#define MNG_FN_SETCB_PROCESSTERM      127
 
 #define MNG_FN_GETCB_MEMALLOC         201
 #define MNG_FN_GETCB_MEMFREE          202
@@ -223,6 +233,7 @@ mng_retcode mng_trace (mng_datap  pData,
 #define MNG_FN_GETCB_PROCESSNEED      224
 #define MNG_FN_GETCB_PROCESSUNKNOWN   225
 #define MNG_FN_GETCB_PROCESSMEND      226
+#define MNG_FN_GETCB_PROCESSTERM      227
 
 #define MNG_FN_SET_USERDATA           301
 #define MNG_FN_SET_CANVASSTYLE        302
@@ -258,6 +269,8 @@ mng_retcode mng_trace (mng_datap  pData,
 #define MNG_FN_SET_SRGBPROFILE2       332
 #define MNG_FN_SET_OUTPUTSRGB         333
 #define MNG_FN_SET_SRGBIMPLICIT       334
+#define MNG_FN_SET_CACHEPLAYBACK      335
+#define MNG_FN_SET_DOPROGRESSIVE      336
 
 #define MNG_FN_GET_USERDATA           401
 #define MNG_FN_GET_SIGTYPE            402
@@ -312,6 +325,9 @@ mng_retcode mng_trace (mng_datap  pData,
 #define MNG_FN_GET_ALPHAINTERLACE     451
 #define MNG_FN_GET_USEBKGD            452
 #define MNG_FN_GET_REFRESHPASS        453
+#define MNG_FN_GET_CACHEPLAYBACK      454
+#define MNG_FN_GET_DOPROGRESSIVE      455
+#define MNG_FN_GET_LASTBACKCHUNK      456
 
 #define MNG_FN_STATUS_ERROR           481
 #define MNG_FN_STATUS_READING         482

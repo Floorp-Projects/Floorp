@@ -5,7 +5,7 @@
 /* *                                                                        * */
 /* * project   : libmng                                                     * */
 /* * file      : libmng_error.c            copyright (c) 2000 G.Juyn        * */
-/* * version   : 1.0.0                                                      * */
+/* * version   : 1.0.2                                                      * */
 /* *                                                                        * */
 /* * purpose   : Error routines (implementation)                            * */
 /* *                                                                        * */
@@ -50,6 +50,9 @@
 /* *             0.9.4 -  1/18/2001 - G.Juyn                                * */
 /* *             - added errorcode for MAGN methods                         * */
 /* *                                                                        * */
+/* *             1.0.2 - 06/23/2001 - G.Juyn                                * */
+/* *             - added optimization option for MNG-video playback         * */
+/* *                                                                        * */
 /* ************************************************************************** */
 
 #include "libmng.h"
@@ -86,6 +89,7 @@
     {MNG_NEEDMOREDATA,     "Reading suspended; waiting for I/O to catch up"},
     {MNG_NEEDTIMERWAIT,    "Timer suspension; normal animation delay"},
     {MNG_NEEDSECTIONWAIT,  "SEEK suspension; application decides"},
+    {MNG_LOOPWITHCACHEOFF, "LOOP encountered when playback cache is turned off"},
 
     {MNG_APPIOERROR,       "Application signalled I/O error"},
     {MNG_APPTIMERERROR,    "Application signalled timing error"},

@@ -5,7 +5,7 @@
 /* *                                                                        * */
 /* * project   : libmng                                                     * */
 /* * file      : libmng_pixels.c           copyright (c) 2000 G.Juyn        * */
-/* * version   : 1.0.1                                                      * */
+/* * version   : 1.0.2                                                      * */
 /* *                                                                        * */
 /* * purpose   : Pixel-row management routines (implementation)             * */
 /* *                                                                        * */
@@ -98,6 +98,9 @@
 /* *             - added BGRA8 canvas with premultiplied alpha              * */
 /* *             1.0.1 - 04/25/2001 - G.Juyn                                * */
 /* *             - moved mng_clear_cms to libmng_cms                        * */
+/* *                                                                        * */
+/* *             1.0.2 - 06/25/2001 - G.Juyn                                * */
+/* *             - added option to turn off progressive refresh             * */
 /* *                                                                        * */
 /* ************************************************************************** */
 
@@ -235,8 +238,9 @@ mng_uint32 const interlace_divider  [7] = { 3, 3, 2, 2, 1, 1, 0 };
 /* ************************************************************************** */
 
 mng_retcode display_progressive_check (mng_datap pData)
-{                                      /* approximate the need for progressive display */
-  if (((pData->eImagetype != mng_it_mng) || (pData->iDataheight > 300)) &&
+{
+  if ((pData->bDoProgressive) &&       /* need progressive display? */
+      ((pData->eImagetype != mng_it_mng) || (pData->iDataheight > 300)) &&
       (pData->iDestb - pData->iDestt > 50) && (!pData->pCurraniobj))
   {
     mng_int32 iC = pData->iRow + pData->iDestt - pData->iSourcet;

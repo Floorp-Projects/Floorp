@@ -100,7 +100,7 @@
 /* *                                                                        * */
 /* * project   : libmng                                                     * */
 /* * file      : libmng.h                  copyright (c) 2000 G.Juyn        * */
-/* * version   : 1.0.1                                                      * */
+/* * version   : 1.0.3                                                      * */
 /* *                                                                        * */
 /* * purpose   : main application interface                                 * */
 /* *                                                                        * */
@@ -218,6 +218,16 @@
 /* *             - added BGRA8 canvas with premultiplied alpha              * */
 /* *             1.0.1 - 05/02/2001 - G.Juyn                                * */
 /* *             - added "default" sRGB generation (Thanks Marti!)          * */
+/* *                                                                        * */
+/* *             1.0.2 - 06/23/2001 - G.Juyn                                * */
+/* *             - added optimization option for MNG-video playback         * */
+/* *             - added processterm callback                               * */
+/* *             1.0.2 - 06/25/2001 - G.Juyn                                * */
+/* *             - added late binding errorcode (not used internally)       * */
+/* *             - added option to turn off progressive refresh             * */
+/* *                                                                        * */
+/* *             1.0.3 - 08/06/2001 - G.Juyn                                * */
+/* *             - added get function for last processed BACK chunk         * */
 /* *                                                                        * */
 /* ************************************************************************** */
 
@@ -357,12 +367,12 @@ extern "C" {
 /* *                                                                        * */
 /* ************************************************************************** */
 
-#define MNG_VERSION_TEXT    "1.0.1"
+#define MNG_VERSION_TEXT    "1.0.3"
 #define MNG_VERSION_SO      1          /* eg. libmng.so.1  */
 #define MNG_VERSION_DLL     1          /* but: libmng.dll (!) */
 #define MNG_VERSION_MAJOR   1
 #define MNG_VERSION_MINOR   0
-#define MNG_VERSION_RELEASE 1
+#define MNG_VERSION_RELEASE 3
 
 MNG_EXT mng_pchar MNG_DECL mng_version_text    (void);
 MNG_EXT mng_uint8 MNG_DECL mng_version_so      (void);
@@ -384,7 +394,8 @@ MNG_EXT mng_uint8 MNG_DECL mng_version_release (void);
 #define MNG_MNG_VERSION     "1.0"
 #define MNG_MNG_VERSION_MAJ 1
 #define MNG_MNG_VERSION_MIN 0
-#define MNG_MNG_DRAFT       99         /* deprecated */
+#define MNG_MNG_DRAFT       99         /* deprecated;
+                                          only used for nEED "MNG DRAFT nn" */
 
 /* ************************************************************************** */
 /* *                                                                        * */
@@ -550,6 +561,8 @@ MNG_EXT mng_retcode MNG_DECL mng_setcb_processmend   (mng_handle        hHandle,
                                                       mng_processmend   fProc);
 MNG_EXT mng_retcode MNG_DECL mng_setcb_processunknown(mng_handle        hHandle,
                                                       mng_processunknown fProc);
+MNG_EXT mng_retcode MNG_DECL mng_setcb_processterm   (mng_handle        hHandle,
+                                                      mng_processterm   fProc);
 #endif
 
 /* callbacks for display processing */
@@ -652,6 +665,7 @@ MNG_EXT mng_processsave   MNG_DECL mng_getcb_processsave   (mng_handle hHandle);
 MNG_EXT mng_processseek   MNG_DECL mng_getcb_processseek   (mng_handle hHandle);
 MNG_EXT mng_processneed   MNG_DECL mng_getcb_processneed   (mng_handle hHandle);
 MNG_EXT mng_processunknown MNG_DECL mng_getcb_processunknown (mng_handle hHandle);
+MNG_EXT mng_processterm   MNG_DECL mng_getcb_processterm   (mng_handle hHandle);
 #endif
 
 /* see _setcb_ */
@@ -717,6 +731,24 @@ MNG_EXT mng_retcode MNG_DECL mng_set_storechunks     (mng_handle        hHandle,
    MNG_NEEDSECTIONWAIT return-codes for each SEEK chunk */
 MNG_EXT mng_retcode MNG_DECL mng_set_sectionbreaks   (mng_handle        hHandle,
                                                       mng_bool          bSectionbreaks);
+
+/* Indicates storage of playback info (ON by default!) */
+/* can be used to turn off caching of playback info; this is useful to
+   specifically optimize MNG-video playback; note that if caching is turned off
+   LOOP chunks will be flagged as errors! TERM chunks will be ignored and only
+   passed to the processterm() callback if it is defined by the app; also, this
+   feature can only be used with mng_readdisplay(); mng_read(),
+   mng_display_reset() and mng_display_goxxxx() will return an error;
+   once this option is turned off it can't be turned on for the same stream!!! */
+MNG_EXT mng_retcode MNG_DECL mng_set_cacheplayback   (mng_handle        hHandle,
+                                                      mng_bool          bCacheplayback);
+
+/* Indicates automatic progressive refreshes for large images (ON by default!) */
+/* turn this off if you do not want intermittent painting while a large image
+   is being read. useful if the input-stream comes from a fast medium, such
+   as a local harddisk */
+MNG_EXT mng_retcode MNG_DECL mng_set_doprogressive   (mng_handle        hHandle,
+                                                      mng_bool          bDoProgressive);
 
 /* Color-management necessaries */
 /*
@@ -952,6 +984,12 @@ MNG_EXT mng_bool    MNG_DECL mng_get_storechunks     (mng_handle        hHandle)
 MNG_EXT mng_bool    MNG_DECL mng_get_sectionbreaks   (mng_handle        hHandle);
 
 /* see _set_ */
+MNG_EXT mng_bool    MNG_DECL mng_get_cacheplayback   (mng_handle        hHandle);
+
+/* see _set_ */
+MNG_EXT mng_bool    MNG_DECL mng_get_doprogressive   (mng_handle        hHandle);
+
+/* see _set_ */
 #if defined(MNG_SUPPORT_DISPLAY) && defined(MNG_FULL_CMS)
 MNG_EXT mng_bool    MNG_DECL mng_get_srgb            (mng_handle        hHandle);
 #endif
@@ -1009,6 +1047,16 @@ MNG_EXT mng_speedtype
    text of the image being processed; the value 1 is returned for top-level
    texts, and the value 2 for a text inside an embedded image inside a MNG */
 MNG_EXT mng_uint32  MNG_DECL mng_get_imagelevel      (mng_handle        hHandle);
+
+/* BACK info */
+/* can be used to retrieve the color & mandatory values for the last processed
+   BACK chunk of a MNG (will fail for other image-types);
+   if no BACK chunk was processed yet, it will return all zeroes */
+MNG_EXT mng_retcode MNG_DECL mng_get_lastbackchunk   (mng_handle        hHandle,
+                                                      mng_uint16*       iRed,
+                                                      mng_uint16*       iGreen,
+                                                      mng_uint16*       iBlue,
+                                                      mng_uint8*        iMandatory);
 
 /* Display status variables */
 /* these get filled & updated during display processing */
@@ -2033,6 +2081,9 @@ MNG_EXT mng_retcode MNG_DECL mng_updatemngsimplicity (mng_handle        hHandle,
 #define MNG_NEEDMOREDATA     (mng_retcode)14   /* I'm hungry, give me more    */
 #define MNG_NEEDTIMERWAIT    (mng_retcode)15   /* Sleep a while then wake me  */
 #define MNG_NEEDSECTIONWAIT  (mng_retcode)16   /* just processed a SEEK       */
+#define MNG_LOOPWITHCACHEOFF (mng_retcode)17   /* LOOP when playback info off */
+
+#define MNG_DLLNOTLOADED     (mng_retcode)99   /* late binding failed         */
 
 #define MNG_APPIOERROR       (mng_retcode)901  /* application I/O error       */
 #define MNG_APPTIMERERROR    (mng_retcode)902  /* application timing error    */
