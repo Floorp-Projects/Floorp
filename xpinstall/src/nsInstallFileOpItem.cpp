@@ -34,7 +34,9 @@
 #include "Aliases.h"
 #include "Gestalt.h"
 #include "Resources.h"
+#include "TextUtils.h"
 #include "script.h"
+#include "MoreFilesExtras.h"
 #include "nsILocalFileMac.h"
 #endif
 
@@ -1113,37 +1115,60 @@ nsInstallFileOpItem::NativeFileOpMacAliasComplete()
   nsCOMPtr<nsILocalFileMac> localFileMacTarget = do_QueryInterface(mTarget);
   nsCOMPtr<nsILocalFileMac> localFileMacSrc = do_QueryInterface(mSrc);
   
-  FSSpec        *fsPtrAlias, *srcPtrAlias;
+  FSSpec        fsSource, fsAliasParent, fsAlias;
   AliasHandle   aliasH;
   FInfo         info;
   OSErr         err = noErr;
+  nsresult      rv = NS_OK;
+  long          aliasDirID;
+  Boolean       isDir;
+  char          *aliasLeaf;  
   
-  localFileMacTarget->GetFSSpec(fsPtrAlias);
-  localFileMacSrc->GetFSSpec(srcPtrAlias);
+  // nsIFile sucks so we have to do special hackery here
+  rv = localFileMacSrc->GetResolvedFSSpec(&fsSource);
+  if (!NS_SUCCEEDED(rv)) return rv;
+  rv = localFileMacTarget->GetFSSpec(&fsAliasParent); 
+  if (!NS_SUCCEEDED(rv)) return rv;
+  rv = localFileMacTarget->GetAppendedPath(&aliasLeaf);
+  if (!NS_SUCCEEDED(rv)) return rv;
 
-  err = NewAliasMinimal( srcPtrAlias, &aliasH );
+  // construct target alias FSSpec using parent and leaf path
+  err = FSpGetDirectoryID(&fsAliasParent, &aliasDirID, &isDir);
+  if (err != noErr) 
+  {
+    if (aliasLeaf)
+      nsAllocator::Free(aliasLeaf);
+    return err;
+  }
+  c2pstr(aliasLeaf);
+  FSMakeFSSpec(fsAliasParent.vRefNum, aliasDirID, (unsigned char *) aliasLeaf, &fsAlias);
+  p2cstr((unsigned char *)aliasLeaf);
+  if (aliasLeaf)
+    nsAllocator::Free(aliasLeaf);
+  
+  err = NewAliasMinimal( &fsSource, &aliasH );
   if (err != noErr)  // bubble up Alias Manager error
   	return err;
   	
   // create the alias file
-  FSpGetFInfo(srcPtrAlias, &info);
-  FSpCreateResFile(fsPtrAlias, info.fdCreator, info.fdType, smRoman);
-  short refNum = FSpOpenResFile(fsPtrAlias, fsRdWrPerm);
+  FSpGetFInfo(&fsSource, &info);
+  FSpCreateResFile(&fsAlias, info.fdCreator, info.fdType, smRoman);
+  short refNum = FSpOpenResFile(&fsAlias, fsRdWrPerm);
   if (refNum != -1)
   {
     UseResFile(refNum);
-    AddResource((Handle)aliasH, rAliasType, 0, fsPtrAlias->name);
+    AddResource((Handle)aliasH, rAliasType, 0, fsAlias.name);
     ReleaseResource((Handle)aliasH);
     UpdateResFile(refNum);
     CloseResFile(refNum);
   }
   else
-    return nsInstall::SUCCESS;
+    return nsInstall::SUCCESS;  // non-fatal so prevent internal abort
   
   // mark newly created file as an alias file
-  FSpGetFInfo(fsPtrAlias, &info);
+  FSpGetFInfo(&fsAlias, &info);
   info.fdFlags |= kIsAlias;
-  FSpSetFInfo(fsPtrAlias, &info);
+  FSpSetFInfo(&fsAlias, &info);
 #endif
 
   return nsInstall::SUCCESS;

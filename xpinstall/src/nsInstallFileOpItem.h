@@ -59,7 +59,7 @@ class nsInstallFileOpItem : public nsInstallObject
     nsInstallFileOpItem(nsInstall*    installObj,
                         PRInt32       aCommand,
                         nsIFile*      aSrc,
-                        nsIFile*  aTarget,
+                        nsIFile*      aTarget,
                         PRInt32*      aReturn);
 
     // used by:
