@@ -1,4 +1,5 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * vim:ts=2:et:sw=2:
  *
  * The contents of this file are subject to the Netscape Public
  * License Version 1.1 (the "License"); you may not use this file
@@ -18,15 +19,20 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ * tim copperfield <timecop@japan.co.jp>
+ *
  */
 
 #include "nsScrollBar.h"
 #include "nsGfxCIID.h"
-
 #include "xlibrgb.h"
 
-NS_IMPL_ADDREF(nsScrollbar)
-NS_IMPL_RELEASE(nsScrollbar)
+#define CLAMP(x, low, high) (((x) > (high)) ? (high) : (((x) < (low)) ? (low) : (x)))
+#define NS_SCROLLBAR_MIN 8
+
+NS_IMPL_ADDREF_INHERITED(nsScrollbar, nsWidget)
+NS_IMPL_RELEASE_INHERITED(nsScrollbar, nsWidget)
+NS_IMPL_QUERY_INTERFACE2(nsScrollbar, nsIScrollbar, nsIWidget)
 
 PRLogModuleInfo *XlibScrollbarLM = PR_NewLogModule("XlibScrollbar");
 
@@ -36,6 +42,8 @@ nsScrollbar::nsScrollbar(PRBool aIsVertical) : nsWidget(), nsIScrollbar()
   mMaxRange = 0;
   mPosition = 0;
   mThumbSize = 0;
+  mXScale = 0.0;
+  mYScale = 0.0;
   mLineIncrement = 1;
   mIsVertical = aIsVertical;
   mBackground = NS_RGB(100,100,100);
@@ -49,9 +57,65 @@ nsScrollbar::~nsScrollbar()
 {
 }
 
-NS_INTERFACE_MAP_BEGIN(nsScrollbar)
-  NS_INTERFACE_MAP_ENTRY(nsIScrollbar)
-NS_INTERFACE_MAP_END_INHERITING(nsWidget)
+/* Create scrollbar widget */
+void nsScrollbar::CreateNative(Window aParent, nsRect aRect)
+{
+  XSetWindowAttributes attr;
+  unsigned long attr_mask;
+
+  // on a window resize, we don't want to window contents to
+  // be discarded...
+  attr.bit_gravity = NorthWestGravity;
+  // make sure that we listen for events
+  attr.event_mask = StructureNotifyMask | ButtonPressMask | ButtonReleaseMask | KeyPressMask | KeyReleaseMask | FocusChangeMask | VisibilityChangeMask;
+  // set the default background color and border to that awful gray
+  attr.background_pixel = mBackgroundPixel;
+  attr.border_pixel = mBorderPixel;
+  // set the colormap
+  attr.colormap = xlib_rgb_get_cmap();
+  // here's what's in the struct
+  attr_mask = CWBitGravity | CWEventMask | CWBackPixel | CWBorderPixel;
+  // check to see if there was actually a colormap.
+  if (attr.colormap)
+    attr_mask |= CWColormap;
+
+  CreateNativeWindow(aParent, mBounds, attr, attr_mask);
+  // set up the scrolling bar.
+  attr.event_mask = Button1MotionMask | ButtonPressMask | ButtonReleaseMask | KeyPressMask | KeyReleaseMask | FocusChangeMask | VisibilityChangeMask;
+  attr.background_pixel = xlib_rgb_xpixel_from_rgb(NS_RGB(192,192,192));
+  attr.border_pixel = xlib_rgb_xpixel_from_rgb(NS_RGB(100,100,100));
+  // set up the size
+  CalcBarBounds();
+  mBar = XCreateWindow(mDisplay,
+                       mBaseWindow,
+                       mBarBounds.x, mBarBounds.y,
+                       mBarBounds.width, mBarBounds.height,
+                       2,  // border width
+                       mDepth,
+                       InputOutput,
+                       mVisual,
+                       attr_mask,
+                       &attr);
+  AddWindowCallback(mBar, this);
+  PR_LOG(XlibScrollbarLM, PR_LOG_DEBUG, ("nsScrollbar::CreateNative created window 0x%lx with bar 0x%lx\n",
+         mBaseWindow, mBar));
+}
+
+void nsScrollbar::DestroyNative(void)
+{
+  // override since we have two native widgets
+  if (mBar) {
+    DestroyNativeChildren(mDisplay, mBar);
+
+    XDestroyWindow(mDisplay, mBar);
+    DeleteWindowCallback(mBar);
+    mBar = 0;
+  }
+  if (mBaseWindow) {
+    nsWidget::DestroyNative();
+    mBaseWindow = 0;
+  }
+}
 
 NS_METHOD nsScrollbar::SetMaxRange(PRUint32 aEndRange)
 {
@@ -74,8 +138,7 @@ NS_METHOD nsScrollbar::SetPosition(PRUint32 aPos)
 {
   PR_LOG(XlibScrollbarLM, PR_LOG_DEBUG, ("nsScrollbar::SetPosition()\n"));
   PR_LOG(XlibScrollbarLM, PR_LOG_DEBUG, ("Scroll to %d\n", aPos));
-//  mPosition = (PRUint32)((float)aPos / (float)mRequestedSize.height * (float)mMaxRange);
-  mPosition = aPos;
+  mPosition = CLAMP(aPos, 0, mMaxRange);
   CalcBarBounds();
   LayoutBar();
   return NS_OK;
@@ -155,6 +218,9 @@ PRBool nsScrollbar::OnScroll(PRUint32 scrollCode, int cPos)
     result = PrevPage();
     break;
   case NS_SCROLLBAR_POS:
+      if (mIsVertical == PR_TRUE)
+        result = SetPosition(cPos);
+      else
     result = SetPosition(cPos);
     break;
   default:
@@ -178,105 +244,40 @@ PRBool nsScrollbar::OnResize(nsSizeEvent &event)
 
 PRBool nsScrollbar::DispatchMouseEvent(nsMouseEvent &aEvent)
 {
-  PRBool result;
+  PRInt32 real;
 
   PR_LOG(XlibScrollbarLM, PR_LOG_DEBUG, ("nsScrollbar::DispatchMouseEvent\n"));
 
-  // check to see if this was on the main window.
+  /* that calculation is kind of screwed, but better than the original */
   switch (aEvent.message) {
   case NS_MOUSE_MIDDLE_BUTTON_DOWN:
     if (mIsVertical == PR_TRUE) {
-      OnScroll(NS_SCROLLBAR_POS, aEvent.point.y);
+        real = (PRInt32)((float)(PR_MAX(0, aEvent.point.y - ((PRInt32)PR_MAX((mThumbSize * mYScale), NS_SCROLLBAR_MIN) / 2))) / mYScale);
+        OnScroll(NS_SCROLLBAR_POS, real);
+      } else {
+        real = (PRInt32)((float)(PR_MAX(0, aEvent.point.x - ((PRInt32)PR_MAX((mThumbSize * mXScale), NS_SCROLLBAR_MIN) / 2))) / mXScale);
+        OnScroll(NS_SCROLLBAR_POS, real);
     } 
-    else {
-      OnScroll(NS_SCROLLBAR_POS, aEvent.point.x);
-    }
     break;
+
   case NS_MOUSE_LEFT_BUTTON_DOWN:
     if (mIsVertical == PR_TRUE) {
-      if (aEvent.point.y < mBarBounds.y) {
+        if (aEvent.point.y < mBarBounds.y)
         OnScroll(NS_SCROLLBAR_PAGE_PREV, 0);
-      }
-      else if (aEvent.point.y > mBarBounds.height) {
+        else if (aEvent.point.y > (mBarBounds.y + mBarBounds.height))
+        OnScroll(NS_SCROLLBAR_PAGE_NEXT, 0);
+      } else { /* !vertical */
+        if (aEvent.point.x < mBarBounds.x)
+        OnScroll(NS_SCROLLBAR_PAGE_PREV, 0);
+        else if (aEvent.point.x > (mBarBounds.x + mBarBounds.width))
         OnScroll(NS_SCROLLBAR_PAGE_NEXT, 0);
       }
-    }
-    else {
-      if (aEvent.point.x < mBarBounds.x) {
-        OnScroll(NS_SCROLLBAR_PAGE_PREV, 0);
-      }
-      else if (aEvent.point.x > mBarBounds.width) {
-        OnScroll(NS_SCROLLBAR_PAGE_NEXT, 0);
-      }
-    }
     break;
   default:
     break;
-  }
-  result = PR_FALSE;
-  return result;
 }
-
-
-void nsScrollbar::CreateNative(Window aParent, nsRect aRect)
-{
-  XSetWindowAttributes attr;
-  unsigned long attr_mask;
-  
-  // on a window resize, we don't want to window contents to
-  // be discarded...
-  attr.bit_gravity = SouthEastGravity;
-  // make sure that we listen for events
-  attr.event_mask = StructureNotifyMask | ButtonPressMask | ButtonReleaseMask | KeyPressMask | KeyReleaseMask | FocusChangeMask | VisibilityChangeMask;
-  // set the default background color and border to that awful gray
-  attr.background_pixel = mBackgroundPixel;
-  attr.border_pixel = mBorderPixel;
-  // set the colormap
-  attr.colormap = xlib_rgb_get_cmap();
-  // here's what's in the struct
-  attr_mask = CWBitGravity | CWEventMask | CWBackPixel | CWBorderPixel;
-  // check to see if there was actually a colormap.
-  if (attr.colormap)
-    attr_mask |= CWColormap;
-
-  CreateNativeWindow(aParent, mBounds, attr, attr_mask);
-  CreateGC();
-  // set up the scrolling bar.
-  attr.event_mask = Button1MotionMask | ButtonPressMask | ButtonReleaseMask | KeyPressMask | KeyReleaseMask | FocusChangeMask | VisibilityChangeMask;
-  attr.background_pixel = xlib_rgb_xpixel_from_rgb(NS_RGB(192,192,192));
-  attr.border_pixel = xlib_rgb_xpixel_from_rgb(NS_RGB(100,100,100));
-  // set up the size
-  CalcBarBounds();
-  mBar = XCreateWindow(mDisplay,
-                       mBaseWindow,
-                       mBarBounds.x, mBarBounds.y,
-                       mBarBounds.width, mBarBounds.height,
-                       2,  // border width
-                       mDepth,
-                       InputOutput,
-                       mVisual,
-                       attr_mask,
-                       &attr);
-  AddWindowCallback(mBar, this);
-  PR_LOG(XlibScrollbarLM, PR_LOG_DEBUG, ("nsScrollbar::CreateNative created window 0x%lx with bar 0x%lx\n",
-         mBaseWindow, mBar));
-}
-
-void nsScrollbar::DestroyNative()
-{
-  // override since we have two native widgets
-  if (mBar) {
-    DestroyNativeChildren(mDisplay, mBar);
-
-    XDestroyWindow(mDisplay, mBar);
-    DeleteWindowCallback(mBar);
-    mBar = 0;
+  return SendEvent(NS_SCROLLBAR_POS);
   }
-  if (mBaseWindow) {
-    nsWidget::DestroyNative();
-    mBaseWindow = 0;
-  }
-}
 
 NS_IMETHODIMP nsScrollbar::Show(PRBool bState)
 {
@@ -329,21 +330,7 @@ nsresult nsScrollbar::NextPage(void)
     mPosition = max;
   PR_LOG(XlibScrollbarLM, PR_LOG_DEBUG, ("nsScrollbar::NextPage(): new position is %d\n", mPosition));
 
-  // send the event
-  if (mEventCallback) {
-    nsScrollbarEvent sevent;
-    sevent.message = NS_SCROLLBAR_POS;
-    sevent.widget = (nsWidget *)this;
-    sevent.eventStructType = NS_SCROLLBAR_EVENT;
-    sevent.position = (mPosition);
-    sevent.point.x = 0;
-    sevent.point.y = 0;
-    // send the event
-    result = ConvertStatus((*mEventCallback) (&sevent));
-    // the gtk code indicates that the callback can
-    // modify the position.  how odd.
-    mPosition = sevent.position;
-  }
+  result = SendEvent(NS_SCROLLBAR_POS);
   CalcBarBounds();
   LayoutBar();
   return result;
@@ -352,27 +339,14 @@ nsresult nsScrollbar::NextPage(void)
 nsresult nsScrollbar::PrevPage(void)
 {
   nsresult result = PR_FALSE;
+
   // check to make sure we don't go backwards
   if (mThumbSize > mPosition) {
     mPosition = 0;
-  }
-  else {
+  } else {
     mPosition -= mThumbSize;
   }
-  
-  // send the event
-  if (mEventCallback) {
-    nsScrollbarEvent sevent;
-    sevent.message = NS_SCROLLBAR_POS;
-    sevent.widget = (nsWidget *)this;
-    sevent.eventStructType = NS_SCROLLBAR_EVENT;
-    sevent.position = (mPosition);
-    // send the event
-    result = ConvertStatus((*mEventCallback) (&sevent));
-    // the gtk code indicates that the callback can
-    // modify the position.  how odd.
-    mPosition = sevent.position;
-  }
+  result = SendEvent(NS_SCROLLBAR_POS);
   CalcBarBounds();
   LayoutBar();
   return result;
@@ -380,47 +354,46 @@ nsresult nsScrollbar::PrevPage(void)
 
 void nsScrollbar::CalcBarBounds(void)
 {
-  float bar_start;
-  float bar_end;
+  PRUint32 bar_start;
+  PRUint32 bar_end;
 
   if (mMaxRange == 0) {
     bar_start = 0;
     bar_end = 0;
-    PR_LOG(XlibScrollbarLM, PR_LOG_DEBUG, ("CalcBarBounds: max range is zero.\n"));
-
+    mXScale = 0.0;
+    mYScale = 0.0;
+  } else {
+    if (mIsVertical == PR_TRUE) {
+      mYScale = (float)mRequestedSize.height / (float)mMaxRange;
+      bar_start = (PRUint32)((float)mPosition * mYScale);
+      bar_end = (PRUint32)((float)mThumbSize * mYScale);
+      bar_start = CLAMP(bar_start, 0, (PRUint32)(mRequestedSize.height));
+    } else {
+      mXScale = (float)mRequestedSize.width / (float)mMaxRange;
+      bar_start = (PRUint32)((float)mPosition * mXScale);
+      bar_end = (PRUint32)((float)mThumbSize * mXScale);
+      bar_start = CLAMP(bar_start, 0, (PRUint32)(mRequestedSize.width));
   }
-  else {
-
-    PR_LOG(XlibScrollbarLM, PR_LOG_DEBUG, ("CalcBarBounds: position: %d max: %d thumb: %d\n",
-           mPosition, mMaxRange, mThumbSize));
-    bar_start = (float)mPosition / (float)mMaxRange;
-    bar_end = (float)mThumbSize / (float)mMaxRange;
-    PR_LOG(XlibScrollbarLM, PR_LOG_DEBUG, ("CalcBarBounds: start: %f end: %f\n", bar_start, bar_end));
-
   }
+  bar_end = PR_MAX(bar_end, NS_SCROLLBAR_MIN);
   
   if (mIsVertical == PR_TRUE) {
     mBarBounds.x = 0;
-    mBarBounds.y = (int)(bar_start * mRequestedSize.height);
-    mBarBounds.width = mRequestedSize.width;
-    mBarBounds.height = (int)(bar_end * mRequestedSize.height);
-  }
-  else {
-    mBarBounds.x = (int)(bar_start * mRequestedSize.width);
+    mBarBounds.y = bar_start;
+    mBarBounds.width = mRequestedSize.width - 4;
+    mBarBounds.height = bar_end;
+  } else {
+    mBarBounds.x = bar_start;
     mBarBounds.y = 0;
-    mBarBounds.width = (int)(bar_end * mRequestedSize.width);
-    mBarBounds.height = mRequestedSize.height;
+    mBarBounds.width = bar_end;
+    mBarBounds.height = mRequestedSize.height - 4;
   }
-  if (mBarBounds.height == 0) {
+
+  if (mBarBounds.height == 0)
     mBarBounds.height = 1;
-  }
-  if (mBarBounds.width == 0) {
-    mBarBounds.width = 1;
-  }
   
-  PR_LOG(XlibScrollbarLM, PR_LOG_DEBUG, ("CalcBarBounds: bar is (%s) %d %d %d %d\n",
-                                       ((mIsVertical == PR_TRUE) ? "vertical" : "horizontal" ), 
-                                       mBarBounds.x, mBarBounds.y, mBarBounds.width, mBarBounds.height));
+  if (mBarBounds.width == 0)
+    mBarBounds.width = 1;
 }
 
 void nsScrollbar::LayoutBar(void)
@@ -433,4 +406,23 @@ void nsScrollbar::LayoutBar(void)
 NS_IMETHODIMP nsScrollbar::Move(PRInt32 aX, PRInt32 aY)
 {
   return nsWidget::Move(aX, aY);
+}
+
+PRBool nsScrollbar::SendEvent(PRUint32 message)
+{
+  PRBool result = PR_FALSE;
+  // send the event
+  if (mEventCallback) {
+    nsScrollbarEvent sevent;
+    sevent.message = message;
+    sevent.widget = (nsWidget *)this;
+    sevent.eventStructType = NS_SCROLLBAR_EVENT;
+    sevent.position = (mPosition);
+    // send the event
+    result = ConvertStatus((*mEventCallback) (&sevent));
+    // the gtk code indicates that the callback can
+    // modify the position.  how odd.
+    mPosition = sevent.position;
+  }
+  return result;
 }

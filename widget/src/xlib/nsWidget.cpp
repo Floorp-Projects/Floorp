@@ -1,4 +1,5 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * vim:ts=2:et:sw=2
  *
  * The contents of this file are subject to the Netscape Public
  * License Version 1.1 (the "License"); you may not use this file
@@ -37,8 +38,10 @@
 #include "nsIEventListener.h"
 #include "nsIMenuListener.h"
 #include "nsIMouseListener.h"
+#include "nsIRollupListener.h"
 #include "nsGfxCIID.h"
 #include "nsIMenuRollup.h"
+#include "nsToolkit.h"
 
 #include "xlibrgb.h"
 
@@ -73,8 +76,7 @@ Window nsWidget::mFocusWindow = 0;
 
 // For popup handling
 nsCOMPtr<nsIRollupListener> nsWidget::gRollupListener;
-//nsWeakPtr          nsWidget::gRollupWidget;
-nsCOMPtr<nsIWidget> nsWidget::gRollupWidget;
+nsWeakPtr          nsWidget::gRollupWidget;
 PRBool             nsWidget::gRollupConsumeRollupEvent = PR_FALSE;
 
 class nsWindowKey : public nsHashKey {
@@ -116,7 +118,6 @@ nsWidget::nsWidget() // : nsBaseWidget()
   mBackgroundPixel = xlib_rgb_xpixel_from_rgb(mBackground);
   mBackground = NS_RGB(192, 192, 192);
   mBorderPixel = xlib_rgb_xpixel_from_rgb(mBorderRGB);
-  mGC = 0;
   mParentWidget = nsnull;
   mName.AssignWithConversion("unnamed");
   mIsShown = PR_FALSE;
@@ -189,12 +190,6 @@ nsWidget::DestroyNative()
   // with dangling references.
   DestroyNativeChildren(mDisplay, mBaseWindow);
 
-  // This is handled in nsDrawingSurfaceXlib for now
-#if 0
-  if (mGC)
-    XFreeGC(mDisplay, mGC);
-#endif
-
   XDestroyWindow(mDisplay, mBaseWindow);
   DeleteWindowCallback(mBaseWindow);
 }
@@ -217,9 +212,9 @@ NS_IMETHODIMP nsWidget::Create(nsIWidget *aParent,
   //mParentWidget = aParent;
   //NS_IF_ADDREF(mParentWidget);	// KenF FIXME
 
-  return(StandardWidgetCreate(aParent, aRect, aHandleEventFunction,
+  return StandardWidgetCreate(aParent, aRect, aHandleEventFunction,
                               aContext, aAppShell, aToolkit, aInitData,
-                              nsnull));
+                              nsnull);
 }
 
 NS_IMETHODIMP nsWidget::Create(nsNativeWidget aParent,
@@ -291,11 +286,9 @@ nsWidget::StandardWidgetCreate(nsIWidget *aParent,
 
   attr.bit_gravity = NorthWestGravity;
   attr.event_mask = GetEventMask();
-  attr.background_pixel = mBackgroundPixel;
-  attr.border_pixel = mBorderPixel;
   attr.colormap = xlib_rgb_get_cmap();
 
-  attr_mask = CWBitGravity | CWEventMask | CWBackPixel | CWBorderPixel;
+  attr_mask = CWBitGravity | CWEventMask;
 
   if (attr.colormap)
     attr_mask |= CWColormap;
@@ -386,9 +379,15 @@ NS_IMETHODIMP nsWidget::ConstrainPosition(PRInt32 *aX, PRInt32 *aY)
 
 NS_IMETHODIMP nsWidget::Move(PRInt32 aX, PRInt32 aY)
 {
-
+  //printf("nsWidget::Move aX=%i, aY=%i\n", aX, aY);
   PR_LOG(XlibWidgetsLM, PR_LOG_DEBUG, ("nsWidget::Move(x, y)\n"));
   PR_LOG(XlibWidgetsLM, PR_LOG_DEBUG, ("Moving window 0x%lx to %d, %d\n", mBaseWindow, aX, aY));
+
+  if((aX == mBounds.x) && (aY == mBounds.y) && !mIsToplevel) {
+    //printf("discard this move\n");
+    return NS_OK;
+  }
+
 
   mBounds.x = aX;
   mBounds.y = aY;
@@ -433,6 +432,7 @@ NS_IMETHODIMP nsWidget::Resize(PRInt32 aWidth,
                                PRInt32 aHeight,
                                PRBool   aRepaint)
 {
+  //printf("nsWidget::Resize aWidth=%i, Height=%i\n",aWidth, aHeight);
   PR_LOG(XlibWidgetsLM, PR_LOG_DEBUG, ("nsWidget::Resize(width, height)\n"));
 
   if (aWidth <= 0) {
@@ -444,6 +444,7 @@ NS_IMETHODIMP nsWidget::Resize(PRInt32 aWidth,
     PR_LOG(XlibWidgetsLM, PR_LOG_DEBUG, ("*** height is %d, fixing.\n", aHeight));
     aHeight = 1;
   }
+
   PR_LOG(XlibWidgetsLM, PR_LOG_DEBUG, ("Resizing window 0x%lx to %d, %d\n", mBaseWindow, aWidth, aHeight));
   mRequestedSize.width = mBounds.width = aWidth;
   mRequestedSize.height = mBounds.height = aHeight;
@@ -477,6 +478,7 @@ NS_IMETHODIMP nsWidget::Resize(PRInt32 aX,
                                PRInt32 aHeight,
                                PRBool   aRepaint)
 {
+  //printf("nsWidget::Resize aX=%i, aY=%i, aWidth=%i, aHeight=%i\n", aX, aY, aWidth, aHeight);
   PR_LOG(XlibWidgetsLM, PR_LOG_DEBUG, ("nsWidget::Resize(x, y, width, height)\n"));
 
   if (aWidth <= 0) {
@@ -584,7 +586,8 @@ void * nsWidget::GetNativeData(PRUint32 aDataType)
     break;
   case NS_NATIVE_GRAPHIC:
     // XXX implement this...
-    return (void *)mGC;
+    NS_ASSERTION(nsnull != mToolkit, "NULL toolkit, unable to get a GC");
+    return (void *)NS_STATIC_CAST(nsToolkit*,mToolkit)->GetSharedGC(mDisplay, mBaseWindow);
     break;
   default:
     fprintf(stderr, "nsWidget::GetNativeData(%d) called with crap value.\n",
@@ -636,29 +639,10 @@ NS_IMETHODIMP nsWidget::Show(PRBool bState)
   PR_LOG(XlibWidgetsLM, PR_LOG_DEBUG, ("state is %d\n", bState));
 
   if (bState) {
-    if (mIsToplevel) {
-      PR_LOG(XlibWidgetsLM, PR_LOG_DEBUG, ("Someone just used the show method on the toplevel window.\n"));
-    }
-    if (mParentWidget) {
-      ((nsWidget *)mParentWidget)->WidgetShow(this);
-      // Fix Popups appearing behind mozilla window. TonyT
-      XRaiseWindow(mDisplay, mBaseWindow);
-    }
-    else {
-      if (mBaseWindow) {
-        PR_LOG(XlibWidgetsLM, PR_LOG_DEBUG, ("Mapping window 0x%lx...\n", mBaseWindow));
         Map();
-      }
-    }
-    mIsShown = PR_TRUE;
-  }
-  else {
-    if (mBaseWindow) {
-      PR_LOG(XlibWidgetsLM, PR_LOG_DEBUG, ("Unmapping window 0x%lx...\n", mBaseWindow));
+  } else {
       Unmap();
     }
-    mIsShown = PR_FALSE;
-  }
   return NS_OK;
 }
 
@@ -701,6 +685,8 @@ NS_IMETHODIMP nsWidget::Scroll(PRInt32 aDx, PRInt32 aDy, nsRect *aClipRect)
 {
   return NS_OK;
 }
+
+NS_IMPL_ISUPPORTS_INHERITED(nsWidget, nsBaseWidget, nsISupportsWeakReference)
 
 NS_IMETHODIMP nsWidget::WidgetToScreen(const nsRect& aOldRect,
                                        nsRect& aNewRect)
@@ -815,11 +801,9 @@ void nsWidget::CreateNative(Window aParent, nsRect aRect)
 
   attr.bit_gravity = NorthWestGravity;
   attr.event_mask = GetEventMask();
-  attr.background_pixel = mBackgroundPixel;
-  attr.border_pixel = mBorderPixel;
   attr.colormap = xlib_rgb_get_cmap();
 
-  attr_mask = CWBitGravity | CWEventMask | CWBackPixel | CWBorderPixel ;
+  attr_mask = CWBitGravity | CWEventMask;
 
   if (attr.colormap)
     attr_mask |= CWColormap;
@@ -986,13 +970,16 @@ nsWidget::OnPaint(nsPaintEvent &event)
   return result;
 }
 
-PRBool nsWidget::IsMouseInWindow(nsIWidget* inWidget, PRInt32 inMouseX, PRInt32 inMouseY){
+PRBool nsWidget::IsMouseInWindow(Window window, PRInt32 inMouseX, PRInt32 inMouseY){
 
 	XWindowAttributes inWindowAttributes;
 
+  /* sometimes we get NULL window */
+  if (!window)
+    return PR_FALSE;
+
 	// Get the origin (top left corner) coordinate and size
-	Window currentPopupWindow = (Window)inWidget->GetNativeData(NS_NATIVE_WINDOW);
-	if (XGetWindowAttributes(mDisplay, currentPopupWindow, &inWindowAttributes) == 0){
+	if (XGetWindowAttributes(mDisplay, window, &inWindowAttributes) == 0) {
 		fprintf(stderr, "Failed calling XGetWindowAttributes in nsWidget::IsMouseInWindow");
 		return PR_FALSE;
 	}
@@ -1033,21 +1020,20 @@ PRBool nsWidget::IsMouseInWindow(nsIWidget* inWidget, PRInt32 inMouseX, PRInt32 
 //
 // Deal with rollup of popups (xpmenus, etc)
 // 
-PRBool nsWidget::HandlePopup ( PRInt32 inMouseX, PRInt32 inMouseY ){
+PRBool nsWidget::HandlePopup ( PRInt32 inMouseX, PRInt32 inMouseY )
+{
 	PRBool retVal = PR_FALSE;
 	PRBool rollup = PR_FALSE;
 	
 	// The gRollupListener and gRollupWidget are both set to nsnull when a popup is no
 	// longer visible
 	
-	// Use non weak reference until implemented
-	//nsCOMPtr<nsIWidget> rollupWidget = do_QueryReferent(gRollupWidget);
-	//nsCOMPtr<nsIWidget> rollupWidget = gRollupWidget;
+  nsCOMPtr<nsIWidget> rollupWidget = do_QueryReferent(gRollupWidget);
 	
-	
-	if (gRollupWidget && gRollupListener){
+  if (rollupWidget && gRollupListener) {
+    Window currentPopup = (Window)rollupWidget->GetNativeData(NS_NATIVE_WINDOW);
 
-		if (!IsMouseInWindow(gRollupWidget, inMouseX, inMouseY)){
+    if (!IsMouseInWindow(currentPopup, inMouseX, inMouseY)) {
 			rollup = PR_TRUE;
 			nsCOMPtr<nsIMenuRollup> menuRollup ( do_QueryInterface(gRollupListener) );
       if ( menuRollup ) {
@@ -1061,7 +1047,8 @@ PRBool nsWidget::HandlePopup ( PRInt32 inMouseX, PRInt32 inMouseY ){
             widgetChain->GetElementAt ( i, getter_AddRefs(genericWidget) );
             nsCOMPtr<nsIWidget> widget ( do_QueryInterface(genericWidget) );
             if ( widget ) {
-              if ( IsMouseInWindow(widget, inMouseX, inMouseY) ) {
+              Window currWindow = (Window)widget->GetNativeData(NS_NATIVE_WINDOW);
+              if ( IsMouseInWindow(currWindow, inMouseX, inMouseY) ) {
                 rollup = PR_FALSE;
                 break;
               }
@@ -1070,11 +1057,9 @@ PRBool nsWidget::HandlePopup ( PRInt32 inMouseX, PRInt32 inMouseY ){
         }
 			}	
 		}				
-		
 	}
 	
 	if (rollup){
-		//fprintf(stderr, "Calling gRollupListener->Rollup()\n");
 		gRollupListener->Rollup();
 		retVal = PR_TRUE;
 	}
@@ -1212,6 +1197,7 @@ PRBool nsWidget::DispatchKeyEvent(nsKeyEvent & aKeyEvent)
 #undef TRACE_EVENTS_MOTION
 #undef TRACE_EVENTS_PAINT
 #undef TRACE_EVENTS_CROSSING
+#undef DEBUG
 
 #ifdef DEBUG
 void
@@ -1300,14 +1286,6 @@ PRBool nsWidget::ConvertStatus(nsEventStatus aStatus)
       break;
   }
   return(PR_FALSE);
-}
-
-void nsWidget::CreateGC(void)
-{
-  // This is handled in nsDrawingSurfaceXlib, for now
-#if 0
-  mGC = XCreateGC(mDisplay, mBaseWindow, 0, NULL);
-#endif
 }
 
 void nsWidget::WidgetPut(nsWidget *aWidget)

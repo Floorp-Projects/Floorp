@@ -23,6 +23,7 @@
 
 #include "nsDrawingSurfaceXlib.h"
 #include "prlog.h"
+#include "nsGCCache.h"
 
 #include "xlibrgb.h"      // for xlib_rgb_get_visual_info
 #include <X11/Xutil.h>    // for XVisualInfo.
@@ -42,7 +43,7 @@ nsDrawingSurfaceXlib::nsDrawingSurfaceXlib()
   mScreen = nsnull;
   mVisual = nsnull;
   mDepth = 0;
-  mGC = 0;
+  mGC = nsnull;
   // set up lock info
   mLocked = PR_FALSE;
   mLockX = 0;
@@ -91,8 +92,10 @@ nsDrawingSurfaceXlib::~nsDrawingSurfaceXlib()
   }
 
   // We are freeing the GC here now [See nsWidget::CreateGC()]
-  if (mGC)
-    XFreeGC(mDisplay, mGC);
+  if(mGC) {
+    mGC->Release();
+    mGC = nsnull;
+  }
 }
 
 NS_IMPL_QUERY_INTERFACE(nsDrawingSurfaceXlib, kIDrawingSurfaceIID)
@@ -105,7 +108,7 @@ nsDrawingSurfaceXlib::Init(Display * aDisplay,
                            Visual *  aVisual,
                            int       aDepth,
                            Drawable  aDrawable, 
-                           GC        aGC) 
+                           xGC        *aGC) 
 {
   PR_LOG(DrawingSurfaceXlibLM, PR_LOG_DEBUG, ("nsDrawingSurfaceXlib::Init()\n"));
 
@@ -113,14 +116,12 @@ nsDrawingSurfaceXlib::Init(Display * aDisplay,
   mScreen = aScreen;
   mVisual = aVisual;
   mDepth = aDepth;
-  // We Ignore the GC we are given, cos it is bad. [See nsWidget::CreateGC()]
-#if 0
-  mGC = aGC;
-#endif
   mDrawable = aDrawable;
 
-  // Create a new GC
-  mGC = XCreateGC(mDisplay, mDrawable, 0, NULL);
+  if (mGC)
+    mGC->Release();
+  mGC = aGC;
+  mGC->AddRef();
 
   mIsOffscreen = PR_FALSE;
   return NS_OK;
@@ -131,7 +132,7 @@ nsDrawingSurfaceXlib::Init (Display * aDisplay,
                             Screen *  aScreen,
                             Visual *  aVisual,
                             int       aDepth,
-                            GC        aGC,
+                            xGC     * aGC,
                             PRUint32  aWidth, 
                             PRUint32  aHeight, 
                             PRUint32  aFlags) 
@@ -140,14 +141,14 @@ nsDrawingSurfaceXlib::Init (Display * aDisplay,
   mScreen = aScreen;
   mVisual = aVisual;
   mDepth = aDepth;
-  // We Ignore the GC we are given, cos it is bad. [See nsWidget::Create()]
-#if 0
-  mGC = aGC;
-#endif
-
   mWidth = aWidth;
   mHeight = aHeight;
   mLockFlags = aFlags;
+
+  if(mGC)
+    mGC->Release();
+  mGC = aGC;
+  mGC->AddRef();
 
   mIsOffscreen = PR_TRUE;
 
@@ -156,9 +157,6 @@ nsDrawingSurfaceXlib::Init (Display * aDisplay,
                             mWidth, 
                             mHeight, 
                             mDepth);
-  // Create a new GC
-  mGC = XCreateGC(mDisplay, mDrawable, 0, NULL);
-
   return NS_OK;
 }
 
@@ -213,7 +211,7 @@ nsDrawingSurfaceXlib::Unlock(void)
   
   // If the lock was not read only, put the bits back on the pixmap
   if (!(mLockFlags & NS_LOCK_SURFACE_READ_ONLY)) {
-    XPutImage(mDisplay, mDrawable, mGC, mImage,
+    XPutImage(mDisplay, mDrawable, *mGC, mImage,
               0, 0, mLockX, mLockY,
               mLockWidth, mLockHeight);
   }

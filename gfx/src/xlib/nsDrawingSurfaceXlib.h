@@ -24,6 +24,7 @@
 #define nsDrawingSurfaceXlib_h__
 
 #include "nsIDrawingSurface.h"
+#include "nsGCCache.h"
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
 #include <X11/Xos.h>
@@ -50,31 +51,31 @@ public:
                    Visual *  aVisual,
                    int       aDepth,
                    Drawable  aDrawable, 
-                   GC        aGC);
+                   xGC       * aGC);
 
   NS_IMETHOD Init (Display * aDisplay,
                    Screen *  aScreen,
                    Visual *  aVisual,
                    int       aDepth,
-                   GC        aGC, 
+                   xGC      *  aGC, 
                    PRUint32  aWidth, 
                    PRUint32  aHeight, 
                    PRUint32  aFlags);
 
-  GC         GetGC(void) { return mGC; }
   Drawable   GetDrawable(void) { return (mDrawable); }  
   Display *  GetDisplay() { return mDisplay; }
   Screen *   GetScreen() { return mScreen; }
   Visual *   GetVisual() { return mVisual; }
   int        GetDepth() { return mDepth; }
   int        GetScreenNumber() { return XScreenNumberOfScreen(mScreen); }
+  xGC *      GetGC() { mGC->AddRef(); return mGC; }
 
 private:
   Display *      mDisplay;
   Screen *       mScreen;
   Visual *       mVisual;
   int            mDepth;
-  GC             mGC;
+  xGC           * mGC;
   Drawable       mDrawable;
   XImage *       mImage;
   nsPixelFormat  mPixFormat;

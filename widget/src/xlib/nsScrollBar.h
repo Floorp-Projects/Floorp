@@ -1,4 +1,5 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * vim:ts=2:et:sw=2
  *
  * The contents of this file are subject to the Netscape Public
  * License Version 1.1 (the "License"); you may not use this file
@@ -68,6 +69,7 @@ public:
   
   PRBool    OnScroll(PRUint32 scrollCode, int cPos);
   void CreateNative(Window aParent, nsRect aRect);
+  PRBool    SendEvent(PRUint32 message);
   
 private:
   void                 CalcBarBounds(void);
@@ -77,6 +79,8 @@ private:
   PRUint32             mMaxRange;
   PRUint32             mPosition;
   PRUint32             mThumbSize;
+  float                mXScale;
+  float                mYScale;
   PRUint32             mLineIncrement;
   PRBool               mIsVertical;
   nsIRenderingContext *mRenderingContext;

@@ -70,6 +70,9 @@ class nsWindow : public nsWidget
  public:
   nsWindow();
   ~nsWindow();
+
+  NS_DECL_ISUPPORTS_INHERITED
+
   static void      UpdateIdle (void *data);
   NS_IMETHOD CaptureRollupEvents(nsIRollupListener *aListener, 
                                  PRBool aDoCapture, 
@@ -83,6 +86,7 @@ class nsWindow : public nsWidget
   NS_IMETHOD ScrollRect(nsRect &aSrcRect, PRInt32 aDx, PRInt32 aDy);
 
   NS_IMETHOD SetTitle(const nsString& aTitle);
+  NS_IMETHOD Show(PRBool aShow);
 
   NS_IMETHOD Resize(PRInt32 aWidth,
                     PRInt32 aHeight,
@@ -108,6 +112,7 @@ protected:
   void                 UnqueueDraw();
   PRBool mIsUpdating;
   PRBool mBlockFocusEvents;
+  PRBool mIsTooSmall;
 
   static PRBool    sIsGrabbing;
   static nsWindow  *sGrabWindow;

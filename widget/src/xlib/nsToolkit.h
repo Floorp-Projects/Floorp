@@ -24,6 +24,7 @@
 #define nsToolkit_h__
 
 #include "nsIToolkit.h"
+#include "nsGCCache.h"
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
 
@@ -38,6 +39,9 @@ struct MethodInfo;
 
 class nsToolkit : public nsIToolkit
 {
+private:
+  void CreateSharedGC(Display *display, Drawable d);
+  xGC *mGC;
 
 public:
   nsToolkit();
@@ -45,6 +49,7 @@ public:
   
   NS_DECL_ISUPPORTS
   NS_IMETHOD            Init(PRThread *aThread);
+  xGC *GetSharedGC(Display *display, Drawable d);
 
 };
 

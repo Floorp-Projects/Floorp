@@ -41,6 +41,9 @@
 #include "nsDrawingSurfaceXlib.h"
 #include "nsRegionXlib.h"
 #include "nsCOMPtr.h"
+#include "nsGCCache.h"
+#include <X11/Xlib.h>
+#include <X11/Xutil.h>
 
 class GraphicsState;
 
@@ -49,6 +52,7 @@ class nsRenderingContextXlib : public nsRenderingContextImpl
  public:
   nsRenderingContextXlib();
   virtual ~nsRenderingContextXlib();
+  static nsresult Shutdown(); // release statics
 
   NS_DECL_AND_IMPL_ZEROING_OPERATOR_NEW
 
@@ -197,7 +201,10 @@ class nsRenderingContextXlib : public nsRenderingContextImpl
   // this is a common init function for both of the init functions.
   nsresult CommonInit(void);
 
+  xGC *GetGC() { mGC->AddRef(); return mGC; }
+
 private:
+  void UpdateGC();
   nsDrawingSurfaceXlib    *mOffscreenSurface;
   nsDrawingSurfaceXlib    *mRenderingSurface;
   nsIDeviceContext        *mContext;
@@ -214,6 +221,32 @@ private:
   nsVoidArray             *mStateCache;
   XFontStruct             *mCurrentFont;
   nsLineStyle              mCurrentLineStyle;
+  xGC                      *mGC;
+  int                      mFunction;
+  int                      mLineStyle;
+  char                    *mDashList;
+  int                      mDashes;
+
+  // ConditionRect is used to fix coordinate overflow problems for
+  // rectangles after they are transformed to screen coordinates
+  void ConditionRect(nscoord &x, nscoord &y, nscoord &w, nscoord &h) {
+    if ( y < -32766 ) {
+      y = -32766;
+    }
+    
+    if ( y + h > 32766 ) {
+      h  = 32766 - y;
+    }
+    
+    if ( x < -32766 ) {
+      x = -32766;
+    }
+    
+    if ( x + w > 32766 ) {
+      w  = 32766 - x;
+    }
+  }
+  
 };
 
 #endif

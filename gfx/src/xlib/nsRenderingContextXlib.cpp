@@ -21,6 +21,7 @@
  *   Peter Hartshorn <peter@igelaus.com.au>
  *   Ken Faulkner <faulkner@igelaus.com.au>
  *   Tony Tsui <tony@igelaus.com.au>
+ *   Tomi Leppikangas <tomi.leppikangas@oulu.fi>
  */
 
 #include "nsRenderingContextXlib.h"
@@ -29,10 +30,13 @@
 #include "xlibrgb.h"
 #include "prprf.h"
 #include "prmem.h"
+#include "nsGCCache.h"
 
 NS_IMPL_THREADSAFE_ISUPPORTS1(nsRenderingContextXlib, nsIRenderingContext)
 
 static PRLogModuleInfo * RenderingContextXlibLM = PR_NewLogModule("RenderingContextXlib");
+
+static nsGCCache *gcCache = nsnull;
 
 class GraphicsState
 {
@@ -83,6 +87,9 @@ nsRenderingContextXlib::nsRenderingContextXlib()
   mScreen = nsnull;
   mVisual = nsnull;
   mDepth = 0;
+  mGC = nsnull;
+
+  mFunction = GXcopy;
 
   PushState();
 }
@@ -102,11 +109,15 @@ nsRenderingContextXlib::~nsRenderingContextXlib()
     delete mStateCache;
     mStateCache = nsnull;
   }
+
   if (mTranMatrix)
     delete mTranMatrix;
   NS_IF_RELEASE(mOffscreenSurface);
   NS_IF_RELEASE(mFontMetrics);
   NS_IF_RELEASE(mContext);
+  
+  if(nsnull != mGC)
+    mGC->Release();
 }
 
 NS_IMETHODIMP
@@ -126,14 +137,15 @@ nsRenderingContextXlib::Init(nsIDeviceContext* aContext, nsIWidget *aWindow)
   mRenderingSurface = (nsDrawingSurfaceXlib *)new nsDrawingSurfaceXlib();
 
   if (mRenderingSurface) {
+
     Drawable win = (Drawable)aWindow->GetNativeData(NS_NATIVE_WINDOW);
-    GC gc        = (GC)aWindow->GetNativeData(NS_NATIVE_GRAPHIC);
+    xGC *gc       = (xGC*)aWindow->GetNativeData(NS_NATIVE_GRAPHIC);
 
     mRenderingSurface->Init(mDisplay, 
                             mScreen, 
                             mVisual,
                             mDepth,
-                            win, 
+                            (PRUint32)win, 
                             gc);
 
     mOffscreenSurface = mRenderingSurface;
@@ -141,6 +153,13 @@ nsRenderingContextXlib::Init(nsIDeviceContext* aContext, nsIWidget *aWindow)
   }
   return (CommonInit());
 }
+
+/*static*/ nsresult
+nsRenderingContextXlib::Shutdown()
+{
+  delete gcCache;
+  return NS_OK;
+}                  
 
 NS_IMETHODIMP
 nsRenderingContextXlib::Init(nsIDeviceContext* aContext, nsDrawingSurface aSurface)
@@ -330,12 +349,6 @@ nsRenderingContextXlib::PopState(PRBool &aClipState)
     if (mFontMetrics != state->mFontMetrics)
       SetFont(state->mFontMetrics);
 
-    if (mRenderingSurface && mClipRegion) {
-      Region region;
-      mClipRegion->GetNativeRegion((void *&)region);
-      XSetRegion(mDisplay, mRenderingSurface->GetGC(), region);
-    }
-
     if (state->mColor != mCurrentColor)
       SetColor(state->mColor);
     if (state->mLineStyle != mCurrentLineStyle)
@@ -350,6 +363,50 @@ nsRenderingContextXlib::PopState(PRBool &aClipState)
     aClipState = PR_TRUE;
 
   return NS_OK;
+}
+void nsRenderingContextXlib::UpdateGC()
+{
+   XGCValues values;
+   unsigned long valuesMask;
+ 
+   if (mGC)
+     mGC->Release();
+ 
+   memset(&values, 0, sizeof(XGCValues));
+ 
+   unsigned long color;
+ 
+   color = xlib_rgb_xpixel_from_rgb (NS_RGB(NS_GET_B(mCurrentColor),
+                                            NS_GET_G(mCurrentColor),
+                                            NS_GET_R(mCurrentColor)));
+
+   values.foreground  =color;
+   valuesMask = GCForeground;
+ 
+   if (mCurrentFont) {
+     valuesMask |= GCFont;
+     values.font = mCurrentFont->fid;
+   }
+ 
+   values.line_style = mLineStyle;
+   valuesMask |= GCLineStyle;
+ 
+   values.function = mFunction;
+   valuesMask |= GCFunction;
+
+   Region rgn = 0;
+   if (mClipRegion) { 
+     mClipRegion->GetNativeRegion((void*&)rgn);
+   }
+ 
+   if (!gcCache) {
+     gcCache = new nsGCCache();
+     if (!gcCache) return;
+   }
+
+   mGC = gcCache->GetGC(mDisplay, mRenderingSurface->GetDrawable(), 
+                        valuesMask, &values,
+                        rgn);
 }
 
 NS_IMETHODIMP
@@ -383,9 +440,6 @@ nsRenderingContextXlib::SetClipRect(const nsRect& aRect, nsClipCombine aCombine,
     break;
   }
   aClipState = mClipRegion->IsEmpty();
-
-  mClipRegion->GetNativeRegion((void*&)rgn);
-  XSetRegion(mDisplay, mRenderingSurface->GetGC(), rgn);
 
   return NS_OK;
 }
@@ -428,8 +482,6 @@ nsRenderingContextXlib::SetClipRegion(const nsIRegion& aRegion, nsClipCombine aC
   }
 
   aClipState = mClipRegion->IsEmpty();
-  mClipRegion->GetNativeRegion((void*&)rgn);
-  XSetRegion(mDisplay, mRenderingSurface->GetGC(),rgn);
 
   return NS_OK;
 }
@@ -461,36 +513,28 @@ nsRenderingContextXlib::SetLineStyle(nsLineStyle aLineStyle)
 {
   PR_LOG(RenderingContextXlibLM, PR_LOG_DEBUG, ("nsRenderingContextXlib::SetLineStyle()\n"));
   if (aLineStyle != mCurrentLineStyle) {
+    /* XXX this isnt done in gtk, copy from there when ready
     switch(aLineStyle)
       { 
       case nsLineStyle_kSolid:
-        XSetLineAttributes(mDisplay, mRenderingSurface->GetGC(),
-                           1, // width
-                           LineSolid, // line style
-                           CapNotLast,// cap style
-                           JoinMiter);// join style
+        mLineStyle = LineSolid;
+        mDashes = 0;
         break;
       case nsLineStyle_kDashed:
-        {
           static char dashed[2] = {4,4};
-          XSetDashes(mDisplay, mRenderingSurface->GetGC(),
-                     0, dashed, 2);
-        }
+        mDashList = dashed;
+        mDashes = 2;
         break;
-
       case nsLineStyle_kDotted:
-        {
           static char dotted[2] = {3,1};
-          XSetDashes(mDisplay, mRenderingSurface->GetGC(),
-                     0, dotted, 2);
-        }
+        mDashList = dotted;
+        mDashes = 2;
         break;
-
     default:
         break;
 
     }
-    
+    */
     mCurrentLineStyle = aLineStyle ;
   }
   return NS_OK;
@@ -512,9 +556,7 @@ nsRenderingContextXlib::SetColor(nscolor aColor)
     return NS_ERROR_FAILURE;
 
   mCurrentColor = aColor;
-  xlib_rgb_gc_set_foreground(mRenderingSurface->GetGC(), NS_RGB(NS_GET_B(aColor),
-                                                                NS_GET_G(aColor),
-                                                                NS_GET_R(aColor)));
+
   PR_LOG(RenderingContextXlibLM, PR_LOG_DEBUG, ("Setting color to %d %d %d\n", NS_GET_R(aColor), NS_GET_G(aColor), NS_GET_B(aColor)));
   return NS_OK;
 }
@@ -550,7 +592,6 @@ nsRenderingContextXlib::SetFont(nsIFontMetrics *aFontMetrics)
     nsFontHandle  fontHandle;
     mFontMetrics->GetFontHandle(fontHandle);
     mCurrentFont = (XFontStruct *)fontHandle;
-    XSetFont(mDisplay, mRenderingSurface->GetGC(), mCurrentFont->fid);
   }
   return NS_OK;
 }
@@ -601,12 +642,13 @@ nsRenderingContextXlib::CreateDrawingSurface(nsRect *aBounds, PRUint32 aSurfFlag
 
   if (surf) {
     NS_ADDREF(surf);
-
+    if (!mGC)
+      UpdateGC();
     surf->Init(mDisplay, 
                mScreen, 
                mVisual,
                mDepth,
-               mRenderingSurface->GetGC(),
+               mGC,
                aBounds->width, 
                aBounds->height, 
                aSurfFlags);
@@ -650,8 +692,10 @@ nsRenderingContextXlib::DrawLine(nscoord aX0, nscoord aY0, nscoord aX1, nscoord 
     diffY = (diffY>0?1:-1);
   }
 
+  UpdateGC();
+
   ::XDrawLine(mDisplay, mRenderingSurface->GetDrawable(),
-              mRenderingSurface->GetGC(), aX0, aY0, aX1 - diffX, aY1 - diffY);
+              *mGC, aX0, aY0, aX1 - diffX, aY1 - diffY);
 
   return NS_OK;
 }
@@ -678,8 +722,9 @@ nsRenderingContextXlib::DrawStdLine(nscoord aX0, nscoord aY0, nscoord aX1, nscoo
     diffY = (diffY>0?1:-1);
   }
 
+  UpdateGC();
   ::XDrawLine(mDisplay, mRenderingSurface->GetDrawable(),
-              mRenderingSurface->GetGC(), aX0, aY0, aX1 - diffX, aY1 - diffY);
+              *mGC, aX0, aY0, aX1 - diffX, aY1 - diffY);
 
   return NS_OK;
 }
@@ -704,9 +749,10 @@ nsRenderingContextXlib::DrawPolyline(const nsPoint aPoints[], PRInt32 aNumPoints
     mTranMatrix->TransformCoord((PRInt32*)&thispoint->x,(PRInt32*)&thispoint->y);
   }
 
+  UpdateGC();
   ::XDrawLines(mDisplay,
                mRenderingSurface->GetDrawable(),
-               mRenderingSurface->GetGC(),
+               *mGC,
                xpoints, aNumPoints, CoordModeOrigin);
 
   PR_Free((void *)xpoints);
@@ -738,13 +784,19 @@ nsRenderingContextXlib::DrawRect(nscoord aX, nscoord aY, nscoord aWidth, nscoord
     
   mTranMatrix->TransformCoord(&x,&y,&w,&h);
     
+  // After the transform, if the numbers are huge, chop them, because
+  // they're going to be converted from 32 bit to 16 bit.
+  // It's all way off the screen anyway.
+  ConditionRect(x,y,w,h);
+   
   // Don't draw empty rectangles; also, w/h are adjusted down by one
   // so that the right number of pixels are drawn.
   if (w && h) 
   {
+    UpdateGC();
     ::XDrawRectangle(mDisplay,
                      mRenderingSurface->GetDrawable(),
-                     mRenderingSurface->GetGC(),
+                     *mGC,
                      x,
                      y,
                      w - 1,
@@ -775,11 +827,18 @@ nsRenderingContextXlib::FillRect(nscoord aX, nscoord aY, nscoord aWidth, nscoord
   h = aHeight;
 
   mTranMatrix->TransformCoord(&x,&y,&w,&h);
+
+  // After the transform, if the numbers are huge, chop them, because
+  // they're going to be converted from 32 bit to 16 bit.
+  // It's all way off the screen anyway.
+  ConditionRect(x,y,w,h);
+
   PR_LOG(RenderingContextXlibLM, PR_LOG_DEBUG, ("About to fill window 0x%lxd with rect %d %d %d %d\n",
                                                 mRenderingSurface->GetDrawable(), x, y, w, h));
+  UpdateGC();
   ::XFillRectangle(mDisplay,
                    mRenderingSurface->GetDrawable(),
-                   mRenderingSurface->GetGC(),
+                   *mGC,
                    x,y,w,h);
   
   return NS_OK;
@@ -806,23 +865,24 @@ nsRenderingContextXlib :: InvertRect(nscoord aX, nscoord aY, nscoord aWidth, nsc
 
   mTranMatrix->TransformCoord(&x,&y,&w,&h);
 
-  // Set XOR drawing mode
-  ::XSetFunction(mDisplay,
-                 mRenderingSurface->GetGC(),
-                 GXxor);  
+  // After the transform, if the numbers are huge, chop them, because
+  // they're going to be converted from 32 bit to 16 bit.
+  // It's all way off the screen anyway.
+  ConditionRect(x,y,w,h);
 
+  mFunction = GXxor;
+  
+  UpdateGC();
+  
   ::XFillRectangle(mDisplay,
                    mRenderingSurface->GetDrawable(),
-                   mRenderingSurface->GetGC(),
+                   *mGC,
                    x,
                    y,
                    w,
                    h);
   
-  // Back to normal copy drawing mode
-  ::XSetFunction(mDisplay,
-                 mRenderingSurface->GetGC(),
-                 GXcopy);  
+  mFunction = GXcopy;
 
   return NS_OK;
 }
@@ -847,9 +907,10 @@ nsRenderingContextXlib::DrawPolygon(const nsPoint aPoints[], PRInt32 aNumPoints)
     mTranMatrix->TransformCoord((PRInt32*)&thispoint->x,(PRInt32*)&thispoint->y);
   }
   
+  UpdateGC();
   ::XDrawLines(mDisplay,
                mRenderingSurface->GetDrawable(),
-               mRenderingSurface->GetGC(),
+               *mGC,
                xpoints, aNumPoints, CoordModeOrigin);
 
   PR_Free((void *)xpoints);
@@ -880,9 +941,10 @@ nsRenderingContextXlib::FillPolygon(const nsPoint aPoints[], PRInt32 aNumPoints)
     thispoint->y = y;
   } 
     
+  UpdateGC();
   ::XFillPolygon(mDisplay,
                  mRenderingSurface->GetDrawable(),
-                 mRenderingSurface->GetGC(),
+                 *mGC,
                  xpoints, aNumPoints, Convex, CoordModeOrigin);
                
   PR_Free((void *)xpoints);
@@ -913,9 +975,10 @@ nsRenderingContextXlib::DrawEllipse(nscoord aX, nscoord aY, nscoord aWidth, nsco
     
   mTranMatrix->TransformCoord(&x,&y,&w,&h);
     
+  UpdateGC();
   ::XDrawArc(mDisplay,
              mRenderingSurface->GetDrawable(),
-             mRenderingSurface->GetGC(),
+             *mGC,
              x,y,w,h, 0, 360 * 64);
   
   return NS_OK;  
@@ -944,9 +1007,11 @@ nsRenderingContextXlib::FillEllipse(nscoord aX, nscoord aY, nscoord aWidth, nsco
     
   mTranMatrix->TransformCoord(&x,&y,&w,&h);
     
+  UpdateGC();
+
   ::XFillArc(mDisplay,
              mRenderingSurface->GetDrawable(),
-             mRenderingSurface->GetGC(),
+             *mGC,
              x,y,w,h, 0, 360 * 64);
   
   return NS_OK;  
@@ -977,9 +1042,10 @@ nsRenderingContextXlib::DrawArc(nscoord aX, nscoord aY, nscoord aWidth, nscoord 
     
   mTranMatrix->TransformCoord(&x,&y,&w,&h);
     
+  UpdateGC();
   ::XDrawArc(mDisplay,
              mRenderingSurface->GetDrawable(),
-             mRenderingSurface->GetGC(),
+             *mGC,
              x,y,w,h, NSToIntRound(aStartAngle * 64.0f),
              NSToIntRound(aEndAngle * 64.0f));
   
@@ -1011,9 +1077,10 @@ nsRenderingContextXlib::FillArc(nscoord aX, nscoord aY, nscoord aWidth, nscoord 
     
   mTranMatrix->TransformCoord(&x,&y,&w,&h);
     
+  UpdateGC();
   ::XFillArc(mDisplay,
              mRenderingSurface->GetDrawable(),
-             mRenderingSurface->GetGC(),
+             *mGC,
              x,y,w,h, NSToIntRound(aStartAngle * 64.0f),
              NSToIntRound(aEndAngle * 64.0f));
   
@@ -1156,6 +1223,8 @@ nsRenderingContextXlib::DrawString(const char *aString, PRUint32 aLength,
       y += aY;
     }
 
+    UpdateGC();
+
     if (nsnull != aSpacing) {
       // Render the string, one character at a time...
       const char* end = aString + aLength;
@@ -1164,9 +1233,9 @@ nsRenderingContextXlib::DrawString(const char *aString, PRUint32 aLength,
         nscoord xx = x;
         nscoord yy = y;
         mTranMatrix->TransformCoord(&xx, &yy);
-        XDrawString(mDisplay,
+        ::XDrawString(mDisplay,
                     mRenderingSurface->GetDrawable(),
-                    mRenderingSurface->GetGC(),
+                    *mGC,
                     xx, yy, &ch, 1);
         x += *aSpacing++;
       }
@@ -1175,7 +1244,7 @@ nsRenderingContextXlib::DrawString(const char *aString, PRUint32 aLength,
       mTranMatrix->TransformCoord(&x, &y);
       XDrawString(mDisplay,
                   mRenderingSurface->GetDrawable(),
-                  mRenderingSurface->GetGC(),
+                  *mGC,
                   x, y, aString, aLength);
     }
   }
@@ -1267,6 +1336,7 @@ FoundFont:
 	  if (aSpacing) {
 	    const PRUnichar* str = &aString[start];
 	    const PRUnichar* end = &aString[i];
+      UpdateGC();
 	    while (str < end) {
 	      x = aX;
 	      y = aY;
@@ -1277,6 +1347,7 @@ FoundFont:
 	    }
 	  }
 	  else {
+      UpdateGC();
       prevFont->DrawString(this, mRenderingSurface, x, y, &aString[start], i - start);
               x += prevFont->GetWidth(&aString[start], i -start);
 
@@ -1292,6 +1363,7 @@ FoundFont:
     }
 
     if (prevFont) {
+    UpdateGC();
       if (aSpacing) {
 	const PRUnichar* str = &aString[start];
 	const PRUnichar* end = &aString[i];
@@ -1358,6 +1430,7 @@ nsRenderingContextXlib::DrawImage(nsIImage *aImage, const nsRect& aRect)
   nsRect tr;
   tr = aRect;
   mTranMatrix->TransformCoord(&tr.x, &tr.y, &tr.width, &tr.height);
+  UpdateGC();
   return aImage->Draw(*this, mRenderingSurface, tr.x, tr.y, tr.width, tr.height);
 }
 
@@ -1377,6 +1450,7 @@ nsRenderingContextXlib::DrawImage(nsIImage *aImage, const nsRect& aSRect, const 
   dr = aDRect;
   mTranMatrix->TransformCoord(&dr.x, &dr.y,
                            &dr.width, &dr.height);
+  UpdateGC();
   
   return aImage->Draw(*this, mRenderingSurface,
                       sr.x, sr.y,
@@ -1454,10 +1528,12 @@ nsRenderingContextXlib::CopyOffScreenBits(nsDrawingSurface aSrcSurf, PRInt32 aSr
   //XXX flags are unused. that would seem to mean that there is
   //inefficiency somewhere... MMP
 
+  UpdateGC();
+
   XCopyArea(mDisplay,
             ((nsDrawingSurfaceXlib *)aSrcSurf)->GetDrawable(),
             destsurf->GetDrawable(),
-            ((nsDrawingSurfaceXlib *)aSrcSurf)->GetGC(),
+            *mGC,
             srcX, srcY,
             drect.width, drect.height,
             drect.x, drect.y);

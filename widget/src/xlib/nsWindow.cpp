@@ -1,4 +1,5 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * vim:ts=2:et:sw=2
  *
  * The contents of this file are subject to the Netscape Public
  * License Version 1.1 (the "License"); you may not use this file
@@ -27,6 +28,11 @@
 #include "nsWindow.h"
 
 #include "xlibrgb.h"
+
+/* for window title unicode->locale conversion */
+#include "nsICharsetConverterManager.h"
+#include "nsIPlatformCharset.h"
+#include "nsIServiceManager.h"
 
 #include "nsFileSpec.h" // for nsAutoCString
 
@@ -176,6 +182,7 @@ nsWindow::UnqueueDraw ()
 }
 
 ///////////////////////////////////////////////////////////////////
+NS_IMPL_ISUPPORTS_INHERITED0(nsWindow, nsWidget)
 ///////////////////////////////////////////////////////////////////
 
 nsWindow::nsWindow() : nsWidget()
@@ -190,6 +197,8 @@ nsWindow::nsWindow() : nsWidget()
   // FIXME KenF
   mIsUpdating = PR_FALSE;
   mBlockFocusEvents = PR_FALSE;
+  mLastGrabFailed = PR_TRUE;
+  mIsTooSmall = PR_FALSE;
 
   // FIXME New on M17 merge.
   mWindowType = eWindowType_child;
@@ -234,10 +243,49 @@ PRBool nsWindow::OnExpose(nsPaintEvent &event)
   return result;
 }
 
+NS_IMETHODIMP nsWindow::Show(PRBool bState)
+{
+  // don't show if we are too small
+  if (mIsTooSmall)
+    return NS_OK;
+
+  if (bState) {
+    if (mIsToplevel) {
+      PR_LOG(XlibWidgetsLM, PR_LOG_DEBUG, ("Someone just used the show method on the toplevel window.\n"));
+    }
+
+    if (mParentWidget) {
+      ((nsWidget *)mParentWidget)->WidgetShow(this);
+      // Fix Popups appearing behind mozilla window. TonyT
+      XRaiseWindow(mDisplay, mBaseWindow);
+    } else {
+      if (mBaseWindow) {
+        PR_LOG(XlibWidgetsLM, PR_LOG_DEBUG, ("Mapping window 0x%lx...\n", mBaseWindow));
+        Map();
+      }
+    }
+
+    mIsShown = PR_TRUE;
+    if (sGrabWindow == this && mLastGrabFailed) {
+      /* re-grab things like popup menus - the window isn't mapped when
+       * the first grab occurs */
+      NativeGrab(PR_TRUE);
+    }
+  } else {
+    if (mBaseWindow) {
+      PR_LOG(XlibWidgetsLM, PR_LOG_DEBUG, ("Unmapping window 0x%lx...\n", mBaseWindow));
+      Unmap();
+    }
+    mIsShown = PR_FALSE;
+  }
+  return NS_OK;
+}
+
 // Function that does native grab.
 void nsWindow::NativeGrab(PRBool aGrab)
 {
   Cursor newCursor = XCreateFontCursor(mDisplay, XC_right_ptr);
+  mLastGrabFailed = PR_FALSE;
 
   if (aGrab)
   {
@@ -249,17 +297,15 @@ void nsWindow::NativeGrab(PRBool aGrab)
                           (Window)0, newCursor, CurrentTime);
 
     if (retval != GrabSuccess)
-      fprintf(stderr, "Grab pointer failed!\n");
+      mLastGrabFailed = PR_TRUE;
 
     retval = XGrabKeyboard(mDisplay, mBaseWindow, PR_TRUE, GrabModeAsync,
                            GrabModeAsync, CurrentTime);
 
     if (retval != GrabSuccess)
-      fprintf(stderr, "Grab keyboard failed!\n");
+      mLastGrabFailed = PR_TRUE;
 
-  }
-  else
-  {
+  } else {
     XUngrabPointer(mDisplay, CurrentTime);
     XUngrabKeyboard(mDisplay, CurrentTime);
   }
@@ -272,29 +318,17 @@ void nsWindow::NativeGrab(PRBool aGrab)
 NS_IMETHODIMP nsWindow::CaptureRollupEvents(nsIRollupListener * aListener,
                                             PRBool aDoCapture,
                                             PRBool aConsumeRollupEvent)
-{
-  if (aDoCapture)
   {
+  if (aDoCapture) {
     NativeGrab(PR_TRUE);
 
     sIsGrabbing = PR_TRUE;
     sGrabWindow = this;
 
-      //fprintf(stderr, "Received listener from generated popup\n");
-      gRollupListener = aListener;
-
-      // Get assertion error:
-      // ###!!! ASSERTION: Did you know you were calling |NS_GetWeakReference()| on
-      // something that doesn't support weak references?: 'factoryPtr', file
-      // nsWeakReference.cpp, line 55
-      //gRollupWidget = getter_AddRefs(NS_GetWeakReference(NS_STATIC_CAST(nsIWidget*,this)));
-      gRollupWidget = NS_STATIC_CAST(nsIWidget*,this);
-
-      // GTK does not seem to use this but other window toolkits do
       gRollupConsumeRollupEvent = PR_TRUE;
-    //}
+    gRollupListener = aListener;
+    gRollupWidget = getter_AddRefs(NS_GetWeakReference(NS_STATIC_CAST(nsIWidget*, this)));
   }else{
-
     // Release Grab
     if (sGrabWindow == this)
       sGrabWindow = NULL;
@@ -377,6 +411,34 @@ NS_IMETHODIMP nsWindow::Resize(PRInt32 aWidth,
                                PRInt32 aHeight,
                                PRBool   aRepaint)
 {
+  //printf("nsWindow::Resize aWidth=%i aHeight=%i\n", aWidth,aHeight);
+  PRBool NeedToShow = PR_FALSE;
+  /* PRInt32 sizeHeight = aHeight;
+  PRInt32 sizeWidth = aWidth; */
+
+  mBounds.width  = aWidth;
+  mBounds.height = aHeight;
+
+  // code to keep the window from showing before it has been moved or resized
+
+  // if we are resized to 1x1 or less, we will hide the window.  Show(TRUE) will be ignored until a
+  // larger resize has happened
+  if (aWidth <= 1 || aHeight <= 1)
+  {
+    aWidth = 1;
+    aHeight = 1;
+    mIsTooSmall = PR_TRUE;
+    Show(PR_FALSE);
+  }
+  else
+  {
+    if (mIsTooSmall)
+    {
+      // if we are not shown, we don't want to force a show here, so check and see if Show(TRUE) has been called
+      NeedToShow = mShown;
+      mIsTooSmall = PR_FALSE;
+    }
+  }
   nsWidget::Resize(aWidth, aHeight, aRepaint);
 
   nsSizeEvent sevent;
@@ -393,6 +455,13 @@ NS_IMETHODIMP nsWindow::Resize(PRInt32 aWidth,
   OnResize(sevent);
   Release();
   delete sevent.windowSize;
+
+  if (NeedToShow)
+    Show(PR_TRUE);
+
+  if (aRepaint)
+    Invalidate(PR_FALSE);
+
   return NS_OK;
 }
 
@@ -407,6 +476,7 @@ NS_IMETHODIMP nsWindow::Resize(PRInt32 aX,
                                PRInt32 aHeight,
                                PRBool   aRepaint)
 {
+  //printf("nsWindow::Resize aX=%i, aY=%i, aWidth=%i, aHeight=%i\n", aX,aY,aWidth,aHeight);
 
   nsWidget::Resize(aX, aY, aWidth, aHeight, aRepaint);
 
@@ -426,43 +496,6 @@ NS_IMETHODIMP nsWindow::Resize(PRInt32 aX,
   delete sevent.windowSize;
   return NS_OK;
 }
-
-
-
-#if 0
-void nsWindow::CreateNative(Window aParent, nsRect aRect)
-{
-  XSetWindowAttributes attr;
-  unsigned long attr_mask;
-
-  // on a window resize, we don't want to window contents to
-  // be discarded...
-  attr.bit_gravity = NorthWestGravity;
-  // make sure that we listen for events
-  attr.event_mask = StructureNotifyMask |
-    ExposureMask |
-    ButtonPressMask |
-    ButtonReleaseMask |
-    PointerMotionMask |
-    KeyPressMask |
-    KeyReleaseMask |
-    VisibilityChangeMask;
-  // set the default background color and border to that awful gray
-  attr.background_pixel = mBackgroundPixel;
-  attr.border_pixel = mBorderPixel;
-  // set the colormap
-  attr.colormap = xlib_rgb_get_cmap();
-  // here's what's in the struct
-  attr_mask = CWBitGravity | CWEventMask | CWBackPixel | CWBorderPixel;
-  // check to see if there was actually a colormap.
-  if (attr.colormap)
-    attr_mask |= CWColormap;
-
-  CreateNativeWindow(aParent, mBounds, attr, attr_mask);
-  CreateGC();
-
-}
-#endif
 
 /* virtual */ long
 nsWindow::GetEventMask()
@@ -587,7 +620,7 @@ NS_IMETHODIMP nsWindow::Update()
       nsISupports* child;
       if (NS_SUCCEEDED(children->CurrentItem(&child)))
       {
-        nsWindow* childWindow = NS_STATIC_CAST(nsWindow*,child);
+        nsWindow *childWindow = NS_STATIC_CAST(nsWindow*, NS_STATIC_CAST(nsIWidget*, child));
         NS_RELEASE(child);
 
         childWindow->Update();
@@ -604,10 +637,9 @@ NS_IMETHODIMP nsWindow::Scroll(PRInt32 aDx, PRInt32 aDy, nsRect *aClipRect)
   if (mIsUpdating)
     UnqueueDraw();
 
-  PRInt32 srcX, srcY, destX, destY, width, height;
+  PRInt32 srcX = 0, srcY = 0, destX = 0, destY = 0, width = 0, height = 0;
   nsRect aRect;
   GC gc;
-
   gc = XCreateGC(mDisplay, mBaseWindow, 0, NULL);
 
   if (aDx < 0 || aDy < 0)
@@ -669,7 +701,7 @@ NS_IMETHODIMP nsWindow::Scroll(PRInt32 aDx, PRInt32 aDy, nsRect *aClipRect)
           nsISupports* child;
           if (NS_SUCCEEDED(children->CurrentItem(&child)))
             {
-              nsWindow* childWindow = NS_STATIC_CAST(nsWindow*,child);
+              nsWindow *childWindow = NS_STATIC_CAST(nsWindow*, NS_STATIC_CAST(nsIWidget*, child));
               NS_RELEASE(child);
 
               nsRect bounds;
@@ -724,6 +756,61 @@ NS_IMETHODIMP nsWindow::SetTitle(const nsString& aTitle)
   if(!mBaseWindow)
     return NS_ERROR_FAILURE;
 
+  nsresult rv;
+  char *platformText;
+  PRInt32 platformLen;
+
+  nsCOMPtr<nsIUnicodeEncoder> encoder;
+  /* get the charset */
+  nsAutoString platformCharset;
+  nsCOMPtr <nsIPlatformCharset> platformCharsetService = do_GetService(NS_PLATFORMCHARSET_CONTRACTID, &rv);
+  if (NS_SUCCEEDED(rv))
+    rv = platformCharsetService->GetCharset(kPlatformCharsetSel_Menu, platformCharset);
+  
+  if (NS_FAILED(rv))
+    platformCharset.AssignWithConversion("ISO-8859-1");
+
+  /* get the encoder */
+  NS_WITH_SERVICE(nsICharsetConverterManager, ccm, NS_CHARSETCONVERTERMANAGER_CONTRACTID, &rv);  
+  rv = ccm->GetUnicodeEncoder(&platformCharset, getter_AddRefs(encoder));
+
+  /* Estimate out length and allocate the buffer based on a worst-case estimate, then do
+     the conversion. */
+  PRInt32 len = (PRInt32)aTitle.Length();
+  encoder->GetMaxLength(aTitle.GetUnicode(), len, &platformLen);
+  if (platformLen) {
+    platformText = NS_REINTERPRET_CAST(char*, nsMemory::Alloc(platformLen + sizeof(char)));
+    if (platformText) {
+      rv = encoder->Convert(aTitle.GetUnicode(), &len, platformText, &platformLen);
+      (platformText)[platformLen] = '\0';  // null terminate. Convert() doesn't do it for us
+    }
+  } // if valid length
+
+  if (platformLen > 0) {
+    int status = 0;
+    XTextProperty prop;
+
+    /* Use XStdICCTextStyle for 41786(a.k.a TWM sucks) and 43108(JA text title) */
+    prop.value = 0;
+    status = XmbTextListToTextProperty(mDisplay, &platformText, 1,
+        XStdICCTextStyle, &prop);
+
+    if (status == Success) {
+      XSetWMProperties(mDisplay, mBaseWindow,
+                       &prop, &prop, NULL, 0, NULL, NULL, NULL);
+      if (prop.value)
+        XFree(prop.value);
+
+      nsMemory::Free(platformText);
+      return NS_OK;
+    } else {                    // status != Success
+      if (prop.value)
+        XFree(prop.value);
+      nsMemory::Free(platformText);
+    }
+  }
+
+  /* if the stuff above failed, replace multibyte with .... */
   XStoreName(mDisplay, mBaseWindow, (const char *) nsAutoCString(aTitle));
 
   return NS_OK;

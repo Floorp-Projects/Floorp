@@ -31,6 +31,7 @@
 #include <X11/Xos.h>
 
 #include "nsBaseWidget.h"
+#include "nsWeakReference.h"
 #include "nsHashtable.h"
 #include "prlog.h"
 #include "nsIRegion.h"
@@ -41,11 +42,13 @@
 #define XLIB_WIDGET_NOISY
 #endif
 
-class nsWidget : public nsBaseWidget
+class nsWidget : public nsBaseWidget, public nsSupportsWeakReference
 {
 public:
   nsWidget();
   virtual ~nsWidget();
+
+  NS_DECL_ISUPPORTS_INHERITED
 
   NS_IMETHOD Create(nsIWidget *aParent,
                     const nsRect &aRect,
@@ -156,9 +159,10 @@ public:
   void *CheckParent(long ThisWindow);
 
 	// Deal with rollup for popups
-	PRBool IsMouseInWindow(nsIWidget* inWidget, PRInt32 inMouseX, PRInt32 inMouseY);
+	PRBool IsMouseInWindow(Window window, PRInt32 inMouseX, PRInt32 inMouseY);
 	PRBool HandlePopup( PRInt32 inMouseX, PRInt32 inMouseY);
 
+  void WidgetShow       (nsWidget *aWidget);
 protected:
 
   nsCOMPtr<nsIRegion> mUpdateArea;
@@ -171,7 +175,6 @@ protected:
   virtual void CreateNative(Window aParent, nsRect aRect);
   virtual void DestroyNative();
   static void  DestroyNativeChildren(Display *aDisplay, Window aWindow);
-  void         CreateGC(void);
   void         Map(void);
   void         Unmap(void);
 
@@ -192,11 +195,11 @@ protected:
   void WidgetMove       (nsWidget *aWidget);
   void WidgetMoveResize (nsWidget *aWidget);
   void WidgetResize     (nsWidget *aWidget);
-  void WidgetShow       (nsWidget *aWidget);
   // check to see whether or not a rect will intersect with the current scrolled area
   PRBool WidgetVisible  (nsRect   &aBounds);
 
   PRBool         mIsShown;
+  PRBool mShown;
   int            mVisibility; // this is an int because that's the way X likes it
   PRUint32       mPreferredWidth;
   PRUint32       mPreferredHeight;
@@ -213,11 +216,12 @@ protected:
   unsigned long  mBackgroundPixel;
   PRUint32       mBorderRGB;
   unsigned long  mBorderPixel;
-  GC             mGC;             // until we get gc pooling working...
+  //  GC             mGC;             // until we get gc pooling working...
   nsString       mName;           // name of the type of widget
   PRBool         mIsToplevel;
   nsRect         mRequestedSize;
   PRBool         mMapped;
+  PRBool         mLastGrabFailed;
 
   static         Window                 mFocusWindow;
 
@@ -232,8 +236,7 @@ protected:
 
   // Variables for infomation about the current popup window and its listener
   static nsCOMPtr<nsIRollupListener> gRollupListener;
-  static nsCOMPtr<nsIWidget> gRollupWidget;
-	//static nsWeakPtr                   gRollupWidget;
+  static nsWeakPtr                   gRollupWidget;
 	static PRBool	gRollupConsumeRollupEvent;
 	
 };

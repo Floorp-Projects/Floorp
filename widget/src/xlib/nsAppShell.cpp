@@ -1,5 +1,6 @@
-/* -*- Mode: c++; tab-width: 2; indent-tabs-mode: nil; -*- */
-/*
+/* -*- Mode: c++; tab-width: 2; indent-tabs-mode: nil; -*-
+ * vim:ts=2:et:sw=2
+ *
  * The contents of this file are subject to the Netscape Public
  * License Version 1.1 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of
@@ -31,6 +32,7 @@
 #include <errno.h>
 #include <X11/keysym.h>
 #include <X11/keysymdef.h>
+#include <X11/Xlocale.h>
 
 #include "nsWindow.h"
 #include "nsWidget.h"
@@ -295,6 +297,18 @@ NS_METHOD nsAppShell::Create(int* bac, char ** bav)
       break;
     } 
 
+  /* setup locale */
+  if (!setlocale (LC_ALL,""))
+    NS_WARNING("locale not supported by C library");
+  
+  if (!XSupportsLocale ()) {
+    NS_WARNING("locale not supported by Xlib, locale set to C");
+    setlocale (LC_ALL, "C");
+  }
+  
+  if (!XSetLocaleModifiers (""))
+    NS_WARNING("can not set locale modifiers");
+
   // Open the display
   if (mDisplay == nsnull) {
     mDisplay = XOpenDisplay(displayName);
@@ -304,12 +318,10 @@ NS_METHOD nsAppShell::Create(int* bac, char ** bav)
     // Requires XSynchronize(mDisplay, True); To stop X buffering. Use this
     // to make debugging easier. KenF
 
-    if (mDisplay == NULL) 
-    {
+    if (mDisplay == NULL) {
       fprintf(stderr, "%s: Cannot connect to X server %s\n",
               argv[0], 
               XDisplayName(displayName));
-    
       exit(1);
     }
 
@@ -728,7 +740,9 @@ nsAppShell::HandleButtonEvent(XEvent *event, nsWidget *aWidget)
       eventType = NS_MOUSE_MIDDLE_BUTTON_DOWN;
       break;
     case 3:
-      eventType = NS_MOUSE_RIGHT_BUTTON_DOWN;
+      /* look back into this in case anything actually needs a
+       * NS_MOUSE_RIGHT_BUTTON_DOWN */
+      eventType = NS_CONTEXTMENU;
       break;
     case 4:
     case 5:
@@ -797,9 +811,8 @@ nsAppShell::HandleButtonEvent(XEvent *event, nsWidget *aWidget)
     }
   }
 
-  if (currentlyDragging && !mDragging) {
+  if (currentlyDragging && !mDragging)
     HandleDragDropEvent(event, aWidget);
-  }
 
   mevent.message = eventType;
   mevent.eventStructType = NS_MOUSE_EVENT;
@@ -812,7 +825,6 @@ nsAppShell::HandleButtonEvent(XEvent *event, nsWidget *aWidget)
 void
 nsAppShell::HandleExposeEvent(XEvent *event, nsWidget *aWidget)
 {
-
   PR_LOG(XlibWidgetsLM, PR_LOG_DEBUG, ("Expose event for window 0x%lx %d %d %d %d\n", event->xany.window,
                                        event->xexpose.x, event->xexpose.y, event->xexpose.width, event->xexpose.height));
 
@@ -830,23 +842,17 @@ nsAppShell::HandleExposeEvent(XEvent *event, nsWidget *aWidget)
      } while (txe.xexpose.count>0);
   }
 
-
-
   nsPaintEvent pevent;
   pevent.message = NS_PAINT;
   pevent.widget = aWidget;
   pevent.eventStructType = NS_PAINT_EVENT;
   pevent.rect = dirtyRect;
 
-  // XXX fix this
   pevent.time = 0;
-  //pevent.time = PR_Now();
-    //pevent.region = nsnull;
   NS_ADDREF(aWidget);
   aWidget->OnPaint(pevent);
   NS_RELEASE(aWidget);
   delete pevent.rect;
-
 }
 
 void

@@ -45,7 +45,16 @@ CPPSRCS		= \
 		nsScreenXlib.cpp \
 		nsScreenManagerXlib.cpp \
         	nsPrintOptionsXlib.cpp \
+		nsGCCache.cpp \
 		$(NULL)
+
+ifdef HAVE_XIE
+CSRCS		+= XIE.c
+endif
+
+CSRCS		+= scale.c
+
+EXPORTS		= nsGCCache.h
 
 include $(topsrcdir)/config/rules.mk
 
@@ -57,10 +66,16 @@ EXTRA_DSO_LDOPTS += $(TK_LIBS)
 CXXFLAGS	+= $(TK_CFLAGS)
 endif
 
+ifdef HAVE_XIE
+DEFINES         += -DHAVE_XIE
+GFX_XIE_LIBS    += $(MOZ_XIE_LIBS)
+endif
+
 EXTRA_DSO_LDOPTS += \
 		$(NSPR_LIBS)	\
 		-lxpcom			\
 		-lgkgfx		\
+		$(GFX_XIE_LIBS) \
 		$(NULL)
 
 DEFINES		+= -D_IMPL_NS_GFXNONXP

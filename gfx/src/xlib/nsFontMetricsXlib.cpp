@@ -49,7 +49,7 @@
 
 #undef USER_DEFINED
 #define USER_DEFINED "x-user-def"
-#define NOISY_FONTS 1
+// #define NOISY_FONTS 1
 
 
 // these are in the widget set
@@ -1477,6 +1477,7 @@ SetUpFontCharSetInfo(nsFontCharSetInfo* aSelf)
           }
         }
       }
+#ifdef NOISY_FONTS
       else 
        fprintf(stderr, "=== nsICharRepresentable %s failed\n", aSelf->mCharSet);
     }
@@ -1485,6 +1486,10 @@ SetUpFontCharSetInfo(nsFontCharSetInfo* aSelf)
   }
   else
     fprintf(stderr, "=== GetCharsetAtom2 %s failed\n", aSelf->mCharSet);
+#else
+    }  
+  }
+#endif
 }
 
 #undef DEBUG_DUMP_TREE
@@ -1723,7 +1728,7 @@ nsFontXlibNormal::GetWidth(const PRUnichar* aString, PRUint32 aLength)
   if ((mFont->min_byte1 == 0) && (mFont->max_byte1 == 0))
     return XTextWidth(mFont, (char*) buf, len);
   else
-    return XTextWidth16(mFont, buf, len);
+    return XTextWidth16(mFont, buf, len / 2);
 }
 
 int
@@ -1743,23 +1748,39 @@ nsFontXlibNormal::DrawString(nsRenderingContextXlib* aContext,
   int len = mCharSetInfo->Convert(mCharSetInfo, mFont, aString, aLength, 
                                   (char*) buf, sizeof(buf));   
 
+  xGC *gc = aContext->GetGC();
   if ((mFont->min_byte1 == 0) && (mFont->max_byte1 == 0))    
   {
     XDrawString(aSurface->GetDisplay(),
                 aSurface->GetDrawable(),
-                aSurface->GetGC(),
+                *gc,
                 aX, aY + mBaselineAdjust, (char *)buf, len);
     
+    gc->Release();
     return XTextWidth(mFont, (char*) buf, len);  
   }
   else
   {
+    /* XXX is this the right way to do it? Can I get GCCache to give me a
+     * new GC? */
+    GC copyGC;
+    XGCValues values;
+    memset(&values, 0, sizeof(XGCValues));
+
+    XGetGCValues(aSurface->GetDisplay(), *gc, 
+        GCForeground | GCBackground, &values);
+    values.font = mFont->fid;
+    copyGC = XCreateGC(aSurface->GetDisplay(), aSurface->GetDrawable(),
+        GCForeground | GCBackground | GCFont, &values);
+
+    /* note the length must be divided by 2 for X*16 functions */
     XDrawString16(aSurface->GetDisplay(),
                   aSurface->GetDrawable(),
-                  aSurface->GetGC(),
-                  aX, aY + mBaselineAdjust, buf, len);	      
-    
-    return XTextWidth16(mFont, buf, len);
+                  copyGC,
+                  aX, aY + mBaselineAdjust, buf, len / 2);
+    XFreeGC(aSurface->GetDisplay(), copyGC);
+    gc->Release();
+    return XTextWidth16(mFont, buf, len / 2);
   }
 }						       
 
@@ -2016,11 +2037,13 @@ nsFontXlibUserDefined::DrawString(nsRenderingContextXlib* aContext,
   char buf[1024];
   PRUint32 len = Convert(aString, aLength, buf, sizeof(buf));
 
+  xGC *gc = aContext->GetGC();
   XDrawString(aSurface->GetDisplay(),
               aSurface->GetDrawable(),
-              aSurface->GetGC(),
+              *gc,
               aX, aY + mBaselineAdjust, (char *)buf, len);
   
+  gc->Release();
   return XTextWidth(mFont, buf, len);  
 }									    
 
@@ -2104,7 +2127,7 @@ nsFontMetricsXlib::PickASizeAndLoad(nsFontStretch* aStretch,
     {
       PRInt32 i;
       PRInt32 n = aStretch->mScaledFonts.Count();
-      nsFontXlib* p;
+      nsFontXlib* p = nsnull;
 
       for (i=0; i < n; i++)
       {
@@ -3061,7 +3084,7 @@ nsFontMetricsXlib::FindLocalFont(PRUnichar aChar)
     if (mFontIsGeneric[mFontsIndex])
       return nsnull;
     
-    nsCString* familyName = mFonts.CStringAt(mFontsIndex++);
+    nsCString* familyName = mFonts.CStringAt(mFontsIndex);
     
     /*
      * Count Hyphens
@@ -3102,6 +3125,7 @@ nsFontMetricsXlib::FindLocalFont(PRUnichar aChar)
 	    if (font && font->SupportsChar(aChar))
 	      return font;
 	  }
+    mFontsIndex++;
 	}
 	
 	return nsnull;	  
