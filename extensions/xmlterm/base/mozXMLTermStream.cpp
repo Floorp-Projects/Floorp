@@ -128,7 +128,7 @@ NS_IMETHODIMP mozXMLTermStream::Open(nsIDOMWindowInternal* aDOMWindow,
     // Open stream in named subframe of current frame
     XMLT_LOG(mozXMLTermStream::Open,22,("frameName=%s\n", frameName));
 
-    nsAutoString innerFrameName; innerFrameName.AssignWithConversion(frameName);
+    nsAutoString innerFrameName; innerFrameName.AssignASCII(frameName);
 
     // Get DOM IFRAME element
     nsCOMPtr<nsIDOMDocument> domDoc;
@@ -378,9 +378,9 @@ NS_IMETHODIMP mozXMLTermStream::SizeToContentHeight(PRInt32 maxHeight)
     return NS_ERROR_FAILURE;
 
   // Get scrollable view
-  nsCOMPtr<nsIScrollableView> scrollableView;
+  nsIScrollableView* scrollableView;
   result = mozXMLTermUtils::GetPresContextScrollableView(presContext,
-                                              getter_AddRefs(scrollableView));
+                                                         &scrollableView);
   if (NS_FAILED(result) || !scrollableView)
     return NS_ERROR_FAILURE;
 

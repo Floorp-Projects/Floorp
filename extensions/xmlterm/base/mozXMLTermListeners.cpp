@@ -272,7 +272,7 @@ mozXMLTermKeyListener::KeyPress(nsIDOMEvent* aKeyEvent)
           if (NS_SUCCEEDED(result) && parentNode) {
             result = parentNode->GetNodeName(nodeName);
             if (NS_SUCCEEDED(result)) {
-              nsCAutoString CNodeName; CNodeName.AssignWithConversion(nodeName);
+              NS_ConvertUTF16toUTF8 CNodeName(nodeName);
               XMLT_LOG(mozXMLTermKeyListener::KeyPress,58,("nodeName=%s\n",
                                               CNodeName.get()));
             }

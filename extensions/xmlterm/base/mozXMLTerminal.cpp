@@ -58,6 +58,7 @@
 #include "nsICaret.h"
 #include "nsRect.h"
 #include "nsIURI.h"
+#include "nsNetUtil.h"
 
 #include "nsIDOMEventReceiver.h"
 #include "nsIDOMEventListener.h"
@@ -248,11 +249,8 @@ NS_IMETHODIMP mozXMLTerminal::Init(nsIDocShell* aDocShell,
     XMLT_LOG(mozXMLTerminal::Init,22,("done setting DocLoaderObs\n"));
 
     // Load initial XMLterm background document
-    nsCAutoString urlCString;
-    urlCString.AssignWithConversion(aURL);
-
     nsCOMPtr<nsIURI> uri;
-    result = uri->SetSpec(urlCString);
+    result = NS_NewURI(getter_AddRefs(uri), nsDependentString(aURL));
     if (NS_FAILED(result))
       return NS_ERROR_FAILURE;
 
@@ -790,14 +788,9 @@ NS_IMETHODIMP mozXMLTerminal::Paste()
   if (NS_FAILED(result))
     return result;
 
-  nsAutoString flavor;
-  flavor.AssignWithConversion(bestFlavor);
+  XMLT_LOG(mozXMLTerminal::Paste,20,("flavour=%s\n", bestFlavor));
 
-  char* temCStr = ToNewCString(flavor);
-  XMLT_LOG(mozXMLTerminal::Paste,20,("flavour=%s\n", temCStr));
-  nsMemory::Free(temCStr);
-
-  if (flavor.EqualsLiteral(kHTMLMime) || flavor.EqualsLiteral(kUnicodeMime)) {
+  if (strcmp(bestFlavor, kHTMLMime) == 0 || strcmp(bestFlavor, kUnicodeMime) == 0) {
     nsCOMPtr<nsISupportsString> textDataObj ( do_QueryInterface(genericDataObj) );
     if (textDataObj && objLen > 0) {
       PRUnichar* text = nsnull;

@@ -287,7 +287,7 @@ mozXMLTermUtils::ExecuteScript(nsIDOMDocument* aDOMDocument,
  * or a null string if the attribute is not defined, or if the DOM node
  * is not an element.
  * @param aDOMNode node whose attribute is to be determined
- * @param aAttName attribute to be determined
+ * @param aAttName attribute to be determined. Must be ASCII.
  * @param aAttValue output attribute value
  * @return NS_OK if no errors occurred
  */
@@ -305,7 +305,7 @@ mozXMLTermUtils::GetNodeAttribute(nsIDOMNode* aDOMNode,
   }
 
   nsAutoString attName;
-  attName.AssignWithConversion(aAttName);
+  attName.AssignASCII(aAttName);
   return domElement->GetAttribute(attName, aAttValue);
 }
 
@@ -343,7 +343,7 @@ NS_IMETHODIMP mozXMLTermUtils::TimeStamp(PRInt32 deltaSec, PRTime& lastTime,
   PR_ExplodeTime(curTime, PR_LocalTimeParameters, &localTime);
 
   PRInt32 nWritten = PR_snprintf(dateStr, DATE_LEN+1,
-                     "%02d:%02d:%02d %02d/%02d/%04d",
+                     "%02d:%02d:%02d %02d/%02d/%04d", // XXX i18n!
                    localTime.tm_hour, localTime.tm_min, localTime.tm_sec,
                    localTime.tm_mday, localTime.tm_month+1, localTime.tm_year);
 
@@ -352,7 +352,7 @@ NS_IMETHODIMP mozXMLTermUtils::TimeStamp(PRInt32 deltaSec, PRTime& lastTime,
 
   XMLT_LOG(mozXMLTermUtils::LocalTime,99,("localTime=%s\n", dateStr));
 
-  aTimeStamp.AssignWithConversion(dateStr);
+  aTimeStamp.AssignASCII(dateStr);
   return NS_OK;
 }
 
@@ -390,7 +390,7 @@ NS_IMETHODIMP mozXMLTermUtils::RandomCookie(nsString& aCookie)
   }
   cookie[11] = '\0';
 
-  aCookie.AssignWithConversion(cookie);
+  aCookie.AssignASCII(cookie);
 
   return NS_OK;
 }
