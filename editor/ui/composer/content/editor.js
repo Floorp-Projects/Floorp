@@ -509,7 +509,7 @@ function EditorSetDocumentCharacterSet(aCharset)
 // ------------------------------------------------------------------
 function updateCharsetPopupMenu(menuPopup)
 {
-  if(editorShell.documentModified)
+  if(editorShell.documentModified && !editorShell.documentIsEmpty)
   {
     for (var i = 0; i < menuPopup.childNodes.length; i++)
     {
