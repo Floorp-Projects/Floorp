@@ -198,7 +198,7 @@ InSetupTypeContent(EventRecord* evt, WindowPtr wCurrPtr)
 	NavDialogOptions	dlgOpts;
 	NavEventUPP			eventProc;
 	AEDesc				resultDesc, initDesc;
-	FSSpec				folderSpec, tmp, fsDest;
+	FSSpec				folderSpec, tmp;
 	OSErr				err;
 	long				realDirID;
 
@@ -327,17 +327,10 @@ InSetupTypeContent(EventRecord* evt, WindowPtr wCurrPtr)
 		{
 			/* check if folder location contains legacy apps */
 			if (gControls->cfg->numLegacyChecks > 0)
-				if (!LegacyFileCheck(gControls->opt->vRefNum, gControls->opt->dirID))
+				if (LegacyFileCheck(gControls->opt->vRefNum, gControls->opt->dirID))
 				{
 					/* user cancelled so don't do anything */
 					return;
-				}
-				/* else delete and move on to next screen */
-				else
-				{
-					err = FSMakeFSSpec(gControls->opt->vRefNum, gControls->opt->dirID, "\p", &fsDest);
-					if (err == noErr) /* don't care if this fails */
-						DeleteDirectoryContents(fsDest.vRefNum, fsDest.parID, fsDest.name);
 				}
 			
 			ClearDiskSpaceMsgs();
@@ -811,30 +804,42 @@ LegacyFileCheck(short vRefNum, long dirID)
 {
 	Boolean 	bRetry = false;
 	int			i, diffLevel;
-	StringPtr	pFilename, pMessage;
-	FSSpec		legacy;
+	StringPtr	pFilepath = 0, pMessage = 0, pSubfolder = 0;
+	FSSpec		legacy, fsDest;
 	OSErr		err = noErr;
 	short		dlgRV = 0;
+	char		cFilepath[1024];
 	
 	for (i = 0; i < gControls->cfg->numLegacyChecks; i++)
 	{
 		/* construct legacy files' FSSpecs in program dir */
 		HLock(gControls->cfg->checks[i].filename);
-		pFilename = CToPascal(*gControls->cfg->checks[i].filename);
-		HUnlock(gControls->cfg->checks[i].filename);
-		if (!pFilename)
+		if (0 == strlen(*gControls->cfg->checks[i].filename))
+		{
+			HUnlock(gControls->cfg->checks[i].filename);
 			continue;
-			
-		err = FSMakeFSSpec(vRefNum, dirID, pFilename, &legacy);
-		if (pFilename)
-			DisposePtr((Ptr)pFilename);
+		}
+		HLock(gControls->cfg->checks[i].subfolder);
+		memset(cFilepath, 0, 1024);
+		strcpy(cFilepath, ":");
+		strcat(cFilepath, *gControls->cfg->checks[i].subfolder);
+		strcat(cFilepath, ":");
+		strcat(cFilepath, *gControls->cfg->checks[i].filename);
+		HUnlock(gControls->cfg->checks[i].filename);
+		pSubfolder = CToPascal(*gControls->cfg->checks[i].subfolder);
+		HUnlock(gControls->cfg->checks[i].subfolder);
+		pFilepath = CToPascal(cFilepath);
+		
+		err = FSMakeFSSpec(vRefNum, dirID, pFilepath, &legacy);
+		if (pFilepath)
+			DisposePtr((Ptr)pFilepath);
 			
 		/* if legacy file exists */
 		if (err == noErr)
 		{
 			/* if new version is greater than old version */
 			diffLevel = CompareVersion( gControls->cfg->checks[i].version, 
-										gControls->cfg->checks[i].filename );
+										&legacy );
 			if (diffLevel > 0)
 			{
 				/* set up message dlg */
@@ -850,24 +855,32 @@ LegacyFileCheck(short vRefNum, long dirID)
 				/* set bRetry to retval of show message dlg */
 				dlgRV = CautionAlert(rAlrtDelOldInst, nil);
 				if (dlgRV == 1) /* default button id  ("Delete") */
+				{			
+					/* delete and move on to next screen */
+					err = FSMakeFSSpec(gControls->opt->vRefNum, gControls->opt->dirID, pSubfolder, &fsDest);
+					if (err == noErr) /* don't care if this fails */
+						DeleteDirectoryContents(fsDest.vRefNum, fsDest.parID, fsDest.name);
+				}
+				else
 					bRetry = true;
-
+					
 				if (pMessage)
 					DisposePtr((Ptr) pMessage);
 			}
 		}
 	}
 	
+	if (pSubfolder)
+		DisposePtr((Ptr) pSubfolder);
+		
 	return bRetry;
 }
 
 int
-CompareVersion(Handle newVersion, Handle filename)
+CompareVersion(Handle newVersion, FSSpecPtr file)
 {
 	int			diffLevel = 0, intVal;
 	OSErr		err = noErr;
-	FSSpec		file;
-	StringPtr	pFilename;
 	short		fileRef;
 	Handle		versRsrc = nil;
 	char		oldRel, oldRev, oldFix, oldInternalStage, oldDevStage, oldRev_n_Fix;
@@ -879,23 +892,11 @@ CompareVersion(Handle newVersion, Handle filename)
 		return 6;
 	
 	/* if no valid filename then error so don't show message */
-	if (!filename || !(*filename))
+	if (!file)
 		return -6;	
 		
-	/* get version from 'vers' res ID = 1 */
-	HLock(filename);
-	pFilename = CToPascal(*filename);
-	HUnlock(filename);
-	if (!pFilename)
-		return -7;
-		
-	err = FSMakeFSSpec(gControls->opt->vRefNum, gControls->opt->dirID, pFilename, &file);
-	if (pFilename)
-		DisposePtr((Ptr) pFilename);
-	if (err != noErr)
-		return -8;
-		
-	fileRef = FSpOpenResFile(&file, fsRdPerm);
+	/* get version from 'vers' res ID = 1 */		
+	fileRef = FSpOpenResFile(file, fsRdPerm);
 	if (fileRef == -1)
 		return -9;
 		
