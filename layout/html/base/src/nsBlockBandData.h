@@ -21,6 +21,8 @@
 
 #include "nsISpaceManager.h"
 
+class nsIPresContext;
+
 // Number of builtin nsBandTrapezoid's
 #define NS_BLOCK_BAND_DATA_TRAPS 6
 
@@ -69,7 +71,20 @@ public:
   // Return the impact on the max-element-size for this band by
   // computing the maximum width and maximum height of all the
   // floaters.
-  void GetMaxElementSize(nscoord* aWidthResult, nscoord* aHeightResult) const;
+  void GetMaxElementSize(nsIPresContext* aPresContext,
+                         nscoord* aWidthResult, nscoord* aHeightResult) const;
+
+  // Utility method to save away the max-element-size associated with
+  // a floating frame.
+  static void StoreMaxElementSize(nsIPresContext* aPresContext,
+                                  nsIFrame* aFrame,
+                                  const nsSize& aMaxElementSize);
+
+  // Utility method to recover a stored max-element-size value
+  // associated with a floating frame.
+  static void RecoverMaxElementSize(nsIPresContext* aPresContext,
+                                    nsIFrame* aFrame,
+                                    nsSize* aResult);
 
 protected:
   // The spacemanager we are getting space from
@@ -93,6 +108,7 @@ protected:
 
   void ComputeAvailSpaceRect();
   PRBool ShouldClearFrame(nsIFrame* aFrame, PRUint8 aBreakType);
+
 };
 
 #endif /* nsBlockBandData_h___ */
