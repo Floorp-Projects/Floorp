@@ -5817,7 +5817,7 @@ nsCSSFrameConstructor::ContentInserted(nsIPresContext* aPresContext,
     else {
       // No previous or next sibling so treat this like an appended frame.
       isAppend = PR_TRUE;
-      shell->GetPrimaryFrameFor(aContainer, &parentFrame);
+      parentFrame = GetFrameFor(shell, aPresContext, aContainer);
       
       if (parentFrame) {
         // If we didn't process children when we originally created the frame,
