@@ -922,9 +922,6 @@ toolkit/mozapps/installer/windows/wizard/Makefile
 toolkit/mozapps/installer/windows/wizard/setup/Makefile
 toolkit/mozapps/installer/windows/wizard/setuprsc/Makefile
 toolkit/mozapps/installer/windows/wizard/uninstall/Makefile
-toolkit/skin/mac/Makefile
-toolkit/skin/gtk2/Makefile
-toolkit/skin/win/Makefile
 toolkit/xre/Makefile
 toolkit/content/contents-platform.rdf
 toolkit/content/contents-region.rdf
