@@ -214,7 +214,9 @@ NS_METHOD nsMenu::AddMenu(nsIMenu * aMenu)
   char * nameStr = name.ToNewCString();
 
   HMENU nativeMenuHandle;
-  aMenu->GetNativeData(nativeMenuHandle);
+  void * voidData;
+  aMenu->GetNativeData(voidData);
+  nativeMenuHandle = (HMENU)voidData;
 
   MENUITEMINFO menuInfo;
 

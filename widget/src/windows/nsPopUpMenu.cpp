@@ -15,7 +15,6 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
-
 #include "nsPopUpMenu.h"
 #include "nsIPopUpMenu.h"
 #include "nsIMenu.h"
@@ -37,6 +36,7 @@ static NS_DEFINE_IID(kIWidgetIID, NS_IWIDGET_IID);
 
 NS_IMPL_ADDREF(nsPopUpMenu)
 NS_IMPL_RELEASE(nsPopUpMenu)
+
 
 //-------------------------------------------------------------------------
 //
@@ -204,7 +204,9 @@ NS_METHOD nsPopUpMenu::AddMenu(nsIMenu * aMenu)
   char * nameStr = name.ToNewCString();
 
   HMENU nativeMenuHandle;
-  aMenu->GetNativeData(nativeMenuHandle);
+  void * voidData;
+  aMenu->GetNativeData(voidData);
+  nativeMenuHandle = (HMENU)voidData;
 
   MENUITEMINFO menuInfo;
 
@@ -303,6 +305,8 @@ NS_METHOD nsPopUpMenu::ShowMenu(PRInt32 aX, PRInt32 aY)
 //-------------------------------------------------------------------------
 NS_METHOD nsPopUpMenu::GetNativeData(void *& aData)
 {
+  //void * data = (void *)mMenu;
+  //aData = data;
   aData = (void *)mMenu;
   return NS_OK;
 }
