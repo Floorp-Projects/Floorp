@@ -49,8 +49,6 @@ interface nsIFileTransportService : nsISupports
     nsIChannel createTransportFromStreamIO(in nsIStreamIO io);
 
     void dispatchRequest(in nsIRunnable runnable);
-    void suspend(in nsIRunnable trans);
-    void resume(in nsIRunnable trans);
     void processPendingRequests();
     void shutdown();
 

@@ -109,6 +109,7 @@ protected:
     // file transport thread:
     RunState                            mRunState;
     nsresult                            mCancelStatus;
+    PRMonitor*                          mMonitor;
 
     // state variables:
     nsresult                            mStatus;

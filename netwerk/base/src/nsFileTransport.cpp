@@ -60,6 +60,7 @@ nsFileTransport::nsFileTransport()
       mXferState(CLOSED),
       mRunState(RUNNING),
       mCancelStatus(NS_OK),
+      mMonitor(nsnull),
       mStatus(NS_OK),
       mLoadAttributes(LOAD_NORMAL),
       mOffset(0),
@@ -108,6 +109,11 @@ nsresult
 nsFileTransport::Init(nsFileTransportService *aService, nsIStreamIO* io)
 {
     nsresult rv = NS_OK;
+    if (mMonitor == nsnull) {
+        mMonitor = nsAutoMonitor::NewMonitor("nsFileTransport");
+        if (mMonitor == nsnull)
+            return NS_ERROR_OUT_OF_MEMORY;
+    }
     mStreamIO = io;
     nsXPIDLCString name;
     rv = mStreamIO->GetName(getter_Copies(name));
@@ -115,8 +121,7 @@ nsFileTransport::Init(nsFileTransportService *aService, nsIStreamIO* io)
     NS_ASSERTION(NS_SUCCEEDED(rv), "GetName failed");
 
     mService = aService;
-    if (mService)
-        PR_AtomicIncrement(&mService->mTotalTransports);
+    PR_AtomicIncrement(&mService->mTotalTransports);
 
     return rv;
 }
@@ -131,11 +136,12 @@ nsFileTransport::~nsFileTransport()
     NS_ASSERTION(mBufferOutputStream == nsnull, "transport not closed");
     NS_ASSERTION(mSink == nsnull, "transport not closed");
     NS_ASSERTION(mBuffer == nsnull, "transport not closed");
+    if (mMonitor)
+        nsAutoMonitor::DestroyMonitor(mMonitor);
     if (mContentType)
         nsCRT::free(mContentType);
 
-    if (mService)
-        PR_AtomicDecrement(&mService->mTotalTransports);
+    PR_AtomicDecrement(&mService->mTotalTransports);
 
 }
 
@@ -178,6 +184,7 @@ nsFileTransport::GetStatus(nsresult *status)
 NS_IMETHODIMP
 nsFileTransport::Cancel(nsresult status)
 {
+    nsAutoMonitor mon(mMonitor);
     NS_ASSERTION(NS_FAILED(status), "shouldn't cancel with a success code");
 
     nsresult rv = NS_OK;
@@ -198,12 +205,10 @@ nsFileTransport::Cancel(nsresult status)
 NS_IMETHODIMP
 nsFileTransport::Suspend()
 {
+    nsAutoMonitor mon(mMonitor);
     nsresult rv = NS_OK;
     if (mRunState != SUSPENDED) {
         // XXX close the stream here?
-        NS_WITH_SERVICE(nsIFileTransportService, fts, kFileTransportServiceCID, &rv);
-        if (NS_FAILED(rv)) return rv;
-        mStatus = fts->Suspend(this);
         mRunState = SUSPENDED;
         PR_LOG(gFileTransportLog, PR_LOG_DEBUG,
                ("nsFileTransport: Suspend [this=%x %s]",
@@ -215,13 +220,12 @@ nsFileTransport::Suspend()
 NS_IMETHODIMP
 nsFileTransport::Resume()
 {
+    nsAutoMonitor mon(mMonitor);
     nsresult rv = NS_OK;
     if (mRunState == SUSPENDED) {
         // XXX re-open the stream and seek here?
-        NS_WITH_SERVICE(nsIFileTransportService, fts, kFileTransportServiceCID, &rv);
-        if (NS_FAILED(rv)) return rv;
         mRunState = RUNNING;  // set this first before resuming!
-        mStatus = fts->Resume(this);
+        mStatus = mService->DispatchRequest(this);
         PR_LOG(gFileTransportLog, PR_LOG_DEBUG,
                ("nsFileTransport: Resume [this=%x %s] status=%x",
                 this, mStreamName.GetBuffer(), mStatus));
@@ -290,9 +294,7 @@ nsFileTransport::AsyncRead(nsIStreamListener *listener, nsISupports *ctxt)
            ("nsFileTransport: AsyncRead [this=%x %s] mOffset=%d mTransferAmount=%d",
             this, mStreamName.GetBuffer(), mOffset, mTransferAmount));
 
-    NS_WITH_SERVICE(nsIFileTransportService, fts, kFileTransportServiceCID, &rv);
-    if (NS_FAILED(rv)) return rv;
-    rv = fts->DispatchRequest(this);
+    rv = mService->DispatchRequest(this);
     if (NS_FAILED(rv)) return rv;
 
     return NS_OK;
@@ -323,9 +325,7 @@ nsFileTransport::AsyncWrite(nsIInputStream *fromStream,
            ("nsFileTransport: AsyncWrite [this=%x %s]",
             this, mStreamName.GetBuffer()));
 
-    NS_WITH_SERVICE(nsIFileTransportService, fts, kFileTransportServiceCID, &rv);
-    if (NS_FAILED(rv)) return rv;
-    rv = fts->DispatchRequest(this);
+    rv = mService->DispatchRequest(this);
     if (NS_FAILED(rv)) return rv;
 
     return NS_OK;
@@ -391,8 +391,7 @@ nsFileTransport::Process(void)
                ("nsFileTransport: START_READ [this=%x %s]",
                 this, mStreamName.GetBuffer()));
 
-        if (mService)
-            PR_AtomicIncrement(&mService->mInUseTransports);
+        PR_AtomicIncrement(&mService->mInUseTransports);
 
         mStatus = mStreamIO->GetInputStream(getter_AddRefs(mSource));
         if (NS_FAILED(mStatus)) {
@@ -485,8 +484,7 @@ nsFileTransport::Process(void)
 
       case END_READ: {
         
-        if (mService)
-            PR_AtomicDecrement(&mService->mInUseTransports);
+        PR_AtomicDecrement(&mService->mInUseTransports);
 
         PR_LOG(gFileTransportLog, PR_LOG_DEBUG,
                ("nsFileTransport: END_READ [this=%x %s] status=%x",
@@ -546,8 +544,7 @@ nsFileTransport::Process(void)
                ("nsFileTransport: START_WRITE [this=%x %s]",
                 this, mStreamName.GetBuffer()));
 
-        if (mService)
-            PR_AtomicIncrement(&mService->mInUseTransports);
+        PR_AtomicIncrement(&mService->mInUseTransports);
 
         mStatus = mStreamIO->GetOutputStream(getter_AddRefs(mSink));
         if (NS_FAILED(mStatus)) {
@@ -642,8 +639,7 @@ nsFileTransport::Process(void)
                ("nsFileTransport: END_WRITE [this=%x %s] status=%x",
                 this, mStreamName.GetBuffer(), mStatus));
 
-        if (mService)
-            PR_AtomicDecrement(&mService->mInUseTransports);
+        PR_AtomicDecrement(&mService->mInUseTransports);
 
 #if defined (DEBUG_dougt) || defined (DEBUG_warren)
         NS_ASSERTION(mTransferAmount <= 0 || NS_FAILED(mStatus), "didn't transfer all the data");
@@ -714,8 +710,7 @@ nsFileTransport::DoClose(void)
     }
     mXferState = CLOSED;
 
-    if (mService)
-        PR_AtomicDecrement(&mService->mConnectedTransports);
+    PR_AtomicDecrement(&mService->mConnectedTransports);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
