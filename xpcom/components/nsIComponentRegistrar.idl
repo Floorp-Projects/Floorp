@@ -194,7 +194,9 @@ interface nsIComponentRegistrar : nsISupports
      *
      * Enumerate the list of all registered CIDs.
      *
-     * @return : enumerator for CIDs.  This enumerator can be QI'ed for 
+     * @return : enumerator for CIDs.  Elements of the enumeration can be QI'ed
+     *           for the nsISupportsID interface.  From the nsISupportsID, you 
+     *           can obtain the actual CID.
      */
     nsISimpleEnumerator enumerateCIDs();
 
@@ -203,7 +205,10 @@ interface nsIComponentRegistrar : nsISupports
      *
      * Enumerate the list of all registered ContractIDs.
      *
-     * @return : enumerator for ContractIDs.
+     * @return : enumerator for ContractIDs. Elements of the enumeration can be 
+     *           QI'ed for the nsISupportsCString interface.  From  the
+     *           nsISupportsCString interface, you can obtain the actual 
+     *           Contract ID string.
      */
     nsISimpleEnumerator enumerateContractIDs();
 
