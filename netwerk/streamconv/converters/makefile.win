@@ -28,6 +28,7 @@ REQUIRES	= xpcom \
 		  pref \
 		  exthandler \
 		  uconv \
+		  intl \
 		  unicharutil \
 		  zlib \
 		  $(NULL)

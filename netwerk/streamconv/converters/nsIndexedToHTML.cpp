@@ -62,6 +62,12 @@ nsIndexedToHTML::Init(nsIStreamListener* aListener) {
 
     mDateTime = do_CreateInstance(kDateTimeFormatCID, &rv);
 
+    nsCOMPtr<nsIStringBundleService> sbs =
+        do_GetService(NS_STRINGBUNDLE_CONTRACTID, &rv);
+    if (NS_FAILED(rv)) return rv;
+    rv = sbs->CreateBundle("chrome://necko/locale/necko.properties",
+                           getter_AddRefs(mBundle));
+
     return rv;
 }
 
@@ -137,8 +143,21 @@ nsIndexedToHTML::OnStartRequest(nsIRequest* request, nsISupports *aContext) {
     char* spec = nsCRT::strdup(tmp.get());
     nsUnescape(spec);
     
-    buffer.Append(NS_LITERAL_STRING("<html>\n<head><title>Index of ")); //FIX i18n.
-    buffer.AppendWithConversion(spec);
+    buffer.Append(NS_LITERAL_STRING("<html>\n<head><title>"));
+
+    nsXPIDLString title;
+    nsAutoString uniSpec; uniSpec.AssignWithConversion(spec);
+
+    const PRUnichar* formatTitle[] = {
+        uniSpec.get()
+    };
+
+    rv = mBundle->FormatStringFromName(NS_LITERAL_STRING("DirTitle").get(),
+                                       formatTitle, sizeof(formatTitle),
+                                       getter_Copies(title));
+    if (NS_FAILED(rv)) return rv;
+    buffer.Append(title);
+
     buffer.Append(NS_LITERAL_STRING("</title><base href=\""));
     buffer.Append(baseUri);
     buffer.Append(NS_LITERAL_STRING("\">\n"));
@@ -153,14 +172,25 @@ nsIndexedToHTML::OnStartRequest(nsIRequest* request, nsISupports *aContext) {
     
     buffer.Append(NS_LITERAL_STRING("</head>\n<body><pre>\n"));
 
-    buffer.Append(NS_LITERAL_STRING("<H1> Index of ")); //FIX i18n.
+    buffer.Append(NS_LITERAL_STRING("<H1>"));
+    
     char* escaped = nsEscapeHTML(spec);
-    buffer.AppendWithConversion(escaped);
+    nsAutoString escapedSpec; escapedSpec.AssignWithConversion(escaped);
     nsMemory::Free(escaped);
+    const PRUnichar* formatHeading[] = {
+        escapedSpec.get()
+    };
+
+    rv = mBundle->FormatStringFromName(NS_LITERAL_STRING("DirTitle").get(),
+                                       formatHeading, sizeof(formatHeading),
+                                       getter_Copies(title));
+    if (NS_FAILED(rv)) return rv;
+    
+    buffer.Append(title);
     buffer.Append(NS_LITERAL_STRING("</H1>\n"));
     buffer.Append(NS_LITERAL_STRING("<hr><table border=0>\n"));
 
-//    buffer.AppendWithConversion("<tr><th>Name</th><th>Size</th><th>Last modified</th><th>Description</th></tr>\n"); //FIX i18n.
+    //buffer.Append(NS_LITERAL_STRING("<tr><th>Name</th><th>Size</th><th>Last modified</th></tr>\n"));
 
     // Push buffer to the listener now, so the initial HTML will not
     // be parsed in OnDataAvailable().
@@ -262,7 +292,9 @@ nsIndexedToHTML::OnIndexAvailable(nsIRequest *aRequest,
     PRUint32 size;
     aIndex->GetSize(&size);
     
-    if (size != PRUint32(-1)) {
+    if (size != PRUint32(-1) &&
+        type != nsIDirIndex::TYPE_DIRECTORY &&
+        type != nsIDirIndex::TYPE_SYMLINK) {
         pushBuffer.AppendInt(size);
     } else {
         pushBuffer.Append(NS_LITERAL_STRING("&nbsp;"));
