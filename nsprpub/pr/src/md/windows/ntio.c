@@ -2514,9 +2514,26 @@ _PR_MD_PIPEAVAILABLE(PRFileDesc *fd)
 PROffset32
 _PR_MD_LSEEK(PRFileDesc *fd, PROffset32 offset, int whence)
 {
+    DWORD moveMethod;
     PROffset32 rv;
 
-    rv = SetFilePointer((HANDLE)fd->secret->md.osfd, offset, NULL, whence);
+    switch (whence) {
+        case PR_SEEK_SET:
+            moveMethod = FILE_BEGIN;
+            break;
+        case PR_SEEK_CUR:
+            moveMethod = FILE_CURRENT;
+            break;
+        case PR_SEEK_END:
+            moveMethod = FILE_END;
+            break;
+        default:
+            PR_SetError(PR_INVALID_ARGUMENT_ERROR, 0);
+            return -1;
+    }
+
+    rv = SetFilePointer((HANDLE)fd->secret->md.osfd, offset, NULL, moveMethod);
+
     /*
      * If the lpDistanceToMoveHigh argument (third argument) is
      * NULL, SetFilePointer returns 0xffffffff on failure.
@@ -2530,44 +2547,34 @@ _PR_MD_LSEEK(PRFileDesc *fd, PROffset32 offset, int whence)
 PROffset64
 _PR_MD_LSEEK64(PRFileDesc *fd, PROffset64 offset, int whence)
 {
-    PRUint64 result;
-    PRUint32 position, uhi;
-    PRInt32 low = (PRInt32)offset, hi = (PRInt32)(offset >> 32);
+    DWORD moveMethod;
+    LARGE_INTEGER li;
+    DWORD err;
 
-    position = SetFilePointer((HANDLE)fd->secret->md.osfd, low, &hi, whence);
-
-	/*
-	 * The lpDistanceToMoveHigh argument (third argument) is not
-	 * NULL. Therefore, a -1 (unsigned) result is ambiguious. If
-	 * the result just happens to be -1, also test to see if the
-	 * last error is non-zero. If it is, the operation failed.
-	 * Otherwise, the -1 is just the low half of the 64 bit position.
-	 */
-	if (0xffffffff == position)
-    {
-        PRInt32 oserr = GetLastError();
-        if (0 != oserr)
-        {
-		    _PR_MD_MAP_LSEEK_ERROR(oserr);
+    switch (whence) {
+        case PR_SEEK_SET:
+            moveMethod = FILE_BEGIN;
+            break;
+        case PR_SEEK_CUR:
+            moveMethod = FILE_CURRENT;
+            break;
+        case PR_SEEK_END:
+            moveMethod = FILE_END;
+            break;
+        default:
+            PR_SetError(PR_INVALID_ARGUMENT_ERROR, 0);
             return -1;
-        }
     }
 
-    /*
-    ** All this 'cause we keep extending the sign of rv into
-    ** the high bits of the result. We just know that the final
-    ** position of the file must be positive and probably nowhere
-    ** close to the maximum value of a PRUint64.
-    */
-    uhi = (PRUint32)hi;
-    PR_ASSERT((PRInt32)uhi >= 0);
-    result = uhi;
-    PR_ASSERT((PRInt64)result >= 0);
-    result = (result << 32);
-    PR_ASSERT((PRInt64)result >= 0);
-    result += position;
-    PR_ASSERT((PRInt64)result >= 0);
-    return (PROffset64)result;
+    li.QuadPart = offset;
+    li.LowPart = SetFilePointer((HANDLE)fd->secret->md.osfd,
+            li.LowPart, &li.HighPart, moveMethod);
+
+    if (0xffffffff == li.LowPart && (err = GetLastError()) != NO_ERROR) {
+        _PR_MD_MAP_LSEEK_ERROR(err);
+        li.QuadPart = -1;
+    }
+    return li.QuadPart;
 }
 
 /*
