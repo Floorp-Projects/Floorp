@@ -1,4 +1,5 @@
 #file:///s|/mozilla/layout/html/tests/table/printing/bug26792.html
+file:///s|/mozilla/layout/html/tests/table/printing/bug105166.html
 file:///s|/mozilla/layout/html/tests/table/printing/bug53690.html
 file:///s|/mozilla/layout/html/tests/table/printing/bug54829.html
 file:///s|/mozilla/layout/html/tests/table/printing/bug57378.html
