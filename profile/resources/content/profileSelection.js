@@ -172,7 +172,9 @@ function onStart()
                               gBrandBundle.getString("brandShortName"));
     var title = gProfileManagerBundle.getString("migratetitle");
 
-    if (promptService.Confirm(window, title, lString))
+    var promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].getService();
+    promptService = promptService.QueryInterface(Components.interfaces.nsIPromptService);
+    if (promptService.confirm(window, title, lString))
       profile.migrateProfile( profilename, true );
     else
       return false;
