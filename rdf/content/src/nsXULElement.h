@@ -353,7 +353,6 @@ public:
     NS_IMETHOD ReplaceChildAt(nsIContent* aKid, PRInt32 aIndex, PRBool aNotify);
     NS_IMETHOD AppendChildTo(nsIContent* aKid, PRBool aNotify);
     NS_IMETHOD RemoveChildAt(PRInt32 aIndex, PRBool aNotify);
-    NS_IMETHOD IsSynthetic(PRBool& aResult);
     NS_IMETHOD GetNameSpaceID(PRInt32& aNameSpeceID) const;
     NS_IMETHOD GetTag(nsIAtom*& aResult) const;
     NS_IMETHOD GetNodeInfo(nsINodeInfo*& aResult) const;

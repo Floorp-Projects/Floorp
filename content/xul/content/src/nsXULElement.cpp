@@ -2559,13 +2559,6 @@ nsXULElement::RemoveChildAt(PRInt32 aIndex, PRBool aNotify)
     return NS_OK;
 }
 
-NS_IMETHODIMP
-nsXULElement::IsSynthetic(PRBool& aResult)
-{
-    NS_NOTYETIMPLEMENTED("write me!");
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
 NS_IMETHODIMP 
 nsXULElement::GetNameSpaceID(PRInt32& aNameSpaceID) const
 {

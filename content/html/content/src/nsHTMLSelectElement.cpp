@@ -173,9 +173,6 @@ public:
   NS_IMETHOD AppendChildTo(nsIContent* aKid, PRBool aNotify);
   NS_IMETHOD RemoveChildAt(PRInt32 aIndex, PRBool aNotify);
 
-  NS_IMETHOD IsSynthetic(PRBool& aResult) {
-    return mInner.IsSynthetic(aResult);
-  }
   NS_IMETHOD GetNameSpaceID(PRInt32& aResult) const {
     return mInner.GetNameSpaceID(aResult);
   }
