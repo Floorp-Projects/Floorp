@@ -50,8 +50,9 @@
 
 class nsFontXft;
 
-typedef void (*GlyphEnumeratorCallback) (FcChar32 aChar, nsFontXft *aFont,
-                                        void *aData);
+typedef nsresult (*GlyphEnumeratorCallback) (const FcChar32 *aString, 
+                                             PRUint32 aLen, nsFontXft *aFont, 
+                                             void *aData);
 
 class nsFontMetricsXft : public nsIFontMetricsGTK
 {
@@ -207,12 +208,14 @@ public:
     static nsresult FamilyExists (nsIDeviceContext *aDevice,
                                   const nsString &aName);
 
-    void        DrawStringCallback     (FcChar32 aChar, nsFontXft *aFont,
-                                        void *aData);
-    void        TextDimensionsCallback (FcChar32 aChar, nsFontXft *aFont,
-                                        void *aData);
-    void        GetWidthCallback       (FcChar32 aChar, nsFontXft *aFont,
-                                        void *aData);
+    nsresult    DrawStringCallback      (const FcChar32 *aString, PRUint32 aLen,
+                                         nsFontXft *aFont, void *aData);
+    nsresult    TextDimensionsCallback  (const FcChar32 *aString, PRUint32 aLen,
+                                         nsFontXft *aFont, void *aData);
+    nsresult    GetWidthCallback        (const FcChar32 *aString, PRUint32 aLen,
+                                         nsFontXft *aFont, void *aData);
+    nsresult    BoundingMetricsCallback (const FcChar32 *aString, PRUint32 aLen,
+                                         nsFontXft *aFont, void *aData);
 
 private:
     // local methods
@@ -230,7 +233,7 @@ private:
                                   nscoord    aY,
                                   XftColor  *aColor,
                                   XftDraw   *aDraw);
-    void        EnumerateGlyphs  (FcChar32 *aChars,
+    nsresult    EnumerateGlyphs  (const FcChar32 *aString,
                                   PRUint32  aLen,
                                   GlyphEnumeratorCallback aCallback,
                                   void     *aCallbackData);

@@ -152,6 +152,14 @@ EXTRA_DSO_LDOPTS += \
 		$(NULL)
 endif
 
+ifdef MOZ_ENABLE_XFT
+libs:: fontEncoding.properties
+	$(INSTALL) $^ $(DIST)/bin/res/fonts
+ 
+install:: fontEncoding.properties
+	$(INSTALL) $^ $(DESTDIR)$(mozappdir)/res/fonts
+endif
+
 ifdef MOZ_ENABLE_GTK2
 EXTRA_DSO_LDOPTS += $(MOZ_COMPONENT_LIBS) \
 		-lgkgfx \
