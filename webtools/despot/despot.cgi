@@ -248,7 +248,7 @@ sub MainMenu() {
         if ($::despot) {
             my @l2 = ();
             my $opts = popup_menu(-name=>"matchtype",
-                                  -values=>["regexp", "not regexp"],
+                                  "-values"=>["regexp", "not regexp"],
                                   -default=>"regexp",
                                   -labels=>{"regexp"=>"Matching regexp",
                                             "not regexp"=>"Not matching regexp"});
