@@ -189,6 +189,11 @@ public:
   NS_IMETHOD GetBinding(nsIContent* aContent, nsIXBLBinding** aResult);
   NS_IMETHOD SetBinding(nsIContent* aContent, nsIXBLBinding* aBinding);
 
+  NS_IMETHOD ChangeDocumentFor(nsIContent* aContent, nsIDocument* aOldDocument,
+                               nsIDocument* aNewDocument);
+
+  NS_IMETHOD SetAnonymousContentFor(nsIContent* aContent, nsISupportsArray* aAnonymousElements);
+
   NS_IMETHOD ResolveTag(nsIContent* aContent, PRInt32* aNameSpaceID, nsIAtom** aResult);
 
   NS_IMETHOD GetInsertionPoint(nsIContent* aParent, nsIContent* aChild, nsIContent** aResult);
@@ -235,6 +240,7 @@ protected:
   nsSupportsHashtable* mBindingTable;
   nsSupportsHashtable* mDocumentTable;
   nsSupportsHashtable* mLoadingDocTable;
+  nsSupportsHashtable* mAnonymousContentTable;
 
   nsCOMPtr<nsISupportsArray> mAttachedQueue;
 };
@@ -255,6 +261,7 @@ nsBindingManager::nsBindingManager(void)
   
   mDocumentTable = nsnull;
   mLoadingDocTable = nsnull;
+  mAnonymousContentTable = nsnull;
 
   mAttachedQueue = nsnull;
 }
@@ -264,20 +271,18 @@ nsBindingManager::~nsBindingManager(void)
   delete mBindingTable;
   delete mDocumentTable;
   delete mLoadingDocTable;
+  delete mAnonymousContentTable;
 }
 
 NS_IMETHODIMP
 nsBindingManager::GetBinding(nsIContent* aContent, nsIXBLBinding** aResult) 
 { 
-  *aResult = nsnull;
   if (mBindingTable) {
     nsISupportsKey key(aContent);
-    nsCOMPtr<nsIXBLBinding> binding;
-    binding = dont_AddRef(NS_STATIC_CAST(nsIXBLBinding*, mBindingTable->Get(&key)));
-    if (binding) {
-      *aResult = binding;
-      NS_ADDREF(*aResult);
-    }
+    *aResult = NS_STATIC_CAST(nsIXBLBinding*, mBindingTable->Get(&key));
+  }
+  else {
+    *aResult = nsnull;
   }
 
   return NS_OK;
@@ -300,6 +305,93 @@ nsBindingManager::SetBinding(nsIContent* aContent, nsIXBLBinding* aBinding )
   }
   else
     mBindingTable->Remove(&key);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsBindingManager::ChangeDocumentFor(nsIContent* aContent, nsIDocument* aOldDocument,
+                                    nsIDocument* aNewDocument)
+{
+  nsCOMPtr<nsIXBLBinding> binding;
+  GetBinding(aContent, getter_AddRefs(binding));
+  if (binding) {
+    binding->ChangeDocument(aOldDocument, aNewDocument);
+    SetBinding(aContent, nsnull);
+    if (aNewDocument) {
+      nsCOMPtr<nsIBindingManager> otherManager;
+      aNewDocument->GetBindingManager(getter_AddRefs(otherManager));
+      otherManager->SetBinding(aContent, binding);
+    }
+  }
+
+  if (mAnonymousContentTable) {
+    // See if the element has nsIAnonymousContentCreator-created
+    // anonymous content...
+    nsISupportsKey key(aContent);
+
+    nsCOMPtr<nsISupportsArray> anonymousElements =
+      getter_AddRefs(NS_REINTERPRET_CAST(nsISupportsArray*, mAnonymousContentTable->Get(&key)));
+
+    if (anonymousElements) {
+      // ...yep, so be sure to update the doc pointer in those
+      // elements, too.
+      PRUint32 count;
+      anonymousElements->Count(&count);
+
+      while (PRInt32(--count) >= 0) {
+        nsCOMPtr<nsISupports> isupports( getter_AddRefs(anonymousElements->ElementAt(count)) );
+        nsCOMPtr<nsIContent> content( do_QueryInterface(isupports) );
+        NS_ASSERTION(content != nsnull, "not an nsIContent");
+        if (! content)
+          continue;
+
+        content->SetDocument(aNewDocument, PR_TRUE, PR_TRUE);
+      }
+    }
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsBindingManager::SetAnonymousContentFor(nsIContent* aContent, nsISupportsArray* aAnonymousElements)
+{
+  NS_PRECONDITION(aContent != nsnull, "null ptr");
+  if (! aContent)
+    return NS_ERROR_NULL_POINTER;
+
+  if (!mAnonymousContentTable)
+    mAnonymousContentTable = new nsSupportsHashtable;
+
+  nsISupportsKey key(aContent);
+
+  nsCOMPtr<nsISupportsArray> oldAnonymousElements =
+    getter_AddRefs(NS_STATIC_CAST(nsISupportsArray*, mAnonymousContentTable->Get(&key)));
+
+  if (oldAnonymousElements && aAnonymousElements) {
+    // If we're trying to set anonymous content for an element that
+    // already had anonymous content, then we need to be sure to clean
+    // up after the old content. (This can happen, for example, when a
+    // reframe occurs.)
+    PRUint32 count;
+    oldAnonymousElements->Count(&count);
+
+    while (PRInt32(--count) >= 0) {
+      nsCOMPtr<nsISupports> isupports( getter_AddRefs(oldAnonymousElements->ElementAt(count)) );
+      nsCOMPtr<nsIContent> content( do_QueryInterface(isupports) );
+      NS_ASSERTION(content != nsnull, "not an nsIContent");
+      if (! content)
+        continue;
+
+      content->SetDocument(nsnull, PR_TRUE, PR_TRUE);
+    }
+  }
+
+  if (aAnonymousElements)
+    mAnonymousContentTable->Put(&key, aAnonymousElements);
+  else
+    mAnonymousContentTable->Remove(&key);
 
   return NS_OK;
 }

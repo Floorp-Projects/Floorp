@@ -2170,18 +2170,13 @@ nsXULElement::SetDocument(nsIDocument* aDocument, PRBool aDeep, PRBool aCompileE
         }
 
         if (mDocument) {
+          // Notify XBL- & nsIAnonymousContentCreator-generated
+          // anonymous content that the document is changing.
           nsCOMPtr<nsIBindingManager> bindingManager;
           mDocument->GetBindingManager(getter_AddRefs(bindingManager));
-          nsCOMPtr<nsIXBLBinding> binding;
-          bindingManager->GetBinding(NS_STATIC_CAST(nsIStyledContent*, this), getter_AddRefs(binding));
-          if (binding) {
-            binding->ChangeDocument(mDocument, aDocument);
-            bindingManager->SetBinding(NS_STATIC_CAST(nsIStyledContent*, this), nsnull);
-            if (aDocument) {
-              nsCOMPtr<nsIBindingManager> otherManager;
-              aDocument->GetBindingManager(getter_AddRefs(otherManager));
-              otherManager->SetBinding(NS_STATIC_CAST(nsIStyledContent*, this), binding);
-            }
+          NS_ASSERTION(bindingManager, "no binding manager");
+          if (bindingManager) {
+            bindingManager->ChangeDocumentFor(NS_STATIC_CAST(nsIStyledContent*, this), mDocument, aDocument);
           }
         }
 
