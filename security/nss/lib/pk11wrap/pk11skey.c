@@ -161,14 +161,16 @@ static PK11SymKey *
 pk11_getKeyFromList(PK11SlotInfo *slot) {
     PK11SymKey *symKey = NULL;
 
-
     PK11_USE_THREADS(PZ_Lock(slot->freeListLock);)
     if (slot->freeSymKeysHead) {
     	symKey = slot->freeSymKeysHead;
 	slot->freeSymKeysHead = symKey->next;
-	slot->keyCount--;
+    	PK11_USE_THREADS(PZ_Unlock(slot->freeListLock);)
+	PR_AtomicDecrement(&slot->keyCount);
     }
-    PK11_USE_THREADS(PZ_Unlock(slot->freeListLock);)
+    else {
+    	PK11_USE_THREADS(PZ_Unlock(slot->freeListLock);)
+    }
     if (symKey) {
 	symKey->next = NULL;
 	if ((symKey->series != slot->series) || (!symKey->sessionOwner))
@@ -247,11 +249,9 @@ PK11_FreeSymKey(PK11SymKey *symKey)
     PK11SlotInfo *slot;
     PRBool freeit = PR_TRUE;
 
-    PK11_USE_THREADS(PZ_Lock(symKey->refLock);)
-     if (symKey->refCount-- == 1) {
+    if (PR_AtomicDecrement(&symKey->refCount) == -1) {
 	destroy= PR_TRUE;
     }
-    PK11_USE_THREADS(PZ_Unlock(symKey->refLock);)
     if (destroy) {
 	if ((symKey->owner) && symKey->objectID != CK_INVALID_HANDLE) {
 	    pk11_EnterKeyMonitor(symKey);
@@ -264,15 +264,15 @@ PK11_FreeSymKey(PK11SymKey *symKey)
 	    PORT_Free(symKey->data.data);
 	}
         slot = symKey->slot;
-        PK11_USE_THREADS(PZ_Lock(slot->freeListLock);)
 	if (slot->keyCount < slot->maxKeyCount) {
-	   symKey->next = slot->freeSymKeysHead;
-	   slot->freeSymKeysHead = symKey;
-	   slot->keyCount++;
-	   symKey->slot = NULL;
-	   freeit = PR_FALSE;
+            PK11_USE_THREADS(PZ_Lock(slot->freeListLock);)
+	    symKey->next = slot->freeSymKeysHead;
+	    slot->freeSymKeysHead = symKey;
+	    PK11_USE_THREADS(PZ_Unlock(slot->freeListLock);)
+	    PR_AtomicIncrement(&slot->keyCount);
+	    symKey->slot = NULL;
+	    freeit = PR_FALSE;
         }
-	PK11_USE_THREADS(PZ_Unlock(slot->freeListLock);)
         if (freeit) {
 	    pk11_CloseSession(symKey->slot, symKey->session,
 							symKey->sessionOwner);
