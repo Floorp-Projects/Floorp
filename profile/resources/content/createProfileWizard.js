@@ -53,8 +53,6 @@ function Startup( startPage, frame_id )
   // set the button handler functions
   wizardManager.SetHandlers( null, null, onFinish, onCancel, null, null );
   // load the start page
-  dump("calling loadpage...\n");
-  dump("startPage:: " + startPage + "\n");
 	wizardManager.LoadPage( startPage, false );
   // move to center of screen if no opener, otherwise, to center of opener
   if( window.opener )
@@ -90,14 +88,13 @@ function selectLocale(langcode)
   }
   catch(e) {
     dump("\n--> createPrifleWizard.js: selectLocale() failed!\n");
-	return false;
+    return false;
   }
   return true;	
 }
 
 function onFinish()
 {
-  dump("*** IN ONFINISH\n");
 
   // check if we're at final stage 
   if( !wizardManager.wizardMap[wizardManager.currentPageTag].finish )
@@ -107,22 +104,21 @@ function onFinish()
   wizardManager.WSM.SavePageData( tag, null, null, null );
 
   var profName = wizardManager.WSM.PageData["newProfile1_2"].ProfileName.value;
-  dump("**** profName: "+ profName + "\n");
   var profDir = wizardManager.WSM.PageData["newProfile1_2"].ProfileDir.value;
+  var profLocale = wizardManager.WSM.PageData["newProfile1_2"].ProfileLocale.value;
 
   // Get langcode
-  var langcode = window.frames["content"].document.getElementById("langList").selectedItem.getAttribute("data");
-  proceed = processCreateProfileData( profName, profDir, langcode); 
+  proceed = processCreateProfileData(profName, profDir, profLocale); 
   if( proceed ) {
     if( window.opener ) {
-      window.opener.CreateProfile( profName, profDir );
+      window.opener.CreateProfile(profName, profDir);
       window.close();
 
       // select locale
-      selectLocale(langcode);
+      selectLocale(profLocale);
     }
     else {
-      profile.startApprunner( profName );
+      profile.startApprunner(profName);
       ExitApp();
     }
   }
@@ -181,14 +177,11 @@ function processCreateProfileData( aProfName, aProfDir, langcode)
 
     fileSpec.appendRelativeUnixPath(aProfName);
 
-    if (fileSpec != null) {
-        if (fileSpec.exists()) {
-            useExistingDir = true;
-        }
-    }
+    if (fileSpec != null && fileSpec.exists())
+      useExistingDir = true;
 
     dump("*** going to create a new profile called " + aProfName + " in folder: " + aProfDir + "\n");
-    profile.createNewProfile( aProfName, aProfDir, langcode, useExistingDir );
+    profile.createNewProfile(aProfName, aProfDir, langcode, useExistingDir);
 
     return true;
   }

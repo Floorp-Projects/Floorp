@@ -39,6 +39,8 @@ FILES=\
 	profileSelection.js		\
 	confirmMigration.xul		\
 	confirmMigration.js		\
+	selectLang.js			\
+	selectLang.xul			\
         $(NULL)
 
 install::
