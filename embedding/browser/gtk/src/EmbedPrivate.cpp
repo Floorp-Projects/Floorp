@@ -62,7 +62,6 @@ static char *sWatcherContractID = "@mozilla.org/embedcomp/window-watcher;1";
 PRUint32     EmbedPrivate::sWidgetCount = 0;
 char        *EmbedPrivate::sCompPath    = nsnull;
 nsIAppShell *EmbedPrivate::sAppShell    = nsnull;
-PRBool       EmbedPrivate::sCreatorInit = PR_FALSE;
 nsVoidArray *EmbedPrivate::sWindowList  = nsnull;
 char        *EmbedPrivate::sProfileDir  = nsnull;
 char        *EmbedPrivate::sProfileName = nsnull;
@@ -101,35 +100,42 @@ EmbedPrivate::Init(GtkMozEmbed *aOwningWidget)
   mOwningWidget = aOwningWidget;
 
   // Create our embed window, and create an owning reference to it and
-  // initialize it.
+  // initialize it.  It is assumed that this window will be destroyed
+  // when we go out of scope.
   mWindow = new EmbedWindow();
   mWindowGuard = NS_STATIC_CAST(nsIWebBrowserChrome *, mWindow);
   mWindow->Init(this);
 
   // Create our progress listener object, make an owning reference,
-  // and initialize it.
+  // and initialize it.  It is assumed that this progress listener
+  // will be destroyed when we go out of scope.
   mProgress = new EmbedProgress();
   mProgressGuard = NS_STATIC_CAST(nsIWebProgressListener *,
 				       mProgress);
   mProgress->Init(this);
 
   // Create our content listener object, initialize it and attach it.
+  // It is assumed that this will be destroyed when we go out of
+  // scope.
   mContentListener = new EmbedContentListener();
   mContentListenerGuard = mContentListener;
   mContentListener->Init(this);
 
-  // Create our key listener object and initialize it.
+  // Create our key listener object and initialize it.  It is assumed
+  // that this will be destroyed before we go out of scope.
   mEventListener = new EmbedEventListener();
   mEventListenerGuard =
     NS_STATIC_CAST(nsISupports *, NS_STATIC_CAST(nsIDOMKeyListener *,
 						 mEventListener));
   mEventListener->Init(this);
 
+  // has the window creator service been set up?
+  static int initialized = PR_FALSE;
   // Set up our window creator ( only once )
-  if (!sCreatorInit) {
+  if (!initialized) {
     // We set this flag here instead of on success.  If it failed we
     // don't want to keep trying and leaking window creator objects.
-    sCreatorInit = PR_TRUE;
+    initialized = PR_TRUE;
 
     // create our local object
     EmbedWindowCreator *creator = new EmbedWindowCreator();
@@ -197,12 +203,12 @@ EmbedPrivate::Unrealize(void)
   supportsWeak->GetWeakReference(getter_AddRefs(weakRef));
   webBrowser->RemoveWebBrowserListener(weakRef,
 				       nsIWebProgressListener::GetIID());
-  weakRef = 0;
-  supportsWeak = 0;
+  weakRef = nsnull;
+  supportsWeak = nsnull;
   // Now that we have removed the listener, release our progress
   // object
-  mProgressGuard = 0;
-  mProgress = 0;
+  mProgressGuard = nsnull;
+  mProgress = nsnull;
 
   // release navigation
   mNavigation = nsnull;
@@ -212,15 +218,15 @@ EmbedPrivate::Unrealize(void)
 
   // Release our content listener
   webBrowser->SetParentURIContentListener(nsnull);
-  mContentListenerGuard = 0;
-  mContentListener = 0;
+  mContentListenerGuard = nsnull;
+  mContentListener = nsnull;
 
   // detach our event listeners and release the event receiver
   DetachListeners();
   if (mEventReceiver)
     mEventReceiver = nsnull;
   
-  mOwningWidget = 0;
+  mOwningWidget = nsnull;
 }
 
 void
@@ -351,20 +357,20 @@ void
 EmbedPrivate::SetProfilePath(char *aDir, char *aName)
 {
   if (sProfileDir) {
-    free(sProfileDir);
+    nsMemory::Free(sProfileDir);
     sProfileDir = nsnull;
   }
 
   if (sProfileName) {
-    free(sProfileName);
+    nsMemory::Free(sProfileName);
     sProfileName = nsnull;
   }
 
   if (aDir)
-    sProfileDir = strdup(aDir);
+    sProfileDir = (char *)nsMemory::Clone(aDir, strlen(aDir) + 1);
   
   if (aName)
-    sProfileName = strdup(aName);
+    sProfileName = (char *)nsMemory::Clone(aName, strlen(aDir) + 1);
 }
 
 nsresult

@@ -68,8 +68,11 @@ EmbedStream::Init(void)
 
   if (NS_FAILED(rv)) return rv;
   
-  mInputStream  = do_QueryInterface(bufInStream);
-  mOutputStream = do_QueryInterface(bufOutStream);
+  mInputStream  = do_QueryInterface(bufInStream, &rv);
+  if (NS_FAILED(rv))
+    return rv;
+
+  mOutputStream = do_QueryInterface(bufOutStream, &rv);
   return rv;
 }
 
@@ -146,11 +149,8 @@ EmbedStream::OpenStream(const char *aBaseURI, const char *aContentType)
   // ok, create an instance of the content viewer for that command and
   // mime type
   nsCOMPtr<nsIContentViewer> contentViewer;
-  rv = docLoaderFactory->CreateInstance("view",
-					mChannel,
-					mLoadGroup,
-					aContentType,
-					viewerContainer,
+  rv = docLoaderFactory->CreateInstance("view", mChannel, mLoadGroup,
+					aContentType, viewerContainer,
 					nsnull,
 					getter_AddRefs(mStreamListener),
 					getter_AddRefs(contentViewer));
@@ -204,25 +204,27 @@ EmbedStream::AppendToStream(const char *aData, gint32 aLen)
 NS_METHOD
 EmbedStream::CloseStream(void)
 {
-  nsresult rv;
+  nsresult rv = NS_OK;
 
   NS_ENSURE_STATE(mDoingStream);
   mDoingStream = PR_FALSE;
 
-  nsCOMPtr<nsIRequest> request = do_QueryInterface(mChannel); 
-  rv = mStreamListener->OnStopRequest(request,
-				      NULL,
-				      NS_OK,
-				      NULL);
+  nsCOMPtr<nsIRequest> request = do_QueryInterface(mChannel, &rv); 
+  if (NS_FAILED(rv))
+    goto loser;
+  
+  rv = mStreamListener->OnStopRequest(request, NULL,
+				      NS_OK, NULL);
   if (NS_FAILED(rv))
     return rv;
 
+ loser:
   mLoadGroup = nsnull;
   mChannel = nsnull;
   mStreamListener = nsnull;
   mOffset = 0;
 
-  return NS_OK;
+  return rv;
 }
 
 NS_METHOD
@@ -254,14 +256,13 @@ EmbedStream::Read(char * aBuf, PRUint32 aCount, PRUint32 *_retval)
 NS_IMETHODIMP EmbedStream::Close(void)
 {
   return mInputStream->Close();
-  return NS_OK;
 }
 
 NS_IMETHODIMP
 EmbedStream::ReadSegments(nsWriteSegmentFun aWriter, void * aClosure,
 			  PRUint32 aCount, PRUint32 *_retval)
 {
-  char *readBuf = (char *)PR_Malloc(aCount);
+  char *readBuf = (char *)nsMemory::Alloc(aCount);
   PRUint32 nBytes;
 
   if (!readBuf)
@@ -276,7 +277,7 @@ EmbedStream::ReadSegments(nsWriteSegmentFun aWriter, void * aClosure,
     rv = aWriter(this, aClosure, readBuf, 0, nBytes, &writeCount);
   }
 
-  PR_Free(readBuf);
+  nsMemory::Free(readBuf);
 
   return rv;
 }

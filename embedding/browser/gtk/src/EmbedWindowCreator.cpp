@@ -39,7 +39,6 @@ EmbedWindowCreator::CreateChromeWindow(nsIWebBrowserChrome *aParent,
 				       PRUint32 aChromeFlags,
 				       nsIWebBrowserChrome **_retval)
 {
-  printf("EmbedWindowCreator::CreateChromeWindow\n");
   NS_ENSURE_ARG_POINTER(_retval);
 
   GtkMozEmbed *newEmbed = nsnull;
@@ -67,10 +66,11 @@ EmbedWindowCreator::CreateChromeWindow(nsIWebBrowserChrome *aParent,
 						 newEmbed->data);
   *_retval = NS_STATIC_CAST(nsIWebBrowserChrome *,
   			    (newEmbedPrivate->mWindow));
-  NS_IF_ADDREF(*_retval);
   
-  if (*_retval)
+  if (*_retval) {
+    NS_ADDREF(*_retval);
     return NS_OK;
-  else
-    return NS_ERROR_FAILURE;
+  }
+
+  return NS_ERROR_FAILURE;
 }

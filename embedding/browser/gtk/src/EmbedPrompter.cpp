@@ -77,6 +77,7 @@ EmbedPrompter::Create(PromptType aType)
   case TYPE_PROMPT:
     CreateAlertPrompter(EmbedPrompter::INCLUDE_CANCEL |
 			EmbedPrompter::INCLUDE_TEXTFIELD);
+    break;
   default:
     rv = NS_ERROR_NOT_IMPLEMENTED;
     break;
@@ -99,7 +100,7 @@ EmbedPrompter::SetDefaultText (const PRUnichar *aDefaultText)
 void
 EmbedPrompter::SetPassRealm(const PRUnichar *aRealm)
 {
-  mRealm.Append("Enter Password for ");
+  mRealm.Assign("Enter Password for ");
   mRealm.AppendWithConversion(aRealm);
 }
 
