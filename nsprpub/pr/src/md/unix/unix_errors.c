@@ -383,9 +383,14 @@ void _MD_unix_map_rmdir_error(int err)
     PRErrorCode prError;
 
     switch (err) {
+        /*
+         * On AIX 4.3, ENOTEMPTY is defined as EEXIST.
+         */
+#if ENOTEMPTY != EEXIST
         case ENOTEMPTY:
             prError = PR_DIRECTORY_NOT_EMPTY_ERROR;
             break;
+#endif
         case EEXIST:
             prError = PR_DIRECTORY_NOT_EMPTY_ERROR;
             break;
