@@ -772,8 +772,7 @@ nsHTMLToTXTSinkStream::AddLeaf(const nsIParserNode& aNode)
   else if (type == eHTMLTag_entity)
   {
     PRUnichar entity = nsHTMLEntities::EntityToUnicode(aNode.GetText());
-    nsAutoString temp;
-    temp.Append(entity);
+    nsAutoString temp(entity);
     Write(temp);
   }
   else if (type == eHTMLTag_br)
@@ -846,12 +845,6 @@ void nsHTMLToTXTSinkStream::EnsureBufferSize(PRInt32 aNewSize)
 
 void nsHTMLToTXTSinkStream::EncodeToBuffer(nsString& aSrc)
 {
-  // First, replace all nbsp characters with spaces,
-  // which the unicode encoder won't do for us.
-  PRUnichar nbsp = 160;
-  PRUnichar space = ' ';
-  aSrc.ReplaceChar(nbsp, space);
-
   if (mUnicodeEncoder == nsnull)
   {
     NS_WARNING("The unicode encoder needs to be initialized");
@@ -913,6 +906,12 @@ nsHTMLToTXTSinkStream::FlushLine()
  */
 void nsHTMLToTXTSinkStream::WriteSimple(nsString& aString)
 {
+  // First, replace all nbsp characters with spaces,
+  // which the unicode encoder won't do for us.
+  static PRUnichar nbsp = 160;
+  static PRUnichar space = ' ';
+  aString.ReplaceChar(nbsp, space);
+
   // If a encoder is being used then convert first convert the input string
   if (mUnicodeEncoder != nsnull)
   {
