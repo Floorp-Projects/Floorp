@@ -27,7 +27,6 @@
 #include "nsAreaFrame.h"
 #include "nsIFormControlFrame.h"
 #include "nsIComboboxControlFrame.h"
-#include "nsIDOMMouseListener.h"
 #include "nsVoidArray.h"
 #include "nsIAnonymousContentCreator.h"
 #include "nsISelectControlFrame.h"
@@ -51,7 +50,6 @@ class nsIListControlFrame;
 class nsComboboxControlFrame : public nsAreaFrame,
                                public nsIFormControlFrame,
                                public nsIComboboxControlFrame,
-                               public nsIDOMMouseListener,
                                public nsIAnonymousContentCreator,
                                public nsISelectControlFrame,
 			                         public nsIStatefulFrame,
@@ -152,15 +150,6 @@ public:
   NS_IMETHOD SetOptionSelected(PRInt32 aIndex, PRBool aValue);
   NS_IMETHOD GetOptionSelected(PRInt32 aIndex, PRBool* aValue);
   NS_IMETHOD DoneAddingContent(PRBool aIsDone);
-
-  //nsIDOMEventListener
-  virtual nsresult MouseDown(nsIDOMEvent* aMouseEvent);
-  virtual nsresult MouseUp(nsIDOMEvent* aMouseEvent)       { return NS_OK; }
-  virtual nsresult MouseClick(nsIDOMEvent* aMouseEvent)    { return NS_OK; }
-  virtual nsresult MouseDblClick(nsIDOMEvent* aMouseEvent) { return NS_OK; }
-  virtual nsresult MouseOver(nsIDOMEvent* aMouseEvent)     { return NS_OK; }
-  virtual nsresult MouseOut(nsIDOMEvent* aMouseEvent)      { return NS_OK; }
-  virtual nsresult HandleEvent(nsIDOMEvent* aEvent)        { return NS_OK; }
 
   //nsIStatefulFrame
   NS_IMETHOD GetStateType(nsIPresContext* aPresContext, nsIStatefulFrame::StateType* aStateType);
