@@ -124,6 +124,8 @@ div.sidebartitlelabel
 
 titledbutton.paneltitle
 { 
+  margin: 1px;
+  padding: 1px;
   color: white;
   font: 3mm tahoma,arial,helvetica,sans-serif;
 }
