@@ -749,24 +749,24 @@ nsresult nsMapiHook::PopulateCompFieldsForSendDocs(nsIMsgCompFields * aCompField
         nsCOMPtr <nsILocalFile> pFile = do_CreateInstance (NS_LOCAL_FILE_CONTRACTID, &rv) ;
         if (NS_FAILED(rv) || (!pFile) ) return rv ;        
 
-        //Temp Directory
-        nsCOMPtr <nsIFile> pTempFileDir;
-        NS_GetSpecialDirectory(NS_OS_TEMP_DIR, getter_AddRefs(pTempFileDir));
-        nsCOMPtr <nsILocalFile> pTempDir = do_QueryInterface(pTempFileDir);
-
-        // if not already existing, create another temp dir for mapi within Win temp dir
-        // this is windows only so we can do "\\"
-        pTempDir->AppendRelativePath (NS_LITERAL_STRING("moz_mapi"));
-        pTempDir->Exists(&bExist) ;
-        if (!bExist)
-        {
-            rv = pTempDir->Create(nsIFile::DIRECTORY_TYPE, 777) ;
-            if (NS_FAILED(rv)) return rv ;
-    }
-
         PRUnichar * newFilePaths = (PRUnichar *) strFilePaths.get() ;
         while (offset != kNotFound)
         {
+          //Temp Directory
+          nsCOMPtr <nsIFile> pTempFileDir;
+          NS_GetSpecialDirectory(NS_OS_TEMP_DIR, getter_AddRefs(pTempFileDir));
+
+          nsCOMPtr <nsILocalFile> pTempDir = do_QueryInterface(pTempFileDir);
+
+          // if not already existing, create another temp dir for mapi within Win temp dir
+          // this is windows only so we can do "\\"
+          pTempDir->AppendRelativePath (NS_LITERAL_STRING("moz_mapi"));
+          pTempDir->Exists(&bExist) ;
+          if (!bExist)
+          {
+              rv = pTempDir->Create(nsIFile::DIRECTORY_TYPE, 777) ;
+              if (NS_FAILED(rv)) return rv ;
+          }
             nsString RemainingPaths ;
             RemainingPaths.Assign(newFilePaths) ;
             offset = RemainingPaths.Find (strDelimChars) ;
@@ -775,6 +775,9 @@ nsresult nsMapiHook::PopulateCompFieldsForSendDocs(nsIMsgCompFields * aCompField
                 RemainingPaths.SetLength (offset) ;
                 if ((offset + strDelimChars.Length()) < FilePathsLen)
                     newFilePaths += offset + strDelimChars.Length() ;
+                else
+                  offset = kNotFound;
+                FilePathsLen -= offset + strDelimChars.Length();
             }
 
             pFile->InitWithPath (RemainingPaths) ;

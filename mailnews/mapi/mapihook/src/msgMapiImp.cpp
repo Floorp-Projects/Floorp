@@ -165,7 +165,7 @@ STDMETHODIMP CMapiImp::Login(unsigned long aUIArg, LOGIN_PW_TYPE aLogin, LOGIN_P
                 unsigned long aFlags, unsigned long *aSessionId)
 {
     HRESULT hr = E_FAIL;
-    PRBool bNewSession = PR_FALSE;
+     PRBool bNewSession = PR_FALSE;
     char *id_key = nsnull;
 
     PR_LOG(MAPI, PR_LOG_DEBUG, ("CMapiImp::Login using flags %d\n", aFlags));
@@ -178,6 +178,7 @@ STDMETHODIMP CMapiImp::Login(unsigned long aUIArg, LOGIN_PW_TYPE aLogin, LOGIN_P
         if (nsMapiHook::VerifyUserName(aLogin, &id_key) == PR_FALSE)
         {
             *aSessionId = MAPI_E_LOGIN_FAILURE;
+            PR_LOG(MAPI, PR_LOG_DEBUG, ("CMapiImp::Login failed for username %s\n", aLogin));
             NS_ASSERTION(PR_FALSE, "failed verifying user name");
             return hr;
         }
@@ -223,6 +224,7 @@ STDMETHODIMP CMapiImp::Login(unsigned long aUIArg, LOGIN_PW_TYPE aLogin, LOGIN_P
         default :
         {
             *aSessionId = nSession_Id;
+            PR_LOG(MAPI, PR_LOG_DEBUG, ("CMapiImp::Login succeeded\n"));
             break;
         }
     }
@@ -236,13 +238,14 @@ STDMETHODIMP CMapiImp::SendMail( unsigned long aSession, lpnsMapiMessage aMessag
 {
     nsresult rv = NS_OK ;
 
+    PR_LOG(MAPI, PR_LOG_DEBUG, ("CMapiImp::SendMail using flags %d\n", aFlags));
     // Assign the pointers in the aMessage struct to the array of Recips and Files
     // recieved here from MS COM. These are used in BlindSendMail and ShowCompWin fns 
     aMessage->lpRecips = aRecips ;
     aMessage->lpFiles = aFiles ;
 
     PR_LOG(MAPI, PR_LOG_DEBUG, ("CMapiImp::SendMail flags=%x subject: %s sender: %s\n", 
-      aFlags, (char *) aMessage->lpszSubject, aMessage->lpOriginator->lpszAddress) );
+      aFlags, (char *) aMessage->lpszSubject, (aMessage->lpOriginator) ? aMessage->lpOriginator->lpszAddress : ""));
 
     /** create nsIMsgCompFields obj and populate it **/
     nsCOMPtr<nsIMsgCompFields> pCompFields = do_CreateInstance(NS_MSGCOMPFIELDS_CONTRACTID, &rv) ;
@@ -275,6 +278,7 @@ STDMETHODIMP CMapiImp::SendDocuments( unsigned long aSession, LPTSTR aDelimChar,
 {
     nsresult rv = NS_OK ;
 
+    PR_LOG(MAPI, PR_LOG_DEBUG, ("CMapiImp::SendDocument using flags %d\n", aFlags));
     /** create nsIMsgCompFields obj and populate it **/
     nsCOMPtr<nsIMsgCompFields> pCompFields = do_CreateInstance(NS_MSGCOMPFIELDS_CONTRACTID, &rv) ;
     if (NS_FAILED(rv) || (!pCompFields) ) return MAPI_E_INSUFFICIENT_MEMORY ;
@@ -286,6 +290,8 @@ STDMETHODIMP CMapiImp::SendDocuments( unsigned long aSession, LPTSTR aDelimChar,
 
     if (NS_SUCCEEDED (rv)) 
         rv = nsMapiHook::ShowComposerWindow(aSession, pCompFields);
+    else
+      PR_LOG(MAPI, PR_LOG_DEBUG, ("CMapiImp::SendDocument error rv = %lx, paths = %s names = %s\n", rv, aFilePaths, aFileNames));
 
     return nsMAPIConfiguration::GetMAPIErrorFromNSError (rv) ;
 }
@@ -496,6 +502,7 @@ STDMETHODIMP CMapiImp::SaveMail(unsigned long aSession, unsigned long ulUIParam,
     return ret;
   return S_OK;
 }
+
 
 STDMETHODIMP CMapiImp::Logoff (unsigned long aSession)
 {
