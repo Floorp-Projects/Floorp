@@ -64,7 +64,6 @@
 #include "nsEditorMode.h"
 
 // Needed for "Find" GUI
-#include "nsIDialog.h"
 #include "nsICheckButton.h"
 #include "nsIRadioButton.h"
 #include "nsILabel.h"
@@ -165,7 +164,6 @@ static NS_DEFINE_IID(kIContentConnectorIID, NS_ICONTENTCONNECTOR_IID);
 static NS_DEFINE_IID(kIWebShellIID, NS_IWEB_SHELL_IID);
 static NS_DEFINE_IID(kIWebShellContainerIID, NS_IWEB_SHELL_CONTAINER_IID);
 static NS_DEFINE_IID(kIWidgetIID, NS_IWIDGET_IID);
-static NS_DEFINE_IID(kIDialogIID, NS_IDIALOG_IID);
 static NS_DEFINE_IID(kICheckButtonIID, NS_ICHECKBUTTON_IID);
 static NS_DEFINE_IID(kIRadioButtonIID, NS_IRADIOBUTTON_IID);
 static NS_DEFINE_IID(kILabelIID, NS_ILABEL_IID);
