@@ -2111,6 +2111,18 @@ pk11_GetPrivKey(PK11Object *object,CK_KEY_TYPE key_type)
 	priv=SECKEY_FindKeyByPublicKey(SECKEY_GetDefaultKeyDB(),&pubKey,
 				       (SECKEYGetPasswordKey) pk11_givePass,
 				       object->slot);
+	if (!priv && pubKey.data[0] == 0) {
+	    /* Because of legacy code issues, sometimes the public key has
+	     * a '0' prepended to it, forcing it to be unsigned.  The database
+	     * does not store that '0', so catch that failure here.
+	     */
+	    SECItem tmpPubKey;
+	    tmpPubKey.data = pubKey.data + 1;
+	    tmpPubKey.len = pubKey.len - 1;
+	    priv=SECKEY_FindKeyByPublicKey(SECKEY_GetDefaultKeyDB(),&tmpPubKey,
+				           (SECKEYGetPasswordKey) pk11_givePass,
+				           object->slot);
+	}
 	if (pubKey.data) PORT_Free(pubKey.data);
 
 	/* don't 'cache' DB private keys */
