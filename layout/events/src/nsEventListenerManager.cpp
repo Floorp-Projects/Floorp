@@ -431,8 +431,6 @@ nsresult nsEventListenerManager::RemoveEventListenerByType(nsIDOMEventListener *
   return NS_OK;
 }
 
-static const char *gEventArgv[] = {"event"};
-
 nsresult nsEventListenerManager::SetJSEventListener(nsIScriptContext *aContext, JSObject *aObject, REFNSIID aIID)
 {
   nsVoidArray *mListeners;
@@ -464,52 +462,19 @@ nsresult
 nsEventListenerManager::AddScriptEventListener(nsIScriptContext* aContext,
                                                nsIScriptObjectOwner *aScriptObjectOwner,
                                                nsIAtom *aName,
-                                               const nsString& aFunc,
+                                               const nsString& aBody,
                                                REFNSIID aIID)
 {
-  JSObject *scriptObject = nsnull;
-  JSPrincipals *jsprin = nsnull;
-
-  nsCOMPtr<nsIScriptGlobalObject> global = getter_AddRefs(aContext->GetGlobalObject());
-  if (global) {
-    // XXXbe why the two-step QI?  speed up via aContext->GetGlobalObjectData?
-    nsCOMPtr<nsIScriptGlobalObjectData> globalData = do_QueryInterface(global);
-    if (globalData) {
-      nsCOMPtr<nsIPrincipal> prin;
-      if (NS_FAILED(globalData->GetPrincipal(getter_AddRefs(prin))))
-        return NS_ERROR_FAILURE;
-      prin->GetJSPrincipals(&jsprin);
-    }
-  }
-
-  JSContext *cx = (JSContext*)aContext->GetNativeContext();
-  nsresult rv = aScriptObjectOwner->GetScriptObject(aContext,
-                                                    (void**)&scriptObject);
-  if (NS_SUCCEEDED(rv)) {
-    nsString name, lowerName;
-    aName->ToString(name);
-    name.ToLowerCase(lowerName);
-    char* charName = lowerName.ToNewCString();
-    if (!charName) {
-      rv = NS_ERROR_OUT_OF_MEMORY;
-    } else {
-      JSBool ok = JS_CompileUCFunctionForPrincipals(cx, scriptObject, jsprin,
-                                                    charName, 1, gEventArgv,
-                                                    (jschar*)aFunc.GetUnicode(),
-                                                    aFunc.Length(),
-                                                    //XXXbe filename, lineno:
-                                                    nsnull, 0)
-                  != 0;
-      nsCRT::free(charName);
-      if (ok)
-        rv = SetJSEventListener(aContext, scriptObject, aIID);
-      else
-        rv = NS_ERROR_OUT_OF_MEMORY;
-    }
-  }
-  if (jsprin)
-    JSPRINCIPALS_DROP(cx, jsprin);
-  return rv;
+  JSObject *scriptObject;
+  nsresult rv;
+  
+  rv = aScriptObjectOwner->GetScriptObject(aContext, (void**)&scriptObject);
+  if (NS_FAILED(rv))
+    return NS_ERROR_FAILURE;
+  rv = aContext->CompileFunction(scriptObject, aName, aBody);
+  if (NS_FAILED(rv))
+    return NS_ERROR_FAILURE;
+  return SetJSEventListener(aContext, scriptObject, aIID);
 }
 
 nsresult nsEventListenerManager::RegisterScriptEventListener(nsIScriptContext *aContext, nsIScriptObjectOwner *aScriptObjectOwner, 

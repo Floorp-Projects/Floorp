@@ -304,10 +304,10 @@ struct nsTimeoutImpl {
   PRUint32            public_id;      /* Returned as value of setTimeout() */
   PRInt32             interval;       /* Non-zero if repetitive timeout */
   PRInt64             when;           /* nominal time to run this timeout */
-  JSVersion           version;        /* Version of JavaScript to execute */
-  nsIPrincipal       *principal;    /* principals with which to execute */
+  nsIPrincipal        *principal;     /* principals with which to execute */
   char                *filename;      /* filename of setTimeout call */
   PRUint32            lineno;         /* line number of setTimeout call */
+  const char          *version;       /* JS language version string constant */
   nsTimeoutImpl       *next;
 };
 

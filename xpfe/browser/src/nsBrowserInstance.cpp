@@ -2122,6 +2122,7 @@ nsBrowserAppCore::FindNext()
     return rv;
 }
 
+// XXXbe why is this needed?  eliminate
 NS_IMETHODIMP    
 nsBrowserAppCore::ExecuteScript(nsIScriptContext * aContext, const nsString& aScript)
 {
@@ -2132,7 +2133,7 @@ nsBrowserAppCore::ExecuteScript(nsIScriptContext * aContext, const nsString& aSc
     if (APP_DEBUG) {
       printf("Executing [%s]\n", (const char *)nsAutoCString(aScript));
     }
-    aContext->EvaluateString(aScript, url, 0, rVal, &isUndefined);
+    aContext->EvaluateString(aScript, url, 0, nsnull, rVal, &isUndefined);
   } 
   return NS_OK;
 }

@@ -576,14 +576,14 @@ protected:
      * prototype construction must 'block' until the load has
      * completed, aBlock will be set to true.
      */
-    nsresult LoadScript(nsIURI* aURI, PRBool* aBlock);
+    nsresult LoadScript(nsIURI* aURI, const char* aVersion, PRBool* aBlock);
 
     /**
      * Evaluate the script text in aScript. aURL and aLineNo
      * specify meta-information about the script in order to
      * provide useful error messages.
      */
-    nsresult EvaluateScript(nsIURI* aURL, const nsString& aScript, PRInt32 aLinenNo);
+    nsresult EvaluateScript(nsIURI* aURL, const nsString& aScript, PRInt32 aLinenNo, const char* aVersion);
 
     /**
      * Create a delegate content model element from a prototype.
@@ -611,9 +611,13 @@ protected:
                       nsresult aStatus);
 
     /**
-     * The URL of the current transcluded script that is being loaded
+     * The URL of the current transcluded script that is being loaded.
+     * For document.write('<script src="nestedwrite.js"><\/script>') to work,
+     * these need to be in a stack element type, and we need to hold the top
+     * of stack here.
      */
     nsCOMPtr<nsIURI> mCurrentScriptURL;
+    const char* mCurrentScriptLanguageVersion;
 
     /**
      * Create a XUL template builder on the specified node if a 'datasources'

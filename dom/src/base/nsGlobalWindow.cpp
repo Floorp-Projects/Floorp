@@ -1787,10 +1787,13 @@ GlobalWindowImpl::RunTimeout(nsTimeoutImpl *aTimeout)
         nsAutoString script = JS_GetStringChars(timeout->expr);
         nsAutoString blank = "";
         PRBool isUndefined;
-        rv = mContext->EvaluateString(script, mScriptObject, 
-                                      timeout->principal, 
+        rv = mContext->EvaluateString(script,
+                                      mScriptObject,
+                                      timeout->principal,
                                       timeout->filename,
-                                      timeout->lineno, blank, 
+                                      timeout->lineno,
+                                      timeout->version,
+                                      blank,
                                       &isUndefined);
       } else {
         PRInt64 lateness64;
@@ -1988,6 +1991,17 @@ GlobalWindowImpl::SetTimeoutOrInterval(JSContext *cx,
       timeout->argc++;
     }
   }
+
+  const char* filename;
+  if (nsJSUtils::nsGetCallingLocation(cx, &filename, &timeout->lineno)) {
+    timeout->filename = PL_strdup(filename);
+    if (!timeout->filename) {
+      DropTimeout(timeout);
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+  }
+
+  timeout->version = JS_VersionToString(JS_GetVersion(cx));
 
   // Get principal of currently executing code, save for execution of timeout
   nsresult rv;  

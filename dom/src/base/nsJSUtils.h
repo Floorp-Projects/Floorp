@@ -34,6 +34,9 @@ class nsIDOMEventListener;
 
 class nsJSUtils {
 public:
+  static NS_EXPORT JSBool nsGetCallingLocation(JSContext* aContext,
+                                               const char* *aFilename,
+                                               PRUint32 *aLineno);
 
   static NS_EXPORT JSBool nsReportError(JSContext* aContext, 
                                         nsresult aResult,

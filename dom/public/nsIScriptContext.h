@@ -51,6 +51,7 @@ public:
   NS_IMETHOD EvaluateString(const nsString& aScript,
                             const char *aURL,
                             PRUint32 aLineNo,
+                            const char* aVersion,
                             nsString& aRetValue,
                             PRBool* aIsUndefined) = 0;
 
@@ -75,12 +76,18 @@ public:
                             nsIPrincipal *principal,
                             const char *aURL,
                             PRUint32 aLineNo,
+                            const char* aVersion,
                             nsString& aRetValue,
                             PRBool* aIsUndefined) = 0;
+
+  NS_IMETHOD CompileFunction(void *aObj, nsIAtom *aName,
+                             const nsString& aBody) = 0;
 
   NS_IMETHOD CallFunction(void *aObj, void *aFunction, 
                           PRUint32 argc, void *argv, 
                           PRBool *aBoolResult) = 0;
+
+  NS_IMETHOD SetDefaultLanguageVersion(const char* aVersion) = 0;
 
   /**
    * Return the global object.

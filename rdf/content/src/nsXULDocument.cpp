@@ -4341,23 +4341,22 @@ nsXULDocument::ResumeWalk()
                 nsXULPrototypeScript* scriptproto =
                     NS_REINTERPRET_CAST(nsXULPrototypeScript*, childproto);
 
-                if (scriptproto->mInlineScript.Length()) {
-                    // An inline script
-                    rv = EvaluateScript(mDocumentURL, scriptproto->mInlineScript, scriptproto->mLineNo);
-                    if (NS_FAILED(rv)) return rv;
-                }
-
                 if (scriptproto->mSrcURI) {
                     // A transcluded script reference; this may
                     // "block" our prototype walk if the script isn't
                     // cached, or the cached copy of the script is
                     // stale and must be reloaded.
                     PRBool blocked;
-                    rv = LoadScript(scriptproto->mSrcURI, &blocked);
+                    rv = LoadScript(scriptproto->mSrcURI, scriptproto->mVersion, &blocked);
                     if (NS_FAILED(rv)) return rv;
 
                     if (blocked)
                         return NS_OK;
+                }
+                else if (scriptproto->mInlineScript.Length()) {
+                    // An inline script
+                    rv = EvaluateScript(mDocumentURL, scriptproto->mInlineScript, scriptproto->mLineNo, scriptproto->mVersion);
+                    if (NS_FAILED(rv)) return rv;
                 }
             }
             break;
@@ -4482,7 +4481,7 @@ nsXULDocument::ResumeWalk()
 
 
 nsresult
-nsXULDocument::LoadScript(nsIURI* aURI, PRBool* aBlock)
+nsXULDocument::LoadScript(nsIURI* aURI, const char* aVersion, PRBool* aBlock)
 {
     // Load a transcluded script
     nsresult rv;
@@ -4499,6 +4498,7 @@ nsXULDocument::LoadScript(nsIURI* aURI, PRBool* aBlock)
         // call can get report the right file if there are errors in
         // the script.
         mCurrentScriptURL = aURI;
+        mCurrentScriptLanguageVersion = aVersion;
 
         nsCOMPtr<nsILoadGroup> group = do_QueryReferent(mDocumentLoadGroup);
 
@@ -4524,9 +4524,9 @@ nsXULDocument::LoadScript(nsIURI* aURI, PRBool* aBlock)
 
 nsresult
 nsXULDocument::DoneLoadingScript(nsIUnicharStreamLoader* aLoader,
-                                            nsString& aData,
-                                            void* aRef,
-                                            nsresult aStatus)
+                                 nsString& aData,
+                                 void* aRef,
+                                 nsresult aStatus)
 {
     // This is the completion routine that will be called when a
     // transcluded script completes. Evaluate the script if the load
@@ -4536,7 +4536,8 @@ nsXULDocument::DoneLoadingScript(nsIUnicharStreamLoader* aLoader,
     nsXULDocument* doc = NS_REINTERPRET_CAST(nsXULDocument*, aRef);
 
     if (NS_SUCCEEDED(aStatus)) {
-        rv = doc->EvaluateScript(doc->mCurrentScriptURL, aData, 1);
+        rv = doc->EvaluateScript(doc->mCurrentScriptURL, aData, 1,
+				 doc->mCurrentScriptLanguageVersion);
     }
 
     // balance the addref we added in LoadScript()
@@ -4550,7 +4551,7 @@ nsXULDocument::DoneLoadingScript(nsIUnicharStreamLoader* aLoader,
 
 
 nsresult
-nsXULDocument::EvaluateScript(nsIURI* aURL, const nsString& aScript, PRInt32 aLineNo)
+nsXULDocument::EvaluateScript(nsIURI* aURL, const nsString& aScript, PRInt32 aLineNo, const char* aVersion)
 {
     // Evaluate the script text in aScript, whose source is aURL
     // starting at aLineNo.
@@ -4573,8 +4574,8 @@ nsXULDocument::EvaluateScript(nsIURI* aURL, const nsString& aScript, PRInt32 aLi
 
     nsAutoString result;
     PRBool isUndefined;
-    rv = context->EvaluateString(aScript, urlspec, aLineNo, 
-                                 result, &isUndefined);
+    rv = context->EvaluateString(aScript, nsnull, mDocumentPrincipal, urlspec,
+                                 aLineNo, aVersion, result, &isUndefined);
     return rv;
 }
 

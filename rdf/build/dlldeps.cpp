@@ -26,12 +26,13 @@ void XXXNeverCalled()
 {
     nsAutoString s;
     nsCAutoString cs;
+    int v;
 
     // nsRDFParserUtils
     nsRDFParserUtils::EntityToUnicode("");
     nsRDFParserUtils::StripAndConvert(s);
     nsRDFParserUtils::GetQuotedAttributeValue(s, s, s);
-    nsRDFParserUtils::IsJavaScriptLanguage(s);
+    nsRDFParserUtils::IsJavaScriptLanguage(s, &v);
 
     // rdfutils
     rdf_MakeRelativeRef(s, s);
