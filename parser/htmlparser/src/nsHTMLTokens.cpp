@@ -1338,26 +1338,24 @@ PRInt32 CEntityToken::TranslateToUnicodeStr(nsString& aString) {
 
   if(mTextValue.Length()>1) {
     PRUnichar theChar1=mTextValue[0];
-    PRUnichar theChar2=mTextValue[1];
     PRBool    isDigit1=nsString::IsDigit(theChar1);
 
-    if(isDigit1 || (('x'==theChar1) || ('X'==theChar1))) 
-      if(nsString::IsDigit(theChar2)) {
-        PRInt32 err=0;
-        value=mTextValue.ToInteger(&err,theRadix[isDigit1]);
-        if(0==err) {
-    #ifdef PA_REMAP_128_TO_160_ILLEGAL_NCR
-          /* for some illegal, but popular usage */
-          if ((value >= 0x0080) && (value <= 0x009f)) {
-            value = PA_HackTable[value - 0x0080];
-          }
-    #endif
-          aString.Append(PRUnichar(value));
+    if(isDigit1 || ('x'==theChar1) || ('X'==theChar1)) {
+      PRInt32 err=0;
+      value=mTextValue.ToInteger(&err,theRadix[isDigit1]);
+      if(0==err) {
+  #ifdef PA_REMAP_128_TO_160_ILLEGAL_NCR
+        /* for some illegal, but popular usage */
+        if ((value >= 0x0080) && (value <= 0x009f)) {
+          value = PA_HackTable[value - 0x0080];
         }
-        return value;
+  #endif
+        aString.Append(PRUnichar(value));
       }//if
+      return value;
     }//if
-  
+  }//if
+
   char cbuf[30];
   mTextValue.ToCString(cbuf, sizeof(cbuf));
   value = NS_EntityToUnicode(cbuf);
