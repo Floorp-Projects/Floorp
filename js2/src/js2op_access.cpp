@@ -333,6 +333,44 @@
         }
         break;
 
+    case eParameterSlotWrite:
+        {
+            uint16 slotIndex = BytecodeContainer::getShort(pc);
+            pc += sizeof(short);
+            a = top();
+            ASSERT(slotIndex < parameterFrame->slots->size());
+            (*parameterFrame->slots)[slotIndex] = a;
+        }
+        break;
+
+    case eParameterSlotDelete:
+        {
+            uint16 slotIndex = BytecodeContainer::getShort(pc);
+            pc += sizeof(short);
+            ASSERT(slotIndex < parameterFrame->slots->size());
+            // XXX some kind of code here?
+        }
+        break;
+
+    case eParameterSlotRead:
+        {
+            uint16 slotIndex = BytecodeContainer::getShort(pc);
+            pc += sizeof(short);
+            ASSERT(slotIndex < parameterFrame->slots->size());
+            push((*parameterFrame->slots)[slotIndex]);
+        }
+        break;
+
+    case eParameterSlotRef:
+        {
+            uint16 slotIndex = BytecodeContainer::getShort(pc);
+            pc += sizeof(short);
+            push(JS2VAL_NULL);
+            ASSERT(slotIndex < parameterFrame->slots->size());
+            push((*parameterFrame->slots)[slotIndex]);
+        }
+        break;
+
     case eSlotWrite:
         {
             a = pop();

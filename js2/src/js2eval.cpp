@@ -296,20 +296,24 @@ namespace MetaData {
                 runtimeFrame->assignArguments(this, fnObj, argv, argc, argc);
                 Frame *oldTopFrame = env->getTopFrame();
                 env->addFrame(runtimeFrame);
+                ParameterFrame *oldPFrame = engine->parameterFrame;
                 try {
                     savePC = engine->pc;
                     engine->pc = NULL;
+                    engine->parameterFrame = runtimeFrame;
                     result = engine->interpret(RunPhase, bCon, env);
                 }
                 catch (Exception &x) {
                     engine->pc = savePC;
                     restoreCompilationUnit(oldData);
                     env->setTopFrame(oldTopFrame);
+                    engine->parameterFrame = oldPFrame;
                     throw x;
                 }
                 engine->pc = savePC;
                 restoreCompilationUnit(oldData);
                 env->setTopFrame(oldTopFrame);
+                engine->parameterFrame = oldPFrame;
             }
         }
         return result;

@@ -92,6 +92,7 @@
                         pFrame->assignArguments(meta, obj, base(argCount), argCount, length);
                         jsr(phase, fWrap->bCon, base(argCount + 1) - execStack, baseVal, fWrap->env);   // seems out of order, but we need to catch the current top frame 
                         meta->env->addFrame(pFrame);
+                        parameterFrame = pFrame;
                         pFrame = NULL;
                     }
                 }
@@ -124,7 +125,8 @@
                         a = OBJECT_TO_JS2VAL(g);
                     }
                 }
-                uint32 length = getLength(meta, fObj);
+                // XXX ok to not use getLength(meta, fObj) ?
+                uint32 length = (fWrap->compileFrame->slots) ? fWrap->compileFrame->slots->size() : 0;
                 if (fWrap->code) {  // native code
                     uint16 argc = argCount;
                     while (argCount < length) {
@@ -137,15 +139,21 @@
                     push(a);
                 }
                 else {
-                    pFrame = new ParameterFrame(fWrap->compileFrame);
-                    pFrame->instantiate(meta->env);
-                    pFrame->thisObject = a;
-                    // XXX (use fWrap->compileFrame->signature)
-                    uint32 i = length;
-                    pFrame->assignArguments(meta, fObj, base(argCount), argCount, length);
-                    jsr(phase, fWrap->bCon, base(argCount + 2) - execStack, JS2VAL_VOID, fWrap->env);   // seems out of order, but we need to catch the current top frame 
-                    meta->env->addFrame(pFrame);
-                    pFrame = NULL;
+                    if (length) {
+                        pFrame = new ParameterFrame(fWrap->compileFrame);
+                        pFrame->instantiate(meta->env);
+                        pFrame->thisObject = a;
+                        // XXX (use fWrap->compileFrame->signature)
+                        pFrame->assignArguments(meta, fObj, base(argCount), argCount, length);
+                        jsr(phase, fWrap->bCon, base(argCount + 2) - execStack, JS2VAL_VOID, fWrap->env);   // seems out of order, but we need to catch the current top frame 
+                        meta->env->addFrame(pFrame);
+                        parameterFrame = pFrame;
+                        pFrame = NULL;
+                    }
+                    else {
+                        jsr(phase, fWrap->bCon, base(argCount + 2) - execStack, JS2VAL_VOID, fWrap->env);   // seems out of order, but we need to catch the current top frame 
+                        meta->env->addFrame(fWrap->compileFrame);
+                    }
                 }
             }
             else
@@ -153,7 +161,8 @@
                 MethodClosure *mc = checked_cast<MethodClosure *>(fObj);
                 SimpleInstance *fInst = mc->method->fInst;
                 FunctionWrapper *fWrap = fInst->fWrap;
-                uint32 length = getLength(meta, fObj);
+                // XXX ok to not use getLength(meta, fObj) ?
+                uint32 length = (fWrap->compileFrame->slots) ? fWrap->compileFrame->slots->size() : 0;
                 if (fWrap->code) {
                     Environment *oldEnv = meta->env;
                     meta->env = fWrap->env;
@@ -175,6 +184,7 @@
                     jsr(phase, fWrap->bCon, base(argCount + 2) - execStack, JS2VAL_VOID, fWrap->env);   // seems out of order, but we need to catch the current top frame 
                     meta->env->addFrame(meta->objectType(mc->thisObject));
                     meta->env->addFrame(pFrame);
+                    parameterFrame = pFrame;
                     pFrame = NULL;
                 }
             }
@@ -229,7 +239,7 @@
         {
             Frame *f = checked_cast<Frame *>(bCon->mObjectList[BytecodeContainer::getShort(pc)]);
             pc += sizeof(short);
-            if (meta->env->getTopFrame()->kind == ParameterKind)
+            if (meta->env->getTopFrame()->kind == ParameterFrameKind)
                 localFrame = checked_cast<NonWithFrame *>(f);
             meta->env->addFrame(f);
             f->instantiate(meta->env);
@@ -254,7 +264,7 @@
     case eIs:
         {
             b = pop();
-            a = pop();      // doing a is b
+            a = pop();      // doing 'a is b'
 
             if (!JS2VAL_IS_OBJECT(b))
                 meta->reportError(Exception::badValueError, "Type expected", errorPos());
@@ -269,7 +279,7 @@
     case eInstanceof:   // XXX prototype version
         {
             b = pop();
-            a = pop();      // doing a instanceof b
+            a = pop();      // doing 'a instanceof b'
 
             if (!JS2VAL_IS_OBJECT(b))
                 meta->reportError(Exception::typeError, "Object expected for instanceof", errorPos());

@@ -127,7 +127,7 @@ enum ObjectKind {
     AttributeObjectKind,
     SystemKind,                 
     PackageKind, 
-    ParameterKind, 
+    ParameterFrameKind, 
     ClassKind, 
     BlockFrameKind, 
     SimpleInstanceKind,
@@ -455,13 +455,16 @@ public:
 
 class FrameVariable : public LocalMember {
 public:
-    FrameVariable(uint16 frameSlot, bool packageSlot) : LocalMember(Member::FrameVariableMember), frameSlot(frameSlot), packageSlot(packageSlot), sealed(false) { } 
+
+    typedef enum { Local, Package, Parameter } FrameVariableKind;
+
+    FrameVariable(uint16 frameSlot, FrameVariableKind kind) : LocalMember(Member::FrameVariableMember), frameSlot(frameSlot), kind(kind), sealed(false) { } 
 
     uint16 frameSlot;
-    bool packageSlot;               // true if the variable is in a package frame
+    FrameVariableKind kind;               // true if the variable is in a package frame
 
     bool sealed;                    // true if this variable cannot be deleted using the delete operator
-    virtual LocalMember *clone()       { return new FrameVariable(frameSlot, packageSlot); }
+    virtual LocalMember *clone()       { return new FrameVariable(frameSlot, kind); }
 };
 
 class ConstructorMethod : public LocalMember {
@@ -1091,6 +1094,29 @@ public:
     virtual int hasStackEffect()                                            { return 0; }
 };
 
+class ParameterSlotReference : public Reference {
+// A special case of a DotReference with an ParameterSl instead of a D
+public:
+    ParameterSlotReference(uint32 slotIndex) : slotIndex(slotIndex) { }
+    virtual ~ParameterSlotReference()	{ }
+
+    virtual void emitReadBytecode(BytecodeContainer *bCon, size_t pos)      { bCon->emitOp(eParameterSlotRead, pos); bCon->addShort((uint16)slotIndex); }
+    virtual void emitWriteBytecode(BytecodeContainer *bCon, size_t pos)     { bCon->emitOp(eParameterSlotWrite, pos); bCon->addShort((uint16)slotIndex); }
+    virtual void emitReadForInvokeBytecode(BytecodeContainer *bCon, size_t pos)     { bCon->emitOp(eParameterSlotRef, pos); bCon->addShort((uint16)slotIndex); }
+    virtual void emitReadForWriteBackBytecode(BytecodeContainer *bCon, size_t pos)  { emitReadBytecode(bCon, pos); }
+    virtual void emitWriteBackBytecode(BytecodeContainer *bCon, size_t pos)         { emitWriteBytecode(bCon, pos); }
+
+    virtual void emitPostIncBytecode(BytecodeContainer *bCon, size_t pos)   { bCon->emitOp(eParameterSlotPostInc, pos); bCon->addShort((uint16)slotIndex); }
+    virtual void emitPostDecBytecode(BytecodeContainer *bCon, size_t pos)   { bCon->emitOp(eParameterSlotPostDec, pos); bCon->addShort((uint16)slotIndex); }
+    virtual void emitPreIncBytecode(BytecodeContainer *bCon, size_t pos)    { bCon->emitOp(eParameterSlotPreInc, pos); bCon->addShort((uint16)slotIndex); }
+    virtual void emitPreDecBytecode(BytecodeContainer *bCon, size_t pos)    { bCon->emitOp(eParameterSlotPreDec, pos); bCon->addShort((uint16)slotIndex); }
+
+    virtual void emitDeleteBytecode(BytecodeContainer *bCon, size_t pos)    { bCon->emitOp(eFalse, pos); /* bCon->emitOp(ePackageSlotDelete, pos); bCon->addShort((uint16)slotIndex); */ }
+
+    uint32 slotIndex;
+    virtual int hasStackEffect()                                            { return 0; }
+};
+
 class PackageSlotReference : public Reference {
 // A special case of a DotReference with an PackageSl instead of a D
 public:
@@ -1160,8 +1186,16 @@ public:
 // Frames holding bindings for invoked functions
 class ParameterFrame : public NonWithFrame {
 public:
-    ParameterFrame(js2val thisObject, bool prototype) : NonWithFrame(ParameterKind), thisObject(thisObject), prototype(prototype), positional(NULL), positionalCount(0) { }    
-    ParameterFrame(ParameterFrame *pluralFrame) : NonWithFrame(ParameterKind, pluralFrame), thisObject(JS2VAL_UNDEFINED), prototype(pluralFrame->prototype), positional(NULL), positionalCount(0) { }
+    ParameterFrame(js2val thisObject, bool prototype) 
+        : NonWithFrame(ParameterFrameKind), 
+                thisObject(thisObject), 
+                prototype(prototype), 
+                buildArguments(false)  { }    
+    ParameterFrame(ParameterFrame *pluralFrame) 
+        : NonWithFrame(ParameterFrameKind, pluralFrame), 
+                thisObject(JS2VAL_UNDEFINED), 
+                prototype(pluralFrame->prototype), 
+                buildArguments(pluralFrame->buildArguments) { }
 
 //    Plurality plurality;
     js2val thisObject;              // The value of this; none if this function doesn't define this;
@@ -1169,9 +1203,10 @@ public:
                                     // available because this function hasn't been called yet.
 
     bool prototype;                 // true if this function is not an instance method but defines this anyway
+    bool buildArguments;
 
-    Variable **positional;          // list of positional parameters, in order
-    uint32 positionalCount;
+//    Variable **positional;          // list of positional parameters, in order
+//    uint32 positionalCount;
 
     virtual void instantiate(Environment *env);
     void assignArguments(JS2Metadata *meta, JS2Object *fnObj, js2val *argBase, uint32 argCount, uint32 length);

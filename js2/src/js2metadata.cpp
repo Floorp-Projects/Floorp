@@ -111,13 +111,9 @@ namespace MetaData {
                 if (prototype)
                     createDynamicProperty(result, engine->length_StringAtom, INT_TO_JS2VAL(pCount), ReadAccess, true, false);
                 pb = fnDef->parameters;
-                compileFrame->positional = new Variable *[pCount];
-                compileFrame->positionalCount = pCount;
-                pCount = 0;
                 while (pb) {
                     // XXX define a static binding for each parameter
-                    Variable *v = new Variable(objectClass, JS2VAL_UNDEFINED, false);
-                    compileFrame->positional[pCount++] = v;
+                    FrameVariable *v = new FrameVariable(compileFrame->allocateSlot(), FrameVariable::Parameter);
                     pb->mn = defineLocalMember(env, pb->name, publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, v, pb->pos, true);
                     pb = pb->next;
                 }
@@ -373,7 +369,7 @@ namespace MetaData {
             case StmtNode::Return:
                 {
                     Frame *regionalFrame = *env->getRegionalFrame();
-                    if (regionalFrame->kind != ParameterKind)
+                    if (regionalFrame->kind != ParameterFrameKind)
                         reportError(Exception::syntaxError, "Return statement not in function", p->pos);
                     ExprStmtNode *e = checked_cast<ExprStmtNode *>(p);
                     if (e->expr) {
@@ -438,7 +434,7 @@ namespace MetaData {
                                         && (f->attributes == NULL)
                                         && ((topFrame->kind == PackageKind)
                                                         || (topFrame->kind == BlockFrameKind)
-                                                        || (topFrame->kind == ParameterKind)) ) {
+                                                        || (topFrame->kind == ParameterFrameKind)) ) {
                                     LocalMember *v = defineHoistedVar(env, f->function.name, p, false, OBJECT_TO_JS2VAL(fObj));
                                 }
                                 else {
@@ -495,7 +491,7 @@ namespace MetaData {
                             ValidateExpression(cxt, env, vb->initializer);
 
                         if (!cxt->strict && ((regionalFrame->kind == PackageKind)
-                                            || (regionalFrame->kind == ParameterKind))
+                                            || (regionalFrame->kind == ParameterFrameKind))
                                         && !immutable
                                         && (vs->attributes == NULL)
                                         && (vb->type == NULL)) {
@@ -2070,6 +2066,25 @@ doUnary:
         case ExprNode::identifier:
             {
                 IdentifierExprNode *i = checked_cast<IdentifierExprNode *>(p);
+                if ((i->name == widenCString("eval")) || (i->name == widenCString("arguments"))) {
+                    // find the parameterFrame for this function and make sure
+                    // that the arguments property will get built
+                    FrameListIterator fi = env->getBegin();
+                    while (fi != env->getEnd()) {
+                        Frame *fr = *fi;
+                        if ((fr->kind != WithFrameKind) && (fr->kind != BlockFrameKind)) {
+                            NonWithFrame *nwf = checked_cast<NonWithFrame *>(fr);
+                            if (nwf->kind == ParameterFrameKind) {
+                                ParameterFrame *pf = checked_cast<ParameterFrame *>(nwf);
+                                pf->buildArguments = true;
+                                break;
+                            }
+                            else    // ran into a class or package, we're not in a function
+                                break;
+                        }
+                        fi++;
+                    }
+                }
                 returnRef = new (*referenceArena) LexicalReference(&i->name, cxt.strict);
                 referenceArena->registerDestructor(returnRef);
                 ((LexicalReference *)returnRef)->variableMultiname.addNamespace(cxt);
@@ -2092,6 +2107,23 @@ doUnary:
                     default:
                         keepLooking = false;
                         break;
+                    case ParameterFrameKind:
+                        {
+                            LocalMember *m = findLocalMember(pf, multiname, ReadAccess);
+                            if (m) {
+                                switch (checked_cast<LocalMember *>(m)->memberKind) {
+                                case LocalMember::VariableMember:
+                                    *exprType = checked_cast<Variable *>(m)->type;
+                                    break;
+                                case LocalMember::FrameVariableMember:
+                                    ASSERT(checked_cast<FrameVariable *>(m)->kind == FrameVariable::Parameter);
+                                    returnRef = new (*referenceArena) ParameterSlotReference(checked_cast<FrameVariable *>(m)->frameSlot);
+                                    break;
+                                }                                
+                                keepLooking = false;
+                            }
+                        }
+                        break;
                     case BlockFrameKind:
                         {
                             LocalMember *m = findLocalMember(pf, multiname, ReadAccess);
@@ -2101,7 +2133,7 @@ doUnary:
                                     *exprType = checked_cast<Variable *>(m)->type;
                                     break;
                                 case LocalMember::FrameVariableMember:
-                                    ASSERT(!checked_cast<FrameVariable *>(m)->packageSlot);
+                                    ASSERT(checked_cast<FrameVariable *>(m)->kind == FrameVariable::Local);
                                     returnRef = new (*referenceArena) FrameSlotReference(checked_cast<FrameVariable *>(m)->frameSlot);
                                     break;
                                 }                                        
@@ -2141,7 +2173,7 @@ doUnary:
                                             *exprType = checked_cast<Variable *>(m)->type;
                                             break;
                                         case LocalMember::FrameVariableMember:
-                                            ASSERT(checked_cast<FrameVariable *>(m)->packageSlot);
+                                            ASSERT(checked_cast<FrameVariable *>(m)->kind == FrameVariable::Package);
                                             returnRef = new (*referenceArena) PackageSlotReference(checked_cast<FrameVariable *>(m)->frameSlot);
                                             break;
                                         }                                        
@@ -2472,7 +2504,7 @@ doUnary:
         FrameListIterator fi = getBegin();
         while (fi != getEnd()) {
             Frame *pf = *fi;
-            if ((pf->kind == ParameterKind)
+            if ((pf->kind == ParameterFrameKind)
                     && !JS2VAL_IS_NULL(checked_cast<ParameterFrame *>(pf)->thisObject))
                 if (allowPrototypeThis || !checked_cast<ParameterFrame *>(pf)->prototype)
                     return checked_cast<ParameterFrame *>(pf)->thisObject;
@@ -2505,7 +2537,7 @@ doUnary:
                 }
                 break;
             case SystemKind:
-            case ParameterKind:
+            case ParameterFrameKind:
             case BlockFrameKind:
                 {
                     LocalMember *m = meta->findLocalMember(*fi, multiname, ReadAccess);
@@ -2549,7 +2581,7 @@ doUnary:
                 }
                 break;
             case SystemKind:
-            case ParameterKind:
+            case ParameterFrameKind:
             case BlockFrameKind:
                 {
                     LocalMember *m = meta->findLocalMember(*fi, multiname, WriteAccess);
@@ -2601,7 +2633,7 @@ doUnary:
                 }
                 break;
             case SystemKind:
-            case ParameterKind:
+            case ParameterFrameKind:
             case BlockFrameKind:
                 {
                     LocalMember *m = meta->findLocalMember(*fi, multiname, WriteAccess);
@@ -2651,7 +2683,7 @@ doUnary:
                 }
                 break;
             case SystemKind:
-            case ParameterKind:
+            case ParameterFrameKind:
             case BlockFrameKind:
                 {
                     LocalMember *m = meta->findLocalMember(*fi, multiname, WriteAccess);
@@ -3045,7 +3077,7 @@ doUnary:
         LocalMember *result = NULL;
         FrameListIterator regionalFrameEnd = env->getRegionalEnvironment();
         NonWithFrame *regionalFrame = checked_cast<NonWithFrame *>(*regionalFrameEnd);
-        ASSERT((regionalFrame->kind == PackageKind) || (regionalFrame->kind == ParameterKind));          
+        ASSERT((regionalFrame->kind == PackageKind) || (regionalFrame->kind == ParameterFrameKind));          
 rescan:
         // run through all the existing bindings, to see if this variable already exists.
         LocalBinding *bindingResult = NULL;
@@ -3065,7 +3097,7 @@ rescan:
             }
         }
         if (((bindingResult == NULL) || !isVar) 
-                && (regionalFrame->kind == ParameterKind)
+                && (regionalFrame->kind == ParameterFrameKind)
                 && (regionalFrameEnd != env->getBegin())) {
             // re-scan in the frame above the parameter frame
             regionalFrame = checked_cast<NonWithFrame *>(*(regionalFrameEnd - 1));
@@ -3080,7 +3112,19 @@ rescan:
             }
             else
                 lbe = *lbeP;
-            result = new FrameVariable(regionalFrame->allocateSlot(), (regionalFrame->kind == PackageKind));
+            switch (regionalFrame->kind) {
+            case PackageKind:
+                result = new FrameVariable(regionalFrame->allocateSlot(), FrameVariable::Package);
+                break;
+            case ParameterFrameKind:
+                result = new FrameVariable(regionalFrame->allocateSlot(), FrameVariable::Parameter);
+                break;
+            case BlockFrameKind:
+                result = new FrameVariable(regionalFrame->allocateSlot(), FrameVariable::Local);
+                break;
+            default:
+                NOT_REACHED("Bad frame kind");
+            }
             (*regionalFrame->slots)[checked_cast<FrameVariable *>(result)->frameSlot] = initVal;
             LocalBinding *sb = new LocalBinding(ReadWriteAccess, result, true);
             lbe->bindingList.push_back(LocalBindingEntry::NamespaceBinding(publicNamespace, sb));
@@ -3558,7 +3602,7 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
             return functionClass;
 
         case SystemKind:
-        case ParameterKind: 
+        case ParameterFrameKind: 
         case BlockFrameKind: 
         default:
             ASSERT(false);
@@ -3779,12 +3823,24 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
                 if (phase == CompilePhase) 
                     reportError(Exception::compileExpressionError, "Inappropriate compile time expression", engine->errorPos());
                 FrameVariable *f = checked_cast<FrameVariable *>(m);
-                if (f->packageSlot)
+                switch (f->kind) {
+                case FrameVariable::Package:
                     *rval = (*env->getPackageFrame()->slots)[f->frameSlot];
-                else {
-                    FrameListIterator fi = env->getRegionalFrame();
-                    ASSERT((*fi)->kind == ParameterKind);
-                    *rval = (*checked_cast<NonWithFrame *>(*(fi - 1))->slots)[f->frameSlot];
+                    break;
+                case FrameVariable::Local:
+                    {
+                        FrameListIterator fi = env->getRegionalFrame();
+                        ASSERT((*fi)->kind == ParameterFrameKind);
+                        *rval = (*checked_cast<NonWithFrame *>(*(fi - 1))->slots)[f->frameSlot];
+                    }
+                    break;
+                case FrameVariable::Parameter:
+                    {
+                        FrameListIterator fi = env->getRegionalFrame();
+                        ASSERT((*fi)->kind == ParameterFrameKind);
+                        *rval = (*checked_cast<NonWithFrame *>(*fi)->slots)[f->frameSlot];
+                    }
+                    break;
                 }
             }
             return true;
@@ -3830,12 +3886,24 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
         case LocalMember::FrameVariableMember:
             {
                 FrameVariable *f = checked_cast<FrameVariable *>(m);
-                if (f->packageSlot)
+                switch (f->kind) {
+                case FrameVariable::Package:
                     (*env->getPackageFrame()->slots)[f->frameSlot] = newValue;
-                else {
-                    FrameListIterator fi = env->getRegionalFrame();
-                    ASSERT((*fi)->kind == ParameterKind);
-                    (*checked_cast<NonWithFrame *>(*(fi - 1))->slots)[f->frameSlot] = newValue;
+                    break;
+                case FrameVariable::Local:
+                    {
+                        FrameListIterator fi = env->getRegionalFrame();
+                        ASSERT((*fi)->kind == ParameterFrameKind);
+                        (*checked_cast<NonWithFrame *>(*(fi - 1))->slots)[f->frameSlot] = newValue;
+                    }
+                    break;
+                case FrameVariable::Parameter:
+                    {
+                        FrameListIterator fi = env->getRegionalFrame();
+                        ASSERT((*fi)->kind == ParameterFrameKind);
+                        (*checked_cast<NonWithFrame *>(*fi)->slots)[f->frameSlot] = newValue;
+                    }
+                    break;
                 }
             }
             return true;
@@ -4447,43 +4515,44 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
     // Pad out to 'length' args with undefined values if argCount is insufficient
     void ParameterFrame::assignArguments(JS2Metadata *meta, JS2Object *fnObj, js2val *argBase, uint32 argCount, uint32 length)
     {
-        Multiname *mn = new Multiname(NULL, meta->publicNamespace);
-        DEFINE_ROOTKEEPER(rk1, mn);
-
-        ASSERT(pluralFrame->kind == ParameterKind);
+        ASSERT(pluralFrame->kind == ParameterFrameKind);
         ParameterFrame *plural = checked_cast<ParameterFrame *>(pluralFrame);
-        ASSERT((plural->positionalCount == 0) || (plural->positional != NULL));
         
-        SimpleInstance *argsObj = new SimpleInstance(meta, meta->objectClass->prototype, meta->objectClass);
+        SimpleInstance *argsObj = NULL;
         DEFINE_ROOTKEEPER(rk2, argsObj);
 
-        // Add the 'arguments' property
-        String name(widenCString("arguments"));
-        ASSERT(localBindings[name] == NULL);
-        LocalBindingEntry *lbe = new LocalBindingEntry(name);
-        LocalBinding *sb = new LocalBinding(ReadAccess, new Variable(meta->arrayClass, OBJECT_TO_JS2VAL(argsObj), true), false);
-        lbe->bindingList.push_back(LocalBindingEntry::NamespaceBinding(meta->publicNamespace, sb));
-        localBindings.insert(name, lbe);
+        if (plural->buildArguments) {
+            argsObj = new SimpleInstance(meta, meta->objectClass->prototype, meta->objectClass);
+            // Add the 'arguments' property
+            String name(widenCString("arguments"));
+            ASSERT(localBindings[name] == NULL);
+            LocalBindingEntry *lbe = new LocalBindingEntry(name);
+            LocalBinding *sb = new LocalBinding(ReadAccess, new Variable(meta->arrayClass, OBJECT_TO_JS2VAL(argsObj), true), false);
+            lbe->bindingList.push_back(LocalBindingEntry::NamespaceBinding(meta->publicNamespace, sb));
+            localBindings.insert(name, lbe);
+        }
+
+        uint32 slotCount = (plural->slots) ? plural->slots->size() : 0;
 
         uint32 i;
         for (i = 0; (i < argCount); i++) {
-            if (i < plural->positionalCount) {
-                ASSERT(plural->positional[i]->cloneContent);
-                ASSERT(plural->positional[i]->cloneContent->memberKind == Member::VariableMember);
-                (checked_cast<Variable *>(plural->positional[i]->cloneContent))->value = argBase[i];
+            if (i < slotCount) {
+                (*slots)[i] = argBase[i];
             }
-            meta->objectClass->writePublic(meta, OBJECT_TO_JS2VAL(argsObj), meta->objectClass, meta->engine->numberToString(i), true, argBase[i]);
+            if (plural->buildArguments) 
+                meta->objectClass->writePublic(meta, OBJECT_TO_JS2VAL(argsObj), meta->objectClass, meta->engine->numberToString(i), true, argBase[i]);
         }
         while (i++ < length) {
-            if (i < plural->positionalCount) {
-                ASSERT(plural->positional[i]->cloneContent);
-                ASSERT(plural->positional[i]->cloneContent->memberKind == Member::VariableMember);
-                (checked_cast<Variable *>(plural->positional[i]->cloneContent))->value = JS2VAL_UNDEFINED;
+            if (i < slotCount) {
+                (*slots)[i] = JS2VAL_UNDEFINED;
             }
-            meta->objectClass->writePublic(meta, OBJECT_TO_JS2VAL(argsObj), meta->objectClass, meta->engine->numberToString(i), true, JS2VAL_UNDEFINED);
+            if (plural->buildArguments) 
+                meta->objectClass->writePublic(meta, OBJECT_TO_JS2VAL(argsObj), meta->objectClass, meta->engine->numberToString(i), true, JS2VAL_UNDEFINED);
         }
-        setLength(meta, argsObj, argCount);
-        meta->objectClass->writePublic(meta, OBJECT_TO_JS2VAL(argsObj), meta->objectClass, meta->engine->allocStringPtr("callee"), true, OBJECT_TO_JS2VAL(fnObj));
+        if (plural->buildArguments) {
+            setLength(meta, argsObj, argCount);
+            meta->objectClass->writePublic(meta, OBJECT_TO_JS2VAL(argsObj), meta->objectClass, meta->engine->allocStringPtr("callee"), true, OBJECT_TO_JS2VAL(fnObj));
+        }
     }
 
 

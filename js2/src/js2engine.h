@@ -106,6 +106,15 @@ enum JS2Op {
     eFrameSlotPreInc,   // <slot index:u16>
     eFrameSlotPreDec,   // <slot index:u16>
 
+    eParameterSlotRead,     // <slot index:u16>
+    eParameterSlotRef,      // <slot index:u16>
+    eParameterSlotWrite,    // <slot index:u16>
+    eParameterSlotDelete,   // <slot index:u16>
+    eParameterSlotPostInc,  // <slot index:u16>
+    eParameterSlotPostDec,  // <slot index:u16>
+    eParameterSlotPreInc,   // <slot index:u16>
+    eParameterSlotPreDec,   // <slot index:u16>
+
     ePackageSlotRead,     // <slot index:u16>
     ePackageSlotRef,      // <slot index:u16>
     ePackageSlotWrite,    // <slot index:u16>
@@ -295,6 +304,7 @@ public:
         Environment *newEnv;
         Frame *topFrame;
         NonWithFrame *localFrame;
+        ParameterFrame *parameterFrame;
     };
     void jsr(Phase execPhase, BytecodeContainer *bCon, uint32 stackBase, js2val returnVal, Environment *env);
     bool activationStackEmpty() { return (activationStackTop == activationStack); }
@@ -345,6 +355,7 @@ public:
 
     // For frame slot references:
     NonWithFrame *packageFrame;
+    ParameterFrame *parameterFrame;
     NonWithFrame *localFrame;
 
     void pushHandler(uint8 *pc);

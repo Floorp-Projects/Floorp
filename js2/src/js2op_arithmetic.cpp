@@ -1239,3 +1239,48 @@
             (*packageFrame->slots)[slotIndex] = a;
         }
         break;
+
+    case eParameterSlotPostInc:
+        {
+            uint16 slotIndex = BytecodeContainer::getShort(pc);
+            pc += sizeof(short);
+            ASSERT(slotIndex < parameterFrame->slots->size());
+            a = (*parameterFrame->slots)[slotIndex];
+            float64 num = meta->toFloat64(a);
+            (*parameterFrame->slots)[slotIndex] = allocNumber(num + 1.0);
+            pushNumber(num);
+        }
+        break;
+    case eParameterSlotPostDec:
+        {
+            uint16 slotIndex = BytecodeContainer::getShort(pc);
+            pc += sizeof(short);
+            ASSERT(slotIndex < parameterFrame->slots->size());
+            a = (*parameterFrame->slots)[slotIndex];
+            float64 num = meta->toFloat64(a);
+            (*parameterFrame->slots)[slotIndex] = allocNumber(num - 1.0);
+            pushNumber(num);
+        }
+        break;
+    case eParameterSlotPreInc:
+        {
+            uint16 slotIndex = BytecodeContainer::getShort(pc);
+            pc += sizeof(short);
+            ASSERT(slotIndex < parameterFrame->slots->size());
+            a = (*parameterFrame->slots)[slotIndex];
+            float64 num = meta->toFloat64(a);
+            a = pushNumber(num + 1.0);
+            (*parameterFrame->slots)[slotIndex] = a;
+        }
+        break;
+    case eParameterSlotPreDec:
+        {
+            uint16 slotIndex = BytecodeContainer::getShort(pc);
+            pc += sizeof(short);
+            ASSERT(slotIndex < parameterFrame->slots->size());
+            a = (*parameterFrame->slots)[slotIndex];
+            float64 num = meta->toFloat64(a);
+            a = pushNumber(num - 1.0);
+            (*parameterFrame->slots)[slotIndex] = a;
+        }
+        break;

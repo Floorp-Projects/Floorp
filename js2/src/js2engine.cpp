@@ -186,6 +186,11 @@ namespace MetaData {
     // If not, fill the table or return a un-hashed pointer
     float64 *JS2Engine::newDoubleValue(float64 x)
     {
+        float64 *p = (float64 *)JS2Object::alloc(sizeof(float64), PondScum::GenericFlag);
+        *p = x;
+        return p;
+
+/*
         union {
             float64 x;
             uint8 a[8];
@@ -208,6 +213,7 @@ namespace MetaData {
             *p = x;
             return p;
         }
+*/
     }
 
     String *JS2Engine::allocStringPtr(const char *s)
@@ -518,6 +524,15 @@ namespace MetaData {
         { eFrameSlotPreInc, "FrameSlotPreInc", U16 },       // <slot index:u16>
         { eFrameSlotPreDec, "FrameSlotPreDec", U16 },       // <slot index:u16>
 
+        { eParameterSlotRead, "ParameterSlotRead", U16 },           // <slot index:u16>
+        { eParameterSlotRef, "ParameterSlotRef", U16 },             // <slot index:u16>
+        { eParameterSlotWrite, "ParameterSlotWrite", U16 },         // <slot index:u16>
+        { eParameterSlotDelete, "ParameterSlotDelete", U16 },       // <slot index:u16>
+        { eParameterSlotPostInc, "ParameterSlotPostInc", U16 },     // <slot index:u16>
+        { eParameterSlotPostDec, "ParameterSlotPostDec", U16 },     // <slot index:u16>
+        { eParameterSlotPreInc, "ParameterSlotPreInc", U16 },       // <slot index:u16>
+        { eParameterSlotPreDec, "ParameterSlotPreDec", U16 },       // <slot index:u16>
+
         { ePackageSlotRead, "PackageSlotRead", U16 },           // <slot index:u16>
         { ePackageSlotRef, "PackageSlotRef", U16 },             // <slot index:u16>
         { ePackageSlotWrite, "PackageSlotWrite", U16 },         // <slot index:u16>
@@ -778,15 +793,19 @@ namespace MetaData {
 
         case eFrameSlotRead:
         case ePackageSlotRead:
+        case eParameterSlotRead:
             return 1;          // push value
         case eFrameSlotWrite:
         case ePackageSlotWrite:
+        case eParameterSlotWrite:
             return 0;          // leaves value on stack
         case eFrameSlotRef:
         case ePackageSlotRef:
+        case eParameterSlotRef:
             return 2;          // push base and value
         case eFrameSlotDelete:
         case ePackageSlotDelete:
+        case eParameterSlotDelete:
             return 1;          // push boolean result;
 
         case eDotRead:
@@ -855,6 +874,10 @@ namespace MetaData {
         case eFrameSlotPostDec:
         case eFrameSlotPreInc:
         case eFrameSlotPreDec:
+        case eParameterSlotPostInc:
+        case eParameterSlotPostDec:
+        case eParameterSlotPreInc:
+        case eParameterSlotPreDec:
         case ePackageSlotPostInc:
         case ePackageSlotPostDec:
         case ePackageSlotPreInc:
@@ -922,7 +945,7 @@ namespace MetaData {
         activationStackTop->newEnv = env;       // and save the new environment, if an exception occurs, we can't depend on meta->env
         activationStackTop->topFrame = env->getTopFrame();  // remember how big the new env. is supposed to be so that local frames don't accumulate
         activationStackTop->localFrame = localFrame;
-//        localFrame = checked_cast<NonWithFrame *>(activationStackTop->topFrame);
+        activationStackTop->parameterFrame = parameterFrame;
         activationStackTop++;
         if (new_bCon) {
             bCon = new_bCon;
@@ -951,6 +974,7 @@ namespace MetaData {
         pc = activationStackTop->pc;
         phase = activationStackTop->phase;
         localFrame = activationStackTop->localFrame;
+        parameterFrame = activationStackTop->parameterFrame;
         // reset the env. top
         while (activationStackTop->newEnv->getTopFrame() != activationStackTop->topFrame)
             activationStackTop->newEnv->removeTopFrame();
