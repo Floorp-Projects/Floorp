@@ -89,10 +89,12 @@ PRInt32 MIME_ConvertString(const char* from_charset, const char* to_charset,
  * @param inLength    [IN] Input buffer length.
  * @param outBuffer   [OUT] Converted buffer is set. Allocated buffer should be freed by PR_FREE.
  * @param outLength   [OUT] Converted buffer length is set.
+ * @param numUnConverted [OUT] Number of unconverted characters (can be NULL).
  * @return            0 is success, otherwise error.
  */
 PRInt32 MIME_ConvertCharset(const PRBool autoDetection, const char* from_charset, const char* to_charset,
-                            const char* inBuffer, const PRInt32 inLength, char** outBuffer, PRInt32* outLength);
+                            const char* inBuffer, const PRInt32 inLength, char** outBuffer, PRInt32* outLength,
+                            PRInt32* numUnConverted);
 
 /**
  * Convert an input string with a charset into unicode.

@@ -536,7 +536,7 @@ mime_intl_mimepart_2_str(char **str, char *mcharset)
     char  *newStr = NULL;
     PRInt32 newStrLen;
     PRInt32 res = MIME_ConvertCharset(PR_TRUE, mcharset, "UTF-8", *str, PL_strlen(*str), 
-                                    &newStr, &newStrLen);
+                                    &newStr, &newStrLen, NULL);
 		if ( (NS_SUCCEEDED(res)) && (newStr && newStr != *str))
 		{
 			PR_FREEIF(*str);
@@ -1301,7 +1301,7 @@ mime_parse_stream_complete (nsMIMESession *stream)
         char      *newBody = NULL;
         PRInt32   newBodyLen;
         PRInt32 res = MIME_ConvertCharset(PR_TRUE, mdd->mailcharset, "UTF-8", body, 
-                                          PL_strlen(body), &newBody, &newBodyLen);
+                                          PL_strlen(body), &newBody, &newBodyLen, NULL);
 		    if ( (NS_SUCCEEDED(res)) && (newBody && newBody != body))
 		    {
 			    PR_FREEIF(body);

@@ -768,7 +768,7 @@ char * utf8_mime_encode_mail_address(char *charset, const char *src, int maxLine
         }
         // utf-8 to mail charset conversion (or iso-8859-1 in case of us-ascii).
         if (MIME_ConvertCharset(PR_FALSE, "utf-8", !PL_strcasecmp(charset, "us-ascii") ? "iso-8859-1" : charset, 
-                                (const char*) begin, (const PRInt32) len, &buf1, (PRInt32 *) &iBufLen)) {
+                                (const char*) begin, (const PRInt32) len, &buf1, (PRInt32 *) &iBufLen, NULL)) {
           PR_FREEIF(srcbuf);
           PR_FREEIF(retbuf);
           return NULL; //error
@@ -1281,7 +1281,9 @@ public:
   // Converts input buffer or duplicates input if converters not available (and returns 0).
   // Also duplicates input if convertion not needed.
   // C string is generated for converted string.
-  PRInt32 Convert(const char* inBuffer, const PRInt32 inLength, char** outBuffer, PRInt32* outLength);
+  PRInt32 Convert(const char* inBuffer, const PRInt32 inLength, 
+                  char** outBuffer, PRInt32* outLength,
+                  PRInt32* numUnConverted);
 
 protected:
   nsIUnicodeDecoder * GetUnicodeDecoder() {return (mAutoDetect && NULL != mDecoderDetected) ? mDecoderDetected : mDecoder;}
@@ -1390,9 +1392,15 @@ PRInt32 MimeCharsetConverterClass::Initialize(const char* from_charset, const ch
   return NS_SUCCEEDED(res) ? 0 : -1;
 }
 
-PRInt32 MimeCharsetConverterClass::Convert(const char* inBuffer, const PRInt32 inLength, char** outBuffer, PRInt32* outLength)
+PRInt32 MimeCharsetConverterClass::Convert(const char* inBuffer, const PRInt32 inLength, 
+                                           char** outBuffer, PRInt32* outLength,
+                                           PRInt32* numUnConverted)
 {
   nsresult res;
+
+  if (NULL != numUnConverted) {
+    *numUnConverted = 0;
+  }
 
   // Encoder is not available, duplicate the input.
   if (NULL == mEncoder) {
@@ -1483,12 +1491,40 @@ PRInt32 MimeCharsetConverterClass::Convert(const char* inBuffer, const PRInt32 i
       }
       else {
         // convert from unicode
-        res = encoder->Convert(unichars, &unicharLength, dstPtr, &dstLength);
-        if (NS_SUCCEEDED(res)) {
-          dstPtr[dstLength] = '\0';
-          *outBuffer = dstPtr;      // set the result string
-          *outLength = dstLength;
+        PRUnichar *currentUStringPtr = unichars;
+        PRInt32 oldUnicharLength = unicharLength;
+        PRInt32 currentUnicharLength = unicharLength;
+        char *currentCStringPtr = dstPtr;
+        PRInt32 totalCLength = 0;
+        while (1) {
+          res = encoder->Convert(currentUStringPtr, &currentUnicharLength, currentCStringPtr, &dstLength);
+
+          // increment for destination
+          currentCStringPtr += dstLength;
+          totalCLength += dstLength;
+
+          // break: this is usually the case
+          // source length <= zero and no error or unrecoverable error
+          if (0 >= currentUnicharLength || NS_ERROR_UENC_NOMAPPING != res) {
+            break;
+          }
+          // could not map unicode to the destination charset, skip one unichar and continue
+          // increment for source unicode, skip one unichar
+          if (NULL != numUnConverted) {
+            (*numUnConverted)++;
+          }
+          currentUStringPtr += currentUnicharLength + 1;
+          oldUnicharLength -= (currentUnicharLength + 1);
+          currentUnicharLength = oldUnicharLength;
+          // estimate target length again
+          (void) encoder->GetMaxLength(currentUStringPtr, currentUnicharLength, &dstLength);
+          if (dstLength > unicharLength) {
+            dstLength = unicharLength;  // not to exceed allocated buffer length
+          }
         }
+         dstPtr[totalCLength] = '\0';
+         *outBuffer = dstPtr;      // set the result string
+         *outLength = totalCLength;
       }
     }
     delete [] unichars;
@@ -1539,11 +1575,13 @@ PRInt32 MIME_ConvertString(const char* from_charset, const char* to_charset,
                            const char* inCstring, char** outCstring)
 {
   PRInt32 outLength;
-  return MIME_ConvertCharset(PR_FALSE, from_charset, to_charset, inCstring, PL_strlen(inCstring), outCstring, &outLength);
+  return MIME_ConvertCharset(PR_FALSE, from_charset, to_charset, 
+                             inCstring, PL_strlen(inCstring), outCstring, &outLength, NULL);
 }
 
 PRInt32 MIME_ConvertCharset(const PRBool autoDetection, const char* from_charset, const char* to_charset,
-                            const char* inBuffer, const PRInt32 inLength, char** outBuffer, PRInt32* outLength)
+                            const char* inBuffer, const PRInt32 inLength, char** outBuffer, PRInt32* outLength,
+                            PRInt32* numUnConverted)
 {
   char srcCharset[kMAX_CSNAME+1], dstCharset[kMAX_CSNAME+1];
   MimeCharsetConverterClass aMimeCharsetConverterClass;
@@ -1557,7 +1595,7 @@ PRInt32 MIME_ConvertCharset(const PRBool autoDetection, const char* from_charset
   res = aMimeCharsetConverterClass.Initialize(srcCharset, dstCharset, autoDetection, -1);
 
   if (res != -1) {
-    res = aMimeCharsetConverterClass.Convert(inBuffer, inLength, outBuffer, outLength);
+    res = aMimeCharsetConverterClass.Convert(inBuffer, inLength, outBuffer, outLength, NULL);
   }
 
   return res;

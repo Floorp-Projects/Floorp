@@ -102,7 +102,8 @@ nsresult nsMsgHeaderParser::ParseHeaderAddresses (const char *charset, const cha
       s += len;
     }
     // convert array of strings
-    if (MIME_ConvertCharset(PR_FALSE, "UTF-8", CHARSET(charset), *names, len_all, &outStrings, &outStrLen) == 0) {
+    if (MIME_ConvertCharset(PR_FALSE, "UTF-8", CHARSET(charset), *names, 
+                            len_all, &outStrings, &outStrLen, NULL) == 0) {
       PR_Free(*names);
       *names = outStrings;
     }
@@ -116,7 +117,8 @@ nsresult nsMsgHeaderParser::ParseHeaderAddresses (const char *charset, const cha
       s += len;
     }
     // convert array of strings
-    if (MIME_ConvertCharset(PR_FALSE, "UTF-8", CHARSET(charset), *addresses, len_all, &outStrings, &outStrLen) == 0) {
+    if (MIME_ConvertCharset(PR_FALSE, "UTF-8", CHARSET(charset), *addresses, 
+                            len_all, &outStrings, &outStrLen, NULL) == 0) {
       PR_Free(*addresses);
       *addresses = outStrings;
     }

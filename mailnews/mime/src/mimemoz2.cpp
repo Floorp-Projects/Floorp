@@ -369,7 +369,7 @@ mime_convert_charset (const PRBool input_autodetect, const char *input_line, PRI
   char  *convertedString = NULL;
   PRInt32 convertedStringLen;
   PRInt32 res = MIME_ConvertCharset(input_autodetect, input_charset, "UTF-8", input_line, input_length, 
-                                    &convertedString, &convertedStringLen);
+                                    &convertedString, &convertedStringLen, NULL);
   if (res != 0)
   {
       *output_ret = 0;
