@@ -462,7 +462,6 @@
                                disable-controller="repeat"
                                label="&newevent.forever.label;"
                                oncommand="commandUntil()"/>
-                        <vbox id="repeat-end-box" align="center">
                            <hbox>
                               <radio id="repeat-numberoftimes-radio"
                                      disable-controller="repeat"
@@ -471,7 +470,6 @@
                               <textbox id="repeat-numberoftimes-textbox"
                                        disable-controller="repeat"/>
                            </hbox>
-                        </vbox>
                         <vbox id="repeat-end-box" align="center">
                             <hbox>
                                 <radio id="repeat-until-radio"
