@@ -1592,6 +1592,33 @@ int main(int argc, char* argv[])
   argc = NS_TraceMallocStartupArgs(argc, argv);
 #endif
 
+#ifdef MOZ_XUL_APP
+  // Check for -register, which registers chrome and then exits immediately.
+  for (int i = 0; i < argc; ++i) {
+    if (!strcmp(argv[i], "-register")) {
+      {
+        nsCOMPtr<nsIDirectoryServiceProvider> provider;
+        provider = new nsXREDirProvider(aAppData.GetProductName());
+        NS_ENSURE_TRUE(provider, 1);
+
+        nsresult rv = NS_InitXPCOM2(nsnull, nsnull, provider);
+        NS_ENSURE_SUCCESS(rv, 1);
+      }
+
+      nsCOMPtr<nsIChromeRegistry> chromeReg = do_GetService("@mozilla.org/chrome/chrome-registry;1");
+      NS_ENSURE_TRUE(chromeReg, 1);
+
+      chromeReg->CheckForNewChrome();
+      chromeReg = 0;
+#ifdef XPCOM_GLUE
+      GRE_Shutdown();
+#else
+      NS_ShutdownXPCOM(nsnull);
+#endif
+      return 0;
+    }
+  }
+
 #if defined(MOZ_WIDGET_GTK) || defined(MOZ_WIDGET_GTK2)
   // Initialize GTK+1/2 here for splash
 #if defined(MOZ_WIDGET_GTK)
@@ -1694,24 +1721,6 @@ int main(int argc, char* argv[])
     return remoterv;
   }
 #endif
-
-#ifdef MOZ_XUL_APP
-  // Check for -register, which registers chrome and then exits immediately.
-  for (int i = 0; i < argc; ++i) {
-    if (!strcmp(argv[i], "-register")) {
-      nsCOMPtr<nsIChromeRegistry> chromeReg = do_GetService("@mozilla.org/chrome/chrome-registry;1");
-      if (chromeReg) {
-        chromeReg->CheckForNewChrome();
-        chromeReg = 0;
-#ifdef XPCOM_GLUE
-        GRE_Shutdown();
-#else
-        NS_ShutdownXPCOM(nsnull);
-#endif
-        return 0;
-      }
-    }
-  }
 
   nsresult mainResult = main1(argc, argv, nativeApp ? (nsISupports*)nativeApp : (nsISupports*)splash, aAppData);
 #else
