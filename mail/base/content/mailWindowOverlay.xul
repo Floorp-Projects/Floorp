@@ -298,11 +298,11 @@
   <key id="key_copy"/>
   <key id="key_paste"/>
   <key id="key_delete" oncommand="goDoCommand('cmd_delete');" shift="false"/>
-   #ifdef XP_MACOSX
-     <key id="cmd_shiftDelete" keycode="VK_BACK" xulkey="false" oncommand="goDoCommand('cmd_shiftDelete');" modifiers="shift"/>
-   #else
-     <key id="cmd_shiftDelete" keycode="VK_DELETE" xulkey="false" oncommand="goDoCommand('cmd_shiftDelete');" modifiers="shift"/>
-   #endif
+#ifdef XP_MACOSX
+  <key id="cmd_shiftDelete" keycode="VK_BACK" xulkey="false" oncommand="goDoCommand('cmd_shiftDelete');" modifiers="shift"/>
+#else
+  <key id="cmd_shiftDelete" keycode="VK_DELETE" xulkey="false" oncommand="goDoCommand('cmd_shiftDelete');" modifiers="shift"/>
+#endif
   <key id="key_selectAll"/>
   <key id="key_selectThread" key="&selectThreadCmd.key;"             oncommand="goDoCommand('cmd_selectThread');" modifiers="accel, shift"/>
   
@@ -310,7 +310,13 @@
   <key id="key_markJunk" key="&markAsJunkCmd.key;"                   oncommand="goDoCommand('cmd_markAsJunk');"/>
   <key id="key_markNotJunk" key="&markAsNotJunkCmd.key;"             oncommand="goDoCommand('cmd_markAsNotJunk');"
        modifiers="shift"/>
+
+#ifdef MOZ_WIDGET_GTK2
+  <key id="key_markAllRead" key="&markAllReadCmd.key;"               oncommand="goDoCommand('cmd_markAllRead');" modifiers="shift"/>
+#else
   <key id="key_markAllRead" key="&markAllReadCmd.key;"               oncommand="goDoCommand('cmd_markAllRead');" modifiers="accel, shift"/>
+#endif
+
   <key id="key_markThreadAsRead" key="&markThreadAsReadCmd.key;"     oncommand="goDoCommand('cmd_markThreadAsRead')"/>
   <key id="key_markReadByDate" key="&markReadByDateCmd.key;"         oncommand="goDoCommand('cmd_markReadByDate')"/>
   <key id="key_nextMsg" key="&nextMsgCmd.key;"                       oncommand="goDoCommand('cmd_nextMsg')"/>
@@ -331,15 +337,16 @@
   <key id="key_saveAsFile" key="&saveAsFileCmd.key;"                 oncommand="goDoCommand('cmd_saveAsFile')" modifiers="accel"/>
   <key id="key_viewPageSource" key="&pageSourceCmd.key;"             oncommand="goDoCommand('cmd_viewPageSource')" modifiers="accel"/>
   <key id="key_getNewMessages" key="&getNewMsgCmd.key;"              oncommand="goDoCommand('cmd_getNewMessages')" modifiers="accel"/>
-        <key id="key_getAllNewMessages" 
-             key="&getAllNewMsgCmd.key;"  
-             oncommand="goDoCommand('cmd_getMsgsForAuthAccounts');"
-             modifiers="accel, shift"/>
+  <key id="key_getAllNewMessages" 
+       key="&getAllNewMsgCmd.key;"  
+       oncommand="goDoCommand('cmd_getMsgsForAuthAccounts');"
+       modifiers="accel, shift"/>
   <key id="key_find" key="&findCmd.key;"  oncommand="goDoCommand('cmd_find')" modifiers="accel"/>
   <key id="key_findAgain" key="&findAgainCmd.key;"   oncommand="goDoCommand('cmd_findAgain')" modifiers="accel"/>
   <key id="key_findPrev"  key="&findPrevCmd.key;"    oncommand="goDoCommand('cmd_findPrev')"  modifiers="accel, shift"/>
   <key keycode="&findAgainCmd.key2;"   oncommand="goDoCommand('cmd_findAgain')"/>
   <key keycode="&findPrevCmd.key2;"    oncommand="goDoCommand('cmd_findPrev')"  modifiers="shift"/>
+  <key keycode="&quickSearchCmd.key;"  oncommand="QuickSearchFocus()" modifiers="accel"/>
   <key id="key_stop" keycode="VK_ESCAPE" command="cmd_stop"/>
 
   <keyset id="viewZoomKeys">

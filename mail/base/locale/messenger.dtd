@@ -569,6 +569,9 @@
 <!ENTITY notJunkButton.label "This is Not Junk">
 <!ENTITY junkInfoButton.label "?">
 
+<!-- Search Bar -->
+<!ENTITY quickSearchCmd.key "k">
+
 <!-- Message Header Context Menu -->
 <!ENTITY AddToAddressBook.label "Add to Address Book...">
 <!ENTITY AddToAddressBook.accesskey "B">

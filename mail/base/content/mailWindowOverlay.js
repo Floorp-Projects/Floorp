@@ -2241,6 +2241,13 @@ function HandleMDNResponse(aUrl)
     msgdb.Commit(ADDR_DB_LARGE_COMMIT);
 }
 
+function QuickSearchFocus() 
+{
+  var quickSearchTextBox = document.getElementById('searchInput');
+  if (quickSearchTextBox)
+    quickSearchTextBox.focus();
+}
+
 function MsgSearchMessages()
 {
   var preselectedFolder = null;
