@@ -83,7 +83,7 @@ NS_METHOD nsCookieHTTPNotify::UnregisterProc(nsIComponentManager *aCompMgr,
     if (NS_FAILED(rv)) return rv;
 
     nsXPIDLCString prevEntry;
-    rv = catman->DeleteCategoryEntry("http-startup-category", NS_COOKIEHTTPNOTIFY_PROGID, PR_TRUE,
+    rv = catman->DeleteCategoryEntry(NS_HTTP_STARTUP_CATEGORY, NS_COOKIEHTTPNOTIFY_PROGID, PR_TRUE,
                                      getter_Copies(prevEntry));
 
     // Return value is not used from this function.
