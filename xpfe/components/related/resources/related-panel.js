@@ -25,7 +25,7 @@
 
 
 var kUnknownReasonUrl		= 'about:blank';
-var kMAMIUrl				= 'http://client.alexa.com/MAMI/ns_whats_related/ns_whats_related.htm?';
+var kMAMIUrl				= 'http://xslt.alexa.com/data?cli=17&dat=nsa';
 
 var kNoHTTPReasonUrl		= kMAMIUrl + 'req_type=secure_intranet';
 var kSkipDomainReasonUrl	= kMAMIUrl + 'req_type=blocked_list';
