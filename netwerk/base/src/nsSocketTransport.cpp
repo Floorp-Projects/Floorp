@@ -1161,15 +1161,17 @@ NS_IMETHODIMP
 nsSocketTransport::GetProgressEventSink(nsIProgressEventSink **aResult)
 {
     NS_ENSURE_ARG_POINTER(aResult);
-    NS_ADDREF(*aResult = mEventSink);
+    *aResult = mNonProxiedEventSink;
+    NS_IF_ADDREF(*aResult);
     return NS_OK;
 }
 
 NS_IMETHODIMP
 nsSocketTransport::SetProgressEventSink(nsIProgressEventSink *aEventSink)
 {
-    mEventSink = nsnull;
+    mEventSink = mNonProxiedEventSink = 0;
     if (aEventSink) {
+        mNonProxiedEventSink = aEventSink;
         nsresult rv;
         // Now generate a proxied event sink-
         NS_WITH_SERVICE(nsIProxyObjectManager, 
