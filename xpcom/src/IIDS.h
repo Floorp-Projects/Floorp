@@ -995,31 +995,31 @@ nsIBrowserComponent = { /* a6cf90f1-15b3-11d2-932e-00805f8add32 */
     0x11d2,
     {0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32}
   };
-INTERFACENAME = { /* a6cf90f2-15b3-11d2-932e-00805f8add32 */
+nsIDOMNSRange = { /* a6cf90f2-15b3-11d2-932e-00805f8add32 */
     0xa6cf90f2,
     0x15b3,
     0x11d2,
     {0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32}
   };
-INTERFACENAME = { /* a6cf90f3-15b3-11d2-932e-00805f8add32 */
+nsIDOMOption = { /* a6cf90f3-15b3-11d2-932e-00805f8add32 */
     0xa6cf90f3,
     0x15b3,
     0x11d2,
     {0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32}
   };
-INTERFACENAME = { /* a6cf90f4-15b3-11d2-932e-00805f8add32 */
+nsIJSNativeIntializer = { /* a6cf90f4-15b3-11d2-932e-00805f8add32 */
     0xa6cf90f4,
     0x15b3,
     0x11d2,
     {0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32}
   };
-INTERFACENAME = { /* a6cf90f5-15b3-11d2-932e-00805f8add32 */
+nsHTMLOptionElement_CID = { /* a6cf90f5-15b3-11d2-932e-00805f8add32 */
     0xa6cf90f5,
     0x15b3,
     0x11d2,
     {0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32}
   };
-INTERFACENAME = { /* a6cf90f6-15b3-11d2-932e-00805f8add32 */
+nsISelectElement = { /* a6cf90f6-15b3-11d2-932e-00805f8add32 */
     0xa6cf90f6,
     0x15b3,
     0x11d2,
