@@ -41,16 +41,9 @@
 #include "nsHTMLValue.h"// XXX list ordinal hack
 #include "nsIHTMLContent.h"// XXX list ordinal hack
 
-// XXX break-before and completion status?
-
 // XXX mLastContentOffset, mFirstContentOffset, mLastContentIsComplete
 // XXX pagination
 // XXX prev-in-flow continuations
-
-// XXX write verify code for FD's:
-//   no contiguous IFD's
-//   check that child-counts agree with mChildCount
-//   verify that mFirstChild == first FD's first child
 
 // XXX IsFirstChild
 // XXX max-element-size
@@ -639,6 +632,29 @@ void nsCSSBlockReflowState::BlockBandData::ComputeAvailSpaceRect()
 
 //----------------------------------------------------------------------
 
+static nscoord
+GetParentLeftPadding(const nsReflowState* aReflowState)
+{
+  nscoord leftPadding = 0;
+  while (nsnull != aReflowState) {
+    nsIFrame* frame = aReflowState->frame;
+    const nsStyleDisplay* styleDisplay;
+    frame->GetStyleData(eStyleStruct_Display,
+                        (const nsStyleStruct*&) styleDisplay);
+    if (NS_STYLE_DISPLAY_BLOCK == styleDisplay->mDisplay) {
+      const nsStyleSpacing* styleSpacing;
+      frame->GetStyleData(eStyleStruct_Spacing,
+                          (const nsStyleStruct*&) styleSpacing);
+      nsMargin padding;
+      styleSpacing->CalcPaddingFor(frame, padding);
+      leftPadding = padding.left;
+      break;
+    }
+    aReflowState = aReflowState->parentReflowState;
+  }
+  return leftPadding;
+}
+
 nsCSSBlockReflowState::nsCSSBlockReflowState(nsIPresContext* aPresContext,
                                              nsISpaceManager* aSpaceManager,
                                              nsCSSBlockFrame* aBlock,
@@ -698,22 +714,26 @@ nsCSSBlockReflowState::nsCSSBlockReflowState(nsIPresContext* aPresContext,
     aBlockSC->GetStyleData(eStyleStruct_Display);
   mDirection = styleDisplay->mDirection;
 
+  mBulletPadding = 0;
   if (NS_STYLE_DISPLAY_LIST_ITEM == styleDisplay->mDisplay) {
     const nsStyleList* sl = (const nsStyleList*)
       aBlockSC->GetStyleData(eStyleStruct_List);
     if (NS_STYLE_LIST_STYLE_POSITION_OUTSIDE == sl->mListStylePosition) {
       mLineLayout.mListPositionOutside = PR_TRUE;
+      mBulletPadding = GetParentLeftPadding(aReflowState.parentReflowState);
     }
   }
+  const nsStyleSpacing* blockSpacing = (const nsStyleSpacing*)
+    aBlockSC->GetStyleData(eStyleStruct_Spacing);
+  nsMargin padding;
+  blockSpacing->CalcPaddingFor(mBlock, padding);
+  mLeftPadding = padding.left;
 
   // Apply border and padding adjustments for regular frames only
   nsRect blockRect;
   mBlock->GetRect(blockRect);
   mStyleSizeFlags = 0;
   if (!mBlockIsPseudo) {
-    const nsStyleSpacing* blockSpacing = (const nsStyleSpacing*)
-      aBlockSC->GetStyleData(eStyleStruct_Spacing);
-
     blockSpacing->CalcBorderPaddingFor(mBlock, mBorderPadding);
     mY = mBorderPadding.top;
     mX = mBorderPadding.left;
@@ -1388,8 +1408,9 @@ nsCSSBlockFrame::ComputeFinalSize(nsCSSBlockReflowState& aState,
     aDesiredRect.width = aState.mKidXMost + aState.mBorderPadding.right;
     if (!aState.mUnconstrainedWidth) {
       // Make sure we're at least as wide as the max size we were given
-      if (aDesiredRect.width < aState.maxSize.width) {
-        aDesiredRect.width = aState.maxSize.width;
+      nscoord mw = aState.maxSize.width + aState.mBulletPadding;
+      if (aDesiredRect.width < mw) {
+        aDesiredRect.width = mw;
       }
     }
     if (0 != aState.mBorderPadding.bottom) {
@@ -2021,6 +2042,9 @@ nsCSSBlockFrame::ReflowBlockFrame(nsCSSBlockReflowState& aState,
   aFrame->GetStyleData(eStyleStruct_Spacing,
                        (const nsStyleStruct*&)childSpacing);
   childSpacing->CalcMarginFor(aFrame, childMargin);
+  const nsStyleDisplay* childDisplay;
+  aFrame->GetStyleData(eStyleStruct_Display,
+                       (const nsStyleStruct*&)childDisplay);
 
   // XXX Negative margins are set to zero; we could do better SOMEDAY
   // Compute the top margin to apply to the child block
@@ -2032,9 +2056,6 @@ nsCSSBlockFrame::ReflowBlockFrame(nsCSSBlockReflowState& aState,
     // Provide an ebina style margin of 1 blank line before this block
     // for most block elements.
     // XXX need a complete list of the ones that he does this for
-    const nsStyleDisplay* childDisplay;
-    aFrame->GetStyleData(eStyleStruct_Display,
-                         (const nsStyleStruct*&)childDisplay);
     if (NS_STYLE_DISPLAY_LIST_ITEM != childDisplay->mDisplay) {
       if (IsPseudoFrame() && (aState.mY == aState.mBorderPadding.top)) {
         childTopMargin = 0;
@@ -2085,7 +2106,17 @@ nsCSSBlockFrame::ReflowBlockFrame(nsCSSBlockReflowState& aState,
     if (childBottomMargin < 0) childBottomMargin = 0;
   }
 
-  nscoord x = aState.mX + childMargin.left;
+  nscoord x = aState.mX + childMargin.left + aState.mBulletPadding;
+  if (NS_STYLE_DISPLAY_LIST_ITEM == childDisplay->mDisplay) {
+    const nsStyleList* sl;
+    aFrame->GetStyleData(eStyleStruct_List,
+                         (const nsStyleStruct*&) sl);
+    if (NS_STYLE_LIST_STYLE_POSITION_OUTSIDE == sl->mListStylePosition) {
+      // Slide child list item so that it's just past our border; it
+      // will use our padding area to place it's bullet.
+      x -= aState.mLeftPadding;
+    }
+  }
   nscoord y = aState.mY + topMargin;
   aFrame->WillReflow(*aState.mPresContext);
   aFrame->MoveTo(x, y);
@@ -2328,10 +2359,11 @@ nsCSSBlockFrame::ReflowInlineFrame(nsCSSBlockReflowState& aState,
                                    nsInlineReflowStatus&  aReflowResult)
 {
   if (!aState.mInlineLayoutPrepared) {
-    aState.mLineLayout.Prepare(aState.mX);
+    aState.mLineLayout.Prepare(aState.mX + aState.mBulletPadding);
     aState.mInlineLayout.Prepare(aState.mUnconstrainedWidth, aState.mNoWrap,
                                  aState.mComputeMaxElementSize);
-    aState.mInlineLayout.SetReflowSpace(aState.mCurrentBand.availSpace.x,
+    aState.mInlineLayout.SetReflowSpace(aState.mCurrentBand.availSpace.x +
+                                        aState.mBulletPadding,
                                         aState.mY,
                                         aState.mCurrentBand.availSpace.width,
                                         aState.mCurrentBand.availSpace.height);
@@ -2343,6 +2375,7 @@ nsCSSBlockFrame::ReflowInlineFrame(nsCSSBlockReflowState& aState,
         (0 == aState.mLineLayout.mLineNumber) &&
         (nsnull == mPrevInFlow)) {
       aState.mInlineLayout.mIsBullet = PR_TRUE;
+      aState.mInlineLayout.mHaveBullet = PR_TRUE;
     }
     aState.mInlineLayoutPrepared = PR_TRUE;
   }

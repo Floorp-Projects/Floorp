@@ -71,6 +71,8 @@ struct nsCSSBlockReflowState : public nsReflowState {
   PRIntn mStyleSizeFlags;
   nscoord mDeltaWidth;
   nscoord mBottomEdge;          // maximum Y
+  nscoord mBulletPadding;
+  nscoord mLeftPadding;
 
   PRPackedBool mUnconstrainedWidth;
   PRPackedBool mUnconstrainedHeight;
