@@ -60,6 +60,12 @@ case "$build_action" in
       echo "$build_type build already running with PID "`cat $build_type.pid`
     else
       echo "Starting $build_type tinderbox..."
+
+	  # Say if we found post-mozilla.pl
+	  if test -f post-mozilla.pl; then
+	    echo "Found post-mozilla.pl"
+	  fi
+
 	  # Grab and use mozconfig if it exists.
       if test -f mozconfig; then
         echo "Found mozconfig..."
@@ -70,6 +76,9 @@ case "$build_action" in
       else
         nohup ./build-seamonkey.pl --$build_type &
       fi
+	  # Write out PID so we can shut things down later.
+	  # This needs to be right after the ./build-seamonkey.pl call to
+	  # get the right PID.
       echo "PID $!"
       echo $! > $build_type.pid
 	  \rm -f nohup.out

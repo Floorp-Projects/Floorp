@@ -18,7 +18,7 @@ use POSIX qw(sys_wait_h strftime);
 use Cwd;
 use File::Basename; # for basename();
 use Config; # for $Config{sig_name} and $Config{sig_num}
-$::UtilsVersion = '$Revision: 1.50 $ ';
+$::UtilsVersion = '$Revision: 1.51 $ ';
 
 package TinderUtils;
 
@@ -868,10 +868,13 @@ sub DeleteBinary {
 sub PrintEnv {
     local $_;
 
+	# Print out environment settings.
     my $key;
     foreach $key (sort keys %ENV) {
         print_log "$key=$ENV{$key}\n";
     }
+
+	# Print out mozconfig if found.
     if (defined $ENV{MOZCONFIG} and -e $ENV{MOZCONFIG}) {
         print_log "-->mozconfig<----------------------------------------\n";
         open CONFIG, "$ENV{MOZCONFIG}";
@@ -879,6 +882,15 @@ sub PrintEnv {
         close CONFIG;
         print_log "-->end mozconfig<----------------------------------------\n";
     }
+
+	# Say if we found post-mozilla.pl
+	if(-e "$Settings::BaseDir/post-mozilla.pl") {
+	  print_log "Found post-mozilla.pl\n";
+	} else {
+	  print_log "Didn't find $Settings::BaseDir/post-mozilla.pl\n";
+	}
+
+	# Print compiler setting
     if ($Settings::Compiler ne '') {
         print_log "===============================\n";
         if ($Settings::Compiler eq 'gcc' or $Settings::Compiler eq 'egcc') {
