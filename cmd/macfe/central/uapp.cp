@@ -952,17 +952,19 @@ CFrontApp::~CFrontApp()
 			{
 			switch(theWindow->GetWindowType())
 				{
+#if 0
 				case WindowType_MailNews:
 					winRecord |= (MAIL_STARTUP_ID | NEWS_STARTUP_ID);
 					break;
+				case WindowType_Address:
+					winRecord |= ADDRESS_STARTUP_ID;
+					break;
+#endif
 				case WindowType_Browser:
 					winRecord |= BROWSER_STARTUP_ID;
 					break;
 				case WindowType_NavCenter:
 					winRecord |= NAVCENTER_STARTUP_ID;
-					break;
-				case WindowType_Address:
-					winRecord |= ADDRESS_STARTUP_ID;
 					break;
 				default:
 					break;
@@ -1560,18 +1562,19 @@ void CFrontApp::ProperStartup( FSSpec* file, short fileType )
 	if (CWindowMenu::sWindowMenu)
 	{
 		FSSpec fspec;
-			
+
+#if 0
 		if ( CFileMgr::FindApplication(kCalendarAppSig, fspec) != noErr )
 			(CWindowMenu::sWindowMenu)->RemoveCommand(cmd_LaunchCalendar);
+		if ( ! FE_IsNetcasterInstalled() )
+			(CWindowMenu::sWindowMenu)->RemoveCommand(cmd_LaunchNetcaster);
+		if ( ! Find3270Applet(fspec) )
+			(CWindowMenu::sWindowMenu)->RemoveCommand(cmd_Launch3270);
+#endif
 
 		if ( CFileMgr::FindApplication(kAOLInstantMessengerSig, fspec) != noErr )
 			(CWindowMenu::sWindowMenu)->RemoveCommand(cmd_LaunchAOLInstantMessenger);
 
-		if ( ! Find3270Applet(fspec) )
-			(CWindowMenu::sWindowMenu)->RemoveCommand(cmd_Launch3270);
-
-		if ( ! FE_IsNetcasterInstalled() )
-			(CWindowMenu::sWindowMenu)->RemoveCommand(cmd_LaunchNetcaster);
 	}
 
 	SECNAV_Init();
@@ -1742,11 +1745,14 @@ void CFrontApp::CreateStartupEnvironment(Boolean openStartupWindows)
 				MakeNewDocument();
 		}
 	}
+
+#if 0
 	if (PREF_GetBoolPref("general.startup.netcaster", &startupFlag) == PREF_NOERROR)
 	{
 		if (openStartupWindows && startupFlag)
 			ObeyCommand(cmd_LaunchNetcaster, NULL);
 	}
+#endif
 	
 	startupFlag = false;
 	if (HasFrontierMenuSharing())
@@ -2481,9 +2487,16 @@ void CFrontApp::FindCommandStatus( CommandT command, Boolean& enabled,
 //		case cmd_MailTo:
 		case cmd_CoBrandLogo:
 		case cmd_AboutPlugins:
+
+#if 0
 		case cmd_LaunchCalendar:
 		case cmd_Launch3270:
 		case cmd_LaunchNetcaster:
+		case cmd_LaunchConference:
+			enabled = mConferenceApplicationExists;
+			break;
+#endif
+
 #ifdef FORTEZZA
 		case cmd_FortezzaCard:
 		case cmd_FortezzaChange:
@@ -2494,9 +2507,6 @@ void CFrontApp::FindCommandStatus( CommandT command, Boolean& enabled,
 			enabled = TRUE;
 		break;			
 		
-		case cmd_LaunchConference:
-			enabled = mConferenceApplicationExists;
-			break;
 		
 		case cmd_BookmarksWindow:
 		case cmd_HistoryWindow:
@@ -2528,9 +2538,7 @@ void CFrontApp::FindCommandStatus( CommandT command, Boolean& enabled,
 		default:
 			ResIDT menuID;
 			Int16 menuItem;
-			if ( command >= DIR_BUTTON_BASE && command <= DIR_BUTTON_LAST )
-				enabled = TRUE;
-			else if (IsSyntheticCommand(command, menuID, menuItem) && menuID == cWindowMenuID)
+			if (IsSyntheticCommand(command, menuID, menuItem) && menuID == cWindowMenuID)
 				// --ML 4.0b2 Disable all Window menu items without a command number
 				// (i.e. Conference, Calendar, IBM, History)
 				enabled = FALSE;
@@ -2796,31 +2804,29 @@ Boolean CFrontApp::ObeyCommand(CommandT inCommand, void* ioParam)
 			DoGetURL( "about:plugins" );
 			break;
 
+#if 0
 		case cmd_LaunchConference:
 			LaunchExternalApp(kConferenceAppSig, CONFERENCE_APP_NAME);
 			break;
+		// --ML Polaris
+		case cmd_LaunchCalendar:
+			LaunchExternalApp(kCalendarAppSig, CALENDAR_APP_NAME);
+			break;	
+		case cmd_Launch3270:
+			Launch3270Applet();
+			break;
+		case cmd_LaunchNetcaster:
+			LaunchNetcaster();
+			break;
+#endif
 
 		case cmd_LaunchImportModule:
 			LaunchExternalApp(kImportAppSig, IMPORT_APP_NAME);
 			break;
 
-		// --ML Polaris
-		case cmd_LaunchCalendar:
-			LaunchExternalApp(kCalendarAppSig, CALENDAR_APP_NAME);
-			break;
-
 		case cmd_LaunchAOLInstantMessenger:
 			LaunchExternalApp(kAOLInstantMessengerSig, AIM_APP_NAME);
 			break;
-	
-		case cmd_Launch3270:
-			Launch3270Applet();
-			break;
-
-		case cmd_LaunchNetcaster:
-			LaunchNetcaster();
-			break;
-
 
 #ifdef FORTEZZA
 		case cmd_FortezzaCard:
@@ -2885,12 +2891,8 @@ Boolean CFrontApp::ObeyCommand(CommandT inCommand, void* ioParam)
 #endif // MOZ_OFFLINE
 		default:
 			{
-			// Directory urls
-			if ( inCommand >= DIR_BUTTON_BASE && inCommand <= DIR_BUTTON_LAST )
-				DoOpenDirectoryURL( inCommand );
-
 			// Spinning icon
-			else if ( inCommand == LOGO_BUTTON || inCommand == cmd_CoBrandLogo )
+			if ( inCommand == LOGO_BUTTON || inCommand == cmd_CoBrandLogo )
 				DoOpenLogoURL( inCommand );
 
 			else if (!CWindowMenu::ObeyWindowCommand(inCommand))
@@ -2916,6 +2918,7 @@ Boolean CFrontApp::ObeyCommand(CommandT inCommand, void* ioParam)
 void CFrontApp::DoOpenDirectoryURL( CommandT menuCommand )
 //-----------------------------------
 {
+#if 0
 	CStr255		urlString;
 	Boolean		isMenuCommand = (menuCommand >= DIR_MENU_BASE);
 	short stringID = isMenuCommand ? DIR_MENU_BASE : DIR_BUTTON_BASE;
@@ -2928,6 +2931,7 @@ void CFrontApp::DoOpenDirectoryURL( CommandT menuCommand )
 		DoGetURL(url);
 		XP_FREE(url);
 	}
+#endif
 }
 
 void CFrontApp::DoOpenLogoURL( CommandT menuCommand )
