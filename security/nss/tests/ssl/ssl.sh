@@ -127,15 +127,15 @@ is_selfserv_alive()
 ########################################################################
 wait_for_selfserv()
 {
-  echo "tstclnt -p ${PORT} -h ${HOST} -q "
+  echo "tstclnt -p ${PORT} -h ${HOSTADDR} -q "
   echo "        -d ${P_R_CLIENTDIR} < ${REQUEST_FILE} \\"
   #echo "tstclnt -q started at `date`"
-  tstclnt -p ${PORT} -h ${HOST} -q -d ${P_R_CLIENTDIR} < ${REQUEST_FILE}
+  tstclnt -p ${PORT} -h ${HOSTADDR} -q -d ${P_R_CLIENTDIR} < ${REQUEST_FILE}
   if [ $? -ne 0 ]; then
       html_failed "<TR><TD> Wait for Server "
-      echo "RETRY: tstclnt -p ${PORT} -h ${HOST} -q \\"
+      echo "RETRY: tstclnt -p ${PORT} -h ${HOSTADDR} -q \\"
       echo "               -d ${P_R_CLIENTDIR} < ${REQUEST_FILE}"
-      tstclnt -p ${PORT} -h ${HOST} -q -d ${P_R_CLIENTDIR} < ${REQUEST_FILE}
+      tstclnt -p ${PORT} -h ${HOSTADDR} -q -d ${P_R_CLIENTDIR} < ${REQUEST_FILE}
   elif [ sparam = "-c ABCDEFabcdefghijklmnvy" ] ; then # "$1" = "cov" ] ; then
       html_passed "<TR><TD> Wait for Server"
   fi
@@ -214,11 +214,11 @@ ssl_cov()
           fi
 
           is_selfserv_alive
-          echo "tstclnt -p ${PORT} -h ${HOST} -c ${param} ${TLS_FLAG} \\"
+          echo "tstclnt -p ${PORT} -h ${HOSTADDR} -c ${param} ${TLS_FLAG} \\"
           echo "        -f -d ${P_R_CLIENTDIR} < ${REQUEST_FILE}"
 
           rm ${TMP}/$HOST.tmp.$$ 2>/dev/null
-          tstclnt -p ${PORT} -h ${HOST} -c ${param} ${TLS_FLAG} -f \
+          tstclnt -p ${PORT} -h ${HOSTADDR} -c ${param} ${TLS_FLAG} -f \
                   -d ${P_R_CLIENTDIR} < ${REQUEST_FILE} \
                   >${TMP}/$HOST.tmp.$$  2>&1
           ret=$?
@@ -245,10 +245,10 @@ ssl_auth()
           cparam=`echo $cparam | sed -e 's;_; ;g' -e "s/TestUser/$USER_NICKNAME/g" `
           start_selfserv
 
-          echo "tstclnt -p ${PORT} -h ${HOST} -f -d ${P_R_CLIENTDIR} \\"
+          echo "tstclnt -p ${PORT} -h ${HOSTADDR} -f -d ${P_R_CLIENTDIR} \\"
 	  echo "        ${cparam}  < ${REQUEST_FILE}"
           rm ${TMP}/$HOST.tmp.$$ 2>/dev/null
-          tstclnt -p ${PORT} -h ${HOST} -f ${cparam} \
+          tstclnt -p ${PORT} -h ${HOSTADDR} -f ${cparam} \
                   -d ${P_R_CLIENTDIR} < ${REQUEST_FILE} \
                   >${TMP}/$HOST.tmp.$$  2>&1
           ret=$?
