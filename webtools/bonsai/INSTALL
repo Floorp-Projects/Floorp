@@ -188,15 +188,25 @@ configuration mechanism is introduced.
 install Bonsai in another place than /usr/local, e.g. /var/www.  It
 will make a new directory named "bonsai" in the prefix directory you specify.
 
+   Ensure that the bonsai cgi programs can write and create files in the 
+data directory.  Typically this means making the data directory owned by 
+the web cgi id.  Bonsai does not need to change the executable files in the 
+main bonsai directory so these can be owned as root.
+
    Edit data/treeconfig.pl file as described in README file. Create
 appropriate data/XXX directory for each tree XXX you've configured
-in 'treeconfig.pl'.
+in 'treeconfig.pl'. This file maps the names of trees to branch/module 
+combinations.  You will need to have at least one module in your CVS 
+repository to run Bonsai.  Typically users create a module called All.
 
    Go to the data directory and run 
 
    trapdoor <admin password here> >data/passwd
 
    it will set up admin's password.
+
+   Bonsai should now be accessible via a web browser but not all 
+functionality is installed yet.  Visit admin.cgi and set all the parameters.
 
 That's basically it. With some luck and persistence you will have 90%
 working system at this point. A lot of these things are just asking to be
