@@ -471,7 +471,7 @@ nsBrowserWindow::Init(nsIAppShell* aAppShell,
   rv = mWebShell->Init(mWindow->GetNativeData(NS_NATIVE_WIDGET), 
                        r.x, r.y, r.width, r.height,
                        nsScrollPreference_kAuto, 
-                       aAllowPlugins);
+                       aAllowPlugins, PR_TRUE);
   mWebShell->SetContainer((nsIWebShellContainer*) this);
   mWebShell->SetObserver((nsIStreamObserver*)this);
   mWebShell->SetPrefs(aPrefs);
