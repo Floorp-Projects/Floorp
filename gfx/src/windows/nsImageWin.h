@@ -106,6 +106,8 @@ public:
 
   void* GetBitInfo() {return mBHead;}
 
+  static PRBool gIsWinNT;
+
 private:
 
   /** 
