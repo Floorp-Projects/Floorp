@@ -7517,9 +7517,11 @@ nsCSSFrameConstructor::ConstructFrameInternal( nsIPresShell*            aPresShe
                                                nsFrameItems&            aFrameItems,
                                                PRBool                   aXBLBaseTag)
 {
+#ifdef DEBUG_hyatt
 	if (aTag == nsXULAtoms::menulist) {
 		printf("moo!");
 	}
+#endif /* DEBUG_hyatt */
   // The following code allows the user to specify the base tag
   // of a XUL object using XBL.  XUL objects (like boxes, menus, etc.)
   // can then be extended arbitrarily.
