@@ -358,12 +358,31 @@ NS_IMETHODIMP nsMsgFolder::GetName(PRUnichar **name)
 {
 	if (!name)
 		return NS_ERROR_NULL_POINTER;
-	*name = mName.ToNewUnicode();
-	return (*name) ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
+  
+  *name = nsnull;
+
+  // cache the name in mName
+  if (mName.IsEmpty()) {
+    // return the leaf of this URI
+    char *lastSlash = PL_strrchr(mURI, '/');
+    if (lastSlash) {
+      lastSlash++;
+      mName = lastSlash;
+    } else {
+      // no slashes, return the whole URI
+      mName = mURI;
+    }
+  }
+
+  *name = mName.ToNewUnicode();
+  
+  if (!(*name)) return NS_ERROR_OUT_OF_MEMORY;
+	return NS_OK;
 }
 
 NS_IMETHODIMP nsMsgFolder::SetName(PRUnichar * name)
 {
+  // override the URI-generated name
 	mName = name;
 	return NS_OK;
 }
