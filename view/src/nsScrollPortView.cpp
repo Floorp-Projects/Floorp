@@ -468,7 +468,7 @@ NS_IMETHODIMP nsScrollPortView::ScrollByWhole(PRBool aTop)
     newPos = scrolledSize.height;
   }
 
-  ScrollTo(0, newPos, 0);
+  ScrollTo(mOffsetX, newPos, 0);
 
   return NS_OK;
 }
