@@ -54,6 +54,7 @@
 #include "nsIEventQueueService.h"
 #include "nsIServiceManager.h"
 #include "nsGUIEvent.h"
+#include "nsIPref.h"
 
 static NS_DEFINE_IID(kBlenderCID, NS_BLENDER_CID);
 static NS_DEFINE_IID(kRegionCID, NS_REGION_CID);
@@ -270,6 +271,7 @@ nsSize nsViewManager::gLargestRequestedSize = nsSize(0, 0);
 // Weakly held references to all of the view managers
 nsVoidArray* nsViewManager::gViewManagers = nsnull;
 PRUint32 nsViewManager::gLastUserEventTime = 0;
+PRBool nsViewManager::gTransitoryBackbuffer = PR_FALSE;
 
 nsViewManager::nsViewManager()
 {
@@ -469,6 +471,11 @@ NS_IMETHODIMP nsViewManager::Init(nsIDeviceContext* aContext, nscoord aX, nscoor
     }
 
     NS_ASSERTION(nsnull != mEventQueue, "event queue is null");
+  }
+
+  nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID));
+  if (prefs) {
+    prefs->GetBoolPref("layout.transitory.backbuffer", &gTransitoryBackbuffer);
   }
   
   return rv;
@@ -680,6 +687,12 @@ void nsViewManager::Refresh(nsView *aView, nsIRenderingContext *aContext, nsIReg
   if (mRecursiveRefreshPending) {
     UpdateAllViews(aUpdateFlags);
     mRecursiveRefreshPending = PR_FALSE;
+  }
+
+  if ((gTransitoryBackbuffer) && (mDrawingSurface)) {
+    //Destroy backbuffer drawing surface
+    localcx->DestroyDrawingSurface(mDrawingSurface);
+    mDrawingSurface = nsnull;
   }
 
 #ifdef NS_VM_PERF_METRICS
@@ -1709,7 +1722,7 @@ NS_IMETHODIMP nsViewManager::DispatchEvent(nsGUIEvent *aEvent, nsEventStatus *aS
                     PRUint32   updateFlags = NS_VMREFRESH_DOUBLE_BUFFER;
                     PRBool     doDefault = PR_TRUE;
 
-                    //printf("refreshing: view: %x, %d, %d, %d, %d\n", view, damrect.x, damrect.y, damrect.width, damrect.height);
+                    // printf("refreshing: view: %x, %d, %d, %d, %d\n", view, damrect.x, damrect.y, damrect.width, damrect.height);
                     // Refresh the view
                     if (mRefreshEnabled) {
                       nsIComponentManager* componentManager = nsnull;
@@ -2557,7 +2570,13 @@ const nsVoidArray* nsViewManager::GetViewManagerArray()
 nsDrawingSurface nsViewManager::GetDrawingSurface(nsIRenderingContext &aContext, nsRect& aBounds) 
 {
   nsRect newBounds;
-  GetDrawingSurfaceSize(aBounds, newBounds);
+
+  if (gTransitoryBackbuffer) {
+    newBounds = aBounds;
+  } else {
+    GetDrawingSurfaceSize(aBounds, newBounds);
+  }
+
 
   if ((nsnull == mDrawingSurface)
       || (mDSBounds.width != newBounds.width)
