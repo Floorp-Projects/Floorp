@@ -47,14 +47,6 @@ function Startup()
 {
   if (window.arguments && window.arguments[0])
   {    
-    var defaultElement;
-    switch (defaultAction)
-    {
-      case msgCompSendFormat.HTML:  defaultElement = document.getElementById("SendHtmlOnly");           break
-      case msgCompSendFormat.Both:  defaultElement = document.getElementById("SendPlainTextAndHtml");   break
-      default:                      defaultElement = document.getElementById("SendPlainTextOnly");      break
-    }     
-
     param = window.arguments[0];
     param.abort = true;    //if the user hit the close box, we will abort.
     if (param.action)
@@ -85,37 +77,28 @@ function Startup()
 
       // Set the default radio array value and recommendation
       var group = document.getElementById("mailDefaultHTMLAction");
-      var element;
       var recommlabels = document.getElementById("hiddenLabels");
       var label;
       var haveRecommendation = false;
-      var radioSelect;
-       
-      if (useDefault)
-        radioSelect=defaultAction;
-      else
-        radioSelect=param.action;
+      var format = (useDefault) ? defaultAction : param.action;
 
-      switch (radioSelect)
+      switch (format)
       {
         case msgCompSendFormat.AskUser:
           //haveRecommendation = false;
           break;
         case msgCompSendFormat.PlainText:
-          element = document.getElementById("SendPlainTextOnly");
           //label = recommlabels.getAttribute("plainTextOnlyRecommendedLabel");
           label = document.getElementById("plainTextOnlyRecommended");
                // elements for "recommended" are a workaround for bug 49623
           haveRecommendation = true;
           break;
         case msgCompSendFormat.Both:
-          element = document.getElementById("SendPlainTextAndHtml");
           //label = recommlabels.getAttribute("plainTextAndHtmlRecommendedLabel");
           label = document.getElementById("plainTextAndHtmlRecommended");
           haveRecommendation = true;
           break;
         case msgCompSendFormat.HTML:
-          element = document.getElementById("SendHtmlOnly");
           //label = recommlabels.getAttribute("htmlOnlyRecommendedLabel");
           label = document.getElementById("htmlOnlyRecommended");
           haveRecommendation = true;
@@ -136,14 +119,12 @@ function Startup()
         }
         if (recommended_as_default)
         {
-          group.selectedItem = element;
-          group.value = element.value;
+          group.value = format;
         }
       }
       if (!haveRecommendation || !recommended_as_default)
       {
-        group.selectedItem = defaultElement;
-        group.value = defaultElement.value;
+        group.value = defaultAction;
       }
 
       //change the button label
@@ -167,12 +148,8 @@ function Send()
 {
   if (param)
   {
-    switch (document.getElementById("mailDefaultHTMLAction").value)
-    {
-      case "0": param.action = msgCompSendFormat.Both;    break;
-      case "1": param.action = msgCompSendFormat.PlainText;  break;
-      case "2": param.action = msgCompSendFormat.HTML;    break;
-    }
+    // param.action should be an integer for when it is returned to MsgComposeCommands.js
+    param.action = parseInt(document.getElementById("mailDefaultHTMLAction").value);
     param.abort = false;
   }
   return true;

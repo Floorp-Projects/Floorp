@@ -35,19 +35,19 @@
             <spacer style="height:1em"/>
 
       <radiogroup id="mailDefaultHTMLAction">
-         <hbox>
-                <radio id="SendPlainTextAndHtml" value="0" label="&plainTextAndHtml.label;"/>
-                <description id="plainTextAndHtmlRecommended" hidden="true" style="margin-top: 4px;">&recommended.label;</description>
-                <!-- Hack: box and html are workarounds for bug 49623 -->
-               </hbox>
-         <hbox>
-        <radio id="SendPlainTextOnly" value="1" label="&plainTextOnly.label;"/>
-                <description id="plainTextOnlyRecommended" hidden="true" style="margin-top: 4px;">&recommended.label;</description>
-               </hbox>
-         <hbox>
-        <radio id="SendHtmlOnly" value="2" label="&htmlOnly.label;"/>
-                <description id="htmlOnlyRecommended" hidden="true" style="margin-top: 4px;">&recommended.label;</description>
-               </hbox>
+          <hbox>
+              <radio value="3" label="&plainTextAndHtml.label;"/>
+              <description id="plainTextAndHtmlRecommended" hidden="true" style="margin-top: 4px;">&recommended.label;</description>
+              <!-- Hack: box and html are workarounds for bug 49623 -->
+          </hbox>
+          <hbox>
+              <radio value="1" label="&plainTextOnly.label;"/>
+              <description id="plainTextOnlyRecommended" hidden="true" style="margin-top: 4px;">&recommended.label;</description>
+          </hbox>
+          <hbox>
+              <radio value="2" label="&htmlOnly.label;"/>
+              <description id="htmlOnlyRecommended" hidden="true" style="margin-top: 4px;">&recommended.label;</description>
+          </hbox>
       </radiogroup>
 
         </vbox>
