@@ -103,7 +103,11 @@
     <key keycode="&findPrevCmd.commandkey2;"  command="Browser:FindPrev"  modifiers="shift"/>
     <key id="key_findTypeText"/>
 
+    <!-- View Menu -->
+    <key id="key_reload"  key="&reloadCmd.commandkey;" oncommand="BrowserReload();" modifiers="accel"/>
+    <key key="&reloadCmd.commandkey;" oncommand="BrowserReloadSkipCache();" modifiers="accel,shift"/>
     <keyset id="viewZoomKeys"/>
+    <keyset id="navigationKeys"/>
   </keyset>
 
   <!-- context menu -->
@@ -171,6 +175,8 @@
 
       <menu id="menu_View">
         <menupopup>
+          <menuitem accesskey="&reloadCmd.accesskey;" key="key_reload" label="&reloadCmd.label;" oncommand="BrowserReload();"/>
+          <menuseparator />
           <menu id="menu_textZoom"/>  
           <menuseparator/>
 <!--      <menuitem key="key_viewInfo" observes="View:PageInfo"
