@@ -18,7 +18,7 @@
 
 /*
  *	  jpeg.c --- Glue code to Independent JPEG Group decoder library
- *    $Id: jpeg.c,v 1.1 1998/03/28 02:40:36 ltabb Exp $
+ *    $Id: jpeg.c,v 3.1 1998/03/28 03:35:03 ltabb Exp $
  */
 
 

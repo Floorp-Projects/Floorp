@@ -33,7 +33,7 @@ with copyright holders.
 **
 **	(c) COPYRIGHT MIT 1995.
 **	Please first read the full copyright statement in the file COPYRIGH.
-**	@(#) $Id: htstring.c,v 1.1 1998/03/28 02:37:18 ltabb Exp $
+**	@(#) $Id: htstring.c,v 3.1 1998/03/28 03:32:07 ltabb Exp $
 **
 **	Original version came with listserv implementation.
 **	Version TBL Oct 91 replaces one which modified the strings.

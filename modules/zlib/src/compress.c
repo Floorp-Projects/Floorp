@@ -3,7 +3,7 @@
  * For conditions of distribution and use, see copyright notice in zlib.h 
  */
 /* This file was modified since it was taken from the zlib distribution */
-/* $Id: compress.c,v 1.1 1998/03/28 02:41:39 ltabb Exp $ */
+/* $Id: compress.c,v 3.1 1998/03/28 03:36:10 ltabb Exp $ */
 
 #include "zlib.h"
 

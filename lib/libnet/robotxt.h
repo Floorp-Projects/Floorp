@@ -29,8 +29,8 @@
 	Note: the original spec says that at least one Disallow field must be present
 	in a record. That is what I am following.
 
-  $Revision: 1.1 $
-  $Date: 1998/03/28 02:37:07 $
+  $Revision: 3.1 $
+  $Date: 1998/03/28 03:31:59 $
 
  *********************************************************************/
 

@@ -123,6 +123,6 @@ extern char * HTStrip (char * s);
    
    ___________________________________
    
-                          @(#) $Id: htstring.h,v 1.1 1998/03/28 02:37:18 ltabb Exp $
+                          @(#) $Id: htstring.h,v 3.1 1998/03/28 03:32:08 ltabb Exp $
                                                                                           
     */

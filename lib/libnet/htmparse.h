@@ -26,8 +26,8 @@
    parser calls this function whenever a begin or end tag, or run of
    character data has been scanned, and does not build a tree.
 
-  $Revision: 1.1 $
-  $Date: 1998/03/28 02:36:37 $
+  $Revision: 3.1 $
+  $Date: 1998/03/28 03:31:31 $
 
  *********************************************************************/
 

@@ -45,8 +45,8 @@
 	The parsing code is in htmparse.c
 	The robots.txt parser is in robotxt.c
 
-  $Revision: 1.1 $
-  $Date: 1998/03/28 02:36:30 $
+  $Revision: 3.1 $
+  $Date: 1998/03/28 03:31:25 $
 
  *********************************************************************/
 

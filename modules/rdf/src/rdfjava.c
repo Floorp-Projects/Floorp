@@ -18,7 +18,7 @@
 
 /*
  *
- *  $RCSfile: rdfjava.c,v $ $Revision: 1.1 $
+ *  $RCSfile: rdfjava.c,v $ $Revision: 3.1 $
  *	Copyright © 1997 Netscape Communications Corporation, All Rights Reserved.
  */
 

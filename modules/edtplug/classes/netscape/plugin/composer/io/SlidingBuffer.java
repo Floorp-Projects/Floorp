@@ -17,9 +17,12 @@
  */
 
 /*
- * $Header: /home/hwine/cvs_conversion/cvsroot/mozilla/modules/edtplug/classes/netscape/plugin/composer/io/SlidingBuffer.java,v 1.1 1998/03/28 02:39:09 ltabb Exp $
+ * $Header: /home/hwine/cvs_conversion/cvsroot/mozilla/modules/edtplug/classes/netscape/plugin/composer/io/SlidingBuffer.java,v 3.1 1998/03/28 03:33:50 ltabb Exp $
  *
  * $Log: SlidingBuffer.java,v $
+ * Revision 3.1  1998/03/28 03:33:50  ltabb
+ * bump rev to 3.1
+ *
  * Revision 1.1  1998/03/28 02:39:09  ltabb
  * Free the lizard
  *

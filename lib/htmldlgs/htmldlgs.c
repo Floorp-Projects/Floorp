@@ -19,7 +19,7 @@
  * Cross platform html dialogs
  *
  *
- * $Id: htmldlgs.c,v 1.1 1998/03/28 02:33:42 ltabb Exp $
+ * $Id: htmldlgs.c,v 3.1 1998/03/28 03:29:14 ltabb Exp $
  */
 
 #include "xp.h"

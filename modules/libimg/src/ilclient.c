@@ -20,7 +20,7 @@
  *   ilclient.c --- Management of imagelib client data structures,
  *                  including image cache.
  *
- *   $Id: ilclient.c,v 1.1 1998/03/28 02:40:35 ltabb Exp $
+ *   $Id: ilclient.c,v 3.1 1998/03/28 03:35:02 ltabb Exp $
  */
 
 

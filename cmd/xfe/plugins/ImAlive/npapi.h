@@ -17,7 +17,7 @@
  */
 
 /*
- *  npapi.h $Revision: 1.1 $
+ *  npapi.h $Revision: 3.1 $
  *  Netscape client plug-in API spec
  */
 

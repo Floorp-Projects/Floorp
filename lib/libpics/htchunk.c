@@ -33,7 +33,7 @@ with copyright holders.
 **
 **	(c) COPYRIGHT MIT 1995.
 **	Please first read the full copyright statement in the file COPYRIGH.
-**	@(#) $Id: htchunk.c,v 1.1 1998/03/28 02:37:16 ltabb Exp $
+**	@(#) $Id: htchunk.c,v 3.1 1998/03/28 03:32:06 ltabb Exp $
 **
 ** history:	AL, HF	28 Apr 94, Now chunk->data is filled by '\0' so
 **			that the string is terminated at any time. That makes

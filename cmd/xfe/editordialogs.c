@@ -22,7 +22,7 @@
  *  Should only be built for the editor.
  *  Created: David Williams <djw@netscape.com>, Mar-12-1996
  *
- *  RCSID: "$Id: editordialogs.c,v 1.1 1998/03/28 02:22:02 ltabb Exp $"
+ *  RCSID: "$Id: editordialogs.c,v 3.1 1998/03/28 03:20:03 ltabb Exp $"
  */
 
 #include "mozilla.h"

@@ -22,7 +22,7 @@
  *  EditorToolbar.cpp --- Toolbar for Editor and HTML Mail Compose.
  *
  *  Created: David Williams <djw@netscape.com>, Feb-7-1997
- *  RCSID: "$Id: EditorToolbar.cpp,v 1.1 1998/03/28 02:29:35 ltabb Exp $"
+ *  RCSID: "$Id: EditorToolbar.cpp,v 3.1 1998/03/28 03:26:24 ltabb Exp $"
  *
  *----------------------------------------------------------------------------
  */

@@ -18,7 +18,7 @@
 
 /* -*- Mode: C; tab-width: 4 -*-
  *  il_strm.h --- Stream converters for the image library.
- *  $Id: il_strm.h,v 1.1 1998/03/28 02:40:28 ltabb Exp $
+ *  $Id: il_strm.h,v 3.1 1998/03/28 03:34:57 ltabb Exp $
  */
 
 

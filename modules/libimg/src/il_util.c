@@ -19,7 +19,7 @@
 /* -*- Mode: C; tab-width: 4 -*-
  *  il_util.c Colormap and colorspace utilities.
  *             
- *   $Id: il_util.c,v 1.1 1998/03/28 02:40:34 ltabb Exp $
+ *   $Id: il_util.c,v 3.1 1998/03/28 03:35:02 ltabb Exp $
  */
 
 

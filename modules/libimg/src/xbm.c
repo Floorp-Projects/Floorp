@@ -18,7 +18,7 @@
 
 /* -*- Mode: C; tab-width: 4 -*-
  *   xbm.c --- Decoding of X bit-map format images
- * $Id: xbm.c,v 1.1 1998/03/28 02:40:37 ltabb Exp $
+ * $Id: xbm.c,v 3.1 1998/03/28 03:35:04 ltabb Exp $
  */
 
 

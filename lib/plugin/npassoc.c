@@ -17,7 +17,7 @@
  */
 
 /*
- *  npassoc.c $Revision: 1.1 $
+ *  npassoc.c $Revision: 3.1 $
  *  some xp mime-type file extension associations
  */
 

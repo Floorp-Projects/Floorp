@@ -33,7 +33,7 @@ with copyright holders.
 **
 **	(c) COPYRIGHT MIT 1995.
 **	Please first read the full copyright statement in the file COPYRIGH.
-**	@(#) $Id: htlist.c,v 1.1 1998/03/28 02:37:16 ltabb Exp $
+**	@(#) $Id: htlist.c,v 3.1 1998/03/28 03:32:07 ltabb Exp $
 **
 **	A list is represented as a sequence of linked nodes of type HTList.
 **	The first node is a header which contains no object.

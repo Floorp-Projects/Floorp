@@ -28,8 +28,8 @@
   directory as schedulr.htm.  The information given there is a
   superset of the comments in this file.
 
-  $Revision: 1.1 $
-  $Date: 1998/03/28 02:41:28 $
+  $Revision: 3.1 $
+  $Date: 1998/03/28 03:36:00 $
 
  *********************************************************************/
 

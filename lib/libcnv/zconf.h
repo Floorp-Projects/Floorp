@@ -3,7 +3,7 @@
  * For conditions of distribution and use, see copyright notice in zlib.h 
  */
 
-/* $Id: zconf.h,v 1.1 1998/03/28 02:34:24 ltabb Exp $ */
+/* $Id: zconf.h,v 3.1 1998/03/28 03:29:42 ltabb Exp $ */
 
 #ifndef _ZCONF_H
 #define _ZCONF_H

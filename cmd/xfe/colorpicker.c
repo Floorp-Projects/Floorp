@@ -21,7 +21,7 @@
  *
  *  Created: David Williams <djw@netscape.com>, Apr-20-1997
  *
- *  RCSID: "$Id: colorpicker.c,v 1.1 1998/03/28 02:21:53 ltabb Exp $"
+ *  RCSID: "$Id: colorpicker.c,v 3.1 1998/03/28 03:19:56 ltabb Exp $"
  */
 
 #include "mozilla.h"

@@ -20,7 +20,7 @@
 /*
  * mkcertld.h - api to cert ldap protocol code
  *
- * $Id: mkcertld.h,v 1.1 1998/03/28 02:36:43 ltabb Exp $
+ * $Id: mkcertld.h,v 3.1 1998/03/28 03:31:36 ltabb Exp $
  */
 
 XP_BEGIN_PROTOS

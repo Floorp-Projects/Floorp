@@ -21,7 +21,7 @@
  *  Should only be include by files that work with the editor.
  *  Created: David Williams <djw@netscape.com>, Mar-12-1996
  *
- *  RCSID: "$Id: xeditor.h,v 1.1 1998/03/28 02:22:27 ltabb Exp $"
+ *  RCSID: "$Id: xeditor.h,v 3.1 1998/03/28 03:20:28 ltabb Exp $"
  */
 
 
