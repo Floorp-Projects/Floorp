@@ -12,10 +12,14 @@ DirText "This will install the Mozilla ActiveX Control ${VERSION} on your comput
 
 Section "Mozilla Control (required)"
 
+  ; MSVC++ redistributable DLLs
+  SetOutPath "$INSTDIR"
+  File ${REDISTDIR}\msvc70\msvcr70.dll
+  File ${REDISTDIR}\msvc70\msvcp70.dll
+
+  ; Now the Gecko embedding files
   !include "files.nsh"
 
-  ; TODO install MSVC++ redistributable DLLs - msvcrt.dll & msvcp60.dll
-  
   RegDLL "$INSTDIR\mozctlx.dll"
   
   WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${PRODUCT}" "DisplayName" "${PRODUCT}"
