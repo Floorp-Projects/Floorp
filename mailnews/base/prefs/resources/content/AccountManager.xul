@@ -49,7 +49,7 @@
           </rule>
         </template>
       </tree>
-      <button label="&newAccountButton.label;" oncommand="onNewAccount(event);" id="newAccountButton"
+      <button label="&addAccountButton.label;" oncommand="onAddAccount(event);" id="addAccountButton"
               prefstring="mail.accountmanager.accounts"/>
       <button label="&setDefaultButton.label;" oncommand="onSetDefault(event);" disabled="true" id="setDefaultButton"
               prefstring="mail.disable_button.set_default_account"/>
@@ -57,7 +57,7 @@
         <!-- taking out for PR2
           <button disabled="true" label="&duplicateButton.label;" id="duplicateButton" oncommand="onDuplicateAccount();"/>
         -->
-        <button disabled="true" label="&deleteButton.label;" oncommand="onDeleteAccount(event);" id="deleteButton"
+        <button disabled="true" label="&removeButton.label;" oncommand="onRemoveAccount(event);" id="removeButton"
                 prefstring="mail.disable_button.delete_account"/>
     </vbox>
   

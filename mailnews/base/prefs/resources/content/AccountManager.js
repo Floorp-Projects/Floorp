@@ -60,8 +60,8 @@ var nsPrefBranch;
 
 // widgets
 var duplicateButton;
-var deleteButton;
-var newAccountButton;
+var removeButton;
+var addAccountButton;
 var setDefaultButton;
 
 // This sets an attribute in a xul element so that we can later
@@ -119,9 +119,9 @@ function onLoad() {
 
   doSetOKCancel(onOk, 0);
 
-  newAccountButton = document.getElementById("newAccountButton");
+  addAccountButton = document.getElementById("addAccountButton");
   duplicateButton = document.getElementById("duplicateButton");
-  deleteButton = document.getElementById("deleteButton");
+  removeButton = document.getElementById("removeButton");
   setDefaultButton = document.getElementById("setDefaultButton");
 
   sortAccountList(accounttree);
@@ -328,7 +328,7 @@ function onSave() {
   }
 }
 
-function onNewAccount() {
+function onAddAccount() {
   MsgAccountWizard();
 }
 
@@ -376,8 +376,8 @@ function onSetDefault(event) {
   accountManager.defaultAccount = account;
 }
 
-function onDeleteAccount(event) {
-    //dump("onDeleteAccount\n");
+function onRemoveAccount(event) {
+    //dump("onRemoveAccount\n");
 
     if (event.target.getAttribute("disabled") == "true") return;
 
@@ -397,9 +397,9 @@ function onDeleteAccount(event) {
     }
     if (!canDelete) return;
 
-    var confirmDeleteAccount =
-      gPrefsBundle.getString("confirmDeleteAccount");
-    if (!window.confirm(confirmDeleteAccount)) return;
+    var confirmRemoveAccount =
+      gPrefsBundle.getString("confirmRemoveAccount");
+    if (!window.confirm(confirmRemoveAccount)) return;
 
     try {
       // clear cached data out of the account array
@@ -411,8 +411,8 @@ function onDeleteAccount(event) {
       selectServer(null);
     }
     catch (ex) {
-      dump("failure to delete account: " + ex + "\n");
-      var alertText = gPrefsBundle.getString("failedDeleteAccount");
+      dump("failure to remove account: " + ex + "\n");
+      var alertText = gPrefsBundle.getString("failedRemoveAccount");
       window.alert(alertText);
     }
 }
@@ -536,19 +536,19 @@ function updateButtons(tree,serverId) {
   // check for disabled preferences on the account buttons.  
   //  Not currently handled by WSM or the main loop yet since these buttons aren't
   //  under the IFRAME
-  if (nsPrefBranch.prefIsLocked(newAccountButton.getAttribute("prefstring")))
+  if (nsPrefBranch.prefIsLocked(addAccountButton.getAttribute("prefstring")))
     canCreate = false;
   //if (nsPrefBranch.prefIsLocked(duplicateButton.getAttribute("prefstring")))
   //  canDuplicate = false;
   if (nsPrefBranch.prefIsLocked(setDefaultButton.getAttribute("prefstring")))
     canSetDefault = false;
-  if (nsPrefBranch.prefIsLocked(deleteButton.getAttribute("prefstring")))
+  if (nsPrefBranch.prefIsLocked(removeButton.getAttribute("prefstring")))
     canDelete = false;
 
-  setEnabled(newAccountButton, canCreate);
+  setEnabled(addAccountButton, canCreate);
   setEnabled(duplicateButton, canDuplicate);
   setEnabled(setDefaultButton, canSetDefault);
-  setEnabled(deleteButton, canDelete);
+  setEnabled(removeButton, canDelete);
 
 }
 
