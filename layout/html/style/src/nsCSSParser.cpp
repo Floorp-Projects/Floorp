@@ -679,7 +679,26 @@ PRBool CSSParserImpl::ParseImportRule(PRInt32& aErrorCode)
   }
   // invalid @import
   if ((eCSSToken_Symbol != mToken.mType) || (';' != mToken.mSymbol)) {
-    SkipUntil(aErrorCode, ';');
+    // Skip over trailing cruft
+    for (;;) {
+      if (!GetToken(aErrorCode, PR_TRUE)) {
+        return PR_FALSE;
+      }
+      if (eCSSToken_Symbol == mToken.mType) {
+        PRUnichar symbol = mToken.mSymbol;
+        if (symbol == ';') {
+          break;
+        }
+        if (symbol == '{') {
+          SkipUntil(aErrorCode, '}');
+          break;
+        } else if (symbol == '(') {
+          SkipUntil(aErrorCode, ')');
+        } else if (symbol == '[') {
+          SkipUntil(aErrorCode, ']');
+        }
+      }
+    }
   }
 
 //  mInHead = PR_FALSE; // an invalid @import doesn't block other @imports (I think) awaiting clarification
