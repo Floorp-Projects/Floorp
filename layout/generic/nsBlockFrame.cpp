@@ -5420,31 +5420,6 @@ nsBlockFrame::DeleteNextInFlowChild(nsPresContext* aPresContext,
 
 ////////////////////////////////////////////////////////////////////////
 // Float support
-
-static void InitReflowStateForFloat(nsHTMLReflowState* aState, nsPresContext* aPresContext)
-{
-  /* We build a different reflow context based on the width attribute of the block
-   * when it's a float.
-   * Auto-width floats need to have their containing-block size set explicitly.
-   * factoring in other floats that impact it.  
-   * It's possible this should be quirks-only.
-   */
-  // XXXldb We should really fix this in nsHTMLReflowState::InitConstraints instead.
-  const nsStylePosition* position = aState->frame->GetStylePosition();
-  nsStyleUnit widthUnit = position->mWidth.GetUnit();
-
-  if (eStyleUnit_Auto == widthUnit) {
-    // Initialize the reflow state and constrain the containing block's 
-    // width and height to the available width and height.
-    aState->Init(aPresContext, aState->availableWidth, aState->availableHeight);
-  } else {
-    // Initialize the reflow state and use the containing block's
-    // computed width and height (or derive appropriate values for an
-    // absolutely positioned frame).
-    aState->Init(aPresContext);
-  }
-}
-
 nsresult
 nsBlockFrame::ReflowFloat(nsBlockReflowState& aState,
                           nsPlaceholderFrame* aPlaceholder,
@@ -5519,9 +5494,7 @@ nsBlockFrame::ReflowFloat(nsBlockReflowState& aState,
   nsHTMLReflowState floatRS(aState.mPresContext, aState.mReflowState,
                             floatFrame, 
                             nsSize(availSpace.width, availSpace.height), 
-                            aState.mReflowState.reason, PR_FALSE);
-
-  InitReflowStateForFloat(&floatRS, aState.mPresContext);
+                            aState.mReflowState.reason);
 
   // Setup a block reflow state to reflow the float.
   nsBlockReflowContext brc(aState.mPresContext, aState.mReflowState,
@@ -5583,9 +5556,7 @@ nsBlockFrame::ReflowFloat(nsBlockReflowState& aState,
       nsHTMLReflowState redoFloatRS(aState.mPresContext, aState.mReflowState,
                                     floatFrame, 
                                     nsSize(availSpace.width, availSpace.height), 
-                                    aState.mReflowState.reason, PR_FALSE);
-
-      InitReflowStateForFloat(&redoFloatRS, aState.mPresContext);
+                                    aState.mReflowState.reason);
 
       clearanceFrame = nsnull;
       do {
