@@ -37,6 +37,9 @@ public:
 
   static const nsIID& GetIID() { static nsIID iid = NS_ITABLECELLAYOUT_IID; return iid; }
 
+  /** return the mapped cell's row and column indexes (starting at 0 for each) */
+  NS_IMETHOD GetCellIndexes(PRInt32 &aRowIndex, PRInt32 &aColIndex)=0;
+
   /** return the mapped cell's row index (starting at 0 for the first row) */
   virtual nsresult GetRowIndex(PRInt32 &aRowIndex)=0;
   

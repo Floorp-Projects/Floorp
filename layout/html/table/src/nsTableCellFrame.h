@@ -130,7 +130,11 @@ public:
   /**
    * return the cell's starting row index (starting at 0 for the first row).
    * for continued cell frames the row index is that of the cell's first-in-flow
+   * and the column index (starting at 0 for the first column
    */
+  NS_IMETHOD GetCellIndexes(PRInt32 &aRowIndex, PRInt32 &aColIndex);
+
+  /** return the mapped cell's row index (starting at 0 for the first row) */
   virtual nsresult GetRowIndex(PRInt32 &aRowIndex);
 
   /**

@@ -1050,11 +1050,25 @@ nsresult nsTableCellFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr
     return NS_ERROR_NULL_POINTER;
   }
   if (aIID.Equals(nsITableCellLayout::GetIID())) {
-    *aInstancePtr = (void*)this;
+    *aInstancePtr = (void*) (nsITableCellLayout *)this;
     return NS_OK;
   } else {
     return nsHTMLContainerFrame::QueryInterface(aIID, aInstancePtr);
   }
+}
+
+/* This is primarily for editor access via nsITableLayout */
+NS_IMETHODIMP
+nsTableCellFrame::GetCellIndexes(PRInt32 &aRowIndex, PRInt32 &aColIndex)
+{
+  nsresult res = GetRowIndex(aRowIndex);
+  if (NS_FAILED(res))
+  {
+    aColIndex = 0;
+    return res;
+  }
+  aColIndex = mColIndex;
+  return  NS_OK;
 }
 
 nsresult 
