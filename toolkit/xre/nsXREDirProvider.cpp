@@ -520,7 +520,11 @@ nsXREDirProvider::GetUserAppDataDirectory(nsILocalFile** aFile)
 
 #if defined(XP_MACOSX)
    FSRef fsRef;
+#ifdef MOZ_THUNDERBIRD 
+  OSErr err = ::FSFindFolder(kUserDomain, kDomainLibraryFolderType, kCreateFolder, &fsRef);
+#else
   OSErr err = ::FSFindFolder(kUserDomain, kApplicationSupportFolderType, kCreateFolder, &fsRef);
+#endif 
   if (err) return NS_ERROR_FAILURE;
 
   rv = NS_NewNativeLocalFile(EmptyCString(), PR_TRUE, getter_AddRefs(localDir));
