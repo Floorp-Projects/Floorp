@@ -6607,7 +6607,7 @@ nsCSSFrameConstructor::ConstructMathMLFrame(nsIPresShell*            aPresShell,
                                             nsFrameItems&            aFrameItems)
 {
   // Make sure that we remain confined in the MathML world
-  if (aNameSpaceID != nsMathMLAtoms::nameSpaceID) 
+  if (aNameSpaceID != kNameSpaceID_MathML) 
     return NS_OK;
 
   PRBool    processChildren = PR_TRUE;  // Whether we should process child content.

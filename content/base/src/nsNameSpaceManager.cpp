@@ -59,6 +59,7 @@ static const char kXHTMLNameSpaceURI[] = "http://www.w3.org/1999/xhtml";
 static const char kXLinkNameSpaceURI[] = "http://www.w3.org/1999/xlink";
 static const char kXSLTNameSpaceURI[] = "http://www.w3.org/1999/XSL/Transform";
 static const char kXBLNameSpaceURI[] = "http://www.mozilla.org/xbl";
+static const char kMathMLNameSpaceURI[] = "http://www.w3.org/1998/Math/MathML";
 
 //-----------------------------------------------------------
 // Name Space ID table support
@@ -91,6 +92,7 @@ static void InitializeNameSpaceManager()
   nsString* html = new nsString( NS_ConvertASCIItoUCS2(kHTMLNameSpaceURI) );
   nsString* xslt = new nsString( NS_ConvertASCIItoUCS2(kXSLTNameSpaceURI) );
   nsString* xbl = new nsString(NS_ConvertASCIItoUCS2(kXBLNameSpaceURI));
+  nsString* mathml = new nsString(NS_ConvertASCIItoUCS2(kMathMLNameSpaceURI));
 
   gURIArray->AppendElement(xmlns);  // ordering here needs to match IDs
   gURIArray->AppendElement(xml);
@@ -99,6 +101,7 @@ static void InitializeNameSpaceManager()
   gURIArray->AppendElement(html); 
   gURIArray->AppendElement(xslt);
   gURIArray->AppendElement(xbl);
+  gURIArray->AppendElement(mathml);
 
   nsStringKey xmlnsKey(*xmlns);
   nsStringKey xmlKey(*xml);
@@ -107,6 +110,7 @@ static void InitializeNameSpaceManager()
   nsStringKey htmlKey(*html);
   nsStringKey xsltKey(*xslt);
   nsStringKey xblKey(*xbl);
+  nsStringKey mathmlKey(*mathml);
 
   gURIToIDTable->Put(&xmlnsKey, (void*)kNameSpaceID_XMLNS);
   gURIToIDTable->Put(&xmlKey, (void*)kNameSpaceID_XML);
@@ -115,6 +119,7 @@ static void InitializeNameSpaceManager()
   gURIToIDTable->Put(&htmlKey, (void*)kNameSpaceID_HTML);
   gURIToIDTable->Put(&xsltKey, (void*)kNameSpaceID_XSLT);
   gURIToIDTable->Put(&xblKey, (void*)kNameSpaceID_XBL);
+  gURIToIDTable->Put(&mathmlKey, (void*)kNameSpaceID_MathML);
 
   NS_NewISupportsArray(&gElementFactoryArray);
 
