@@ -62,7 +62,6 @@
 // OS includes
 #include <PMApplication.h>
 #include <CFPlugIn.h>
-#include <Gestalt.h>
 
 // Constants
 static const char *kPrintProgressDialogURL = "chrome://global/content/printProgress.xul";
@@ -256,46 +255,7 @@ nsPrintingPromptService::ShowProgress(nsIDOMWindow*            parent,
                                       nsIPrintProgressParams** printProgressParams,
                                       PRBool*                  notifyOnOpen)
 {
-    NS_ENSURE_ARG(webProgressListener);
-    NS_ENSURE_ARG(printProgressParams);
-    NS_ENSURE_ARG(notifyOnOpen);
-
-    *notifyOnOpen = PR_FALSE;
-
-    // If running on OS X, the printing manager displays a nice progress dialog
-    // so we don't need to do this. Keeping this code here in order to support
-    // running TARGET_CARBON builds on OS 9.
-    
-    long version;
-    if (::Gestalt(gestaltSystemVersion, &version) == noErr && version >= 0x00001000)
-        return NS_ERROR_NOT_IMPLEMENTED;
-        
-    nsPrintProgress* prtProgress = new nsPrintProgress();
-    nsresult rv = prtProgress->QueryInterface(NS_GET_IID(nsIPrintProgress), (void**)getter_AddRefs(mPrintProgress));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    rv = prtProgress->QueryInterface(NS_GET_IID(nsIWebProgressListener), (void**)getter_AddRefs(mWebProgressListener));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    nsPrintProgressParams* prtProgressParams = new nsPrintProgressParams();
-    rv = prtProgressParams->QueryInterface(NS_GET_IID(nsIPrintProgressParams), (void**)printProgressParams);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    if (printProgressParams) 
-    {
-        if (mWatcher) 
-        {
-            nsCOMPtr<nsIDOMWindow> active;
-            mWatcher->GetActiveWindow(getter_AddRefs(active));
-            nsCOMPtr<nsIDOMWindowInternal> parent(do_QueryInterface(active));
-            mPrintProgress->OpenProgressDialog(parent, kPrintProgressDialogURL, *printProgressParams, openDialogObserver, notifyOnOpen);
-        }
-    }
-
-    *webProgressListener = NS_STATIC_CAST(nsIWebProgressListener*, this);
-    NS_ADDREF(*webProgressListener);
-
-    return rv;
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP 
@@ -352,13 +312,10 @@ nsPrintingPromptService::ShowPrinterProperties(nsIDOMWindow *parent, const PRUni
 NS_IMETHODIMP 
 nsPrintingPromptService::OnStateChange(nsIWebProgress *aWebProgress, nsIRequest *aRequest, PRUint32 aStateFlags, nsresult aStatus)
 {
-    if ((aStateFlags & STATE_STOP) && mWebProgressListener) 
-    {
+    if ((aStateFlags & STATE_STOP) && mWebProgressListener) {
         mWebProgressListener->OnStateChange(aWebProgress, aRequest, aStateFlags, aStatus);
         if (mPrintProgress) 
-        {
-            mPrintProgress->CloseProgressDialog(PR_TRUE);
-        }
+          mPrintProgress->CloseProgressDialog(PR_TRUE);
         mPrintProgress       = nsnull;
         mWebProgressListener = nsnull;
     }
