@@ -220,7 +220,7 @@
 
   <!-- Menu -->
   <!-- if you change the id of the menubar, be sure to update mailCore.js::CustomizeMailToolbar and MailToolboxCustomizeDone -->
-  <toolbar type="menubar" id="mail-menubar" class="chromeclass-menubar" customizable="true"
+  <toolbar type="menubar" id="compose-toolbar-menubar" class="chromeclass-menubar" customizable="true"
      defaultset="menubar-items" mode="full">
 
      <toolbaritem id="menubar-items" align="center">
