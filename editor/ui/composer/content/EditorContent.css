@@ -18,6 +18,7 @@
  * Rights Reserved.
  * 
  * Contributor(s): 
+ *   Daniel Glazman <glazman@netscape.com>
  */
 
 /* Styles to alter look of things in the Editor content window 
@@ -44,7 +45,9 @@ table {
 
 table[empty-cells],
   table[border="0"], 
-  table[border="0"] td, table[border="0"] th
+  table[border="0"] td, table[border="0"] th,
+  table:not([border]),
+  table:not([border]) td, table:not([border]) th
 {
   border: 1px dotted red;
 }
