@@ -1,0 +1,183 @@
+<!-- ***** BEGIN LICENSE BLOCK *****
+   - Version: MPL 1.1/GPL 2.0/LGPL 2.1
+   -
+   - The contents of this file are subject to the Mozilla Public License Version
+   - 1.1 (the "License"); you may not use this file except in compliance with
+   - the License. You may obtain a copy of the License at
+   - http://www.mozilla.org/MPL/
+   -
+   - Software distributed under the License is distributed on an "AS IS" basis,
+   - WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+   - for the specific language governing rights and limitations under the
+   - License.
+   -
+   - The Original Code is OEone Calendar Code, released October 31st, 2001.
+   -
+   - The Initial Developer of the Original Code is
+   - OEone Corporation.
+   - Portions created by the Initial Developer are Copyright (C) 2001
+   - the Initial Developer. All Rights Reserved.
+   -
+   - Contributor(s): Garth Smedley <garths@oeone.com>
+   -                 Mike Potter <mikep@oeone.com>
+   -                 Chris Charabaruk <coldacid@meldstar.com>
+   -                 Matthew Willis <mattwillis@gmail.com>
+   -
+   - Alternatively, the contents of this file may be used under the terms of
+   - either the GNU General Public License Version 2 or later (the "GPL"), or
+   - the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+   - in which case the provisions of the GPL or the LGPL are applicable instead
+   - of those above. If you wish to allow use of your version of this file only
+   - under the terms of either the GPL or the LGPL, and not to allow others to
+   - use your version of this file under the terms of the MPL, indicate your
+   - decision by deleting the provisions above and replace them with the notice
+   - and other provisions required by the LGPL or the GPL. If you do not delete
+   - the provisions above, a recipient may use your version of this file under
+   - the terms of any one of the MPL, the GPL or the LGPL.
+   -
+   - ***** END LICENSE BLOCK ***** -->
+
+<!-- Event Menu -->
+<!ENTITY event.menu.title                       "Cita">
+<!ENTITY eventMenuCmd.accesskey                 "v">
+
+<!ENTITY event.new.event                        "Nova cita">
+<!ENTITY event.new.event.key                    "N">
+<!ENTITY event.new.event.accesskey              "c">
+
+<!ENTITY event.new.todo                         "Nova tasca">
+<!ENTITY event.new.todo.key                     "T">
+<!ENTITY event.new.todo.accesskey               "t">
+
+<!ENTITY calendar.new.server.label              "Nou calendari">
+<!ENTITY calendar.new.server.key                "L">
+<!ENTITY calendar.new.server.accesskey          "l">
+
+<!ENTITY calendar.open.file.label               "Open Calendar File…">
+<!ENTITY calendar.open.file.accesskey           "O">
+
+<!ENTITY event.edit.event                       "Edita">
+<!ENTITY event.edit.event.key                   "E">
+<!ENTITY event.edit.event.accesskey             "E">
+
+<!ENTITY event.delete.event                     "Suprimeix la cita o cites seleccionades">
+<!ENTITY event.delete.event.accesskey           "x">
+
+<!ENTITY event.delete.tasks                     "Suprimeix la tasca o tasques seleccionades">
+<!ENTITY event.delete.tasks.accesskey           "p">
+
+<!ENTITY event.mail.event                       "Envia un correu electrònic de la cita o cites seleccionades">
+<!ENTITY event.mail.event.key                   "M">
+<!ENTITY event.mail.event.accesskey             "v">
+
+<!ENTITY calendar.print.label                   "Imprimeix els calendaris actius...">
+<!ENTITY calendar.print.key                     "P">
+<!ENTITY calendar.print.accesskey               "I">
+
+<!ENTITY calendar.printpreview.label            "Exemple d'impressió">
+<!ENTITY calendar.printpreview.accesskey        "m">
+
+<!ENTITY calendar.pagesetup.label               "Configuració de la pàgina...">
+<!ENTITY calendar.pagesetup.accesskey           "u">
+
+<!ENTITY calendar.import.label                  "Importa des d'un fitxer...">
+<!ENTITY calendar.import.key                    "I">
+<!ENTITY calendar.import.accesskey              "I">
+
+<!ENTITY calendar.wizard.label                  "Executa l'auxiliar">
+<!ENTITY calendar.wizard.accesskey              "u">
+
+<!ENTITY calendar.export.label                  "Exporta les cites seleccionades...">
+<!ENTITY calendar.export.key                    "O">
+<!ENTITY calendar.export.accesskey              "E">
+
+<!ENTITY calendar.subscribe.label               "Subscriu-te a un calendari remot...">
+<!ENTITY calendar.subscribe.accesskey           "r">
+
+<!ENTITY calendar.publish.label                 "Publica les cites seleccionades...">
+<!ENTITY calendar.publish.accesskey             "s">
+
+<!ENTITY calendar.about.label                   "Quant al Calendari">
+<!ENTITY calendar.about.accesskey               "C">
+
+<!ENTITY calendar.cut.label                     "Retalla">
+<!ENTITY calendar.cut.key                       "X">
+<!ENTITY calendar.cut.accesskey                 "t">
+
+<!ENTITY calendar.copy.label                    "Copia">
+<!ENTITY calendar.copy.key                      "C">
+<!ENTITY calendar.copy.accesskey                "C">
+
+<!ENTITY calendar.paste.label                   "Enganxa">
+<!ENTITY calendar.paste.key                     "V">
+<!ENTITY calendar.paste.accesskey               "x">
+
+<!ENTITY calendar.selectall.label               "Selecciona-ho tot">
+<!ENTITY calendar.selectall.key                 "A">
+<!ENTITY calendar.selectall.accesskey           "a">
+
+<!ENTITY calendar.preferences.label             "Preferències...">
+<!ENTITY calendar.preferences.accesskey         "e">
+
+<!ENTITY goMenu.label                           "Vés a">
+<!ENTITY goMenu.accesskey                       "V">
+
+<!ENTITY goTodayCmd.label                       "Vés a avui">
+<!ENTITY goTodayCmd.accesskey                   "u">
+
+<!ENTITY goDateCmd.label                        "Vés a data">
+<!ENTITY goDateCmd.accesskey                    "d">
+
+<!ENTITY goPreviousCmd.label                    "Anterior">
+<!ENTITY goPreviousCmd.accesskey                "A">
+
+<!ENTITY goNextCmd.label                        "Següent">
+<!ENTITY goNextCmd.accesskey                    "S">
+
+<!ENTITY taskMenu.label                         "Tasques">
+<!ENTITY taskMenu.accesskey                     "T">
+
+<!ENTITY toolsMenu.label                        "Eines">
+<!ENTITY toolsMenu.accesskey                    "i">
+
+<!ENTITY javaScriptConsoleCmd.label             "Consola de JavaScript">
+<!ENTITY javaScriptConsoleCmd.accesskey         "S">
+
+<!ENTITY navigatorCmd.label                     "Navegador">
+<!ENTITY navigatorCmd.accesskey                 "N">
+
+<!ENTITY messengerCmd.label                     "Correu">
+<!ENTITY messengerCmd.accesskey                 "C">
+
+<!ENTITY addressBookCmd.label                   "Llibreta d'adreces">
+<!ENTITY addressBookCmd.accesskey               "L">
+
+<!ENTITY helpMenu.label                         "Ajuda">
+<!ENTITY helpMenu.accesskey                     "A">
+
+<!ENTITY walletPasswordManager.label            "Gestor de contrasenyes">
+<!ENTITY walletPasswordManager.accesskey        "G">
+
+<!-- Toolbar items -->
+<!ENTITY fileMenu.label                         "Fitxer">
+<!ENTITY fileMenu.accesskey                     "F">
+
+<!ENTITY editMenu.label                         "Edita">
+<!ENTITY editMenu.accesskey                     "E">
+<!ENTITY preferencesCmd.label                   "Opcions...">
+<!ENTITY preferencesCmd.accesskey               "O">
+
+<!ENTITY viewMenu.label                         "Visualitza">
+<!ENTITY viewMenu.accesskey                     "V">
+
+<!ENTITY releaseCmd.label                       "Notes de llançament">
+<!ENTITY releaseCmd.accesskey                   "N">
+<!ENTITY aboutCmd.label                         "Quant al &brandFullName;">
+<!ENTITY aboutCmd.accesskey                     "Q">
+
+<!-- Mac OS X "Window" menu items -->
+<!ENTITY windowMenu.label                       "Window">
+<!ENTITY minimizeWindow.label                   "Minimize">
+<!ENTITY zoomWindow.label                       "Zoom">
+<!ENTITY minimizeWindow.key                     "M">
+<!ENTITY bringAllToFront.label                  "Bring All to Front">

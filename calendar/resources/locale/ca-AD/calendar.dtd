@@ -1,0 +1,482 @@
+<!-- ***** BEGIN LICENSE BLOCK *****
+   - Version: MPL 1.1/GPL 2.0/LGPL 2.1
+   -
+   - The contents of this file are subject to the Mozilla Public License Version
+   - 1.1 (the "License"); you may not use this file except in compliance with
+   - the License. You may obtain a copy of the License at
+   - http://www.mozilla.org/MPL/
+   -
+   - Software distributed under the License is distributed on an "AS IS" basis,
+   - WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+   - for the specific language governing rights and limitations under the
+   - License.
+   -
+   - The Original Code is OEone Calendar Code, released October 31st, 2001.
+   -
+   - The Initial Developer of the Original Code is
+   - OEone Corporation.
+   - Portions created by the Initial Developer are Copyright (C) 2001
+   - the Initial Developer. All Rights Reserved.
+   -
+   - Contributor(s): Garth Smedley <garths@oeone.com>
+   -                 Mike Potter <mikep@oeone.com>
+   -                 Chris Charabaruk <coldacid@meldstar.com>
+   -                 ArentJan Banck <ajbanck@planet.nl>
+   -                 Eric Belhaire <belhaire@ief.u-psud.fr>
+   -
+   - Alternatively, the contents of this file may be used under the terms of
+   - either the GNU General Public License Version 2 or later (the "GPL"), or
+   - the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+   - in which case the provisions of the GPL or the LGPL are applicable instead
+   - of those above. If you wish to allow use of your version of this file only
+   - under the terms of either the GPL or the LGPL, and not to allow others to
+   - use your version of this file under the terms of the MPL, indicate your
+   - decision by deleting the provisions above and replace them with the notice
+   - and other provisions required by the LGPL or the GPL. If you do not delete
+   - the provisions above, a recipient may use your version of this file under
+   - the terms of any one of the MPL, the GPL or the LGPL.
+   -
+   - ***** END LICENSE BLOCK ***** -->
+
+<!-- General -->
+<!ENTITY calendar.file.default.name  "El meu calendari" >
+
+<!-- Alarm -->
+<!ENTITY alarm.units.minutes  "minuts" >
+<!ENTITY alarm.units.hours    "hores" >
+<!ENTITY alarm.units.days     "dies" >
+
+<!ENTITY alarm.units.minutes.singular  "minut" >
+<!ENTITY alarm.units.hours.singular    "hora" >
+<!ENTITY alarm.units.days.singular     "dia" >
+
+
+<!ENTITY repeat.units.days     "dies" >
+<!ENTITY repeat.units.weeks    "setmanes" >
+<!ENTITY repeat.units.months   "mesos" >
+<!ENTITY repeat.units.years    "anys" >
+
+<!ENTITY repeat.units.days.singular    "dia" >
+<!ENTITY repeat.units.weeks.singular    "setmana" >
+<!ENTITY repeat.units.months.singular   "mes" >
+<!ENTITY repeat.units.years.singular    "any" >
+
+<!ENTITY priority.level.none              "Cap">
+<!ENTITY priority.level.none.accesskey    "N">
+<!ENTITY priority.level.low               "Baixa">
+<!ENTITY priority.level.low.accesskey     "B">
+<!ENTITY priority.level.medium            "Mitja">
+<!ENTITY priority.level.medium.accesskey  "M">
+<!ENTITY priority.level.high              "Alta">
+<!ENTITY priority.level.high.accesskey    "A">
+
+<!ENTITY newevent.title.label        "Títol" >
+<!ENTITY newevent.location.label     "Ubicació" >
+<!ENTITY newevent.start.label        "Comença" >
+<!ENTITY newevent.date.label         "Data" >
+<!ENTITY newevent.startdate.label    "Comença" >
+<!ENTITY newevent.enddate.label      "Acaba" >
+<!ENTITY newevent.end.label          "Acaba" >
+<!ENTITY newevent.alldayevent.label  "Aquesta cita dura tot el dia." >
+<!ENTITY newevent.description.label  "Nota" >
+<!ENTITY newevent.uri.label          "URL" >
+<!ENTITY newevent.uri.visit.label    "Visita l'URL" >
+<!ENTITY newevent.private.label      "Privat" >
+<!ENTITY newevent.private.note       "Aquesta cita és privada." >
+<!ENTITY newevent.alarm.label        "Alarma" >
+<!ENTITY newevent.server.label       "Fitxer de calendari" >
+<!ENTITY newevent.invite.label       "Convida" >
+<!ENTITY newevent.email.label        "Alarma per correu electrònic a:" >
+<!ENTITY newevent.beforealarm.label  "abans que comenci la cita" >
+<!ENTITY newevent.beforealarmends.label  "abans que finalitzi la cita" >
+<!ENTITY newevent.repeat.label       "Repeteix cada" >
+<!ENTITY newevent.until.label        "Fins" >
+<!ENTITY newevent.forever.label      "Per sempre" >
+<!ENTITY newevent.numberoftimes.label "Nombre de vegades" >
+<!ENTITY newevent.category.label      "Categoria" >
+<!ENTITY newevent.exceptions.caption "Excepcions">
+<!ENTITY newevent.addexceptions.label "Afegeix una excepció">
+<!ENTITY newevent.deleteexceptions.label "Elimina l'excepció">
+<!ENTITY newevent.endtime.warning    "L'hora d'inici es posterior a la d'acabada.">
+<!ENTITY newevent.enddate.warning    "La data d'inici es posterior a la d'acabada.">
+<!ENTITY newevent.repeatdate.tooltip    "Trieu una data d'acabada" >
+<!ENTITY newevent.recurend.warning    "La vostra repetició - fins que sigui abans de la vostra hora d'acabada.">
+<!ENTITY newevent.endtime.tooltip    "Trieu una hora d'acabada per a aquesta cita" >
+<!ENTITY newevent.starttimeerror.alertmessage "La vostra cita no pot acabar abans d'haver començat. Si us plau, canvieu l'hora d'inici o la d'acabada." >
+<!ENTITY newevent.recurendtimeerror.alertmessage "El temps de repetició de la cita no pot estar abans que el temps d'acabada de la mateixa. Si us plau, arregleu-ho o desactiveu la repetició." >
+<!ENTITY newevent.newevent.tab.label "Cita" >
+<!ENTITY newevent.recurrence.tab.label "Repetició" >
+<!ENTITY newevent.contacts.tab.label "Contactes" >
+<!ENTITY newevent.files.tab.label "Fitxers" >
+<!ENTITY newevent.status.label "En procés" >
+<!ENTITY newevent.status.longlabel "Estat de la cita">
+<!ENTITY newevent.status.needsaction.label "Necessita una acció" >
+<!ENTITY newevent.status.inprogress.label  "En procés" >
+<!ENTITY newevent.status.completed.label   "Acabat" >
+<!ENTITY newevent.status.cancelled.label   "Cancel·lat" >
+<!ENTITY newevent.status.tentative.label   "Temptejant" >
+<!ENTITY newevent.status.confirmed.label   "Confirmat" >
+
+<!ENTITY newevent.advanced.repeat.dayofmonth.label "El xt dia del mes">
+<!ENTITY newevent.advanced.repeat.dayofweek.label "4t dimarts de mes">
+<!ENTITY newevent.advanced.repeat.lastdayofweek.label "Últim dimarts de mes">
+<!ENTITY newevent.advanced.repeat.ofthemonth.label " del mes">
+
+<!ENTITY newevent.advanced.repeat.onthe.label "En el">
+<!ENTITY newevent.advanced.repeat.last.label "Últim">
+<!ENTITY newevent.advanced.repeat.first.label "Primer">
+<!ENTITY newevent.advanced.repeat.second.label "Segon">
+<!ENTITY newevent.advanced.repeat.third.label "Tercer">
+<!ENTITY newevent.advanced.repeat.fourth.label "Quart">
+<!ENTITY newevent.advanced.repeat.first.extension "r">
+<!ENTITY newevent.advanced.repeat.second.extension "n">
+<!ENTITY newevent.advanced.repeat.third.extension "r">
+<!ENTITY newevent.advanced.repeat.nth.extension "t">
+
+<!ENTITY newevent.choosefile.label "Trieu un fitxer">
+<!ENTITY newevent.removeselectedfile.label "Elimina el fitxer seleccionat">
+
+<!ENTITY newtodo.completed.label "Acabat">
+<!ENTITY newtodo.duedate.label "Acaba">
+<!ENTITY newtodo.startdate.label "Data d'inici">
+<!ENTITY newtodo.priority.label "Prioritat">
+<!ENTITY newtodo.percentcomplete.label "&#37; complet">
+<!ENTITY newtodo.categories.label "Categoria">
+<!ENTITY newtodo.starttime.warning "La vostra data d'inici ocorre abans que la d'acabada.">
+<!ENTITY newtodo.cancelled.label "Cancel·lat">
+<!ENTITY newtodo.status.label "En procés">
+<!ENTITY newtodo.beforealarm.label  "abans que s'inicïi la tasca" >
+<!ENTITY newtodo.beforealarmends.label  "abans que finalitzi la tasca" >
+<!ENTITY newtodo.newtodo.tab.label "Tasca" >
+<!ENTITY newtodo.status.longlabel "Estat de la tasca">
+<!ENTITY newtodo.duetime.warning    "La vostra hora d'inici és posterior a la d'acabada.">
+<!ENTITY newtodo.duedate.warning    "La vostra data d'inici es posterior a la d'acabada.">
+<!ENTITY newtodo.repeatstart.warning "La data d'inici és necessària per a la recurrència.">
+
+<!ENTITY calendar.confirm.deleteevent "Esteu segur de voler suprimir la cita titolada:" >
+<!ENTITY calendar.confirm.deleteuntitledevent "Esteu segur de voler suprimir aquesta cita sense nom?" >
+
+<!ENTITY event.alarm.checkbox.label "Recorda-m'ho d'aquí" >
+
+<!ENTITY event.title.alarm         "Alarma" >
+<!ENTITY event.title.new         "Nova cita" >
+<!ENTITY event.title.edit        "Edita la cita" >
+<!ENTITY event.title.heading        "Alarma del calendari" >
+
+<!ENTITY onthe-text            "En el">
+<!ENTITY last-text             "Últim">
+<!ENTITY ofthemonth-text       " del mes">
+
+
+<!ENTITY todo.title.new         "Nova tasca">
+<!ENTITY todo.title.edit        "Edita la tasca">
+
+<!ENTITY event.tip.new         "Crea una nova cita" >
+<!ENTITY event.tip.edit        "Edita una cita existent." >
+<!ENTITY todo.tip.new         "Crea una nova tasca." >
+<!ENTITY todo.tip.edit        "Edita una tasca existent." >
+<!ENTITY event.tip.alert       "Alarma!" >
+
+
+<!ENTITY calendar.flat.topbar.new              "Nova cita" >
+<!ENTITY calendar.flat.topbar.gototoday        "Vés a avui" >
+<!ENTITY calendar.flat.topbar.choosedate       "Vés a la data" >
+<!ENTITY calendar.flat.topbar.dayview          "Vista diària" >
+<!ENTITY calendar.dayview.accesskey            "D" >
+<!ENTITY calendar.flat.topbar.weekview         "Vista setmanal" >
+<!ENTITY calendar.weekview.accesskey           "s" >
+<!ENTITY calendar.flat.topbar.monthview        "Vista mensual" >
+<!ENTITY calendar.monthview.accesskey          "M" >
+<!ENTITY calendar.flat.topbar.multiweekview   "Multisetmana" >
+<!ENTITY calendar.multiweekview.accesskey     "i" >
+
+<!ENTITY calendar.tools.delete.tooltip         "Suprimeix la cita" >
+<!ENTITY calendar.tools.modify.tooltip         "Modifica la cita" >
+
+<!ENTITY calendar.newtask.button.tooltip          "Crea una nova tasca" >
+<!ENTITY calendar.newevent.button.tooltip         "Crea una nova cita al Calendari" >
+<!ENTITY calendar.delete.button.tooltip           "Suprimeix la cita seleccionada" >
+<!ENTITY calendar.edit.button.tooltip             "Edita la cita seleccionada" >
+
+<!ENTITY calendar.unifinder.withalarms.label      "Amb alarmes" >
+<!ENTITY calendar.unifinder.todayandfuture.label  "Amaga les cites passades" >
+<!ENTITY calendar.unifinder.todoitems.label       "Tasques" >
+<!ENTITY calendar.unifinder.hidecompletedtodos.label "Amaga les tasques acabades">
+
+<!ENTITY calendar.calendartab.label "Calendari">
+<!ENTITY calendar.listofcalendarstab.label "Calendaris">
+<!ENTITY calendar.gototoday.button.label        "Vés a avui" >
+
+<!ENTITY calendar.calendarlistbox.label "Calendaris">
+
+<!ENTITY calendar.events.filter.all.label "Totes les cites">
+<!ENTITY calendar.events.filter.today.label "Cites d'avui">
+<!ENTITY calendar.events.filter.week.label "Cites d'aquesta setmana">
+<!ENTITY calendar.events.filter.2weeks.label "Cites de les properes 2 setmanes">
+<!ENTITY calendar.events.filter.month.label "Cites del següent mes">
+<!ENTITY calendar.events.filter.future.label "Totes les cites futures">
+<!ENTITY calendar.events.filter.current.label "Dia seleccionat actualment">
+
+<!ENTITY calendar.unifinder.tree.done.label          "Fet">
+<!ENTITY calendar.unifinder.tree.priority.label      "Prioritat">
+<!ENTITY calendar.unifinder.tree.title.label         "Títol">
+<!ENTITY calendar.unifinder.tree.percentcomplete.label "&#37; Complet">
+<!ENTITY calendar.unifinder.tree.startdate.label     "Comença">
+<!ENTITY calendar.unifinder.tree.enddate.label       "Acaba">
+<!ENTITY calendar.unifinder.tree.duedate.label       "Acaba">
+<!ENTITY calendar.unifinder.tree.completeddate.label "Acabat">
+<!ENTITY calendar.unifinder.tree.categories.label    "Categories">
+<!ENTITY calendar.unifinder.tree.location.label    "Ubicació">
+<!ENTITY calendar.unifinder.tree.status.label    "En procés">
+<!ENTITY calendar.unifinder.tree.filename.label    "Nom del calendari">
+
+<!ENTITY calendar.gototoday.button.tooltip        "Vés a avui" >
+<!ENTITY calendar.choosedate.button.tooltip       "Trieu una data per anar-hi" >
+
+<!ENTITY calendar.dayview.button.tooltip          "Commuta a vista diària" >
+<!ENTITY calendar.weekview.button.tooltip         "Commuta a vista setmanal" >
+<!ENTITY calendar.monthview.button.tooltip        "Commuta a vista mensual" >
+<!ENTITY calendar.multiweekview.button.tooltip        "Commuta a vista multisetmana" >
+
+<!ENTITY calendar.nextday.button.tooltip        "Següent dia" >
+<!ENTITY calendar.prevday.button.tooltip        "Dia anterior" >
+<!ENTITY calendar.nextweek.button.tooltip       "Següent setmana" >
+<!ENTITY calendar.prevweek.button.tooltip       "Setmana anterior" >
+<!ENTITY calendar.nextmonth.button.tooltip      "Proper mes" >
+<!ENTITY calendar.prevmonth.button.tooltip      "Mes anterior" >
+
+<!ENTITY calendar.newtask.button.label          "Nova tasca" >
+<!ENTITY calendar.newevent.button.label         "Nova cita" >
+<!ENTITY calendar.delete.button.label           "Suprimeix" >
+<!ENTITY calendar.edit.button.label             "Edita" >
+
+<!ENTITY calendar.choosedate.button.label       "Trieu una data" >
+
+<!ENTITY calendar.cut.button.tooltip            "Talla" >
+<!ENTITY calendar.copy.button.tooltip           "Copia" >
+<!ENTITY calendar.paste.button.tooltip          "Enganxa" >
+<!ENTITY calendar.print.button.tooltip          "Imprimeix un calendari" >
+
+<!ENTITY calendar.cut.button.label              "Talla" >
+<!ENTITY calendar.copy.button.label             "Copia" >
+<!ENTITY calendar.paste.button.label            "Enganxa" >
+<!ENTITY calendar.print.button.label            "Imprimeix un calendari" >
+
+<!ENTITY calendar.import.button.tooltip            "Importa: Importa les cites d'un fitxer local." >
+<!ENTITY calendar.export.button.tooltip            "Exporta: Exporta les cites a un fitxer local." >
+<!ENTITY calendar.subscribe.button.tooltip         "Subscriu: Subscriu-te a un fitxer de calendari en una màquina remota (p.e. d'Internet)" >
+<!ENTITY calendar.publish.button.tooltip            "Publica: Publica les cites a una màquina remota." >
+
+<!ENTITY calendar.import.button.label              "Importa-ho tot" >
+<!ENTITY calendar.export.button.label              "Exporta les cites seleccionades..." >
+<!ENTITY calendar.subscribe.button.label           "Subscriu" >
+<!ENTITY calendar.publish.button.label             "Publica" >
+
+<!ENTITY calendar.dayview.button.label          "Vista diària" >
+<!ENTITY calendar.weekview.button.label         "Vista setmanal" >
+<!ENTITY calendar.monthview.button.label        "Vista mensual" >
+<!ENTITY calendar.multiweekview.button.label        "Multisetmana" >
+<!ENTITY calendar.onlyworkday.checkbox.label    "Només els dies feiners" >
+<!ENTITY calendar.onlyworkday.checkbox.accesskey  "f" >
+<!ENTITY calendar.displaytodos.checkbox.label   "Tasques visualitzades" >
+<!ENTITY calendar.displaytodos.checkbox.accesskey "V" >
+
+<!ENTITY calendar.menu.options.modify           "Edita" >
+<!ENTITY calendar.menu.options.remove           "Suprimeix" >
+<!ENTITY calendar.menu.options.close            "Tanca la finestra" >
+<!ENTITY calendar.menu.options.close.key        "">
+<!ENTITY calendar.menu.options.close.accesskey  "n" >
+
+<!ENTITY calendar.main.tab.label        "Cites" >
+<!ENTITY calendar.search.tab.label      "Cerca">
+
+<!ENTITY calendar.search.options.searchfor "que continguin">
+
+<!ENTITY calendar.menu.numberofweeks.label     "Número de setmanes" >
+<!ENTITY calendar.menu.numberofweeks.1      "1 setmana" >
+<!ENTITY calendar.menu.numberofweeks.2      "2 setmanes" >
+<!ENTITY calendar.menu.numberofweeks.3      "3 setmanes" >
+<!ENTITY calendar.menu.numberofweeks.4      "4 setmanes" >
+<!ENTITY calendar.menu.numberofweeks.5      "5 setmanes" >
+<!ENTITY calendar.menu.numberofweeks.6      "6 setmanes" >
+
+<!-- Month View Entities -->
+<!ENTITY calendar.monthview.column.1.name "Dg">
+<!ENTITY calendar.monthview.column.2.name "Dl">
+<!ENTITY calendar.monthview.column.3.name "Dm">
+<!ENTITY calendar.monthview.column.4.name "Dc">
+<!ENTITY calendar.monthview.column.5.name "Dj">
+<!ENTITY calendar.monthview.column.6.name "Dv">
+<!ENTITY calendar.monthview.column.7.name "Ds">
+<!ENTITY week.short "s">
+
+<!-- Statusbar -->
+<!ENTITY statusText.label            "Document: Fet">
+
+<!-- Window Title -->
+<!ENTITY window.title            "Calendari del Mozilla">
+
+<!-- customizable toolbars -->
+<!ENTITY calendar.context.customize.label             "Personalitza">
+<!ENTITY calendar.context.customize.accesskey         "P">
+<!ENTITY calendar.menu.customize.label                "Personalitza la barra d'eines">
+<!ENTITY calendar.menu.customize.accesskey            "P">
+<!ENTITY calendar.maintoolbar.name                    "Barra d'eines de navegació">
+<!ENTITY calendar.maintoolbar.accesskey               "M">
+
+<!-- Context Menu -->
+<!ENTITY calendar.context.newevent.label              "Nova cita">
+<!ENTITY calendar.context.newevent.accesskey          "N">
+<!ENTITY calendar.context.newtodo.label               "Nova tasca">
+<!ENTITY calendar.context.newtodo.accesskey           "c">
+<!ENTITY calendar.context.modifyevent.label           "Edita la cita seleccionada">
+<!ENTITY calendar.context.modifyevent.accesskey       "E">
+<!ENTITY calendar.context.modifytask.label            "Edita la tasca">
+<!ENTITY calendar.context.modifytask.accesskey        "E">
+<!ENTITY calendar.context.deleteevent.label           "Suprimeix la cita seleccionada">
+<!ENTITY calendar.context.deleteevent.accesskey       "p">
+<!ENTITY calendar.context.deletetask.label            "Suprimeix la tasca">
+<!ENTITY calendar.context.deletetask.accesskey        "S">
+<!ENTITY calendar.context.cutevent.label              "Retalla">
+<!ENTITY calendar.context.cutevent.accesskey          "t">
+<!ENTITY calendar.context.copyevent.label             "Copia">
+<!ENTITY calendar.context.copyevent.accesskey         "C">
+<!ENTITY calendar.context.pasteevent.label            "Enganxa">
+<!ENTITY calendar.context.pasteevent.accesskey        "x">
+<!ENTITY calendar.context.selectall.label             "Selecciona-ho tot">
+<!ENTITY calendar.context.selectall.accesskey         "a">
+<!ENTITY calendar.context.gototoday.label             "Vés a avui">
+<!ENTITY calendar.context.gototoday.accesskey         "u">
+<!ENTITY calendar.context.dayview.label               "Commuta a vista diària">
+<!ENTITY calendar.context.dayview.accesskey           "d">
+<!ENTITY calendar.context.weekview.label              "Commuta a vista setmanal">
+<!ENTITY calendar.context.weekview.accesskey          "s">
+<!ENTITY calendar.context.monthview.label             "Commuta a vista mensual">
+<!ENTITY calendar.context.monthview.accesskey         "m">
+<!ENTITY calendar.context.multiweekview.label        "Commuta a vista multisetmana">
+<!ENTITY calendar.context.multiweekview.accesskey    "i">
+<!ENTITY calendar.context.reload.label                "Actualitza">
+<!ENTITY calendar.context.reload.accesskey            "l">
+<!ENTITY calendar.context.emailevent.label            "Envia un correu electrònic de la cita o cites seleccionades">
+<!ENTITY calendar.context.emailevent.accesskey        "r">
+<!ENTITY calendar.context.emailtask.label             "Envia un correu electrònic d'aquesta tasca">
+<!ENTITY calendar.context.emailtask.accesskey         "o">
+
+<!-- Task Context Menu -->
+<!ENTITY calendar.context.progress.label              "En curs">
+<!ENTITY calendar.context.progress.accesskey          "E">
+<!ENTITY calendar.context.priority.label              "Prioritat">
+<!ENTITY calendar.context.priority.accesskey          "r">
+
+<!ENTITY percnt "&#38;#37;" ><!--=percent sign-->
+
+<!ENTITY progress.level.0             "0&percnt;">
+<!ENTITY progress.level.0.accesskey   "0">
+<!ENTITY progress.level.25            "25&percnt;">
+<!ENTITY progress.level.25.accesskey  "2">
+<!ENTITY progress.level.50            "50&percnt;">
+<!ENTITY progress.level.50.accesskey  "5">
+<!ENTITY progress.level.75            "75&percnt;">
+<!ENTITY progress.level.75.accesskey  "7">
+<!ENTITY progress.level.100            "100&percnt;">
+<!ENTITY progress.level.100.accesskey  "1">
+                                                                 
+<!-- Server Context Menu -->
+<!ENTITY calendar.context.newserver.label              "Nou calendari">
+<!ENTITY calendar.context.newserver.accesskey          "N">
+<!ENTITY calendar.context.editserver.label             "Edita el calendari">
+<!ENTITY calendar.context.editserver.accesskey         "E">
+<!ENTITY calendar.context.deleteserver.label           "Suprimeix el calendari">
+<!ENTITY calendar.context.deleteserver.accesskey       "S">
+<!ENTITY calendar.context.refreshserver.label          "Actualitza els calendaris remots">
+<!ENTITY calendar.context.refreshserver.accesskey      "A">
+<!ENTITY calendar.context.publish.label                "Publica el calendari sencer">
+<!ENTITY calendar.context.publish.accesskey            "P">
+
+<!-- About Dialog -->
+<!ENTITY calendar.about.title "Quant a Mozilla Calendar">
+<!ENTITY calendar.about.tab   "Quant a">
+
+<!ENTITY throbber.tooltip "Vés a la pàgina de Mozilla">
+<!ENTITY menuBar.tooltip "Barra de menú">
+<!ENTITY navigationToolbar.tooltip "Barra d'eines de navegació">
+
+
+<!-- Calendar Alarm Dialog -->
+<!ENTITY calendar.alarm.acknowledge.label           "Reconeix" >
+<!ENTITY calendar.alarm.editevent.label             "Edita la cita" >
+<!ENTITY calendar.alarm.acknowledgeall.label        "Reconeix totes les alarmes" >
+<!ENTITY calendar.alarm.snooze.label                "Silencia" >
+
+
+<!-- Calendar Server Dialog -->
+<!ENTITY calendar.server.dialog.title.new           "Afegeix un nou calendari">
+<!ENTITY calendar.server.dialog.title.open          "">
+<!ENTITY calendar.server.dialog.title.edit          "Edita el calendari">
+<!ENTITY calendar.server.dialog.name.label          "Nom">
+<!ENTITY calendar.server.dialog.publish.label       "Voleu publicar els canvis automàticament? Per a calendaris remots, heu de baixar una nova versió abans d'afegir, editar o suprimir una cita. Llavors es realitzarà la vostra acció i es penjarà el nou fitxer al servidor.">
+<!ENTITY calendar.server.dialog.location.label      "Ubicació">
+<!ENTITY calendar.server.dialog.local.location.label "Ubicació del fitxer local">
+<!ENTITY calendar.server.dialog.browse.label        "Obre un fitxer local...">
+<!ENTITY calendar.local.calendar.dialog.help.label  "Opcionalment, podeu especificar la ubicació del fitxer on es va crear el calendari.">
+<!ENTITY calendar.server.dialog.help.label          "Podeu introduir un camí per a un fitxer local, o un camí per a un fitxer remot com http://www.mozilla.org/projects/calendar/caldata/CanadaHolidays.ics">
+
+<!-- Calendar Coloring -->
+<!ENTITY calendar.server.dialog.color.label "Color">
+
+<!ENTITY calendar.local.calendar.dialog.optional.label "Els camps següents són opcionals, i s'utilitzen per publicar el calendari en una ubicació remota.">
+
+<!-- Calendar Publish Dialog -->
+<!ENTITY calendar.publish.dialog.title              "Publica el calendari">
+<!ENTITY calendar.publish.url.label                 "URL de publicació">
+<!ENTITY calendar.publish.publish.button      "Publica">
+<!ENTITY calendar.publish.close.button      "Tanca">
+
+<!ENTITY calendar.publish.example.url.description   "Quelcom semblant a http://www.myserver.com/webdav/test.ics">
+
+<!-- TRANSLATORS: this label must be short to keep a reasonable column width in the week view -->
+<!ENTITY allDayEvents.label "Cites del dia">
+
+<!-- Calendar Wizard Dialog -->
+<!ENTITY calendar.wizard.import.label              "Importa: Importa cites des d'un fitxer local a un calendari existent.">
+<!ENTITY calendar.wizard.export.label              "Exporta: Exporta cites d'un calendari existent a un fitxer local.">
+<!ENTITY calendar.wizard.subscribe.label           "Subscriu: Subscriu-te a un fitxer de calendari en una màquina remota (p.e. d'Internet)">
+<!ENTITY calendar.wizard.publish.label             "Publica: Publica cites a una màquina remota (p.e. d'Internet) per a que altres s'hi subscriguin.">
+
+<!-- Calendar Import Outlook CSV Dialog -->
+<!-- TRANSLATORS: all outlook*.label -fields should be translated word to word (or if possible
+                  copied from outlook csv file headers -->
+<!ENTITY calendar.importoutlook.dialog.title "Importa el CSV de l'Outlook" >
+<!ENTITY calendar.importoutlook.mapconcepts.label "Si us plau, feu les correspondències apropiades dels següents conceptes del calendari amb els seus equivalents al CSV d'Outlook:" >
+<!ENTITY calendar.importoutlook.outlooksubject.label "Assumpte:" >
+<!ENTITY calendar.importoutlook.outlookstartdate.label "Data d'inici" >
+<!ENTITY calendar.importoutlook.outlookstarttime.label "Hora d'inici" >
+<!ENTITY calendar.importoutlook.outlookenddate.label "Data d'acabada" >
+<!ENTITY calendar.importoutlook.outlookendtime.label "Hora d'acabada" >
+<!ENTITY calendar.importoutlook.outlooklocation.label "Ubicació" >
+<!ENTITY calendar.importoutlook.outlookdescription.label "Descripció" >
+<!ENTITY calendar.importoutlook.outlookallday.label "Cites de tot el dia" >
+<!ENTITY calendar.importoutlook.outlookprivate.label "Privat" >
+<!ENTITY calendar.importoutlook.outlookalarm.label "Alarma encesa/apagada" >
+<!ENTITY calendar.importoutlook.outlookalarmdate.label "Data de l'alarma" >
+<!ENTITY calendar.importoutlook.outlookalarmtime.label "Hora de l'alarma" >
+<!ENTITY calendar.importoutlook.outlookcategories.label "Categories" >
+<!ENTITY calendar.importoutlook.selectmeaning.label "Tria el significat de la següent paraula:" >
+<!ENTITY calendar.importoutlook.true.label "Cert" >
+<!ENTITY calendar.importoutlook.false.label "Fals" >
+
+<!-- Calendar Printing -->
+<!ENTITY calendar.print.window.title "Imprimeix un calendari">
+<!ENTITY calendar.print.selectoptions.label "Seleccioneu les vostres opcions, i feu clic a D'acord per imprimir">
+<!ENTITY calendar.print.selectviews.label "Selecciona la visualització d'impressió">
+<!ENTITY calendar.print.listselected.label "Llista les cites seleccionades">
+<!ENTITY calendar.print.onlyitemsstatus.label "Imprimeix només els elements amb aquest estat:">
+<!ENTITY calendar.print.onlyitemscategory.label "Imprimeix només els element amb aquesta categoria:">
+
+<!-- LOCALIZATION NOTE (mainWindow.title): DONT_TRANSLATE -->
+<!ENTITY mainWindow.title "&brandFullName;">
+<!-- LOCALIZATION NOTE (mainWindow.titlemodifier) : DONT_TRANSLATE -->
+<!ENTITY mainWindow.titlemodifier "&brandFullName;">
+<!-- LOCALIZATION NOTE (mainWindow.titlemodifiermenuseparator): DONT_TRANSLATE -->
+<!ENTITY mainWindow.titlemodifiermenuseparator " - ">
+
