@@ -187,8 +187,7 @@ class ConvertUTF8toUTF16
               }
             else
               {
-                if ( ucs4 != 0xFEFF ) // ignore BOM
-                    *out++ = ucs4;
+                *out++ = ucs4;
               }
           }
         mBuffer = out;
