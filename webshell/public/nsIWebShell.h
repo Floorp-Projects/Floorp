@@ -340,10 +340,16 @@ public:
   NS_IMETHOD GetDefaultCharacterSet (const PRUnichar** aDefaultCharacterSet) = 0;
   NS_IMETHOD SetDefaultCharacterSet (const PRUnichar*  aDefaultCharacterSet)  = 0;
   /**
+   * Set/Get the document scale factor
+   */
+
+  NS_IMETHOD SetZoom(float aZoom) = 0;
+  NS_IMETHOD GetZoom(float *aZoom) = 0;
+
+  /**
     * Finds text in content
    */
   NS_IMETHOD FindNext(const PRUnichar * aSearchStr, PRBool aMatchCase, PRBool aSearchDown, PRBool &aIsFound) = 0;
-
 };
 
 extern "C" NS_WEB nsresult

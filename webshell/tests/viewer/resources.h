@@ -86,6 +86,16 @@
 #define VIEWER_EDIT_JOIN_CELL_RIGHT 40558
 #define VIEWER_EDIT_JOIN_CELL_BELOW 40559
 
+#define VIEWER_ZOOM_BASE            40600
+#define VIEWER_ZOOM_500             40650
+#define VIEWER_ZOOM_300             40630
+#define VIEWER_ZOOM_200             40620
+#define VIEWER_ZOOM_100             40610
+#define VIEWER_ZOOM_070             40607
+#define VIEWER_ZOOM_050             40605
+#define VIEWER_ZOOM_030             40603
+#define VIEWER_ZOOM_020             40602
+
 // Note: must be in ascending sequential order
 #define VIEWER_ONE_COLUMN       40050
 #define VIEWER_TWO_COLUMN       40051
