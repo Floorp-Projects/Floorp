@@ -7,6 +7,8 @@
 <!ENTITY textZoomReduceCmd.accesskey    "m">
 <!ENTITY textZoomReduceCmd.commandkey   "-">
 
+<!ENTITY textZoomResetCmd.commandkey    "0">
+
 <!-- see textZoomOtherLabel in navigator.properties -->
 <!ENTITY textZoomMenu.accesskey         "z">
 <!ENTITY textZoomOtherCmd.accesskey     "o">

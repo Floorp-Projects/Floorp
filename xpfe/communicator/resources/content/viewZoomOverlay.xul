@@ -52,11 +52,13 @@
     <key id="key_textZoomEnlarge" key="&textZoomEnlargeCmd.commandkey;"  observes="cmd_textZoomEnlarge" modifiers="accel"/>
     <key                          key="&textZoomEnlargeCmd.commandkey;"  observes="cmd_textZoomEnlarge" modifiers="accel,shift"/>
     <key                          key="&textZoomEnlargeCmd.commandkey2;" observes="cmd_textZoomEnlarge" modifiers="accel"/>
+    <key                          key="&textZoomResetCmd.commandkey;"    observes="cmd_textZoomReset"   modifiers="accel"/>
   </keyset>
 
   <broadcasterset id="broadcasterset">
     <broadcaster id="cmd_textZoomReduce"  oncommand="ZoomManager.prototype.getInstance().reduce();"/>
     <broadcaster id="cmd_textZoomEnlarge" oncommand="ZoomManager.prototype.getInstance().enlarge();"/>
+    <broadcaster id="cmd_textZoomReset"   oncommand="ZoomManager.prototype.getInstance().reset();"/>
   </broadcasterset>
 
   <menu id="menu_textZoom" accesskey="&textZoomMenu.accesskey;" hidden="true">
