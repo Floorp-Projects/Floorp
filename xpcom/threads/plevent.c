@@ -562,7 +562,9 @@ PL_InitEvent(PLEvent* self, void* owner,
     PR_ASSERT(self->lock);
     self->condVar = PR_NewCondVar(self->lock);
     PR_ASSERT(self->condVar);
+#ifdef XP_UNIX
     self->id = 0;
+#endif
 }
 
 PR_IMPLEMENT(void*)
