@@ -48,8 +48,10 @@ which is an event with display information added to it is included here as well.
 #include "nsCOMPtr.h"
 #include "plbase64.h"
 #include "nsComponentManagerUtils.h"
+#ifdef MOZ_MAIL_NEWS
 #include "nsIAbCard.h"
 #include "nsIMsgAttachment.h"
+#endif
 
 #define strcasecmp strcmp
 
@@ -1493,6 +1495,7 @@ NS_IMETHODIMP oeICalEventImpl::AddAttachment(nsIMsgAttachment *attachment)
 #ifdef ICAL_DEBUG
     printf( "oeICalEventImpl::AddAttachment()\n" );
 #endif
+#ifdef MOZ_MAIL_NEWS
     PRUint32 i;
     PRUint32 attachmentCount = 0;
     m_attachments->Count(&attachmentCount);
@@ -1512,6 +1515,9 @@ NS_IMETHODIMP oeICalEventImpl::AddAttachment(nsIMsgAttachment *attachment)
     }
 
     return m_attachments->InsertElementAt(attachment, attachmentCount);
+#else
+    return NS_ERROR_NOT_IMPLEMENTED;
+#endif
 }
 
 NS_IMETHODIMP oeICalEventImpl::RemoveAttachment(nsIMsgAttachment *attachment)
@@ -1519,6 +1525,7 @@ NS_IMETHODIMP oeICalEventImpl::RemoveAttachment(nsIMsgAttachment *attachment)
 #ifdef ICAL_DEBUG
     printf( "oeICalEventImpl::RemoveAttachment()\n" );
 #endif
+#ifdef MOZ_MAIL_NEWS
     PRUint32 i;
     PRUint32 attachmentCount = 0;
     m_attachments->Count(&attachmentCount);
@@ -1540,6 +1547,9 @@ NS_IMETHODIMP oeICalEventImpl::RemoveAttachment(nsIMsgAttachment *attachment)
     }
 
     return NS_OK;
+#else
+    return NS_ERROR_NOT_IMPLEMENTED;
+#endif
 }
 
 NS_IMETHODIMP oeICalEventImpl::RemoveAttachments()
@@ -1570,6 +1580,7 @@ NS_IMETHODIMP oeICalEventImpl::AddContact(nsIAbCard *contact)
 #ifdef ICAL_DEBUG
     printf( "oeICalEventImpl::AddContact()\n" );
 #endif
+#ifdef MOZ_MAIL_NEWS
     PRUint32 i;
     PRUint32 contactCount = 0;
     m_contacts->Count(&contactCount);
@@ -1589,6 +1600,9 @@ NS_IMETHODIMP oeICalEventImpl::AddContact(nsIAbCard *contact)
     }
 
     return m_contacts->InsertElementAt(contact, contactCount);
+#else
+    return NS_ERROR_NOT_IMPLEMENTED;
+#endif
 }
 
 NS_IMETHODIMP oeICalEventImpl::RemoveContact(nsIAbCard *contact)
@@ -1596,6 +1610,7 @@ NS_IMETHODIMP oeICalEventImpl::RemoveContact(nsIAbCard *contact)
 #ifdef ICAL_DEBUG
     printf( "oeICalEventImpl::RemoveContact()\n" );
 #endif
+#ifdef MOZ_MAIL_NEWS
     PRUint32 i;
     PRUint32 contactCount = 0;
     m_contacts->Count(&contactCount);
@@ -1617,6 +1632,9 @@ NS_IMETHODIMP oeICalEventImpl::RemoveContact(nsIAbCard *contact)
     }
 
     return NS_OK;
+#else
+    return NS_ERROR_NOT_IMPLEMENTED;
+#endif
 }
 
 NS_IMETHODIMP oeICalEventImpl::RemoveContacts()
@@ -1624,6 +1642,7 @@ NS_IMETHODIMP oeICalEventImpl::RemoveContacts()
 #ifdef ICAL_DEBUG
     printf( "oeICalEventImpl::RemoveContacts()\n" );
 #endif
+#ifdef MOZ_MAIL_NEWS
     PRUint32 i;
     PRUint32 contactCount = 0;
     m_contacts->Count(&contactCount);
@@ -1632,6 +1651,9 @@ NS_IMETHODIMP oeICalEventImpl::RemoveContacts()
         m_contacts->DeleteElementAt(0);
 
     return NS_OK;
+#else
+    return NS_ERROR_NOT_IMPLEMENTED;
+#endif
 }
 
 NS_IMETHODIMP oeICalEventImpl::SetDuration(PRBool is_negative, PRUint16 weeks, PRUint16 days, PRUint16 hours, PRUint16 minutes, PRUint16 seconds)
@@ -2226,6 +2248,7 @@ bool oeICalEventImpl::ParseIcalComponent( icalcomponent *comp )
         }
     }
 
+#ifdef MOZ_MAIL_NEWS
     //attachments
     for( prop = icalcomponent_get_first_property( vevent, ICAL_X_PROPERTY );
         prop != 0 ;
@@ -2244,7 +2267,9 @@ bool oeICalEventImpl::ParseIcalComponent( icalcomponent *comp )
             }
         }
     }
+#endif
 
+#ifdef MOZ_MAIL_NEWS
     //contacts
     for(prop = icalcomponent_get_first_property( vevent, ICAL_CONTACT_PROPERTY );
         prop != 0 ;
@@ -2259,6 +2284,7 @@ bool oeICalEventImpl::ParseIcalComponent( icalcomponent *comp )
             AddContact( contact );
         }
     }
+#endif
 
     return true;
 }
@@ -2660,6 +2686,7 @@ icalcomponent* oeICalEventImpl::AsIcalComponent()
     if( tmpcomp )
         icalcomponent_add_component( vevent, tmpcomp );
 
+#ifdef MOZ_MAIL_NEWS
     PRUint32 attachmentCount = 0;
     m_attachments->Count(&attachmentCount);
     nsCOMPtr<nsIMsgAttachment> element;
@@ -2709,6 +2736,7 @@ icalcomponent* oeICalEventImpl::AsIcalComponent()
             icalcomponent_add_property( vevent, prop );
         }
     }
+#endif
 
     //add event to newcalendar
     icalcomponent_add_component( newcalendar, vevent );
