@@ -15,152 +15,28 @@
  * Reserved.
  */
 
-// It's probably cheaper to have a single rule per tag than to have to
-// merge rules
-
-// XXX I'm starting to believe that this portion of the style sheet
-// comes from the PresentationContext.
+HTML {
+}
 
 BODY {
+  background: rgb(255,255,255);
+  color: black;
+  cursor: arrow;
+  display: block;
   font-family: serif;
   font-style: normal;
   font-variant: normal;
   font-weight: normal;
   font-size: 11pt;
   line-height: 1.1;
-  background: rgb(255,255,255);
-  color: black;
   padding: 8px;
-  display: block;
-  cursor: arrow;
 }
 
-// XXX Use this!
-FRAMESET {
-  font-family: serif;
-  font-style: normal;
-  font-variant: normal;
-  font-weight: normal;
-  font-size: medium;
-  background: rgb(192,192,192);
-  color: black;
+// Blocks
+
+P {
   display: block;
 }
-IFRAME {
-  border: 1px solid black;
-}
-
-// XXX Used when PagePreview'ing
-PAGE {
-  background: white;
-  border: black solid 1px;
-  display: block;
-}
-
-//----------------------------------------------------------------------
-
-// This part of the ua.css is junk taken from the css1 spec and used as
-// a temporary style sheet.
-
-UL, OL, DL { display: block; }
-DT, DD { display: block; }
-IMG { display: inline; }
-SPACER { display: inline; }
-WBR { display: inline; }
-
-// Default list-style-type styles.
-// The Navigator 3.0 rule is:
-// Zeroth-level: small disc. (Needs to be handled by parser.)
-// First level: disc
-// second level: circle
-// third and higher levels: square.
-//
-// These style rules assume that MENU and DIR have been mapped to UL.
-
-UL {
-  list-style-type: disc;
-}
-
-OL UL, UL UL  {
-  list-style-type: circle;
-}
-
-UL UL, UL OL, OL UL, OL OL  {
-  padding-left: 40px;	/* COMPATABILITY: nav4's value */
-  margin-top: 0;	/* COMPATABILITY: nested lists !get auto margins */
-  margin-bottom: 0;	/* COMPATABILITY: nested lists !get auto margins */
-}
-
-UL UL UL,  UL OL UL, OL UL UL,  OL OL UL {
-  list-style-type: square;
-}
-
-OL {
-  list-style-type: decimal;
-}
-
-LI {
-  display: list-item;
-  list-style-position: inside;
-}
-
-UL LI, OL LI {
-  list-style-position: outside;
-  padding-left: 40px;		/* nav4's value */
-}
-
-DT {
-  margin-bottom: 0;
-}
-DD {
-  margin-top: 0;
-  margin-left: .25in;
-}
-
-A:link { color: blue; text-decoration: underline; cursor: hand; }
-A:visited { color: purple; text-decoration: underline; cursor: hand; }
-A:active { color: lime; text-decoration: underline; cursor: hand; }
-A:out-of-date { color: red; text-decoration: underline; cursor: hand; }
-
-A:link IMG { border: 2px solid blue; text-decoration: underline }
-A:visited IMG { border: 2px solid purple; text-decoration: underline }
-A:active IMG { border: 2px solid lime; text-decoration: underline }
-A:out-of-date IMG { border: 2px solid red; text-decoration: underline }
-
-
-//----------------------------------------------------------------------
-// The real stuff
-
-HR {
-  display: block;
-}
-
-BR {
-  display: inline;
-  color: cyan;
-}
-
-INPUT {
-  vertical-align: bottom;
-	font-family: "HACK";
-	font-size: 100pt;
-}
-SELECT {
-  vertical-align: bottom;
-	font-family: "Times New Roman";
-	font-size: 10pt;
-}
-OPTION {
-	font-family: "Times New Roman";
-	font-size: 10pt;
-}
-TEXTAREA {
-  vertical-align: bottom;
-	font-family: "HACK";
-	font-size: 100pt;
-}
-
-// Block tags
 ADDRESS {
   display: block;
   font-style: italic;
@@ -217,20 +93,17 @@ LISTING {
   font-size: small;
   white-space: pre;
 }
-NOBR {
-  display: inline;
-  white-space: nowrap; // XXX approximation?
-}
-P {
-  display: block;
-}
 PLAINTEXT, XMP, PRE {
-  display: block; // Note: need before and after breaks
+  display: block;
   font-family: monospace;
   white-space: pre;
 }
+MULTICOL {
+  display: block;
+}
 
-// Table tags
+// Tables
+
 TABLE {
   display: table;
   border-style: outset;
@@ -259,18 +132,71 @@ CAPTION {
   text-align: center;
   display: table-caption;
 }
-TR { display: table-row;}
-TBODY { display: table-row-group;    }
-THEAD { display: table-header-group; }
-TFOOT { display: table-footer-group; }
-COL   { display: table-column;       }
-COLGROUP { display: table-column-group;}
-
-MULTICOL {
-  display: block;
+TR {
+  display: table-row;
+}
+TBODY {
+  display: table-row-group;
+}
+THEAD {
+  display: table-header-group;
+}
+TFOOT {
+  display: table-footer-group;
+}
+COL {
+  display: table-column;
+}
+COLGROUP {
+  display: table-column-group;
 }
 
-// Span tags
+// Spans
+
+A:link {
+  display: inline;
+  color: blue;
+  text-decoration: underline;
+  cursor: hand;
+}
+A:visited {
+  display: inline;
+  color: purple;
+  text-decoration: underline;
+  cursor: hand;
+}
+A:active {
+  display: inline;
+  color: lime;
+  text-decoration: underline;
+  cursor: hand;
+}
+A:out-of-date {
+  display: inline;
+  color: red;
+  text-decoration: underline;
+  cursor: hand;
+}
+A:link IMG {
+  display: inline;
+  border: 2px solid blue;
+  text-decoration: underline;
+}
+A:visited IMG {
+  display: inline;
+  border: 2px solid purple;
+  text-decoration: underline;
+}
+A:active IMG {
+  display: inline;
+  border: 2px solid lime;
+  text-decoration: underline;
+}
+A:out-of-date IMG {
+  display: inline;
+  border: 2px solid red;
+  text-decoration: underline;
+}
 B, STRONG {
   display: inline;
   font-weight: bolder;
@@ -319,4 +245,92 @@ SUP {
 ILAYER {
   position: absolute;
   display: inline;
+}
+NOBR {
+  display: inline;
+  white-space: nowrap;
+}
+
+// Lists
+
+UL {
+  padding-left: 40px;
+  list-style-type: disc;
+}
+OL {
+  padding-left: 40px;
+  list-style-type: decimal;
+}
+OL UL, UL UL  {
+  list-style-type: circle;
+}
+UL UL UL,  UL OL UL, OL UL UL,  OL OL UL {
+  list-style-type: square;
+}
+LI {
+  display: list-item;
+  list-style-position: inside;
+}
+UL LI, OL LI {
+  list-style-position: outside;
+}
+UL UL, UL OL, OL UL, OL OL  {
+  margin-top: 0;
+  margin-bottom: 0;
+}
+
+
+DL {
+  display: block;
+}
+DT {
+  display: block;
+  margin-bottom: 0;
+}
+DD {
+  display: block;
+  margin-top: 0;
+  margin-left: 40px;
+}
+
+// Leafs
+
+HR {
+  display: block;
+}
+BR {
+  display: inline;
+  color: cyan;
+}
+IMG {
+  display: inline;
+}
+SPACER {
+  display: inline;
+}
+WBR {
+  display: inline;
+}
+IFRAME {
+  display: inline;
+  border: 1px solid black;
+}
+INPUT {
+  vertical-align: bottom;
+  font-family: "XXXHACK";
+  font-size: 100pt;
+}
+SELECT {
+  vertical-align: bottom;
+  font-family: "Times New Roman";
+  font-size: 10pt;
+}
+OPTION {
+  font-family: "Times New Roman";
+  font-size: 10pt;
+}
+TEXTAREA {
+  vertical-align: bottom;
+  font-family: "XXXHACK";
+  font-size: 100pt;
 }
