@@ -159,18 +159,30 @@ nsHTMLContentSerializer::AppendText(nsIDOMText* aText,
   nsresult rv;
   rv = AppendTextData((nsIDOMNode*)aText, aStartOffset, 
                       aEndOffset, data, PR_TRUE, PR_FALSE);
-  if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
+  if (NS_FAILED(rv))
+    return NS_ERROR_FAILURE;
 
-  PRInt32 lastNewlineOffset = kNotFound;
-  PRBool hasLongLines = HasLongLines(data, lastNewlineOffset);
-
-  if (mPreLevel || (!mDoFormat && !hasLongLines) ||
-      (mFlags & nsIDocumentEncoder::OutputRaw)) {
+  if (mPreLevel > 0) {
+    AppendToStringConvertLF(data, aStr);
+  }
+  else if (!mDoFormat) {
+    PRInt32 lastNewlineOffset = kNotFound;
+    PRBool hasLongLines = HasLongLines(data, lastNewlineOffset);
+    if (hasLongLines) {
+      // We have long lines, rewrap
+      AppendToStringWrapped(data, aStr, PR_FALSE);
+      if (lastNewlineOffset != kNotFound)
+        mColPos = data.Length() - lastNewlineOffset;
+    }
+    else {
+      AppendToStringConvertLF(data, aStr);
+    }
+  }
+  else if (mFlags & nsIDocumentEncoder::OutputRaw) {
+    PRInt32 lastNewlineOffset = data.RFindChar('\n');
     AppendToString(data, aStr);
-
-    if (lastNewlineOffset != kNotFound) {
+    if (lastNewlineOffset != kNotFound)
       mColPos = data.Length() - lastNewlineOffset;
-    }   
   }
   else {
     AppendToStringWrapped(data, aStr, PR_FALSE);
@@ -712,6 +724,31 @@ nsHTMLContentSerializer::AppendToString(const nsAReadableString& aStr,
   }
 
   aOutputStr.Append(aStr);
+}
+
+void
+nsHTMLContentSerializer::AppendToStringConvertLF(const nsAReadableString& aStr,
+                                                 nsAWritableString& aOutputStr)
+{
+  // Convert line-endings to mLineBreak
+  PRUint32 start = 0;
+  PRUint32 theLen = aStr.Length();
+  while (start < theLen) {
+    PRInt32 eol = aStr.FindChar('\n', start);
+    if (eol == kNotFound) {
+      nsDependentSubstring dataSubstring(aStr, start, theLen - start);
+      AppendToString(dataSubstring, aOutputStr);
+      start = theLen;
+    }
+    else {
+      nsDependentSubstring dataSubstring(aStr, start, eol - start);
+      AppendToString(dataSubstring, aOutputStr);
+      AppendToString(mLineBreak, aOutputStr);
+      start = eol + 1;
+      if (start == theLen)
+        mColPos = 0;
+    }
+  }
 }
 
 PRBool
