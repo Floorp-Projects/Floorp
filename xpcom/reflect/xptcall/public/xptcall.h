@@ -189,7 +189,7 @@ struct nsXPTCVariant : public nsXPTCMiniVariant
 #undef  IMETHOD_VISIBILITY
 #define IMETHOD_VISIBILITY NS_VISIBILITY_DEFAULT
 
-class nsXPTCStubBase : public nsISupports
+class XPTC_EXPORT nsXPTCStubBase : public nsISupports
 {
 public:
     // We are going to implement this to force the compiler to generate a 
