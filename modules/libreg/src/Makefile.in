@@ -40,6 +40,8 @@ override NO_STATIC_LIB=
 
 include $(topsrcdir)/config/rules.mk
 
+DEFINES += -DUSE_MMAP_REGISTRY_IO
+
 # Override gtscc when building vreg on IRIX 5.3.
 ifeq ($(OS_ARCH)$(OS_RELEASE),IRIX5)
 ifneq ($(CC),gcc)

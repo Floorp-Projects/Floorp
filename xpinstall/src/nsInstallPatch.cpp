@@ -29,8 +29,7 @@
 #include "VerReg.h"
 #include "ScheduledTasks.h"
 #include "plstr.h"
-#include "xp_file.h" /* for XP_PlatformFileToURL */
-
+#include "prlog.h"
 
 #ifdef XP_MAC
 #include "PatchableAppleSingle.h"
@@ -59,7 +58,7 @@ static int32   gdiff_add( pDIFFDATA dd, uint32 count );
 static int32   gdiff_copy( pDIFFDATA dd, uint32 position, uint32 count );
 static int32   gdiff_validateFile( pDIFFDATA dd, int file );
 #ifdef WIN32
-static XP_Bool su_unbind(char* oldsrc, char* newsrc);
+static PRBool  su_unbind(char* oldsrc, char* newsrc);
 #endif
 
 
@@ -854,7 +853,7 @@ static
 int32 gdiff_ApplyPatch( pDIFFDATA dd )
 {
     int32   err;
-    XP_Bool done;
+    PRBool done;
     uint32  position;
     uint32  count;
     uchar   opcode;
@@ -1045,6 +1044,7 @@ int32 gdiff_copy( pDIFFDATA dd, uint32 position, uint32 count )
 
 
 #ifdef WIN32
+#include <winfile.h>
 /*---------------------------------------------------------
  *  su_unbind()
  *
@@ -1053,9 +1053,9 @@ int32 gdiff_copy( pDIFFDATA dd, uint32 position, uint32 count )
  *---------------------------------------------------------
  */
 static 
-XP_Bool su_unbind(char* oldfile, char* newfile)
+PRBool su_unbind(char* oldfile, char* newfile)
 {
-    XP_Bool bSuccess = FALSE;
+    PRBool bSuccess = FALSE;
 
     int     i;
     DWORD   nRead;

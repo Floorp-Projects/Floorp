@@ -21,7 +21,7 @@
 #include "pratom.h"
 #include "nsIComponentManager.h"
 #include "nsIServiceManager.h"
-#include "VerReg.h"
+#include "NSReg.h"
 #include "nsCOMPtr.h"
 
 #include "nsPrefMigration.h"

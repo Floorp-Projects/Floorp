@@ -47,6 +47,7 @@ OBJS=                                       \
     .\$(OBJDIR)\reg.obj                     \
     .\$(OBJDIR)\VerReg.obj                  \
     .\$(OBJDIR)\vr_stubs.obj                \
+#    .\$(OBJDIR)\mmapio.obj                  \
     $(NULL)
 
 #//------------------------------------------------------------------------
@@ -67,6 +68,8 @@ DLL=$(OBJDIR)\$(DLLNAME).dll
 #//     (ie. LCFLAGS, LLFLAGS, LLIBS, LINCS)
 #//
 #//------------------------------------------------------------------------
+
+#LCFLAGS= -DUSE_MMAP_REGISTRY_IO
 
 LLIBS = \
     $(LIBNSPR)                  \

@@ -38,16 +38,18 @@
  *  NOCACHE_HDR         - define if multi-threaded access to registry
  *  SELF_REPAIR         - define to skip header update on open
  *  VERIFY_READ         - define TRUE to double-check short reads
- */
+ *
 #define NOCACHE_HDR     1
+ */
 #define SELF_REPAIR     1
 #ifdef DEBUG
 #define VERIFY_READ     1
 #endif
 
+#include <stdio.h>
+
 #ifdef STANDALONE_REGISTRY
 #include <stdlib.h>
-#include <stdio.h>
 #include <string.h>
 #include <assert.h>
 #include <errno.h>
@@ -58,6 +60,8 @@
 
 #else
 
+#include "prtypes.h"
+#include "prlog.h"
 #include "prerror.h"
 
 #endif /*STANDALONE_REGISTRY*/
@@ -391,7 +395,7 @@ static REGERR nr_OpenFile(char *path, FILEHANDLE *fh)
         case PR_FILE_IS_LOCKED_ERROR:
         case PR_ILLEGAL_ACCESS_ERROR:
         case PR_NO_ACCESS_RIGHTS_ERROR:
-            /* DVNOTE: should we try read only? */
+            /* try read only */
             (*fh) = XP_FileOpen(path, PR_RDONLY, 00644);
             if ( VALID_FILEHANDLE(*fh) )
                 return REGERR_READONLY;
@@ -573,7 +577,7 @@ static uint16 nr_ReadShort(char *buffer)
     uint16 val;
     uint8 *p = (uint8*)buffer;
  
-    val = *p + (uint16)( *(p+1) * 0x100 );
+    val = (uint16)(*p + (uint16)( *(p+1) * 0x100 ));
 
     return val;
 }
@@ -1237,7 +1241,7 @@ static REGERR nr_ReplaceName(REGFILE *reg, REGOFF node, char *path,
 
 #if 0 /* old interface */
 static char * nr_LastDelim(char *pPath);
-static Bool   nr_IsQualifiedEntry(char *pPath);
+static XP_Bool nr_IsQualifiedEntry(char *pPath);
 static REGERR nr_SplitEntry(char *pPath, char **name, char **value);
 static REGERR nr_CatNameValue(char *path, int bufsize, REGDESC *desc);
 static REGERR nr_ReplaceNameValue(char *path, int bufsize, REGDESC *desc);
@@ -1423,7 +1427,7 @@ static REGERR nr_RemoveName(char *path)
  * --------------------------------------------------------------------
  */
 static REGERR nr_Find(REGFILE *reg, REGOFF offParent, char *pPath,
-    REGDESC *pDesc, REGOFF *pPrev, REGOFF *pParent, Bool raw);
+    REGDESC *pDesc, REGOFF *pPrev, REGOFF *pParent, XP_Bool raw);
 
 static REGERR nr_FindAtLevel(REGFILE *reg, REGOFF offFirst, char *pName,
     REGDESC *pDesc, REGOFF *pOffPrev);
@@ -1443,7 +1447,7 @@ static REGERR nr_Find(REGFILE *reg,
             REGDESC *pDesc,
             REGOFF *pPrev,
             REGOFF *pParent,
-            Bool raw)
+            XP_Bool raw)
 {
 
     REGERR  err;
@@ -1799,15 +1803,15 @@ cleanup:
  * Intermediate API
  * ---------------------------------------------------------------------
  */
-static REGOFF nr_TranslateKey( REGFILE *reg, RKEY key );
-static REGERR nr_InitStdRkeys( REGFILE *reg );
-static Bool   nr_ProtectedNode( REGFILE *reg, REGOFF key );
-static REGERR nr_RegAddKey( REGFILE *reg, RKEY key, char *path, RKEY *newKey, Bool raw );
-static REGERR nr_RegDeleteKey( REGFILE *reg, RKEY key, char *path, Bool raw );
-static REGERR nr_RegOpen( char *filename, HREG *hReg );
-static REGERR nr_RegClose( HREG hReg );
-static char*  nr_GetUsername();
-static char*  nr_GetRegName (char *name);
+static REGOFF  nr_TranslateKey( REGFILE *reg, RKEY key );
+static REGERR  nr_InitStdRkeys( REGFILE *reg );
+static XP_Bool nr_ProtectedNode( REGFILE *reg, REGOFF key );
+static REGERR  nr_RegAddKey( REGFILE *reg, RKEY key, char *path, RKEY *newKey, XP_Bool raw );
+static REGERR  nr_RegDeleteKey( REGFILE *reg, RKEY key, char *path, XP_Bool raw );
+static REGERR  nr_RegOpen( char *filename, HREG *hReg );
+static REGERR  nr_RegClose( HREG hReg );
+static char*   nr_GetUsername();
+static char*   nr_GetRegName (char *name);
 
 /* --------------------------------------------------------------------- */
 
@@ -1934,7 +1938,7 @@ static REGERR nr_InitStdRkeys( REGFILE *reg )
 
 
 
-static Bool nr_ProtectedNode( REGFILE *reg, REGOFF key )
+static XP_Bool nr_ProtectedNode( REGFILE *reg, REGOFF key )
 {
     if ( (key == reg->hdr.root) ||
          (key == reg->rkeys.users) ||
@@ -1950,7 +1954,7 @@ static Bool nr_ProtectedNode( REGFILE *reg, REGOFF key )
 
 
 
-static REGERR nr_RegAddKey( REGFILE *reg, RKEY key, char *path, RKEY *newKey, Bool raw )
+static REGERR nr_RegAddKey( REGFILE *reg, RKEY key, char *path, RKEY *newKey, XP_Bool raw )
 {
     REGERR      err;
     REGDESC     desc;
@@ -2024,7 +2028,7 @@ static REGERR nr_RegAddKey( REGFILE *reg, RKEY key, char *path, RKEY *newKey, Bo
 
 
 
-static REGERR nr_RegDeleteKey( REGFILE *reg, RKEY key, char *path, Bool raw )
+static REGERR nr_RegDeleteKey( REGFILE *reg, RKEY key, char *path, XP_Bool raw )
 {
     REGERR      err;
     REGOFF      start;
@@ -3634,7 +3638,7 @@ static REGERR nr_addNodesToNewReg( HREG hReg, RKEY rootkey, HREG hRegNew, void *
 static REGERR nr_createTempRegName( char *filename, uint32 filesize )
 {
     struct stat statbuf;
-    Bool nameFound = FALSE;
+    XP_Bool nameFound = FALSE;
     char tmpname[MAX_PATH];
     uint32 len;
     int err;
