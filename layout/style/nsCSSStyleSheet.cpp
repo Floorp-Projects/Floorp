@@ -778,7 +778,7 @@ public:
 
   nsAutoVoidArray       mSheets;
 
-  nsIURI*               mURL;
+  nsCOMPtr<nsIURI>      mURL;
 
   nsISupportsArray*     mOrderedRules;
 
@@ -1463,7 +1463,6 @@ static PRBool SetStyleSheetReference(nsISupports* aElement, void* aSheet)
 
 CSSStyleSheetInner::CSSStyleSheetInner(nsICSSStyleSheet* aParentSheet)
   : mSheets(),
-    mURL(nsnull),
     mOrderedRules(nsnull),
     mNameSpace(nsnull),
     mDefaultNameSpaceID(kNameSpaceID_None),
@@ -1497,7 +1496,6 @@ CSSStyleSheetInner::CSSStyleSheetInner(CSSStyleSheetInner& aCopy,
 {
   MOZ_COUNT_CTOR(CSSStyleSheetInner);
   mSheets.AppendElement(aParentSheet);
-  NS_IF_ADDREF(mURL);
   if (aCopy.mOrderedRules) {
     NS_NewISupportsArray(&mOrderedRules);
     if (mOrderedRules) {
@@ -1514,7 +1512,6 @@ CSSStyleSheetInner::CSSStyleSheetInner(CSSStyleSheetInner& aCopy,
 CSSStyleSheetInner::~CSSStyleSheetInner(void)
 {
   MOZ_COUNT_DTOR(CSSStyleSheetInner);
-  NS_IF_RELEASE(mURL);
   if (mOrderedRules) {
     mOrderedRules->EnumerateForwards(SetStyleSheetReference, nsnull);
     NS_RELEASE(mOrderedRules);
@@ -1808,26 +1805,14 @@ CSSStyleSheetImpl::Init(nsIURI* aURL)
   if (mInner->mURL)
     return NS_ERROR_ALREADY_INITIALIZED;
 
-  if (mInner->mURL) {
-#ifdef DEBUG
-    PRBool eq;
-    nsresult rv = mInner->mURL->Equals(aURL, &eq);
-    NS_ASSERTION(NS_SUCCEEDED(rv) && eq, "bad inner");
-#endif
-  }
-  else {
-    mInner->mURL = aURL;
-    NS_ADDREF(mInner->mURL);
-  }
+  mInner->mURL = aURL;
   return NS_OK;
 }
 
 NS_IMETHODIMP
 CSSStyleSheetImpl::GetURL(nsIURI*& aURL) const
 {
-  const nsIURI* url = ((mInner) ? mInner->mURL : nsnull);
-  aURL = (nsIURI*)url;
-  NS_IF_ADDREF(aURL);
+  NS_IF_ADDREF(aURL = (mInner ? mInner->mURL : nsnull));
   return NS_OK;
 }
 
@@ -2020,6 +2005,15 @@ CSSStyleSheetImpl::ContainsStyleSheet(nsIURI* aURL, PRBool& aContains, nsIStyleS
 {
   NS_PRECONDITION(nsnull != aURL, "null arg");
 
+  if (!mInner || !mInner->mURL) {
+    // We're not yet far enough along in our load to know what our URL is (we
+    // may still get redirected and such).  Assert (caller should really not be
+    // calling this on us at this stage) and return.
+    NS_ERROR("ContainsStyleSheet called on a sheet that's still loading");
+    aContains = PR_FALSE;
+    return NS_OK;
+  }
+  
   // first check ourself out
   nsresult rv = mInner->mURL->Equals(aURL, &aContains);
   if (NS_FAILED(rv)) aContains = PR_FALSE;

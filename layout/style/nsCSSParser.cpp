@@ -1153,6 +1153,7 @@ PRBool CSSParserImpl::ProcessImport(PRInt32& aErrorCode, const nsString& aURLSpe
 
   if (mChildLoader) {
     nsCOMPtr<nsIURI> url;
+    // XXX should pass a charset!
     aErrorCode = NS_NewURI(getter_AddRefs(url), aURLSpec, nsnull, mURL);
 
     if (NS_FAILED(aErrorCode)) {
@@ -1161,11 +1162,7 @@ PRBool CSSParserImpl::ProcessImport(PRInt32& aErrorCode, const nsString& aURLSpe
       return PR_FALSE;
     }
 
-    PRBool bContains = PR_FALSE;
-    if (NS_SUCCEEDED(mSheet->ContainsStyleSheet(url,bContains)) && 
-        bContains != PR_TRUE ) { // don't allow circular references
-      mChildLoader->LoadChildSheet(mSheet, url, aMedia, kNameSpaceID_Unknown, rule);
-    }
+    mChildLoader->LoadChildSheet(mSheet, url, aMedia, kNameSpaceID_Unknown, rule);
   }
   
   return PR_TRUE;
