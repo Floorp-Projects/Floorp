@@ -23,7 +23,7 @@
  *
  */
 
-@import url(chrome://communicator/skin/);
+/*@import url(chrome://navigator/skin/); */
 /*@import url(chrome://global/skin/global.css);*/
 
 window {
@@ -35,21 +35,21 @@ window {
 
 #back-button
   {
-	  list-style-image      : url("chrome://embedding/browser/skin/back.gif");
+	  list-style-image      : url("chrome://embed/content/back.gif");
   }
 
 #forward-button
   {
-	  list-style-image      : url("chrome://embedding/browser/skin/forward.gif");
+	  list-style-image      : url("chrome://embed/content/forward.gif");
   }
 
 #stop-button 
   {
-	  list-style-image      : url("chrome://embedding/browser/skin/stop.gif");
+	  list-style-image      : url("chrome://embed/content/skin/stop.gif");
   }
 
 #reload-button 
   {
-	  list-style-image      : url("chrome://embedding/browser/skin/reload.gif");
+	  list-style-image      : url("chrome://embed/content/skin/reload.gif");
   }
 

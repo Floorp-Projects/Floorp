@@ -20,25 +20,27 @@ Rights Reserved.
 
 Contributor(s): ______________________________________. -->
 
-<?xml-stylesheet href="chrome://embedding/browser/skin/embedding.css" type="text/css"?> 
+<?xml-stylesheet href="chrome://embed/content/embedding.css" type="text/css"?> 
+<?xml-stylesheet href="chrome://navigator/skin/" type="text/css"?>
+
 
 <!DOCTYPE window [
 <!ENTITY % brandDTD SYSTEM "chrome://global/locale/brand.dtd" >
 %brandDTD;
-<!ENTITY % embeddingDTD SYSTEM "chrome://embedding/browser/locale/embedding.dtd" >
+<!ENTITY % embeddingDTD SYSTEM "chrome://embed/locale/embedding.dtd" >
 %embeddingDTD;
 ]>
 
 <window id="main-window" xmlns:html="http://www.w3.org/1999/xhtml"
   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-  onload="Startup()"
-  onunload="Shutdown()"
   align="vertical"
-  title="Embedding">
+  title="Embedding"
+  onload="MiniNavStartup()"
+  onunload="MiniNavShutdown()">
 
-  <script language="javascript" src="chrome://global/content/strres.js"></script>
-  <script language="javascript" src="mini-nav.js"></script>
+  <script language="javascript" src="chrome://global/content/strres.js"/>
+  <script language="javascript" src="chrome://embed/content/mini-nav.js"/>
 
   <!-- Context menu -->
   <popupset>
@@ -78,7 +80,7 @@ Contributor(s): ______________________________________. -->
           <box autostretch="never" valign="middle" flex="1">
             <textfield autocomplete="true" timeout="300"
 		 	                 searchSessionType="urlbar" id="urlbar"
-                       onkeypress="if( event.which == 13 ) { BrowserLoadURL(); }"/>  
+                       onkeypress="if( event.keyCode == 13 ) { BrowserLoadURL(); }"/>  
           </box>
         </box>
       </box>

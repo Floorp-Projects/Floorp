@@ -389,7 +389,7 @@ GtkMozEmbedPrivate::LoadChrome(void)
   nsCOMPtr<nsIAppShell> subShell(do_CreateInstance(kAppShellCID));
   NS_ENSURE_TRUE(subShell, NS_ERROR_FAILURE);
 
-  mChromeLocation.AssignWithConversion("chrome://embedding/browser/content/simple-shell.xul");
+  mChromeLocation.AssignWithConversion("chrome://embed/content/simple-shell.xul");
   mChromeNav->LoadURI(mChromeLocation.GetUnicode(), nsIWebNavigation::LOAD_FLAGS_NONE);
   
   subShell->Create(0, nsnull);
