@@ -119,7 +119,7 @@ nsSecureBrowserUIImpl::Init(nsIDOMWindowInternal *window,
   nsCOMPtr<nsIStringBundleService> service(do_GetService(kCStringBundleServiceCID, &rv));
   if (NS_FAILED(rv)) return rv;
   
-  rv = service->CreateBundle(SECURITY_STRING_BUNDLE_URL, nsnull,
+  rv = service->CreateBundle(SECURITY_STRING_BUNDLE_URL,
                              getter_AddRefs(mStringBundle));
   if (NS_FAILED(rv)) return rv;
   
