@@ -24,7 +24,6 @@
     Ben Goodger <ben@netscape.com> (Original Author) 
 -->
 
-<!-- <?xml-stylesheet href="chrome://communicator/skin/downloadmanager/downloadmanager.css"?> -->
 <?xml-stylesheet href="chrome://communicator/skin/"?>
 <?xul-overlay href="chrome://communicator/content/tasksOverlay.xul"?>
 <?xul-overlay href="chrome://communicator/content/utilityOverlay.xul"?>
@@ -34,31 +33,45 @@
 %platformDTD;
 <!ENTITY % downloadManagerDTD SYSTEM "chrome://communicator/locale/downloadmanager/downloadmanager.ent">
 %downloadManagerDTD;
+<!ENTITY % downloadProgressDTD SYSTEM "chrome://global/locale/downloadProgress.dtd" >
+%downloadProgressDTD;
 ]>
 
 <window id="downloadManager" 
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
         windowtype="Download:Manager"
-        orient="vertical"
         width="600" height="400" screenX="10" screenY="10"
         persist="width height screenX screenY"
         title="&downloadManager.title;"
         onload="Startup();" onunload="Shutdown();">
         
-  <script type="application/x-javascript" src="chrome://global/content/globalOverlay.js"></script>
-  <script type="application/x-javascript" src="chrome://global/content/treePopups.js"></script>
+  <script type="application/x-javascript" src="chrome://global/content/globalOverlay.js"/>
+  <script type="application/x-javascript" src="chrome://global/content/treePopups.js"/>
 
-  <script type="application/x-javascript" src="chrome://communicator/content/downloadmanager/downloadmanager.js"></script>
-  
+  <script type="application/x-javascript" src="chrome://communicator/content/downloadmanager/downloadmanager.js"/>
+  <script type="application/x-javascript" src="chrome://communicator/content/downloadmanager/nsDownloadProgressListener.js"/>
+
   <stringbundle id="downloadBundle" 
                 src="chrome://communicator/locale/downloadmanager/downloadmanager.properties"/>
-
-  <commands id="commands">
-    <commandset id="commandUpdate_Downloads"
-                commandupdater="true"
-                events="focus,tree-select"
-                oncommandupdate="downloadViewController.onCommandUpdate()"/>
+ 
+ <data id="dialog.strings.confirmCancel">&confirmCancel;</data>
+ <data id="dialog.strings.close">&close;</data>
+ <data id="dialog.strings.progressMsgNoRate">&progressMsgNoRate;</data>
+ <data id="dialog.strings.rateMsg">&rateMsg;</data>
+ <data id="dialog.strings.completeMsg">&completeMsg;</data>
+ <data id="dialog.strings.percentMsg">&percentMsg;</data>
+ <data id="dialog.strings.shortTimeFormat">&shortTimeFormat;</data>
+ <data id="dialog.strings.longTimeFormat">&longTimeFormat;</data>
+ <data id="dialog.strings.unknownTime">&unknownTime;</data>
+ <data id="dialog.strings.pausedMsg">&pausedMsg;</data>
+ <data id="dialog.strings.filesFolder">&filesFolder;</data>
+ 
+ <commands id="commands">
+   <commandset id="commandUpdate_Downloads"
+               commandupdater="true"
+               events="focus,tree-select"
+               oncommandupdate="downloadViewController.onCommandUpdate()"/>
   
     <commandset id="downloadCommands">
       <command id="cmd_downloadFile" 
@@ -107,28 +120,24 @@
          command="cmd_properties" modifiers="accel"/>
   </keyset>
   
-          
-  <toolbar>
-    <toolbarbutton id="btn_downloadFile" command="cmd_downloadFile"/>
-    <toolbarseparator/>
-    <toolbarbutton id="btn_properties" command="cmd_properties"/>
-    <toolbarbutton id="btn_pause" command="cmd_pause"/>
-    <toolbarseparator/>
-    <toolbarbutton id="btn_delete" command="cmd_delete"/>
-    <toolbarseparator/>
-    <toolbarbutton id="btn_openfile" command="cmd_openfile"/>
-    <toolbarbutton id="btn_showinshell" command="cmd_showinshell"/>
-    <toolbarseparator/>
-    <toolbarbutton label="Test" oncommand="Test();"/>
-  </toolbar>
+  <toolbox> 
+    <toolbar>
+      <toolbarbutton id="btn_downloadFile" command="cmd_downloadFile"/>
+      <toolbarseparator/>
+      <toolbarbutton id="btn_properties" command="cmd_properties"/>
+      <toolbarbutton id="btn_pause" command="cmd_pause"/>
+      <toolbarseparator/>
+      <toolbarbutton id="btn_delete" command="cmd_delete"/>
+      <toolbarseparator/>
+      <toolbarbutton id="btn_openfile" command="cmd_openfile"/>
+      <toolbarbutton id="btn_showinshell" command="cmd_showinshell"/>
+    </toolbar>
+  </toolbox>
 
   <tree id="downloadView" ref="NC:DownloadsRoot"
         datasources="rdf:downloads"
-        seltype="multiple" flags="dont-test-empty"
-        ondragover="nsDragAndDrop.dragOver(event, downloadView);"
-        ondraggesture="nsDragAndDrop.startDrag(event, downloadView);"
-        ondragdrop="nsDragAndDrop.drop(event, downloadView);"
-        onclick="downloadView.onClick(event);"
+        multiple="true" flags="dont-test-empty"
+        ondblclick="openPropertiesDialog();"
         onselect="downloadView.onSelect(event);"
         style="height: 0px; width: 0px;" flex="1">
 
@@ -143,6 +152,10 @@
                   onclick="return TriStateColumnSort('Progress');"
                   observes="Progress" />
         <treecell class="treecell-header sortDirectionIndicator"
+                  label="&view.header.progresstext.label;"
+                  onclick="return TriStateColumnSort('ProgressText');"
+                  observes="ProgressText" />
+        <treecell class="treecell-header sortDirectionIndicator"
                   label="&view.header.timeremaining.label;"
                   onclick="return TriStateColumnSort('TimeRemaining');"
                   observes="TimeRemaining" />
@@ -154,8 +167,12 @@
                   label="&view.header.transferrate.label;"
                   onclick="return TriStateColumnSort('TransferRate');"
                   observes="TransferRate" />
-        <treecell class="treecell-header" allowevents="true" id="popupCell">
-          <menu class="treecell-popupcell-menu" align="center" pack="center">
+        <treecell class="treecell-header sortDirectionIndicator"
+                  label="&view.header.timeelapsed.label;"
+                  onclick="return TriStateColumnSort('TimeElapsed');"
+                  observes="TimeElapsed" />
+        <treecell class="treecell-header treecell-popup-icon" allowevents="true" id="popupCell">
+          <menu align="center" pack="center">
             <menupopup popupanchor="bottomright" popupalign="topright"
                       onpopupshowing="BuildTreePopup(document.getElementById('theColumns'), 
                                                document.getElementById('headRow'), this,
@@ -172,15 +189,17 @@
                     rdf:type="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type">
             <treerow>
               <treecell class="treecell-indent" 
-                        label="rdf:http://home.netscape.com/NC-rdf#File"
+                        label="rdf:http://home.netscape.com/NC-rdf#Name"
                         src="moz-icon:rdf:http://home.netscape.com/NC-rdf#File"
                         rdf:type="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type"/>
               <treecell>
                 <progressmeter class="tree-progressmeter" value="rdf:http://home.netscape.com/NC-rdf#ProgressPercent"/>
               </treecell>
+              <treecell label="rdf:http://home.netscape.com/NC-rdf#ProgressText"/>
               <treecell label="rdf:http://home.netscape.com/NC-rdf#TimeRemaining"/>
               <treecell label="rdf:http://home.netscape.com/NC-rdf#Transferred"/>
               <treecell label="rdf:http://home.netscape.com/NC-rdf#TransferRate"/>
+              <treecell label="rdf:http://home.netscape.com/NC-rdf#TimeElapsed"/>
             </treerow>
           </treeitem>
         </treechildren>
@@ -197,27 +216,39 @@
       <splitter class="tree-splitter"/>
       <treecol id="Progress"
                sortSeparators="true" width="4*" flex="4"
-               persist="width sortActive sortDirection" 
+               persist="width sortActive sortDirection hidden" 
                resource="http://home.netscape.com/NC-rdf#Progress"
                resource2="http://home.netscape.com/NC-rdf#Name"/>
       <splitter class="tree-splitter"/>
+      <treecol id="ProgressText"  hidden="true"
+               sortSeparators="true" width="4*" flex="4"
+               persist="width sortActive sortDirection hidden"
+               resource="http://home.netscape.com/NC-rdf#ProgressText"
+               resourc2="http://home.netscape.com/NC-rdf#Name"/>
+      <splitter class="tree-splitter"/>
       <treecol id="TimeRemaining"
                sortSeparators="true" width="1*" flex="1"
-               persist="width sortActive sortDirection" 
+               persist="width sortActive sortDirection hidden" 
                resource="http://home.netscape.com/NC-rdf#TimeRemaining"
                resource2="http://home.netscape.com/NC-rdf#Name"/>
       <splitter class="tree-splitter"/>
       <treecol id="Transferred"
                sortSeparators="true" width="1*" flex="1"
-               persist="width sortActive sortDirection" 
+               persist="width sortActive sortDirection hidden" 
                resource="http://home.netscape.com/NC-rdf#Transferred"
                resource2="http://home.netscape.com/NC-rdf#Name"/>
       <splitter class="tree-splitter"/>
       <treecol id="TransferRate"
                sortSeparators="true" width="1*" flex="1"
-               persist="width sortActive sortDirection" 
+               persist="width sortActive sortDirection hidden" 
                resource="http://home.netscape.com/NC-rdf#TransferRate"
                resource2="http://home.netscape.com/NC-rdf#Name"/>
+      <splitter class="tree-splitter"/>
+      <treecol id="TimeElapsed"
+               sortSeparators="true" width="1*" flex="1" hidden="true"
+               persist="width sortActive sortDirection hidden"
+               resource="http://home.netscape.com/NC-rdf#TimeElapsed"
+               resource2="http://home.netscape.com/NC-rdf#TimeElapsed"/>
       <treecol persist="width" fixed="true" width="14" id="PopupColumn"/>
     </treecolgroup>
   </tree>

@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *   Ben Goodger <ben@netscape.com> (Original Author)
+ *   Blake Ross <blakeross@telocity.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or 
@@ -36,17 +37,26 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var NC_NS = "http://home.netscape.com/NC-rdf#";
+const NC_NS = "http://home.netscape.com/NC-rdf#";
 
 var gDownloadView = null;
 var gDownloadViewChildren = null;
 var gRDFService = null;
-
 var gNC_File = null;
+// random global variables...
+var keepProgressWindowUpBox;
+
+var webBrowserPersist;                                                          
 
 function NODE_ID(aElement)
 {
   return aElement.getAttribute("ref") || aElement.id;
+}
+
+function openPropertiesDialog()
+{
+  window.openDialog("chrome://global/content/nsProgressDlg.xul", "",
+                    "chrome,titlebar,minimizable,dialog=yes", null, gDownloadView.selectedItems[0].id);
 }
 
 function Startup()
@@ -63,38 +73,22 @@ function Startup()
   // Select the first item in the view, if any. 
   if (gDownloadViewChildren.hasChildNodes()) 
     gDownloadView.selectItem(gDownloadViewChildren.firstChild);
-   
+
   gDownloadView.controllers.appendController(downloadViewController);
-}
-
-function Test()
-{  
-  // Test code:
-  var uriContractID = "@mozilla.org/network/standard-url;1";
-  var uriIID = Components.interfaces.nsIURI;
-  var uri = Components.classes[uriContractID].createInstance(uriIID);
-  uri.spec = "http://www.silverstone.net.nz/mozilla/fsmoz.png";
-
-  var lfContractID = "@mozilla.org/file/local;1";
-  var lfIID = Components.interfaces.nsILocalFile;
-  var lf = Components.classes[lfContractID].createInstance(lfIID);
-  lf.initWithPath("C:\\GOATS\\goat.png");
-
-  var dlmgrContractID = "@mozilla.org/download-manager;1";
-  var dlmgrIID = Components.interfaces.nsIDownloadManager;
-  var dlmgr = Components.classes[dlmgrContractID].getService(dlmgrIID);
-  
-  var ds = dlmgr.QueryInterface(Components.interfaces.nsIRDFDataSource);
+  const dlmgrContractID = "@mozilla.org/download-manager;1";
+  const dlmgrIID = Components.interfaces.nsIDownloadManager;
+  const dlmgr = Components.classes[dlmgrContractID].getService(dlmgrIID);
+  const ds = dlmgr.QueryInterface(Components.interfaces.nsIRDFDataSource);
   gDownloadView.database.AddDataSource(ds);
   gDownloadView.builder.rebuild();
-//  dlmgr.addItem("Some File", uri, lf, null, null);
-//  gDownloadView.builder.rebuild();  
-//  dump("*** goat\n");
 }
 
 function Shutdown()
 {
-
+  const dlmgrContractID = "@mozilla.org/download-manager;1";
+  const dlmgrIID = Components.interfaces.nsIDownloadManager;
+  const dlmgr = Components.classes[dlmgrContractID].getService(dlmgrIID);
+  dlmgr.uninitializeUI();
 }
 
 var downloadView = {
@@ -153,30 +147,25 @@ var downloadViewController = {
   
   doCommand: function dVC_doCommand (aCommand)
   {
-    dump("*** command = " + aCommand + "\n");
     var selection = gDownloadView.selectedItems;
     switch (aCommand) {
     case "cmd_downloadFile":
       downloadFile();
       break;
     case "cmd_properties":
-      dump("*** show properties for selected item\n");
+      openPropertiesDialog();
       break;
     case "cmd_openfile":
-      dump("*** launch the file for the selected item\n");
       var file = getFileForItem(selection[0]);
       file.launch();
       break;
     case "cmd_showinshell":
-      dump("*** show the containing folder for the selected item\n");
       var file = getFileForItem(selection[0]);
       file.reveal();
       break;
     case "cmd_pause":
-      dump("*** pause the transfer for the selected item\n");
       break;
     case "cmd_delete":
-      dump("*** delete entries for the selection\n");
       // a) Prompt user to confirm end of transfers in progress
       // b) End transfers
       // c) Delete entries from datasource
@@ -226,22 +215,27 @@ function downloadFile()
     // Now select a location to save it to
     const fpContractID = "@mozilla.org/filepicker;1";
     const fpIID = Components.interfaces.nsIFilePicker;
-    var fp = Components.classes[fpContractID].getService(fpIID);
+    const fp = Components.classes[fpContractID].getService(fpIID);
     
     // XXX-todo: make this file picker use the user's download folder
     var title = bundle.getString("chooseDestinationTitle");
     fp.init(window, title, fpIID.modeSave);
     fp.appendFilters(fpIID.filterAll);
     if (fp.show() == fpIID.returnOK) {
-      var uriContractID = "@mozilla.org/network/standard-url;1";
-      var uriIID = Components.interfaces.nsIURI;
-      var uri = Components.classes[uriContractID].createInstance(uriIID);
+      const uriContractID = "@mozilla.org/network/standard-url;1";
+      const uriIID = Components.interfaces.nsIURI;
+      const uri = Components.classes[uriContractID].createInstance(uriIID);
       uri.spec = rv.value;
     
-      var dlmgrContractID = "@mozilla.org/download-manager;1";
-      var dlmgrIID = Components.interfaces.nsIDownloadManager;
-      var dlmgr = Components.classes[dlmgrContractID].getService(dlmgrIID);
-      dlmgr.addItem(fp.file.leafName, uri, fp.file, null, null);
+      const dlmgrContractID = "@mozilla.org/download-manager;1";
+      const dlmgrIID = Components.interfaces.nsIDownloadManager;
+      const dlmgr = Components.classes[dlmgrContractID].getService(dlmgrIID);
+      const dlitemContractID = "@mozilla.org/download-manager/item;1";
+      const dlitem = Components.classes[dlitemContractID].createInstance(Components.interfaces.nsIDownloadItem);
+      dlitem.prettyName = fp.file.leafName;
+      dlitem.source = uri;
+      dlitem.target = fp.file;
+      dlmgr.addItem(dlitem);
     }
   }
 }
@@ -286,7 +280,7 @@ function getDownloadsContainer()
   
   const ctrContractID = "@mozilla.org/rdf/container;1";
   const ctrIID = Components.interfaces.nsIRDFContainer;
-  var ctr = Components.classes[ctrContractID].getService(ctrIID);
+  const ctr = Components.classes[ctrContractID].getService(ctrIID);
 
   ctr.Init(gDownloadView.database, downloads);
   return ctr;
@@ -305,7 +299,6 @@ function createLocalFile(aFilePath)
   var lfContractID = "@mozilla.org/file/local;1";
   var lfIID = Components.interfaces.nsILocalFile;
   var lf = Components.classes[lfContractID].createInstance(lfIID);
-  dump("*** aPath = " + aFilePath + "\n");
   lf.initWithPath(aFilePath);
   return lf;
 }
