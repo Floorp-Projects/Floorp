@@ -58,7 +58,7 @@
           src="chrome://communicator/content/wallet/WalletViewer.js"/>
   
 
-  <groupbox align="start" hidden="true">
+  <groupbox hidden="true">
     <caption label="&concatPrimary.title;"/>
     <grid class="indent" flex="1">
       <columns>
@@ -191,7 +191,7 @@
     </grid>
   </groupbox>
 
-  <groupbox align="start" hidden="true">
+  <groupbox hidden="true">
     <caption label="&concatShipping.title;"/>
     <grid class="indent">
       <columns>
@@ -324,7 +324,7 @@
     </grid>
   </groupbox>
 
-  <groupbox align="start" hidden="true">
+  <groupbox hidden="true">
     <caption label="&concatBilling.title;"/>
     <grid class="indent">
       <columns>
@@ -457,7 +457,7 @@
     </grid>
   </groupbox>
 
-  <groupbox align="start" hidden="true">
+  <groupbox hidden="true">
     <caption label="&concatOther.title;"/>label
     <grid class="indent">
       <columns>
