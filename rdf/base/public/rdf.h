@@ -93,13 +93,13 @@ static const char* kURI##prefix##_##name = ns #name
 /*@}*/
 
 #ifdef _IMPL_NS_RDF
-#ifdef XP_PC
+#if defined(XP_PC) && !defined(XP_OS2_EMX)
 #define NS_RDF _declspec(dllexport)
 #else  /* !XP_PC */
 #define NS_RDF
 #endif /* !XP_PC */
 #else  /* !_IMPL_NS_RDF */
-#ifdef XP_PC
+#if defined(XP_PC) && !defined(XP_OS2_EMX)
 #define NS_RDF _declspec(dllimport)
 #else  /* !XP_PC */
 #define NS_RDF
