@@ -236,16 +236,12 @@ Rights Reserved.
 <!-- LOCALIZATION NOTE (searchParentParentCmd.label) : Do not translate "&lt;" and "&gt;" in below line. -->
 <!ENTITY searchParentParentCmd.label ".Search in &lt;parent parent&gt;">
 <!ENTITY searchParentParentCmd.accesskey "">
-<!ENTITY searchInternetCmd.label ".Search the Web">
+<!ENTITY searchInternetCmd.label "Search the Web">
 <!ENTITY searchInternetCmd.accesskey "w">
 <!ENTITY searchMailCmd.label "Search Mail/News Messages">
 <!ENTITY searchMailCmd.accesskey "m">
-<!ENTITY searchBookmarksCmd.label ".Search Bookmarks/History">
+<!ENTITY searchBookmarksCmd.label "Search Bookmarks/History">
 <!ENTITY searchBookmarksCmd.accesskey "b">
-<!ENTITY searchPeopleCmd.label ".Search Address Book">
-<!ENTITY searchPeopleCmd.accesskey "a">
-<!ENTITY searchLocalCmd.label ".Search on this Computer...">
-<!ENTITY searchLocalCmd.accesskey "c">
 
 <!-- Go Menu -->
 
