@@ -30,6 +30,7 @@ class nsISupportsArray;
 
 /**
  * An NGLayout document context for displaying an RDF graph.
+ * XXX This should implement nsIDOMDocument, too.
  */
 class nsRDFDocument : public nsIDocument,
                       public nsIRDFDocument
