@@ -609,21 +609,31 @@ nsresult nsImapProtocol::SetupWithUrl(nsIURI * aURL, nsISupports* aConsumer)
       // extract the file name and create a file transport...
       PRInt32 port=-1;
       m_server->GetPort(&port);
+
       if (port <= 0) port = IMAP_PORT;
       
       nsXPIDLCString hostName;
             
-            NS_WITH_SERVICE(nsISocketTransportService, socketService, kSocketTransportServiceCID, &rv);
+      NS_WITH_SERVICE(nsISocketTransportService, socketService, kSocketTransportServiceCID, &rv);
       if (NS_SUCCEEDED(rv) && aURL)
       {
         aURL->GetPort(&port);
         aURL->GetHost(getter_Copies(hostName));
 
         ClearFlag(IMAP_CONNECTION_IS_OPEN); 
-		if (m_overRideUrlConnectionInfo)
-			rv = socketService->CreateTransport(m_logonHost.GetBuffer(), m_logonPort, nsnull, 0, 0, getter_AddRefs(m_channel));
-		else
-			rv = socketService->CreateTransport(hostName, port, nsnull, 0, 0, getter_AddRefs(m_channel));
+        PRBool isSecure = PR_FALSE;
+        char *connectionType = nsnull;
+        
+        if (NS_SUCCEEDED(m_server->GetIsSecure(&isSecure)) && isSecure) 
+        {
+          connectionType = "ssl";
+          port = SECURE_IMAP_PORT;
+        }
+
+		    if (m_overRideUrlConnectionInfo)
+			    rv = socketService->CreateTransportOfType(connectionType, m_logonHost.GetBuffer(), m_logonPort, nsnull, 0, 0, getter_AddRefs(m_channel));
+		    else
+			    rv = socketService->CreateTransportOfType(connectionType, hostName, port, nsnull, 0, 0, getter_AddRefs(m_channel));
         
         if (NS_SUCCEEDED(rv))
           rv = m_channel->OpenOutputStream(0 /* start position */, getter_AddRefs(m_outputStream));
@@ -922,15 +932,44 @@ nsImapProtocol::ImapThreadMainLoop()
 
 void nsImapProtocol::EstablishServerConnection()
 {
-  // mscott: I really haven't worried about how much of this establish server connection
-  // stuff we *REALLY* need. For now I just want to read out the greeting so I never bother
-  // the parser with it...
   char * serverResponse = CreateNewLineFromSocket(); // read in the greeting
-  PR_FREEIF(serverResponse); // we don't care about the greeting yet...
 
   // record the fact that we've received a greeting for this connection so we don't ever
   // try to do it again..
   SetFlag(IMAP_RECEIVED_GREETING);
+
+  if (!nsCRT::strncasecmp(serverResponse, "* OK", 4))
+  {
+    SetConnectionStatus(0);
+  }
+  else if (!nsCRT::strncasecmp(serverResponse, "* PREAUTH", 9))
+  {
+    // we've been pre-authenticated.
+    // we can skip the whole password step, right into the
+    // kAuthenticated state
+    GetServerStateParser().PreauthSetAuthenticatedState();
+
+    if (GetServerStateParser().GetCapabilityFlag() == kCapabilityUndefined)
+      Capability();
+
+    if ( !(GetServerStateParser().GetCapabilityFlag() & 
+          (kIMAP4Capability | kIMAP4rev1Capability | kIMAP4other) ) )
+    {
+      // AlertUserEvent_UsingId(MK_MSG_IMAP_SERVER_NOT_IMAP4);
+      SetConnectionStatus(-1);        // stop netlib
+    }
+    else
+    {
+      // let's record the user as authenticated.
+      m_imapServerSink->SetUserAuthenticated(PR_TRUE);
+
+      ProcessAfterAuthenticated();
+      // the connection was a success
+      SetConnectionStatus(0);
+     }
+  }
+  
+  PR_FREEIF(serverResponse); // we don't care about the greeting yet...
 
 #ifdef UNREADY_CODE // mscott: I don't think we need to care about this stuff...
   if (GetConnectionStatus() == MK_CONNECTED)
