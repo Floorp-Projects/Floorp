@@ -38,6 +38,9 @@
     <implementation>
       <constructor><![CDATA[
         // This function only reads in the bookmarks from disk if they have not already been read.
+        initServices();
+        initBMService();
+
         BMSVC.ReadBookmarks();
         
         // We implement nsIController
