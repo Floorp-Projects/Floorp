@@ -100,13 +100,13 @@
      <hbox align="center">
          <description>&pref.defaultlength.label;</description>
          <textbox flex="1" id="defaultlength" preftype="int" prefstring="calendar.event.defaultlength" maxlength="3" size="3"/>
-         <label value="Minutes"/>
+         <label value="&pref.minutes.label;"/>
       </hbox>
       
       <hbox align="center">
          <description>&pref.defaultsnoozelength.label;</description>
          <textbox flex="1" id="defaultsnoozelength" preftype="int" prefstring="calendar.alarms.defaultsnoozelength" maxlength="3" size="3"/>
-         <label value="Minutes"/>
+         <label value="&pref.minutes.label;"/>
       </hbox>
       
       <checkbox id="reloadonlaunch" preftype="bool" prefstring="calendar.servers.reloadonlaunch" label="&pref.reloadonlaunch;" />

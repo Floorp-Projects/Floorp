@@ -51,16 +51,16 @@
 
 
 <dialog
-   id="calendar-serverwindow"
+   id="calendar-local-serverwindow"
    title="&calendar.server.dialog.title.new;"
    buttons="accept,cancel"
    ondialogaccept="return onOKCommand();"
    ondialogcancel="return true;"
    onload="loadCalendarServerDialog()"
-   persist="screenX screenY"
+   persist="screenX screenY width height"
    xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
    width="600"
-	height="270"
+	height="470"
 	xmlns:nc="http://home.netscape.com/NC-rdf#">
     
    

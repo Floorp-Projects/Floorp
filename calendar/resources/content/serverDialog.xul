@@ -57,7 +57,7 @@
    ondialogaccept="return onOKCommand();"
    ondialogcancel="return true;"
    onload="loadCalendarServerDialog()"
-   persist="screenX screenY"
+   persist="screenX screenY width height"
    xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
    width="600"
 	height="270"
