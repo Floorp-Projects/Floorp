@@ -21,6 +21,7 @@
  *    Gordon Sheridan, 10-February-2001
  */
 
+#include "necko-config.h"
 
 #include "nsCache.h"
 #include "nsCacheService.h"
@@ -248,6 +249,7 @@ nsCacheProfilePrefObserver::Observe(nsISupports *     subject,
         if (NS_FAILED(rv))
             return rv;
 
+#ifdef NECKO_DISK_CACHE
         // which preference changed?
         if (!nsCRT::strcmp(DISK_CACHE_ENABLE_PREF, NS_ConvertUCS2toUTF8(data).get())) {
 
@@ -269,7 +271,10 @@ nsCacheProfilePrefObserver::Observe(nsISupports *     subject,
             // XXX ideally, there should be somekind of user notification that the pref change
             // XXX won't take effect until the next time the profile changes (browser launch)
 #endif            
-        } else if (!nsCRT::strcmp(MEMORY_CACHE_ENABLE_PREF, NS_ConvertUCS2toUTF8(data).get())) {
+        } else
+#endif // !NECKO_DISK_CACHE
+
+        if (!nsCRT::strcmp(MEMORY_CACHE_ENABLE_PREF, NS_ConvertUCS2toUTF8(data).get())) {
 
             rv = prefBranch->GetBoolPref(MEMORY_CACHE_ENABLE_PREF, &mMemoryCacheEnabled);
             if (NS_FAILED(rv))  return rv;
@@ -301,6 +306,7 @@ nsCacheProfilePrefObserver::ReadPrefs()
     nsCOMPtr<nsIPrefBranch> prefBranch = do_QueryInterface(prefService, &rv);
     if (NS_FAILED(rv))  return rv;
 
+#ifdef NECKO_DISK_CACHE
     // read disk cache device prefs
     rv = prefBranch->GetBoolPref(DISK_CACHE_ENABLE_PREF, &mDiskCacheEnabled);
     if (NS_FAILED(rv)) rv2 = rv;
@@ -326,6 +332,7 @@ nsCacheProfilePrefObserver::ReadPrefs()
         if (directory)
             mDiskCacheParentDirectory = do_QueryInterface(directory, &rv);
     }
+#endif // !NECKO_DISK_CACHE
     
     // read memory cache device prefs
     rv = prefBranch->GetBoolPref(MEMORY_CACHE_ENABLE_PREF, &mMemoryCacheEnabled);
@@ -472,8 +479,10 @@ nsCacheService::Shutdown()
         delete mMemoryDevice;
         mMemoryDevice = nsnull;
 
+#ifdef NECKO_DISK_CACHE
         delete mDiskDevice;
         mDiskDevice = nsnull;
+#endif
     }
     return NS_OK;
 }
@@ -537,6 +546,7 @@ nsCacheService::EvictEntriesForClient(const char *          clientID,
     nsAutoLock lock(mCacheServiceLock);
     nsresult rv = NS_OK;
 
+#ifdef NECKO_DISK_CACHE
     if (storagePolicy == nsICache::STORE_ANYWHERE ||
         storagePolicy == nsICache::STORE_ON_DISK) {
 
@@ -549,6 +559,7 @@ nsCacheService::EvictEntriesForClient(const char *          clientID,
             if (NS_FAILED(rv)) return rv;
         }
     }
+#endif // !NECKO_DISK_CACHE
 
     if (storagePolicy == nsICache::STORE_ANYWHERE ||
         storagePolicy == nsICache::STORE_IN_MEMORY) {
@@ -610,6 +621,7 @@ NS_IMETHODIMP nsCacheService::VisitEntries(nsICacheVisitor *visitor)
         if (NS_FAILED(rv)) return rv;
     }
 
+#ifdef NECKO_DISK_CACHE
     if (mEnableDiskDevice) {
         if (!mDiskDevice) {
             rv = CreateDiskDevice();
@@ -618,6 +630,7 @@ NS_IMETHODIMP nsCacheService::VisitEntries(nsICacheVisitor *visitor)
         rv = mDiskDevice->Visit(visitor);
         if (NS_FAILED(rv)) return rv;
     }
+#endif // !NECKO_DISK_CACHE
 
     // XXX notify any shutdown process that visitation is complete for THIS visitor.
     // XXX keep queue of visitors
@@ -638,6 +651,7 @@ NS_IMETHODIMP nsCacheService::EvictEntries(nsCacheStoragePolicy storagePolicy)
 nsresult
 nsCacheService::CreateDiskDevice()
 {
+#ifdef NECKO_DISK_CACHE
     if (!mEnableDiskDevice) return NS_ERROR_NOT_AVAILABLE;
     if (mDiskDevice)        return NS_OK;
 
@@ -661,6 +675,10 @@ nsCacheService::CreateDiskDevice()
         mDiskDevice = nsnull;
     }
     return rv;
+#else // !NECKO_DISK_CACHE
+    NS_NOTREACHED("nsCacheService::CreateDiskDevice");
+    return NS_ERROR_NOT_IMPLEMENTED;
+#endif
 }
 
 
@@ -936,6 +954,7 @@ nsCacheService::SearchCacheDevices(nsCString * key, nsCacheStoragePolicy policy)
     if (!entry && 
         ((policy == nsICache::STORE_ANYWHERE) || (policy == nsICache::STORE_ON_DISK))) {
 
+#ifdef NECKO_DISK_CACHE
         if (mEnableDiskDevice) {
             if (!mDiskDevice) {
                 nsresult rv = CreateDiskDevice();
@@ -945,6 +964,7 @@ nsCacheService::SearchCacheDevices(nsCString * key, nsCacheStoragePolicy policy)
             
             entry = mDiskDevice->FindEntry(key);
         }
+#endif // !NECKO_DISK_CACHE
     }
 
     return entry;
@@ -958,6 +978,7 @@ nsCacheService::EnsureEntryHasDevice(nsCacheEntry * entry)
     if (device)  return device;
     nsresult rv = NS_OK;
 
+#ifdef NECKO_DISK_CACHE
     if (entry->IsStreamData() && entry->IsAllowedOnDisk() && mEnableDiskDevice) {
         // this is the default
         if (!mDiskDevice) {
@@ -972,6 +993,7 @@ nsCacheService::EnsureEntryHasDevice(nsCacheEntry * entry)
                 device = mDiskDevice;
         }
     }
+#endif // !NECKO_DISK_CACHE
      
     // if we can't use mDiskDevice, try mMemoryDevice
     if (!device && mEnableMemoryDevice && entry->IsAllowedInMemory()) {        
@@ -1074,6 +1096,7 @@ nsCacheService::OnProfileShutdown(PRBool cleanse)
     if (!gService)  return;
     nsAutoLock lock(gService->mCacheServiceLock);
 
+#ifdef NECKO_DISK_CACHE
     if (gService->mDiskDevice) {
         if (cleanse)
             gService->mDiskDevice->EvictEntries(nsnull);
@@ -1084,6 +1107,7 @@ nsCacheService::OnProfileShutdown(PRBool cleanse)
         gService->mDiskDevice->Shutdown();
         gService->mEnableDiskDevice = PR_FALSE;
     }
+#endif // !NECKO_DISK_CACHE
 #if 0
     if (gService->mMemoryDevice) {
         gService->mMemoryDevice->Shutdown();
@@ -1104,6 +1128,7 @@ nsCacheService::OnProfileChanged()
     gService->mEnableDiskDevice   = gService->mObserver->DiskCacheEnabled();
     gService->mEnableMemoryDevice = gService->mObserver->MemoryCacheEnabled();
 
+#ifdef NECKO_DISK_CACHE
     if (gService->mDiskDevice) {
         gService->mDiskDevice->SetCacheParentDirectory(gService->mObserver->DiskCacheParentDirectory());
         gService->mDiskDevice->SetCapacity(gService->mObserver->DiskCacheCapacity());
@@ -1116,6 +1141,7 @@ nsCacheService::OnProfileChanged()
             // XXX delete mDiskDevice?
         }
     }
+#endif // !NECKO_DISK_CACHE
     
     if (gService->mMemoryDevice) {
         gService->mMemoryDevice->SetCapacity(gService->mObserver->MemoryCacheCapacity());
@@ -1144,9 +1170,11 @@ nsCacheService::SetDiskCacheCapacity(PRInt32  capacity)
     if (!gService)  return;
     nsAutoLock lock(gService->mCacheServiceLock);
 
+#ifdef NECKO_DISK_CACHE
     if (gService->mDiskDevice) {
         gService->mDiskDevice->SetCapacity(capacity);
     }
+#endif // !NECKO_DISK_CACHE
     
     gService->mEnableDiskDevice = gService->mObserver->DiskCacheEnabled();
 }

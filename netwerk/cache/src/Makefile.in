@@ -49,6 +49,10 @@ CPPSRCS		= \
 	nsCacheService.cpp \
 	nsCacheSession.cpp \
 	nsMemoryCacheDevice.cpp \
+	$(NULL)
+
+ifdef NECKO_DISK_CACHE
+CPPSRCS += \
 	nsDiskCacheBinding.cpp \
 	nsDiskCacheBlockFile.cpp \
 	nsDiskCacheDevice.cpp \
@@ -56,6 +60,7 @@ CPPSRCS		= \
 	nsDiskCacheMap.cpp \
 	nsDiskCacheStreams.cpp \
 	$(NULL)
+endif
 
 include $(topsrcdir)/config/config.mk
 
