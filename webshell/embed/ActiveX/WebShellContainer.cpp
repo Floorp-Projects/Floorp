@@ -177,7 +177,9 @@ CWebShellContainer::EndLoadURL(nsIWebShell* aShell, const PRUnichar* aURL, PRInt
 
 
 NS_IMETHODIMP
-CWebShellContainer::NewWebShell(nsIWebShell *&aNewWebShell)
+CWebShellContainer::NewWebShell(PRUint32 aChromeMask,
+                                PRBool aVisible,
+                                nsIWebShell *&aNewWebShell)
 {
 	ATLTRACE(_T("CWebShellContainer::NewWebShell()\n"));
 	nsresult rv = NS_ERROR_OUT_OF_MEMORY;
