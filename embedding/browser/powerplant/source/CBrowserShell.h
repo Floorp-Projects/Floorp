@@ -86,6 +86,9 @@ public:
     virtual void                MoveBy(SInt32   inHorizDelta,
                                        SInt32   inVertDelta,
                                        Boolean  inRefresh);
+                                       
+    virtual void                ActivateSelf();
+    virtual void                DeactivateSelf();
     virtual void                ShowSelf();
     virtual void                DrawSelf(); 
     virtual void                ClickSelf(const SMouseDownEvent &inMouseDown);
