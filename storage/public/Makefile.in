@@ -52,6 +52,7 @@ XPIDLSRCS = \
 	mozIStorageConnection.idl \
 	mozIStorageFunction.idl \
 	mozIStorageStatement.idl \
+	mozIStorageStatementWrapper.idl \
 	mozIStorageDataSet.idl \
 	mozIStorageValueArray.idl \
 	$(NULL)

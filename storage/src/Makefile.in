@@ -51,13 +51,16 @@ GRE_MODULE       = 1
 
 REQUIRES = xpcom \
            string \
-	   sqlite3 \
+           sqlite3 \
+           js \
+           xpconnect \
            $(NULL)
 
 CPPSRCS = \
 	mozStorageService.cpp \
 	mozStorageConnection.cpp \
 	mozStorageStatement.cpp \
+	mozStorageStatementWrapper.cpp \
 	mozStorageValueArray.cpp \
 	$(NULL)
 
