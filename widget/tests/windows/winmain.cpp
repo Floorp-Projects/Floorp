@@ -909,7 +909,6 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmd
     NSRepository::CreateInstance(kCWindowCID, nsnull, kIWidgetIID, (LPVOID*)&window);
     nsRect rect(100, 100, 600, 700);
    
-    window->SetBorderStyle(eBorderStyle_dialog);
     window->Create((nsIWidget*)NULL, rect, HandleEvent, NULL);
     window->SetTitle("TOP-LEVEL window");
 
@@ -923,11 +922,14 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmd
 
     int x = 10;
     int y = 10;
-    rect.SetRect(x, y, 50, 50);  
+    rect.SetRect(x, y, 200, 100);  
     NSRepository::CreateInstance(kCChildCID, nsnull, kIWidgetIID, (LPVOID*)&child);
+      
+   
+    child->SetBorderStyle(eBorderStyle_dialog);
     child->Create(window, rect, HandleEvent, NULL);
-   // child->SetBackgroundColor(NS_RGB(100, 200,200));
-   // child->SetForegroundColor(NS_RGB(100, 200,200));
+    //child->SetBackgroundColor(NS_RGB(255, 255, 0));
+    child->SetForegroundColor(NS_RGB(255, 0, 0));
     NS_RELEASE(child); // the parent keeps a reference on this child
 
     y += rect.height + 5;

@@ -73,7 +73,7 @@ typedef void* nsNativeWindow;
 
 enum nsBorderStyle {   
                   ///window border with title area
-                eBorderStyle_window,
+                eBorderStyle_none,
                   ///dialog box border + title area
                 eBorderStyle_dialog, 
               }; 

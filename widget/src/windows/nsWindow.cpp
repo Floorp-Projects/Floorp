@@ -115,7 +115,7 @@ nsWindow::nsWindow(nsISupports *aOuter) : nsObject(aOuter)
     mForeground    = ::GetSysColor(COLOR_WINDOWTEXT);
     mPalette       = NULL;
     mCursor        = eCursor_standard;
-    mBorderStyle   = eBorderStyle_window;
+    mBorderStyle   = eBorderStyle_none;
     mIsShiftDown   = PR_FALSE;
     mIsControlDown = PR_FALSE;
     mIsAltDown     = PR_FALSE;
@@ -1224,7 +1224,7 @@ LPCTSTR nsWindow::WindowClass()
 //-------------------------------------------------------------------------
 DWORD nsWindow::WindowStyle()
 {
-    return /*WS_OVERLAPPEDWINDOW | */ GetBorderStyle(mBorderStyle);
+    return WS_OVERLAPPEDWINDOW;
 }
 
 
@@ -1768,7 +1768,7 @@ void nsWindow::Enumerator::GrowArray()
 //-------------------------------------------------------------------------
 DWORD ChildWindow::WindowStyle()
 {
-    return WS_CHILD | WS_VISIBLE | WS_CLIPCHILDREN; 
+    return WS_CHILD | WS_VISIBLE | WS_CLIPCHILDREN | GetBorderStyle(mBorderStyle);
 }
 
 
@@ -1776,12 +1776,12 @@ DWORD nsWindow::GetBorderStyle(nsBorderStyle aBorderStyle)
 {
   switch(aBorderStyle)
   {
-    case eBorderStyle_window:
-      return(WS_OVERLAPPEDWINDOW);
+    case eBorderStyle_none:
+      return(0);
     break;
 
     case eBorderStyle_dialog:
-      return(DS_MODALFRAME | WS_CAPTION | WS_SYSMENU);
+     return(WS_DLGFRAME | DS_3DLOOK);
     break;
 
     default:
