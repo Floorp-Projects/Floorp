@@ -16,7 +16,7 @@
  * Reserved.
  */
 
-#ifndef __nsXtEventHandler_h      
+#ifndef __nsXtEventHandler_h
 #define __nsXtEventHandler_h
 
 #include <gtk/gtk.h>
@@ -48,7 +48,7 @@ void CheckButton_Toggle_Callback(GtkWidget *w, gpointer p);
 void nsGtkWidget_RadioButton_ArmCallback(GtkWidget *w, gpointer p);
 void nsGtkWidget_RadioButton_DisArmCallback(GtkWidget *w, gpointer p);
 
-void nsGtkWidget_Text_Callback(GtkWidget *w, gpointer p);
+void nsGtkWidget_Text_Callback(GtkWidget *w, GdkEvent* event, gpointer p);
 void nsGtkWidget_Resize_Callback(GtkWidget *w, gpointer p);
 void nsGtkWidget_Expose_Callback(GtkWidget *w, gpointer p);
 
@@ -57,8 +57,3 @@ void nsGtkWidget_Refresh_Callback(gpointer call_data);
 void nsGtkWidget_Menu_Callback(GtkWidget *w, gpointer p);
 
 #endif  // __nsXtEventHandler.h
-
-
-
-
-

@@ -41,14 +41,14 @@ struct nsKeyConverter {
   int keysym; // GDK keysym key code
 };
 
-struct nsKeyConverter nsKeycodes[] = { 
-  NS_VK_CANCEL,     GDK_Cancel, 
+struct nsKeyConverter nsKeycodes[] = {
+  NS_VK_CANCEL,     GDK_Cancel,
   NS_VK_BACK,       GDK_BackSpace,
   NS_VK_TAB,        GDK_Tab,
   NS_VK_CLEAR,      GDK_Clear,
   NS_VK_RETURN,     GDK_Return,
-  NS_VK_SHIFT,      GDK_Shift_L,      
-  NS_VK_SHIFT,      GDK_Shift_R,      
+  NS_VK_SHIFT,      GDK_Shift_L,
+  NS_VK_SHIFT,      GDK_Shift_R,
   NS_VK_CONTROL,    GDK_Control_L,
   NS_VK_CONTROL,    GDK_Control_R,
   NS_VK_ALT,        GDK_Alt_L,
@@ -64,12 +64,12 @@ struct nsKeyConverter nsKeycodes[] = {
   NS_VK_LEFT,       GDK_Left,
   NS_VK_UP,         GDK_Up,
   NS_VK_RIGHT,      GDK_Right,
-  NS_VK_DOWN,       GDK_Down, 
+  NS_VK_DOWN,       GDK_Down,
   NS_VK_PRINTSCREEN, GDK_Print,
   NS_VK_INSERT,     GDK_Insert,
   NS_VK_DELETE,     GDK_Delete,
 
-  NS_VK_NUMPAD0,    GDK_KP_0, 
+  NS_VK_NUMPAD0,    GDK_KP_0,
   NS_VK_NUMPAD1,    GDK_KP_1,
   NS_VK_NUMPAD2,    GDK_KP_2,
   NS_VK_NUMPAD3,    GDK_KP_3,
@@ -112,15 +112,17 @@ struct nsKeyConverter nsKeycodes[] = {
   NS_VK_F24,        GDK_F24,
 
   NS_VK_COMMA,      GDK_comma,
-  NS_VK_PERIOD,     GDK_period, 
-  NS_VK_SLASH,      GDK_slash, 
-//XXX: How do you get a BACK_QUOTE?  NS_VK_BACK_QUOTE, GDK_backquote, 
-  NS_VK_OPEN_BRACKET, GDK_bracketleft, 
-  NS_VK_CLOSE_BRACKET, GDK_bracketright, 
+  NS_VK_PERIOD,     GDK_period,
+  NS_VK_SLASH,      GDK_slash,
+//XXX: How do you get a BACK_QUOTE?  NS_VK_BACK_QUOTE, GDK_backquote,
+  NS_VK_OPEN_BRACKET, GDK_bracketleft,
+  NS_VK_CLOSE_BRACKET, GDK_bracketright,
   NS_VK_QUOTE, GDK_quotedbl
-  
-}; 
 
+};
+
+void nsGtkWidget_InitNSKeyEvent(int aEventType, nsKeyEvent& aKeyEvent,
+                                GtkWidget *w, gpointer p, GdkEvent * event);
 
 int nsConvertKey(int keysym)
 {
@@ -464,9 +466,13 @@ void nsGtkWidget_Resize_Callback(GtkWidget *w, gpointer p)
 }
 
 //==============================================================
-void nsGtkWidget_Text_Callback(GtkWidget *w, gpointer p)
+void nsGtkWidget_Text_Callback(GtkWidget *w, GdkEvent* event, gpointer p)
 {
-  nsWindow *widgetWindow = (nsWindow*)gtk_object_get_user_data(GTK_OBJECT(w));
+  nsKeyEvent kevent;
+  nsGtkWidget_InitNSKeyEvent(NS_KEY_UP, kevent, w, p, event);
+  nsWindow * widgetWindow = (nsWindow *) p ;
+  widgetWindow->OnKey(NS_KEY_UP, kevent.keyCode, &kevent);
+
 #if 0
   nsWindow * widgetWindow = (nsWindow *) p ;
   int len;
@@ -538,8 +544,8 @@ void nsGtkWidget_InitNSKeyEvent(int aEventType, nsKeyEvent& aKeyEvent,
   GdkEventKey *eventKey = (GdkEventKey*)event;
 
   aKeyEvent.keyCode   = nsConvertKey(eventKey->keyval) & 0x00FF;
-  aKeyEvent.time      = eventKey->time; 
-  aKeyEvent.isShift   = (eventKey->state & ShiftMask) ? PR_TRUE : PR_FALSE; 
+  aKeyEvent.time      = eventKey->time;
+  aKeyEvent.isShift   = (eventKey->state & ShiftMask) ? PR_TRUE : PR_FALSE;
   aKeyEvent.isControl = (eventKey->state & ControlMask) ? PR_TRUE : PR_FALSE;
   aKeyEvent.isAlt     = (eventKey->state & Mod1Mask) ? PR_TRUE : PR_FALSE;
 }
