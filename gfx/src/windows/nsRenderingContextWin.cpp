@@ -31,10 +31,12 @@ public:
   nsRect          mLocalClip;
   nsRect          mGlobalClip;
   HRGN            mClipRegion;
-  nscolor         mSolidColor;
+  nscolor         mBrushColor;
   HBRUSH          mSolidBrush;
   nsIFontMetrics  *mFontMetrics;
   HFONT           mFont;
+  nscolor         mPenColor;
+  HPEN            mSolidPen;
 };
 
 GraphicsState :: GraphicsState()
@@ -44,10 +46,12 @@ GraphicsState :: GraphicsState()
   mLocalClip.x = mLocalClip.y = mLocalClip.width = mLocalClip.height = 0;
   mGlobalClip = mLocalClip;
   mClipRegion = NULL;
-  mSolidColor = RGB(0, 0, 0);
+  mBrushColor = NS_RGB(0, 0, 0);
   mSolidBrush = NULL;
   mFontMetrics = nsnull;
   mFont = NULL;
+  mPenColor = NS_RGB(0, 0, 0);
+  mSolidPen = NULL;
 }
 
 GraphicsState :: GraphicsState(GraphicsState &aState) :
@@ -57,10 +61,12 @@ GraphicsState :: GraphicsState(GraphicsState &aState) :
 {
   mNext = &aState;
   mClipRegion = NULL;
-  mSolidColor = aState.mSolidColor;
+  mBrushColor = aState.mBrushColor;
   mSolidBrush = NULL;
   mFontMetrics = nsnull;
   mFont = NULL;
+  mPenColor = aState.mPenColor;
+  mSolidPen = NULL;
 }
 
 GraphicsState :: ~GraphicsState()
@@ -79,6 +85,12 @@ GraphicsState :: ~GraphicsState()
 
   //don't delete this because it lives in the font metrics
   mFont = NULL;
+
+  if (NULL != mSolidPen)
+  {
+    ::DeleteObject(mSolidPen);
+    mSolidPen = NULL;
+  }
 }
 
 static NS_DEFINE_IID(kRenderingContextIID, NS_IRENDERING_CONTEXT_IID);
@@ -97,6 +109,8 @@ nsRenderingContextWin :: nsRenderingContextWin()
   mBlackBrush = NULL;
   mOrigFont = NULL;
   mDefFont = NULL;
+  mOrigSolidPen = NULL;
+  mBlackPen = NULL;
 #ifdef NS_DEBUG
   mInitialized = PR_FALSE;
 #endif
@@ -148,6 +162,18 @@ nsRenderingContextWin :: ~nsRenderingContextWin()
     {
       ::DeleteObject(mDefFont);
       mDefFont = NULL;
+    }
+
+    if (NULL != mOrigSolidPen)
+    {
+      ::SelectObject(mDC, mOrigSolidPen);
+      mOrigSolidPen = NULL;
+    }
+
+    if (NULL != mBlackPen)
+    {
+      ::DeleteObject(mBlackPen);
+      mBlackPen = NULL;
     }
   }
 
@@ -241,6 +267,9 @@ nsresult nsRenderingContextWin :: CommonInit(void)
                           DEFAULT_QUALITY, FF_ROMAN | VARIABLE_PITCH, "Times New Roman");
   mOrigFont = ::SelectObject(mDC, mDefFont);
 
+  mBlackPen = ::CreatePen(PS_SOLID, 0, RGB(0, 0, 0));
+  mOrigSolidPen = ::SelectObject(mDC, mBlackPen);
+
   return NS_OK;
 }
 
@@ -286,10 +315,12 @@ void nsRenderingContextWin :: PushState()
     state->mLocalClip = mStates->mLocalClip;
     state->mGlobalClip = mStates->mGlobalClip;
     state->mClipRegion = nsnull;
-    state->mSolidColor = mStates->mSolidColor;
+    state->mBrushColor = mStates->mBrushColor;
     state->mSolidBrush = nsnull;
     state->mFontMetrics = mStates->mFontMetrics;
     state->mFont = nsnull;
+    state->mPenColor = mStates->mPenColor;
+    state->mSolidPen = nsnull;
 
     mStates = state;
   }
@@ -388,6 +419,36 @@ void nsRenderingContextWin :: PopState()
 
         //don't delete the font because it lives in the font metrics
         oldstate->mFont = NULL;
+      }
+
+      if (NULL != oldstate->mSolidPen)
+      {
+        pstate = mStates;
+
+        //if the solid pens are different between the states,
+        //select the previous solid pen
+
+        while ((nsnull != pstate) && (NULL == pstate->mSolidPen))
+          pstate = pstate->mNext;
+
+        if (nsnull != pstate)
+        {
+          if (oldstate->mSolidPen != pstate->mSolidPen)
+            ::SelectObject(mDC, pstate->mSolidPen);
+        }
+        else
+          ::SelectObject(mDC, mBlackPen);
+
+        //kill the solid brush we are popping off the stack
+
+        if (oldstate->mSolidPen != mBlackPen)
+        {
+          if (((nsnull != pstate) && (oldstate->mSolidPen != pstate->mSolidPen)) ||
+              (nsnull == pstate))
+            ::DeleteObject(oldstate->mSolidPen);
+        }
+
+        oldstate->mSolidPen = NULL;
       }
     }
     else
@@ -517,11 +578,10 @@ void nsRenderingContextWin :: DrawLine(nscoord aX0, nscoord aY0, nscoord aX1, ns
 	mTMatrix->TransformCoord(&aX0,&aY0);
 	mTMatrix->TransformCoord(&aX1,&aY1);
 
-  HPEN newPen = ::CreatePen(PS_SOLID, 0, mColor);
-  HPEN oldPen = ::SelectObject(mDC, newPen);
+  SetupSolidPen();
+
   ::MoveToEx(mDC, (int)(aX0), (int)(aY0), NULL);
   ::LineTo(mDC, (int)(aX1), (int)(aY1));
-  ::SelectObject(mDC, oldPen);
 }
 
 void nsRenderingContextWin :: DrawRect(const nsRect& aRect)
@@ -609,13 +669,10 @@ void nsRenderingContextWin::DrawPolygon(nsPoint aPoints[], PRInt32 aNumPoints)
   lb.lbColor = 0;
   lb.lbHatch = 0;
   HBRUSH brush = ::CreateBrushIndirect(&lb);
-  HPEN pen = ::CreatePen(PS_SOLID, 0, mColor);
-  HPEN oldPen = ::SelectObject(mDC, pen);
+  SetupSolidPen();
   HBRUSH oldBrush = ::SelectObject(mDC, brush);
   ::Polygon(mDC, pp0, int(aNumPoints));
   ::SelectObject(mDC, oldBrush);
-  ::SelectObject(mDC, oldPen);
-  ::DeleteObject(pen);
   ::DeleteObject(brush);
   ::SetPolyFillMode(mDC, pfm);
 
@@ -670,15 +727,12 @@ void nsRenderingContextWin :: DrawEllipse(nscoord aX, nscoord aY, nscoord aWidth
 {
   mTMatrix->TransformCoord(&aX, &aY, &aWidth, &aHeight);
 
-  HPEN newPen = ::CreatePen(PS_SOLID, 0, mColor);
-  HPEN oldPen = ::SelectObject(mDC, newPen);
+  SetupSolidPen();
   HBRUSH oldBrush = ::SelectObject(mDC, ::GetStockObject(NULL_BRUSH));
   
   ::Ellipse(mDC, aX, aY, aX + aWidth, aY + aHeight);
   
   ::SelectObject(mDC, oldBrush);
-  ::SelectObject(mDC, oldPen);
-  ::DeleteObject(newPen);
 }
 
 void nsRenderingContextWin :: FillEllipse(const nsRect& aRect)
@@ -690,15 +744,10 @@ void nsRenderingContextWin :: FillEllipse(nscoord aX, nscoord aY, nscoord aWidth
 {
   mTMatrix->TransformCoord(&aX, &aY, &aWidth, &aHeight);
 
-  HPEN newPen = ::CreatePen(PS_SOLID, 0, mColor);
-  HPEN oldPen = ::SelectObject(mDC, newPen);
-
+  SetupSolidPen();
   SetupSolidBrush();
   
   ::Ellipse(mDC, aX, aY, aX + aWidth, aY + aHeight);
-  
-  ::SelectObject(mDC, oldPen);
-  ::DeleteObject(newPen);
 }
 
 void nsRenderingContextWin :: DrawArc(const nsRect& aRect,
@@ -710,83 +759,71 @@ void nsRenderingContextWin :: DrawArc(const nsRect& aRect,
 void nsRenderingContextWin :: DrawArc(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight,
                                  float aStartAngle, float aEndAngle)
 {
-PRInt32 quad1,quad2,sx,sy,ex,ey,cx,cy;
-float   anglerad,distance;
+  PRInt32 quad1, quad2, sx, sy, ex, ey, cx, cy;
+  float   anglerad, distance;
 
   mTMatrix->TransformCoord(&aX, &aY, &aWidth, &aHeight);
 
-  HPEN newPen = ::CreatePen(PS_SOLID, 0, mColor);
-  HPEN oldPen = ::SelectObject(mDC, newPen);
-  HBRUSH newBrush = ::CreateSolidBrush(mCurrentColor);
-  HBRUSH oldBrush = ::SelectObject(mDC, newBrush);
+  SetupSolidPen();
+  SetupSolidBrush();
 
   // figure out the the coordinates of the arc from the angle
-  distance = (float)sqrt((float)(aWidth*aWidth + aHeight*aHeight));
-  cx = aX+aWidth/2;
-  cy = aY+aHeight/2;
+  distance = (float)sqrt((float)(aWidth * aWidth + aHeight * aHeight));
+  cx = aX + aWidth / 2;
+  cy = aY + aHeight / 2;
 
-  anglerad = (float)(aStartAngle/(180.0/3.14159265358979323846));
-  quad1 = (PRInt32)(aStartAngle/90.0);
-  sx = (PRInt32)(distance*cos(anglerad)+cx);
-  sy = (PRInt32)(cy-distance*sin(anglerad));
+  anglerad = (float)(aStartAngle / (180.0 / 3.14159265358979323846));
+  quad1 = (PRInt32)(aStartAngle / 90.0);
+  sx = (PRInt32)(distance * cos(anglerad) + cx);
+  sy = (PRInt32)(cy - distance * sin(anglerad));
 
-  anglerad = (float)(aEndAngle/(180.0/3.14159265358979323846));
-  quad2 = (PRInt32)(aEndAngle/90.0);
-  ex = (PRInt32)(distance*cos(anglerad)+cx);
-  ey = (PRInt32)(cy-distance*sin(anglerad));
+  anglerad = (float)(aEndAngle / (180.0 / 3.14159265358979323846));
+  quad2 = (PRInt32)(aEndAngle / 90.0);
+  ex = (PRInt32)(distance * cos(anglerad) + cx);
+  ey = (PRInt32)(cy - distance * sin(anglerad));
 
   // this just makes it consitent, on windows 95 arc will always draw CC, nt this sets direction
-  ::SetArcDirection (mDC,AD_COUNTERCLOCKWISE);
+  ::SetArcDirection(mDC, AD_COUNTERCLOCKWISE);
 
-  ::Arc(mDC,aX,aY,aX+aWidth,aY+aHeight,sx,sy,ex,ey); 
-
-  ::SelectObject(mDC, oldBrush);
-  ::SelectObject(mDC, oldPen);
-  ::DeleteObject(newBrush);
-  ::DeleteObject(newPen);
+  ::Arc(mDC, aX, aY, aX + aWidth, aY + aHeight, sx, sy, ex, ey); 
 }
 
 void nsRenderingContextWin :: FillArc(const nsRect& aRect,
                                  float aStartAngle, float aEndAngle)
 {
-  this->FillArc(aRect.x,aRect.y,aRect.width,aRect.height,aStartAngle,aEndAngle);
+  this->FillArc(aRect.x, aRect.y, aRect.width, aRect.height, aStartAngle, aEndAngle);
 }
 
 void nsRenderingContextWin :: FillArc(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight,
                                  float aStartAngle, float aEndAngle)
 {
-PRInt32 quad1,quad2,sx,sy,ex,ey,cx,cy;
-float   anglerad,distance;
+  PRInt32 quad1, quad2, sx, sy, ex, ey, cx, cy;
+  float   anglerad, distance;
 
   mTMatrix->TransformCoord(&aX, &aY, &aWidth, &aHeight);
 
-  HPEN newPen = ::CreatePen(PS_SOLID, 0, mColor);
-  HPEN oldPen = ::SelectObject(mDC, newPen);
-
+  SetupSolidPen();
   SetupSolidBrush();
 
   // figure out the the coordinates of the arc from the angle
-  distance = (float)sqrt((float)(aWidth*aWidth + aHeight*aHeight));
-  cx = aX+aWidth/2;
-  cy = aY+aHeight/2;
+  distance = (float)sqrt((float)(aWidth * aWidth + aHeight * aHeight));
+  cx = aX + aWidth / 2;
+  cy = aY + aHeight / 2;
 
-  anglerad = (float)(aStartAngle/(180.0/3.14159265358979323846));
-  quad1 = (PRInt32)(aStartAngle/90.0);
-  sx = (PRInt32)(distance*cos(anglerad)+cx);
-  sy = (PRInt32)(cy-distance*sin(anglerad));
+  anglerad = (float)(aStartAngle / (180.0 / 3.14159265358979323846));
+  quad1 = (PRInt32)(aStartAngle / 90.0);
+  sx = (PRInt32)(distance * cos(anglerad) + cx);
+  sy = (PRInt32)(cy - distance * sin(anglerad));
 
-  anglerad = (float)(aEndAngle/(180.0/3.14159265358979323846));
-  quad2 = (PRInt32)(aEndAngle/90.0);
-  ex = (PRInt32)(distance*cos(anglerad)+cx);
-  ey = (PRInt32)(cy-distance*sin(anglerad));
+  anglerad = (float)(aEndAngle / (180.0 / 3.14159265358979323846));
+  quad2 = (PRInt32)(aEndAngle / 90.0);
+  ex = (PRInt32)(distance * cos(anglerad) + cx);
+  ey = (PRInt32)(cy - distance * sin(anglerad));
 
   // this just makes it consitent, on windows 95 arc will always draw CC, nt this sets direction
-  ::SetArcDirection (mDC,AD_COUNTERCLOCKWISE);
+  ::SetArcDirection(mDC, AD_COUNTERCLOCKWISE);
 
-  ::Pie(mDC,aX,aY,aX+aWidth,aY+aHeight,sx,sy,ex,ey); 
-
-  ::SelectObject(mDC, oldPen);
-  ::DeleteObject(newPen);
+  ::Pie(mDC, aX, aY, aX + aWidth, aY + aHeight, sx, sy, ex, ey); 
 }
 
 void nsRenderingContextWin :: DrawString(const char *aString, PRUint32 aLength,
@@ -912,7 +949,7 @@ nsresult nsRenderingContextWin :: CopyOffScreenBits(nsRect &aBounds)
 
 HBRUSH nsRenderingContextWin :: SetupSolidBrush(void)
 {
-  if (mCurrentColor != mStates->mSolidColor)
+  if (mCurrentColor != mStates->mBrushColor)
   {
     HBRUSH  tbrush = ::CreateSolidBrush(mColor);
     HBRUSH  obrush = ::SelectObject(mDC, tbrush);
@@ -921,6 +958,7 @@ HBRUSH nsRenderingContextWin :: SetupSolidBrush(void)
       ::DeleteObject(obrush);
 
     mStates->mSolidBrush = tbrush;
+    mStates->mBrushColor = mCurrentColor;
   }
 
   if (NULL == mStates->mSolidBrush)
@@ -947,5 +985,36 @@ void nsRenderingContextWin :: SetupFont(void)
     
     ::SelectObject(mDC, tfont);
     mStates->mFont = tfont;
+    mStates->mFontMetrics = mFontMetrics;
   }
+}
+
+HPEN nsRenderingContextWin :: SetupSolidPen(void)
+{
+  if (mCurrentColor != mStates->mPenColor)
+  {
+    HPEN  tpen = ::CreatePen(PS_SOLID, 0, mColor);
+    HPEN  open = ::SelectObject(mDC, tpen);
+
+    if ((NULL != open) && (NULL != mStates->mSolidPen))
+      ::DeleteObject(open);
+
+    mStates->mSolidPen = tpen;
+    mStates->mPenColor = mCurrentColor;
+  }
+
+  if (NULL == mStates->mSolidPen)
+  {
+    GraphicsState *tstate = mStates->mNext;
+
+    while ((nsnull != tstate) && (NULL == tstate->mSolidPen))
+      tstate = tstate->mNext;
+
+    if (nsnull == tstate)
+      return mBlackPen;
+    else
+      return tstate->mSolidPen;
+  }
+  else
+    return mStates->mSolidPen;
 }

@@ -127,6 +127,7 @@ public:
 private:
   nsresult CommonInit(void);
   HBRUSH SetupSolidBrush(void);
+  HPEN SetupSolidPen(void);
   void SetupFont(void);
 
 protected:
@@ -147,6 +148,8 @@ protected:
   HBRUSH            mBlackBrush;
   HFONT             mOrigFont;
   HFONT             mDefFont;
+  HPEN              mOrigSolidPen;
+  HPEN              mBlackPen;
 
 #ifdef NS_DEBUG
   PRBool          mInitialized;
