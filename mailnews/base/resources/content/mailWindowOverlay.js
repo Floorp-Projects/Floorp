@@ -688,8 +688,8 @@ function MsgUnsubscribe()
 
 function MsgSaveAsFile()
 {
-    if (gDBView.numSelected == 1) {
-        SaveAsFile(gDBView.URIForFirstSelectedMessage);
+    if (GetNumSelectedMessages() == 1) {
+        SaveAsFile(GetFirstSelectedMessage());
     }
 }
 
@@ -697,8 +697,8 @@ function MsgSaveAsFile()
 function MsgSaveAsTemplate()
 {
     var folder = GetLoadedMsgFolder();
-    if (gDBView.numSelected == 1) {
-        SaveAsTemplate(gDBView.URIForFirstSelectedMessage, folder);
+    if (GetNumSelectedMessages() == 1) {
+        SaveAsTemplate(GetFirstSelectedMessage(), folder);
     }
 }
 
