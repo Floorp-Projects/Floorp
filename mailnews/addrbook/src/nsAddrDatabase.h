@@ -30,6 +30,8 @@
 #include "nsFileSpec.h"
 #include "nsIAddrDBListener.h"
 #include "nsISupportsArray.h"
+#include "nsCOMPtr.h"
+#include "nsICollation.h"
 
 typedef enum 
 {
@@ -212,6 +214,8 @@ public:
 	NS_IMETHOD AddNotes(nsIMdbRow * row, const char * value)
 	{ return AddCharStringColumn(row, m_NotesColumnToken, value); }
 
+	NS_IMETHOD CreateCollationKey(const PRUnichar *sourceStr, nsString& resultStr);
+
 	//////////////////////////////////////////////////////////////////////////////
 	// nsAddrDatabase methods:
 
@@ -272,6 +276,8 @@ protected:
 	nsresult DoBoolAnonymousTransaction(nsVoidArray* pAttributes, nsVoidArray* pValues, AB_NOTIFY_CODE code);
 	void GetAnonymousAttributesFromCard(nsIAbCard* card);
 	nsresult FindAttributeRow(nsIMdbTable* pTable, mdb_token columnToken, nsIMdbRow** row);
+
+	nsresult GetCollationKeyGenerator();
 
 	static nsVoidArray/*<nsAddrDatabase>*/* GetDBCache();
 	static nsVoidArray/*<nsAddrDatabase>*/* m_dbCache;
@@ -348,6 +354,9 @@ protected:
 	mdb_token			m_AddressCharSetColumnToken;
 
 	nsIAbDirectory*		m_dbDirectory;
+
+	nsCOMPtr<nsICollation> m_collationKeyGenerator;
+
 };
 
 #endif

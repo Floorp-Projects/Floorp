@@ -25,13 +25,15 @@
 #include "nsIAbCard.idl"
 #include "nsIAbDirectory.idl"
 
+%{C++
+#include "mdb.h"
+#include "nsString.h"
+%}
+
 [ptr] native nsIMdbTableRowCursor(nsIMdbTableRowCursor);
 [ptr] native nsIMdbEnv(nsIMdbEnv);
 [ptr] native nsIMdbRow(nsIMdbRow);
-
-%{C++
-#include "mdb.h"
-%}
+[ref] native nsStringRef(nsString);
 
 
 [scriptable, uuid(A4186D8B-1DD0-11d3-A303-001083003D0C)] 
@@ -110,4 +112,7 @@ interface nsIAddrDatabase : nsIAddrDBAnnouncer {
 	[noscript] void addCustom3(in nsIMdbRow row, in string value);
 	[noscript] void addCustom4(in nsIMdbRow row, in string value);
 	[noscript] void addNotes(in nsIMdbRow row, in string value);
+
+	[noscript] void createCollationKey(in wstring sourceStr, in nsStringRef resultStr);
+
 };

@@ -38,9 +38,12 @@
 #include "nsIServiceManager.h"
 #include "nsRDFCID.h"
 
-#include "nsICollation.h"
-
+#include "nsILocale.h"
+#include "nsLocaleCID.h"
+#include "nsILocaleService.h"
 #include "nsCollationCID.h"
+
+
 #include "nsMorkCID.h"
 #include "nsIPref.h"
 #include "nsIMdbFactoryFactory.h"
@@ -48,6 +51,9 @@
 
 static NS_DEFINE_CID(kCMorkFactory, NS_MORK_CID);
 static NS_DEFINE_CID(kAddrBookSessionCID, NS_ADDRBOOKSESSION_CID);
+static NS_DEFINE_CID(kLocaleServiceCID, NS_LOCALESERVICE_CID); 
+static NS_DEFINE_CID(kCollationFactoryCID, NS_COLLATIONFACTORY_CID);
+static NS_DEFINE_IID(kICollationFactoryIID, NS_ICOLLATIONFACTORY_IID);
 
 /* The definition is nsAddressBook.cpp */
 extern const char *kCardDataSourceRoot;
@@ -2732,3 +2738,38 @@ NS_IMETHODIMP nsAddrDatabase::GetCardForEmailAddress(nsIAbDirectory *directory, 
 	return rv;
 }
 
+nsresult nsAddrDatabase::GetCollationKeyGenerator()
+{
+	nsresult rv = NS_OK;
+	if (!m_collationKeyGenerator)
+	{
+		nsCOMPtr<nsILocale> locale; 
+
+		NS_WITH_SERVICE(nsILocaleService, localeSvc, kLocaleServiceCID, &rv);
+		if (NS_FAILED(rv)) return rv;
+
+		rv = localeSvc->GetApplicationLocale(getter_AddRefs(locale));
+		if (NS_SUCCEEDED(rv) && locale)
+		{
+			nsCOMPtr <nsICollationFactory> factory;
+
+			rv = nsComponentManager::CreateInstance(kCollationFactoryCID, NULL,
+									  kICollationFactoryIID, getter_AddRefs(factory)); 
+			if (NS_SUCCEEDED(rv) && factory)
+			{
+				rv = factory->CreateCollation(locale, getter_AddRefs(m_collationKeyGenerator));
+			}
+		}
+	}
+	return rv;
+}
+
+NS_IMETHODIMP nsAddrDatabase::CreateCollationKey(const PRUnichar* sourceStr, nsString& resultStr)
+{
+	nsString sourceString(sourceStr);
+
+	nsresult rv = GetCollationKeyGenerator();
+	if (NS_SUCCEEDED(rv) && m_collationKeyGenerator)
+		rv = m_collationKeyGenerator->CreateSortKey(kCollationCaseInSensitive, sourceString, resultStr) ;
+	return rv;
+}
