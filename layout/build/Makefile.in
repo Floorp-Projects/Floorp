@@ -24,11 +24,11 @@ include $(DEPTH)/config/autoconf.mk
 
 include $(topsrcdir)/config/config.mk
 
-DEFINES += -D_IMPL_NS_HTML 
+DEFINES += -D_IMPL_NS_HTML
 
 LIBRARY_NAME = raptorhtml
 
-MODULE=raptor 
+MODULE=raptor
 
 REQUIRES=xpcom raptor dom js
 
@@ -44,7 +44,6 @@ LD_ALL = -all
 LD_NONE = -none
 endif
 
-ifeq ($(OS_TARGET),Rhapsody)
 EXTRA_DSO_LDOPTS = \
 	-L$(DIST)/lib	\
 	-lraptorhtmldoc_s	\
