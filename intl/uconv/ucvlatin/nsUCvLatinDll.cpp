@@ -36,16 +36,31 @@
 #include "nsISO88597ToUnicode.h"
 #include "nsISO88598ToUnicode.h"
 #include "nsISO88599ToUnicode.h"
+#include "nsISO885914ToUnicode.h"
+#include "nsISO885915ToUnicode.h"
 #include "nsCP1250ToUnicode.h"
 #include "nsCP1251ToUnicode.h"
 #include "nsCP1252ToUnicode.h"
 #include "nsCP1253ToUnicode.h"
 #include "nsCP1254ToUnicode.h"
 #include "nsCP1257ToUnicode.h"
+#include "nsCP1258ToUnicode.h"
+#include "nsCP874ToUnicode.h"
+#include "nsKOI8RToUnicode.h"
+#include "nsKOI8UToUnicode.h"
 #include "nsMacRomanToUnicode.h"
 #include "nsMacCEToUnicode.h"
 #include "nsMacGreekToUnicode.h"
 #include "nsMacTurkishToUnicode.h"
+#include "nsMacCroatianToUnicode.h"
+#include "nsMacRomanianToUnicode.h"
+#include "nsMacCyrillicToUnicode.h"
+#include "nsMacUkrainianToUnicode.h"
+#include "nsMacIcelandicToUnicode.h"
+#include "nsARMSCII8ToUnicode.h"
+#include "nsTCVN5712ToUnicode.h"
+#include "nsVISCIIToUnicode.h"
+#include "nsVPSToUnicode.h"
 #include "nsUTF8ToUnicode.h"
 #include "nsUnicodeToISO88591.h"
 #include "nsUnicodeToISO88592.h"
@@ -56,16 +71,31 @@
 #include "nsUnicodeToISO88597.h"
 #include "nsUnicodeToISO88598.h"
 #include "nsUnicodeToISO88599.h"
+#include "nsUnicodeToISO885914.h"
+#include "nsUnicodeToISO885915.h"
 #include "nsUnicodeToCP1250.h"
 #include "nsUnicodeToCP1251.h"
 #include "nsUnicodeToCP1252.h"
 #include "nsUnicodeToCP1253.h"
 #include "nsUnicodeToCP1254.h"
 #include "nsUnicodeToCP1257.h"
+#include "nsUnicodeToCP1258.h"
+#include "nsUnicodeToCP874.h"
+#include "nsUnicodeToKOI8R.h"
+#include "nsUnicodeToKOI8U.h"
 #include "nsUnicodeToMacRoman.h"
 #include "nsUnicodeToMacCE.h"
 #include "nsUnicodeToMacGreek.h"
 #include "nsUnicodeToMacTurkish.h"
+#include "nsUnicodeToMacCroatian.h"
+#include "nsUnicodeToMacRomanian.h"
+#include "nsUnicodeToMacCyrillic.h"
+#include "nsUnicodeToMacUkrainian.h"
+#include "nsUnicodeToMacIcelandic.h"
+#include "nsUnicodeToARMSCII8.h"
+#include "nsUnicodeToTCVN5712.h"
+#include "nsUnicodeToVISCII.h"
+#include "nsUnicodeToVPS.h"
 #include "nsUnicodeToUTF8.h"
 
 // just for NS_IMPL_IDS; this is a good, central place to implement GUIDs
@@ -153,6 +183,18 @@ FactoryData g_FactoryData[] =
     "Unicode"
   },
   {
+    &kISO885914ToUnicodeCID,
+    nsISO885914ToUnicode::CreateInstance,
+    "ISO-8859-14",
+    "Unicode"
+  },
+  {
+    &kISO885915ToUnicodeCID,
+    nsISO885915ToUnicode::CreateInstance,
+    "ISO-8859-15",
+    "Unicode"
+  },
+  {
     &kCP1250ToUnicodeCID,
     nsCP1250ToUnicode::CreateInstance,
     "windows-1250",
@@ -189,6 +231,30 @@ FactoryData g_FactoryData[] =
     "Unicode"
   },
   {
+    &kCP1258ToUnicodeCID,
+    nsCP1258ToUnicode::CreateInstance,
+    "windows-1258",
+    "Unicode"
+  },
+  {
+    &kCP874ToUnicodeCID,
+    nsCP874ToUnicode::CreateInstance,
+    "TIS-620",
+    "Unicode"
+  },
+  {
+    &kKOI8RToUnicodeCID,
+    nsKOI8RToUnicode::CreateInstance,
+    "KOI8-R",
+    "Unicode"
+  },
+  {
+    &kKOI8UToUnicodeCID,
+    nsKOI8UToUnicode::CreateInstance,
+    "KOI8-U",
+    "Unicode"
+  },
+  {
     &kMacRomanToUnicodeCID,
     nsMacRomanToUnicode::CreateInstance,
     "x-mac-roman",
@@ -210,6 +276,60 @@ FactoryData g_FactoryData[] =
     &kMacTurkishToUnicodeCID,
     nsMacTurkishToUnicode::CreateInstance,
     "x-mac-turkish",
+    "Unicode"
+  },
+  {
+    &kMacCroatianToUnicodeCID,
+    nsMacCroatianToUnicode::CreateInstance,
+    "x-mac-croatian",
+    "Unicode"
+  },
+  {
+    &kMacRomanianToUnicodeCID,
+    nsMacRomanianToUnicode::CreateInstance,
+    "x-mac-romanian",
+    "Unicode"
+  },
+  {
+    &kMacCyrillicToUnicodeCID,
+    nsMacCyrillicToUnicode::CreateInstance,
+    "x-mac-cyrillic",
+    "Unicode"
+  },
+  {
+    &kMacUkrainianToUnicodeCID,
+    nsMacUkrainianToUnicode::CreateInstance,
+    "x-mac-ukrainian",
+    "Unicode"
+  },
+  {
+    &kMacIcelandicToUnicodeCID,
+    nsMacIcelandicToUnicode::CreateInstance,
+    "x-mac-icelandic",
+    "Unicode"
+  },
+  {
+    &kARMSCII8ToUnicodeCID,
+    nsARMSCII8ToUnicode::CreateInstance,
+    "armscii-8",
+    "Unicode"
+  },
+  {
+    &kTCVN5712ToUnicodeCID,
+    nsTCVN5712ToUnicode::CreateInstance,
+    "x-viet-tcvn",
+    "Unicode"
+  },
+  {
+    &kVISCIIToUnicodeCID,
+    nsVISCIIToUnicode::CreateInstance,
+    "VISCII",
+    "Unicode"
+  },
+  {
+    &kVPSToUnicodeCID,
+    nsVPSToUnicode::CreateInstance,
+    "x-viet-vps",
     "Unicode"
   },
   {
@@ -273,6 +393,18 @@ FactoryData g_FactoryData[] =
     "ISO-8859-9"
   },
   {
+    &kUnicodeToISO885914CID,
+    nsUnicodeToISO885914::CreateInstance,
+    "Unicode",
+    "ISO-8859-14"
+  },
+  {
+    &kUnicodeToISO885915CID,
+    nsUnicodeToISO885915::CreateInstance,
+    "Unicode",
+    "ISO-8859-15"
+  },
+  {
     &kUnicodeToCP1250CID,
     nsUnicodeToCP1250::CreateInstance,
     "Unicode",
@@ -309,6 +441,30 @@ FactoryData g_FactoryData[] =
     "windows-1257"
   },
   {
+    &kUnicodeToCP1258CID,
+    nsUnicodeToCP1258::CreateInstance,
+    "Unicode",
+    "windows-1258"
+  },
+  {
+    &kUnicodeToCP874CID,
+    nsUnicodeToCP874::CreateInstance,
+    "Unicode",
+    "TIS-620"
+  },
+  {
+    &kUnicodeToKOI8RCID,
+    nsUnicodeToKOI8R::CreateInstance,
+    "Unicode",
+    "KOI8-R"
+  },
+  {
+    &kUnicodeToKOI8UCID,
+    nsUnicodeToKOI8U::CreateInstance,
+    "Unicode",
+    "KOI8-U"
+  },
+  {
     &kUnicodeToMacRomanCID,
     nsUnicodeToMacRoman::CreateInstance,
     "Unicode",
@@ -331,6 +487,60 @@ FactoryData g_FactoryData[] =
     nsUnicodeToMacTurkish::CreateInstance,
     "Unicode",
     "x-mac-turkish"
+  },
+  {
+    &kUnicodeToMacCroatianCID,
+    nsUnicodeToMacCroatian::CreateInstance,
+    "Unicode",
+    "x-mac-croatian"
+  },
+  {
+    &kUnicodeToMacRomanianCID,
+    nsUnicodeToMacRomanian::CreateInstance,
+    "Unicode",
+    "x-mac-romanian"
+  },
+  {
+    &kUnicodeToMacCyrillicCID,
+    nsUnicodeToMacCyrillic::CreateInstance,
+    "Unicode",
+    "x-mac-cyrillic"
+  },
+  {
+    &kUnicodeToMacUkrainianCID,
+    nsUnicodeToMacUkrainian::CreateInstance,
+    "Unicode",
+    "x-mac-ukrainian"
+  },
+  {
+    &kUnicodeToMacIcelandicCID,
+    nsUnicodeToMacIcelandic::CreateInstance,
+    "Unicode",
+    "x-mac-icelandic"
+  },
+  {
+    &kUnicodeToARMSCII8CID,
+    nsUnicodeToARMSCII8::CreateInstance,
+    "Unicode",
+    "armscii-8"
+  },
+  {
+    &kUnicodeToTCVN5712CID,
+    nsUnicodeToTCVN5712::CreateInstance,
+    "Unicode",
+    "x-viet-tcvn"
+  },
+  {
+    &kUnicodeToVISCIICID,
+    nsUnicodeToVISCII::CreateInstance,
+    "Unicode",
+    "VISCII"
+  },
+  {
+    &kUnicodeToVPSCID,
+    nsUnicodeToVPS::CreateInstance,
+    "Unicode",
+    "x-viet-vps"
   },
   {
     &kUnicodeToUTF8CID,
