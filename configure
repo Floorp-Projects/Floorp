@@ -133,7 +133,9 @@ ac_help="$ac_help
 ac_help="$ac_help
   --disable-jar-packaging Disable Jar packaging "
 ac_help="$ac_help
-  --enable-gprof          Enable gprof symbols"
+  --enable-eazel-profiler          Enable Corel/Eazel profiler"
+ac_help="$ac_help
+  --with-profile-modules    Enable/disable profile for specific modules only"
 ac_help="$ac_help
   --enable-perf-metrics   Enable performance metrics"
 ac_help="$ac_help
@@ -144,8 +146,6 @@ ac_help="$ac_help
 ac_help="$ac_help
   --with-insure-exclude-dirs=\$dirs
                           Dirs to not instrument "
-ac_help="$ac_help
-  --enable-profile        Enable profiling (solaris only)"
 ac_help="$ac_help
   --enable-boehm          Enable the Boehm Garbage Collector"
 ac_help="$ac_help
@@ -10771,16 +10771,31 @@ fi
 
 # Profiling and Instrumenting
 
-# Check whether --enable-gprof or --disable-gprof was given.
-if test "${enable_gprof+set}" = set; then
-  enableval="$enable_gprof"
+# Check whether --enable-eazel-profiler or --disable-eazel-profiler was given.
+if test "${enable_eazel_profiler+set}" = set; then
+  enableval="$enable_eazel_profiler"
   if test "$enableval" = "yes"; then
-     _GPROF_CFLAGS="-pg" 
+      ENABLE_EAZEL_PROFILER=1
+     cat >> confdefs.h <<\EOF
+#define ENABLE_EAZEL_PROFILER 1
+EOF
+
+     USE_ELF_DYNSTR_GC=
+     MOZ_COMPONENTS_VERSION_SCRIPT_LDFLAGS=
+     EAZEL_PROFILER_CFLAGS="-g -O -gdwarf-2 -finstrument-functions -D__NO_STRING_INLINES  -D__NO_MATH_INLINES"
+     EAZEL_PROFILER_LIBS="-lprofiler -lpthread"
   elif test "$enableval" = "no"; then
     :
   else
-    { echo "configure: error: Option, gprof, does not take an argument ($enableval)." 1>&2; exit 1; }
+    { echo "configure: error: Option, eazel-profiler, does not take an argument ($enableval)." 1>&2; exit 1; }
   fi
+fi
+
+
+# Check whether --with-profile-modules or --without-profile-modules was given.
+if test "${with_profile_modules+set}" = set; then
+  withval="$with_profile_modules"
+   MOZ_PROFILE_MODULES=`echo $withval | sed 's/,/ /g'`  
 fi
 
 
@@ -10825,19 +10840,6 @@ fi
 if test "${with_insure_exclude_dirs+set}" = set; then
   withval="$with_insure_exclude_dirs"
   MOZ_INSURE_EXCLUDE_DIRS="config $withval" 
-fi
-
-
-# Check whether --enable-profile or --disable-profile was given.
-if test "${enable_profile+set}" = set; then
-  enableval="$enable_profile"
-  if test "$enableval" = "yes"; then
-    MOZILLA_GPROF=1
-  elif test "$enableval" = "no"; then
-    :
-  else
-    { echo "configure: error: Option, profile, does not take an argument ($enableval)." 1>&2; exit 1; }
-  fi
 fi
 
 
@@ -10910,7 +10912,7 @@ fi
 
 
 echo $ac_n "checking webshell leaks option""... $ac_c" 1>&6
-echo "configure:10914: checking webshell leaks option" >&5
+echo "configure:10916: checking webshell leaks option" >&5
 # Check whether --enable-detect-webshell-leaks or --disable-detect-webshell-leaks was given.
 if test "${enable_detect_webshell_leaks+set}" = set; then
   enableval="$enable_detect_webshell_leaks"
@@ -10984,7 +10986,7 @@ if test "${enable_efence+set}" = set; then
   enableval="$enable_efence"
   if test "$enableval" = "yes"; then
     echo $ac_n "checking for malloc in -lefence""... $ac_c" 1>&6
-echo "configure:10988: checking for malloc in -lefence" >&5
+echo "configure:10990: checking for malloc in -lefence" >&5
 ac_lib_var=`echo efence'_'malloc | sed 'y%./+-%__p_%'`
 if eval "test \"`echo '$''{'ac_cv_lib_$ac_lib_var'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
@@ -10992,7 +10994,7 @@ else
   ac_save_LIBS="$LIBS"
 LIBS="-lefence  $LIBS"
 cat > conftest.$ac_ext <<EOF
-#line 10996 "configure"
+#line 10998 "configure"
 #include "confdefs.h"
 /* Override any gcc2 internal prototype to avoid an error.  */
 /* We use char because int might match the return type of a gcc2
@@ -11003,7 +11005,7 @@ int main() {
 malloc()
 ; return 0; }
 EOF
-if { (eval echo configure:11007: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
+if { (eval echo configure:11009: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
   rm -rf conftest*
   eval "ac_cv_lib_$ac_lib_var=yes"
 else
@@ -11039,7 +11041,7 @@ fi
 
 
 echo $ac_n "checking for cplus_demangle in -liberty""... $ac_c" 1>&6
-echo "configure:11043: checking for cplus_demangle in -liberty" >&5
+echo "configure:11045: checking for cplus_demangle in -liberty" >&5
 ac_lib_var=`echo iberty'_'cplus_demangle | sed 'y%./+-%__p_%'`
 if eval "test \"`echo '$''{'ac_cv_lib_$ac_lib_var'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
@@ -11047,7 +11049,7 @@ else
   ac_save_LIBS="$LIBS"
 LIBS="-liberty "-liberty" $LIBS"
 cat > conftest.$ac_ext <<EOF
-#line 11051 "configure"
+#line 11053 "configure"
 #include "confdefs.h"
 /* Override any gcc2 internal prototype to avoid an error.  */
 /* We use char because int might match the return type of a gcc2
@@ -11058,7 +11060,7 @@ int main() {
 cplus_demangle()
 ; return 0; }
 EOF
-if { (eval echo configure:11062: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
+if { (eval echo configure:11064: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
   rm -rf conftest*
   eval "ac_cv_lib_$ac_lib_var=yes"
 else
@@ -11339,7 +11341,7 @@ case "$target" in
 	    # Extract the first word of "makeC++SharedLib_r", so it can be a program name with args.
 set dummy makeC++SharedLib_r; ac_word=$2
 echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
-echo "configure:11343: checking for $ac_word" >&5
+echo "configure:11345: checking for $ac_word" >&5
 if eval "test \"`echo '$''{'ac_cv_path_AIX_SHLIB_BIN'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -11459,6 +11461,9 @@ esac
 
 
 
+
+
+
 # Check whether --with-jpeg or --without-jpeg was given.
 if test "${with_jpeg+set}" = set; then
   withval="$with_jpeg"
@@ -11475,7 +11480,7 @@ if test "$JPEG_DIR" = no; then
     SYSTEM_JPEG=
 else
     echo $ac_n "checking for jpeg_destroy_compress in -ljpeg""... $ac_c" 1>&6
-echo "configure:11479: checking for jpeg_destroy_compress in -ljpeg" >&5
+echo "configure:11484: checking for jpeg_destroy_compress in -ljpeg" >&5
 ac_lib_var=`echo jpeg'_'jpeg_destroy_compress | sed 'y%./+-%__p_%'`
 if eval "test \"`echo '$''{'ac_cv_lib_$ac_lib_var'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
@@ -11483,7 +11488,7 @@ else
   ac_save_LIBS="$LIBS"
 LIBS="-ljpeg $JPEG_LIBS $LIBS"
 cat > conftest.$ac_ext <<EOF
-#line 11487 "configure"
+#line 11492 "configure"
 #include "confdefs.h"
 /* Override any gcc2 internal prototype to avoid an error.  */
 /* We use char because int might match the return type of a gcc2
@@ -11494,7 +11499,7 @@ int main() {
 jpeg_destroy_compress()
 ; return 0; }
 EOF
-if { (eval echo configure:11498: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
+if { (eval echo configure:11503: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
   rm -rf conftest*
   eval "ac_cv_lib_$ac_lib_var=yes"
 else
@@ -11523,7 +11528,7 @@ if test "$SYSTEM_JPEG" = 1; then
   SYSTEM_JPEG= 
 else
   cat > conftest.$ac_ext <<EOF
-#line 11527 "configure"
+#line 11532 "configure"
 #include "confdefs.h"
 #include <stdio.h>
 	#include <sys/types.h>
@@ -11537,7 +11542,7 @@ else
 	}
 	
 EOF
-if { (eval echo configure:11541: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext} && (./conftest; exit) 2>/dev/null
+if { (eval echo configure:11546: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext} && (./conftest; exit) 2>/dev/null
 then
   SYSTEM_JPEG=1
 else
@@ -11575,16 +11580,16 @@ if test "$ZLIB_DIR" = no; then
     SYSTEM_ZLIB=
 else
     echo $ac_n "checking "for zlib.h"""... $ac_c" 1>&6
-echo "configure:11579: checking "for zlib.h"" >&5
+echo "configure:11584: checking "for zlib.h"" >&5
     cat > conftest.$ac_ext <<EOF
-#line 11581 "configure"
+#line 11586 "configure"
 #include "confdefs.h"
 #include "zlib.h"
 int main() {
 
 ; return 0; }
 EOF
-if { (eval echo configure:11588: \"$ac_compile\") 1>&5; (eval $ac_compile) 2>&5; }; then
+if { (eval echo configure:11593: \"$ac_compile\") 1>&5; (eval $ac_compile) 2>&5; }; then
   rm -rf conftest*
   result="yes" SYSTEM_ZLIB=1
 else
@@ -11598,7 +11603,7 @@ rm -f conftest*
 fi
 if test "$SYSTEM_ZLIB" = 1; then
     echo $ac_n "checking for gzread in -lz""... $ac_c" 1>&6
-echo "configure:11602: checking for gzread in -lz" >&5
+echo "configure:11607: checking for gzread in -lz" >&5
 ac_lib_var=`echo z'_'gzread | sed 'y%./+-%__p_%'`
 if eval "test \"`echo '$''{'ac_cv_lib_$ac_lib_var'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
@@ -11606,7 +11611,7 @@ else
   ac_save_LIBS="$LIBS"
 LIBS="-lz $ZLIB_LIBS $LIBS"
 cat > conftest.$ac_ext <<EOF
-#line 11610 "configure"
+#line 11615 "configure"
 #include "confdefs.h"
 /* Override any gcc2 internal prototype to avoid an error.  */
 /* We use char because int might match the return type of a gcc2
@@ -11617,7 +11622,7 @@ int main() {
 gzread()
 ; return 0; }
 EOF
-if { (eval echo configure:11621: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
+if { (eval echo configure:11626: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
   rm -rf conftest*
   eval "ac_cv_lib_$ac_lib_var=yes"
 else
@@ -11663,7 +11668,7 @@ if test "$PNG_DIR" = no; then
     SYSTEM_PNG=
 else
     echo $ac_n "checking for png_get_valid in -lpng""... $ac_c" 1>&6
-echo "configure:11667: checking for png_get_valid in -lpng" >&5
+echo "configure:11672: checking for png_get_valid in -lpng" >&5
 ac_lib_var=`echo png'_'png_get_valid | sed 'y%./+-%__p_%'`
 if eval "test \"`echo '$''{'ac_cv_lib_$ac_lib_var'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
@@ -11671,7 +11676,7 @@ else
   ac_save_LIBS="$LIBS"
 LIBS="-lpng $PNG_LIBS $LIBS"
 cat > conftest.$ac_ext <<EOF
-#line 11675 "configure"
+#line 11680 "configure"
 #include "confdefs.h"
 /* Override any gcc2 internal prototype to avoid an error.  */
 /* We use char because int might match the return type of a gcc2
@@ -11682,7 +11687,7 @@ int main() {
 png_get_valid()
 ; return 0; }
 EOF
-if { (eval echo configure:11686: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
+if { (eval echo configure:11691: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
   rm -rf conftest*
   eval "ac_cv_lib_$ac_lib_var=yes"
 else
@@ -11710,7 +11715,7 @@ if test "$SYSTEM_PNG" = 1; then
   SYSTEM_PNG= 
 else
   cat > conftest.$ac_ext <<EOF
-#line 11714 "configure"
+#line 11719 "configure"
 #include "confdefs.h"
 #include <stdio.h>
 	#include <sys/types.h>
@@ -11724,7 +11729,7 @@ else
 	}
 	
 EOF
-if { (eval echo configure:11728: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext} && (./conftest; exit) 2>/dev/null
+if { (eval echo configure:11733: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext} && (./conftest; exit) 2>/dev/null
 then
   SYSTEM_PNG=1
 else
@@ -11791,9 +11796,9 @@ CFLAGS="$CFLAGS -I${FULLCIRCLE_DIR}"
 LDFLAGS="$LDFLAGS -L${FULLCIRCLE_DIR}"
 LIBS="-lfullsoft $LIBS"
 echo $ac_n "checking "for FCInitialize in -lfullsoft"""... $ac_c" 1>&6
-echo "configure:11795: checking "for FCInitialize in -lfullsoft"" >&5;
+echo "configure:11800: checking "for FCInitialize in -lfullsoft"" >&5;
 cat > conftest.$ac_ext <<EOF
-#line 11797 "configure"
+#line 11802 "configure"
 #include "confdefs.h"
  #include <stdio.h>
 	      #include "fullsoft.h" 
@@ -11801,7 +11806,7 @@ int main() {
  FCInitialize(); exit(0); 
 ; return 0; }
 EOF
-if { (eval echo configure:11805: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
+if { (eval echo configure:11810: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
   rm -rf conftest*
   FULLCIRCLE_LIBS="-I${FULLCIRCLE_DIR} -L${FULLCIRCLE_DIR} -lfullsoft" result="yes"
 else
@@ -11838,14 +11843,12 @@ fi
 
 CFLAGS=`echo \
 	$_WARNINGS_CFLAGS \
-	$_GPROF_CFLAGS \
 	$CFLAGS`
 
 CXXFLAGS=`echo \
 	$_MOZ_RTTI_FLAGS \
 	$_MOZ_EXCEPTIONS_FLAGS \
 	$_WARNINGS_CXXFLAGS \
-	$_GPROF_CFLAGS \
 	$CXXFLAGS`
 
 COMPILE_CFLAGS=`echo \
@@ -12420,12 +12423,15 @@ s%@MOZ_SECURITY@%$MOZ_SECURITY%g
 s%@BUILD_MODULES@%$BUILD_MODULES%g
 s%@MOZ_DEBUG@%$MOZ_DEBUG%g
 s%@MOZ_DEBUG_MODULES@%$MOZ_DEBUG_MODULES%g
+s%@MOZ_PROFILE_MODULES@%$MOZ_PROFILE_MODULES%g
 s%@MOZ_DEBUG_ENABLE_DEFS@%$MOZ_DEBUG_ENABLE_DEFS%g
 s%@MOZ_DEBUG_DISABLE_DEFS@%$MOZ_DEBUG_DISABLE_DEFS%g
 s%@MOZ_DEBUG_FLAGS@%$MOZ_DEBUG_FLAGS%g
 s%@MOZ_DBGRINFO_MODULES@%$MOZ_DBGRINFO_MODULES%g
 s%@MOZ_EXTENSIONS@%$MOZ_EXTENSIONS%g
-s%@MOZILLA_GPROF@%$MOZILLA_GPROF%g
+s%@ENABLE_EAZEL_PROFILER@%$ENABLE_EAZEL_PROFILER%g
+s%@EAZEL_PROFILER_CFLAGS@%$EAZEL_PROFILER_CFLAGS%g
+s%@EAZEL_PROFILER_LIBS@%$EAZEL_PROFILER_LIBS%g
 s%@MOZ_PERF_METRICS@%$MOZ_PERF_METRICS%g
 s%@GC_LEAK_DETECTOR@%$GC_LEAK_DETECTOR%g
 s%@MOZ_LOG_REFCNT@%$MOZ_LOG_REFCNT%g
