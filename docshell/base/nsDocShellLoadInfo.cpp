@@ -111,6 +111,20 @@ NS_IMETHODIMP nsDocShellLoadInfo::SetOwner(nsISupports* aOwner)
    return NS_OK;
 }
 
+NS_IMETHODIMP nsDocShellLoadInfo::GetSHEntry(nsISHEntry** aSHEntry)
+{
+   NS_ENSURE_ARG_POINTER(aSHEntry);
+
+   *aSHEntry = mSHEntry;
+   NS_IF_ADDREF(*aSHEntry);
+   return NS_OK;
+}
+
+NS_IMETHODIMP nsDocShellLoadInfo::SetSHEntry(nsISHEntry* aSHEntry)
+{
+   mSHEntry = aSHEntry;
+   return NS_OK;
+}
 //*****************************************************************************
 // nsDocShellLoadInfo: Helpers
 //*****************************************************************************   
