@@ -107,8 +107,7 @@
               <treecell label="rdf:http://home.netscape.com/NC-rdf#Name"
                         sortName="rdf:http://home.netscape.com/NC-rdf#Name?sort=true"
                         visitcount="rdf:http://home.netscape.com/NC-rdf#VisitCount"
-                        date="rdf:http://home.netscape.com/NC-rdf#Date"
-                        properties="linkTree"/>
+                        date="rdf:http://home.netscape.com/NC-rdf#Date"/>
             </treerow>
           </treeitem>
         </treechildren>
