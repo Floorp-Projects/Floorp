@@ -90,7 +90,8 @@ Contributor(s):
         <label value="&location.label;" accesskey="&location.accesskey;" 
                control="mailnews.start_page.url"/>
         <textbox id="mailnewsStartPageUrl" flex="1" preftype="localizedstring"
-                 prefstring="mailnews.start_page.url"/>
+                 type="autocomplete" prefstring="mailnews.start_page.url"
+                 searchSessions="history" timeout="50" maxrows="6"/>
       </hbox>
 
     <hbox pack="end">
