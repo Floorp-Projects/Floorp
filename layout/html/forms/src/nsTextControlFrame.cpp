@@ -2430,8 +2430,9 @@ nsTextControlFrame::DOMPointToOffset(nsIDOMNode* aNode,
     return NS_OK;
 
   PRInt32 i, textOffset = 0;
+  PRInt32 lastIndex = (PRInt32)length - 1;
 
-  for (i = 0; i < length; i++) {
+  for (i = 0; i < (PRInt32)length; i++) {
     if (rootNode == aNode && i == aNodeOffset) {
       *aResult = textOffset;
       return NS_OK;
@@ -2451,7 +2452,7 @@ nsTextControlFrame::DOMPointToOffset(nsIDOMNode* aNode,
       NS_ENSURE_SUCCESS(rv, rv);
 
       if (item == aNode) {
-        NS_ASSERTION((aNodeOffset >= 0 && aNodeOffset <= textLength),
+        NS_ASSERTION((aNodeOffset >= 0 && aNodeOffset <= (PRInt32)textLength),
                      "Invalid aNodeOffset!");
         *aResult = textOffset + aNodeOffset;
         return NS_OK;
@@ -2460,13 +2461,15 @@ nsTextControlFrame::DOMPointToOffset(nsIDOMNode* aNode,
       textOffset += textLength;
     }
     else {
-      // Must be a BR node, count it as a newline.
+      // Must be a BR node. If it's not the last BR node
+      // under the root, count it as a newline.
 
-      ++textOffset;
+      if (i != lastIndex)
+        ++textOffset;
     }
   }
 
-  NS_ASSERTION((aNode == rootNode && aNodeOffset == length),
+  NS_ASSERTION((aNode == rootNode && aNodeOffset == (PRInt32)length),
                "Invalide node offset!");
 
   *aResult = textOffset;
