@@ -922,7 +922,7 @@ NS_IMETHODIMP nsImapIncomingServer::PossibleImapMailbox(const char *folderPath, 
         explicitlyVerify = !(boxFlags & kNameSpace);
     }
 
-    nsCAutoString folderName(dupFolderPat);
+    nsCAutoString folderName(dupFolderPath);
         
     nsCAutoString uri;
 	nsXPIDLCString serverUri;
