@@ -34,7 +34,7 @@ public class Splash extends JWindow {
 
   public Splash() {
     super();
-    ImageIcon image = new ImageIcon("ui/images/splash.gif");
+    ImageIcon image = new ImageIcon(getClass().getResource("images/GrendelSplash.jpg"));
     JLabel splashLabel = new JLabel(image);
     getContentPane().add(splashLabel);
     
