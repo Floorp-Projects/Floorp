@@ -498,8 +498,8 @@ nsAppShellService::CreateTopLevelWindow(nsIWebShellWindow *aParent,
 
     if (aInitialWidth == NS_SIZETOCONTENT ||
         aInitialHeight == NS_SIZETOCONTENT) {
-      aInitialWidth = 0;
-      aInitialHeight = 0;
+      aInitialWidth = 1;
+      aInitialHeight = 1;
       showWindow = PR_FALSE; // Don't show until we have the intrinsic size figured out.
       window->SetIntrinsicallySized(PR_TRUE);
     }
@@ -558,8 +558,8 @@ nsAppShellService::CreateDialogWindow(nsIWebShellWindow * aParent,
 
     if (aInitialWidth == NS_SIZETOCONTENT ||
         aInitialHeight == NS_SIZETOCONTENT) {
-      aInitialWidth = 0;
-      aInitialHeight = 0;
+      aInitialWidth = 1;
+      aInitialHeight = 1;
       showWindow = PR_FALSE; // Don't show until we have the intrinsic size figured out.
       window->SetIntrinsicallySized(PR_TRUE);
     }
