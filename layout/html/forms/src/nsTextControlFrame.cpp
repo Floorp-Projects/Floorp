@@ -243,12 +243,12 @@ nsTextControlFrame::GetDesiredSize(nsIPresContext* aPresContext,
                                        areaSpec, desiredSize, minSize, widthExplicit, heightExplicit, ignore);
   }
 
+  float   p2t;
+  aPresContext->GetPixelsToTwips(&p2t);
   if (NS_FORM_TEXTAREA == type) {
     nscoord scrollbarWidth  = 0;
     nscoord scrollbarHeight = 0;
     float   scale;
-    float   p2t;
-    aPresContext->GetPixelsToTwips(&p2t);
     nsCOMPtr<nsIDeviceContext> dx;
     aPresContext->GetDeviceContext(getter_AddRefs(dx));
     if (dx) { 
@@ -273,9 +273,21 @@ nsTextControlFrame::GetDesiredSize(nsIPresContext* aPresContext,
     }
   }
 
-  aDesiredLayoutSize.width  = desiredSize.width;
-  aDesiredLayoutSize.height = desiredSize.height;
-  aDesiredLayoutSize.ascent = aDesiredLayoutSize.height;
+  if (eCompatibility_Standard == mode) {
+    nsILookAndFeel * lookAndFeel;
+    if (NS_OK == nsComponentManager::CreateInstance(kLookAndFeelCID, nsnull, kILookAndFeelIID, (void**)&lookAndFeel)) {
+      PRInt32 borderSize;
+      lookAndFeel->GetMetric(nsILookAndFeel::eMetric_TextFieldBorder, borderSize);
+      nscoord borderTwips = NSIntPixelsToTwips(borderSize, p2t);
+      desiredSize.width  -= borderTwips*2;
+      desiredSize.height -= borderTwips*2;
+      NS_RELEASE(lookAndFeel);
+    }
+  }
+
+  aDesiredLayoutSize.width   = desiredSize.width;
+  aDesiredLayoutSize.height  = desiredSize.height;
+  aDesiredLayoutSize.ascent  = aDesiredLayoutSize.height;
   aDesiredLayoutSize.descent = 0;
 
   if (aDesiredLayoutSize.maxElementSize) {
