@@ -1,4 +1,4 @@
-# $Id: Common.pm,v 1.23 2001/08/31 00:46:09 myk%mozilla.org Exp $
+# $Id: Common.pm,v 1.24 2004/02/19 06:53:22 timeless%mozdev.org Exp $
 
 package LXR::Common;
 
@@ -440,6 +440,21 @@ sub init {
     return($Conf, $HTTP, $Path);
     }
 
+sub pretty_date
+{
+    my $time = shift;
+    my @t = gmtime($time);
+    my ($sec, $min, $hour, $mday, $mon, $year,$wday) = @t;
+    my @days = ("Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat");
+    my @months = ("Jan", "Feb", "Mar", "Apr", "May", "Jun",
+		  "Jul", "Aug", "Sep", "Oct", "Nov", "Dec");
+    $year += 1900;
+    $wday = $days[$wday];
+    $mon = $months[$mon];
+    return sprintf("%s, %2d %s %d %02d:%02d:%02d GMT",
+		  $wday, $mday, $mon, $year, $hour, $min, $sec);
+}
+
 sub init_all {
     my ($argv_0) = @_;
 
@@ -484,19 +499,12 @@ sub init_all {
 	if ($file1) { $time1 = (stat($file1))[9]; }
 	if ($file2) { $time2 = (stat($file2))[9]; }
 
-	my $time = ($time1 > $time2 ? $time1 : $time2);
-	if ($time > 0) {
-	    my @t = gmtime($time);
-	    my ($sec, $min, $hour, $mday, $mon, $year,$wday) = @t;
-	    my @days = ("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun");
-	    my @months = ("Jan", "Feb", "Mar", "Apr", "May", "Jun",
-			  "Jul", "Aug", "Sep", "Oct", "Nov", "Dec");
-	    $year += 1900;
-	    $wday = $days[$wday];
-	    $mon = $months[$mon];
+	my $mod_time = ($time1 > $time2 ? $time1 : $time2);
+	if ($mod_time > 0) {
 	    # Last-Modified: Wed, 10 Dec 1997 00:55:32 GMT
-	    print sprintf("Last-Modified: %s, %2d %s %d %02d:%02d:%02d GMT\n",
-			  $wday, $mday, $mon, $year, $hour, $min, $sec);
+	    print ("Last-Modified: ".(pretty_date($mod_time))."\n");
+	    # Expires: Thu, 11 Dec 1997 00:55:32 GMT
+	    print ("Expires: ".(pretty_date(time+1200))."\n");
 	}
 
 	# Close the HTTP header block.
