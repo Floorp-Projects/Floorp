@@ -51,7 +51,7 @@ char *gSession;
 char *gDenied;
 nsPrivilegeTable *gPrivilegeTable;
 
-static PRBool getPrincipalString(nsHashKey *aKey, void *aData);
+static PRBool getPrincipalString(nsHashKey *aKey, void *aData, void* closure);
 
 static nsPrincipal *RDF_getPrincipal(JSec_Principal jsec_pr);
 static PRBool RDF_RemovePrincipal(nsPrincipal *prin);
@@ -765,7 +765,7 @@ PRBool nsPrivilegeManager::checkMatchPrincipal(void* context, nsPrincipal *prin,
   return (comparePrincipalArray(prinArray, classPrinArray) != nsSetComparisonType_NoSubset) ? PR_TRUE : PR_FALSE;
 }
 
-static PRBool getPrincipalString(nsHashKey *aKey, void *aData) 
+static PRBool getPrincipalString(nsHashKey *aKey, void *aData, void* closure) 
 {
   /* Admin UI */
   /* XXX: Ignore empty strings */
@@ -813,7 +813,7 @@ nsPrincipal * nsPrivilegeManager::getPrincipalFromString(char *prinName)
   return prin;
 }
 
-static PRBool getPermissionsString(nsHashKey *aKey, void *aData) 
+static PRBool getPermissionsString(nsHashKey *aKey, void *aData, void* closure) 
 {
   /* Admin UI */
   TargetKey *targetKey = (TargetKey *) aKey;
@@ -895,7 +895,7 @@ PRBool nsPrivilegeManager::removePrincipalsPrivilege(char *prinName,
   return PR_TRUE;
 }
 
-static PRBool updatePrivileges(nsHashKey *aKey, void *aData) 
+static PRBool updatePrivileges(nsHashKey *aKey, void *aData, void* closure) 
 {
   /* Admin UI */
   TargetKey *targetKey = (TargetKey *) aKey;

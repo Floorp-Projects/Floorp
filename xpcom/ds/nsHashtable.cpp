@@ -71,11 +71,17 @@ static PLHashAllocOps _hashAllocOps = {
 // Enumerator callback
 //
 
+struct _HashEnumerateArgs {
+  nsHashtableEnumFunc fn;
+  void* arg;
+};
+
 static PR_CALLBACK PRIntn _hashEnumerate(PLHashEntry *he, PRIntn i, void *arg)
 {
-  return ((nsHashtableEnumFunc) arg)((nsHashKey *) he->key, he->value) ? 
-    HT_ENUMERATE_NEXT : 
-    HT_ENUMERATE_STOP;
+  _HashEnumerateArgs* thunk = (_HashEnumerateArgs*)arg;
+  return thunk->fn((nsHashKey *) he->key, he->value, thunk->arg)
+    ? HT_ENUMERATE_NEXT
+    : HT_ENUMERATE_STOP;
 }
 
 //
@@ -151,6 +157,9 @@ nsHashtable * nsHashtable::Clone() {
   return newHashTable;
 }
 
-void nsHashtable::Enumerate(nsHashtableEnumFunc aEnumFunc) {
-  PL_HashTableEnumerateEntries(hashtable, _hashEnumerate, aEnumFunc);
+void nsHashtable::Enumerate(nsHashtableEnumFunc aEnumFunc, void* closure) {
+  _HashEnumerateArgs thunk;
+  thunk.fn = aEnumFunc;
+  thunk.arg = closure;
+  PL_HashTableEnumerateEntries(hashtable, _hashEnumerate, &thunk);
 }

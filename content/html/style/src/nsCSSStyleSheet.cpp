@@ -144,7 +144,7 @@ RuleHash::RuleHash(void)
 {
 }
 
-static PRBool DeleteValue(nsHashKey* aKey, void* aValue)
+static PRBool DeleteValue(nsHashKey* aKey, void* aValue, void* closure)
 {
   delete ((RuleValue*)aValue);
   return PR_TRUE;

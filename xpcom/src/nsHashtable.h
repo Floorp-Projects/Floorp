@@ -34,7 +34,7 @@ public:
 
 // Enumerator callback function. Use
 
-typedef PRBool (*nsHashtableEnumFunc)(nsHashKey *aKey, void *aData);
+typedef PRBool (*nsHashtableEnumFunc)(nsHashKey *aKey, void *aData, void* closure);
 
 class NS_COM nsHashtable {
 private:
@@ -50,7 +50,7 @@ public:
   void *Get(nsHashKey *aKey);
   void *Remove(nsHashKey *aKey);
   nsHashtable *Clone();
-  void Enumerate(nsHashtableEnumFunc aEnumFunc);
+  void Enumerate(nsHashtableEnumFunc aEnumFunc, void* closure = NULL);
 };
 
 #endif
