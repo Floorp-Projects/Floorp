@@ -1517,16 +1517,16 @@ CPluginInstancePeer::NewStream(nsMIMEType type, const char* target,
     assert( npp != NULL );
     
     // Create a new NPStream.
-    NPStream* ptr = NULL;
-    NPError error = NPN_NewStream(npp, (NPMIMEType)type, target, &ptr);
-    if (error) 
+    NPStream* stream = NULL;
+    NPError error = NPN_NewStream(npp, (NPMIMEType)type, target, &stream);
+    if (error != NPERR_NO_ERROR)
         return fromNPError[error];
     
     // Create a new Plugin Manager Stream.
     // XXX - Do we have to Release() the manager stream before doing this?
     // XXX - See the BAM doc for more info.
-    CPluginManagerStream* mstream = new CPluginManagerStream(npp, ptr);
-    if (mstream == NULL) 
+    CPluginManagerStream* mstream = new CPluginManagerStream(npp, stream);
+    if (mstream == NULL)
         return NS_ERROR_OUT_OF_MEMORY;
     mstream->AddRef();
     *result = (nsIOutputStream* )mstream;
