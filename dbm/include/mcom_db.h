@@ -397,12 +397,6 @@ void	 __dbpanic (DB *dbp);
 
 __END_DECLS
 
-#ifdef linux
-#if BYTE_ORDER != LITTLE_ENDIAN
-#define BYTE_ORDER LITTLE_ENDIAN
-#endif
-#endif
-
 #if defined(__hpux) || defined(__hppa)
 #define BYTE_ORDER BIG_ENDIAN
 #define BIG_ENDIAN      4321
@@ -419,8 +413,9 @@ __END_DECLS
 #include <sys/machine.h>
 #endif
 
-#ifdef __alpha
-#include <endian.h>
+/* Digital Unix */
+#ifdef __osf__
+#include <machine/endian.h>
 #endif
 
 #endif /* !_DB_H_ */
