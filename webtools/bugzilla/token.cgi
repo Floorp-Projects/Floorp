@@ -32,6 +32,7 @@ use lib qw(.);
 use vars qw($template $vars);
 
 use Bugzilla;
+my $cgi = Bugzilla->cgi;
 
 # Include the Bugzilla CGI and general utility library.
 require "CGI.pl";
@@ -52,16 +53,16 @@ use Bugzilla::User;
 
 # Throw an error if the form does not contain an "action" field specifying
 # what the user wants to do.
-$::FORM{'a'} || ThrowCodeError("unknown_action");
+$cgi->param('a') || ThrowCodeError("unknown_action");
 
 # Assign the action to a global variable.
-$::action = $::FORM{'a'};
+$::action = $cgi->param('a');
 
 # If a token was submitted, make sure it is a valid token that exists in the
 # database and is the correct type for the action being taken.
-if ($::FORM{'t'}) {
+if ($cgi->param('t')) {
   # Assign the token and its SQL quoted equivalent to global variables.
-  $::token = $::FORM{'t'};
+  $::token = $cgi->param('t');
   $::quotedtoken = SqlQuote($::token);
   
   # Make sure the token contains only valid characters in the right amount.
@@ -97,14 +98,14 @@ if ($::FORM{'t'}) {
 # If the user is requesting a password change, make sure they submitted
 # their login name and it exists in the database.
 if ( $::action eq 'reqpw' ) {
-    defined $::FORM{'loginname'}
+    defined $cgi->param('loginname')
       || ThrowUserError("login_needed_for_password_change");
 
     # Make sure the login name looks like an email address.  This function
     # displays its own error and stops execution if the login name looks wrong.
-    CheckEmailSyntax($::FORM{'loginname'});
+    CheckEmailSyntax($cgi->param('loginname'));
 
-    my $quotedloginname = SqlQuote($::FORM{'loginname'});
+    my $quotedloginname = SqlQuote($cgi->param('loginname'));
     SendSQL("SELECT userid FROM profiles WHERE login_name = $quotedloginname");
     FetchSQLData()
       || ThrowUserError("account_inexistent");
@@ -113,11 +114,11 @@ if ( $::action eq 'reqpw' ) {
 # If the user is changing their password, make sure they submitted a new
 # password and that the new password is valid.
 if ( $::action eq 'chgpw' ) {
-    defined $::FORM{'password'}
-      && defined $::FORM{'matchpassword'}
+    defined $cgi->param('password')
+      && defined $cgi->param('matchpassword')
       || ThrowUserError("require_new_password");
 
-    ValidatePassword($::FORM{'password'}, $::FORM{'matchpassword'});
+    ValidatePassword($cgi->param('password'), $cgi->param('matchpassword'));
 }
 
 ################################################################################
@@ -156,11 +157,11 @@ exit;
 ################################################################################
 
 sub requestChangePassword {
-    Token::IssuePasswordToken($::FORM{'loginname'});
+    Token::IssuePasswordToken($cgi->param('loginname'));
 
     $vars->{'message'} = "password_change_request";
 
-    print Bugzilla->cgi->header();
+    print $cgi->header();
     $template->process("global/message.html.tmpl", $vars)
       || ThrowTemplateError($template->error());
 }
@@ -168,7 +169,7 @@ sub requestChangePassword {
 sub confirmChangePassword {
     $vars->{'token'} = $::token;
     
-    print Bugzilla->cgi->header();
+    print $cgi->header();
     $template->process("account/password/set-forgotten-password.html.tmpl", $vars)
       || ThrowTemplateError($template->error());
 }
@@ -177,14 +178,14 @@ sub cancelChangePassword {
     $vars->{'message'} = "password_change_canceled";
     Token::Cancel($::token, $vars->{'message'});
 
-    print Bugzilla->cgi->header();
+    print $cgi->header();
     $template->process("global/message.html.tmpl", $vars)
       || ThrowTemplateError($template->error());
 }
 
 sub changePassword {
     # Quote the password and token for inclusion into SQL statements.
-    my $cryptedpassword = Crypt($::FORM{'password'});
+    my $cryptedpassword = Crypt($cgi->param('password'));
     my $quotedpassword = SqlQuote($cryptedpassword);
 
     # Get the user's ID from the tokens table.
@@ -204,14 +205,14 @@ sub changePassword {
 
     $vars->{'message'} = "password_changed";
 
-    print Bugzilla->cgi->header();
+    print $cgi->header();
     $template->process("global/message.html.tmpl", $vars)
       || ThrowTemplateError($template->error());
 }
 
 sub confirmChangeEmail {
     # Return HTTP response headers.
-    print Bugzilla->cgi->header();
+    print $cgi->header();
 
     $vars->{'token'} = $::token;
 
@@ -229,7 +230,7 @@ sub changeEmail {
     my $quotednewemail = SqlQuote($new_email);
 
     # Check the user entered the correct old email address
-    if(lc($::FORM{'email'}) ne lc($old_email)) {
+    if(lc($cgi->param('email')) ne lc($old_email)) {
         ThrowUserError("email_confirmation_failed");
     }
     # The new email address should be available as this was 
@@ -256,7 +257,7 @@ sub changeEmail {
     $user->derive_groups;
 
     # Return HTTP response headers.
-    print Bugzilla->cgi->header();
+    print $cgi->header();
 
     # Let the user know their email address has been changed.
 
@@ -316,7 +317,7 @@ sub cancelChangeEmail {
     SendSQL("UNLOCK TABLES");
 
     # Return HTTP response headers.
-    print Bugzilla->cgi->header();
+    print $cgi->header();
 
     $template->process("global/message.html.tmpl", $vars)
       || ThrowTemplateError($template->error());
