@@ -39,6 +39,7 @@
 
 #include "nsJAR.h"
 #include "nsIJARFactory.h"
+#include "nsZlibAllocator.h"
 
 // The list of components we register
 static nsModuleComponentInfo components[] = 
@@ -55,8 +56,11 @@ static nsModuleComponentInfo components[] =
     }
 };
 
-NS_IMPL_NSGETMODULE(nsJarModule, components);
+// Jar module shutdown hook
+static void PR_CALLBACK nsJarShutdown(nsIModule *module)
+{
+    // Release cached buffers from zlib allocator
+    delete gZlibAllocator;
+}
 
-
-
-
+NS_IMPL_NSGETMODULE_WITH_DTOR(nsJarModule, components, nsJarShutdown);
