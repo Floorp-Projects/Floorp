@@ -77,40 +77,40 @@ public class CPGenerator
 	
 	private static String getMetadataPath()
 	{
-		return ( getLocalPath() + File.separator + "metadata" + File.separator + "html" );
+		return ( getLocalPath() + "metadata" + File.separator + "html" + File.separator );
 	}
 	
 	private static String getISPPath()
 	{
-		return ( getLocalPath() + File.separator + "isp" );
+		return ( getLocalPath() + "isp" + File.separator );
 	}
 	
 	private static String getJarFilePath( ISPDynamicData isp )
 	{
-		return new String( getISPPath() + File.separator + isp.getLanguage() +
-							File.separator + isp.getName() + File.separator + isp.getName() + ".jar" );
+		return new String( getISPPath() + isp.getLanguage() + File.separator +
+							isp.getName() + File.separator + isp.getName() + ".jar" );
     }
 
 	private static String getConfigPath( ISPDynamicData isp )
 	{
-		return new String( getISPPath() + File.separator + isp.getLanguage() +
-						File.separator + isp.getName() + File.separator + "client_data" +
-						File.separator + "config" );
+		return new String( getISPPath() + isp.getLanguage() + File.separator +
+							isp.getName() + File.separator + "client_data" +
+								File.separator + "config" + File.separator );
     }
 
 	private static String getConfigFilePath( ISPDynamicData isp )
 	{
-		return new String( getConfigPath( isp ) + File.separator + "config.ias" );
+		return new String( getConfigPath( isp ) + "config.ias" );
 	}
 	
 	private static String getCompareFilePath( ISPDynamicData isp )
 	{
-		return new String( getConfigPath( isp ) + File.separator + "compare.cfg" );
+		return new String( getConfigPath( isp ) + "compare.cfg" );
 	}
 
 	private static String getMasterFilePath( ISPDynamicData isp )
 	{
-		return new String( getConfigPath( isp ) + File.separator + "master.cfg" );
+		return new String( getConfigPath( isp ) + "master.cfg" );
 	}
 	
 	private static ISPDynamicData getISPDynamicData( String ispName )
@@ -390,9 +390,9 @@ public class CPGenerator
 						{
                             successful = true;
 
-                            String          criterionFileName = getMetadataPath() + File.separator + buffer.toString() + ".mat"; /* will be something like "template1.mat" */
-                            String          templateFileName = getMetadataPath() + File.separator + buffer.toString() + ".tmpl"; /* will be something like "template1.tmpl" */
-                            String          outputFileName = getMetadataPath() + File.separator + buffer.toString() + ".html";
+                            String          criterionFileName = getMetadataPath() + buffer.toString() + ".mat"; /* will be something like "template1.mat" */
+                            String          templateFileName = getMetadataPath() + buffer.toString() + ".tmpl"; /* will be something like "template1.tmpl" */
+                            String          outputFileName = getMetadataPath() + buffer.toString() + ".html";
 
                             //Trace.TRACE( "criterionFile: " + criterionFileName );
                             //Trace.TRACE( "templateFile: " + templateFileName );
@@ -605,7 +605,7 @@ public class CPGenerator
 	private static void downloadAndUnzipMetadata( String rootURL ) throws Throwable
 	{
 	    String          zipFileURL =  rootURL + "metadata.jar";
-		String			localFileName = getLocalPath() + File.separator + "metadata.jar";
+		String			localFileName = getLocalPath() + "metadata.jar";
 		
 		ServerDownload.downloadURL( zipFileURL, localFileName );
 		ServerDownload.unJarFile( localFileName, true );
@@ -722,7 +722,7 @@ public class CPGenerator
 			decompressJarFiles( ispList );
 			
 			//Trace.TRACE( "features.cfg settings: " );
-			String		featuresConfigPath = getLocalPath() + File.separator + "metadata" + 
+			String		featuresConfigPath = getLocalPath() + "metadata" + 
 												File.separator + "config" + File.separator + "features.cfg";
 
 
@@ -743,8 +743,8 @@ public class CPGenerator
         //  }
 
 			// * now, generate the compare page using the compare page template and the name/value pairs for each ISP
-			File inputFile = new File( getMetadataPath() + File.separator + comparePageTemplateFileName );
-			File outputFile = new File( getLocalPath() + File.separator + comparePageFileName );
+			File inputFile = new File( getMetadataPath() + comparePageTemplateFileName );
+			File outputFile = new File( getLocalPath() + comparePageFileName );
 			
 			BufferedReader  bufferedReader = new BufferedReader( new FileReader( inputFile ) );
 			BufferedWriter  bufferedWriter = new BufferedWriter( new FileWriter( outputFile ) );
