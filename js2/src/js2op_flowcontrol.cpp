@@ -98,7 +98,7 @@
             JS2Object *obj = JS2VAL_TO_OBJECT(a);
             ASSERT(obj->kind == ForIteratorKind);
             ForIteratorObject *fi = checked_cast<ForIteratorObject *>(obj);
-            push(BOOLEAN_TO_JS2VAL(fi->next()));
+            push(BOOLEAN_TO_JS2VAL(fi->next(this)));
         }
         break;
 

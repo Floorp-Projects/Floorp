@@ -347,7 +347,12 @@ namespace MetaData {
                         && ((topFrame->kind == GlobalObjectKind)
                                         || (topFrame->kind == ParameterKind))
                         && (f->attributes == NULL)) {
-                    defineHoistedVar(env, f->function.name, p);
+                    HoistedVar *v = defineHoistedVar(env, f->function.name, p);
+                    // XXX Here ths spec. has ???, so the following is tentative
+                    FixedInstance *fInst = new FixedInstance(functionClass);
+                    fInst->fWrap = new FunctionWrapper(unchecked, compileFrame);
+                    f->fWrap = fInst->fWrap;
+                    v->value = OBJECT_TO_JS2VAL(fInst);
                 }
                 else {
                     FixedInstance *fInst = new FixedInstance(functionClass);
@@ -910,6 +915,8 @@ namespace MetaData {
                 bCon = f->fWrap->bCon;
                 env->addFrame(f->fWrap->compileFrame);
                 EvalStmt(env, phase, f->function.body);
+                // XXX need to make sure that all paths lead to an exit of some kind
+                bCon->emitOp(eReturnVoid, p->pos);
                 env->removeTopFrame();
                 bCon = saveBacon;
             }
@@ -2359,8 +2366,9 @@ doUnary:
     }
 
     // Define a hoisted var in the current frame (either Global or a Function)
-    void JS2Metadata::defineHoistedVar(Environment *env, const StringAtom *id, StmtNode *p)
+    HoistedVar *JS2Metadata::defineHoistedVar(Environment *env, const StringAtom *id, StmtNode *p)
     {
+        HoistedVar *result = NULL;
         QualifiedName qName(publicNamespace, *id);
         Frame *regionalFrame = env->getRegionalFrame();
         ASSERT((env->getTopFrame()->kind == GlobalObjectKind) || (env->getTopFrame()->kind == ParameterKind));
@@ -2368,14 +2376,13 @@ doUnary:
         // run through all the existing bindings, both read and write, to see if this
         // variable already exists.
         StaticBindingIterator b, end;
-        bool existing = false;
         for (b = regionalFrame->staticReadBindings.lower_bound(*id),
                 end = regionalFrame->staticReadBindings.upper_bound(*id); (b != end); b++) {
             if (b->second->qname == qName) {
                 if (b->second->content->kind != StaticMember::HoistedVariable)
                     reportError(Exception::definitionError, "Duplicate definition {0}", p->pos, id);
                 else {
-                    existing = true;
+                    result = checked_cast<HoistedVar *>(b->second->content);
                     break;
                 }
             }
@@ -2386,12 +2393,12 @@ doUnary:
                 if (b->second->content->kind != StaticMember::HoistedVariable)
                     reportError(Exception::definitionError, "Duplicate definition {0}", p->pos, id);
                 else {
-                    existing = true;
+                    result = checked_cast<HoistedVar *>(b->second->content);
                     break;
                 }
             }
         }
-        if (!existing) {
+        if (result == NULL) {
             if (regionalFrame->kind == GlobalObjectKind) {
                 GlobalObject *gObj = checked_cast<GlobalObject *>(regionalFrame);
                 DynamicPropertyIterator dp = gObj->dynamicProperties.find(*id);
@@ -2399,7 +2406,8 @@ doUnary:
                     reportError(Exception::definitionError, "Duplicate definition {0}", p->pos, id);
             }
             // XXX ok to use same binding in read & write maps?
-            StaticBinding *sb = new StaticBinding(qName, new HoistedVar());
+            result = new HoistedVar();
+            StaticBinding *sb = new StaticBinding(qName, result);
             const StaticBindingMap::value_type e(*id, sb);
 
             // XXX ok to use same value_type in different multimaps?
@@ -2407,6 +2415,7 @@ doUnary:
             regionalFrame->staticWriteBindings.insert(e);
         }
         //else A hoisted binding of the same var already exists, so there is no need to create another one
+        return result;
     }
 
     js2val Object_toString(JS2Metadata *meta, const js2val thisValue, js2val argv[], uint32 argc)
@@ -2588,6 +2597,36 @@ doUnary:
             ASSERT(false);
             return NULL;
         }
+    }
+
+    // Scan this object and, if appropriate, it's prototype chain
+    // looking for the given name. Return the containing object.
+    JS2Object *JS2Metadata::lookupDynamicProperty(JS2Object *obj, const String *name)
+    {
+        ASSERT(obj);
+        DynamicPropertyMap *dMap = NULL;
+        bool isPrototypeInstance = false;
+        if (obj->kind == DynamicInstanceKind)
+            dMap = &(checked_cast<DynamicInstance *>(obj))->dynamicProperties;
+        else
+        if (obj->kind == GlobalObjectKind)
+            dMap = &(checked_cast<GlobalObject *>(obj))->dynamicProperties;
+        else {
+            ASSERT(obj->kind == PrototypeInstanceKind);
+            isPrototypeInstance = true;
+            dMap = &(checked_cast<PrototypeInstance *>(obj))->dynamicProperties;
+        }
+        for (DynamicPropertyIterator i = dMap->begin(), end = dMap->end(); (i != end); i++) {
+            if (i->first == *name) {
+                return obj;
+            }
+        }
+        if (isPrototypeInstance) {
+            PrototypeInstance *pInst = checked_cast<PrototypeInstance *>(obj);
+            if (pInst->parent)
+                return lookupDynamicProperty(pInst->parent, name);
+        }
+        return NULL;
     }
 
     // Read the property from the container given by the public id in multiname - if that exists

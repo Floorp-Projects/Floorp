@@ -573,20 +573,22 @@ public:
 // A helper class for 'for..in' statements
 class ForIteratorObject : public JS2Object {
 public:
-    ForIteratorObject(js2val obj) : JS2Object(ForIteratorKind), objValue(obj), dMap(NULL) { }
+    ForIteratorObject(js2val obj) : JS2Object(ForIteratorKind), objValue(obj), nameList(NULL) { }
 
     bool first();
-    bool next();
+    bool next(JS2Engine *engine);
 
     js2val value(JS2Engine *engine);
 
     js2val objValue;
+    JS2Object *originalObj;
 
     virtual void markChildren()     { GCMARKVALUE(objValue); }
 
 private:
-    DynamicPropertyIterator it;
-    DynamicPropertyMap *dMap;
+    const String **nameList;
+    int32 it;
+    int32 length;
 };
 
 // A METHODCLOSURE tuple describes an instance method with a bound this value.
@@ -815,7 +817,7 @@ typedef NamespaceList::iterator NamespaceListIterator;
 // A CONTEXT carries static information about a particular point in the source program.
 class Context {
 public:
-    Context() : strict(true) { }
+    Context() : strict(false) { }
     Context(Context *cxt);
     bool strict;                    // true if strict mode is in effect
     NamespaceList openNamespaces;   // The set of namespaces that are open at this point. 
@@ -896,7 +898,7 @@ public:
     StaticMember *findFlatMember(Frame *container, Multiname *multiname, Access access, Phase phase);
     InstanceBinding *resolveInstanceMemberName(JS2Class *js2class, Multiname *multiname, Access access, Phase phase);
 
-    void defineHoistedVar(Environment *env, const StringAtom *id, StmtNode *p);
+    HoistedVar *defineHoistedVar(Environment *env, const StringAtom *id, StmtNode *p);
     Multiname *defineStaticMember(Environment *env, const StringAtom *id, NamespaceList *namespaces, Attribute::OverrideModifier overrideMod, bool xplicit, Access access, StaticMember *m, size_t pos);
     OverrideStatusPair *defineInstanceMember(JS2Class *c, Context *cxt, const StringAtom *id, NamespaceList *namespaces, Attribute::OverrideModifier overrideMod, bool xplicit, Access access, InstanceMember *m, size_t pos);
     OverrideStatus *resolveOverrides(JS2Class *c, Context *cxt, const StringAtom *id, NamespaceList *namespaces, Access access, bool expectMethod, size_t pos);
@@ -912,6 +914,7 @@ public:
     bool readDynamicProperty(JS2Object *container, Multiname *multiname, LookupKind *lookupKind, Phase phase, js2val *rval);
     bool readStaticMember(StaticMember *m, Phase phase, js2val *rval);
     bool readInstanceMember(js2val containerVal, JS2Class *c, QualifiedName *qname, Phase phase, js2val *rval);
+    JS2Object *lookupDynamicProperty(JS2Object *obj, const String *name);
 
     bool writeProperty(js2val container, Multiname *multiname, LookupKind *lookupKind, bool createIfMissing, js2val newValue, Phase phase);
     bool writeProperty(Frame *container, Multiname *multiname, LookupKind *lookupKind, bool createIfMissing, js2val newValue, Phase phase);

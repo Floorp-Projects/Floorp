@@ -89,6 +89,8 @@ namespace MetaData {
     #include "js2op_access.cpp"
     #include "js2op_literal.cpp"
     #include "js2op_flowcontrol.cpp"
+            default:
+                NOT_REACHED("Bad opcode, no biscuit");
             }
             JS2Object::gc(meta);        // XXX temporarily, for testing
         }
@@ -668,13 +670,17 @@ namespace MetaData {
         JS2Object::mark(Dollar_StringAtom);
     }
 
+    //
     // XXX Only scanning dynamic properties
+    //
+    // Initialize and build a list of names of properties in the object.
+    //
     bool ForIteratorObject::first()
     {
         if (JS2VAL_IS_NULL(objValue))
             return false;
         JS2Object *obj = JS2VAL_TO_OBJECT(objValue);
-        dMap = NULL;
+        DynamicPropertyMap *dMap = NULL;
         if (obj->kind == DynamicInstanceKind)
             dMap = &(checked_cast<DynamicInstance *>(obj))->dynamicProperties;
         else
@@ -682,19 +688,37 @@ namespace MetaData {
             dMap = &(checked_cast<GlobalObject *>(obj))->dynamicProperties;
         else
             dMap = &(checked_cast<PrototypeInstance *>(obj))->dynamicProperties;
+
         if (dMap) {
-            it = dMap->begin();
-            return (it != dMap->end());
+            originalObj = obj;
+            nameList = new const String *[dMap->size()];
+            length = 0;
+            for (DynamicPropertyIterator i = dMap->begin(), end = dMap->end(); (i != end); i++) {
+                nameList[length++] = &i->first;
+            }
+            ASSERT(length == dMap->size());
+            it = 0;
+            return (length != 0);
         }
         else
             return false;
     }
 
-    bool ForIteratorObject::next()
+    //
+    // Set the iterator to the first property in that list that is not
+    // shadowed by a property higher up the prototype chain. If we get 
+    // to the end of the list, bump down to the next object on the chain.
+    //
+    bool ForIteratorObject::next(JS2Engine *engine)
     {
-        if (dMap) {
+        if (nameList) {
+            JS2Object *obj = JS2VAL_TO_OBJECT(objValue);
             it++;
-            return (it != dMap->end());
+            if (originalObj != obj) {
+                while (it != length)
+                    if (engine->meta->lookupDynamicProperty(originalObj, nameList[it]) != obj) it++;
+            }
+            return (it != length);
         }
         else
             return false;
@@ -702,7 +726,8 @@ namespace MetaData {
 
     js2val ForIteratorObject::value(JS2Engine *engine)
     { 
-        return engine->allocString(it->first);
+        ASSERT(nameList);
+        return engine->allocString(nameList[it]);
     }
 
 }
