@@ -50,7 +50,7 @@ function loadDS()
 {
 	//dump("\n-->loadDS() called <--\n");
 	if (ds && loaded) {
-		dump("\n-->loadDS(): ds=" + ds + ", loaded=" + loaded + ", returning! <--\n");
+		//dump("\n-->loadDS(): ds=" + ds + ", loaded=" + loaded + ", returning! <--\n");
 		return;
     }
 
