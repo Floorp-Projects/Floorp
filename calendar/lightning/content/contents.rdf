@@ -16,7 +16,7 @@
 	chrome:description="This extension integrates calendar functionality into Thunderbird."
 #expand chrome:localeVersion="__MOZILLA_LOCALE_VERSION__"
 #expand chrome:skinVersion="__MOZILLA_SKIN_VERSION__"
-  </RDF:Description>
+/>
 
   <!-- overlay information -->
   <RDF:Seq about="urn:mozilla:overlays">
@@ -24,7 +24,7 @@
   </RDF:Seq>
 
   <RDF:Seq about="chrome://messenger/content/messenger.xul">
-    <RDF:li>chrome://lightning/content/tools-overlay.xul</RDF:li>
+    <RDF:li>chrome://lightning/content/messenger-overlay.xul</RDF:li>
   </RDF:Seq>
 
 </RDF:RDF>
