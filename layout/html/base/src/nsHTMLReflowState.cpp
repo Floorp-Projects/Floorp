@@ -1347,6 +1347,23 @@ nsHTMLReflowState::CalculateBlockSideMargins(const nsHTMLReflowState* cbrs,
   }
 }
 
+PRBool
+nsHTMLReflowState::UseComputedHeight()
+{
+  static PRBool useComputedHeight = PR_FALSE;
+
+#if defined(XP_UNIX) || defined(XP_PC) || defined(XP_BEOS)
+  static PRBool firstTime = 1;
+  if (firstTime) {
+    if (getenv("GECKO_USE_COMPUTED_HEIGHT")) {
+      useComputedHeight = PR_TRUE;
+    }
+    firstTime = 0;
+  }
+#endif
+  return useComputedHeight;
+}
+
 static nsIStyleContext*
 GetNonInheritedLineHeightStyleContext(nsIStyleContext* aStyleContext)
 {
@@ -1368,7 +1385,7 @@ static nscoord
 ComputeLineHeight(nsIRenderingContext* aRenderingContext,
                   nsIStyleContext* aStyleContext)
 {
-  nscoord lineHeight = 0;
+  nscoord lineHeight = -1;
 
   const nsStyleText* text = (const nsStyleText*)
     aStyleContext->GetStyleData(eStyleStruct_Text);
@@ -1384,7 +1401,7 @@ ComputeLineHeight(nsIRenderingContext* aRenderingContext,
       text = (const nsStyleText*) parentSC->GetStyleData(eStyleStruct_Text);
       unit = text->mLineHeight.GetUnit();
       if (eStyleUnit_Percent == unit) {
-        // For percent, we inherit the computed value so updated the
+        // For percent, we inherit the computed value so update the
         // font to use the parent's font not our font.
         font = (const nsStyleFont*) parentSC->GetStyleData(eStyleStruct_Font);
       }
@@ -1414,26 +1431,14 @@ ComputeLineHeight(nsIRenderingContext* aRenderingContext,
       fm->GetHeight(lineHeight);
     }
 
-#ifdef DEBUG_kipp
     // Note: we normally use the actual font height for computing the
     // line-height raw value from the style context. On systems where
     // they disagree the actual font height is more appropriate. This
     // little hack lets us override that behavior to allow for more
     // precise layout in the face of imprecise fonts.
-    static PRBool useComputedHeight = PR_FALSE;
-#if defined(XP_UNIX) || defined(XP_PC) || defined(XP_BEOS)
-    static PRBool firstTime = 1;
-    if (firstTime) {
-      if (getenv("GECKO_USE_COMPUTED_HEIGHT")) {
-        useComputedHeight = PR_TRUE;
-      }
-      firstTime = 0;
-    }
-#endif
-    if (useComputedHeight) {
+    if (nsHTMLReflowState::UseComputedHeight()) {
       lineHeight = font->mFont.size;
     }
-#endif
 
     lineHeight = NSToCoordRound(factor * lineHeight);
   }
@@ -1446,14 +1451,28 @@ nsHTMLReflowState::CalcLineHeight(nsIPresContext& aPresContext,
                                   nsIRenderingContext* aRenderingContext,
                                   nsIFrame* aFrame)
 {
-  nscoord lineHeight = 0;
+  nscoord lineHeight = -1;
   nsCOMPtr<nsIStyleContext> sc;
   aFrame->GetStyleContext(getter_AddRefs(sc));
   if (sc) {
     lineHeight = ComputeLineHeight(aRenderingContext, sc);
   }
   if (lineHeight < 0) {
-    lineHeight = 0;
+    // Negative line-heights are not allowed by the spec. Translate
+    // them into "normal" (== 1.0) when found.
+    const nsStyleFont* font = (const nsStyleFont*)
+      sc->GetStyleData(eStyleStruct_Font);
+    if (UseComputedHeight()) {
+      lineHeight = font->mFont.size;
+    }
+    else {
+      aRenderingContext->SetFont(font->mFont);
+      nsCOMPtr<nsIFontMetrics> fm;
+      aRenderingContext->GetFontMetrics(*getter_AddRefs(fm));
+      if (fm) {
+        fm->GetHeight(lineHeight);
+      }
+    }
   }
   return lineHeight;
 }

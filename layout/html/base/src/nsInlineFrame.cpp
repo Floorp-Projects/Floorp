@@ -1501,28 +1501,16 @@ nsInlineFrame::ReflowInlineFrames(nsIPresContext* aPresContext,
     aMetrics.height += aReflowState.mComputedBorderPadding.top +
       aReflowState.mComputedBorderPadding.bottom;
 
-#ifdef DEBUG_kipp
     // Note: we normally use the actual font height for computing the
     // line-height raw value from the style context. On systems where
     // they disagree the actual font height is more appropriate. This
     // little hack lets us override that behavior to allow for more
     // precise layout in the face of imprecise fonts.
-    static PRBool useComputedHeight = PR_FALSE;
-#if defined(XP_UNIX) || defined(XP_PC) || defined(XP_BEOS)
-    static PRBool firstTime = 1;
-    if (firstTime) {
-      if (getenv("GECKO_USE_COMPUTED_HEIGHT")) {
-        useComputedHeight = PR_TRUE;
-      }
-      firstTime = 0;
-    }
-#endif
-    if (useComputedHeight) {
+    if (nsHTMLReflowState::UseComputedHeight()) {
       aMetrics.height = font->mFont.size +
         aReflowState.mComputedBorderPadding.top +
         aReflowState.mComputedBorderPadding.bottom;
     }
-#endif
   }
 
   // For now our combined area is zero. The real value will be
