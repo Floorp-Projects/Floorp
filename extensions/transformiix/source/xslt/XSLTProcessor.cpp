@@ -25,7 +25,7 @@
  * Pierre Phaneuf, pp@ludusdesign.com
  *    -- fixed some XPCOM usage.
  *
- * $Id: XSLTProcessor.cpp,v 1.2 2000/04/07 10:34:18 Peter.VanderBeken%pandora.be Exp $
+ * $Id: XSLTProcessor.cpp,v 1.3 2000/04/07 22:59:04 Peter.VanderBeken%pandora.be Exp $
  */
 
 #include "XSLTProcessor.h"
@@ -38,7 +38,7 @@
 /**
  * XSLTProcessor is a class for Processing XSL styelsheets
  * @author <a href="mailto:kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.2 $ $Date: 2000/04/07 10:34:18 $
+ * @version $Revision: 1.3 $ $Date: 2000/04/07 22:59:04 $
 **/
 
 /**
@@ -733,7 +733,7 @@ short XSLTProcessor::getElementType(String& name, ProcessorState* ps) {
  * @param allowOnlyTextNodes
 **/
 MBool XSLTProcessor::getText
-    (DocumentFragment* dfrag, String& dest, MBool deep, MBool allowOnlyTextNodes)
+    (DocumentFragment* dfrag, DOMString& dest, MBool deep, MBool allowOnlyTextNodes)
 {
     if ( !dfrag ) return MB_TRUE;
 
@@ -906,7 +906,7 @@ void XSLTProcessor::processAction
                         ps->getNodeStack()->push(dfrag);
                         processTemplate(node, actionElement, ps);
                         ps->getNodeStack()->pop();
-                        String value;
+                        DOMString value;
                         XMLDOMUtils::getNodeValue(dfrag, &value);
                         XMLUtils::normalizeAttributeValue(value);
                         newAttr->setValue(value);
@@ -1084,7 +1084,7 @@ void XSLTProcessor::processAction
             //-- xsl:message
             case XSLType::MESSAGE :
             {
-                String message;
+                DOMString message;
 
                 DocumentFragment* dfrag = resultDoc->createDocumentFragment();
                 ps->getNodeStack()->push(dfrag);
@@ -1153,7 +1153,7 @@ void XSLTProcessor::processAction
             //-- xsl:text
             case XSLType::TEXT :
             {
-                String data;
+                DOMString data;
                 //-- get Node value, and do not perform whitespace stripping
                 XMLDOMUtils::getNodeValue(actionElement, &data);
                 Text* text = resultDoc->createTextNode(data);

@@ -24,13 +24,13 @@
  * Larry Fitzpatrick, OpenText, lef@opentext.com
  *   -- moved initialization of DEFAULT_SIZE to NodeSet.cpp
  *
- * $Id: NodeSet.h,v 1.1 2000/04/06 07:45:33 kvisco%ziplink.net Exp $
+ * $Id: NodeSet.h,v 1.2 2000/04/07 22:57:48 Peter.VanderBeken%pandora.be Exp $
  */
 
 /**
  * NodeSet
  * @author <a href="mailto:kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.1 $ $Date: 2000/04/06 07:45:33 $
+ * @version $Revision: 1.2 $ $Date: 2000/04/07 22:57:48 $
 **/
 
 #ifndef TRANSFRMX_NODESET_H
@@ -191,7 +191,7 @@ public:
      * Creates a String representation of this ExprResult
      * @param str the destination string to append the String representation to.
     **/
-    virtual void stringValue(String& str);
+    virtual void stringValue(DOMString& str);
 
 private:
 

@@ -21,13 +21,13 @@
  * Keith Visco, kvisco@ziplink.net
  *   -- original author.
  *    
- * $Id: BooleanResult.cpp,v 1.1 2000/04/06 07:45:19 kvisco%ziplink.net Exp $
+ * $Id: BooleanResult.cpp,v 1.2 2000/04/07 22:57:06 Peter.VanderBeken%pandora.be Exp $
  */
 
 /**
  * Boolean Expression result
  * @author <A href="mailto:kvisco@ziplink.net">Keith Visco</A>
- * @version $Revision: 1.1 $ $Date: 2000/04/06 07:45:19 $
+ * @version $Revision: 1.2 $ $Date: 2000/04/07 22:57:06 $
 **/
 
 #include "ExprResult.h"
@@ -83,7 +83,7 @@ short BooleanResult::getResultType() {
     return ExprResult::BOOLEAN;
 } //-- getResultType
 
-void BooleanResult::stringValue(String& str)  {
+void BooleanResult::stringValue(DOMString& str)  {
     if ( value ) str.append("true");
     else str.append("false");
 } //-- toString
