@@ -1184,8 +1184,8 @@ nsRDFElement::HandleDOMEvent(nsIPresContext& aPresContext,
 NS_IMETHODIMP 
 nsRDFElement::RangeAdd(nsIDOMRange& aRange) 
 {  
-    // rdf content does not yet support DOM ranges
-    return NS_OK;
+  // rdf content does not yet support DOM ranges
+  return NS_OK;
 }
 
 
@@ -1193,9 +1193,18 @@ nsRDFElement::RangeAdd(nsIDOMRange& aRange)
 NS_IMETHODIMP 
 nsRDFElement::RangeRemove(nsIDOMRange& aRange) 
 {
-    // rdf content does not yet support DOM ranges
-    return NS_OK;
+  // rdf content does not yet support DOM ranges
+  return NS_OK;
 }                                                                        
+
+
+NS_IMETHODIMP 
+nsRDFElement::GetRangeList(nsVoidArray*& aResult) const
+{
+  // rdf content does not yet support DOM ranges
+  return NS_OK;
+}
+
 
 ////////////////////////////////////////////////////////////////////////
 // nsIXMLContent

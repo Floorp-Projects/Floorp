@@ -154,6 +154,7 @@ typedef struct {
   void *mScriptObject;
   nsChildContentList *mChildNodes;
   nsDOMCSSDeclaration *mStyle;
+  nsVoidArray *mRangeList;
   PRBool mIsContainer;
 } nsDOMSlots;
 
@@ -217,7 +218,8 @@ public:
                           nsEventStatus& aEventStatus);
   nsresult RangeAdd(nsIDOMRange& aRange);
   nsresult RangeRemove(nsIDOMRange& aRange);
-
+  nsresult GetRangeList(nsVoidArray*& aResult) const;
+  
   // Implementation for nsIJSScriptObject
   PRBool    AddProperty(JSContext *aContext, jsval aID, jsval *aVp);
   PRBool    DeleteProperty(JSContext *aContext, jsval aID, jsval *aVp);
@@ -269,7 +271,6 @@ public:
   nsIAtom* mTag;
   nsIEventListenerManager* mListenerManager;
   nsDOMSlots *mDOMSlots;
-  nsVoidArray *mRangeList;
 };
 
 //----------------------------------------------------------------------
@@ -532,12 +533,16 @@ public:
                             nsIDOMEvent** aDOMEvent,                       \
                             PRUint32 aFlags,                               \
                             nsEventStatus& aEventStatus);                  \
-  NS_IMETHOD RangeAdd(nsIDOMRange& aRange){                                \
+  NS_IMETHOD RangeAdd(nsIDOMRange& aRange) {                               \
     return _g.RangeAdd(aRange);                                            \
   }                                                                        \
-  NS_IMETHOD RangeRemove(nsIDOMRange& aRange){                             \
+  NS_IMETHOD RangeRemove(nsIDOMRange& aRange) {                            \
     return _g.RangeRemove(aRange);                                         \
+  }                                                                        \
+  NS_IMETHOD GetRangeList(nsVoidArray*& aResult) const {                   \
+    return _g.GetRangeList(aResult);                                       \
   }                                                                        
+  
 
 #define NS_IMPL_CONTENT_QUERY_INTERFACE(_id, _iptr, _this, _base) \
   if (_id.Equals(kISupportsIID)) {                              \
