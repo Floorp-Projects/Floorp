@@ -1504,7 +1504,12 @@ js_Execute(JSContext *cx, JSObject *chain, JSScript *script,
     if (hook)
         hookData = hook(cx, &frame, JS_TRUE, 0, cx->runtime->executeHookData);
 
-    ok = js_Interpret(cx, result);
+    /*
+     * Use frame.rval, not result, so the last result stays rooted across any
+     * GC activations nested within this js_Interpret.
+     */
+    ok = js_Interpret(cx, &frame.rval);
+    *result = frame.rval;
 
     if (hookData) {
         hook = cx->runtime->executeHook;
