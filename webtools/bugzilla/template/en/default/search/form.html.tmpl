@@ -430,8 +430,8 @@ function selectProduct(f) {
       <td>
         <select name="keywords_type">
         [% FOREACH qv = [ 
-          { name => "anywords", description => "contains any of the keywords" },
           { name => "allwords", description => "contains all of the keywords" },
+          { name => "anywords", description => "contains any of the keywords" },
           { name => "nowords",  description => "contains none of the keywords" } ] %]
 
           <option value="[% qv.name %]"
