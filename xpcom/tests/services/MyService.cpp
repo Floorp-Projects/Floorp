@@ -75,7 +75,7 @@ MyServiceFactory* gFact = NULL;
 ////////////////////////////////////////////////////////////////////////////////
 // MyService Implementation
 
-NS_IMPL_ISUPPORTS(MyService, NS_GET_IID(IMyService));
+NS_IMPL_ISUPPORTS1(MyService, IMyService);
 
 MyService::MyService(nsISupports* outer)
 {
@@ -102,7 +102,7 @@ MyService::Doit(void)
 ////////////////////////////////////////////////////////////////////////////////
 // MyServiceFactory Implementation
 
-NS_IMPL_ISUPPORTS(MyServiceFactory, NS_GET_IID(nsIFactory));
+NS_IMPL_ISUPPORTS1(MyServiceFactory, nsIFactory);
 
 MyServiceFactory::MyServiceFactory(void)
     : mStarted(PR_FALSE), mOutstandingInstances(0)

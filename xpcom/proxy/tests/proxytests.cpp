@@ -72,7 +72,7 @@ nsTestXPCFoo::~nsTestXPCFoo()
 {
 }
 
-NS_IMPL_ISUPPORTS(nsTestXPCFoo, NS_GET_IID(nsITestProxy))
+NS_IMPL_ISUPPORTS1(nsTestXPCFoo, nsITestProxy)
 
 NS_IMETHODIMP nsTestXPCFoo::Test(PRInt32 p1, PRInt32 p2, PRInt32* retval)
 {

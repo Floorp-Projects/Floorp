@@ -81,7 +81,7 @@ nsNativeComponentLoader::~nsNativeComponentLoader()
     delete mDllStore;
 }
     
-NS_IMPL_ISUPPORTS(nsNativeComponentLoader, NS_GET_IID(nsIComponentLoader));
+NS_IMPL_ISUPPORTS1(nsNativeComponentLoader, nsIComponentLoader);
 
 NS_IMETHODIMP
 nsNativeComponentLoader::GetFactory(const nsIID & aCID,

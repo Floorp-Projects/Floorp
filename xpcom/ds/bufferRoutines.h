@@ -719,7 +719,7 @@ public :
 static NS_DEFINE_CID(kUnicharUtilCID, NS_UNICHARUTIL_CID);
 static nsICaseConversion * gCaseConv = 0; 
 
-NS_IMPL_ISUPPORTS(HandleCaseConversionShutdown3, NS_GET_IID(nsIShutdownListener));
+NS_IMPL_ISUPPORTS1(HandleCaseConversionShutdown3, nsIShutdownListener);
 
 nsresult HandleCaseConversionShutdown3::OnShutdown(const nsCID& cid, nsISupports* service) {
     if (cid.Equals(kUnicharUtilCID)) {

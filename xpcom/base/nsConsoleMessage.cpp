@@ -25,7 +25,7 @@
 
 #include "nsConsoleMessage.h"
 
-NS_IMPL_THREADSAFE_ISUPPORTS(nsConsoleMessage, NS_GET_IID(nsIConsoleMessage));
+NS_IMPL_THREADSAFE_ISUPPORTS1(nsConsoleMessage, nsIConsoleMessage);
 
 nsConsoleMessage::nsConsoleMessage() 
 {
