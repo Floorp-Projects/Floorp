@@ -7006,7 +7006,7 @@ nsTableFrame::PaintBCBorders(nsPresContext*      aPresContext,
             break;
           case eAjaRowOwner: 
             side = NS_SIDE_BOTTOM;
-            row = iter.prevRow; // and fall through
+            row = (iter.IsBottomMostTable()) ? iter.row : iter.prevRow; // and fall through
           case eRowOwner:
             if (row) {
               ::GetStyleInfo(*row, side, style, color, iter.IsBottomMostTable());
