@@ -33,7 +33,18 @@
  * there can be more than one implementation of an given interface.  Class
  * IDs (CIDs) uniquely identify a particular implementation of an interface.
  * Interface IDs (IIDs) uniquely identify an interface.
+ *
+ * The CID is also a unique number that looks just like an IID
+ * and uniquely identifies an implementation
+ * {7CB5B7A0-07D7-11d3-BDE2-000064657374}
  */
+
+#define NS_SAMPLE_CID \
+{ 0x7cb5b7a0, 0x7d7, 0x11d3, { 0xbd, 0xe2, 0x0, 0x0, 0x64, 0x65, 0x73, 0x74 } }
+
+#define NS_SAMPLE_PROGID "component://netscape/sample"
+
+
 class nsSampleImpl : public nsISample
 {
 public:

@@ -125,24 +125,28 @@ dump("sample = " + sample + "\n");
 
 function get()
 {
+  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
   var field = document.getElementById('Value');
   field.value = sample.value;
 }
 
 function set()
 {
+  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
   var field = document.getElementById('Value');
   sample.value = field.value;
 }
 
 function poke()
 {
+  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
   var field = document.getElementById('Value');
   sample.poke(field.value);
 }
 
-function write()
+function sampleWrite()
 {
+  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
   sample.writeValue("here is what I'm writing: ");
 }
 </script>
@@ -153,7 +157,7 @@ function write()
 <input type="button" value="Set" onclick="set();">
 <input type="button" value="Poke" onclick="poke();">
 <input type="text" id="Value">
-<input type="button" value="Write" onclick="write();">
+<input type="button" value="Write" onclick="sampleWrite();">
 <form>
 
 <hr>
@@ -172,24 +176,25 @@ dump("sample = " + sample + "\n");
 
 function get()
 {
-  var field = document.getElementById('Value');
+  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");  var field = document.getElementById('Value');
   field.value = sample.value;
 }
 
 function set()
 {
-  var field = document.getElementById('Value');
+  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");  var field = document.getElementById('Value');
   sample.value = field.value;
 }
 
 function poke()
 {
-  var field = document.getElementById('Value');
+  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");  var field = document.getElementById('Value');
   sample.poke(field.value);
 }
 
-function write()
+function sampleWrite()
 {
+  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
   sample.writeValue("here is what I'm writing: ");
 }
 &lt;/script&gt;
@@ -199,7 +204,7 @@ function write()
 &lt;input type=&quot;button&quot; value=&quot;Set&quot; onclick=&quot;set();&quot;&gt;
 &lt;input type=&quot;button&quot; value=&quot;Poke&quot; onclick=&quot;poke();&quot;&gt;
 &lt;input type=&quot;text&quot; id=&quot;Value&quot;&gt;
-&lt;input type=&quot;button&quot; value=&quot;Write&quot; onclick=&quot;write();&quot;&gt;
+&lt;input type=&quot;button&quot; value=&quot;Write&quot; onclick=&quot;sampleWrite();&quot;&gt;
 &lt;form>
 
 </pre>
