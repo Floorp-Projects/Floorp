@@ -30,6 +30,9 @@
 #include "nsQuickSort.h"
 #include "nsTextFormatter.h"
 #include "nsIFontPackageProxy.h"
+#include "nsIPersistentProperties2.h"
+#include "nsNetUtil.h"
+#include "nsIURI.h"
 #include "prmem.h"
 #include "plhash.h"
 #include "prprf.h"
@@ -110,6 +113,7 @@ PLHashTable* nsFontMetricsWin::gFontWeights = nsnull;
 #undef CHAR_BUFFER_SIZE
 #define CHAR_BUFFER_SIZE 1024
 
+static nsIPersistentProperties* gFontEncodingProperties = nsnull;
 static nsICharsetConverterManager2* gCharSetManager = nsnull;
 static nsIPref* gPref = nsnull;
 static nsIUnicodeEncoder* gUserDefinedConverter = nsnull;
@@ -164,6 +168,7 @@ FreeGlobals(void)
 
   gInitialized = 0;
 
+  NS_IF_RELEASE(gFontEncodingProperties);
   NS_IF_RELEASE(gCharSetManager);
   NS_IF_RELEASE(gPref);
   NS_IF_RELEASE(gUserDefined);
@@ -202,6 +207,28 @@ FreeGlobals(void)
 static nsresult
 InitGlobals(void)
 {
+  // load the special encoding resolver
+  nsresult rv;
+  nsCOMPtr<nsIURI> uri;
+  rv = NS_NewURI(getter_AddRefs(uri), "resource:/res/fonts/fontEncoding.properties");
+  if (NS_SUCCEEDED(rv)) {
+    nsCOMPtr<nsIInputStream> in;
+    rv = NS_OpenURI(getter_AddRefs(in), uri);
+    if (NS_SUCCEEDED(rv)) {
+      rv = nsComponentManager::
+           CreateInstance(NS_PERSISTENTPROPERTIES_CONTRACTID, nsnull,
+                          NS_GET_IID(nsIPersistentProperties),
+                          (void**)&gFontEncodingProperties);
+      if (NS_SUCCEEDED(rv)) {
+        rv = gFontEncodingProperties->Load(in);
+      }
+    }
+  }
+  if (NS_FAILED(rv)) {
+    FreeGlobals();
+    return rv;
+  }
+
   nsServiceManager::GetService(kCharsetConverterManagerCID,
     NS_GET_IID(nsICharsetConverterManager2), (nsISupports**) &gCharSetManager);
   if (!gCharSetManager) {
@@ -342,6 +369,7 @@ nsFontMetricsWin :: Init(const nsFont& aFont, nsIAtom* aLangGroup,
   nsresult res;
   if (!gInitialized) {
     res = InitGlobals();
+    NS_ASSERTION(NS_SUCCEEDED(res), "No font at all has been created");
     if (NS_FAILED(res)) {
       return res;
     }
@@ -972,129 +1000,54 @@ PRUint8 charSetToBit[eCharSet_COUNT] =
 	21   // JOHAB_CHARSET,
 };
 
-
-struct nsFontHasConverter {
-  char* mName;
-  char* mEncoding;
-};
-
-static nsFontHasConverter gFontsHaveConverters[] =
+// Helper to determine if a font has a private encoding that we know something about
+static nsresult
+GetEncoding(const char* aFontName, nsString& aValue)
 {
-/* Adobe' Symbol font */
-  {"Symbol", "Adobe-Symbol-Encoding"},
-#ifdef MOZ_MATHML
-/* TeX's Computer Modern fonts (Symbol and Extension) */
-  {"CMSY10", "x-ttf-cmsy"},
-  {"CMEX10", "x-ttf-cmex"},
-/* Mathematica fonts */
-  {"Math1",          "x-mathematica1"},
-  {"Math1-Bold",     "x-mathematica1"},
-  {"Math1Mono",      "x-mathematica1"},
-  {"Math1Mono-Bold", "x-mathematica1"},
-
-  {"Math2",          "x-mathematica2"},
-  {"Math2-Bold",     "x-mathematica2"},
-  {"Math2Mono",      "x-mathematica2"},
-  {"Math2Mono-Bold", "x-mathematica2"},
-
-  {"Math3",          "x-mathematica3"},
-  {"Math3-Bold",     "x-mathematica3"},
-  {"Math3Mono",      "x-mathematica3"},
-  {"Math3Mono-Bold", "x-mathematica3"},
-
-  {"Math4",          "x-mathematica4"},
-  {"Math4-Bold",     "x-mathematica4"},
-  {"Math4Mono",      "x-mathematica4"},
-  {"Math4Mono-Bold", "x-mathematica4"},
-
-  {"Math5",          "x-mathematica5"},
-  {"Math5-Bold",     "x-mathematica5"},
-  {"Math5 Bold",     "x-mathematica5"}, // typo in the Mathematica pack?
-  {"Math5Mono",      "x-mathematica5"},
-  {"Math5Mono-Bold", "x-mathematica5"},
-  {"Math5Mono Bold", "x-mathematica5"}, // typo in the Mathematica pack?
-/* MathType Extra */
-  {"MT Extra",       "x-mtextra"},
-#endif
-  {nsnull, nsnull}
-};
-
-// This function uses the charset converter manager to fill the map for the
-// font whose name is given
-static int
-GetMap(const char* aName, PRUint32* aMap)
-{
-  nsAutoString encoding;
-  encoding.SetLength(0);
-  // linear search to see if we know something about the converter of this font 
-  nsFontHasConverter* f = gFontsHaveConverters;
-  while (f->mName) {
-    if (!strcmpi(f->mName, aName)) {
-      encoding.AssignWithConversion(f->mEncoding);
-      break;
-    }
-    f++;
-  }
-  if (0 < encoding.Length())
-  {
-    nsresult rv = NS_ERROR_FAILURE;
-    NS_WITH_SERVICE(nsICharsetConverterManager, ccm, kCharsetConverterManagerCID, &rv); 
-    if (NS_SUCCEEDED(rv) && ccm)
-    {
-      nsIUnicodeEncoder* converter = nsnull;
-      rv = ccm->GetUnicodeEncoder(&encoding, &converter);
-      if (NS_SUCCEEDED(rv) && converter)
-      {
-        rv = converter->SetOutputErrorBehavior(converter->kOnError_Replace, nsnull, '?');
-        nsCOMPtr<nsICharRepresentable> mapper = do_QueryInterface(converter);
-        if (mapper) {
-          rv = mapper->FillInfo(aMap);
-          if (NS_SUCCEEDED(rv)) {
-            NS_IF_RELEASE(converter); // XXX fix me! converter & map should be
-            return 1;                 // created/released together, since one doesn't
-          }                           // exist without the other.
-        }
-      }
-      NS_IF_RELEASE(converter);
-    }
-  }
-  return 0;
+  nsAutoString name;
+  name.Assign(NS_LITERAL_STRING("encoding."));
+  name.AppendWithConversion(aFontName);
+  name.Append(NS_LITERAL_STRING(".ttf"));
+  name.StripWhitespace();
+  name.ToLowerCase();
+  return gFontEncodingProperties->GetStringProperty(name, aValue);
 }
 
 // This function uses the charset converter manager to get a pointer on the 
 // converter for the font whose name is given. The caller holds a reference
 // to the converter, and should take care of the release...
-static nsIUnicodeEncoder*
-GetConverter(const char* aName)
+static nsresult
+GetConverter(const char* aFontName, nsIUnicodeEncoder** aConverter)
 {
-  nsAutoString encoding;
-  encoding.SetLength(0);
-  // linear search to see if we know something about the converter of this font 
-  nsFontHasConverter* f = gFontsHaveConverters;
-  while (f->mName) {
-    if (!strcmpi(f->mName, aName)) {
-      encoding.AssignWithConversion(f->mEncoding);
-      break;
+  *aConverter = nsnull;
+
+  nsAutoString value;
+  nsresult rv = GetEncoding(aFontName, value);
+  if (NS_FAILED(rv)) return rv;
+
+  nsCOMPtr<nsIAtom> charset;
+  rv = gCharSetManager->GetCharsetAtom(value.GetUnicode(), getter_AddRefs(charset));
+  if (NS_FAILED(rv)) return rv;
+
+  rv = gCharSetManager->GetUnicodeEncoder(charset, aConverter);
+  if (NS_FAILED(rv)) return rv;
+  return (*aConverter)->SetOutputErrorBehavior((*aConverter)->kOnError_Replace, nsnull, '?');
+}
+
+// This function uses the charset converter manager to fill the map for the
+// font whose name is given
+static int
+GetMap(const char* aFontName, PRUint32* aMap)
+{
+  // see if we know something about the converter of this font 
+  nsCOMPtr<nsIUnicodeEncoder> converter;
+  if (NS_SUCCEEDED(GetConverter(aFontName, getter_AddRefs(converter)))) {
+    nsCOMPtr<nsICharRepresentable> mapper = do_QueryInterface(converter);
+    if (mapper && NS_SUCCEEDED(mapper->FillInfo(aMap))) {
+      return 1;
     }
-    f++;
   }
-  if (0 < encoding.Length())
-  {
-    nsresult rv = NS_ERROR_FAILURE;
-    NS_WITH_SERVICE(nsICharsetConverterManager, ccm, kCharsetConverterManagerCID, &rv); 
-    if (NS_SUCCEEDED(rv) && ccm)
-    {
-      nsIUnicodeEncoder* converter = nsnull;
-      rv = ccm->GetUnicodeEncoder(&encoding, &converter);
-      if (NS_SUCCEEDED(rv) && converter)
-      {
-        rv = converter->SetOutputErrorBehavior(converter->kOnError_Replace, nsnull, '?');
-        if (NS_SUCCEEDED(rv)) return converter;
-      }
-      NS_IF_RELEASE(converter);
-    }
-  }
-  return nsnull;
+  return 0;
 }
 
 class nsFontInfo : public PLHashEntry
@@ -1115,16 +1068,12 @@ public:
   PRUint8   mCharset;
   PRUint32* mMap;
 #ifdef MOZ_MATHML
-  // See bug 29358.
   // We need to cache the CMAP for performance reasons. This
   // way, we can retrieve glyph indices without having to call
-  // GetFontData() -- (with malloc/free) for every function call !
+  // GetFontData() -- (with malloc/free) for every function call.
   // However, the CMAP is created *lazily* and is typically less than
   // 1K or 2K. If no glyph indices are requested for this font, the
-  // array will never be created. But because we are owned by "nsFontInfo"s
-  // which are never released (bug 29358), we are leaking also. 
-  // XXX make sure to hook ourselves to the "shutdown listener", in
-  // order to also free non-null mCMAP.mData.
+  // mCMAP.mData array will never be created.
   nsCharacterMap mCMAP;
 #endif
 };
@@ -1291,55 +1240,51 @@ nsFontMetricsWin::GetCMAP(HDC aDC, const char* aShortName, int* aFontType, PRUin
         // 'pseudo-unicode' fonts that require a converter...
         // Here, we check if this font is a pseudo-unicode font that 
         // we know something about, and we force it to be treated as
-        // a non-unicode font !!
-        nsFontHasConverter* f = gFontsHaveConverters;
-        while (f->mName) {
-          if (!strcmpi(f->mName, aShortName)) 
-          {
-            PLHashEntry **hep, *he;
-            PLHashNumber hash = HashKey(name);
-            hep = PL_HashTableRawLookup(gFontMaps, hash, name);
-            he = *hep;
-            if (he) {
-              // an identical map has already been added
-              info = NS_STATIC_CAST(nsFontInfo *, he);
-              if (aCharset) {
-                *aCharset = info->mCharset;
-              }
-              if (aFontType) {
-                *aFontType = info->mType;
-              }
-              return info->mMap;
-            } 
-
-            // map didn't exist in the HashTable, let's add 
+        // a non-unicode font.
+        nsAutoString encoding;
+        if (NS_SUCCEEDED(GetEncoding(aShortName, encoding))) {
+          PLHashEntry **hep, *he;
+          PLHashNumber hash = HashKey(name);
+          hep = PL_HashTableRawLookup(gFontMaps, hash, name);
+          he = *hep;
+          if (he) {
+            // an identical map has already been added
+            info = NS_STATIC_CAST(nsFontInfo *, he);
             if (aCharset) {
-              *aCharset = DEFAULT_CHARSET;
+              *aCharset = info->mCharset;
             }
             if (aFontType) {
-              *aFontType = NS_FONT_TYPE_NON_UNICODE;
+              *aFontType = info->mType;
             }
-            if (!GetMap(aShortName, map)) {
-              PR_Free(map);
-              map = gEmptyMap;
-            }
-            PR_Free(buf);
+            return info->mMap;
+          } 
 
-            he = PL_HashTableRawAdd(gFontMaps, hep, hash, name, nsnull);
-            if (he) {   
-              info = NS_STATIC_CAST(nsFontInfo*, he);
-              info->mType = NS_FONT_TYPE_NON_UNICODE;
-              info->mMap = map;
-              he->value = info;    // so PL_HashTableLookup returns an nsFontInfo*
-              return map;
-            }
-            delete name;
-            if (map != gEmptyMap)
-              PR_Free(map);
-            return nsnull;
-          } // if (!strcmpi(f->mName, aShortName)) 
-          f++;
-        } //while (f->mName)
+          // map didn't exist in the HashTable, let's add 
+          if (aCharset) {
+            *aCharset = DEFAULT_CHARSET;
+          }
+          if (aFontType) {
+            *aFontType = NS_FONT_TYPE_NON_UNICODE;
+          }
+          if (!GetMap(aShortName, map)) {
+            PR_Free(map);
+            map = gEmptyMap;
+          }
+          PR_Free(buf);
+
+          he = PL_HashTableRawAdd(gFontMaps, hep, hash, name, nsnull);
+          if (he) {   
+            info = NS_STATIC_CAST(nsFontInfo*, he);
+            info->mType = NS_FONT_TYPE_NON_UNICODE;
+            info->mMap = map;
+            he->value = info;    // so PL_HashTableLookup returns an nsFontInfo*
+            return map;
+          }
+          delete name;
+          if (map != gEmptyMap)
+            PR_Free(map);
+          return nsnull;
+        } // if GetEncoding();
         break;  // break out from for(;;) loop
       } //if (encodingID == 1)
       else if (encodingID == 0) { // symbol
@@ -1852,7 +1797,7 @@ public:
 #endif
 
 private:
-  nsIUnicodeEncoder* mConverter;
+  nsCOMPtr<nsIUnicodeEncoder> mConverter;
 };
 
 // A "substitute font" to deal with missing glyphs -- see bug 6585
@@ -1949,8 +1894,8 @@ nsFontMetricsWin::LoadFont(HDC aDC, nsString* aName)
       font = new nsFontWinUnicode(&logFont, hfont, map);
     }
     else if (NS_FONT_TYPE_NON_UNICODE == fontType) {
-      nsIUnicodeEncoder* converter = GetConverter(logFont.lfFaceName);
-      if (converter) {
+      nsCOMPtr<nsIUnicodeEncoder> converter;
+      if (NS_SUCCEEDED(GetConverter(logFont.lfFaceName, getter_AddRefs(converter)))) {
 #if 0
 // RBS trying to reset hfont with this piece of code causes GDI to be confused
         if (DEFAULT_CHARSET != charset) {
@@ -2014,8 +1959,8 @@ nsFontMetricsWin::LoadGlobalFont(HDC aDC, nsGlobalFont* aGlobalFontItem)
       font = new nsFontWinUnicode(&logFont, hfont, aGlobalFontItem->map);
     }
     else if (NS_FONT_TYPE_NON_UNICODE == aGlobalFontItem->fonttype) {
-      nsIUnicodeEncoder* converter = GetConverter(logFont.lfFaceName);
-      if (converter) {
+      nsCOMPtr<nsIUnicodeEncoder> converter;
+      if (NS_SUCCEEDED(GetConverter(logFont.lfFaceName, getter_AddRefs(converter)))) {
         font = new nsFontWinNonUnicode(&logFont, hfont, aGlobalFontItem->map, converter);
       }
     }
@@ -2170,7 +2115,7 @@ nsFontMetricsWin::FindGlobalFont(HDC aDC, PRUnichar c)
           &(gGlobalFonts[i].fonttype), nsnull);
         ::SelectObject(aDC, oldFont);
         ::DeleteObject(font);
-        if (!gGlobalFonts[i].map) {
+        if (!gGlobalFonts[i].map || gGlobalFonts[i].map == gEmptyMap) {
           gGlobalFonts[i].skip = 1;
           continue;
         }
@@ -3509,7 +3454,6 @@ nsFontWinNonUnicode::nsFontWinNonUnicode(LOGFONT* aLogFont, HFONT aFont,
 
 nsFontWinNonUnicode::~nsFontWinNonUnicode()
 {
-//  NS_IF_RELEASE(mConverter); // XXX need to release together with map at shutdown
 }
 
 PRInt32
@@ -4432,7 +4376,7 @@ nsFontMetricsWinA::FindGlobalFont(HDC aDC, PRUnichar c)
           nsnull, nsnull);
         ::SelectObject(aDC, oldFont);
         ::DeleteObject(font);
-        if (!gGlobalFonts[i].map) {
+        if (!gGlobalFonts[i].map || gGlobalFonts[i].map == gEmptyMap) {
           gGlobalFonts[i].skip = 1;
           continue;
         }
