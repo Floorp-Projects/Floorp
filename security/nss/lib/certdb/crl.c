@@ -34,7 +34,7 @@
 /*
  * Moved from secpkcs7.c
  *
- * $Id: crl.c,v 1.5 2001/12/07 01:35:47 relyea%netscape.com Exp $
+ * $Id: crl.c,v 1.6 2002/01/11 17:31:09 relyea%netscape.com Exp $
  */
 
 #include "cert.h"
@@ -344,6 +344,15 @@ CERT_DecodeDERCrl(PRArenaPool *narena, SECItem *derSignedCrl, int type)
     
     crl->arena = arena;
 
+    crl->derCrl = (SECItem *)PORT_ArenaZAlloc(arena,sizeof(SECItem));
+    if (crl->derCrl == NULL) {
+	goto loser;
+    }
+    rv = SECITEM_CopyItem(arena, crl->derCrl, derSignedCrl);
+    if (rv != SECSuccess) {
+	goto loser;
+    }
+
     /* Save the arena in the inner crl for CRL extensions support */
     crl->crl.arena = arena;
 
@@ -420,6 +429,9 @@ loser:
     if (slot) {
 	PK11_FreeSlot(slot);
     }
+    if (derCrl) {
+	SECITEM_FreeItem(derCrl,PR_TRUE);
+    }
     return(crl);
 }
 
@@ -434,10 +446,20 @@ crl_storeCRL (PK11SlotInfo *slot,char *url,
 
     oldCrl = SEC_FindCrlByKeyOnSlot(slot, &newCrl->crl.derName, type);
 
+
+
     /* if there is an old crl, make sure the one we are installing
      * is newer. If not, exit out, otherwise delete the old crl.
      */
     if (oldCrl != NULL) {
+	/* if it's already there, quietly continue */
+	if (SECITEM_CompareItem(newCrl->derCrl, oldCrl->derCrl) 
+						== SECEqual) {
+	    crl = newCrl;
+	    crl->slot = PK11_ReferenceSlot(slot);
+	    crl->pkcs11ID = oldCrl->pkcs11ID;
+	    goto done;
+	}
         if (!SEC_CrlIsNewer(&newCrl->crl,&oldCrl->crl)) {
 
             if (type == SEC_CRL_TYPE) {

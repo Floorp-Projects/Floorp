@@ -33,7 +33,7 @@
 /*
  * certt.h - public data structures for the certificate library
  *
- * $Id: certt.h,v 1.13 2001/11/21 18:00:09 relyea%netscape.com Exp $
+ * $Id: certt.h,v 1.14 2002/01/11 17:31:09 relyea%netscape.com Exp $
  */
 #ifndef _CERTT_H_
 #define _CERTT_H_
@@ -402,6 +402,7 @@ struct CERTSignedCrlStr {
     PRArenaPool *arena;
     CERTCrl crl;
     /*certDBEntryRevocation *dbEntry;	 database entry struct */
+    SECItem *derCrl;
     PK11SlotInfo *slot;
     /* PRBool keep;		 keep this crl in the cache for the  session*/
     CK_OBJECT_HANDLE pkcs11ID;
