@@ -23,9 +23,7 @@
 #include "nsNetModuleMgr.h"
 //#include "nsFileTransportService.h"
 #include "nsSocketTransportService.h"
-#ifdef NET_SOCKET_PROVIDER_BUILD
 #include "nsSocketProviderService.h"
-#endif
 #include "nscore.h"
 #include "nsStdURL.h"
 #include "nsSimpleURI.h"
@@ -39,9 +37,7 @@ static NS_DEFINE_CID(kIOServiceCID,              NS_IOSERVICE_CID);
 static NS_DEFINE_CID(kStandardURLCID,            NS_STANDARDURL_CID);
 static NS_DEFINE_CID(kSimpleURICID,              NS_SIMPLEURI_CID);
 static NS_DEFINE_CID(kSocketTransportServiceCID, NS_SOCKETTRANSPORTSERVICE_CID);
-#ifdef NET_SOCKET_PROVIDER_BUILD
 static NS_DEFINE_CID(kSocketProviderServiceCID,  NS_SOCKETPROVIDERSERVICE_CID);
-#endif
 static NS_DEFINE_CID(kExternalModuleManagerCID,  NS_NETMODULEMGR_CID);
 static NS_DEFINE_CID(kDNSServiceCID,             NS_DNSSERVICE_CID);
 static NS_DEFINE_CID(kLoadGroupCID,              NS_LOADGROUP_CID);
@@ -72,11 +68,9 @@ NSGetFactory(nsISupports* aServMgr,
     else if (aClass.Equals(kSocketTransportServiceCID)) {
         rv = NS_NewGenericFactory(&fact, nsSocketTransportService::Create);
     }
-#ifdef NET_SOCKET_PROVIDER_BUILD
     else if (aClass.Equals(kSocketProviderServiceCID)) {
         rv = NS_NewGenericFactory(&fact, nsSocketProviderService::Create);
     }
-#endif
     else if (aClass.Equals(kDNSServiceCID)) {
         rv = NS_NewGenericFactory(&fact, nsDNSService::Create);
     }
@@ -133,13 +127,11 @@ NSRegisterSelf(nsISupports* aServMgr , const char* aPath)
                                     aPath, PR_TRUE, PR_TRUE);
     if (NS_FAILED(rv)) return rv;
 
-#ifdef NET_SOCKET_PROVIDER_BUILD
     rv = compMgr->RegisterComponent(kSocketProviderServiceCID, 
                                     "Socket Provider Service",
                                     "component://netscape/network/socket-provider-service",
                                     aPath, PR_TRUE, PR_TRUE);
     if (NS_FAILED(rv)) return rv;
-#endif
 
     rv = compMgr->RegisterComponent(kDNSServiceCID, 
                                     "DNS Service",
@@ -189,10 +181,8 @@ NSUnregisterSelf(nsISupports* aServMgr, const char* aPath)
     rv = compMgr->UnregisterComponent(kSocketTransportServiceCID, aPath);
     if (NS_FAILED(rv)) return rv;
 
-#ifdef NET_SOCKET_PROVIDER_BUILD
     rv = compMgr->UnregisterComponent(kSocketProviderServiceCID, aPath);
     if (NS_FAILED(rv)) return rv;
-#endif
 
     rv = compMgr->UnregisterComponent(kDNSServiceCID, aPath);
     if (NS_FAILED(rv)) return rv;
