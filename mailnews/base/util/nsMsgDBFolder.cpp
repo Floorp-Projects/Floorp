@@ -311,8 +311,6 @@ NS_IMETHODIMP nsMsgDBFolder::GetHasNewMessages(PRBool *hasNewMessages)
 
 NS_IMETHODIMP nsMsgDBFolder::SetHasNewMessages(PRBool curNewMessages)
 {
-	nsresult rv;
-
 	if (curNewMessages != mNewMessages) 
 	{
 		/** @params
@@ -570,9 +568,6 @@ nsresult nsMsgDBFolder::CreatePlatformLeafNameForDisk(const char *userLeafName, 
 
 	// Now, we have to loop until we find a filename that doesn't already
 	// exist on the disk
-	PRBool nameSpaceExhausted = PR_FALSE;
-	nsXPIDLCString leafName;
-	
 	path.SetLeafName(mangledLeaf.GetBuffer());
   path.MakeUnique();
   *resultName = path.GetLeafName();
