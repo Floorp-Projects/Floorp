@@ -283,6 +283,29 @@
   }
 
 /*--------------------------------------------------------------------
+ *   New Task button
+ *-------------------------------------------------------------------*/
+
+#calendar-new-task-button
+  {
+    -moz-image-region: rect(189px 32px 210px 0px);
+  }
+#calendar-new-task-button[disabled="true"],
+#calendar-new-task-button[disabled="true"]:hover,
+#calendar-new-task-button[disabled="true"]:hover:active
+  {
+    -moz-image-region: rect(189px 128px 210px 96px);
+  }
+#calendar-new-task-button:hover
+  {
+    -moz-image-region: rect(189px 64px 210px 32px);
+  }
+#calendar-new-task-button:hover:active
+  {
+    -moz-image-region: rect(189px 96px 210px 64px);
+  }
+
+/*--------------------------------------------------------------------
  *   Throbber button
  *-------------------------------------------------------------------*/
 

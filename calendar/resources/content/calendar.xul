@@ -410,6 +410,11 @@
                    tooltiptext="&calendar.newevent.button.tooltip;"
                    observes="new_command"/>
     <toolbarbutton class="toolbarbutton-1"
+                   id="calendar-new-task-button"
+                   label="&calendar.newtask.button.label;"
+                   tooltiptext="&calendar.newtask.button.tooltip;"
+                   observes="new_todo_command"/>
+    <toolbarbutton class="toolbarbutton-1"
                    id="calendar-edit-event-button"
                    label="&calendar.edit.button.label;"
                    tooltiptext="&calendar.edit.button.tooltip;"

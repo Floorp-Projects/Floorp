@@ -290,6 +290,30 @@
   }
 
 /*--------------------------------------------------------------------
+ *   New Task button
+ *-------------------------------------------------------------------*/
+#calendar-new-task-button
+  {
+    margin-left:        5px;
+    padding-top:        1px;
+    -moz-image-region: rect(306px 45px 340px 0px);
+  }
+#calendar-new-task-button[disabled="true"],
+#calendar-new-task-button[disabled="true"]:hover,
+#calendar-new-task-button[disabled="true"]:hover:active
+  {
+    -moz-image-region: rect(306px 180px 340px 135px);
+  }
+#calendar-new-task-button:hover
+  {
+    -moz-image-region: rect(306px 90px 340px 45px);
+  }
+#calendar-new-task-button:hover:active
+  {
+    -moz-image-region: rect(306px 135px 340px 90px);
+  }
+
+/*--------------------------------------------------------------------
  *   Throbber button
  *-------------------------------------------------------------------*/
 #navigator-throbber {
