@@ -650,7 +650,8 @@ BookmarksTree.prototype = {
         return true;
       case "cmd_properties":
       case "cmd_rename":
-        return numSelectedItems == 1;
+        seln = gBookmarksShell.tree.selectedItems;
+        return numSelectedItems == 1 && seln[0].getAttribute("type") != NC_NS + "BookmarkSeparator";
       case "cmd_setnewbookmarkfolder":
         seln = gBookmarksShell.tree.selectedItems;
         var firstSelected = seln.length ? seln[0] : gBookmarksShell.tree;
