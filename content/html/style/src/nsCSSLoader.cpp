@@ -1516,18 +1516,6 @@ CSSLoaderImpl::LoadSheet(SheetLoadData* aLoadData, StyleSheetState aSheetState)
     return NS_OK;
   }
 
-  // We have to clone the URI because we're using it as the hash key and necko
-  // will munge it.  For example, "chrome://communicator/skin/" will become
-  // "chrome://communicator/skin/communicator.css" if you open a channel with
-  // it..  :(
-  nsCOMPtr<nsIURI> uriClone;
-  rv = aLoadData->mURI->Clone(getter_AddRefs(uriClone));
-  if (!uriClone) {
-    LOG_ERROR(("  Failed to clone URI"));
-    SheetComplete(aLoadData, PR_FALSE);
-    return rv;
-  }
-  
   if (aLoadData->mSyncLoad) {
     LOG(("  Synchronous load"));
     NS_ASSERTION(aSheetState == eSheetNeedsParser,
@@ -1535,7 +1523,7 @@ CSSLoaderImpl::LoadSheet(SheetLoadData* aLoadData, StyleSheetState aSheetState)
     
     // Just load it
     nsCOMPtr<nsIInputStream> stream;
-    rv = NS_OpenURI(getter_AddRefs(stream), uriClone);
+    rv = NS_OpenURI(getter_AddRefs(stream), aLoadData->mURI);
     if (NS_FAILED(rv)) {
       LOG_ERROR(("  Failed to open URI synchronously"));
       SheetComplete(aLoadData, PR_FALSE);
@@ -1617,13 +1605,13 @@ CSSLoaderImpl::LoadSheet(SheetLoadData* aLoadData, StyleSheetState aSheetState)
   }
 
 #ifdef MOZ_TIMELINE
-  NS_TIMELINE_MARK_URI("Loading style sheet: %s", uriClone);
+  NS_TIMELINE_MARK_URI("Loading style sheet: %s", aLoadData->mURI);
   NS_TIMELINE_INDENT();
 #endif
   
   nsCOMPtr<nsIChannel> channel;
   rv = NS_NewChannel(getter_AddRefs(channel),
-                     uriClone, nsnull, loadGroup,
+                     aLoadData->mURI, nsnull, loadGroup,
                      nsnull, nsIChannel::LOAD_NORMAL);
   
   if (NS_FAILED(rv)) {
