@@ -4,7 +4,6 @@ classic.jar:
 +  skin/classic/global/checkbox.css
 +  skin/classic/global/colorpicker.css
 +  skin/classic/global/customizeToolbar.css
-+  skin/classic/global/console.css
 +  skin/classic/global/contents.rdf
 +  skin/classic/global/dialog.css
 +  skin/classic/global/filepicker.css
@@ -53,8 +52,6 @@ classic.jar:
 +  skin/classic/global/arrow/arrow-up.gif                         (arrow/arrow-up.gif)
 +  skin/classic/global/checkbox/cbox-check-dis.gif                (checkbox/cbox-check-dis.gif)
 +  skin/classic/global/checkbox/cbox-check.gif                    (checkbox/cbox-check.gif)
-+  skin/classic/global/console/console-error-caret.gif            (console/console-error-caret.gif)
-+  skin/classic/global/console/console-error-dash.gif             (console/console-error-dash.gif)
 +  skin/classic/global/filepicker/folder-home.gif                 (filepicker/folder-home.gif)
 +  skin/classic/global/filepicker/folder-new.gif                  (filepicker/folder-new.gif)
 +  skin/classic/global/filepicker/folder-up.gif                   (filepicker/folder-up.gif)

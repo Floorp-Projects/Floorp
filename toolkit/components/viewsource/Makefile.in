@@ -20,14 +20,12 @@
 #
 
 
-DEPTH           = ../../..
-topsrcdir       = @top_srcdir@
-srcdir          = @srcdir@
-VPATH           = @srcdir@
+DEPTH     = ../../..
+topsrcdir = @top_srcdir@
+srcdir    = @srcdir@
+VPATH     = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
-
-EXTRA_COMPONENTS = jsconsole-clhandler.js
 
 include $(topsrcdir)/config/rules.mk
 

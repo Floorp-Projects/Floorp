@@ -989,7 +989,7 @@ function BrowserViewSourceOfDocument(aDocument)
 function BrowserViewSourceOfURL(url, charset, pageCookie)
 {
   // try to open a view-source window while inheriting the charset (if any)
-  openDialog("chrome://browser/content/viewSource.xul",
+  openDialog("chrome://global/content/viewSource.xul",
              "_blank",
              "scrollbars,resizable,chrome,dialog=no",
              url, charset, pageCookie);
@@ -2093,7 +2093,7 @@ function deleteHistoryItems(aParent)
 
 function toJavaScriptConsole()
 {
-  toOpenWindowByType("global:console", "chrome://browser/content/console/console.xul");
+  toOpenWindowByType("global:console", "chrome://global/content/console.xul");
 }
 
 function toOpenWindowByType(inType, uri)
@@ -3272,7 +3272,7 @@ nsContextMenu.prototype = {
           throw "not reached";
 
         var docUrl = null; // unused (and play nice for fragments generated via XSLT too)
-        window.openDialog("chrome://browser/content/viewPartialSource.xul",
+        window.openDialog("chrome://global/content/viewPartialSource.xul",
                           "_blank", "scrollbars,resizable,chrome,dialog=no",
                           docUrl, docCharset, reference, context);
     },
