@@ -174,7 +174,7 @@ NS_COM PRInt32 nsUnescapeCount(char * str)
 NS_COM char *
 nsEscapeHTML(const char * string)
 {
-  char *rv = (char *) nsAllocator::Alloc(nsCRT::strlen(string)*5 + 1); /* The +1 is for the trailing null! */
+  char *rv = (char *) nsAllocator::Alloc(nsCRT::strlen(string)*6 + 1); /* The +1 is for the trailing null! */
 	char *ptr = rv;
 
 	if(rv)
@@ -203,6 +203,15 @@ nsEscapeHTML(const char * string)
 				*ptr++ = 'p';
 				*ptr++ = ';';
 			  }
+			else if (*string == '"')
+			  {
+				*ptr++ = '&';
+				*ptr++ = 'q';
+				*ptr++ = 'u';
+				*ptr++ = 'o';
+				*ptr++ = 't';
+				*ptr++ = ';';
+			  }			
 			else
 			  {
 				*ptr++ = *string;
