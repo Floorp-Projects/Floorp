@@ -79,7 +79,7 @@
                       sortDirection="ascending">
               <template>
                 <menupopup id="basicPopup"
-                           oncommand="AskChangeDefaultEngine(event.target);">
+                           oncommand="if (event.originalTarget.localName == 'menuitem') AskChangeDefaultEngine(event.target);">
                   <menuitem value="..." uri="..."
                     desc="rdf:http://home.netscape.com/NC-rdf#Description"
                     ver="rdf:http://home.netscape.com/NC-rdf#Version"
