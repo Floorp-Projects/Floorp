@@ -1,6 +1,6 @@
 #!/bin/sh
 if [ ${3} = "YES" ]; then
-    PATH=${PATH};${1}/bin;${1}/lib
+    PATH=${PATH}\;${1}/bin\;${1}/lib
     export PATH
 else
     LIBPATH=${1}/lib
