@@ -8,7 +8,7 @@ addFile("$ProductName$ Help",
 
 var jarFolder = getFolder("Chrome", "help.jar");
 registerChrome(PACKAGE | DELAYED_CHROME, jarFolder, "content/help/");
-registerChrome(SKIN    | DELAYED_CHROME, jarFolder, "skin/help/");
+registerChrome(SKIN    | DELAYED_CHROME, jarFolder, "skin/classic/help/");
 registerChrome(LOCALE  | DELAYED_CHROME, jarFolder, "locale/en-US/help/");
 
 err = getLastError();
