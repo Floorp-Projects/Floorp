@@ -187,21 +187,12 @@ BookmarksTree.prototype = {
 
       const kBMDS = gBookmarksShell.RDF.GetDataSource("rdf:bookmarks");
       kBMDS.AddObserver(newFolderRDFObserver);
-      gBookmarksShell.doBookmarksCommand(NODE_ID(relativeNode), 
+      BookmarksUtils.doBookmarksCommand(NODE_ID(relativeNode), 
                                          NC_NS_CMD + "newfolder", args);
       kBMDS.RemoveObserver(newFolderRDFObserver);
       var newFolderItem = document.getElementById(newFolderRDFObserver._newFolderURI);
       gBookmarksShell.tree.focus();
       gBookmarksShell.tree.selectItem(newFolderItem);
-    },
-    
-    createSeparator: function (aSelectedItem)
-    {
-      var parentNode = gBookmarksShell.findRDFNode(aSelectedItem, false);
-      var args = [{ property: NC_NS + "parent", 
-                    resource: NODE_ID(parentNode) }];
-      gBookmarksShell.doBookmarksCommand(NODE_ID(aSelectedItem), 
-                                         NC_NS_CMD + "newseparator", args);
     },
     
     ///////////////////////////////////////////////////////////////////////////
@@ -416,12 +407,15 @@ BookmarksTree.prototype = {
     gSelectionTracker.currentItem = this.tree.currentItem;
     gSelectionTracker.currentCell = aEvent.target;
 
+    if (gSelectionTracker.currentItem.getAttribute("type") != NC_NS + "Bookmark" || 
+        gSelectionTracker.currentItem.getAttribute("type") != NC_NS + "Folder")
+      return;
+
     var row = gSelectionTracker.currentItem.firstChild;
     for (var i = 0; i < row.childNodes.length; ++i) {
       if (row.childNodes[i] == gSelectionTracker.currentCell) {
         // Don't allow inline-edit of cells other than name for folders. 
-        if (gSelectionTracker.currentItem.getAttribute("type") != NC_NS + "Bookmark" &&
-            i > 1)
+        if (gSelectionTracker.currentItem.getAttribute("type") != NC_NS + "Bookmark" && i)
           return;
         // Don't allow editing of the root folder name
         if (gSelectionTracker.currentItem.id == "NC:BookmarksRoot")
@@ -441,7 +435,7 @@ BookmarksTree.prototype = {
     if (this.tree.selectedItems.length > 1) return;
     if (aEvent.keyCode == 113 && aEvent.shiftKey) {
       const kNodeID = NODE_ID(this.tree.currentItem);
-      if (this.resolveType(kNodeId) == NC_NS + "Bookmark" && kNodeID != "NC:NavCenter")
+      if (this.resolveType(kNodeId) == NC_NS + "Bookmark")
         gBookmarksShell.commands.editCell (this.tree.currentItem, 1);
     }
     else if (aEvent.keyCode == 113)
