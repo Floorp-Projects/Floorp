@@ -107,23 +107,23 @@ NS_IMPL_THREADSAFE_ISUPPORTS1(nsSubscribableServer, nsISubscribableServer)
 NS_IMETHODIMP
 nsSubscribableServer::SetIncomingServer(nsIMsgIncomingServer *aServer)
 {
-	mIncomingServer = aServer;
-	return NS_OK;
+  mIncomingServer = aServer;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 nsSubscribableServer::GetDelimiter(char *aDelimiter)
 {
-    if (!aDelimiter) return NS_ERROR_NULL_POINTER;
-    *aDelimiter = mDelimiter;
-	return NS_OK;
+  if (!aDelimiter) return NS_ERROR_NULL_POINTER;
+  *aDelimiter = mDelimiter;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 nsSubscribableServer::SetDelimiter(char aDelimiter)
 {
-	mDelimiter = aDelimiter;
-	return NS_OK;
+  mDelimiter = aDelimiter;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -150,7 +150,7 @@ nsSubscribableServer::SetAsSubscribed(const char *path)
 }
 
 NS_IMETHODIMP
-nsSubscribableServer::AddTo(const char *aName, PRBool addAsSubscribed, PRBool changeIfExists)
+nsSubscribableServer::AddTo(const char *aName, PRBool addAsSubscribed, PRBool subscribable, PRBool changeIfExists)
 {
     nsresult rv = NS_OK;
     
@@ -177,14 +177,14 @@ nsSubscribableServer::AddTo(const char *aName, PRBool addAsSubscribed, PRBool ch
         NS_ENSURE_SUCCESS(rv,rv);
     }
 
-    node->isSubscribable = PR_TRUE;
+    node->isSubscribable = subscribable;
     return rv;
 }
 
 NS_IMETHODIMP
 nsSubscribableServer::SetState(const char *path, PRBool state, PRBool *stateChanged)
 {
-	nsresult rv = NS_OK;
+    nsresult rv = NS_OK;
     NS_ASSERTION(path && stateChanged, "no path or stateChanged");
     if (!path || !stateChanged) return NS_ERROR_NULL_POINTER;
 
@@ -613,7 +613,7 @@ nsSubscribableServer::AddChildNode(SubscribeTreeNode *parent, const char *name, 
 nsresult
 nsSubscribableServer::FindAndCreateNode(const char *path, SubscribeTreeNode **result)
 {
-	nsresult rv = NS_OK;
+    nsresult rv = NS_OK;
     NS_ASSERTION(result, "no result");
     if (!result) return NS_ERROR_NULL_POINTER;
 
@@ -650,7 +650,7 @@ nsSubscribableServer::FindAndCreateNode(const char *path, SubscribeTreeNode **re
         rv = AddChildNode(parent, token, &child);
         if (NS_FAILED(rv)) {
             CRTFREEIF(pathStr);
-	        return rv;
+            return rv;
         }
         token = nsCRT::strtok(rest, delimstr, &rest);
         parent = child;
@@ -659,7 +659,7 @@ nsSubscribableServer::FindAndCreateNode(const char *path, SubscribeTreeNode **re
 
     // the last child we add is the result
     *result = child;
-	return rv;
+    return rv;
 }
 
 NS_IMETHODIMP
@@ -811,8 +811,8 @@ nsSubscribableServer::GetChildren(const char *path, nsISupportsArray *array)
 NS_IMETHODIMP
 nsSubscribableServer::CommitSubscribeChanges()
 {
-	NS_ASSERTION(PR_FALSE,"override this.");
-	return NS_ERROR_FAILURE;
+    NS_ASSERTION(PR_FALSE,"override this.");
+    return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP

@@ -76,7 +76,7 @@ interface nsISubscribableServer : nsISupports {
 
     // other stuff
 	void setIncomingServer(in nsIMsgIncomingServer server);
-	void addTo(in string aName, in boolean addAsSubscribed, in boolean changeIfExists);
+	void addTo(in string aName, in boolean addAsSubscribed, in boolean aSubscribable, in boolean aChangeIfExists);
 	void setAsSubscribed(in string path);
 	void updateSubscribed();
 	void setShowFullName(in boolean showFullName);

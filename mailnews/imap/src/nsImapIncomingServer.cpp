@@ -1147,8 +1147,8 @@ NS_IMETHODIMP nsImapIncomingServer::PossibleImapMailbox(const char *folderPath, 
       NS_ENSURE_SUCCESS(rv,rv);
       imapFolder->SetHierarchyDelimiter(hierarchyDelimiter);
       isNamespace = (boxFlags & kNameSpace) != 0;
-      if (!isNamespace && !noSelect)
-        rv = AddTo(dupFolderPath.get(), mDoingLsub /* add as subscribed */, mDoingLsub /* change if exists */);
+      if (!isNamespace)
+        rv = AddTo(dupFolderPath.get(), mDoingLsub && !noSelect/* add as subscribed */, !noSelect, mDoingLsub /* change if exists */);
       NS_ENSURE_SUCCESS(rv,rv);
       return rv;
     }
@@ -2914,7 +2914,7 @@ nsImapIncomingServer::UpdateSubscribed()
 }
 
 NS_IMETHODIMP
-nsImapIncomingServer::AddTo(const char *aName, PRBool addAsSubscribed,PRBool changeIfExists)
+nsImapIncomingServer::AddTo(const char *aName, PRBool addAsSubscribed, PRBool aSubscribable, PRBool changeIfExists)
 {
   nsresult rv = EnsureInner();
   NS_ENSURE_SUCCESS(rv,rv);
@@ -2938,7 +2938,7 @@ nsImapIncomingServer::AddTo(const char *aName, PRBool addAsSubscribed,PRBool cha
   NS_ASSERTION(nameIsClean,"folder path was not in UTF7, ignore it");
   if (!nameIsClean) return NS_OK;
   
-  return mInner->AddTo(aName, addAsSubscribed, changeIfExists);
+  return mInner->AddTo(aName, addAsSubscribed, aSubscribable, changeIfExists);
 }
 
 NS_IMETHODIMP

@@ -1004,7 +1004,7 @@ nsNntpIncomingServer::AddNewsgroupToList(const char *aName)
 {
 	nsresult rv;
 
-	rv = AddTo(aName, PR_FALSE, PR_TRUE);
+	rv = AddTo(aName, PR_FALSE, PR_TRUE, PR_TRUE);
 	if (NS_FAILED(rv)) return rv;
 	return NS_OK;
 }
@@ -1112,7 +1112,7 @@ nsNntpIncomingServer::UpdateSubscribed()
 }
 
 NS_IMETHODIMP
-nsNntpIncomingServer::AddTo(const char *aName, PRBool addAsSubscribed, PRBool changeIfExists)
+nsNntpIncomingServer::AddTo(const char *aName, PRBool addAsSubscribed, PRBool aSubscribable, PRBool changeIfExists)
 {
     nsresult rv = EnsureInner();
     NS_ENSURE_SUCCESS(rv,rv);
@@ -1126,7 +1126,7 @@ nsNntpIncomingServer::AddTo(const char *aName, PRBool addAsSubscribed, PRBool ch
     rv = AddGroupOnServer(escapedName);
     NS_ENSURE_SUCCESS(rv,rv);
  
-    rv = mInner->AddTo(escapedName,addAsSubscribed,changeIfExists);
+    rv = mInner->AddTo(escapedName,addAsSubscribed, aSubscribable, changeIfExists);
     NS_ENSURE_SUCCESS(rv,rv);
 
     PR_FREEIF(escapedName);
@@ -1236,7 +1236,7 @@ nsNntpIncomingServer::HandleLine(char* line, PRUint32 line_size)
 		char *commaPos = PL_strchr(line,',');
 		if (commaPos) *commaPos = 0;
 
-		nsresult rv = AddTo(line, PR_FALSE, PR_TRUE);
+		nsresult rv = AddTo(line, PR_FALSE, PR_TRUE, PR_TRUE);
 		NS_ASSERTION(NS_SUCCEEDED(rv),"failed to add line");
 		if (NS_SUCCEEDED(rv)) {
           // since we've seen one group, we can claim we've loaded the hostinfo file
