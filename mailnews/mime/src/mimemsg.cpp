@@ -416,7 +416,7 @@ HG09091
 	   obj->options && 
 	   obj->options->decompose_file_p && 
 	   ct )
-	obj->options->is_multipart_msg = PL_strstr(ct, "multipart/") != NULL;
+	obj->options->is_multipart_msg = PL_strcasestr(ct, "multipart/") != NULL;
 #endif /* MIME_DRAFTS */
 
 
