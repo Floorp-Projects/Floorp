@@ -56,9 +56,6 @@ class nsIURI;
 class nsIWebShellWindow;
 class nsIFindComponent;
 
-
-
-#define SHISTORY_POPUP_LIST 10
 #define SH_IN_FRAMES
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -104,9 +101,7 @@ class nsBrowserInstance : public nsIBrowserInstance,
 
     nsresult InitializeSearch(nsIDOMWindowInternal* windowToSearch, nsIFindComponent *finder );
     
-    NS_IMETHOD CreateMenuItem(nsIDOMNode * , PRInt32,const PRUnichar * );
     NS_IMETHOD EnsureXULBrowserWindow();
-	  NS_IMETHOD ClearHistoryMenus(nsIDOMNode * );
 
     PRBool              mIsClosed;
 
