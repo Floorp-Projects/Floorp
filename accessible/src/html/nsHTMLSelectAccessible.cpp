@@ -820,11 +820,11 @@ NS_IMETHODIMP nsHTMLComboboxAccessible::GetAccRole(PRUint32 *_retval)
 
 NS_IMETHODIMP nsHTMLComboboxAccessible::Shutdown()
 {
+  nsHTMLSelectableAccessible::Shutdown();
+
   mComboboxTextFieldAccessible = nsnull;
   mComboboxButtonAccessible = nsnull;
   mComboboxListAccessible = nsnull;
-
-  nsHTMLSelectableAccessible::Shutdown();
 
   return NS_OK;
 }
