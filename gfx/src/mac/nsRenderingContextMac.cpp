@@ -42,17 +42,6 @@ DrawString();  DrawText for cstrings
 //#define NO_CLIP
 
 
-/*
-  Some Implementation Notes
-
-  REGIONS:  Regions are clipping rects associated with a GC. Since 
-  multiple Drawable's can and do share GC's (they are hardware cached)
-  In order to select clip rect's into GC's, they must be writeable. Thus, 
-  any consumer of the 'gfx' library must assume that GC's created by them
-  will be modified in gfx.
-
- */
-
 class GraphicsState
 {
 public:
@@ -66,6 +55,8 @@ public:
   nscolor         mColor;
   nsIFontMetrics  *mFontMetrics;
   PRInt32        	mFont;
+  PRInt32					mOffx;
+  PRInt32					mOffy;
 };
 
 //------------------------------------------------------------------------
@@ -78,6 +69,8 @@ GraphicsState :: GraphicsState()
   mColor = NS_RGB(0, 0, 0);
   mFontMetrics = nsnull;
   mFont = 0;
+  mOffx = 0;
+  mOffy = 0;
 }
 
 //------------------------------------------------------------------------
@@ -104,6 +97,8 @@ nsRenderingContextMac :: nsRenderingContextMac()
   mStateCache = new nsVoidArray();
   mClipRegion = nsnull;
   mCurrFontHandle = 0;
+  mOffx = 0;
+  mOffy = 0;
   PushState();
 }
 
@@ -114,7 +109,7 @@ nsRenderingContextMac :: ~nsRenderingContextMac()
 
 	if(mRenderingSurface)
 		{
-  	::SetPort(mRenderingSurface);
+  	::SetPort(mOriSurface);
   	::SetOrigin(0,0);
   	}
 
@@ -156,7 +151,7 @@ NS_IMPL_RELEASE(nsRenderingContextMac)
 
 nsresult nsRenderingContextMac :: Init(nsIDeviceContext* aContext,nsIWidget *aWindow)
 {
-PRInt32					offx,offy;
+PRInt32	offx,offy;
 
   if (nsnull == aWindow->GetNativeData(NS_NATIVE_WINDOW))
     return NS_ERROR_NOT_INITIALIZED;
@@ -172,6 +167,7 @@ PRInt32					offx,offy;
   
   mMainRegion = (RgnHandle)aWindow->GetNativeData(NS_NATIVE_REGION);
 
+	mOriSurface = mRenderingSurface;    // we need to know when we set back
   ::SetPort(mRenderingSurface);
   ::SetOrigin(-offx,-offy);
   
@@ -272,6 +268,9 @@ Rect		mac_rect;
     					state->mLocalClip.x + state->mLocalClip.width,state->mLocalClip.y + state->mLocalClip.height);
   	}
 
+  state->mOffx = mOffx;
+  state->mOffy = mOffy;
+  
   state->mColor = mCurrentColor;
 }
 
@@ -318,6 +317,10 @@ PRBool bEmpty = PR_FALSE;
 
     if (state->mColor != mCurrentColor)
       SetColor(state->mColor);
+    
+    mOffy = state->mOffy;
+    mOffx = state->mOffx;
+    ::SetOrigin(mOffy,mOffx);
     
     // Delete this graphics state object
     delete state;
@@ -1104,7 +1107,6 @@ Rect					srcrect,dstrect;
 
 	offscreenPM = ::GetGWorldPixMap((GWorldPtr)mRenderingSurface);
 	LockPixels(offscreenPM);
-	//srcpix = *offscreenPM;
 	srcpix = (PixMapPtr)*offscreenPM;
 	::RGBForeColor(&rgbblack);
 	::RGBBackColor(&rgbwhite);

@@ -120,11 +120,14 @@ protected:
   float             		mP2T;
   nsDrawingSurfaceMac		mRenderingSurface;  // main drawing surface,Can be a BackBuffer if Selected in
   nsDrawingSurfaceMac		mFrontBuffer;				// current buffer to draw into
+	nsDrawingSurfaceMac		mOriSurface;
   nsIDeviceContext			*mContext;
   nsIFontMetrics				*mFontMetrics;
   RgnHandle							mClipRegion;
   RgnHandle							mMainRegion;
   PRInt32               mCurrFontHandle;
+  PRInt32								mOffx;
+  PRInt32								mOffy;
 
   //state management
   nsVoidArray       *mStateCache;
