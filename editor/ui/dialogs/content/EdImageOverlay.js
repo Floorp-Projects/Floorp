@@ -530,12 +530,12 @@ function ValidateImage()
   if (!gDialog.actualSizeRadio.selected)
   {
     // Get user values for width and height
-    width = ValidateNumber(gDialog.widthInput, gDialog.widthUnitsMenulist, 1, maxPixels, 
+    width = ValidateNumber(gDialog.widthInput, gDialog.widthUnitsMenulist, 1, gMaxPixels, 
                            globalElement, "width", false, true);
     if (gValidationError)
       return false;
 
-    height = ValidateNumber(gDialog.heightInput, gDialog.heightUnitsMenulist, 1, maxPixels, 
+    height = ValidateNumber(gDialog.heightInput, gDialog.heightUnitsMenulist, 1, gMaxPixels, 
                             globalElement, "height", false, true);
     if (gValidationError)
       return false;
@@ -563,18 +563,18 @@ function ValidateImage()
 
   // spacing attributes
   gValidateTab = gDialog.tabBorder;
-  ValidateNumber(gDialog.imagelrInput, null, 0, maxPixels, 
+  ValidateNumber(gDialog.imagelrInput, null, 0, gMaxPixels, 
                  globalElement, "hspace", false, true, true);
   if (gValidationError)
     return false;
 
-  ValidateNumber(gDialog.imagetbInput, null, 0, maxPixels, 
+  ValidateNumber(gDialog.imagetbInput, null, 0, gMaxPixels, 
                  globalElement, "vspace", false, true);
   if (gValidationError)
     return false;
 
   // note this is deprecated and should be converted to stylesheets
-  ValidateNumber(gDialog.border, null, 0, maxPixels, 
+  ValidateNumber(gDialog.border, null, 0, gMaxPixels, 
                  globalElement, "border", false, true);
   if (gValidationError)
     return false;

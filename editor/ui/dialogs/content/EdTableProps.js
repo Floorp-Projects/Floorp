@@ -74,9 +74,6 @@ From C++:
 
 var gSelectedCellCount = 0;
 var ApplyUsed = false;
-// What should these be?
-var maxRows    = 1000; // This is the value gecko code uses for maximum rowspan, colspan
-var maxColumns = 1000;
 var selection;
 var CellDataChanged = false;
 var canDelete = false;
@@ -771,10 +768,10 @@ function SetAlign(listID, defaultValue, element, attName)
 function ValidateTableData()
 {
   gValidateTab = gDialog.TableTab;
-  newRowCount = Number(ValidateNumber(gDialog.TableRowsInput, null, 1, maxRows, null, true, true));
+  newRowCount = Number(ValidateNumber(gDialog.TableRowsInput, null, 1, gMaxRows, null, true, true));
   if (gValidationError) return false;
 
-  newColCount = Number(ValidateNumber(gDialog.TableColumnsInput, null, 1, maxColumns, null, true, true));
+  newColCount = Number(ValidateNumber(gDialog.TableColumnsInput, null, 1, gMaxColumns, null, true, true));
   if (gValidationError) return false;
 
   // If user is deleting any cells, get confirmation
@@ -797,23 +794,23 @@ function ValidateTableData()
   }
 
   ValidateNumber(gDialog.TableWidthInput, gDialog.TableWidthUnits,
-                 1, maxPixels, globalTableElement, "width");
+                 1, gMaxTableSize, globalTableElement, "width");
   if (gValidationError) return false;
 
   if (gUseCSS) {
     ValidateNumber(gDialog.TableHeightInput, gDialog.TableHeightUnits,
-                   1, maxPixels, globalTableElement, "height");
+                   1, gMaxTableSize, globalTableElement, "height");
     if (gValidationError) return false;
   }
 
-  var border = ValidateNumber(gDialog.BorderWidthInput, null, 0, maxPixels, globalTableElement, "border");
+  var border = ValidateNumber(gDialog.BorderWidthInput, null, 0, gMaxPixels, globalTableElement, "border");
   // TODO: Deal with "BORDER" without value issue
   if (gValidationError) return false;
 
-  ValidateNumber(gDialog.SpacingInput, null, 0, maxPixels, globalTableElement, "cellspacing");
+  ValidateNumber(gDialog.SpacingInput, null, 0, gMaxPixels, globalTableElement, "cellspacing");
   if (gValidationError) return false;
 
-  ValidateNumber(gDialog.PaddingInput, null, 0, maxPixels, globalTableElement, "cellpadding");
+  ValidateNumber(gDialog.PaddingInput, null, 0, gMaxPixels, globalTableElement, "cellpadding");
   if (gValidationError) return false;
 
   SetAlign("TableAlignList", defHAlign, globalTableElement, "align");
@@ -830,14 +827,14 @@ function ValidateCellData()
   if (gDialog.CellHeightCheckbox.checked)
   {
     ValidateNumber(gDialog.CellHeightInput, gDialog.CellHeightUnits,
-                    1, maxPixels, globalCellElement, "height");
+                    1, gMaxTableSize, globalCellElement, "height");
     if (gValidationError) return false;
   }
 
   if (gDialog.CellWidthCheckbox.checked)
   {
     ValidateNumber(gDialog.CellWidthInput, gDialog.CellWidthUnits,
-                   1, maxPixels, globalCellElement, "width");
+                   1, gMaxTableSize, globalCellElement, "width");
     if (gValidationError) return false;
   }
 
