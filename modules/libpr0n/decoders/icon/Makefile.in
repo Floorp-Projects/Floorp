@@ -34,9 +34,14 @@ MODULE_NAME	= nsIconDecoderModule
 
 ifeq ($(OS_ARCH),WINNT)
 EXTRA_DSO_LIBS	= gkgfx
+PLATFORM = win
 endif
 
-DIRS		= win
+ifeq ($(OS_ARCH),OS2)
+PLATFORM = os2
+endif
+
+DIRS		= $(PLATFORM)
 
 REQUIRES	= xpcom \
 		  string \
@@ -55,16 +60,18 @@ CPPSRCS		= \
 
 XPIDLSRCS	= nsIIconURI.idl
 
-SHARED_LIBRARY_LIBS = $(DIST)/lib/$(LIB_PREFIX)imgiconwin_s.$(LIB_SUFFIX)
+SHARED_LIBRARY_LIBS = $(DIST)/lib/$(LIB_PREFIX)imgicon$(PLATFORM)_s.$(LIB_SUFFIX)
 
 EXTRA_DSO_LDOPTS = \
 		$(EXTRA_DSO_LIBS) \
 		$(MOZ_COMPONENT_LIBS) \
 		$(NULL)
 
-LOCAL_INCLUDES	= -I$(srcdir)/win
+LOCAL_INCLUDES	= -I$(srcdir)/$(PLATFORM)
 
+ifeq ($(OS_ARCH),WINNT)
 OS_LIBS		+= shell32.lib
+endif
 
 include $(topsrcdir)/config/rules.mk
 
