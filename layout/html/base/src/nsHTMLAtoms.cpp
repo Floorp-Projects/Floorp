@@ -21,6 +21,7 @@
 
 nsIAtom* nsHTMLAtoms::mozAnonymousBlock;
 nsIAtom* nsHTMLAtoms::mozFirstLineFixup;
+nsIAtom* nsHTMLAtoms::mozLetterFrame;
 nsIAtom* nsHTMLAtoms::mozLineFrame;
 nsIAtom* nsHTMLAtoms::mozListBulletPseudo;
 
@@ -154,7 +155,6 @@ nsIAtom* nsHTMLAtoms::leftpadding;
 nsIAtom* nsHTMLAtoms::length;
 nsIAtom* nsHTMLAtoms::legend;
 nsIAtom* nsHTMLAtoms::legendContentPseudo;
-nsIAtom* nsHTMLAtoms::lineFrame;
 nsIAtom* nsHTMLAtoms::longdesc;
 nsIAtom* nsHTMLAtoms::lowsrc;
 nsIAtom* nsHTMLAtoms::marginheight;
@@ -281,6 +281,7 @@ void nsHTMLAtoms::AddrefAtoms()
   if (0 == gRefCnt) {
     mozAnonymousBlock = NS_NewAtom(":-moz-anonymous-block");
     mozFirstLineFixup = NS_NewAtom(":-moz-first-line-fixup");
+    mozLetterFrame = NS_NewAtom(":-moz-letter-frame");
     mozLineFrame = NS_NewAtom(":-moz-line-frame");
     mozListBulletPseudo = NS_NewAtom(":-moz-list-bullet");
 
@@ -415,7 +416,6 @@ void nsHTMLAtoms::AddrefAtoms()
     legend = NS_NewAtom("legend");
     legendContentPseudo = NS_NewAtom(":legend-content");
     length = NS_NewAtom("length");
-    lineFrame = NS_NewAtom("LineFrame");
     longdesc = NS_NewAtom("longdesc");
     lowsrc = NS_NewAtom("lowsrc");
     marginheight = NS_NewAtom("marginheight");
@@ -542,6 +542,7 @@ void nsHTMLAtoms::ReleaseAtoms()
   NS_PRECONDITION(gRefCnt != 0, "bad release atoms");
   if (--gRefCnt == 0) {
     NS_RELEASE(mozAnonymousBlock);
+    NS_RELEASE(mozLetterFrame);
     NS_RELEASE(mozLineFrame);
     NS_RELEASE(mozListBulletPseudo);
 
