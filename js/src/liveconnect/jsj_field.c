@@ -26,9 +26,6 @@
  */
 
 #include <stdlib.h>
-#include "prtypes.h"
-#include "prprf.h"
-#include "prlog.h"
 
 #include "jsj_private.h"      /* LiveConnect internals */
 
@@ -249,7 +246,7 @@ jsj_GetJavaFieldValue(JSContext *cx, JNIEnv *jEnv, JavaFieldSpec *field_spec,
         java_value.member =                                                  \
             (*jEnv)->Get##Type##Field(jEnv, java_obj, fieldID);              \
     if ((*jEnv)->ExceptionOccurred(jEnv)) {                                  \
-        jsj_ReportJavaError(cx, jEnv, "Error reading Java field");           \
+        jsj_UnexpectedJavaError(cx, jEnv, "Error reading Java field");           \
         return JS_FALSE;                                                     \
     }                                                                        \
     PR_END_MACRO
@@ -325,7 +322,7 @@ jsj_SetJavaFieldValue(JSContext *cx, JNIEnv *jEnv, JavaFieldSpec *field_spec,
         (*jEnv)->Set##Type##Field(jEnv, java_obj, fieldID,java_value.member);\
     }                                                                        \
     if ((*jEnv)->ExceptionOccurred(jEnv)) {                                  \
-        jsj_ReportJavaError(cx, jEnv, "Error assigning to Java field");      \
+        jsj_UnexpectedJavaError(cx, jEnv, "Error assigning to Java field");      \
         return JS_FALSE;                                                     \
     }                                                                        \
     PR_END_MACRO

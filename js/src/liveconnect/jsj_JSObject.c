@@ -28,13 +28,6 @@
 
 #include <stdlib.h>
 #include <string.h>
-#include "prtypes.h"
-#include "prprf.h"
-#include "prlog.h"
-
-#ifdef XP_MAC
-#include "prosdep.h"
-#endif
 
 #include "jsj_private.h"
 #include "jsjava.h"
@@ -57,6 +50,7 @@ struct CapturedJSError {
 
 /*********************** Reflection of JSObjects ****************************/
 
+#ifdef PRESERVE_JSOBJECT_IDENTITY
 /*
  * This is a hash table that maps from JS objects to Java objects.
  * It is used to ensure that the same Java object results when a JS
@@ -76,11 +70,13 @@ static PRHashTable *js_obj_reflections = NULL;
  * read/write or * write/write access.
  */
 static PRMonitor *js_obj_reflections_monitor = NULL;
-#endif
+#endif  /* JS_THREADSAFE */
+#endif  /* PRESERVE_JSOBJECT_IDENTITY */
 
 static JSBool
 init_js_obj_reflections_table()
 {
+#ifdef PRESERVE_JSOBJECT_IDENTITY
     js_obj_reflections = PR_NewHashTable(128, NULL, PR_CompareValues,
                                          PR_CompareValues, NULL, NULL);
     if (!js_obj_reflections)
@@ -92,7 +88,8 @@ init_js_obj_reflections_table()
         PR_HashTableDestroy(js_obj_reflections);
         return JS_FALSE;
     }
-#endif
+#endif  /* JS_THREADSAFE */
+#endif  /* PRESERVE_JSOBJECT_IDENTITY */
 
     return JS_TRUE;
 }
@@ -105,6 +102,9 @@ init_js_obj_reflections_table()
  *
  * If an error occurs, returns NULL and reports an error.
  */
+
+#ifdef PRESERVE_JSOBJECT_IDENTITY
+
 jobject
 jsj_WrapJSObject(JSContext *cx, JNIEnv *jEnv, JSObject *js_obj)
 {
@@ -121,14 +121,12 @@ jsj_WrapJSObject(JSContext *cx, JNIEnv *jEnv, JSObject *js_obj)
        JavaScript object.  If one is found, return it. */
     hep = PR_HashTableRawLookup(js_obj_reflections, (PRHashNumber)js_obj, js_obj);
 
-#ifdef PRESERVE_JSOBJECT_IDENTITY
     /* If the same JSObject is reflected into Java more than once then we should
        return the same Java object, both for efficiency and so that the '=='
        operator works as expected in Java when comparing two JSObjects.
        However, it is not possible to hold a reference to a Java object without
-       inhibiting GC of that object, at least not in a way that is portable
-       to all vendor's JVM, i.e. a weak reference. So, for now, JSObject identity
-       is broken. */
+       inhibiting GC of that object, at least not in a portable way, i.e.
+       a weak reference. So, for now, JSObject identity is broken. */
 
     he = *hep;
     if (he) {
@@ -137,7 +135,6 @@ jsj_WrapJSObject(JSContext *cx, JNIEnv *jEnv, JSObject *js_obj)
         if (java_wrapper_obj)
             goto done;
     }
-#endif /* PRESERVE_JSOBJECT_IDENTITY */
 
     /* No existing reflection found, so create a new Java object that wraps
        the JavaScript object by storing its address in a private integer field. */
@@ -167,6 +164,7 @@ jsj_WrapJSObject(JSContext *cx, JNIEnv *jEnv, JSObject *js_obj)
      * about collecting it otherwise.
      */
     /* FIXME -- beard: this seems to make calls into Java with JSObject's fail. */
+    /* We should really be creating a global ref if we are putting it in a hash table. */
     /* (*jEnv)->DeleteLocalRef(jEnv, java_wrapper_obj); */
 
 done:
@@ -211,6 +209,64 @@ remove_js_obj_reflection_from_hashtable(JSContext *cx, JSObject *js_obj)
 
     return success;
 }
+
+#else /* !PRESERVE_JSOBJECT_IDENTITY */
+
+/* This object provides is the "anchor" by which netscape.javscript.JSObject
+   objects hold a reference to native JSObjects. */
+typedef struct JSObjectRoot {
+    JSObject *js_obj;
+    JSContext *cx;      /* Creating context, needed for finalization */
+} JSObjectHandle;
+
+/*
+ * The caller must call DeleteLocalRef() on the returned object when no more
+ * references remain.
+ */
+jobject
+jsj_WrapJSObject(JSContext *cx, JNIEnv *jEnv, JSObject *js_obj)
+{
+    jobject java_wrapper_obj;
+    JSObjectHandle *handle;
+
+    /* Create a tiny stub object to act as the GC root that points to the
+       JSObject from its netscape.javascript.JSObject counterpart. */
+    handle = (JSObjectHandle*)JS_malloc(cx, sizeof(JSObjectHandle));
+    if (!handle)
+        return NULL;
+    handle->js_obj = js_obj;
+    handle->cx = cx;
+
+    /* No existing reflection found, so create a new Java object that wraps
+       the JavaScript object by storing its address in a private integer field. */
+    java_wrapper_obj =
+        (*jEnv)->NewObject(jEnv, njJSObject, njJSObject_JSObject, (jint)handle);
+    if (!java_wrapper_obj) {
+        jsj_UnexpectedJavaError(cx, jEnv, "Couldn't create new instance of "
+                                          "netscape.javascript.JSObject");
+        goto done;
+    }
+ 
+    JS_AddRoot(cx, &handle->js_obj);
+
+done:
+        
+    return java_wrapper_obj;
+}
+
+JSObject *
+jsj_UnwrapJSObjectWrapper(JNIEnv *jEnv, jobject java_wrapper_obj)
+{
+    JSObjectHandle *handle;
+
+    handle = (JSObjectHandle*)((*jEnv)->GetIntField(jEnv, java_wrapper_obj, njJSObject_internal));
+    PR_ASSERT(handle);
+    if (!handle)
+        return NULL;
+    return handle->js_obj;
+}
+
+#endif  /* !PRESERVE_JSOBJECT_IDENTITY */
 
 /*************** Handling of Java exceptions in JavaScript ******************/
 
@@ -535,14 +591,19 @@ enter_js(JNIEnv *jEnv, jobject java_wrapper_obj,
 
     /* Invoke callback, presumably used to implement concurrency constraints */
     if (JSJ_callbacks->enter_js_from_java) {
-        if (!JSJ_callbacks->enter_js_from_java(&err_msg))
+        if (!JSJ_callbacks->enter_js_from_java(jEnv, &err_msg))
             goto entry_failure;
     }
 
-    /* Check the JSObject pointer in the wrapper object for null while holding
-       the JS lock to deal with shutdown issues. */
+    /* Check the JSObject pointer in the wrapper object. */
     if (js_objp) {
+
+#ifdef PRESERVE_JSOBJECT_IDENTITY
         js_obj = (JSObject *)((*jEnv)->GetIntField(jEnv, java_wrapper_obj, njJSObject_internal));
+#else   /* !PRESERVE_JSOBJECT_IDENTITY */
+        js_obj = jsj_UnwrapJSObjectWrapper(jEnv, java_wrapper_obj);
+#endif  /* PRESERVE_JSOBJECT_IDENTITY */
+
         PR_ASSERT(js_obj);
         if (!js_obj)
             goto error;
@@ -561,7 +622,7 @@ enter_js(JNIEnv *jEnv, jobject java_wrapper_obj,
            Java and back into JS.  Invoke a callback to obtain/create a
            JSContext for us to use. */
         if (JSJ_callbacks->map_jsj_thread_to_js_context) {
-            cx = JSJ_callbacks->map_jsj_thread_to_js_context(jsj_env->jEnv, &err_msg);
+            cx = JSJ_callbacks->map_jsj_thread_to_js_context(jsj_env, jEnv, &err_msg);
             if (!cx)
                 goto error;
         } else {
@@ -584,7 +645,7 @@ enter_js(JNIEnv *jEnv, jobject java_wrapper_obj,
 error:
     /* Invoke callback, presumably used to implement concurrency constraints */
     if (JSJ_callbacks->exit_js)
-        JSJ_callbacks->exit_js();
+        JSJ_callbacks->exit_js(jEnv);
 
 entry_failure:
     if (err_msg) {
@@ -630,7 +691,7 @@ exit_js(JSContext *cx, JSJavaThreadState *jsj_env, JavaToJSSavedState* original_
 
     /* Invoke callback, presumably used to implement concurrency constraints */
     if (JSJ_callbacks->exit_js)
-        JSJ_callbacks->exit_js();
+        JSJ_callbacks->exit_js(jEnv);
 
     return JS_TRUE;
 }
@@ -1123,15 +1184,49 @@ done:
 JNIEXPORT void JNICALL
 Java_netscape_javascript_JSObject_finalize(JNIEnv *jEnv, jobject java_wrapper_obj)
 {
+    JSBool success;
     JSContext *cx;
-    JavaToJSSavedState saved_state;
-    JSJavaThreadState *jsj_env;
-    JSObject *js_obj;
-    
-    jsj_env = enter_js(jEnv, java_wrapper_obj, &cx, &js_obj, &saved_state);
-    if (!jsj_env)   /* Note: memory leak if we exit here */
+    JSObjectHandle *handle;
+
+    success = JS_FALSE;
+ 
+    handle = (JSObjectHandle *)((*jEnv)->GetIntField(jEnv, java_wrapper_obj, njJSObject_internal));
+    PR_ASSERT(handle);
+    if (!handle)
         return;
-    remove_js_obj_reflection_from_hashtable(cx, js_obj);
-    exit_js(cx, jsj_env, &saved_state);
+    cx = handle->cx;
+
+    success = JS_RemoveRoot(cx, &handle->js_obj);
+    JS_free(cx, handle);
+
+    PR_ASSERT(success);
 }
 
+/*
+ * Class:     netscape_javascript_JSObject
+ * Method:    equals
+ * Signature: (Ljava/lang/Object;)Z
+ */
+
+JNIEXPORT jboolean JNICALL
+Java_netscape_javascript_JSObject_equals(JNIEnv *jEnv,
+                                         jobject java_wrapper_obj,
+                                         jobject comparison_obj)
+{
+#ifdef PRESERVE_JSOBJECT_IDENTITY
+#    error "Missing code should be added here"
+#else
+    JSObject *js_obj1, *js_obj2;
+
+    /* Check that we're comparing with another netscape.javascript.JSObject */
+    if (!comparison_obj)
+        return 0;
+    if (!(*jEnv)->IsInstanceOf(jEnv, comparison_obj, njJSObject))
+        return 0;
+
+    js_obj1 = jsj_UnwrapJSObjectWrapper(jEnv, java_wrapper_obj);
+    js_obj2 = jsj_UnwrapJSObjectWrapper(jEnv, comparison_obj);
+
+    return (js_obj1 == js_obj2);
+#endif  /* PRESERVE_JSOBJECT_IDENTITY */
+}

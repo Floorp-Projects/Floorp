@@ -23,9 +23,6 @@
  * It contains the code for reading and writing elements of a Java array.
  */
 
-#include "prtypes.h"
-#include "prlog.h"
-
 #include "jsj_private.h"      /* LiveConnect internals */
 
 /*

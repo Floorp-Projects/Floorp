@@ -36,10 +36,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "prtypes.h"
-#include "prprf.h"
-#include "prlog.h"
-
 #include "jsj_private.h"        /* LiveConnect internals */
 
 static JSBool
@@ -161,7 +157,6 @@ JavaClass_getPropertyById(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
             return jsj_GetJavaFieldValue(cx, jEnv, member_descriptor->field, java_class, vp);
         } else {
             PR_ASSERT(0);
-            return JS_FALSE;
         }
     } else {
         JSFunction *function;
@@ -175,8 +170,8 @@ JavaClass_getPropertyById(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
             return JS_FALSE;
 
         *vp = OBJECT_TO_JSVAL(JS_GetFunctionObject(function));
-        return JS_TRUE;
     }
+    return JS_TRUE;
 }
 
 PR_STATIC_CALLBACK(JSBool)
@@ -250,18 +245,25 @@ JavaClass_lookupProperty(JSContext *cx, JSObject *obj, jsid id,
                             )
 {
     JNIEnv *jEnv;
+    JSErrorReporter old_reporter;
 
     /* printf("In JavaClass_lookupProperty()\n"); */
-
+    
     /* Get the Java per-thread environment pointer for this JSContext */
     jsj_MapJSContextToJSJThread(cx, &jEnv);
     if (!jEnv)
         return JS_FALSE;
 
-    if (!lookup_static_member_by_id(cx, jEnv, obj, NULL, id, NULL))
-        return JS_FALSE;
-    *objp = obj;
-    *propp = (JSProperty*)1;
+    old_reporter = JS_SetErrorReporter(cx, NULL);
+    if (lookup_static_member_by_id(cx, jEnv, obj, NULL, id, NULL)) {
+        *objp = obj;
+        *propp = (JSProperty*)1;
+    } else {
+        *objp = NULL;
+        *propp = NULL;
+    }
+
+    JS_SetErrorReporter(cx, old_reporter);
     return JS_TRUE;
 }
 
@@ -288,7 +290,7 @@ JavaClass_setAttributes(JSContext *cx, JSObject *obj, jsid id,
                         JSProperty *prop, uintN *attrsp)
 {
     /* We don't maintain JS property attributes for Java class members */
-    if (*attrsp != JSPROP_PERMANENT|JSPROP_ENUMERATE) {
+    if (*attrsp != (JSPROP_PERMANENT|JSPROP_ENUMERATE)) {
         PR_ASSERT(0);
         return JS_FALSE;
     }
@@ -540,12 +542,12 @@ getClass(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
         return JS_FALSE;
 
     if (argc != 1 ||
-	!JSVAL_IS_OBJECT(argv[0]) ||
-	!(obj_arg = JSVAL_TO_OBJECT(argv[0])) ||
-	(!JS_InstanceOf(cx, obj_arg, &JavaObject_class, 0) &&
+    !JSVAL_IS_OBJECT(argv[0]) ||
+    !(obj_arg = JSVAL_TO_OBJECT(argv[0])) ||
+    (!JS_InstanceOf(cx, obj_arg, &JavaObject_class, 0) &&
          !JS_InstanceOf(cx, obj_arg, &JavaArray_class, 0))) {
         JS_ReportError(cx, "getClass expects a Java object argument");
-	return JS_FALSE;
+    return JS_FALSE;
     }
 
     java_wrapper = JS_GetPrivate(cx, obj_arg);

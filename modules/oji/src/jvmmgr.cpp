@@ -178,7 +178,7 @@ PR_BEGIN_EXTERN_C
 
 #ifdef MOCHA
 
-PR_EXTERN(JSContext*) map_jsj_thread_to_js_context_impl(JNIEnv *env, char **errp);
+PR_EXTERN(JSContext*) map_jsj_thread_to_js_context_impl(JSJavaThreadState *jsj_env, JNIEnv *env, char **errp);
 PR_EXTERN(JSJavaThreadState*) map_js_context_to_jsj_thread_impl(JSContext *cx, char **errp);
 PR_EXTERN(JSObject*) map_java_object_to_js_object_impl(JNIEnv *env, jobject applet, char **errp);
 PR_EXTERN(JavaVM*) get_java_vm_impl(char **errp);
@@ -186,7 +186,7 @@ PR_EXTERN(JavaVM*) get_java_vm_impl(char **errp);
 PR_EXTERN_DATA(JSContext*) lm_crippled_context; /* XXX kill me */
 
 PR_IMPLEMENT(JSContext *)
-map_jsj_thread_to_js_context_impl(JNIEnv *env, char **errp)
+map_jsj_thread_to_js_context_impl(JSJavaThreadState *jsj_env, JNIEnv *env, char **errp)
 {
     JSContext *cx    = lm_crippled_context;
     PRBool    jvmMochaPrefsEnabled = PR_FALSE;
@@ -395,6 +395,20 @@ get_java_vm_impl(char **errp)
     return pJavaVM;
 }
 
+#ifdef OJI
+static JSBool PR_CALLBACK
+enter_js_from_java_impl(JNIEnv *jEnv, char **errp)
+{
+    return LM_LockJS(errp);
+}
+
+static void PR_CALLBACK
+exit_js_impl(JNIEnv *jEnv)
+{
+    LM_UnlockJS();
+}
+#endif /* OJI */
+
 #endif /* MOCHA */
 
 PR_END_EXTERN_C
@@ -409,9 +423,11 @@ static JSJCallbacks jsj_callbacks = {
     map_java_object_to_js_object_impl,
     NULL,
 #ifdef OJI
-    LM_LockJS, LM_UnlockJS,
+    enter_js_from_java_impl,
+    exit_js_impl,
 #else
-	NULL, NULL,
+	NULL,
+    NULL,
 #endif
     NULL,
     get_java_vm_impl

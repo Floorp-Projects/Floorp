@@ -36,13 +36,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "prtypes.h"
-#include "prprf.h"
-
-#ifdef XP_MAC
-#include "prosdep.h"
-#endif
-
 #include "jsj_private.h"        /* LiveConnect internals */
 #include "jsjava.h"
 
@@ -124,13 +117,17 @@ JavaPackage_resolve(JSContext *cx, JSObject *obj, jsval id)
     char *subPath, *newPath;
     const char *path;
     JNIEnv *jEnv;
-    
+
+    /* Painful hack for pre_define_java_packages() */
+    if (quiet_resolve_failure)
+        return JS_FALSE;
+                
     package = (JavaPackage_Private *)JS_GetPrivate(cx, obj);
     if (!package)
         return JS_TRUE;
 
     if (!JSVAL_IS_STRING(id))
-        return JS_TRUE;
+    return JS_TRUE;
     subPath = JS_GetStringBytes(JSVAL_TO_STRING(id));
 
     /*
@@ -188,9 +185,11 @@ JavaPackage_resolve(JSContext *cx, JSObject *obj, jsval id)
             goto out;
         }
     } else {
-        /* beard: if an exception occurred, shouldn't this clear it? */
-	     if ((*jEnv)->ExceptionOccurred(jEnv))
-            (*jEnv)->ExceptionClear(jEnv);
+
+        /* We assume that any failed attempt to load a class is because it
+           doesn't exist.  If we wanted to do a better job, we would check
+           the exception type and make sure that it's NoClassDefFoundError */
+        (*jEnv)->ExceptionClear(jEnv);
 
         /*
          * If there's no class of the given name, then we must be referring to
@@ -204,9 +203,11 @@ JavaPackage_resolve(JSContext *cx, JSObject *obj, jsval id)
             if (package->flags & PKG_SYSTEM) {
                 char *msg, *cp;
 
+#if 0
                 /* Painful hack for pre_define_java_packages() */
                 if (quiet_resolve_failure)
                     return JS_FALSE;
+#endif
 
                 msg = PR_smprintf("No Java system package with name \"%s\" was identified "
                                   "and no Java class with that name exists either",
@@ -226,9 +227,11 @@ JavaPackage_resolve(JSContext *cx, JSObject *obj, jsval id)
             }
         }
 
+#if 0
         /* Painful hack for pre_define_java_packages() */
         if (quiet_resolve_failure)
             return JS_FALSE;
+#endif
 
         if (!define_JavaPackage(cx, obj, subPath, newPath, 0)) {
             ok = JS_FALSE;
@@ -368,7 +371,8 @@ standard_java_packages[] = {
 
     {"sun",                 NULL,   PKG_USER},
     {"Packages",            "",     PKG_USER},
-    0
+
+    {NULL,                  NULL,   0}
 };
 
 /*
@@ -469,7 +473,7 @@ error:
 
 static JSBool
 JavaPackage_toString(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
-	             jsval *rval)
+                 jsval *rval)
 {
     if (!JS_InstanceOf(cx, obj, &JavaPackage_class, argv))
         return JS_FALSE;

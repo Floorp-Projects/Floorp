@@ -65,7 +65,8 @@ typedef struct JSJCallbacks {
        one from a pool of available JSContexts.  The implementation of this
        callback can call JSJ_SetJSContextForJavaThread() to avoid any further
        callbacks of this type for this Java thread. */
-    JSContext *	        (*map_jsj_thread_to_js_context)(JNIEnv *jEnv,
+    JSContext *	        (*map_jsj_thread_to_js_context)(JSJavaThreadState *jsj_env,
+                                                        JNIEnv *jEnv,
                                                         char **errp);
 
     /* This callback is invoked whenever a call is made into Java from
@@ -93,8 +94,8 @@ typedef struct JSJCallbacks {
        browser embedding, these are used to maintain the run-to-completion
        semantics of JavaScript.  It is acceptable for either function pointer
        to be NULL. */
-    JSBool	        (*enter_js_from_java)(char **errp);
-    void	        (*exit_js)(void);
+    JSBool	        (*enter_js_from_java)(JNIEnv *jEnv, char **errp);
+    void	        (*exit_js)(JNIEnv *jEnv);
 
     /* Most LiveConnect errors are signaled by calling JS_ReportError(), but in
        some circumstances, the target JSContext for such errors is not
@@ -214,7 +215,7 @@ JSJ_DetachCurrentThreadFromJava(JSJavaThreadState *jsj_env);
    execution environment to be used when LiveConnect is accessed from the given
    Java thread, i.e. when one of the methods of netscape.javascript.JSObject
    has been called.  There can only be one such JS context for any given Java
-   thread at a time.  To multiplex JSContexts among a single thread, this
+   thread at a time.  (To multiplex JSContexts among a single thread, this
    function could be called before Java is invoked on that thread.)  The return
    value is the previous JSContext associated with the given Java thread.
 

@@ -29,11 +29,28 @@
 #ifndef _JSJAVA_PVT_H
 #define _JSJAVA_PVT_H
 
-#include "jsjava.h"
+#include "prtypes.h"
+
+/* NSPR1 compatibility definitions */
+#ifdef NSPR20
+#   include "prprf.h"
+#   include "prlog.h"
+#   include "plhash.h"          /* NSPR hash-tables      */
+#else
+#   include "prprintf.h"
+#   include "prassert.h"
+#   include "prhash.h"          /* NSPR hash-tables      */
+#   define PRHashNumber prhashcode
+#endif
+
+#ifdef XP_MAC
+#    include "prosdep.h"
+#endif
+
 #include "jsj_hash.h"        /* Hash tables */
-#include "plhash.h"          /* NSPR hash-tables      */
 #include "jni.h"             /* Java Native Interface */
 #include "jsapi.h"           /* JavaScript engine API */
+#include "jsjava.h"          /* LiveConnect public API */
 
 
 /*************************** Type Declarations ******************************/
@@ -103,6 +120,7 @@ struct JavaMemberDescriptor {
     JavaFieldSpec *         field;      /* field with the given name, if any */
     JavaMethodSpec *        methods;    /* Overloaded methods which share the same name, if any */
     JavaMemberDescriptor *  next;       /* next descriptor in same defining class */
+    JSObject *              invoke_func_obj; /* If non-null, JSFunction obj to invoke method */
 };
 
 /* This is the native portion of a reflected Java class */
@@ -135,7 +153,6 @@ struct JavaMemberVal {
 typedef struct JavaObjectWrapper {
     jobject                 java_obj;           /* Opaque JVM ref to Java object */
     JavaClassDescriptor *   class_descriptor;   /* Java class info */
-    JavaMemberVal *         members;            /* Reflected methods and fields */
 } JavaObjectWrapper;
 
 /* These are definitions of the Java class/method/field modifier bits.
@@ -178,6 +195,7 @@ extern JSJCallbacks *JSJ_callbacks;
 extern JSClass JavaObject_class;
 extern JSClass JavaArray_class;
 extern JSClass JavaClass_class;
+extern JSClass JavaMember_class;
 
 /*
  * Opaque JVM handles to Java classes, methods and objects required for
@@ -288,9 +306,11 @@ jsj_ConvertJavaObjectToJSString(JSContext *cx, JNIEnv *jEnv,
                                 jobject java_obj, jsval *vp);
 extern JSBool
 jsj_ConvertJavaObjectToJSNumber(JSContext *cx, JNIEnv *jEnv,
+                                JavaClassDescriptor *class_descriptor,
                                 jobject java_obj, jsval *vp);
 extern JSBool
 jsj_ConvertJavaObjectToJSBoolean(JSContext *cx, JNIEnv *jEnv,
+                                 JavaClassDescriptor *class_descriptor,
                                  jobject java_obj, jsval *vp);
 
 /************************ Java package reflection **************************/
@@ -399,6 +419,9 @@ extern JSBool
 jsj_ReflectJavaMethodsAndFields(JSContext *cx, JavaClassDescriptor *class_descriptor,
                                 JSBool reflect_only_statics);
 
+extern JSObject *
+jsj_CreateJavaMember(JSContext *cx, jsval method_val, jsval field_val);
+
 /************************* Java object reflection **************************/
 extern JSBool
 jsj_init_JavaObject(JSContext *, JSObject *);
@@ -417,9 +440,6 @@ JavaObject_finalize(JSContext *cx, JSObject *obj);
 
 extern JSBool
 JavaObject_resolve(JSContext *cx, JSObject *obj, jsval id);
-
-extern JSBool
-JavaObject_enumerate(JSContext *cx, JSObject *obj);
 
 extern JSBool
 JavaObject_getProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp);
@@ -444,6 +464,9 @@ jsj_SetJavaArrayElement(JSContext *cx, JNIEnv *jEnv, jarray java_array,
 /********************* JavaScript object reflection ************************/                        
 extern jobject
 jsj_WrapJSObject(JSContext *cx, JNIEnv *jEnv, JSObject *js_obj);
+
+extern JSObject *
+jsj_UnwrapJSObjectWrapper(JNIEnv *jEnv, jobject java_wrapper_obj);
 
 extern void
 jsj_ClearPendingJSErrors(JSJavaThreadState *jsj_env);
