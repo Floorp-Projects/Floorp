@@ -33,6 +33,10 @@
 #include "nsIDocument.h"
 #include "nsIDOMWindow.h"
 
+#include "nsIServiceManager.h"
+#include "nsRDFCID.h"
+#include "nsIXULSortService.h"
+
 
 // Globals
 static NS_DEFINE_IID(kISupportsIID,              NS_ISUPPORTS_IID);
@@ -43,6 +47,9 @@ static NS_DEFINE_IID(kIDocumentIID,              nsIDocument::GetIID());
 
 static NS_DEFINE_IID(kRDFCoreCID,                NS_RDFCORE_CID);
 static NS_DEFINE_IID(kBrowserWindowCID,          NS_BROWSER_WINDOW_CID);
+
+static NS_DEFINE_IID(kXULSortServiceCID,         NS_XULSORTSERVICE_CID);
+static NS_DEFINE_IID(kIXULSortServiceIID,        NS_IXULSORTSERVICE_IID);
 
 
 /////////////////////////////////////////////////////////////////////////
@@ -140,6 +147,20 @@ nsRDFCore::DoSort(nsIDOMNode* node, const nsString& sortResource)
   printf("----------------------------\n");
   printf("Column: %s  \n", sortResource.ToNewCString());
   printf("----------------------------\n");
+
+	nsIXULSortService		*gXULSortService = nsnull;
+
+	nsresult rv = nsServiceManager::GetService(kXULSortServiceCID,
+		kIXULSortServiceIID, (nsISupports**) &gXULSortService);
+	if (nsnull != gXULSortService)
+	{
+		printf("\n******** YES, we got kXULSortServiceCID\n\n");
+		
+		gXULSortService->DoSort(node, sortResource);
+		nsServiceManager::ReleaseService(kXULSortServiceCID, gXULSortService);
+	}
+	else printf("\n******** unable to obtain kXULSortServiceCID\n\n");
+
 /*
   if (nsnull != mScriptContext) {
     const char* url = "";
