@@ -754,7 +754,7 @@ RDFXULBuilderImpl::CreateContents(nsIContent* aElement)
 
     // Now that we've built the children, check to see if the includesrc attribute
     // exists on the node.
-    nsString includeSrc;
+    nsAutoString includeSrc;
     if (NS_FAILED(rv = aElement->GetAttribute(kNameSpaceID_None,
                                               kXULIncludeSrcAtom,
                                               includeSrc))) {
@@ -2245,15 +2245,15 @@ RDFXULBuilderImpl::CreateHTMLElement(nsINameSpace* aContainingNameSpace,
         if (!tag)
           break;
 
-        nsString tagName;
+        nsAutoString tagName;
         tag->ToString(tagName);
 
         if (tagName == "observes")
         {
             // Find the node that we're supposed to be
             // observing and perform the hookup.
-            nsString elementValue;
-            nsString attributeValue;
+            nsAutoString elementValue;
+            nsAutoString attributeValue;
             nsCOMPtr<nsIDOMElement> domContent;
             domContent = do_QueryInterface(childContent);
 

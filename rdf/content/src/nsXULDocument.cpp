@@ -1062,7 +1062,7 @@ XULDocumentImpl::PrepareToLoad( nsCOMPtr<nsIParser>* created_parser,
 			syntheticURL = dont_QueryInterface(aOptionalURL);
 		else
 			{
-				nsString seedString;
+				nsAutoString seedString;
 				generate_RDF_seed(&seedString, 0);
 #ifndef NECKO
 				NS_NewURL(getter_AddRefs(syntheticURL), seedString);
@@ -2031,7 +2031,7 @@ XULDocumentImpl::SelectAll()
     nsIContent * end   = nsnull;
     nsIContent * body  = nsnull;
 
-    nsString bodyStr("BODY");
+    nsAutoString bodyStr("BODY");
     PRInt32 i, n;
     mRootContent->ChildCount(n);
     for (i=0;i<n;i++) {
@@ -2556,8 +2556,8 @@ XULDocumentImpl::CreateContents(nsIContent* aElement)
         {
             // Find the node that we're supposed to be
             // observing and perform the hookup.
-            nsString elementValue;
-            nsString attributeValue;
+            nsAutoString elementValue;
+            nsAutoString attributeValue;
             
             nsCOMPtr<nsIDOMElement> domContent;
             domContent = do_QueryInterface(childContent);
@@ -2972,7 +2972,7 @@ XULDocumentImpl::SearchForNodeByID(const nsString& anID,
     PRInt32 namespaceID;
     anElement->GetNameSpaceID(namespaceID);
     
-    nsString idValue;
+    nsAutoString idValue;
 
     anElement->GetAttribute(namespaceID, kIdAtom, idValue);
 

@@ -108,9 +108,9 @@ public:
 
     // Publicly exposed to make life easier. This is a private class
     // anyway.
-    PRInt32     mNameSpaceID;
-    nsIAtom*    mName;
-    nsString    mValue;
+    PRInt32      mNameSpaceID;
+    nsIAtom*     mName;
+    nsAutoString mValue;
 
 private:
     nsIContent* mContent;
