@@ -98,6 +98,9 @@ public:
   NS_IMETHOD SetContainer(nsIWebShellContainer* aContainer) = 0;
   NS_IMETHOD GetContainer(nsIWebShellContainer*& aResult) = 0;
 
+  NS_IMETHOD SetObserver(nsIStreamObserver* anObserver) = 0;
+  NS_IMETHOD GetObserver(nsIStreamObserver*& aResult) = 0;
+
   NS_IMETHOD GetRootWebShell(nsIWebShell*& aResult) = 0;
   NS_IMETHOD SetParent(nsIWebShell* aParent) = 0;
   NS_IMETHOD GetParent(nsIWebShell*& aParent) = 0;
@@ -110,12 +113,11 @@ public:
                                nsIWebShell*& aResult) = 0;
 
   // History api's
-  NS_IMETHOD Back(nsIStreamObserver* aObserver) = 0;
-  NS_IMETHOD Forward(nsIStreamObserver* aObserver) = 0;
+  NS_IMETHOD Back() = 0;
+  NS_IMETHOD Forward() = 0;
   NS_IMETHOD LoadURL(const nsString& aURLSpec,
-                     nsIStreamObserver* aObserver,
                      nsIPostData* aPostData=nsnull) = 0;
-  NS_IMETHOD GoTo(PRInt32 aHistoryIndex, nsIStreamObserver* aObserver) = 0;
+  NS_IMETHOD GoTo(PRInt32 aHistoryIndex) = 0;
   NS_IMETHOD GetHistoryIndex(PRInt32& aResult) = 0;
 
   // Chrome api's
