@@ -22,6 +22,82 @@ Inc. All Rights Reserved.
 #include "javaDOMGlobals.h"
 #include "org_mozilla_dom_NodeImpl.h"
 
+static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
+
+JNIEXPORT jboolean JNICALL Java_org_mozilla_dom_NodeImpl_XPCOM_equals
+  (JNIEnv *env, jobject jthis, jobject nodeArg)
+{
+  jboolean b_retFlag = JNI_FALSE;
+
+  nsIDOMNode* p_thisNode = 
+    (nsIDOMNode*) env->GetLongField(jthis, JavaDOMGlobals::nodePtrFID);
+  if (!p_thisNode) {
+    PR_LOG(JavaDOMGlobals::log, PR_LOG_WARNING, 
+	   ("Node.equals: NULL pointer\n"));
+    return b_retFlag;
+  }
+
+  nsIDOMNode* p_argNode = 
+    (nsIDOMNode*) env->GetLongField(nodeArg, JavaDOMGlobals::nodePtrFID);
+  if (!p_argNode) {
+    PR_LOG(JavaDOMGlobals::log, PR_LOG_WARNING, 
+	   ("Node.equals: NULL arg pointer\n"));
+    return b_retFlag;
+  }
+
+  nsISupports* thisSupports = nsnull;
+  nsISupports* argNodeSupports = nsnull;
+
+  nsresult rvThis = 
+    p_thisNode->QueryInterface(kISupportsIID, (void**)(&thisSupports));
+  if (NS_FAILED(rvThis) || !thisSupports) {
+    PR_LOG(JavaDOMGlobals::log, PR_LOG_ERROR, 
+	   ("Node.equals: this->QueryInterface failed (%x)\n", rvThis));
+    return b_retFlag; 	
+  }
+
+  nsresult rvArgNode =
+    p_argNode->QueryInterface(kISupportsIID, (void**)(&argNodeSupports));
+  if (NS_FAILED(rvArgNode) || !argNodeSupports) {
+    PR_LOG(JavaDOMGlobals::log, PR_LOG_ERROR, 
+	   ("Node.equals: arg->QueryInterface failed (%x)\n", rvArgNode));
+    thisSupports->Release();
+    return b_retFlag;
+  }
+
+  if (thisSupports == argNodeSupports)
+    b_retFlag = JNI_TRUE;
+  
+  thisSupports->Release();
+  argNodeSupports->Release();
+
+  return b_retFlag;
+}
+
+JNIEXPORT jint JNICALL Java_org_mozilla_dom_NodeImpl_XPCOM_hashCode
+  (JNIEnv *env, jobject jthis)
+{
+  nsIDOMNode* p_thisNode = 
+    (nsIDOMNode*) env->GetLongField(jthis, JavaDOMGlobals::nodePtrFID);
+  if (!p_thisNode) {
+    PR_LOG(JavaDOMGlobals::log, PR_LOG_WARNING, 
+	   ("Node.hashCode: NULL pointer\n"));
+    return (jint) 0;
+  }
+
+  nsISupports* thisSupports = nsnull;
+  nsresult rvThis = 
+    p_thisNode->QueryInterface(kISupportsIID, (void**)(&thisSupports));
+  if (NS_FAILED(rvThis) || !thisSupports) {
+    PR_LOG(JavaDOMGlobals::log, PR_LOG_ERROR, 
+	   ("Node.hashCode: QueryInterface failed (%x)\n", rvThis));
+    return (jint) 0;
+  }
+
+  thisSupports->Release();
+  return (jint) thisSupports;
+}
+
 /*
  * Class:     org_mozilla_dom_NodeImpl
  * Method:    finalize

@@ -36,11 +36,12 @@ public class NodeImpl implements Node {
     public boolean equals(Object o) {
 	if (!(o instanceof NodeImpl))
 	    return false;
-	return p_nsIDOMNode == ((NodeImpl)o).p_nsIDOMNode;
-    }
+	else
+	    return (XPCOM_equals(o));
+	}
 
-    public int hashCode() {
-	return (int) p_nsIDOMNode;
+    public int hashCode(){
+	return XPCOM_hashCode();
     }
 
     public String toString() {
@@ -88,4 +89,7 @@ public class NodeImpl implements Node {
     public native void setNodeValue(String nodeValue);
 
     protected native void finalize();
+
+    private native boolean XPCOM_equals(Object o);
+    private native int XPCOM_hashCode();
 }
