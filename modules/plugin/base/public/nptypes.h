@@ -46,9 +46,12 @@ typedef int int32_t;
 typedef unsigned int uint32_t;
 #else
 #include <stdint.h>
+
+#if !defined(__GNUC__) || (__GNUC__ > 2 && __GNUC_MINOR__ > 96)
 #ifndef __cplusplus
 #ifndef bool
 typedef int bool;
-#endif
-#endif
+#endif /* bool */
+#endif /* __cplusplus */
+#endif /* !defined(__GNUC__) || (__GNUC__ > 2 && __GNUC_MINOR__ > 96) */
 #endif
