@@ -293,8 +293,6 @@ void
 nsSVGScriptElement::GetScriptType(nsAString& type)
 {
   GetType(type);
-  if (type.LowerCaseEqualsLiteral("text/ecmascript"))
-    type.AssignLiteral("text/javascript");
 }
 
 // variation of this code in nsHTMLScriptElement - check if changes
