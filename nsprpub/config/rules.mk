@@ -258,13 +258,6 @@ ifeq ($(OS_ARCH)$(OS_RELEASE), AIX4.1)
 	$(LD) $(XCFLAGS) -o $@ $(OBJS) -bE:$(OBJDIR)/lib$(LIBRARY_NAME)_syms \
 		-bM:SRE -bnoentry $(OS_LIBS) $(EXTRA_LIBS)
 else
-ifeq ($(OS_ARCH)$(OS_RELEASE), Rhapsody5.0)
-	@echo Trying to generate Rhapsody dynamic library.
-	# Do we need this?: -install_name 
-	$(CC) -arch ppc -dynamiclib -compatibility_version 1 -current_version 1 -all_load $(OBJS) -o $@
-
-
-else
 ifeq ($(OS_ARCH), WINNT)
 ifeq ($(OS_TARGET), WIN16)
 	echo system windows dll initinstance >w16link
@@ -298,7 +291,6 @@ endif
 endif
 else
 	$(MKSHLIB) -o $@ $(OBJS) $(EXTRA_LIBS) $(OS_LIBS)
-endif
 endif
 endif
 
