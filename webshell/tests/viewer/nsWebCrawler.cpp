@@ -165,6 +165,18 @@ AtomHashTable::Remove(nsIAtom* aKey)
 }
 
 //----------------------------------------------------------------------
+PRInt32
+GetDelay(nsString& aURL)
+{
+  PRInt32 delay = -1;
+  if (aURL.Find("delay:=") >= 0) {
+    char buf[128];
+    PRInt32 offset = aURL.Find("=") + 1;
+    aURL.ToCString(&buf[0], 128, offset);
+    sscanf(&buf[0], "%d", &delay);
+  }
+  return delay;
+}
 
 nsWebCrawler::nsWebCrawler(nsViewerApp* aViewer)
   : mHaveURLList(PR_FALSE),
@@ -178,6 +190,7 @@ nsWebCrawler::nsWebCrawler(nsViewerApp* aViewer)
   mJiggleLayout = PR_FALSE;
   mPostExit = PR_FALSE;
   mDelay = 0;
+  mLastDelay = 0;
   mMaxPages = -1;
   mRecord = nsnull;
   mLinkTag = getter_AddRefs(NS_NewAtom("a"));
@@ -192,6 +205,8 @@ nsWebCrawler::nsWebCrawler(nsViewerApp* aViewer)
   mRegressing = PR_FALSE;
   mPrinterTestType = 0;
   mIncludeStyleInfo = PR_TRUE;
+  mLastWebShell = nsnull;
+  mLastURL = nsnull;
 }
 
 static void FreeStrings(nsVoidArray& aArray)
@@ -208,16 +223,113 @@ nsWebCrawler::~nsWebCrawler()
 {
   FreeStrings(mSafeDomains);
   FreeStrings(mAvoidDomains);
+  NS_IF_RELEASE(mLastWebShell);
+  NS_IF_RELEASE(mLastURL);
   NS_IF_RELEASE(mBrowser);
   delete mVisited;
 }
 
 NS_IMPL_ISUPPORTS1(nsWebCrawler, nsIDocumentLoaderObserver)
 
+void
+nsWebCrawler::DumpRegressionData(nsIWebShell* aWebShell,
+                                 nsIURI*      aURL)
+{
+#ifdef NS_DEBUG
+  if (mOutputDir.Length() > 0) {
+    nsIPresShell* shell = GetPresShell(aWebShell);
+    if (!shell) return;
+    if ( mPrinterTestType > 0 ) {
+      nsCOMPtr <nsIContentViewer> viewer;
+      nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(aWebShell));
+      docShell->GetContentViewer(getter_AddRefs(viewer));
+
+      if (viewer){
+        nsCOMPtr<nsIContentViewerFile> viewerFile = do_QueryInterface(viewer);
+        if (viewerFile) {
+          nsAutoString regressionFileName;
+          FILE *fp = GetOutputFile(aURL, regressionFileName);
+            
+          switch (mPrinterTestType) {
+          case 1:
+            // dump print data to a file for regression testing
+            viewerFile->Print(PR_TRUE,fp);
+            break;
+          case 2:
+            // visual printing tests, all go to the printer, no printer dialog
+            viewerFile->Print(PR_TRUE,0);
+            break;
+          case 3:
+            // visual printing tests, all go to the printer, with a printer dialog
+            viewerFile->Print(PR_FALSE,0);
+            break;
+          default:
+            break;
+          }
+          fclose(fp);
+        }
+      }
+    } 
+    else {
+      nsIFrame* root;
+      shell->GetRootFrame(&root);
+      if (nsnull != root) {
+        nsCOMPtr<nsIPresContext> presContext;
+        shell->GetPresContext(getter_AddRefs(presContext));
+        
+        if (mOutputDir.Length() > 0) {
+          nsAutoString regressionFileName;
+          FILE *fp = GetOutputFile(aURL, regressionFileName);
+          if (fp) {
+            nsIFrameDebug* fdbg;
+            if (NS_SUCCEEDED(root->QueryInterface(NS_GET_IID(nsIFrameDebug), (void**) &fdbg))) {
+              fdbg->DumpRegressionData(presContext, fp, 0, mIncludeStyleInfo);
+            }
+            fclose(fp);
+            if (mRegressing) {
+              PerformRegressionTest(regressionFileName);
+            }
+            else {
+              fputs(regressionFileName, stdout);
+              printf(" - being written\n");
+            }
+          }
+          else {
+            char* file;
+            (void)aURL->GetPath(&file);
+            printf("could not open output file for %s\n", file);
+            nsCRT::free(file);
+          }
+        }
+        else {
+          nsIFrameDebug* fdbg;
+          if (NS_SUCCEEDED(root->QueryInterface(NS_GET_IID(nsIFrameDebug), (void**) &fdbg))) {
+            fdbg->DumpRegressionData(presContext, stdout, 0, mIncludeStyleInfo);
+          }
+        }
+      }
+    }
+    NS_RELEASE(shell);
+  }
+#endif
+}
+
 NS_IMETHODIMP
 nsWebCrawler::OnStartDocumentLoad(nsIDocumentLoader* loader, nsIURI* aURL,
                                   const char* aCommand)
 {
+  if (mDelay > 0) {
+    if (mLastWebShell && mLastURL) {
+      DumpRegressionData(mLastWebShell, mLastURL);
+    }
+  }
+  NS_IF_RELEASE(mLastWebShell);
+  mBrowser->GetWebShell(mLastWebShell);
+
+  NS_IF_RELEASE(mLastURL);
+  mLastURL = aURL;
+  NS_ADDREF(mLastURL);
+
   return NS_OK;
 }
 
@@ -302,85 +414,14 @@ nsWebCrawler::OnEndDocumentLoad(nsIDocumentLoader* loader,
       vm->GetRootView(rootView);
       vm->UpdateView(rootView, NS_VMREFRESH_IMMEDIATE);
     }
-
-#ifdef NS_DEBUG
-    if (mOutputDir.Length() > 0) {
-      if ( mPrinterTestType > 0 ) {
-        nsCOMPtr <nsIContentViewer> viewer;
-        nsIWebShell* webshell = nsnull;
-        mBrowser->GetWebShell(webshell);
-
-        nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(webshell));
-        docShell->GetContentViewer(getter_AddRefs(viewer));
-
-        if (viewer){
-          nsCOMPtr<nsIContentViewerFile> viewerFile = do_QueryInterface(viewer);
-          if (viewerFile) {
-            nsAutoString regressionFileName;
-            FILE *fp = GetOutputFile(aURL, regressionFileName);
-            
-            switch (mPrinterTestType) {
-              case 1:
-                // dump print data to a file for regression testing
-                viewerFile->Print(PR_TRUE,fp);
-                break;
-              case 2:
-                // visual printing tests, all go to the printer, no printer dialog
-                viewerFile->Print(PR_TRUE,0);
-                break;
-              case 3:
-                // visual printing tests, all go to the printer, with a printer dialog
-                viewerFile->Print(PR_FALSE,0);
-                break;
-              default:
-                break;
-            }
-          fclose(fp);
-          }
-        }
-      } else {
-        nsIFrame* root;
-        shell->GetRootFrame(&root);
-        if (nsnull != root) {
-          nsCOMPtr<nsIPresContext> presContext;
-          shell->GetPresContext(getter_AddRefs(presContext));
-        
-          if (mOutputDir.Length() > 0)
-          {
-            nsAutoString regressionFileName;
-            FILE *fp = GetOutputFile(aURL, regressionFileName);
-            if (fp) {
-              nsIFrameDebug* fdbg;
-              if (NS_SUCCEEDED(root->QueryInterface(NS_GET_IID(nsIFrameDebug), (void**) &fdbg))) {
-                fdbg->DumpRegressionData(presContext, fp, 0, mIncludeStyleInfo);
-              }
-              fclose(fp);
-              if (mRegressing) {
-                PerformRegressionTest(regressionFileName);
-              }
-              else {
-                fputs(regressionFileName, stdout);
-                printf(" - being written\n");
-              }
-            }
-            else {
-              char* file;
-              (void)aURL->GetPath(&file);
-              printf("could not open output file for %s\n", file);
-              nsCRT::free(file);
-            }
-          }
-          else {
-            nsIFrameDebug* fdbg;
-            if (NS_SUCCEEDED(root->QueryInterface(NS_GET_IID(nsIFrameDebug), (void**) &fdbg))) {
-              fdbg->DumpRegressionData(presContext, stdout, 0, mIncludeStyleInfo);
-            }
-          }
-        }
+    if (0 == mDelay) {
+      nsIWebShell* webShell;
+      mBrowser->GetWebShell(webShell);
+      if (webShell) {
+        DumpRegressionData(webShell, aURL);
+        NS_RELEASE(webShell);
       }
     }
-#endif
-
     if (mJiggleLayout) {
       nsRect r;
       mBrowser->GetContentBounds(r);
@@ -503,8 +544,16 @@ nsWebCrawler::GetOutputFile(nsIURI *aURL, nsString& aOutputName)
 void
 nsWebCrawler::AddURL(const nsString& aURL)
 {
-  nsString* s = new nsString(aURL);
-  mPendingURLs.AppendElement(s);
+  nsString* url = new nsString(aURL);
+  mPendingURLs.AppendElement(url);
+  if (1 == mPendingURLs.Count()) {
+    mLastDelay = mDelay;
+  }
+  PRInt32 delay = GetDelay(*url);
+  if (delay >= 0) {
+    SetDelay(delay);
+    mLastDelay = delay;
+  }
   if (mVerbose) {
     printf("WebCrawler: adding '");
     fputs(aURL, stdout);
@@ -548,8 +597,17 @@ nsWebCrawler::Start()
   docShell->SetDocLoaderObserver(this);
   shell->GetDocumentLoader(*getter_AddRefs(mDocLoader));
   NS_RELEASE(shell);
-  if (mPendingURLs.Count() > 1) {
+  if (mPendingURLs.Count() >= 1) {
     mHaveURLList = PR_TRUE;
+    // duplicate the last url if there is a delay since the regression data for the
+    // url gets written when the next url is encountered. Not perfect, but simple.
+    if (mLastDelay != 0) {
+      nsString* last = (nsString *) mPendingURLs.ElementAt(mPendingURLs.Count() - 1);
+      if (last) {
+        nsString* dupLast = new nsString(*last);
+        mPendingURLs.AppendElement(dupLast);
+      }
+    }
   }
   LoadNextURL(PR_FALSE);
 }
@@ -806,7 +864,19 @@ TimerCallBack(nsITimer *aTimer, void *aClosure)
 void
 nsWebCrawler::LoadNextURL(PRBool aQueueLoad)
 {
-  if (0 != mDelay) {
+  nsString* url = (nsString*) mPendingURLs.ElementAt(0);
+  if (nsnull != url) {
+    PRInt32 delay = GetDelay(*url);
+    if (delay >= 0) {
+      SetDelay(delay);
+      mPendingURLs.RemoveElementAt(0);
+      char buf[128];
+      url->ToCString(&buf[0], 128);
+      printf("%s\n", buf);
+    }
+  }
+
+  if ((0 != mDelay) && (mPendingURLs.Count() > 0)) {
     mTimer = do_CreateInstance("@mozilla.org/timer;1");
     mTimer->Init(TimerCallBack, (void *)this, mDelay * 1000);
   }
@@ -852,10 +922,15 @@ nsWebCrawler::LoadNextURL(PRBool aQueueLoad)
 } 
 
 nsIPresShell*
-nsWebCrawler::GetPresShell()
+nsWebCrawler::GetPresShell(nsIWebShell* aWebShell)
 {
-  nsIWebShell* webShell;
-  mBrowser->GetWebShell(webShell);
+  nsIWebShell* webShell = aWebShell;
+  if (webShell) {
+    NS_ADDREF(webShell);
+  }
+  else {
+    mBrowser->GetWebShell(webShell);
+  }
   nsIPresShell* shell = nsnull;
   nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(webShell));
   if (nsnull != webShell) {
