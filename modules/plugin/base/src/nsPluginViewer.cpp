@@ -1022,41 +1022,48 @@ NS_IMETHODIMP pluginInstanceOwner :: CreateWidget(void)
 NS_IMETHODIMP pluginInstanceOwner :: GetURL(const char *aURL, const char *aTarget, void *aPostData, PRUint32 aPostDataLen, void *aHeadersData, 
                                             PRUint32 aHeadersDataLen)
 {
-  nsresult  rv;
+  NS_ENSURE_TRUE(mViewer,NS_ERROR_NULL_POINTER);
 
-  if (nsnull != mViewer)
-  {
-    nsCOMPtr<nsISupports> cont;
+  // the container of the pres context will give us the link handler
+  nsCOMPtr<nsISupports> container;
+  nsresult rv = mViewer->GetContainer(getter_AddRefs(container));
+  NS_ENSURE_TRUE(container,NS_ERROR_FAILURE);
+  nsCOMPtr<nsILinkHandler> lh = do_QueryInterface(container);
+  NS_ENSURE_TRUE(lh, NS_ERROR_FAILURE);
 
-    rv = mViewer->GetContainer(getter_AddRefs(cont));
+  nsCOMPtr<nsIURI> uri;
+  rv = mViewer->GetURI(getter_AddRefs(uri));
+  NS_ENSURE_TRUE(NS_SUCCEEDED(rv),NS_ERROR_FAILURE);
 
-    if (NS_OK == rv)
-    {
-      nsCOMPtr<nsILinkHandler> lh(do_QueryInterface(cont));
+  char* absURIStr;
+  NS_MakeAbsoluteURI(&absURIStr, aURL, uri);
+  nsAutoString fullurl; fullurl.AssignWithConversion(absURIStr);
+  nsCRT::free(absURIStr);
+  NS_ENSURE_TRUE(NS_SUCCEEDED(rv),NS_ERROR_FAILURE);
 
-      if (lh)
-      {
-        nsCOMPtr<nsIURI> uri;
-        rv = mViewer->GetURI(getter_AddRefs(uri));
-
-        if (NS_OK == rv)
-        {
-          // Create an absolute URL
-          char* absURIStr;
-          rv = NS_MakeAbsoluteURI(&absURIStr, aURL, uri);
-          nsAutoString fullurl; fullurl.AssignWithConversion(absURIStr);
-          nsCRT::free(absURIStr);
-
-          if (NS_OK == rv) {
-            nsAutoString  unitarget; unitarget.AssignWithConversion(aTarget);
-            rv = lh->OnLinkClick(nsnull, eLinkVerb_Replace, fullurl.get(), unitarget.get(), nsnull);
-          }
-        }
-      }
+  nsCOMPtr<nsISupports> result;
+  nsCOMPtr<nsIInputStream> postDataStream;
+  nsCOMPtr<nsIInputStream> headersDataStream;
+  if (aPostData) {
+    if (PL_strncasecmp((const char*)aPostData, "file:///", 8) == 0) {
+      const char *fileURL = (const char*)aPostData + 8 ;
+      rv = NS_NewPostDataStream(getter_AddRefs(postDataStream), PR_TRUE, fileURL, 0);
+    } else
+    rv = NS_NewPostDataStream(getter_AddRefs(postDataStream), PR_FALSE, (const char *) aPostData, 0);
+  }
+  if (aHeadersData) {
+    rv = NS_NewByteInputStream(getter_AddRefs(result), (const char *) aHeadersData, aHeadersDataLen);
+    if (result) {
+      headersDataStream = do_QueryInterface(result, &rv);
     }
   }
-  else
-    rv = NS_ERROR_FAILURE;
+
+  NS_ASSERTION(NS_SUCCEEDED(rv),"failed in creating plugin post data stream");
+
+  nsAutoString  unitarget; unitarget.AssignWithConversion(aTarget);
+  rv = lh->OnLinkClick(nsnull, eLinkVerb_Replace, 
+                       fullurl.get(), unitarget.get(), 
+                       postDataStream, headersDataStream);
 
   return rv;
 }
