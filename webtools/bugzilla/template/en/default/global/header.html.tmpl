@@ -63,7 +63,7 @@
   
 [%# Migration note: contents of the old Param 'bodyhtml' go in the body tag %]
 
-  <body [% body_attributes %]>
+  <body [% "bgcolor=\"#FFFFFF\"" UNLESS body_attributes.search('(?:^|\s)bgcolor=') %] [%+ body_attributes %]>
 
 [%# Migration note: this section corresponds to the old Param 'bannerhtml' %]
 
@@ -71,10 +71,9 @@
            cellspacing="0">
       <tr>
         <td>
-          <a href="http://www.mozilla.org/">
-            <img src="http://www.mozilla.org/images/mozilla-banner.gif" alt=""
-                 border="0" width="600" height="58">
-          </a>
+          <a href="http://www.mozilla.org/"><img 
+            src="http://www.mozilla.org/images/mozilla-banner.gif" alt=""
+            border="0" width="600" height="58"></a>
         </td>
       </tr>
     </table>
