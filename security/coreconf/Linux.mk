@@ -82,9 +82,7 @@ OS_CFLAGS		= $(DSO_CFLAGS) $(OS_REL_CFLAGS) -ansi -Wall -pipe -DLINUX -Dlinux -D
 OS_LIBS			= -L/lib $(OS_PTHREAD) -ldl -lc
 
 ifdef USE_PTHREADS
-	DEFINES		+= -D_REENTRANT -D_PR_NEED_FAKE_POLL
-else
-	DEFINES		+= -D_PR_LOCAL_THREADS_ONLY
+	DEFINES		+= -D_REENTRANT
 endif
 
 ARCH			= linux

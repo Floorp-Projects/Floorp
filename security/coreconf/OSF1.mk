@@ -61,10 +61,6 @@ ifeq ($(USE_PTHREADS),1)
 	OS_CFLAGS += -pthread
 endif
 
-ifeq ($(USE_IPV6),1)
-	OS_CFLAGS += -D_PR_INET6
-endif
-
 # The command to build a shared library on OSF1.
 MKSHLIB    += ld -shared -all -expect_unresolved "*"
 DSO_LDOPTS += -shared

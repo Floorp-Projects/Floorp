@@ -36,7 +36,7 @@ ARCH := $(shell uname)
 ifeq ($(ARCH), SunOS)
 	DEFINES  = -KPIC -DSVR4 -DSOLARIS -DSYSV -D__svr4 -D__svr4__ \
  -D_REENTRANT -DSOLARIS2_5 -D_SVID_GETTOD -DXP_UNIX -UDEBUG -DNDEBUG \
- -D_PR_GLOBAL_THREADS_ONLY -DXP_UNIX
+ -DXP_UNIX
 	INCPATH  = -I. -I../include/dbm -I../include/nspr -I../include/security
 	LIBPATH  = -L../lib
 	LIBS     = -lnss -lssl -lpkcs7 -lpkcs12 -lsecmod -lcert -lkey \
