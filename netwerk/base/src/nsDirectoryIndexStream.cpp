@@ -35,7 +35,7 @@
 #include "nsXPIDLString.h"
 #include "prio.h"
 #include "prlog.h"
-
+#include "prlong.h"
 #ifdef PR_LOGGING
 static PRLogModuleInfo* gLog;
 #endif
@@ -179,26 +179,27 @@ nsDirectoryIndexStream::Read(char* aBuf, PRUint32 aCount, PRUint32* aReadCount)
             }
 #endif
 
-            // rjc: don't return hidden files/directories!
-            PRBool hidden;
-            rv = current->IsHidden(&hidden);
-            if (NS_FAILED(rv)) return rv; 
-            if (hidden) {
-                PR_LOG(gLog, PR_LOG_DEBUG,
-                       ("nsDirectoryIndexStream[%p]: skipping hidden file/directory",
-                        this));
-                continue;
-            }
-
-            char* path;
-            rv = current->GetPath(&path);
-            if (NS_FAILED(rv)) return rv; 
-            PRFileInfo fileinfo;
-            PRStatus status = PR_GetFileInfo(path, &fileinfo);
-            nsCRT::free(path);
-            if (status != PR_SUCCESS)
-                continue;
-
+        // rjc: don't return hidden files/directories!
+        PRBool hidden;
+        rv = current->IsHidden(&hidden);
+        if (NS_FAILED(rv)) return rv; 
+        if (hidden) {
+            PR_LOG(gLog, PR_LOG_DEBUG,
+                   ("nsDirectoryIndexStream[%p]: skipping hidden file/directory",
+                    this));
+            continue;
+        }
+				
+				 PRInt64 fileSize;
+				 PRInt64 fileInfoModifyTime;
+				 rv = current->GetFileSize( &fileSize );
+				 if (NS_FAILED(rv)) return rv; 
+				 
+				 PROffset32 fileInfoSize;
+				 LL_L2I( fileInfoSize,fileSize );
+				 
+				 rv = current->GetLastModificationDate( &fileInfoModifyTime );	
+				 if (NS_FAILED(rv)) return rv; 
             mBuf += "201: ";
 
             // The "filename" field
@@ -218,12 +219,12 @@ nsDirectoryIndexStream::Read(char* aBuf, PRUint32 aCount, PRUint32* aReadCount)
             }
 
             // The "content-length" field
-            mBuf.Append(fileinfo.size, 10);
+            mBuf.Append(fileInfoSize, 10);
             mBuf.Append(' ');
 
             // The "last-modified" field
             PRExplodedTime tm;
-            PR_ExplodeTime(fileinfo.modifyTime, PR_GMTParameters, &tm);
+            PR_ExplodeTime(fileInfoModifyTime, PR_GMTParameters, &tm);
             {
                 char buf[64];
                 PR_FormatTimeUSEnglish(buf, sizeof(buf), "%a,%%20%d%%20%b%%20%Y%%20%H:%M:%S%%20GMT ", &tm);
