@@ -539,7 +539,7 @@ nsFtpState::Process() {
 //////////////////////////////
             case FTP_COMMAND_CONNECT:
                 {
-                    KillControlConnnection();
+                    KillControlConnection();
                     PR_LOG(gFTPLog, PR_LOG_DEBUG, ("(%x) Establishing control connection...", this));
                     rv = EstablishControlConnection();  // sets mState
                     mInternalError = rv;
@@ -1459,7 +1459,7 @@ nsFtpState::S_list() {
     if (NS_FAILED(rv)) return rv;
 
     mDRequestForwarder->SetStreamListener(converter);
-
+    
 #ifdef DOUGT_NEW_CACHE
     if (mCacheEntry && mReadingFromCache)
     {            
@@ -1712,6 +1712,7 @@ nsFtpState::R_pasv() {
     nsCOMPtr<nsIInterfaceRequestor> callbacks = do_QueryInterface(mChannel);
     mDPipe->SetNotificationCallbacks(callbacks, PR_FALSE);
 
+    NS_IF_RELEASE(mDRequestForwarder);
     mDRequestForwarder = new DataRequestForwarder;
     if (!mDRequestForwarder) return FTP_ERROR;
     NS_ADDREF(mDRequestForwarder);
@@ -2073,7 +2074,7 @@ nsFtpState::SetWriteStream(nsIInputStream* aInStream, PRUint32 aWriteCount) {
 }
 
 void
-nsFtpState::KillControlConnnection() {
+nsFtpState::KillControlConnection() {
     mControlReadContinue = PR_FALSE;
     mControlReadBrokenLine = PR_FALSE;
     mControlReadCarryOverBuf.Truncate(0);
@@ -2088,6 +2089,8 @@ nsFtpState::KillControlConnnection() {
         mDPipe->SetNotificationCallbacks(nsnull, PR_FALSE);
         mDPipe = 0;
     }
+    
+    NS_IF_RELEASE(mDRequestForwarder);
 
     mIPv6Checked = PR_FALSE;
     if (mIPv6ServerAddress) {
@@ -2176,7 +2179,7 @@ nsFtpState::StopProcessing() {
     // Clean up the event loop
     mKeepRunning = PR_FALSE;
 
-    KillControlConnnection();
+    KillControlConnection();
 
     // Release the Observers
     mWriteStream = 0;
