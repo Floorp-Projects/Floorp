@@ -1461,13 +1461,27 @@ nsObjectFrame::Paint(nsIPresContext& aPresContext,
     return NS_OK;
   }
 
-  if (NS_FRAME_PAINT_LAYER_FOREGROUND == aWhichLayer) {
-    const nsStyleFont* font = (const nsStyleFont*)
-      mStyleContext->GetStyleData(eStyleStruct_Font);
-
-    aRenderingContext.SetFont(font->mFont);
+  if (NS_FRAME_PAINT_LAYER_FOREGROUND == aWhichLayer) 
+  {
     aRenderingContext.SetColor(NS_RGB(192, 192, 192));
     aRenderingContext.FillRect(0, 0, mRect.width, mRect.height);
+
+    //~~~
+    nsIPluginInstance * inst;
+    if(NS_OK == GetPluginInstance(inst))
+    {
+      NS_RELEASE(inst);
+      // Look if it's windowless
+      nsPluginWindow * window;
+      mInstanceOwner->GetWindow(window);
+      if(window->type == nsPluginWindowType_Drawable)
+        mInstanceOwner->Paint(aDirtyRect);
+      return NS_OK;
+    }
+
+    const nsStyleFont* font = (const nsStyleFont*)mStyleContext->GetStyleData(eStyleStruct_Font);
+
+    aRenderingContext.SetFont(font->mFont);
     aRenderingContext.SetColor(NS_RGB(0, 0, 0));
     aRenderingContext.DrawRect(0, 0, mRect.width, mRect.height);
     float p2t;
@@ -1506,7 +1520,6 @@ nsObjectFrame::HandleEvent(nsIPresContext& aPresContext,
   {
 	  switch (anEvent->message) 
     {
-      case NS_PAINT:
       case NS_MOUSE_LEFT_BUTTON_DOWN:
       case NS_MOUSE_LEFT_BUTTON_UP:
       case NS_MOUSE_LEFT_DOUBLECLICK:
@@ -1520,7 +1533,7 @@ nsObjectFrame::HandleEvent(nsIPresContext& aPresContext,
       case NS_KEY_UP:
       case NS_KEY_DOWN:
       //case set cursor must be here:
-        anEventStatus = mInstanceOwner->ProcessEvent(*anEvent);
+        //anEventStatus = mInstanceOwner->ProcessEvent(*anEvent);
         return rv;
       case NS_GOTFOCUS:
       case NS_LOSTFOCUS:
@@ -2450,6 +2463,13 @@ void nsPluginInstanceOwner::Paint(const nsRect& aDirtyRect)
 		PRBool eventHandled = PR_FALSE;
 		mInstance->HandleEvent(&pluginEvent, &eventHandled);
 	}
+#endif
+
+//~~~
+#ifdef XP_WIN
+		nsPluginEvent pluginEvent;
+		PRBool eventHandled = PR_FALSE;
+		mInstance->HandleEvent(&pluginEvent, &eventHandled);
 #endif
 }
 

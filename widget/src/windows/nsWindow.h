@@ -34,10 +34,6 @@
 
 #include "nsVoidArray.h"
 
-//~~~ for windowless plugin support
-#include "nsplugindefs.h"
-
-
 #ifdef NEW_DRAG_AND_DROP
 class nsNativeDragTarget;
 #endif
@@ -214,9 +210,6 @@ protected:
     HPALETTE    mPalette;
     WNDPROC     mPrevWndProc;
 
-    //~~~
-    nsPluginEvent mPluginEvent;
-  
     PRBool      mHas3DBorder;
     HBRUSH      mBrush;
     PRBool      mIsShiftDown;
