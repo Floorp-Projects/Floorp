@@ -1659,11 +1659,11 @@ nsEventStateManager::DoScrollText(nsPresContext* aPresContext,
                                aEvent->isControl,  aEvent->isAlt,
                                aEvent->isShift,    aEvent->isMeta,
                                0, nsnull);
-    PRBool allowDefault;
     nsCOMPtr<nsIDOMEventTarget> target(do_QueryInterface(targetContent));
     if (target) {
-      target->DispatchEvent(event, &allowDefault);
-      if (!allowDefault)
+      PRBool defaultActionEnabled;
+      target->DispatchEvent(event, &defaultActionEnabled);
+      if (!defaultActionEnabled)
         return NS_OK;
       // Re-resolve |aTargetFrame| in case it was destroyed by the
       // DOM event handler above, bug 257998.
@@ -4353,7 +4353,7 @@ nsEventStateManager::ForceViewUpdate(nsIView* aView)
 NS_IMETHODIMP
 nsEventStateManager::DispatchNewEvent(nsISupports* aTarget,
                                       nsIDOMEvent* aEvent,
-                                      PRBool *aPreventDefault)
+                                      PRBool *aDefaultActionEnabled)
 {
   nsresult ret = NS_OK;
 
@@ -4416,7 +4416,7 @@ nsEventStateManager::DispatchNewEvent(nsISupports* aTarget,
         }
       }
 
-      *aPreventDefault = status != nsEventStatus_eConsumeNoDefault;
+      *aDefaultActionEnabled = status != nsEventStatus_eConsumeNoDefault;
     }
   }
 

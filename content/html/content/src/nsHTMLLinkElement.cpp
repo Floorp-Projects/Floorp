@@ -235,7 +235,6 @@ nsHTMLLinkElement::CreateAndDispatchEvent(nsIDocument* aDoc,
   docEvent->CreateEvent(NS_LITERAL_STRING("Events"), getter_AddRefs(event));
   if (event) {
     event->InitEvent(aEventName, PR_TRUE, PR_TRUE);
-    PRBool noDefault;
     nsCOMPtr<nsIDOMEventTarget> target =
       do_QueryInterface(NS_STATIC_CAST(nsIDOMNode*, this));
     if (target) {
@@ -243,7 +242,8 @@ nsHTMLLinkElement::CreateAndDispatchEvent(nsIDocument* aDoc,
       if (privEvent) {
         privEvent->SetTrusted(PR_TRUE);
       }
-      target->DispatchEvent(event, &noDefault);
+      PRBool defaultActionEnabled;
+      target->DispatchEvent(event, &defaultActionEnabled);
     }
   }
 }

@@ -95,9 +95,9 @@
   docEvent->CreateEvent(NS_LITERAL_STRING("Events"), getter_AddRefs(event));
   if (event) {
     event->InitEvent(NS_LITERAL_STRING("change"), PR_TRUE, PR_TRUE);
-    PRBool noDefault;
     nsCOMPtr<nsIDOMEventTarget> target(do_QueryInterface(mSelectElt));
-    target->DispatchEvent(event, &noDefault);
+    PRBool defaultActionEnabled;
+    target->DispatchEvent(event, &defaultActionEnabled);
   }  
 }
 

@@ -592,9 +592,11 @@ nsDOMEvent::GetEventPopupControlState(nsEvent *aEvent)
       case NS_FORM_SELECTED :
         if (::PopupAllowedForEvent("select"))
           abuse = openControlled;
+        break;
       case NS_FORM_CHANGE :
         if (::PopupAllowedForEvent("change"))
           abuse = openControlled;
+        break;
       }
     }
     break;

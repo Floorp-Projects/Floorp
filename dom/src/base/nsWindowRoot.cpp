@@ -188,8 +188,8 @@ nsWindowRoot::GetListenerManager(nsIEventListenerManager** aResult)
 NS_IMETHODIMP
 nsWindowRoot::HandleEvent(nsIDOMEvent *aEvent)
 {
-  PRBool noDefault;
-  return DispatchEvent(aEvent, &noDefault);
+  PRBool defaultActionEnabled;
+  return DispatchEvent(aEvent, &defaultActionEnabled);
 }
 
 NS_IMETHODIMP

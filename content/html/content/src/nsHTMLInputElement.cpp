@@ -2043,10 +2043,10 @@ nsHTMLInputElement::FireEventForAccessibility(nsPresContext* aPresContext,
       NS_SUCCEEDED(manager->CreateEvent(aPresContext, nsnull, NS_LITERAL_STRING("Events"), getter_AddRefs(event)))) {
     event->InitEvent(aEventType, PR_TRUE, PR_TRUE);
 
-    PRBool noDefault;
     nsISupports *target = NS_STATIC_CAST(nsIDOMHTMLInputElement*, this);
+    PRBool defaultActionEnabled;
     aPresContext->EventStateManager()->DispatchNewEvent(target, event,
-                                                        &noDefault);
+                                                        &defaultActionEnabled);
   }
 
   return NS_OK;

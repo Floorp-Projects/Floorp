@@ -257,10 +257,11 @@ NS_IMETHODIMP nsXULWindow::SetZLevel(PRUint32 aLevel)
       docEvent->CreateEvent(NS_LITERAL_STRING("Events"), getter_AddRefs(event));
       if (event) {
         event->InitEvent(NS_LITERAL_STRING("windowZLevel"), PR_TRUE, PR_FALSE);
-        PRBool noDefault;
         nsCOMPtr<nsIDOMEventTarget> targ(do_QueryInterface(doc));
-        if (targ)
-          targ->DispatchEvent(event, &noDefault);
+        if (targ) {
+          PRBool defaultActionEnabled;
+          targ->DispatchEvent(event, &defaultActionEnabled);
+        }
       }
     }
   }

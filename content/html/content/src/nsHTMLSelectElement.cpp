@@ -2009,9 +2009,10 @@ nsHTMLSelectElement::DispatchDOMEvent(const nsAString& aName)
     domDoc->CreateEvent(NS_LITERAL_STRING("Events"), getter_AddRefs(selectEvent));
     if (selectEvent) {
       selectEvent->InitEvent(aName, PR_TRUE, PR_TRUE);
-      nsCOMPtr<nsIDOMEventTarget> target(do_QueryInterface(NS_STATIC_CAST(nsIDOMNode*, this)));
-      PRBool noDefault;
-      target->DispatchEvent(selectEvent, &noDefault);
+      nsCOMPtr<nsIDOMEventTarget> target =
+        do_QueryInterface(NS_STATIC_CAST(nsIDOMNode*, this));
+      PRBool defaultActionEnabled;
+      target->DispatchEvent(selectEvent, &defaultActionEnabled);
     }
   }
 }

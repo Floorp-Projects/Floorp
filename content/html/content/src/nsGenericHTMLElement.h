@@ -154,8 +154,9 @@ public:
   nsresult GetClientHeight(PRInt32* aClientHeight);
   nsresult GetClientWidth(PRInt32* aClientWidth);
   nsresult ScrollIntoView(PRBool aTop);
-  // Declare Focus(), Blur(), GetTabIndex() and SetTabIndex() such that classes that 
-  // inherit interfaces with those methods properly override them
+  // Declare Focus(), Blur(), GetTabIndex() and SetTabIndex() such
+  // that classes that inherit interfaces with those methods properly
+  // override them
   NS_IMETHOD Focus();
   NS_IMETHOD Blur();
   NS_IMETHOD GetTabIndex(PRInt32 *aTabIndex);

@@ -127,27 +127,27 @@ public:
   nsAutoDOMEventDispatcher(nsIDOMWindow *aWindow);
   ~nsAutoDOMEventDispatcher();
 
-  PRBool DefaultPrevented()
+  PRBool DefaultEnabled()
   {
-    return mDefaultPrevented;
+    return mDefaultEnabled;
   }
 
 protected:
   PRBool DispatchCustomEvent(const char *aEventName);
 
   nsIDOMWindow *mWindow;
-  PRBool mDefaultPrevented;
+  PRBool mDefaultEnabled;
 };
 
 nsAutoDOMEventDispatcher::nsAutoDOMEventDispatcher(nsIDOMWindow *aWindow)
   : mWindow(aWindow),
-    mDefaultPrevented(DispatchCustomEvent("DOMWillOpenModalDialog"))
+    mDefaultEnabled(DispatchCustomEvent("DOMWillOpenModalDialog"))
 {
 }
 
 nsAutoDOMEventDispatcher::~nsAutoDOMEventDispatcher()
 {
-  if (!mDefaultPrevented) {
+  if (mDefaultEnabled) {
     DispatchCustomEvent("DOMModalDialogClosed");
   }
 }
@@ -156,7 +156,7 @@ PRBool
 nsAutoDOMEventDispatcher::DispatchCustomEvent(const char *aEventName)
 {
   if (!mWindow) {
-    return PR_FALSE;
+    return PR_TRUE;
   }
 
   nsCOMPtr<nsIDOMDocument> domdoc;
@@ -165,10 +165,7 @@ nsAutoDOMEventDispatcher::DispatchCustomEvent(const char *aEventName)
   nsCOMPtr<nsIDOMDocumentEvent> docevent(do_QueryInterface(domdoc));
   nsCOMPtr<nsIDOMEvent> event;
 
-  // Doesn't this seem backwards? Seems like
-  // nsEventStateManager::DispatchNewEvent() screws up on the
-  // logic for its prevent default argument...
-  PRBool preventDefault = PR_FALSE;
+  PRBool defaultActionEnabled = PR_TRUE;
 
   if (docevent) {
     docevent->CreateEvent(NS_LITERAL_STRING("Events"), getter_AddRefs(event));
@@ -181,14 +178,11 @@ nsAutoDOMEventDispatcher::DispatchCustomEvent(const char *aEventName)
 
       nsCOMPtr<nsIDOMEventTarget> target(do_QueryInterface(mWindow));
 
-      target->DispatchEvent(event, &preventDefault);
-
-      // DispatchEvent() is buggy, it returns the wrong boolean value.
-      preventDefault = !preventDefault;
+      target->DispatchEvent(event, &defaultActionEnabled);
     }
   }
 
-  return preventDefault;
+  return defaultActionEnabled;
 }
 
 
@@ -198,7 +192,7 @@ nsPrompt::Alert(const PRUnichar* dialogTitle,
 {
   nsAutoDOMEventDispatcher autoDOMEventDispatcher(mParent);
 
-  if (autoDOMEventDispatcher.DefaultPrevented()) {
+  if (!autoDOMEventDispatcher.DefaultEnabled()) {
     return NS_OK;
   }
 
@@ -213,7 +207,7 @@ nsPrompt::AlertCheck(const PRUnichar* dialogTitle,
 {
   nsAutoDOMEventDispatcher autoDOMEventDispatcher(mParent);
 
-  if (autoDOMEventDispatcher.DefaultPrevented()) {
+  if (!autoDOMEventDispatcher.DefaultEnabled()) {
     return NS_OK;
   }
 
@@ -228,7 +222,7 @@ nsPrompt::Confirm(const PRUnichar* dialogTitle,
 {
   nsAutoDOMEventDispatcher autoDOMEventDispatcher(mParent);
 
-  if (autoDOMEventDispatcher.DefaultPrevented()) {
+  if (!autoDOMEventDispatcher.DefaultEnabled()) {
     return NS_OK;
   }
 
@@ -244,7 +238,7 @@ nsPrompt::ConfirmCheck(const PRUnichar* dialogTitle,
 {
   nsAutoDOMEventDispatcher autoDOMEventDispatcher(mParent);
 
-  if (autoDOMEventDispatcher.DefaultPrevented()) {
+  if (!autoDOMEventDispatcher.DefaultEnabled()) {
     return NS_OK;
   }
 
@@ -265,7 +259,7 @@ nsPrompt::ConfirmEx(const PRUnichar *dialogTitle,
 {
   nsAutoDOMEventDispatcher autoDOMEventDispatcher(mParent);
 
-  if (autoDOMEventDispatcher.DefaultPrevented()) {
+  if (!autoDOMEventDispatcher.DefaultEnabled()) {
     return NS_OK;
   }
 
@@ -284,7 +278,7 @@ nsPrompt::Prompt(const PRUnichar *dialogTitle,
 {
   nsAutoDOMEventDispatcher autoDOMEventDispatcher(mParent);
 
-  if (autoDOMEventDispatcher.DefaultPrevented()) {
+  if (!autoDOMEventDispatcher.DefaultEnabled()) {
     return NS_OK;
   }
 
@@ -303,7 +297,7 @@ nsPrompt::PromptUsernameAndPassword(const PRUnichar *dialogTitle,
 {
   nsAutoDOMEventDispatcher autoDOMEventDispatcher(mParent);
 
-  if (autoDOMEventDispatcher.DefaultPrevented()) {
+  if (!autoDOMEventDispatcher.DefaultEnabled()) {
     return NS_OK;
   }
 
@@ -323,7 +317,7 @@ nsPrompt::PromptPassword(const PRUnichar *dialogTitle,
 {
   nsAutoDOMEventDispatcher autoDOMEventDispatcher(mParent);
 
-  if (autoDOMEventDispatcher.DefaultPrevented()) {
+  if (!autoDOMEventDispatcher.DefaultEnabled()) {
     return NS_OK;
   }
 
@@ -341,7 +335,7 @@ nsPrompt::Select(const PRUnichar *dialogTitle,
 {
   nsAutoDOMEventDispatcher autoDOMEventDispatcher(mParent);
 
-  if (autoDOMEventDispatcher.DefaultPrevented()) {
+  if (!autoDOMEventDispatcher.DefaultEnabled()) {
     return NS_OK;
   }
 
@@ -366,7 +360,7 @@ nsPrompt::Prompt(const PRUnichar* dialogTitle,
 {
   nsAutoDOMEventDispatcher autoDOMEventDispatcher(mParent);
 
-  if (autoDOMEventDispatcher.DefaultPrevented()) {
+  if (!autoDOMEventDispatcher.DefaultEnabled()) {
     return NS_OK;
   }
 
@@ -394,7 +388,7 @@ nsPrompt::PromptUsernameAndPassword(const PRUnichar* dialogTitle,
 {
   nsAutoDOMEventDispatcher autoDOMEventDispatcher(mParent);
 
-  if (autoDOMEventDispatcher.DefaultPrevented()) {
+  if (!autoDOMEventDispatcher.DefaultEnabled()) {
     return NS_OK;
   }
 
@@ -414,7 +408,7 @@ nsPrompt::PromptPassword(const PRUnichar* dialogTitle,
 {
   nsAutoDOMEventDispatcher autoDOMEventDispatcher(mParent);
 
-  if (autoDOMEventDispatcher.DefaultPrevented()) {
+  if (!autoDOMEventDispatcher.DefaultEnabled()) {
     return NS_OK;
   }
 

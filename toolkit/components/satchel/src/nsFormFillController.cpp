@@ -453,8 +453,8 @@ nsFormFillController::OnTextEntered(PRBool *_retval)
   event->InitEvent(NS_LITERAL_STRING("DOMAutoComplete"), PR_TRUE, PR_TRUE);
   nsCOMPtr<nsIDOMEventTarget> targ = do_QueryInterface(mFocusedInput);
 
-  PRBool noDefault;
-  targ->DispatchEvent(event, &noDefault);
+  PRBool defaultActionEnabled;
+  targ->DispatchEvent(event, &defaultActionEnabled);
 
   return NS_OK;
 }

@@ -1201,10 +1201,11 @@ nsXULElement::RemoveChildAt(PRUint32 aIndex, PRBool aNotify)
       docEvent->CreateEvent(NS_LITERAL_STRING("Events"), getter_AddRefs(event));
       if (event) {
         event->InitEvent(NS_LITERAL_STRING("select"), PR_FALSE, PR_TRUE);
-        PRBool noDefault;
-        nsCOMPtr<nsIDOMEventTarget> target(do_QueryInterface(NS_STATIC_CAST(nsIContent *, this)));
+        nsCOMPtr<nsIDOMEventTarget> target =
+            do_QueryInterface(NS_STATIC_CAST(nsIContent *, this));
         NS_ENSURE_TRUE(target, NS_ERROR_FAILURE);
-        target->DispatchEvent(event, &noDefault);
+        PRBool defaultActionEnabled;
+        target->DispatchEvent(event, &defaultActionEnabled);
       }
     }
 

@@ -2575,10 +2575,9 @@ nsListControlFrame::FireMenuItemActiveEvent()
   if (manager &&
       NS_SUCCEEDED(manager->CreateEvent(presContext, nsnull, NS_LITERAL_STRING("Events"), getter_AddRefs(event)))) {
     event->InitEvent(NS_LITERAL_STRING("DOMMenuItemActive"), PR_TRUE, PR_TRUE);
-    PRBool noDefault;
-
+    PRBool defaultActionEnabled;
     presContext->EventStateManager()->DispatchNewEvent(optionContent, event,
-                                                       &noDefault);
+                                                       &defaultActionEnabled);
   }
 }
 #endif

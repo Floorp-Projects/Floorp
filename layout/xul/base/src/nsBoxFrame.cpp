@@ -2580,9 +2580,9 @@ nsBoxFrame::FireDOMEvent(const nsAString& aDOMEventName, nsIContent *aContent)
                                                      NS_LITERAL_STRING("Events"),
                                                      getter_AddRefs(event)))) {
       event->InitEvent(aDOMEventName, PR_TRUE, PR_TRUE);
-      PRBool noDefault;
-      mPresContext->EventStateManager()->DispatchNewEvent(content, event,
-                                                          &noDefault);
+      PRBool defaultActionEnabled;
+      mPresContext->EventStateManager()->
+        DispatchNewEvent(content, event, &defaultActionEnabled);
     }
   }
 }
