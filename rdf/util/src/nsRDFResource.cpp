@@ -60,16 +60,17 @@ NS_IMPL_ADDREF(nsRDFResource)
 NS_IMPL_RELEASE(nsRDFResource)
 
 NS_IMETHODIMP
-nsRDFResource::QueryInterface(REFNSIID iid, void** result)
+nsRDFResource::QueryInterface(REFNSIID aIID, void** aResult)
 {
-    if (! result)
+    NS_PRECONDITION(aResult != nsnull, "null ptr");
+    if (! aResult)
         return NS_ERROR_NULL_POINTER;
 
-    *result = nsnull;
-    if (iid.Equals(nsIRDFResource::GetIID()) ||
-        iid.Equals(nsIRDFNode::GetIID()) ||
-        iid.Equals(kISupportsIID)) {
-        *result = NS_STATIC_CAST(nsIRDFResource*, this);
+    *aResult = nsnull;
+    if (aIID.Equals(nsIRDFResource::GetIID()) ||
+        aIID.Equals(nsIRDFNode::GetIID()) ||
+        aIID.Equals(kISupportsIID)) {
+        *aResult = NS_STATIC_CAST(nsIRDFResource*, this);
         NS_ADDREF_THIS();
         return NS_OK;
     }
@@ -81,19 +82,27 @@ nsRDFResource::QueryInterface(REFNSIID iid, void** result)
 // nsIRDFNode methods:
 
 NS_IMETHODIMP
-nsRDFResource::EqualsNode(nsIRDFNode* node, PRBool* result)
+nsRDFResource::EqualsNode(nsIRDFNode* aNode, PRBool* aResult)
 {
+    NS_PRECONDITION(aNode != nsnull, "null ptr");
+    if (! aNode)
+        return NS_ERROR_NULL_POINTER;
+
     nsresult rv;
     nsIRDFResource* resource;
-    if (NS_SUCCEEDED(node->QueryInterface(nsIRDFResource::GetIID(), (void**)&resource))) {
-        rv = EqualsResource(resource, result);
+    rv = aNode->QueryInterface(nsIRDFResource::GetIID(), (void**)&resource);
+    if (NS_SUCCEEDED(rv)) {
+        *aResult = (NS_STATIC_CAST(nsIRDFResource*, this) == resource);
         NS_RELEASE(resource);
+        return NS_OK;
+    }
+    else if (rv == NS_NOINTERFACE) {
+        *aResult = PR_FALSE;
+        return NS_OK;
     }
     else {
-        *result = PR_FALSE;
-        rv = NS_OK;
+        return rv;
     }
-    return rv;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -132,41 +141,36 @@ nsRDFResource::Init(const char* aURI)
 }
 
 NS_IMETHODIMP
-nsRDFResource::GetValue(char* *uri)
+nsRDFResource::GetValue(char* *aURI)
 {
-    if (!uri)
+    if (!aURI)
         return NS_ERROR_NULL_POINTER;
     
-    if ((*uri = nsXPIDLCString::Copy(mURI)) == nsnull)
+    if ((*aURI = nsXPIDLCString::Copy(mURI)) == nsnull)
         return NS_ERROR_OUT_OF_MEMORY;
     else
         return NS_OK;
 }
 
 NS_IMETHODIMP
-nsRDFResource::EqualsResource(nsIRDFResource* resource, PRBool* result)
+nsRDFResource::GetValueConst(const char** aURI)
 {
-    NS_PRECONDITION(resource != nsnull, "null ptr");
-    NS_PRECONDITION(result != nsnull, "null ptr");
-
-    if (!resource || !result)
-        return NS_ERROR_NULL_POINTER;
-
-    // nsIRDFResource interfaces are unique
-    *result = ((nsIRDFResource*) this) == resource;
+    *aURI = mURI;
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsRDFResource::EqualsString(const char* uri, PRBool* result)
+nsRDFResource::EqualsString(const char* aURI, PRBool* aResult)
 {
-    NS_PRECONDITION(uri != nsnull, "null ptr");
-    NS_PRECONDITION(result != nsnull, "null ptr");
-
-    if (!uri || !result)
+    NS_PRECONDITION(aURI != nsnull, "null ptr");
+    if (! aURI)
         return NS_ERROR_NULL_POINTER;
 
-    *result = nsCRT::strcmp(uri, mURI) == 0;
+    NS_PRECONDITION(aResult != nsnull, "null ptr");
+    if (!aResult)
+        return NS_ERROR_NULL_POINTER;
+
+    *aResult = (nsCRT::strcmp(aURI, mURI) == 0);
     return NS_OK;
 }
 

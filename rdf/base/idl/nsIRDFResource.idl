@@ -19,22 +19,33 @@
 #include "nsIRDFNode.idl"
 
 
-// An nsIRDFResource is an object that has unique identity in the 
-// RDF data model. The object's identity is determined by its URI.
+/**
+ * An nsIRDFResource is an object that has unique identity in the 
+ * RDF data model. The object's identity is determined by its URI.
+ */
 [scriptable, uuid(E0C493D1-9542-11d2-8EB8-00805F29F370)]
 interface nsIRDFResource : nsIRDFNode {
-    // The single-byte string value of the resource
+    /**
+     * The single-byte string value of the resource
+     */
     readonly attribute string Value;
 
-    // This method is called by the nsIRDFService after constructing
-    // a resource object to initialize it's URI. You would not normally
-    // call this method directly
+    /**
+     * An unscriptable version used to avoid a string copy. Meant
+     * for use as a performance optimization.
+     */
+    [noscript] void GetValueConst([shared] out string aConstValue);
+
+    /**
+     * This method is called by the nsIRDFService after constructing
+     * a resource object to initialize it's URI. You would not normally
+     * call this method directly
+     */
     void Init(in string uri);
 
-    // Determine if two resources are identical.
-    boolean EqualsResource(in nsIRDFResource aResource);
-
-    // Determine if the resource has the given URI.
+    /**
+     * Determine if the resource has the given URI.
+     */
     boolean EqualsString(in string aURI);
 };
 

@@ -120,11 +120,11 @@ public:
     NS_DECL_ISUPPORTS
 
     // nsIRDFNode
-    NS_IMETHOD EqualsNode(nsIRDFNode* node, PRBool* result);
+    NS_IMETHOD EqualsNode(nsIRDFNode* aNode, PRBool* aResult);
 
     // nsIRDFLiteral
-    NS_IMETHOD GetValue(PRUnichar* *value);
-    NS_IMETHOD EqualsLiteral(nsIRDFLiteral* literal, PRBool* result);
+    NS_IMETHOD GetValue(PRUnichar* *aValue);
+    NS_IMETHOD GetValueConst(const PRUnichar** aValue);
 
 private:
     nsAutoString mValue;
@@ -164,19 +164,23 @@ LiteralImpl::QueryInterface(REFNSIID iid, void** result)
 }
 
 NS_IMETHODIMP
-LiteralImpl::EqualsNode(nsIRDFNode* node, PRBool* result)
+LiteralImpl::EqualsNode(nsIRDFNode* aNode, PRBool* aResult)
 {
     nsresult rv;
     nsIRDFLiteral* literal;
-    if (NS_SUCCEEDED(node->QueryInterface(kIRDFLiteralIID, (void**) &literal))) {
-        rv = EqualsLiteral(literal, result);
+    rv = aNode->QueryInterface(kIRDFLiteralIID, (void**) &literal);
+    if (NS_SUCCEEDED(rv)) {
+        *aResult = (NS_STATIC_CAST(nsIRDFLiteral*, this) == literal);
         NS_RELEASE(literal);
+        return NS_OK;
+    }
+    else if (rv == NS_NOINTERFACE) {
+        *aResult = PR_FALSE;
+        return NS_OK;
     }
     else {
-        *result = PR_FALSE;
-        rv = NS_OK;
+        return rv;
     }
-    return rv;
 }
 
 NS_IMETHODIMP
@@ -192,23 +196,11 @@ LiteralImpl::GetValue(PRUnichar* *value)
 
 
 NS_IMETHODIMP
-LiteralImpl::EqualsLiteral(nsIRDFLiteral* literal, PRBool* result)
+LiteralImpl::GetValueConst(const PRUnichar** aValue)
 {
-    NS_ASSERTION(literal && result, "null ptr");
-    if (!literal || !result)
-        return NS_ERROR_NULL_POINTER;
-
-    nsresult rv;
-    nsXPIDLString p;
-    if (NS_FAILED(rv = literal->GetValue(getter_Copies(p))))
-        return rv;
-
-    nsAutoString s((const PRUnichar*) p);
-
-    *result = s.Equals(mValue);
+    *aValue = mValue.GetUnicode();
     return NS_OK;
 }
-
 
 ////////////////////////////////////////////////////////////////////////
 // DateImpl
@@ -227,9 +219,9 @@ public:
 
     // nsIRDFDate
     NS_IMETHOD GetValue(PRTime *value);
-    NS_IMETHOD EqualsDate(nsIRDFDate* date, PRBool* result);
 
 private:
+    nsresult EqualsDate(nsIRDFDate* date, PRBool* result);
     PRTime mValue;
 };
 
@@ -292,7 +284,7 @@ DateImpl::GetValue(PRTime *value)
 }
 
 
-NS_IMETHODIMP
+nsresult
 DateImpl::EqualsDate(nsIRDFDate* date, PRBool* result)
 {
     NS_ASSERTION(date && result, "null ptr");
@@ -325,9 +317,9 @@ public:
 
     // nsIRDFInt
     NS_IMETHOD GetValue(PRInt32 *value);
-    NS_IMETHOD EqualsInt(nsIRDFInt* value, PRBool* result);
 
 private:
+    nsresult EqualsInt(nsIRDFInt* value, PRBool* result);
     PRInt32 mValue;
 };
 
@@ -390,7 +382,7 @@ IntImpl::GetValue(PRInt32 *value)
 }
 
 
-NS_IMETHODIMP
+nsresult
 IntImpl::EqualsInt(nsIRDFInt* intValue, PRBool* result)
 {
     NS_ASSERTION(intValue && result, "null ptr");

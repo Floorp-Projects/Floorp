@@ -1455,7 +1455,7 @@ nsBookmarksService::WriteBookmarksContainer(nsIRDFDataSource *ds, nsOutputFileSt
 				if (!child)	break;
 
 				PRBool	isIERoot = PR_FALSE, isContainer = PR_FALSE;
-				if (NS_SUCCEEDED(child->EqualsResource(kNC_IEFavoritesRoot, &isIERoot)))
+				if (child == kNC_IEFavoritesRoot)
 				{
 					if (isIERoot == PR_FALSE)
 					{
