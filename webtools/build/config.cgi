@@ -136,31 +136,41 @@ sub print_script_preview {
       }
     }
 
+  my $script = &print_script;
+
+  if ($script eq '') {
+    print "<font size='+1'><b>";
+    print "No script needed. Only default values were selected.<p>\n";
+    print "</b></font>";
+  } else {
+      print qq(
+      <!--
+      <table cellpadding=0 cellspacing=1><tr><td>
+  	<input type='submit' value='Save the script'>
+  	</td></tr></table>
+      -->
+  
+      <table cellspacing=2 cellpading=0 border=0>
+        <tr><td>
+  	<table bgcolor="#FF0000" cellspacing=0 cellpadding=2 border=0>
+          <tr valign=middle><td align=center>
+  	  <table bgcolor="$chrome_color" cellspacing=0 cellpadding=2 border=0>
+            <tr valign=middle><td align=center>
+            <table bgcolor="#FFFFFF" cellspacing=0 cellpadding=10 width="600" border=0>
+              <tr><td>
+                <pre>$script</pre>
+  	      </td></tr></table>
+  	    </td></tr></table>
+  	  </td></tr></table>
+        </td></tr></table>
+  
+      <table cellpadding=0 cellspacing=1><tr><td>
+  	<input type='submit' value='Save the script'>
+  	</td></tr></table>
+    );
+  }
+
   print qq(
-    <!--
-    <table cellpadding=0 cellspacing=1><tr><td>
-	<input type='submit' value='Save the script'>
-	</td></tr></table>
-    -->
-
-    <table cellspacing=2 cellpading=0 border=0><tr><td>
-	<table bgcolor="#FF0000" cellspacing=0 cellpadding=2 border=0><tr valign=middle><td align=center>
-	<table bgcolor="$chrome_color" cellspacing=0 cellpadding=2 border=0><tr valign=middle><td align=center>
-    <table bgcolor="#FFFFFF" cellspacing=0 cellpadding=10 width="600" border=0><tr><td>
-    <pre>);
-
-  &print_script;
-
-  print qq(</pre>
-	   </td></tr></table>
-	   </td></tr></table>
-	   </td></tr></table>
-	   </td></tr></table>
-
-    <table cellpadding=0 cellspacing=1><tr><td>
-	<input type='submit' value='Save the script'>
-	</td></tr></table>
-
 <table cellspacing=0 cellpadding=0 border=0>
 <tr><td colspan=3>
 Save the script, then build the tree as follows,
@@ -176,13 +186,16 @@ Save the script, then build the tree as follows,
 </td></tr><tr><td colspan=3>&nbsp;</td></tr><tr><td colspan=3>
 </td></tr></table>
 If you do not want to use <code><b>client.mk</b></code>, 
-then use your usual build steps.<br>
+then use your favorite build steps, and
 <code><b>configure</b></code> will
 pick up the options in your <code><b>.mozconfig</b></code> script.
-<P>
-Check out the <A HREF="http://www.mozilla.org/build/configurator-faq.html">Build Configuator FAQ</A>
-for more information.
 <p>
+       Questions? See the 
+       <a href="http://www.mozilla.org/build/configurator-faq.html">
+       Configurator FAQ</a>.<br>
+       <a href="http://www.mozilla.org/build/unix.html">
+       Back to the Unix Build Instructions</a>
+       <p>
 <hr align=left width=600>
            Send questions or comments to 
            &lt;<a href="mailto:slamm\@netscape.com?subject=About the Build Configurator">slamm\@netcape.com</a>&gt;.
@@ -192,13 +205,14 @@ for more information.
 }
 
 sub print_script {
+  my $out = '';
 
-  print "# sh\n";
-  print "# Build configuration script\n";
-  print "#\n";
-  print "# See http://www.mozilla.org/build/unix.html for build instructions.\n";
-  print "#\n";
-  print "\n";
+  $out =  "# sh\n";
+  $out .= "# Build configuration script\n";
+  $out .= "#\n";
+  $out .= "# See http://www.mozilla.org/build/unix.html for build instructions.\n";
+  $out .= "#\n";
+  $out .= "\n";
 
   foreach $param ($query->param()) {
     if ($param =~ /^MOZ_/) {
@@ -207,25 +221,27 @@ sub print_script {
       $value =~ s/^\s+//;
       next if $value eq $default{$param};
       $value = "\"$value\"" if $value =~ /\s/;
-      print "# Options for client.mk.\n" if not $have_client_mk_options;
-      print "mk_add_options $param=".$value."\n";
+      $out .= "# Options for client.mk.\n" unless $have_client_mk_options;
+      $out .= "mk_add_options $param=".$value."\n";
       $have_client_mk_options = 1;
     }
   }
-  print "\n" if $have_client_mk_options;
+  $out .= "\n" if $have_client_mk_options;
   foreach $param ($query->param()) {
     if ($param =~ /^--/) {
       next if $query->param($param) eq '';
-      print "# Options for 'configure' (same as command-line options).\n"
+      $out .= "# Options for 'configure' (same as command-line options).\n"
         if not $have_configure_options;
-      print "ac_add_options $param";
-      print "=".$query->param($param) if $query->param($param) ne "yes";
-      print "\n";
+      $out .= "ac_add_options $param";
+      $out .= "=".$query->param($param) if $query->param($param) ne "yes";
+      $out .= "\n";
       $have_configure_options = 1;
     }
   }
-  if (not $have_client_mk_options and not $have_configure_options) {
-    print "\n# No script needed. Only default values were selected\n";
+  if ($have_client_mk_options or $have_configure_options) {
+    return $out;
+  } else {
+    return '';
   }
 }
 
@@ -258,7 +274,7 @@ sub print_configure_form {
     Unix Build Configurator
     </b></font>
     </td></tr><tr><td>
-    The mozilla Unix build system is designed to build free of any user set
+    The mozilla Unix Build System is designed to work free of any user set
     options. However, should you need to tweak an option, the
     Configurator is here to help.<p>
     This form produces a script that you can use to configure your build. 
@@ -380,6 +396,12 @@ sub print_configure_form {
 	   <input type="Submit" value="Preview Build Script">
        </td></tr></table>
 	   </form>
+
+       Questions? See the 
+       <a href="http://www.mozilla.org/build/configurator-faq.html">
+       Configurator FAQ</a>.<br>
+       <a href="http://www.mozilla.org/build/unix.html">
+       Back to the Unix Build Instructions</a>
        <p>
        <hr align=left width=600>
            Send questions or comments to 
