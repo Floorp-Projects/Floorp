@@ -321,12 +321,12 @@ NS_IMETHODIMP nsMsgProtocol::GetContentLength(PRInt32 * aContentLength)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsMsgProtocol::GetPrincipal(nsIPrincipal * *aPrincipal)
+NS_IMETHODIMP nsMsgProtocol::GetOwner(nsISupports * *aPrincipal)
 {
 	return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-NS_IMETHODIMP nsMsgProtocol::SetPrincipal(nsIPrincipal * aPrincipal)
+NS_IMETHODIMP nsMsgProtocol::SetOwner(nsISupports * aPrincipal)
 {
 	return NS_ERROR_NOT_IMPLEMENTED;
 }
