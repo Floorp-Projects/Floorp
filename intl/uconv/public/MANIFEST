@@ -9,3 +9,4 @@ nsIUnicodeEncodeHelper.h
 nsIUnicodeEncoder.h
 uconvutil.h
 nsIMappingCache.h
+nsICharRepresentable.h

@@ -28,6 +28,7 @@ EXPORTS =				\
 	nsIUnicodeEncodeHelper.h \
 	nsIUnicodeEncoder.h \
         nsIMappingCache.h \
+        nsICharRepresentable.h \
 	uconvutil.h \
         $(NULL)
 
