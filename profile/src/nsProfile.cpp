@@ -334,6 +334,7 @@ NS_IMETHODIMP nsProfile::GetProfileDir(const char *profileName, nsFileSpec* prof
 					if (NS_SUCCEEDED(rv))
 					{
 						char* isMigrated = nsnull;
+						char* orgProfileDir = nsnull;
 						
 						// Use persistent classes to make the directory names XPlatform
 						nsInputStringStream stream(encodedProfileDir);
@@ -342,6 +343,8 @@ NS_IMETHODIMP nsProfile::GetProfileDir(const char *profileName, nsFileSpec* prof
 						*profileDir = descriptor;
 
 						PR_FREEIF(encodedProfileDir);
+
+						orgProfileDir = PL_strdup(profileDir->GetCString());
 
 						// Get the value of entry "migrated" to check the nature of the profile
 						m_reg->GetString( newKey, "migrated", &isMigrated);
@@ -357,7 +360,40 @@ NS_IMETHODIMP nsProfile::GetProfileDir(const char *profileName, nsFileSpec* prof
 									printf("Profiles : Couldn't set CurrentProfile Name.\n");
 								#endif
 					        }
+
+							nsFileSpec tmpFileSpec(orgProfileDir);
+							if (!tmpFileSpec.Exists()) {
+							    
+								// Get profile defaults folder..
+								nsIFileLocator* locator = nsnull;
+		
+								rv = nsServiceManager::GetService(kFileLocatorCID, nsIFileLocator::GetIID(), (nsISupports**)&locator);
+
+								if (NS_FAILED(rv) || !locator)
+									return NS_ERROR_FAILURE;
+
+								nsIFileSpec* profDefaultsDir;
+								rv = locator->GetFileLocation(nsSpecialFileSpec::App_ProfileDefaultsFolder50, &profDefaultsDir);
+        
+								if (NS_FAILED(rv) || !profDefaultsDir)
+									return NS_ERROR_FAILURE;
+
+								nsFileSpec defaultsDirSpec;
+			
+								profDefaultsDir->GetFileSpec(&defaultsDirSpec);
+								NS_RELEASE(profDefaultsDir);
+
+								// Copy contents from defaults folder.
+								if (defaultsDirSpec.Exists())
+								{
+									defaultsDirSpec.RecursiveCopy(tmpFileSpec);
+								}
+
+								nsServiceManager::ReleaseService(kFileLocatorCID, locator);
+							}
+
 						}
+
 					}
 					else
 					{
