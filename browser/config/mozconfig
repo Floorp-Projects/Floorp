@@ -3,13 +3,7 @@
 #  . $topsrcdir/browser/config/mozconfig
 # to the top of your mozconfig file.
 
-export MOZ_PHOENIX=1
-mk_add_options MOZ_PHOENIX=1
-
-ac_add_options --disable-ldap
-ac_add_options --disable-mailnews
+mk_add_options MOZ_CO_PROJECT=browser
+ac_add_options --enable-application=browser
 ac_add_options --enable-extensions=cookie,xml-rpc,xmlextras,pref,transformiix,universalchardet,webservices,inspector,gnomevfs,negotiateauth
 ac_add_options --enable-crypto
-ac_add_options --disable-composer
-ac_add_options --enable-single-profile
-ac_add_options --disable-profilesharing
