@@ -703,117 +703,112 @@ PRBool FindSuitableDTD( CParserContext& aParserContext,nsString& aBuffer) {
  *  @param   aParseMode  -- Used with aMimeType to choose the correct DTD.
  *  @return  NS_OK if succeeded else ERROR.
  */
-nsresult nsParser::CreateCompatibleDTDForDocType(nsIDTD** aDTD, nsString* aDocTypeStr)
+nsresult nsParser::CreateCompatibleDTD(nsIDTD** aDTD, 
+                                       nsString* aDocTypeStr, 
+                                       eParserCommands aCommand,
+                                       const nsString* aMimeType,
+                                       nsDTDMode aDTDMode)
 {
   nsresult       result=NS_OK;
   const nsCID*   theDTDClassID=0;
+
+  /**
+   *  If the command is eViewNormal then we choose the DTD from
+   *  either the DOCTYPE or form the MIMETYPE. DOCTYPE is given
+   *  precedence over MIMETYPE. The passsed in DTD mode takes
+   *  precedence over the DTD mode figured out from the DOCTYPE string.
+   *  Ex. Assume the following:
+   *      aDocTypeStr=<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+   *      aCommand=eViewNormal 
+   *      aMimeType=text/html
+   *      aDTDMode=eDTDMode_strict
+   *  The above example would invoke DetermineParseMode(). This would figure out
+   *  a DTD mode ( eDTDMode_quirks ) and the doctype (eHTML4Text). Based on this
+   *  info. NavDTD would be chosen. However, since the passed in mode (aDTDMode) requests
+   *  for a strict the COtherDTD ( strict mode ) would get chosen rather than NavDTD. 
+   *  That is, aDTDMode overrides theDTDMode ( configured by the DOCTYPE ).The mime type 
+   *  will be taken into consideration only if a DOCTYPE string is not available.
+   *
+   *  Usage ( a sample ):
+   *
+   *  nsCOMPtr<nsIDTD> theDTD;
+   *  nsAutoString     theMimeType;
+   *  nsAutoString     theDocType;
+   *  
+   *  theDocType.AssignWithConversion("<!DOCTYPE>");
+   *  theMimeType.AssignWithConversion("text/html");
+   *
+   *  result=CreateCompatibleDTD(getter_AddRefs(theDTD),&theDocType,eViewNormal,&theMimeType,eDTDMode_quirks);
+   *       
+   */
   
-  if(aDocTypeStr) {
-    nsDTDMode       theParseMode=eDTDMode_unknown;
-    eParserDocType  theDocType=ePlainText;
+  if(aCommand==eViewNormal) {
+    if(aDocTypeStr) {
+      nsDTDMode      theDTDMode=eDTDMode_unknown;
+      eParserDocType theDocType=ePlainText;
 
-    DetermineParseMode(*aDocTypeStr,theParseMode,theDocType);
+      DetermineParseMode(*aDocTypeStr,theDTDMode,theDocType);
 
-    switch(theDocType) {
-      case eHTML4Text:
-        if(theParseMode==eDTDMode_strict) {
-          theDTDClassID=&kCOtherDTDCID;
+      NS_ASSERTION(aDTDMode==theDTDMode,"aDTDMode overrides the mode selected from the DOCTYPE ");
+
+      if(aDTDMode!=eDTDMode_unknown) theDTDMode=aDTDMode;  // aDTDMode takes precedence over theDTDMode
+
+      switch(theDocType) {
+        case eHTML4Text:
+          if(theDTDMode==eDTDMode_strict) {
+            theDTDClassID=&kCOtherDTDCID;
+            break;
+          }
+        case eHTML3Text:
+          theDTDClassID=&kNavDTDCID;
           break;
-        }
-      case eHTML3Text:
-        theDTDClassID=&kNavDTDCID;
-        break;
-      case eXHTMLText:
-      case eXMLText:
-        theDTDClassID=&kWellFormedDTDCID;
-        break;
-      default:
-        theDTDClassID=&kNavDTDCID;
-        break;
+        case eXHTMLText:
+        case eXMLText:
+          theDTDClassID=&kWellFormedDTDCID;
+          break;
+        default:
+          theDTDClassID=&kNavDTDCID;
+          break;
+      }
     }
-  }
+    else if(aMimeType) {
+          
+      NS_ASSERTION(aDTDMode!=eDTDMode_unknown,"DTD selection might require a parsemode");
 
-  result=(theDTDClassID)? nsComponentManager::CreateInstance(*theDTDClassID, nsnull, NS_GET_IID(nsIDTD),(void**)aDTD):NS_OK;
-
-  return result;
-
-}
-
-/**
- *  Call this method to determine a DTD for a given mime type.
- *  
- *  @update  harishd 05/01/00
- *  @param   aDTD  -- Carries the deduced ( from DOCTYPE ) DTD.
- *  @param   aMimeType   -- A mimetype for which a DTD is to be selected.
- *                          Note: aParseMode might be required.
- *  @param   aParseMode  -- Used with aMimeType to choose the correct DTD.
- *  @return  NS_OK if succeeded else ERROR.
- */
-nsresult nsParser::CreateCompatibleDTDForMimeType(nsIDTD** aDTD,const nsString* aMimeType, 
-                                        nsDTDMode aParseMode)
-{
-  nsresult result=NS_OK;
-  const nsCID*   theDTDClassID=0;
-      
-  if(aMimeType) {
-    
-    NS_ASSERTION(aParseMode!=eDTDMode_unknown,"DTD selection might require a parsemode");
-
-    if(aMimeType->EqualsWithConversion(kHTMLTextContentType)) {
-      if(aParseMode==eDTDMode_strict) {
-        theDTDClassID=&kCOtherDTDCID;
+      if(aMimeType->EqualsWithConversion(kHTMLTextContentType)) {
+        if(aDTDMode==eDTDMode_strict) {
+          theDTDClassID=&kCOtherDTDCID;
+        }
+        else {
+         theDTDClassID=&kNavDTDCID;
+        }
+      }
+      else if(aMimeType->EqualsWithConversion(kPlainTextContentType)) {
+        theDTDClassID=&kNavDTDCID;
+      }
+      else if(aMimeType->EqualsWithConversion(kXMLTextContentType) ||
+        aMimeType->EqualsWithConversion(kXULTextContentType) ||
+        aMimeType->EqualsWithConversion(kRDFTextContentType)) {
+        theDTDClassID=&kWellFormedDTDCID;
+      }
+      else if(aMimeType->EqualsWithConversion(kXIFTextContentType)) {
+        theDTDClassID=&kRtfDTDCID;
       }
       else {
         theDTDClassID=&kNavDTDCID;
       }
     }
-    else if(aMimeType->EqualsWithConversion(kPlainTextContentType)) {
-      theDTDClassID=&kNavDTDCID;
-    }
-    else if(aMimeType->EqualsWithConversion(kXMLTextContentType) ||
-       aMimeType->EqualsWithConversion(kXULTextContentType) ||
-       aMimeType->EqualsWithConversion(kRDFTextContentType)) {
-      theDTDClassID=&kWellFormedDTDCID;
-    }
-    else if(aMimeType->EqualsWithConversion(kXIFTextContentType)) {
-      theDTDClassID=&kRtfDTDCID;
-    }
-    else {
-      theDTDClassID=&kNavDTDCID;
-    }
-    result=(theDTDClassID)? nsComponentManager::CreateInstance(*theDTDClassID, nsnull, NS_GET_IID(nsIDTD),(void**)aDTD):NS_OK;
   }
-
-  return result;
-}
-
-/**
- *  Call this method to determine a DTD for a given command
- *  
- *  @update  harishd 05/01/00
- *  @param   aDTD  -- Carries the deduced ( from DOCTYPE ) DTD.
- *  @param   aCommand    -- A command for which a DTD is to be selected.
- *  @return  NS_OK if succeeded else ERROR.
- */
-nsresult nsParser::CreateCompatibleDTDForCommand(nsIDTD**  aDTD, eParserCommands aCommand)
-{
-  nsresult result=NS_OK;
-  const nsCID*   theDTDClassID=0;
-
-  switch(aCommand) {
-    case eViewSource:
+  else {
+    if(aCommand==eViewSource) {
       theDTDClassID=&kViewSourceDTDCID;
-      break;
-    case eViewNormal:
-      theDTDClassID=&kNavDTDCID;
-      break;
-    case eViewErrors:
-    default:
-      break;
+    }
   }
+
   result=(theDTDClassID)? nsComponentManager::CreateInstance(*theDTDClassID, nsnull, NS_GET_IID(nsIDTD),(void**)aDTD):NS_OK;
-  
+
   return result;
+
 }
 
 #ifdef TEST_DOCTYPES
