@@ -45,7 +45,7 @@
       </handler>
     </handlers>
 
-    <implementation implements="nsIDOMXULMenuListElement, nsIDOMXULSelectControlElement, nsIAccessibleProvider">
+    <implementation implements="nsIDOMXULMenuListElement, nsIAccessibleProvider">
       <constructor>
         this.setInitialSelection()
       </constructor>

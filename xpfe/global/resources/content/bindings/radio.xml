@@ -10,7 +10,7 @@
       <stylesheet src="chrome://global/skin/radio.css"/>
     </resources>
 
-    <implementation implements="nsIDOMXULControlElement, nsIDOMXULSelectControlElement, nsIAccessibleProvider">
+    <implementation implements="nsIDOMXULSelectControlElement, nsIAccessibleProvider">
       <property name="accessible">
         <getter>
           <![CDATA[

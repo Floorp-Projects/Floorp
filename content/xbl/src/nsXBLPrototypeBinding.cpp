@@ -1183,27 +1183,59 @@ nsXBLPrototypeBinding::ConstructInterfaceTable(const nsAString& aImpls)
       mInterfaceTable = new nsSupportsHashtable(4);
 
     // The user specified at least one attribute.
-    char* str = ToNewCString(aImpls);
+    NS_ConvertUCS2toUTF8 utf8impl(aImpls);
+    char* str = NS_CONST_CAST(char *, utf8impl.get());
     char* newStr;
     // XXX We should use a strtok function that tokenizes PRUnichars
     // so that we don't have to convert from Unicode to ASCII and then back
 
     char* token = nsCRT::strtok( str, ", ", &newStr );
     while( token != NULL ) {
-      // Take the name and try obtain an IID.
-      nsIID* iid = nsnull;
-      infoManager->GetIIDForName(token, &iid);
-      if (iid) {
-        // We found a valid iid.  Add it to our table.
-        nsIIDKey key(*iid);
-        mInterfaceTable->Put(&key, mBinding);
-        nsMemory::Free(iid);
+      // get the InterfaceInfo for the name
+      nsCOMPtr<nsIInterfaceInfo> iinfo;
+      infoManager->GetInfoForName(token, getter_AddRefs(iinfo));
+
+      if (iinfo) {
+        // obtain an IID.
+        nsIID* iid = nsnull;
+        iinfo->GetInterfaceIID(&iid);
+
+        if (iid) {
+          // We found a valid iid.  Add it to our table.
+          nsIIDKey key(*iid);
+          mInterfaceTable->Put(&key, mBinding);
+
+          // this block adds the parent interfaces of each interface
+          // defined in the xbl definition (implements="nsI...")
+          nsCOMPtr<nsIInterfaceInfo> parentInfo;
+          // if it has a parent, add it to the table
+          while (NS_SUCCEEDED(iinfo->GetParent(getter_AddRefs(parentInfo))) && parentInfo) {
+            // free the nsMemory::Clone()ed iid
+            nsMemory::Free(iid);
+
+            // get the iid
+            parentInfo->GetInterfaceIID(&iid);
+
+            // don't add nsISupports to the table
+            if (!iid || iid->Equals(NS_GET_IID(nsISupports)))
+              break;
+
+            // add the iid to the table
+            nsIIDKey parentKey(*iid);
+            mInterfaceTable->Put(&parentKey, mBinding);
+
+            // look for the next parent
+            iinfo = parentInfo;
+          }
+        }
+
+        // free the nsMemory::Clone()ed iid
+        if (iid)
+          nsMemory::Free(iid);
       }
 
       token = nsCRT::strtok( newStr, ", ", &newStr );
     }
-
-    nsMemory::Free(str);
   }
 
   return NS_OK;

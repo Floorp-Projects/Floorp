@@ -27,7 +27,7 @@
       </xul:listrows>
     </content>
     
-    <implementation implements="nsIDOMXULMultiSelectControlElement, nsIDOMXULSelectControlElement, nsIAccessibleProvider">
+    <implementation implements="nsIDOMXULMultiSelectControlElement, nsIAccessibleProvider">
       <field name="_isUpSelection">0</field>
       <field name="_isDownSelection">0</field>
       <field name="_suppressOnSelect">false</field>
