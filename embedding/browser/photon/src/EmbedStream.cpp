@@ -17,7 +17,6 @@
  * 
  * Contributor(s):
  *   Christopher Blizzard <blizzard@mozilla.org>
- *   Brian Edmond <briane@qnx.com>
  */
 
 #include <nsIPipe.h>
@@ -69,12 +68,9 @@ EmbedStream::Init(void)
 
   if (NS_FAILED(rv)) return rv;
   
-  mInputStream  = do_QueryInterface(bufInStream, &rv);
-  if (NS_FAILED(rv))
-    return rv;
-
-  mOutputStream = do_QueryInterface(bufOutStream, &rv);
-  return rv;
+  mInputStream  = bufInStream;
+  mOutputStream = bufOutStream;
+  return NS_OK;
 }
 
 NS_METHOD
@@ -121,7 +117,8 @@ EmbedStream::OpenStream(const char *aBaseURI, const char *aContentType)
   // create a new input stream channel
   rv = NS_NewInputStreamChannel(getter_AddRefs(mChannel), uri,
 				NS_STATIC_CAST(nsIInputStream *, this),
-				aContentType,
+				nsDependentCString(aContentType),
+                NS_LITERAL_CSTRING(""),
 				1024); /* len */
   if (NS_FAILED(rv))
     return rv;
@@ -175,7 +172,7 @@ EmbedStream::OpenStream(const char *aBaseURI, const char *aContentType)
 }
 
 NS_METHOD
-EmbedStream::AppendToStream(const char *aData, PRInt32 aLen)
+EmbedStream::AppendToStream(const char *aData, int aLen)
 {
   nsresult rv;
 

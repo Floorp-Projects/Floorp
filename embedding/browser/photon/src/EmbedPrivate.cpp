@@ -54,6 +54,7 @@
 #include <nsIChromeEventHandler.h>
 #include <nsIContentViewer.h>
 #include <nsIContentViewerEdit.h>
+#include <nsIWebBrowserSetup.h>
 #include "nsIWebBrowserPrint.h"
 #include "nsIClipboardCommands.h"
 #include "docshell/nsCDefaultURIFixup.h"
@@ -64,6 +65,7 @@
 
 // for profiles
 #include <nsMPFileLocProvider.h>
+#include "nsIWebBrowserPrint.h"
 #include "nsIPrintOptions.h"
 
 // all of our local includes
@@ -208,6 +210,11 @@ EmbedPrivate::Setup()
 	nsCOMPtr<nsIWebBrowser> webBrowser;
 	mWindow->GetWebBrowser(getter_AddRefs(webBrowser));
 
+	// Configure what the web browser can and cannot do
+	PRBool aAllowPlugins = PR_TRUE;
+	nsCOMPtr<nsIWebBrowserSetup> webBrowserAsSetup(do_QueryInterface(webBrowser));
+	webBrowserAsSetup->SetProperty(nsIWebBrowserSetup::SETUP_ALLOW_PLUGINS, aAllowPlugins);
+
 	// get a handle on the navigation object
 	mNavigation = do_QueryInterface(webBrowser);
 
@@ -234,9 +241,9 @@ EmbedPrivate::Setup()
 	uriListener = do_QueryInterface(mContentListenerGuard);
 	webBrowser->SetParentURIContentListener(uriListener);
 
-  nsCOMPtr<nsIWebBrowserPrint> print(do_GetInterface(webBrowser));
+	nsCOMPtr<nsIWebBrowserPrint> print(do_GetInterface(webBrowser));
 	if (print)
-		print->GetPrintSettings(getter_AddRefs(m_PrintSettings));
+		print->GetNewPrintSettings(getter_AddRefs(m_PrintSettings));
 
 	return NS_OK;
 }
@@ -521,11 +528,12 @@ EmbedPrivate::Clear()
 void
 EmbedPrivate::Print(PpPrintContext_t *pc)
 {
-  nsCOMPtr<nsIWebBrowserPrint> print = do_GetInterface(mWindow->mWebBrowser);
-  if (print) {
-    m_PrintSettings->SetEndPageRange((PRInt32) pc);
-    print->Print(m_PrintSettings, mPrint);
-  }
+  nsCOMPtr<nsIDOMWindow> window;
+  mWindow->mWebBrowser->GetContentDOMWindow(getter_AddRefs(window));
+  nsCOMPtr<nsIWebBrowserPrint> print( do_GetInterface( mWindow->mWebBrowser ) );
+
+  m_PrintSettings->SetEndPageRange((PRInt32) pc);
+  print->Print(m_PrintSettings, mPrint);
 }
 
 nsresult

@@ -36,6 +36,7 @@
 #include <nsILocalFile.h>
 #include <nsIRequestObserver.h>
 #include <nsISocketTransportService.h>
+#include <netCore.h>
 #include "nsGfxCIID.h"
 
 #include "EmbedWindow.h"
@@ -75,11 +76,13 @@ EmbedProgress::OnStateChange(nsIWebProgress *aWebProgress,
 	PtMozillaWidget_t 		*moz = (PtMozillaWidget_t *) mOwner->mOwningWidget;
 	PtCallbackList_t 		*cb = NULL;
 	PtCallbackInfo_t 		cbinfo;
-	PRUnichar 				*url;
 	PtMozillaNetStateCb_t   state;
 
-	aRequest->GetName( &url );
-	nsString surl( url );
+	// get the uri for this request
+	nsXPIDLCString uriString;
+	RequestToURIString(aRequest, getter_Copies(uriString));
+	nsString tmpString;
+	tmpString.AssignWithConversion(uriString);
 
 	if( ( aStateFlags & STATE_IS_NETWORK ) && NS_FAILED( aStatus ) ) 
 	{
@@ -92,10 +95,7 @@ EmbedProgress::OnStateChange(nsIWebProgress *aWebProgress,
 		cbinfo.cbdata = &cbw;
 
 		memset( &cbw, 0, sizeof( PtWebErrorCallback_t ) );
-		char *s = ToNewCString(surl);
-		strcpy( cbw.url, s );
-		free( s );
-
+		strcpy(cbw.url, (const char *)uriString);
 
 		cbw.type = WWW_ERROR_TOPVIEW;
 		switch( aStatus ) 
@@ -183,9 +183,7 @@ EmbedProgress::OnStateChange(nsIWebProgress *aWebProgress,
 			cbinfo.reason = Pt_CB_MOZ_COMPLETE;
 			cbinfo.cbdata = &cbcomplete;
 			memset( &cbcomplete, 0, sizeof( PtWebCompleteCallback_t ) );
-			char *s = ToNewCString(surl);
-			strcpy( cbcomplete.url, s );
-			free( s );
+			strcpy(cbcomplete.url, (const char *)uriString);
 
 			if( ( cb = moz->complete_cb ) )
 				PtInvokeCallbackList(cb, (PtWidget_t *) moz, &cbinfo);
@@ -197,7 +195,7 @@ EmbedProgress::OnStateChange(nsIWebProgress *aWebProgress,
 	cbinfo.cbdata = &state;
 	state.flags = aStateFlags;
 	state.status = aStatus;
-	state.url = (char *)ToNewCString(surl);
+	state.url = (const char *)uriString;
 	char *statusMessage = "";
 	PRInt32 flags = aStateFlags;
 
@@ -270,10 +268,10 @@ EmbedProgress::OnLocationChange(nsIWebProgress *aWebProgress,
 	PtCallbackList_t    *cb = NULL;
 	PtCallbackInfo_t    cbinfo;
 	PtMozillaUrlCb_t    url;
-	char *uri;
+	nsCAutoString newURI;
 
-	aLocation->GetSpec(&uri);
-  	mOwner->SetURI(uri);
+	aLocation->GetSpec(newURI);
+	mOwner->SetURI(newURI.get());
 
 	if (!moz->url_cb)
 	    return NS_OK;
@@ -281,7 +279,8 @@ EmbedProgress::OnLocationChange(nsIWebProgress *aWebProgress,
 	memset(&cbinfo, 0, sizeof(cbinfo));
 	cbinfo.cbdata = &url;
 	cbinfo.reason = Pt_CB_MOZ_URL;
-	aLocation->GetSpec(&(url.url));
+	url.url = (char *) newURI.get();
+//	aLocation->GetSpec(&(url.url));
 	cb = moz->url_cb;
 	PtInvokeCallbackList(cb, (PtWidget_t *) moz, &cbinfo);
   	
@@ -330,21 +329,19 @@ EmbedProgress::OnSecurityChange(nsIWebProgress *aWebProgress,
 void
 EmbedProgress::RequestToURIString(nsIRequest *aRequest, char **aString)
 {
-  // is it a channel
-  nsCOMPtr<nsIChannel> channel;
-  channel = do_QueryInterface(aRequest);
-  if (!channel)
-    return;
-  
-  nsCOMPtr<nsIURI> uri;
-  channel->GetURI(getter_AddRefs(uri));
-  if (!uri)
-    return;
-  
-  nsXPIDLCString uriString;
-  uri->GetSpec(getter_Copies(uriString));
-  if (!uriString)
-    return;
+	// is it a channel
+	nsCOMPtr<nsIChannel> channel;
+	channel = do_QueryInterface(aRequest);
+	if (!channel)
+  		return;
 
-  *aString = nsCRT::strdup((const char *)uriString);
+  	nsCOMPtr<nsIURI> uri;
+  	channel->GetURI(getter_AddRefs(uri));
+  	if (!uri)
+    	return;
+
+	nsCAutoString uriString;
+	uri->GetSpec(uriString);
+
+	*aString = strdup(uriString.get());
 }

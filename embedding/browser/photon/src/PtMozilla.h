@@ -174,7 +174,7 @@ typedef struct mozilla_net_state_t
 {
         int 			flags;
         unsigned int 	status;
-		char *url;
+		const char *url;
 		char *message;
 } PtMozillaNetStateCb_t;
 
