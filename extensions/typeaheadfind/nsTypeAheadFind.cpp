@@ -91,6 +91,7 @@
 #include "nsXULAtoms.h"
 #include "nsINameSpaceManager.h"
 #include "nsIWindowWatcher.h"
+#include "nsIObserverService.h"
 
 
 // Header for this class
@@ -110,6 +111,7 @@ NS_INTERFACE_MAP_BEGIN(nsTypeAheadFind)
   NS_INTERFACE_MAP_ENTRY(nsIWebProgressListener) 
   NS_INTERFACE_MAP_ENTRY(nsIScrollPositionListener)
   NS_INTERFACE_MAP_ENTRY(nsISelectionListener)
+  NS_INTERFACE_MAP_ENTRY(nsIObserver)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsISelectionListener)
   NS_INTERFACE_MAP_ENTRY(nsIDOMKeyListener)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsIDOMEventListener, nsIDOMKeyListener)
@@ -152,7 +154,7 @@ nsTypeAheadFind::~nsTypeAheadFind()
   RemoveCurrentSelectionListener();
   RemoveCurrentScrollPositionListener();
   RemoveCurrentKeypressListener();
-  RemoveCurrentWindowFocusListener();
+  RemoveWindowFocusListener(mFocusedWindow);
   mTimer = nsnull;
 
   nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID));
@@ -200,6 +202,9 @@ nsresult nsTypeAheadFind::Init()
     mFind->SetCaseSensitive(PR_FALSE);
     mFind->SetWordBreaker(nsnull);
   }
+
+  nsCOMPtr<nsIWindowWatcher> windowWatcher(do_GetService(NS_WINDOWWATCHER_CONTRACTID));
+  windowWatcher->RegisterNotification(this);
 
   return rv;
 }
@@ -252,8 +257,10 @@ int PR_CALLBACK nsTypeAheadFind::PrefsReset(const char* aPrefName, void* instanc
         typeAheadFind->RemoveCurrentSelectionListener();
         typeAheadFind->RemoveCurrentScrollPositionListener();
         typeAheadFind->RemoveCurrentKeypressListener();
-        typeAheadFind->RemoveCurrentWindowFocusListener();
+        typeAheadFind->RemoveWindowFocusListener(typeAheadFind->mFocusedWindow);
         progress->RemoveProgressListener(NS_STATIC_CAST(nsIWebProgressListener*, typeAheadFind));
+        nsCOMPtr<nsIWindowWatcher> windowWatcher(do_GetService(NS_WINDOWWATCHER_CONTRACTID));
+        windowWatcher->UnregisterNotification(typeAheadFind);
       }
       else {
         progress->AddProgressListener(NS_STATIC_CAST(nsIWebProgressListener*, typeAheadFind),
@@ -306,19 +313,15 @@ NS_IMETHODIMP nsTypeAheadFind::OnStateChange(nsIWebProgress *aWebProgress,
     return NS_OK;
 
   nsCOMPtr<nsIDOMWindow> domWindow;
+
   aWebProgress->GetDOMWindow(getter_AddRefs(domWindow));
-  nsCOMPtr<nsPIDOMWindow> privateDOMWindow(do_QueryInterface(domWindow));
-  nsCOMPtr<nsIChromeEventHandler> chromeEventHandler;
-  if (!privateDOMWindow)
-    return NS_OK;
-  PRBool isAutoStart;
-  GetAutoStart(domWindow, &isAutoStart);
-  if (!isAutoStart)
-    return NS_OK;
-  privateDOMWindow->GetChromeEventHandler(getter_AddRefs(chromeEventHandler));
-  nsCOMPtr<nsIDOMEventTarget> eventTarget(do_QueryInterface(chromeEventHandler));
-  if (eventTarget)
-    AttachNewWindowFocusListener(eventTarget);
+  if (domWindow) {
+    PRBool isAutoStart;
+    GetAutoStart(domWindow, &isAutoStart);
+    if (!isAutoStart)
+      return NS_OK;
+    AttachWindowFocusListener(domWindow);
+  }
 
   return NS_OK;
 }
@@ -360,6 +363,73 @@ NS_IMETHODIMP nsTypeAheadFind::OnSecurityChange(nsIWebProgress *aWebProgress,
   return NS_OK;
 }
 
+// ----------- nsIObserver Methods (1) -------------------
+
+NS_IMETHODIMP nsTypeAheadFind::Observe(nsISupports *aSubject, const char *aTopic, const PRUnichar *aData)
+{
+  if (!nsCRT::strcmp(aTopic,"domwindowclosed")) {
+    // When a window closes, we have to remove it and all of it's subwindows
+    // from mManualFindWindows so that we don't leak. 
+    // Eek, lots of work for such a simple thing.
+    nsCOMPtr<nsIDOMWindow> domWin(do_QueryInterface(aSubject));
+    if (!domWin)
+      return NS_OK;
+
+    nsCOMPtr<nsIDOMDocument> domDoc;
+    domWin->GetDocument(getter_AddRefs(domDoc));
+    nsCOMPtr<nsIDocument> doc(do_QueryInterface(domDoc));
+    if (!doc)
+      return NS_OK;
+
+    nsCOMPtr<nsIPresShell> presShell;
+    doc->GetShellAt(0, getter_AddRefs(presShell));
+    if (!presShell)
+      return NS_OK;
+
+    nsCOMPtr<nsIPresContext> presContext;
+    presShell->GetPresContext(getter_AddRefs(presContext));
+    if (!presContext)
+      return NS_OK;
+
+    // Don't listen for events on chrome windows
+    nsCOMPtr<nsISupports> pcContainer;
+    presContext->GetContainer(getter_AddRefs(pcContainer));
+    nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(pcContainer));
+
+    nsCOMPtr<nsISimpleEnumerator> docShellEnumerator;
+    docShell->GetDocShellEnumerator(nsIDocShellTreeItem::typeAll, 
+                                    nsIDocShell::ENUMERATE_FORWARDS,
+                                    getter_AddRefs(docShellEnumerator));
+
+    // Iterate through shells to get windows
+    // Eek! docshell -> presshell -> doc -> script global object -> window
+    PRBool hasMoreDocShells;
+    while (NS_SUCCEEDED(docShellEnumerator->HasMoreElements(&hasMoreDocShells)) 
+           && hasMoreDocShells) {
+      docShellEnumerator->GetNext(getter_AddRefs(pcContainer));
+      docShell = do_QueryInterface(pcContainer);
+      if (docShell) {
+        docShell->GetPresShell(getter_AddRefs(presShell));
+        if (presShell) {
+          presShell->GetDocument(getter_AddRefs(doc));
+          if (doc) {
+            nsCOMPtr<nsIScriptGlobalObject> ourGlobal;
+            doc->GetScriptGlobalObject(getter_AddRefs(ourGlobal));
+            domWin = do_QueryInterface(ourGlobal);
+            if (domWin) {
+              nsCOMPtr<nsISupports> windowSupports(do_QueryInterface(domWin));
+              PRInt32 index = mManualFindWindows->IndexOf(windowSupports);
+              if (index >= 0)
+                mManualFindWindows->RemoveElementAt(index);
+            }
+          }
+        }
+      }
+    }
+  }
+
+  return NS_OK;
+}
 
   
 // ------- nsIDOMFocusListener Methods (2) ---------------
@@ -446,6 +516,10 @@ NS_IMETHODIMP nsTypeAheadFind::Blur(nsIDOMEvent* aEvent)
 
 NS_IMETHODIMP nsTypeAheadFind::HandleEvent(nsIDOMEvent* aEvent)
 {
+  nsAutoString eventName;
+  aEvent->GetType(eventName);
+  if (eventName.Equals(NS_LITERAL_STRING("DOMWindowDestroyed")))
+    printf("\nDOMWindowClose!");
   return NS_OK; 
 }
 
@@ -1091,12 +1165,8 @@ NS_IMETHODIMP nsTypeAheadFind::StartNewFind(nsIDOMWindow *aWindow,
   if (!windowInternal)
     return NS_ERROR_FAILURE;
 
-  nsCOMPtr<nsIDOMEventTarget> eventTarget(do_QueryInterface(aWindow));
-  if (!eventTarget)
-    return NS_ERROR_FAILURE;
-
-  RemoveCurrentWindowFocusListener();
-  AttachNewWindowFocusListener(eventTarget);
+  RemoveWindowFocusListener(aWindow);
+  AttachWindowFocusListener(aWindow);
 
   windowInternal->Focus();  
   if (mFocusedWindow != aWindow) {
@@ -1114,16 +1184,38 @@ NS_IMETHODIMP nsTypeAheadFind::SetAutoStart(nsIDOMWindow *aDOMWin,
                                             PRBool aAutoStartOn)
 {
   nsCOMPtr<nsISupports> windowSupports(do_QueryInterface(aDOMWin));
-  PRInt32 index = mManualFindWindows->IndexOf(windowSupports);
-
+  PRInt32 index = mManualFindWindows->IndexOf(windowSupports);  
+  
   if (aAutoStartOn) {
     if (index >= 0) {
       // Remove from list of windows requiring manual find
       mManualFindWindows->RemoveElementAt(index);
     }
+
+    AttachWindowFocusListener(aDOMWin);
+    nsCOMPtr<nsPIDOMWindow> privateWindow(do_QueryInterface(aDOMWin));
+    // If this window is focused
+    if (privateWindow) {
+      nsCOMPtr<nsIFocusController> focusController;
+      privateWindow->GetRootFocusController(getter_AddRefs(focusController));
+      if (focusController) {
+        nsCOMPtr<nsIDOMWindowInternal> focusedWindowInternal;
+        focusController->GetFocusedWindow(getter_AddRefs(focusedWindowInternal));
+        nsCOMPtr<nsIDOMWindow> focusedWindow(do_QueryInterface(focusedWindowInternal));
+        if (focusedWindow == aDOMWin)
+          UseInWindow(aDOMWin);
+      }
+    }
   }
-  else if (index < 0)  // Should be in list of windows requiring manual find
-    mManualFindWindows->InsertElementAt(windowSupports, 0);
+  else {  // Should be in list of windows requiring manual find
+    if (aDOMWin == mFocusedWindow)
+      CancelFind();
+    RemoveWindowFocusListener(aDOMWin);
+    if (index < 0) {  // Should be in list of windows requiring manual find
+      mManualFindWindows->InsertElementAt(windowSupports, 0);
+    }
+  }
+
   return NS_OK;
 }
 
@@ -1236,9 +1328,8 @@ NS_IMETHODIMP nsTypeAheadFind::CancelFind()
 
   nsCOMPtr<nsISupports> windowSupports(do_QueryInterface(mFocusedWindow));
   if (mManualFindWindows->IndexOf(windowSupports) >= 0) {
-    SetAutoStart(mFocusedWindow, PR_FALSE);
     RemoveCurrentKeypressListener();
-    RemoveCurrentWindowFocusListener();
+    RemoveWindowFocusListener(mFocusedWindow);
     RemoveCurrentSelectionListener();
     RemoveCurrentScrollPositionListener();
   }
@@ -1356,24 +1447,39 @@ void nsTypeAheadFind::AttachNewKeypressListener(nsIDOMEventTarget *aTarget)
 }
 
 
-void nsTypeAheadFind::RemoveCurrentWindowFocusListener()
+void nsTypeAheadFind::GetChromeEventHandler(nsIDOMWindow *aDOMWin, nsIDOMEventTarget **aChromeTarget)
 {
-  // Remove focus listener
-  nsCOMPtr<nsIDOMEventTarget> target(do_QueryInterface(mFocusedWindow));
-  if (target)
-    target->RemoveEventListener(NS_LITERAL_STRING("focus"),
-                                NS_STATIC_CAST(nsIDOMFocusListener*, this), 
-                                PR_TRUE);
-  mFocusedWindow = nsnull;
+  nsCOMPtr<nsPIDOMWindow> privateDOMWindow(do_QueryInterface(aDOMWin));
+  nsCOMPtr<nsIChromeEventHandler> chromeEventHandler;
+  if (privateDOMWindow)
+    privateDOMWindow->GetChromeEventHandler(getter_AddRefs(chromeEventHandler));
+  nsCOMPtr<nsIDOMEventTarget> target(do_QueryInterface(chromeEventHandler));
+  NS_IF_ADDREF(*aChromeTarget = target);
 }
 
 
-void nsTypeAheadFind::AttachNewWindowFocusListener(nsIDOMEventTarget *aTarget)
+void nsTypeAheadFind::RemoveWindowFocusListener(nsIDOMWindow *aDOMWin)
 {
-  // Add focus listener
-  aTarget->AddEventListener(NS_LITERAL_STRING("focus"),
-                            NS_STATIC_CAST(nsIDOMFocusListener*, this),
-                            PR_TRUE);
+  // Remove focus listener
+  nsCOMPtr<nsIDOMEventTarget> chromeEventHandler;
+  GetChromeEventHandler(aDOMWin, getter_AddRefs(chromeEventHandler));
+  chromeEventHandler->RemoveEventListener(NS_LITERAL_STRING("focus"),
+                                          NS_STATIC_CAST(nsIDOMFocusListener*, this),
+                                          PR_TRUE);
+
+  if (aDOMWin == mFocusedWindow)
+    mFocusedWindow = nsnull;
+}
+
+
+void nsTypeAheadFind::AttachWindowFocusListener(nsIDOMWindow *aDOMWin)
+{
+  // Add focus listener to chrome event handler
+  nsCOMPtr<nsIDOMEventTarget> chromeEventHandler;
+  GetChromeEventHandler(aDOMWin, getter_AddRefs(chromeEventHandler));
+  chromeEventHandler->AddEventListener(NS_LITERAL_STRING("focus"),
+                                       NS_STATIC_CAST(nsIDOMFocusListener*, this),
+                                       PR_TRUE);
 }
 
 

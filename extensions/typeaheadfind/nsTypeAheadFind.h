@@ -46,6 +46,7 @@
 #include "nsISelectionListener.h"
 #include "nsISelectionController.h"
 #include "nsITimerCallback.h"
+#include "nsIObserver.h"
 #include "nsITimer.h"
 #include "nsUnicharUtils.h"
 #include "nsIFindService.h"
@@ -69,6 +70,7 @@ enum { eRepeatingNone, eRepeatingChar, eRepeatingForward, eRepeatingReverse};
 class nsTypeAheadFind : public nsITypeAheadFind,
                         public nsIDOMFocusListener,
                         public nsIDOMKeyListener,
+                        public nsIObserver,
                         public nsIWebProgressListener,
                         public nsIScrollPositionListener,
                         public nsISelectionListener,
@@ -84,6 +86,7 @@ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIWEBPROGRESSLISTENER
   NS_DECL_NSITYPEAHEADFIND
+  NS_DECL_NSIOBSERVER
 
   // ----- nsIDOMEventListener --------------------------
   NS_IMETHOD HandleEvent(nsIDOMEvent* aEvent);
@@ -97,7 +100,7 @@ public:
   NS_IMETHOD KeyUp(nsIDOMEvent* aKeyEvent);
   NS_IMETHOD KeyPress(nsIDOMEvent* aKeyEvent);
 
-  // ----- nsIScrollPositionListener --------------------
+  // ----- nsIDOMKeyListener ----------------------------
   NS_IMETHOD ScrollPositionWillChange(nsIScrollableView *aView, 
                                       nscoord aX, nscoord aY);
   NS_IMETHOD ScrollPositionDidChange(nsIScrollableView *aView, 
@@ -126,8 +129,10 @@ protected:
   void RemoveCurrentScrollPositionListener();
   void AttachNewKeypressListener(nsIDOMEventTarget *aTarget);
   void RemoveCurrentKeypressListener();
-  void AttachNewWindowFocusListener(nsIDOMEventTarget *aTarget);
-  void RemoveCurrentWindowFocusListener();
+  void GetChromeEventHandler(nsIDOMWindow *aDOMWin, 
+                             nsIDOMEventTarget **aChromeTarget);
+  void AttachWindowFocusListener(nsIDOMWindow *aDOMWin);
+  void RemoveWindowFocusListener(nsIDOMWindow *aDOMWin);
 
   void RangeStartsInsideLink(nsIDOMRange *aRange, nsIPresShell *aPresShell, 
                              PRBool *aIsInsideLink, PRBool *aIsStartingLink);
