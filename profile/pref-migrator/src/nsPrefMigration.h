@@ -67,16 +67,17 @@ class nsPrefMigration: public nsIPrefMigration, public nsIShutdownListener
     private:
       
       static nsPrefMigration* mInstance;
+	
+	  nsresult ConvertPersistentStringToFileSpec(const char *str, nsIFileSpec *path);
+      nsresult CreateNewUser5Tree(nsIFileSpec* oldProfilePath, 
+                                  nsIFileSpec* newProfilePath);
 
-      nsresult CreateNewUser5Tree(const char* oldProfilePath, 
-                                  const char* newProfilePath);
-
-      nsresult GetDirFromPref(const char* oldProfilePath,
-                              const char* newProfilePath, 
-			      const char* newDirName,
+      nsresult GetDirFromPref(nsIFileSpec* oldProfilePath,
+                              nsIFileSpec* newProfilePath, 
+                              const char* newDirName,
                               char* pref, 
-                              char** newPath, 
-                              char** oldPath);
+                              nsIFileSpec** newPath, 
+                              nsIFileSpec** oldPath);
 
       nsresult GetSizes(nsFileSpec inputPath,
                         PRBool readSubdirs,
@@ -88,27 +89,26 @@ class nsPrefMigration: public nsIPrefMigration, public nsIShutdownListener
       nsresult CheckForSpace(nsFileSpec newProfilePath, 
                              PRFloat64 requiredSpace);
 
-      nsresult DoTheCopy(nsFileSpec oldPath, 
-                         nsFileSpec newPath,
+      nsresult DoTheCopy(nsIFileSpec *oldPath, 
+                         nsIFileSpec *newPath,
                          PRBool readSubdirs); 
 
-      nsresult DoTheCopyAndRename(nsFileSpec oldPath, 
-                              nsFileSpec newPath,
+      nsresult DoTheCopyAndRename(nsIFileSpec *oldPath, 
+                              nsIFileSpec *newPath,
                               PRBool readSubdirs,
                               PRBool needToRenameFiles,
                               const char *oldName,
                               const char *newName); 
 
-      nsresult DoSpecialUpdates(nsFileSpec profilePath);
-      nsresult Rename4xFileAfterMigration(nsFileSpec profilePath, const char *oldFileName, const char *newFileName);
+      nsresult DoSpecialUpdates(nsIFileSpec * profilePath);
+      nsresult Rename4xFileAfterMigration(nsIFileSpec *profilePath, const char *oldFileName, const char *newFileName);
 #ifdef IMAP_MAIL_FILTER_FILE_NAME_FORMAT_IN_4x
-      nsresult RenameAndMove4xImapFilterFile(nsFileSpec profilePath, const char *hostname);
-      nsresult RenameAndMove4xImapFilterFiles(nsFileSpec profilePath);
+      nsresult RenameAndMove4xImapFilterFile(nsIFileSpec *profilePath, const char *hostname);
+      nsresult RenameAndMove4xImapFilterFiles(nsIFileSpec *profilePath);
 #endif /* IMAP_MAIL_FILTER_FILE_NAME_FORMAT_IN_4x */
-      nsresult RenameAndMove4xPopFilterFile(nsFileSpec profilePath);
+      nsresult RenameAndMove4xPopFilterFile(nsIFileSpec *profilePath);
   
-      nsresult SetPremigratedCharPref(const char *pref_name, char *value);
-      nsresult SetPremigratedFilePref(const char *pref_name, nsFileSpec &filePath);
+      nsresult SetPremigratedFilePref(const char *pref_name, nsIFileSpec *filePath);
       
       
       nsIPref* m_prefs;

@@ -227,18 +227,14 @@ function processCreateProfileData()
 		dump("********DATA: "+data+"\n\n");
 		profileCore.CreateNewProfile(data);
 		profileCore.StartCommunicator(profName);
+		ExitApp();
 	}
-	
-	toolkitCore = XPAppCoresManager.Find("toolkitCore");
-	if (!toolkitCore) {
-		toolkitCore = new ToolkitCore();
-		
-		if (toolkitCore) {
-			toolkitCore.Init("toolkitCore");
-		}
-	}
-	if (toolkitCore) {
-		toolkitCore.CloseWindow(parent);
-	}
+}
 
+function ExitApp()
+{
+        // Need to call this to stop the event loop
+        var appShell = Components.classes['component://netscape/appshell/appShellService'].getService();
+        appShell = appShell.QueryInterface( Components.interfaces.nsIAppShellService);
+        appShell.Quit();
 }

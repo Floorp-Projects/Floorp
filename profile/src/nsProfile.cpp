@@ -37,6 +37,7 @@
 #include "nsFileLocations.h"
 #include "nsEscape.h"
 #include "nsIURL.h"
+#include "nsIFactory.h"
 
 #include "nsIAppShellService.h"
 #include "nsAppShellCIDs.h"
@@ -44,102 +45,84 @@
 #include "nsIWebShellWindow.h"
 #include "prprf.h"
 
-#ifdef XP_PC
+#include "nsIIOService.h"
+#include "nsNeckoUtil.h"
+#include "nsIPrefMigration.h"
+#include "nsPrefMigrationCIDs.h"
+#include "nsFileStream.h"
+#include "nsSpecialSystemDirectory.h"
+#include "nsIPrompt.h"
+#include "nsIStreamListener.h"
+#include "nsIServiceManager.h"
+#include "nsCOMPtr.h"
+#include "nsIBookmarksService.h"
+
+#if 0
 #define AUTOMATICALLY_MIGRATE_IF_ONLY_ONE_PROFILE 1
 #endif
 
-#ifdef XP_UNIX
+#if defined (XP_UNIX)
 #define USER_ENVIRONMENT_VARIABLE "USER"
 #define HOME_ENVIRONMENT_VARIABLE "HOME"
 #define PROFILE_NAME_ENVIRONMENT_VARIABLE "PROFILE_NAME"
 #define PROFILE_HOME_ENVIRONMENT_VARIABLE "PROFILE_HOME"
-#endif
-
-#ifndef NECKO
-#include "nsINetService.h"
-#else
-#include "nsIIOService.h"
-#include "nsNeckoUtil.h"
-#endif // NECKO
-
-
-#ifdef XP_PC
+#elif defined (XP_MAC)
+#define OLD_REGISTRY_FILE_NAME "Netscape Registry"
+#else /* assume XP_PC */
 #include <direct.h>
-#endif
+#define OLD_REGISTRY_FILE_NAME "nsreg.dat"
+#endif /* XP_UNIX */
 
-#include "nsIPrefMigration.h"
-#include "nsPrefMigrationCIDs.h"
-
-// included for XPlatform coding 
-#include "nsFileStream.h"
-#include "nsSpecialSystemDirectory.h"
-
-
-#ifdef XP_MAC
-#ifdef NECKO
-#include "nsIPrompt.h"
-#else
-#include "nsINetSupport.h"
-#endif
-#include "nsIStreamListener.h"
-#endif
-#include "nsIServiceManager.h"
-#include "nsCOMPtr.h"
-
-#include "nsIBookmarksService.h"
-
-#define _MAX_LENGTH			256
+#define _MAX_LENGTH		256
 #define _MAX_NUM_PROFILES	50
 
 // PREG information
-#define PREG_COOKIE			"NS_REG2_PREG"
+#define PREG_COOKIE		"NS_REG2_PREG"
 #define PREG_USERNAME		"PREG_USER_NAME"
-#define PREG_DENIAL			"PREG_USER_DENIAL"
-#define PREG_URL			"http://seaspace.mcom.com/"
+#define PREG_DENIAL		"PREG_USER_DENIAL"
 
+// kill me now.
+#define REGISTRY_TRUE_STRING            "true"
+#define REGISTRY_FALSE_STRING           "false"
+#define REGISTRY_YES_STRING             "yes"
+#define REGISTRY_NO_STRING              "no"
+
+// strings for items in the registry we'll be getting or setting
+#define REGISTRY_PROFILE_SUBTREE_STRING     "Profiles"
+#define REGISTRY_CURRENT_PROFILE_STRING     "CurrentProfile"
+#define REGISTRY_NC_SERVICE_DENIAL_STRING   "NCServiceDenial"
+#define REGISTRY_NC_PROFILE_NAME_STRING     "NCProfileName"
+#define REGISTRY_HAVE_PREG_INFO_STRING      "HavePregInfo"
+#define REGISTRY_MIGRATED_STRING            "migrated"
+#define REGISTRY_DIRECTORY_STRING           "directory"
+#define REGISTRY_NEED_MIGRATION_STRING      "NeedMigration"
+
+#define PROFILE_PREG_URL "resource:/res/profile/cpwPreg.xul"
+#define PROFILE_MANAGER_URL "resource:/res/profile/pm.xul"
+#define PROFILE_MANAGER_CMD_LINE_ARG "-ProfileManager"
+#define PROFILE_WIZARD_URL "resource:/res/profile/cpw.xul"
+#define PROFILE_WIZARD_CMD_LINE_ARG "-ProfileWizard"
+#define INSTALLER_CMD_LINE_ARG "-installer"
+#define CREATE_PROFILE_CMD_LINE_ARG "-CreateProfile"
+#define PROFILE_CMD_LINE_ARG "-P"   
 
 #if defined(DEBUG_sspitzer) || defined(DEBUG_seth)
-#define DEBUG_profile 1
+#define DEBUG_profile_ 1
 #endif
 
-// Globals to hold profile information
-#ifdef XP_PC
-static char *oldWinReg="nsreg.dat";
-#endif
-
-#ifdef XP_MAC
-static char *oldMacReg = "Netscape Registry";
-#endif
-
-static char gNewProfileData[_MAX_NUM_PROFILES][_MAX_LENGTH] = {{'\0'}};
-static int	g_Count = 0;
-
-static char gProfiles[_MAX_NUM_PROFILES][_MAX_LENGTH] = {{'\0'}};
-static int	g_numProfiles = 0;
-
-static char gOldProfiles[_MAX_NUM_PROFILES][_MAX_LENGTH] = {{'\0'}};
-static char gOldProfLocations[_MAX_NUM_PROFILES][_MAX_LENGTH] = {{'\0'}};
-static int	g_numOldProfiles = 0;
-
-static PRBool renameCurrProfile = PR_FALSE;
 
 // IID and CIDs of all the services needed
 static NS_DEFINE_CID(kProfileCID, NS_PROFILE_CID);
+static NS_DEFINE_CID(kIProfileIID, NS_IPROFILE_IID);
 static NS_DEFINE_CID(kBookmarksCID, NS_BOOKMARKS_SERVICE_CID);      
 static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
 static NS_DEFINE_CID(kFileLocatorCID, NS_FILELOCATOR_CID);
 static NS_DEFINE_CID(kRegistryCID, NS_REGISTRY_CID);
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 static NS_DEFINE_CID(kAppShellServiceCID, NS_APPSHELL_SERVICE_CID);
-
-#ifndef NECKO
-static NS_DEFINE_IID(kINetServiceIID, NS_INETSERVICE_IID);
-static NS_DEFINE_CID(kNetServiceCID, NS_NETSERVICE_CID);
-#else
+static NS_DEFINE_IID(kIFactoryIID,  NS_IFACTORY_IID);
 static NS_DEFINE_IID(kIIOServiceIID, NS_IIOSERVICE_IID);
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
-#endif // NECKO
-
 static NS_DEFINE_CID(kPrefMigrationCID, NS_PREFMIGRATION_CID);
 
 static
@@ -149,7 +132,7 @@ nsresult GetStringFromSpec(nsFileSpec inSpec, char **string)
 	nsCOMPtr<nsIFileSpec> spec;
 	rv = NS_NewFileSpecWithSpec(inSpec, getter_AddRefs(spec));
 	if (NS_SUCCEEDED(rv)) {
-        rv = spec->GetNativePath(string);
+        rv = spec->GetPersistentDescriptorString(string);
 		if (NS_SUCCEEDED(rv)) {
 			return NS_OK;
         }
@@ -163,32 +146,32 @@ nsresult GetStringFromSpec(nsFileSpec inSpec, char **string)
 		return rv;
 	}
 }
-class nsProfile: public nsIProfile,
-                 public nsIShutdownListener
+class nsProfile: public nsIProfile
 {
   NS_DECL_ISUPPORTS
   NS_DECL_NSIPROFILE
 
-  NS_IMETHOD OnShutdown(const nsCID& aClass, nsISupports *service);
-  
 private:
-  static void useDefaultProfileFile(nsProfile *aProfileInst);
-  static nsProfile *mInstance;
-  nsIRegistry* m_reg;
-  nsIPref* m_prefs;
-
-  nsresult loadPrefs();
-  nsresult unloadPrefs();
+  nsCOMPtr <nsIRegistry> m_reg;
 
   nsresult ProcessArgs(nsICmdLineService *service,
                        PRBool *profileDirSet,
-                       char **profdir);
-  nsresult LoadDefaultProfileDir(char *profstr);
+                       nsCString & profileURLStr);
+  nsresult LoadDefaultProfileDir(nsCString & profileURLStr);
+  nsresult OpenRegistry();
+
+  char mNewProfileData[_MAX_NUM_PROFILES][_MAX_LENGTH];
+  char mProfiles[_MAX_NUM_PROFILES][_MAX_LENGTH];
+  PRInt32 mCount;
+  PRInt32 mNumProfiles;
+  PRInt32 mNumOldProfiles;
+  PRBool mRenameCurrProfile;
+  char mOldProfiles[_MAX_NUM_PROFILES][_MAX_LENGTH];
+  char mOldProfLocations[_MAX_NUM_PROFILES][_MAX_LENGTH];
     
 public:
     nsProfile();
     virtual ~nsProfile();
-    static nsProfile *GetInstance();
 
 	// Creates associated user directories on the creation of a new profile
     void		CreateUserDirectories(const nsFileSpec& profileDir);
@@ -205,41 +188,30 @@ public:
 	// Copies all the registry keys from old profile to new profile
 	nsresult	CopyRegKey(const char *oldProfile, const char *newProfile);
 
-	// Fills the global array gProfiles by enumerating registry entries
+	// Fills the global array mProfiles by enumerating registry entries
 	void		GetAllProfiles();
 
     NS_IMETHOD ProfileExists(const char *profileName);
 	NS_IMETHOD UpdateMozProfileRegistry();
 };
 
-nsProfile* nsProfile::mInstance = nsnull;
-
-static PRInt32 g_InstanceCount = 0;
-static PRInt32 g_LockCount = 0;
-
 /*
  * Constructor/Destructor
  */
 nsProfile::nsProfile()
-: m_reg(nsnull),
-  m_prefs(nsnull)
 {
-  PR_AtomicIncrement(&g_InstanceCount);
+  m_reg = null_nsCOMPtr();
+  mCount = 0;
+  mNumProfiles = 0; 
+  mNumOldProfiles = 0;
+  mRenameCurrProfile = PR_FALSE;
+
   NS_INIT_REFCNT();
 }
 
-nsProfile::~nsProfile() {
-  unloadPrefs();
-  PR_AtomicDecrement(&g_InstanceCount);
-  mInstance = nsnull;
-}
-
-nsProfile *nsProfile::GetInstance()
+nsProfile::~nsProfile() 
 {
-  if (mInstance == nsnull) {
-    mInstance = new nsProfile();
-  }
-  return mInstance;
+  printf("nsProfile::~nsProfile()\n");
 }
 
 /*
@@ -248,7 +220,7 @@ nsProfile *nsProfile::GetInstance()
 
 NS_IMPL_ADDREF(nsProfile)
 NS_IMPL_RELEASE(nsProfile)
-NS_IMPL_QUERY_INTERFACE2(nsProfile, nsIProfile, nsIShutdownListener)
+NS_IMPL_QUERY_INTERFACE(nsProfile, kIProfileIID)
 
 /*
  * nsIProfile Implementation
@@ -258,106 +230,91 @@ NS_IMPL_QUERY_INTERFACE2(nsProfile, nsIProfile, nsIShutdownListener)
 // Adds subtree Profiles to facilitate profile operations
 NS_IMETHODIMP nsProfile::Startup(const char *filename)
 {
-
-    PRBool openalready = PR_FALSE;
-
 #if defined(DEBUG_profile)
     printf("ProfileManager (nsProfile) : Startup : Get Registry handle\n");
 #endif
     nsresult rv = NS_OK;
-    rv = nsComponentManager::CreateInstance(kRegistryCID,
-                                            nsnull,
-                                            nsIRegistry::GetIID(),
-                                            (void **) &m_reg);
-
     
-	// Add the root Profiles node in the registry
-	if (m_reg != nsnull)
-	{
-		// Latch onto the registry object.
-		NS_ADDREF(m_reg);
+    rv = OpenRegistry();
+    if (NS_FAILED(rv)) return rv;
+    
+    // Add the root Profiles node in the registry
+    nsIRegistry::Key key;
+    rv = m_reg->AddSubtree(nsIRegistry::Common, REGISTRY_PROFILE_SUBTREE_STRING, &key);
+    return rv;
+}
 
-		// Open the registry
-		rv = m_reg->IsOpen( &openalready );
-		if ( !openalready )
-			rv = m_reg->OpenDefault();
+nsresult
+nsProfile::OpenRegistry()
+{
+    nsresult rv;
+    PRBool openalready;
 
-		if (NS_SUCCEEDED(rv))
-		{
-			nsIRegistry::Key key;
-			rv = m_reg->AddSubtree(nsIRegistry::Common, "Profiles", &key);
+    if (!m_reg) {
+        rv = nsComponentManager::CreateInstance(kRegistryCID,
+                                                nsnull,
+                                                nsIRegistry::GetIID(),
+                                                getter_AddRefs(m_reg));
+        if (NS_FAILED(rv)) return rv;
+        if (!m_reg) return NS_ERROR_FAILURE;
+    }
+    
+    // Open the registry
+    rv = m_reg->IsOpen( &openalready);
+    if (NS_FAILED(rv)) return rv;
 
-			if (NS_FAILED(rv))
-			{
-#if defined(DEBUG_profile)
-					printf("Registry : Couldn't add Profiles subtree.\n");
-#endif
-			}
-		}
-		else
-		{
-#if defined(DEBUG_profile)
-				printf("Couldn't open registry.\n");
-#endif
-		}
-	}
-	else
-	{
-#if defined(DEBUG_profile)
-			printf("Registry Object is NULL.\n");
-#endif
-
-		return NS_ERROR_FAILURE;
-	}
+    if (!openalready)
+        rv = m_reg->OpenDefault();   
 
     return rv;
 }
 
 NS_IMETHODIMP nsProfile::Shutdown()
 {
-  unloadPrefs();
-  
-  NS_RELEASE(m_reg);
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsProfile::StartupWithArgs(nsICmdLineService *cmdLineArgs)
 {
-	nsresult rv;
+  nsresult rv;
   // initializations for profile manager
-	PRBool profileDirSet = PR_FALSE;
-	char *profstr=nsnull;
+  PRBool profileDirSet = PR_FALSE;
+  nsCString profileURLStr("");
   
+#ifdef DEBUG_profile
   printf("Profile Manager : Profile Wizard and Manager activites : Begin\n");
+#endif
 
   Startup(nsnull);
 
   if (cmdLineArgs)
-    rv = ProcessArgs(cmdLineArgs, &profileDirSet, &profstr);
+    rv = ProcessArgs(cmdLineArgs, &profileDirSet, profileURLStr);
   
   if (!profileDirSet)
-    rv = LoadDefaultProfileDir(profstr);
-
-  // Closing the registry that was opened in the Startup.
+    rv = LoadDefaultProfileDir(profileURLStr);
+  
+  // Closing the registry that was opened in Startup()
   m_reg->Close();
 
+#ifdef DEBUG_profile
   printf("Profile Manager : Profile Wizard and Manager activites : End\n");
+#endif
 
   return NS_OK;
 }
 
 
 nsresult
-nsProfile::LoadDefaultProfileDir(char *profstr)
+nsProfile::LoadDefaultProfileDir(nsCString & profileURLStr)
 {
     nsresult rv;
-    nsCOMPtr<nsIURI> profURL;
-    int numProfiles=0;
+    nsCOMPtr<nsIURI> profileURL;
+    PRInt32 numProfiles=0;
   
-    PRInt32 profWinWidth  = 615;
-    PRInt32 profWinHeight = 500;
-  
+    NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &rv);
+    if (NS_FAILED(rv)) return rv;
+
     GetProfileCount(&numProfiles);
   /*
 	 	 * Create the Application Shell instance...
@@ -371,11 +328,11 @@ nsProfile::LoadDefaultProfileDir(char *profstr)
     IsPregCookieSet(&isPregInfoSet); 
 		
     PRBool pregPref = PR_FALSE;
-    rv = loadPrefs();
-    if (NS_SUCCEEDED(rv))
-        rv = m_prefs->GetBoolPref(PREG_PREF, &pregPref);
 
-    if (!profstr)
+    rv = prefs->GetBoolPref(PREG_PREF, &pregPref);
+    //if (NS_FAILED(rv)) return rv;
+
+    if (profileURLStr.Length() == 0)
         {
             // This means that there was no command-line argument to force
             // profile UI to come up. But we need the UI anyway if there
@@ -383,32 +340,34 @@ nsProfile::LoadDefaultProfileDir(char *profstr)
             if (numProfiles == 0)
                 {
                     if (pregPref)
-                        profstr = "resource:/res/profile/cpwPreg.xul"; 
+                        profileURLStr = PROFILE_PREG_URL;
                     else
-                        profstr = "resource:/res/profile/cpw.xul"; 
+                        profileURLStr = PROFILE_WIZARD_URL;
                 }
             else if (numProfiles > 1)
-                profstr = "resource:/res/profile/pm.xul"; 
+                profileURLStr = PROFILE_MANAGER_URL;
         }
 
 
     // Provide Preg information
-    if (pregPref && (PL_strcmp(isPregInfoSet, "true") != 0))
-        profstr = "resource:/res/profile/cpwPreg.xul"; 
+    if (pregPref && (PL_strcmp(isPregInfoSet, REGISTRY_TRUE_STRING) != 0))
+        profileURLStr = PROFILE_PREG_URL;
 
 
-    if (profstr)
+    if (profileURLStr.Length() != 0)
         {
-            rv = NS_NewURI(getter_AddRefs(profURL), profstr);
+            rv = NS_NewURI(getter_AddRefs(profileURL), (const char *)profileURLStr);
 	
             if (NS_FAILED(rv)) {
                 return rv;
             } 
 
             nsCOMPtr<nsIWebShellWindow>  profWindow;
-            rv = profAppShell->CreateTopLevelWindow(nsnull, profURL,
+            rv = profAppShell->CreateTopLevelWindow(nsnull, profileURL,
                                                     PR_TRUE, PR_TRUE, NS_CHROME_ALL_CHROME,
-                                                    nsnull, profWinWidth, profWinHeight,
+                                                    nsnull, 
+							NS_SIZETOCONTENT,           // width 
+							NS_SIZETOCONTENT,           // height
                                                     getter_AddRefs(profWindow));
 
             if (NS_FAILED(rv)) 
@@ -422,32 +381,34 @@ nsProfile::LoadDefaultProfileDir(char *profstr)
             rv = profAppShell->Run();
         }
 
-    if (pregPref && PL_strcmp(isPregInfoSet, "true") != 0)
+    if (pregPref && PL_strcmp(isPregInfoSet, REGISTRY_TRUE_STRING) != 0)
         ProcessPRegCookie();
     
     // Now we have the right profile, read the user-specific prefs.
-    m_prefs->ReadUserPrefs();
-    return NS_OK;
+    rv = prefs->ReadUserPrefs();
+    return rv;
 }
 
 nsresult
 nsProfile::ProcessArgs(nsICmdLineService *cmdLineArgs,
                        PRBool* profileDirSet,
-                       char **profstr)
+                       nsCString & profileURLStr)
 {
     nsresult rv;
 	char* cmdResult = nsnull;
 	nsFileSpec currProfileDirSpec;
 
+#ifdef DEBUG_profile
     printf("Profile Manager : Command Line Options : Begin\n");
-  
+#endif
+ 
     // check for command line arguments for profile manager
     //	
     // -P command line option works this way:
     // apprunner -P profilename 
     // runs the app using the profile <profilename> 
     // remembers profile for next time
-    rv = cmdLineArgs->GetCmdLineValue("-P", &cmdResult);
+    rv = cmdLineArgs->GetCmdLineValue(PROFILE_CMD_LINE_ARG, &cmdResult);
     if (NS_SUCCEEDED(rv))
         {
             if (cmdResult) {
@@ -457,14 +418,6 @@ nsProfile::ProcessArgs(nsICmdLineService *cmdLineArgs,
 #endif /* DEBUG_profile */
                 
                 GetProfileDir(currProfileName, &currProfileDirSpec);
-#ifdef DEBUG_profile
-                nsXPIDLCString currProfileDirSpecStr;
-                rv = GetStringFromSpec(currProfileDirSpec, getter_Copies(currProfileDirSpecStr));
-                
-                if (NS_SUCCEEDED(rv) && currProfileDirSpecStr && *currProfileDirSpecStr) {
-                    printf("** ProfileDir  :  %s **\n", (const char *) currProfileDirSpecStr);
-                }
-#endif /* DEBUG_profile */
 			
                 if (NS_SUCCEEDED(rv)){
                     *profileDirSet = PR_TRUE;
@@ -483,7 +436,7 @@ nsProfile::ProcessArgs(nsICmdLineService *cmdLineArgs,
 	// runs app using that profile 
 	// remembers profile for next time
 
-    rv = cmdLineArgs->GetCmdLineValue("-CreateProfile", &cmdResult);
+    rv = cmdLineArgs->GetCmdLineValue(CREATE_PROFILE_CMD_LINE_ARG, &cmdResult);
     if (NS_SUCCEEDED(rv))
         {
             if (cmdResult) {
@@ -519,39 +472,39 @@ nsProfile::ProcessArgs(nsICmdLineService *cmdLineArgs,
         }
 
     // Start Profile Manager
-    rv = cmdLineArgs->GetCmdLineValue("-ProfileManager", &cmdResult);
+    rv = cmdLineArgs->GetCmdLineValue(PROFILE_MANAGER_CMD_LINE_ARG, &cmdResult);
     if (NS_SUCCEEDED(rv))
         {		
             if (cmdResult) {
-                *profstr = "resource:/res/profile/pm.xul"; 
+                profileURLStr = PROFILE_MANAGER_URL;
             }
         }
 
 	// Start Profile Wizard
-    rv = cmdLineArgs->GetCmdLineValue("-ProfileWizard", &cmdResult);
+    rv = cmdLineArgs->GetCmdLineValue(PROFILE_WIZARD_CMD_LINE_ARG, &cmdResult);
     if (NS_SUCCEEDED(rv))
         {		
             if (cmdResult) {
-                *profstr = "resource:/res/profile/cpw.xul"; 
+                profileURLStr = PROFILE_WIZARD_URL;
             }
         }
 
 	// Start Migaration activity
-    rv = cmdLineArgs->GetCmdLineValue("-installer", &cmdResult);
+    rv = cmdLineArgs->GetCmdLineValue(INSTALLER_CMD_LINE_ARG, &cmdResult);
     if (NS_SUCCEEDED(rv))
         {		
             if (cmdResult) {
                 rv = MigrateProfileInfo();
                 if (NS_FAILED(rv)) return rv;
 
-                int num4xProfiles = 0;
+                PRInt32 num4xProfiles = 0;
                 rv = Get4xProfileCount(&num4xProfiles);
                 if (NS_FAILED(rv)) return rv;
                 
-				int numProfiles = 0;
+				PRInt32 numProfiles = 0;
 				GetProfileCount(&numProfiles);
                 if (num4xProfiles == 0 && numProfiles == 0) {
-                    *profstr = "resource:/res/profile/cpw.xul"; 
+                    profileURLStr = PROFILE_WIZARD_URL;
                 }
 #ifdef AUTOMATICALLY_MIGRATE_IF_ONLY_ONE_PROFILE
                 else if (num4xProfiles == 1) {
@@ -561,22 +514,14 @@ nsProfile::ProcessArgs(nsICmdLineService *cmdLineArgs,
 #else
 		else {
 #endif /* AUTOMATICALLY_MIGRATE_IF_ONLY_ONE_PROFILE */
-                    *profstr = "resource:/res/profile/pm.xul";
+                    profileURLStr = PROFILE_MANAGER_URL;
                 }
             }
         }
-
+#ifdef DEBUG_profile
     printf("Profile Manager : Command Line Options : End\n");
+#endif
 
-
-  /*
-   * Load preferences, causing them to be initialized, and hold a reference to them.
-   */
-    rv = loadPrefs();
-    if (NS_FAILED(rv))
-        return rv;
-
-  
     return NS_OK;
 }
 
@@ -590,264 +535,205 @@ nsProfile::ProcessArgs(nsICmdLineService *cmdLineArgs,
 NS_IMETHODIMP nsProfile::GetProfileDir(const char *profileName, nsFileSpec* profileDir)
 {
     nsresult rv = NS_OK;
-    PRBool openalready = PR_FALSE;
 
 #if defined(DEBUG_profile)
     printf("ProfileManager : GetProfileDir\n");
 #endif
 
-    // Check result.
-    if ( m_reg != nsnull ) 
-	{
-        // Open the registry
-		rv = m_reg->IsOpen( &openalready );
-		
-		if ( !openalready )
-			rv = m_reg->OpenDefault();
+    rv = OpenRegistry();
+    if (NS_FAILED(rv)) return rv;       
 
-		if (NS_SUCCEEDED(rv))
-		{
-			nsIRegistry::Key key;
-
-			// Get handle to subtree "Profiles"
-			rv = m_reg->GetSubtree(nsIRegistry::Common, "Profiles", &key);
-
-			if (NS_SUCCEEDED(rv))
-			{
-		        nsIRegistry::Key newKey;
-
-				// Get handle to <profileName> passed
-				rv = m_reg->GetSubtree(key, profileName, &newKey);
-
-				if (NS_SUCCEEDED(rv))
+    nsIRegistry::Key key;
+    
+    // Get handle to subtree REGISTRY_PROFILE_SUBTREE_STRING
+    rv = m_reg->GetSubtree(nsIRegistry::Common, REGISTRY_PROFILE_SUBTREE_STRING, &key);
+    
+    if (NS_SUCCEEDED(rv))
+        {
+            nsIRegistry::Key newKey;
+            
+            // Get handle to <profileName> passed
+            rv = m_reg->GetSubtree(key, profileName, &newKey);
+            
+            if (NS_SUCCEEDED(rv))
 				{
 					nsXPIDLCString encodedProfileDir;
-
-					// Get the value of entry "directory"
-			        rv = m_reg->GetString( newKey, "directory", getter_Copies(encodedProfileDir));
-
+                    
+					// Get the value of entry REGISTRY_DIRECTORY_STRING
+			        rv = m_reg->GetString( newKey, REGISTRY_DIRECTORY_STRING, getter_Copies(encodedProfileDir));
+                    
 					if (NS_SUCCEEDED(rv))
-					{
-						nsXPIDLCString isMigrated;
-
-						nsCOMPtr<nsIFileSpec>spec;
-						rv = NS_NewFileSpec(getter_AddRefs(spec));
-						if (NS_FAILED(rv)) return rv;
-						rv = spec->SetPersistentDescriptorString(encodedProfileDir);
-						if (NS_FAILED(rv)) return rv;
-						rv = spec->GetFileSpec(profileDir);
-						if (NS_FAILED(rv)) return rv;
-
-						// Get the value of entry "migrated" to check the nature of the profile
-						m_reg->GetString( newKey, "migrated",
-                                          getter_Copies(isMigrated));
-				
-						// Set this to be a current profile only if it is a 5.0 profile
-						if (PL_strcmp(isMigrated, "yes") == 0)
-						{
-							rv = m_reg->SetString(key, "CurrentProfile", profileName);
-													
-							if (NS_FAILED(rv))
-							{
+                        {
+                            nsXPIDLCString isMigrated;
+                            
+                            nsCOMPtr<nsIFileSpec>spec;
+                            rv = NS_NewFileSpec(getter_AddRefs(spec));
+                            if (NS_FAILED(rv)) return rv;
+                            rv = spec->SetPersistentDescriptorString(encodedProfileDir);
+                            if (NS_FAILED(rv)) return rv;
+                            rv = spec->GetFileSpec(profileDir);
+                            if (NS_FAILED(rv)) return rv;
+                            
+                            // Get the value of entry REGISTRY_MIGRATED_STRING to check the nature of the profile
+                            m_reg->GetString( newKey, REGISTRY_MIGRATED_STRING,
+                                              getter_Copies(isMigrated));
+                            
+                            // Set this to be a current profile only if it is a 5.0 profile
+                            if (PL_strcmp(isMigrated, REGISTRY_YES_STRING) == 0)
+                                {
+                                    rv = m_reg->SetString(key, REGISTRY_CURRENT_PROFILE_STRING, profileName);
+                                    
+                                    if (NS_FAILED(rv))
+                                        {
 #if defined(DEBUG_profile)
-									printf("Profiles : Couldn't set CurrentProfile Name.\n");
+                                            printf("Profiles : Couldn't set CurrentProfile Name.\n");
 #endif
-					        }
-
-							nsFileSpec tmpFileSpec(*profileDir);
-							if (!tmpFileSpec.Exists()) {
-							    
+                                        }
+                                    
+                                    nsFileSpec tmpFileSpec(*profileDir);
+                                    if (!tmpFileSpec.Exists()) {
+                                        
 								// Get profile defaults folder..
-                              					NS_WITH_SERVICE(nsIFileLocator, locator, kFileLocatorCID, &rv);
-
-								if (NS_FAILED(rv) || !locator)
-									return NS_ERROR_FAILURE;
-
-								nsCOMPtr <nsIFileSpec> profDefaultsDir;
-								rv = locator->GetFileLocation(nsSpecialFileSpec::App_ProfileDefaultsFolder50, getter_AddRefs(profDefaultsDir));
-        
-								if (NS_FAILED(rv) || !profDefaultsDir)
-									return NS_ERROR_FAILURE;
-
-								nsFileSpec defaultsDirSpec;
-			
-								profDefaultsDir->GetFileSpec(&defaultsDirSpec);
-
+                                        NS_WITH_SERVICE(nsIFileLocator, locator, kFileLocatorCID, &rv);
+                                        
+                                        if (NS_FAILED(rv) || !locator)
+                                            return NS_ERROR_FAILURE;
+                                        
+                                        nsCOMPtr <nsIFileSpec> profDefaultsDir;
+                                        rv = locator->GetFileLocation(nsSpecialFileSpec::App_ProfileDefaultsFolder50, getter_AddRefs(profDefaultsDir));
+                                        
+                                        if (NS_FAILED(rv) || !profDefaultsDir)
+                                            return NS_ERROR_FAILURE;
+                                        
+                                        nsFileSpec defaultsDirSpec;
+                                        
+                                        profDefaultsDir->GetFileSpec(&defaultsDirSpec);
+                                        
 								// Copy contents from defaults folder.
-								if (defaultsDirSpec.Exists())
-								{
-									defaultsDirSpec.RecursiveCopy(tmpFileSpec);
-								}
-
-							}
-
-						}
-
-					}
+                                        if (defaultsDirSpec.Exists())
+                                            {
+                                                defaultsDirSpec.RecursiveCopy(tmpFileSpec);
+                                            }
+                                        
+                                    }
+                                    
+                                }
+                            
+                        }
 					else
-					{
+                        {
 #if defined(DEBUG_profile)
 							printf("Profiles : Couldn't get Profile directory name.\n");
 #endif
-					}
+                        }
 				}
-				else
+            else
 				{
 #if defined(DEBUG_profile)
-						printf("Profiles : Couldn't get profileName subtree.\n");
+                    printf("Profiles : Couldn't get profileName subtree.\n");
 #endif
 				}
-			}
-			else
-			{
+        }
+    else
+        {
 #if defined(DEBUG_profile)
 					printf("Registry : Couldn't get Profiles subtree.\n");
 #endif
-			}
-			if (!openalready)
-				m_reg->Close();
-		}
-		else
-		{
-#if defined(DEBUG_profile)
-				printf("Couldn't open registry.\n");
-#endif
-		}
-		
-    }
-	else
-	{
-#if defined(DEBUG_profile)
-        printf("Registry Object is NULL.\n");
-#endif
-
-		return NS_ERROR_FAILURE;
-	}
+        }
     return rv;
 }
 
 
 // Gets the number of profiles
 // Location: Common/Profiles
-NS_IMETHODIMP nsProfile::GetProfileCount(int *numProfiles)
+NS_IMETHODIMP nsProfile::GetProfileCount(PRInt32 *numProfiles)
 {
 
     nsresult rv = NS_OK;
-    PRBool openalready = PR_FALSE;     
 
 #if defined(DEBUG_profile)
     printf("ProfileManager : GetProfileCount\n");
 #endif
 
-    // Check result.
-    if ( m_reg != nsnull ) 
-	{
-        // Open the registry
-		rv = m_reg->IsOpen( &openalready );
-		
-		if ( !openalready )
-			rv = m_reg->OpenDefault();
-
-		if (NS_SUCCEEDED(rv))
-		{
-			// Enumerate all subkeys (immediately) under the given node.
-			nsCOMPtr<nsIEnumerator> enumKeys;
-			nsIRegistry::Key key;
-
-			rv = m_reg->GetSubtree(nsIRegistry::Common, "Profiles", &key);
-
-			if (NS_SUCCEEDED(rv))
-			{
-		        rv = m_reg->EnumerateSubtrees( key, getter_AddRefs(enumKeys));
-
-				if (NS_SUCCEEDED(rv))
+    rv = OpenRegistry();
+    if (NS_FAILED(rv)) return rv;
+    
+    // Enumerate all subkeys (immediately) under the given node.
+    nsCOMPtr<nsIEnumerator> enumKeys;
+    nsIRegistry::Key key;
+    
+    rv = m_reg->GetSubtree(nsIRegistry::Common, REGISTRY_PROFILE_SUBTREE_STRING, &key);
+    
+    if (NS_SUCCEEDED(rv))
+        {
+            rv = m_reg->EnumerateSubtrees( key, getter_AddRefs(enumKeys));
+            
+            if (NS_SUCCEEDED(rv))
 				{
-			        int numKeys=0;
+			        PRInt32 numKeys=0;
 					rv = enumKeys->First();
-
+                    
 			        while( NS_SUCCEEDED( rv ) && (NS_OK != enumKeys->IsDone()) ) 
-					{
-						nsCOMPtr<nsISupports> base;
-
-						rv = enumKeys->CurrentItem( getter_AddRefs(base) );
-
-						if (NS_SUCCEEDED(rv)) 
-						{
-	                        // Get specific interface.
-		                    nsIRegistryNode *node;
-			                nsIID nodeIID = NS_IREGISTRYNODE_IID;
-
-							rv = base->QueryInterface( nodeIID, (void**)&node );
-					        
-						    // Test that result.
-							if (NS_SUCCEEDED(rv)) 
-							{
+                        {
+                            nsCOMPtr<nsISupports> base;
+                            
+                            rv = enumKeys->CurrentItem( getter_AddRefs(base) );
+                            
+                            if (NS_SUCCEEDED(rv)) 
+                                {
+                                    // Get specific interface.
+                                    nsCOMPtr <nsIRegistryNode> node;
+                                    nsIID nodeIID = NS_IREGISTRYNODE_IID;
+                                    
+                                    rv = base->QueryInterface( nodeIID, getter_AddRefs(node));
+                                    
+                                    // Test that result.
+                                    if (NS_SUCCEEDED(rv)) 
+                                        {
 								// Get node name.
-		                        nsXPIDLCString profile;
-                                nsXPIDLCString isMigrated;
-
-			                    rv = node->GetName( getter_Copies(profile) );
-
-								if (NS_SUCCEEDED(rv) && (profile))
-								{
-									nsIRegistry::Key profKey;								
-
-									rv = m_reg->GetSubtree(key, profile, &profKey);
-								
-									if (NS_SUCCEEDED(rv)) 
-									{
-										rv = m_reg->GetString(profKey, "migrated", getter_Copies(isMigrated));
-
-										if (NS_SUCCEEDED(rv) && (isMigrated))
-										{
-											if (PL_strcmp(isMigrated, "yes") == 0)
-											{
-												numKeys++;
-											}
-										}
-									}
-								}
-								NS_RELEASE(node);
-					        }
-						}	
-						rv = enumKeys->Next();
-					}
+                                            nsXPIDLCString profile;
+                                            nsXPIDLCString isMigrated;
+                                            
+                                            rv = node->GetName( getter_Copies(profile) );
+                                            
+                                            if (NS_SUCCEEDED(rv) && (profile))
+                                                {
+                                                    nsIRegistry::Key profKey;								
+                                                    
+                                                    rv = m_reg->GetSubtree(key, profile, &profKey);
+                                                    
+                                                    if (NS_SUCCEEDED(rv)) 
+                                                        {
+                                                            rv = m_reg->GetString(profKey, REGISTRY_MIGRATED_STRING, getter_Copies(isMigrated));
+                                                            
+                                                            if (NS_SUCCEEDED(rv) && (isMigrated))
+                                                                {
+                                                                    if (PL_strcmp(isMigrated, REGISTRY_YES_STRING) == 0)
+                                                                        {
+                                                                            numKeys++;
+                                                                        }
+                                                                }
+                                                        }
+                                                }
+                                        }
+                                }	
+                            rv = enumKeys->Next();
+                        }
 					*numProfiles = numKeys;
 				}
-				else
+            else
 				{
 #if defined(DEBUG_profile)
-						printf("Profiles : Can't enumerate subtrees.\n" );
+                    printf("Profiles : Can't enumerate subtrees.\n" );
 #endif
 				}
-			}
-			else
-			{
+        }
+    else
+        {
 #if defined(DEBUG_profile)
-					printf("Registry : Couldn't get Profiles subtree.\n");
+            printf("Registry : Couldn't get Profiles subtree.\n");
 #endif
-			}
-			if (!openalready)
-				m_reg->Close();
-		}
-		else
-		{
-#if defined(DEBUG_profile)
-				printf("Couldn't open registry.\n");
-#endif
-		}
-		
-    }
-	else
-	{
-#if defined(DEBUG_profile)
-			printf("Registry Object is NULL.\n");
-#endif
-
-		return NS_ERROR_FAILURE;
-
-	}
-
+        }
 	return rv;
 }
 
@@ -859,213 +745,169 @@ NS_IMETHODIMP nsProfile::GetProfileCount(int *numProfiles)
 NS_IMETHODIMP nsProfile::GetSingleProfile(char **profileName)
 {
 	nsresult rv = NS_OK;
-    PRBool openalready = PR_FALSE;     
 
 #if defined(DEBUG_profile)
     printf("ProfileManager : GetSingleProfile\n");
 #endif
 
-    // Check result.
-    if ( m_reg != nsnull ) 
-	{
-        // Open the registry
-		rv = m_reg->IsOpen( &openalready );
-		
-		if ( !openalready )
-			rv = m_reg->OpenDefault();
-
-		if (NS_SUCCEEDED(rv))
-		{
-	        // Enumerate all subkeys (immediately) under the given node.
-		    nsCOMPtr<nsIEnumerator> enumKeys;
-			nsIRegistry::Key key;
-
-	        rv = m_reg->GetSubtree(nsIRegistry::Common, "Profiles", &key);
-
-			if (NS_SUCCEEDED(rv))
-			{
-		        rv = m_reg->EnumerateSubtrees( key, getter_AddRefs(enumKeys));
-
-				if (NS_SUCCEEDED(rv))
+    // Enumerate all subkeys (immediately) under the given node.
+    nsCOMPtr<nsIEnumerator> enumKeys;
+    nsIRegistry::Key key;
+    
+    rv = m_reg->GetSubtree(nsIRegistry::Common, REGISTRY_PROFILE_SUBTREE_STRING, &key);
+    
+    if (NS_SUCCEEDED(rv))
+        {
+            rv = m_reg->EnumerateSubtrees( key, getter_AddRefs(enumKeys));
+            
+            if (NS_SUCCEEDED(rv))
 				{
 					// Go to beginning.
 					rv = enumKeys->First();
-
+                    
 			        while(NS_SUCCEEDED(rv)&& (NS_OK != enumKeys->IsDone()) ) 
-					{
-						nsCOMPtr<nsISupports> base;
-						rv = enumKeys->CurrentItem(getter_AddRefs(base));
-
-						if (NS_SUCCEEDED(rv))
-						{
-							// Get specific interface.
-							nsIRegistryNode *node;
-							nsIID nodeIID = NS_IREGISTRYNODE_IID;
-							rv = base->QueryInterface( nodeIID, (void**)&node );
-		                        
-							if (NS_SUCCEEDED(rv))
-							{
-								nsXPIDLCString isMigrated;
-                                nsIRegistry::Key profKey;								
-
+                        {
+                            nsCOMPtr<nsISupports> base;
+                            rv = enumKeys->CurrentItem(getter_AddRefs(base));
+                            
+                            if (NS_SUCCEEDED(rv))
+                                {
+                                    // Get specific interface.
+                                    nsCOMPtr <nsIRegistryNode> node;
+                                    nsIID nodeIID = NS_IREGISTRYNODE_IID;
+                                    rv = base->QueryInterface( nodeIID, getter_AddRefs(node));
+                                    
+                                    if (NS_SUCCEEDED(rv))
+                                        {
+                                            nsXPIDLCString isMigrated;
+                                            nsIRegistry::Key profKey;								
+                                            
 					            // Get node name.
-					            rv = node->GetName(profileName );	
-
+                                            rv = node->GetName(profileName );	
+                                            
 								// Profiles need to be migrated are not considered as valid profiles
 								// On finding the valid profile, breaks out of the while loop.
-								if (NS_SUCCEEDED(rv))
-								{
-									rv = m_reg->GetSubtree(key, *profileName, &profKey);
-
-									m_reg->GetString(profKey, "migrated", getter_Copies(isMigrated));
-
-									if (PL_strcmp(isMigrated, "no") == 0)
-									{
-										rv = enumKeys->Next();
-										continue;
-									}
-									else
-									{
-										if (NS_SUCCEEDED(rv))
-										{
-										    rv = m_reg->SetString(key, "CurrentProfile", *profileName);	
-		
-											if (NS_SUCCEEDED(rv))
-											{
-												break;
-											}
-											else
-											{
+                                            if (NS_SUCCEEDED(rv))
+                                                {
+                                                    rv = m_reg->GetSubtree(key, *profileName, &profKey);
+                                                    
+                                                    m_reg->GetString(profKey, REGISTRY_MIGRATED_STRING, getter_Copies(isMigrated));
+                                                    
+                                                    if (PL_strcmp(isMigrated, REGISTRY_NO_STRING) == 0)
+                                                        {
+                                                            rv = enumKeys->Next();
+                                                            continue;
+                                                        }
+                                                    else
+                                                        {
+                                                            if (NS_SUCCEEDED(rv))
+                                                                {
+                                                                    rv = m_reg->SetString(key, REGISTRY_CURRENT_PROFILE_STRING, *profileName);	
+                                                                    
+                                                                    if (NS_SUCCEEDED(rv))
+                                                                        {
+                                                                            break;
+                                                                        }
+                                                                    else
+                                                                        {
 #if defined(DEBUG_profile)
-													printf("RegistryNode : Can't set Current Profile name.\n" );
+                                                                            printf("RegistryNode : Can't set Current Profile name.\n" );
 #endif											
-											}
-										}
-									}
-								}
-								else
-								{
+                                                                        }
+                                                                }
+                                                        }
+                                                }
+                                            else
+                                                {
 #if defined(DEBUG_profile)
-										printf("RegistryNode : Couldn't get the node name.\n");
+                                                    printf("RegistryNode : Couldn't get the node name.\n");
 #endif
-								}
-							}
-							else
-							{
+                                                }
+                                        }
+                                    else
+                                        {
 #if defined(DEBUG_profile)
-									printf("RegistryNode : Couldn't get the interface.\n");
+                                            printf("RegistryNode : Couldn't get the interface.\n");
 #endif
-							}
-						}
-						else
-						{
+                                        }
+                                }
+                            else
+                                {
 #if defined(DEBUG_profile)
-								printf("Profiles : Couldn't get current enumerated item.\n");
+                                    printf("Profiles : Couldn't get current enumerated item.\n");
 #endif
-						}
-						rv = enumKeys->Next();
-					} //end while loop
+                                }
+                            rv = enumKeys->Next();
+                        } //end while loop
 				}
-				else
+            else
 				{
 #if defined(DEBUG_profile)
-						printf("Profiles : Couldn't enumerate subtrees.\n");
+                    printf("Profiles : Couldn't enumerate subtrees.\n");
 #endif
 				}
-			}
-			else
-			{
+        }
+    else
+        {
 #if defined(DEBUG_profile)
-					printf("Registry : Couldn't get Profiles subtree.\n");
+            printf("Registry : Couldn't get Profiles subtree.\n");
 #endif
-			}
-			if (!openalready)
-				m_reg->Close();
-		}
-		else
-		{
-#if defined(DEBUG_profile)
-				printf("Couldn't open registry.\n");
-#endif
-		}
-	}
-	else
-	{
-#if defined(DEBUG_profile)
-			printf("Registry Object is NULL.\n");
-#endif
-
-		return NS_ERROR_FAILURE;
-	}
+        }
     return rv;
 }
 
+
+NS_IMETHODIMP
+nsProfile::GetCurrentProfileDirFromJS(nsIFileSpec **spec)
+{
+        nsresult rv;
+        nsFileSpec dir;
+
+        rv = GetCurrentProfileDir(&dir);
+        if (NS_FAILED(rv)) return rv;
+
+        rv = NS_NewFileSpecWithSpec(dir, spec);
+        return rv;
+}                  
 
 // Returns the name of the current profile i.e., the last used profile
 NS_IMETHODIMP nsProfile::GetCurrentProfile(char **profileName)
 {
 	nsresult rv = NS_OK;
-    PRBool openalready = PR_FALSE;     
-
+  
 #if defined(DEBUG_profile) 
 	printf("ProfileManager : GetCurrentProfile\n");
 #endif
-  
-	// Check result.
-	if ( m_reg != nsnull ) 
-	{
-		// Open the registry.
-		rv = m_reg->IsOpen( &openalready );
-		
-		if ( !openalready )
-			rv = m_reg->OpenDefault();
 
-		if (NS_SUCCEEDED(rv))
-		{
-			nsIRegistry::Key key;
+    rv = OpenRegistry();
+    if (NS_FAILED(rv)) return rv;
+    
+    nsIRegistry::Key key;
 
-			rv = m_reg->GetSubtree(nsIRegistry::Common, "Profiles", &key);
-
-			if (NS_SUCCEEDED(rv))
-			{
-
-				rv = m_reg->GetString( key, "CurrentProfile", profileName );
-
-				// if fails to get the current profile set the value to null
-				if (NS_FAILED(rv))
+    rv = m_reg->GetSubtree(nsIRegistry::Common, REGISTRY_PROFILE_SUBTREE_STRING, &key);
+    
+    if (NS_SUCCEEDED(rv))
+        {
+            
+            rv = m_reg->GetString( key, REGISTRY_CURRENT_PROFILE_STRING, profileName );
+            
+            // if fails to get the current profile set the value to null
+            if (NS_FAILED(rv))
 				{
 		            profileName = '\0';
-
+                    
 #if defined(DEBUG_profile)
-						printf("Profiles:Can't get Current Profile value.\n" );
+                    printf("Profiles:Can't get Current Profile value.\n" );
 #endif
 				}
-			}
-			else
-			{
+        }
+    else
+        {
 #if defined(DEBUG_profile)
-					printf("Registry : Couldn't get Profiles subtree.\n");
+            printf("Registry : Couldn't get Profiles subtree.\n");
 #endif
-			}
-			if (!openalready)
-				m_reg->Close();
-		}
-		else
-		{
-#if defined(DEBUG_profile)
-				printf("Couldn't open registry.\n");
-#endif
-		}
-		
-    }
-	else
-	{
-#if defined(DEBUG_profile)
-			printf("Registry Object is NULL.\n");
-#endif
-
-		return NS_ERROR_FAILURE;
-	}
+        }
+    
 	return rv;
 }
 
@@ -1143,127 +985,89 @@ NS_IMETHODIMP nsProfile::GetCurrentProfileDir(nsFileSpec* profileDir)
 NS_IMETHODIMP nsProfile::SetProfileDir(const char *profileName, nsFileSpec& profileDir)
 {
     nsresult rv = NS_OK;
-    PRBool openalready = PR_FALSE;     
-
-#if defined(DEBUG_profile)
-    printf("ProfileManager : SetProfileDir\n");
-    printf("profileName : %s ", profileName);
-    nsXPIDLCString profileDirStr;
-    rv = GetStringFromSpec(profileDir, getter_Copies(profileDirStr));
-    if (NS_SUCCEEDED(rv) && profileDirStr) {
-        printf("profileDir  : %s\n", (const char *)profileDirStr);
-    }
-#endif
-
-    // Check result.
-    if (m_reg != nsnull)
-	{
-		// Open the registry.
-		rv = m_reg->IsOpen( &openalready );
-		
-		if ( !openalready )
-			rv = m_reg->OpenDefault();
+ 
+    rv = OpenRegistry();
+    if (NS_FAILED(rv)) return rv;
     
-		if (NS_SUCCEEDED(rv))
-		{
-			nsIRegistry::Key key;
-
-			rv = m_reg->GetSubtree(nsIRegistry::Common, "Profiles", &key);
-
-			if (NS_SUCCEEDED(rv))
-			{
-				nsIRegistry::Key newKey;
-
-				rv = m_reg->AddSubtree(key, profileName, &newKey);
-		
-				if (NS_SUCCEEDED(rv))
+    nsIRegistry::Key key;
+    
+    rv = m_reg->GetSubtree(nsIRegistry::Common, REGISTRY_PROFILE_SUBTREE_STRING, &key);
+    
+    if (NS_SUCCEEDED(rv))
+        {
+            nsIRegistry::Key newKey;
+            
+            rv = m_reg->AddSubtree(key, profileName, &newKey);
+            
+            if (NS_SUCCEEDED(rv))
 				{
 					// Create a tmp Filespec and create a directory if required
 					nsFileSpec tmpDir(profileDir);
-
+                    
 					if (!profileDir.Exists())
-					{
-						// nsPersistentFileDescriptor requires an existing
-						// object. Make it first.
-						tmpDir.CreateDirectory();
-					}
+                        {
+                            // nsPersistentFileDescriptor requires an existing
+                            // object. Make it first.
+                            tmpDir.CreateDirectory();
+                        }
 					
-
+                    
 					nsXPIDLCString profileDirString;
-                    					
+                    
 					nsCOMPtr<nsIFileSpec>spec;
 					rv = NS_NewFileSpecWithSpec(profileDir, getter_AddRefs(spec));
 					if (NS_SUCCEEDED(rv)) {
 						rv = spec->GetPersistentDescriptorString(getter_Copies(profileDirString));
 					}
-    
-					// Set the entry "directory" for this profile
+                    
+					// Set the entry REGISTRY_DIRECTORY_STRING for this profile
 					if (NS_SUCCEEDED(rv) && profileDirString)
-					{
-						rv = m_reg->SetString(newKey, "directory", profileDirString);
-
-						CreateUserDirectories(tmpDir);
-
-						if (NS_FAILED(rv))
-						{
+                        {
+                            rv = m_reg->SetString(newKey, REGISTRY_DIRECTORY_STRING, profileDirString);
+                            
+                            CreateUserDirectories(tmpDir);
+                            
+                            if (NS_FAILED(rv))
+                                {
 #if defined(DEBUG_profile)
-								printf("Couldn't set directory property.\n" );
+                                    printf("Couldn't set directory property.\n" );
 #endif
-						}
-						
-						// A 5.0 profile needs no migration.
-						// Hence setting migrated flag to "yes"
-						// Need to change this logic to "migrate" = true/false.
-						rv = m_reg->SetString( newKey, "migrated", "yes");
-					}
+                                }
+                            
+                            // A 5.0 profile needs no migration.
+                            // Hence setting migrated flag to REGISTRY_YES_STRING
+                            // Need to change this logic to "migrate" = true/false.
+                            rv = m_reg->SetString( newKey, REGISTRY_MIGRATED_STRING, REGISTRY_YES_STRING);
+                        }
 					else
-					{
+                        {
 #if defined(DEBUG_profile)
 							printf("NULL value received for directory name.\n" );
 #endif
-					}
+                        }
 				}
-				else
+            else
 				{
 #if defined(DEBUG_profile)
                     printf("Profiles : Could not add profile name subtree.\n" );
 #endif
 				}
-			}
-			else
-			{
+        }
+    else
+        {
 #if defined(DEBUG_profile)
-					printf("Registry : Couldn't get Profiles subtree.\n");
+            printf("Registry : Couldn't get Profiles subtree.\n");
 #endif
-			}
-
-			rv = m_reg->SetString(key, "CurrentProfile", profileName);
-
-			if (NS_FAILED(rv))
-			{
+        }
+    
+    rv = m_reg->SetString(key, REGISTRY_CURRENT_PROFILE_STRING, profileName);
+    
+    if (NS_FAILED(rv))
+        {
 #if defined(DEBUG_profile)
-					printf("Couldn't set CurrentProfile name.\n" );
+            printf("Couldn't set CurrentProfile name.\n" );
 #endif
-			}
-			//if (!openalready)
-				m_reg->Close();
-		}
-		else
-		{
-#if defined(DEBUG_profile)
-				printf("Couldn't open registry.\n");
-#endif
-		}
-		
-	}
-	else
-	{
-#if defined(DEBUG_profile)
-			printf("Registry Object is NULL.\n");
-#endif
-
-		return NS_ERROR_FAILURE;
-	}
+        }
     return rv;
 }
 
@@ -1442,7 +1246,7 @@ void nsProfile::SetDataArray(nsString data)
 	printf("SetDataArray data : %s\n", data.ToNewCString());
 #endif
 
-	int idx = 0;
+	PRInt32 idx = 0;
 	char *newStr=nsnull;
 	char *tokstr = data.ToNewCString();
 	char *token = nsCRT::strtok(tokstr, "%", &newStr);
@@ -1458,9 +1262,9 @@ void nsProfile::SetDataArray(nsString data)
 	printf("subTok : %s\n", token);
 #endif
     
-		PL_strcpy(gNewProfileData[idx], token);
+		PL_strcpy(mNewProfileData[idx], token);
 		idx++;
-		g_Count = idx;
+		mCount = idx;
       
 		token = nsCRT::strtok(newStr, "%", &newStr);
     }
@@ -1478,19 +1282,19 @@ void nsProfile::SetDataArray(nsString data)
 // request to create a new profile (CreateProfile Wizard).
 char* nsProfile::GetValue(char *name)
 {
-    int nameLength;
+    PRInt32 nameLength;
     char* value;
     value = (char *) PR_Malloc(sizeof(char) * _MAX_LENGTH);
 
-    for (int i = 0; i < g_Count; i=i+1) 
+    for (PRInt32 i = 0; i < mCount; i=i+1) 
 	{
-        if (gNewProfileData[i]) 
+        if (mNewProfileData[i]) 
 		{
             nameLength = PL_strlen(name);
 
-            if (PL_strncmp(name, gNewProfileData[i], nameLength) == 0) 
+            if (PL_strncmp(name, mNewProfileData[i], nameLength) == 0) 
 			{
-                char* equalsPosition = PL_strchr(gNewProfileData[i], '=');
+                char* equalsPosition = PL_strchr(mNewProfileData[i], '=');
                 if (equalsPosition) 
 				{
                     PL_strcpy(value, 1 + equalsPosition);
@@ -1537,13 +1341,13 @@ NS_IMETHODIMP nsProfile::RenameProfile(const char* oldName, const char* newName)
 
 	GetCurrentProfile(&currProfile);
 
-	// If renaming the current profile set the renameCurrProfile flag to true
+	// If renaming the current profile set the mRenameCurrProfile flag to true
 	// By default the flag is set to false.
 	if (currProfile)
 	{
 		if (PL_strcmp(oldName, currProfile) == 0)
 		{
-			renameCurrProfile = PR_TRUE;
+			mRenameCurrProfile = PR_TRUE;
 	
 #if defined(DEBUG_profile)
 				printf("ProfileManager : Renaming the current profile\n");
@@ -1555,11 +1359,11 @@ NS_IMETHODIMP nsProfile::RenameProfile(const char* oldName, const char* newName)
 	CopyRegKey(oldName, newName);
 
 	// Delete old profile entry
-		DeleteProfile(oldName, "false");
+		DeleteProfile(oldName, REGISTRY_FALSE_STRING);
 
 
 	// If we renamed current profile, the new profile will be the current profile
-	if (renameCurrProfile)
+	if (mRenameCurrProfile)
 	{
 		rv = m_reg->OpenDefault();
 
@@ -1567,15 +1371,14 @@ NS_IMETHODIMP nsProfile::RenameProfile(const char* oldName, const char* newName)
 		{
 			nsIRegistry::Key profileRootKey;
 
-			rv = m_reg->GetSubtree(nsIRegistry::Common, "Profiles", &profileRootKey);
+			rv = m_reg->GetSubtree(nsIRegistry::Common, REGISTRY_PROFILE_SUBTREE_STRING, &profileRootKey);
 
 			if (NS_SUCCEEDED(rv))
 			{
-				rv = m_reg->SetString(profileRootKey, "CurrentProfile", newName);
+				rv = m_reg->SetString(profileRootKey, REGISTRY_CURRENT_PROFILE_STRING, newName);
 			}
-			m_reg->Close();
 		}
-		renameCurrProfile = PR_FALSE;
+		mRenameCurrProfile = PR_FALSE;
 	}
    	return rv;
 }
@@ -1586,72 +1389,62 @@ nsresult nsProfile::CopyRegKey(const char *oldProfile, const char *newProfile)
 {
 	nsCOMPtr<nsIEnumerator> enumKeys;
     nsIRegistry::Key sourceKey, destKey, profileRootKey;
+
+	nsresult rv;
+    rv = OpenRegistry();
+    if (NS_FAILED(rv)) return rv;
     
-	nsresult rv = m_reg->OpenDefault();
+    rv = m_reg->GetSubtree(nsIRegistry::Common, REGISTRY_PROFILE_SUBTREE_STRING, &profileRootKey);
+    if (NS_FAILED(rv)) return rv;
+     
+    rv = m_reg->GetSubtree(profileRootKey, (char *) oldProfile, &sourceKey);
+    if (NS_FAILED(rv)) return rv;
+	
+    rv = m_reg->AddSubtree(profileRootKey, (char *) newProfile, &destKey);
+    if (NS_FAILED(rv)) return rv;
 
-	// Need to add else statements to print the error stages.
-	if (NS_SUCCEEDED(rv))
-	{
-		rv = m_reg->GetSubtree(nsIRegistry::Common, "Profiles", &profileRootKey);
-
-		if (NS_SUCCEEDED(rv))
-		{
-
-			rv = m_reg->GetSubtree(profileRootKey, (char *) oldProfile, &sourceKey);
-
-			if (NS_SUCCEEDED(rv))
-			{
-				rv = m_reg->AddSubtree(profileRootKey, (char *) newProfile, &destKey);
-
-				if (NS_SUCCEEDED(rv))
-				{
-	                rv = m_reg->EnumerateValues(sourceKey, getter_AddRefs(enumKeys));
-
-					if (NS_SUCCEEDED(rv)) {
-						rv = enumKeys->First();
-                    
-						// Enumerate subkeys till done.
-						while( NS_SUCCEEDED( rv ) && (NS_OK != enumKeys->IsDone()) ) 
-						{
-							nsCOMPtr<nsISupports> base;
-							rv = enumKeys->CurrentItem(getter_AddRefs(base));
-                    
-							// Test result.
-							if (NS_SUCCEEDED(rv)) 
-							{
+    rv = m_reg->EnumerateValues(sourceKey, getter_AddRefs(enumKeys));
+    if (NS_FAILED(rv)) return rv;
+    
+    rv = enumKeys->First();
+    if (NS_FAILED(rv)) return rv;
+    
+    // Enumerate subkeys till done.
+    while( NS_SUCCEEDED( rv ) && (NS_OK != enumKeys->IsDone()) ) 
+        {
+            nsCOMPtr<nsISupports> base;
+            rv = enumKeys->CurrentItem(getter_AddRefs(base));
+            
+            // Test result.
+            if (NS_SUCCEEDED(rv)) 
+                {
 								// Get specific interface.
-								nsIRegistryNode *value;
-								nsIID valueIID = NS_IREGISTRYVALUE_IID;
-								rv = base->QueryInterface( valueIID, (void**)&value );
-                        
+                    nsCOMPtr <nsIRegistryNode> value;
+                    nsIID valueIID = NS_IREGISTRYVALUE_IID;
+                    rv = base->QueryInterface( valueIID, getter_AddRefs(value));
+                    
 								// Test that result.
-								if (NS_SUCCEEDED(rv)) 
-								{
-									// Get node name.
-									nsXPIDLCString entryName;
-									nsXPIDLCString entryValue;
-								
-									rv = value->GetName(getter_Copies(entryName));
-								
-									if (NS_SUCCEEDED(rv)) 
-									{
-										rv = m_reg->GetString( sourceKey, entryName, getter_Copies(entryValue));
-
-										if (NS_SUCCEEDED(rv)) 
+                    if (NS_SUCCEEDED(rv)) 
+                        {
+                            // Get node name.
+                            nsXPIDLCString entryName;
+                            nsXPIDLCString entryValue;
+                            
+                            rv = value->GetName(getter_Copies(entryName));
+                            
+                            if (NS_SUCCEEDED(rv)) 
+                                {
+                                    rv = m_reg->GetString( sourceKey, entryName, getter_Copies(entryValue));
+                                    
+                                    if (NS_SUCCEEDED(rv)) 
 										{
 											rv = m_reg->SetString(destKey, entryName, entryValue);
 										}
-									}
-								}
-							}
-							rv = enumKeys->Next();
-						}
-					}
-				}
-			}
-		}
-		m_reg->Close();
-	}
+                                }
+                        }
+                }
+            rv = enumKeys->Next();
+        }
 	return rv;
 }
 
@@ -1661,107 +1454,70 @@ nsresult nsProfile::CopyRegKey(const char *oldProfile, const char *newProfile)
 // 4.x kind of confirmation need to be implemented yet
 NS_IMETHODIMP nsProfile::DeleteProfile(const char* profileName, const char* canDeleteFiles)
 {
-
     nsresult rv = NS_OK;
-    PRBool openalready = PR_FALSE;     
-
+ 
 #if defined(DEBUG_profile)
     printf("ProfileManager : DeleteProfile\n");
 #endif
     
+    rv = OpenRegistry();
+    if (NS_FAILED(rv)) return rv;
+    
 	nsFileSpec profileDirSpec;
 	GetProfileDir(profileName, &profileDirSpec);
 
-	// To be more uniform need to change the arragement
-	// of the following with NS_SUCCEEDED()
-	// Check result.
-    if ( m_reg != nsnull ) 
-	{
-        // Open the registry.
-		rv = m_reg->IsOpen( &openalready );
-		
-		if ( !openalready )
-			rv = m_reg->OpenDefault();
+    
+    nsIRegistry::Key key;
+    
+    rv = m_reg->GetSubtree(nsIRegistry::Common, REGISTRY_PROFILE_SUBTREE_STRING, &key);
+    if (NS_FAILED(rv)) return rv;
 
-        if (NS_FAILED(rv))
-        {
-#if defined(DEBUG_profile)
-				printf("Error opening Registry.\n" );
-#endif
-            return rv;
-        }
-		
-#if defined(DEBUG_profile)
-			printf("Registry opened OK.\n" );
-#endif
-
-        nsIRegistry::Key key;
-
-        rv = m_reg->GetSubtree(nsIRegistry::Common, "Profiles", &key);
-
-        if (NS_FAILED(rv))
-        {
-#if defined(DEBUG_profile)
-				printf("Can't obtain subtree Profiles.\n" );
-#endif
-
-            return rv;
-        }
-
-		// Remove the subtree from the registry.
-        rv = m_reg->RemoveSubtree(key, profileName);
-
-        if (NS_FAILED(rv))
-           return rv;
-		else
-		{
+    // Remove the subtree from the registry.
+    rv = m_reg->RemoveSubtree(key, profileName);
+    if (NS_FAILED(rv)) return rv;
+    
 #if defined(DEBUG_profile) 
-				printf("DeleteProfile : deleted profile -> %s <-\n", profileName);
+    printf("DeleteProfile : deleted profile -> %s <-\n", profileName);
 #endif
-		}
-
-		// May need to delete directories, but not so directly.
-		// DeleteUserDirectories(profileDirSpec);
-
-		// Take care of the current profile, if the profile 
-		// just deleted was a current profile.
-		if (!renameCurrProfile)
+	
+    // May need to delete directories, but not so directly.
+    // DeleteUserDirectories(profileDirSpec);
+    
+    // Take care of the current profile, if the profile 
+    // just deleted was a current profile.
+    if (!mRenameCurrProfile)
 		{
 			char *oldCurrProfile = nsnull;
 			char *newCurrProfile = nsnull;
-
+            
 			GetCurrentProfile(&oldCurrProfile);
-
+            
 			if (PL_strcmp(profileName, oldCurrProfile) == 0)
-			{
-				GetFirstProfile(&newCurrProfile);
-
+                {
+                    GetFirstProfile(&newCurrProfile);
+                    
 #if defined(DEBUG_profile) 
 					printf("DeleteProfile : Old Current profile -> %s <-\n", oldCurrProfile);
 					printf("DeleteProfile : New Current profile -> %s <-\n", newCurrProfile);
 #endif
-
-				rv = m_reg->SetString(key, "CurrentProfile", newCurrProfile);
-
-			    if (NS_FAILED(rv)) 
-				{
+                    
+                    rv = m_reg->SetString(key, REGISTRY_CURRENT_PROFILE_STRING, newCurrProfile);
+                    
+                    if (NS_FAILED(rv)) 
+                        {
 #if defined(DEBUG_profile) 
-					   printf("Did not take nsnull successfully\n");
+                            printf("Did not take nsnull successfully\n");
 #endif
-				}
-			}
+                        }
+                }
 		}
-		if (!openalready)
-			m_reg->Close();
-    }
 
-	// If user asks for it, delete profile directory
-	if (PL_strcmp(canDeleteFiles, "true") == 0)
-	{
-		DeleteUserDirectories(profileDirSpec);
-	}
-
-
+    // If user asks for it, delete profile directory
+	if (PL_strcmp(canDeleteFiles, REGISTRY_TRUE_STRING) == 0)
+        {
+            DeleteUserDirectories(profileDirSpec);
+        }
+    
     return rv;
 }
 
@@ -1771,121 +1527,107 @@ NS_IMETHODIMP nsProfile::DeleteProfile(const char* profileName, const char* canD
 // with the text " - migrate" (e.g. <unmigratedProfileName> - migrate).
 // Need to change this lotic to have True/False to represent the 
 // migration state.
-// Names are stored in the global array gProfiles[].
+// Names are stored in the global array mProfiles[].
 void nsProfile::GetAllProfiles()
 {
 	nsresult rv = NS_OK;
-    PRBool openalready = PR_FALSE;     
 
 #if defined(DEBUG_profile) 
     printf("ProfileManager : GetAllProfiles\n");
 #endif
-	
-	int idx = 0;
 
-    // Check result.
-    if ( m_reg != nsnull ) 
-	{
-        // Open the registry.
-		rv = m_reg->IsOpen( &openalready );
-		
-		if ( !openalready )
-			rv = m_reg->OpenDefault();
+    rv = OpenRegistry();
+    if (NS_FAILED(rv)) return;
+    
+	PRInt32 idx = 0;
 
-        if (NS_SUCCEEDED(rv)) 
-		{
-            // Enumerate all subkeys (immediately) under the given node.
-            nsCOMPtr<nsIEnumerator> enumKeys;
-            nsIRegistry::Key key;
-
-            rv = m_reg->GetSubtree(nsIRegistry::Common, "Profiles", &key);
-
+    // Enumerate all subkeys (immediately) under the given node.
+    nsCOMPtr<nsIEnumerator> enumKeys;
+    nsIRegistry::Key key;
+    
+    rv = m_reg->GetSubtree(nsIRegistry::Common, REGISTRY_PROFILE_SUBTREE_STRING, &key);
+    
+    if (NS_SUCCEEDED(rv)) 
+        {
+            rv = m_reg->EnumerateSubtrees( key, getter_AddRefs(enumKeys));
+            
             if (NS_SUCCEEDED(rv)) 
-			{
-                rv = m_reg->EnumerateSubtrees( key, getter_AddRefs(enumKeys));
-
-                if (NS_SUCCEEDED(rv)) 
 				{
-
+                    
                     rv = enumKeys->First();
-
+                    
                     // Enumerate subkeys till done.
                     while( NS_SUCCEEDED( rv ) && (NS_OK != enumKeys->IsDone()) ) 
-                    {
-						nsCOMPtr<nsISupports> base;
-						rv = enumKeys->CurrentItem(getter_AddRefs(base));
-
-						if (NS_SUCCEEDED(rv)) 
-						{
-	                        // Get specific interface.
-		                    nsIRegistryNode *node;
-			                nsIID nodeIID = NS_IREGISTRYNODE_IID;
-				            rv = base->QueryInterface( nodeIID, (void**)&node );
-					        
-						    // Test that result.
-							if (NS_SUCCEEDED(rv)) 
-							{
+                        {
+                            nsCOMPtr<nsISupports> base;
+                            rv = enumKeys->CurrentItem(getter_AddRefs(base));
+                            
+                            if (NS_SUCCEEDED(rv)) 
+                                {
+                                    // Get specific interface.
+                                    nsCOMPtr <nsIRegistryNode> node;
+                                    nsIID nodeIID = NS_IREGISTRYNODE_IID;
+                                    rv = base->QueryInterface( nodeIID, getter_AddRefs(node));
+                                    
+                                    // Test that result.
+                                    if (NS_SUCCEEDED(rv)) 
+                                        {
 								// Get node name.
-		                        nsXPIDLCString profile;
-                                nsXPIDLCString isMigrated;
-								
-			                    rv = node->GetName(getter_Copies(profile));
-
-								if (NS_SUCCEEDED(rv) && (profile))
-								{
-									nsIRegistry::Key profKey;								
-
-									rv = m_reg->GetSubtree(key, profile, &profKey);
-								
-									if (NS_SUCCEEDED(rv)) 
-									{
-										rv = m_reg->GetString(profKey, "migrated", getter_Copies(isMigrated));
-
-										if (NS_SUCCEEDED(rv) && (isMigrated))
-										{
-											if (PL_strcmp(isMigrated, "no") == 0)
-											{
-												PL_strcpy(gProfiles[idx], profile);
-												PL_strcat(gProfiles[idx], " - migrate");
-											}
-											else
-											{
-												PL_strcpy(gProfiles[idx], profile);
-											}
-
+                                            nsXPIDLCString profile;
+                                            nsXPIDLCString isMigrated;
+                                            
+                                            rv = node->GetName(getter_Copies(profile));
+                                            
+                                            if (NS_SUCCEEDED(rv) && (profile))
+                                                {
+                                                    nsIRegistry::Key profKey;								
+                                                    
+                                                    rv = m_reg->GetSubtree(key, profile, &profKey);
+                                                    
+                                                    if (NS_SUCCEEDED(rv)) 
+                                                        {
+                                                            rv = m_reg->GetString(profKey, REGISTRY_MIGRATED_STRING, getter_Copies(isMigrated));
+                                                            
+                                                            if (NS_SUCCEEDED(rv) && (isMigrated))
+                                                                {
+                                                                    if (PL_strcmp(isMigrated, REGISTRY_NO_STRING) == 0)
+                                                                        {
+                                                                            PL_strcpy(mProfiles[idx], profile);
+                                                                            PL_strcat(mProfiles[idx], " - migrate");
+                                                                        }
+                                                                    else
+                                                                        {
+                                                                            PL_strcpy(mProfiles[idx], profile);
+                                                                        }
+                                                                    
 #if defined(DEBUG_profile)
-												printf("profile%d = %s\n", idx, gProfiles[idx]);
+                                                                    printf("profile%d = %s\n", idx, mProfiles[idx]);
 #endif
-										}
-									}
-								}
-								NS_RELEASE(node);
-					        }
-						}	
-					    rv = enumKeys->Next();
-
-						if (NS_FAILED(rv))
-						{
+                                                                }
+                                                        }
+                                                }
+                                        }
+                                }	
+                            rv = enumKeys->Next();
+                            
+                            if (NS_FAILED(rv))
+                                {
 #if defined(DEBUG_profile)
-								printf( "Error advancing enumerator, rv=0x%08X\n", (int)rv );
+                                    printf( "Error advancing enumerator, rv=0x%08X\n", (int)rv );
 #endif
-						}
-						idx++;
-					}
-					g_numProfiles = idx;
+                                }
+                            idx++;
+                        }
+					mNumProfiles = idx;
 				}
-            }
         }
-		if (!openalready)
-			m_reg->Close();
-    }
 }
 
 
 
 // Get the list of all profiles
 // Populate the input param.
-// Essentially calls GetAllProfiles to fill gProfiles[].
+// Essentially calls GetAllProfiles to fill mProfiles[].
 // This method is written to support the core service
 // call to get the names all profiles.
 NS_IMETHODIMP nsProfile::GetProfileList(nsString& profileList)
@@ -1897,13 +1639,13 @@ NS_IMETHODIMP nsProfile::GetProfileList(nsString& profileList)
 
 	GetAllProfiles();
 
-	for (int i=0; i < g_numProfiles; i++)
+	for (PRInt32 i=0; i < mNumProfiles; i++)
 	{
 		if (i != 0)
 		{
 			profileList += ",";
 		}
-		profileList += gProfiles[i];
+		profileList += mProfiles[i];
 	}
 	return NS_OK;
 }
@@ -1917,50 +1659,38 @@ NS_IMETHODIMP nsProfile::StartCommunicator(const char* profileName)
 {
 
     nsresult rv = NS_OK;
-    PRBool openalready = PR_FALSE;     
 
 #if defined(DEBUG_profile)
     printf("ProfileManager : Start AppRunner\n");
 #endif
 
+    rv = OpenRegistry();
+    if (NS_FAILED(rv)) return rv;
+    
+	// First, set the profile to be the current profile.
+	// So that FileLocation services grabs right directory when it needs to.
+    nsIRegistry::Key profileRootKey;
+    rv = m_reg->GetSubtree(nsIRegistry::Common, REGISTRY_PROFILE_SUBTREE_STRING, &profileRootKey);
+    if (NS_FAILED(rv)) return rv;
+    
+    rv = m_reg->SetString(profileRootKey, REGISTRY_CURRENT_PROFILE_STRING, profileName);
+    if (NS_FAILED(rv)) return rv;
+      
+    NS_WITH_SERVICE(nsIFileLocator, locator, kFileLocatorCID, &rv);
+    if (NS_FAILED(rv)) return rv;
+
+    if (!locator) return NS_ERROR_FAILURE;
+    
+    rv = locator->ForgetProfileDir();
+    if (NS_FAILED(rv)) return rv;
+
 	/*
 	 * Need to load new profile prefs.
 	 */
-    rv = loadPrefs();
-	
-	// First, set the profile to be the current profile.
-	// So that FileLocation services grabs right directory when it needs to.
-	if (NS_SUCCEEDED(rv))
-	{
-		rv = m_reg->IsOpen( &openalready );
-		
-		if ( !openalready )
-			rv = m_reg->OpenDefault();
-
-		if (NS_SUCCEEDED(rv))
-		{
-			nsIRegistry::Key profileRootKey;
-			rv = m_reg->GetSubtree(nsIRegistry::Common, "Profiles", &profileRootKey);
-
-			if (NS_SUCCEEDED(rv))
-			{
-				rv = m_reg->SetString(profileRootKey, "CurrentProfile", profileName);
-			}
-			if (!openalready)
-				m_reg->Close();
-		}
-
-        NS_WITH_SERVICE(nsIFileLocator, locator, kFileLocatorCID, &rv);
-			
-		if (NS_SUCCEEDED(rv) && locator)
-			rv = locator->ForgetProfileDir();
-
-		if (NS_SUCCEEDED(rv))
-		{
-			m_prefs->StartUp();
-		}
-		
-	}
+    NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &rv);
+    prefs->ShutDown();
+    prefs->ResetPrefs();
+    prefs->ReadUserPrefs();
 
 	// we need to re-read the bookmarks here, other wise the user
 	// won't have there 4.x bookmarks until after they exit and come back
@@ -2003,132 +1733,103 @@ NS_IMETHODIMP nsProfile::MigrateProfileInfo()
 
 	char oldRegFile[_MAX_LENGTH] = {'\0'};
 
-    // Check result.
-    if ( m_reg != nsnull ) 
-	{
-		/***********************
-		Get the right registry file. Ideally from File Locations.
-		File Locations is yet to implement this service.
-	
-                NS_WITH_SERVICE(nsIFileLocator, locator, kFileLocatorCID, &rv);
-		if (NS_FAILED(rv) || !locator) return NS_ERROR_FAILURE;
-
-		nsFileSpec oldAppRegistry;
-	
-		// Get current profile, make the new one a sibling...
-		rv = locator->GetFileLocation(nsSpecialFileSpec::App_Registry50, &oldAppRegistry);
-		nsServiceManager::ReleaseService(kFileLocatorCID, locator);
-		if (NS_FAILED(rv))
-			 return NS_ERROR_FAILURE;
-		oldAppRegistry.SetLeafName(OLD_WINREG);
-        
-#error DONT_USE_GETCSTRING
-		rv = m_reg->Open(oldAppRegistryGetCString());
-		************************/
-
 #ifdef XP_PC
-		// Registry file has been traditionally stored in the windows directory (XP_PC).
-		nsSpecialSystemDirectory systemDir(nsSpecialSystemDirectory::Win_WindowsDirectory);
+    // Registry file has been traditionally stored in the windows directory (XP_PC).
+    nsSpecialSystemDirectory systemDir(nsSpecialSystemDirectory::Win_WindowsDirectory);
+    
+    // Append the name of the old registry to the path obtained.
+    PL_strcpy(oldRegFile, systemDir.GetNativePathCString());
+    PL_strcat(oldRegFile, OLD_REGISTRY_FILE_NAME);
+#else /* XP_MAC */
+    nsSpecialSystemDirectory *regLocation = NULL;
+    
+    regLocation = new nsSpecialSystemDirectory(nsSpecialSystemDirectory::Mac_SystemDirectory);
+    
+    // Append the name of the old registry to the path obtained.
+    *regLocation += "Preferences";
+    *regLocation += OLD_REGISTRY_FILE_NAME;
+    
+    PL_strcpy(oldRegFile, regLocation->GetNativePathCString());
+#endif /* XP_PC */
 
-		// Append the name of the old registry to the path obtained.
-		PL_strcpy(oldRegFile, systemDir.GetNativePathCString());
-		PL_strcat(oldRegFile, oldWinReg);
-#endif
-
-
-#ifdef XP_MAC
-		nsSpecialSystemDirectory *regLocation = NULL;
-
-
-        regLocation = new nsSpecialSystemDirectory(nsSpecialSystemDirectory::Mac_SystemDirectory);
-
-		// Append the name of the old registry to the path obtained.
-		*regLocation += "Preferences";
-		*regLocation += oldMacReg;
-		
-        PL_strcpy(oldRegFile, regLocation->GetNativePathCString());
-#endif
-		rv = m_reg->Open(oldRegFile);
-
-		// Enumerate 4x tree and create an array of that information.
-		if (NS_SUCCEEDED(rv))
-		{
-            // Enumerate all subkeys (immediately) under the given node.
-            nsCOMPtr<nsIEnumerator> enumKeys;
-
-            if (NS_SUCCEEDED(rv)) 
-			{
+    nsCOMPtr <nsIRegistry> oldReg;
+    rv = nsComponentManager::CreateInstance(kRegistryCID,
+                                            nsnull,
+                                            nsIRegistry::GetIID(),
+                                            getter_AddRefs(oldReg));
+    if (NS_FAILED(rv)) return rv;
+    
+    rv = oldReg->Open(oldRegFile);
+    if (NS_FAILED(rv)) return rv;
+    
+    // Enumerate 4x tree and create an array of that information.
+    // Enumerate all subkeys (immediately) under the given node.
+    nsCOMPtr<nsIEnumerator> enumKeys;
+    
+    rv = oldReg->EnumerateSubtrees(nsIRegistry::Users,
+                                   getter_AddRefs(enumKeys));
+    
+    if (NS_SUCCEEDED(rv)) 
+        {
             
-				rv = m_reg->EnumerateSubtrees(nsIRegistry::Users,
-                                              getter_AddRefs(enumKeys));
-
-                if (NS_SUCCEEDED(rv)) 
-				{
-                
-					rv = enumKeys->First();
+            rv = enumKeys->First();
+            
+            // Enumerate subkeys till done.
+            while( NS_SUCCEEDED( rv ) && (NS_OK != enumKeys->IsDone()) ) 
+                {
+                    nsCOMPtr<nsISupports> base;
+                    rv = enumKeys->CurrentItem(getter_AddRefs(base));
                     
-					// Enumerate subkeys till done.
-                    while( NS_SUCCEEDED( rv ) && (NS_OK != enumKeys->IsDone()) ) 
-                    {
-						nsCOMPtr<nsISupports> base;
-						rv = enumKeys->CurrentItem(getter_AddRefs(base));
-
-						if (NS_SUCCEEDED(rv)) 
-						{
-	                        // Get specific interface.
-		                    nsIRegistryNode *node;
-			                nsIID nodeIID = NS_IREGISTRYNODE_IID;
-				            rv = base->QueryInterface( nodeIID, (void**)&node );
-					        
-						    // Get Node details.
-							if (NS_SUCCEEDED(rv)) 
-							{
+                    if (NS_SUCCEEDED(rv)) 
+                        {
+                            // Get specific interface.
+                            nsCOMPtr <nsIRegistryNode> node;
+                            nsIID nodeIID = NS_IREGISTRYNODE_IID;
+                            rv = base->QueryInterface( nodeIID, getter_AddRefs(node));
+                            
+                            // Get Node details.
+                            if (NS_SUCCEEDED(rv)) 
+                                {
 	                            // Get node name.
-		                char *profile = nsnull;
-                                rv = node->GetName(&profile);
-
+                                    char *profile = nsnull;
+                                    rv = node->GetName(&profile);
+                                    
 #if defined(DEBUG_profile)
-                                printf("oldProflie = %s\n", profile);
+                                    printf("oldProflie = %s\n", profile);
 #endif
-
-								nsIRegistry::Key key;								
-							
-								rv = m_reg->GetSubtree(nsIRegistry::Users, profile, &key);
-
-								if (NS_SUCCEEDED(rv)) 
-								{
-									PL_strcpy(gOldProfiles[g_numOldProfiles], nsUnescape(profile));
-								}
-
-                                nsXPIDLCString profLoc;
-								
-								rv = m_reg->GetString( key, "ProfileLocation", getter_Copies(profLoc));
-
+                                    
+                                    nsIRegistry::Key key;								
+                                    
+                                    rv = oldReg->GetSubtree(nsIRegistry::Users, profile, &key);
+                                    
+                                    if (NS_SUCCEEDED(rv)) 
+                                        {
+                                            PL_strcpy(mOldProfiles[mNumOldProfiles], nsUnescape(profile));
+                                        }
+                                    
+                                    nsXPIDLCString profLoc;
+                                    
+                                    rv = oldReg->GetString( key, "ProfileLocation", getter_Copies(profLoc));
+                                    
 #if defined(DEBUG_profile)
-                                printf("oldProflie Location = %s\n", profLoc);
+                                    printf("oldProflie Location = %s\n", profLoc);
 #endif
-							
-								if (NS_SUCCEEDED(rv)) 
-								{
-									PL_strcpy(gOldProfLocations[g_numOldProfiles], profLoc);
-									g_numOldProfiles++;
-								}
+                                    
+                                    if (NS_SUCCEEDED(rv)) 
+                                        {
+                                            PL_strcpy(mOldProfLocations[mNumOldProfiles], profLoc);
+                                            mNumOldProfiles++;
+                                        }
+                                    
+                                }
+                        }	
+                    rv = enumKeys->Next();
+                }
+        }
 
-                            }
-						}	
-					    rv = enumKeys->Next();
-					}
-				}
-            }
-			m_reg->Close();
-			
-			if (g_numOldProfiles > 0)
-			{
-				UpdateMozProfileRegistry();
-			}
-		}
-	}
+    oldReg->Close();
 #else
+    /* XP_UNIX */
     char *unixProfileName = PR_GetEnv(PROFILE_NAME_ENVIRONMENT_VARIABLE);
     char *unixProfileDirectory = PR_GetEnv(PROFILE_HOME_ENVIRONMENT_VARIABLE);
 	
@@ -2138,139 +1839,120 @@ NS_IMETHODIMP nsProfile::MigrateProfileInfo()
     }
 
     if (unixProfileName && unixProfileDirectory) {
-	PL_strcpy(gOldProfiles[g_numOldProfiles], nsUnescape(unixProfileName));
-	PL_strcpy(gOldProfLocations[g_numOldProfiles], unixProfileDirectory);
-	PL_strcat(gOldProfLocations[g_numOldProfiles], "/.netscape");
+        PL_strcpy(mOldProfiles[mNumOldProfiles], nsUnescape(unixProfileName));
+        PL_strcpy(mOldProfLocations[mNumOldProfiles], unixProfileDirectory);
+        PL_strcat(mOldProfLocations[mNumOldProfiles], "/.netscape");
 #ifdef DEBUG_profile
-	printf("unix profile is %s, unix profile dir is %s\n",gOldProfiles[g_numOldProfiles],gOldProfLocations[g_numOldProfiles]);
+        printf("unix profile is %s, unix profile dir is %s\n",mOldProfiles[mNumOldProfiles],mOldProfLocations[mNumOldProfiles]);
 #endif
-	g_numOldProfiles++;
+        mNumOldProfiles++;
     }
+#endif /* XP_PC || XP_MAC */
 
-    if (g_numOldProfiles > 0) {
+    if (mNumOldProfiles > 0) {
         UpdateMozProfileRegistry();
     }
 
-#endif /* XP_PC || XP_MAC */
 
 	return rv;
 }
 
 // Update the mozregistry with the 4x profile names
-// and thier locations. Entry "migrated" is set to "no"
+// and thier locations. Entry REGISTRY_MIGRATED_STRING is set to REGISTRY_NO_STRING
 // to differentiate these profiles from 5x profiles.
-// gOldProfiles, gOldProfLocations carried info about
+// mOldProfiles, mOldProfLocations carried info about
 // profile names and locations respectively. They are
 // populated inthe routine MigrateProfileInfo()
 NS_IMETHODIMP nsProfile::UpdateMozProfileRegistry()
 {
 
 	nsresult rv = NS_OK;
-    PRBool openalready = PR_FALSE;     
 
+    rv = OpenRegistry();
+    if (NS_FAILED(rv)) return rv;
+                           
 #if defined(DEBUG_profile)
     printf("Entered UpdateMozProfileRegistry.\n");
 #endif
 
-	for (int idx = 0; idx < g_numOldProfiles; idx++)
+	for (PRInt32 idx = 0; idx < mNumOldProfiles; idx++)
 	{
-		// Check result.
-		if (m_reg != nsnull)
-		{
-			// Open the registry file.
-			rv = m_reg->IsOpen( &openalready );
-		
-			if ( !openalready )
-				rv = m_reg->OpenDefault();
-    
-			if (NS_SUCCEEDED(rv))
-			{
-				nsIRegistry::Key key;
-				rv = m_reg->GetSubtree(nsIRegistry::Common, "Profiles", &key);
-
-				if (NS_SUCCEEDED(rv))
-				{
-					nsIRegistry::Key newKey;
-
-					rv = m_reg->SetString(key, "NeedMigration", "true");
-
-					rv = m_reg->GetSubtree(key, gOldProfiles[idx], &newKey);
-			
-					if (NS_FAILED(rv))
+        nsIRegistry::Key key;
+        rv = m_reg->GetSubtree(nsIRegistry::Common, REGISTRY_PROFILE_SUBTREE_STRING, &key);
+        
+        if (NS_SUCCEEDED(rv))
+            {
+                nsIRegistry::Key newKey;
+                
+                rv = m_reg->SetString(key, REGISTRY_NEED_MIGRATION_STRING, REGISTRY_TRUE_STRING);
+                
+                rv = m_reg->GetSubtree(key, mOldProfiles[idx], &newKey);
+                
+                if (NS_FAILED(rv))
 					{
-						rv = m_reg->AddSubtree(key, gOldProfiles[idx], &newKey);
-		
+						rv = m_reg->AddSubtree(key, mOldProfiles[idx], &newKey);
+                        
 						if (NS_SUCCEEDED(rv))
-						{
-							nsFileSpec profileDir(gOldProfLocations[idx]);
-							
-							nsXPIDLCString profileDirString;	
-							nsCOMPtr<nsIFileSpec>spec;
-							rv = NS_NewFileSpecWithSpec(profileDir, getter_AddRefs(spec));
-							if (NS_SUCCEEDED(rv)) {
-								rv = spec->GetPersistentDescriptorString(getter_Copies(profileDirString));
-							}
-
-							if (NS_SUCCEEDED(rv) && profileDirString)
-							{
-
-								rv = m_reg->SetString(newKey, "directory", profileDirString);
-								
-								if (NS_FAILED(rv))
-								{
+                            {
+                                nsFileSpec profileDir(mOldProfLocations[idx]);
+                                
+                                nsXPIDLCString profileDirString;	
+                                nsCOMPtr<nsIFileSpec>spec;
+                                rv = NS_NewFileSpecWithSpec(profileDir, getter_AddRefs(spec));
+                                if (NS_SUCCEEDED(rv)) {
+                                    rv = spec->GetPersistentDescriptorString(getter_Copies(profileDirString));
+                                }
+                                
+                                if (NS_SUCCEEDED(rv) && profileDirString)
+                                    {
+                                        
+                                        rv = m_reg->SetString(newKey, REGISTRY_DIRECTORY_STRING, profileDirString);
+                                        
+                                        if (NS_FAILED(rv))
+                                            {
 #if defined(DEBUG_profile)
-										printf("Couldn't set directory property.\n" );
+                                                printf("Couldn't set directory property.\n" );
 #endif
-								}
-							
-								rv = m_reg->SetString(newKey, "migrated", "no");
-							
-								if (NS_FAILED(rv))
-								{
+                                            }
+                                        
+                                        rv = m_reg->SetString(newKey, REGISTRY_MIGRATED_STRING, REGISTRY_NO_STRING);
+                                        
+                                        if (NS_FAILED(rv))
+                                            {
 #if defined(DEBUG_profile)
-										printf("Couldn't add migrate flag.\n" );
+                                                printf("Couldn't add migrate flag.\n" );
 #endif
-								}
-							}
-							else
-							{
+                                            }
+                                    }
+                                else
+                                    {
 #if defined(DEBUG_profile)
-									printf("NULL value received for directory name.\n" );
+                                        printf("NULL value received for directory name.\n" );
 #endif
-							}
-						}
+                                    }
+                            }
 						else
-						{
+                            {
 #if defined(DEBUG_profile)
 								printf("Profiles : Could not add profile subtree.\n" );
 #endif
-						}
+                            }
 					}
-					else
+                else
 					{
 #if defined(DEBUG_profile)
-							printf("Profiles : Profile name subtree already exists.\n" );
+                        printf("Profiles : Profile name subtree already exists.\n" );
 #endif
 					}
-				}
-				else
-				{
+            }
+        else
+            {
 #if defined(DEBUG_profile)
-						printf("Registry : Couldn't get Profiles subtree.\n");
+                printf("Registry : Couldn't get Profiles subtree.\n");
 #endif
-				}
-				if (!openalready)
-					m_reg->Close();
-			}
-			else
-			{
-#if defined(DEBUG_profile)
-					printf("Couldn't open registry.\n");
-#endif
-			}
-		}	
-	}
-
+            }
+    }
+	
 	return rv;
 }
 
@@ -2282,7 +1964,6 @@ NS_IMETHODIMP nsProfile::MigrateProfile(const char* profileName)
 {
 
 	nsresult rv = NS_OK;
-    PRBool openalready = PR_FALSE;     
 
 #if defined(DEBUG_profile)
 	printf("Inside Migrate Profile routine.\n" );
@@ -2295,15 +1976,15 @@ NS_IMETHODIMP nsProfile::MigrateProfile(const char* profileName)
 	if (NS_FAILED(rv)) return rv;
 	
 	// Create new profile dir path
-        NS_WITH_SERVICE(nsIFileLocator, locator, kFileLocatorCID, &rv);
+    NS_WITH_SERVICE(nsIFileLocator, locator, kFileLocatorCID, &rv);
 	if (NS_FAILED(rv) || !locator) return NS_ERROR_FAILURE;
 	
     // Get current profile, make the new one a sibling...
 	nsCOMPtr<nsIFileSpec> newSpec;
-       	rv = locator->GetFileLocation(nsSpecialFileSpec::App_DefaultUserProfileRoot50, getter_AddRefs(newSpec));
+    rv = locator->GetFileLocation(nsSpecialFileSpec::App_DefaultUserProfileRoot50, getter_AddRefs(newSpec));
 	if (!newSpec)
-	     return NS_ERROR_FAILURE;
-    	newSpec->GetFileSpec(&newProfDir);
+        return NS_ERROR_FAILURE;
+    newSpec->GetFileSpec(&newProfDir);
 	newProfDir += profileName;
 
 
@@ -2317,92 +1998,68 @@ NS_IMETHODIMP nsProfile::MigrateProfile(const char* profileName)
 					getter_AddRefs(pPrefMigrator));
     if (NS_FAILED(rv)) return rv;
         
-	nsXPIDLCString oldProfDirStr;
+    nsXPIDLCString oldProfDirStr;
     nsXPIDLCString newProfDirStr;
 	
-	rv = GetStringFromSpec(newProfDir, getter_Copies(newProfDirStr)); 
-	if (NS_SUCCEEDED(rv)) {               
-		rv = GetStringFromSpec(oldProfDir, getter_Copies(oldProfDirStr));               
-		if (NS_SUCCEEDED(rv)) {                             
-			rv = pPrefMigrator->AddProfilePaths(oldProfDirStr,  newProfDirStr);  // you can do this a bunch of times.
-      rv = pPrefMigrator->ProcessPrefs();
-		}
-	}
-
+    if (!newProfDir.Exists()) {
+	newProfDir.CreateDirectory();
+    }
+    rv = GetStringFromSpec(newProfDir, getter_Copies(newProfDirStr));
+    if (NS_FAILED(rv)) return rv;
+    
+    if (!oldProfDir.Exists()) {
+	oldProfDir.CreateDirectory();
+    }
+    rv = GetStringFromSpec(oldProfDir, getter_Copies(oldProfDirStr));
+    if (NS_FAILED(rv)) return rv;
+    rv = pPrefMigrator->AddProfilePaths(oldProfDirStr,  newProfDirStr);  // you can do this a bunch of times.
+    rv = pPrefMigrator->ProcessPrefs();
 	if (NS_FAILED(rv)) return rv;
 
+    rv = OpenRegistry();
+    if (NS_FAILED(rv)) return rv;
+        
 	//unmark migrate flag
-	if (NS_SUCCEEDED(rv))
-	{
-		// Check result.
-		if ( m_reg != nsnull ) 
-		{
-	        // Open the registry.
-			rv = m_reg->IsOpen( &openalready );
-		
-			if ( !openalready )
-				rv = m_reg->OpenDefault();
-
-			if (NS_SUCCEEDED(rv))
-			{
-				nsIRegistry::Key key;
-
-				rv = m_reg->GetSubtree(nsIRegistry::Common, "Profiles", &key);
-
-				if (NS_SUCCEEDED(rv))
-				{
-			        nsIRegistry::Key newKey;
-					rv = m_reg->GetSubtree(key, profileName, &newKey);
-
-					if (NS_SUCCEEDED(rv))
-					{
-				        rv = m_reg->SetString( newKey, "migrated", "yes");
-
-						if (NS_SUCCEEDED(rv))
+    nsIRegistry::Key key;
+    
+    rv = m_reg->GetSubtree(nsIRegistry::Common, REGISTRY_PROFILE_SUBTREE_STRING, &key);
+    
+    if (NS_SUCCEEDED(rv))
+        {
+            nsIRegistry::Key newKey;
+            rv = m_reg->GetSubtree(key, profileName, &newKey);
+            
+            if (NS_SUCCEEDED(rv))
+                {
+                    rv = m_reg->SetString( newKey, REGISTRY_MIGRATED_STRING, REGISTRY_YES_STRING);
+                    
+                    if (NS_SUCCEEDED(rv))
 						{
-							rv = m_reg->SetString(key, "CurrentProfile", profileName);
-													
+							rv = m_reg->SetString(key, REGISTRY_CURRENT_PROFILE_STRING, profileName);
+                            
 							if (NS_FAILED(rv))
-							{
+                                {
 #if defined(DEBUG_profile)
 									printf("Profiles : Couldn't set CurrentProfile Name.\n");
 #endif
-					        }
+                                }
 						}
-						else
+                    else
 						{
 #if defined(DEBUG_profile)
-								printf("Profiles : Couldn't set migrate flag.\n");
+                            printf("Profiles : Couldn't set migrate flag.\n");
 #endif
 						}
-						SetProfileDir(profileName, newProfDir);
-					}
-					else
-					{
+                    SetProfileDir(profileName, newProfDir);
+                }
+            else
+                {
 #if defined(DEBUG_profile)
-							printf("Profiles : Couldn't get profileName subtree.\n");
+                    printf("Profiles : Couldn't get profileName subtree.\n");
 #endif
-					}
-				}
-				else
-				{
-#if defined(DEBUG_profile)
-						printf("Registry : Couldn't get Profiles subtree.\n");
-#endif
-				}
-				if (!openalready)
-					m_reg->Close();
-			}
-			else
-			{	
-#if defined(DEBUG_profile)
-					printf("Couldn't open registry.\n");
-#endif
-			}
-		}
-	}
-
-	return rv;
+                }
+        }
+    return rv;
 }
 
 
@@ -2411,6 +2068,9 @@ NS_IMETHODIMP nsProfile::GetCookie(nsString& aCookie)
 #ifndef NECKO
   nsINetService *service;
   nsIURI	*aURL;
+
+// this is an internal url!
+#define PREG_URL		"http://seaspace.mcom.com/"
 
   nsresult rv = NS_NewURL(&aURL, PREG_URL);
   if (NS_FAILED(rv)) return rv;
@@ -2449,8 +2109,7 @@ NS_IMETHODIMP nsProfile::ProcessPRegCookie()
 NS_IMETHODIMP nsProfile::ProcessPREGInfo(const char* data)
 {
 	nsresult rv = NS_OK;
-    PRBool openalready = PR_FALSE;     
-
+  
 	nsString aCookie(data);
 
 	char *pregCookie = nsnull;
@@ -2482,8 +2141,8 @@ NS_IMETHODIMP nsProfile::ProcessPREGInfo(const char* data)
 	if (service_denial) 
 		serviceState.SetString(service_denial);
 
-	int profileNameIndex, delimIndex;
-	int serviceIndex;
+	PRInt32 profileNameIndex, delimIndex;
+	PRInt32 serviceIndex;
 
 	nsString userProfileName, userServiceDenial;
 
@@ -2522,6 +2181,9 @@ NS_IMETHODIMP nsProfile::ProcessPREGInfo(const char* data)
 
 	char *curProfile = nsnull;
 
+    rv = OpenRegistry();
+    if (NS_FAILED(rv)) return rv;
+    
 	rv = GetCurrentProfile(&curProfile);
 
 	if (NS_SUCCEEDED(rv))
@@ -2531,88 +2193,59 @@ NS_IMETHODIMP nsProfile::ProcessPREGInfo(const char* data)
 
 		if (NS_SUCCEEDED(rv))
 		{
-		    // Check result.
-			if (m_reg != nsnull)
-			{
-				// Open the registry.
-				rv = m_reg->IsOpen( &openalready );
-		
-				if ( !openalready )
-					rv = m_reg->OpenDefault();
-    
-				if (NS_SUCCEEDED(rv))
-				{
-					nsIRegistry::Key key;
-
-					rv = m_reg->GetSubtree(nsIRegistry::Common, "Profiles", &key);
-
-					if (NS_SUCCEEDED(rv))
-					{
-						nsIRegistry::Key newKey;
-		
-						if (userProfileName.mLength > 0)
+            nsIRegistry::Key key;
+            
+            rv = m_reg->GetSubtree(nsIRegistry::Common, REGISTRY_PROFILE_SUBTREE_STRING, &key);
+            
+            if (NS_SUCCEEDED(rv))
+                {
+                    nsIRegistry::Key newKey;
+                    
+                    if (userProfileName.mLength > 0)
 						{
 							rv = m_reg->GetSubtree(key, userProfileName.ToNewCString(), &newKey);
-				
+                            
 							if (NS_SUCCEEDED(rv))
-							{
+                                {
 								// Register new info
-								rv = m_reg->SetString(newKey, "NCProfileName", userProfileName.ToNewCString());
-							}
+                                    rv = m_reg->SetString(newKey, REGISTRY_NC_PROFILE_NAME_STRING, userProfileName.ToNewCString());
+                                }
 							else
-							{
+                                {
 #if defined(DEBUG_profile)
 									printf("Profiles : Could not set NetCenter properties.\n" );
 #endif
-							}
+                                }
 							
-							rv = m_reg->SetString(key, "CurrentProfile", userProfileName.ToNewCString());
-
+							rv = m_reg->SetString(key, REGISTRY_CURRENT_PROFILE_STRING, userProfileName.ToNewCString());
+                            
 							if (NS_FAILED(rv))
-							{
+                                {
 #if defined(DEBUG_profile)
 									printf("Couldn't set CurrentProfile name.\n" );
 #endif
-							}
+                                }
 						}
-					}
-					else
-					{
+                }
+            else
+                {
 #if defined(DEBUG_profile)
-							printf("Registry : Couldn't get Profiles subtree.\n");
+                    printf("Registry : Couldn't get Profiles subtree.\n");
 #endif
-					}
-
-					if (userServiceDenial.mLength > 0)
-						rv = m_reg->SetString(key, "NCServiceDenial", userServiceDenial.ToNewCString());
-
-					rv = m_reg->SetString(key, "HavePregInfo", "true");
-
-					if (NS_FAILED(rv))
-					{
+                }
+            
+            if (userServiceDenial.mLength > 0)
+                rv = m_reg->SetString(key, REGISTRY_NC_SERVICE_DENIAL_STRING, userServiceDenial.ToNewCString());
+            
+            rv = m_reg->SetString(key, REGISTRY_HAVE_PREG_INFO_STRING, REGISTRY_TRUE_STRING);
+            
+            if (NS_FAILED(rv))
+                {
 #if defined(DEBUG_profile)
-							printf("Couldn't set Preg info flag.\n" );
+                    printf("Couldn't set Preg info flag.\n" );
 #endif
-					}
-					if (!openalready)
-						m_reg->Close();
-				}
-				else
-				{
-#if defined(DEBUG_profile)
-						printf("Couldn't open registry.\n");
-#endif
-				}
-			}
-			else
-			{
-#if defined(DEBUG_profile)
-					printf("Registry Object is NULL.\n");
-#endif
-
-				return NS_ERROR_FAILURE;
-			}
-		}
+                }
+        }
 	}
 	return rv;
 }
@@ -2622,234 +2255,145 @@ NS_IMETHODIMP nsProfile::IsPregCookieSet(char **pregSet)
 {
 
 	nsresult rv = NS_OK;
-    PRBool openalready = PR_FALSE;     
-
-	// Check result.
-	if (m_reg != nsnull)
-	{
-		// Open the registry.
-		rv = m_reg->IsOpen( &openalready );
-		
-		if ( !openalready )
-			rv = m_reg->OpenDefault();
+    rv = OpenRegistry();
+    if (NS_FAILED(rv)) return rv;
     
-		if (NS_SUCCEEDED(rv))
-		{
-			nsIRegistry::Key key;
-
-			rv = m_reg->GetSubtree(nsIRegistry::Common, "Profiles", &key);
-
-			if (NS_SUCCEEDED(rv))
-			{
-				rv = m_reg->GetString(key, "HavePregInfo", pregSet);
-			}
-			else
-			{
+    nsIRegistry::Key key;
+    
+    rv = m_reg->GetSubtree(nsIRegistry::Common, REGISTRY_PROFILE_SUBTREE_STRING, &key);
+    
+    if (NS_SUCCEEDED(rv))
+        {
+            rv = m_reg->GetString(key, REGISTRY_HAVE_PREG_INFO_STRING, pregSet);
+        }
+    else
+        {
 #if defined(DEBUG_profile)
-					printf("Registry : Couldn't get Profiles subtree.\n");
+            printf("Registry : Couldn't get Profiles subtree.\n");
 #endif
-			}
-			if (!openalready)
-				m_reg->Close();
-		}
-		else
-		{
-#if defined(DEBUG_profile)
-				printf("Couldn't open registry.\n");
-#endif
-		}
-	}
-	else
-	{
-#if defined(DEBUG_profile)
-			printf("Registry Object is NULL.\n");
-#endif
-
-		return NS_ERROR_FAILURE;
-	}
-
+        }
 	return rv;
 }
 
 NS_IMETHODIMP nsProfile::ProfileExists(const char *profileName)
 {
-
 	nsresult rv = NS_OK;
-    PRBool openalready = PR_FALSE;     
 
-	// Check result.
-	if (m_reg != nsnull)
-	{
-		// Open the registry.
-		rv = m_reg->IsOpen( &openalready );
-		
-		if ( !openalready )
-			rv = m_reg->OpenDefault();
+    rv = OpenRegistry();
+    if (NS_FAILED(rv)) return rv;
     
-		if (NS_SUCCEEDED(rv))
-		{
-			nsIRegistry::Key key;
-
-			rv = m_reg->GetSubtree(nsIRegistry::Common, "Profiles", &key);
-
-			if (NS_SUCCEEDED(rv))
-			{
-		        nsIRegistry::Key newKey;
-
-				// Get handle to <profileName> passed
-				rv = m_reg->GetSubtree(key, profileName, &newKey);			
-			}
-			else
-			{
+    nsIRegistry::Key key;
+    
+    rv = m_reg->GetSubtree(nsIRegistry::Common, REGISTRY_PROFILE_SUBTREE_STRING, &key);
+    
+    if (NS_SUCCEEDED(rv))
+        {
+            nsIRegistry::Key newKey;
+            
+            // Get handle to <profileName> passed
+            rv = m_reg->GetSubtree(key, profileName, &newKey);			
+        }
+    else
+        {
 #if defined(DEBUG_profile)
-					printf("Registry : Couldn't get Profiles subtree.\n");
+            printf("Registry : Couldn't get Profiles subtree.\n");
 #endif
-			}
-			if (!openalready)
-				m_reg->Close();
-		}
-		else
-		{
-#if defined(DEBUG_profile)
-				printf("Couldn't open registry.\n");
-#endif
-		}
-	}
-	else
-	{
-#if defined(DEBUG_profile)
-			printf("Registry Object is NULL.\n");
-#endif
-
-		return NS_ERROR_FAILURE;
-	}
-
+        }
 	return rv;
 }
 
 
 // Gets the number of unmigrated 4x profiles
 // Location: Common/Profiles
-NS_IMETHODIMP nsProfile::Get4xProfileCount(int *numProfiles)
+NS_IMETHODIMP nsProfile::Get4xProfileCount(PRInt32 *numProfiles)
 {
 
     nsresult rv = NS_OK;
-    PRBool openalready = PR_FALSE;     
 
 #if defined(DEBUG_profile)
     printf("ProfileManager : Get4xProfileCount\n");
 #endif
 
-    // Check result.
-    if ( m_reg != nsnull ) 
-	{
-        // Open the registry
-		rv = m_reg->IsOpen( &openalready );
-		
-		if ( !openalready )
-			rv = m_reg->OpenDefault();
-
-		if (NS_SUCCEEDED(rv))
-		{
-			// Enumerate all subkeys (immediately) under the given node.
-			nsCOMPtr<nsIEnumerator> enumKeys;
-			nsIRegistry::Key key;
-
-			rv = m_reg->GetSubtree(nsIRegistry::Common, "Profiles", &key);
-
-			if (NS_SUCCEEDED(rv))
-			{
-		        rv = m_reg->EnumerateSubtrees( key, getter_AddRefs(enumKeys));
-
-				if (NS_SUCCEEDED(rv))
+    rv = OpenRegistry();
+    if (NS_FAILED(rv)) return rv;
+    
+    // Enumerate all subkeys (immediately) under the given node.
+    nsCOMPtr<nsIEnumerator> enumKeys;
+    nsIRegistry::Key key;
+    
+    rv = m_reg->GetSubtree(nsIRegistry::Common, REGISTRY_PROFILE_SUBTREE_STRING, &key);
+    
+    if (NS_SUCCEEDED(rv))
+        {
+            rv = m_reg->EnumerateSubtrees( key, getter_AddRefs(enumKeys));
+            
+            if (NS_SUCCEEDED(rv))
 				{
-			        int numKeys=0;
+			        PRInt32 numKeys=0;
 					rv = enumKeys->First();
-
+                    
 			        while( NS_SUCCEEDED( rv ) && (NS_OK != enumKeys->IsDone()) ) 
-					{
-						nsCOMPtr<nsISupports> base;
-
-						rv = enumKeys->CurrentItem(getter_AddRefs(base));
-
-						if (NS_SUCCEEDED(rv)) 
-						{
-	                        // Get specific interface.
-		                    nsIRegistryNode *node;
-			                nsIID nodeIID = NS_IREGISTRYNODE_IID;
-
-							rv = base->QueryInterface( nodeIID, (void**)&node );
-					        
-						    // Test that result.
-							if (NS_SUCCEEDED(rv)) 
-							{
+                        {
+                            nsCOMPtr<nsISupports> base;
+                            
+                            rv = enumKeys->CurrentItem(getter_AddRefs(base));
+                            
+                            if (NS_SUCCEEDED(rv)) 
+                                {
+                                    // Get specific interface.
+                                    nsCOMPtr <nsIRegistryNode> node;
+                                    nsIID nodeIID = NS_IREGISTRYNODE_IID;
+                                    
+                                    rv = base->QueryInterface( nodeIID, getter_AddRefs(node));
+                                    
+                                    // Test that result.
+                                    if (NS_SUCCEEDED(rv)) 
+                                        {
 								// Get node name.
-		                        nsXPIDLCString profile;
-                                nsXPIDLCString isMigrated;
-                                
-			                    rv = node->GetName(getter_Copies(profile));
-
-								if (NS_SUCCEEDED(rv) && (profile))
-								{
-									nsIRegistry::Key profKey;								
-
-									rv = m_reg->GetSubtree(key, profile, &profKey);
-								
-									if (NS_SUCCEEDED(rv)) 
-									{
-										rv = m_reg->GetString(profKey, "migrated", getter_Copies(isMigrated));
-
-										if (NS_SUCCEEDED(rv) && (isMigrated))
-										{
-											if (PL_strcmp(isMigrated, "no") == 0)
-											{
-												numKeys++;
-											}
-										}
-									}
-								}
-								NS_RELEASE(node);
-					        }
-						}	
-						rv = enumKeys->Next();
-					}
+                                            nsXPIDLCString profile;
+                                            nsXPIDLCString isMigrated;
+                                            
+                                            rv = node->GetName(getter_Copies(profile));
+                                            
+                                            if (NS_SUCCEEDED(rv) && (profile))
+                                                {
+                                                    nsIRegistry::Key profKey;								
+                                                    
+                                                    rv = m_reg->GetSubtree(key, profile, &profKey);
+                                                    
+                                                    if (NS_SUCCEEDED(rv)) 
+                                                        {
+                                                            rv = m_reg->GetString(profKey, REGISTRY_MIGRATED_STRING, getter_Copies(isMigrated));
+                                                            
+                                                            if (NS_SUCCEEDED(rv) && (isMigrated))
+                                                                {
+                                                                    if (PL_strcmp(isMigrated, REGISTRY_NO_STRING) == 0)
+                                                                        {
+                                                                            numKeys++;
+                                                                        }
+                                                                }
+                                                        }
+                                                }
+                                        }
+                                }	
+                            rv = enumKeys->Next();
+                        }
 					*numProfiles = numKeys;
 				}
-				else
+            else
 				{
 #if defined(DEBUG_profile)
-						printf("Profiles : Can't enumerate subtrees.\n" );
+                    printf("Profiles : Can't enumerate subtrees.\n" );
 #endif
 				}
-			}
-			else
-			{
+        }
+    else
+        {
 #if defined(DEBUG_profile)
-					printf("Registry : Couldn't get Profiles subtree.\n");
+            printf("Registry : Couldn't get Profiles subtree.\n");
 #endif
-			}
-			if (!openalready)
-				m_reg->Close();
-		}
-		else
-		{
-#if defined(DEBUG_profile)
-            printf("Couldn't open registry.\n");
-#endif
-		}
-		
-    }
-	else
-	{
-#if defined(DEBUG_profile)
-        printf("Registry Object is NULL.\n");
-#endif
-
-		return NS_ERROR_FAILURE;
-
-	}
-
-	return rv;
+        }
+    return rv;
 }
 
 
@@ -2857,9 +2401,9 @@ NS_IMETHODIMP nsProfile::Get4xProfileCount(int *numProfiles)
 NS_IMETHODIMP nsProfile::MigrateAllProfiles()
 {
 	nsresult rv = NS_OK;
-	for (int i=0; i < g_numOldProfiles; i++)
+	for (PRInt32 i=0; i < mNumOldProfiles; i++)
 	{
-		rv = MigrateProfile(gOldProfiles[i]);
+		rv = MigrateProfile(mOldProfiles[i]);
 		if (NS_FAILED(rv)) return rv;
 	}
 
@@ -2909,165 +2453,146 @@ NS_IMETHODIMP nsProfile::CloneProfile(const char* newProfile)
 	return rv;
 }
 
-NS_IMETHODIMP
-nsProfile::OnShutdown(const nsCID& serviceCID, nsISupports* service) {
-
-  if (serviceCID.Equals(kPrefCID)) {
-    unloadPrefs();
-    // are we supposed to do this?
-    //nsServiceManager::ReleaseService(serviceCID, service);
-  }
-
-  return NS_OK;
-}
-
-nsresult
-nsProfile::loadPrefs() {
-  if (m_prefs) return NS_OK;
-
-  nsresult rv;
-  rv = nsServiceManager::GetService(kPrefCID, NS_GET_IID(nsIPref),
-                                    (nsISupports **)&m_prefs, this);
-  NS_ASSERTION(NS_SUCCEEDED(rv), "may bail without prefs service..\n");
-  return rv;
-}
-
-nsresult
-nsProfile::unloadPrefs() {
-  if (m_prefs) {
-    m_prefs->SavePrefFile(); 
-    m_prefs->ShutDown();
-    nsServiceManager::ReleaseService(kPrefCID, m_prefs);
-    m_prefs=nsnull;
-  }
-  return NS_OK;
-}
-
 /***************************************************************************************/
 /***********                           PROFILE FACTORY                      ************/
 /***************************************************************************************/
+static PRInt32 g_InstanceCount = 0;
+static PRInt32 g_LockCount = 0; 
+
 // Factory
 class nsProfileFactory: public nsIFactory {
+public:
   NS_DECL_ISUPPORTS
-  
-  nsProfileFactory() {
-    NS_INIT_REFCNT();
-    PR_AtomicIncrement(&g_InstanceCount);
-  }
-
-  virtual ~nsProfileFactory() {
-    PR_AtomicDecrement(&g_InstanceCount);
-  }
 
   NS_IMETHOD CreateInstance(nsISupports *aDelegate,
                             const nsIID &aIID,
                             void **aResult);
 
-  NS_IMETHOD LockFactory(PRBool aLock) {
-    if (aLock) {
-      PR_AtomicIncrement(&g_LockCount);
-    } else {
-      PR_AtomicDecrement(&g_LockCount);
-    }
-    return NS_OK;
-  };
+  NS_IMETHOD LockFactory(PRBool aLock);
+  
+  nsProfileFactory(const nsCID &aClass,
+                   const char* aClassName,
+                   const char* aProgID);
+
+protected:
+  virtual ~nsProfileFactory();
+
+  nsCID mClassID;
+  char* mClassName;
+  char* mProgID; 
 };
 
-NS_IMPL_ISUPPORTS(nsProfileFactory, nsIFactory::GetIID());
+nsProfileFactory::nsProfileFactory(const nsCID &aClass,
+                           const char* aClassName,
+                           const char* aProgID)
+  : mClassID(aClass),
+    mClassName(nsCRT::strdup(aClassName)),
+    mProgID(nsCRT::strdup(aProgID))
+{
+    NS_INIT_REFCNT();
+}  
 
+nsProfileFactory::~nsProfileFactory()
+{
+    NS_ASSERTION(mRefCnt == 0, "non-zero refcnt at destruction");
+    
+    PL_strfree(mClassName);
+    PL_strfree(mProgID);
+}    
+
+NS_IMPL_ADDREF(nsProfileFactory)
+NS_IMPL_RELEASE(nsProfileFactory)
+NS_IMPL_QUERY_INTERFACE(nsProfileFactory,kIFactoryIID)
+    
 nsresult nsProfileFactory::CreateInstance(nsISupports *aDelegate,
                                             const nsIID &aIID,
                                             void **aResult)
 {
-  if (aDelegate != nsnull) {
-    return NS_ERROR_NO_AGGREGATION;
-  }
+  nsresult rv;
 
-  nsProfile *t = nsProfile::GetInstance();
-  
-  if (t == nsnull) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  
-  nsresult res = t->QueryInterface(aIID, aResult);
-  
-  if (NS_FAILED(res)) {
-    *aResult = nsnull;
-  }
+  if (!aResult)
+	return NS_ERROR_NULL_POINTER;
 
-  return res;
+  *aResult = nsnull;
+
+   if (mClassID.Equals(kProfileCID)) {
+    nsProfile *profile = new nsProfile();
+    if (profile)
+      rv = profile->QueryInterface(aIID, aResult);
+    else
+      rv = NS_ERROR_OUT_OF_MEMORY;
+
+    if (NS_FAILED(rv) && profile)
+      delete profile;
+   }
+   else {
+	return NS_NOINTERFACE;
+   }
+
+   if (NS_SUCCEEDED(rv))
+    PR_AtomicIncrement(&g_InstanceCount);
+   return rv;
 }
 
-extern "C" NS_EXPORT nsresult 
-NSGetFactory(nsISupports* serviceMgr,
-             const nsCID &aClass,
-             const char *aClassName,
-             const char *aProgID,
-             nsIFactory **aFactory)
+nsresult
+nsProfileFactory::LockFactory(PRBool aLock)
 {
-  if (aFactory == nsnull) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  if (aClass.Equals(kProfileCID)) {
-    nsProfileFactory *factory = new nsProfileFactory();
+    if (aLock)
+        PR_AtomicIncrement(&g_LockCount);
+    else
+        PR_AtomicDecrement(&g_LockCount);
+    
+    return NS_OK;
+} 
 
-	if (factory == nsnull) {
-		return NS_ERROR_OUT_OF_MEMORY;
-	}
-
-	nsresult res = factory->QueryInterface(nsIFactory::GetIID(), (void **) aFactory);
-    if (NS_FAILED(res)) {
-      *aFactory = nsnull;
-      delete factory;
-    }
-    return res;
-  }
-  return NS_NOINTERFACE;
-}
-
-NS_IMETHODIMP
-nsProfile::GetCurrentProfileDirFromJS(nsIFileSpec **spec)
+// return the proper factory to the caller.
+extern "C" NS_EXPORT nsresult NSGetFactory(nsISupports* /*aServMgr */,
+                                           const nsCID &aClass,
+                                           const char *aClassName,
+                                           const char *aProgID,
+                                           nsIFactory **aFactory)
 {
-	nsresult rv;
-	nsFileSpec dir;
-	rv = GetCurrentProfileDir(&dir);
-	if (NS_FAILED(rv)) return rv;
-
-	rv = NS_NewFileSpecWithSpec(dir, spec);
-	return rv;
-}
+    if (nsnull == aFactory)
+        return NS_ERROR_NULL_POINTER;
+    
+    *aFactory = new nsProfileFactory(aClass, aClassName, aProgID);
+    if (aFactory)
+        return (*aFactory)->QueryInterface(nsCOMTypeInfo<nsIFactory>::GetIID(),
+                                           (void**)aFactory);
+    else
+        return NS_ERROR_OUT_OF_MEMORY;
+}     
 
 extern "C" NS_EXPORT PRBool NSCanUnload(nsISupports* serviceMgr)
 {
-  return PRBool(g_InstanceCount == 0 && g_LockCount == 0);
+    return PRBool(g_InstanceCount == 0 && g_LockCount == 0);
 }
 
 extern "C" NS_EXPORT nsresult NSRegisterSelf(nsISupports* aServMgr, const char *path)
 {
-  nsresult rv;
-
-  NS_WITH_SERVICE1(nsIComponentManager, compMgr, aServMgr,
-                   kComponentManagerCID, &rv);
-  if (NS_FAILED(rv)) return rv;
-  
-  rv = compMgr->RegisterComponent(kProfileCID,
-                                  "Profile Manager",
-                                  NS_PROFILE_PROGID, path, 
-                                  PR_TRUE, PR_TRUE);
-
-  return rv;
+    nsresult rv;
+    
+    NS_WITH_SERVICE1(nsIComponentManager, compMgr, aServMgr,
+                     kComponentManagerCID, &rv);
+    if (NS_FAILED(rv)) return rv;
+    
+    rv = compMgr->RegisterComponent(kProfileCID,
+                                    "Profile Manager",
+                                    NS_PROFILE_PROGID, path, 
+                                    PR_TRUE, PR_TRUE);
+    
+    return rv;
 }
 
 extern "C" NS_EXPORT nsresult NSUnregisterSelf(nsISupports* aServMgr, const char *path)
 {
-  nsresult rv;
-
-  NS_WITH_SERVICE1(nsIComponentManager, compMgr, aServMgr,
-                   kComponentManagerCID, &rv);
-  if (NS_FAILED(rv)) return rv;
-
-  rv = compMgr->UnregisterComponent(kProfileCID, path);
-
-  return rv;
+    nsresult rv;
+    
+    NS_WITH_SERVICE1(nsIComponentManager, compMgr, aServMgr,
+                     kComponentManagerCID, &rv);
+    if (NS_FAILED(rv)) return rv;
+    
+    rv = compMgr->UnregisterComponent(kProfileCID, path);
+    
+    return rv;
 }
-
