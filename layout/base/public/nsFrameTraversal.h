@@ -44,7 +44,8 @@
 nsresult NS_NewFrameTraversal(nsIBidirectionalEnumerator **aEnumerator,
                               nsTraversalType aType,
                               nsIPresContext* aPresContext,
-                              nsIFrame *aStart);
+                              nsIFrame *aStart,
+                              PRBool aLockInScrollView);
 
 nsresult NS_CreateFrameTraversal(nsIFrameTraversal** aResult);
 

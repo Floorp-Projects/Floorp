@@ -992,7 +992,7 @@ void nsCaret::DrawCaret()
       presContext->GetDeviceContext(getter_AddRefs(dx));
       if (dx)
         dx->GetDevUnitsToTwips(tDevUnitsToTwips);
-      mCaretTwipsWidth  = tDevUnitsToTwips * mCaretPixelsWidth;
+      mCaretTwipsWidth  = (nscoord)(tDevUnitsToTwips * (float)mCaretPixelsWidth);
     }
     caretRect.width = mCaretTwipsWidth;
 
