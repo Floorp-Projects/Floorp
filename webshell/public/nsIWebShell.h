@@ -193,10 +193,6 @@ public:
   /**
    * Load the previous document in the history list.
    */
-  NS_IMETHOD Back() = 0;
-  NS_IMETHOD CanBack() = 0;
-  NS_IMETHOD Forward() = 0;
-  NS_IMETHOD CanForward() = 0;
   NS_IMETHOD GoTo(PRInt32 aHistoryIndex) = 0;
   NS_IMETHOD GetHistoryLength(PRInt32& aResult) = 0;
   NS_IMETHOD GetHistoryIndex(PRInt32& aResult) = 0;
