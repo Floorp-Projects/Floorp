@@ -63,6 +63,7 @@
 
 <!-- Format menu items -->
 <!ENTITY formatMenu.label "Format">
+<!ENTITY formatmenu.accesskey "o">
 
 <!-- Message menu items -->
 <!ENTITY messageMenu.label "Message">

@@ -225,28 +225,12 @@ ACTUALLY, EVERY TIME YOU TYPE ANY OF THE KEY DEFINED HERE AFTER WITHOUT ANY OF T
 	</menupopup>
     </menu>
 
-	<!-- menu comes from editorOverlay -->
+	<!-- entire menus come from editorOverlay -->
 	<menu id="insertMenu"/>
-	
-	<!-- menu items come from editorOverlay -->
-    <menu value="&formatMenu.label;">
-    <menupopup>
-      <menu id="fontFaceMenu"/>
-      <menu id="fontSizeMenu"/>
-      <menu id="fontStyleMenu"/>
-      <menu id="fontColorMenu"/>
-      <menu id="backgroundColorMenu"/>
-  
-      <menuitem id="removeAllStylesMenuitem"/>
-      <menuitem id="removeLinksMenuitem"/>
-      <menuseparator />
-      
-      <menu id="headingMenu"/>
-      <menu id="paragraphMenu"/>
-      <menuseparator />
-      <menu id="stylesheetMenu"/>
-    </menupopup>
-    </menu>
+  <menu id="formatMenu" value="&formatMenu.label;" accesskey="&formatmenu.accesskey;">
+    <menupopup id="formatMenuPopup"/>
+  </menu>
+  <menu id="tableMenu"/>
 
 	<menu value="&messageMenu.label;">
 		<menupopup>
