@@ -62,6 +62,8 @@ EXPORTS =              		\
 ################################################################################
 ## library
 
+RESFILE = mail.res
+
 CPP_OBJS=									\
 			.\$(OBJDIR)\nsMsgFactory.obj    \
 			$(NULL)
@@ -81,5 +83,9 @@ LLIBS=										\
 			$(DIST)\lib\unicharutil_s.lib   \
 			$(LIBNSPR)						\
 			$(NULL)
+
+WIN_LIBS=       \
+ shell32.lib    \
+ $(NULL)
 
 include <$(DEPTH)/config/rules.mak>
