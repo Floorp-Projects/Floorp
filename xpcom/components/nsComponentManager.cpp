@@ -21,6 +21,8 @@
 #include "nsComponentManager.h"
 #include "nsIServiceManager.h"
 #include "nsSpecialSystemDirectory.h"
+#include "nsCRT.h"
+#include "nsIEnumerator.h"
 
 #include "plstr.h"
 #include "prlink.h"
@@ -117,7 +119,8 @@ public:
     enum DeleteModel {
         NSPR_Delete = 1,
         Cplusplus_Delete = 2,
-        Cplusplus_Array_Delete = 3
+        Cplusplus_Array_Delete = 3,
+        nsCRT_String_Delete = 4
     };
     autoFree(void *Ptr, DeleteModel whichDelete): mPtr(Ptr), mWhichDelete(whichDelete) {}
     ~autoFree() {
@@ -125,6 +128,7 @@ public:
             if (mWhichDelete == NSPR_Delete) { PR_FREEIF(mPtr); }
             else if (mWhichDelete == Cplusplus_Delete) delete mPtr;
             else if (mWhichDelete == Cplusplus_Array_Delete) delete [] mPtr;
+            else if (mWhichDelete == nsCRT_String_Delete) nsCRT::free((char *) mPtr);
             else PR_ASSERT(0);
     }
 private:
@@ -682,6 +686,108 @@ nsComponentManagerImpl::PlatformCLSIDToProgID(nsCID *aClass,
 
 }
 
+nsresult nsComponentManagerImpl::PlatformPrePopulateRegistry()
+{
+    // Read in all dll entries and populate the mDllStore
+    nsCOMPtr<nsIEnumerator> dllEnum;
+    nsresult rv = mRegistry->EnumerateSubtrees( mXPCOMKey, getter_AddRefs(dllEnum));
+    if (NS_FAILED(rv)) return rv;
+
+    rv = dllEnum->First();
+    for (; NS_SUCCEEDED(rv) && !dllEnum->IsDone(); (rv = dllEnum->Next()))
+    {
+        nsCOMPtr<nsISupports> base;
+        rv = dllEnum->CurrentItem(getter_AddRefs(base));
+        if (NS_FAILED(rv))  continue;
+
+        // Get specific interface.
+        nsIID nodeIID = NS_IREGISTRYNODE_IID;
+        nsCOMPtr<nsIRegistryNode> node;
+        rv = base->QueryInterface( nodeIID, getter_AddRefs(node) );
+        if (NS_FAILED(rv)) continue;
+
+        // Get library name
+        char *library = NULL;
+        rv = node->GetName(&library);
+        if (NS_FAILED(rv)) continue;
+        // XXX make sure the following will work
+        autoFree delete_library(library, autoFree::nsCRT_String_Delete);
+
+        // Get key associated with library
+        nsIRegistry::Key libKey;
+        rv = node->GetKey(&libKey);
+        if (NS_FAILED(rv)) continue;
+
+        // Create nsDll with this name
+        PRUint32 lastModTime = 0;
+        PRUint32 fileSize = 0;
+        PlatformGetFileInfo(libKey, &lastModTime, &fileSize);
+
+        //        printf("Populating dll: %s, %d, %d\n", library, lastModTime, fileSize);
+
+        nsDll *dll = CreateCachedDll(library, lastModTime, fileSize);
+        if (dll == NULL)
+        {
+            rv = NS_ERROR_OUT_OF_MEMORY;
+            continue;
+        }
+    }
+
+    // Then read in all CID entries and populate the mFactories
+    nsCOMPtr<nsIEnumerator> cidEnum;
+    rv = mRegistry->EnumerateSubtrees( mCLSIDKey, getter_AddRefs(cidEnum));
+    if (NS_FAILED(rv)) return rv;
+
+    rv = cidEnum->First();
+    for (; NS_SUCCEEDED(rv) && !cidEnum->IsDone(); (rv = cidEnum->Next()))
+    {
+        nsCOMPtr<nsISupports> base;
+        rv = cidEnum->CurrentItem(getter_AddRefs(base));
+        if (NS_FAILED(rv))  continue;
+
+        // Get specific interface.
+        nsIID nodeIID = NS_IREGISTRYNODE_IID;
+        nsCOMPtr<nsIRegistryNode> node;
+        rv = base->QueryInterface( nodeIID, getter_AddRefs(node) );
+        if (NS_FAILED(rv)) continue;
+
+        // Get library name
+        char *cidString = NULL;
+        rv = node->GetName(&cidString);
+        if (NS_FAILED(rv)) continue;
+        // XXX make sure the following will work
+        autoFree delete_cidString(cidString, autoFree::nsCRT_String_Delete);
+
+        // Get key associated with library
+        nsIRegistry::Key cidKey;
+        rv = node->GetKey(&cidKey);
+        if (NS_FAILED(rv)) continue;
+
+        // Create the CID entry
+        char *library = NULL;
+        rv = mRegistry->GetString(cidKey, inprocServerValueName, &library);
+        if (NS_FAILED(rv)) continue;
+        // XXX wont work in this scope
+        autoFree delete_library(library, autoFree::NSPR_Delete);
+        nsCID aClass;
+        if (!(aClass.Parse(cidString))) continue;
+
+        nsDll *dll = CreateCachedDll(library, 0, 0);
+        if (!dll) continue;
+        nsFactoryEntry* entry = new nsFactoryEntry(aClass, dll);
+        if (!entry) continue;
+
+        nsIDKey key(aClass);
+        mFactories->Put(&key, entry);
+        //        printf("Populating cid: %s, %s\n", cidString, library);
+
+    }
+
+    // Finally read in PROGID -> CID mappings
+
+    return NS_OK;
+}
+
 #endif /* USE_REGISTRY */
 
 //
@@ -839,6 +945,8 @@ nsresult
 nsComponentManagerImpl::LoadFactory(nsFactoryEntry *aEntry,
                                     nsIFactory **aFactory)
 {
+    PR_LOG(nsComponentManagerLog, PR_LOG_ALWAYS, 
+           ("nsComponentManager: LoadFactory() \"%s\".", aEntry->dll->GetNativePath()));
     if (aFactory == NULL)
     {
         return NS_ERROR_NULL_POINTER;
@@ -971,6 +1079,18 @@ nsComponentManagerImpl::FindFactory(const nsCID &aClass,
         if ((entry)->factory == NULL)
         {
             res = LoadFactory(entry, aFactory);
+#if 0
+            // This doesn't work. On firsttime run, I hit a coredump
+            // got to see why.
+            // XXX Cache factory that we created for performance.
+            // XXX Need a way to release this factory else dlls will never
+            // XXX get unloaded
+            if (NS_SUCCEEDED(res))
+            {
+                entry->factory = *aFactory;
+                NS_ADDREF(entry->factory);
+            }
+#endif
         }
         else
         {

@@ -139,6 +139,7 @@ public:
 
     static nsComponentManagerImpl* gComponentManager;
     nsresult Init(void);
+    nsresult PlatformPrePopulateRegistry();
 
 protected:
     nsresult LoadFactory(nsFactoryEntry *aEntry, nsIFactory **aFactory);
