@@ -179,34 +179,6 @@ union PRNetAddr {
 };
 
 /*
-** The PR_NETADDR_SIZE macro can only be called on a PRNetAddr union
-** whose 'family' field is set.  It returns the size of the union
-** member corresponding to the specified address family.
-*/
-
-#if defined(_PR_INET6)
-
-#define PR_NETADDR_SIZE(_addr) PR_NetAddrSize(_addr)
-
-#else
-
-#if defined(XP_UNIX)
-#define PR_NETADDR_SIZE(_addr) 					\
-        ((_addr)->raw.family == PR_AF_INET		\
-        ? sizeof((_addr)->inet)					\
-        : ((_addr)->raw.family == PR_AF_INET6	\
-        ? sizeof((_addr)->ipv6)					\
-        : sizeof((_addr)->local)))
-#else
-#define PR_NETADDR_SIZE(_addr) 					\
-        ((_addr)->raw.family == PR_AF_INET		\
-        ? sizeof((_addr)->inet)					\
-        : sizeof((_addr)->ipv6))
-#endif /* defined(XP_UNIX) */
-
-#endif /* defined(_PR_INET6) */
-
-/*
 ***************************************************************************
 ** PRSockOption
 **
@@ -1107,8 +1079,6 @@ NSPR_API(PRStatus) PR_MakeDir(const char *name, PRIntn mode);
  */
 
 NSPR_API(PRStatus) PR_RmDir(const char *name);
-
-NSPR_API(PRUintn) PR_NetAddrSize(const PRNetAddr* addr);
 
 /*
  *************************************************************************

@@ -16,15 +16,6 @@
  * Reserved.
  */
 
-#ifdef XP_BEOS
-#include <stdio.h>
-int main()
-{
-    printf( "BeOS does not support IPv6\n" );
-    return 0;
-}
-#else
-
 #include "prio.h"
 #include "prenv.h"
 #include "prmem.h"
@@ -45,6 +36,10 @@ int main()
 #define HOST_BUFFER 1024
 #define PROTO_BUFFER 1500
 
+#define NETADDR_SIZE(addr) \
+    (PR_AF_INET == (addr)->raw.family ? \
+    sizeof((addr)->inet) : sizeof((addr)->ipv6))
+
 static PRFileDesc *err = NULL;
 
 static void Help(void)
@@ -59,7 +54,7 @@ static void DumpAddr(const PRNetAddr* address, const char *msg)
 {
     PRUint32 *word = (PRUint32*)address;
     PRUint32 addr_len = sizeof(PRNetAddr);
-    PR_fprintf(err, "%s[%d]\t", msg, PR_NETADDR_SIZE(address));
+    PR_fprintf(err, "%s[%d]\t", msg, NETADDR_SIZE(address));
     while (addr_len > 0)
     {
         PR_fprintf(err, " %08x", *word++);
@@ -73,7 +68,6 @@ static PRStatus PrintAddress(const PRNetAddr* address)
     PRNetAddr translation;
     char buffer[ADDR_BUFFER];
     PRStatus rv = PR_NetAddrToString(address, buffer, sizeof(buffer));
-    memset(&translation, 0, sizeof(PRNetAddr));
     if (PR_FAILURE == rv) PL_FPrintError(err, "PR_NetAddrToString");
     else
     {
@@ -83,7 +77,7 @@ static PRStatus PrintAddress(const PRNetAddr* address)
         if (PR_FAILURE == rv) PL_FPrintError(err, "PR_StringToNetAddr");
         else
         {
-            PRSize addr_len = PR_NETADDR_SIZE(address);
+            PRSize addr_len = NETADDR_SIZE(address);
             if (0 != memcmp(address, &translation, addr_len))
             {
                 PR_fprintf(err, "Address translations do not match\n");
@@ -102,7 +96,6 @@ PRIntn main(PRIntn argc, char **argv)
     PLOptStatus os;
     PRHostEnt host;
     PRProtoEnt proto;
-    PRBool ipv6 = PR_FALSE;
     const char *name = NULL;
     PRBool failed = PR_FALSE, version = PR_FALSE;
     PLOptState *opt = PL_CreateOptState(argc, argv, "Vh");
@@ -130,12 +123,10 @@ PRIntn main(PRIntn argc, char **argv)
 
     if (version)
     {
-#if defined(XP_UNIX) || defined(XP_OS2)
-#define NSPR_LIB "nspr21"
-#elif defined(WIN32)
-#define NSPR_LIB "libnspr21"
+#if defined(WINNT)
+#define NSPR_LIB "libnspr4"
 #else
-#error "Architecture not supported"
+#define NSPR_LIB "nspr4"
 #endif
         const PRVersionDescription *version_info;
         char *nspr_path = PR_GetEnv("LD_LIBRARY_PATH");
@@ -236,5 +227,3 @@ PRIntn main(PRIntn argc, char **argv)
 
     return (failed) ? 1 : 0;
 }
-
-#endif /* XP_BEOS */

@@ -1268,6 +1268,36 @@ extern PRFileDesc *_PR_InvalidDesc(void);
 
 extern PRIOMethods _pr_faulty_methods;
 
+/*
+** The PR_NETADDR_SIZE macro can only be called on a PRNetAddr union
+** whose 'family' field is set.  It returns the size of the union
+** member corresponding to the specified address family.
+*/
+
+extern PRUintn _PR_NetAddrSize(const PRNetAddr* addr);
+
+#if defined(_PR_INET6)
+
+#define PR_NETADDR_SIZE(_addr) _PR_NetAddrSize(_addr)
+
+#else
+
+#if defined(XP_UNIX)
+#define PR_NETADDR_SIZE(_addr) 					\
+        ((_addr)->raw.family == PR_AF_INET		\
+        ? sizeof((_addr)->inet)					\
+        : ((_addr)->raw.family == PR_AF_INET6	\
+        ? sizeof((_addr)->ipv6)					\
+        : sizeof((_addr)->local)))
+#else
+#define PR_NETADDR_SIZE(_addr) 					\
+        ((_addr)->raw.family == PR_AF_INET		\
+        ? sizeof((_addr)->inet)					\
+        : sizeof((_addr)->ipv6))
+#endif /* defined(XP_UNIX) */
+
+#endif /* defined(_PR_INET6) */
+
 extern PRStatus _PR_MapOptionName(
     PRSockOption optname, PRInt32 *level, PRInt32 *name);
 extern void _PR_InitThreads(
