@@ -54,6 +54,17 @@ void DebugDumpContainmentRules(nsIDTD& theDTD,const char* aFilename,const char* 
 void DebugDumpContainmentRules2(nsIDTD& theDTD,const char* aFilename,const char* aTitle);
 PRUint32 AccumulateCRC(PRUint32 crc_accum, char *data_blk_ptr, int data_blk_size);
 
+/**************************************************************
+  This is the place to store the "bad-content" tokens, and the 
+  also the regular tags.
+ **************************************************************/
+
+typedef struct _nsTagStruct{
+  _nsTagStruct():mTokenBank(new nsDeque(nsnull)),mTag(eHTMLTag_unknown){}
+  ~_nsTagStruct(){delete mTokenBank;}
+  eHTMLTags mTag;
+  nsDeque*  mTokenBank;
+}nsTags;
 
 class nsTagStack {
 public:
@@ -74,14 +85,10 @@ public:
   eHTMLTags   Last() const;
   void        Empty(void); 
 
-  int         mCapacity;
-  int         mCount;
-
-#ifndef NS_DEBUG
-  eHTMLTags*  mTags;
-#else
-  eHTMLTags   mTags[eStackSize];
-#endif
+  void        SaveToken(CToken* aToken, PRInt32 aID);
+  CToken*     RestoreTokenFrom(PRInt32 aID);
+  PRInt32     TokenCountAt(PRInt32 aID);
+  nsDeque*    mTags;
 };
 
 
