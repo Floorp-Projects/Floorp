@@ -50,6 +50,7 @@
 #include "nsString.h"
 #include "nsIURL.h"
 #include "nsNetCID.h"
+#include "nsEscape.h"
                              
 extern "C" {
     #include "icalss.h"
@@ -644,6 +645,7 @@ oeICalImpl::SetServer( const char *str ) {
         url->SetSpec( filePath );
         url->GetFilePath( filePath );
         strcpy( serveraddr, filePath.get() );
+        NS_UnescapeURL( serveraddr );
     } else
 	    strcpy( serveraddr, str );
 
