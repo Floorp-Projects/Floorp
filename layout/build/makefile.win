@@ -85,6 +85,9 @@ LLIBS=					\
 !if defined(MOZ_DEBUG) && defined(GLOWCODE) && "$(MOZ_BITS)"=="32"
  $(GLOWDIR)\glowcode.lib                \
 !endif
+!if defined(MOZ_PERF)
+ $(DIST)\lib\util.lib		        \
+!endif
  $(LIBNSPR)
 
 include <$(DEPTH)\config\rules.mak>
