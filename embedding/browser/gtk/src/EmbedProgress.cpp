@@ -51,8 +51,8 @@ EmbedProgress::Init(EmbedPrivate *aOwner)
 NS_IMETHODIMP
 EmbedProgress::OnStateChange(nsIWebProgress *aWebProgress,
 			     nsIRequest     *aRequest,
-			     PRInt32         aStateFlags,
-			     PRUint32        aStatus)
+			     PRUint32        aStateFlags,
+			     nsresult        aStatus)
 {
   // give the widget a chance to attach any listeners
   mOwner->ContentStateChange();
@@ -162,7 +162,7 @@ EmbedProgress::OnStatusChange(nsIWebProgress  *aWebProgress,
 NS_IMETHODIMP
 EmbedProgress::OnSecurityChange(nsIWebProgress *aWebProgress,
 				nsIRequest     *aRequest,
-				PRInt32         aState)
+				PRUint32         aState)
 {
   gtk_signal_emit(GTK_OBJECT(mOwner->mOwningWidget),
 		  moz_embed_signals[SECURITY_CHANGE],
