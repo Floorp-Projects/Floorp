@@ -214,7 +214,7 @@ nsHTMLTableRowElement::StringToAttribute(nsIAtom* aAttribute,
   /* ignore these attributes, stored simply as strings
      ch
    */
-  /* attributes that resolve to integers */
+  /* attributes that resolve to integers with default=0*/
   if (aAttribute == nsHTMLAtoms::choff) {
     nsGenericHTMLElement::ParseValue(aValue, 0, aResult, eHTMLUnit_Integer);
     return NS_CONTENT_ATTR_HAS_VALUE;

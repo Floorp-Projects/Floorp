@@ -316,14 +316,14 @@ nsHTMLTableElement::StringToAttribute(nsIAtom* aAttribute,
                                       nsHTMLValue& aResult)
 {
   /* ignore summary, just a string */
-  /* attributes that resolve to pixels */
+  /* attributes that resolve to pixels, with min=0 */
   if ((aAttribute == nsHTMLAtoms::cellspacing) ||
       (aAttribute == nsHTMLAtoms::cellpadding)) {
     nsGenericHTMLElement::ParseValue(aValue, 0, aResult, eHTMLUnit_Pixel);
     return NS_CONTENT_ATTR_HAS_VALUE;
   }
 
-  /* attributes that are either empty, or integers */
+  /* attributes that are either empty, or integers, with min=0 */
   else if (aAttribute == nsHTMLAtoms::cols) {
     nsAutoString tmp(aValue);
     tmp.StripWhitespace();
@@ -339,7 +339,7 @@ nsHTMLTableElement::StringToAttribute(nsIAtom* aAttribute,
   }
 
   /* attributes that are either empty, or pixels */
-  else if (aAttribute == nsHTMLAtoms::cols) {
+  else if (aAttribute == nsHTMLAtoms::border) {
     nsAutoString tmp(aValue);
     tmp.StripWhitespace();
     if (0 == tmp.Length()) {

@@ -2061,13 +2061,13 @@ PRBool
 nsGenericHTMLElement::ParseValueOrPercent(const nsString& aString,
                                           nsHTMLValue& aResult, 
                                           nsHTMLUnit aValueUnit)
-{ // XXX should vave min/max values?
+{
   nsAutoString tmp(aString);
   tmp.CompressWhitespace(PR_TRUE, PR_TRUE);
   PRInt32 ec, val = tmp.ToInteger(&ec);
   if (NS_OK == ec) {
+    if (val < 0) val = 0; 
     if (tmp.Last() == '%') {/* XXX not 100% compatible with ebina's code */
-      if (val < 0) val = 0;
       if (val > 100) val = 100;
       aResult.SetPercentValue(float(val)/100.0f);
     } else {
@@ -2095,23 +2095,24 @@ void
 nsGenericHTMLElement::ParseValueOrPercentOrProportional(const nsString& aString,
                                                         nsHTMLValue& aResult, 
                                                         nsHTMLUnit aValueUnit)
-{ // XXX should have min/max values?
+{
   nsAutoString tmp(aString);
   tmp.CompressWhitespace(PR_TRUE, PR_TRUE);
   PRInt32 ec, val = tmp.ToInteger(&ec);
-  if (tmp.Last() == '%') {/* XXX not 100% compatible with ebina's code */
+  if (NS_OK == ec) {
     if (val < 0) val = 0;
-    if (val > 100) val = 100;
-    aResult.SetPercentValue(float(val)/100.0f);
-	} else if (tmp.Last() == '*') {
-    if (val < 0) val = 0;
-    aResult.SetIntValue(val, eHTMLUnit_Proportional); // proportional values are integers
-  } else {
-    if (eHTMLUnit_Pixel == aValueUnit) {
-      aResult.SetPixelValue(val);
-    }
-    else {
-      aResult.SetIntValue(val, aValueUnit);
+    if (tmp.Last() == '%') {/* XXX not 100% compatible with ebina's code */
+      if (val > 100) val = 100;
+      aResult.SetPercentValue(float(val)/100.0f);
+	  } else if (tmp.Last() == '*') {
+      aResult.SetIntValue(val, eHTMLUnit_Proportional); // proportional values are integers
+    } else {
+      if (eHTMLUnit_Pixel == aValueUnit) {
+        aResult.SetPixelValue(val);
+      }
+      else {
+        aResult.SetIntValue(val, aValueUnit);
+      }
     }
   }
 }
