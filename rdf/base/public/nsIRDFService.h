@@ -37,10 +37,14 @@
 
 #include "nscore.h"
 #include "nsISupports.h"
+#include "prtime.h"
 class nsIRDFDataBase;
 class nsIRDFDataSource;
 class nsIRDFLiteral;
 class nsIRDFResource;
+class nsIRDFResourceFactory;
+class nsIRDFDate;
+class nsIRDFInt;
 
 // {BFD05261-834C-11d2-8EAC-00805F29F370}
 #define NS_IRDFSERVICE_IID \
@@ -56,9 +60,11 @@ public:
     /**
      * Construct an RDF resource from a single-byte URI. <tt>nsIRDFSerivce</tt>
      * caches resources that are in-use, so multiple calls to <tt>GetResource()</tt>
-     * for the same <tt>uri</tt> will return identical pointers.
+     * for the same <tt>uri</tt> will return identical pointers. FindResource
+     * is used to find out whether there already exists a resource corresponding to that url.
      */
     NS_IMETHOD GetResource(const char* uri, nsIRDFResource** resource) = 0;
+    NS_IMETHOD FindResource(const char* uri, nsIRDFResource** resource, PRBool* found) = 0;
 
     /**
      * Construct an RDF resource from a Unicode URI. This is provided
@@ -74,6 +80,18 @@ public:
     NS_IMETHOD GetLiteral(const PRUnichar* value, nsIRDFLiteral** literal) = 0;
 
     /**
+
+     * Construct an RDF literal from a PRTime.
+     */
+    NS_IMETHOD GetDateLiteral(const PRTime value, nsIRDFDate** date) = 0;
+
+    /**
+     * Construct an RDF literal from an int.
+     */
+    NS_IMETHOD GetIntLiteral(const int32 value, nsIRDFInt** intLiteral) = 0;
+
+    /**
+
      * Registers a resource with the RDF system, making it unique w.r.t.
      * GetResource.
      *
@@ -100,6 +118,7 @@ public:
     NS_IMETHOD RegisterResource(nsIRDFResource* aResource, PRBool replace = PR_FALSE) = 0;
 
     /**
+
      * Called to notify the resource manager that a resource is no
      * longer in use. This method should only be called from the
      * destructor of a "custom" resource implementation to notify the

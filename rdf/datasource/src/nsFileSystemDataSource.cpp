@@ -82,6 +82,19 @@ DEFINE_RDF_VOCAB(RDF_NAMESPACE_URI, RDF, Seq);
 static	nsIRDFService		*gRDFService = nsnull;
 static	FileSystemDataSource	*gFileSystemDataSource = nsnull;
 
+PRInt32 FileSystemDataSource::gRefCnt;
+
+nsIRDFResource		*FileSystemDataSource::kNC_FileSystemRoot;
+nsIRDFResource		*FileSystemDataSource::kNC_Child;
+nsIRDFResource		*FileSystemDataSource::kNC_Name;
+nsIRDFResource		*FileSystemDataSource::kNC_URL;
+nsIRDFResource		*FileSystemDataSource::kNC_Columns;
+nsIRDFResource		*FileSystemDataSource::kNC_Folder;
+
+nsIRDFResource		*FileSystemDataSource::kRDF_InstanceOf;
+nsIRDFResource		*FileSystemDataSource::kRDF_type;
+nsIRDFResource		*FileSystemDataSource::kRDF_Seq;
+
 
 
 static PRBool
@@ -124,46 +137,62 @@ FileSystemDataSource::FileSystemDataSource(void)
 	: mURI(nsnull),
 	  mObservers(nsnull)
 {
-	NS_INIT_REFCNT();
-	nsresult rv = nsServiceManager::GetService(kRDFServiceCID,
-		kIRDFServiceIID, (nsISupports**) &gRDFService);
-	PR_ASSERT(NS_SUCCEEDED(rv));
-	gFileSystemDataSource = this;
+    NS_INIT_REFCNT();
+
+    if (gRefCnt++ == 0) {
+        nsresult rv = nsServiceManager::GetService(kRDFServiceCID,
+                                                   kIRDFServiceIID,
+                                                   (nsISupports**) &gRDFService);
+
+        PR_ASSERT(NS_SUCCEEDED(rv));
+
+	gRDFService->GetResource(kURINC_FileSystemRoot, &kNC_FileSystemRoot);
+	gRDFService->GetResource(kURINC_child, &kNC_Child);
+	gRDFService->GetResource(kURINC_Name, &kNC_Name);
+	gRDFService->GetResource(kURINC_URL, &kNC_URL);
+	gRDFService->GetResource(kURINC_Folder, &kNC_Folder);
+
+	gRDFService->GetResource(kURIRDF_instanceOf, &kRDF_InstanceOf);
+	gRDFService->GetResource(kURIRDF_type, &kRDF_type);
+	gRDFService->GetResource(kURIRDF_Seq, &kRDF_Seq);
+
+        gFileSystemDataSource = this;
+    }
 }
 
 
 
 FileSystemDataSource::~FileSystemDataSource (void)
 {
-	gRDFService->UnregisterDataSource(this);
+    gRDFService->UnregisterDataSource(this);
 
-	PL_strfree(mURI);
-	if (nsnull != mObservers)
+    PL_strfree(mURI);
+    if (nsnull != mObservers)
 	{
-		for (PRInt32 i = mObservers->Count(); i >= 0; --i)
+            for (PRInt32 i = mObservers->Count(); i >= 0; --i)
 		{
-			nsIRDFObserver* obs = (nsIRDFObserver*) mObservers->ElementAt(i);
-			NS_RELEASE(obs);
+                    nsIRDFObserver* obs = (nsIRDFObserver*) mObservers->ElementAt(i);
+                    NS_RELEASE(obs);
 		}
-		delete mObservers;
-		mObservers = nsnull;
+            delete mObservers;
+            mObservers = nsnull;
 	}
 
-	nsrefcnt	refcnt;
-	NS_RELEASE2(kNC_FileSystemRoot, refcnt);
-	NS_RELEASE2(kNC_Child, refcnt);
-	NS_RELEASE2(kNC_Name, refcnt);
-	NS_RELEASE2(kNC_URL, refcnt);
-//	NS_RELEASE2(kNC_Columns, refcnt);
-	NS_RELEASE2(kNC_Folder, refcnt);
+    if (--gRefCnt == 0) {
+        NS_RELEASE(kNC_FileSystemRoot);
+        NS_RELEASE(kNC_Child);
+        NS_RELEASE(kNC_Name);
+        NS_RELEASE(kNC_URL);
+        NS_RELEASE(kNC_Folder);
 
-	NS_RELEASE2(kRDF_InstanceOf, refcnt);
-	NS_RELEASE2(kRDF_type, refcnt);
-	NS_RELEASE2(kRDF_Seq, refcnt);
+        NS_RELEASE(kRDF_InstanceOf);
+        NS_RELEASE(kRDF_type);
+        NS_RELEASE(kRDF_Seq);
 
-	gFileSystemDataSource = nsnull;
-	nsServiceManager::ReleaseService(kRDFServiceCID, gRDFService);
-	gRDFService = nsnull;
+        gFileSystemDataSource = nsnull;
+        nsServiceManager::ReleaseService(kRDFServiceCID, gRDFService);
+        gRDFService = nsnull;
+    }
 }
 
 
@@ -180,18 +209,6 @@ FileSystemDataSource::Init(const char *uri)
 
 	if ((mURI = PL_strdup(uri)) == nsnull)
 		return rv;
-
-	gRDFService->GetResource(kURINC_FileSystemRoot, &kNC_FileSystemRoot);
-	gRDFService->GetResource(kURINC_child, &kNC_Child);
-	gRDFService->GetResource(kURINC_Name, &kNC_Name);
-	gRDFService->GetResource(kURINC_URL, &kNC_URL);
-//	gRDFService->GetResource(kURINC_Columns, &kNC_Columns);
-	gRDFService->GetResource(kURINC_Folder, &kNC_Folder);
-
-	gRDFService->GetResource(kURIRDF_instanceOf, &kRDF_InstanceOf);
-	gRDFService->GetResource(kURIRDF_type, &kRDF_type);
-	gRDFService->GetResource(kURIRDF_Seq, &kRDF_Seq);
-
 
 	//   if (NS_FAILED(rv = AddColumns()))
 	//       return rv;
@@ -623,7 +640,7 @@ FileSystemCursor::FileSystemCursor(nsIRDFResource *source,
 	  mTarget(nsnull),
 	  mValue(nsnull)
 {
-//	NS_INIT_REFCNT();
+	NS_INIT_REFCNT();
 	NS_ADDREF(mSource);
 	NS_ADDREF(mProperty);
 }
@@ -654,6 +671,7 @@ FileSystemCursor::Advance(void)
 	NS_IF_RELEASE(mValue);
 	mTarget = mValue = (nsIRDFNode *)mArray->ElementAt(mCount++);
 	NS_ADDREF(mValue);
+    NS_ADDREF(mTarget);
 	return NS_OK;
 }
 

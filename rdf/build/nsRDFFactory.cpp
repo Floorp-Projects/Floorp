@@ -43,21 +43,22 @@ static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIFactoryIID,  NS_IFACTORY_IID);
 
 static NS_DEFINE_CID(kRDFBookmarkDataSourceCID,  NS_RDFBOOKMARKDATASOURCE_CID);
-static NS_DEFINE_CID(kRDFFileSystemDataSourceCID,NS_RDFFILESYSTEMDATASOURCE_CID);
 static NS_DEFINE_CID(kRDFCompositeDataSourceCID, NS_RDFCOMPOSITEDATASOURCE_CID);
 static NS_DEFINE_CID(kRDFContentSinkCID,         NS_RDFCONTENTSINK_CID);
+static NS_DEFINE_CID(kRDFDefaultResourceCID,     NS_RDFDEFAULTRESOURCE_CID);
+static NS_DEFINE_CID(kRDFFileSystemDataSourceCID,NS_RDFFILESYSTEMDATASOURCE_CID);
 static NS_DEFINE_CID(kRDFHTMLBuilderCID,         NS_RDFHTMLBUILDER_CID);
+static NS_DEFINE_CID(kRDFHistoryDataSourceCID,   NS_RDFHISTORYDATASOURCE_CID);
 static NS_DEFINE_CID(kRDFInMemoryDataSourceCID,  NS_RDFINMEMORYDATASOURCE_CID);
-static NS_DEFINE_CID(kRDFServiceCID,             NS_RDFSERVICE_CID);
 static NS_DEFINE_CID(kRDFMenuBuilderCID,         NS_RDFMENUBUILDER_CID);
+static NS_DEFINE_CID(kRDFServiceCID,             NS_RDFSERVICE_CID);
 static NS_DEFINE_CID(kRDFToolbarBuilderCID,      NS_RDFTOOLBARBUILDER_CID);
 static NS_DEFINE_CID(kRDFTreeBuilderCID,         NS_RDFTREEBUILDER_CID);
 static NS_DEFINE_CID(kRDFXMLDataSourceCID,       NS_RDFXMLDATASOURCE_CID);
 static NS_DEFINE_CID(kRDFXULBuilderCID,          NS_RDFXULBUILDER_CID);
 static NS_DEFINE_CID(kXULContentSinkCID,         NS_XULCONTENTSINK_CID);
-static NS_DEFINE_CID(kXULDataSourceCID,		 NS_XULDATASOURCE_CID);
+static NS_DEFINE_CID(kXULDataSourceCID,	         NS_XULDATASOURCE_CID);
 static NS_DEFINE_CID(kXULDocumentCID,            NS_XULDOCUMENT_CID);
-static NS_DEFINE_CID(kRDFDefaultResourceCID,     NS_RDFDEFAULTRESOURCE_CID);
 static NS_DEFINE_CID(kXULSortServiceCID,         NS_XULSORTSERVICE_CID);
 
 class RDFFactoryImpl : public nsIFactory
@@ -140,7 +141,7 @@ RDFFactoryImpl::CreateInstance(nsISupports *aOuter,
     *aResult = nsnull;
 
     nsresult rv;
-    PRBool wasRefCounted = PR_TRUE;
+
     nsISupports *inst = nsnull;
     if (mClassID.Equals(kRDFServiceCID)) {
         if (NS_FAILED(rv = NS_NewRDFService((nsIRDFService**) &inst)))
@@ -169,6 +170,10 @@ RDFFactoryImpl::CreateInstance(nsISupports *aOuter,
     }
     else if (mClassID.Equals(kRDFCompositeDataSourceCID)) {
         if (NS_FAILED(rv = NS_NewRDFCompositeDataSource((nsIRDFCompositeDataSource**) &inst)))
+            return rv;
+    }
+    else if (mClassID.Equals(kRDFHistoryDataSourceCID)) {
+        if (NS_FAILED(rv = NS_NewRDFHistoryDataSource((nsIRDFDataSource**) &inst)))
             return rv;
     }
     else if (mClassID.Equals(kXULDocumentCID)) {
@@ -218,13 +223,12 @@ RDFFactoryImpl::CreateInstance(nsISupports *aOuter,
     if (! inst)
         return NS_ERROR_OUT_OF_MEMORY;
 
-    if (NS_FAILED(rv = inst->QueryInterface(aIID, aResult)))
-        // We didn't get the right interface, so clean up
-        delete inst;
+    if (NS_FAILED(rv = inst->QueryInterface(aIID, aResult))) {
+        // We didn't get the right interface.
+        NS_ERROR("didn't support the interface you wanted");
+    }
 
-    if (wasRefCounted)
-        NS_IF_RELEASE(inst);
-
+    NS_IF_RELEASE(inst);
     return rv;
 }
 
@@ -275,6 +279,10 @@ NSRegisterSelf(nsISupports* serviceMgr, const char* aPath)
     rv = nsRepository::RegisterComponent(kRDFFileSystemDataSourceCID,  
                                          "RDF File System Data Source",
                                          NS_RDF_DATASOURCE_PROGID_PREFIX "files",
+                                         aPath, PR_TRUE, PR_TRUE);
+    rv = nsRepository::RegisterComponent(kRDFHistoryDataSourceCID,  
+                                         "RDF History Data Source",
+                                         NS_RDF_DATASOURCE_PROGID_PREFIX "history",
                                          aPath, PR_TRUE, PR_TRUE);
     rv = nsRepository::RegisterComponent(kRDFCompositeDataSourceCID, 
                                          "RDF Composite Data Source",
@@ -352,6 +360,7 @@ NSUnregisterSelf(nsISupports* serviceMgr, const char* aPath)
 
     rv = nsRepository::UnregisterComponent(kRDFBookmarkDataSourceCID,  aPath);
     rv = nsRepository::UnregisterComponent(kRDFFileSystemDataSourceCID,aPath);
+    rv = nsRepository::UnregisterComponent(kRDFHistoryDataSourceCID,   aPath);
     rv = nsRepository::UnregisterComponent(kRDFCompositeDataSourceCID, aPath);
     rv = nsRepository::UnregisterComponent(kRDFInMemoryDataSourceCID,  aPath);
     rv = nsRepository::UnregisterComponent(kRDFXMLDataSourceCID,       aPath);

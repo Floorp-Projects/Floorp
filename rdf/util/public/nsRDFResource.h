@@ -33,10 +33,10 @@ public:
     NS_DECL_ISUPPORTS
 
     // nsIRDFNode methods:
-    NS_IMETHOD Init(const char* uri);
     NS_IMETHOD EqualsNode(nsIRDFNode* node, PRBool* result) const;
 
     // nsIRDFResource methods:
+    NS_IMETHOD Init(const char* uri);
     NS_IMETHOD GetValue(const char* *uri) const;
     NS_IMETHOD EqualsResource(const nsIRDFResource* resource, PRBool* result) const;
     NS_IMETHOD EqualsString(const char* uri, PRBool* result) const;

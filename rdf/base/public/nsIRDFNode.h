@@ -29,7 +29,7 @@
 #include "nscore.h"
 #include "rdf.h"
 #include "nsISupports.h"
-
+#include "prtime.h"
 // {0F78DA50-8321-11d2-8EAC-00805F29F370}
 #define NS_IRDFNODE_IID \
 { 0xf78da50, 0x8321, 0x11d2, { 0x8e, 0xac, 0x0, 0x80, 0x5f, 0x29, 0xf3, 0x70 } }
@@ -58,12 +58,6 @@ public:
     static const nsIID& GetIID() { static nsIID iid = NS_IRDFNODE_IID; return iid; }
 
     /**
-     * Called by nsIRDFService after constructing a resource object to
-     * initialize it's URI.
-     */
-    NS_IMETHOD Init(const char* uri) = 0;
-
-    /**
      * Determine if two nodes are identical
      */
     NS_IMETHOD EqualsNode(nsIRDFNode* that, PRBool* result) const = 0;
@@ -81,6 +75,12 @@ public:
 class NS_RDF nsIRDFResource : public nsIRDFNode {
 public:
     static const nsIID& GetIID() { static nsIID iid = NS_IRDFRESOURCE_IID; return iid; }
+
+    /**
+     * Called by nsIRDFService after constructing a resource object to
+     * initialize it's URI.
+     */
+    NS_IMETHOD Init(const char* uri) = 0;
 
     /**
      * Get the 8-bit string value of the node.
@@ -118,6 +118,44 @@ public:
     NS_IMETHOD EqualsLiteral(const nsIRDFLiteral* literal, PRBool* result) const = 0;
 };
 
+// {E13A24E1-C77A-11d2-80BE-006097B76B8E}
+#define NS_IRDFDATE_IID \
+{ 0xe13a24e1, 0xc77a, 0x11d2, { 0x80, 0xbe, 0x0, 0x60, 0x97, 0xb7, 0x6b, 0x8e } };
+
+
+class nsIRDFDate : public nsIRDFNode {
+public:
+    static const nsIID& IID() { static nsIID iid = NS_IRDFDATE_IID; return iid; }
+
+    /**
+     * Get the PRTime value of the node.
+     */
+    NS_IMETHOD GetValue(PRTime *value) const = 0;
+
+    /**
+     * Determine if two ints are identical.
+     */
+    NS_IMETHOD EqualsDate(const nsIRDFDate* literal, PRBool* result) const = 0;
+};
+
+// {E13A24E3-C77A-11d2-80BE-006097B76B8E}
+#define NS_IRDFINT_IID \
+{ 0xe13a24e3, 0xc77a, 0x11d2, { 0x80, 0xbe, 0x0, 0x60, 0x97, 0xb7, 0x6b, 0x8e } };
+
+class nsIRDFInt : public nsIRDFNode {
+public:
+    static const nsIID& IID() { static nsIID iid = NS_IRDFINT_IID; return iid; }
+
+    /**
+     * Get the int32 value of the node.
+     */
+    NS_IMETHOD GetValue(int32 *value) const = 0;
+
+    /**
+     * Determine if two ints are identical.
+     */
+    NS_IMETHOD EqualsInt(const nsIRDFInt* literal, PRBool* result) const = 0;
+};
 
 
 #endif // nsIRDFNode_h__

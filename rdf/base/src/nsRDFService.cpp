@@ -25,6 +25,8 @@
 
   1) Implement the CreateDataBase() methods.
 
+  2) Cache date and int literals.
+
  */
 
 #include "nsIAtom.h"
@@ -69,6 +71,8 @@ static NS_DEFINE_CID(kRDFDefaultResourceCID,     NS_RDFDEFAULTRESOURCE_CID);
 
 static NS_DEFINE_IID(kIRDFServiceIID,         NS_IRDFSERVICE_IID);
 static NS_DEFINE_IID(kIRDFLiteralIID,         NS_IRDFLITERAL_IID);
+static NS_DEFINE_IID(kIRDFDateIID,         NS_IRDFDATE_IID);
+static NS_DEFINE_IID(kIRDFIntIID,         NS_IRDFINT_IID);
 static NS_DEFINE_IID(kIRDFResourceIID,        NS_IRDFRESOURCE_IID);
 static NS_DEFINE_IID(kIRDFNodeIID,            NS_IRDFNODE_IID);
 static NS_DEFINE_IID(kISupportsIID,           NS_ISUPPORTS_IID);
@@ -97,8 +101,11 @@ public:
 
     // nsIRDFService
     NS_IMETHOD GetResource(const char* uri, nsIRDFResource** resource);
+    NS_IMETHOD FindResource(const char* uri, nsIRDFResource** resource, PRBool *found);
     NS_IMETHOD GetUnicodeResource(const PRUnichar* uri, nsIRDFResource** resource);
     NS_IMETHOD GetLiteral(const PRUnichar* value, nsIRDFLiteral** literal);
+    NS_IMETHOD GetDateLiteral(const PRTime value, nsIRDFDate** date) ;
+    NS_IMETHOD GetIntLiteral(const int32 value, nsIRDFInt** intLiteral);
     NS_IMETHOD RegisterResource(nsIRDFResource* aResource, PRBool replace = PR_FALSE);
     NS_IMETHOD UnregisterResource(nsIRDFResource* aResource);
     NS_IMETHOD RegisterDataSource(nsIRDFDataSource* dataSource, PRBool replace = PR_FALSE);
@@ -131,7 +138,6 @@ public:
     NS_DECL_ISUPPORTS
 
     // nsIRDFNode
-    NS_IMETHOD Init(const char* uri);
     NS_IMETHOD EqualsNode(nsIRDFNode* node, PRBool* result) const;
 
     // nsIRDFLiteral
@@ -173,15 +179,6 @@ LiteralImpl::QueryInterface(REFNSIID iid, void** result)
         return NS_OK;
     }
     return NS_NOINTERFACE;
-}
-
-NS_IMETHODIMP
-LiteralImpl::Init(const char* uri)
-{
-    // Literals should always be constructed by calling nsIRDFService::GetLiteral,
-    // so this method should never get called.
-    NS_NOTREACHED("RDF LiteralImpl::Init");
-    return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP
@@ -227,6 +224,203 @@ LiteralImpl::EqualsLiteral(const nsIRDFLiteral* literal, PRBool* result) const
     nsAutoString s(p);
 
     *result = s.Equals(mValue);
+    return NS_OK;
+}
+
+
+////////////////////////////////////////////////////////////////////////
+// DateImpl
+//
+
+class DateImpl : public nsIRDFDate {
+public:
+    DateImpl(const PRTime s);
+    virtual ~DateImpl(void);
+
+    // nsISupports
+    NS_DECL_ISUPPORTS
+
+    // nsIRDFNode
+    NS_IMETHOD EqualsNode(nsIRDFNode* node, PRBool* result) const;
+
+    // nsIRDFDate
+    NS_IMETHOD GetValue(PRTime *value) const;
+    NS_IMETHOD EqualsDate(const nsIRDFDate* date, PRBool* result) const;
+
+private:
+    PRTime mValue;
+};
+
+
+DateImpl::DateImpl(const PRTime s)
+    : mValue(s)
+{
+    NS_INIT_REFCNT();
+}
+
+DateImpl::~DateImpl(void)
+{
+}
+
+NS_IMPL_ADDREF(DateImpl);
+NS_IMPL_RELEASE(DateImpl);
+
+nsresult
+DateImpl::QueryInterface(REFNSIID iid, void** result)
+{
+    if (! result)
+        return NS_ERROR_NULL_POINTER;
+
+    *result = nsnull;
+    if (iid.Equals(kIRDFDateIID) ||
+        iid.Equals(kIRDFNodeIID) ||
+        iid.Equals(kISupportsIID)) {
+        *result = NS_STATIC_CAST(nsIRDFDate*, this);
+        AddRef();
+        return NS_OK;
+    }
+    return NS_NOINTERFACE;
+}
+
+NS_IMETHODIMP
+DateImpl::EqualsNode(nsIRDFNode* node, PRBool* result) const
+{
+    nsresult rv;
+    nsIRDFDate* date;
+    if (NS_SUCCEEDED(node->QueryInterface(kIRDFDateIID, (void**) &date))) {
+        rv = EqualsDate(date, result);
+        NS_RELEASE(date);
+    }
+    else {
+        *result = PR_FALSE;
+        rv = NS_OK;
+    }
+    return rv;
+}
+
+NS_IMETHODIMP
+DateImpl::GetValue(PRTime *value) const
+{
+    NS_ASSERTION(value, "null ptr");
+    if (! value)
+        return NS_ERROR_NULL_POINTER;
+
+    *value = mValue;
+    return NS_OK;
+}
+
+
+NS_IMETHODIMP
+DateImpl::EqualsDate(const nsIRDFDate* date, PRBool* result) const
+{
+    NS_ASSERTION(date && result, "null ptr");
+    if (!date || !result)
+        return NS_ERROR_NULL_POINTER;
+
+    nsresult rv;
+    PRTime p;
+    if (NS_FAILED(rv = date->GetValue(&p)))
+        return rv;
+
+    *result = LL_EQ(p, mValue);
+    return NS_OK;
+}
+
+////////////////////////////////////////////////////////////////////////
+// IntImpl
+//
+
+class IntImpl : public nsIRDFInt {
+public:
+    IntImpl(const int32 s);
+    virtual ~IntImpl(void);
+
+    // nsISupports
+    NS_DECL_ISUPPORTS
+
+    // nsIRDFNode
+    NS_IMETHOD EqualsNode(nsIRDFNode* node, PRBool* result) const;
+
+    // nsIRDFInt
+    NS_IMETHOD GetValue(int32 *value) const;
+    NS_IMETHOD EqualsInt(const nsIRDFInt* value, PRBool* result) const;
+
+private:
+    int32 mValue;
+};
+
+
+IntImpl::IntImpl(const int32 s)
+    : mValue(s)
+{
+    NS_INIT_REFCNT();
+}
+
+IntImpl::~IntImpl(void)
+{
+}
+
+NS_IMPL_ADDREF(IntImpl);
+NS_IMPL_RELEASE(IntImpl);
+
+nsresult
+IntImpl::QueryInterface(REFNSIID iid, void** result)
+{
+    if (! result)
+        return NS_ERROR_NULL_POINTER;
+
+    *result = nsnull;
+    if (iid.Equals(kIRDFIntIID) ||
+        iid.Equals(kIRDFNodeIID) ||
+        iid.Equals(kISupportsIID)) {
+        *result = NS_STATIC_CAST(nsIRDFInt*, this);
+        AddRef();
+        return NS_OK;
+    }
+    return NS_NOINTERFACE;
+}
+
+NS_IMETHODIMP
+IntImpl::EqualsNode(nsIRDFNode* node, PRBool* result) const
+{
+    nsresult rv;
+    nsIRDFInt* intValue;
+    if (NS_SUCCEEDED(node->QueryInterface(kIRDFIntIID, (void**) &intValue))) {
+        rv = EqualsInt(intValue, result);
+        NS_RELEASE(intValue);
+    }
+    else {
+        *result = PR_FALSE;
+        rv = NS_OK;
+    }
+    return rv;
+}
+
+NS_IMETHODIMP
+IntImpl::GetValue(int32 *value) const
+{
+    NS_ASSERTION(value, "null ptr");
+    if (! value)
+        return NS_ERROR_NULL_POINTER;
+
+    *value = mValue;
+    return NS_OK;
+}
+
+
+NS_IMETHODIMP
+IntImpl::EqualsInt(const nsIRDFInt* intValue, PRBool* result) const
+{
+    NS_ASSERTION(intValue && result, "null ptr");
+    if (!intValue || !result)
+        return NS_ERROR_NULL_POINTER;
+
+    nsresult rv;
+    int32 p;
+    if (NS_FAILED(rv = intValue->GetValue(&p)))
+        return rv;
+
+    *result = (p == mValue);
     return NS_OK;
 }
 
@@ -444,6 +638,21 @@ ServiceImpl::GetResource(const char* aURI, nsIRDFResource** aResource)
 }
 
 NS_IMETHODIMP
+ServiceImpl::FindResource(const char* uri, nsIRDFResource** resource, PRBool *found)
+{
+    nsIRDFResource* result =
+        NS_STATIC_CAST(nsIRDFResource*, PL_HashTableLookup(mResources, uri));
+
+    if (result) {
+        *resource = result;
+        *found = 1;
+    } else {
+        *found = 0;
+    }
+    return NS_OK;
+}
+
+NS_IMETHODIMP
 ServiceImpl::GetUnicodeResource(const PRUnichar* aURI, nsIRDFResource** aResource)
 {
     nsString uriStr(aURI);
@@ -492,6 +701,32 @@ ServiceImpl::GetLiteral(const PRUnichar* aValue, nsIRDFLiteral** aLiteral)
 
     *aLiteral = literal;
     NS_ADDREF(literal);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+ServiceImpl::GetDateLiteral(const PRTime time, nsIRDFDate** literal)
+{
+    // XXX how do we cache these? should they live in their own hashtable?
+    DateImpl* result = new DateImpl(time);
+    if (! result)
+        return NS_ERROR_OUT_OF_MEMORY;
+
+    *literal = result;
+    NS_ADDREF(result);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+ServiceImpl::GetIntLiteral(const int32 value, nsIRDFInt** literal)
+{
+    // XXX how do we cache these? should they live in their own hashtable?
+    IntImpl* result = new IntImpl(value);
+    if (! result)
+        return NS_ERROR_OUT_OF_MEMORY;
+
+    *literal = result;
+    NS_ADDREF(result);
     return NS_OK;
 }
 

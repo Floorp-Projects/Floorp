@@ -360,8 +360,8 @@ RDFTreeBuilderImpl::AddWidgetItem(nsIContent* aElement,
             return rv;
         }
 
-        // Ignore ordinal properties
-        if (rdf_IsOrdinalProperty(property))
+        // Ignore properties that are used to indicate "tree-ness"
+        if (IsWidgetProperty(aElement, property))
             continue;
 
         PRInt32 nameSpaceID;

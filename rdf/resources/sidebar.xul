@@ -57,7 +57,7 @@ function doSort(sortColName)
 
 </html:script>
 
-<xul:tree datasources="rdf:files rdf:bookmarks rdf:mail">
+<xul:tree datasources="rdf:files rdf:bookmarks rdf:mail rdf:history">
   <xul:treecol id="NameColumn" rdf:resource="http://home.netscape.com/NC-rdf#Name"/>
   <xul:treecol id="URLColumn" rdf:resource="http://home.netscape.com/NC-rdf#URL"/>
   <xul:treecol id="LastModColumn" rdf:resource="http://home.netscape.com/WEB-rdf#LastModifiedDate"/>
@@ -94,6 +94,12 @@ function doSort(sortColName)
 
     <xul:treeitem id="NC:MailRoot">
       <xul:treecell>Mail</xul:treecell>
+      <xul:treecell></xul:treecell>
+      <xul:treecell></xul:treecell>
+    </xul:treeitem>
+
+    <xul:treeitem id="NC:HistoryBySite">
+      <xul:treecell>History By Site</xul:treecell>
       <xul:treecell></xul:treecell>
       <xul:treecell></xul:treecell>
     </xul:treeitem>

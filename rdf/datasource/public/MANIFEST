@@ -1,2 +1,3 @@
+nsIRDFHistory.h
 nsIRDFFileSystem.h
 nsIXULContentSink.h

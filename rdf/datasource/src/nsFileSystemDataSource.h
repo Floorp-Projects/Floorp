@@ -77,16 +77,19 @@ private:
 	char			*mURI;
 	nsVoidArray		*mObservers;
 
-	nsIRDFResource		*kNC_FileSystemRoot;
-	nsIRDFResource		*kNC_Child;
-	nsIRDFResource		*kNC_Name;
-	nsIRDFResource		*kNC_URL;
-	nsIRDFResource		*kNC_Columns;
-	nsIRDFResource		*kNC_Folder;
+    static PRInt32 gRefCnt;
 
-	nsIRDFResource		*kRDF_InstanceOf;
-	nsIRDFResource		*kRDF_type;
-	nsIRDFResource		*kRDF_Seq;
+    // pseudo-constants
+	static nsIRDFResource		*kNC_FileSystemRoot;
+	static nsIRDFResource		*kNC_Child;
+	static nsIRDFResource		*kNC_Name;
+	static nsIRDFResource		*kNC_URL;
+	static nsIRDFResource		*kNC_Columns;
+	static nsIRDFResource		*kNC_Folder;
+
+	static nsIRDFResource		*kRDF_InstanceOf;
+	static nsIRDFResource		*kRDF_type;
+	static nsIRDFResource		*kRDF_Seq;
 
 public:
 
