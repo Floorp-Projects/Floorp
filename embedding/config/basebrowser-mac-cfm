@@ -191,6 +191,8 @@ Components/shistory.xpt
 
 ; required l10n libraries
 
+Components/intl.xpt
+Components/locale.xpt
 Components/unicharutil.shlb
 Components/unicharutil.xpt
 Components/uconv.shlb

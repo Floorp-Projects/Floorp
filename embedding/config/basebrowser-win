@@ -211,6 +211,8 @@ components\shistory.xpt
 
 ; required l10n libraries
 
+components\intl.xpt
+components\locale.xpt
 components\ucharuti.dll
 components\uconv.dll
 components\uconv.xpt

@@ -194,6 +194,8 @@ components/shistory.xpt
 
 ; required l10n libraries
 
+components/intl.xpt
+components/locale.xpt
 components/libunicharutil.so
 components/libuconv.so
 components/uconv.xpt
