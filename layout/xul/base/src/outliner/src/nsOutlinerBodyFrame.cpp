@@ -20,6 +20,7 @@
  * Original Author: David W. Hyatt (hyatt@netscape.com)
  *
  * Contributor(s): 
+ *  Ben Goodger <ben@netscape.com>
  */
 
 #include "nsCOMPtr.h"
@@ -38,6 +39,7 @@
 #include "nsIContent.h"
 #include "nsIStyleContext.h"
 #include "nsIBoxObject.h"
+#include "nsIDOMMouseEvent.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMNodeList.h"
 #include "nsIDOMNSDocument.h"
@@ -46,7 +48,6 @@
 #include "nsIContent.h"
 #include "nsICSSStyleRule.h"
 #include "nsCSSRendering.h"
-#include "nsIRenderingContext.h"
 #include "nsIFontMetrics.h"
 #include "nsIDeviceContext.h"
 #include "nsIXULTemplateBuilder.h"
@@ -59,6 +60,7 @@
 #include "nsIURL.h"
 #include "nsNetUtil.h"
 #include "nsBoxLayoutState.h"
+#include "nsIDragService.h"
 
 #ifdef USE_IMG2
 #include "imgIRequest.h"
@@ -225,10 +227,23 @@ NS_NewOutlinerBodyFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame)
 } // NS_NewOutlinerFrame
 
 
+//
+// QueryInterface
+//
+NS_INTERFACE_MAP_BEGIN(nsOutlinerBodyFrame)
+  NS_INTERFACE_MAP_ENTRY(nsIOutlinerBoxObject)
+  NS_INTERFACE_MAP_ENTRY(nsICSSPseudoComparator)
+  NS_INTERFACE_MAP_ENTRY(nsIScrollbarMediator)
+NS_INTERFACE_MAP_END_INHERITING(nsLeafFrame)
+
+
+
 // Constructor
 nsOutlinerBodyFrame::nsOutlinerBodyFrame(nsIPresShell* aPresShell)
 :nsLeafBoxFrame(aPresShell), mPresContext(nsnull), mOutlinerBoxObject(nsnull), mFocused(PR_FALSE), mImageCache(nsnull),
- mColumns(nsnull), mScrollbar(nsnull), mTopRowIndex(0), mRowHeight(0), mIndentation(0)
+ mColumns(nsnull), mScrollbar(nsnull), mTopRowIndex(0), mRowHeight(0), mIndentation(0),
+ mDropRow(kIllegalRow), mDropOrient(kNoOrientation), mDropAllowed(PR_FALSE), mIsSortRectDrawn(PR_FALSE),
+ mAlreadyUndrewDueToScroll(PR_FALSE)
 {
   NS_NewISupportsArray(getter_AddRefs(mScratchArray));
 }
@@ -643,6 +658,53 @@ NS_IMETHODIMP nsOutlinerBodyFrame::InvalidateScrollbar()
   return NS_OK;
 }
 
+
+//
+// AdjustEventCoordsToBoxCoordSpace
+//
+// Takes client x/y in pixels, converts them to twips, and massages them to be
+// in our coordinate system.
+//
+void
+nsOutlinerBodyFrame :: AdjustEventCoordsToBoxCoordSpace ( PRInt32 inX, PRInt32 inY, PRInt32* outX, PRInt32* outY )
+{
+  // Convert our x and y coords to twips.
+  float pixelsToTwips = 0.0;
+  mPresContext->GetPixelsToTwips(&pixelsToTwips);
+  inX = NSToIntRound(inX * pixelsToTwips);
+  inY = NSToIntRound(inY * pixelsToTwips);
+  
+  // Get our box object.
+  nsCOMPtr<nsIDocument> doc;
+  mContent->GetDocument(*getter_AddRefs(doc));
+  nsCOMPtr<nsIDOMNSDocument> nsDoc(do_QueryInterface(doc));
+  nsCOMPtr<nsIDOMElement> elt(do_QueryInterface(mContent));
+  
+  nsCOMPtr<nsIBoxObject> boxObject;
+  nsDoc->GetBoxObjectFor(elt, getter_AddRefs(boxObject));
+  
+  PRInt32 x;
+  PRInt32 y;
+  boxObject->GetX(&x);
+  boxObject->GetY(&y);
+
+  x = NSToIntRound(x * pixelsToTwips);
+  y = NSToIntRound(y * pixelsToTwips);
+
+  // Adjust into our coordinate space.
+  x = inX-x;
+  y = inY-y;
+
+  // Adjust y by the inner box y, so that we're in the inner box's
+  // coordinate space.
+  y += mInnerBox.y;
+  
+  *outX = x;
+  *outY = y;
+
+} // AdjustEventCoordsToBoxCoordSpace
+
+
 NS_IMETHODIMP nsOutlinerBodyFrame::GetCellAt(PRInt32 aX, PRInt32 aY, PRInt32* aRow, PRUnichar** aColID,
                                              PRUnichar** aChildElt)
 {
@@ -650,6 +712,10 @@ NS_IMETHODIMP nsOutlinerBodyFrame::GetCellAt(PRInt32 aX, PRInt32 aY, PRInt32* aR
   if (mRowHeight == 0)
     mRowHeight = GetRowHeight();
 
+  PRInt32 x, y;
+  AdjustEventCoordsToBoxCoordSpace ( aX, aY, &x, &y );
+  
+#if 0
   // Convert our x and y coords to twips.
   float pixelsToTwips = 0.0;
   mPresContext->GetPixelsToTwips(&pixelsToTwips);
@@ -680,6 +746,7 @@ NS_IMETHODIMP nsOutlinerBodyFrame::GetCellAt(PRInt32 aX, PRInt32 aY, PRInt32* aR
   // Adjust y by the inner box y, so that we're in the inner box's
   // coordinate space.
   y += mInnerBox.y;
+#endif
 
   // Now just mod by our total inner box height and add to our top row index.
   *aRow = (y/mRowHeight)+mTopRowIndex;
@@ -697,11 +764,9 @@ NS_IMETHODIMP nsOutlinerBodyFrame::GetCellAt(PRInt32 aX, PRInt32 aY, PRInt32* aR
       // We know the column hit now.
       *aColID = nsXPIDLString::Copy(currCol->GetID());
 
-      if (currCol->IsCycler()) {
+      if (currCol->IsCycler())
         // Cyclers contain only images.  Fill this in immediately and return.
-        nsAutoString image; image.AssignWithConversion("image");
-        *aChildElt = nsXPIDLString::Copy(image.GetUnicode());
-      }
+        *aChildElt = nsXPIDLString::Copy(NS_LITERAL_STRING("image").get());
       else
         GetItemWithinCellAt(x, cellRect, *aRow, currCol, aChildElt);
       break;
@@ -713,6 +778,226 @@ NS_IMETHODIMP nsOutlinerBodyFrame::GetCellAt(PRInt32 aX, PRInt32 aY, PRInt32* aR
   return NS_OK;
 }
 
+
+//
+// GetCoordsForCellItem
+//
+// Find the x/y location and width/height (all in PIXELS) of the given object
+// in the given column. 
+//
+// XXX IMPORTANT XXX:
+// Hyatt says in the bug for this, that the following needs to be done:
+// (1) You need to deal with overflow when computing cell rects.  See other column 
+// iteration examples... if you don't deal with this, you'll mistakenly extend the 
+// cell into the scrollbar's rect.
+//
+// (2) You are adjusting the cell rect by the *row" border padding.  That's 
+// wrong.  You need to first adjust a row rect by its border/padding, and then the 
+// cell rect fits inside the adjusted row rect.  It also can have border/padding 
+// as well as margins.  The vertical direction isn't that important, but you need 
+// to get the horizontal direction right.
+//
+// (3) GetImageSize() does not include margins (but it does include border/padding).  
+// You need to make sure to add in the image's margins as well.
+//
+NS_IMETHODIMP
+nsOutlinerBodyFrame::GetCoordsForCellItem(PRInt32 aRow, const PRUnichar *aColID, const PRUnichar *aCellItem, 
+                                          PRInt32 *aX, PRInt32 *aY, PRInt32 *aWidth, PRInt32 *aHeight)
+{
+  *aX = 0;
+  *aY = 0;
+  *aWidth = 0;
+  *aHeight = 0;
+
+  nscoord currX = mInnerBox.x;
+
+  // The Rect for the requested item. 
+  nsRect theRect;
+
+  for (nsOutlinerColumn* currCol = mColumns; currCol && currX < mInnerBox.x + mInnerBox.width;
+       currCol = currCol->GetNext()) {
+
+    // The Rect for the current cell. 
+    nsRect cellRect(currX, mInnerBox.y + mRowHeight * (aRow - mTopRowIndex), currCol->GetWidth(), mRowHeight);
+
+    nsAutoString colID;
+    currCol->GetID(colID);
+    // Check the ID of the current column to see if it matches. If it doesn't 
+    // increment the current X value and continue to the next column.
+    if (!colID.EqualsWithConversion(aColID)) {
+      currX += cellRect.width;
+      continue;
+    }
+
+    // Now obtain the properties for our cell.
+    PrefillPropertyArray(aRow, currCol);
+    mView->GetCellProperties(aRow, currCol->GetID(), mScratchArray);
+
+    nsCOMPtr<nsIStyleContext> rowContext;
+    GetPseudoStyleContext(nsXULAtoms::mozoutlinerrow, getter_AddRefs(rowContext));
+
+    // We don't want to consider any of the decorations that may be present
+    // on the current row, so we have to deflate the rect by the border and 
+    // padding and offset its left and top coordinates appropriately. 
+    AdjustForBorderPadding(rowContext, cellRect);
+
+    nsCOMPtr<nsIStyleContext> cellContext;
+    GetPseudoStyleContext(nsXULAtoms::mozoutlinercell, getter_AddRefs(cellContext));
+
+    nsAutoString cell; cell.AssignWithConversion("cell");
+    if (currCol->IsCycler() || cell.EqualsWithConversion(aCellItem)) {
+      // If the current Column is a Cycler, then the Rect is just the cell - the margins. 
+      // Similarly, if we're just being asked for the cell rect, provide it. 
+
+      theRect = cellRect;
+      const nsStyleMargin* cellMarginData = (const nsStyleMargin*) cellContext->GetStyleData(eStyleStruct_Margin);
+      nsMargin cellMargin;
+      cellMarginData->GetMargin(cellMargin);
+      theRect.Deflate(cellMargin);
+      break;
+    }
+
+    // Since we're not looking for the cell, and since the cell isn't a cycler,
+    // we're looking for some subcomponent, and now we need to subtract the 
+    // borders and padding of the cell from cellRect so this does not 
+    // interfere with our computations.
+    AdjustForBorderPadding(cellContext, cellRect);
+
+    // Now we'll start making our way across the cell, starting at the edge of 
+    // the cell and proceeding until we hit the right edge. |cellX| is the 
+    // working X value that we will increment as we crawl from left to right.
+    nscoord cellX = cellRect.x;
+    nscoord remainWidth = cellRect.width;
+
+    if (currCol->IsPrimary()) {
+      // If the current Column is a Primary, then we need to take into account the indentation
+      // and possibly a twisty. 
+
+      // The amount of indentation is the indentation width (|mIndentation|) by the level. 
+      PRInt32 level;
+      mView->GetLevel(aRow, &level);
+      cellX += mIndentation * level;
+      remainWidth -= mIndentation * level;
+
+      // Start the Twisty Rect as the full width of the cell, and gradually decrement its width
+      // as we figure out the size of other elements. 
+      nsRect twistyRect(cellX, cellRect.y, remainWidth, cellRect.height);
+
+      PRBool hasTwisty = PR_FALSE;
+      PRBool isContainer = PR_FALSE;
+      mView->IsContainer(aRow, &isContainer);
+      if (isContainer) {
+        PRBool isContainerEmpty = PR_FALSE;
+        mView->IsContainerEmpty(aRow, &isContainerEmpty);
+        if (!isContainerEmpty)
+          hasTwisty = PR_TRUE;
+      }
+
+      // Find the twisty rect by computing its size. 
+      nsCOMPtr<nsIStyleContext> twistyContext;
+      GetPseudoStyleContext(nsXULAtoms::mozoutlinertwisty, getter_AddRefs(twistyContext));
+
+      // |GetImageSize| returns the rect of the twisty image, including the 
+      // borders and padding. 
+      nsRect twistyImageRect = GetImageSize(aRow, currCol->GetID(), twistyContext);
+      if (NS_LITERAL_STRING("twisty").Equals(aCellItem)) {
+        // If we're looking for the twisty Rect, just return the result of |GetImageSize|
+        theRect = twistyImageRect;
+        break;
+      }
+      
+      // Now we need to add in the margins of the twisty element, so that we 
+      // can find the offset of the next element in the cell. 
+      const nsStyleMargin* twistyMarginData = (const nsStyleMargin*) twistyContext->GetStyleData(eStyleStruct_Margin);
+      nsMargin twistyMargin;
+      twistyMarginData->GetMargin(twistyMargin);
+      twistyImageRect.Inflate(twistyMargin);
+
+      // Adjust our working X value with the twisty width (image size, margins,
+      // borders, padding. 
+      cellX += twistyImageRect.width;
+    }
+
+    // Cell Image
+    nsCOMPtr<nsIStyleContext> imageContext;
+    GetPseudoStyleContext(nsXULAtoms::mozoutlinerimage, getter_AddRefs(imageContext));
+
+    nsRect imageSize = GetImageSize(aRow, currCol->GetID(), imageContext);
+    if (NS_LITERAL_STRING("image").Equals(aCellItem)) {
+      theRect = imageSize;
+      theRect.x = cellX;
+      theRect.y = cellRect.y;
+      break;
+    }
+
+    // Increment cellX by the image width
+    cellX += imageSize.width;
+    
+    // Cell Text 
+    nsXPIDLString text;
+    mView->GetCellText(aRow, currCol->GetID(), getter_Copies(text));
+    nsAutoString cellText(text);
+
+    // Create a scratch rect to represent the text rectangle, with the current 
+    // X and Y coords, and a guess at the width and height. The width is the 
+    // remaining width we have left to traverse in the cell, which will be the
+    // widest possible value for the text rect, and the row height. 
+    nsRect textRect(cellX, cellRect.y, remainWidth, mRowHeight);
+
+    // Measure the width of the text. If the width of the text is greater than 
+    // the remaining width available, then we just assume that the text has 
+    // been cropped and use the remaining rect as the text Rect. Otherwise,
+    // we add in borders and padding to the text dimension and give that back. 
+    nsCOMPtr<nsIStyleContext> textContext;
+    GetPseudoStyleContext(nsXULAtoms::mozoutlinercelltext, getter_AddRefs(textContext));
+
+    const nsStyleFont* fontStyle = (const nsStyleFont*) textContext->GetStyleData(eStyleStruct_Font);
+    nsCOMPtr<nsIDeviceContext> dc;
+
+    mPresContext->GetDeviceContext(getter_AddRefs(dc));
+    nsCOMPtr<nsIFontMetrics> fm;
+    dc->GetMetricsFor(fontStyle->mFont, *getter_AddRefs(fm));
+    nscoord height;
+    fm->GetHeight(height);
+
+    nsStyleBorderPadding borderPadding;
+    textContext->GetStyle(eStyleStruct_BorderPaddingShortcut, (nsStyleStruct&)borderPadding);
+    nsMargin bp(0,0,0,0);
+    borderPadding.GetBorderPadding(bp);
+    
+    textRect.height = height + bp.top + bp.bottom;
+
+    nsCOMPtr<nsIPresShell> shell;
+    mPresContext->GetShell(getter_AddRefs(shell));
+    nsCOMPtr<nsIRenderingContext> rc;
+    shell->CreateRenderingContext(this, getter_AddRefs(rc));
+    rc->SetFont(fm);
+    nscoord width;
+    rc->GetWidth(cellText, width);
+
+    nscoord totalTextWidth = width + bp.left + bp.right;
+    if (totalTextWidth < remainWidth) {
+      // If the text is not cropped, the text is smaller than the available 
+      // space and we set the text rect to be that width. 
+      textRect.width = totalTextWidth;
+    }
+
+    theRect = textRect;
+  }
+  
+  float t2p = 0.0;
+  mPresContext->GetTwipsToPixels(&t2p);
+  
+  *aX = NSToIntRound(theRect.x * t2p);
+  *aY = NSToIntRound(theRect.y * t2p);
+  *aWidth = NSToIntRound(theRect.width * t2p);
+  *aHeight = NSToIntRound(theRect.height * t2p);
+ 
+  return NS_OK;
+}
+
+  
+  
 nsresult
 nsOutlinerBodyFrame::GetItemWithinCellAt(PRInt32 aX, const nsRect& aCellRect, 
                                          PRInt32 aRowIndex,
@@ -739,8 +1024,7 @@ nsOutlinerBodyFrame::GetItemWithinCellAt(PRInt32 aX, const nsRect& aCellRect,
 
   if (aX < cellRect.x || aX >= cellRect.x + cellRect.width) {
     // The user clicked within the cell's margins/borders/padding.  This constitutes a click on the cell.
-    nsAutoString cell; cell.AssignWithConversion("cell");
-    *aChildElt = nsXPIDLString::Copy(cell.GetUnicode());
+    *aChildElt = nsXPIDLString::Copy(NS_LITERAL_STRING("cell").get());
     return NS_OK;
   }
 
@@ -759,8 +1043,7 @@ nsOutlinerBodyFrame::GetItemWithinCellAt(PRInt32 aX, const nsRect& aCellRect,
 
     if (aX < currX) {
       // The user clicked within the indentation.
-      nsAutoString cell; cell.AssignWithConversion("cell");
-      *aChildElt = nsXPIDLString::Copy(cell.GetUnicode());
+      *aChildElt = nsXPIDLString::Copy(NS_LITERAL_STRING("cell").get());
       return NS_OK;
     }
 
@@ -794,14 +1077,10 @@ nsOutlinerBodyFrame::GetItemWithinCellAt(PRInt32 aX, const nsRect& aCellRect,
     // have a twisty, then we return "twisty".  If it is within the rect but we shouldn't have a twisty,
     // then we return "cell".
     if (aX >= twistyRect.x && aX < twistyRect.x + twistyRect.width) {
-      if (hasTwisty) {
-        nsAutoString twisty; twisty.AssignWithConversion("twisty");
-        *aChildElt = nsXPIDLString::Copy(twisty.GetUnicode());
-      }
-      else {
-        nsAutoString cell; cell.AssignWithConversion("cell");
-        *aChildElt = nsXPIDLString::Copy(cell.GetUnicode());
-      }
+      if (hasTwisty)
+        *aChildElt = nsXPIDLString::Copy(NS_LITERAL_STRING("twisty").get());
+      else
+        *aChildElt = nsXPIDLString::Copy(NS_LITERAL_STRING("cell").get());
       return NS_OK;
     }
 
@@ -825,15 +1104,13 @@ nsOutlinerBodyFrame::GetItemWithinCellAt(PRInt32 aX, const nsRect& aCellRect,
 
   if (aX >= iconRect.x && aX < iconRect.x + iconRect.width) {
     // The user clicked on the image.
-    nsAutoString image; image.AssignWithConversion("image");
-    *aChildElt = nsXPIDLString::Copy(image.GetUnicode());
+    *aChildElt = nsXPIDLString::Copy(NS_LITERAL_STRING("image").get());
     return NS_OK;
   }
 
   // Just assume "text".
   // XXX For marquee selection, we'll have to make this more precise and do text measurement.
-  nsAutoString text; text.AssignWithConversion("text");
-  *aChildElt = nsXPIDLString::Copy(text.GetUnicode());
+  *aChildElt = nsXPIDLString::Copy(NS_LITERAL_STRING("text").get());
   return NS_OK;
 }
 
@@ -1802,6 +2079,18 @@ NS_IMETHODIMP nsOutlinerBodyFrame::ScrollToRow(PRInt32 aRow)
   ScrollInternal(aRow);
   UpdateScrollbar();
 
+#ifdef XP_MAC
+  // mac can't process the event loop during a drag, so if we're dragging,
+  // grab the scroll widget and make it paint synchronously. This is
+  // sorta slow (having to paint the entire tree), but it works.
+  if ( mDragSession ) {
+    nsCOMPtr<nsIWidget> scrollWidget;
+    mScrollbar->GetWindow(mPresContext, getter_AddRefs(scrollWidget));
+    if ( scrollWidget )
+      scrollWidget->Invalidate(PR_TRUE);
+  }
+#endif
+  
   return NS_OK;
 }
 
@@ -1821,7 +2110,7 @@ NS_IMETHODIMP nsOutlinerBodyFrame::ScrollByLines(PRInt32 aNumLines)
       newIndex = lastPageTopRow;
   }
   ScrollToRow(newIndex);
-    
+  
   return NS_OK;
 }
 
@@ -1993,14 +2282,339 @@ nsOutlinerBodyFrame::EnsureColumns()
   }
 }
 
+
+#ifdef XP_MAC
+#pragma mark - 
+#endif
+
+
 //
-// QueryInterface
+// OnDragDrop
 //
-NS_INTERFACE_MAP_BEGIN(nsOutlinerBodyFrame)
-  NS_INTERFACE_MAP_ENTRY(nsIOutlinerBoxObject)
-  NS_INTERFACE_MAP_ENTRY(nsICSSPseudoComparator)
-  NS_INTERFACE_MAP_ENTRY(nsIScrollbarMediator)
-NS_INTERFACE_MAP_END_INHERITING(nsLeafFrame)
+// Tell the view where the drop happened
+//
+NS_IMETHODIMP
+nsOutlinerBodyFrame :: OnDragDrop ( nsIDOMEvent* inEvent )
+{
+  mView->Drop ( mDropRow, mDropOrient );
+  return NS_OK;
+
+} // OnDragDrop
+
+
+//
+// OnDragExit
+//
+// Clear out all our tracking vars. If we were drawing feedback, undraw it
+//
+NS_IMETHODIMP
+nsOutlinerBodyFrame :: OnDragExit ( nsIDOMEvent* inEvent )
+{
+  if ( mDropAllowed && !mAlreadyUndrewDueToScroll )
+    DrawDropFeedback ( mDropRow, mDropOrient, kUndrawFeedback ) ;
+  
+  mDropRow = kIllegalRow;
+  mDropOrient = kNoOrientation;
+  mDropAllowed = PR_FALSE;
+  mIsSortRectDrawn = PR_FALSE;
+  mAlreadyUndrewDueToScroll = PR_FALSE;
+   
+  mDragSession = nsnull;
+  mRenderingContext = nsnull;
+  return NS_OK;
+
+} // OnDragExit
+
+
+//
+// OnDragOver
+//
+// The mouse is hovering over this outliner. If we determine things are different from the
+// last time, undraw feedback at the old position, query the view to see if the current location is 
+// droppable, and then draw feedback at the new location if it is. The mouse may or may
+// not have changed position from the last time we were called, so optimize out a lot of
+// the extra notifications by checking if anything changed first.
+//
+NS_IMETHODIMP
+nsOutlinerBodyFrame :: OnDragOver ( nsIDOMEvent* inEvent )
+{
+  // while we're here, handle tracking of scrolling during a drag. There is a little craziness
+  // here as we turn off tracking of feedback during the scroll. When we first start scrolling,
+  // we explicitly undraw the previous feedback, then set |mAlreadyUndrewDueToScroll| to
+  // alert other places not to undraw again later (we're using XOR, so undrawing twice
+  // is bad). Below, we'll clear this member the next time we try to undraw the regular feedback.
+  PRBool scrollUp = PR_FALSE;
+  if ( IsInDragScrollRegion(inEvent, &scrollUp) ) {
+    if ( mDropAllowed && !mAlreadyUndrewDueToScroll )
+      DrawDropFeedback ( mDropRow, mDropOrient, kUndrawFeedback );    // undraw it at old loc, if we were drawing
+    mAlreadyUndrewDueToScroll = PR_TRUE;
+    ScrollByLines ( scrollUp ? -1 : 1);
+    return NS_OK;
+  }
+
+  // compute the row mouse is over and the above/below/on state. Below we'll use this
+  // to see if anything changed.
+  PRInt32 newRow = kIllegalRow;
+  DropOrientation newOrient = kNoOrientation;
+  ComputeDropPosition ( inEvent, &newRow, &newOrient );
+  
+  // if changed from last time, undraw it at the old location and if allowed, 
+  // draw it at the new location. If nothing changed, just bail.
+  if ( newRow != mDropRow || newOrient != mDropOrient ) {
+
+    // undraw feedback at old loc. If we are coming off a scroll, 
+    // don't undraw the old (we already did that), but reset us so that
+    // we're back in the normal case.
+    if ( !mAlreadyUndrewDueToScroll ) {
+      if ( mDropAllowed )
+        DrawDropFeedback ( mDropRow, mDropOrient, kUndrawFeedback );
+    }
+    else
+      mAlreadyUndrewDueToScroll = PR_FALSE;
+
+    // cache the new row and orientation regardless so we can check if it changed
+    // for next time.
+    mDropRow = newRow;
+    mDropOrient = newOrient;
+
+    PRBool canDropAtNewLocation = PR_FALSE;
+    if ( newOrient == kOnRow )
+      mView->CanDropOn ( newRow, &canDropAtNewLocation );
+    else
+      mView->CanDropBeforeAfter ( newRow, newOrient == kBeforeRow ? PR_TRUE : PR_FALSE, &canDropAtNewLocation );
+      
+    if ( canDropAtNewLocation )
+      DrawDropFeedback ( newRow, newOrient, kDrawFeedback );         // draw it at old loc, if we are allowed
+
+    mDropAllowed = canDropAtNewLocation;
+  }
+  
+  // alert the drag session we accept the drop. We have to do this every time
+  // since the |canDrop| attribute is reset before we're called.
+  if ( mDropAllowed && mDragSession )
+    mDragSession->SetCanDrop(PR_TRUE);
+
+  return NS_OK;
+
+} // OnDragOver
+
+
+//
+// DrawDropFeedback
+//
+// Takes care of actually drawing the correct feedback. |inDrawFeedback| tells us whether
+// we're drawing or undrawing (removing/clearing) the feedback for the given row.
+//
+// XXX Need to be able to make line color respect style
+//
+void
+nsOutlinerBodyFrame :: DrawDropFeedback ( PRInt32 inDropRow, DropOrientation inDropOrient, PRBool inDrawFeedback ) 
+{
+  // call appropriate routine (insert, container, etc) based on |inDropOrient| and pass in |inDrawFeedback|
+  float pixelsToTwips = 0.0;
+  mPresContext->GetPixelsToTwips ( &pixelsToTwips );
+
+#if NOT_YET_WORKING
+  // feedback will differ depending on if we're sorted or not -- leaving this around
+  // for later.
+  if ( viewSorted ) {    
+    PRInt32 penSize = NSToIntRound(1*pixelsToTwips);      // use a 1 pixel wide pen
+    
+    // draw outline rectangle made of 4 rects (gfx can't just frame a rectangle). The
+    // rects can't overlap because we're XORing.
+    mRenderingContext->InvertRect ( 0, 0, mRect.width, penSize );           // top
+    mRenderingContext->InvertRect ( 0, penSize, penSize, mRect.height );    // left
+    mRenderingContext->InvertRect ( mRect.width - penSize, penSize, penSize, mRect.height );    // right
+    mRenderingContext->InvertRect ( penSize, mRect.height - penSize, 
+                                      mRect.width - 2*penSize, penSize );    // bottom
+  }
+#endif
+  
+  nsOutlinerColumn* primaryCol = nsnull;
+  for (nsOutlinerColumn* currCol = mColumns; currCol; currCol = currCol->GetNext()) {
+    if ( currCol->IsPrimary() ) {
+      primaryCol = currCol;
+      break;
+    }
+  }
+  if ( !primaryCol )
+    return;
+  
+  if ( inDropOrient == kOnRow ) {
+    // drawing "on" a row. Invert the image and text in the primary column.
+    PRInt32 x, y, width, height;
+    GetCoordsForCellItem ( inDropRow, primaryCol->GetID(), NS_LITERAL_STRING("image").get(), 
+                            &x, &y, &width, &height );     
+    mRenderingContext->InvertRect ( NSToIntRound(x*pixelsToTwips), NSToIntRound(y*pixelsToTwips),
+                                      NSToIntRound(width*pixelsToTwips), NSToIntRound(height*pixelsToTwips) );
+    GetCoordsForCellItem ( inDropRow, primaryCol->GetID(), NS_LITERAL_STRING("text").get(), 
+                            &x, &y, &width, &height );     
+    mRenderingContext->InvertRect ( NSToIntRound(x*pixelsToTwips), NSToIntRound(y*pixelsToTwips),
+                                      NSToIntRound(width*pixelsToTwips), NSToIntRound(height*pixelsToTwips) );
+  }
+  else {
+    // drawing between rows, find the X/Y to draw a 2 pixel line indented 5 pixels
+    // from the left of the image in the primary column.
+    PRInt32 whereToDrawY = mRowHeight * (inDropRow - mTopRowIndex);
+    if ( inDropOrient == kAfterRow )
+      whereToDrawY += mRowHeight;
+
+    PRInt32 whereToDrawX = 0;    
+    PRInt32 y, width, height;
+    GetCoordsForCellItem ( inDropRow, primaryCol->GetID(), NS_LITERAL_STRING("image").get(), 
+                            &whereToDrawX, &y, &width, &height );     
+    whereToDrawX += 5;                                // indent 5 pixels from left of image
+    
+    mRenderingContext->InvertRect ( NSToIntRound(whereToDrawX*pixelsToTwips),
+                                      whereToDrawY, NSToIntRound(25*pixelsToTwips), NSToIntRound(2*pixelsToTwips) );
+  }
+   
+} // DrawDropFeedback
+
+
+//
+// ComputeDropPosition
+//
+// Given a dom event, figure out which row in the tree the mouse is over
+// and if we should drop before/after/on that row. Doesn't query the content
+// about if the drag is allowable, that's done elsewhere.
+//
+// For containers, we break up the vertical space of the row as follows: if in
+// the topmost 25%, the drop is _before_ the row the mouse is over; if in the
+// last 25%, _after_; in the middle 50%, we consider it a drop _on_ the container.
+//
+// For non-containers, if the mouse is in the top 50% of the row, the drop is
+// _before_ and the bottom 50% _after_
+//
+void 
+nsOutlinerBodyFrame :: ComputeDropPosition ( nsIDOMEvent* inEvent, PRInt32* outRow, DropOrientation* outOrient )
+{
+  nsCOMPtr<nsIDOMMouseEvent> mouseEvent ( do_QueryInterface(inEvent) );
+  if ( mouseEvent ) {
+    PRInt32 x = 0, y = 0;
+    mouseEvent->GetClientX(&x); mouseEvent->GetClientY(&y);
+    
+    PRInt32 row = kIllegalRow;
+    nsXPIDLString colID, child;
+    GetCellAt ( x, y, &row, getter_Copies(colID), getter_Copies(child) );
+    
+    // GetCellAt() will just blindly report a row even if there is no content there
+    // (ie, dragging below the end of the tree). If that's the case, set the reported row
+    // to after the final row. If we're not off the end, then check the coords w/in the cell
+    // to see if we are dropping before/on/after.
+    PRInt32 totalNumRows = 0;
+    mView->GetRowCount ( &totalNumRows );
+    if ( row > totalNumRows - 1 ) {             // doh, we're off the end of the tree
+      row = (totalNumRows-1) - mTopRowIndex;
+      *outOrient = kAfterRow;
+    }
+    else {                                              // w/in a cell, check above/below/on
+      // Compute the top/bottom of the row in question. We need to convert
+      // our y coord to twips since |mRowHeight| is in twips.
+      PRInt32 yTwips, xTwips;
+      AdjustEventCoordsToBoxCoordSpace ( x, y, &xTwips, &yTwips );
+      PRInt32 rowTop = mRowHeight * (row - mTopRowIndex);
+      PRInt32 rowBottom = rowTop + mRowHeight;
+      PRInt32 yOffset = yTwips - rowTop;
+   
+      PRBool isContainer = PR_FALSE;
+      mView->IsContainer ( row, &isContainer );
+      if ( isContainer ) {
+        // for a container, use a 25%/50%/25% breakdown
+        if ( yOffset < rint(0.25 * mRowHeight) )
+          *outOrient = kBeforeRow;
+        else if ( yOffset > mRowHeight - rint(0.25 * mRowHeight) )
+          *outOrient = kAfterRow;
+        else
+          *outOrient = kOnRow;
+      }
+      else {
+        // for a non-container use a 50%/50% breakdown
+        if ( yOffset < rint(0.5 * mRowHeight) )
+          *outOrient = kBeforeRow;
+        else
+          *outOrient = kAfterRow;        
+      }
+    }
+    
+    *outRow = row;
+  }
+  
+} // ComputeDropPosition
+
+
+//
+// IsInDragScrollRegion
+//
+// Determine if we're w/in a margin of the top/bottom of the outliner during a drag.
+// This will ultimately cause us to scroll, but that's done elsewhere.
+//
+PRBool
+nsOutlinerBodyFrame :: IsInDragScrollRegion ( nsIDOMEvent* inEvent, PRBool* outScrollUp )
+{
+  PRBool isInRegion = PR_FALSE;
+
+  float pixelsToTwips = 0.0;
+  mPresContext->GetPixelsToTwips ( &pixelsToTwips );
+  const int kMarginHeight = NSToIntRound ( 12 * pixelsToTwips );
+  
+  nsCOMPtr<nsIDOMMouseEvent> mouseEvent ( do_QueryInterface(inEvent) );
+  if ( mouseEvent ) {
+    PRInt32 x = 0, y = 0;
+    mouseEvent->GetClientX(&x); mouseEvent->GetClientY(&y);
+  
+    PRInt32 yTwips, xTwips;
+    AdjustEventCoordsToBoxCoordSpace ( x, y, &xTwips, &yTwips );
+    
+    if ( yTwips < kMarginHeight ) {
+      isInRegion = PR_TRUE;
+      if ( outScrollUp )
+        *outScrollUp = PR_TRUE;       // scroll up
+    }
+    else if ( yTwips > mRect.height - kMarginHeight ) {
+      isInRegion = PR_TRUE;
+      if ( outScrollUp )
+        *outScrollUp = PR_FALSE;     // scroll down
+    }    
+  }
+
+  return isInRegion;
+  
+} // IsInDragScrollRegion
+
+
+//
+// OnDragEnter
+//
+// Cache several things we'll need throughout the course of our work. These
+// will all get released on a drag exit
+//
+NS_IMETHODIMP
+nsOutlinerBodyFrame :: OnDragEnter ( nsIDOMEvent* inEvent )
+{
+  // create a rendering context for our drawing needs
+  nsCOMPtr<nsIPresShell> presShell;
+  mPresContext->GetShell(getter_AddRefs(presShell));
+  nsCOMPtr<nsIRenderingContext> rendContext;
+  presShell->CreateRenderingContext ( this, getter_AddRefs(mRenderingContext) );
+
+  // cache the drag session
+  nsresult rv;
+  NS_WITH_SERVICE(nsIDragService, dragService, "@mozilla.org/widget/dragservice;1", &rv);
+  nsCOMPtr<nsIDragSession> dragSession;
+  dragService->GetCurrentSession(getter_AddRefs(mDragSession));
+  NS_ASSERTION ( mDragSession, "can't get drag session" );
+
+  return NS_OK;
+
+} // OnDragEnter
+
+
+
+#ifdef XP_MAC
+#pragma mark - 
+#endif
+
 
 // ==============================================================================
 // The ImageListener implementation
@@ -2085,5 +2699,4 @@ nsOutlinerImageListener::Invalidate()
   return NS_OK;
 }
 #endif
-
 

@@ -1646,3 +1646,32 @@ nsXULOutlinerBuilder::SortSubtree(nsOutlinerRows::Subtree* aSubtree)
 
     return NS_OK;
 }
+
+
+/* boolean canDropOn (in long index); */
+NS_IMETHODIMP
+nsXULOutlinerBuilder::CanDropOn(PRInt32 index, PRBool *_retval)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+/* boolean canDropBeforeAfter (in long index, in boolean before); */
+NS_IMETHODIMP
+nsXULOutlinerBuilder::CanDropBeforeAfter(PRInt32 index, PRBool before, PRBool *_retval)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsXULOutlinerBuilder::Drop(PRInt32 row, PRInt32 orient)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsXULOutlinerBuilder::IsSorted(PRBool *_retval)
+{
+  *_retval = PR_FALSE;
+  return NS_OK;
+}
+

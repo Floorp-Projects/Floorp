@@ -32,6 +32,12 @@
     <handlers>
     <handler event="focus" action="this.outlinerBoxObject.focused = true;"/>
     <handler event="blur" action="this.outlinerBoxObject.focused = false;"/>
+
+    <handler event="dragenter" action="this.outlinerBoxObject.onDragEnter(event);"/>
+    <handler event="dragexit" action="this.outlinerBoxObject.onDragExit(event);"/>
+    <handler event="dragover" action="this.outlinerBoxObject.onDragOver(event);"/>
+    <handler event="dragdrop" action="this.outlinerBoxObject.onDragDrop(event);"/>
+
       <handler event="keypress" keycode="vk_enter">
         <![CDATA[
          if (this.currentIndex == -1)
