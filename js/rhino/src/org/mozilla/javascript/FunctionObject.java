@@ -50,7 +50,8 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 
-public class FunctionObject extends BaseFunction {
+public class FunctionObject extends BaseFunction
+{
 
     static final long serialVersionUID = -4074285335521944312L;
 
@@ -186,12 +187,11 @@ public class FunctionObject extends BaseFunction {
         hasVoidReturn = method != null && method.getReturnType() == Void.TYPE;
 
         ScriptRuntime.setFunctionProtoAndParent(scope, this);
-        Context cx = Context.getContext();
-        useDynamicScope = cx.hasCompileFunctionsWithDynamicScope();
 
         if (method != null) {
             Invoker master = invokerMaster;
             if (master != null) {
+                Context cx = Context.getContext();
                 try {
                     invoker = master.createInvoker(cx, method, types);
                 } catch (SecurityException ex) {
@@ -367,13 +367,23 @@ public class FunctionObject extends BaseFunction {
         if (parmsLength < 0) {
             return callVarargs(cx, thisObj, args);
         }
-        if (!isStatic) {
+        if (!isStatic && method != null) {
             // OPT: cache "clazz"?
-            Class clazz = method != null ? method.getDeclaringClass()
-                                         : ctor.getDeclaringClass();
-            while (!clazz.isInstance(thisObj)) {
-                thisObj = thisObj.getPrototype();
-                if (thisObj == null || !useDynamicScope) {
+            Class clazz = method.getDeclaringClass();
+            if (!clazz.isInstance(thisObj)) {
+                boolean compatible = false;
+                if (thisObj == scope) {
+                    Scriptable parentScope = getParentScope();
+                    if (scope != parentScope) {
+                        // Call with dynamic scope for standalone function,
+                        // use parentScope as thisObj
+                        compatible = clazz.isInstance(parentScope);
+                        if (compatible) {
+                            thisObj = parentScope;
+                        }
+                    }
+                }
+                if (!compatible) {
                     // Couldn't find an object to call this on.
                     throw NativeGlobal.typeError1
                         ("msg.incompat.call", functionName, scope);
@@ -642,5 +652,4 @@ public class FunctionObject extends BaseFunction {
     private int parmsLength;
     private boolean hasVoidReturn;
     private boolean isStatic;
-    private boolean useDynamicScope;
 }
