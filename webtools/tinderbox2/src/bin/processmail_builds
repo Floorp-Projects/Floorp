@@ -12,8 +12,8 @@
 # server.  No locks are used by the mail processes, data is passed to
 # the tinderbox server in a maildir like format.
 
-# $Revision: 1.2 $ 
-# $Date: 2001/01/04 00:29:09 $ 
+# $Revision: 1.3 $ 
+# $Date: 2001/01/06 01:32:03 $ 
 # $Author: kestes%staff.mail.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/bin/processmail_builds,v $ 
 # $Name:  $ 
@@ -90,6 +90,7 @@ Informational Arguments
 		easier testing the functionality of the program. This flag is
 		not recomended for production use.
 
+
 Synopsis
 
 
@@ -97,35 +98,77 @@ This program handles mail acceptance for the tinderbox system.  The
 mail transerfer agent runs this program to deliver the mail.  Mail is
 recived on stdin, this makes it particularly easy to test this script.
 The script accepts no arguments and will exit with return code of zero
-if successful.  Mail messages are parsed to extract the tinderbox
-variables and database update files are written for the tinderbox
-server to pickup when it next wakes up.  The tinderbox variables must
-be at the top of the mail and the last variable must be 'END'.  We
-ignore the line following the variables, it should be blank.  Any
-uuencoded binaries in the mail message are extracted and uudecoded and
-stored on disk.  The build logs are converted into HTML and are split
-into full and summary form and stored on the disk.  Both logs basnames
-are the same unique id which is found by using the time this program
-was stared and its pid.  The logs are stored in separate directories
-and compressed.  The server knows how to contruct URLS to the log
-files because that information is passed in the database update files.
-There may be serveral instances of this program running so each
-database update file is written to the disk with a unique name.  No
-locks are held by this code.
+if successful.  
 
 Should errors occur during the processing of the mail message, the
 message is bounced by exiting with a non zero exit code and the error
 is written to the error log and standard err.
 
-By convention all database update files are stored in a file name
-which matches the module name which will accept them.  We are creating
-information for the database controled by the module TinderDB::Build
-so its update file must be named
+Mail is expected to consist of 
+
+	1) A set of tinderbox variables with values applicable to this
+	build this includes information on which regular expressions
+	to use when parsing the build log and whether the build was
+	successful or not.
+
+	2) The build/test log as output by the tool which was run to
+	generate the build.
+
+	3) The binary which results form the build, if desired.
+
+Mail messages are parsed to extract the tinderbox variables and
+database update files are written for the tinderbox server to pickup
+when it next wakes up.  By convention all database update files are
+stored in a file name which matches the module name which will accept
+them.  We are creating information for the database controled by the
+module TinderDB::Build so its update file must be named
 $TinderConfig::FILE{'TinderDB::Build::Update'} with some unique id
 placed on the end.  This file contains all the tinderbox variable
 information extracted from the mail message and any new variables
 derived while parsing the log file.
 
+The build logs are converted into HTML and are split into full and
+summary form and stored on the disk.  Both logs basnames are the same
+unique id which is found by using the time this program was stared and
+its pid.  The logs are stored in separate directories and compressed.
+The server knows how to contruct URLS to the log files because that
+information is passed in the database update files.  There may be
+serveral instances of this program running so each database update
+file is written to the disk with a unique name.  No locks are held by
+this code.
+
+Builds which take a long time to complete can send multiple status
+mails each one conaining the log file which has been completed so far.
+All mails sent before the build is finished should have the status
+'building'.  The last mail must contain the results of the build.  The
+website will make each build log availible so that everyone can see
+the log file and get a feel for how far into the compilation the build
+machine has progressed.
+
+
+Mail Format
+
+The mail has a very simple format and is not MIME encoded and has not
+attachments. 
+
+The tinderbox variables must be at the top of the mail and the last
+variable must be 'END'.  We ignore the line following the variables,
+it should be blank.  Tinderbox variables are specified by a line which
+looks like this string:
+
+tinderbox: variablename: varaiblevalue
+
+Any uuencoded binaries in the mail message are extracted and uudecoded
+and stored on disk in the filename specified by the tinderbox variable
+binaryname.
+
+The bulk of the mail message is the output from the compilers and test
+tools which created the build.  Each tinderbox server must be
+customized with the set of regular expressions which describe the
+errors which are produced as part of the build process.  These regular
+expressions are stored in the module Error_Parse.pm.  Each mail
+contains the tinderbox variable 'errorparser' which chooses one set of
+regualar expressions to use when processing the mails contents.
 
 
 Tinderbox Variables:
@@ -228,6 +271,20 @@ File names for the output files are contructed from the values returned by:
 	FileStructure::get_filename(\$tree, 'brief-log')
 	FileStructure::get_filename(\$tree, 'TinderDB_Dir')
 
+
+Example:
+
+This is the set of tinderbox variables which are used in the logsample
+mail message.  See the logsample file in the test directory for a more
+complete example of tinderbox build mail.
+
+tinderbox: tree: Project_A
+tinderbox: starttime: 934395485
+tinderbox: timenow: 934395489
+tinderbox: status: success
+tinderbox: buildname: worms-SunOS-sparc-5.6-Depend-apprunner
+tinderbox: errorparser: unix
+tinderbox: END
 
 
 EOF
