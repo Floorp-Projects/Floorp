@@ -199,6 +199,7 @@ function SendMailToNode(emailAddressNode)
     var addressInfo = currentAddressData[emailAddressNode];
     if (addressInfo)
     {
+      // dump("address: " + addressInfo.emailAddress + "\n");
       var url = "mailto:" + addressInfo.emailAddress;
       messenger.OpenURL(url);
     }
@@ -234,13 +235,14 @@ function AddAttachmentToMenu(name, oncommand)
     if ( item ) 
     { 
       // popup.removeAttribute('menugenerated');
-      item.setAttribute('value', name); 
-      item.setAttribute('oncommand', oncommand); 
+
       var child = popup.childNodes[popup.childNodes.length - 2]; 
       
       var bigMenu = document.getElementById('attachmentMenu');
 
       popup.insertBefore(item, child); 
+      item.setAttribute('value', name); 
+      item.setAttribute('oncommand', oncommand); 
     } 
 
     var button = document.getElementById("attachmentButton");
@@ -376,10 +378,7 @@ function InsertEmailAddressUnderEnclosingBox(parentBox, parentDiv, emailAddress,
     var item = document.createElement("titledbutton");
     if ( item && parentDiv) 
     { 
-      item.setAttribute("class", "emailDisplayButton");
-      item.setAttribute("popup", "emailAddressPopup");
-      item.setAttribute("value", fullAddress);     
-     
+   
       if (parentDiv.childNodes.length)
       {
         var child = parentDiv.childNodes[parentDiv.childNodes.length - 1]; 
@@ -388,7 +387,11 @@ function InsertEmailAddressUnderEnclosingBox(parentBox, parentDiv, emailAddress,
         parentDiv.insertBefore(item, child);
       }
       else
-        parentDiv.appendChild(item);
+       parentDiv.appendChild(item);
+      
+      item.setAttribute("class", "emailDisplayButton");
+      item.setAttribute("popup", "emailAddressPopup");
+      item.setAttribute("value", fullAddress);   
 
       var addressInfo = new Object;
       addressInfo.emailAddress = emailAddress;
