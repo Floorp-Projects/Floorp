@@ -58,7 +58,7 @@ if(!(-e "$inStagePath"))
 # Make sure inDestPath exists
 if(!(-e "$inDistPath"))
 {
-  system("mkdir /s $inDestPath");
+  system("mkdir $inDestPath");
 }
 
 MakeConfigFile();
@@ -79,7 +79,7 @@ if(-e "$inDistPath\\setup")
 }
 else
 {
-  system("mkdir /s $inDistPath\\setup");
+  system("mkdir $inDistPath\\setup");
 }
 
 # Copy the setup files to the dist setup directory.
