@@ -420,7 +420,7 @@ nsChromeRegistry::ConvertChromeURL(nsIURI* aChromeURL)
     if (NS_FAILED(rv)) return rv;
 
     if (provider.Equals("skin") && enableSwitching) {
-      finalURL = "resource:/chrome/modern/";
+      finalURL = "resource:/chrome/skins/modern/";
     }
     else {
       finalURL = "resource:/chrome/";
