@@ -27,6 +27,7 @@ LIBRARY_NAME	= ucvlatin
 IS_COMPONENT	= 1
 
 CPPSRCS		= \
+                  nsUEscapeToUnicode.cpp \
                   nsAsciiToUnicode.cpp \
                   nsISO88591ToUnicode.cpp \
                   nsISO88592ToUnicode.cpp \
@@ -79,6 +80,7 @@ CPPSRCS		= \
                   nsUCS4LEToUnicode.cpp \
                   nsT61ToUnicode.cpp \
                   nsUserDefinedToUnicode.cpp \
+                  nsUnicodeToUEscape.cpp \
                   nsUnicodeToAscii.cpp \
                   nsUnicodeToISO88591.cpp \
                   nsUnicodeToISO88592.cpp \
