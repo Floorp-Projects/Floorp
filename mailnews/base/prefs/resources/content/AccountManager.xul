@@ -75,23 +75,25 @@
            <tabcontrol flex="100%" align="vertical">
              <deck id="mydeck" flex="100%">
                 <box id="am-main.xul" flex="100%">
-                     <html:iframe src="am-main.xul" name="am-main.xul"
+<!-- need to specific these src= URLs as absolute URLs
+     so that DOM security knows these have the same principal as this file -->
+                     <html:iframe src="chrome://messenger/content/am-main.xul" name="am-main.xul"
                           style="border: none" flex="100%"/>
                 </box>
                 <box id="am-server.xul" flex="100%">
-                     <html:iframe src="am-server.xul" name="am-server.xul"
+                     <html:iframe src="chrome://messenger/content/am-server.xul" name="am-server.xul"
                           style="border: none" flex="100%"/>
                 </box>
                 <box id="am-copies.xul" flex="100%">
-                     <html:iframe src="am-copies.xul" name="am-copies.xul"
+                     <html:iframe src="chrome://messenger/content/am-copies.xul" name="am-copies.xul"
                           style="border: none" flex="100%"/>
                 </box>
                 <box id="am-advanced.xul" flex="100%">
-                     <html:iframe src="am-advanced.xul" name="am-advanced.xul"
+                     <html:iframe src="chrome://messenger/content/am-advanced.xul" name="am-advanced.xul"
                           style="border: none" flex="100%"/>
                 </box>
                 <box id="am-smtp.xul" flex="100%">
-                     <html:iframe src="am-smtp.xul" name="am-smtp.xul"
+                     <html:iframe src="chrome://messenger/content/am-smtp.xul" name="am-smtp.xul"
                           style="border:none" flex="100%"/>
                 </box>
               </deck>
