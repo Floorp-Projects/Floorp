@@ -126,7 +126,7 @@ void nsCheckButton::Create(nsNativeWindow aParent,
 // Query interface implementation
 //
 //-------------------------------------------------------------------------
-nsresult nsCheckButton::QueryInterface(REFNSIID aIID, void** aInstancePtr)
+nsresult nsCheckButton::QueryObject(REFNSIID aIID, void** aInstancePtr)
 {
   static NS_DEFINE_IID(kICheckButtonIID,    NS_ICHECKBUTTON_IID);
 
@@ -135,7 +135,7 @@ nsresult nsCheckButton::QueryInterface(REFNSIID aIID, void** aInstancePtr)
     *aInstancePtr = (void**) &mAggWidget;
     return NS_OK;
   }
-  return nsWindow::QueryInterface(aIID, aInstancePtr);
+  return nsWindow::QueryObject(aIID, aInstancePtr);
 }
 
 //-------------------------------------------------------------------------

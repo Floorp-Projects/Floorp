@@ -132,7 +132,7 @@ nsScrollbar::~nsScrollbar()
 // Query interface implementation
 //
 //-------------------------------------------------------------------------
-nsresult nsScrollbar::QueryInterface(const nsIID& aIID, void** aInstancePtr)
+nsresult nsScrollbar::QueryObject(const nsIID& aIID, void** aInstancePtr)
 {
   static NS_DEFINE_IID(kInsScrollbarIID, NS_ISCROLLBAR_IID);
 
@@ -141,7 +141,7 @@ nsresult nsScrollbar::QueryInterface(const nsIID& aIID, void** aInstancePtr)
     *aInstancePtr = (void**) &mAggWidget;
     return NS_OK;
   }
-  return nsWindow::QueryInterface(aIID, aInstancePtr);
+  return nsWindow::QueryObject(aIID, aInstancePtr);
 
 }
 

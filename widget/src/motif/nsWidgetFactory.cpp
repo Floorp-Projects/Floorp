@@ -124,37 +124,37 @@ nsresult nsWidgetFactory::CreateInstance(nsISupports *aOuter,
     }
 
 
-    nsIWidget *inst = nsnull;
+    nsWindow *inst = nsnull;
     if (aIID.Equals(kCWindow)) {
-        inst = (nsIWidget*)new nsWindow(aOuter);
+        inst = new nsWindow(aOuter);
     }
     else if (aIID.Equals(kICheckButton)) {
-        inst = (nsIWidget*)new nsCheckButton(aOuter);
+        inst = new nsCheckButton(aOuter);
     }
     else if (aIID.Equals(kIButton)) {
-        inst = (nsIWidget*)new nsButton(aOuter);
+        inst = new nsButton(aOuter);
     }
     else if (mClassID.Equals(kCVertScrollbarCID)) {
-        inst = (nsIWidget*)new nsScrollbar(aOuter, PR_TRUE);
+        inst = new nsScrollbar(aOuter, PR_TRUE);
     }
     else if (mClassID.Equals(kCHorzScrollbarCID)) {
-        inst = (nsIWidget*)new nsScrollbar(aOuter, PR_FALSE);
+        inst = new nsScrollbar(aOuter, PR_FALSE);
     }
     else if (aIID.Equals(kIScrollbar)) {
-        inst = (nsIWidget*)nsnull;
+        inst = nsnull;
         fprintf(stderr, "------ NOT CreatingkIScrollbar Scrollbar\n");
     }
     else if (mClassID.Equals(kCTextWidgetCID)) {
-        inst = (nsIWidget*)new nsTextWidget(aOuter);
+        inst = new nsTextWidget(aOuter);
     }
     else if (aIID.Equals(kIFileWidget)) {
-        inst = (nsIWidget*)new nsFileWidget(aOuter);
+        inst = new nsFileWidget(aOuter);
     }
     else if (aIID.Equals(kIWidget)) {
-        inst = (nsIWidget*)new nsWindow(aOuter);
+        inst = new nsWindow(aOuter);
     }
     else if (mClassID.Equals(kCChild)) {
-        inst = (nsIWidget*)new ChildWindow(aOuter);
+        inst = new ChildWindow(aOuter);
     }
 
     else if (aIID.Equals(kIAppShellIID)) {
@@ -174,7 +174,7 @@ nsresult nsWidgetFactory::CreateInstance(nsISupports *aOuter,
     }  
 
 
-  nsresult res = inst->QueryInterface(aIID, aResult);
+  nsresult res = inst->QueryObject(aIID, aResult);
 
   if (res != NS_OK) {
     delete inst ;

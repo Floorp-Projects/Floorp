@@ -44,9 +44,75 @@
 
 static NS_DEFINE_IID(kIWidgetIID, NS_IWIDGET_IID);
 
-NS_IMPL_QUERY_INTERFACE(nsWindow, kIWidgetIID)
-NS_IMPL_ADDREF(nsWindow)
-NS_IMPL_RELEASE(nsWindow)
+//NS_IMPL_QUERY_INTERFACE(nsWindow, kIWidgetIID)
+//NS_IMPL_ADDREF(nsWindow)
+//NS_IMPL_RELEASE(nsWindow)
+
+/**
+ *
+ */
+nsrefcnt nsWindow::AddRefObject(void) { 
+  return ++mRefCnt; 
+}
+
+/**
+ *
+ */
+nsrefcnt nsWindow::ReleaseObject(void) { 
+  return (--mRefCnt) ? mRefCnt : (delete this, 0); 
+}
+
+
+/**
+ *
+ */
+nsresult nsWindow::QueryObject(const nsIID& aIID, void** aInstancePtr)
+{
+    if (NULL == aInstancePtr) {
+        return NS_ERROR_NULL_POINTER;
+    }
+
+    static NS_DEFINE_IID(kIWidgetIID, NS_IWIDGET_IID);
+    if (aIID.Equals(kIWidgetIID)) {
+        *aInstancePtr = (void*) ((nsISupports*)this);
+        AddRef();
+        return NS_OK;
+    }
+
+    static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
+    if (aIID.Equals(kISupportsIID)) {
+        *aInstancePtr = (void*) ((nsISupports*)&mInner);
+        AddRef();
+        return NS_OK;
+    }
+
+    return NS_NOINTERFACE;
+}
+
+/**
+ * nsISupports methods
+ */
+nsresult nsWindow::QueryInterface(const nsIID& aIID, void** aInstancePtr)
+{
+    return mOuter->QueryInterface(aIID, aInstancePtr);
+}
+
+/**
+ *
+ */
+nsrefcnt nsWindow::AddRef(void)
+{
+    return mOuter->AddRef();
+}
+
+/**
+ *
+ */
+nsrefcnt nsWindow::Release(void)
+{
+    return NS_RELEASE(mOuter);
+}
+
 
 void nsWindow::WidgetToScreen(const nsRect& aOldRect, nsRect& aNewRect)
 {
@@ -107,6 +173,10 @@ nsWindow::nsWindow(nsISupports *aOuter):
   mBounds.y = 0;
   mBounds.width = 0;
   mBounds.height = 0;
+  if (aOuter)
+    mOuter = aOuter;
+  else
+    mOuter = &mInner;
 }
 
 

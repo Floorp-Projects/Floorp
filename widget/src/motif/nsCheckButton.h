@@ -35,7 +35,7 @@ public:
   nsCheckButton(nsISupports *aOuter);
   virtual                 ~nsCheckButton();
 
-  NS_IMETHOD QueryInterface(REFNSIID aIID, void** aInstancePtr);
+  NS_IMETHOD QueryObject(REFNSIID aIID, void** aInstancePtr);
 
   void Create(nsIWidget *aParent,
               const nsRect &aRect,

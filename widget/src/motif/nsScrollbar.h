@@ -34,7 +34,7 @@ public:
   nsScrollbar(nsISupports *aOuter, PRBool aIsVertical);
   virtual ~nsScrollbar();
 
-  NS_IMETHOD QueryInterface(REFNSIID aIID, void** aInstancePtr);
+  NS_IMETHOD QueryObject(REFNSIID aIID, void** aInstancePtr);
 
   void Create(nsIWidget *aParent,
               const nsRect &aRect,
