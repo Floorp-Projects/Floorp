@@ -1710,7 +1710,7 @@ function InitListMenu()
 
   // Set "radio" check on one item, but...
   var menuItem = document.getElementById("menu_"+IDSuffix);
-  if (!menuitem)
+  if (!menuItem)
     return;
 
   menuItem.setAttribute("checked", "true");
