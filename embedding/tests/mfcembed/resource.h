@@ -70,10 +70,10 @@
 #define IDC_INCHES_RD                   1037
 #define IDC_MILLI_RD                    1038
 #define IDC_HDR_LEFT_TXT                1039
-#define IDC_MATCH_WHOLE_WORD            1040
 #define IDC_HDR_MID_TXT                 1040
-#define IDC_MATCH_CASE                  1041
+#define IDC_MATCH_WHOLE_WORD            0x0410
 #define IDC_HDR_RIGHT_TXT               1041
+#define IDC_MATCH_CASE                  0x0411
 #define IDC_WRAP_AROUND                 1042
 #define IDC_FTR_LEFT_TXT                1042
 #define IDC_TAB1                        1042
@@ -87,12 +87,12 @@
 #define IDC_HDR_LEFT_CMBX               1049
 #define IDC_HDR_CENTER_CMBX             1050
 #define IDC_HDR_RIGHT_CMBX              1051
-#define IDC_FIND_EDIT                   1052
 #define IDC_RADIO_BLANK_PAGE            1053
 #define IDC_RADIO_HOME_PAGE             1054
 #define IDC_EDIT_HOMEPAGE               1055
 #define IDC_PRT_PORTRAIT_RD             1056
 #define IDC_PRT_LANDSCAPE_RD            1057
+#define IDC_FIND_EDIT                   0x0480
 #define ID_NAV_BACK                     32773
 #define ID_NAV_FORWARD                  32774
 #define ID_NAV_HOME                     32775
@@ -134,7 +134,6 @@
 #define ID_INSERTLINK                   32811
 #define ID_EDITOR_UNDO                  32813
 #define ID_EDITOR_REDO                  32814
-
 
 // Next default values for new objects
 // 
