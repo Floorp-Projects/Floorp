@@ -550,7 +550,7 @@ NS_IMETHODIMP
 nsScriptSecurityManager::CheckLoadURI(nsIURI *aSourceURI, nsIURI *aTargetURI,
                                       PRUint32 aFlags)
 {
-    nsCOMPtr<nsIJARURI> jarURI;
+   nsCOMPtr<nsIJARURI> jarURI;
     nsCOMPtr<nsIURI> sourceUri(aSourceURI);
     while((jarURI = do_QueryInterface(sourceUri)))
         jarURI->GetJARFile(getter_AddRefs(sourceUri));
@@ -604,6 +604,7 @@ nsScriptSecurityManager::CheckLoadURI(nsIURI *aSourceURI, nsIURI *aTargetURI,
         { "ftp",             AllowProtocol },
         { "about",           AllowProtocol },
         { "mailto",          AllowProtocol },
+		{ "aim",          AllowProtocol },
         { "data",            AllowProtocol },
         { "keyword",         DenyProtocol  },
         { "resource",        DenyProtocol  },
