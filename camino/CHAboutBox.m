@@ -48,8 +48,8 @@ static CHAboutBox *sharedInstance = nil;
         float fieldHeight;
         float containerHeight;
 
-        if (![NSBundle loadNibNamed:@"CHAboutBox" owner:self]) {
-            NSLog( @"Failed to load CHAboutBox.nib" );
+        if (![NSBundle loadNibNamed:@"AboutBox" owner:self]) {
+            NSLog( @"Failed to load AboutBox.nib" );
             NSBeep();
             return;
         }
