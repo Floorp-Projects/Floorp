@@ -26,6 +26,8 @@
 #include "nsISound.h"
 #include "nsIStreamLoader.h"
 
+#include <MacTypes.h>
+
 class nsSound : public nsISound,
                 public nsIStreamLoaderObserver
 {
