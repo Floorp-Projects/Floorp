@@ -36,7 +36,7 @@ EXPORTS = \
 		$(NULL)
 
 SHARED_LIBRARY_LIBS = \
-		$(DIST)/lib/libnntp.a	\
+		$(DIST)/lib/libnntp_s.a	\
 		$(NULL)
 
 ifeq ($(OS_ARCH),HP-UX)

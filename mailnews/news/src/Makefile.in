@@ -23,7 +23,7 @@ srcdir		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MODULE=news
-LIBRARY_NAME=nntp
+LIBRARY_NAME=nntp_s
 
 EXPORTS = \
 	nsNNTPProtocol.h	\
