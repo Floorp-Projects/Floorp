@@ -12,8 +12,8 @@
 # server.  No locks are used by the mail processes, data is passed to
 # the tinderbox server in a maildir like format.
 
-# $Revision: 1.14 $ 
-# $Date: 2002/04/25 00:13:46 $ 
+# $Revision: 1.15 $ 
+# $Date: 2002/04/26 00:44:23 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/bin/processmail_builds,v $ 
 # $Name:  $ 
@@ -484,12 +484,12 @@ sub check_required_vars {
   ($TINDERBOX{'buildname'}) ||
     ($err_string .= "Variable: 'tinderbox: buildname:' not set.\n");
   
-  ($TINDERBOX{'administrator'}) ||
-    ($err_string .= "Variable: 'tinderbox: administrator:' not set.\n");
-  
-  ($TINDERBOX{'administrator'} =~ m/\@\w/) ||
-    ($err_string .= "Variable: 'tinderbox: administrator:' ".
-     "is not a valid email address.\n");
+#  ($TINDERBOX{'administrator'}) ||
+#    ($err_string .= "Variable: 'tinderbox: administrator:' not set.\n");
+#  
+#  ($TINDERBOX{'administrator'} =~ m/\@\w/) ||
+#    ($err_string .= "Variable: 'tinderbox: administrator:' ".
+#     "is not a valid email address.\n");
 
   ($TINDERBOX{'errorparser'}) ||
     ($err_string .= "Variable: 'tinderbox: errorparser:' not set.\n");
@@ -518,7 +518,9 @@ sub check_required_vars {
 
   $TINDERBOX{'timenow'} = main::extract_digits($TINDERBOX{'timenow'});
   if ($TINDERBOX{'timenow'} eq '') {
-    $err_string .= "Variable: 'timenow' not set.\n";
+      # fudge the timenow
+      $TINDERBOX{'timenow'} = time();
+#    $err_string .= "Variable: 'timenow' not set.\n";
   } else {
     
     if( main::is_time_in_sync($TINDERBOX{'timenow'}) ){
