@@ -133,7 +133,9 @@ NS_DECL_CLASSINFO(nsSOAPOperationBinding)
 NS_DECL_CLASSINFO(nsSOAPMessageBinding)
 NS_DECL_CLASSINFO(nsSOAPPartBinding)
 
+NS_DECL_CLASSINFO(WSPComplexTypeWrapper)
 NS_DECL_CLASSINFO(WSPCallContext)
+NS_DECL_CLASSINFO(WSPException)
 #endif
 
 class nsXMLExtrasNameset : public nsISupports
@@ -477,6 +479,25 @@ static nsModuleComponentInfo components[] = {
     nsnull, nsnull, nsnull, nsnull, 
     NS_CI_INTERFACE_GETTER_NAME(nsSOAPPartBinding), nsnull, 
     &NS_CLASSINFO_NAME(nsSOAPPartBinding), nsIClassInfo::DOM_OBJECT },
+  { "WebServiceProxy", NS_WEBSERVICEPROXY_CLASSID, 
+    NS_WEBSERVICEPROXY_CONTRACTID, WSPProxy::Create },
+  { "WebServiceComplexTypeWrapper", NS_WEBSERVICECOMPLEXTYPEWRAPPER_CLASSID,
+    NS_WEBSERVICECOMPLEXTYPEWRAPPER_CONTRACTID, 
+    WSPComplexTypeWrapper::Create, nsnull, nsnull, nsnull,
+    NS_CI_INTERFACE_GETTER_NAME(WSPComplexTypeWrapper), nsnull, 
+    &NS_CLASSINFO_NAME(WSPComplexTypeWrapper), nsIClassInfo::DOM_OBJECT },
+  { "WebServicePropertyBagWrapper", NS_WEBSERVICEPROPERTYBAGWRAPPER_CLASSID, 
+    NS_WEBSERVICEPROPERTYBAGWRAPPER_CONTRACTID, 
+    WSPPropertyBagWrapper::Create }, 
+  { "WebServiceCallContext", NS_WEBSERVICECALLCONTEXT_CLASSID, 
+    NS_WEBSERVICECALLCONTEXT_CONTRACTID, nsnull, nsnull, nsnull, nsnull, 
+    NS_CI_INTERFACE_GETTER_NAME(WSPCallContext), nsnull, 
+    &NS_CLASSINFO_NAME(WSPCallContext), nsIClassInfo::DOM_OBJECT },
+  { "WebServiceException", NS_WEBSERVICEEXCEPTION_CLASSID, 
+    NS_WEBSERVICEEXCEPTION_CONTRACTID, 
+    nsnull, nsnull, nsnull, nsnull, 
+    NS_CI_INTERFACE_GETTER_NAME(WSPException), nsnull, 
+    &NS_CLASSINFO_NAME(WSPException), nsIClassInfo::DOM_OBJECT },
 #endif
 };
 
