@@ -28,6 +28,8 @@
 #include "nsIXPCSecurityManager.h"
 #include "nsIServiceManager.h"
 #include "nsIComponentManager.h"
+#include "nsIEnumerator.h"
+#include "nsISupportsPrimitives.h"
 #include "jsapi.h"
 #include "xpclog.h"
 #include "nscore.h"
@@ -40,6 +42,7 @@
 
 #include "nsIJSContextStack.h"
 
+static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
 static NS_DEFINE_CID(kGenericFactoryCID, NS_GENERICFACTORY_CID);
 static NS_DEFINE_IID(kIAllocatorIID, NS_IALLOCATOR_IID);
 static NS_DEFINE_IID(kAllocatorCID, NS_ALLOCATOR_CID);
@@ -1257,6 +1260,103 @@ sm_test_done:
     NS_RELEASE(xpc);
     JS_DestroyRuntime(rt);
     JS_ShutDown();
+
+#if 0
+// a fun test...
+    {
+        nsresult rv;
+        NS_WITH_SERVICE(nsIComponentManager, cm, kComponentManagerCID, &rv);
+        if(NS_SUCCEEDED(rv))
+        {
+            int count = 0;
+            nsIEnumerator* cids;
+            rv = cm->EnumerateCLSIDs(&cids);
+            if(NS_SUCCEEDED(rv))
+            {
+                nsISupports* raw_holder;
+
+                for(rv = cids->First();
+                    NS_SUCCEEDED(rv) && !cids->IsDone();
+                    rv = cids->Next())
+                {
+                    rv = cids->CurrentItem(&raw_holder);
+                    if(NS_FAILED(rv))
+                        continue;
+                    nsISupportsID* holder;
+                    rv = raw_holder->QueryInterface(NS_GET_IID(nsISupportsID),
+                                                    (void**) &holder);
+                    NS_RELEASE(raw_holder);
+                    if(NS_SUCCEEDED(rv))
+                    {
+                        nsID* cid;
+                        rv = holder->GetData(&cid);
+                        if(NS_SUCCEEDED(rv))
+                        {
+                            char* str = cid->ToString();
+                            if(str)
+                            {
+                                char* progid;
+                                char* classname;
+                                rv = cm->CLSIDToProgID(cid, &classname, &progid);
+                                if(NS_SUCCEEDED(rv))
+                                {
+                                    printf("%s - %s - %s\n", str, progid, classname);
+                                    delete [] progid;
+                                    delete [] classname;
+                                }
+                                else
+                                    printf("%s\n", str);
+                                count++;
+                                delete [] str;                            
+                            }
+                            nsAllocator::Free(cid);
+                        }
+                        NS_RELEASE(holder);
+                    }
+                }
+                NS_RELEASE(cids);
+            }
+            printf("%d CIDs found\n", count);
+            count = 0;
+
+
+            nsIEnumerator* progids;
+            rv = cm->EnumerateProgIDs(&progids);
+            if(NS_SUCCEEDED(rv))
+            {
+                nsISupports* raw_holder;
+
+                for(rv = progids->First();
+                    NS_SUCCEEDED(rv) && !progids->IsDone();
+                    rv = progids->Next())
+                {
+                    rv = progids->CurrentItem(&raw_holder);
+                    if(NS_FAILED(rv))
+                        continue;
+                    nsISupportsString* holder;
+                    rv = raw_holder->QueryInterface(NS_GET_IID(nsISupportsString),
+                                                    (void**) &holder);
+                    NS_RELEASE(raw_holder);
+                    if(NS_SUCCEEDED(rv))
+                    {
+                        char* progid;
+                        rv = holder->GetData(&progid);
+                        if(NS_SUCCEEDED(rv))
+                        {
+                            printf("%s\n", progid);
+                            count++;
+                            nsAllocator::Free(progid);
+                        }
+                        NS_RELEASE(holder);
+                    }
+                }
+                NS_RELEASE(progids);
+            }
+            printf("%d Progids found\n", count);
+        }
+    }
+#endif
+
     return 0;
 }
 

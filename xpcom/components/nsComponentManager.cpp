@@ -23,6 +23,8 @@
 #include "nsSpecialSystemDirectory.h"
 #include "nsCRT.h"
 #include "nsIEnumerator.h"
+#include "nsHashtableEnumerator.h"
+#include "nsISupportsPrimitives.h"
 
 #include "plstr.h"
 #include "prlink.h"
@@ -140,7 +142,8 @@ private:
 
 
 nsComponentManagerImpl::nsComponentManagerImpl()
-    : mFactories(NULL), mProgIDs(NULL), mMon(NULL), mDllStore(NULL), mRegistry(NULL)
+    : mFactories(NULL), mProgIDs(NULL), mMon(NULL), mDllStore(NULL), 
+      mRegistry(NULL), mPrePopulationDone(PR_FALSE)
 {
     NS_INIT_REFCNT();
 }
@@ -868,6 +871,7 @@ nsresult nsComponentManagerImpl::PlatformPrePopulateRegistry()
         //  printf("Populating [ %s, %s ]\n", cidString, progidString);
     }
 
+    mPrePopulationDone = PR_TRUE;
     return NS_OK;
 }
 
@@ -2206,6 +2210,116 @@ nsComponentManagerImpl::SelfUnregisterDll(nsDll *dll)
     }
     dll->Unload();
     return res;
+}
+
+nsresult
+nsComponentManagerImpl::IsRegistered(const nsCID &aClass,
+                                     PRBool *aRegistered)
+{
+    if(!aRegistered)
+    {
+        NS_ASSERTION(0, "null ptr");
+        return NS_ERROR_NULL_POINTER;
+    }
+    *aRegistered = (nsnull != GetFactoryEntry(aClass, PR_TRUE));
+    return NS_OK;
+}
+
+static NS_IMETHODIMP
+ConvertFactoryEntryToCID(nsHashKey *key, void *data, void *convert_data,
+                         nsISupports **retval)
+{
+    nsComponentManagerImpl *compMgr = (nsComponentManagerImpl*) convert_data;
+    nsresult rv;
+
+    nsISupportsID* cidHolder;
+
+    if(NS_SUCCEEDED(rv = compMgr->CreateInstance(NS_SUPPORTS_ID_PROGID, nsnull, 
+                                                 NS_GET_IID(nsISupportsID),
+                                                 (void **)&cidHolder)))
+    {
+        nsFactoryEntry *fe = (nsFactoryEntry *) data;
+        cidHolder->SetData(&fe->cid);
+        *retval = cidHolder;
+    }
+    else
+        *retval = nsnull;
+
+    return rv;
+}
+
+static NS_IMETHODIMP
+ConvertProgIDKeyToString(nsHashKey *key, void *data, void *convert_data,
+                         nsISupports **retval)
+{
+    nsComponentManagerImpl *compMgr = (nsComponentManagerImpl*) convert_data;
+    nsresult rv;
+
+    nsISupportsString* strHolder;
+
+    if(NS_SUCCEEDED(rv = compMgr->CreateInstance(NS_SUPPORTS_STRING_PROGID, nsnull, 
+                                                 NS_GET_IID(nsISupportsString),
+                                                 (void **)&strHolder)))
+    {
+        nsStringKey *strKey = (nsStringKey *) key;
+        const nsString& str = strKey->GetString();
+        char* yetAnotherCopyOfTheString = str.ToNewCString();
+        if(yetAnotherCopyOfTheString)
+        {
+            strHolder->SetData(yetAnotherCopyOfTheString);
+            delete [] yetAnotherCopyOfTheString;
+        }
+        *retval = strHolder;
+    }
+    else
+        *retval = nsnull;
+
+    return rv;
+}
+
+nsresult
+nsComponentManagerImpl::EnumerateCLSIDs(nsIEnumerator** aEmumerator)
+{
+    if(!aEmumerator)
+    {
+        NS_ASSERTION(0, "null ptr");
+        return NS_ERROR_NULL_POINTER;
+    }
+    *aEmumerator = nsnull;
+
+    nsresult rv;
+    if(!mPrePopulationDone)
+    {
+        rv = PlatformPrePopulateRegistry();
+        if(NS_FAILED(rv))
+            return rv;
+    }
+
+    return NS_NewHashtableEnumerator(mFactories, ConvertFactoryEntryToCID,
+                                     this, aEmumerator);
+}
+
+nsresult
+nsComponentManagerImpl::EnumerateProgIDs(nsIEnumerator** aEmumerator)
+{
+    if(!aEmumerator)
+    {
+        NS_ASSERTION(0, "null ptr");
+        return NS_ERROR_NULL_POINTER;
+    }
+
+    *aEmumerator = nsnull;
+
+    nsresult rv;
+    if(!mPrePopulationDone)
+    {
+        rv = PlatformPrePopulateRegistry();
+        if(NS_FAILED(rv))
+            return rv;
+    }
+
+    return NS_NewHashtableEnumerator(mProgIDs, ConvertProgIDKeyToString,
+                                     this, aEmumerator);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

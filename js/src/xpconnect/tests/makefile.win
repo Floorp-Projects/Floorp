@@ -28,7 +28,9 @@ TESTCASES = \
             testxpc.js \
             simpletest.js \
             xpctest_echo.js \
-            xpctest_primitives.js
+            xpctest_ids.js \
+            xpctest_enum_create.js \
+            xpctest_primitives.js 
 
 LCFLAGS=-DUSE_NSREG -DWIN32_LEAN_AND_MEAN -DJS_THREADSAFE -DJSFILE
 

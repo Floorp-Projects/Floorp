@@ -209,6 +209,9 @@ public:
 
   nsHashKey* Clone() const;
 
+  // For when the owner of the hashtable wants to peek at the actual
+  // string in the key. No copy is made, so be careful.
+  const nsString& GetString() const;
 };
 
 

@@ -18,16 +18,12 @@
 
 #include "nsISupports.idl"
 
-// XXX this ought to be builtin!
-native nsID(nsID*);
-
-
 [scriptable, uuid(C86AE131-D101-11d2-9841-006008962422)]
 interface nsIJSID : nsISupports
 {
     readonly attribute string   name;
     readonly attribute string   number;
-    readonly attribute nsID     id;
+    readonly attribute nsIDPtr  id;
     readonly attribute boolean  valid;
 
     boolean equals(in nsIJSID other);

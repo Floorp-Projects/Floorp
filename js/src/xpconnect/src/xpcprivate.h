@@ -28,6 +28,7 @@
 #include "nsISupports.h"
 #include "nsIServiceManager.h"
 #include "nsIComponentManager.h"
+#include "nsISupportsPrimitives.h"
 #include "nsIGenericFactory.h"
 #include "nsIAllocator.h"
 #include "nsIXPConnect.h"
@@ -697,6 +698,41 @@ XPC_JSArgumentFormatter(JSContext *cx, const char *format,
                         JSBool fromJS, jsval **vpp, va_list *app);
 
 /***************************************************************************/
+// This is a hidden shared base to handle most of the shared implementation 
+// between nsJSIID and nsJSCID
+
+class nsJSIDDDetails
+{
+public:
+    nsresult GetName(char * *aName);
+    nsresult GetNumber(char * *aNumber);
+    nsresult GetId(nsID* *aId);
+    nsresult GetValid(PRBool *aValid);
+    nsresult equals(nsIJSID *other, PRBool *_retval);
+    nsresult init(const char *idString, PRBool *_retval);
+    nsresult toString(char **_retval);
+
+    PRBool initWithName(const nsID& id, const char *nameString);
+    PRBool setName(const char* name);
+    void   setNameToNoString()
+        {NS_ASSERTION(!mName, "name already set"); mName = gNoString;}        
+    PRBool nameIsSet() const {return nsnull != mName;}        
+    const nsID* getID() const {return &mID;}
+
+    nsJSIDDDetails();
+    ~nsJSIDDDetails();
+protected:
+
+    void reset();
+    const nsID& GetInvalidIID() const;
+
+protected:
+    static char gNoString[];
+    nsID    mID;
+    char*   mNumber;
+    char*   mName;
+};
+
 // nsJSIID
 
 class nsJSIID : public nsIJSIID
@@ -704,6 +740,8 @@ class nsJSIID : public nsIJSIID
 public:
     NS_DECL_ISUPPORTS
 
+    // we manually delagate these to nsJSIDDDetails
+
     /* readonly attribute string name; */
     NS_IMETHOD GetName(char * *aName);
 
@@ -725,22 +763,20 @@ public:
     /* string toString (); */
     NS_IMETHOD toString(char **_retval);
 
-    nsJSIID();
-    virtual ~nsJSIID();
+    // we implement the rest...
 
     static nsJSIID* NewID(const char* str);
 
-private:
-    void reset();
-    void setName(const char* name);
+    nsJSIID();
+    virtual ~nsJSIID();
 
 private:
-    nsID    mID;
-    char*   mNumber;
-    char*   mName;
+    void resolveName();
+
+private:
+    nsJSIDDDetails mDetails;
 };
 
-/***************************************************************************/
 // nsJSCID
 
 class nsJSCID : public nsIJSCID
@@ -748,6 +784,8 @@ class nsJSCID : public nsIJSCID
 public:
     NS_DECL_ISUPPORTS
 
+    // we manually delagate these to nsJSIDDDetails
+
     /* readonly attribute string name; */
     NS_IMETHOD GetName(char * *aName);
 
@@ -766,29 +804,29 @@ public:
     /* boolean init (in string idString); */
     NS_IMETHOD init(const char *idString, PRBool *_retval);
 
+    /* string toString (); */
+    NS_IMETHOD toString(char **_retval);
+
+    // we implement the rest...
+
     /* readonly attribute nsISupports createInstance; */
     NS_IMETHOD GetCreateInstance(nsISupports * *aCreateInstance);
 
     /* readonly attribute nsISupports getService; */
     NS_IMETHOD GetGetService(nsISupports * *aGetService);
 
-    /* string toString (); */
-    NS_IMETHOD toString(char **_retval);
+    static nsJSCID* NewID(const char* str);
 
     nsJSCID();
     virtual ~nsJSCID();
 
-    static nsJSCID* NewID(const char* str);
+private:
+    void resolveName();
 
 private:
-    void reset();
-    void setName(const char* name);
-
-private:
-    nsID    mID;
-    char*   mNumber;
-    char*   mName;
+    nsJSIDDDetails mDetails;
 };
+
 
 JSObject*
 xpc_NewIIDObject(JSContext *cx, const nsID& aID);
@@ -801,6 +839,7 @@ xpc_JSObjectToID(JSContext *cx, JSObject* obj);
 
 class nsXPCInterfaces;
 class nsXPCClasses;
+class nsXPCClassesByID;
 class ComponentsScriptable;
 
 class nsXPCComponents : public nsIXPCComponents
@@ -814,14 +853,18 @@ public:
     /* readonly attribute nsIXPCClasses classes; */
     NS_IMETHOD GetClasses(nsIXPCClasses * *aClasses);
 
+    /* readonly attribute nsIXPCClassesByID classes; */
+    NS_IMETHOD GetClassesByID(nsIXPCClassesByID * *aClassesByID);
+
     /* readonly attribute nsIJSStackFrameLocation stack; */
     NS_IMETHOD GetStack(nsIJSStackFrameLocation * *aStack);
 
     nsXPCComponents();
     virtual ~nsXPCComponents();
 private:
-    nsXPCInterfaces* mInterfaces;
-    nsXPCClasses*    mClasses;
+    nsXPCInterfaces*      mInterfaces;
+    nsXPCClasses*         mClasses;
+    nsXPCClassesByID*     mClassesByID;
     ComponentsScriptable* mScriptable;
 };
 
