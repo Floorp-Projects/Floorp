@@ -1270,6 +1270,7 @@ CSSLoaderImpl::LoadSheet(URLKey& aKey, SheetLoadData* aData)
             if (NS_SUCCEEDED(result) && equals)
             {
               mPendingAlternateSheets.RemoveElementAt(index);
+              NS_IF_RELEASE(loadingData->mNext);
               loadingData->mNext = data;
               loadingData = data;
             }
