@@ -123,6 +123,28 @@ static void readEvalPrint(FILE *in, World &world)
     stdOut << '\n';
 }
 
+/**
+ * Poor man's instruction tracing facility.
+ */
+class Tracer : public Context::Listener {
+    typedef InstructionStream::difference_type InstructionOffset;
+    void listen(Context* /*context*/, InstructionIterator pc,
+                JSValues* registers, ICodeModule* iCode)
+    {
+        InstructionOffset offset = (pc - iCode->its_iCode->begin());
+        printFormat(stdOut, "%04X: ", offset);
+        Instruction* i = *pc;
+        stdOut << *i;
+        if (i->count() > 0) {
+            stdOut << " [";
+            i->printOperands(stdOut, *registers);
+            stdOut << "]\n";
+        } else {
+            stdOut << '\n';
+        }
+    }
+};
+
 static void testICG(World &world)
 {
     //
@@ -252,6 +274,9 @@ static float64 testFunctionCall(World &world, float64 n)
 {
     JSObject glob;
     Context cx(world, &glob);
+    Tracer t;
+    cx.addListener(&t);
+    
     uint32 position = 0;
     //StringAtom& global = world.identifiers[widenCString("global")];
     StringAtom& sum = world.identifiers[widenCString("sum")];
@@ -297,28 +322,6 @@ static float64 testFunctionCall(World &world, float64 n)
         
     return result.f64;    
 }
-
-/**
- * Poor man's instruction tracing facility.
- */
-class Tracer : public Context::Listener {
-    typedef InstructionStream::difference_type InstructionOffset;
-    void listen(Context* /*context*/, InstructionIterator pc,
-                JSValues* registers, ICodeModule* iCode)
-    {
-        InstructionOffset offset = (pc - iCode->its_iCode->begin());
-        printFormat(stdOut, "%04X: ", offset);
-        Instruction* i = *pc;
-        stdOut << *i;
-        if (i->count() > 0) {
-            stdOut << " [";
-            i->printOperands(stdOut, *registers);
-            stdOut << "]\n";
-        } else {
-            stdOut << '\n';
-        }
-    }
-};
 
 static float64 testFactorial(World &world, float64 n)
 {
