@@ -73,7 +73,7 @@ class nsIDTD;
 class nsIDTDDebug;
 class CScanner;
 class nsIParserFilter;
-class fstream;
+#include <fstream.h>
 
 class nsParser : public nsIParser, public nsIStreamListener {
             
