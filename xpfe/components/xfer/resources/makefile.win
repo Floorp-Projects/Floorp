@@ -37,6 +37,7 @@ CHROME_SKIN=
 
 CHROME_L10N=\
     .\locale\en-US\downloadProgress.dtd \
+    .\locale\en-US\downloadProgress.properties \
     $(NULL)
 
 include <$(DEPTH)\config\rules.mak>

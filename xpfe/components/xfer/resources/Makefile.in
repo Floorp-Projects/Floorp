@@ -35,7 +35,10 @@ CHROME_CONTENT	= \
 		downloadProgress.js \
 		$(NULL)
 
-CHROME_L10N	= ./locale/en-US/downloadProgress.dtd
-
+CHROME_L10N	= \
+	./locale/en-US/downloadProgress.dtd \
+	./locale/en-US/downloadProgress.properties \
+	$(NULL)
+	
 include $(topsrcdir)/config/rules.mk
 
