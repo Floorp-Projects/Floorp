@@ -228,18 +228,31 @@ CHyperTreeFlexTable :: CellSelects ( const STableCell& inCell ) const
 // supposed to select anything. This is the case when the tree is in single-click mode because
 // we still want to respond to clicks even though the cell does not select.
 //
-// Instead of just saying we want the click, handle it, and then return that we don't want it.
-//
 Boolean
 CHyperTreeFlexTable :: CellWantsClick( const STableCell & inCell ) const
 {
-	if ( inCell.col == FindTitleColumnID() ) {	
-		CHyperTreeFlexTable* me = const_cast<CHyperTreeFlexTable*>(this);	// hack around const
-		me->OpenRow(inCell.row);
-	}
-	return false;
+	return true;
 
 } // CellWantsClick
+
+
+//
+// ClickCell
+//
+// If we're in single-click mode, do an open.
+//
+void
+CHyperTreeFlexTable :: ClickCell ( const STableCell & inCell, const SMouseDownEvent & inMouse )
+{
+	if ( inCell.col == FindTitleColumnID() &&	
+			URDFUtilities::PropertyValueBool(TopNode(), gNavCenter->useSingleClick, true) == true ) {
+		if ( ! ::WaitMouseMoved(inMouse.macEvent.where) )
+			OpenRow ( inCell.row );
+	}
+	else
+		CStandardFlexTable::ClickCell ( inCell, inMouse );
+
+} // ClickCell
 
 
 //
@@ -251,7 +264,7 @@ CHyperTreeFlexTable :: CellWantsClick( const STableCell & inCell ) const
 //
 void 
 CHyperTreeFlexTable :: DoHiliteRgn ( RgnHandle inHiliteRgn ) const
-{	
+{
 	::InvertRgn ( inHiliteRgn );
 		
 } // DoHiliteRgn

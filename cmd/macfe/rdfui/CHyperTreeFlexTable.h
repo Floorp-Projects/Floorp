@@ -97,6 +97,7 @@ protected:
 	virtual Boolean	CellHasDropFlag(const STableCell& inCell, Boolean& outIsExpanded) const;
 	virtual Boolean TableSupportsNaturalOrderSort ( ) const ;
 	virtual Boolean CellWantsClick( const STableCell & /*inCell*/ ) const ;
+	virtual void ClickCell ( const STableCell & inCell, const SMouseDownEvent & inMouse ) ;
 		
 		// Stuff related to hiliting
 	virtual TableIndexT	GetHiliteColumn() const { return 1; } ;
