@@ -782,6 +782,7 @@ nsRangeList::HandleKeyEvent(nsGUIEvent *aGuiEvent)
     offsetused = mDomSelections[SELECTION_NORMAL]->FetchFocusOffset();
     weakNodeUsed = mDomSelections[SELECTION_NORMAL]->FetchFocusNode();
     nsIFrame *frame;
+    nsIFrame *resultFrame;
     nsCOMPtr<nsIContent> content;
     result = mDomSelections[SELECTION_NORMAL]->GetPrimaryFrameForFocusNode(&frame);
     if (NS_FAILED(result))
@@ -790,7 +791,7 @@ nsRangeList::HandleKeyEvent(nsGUIEvent *aGuiEvent)
       case nsIDOMUIEvent::VK_LEFT  : 
         {
         //we need to look for the previous PAINTED location to move the cursor to.
-          if (NS_SUCCEEDED(result) && NS_SUCCEEDED(frame->PeekOffset(mTracker, desiredX, amount, eDirPrevious, offsetused, getter_AddRefs(content), &offsetused, PR_FALSE)) && content){
+          if (NS_SUCCEEDED(result) && NS_SUCCEEDED(frame->PeekOffset(mTracker, desiredX, amount, eDirPrevious, offsetused, getter_AddRefs(content), &offsetused, &resultFrame, PR_FALSE)) && content){
             result = TakeFocus(content, offsetused, offsetused, keyEvent->isShift, PR_FALSE);
           }
           result = mDomSelections[SELECTION_NORMAL]->ScrollIntoView();
@@ -799,7 +800,7 @@ nsRangeList::HandleKeyEvent(nsGUIEvent *aGuiEvent)
       case nsIDOMUIEvent::VK_RIGHT : 
         {
         //we need to look for the previous PAINTED location to move the cursor to.
-          if (NS_SUCCEEDED(result) && NS_SUCCEEDED(frame->PeekOffset(mTracker, desiredX, amount, eDirNext, offsetused, getter_AddRefs(content), &offsetused, PR_FALSE)) && content){
+          if (NS_SUCCEEDED(result) && NS_SUCCEEDED(frame->PeekOffset(mTracker, desiredX, amount, eDirNext, offsetused, getter_AddRefs(content), &offsetused, &resultFrame, PR_FALSE)) && content){
             result = TakeFocus(content, offsetused, offsetused, keyEvent->isShift, PR_FALSE);
           }
           result = mDomSelections[SELECTION_NORMAL]->ScrollIntoView();
@@ -812,12 +813,12 @@ nsRangeList::HandleKeyEvent(nsGUIEvent *aGuiEvent)
           amount = eSelectLine;
           if (nsIDOMUIEvent::VK_UP == keyEvent->keyCode)
           {
-            if (NS_SUCCEEDED(result) && NS_SUCCEEDED(frame->PeekOffset(mTracker, desiredX, amount, eDirPrevious, offsetused, getter_AddRefs(content), &offsetused, PR_FALSE)) && content){
+            if (NS_SUCCEEDED(result) && NS_SUCCEEDED(frame->PeekOffset(mTracker, desiredX, amount, eDirPrevious, offsetused, getter_AddRefs(content), &offsetused, &resultFrame, PR_FALSE)) && content){
               result = TakeFocus(content, offsetused, offsetused, keyEvent->isShift, PR_FALSE);
             }
           }
           else
-            if (NS_SUCCEEDED(result) && NS_SUCCEEDED(frame->PeekOffset(mTracker, desiredX, amount, eDirNext, offsetused, getter_AddRefs(content), &offsetused, PR_FALSE)) && content){
+            if (NS_SUCCEEDED(result) && NS_SUCCEEDED(frame->PeekOffset(mTracker, desiredX, amount, eDirNext, offsetused, getter_AddRefs(content), &offsetused, &resultFrame, PR_FALSE)) && content){
               result = TakeFocus(content, offsetused, offsetused, keyEvent->isShift, PR_FALSE);
             }
           result = mDomSelections[SELECTION_NORMAL]->ScrollIntoView();
@@ -1183,10 +1184,10 @@ nsDOMSelection::~nsDOMSelection()
   PRUint32 cnt = 0;
   nsresult rv = mRangeArray->Count(&cnt);
   NS_ASSERTION(NS_SUCCEEDED(rv), "Count failed");
-  PRUint32 j;
-  for (j=cnt-1;j >= 0; j--)
+  PRInt32 j;
+  for (j=0; j<cnt; j++)
 	{
-	  mRangeArray->RemoveElementAt(j);
+	  mRangeArray->RemoveElementAt(0);
 	}
   setAnchorFocusRange(-1);
 }

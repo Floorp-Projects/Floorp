@@ -636,10 +636,11 @@ public:
    *  @param aStartOffset start offset to start the peek. 0 == beginning -1 = end
    *  @param aResultContent content that actually is the next/previous
    *  @param aResultOffset offset for result content
+   *  @param aResultFrame resulting frame for peeking
    *  @param aEatingWS boolean to tell us the state of our search for Next/Prev
    */
   NS_IMETHOD  PeekOffset(nsIFocusTracker *aTracker, PRInt32 aDesiredX, nsSelectionAmount aAmount, nsDirection aDirection,  PRInt32 aStartOffset, 
-                         nsIContent **aResultContent, PRInt32 *aResultOffset, PRBool aEatingWS) = 0;
+                         nsIContent **aResultContent, PRInt32 *aResultOffset, nsIFrame **aResultFrame, PRBool aEatingWS) = 0;
 
   /**
    * See if tree verification is enabled. To enable tree verification add

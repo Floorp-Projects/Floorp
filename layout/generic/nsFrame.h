@@ -179,14 +179,15 @@ public:
                                  PRInt32*               outFrameContentOffset,
                                  nsIFrame*              *outChildFrame);
 
-  NS_IMETHOD  GetNextPrevLineFromeBlockFrame(nsIFocusTracker *aTracker,
+  static nsresult  GetNextPrevLineFromeBlockFrame(nsIFocusTracker *aTracker,
                                         nsDirection aDirection, 
                                         nsIFrame *aBlockFrame, 
                                         PRInt32 aLineStart, 
                                         nscoord aDesiredX,
                                         nsIContent **aResultContent, 
                                         PRInt32 *aContentOffset,
-                                        PRInt8 aOutSideLimit
+                                        PRInt8 aOutSideLimit,
+                                        nsIFrame **aResultFrame = nsnull
                                         );
 
   NS_IMETHOD  GetFrameState(nsFrameState* aResult);
@@ -232,6 +233,7 @@ public:
                         PRInt32 aStartOffset,
                         nsIContent **aResultContent, 
                         PRInt32 *aContentOffset,
+                        nsIFrame **aResultFrame,
                         PRBool aEatingWS) ;
 
   NS_IMETHOD  GetOffsets(PRInt32 &aStart, PRInt32 &aEnd) const;

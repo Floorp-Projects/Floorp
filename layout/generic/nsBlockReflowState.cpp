@@ -47,6 +47,8 @@
 
 // XXX for IsEmptyLine
 #include "nsTextFragment.h"
+#include "nsIFocusTracker.h"
+#include "nsIFrameSelection.h"
 
 // XXX HTML:P's that are empty yet have style indicating they should
 // clear floaters - we need to ignore the clear behavior.
@@ -5277,11 +5279,127 @@ nsBlockFrame::PaintChildren(nsIPresContext& aPresContext,
   }
 }
 
+
 NS_IMETHODIMP
 nsBlockFrame::HandleEvent(nsIPresContext& aPresContext, 
                           nsGUIEvent*     aEvent,
                           nsEventStatus&  aEventStatus)
 {
+  if (aEvent->message == NS_MOUSE_MOVE) {
+    nsCOMPtr<nsIPresShell> shell;
+    nsresult rv = aPresContext.GetShell(getter_AddRefs(shell));
+    if (NS_SUCCEEDED(rv)){
+      nsCOMPtr<nsIFrameSelection> frameselection;
+      if (NS_SUCCEEDED(shell->GetFrameSelection(getter_AddRefs(frameselection))) && frameselection){
+          PRBool mouseDown = PR_FALSE;
+          if (NS_FAILED(frameselection->GetMouseDownState(&mouseDown)) || !mouseDown) 
+            return NS_OK;//do not handle
+      }
+    }
+  }
+
+  if (aEvent->message == NS_MOUSE_LEFT_BUTTON_DOWN || aEvent->message == NS_MOUSE_MOVE ||
+    aEvent->message == NS_MOUSE_LEFT_DOUBLECLICK ) {
+    nsresult result;
+    nsIFrame *resultFrame = nsnull;
+/*    result = GetFrameForPoint(aEvent->point, &resultFrame);
+    if (resultFrame  && NS_SUCCEEDED(result))
+    {
+      return resultFrame->HandleEvent(aPresContext, aEvent, aEventStatus);
+    }
+    */
+    nsCOMPtr<nsILineIterator> it; 
+    result = QueryInterface(nsILineIterator::GetIID(),getter_AddRefs(it));
+    if (NS_FAILED(result))
+      return NS_OK;//do not handle
+    PRInt32 countLines;
+    result = it->GetNumLines(&countLines);
+    if (NS_FAILED(result))
+      return NS_OK;//do not handle
+    PRInt32 i;
+    PRInt32 lineFrameCount;
+    nsIFrame *firstFrame;
+    nsRect  rect;
+    PRInt32 closestLine = 0;
+    PRInt32 closestDistance = 999999; //some HUGE number that will always fail first comparison
+    for (i = 0; i< countLines;i++)
+    {
+      result = it->GetLine(i, &firstFrame, &lineFrameCount,rect);
+      if (NS_FAILED(result))
+        continue;//do not handle
+      if (rect.Contains(aEvent->point.x, aEvent->point.y))
+      {
+        closestLine = i;
+        break;
+      }
+      else
+      {
+        PRInt32 distance = PR_MIN(abs(rect.y - aEvent->point.y),abs((rect.y + rect.height) - aEvent->point.y));
+        if (distance < closestDistance)
+        {
+          closestDistance = distance;
+          closestLine = i;
+        }
+        else if (distance > closestDistance)
+          break;//done
+      }
+    }
+    nsCOMPtr<nsIPresShell> shell;
+    aPresContext.GetShell(getter_AddRefs(shell));
+    if (!shell)
+      return NS_OK;
+    nsCOMPtr<nsIFocusTracker> tracker;
+    result = shell->QueryInterface(nsIFocusTracker::GetIID(),getter_AddRefs(tracker));
+    nsIContent *content;
+    PRInt32 contentOffset;
+    nsIFrame *returnFrame;
+    closestDistance = 999999;
+    PRInt32 distance;
+    nsPoint offsetPoint; //used for offset of result frame
+    nsIView * view; //used for call of get offset from view
+    result = nsFrame::GetNextPrevLineFromeBlockFrame(tracker,
+                                        eDirNext, 
+                                        this, 
+                                        closestLine-1, 
+                                        aEvent->point.x,
+                                        &content, 
+                                        &contentOffset,
+                                        0,
+                                        &returnFrame
+                                        );
+
+    if (NS_SUCCEEDED(result) && returnFrame){
+      returnFrame->GetOffsetFromView(offsetPoint, &view);
+      returnFrame->GetRect(rect);
+      rect.x = offsetPoint.x;
+      rect.y = offsetPoint.y;
+      closestDistance = PR_MIN(abs(rect.y - aEvent->point.y),abs((rect.y + rect.height) - aEvent->point.y));
+      resultFrame = returnFrame;
+    }
+    result = nsFrame::GetNextPrevLineFromeBlockFrame(tracker,
+                                        eDirPrevious, 
+                                        this, 
+                                        closestLine, 
+                                        aEvent->point.x,
+                                        &content, 
+                                        &contentOffset,
+                                        0,
+                                        &returnFrame
+                                        );
+    if (NS_SUCCEEDED(result) && returnFrame){
+      returnFrame->GetOffsetFromView(offsetPoint, &view);
+      returnFrame->GetRect(rect);
+      rect.x = offsetPoint.x;
+      rect.y = offsetPoint.y;
+      distance = PR_MIN(abs(rect.y - aEvent->point.y),abs((rect.y + rect.height) - aEvent->point.y));
+      if (distance < closestDistance)
+        resultFrame = returnFrame;
+    }
+    if (resultFrame)
+      return resultFrame->HandleEvent(aPresContext, aEvent, aEventStatus);
+    else
+      return NS_OK; //just stop it
+  }
   return NS_OK;
 }
 
