@@ -22,6 +22,7 @@
  * Attachment Command-specific code. This stuff should be called by the widgets
  */
 
+var msgWindowProgID		   = "component://netscape/messenger/msgwindow";
 var messenger = Components.classes['component://netscape/messenger'].createInstance();
 messenger = messenger.QueryInterface(Components.interfaces.nsIMessenger);
 //Create message window object
