@@ -1780,24 +1780,9 @@ NS_IMETHODIMP nsPluginHostImpl::InstantiateFullPagePlugin(const char *aMimeType,
 {
   nsresult  rv;
   nsIURI    *url;
-  nsCOMPtr<nsIPluginTagInfo2> pti2 = nsnull;
   nsPluginTagType tagType;
   PRBool isJavaEnabled = PR_TRUE;
 
-  rv = aOwner->QueryInterface(kIPluginTagInfo2IID, getter_AddRefs(pti2));
-  
-  if(rv != NS_OK) {
-    return rv;
-  }
-  
-  rv = pti2->GetTagType(&tagType);
-  
-  // PENDING(edburns): do we need to check for nsPluginTagType_Object?
-  if((rv != NS_OK) || !((tagType == nsPluginTagType_Embed) ||
-                        (tagType == nsPluginTagType_Applet))) {
-    return rv;
-  }
-  
 #ifdef NS_DEBUG
   printf("InstantiateFullPagePlugin for %s\n",aMimeType);
 #endif
