@@ -4,7 +4,7 @@
  CREATOR: eric 02 June 2000
 
 
- $Id: icaltime.h,v 1.24 2003/02/17 14:23:17 acampi Exp $
+ $Id: icaltime.h,v 1.25 2005/01/24 13:06:10 acampi Exp $
  $Locker:  $
 
  (C) COPYRIGHT 2000, Eric Busboom, http://www.softwarestudio.org
@@ -203,6 +203,10 @@ int icaltime_day_of_week(const struct icaltimetype t);
 /** Return the day of the year for the Sunday of the week that the
    given time is within. */
 int icaltime_start_doy_of_week(const struct icaltimetype t);
+
+/** Return the day of the year for the first day of the week that the
+   given time is within. */
+int icaltime_start_doy_in_week(const struct icaltimetype t, int fdow);
 
 /** Return the day of the year for the first day of the week that the
    given time is within. */

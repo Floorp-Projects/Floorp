@@ -3,7 +3,7 @@
   FILE: icalvalue.c
   CREATOR: eric 02 May 1999
   
-  $Id: icalderivedvalue.c.in,v 1.11 2002/06/27 00:22:09 acampi Exp $
+  $Id: icalderivedvalue.c.in,v 1.13 2005/01/24 11:48:01 acampi Exp $
 
 
  (C) COPYRIGHT 2000, Eric Busboom, http://www.softwarestudio.org
@@ -39,13 +39,8 @@
 #include "icalvalueimpl.h"
 
 #include <stdlib.h> /* for malloc */
-#include <stdio.h> /* for sprintf */
 #include <string.h> /* For memset, others */
-#include <stddef.h> /* For offsetof() macro */
 #include <errno.h>
-#include <time.h> /* for mktime */
-#include <stdlib.h> /* for atoi and atof */
-#include <limits.h> /* for SHRT_MAX */         
 
 struct icalvalue_impl*  icalvalue_new_impl(icalvalue_kind kind);
 

@@ -4,7 +4,7 @@
   FILE: icalvalue.c
   CREATOR: eric 02 May 1999
   
-  $Id: icalvalue.c,v 1.37 2003/01/16 01:14:21 acampi Exp $
+  $Id: icalvalue.c,v 1.40 2005/01/24 13:11:31 acampi Exp $
 
 
  (C) COPYRIGHT 2000, Eric Busboom, http://www.softwarestudio.org
@@ -39,7 +39,7 @@
 #include "icalvalueimpl.h"
 
 #include <stdlib.h> /* for malloc */
-#include <stdio.h> /* for sprintf */
+#include <stdio.h> /* for snprintf */
 #include <string.h> /* For memset, others */
 #include <stddef.h> /* For offsetof() macro */
 #include <errno.h>
@@ -321,7 +321,7 @@ icalvalue* icalvalue_new_from_string_with_error(icalvalue_kind kind,const char* 
             
 	    if (error != 0){
 		char temp[TMP_BUF_SIZE];
-		sprintf(temp,"%s Values are not implemented",
+		snprintf(temp,sizeof(temp),"%s Values are not implemented",
                         icalvalue_kind_to_string(kind)); 
 		*error = icalproperty_vanew_xlicerror( 
                                    temp, 
@@ -416,10 +416,8 @@ icalvalue* icalvalue_new_from_string_with_error(icalvalue_kind kind,const char* 
 	    /* HACK */
             
 	    if (error != 0){
-		char temp[TMP_BUF_SIZE];
-		sprintf(temp,"GEO Values are not implemented"); 
 		*error = icalproperty_vanew_xlicerror( 
-		    temp, 
+		    "GEO Values are not implemented",
 		    icalparameter_new_xlicerrortype( 
 			ICAL_XLICERRORTYPE_VALUEPARSEERROR), 
 		    0); 
@@ -646,8 +644,8 @@ static char* icalvalue_binary_as_ical_string(const icalvalue* value) {
 
     data = icalvalue_get_binary(value);
 
-    str = (char*)icalmemory_tmp_buffer(60);
-    sprintf(str,"icalvalue_binary_as_ical_string is not implemented yet");
+    str = icalmemory_tmp_copy(
+            "icalvalue_binary_as_ical_string is not implemented yet");
 
     return str;
 }
@@ -689,9 +687,9 @@ static char* icalvalue_utcoffset_as_ical_string(const icalvalue* value)
     s = (data - (h*3600) - (m*60));
 
     if (s > 0)
-	sprintf(str,"%c%02d%02d%02d",sign,abs(h),abs(m),abs(s));
+	snprintf(str,9,"%c%02d%02d%02d",sign,abs(h),abs(m),abs(s));
     else
-	sprintf(str,"%c%02d%02d",sign,abs(h),abs(m));
+	snprintf(str,9,"%c%02d%02d",sign,abs(h),abs(m));
 
     return str;
 }
@@ -831,9 +829,9 @@ void print_time_to_string(char* str, const struct icaltimetype *data)
     char temp[20];
 
     if (icaltime_is_utc(*data)){
-	sprintf(temp,"%02d%02d%02dZ",data->hour,data->minute,data->second);
+	snprintf(temp,sizeof(temp),"%02d%02d%02dZ",data->hour,data->minute,data->second);
     } else {
-	sprintf(temp,"%02d%02d%02d",data->hour,data->minute,data->second);
+	snprintf(temp,sizeof(temp),"%02d%02d%02d",data->hour,data->minute,data->second);
     }   
 
     strcat(str,temp);
@@ -844,7 +842,7 @@ void print_date_to_string(char* str,  const struct icaltimetype *data)
 {
     char temp[20];
 
-    sprintf(temp,"%04d%02d%02d",data->year,data->month,data->day);
+    snprintf(temp,sizeof(temp),"%04d%02d%02d",data->year,data->month,data->day);
 
     strcat(str,temp);
 }
@@ -898,6 +896,8 @@ static const char* icalvalue_datetime_as_ical_string(const icalvalue* value) {
 
 }
 
+#define MAX_FLOAT_DIGITS 40
+    
 static char* icalvalue_float_as_ical_string(const icalvalue* value) {
 
     float data;
@@ -905,13 +905,15 @@ static char* icalvalue_float_as_ical_string(const icalvalue* value) {
     icalerror_check_arg_rz( (value!=0),"value");
     data = icalvalue_get_float(value);
 
-    str = (char*)icalmemory_tmp_buffer(15);
+    str = (char*)icalmemory_tmp_buffer(MAX_FLOAT_DIGITS);
 
-    sprintf(str,"%f",data);
+    snprintf(str,MAX_FLOAT_DIGITS,"%f",data);
 
     return str;
 }
 
+#define MAX_GEO_DIGITS 40
+    
 static char* icalvalue_geo_as_ical_string(const icalvalue* value) {
 
     struct icalgeotype data;
@@ -920,9 +922,9 @@ static char* icalvalue_geo_as_ical_string(const icalvalue* value) {
 
     data = icalvalue_get_geo(value);
 
-    str = (char*)icalmemory_tmp_buffer(25);
+    str = (char*)icalmemory_tmp_buffer(MAX_GEO_DIGITS);
 
-    sprintf(str,"%f;%f",data.lat,data.lon);
+    snprintf(str,MAX_GEO_DIGITS,"%f;%f",data.lat,data.lon);
 
     return str;
 }
