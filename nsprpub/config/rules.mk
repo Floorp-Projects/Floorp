@@ -81,7 +81,7 @@ endif
 #
 
 ifdef LIBRARY_NAME
-ifeq (,$(filter-out WINNT OS2,$(OS_ARCH)))
+ifeq ($(OS_ARCH), WINNT)
 
 #
 # Win95, Win16, and OS/2 require library names conforming to the 8.3 rule.
@@ -112,7 +112,7 @@ endif
 endif
 
 ifndef TARGETS
-ifeq (,$(filter-out WINNT OS2,$(OS_ARCH)))
+ifeq ($(OS_ARCH), WINNT)
 TARGETS		= $(LIBRARY) $(SHARED_LIBRARY) $(IMPORT_LIBRARY)
 else
 TARGETS		= $(LIBRARY) $(SHARED_LIBRARY)
@@ -146,7 +146,9 @@ endif
 
 ifeq ($(OS_ARCH), WINNT)
 ifneq ($(OS_TARGET), WIN16)
+ifneq ($(OS_TARGET), OS2)
 OBJS += $(RES)
+endif
 endif
 endif
 
@@ -182,7 +184,7 @@ install::
 	+$(LOOP_OVER_DIRS)
 
 clean::
-	rm -rf $(OBJS) so_locations $(NOSUCHFILE) $(GARBAGE)
+	rm -rf $(OBJS) so_locations $(NOSUCHFILE)
 	+$(LOOP_OVER_DIRS)
 
 clobber::
@@ -257,17 +259,13 @@ $(PROGRAM): $(OBJS)
 ifeq ($(OS_ARCH),WINNT)
 	$(CC) $(OBJS) -Fe$@ -link $(LDFLAGS) $(OS_LIBS) $(EXTRA_LIBS)
 else
-ifeq ($(MOZ_OS2_TOOLS),VACPP)
-	$(CC) $(OBJS) -Fe$@ $(LDFLAGS) $(OS_LIBS) $(EXTRA_LIBS)
-else
 	$(CC) -o $@ $(CFLAGS) $(OBJS) $(LDFLAGS)
-endif
 endif
 
 $(LIBRARY): $(OBJS)
 	@$(MAKE_OBJDIR)
 	rm -f $@
-ifneq ($(MOZ_OS2_TOOLS),VACPP)
+ifdef XP_OS2_VACPP
 	$(AR) $(subst /,\\,$(OBJS)) $(AR_EXTRA_ARGS)
 else
 ifdef USE_AUTOCONF
@@ -321,19 +319,20 @@ ifeq ($(OS_TARGET), WIN16)
 	$(LINK) @w16link.
 	rm w16link
 else	# WIN16
-	$(LINK_DLL) -MAP $(DLLBASE) $(OS_LIBS) $(EXTRA_LIBS) $(OBJS)
-endif # WINNT
-else
-ifeq ($(OS_ARCH),OS2)
+ifeq ($(OS_TARGET), OS2)
 # append ( >> ) doesn't seem to be working under OS/2 gmake. Run through OS/2 shell instead.	
 	@cmd /C "echo LIBRARY $(notdir $(basename $(SHARED_LIBRARY))) INITINSTANCE TERMINSTANCE >$@.def"
 	@cmd /C "echo PROTMODE >>$@.def"
 	@cmd /C "echo CODE    LOADONCALL MOVEABLE DISCARDABLE >>$@.def"
 	@cmd /C "echo DATA    PRELOAD MOVEABLE MULTIPLE NONSHARED >>$@.def"	
 	@cmd /C "echo EXPORTS >>$@.def"
-	@cmd /C "$(FILTER) $(LIBRARY) | grep -v _DLL_InitTerm >>$@.def"
+	@cmd /C "$(FILTER) $(LIBRARY) >> $@.def"
 	$(LINK_DLL) $(DLLBASE) $(OBJS) $(OS_LIBS) $(EXTRA_LIBS) $@.def
-else	# OS2
+else
+	$(LINK_DLL) -MAP $(DLLBASE) $(OS_LIBS) $(EXTRA_LIBS) $(OBJS)
+endif	# OS2
+endif	# WIN16
+else	# WINNT
 ifeq ($(OS_TARGET), OpenVMS)
 	@if test ! -f $(OBJDIR)/VMSuni.opt; then \
 	    echo "Creating universal symbol option file $(OBJDIR)/VMSuni.opt";\
@@ -345,13 +344,11 @@ ifeq ($(OS_TARGET), OpenVMS)
 else	# OpenVMS
 	$(MKSHLIB) -o $@ $(OBJS) $(EXTRA_LIBS) $(OS_LIBS)
 endif	# OpenVMS
-endif   # OS2
 endif	# WINNT
 endif	# AIX 4.1
 endif   # USE_AUTOCONF
 
-
-ifeq (,$(filter-out WINNT OS2,$(OS_ARCH)))
+ifeq ($(OS_ARCH), WINNT)
 $(RES): $(RESNAME)
 	@$(MAKE_OBJDIR)
 ifeq ($(OS_TARGET),OS2)
@@ -366,13 +363,13 @@ endif
 $(OBJDIR)/%.$(OBJ_SUFFIX): %.cpp
 	@$(MAKE_OBJDIR)
 ifeq ($(OS_ARCH), WINNT)
+ifndef XP_OS2_EMX
 	$(CCC) -Fo$@ -c $(CCCFLAGS) $<
 else
-ifeq ($(MOZ_OS2_TOOLS),VACPP)
-	$(CCC) -Fo$@ -c $(CCCFLAGS) $<
+	$(CCC) -o $@ -c $(CCCFLAGS) $< 
+endif
 else
 	$(CCC) -o $@ -c $(CCCFLAGS) $<
-endif
 endif
 
 WCCFLAGS1 = $(subst /,\\,$(CFLAGS))
@@ -387,16 +384,15 @@ ifeq ($(OS_TARGET), WIN16)
 	$(CC) -zq -fo$(OBJDIR)\\$*.$(OBJ_SUFFIX)  @w16wccf $*.c
 	rm w16wccf
 else
-	$(CC) -Fo$@ -c $(CFLAGS) $<
-endif
-else
-ifeq ($(MOZ_OS2_TOOLS),VACPP)
+ifndef XP_OS2_EMX
 	$(CC) -Fo$@ -c $(CFLAGS) $<
 else
 	$(CC) -o $@ -c $(CFLAGS) $<
 endif
 endif
-
+else
+	$(CC) -o $@ -c $(CFLAGS) $<
+endif
 
 $(OBJDIR)/%.$(OBJ_SUFFIX): %.s
 	@$(MAKE_OBJDIR)
