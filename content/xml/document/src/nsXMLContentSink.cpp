@@ -56,6 +56,7 @@
 #include "nsICSSStyleSheet.h"
 #include "nsIHTMLContentContainer.h"
 #include "nsHTMLAtoms.h"
+#include "nsLayoutUtils.h"
 #include "nsLayoutAtoms.h"
 #include "nsLayoutCID.h"
 #include "nsIScriptContext.h"
@@ -1336,8 +1337,10 @@ nsXMLContentSink::AddText(const nsAReadableString& aString)
         }
       }
     }
-    CopyUnicodeTo(aString, offset, &mText[mTextLength], amount);
-    mTextLength += amount;
+    mTextLength += nsLayoutUtils::CopyNewlineNormalizedUnicodeTo(aString, 
+                                                                 offset, 
+                                                                 &mText[mTextLength], 
+                                                                 amount);
     offset += amount;
     addLen -= amount;
   }

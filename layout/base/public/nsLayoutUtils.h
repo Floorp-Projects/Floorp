@@ -39,6 +39,7 @@
 
 #include "nslayout.h"
 #include "jspubtd.h"
+#include "nsAReadableString.h"
 
 class nsIScriptContext;
 class nsIScriptGlobalObject;
@@ -62,6 +63,13 @@ public:
 
   static nsresult GetDynamicScriptContext(JSContext *aContext,
                                           nsIScriptContext** aScriptContext);
+
+  static PRUint32 CopyNewlineNormalizedUnicodeTo(const nsAReadableString& aSource, 
+                                                 PRUint32 aSrcOffset, 
+                                                 PRUnichar* aDest, 
+                                                 PRUint32 aLength);
+
+  static PRUint32 CopyNewlineNormalizedUnicodeTo(nsReadingIterator<PRUnichar>& aSrcStart, const nsReadingIterator<PRUnichar>& aSrcEnd, nsAWritableString& aDest);
 };
 
 #endif /* nsLayoutUtils_h___ */
