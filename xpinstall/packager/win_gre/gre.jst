@@ -137,6 +137,10 @@ if(verifyDiskSpace(fProgram, srDest))
                      "",                 // subdir name to create relative to fProgram
                      true);              // Force Flag 
   logComment("addDirectory() of Program returned: " + err);
+
+  // Let the uninstaller know about this generated file.
+  logComment("Installing: "    + fProgram + ".autoreg");
+
   // check return value
   if( err == SUCCESS )
   {
