@@ -275,10 +275,10 @@ nsMathMLContainerFrame::ParseNumericValue(nsString&   aString,
 
   if (!stringLength) return PR_FALSE;
 
-  nsAutoString number = aString;
+  nsAutoString number(aString);
   number.SetLength(0);
 
-  nsAutoString unit = aString;
+  nsAutoString unit(aString);
   unit.SetLength(0);
 
   // Gather up characters that make up the number
@@ -468,7 +468,7 @@ nsMathMLContainerFrame::ReflowError(nsIPresContext*      aPresContext,
   aRenderingContext.SetFont(font.mFont);
 
   // bounding metrics
-  nsAutoString errorMsg = PRUnichar(0xFFFD);
+  nsAutoString errorMsg(PRUnichar(0xFFFD));
   rv = aRenderingContext.GetBoundingMetrics(errorMsg.GetUnicode(), 
                                             PRUint32(errorMsg.Length()),
                                             mBoundingMetrics);
@@ -515,7 +515,7 @@ nsMathMLContainerFrame::PaintError(nsIPresContext*      aPresContext,
     aRenderingContext.SetColor(color.mColor);
     aRenderingContext.SetFont(font.mFont);
 
-    nsAutoString errorMsg = PRUnichar(0xFFFD);
+    nsAutoString errorMsg(PRUnichar(0xFFFD));
     aRenderingContext.DrawString(errorMsg.GetUnicode(), 
                                  PRUint32(errorMsg.Length()), 
                                  mRect.x, mRect.y);
