@@ -16,8 +16,8 @@
 # Reserved.
 
 DEPTH = ..\..
-LIBRARY_NAME = layout
-MODULE = layout
+LIBRARY_NAME = lay
+MODULE = lay
 EXPORTS = layout.h
 !include $(DEPTH)\config\rules.mak
 # 
