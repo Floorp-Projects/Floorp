@@ -20,9 +20,15 @@
  *   Travis Bogard <travis@netscape.com>
  */
 
-//#include "nsIComponentManager.h"
+#include "nsIComponentManager.h"
+#include "nsGfxCIID.h"
+#include "nsWidgetsCID.h"
+#include "nsIDeviceContext.h"
 
 #include "nsWebBrowser.h"
+
+static NS_DEFINE_IID(kChildCID,               NS_CHILD_CID);
+static NS_DEFINE_IID(kDeviceContextCID,       NS_DEVICE_CONTEXT_CID);
 
 //*****************************************************************************
 //***    nsWebBrowser: Object Management
@@ -31,10 +37,16 @@
 nsWebBrowser::nsWebBrowser() : m_Created(PR_FALSE)
 {
 	NS_INIT_REFCNT();
+   m_InitInfo = new nsWebBrowserInitInfo();
 }
 
 nsWebBrowser::~nsWebBrowser()
 {
+   if(m_InitInfo)
+      {
+      delete m_InitInfo;
+      m_InitInfo = nsnull;
+      }
 }
 
 NS_IMETHODIMP nsWebBrowser::Create(nsISupports* aOuter, const nsIID& aIID, 
@@ -359,39 +371,58 @@ NS_IMETHODIMP nsWebBrowser::GetNumChildParts(PRInt32* numChildParts)
 NS_IMETHODIMP nsWebBrowser::InitWindow(nativeWindow parentNativeWindow,
    nsIWidget* parentWidget, PRInt32 x, PRInt32 y, PRInt32 cx, PRInt32 cy)   
 {
-   //XXX First Check
-	/*
-	Allows a client to initialize an object implementing this interface with
-	the usually required window setup information.
+   NS_ENSURE_ARG(parentNativeWindow || parentWidget);
+   NS_ENSURE_STATE(!m_Created || m_InitInfo);
 
-	@param parentNativeWindow - This allows a system to pass in the parenting
-		window as a native reference rather than relying on the calling
-		application to have created the parent window as an nsIWidget.  This 
-		value will be ignored (should be nsnull) if an nsIWidget is passed in to
-		the parentWidget parameter.  One of the two parameters however must be
-		passed.
+   m_ParentNativeWindow = parentNativeWindow;
+   m_ParentWidget = parentWidget;
+   m_InitInfo->x = x;
+   m_InitInfo->y = y;
+   m_InitInfo->cx = cx;
+   m_InitInfo->cy = cy;
 
-	@param parentWidget - This allows a system to pass in the parenting widget.
-		This allows some objects to optimize themselves and rely on the view
-		system for event flow rather than creating numerous native windows.  If
-		one of these is not available, nsnull should be passed and a 
-		valid native window should be passed to the parentNativeWindow parameter.
-
-	@param x - This is the x co-ordinate relative to the parent to place the
-		window.
-
-	@param y - This is the y co-ordinate relative to the parent to place the 
-		window.
-
-	@param cx - This is the width	for the window to be.
-
-	@param cy - This is the height for the window to be.
-	*/
-   return NS_ERROR_FAILURE;
+   return NS_OK;
 }
 
 NS_IMETHODIMP nsWebBrowser::Create()
 {
+   NS_ENSURE_STATE(!m_Created && (m_ParentNativeWindow || m_ParentWidget));
+
+   if(m_ParentWidget)
+      {
+      m_ParentNativeWindow = m_ParentWidget->GetNativeData(NS_NATIVE_WIDGET);
+      }
+   else // We need to create a widget
+      {
+      // XXX Review this code, carried over from old webShell
+      // Create a device context
+      nsCOMPtr<nsIDeviceContext> deviceContext;
+      NS_ENSURE_SUCCESS(nsComponentManager::CreateInstance(kDeviceContextCID,
+         nsnull, NS_GET_IID(nsIDeviceContext), getter_AddRefs(deviceContext)), 
+         NS_ERROR_FAILURE);
+
+      deviceContext->Init(m_ParentNativeWindow);
+      float dev2twip;
+      deviceContext->GetDevUnitsToTwips(dev2twip);
+      deviceContext->SetDevUnitsToAppUnits(dev2twip);
+      float twip2dev;
+      deviceContext->GetTwipsToDevUnits(twip2dev);
+      deviceContext->SetAppUnitsToDevUnits(twip2dev);
+      deviceContext->SetGamma(1.0f);
+
+      // Create the widget
+      NS_ENSURE_SUCCESS(nsComponentManager::CreateInstance(kChildCID, nsnull,
+         NS_GET_IID(nsIWidget), getter_AddRefs(m_InternalWidget)), NS_ERROR_FAILURE);
+
+      nsWidgetInitData  widgetInit;
+
+      widgetInit.clipChildren = PR_FALSE;
+      widgetInit.mWindowType = eWindowType_child;
+      nsRect bounds(m_InitInfo->x, m_InitInfo->y, m_InitInfo->cx, m_InitInfo->cy);
+      
+      m_InternalWidget->Create(m_ParentNativeWindow, bounds, nsnull /* was nsWebShell::HandleEvent*/,
+         deviceContext, nsnull, nsnull, &widgetInit);  
+      }
    //XXX First Check
 	/*
 	Tells the window that intialization and setup is complete.  When this is
@@ -403,68 +434,140 @@ NS_IMETHODIMP nsWebBrowser::Create()
 
 NS_IMETHODIMP nsWebBrowser::Destroy()
 {
-   //XXX First Check
-	/*
-	Tell the window that it can destroy itself.  This allows re-using the same
-	object without re-doing a lot of setup.  This is not a required call 
-	before a release.
-
-	@return	NS_OK - Everything destroyed properly.
-				NS_ERROR_NOT_IMPLEMENTED - State preservation is not supported.
-					Release the interface and create a new object.
-	*/
-   return NS_ERROR_FAILURE;
+   /* For now we don't support dynamic tear down and rebuild.  In the future we
+    may */
+   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP nsWebBrowser::SetPosition(PRInt32 x, PRInt32 y)
 {
-   //XXX First Check
-	/*
-	Sets the current x and y coordinates of the control.  This is relative to
-	the parent window.
-	*/
-   return NS_ERROR_FAILURE;
+   if(!m_Created)
+      {
+      m_InitInfo->x = x;
+      m_InitInfo->y = y;
+      }
+   else
+      {
+      // If there is an internal widget you just want to move it as the 
+      // DocShell View will implicitly be moved as the widget moves
+      if(m_InternalWidget)
+         NS_ENSURE_SUCCESS(m_InternalWidget->Move(x, y), NS_ERROR_FAILURE);
+      else // Else rely on the docShell to set it
+         {
+         nsCOMPtr<nsIGenericWindow> docShellWin(do_QueryInterface(m_DocShell));
+         NS_ENSURE_SUCCESS(docShellWin->SetPosition(x, y), NS_ERROR_FAILURE);
+         }
+      }
+   return NS_OK;
 }
 
 NS_IMETHODIMP nsWebBrowser::GetPosition(PRInt32* x, PRInt32* y)
 {
    NS_ENSURE_ARG_POINTER(x && y);
-   //XXX First Check
-	/*
-	Gets the current x and y coordinates of the control.  This is relatie to the
-	parent window.
-	*/
-   return NS_ERROR_FAILURE;
+
+   if(!m_Created)
+      {
+      *x = m_InitInfo->x;
+      *y = m_InitInfo->y;
+      }
+   else
+      {
+      //If there is an internal widget you just want to get the position of the 
+      //widget as that is the implied position of the docshell as well.
+      if(m_InternalWidget)
+         {
+         nsRect bounds;
+         m_InternalWidget->GetBounds(bounds);
+
+         *x = bounds.x;
+         *y = bounds.y;
+         }
+      else //Else Rely on the docShell to tell us
+         {
+         nsCOMPtr<nsIGenericWindow> docShellWin(do_QueryInterface(m_DocShell));
+         NS_ENSURE_SUCCESS(docShellWin->GetPosition(x, y), NS_ERROR_FAILURE);
+         }
+      }
+
+   return NS_OK;
 }
 
 NS_IMETHODIMP nsWebBrowser::SetSize(PRInt32 cx, PRInt32 cy, PRBool fRepaint)
 {
-   //XXX First Check
-	/*
-	Sets the width and height of the control.
-	*/
-   return NS_ERROR_FAILURE;
+   if(!m_Created)
+      {
+      m_InitInfo->cx = cx;
+      m_InitInfo->cy = cy;
+      }
+   else
+      {
+      // If there is an internal widget set the size of it as well
+      if(m_InternalWidget)
+         m_InternalWidget->Resize(cx, cy, fRepaint);
+
+      // Now size the docShell as well
+      nsCOMPtr<nsIGenericWindow> docShellWindow(do_QueryInterface(m_DocShell));
+
+      NS_ENSURE_SUCCESS(docShellWindow->SetSize(cx, cy, fRepaint), NS_ERROR_FAILURE);
+      }
+
+   return NS_OK;
 }
 
 NS_IMETHODIMP nsWebBrowser::GetSize(PRInt32* cx, PRInt32* cy)
 {
    NS_ENSURE_ARG_POINTER(cx && cy);
 
-   //XXX First Check
-	/*
-	Gets the width and height of the control.
-	*/
-   return NS_ERROR_FAILURE;
+   if(!m_Created)
+      {
+      *cx = m_InitInfo->cx;
+      *cy = m_InitInfo->cy;
+      }
+   else
+      {
+      // We can ignore the internal widget and just rely on the docShell for 
+      // this question.
+      nsCOMPtr<nsIGenericWindow> docShellWindow(do_QueryInterface(m_DocShell));
+
+      NS_ENSURE_SUCCESS(docShellWindow->GetSize(cx, cy), NS_ERROR_FAILURE);
+      }
+
+   return NS_OK;
 }
 
 NS_IMETHODIMP nsWebBrowser::SetPositionAndSize(PRInt32 x, PRInt32 y, PRInt32 cx,
    PRInt32 cy, PRBool fRepaint)
 {
-   //XXX First Check
-	/*
-	Convenience function combining the SetPosition and SetSize into one call.
-	*/
-   return NS_ERROR_FAILURE;
+   if(!m_Created)
+      {
+      m_InitInfo->x = x;
+      m_InitInfo->y = y;
+      m_InitInfo->cx = cx;
+      m_InitInfo->cy = cy;
+      }
+   else
+      {
+      PRInt32 doc_x = x;
+      PRInt32 doc_y = y;
+
+      // If there is an internal widget we need to make the docShell coordinates
+      // relative to the internal widget rather than the calling app's parent.
+      // We also need to resize our widget then.
+      if(m_InternalWidget)
+         {
+         doc_x = doc_y = 0;
+         NS_ENSURE_SUCCESS(m_InternalWidget->Resize(x, y, cx, cy, fRepaint),
+            NS_ERROR_FAILURE);
+         }
+
+      nsCOMPtr<nsIGenericWindow> docShellWindow(do_QueryInterface(m_DocShell));
+
+      // Now reposition/ resize the doc
+      NS_ENSURE_SUCCESS(docShellWindow->SetPositionAndSize(doc_x, doc_y, cx, cy, 
+         fRepaint), NS_ERROR_FAILURE);
+      }
+
+   return NS_OK;
 }
 
 NS_IMETHODIMP nsWebBrowser::SizeToContent()
@@ -491,80 +594,89 @@ NS_IMETHODIMP nsWebBrowser::GetParentWidget(nsIWidget** parentWidget)
 {
    NS_ENSURE_ARG_POINTER(parentWidget);
 
-   //XXX First Check
-	/*			  
-	This is the parenting widget for the control.  This may be null if only the
-	native window was handed in for the parent during initialization.  If this
-	is returned, it should refer to the same object as parentNativeWindow.
-	*/
-   return NS_ERROR_FAILURE;
+   *parentWidget = m_ParentWidget;
+
+   NS_IF_ADDREF(*parentWidget);
+
+   return NS_OK;
 }
 
 NS_IMETHODIMP nsWebBrowser::SetParentWidget(nsIWidget* parentWidget)
 {
-   //XXX First Check
-	/*			  
-	This is the parenting widget for the control.  This may be null if only the
-	native window was handed in for the parent during initialization.  If this
-	is returned, it should refer to the same object as parentNativeWindow.
-	*/
-   return NS_ERROR_FAILURE;
-}
+   NS_ENSURE_STATE(!m_Created);
 
+   m_ParentWidget = parentWidget;
+
+   return NS_OK;
+}
 
 NS_IMETHODIMP nsWebBrowser::GetParentNativeWindow(nativeWindow* parentNativeWindow)
 {
    NS_ENSURE_ARG_POINTER(parentNativeWindow);
-   //XXX First Check
-	/*
-	This is the native window parent of the control.
-	*/
-   return NS_ERROR_FAILURE;
+   
+   if(m_ParentNativeWindow)
+      *parentNativeWindow = m_ParentNativeWindow;
+   else if(m_ParentWidget)
+      *parentNativeWindow = m_ParentWidget->GetNativeData(NS_NATIVE_WIDGET);
+   else
+      *parentNativeWindow = nsnull;
+
+   return NS_OK;
 }
 
 NS_IMETHODIMP nsWebBrowser::SetParentNativeWindow(nativeWindow parentNativeWindow)
 {
-   //XXX First Check
-	/*
-	This is the native window parent of the control.
-	*/
-   return NS_ERROR_FAILURE;
+   NS_ENSURE_STATE(!m_Created);
+
+   m_ParentNativeWindow = parentNativeWindow;
+
+   return NS_OK;
 }
 
 NS_IMETHODIMP nsWebBrowser::GetVisibility(PRBool* visibility)
 {
    NS_ENSURE_ARG_POINTER(visibility);
 
-   //XXX First Check
-	/*
-	Attribute controls the visibility of the object behind this interface.
-	Setting this attribute to false will hide the control.  Setting it to 
-	true will show it.
-	*/
-   return NS_ERROR_FAILURE;
+   if(!m_Created)
+      *visibility = m_InitInfo->visible;
+   else
+      {
+      nsCOMPtr<nsIGenericWindow> docShellWindow(do_QueryInterface(m_DocShell));
+
+      NS_ENSURE_SUCCESS(docShellWindow->GetVisibility(visibility), 
+         NS_ERROR_FAILURE);
+      }
+
+   return NS_OK;
 }
 
 NS_IMETHODIMP nsWebBrowser::SetVisibility(PRBool visibility)
 {
-   //XXX First Check
-	/*
-	Attribute controls the visibility of the object behind this interface.
-	Setting this attribute to false will hide the control.  Setting it to 
-	true will show it.
-	*/
-   return NS_ERROR_FAILURE;
+   if(!m_Created)
+      m_InitInfo->visible = visibility;
+   else
+      {
+      nsCOMPtr<nsIGenericWindow> docShellWindow(do_QueryInterface(m_DocShell));
+
+      NS_ENSURE_SUCCESS(docShellWindow->SetVisibility(visibility), 
+         NS_ERROR_FAILURE);
+      }
+
+   return NS_OK;
 }
 
 NS_IMETHODIMP nsWebBrowser::GetMainWidget(nsIWidget** mainWidget)
 {
    NS_ENSURE_ARG_POINTER(mainWidget);
-   //XXX First Check
-	/*
-	Allows you to find out what the widget is of a given object.  Depending
-	on the object, this may return the parent widget in which this object
-	lives if it has not had to create it's own widget.
-	*/
-   return NS_ERROR_FAILURE;
+
+   if(m_InternalWidget)
+      *mainWidget = m_InternalWidget;
+   else
+      *mainWidget = m_ParentWidget;
+
+   NS_IF_ADDREF(*mainWidget);
+
+   return NS_OK;
 }
 
 NS_IMETHODIMP nsWebBrowser::SetFocus()
@@ -627,95 +739,87 @@ NS_IMETHODIMP nsWebBrowser::GetCurScrollPos(PRInt32 scrollOrientation,
    PRInt32* curPos)
 {
    NS_ENSURE_ARG_POINTER(curPos);
+   NS_ENSURE_STATE(m_DocShell);
 
-   //XXX First Check
-	/*
-	Retrieves or Sets the current thumb position to the curPos passed in for the
-	scrolling orientation passed in.  curPos should be between minPos and maxPos.
+   nsCOMPtr<nsIScrollable> scroll(do_QueryInterface(m_DocShell));
 
-	@return	NS_OK - Setting or Getting completed successfully.
-				NS_ERROR_INVALID_ARG - returned when curPos is not within the
-					minPos and maxPos.
-	*/
-   return NS_ERROR_FAILURE;
+   NS_ENSURE(scroll, NS_ERROR_FAILURE);
+
+   return scroll->GetCurScrollPos(scrollOrientation, curPos);
 }
 
 NS_IMETHODIMP nsWebBrowser::SetCurScrollPos(PRInt32 scrollOrientation, 
    PRInt32 curPos)
 {
-   //XXX First Check
-	/*
-	Retrieves or Sets the current thumb position to the curPos passed in for the
-	scrolling orientation passed in.  curPos should be between minPos and maxPos.
+   NS_ENSURE_STATE(m_DocShell);
 
-	@return	NS_OK - Setting or Getting completed successfully.
-				NS_ERROR_INVALID_ARG - returned when curPos is not within the
-					minPos and maxPos.
-	*/
-   return NS_ERROR_FAILURE;
+   nsCOMPtr<nsIScrollable> scroll(do_QueryInterface(m_DocShell));
+
+   NS_ENSURE(scroll, NS_ERROR_FAILURE);
+
+   return scroll->SetCurScrollPos(scrollOrientation, curPos);
 }
 
 NS_IMETHODIMP nsWebBrowser::GetScrollRange(PRInt32 scrollOrientation,
    PRInt32* minPos, PRInt32* maxPos)
 {
    NS_ENSURE_ARG_POINTER(minPos && maxPos);
-   //XXX First Check
-	/*
-	Retrieves or Sets the valid ranges for the thumb.  When maxPos is set to 
-	something less than the current thumb position, curPos is set = to maxPos.
+   NS_ENSURE_STATE(m_DocShell);
 
-	@return	NS_OK - Setting or Getting completed successfully.
-				NS_ERROR_INVALID_ARG - returned when curPos is not within the
-					minPos and maxPos.
-	*/
-   return NS_ERROR_FAILURE;
+   nsCOMPtr<nsIScrollable> scroll(do_QueryInterface(m_DocShell));
+
+   NS_ENSURE(scroll, NS_ERROR_FAILURE);
+
+   return scroll->GetScrollRange(scrollOrientation, minPos, maxPos);
 }
 
 NS_IMETHODIMP nsWebBrowser::SetScrollRange(PRInt32 scrollOrientation,
    PRInt32 minPos, PRInt32 maxPos)
 {
-   //XXX First Check
-	/*
-	Retrieves or Sets the valid ranges for the thumb.  When maxPos is set to 
-	something less than the current thumb position, curPos is set = to maxPos.
+   NS_ENSURE_STATE(m_DocShell);
 
-	@return	NS_OK - Setting or Getting completed successfully.
-				NS_ERROR_INVALID_ARG - returned when curPos is not within the
-					minPos and maxPos.
-	*/
-   return NS_ERROR_FAILURE;
+   nsCOMPtr<nsIScrollable> scroll(do_QueryInterface(m_DocShell));
+
+   NS_ENSURE(scroll, NS_ERROR_FAILURE);
+
+   return scroll->SetScrollRange(scrollOrientation, minPos, maxPos);
 }
 
 NS_IMETHODIMP nsWebBrowser::GetScrollbarPreferences(PRInt32 scrollOrientation,
    PRInt32* scrollbarPref)
 {
    NS_ENSURE_ARG_POINTER(scrollbarPref);
-   //XXX First Check
-	/*
-	Retrieves of Set the preferences for the scroll bar.
-	*/
-   return NS_ERROR_FAILURE;
+   NS_ENSURE_STATE(m_DocShell);
+
+   nsCOMPtr<nsIScrollable> scroll(do_QueryInterface(m_DocShell));
+
+   NS_ENSURE(scroll, NS_ERROR_FAILURE);
+
+   return scroll->GetScrollbarPreferences(scrollOrientation, scrollbarPref);
 }
 
 NS_IMETHODIMP nsWebBrowser::SetScrollbarPreferences(PRInt32 scrollOrientation,
    PRInt32 scrollbarPref)
 {
-   //XXX First Check
-	/*
-	Retrieves of Set the preferences for the scroll bar.
-	*/
-   return NS_ERROR_FAILURE;
+   NS_ENSURE_STATE(m_DocShell);
+
+   nsCOMPtr<nsIScrollable> scroll(do_QueryInterface(m_DocShell));
+
+   NS_ENSURE(scroll, NS_ERROR_FAILURE);
+
+   return scroll->SetScrollbarPreferences(scrollOrientation, scrollbarPref);
 }
 
 NS_IMETHODIMP nsWebBrowser::GetScrollbarVisibility(PRBool* verticalVisible,
    PRBool* horizontalVisible)
 {
-   //XXX First Check
-	/*
-	Get information about whether the vertical and horizontal scrollbars are
-	currently visible.
-	*/
-   return NS_ERROR_FAILURE;
+   NS_ENSURE_STATE(m_DocShell);
+
+   nsCOMPtr<nsIScrollable> scroll(do_QueryInterface(m_DocShell));
+
+   NS_ENSURE(scroll, NS_ERROR_FAILURE);
+
+   return scroll->GetScrollbarVisibility(verticalVisible, horizontalVisible);
 }
 
 //*****************************************************************************
@@ -724,27 +828,24 @@ NS_IMETHODIMP nsWebBrowser::GetScrollbarVisibility(PRBool* verticalVisible,
 
 NS_IMETHODIMP nsWebBrowser::ScrollByLines(PRInt32 numLines)
 {
-   //XXX First Check
-  /**
-   * Scroll the view up or down by aNumLines lines. positive
-   * values move down in the view. Prevents scrolling off the
-   * end of the view.
-   * @param numLines number of lines to scroll the view by
-   */
-   return NS_ERROR_FAILURE;
+   NS_ENSURE_STATE(m_DocShell);
+
+   nsCOMPtr<nsITextScroll> scroll(do_QueryInterface(m_DocShell));
+
+   NS_ENSURE(scroll, NS_ERROR_FAILURE);
+
+   return scroll->ScrollByLines(numLines);
 }
 
 NS_IMETHODIMP nsWebBrowser::ScrollByPages(PRInt32 numPages)
 {
-   //XXX First Check
-	/**
-   * Scroll the view up or down by numPages pages. a page
-   * is considered to be the amount displayed by the clip view.
-   * positive values move down in the view. Prevents scrolling
-   * off the end of the view.
-   * @param numPages number of pages to scroll the view by
-   */
-   return NS_ERROR_FAILURE;
+   NS_ENSURE_STATE(m_DocShell);
+
+   nsCOMPtr<nsITextScroll> scroll(do_QueryInterface(m_DocShell));
+
+   NS_ENSURE(scroll, NS_ERROR_FAILURE);
+
+   return scroll->ScrollByPages(numPages);
 }
 
 
@@ -754,6 +855,28 @@ NS_IMETHODIMP nsWebBrowser::ScrollByPages(PRInt32 numPages)
 
 void nsWebBrowser::UpdateListeners()
 {
+   // XXX
+   // Should walk the m_ListenerList and call each asking for our needed
+   // interfaces.
 }
+
+nsresult nsWebBrowser::CreateDocShell(const PRUnichar* contentType)
+{
+   if(m_DocShell)
+      {
+      PRBool fCanHandle = PR_FALSE;
+      m_DocShell->CanHandleContentType(contentType, &fCanHandle);
+      if(fCanHandle)
+         return NS_OK;
+      }
+
+   // XXX
+   // Should walk category list looking for a component that can 
+   // handle the specific contentType being offered to us.
+   // For now......  We will simply instantiate an nsHTMLDocShell.
+
+   return NS_ERROR_FAILURE;
+} 
+
 
 
