@@ -162,9 +162,8 @@ static const char* ioServiceContractID = "@mozilla.org/network/io-service;1";
   // to do this after we set |mIsPrimary|.
   [self onSecurityStateChange:mSecureState];
 
-  // update the window's title
-  if ( mTitle )
-    [[self window] setTitle:mTitle];
+  // update the window's title. 
+  [self setTitle:mTitle];
 
   if ([[self window] isKeyWindow])
     [mBrowserView setActive: YES];
