@@ -1971,6 +1971,7 @@ nsHTMLReflowState::ComputeBlockBoxData(nsIPresContext* aPresContext,
           mComputedWidth = availableWidth - mComputedMargin.left -
             mComputedMargin.right - mComputedBorderPadding.left -
             mComputedBorderPadding.right;
+          mComputedWidth = PR_MAX(mComputedWidth, 0);
         }
 
         AdjustComputedWidth(PR_FALSE);
