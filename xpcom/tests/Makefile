@@ -45,10 +45,15 @@ TARGETS = $(NON_DIRS)
 
 include $(DEPTH)/config/rules.mk
 
+ifeq ($(OS_TARGET),Rhapsody)
+$(PROGS):$(OBJDIR)/%: $(OBJDIR)/%.o $(EX_LIBS)
+	@$(MAKE_OBJDIR)
+	$(CC) -o $@ $@.o $(LDFLAGS) $(EX_LIBS) $(OS_LIBS)
+else
 $(PROGS):$(OBJDIR)/%: $(OBJDIR)/%.o $(EX_LIBS)
 	@$(MAKE_OBJDIR)
 	$(CCC) -o $@ $@.o $(LDFLAGS) $(EX_LIBS) $(OS_LIBS)
+endif
 
 install:: $(PROGS)
 	$(INSTALL) $(PROGS) $(DIST)/bin
-
