@@ -45,13 +45,13 @@ public:
   NS_IMETHOD SetMailAccountUrl(nsIImapProtocol* aProtocol,
 							   const char* hostName) = 0;
   NS_IMETHOD ClearFolderRights(nsIImapProtocol* aProtocol,
-							   TIMAPACLRightsInfo* aclRights) = 0;
+							   nsIMAPACLRightsInfo* aclRights) = 0;
   NS_IMETHOD AddFolderRights(nsIImapProtocol* aProtocol,
-							 TIMAPACLRightsInfo* aclRights) = 0;
+							 nsIMAPACLRightsInfo* aclRights) = 0;
   NS_IMETHOD RefreshFolderRights(nsIImapProtocol* aProtocol,
-								 TIMAPACLRightsInfo* aclRights) = 0;
+								 nsIMAPACLRightsInfo* aclRights) = 0;
   NS_IMETHOD FolderNeedsACLInitialized(nsIImapProtocol* aProtocol,
-									   TIMAPACLRightsInfo* aclRights) = 0;
+									   nsIMAPACLRightsInfo* aclRights) = 0;
   NS_IMETHOD SetFolderAdminURL(nsIImapProtocol* aProtocol,
 							   FolderQueryInfo* aInfo) = 0;
 };

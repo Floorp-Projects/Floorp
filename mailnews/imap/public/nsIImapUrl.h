@@ -132,7 +132,7 @@ public:
 	NS_IMETHOD SetImapAction(nsImapAction aImapAction) = 0;
 
 	NS_IMETHOD GetImapPartToFetch(char **resultPart) const = 0;
-	NS_IMETHOD AllocateCannonicalPath(const char *serverPath, char onlineDelimiter, char **allocatedPath ) const = 0;
+	NS_IMETHOD AllocateCanonicalPath(const char *serverPath, char onlineDelimiter, char **allocatedPath ) const = 0;
 
 	NS_IMETHOD	CreateListOfMessageIdsString(char **result) const = 0;
 };

@@ -58,6 +58,25 @@ public:
 	 NS_IMETHOD GetPasswordVerifiedOnline(const char *hostname, const char *userName, PRBool &result) = 0;
 	 NS_IMETHOD	SetPasswordVerifiedOnline(const char *hostName, const char *userName) = 0;
 
+    // OnlineDir
+    NS_IMETHOD GetOnlineDirForHost(const char *hostName, const char *userName,
+                                   nsString &result) = 0;
+    NS_IMETHOD SetOnlineDirForHost(const char *hostName, const char *userName,
+                                   const char *onlineDir) = 0;
+
+    // Delete is move to trash folder
+    NS_IMETHOD GetDeleteIsMoveToTrashForHost(const char *hostName, const char
+                                             *userName, PRBool &result) = 0;
+    NS_IMETHOD SetDeleteIsMoveToTrashForHost(const char *hostName, const char
+                                             *userName, PRBool isMoveToTrash)
+        = 0;
+
+    // Get namespaces
+    NS_IMETHOD GetGotNamespacesForHost(const char *hostName, const char
+                                       *userName, PRBool &result) = 0;
+    NS_IMETHOD SetGotNamespacesForHost(const char *hostName, const char
+                                       *userName, PRBool gotNamespaces) = 0;
+
 	// Folders
 	 NS_IMETHOD	SetHaveWeEverDiscoveredFoldersForHost(const char *hostname, const char *userName, PRBool discovered) = 0;
 	 NS_IMETHOD	GetHaveWeEverDiscoveredFoldersForHost(const char *hostname, const char *userName, PRBool &result) = 0;
