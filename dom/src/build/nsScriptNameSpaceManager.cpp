@@ -195,7 +195,10 @@ nsScriptNameSpaceManager::FillHashWithDOMInterfaces()
     PRUint16 constant_count = 0;
 
     rv = if_info->GetConstantCount(&constant_count);
-    NS_ENSURE_SUCCESS(rv, rv);
+    if (NS_FAILED(rv)) {
+      NS_ERROR("can't get constant count");
+      continue;
+    }
 
     if (constant_count) {
       PRUint16 parent_constant_count = 0;
@@ -206,7 +209,10 @@ nsScriptNameSpaceManager::FillHashWithDOMInterfaces()
 
       if (parent_info) {
         rv = parent_info->GetConstantCount(&parent_constant_count);
-        NS_ENSURE_SUCCESS(rv, rv);
+        if (NS_FAILED(rv)) {
+          NS_ERROR("can't get constant count");
+          continue;
+        }
       }
 
       if (constant_count != parent_constant_count) {
