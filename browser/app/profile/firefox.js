@@ -57,9 +57,13 @@ pref("app.version",
 
 pref("update.app.enabled", true);
 pref("update.app.url", "chrome://mozapps/locale/update/update.properties");
+pref("update.app.updateVersion", "");
+pref("update.app.updateDescription", "");
+pref("update.app.updateURL", "");
 pref("update.extensions.enabled", true);
 // Automatically download and install updates to themes and extensions.
 pref("update.extensions.autoUpdate", false);
+
 pref("update.interval", 604800000); // every 7 days
 pref("update.lastUpdateDate", 0); // UTC offset when last update was performed. 
 
