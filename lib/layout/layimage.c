@@ -1547,36 +1547,46 @@ lo_FormatImage(MWContext *context, lo_DocState *state, PA_Tag *tag)
 #ifdef DEBUG_shaver
         fprintf(stderr, "----GETTING IMAGE DATA----\n");
 #endif
-        if (!DOM_StyleGetProperty(cx, db, (DOM_Node *)element,
-                                  BORDERWIDTH_STYLE, &entry))
-            return;
-        if (entry) {
-            /* XXX handle borderTop/borderBottom/borderLeft/borderRight */
-            if (!DOM_GetCleanEntryData(cx, entry, lo_SSUnitsToData,
-                                       &image->border_width, context))
-                return;
-        } else {
-            /* no style value for image border */
+        /* if (db) { */
+        if (!db) {
+            if (cx)
+                db = DOM_StyleGetDatabaseFromContext(cx);
+            else
+                goto error;
+            if (!db)
+                goto error;
+        }
+            if (!DOM_StyleGetProperty(cx, db, (DOM_Node *)element,
+                                      BORDERWIDTH_STYLE, &entry))
+                goto error;
+            if (entry) {
+                /* XXX handle borderTop/borderBottom/borderLeft/borderRight */
+                if (!DOM_GetCleanEntryData(cx, entry, lo_SSUnitsToData,
+                                           &image->border_width, context))
+                    goto error;
+            } else {
+                /* no style value for image border */
 #ifdef DEBUG_shaver
-            fprintf(stderr, "no style value for IMG.border\n");
+                fprintf(stderr, "no style value for IMG.border\n");
 #endif
-            image->border_width = IMAGE_DEF_BORDER;
-        }
-        if (!DOM_StyleGetProperty(cx, db, (DOM_Node *)element,
-                                  PADDING_STYLE, &entry))
-            return;
-        if (entry) {
-            /* XXX handle paddingTop/paddingBottom/paddingLeft/paddingRight */
-            if (!DOM_GetCleanEntryData(cx, entry, lo_SSUnitsToData,
-                                       &image->border_vert_space, context))
-                return;
-            image->border_horiz_space = image->border_vert_space;
-        } else {
-            /* no style value for image padding */
-            image->border_vert_space = IMAGE_DEF_VERTICAL_SPACE;
-            image->border_horiz_space = IMAGE_DEF_HORIZONTAL_SPACE;
-        }
-#else
+                image->border_width = IMAGE_DEF_BORDER;
+            }
+            if (!DOM_StyleGetProperty(cx, db, (DOM_Node *)element,
+                                      PADDING_STYLE, &entry))
+                goto error;
+            if (entry) {
+                /* XXX handle paddingTop/paddingBottom/paddingLeft/paddingRight */
+                if (!DOM_GetCleanEntryData(cx, entry, lo_SSUnitsToData,
+                                           &image->border_vert_space, context))
+                    goto error;
+                image->border_horiz_space = image->border_vert_space;
+            } else {
+                /* no style value for image padding */
+                image->border_vert_space = IMAGE_DEF_VERTICAL_SPACE;
+                image->border_horiz_space = IMAGE_DEF_HORIZONTAL_SPACE;
+            }
+            /*         } else { */
+#else /* DOM */
             
 	if (image->anchor_href != NULL)
 	{
@@ -1588,6 +1598,11 @@ lo_FormatImage(MWContext *context, lo_DocState *state, PA_Tag *tag)
 	}
 	image->border_vert_space = IMAGE_DEF_VERTICAL_SPACE;
 	image->border_horiz_space = IMAGE_DEF_HORIZONTAL_SPACE;
+#endif
+#if 0
+#ifdef DOM
+        }
+#endif
 #endif
 
 	if ((image->text_attr != NULL)&&
@@ -2172,6 +2187,9 @@ lo_FormatImage(MWContext *context, lo_DocState *state, PA_Tag *tag)
         if ((image->width == 0) || (image->height == 0))
             context->requires_reflow = PR_TRUE;
 	}
+        return;
+ error:
+        /* XXX free the image */
 }
 
 

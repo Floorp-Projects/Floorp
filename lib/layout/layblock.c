@@ -1034,7 +1034,7 @@ lo_ParseSSNumToData(const char *str, uint32 *data, void *closure)
 
   *data = num;
 
-  return JS_FALSE;
+  return JS_TRUE;
 }
 
 void
@@ -1048,34 +1048,40 @@ lo_SetStyleSheetLayerProperties(MWContext *context, lo_DocState *state,
   JSBool inflow;
   struct SSUnitContext arg;
   JSContext *cx = context->mocha_context;
-
-#ifdef DEBUG_shaver
-  fprintf(stderr, "setting layer data on <%s>\n", PA_TagString(tag->type));
-#endif
-  
-  arg.context = context;
+  char *src_prop;
 
  if (node->type != NODE_TYPE_ELEMENT ||
      lo_IsEmptyTag(tag->type))
     /* other code says we can't handle empty tags, so I bail...for now! */
     return;
 
+  arg.context = context;
+
+#ifdef DEBUG_shaver
+  fprintf(stderr, "setting layer data on <%s>\n", PA_TagString(tag->type));
+#endif
+  
  element = (DOM_Element *)node;
 
+ if (!DOM_StyleGetProperty(cx, db, node, LAYER_SRC_STYLE, &entry))
+   return;
+ if (entry) {
+   src_prop = (char *)entry->value;
+ } else {
+   src_prop = NULL;
+ }
+ 
  if (!DOM_StyleGetProperty(cx, db, node, POSITION_STYLE, &entry))
     return;
 
-  if (entry) {
-    if (!DOM_GetCleanEntryData(cx, entry, PositionParser,
-                               (uint32 *)&inflow, NULL))
-      return;
-  } else {
-    if (!DOM_StyleGetProperty(cx, db, node, LAYER_SRC_STYLE, &entry))
-      return;
-    if (!entry)
-      return;
-    inflow = JS_TRUE;
-  }
+ if (entry) {
+   if (!DOM_GetCleanEntryData(cx, entry, PositionParser,
+                              (uint32 *)&inflow, NULL))
+     return;
+ } else {
+   if (!src_prop)
+     return;
+ }
 
   param = XP_NEW_ZAP(LO_BlockInitializeStruct);
   if (!param)
@@ -1110,6 +1116,7 @@ lo_SetStyleSheetLayerProperties(MWContext *context, lo_DocState *state,
     if (!DOM_GetCleanEntryData(cx, entry, lo_ParseSSNumToData, &param->top,
                                    (void *)&arg))
       goto error;
+    CHECK_PERCENTAGE(entry, arg);
     param->has_top = TRUE;
   }
 
@@ -1121,6 +1128,7 @@ lo_SetStyleSheetLayerProperties(MWContext *context, lo_DocState *state,
     if (!DOM_GetCleanEntryData(cx, entry, lo_ParseSSNumToData,
                                    &param->height, (void *)&arg))
       goto error;
+    CHECK_PERCENTAGE(entry, arg);
     param->has_height = TRUE;
   }
 
@@ -1151,13 +1159,39 @@ lo_SetStyleSheetLayerProperties(MWContext *context, lo_DocState *state,
   if (entry)
     param->visibility = XP_STRDUP(entry->value);
 
-  /* XXX handle src */
+  if (src_prop)
+    param->src = NET_MakeAbsoluteURL(state->top_state->base_url,
+                                     lo_ParseStyleSheetURL(src_prop));
+  else
+    param->src = NULL;
+
   param->tag = NULL;
   param->ss_tag = tag;
+
+  if (!DOM_StyleGetProperty(cx, db, node, OVERFLOW_STYLE, &entry))
+      goto error;
+
+  if (entry)
+    param->overflow = XP_STRDUP(entry->value);
+
+  if (!DOM_StyleGetProperty(cx, db, node, LAYER_BG_COLOR_STYLE, &entry))
+    goto error;
+  if (entry)
+    param->bgcolor = XP_STRDUP(entry->value);
+  param->is_style_bgcolor = TRUE;
+
+  if (!DOM_StyleGetProperty(cx, db, node, LAYER_BG_IMAGE_STYLE, &entry))
+    goto error;
+  if (entry && strcasecomp(entry->value, "none"))
+    param->bgimage = NET_MakeAbsoluteURL(state->top_state->base_url,
+                                         lo_ParseStyleSheetURL(entry->value));
 
   if (!LM_SetNodeFlags(node, STYLE_NODE_NEED_TO_POP_LAYER))
     goto error;
 
+#ifdef DEBUG_shaver
+  fprintf(stderr, "starting layer for <%s>\n", ((DOM_Element *)node)->tagName);
+#endif
   if (lo_BeginLayer(context, state, param, inflow))
     error:
     lo_FreeBlockInitializeStruct(param);

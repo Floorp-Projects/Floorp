@@ -8546,6 +8546,10 @@ TextDecorationToData(const char *decors, uint32 *data, void *closure)
 
 #undef SET_ATTR_BIT_IF
 
+#ifdef DEBUG_shaver
+/* #define DEBUG_shaver_textattr */
+#endif
+
 LO_TextAttr *
 lo_FillInTextStyleInfo(lo_DocState *state, MWContext *context,
                        LO_TextAttr *tptr, JSBool isMutable)
@@ -8558,7 +8562,7 @@ lo_FillInTextStyleInfo(lo_DocState *state, MWContext *context,
   JSBool copied = JS_FALSE;
   LO_Color col;
 
-  if (!cx || !db || !node)
+  if (!node)
     return tptr;
 
   if (node->type != NODE_TYPE_TEXT) {
@@ -8568,12 +8572,12 @@ lo_FillInTextStyleInfo(lo_DocState *state, MWContext *context,
           (priv->tagtype == P_LIST_ITEM ||
            priv->tagtype == P_IMAGE ||
            priv->tagtype == P_HRULE /* layout NYI */)) {
-#ifdef DEBUG_shaver
+#ifdef DEBUG_shaver_textattr
         fprintf(stderr, "setting textattr on <%s>\n",
                 ((DOM_Element *)node)->tagName);
 #endif
       } else {
-#ifdef DEBUG_shaver
+#ifdef DEBUG_shaver_textattr
         fprintf(stderr, "NOT setting textattr on <%s>\n",
                 ((DOM_Element *)node)->tagName);
 #endif
@@ -8595,15 +8599,60 @@ lo_FillInTextStyleInfo(lo_DocState *state, MWContext *context,
     newptr = tptr;
   }
 
+  if (!db) {
+    /* find enclosing link object, and set the appropriate default color */
+    DOM_StyleToken pseudo;
+    DOM_Element *link;
+
+#ifdef DEBUG_shaver_textattr
+    fprintf(stderr, "no db, setting default attrs ");
+#endif
+
+    if (!state->current_anchor) {
+#ifdef DEBUG_shaver
+      fprintf(stderr, "no anchor, done\n");
+#endif
+      goto done;
+    }
+
+    link = state->current_anchor->node;
+    XP_ASSERT(link && link->node.type == NODE_TYPE_ELEMENT);
+    pseudo = DOM_GetElementPseudo(cx, link);
+    if (pseudo) {
+      /* XXX assuming that we only set pseudo on links! */
+      LO_Color col;
+#ifdef DEBUG_shaver_textattr
+      fprintf(stderr, "pseudo is %s", pseudo);
+#endif
+      COW();
+      if (lo_underline_anchors())
+        newptr->attrmask |= LO_ATTR_UNDERLINE;
+      if (!XP_STRCMP(pseudo, "link")) {
+        col.red = STATE_UNVISITED_ANCHOR_RED(state);
+        col.blue = STATE_UNVISITED_ANCHOR_BLUE(state);
+        col.green = STATE_UNVISITED_ANCHOR_GREEN(state);
+        newptr->fg = col;
+      } else if (!XP_STRCMP(pseudo, "visited")) {
+        col.red = STATE_VISITED_ANCHOR_RED(state);
+        col.blue = STATE_VISITED_ANCHOR_BLUE(state);
+        col.green = STATE_VISITED_ANCHOR_GREEN(state);
+        newptr->fg = col;
+      }        
+    }
+#ifdef DEBUG_shaver_textattr
+    fputs("\n", stderr);
+#endif
+    goto done;
+  }
+
   /* check "color" property */
   if (!DOM_StyleGetProperty(cx, db, node, COLOR_STYLE, &entry))
-    /* XXX report error? return tptr unmodified? */
-    return NULL;
-
+    /* XXX report error? return NULL? */
+    goto done;
   if (entry) {
     if (!DOM_GetCleanEntryData(cx, entry, lo_ColorStringToData, (uint32*)&col,
                                NULL))
-      return NULL;
+      goto done;
     if (*(uint32 *)&col != *(uint32 *)&tptr->fg) {
       COW();
       newptr->fg = col;
@@ -8612,12 +8661,12 @@ lo_FillInTextStyleInfo(lo_DocState *state, MWContext *context,
 
   /* check bgcolor property, including transparent */
   if (!DOM_StyleGetProperty(cx, db, node, BG_COLOR_STYLE, &entry))
-    return NULL;
+    goto done;
   if (entry) {
     COW();
     if (!DOM_GetCleanEntryData(cx, entry, lo_ColorStringToData, (uint32*)&col,
                                NULL))
-      return NULL;
+      goto done;
     newptr->bg = col;
     if (!strcasecomp(entry->value, "transparent"))
       newptr->no_background = TRUE;
@@ -8628,7 +8677,7 @@ lo_FillInTextStyleInfo(lo_DocState *state, MWContext *context,
   /* check font-face */
   if (lo_face_attribute()) {
     if (!DOM_StyleGetProperty(cx, db, node, FONTFACE_STYLE, &entry))
-      return NULL;
+      goto done;
     if (entry) {
       COW();
       /* XXXshaver use GetCleanEntryData when I figure out mem mgmt */
@@ -8645,17 +8694,15 @@ lo_FillInTextStyleInfo(lo_DocState *state, MWContext *context,
 
   /* check font-weight */
   if (!DOM_StyleGetProperty(cx, db, node, FONTWEIGHT_STYLE, &entry))
-    return NULL;
+    goto done;
   if (entry) {
     uint32 weight;
     /*
      * For "bolder" and "lighter", we need to keep them dirty because they're
-     * dependent on the enclosing state, so we have to recalculate each time.
-     * OPTIMIZATION: let FontWeightToData parse them and make the data be
-     * some magic value > 0xffff, to save the strcasecomps on each pass.
+     * dependent on the enclosing state.
      */
     if (!DOM_GetCleanEntryData(cx, entry, FontWeightToData, &weight, NULL))
-      return NULL;
+      goto done;
     if (weight) {
       if (!newptr->font_weight) {
         COW();
@@ -8663,8 +8710,10 @@ lo_FillInTextStyleInfo(lo_DocState *state, MWContext *context,
       }
       if (weight == FONT_WEIGHT_BOLDER) {
         weight = MAX(newptr->font_weight + 100, 100);        
+        entry->dirty = JS_TRUE;
       } else if (weight == FONT_WEIGHT_LIGHTER) {
         weight = MIN(newptr->font_weight - 100, 900);
+        entry->dirty = JS_TRUE;
       }
       if (weight != (uint32)newptr->font_weight) {
         COW();
@@ -8675,7 +8724,7 @@ lo_FillInTextStyleInfo(lo_DocState *state, MWContext *context,
 
   /* font-style */
   if (!DOM_StyleGetProperty(cx, db, node, FONTSTYLE_STYLE, &entry))
-    return NULL;
+    goto done;
   if (entry) {
     if (!strcasecomp(entry->value, NORMAL_STYLE)) {
       /* { font-style:normal} */
@@ -8695,12 +8744,12 @@ lo_FillInTextStyleInfo(lo_DocState *state, MWContext *context,
 
   /* text-decoration */
   if (!DOM_StyleGetProperty(cx, db, node, TEXTDECORATION_STYLE, &entry))
-    return NULL;
+    goto done;
   if (entry) {
     uint32 attrs;
 #define ATTRMASK (LO_ATTR_BLINK | LO_ATTR_STRIKEOUT | LO_ATTR_UNDERLINE)
     if (!DOM_GetCleanEntryData(cx, entry, TextDecorationToData, &attrs, NULL))
-      return NULL;
+      goto done;
     attrs = (tptr->attrmask & ~ATTRMASK) | (attrs & ATTRMASK);
     if (attrs != tptr->attrmask) {
       COW();
@@ -8710,8 +8759,17 @@ lo_FillInTextStyleInfo(lo_DocState *state, MWContext *context,
   }
 
 #undef COW
-  if (!isMutable && copied)
-    return lo_FetchTextAttr(state, &text_attr);
+ done:
+  if (!isMutable && copied) {
+    tptr = lo_FetchTextAttr(state, &text_attr);
+#ifdef DEBUG_shaver_textattr
+    fprintf(stderr, "returning new TextAttr: %p\n", tptr);
+#endif
+    return tptr;
+  }
+#ifdef DEBUG_shaver_textattr
+  fprintf(stderr, "returning unmodified TextAttr %p\n", tptr);
+#endif
   return tptr;
 }
 

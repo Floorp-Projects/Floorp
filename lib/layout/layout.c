@@ -1347,6 +1347,13 @@ lo_NewAnchor(lo_DocState *state, PA_Block href, PA_Block targ)
 	{
 		anchor_data->anchor = href;
 		anchor_data->target = targ;
+#ifdef DOM
+        /*
+         * XXX What if we create anchors out of order?  I guess the
+         * lo_CurrentLayerState call below means that we can't.
+         */
+        anchor_data->node = ACTIVE_NODE(state); /* CURRENT_NODE? */
+#endif
 		layer_state = lo_CurrentLayerState(state);
 		if (layer_state )
 			anchor_data->layer = layer_state->layer;
@@ -6665,6 +6672,10 @@ lo_is_default_anchor_color(lo_DocState *state, LO_TextAttr *tmp_attr)
 
 	return FALSE;
 }
+
+#ifdef DOM
+/* XXX honour style data here */
+#endif
 
 static void
 lo_RefreshElementAnchor(lo_DocState *state, LO_Element *element)

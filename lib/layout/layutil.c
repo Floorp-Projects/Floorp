@@ -2566,9 +2566,9 @@ void
 lo_SetNodeElement(lo_DocState *state, LO_Element *element)
 {
     LO_Element *eptr;
-    DOM_Node *node = CURRENT_NODE(state);
+    DOM_Node *node = ACTIVE_NODE(state);
 
-#ifdef DEBUG_shaver_0
+#ifdef DEBUG_shaver
     if (!node)
         fprintf(stderr, "NULL node\n");
     else if (node->type == NODE_TYPE_DOCUMENT)
@@ -2579,7 +2579,9 @@ lo_SetNodeElement(lo_DocState *state, LO_Element *element)
     XP_ASSERT(!ELEMENT_PRIV(node)->ele_end);
 #ifdef DEBUG_shaver
     if (ELEMENT_PRIV(node)->ele_end) {
-        fprintf(stderr, "lo_SetNodeElement: node has end already!\n");
+        fprintf(stderr, "lo_SetNodeElement: node %s has end already!\n",
+                node->type == NODE_TYPE_TEXT ? "text" :
+                ((DOM_Element *)node)->tagName);
     }
 #endif           
     eptr = ELEMENT_PRIV(node)->ele_start;

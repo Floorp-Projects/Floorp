@@ -4144,15 +4144,114 @@ lo_SetStyleSheetRandomProperties(MWContext *context,
 
 #ifdef DOM
 
+#define DISPLAY_STYLE_UNKNOWN   0
+#define DISPLAY_STYLE_NONE      1
+#define DISPLAY_STYLE_BLOCK     2
+#define DISPLAY_STYLE_LIST_ITEM 3
+
+static JSBool
+DisplayParser(const char *str, uint32 *data, void *closure)
+{
+    if (!strcasecomp(str, NONE_STYLE))
+        *data = DISPLAY_STYLE_NONE;
+    else if (!strcasecomp(str, BLOCK_STYLE))
+        *data = DISPLAY_STYLE_BLOCK;
+    else if (!strcasecomp(str, LIST_ITEM_STYLE))
+        *data = DISPLAY_STYLE_LIST_ITEM;
+    else
+        *data = DISPLAY_STYLE_UNKNOWN;
+    return JS_TRUE;
+}
+
+#if 0 /* not ready yet */
+/* XXX -- copied struct def'n from layblock.c -- I'm going to hell for sure */
+
+#define AXIS_NONE       0
+#define AXIS_X          1
+#define AXIS_Y          2
+
+struct SSUnitContext {
+  MWContext *context;
+  uint32 enclosingVal;
+  uint8 units;
+  uint8 axisAdjust;              
+};
+
+#define STYLE_UNITS_NONE        0
+#define STYLE_UNITS_PERCENT     1
+
+static void
+lo_SetStyleSheetBoxProperties(MWContext *context, lo_DocState *state,
+                              DOM_StyleDatabase *db, DOM_Node *node,
+                              PA_Tag *tag)
+{
+    DOM_Element *element;
+    DOM_AttributeEntry *entry;
+    uint32 value;
+    int32 left_margin;
+    Bool dummyTag = (tag->type == P_UNKNOWN);
+
+    if (node->type != NODE_TYPE_ELEMENT)
+        return;
+    
+    element = (DOM_Element *)node;
+
+    /* XXX page-break, etc. */
+    
+    /* display -- display:none is handled in the main lo_SSSP function */
+    if (!DOM_StyleGetProperty(cx, db, node, DISPLAY_STYLE, &entry))
+        return;
+    if (entry) {
+        if (!DOM_GetCleanEntryData(cx, entry, DisplayParser, &value, NULL))
+            return;
+        if (value == DISPLAY_STYLE_BLOCK) {
+            /* display:block */
+            /* cut-and-paste from original lo_SSSBP follows */
+            if (state->in_paragraph)
+                lo_CloseParagraph(context, &state, tag, 2);
+            lo_SetLineBreakState(context, state, FALSE,
+                                 LO_LINEFEED_BREAK_PARAGRAPH,1, FALSE);
+        } else if (value == DISPLAY_STYLE_LIST_ITEM) {
+            /* display:list-item */
+            if (!DOM_StyleGetProperty(cx, db, node, LIST_STYLE_TYPE_STYLE,
+                                      &entry))
+                return;
+            lo_setup_list(state, context, tag,
+                          entry ? entry->value : "disc", NULL, NULL);
+            LM_SetNodeFlags(node, STYLE_NODE_NEED_TO_POP_LIST);
+        }
+    }
+
+    /* left margin */
+#if 0 /* need to handle negatives somehow, etc. */
+    if (!DOM_StyleGetProperty(cx, db, node, LEFTMARGIN_STYLE, &entry))
+        return;
+    if (entry) {
+        arg.axisAdjust = AXIS_X;
+        arg.enclosingVal = 0;   /* XXX enclosing left margin? */
+        if (!DOM_GetCleanEntryData(cx, entry, lo_ParseSSNumToData,
+                                   &left_margin, (void *)&arg))
+            return;
+        CHECK_PERCENTAGE(entry, arg);
+    }        
+#endif 
+
+}
+#endif
+
 void
 lo_SetStyleSheetProperties(MWContext *context, lo_DocState *state, PA_Tag *tag)
 {
   JSContext *cx = context->mocha_context;
   DOM_StyleDatabase *db = state->top_state->style_db;
+  DOM_AttributeEntry *entry;
   DOM_Node *node = ACTIVE_NODE(state);
 
-  if (!node)
+  if (!db || !node || tag->type == P_TEXT || state->hide_content ||
+      (tag->type == P_UNKNOWN && !state->in_relayout))
     return;
+
+#if 0 /* Don't force creation of a style DB */
   if (!db) {
     if (!cx)
       return;
@@ -4161,15 +4260,49 @@ lo_SetStyleSheetProperties(MWContext *context, lo_DocState *state, PA_Tag *tag)
       return;
     state->top_state->style_db = db;
   }
+#endif
 
 #ifdef DEBUG_shaver
   fprintf(stderr, "setting style data for <%s>\n", PA_TagString(tag->type));
 #endif
 
+  /* check for display:none */
+  if (!DOM_StyleGetProperty(cx, db, node, DISPLAY_STYLE, &entry))
+    return;
+  if (entry) {
+      uint32 value;
+      if (!DOM_GetCleanEntryData(cx, entry, DisplayParser, &value, NULL))
+          return;
+      if (value == DISPLAY_STYLE_NONE) {
+          /*
+           * For now, we just don't generate layout elements for content with
+           * display:none.  In the future, we should generate the content and
+           * just mark it as invisible, so that we can dynamically change the
+           * display property.
+           */
+          
+#ifdef DEBUG_shaver
+          fprintf(stderr, "hiding content for <%s>\n",
+                  PA_TagString(tag->type));
+#endif
+          LM_SetNodeFlags(node, STYLE_NODE_NEED_TO_POP_CONTENT_HIDING);
+          state->hide_content = TRUE;
+          return;
+      }
+  }
+
+  /*
+   * do layer properties (position:absolute, etc.), but not for dummy
+   * table relayout tags.
+   */
+  if (tag->type != P_UNKNOWN)
+    lo_SetStyleSheetLayerProperties(context, state, db, node, tag);
+
+#if 0
   /* do box properties */
-  
-  /* do layer properties (position:absolute, etc.) */
-  lo_SetStyleSheetLayerProperties(context, state, db, node, tag);
+  lo_SetStyleSheetBoxProperties(context, state, db, node, tag);
+#endif
+
   return;
 }
 
@@ -4218,11 +4351,7 @@ lo_SetStyleSheetProperties(MWContext *context,
 	 * if set then we are ignoring tags and text for the duration
 	 * of this tag span 
 	 */
-	if(LO_CheckForContentHiding(state
-#ifdef DOM
-                                , context
-#endif
-                                ))
+	if(LO_CheckForContentHiding(state))
 	{
 		state->hide_content = TRUE;
 		STYLESTRUCT_SetString(style_struct, 	
@@ -4329,6 +4458,7 @@ static void lo_ProcessFontTag( lo_DocState *state, MWContext *context, PA_Tag *t
 }
 
 #ifdef DOM
+#ifdef DEBUG_shaver_verbose
 char *element_names[] = {
     "NONE",
     "TEXT",
@@ -4363,7 +4493,6 @@ char *element_names[] = {
     "SUB"
 };
 
-#ifdef DEBUG_shaver_verbose
 static void
 DumpNodeElements(DOM_Node *node)
 {
@@ -4419,6 +4548,9 @@ lo_LayoutTag(MWContext *context, lo_DocState *state, PA_Tag *tag)
 	StyleStruct *style_struct=NULL;
 	XP_Bool has_ss_bottom_margin=FALSE;
     XP_Bool started_in_head=FALSE;
+#ifdef DOM
+    DOM_Node *last_node;
+#endif
 	INTL_CharSetInfo c = LO_GetDocumentCharacterSetInfo(context);
 
 	XP_ASSERT(state);
@@ -4529,7 +4661,8 @@ XP_TRACE(("lo_LayoutTag(%d)\n", tag->type));
 	LO_LockLayout();
 
 #ifdef DOM
-    LM_ReflectTagNode(tag, state, context);
+    /* if we're closing a tag, LM_ReflectTagNode will return the closed node */
+    last_node = LM_ReflectTagNode(tag, state, context);
 #endif
 
 	if(!tag->is_end && lo_IsEmptyTag(tag->type))
@@ -7665,12 +7798,20 @@ XP_TRACE(("lo_LayoutTag(%d)\n", tag->type));
         }
         
         FIND_LAST_ELEMENT(eptr);
+#if 0
         if (!eptr)
-          return;
+          goto out;
         node = eptr->lo_any.node;
         if (!node)
-          return;
+            goto out;
+#endif /* 0 */
 
+        node = last_node;
+#ifdef DEBUG_shaver
+        fprintf(stderr, "closing <%s/%s>\n", PA_TagString(tag->type),
+                node->type == NODE_TYPE_TEXT ?
+                "text" : ((DOM_Element *)node)->tagName);
+#endif
         if (node->type == NODE_TYPE_ELEMENT ||
             node->type == NODE_TYPE_TEXT) {
             PRBool resyncElements = PR_FALSE;
@@ -7678,9 +7819,23 @@ XP_TRACE(("lo_LayoutTag(%d)\n", tag->type));
             XP_ASSERT(priv);
             
             if (priv->flags & STYLE_NODE_NEED_TO_POP_LAYER) {
+#ifdef DEBUG_shaver
+                fprintf(stderr, "need to pop layer ending <%s>\n",
+                        ((DOM_Element *)node)->tagName);
+#endif
                 resyncElements = PR_TRUE;
                 lo_EndLayer(context, state, PR_TRUE);
                 LM_ClearNodeFlags(node, STYLE_NODE_NEED_TO_POP_LAYER);
+            }
+
+            if (priv->flags & STYLE_NODE_NEED_TO_POP_CONTENT_HIDING) {
+#ifdef DEBUG_shaver
+                fprintf(stderr, "need to pop content hiding ending <%s>\n",
+                        ((DOM_Element *)node)->tagName);
+#endif
+              XP_ASSERT(state->hide_content);
+              state->hide_content = FALSE;
+              LM_ClearNodeFlags(node, STYLE_NODE_NEED_TO_POP_CONTENT_HIDING);
             }
 
             /* if we popped stuff, resync the end pointer */
@@ -7690,9 +7845,13 @@ XP_TRACE(("lo_LayoutTag(%d)\n", tag->type));
 #ifdef DEBUG_shaver
                     fprintf(stderr, "can't find new eptr for resync!\n");
 #endif
-                    return;
+                    goto out;
                 }
                 XP_ASSERT(eptr->lo_any.node == node);
+#ifdef DEBUG_shaver
+                fprintf(stderr, "eptr node %p != current %p\n",
+                        eptr->lo_any.node, node);
+#endif
             }
 
             priv->ele_end = eptr;
@@ -7709,7 +7868,7 @@ XP_TRACE(("lo_LayoutTag(%d)\n", tag->type));
     }
 #endif /* DOM */
 
-
+ out:
 	LO_UnlockLayout();
 }
 
