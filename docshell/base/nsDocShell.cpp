@@ -2218,15 +2218,6 @@ nsDocShell::Destroy()
     if (docShellParentAsNode)
         docShellParentAsNode->RemoveChild(this);
 
-    if (mScriptGlobal) {
-        nsCOMPtr<nsIFocusController> focusController;
-        nsCOMPtr<nsPIDOMWindow> ourWindow = do_QueryInterface(mScriptGlobal);
-        ourWindow->GetRootFocusController(getter_AddRefs(focusController));
-        if (focusController) {
-            focusController->SetFocusedWindow(nsnull);
-        }
-    }
-
     if (mContentViewer) {
         mContentViewer->Destroy();
         mContentViewer = nsnull;
