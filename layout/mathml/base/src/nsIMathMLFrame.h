@@ -23,8 +23,9 @@
 #define nsIMathMLFrame_h___
 
 // IID for the nsIMathMLFrame interface (the IID was taken from IIDS.h) 
-#define NS_IMATHMLFRAME_IID    \
-{ 0xa6cf90f6, 0x15b3, 0x11d2,    \
+/* a6cf9113-15b3-11d2-932e-00805f8add32 */
+#define NS_IMATHMLFRAME_IID   \
+{ 0xa6cf9113, 0x15b3, 0x11d2, \
   { 0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32 } }
 
 static NS_DEFINE_IID(kIMathMLFrameIID, NS_IMATHMLFRAME_IID);
