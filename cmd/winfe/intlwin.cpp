@@ -148,6 +148,7 @@ struct FontCharTable  fontchar_tbl[] =
         CS_VIET_VISCII,  "ÁnhMinh 1.1",         12, "MinhQuân 1.1", 10, 163,163,
         CS_VIET_VPS,     "VPS Times",           12, "VPS Courier",  10, 163,163,
         CS_VIET_TCVN,    ".VNTime",             12, ".VNTime",      10, 163,163,
+        CS_VIET_VNI,     "VNI-Times",           12, "VNI-Times",    10, 163,163,
 	CS_TIS620, 	"AngsanaUPC", 	16, "CordiaUPC", 14, THAI_CHARSET, THAI_CHARSET,
 	CS_UTF8, 	DEF_PROPORTIONAL_FONT, 	12, DEF_FIXED_FONT, 10, DEFAULT_CHARSET, DEFAULT_CHARSET,
 	CS_USER_DEFINED_ENCODING, 	DEF_PROPORTIONAL_FONT, 	12, DEF_FIXED_FONT, 10, ANSI_CHARSET, ANSI_CHARSET,
@@ -178,6 +179,7 @@ unsigned int lang_table[] =
         IDS_LANGUAGE_VIETNAMESE_VISCII, CS_VIET_VISCII, CS_VIET_VISCII, CS_VIET_VPS, CS_VIET_TCVN, CS_VIET_VIQR, CS_VIET_VNI, 0,
         IDS_LANGUAGE_VIETNAMESE_VPS, CS_VIET_VPS, CS_VIET_VPS, CS_VIET_VISCII, CS_VIET_TCVN, CS_VIET_VIQR, CS_VIET_VNI, 0,
         IDS_LANGUAGE_VIETNAMESE_TCVN, CS_VIET_TCVN, CS_VIET_TCVN, CS_VIET_VISCII, CS_VIET_VPS, CS_VIET_VIQR, CS_VIET_VNI, 0,
+        IDS_LANGUAGE_VIETNAMESE_VNI, CS_VIET_VNI, CS_VIET_TCVN, CS_VIET_VISCII, CS_VIET_VPS, CS_VIET_VIQR, CS_VIET_VNI, 0,
 	IDS_LANGUAGE_THAI, CS_TIS620, CS_TIS620, 0,
 	IDS_LANGUAGE_UTF8, CS_UTF8, CS_UTF8, CS_UTF7, CS_UCS2, CS_UCS2_SWAP, 0,
 	IDS_LANGUAGE_USERDEFINED, CS_USER_DEFINED_ENCODING, CS_USER_DEFINED_ENCODING, 0,
@@ -330,6 +332,7 @@ int CIntlFont::DocCSIDtoID(int doc_csid)
         if (! ((def_doccsid == CS_VIET_VISCII) ||
                (def_doccsid == CS_VIET_VPS) ||
                (def_doccsid == CS_VIET_TCVN) ||
+               (def_doccsid == CS_VIET_VNI) ||
                (def_doccsid == CS_VIET_VIQR)
            )) {
                 def_doccsid = 0;
