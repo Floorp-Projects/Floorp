@@ -607,9 +607,23 @@ namespace JavaScript {
             s  << "\t" << std::setiosflags( std::ostream::left ) << std::setw(16) << opcodeName[instr->itsOp];
             switch (instr->itsOp) {
                 case LOAD_NAME :
+                case SAVE_NAME :
                     {
                         LoadName *t = static_cast<LoadName * >(instr);
-                        s << "\"" << t->itsOperand1 <<  "\", R" << t->itsOperand2;
+                        s << "\"" << *t->itsOperand1 <<  "\", R" << t->itsOperand2;
+                    }
+                    break;
+                case NEW_OBJECT :
+                    {
+                        NewObject *t = static_cast<NewObject * >(instr);
+                        s << "R" << t->itsOperand1;
+                    }
+                    break;
+                case GET_PROP :
+                case SET_PROP :
+                    {
+                        GetProp *t = static_cast<GetProp * >(instr);
+                        s << "\"" << *t->itsOperand1 <<  "\", R" << t->itsOperand2 << ", R" << t->itsOperand3;
                     }
                     break;
                 case LOAD_IMMEDIATE :
