@@ -259,6 +259,7 @@ protected:
   // member variables for the d&d gesture state machine
   PRBool mIsTrackingDragGesture;
   nsPoint mGestureDownPoint;
+  nsPoint mGestureDownRefPoint;
   nsIFrame* mGestureDownFrame;
 
   nsCOMPtr<nsIContent> mLastLeftMouseDownContent;

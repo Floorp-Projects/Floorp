@@ -153,6 +153,7 @@ enum {
 
 nsEventStateManager::nsEventStateManager()
   : mGestureDownPoint(0,0),
+    mGestureDownRefPoint(0,0),
     mCurrentFocusFrame(nsnull),
     m_haveShutdown(PR_FALSE),
     mClearedFrameRefsDuringEvent(PR_FALSE),
@@ -1296,6 +1297,7 @@ nsEventStateManager :: BeginTrackingDragGesture ( nsIPresContext* aPresContext, 
 {
   mIsTrackingDragGesture = PR_TRUE;
   mGestureDownPoint = inDownEvent->point;
+  mGestureDownRefPoint = inDownEvent->refPoint;
   mGestureDownFrame = inDownFrame;
   
 #ifdef CLICK_HOLD_CONTEXT_MENUS
@@ -1317,6 +1319,7 @@ nsEventStateManager :: StopTrackingDragGesture ( )
 {
   mIsTrackingDragGesture = PR_FALSE;
   mGestureDownPoint = nsPoint(0,0);
+  mGestureDownRefPoint = nsPoint(0,0);
   mGestureDownFrame = nsnull;
 }
 
@@ -1411,14 +1414,21 @@ nsEventStateManager :: GenerateDragGesture ( nsIPresContext* aPresContext, nsGUI
       KillClickHoldTimer();
 #endif
 
+      // get the widget from the target frame
+      nsCOMPtr<nsIWidget> targetWidget;
+      mGestureDownFrame->GetWindow(aPresContext, getter_AddRefs(targetWidget));
+      
       nsEventStatus status = nsEventStatus_eIgnore;
       nsMouseEvent event;
       event.eventStructType = NS_DRAGDROP_EVENT;
       event.message = NS_DRAGDROP_GESTURE;
-      event.widget = aEvent->widget;
+      event.widget = targetWidget;
       event.clickCount = 0;
-      event.point = aEvent->point;
-      event.refPoint = aEvent->refPoint;
+      event.point = mGestureDownPoint;
+      event.refPoint = mGestureDownRefPoint;
+      // ideally, we should get the modifiers from the original event too, 
+      // but the drag code looks at modifiers at the end of the drag, so this
+      // is probably OK.
       event.isShift = ((nsMouseEvent*)aEvent)->isShift;
       event.isControl = ((nsMouseEvent*)aEvent)->isControl;
       event.isAlt = ((nsMouseEvent*)aEvent)->isAlt;
@@ -1431,16 +1441,29 @@ nsEventStateManager :: GenerateDragGesture ( nsIPresContext* aPresContext, nsGUI
       // when we're through because no one else is doing anything more with this
       // event and it will get reset on the very next event to the correct frame).
       mCurrentTarget = mGestureDownFrame;
-      nsCOMPtr<nsIContent> lastContent;
+
       if ( mGestureDownFrame ) {
-        mGestureDownFrame->GetContentForEvent(aPresContext, aEvent, getter_AddRefs(lastContent));
+        // Get the content for our synthesised event, not the mouse move event
+        nsCOMPtr<nsIContent> lastContent;
+        mGestureDownFrame->GetContentForEvent(aPresContext, &event, getter_AddRefs(lastContent));
+
+        // Hold onto old target content through the event and reset after.
+        nsCOMPtr<nsIContent> targetBeforeEvent = mCurrentTargetContent;
+        // Set the current target to the content for the mouse down
+        mCurrentTargetContent = lastContent;
+
+        // Dispatch to DOM
         if ( lastContent )
           lastContent->HandleDOMEvent(aPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status);
-      }
       
-      // dispatch to the frame
-      if ( mGestureDownFrame ) 
-        mGestureDownFrame->HandleEvent(aPresContext, &event, &status);   
+        // Firing the DOM event could have caused mGestureDownFrame to
+        // be destroyed.  So, null-check it again.
+        if ( mGestureDownFrame )
+          mGestureDownFrame->HandleEvent(aPresContext, &event, &status);   
+
+        // Reset mCurretTargetContent to what it was
+        mCurrentTargetContent = targetBeforeEvent;
+      }
       
       StopTrackingDragGesture();
     }
