@@ -31,12 +31,12 @@
 
 #include "nsFileSpec.h"  // evil ftang hack
 
-#ifdef XP_PC
-#ifdef XP_OS2
-#include "nsLocalFileOS2.h"
-#else
+#ifdef XP_WIN
 #include "nsLocalFileWin.h"
 #endif
+
+#ifdef XP_OS2
+#include "nsLocalFileOS2.h"
 #endif
 
 #ifdef XP_MAC

@@ -32,7 +32,7 @@
 #include <Memory.h>
 #include <Processes.h>
 #include "nsIInternetConfigService.h"
-#elif defined(XP_PC) && !defined (XP_OS2)
+#elif defined(XP_WIN)
 #include <windows.h>
 #include <shlobj.h>
 #include <stdlib.h>
@@ -99,7 +99,7 @@ private:
 static nsHashtable *systemDirectoriesLocations = NULL;
 
 
-#if defined (XP_PC) && !defined (XP_OS2)
+#if defined (XP_WIN)
 //----------------------------------------------------------------------------------------
 static char* MakeUpperCase(char* aPath)
 //----------------------------------------------------------------------------------------
@@ -155,7 +155,7 @@ Clean:
 
 	pMalloc->Release();
 } // GetWindowsFolder
-#endif // XP_PC && !XP_OS2
+#endif // XP_WIN
 
 //----------------------------------------------------------------------------------------
 static void GetCurrentWorkingDirectory(nsFileSpec& aFileSpec)
@@ -169,7 +169,7 @@ static void GetCurrentWorkingDirectory(nsFileSpec& aFileSpec)
 static void GetCurrentProcessDirectory(nsFileSpec& aFileSpec)
 //----------------------------------------------------------------------------------------
 {
-#if defined (XP_PC) && !defined (XP_OS2)
+#if defined (XP_WIN)
     char buf[MAX_PATH];
     if ( ::GetModuleFileName(0, buf, sizeof(buf)) ) {
         // chop of the executable name by finding the rightmost backslash
@@ -332,7 +332,7 @@ void nsSpecialSystemDirectory::operator = (SystemDirectories aSystemSystemDirect
     {
         
         case OS_DriveDirectory:
-#if defined (XP_PC) && !defined (XP_OS2)
+#if defined (XP_WIN)
         {
             char path[_MAX_PATH];
             PRInt32 len = GetWindowsDirectory( path, _MAX_PATH );
@@ -368,7 +368,7 @@ void nsSpecialSystemDirectory::operator = (SystemDirectories aSystemSystemDirect
 
             
         case OS_TemporaryDirectory:
-#if defined (XP_PC) && !defined (XP_OS2)
+#if defined (XP_WIN)
         {
             char path[_MAX_PATH];
             DWORD len = GetTempPath(_MAX_PATH, path);
@@ -559,7 +559,7 @@ void nsSpecialSystemDirectory::operator = (SystemDirectories aSystemSystemDirect
             break;
 #endif
             
-#if defined (XP_PC) && !defined (XP_OS2)
+#if defined (XP_WIN)
         case Win_SystemDirectory:
         {    
             char path[_MAX_PATH];
@@ -743,7 +743,7 @@ void nsSpecialSystemDirectory::operator = (SystemDirectories aSystemSystemDirect
             GetWindowsFolder(CSIDL_PRINTHOOD, *this);
             break;
         }
-#endif  // XP_PC && !XP_OS2 
+#endif  // XP_WIN
 
 #ifdef XP_UNIX
         case Unix_LocalDirectory:

@@ -90,11 +90,11 @@
 //========================================================================================
 //                          Compiler-specific macros, as needed
 //========================================================================================
-#if !defined(NS_USING_NAMESPACE) && (defined(__MWERKS__) || (defined(XP_PC) && !defined(XP_OS2)))
+#if !defined(NS_USING_NAMESPACE) && (defined(__MWERKS__) || defined(XP_WIN))
 #define NS_USING_NAMESPACE
 #endif
 
-#if !defined(NS_USING_STL) && (defined(__MWERKS__) || (defined(XP_PC) && !defined(XP_OS2)))
+#if !defined(NS_USING_STL) && (defined(__MWERKS__) || defined(XP_WIN))
 #define NS_USING_STL
 #endif
 
@@ -446,7 +446,7 @@ INT_TYPE FILE_BUFFER_TYPE::overflow(int_type c)
 #else
 #ifdef NS_EXPLICIT_FUNC_TEMPLATE_ARG    
     const ofacet_type& ft=use_facet<ofacet_type>(getloc());
-#elif defined(XP_PC)
+#elif defined(XP_WIN) || defined(XP_OS2)
 	const ofacet_type& ft=use_facet(getloc(), (ofacet_type*)0, false);
 #else
     const ofacet_type& ft=use_facet(getloc(), (ofacet_type*)0);
@@ -510,7 +510,7 @@ streamsize FILE_BUFFER_TYPE::xsputn(const char_type* s, streamsize n)
 #else
 #ifdef NS_EXPLICIT_FUNC_TEMPLATE_ARG
     const ofacet_type& ft=use_facet<ofacet_type>(loc);
-#elif defined(XP_PC)
+#elif defined(XP_WIN) || defined(XP_OS2)
 	const ofacet_type& ft=use_facet(getloc(), (ofacet_type*)0, false);
 #else
     const ofacet_type& ft=use_facet(getloc(), (ofacet_type*)0);
@@ -530,7 +530,7 @@ streamsize FILE_BUFFER_TYPE::xsputn(const char_type* s, streamsize n)
          result conv;
 #ifdef NS_EXPLICIT_FUNC_TEMPLATE_ARG     
          if ((conv=use_facet<ofacet_type>(getloc()).
-#elif defined(XP_PC)
+#elif defined(XP_WIN) || defined(XP_OS2)
 	     if ((conv=use_facet(getloc(), (ofacet_type*)0, false).
 #else
          if ((conv=use_facet(getloc(), (ofacet_type*)0).
@@ -645,7 +645,7 @@ POS_TYPE FILE_BUFFER_TYPE::seekpos(pos_type sp, IOS_BASE::openmode)
 {
     if (!mFileDesc || sp==pos_type(-1))
         return -1;
-#if defined(XP_PC) || defined(XP_UNIX) || defined(XP_BEOS)
+#if defined(XP_WIN) || defined(XP_UNIX) || defined(XP_OS2) || defined(XP_BEOS)
     PRInt32 position = sp;
 #else
     PRInt32 position = sp.offset();

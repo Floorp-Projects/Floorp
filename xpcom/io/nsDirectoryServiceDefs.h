@@ -67,11 +67,7 @@
     #define NS_MAC_INTERNET_SEARCH_DIR          "ISrch"
     #define NS_MAC_HOME_DIR                     "Home"
     #define NS_MAC_DEFAULT_DOWNLOAD_DIR         "DfltDwnld"
-#elif defined (XP_OS2)
-    #define NS_OS2_DIR                          "0S2Dir"
-    #define NS_OS2_HOME_DIR                     "Home"
-    #define NS_OS2_DESKTOP_DIR                  "Desk"    
-#elif defined (XP_PC)
+#elif defined (XP_WIN)
     #define NS_WIN_WINDOWS_DIR                  "WinD"
     #define NS_WIN_HOME_DIR                     "Home"
     #define NS_WIN_DESKTOP_DIR                  "DeskV" // virtual folder at the root of the namespace
@@ -101,6 +97,10 @@
     #define NS_UNIX_LOCAL_DIR                   "Locl"
     #define NS_UNIX_LIB_DIR                     "LibD"
     #define NS_UNIX_HOME_DIR                    "Home" 
+#elif defined (XP_OS2)
+    #define NS_OS2_DIR                          "0S2Dir"
+    #define NS_OS2_HOME_DIR                     "Home"
+    #define NS_OS2_DESKTOP_DIR                  "Desk"    
 #elif defined (XP_BEOS)
     #define NS_BEOS_SETTINGS_DIR                "Setngs"
     #define NS_BEOS_HOME_DIR                    "Home"

@@ -43,7 +43,7 @@
 #include <string.h>
 #include <stdio.h>
 
-#if defined(XP_PC) && !defined(XP_OS2)
+#if defined(XP_WIN)
 #include <mbstring.h>
 #endif
 
@@ -288,7 +288,7 @@ NS_NAMESPACE nsFileSpecHelpers
     NS_NAMESPACE_PROTOTYPE void Canonify(nsSimpleCharString& ioPath, PRBool inMakeDirs);
     NS_NAMESPACE_PROTOTYPE void MakeAllDirectories(const char* inPath, int mode);
 #endif
-#ifdef XP_PC
+#if defined(XP_WIN) || defined(XP_OS2)
     NS_NAMESPACE_PROTOTYPE void NativeToUnix(nsSimpleCharString& ioPath);
     NS_NAMESPACE_PROTOTYPE void UnixToNative(nsSimpleCharString& ioPath);
 #endif
@@ -316,7 +316,7 @@ void nsSimpleCharString::LeafReplace(char inSeparator, const char* inLeafName)
         return;
     }
     char* chars = mData->mString;
-#if defined(XP_PC) && !defined(XP_OS2)
+#if defined(XP_WIN)
     // XXX OS/2 should use strrchr() of DBCS verison, too
     char* lastSeparator = (char*) _mbsrchr((const unsigned char*) chars, inSeparator);
 #else
@@ -329,7 +329,7 @@ void nsSimpleCharString::LeafReplace(char inSeparator, const char* inLeafName)
         char savedCh = *lastSeparator;
         char *savedLastSeparator = lastSeparator;
         *lastSeparator = '\0';
-#if defined(XP_PC) && !defined(XP_OS2)
+#if defined(XP_WIN)
         // XXX OS/2 should use strrchr() of DBCS verison, too
         lastSeparator = (char*) _mbsrchr((const unsigned char*) chars, inSeparator);
 #else
@@ -369,7 +369,7 @@ char* nsSimpleCharString::GetLeaf(char inSeparator) const
         return nsnull;
 
     char* chars = mData->mString;
-#if defined(XP_PC) && !defined(XP_OS2)
+#if defined(XP_WIN)
     const char* lastSeparator = (const char*) _mbsrchr((const unsigned char *) chars, inSeparator);
 #else
     const char* lastSeparator = strrchr(chars, inSeparator);
@@ -386,7 +386,7 @@ char* nsSimpleCharString::GetLeaf(char inSeparator) const
 
     // So now, separator was the last character. Poke in a null instead.
     *(char*)lastSeparator = '\0'; // Should use const_cast, but Unix has old compiler.
-#if defined(XP_PC) && !defined(XP_OS2)
+#if defined(XP_WIN)
     leafPointer = (const char*) _mbsrchr((const unsigned char *) chars, inSeparator);
 #else
     leafPointer = strrchr(chars, inSeparator);
@@ -394,7 +394,7 @@ char* nsSimpleCharString::GetLeaf(char inSeparator) const
     char* result = leafPointer ? nsCRT::strdup(++leafPointer) : nsCRT::strdup(chars);
     // Restore the poked null before returning.
     *(char*)lastSeparator = inSeparator;
-#ifdef XP_PC
+#if defined(XP_WIN) || defined(XP_OS2)
     // If it's a drive letter use the colon notation.
     if (!leafPointer && result[2] == 0 && result[1] == '|')
         result[1] = ':';
@@ -407,7 +407,7 @@ char* nsSimpleCharString::GetLeaf(char inSeparator) const
 #pragma mark -
 #endif
 
-#if defined(XP_UNIX) || defined(XP_PC) || defined(XP_BEOS)
+#if defined(XP_UNIX) || defined(XP_WIN) || defined(XP_OS2) || defined(XP_BEOS)
 
 //----------------------------------------------------------------------------------------
 void nsFileSpecHelpers::MakeAllDirectories(const char* inPath, int mode)
@@ -425,7 +425,7 @@ void nsFileSpecHelpers::MakeAllDirectories(const char* inPath, int mode)
     const char kSeparator = '/'; // I repeat: this should be a unix-style path.
     const int kSkipFirst = 1;
 
-#ifdef XP_PC
+#if defined(XP_WIN) || defined(XP_OS2)
     // Either this is a relative path, or we ensure that it has
     // a drive letter specifier.
     NS_ASSERTION( pathCopy[0] != '/' || pathCopy[2] == '|', "No drive letter!" );
@@ -437,7 +437,7 @@ void nsFileSpecHelpers::MakeAllDirectories(const char* inPath, int mode)
         nsFileSpec spec;
         *currentEnd = '\0';
         
-#ifdef XP_PC
+#if defined(XP_WIN) || defined(XP_OS2)
         /* 
            if we have a drive letter path, we must make sure that the inital path has a '/' on it, or
            Canonify will turn "/c|" into a path relative to the running executable.
@@ -480,14 +480,12 @@ void nsFileSpecHelpers::MakeAllDirectories(const char* inPath, int mode)
     nsCRT::free(pathCopy);
 } // nsFileSpecHelpers::MakeAllDirectories
 
-#endif // XP_PC || XP_UNIX
+#endif // XP_UNIX || XP_WIN || XP_OS2 || XP_BEOS
 
 #ifdef XP_MAC
 #pragma mark -
 #endif
-#if defined(XP_OS2)
-#include "nsFileSpecOS2.cpp" // OS/2-specific implementations
-#elif defined(XP_PC)
+#if defined(XP_WIN)
 #include "nsFileSpecWin.cpp" // Windows-specific implementations
 #elif defined(XP_MAC)
 //#include "nsFileSpecMac.cpp" // Macintosh-specific implementations
@@ -499,6 +497,8 @@ void nsFileSpecHelpers::MakeAllDirectories(const char* inPath, int mode)
 #include "nsFileSpecBeOS.cpp" // BeOS-specific implementations
 #elif defined(XP_UNIX)
 #include "nsFileSpecUnix.cpp" // Unix-specific implementations
+#elif defined(XP_OS2)
+#include "nsFileSpecOS2.cpp" // OS/2-specific implementations
 #endif
 
 //========================================================================================
@@ -629,7 +629,7 @@ void nsFileURL::operator = (const nsFilePath& inOther)
     mURL = kFileURLPrefix;
     char* original = (char*)(const char*)inOther; // we shall modify, but restore.
     if (!original || !*original) return;
-#ifdef XP_PC
+#if defined(XP_WIN) || defined(XP_OS2)
     // because we don't want to escape the '|' character, change it to a letter.
     NS_ASSERTION(original[2] == '|', "No drive letter part!");
     original[2] = 'x';
@@ -685,12 +685,12 @@ nsFilePath::nsFilePath(const char* inString, PRBool inCreateDirs)
     	
     NS_ASSERTION(strstr(inString, kFileURLPrefix) != inString, "URL passed as path");
 
-#ifdef XP_PC
+#if defined(XP_WIN) || defined(XP_OS2)
     nsFileSpecHelpers::UnixToNative(mPath);
 #endif
     // Make canonical and absolute.
     nsFileSpecHelpers::Canonify(mPath, inCreateDirs);
-#ifdef XP_PC
+#if defined(XP_WIN) || defined(XP_OS2)
     NS_ASSERTION( mPath[1] == ':', "unexpected canonical path" );
     nsFileSpecHelpers::NativeToUnix(mPath);
 #endif
@@ -707,12 +707,12 @@ nsFilePath::nsFilePath(const nsString& inString, PRBool inCreateDirs)
     	return;
 
     NS_ASSERTION(strstr((const char*)mPath, kFileURLPrefix) != (const char*)mPath, "URL passed as path");
-#ifdef XP_PC
+#if defined(XP_WIN) || defined(XP_OS2)
     nsFileSpecHelpers::UnixToNative(mPath);
 #endif
     // Make canonical and absolute.
     nsFileSpecHelpers::Canonify(mPath, inCreateDirs);
-#ifdef XP_PC
+#if defined(XP_WIN) || defined(XP_OS2)
     NS_ASSERTION( mPath[1] == ':', "unexpected canonical path" );
     nsFileSpecHelpers::NativeToUnix(mPath);
 #endif
@@ -765,12 +765,12 @@ void nsFilePath::operator = (const char* inString)
     mPath = inString;
     if (mPath.IsEmpty())
     	return;
-#ifdef XP_PC
+#if defined(XP_WIN) || defined(XP_OS2)
     nsFileSpecHelpers::UnixToNative(mPath);
 #endif
     // Make canonical and absolute.
     nsFileSpecHelpers::Canonify(mPath, PR_FALSE /* XXX? */);
-#ifdef XP_PC
+#if defined(XP_WIN) || defined(XP_OS2)
     nsFileSpecHelpers::NativeToUnix(mPath);
 #endif
 }
@@ -975,7 +975,7 @@ void nsFileSpec::operator = (const nsFilePath& inPath)
 }
 #endif //XP_UNIX
 
-#if defined(XP_UNIX) || defined(XP_PC) || defined(XP_BEOS)
+#if defined(XP_UNIX) || defined(XP_WIN) || defined(XP_OS2) || defined(XP_BEOS)
 //----------------------------------------------------------------------------------------
 nsFileSpec::nsFileSpec(const nsFileSpec& inSpec)
 //----------------------------------------------------------------------------------------
@@ -1024,7 +1024,7 @@ void nsFileSpec::operator = (const char* inString)
     nsFileSpecHelpers::Canonify(mPath, PR_FALSE /* XXX? */);
     mError = NS_OK;
 }
-#endif //XP_UNIX,PC,XP_BEOS
+#endif //XP_UNIX,XP_WIN,XP_OS2,XP_BEOS
 
 //----------------------------------------------------------------------------------------
 nsFileSpec nsFileSpec::operator + (const char* inRelativePath) const
@@ -1060,7 +1060,7 @@ PRBool nsFileSpec::operator == (const nsFileSpec& inOther) const
     
     // Length() is size of buffer, not length of string
     PRUint32 strLast = str.Length() - 1, inLast = inStr.Length() - 1;
-#if defined(XP_PC)
+#if defined(XP_WIN) || defined(XP_OS2)
 #define DIR_SEPARATOR '\\'      // XXX doesn't NSPR have this?
     /* windows does not care about case. */
 #ifdef XP_OS2
@@ -1375,7 +1375,7 @@ nsNSPRPath::operator const char*() const
 // cannot be changed, so we have to do the dirty work.
 //----------------------------------------------------------------------------------------
 {
-#ifdef XP_PC
+#if defined(XP_WIN) || defined(XP_OS2)
     if (!modifiedNSPRPath)
     {
         // If this is the first call, initialize modifiedNSPRPath. Start by cloning
@@ -1406,7 +1406,7 @@ nsNSPRPath::operator const char*() const
 nsNSPRPath::~nsNSPRPath()
 //----------------------------------------------------------------------------------------
 {
-#ifdef XP_PC
+#if defined(XP_WIN) || defined(XP_OS2)
     if (modifiedNSPRPath)
         nsCRT::free(modifiedNSPRPath);
 #endif
