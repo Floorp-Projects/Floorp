@@ -197,7 +197,7 @@ Can't contact the directory server at $ldapserver:$ldapport</font>\n";
 
 my $cvsqueryurl = "cvsqueryform.cgi?" .
     "cvsroot=$::TreeInfo{$::TreeID}{repository}" .
-    "&module=$::TreeID";
+    "&module=$::TreeInfo{$::TreeID}{module}";
 $cvsqueryurl.= "&branch=$::TreeInfo{$::TreeID}{branch}"
      if ($::TreeInfo{$::TreeID}{branch});
 my $bip = BatchIdPart('?');
