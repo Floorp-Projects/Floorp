@@ -19,8 +19,8 @@ browser.jar:
 *       content/browser/pageReportFirstTime.xul       (content/pageReportFirstTime.xul)   
 *       content/browser/search.xml                    (content/search.xml)
 *       content/browser/utilityOverlay.js             (content/utilityOverlay.js)
-        content/browser/web-panels.js                 (content/web-panels.js)
-        content/browser/web-panels.xul                (content/web-panels.xul)
+*       content/browser/web-panels.js                 (content/web-panels.js)
+*       content/browser/web-panels.xul                (content/web-panels.xul)
 
 en-US.jar:
         locale/en-US/browser/contents.rdf             (locale/contents.rdf)
