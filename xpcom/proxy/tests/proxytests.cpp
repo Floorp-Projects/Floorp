@@ -132,7 +132,8 @@ nsTestXPCFoo::~nsTestXPCFoo()
 {
 }
 
-NS_IMPL_ISUPPORTS(nsTestXPCFoo,NS_ITESTXPCFOO_IID)
+static NS_DEFINE_IID(kITestXPCFooIID, NS_ITESTXPCFOO_IID);
+NS_IMPL_ISUPPORTS(nsTestXPCFoo,kITestXPCFooIID)
 
 NS_IMETHODIMP nsTestXPCFoo::Test(int p1, int p2, int* retval)
 {
@@ -173,9 +174,8 @@ nsTestXPCFoo2::nsTestXPCFoo2()
 nsTestXPCFoo2::~nsTestXPCFoo2()
 {
 }
-
-NS_IMPL_ISUPPORTS(nsTestXPCFoo2,NS_ITESTXPCFOO_IID)
-
+//kITestXPCFooIID defined above for nsTestXPCFoo(1)
+NS_IMPL_ISUPPORTS(nsTestXPCFoo2,kITestXPCFooIID)
 
 NS_IMETHODIMP nsTestXPCFoo2::Test(int p1, int p2, int* retval)
 {
