@@ -326,6 +326,17 @@ BASIC_LIBS_2	= \
 		  $(DIST)/lib/lib$(LITE_PREFIX)rdf.a \
 		  $(NULL)
 
+
+# jwz: link in libmime all the time.
+# but it needs to be before libnetutil, and I don't know how to do that,
+# so just link against libnetutil twice.
+
+BASIC_LIBS	+= \
+		  $(DIST)/lib/libmime.a		\
+		  $(DIST)/lib/libnetutil.a      \
+		  $(NULL)
+
+
 ifdef MOZ_MAIL_NEWS
 ifdef MOZ_SECURITY
 BASIC_LIBS	+= \
@@ -358,8 +369,7 @@ ifdef MOZ_SECURITY
 BASIC_LIBS	+= $(DIST)/lib/libmsg.a \
 		$(NULL)
 endif
-BASIC_LIBS	+= $(DIST)/lib/libmime.a \
-		  $(DIST)/lib/libaddr.a \
+BASIC_LIBS	+= $(DIST)/lib/libaddr.a \
 		  $(DIST)/lib/libneo.a \
 		  $(DIST)/lib/libaddr.a \
 		  $(NULL)

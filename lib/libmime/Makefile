@@ -55,7 +55,7 @@ CSRCS		= \
 #		  mimevcrd.c \
 
 
-REQUIRES	= mime nspr dbm img util layer security pref js julian nls
+REQUIRES = mime nspr dbm img util layer security pref js julian nls xp network
 
 include $(DEPTH)/config/rules.mk
 
@@ -74,7 +74,8 @@ DEFINES += -DMOZILLA_30
 # Building the "mimefilt" executable, which reads a message from stdin and
 # writes HTML to stdout
 
-FILT_LIBS=-L$(DIST)/lib -L$(DIST)/bin -li18n -lnetwork -lxp -lnspr21 -lplc21
+FILT_LIBS=-L$(DIST)/lib -L$(DIST)/bin -li18n -lnetwork -lxp \
+	-lnspr21 -lplc21 -lplds21
 
 $(OBJDIR)/mimefilt: $(FILT_OBJS) $(LIBRARY)
 	@$(MAKE_OBJDIR)

@@ -37,8 +37,10 @@ endif
 
 DIRS	+= libparse xlate xp
 
+DIRS	+= libmime
+
 ifdef MOZ_MAIL_NEWS
-DIRS	+= libaddr libmime
+DIRS	+= libaddr
 endif
 
 DIRS	+= htmldlgs
