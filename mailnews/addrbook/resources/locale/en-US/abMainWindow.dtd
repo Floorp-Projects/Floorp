@@ -37,7 +37,6 @@ Rights Reserved.
 <!-- LOCALIZATION NOTE (newLDAPDirectoryCmd.accesskey) : DONT_TRANSLATE -->
 <!ENTITY newLDAPDirectoryCmd.accesskey                  "D">
 <!ENTITY newIM.label                                    "IM">
-<!ENTITY newIM.tooltip                                  "IM / Chat selected people"> 
 <!ENTITY importCmd.label                                "Import..."> 
 <!ENTITY importCmd.accesskey				"I"> 
 <!ENTITY exportCmd.label                                "Export...">  
@@ -92,7 +91,8 @@ Rights Reserved.
 <!ENTITY newcardButton.tooltip                          "Create a new address book card"> 
 <!ENTITY newlistButton.tooltip                          "Create a new list"> 
 <!ENTITY editButton.tooltip                             "Edit the selected card"> 
-<!ENTITY newmsgButton.tooltip                           "Create a new message"> 
+<!ENTITY newmsgButton.tooltip                           "Send a mail message"> 
+<!ENTITY newIM.tooltip                                  "Send an instant message"> 
 <!ENTITY deleteButton.tooltip                           "Delete selected card or address book"> 
 <!ENTITY stopButton.tooltip                             "Stop the current transfer"> 
 <!ENTITY searchButton.tooltip                           "Search the selected address book"> 
