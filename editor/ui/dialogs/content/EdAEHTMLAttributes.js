@@ -90,11 +90,16 @@ function BuildHTMLAttributeNameList()
           //  menuitem.setAttribute("class", "menuitem-highlight-1");
 
           // Set flags to filter value input
-          menuitem.setAttribute("forceOneChar", forceOneChar ? "true" : "");
-          menuitem.setAttribute("limitFirstChar", limitFirstChar ? "true" : "");
-          menuitem.setAttribute("forceInteger", forceInteger ? "true" : "");
-          menuitem.setAttribute("forceSignedInteger", forceSignedInteger ? "true" : "");
-          menuitem.setAttribute("forceIntOrPercent", forceIntOrPercent ? "true" : "");
+          if (forceOneChar)
+            menuitem.setAttribute("forceOneChar","true");
+          if (limitFirstChar)
+            menuitem.setAttribute("limitFirstChar", "true");
+          if (forceInteger)
+            menuitem.setAttribute("forceInteger", "true");
+          if (forceSignedInteger)
+            menuitem.setAttribute("forceSignedInteger", "true");
+          if (forceIntOrPercent)
+            menuitem.setAttribute("forceIntOrPercent", "true");
         }
       }
     }
