@@ -773,14 +773,14 @@ PRBool nsRange::IsIncreasing(nsIDOMNode* aStartN, PRInt32 aStartOffset,
   }
 
   // back through the ancestors, starting from the root, until first non-matching ancestor found
-  while (startIdx >= 0 && endIdx >= 0 &&
-         mStartAncestors->ElementAt(startIdx) == mEndAncestors->ElementAt(endIdx))
+  do
   {
     --startIdx;
     --endIdx;
     // numStartAncestors will only be <0 if one endpoint's node is the
     // common ancestor of the other
-  }
+  } while (startIdx >= 0 && endIdx >= 0 &&
+           mStartAncestors->ElementAt(startIdx) == mEndAncestors->ElementAt(endIdx));
   // now back up one and that's the last common ancestor from the root,
   // or the first common ancestor from the leaf perspective
   ++startIdx;
