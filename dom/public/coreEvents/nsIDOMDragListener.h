@@ -36,6 +36,8 @@ class nsIDOMDragListener : public nsIDOMEventListener {
 
 public:
 
+  static const nsIID& GetIID() { static nsIID iid = NS_IDOMDRAGLISTENER_IID; return iid; }
+
   /**
   * Processes a drag enter event
   * @param aMouseEvent @see nsIDOMEvent.h 
