@@ -51,12 +51,9 @@
 
 		void createPopup(in Element element, in Element popupContent,
 					     in long xPos, in long yPos, 
-						 in DOMString popupType, in DOMString popupAlignment);
-
-		void createAnchoredPopup(in Element element, in Element popupContent,
-								 in DOMString anchorAlignment,
-								 in DOMString popupType, in DOMString popupAlignment);
-								  
+						 in DOMString popupType, in DOMString anchorAlignment,
+						 in DOMString popupAlignment);
+						  
         Window open(/* ... */);
         Window openDialog(/* ... */);
       };
