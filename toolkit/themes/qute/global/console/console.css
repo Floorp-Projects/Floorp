@@ -135,6 +135,10 @@ toolbarseparator {
 
 /* Toolbar icons */
 
+.toolbarbutton-text {
+  margin-left: 4px !important;
+} 
+
 toolbar#ToolbarMode toolbarbutton {
   list-style-image: url("chrome://global/skin/console/Console-toolbar.png");
 }
