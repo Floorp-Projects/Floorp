@@ -87,6 +87,9 @@ CSRCS =             \
 	op_nofil.c		\
 	parent.c    	\
 	perf.c    		\
+	pipeping.c		\
+	pipepong.c		\
+	pipeself.c		\
 	poll_er.c		\
 	poll_nm.c		\
 	poll_to.c		\
