@@ -66,6 +66,10 @@ typedef int PRInt32;
 #define FILE_ALL_JS                     "all-proxy.js"
 #define VR_DEFAULT_PRODUCT_NAME         "Mozilla"
 
+#define NEXT_DLG                        1
+#define PREV_DLG                        2
+#define OTHER_DLG_1                     3
+
 #define MAX_CRC_FAILED_DOWNLOAD_RETRIES 3
 #define MAX_FILE_DOWNLOAD_RETRIES       3
 
@@ -145,6 +149,7 @@ typedef int PRInt32;
 #define ERROR_CODE_HIDE                 0
 #define ERROR_CODE_SHOW                 1
 #define DLG_NONE                        0
+#define DLG_COMMIT_INSTALL              1
 #define CX_CHECKBOX                     13
 #define CY_CHECKBOX                     13
 
