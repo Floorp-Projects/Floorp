@@ -2446,14 +2446,19 @@ js_Interpret(JSContext *cx, jsval *result)
 		goto out;
 	    }
 
-	    /*
-	     * If in a with statement, set obj to the With object's prototype,
-	     * i.e., the object specified in the with statement head.
-	     */
+            /*
+             * Name the closure in the object at the head of the scope chain,
+             * referenced by obj.
+             */
 	    if (fp->scopeChain != obj) {
 		obj = fp->scopeChain;
 		JS_ASSERT(OBJ_GET_CLASS(cx, obj) == &js_WithClass);
 #if JS_BUG_WITH_CLOSURE
+                /*
+                 * If in a with statement, set obj to the With object's
+                 * prototype, i.e., the object specified in the head of
+                 * the with statement.
+                 */
 		while (OBJ_GET_CLASS(cx, obj) == &js_WithClass) {
 		    proto = OBJ_GET_PROTO(cx, obj);
 		    if (!proto)
@@ -2480,8 +2485,7 @@ js_Interpret(JSContext *cx, jsval *result)
 	     * constructor function.
 	     */
 	    SAVE_SP(fp);
-	    closure = js_ConstructObject(cx, &js_ClosureClass, obj2,
-					 fp->scopeChain);
+	    closure = js_ConstructObject(cx, &js_ClosureClass, obj2, obj);
 	    if (!closure) {
 		ok = JS_FALSE;
 		goto out;
@@ -2642,41 +2646,74 @@ js_Interpret(JSContext *cx, jsval *result)
 	    *vp = sp[-1];
 	    break;
 
-	  case JSOP_DEFFUN:
-	    /* We must be at top-level ("box") scope, not inside a with. */
-	    JS_ASSERT(fp->scopeChain == js_FindVariableScope(cx, &fun));
+          case JSOP_DEFFUN:
+            /* We must be at top-level ("box") scope, not inside a with. */
+            parent = fp->scopeChain;
+            JS_ASSERT(parent == js_FindVariableScope(cx, &fun));
 
-	    atom = GET_ATOM(cx, script, pc);
-	    obj = ATOM_TO_OBJECT(atom);
-	    fun = JS_GetPrivate(cx, obj);
-	    attrs = fun->flags & (JSFUN_GETTER | JSFUN_SETTER);
-	    ok = OBJ_DEFINE_PROPERTY(cx, fp->scopeChain, (jsid)fun->atom,
-	                             attrs ? JSVAL_VOID : OBJECT_TO_JSVAL(obj),
-	                             (attrs & JSFUN_GETTER)
-	                             ? (JSPropertyOp) obj
-	                             : NULL,
-	                             (attrs & JSFUN_SETTER)
-	                             ? (JSPropertyOp) obj
-	                             : NULL,
-	                             attrs | JSPROP_ENUMERATE,
-				     NULL);
-	    if (!ok)
-	    	goto out;
-	    break;
+            atom = GET_ATOM(cx, script, pc);
+            obj = ATOM_TO_OBJECT(atom);
+            fun = JS_GetPrivate(cx, obj);
 
-	  case JSOP_DEFCONST:
-	  case JSOP_DEFVAR:
-	    atom = GET_ATOM(cx, script, pc);
-	    obj = js_FindVariableScope(cx, &fun);
-	    JS_ASSERT(!fun);
-	    attrs = JSPROP_ENUMERATE | JSPROP_PERMANENT;
-	    if (op == JSOP_DEFCONST)
-	    	attrs |= JSPROP_READONLY;
-	    ok = OBJ_DEFINE_PROPERTY(cx, obj, (jsid)atom, JSVAL_VOID,
-				     NULL, NULL, attrs, NULL);
-	    if (!ok)
-	    	goto out;
-	    break;
+            /*
+             * If static link is not current scope, clone fun's object to link
+             * to the current scope via parent.  This clause exists to enable
+             * sharing of compiled functions among multiple equivalent scopes,
+             * splitting the cost of compilation evenly among the scopes and
+             * amortizing it over a number of executions.  Examples include XUL
+             * scripts and event handlers shared among Mozilla chrome windows,
+             * and server-side JS user-defined functions shared among requests.
+             *
+             * NB: The Script object exposes compile and exec in the language,
+             * such that this clause introduces an incompatible change from old
+             * JS versions that supported Script.  Such a JS version supported
+             * executing a script that defined and called functions scoped by
+             * the compile-time static link, not by the exec-time scope chain.
+             *
+             * We sacrifice compatibility, breaking such scripts, in order to
+             * promote compile-cost sharing and amortizing, and because Script
+             * is not and will not be standardized.
+             */
+            if (OBJ_GET_PARENT(cx, obj) != parent) {
+                obj = js_NewObject(cx, &js_FunctionClass, obj, parent);
+                if (!obj) {
+                    ok = JS_FALSE;
+                    goto out;
+                }
+                ok = js_LinkFunctionObject(cx, fun, obj);
+                if (!ok) {
+                    cx->newborn[GCX_OBJECT] = NULL;
+                    goto out;
+                }
+            }
+
+            attrs = fun->flags & (JSFUN_GETTER | JSFUN_SETTER);
+            ok = OBJ_DEFINE_PROPERTY(cx, parent, (jsid)fun->atom,
+                                     attrs ? JSVAL_VOID : OBJECT_TO_JSVAL(obj),
+                                     (attrs & JSFUN_GETTER)
+                                     ? (JSPropertyOp) obj
+                                     : NULL,
+                                     (attrs & JSFUN_SETTER)
+                                     ? (JSPropertyOp) obj
+                                     : NULL,
+                                     attrs | JSPROP_ENUMERATE,
+                                     NULL);
+            if (!ok)
+                goto out;
+            break;
+
+          case JSOP_DEFCONST:
+          case JSOP_DEFVAR:
+            atom = GET_ATOM(cx, script, pc);
+            obj = js_FindVariableScope(cx, &fun);
+            attrs = JSPROP_ENUMERATE | JSPROP_PERMANENT;
+            if (op == JSOP_DEFCONST)
+                attrs |= JSPROP_READONLY;
+            ok = OBJ_DEFINE_PROPERTY(cx, obj, (jsid)atom, JSVAL_VOID,
+                                     NULL, NULL, attrs, NULL);
+            if (!ok)
+                goto out;
+            break;
 
 #if JS_HAS_GETTER_SETTER
           case JSOP_GETTER:

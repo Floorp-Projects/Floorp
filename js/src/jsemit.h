@@ -49,14 +49,14 @@ JS_BEGIN_EXTERN_C
 
 typedef enum JSStmtType {
     STMT_BLOCK        = 0,      /* compound statement: { s1[;... sN] } */
-    STMT_LABEL        = 1,      /* labeled statement:  l: s */
+    STMT_LABEL        = 1,      /* labeled statement:  L: s */
     STMT_IF           = 2,      /* if (then) statement */
-    STMT_ELSE         = 3,      /* else statement */
+    STMT_ELSE         = 3,      /* else clause of if statement */
     STMT_SWITCH       = 4,      /* switch statement */
     STMT_WITH         = 5,      /* with statement */
-    STMT_TRY	      = 6,	/* try statement */
-    STMT_CATCH	      = 7,	/* catch block */
-    STMT_FINALLY      = 8,	/* finally statement */
+    STMT_TRY          = 6,      /* try statement */
+    STMT_CATCH        = 7,      /* catch block */
+    STMT_FINALLY      = 8,      /* finally statement */
     STMT_DO_LOOP      = 9,      /* do/while loop statement */
     STMT_FOR_LOOP     = 10,     /* for loop statement */
     STMT_FOR_IN_LOOP  = 11,     /* for/in loop statement */
@@ -92,11 +92,11 @@ struct JSTreeContext {              /* tree context for semantic checks */
 #define TCF_RETURN_VOID 0x04        /* function has 'return;' */
 #define TCF_IN_FOR_INIT 0x08        /* parsing init expr of for; exclude 'in' */
 
-#define TREE_CONTEXT_INIT(tc) \
+#define TREE_CONTEXT_INIT(tc)                                                 \
     ((tc)->flags = 0, (tc)->tryCount = 0, (tc)->topStmt = NULL,               \
      ATOM_LIST_INIT(&(tc)->decls))
 
-#define TREE_CONTEXT_FREE(tc) \
+#define TREE_CONTEXT_FREE(tc)                                                 \
     ((void)0)
 
 struct JSCodeGenerator {
@@ -114,7 +114,7 @@ struct JSCodeGenerator {
     JSPrincipals    *principals;    /* principals for constant folding eval */
     JSTreeContext   treeContext;    /* for break/continue code generation */
     JSAtomList      atomList;       /* literals indexed for mapping */
-    intN            stackDepth;     /* current stack depth in basic block */
+    intN            stackDepth;     /* current stack depth in script frame */
     uintN           maxStackDepth;  /* maximum stack depth so far */
     jssrcnote       *notes;         /* source notes, see below */
     uintN           noteCount;      /* number of source notes so far */

@@ -541,17 +541,12 @@ FunctionDef(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
     MUST_MATCH_TOKEN(TOK_RC, JSMSG_CURLY_AFTER_BODY);
     pn->pn_pos.end = CURRENT_TOKEN(ts).pos.end;
 
+    /* If a top-level function has no name, it must be a (useless) closure. */
+    pn->pn_op = (outerFun || lambda || !funAtom) ? JSOP_CLOSURE : JSOP_NOP;
     pn->pn_fun = fun;
     pn->pn_body = pn2;
     pn->pn_tryCount = funtc.tryCount;
     TREE_CONTEXT_FREE(&funtc);
-
-#if JS_HAS_LEXICAL_CLOSURE
-    if (lambda)
-	pn->pn_op = JSOP_CLOSURE;
-    else
-#endif
-	pn->pn_op = JSOP_NOP;
     return pn;
 }
 
@@ -686,6 +681,7 @@ ImportExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
     pn->pn_op = JSOP_NAME;
     pn->pn_atom = CURRENT_TOKEN(ts).t_atom;
     pn->pn_slot = -1;
+    pn->pn_attrs = 0;
 
     ts->flags |= TSF_REGEXP;
     while ((tt = js_GetToken(cx, ts)) == TOK_DOT || tt == TOK_LB) {
@@ -706,6 +702,7 @@ ImportExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
 		pn2->pn_op = JSOP_GETPROP;
 		pn2->pn_atom = CURRENT_TOKEN(ts).t_atom;
 		pn2->pn_slot = -1;
+                pn2->pn_attrs = 0;
 	    }
 	    pn2->pn_pos.begin = pn->pn_pos.begin;
 	    pn2->pn_pos.end = CURRENT_TOKEN(ts).pos.end;
@@ -788,6 +785,7 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
 		pn2->pn_op = JSOP_NAME;
 		pn2->pn_atom = CURRENT_TOKEN(ts).t_atom;
 		pn2->pn_slot = -1;
+                pn2->pn_attrs = 0;
 		PN_APPEND(pn, pn2);
 	    } while (js_MatchToken(cx, ts, TOK_COMMA));
 	}
@@ -1537,6 +1535,7 @@ Variables(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
 	pn2->pn_atom = atom;
 	pn2->pn_expr = NULL;
 	pn2->pn_slot = -1;
+        pn2->pn_attrs = 0;
 	PN_APPEND(pn, pn2);
 
 	if (!OBJ_LOOKUP_PROPERTY(cx, obj, (jsid)atom, &pobj, &prop))
@@ -1591,10 +1590,12 @@ Variables(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
 	    }
 	} else {
 	    /*
-	     * Property not found in current variable scope: we have not
-	     * seen this variable before.
-	     * Define a new variable by adding a property to the current
-	     * scope, or by allocating more slots in the function's frame.
+	     * Property not found in current variable scope: we have not seen
+             * this variable before.  Define a new local variable by adding a
+             * property to the function's scope, allocating one slot in the
+             * function's frame.  Global variables and any locals declared in
+             * with statement bodies are handled at runtime, by script prolog
+             * JSOP_DEFVAR bytecodes generated for slot-less vars.
 	     */
 	    sprop = NULL;
 	    if (prop) {
@@ -1606,10 +1607,13 @@ Variables(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
 		currentGetter = clasp->getProperty;
 		currentSetter = clasp->setProperty;
 	    }
-	    if (currentGetter == js_GetLocalVariable) {
+	    if (currentGetter == js_GetLocalVariable && !InWithStatement(tc)) {
 		ok = OBJ_DEFINE_PROPERTY(cx, obj, (jsid)atom, JSVAL_VOID,
 					 currentGetter, currentSetter,
-					 JSPROP_ENUMERATE | JSPROP_PERMANENT,
+                                         (pn->pn_op == JSOP_DEFCONST)
+					 ? JSPROP_ENUMERATE | JSPROP_PERMANENT |
+                                           JSPROP_READONLY
+                                         : JSPROP_ENUMERATE | JSPROP_PERMANENT,
 					 &prop);
 		if (ok) {
 		    pobj = obj;
@@ -1700,11 +1704,9 @@ Expr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
     return pn;
 }
 
-/* ZZZbe don't create functions till codegen? or at least don't bind
- * fn name */
 static JSBool
 LookupArgOrVar(JSContext *cx, JSAtom *atom, JSTreeContext *tc,
-	       JSOp *opp, jsint *slotp)
+	       JSOp *opp, jsint *slotp, uintN *attrsp)
 {
     JSObject *obj, *pobj;
     JSClass *clasp;
@@ -1733,6 +1735,7 @@ LookupArgOrVar(JSContext *cx, JSAtom *atom, JSTreeContext *tc,
 	    *opp = JSOP_GETVAR;
 	    *slotp = JSVAL_TO_INT(sprop->id);
 	}
+        *attrsp = sprop->attrs;
 	OBJ_DROP_PROPERTY(cx, pobj, (JSProperty *)sprop);
     }
     return JS_TRUE;
@@ -1769,10 +1772,14 @@ AssignExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
       case TOK_NAME:
         if (pn2->pn_slot >= 0) {
             JS_ASSERT(pn2->pn_op == JSOP_GETARG || pn2->pn_op == JSOP_GETVAR);
-            if (pn2->pn_op == JSOP_GETARG)
+            if (pn2->pn_op == JSOP_GETARG) {
                 pn2->pn_op = JSOP_SETARG;
-            else
+            } else {
+                JS_ASSERT(pn2->pn_op == JSOP_GETVAR);
+                if (pn2->pn_attrs & JSPROP_READONLY)
+                    return AssignExpr(cx, ts, tc);
                 pn2->pn_op = JSOP_SETVAR;
+            }
         } else {
             pn2->pn_op = JSOP_SETNAME;
         }
@@ -2023,6 +2030,7 @@ SetIncOpKid(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
 {
     jsint num;
     JSOp op;
+    uintN attrs;
 
     kid = SetLvalKid(cx, ts, pn, kid, incop_name_str[tt == TOK_DEC]);
     if (!kid)
@@ -2030,16 +2038,18 @@ SetIncOpKid(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
     num = -1;
     switch (kid->pn_type) {
       case TOK_NAME:
-	if (!LookupArgOrVar(cx, kid->pn_atom, tc, &op, &num))
+	if (!LookupArgOrVar(cx, kid->pn_atom, tc, &op, &num, &attrs))
 	    return JS_FALSE;
 	if (op == JSOP_GETARG) {
 	    op = (tt == TOK_INC)
 		 ? (preorder ? JSOP_INCARG : JSOP_ARGINC)
 		 : (preorder ? JSOP_DECARG : JSOP_ARGDEC);
 	} else if (op == JSOP_GETVAR) {
-	    op = (tt == TOK_INC)
-		 ? (preorder ? JSOP_INCVAR : JSOP_VARINC)
-		 : (preorder ? JSOP_DECVAR : JSOP_VARDEC);
+            if ((attrs & JSPROP_READONLY) == 0) {
+                op = (tt == TOK_INC)
+                     ? (preorder ? JSOP_INCVAR : JSOP_VARINC)
+                     : (preorder ? JSOP_DECVAR : JSOP_VARDEC);
+            }
 	} else {
 	    op = (tt == TOK_INC)
 		 ? (preorder ? JSOP_INCNAME : JSOP_NAMEINC)
@@ -2485,9 +2495,12 @@ PrimaryExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
 	pn->pn_op = CURRENT_TOKEN(ts).t_op;
 	pn->pn_atom = CURRENT_TOKEN(ts).t_atom;
 	pn->pn_slot = -1;
+        pn->pn_attrs = 0;
 	if (tt == TOK_NAME) {
-	    if (!LookupArgOrVar(cx, pn->pn_atom, tc, &pn->pn_op, &pn->pn_slot))
+	    if (!LookupArgOrVar(cx, pn->pn_atom, tc, &pn->pn_op, &pn->pn_slot,
+                                &pn->pn_attrs)) {
 		return NULL;
+            }
 	    pn->pn_arity = PN_NAME;
 	    pn->pn_expr = NULL;
 	}

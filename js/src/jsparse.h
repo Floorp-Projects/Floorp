@@ -199,6 +199,7 @@ struct JSParseNode {
 	    JSAtom      *atom;          /* name or label atom, null if slot */
 	    JSParseNode *expr;          /* object or initializer */
 	    jsint       slot;           /* -1 or arg or local var slot */
+            uintN       attrs;          /* attributes if local var or const */
 	} name;
 	jsdouble        dval;           /* aligned numeric literal value */
     } pn_u;
@@ -223,6 +224,7 @@ struct JSParseNode {
 #define pn_atom         pn_u.name.atom
 #define pn_expr         pn_u.name.expr
 #define pn_slot         pn_u.name.slot
+#define pn_attrs        pn_u.name.attrs
 #define pn_dval         pn_u.dval
 
 /*
