@@ -70,6 +70,8 @@ interface nsIDOMEvent;
  *    so no further processing will occur.
  *  * If any errors occur (without setting the boolean result) the default
  *    action will occur.
+ *  * AllowDrop will be called MANY times during drag so ensure that it is
+ *    efficient. 
  */
 
 
@@ -103,8 +105,11 @@ interface nsIClipboardDragDropHooks : nsISupports
   /**
    * Alter the flavors or data presented to the OS
    * Used for drag and copy actions
+   * Because this can be called many times, it is highly recommended
+   * that the implementation be very efficient so user feedback is
+   * not negatively impacted.
    *
-   * @param trans the transferable holding the list of flavors
+   * @param trans  the transferable holding the list of flavors
    *               and the data for each flavor
    *
    * @return TRUE  copy/drag can proceed
@@ -116,8 +121,8 @@ interface nsIClipboardDragDropHooks : nsISupports
    * Provide an alternative action to the built-in behavior when
    * something is dropped on the browser or in an editor
    *
-   * @param event DOM event (drag drop)
-   * @param trans the transferable holding the list of flavors
+   * @param event  DOM event (drag drop); null if triggered by paste.
+   * @param trans  the transferable holding the list of flavors
    *               and the data for each flavor
    *
    * @return TRUE  action was handled, do not perform built-in
