@@ -62,7 +62,7 @@ if (defined $tree && defined $start && defined $end) {
                 chop;
     		my ($nbuildtime,$nbuildname,$nwho,$nnow,$nenc_note)
 		    = split /\|/;
-		if ($nbuildtime >= $first && $nbuildtime <= $last) {
+		if ($nnow >= $first && $nnow <= $last) {
 			my $note = &url_decode($nenc_note);
 			$nbuildtime = print_time($nbuildtime);
 			$nnow = print_time($nnow);
@@ -108,7 +108,7 @@ if (defined $tree && defined $start && defined $end) {
                 chop;
                 my ($nbuildtime,$nbuildname,$nwho,$nnow,$nenc_note)
                     = split /\|/;
-                if ($nbuildtime >= $first && $nbuildtime <= $last) {
+                if ($nnow >= $first && $nnow <= $last) {
                         my $note = &url_decode($nenc_note);
                         $nbuildtime = print_time($nbuildtime);
                         $nnow = print_time($nnow);
