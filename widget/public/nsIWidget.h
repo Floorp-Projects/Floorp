@@ -67,6 +67,16 @@ typedef nsEventStatus (*PR_CALLBACK EVENT_CALLBACK)(nsGUIEvent *event);
 // to ensure cross-platform code.
 typedef void* nsNativeWindow;
 
+/**
+ * Border styles
+ */
+
+enum nsBorderStyle {   
+                  ///window border with title area
+                eBorderStyle_window,
+                  ///dialog box border + title area
+                eBorderStyle_dialog, 
+              }; 
 
 /**
  * Cursor types.
@@ -351,6 +361,25 @@ class nsIWidget : public nsISupports {
     virtual nsIRenderingContext* GetRenderingContext() = 0;
     virtual nsIDeviceContext* GetDeviceContext() = 0;
     //@}
+
+    /**
+     * Set border style
+     * Must be called before Create.
+     * @param aBorderStyle @see nsBorderStyle
+     */
+
+    virtual void SetBorderStyle(nsBorderStyle aBorderStyle) = 0;
+
+    /**
+     * Set the widget's title.
+     * Must be called after Create.
+     *
+     * @param aTitle string displayed as the title of the widget
+     */
+
+    virtual void SetTitle(nsString aTitle) = 0;
+
+
 };
 
 #endif // nsIWidget_h__

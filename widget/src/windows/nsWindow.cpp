@@ -24,6 +24,7 @@
 #include "nsIDeviceContext.h"
 #include "nsRect.h"
 #include "nsTransform2D.h"
+#include "nsStringUtil.h"
 #include <windows.h>
 #include "nsGfxCIID.h"
 #include "resource.h"
@@ -114,6 +115,7 @@ nsWindow::nsWindow(nsISupports *aOuter) : nsObject(aOuter)
     mForeground    = ::GetSysColor(COLOR_WINDOWTEXT);
     mPalette       = NULL;
     mCursor        = eCursor_standard;
+    mBorderStyle   = eBorderStyle_window;
     mIsShiftDown   = PR_FALSE;
     mIsControlDown = PR_FALSE;
     mIsAltDown     = PR_FALSE;
@@ -1222,7 +1224,7 @@ LPCTSTR nsWindow::WindowClass()
 //-------------------------------------------------------------------------
 DWORD nsWindow::WindowStyle()
 {
-    return WS_OVERLAPPEDWINDOW;
+    return /*WS_OVERLAPPEDWINDOW | */ GetBorderStyle(mBorderStyle);
 }
 
 
@@ -1770,6 +1772,38 @@ DWORD ChildWindow::WindowStyle()
 }
 
 
+DWORD nsWindow::GetBorderStyle(nsBorderStyle aBorderStyle)
+{
+  switch(aBorderStyle)
+  {
+    case eBorderStyle_window:
+      return(WS_OVERLAPPEDWINDOW);
+    break;
+
+    case eBorderStyle_dialog:
+      return(DS_MODALFRAME | WS_CAPTION | WS_SYSMENU);
+    break;
+
+    default:
+      NS_ASSERTION(0, "unknown border style");
+      return(WS_OVERLAPPEDWINDOW);
+  }
+}
+
+
+void nsWindow::SetBorderStyle(nsBorderStyle aBorderStyle) 
+{
+  mBorderStyle = aBorderStyle; 
+} 
+
+void nsWindow::SetTitle(nsString aTitle) 
+{
+  NS_ALLOC_STR_BUF(buf, aTitle, 256);
+  ::SendMessage(mWnd, WM_SETTEXT, (WPARAM)0, (LPARAM)(LPCTSTR)buf);
+  NS_FREE_STR_BUF(buf);
+} 
+
+
 /**
  * Processes a mouse pressed event
  *
@@ -1789,4 +1823,6 @@ void nsWindow::AddEventListener(nsIEventListener * aListener)
   NS_PRECONDITION(mEventListener == nsnull, "Null mouse listener");
   mEventListener = aListener;
 }
+
+
 

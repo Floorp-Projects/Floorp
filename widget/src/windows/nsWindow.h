@@ -28,6 +28,8 @@
 
 #include "nsIMouseListener.h"
 #include "nsIEventListener.h"
+#include "nsStringUtil.h"
+#include "nsString.h"
 
 
 #define NSRGB_2_COLOREF(color) \
@@ -93,8 +95,9 @@ public:
     virtual void            SetColorMap(nsColorMap *aColorMap);
     virtual nsIDeviceContext* GetDeviceContext();
     virtual void            Scroll(PRInt32 aDx, PRInt32 aDy, nsRect *aClipRect);
-    virtual nsIToolkit*     GetToolkit();    
-
+    virtual nsIToolkit*     GetToolkit();  
+    virtual void            SetBorderStyle(nsBorderStyle aBorderStyle); 
+    virtual void            SetTitle(nsString aTitle); 
     virtual void            AddMouseListener(nsIMouseListener * aListener);
     virtual void            AddEventListener(nsIEventListener * aListener);
 
@@ -134,6 +137,7 @@ protected:
     
     PRBool DispatchEventToCallback(PRUint32 aEventType);
     static PRBool ConvertStatus(nsEventStatus aStatus);
+    DWORD  GetBorderStyle(nsBorderStyle aBorderStyle);
 
 protected:
     HWND        mWnd;
@@ -151,6 +155,7 @@ protected:
     HBRUSH      mBrush;
     nscolor     mForeground;
     nsCursor    mCursor;
+    nsBorderStyle mBorderStyle;
 
     PRBool      mIsShiftDown;
     PRBool      mIsControlDown;
@@ -229,71 +234,71 @@ protected:
     { \
         nsWindow::Create(aParent, aRect, aHandleEventFunction, aContext, aToolkit); \
     } \
-    void            Destroy(void) \
+    void Destroy(void) \
     { \
         nsWindow::Destroy(); \
     } \
-    nsIWidget*      GetParent(void) \
+    nsIWidget* GetParent(void) \
     { \
         return nsWindow::GetParent(); \
     } \
-    nsIEnumerator*  GetChildren(void) \
+    nsIEnumerator* GetChildren(void) \
     { \
         return nsWindow::GetChildren(); \
     } \
-    void            AddChild(nsIWidget* aChild) \
+    void AddChild(nsIWidget* aChild) \
     { \
         nsWindow::AddChild(aChild); \
     } \
-    void            RemoveChild(nsIWidget* aChild) \
+    void RemoveChild(nsIWidget* aChild) \
     { \
         nsWindow::RemoveChild(aChild); \
     } \
-    void            Show(PRBool bState) \
+    void Show(PRBool bState) \
     { \
         nsWindow::Show(bState); \
     } \
-    void            Move(PRUint32 aX, PRUint32 aY) \
+    void Move(PRUint32 aX, PRUint32 aY) \
     { \
         nsWindow::Move(aX, aY); \
     } \
-    void            Resize(PRUint32 aWidth, \
-                           PRUint32 aHeight) \
+    void Resize(PRUint32 aWidth, \
+                PRUint32 aHeight) \
     { \
         nsWindow::Resize(aWidth, aHeight); \
     } \
-    void            Resize(PRUint32 aX, \
-                           PRUint32 aY, \
-                           PRUint32 aWidth, \
-                           PRUint32 aHeight) \
+    void Resize(PRUint32 aX, \
+                PRUint32 aY, \
+                PRUint32 aWidth, \
+                PRUint32 aHeight) \
     { \
         nsWindow::Resize(aX, aY, aWidth, aHeight); \
     } \
-    void            Enable(PRBool bState) \
+    void Enable(PRBool bState) \
     { \
         nsWindow::Enable(bState); \
     } \
-    void            SetFocus(void) \
+    void SetFocus(void) \
     { \
         nsWindow::SetFocus(); \
     } \
-    void            GetBounds(nsRect &aRect) \
+    void GetBounds(nsRect &aRect) \
     { \
         nsWindow::GetBounds(aRect); \
     } \
-    nscolor         GetForegroundColor(void) \
+    nscolor GetForegroundColor(void) \
     { \
         return nsWindow::GetForegroundColor(); \
     } \
-    void            SetForegroundColor(const nscolor &aColor) \
+    void SetForegroundColor(const nscolor &aColor) \
     { \
         nsWindow::SetForegroundColor(aColor); \
     } \
-    nscolor         GetBackgroundColor(void) \
+    nscolor GetBackgroundColor(void) \
     { \
         return nsWindow::GetBackgroundColor(); \
     } \
-    void            SetBackgroundColor(const nscolor &aColor) \
+    void SetBackgroundColor(const nscolor &aColor) \
     { \
         nsWindow::SetBackgroundColor(aColor); \
     } \
@@ -301,23 +306,23 @@ protected:
     { \
         return nsWindow::GetFont(); \
     } \
-    void            SetFont(const nsFont &aFont) \
+    void SetFont(const nsFont &aFont) \
     { \
         nsWindow::SetFont(aFont); \
     } \
-    nsCursor        GetCursor() \
+    nsCursor GetCursor() \
     { \
         return nsWindow::GetCursor(); \
     } \
-    void            SetCursor(nsCursor aCursor) \
+    void SetCursor(nsCursor aCursor) \
     { \
         nsWindow::SetCursor(aCursor); \
     } \
-    void            Invalidate(PRBool aIsSynchronous) \
+    void Invalidate(PRBool aIsSynchronous) \
     { \
         nsWindow::Invalidate(aIsSynchronous); \
     } \
-    void*           GetNativeData(PRUint32 aDataType) \
+    void* GetNativeData(PRUint32 aDataType) \
     { \
         return nsWindow::GetNativeData(aDataType); \
     } \
@@ -352,7 +357,16 @@ protected:
     PRBool OnKey(PRUint32 aEventType, PRUint32 aKeyCode) \
     { \
       return nsWindow::OnKey(aEventType, aKeyCode); \
+    } \
+    void SetBorderStyle(nsBorderStyle aBorderStyle) \
+    { \
+      nsWindow::SetBorderStyle(aBorderStyle); \
+    } \
+    void SetTitle(nsString aTitle) \
+    { \
+      nsWindow::SetTitle(aTitle); \
     } 
+
 
 
 #endif // Window_h__
