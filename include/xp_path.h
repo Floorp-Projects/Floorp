@@ -28,7 +28,7 @@
 #ifndef _XP_PATH_H
 #define _XP_PATH_H
 
-#if defined(XP_UNIX) || defined(XP_MAC)
+#if defined(XP_UNIX) || defined(XP_MAC) || defined(XP_BEOS)
 #define PR_DIRECTORY_SEPARATOR '/'
 #define PR_DIRECTORY_SEPARATOR_STR "/"
 #define PR_PATH_SEPARATOR ':'
