@@ -688,7 +688,10 @@ nsPasswordManager::Notify(nsIContent* aFormNode,
         return NS_OK;
 
 
-      // Check whether this username and password are already stored
+      // Check whether this signon is already stored.
+      // Note that we don't prompt the user if only the password doesn't match;
+      // we instead just silently change the stored password.
+
       nsAutoString userValue, passValue, userFieldName, passFieldName;
 
       if (userField) {
@@ -705,10 +708,13 @@ nsPasswordManager::Notify(nsIContent* aFormNode,
         for (; entry; entry = entry->next) {
           if (entry->userField.Equals(userFieldName) &&
               entry->userValue.Equals(userValue) &&
-              entry->passField.Equals(passFieldName) &&
-              entry->passValue.Equals(passValue)) {
+              entry->passField.Equals(passFieldName)) {
 
-            // It's already present; nothing else to do.
+            if (!entry->passValue.Equals(passValue)) {
+              entry->passValue.Assign(passValue);
+              WriteSignonFile();
+            }
+
             return NS_OK;
           }
         }
