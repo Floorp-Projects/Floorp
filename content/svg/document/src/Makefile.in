@@ -55,6 +55,7 @@ REQUIRES	= content \
 		  htmlparser \
 		  lwbrk \
 		  necko \
+		  pref \
 		  js \
 		  caps \
 		  locale \
