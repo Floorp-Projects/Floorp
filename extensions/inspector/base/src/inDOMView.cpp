@@ -641,7 +641,7 @@ inDOMView::AttributeChanged(nsIDocument *aDocument, nsIContent* aContent, PRInt3
     return NS_OK;
 
   // get the dom attribute node, if there is any
-  nsCOMPtr<nsIDOMNode> node(do_QueryInterface(aContent));
+  nsCOMPtr<nsIDOMNode> content(do_QueryInterface(aContent));
   nsCOMPtr<nsIDOMElement> el(do_QueryInterface(aContent));
   nsCOMPtr<nsIDOMAttr> domAttr;
   nsAutoString attrStr;
@@ -656,28 +656,26 @@ inDOMView::AttributeChanged(nsIDocument *aDocument, nsIContent* aContent, PRInt3
   } else if (aModType == nsIDOMMutationEvent::ADDITION) {
     // get the number of attributes on this content node
     nsCOMPtr<nsIDOMNamedNodeMap> attrs;
-    node->GetAttributes(getter_AddRefs(attrs));
+    content->GetAttributes(getter_AddRefs(attrs));
     PRUint32 attrCount;
     attrs->GetLength(&attrCount);
   
-    nsCOMPtr<nsIDOMNode> content(do_QueryInterface(aContent));
     inDOMViewNode* contentNode = nsnull;
     PRInt32 contentRow;
     PRInt32 attrRow;
-    if (NS_SUCCEEDED(NodeToRow(content, &contentRow))) {
-      // If there is a node for this content in the view, and it is open,
-      // we will insert the attr node after the index of the last attr
-      RowToNode(contentRow, &contentNode);
-      if (!contentNode->isOpen)
-        return NS_OK;
-      attrRow = contentRow + attrCount;
-    } else {
-      // if this view has a root node but is not display it, it is ok
-      // to act here if the changed attribute is on the root.  If not,
-      // then the changed attribute's parent is not in the view
-      if (mRootNode != node)
-        return NS_OK;
+    if (NS_FAILED(NodeToRow(content, &contentRow))) {
+      return NS_OK;
+    }
+    RowToNode(contentRow, &contentNode);
+    if (!contentRow || !contentNode->isOpen) {
+      return NS_OK;
+    }
+    if (mRootNode == content) {
+      // if this view has a root node but is not displaying it,
+      // it is ok to act as if the changed attribute is on the root.
       attrRow = attrCount - 1;
+    } else {
+      attrRow = contentRow + attrCount;
     }
 
     inDOMViewNode* newNode = CreateNode(domAttr, contentNode);
@@ -698,7 +696,6 @@ inDOMView::AttributeChanged(nsIDocument *aDocument, nsIContent* aContent, PRInt3
     // node and remove it.
 
     // get the row of the content node
-    nsCOMPtr<nsIDOMNode> content(do_QueryInterface(aContent));
     inDOMViewNode* contentNode = nsnull;
     PRInt32 contentRow;
     PRInt32 baseLevel;
@@ -706,7 +703,7 @@ inDOMView::AttributeChanged(nsIDocument *aDocument, nsIContent* aContent, PRInt3
       RowToNode(contentRow, &contentNode);
       baseLevel = contentNode->level;
     } else {
-      if (mRootNode == node) {
+      if (mRootNode == content) {
         contentRow = -1;
         baseLevel = -1;      
       } else
