@@ -55,7 +55,8 @@ static NS_DEFINE_IID(kIFormControlFrameIID, NS_IFORMCONTROLFRAME_IID);
 static NS_DEFINE_IID(kViewCID, NS_VIEW_CID);
 static NS_DEFINE_IID(kIViewIID, NS_IVIEW_IID);
 
-class nsImageControlFrame : public ImageFrame,
+#define nsImageControlFrameSuper nsImageFrame
+class nsImageControlFrame : public nsImageControlFrameSuper,
                             public nsIFormControlFrame 
 {
 public:
@@ -110,7 +111,7 @@ protected:
 
 nsImageControlFrame::nsImageControlFrame(nsIContent* aContent,
                                            nsIFrame* aParentFrame)
-  : ImageFrame(aContent, aParentFrame)
+  : nsImageControlFrameSuper(aContent, aParentFrame)
 {
   mLastMouseState = eMouseNone;
   mLastClickPoint = nsPoint(0,0);
@@ -146,7 +147,7 @@ nsImageControlFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
     *aInstancePtr = (void*) ((nsIFormControlFrame*) this);
     return NS_OK;
   }
-  return ImageFrame::QueryInterface(aIID, aInstancePtr);
+  return nsImageControlFrameSuper::QueryInterface(aIID, aInstancePtr);
 }
 
 nsrefcnt nsImageControlFrame::AddRef(void)
@@ -243,7 +244,8 @@ nsImageControlFrame::HandleEvent(nsIPresContext& aPresContext,
 	    break;
     }
   }
-  return ImageFrame::HandleEvent(aPresContext, aEvent, aEventStatus);
+  return nsImageControlFrameSuper::HandleEvent(aPresContext, aEvent,
+                                               aEventStatus);
 }
 
 void 
