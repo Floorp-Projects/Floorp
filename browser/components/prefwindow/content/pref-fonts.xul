@@ -205,9 +205,9 @@
                           label="&resolution.system.label;" 
                           id="systemResolution"
                           hidden="true"/>
-                <menuseparator/>
+                <menuseparator id="resolutionSeparator"/>
                 <menuitem id="userResolution" hidden="true"/>
-                <menuitem value="other" label="&resolution.other;"/>
+                <menuitem id="arbitraryResolution" value="other" label="&resolution.other;"/>
               </menupopup>
             </menulist>
           </hbox>

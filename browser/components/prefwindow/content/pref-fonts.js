@@ -226,6 +226,8 @@ function Startup()
       {
         defaultResolution = "120";
         otherResolution = "96";
+        document.getElementById( "arbitraryResolution" ).setAttribute( "hidden", "true" ); 
+        document.getElementById( "resolutionSeparator" ).setAttribute( "hidden", "true" ); 
       } else {
         defaultResolution = "96";
         otherResolution = "72";
