@@ -481,7 +481,7 @@ nsHttpTransaction::HandleContent(char *buf,
             // mContentLength might need to be increased...
             if (*countRead + mContentRead > (PRUint32) mContentLength) {
                 mContentLength = *countRead + mContentRead;
-                mResponseHead->SetContentLength(mContentLength);
+                //mResponseHead->SetContentLength(mContentLength);
             }
         }
     }
