@@ -117,7 +117,7 @@ RDFFactoryImpl::CreateInstance(nsISupports *aOuter,
             return rv;
     }
     else if (mClassID.Equals(kRDFMemoryDataSourceCID)) {
-        if (NS_FAILED(rv = NS_NewRDFMemoryDataSource((nsIRDFDataSource**) &inst)))
+        if (NS_FAILED(rv = NS_NewRDFInMemoryDataSource((nsIRDFDataSource**) &inst)))
             return rv;
     }
     else if (mClassID.Equals(kRDFStreamDataSourceCID)) {
