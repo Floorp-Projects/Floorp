@@ -65,7 +65,7 @@ nsresult XPCOMGlueStartup(const char* xpcomFile)
 #ifdef XPCOM_GLUE_NO_DYNAMIC_LOADING
     return NS_OK;
 #else
-    nsresult rv;
+    nsresult rv = NS_OK;
     GetFrozenFunctionsFunc function = nsnull;
 
     xpcomFunctions.version = XPCOM_GLUE_VERSION;
