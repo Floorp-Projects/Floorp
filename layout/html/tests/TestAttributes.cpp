@@ -168,8 +168,9 @@ void testStrings(nsIDocument* aDoc) {
 class MyDocument : public nsDocument {
 public:
   MyDocument();
-  NS_IMETHOD LoadURL(nsIURL* aURL, nsIStreamListener* aListener,
-                     nsIWebWidget* aWebWidget, nsIPostData* aPostData)
+  NS_IMETHOD StartDocumentLoad(nsIURL *aUrl, 
+                               nsIWebWidget* aWebWidget,
+                               nsIStreamListener **aDocListener)
   {
     return NS_OK;
   }
