@@ -64,7 +64,7 @@ NS_IMPL_RELEASE(nsDeviceContextMac)
 
 //------------------------------------------------------------------------
 
-nsresult nsDeviceContextMac :: Init(nsNativeWidget aNativeWidget)
+NS_IMETHODIMP nsDeviceContextMac :: Init(nsNativeWidget aNativeWidget)
 {
   NS_ASSERTION(!(aNativeWidget == nsnull), "attempt to init devicecontext with null widget");
 
@@ -77,18 +77,20 @@ nsresult nsDeviceContextMac :: Init(nsNativeWidget aNativeWidget)
 
 //------------------------------------------------------------------------
 
-float nsDeviceContextMac :: GetScrollBarWidth() const
+NS_IMETHODIMP nsDeviceContextMac :: GetScrollBarWidth(float &aWidth) const
 {
   // XXX Should we push this to widget library
-  return 240.0;
+  aWidth = 240.0;
+  return NS_OK;
 }
 
 //------------------------------------------------------------------------
 
-float nsDeviceContextMac :: GetScrollBarHeight() const
+NS_IMETHODIMP nsDeviceContextMac :: GetScrollBarHeight(float &aHeight) const
 {
   // XXX Should we push this to widget library
-  return 240.0;
+  aHeight = 240.0;
+  return NS_OK;
 }
 
 //------------------------------------------------------------------------
