@@ -146,7 +146,7 @@ public:
 // To manipulate such a wrapper (as opposed to manipulating the wrapped
 // JSObject via the wrapper) do a QueryInterface for the
 // nsIXPConnectWrappedJSMethods interface
-// i.e. 'nsIXPConnectWrappedJSMethods::GetIID()'
+// i.e. 'GET_NS_IID(nsIXPConnectWrappedJSMethods)'
 // and use the methods on that interface. (see below)
 
 /******************************************/
