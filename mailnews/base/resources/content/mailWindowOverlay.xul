@@ -1555,10 +1555,13 @@ Rights Reserved.
 </toolbox>
 
 <hbox id="searchBox" persist="collapsed" align="center">
-  <label id="searchCriteria" value="&SearchSubjectOrSender.label;"/>
+  <label id="searchCriteria" value="&SearchSubjectOrSender.label;" control="searchInput" 
+         accesskey="&SearchSubjectOrSender.accesskey;"/>
   <textbox id="searchInput" flex="1" onfocus="this.select();" oninput="onSearchInput(false);" onkeypress="onSearchKeyPress(event);"/>
-  <button id="clearButton" label="&clearButton.label;" disabled="true" tooltiptext="&clearButton.tooltip;" oncommand="onClearSearch();" accesskey="&clearButton.accesskey;"/>
-  <button id="advancedButton" label="&advancedButton.label;" tooltiptext="&advancedButton.tooltip;" oncommand="onAdvancedSearch();"/>
+  <button id="clearButton" label="&clearButton.label;" disabled="true" tooltiptext="&clearButton.tooltip;" oncommand="onClearSearch();" 
+          accesskey="&clearButton.accesskey;"/>
+  <button id="advancedButton" label="&advancedButton.label;" tooltiptext="&advancedButton.tooltip;" oncommand="onAdvancedSearch();"
+          accesskey="&advancedButton.accesskey;"/>
 </hbox>
 
 <statusbar class="chromeclass-status" id="status-bar"> 
