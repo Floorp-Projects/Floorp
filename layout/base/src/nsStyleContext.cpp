@@ -112,18 +112,21 @@ void StyleColorImpl::ResetFrom(const nsStyleColor* aParent, nsIPresContext* aPre
     mOpacity = 1.0f;
   }
 
-
-  mBackgroundAttachment = NS_STYLE_BG_ATTACHMENT_SCROLL;
   mBackgroundFlags = NS_STYLE_BG_COLOR_TRANSPARENT | NS_STYLE_BG_IMAGE_NONE;
-  mBackgroundRepeat = NS_STYLE_BG_REPEAT_XY;
   if (nsnull != aPresContext) {
     aPresContext->GetDefaultBackgroundColor(&mBackgroundColor);
+    aPresContext->GetDefaultBackgroundImageAttachment(&mBackgroundAttachment);
+    aPresContext->GetDefaultBackgroundImageRepeat(&mBackgroundRepeat);
+    aPresContext->GetDefaultBackgroundImageOffset(&mBackgroundXPosition, &mBackgroundYPosition);
+    aPresContext->GetDefaultBackgroundImage(mBackgroundImage);
   }
   else {
     mBackgroundColor = NS_RGB(192,192,192);
+    mBackgroundAttachment = NS_STYLE_BG_ATTACHMENT_SCROLL;
+    mBackgroundRepeat = NS_STYLE_BG_REPEAT_XY;
+    mBackgroundXPosition = 0;
+    mBackgroundYPosition = 0;
   }
-  mBackgroundXPosition = 0;
-  mBackgroundYPosition = 0;
 
   mCursor = NS_STYLE_CURSOR_AUTO;
 }

@@ -66,15 +66,27 @@ public:
                                         nsIStyleContext** aResult);
   NS_IMETHOD GetMetricsFor(const nsFont& aFont, nsIFontMetrics** aResult);
   NS_IMETHOD GetDefaultFont(nsFont& aResult);
+  NS_IMETHOD SetDefaultFont(nsFont& aFont);
   virtual const nsFont& GetDefaultFontDeprecated();
   NS_IMETHOD GetDefaultFixedFont(nsFont& aResult);
+  NS_IMETHOD SetDefaultFixedFont(nsFont& aFont);
   virtual const nsFont& GetDefaultFixedFontDeprecated();
   NS_IMETHOD GetFontScaler(PRInt32* aResult);
   NS_IMETHOD SetFontScaler(PRInt32 aScaler);
   NS_IMETHOD GetDefaultColor(nscolor* aColor);
   NS_IMETHOD GetDefaultBackgroundColor(nscolor* aColor);
+  NS_IMETHOD GetDefaultBackgroundImage(nsString& aImage);
+  NS_IMETHOD GetDefaultBackgroundImageRepeat(PRUint8* aRepeat);
+  NS_IMETHOD GetDefaultBackgroundImageOffset(nscoord* aX, nscoord* aY);
+  NS_IMETHOD GetDefaultBackgroundImageAttachment(PRUint8* aRepeat);
+
   NS_IMETHOD SetDefaultColor(nscolor aColor);
   NS_IMETHOD SetDefaultBackgroundColor(nscolor aColor);
+  NS_IMETHOD SetDefaultBackgroundImage(const nsString& aImage);
+  NS_IMETHOD SetDefaultBackgroundImageRepeat(PRUint8 aRepeat);
+  NS_IMETHOD SetDefaultBackgroundImageOffset(nscoord aX, nscoord aY);
+  NS_IMETHOD SetDefaultBackgroundImageAttachment(PRUint8 aRepeat);
+
   NS_IMETHOD GetImageGroup(nsIImageGroup** aGroupResult);
   NS_IMETHOD StartLoadImage(const nsString& aURL,
                             const nscolor* aBackgroundColor,
@@ -122,6 +134,11 @@ protected:
   PRInt32               mFontScaler;
   nscolor               mDefaultColor;
   nscolor               mDefaultBackgroundColor;
+  nsString              mDefaultBackgroundImage;
+  PRUint8               mDefaultBackgroundImageRepeat;
+  nscoord               mDefaultBackgroundImageOffsetX;
+  nscoord               mDefaultBackgroundImageOffsetY;
+  PRUint8               mDefaultBackgroundImageAttachment;
   nsVoidArray           mImageLoaders;
   nsCOMPtr<nsIEventStateManager> mEventManager;
   nsCompatibility       mCompatibilityMode;
