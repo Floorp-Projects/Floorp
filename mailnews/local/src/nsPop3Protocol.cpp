@@ -612,10 +612,12 @@ NS_IMETHODIMP nsPop3Protocol::OnStopRequest(nsIRequest *request, nsISupports * a
 			server->SetServerBusy(PR_FALSE); // the server is now busy
 	}
 	CommitState(PR_TRUE);
+  if (NS_FAILED(aStatus) && aStatus != NS_BINDING_ABORTED)
+    Abort();
 	return rv;
 }
 
-NS_IMETHODIMP nsPop3Protocol::Cancel(nsresult status)  // handle stop button
+void nsPop3Protocol::Abort()
 {
   if(m_pop3ConData->msg_closure)
   {
@@ -624,6 +626,11 @@ NS_IMETHODIMP nsPop3Protocol::Cancel(nsresult status)  // handle stop button
   }
   // need this to close the stream on the inbox.
   m_nsIPop3Sink->AbortMailDelivery();
+}
+
+NS_IMETHODIMP nsPop3Protocol::Cancel(nsresult status)  // handle stop button
+{
+  Abort();
   return nsMsgProtocol::Cancel(NS_BINDING_ABORTED);
 }
 

@@ -308,6 +308,7 @@ private:
 	nsMsgLineStreamBuffer   * m_lineStreamBuffer; // used to efficiently extract lines from the incoming data stream
   Pop3ConData* m_pop3ConData;
   void FreeMsgInfo();
+  void Abort();
 
     //////////////////////////////////////////////////////////////////////////////////////////
 	// Begin Pop3 protocol state handlers

@@ -243,7 +243,8 @@ nsresult
 nsPop3Sink::ReleaseFolderLock()
 {
   nsresult result = NS_OK;
-  if (!m_folder) return result;
+  if (!m_folder) 
+    return result;
   PRBool haveSemaphore;
   nsCOMPtr <nsISupports> supports = do_QueryInterface(NS_STATIC_CAST(nsIPop3Sink*, this));
   result = m_folder->TestSemaphore(supports, &haveSemaphore);
@@ -255,19 +256,26 @@ nsPop3Sink::ReleaseFolderLock()
 nsresult 
 nsPop3Sink::AbortMailDelivery()
 {
-    if (m_outFileStream)
-    {
-        if (m_outFileStream->is_open())
-          m_outFileStream->close();
-        delete m_outFileStream;
-        m_outFileStream = 0;
-    }
-    nsresult rv = ReleaseFolderLock();
-    NS_ASSERTION(NS_SUCCEEDED(rv),"folder lock not released successfully");
+  if (m_outFileStream)
+  {
+    if (m_outFileStream->is_open())
+      m_outFileStream->close();
+    delete m_outFileStream;
+    m_outFileStream = 0;
+  }
+
+  /* tell the parser to mark the db valid *after* closing the mailbox.
+  we have truncated the inbox, so berkeley mailbox and msf file are in sync*/
+  if (m_newMailParser)
+    m_newMailParser->UpdateDBFolderInfo();
+  
+  nsresult rv = ReleaseFolderLock();
+  NS_ASSERTION(NS_SUCCEEDED(rv),"folder lock not released successfully");
+
 #ifdef DEBUG
     printf("Abort mail message delivery.\n");
 #endif 
-    return NS_OK;
+  return NS_OK;
 }
 
 nsresult
