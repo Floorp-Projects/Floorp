@@ -725,10 +725,6 @@ static nsresult main1(int argc, char* argv[], nsISplashScreen *splashScreen )
   //      if the profile manager ever switches to using nsIDOMWindow stuff, this might have to change
   appShell->CreateHiddenWindow();
 
-#ifdef NS_BUILD_REFCNT_LOGGING  
-  nsTraceRefcnt::SetPrefServiceAvailability(PR_TRUE);
-#endif
-
 	// Enumerate AppShellComponenets
 	appShell->EnumerateAndInitializeComponents();
 	
