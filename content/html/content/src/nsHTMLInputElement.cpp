@@ -1881,8 +1881,19 @@ nsHTMLInputElement::GetMaxNumValues(PRInt32 *_retval)
 {
   PRInt32 type;
   GetType(&type);
-  *_retval = type == NS_FORM_INPUT_IMAGE ? 2 : 1;
-
+  if (type == NS_FORM_INPUT_IMAGE) {
+    nsAutoString name;
+    nsAutoString value;
+    GetName(name);
+    GetValue(value);
+    if (name.IsEmpty() || value.IsEmpty()) {
+      *_retval = 2;
+    } else {
+      *_retval = 3;
+    }
+  } else {
+    *_retval = 1;
+  }
   return NS_OK;
 }
 
@@ -1965,17 +1976,26 @@ nsHTMLInputElement::GetNamesValues(PRInt32 aMaxNumValues,
       // Figure out the proper name of the x and y values
       nsAutoString name;
       rv = GetName(name);
-      aNumValues = 2;
       if (!name.IsEmpty()) {
         aNames[0] = name;
         aNames[0].Append(NS_LITERAL_STRING(".x"));
         aNames[1] = name;
         aNames[1].Append(NS_LITERAL_STRING(".y"));
+        nsAutoString value;
+        rv = GetValue(value);
+        if (!value.IsEmpty()) {
+          aNames[2] = name;
+          aValues[2] = value;
+          aNumValues = 3;
+        } else {
+          aNumValues = 2;
+        }
       } else {
         // If the Image Element has no name, simply return x and y
         // to Nav and IE compatability.
         aNames[0] = NS_LITERAL_STRING("x");
         aNames[1] = NS_LITERAL_STRING("y");
+        aNumValues = 2;
       }
 
       break;
