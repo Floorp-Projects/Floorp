@@ -85,10 +85,8 @@ my $who = DBNameToIdAndCheck($::COOKIE{'Bugzilla_login'});
 if ( (! defined $who) || (!$who) ) {
     PutHeader("Bad login.");
     print qq|
-    The login info got confused. Please
-    <a href="http://bugzilla.mozilla.org/query.cgi?GoAheadAndLogIn=1">log in</a>
-    (again) and try again.\n
-    |;
+    The login info got confused. Please <a href="query.cgi?GoAheadAndLogIn=1">log 
+    in</a> (again) and try again.\n|;
     PutFooter();
     exit();
 }
