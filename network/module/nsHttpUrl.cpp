@@ -882,6 +882,25 @@ nsresult nsHttpUrlImpl::SetPostData(nsIInputStream* input)
     return NS_OK;
 }
 
+nsresult nsHttpUrlImpl::GetContentLength(PRInt32 *len)
+{
+    NS_LOCK_INSTANCE();
+    *len = m_URL_s->content_length;
+    NS_UNLOCK_INSTANCE();
+    return NS_OK;
+}
+
+
+
+nsresult nsHttpUrlImpl::GetServerStatus(PRInt32 *status)
+{
+    NS_LOCK_INSTANCE();
+    *status = m_URL_s->server_status;
+    NS_UNLOCK_INSTANCE();
+    return NS_OK;
+}
+
+
 nsresult nsHttpUrlImpl::ToString(PRUnichar* *unichars) const
 {
     nsAutoString string;

@@ -53,6 +53,8 @@ public:
     NS_IMETHOD SetURLGroup(nsIURLGroup* group);
     NS_IMETHOD SetPostHeader(const char* name, const char* value);
     NS_IMETHOD SetPostData(nsIInputStream* input);
+    NS_IMETHOD GetContentLength(PRInt32 *len);
+    NS_IMETHOD GetServerStatus(PRInt32 *status);
     NS_IMETHOD ToString(PRUnichar* *aString) const;
   
     // from nsINetlibURL:
