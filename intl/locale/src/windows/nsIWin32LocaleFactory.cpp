@@ -29,7 +29,7 @@ NS_DEFINE_IID(kIFactoryIID,  NS_IFACTORY_IID);
 
 nsIWin32LocaleFactory::nsIWin32LocaleFactory()
 {
-
+	NS_INIT_REFCNT();
 }
 
 nsIWin32LocaleFactory::~nsIWin32LocaleFactory()
@@ -51,19 +51,25 @@ nsIWin32LocaleFactory::CreateInstance(nsISupports* aOuter, REFNSIID aIID,
   if (aIID.Equals(kISupportsIID))
   {   
     *aResult = (void *)(nsISupports*)this;   
+	NS_ADDREF_THIS(); // Increase reference count for caller   
   } else if (aIID.Equals(kIFactoryIID))
   {   
     *aResult = (void *)(nsIFactory*)this;   
+	NS_ADDREF_THIS(); // Increase reference count for caller   
   } else if (aIID.Equals(kIWin32LocaleIID))
   {
-	  *aResult = (void*)new nsIWin32LocaleImpl();
+	nsIWin32LocaleImpl *localeImpl = new nsIWin32LocaleImpl();
+	if(localeImpl)
+		NS_ADDREF(localeImpl);
+	*aResult = (void*)localeImpl;
+	
   }
 
   if (*aResult == NULL) {   
     return NS_NOINTERFACE;   
   }   
 
-  NS_ADDREF_THIS(); // Increase reference count for caller   
+
   return NS_OK;   
 }
 

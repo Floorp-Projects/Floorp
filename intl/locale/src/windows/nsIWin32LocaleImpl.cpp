@@ -202,7 +202,7 @@ NS_IMPL_ISUPPORTS(nsIWin32LocaleImpl,kIWin32LocaleIID)
 
 nsIWin32LocaleImpl::nsIWin32LocaleImpl(void)
 {
-
+	NS_INIT_REFCNT();
 }
 
 nsIWin32LocaleImpl::~nsIWin32LocaleImpl(void)
