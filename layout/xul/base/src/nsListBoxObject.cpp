@@ -207,7 +207,7 @@ FindBodyContent(nsIContent* aParent, nsIContent** aResult)
   }
 }
 
-inline nsIListBoxObject*
+nsIListBoxObject*
 nsListBoxObject::GetListBoxBody()
 {
   nsAutoString listboxbody;
