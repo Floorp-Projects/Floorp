@@ -352,7 +352,11 @@ PREF_Init(char *filename)
 	if (!m_HashTable)
 		return 0;
 
-    if (filename) m_filename = strdup(filename);
+    if (filename) {
+        if (m_filename) /* happens if PREF_Init is called twice (it is) */
+            free(m_filename);
+        m_filename = strdup(filename);
+    }
 
     if (!m_mochaTaskState)
 		m_mochaTaskState = JS_Init((uint32) 0xffffffffL);
