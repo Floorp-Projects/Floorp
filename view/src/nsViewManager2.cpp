@@ -654,6 +654,23 @@ void nsViewManager2::Refresh(nsIView *aView, nsIRenderingContext *aContext, cons
 
 	localcx->SetClipRect(trect, nsClipCombine_kReplace, result);
 
+  if ((aUpdateFlags & NS_VMREFRESH_DOUBLE_BUFFER) && ds)
+  {
+    // XXX: This should not be needed. The frames should
+    // paint the background for the area cleared, but when the 
+    // document is empty there aren't any frames to clear the 
+    // background. In addition, frames sometimes
+    // do not paint the entire extent of the damaged rect.
+    // However, this should be fixed in the frame's not here.
+    
+    // Clear the background of the area about to be rendered to.
+    // If this is not done, garbage (stale bits) from the backbuffer
+    // are copied forward.
+    nscolor col = NS_RGB(255,255, 255);
+    localcx->SetColor(col);
+    localcx->FillRect(trect);
+  }
+
 	RenderViews(aView, *localcx, trect, result);
 
 	if ((aUpdateFlags & NS_VMREFRESH_DOUBLE_BUFFER) && ds)
