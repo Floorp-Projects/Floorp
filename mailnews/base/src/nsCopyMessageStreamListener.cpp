@@ -58,7 +58,7 @@ static nsresult GetMessage(nsIURI *aURL, nsIMessage **message)
 	if(NS_FAILED(rv))
 		return rv;
 
-	rv = uriURL->GetURI(&uri);
+	rv = uriURL->GetUri(&uri);
 	if(NS_FAILED(rv))
 		return rv;
 

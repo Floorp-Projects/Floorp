@@ -429,7 +429,7 @@ nsMimeXULEmitter::DumpAttachmentMenu()
       
       nsCOMPtr<nsIMsgMessageUrl> messageUrl = do_QueryInterface(mURL, &rv);
       if (NS_SUCCEEDED(rv))
-        rv = messageUrl->GetURI(&urlString);
+        rv = messageUrl->GetUri(&urlString);
       if (NS_SUCCEEDED(rv) && urlString)
       {
         UtilityWrite(urlString);

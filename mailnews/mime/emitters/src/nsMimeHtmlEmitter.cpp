@@ -230,7 +230,7 @@ nsMimeHtmlDisplayEmitter::StartAttachment(const char *name, const char *contentT
 
     nsCOMPtr<nsIMsgMessageUrl> msgurl (do_QueryInterface(mURL, &rv));
     if (NS_SUCCEEDED(rv))
-      rv = msgurl->GetURI(getter_Copies(uriString));
+      rv = msgurl->GetUri(getter_Copies(uriString));
 
     // we need to convert the attachment name from UTF-8 to unicode before
     // we emit it...
