@@ -64,6 +64,11 @@ NS_IMETHODIMP nsTextWidget::CreateNative(GtkWidget *parentWindow)
   mTextWidget = mWidget;
 
   gtk_widget_set_name(mWidget, "nsTextWidget");
+
+  /*
+   * GTK's text widget does XIM for us, so we don't want to use the default key handler
+   * which does XIM, so we connect to a non-XIM key event for the text widget
+   */
   gtk_signal_connect_after(GTK_OBJECT(mWidget),
                      "key_press_event",
 #ifdef USE_XIM
