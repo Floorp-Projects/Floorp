@@ -183,7 +183,7 @@ public class NativeJavaClass extends NativeJavaObject implements Function {
         } else {
                 Scriptable topLevel = ScriptableObject.getTopLevelScope(this);
                 String msg = "";
-	    	try {
+                try {
                     // trying to construct an interface; use JavaAdapter to 
                     // construct a new class on the fly that implements this 
                     // interface.
@@ -200,8 +200,8 @@ public class NativeJavaClass extends NativeJavaObject implements Function {
                     if (m != null)
                         msg = m;
                 }
-	        Object[] errArgs = { msg, classObject.getName() };
-	        throw Context.reportRuntimeError(Context.getMessage
+	              Object[] errArgs = { msg, classObject.getName() };
+	              throw Context.reportRuntimeError(Context.getMessage
 	                                         ("msg.cant.instantiate",
 	                                          errArgs));
         }

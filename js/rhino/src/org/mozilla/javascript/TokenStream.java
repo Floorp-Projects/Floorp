@@ -703,15 +703,15 @@ public class TokenStream {
     public static boolean isJSSpace(int c) {
         return (c == '\u0020' || c == '\u0009'
                 || c == '\u000C' || c == '\u000B'
-				|| c == '\u00A0' 
-				|| Character.getType((char)c) == Character.SPACE_SEPARATOR);
+                || c == '\u00A0' 
+                || Character.getType((char)c) == Character.SPACE_SEPARATOR);
     }
 
     public static boolean isJSLineTerminator(int c) {
         return (c == '\n' || c == '\r'
                 || c == 0x2028 || c == 0x2029);
     }
-	
+    
     public int getToken() throws IOException {
         int c;
         tokenno++;
