@@ -63,6 +63,7 @@ class nsICharsetConverterManager2;
 class nsStandardURL : public nsIFileURL
                     , public nsIStandardURL
                     , public nsISerializable
+                    , public nsIClassInfo
 {
 public:
     NS_DECL_ISUPPORTS
@@ -71,6 +72,7 @@ public:
     NS_DECL_NSIFILEURL
     NS_DECL_NSISTANDARDURL
     NS_DECL_NSISERIALIZABLE
+    NS_DECL_NSICLASSINFO
 
     nsStandardURL();
     virtual ~nsStandardURL();
