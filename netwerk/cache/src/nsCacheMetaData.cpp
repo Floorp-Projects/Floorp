@@ -25,7 +25,6 @@
 #include "nsString.h"
 
 
-
 /*
  *  nsCacheClientHashTable
  */
@@ -146,26 +145,40 @@ nsCacheMetaData::SetElement(const nsAReadableCString& key,
 }
 
 
-//** enumerate MetaData elements
 nsresult
-nsCacheMetaData::GetKeyValueArray(nsCacheMetaDataKeyValuePair ** array,
-                                  PRUint32 *                     count)
+nsCacheMetaData::FlattenMetaData(char ** data, PRUint32 * size)
 {
-    // count elements
-    PRUint32  total = 0;
-    PRUint32  totalEntries = PL_DHashTableEnumerate(&table, CountElements, &total);
+    *size = 0;
 
-    if (total != totalEntries) {
-        //** just checking
+    if (PL_DHashTableEnumerate(&table, CalculateSize, size) != 0 && data) {
+        *data = new char[*size];
+        if (*data == nsnull) return NS_ERROR_OUT_OF_MEMORY;
+        PL_DHashTableEnumerate(&table, AccumulateElements, data);
     }
-    // allocate array
 
-    // fill array
-
-    return NS_ERROR_NOT_IMPLEMENTED;
+    return NS_OK;
 }
 
-
+nsresult
+nsCacheMetaData::UnflattenMetaData(char * data, PRUint32 size)
+{
+    nsresult rv = NS_ERROR_UNEXPECTED;
+    char* limit = data + size;
+    while (data < limit) {
+        const char* name = data;
+        PRUint32 nameSize = nsCRT::strlen(name);
+        data += 1 + nameSize;
+        if (data < limit) {
+            const char* value = data;
+            PRUint32 valueSize = nsCRT::strlen(value);
+            data += 1 + valueSize;
+            rv = SetElement(nsLiteralCString(name, nameSize),
+                                   nsLiteralCString(value, valueSize));
+            if (NS_FAILED(rv)) break;
+        }
+    }
+    return rv;
+}
 
 /*
  *  hash table operation callback functions
@@ -234,30 +247,32 @@ nsCacheMetaData::Finalize(PLDHashTable * table)
  */
 
 PLDHashOperator
-nsCacheMetaData::CountElements(PLDHashTable *table,
+nsCacheMetaData::CalculateSize(PLDHashTable *table,
                                PLDHashEntryHdr *hdr,
                                PRUint32 number,
                                void *arg)
 {
-    ++*(PRUint32 *)arg;
+    nsCacheMetaDataHashTableEntry* hashEntry = (nsCacheMetaDataHashTableEntry *)hdr;
+    *(PRUint32*)arg += hashEntry->key->Length() + hashEntry->value->Length();
     return PL_DHASH_NEXT;
 }
-
 
 PLDHashOperator
 nsCacheMetaData::AccumulateElements(PLDHashTable *table,
-                                    PLDHashEntryHdr *hdr,
-                                    PRUint32 number,
-                                    void *arg)
+                                 PLDHashEntryHdr *hdr,
+                                 PRUint32 number,
+                                 void *arg)
 {
-    nsCacheMetaDataHashTableEntry *entry = (nsCacheMetaDataHashTableEntry *)hdr;
-    nsCacheMetaDataKeyValuePair *pair    = (nsCacheMetaDataKeyValuePair *)arg;
-
-    pair->key   = entry->key;
-    pair->value = entry->value;
+    char** bufferPtr = (char**) arg;
+    nsCacheMetaDataHashTableEntry* hashEntry = (nsCacheMetaDataHashTableEntry *)hdr;
+    PRUint32 size = 1 + hashEntry->key->Length();
+    nsCRT::memcpy(*bufferPtr, hashEntry->key->get(), size);
+    *bufferPtr += size;
+    size = 1 + hashEntry->value->Length();
+    nsCRT::memcpy(*bufferPtr, hashEntry->value->get(), size);
+    *bufferPtr += size;
     return PL_DHASH_NEXT;
 }
-
 
 PLDHashOperator
 nsCacheMetaData::FreeElements(PLDHashTable *table,

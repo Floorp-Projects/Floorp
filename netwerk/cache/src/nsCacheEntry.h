@@ -82,8 +82,8 @@ public:
     nsresult SetMetaDataElement( const nsAReadableCString&  key,
                                  const nsAReadableCString&  value);
 
-    nsresult GetKeyValueArray(nsCacheMetaDataKeyValuePair ** array,
-                              PRUint32 *                     count);
+    nsresult FlattenMetaData(char ** data, PRUint32 * size);
+    nsresult UnflattenMetaData(char * data, PRUint32 size);
 
     //** enumerate MetaData method
 
