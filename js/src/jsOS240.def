@@ -615,6 +615,13 @@ EXPORTS
       JS_GetScriptPrincipals
       JS_IsAssigning
       JS_SetCharSetInfo
+;brendan@mozilla.org, 2-Sept-2000
+      JS_SetCallReturnValue2
+      JS_SetGCCallback
+      JS_SetGCCallbackRT
+      JS_AddExternalStringFinalizer
+      JS_RemoveExternalStringFinalizer
+      JS_NewExternalString
 ;
 ;
 ;00023:prmjtime (OFFSET:0x000dae0f, SIZE:0x00008986):

@@ -82,6 +82,21 @@ typedef void (*GCFinalizeOp)(JSContext *cx, JSGCThing *thing);
 
 static GCFinalizeOp gc_finalizers[GCX_NTYPES];
 
+intN
+js_ChangeExternalStringFinalizer(JSStringFinalizeOp oldop,
+                                 JSStringFinalizeOp newop)
+{
+    uintN i;
+
+    for (i = GCX_EXTERNAL_STRING; i < GCX_NTYPES; i++) {
+        if (gc_finalizers[i] == (GCFinalizeOp) oldop) {
+            gc_finalizers[i] = (GCFinalizeOp) newop;
+            return (intN) i;
+        }
+    }
+    return -1;
+}
+
 #ifdef JS_GCMETER
 #define METER(x) x
 #else
@@ -94,7 +109,9 @@ js_InitGC(JSRuntime *rt, uint32 maxbytes)
     if (!gc_finalizers[GCX_OBJECT]) {
 	gc_finalizers[GCX_OBJECT] = (GCFinalizeOp)js_FinalizeObject;
 	gc_finalizers[GCX_STRING] = (GCFinalizeOp)js_FinalizeString;
+#ifdef DEBUG
 	gc_finalizers[GCX_DOUBLE] = (GCFinalizeOp)js_FinalizeDouble;
+#endif
     }
 
     JS_InitArenaPool(&rt->gcArenaPool, "gc-arena", GC_ARENA_SIZE,
@@ -479,12 +496,12 @@ gc_dump_thing(JSRuntime* rt, JSGCThing *thing, uint8 flags, GCMarkNode *prev,
         break;
       }
       case GCX_STRING:
+      case GCX_EXTERNAL_STRING:
+      default:
         fprintf(fp, "string %s", JS_GetStringBytes((JSString *)thing));
         break;
       case GCX_DOUBLE:
         fprintf(fp, "double %g", *(jsdouble *)thing);
-        break;
-      case GCX_DECIMAL:
         break;
     }
     fprintf(fp, " via %s\n", path);
@@ -686,9 +703,10 @@ gc_lock_marker(JSHashEntry *he, intN i, void *arg)
 JS_FRIEND_API(void)
 js_ForceGC(JSContext *cx)
 {
-    cx->newborn[GCX_OBJECT] = NULL;
-    cx->newborn[GCX_STRING] = NULL;
-    cx->newborn[GCX_DOUBLE] = NULL;
+    uintN i;
+
+    for (i = 0; i < GCX_NTYPES; i++)
+        cx->newborn[i] = NULL;
     cx->runtime->gcPoke = JS_TRUE;
     js_GC(cx, 0);
     JS_ArenaFinish();
@@ -703,6 +721,7 @@ js_GC(JSContext *cx, uintN gcflags)
     jsval v, *vp, *sp;
     jsuword begin, end;
     JSStackFrame *fp, *chain;
+    uintN i;
     void *mark;
     uint8 flags, *flagp;
     JSGCThing *thing, *final, **flp, **oflp;
@@ -913,6 +932,8 @@ restart:
 	GC_MARK(cx, acx->newborn[GCX_OBJECT], "newborn object", NULL);
 	GC_MARK(cx, acx->newborn[GCX_STRING], "newborn string", NULL);
 	GC_MARK(cx, acx->newborn[GCX_DOUBLE], "newborn double", NULL);
+	for (i = GCX_EXTERNAL_STRING; i < GCX_NTYPES; i++)
+            GC_MARK(cx, acx->newborn[i], "newborn external string", NULL);
 #if JS_HAS_EXCEPTIONS
 	if (acx->throwing && JSVAL_IS_GCTHING(acx->exception))
 	    GC_MARK(cx, JSVAL_TO_GCTHING(acx->exception), "exception", NULL);

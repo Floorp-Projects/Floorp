@@ -170,6 +170,9 @@ typedef JSBool
 typedef void
 (* CRT_CALL JSFinalizeOp)(JSContext *cx, JSObject *obj);
 
+typedef void
+(* CRT_CALL JSStringFinalizeOp)(JSContext *cx, JSString *str);
+
 typedef JSObjectOps *
 (* CRT_CALL JSGetObjectOps)(JSContext *cx, JSClass *clasp);
 

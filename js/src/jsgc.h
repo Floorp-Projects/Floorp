@@ -43,19 +43,20 @@
 JS_BEGIN_EXTERN_C
 
 /* GC thing type indexes. */
-#define GCX_OBJECT      0                       /* JSObject */
-#define GCX_STRING      1                       /* JSString */
-#define GCX_DOUBLE      2                       /* jsdouble */
-#define GCX_DECIMAL     3                       /* JSDecimal */
-#define GCX_NTYPES      4
+#define GCX_OBJECT              0               /* JSObject */
+#define GCX_STRING              1               /* JSString */
+#define GCX_DOUBLE              2               /* jsdouble */
+#define GCX_EXTERNAL_STRING     3               /* JSString w/ external chars */
+#define GCX_NTYPES_LOG2         3
+#define GCX_NTYPES              JS_BIT(GCX_NTYPES_LOG2)
 
 /* GC flag definitions (type index goes in low bits). */
-#define GCF_TYPEMASK    JS_BITMASK(2)           /* use low bits for type */
-#define GCF_MARK        JS_BIT(2)               /* mark bit */
-#define GCF_FINAL       JS_BIT(3)               /* in finalization bit */
-#define GCF_LOCKBIT     4                       /* lock bit shift and mask */
-#define GCF_LOCKMASK    (JS_BITMASK(4) << GCF_LOCKBIT)
-#define GCF_LOCK        JS_BIT(GCF_LOCKBIT)     /* lock request bit in API */
+#define GCF_TYPEMASK    JS_BITMASK(GCX_NTYPES_LOG2)
+#define GCF_MARK        JS_BIT(GCX_NTYPES_LOG2)
+#define GCF_FINAL       JS_BIT(GCX_NTYPES_LOG2 + 1)
+#define GCF_LOCKSHIFT   (GCX_NTYPES_LOG2 + 2)   /* lock bit shift and mask */
+#define GCF_LOCKMASK    (JS_BITMASK(8 - GCF_LOCKSHIFT) << GCF_LOCKSHIFT)
+#define GCF_LOCK        JS_BIT(GCF_LOCKSHIFT)   /* lock request bit in API */
 
 #if 1
 /*
@@ -66,6 +67,10 @@ JS_BEGIN_EXTERN_C
 #else
 #define GC_POKE(cx, oldval) ((cx)->runtime->gcPoke = JSVAL_IS_GCTHING(oldval))
 #endif
+
+extern intN
+js_ChangeExternalStringFinalizer(JSStringFinalizeOp oldop,
+                                 JSStringFinalizeOp newop);
 
 extern JSBool
 js_InitGC(JSRuntime *rt, uint32 maxbytes);
