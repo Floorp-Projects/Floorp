@@ -190,6 +190,7 @@ pref("network.protocol-handler.external.news" , true); // for news
 // It will also try to open link clicks inside the browser before
 // failing over to the system handlers.
 pref("network.protocol-handler.expose-all", true);
+pref("network.protocol-handler.expose.mailto", false);
 
 // Default security warning dialogs to show once.
 pref("security.warn_entering_secure.show_once", true);
