@@ -82,6 +82,7 @@
 #include "nsIXULDocument.h"
 #include "nsIXULPopupListener.h"
 #include "nsIXULPrototypeDocument.h"
+#include "nsIXBLService.h"
 #include "nsLayoutCID.h"
 #include "nsRDFCID.h"
 #include "nsRDFDOMNodeList.h"
@@ -300,7 +301,6 @@ nsIAtom*             nsXULElement::kRadioAtom;
 nsIAtom*             nsXULElement::kRadioGroupAtom;
 nsIAtom*             nsXULElement::kMenuListAtom;
 nsIAtom*             nsXULElement::kMenuButtonAtom;
-nsIAtom*             nsXULElement::kTextAreaAtom;
 nsIAtom*             nsXULElement::kTextFieldAtom;
 
 #ifdef XUL_PROTOTYPE_ATTRIBUTE_METERING
@@ -374,7 +374,6 @@ nsXULElement::Init()
         kRadioGroupAtom     = NS_NewAtom("radiogroup");
         kMenuListAtom       = NS_NewAtom("menulist");
         kMenuButtonAtom     = NS_NewAtom("menubutton");
-        kTextAreaAtom       = NS_NewAtom("textarea");
         kTextFieldAtom      = NS_NewAtom("textfield");
 
         rv = nsComponentManager::CreateInstance(kNameSpaceManagerCID,
@@ -459,8 +458,7 @@ nsXULElement::~nsXULElement()
         NS_IF_RELEASE(kMenuListAtom);
         NS_IF_RELEASE(kMenuButtonAtom);
         NS_IF_RELEASE(kTextFieldAtom);
-        NS_IF_RELEASE(kTextAreaAtom);
-
+        
         NS_IF_RELEASE(gNameSpaceManager);
 
         if (gXULUtils) {
@@ -3868,6 +3866,50 @@ nsXULElement::GetControllers(nsIControllers** aResult)
     return NS_OK;
 }
 
+nsresult
+nsXULElement::GetAnonymousContent(nsIDOMNodeList** aResult)
+{
+  nsresult rv;
+  nsRDFDOMNodeList* elements;
+  // Addref happens on following line in the Create call.
+  if (NS_FAILED(rv = nsRDFDOMNodeList::Create(&elements))) {
+    NS_ERROR("unable to create node list");
+    return rv;
+  }
+
+  *aResult = elements;
+
+  // Use the XBL service to get a content list.
+  NS_WITH_SERVICE(nsIXBLService, xblService, "component://netscape/xbl", &rv);
+  if (!xblService)
+    return rv;
+
+  // Retrieve the anonymous content that we should build.
+  nsCOMPtr<nsISupportsArray> anonymousItems;
+  nsCOMPtr<nsIContent> childElement;
+  xblService->GetContentList(NS_STATIC_CAST(nsIStyledContent*, this), getter_AddRefs(anonymousItems), getter_AddRefs(childElement));
+  
+  if (!anonymousItems)
+    return NS_OK;
+
+  PRUint32 count = 0;
+  anonymousItems->Count(&count);
+
+  for (PRUint32 i=0; i < count; i++)
+  {
+    // get our child's content and set its parent to our content
+    nsCOMPtr<nsISupports> node;
+    anonymousItems->GetElementAt(i,getter_AddRefs(node));
+
+    nsCOMPtr<nsIDOMNode> content(do_QueryInterface(node));
+    
+    if (content)
+      elements->AppendNode(content);
+  }
+
+  return NS_OK;
+}
+
 // Methods for setting/getting attributes from nsIDOMXULElement
 nsresult
 nsXULElement::GetId(nsString& aId)
@@ -4055,17 +4097,22 @@ nsXULElement::RemoveFocus(nsIPresContext* aPresContext)
   return NS_OK;
 }
 
+PRBool 
+nsXULElement::IsFocusable(nsIAtom* aTag)
+{
+  return (aTag == kTitledButtonAtom) || (aTag == kTreeAtom) || (aTag == kCheckboxAtom) || (aTag == kRadioAtom) ||
+         (aTag == kMenuListAtom) || (aTag == kMenuButtonAtom) || (aTag == kTextFieldAtom);
+}
+
 PRBool
 nsXULElement::IsFocusableContent()
 {
   // XXX This method sucks. I mean it. It really really sucks.
-  nsCOMPtr<nsIAtom> tag;
-  GetBaseTag(getter_AddRefs(tag));
-  if (!tag)
-    tag = Tag();
-  return (tag.get() == kTitledButtonAtom) || (tag.get() == kTreeAtom) || (tag.get() == kCheckboxAtom) || (tag.get() == kRadioAtom) ||
-         (tag.get() == kMenuListAtom) || (tag.get() == kMenuButtonAtom) || (tag.get() == kTextFieldAtom) ||
-         (tag.get() == kTextAreaAtom);
+  // We HAVE to fix this before we ship.
+  nsCOMPtr<nsIAtom> baseTag;
+  GetBaseTag(getter_AddRefs(baseTag));
+ 
+  return IsFocusable(Tag()) || IsFocusable(baseTag);
 }
 
 // nsIBindableContent Interface

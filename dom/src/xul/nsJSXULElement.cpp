@@ -39,8 +39,8 @@
 #include "nsIRDFCompositeDataSource.h"
 #include "nsIDOMXULElement.h"
 #include "nsIRDFResource.h"
-#include "nsIControllers.h"
 #include "nsIDOMNodeList.h"
+#include "nsIControllers.h"
 
 
 static NS_DEFINE_IID(kIScriptObjectOwnerIID, NS_ISCRIPTOBJECTOWNER_IID);
@@ -51,8 +51,8 @@ static NS_DEFINE_IID(kICSSStyleDeclarationIID, NS_IDOMCSSSTYLEDECLARATION_IID);
 static NS_DEFINE_IID(kIRDFCompositeDataSourceIID, NS_IRDFCOMPOSITEDATASOURCE_IID);
 static NS_DEFINE_IID(kIXULElementIID, NS_IDOMXULELEMENT_IID);
 static NS_DEFINE_IID(kIRDFResourceIID, NS_IRDFRESOURCE_IID);
-static NS_DEFINE_IID(kIControllersIID, NS_ICONTROLLERS_IID);
 static NS_DEFINE_IID(kINodeListIID, NS_IDOMNODELIST_IID);
+static NS_DEFINE_IID(kIControllersIID, NS_ICONTROLLERS_IID);
 
 //
 // XULElement property ids
@@ -63,7 +63,8 @@ enum XULElement_slots {
   XULELEMENT_STYLE = -3,
   XULELEMENT_DATABASE = -4,
   XULELEMENT_RESOURCE = -5,
-  XULELEMENT_CONTROLLERS = -6
+  XULELEMENT_CONTROLLERS = -6,
+  XULELEMENT_ANONYMOUSCONTENT = -7
 };
 
 /***********************************************************************/
@@ -158,6 +159,19 @@ GetXULElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           if (NS_SUCCEEDED(rv)) {
             // get the js object; n.b., this will do a release on 'prop'
             nsJSUtils::nsConvertXPCObjectToJSVal(prop, NS_GET_IID(nsIControllers), cx, obj, vp);
+          }
+        }
+        break;
+      }
+      case XULELEMENT_ANONYMOUSCONTENT:
+      {
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_XULELEMENT_ANONYMOUSCONTENT, PR_FALSE);
+        if (NS_SUCCEEDED(rv)) {
+          nsIDOMNodeList* prop;
+          rv = a->GetAnonymousContent(&prop);
+          if (NS_SUCCEEDED(rv)) {
+            // get the js object
+            nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, obj, vp);
           }
         }
         break;
@@ -591,6 +605,7 @@ static JSPropertySpec XULElementProperties[] =
   {"database",    XULELEMENT_DATABASE,    JSPROP_ENUMERATE},
   {"resource",    XULELEMENT_RESOURCE,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {"controllers",    XULELEMENT_CONTROLLERS,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"anonymousContent",    XULELEMENT_ANONYMOUSCONTENT,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {0}
 };
 
