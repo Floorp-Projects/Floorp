@@ -145,7 +145,6 @@ NS_NewPolylineFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame);
 #include "nsIDOMDocument.h"
 #include "nsDocument.h"
 #include "nsToolbarItemFrame.h"
-#include "nsCheckBoxFrame.h"
 #include "nsIScrollable.h"
 
 #ifdef DEBUG
@@ -5535,7 +5534,7 @@ nsCSSFrameConstructor::ConstructXULFrame(nsIPresShell*            aPresShell,
     } // End of BOX CONSTRUCTION logic
     
     // BUTTON CONSTRUCTION
-    else if (aTag == nsXULAtoms::button) {
+    else if (aTag == nsXULAtoms::button || aTag == nsXULAtoms::checkbox || aTag == nsXULAtoms::radio) {
       processChildren = PR_TRUE;
       isReplaced = PR_TRUE;
       rv = NS_NewButtonBoxFrame(aPresShell, &newFrame);
