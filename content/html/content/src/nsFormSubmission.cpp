@@ -35,6 +35,7 @@
 #include "nsDOMError.h"
 #include "nsHTMLValue.h"
 #include "nsGenericElement.h"
+#include "nsISaveAsCharset.h"
 
 // JBK added for submit move from content frame
 #include "nsIFile.h"
@@ -46,7 +47,6 @@ static NS_DEFINE_CID(kFormProcessorCID, NS_FORMPROCESSOR_CID);
 #include "nsIURI.h"
 #include "nsNetUtil.h"
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
-#include "nsIUnicodeEncoder.h"
 #include "nsIPref.h"
 #include "nsSpecialSystemDirectory.h"
 #include "nsLinebreakConverter.h"
@@ -82,7 +82,7 @@ class nsFormSubmission : public nsIFormSubmission {
 public:
 
   nsFormSubmission(const nsAString& aCharset,
-                  nsIUnicodeEncoder* aEncoder,
+                  nsISaveAsCharset* aEncoder,
                   nsIFormProcessor* aFormProcessor,
                   PRInt32 aBidiOptions)
     : mCharset(aCharset),
@@ -115,10 +115,10 @@ protected:
   // Encoding Helpers
   char* EncodeVal(const nsAString& aIn);
   char* UnicodeToNewBytes(const PRUnichar* aSrc, PRUint32 aLen,
-                          nsIUnicodeEncoder* aEncoder);
+                          nsISaveAsCharset* aEncoder);
 
   nsString mCharset;
-  nsCOMPtr<nsIUnicodeEncoder> mEncoder;
+  nsCOMPtr<nsISaveAsCharset> mEncoder;
   nsCOMPtr<nsIFormProcessor> mFormProcessor;
   PRInt32 mBidiOptions;
 
@@ -129,9 +129,8 @@ public:
                                nsAString& oCharset);
   static nsresult GetEncoder(nsIForm* form,
                              nsIPresContext* aPresContext,
-                             PRUint8 aCtrlsModAtSubmit,
                              const nsAString& aCharset,
-                             nsIUnicodeEncoder** encoder);
+                             nsISaveAsCharset** encoder);
   static nsresult GetEnumAttr(nsIForm* form, nsIAtom* atom, PRInt32* aValue);
 };
 
@@ -143,7 +142,7 @@ class nsFSURLEncoded : public nsFormSubmission
 {
 public:
   nsFSURLEncoded(const nsAString& aCharset,
-                 nsIUnicodeEncoder* aEncoder,
+                 nsISaveAsCharset* aEncoder,
                  nsIFormProcessor* aFormProcessor,
                  PRInt32 aBidiOptions,
                  PRInt32 aMethod)
@@ -361,7 +360,7 @@ class nsFSMultipartFormData : public nsFormSubmission
 {
 public:
   nsFSMultipartFormData(const nsAString& aCharset,
-                        nsIUnicodeEncoder* aEncoder,
+                        nsISaveAsCharset* aEncoder,
                         nsIFormProcessor* aFormProcessor,
                         PRInt32 aBidiOptions);
   virtual ~nsFSMultipartFormData() { }
@@ -407,7 +406,7 @@ NS_IMPL_QUERY_INTERFACE_INHERITED0(nsFSMultipartFormData, nsFormSubmission)
 // Constructor
 //
 nsFSMultipartFormData::nsFSMultipartFormData(const nsAString& aCharset,
-                                             nsIUnicodeEncoder* aEncoder,
+                                             nsISaveAsCharset* aEncoder,
                                              nsIFormProcessor* aFormProcessor,
                                              PRInt32 aBidiOptions)
     : nsFormSubmission(aCharset, aEncoder, aFormProcessor, aBidiOptions)
@@ -684,8 +683,8 @@ GetSubmissionFromForm(nsIForm* aForm,
   nsFormSubmission::GetSubmitCharset(aForm, ctrlsModAtSubmit, charset);
 
   // Get unicode encoder
-  nsCOMPtr<nsIUnicodeEncoder> encoder;
-  nsFormSubmission::GetEncoder(aForm, aPresContext, ctrlsModAtSubmit, charset,
+  nsCOMPtr<nsISaveAsCharset> encoder;
+  nsFormSubmission::GetEncoder(aForm, aPresContext, charset,
                                getter_AddRefs(encoder));
 
   // Get form processor
@@ -766,9 +765,6 @@ nsFormSubmission::GetSubmitCharset(nsIForm* form,
     value.GetStringValue(acceptCharsetValue);
   }
 
-#ifdef DEBUG_ftang
-  printf("accept-charset = %s\n", acceptCharsetValue.ToNewUTF8String());
-#endif
   PRInt32 charsetLen = acceptCharsetValue.Length();
   if (charsetLen > 0) {
     PRInt32 offset=0;
@@ -785,9 +781,6 @@ nsFormSubmission::GetSubmitCharset(nsIForm* form,
         if (cnt > 0) {
           nsAutoString charset;
           acceptCharsetValue.Mid(charset, offset, cnt);
-#ifdef DEBUG_ftang
-          printf("charset[i] = %s\n",charset.ToNewUTF8String());
-#endif
           if (NS_SUCCEEDED(calias->GetPreferred(charset, oCharset)))
             return;
         }
@@ -838,41 +831,34 @@ nsFormSubmission::GetSubmitCharset(nsIForm* form,
 nsresult
 nsFormSubmission::GetEncoder(nsIForm* form,
                              nsIPresContext* aPresContext,
-                             PRUint8 aCtrlsModAtSubmit,
                              const nsAString& aCharset,
-                             nsIUnicodeEncoder** encoder)
+                             nsISaveAsCharset** aEncoder)
 {
-  *encoder = nsnull;
+  *aEncoder = nsnull;
   nsresult rv = NS_OK;
-#ifdef DEBUG_ftang
-  printf("charset=%s\n", ToNewCString(charset));
-#endif
 
-  // Get Charset, get the encoder.
-  nsCOMPtr<nsICharsetConverterManager> ccm(
-      do_GetService(kCharsetConverterManagerCID, &rv));
+  nsAutoString charset(aCharset);
+  if(charset.Equals(NS_LITERAL_STRING("ISO-8859-1")))
+    charset.Assign(NS_LITERAL_STRING("windows-1252"));
+
+  rv = CallCreateInstance( NS_SAVEASCHARSET_CONTRACTID, aEncoder);
+  NS_ASSERTION(NS_SUCCEEDED(rv), "create nsISaveAsCharset failed");
   NS_ENSURE_SUCCESS(rv, rv);
-  if (ccm) {
-     nsString charset(aCharset);
-     if (charset.Equals(NS_LITERAL_STRING("ISO-8859-1")))
-       charset.Assign(NS_LITERAL_STRING("windows-1252"));
-     rv = ccm->GetUnicodeEncoder(&charset, encoder);
-     NS_ENSURE_SUCCESS(rv, rv);
-     // XXX Commenting this out for now since it was never called up until now
-     // and no one appears to have noticed.  But it appears to be useful stuff,
-     // so it stays for the day when we realize we're doing it wrong.
-     // rv = (*encoder)->SetOutputErrorBehavior(
-     //                    nsIUnicodeEncoder::kOnError_Replace,
-     //                    nsnull,
-     //                    (PRUnichar)'?');
-  }
+
+  rv = (*aEncoder)->Init(NS_ConvertUCS2toUTF8(charset).get(),
+                         (nsISaveAsCharset::attr_EntityAfterCharsetConv + 
+                          nsISaveAsCharset::attr_FallbackDecimalNCR),
+                         0);
+  NS_ASSERTION(NS_SUCCEEDED(rv), "initialize nsISaveAsCharset failed");
+  NS_ENSURE_SUCCESS(rv, rv);
+
   return NS_OK;
 }
 
 // i18n helper routines
 char*
 nsFormSubmission::UnicodeToNewBytes(const PRUnichar* aSrc, PRUint32 aLen,
-                                    nsIUnicodeEncoder* aEncoder)
+                                    nsISaveAsCharset* aEncoder)
 {
   nsresult rv = NS_OK;
 
@@ -932,28 +918,14 @@ nsFormSubmission::UnicodeToNewBytes(const PRUnichar* aSrc, PRUint32 aLen,
   }
 #endif
 
+  
   char* res = nsnull;
-  rv = aEncoder->Reset();
-  if (NS_FAILED(rv)) {
-    return nsnull;
-  }
-
-  PRInt32 maxByteLen = 0;
-  rv = aEncoder->GetMaxLength(aSrc, (PRInt32)aLen, &maxByteLen);
-  if (NS_FAILED(rv)) {
-    return nsnull;
-  }
-
-  res = new char[maxByteLen+1];
-  if (res) {
-    PRInt32 reslen = maxByteLen;
-    PRInt32 reslen2;
-    PRInt32 srclen = aLen;
-    aEncoder->Convert(aSrc, &srclen, res, &reslen);
-    reslen2 = maxByteLen - reslen;
-    aEncoder->Finish(res + reslen, &reslen2);
-    res[reslen+reslen2] = '\0';
-  }
+  if(aSrc && aSrc[0]) {
+    rv = aEncoder->Convert(aSrc, &res);
+    NS_ASSERTION(NS_SUCCEEDED(rv), "conversion failed");
+  } 
+  if(! res)
+    res = nsCRT::strdup("");
   return res;
 }
 
