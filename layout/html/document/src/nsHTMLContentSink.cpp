@@ -19,6 +19,7 @@
 #include "nsIParser.h"
 #include "nsICSSStyleSheet.h"
 #include "nsIUnicharInputStream.h"
+#include "nsIUnicharStreamLoader.h"
 #include "nsIHTMLContent.h"
 #include "nsIURL.h"
 #include "nsIURLGroup.h"
@@ -281,38 +282,6 @@ public:
   PRInt32 mTextLength;
   PRInt32 mTextSize;
 
-};
-
-class nsAccumulatingURLLoader;
-
-typedef void (*nsAccumulationDoneFunc)(nsAccumulatingURLLoader* aLoader,
-                                       nsString& aData,
-                                       void* aRef,
-                                       nsresult aStatus);
-
-class nsAccumulatingURLLoader : public nsIStreamListener {
-public:
-
-  nsAccumulatingURLLoader(nsIURL* aURL,
-                          nsAccumulationDoneFunc aFunc,
-                          void* aRef);
-  ~nsAccumulatingURLLoader();
-  
-  NS_DECL_ISUPPORTS
-
-  NS_IMETHOD OnStartBinding(nsIURL* aURL, const char *aContentType);
-  NS_IMETHOD OnProgress(nsIURL* aURL, PRUint32 aProgress, PRUint32 aProgressMax);
-  NS_IMETHOD OnStatus(nsIURL* aURL, const PRUnichar* aMsg);
-  NS_IMETHOD OnStopBinding(nsIURL* aURL, nsresult aStatus, const PRUnichar* aMsg);
-  NS_IMETHOD GetBindInfo(nsIURL* aURL, nsStreamBindingInfo* aInfo);
-  NS_IMETHOD OnDataAvailable(nsIURL* aURL, nsIInputStream *aIStream, 
-                             PRUint32 aLength);
-
-protected:
-  nsIURL* mURL;
-  nsAccumulationDoneFunc mFunc;
-  void* mRef;
-  nsString* mData;
 };
 
 //----------------------------------------------------------------------
@@ -2106,16 +2075,16 @@ typedef struct {
   nsIURL* mURL;
   nsIHTMLContent* mElement;
   HTMLContentSink* mSink;
-} nsAsyncStyleProcessingData;
+} nsAsyncStyleProcessingDataHTML;
 
 static void
-nsDoneLoadingStyle(nsAccumulatingURLLoader* aLoader,
+nsDoneLoadingStyle(nsIUnicharStreamLoader* aLoader,
                    nsString& aData,
                    void* aRef,
                    nsresult aStatus)
 {
   nsresult rv = NS_OK;
-  nsAsyncStyleProcessingData* d = (nsAsyncStyleProcessingData*)aRef;
+  nsAsyncStyleProcessingDataHTML* d = (nsAsyncStyleProcessingDataHTML*)aRef;
   nsIUnicharInputStream* uin = nsnull;
 
   if ((NS_OK == aStatus) && (0 < aData.Length())) {
@@ -2220,7 +2189,7 @@ HTMLContentSink::ProcessLINKTag(const nsIParserNode& aNode)
         return result;
       }
 
-      nsAsyncStyleProcessingData* d = new nsAsyncStyleProcessingData;
+      nsAsyncStyleProcessingDataHTML* d = new nsAsyncStyleProcessingDataHTML;
       if (nsnull == d) {
         return NS_ERROR_OUT_OF_MEMORY;
       }
@@ -2234,12 +2203,15 @@ HTMLContentSink::ProcessLINKTag(const nsIParserNode& aNode)
       d->mSink = this;
       NS_ADDREF(this);
       
-      nsAccumulatingURLLoader* loader = 
-        new nsAccumulatingURLLoader(url, 
-                                    (nsAccumulationDoneFunc)nsDoneLoadingStyle, 
-                                    (void *)d);
+      nsIUnicharStreamLoader* loader;
+      result = NS_NewUnicharStreamLoader(&loader,
+                                         url, 
+                                         (nsStreamCompleteFunc)nsDoneLoadingStyle, 
+                                         (void *)d);
       NS_RELEASE(url);
-      result = NS_ERROR_HTMLPARSER_BLOCK;
+      if (NS_OK == result) {
+        result = NS_ERROR_HTMLPARSER_BLOCK;
+      }
     }
   }
 
@@ -2385,7 +2357,7 @@ HTMLContentSink::EvaluateScript(nsString& aScript,
 }
 
 static void
-nsDoneLoadingScript(nsAccumulatingURLLoader* aLoader,
+nsDoneLoadingScript(nsIUnicharStreamLoader* aLoader,
                     nsString& aData,
                     void* aRef,
                     nsresult aStatus)
@@ -2444,7 +2416,7 @@ HTMLContentSink::ProcessSCRIPTTag(const nsIParserNode& aNode)
 
     // If there is a SRC attribute...
     if (src.Length() > 0) {
-      // Use the SRC attribute value to open an accumulating stream
+      // Use the SRC attribute value to load the URL
       nsIURL* url = nsnull;
       nsAutoString absURL;
       nsIURLGroup* urlGroup;
@@ -2468,12 +2440,15 @@ HTMLContentSink::ProcessSCRIPTTag(const nsIParserNode& aNode)
       // onto it as opaque data.
       NS_ADDREF(this);
 
-      nsAccumulatingURLLoader* loader = 
-         new nsAccumulatingURLLoader(url, 
-                                     (nsAccumulationDoneFunc)nsDoneLoadingScript, 
+      nsIUnicharStreamLoader* loader;
+      rv = NS_NewUnicharStreamLoader(&loader,
+                                     url, 
+                                     (nsStreamCompleteFunc)nsDoneLoadingScript, 
                                      (void *)this);
       NS_RELEASE(url);
-      rv = NS_ERROR_HTMLPARSER_BLOCK;
+      if (NS_OK == rv) {
+        rv = NS_ERROR_HTMLPARSER_BLOCK;
+      }
     }
     else {
       // Otherwise, get the text content of the script tag
@@ -2579,7 +2554,7 @@ HTMLContentSink::ProcessSTYLETag(const nsIParserNode& aNode)
   } else {
     // src with immediate style data doesn't add up
     // XXX what does nav do?
-    // Use the SRC attribute value to open an accumulating stream
+    // Use the SRC attribute value to load the URL
     nsAutoString absURL;
     nsIURLGroup* urlGroup;
     (void)mDocumentURL->GetURLGroup(&urlGroup);
@@ -2598,7 +2573,7 @@ HTMLContentSink::ProcessSTYLETag(const nsIParserNode& aNode)
       return rv;
     }
 
-    nsAsyncStyleProcessingData* d = new nsAsyncStyleProcessingData;
+    nsAsyncStyleProcessingDataHTML* d = new nsAsyncStyleProcessingDataHTML;
     if (nsnull == d) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
@@ -2612,12 +2587,15 @@ HTMLContentSink::ProcessSTYLETag(const nsIParserNode& aNode)
     d->mSink = this;
     NS_ADDREF(this);
 
-    nsAccumulatingURLLoader* loader = 
-      new nsAccumulatingURLLoader(url, 
-                                  (nsAccumulationDoneFunc)nsDoneLoadingStyle, 
-                                  (void *)d);
+    nsIUnicharStreamLoader* loader;
+    rv = NS_NewUnicharStreamLoader(&loader,
+                                   url, 
+                                   (nsStreamCompleteFunc)nsDoneLoadingStyle, 
+                                   (void *)d);
     NS_RELEASE(url);
-    rv = NS_ERROR_HTMLPARSER_BLOCK;
+    if (NS_OK == rv) {
+      rv = NS_ERROR_HTMLPARSER_BLOCK;
+    }
   }
 
   NS_RELEASE(element);
@@ -2747,104 +2725,4 @@ HTMLContentSink::NotifyError(nsresult aErrorResult)
   // Why are you telling us, parser. Deal with it yourself.
   PR_ASSERT(0);
   return NS_OK;
-}
-
-//----------------------------------------------------------------------
-
-nsAccumulatingURLLoader::nsAccumulatingURLLoader(nsIURL* aURL,
-                                                 nsAccumulationDoneFunc aFunc,
-                                                 void* aRef)
-{
-  mFunc = aFunc;
-  mRef = aRef;
-  mData = new nsString();
-
-  nsresult rv;
-  if (aURL) {
-    rv = NS_OpenURL(aURL, this);
-    if ((NS_OK != rv) && (nsnull != mFunc)) {
-      (*mFunc)(this, *mData, mRef, rv);
-    }
-  }
-}
-
-nsAccumulatingURLLoader::~nsAccumulatingURLLoader()
-{
-  if (nsnull != mData) {
-    delete mData;
-  }
-}
-
-NS_IMPL_ISUPPORTS(nsAccumulatingURLLoader, kIStreamListenerIID)
-
-NS_IMETHODIMP 
-nsAccumulatingURLLoader::OnStartBinding(nsIURL* aURL, 
-                                        const char *aContentType)
-{
-  // XXX Should check content type?
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP 
-nsAccumulatingURLLoader::OnProgress(nsIURL* aURL, 
-                                    PRUint32 aProgress, 
-                                    PRUint32 aProgressMax)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP 
-nsAccumulatingURLLoader::OnStatus(nsIURL* aURL, const PRUnichar* aMsg)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP 
-nsAccumulatingURLLoader::OnStopBinding(nsIURL* aURL, 
-                                       nsresult aStatus, 
-                                       const PRUnichar* aMsg)
-{
-  (*mFunc)(this, *mData, mRef, aStatus);
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP 
-nsAccumulatingURLLoader::GetBindInfo(nsIURL* aURL, nsStreamBindingInfo* aInfo)
-{
-  return NS_OK;
-}
-
-#define BUF_SIZE 1024
-
-NS_IMETHODIMP 
-nsAccumulatingURLLoader::OnDataAvailable(nsIURL* aURL, 
-                                         nsIInputStream *aIStream, 
-                                         PRUint32 aLength)
-{
-  nsresult rv = NS_OK;
-  char buffer[BUF_SIZE];
-  PRUint32 len, lenRead;
-  
-  aIStream->GetLength(&len);
-
-  while (len > 0) {
-    if (len < BUF_SIZE) {
-      lenRead = len;
-    }
-    else {
-      lenRead = BUF_SIZE;
-    }
-
-    rv = aIStream->Read(buffer, 0, lenRead, &lenRead);
-    if (NS_OK != rv) {
-      return rv;
-    }
-
-    mData->Append(buffer, lenRead);
-    len -= lenRead;
-  }
-
-  return rv;
 }
