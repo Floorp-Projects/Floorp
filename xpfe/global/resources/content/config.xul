@@ -20,13 +20,15 @@ The Initial Developer of the Original Code is Netscape
 Communications Corporation. Portions created by Netscape are
  Copyright (C) 1998-1999 Netscape Communications Corporation. All
 Rights Reserved.
+
+Contributors:
+Chip Clark <chipc@netscape.com>
+Seth Spitzer <sspitzer@netscape.com>
 -->
 
 <!DOCTYPE window SYSTEM "chrome://global/locale/config.dtd">
 
 <window id="config"
-        xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
-        xmlns:web="http://home.netscape.com/WEB-rdf#" 
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" 
         orient="vertical"
         width="750"
@@ -35,24 +37,28 @@ Rights Reserved.
 
 <script src="chrome://global/content/config.js"/>
 
-
-<outliner id="out" flex="1" >
-  <outlinercol id="indexCol" label="&idxColumn.label;" flex="1"/>
+<outliner id="configOutliner" flex="1" onclick="ConfigOnClick(event);">
+  <outlinercol id="indexCol" label="&idxColumn.label;" flex="1"
+      class="sortDirectionIndicator"
+      persist="hidden width sortActive sortDirection"/>
   <splitter class="tree-splitter" />
-  <outlinercol id="prefCol" label="&prefColumn.label;" flex="7"/>
+  <outlinercol id="prefCol" label="&prefColumn.label;" flex="7"
+      class="sortDirectionIndicator"
+      persist="hidden width sortActive sortDirection"/>
   <splitter class="tree-splitter" />
-  <outlinercol id="lockCol" label="&lockColumn.label;"  flex="1"/>
+  <outlinercol id="lockCol" label="&lockColumn.label;"  flex="1"
+      class="sortDirectionIndicator"
+      persist="hidden width sortActive sortDirection"/>
   <splitter class="tree-splitter" />
-  <outlinercol id="typeCol" label="&typeColumn.label;"  flex="1"/>
+  <outlinercol id="typeCol" label="&typeColumn.label;"  flex="1"
+      class="sortDirectionIndicator"
+      persist="hidden width sortActive sortDirection"/>
   <splitter class="tree-splitter" />
-  <outlinercol id="valueCol" label="&valueColumn.label;" flex="10"/>
+  <outlinercol id="valueCol" label="&valueColumn.label;" flex="10"
+      class="sortDirectionIndicator"
+      persist="hidden width sortActive sortDirection"/>
 
   <outlinerbody id="configOutlinerBody" flex="1" />
-
 </outliner>
-
-
-  
-
 </window>
 

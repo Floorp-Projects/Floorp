@@ -43,3 +43,19 @@ outlinerbody:-moz-outliner-cell-text(prefCol)
 {
   font-weight: bold;
 }
+
+outlinerbody:-moz-outliner-cell-text(user)
+{
+  color: blue;
+}
+
+outlinerbody:-moz-outliner-cell-text(default)
+{
+  color: green;
+}
+
+outlinerbody:-moz-outliner-cell-text(locked)
+{
+  color: red;
+}
+                                 
