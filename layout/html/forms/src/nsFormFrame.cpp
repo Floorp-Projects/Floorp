@@ -71,6 +71,10 @@ static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 
 #include "nsIUnicodeEncoder.h"
 
+// FormSubmit observer notification
+#include "nsIFormSubmitObserver.h"
+#include "nsIObserverService.h"
+#include "nsIServiceManager.h"
 
 #include "net.h"
 #include "xp_file.h"
@@ -469,7 +473,32 @@ nsFormFrame::OnSubmit(nsIPresContext* aPresContext, nsIFrame* aFrame)
   if (aFrame != nsnull) {
     aFrame->QueryInterface(kIFormControlFrameIID, (void**)&fcFrame);
   }
-  
+
+  // Notify observers that the form is being submitted.
+  nsresult result = NS_OK;
+  nsIObserverService* theObserverService = nsnull;
+  result = nsServiceManager::GetService(NS_OBSERVERSERVICE_PROGID, nsIObserverService::GetIID(),
+                                      (nsISupports**) &theObserverService, nsnull);
+  if (NS_SUCCEEDED(result) && theObserverService){
+    nsString  theTopic(NS_FORMSUBMIT_SUBJECT);
+    nsIEnumerator* theEnum;
+    result = theObserverService->EnumerateObserverList(theTopic.GetUnicode(), &theEnum);
+    if (NS_SUCCEEDED(result) && theEnum){
+      nsIFormSubmitObserver* formSubmitObserver;
+      nsISupports *inst;
+      
+      for (theEnum->First(); theEnum->IsDone() != NS_OK; theEnum->Next()) {
+        result = theEnum->CurrentItem(&inst);
+        if (NS_SUCCEEDED(result) && inst) {
+          result = inst->QueryInterface(nsIFormSubmitObserver::GetIID(),(void**)&formSubmitObserver);
+          if (NS_SUCCEEDED(result) && formSubmitObserver) {
+            formSubmitObserver->Notify(mContent);
+	  }
+	}
+      }
+    }
+  }
+
   if (isURLEncoded) {
     ProcessAsURLEncoded(isPost, data, fcFrame);
   }
