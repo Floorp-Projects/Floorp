@@ -259,10 +259,22 @@ public:
     
     void push(js2val x)         { ASSERT(sp < (execStack + MAX_EXEC_STACK)); *sp++ = x; }
     js2val pop()                { ASSERT(sp > execStack); return *--sp; }
+
+    // return the value at the stack top
     js2val top()                { return *(sp - 1); }
-    js2val top(int argCount)    { return *(sp - (1 + argCount)); }
-    js2val *base(int argCount)  { return (sp - (1 + argCount)); }
-    void pop(int n)             { sp -= n; ASSERT(sp > execStack); }
+
+    // return the value 'n' items down the stack
+    js2val top(int n)           { return *(sp - n); }
+
+    // return the address of the value 'n' items down the stack
+    js2val *base(int n)         { return (sp - n); }
+    
+    // pop 'n' things off the stack
+    void pop(int n)             { sp -= n; ASSERT(sp >= execStack); }
+
+    // insert 'x' before the top 'count' stack items
+    void insert(js2val x, int count);
+
 
     void mark();
 

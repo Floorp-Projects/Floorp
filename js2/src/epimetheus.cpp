@@ -178,7 +178,7 @@ static bool processArgs(int argc, char **argv, int *result)
             case 'f':
                 {
                     try {
-//                        cx->readEvalFile(JavaScript::widenCString(argv[++i]));
+                        metadata->readEvalFile(JavaScript::widenCString(argv[++i]));
                     } catch (Exception &e) {
                         stdOut << '\n' << e.fullMessage();
                         *result = EXITCODE_RUNTIME_ERROR;
@@ -209,6 +209,14 @@ js2val print(JS2Metadata *meta, const js2val thisValue, js2val argv[], uint32 ar
     return JS2VAL_UNDEFINED;
 }
 
+js2val load(JS2Metadata *meta, const js2val thisValue, js2val argv[], uint32 argc)
+{
+    if (argc)
+        return meta->readEvalFile(*meta->engine->toString(argv[0]));
+    else
+        return JS2VAL_UNDEFINED;
+}
+
 } /* namespace Shell */
 } /* namespace JavaScript */
 
@@ -225,6 +233,7 @@ int main(int argc, char **argv)
 
     metadata = new MetaData::JS2Metadata(world);
     metadata->addGlobalObjectFunction("print", print);
+    metadata->addGlobalObjectFunction("load", load);
 
 
     try {

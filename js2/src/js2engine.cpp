@@ -414,6 +414,17 @@ namespace MetaData {
         return (uint16)(d);
     }
 
+    // Insert x before the top count stack entries
+    void JS2Engine::insert(js2val x, int count)
+    {
+        ASSERT(sp < (execStack + MAX_EXEC_STACK));
+        js2val *p = ++sp;
+        for (uint32 i = 0; i < count; i++) {
+            *p = p[-1];
+            --p;
+        }
+        *p = x;            
+    }
 
 
     #define INIT_STRINGATOM(n) n##_StringAtom(allocStringPtr(#n))

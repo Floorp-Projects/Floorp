@@ -40,9 +40,39 @@
             a = top();
             ASSERT(JS2VAL_IS_OBJECT(a) && !JS2VAL_IS_NULL(a));
             JS2Object *obj = JS2VAL_TO_OBJECT(a);
-            ASSERT(obj->kind == ClassKind);
-            JS2Class *c = checked_cast<JS2Class *>(obj);
-            push(c->construct(meta, JS2VAL_NULL, NULL, argCount));
+            if (obj->kind == ClassKind) {
+                JS2Class *c = checked_cast<JS2Class *>(obj);
+                a = c->construct(meta, JS2VAL_NULL, NULL, argCount);
+                pop(argCount + 1);
+                push(a);
+            }
+            else {
+                if (obj->kind == FixedInstanceKind) {
+                    // XXX 
+                    FixedInstance *fInst = checked_cast<FixedInstance *>(obj);
+                    FunctionWrapper *fWrap = fInst->fWrap;
+                    ParameterFrame *runtimeFrame = new ParameterFrame(fWrap->compileFrame);
+                    runtimeFrame->instantiate(&meta->env);
+                    PrototypeInstance *pInst = new PrototypeInstance(meta->objectClass->prototype, meta->objectClass);
+                    baseVal = OBJECT_TO_JS2VAL(pInst);
+                    runtimeFrame->thisObject = baseVal;
+//                      assignArguments(runtimeFrame, fWrap->compileFrame->signature);
+                    if (!fWrap->code)
+                        jsr(phase, fWrap->bCon);   // seems out of order, but we need to catch the current top frame 
+                    meta->env.addFrame(runtimeFrame);
+                    if (fWrap->code) {  // native code, pass pointer to argument base
+                        a = fWrap->code(meta, a, base(argCount), argCount);
+                        meta->env.removeTopFrame();
+                        pop(argCount + 1);
+                        push(a);
+                    }
+                    else {
+                        insert(baseVal, argCount + 1);
+                    }
+                }
+                else
+                    ASSERT(false);
+            }
         }
         break;
 
@@ -50,8 +80,8 @@
         {
             uint16 argCount = BytecodeContainer::getShort(pc);
             pc += sizeof(uint16);
-            a = top(argCount + 1);                  // 'this'
-            b = top(argCount);                      // target function
+            a = top(argCount + 2);                  // 'this'
+            b = top(argCount + 1);                      // target function
             if (JS2VAL_IS_PRIMITIVE(b))
                 meta->reportError(Exception::badValueError, "Can't call on primitive value", errorPos());
             JS2Object *fObj = JS2VAL_TO_OBJECT(b);
@@ -76,14 +106,14 @@
                     jsr(phase, fWrap->bCon);   // seems out of order, but we need to catch the current top frame 
                 meta->env.addFrame(runtimeFrame);
                 if (fWrap->code) {  // native code, pass pointer to argument base
-                    a = fWrap->code(meta, a, base(argCount - 1), argCount);
+                    a = fWrap->code(meta, a, base(argCount), argCount);
                     meta->env.removeTopFrame();
                     pop(argCount + 2);
                     push(a);
                 }
             }
             else
-            if (fObj->kind == MethodClosureKind) {  // XXX I made this up (particularly the push of the objectType)
+            if (fObj->kind == MethodClosureKind) {  // XXX I made this up (particularly the frame push of the objectType)
                 MethodClosure *mc = checked_cast<MethodClosure *>(fObj);
                 FixedInstance *fInst = mc->method->fInst;
                 FunctionWrapper *fWrap = fInst->fWrap;
@@ -96,7 +126,7 @@
                 meta->env.addFrame(meta->objectType(mc->thisObject));
                 meta->env.addFrame(runtimeFrame);
                 if (fWrap->code) {
-                    a = fWrap->code(meta, mc->thisObject, base(argCount - 1), argCount);
+                    a = fWrap->code(meta, mc->thisObject, base(argCount), argCount);
                     meta->env.removeTopFrame();
                     meta->env.removeTopFrame();
                     pop(argCount + 2);

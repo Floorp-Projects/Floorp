@@ -60,6 +60,63 @@
 namespace JavaScript {
 namespace MetaData {
 
+    inline char narrow(char16 ch) { return char(ch); }
+
+    js2val JS2Metadata::readEvalString(const String &str, const String& fileName)
+    {
+        js2val result = JS2VAL_VOID;
+
+        Arena a;
+        Pragma::Flags flags = Pragma::es4;
+        Parser p(world, a, flags, str, fileName);
+        try {
+            StmtNode *parsedStatements = p.parseProgram();
+            ASSERT(p.lexer.peek(true).hasKind(Token::end));
+            if (true)
+            {
+                PrettyPrinter f(stdOut, 30);
+                {
+                    PrettyPrinter::Block b(f, 2);
+                    f << "Program =";
+                    f.linearBreak(1);
+                    StmtNode::printStatements(f, parsedStatements);
+                }
+                f.end();
+                stdOut << '\n';
+            }
+            if (parsedStatements) {
+                setCurrentParser(&p);  // for error reporting        
+                ValidateStmtList(parsedStatements);
+                result = ExecuteStmtList(RunPhase, parsedStatements);
+            }
+        }
+        catch (Exception &x) {
+            throw x;
+        }
+        return result;
+    }
+
+    js2val JS2Metadata::readEvalFile(const String& fileName)
+    {
+        String buffer;
+        int ch;
+
+        js2val result = JS2VAL_VOID;
+
+        std::string str(fileName.length(), char());
+        std::transform(fileName.begin(), fileName.end(), str.begin(), narrow);
+        FILE* f = fopen(str.c_str(), "r");
+        if (f) {
+            while ((ch = getc(f)) != EOF)
+                buffer += static_cast<char>(ch);
+            fclose(f);
+            result = readEvalString(buffer, fileName);
+        }
+        return result;
+    }
+
+
+
 /************************************************************************************
  *
  *  Statements and statement lists
@@ -1882,7 +1939,7 @@ doUnary:
                     argCount++;
                     args = args->next;
                 }
-                bCon->emitOp(eCall, p->pos, -argCount + 1);    // pop argCount args and push a result
+                bCon->emitOp(eCall, p->pos, -(argCount + 2) + 1);    // pop argCount args, the base & function, and push a result
                 bCon->addShort(argCount);
             }
             break;
@@ -1899,7 +1956,7 @@ doUnary:
                     argCount++;
                     args = args->next;
                 }
-                bCon->emitOp(eNew, p->pos, -argCount + 1);    // pop argCount args and push a new object
+                bCon->emitOp(eCall, p->pos, -(argCount + 1) + 1);    // pop argCount args, the type/function, and push a result
                 bCon->addShort(argCount);
             }
             break;
@@ -3336,8 +3393,6 @@ deleteClassProperty:
                             lineNum, pos - linePos, pos, lineBegin, lineEnd);
     }
 
-    inline char narrow(char16 ch) { return char(ch); }
-
     // Accepts a String as the error argument and converts to char *
     void JS2Metadata::reportError(Exception::Kind kind, const char *message, size_t pos, const String &name)
     {
@@ -3440,7 +3495,7 @@ deleteClassProperty:
  *
  ************************************************************************************/
 
-
+    
     // Construct a fixed instance of a class. Set the
     // initial value of all slots to uninitialized.
     FixedInstance::FixedInstance(JS2Class *type) 
@@ -3456,6 +3511,7 @@ deleteClassProperty:
         for (uint32 i = 0; i < type->slotCount; i++) {
             slots[i].value = JS2VAL_UNINITIALIZED;
         }
+
     }
 
     // gc-mark all contained JS2Objects and visit contained structures to do likewise

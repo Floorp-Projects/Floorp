@@ -878,6 +878,9 @@ public:
     void ValidateStmtList(StmtNode *p);
     js2val EvalStmtList(Phase phase, StmtNode *p);
 
+    js2val readEvalString(const String &str, const String& fileName);
+    js2val readEvalFile(const String& fileName);
+
 
     void ValidateStmtList(Context *cxt, Environment *env, StmtNode *p);
     void ValidateTypeExpression(Context *cxt, Environment *env, ExprNode *e)    { ValidateExpression(cxt, env, e); } 
