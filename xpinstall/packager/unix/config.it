@@ -125,6 +125,14 @@ Attributes=SELECTED|INVISIBLE
 URL0=$URLPath$
 
 [Component6]
+Description Short=English US Language Pack
+Description Long=English US Language Pack
+Archive=langenus.xpi
+$InstallSize$:langenus
+Attributes=SELECTED|INVISIBLE
+URL0=$URLPath$
+
+[Component7]
 Description Short=English German Language Pack
 Description Long=English German Language Pack
 Archive=langende.xpi

@@ -14,6 +14,13 @@
 viewer:defaults:profile:en-DE:*
 viewer:chrome:locales:en-DE:*
 
+[langenus]
+;
+; en-US 
+viewer:defaults:profile:en-US:*
+viewer:chrome:locales:en-US:*
+viewer:Search Plugins:*
+
 [deflenus]
 ;
 ; default files for en-US
@@ -51,7 +58,6 @@ viewer:Mozilla Select Profile
 ; viewer:NSPR Logging
 viewer:Plugins:MRJPlugin
 viewer:Plugins:MRJPlugin.jar
-viewer:Search Plugins:*
 
 viewer:Essential Files:gfx.shlb 
 viewer:Essential Files:libimg.shlb 
