@@ -42,7 +42,9 @@ function EditorFillContextMenu(event, contextMenuNode)
 
   // Special case of an image inside a link
   if (objectName == "img")
-    isInLink = gEditor.getElementOrParentByTagName("href", GetObjectForProperties());
+  try {
+    isInLink = GetCurrentEditor().getElementOrParentByTagName("href", GetObjectForProperties());
+  } catch (e) {}
 
   // Disable "Create Link" if in a link
   SetElementEnabledById("createLink_cm", !isInLink);

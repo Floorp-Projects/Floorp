@@ -42,10 +42,7 @@
 
 /* Main Composer window UI control */
 
-var gEditor;
-var editorShell;   // XXX THIS NEEDS TO DIE
-var gComposerWindowControllerID = -1;
-var documentModified;
+var gComposerWindowControllerID = 0;
 var prefAuthorString = "";
 
 const kDisplayModeNormal = 0;
@@ -58,12 +55,15 @@ const kBaseEditorStyleSheet = "chrome://editor/content/EditorOverride.css";
 const kNormalStyleSheet = "chrome://editor/content/EditorContent.css";
 const kAllTagsStyleSheet = "chrome://editor/content/EditorAllTags.css";
 const kParagraphMarksStyleSheet = "chrome://editor/content/EditorParagraphMarks.css";
+
 const kTextMimeType = "text/plain";
 const kHTMLMimeType = "text/html";
 
+const nsIWebNavigation = Components.interfaces.nsIWebNavigation;
+
 var gPreviousNonSourceDisplayMode = 1;
 var gEditorDisplayMode = -1;
-var docWasModified = false;  // Check if clean document, if clean then unload when user "Opens"
+var gDocWasModified = false;  // Check if clean document, if clean then unload when user "Opens"
 var gContentWindow = 0;
 var gSourceContentWindow = 0;
 var gHTMLSourceChanged = false;
@@ -105,7 +105,7 @@ nsButtonPrefListener.prototype =
   domain: "editor.use_css",
   observe: function(subject, topic, prefName)
   {
-    if (!isHTMLEditor())
+    if (!IsHTMLEditor())
       return;
     // verify that we're changing a button pref
     if (topic != "nsPref:changed") return;
@@ -115,9 +115,10 @@ nsButtonPrefListener.prototype =
     if (cmd) {
       var prefs = GetPrefs();
       var useCSS = prefs.getBoolPref(prefName);
-      if (useCSS && gEditor) {
+      var editor = GetCurrentEditor();
+      if (useCSS && editor) {
         var mixedObj = {};
-        var state = gEditor.getHighlightColorState(mixedObj);
+        var state = editor.getHighlightColorState(mixedObj);
         cmd.setAttribute("state", state);
         cmd.removeAttribute("collapsed");
       }      
@@ -126,23 +127,25 @@ nsButtonPrefListener.prototype =
         cmd.setAttribute("collapsed", "true");
       }
 
-      if (gEditor)
-        gEditor.isCSSEnabled = useCSS;
+      if (editor)
+        editor.isCSSEnabled = useCSS;
     }
   }
 }
 
 function AfterHighlightColorChange()
 {
-  if (!isHTMLEditor())
+  if (!IsHTMLEditor())
     return;
 
   var button = document.getElementById("cmd_highlight");
   if (button) {
     var mixedObj = {};
-    var state = gEditor.getHighlightColorState(mixedObj);
-    button.setAttribute("state", state);
-    onHighlightColorChange();
+    try {
+      var state = GetCurrentEditor().getHighlightColorState(mixedObj);
+      button.setAttribute("state", state);
+      onHighlightColorChange();
+    } catch (e) {}
   }      
 }
 
@@ -169,7 +172,7 @@ function EditorOnLoad()
     window.tryToClose = EditorCanClose;
 
     // Continue with normal startup.
-    EditorStartup('html', document.getElementById("content-frame"));
+    EditorStartup();
 }
 
 function TextEditorOnLoad()
@@ -181,7 +184,7 @@ function TextEditorOnLoad()
         document.getElementById( "args" ).setAttribute( "value", window.arguments[0] );
     }
     // Continue with normal startup.
-    EditorStartup('text', document.getElementById("content-frame"));
+    EditorStartup();
 }
 
 // This should be called by all editor users when they close their window
@@ -191,44 +194,6 @@ function EditorCleanup()
   SwitchInsertCharToAnotherEditorOrClose();
 }
 
-function PageIsEmptyAndUntouched()
-{
-  return (gEditor != null) && gEditor.documentIsEmpty && 
-         !docWasModified && !gHTMLSourceChanged;
-}
-
-function IsInHTMLSourceMode()
-{
-  return (gEditorDisplayMode == kDisplayModeSource);
-}
-
-// are we editing HTML (i.e. neither in HTML source mode, nor editing a text file)
-function IsEditingRenderedHTML()
-{
-  return isHTMLEditor() && !IsInHTMLSourceMode();
-}
-
-function IsWebComposer()
-{
-  return document.documentElement.id == "editorWindow";
-}
-
-function IsDocumentEditable()
-{
-  try {
-    return GetCurrentEditor().isDocumentEditable;
-  } catch (e) {}
-  return false;
-}
-
-function IsDocumentModified()
-{
-  try {
-    return GetCurrentEditor().documentModified;
-  } catch(e) {}
-  return false;
-}
-
 var DocumentReloadListener =
 {
   NotifyDocumentCreated: function() {},
@@ -236,13 +201,17 @@ var DocumentReloadListener =
 
   NotifyDocumentStateChanged:function( isNowDirty )
   {
-    var charset = gEditor.documentCharacterSet;
+    var editor = GetCurrentEditor();
+    try {
+      // unregister the listener to prevent multiple callbacks
+      editor.removeDocumentStateListener( DocumentReloadListener );
 
-    // unregister the listener to prevent multiple callbacks
-    gEditor.removeDocumentStateListener( DocumentReloadListener );
+      var charset = editor.documentCharacterSet;
 
-    // update the META charset with the current presentation charset
-    gEditor.documentCharacterSet = charset;
+      // update the META charset with the current presentation charset
+      editor.documentCharacterSet = charset;
+
+    } catch (e) {}
   }
 };
 
@@ -255,128 +224,188 @@ function addEditorClickEventListener()
   } catch (e) {}
 }
 
-function DoAllQueryInterfaceOnEditor()
-{
-  // do QI here so the interfaces will be accessible on gEditor
-  try {
-    gEditor.QueryInterface(Components.interfaces.nsIHTMLEditor);
-  } catch(e) {}
-  try {
-    gEditor.QueryInterface(Components.interfaces.nsIPlaintextEditor);
-  } catch(e) {}
-  try {
-    gEditor.QueryInterface(Components.interfaces.nsITableEditor);
-  } catch(e) {}
-  try {
-    gEditor.QueryInterface(Components.interfaces.nsIEditorStyleSheets);
-  } catch(e) {}
+// implements nsIObserver
+var gEditorDocumentObserver =
+{ 
+  observe: function(aSubject, aTopic, aData)
+  {
+    // Should we allow this even if NOT the focused editor?
+    var commandManager = GetCurrentCommandManager();
+    if (commandManager != aSubject)
+      return;
+
+    var editor = GetCurrentEditor();
+    switch(aTopic)
+    {
+      case "obs_documentCreated":
+        // Just for convenience
+        gContentWindow = window.content;
+
+        // Get state to see if document creation succeeded
+        var params = newCommandParams();
+        if (!params)
+          return;
+
+        try {
+          commandManager.getCommandState(aTopic, gContentWindow, params);
+          var errorStringId = 0;
+          var editorStatus = params.getLongValue("state_data");
+          if (!editor && editorStatus == nsIEditingSession.eEditorOK)
+          {
+            dump("\n ****** NO EDITOR BUT NO EDITOR ERROR REPORTED ******* \n\n");
+            editorStatus = nsIEditingSession.eEditorErrorUnkown;
+          }
+
+          switch (editorStatus)
+          {
+            case nsIEditingSession.eEditorErrorCantEditFramesets:
+              errorStringId = "CantEditFramesetMsg";
+              break;
+            case nsIEditingSession.eEditorErrorCantEditMimeType:
+              errorStringId = "CantEditMimeTypeMsg";
+              break;
+            case nsIEditingSession.eEditorErrorUnkown:
+              errorStringId = "CantEditDocumentMsg";
+              break;
+            // Note that for "eEditorErrorFileNotFound, 
+            // network code popped up an alert dialog, so we don't need to
+          }
+          if (errorStringId)
+            AlertWithTitle("", GetString(errorStringId));
+        } catch(e) { dump("EXCEPTION GETTING obs_documentCreated state "+e+"\n"); }
+
+        // We have a bad editor -- nsIEditingSession will rebuild an editor
+        //   with a blank page, so simply abort here
+        if (editorStatus)
+          return; 
+
+        var editorType = GetCurrentEditorType();
+        if (editorType != "htmlmail"
+            && editorType != "textmail")
+        {
+          // Mail Composers start focus in address area
+          gContentWindow.focus();
+        }
+
+        if (!("InsertCharWindow" in window))
+          window.InsertCharWindow = null;
+
+        try {
+          editor.QueryInterface(nsIEditorStyleSheets);
+
+          // Add the base sheets for editor cursor etc.
+          editor.addOverrideStyleSheet(kBaseEditorStyleSheet);
+
+          //  and extra styles for showing anchors, table borders, smileys, etc
+          editor.addOverrideStyleSheet(kNormalStyleSheet);
+        } catch (e) {}
+
+        // Things for just the Web Composer application
+        if (IsWebComposer())
+        {
+          // Get the window command controller created in SetupComposerWindowCommands()
+          if (gComposerWindowControllerID)
+          {
+            try { 
+              var controller = window.controllers.getControllerById(gComposerWindowControllerID);
+              controller.SetCommandRefCon(editor.QueryInterface(Components.interfaces.nsISupports));
+            } catch (e) {}
+          }
+
+          // udpate menu items now that we have an editor to play with
+          window.updateCommands("create");
+
+          // Call EditorSetDefaultPrefsAndDoctype first so it gets the default author before initing toolbars
+          EditorSetDefaultPrefsAndDoctype();
+
+          // We may load a text document into an html editor,
+          //   so be sure editortype is set correctly
+          // XXX We really should use the "real" plaintext editor for this!
+          if (editor.contentsMIMEType == "text/plain")
+          {
+            try {
+              GetCurrentEditorElement().editortype = "text";
+            } catch (e) { dump (e)+"\n"; }
+
+            // Hide or disable UI not used for plaintext editing
+            HideItem("FormatToolbar");
+            HideItem("EditModeToolbar");
+            HideItem("formatMenu");
+            HideItem("tableMenu");
+            HideItem("menu_validate");
+            HideItem("sep_validate");
+            HideItem("previewButton");
+            HideItem("imageButton");
+            HideItem("linkButton");
+            HideItem("namedAnchorButton");
+            HideItem("hlineButton");
+
+            SetElementEnabledById("cmd_viewFormatToolbar", false);
+            SetElementEnabledById("cmd_viewEditModeToolbar", false);
+
+            // Hide everything in "Insert" except for "Symbols"
+            var menuPopup = document.getElementById("insertMenuPopup");
+            if (menuPopup)
+            {
+              var children = menuPopup.childNodes;
+              for (var i=0; i < children.length; i++) 
+              {
+                var item = children.item(i);
+                if (item.id != "insertChars")
+                  item.setAttribute("hidden", "true");
+              }
+            }
+
+            // Unfortunately, we have to redo all command enabling
+            //   that were done before we changed to "text" editing
+            window.updateCommands("create");
+          }
+    
+          // Set window title and build "Recent Files" menu  
+          // (to detect empty menu and disable it)
+          UpdateWindowTitle();
+          BuildRecentMenu();
+
+          // We must wait until document is created to get proper Url
+          // (Windows may load with local file paths)
+          SetSaveAndPublishUI(GetDocumentUrl());
+
+          // Start in "Normal" edit mode
+          SetDisplayMode(kDisplayModeNormal);
+        }
+
+        // Add mouse click watcher if right type of editor
+        if (IsHTMLEditor())
+        {
+          addEditorClickEventListener();
+
+          // Force color widgets to update
+          onFontColorChange();
+          onBackgroundColorChange();
+        }
+
+        break;
+
+      case "cmd_setDocumentModified":
+        window.updateCommands("save");
+        break;
+
+      case "obs_documentWillBeDestroyed":
+        dump("obs_documentWillBeDestroyed notification\n");
+        break;
+
+      case "cmd_bold":
+        // Update all style items
+        window.updateCommands("style");
+        break;
+    }
+  }
 }
 
-// This is called when the real editor document is created,
-// before it's loaded.
-// IMPORTANT: This is used by ALL Composers, so be careful!
-var DocumentStateListener =
+function EditorStartup()
 {
-  NotifyDocumentCreated: function()
-  {
-    gEditor = editorShell.editor;
-
-    // Just for convenience
-    gContentWindow = window._content;
-
-    // do all of our QI'ing here so we don't need to do it elsewhere
-    DoAllQueryInterfaceOnEditor();
-
-    if (editorShell.editorType == "htmlmail"
-        || editorShell.editorType == "textmail")
-    {
-      gEditor.QueryInterface(Components.interfaces.nsIEditorMailSupport);
-    }
-    else
-    {
-      // Mail Composers start focus in address area
-      gContentWindow.focus();
-    }
-
-    if (!("InsertCharWindow" in window))
-      window.InsertCharWindow = null;
-
-    try {
-      // Add the base sheets for editor cursor etc.
-      gEditor.addOverrideStyleSheet(kBaseEditorStyleSheet);
-
-      //  and extra styles for showing anchors, table borders, smileys, etc
-      gEditor.addOverrideStyleSheet(kNormalStyleSheet);
-    } catch (e) {}
-
-    // XXX Temporary: This should be set during startup 
-    //  once we finish transition from nsIEditorShell is to nsIEditorSession
-    try {
-      gEditor.contentsMIMEType = gIsHTMLEditor ? kHTMLMimeType : kTextMimeType;
-    } catch(e) {}
-    
-    // Add mouse click watcher if right type of editor
-    if (isHTMLEditor())
-      addEditorClickEventListener();
-
-    // udpate menu items now that we have an editor to play with
-    window.updateCommands("create");
-
-    // Do the rest only if a Web Composer application
-    if (IsWebComposer())
-    {
-      // Get the window command controller created in SetupComposerWindowCommands()
-      if (gComposerWindowControllerID != -1)
-      {
-        try { 
-          var controller = window.controllers.getControllerById(gComposerWindowControllerID);
-          controller.SetCommandRefCon(gEditor.QueryInterface(Components.interfaces.nsISupports));
-        } catch (e) {}
-      }
-
-      // Call EditorSetDefaultPrefsAndDoctype first so it gets the default author before initing toolbars
-      EditorSetDefaultPrefsAndDoctype();
-      EditorInitToolbars();
-    
-      // Set window title and build "Recent Files" menu  
-      // (to detect empty menu and disable it)
-      UpdateWindowTitle();
-      BuildRecentMenu();
-
-      // We must wait until document is created to get proper Url
-      // (Windows may load with local file paths)
-      SetSaveAndPublishUI(GetDocumentUrl());
-
-      // Start in "Normal" edit mode
-      SetDisplayMode(kDisplayModeNormal);
-    }
-  },
-
-    // note that the editor seems to be gone at this point 
-    // so we don't have a way to remove the click listener.
-    // hopefully it is being cleaned up with all listeners
-  NotifyDocumentWillBeDestroyed: function() {},
-
-  NotifyDocumentStateChanged:function( isNowDirty )
-  {
-    /* Notify our dirty detector so this window won't be closed if
-       another document is opened */
-    if (isNowDirty)
-      docWasModified = true;
-
-    // hack! Should not need this updateCommands, but there is some controller
-    //  bug that this works around. ??
-    // comment out the following line because it cause 41573 IME problem on Mac
-    //gContentWindow.focus();
-    window.updateCommands("create");
-    window.updateCommands("save");
-  }
-};
-
-function EditorStartup(editorType, editorElement)
-{
-  gIsHTMLEditor = (editorType == "html");
-  if (gIsHTMLEditor)
+  var is_HTMLEditor = IsHTMLEditor();
+  if (is_HTMLEditor)
   {
     gSourceContentWindow = document.getElementById("content-source");
 
@@ -385,15 +414,6 @@ function EditorStartup(editorType, editorElement)
     gFormatToolbar = document.getElementById("FormatToolbar");
     gViewFormatToolbar = document.getElementById("viewFormatToolbar");
   }
-
-  // store the editor shell in the window, so that child windows can get to it.
-  // XXX This needs to go, but first, all the dialogs need to be changed
-  // not to require it.
-  editorShell = editorElement.editorShell;        // this pattern exposes a JS/XBL bug that causes leaks
-  editorShell.editorType = editorType;
-
-  editorShell.webShellWindow = window;
-  editorShell.contentWindow = window._content;
 
   // set up our global prefs object
   GetPrefsService();
@@ -413,66 +433,62 @@ function EditorStartup(editorType, editorElement)
   if (cmd) {
     var prefs = GetPrefs();
     var useCSS = prefs.getBoolPref("editor.use_css");
-    if (!useCSS && gIsHTMLEditor) {
+    if (!useCSS && is_HTMLEditor) {
       cmd.setAttribute("collapsed", "true");
     }
   }
 
   // Get url for editor content and load it.
-  // the editor gets instantiated by the editor shell when the URL has finished loading.
+  // the editor gets instantiated by the edittingSession when the URL has finished loading.
   var url = document.getElementById("args").getAttribute("value");
-  var charset = document.getElementById("args").getAttribute("charset");
-  // XXX We can't call gEditor.documentCharacterSet = charset
-  // XXX because gEditor isn't set until after the document loads.
-  if (charset) editorShell.SetDocumentCharacterSet(charset);
-
-  // We need the docshell to do a loadurl!
-  // editorshell gets it from the window in PrepareDocumentForEditing.
-  editorShell.LoadUrl(url);
+  try {
+    var charset = document.getElementById("args").getAttribute("charset");
+    var contentViewer = GetCurrentEditorElement().docShell.contentViewer;
+    contentViewer.QueryInterface(Components.interfaces.nsIMarkupDocumentViewer);
+    contentViewer.defaultCharacterSet = charset;
+    contentViewer.forceCharacterSet = charset;
+  } catch (e) {}
+  EditorLoadUrl(url);
 }
 
-// This is also called by Message Composer
+function EditorLoadUrl(url)
+{
+  try {
+    if (url)
+      GetCurrentEditorElement().webNavigation.loadURI(url, // uri string
+             nsIWebNavigation.LOAD_FLAGS_BYPASS_CACHE,     // load flags
+             null,                                         // referrer
+             null,                                         // post-data stream
+             null);
+  } catch (e) { dump(" EditorLoadUrl failed: "+e+"\n"); }
+}
+
+// This should be called by all Composer types
 function EditorSharedStartup()
 {
   // Just for convenience
-  gContentWindow = window._content;
-
-  switch (editorShell.editorType)
-  {
-      case "html":
-      case "htmlmail":
-        gIsHTMLEditor = true;
-        break;
-
-      case "text":
-      case "textmail":
-        gIsHTMLEditor = false;
-        break;
-
-      default:
-        dump("INVALID EDITOR TYPE: " + editorShell.editorType + "\n");
-        gIsHTMLEditor = false;
-        break;
-  }
+  gContentWindow = window.content;
 
   // Set up the mime type and register the commands.
-  // We don't have an editor yet -- in fact, this is the listener which
-  // will tell us when it's time to create the editor.
-  // So we can't use gEditor.addDocumentStateListener here.
-  if (gIsHTMLEditor)
-  {
-    //XXX this is replaced by nsIEditor::contentsMIMEType
-    editorShell.contentsMIMEType = kHTMLMimeType;
+  if (IsHTMLEditor)
     SetupHTMLEditorCommands();
-  }
   else
-  {
-    editorShell.contentsMIMEType = kTextMimeType;
     SetupTextEditorCommands();
-  }
 
-  // add a listener to be called when document is really done loading
-  editorShell.RegisterDocumentStateListener( DocumentStateListener );
+  // add observer to be called when document is really done loading 
+  // and is modified
+  // Note: We're really screwed if we fail to install this observer!
+  try {
+    var commandManager = GetCurrentCommandManager();
+    commandManager.addCommandObserver(gEditorDocumentObserver, "obs_documentCreated");
+    commandManager.addCommandObserver(gEditorDocumentObserver, "cmd_setDocumentModified");
+    commandManager.addCommandObserver(gEditorDocumentObserver, "obs_documentWillBeDestroyed");
+
+    // Until nsIControllerCommandGroup-based code is implemented,
+    //  we will observe just the bold command to trigger update of
+    //  all toolbar style items
+    commandManager.addCommandObserver(gEditorDocumentObserver, "cmd_bold");
+  } catch (e) { dump(e); }
 
   var isMac = (GetOS() == gMac);
 
@@ -515,38 +531,40 @@ function EditorSharedStartup()
 // This method is only called by Message composer when recycling a compose window
 function EditorResetFontAndColorAttributes()
 {
-  document.getElementById("cmd_fontFace").setAttribute("state", "");
-  EditorRemoveTextProperty("font", "color");
-  EditorRemoveTextProperty("font", "bgcolor");
-  EditorRemoveTextProperty("font", "size");
-  EditorRemoveTextProperty("small", "");
-  EditorRemoveTextProperty("big", "");
-  var bodyelement = GetBodyElement();
-  if (bodyelement)
-  {
-    gEditor.removeAttributeOrEquivalent(bodyelement, "text", true);
-    gEditor.removeAttributeOrEquivalent(bodyelement, "bgcolor", true);
-    bodyelement.removeAttribute("link");
-    bodyelement.removeAttribute("alink");
-    bodyelement.removeAttribute("vlink");
-    gEditor.removeAttributeOrEquivalent(bodyelement, "background", true);
-  }
-  gColorObj.LastTextColor = "";
-  gColorObj.LastBackgroundColor = "";
-  gColorObj.LastHighlightColor = "";
-  document.getElementById("cmd_fontColor").setAttribute("state", "");
-  document.getElementById("cmd_backgroundColor").setAttribute("state", "");
-  UpdateDefaultColors();
-}
-
-function _EditorNotImplemented()
-{
-  dump("Function not implemented\n");
+  try {  
+    document.getElementById("cmd_fontFace").setAttribute("state", "");
+    EditorRemoveTextProperty("font", "color");
+    EditorRemoveTextProperty("font", "bgcolor");
+    EditorRemoveTextProperty("font", "size");
+    EditorRemoveTextProperty("small", "");
+    EditorRemoveTextProperty("big", "");
+    var bodyelement = GetBodyElement();
+    if (bodyelement)
+    {
+      var editor = GetCurrentEditor();
+      editor.removeAttributeOrEquivalent(bodyelement, "text", true);
+      editor.removeAttributeOrEquivalent(bodyelement, "bgcolor", true);
+      bodyelement.removeAttribute("link");
+      bodyelement.removeAttribute("alink");
+      bodyelement.removeAttribute("vlink");
+      editor.removeAttributeOrEquivalent(bodyelement, "background", true);
+    }
+    gColorObj.LastTextColor = "";
+    gColorObj.LastBackgroundColor = "";
+    gColorObj.LastHighlightColor = "";
+    document.getElementById("cmd_fontColor").setAttribute("state", "");
+    document.getElementById("cmd_backgroundColor").setAttribute("state", "");
+    UpdateDefaultColors();
+  } catch (e) {}
 }
 
 function EditorShutdown()
 {
-    // nothing to do. Shutdown is called by the nsEditorBoxObject
+  try {
+    var commandManager = GetCurrentCommandManager();
+    commandManager.removeCommandObserver(gEditorDocumentObserver, "obs_documentCreated");
+    commandManager.removeCommandObserver(gEditorDocumentObserver, "obs_documentWillBeDestroyed");
+  } catch (e) { dump (e); }   
 }
 
 function SafeSetAttribute(nodeID, attributeName, attributeValue)
@@ -577,14 +595,13 @@ function CheckAndSaveDocument(command, allowDontSave)
   var document;
   try {
     // if we don't have an editor or an document, bail
-    if (!gEditor)
-      return true;
-    document = gEditor.document;
+    var editor = GetCurrentEditor();
+    document = editor.document;
     if (!document)
       return true;
   } catch (e) { return true; }
 
-  if (!gEditor.documentModified && !gHTMLSourceChanged)
+  if (!IsDocumentModified() && !gHTMLSourceChanged)
     return true;
 
   // call window.focus, since we need to pop up a dialog
@@ -671,7 +688,7 @@ function CheckAndSaveDocument(command, allowDontSave)
 
     // Save to local disk
     var contentsMIMEType;
-    if (isHTMLEditor())
+    if (IsHTMLEditor())
       contentsMIMEType = kHTMLMimeType;
     else
       contentsMIMEType = kTextMimeType;
@@ -727,24 +744,24 @@ function EditorCanClose()
 
 function EditorSetDocumentCharacterSet(aCharset)
 {
-  if (gEditor)
-  {
-    gEditor.documentCharacterSet = aCharset;
+  try {
+    var editor = GetCurrentEditor();
+    editor.documentCharacterSet = aCharset;
     var docUrl = GetDocumentUrl();
     if( !IsUrlAboutBlank(docUrl))
     {
       // reloading the document will reverse any changes to the META charset, 
       // we need to put them back in, which is achieved by a dedicated listener
-      gEditor.addDocumentStateListener( DocumentReloadListener );
-      editorShell.LoadUrl(docUrl);
+      editor.addDocumentStateListener( DocumentReloadListener );
+      EditorLoadUrl(docUrl);
     }
-  }
+  } catch (e) {}
 }
 
 // ------------------------------------------------------------------
 function updateCharsetPopupMenu(menuPopup)
 {
-  if (gEditor.documentModified && !gEditor.documentIsEmpty)
+  if (IsDocumentModified() && !IsDocumentEmpty())
   {
     for (var i = 0; i < menuPopup.childNodes.length; i++)
     {
@@ -1027,7 +1044,6 @@ function onFontColorChange()
       // No color set - get color set on page or other defaults
       if (!color)
         color = gDefaultTextColor;
-
       button.setAttribute("style", "background-color:"+color);
     }
   }
@@ -1076,18 +1092,22 @@ function UpdateDefaultColors()
   // Trigger update on toolbar
   if (defTextColor != gDefaultTextColor)
   {
-    goUpdateCommand("cmd_fontColor");
+    goUpdateCommandState("cmd_fontColor");
     onFontColorChange();
   }
   if (defBackColor != gDefaultBackgroundColor)
   {
-    goUpdateCommand("cmd_backgroundColor");
+    goUpdateCommandState("cmd_backgroundColor");
     onBackgroundColorChange();
   }
 }
 
 function GetBackgroundElementWithColor()
 {
+  var editor = GetCurrentTableEditor();
+  if (!editor)
+    return null;
+
   gColorObj.Type = "";
   gColorObj.PageColor = "";
   gColorObj.TableColor = "";
@@ -1098,7 +1118,7 @@ function GetBackgroundElementWithColor()
   var tagNameObj = { value: "" };
   var element;
   try {
-    element = gEditor.getSelectedOrParentTableElement(tagNameObj, {value:0});
+    element = editor.getSelectedOrParentTableElement(tagNameObj, {value:0});
   }
   catch(e) {}
 
@@ -1127,13 +1147,13 @@ function GetBackgroundElementWithColor()
   {
     var prefs = GetPrefs();
     var IsCSSPrefChecked = prefs.getBoolPref("editor.use_css");
-    if (IsCSSPrefChecked && isHTMLEditor())
+    if (IsCSSPrefChecked && IsHTMLEditor())
     {
-      var selection = gEditor.selection;
+      var selection = editor.selection;
       if (selection)
       {
         element = selection.focusNode;
-        while (!gEditor.nodeIsBlock(element))
+        while (!editor.nodeIsBlock(element))
           element = element.parentNode;
       }
       else
@@ -1166,7 +1186,7 @@ function GetBackgroundElementWithColor()
 function SetSmiley(smileyText)
 {
   try {
-    gEditor.InsertText(smileyText);
+    GetCurrentEditor().insertText(smileyText);
     gContentWindow.focus();
   }
   catch(e) {}
@@ -1174,7 +1194,8 @@ function SetSmiley(smileyText)
 
 function EditorSelectColor(colorType, mouseEvent)
 {
-  if (!gColorObj)
+  var editor = GetCurrentEditor();
+  if (!editor || !gColorObj)
     return;
 
   // Shift + mouse click automatically applies last color, if available
@@ -1279,7 +1300,7 @@ function EditorSelectColor(colorType, mouseEvent)
         EditorRemoveTextProperty("font", "color");
     }
     // Update the command state (this will trigger color button update)
-    goUpdateCommand("cmd_fontColor");
+    goUpdateCommandState("cmd_fontColor");
   }
   else if (gColorObj.Type == "Highlight")
   {
@@ -1291,7 +1312,7 @@ function EditorSelectColor(colorType, mouseEvent)
         EditorRemoveTextProperty("font", "bgcolor");
     }
     // Update the command state (this will trigger color button update)
-    goUpdateCommand("cmd_highlight");
+    goUpdateCommandState("cmd_highlight");
   }
   else if (element)
   {
@@ -1303,20 +1324,20 @@ function EditorSelectColor(colorType, mouseEvent)
       {
         var bgcolor = table.getAttribute("bgcolor");
         if (bgcolor != gColorObj.BackgroundColor)
-        {
+        try {
           if (gColorObj.BackgroundColor)
-            gEditor.setAttributeOrEquivalent(table, "bgcolor", gColorObj.BackgroundColor, false);
+            editor.setAttributeOrEquivalent(table, "bgcolor", gColorObj.BackgroundColor, false);
           else
-            gEditor.removeAttributeOrEquivalent(table, "bgcolor", false);
-        }
+            editor.removeAttributeOrEquivalent(table, "bgcolor", false);
+        } catch (e) {}
       }
     }
-    else if (currentColor != gColorObj.BackgroundColor && isHTMLEditor())
+    else if (currentColor != gColorObj.BackgroundColor && IsHTMLEditor())
     {
-      gEditor.beginTransaction();
+      editor.beginTransaction();
       try
       {
-        gEditor.setBackgroundColor(gColorObj.BackgroundColor);
+        editor.setBackgroundColor(gColorObj.BackgroundColor);
 
         if (gColorObj.Type == "Page" && gColorObj.BackgroundColor)
         {
@@ -1330,28 +1351,28 @@ function EditorSelectColor(colorType, mouseEvent)
             if (defColors)
             {
               if (!bodyelement.getAttribute("text"))
-                gEditor.setAttributeOrEquivalent(bodyelement, "text", defColors.TextColor, false);
+                editor.setAttributeOrEquivalent(bodyelement, "text", defColors.TextColor, false);
 
               // The following attributes have no individual CSS declaration counterparts
               // Getting rid of them in favor of CSS implies CSS rules management
               if (!bodyelement.getAttribute("link"))
-                gEditor.setAttribute(bodyelement, "link", defColors.LinkColor);
+                editor.setAttribute(bodyelement, "link", defColors.LinkColor);
 
               if (!bodyelement.getAttribute("alink"))
-                gEditor.setAttribute(bodyelement, "alink", defColors.LinkColor);
+                editor.setAttribute(bodyelement, "alink", defColors.LinkColor);
 
               if (!bodyelement.getAttribute("vlink"))
-                gEditor.setAttribute(bodyelement, "vlink", defColors.VisitedLinkColor);
+                editor.setAttribute(bodyelement, "vlink", defColors.VisitedLinkColor);
             }
           }
         }
       }
       catch(e) {}
 
-      gEditor.endTransaction();
+      editor.endTransaction();
     }
 
-    goUpdateCommand("cmd_backgroundColor");
+    goUpdateCommandState("cmd_backgroundColor");
   }
   gContentWindow.focus();
 }
@@ -1394,7 +1415,9 @@ function EditorDblClick(event)
 
      //  We use "href" instead of "a" to not be fooled by named anchor
     if (!element)
-      element = gEditor.getSelectedElement("href");
+      try {
+        element = GetCurrentEditor().getSelectedElement("href");
+      } catch (e) {}
 
     if (element)
     {
@@ -1418,8 +1441,7 @@ function EditorClick(event)
   // For Web Composer: In Show All Tags Mode,
   // single click selects entire element,
   //  except for body and table elements
-  if (event.target && IsWebComposer()
-      && isHTMLEditor() && gEditorDisplayMode == kDisplayModeAllTags)
+  if (IsWebComposer() && event.target && IsHTMLEditor() && gEditorDisplayMode == kDisplayModeAllTags)
   {
     try
     {
@@ -1428,7 +1450,7 @@ function EditorClick(event)
       if (name != "body" && name != "table" &&
           name != "td" && name != "th" && name != "caption" && name != "tr")
       {          
-        gEditor.selectElement(event.target);
+        GetCurrentEditor().selectElement(event.target);
         event.preventDefault();
       }
     } catch (e) {}
@@ -1443,29 +1465,35 @@ function EditorClick(event)
 //  but will accept a parent link, list, or table cell if inside one
 function GetObjectForProperties()
 {
-  if (!gEditor || !isHTMLEditor())
+  var editor = GetCurrentEditor();
+  if (!editor || !IsHTMLEditor())
     return null;
 
-  var element = gEditor.getSelectedElement("");
+  var element;
+  try {
+    element = editor.getSelectedElement("");
+  } catch (e) {}
   if (element)
     return element;
 
   // Find nearest parent of selection anchor node
   //   that is a link, list, table cell, or table
 
-  var anchorNode = gEditor.selection.anchorNode;
-  if (!anchorNode) return null;
+  var anchorNode
   var node;
-  if (anchorNode.firstChild)
-  {
-    // Start at actual selected node
-    var offset = gEditor.selection.anchorOffset;
-    // Note: If collapsed, offset points to element AFTER caret,
-    //  thus node may be null
-    node = anchorNode.childNodes.item(offset);
-  }
-  if (!node)
-    node = anchorNode;
+  try {
+    anchorNode = editor.selection.anchorNode;
+    if (anchorNode.firstChild)
+    {
+      // Start at actual selected node
+      var offset = editor.selection.anchorOffset;
+      // Note: If collapsed, offset points to element AFTER caret,
+      //  thus node may be null
+      node = anchorNode.childNodes.item(offset);
+    }
+    if (!node)
+      node = anchorNode;
+  } catch (e) {}
 
   while (node)
   {
@@ -1491,15 +1519,18 @@ function GetObjectForProperties()
 
 function SetEditMode(mode)
 {
-  if (!isHTMLEditor())
+  if (!IsHTMLEditor())
     return;
 
-  var bodyNode = gEditor.document.getElementsByTagName("body").item(0);
-  if (!bodyNode)
+  var bodyElement = GetBodyElement();
+  if (!bodyElement)
   {
     dump("SetEditMode: We don't have a body node!\n");
     return;
   }
+
+  // must have editor if here!
+  var editor = GetCurrentEditor();
 
   // Switch the UI mode before inserting contents
   //   so user can't type in source window while new window is being filled
@@ -1511,7 +1542,7 @@ function SetEditMode(mode)
   {
     // Display the DOCTYPE as a non-editable string above edit area
     var domdoc;
-    try { domdoc = gEditor.document; } catch (e) { dump( e + "\n");}
+    try { domdoc = editor.document; } catch (e) { dump( e + "\n");}
     if (domdoc)
     {
       var doctypeNode = document.getElementById("doctype-text");
@@ -1544,7 +1575,7 @@ function SetEditMode(mode)
 
     } catch (e) {}
 
-    var source = gEditor.outputToString(kHTMLMimeType, flags);
+    var source = editor.outputToString(kHTMLMimeType, flags);
     var start = source.search(/<html/i);
     if (start == -1) start = 0;
     gSourceContentWindow.value = source.slice(start);
@@ -1563,37 +1594,37 @@ function SetEditMode(mode)
       //   during multiple uses of source window 
       //   (reinserting entire doc caches all nodes)
       try {
-        gEditor.transactionManager.maxTransactionCount = 1;
+        editor.transactionManager.maxTransactionCount = 1;
       } catch (e) {}
 
-      gEditor.beginTransaction();
+      editor.beginTransaction();
       try {
         // We are comming from edit source mode,
         //   so transfer that back into the document
         source = gSourceContentWindow.value;
-        gEditor.rebuildDocumentFromSource(source);
+        editor.rebuildDocumentFromSource(source);
 
         // Get the text for the <title> from the newly-parsed document
         // (must do this for proper conversion of "escaped" characters)
         var title = "";
-        var titlenodelist = gEditor.document.getElementsByTagName("title");
+        var titlenodelist = editor.document.getElementsByTagName("title");
         if (titlenodelist)
         {
           var titleNode = titlenodelist.item(0);
           if (titleNode && titleNode.firstChild && titleNode.firstChild.data)
             title = titleNode.firstChild.data;
         }
-        if (gEditor.document.title != title)
+        if (editor.document.title != title)
           SetDocumentTitle(title);
 
       } catch (ex) {
         dump(ex);
       }
-      gEditor.endTransaction();
+      editor.endTransaction();
 
       // Restore unlimited undo count
       try {
-        gEditor.transactionManager.maxTransactionCount = -1;
+        editor.transactionManager.maxTransactionCount = -1;
       } catch (e) {}
     } else {
       // We don't need to call this again, so remove handler
@@ -1675,7 +1706,7 @@ function CollapseItem(id, collapse)
 
 function SetDisplayMode(mode)
 {
-  if (!isHTMLEditor())
+  if (!IsHTMLEditor())
     return false;
 
   // Already in requested mode:
@@ -1707,6 +1738,7 @@ function SetDisplayMode(mode)
     // Load/unload appropriate override style sheet
     try {
       var editor = GetCurrentEditor();
+      editor.QueryInterface(nsIEditorStyleSheets);
 
       switch (mode)
       {
@@ -1765,10 +1797,13 @@ function EditorToggleParagraphMarks()
     //  so if "checked" is true now, it was just switched to that mode
     var checked = menuItem.getAttribute("checked");
     try {
+      var editor = GetCurrentEditor();
+      editor.QueryInterface(nsIEditorStyleSheets);
+
       if (checked == "true")
-        GetCurrentEditor().addOverrideStyleSheet(kParagraphMarksStyleSheet);
+        editor.addOverrideStyleSheet(kParagraphMarksStyleSheet);
       else
-        GetCurrentEditor().enableStyleSheet(kParagraphMarksStyleSheet, false);
+        editor.enableStyleSheet(kParagraphMarksStyleSheet, false);
     }
     catch(e) { return; }
   }
@@ -1795,29 +1830,31 @@ function UpdateWindowTitle()
 
     // Append just the 'leaf' filename to the Doc. Title for the window caption
     var docUrl = GetDocumentUrl();
-    if (!IsUrlAboutBlank(docUrl))
+    if (docUrl && !IsUrlAboutBlank(docUrl))
     {
       var scheme = GetScheme(docUrl);
       var filename = GetFilename(docUrl);
       if (filename)
         windowTitle += " [" + scheme + ":/.../" + filename + "]";
+
+      // Save changed title in the recent pages data in prefs
+      SaveRecentFilesPrefs();
     }
     // Set window title with " - Composer" appended
-    var xulWin = document.documentElement;
-    window.title = windowTitle + xulWin.getAttribute("titlemenuseparator") + xulWin.getAttribute("titlemodifier");
-
-    // Save changed title in the recent pages data in prefs
-    SaveRecentFilesPrefs();
-  } catch (e) {}
+    xulWin = document.documentElement;
+    window.title = windowTitle + xulWin.getAttribute("titlemenuseparator") + 
+                   xulWin.getAttribute("titlemodifier");
+  } catch (e) { dump(e); }
 }
 
 function BuildRecentMenu()
 {
-  // Can't do anything if no prefs
-  if (!gPrefs) return;
+  var editor = GetCurrentEditor();
+  if (!editor || !gPrefs)
+    return;
 
   var popup = document.getElementById("menupopup_RecentFiles");
-  if (!popup || !gEditor || !gEditor.document)
+  if (!popup || !editor.document)
     return;
 
   // Delete existing menu
@@ -1826,7 +1863,7 @@ function BuildRecentMenu()
 
   // Current page is the "0" item in the list we save in prefs,
   //  but we don't include it in the menu.
-  var curTitle = gEditor.document.title;
+  var curTitle = editor.document.title;
   var curUrl = StripPassword(GetDocumentUrl());
   var historyCount = 10;
   try { historyCount = gPrefs.getIntPref("editor.history.url_maximum"); } catch(e) {}
@@ -1866,19 +1903,21 @@ function SaveRecentFilesPrefs()
   // Can't do anything if no prefs
   if (!gPrefs) return;
 
+  var curUrl = StripPassword(GetDocumentUrl());
+
   // Nothing will change, so don't bother doing the work
   if(IsUrlAboutBlank(curUrl))
     return;
 
-  var curTitle = gEditor.document.title;
-  var curUrl = StripPassword(GetDocumentUrl());
+  var curTitle = GetCurrentEditor().document.title;
   var historyCount = 10;
-  try { historyCount = gPrefs.getIntPref("editor.history.url_maximum"); } catch(e) {}
+  try {
+    historyCount = gPrefs.getIntPref("editor.history.url_maximum"); 
+  } catch(e) {}
   var titleArray = new Array(historyCount);
   var urlArray   = new Array(historyCount);
   var arrayIndex = 0;
   var i;
-
 
   // Always put latest-opened URL at start of array
   titleArray[arrayIndex] = curTitle;
@@ -1892,8 +1931,8 @@ function SaveRecentFilesPrefs()
 
     // Continue if URL pref is missing because 
     //  a URL not found during loading may have been removed
-    // Also skip "data:" URL
-    if (!url || GetScheme(url) == "data")
+    // Also skip "about:blank" or "data:" URL
+    if (!url || IsUrlAboutBlank(url) || GetScheme(url) == "data")
       continue;
 
     // Skip over current URL
@@ -1917,12 +1956,6 @@ function SaveRecentFilesPrefs()
     SetUnicharPref("editor.history_title_"+i, titleArray[i]);
     SetUnicharPref("editor.history_url_"+i, urlArray[i]);
   }
-/*
-  // Force saving to file so next file opened finds these values
-  var prefsService = Components.classes["@mozilla.org/preferences-service;1"]
-                               .getService(Components.interfaces.nsIPrefService);
-  prefsService.savePrefFile(null);
-*/
 }
 
 function AppendRecentMenuitem(menupopup, title, url, menuIndex)
@@ -1975,7 +2008,6 @@ function EditorInitFormatMenu()
     InitObjectPropertiesMenuitem("objectProperties");
     InitRemoveStylesMenuitems("removeStylesMenuitem", "removeLinksMenuitem", "removeNamedAnchorsMenuitem");
   } catch(ex) {}
-  // Set alignment check
 }
 
 function InitObjectPropertiesMenuitem(id)
@@ -2005,7 +2037,7 @@ function InitObjectPropertiesMenuitem(id)
         //  (use "href" to not be fooled by named anchor)
         try
         {
-          if (gEditor.getElementOrParentByTagName("href", element))
+          if (GetCurrentEditor().getElementOrParentByTagName("href", element))
             objStr = GetString("ImageAndLink");
         } catch(e) {}
         
@@ -2087,7 +2119,7 @@ function InitParagraphMenu()
   var mixedObj = { value: null };
   var state;
   try {
-    state = gEditor.getParagraphState(mixedObj);
+    state = GetCurrentEditor().getParagraphState(mixedObj);
   }
   catch(e) {}
   var IDSuffix;
@@ -2112,34 +2144,38 @@ function InitParagraphMenu()
 
 function GetListStateString()
 {
-  var mixedObj = { value: null };
-  var hasOL = { value: false };
-  var hasUL = { value: false };
-  var hasDL = { value: false };
-  gEditor.getListState(mixedObj, hasOL, hasUL, hasDL);
+  try {
+    var editor = GetCurrentEditor();
 
-  if (mixedObj.value)
-    return "mixed";
-  if (hasOL.value)
-    return "ol";
-  if (hasUL.value)
-    return "ul";
+    var mixedObj = { value: null };
+    var hasOL = { value: false };
+    var hasUL = { value: false };
+    var hasDL = { value: false };
+    editor.getListState(mixedObj, hasOL, hasUL, hasDL);
 
-  if (hasDL.value)
-  {
-    var hasLI = { value: false };
-    var hasDT = { value: false };
-    var hasDD = { value: false };
-    gEditor.getListItemState(mixedObj, hasLI, hasDT, hasDD);
     if (mixedObj.value)
       return "mixed";
-    if (hasLI.value)
-      return "li";
-    if (hasDT.value)
-      return "dt";
-    if (hasDD.value)
-      return "dd";
-  }
+    if (hasOL.value)
+      return "ol";
+    if (hasUL.value)
+      return "ul";
+
+    if (hasDL.value)
+    {
+      var hasLI = { value: false };
+      var hasDT = { value: false };
+      var hasDD = { value: false };
+      editor.getListItemState(mixedObj, hasLI, hasDT, hasDD);
+      if (mixedObj.value)
+        return "mixed";
+      if (hasLI.value)
+        return "li";
+      if (hasDT.value)
+        return "dt";
+      if (hasDD.value)
+        return "dd";
+    }
+  } catch (e) {}
 
   // return "noList" if we aren't in a list at all
   return "noList";
@@ -2147,7 +2183,7 @@ function GetListStateString()
 
 function InitListMenu()
 {
-  if (!isHTMLEditor())
+  if (!IsHTMLEditor())
     return;
 
   var IDSuffix = GetListStateString();
@@ -2166,7 +2202,9 @@ function GetAlignmentString()
 {
   var mixedObj = { value: null };
   var alignObj = { value: null };
-  gEditor.getAlignment(mixedObj, alignObj);
+  try {
+    GetCurrentEditor().getAlignment(mixedObj, alignObj);
+  } catch (e) {}
 
   if (mixedObj.value)
     return "mixed";
@@ -2185,7 +2223,7 @@ function GetAlignmentString()
 
 function InitAlignMenu()
 {
-  if (!isHTMLEditor())
+  if (!IsHTMLEditor())
     return;
 
   var IDSuffix = GetAlignmentString();
@@ -2196,25 +2234,14 @@ function InitAlignMenu()
     menuItem.setAttribute("checked", "true");
 }
 
-function EditorInitToolbars()
-{
-  if (!isHTMLEditor())
-  {
-    //Hide the formating toolbar
-    HideItem("FormatToolbar");
-
-    //Hide the edit mode toolbar
-    HideItem("EditModeToolbar");
-
-    SetElementEnabledById("cmd_viewFormatToolbar", false);
-    SetElementEnabledById("cmd_viewEditModeToolbar", false);
-  }
-}
-
 function EditorSetDefaultPrefsAndDoctype()
 {
+  var editor = GetCurrentEditor();
+
   var domdoc;
-  try { domdoc = gEditor.document; } catch (e) { dump( e + "\n"); }
+  try { 
+    domdoc = editor.document;
+  } catch (e) { dump( e + "\n"); }
   if ( !domdoc )
   {
     dump("EditorSetDefaultPrefsAndDoctype: EDITOR DOCUMENT NOT FOUND\n");
@@ -2322,7 +2349,7 @@ function EditorSetDefaultPrefsAndDoctype()
   }
 
   // add title tag if not present
-  var titlenodelist = gEditor.document.getElementsByTagName("title");
+  var titlenodelist = editor.document.getElementsByTagName("title");
   if (headelement && titlenodelist && titlenodelist.length == 0)
   {
      titleElement = domdoc.createElement("title");
@@ -2358,30 +2385,32 @@ function EditorSetDefaultPrefsAndDoctype()
 
       // add the color attributes to the body tag.
       // and use them for the default text and background colors if not empty
-      if (text_color)
-      {
-        gEditor.setAttributeOrEquivalent(bodyelement, "text", text_color, true);
-        gDefaultTextColor = text_color;
-      }
-      if (background_color)
-      {
-        gEditor.setAttributeOrEquivalent(bodyelement, "bgcolor", background_color, true);
-        gDefaultBackgroundColor = background_color
-      }
+      try {
+        if (text_color)
+        {
+          editor.setAttributeOrEquivalent(bodyelement, "text", text_color, true);
+          gDefaultTextColor = text_color;
+        }
+        if (background_color)
+        {
+          editor.setAttributeOrEquivalent(bodyelement, "bgcolor", background_color, true);
+          gDefaultBackgroundColor = background_color
+        }
 
-      if (link_color)
-        bodyelement.setAttribute("link", link_color);
-      if (active_link_color)
-        bodyelement.setAttribute("alink", active_link_color);
-      if (followed_link_color)
-        bodyelement.setAttribute("vlink", followed_link_color);
+        if (link_color)
+          bodyelement.setAttribute("link", link_color);
+        if (active_link_color)
+          bodyelement.setAttribute("alink", active_link_color);
+        if (followed_link_color)
+          bodyelement.setAttribute("vlink", followed_link_color);
+      } catch (e) {}
     }
     // Default image is independent of Custom colors???
-    var background_image;
-    try { background_image = gPrefs.getCharPref("editor.default_background_image"); } catch(e) {}
+    try {
+      var background_image = gPrefs.getCharPref("editor.default_background_image");
+      editor.setAttributeOrEquivalent(bodyelement, "background", background_image, true);
+    } catch (e) {dump("BACKGROUND EXCEPTION: "+e+"\n"); }
 
-    if (background_image)
-      gEditor.setAttributeOrEquivalent(bodyelement, "background", background_image, true);
   }
   // auto-save???
 }
@@ -2389,9 +2418,7 @@ function EditorSetDefaultPrefsAndDoctype()
 function GetBodyElement()
 {
   try {
-    var bodyNodelist = gEditor.document.getElementsByTagName("body");
-    if (bodyNodelist)
-      return bodyNodelist.item(0);
+    return GetCurrentEditor().rootElement;
   }
   catch (ex) {
     dump("no body tag found?!\n");
@@ -2405,43 +2432,44 @@ function GetBodyElement()
 function EditorGetNodeFromOffsets(offsets)
 {
   var node = null;
-  node = gEditor.document;
+  try {
+    node = GetCurrentEditor().document;
 
-  for (var i = 0; i < offsets.length; i++)
-  {
-    node = node.childNodes[offsets[i]];
-  }
-
+    for (var i = 0; i < offsets.length; i++)
+      node = node.childNodes[offsets[i]];
+  } catch (e) {}
   return node;
 }
 
 function EditorSetSelectionFromOffsets(selRanges)
 {
-  var rangeArr, start, end, node, offset;
-  var selection = gEditor.selection;
+  try {
+    var editor = GetCurrentEditor();
+    var selection = editor.selection;
+    selection.removeAllRanges();
 
-  selection.removeAllRanges();
+    var rangeArr, start, end, node, offset;
+    for (var i = 0; i < selRanges.length; i++)
+    {
+      rangeArr = selRanges[i];
+      start    = rangeArr[0];
+      end      = rangeArr[1];
 
-  for (var i = 0; i < selRanges.length; i++)
-  {
-    rangeArr = selRanges[i];
-    start    = rangeArr[0];
-    end      = rangeArr[1];
+      var range = editor.document.createRange();
 
-    var range = gEditor.document.createRange();
+      node   = EditorGetNodeFromOffsets(start[0]);
+      offset = start[1];
 
-    node   = EditorGetNodeFromOffsets(start[0]);
-    offset = start[1];
+      range.setStart(node, offset);
 
-    range.setStart(node, offset);
+      node   = EditorGetNodeFromOffsets(end[0]);
+      offset = end[1];
 
-    node   = EditorGetNodeFromOffsets(end[0]);
-    offset = end[1];
+      range.setEnd(node, offset);
 
-    range.setEnd(node, offset);
-
-    selection.addRange(range);
-  }
+      selection.addRange(range);
+    }
+  } catch (e) {}
 }
 
 //--------------------------------------------------------------------
@@ -2541,7 +2569,7 @@ function RemoveInapplicableUIElements()
   }
 
   // Remove menu items (from overlay shared with HTML editor) in non-HTML.
-  if (!isHTMLEditor())
+  if (!IsHTMLEditor())
   {
     HideItem("insertAnchor");
     HideItem("insertImage");
@@ -2600,7 +2628,7 @@ function InitJoinCellMenuitem(id)
   try {
     var tagNameObj = {};
     var countObj = {value:0}
-    foundElement = gEditor.getSelectedOrParentTableElement(tagNameObj, countObj);
+    foundElement = GetCurrentTableEditor().getSelectedOrParentTableElement(tagNameObj, countObj);
     numSelected = countObj.value
   }
   catch(e) {}
@@ -2615,11 +2643,15 @@ function InitJoinCellMenuitem(id)
 
 function InitRemoveStylesMenuitems(removeStylesId, removeLinksId, removeNamedAnchorsId)
 {
+  var editor = GetCurrentEditor();
+  if (!editor)
+    return;
+
   // Change wording of menuitems depending on selection
   var stylesItem = document.getElementById(removeStylesId);
   var linkItem = document.getElementById(removeLinksId);
 
-  var isCollapsed = gEditor.selection.isCollapsed;
+  var isCollapsed = editor.selection.isCollapsed;
   if (stylesItem)
   {
     stylesItem.setAttribute("label", isCollapsed ? GetString("StopTextStyles") : GetString("RemoveTextStyles"));
@@ -2635,7 +2667,7 @@ function InitRemoveStylesMenuitems(removeStylesId, removeLinksId, removeNamedAnc
     //  if selection isn't collapsed since we only look at anchor node
     try {
       SetElementEnabled(linkItem, !isCollapsed ||
-                      gEditor.getElementOrParentByTagName("href", null));
+                      editor.getElementOrParentByTagName("href", null));
     } catch(e) {}      
   }
   // Disable if selection is collapsed
@@ -2644,23 +2676,24 @@ function InitRemoveStylesMenuitems(removeStylesId, removeLinksId, removeNamedAnc
 
 function goUpdateTableMenuItems(commandset)
 {
-  var enabled = false;
-  var enabledIfTable = false;
-
-  if (!gEditor)
+  var editor = GetCurrentTableEditor();
+  if (!editor)
   {
     dump("goUpdateTableMenuItems: too early, not initialized\n");
     return;
   }
 
-  var flags = gEditor.flags;
+  var enabled = false;
+  var enabledIfTable = false;
+
+  var flags = editor.flags;
   if (!(flags & nsIPlaintextEditor.eEditorReadonlyMask) &&
       IsEditingRenderedHTML())
   {
     var tagNameObj = { value: "" };
     var element;
     try {
-      element = gEditor.getSelectedOrParentTableElement(tagNameObj, {value:0});
+      element = editor.getSelectedOrParentTableElement(tagNameObj, {value:0});
     }
     catch(e) {}
 
@@ -2708,45 +2741,52 @@ function goUpdateTableMenuItems(commandset)
 
 function IsInTable()
 {
-  if (!gEditor) return false;
-  var flags = gEditor.flags;
-  return (isHTMLEditor() &&
-          !(flags & nsIPlaintextEditor.eEditorReadonlyMask) &&
-          IsEditingRenderedHTML() &&
-          null != gEditor.getElementOrParentByTagName("table", null));
+  var editor = GetCurrentEditor();
+  try {
+    var flags = editor.flags;
+    return (IsHTMLEditor() &&
+            !(flags & nsIPlaintextEditor.eEditorReadonlyMask) &&
+            IsEditingRenderedHTML() &&
+            null != editor.getElementOrParentByTagName("table", null));
+  } catch (e) {}
+  return false;
 }
 
 function IsInTableCell()
 {
-  if (!gEditor) return false;
-  var flags = gEditor.flags;
-  return (isHTMLEditor() &&
-          !(flags & nsIPlaintextEditor.eEditorReadonlyMask) && 
-          IsEditingRenderedHTML() &&
-          null != gEditor.getElementOrParentByTagName("td", null));
+  try {
+    var editor = GetCurrentEditor();
+    var flags = editor.flags;
+    return (IsHTMLEditor() &&
+            !(flags & nsIPlaintextEditor.eEditorReadonlyMask) && 
+            IsEditingRenderedHTML() &&
+            null != editor.getElementOrParentByTagName("td", null));
+  } catch (e) {}
+  return false;
+
 }
 
 function IsSelectionInOneCell()
 {
-  if (!gEditor || !isHTMLEditor()) 
-    return false;
+  try {
+    var editor = GetCurrentEditor();
+    var selection = editor.selection;
 
-  var selection = gEditor.selection;
-
-  if (selection && selection.rangeCount == 1)
-  {
-    // We have a "normal" single-range selection
-    if (!selection.isCollapsed &&
-       selection.anchorNode != selection.focusNode)
+    if (selection.rangeCount == 1)
     {
-      // Check if both nodes are within the same cell
-      var anchorCell = gEditor.getElementOrParentByTagName("td", selection.anchorNode);
-      var focusCell = gEditor.getElementOrParentByTagName("td", selection.focusNode);
-      return (focusCell != null && anchorCell != null && (focusCell == anchorCell));
+      // We have a "normal" single-range selection
+      if (!selection.isCollapsed &&
+         selection.anchorNode != selection.focusNode)
+      {
+        // Check if both nodes are within the same cell
+        var anchorCell = editor.getElementOrParentByTagName("td", selection.anchorNode);
+        var focusCell = editor.getElementOrParentByTagName("td", selection.focusNode);
+        return (focusCell != null && anchorCell != null && (focusCell == anchorCell));
+      }
+      // Collapsed selection or anchor == focus (thus must be in 1 cell)
+      return true;
     }
-    // Collapsed selection or anchor == focus (thus must be in 1 cell)
-    return true;
-  }
+  } catch (e) {}
   return false;
 }
 
@@ -2754,17 +2794,22 @@ function IsSelectionInOneCell()
 //   else use false to do nothing if not in a table
 function EditorInsertOrEditTable(insertAllowed)
 {
-  if (IsInTable()) {
+  if (IsInTable())
+  {
     // Edit properties of existing table
     window.openDialog("chrome://editor/content/EdTableProps.xul", "_blank", "chrome,close,titlebar,modal", "","TablePanel");
     gContentWindow.focus();
-  } else if(insertAllowed) {
-    if (gEditor.selection.isCollapsed)
-      // If we have a caret, insert a blank table...
-      EditorInsertTable();
-    else
-      // else convert the selection into a table
-      goDoCommand("cmd_ConvertToTable");
+  } 
+  else if (insertAllowed)
+  {
+    try {
+      if (GetCurrentEditor().selection.isCollapsed)
+        // If we have a caret, insert a blank table...
+        EditorInsertTable();
+      else
+        // else convert the selection into a table
+        goDoCommand("cmd_ConvertToTable");
+    } catch (e) {}
   }
 }
 
@@ -2777,78 +2822,89 @@ function EditorInsertTable()
 
 function EditorTableCellProperties()
 {
-  if (!isHTMLEditor())
+  if (!IsHTMLEditor())
     return;
 
-  var cell = gEditor.getElementOrParentByTagName("td", null);
-  if (cell) {
-    // Start Table Properties dialog on the "Cell" panel
-    window.openDialog("chrome://editor/content/EdTableProps.xul", "_blank", "chrome,close,titlebar,modal", "", "CellPanel");
-    gContentWindow.focus();
-  }
+  try {
+    var cell = GetCurrentEditor().getElementOrParentByTagName("td", null);
+    if (cell) {
+      // Start Table Properties dialog on the "Cell" panel
+      window.openDialog("chrome://editor/content/EdTableProps.xul", "_blank", "chrome,close,titlebar,modal", "", "CellPanel");
+      gContentWindow.focus();
+    }
+  } catch (e) {}
 }
 
 function GetNumberOfContiguousSelectedRows()
 {
-  if (!isHTMLEditor())
+  if (!IsHTMLEditor())
     return 0;
 
-  var rowObj = { value: 0 };
-  var colObj = { value: 0 };
-  
-  var cell = gEditor.getFirstSelectedCellInTable(rowObj, colObj);
-  if (!cell)
-    return 0;
+  var rows = 0;
+  try {
+    var editor = GetCurrentTableEditor();
+    var rowObj = { value: 0 };
+    var colObj = { value: 0 };
+    var cell = editor.getFirstSelectedCellInTable(rowObj, colObj);
+    if (!cell)
+      return 0;
 
-  var rows = 1;
-  var lastIndex = rowObj.value;
+    // We have at least one row
+    rows++;
 
-  do {
-    cell = gEditor.getNextSelectedCell({value:0});
-    if (cell)
-    {
-      gEditor.getCellIndexes(cell, rowObj, colObj);
-      var index = rowObj.value;
-      if (index == lastIndex + 1)
+    var lastIndex = rowObj.value;
+    do {
+      cell = editor.getNextSelectedCell({value:0});
+      if (cell)
       {
-        lastIndex = index;
-        rows++;
+        editor.getCellIndexes(cell, rowObj, colObj);
+        var index = rowObj.value;
+        if (index == lastIndex + 1)
+        {
+          lastIndex = index;
+          rows++;
+        }
       }
     }
-  }
-  while (cell);
+    while (cell);
+  } catch (e) {}
 
   return rows;
 }
 
 function GetNumberOfContiguousSelectedColumns()
 {
-  if (!isHTMLEditor())
+  if (!IsHTMLEditor())
     return 0;
 
-  var colObj = { value: 0 };
-  var rowObj = { value: 0 };
-  var cell = gEditor.getFirstSelectedCellInTable(rowObj, colObj);
-  if (!cell)
-    return 0;
+  var columns = 0;
+  try {
+    var editor = GetCurrentTableEditor();
+    var colObj = { value: 0 };
+    var rowObj = { value: 0 };
+    var cell = editor.getFirstSelectedCellInTable(rowObj, colObj);
+    if (!cell)
+      return 0;
 
-  var columns = 1;
-  var lastIndex = colObj.value;
+    // We have at least one column
+    columns++;
 
-  do {
-    cell = gEditor.getNextSelectedCell({value:0});
-    if (cell)
-    {
-      gEditor.getCellIndexes(cell, rowObj, colObj);
-      var index = colObj.value;
-      if (index == lastIndex +1)
+    var lastIndex = colObj.value;
+    do {
+      cell = editor.getNextSelectedCell({value:0});
+      if (cell)
       {
-        lastIndex = index;
-        columns++;
+        editor.getCellIndexes(cell, rowObj, colObj);
+        var index = colObj.value;
+        if (index == lastIndex +1)
+        {
+          lastIndex = index;
+          columns++;
+        }
       }
     }
-  }
-  while (cell);
+    while (cell);
+  } catch (e) {}
 
   return columns;
 }
@@ -2878,8 +2934,7 @@ function SwitchInsertCharToThisWindow(windowWithDialog)
     window.InsertCharWindow = windowWithDialog.InsertCharWindow;
     windowWithDialog.InsertCharWindow = null;
 
-    // Switch the dialog's editorShell and opener to current window's
-    window.InsertCharWindow.editorShell = window.editorShell;
+    // Switch the dialog's opener to current window's
     window.InsertCharWindow.opener = window;
 
     // Bring dialog to the forground
@@ -2953,18 +3008,15 @@ function SwitchInsertCharToAnotherEditorOrClose()
     while ( enumerator.hasMoreElements()  )
     {
       var  tempWindow = enumerator.getNext();
-      if (tempWindow != window && tempWindow != window.InsertCharWindow && 
-          ("editorShell" in tempWindow) && tempWindow.editorShell)
+      if (tempWindow != window && tempWindow != window.InsertCharWindow &&
+          "GetCurrentEditor" in tempWindow && tmpWindow.GetCurrentEditor())
       {
-        if (gEditor)
-        {
-          tempWindow.InsertCharWindow = window.InsertCharWindow;
-          window.InsertCharWindow = null;
+        tempWindow.InsertCharWindow = window.InsertCharWindow;
+        window.InsertCharWindow = null;
 
-          tempWindow.InsertCharWindow.editorShell = tempWindow.editorShell;
-          tempWindow.InsertCharWindow.opener = tempWindow;
-          return;
-        }
+        tempWindow.InsertCharWindow.editorShell = tempWindow.editorShell;
+        tempWindow.InsertCharWindow.opener = tempWindow;
+        return;
       }
     }
     // Didn't find another editor - close the dialog

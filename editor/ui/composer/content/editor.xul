@@ -152,7 +152,7 @@
     <menu id="tasksMenu">
       <menupopup id="taskPopup">
         <menuitem id="menu_validate" observes="cmd_validate"/>
-        <menuseparator/>
+        <menuseparator id="sep_validate"/>
       </menupopup>
     </menu>
 
@@ -247,7 +247,7 @@
            which breaks deck frame-hiding mechanism 
        -->
       <stack>
-        <editor type="content-primary" id="content-frame" src="about:blank"
+        <editor editortype="html" type="content-primary" id="content-frame"
                 context="editorContentContext" flex="1" tooltip="aHTMLTooltip"/>
       </stack>
       <vbox>

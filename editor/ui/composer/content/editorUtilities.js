@@ -28,7 +28,6 @@ const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 
 // Each editor window must include this file
 // Variables  shared by all dialogs:
-var editorShell;
 
 // Object to attach commonly-used widgets (all dialogs should use this)
 var gDialog = {};
@@ -45,6 +44,9 @@ var gOS = "";
 const gWin = "Win";
 const gUNIX = "UNIX";
 const gMac = "Mac";
+
+const kWebComposerWindowID = "editorWindow";
+const kMailComposerWindowID = "msgcomposeWindow";
 
 var gIsHTMLEditor;
 /************* Message dialogs ***************/
@@ -185,43 +187,166 @@ function GetSelectionAsText()
 }
 
 
-/************* General editing command utilities ***************/
+/************* Get Current Editor and associated interfaces or info ***************/
+const nsIPlaintextEditor = Components.interfaces.nsIPlaintextEditor;
+const nsIHTMLEditor = Components.interfaces.nsIHTMLEditor;
+const nsITableEditor = Components.interfaces.nsITableEditor;
+const nsIEditorStyleSheets = Components.interfaces.nsIEditorStyleSheets;
+const nsIEditingSession = Components.interfaces.nsIEditingSession;
 
 function GetCurrentEditor()
 {
-  // Get the actual active editor
-  //XXX Temporarily use a global until new embedding access is finished
-  if ("gEditor" in window)
-    return gEditor;
-  
-  // For dialogs: Search up parent chain to find top window with editor
-  var editor = null;
-  var parentWindow = window.opener;
-  try {
-    while ("GetCurrentEditor" in parentWindow)
-    {
-      editor = parentWindow.GetCurrentEditor();
-      if (editor)
-        return editor;
+  // Get the active editor from the <editor> tag
+  // XXX This will probably change if we support > 1 editor in main Composer window
+  //      (e.g. a plaintext editor for HTMLSource)
 
-      parentWindow = parentWindow.opener;
-    }
-  } catch (e) {}
+  // For dialogs: Search up parent chain to find top window with editor
+  var editor;
+  try {
+    var editorElement = GetCurrentEditorElement();
+    editor = editorElement.getEditor(editorElement.contentWindow);
+
+    // Do QIs now so editor users won't have to figure out which interface to use
+    // Using "instanceof" does the QI for us.
+    editor instanceof Components.interfaces.nsIPlaintextEditor;
+    editor instanceof Components.interfaces.nsIHTMLEditor;
+  } catch (e) { dump (e)+"\n"; }
+
+  return editor;
+}
+
+function GetCurrentTableEditor()
+{
+  var editor = GetCurrentEditor();
+  return (editor && (editor instanceof nsITableEditor)) ? editor : null;
+}
+
+function GetCurrentEditorElement()
+{
+  var tmpWindow = window;
+  
+  do {
+    // Get the <editor> element(s)
+    var editorList = tmpWindow.document.getElementsByTagName("editor");
+
+    // This will change if we support > 1 editor element
+    if (editorList && editorList.length > 0)
+      return editorList[0];
+
+    tmpWindow = tmpWindow.opener;
+  } 
+  while (tmpWindow);
 
   return null;
 }
 
-function isHTMLEditor()
+function GetCurrentEditingSession()
 {
-  //XXX Another temporary hack until new embedding access is finished
-  if (typeof window.gIsHTMLEditor == "undefined")
-  {
-    try {
-      window.gIsHTMLEditor = GetCurrentEditor().QueryInterface(Components.interfaces.nsIHTMLEditor);
-    } catch (e) {}
-  }
-  return window.gIsHTMLEditor;
+  try {
+    return GetCurrentEditorElement().editingSession;
+  } catch (e) { dump (e)+"\n"; }
+
+  return null;
 }
+
+function GetCurrentCommandManager()
+{
+  try {
+    return GetCurrentEditorElement().commandManager;
+  } catch (e) { dump (e)+"\n"; }
+
+  return null;
+}
+
+function GetCurrentEditorType()
+{
+  try {
+    return GetCurrentEditorElement().editortype;
+  } catch (e) { dump (e)+"\n"; }
+
+  return "";
+}
+
+function IsHTMLEditor()
+{
+  // We don't have an editorElement, just return false
+  if (!GetCurrentEditorElement())
+    return false;
+
+  var editortype = GetCurrentEditorType();
+  switch (editortype)
+  {
+      case "html":
+      case "htmlmail":
+        return true;
+
+      case "text":
+      case "textmail":
+        return false
+
+      default:
+        dump("INVALID EDITOR TYPE: " + editortype + "\n");
+        break;
+  }
+  return false;
+}
+
+function PageIsEmptyAndUntouched()
+{
+  return IsDocumentEmpty() && !IsDocumentModified()
+         && !gHTMLSourceChanged;
+}
+
+function IsInHTMLSourceMode()
+{
+  return (gEditorDisplayMode == kDisplayModeSource);
+}
+
+// are we editing HTML (i.e. neither in HTML source mode, nor editing a text file)
+function IsEditingRenderedHTML()
+{
+  return IsHTMLEditor() && !IsInHTMLSourceMode();
+}
+
+function IsWebComposer()
+{
+  return document.documentElement.id == "editorWindow";
+}
+
+function IsDocumentEditable()
+{
+  try {
+    return GetCurrentEditor().isDocumentEditable;
+  } catch (e) {}
+  return false;
+}
+
+function IsDocumentEmpty()
+{
+  try {
+    return GetCurrentEditor().documentIsEmpty;
+  } catch (e) {}
+  return false;
+}
+
+function IsDocumentModified()
+{
+  try {
+    return GetCurrentEditor().documentModified;
+  } catch (e) {}
+  return false;
+}
+
+function newCommandParams()
+{
+  try {
+    return Components.classes["@mozilla.org/embedcomp/command-params;1"].createInstance(Components.interfaces.nsICommandParams);
+  }
+  catch(e) { dump("error thrown in newCommandParams: "+e+"\n"); }
+  return null;
+}
+
+/************* General editing command utilities ***************/
 
 function GetDocumentTitle()
 {
@@ -943,7 +1068,7 @@ function GetHTMLOrCSSStyleValue(element, attrName, cssPropertyName)
   var prefs = GetPrefs();
   var IsCSSPrefChecked = prefs.getBoolPref("editor.use_css");
   var value;
-  if (IsCSSPrefChecked && isHTMLEditor())
+  if (IsCSSPrefChecked && IsHTMLEditor())
     value = element.style.getPropertyValue(cssPropertyName);
 
   if (!value)

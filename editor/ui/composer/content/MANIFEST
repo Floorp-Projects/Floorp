@@ -37,7 +37,6 @@ EditorAllTags.css
 EditorOverride.css
 EditorParagraphMarks.css
 EditorContent.css
-editorOverlay.js
 editorOverlay.xul
 editorTasksOverlay.xul
 composerOverlay.xul

@@ -21,10 +21,8 @@
 #
 
 nsIPlaintextEditor.idl
-nsIEditorShell.idl
 nsIEditorSpellCheck.idl
 nsIDocumentStateListener.idl
-nsIEditorController.idl
 nsPIEditorTransaction.idl
 nsIEditor.idl
 nsIHTMLEditor.idl
