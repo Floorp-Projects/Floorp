@@ -4,7 +4,7 @@
 
 <!DOCTYPE window> 
 
-<window style="width: 100%; height: 100%" xmlns:html="http://www.w3.org/TR/REC-html40"
+<window style="overflow: auto" xmlns:html="http://www.w3.org/TR/REC-html40"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" align="vertical" 
         onload=""> 
 
@@ -59,7 +59,9 @@ This is a tri-state checkbox test. The first checkbox should only act like a
 normal two-state checkbox. The last one should behave like a tri-state.
 </html:h3>
 
-<html:hr/>
+<html:div>
+  <html:hr/>
+</html:div>
 
 <html:label>
 <html:input type="checkbox" id="normal"/>Button One (Normal)
@@ -76,13 +78,17 @@ normal two-state checkbox. The last one should behave like a tri-state.
 <html:button onclick="MakeOneTriState()">Change Mode On Button One</html:button>
 <html:button onclick="MakeTwoNormal()">Change Mode On Button Two</html:button>
 
-<html:hr/>
+<html:div>
+  <html:hr/>
+</html:div>
 
 <html:button onclick="setTwoToMixed()">Set Two To Mixed</html:button>
 <html:button onclick="dumpOneValue()">Dump Value of Button One</html:button>
 <html:button onclick="dumpTwoValue()">Dump Value of Button Two</html:button>
 
-<html:hr/>
+<html:div>
+  <html:hr/>
+</html:div>
 
 <html:button onclick="disableTwo()">Disable Button Two</html:button>
 <html:button onclick="enableTwo()">Enable Button Two</html:button>
