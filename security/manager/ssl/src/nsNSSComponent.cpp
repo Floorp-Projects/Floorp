@@ -53,6 +53,7 @@
 #include "ssl.h"
 #include "sslproto.h"
 #include "secmod.h"
+#include "ocsp.h"
 extern "C" {
 #include "pkcs11.h"
 #include "pkcs12.h"
@@ -368,6 +369,40 @@ static CipherPref CipherPrefs[] = {
  {NULL, 0} /* end marker */
 };
 
+static void setOCSPOptions(nsIPref * pref)
+{
+  // Set up OCSP //
+  PRInt32 ocspEnabled;
+  pref->GetIntPref("security.OCSP.enabled", &ocspEnabled);
+  switch (ocspEnabled) {
+  case 0:
+	  CERT_DisableOCSPChecking(CERT_GetDefaultCertDB());
+	  CERT_DisableOCSPDefaultResponder(CERT_GetDefaultCertDB());
+	  break;
+  case 1:
+    CERT_EnableOCSPChecking(CERT_GetDefaultCertDB());
+    break;
+  case 2:
+    {
+      char *signingCA = nsnull;
+      char *url = nsnull;
+
+      // Get the signing CA and service url //
+      pref->CopyCharPref("security.OCSP.signingCA", &signingCA);
+      pref->CopyCharPref("security.OCSP.URL", &url);
+
+      // Set OCSP up
+      CERT_EnableOCSPChecking(CERT_GetDefaultCertDB());
+      CERT_SetOCSPDefaultResponder(CERT_GetDefaultCertDB(), url, signingCA);
+      CERT_EnableOCSPDefaultResponder(CERT_GetDefaultCertDB());
+
+      nsMemory::Free(signingCA);
+      nsMemory::Free(url);
+    }
+	  break;
+  }
+}
+
 nsresult
 nsNSSComponent::InitializeNSS()
 {
@@ -437,6 +472,9 @@ nsNSSComponent::InitializeNSS()
   SEC_PKCS12EnableCipher(PKCS12_DES_EDE3_168, 1);
   SEC_PKCS12SetPreferredCipher(PKCS12_DES_EDE3_168, 1);
   PORT_SetUCS2_ASCIIConversionFunction(pip_ucs2_ascii_conversion_fn);
+
+  // Set up OCSP //
+  setOCSPOptions(mPref);
 
   PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("NSS Initialization done\n"));
   return NS_OK;
@@ -566,6 +604,8 @@ nsNSSComponent::PrefChanged(const char* prefName)
   } else if (!nsCRT::strcmp(prefName, "security.enable_tls")) {
     mPref->GetBoolPref("security.enable_tls", &enabled);
     SSL_OptionSetDefault(SSL_ENABLE_TLS, enabled);
+  } else if (!nsCRT::strcmp(prefName, "security.OCSP.enabled")) {
+    setOCSPOptions(mPref);
   } else {
     /* Look through the cipher table and set according to pref setting */
     for (CipherPref* cp = CipherPrefs; cp->pref; ++cp) {

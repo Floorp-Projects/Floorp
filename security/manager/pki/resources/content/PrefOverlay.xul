@@ -43,6 +43,14 @@
           </treerow>
         </treeitem>
       </treechildren>
+      <treechildren id="securityChildren">
+        <treeitem id="validationItem" open="true" >
+          <treerow>
+             <treecell class="treecell-indent" url="chrome://pippki/content/pref-validation.xul"
+               label="&validation.label;" />
+          </treerow>
+        </treeitem>
+      </treechildren>
     </treeitem>
   </treechildren>
 </overlay>
