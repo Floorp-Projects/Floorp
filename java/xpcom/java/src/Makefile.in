@@ -71,6 +71,7 @@ DSO_LDOPTS += \
 
 DSO_LDOPTS            += \
 	$(XPCOM_LIBS) \
+	$(NSPR_LIBS) \
 	$(NULL)
 
 #DSO_LDOPTS += \

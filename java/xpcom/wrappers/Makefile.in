@@ -50,6 +50,7 @@ CPPSRCS         =  \
 
 DSO_LDOPTS            += \
 	$(XPCOM_LIBS) \
+	$(NSPR_LIBS) \
 	$(NULL)
 
 
