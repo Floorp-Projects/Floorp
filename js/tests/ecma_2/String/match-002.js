@@ -63,7 +63,7 @@
                      "re = /([\d]{5})([-\ ]?[\d]{4})?$/; re.lastIndex =0",
                      s,
                      s.lastIndexOf("0"),
-                     ["02134", ]);
+                     ["02134", "02134"]);
 
 
     re.lastIndex = s.length;
@@ -82,7 +82,7 @@
                     s.lastIndexOf("0"),
                     s,
                     s.lastIndexOf("0"),
-                    ["02134"]);
+                    ["02134", "02134"]);
 
     re.lastIndex = s.lastIndexOf("0") + 1;
 
