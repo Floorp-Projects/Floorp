@@ -22,6 +22,10 @@
 #include "nsString.h"
 #include "nsFont.h"
 
+#ifdef NS_WIN32
+#include "windows.h"
+#endif
+
 nsEventStatus HandleEventApplication(nsGUIEvent *aEvent);
 
 // All Applications must specify this *special* application CID

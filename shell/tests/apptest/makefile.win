@@ -27,7 +27,6 @@ LLFLAGS = $(LLFLAGS) /SUBSYSTEM:CONSOLE
 
 OBJS =                                  \
 	.\$(OBJDIR)\nsAppTest.obj         \
-	.\$(OBJDIR)\AppTestImpl.obj         \
 	$(NULL)
 
 LLIBS=				\
