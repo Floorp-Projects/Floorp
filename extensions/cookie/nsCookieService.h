@@ -25,10 +25,6 @@
 
 #include "nsICookieService.h"
 
-// {AB397774-12D3-11d3-8AD1-00105A1B8860}
-#define NS_COOKIESERVICE_CID \
-{ 0xab397774, 0x12d3, 0x11d3, { 0x8a, 0xd1, 0x0, 0x10, 0x5a, 0x1b, 0x88, 0x60 } }
-
 ////////////////////////////////////////////////////////////////////////////////
 
 class nsCookieService : public nsICookieService {
