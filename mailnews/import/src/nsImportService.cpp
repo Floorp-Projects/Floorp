@@ -776,7 +776,9 @@ void nsImportModuleList::AddModule( const nsCID& cid, const char *pSupports, con
 		ImportModuleDesc **pList = new ImportModuleDesc *[m_alloc + 10];
 		memset( &(pList[m_alloc]), 0, sizeof( ImportModuleDesc *) * 10);
 		memcpy( pList, m_pList, sizeof( ImportModuleDesc *) * m_alloc);
-		delete [] m_pList;
+    for(int i = 0; i < m_count; i++)
+      delete m_pList[i];
+    delete [] m_pList;
 		m_pList = pList;
 		m_alloc += 10;
 	}
