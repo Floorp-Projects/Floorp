@@ -100,7 +100,7 @@ nsXULPopupElement::OpenPopup(nsIDOMElement* aElement, PRInt32 aXPos, PRInt32 aYP
   nsString tagName;
   nsCOMPtr<nsIDOMElement> popupSetElement = do_QueryInterface(popupSet);
   popupSetElement->GetTagName(tagName);
-  if (!tagName.Equals("popupset") && !tagName.Equals("menu"))
+  if (!tagName.EqualsWithConversion("popupset") && !tagName.EqualsWithConversion("menu"))
     return NS_OK;
 
   // Now obtain the popup set frame.
@@ -158,7 +158,7 @@ nsXULPopupElement::ClosePopup()
   nsString tagName;
   nsCOMPtr<nsIDOMElement> popupSetElement = do_QueryInterface(popupSet);
   popupSetElement->GetTagName(tagName);
-  if (!tagName.Equals("popupset") && !tagName.Equals("menu"))
+  if (!tagName.EqualsWithConversion("popupset") && !tagName.EqualsWithConversion("menu"))
     return NS_OK;
 
   // Now obtain the popup set frame.
