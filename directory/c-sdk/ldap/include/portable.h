@@ -328,7 +328,7 @@ typedef char GETHOSTBYNAME_buf_t [BUFSIZ /* XXX might be too small */];
 #else
 #define NSLDAPI_CTIME( c, b, l )	ctime_r( c, b, l )
 #endif
-#if defined(hpux9) || defined(LINUX1_2) || defined(SUNOS4) || defined(SNI) || \
+#if defined(hpux9) || defined(SUNOS4) || defined(SNI) || \
     defined(SCOOS) || defined(BSDI) || defined(NCR) || defined(VMS) || \
     defined(NEC) || (defined(LINUX) && __GNU_LIBRARY__ != 6) || \
     (defined(AIX) && !defined(USE_REENTRANT_LIBC))
