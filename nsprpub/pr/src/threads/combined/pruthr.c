@@ -1547,9 +1547,9 @@ PR_IMPLEMENT(void) PR_SetThreadPriority(PRThread *thread,
     First, pin down the priority.  Not all compilers catch passing out of
     range enum here.  If we let bad values thru, priority queues won't work.
     */
-    if (newPri > PR_PRIORITY_LAST) {
+    if ((PRIntn)newPri > (PRIntn)PR_PRIORITY_LAST) {
         newPri = PR_PRIORITY_LAST;
-    } else if (newPri < PR_PRIORITY_FIRST) {
+    } else if ((PRIntn)newPri < (PRIntn)PR_PRIORITY_FIRST) {
         newPri = PR_PRIORITY_FIRST;
     }
         
