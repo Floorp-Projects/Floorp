@@ -2029,10 +2029,21 @@ BOOL nsWindow::OnKeyDown( UINT aVirtualKeyCode, UINT aScanCode)
   WORD asciiKey;
 
   asciiKey = 0;
-  return DispatchKeyEvent(NS_KEY_DOWN, asciiKey, aVirtualKeyCode);
 
-  // always let the def proc process a WM_KEYDOWN
-  //return FALSE;
+  //printf("In OnKeyDown ascii %d  virt: %d  scan: %d\n", asciiKey, aVirtualKeyCode, aScanCode);
+
+  BOOL result = DispatchKeyEvent(NS_KEY_DOWN, asciiKey, aVirtualKeyCode);
+
+  // XXX: this is a special case hack, should probably use IsSpecialChar and
+  //      do the right thing for all SPECIAL_KEY codes
+  // "SPECIAL_KEY" keys don't generate a WM_CHAR, so don't generate an NS_KEY_PRESS
+  // this is a special case for the delete key
+  if (aVirtualKeyCode==VK_DELETE)
+  {
+    DispatchKeyEvent(NS_KEY_PRESS, 0, aVirtualKeyCode);
+  }
+
+  return result;
 }
 #else
 BOOL nsWindow::OnKeyDown( UINT aVirtualKeyCode, UINT aScanCode)
@@ -2128,7 +2139,7 @@ BOOL nsWindow::OnChar( UINT mbcsCharCode, UINT virtualKeyCode, bool isMultiByte 
   //if (IsDBCSLeadByte(aVirtualKeyCode) || aVirtualKeyCode == 0xD /*'\n'*/ ) {
 	//	return FALSE;
 	//}
-  //printf("OnChar (KeyDown) %d\n", aVirtualKeyCode);
+  //printf("OnChar (KeyDown) %d\n", virtualKeyCode);
   ::MultiByteToWideChar(mCurrentKeyboardCP,MB_PRECOMPOSED,charToConvert,length,
 	  &uniChar,sizeof(uniChar));
 
