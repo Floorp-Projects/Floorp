@@ -1369,29 +1369,15 @@ PRInt32 CSkippedContentToken::GetTokenType(void) {
  */
 nsresult CSkippedContentToken::Consume(PRUnichar,CScanner& aScanner) {
   PRBool      done=PR_FALSE;
-  nsresult    result=NS_OK;
+  PRInt32     result=kNoError;
   nsString    temp;
-  int         parens=0;
-  char        lastChar;
 
-  static nsAutoString terminals(">()");
-  while((!done) && (NS_OK==result)) {
+  while((!done) && (kNoError==result)) {
+    static nsAutoString terminals(">");
     result=aScanner.ReadUntil(temp,terminals,PR_TRUE);
-    int len=temp.Length();
-    lastChar=char(temp[len-1]);
-    switch(lastChar){
-      case kLeftParen:
-        parens++; break;
-      case kRightParen:
-        parens--; break;
-      default:
-        break;
-    }
-    if((0==parens) && (kGreaterThan==lastChar))
-      done=PRBool(kNotFound!=temp.RFind(mTextValue,PR_TRUE));
+    done=PRBool(kNotFound!=temp.RFind(mTextValue,PR_TRUE));
   }
   mTextValue=temp;
-  mStringInit=PR_TRUE;
   return result;
 }
 
