@@ -14,7 +14,12 @@
 # 1. Fix the !perl line, if necessary.
 # 2. Fix $dirsep to be the directory separator on your platform.
 # 3. Uncomment the appropriate $dst_linebreaks file specify what linebreaks
-#    you want for the copied files.
+#    you want for the copied files. This variable defines the *destination* linebreaks 
+#    that you want your changes to be converted to.
+#    For example, if you have a linux volume 
+#    mounted (via SAMBA perhaps) to your windows box where you've made changes to 
+#    source files, you'd want $dst_linebreaks to be set for unix. This ensures that 
+#    linebreaks are converted to the appropriate OS linebreak scheme for your *target* tree.
 # 4. Set $src_tree and $dest_tree to point to the directories you want
 #    to sync up. These don't have to point to the root of the tree,
 #    but should be equivalent directories in the two trees.
@@ -25,10 +30,10 @@
 use File::stat;
 use Time::Local;
 
-# change for your platform
+# change for your platform ('\' == windows, ':' == mac, '/' == unix)
 $dirsep = ":";
 
-
+# Set this to the native OS of the *destination* tree
 # $dst_linebreaks = pack("cc", 13);           # Mac
 $dst_linebreaks = pack("cc", 13, 10);       # DOS
 # $dst_linebreaks = pack("cc", 10);           # UNIX
