@@ -132,8 +132,6 @@ Rights Reserved.
 <!ENTITY editDraftCmd.accesskey "f">
 
 <!-- View Menu -->
-<!-- LOCALIZATION NOTE (showSidebarMenu) : Do not translate line. -->
-<!ENTITY showSidebarMenu.label ".SideBar">
 <!ENTITY showMessengerToolbarCmd.label		"Mail Toolbar">
 <!ENTITY showMessengerToolbarCmd.accesskey	"o">
 
