@@ -155,6 +155,8 @@ LocationImpl::SetURL(nsIURI* aURL)
     if(NS_FAILED(CheckURL(aURL, getter_AddRefs(loadInfo))))
       return NS_ERROR_FAILURE;
 
+    loadInfo->SetStopActiveDocument(PR_TRUE);
+
     return mDocShell->LoadURI(aURL, loadInfo);
   }
   else {
@@ -394,6 +396,8 @@ LocationImpl::SetHrefWithBase(const nsAReadableString& aHref,
 
     if (aReplace)
       loadInfo->SetLoadType(nsIDocShellLoadInfo::loadNormalReplace);
+
+    loadInfo->SetStopActiveDocument(PR_TRUE);
 
     return mDocShell->LoadURI(newUrl, loadInfo);
   }
