@@ -77,9 +77,6 @@ static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 // Text Scanning...
 static NS_DEFINE_CID(kTXTToHTMLConvCID, MOZITXTTOHTMLCONV_CID);
 
-extern "C" char     *MIME_DecodeMimePartIIStr(const char *header, 
-                                              char *charset,
-                                              PRBool eatContinuations);
 void                 ValidateRealName(nsMsgAttachmentData *aAttach, MimeHeaders *aHdrs);
 
 static MimeHeadersState MIME_HeaderType;

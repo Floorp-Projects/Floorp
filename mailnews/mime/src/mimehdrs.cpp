@@ -42,9 +42,6 @@
 #include "mimemoz2.h"
 
 // Forward declares...
-extern "C" char     *MIME_DecodeMimePartIIStr(const char *header, 
-                                              char *charset,
-                                              PRBool eatContinuations);
 extern "C"  char    *MIME_StripContinuations(char *original);
 int MimeHeaders_build_heads_list(MimeHeaders *hdrs);
 
@@ -889,8 +886,6 @@ mime_decode_filename(char *name)
 {
 	char *s = name, *d = name;
 	char *cvt, *returnVal = NULL;
-  char charsetName[128];
-  charsetName[0] = 0;
   
 	while (*s)
 	{
@@ -904,29 +899,11 @@ mime_decode_filename(char *name)
 	*d = 0;
 	returnVal = name;
 	
-	/* If there is a MIME-2 encoded-word in the string, 
-		get the charset of the first one and decode to that charset. */
-	s = PL_strstr(returnVal, "=?");
-	if (s)
-	{
+    cvt = MIME_DecodeMimePartIIStr(returnVal, 0, PR_TRUE);
 
-    cvt = MIME_DecodeMimePartIIStr(returnVal, charsetName, PR_TRUE);
-
-    // rhp - trying to fix header conversion bug
-    //
-		if (cvt && cvt != returnVal)
-    {
-      char *newString = nsnull;
-      PRInt32 res = MIME_ConvertString(charsetName, "UTF-8", cvt, &newString); 
-      if ( (res != 0) || (!newString) )
-        returnVal = cvt;
-      else
-      {
-        PR_FREEIF(cvt);
-        returnVal = newString;
-      }
+    if (cvt && cvt != returnVal) {
+      returnVal = cvt;
     }
-	}
 
 	return returnVal;
 }

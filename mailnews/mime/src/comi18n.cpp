@@ -299,12 +299,11 @@ static PRBool stateful_encoding(const char* charset)
 static PRBool  intlmime_only_ascii_str(const char *s);
 static char *   intlmime_encode_next8bitword(char *src);
 
-/*      we should consider replace this base64 decodeing and encoding
+/*      we should consider replace this base64 encoding
 function with a better one */
-static int      intlmime_decode_base64 (const char *in, char *out);
-static char *   intlmime_decode_qp(char *in);
+static char *   intlmime_decode_q(const char *in, unsigned length);
+static char *   intlmime_decode_b(const char *in, unsigned length);
 static int      intlmime_encode_base64 (const char *in, char *out);
-static char *   intlmime_decode_base64_buf(char *subject);
 static char *   intlmime_encode_base64_buf(char *subject, size_t size);
 static char *   intlmime_encode_qp_buf(char *subject);
 
@@ -374,62 +373,95 @@ static char *intlmime_encode_base64_buf(char *subject, size_t size)
   return output;
 }
 
-static int intlmime_decode_base64 (const char *in, char *out)
+#define XX 127
+/*
+ * Table for decoding base64
+ */
+static char index_64[256] = {
+    XX,XX,XX,XX, XX,XX,XX,XX, XX,XX,XX,XX, XX,XX,XX,XX,
+    XX,XX,XX,XX, XX,XX,XX,XX, XX,XX,XX,XX, XX,XX,XX,XX,
+    XX,XX,XX,XX, XX,XX,XX,XX, XX,XX,XX,62, XX,XX,XX,63,
+    52,53,54,55, 56,57,58,59, 60,61,XX,XX, XX,XX,XX,XX,
+    XX, 0, 1, 2,  3, 4, 5, 6,  7, 8, 9,10, 11,12,13,14,
+    15,16,17,18, 19,20,21,22, 23,24,25,XX, XX,XX,XX,XX,
+    XX,26,27,28, 29,30,31,32, 33,34,35,36, 37,38,39,40,
+    41,42,43,44, 45,46,47,48, 49,50,51,XX, XX,XX,XX,XX,
+    XX,XX,XX,XX, XX,XX,XX,XX, XX,XX,XX,XX, XX,XX,XX,XX,
+    XX,XX,XX,XX, XX,XX,XX,XX, XX,XX,XX,XX, XX,XX,XX,XX,
+    XX,XX,XX,XX, XX,XX,XX,XX, XX,XX,XX,XX, XX,XX,XX,XX,
+    XX,XX,XX,XX, XX,XX,XX,XX, XX,XX,XX,XX, XX,XX,XX,XX,
+    XX,XX,XX,XX, XX,XX,XX,XX, XX,XX,XX,XX, XX,XX,XX,XX,
+    XX,XX,XX,XX, XX,XX,XX,XX, XX,XX,XX,XX, XX,XX,XX,XX,
+    XX,XX,XX,XX, XX,XX,XX,XX, XX,XX,XX,XX, XX,XX,XX,XX,
+    XX,XX,XX,XX, XX,XX,XX,XX, XX,XX,XX,XX, XX,XX,XX,XX,
+};
+#define CHAR64(c)  (index_64[(unsigned char)(c)])
+
+static char *intlmime_decode_b (const char *in, unsigned length)
 {
-  /* reads 4, writes 3. */
-  int j;
-  unsigned long num = 0;
+  char *out, *dest = 0;
+  int c1, c2, c3, c4;
 
-  for (j = 0; j < 4; j++)
-  {
-    unsigned char c;
-    if (in[j] >= 'A' && in[j] <= 'Z')              c = in[j] - 'A';
-    else if (in[j] >= 'a' && in[j] <= 'z') c = in[j] - ('a' - 26);
-    else if (in[j] >= '0' && in[j] <= '9') c = in[j] - ('0' - 52);
-    else if (in[j] == '+')                                 c = 62;
-    else if (in[j] == '/')                                 c = 63;
-    else if (in[j] == '=')                                 c = 0;
-    else
-    {
-      /*      abort ();       */
-      PL_strcpy(out, in);        /* I hate abort */
-      return 0;
+  out = dest = (char *)PR_Malloc(length+1);
+  if (dest == NULL)
+    return NULL;
+
+  while (length > 0) {
+    while (length > 0 && CHAR64(*in) == XX) {
+      if (*in == '=') goto badsyntax;
+      in++;
+      length--;
     }
-    num = (num << 6) | c;
+    if (length == 0) break;
+    c1 = *in++;
+    length--;
+    
+    while (length > 0 && CHAR64(*in) == XX) {
+      if (*in == '=') goto badsyntax;
+      in++;
+      length--;
+    }
+    if (length == 0) goto badsyntax;
+    c2 = *in++;
+    length--;
+    
+    while (length > 0 && *in != '=' && CHAR64(*in) == XX) {
+      in++;
+      length--;
+    }
+    if (length == 0) goto badsyntax;
+    c3 = *in++;
+    length--;
+    
+    while (length > 0 && *in != '=' && CHAR64(*in) == XX) {
+      in++;
+      length--;
+    }
+    if (length == 0) goto badsyntax;
+    c4 = *in++;
+    length--;
+
+    c1 = CHAR64(c1);
+    c2 = CHAR64(c2);
+	*out++ = ((c1<<2) | ((c2&0x30)>>4));
+    if (c3 == '=') {
+      if (c4 != '=') goto badsyntax;
+      break; /* End of data */
+    }
+    c3 = CHAR64(c3);
+    *out++ = (((c2&0x0F) << 4) | ((c3&0x3C) >> 2));
+    if (c4 == '=') {
+      break; /* End of data */
+    }
+    c4 = CHAR64(c4);
+    *out++ = (((c3&0x03) << 6) | c4);
   }
+  *out++ = '\0';
+  return dest;
 
-  *out++ = (unsigned char) (num >> 16);
-  *out++ = (unsigned char) ((num >> 8) & 0xFF);
-  *out++ = (unsigned char) (num & 0xFF);
-  return 1;
-}
-
-static char *intlmime_decode_base64_buf(char *subject)
-{
-  char *output = 0;
-  char *pSrc, *pDest ;
-  int i ;
-
-  mime_SACopy(&output, subject); /* Assume converted text are always less than source text */
-
-  pSrc = subject;
-  pDest = output ;
-  for (i = nsCRT::strlen(subject); i > 3; i -= 4)
-  {
-    if (intlmime_decode_base64(pSrc, pDest) == 0)
-    {
-      pSrc += 4;
-      pDest += 4;
-    }
-    else
-    {
-      pSrc += 4;
-      pDest += 3;
-    }
-  }
-
-  *pDest = '\0';
-  return output;
+ badsyntax:
+  PR_Free(dest);
+  return NULL;
 }
 
 static char *intlmime_encode_qp_buf(char *subject)
@@ -958,218 +990,179 @@ char *utf8_EncodeMimePartIIStr(const char *subject, char *charset, int maxLineLe
   return buf;
 }
 
+/*
+ * Table for decoding hexadecimal in quoted-printable
+ */
+static char index_hex[256] = {
+    XX,XX,XX,XX, XX,XX,XX,XX, XX,XX,XX,XX, XX,XX,XX,XX,
+    XX,XX,XX,XX, XX,XX,XX,XX, XX,XX,XX,XX, XX,XX,XX,XX,
+    XX,XX,XX,XX, XX,XX,XX,XX, XX,XX,XX,XX, XX,XX,XX,XX,
+     0, 1, 2, 3,  4, 5, 6, 7,  8, 9,XX,XX, XX,XX,XX,XX,
+    XX,10,11,12, 13,14,15,XX, XX,XX,XX,XX, XX,XX,XX,XX,
+    XX,XX,XX,XX, XX,XX,XX,XX, XX,XX,XX,XX, XX,XX,XX,XX,
+    XX,10,11,12, 13,14,15,XX, XX,XX,XX,XX, XX,XX,XX,XX,
+    XX,XX,XX,XX, XX,XX,XX,XX, XX,XX,XX,XX, XX,XX,XX,XX,
+    XX,XX,XX,XX, XX,XX,XX,XX, XX,XX,XX,XX, XX,XX,XX,XX,
+    XX,XX,XX,XX, XX,XX,XX,XX, XX,XX,XX,XX, XX,XX,XX,XX,
+    XX,XX,XX,XX, XX,XX,XX,XX, XX,XX,XX,XX, XX,XX,XX,XX,
+    XX,XX,XX,XX, XX,XX,XX,XX, XX,XX,XX,XX, XX,XX,XX,XX,
+    XX,XX,XX,XX, XX,XX,XX,XX, XX,XX,XX,XX, XX,XX,XX,XX,
+    XX,XX,XX,XX, XX,XX,XX,XX, XX,XX,XX,XX, XX,XX,XX,XX,
+    XX,XX,XX,XX, XX,XX,XX,XX, XX,XX,XX,XX, XX,XX,XX,XX,
+    XX,XX,XX,XX, XX,XX,XX,XX, XX,XX,XX,XX, XX,XX,XX,XX,
+};
+#define HEXCHAR(c)  (index_hex[(unsigned char)(c)])
 
-static char *intlmime_decode_qp(char *in)
+static char *intlmime_decode_q(const char *in, unsigned length)
 {
-  int i = 0, length;
-  char token[3];
   char *out, *dest = 0;
 
-  out = dest = (char *)PR_Malloc(nsCRT::strlen(in)+1);
+  out = dest = (char *)PR_Malloc(length+1);
   if (dest == NULL)
     return NULL;
-  memset(out, 0, nsCRT::strlen(in)+1);
-  length = nsCRT::strlen(in);
-  while (length > 0 || i != 0)
-  {
-    while (i < 3 && length > 0)
-    {
-      token [i++] = *in;
+  memset(out, 0, length+1);
+  while (length > 0) {
+    switch (*in) {
+    case '=':
+      if (length < 3 || HEXCHAR(in[1]) == XX ||
+          HEXCHAR(in[2]) == XX) goto badsyntax;
+      *out++ = (HEXCHAR(in[1]) << 4) + HEXCHAR(in[2]);
+      in += 3;
+      length -= 3;
+      break;
+
+    case '_':
+      *out++ = ' ';
       in++;
       length--;
-    }
+      continue;
 
-    if (i < 3)
-    {
-      /* Didn't get enough for a complete token.
-         If it might be a token, unread it.
-         Otherwise, just dump it.
-       */
-      strncpy (out, token, i);
-      break;
-    }
-    i = 0;
-
-    if (token [0] == '=')
-    {
-      unsigned char c = 0;
-      if (token[1] >= '0' && token[1] <= '9')
-        c = token[1] - '0';
-      else if (token[1] >= 'A' && token[1] <= 'F')
-        c = token[1] - ('A' - 10);
-      else if (token[1] >= 'a' && token[1] <= 'f')
-        c = token[1] - ('a' - 10);
-      else if (token[1] == CR || token[1] == LF)
-      {
-        /* =\n means ignore the newline. */
-        if (token[1] == CR && token[2] == LF)
-          ;               /* swallow all three chars */
-        else
-        {
-          in--;   /* put the third char back */
-          length++;
-        }
-        continue;
-      }
-      else
-      {
-        /* = followed by something other than hex or newline -
-         pass it through unaltered, I guess. (But, if
-         this bogus token happened to occur over a buffer
-         boundary, we can't do this, since we don't have
-         space for it.  Oh well.  Screw it.)  */
-        if (in > out) *out++ = token[0];
-        if (in > out) *out++ = token[1];
-        if (in > out) *out++ = token[2];
-        continue;
-      }
-
-      /* Second hex digit */
-      c = (c << 4);
-      if (token[2] >= '0' && token[2] <= '9')
-        c += token[2] - '0';
-      else if (token[2] >= 'A' && token[2] <= 'F')
-        c += token[2] - ('A' - 10);
-      else if (token[2] >= 'a' && token[2] <= 'f')
-        c += token[2] - ('a' - 10);
-      else
-      {
-        /* We got =xy where "x" was hex and "y" was not, so
-         treat that as a literal "=", x, and y. (But, if
-         this bogus token happened to occur over a buffer
-         boundary, we can't do this, since we don't have
-         space for it.  Oh well.  Screw it.) */
-        if (in > out) *out++ = token[0];
-        if (in > out) *out++ = token[1];
-        if (in > out) *out++ = token[2];
-        continue;
-      }
-
-      *out++ = (char) c;
-    }
-    else
-    {
-      *out++ = token [0];
-
-      token[0] = token[1];
-      token[1] = token[2];
-      i = 2;
+    default:
+      if (*in & 0x80) goto badsyntax;
+      *out++ = *in++;
+      length--;
     }
   }
-  /* take care of special underscore case */
-  for (out = dest; *out; out++)
-    if (*out == '_')        *out = ' ';
+  *out++ = '\0';
   return dest;
+
+ badsyntax:
+  PR_Free(dest);
+  return NULL;
 }
 
-/*
-  intlmime_is_mime_part2_header:
-*/
-static PRBool intlmime_is_mime_part2_header(const char *header)
-{
-  return ((
-           PL_strstr(header, "=?") &&
-           (
-            PL_strstr(header, "?q?")  ||
-            PL_strstr(header, "?Q?")  ||
-            PL_strstr(header, "?b?")  ||
-            PL_strstr(header, "?B?")
-           )
-          ) ? PR_TRUE : PR_FALSE );
-}
+static char *especials = "()<>@,;:\\\"/[]?.=";
 
 static
-char *intl_decode_mime_part2_str(const char *header, char* charset)
+char *intl_decode_mime_part2_str(const char *header)
 {
-  char *work_buf = NULL;
   char *output_p = NULL;
   char *retbuff = NULL;
-  char *p, *q, *decoded_text;
-  char *begin; /* tracking pointer for where we are in the work buffer */
-  int  ret = 0;
+  const char *p, *q, *r;
+  char *decoded_text, *utf8_text;
+  const char *begin; /* tracking pointer for where we are in the input buffer */
+  int last_saw_encoded_word = 0;
+  const char *charset_start, *charset_end;
+  char charset[80];
 
   // initialize charset name to an empty string
-  if (charset)
-    charset[0] = '\0';
+  charset[0] = '\0';
 
-  mime_SACopy(&work_buf, header);  /* temporary buffer */
-  mime_SACopy(&retbuff, header);
+  /* Assume no more than 2X expansion due to UTF-8 conversion */
+  retbuff = (char *)PR_Malloc(2*strlen(header)+1);
 
-  if (work_buf == NULL || retbuff == NULL)
+  if (retbuff == NULL)
     return NULL;
 
   output_p = retbuff;
-  begin = work_buf;
+  begin = header;
 
-  while (*begin != '\0')
-  {
-    char * output_text;
+  while ((p = PL_strstr(begin, "=?")) != 0) {
+    if (last_saw_encoded_word) {
+      /* See if it's all whitespace. */
+      for (q = begin; q < p; q++) {
+        if (!PL_strchr(" \t\r\n", *q)) break;
+      }
+    }
 
-    /*              GetCharset();           */
-    p = strstr(begin, "=?");
-    if (p == NULL)
-      break;                          /* exit the loop because the rest are not encoded */
-    *p = '\0';
-    /* skip strings don't need conversion */
-    strncpy(output_p, begin, p - begin);
-    output_p += p - begin;
+    if (!last_saw_encoded_word || q < p) {
+      /* copy the part before the encoded-word */
+      PL_strncpy(output_p, begin, p - begin);
+      output_p += p - begin;
+      begin = p;
+    }
 
     p += 2;
-    begin = p;
 
-    q = strchr(p, '?');  /* Get charset info */
-    if (q == NULL)
-            break;                          /* exit the loop because there are no charset info */
-    *q++ = '\0';
-    if (charset)
-      PL_strcpy(charset, nsCRT::strcasecmp(p, "us-ascii") ? p : "ISO-8859-1");
+    /* Get charset info */
+    charset_start = p;
+    charset_end = 0;
+    for (q = p; *q != '?'; q++) {
+      if (*q <= ' ' || PL_strchr(especials, *q)) {
+        goto badsyntax;
+      }
 
-    if (*(q+1) == '?' &&
-        (*q == 'Q' || *q == 'q' || *q == 'B' || *q == 'b'))
-    {
-      p = strstr(q+2, "?=");
-      if(p != NULL)
-        *p = '\0';
-      if(*q == 'Q' || *q == 'q')
-        decoded_text = intlmime_decode_qp(q+2);
-      else
-        decoded_text = intlmime_decode_base64_buf(q+2);
+      /* RFC 2231 section 5 */
+      if (!charset_end && *q == '*') {
+        charset_end = q; 
+      }
     }
-    else
-      break;                          /* exit the loop because we don't know the encoding method */
+    if (!charset_end) {
+      charset_end = q;
+    }
 
-    begin = (p != NULL) ? p + 2 : (q + nsCRT::strlen(q));
+    /* Check for too-long charset name */
+    if ((unsigned)(charset_end - charset_start) >= sizeof(charset)) goto badsyntax;
+    
+    memcpy(charset, charset_start, charset_end - charset_start);
+    charset[charset_end - charset_start] = 0;
+
+    q++;
+    if (*q != 'Q' && *q != 'q' && *q != 'B' && *q != 'b')
+      goto badsyntax;
+
+    if (q[1] != '?')
+      goto badsyntax;
+
+    r = q;
+    for (r = q + 2; *r != '?'; r++) {
+      if (*r <= ' ') goto badsyntax;
+    }
+    if (r == q + 2 || r[1] != '=') goto badsyntax;
+
+    if(*q == 'Q' || *q == 'q')
+      decoded_text = intlmime_decode_q(q+2, r - (q+2));
+    else
+      decoded_text = intlmime_decode_b(q+2, r - (q+2));
 
     if (decoded_text == NULL)
-      break;                          /* exit the loop because we have problem to decode */
+      goto badsyntax;
 
-    ret = 1;
+    if (MIME_ConvertString(charset, "UTF-8", decoded_text, &utf8_text) == 0) {
+      PL_strcpy(output_p, (char *)utf8_text);
+      output_p += nsCRT::strlen(utf8_text);
+      PR_Free(utf8_text);
+    } else {
+      PL_strcpy(output_p, "\347\277\275"); /* UTF-8 encoding of U+FFFD */
+      output_p += 3;
+    }
 
-    output_text = (char *)decoded_text;
-
-    PR_ASSERT(output_text != NULL);
-    PL_strcpy(output_p, (char *)output_text);
-    output_p += nsCRT::strlen(output_text);
-
-    if (output_text != decoded_text)
-      PR_Free(output_text);
     PR_Free(decoded_text);
+
+    begin = r + 2;
+    last_saw_encoded_word = 1;
+    continue;
+
+  badsyntax:
+    /* copy the part before the encoded-word */
+    PL_strncpy(output_p, begin, p - begin);
+    output_p += p - begin;
+    begin = p;
+    last_saw_encoded_word = 0;
   }
   PL_strcpy(output_p, (char *)begin);     /* put the tail back  */
 
-  if (work_buf)
-    PR_Free(work_buf);
-
-  if (ret)
-  {
-    return retbuff;
-  }
-  else
-  {
-    PR_Free(retbuff);
-    PL_strcpy(charset, "us-ascii");       /* charset was not encoded, put us-ascii */
-    return nsCRT::strdup(header);             /* nothing to decode */
-  }
+  return retbuff;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1475,25 +1468,28 @@ extern "C" char *MIME_DecodeMimePartIIStr(const char *header, char *charset,
     return nsnull;
 
   // If no MIME encoded then do nothing otherwise decode the input.
-  if (*header != '\0' && intlmime_is_mime_part2_header(header)) {
-	  result = intl_decode_mime_part2_str(header, charset);
+  if (*header != '\0' && PL_strstr(header, "=?")) {
+	  result = intl_decode_mime_part2_str(header);
+      if (charset) PL_strcpy(charset, "UTF-8");
   }
-  else
-  {
-    if (*charset == '\0') {
-      // no charset name is specified then assume it's us-ascii (or ISO-8859-1 if 8bit) 
-      // and dup the input (later change the caller to avoid the duplication)
-      unsigned char *cp = (unsigned char *) header;
-      PL_strcpy(charset, "us-ascii");
-      while (*cp) {
-        if (*cp > 127) {
-          PL_strcpy(charset, "ISO-8859-1");
-          break;
-        }
-        cp++;
+  else if (charset && *charset == '\0') {
+    // no charset name is specified then assume it's us-ascii (or ISO-8859-1 if 8bit) 
+    // and dup the input (later change the caller to avoid the duplication)
+    unsigned char *cp = (unsigned char *) header;
+    PL_strcpy(charset, "us-ascii");
+    while (*cp) {
+      if (*cp > 127) {
+        PL_strcpy(charset, "ISO-8859-1");
+        break;
       }
+      cp++;
     }
+    result = nsCRT::strdup(header); 
+  } else if (eatContinuations && 
+             (PL_strchr(header, '\n') || PL_strchr(header, '\r'))) {
     result = nsCRT::strdup(header);
+  } else {
+    eatContinuations = PR_FALSE;
   }
   if (eatContinuations)
     result = MIME_StripContinuations(result);
