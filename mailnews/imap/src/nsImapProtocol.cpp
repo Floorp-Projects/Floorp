@@ -50,6 +50,57 @@ static NS_DEFINE_CID(kNetServiceCID, NS_NETSERVICE_CID);
 
 #define IMAP_DB_HEADERS "From To Cc Subject Date Priority X-Priority Message-ID References Newsgroups"
 
+// **** helper class for downloading line ****
+TLineDownloadCache::TLineDownloadCache()
+{
+    fLineInfo = (msg_line_info *) PR_CALLOC(sizeof( msg_line_info));
+    fLineInfo->adoptedMessageLine = fLineCache;
+    fLineInfo->uidOfMessage = 0;
+    fBytesUsed = 0;
+}
+
+TLineDownloadCache::~TLineDownloadCache()
+{
+    PR_FREEIF( fLineInfo);
+}
+
+uint32 TLineDownloadCache::CurrentUID()
+{
+    return fLineInfo->uidOfMessage;
+}
+
+uint32 TLineDownloadCache::SpaceAvailable()
+{
+    return kDownLoadCacheSize - fBytesUsed;
+}
+
+msg_line_info *TLineDownloadCache::GetCurrentLineInfo()
+{
+    return fLineInfo;
+}
+    
+void TLineDownloadCache::ResetCache()
+{
+    fBytesUsed = 0;
+}
+    
+XP_Bool TLineDownloadCache::CacheEmpty()
+{
+    return fBytesUsed == 0;
+}
+
+void TLineDownloadCache::CacheLine(const char *line, uint32 uid)
+{
+    uint32 lineLength = PL_strlen(line);
+    NS_ASSERTION((lineLength + 1) <= SpaceAvailable(), 
+                 "Oops... line length greater than space available");
+    
+    fLineInfo->uidOfMessage = uid;
+    
+    PL_strcpy(fLineInfo->adoptedMessageLine + fBytesUsed, line);
+    fBytesUsed += lineLength;
+}
+
 /* the following macros actually implement addref, release and query interface for our component. */
 NS_IMPL_THREADSAFE_ADDREF(nsImapProtocol)
 NS_IMPL_THREADSAFE_RELEASE(nsImapProtocol)
@@ -138,6 +189,7 @@ nsImapProtocol::nsImapProtocol() :
     m_fetchByChunks = PR_FALSE;
     m_chunkSize = 0;
     m_chunkThreshold = 0;
+    m_fromHeaderSeen = FALSE;
 
 	// where should we do this? Perhaps in the factory object?
 	if (!IMAP)
@@ -442,21 +494,6 @@ nsImapProtocol::GetThreadEventQueue(PLEventQueue **aEventQueue)
     PR_CEnterMonitor(this);
     if (aEventQueue)
         *aEventQueue = m_eventQueue;
-    PR_CExitMonitor(this);
-    return NS_OK;
-}
-
-NS_IMETHODIMP 
-nsImapProtocol::SetMessageDownloadOutputStream(nsIOutputStream *aOutputStream)
-{
-    NS_PRECONDITION(aOutputStream, "Yuk, null output stream");
-    if (!aOutputStream)
-        return NS_ERROR_NULL_POINTER;
-    PR_CEnterMonitor(this);
-    if(m_messageDownloadOutputStream)
-        NS_RELEASE(m_messageDownloadOutputStream);
-    m_messageDownloadOutputStream = aOutputStream;
-    NS_ADDREF(m_messageDownloadOutputStream);
     PR_CExitMonitor(this);
     return NS_OK;
 }
@@ -1139,6 +1176,23 @@ void nsImapProtocol::PipelinedFetchMessageParts(const char *uid, nsIMAPMessagePa
 	}
 }
 
+void
+nsImapProtocol::AddXMozillaStatusLine(uint16 /* flags */) // flags not use now
+{
+	static char statusLine[] = "X-Mozilla-Status: 0201\r\n";
+	HandleMessageDownLoadLine(statusLine, FALSE);
+}
+
+void
+nsImapProtocol::PostLineDownLoadEvent(msg_line_info *downloadLineDontDelete)
+{
+    NS_ASSERTION(downloadLineDontDelete, 
+                 "Oops... null msg line info not good");
+    if (m_imapMessage && downloadLineDontDelete)
+        m_imapMessage->ParseAdoptedMsgLine(this, downloadLineDontDelete);
+
+    // ***** We need to handle the psuedo interrupt here *****
+}
 
 // well, this is what the old code used to look like to handle a line seen by the parser.
 // I'll leave it mostly #ifdef'ed out, but I suspect it will look a lot like this.
@@ -1201,33 +1255,33 @@ void nsImapProtocol::HandleMessageDownLoadLine(const char *line, PRBool chunkEnd
 			}
 #endif
 	}
-#if 0
+
 	const char *xSenderInfo = GetServerStateParser().GetXSenderInfo();
 
-	if (xSenderInfo && *xSenderInfo && !fFromHeaderSeen)
+	if (xSenderInfo && *xSenderInfo && !m_fromHeaderSeen)
 	{
 		if (!PL_strncmp("From: ", localMessageLine, 6))
 		{
-			fFromHeaderSeen = TRUE;
+			m_fromHeaderSeen = TRUE;
 			if (PL_strstr(localMessageLine, xSenderInfo) != NULL)
 				AddXMozillaStatusLine(0);
 			GetServerStateParser().FreeXSenderInfo();
 		}
 	}
     // if this line is for a different message, or the incoming line is too big
-    if (((fDownLoadLineCache.CurrentUID() != GetServerStateParser().CurrentResponseUID()) && !fDownLoadLineCache.CacheEmpty()) ||
-        (fDownLoadLineCache.SpaceAvailable() < (PL_strlen(localMessageLine) + 1)) )
+    if (((m_downloadLineCache.CurrentUID() != GetServerStateParser().CurrentResponseUID()) && !m_downloadLineCache.CacheEmpty()) ||
+        (m_downloadLineCache.SpaceAvailable() < (PL_strlen(localMessageLine) + 1)) )
     {
-		if (!fDownLoadLineCache.CacheEmpty())
+		if (!m_downloadLineCache.CacheEmpty())
 		{
-			msg_line_info *downloadLineDontDelete = fDownLoadLineCache.GetCurrentLineInfo();
+			msg_line_info *downloadLineDontDelete = m_downloadLineCache.GetCurrentLineInfo();
 			PostLineDownLoadEvent(downloadLineDontDelete);
 		}
-		fDownLoadLineCache.ResetCache();
+		m_downloadLineCache.ResetCache();
 	}
      
     // so now the cache is flushed, but this string might still be to big
-    if (fDownLoadLineCache.SpaceAvailable() < (PL_strlen(localMessageLine) + 1) )
+    if (m_downloadLineCache.SpaceAvailable() < (PL_strlen(localMessageLine) + 1) )
     {
         // has to be dynamic to pass to other win16 thread
 		msg_line_info *downLoadInfo = (msg_line_info *) PR_Malloc(sizeof(msg_line_info));
@@ -1249,8 +1303,8 @@ void nsImapProtocol::HandleMessageDownLoadLine(const char *line, PRBool chunkEnd
         }
 	}
     else
-		fDownLoadLineCache.CacheLine(localMessageLine, GetServerStateParser().CurrentResponseUID());
-#endif // 1
+		m_downloadLineCache.CacheLine(localMessageLine, GetServerStateParser().CurrentResponseUID());
+
 	PR_FREEIF( localMessageLine);
 }
 
@@ -1259,38 +1313,38 @@ void nsImapProtocol::HandleMessageDownLoadLine(const char *line, PRBool chunkEnd
 void nsImapProtocol::NormalMessageEndDownload()
 {
 	Log("STREAM", "CLOSE", "Normal Message End Download Stream");
-#if 0
+
 	if (m_trackingTime)
 		AdjustChunkSize();
-	if (!fDownLoadLineCache.CacheEmpty())
+	if (!m_downloadLineCache.CacheEmpty())
 	{
-	    msg_line_info *downloadLineDontDelete = fDownLoadLineCache.GetCurrentLineInfo();
+	    msg_line_info *downloadLineDontDelete = m_downloadLineCache.GetCurrentLineInfo();
 	    PostLineDownLoadEvent(downloadLineDontDelete);
-	    fDownLoadLineCache.ResetCache();
+	    m_downloadLineCache.ResetCache();
     }
 
     if (m_imapMessage)
         m_imapMessage->NormalEndMsgWriteStream(this);
-#endif // 0
+
 }
 
 void nsImapProtocol::AbortMessageDownLoad()
 {
 	Log("STREAM", "CLOSE", "Abort Message  Download Stream");
-#if 0
+
 	//PR_LOG(IMAP, out, ("STREAM: Abort Message Download Stream"));
 	if (m_trackingTime)
 		AdjustChunkSize();
-	if (!fDownLoadLineCache.CacheEmpty())
+	if (!m_downloadLineCache.CacheEmpty())
 	{
-	    msg_line_info *downloadLineDontDelete = fDownLoadLineCache.GetCurrentLineInfo();
+	    msg_line_info *downloadLineDontDelete = m_downloadLineCache.GetCurrentLineInfo();
 	    PostLineDownLoadEvent(downloadLineDontDelete);
-	    fDownLoadLineCache.ResetCache();
+	    m_downloadLineCache.ResetCache();
     }
 
     if (m_imapMessage)
         m_imapMessage->AbortMsgWriteStream(this);
-#endif // 0
+
 }
 
 
@@ -1305,7 +1359,7 @@ void nsImapProtocol::Log(const char *logSubName, const char *extraInfo, const ch
 #if 0
 	switch (GetServerStateParser().GetIMAPstate())
 	{
-	case TImapServerState::kFolderSelected:
+	case nsImapServerResponseParser::kFolderSelected:
 		if (fCurrentUrl)
 		{
 			if (extraInfo)
@@ -1315,15 +1369,17 @@ void nsImapProtocol::Log(const char *logSubName, const char *extraInfo, const ch
 		}
 		return;
 		break;
-	case TImapServerState::kNonAuthenticated:
+	case nsImapServerResponseParser::kNonAuthenticated:
 		stateName = nonAuthStateName;
 		break;
-	case TImapServerState::kAuthenticated:
+	case nsImapServerResponseParser::kAuthenticated:
 		stateName = authStateName;
 		break;
-	case TImapServerState::kWaitingForMoreClientInput:
+#if 0 // *** this isn't a server state; its a status ***
+	case nsImapServerResponseParser::kWaitingForMoreClientInput:
 		stateName = waitingStateName;
 		break;
+#endif 
 	}
 
 	if (fCurrentUrl)

@@ -51,7 +51,6 @@ public:
 	NS_IMETHOD LoadUrl(nsIURL * aURL, nsISupports * aConsumer);
 	NS_IMETHOD Initialize(nsIImapHostSessionList * aHostSessionList, PLEventQueue * aSinkEventQueue);
     NS_IMETHOD GetThreadEventQueue(PLEventQueue **aEventQueue);
-    NS_IMETHOD SetMessageDownloadOutputStream(nsIOutputStream* aOutputStream);
     // Notify FE Event has been completed
     NS_IMETHOD NotifyFEEventCompletion();
 
@@ -109,6 +108,9 @@ public:
     virtual void HandleMessageDownLoadLine(const char *line, PRBool chunkEnd);
     virtual void NormalMessageEndDownload();
     virtual void AbortMessageDownLoad();
+    virtual void PostLineDownLoadEvent(msg_line_info *downloadLineDontDelete);
+	virtual void AddXMozillaStatusLine(uint16 flags);	// for XSender auth info
+    
 	// Send log output...
 	void	Log(const char *logSubName, const char *extraInfo, const char *logData);
 
@@ -272,6 +274,8 @@ private:
     PRBool m_fetchByChunks;
     PRInt32 m_chunkSize;
     PRInt32 m_chunkThreshold;
+    TLineDownloadCache m_downloadLineCache;
+    PRBool m_fromHeaderSeen;
 };
 
 #endif  // nsImapProtocol_h___
