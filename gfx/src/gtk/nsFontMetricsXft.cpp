@@ -1028,6 +1028,9 @@ nsFontMetricsXft::SetupFCPattern(void)
     if (!mPattern)
         return;
 
+    if (gdk_rgb_get_cmap() != gdk_colormap_get_system())
+        XftPatternAddBool(mPattern, XFT_RENDER, False);
+
     // XXX need to add user defined family
 
     // Add CSS names - walk the list of fonts, adding the generic as
@@ -1251,6 +1254,9 @@ nsFontMetricsXft::SetupMiniFont(void)
     pattern = FcPatternCreate();
     if (!pattern)
         return NS_ERROR_FAILURE;
+
+    if (gdk_rgb_get_cmap() != gdk_colormap_get_system())
+        XftPatternAddBool(mPattern, XFT_RENDER, False);
 
     FcPatternAddString(pattern, FC_FAMILY, (FcChar8 *)"monospace");
 

@@ -334,11 +334,15 @@ NS_IMETHODIMP nsDeviceContextGTK::CreateRenderingContext(nsIRenderingContext *&a
         // window might not be realized... ugh
         if (gwin)
           gdk_window_ref(gwin);
-        else
+        else {
           win = gdk_pixmap_new(nsnull,
                                w->allocation.width,
                                w->allocation.height,
                                gdk_rgb_get_visual()->depth);
+#ifdef MOZ_WIDGET_GTK2
+          gdk_drawable_set_colormap(win, gdk_rgb_get_colormap());
+#endif
+        }
 
         GdkGC *gc = gdk_gc_new(win);
 

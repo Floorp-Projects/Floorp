@@ -159,6 +159,9 @@ NS_IMETHODIMP nsRenderingContextGTK::Init(nsIDeviceContext* aContext,
                            w->allocation.width,
                            w->allocation.height,
                            gdk_rgb_get_visual()->depth);
+#ifdef MOZ_WIDGET_GTK2
+      gdk_drawable_set_colormap(win, gdk_rgb_get_colormap());
+#endif
     }
 
     GdkGC *gc = (GdkGC *)aWindow->GetNativeData(NS_NATIVE_GRAPHIC);
