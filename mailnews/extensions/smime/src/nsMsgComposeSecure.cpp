@@ -56,7 +56,7 @@ static nsresult mime_nested_encoder_output_fn (const char *buf, PRInt32 size, vo
 static int make_multipart_signed_header_string(PRBool outer_p,
 									char **header_return,
 									char **boundary_return);
-extern "C" char *mime_make_separator(const char *prefix);
+static char *mime_make_separator(const char *prefix);
 
 // mscott --> FIX ME...for now cloning code from compose\nsMsgEncode.h/.cpp
 
