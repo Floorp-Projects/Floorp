@@ -180,12 +180,18 @@ __CERT_NewTempCertificate(CERTCertDBHandle *handle, SECItem *derCert,
     NSSCryptoContext *context;
     NSSArena *arena;
     CERTCertificate *cc;
+    NSSCryptoContext *gCC = STAN_GetDefaultCryptoContext();
     if (!isperm) {
-	/* Look for a perm cert first */
 	NSSDER encoding;
 	NSSITEM_FROM_SECITEM(&encoding, derCert);
-	c = NSSTrustDomain_FindCertificateByEncodedCertificate(handle, 
+	/* First, see if it is already a temp cert */
+	c = NSSCryptoContext_FindCertificateByEncodedCertificate(gCC, 
 	                                                       &encoding);
+	if (!c) {
+	    /* Then, see if it is already a perm cert */
+	    c = NSSTrustDomain_FindCertificateByEncodedCertificate(handle, 
+	                                                           &encoding);
+	}
 	if (c) {
 	    return STAN_GetCERTCertificate(c);
 	}
