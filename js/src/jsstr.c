@@ -105,7 +105,7 @@ static const unsigned char netCharType[256] =
 #define IS_OK(C, mask) (netCharType[((unsigned char) (C))] & (mask))
 
 /* See ECMA-262 15.1.2.4. */
-static JSBool
+JSBool
 str_escape(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
     JSString *str;
