@@ -26,11 +26,8 @@
 #include "nsIDocument.h"
 #include "nsIWebShellServices.h"
 
-#ifdef IMPL_NS_IPARSERFILTER
 #include "nsIParserFilter.h"
 static NS_DEFINE_IID(kIParserFilterIID, NS_IPARSERFILTER_IID);
-
-#endif /* IMPL_NS_IPARSERFILTER */
 
 class CToken;
 extern "C" PRInt32 g_InstanceCount;
@@ -80,9 +77,7 @@ class nsMyObserver : public nsICharsetDetectionObserver
 };
 
 class nsDetectionAdaptor : 
-#ifdef IMPL_NS_IPARSERFILTER
                            public nsIParserFilter,
-#endif /* IMPL_NS_IPARSERFILTER */
                            public nsICharsetDetectionAdaptor
 {
  public:
@@ -111,7 +106,7 @@ class nsDetectionAdaptor :
   private:
      nsCOMPtr<nsICharsetDetector> mDetector;
      PRBool mDontFeedToDetector;
-     nsMyObserver* mObserver; 
+     nsCOMPtr<nsMyObserver> mObserver; 
 };
 
 #endif /* nsDetectionAdaptor_h__ */
