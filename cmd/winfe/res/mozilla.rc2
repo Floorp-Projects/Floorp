@@ -444,6 +444,24 @@ BEGIN
         MENUITEM "&Home",                       ID_GO_HOME
 		MENUITEM SEPARATOR
     END
+	POPUP "&Bookmarks"
+    BEGIN
+        MENUITEM "Ad&d Bookmark\tCtrl+D",       ID_HOTLIST_ADDCURRENTTOHOTLIST
+
+        POPUP "&File Bookmark"
+        BEGIN
+            MENUITEM "Root",                        ID_BOOKMARKS_FILEROOT
+
+        END
+        MENUITEM "Edit &Bookmarks...\tCtrl+B",  ID_HOTLIST_VIEW
+        MENUITEM SEPARATOR
+        POPUP "&Guide"
+        BEGIN
+            MENUITEM "PLACEHOLDER",                 IDC_FIRST_PLACES_MENU_ID
+
+        END
+        MENUITEM SEPARATOR
+    END
 #ifndef MOZ_COMMUNICATOR_NAME
     POPUP "&Window"
 #else
@@ -463,24 +481,7 @@ BEGIN
         MENUITEM "Messa&ge Center\tCtrl+Shift+1", ID_TOOLS_MAIL
         MENUITEM "&Address Book\tCtrl+Shift+2", ID_TOOLS_ADDRESSBOOK
 #endif /* MOZ_MAIL_NEWS */
-        POPUP "&Bookmarks"
-        BEGIN
-            MENUITEM "Ad&d Bookmark\tCtrl+D",       ID_HOTLIST_ADDCURRENTTOHOTLIST
-
-            POPUP "&File Bookmark"
-            BEGIN
-                MENUITEM "Root",                        ID_BOOKMARKS_FILEROOT
-
-            END
-            MENUITEM "Edit &Bookmarks...\tCtrl+B",  ID_HOTLIST_VIEW
-            MENUITEM SEPARATOR
-            POPUP "&Guide"
-            BEGIN
-                MENUITEM "PLACEHOLDER",                 IDC_FIRST_PLACES_MENU_ID
-
-            END
-            MENUITEM SEPARATOR
-        END
+		MENUITEM "&Bookmarks\tCtrl+B", ID_HOTLIST_VIEW
         MENUITEM "&History\tCtrl+H",            ID_GO_HISTORY
 #ifdef MOZ_SECURITY
         MENUITEM "&Security Info\tCtrl+Shift+I", ID_SECURITY
@@ -635,7 +636,22 @@ BEGIN
 //	MENUITEM SEPARATOR
 //leave#endif
     END
-    
+    POPUP "&Bookmarks"                                              
+		BEGIN
+			MENUITEM "Add Bookmar&k\tCtrl+D",       ID_HOTLIST_ADDCURRENTTOHOTLIST
+			POPUP "&File Bookmark"
+			BEGIN
+				MENUITEM "Root",					ID_BOOKMARKS_FILEROOT
+			END
+			MENUITEM "Edit &Bookmarks...\tCtrl+B",  ID_HOTLIST_VIEW
+			MENUITEM SEPARATOR
+			POPUP "&Guide"
+			BEGIN
+				MENUITEM "PLACEHOLDER"				IDC_FIRST_PLACES_MENU_ID
+			END
+			MENUITEM SEPARATOR
+		END
+
 #ifndef MOZ_COMMUNICATOR_NAME
     POPUP "&Window"
 #else
@@ -660,21 +676,7 @@ BEGIN
 	    MENUITEM "Messa&ge Center\tCtrl+Shift+1",         ID_TOOLS_MAIL
 		MENUITEM "&Address Book\tCtrl+Shift+2",           ID_TOOLS_ADDRESSBOOK
 #endif /* MOZ_MAIL_NEWS */
-		POPUP "&Bookmarks"                                              
-		BEGIN
-			MENUITEM "Add Bookmar&k\tCtrl+D",       ID_HOTLIST_ADDCURRENTTOHOTLIST
-			POPUP "&File Bookmark"
-			BEGIN
-				MENUITEM "Root",					ID_BOOKMARKS_FILEROOT
-			END
-			MENUITEM "Edit &Bookmarks...\tCtrl+B",   ID_HOTLIST_VIEW
-			MENUITEM SEPARATOR
-			POPUP "&Guide"
-			BEGIN
-				MENUITEM "PLACEHOLDER"				IDC_FIRST_PLACES_MENU_ID
-			END
-			MENUITEM SEPARATOR
-		END
+		MENUITEM "&Bookmarks\tCtrl+B",   ID_HOTLIST_VIEW
 		MENUITEM "&History\tCtrl+H",                         ID_GO_HISTORY
 #if defined(JAVA) || defined(OJI)
 		MENUITEM "&Java Console",                   ID_OPTIONS_SHOWJAVACONSOLE
@@ -1917,19 +1919,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "&Stop Loading\tESC",          ID_NAVIGATE_INTERRUPT
     END
-    POPUP "&Communicator"
-    BEGIN
-        MENUITEM "&Navigator\tCtrl+1",          ID_TOOLS_WEB
-        MENUITEM "&Messenger\tCtrl+2",  ID_TOOLS_INBOX
-        MENUITEM "&Page Composer\tCtrl+4",      ID_TOOLS_EDITOR
-        MENUITEM "&Conference\tCtrl+5",         ID_WINDOW_LIVECALL
-        MENUITEM SEPARATOR
-#ifdef MOZ_TASKBAR
-        MENUITEM "Show Componen&t Bar",         ID_WINDOW_TASKBAR
-#endif // MOZ_TASKBAR
-        MENUITEM "Messa&ge Center\tCtrl+Shift+1", ID_TOOLS_MAIL
-        MENUITEM "&Address Book\tCtrl+Shift+2", ID_TOOLS_ADDRESSBOOK
-        POPUP "&Bookmarks"
+	POPUP "&Bookmarks"
         BEGIN
             MENUITEM "Add Bookmar&k\tCtrl+D",       ID_HOTLIST_ADDCURRENTTOHOTLIST
 
@@ -1947,6 +1937,19 @@ BEGIN
             END
             MENUITEM SEPARATOR
         END
+    POPUP "&Communicator"
+    BEGIN
+        MENUITEM "&Navigator\tCtrl+1",          ID_TOOLS_WEB
+        MENUITEM "&Messenger\tCtrl+2",  ID_TOOLS_INBOX
+        MENUITEM "&Page Composer\tCtrl+4",      ID_TOOLS_EDITOR
+        MENUITEM "&Conference\tCtrl+5",         ID_WINDOW_LIVECALL
+        MENUITEM SEPARATOR
+#ifdef MOZ_TASKBAR
+        MENUITEM "Show Componen&t Bar",         ID_WINDOW_TASKBAR
+#endif // MOZ_TASKBAR
+        MENUITEM "Messa&ge Center\tCtrl+Shift+1", ID_TOOLS_MAIL
+        MENUITEM "&Address Book\tCtrl+Shift+2", ID_TOOLS_ADDRESSBOOK
+		MENUITEM "Bookmarks\tCtrl+B",  ID_HOTLIST_VIEW
         MENUITEM "&History\tCtrl+H",            ID_GO_HISTORY
         MENUITEM "&Java Console",               ID_OPTIONS_SHOWJAVACONSOLE
 #ifdef MOZ_SECURITY
@@ -2037,6 +2040,24 @@ BEGIN
 		MENUITEM SEPARATOR
 		MENUITEM "My Address B&ook Card",       ID_CREATE_CARD
     END
+	POPUP "&Bookmarks"
+        BEGIN
+            MENUITEM "Add Bookmar&k\tCtrl+D",       ID_HOTLIST_ADDCURRENTTOHOTLIST
+
+            POPUP "&File Bookmark"
+            BEGIN
+                MENUITEM "Root",                        ID_BOOKMARKS_FILEROOT
+
+            END
+			MENUITEM "Edit &Bookmarks...\tCtrl+B",  ID_HOTLIST_VIEW
+            MENUITEM SEPARATOR
+            POPUP "&Guide"
+            BEGIN
+                MENUITEM "PLACEHOLDER",                 IDC_FIRST_PLACES_MENU_ID
+
+            END
+            MENUITEM SEPARATOR
+        END
     POPUP "&Communicator"
     BEGIN
         MENUITEM "&Navigator\tCtrl+1",          ID_TOOLS_WEB
@@ -2047,24 +2068,7 @@ BEGIN
         MENUITEM "Show Componen&t Bar",         ID_WINDOW_TASKBAR
         MENUITEM "Messa&ge Center\tCtrl+Shift+1", ID_TOOLS_MAIL
         MENUITEM "&Address Book\tCtrl+Shift+2", ID_TOOLS_ADDRESSBOOK
-        POPUP "&Bookmarks"
-        BEGIN
-            MENUITEM "Add Bookmar&k\tCtrl+D",       ID_HOTLIST_ADDCURRENTTOHOTLIST
-
-            POPUP "&File Bookmark"
-            BEGIN
-                MENUITEM "Root",                        ID_BOOKMARKS_FILEROOT
-
-            END
-            MENUITEM "Edit &Bookmarks...\tCtrl+B",  ID_HOTLIST_VIEW
-            MENUITEM SEPARATOR
-            POPUP "&Guide"
-            BEGIN
-                MENUITEM "PLACEHOLDER",                 IDC_FIRST_PLACES_MENU_ID
-
-            END
-            MENUITEM SEPARATOR
-        END
+		MENUITEM "&Bookmarks\tCtrl+B",  ID_HOTLIST_VIEW
         MENUITEM "&History\tCtrl+H",            ID_GO_HISTORY
         MENUITEM "&Java Console",               ID_OPTIONS_SHOWJAVACONSOLE
 #ifdef MOZ_SECURITY
@@ -2136,17 +2140,7 @@ BEGIN
 		MENUITEM SEPARATOR
         MENUITEM "&Stop Searching\tESC",        ID_NAVIGATE_INTERRUPT
     END
-    POPUP "&Communicator"
-    BEGIN
-        MENUITEM "&Navigator\tCtrl+1",          ID_TOOLS_WEB
-        MENUITEM "&Messenger\tCtrl+2",  ID_TOOLS_INBOX
-        MENUITEM "&Page Composer\tCtrl+4",      ID_TOOLS_EDITOR
-        MENUITEM "&Conference\tCtrl+5",         ID_WINDOW_LIVECALL
-        MENUITEM SEPARATOR
-        MENUITEM "Show Componen&t Bar",         ID_WINDOW_TASKBAR
-        MENUITEM "Messa&ge Center\tCtrl+Shift+1", ID_TOOLS_MAIL
-        MENUITEM "&Address Book\tCtrl+Shift+2", ID_TOOLS_ADDRESSBOOK
-        POPUP "&Bookmarks"
+	POPUP "&Bookmarks"
         BEGIN
             MENUITEM "Add Bookmar&k\tCtrl+D",       ID_HOTLIST_ADDCURRENTTOHOTLIST
 
@@ -2164,6 +2158,17 @@ BEGIN
             END
             MENUITEM SEPARATOR
         END
+    POPUP "&Communicator"
+    BEGIN
+        MENUITEM "&Navigator\tCtrl+1",          ID_TOOLS_WEB
+        MENUITEM "&Messenger\tCtrl+2",  ID_TOOLS_INBOX
+        MENUITEM "&Page Composer\tCtrl+4",      ID_TOOLS_EDITOR
+        MENUITEM "&Conference\tCtrl+5",         ID_WINDOW_LIVECALL
+        MENUITEM SEPARATOR
+        MENUITEM "Show Componen&t Bar",         ID_WINDOW_TASKBAR
+        MENUITEM "Messa&ge Center\tCtrl+Shift+1", ID_TOOLS_MAIL
+        MENUITEM "&Address Book\tCtrl+Shift+2", ID_TOOLS_ADDRESSBOOK
+		MENUITEM "&Bookmarks\tCtrl+B",  ID_HOTLIST_VIEW
         MENUITEM "&History\tCtrl+H",            ID_GO_HISTORY
         MENUITEM "&Java Console",               ID_OPTIONS_SHOWJAVACONSOLE
 #ifdef MOZ_SECURITY
@@ -2404,6 +2409,24 @@ BEGIN
         MENUITEM "Ignor&e Thread\tK",           ID_MESSAGE_KILL
         MENUITEM "&Watch Thread\tW",            ID_MESSAGE_WATCH
     END
+	POPUP "&Bookmarks"
+        BEGIN
+            MENUITEM "Add Bookmar&k\tCtrl+D",       ID_HOTLIST_ADDCURRENTTOHOTLIST
+
+            POPUP "&File Bookmark"
+            BEGIN
+                MENUITEM "Root",                        ID_BOOKMARKS_FILEROOT
+
+            END
+			MENUITEM "Edit &Bookmarks...\tCtrl+B",  ID_HOTLIST_VIEW
+            MENUITEM SEPARATOR
+            POPUP "&Guide"
+            BEGIN
+                MENUITEM "PLACEHOLDER",                 IDC_FIRST_PLACES_MENU_ID
+
+            END
+            MENUITEM SEPARATOR
+        END
     POPUP "&Communicator"
     BEGIN
         MENUITEM "&Navigator\tCtrl+1",          ID_TOOLS_WEB
@@ -2414,24 +2437,7 @@ BEGIN
         MENUITEM "Show Componen&t Bar",         ID_WINDOW_TASKBAR
         MENUITEM "Messa&ge Center\tCtrl+Shift+1", ID_TOOLS_MAIL
         MENUITEM "&Address Book\tCtrl+Shift+2", ID_TOOLS_ADDRESSBOOK
-        POPUP "&Bookmarks"
-        BEGIN
-            MENUITEM "Add Bookmar&k\tCtrl+D",       ID_HOTLIST_ADDCURRENTTOHOTLIST
-
-            POPUP "&File Bookmark"
-            BEGIN
-                MENUITEM "Root",                        ID_BOOKMARKS_FILEROOT
-
-            END
-            MENUITEM "Edit &Bookmarks...\tCtrl+B",  ID_HOTLIST_VIEW
-            MENUITEM SEPARATOR
-            POPUP "&Guide"
-            BEGIN
-                MENUITEM "PLACEHOLDER",                 IDC_FIRST_PLACES_MENU_ID
-
-            END
-            MENUITEM SEPARATOR
-        END
+		MENUITEM "&Bookmarks\tCtrl+B",  ID_HOTLIST_VIEW
         MENUITEM "&History\tCtrl+H",            ID_GO_HISTORY
         MENUITEM "&Java Console",               ID_OPTIONS_SHOWJAVACONSOLE
 #ifdef MOZ_SECURITY
@@ -2708,17 +2714,7 @@ BEGIN
         MENUITEM "Ignor&e Thread\tK",           ID_MESSAGE_KILL
         MENUITEM "&Watch Thread\tW",            ID_MESSAGE_WATCH*/
     END
-    POPUP "&Communicator"
-    BEGIN
-        MENUITEM "&Navigator\tCtrl+1",          ID_TOOLS_WEB
-        MENUITEM "&Messenger\tCtrl+2",			ID_TOOLS_INBOX
-        MENUITEM "&Page Composer\tCtrl+4",      ID_TOOLS_EDITOR
-        MENUITEM "&Conference\tCtrl+5",         ID_WINDOW_LIVECALL
-        MENUITEM SEPARATOR
-        MENUITEM "Show Componen&t Bar",         ID_WINDOW_TASKBAR
-        MENUITEM "Messa&ge Center\tCtrl+Shift+1", ID_TOOLS_MAIL
-        MENUITEM "&Address Book\tCtrl+Shift+2", ID_TOOLS_ADDRESSBOOK
-        POPUP "&Bookmarks"
+	POPUP "&Bookmarks"
         BEGIN
             MENUITEM "Add Bookmar&k\tCtrl+D",       ID_HOTLIST_ADDCURRENTTOHOTLIST
 
@@ -2736,6 +2732,17 @@ BEGIN
             END
             MENUITEM SEPARATOR
         END
+    POPUP "&Communicator"
+    BEGIN
+        MENUITEM "&Navigator\tCtrl+1",          ID_TOOLS_WEB
+        MENUITEM "&Messenger\tCtrl+2",			ID_TOOLS_INBOX
+        MENUITEM "&Page Composer\tCtrl+4",      ID_TOOLS_EDITOR
+        MENUITEM "&Conference\tCtrl+5",         ID_WINDOW_LIVECALL
+        MENUITEM SEPARATOR
+        MENUITEM "Show Componen&t Bar",         ID_WINDOW_TASKBAR
+        MENUITEM "Messa&ge Center\tCtrl+Shift+1", ID_TOOLS_MAIL
+        MENUITEM "&Address Book\tCtrl+Shift+2", ID_TOOLS_ADDRESSBOOK
+		MENUITEM "&Bookmarks\tCtrl+B",  ID_HOTLIST_VIEW
         MENUITEM "&History\tCtrl+H",            ID_GO_HISTORY
         MENUITEM "&Java Console",               ID_OPTIONS_SHOWJAVACONSOLE
 #ifdef MOZ_SECURITY
@@ -3150,17 +3157,7 @@ BEGIN
     BEGIN
         MENUITEM "Check &Spelling...",          ID_CHECK_SPELLING
     END
-    POPUP "&Communicator"
-    BEGIN
-        MENUITEM "&Navigator\tCtrl+1",          ID_TOOLS_WEB
-        MENUITEM "&Messenger\tCtrl+2",  ID_TOOLS_INBOX
-        MENUITEM "&Page Composer\tCtrl+4",      ID_TOOLS_EDITOR
-        MENUITEM "&Conference\tCtrl+5",         ID_WINDOW_LIVECALL
-        MENUITEM SEPARATOR
-        MENUITEM "Show Componen&t Bar",         ID_WINDOW_TASKBAR
-        MENUITEM "Messa&ge Center\tCtrl+Shift+1", ID_TOOLS_MAIL
-        MENUITEM "&Address Book\tCtrl+Shift+2", ID_TOOLS_ADDRESSBOOK
-        POPUP "&Bookmarks"
+	POPUP "&Bookmarks"
         BEGIN
             MENUITEM "Add Bookmar&k\tCtrl+D",       ID_HOTLIST_ADDCURRENTTOHOTLIST
 
@@ -3178,6 +3175,17 @@ BEGIN
             END
             MENUITEM SEPARATOR
         END
+    POPUP "&Communicator"
+    BEGIN
+        MENUITEM "&Navigator\tCtrl+1",          ID_TOOLS_WEB
+        MENUITEM "&Messenger\tCtrl+2",  ID_TOOLS_INBOX
+        MENUITEM "&Page Composer\tCtrl+4",      ID_TOOLS_EDITOR
+        MENUITEM "&Conference\tCtrl+5",         ID_WINDOW_LIVECALL
+        MENUITEM SEPARATOR
+        MENUITEM "Show Componen&t Bar",         ID_WINDOW_TASKBAR
+        MENUITEM "Messa&ge Center\tCtrl+Shift+1", ID_TOOLS_MAIL
+        MENUITEM "&Address Book\tCtrl+Shift+2", ID_TOOLS_ADDRESSBOOK
+		MENUITEM "&Bookmarks\tCtrl+B",  ID_HOTLIST_VIEW
         MENUITEM "&History\tCtrl+H",            ID_GO_HISTORY
         MENUITEM "&Java Console",               ID_OPTIONS_SHOWJAVACONSOLE
 #ifdef MOZ_SECURITY
@@ -3485,6 +3493,24 @@ BEGIN
         MENUITEM "Set as &New Bookmarks Folder", ID_ITEM_SETTOFOLDER
         MENUITEM "Set as Bookmark &Menu",       ID_ITEM_SETTOMENU
     END
+	POPUP "&Bookmarks"
+        BEGIN
+            MENUITEM "Add Bookmar&k\tCtrl+D",       ID_HOTLIST_ADDCURRENTTOHOTLIST
+
+            POPUP "&File Bookmark"
+            BEGIN
+                MENUITEM "Root",                        ID_BOOKMARKS_FILEROOT
+
+            END
+            MENUITEM "Edit &Bookmarks...\tCtrl+B",  ID_HOTLIST_VIEW
+            MENUITEM SEPARATOR
+            POPUP "&Guide"
+            BEGIN
+                MENUITEM "First Place",                 IDC_FIRST_PLACES_MENU_ID
+
+            END
+            MENUITEM SEPARATOR
+        END
 #ifndef MOZ_COMMUNICATOR_NAME
     POPUP "&Window"
 #else
@@ -3509,24 +3535,7 @@ BEGIN
         MENUITEM "Messa&ge Center\tCtrl+Shift+1", ID_TOOLS_MAIL
         MENUITEM "&Address Book\tCtrl+Shift+2", ID_TOOLS_ADDRESSBOOK
 #endif /* MOZ_MAIL_NEWS */
-        POPUP "&Bookmarks"
-        BEGIN
-            MENUITEM "Add Bookmar&k\tCtrl+D",       ID_HOTLIST_ADDCURRENTTOHOTLIST
-
-            POPUP "&File Bookmark"
-            BEGIN
-                MENUITEM "Root",                        ID_BOOKMARKS_FILEROOT
-
-            END
-            MENUITEM "Edit &Bookmarks...\tCtrl+B",  ID_HOTLIST_VIEW
-            MENUITEM SEPARATOR
-            POPUP "&Guide"
-            BEGIN
-                MENUITEM "First Place",                 IDC_FIRST_PLACES_MENU_ID
-
-            END
-            MENUITEM SEPARATOR
-        END
+		MENUITEM "&Bookmarks\tCtrl+B",  ID_HOTLIST_VIEW
         MENUITEM "&History\tCtrl+H",            ID_GO_HISTORY
         MENUITEM "&Java Console",               ID_OPTIONS_SHOWJAVACONSOLE
 #ifdef MOZ_SECURITY
@@ -3613,6 +3622,24 @@ BEGIN
         MENUITEM "Sort &Ascending",             ID_ASCENDING
         MENUITEM "Sort &Descending",            ID_DECENDING
     END
+	POPUP "&Bookmarks"
+        BEGIN
+            MENUITEM "Add Bookmar&k\tCtrl+D",       ID_HOTLIST_ADDCURRENTTOHOTLIST
+
+            POPUP "&File Bookmark"
+            BEGIN
+                MENUITEM "Root",                        ID_BOOKMARKS_FILEROOT
+
+            END
+            MENUITEM "Edit &Bookmarks...\tCtrl+B",  ID_HOTLIST_VIEW
+            MENUITEM SEPARATOR
+            POPUP "&Guide"
+            BEGIN
+                MENUITEM "PLACEHOLDER",                 IDC_FIRST_PLACES_MENU_ID
+
+            END
+            MENUITEM SEPARATOR            
+        END
 #ifndef MOZ_COMMUNICATOR_NAME
     POPUP "&Window"
 #else
@@ -3637,24 +3664,7 @@ BEGIN
         MENUITEM "Messa&ge Center\tCtrl+Shift+1", ID_TOOLS_MAIL
         MENUITEM "&Address Book\tCtrl+Shift+2", ID_TOOLS_ADDRESSBOOK
 #endif // MOZ_MAIL_NEWS
-        POPUP "&Bookmarks"
-        BEGIN
-            MENUITEM "Add Bookmar&k\tCtrl+D",       ID_HOTLIST_ADDCURRENTTOHOTLIST
-
-            POPUP "&File Bookmark"
-            BEGIN
-                MENUITEM "Root",                        ID_BOOKMARKS_FILEROOT
-
-            END
-            MENUITEM "Edit &Bookmarks...\tCtrl+B",  ID_HOTLIST_VIEW
-            MENUITEM SEPARATOR
-            POPUP "&Guide"
-            BEGIN
-                MENUITEM "PLACEHOLDER",                 IDC_FIRST_PLACES_MENU_ID
-
-            END
-            MENUITEM SEPARATOR            
-        END
+		MENUITEM "&Bookmarks\tCtrl+B",  ID_HOTLIST_VIEW
         MENUITEM "&History\tCtrl+H",            ID_GO_HISTORY
         MENUITEM "&Java Console",               ID_OPTIONS_SHOWJAVACONSOLE
 #ifdef MOZ_SECURITY
