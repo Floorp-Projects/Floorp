@@ -1009,6 +1009,9 @@ nsDragService::SourceEndDrag(void)
 {
     // this just releases the list of data items that we provide
     mSourceDataItems = 0;
+
+    // Inform the drag session that we're ending the drag.
+    EndDragSession();
 }
 
 static void
