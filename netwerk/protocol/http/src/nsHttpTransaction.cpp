@@ -38,7 +38,8 @@
 //-----------------------------------------------------------------------------
 
 nsHttpTransaction::nsHttpTransaction(nsIStreamListener *listener,
-                                     nsIInterfaceRequestor *callbacks)
+                                     nsIInterfaceRequestor *callbacks,
+                                     PRUint8 caps)
     : mListener(listener)
     , mCallbacks(callbacks)
     , mConnection(nsnull)
@@ -49,6 +50,7 @@ nsHttpTransaction::nsHttpTransaction(nsIStreamListener *listener,
     , mTransactionDone(0)
     , mStatus(NS_OK)
     , mRestartCount(0)
+    , mCapabilities(caps)
     , mHaveStatusLine(PR_FALSE)
     , mHaveAllHeaders(PR_FALSE)
     , mFiredOnStart(PR_FALSE)

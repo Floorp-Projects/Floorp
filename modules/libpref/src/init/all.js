@@ -288,11 +288,28 @@ pref("network.http.keep-alive", true); // set it to false in case of problems
 pref("network.http.proxy.keep-alive", true );
 pref("network.http.keep-alive.timeout", 300);
 
-pref("network.http.max-connections", 16);
-pref("network.http.max-connections-per-server", 8);
-pref("network.http.keep-alive.max-connections", 20); // max connections to be kept alive
-pref("network.http.keep-alive.max-connections-per-server", 8);
+// limit the absolute number of http connections.
+pref("network.http.max-connections", 24);
 
+// limit the absolute number of http connections that can be established per
+// host.  if a http proxy server is enabled, then the "server" is the proxy
+// server.  Otherwise, "server" is the http origin server.
+pref("network.http.max-connections-per-server", 8);
+
+// if network.http.keep-alive is true, then a new connection will only be
+// attempted if the number of active connections to a host is less then
+// network.http.max-persistent-connections-per-server.  if a http proxy server
+// is enabled, then the "server" is the proxy server.  Otherwise, "server" is
+// the http origin server.
+pref("network.http.max-persistent-connections-per-server", 2);
+
+// amount of time (in seconds) to suspend pending requests, before spawning a
+// new connection, once the limit on the number of persistent connections per
+// host has been reached.  however, a new connection will not be created if the
+// limit on the number of connections per host has also been reached.
+pref("network.http.request.max-start-delay", 10);
+
+// http specific network timeouts (XXX currently unused)
 pref("network.http.connect.timeout",  30);	// in seconds
 pref("network.http.request.timeout", 120);	// in seconds
 

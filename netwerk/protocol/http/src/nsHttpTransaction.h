@@ -52,7 +52,7 @@ public:
     NS_DECL_NSIINPUTSTREAM
 
     // A transaction is constructed from request headers.
-    nsHttpTransaction(nsIStreamListener *, nsIInterfaceRequestor *);
+    nsHttpTransaction(nsIStreamListener *, nsIInterfaceRequestor *, PRUint8 caps);
     virtual ~nsHttpTransaction();
 
     nsrefcnt RefCnt() { return mRefCnt; }
@@ -75,6 +75,7 @@ public:
     nsISupports           *SecurityInfo()   { return mSecurityInfo; }
     PRBool                 IsDone()         { return mTransactionDone; }
     nsresult               Status()         { return mStatus; } 
+    PRUint8                Capabilities()   { return mCapabilities; }
 
     // Called to take ownership of the response headers; the transaction
     // will drop any reference to the response headers after this call.
@@ -127,6 +128,7 @@ private:
     nsresult                        mStatus;
 
     PRUint16                        mRestartCount;    // the number of times this transaction has been restarted
+    PRUint8                         mCapabilities;
 
     PRPackedBool                    mHaveStatusLine;
     PRPackedBool                    mHaveAllHeaders;
