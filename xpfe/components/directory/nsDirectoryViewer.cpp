@@ -389,7 +389,15 @@ nsHTTPIndexParser::OnStartRequest(nsIChannel* aChannel, nsISupports* aContext)
   rv = mDirectoryURI->GetSpec(getter_Copies(uristr));
   if (NS_FAILED(rv)) return rv;
 
-  rv = gRDF->GetResource(uristr, getter_AddRefs(mDirectory));
+  // we know that this is a directory (due to being a HTTP-INDEX response)
+  // so ensure it ends with a slash if its a FTP URL
+  nsAutoString	fullURI(uristr);
+  if ((fullURI.Find("ftp://", PR_TRUE) == 0) && (fullURI.Last() != (PRUnichar('/'))))
+  {
+  	fullURI.AppendWithConversion('/');
+  }
+
+  rv = gRDF->GetUnicodeResource(fullURI.GetUnicode(), getter_AddRefs(mDirectory));
   if (NS_FAILED(rv)) return rv;
 
   NS_WITH_SERVICE(nsIRDFContainerUtils, rdfc, "component://netscape/rdf/container-utils", &rv);
