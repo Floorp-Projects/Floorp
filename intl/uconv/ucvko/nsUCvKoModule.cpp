@@ -41,6 +41,7 @@
 #include "nsUnicodeToEUCKR.h"
 #include "nsUnicodeToKSC5601.h"
 #include "nsUnicodeToX11Johab.h"
+#include "nsUnicodeToJohab.h"
 
 //----------------------------------------------------------------------------
 // Global functions and data [declaration]
@@ -74,11 +75,13 @@ NS_UCONV_REG_UNREG(nsEUCKRToUnicode, "EUC-KR", "Unicode" , NS_EUCKRTOUNICODE_CID
 NS_UCONV_REG_UNREG(nsUnicodeToEUCKR, "Unicode", "EUC-KR",  NS_UNICODETOEUCKR_CID);
 NS_UCONV_REG_UNREG(nsUnicodeToKSC5601, "Unicode", "ks_c_5601-1987",  NS_UNICODETOKSC5601_CID);
 NS_UCONV_REG_UNREG(nsUnicodeToX11Johab, "Unicode", "x-x11johab",  NS_UNICODETOX11JOHAB_CID);
+NS_UCONV_REG_UNREG(nsUnicodeToJohab, "Unicode", "x-johab",  NS_UNICODETOJOHAB_CID);
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsEUCKRToUnicode);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsUnicodeToEUCKR);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsUnicodeToKSC5601);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsUnicodeToX11Johab);
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsUnicodeToJohab);
 
 static nsModuleComponentInfo components[] = 
 {
@@ -105,6 +108,12 @@ static nsModuleComponentInfo components[] =
     NS_UNICODEENCODER_CONTRACTID_BASE "x-x11johab",
     nsUnicodeToX11JohabConstructor,
     nsUnicodeToX11JohabRegSelf, nsUnicodeToX11JohabUnRegSelf
+  },
+  { 
+    ENCODER_NAME_BASE "x-johab" , NS_UNICODETOJOHAB_CID, 
+    NS_UNICODEENCODER_CONTRACTID_BASE "x-johab",
+    nsUnicodeToJohabConstructor,
+    nsUnicodeToJohabRegSelf, nsUnicodeToJohabUnRegSelf
   }
 };
 
