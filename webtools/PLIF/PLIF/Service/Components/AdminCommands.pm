@@ -126,8 +126,8 @@ sub outputSetupProgress {
 # dispatcher.output
 sub strings {
     return (
-            'setup' => 'The message given at the end of the setup command (only required for stdout, since it is the only way to trigger setup); data.failed is a boolean, data.result is the error message if any',
-            'setup.progress' => 'Progress messages given during setup (only required for stdout); data.component is a dotted hierarchical string giving progressively more detail about what is being set up. e.g., \'database\', \'database.default.settings\', \'database.default.settings.connection.port\'. If outputters are interpreting data.component then any trailing unknown levels of detail should be ignored.',
+            'setup' => 'The message given at the end of the setup command (only required for stdout, since it is the only way to trigger setup); failed is a boolean, result is the error message if any',
+            'setup.progress' => 'Progress messages given during setup (only required for stdout); component is a dotted hierarchical string giving progressively more detail about what is being set up. e.g., \'database\', \'database.default.settings\', \'database.default.settings.connection.port\'. If outputters are interpreting component then any trailing unknown levels of detail should be ignored.',
             );
 }
 
@@ -137,9 +137,9 @@ sub getDefaultString {
     my($app, $protocol, $string) = @_;
     if ($protocol eq 'stdout') {
         if ($string eq 'setup') {
-            return ('COSES', '1', '<text xmlns="http://bugzilla.mozilla.org/coses"><if lvalue="(data.failed)" condition="=" rvalue="1">Can\'t continue: argument <text value="(data.result)"/> is missing.</if><else>Succeeded!</else><br/></text>');
+            return ('COSES', '1', '<text xmlns="http://bugzilla.mozilla.org/coses"><if lvalue="(failed)" condition="=" rvalue="1">Can\'t continue: argument <text value="(result)"/> is missing.</if><else>Succeeded!</else><br/></text>');
         } elsif ($string eq 'setup.progress') {
-            return ('COSES', '1', '<text xmlns="http://bugzilla.mozilla.org/coses">Setup: configuring <text value="(data.component)"/>...<br/></text>');
+            return ('COSES', '1', '<text xmlns="http://bugzilla.mozilla.org/coses">Setup: <text value="(component)"/>...<br/></text>');
         }
     }
     return; # nope, sorry

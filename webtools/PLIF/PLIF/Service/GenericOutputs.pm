@@ -80,13 +80,13 @@ sub getDefaultString {
     }
     if ($protocol eq 'stdout') {
         if ($string eq 'request') {
-            return ('COSES', '1', '<text xmlns="http://bugzilla.mozilla.org/coses">\'<text value="(data.argument)"/>\'<if lvalue="(data.defaults.length)" condition=">" rvalue="0"> (default: \'<set variable="default" value="(data.defaults)" source="keys" order="default"><text value="(data.defaults.(default))"/><if lvalue="(default)" condition="!=" rvalue="0">\', \'</if></set>\')</if>? </text>');
+            return ('COSES', '1', '<text xmlns="http://bugzilla.mozilla.org/coses">\'<text value="(argument)"/>\'<if lvalue="(defaults.length)" condition=">" rvalue="0"> (default: \'<set variable="default" value="(defaults)" source="keys" order="default"><text value="(defaults.(default))"/><if lvalue="(default)" condition="!=" rvalue="0">\', \'</if></set>\')</if>? </text>');
         } elsif ($string eq 'error') {
-            return ('COSES', '1', '<text xmlns="http://bugzilla.mozilla.org/coses">Error:<br/><text value="(data.error)"/><br/></text>');
+            return ('COSES', '1', '<text xmlns="http://bugzilla.mozilla.org/coses">Error:<br/><text value="(error)"/><br/></text>');
         }
     } elsif ($protocol eq 'http') {
         if ($string eq 'error') {
-            return ('COSES', '1', '<text xmlns="http://bugzilla.mozilla.org/coses">HTTP/1.1 500 Internal Error<br/>Content-Type: text/plain<br/><br/>Error:<br/><text value="(data.error)"/></text>');
+            return ('COSES', '1', '<text xmlns="http://bugzilla.mozilla.org/coses">HTTP/1.1 500 Internal Error<br/>Content-Type: text/plain<br/><br/>Error:<br/><text value="(error)"/></text>');
         }
     }
     return; # nope, sorry

@@ -223,7 +223,7 @@ sub getDefaultString {
     my($app, $protocol, $string) = @_;
     if ($protocol eq 'stdout') {
         if ($string eq 'setup.newStringsReport') {
-            return ('COSES', '1', '<text>Note: The following strings have had their defaults updated since you last customised them:<br/><set variable="string" value="(data.oldStrings)" source="values" order="lexical"><text value="string (string.3) in variant (string.1)"/> (<text value="protocol (string.2)"/>): yours=<text value="(string.4)"/>, new=<text value="(string.5)"/><br/></set></text>')
+            return ('COSES', '1', '<text>Note: The following strings have had their defaults updated since you last customised them:<br/><set variable="string" value="(oldStrings)" source="values" order="lexical"><text value="string (string.3) in variant (string.1)"/> (<text value="protocol (string.2)"/>): yours=<text value="(string.4)"/>, new=<text value="(string.5)"/><br/></set></text>')
         }
     }
     return; # nope, sorry

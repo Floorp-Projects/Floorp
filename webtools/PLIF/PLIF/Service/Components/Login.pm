@@ -243,11 +243,11 @@ sub outputLoginDetails {
 # dispatcher.output
 sub strings {
     return (
-            'login.accessDenied' => 'Displayed when the user does not have the requisite right (namely, data.right).',
-            'login.failed' => 'Displayed when the user has not logged in (data.tried is false) or when the credentials were wrong (data.tried is true). A message may be given in data.message.',
+            'login.accessDenied' => 'Displayed when the user does not have the requisite right (namely, right).',
+            'login.failed' => 'Displayed when the user has not logged in (tried is false) or when the credentials were wrong (tried is true). A message may be given in message.',
             'login.requestAccount' => 'Displayed when the user requests the form to enter a new account (should display the same form as login.failed, basically).',
-            'login.detailsSent' => 'The password was sent to data.address using data.protocol.',
-            'login.details' => 'The message containing the data.username and data.password of a new account or when the user has forgotten his password (only required for contact protocols, e.g. e-mail).',
+            'login.detailsSent' => 'The password was sent to address using protocol.',
+            'login.details' => 'The message containing the username and password of a new account or when the user has forgotten his password (only required for contact protocols, e.g. e-mail).',
             );
 }
 
