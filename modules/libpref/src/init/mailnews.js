@@ -133,6 +133,7 @@ pref("mail.addr_book.quicksearchquery.format","?(or(PrimaryEmail,c,@V)(DisplayNa
 pref("mail.addr_book.lastnamefirst", 0); 
 pref("mail.addr_book.displayName.autoGeneration", true);
 pref("mail.addr_book.displayName.lastnamefirst", false); // generate display names in last first order
+pref("mail.addr_book.show_phonetic_fields", "chrome://messenger/locale/messenger.properties");
 pref("mail.attach_vcard",                   false);
 pref("mail.html_compose",                   true);
 pref("mail.compose.other.header",	    "");
@@ -190,6 +191,9 @@ pref("mailnews.autolookup_unknown_mime_types",  true);
 pref("mailnews.send_default_charset",       "chrome://messenger/locale/messenger.properties");
 pref("mailnews.view_default_charset",       "chrome://messenger/locale/messenger.properties");
 pref("mailnews.force_charset_override",     false);
+
+pref("mailnews.search_date_format",        "chrome://messenger/locale/messenger.properties");
+pref("mailnews.search_date_separator",     "chrome://messenger/locale/messenger.properties");
 
 pref("mailnews.language_sensitive_font",    true);
 
