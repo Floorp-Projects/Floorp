@@ -1344,12 +1344,12 @@ AC_MSG_CHECKING("for PR_GetCurrentThread in -lnspr3 with thread lib")
 AC_MSG_RESULT("$result")
 fi
 
-dnl AC_CHECK_LIB(nspr3, PR_GetUniqueIdentity, NSPR_LIBS="-lnspr21 $NSPR_LIBS",
+dnl AC_CHECK_LIB(nspr3, PR_GetUniqueIdentity, NSPR_LIBS="-lnspr3 $NSPR_LIBS",
 dnl	[MISSING_NSPR="$MISSING_NSPR -lnspr3"], $NSPR_LIBS)
 
-AC_CHECK_LIB(plc3, PL_CreateOptState, NSPR_LIBS="-lplc21 $NSPR_LIBS",
+AC_CHECK_LIB(plc3, PL_CreateOptState, NSPR_LIBS="-lplc3 $NSPR_LIBS",
 	[MISSING_NSPR="$MISSING_NSPR -lplc3"], $NSPR_LIBS)
-AC_CHECK_LIB(plds3, PL_GetEvent, NSPR_LIBS="-lplds21 $NSPR_LIBS",
+AC_CHECK_LIB(plds3, PL_GetEvent, NSPR_LIBS="-lplds3 $NSPR_LIBS",
 	[MISSING_NSPR="$MISSING_NSPR -lplds3"], $NSPR_LIBS)
 
 CFLAGS=$_SAVE_CFLAGS
