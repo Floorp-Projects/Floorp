@@ -40,6 +40,23 @@ function MsgNewMessage()
 	NewMessage();
 } 
 
+function MsgDeleteMessage()
+{
+	dump("\nMsgDeleteMessage from XUL\n");
+	var tree = frames[0].document.getElementById('threadTree')
+	if(tree)
+		dump("tree is valid\n")
+	var appCore = new MsgAppCore();
+	if (appCore != null) {
+		appCore.Init("MsgAppCore");
+		appCore.SetWindow(window);
+		dump("\nAppcore isn't null in MsgDeleteMessage\n")
+		var NodeList = tree.getElementsByAttribute("selected", "true");
+		appCore.DeleteMessage(tree, NodeList);
+	}
+
+}
+
 function MsgNewFolder() {}
 function MsgOpenAttachment() {}
 function MsgSaveAsFile() {}
@@ -61,7 +78,6 @@ function MsgEditRedo() {}
 function MsgEditCut() {}
 function MsgEditCopy() {}
 function MsgEditPaste() {}
-function MsgDeleteMessage() {}
 function MsgSelectAll() {}
 function MsgSelectThread() {}
 function MsgSelectFlaggedMsg() {}

@@ -322,7 +322,7 @@
 	  <titledbutton src="resource:/res/toolbar/Mail_Forward.gif" align="bottom" value="Forward" onclick="MsgForwardMessage()">
 	  </titledbutton>
 
-	  <titledbutton src="resource:/res/samples/delmsg.gif" align="bottom" value="Delete" onclick="MsgLoadNewsMessage('')">
+	  <titledbutton src="resource:/res/samples/delmsg.gif" align="bottom" value="Delete" onclick="MsgDeleteMessage()">
 
 	  </titledbutton>
 
@@ -339,7 +339,7 @@
 </html:div>
 
 <html:div id="thread">
-<html:iframe align=right src="threadPane.xul" name="browser.foo" width="650" height="370" > </html:iframe>
+<html:iframe align=right src="threadPane.xul" id="threadPane" width="650" height="370" > </html:iframe>
 </html:div>
 
 <html:div id="message">
