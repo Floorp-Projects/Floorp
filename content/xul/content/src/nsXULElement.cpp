@@ -1938,21 +1938,20 @@ nsXULElement::InsertChildAt(nsIContent* aKid, PRUint32 aIndex, PRBool aNotify,
         return NS_ERROR_FAILURE;
 
     NS_ADDREF(aKid);
-    aKid->SetParent(NS_STATIC_CAST(nsIStyledContent*, this));
+    aKid->SetParent(this);
     //nsRange::OwnerChildInserted(this, aIndex);
 
     aKid->SetDocument(mDocument, aDeepSetDocument, PR_TRUE);
 
-    if (mDocument && HasMutationListeners(NS_STATIC_CAST(nsIStyledContent*,this),
+    if (mDocument && HasMutationListeners(this,
                                           NS_EVENT_BITS_MUTATION_NODEINSERTED)) {
-      nsCOMPtr<nsIDOMEventTarget> node(do_QueryInterface(aKid));
       nsMutationEvent mutation;
       mutation.eventStructType = NS_MUTATION_EVENT;
       mutation.message = NS_MUTATION_NODEINSERTED;
-      mutation.mTarget = node;
+      mutation.mTarget = do_QueryInterface(aKid);
 
-      nsCOMPtr<nsIDOMNode> relNode(do_QueryInterface(NS_STATIC_CAST(nsIStyledContent*,this)));
-      mutation.mRelatedNode = relNode;
+      mutation.mRelatedNode =
+          do_QueryInterface(NS_STATIC_CAST(nsIStyledContent*, this));
 
       nsEventStatus status = nsEventStatus_eIgnore;
       aKid->HandleDOMEvent(nsnull, &mutation, nsnull, NS_EVENT_FLAG_INIT, &status);
@@ -1985,19 +1984,32 @@ nsXULElement::ReplaceChildAt(nsIContent* aKid, PRUint32 aIndex, PRBool aNotify,
     if (oldKid == aKid)
         return NS_OK;
 
-    //XXXbz should this fire DOMSubtreeModified?
     mozAutoDocUpdate updateBatch(mDocument, UPDATE_CONTENT_MODEL, aNotify);
     
     PRBool replaceOk = mChildren.ReplaceElementAt(aKid, aIndex);
     if (replaceOk) {
         NS_ADDREF(aKid);
-        aKid->SetParent(NS_STATIC_CAST(nsIStyledContent*, this));
+        aKid->SetParent(this);
         //nsRange::OwnerChildReplaced(this, aIndex, oldKid);
 
-        aKid->SetDocument(mDocument, aDeepSetDocument, PR_TRUE);
+        if (mDocument) {
+            aKid->SetDocument(mDocument, aDeepSetDocument, PR_TRUE);
 
-        if (aNotify && mDocument) {
-            mDocument->ContentReplaced(NS_STATIC_CAST(nsIStyledContent*, this), oldKid, aKid, aIndex);
+            if (aNotify) {
+                mDocument->ContentReplaced(this, oldKid, aKid, aIndex);
+            }
+            if (HasMutationListeners(this,
+                                     NS_EVENT_BITS_MUTATION_SUBTREEMODIFIED)) {
+                nsMutationEvent mutation;
+                mutation.eventStructType = NS_MUTATION_EVENT;
+                mutation.message = NS_MUTATION_SUBTREEMODIFIED;
+                mutation.mTarget = do_QueryInterface(NS_STATIC_CAST(nsIStyledContent*, this));
+                mutation.mRelatedNode = do_QueryInterface(oldKid);
+                
+                nsEventStatus status = nsEventStatus_eIgnore;
+                HandleDOMEvent(nsnull, &mutation, nsnull,
+                               NS_EVENT_FLAG_INIT, &status);
+            }
         }
 
         // This will cause the script object to be unrooted for each
@@ -2025,29 +2037,31 @@ nsXULElement::AppendChildTo(nsIContent* aKid, PRBool aNotify, PRBool aDeepSetDoc
     PRBool appendOk = mChildren.AppendElement(aKid);
     if (appendOk) {
         NS_ADDREF(aKid);
-        aKid->SetParent(NS_STATIC_CAST(nsIStyledContent*, this));
+        aKid->SetParent(this);
         // ranges don't need adjustment since new child is at end of list
 
-        aKid->SetDocument(mDocument, aDeepSetDocument, PR_TRUE);
+        if (mDocument) {
+            aKid->SetDocument(mDocument, aDeepSetDocument, PR_TRUE);
 
-        if (mDocument && HasMutationListeners(NS_STATIC_CAST(nsIStyledContent*,this),
-                                              NS_EVENT_BITS_MUTATION_NODEINSERTED)) {
-          nsCOMPtr<nsIDOMEventTarget> node(do_QueryInterface(aKid));
-          nsMutationEvent mutation;
-          mutation.eventStructType = NS_MUTATION_EVENT;
-          mutation.message = NS_MUTATION_NODEINSERTED;
-          mutation.mTarget = node;
+            if (aNotify) {
+                mDocument->ContentAppended(this, mChildren.Count() - 1);
+            }
+        
+            if (HasMutationListeners(this,
+                                     NS_EVENT_BITS_MUTATION_NODEINSERTED)) {
+                nsMutationEvent mutation;
+                mutation.eventStructType = NS_MUTATION_EVENT;
+                mutation.message = NS_MUTATION_NODEINSERTED;
+                mutation.mTarget = do_QueryInterface(aKid);
 
-          nsCOMPtr<nsIDOMNode> relNode(do_QueryInterface(NS_STATIC_CAST(nsIStyledContent*,this)));
-          mutation.mRelatedNode = relNode;
+                mutation.mRelatedNode =
+                    do_QueryInterface(NS_STATIC_CAST(nsIStyledContent*, this));
 
-          nsEventStatus status = nsEventStatus_eIgnore;
-          aKid->HandleDOMEvent(nsnull, &mutation, nsnull, NS_EVENT_FLAG_INIT, &status);
+                nsEventStatus status = nsEventStatus_eIgnore;
+                aKid->HandleDOMEvent(nsnull, &mutation, nsnull, NS_EVENT_FLAG_INIT, &status);
+            }
         }
 
-        if (aNotify && mDocument) {
-            mDocument->ContentAppended(NS_STATIC_CAST(nsIStyledContent*, this), mChildren.Count() - 1);
-        }
     }
     return NS_OK;
 }
@@ -2065,15 +2079,14 @@ nsXULElement::RemoveChildAt(PRUint32 aIndex, PRBool aNotify)
 
     mozAutoDocUpdate updateBatch(mDocument, UPDATE_CONTENT_MODEL, aNotify);
 
-    if (HasMutationListeners(NS_STATIC_CAST(nsIStyledContent*,this), NS_EVENT_BITS_MUTATION_NODEREMOVED)) {
-      nsCOMPtr<nsIDOMEventTarget> node(do_QueryInterface(oldKid));
+    if (HasMutationListeners(this, NS_EVENT_BITS_MUTATION_NODEREMOVED)) {
       nsMutationEvent mutation;
       mutation.eventStructType = NS_MUTATION_EVENT;
       mutation.message = NS_MUTATION_NODEREMOVED;
-      mutation.mTarget = node;
+      mutation.mTarget = do_QueryInterface(oldKid);
 
-      nsCOMPtr<nsIDOMNode> relNode(do_QueryInterface(NS_STATIC_CAST(nsIStyledContent*,this)));
-      mutation.mRelatedNode = relNode;
+      mutation.mRelatedNode =
+          do_QueryInterface(NS_STATIC_CAST(nsIStyledContent*, this));
 
       nsEventStatus status = nsEventStatus_eIgnore;
       oldKid->HandleDOMEvent(nsnull, &mutation, nsnull, NS_EVENT_FLAG_INIT, &status);
@@ -2141,11 +2154,10 @@ nsXULElement::RemoveChildAt(PRUint32 aIndex, PRBool aNotify)
     }
 
     if (oldKid) {
-        nsIDocument* doc = mDocument;
         PRBool removeOk = mChildren.RemoveElementAt(aIndex);
         //nsRange::OwnerChildRemoved(this, aIndex, oldKid);
         if (aNotify && removeOk && mDocument) {
-            doc->ContentRemoved(NS_STATIC_CAST(nsIStyledContent*, this), oldKid, aIndex);
+            mDocument->ContentRemoved(this, oldKid, aIndex);
         }
 
         if (newCurrentIndex == -2)
@@ -2398,11 +2410,10 @@ nsXULElement::FinishSetAttr(PRInt32 aAttrNS, nsIAtom* aAttrName,
         binding->AttributeChanged(aAttrName, aAttrNS, PR_FALSE, aNotify);
 
       if (HasMutationListeners(NS_STATIC_CAST(nsIStyledContent*, this), NS_EVENT_BITS_MUTATION_ATTRMODIFIED)) {
-        nsCOMPtr<nsIDOMEventTarget> node(do_QueryInterface(NS_STATIC_CAST(nsIStyledContent*, this)));
         nsMutationEvent mutation;
         mutation.eventStructType = NS_MUTATION_EVENT;
         mutation.message = NS_MUTATION_ATTRMODIFIED;
-        mutation.mTarget = node;
+        mutation.mTarget = do_QueryInterface(NS_STATIC_CAST(nsIStyledContent*, this));
 
         nsAutoString attrName2;
         aAttrName->ToString(attrName2);
@@ -2644,12 +2655,11 @@ nsXULElement::UnsetAttr(PRInt32 aNameSpaceID,
     // Fire mutation listeners
     if (HasMutationListeners(NS_STATIC_CAST(nsIStyledContent*, this),
                              NS_EVENT_BITS_MUTATION_ATTRMODIFIED)) {
-        // XXXwaterson ugh, why do we QI() on ourself?
-        nsCOMPtr<nsIDOMEventTarget> node(do_QueryInterface(NS_STATIC_CAST(nsIStyledContent*, this)));
         nsMutationEvent mutation;
         mutation.eventStructType = NS_MUTATION_EVENT;
         mutation.message = NS_MUTATION_ATTRMODIFIED;
-        mutation.mTarget = node;
+        mutation.mTarget =
+            do_QueryInterface(NS_STATIC_CAST(nsIStyledContent*, this));
 
         nsAutoString attrName2;
         aName->ToString(attrName2);

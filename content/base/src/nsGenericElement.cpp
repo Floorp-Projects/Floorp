@@ -2491,6 +2491,160 @@ nsGenericElement::DoneCreatingElement()
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsGenericElement::InsertChildAt(nsIContent* aKid,
+                                PRUint32 aIndex,
+                                PRBool aNotify,
+                                PRBool aDeepSetDocument)
+{
+  NS_PRECONDITION(aKid, "null ptr");
+  mozAutoDocUpdate updateBatch(mDocument, UPDATE_CONTENT_MODEL, aNotify);
+  
+  if (!InternalInsertChildAt(aKid, aIndex)) {
+    return NS_OK;
+  }
+
+  NS_ADDREF(aKid);
+  aKid->SetParent(this);
+  nsRange::OwnerChildInserted(this, aIndex);
+  if (mDocument) {
+    aKid->SetDocument(mDocument, aDeepSetDocument, PR_TRUE);
+    if (aNotify) {
+      mDocument->ContentInserted(this, aKid, aIndex);
+    }
+
+    if (HasMutationListeners(this, NS_EVENT_BITS_MUTATION_NODEINSERTED)) {
+      nsMutationEvent mutation;
+      mutation.eventStructType = NS_MUTATION_EVENT;
+      mutation.message = NS_MUTATION_NODEINSERTED;
+      mutation.mTarget = do_QueryInterface(aKid);
+      mutation.mRelatedNode = do_QueryInterface(this);
+
+      nsEventStatus status = nsEventStatus_eIgnore;
+      aKid->HandleDOMEvent(nsnull, &mutation, nsnull, NS_EVENT_FLAG_INIT, &status);
+    }
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsGenericElement::ReplaceChildAt(nsIContent* aKid,
+                                 PRUint32 aIndex,
+                                 PRBool aNotify,
+                                 PRBool aDeepSetDocument)
+{
+  NS_PRECONDITION(aKid, "null ptr");
+  nsIContent* oldKid = GetChildAt(aIndex);
+  mozAutoDocUpdate updateBatch(mDocument, UPDATE_CONTENT_MODEL, aNotify);
+
+  nsRange::OwnerChildReplaced(this, aIndex, oldKid);
+  if (!InternalReplaceChildAt(aKid, aIndex)) {
+    return NS_OK;
+  }
+  
+  NS_ADDREF(aKid);
+  aKid->SetParent(this);
+  if (mDocument) {
+    aKid->SetDocument(mDocument, aDeepSetDocument, PR_TRUE);
+    if (aNotify) {
+      mDocument->ContentReplaced(this, oldKid, aKid, aIndex);
+    }
+    if (HasMutationListeners(this, NS_EVENT_BITS_MUTATION_SUBTREEMODIFIED)) {
+      nsMutationEvent mutation;
+      mutation.eventStructType = NS_MUTATION_EVENT;
+      mutation.message = NS_MUTATION_SUBTREEMODIFIED;
+      mutation.mTarget = do_QueryInterface(this);
+      mutation.mRelatedNode = do_QueryInterface(oldKid);
+    
+      nsEventStatus status = nsEventStatus_eIgnore;
+      HandleDOMEvent(nsnull, &mutation, nsnull,
+                     NS_EVENT_FLAG_INIT, &status);
+    }
+  }
+
+  if (oldKid) {
+    oldKid->SetDocument(nsnull, PR_TRUE, PR_TRUE);
+    oldKid->SetParent(nsnull);
+    NS_RELEASE(oldKid);
+  }
+  
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsGenericElement::AppendChildTo(nsIContent* aKid, PRBool aNotify,
+                                PRBool aDeepSetDocument)
+{
+  NS_PRECONDITION(aKid && this != aKid, "null ptr");
+  mozAutoDocUpdate updateBatch(mDocument, UPDATE_CONTENT_MODEL, aNotify);
+  
+  if (!InternalAppendChildTo(aKid)) {
+    return NS_OK;
+  }
+  
+  NS_ADDREF(aKid);
+  aKid->SetParent(this);
+  // ranges don't need adjustment since new child is at end of list
+  if (mDocument) {
+    aKid->SetDocument(mDocument, aDeepSetDocument, PR_TRUE);
+    if (aNotify) {
+      mDocument->ContentAppended(this, GetChildCount() - 1);
+    }
+
+    if (HasMutationListeners(this, NS_EVENT_BITS_MUTATION_NODEINSERTED)) {
+      nsMutationEvent mutation;
+      mutation.eventStructType = NS_MUTATION_EVENT;
+      mutation.message = NS_MUTATION_NODEINSERTED;
+      mutation.mTarget = do_QueryInterface(aKid);
+      mutation.mRelatedNode = do_QueryInterface(this);
+
+      nsEventStatus status = nsEventStatus_eIgnore;
+      aKid->HandleDOMEvent(nsnull, &mutation, nsnull, NS_EVENT_FLAG_INIT, &status);
+    }
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsGenericElement::RemoveChildAt(PRUint32 aIndex, PRBool aNotify)
+{
+  nsIContent* oldKid = GetChildAt(aIndex);
+  if (oldKid) {
+    mozAutoDocUpdate updateBatch(mDocument, UPDATE_CONTENT_MODEL, aNotify);
+
+    if (HasMutationListeners(this, NS_EVENT_BITS_MUTATION_NODEREMOVED)) {
+      nsMutationEvent mutation;
+      mutation.eventStructType = NS_MUTATION_EVENT;
+      mutation.message = NS_MUTATION_NODEREMOVED;
+      mutation.mTarget = do_QueryInterface(oldKid);
+
+      mutation.mRelatedNode = do_QueryInterface(this);
+
+      nsEventStatus status = nsEventStatus_eIgnore;
+      oldKid->HandleDOMEvent(nsnull, &mutation, nsnull,
+                             NS_EVENT_FLAG_INIT, &status);
+    }
+
+    nsRange::OwnerChildRemoved(this, aIndex, oldKid);
+
+    if (!InternalRemoveChildAt(aIndex)) {
+      return NS_OK;
+    }
+    
+    if (aNotify && mDocument) {
+      mDocument->ContentRemoved(this, oldKid, aIndex);
+    }
+    
+    oldKid->SetDocument(nsnull, PR_TRUE, PR_TRUE);
+    oldKid->SetParent(nsnull);
+    NS_RELEASE(oldKid);
+  }
+
+  return NS_OK;
+}
+
+
+
 //----------------------------------------------------------------------
 
 // Generic DOMNode implementations
@@ -3822,154 +3976,4 @@ nsGenericContainerElement::IndexOf(nsIContent* aPossibleChild) const
   NS_PRECONDITION(nsnull != aPossibleChild, "null ptr");
 
   return mChildren.IndexOf(aPossibleChild);
-}
-
-nsresult
-nsGenericContainerElement::InsertChildAt(nsIContent* aKid,
-                                         PRUint32 aIndex,
-                                         PRBool aNotify,
-                                         PRBool aDeepSetDocument)
-{
-  NS_PRECONDITION(nsnull != aKid, "null ptr");
-  nsIDocument* doc = mDocument;
-  mozAutoDocUpdate updateBatch(doc, UPDATE_CONTENT_MODEL, aNotify);
-
-  PRBool rv = mChildren.InsertElementAt(aKid, aIndex);/* XXX fix up void array api to use nsresult's*/
-  if (rv) {
-    NS_ADDREF(aKid);
-    aKid->SetParent(this);
-    nsRange::OwnerChildInserted(this, aIndex);
-    if (nsnull != doc) {
-      aKid->SetDocument(doc, aDeepSetDocument, PR_TRUE);
-      if (aNotify) {
-        doc->ContentInserted(this, aKid, aIndex);
-      }
-
-      if (HasMutationListeners(this, NS_EVENT_BITS_MUTATION_NODEINSERTED)) {
-        nsCOMPtr<nsIDOMEventTarget> node(do_QueryInterface(aKid));
-        nsMutationEvent mutation;
-        mutation.eventStructType = NS_MUTATION_EVENT;
-        mutation.message = NS_MUTATION_NODEINSERTED;
-        mutation.mTarget = node;
-
-        nsCOMPtr<nsIDOMNode> relNode(do_QueryInterface(NS_STATIC_CAST(nsIContent *, this)));
-        mutation.mRelatedNode = relNode;
-
-        nsEventStatus status = nsEventStatus_eIgnore;
-        aKid->HandleDOMEvent(nsnull, &mutation, nsnull,
-                             NS_EVENT_FLAG_INIT, &status);
-      }
-    }
-  }
-  
-  return NS_OK;
-}
-
-nsresult
-nsGenericContainerElement::ReplaceChildAt(nsIContent* aKid,
-                                          PRUint32 aIndex,
-                                          PRBool aNotify,
-                                          PRBool aDeepSetDocument)
-{
-  NS_PRECONDITION(nsnull != aKid, "null ptr");
-  nsIDocument* doc = mDocument;
-  mozAutoDocUpdate updateBatch(doc, UPDATE_CONTENT_MODEL, aNotify);
-  
-  nsIContent* oldKid = (nsIContent *)mChildren.ElementAt(aIndex);
-  nsRange::OwnerChildReplaced(this, aIndex, oldKid);
-  PRBool rv = mChildren.ReplaceElementAt(aKid, aIndex);
-  if (rv) {
-    NS_ADDREF(aKid);
-    aKid->SetParent(this);
-    if (nsnull != doc) {
-      aKid->SetDocument(doc, aDeepSetDocument, PR_TRUE);
-      if (aNotify) {
-        doc->ContentReplaced(this, oldKid, aKid, aIndex);
-      }
-    }
-    oldKid->SetDocument(nsnull, PR_TRUE, PR_TRUE);
-    oldKid->SetParent(nsnull);
-    NS_RELEASE(oldKid);
-  }
-  
-  return NS_OK;
-}
-
-nsresult
-nsGenericContainerElement::AppendChildTo(nsIContent* aKid, PRBool aNotify,
-                                         PRBool aDeepSetDocument)
-{
-  NS_PRECONDITION(nsnull != aKid, "null ptr");
-  nsIDocument* doc = mDocument;
-  mozAutoDocUpdate updateBatch(doc, UPDATE_CONTENT_MODEL, aNotify);
-  
-  PRBool rv = mChildren.AppendElement(aKid);
-  if (rv) {
-    NS_ADDREF(aKid);
-    aKid->SetParent(this);
-    // ranges don't need adjustment since new child is at end of list
-    if (doc) {
-      aKid->SetDocument(doc, aDeepSetDocument, PR_TRUE);
-      if (aNotify) {
-        doc->ContentAppended(this, mChildren.Count() - 1);
-      }
-
-      if (HasMutationListeners(this, NS_EVENT_BITS_MUTATION_NODEINSERTED)) {
-        nsCOMPtr<nsIDOMEventTarget> node(do_QueryInterface(aKid));
-        nsMutationEvent mutation;
-        mutation.eventStructType = NS_MUTATION_EVENT;
-        mutation.message = NS_MUTATION_NODEINSERTED;
-        mutation.mTarget = node;
-
-        nsCOMPtr<nsIDOMNode> relNode(do_QueryInterface(NS_STATIC_CAST(nsIContent *, this)));
-        mutation.mRelatedNode = relNode;
-
-        nsEventStatus status = nsEventStatus_eIgnore;
-        aKid->HandleDOMEvent(nsnull, &mutation, nsnull,
-                             NS_EVENT_FLAG_INIT, &status);
-      }
-    }
-  }
-
-  return NS_OK;
-}
-
-nsresult
-nsGenericContainerElement::RemoveChildAt(PRUint32 aIndex, PRBool aNotify)
-{
-  nsIContent* oldKid = (nsIContent *)mChildren.ElementAt(aIndex);
-  if (oldKid) {
-    nsIDocument* doc = mDocument;
-    mozAutoDocUpdate updateBatch(doc, UPDATE_CONTENT_MODEL, aNotify);
-
-    if (HasMutationListeners(this, NS_EVENT_BITS_MUTATION_NODEREMOVED)) {
-      nsCOMPtr<nsIDOMEventTarget> node(do_QueryInterface(oldKid));
-      nsMutationEvent mutation;
-      mutation.eventStructType = NS_MUTATION_EVENT;
-      mutation.message = NS_MUTATION_NODEREMOVED;
-      mutation.mTarget = node;
-
-      nsCOMPtr<nsIDOMNode> relNode(do_QueryInterface(NS_STATIC_CAST(nsIContent *, this)));
-      mutation.mRelatedNode = relNode;
-
-      nsEventStatus status = nsEventStatus_eIgnore;
-      nsCOMPtr<nsIDOMEvent> domEvent;
-      oldKid->HandleDOMEvent(nsnull, &mutation, nsnull,
-                             NS_EVENT_FLAG_INIT, &status);
-    }
-
-    nsRange::OwnerChildRemoved(this, aIndex, oldKid);
-
-    mChildren.RemoveElementAt(aIndex);
-    if (aNotify) {
-      if (doc) {
-        doc->ContentRemoved(this, oldKid, aIndex);
-      }
-    }
-    oldKid->SetDocument(nsnull, PR_TRUE, PR_TRUE);
-    oldKid->SetParent(nsnull);
-    NS_RELEASE(oldKid);
-  }
-
-  return NS_OK;
 }

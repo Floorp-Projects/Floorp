@@ -393,6 +393,16 @@ public:
   NS_IMETHOD GetBaseURL(nsIURI** aBaseURL) const;
   NS_IMETHOD DoneCreatingElement();
 
+  // Declare these here so we can consolidate the implementations.
+  // Subclasses that don't want to implement these should override.
+  NS_IMETHOD InsertChildAt(nsIContent* aKid, PRUint32 aIndex, PRBool aNotify,
+                           PRBool aDeepSetDocument);
+  NS_IMETHOD ReplaceChildAt(nsIContent* aKid, PRUint32 aIndex, PRBool aNotify,
+                            PRBool aDeepSetDocument);
+  NS_IMETHOD AppendChildTo(nsIContent* aKid, PRBool aNotify,
+                           PRBool aDeepSetDocument);
+  NS_IMETHOD RemoveChildAt(PRUint32 aIndex, PRBool aNotify);
+
 
   // nsIStyledContent interface methods
   NS_IMETHOD GetID(nsIAtom** aResult) const;
@@ -580,6 +590,29 @@ public:
   static PLDHashTable sRangeListsHash;
 
 protected:
+  /**
+   * InsertChildAt/ReplaceChildAt/AppendChildTo/RemoveChildAt subclass
+   * hooks.  These methods are called to perform the actual moving
+   * around of content nodes in child lists.  The return value should
+   * be true if something changed, false otherwise.
+   *
+   * These methods should not change the refcount on the kids in question;
+   * that's handled by the
+   * InsertChildAt/ReplaceChildAt/AppendChildTo/RemoveChildAt functions.
+   */
+  virtual PRBool InternalInsertChildAt(nsIContent* aKid, PRUint32 aIndex) {
+    return PR_FALSE;
+  }
+  virtual PRBool InternalReplaceChildAt(nsIContent* aKid, PRUint32 aIndex) {
+    return PR_FALSE;
+  }
+  virtual PRBool InternalAppendChildTo(nsIContent* aKid) {
+    return PR_FALSE;
+  }
+  virtual PRBool InternalRemoveChildAt(PRUint32 aIndex) {
+    return PR_FALSE;
+  }
+
   PRBool HasDOMSlots() const
   {
     return !(mFlagsOrSlots & GENERIC_ELEMENT_DOESNT_HAVE_DOMSLOTS);
@@ -780,14 +813,21 @@ public:
   NS_IMETHOD_(PRUint32) GetChildCount() const;
   NS_IMETHOD_(nsIContent *) GetChildAt(PRUint32 aIndex) const;
   NS_IMETHOD_(PRInt32) IndexOf(nsIContent* aPossibleChild) const;
-  NS_IMETHOD InsertChildAt(nsIContent* aKid, PRUint32 aIndex, PRBool aNotify,
-                           PRBool aDeepSetDocument);
-  NS_IMETHOD ReplaceChildAt(nsIContent* aKid, PRUint32 aIndex, PRBool aNotify,
-                            PRBool aDeepSetDocument);
-  NS_IMETHOD AppendChildTo(nsIContent* aKid, PRBool aNotify,
-                           PRBool aDeepSetDocument);
-  NS_IMETHOD RemoveChildAt(PRUint32 aIndex, PRBool aNotify);
 
+  // Child list modification hooks
+  virtual PRBool InternalInsertChildAt(nsIContent* aKid, PRUint32 aIndex) {
+    return mChildren.InsertElementAt(aKid, aIndex);
+  }
+  virtual PRBool InternalReplaceChildAt(nsIContent* aKid, PRUint32 aIndex) {
+    return mChildren.ReplaceElementAt(aKid, aIndex);
+  }
+  virtual PRBool InternalAppendChildTo(nsIContent* aKid) {
+    return mChildren.AppendElement(aKid);
+  }
+  virtual PRBool InternalRemoveChildAt(PRUint32 aIndex) {
+    return mChildren.RemoveElementAt(aIndex);
+  }
+  
 #ifdef DEBUG
   void ListAttributes(FILE* out) const;
 #endif
