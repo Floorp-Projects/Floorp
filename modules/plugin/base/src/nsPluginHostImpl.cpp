@@ -3671,6 +3671,25 @@ nsPluginTag::RegisterWithCategoryManager(PRBool aOverrideInternalTypes,
 
   const char *contractId = "@mozilla.org/content/plugin/document-loader-factory;1";
 
+  nsCOMPtr<nsIPrefBranch> psvc(do_GetService(NS_PREFSERVICE_CONTRACTID));
+  if (!psvc)
+    return; // NS_ERROR_OUT_OF_MEMORY
+
+  // A preference controls whether or not the full page plugin is disabled for
+  // a particular type. The string must be in the form:
+  //   type1,type2,type3,type4
+  // Note: need an actual interface to control this and subsequent disabling 
+  // (and other plugin host settings) so applications can reliably disable 
+  // plugins - without relying on implementation details such as prefs/category
+  // manager entries.
+  nsXPIDLCString overrideTypes;
+  psvc->GetCharPref("plugin.disable_full_page_plugin_for_types", getter_Copies(overrideTypes));
+  nsCAutoString overrideTypesFormatted;
+  overrideTypesFormatted.Assign(',');
+  overrideTypesFormatted += overrideTypes;
+  overrideTypesFormatted.Append(',');
+
+  nsACString::const_iterator start, end;
   for(int i = 0; i < mVariants; i++) {
     if (aType == ePluginUnregister) {
       nsXPIDLCString value;
@@ -3685,12 +3704,22 @@ nsPluginTag::RegisterWithCategoryManager(PRBool aOverrideInternalTypes,
         }
       }
     } else {
-      catMan->AddCategoryEntry("Gecko-Content-Viewers",
-                               mMimeTypeArray[i],
-                               contractId,
-                               PR_FALSE, /* persist: broken by bug 193031 */
-                               aOverrideInternalTypes, /* replace if we're told to */
-                               nsnull);
+      overrideTypesFormatted.BeginReading(start);
+      overrideTypesFormatted.EndReading(end);
+      
+      nsDependentCString mimeType(mMimeTypeArray[i]);
+      nsCAutoString commaSeparated; 
+      commaSeparated.Assign(',');
+      commaSeparated += mimeType;
+      commaSeparated.Append(',');
+      if (!FindInReadable(commaSeparated, start, end)) {
+        catMan->AddCategoryEntry("Gecko-Content-Viewers",
+                                 mMimeTypeArray[i],
+                                 contractId,
+                                 PR_FALSE, /* persist: broken by bug 193031 */
+                                 aOverrideInternalTypes, /* replace if we're told to */
+                                 nsnull);
+      }
     }
 
     PLUGIN_LOG(PLUGIN_LOG_NOISY,
