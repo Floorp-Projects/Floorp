@@ -24,19 +24,30 @@
 
 namespace JavaScript {
 
-#define op1(i) (i->itsOperand1)
-#define op2(i) (i->itsOperand2)
-#define op3(i) (i->itsOperand3)
+using std::map;
+using std::less;
+using std::pair;
 
 /**
  * Private representation of a JavaScript object.
  * This will change over time, so it is treated as an opaque
  * type everywhere else but here.
  */
-class JSObject : public std::map<String, JSValue> {
+class JSObject : public map<String, JSValue, less<String>, gc_allocator<pair<const String, JSValue> > > {
 public:
-    // we'll define a GC-aware operator new here, and use a gc_allocator when the time comes.
+    void* operator new(size_t) { return alloc.allocate(1); }
+    void operator delete(void* /* ptr */) {}
+private:
+    static gc_allocator<JSObject> alloc;
 };
+
+// static allocator (required when gc_allocator<T> is allocator<T>.
+gc_allocator<JSObject> JSObject::alloc;
+
+// operand access macros.
+#define op1(i) (i->itsOperand1)
+#define op2(i) (i->itsOperand2)
+#define op3(i) (i->itsOperand3)
 
 JSValue interpret(InstructionStream& iCode, const JSValues& args)
 {
