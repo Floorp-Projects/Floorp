@@ -24,7 +24,7 @@
 typedef PRUint32 NLS_ThreadInfo;
 typedef PRUint32 NLS_ErrorCode;
 
-NLS_ErrorCode NLS_Initialize(const NLS_ThreadInfo * aThreadInfo, const char * aDataDirectory);
-NLS_ErrorCode NLS_Terminate(void);
+NLS_ErrorCode NS_NLS NLS_Initialize(const NLS_ThreadInfo * aThreadInfo, const char * aDataDirectory);
+NLS_ErrorCode NS_NLS NLS_Terminate(void);
 
 #endif

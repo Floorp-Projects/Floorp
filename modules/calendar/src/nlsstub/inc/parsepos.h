@@ -21,7 +21,7 @@
 
 #include "ptypes.h"
 
-class ParsePosition
+class NS_NLS ParsePosition
 {
 
 public:

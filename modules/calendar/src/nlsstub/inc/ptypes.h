@@ -19,6 +19,7 @@
 #ifndef ptypes_h__
 #define ptypes_h__
 
+#include "nscore.h"
 #include "nspr.h"
 
 typedef double Date;

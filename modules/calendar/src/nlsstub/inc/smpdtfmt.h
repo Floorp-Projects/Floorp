@@ -27,7 +27,7 @@ class Formattable;
 class ParsePosition;
 class Format;
 
-class FieldPosition
+class NS_NLS FieldPosition
 {
 public:
   FieldPosition();
@@ -35,7 +35,7 @@ public:
   FieldPosition(PRInt32 aField);
 };
 
-class SimpleDateFormat : public DateFormat 
+class NS_NLS SimpleDateFormat : public DateFormat 
 {
 public:
   SimpleDateFormat();

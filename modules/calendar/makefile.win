@@ -29,7 +29,7 @@ LIBDIR=libjulian
 
 LIBRARY_NAME = juls$(MOZ_BITS)$(VERSION_NUMBER)
 
-LCFLAGS= -DLIBJULIAN $(LCFLAGS)
+LCFLAGS= -DLIBJULIAN $(LCFLAGS) 
 
 DLLNAME         = jul$(MOZ_BITS)$(VERSION_NUMBER)
 PDBFILE         = $(DLLNAME).pdb
@@ -41,7 +41,11 @@ MAKE_OBJ_TYPE   = DLL
 
 include <$(NS_DEPTH)/config/config.mak>
 
-REQUIRES=nls
+!ifdef MOZ_TREX
+CFLAGS = $(CFLAGS) -I$(PUBLIC)\public\raptor -I$(PUBLIC)\public\xpcom -DMOZ_TREX
+!endif
+
+REQUIRES=nls raptor xpcom
 
 OBJS = $(OBJS) \
 !ifndef MOZ_TREX
@@ -145,7 +149,7 @@ LLIBS = $(LLIBS) \
 !endif
     $(NULL)
 
-LINCS=-I$(XPDIST)\public\nls
+#LINCS=-I$(XPDIST)\public\nls -I$(PUBLIC)\public\raptor -I$(PUBLIC)\public\xpcom
 
 #// From the old Manifest file
 CSRCS=julmain.c

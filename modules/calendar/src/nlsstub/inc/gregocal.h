@@ -25,7 +25,7 @@
 class TimeZone;
 class Locale;
 
-class GregorianCalendar : public Calendar
+class NS_NLS GregorianCalendar : public Calendar
 {
 
 public:

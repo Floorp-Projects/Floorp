@@ -25,7 +25,7 @@
 class TimeZone;
 class ParsePosition;
 
-class Calendar 
+class NS_NLS Calendar 
 {
 
 public:
