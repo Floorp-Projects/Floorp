@@ -125,7 +125,7 @@ int WINAPI WinMain( HINSTANCE, HINSTANCE, LPSTR args, int)
                 {
                     status = PerformScheduledTasks(reg);
                     if (status != DONE)
-                        Sleep(15000); // Sleep for 15 seconds
+                        Sleep(1000); // Sleep for 1 second
                 } while (status == TRY_LATER);
 
                 RegDeleteValue(hkRunOnceHandle, cleanupKeyName);

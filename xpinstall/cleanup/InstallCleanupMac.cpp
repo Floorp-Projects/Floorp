@@ -40,7 +40,7 @@
 #include "InstallCleanup.h"
 #include "InstallCleanupDefines.h"
 
-#define kSleepMax 900  // sleep 15 seconds
+#define kSleepMax 60  // sleep 1 second
 
 Boolean gAppleEventsFlag, gQuitFlag;
 long gSleepVal;
