@@ -1435,6 +1435,8 @@ nsParseNewMailState::Init(nsIMsgFolder *rootFolder, nsIMsgFolder *downloadFolder
   m_inboxFileSpec = folder;
   m_inboxFileStream = inboxFileStream;
   m_msgWindow = aMsgWindow;
+  m_downloadFolder = downloadFolder;
+
   // the new mail parser isn't going to get the stream input, it seems, so we can't use
   // the OnStartRequest mechanism the mailbox parser uses. So, let's open the db right now.
   nsCOMPtr<nsIMsgDatabase> mailDB;
@@ -1607,6 +1609,7 @@ NS_IMETHODIMP nsParseNewMailState::ApplyFilterHit(nsIMsgFilter *filter, nsIMsgWi
   if (m_filterList && numActions)
     m_filterList->GetLoggingEnabled(&loggingEnabled);
   
+  PRBool msgIsNew = PR_TRUE;
   for (PRUint32 actionIndex =0; actionIndex < numActions && *applyMore; actionIndex++)
   {
     nsCOMPtr<nsIMsgRuleAction> filterAction;
@@ -1636,6 +1639,7 @@ NS_IMETHODIMP nsParseNewMailState::ApplyFilterHit(nsIMsgFilter *filter, nsIMsgWi
             rv = trash->GetURI(getter_Copies(actionTargetFolderUri));
           
           msgHdr->OrFlags(MSG_FLAG_READ, &newFlags);	// mark read in trash.
+          msgIsNew = PR_FALSE;
         }
       case nsMsgFilterAction::MoveToFolder:
         // if moving to a different file, do it.
@@ -1656,6 +1660,7 @@ NS_IMETHODIMP nsParseNewMailState::ApplyFilterHit(nsIMsgFilter *filter, nsIMsgWi
         *applyMore = PR_FALSE; 
         break;
       case nsMsgFilterAction::MarkRead:
+        msgIsNew = PR_FALSE;
         MarkFilteredMessageRead(msgHdr);
         break;
       case nsMsgFilterAction::KillThread:
@@ -1702,6 +1707,12 @@ NS_IMETHODIMP nsParseNewMailState::ApplyFilterHit(nsIMsgFilter *filter, nsIMsgWi
       if (loggingEnabled && actionType != nsMsgFilterAction::MoveToFolder && actionType != nsMsgFilterAction::Delete)  
         (void)filter->LogRuleHit(filterAction, msgHdr); 
     }
+  }
+  if (!msgIsNew)
+  {
+    PRInt32 numNewMessages;
+    m_downloadFolder->GetNumNewMessages(PR_FALSE, &numNewMessages);
+    m_downloadFolder->SetNumNewMessages(numNewMessages - 1);
   }
   return rv;
 }
@@ -1857,6 +1868,7 @@ nsresult nsParseNewMailState::MoveIncorporatedMessage(nsIMsgDBHdr *mailHdr,
   
   NS_ASSERTION(length == 0, "didn't read all of original message in filter move");
   
+  PRBool movedMsgIsNew = PR_TRUE;
   // if we have made it this far then the message has successfully been written to the new folder
   // now add the header to the destMailDB.
   if (NS_SUCCEEDED(rv) && destMailDB)
@@ -1875,6 +1887,10 @@ nsresult nsParseNewMailState::MoveIncorporatedMessage(nsIMsgDBHdr *mailHdr,
         newHdr->OrFlags(MSG_FLAG_NEW, &newFlags);
         destMailDB->AddToNewList(newMsgPos);
       }
+      else
+      {
+        movedMsgIsNew = PR_FALSE;
+      }
       destMailDB->AddNewHdrToDB(newHdr, PR_TRUE);
     }
   }
@@ -1883,7 +1899,8 @@ nsresult nsParseNewMailState::MoveIncorporatedMessage(nsIMsgDBHdr *mailHdr,
     if (destMailDB)
       destMailDB = nsnull;
   }
-  destIFolder->SetHasNewMessages(PR_TRUE);
+  if (movedMsgIsNew)
+    destIFolder->SetHasNewMessages(PR_TRUE);
   destFile->close();
   delete destFile;
   m_inboxFileStream->close();

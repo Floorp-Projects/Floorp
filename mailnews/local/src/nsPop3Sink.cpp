@@ -61,6 +61,7 @@ nsPop3Sink::nsPop3Sink()
     m_accountUrl = nsnull;
     m_biffState = 0;
     m_numNewMessages = 0;
+    m_numNewMessagesInFolder = 0;
     m_senderAuthed = PR_FALSE;
     m_outputBuffer = nsnull;
     m_outputBufferSize = 0;
@@ -192,6 +193,7 @@ nsPop3Sink::BeginMailDelivery(PRBool uidlDownload, nsIMsgWindow *aMsgWindow, PRB
     if (m_newMailParser == nsnull)
       return NS_ERROR_OUT_OF_MEMORY;
 
+    m_folder->GetNumNewMessages(PR_FALSE, &m_numNewMessagesInFolder);
     nsCOMPtr <nsIMsgFolder> serverFolder;
     rv = GetServerFolder(getter_AddRefs(serverFolder));
     if (NS_FAILED(rv)) return rv;
@@ -248,6 +250,13 @@ nsPop3Sink::EndMailDelivery()
 
   PRBool filtersRun;
   m_folder->CallFilterPlugins(nsnull, &filtersRun); // ??? do we need msgWindow?
+  PRInt32 numNewMessagesInFolder;
+  // if filters have marked msgs read or deleted, the num new messages count  
+  // will go negative by the number of messages marked read or deleted,
+  // so if we add that number to the number of msgs downloaded, that will give
+  // us the number of actual new messages.
+  m_folder->GetNumNewMessages(PR_FALSE, &numNewMessagesInFolder);
+  m_numNewMessages -= (m_numNewMessagesInFolder  - numNewMessagesInFolder);
   m_folder->SetNumNewMessages(m_numNewMessages); // we'll adjust this for spam later
   if (!filtersRun && m_numNewMessages > 0)
     m_folder->SetBiffState(m_biffState);

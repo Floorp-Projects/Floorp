@@ -66,7 +66,7 @@ public:
     
 protected:
 
-	nsresult WriteLineToMailbox(char *buffer);
+    nsresult WriteLineToMailbox(char *buffer);
     nsresult ReleaseFolderLock();
 
     PRBool m_authed;
@@ -74,6 +74,7 @@ protected:
     char* m_accountUrl;
     PRUint32 m_biffState;
     PRInt32 m_numNewMessages;
+    PRInt32 m_numNewMessagesInFolder;
     PRBool m_senderAuthed;
     char* m_outputBuffer;
     PRInt32 m_outputBufferSize;
