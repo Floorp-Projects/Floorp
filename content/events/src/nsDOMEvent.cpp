@@ -1237,6 +1237,9 @@ nsDOMEvent::SetEventType(const nsAString& aEventTypeArg)
   else if (atom == nsLayoutAtoms::onclick && mEvent->eventStructType == NS_MOUSE_EVENT) {
     mEvent->message = NS_MOUSE_LEFT_CLICK;
   }
+  else if (atom == nsLayoutAtoms::ondblclick && mEvent->eventStructType == NS_MOUSE_EVENT) {
+    mEvent->message = NS_MOUSE_LEFT_DOUBLECLICK;
+  }
   else if (atom == nsLayoutAtoms::onmouseover && mEvent->eventStructType == NS_MOUSE_EVENT) {
     mEvent->message = NS_MOUSE_ENTER_SYNTH;
   }

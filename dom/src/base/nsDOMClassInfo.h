@@ -226,6 +226,7 @@ protected:
   static jsval sOnmousedown_id;
   static jsval sOnmouseup_id;
   static jsval sOnclick_id;
+  static jsval sOndblclick_id;
   static jsval sOncontextmenu_id;
   static jsval sOnmouseover_id;
   static jsval sOnmouseout_id;
