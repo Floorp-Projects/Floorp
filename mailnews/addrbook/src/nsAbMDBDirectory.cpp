@@ -1060,11 +1060,11 @@ nsresult nsAbMDBDirectory::GetAbDatabase()
     if(NS_SUCCEEDED(rv))
       abSession->GetUserProfileDirectory(&dbPath);
     
-    NS_ConvertUTF8toUCS2 file(&(mURI[strlen(kMDBDirectoryRoot)]));
+    nsCAutoString file(&(mURI[strlen(kMDBDirectoryRoot)]));
     PRInt32 pos = file.Find("/");
     if (pos != -1)
       file.Truncate(pos);
-    (*dbPath) += file;
+    (*dbPath) += file.get();
     
     nsCOMPtr<nsIAddrDatabase> addrDBFactory = 
       do_GetService(NS_ADDRDATABASE_CONTRACTID, &rv);
