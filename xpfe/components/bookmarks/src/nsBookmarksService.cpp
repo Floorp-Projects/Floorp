@@ -315,16 +315,17 @@ bm_ReleaseGlobals()
  */
 class BookmarkParser {
 private:
-	nsCOMPtr<nsIUnicodeDecoder>	mUnicodeDecoder;
-	nsIRDFDataSource		*mDataSource;
-	const char			*mIEFavoritesRoot;
-	PRBool				mFoundIEFavoritesRoot;
-	PRBool				mFoundPersonalToolbarFolder;
-	char				*mContents;
-	PRUint32			mContentsLen;
-	PRInt32				mStartOffset;
-	nsInputFileStream		*mInputStream;
-	nsString			mPersonalToolbarName;
+  nsCOMPtr<nsIUnicodeDecoder>	mUnicodeDecoder;
+  nsIRDFDataSource*           mDataSource;
+  const char*                 mIEFavoritesRoot;
+  PRBool                      mFoundIEFavoritesRoot;
+  PRBool                      mFoundPersonalToolbarFolder;
+  PRBool                      mIsImportOperation;
+  char*                       mContents;
+  PRUint32                    mContentsLen;
+  PRInt32                     mStartOffset;
+  nsInputFileStream*          mInputStream;
+  nsString                    mPersonalToolbarName;
 
 friend	class nsBookmarksService;
 
@@ -378,7 +379,8 @@ public:
 	BookmarkParser();
 	~BookmarkParser();
 
-	nsresult Init(nsFileSpec *fileSpec, nsIRDFDataSource *aDataSource, const nsString &defaultPersonalToolbarName);
+	nsresult Init(nsFileSpec *fileSpec, nsIRDFDataSource *aDataSource, 
+                const nsString &defaultPersonalToolbarName, PRBool aIsImportOperation = PR_FALSE);
 	nsresult DecodeBuffer(nsString &line, char *buf, PRUint32 aLength);
 	nsresult ProcessLine(nsIRDFContainer *aContainer, nsIRDFResource *nodeType,
 			nsCOMPtr<nsIRDFResource> &bookmarkNode, const nsString &line,
@@ -413,24 +415,65 @@ public:
 	}
 };
 
-
-
 BookmarkParser::BookmarkParser()
 	: mContents(nsnull), mContentsLen(0L), mStartOffset(0L), mInputStream(nsnull)
 {
 	bm_AddRefGlobals();
 }
 
+static const char kOpenAnchor[]  = "<A ";
+static const char kCloseAnchor[] = "</A>";
 
+static const char kOpenHeading[]  = "<H";
+static const char kCloseHeading[] = "</H";
+
+static const char kSeparator[]  = "<HR>";
+
+static const char kOpenUL[]     = "<UL>";
+static const char kCloseUL[]    = "</UL>";
+
+static const char kOpenMenu[]   = "<MENU>";
+static const char kCloseMenu[]  = "</MENU>";
+
+static const char kOpenDL[]     = "<DL>";
+static const char kCloseDL[]    = "</DL>";
+
+static const char kOpenDD[]     = "<DD>";
+
+static const char kOpenMeta[]   = "<META ";
+
+static const char kNewBookmarkFolderEquals[]      = "NEW_BOOKMARK_FOLDER=\"";
+static const char kNewSearchFolderEquals[]        = "NEW_SEARCH_FOLDER=\"";
+static const char kPersonalToolbarFolderEquals[]  = "PERSONAL_TOOLBAR_FOLDER=\"";
+
+static const char kHREFEquals[]            = "HREF=\"";
+static const char kTargetEquals[]          = "TARGET=\"";
+static const char kAddDateEquals[]         = "ADD_DATE=\"";
+static const char kLastVisitEquals[]       = "LAST_VISIT=\"";
+static const char kLastModifiedEquals[]    = "LAST_MODIFIED=\"";
+static const char kLastCharsetEquals[]     = "LAST_CHARSET=\"";
+static const char kShortcutURLEquals[]     = "SHORTCUTURL=\"";
+static const char kScheduleEquals[]        = "SCHEDULE=\"";
+static const char kLastPingEquals[]        = "LAST_PING=\"";
+static const char kPingETagEquals[]        = "PING_ETAG=\"";
+static const char kPingLastModEquals[]     = "PING_LAST_MODIFIED=\"";
+static const char kPingContentLenEquals[]  = "PING_CONTENT_LEN=\"";
+static const char kPingStatusEquals[]      = "PING_STATUS=\"";
+static const char kIDEquals[]              = "ID=\"";
+static const char kContentEquals[]         = "CONTENT=\"";
+static const char kHTTPEquivEquals[]       = "HTTP-EQUIV=\"";
+static const char kCharsetEquals[]         = "charset=";		// note: no quote
 
 nsresult
-BookmarkParser::Init(nsFileSpec *fileSpec, nsIRDFDataSource *aDataSource, const nsString &defaultPersonalToolbarName)
+BookmarkParser::Init(nsFileSpec *fileSpec, nsIRDFDataSource *aDataSource, 
+                     const nsString &defaultPersonalToolbarName, PRBool aIsImportOperation)
 {
 	mDataSource = aDataSource;
 	mIEFavoritesRoot = nsnull;
 	mFoundIEFavoritesRoot = PR_FALSE;
 	mFoundPersonalToolbarFolder = PR_FALSE;
-	mPersonalToolbarName = defaultPersonalToolbarName;
+  mIsImportOperation = aIsImportOperation;
+  mPersonalToolbarName = defaultPersonalToolbarName;
 
 	nsresult		rv;
 
@@ -531,53 +574,6 @@ BookmarkParser::~BookmarkParser()
 	bm_ReleaseGlobals();
 }
 
-
-
-static const char kOpenAnchor[]  = "<A ";
-static const char kCloseAnchor[] = "</A>";
-
-static const char kOpenHeading[]  = "<H";
-static const char kCloseHeading[] = "</H";
-
-static const char kSeparator[]  = "<HR>";
-
-static const char kOpenUL[]     = "<UL>";
-static const char kCloseUL[]    = "</UL>";
-
-static const char kOpenMenu[]   = "<MENU>";
-static const char kCloseMenu[]  = "</MENU>";
-
-static const char kOpenDL[]     = "<DL>";
-static const char kCloseDL[]    = "</DL>";
-
-static const char kOpenDD[]     = "<DD>";
-
-static const char kOpenMeta[]   = "<META ";
-
-static const char kNewBookmarkFolderEquals[]      = "NEW_BOOKMARK_FOLDER=\"";
-static const char kNewSearchFolderEquals[]        = "NEW_SEARCH_FOLDER=\"";
-static const char kPersonalToolbarFolderEquals[]  = "PERSONAL_TOOLBAR_FOLDER=\"";
-
-static const char kHREFEquals[]            = "HREF=\"";
-static const char kTargetEquals[]          = "TARGET=\"";
-static const char kAddDateEquals[]         = "ADD_DATE=\"";
-static const char kLastVisitEquals[]       = "LAST_VISIT=\"";
-static const char kLastModifiedEquals[]    = "LAST_MODIFIED=\"";
-static const char kLastCharsetEquals[]     = "LAST_CHARSET=\"";
-static const char kShortcutURLEquals[]     = "SHORTCUTURL=\"";
-static const char kScheduleEquals[]        = "SCHEDULE=\"";
-static const char kLastPingEquals[]        = "LAST_PING=\"";
-static const char kPingETagEquals[]        = "PING_ETAG=\"";
-static const char kPingLastModEquals[]     = "PING_LAST_MODIFIED=\"";
-static const char kPingContentLenEquals[]  = "PING_CONTENT_LEN=\"";
-static const char kPingStatusEquals[]      = "PING_STATUS=\"";
-static const char kIDEquals[]              = "ID=\"";
-static const char kContentEquals[]         = "CONTENT=\"";
-static const char kHTTPEquivEquals[]       = "HTTP-EQUIV=\"";
-static const char kCharsetEquals[]         = "charset=";		// note: no quote
-
-
-
 PRInt32
 BookmarkParser::getEOL(const char *whole, PRInt32 startOffset, PRInt32 totalLength)
 {
@@ -596,8 +592,6 @@ BookmarkParser::getEOL(const char *whole, PRInt32 startOffset, PRInt32 totalLeng
 	}
 	return(eolOffset);
 }
-
-
 
 nsresult
 BookmarkParser::DecodeBuffer(nsString &line, char *buf, PRUint32 aLength)
@@ -1043,8 +1037,18 @@ BookmarkParser::ParseBookmarkInfo(BookmarkField *fields, PRBool isBookmarkFlag,
 
         PRBool  fieldFound = PR_FALSE;
 
+        nsAutoString id;
+        id.AssignWithConversion(kIDEquals);
         for (BookmarkField *field = fields; field->mName; ++field)
         {
+            nsAutoString name;
+            name.AssignWithConversion(field->mName);
+            if (mIsImportOperation && name.Equals(id)) 
+              // For import operations, we don't want to save the unique identifier for folders,
+              // because this can cause bugs like 74969 (importing duplicate bookmark folder 
+              // hierachy causes bookmarks file to grow infinitely).
+              continue;
+  
             if (aLine.Find(field->mName, PR_TRUE, attrStart, 1) == attrStart)
             {
                 attrStart += nsCRT::strlen(field->mName);
@@ -3717,7 +3721,7 @@ nsBookmarksService::importBookmarks(nsISupportsArray *aArguments)
 
 	// read 'em in
 	BookmarkParser		parser;
-	parser.Init(&fileSpec, mInner, nsAutoString());
+	parser.Init(&fileSpec, mInner, nsAutoString(), PR_TRUE);
 	parser.Parse(newBookmarkFolder, kNC_Bookmark);
 
 	return(NS_OK);
