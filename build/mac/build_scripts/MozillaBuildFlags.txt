@@ -85,6 +85,7 @@ mdn             1
 print_preview   1      NS_PRINT_PREVIEW
 printing        1      NS_PRINTING
 moz_xul         1      MOZ_XUL
+layout_debug    0
 
 filepath_flags
 idepath             ":CodeWarrior IDE Path.txt"

@@ -986,6 +986,13 @@ sub BuildClientDist()
     InstallFromManifest(":mozilla:layout:html:table:public:MANIFEST",              "$distdirectory:layout:");
     InstallFromManifest(":mozilla:layout:xul:base:public:Manifest",                "$distdirectory:layout:");
     InstallFromManifest(":mozilla:layout:xul:base:src:MANIFEST",                   "$distdirectory:layout:");
+    if ($main::options{layout_debug}) 
+    {
+      #LAYOUT-DEBUG
+      InstallFromManifest(":mozilla:extensions:layout-debug:idl:MANIFEST_IDL",     "$distdirectory:idl:");
+      InstallFromManifest(":mozilla:extensions:layout-debug:public:MANIFEST",      "$distdirectory:layout-debug:");
+      InstallFromManifest(":mozilla:extensions:layout-debug:plugin:MANIFEST_IDL",  "$distdirectory:idl:");
+    }
     
     #GFX
     InstallFromManifest(":mozilla:gfx:public:MANIFEST",                            "$distdirectory:gfx:");
@@ -1541,6 +1548,25 @@ sub BuildIDLProjects()
         BuildIDLProject(":mozilla:js:jsd:macbuild:jsdIDL.xml", "jsdservice");
     }
 
+    if ($main::options{layout_debug}) 
+    {
+        # layout-debug component headers/xpt
+        my($layout_debug_path) = ":mozilla:extensions:layout-debug:mac:";
+        BuildIDLProject($layout_debug_path . "lytDbgCmpIDL.xml", "layoutDebugComponent");
+        
+        # layout-debug plugin headers/xpt
+        # BuildIDLProject() won't do the right thing with plugins, so we roll our own
+        if ($main::CLOBBER_IDL_PROJECTS)
+        {
+            print STDERR "Deleting IDL data folder: mozilla:extensions:layout-debug:mac:_lytDbgCmpIDL Data\n";
+            EmptyTree($layout_debug_path . "_lytDbgCmpIDL Data:");
+        }
+        my($plugin_dist) = GetBinDirectory() . "Plug-ins:";
+        BuildOneProject($layout_debug_path . "lytDbgPlgIDL.xml",  "headers", 0, 0, 0);
+        BuildOneProject($layout_debug_path . "lytDbgPlgIDL.xml",  "layoutDebugPlugin.xpt", 0, 0, 0);
+        MakeAlias($layout_debug_path . "LayoutDebugPlugin.xpt", $plugin_dist);
+    }
+
     EndBuildModule("idl");
 }
 
@@ -2017,6 +2043,18 @@ sub BuildLayoutProjects()
     BuildOneProject(":mozilla:xpinstall:wizard:libxpnet:macbuild:xpnet.xml",    "xpnet$D.Lib", 0, 0, 0);
     if (!($main::PROFILE)) {
         BuildOneProject(":mozilla:xpinstall:wizard:mac:macbuild:MIW.xml",           "Mozilla Installer$D", 0, 0, 0);
+    }
+    
+    if ($main::options{layout_debug}) 
+    {
+        # make the component.
+        my($layout_debug_path) = ":mozilla:extensions:layout-debug:mac:";
+        BuildOneProject($layout_debug_path . "lytDbgComp.xml", "LayoutDebugComponent.shlb", 1, 0, 1);
+        
+        # make the plugin.  BuildOneProject isn't smart about plugins, so roll our own.
+        my($plugin_dist) = GetBinDirectory() . "Plug-ins:";
+        BuildProject($layout_debug_path . "lytDbgPlugin.xml", "LayoutDebugPlugin$C");
+        MakeAlias($layout_debug_path . "LayoutDebugPlugin", $plugin_dist);
     }
     
     EndBuildModule("nglayout");
