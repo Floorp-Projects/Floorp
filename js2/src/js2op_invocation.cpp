@@ -52,7 +52,7 @@
                 FunctionWrapper *fWrap = NULL;
                 if ((obj->kind == SimpleInstanceKind)
                             && (meta->objectType(a) == meta->functionClass)) {
-                    fWrap = (checked_cast<SimpleInstance *>(obj))->fWrap;
+                    fWrap = (checked_cast<FunctionInstance *>(obj))->fWrap;
                 }
                 if (fWrap) {
                     // XXX - I made this stuff up - extract the 'prototype' property from
@@ -73,7 +73,6 @@
                         if (!JS2VAL_IS_OBJECT(protoVal))
                             meta->reportError(Exception::badValueError, "Non-object prototype value", errorPos());
                     }
-
                     uint32 length = getLength(meta, obj);
                     if (fWrap->code) {  // native code, pass pointer to argument base
                         while (argCount < length) {
@@ -116,9 +115,11 @@
             FunctionWrapper *fWrap = NULL;
             if ((fObj->kind == SimpleInstanceKind)
                         && (meta->objectType(b) == meta->functionClass)) {
-                fWrap = (checked_cast<SimpleInstance *>(fObj))->fWrap;
-            }
-            if (fWrap) {
+                FunctionInstance *fInst = checked_cast<FunctionInstance *>(fObj);
+                fWrap = fInst->fWrap;
+                if (fInst->isMethodClosure) {
+                    a = fInst->thisObject;
+                }
                 if (fWrap->compileFrame->prototype) {
                     if (JS2VAL_IS_VOID(a) || JS2VAL_IS_NULL(a)) {
                         Frame *g = meta->env->getPackageFrame();
@@ -139,13 +140,15 @@
                     push(a);
                 }
                 else {
-                    if (length) {
+                    if (length || fInst->isMethodClosure) {
                         pFrame = new ParameterFrame(fWrap->compileFrame);
                         pFrame->instantiate(meta->env);
                         pFrame->thisObject = a;
                         // XXX (use fWrap->compileFrame->signature)
                         pFrame->assignArguments(meta, fObj, base(argCount), argCount, length);
                         jsr(phase, fWrap->bCon, base(argCount + 2) - execStack, JS2VAL_VOID, fWrap->env);   // seems out of order, but we need to catch the current top frame 
+                        if (fInst->isMethodClosure)
+                            meta->env->addFrame(meta->objectType(a));
                         meta->env->addFrame(pFrame);
                         parameterFrame = pFrame;
                         pFrame = NULL;
@@ -154,38 +157,6 @@
                         jsr(phase, fWrap->bCon, base(argCount + 2) - execStack, JS2VAL_VOID, fWrap->env);   // seems out of order, but we need to catch the current top frame 
                         meta->env->addFrame(fWrap->compileFrame);
                     }
-                }
-            }
-            else
-            if (fObj->kind == MethodClosureKind) {  // XXX I made this up (particularly the frame push of the objectType)
-                MethodClosure *mc = checked_cast<MethodClosure *>(fObj);
-                SimpleInstance *fInst = mc->method->fInst;
-                FunctionWrapper *fWrap = fInst->fWrap;
-                // XXX ok to not use getLength(meta, fObj) ?
-                uint32 length = (fWrap->compileFrame->slots) ? fWrap->compileFrame->slots->size() : 0;
-                if (fWrap->code) {
-                    Environment *oldEnv = meta->env;
-                    meta->env = fWrap->env;
-                    while (argCount < length) {
-                        push(JS2VAL_UNDEFINED);
-                        argCount++;
-                    }
-                    a = fWrap->code(meta, mc->thisObject, base(argCount), argCount);
-                    pop(argCount + 2);
-                    push(a);
-                    meta->env = oldEnv;
-                }
-                else {
-                    pFrame = new ParameterFrame(fWrap->compileFrame);
-                    pFrame->instantiate(meta->env);
-                    pFrame->thisObject = mc->thisObject;
-//                assignArguments(runtimeFrame, fWrap->compileFrame->signature);
-                    pFrame->assignArguments(meta, fObj, base(argCount), argCount, length);
-                    jsr(phase, fWrap->bCon, base(argCount + 2) - execStack, JS2VAL_VOID, fWrap->env);   // seems out of order, but we need to catch the current top frame 
-                    meta->env->addFrame(meta->objectType(mc->thisObject));
-                    meta->env->addFrame(pFrame);
-                    parameterFrame = pFrame;
-                    pFrame = NULL;
                 }
             }
             else

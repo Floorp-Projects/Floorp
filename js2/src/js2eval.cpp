@@ -272,15 +272,11 @@ namespace MetaData {
         FunctionWrapper *fWrap = NULL;
         if ((fnObj->kind == SimpleInstanceKind)
                 && ((checked_cast<SimpleInstance *>(fnObj))->type == functionClass)) {
-            fWrap = (checked_cast<SimpleInstance *>(fnObj))->fWrap;
-        }
-        else
-        if (fnObj->kind == MethodClosureKind) {
-            // XXX here we ignore the bound this, can that be right?
-            MethodClosure *mc = checked_cast<MethodClosure *>(fnObj);
-            fWrap = mc->method->fInst->fWrap;
-        }
-        if (fWrap) {
+            FunctionInstance *fInst = checked_cast<FunctionInstance *>(fnObj);
+            fWrap = fInst->fWrap;
+            if (fInst->isMethodClosure) {
+                // XXX ignoring fInst->thisObject;
+            }
             if (fWrap->code) {
                 result = (fWrap->code)(this, thisValue, argv, argc);
             }
@@ -295,6 +291,8 @@ namespace MetaData {
                 runtimeFrame->thisObject = thisValue;
                 runtimeFrame->assignArguments(this, fnObj, argv, argc, argc);
                 Frame *oldTopFrame = env->getTopFrame();
+                if (fInst->isMethodClosure)
+                    env->addFrame(objectType(thisValue));
                 env->addFrame(runtimeFrame);
                 ParameterFrame *oldPFrame = engine->parameterFrame;
                 try {

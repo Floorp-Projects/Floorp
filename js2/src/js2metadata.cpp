@@ -451,7 +451,7 @@ namespace MetaData {
                             FunctionInstance *fObj = validateStaticFunction(&f->function, compileThis, prototype, unchecked, cxt, env);
                             JS2Class *c = checked_cast<JS2Class *>(env->getTopFrame());
                             Multiname *mn = new Multiname(f->function.name, a->namespaces);
-                            InstanceMember *m = new InstanceMethod(mn, checked_cast<SimpleInstance *>(fObj), (memberMod == Attribute::Final), true);
+                            InstanceMember *m = new InstanceMethod(mn, fObj, (memberMod == Attribute::Final), true);
                             defineInstanceMember(c, cxt, f->function.name, a->namespaces, a->overrideMod, a->xplicit, m, p->pos);
                         }
                         break;
@@ -3350,7 +3350,7 @@ static const uint8 urlCharType[256] =
 
     void JS2Metadata::addGlobalObjectFunction(char *name, NativeCode *code, uint32 length)
     {
-        SimpleInstance *fInst = new SimpleInstance(this, functionClass->prototype, functionClass);
+        FunctionInstance *fInst = new FunctionInstance(this, functionClass->prototype, functionClass);
         fInst->fWrap = new FunctionWrapper(true, new ParameterFrame(JS2VAL_VOID, true), code, env);
         createDynamicProperty(glob, &world.identifiers[name], OBJECT_TO_JS2VAL(fInst), ReadWriteAccess, false, true);
         createDynamicProperty(fInst, engine->length_StringAtom, INT_TO_JS2VAL(length), ReadAccess, true, false);
@@ -3604,9 +3604,6 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
         case PackageKind:
             return packageClass;
 
-        case MethodClosureKind:
-            return functionClass;
-
         case SystemKind:
         case ParameterFrameKind: 
         case BlockFrameKind: 
@@ -3790,7 +3787,11 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
                 InstanceMethod *im = checked_cast<InstanceMethod *>(m);
                 if (phase == CompilePhase)
                     reportError(Exception::compileExpressionError, "Inappropriate compile time expression", engine->errorPos());
-                *rval = OBJECT_TO_JS2VAL(new MethodClosure(containerVal, im));
+                FunctionInstance *fInst = new FunctionInstance(this, functionClass->prototype, functionClass);
+                fInst->isMethodClosure = true;
+                fInst->fWrap = im->fInst->fWrap;
+                fInst->thisObject = containerVal;
+                *rval = OBJECT_TO_JS2VAL(fInst);
                 return true;
             }
         default:
@@ -4091,7 +4092,7 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
             pf = staticFunctions;
             if (pf) {
                 while (pf->name) {
-                    SimpleInstance *callInst = new SimpleInstance(this, functionClass->prototype, functionClass);
+                    FunctionInstance *callInst = new FunctionInstance(this, functionClass->prototype, functionClass);
                     callInst->fWrap = new FunctionWrapper(true, new ParameterFrame(JS2VAL_INACCESSIBLE, true), pf->code, env);
                     v = new Variable(functionClass, OBJECT_TO_JS2VAL(callInst), true);
                     defineLocalMember(env, &world.identifiers[pf->name], publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, v, 0, false);
@@ -4298,8 +4299,7 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
             sealed(false),
             super(parent),
             type(type), 
-            slots(new Slot[type->slotCount]),
-            fWrap(NULL)
+            slots(new Slot[type->slotCount])
     {
         for (uint32 i = 0; i < type->slotCount; i++) {
             slots[i].value = JS2VAL_UNINITIALIZED;
@@ -4312,12 +4312,6 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
     {
         GCMARKOBJECT(type)
         GCMARKVALUE(super);
-        if (fWrap) {
-            GCMARKOBJECT(fWrap->compileFrame);
-            GCMARKOBJECT(fWrap->env);
-            if (fWrap->bCon)
-                fWrap->bCon->mark();
-        }
         if (slots) {
             ASSERT(type);
             for (uint32 i = 0; (i < type->slotCount); i++) {
@@ -4345,8 +4339,6 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
             delete lbe;
         }
         delete [] slots;
-        if (fWrap)
-            delete fWrap;
     }
 
  /************************************************************************************
@@ -4408,7 +4400,7 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
  ************************************************************************************/
 
     FunctionInstance::FunctionInstance(JS2Metadata *meta, js2val parent, JS2Class *type)
-     : SimpleInstance(meta, parent, type) 
+     : SimpleInstance(meta, parent, type), isMethodClosure(false), fWrap(NULL), thisObject(JS2VAL_VOID) 
     {
         // Add prototype property
         JS2Object *result = this;
@@ -4431,8 +4423,14 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
             if (fWrap->bCon)
                 fWrap->bCon->mark();
         }
+        GCMARKVALUE(thisObject);
     }
 
+    FunctionInstance::~FunctionInstance()
+    {
+        if (fWrap)
+            delete fWrap;
+    }
 
 /************************************************************************************
  *
@@ -4443,20 +4441,6 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
     InstanceMethod::~InstanceMethod()       
     { 
         delete fInst; 
-    }
-
-
-/************************************************************************************
- *
- *  MethodClosure
- *
- ************************************************************************************/
-
-    // gc-mark all contained JS2Objects and visit contained structures to do likewise
-    void MethodClosure::markChildren()     
-    { 
-        GCMARKVALUE(thisObject);
-        GCMARKOBJECT(method->fInst)
     }
 
 /************************************************************************************

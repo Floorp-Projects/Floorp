@@ -132,7 +132,6 @@ enum ObjectKind {
     BlockFrameKind, 
     SimpleInstanceKind,
     MultinameKind,
-    MethodClosureKind,
     AlienInstanceKind,
     ForIteratorKind,
     WithFrameKind,
@@ -548,11 +547,11 @@ public:
 
 class InstanceMethod : public InstanceMember {
 public:
-    InstanceMethod(Multiname *multiname, SimpleInstance *fInst, bool final, bool enumerable) 
+    InstanceMethod(Multiname *multiname, FunctionInstance *fInst, bool final, bool enumerable) 
         : InstanceMember(InstanceMethodMember, multiname, final, enumerable), fInst(fInst) { }
     Signature type;                 // This method's signature
 //    Invokable *code;              // This method itself (a callable object); null if this method is abstract
-    SimpleInstance *fInst;
+    FunctionInstance *fInst;
 
     virtual ~InstanceMethod();
     virtual void mark();
@@ -818,8 +817,6 @@ public:
     JS2Class            *type;              // This instance's type
     Slot                *slots;             // A set of slots that hold this instance's fixed property values
 
-    FunctionWrapper     *fWrap;
-
     void initializeSlots(JS2Class *type);
 
     virtual void markChildren();
@@ -874,8 +871,12 @@ class FunctionInstance : public SimpleInstance {
 public:
     FunctionInstance(JS2Metadata *meta, js2val parent, JS2Class *type);
 
+    FunctionWrapper     *fWrap;
+    bool                isMethodClosure;
+    js2val              thisObject;
+
     virtual void markChildren();
-    virtual ~FunctionInstance()          { }
+    virtual ~FunctionInstance();
 };
 
 // Array instances are SimpleInstances created by the Array class, they 
@@ -937,7 +938,7 @@ public:
     JS2Object *originalObj;
 
     virtual void markChildren()     { GCMARKOBJECT(obj); GCMARKOBJECT(originalObj); }
-    virtual ~ForIteratorObject()            { }
+    virtual ~ForIteratorObject()    { }
 
 private:
 
@@ -946,17 +947,6 @@ private:
     const String **nameList;
     uint32 it;
     uint32 length;
-};
-
-// A METHODCLOSURE tuple describes an instance method with a bound this value.
-class MethodClosure : public JS2Object {
-public:
-    MethodClosure(js2val thisObject, InstanceMethod *method) : JS2Object(MethodClosureKind), thisObject(thisObject), method(method) { }
-    js2val              thisObject;     // The bound this value
-    InstanceMethod      *method;        // The bound method
-
-    virtual void markChildren();
-    virtual ~MethodClosure()            { }
 };
 
 // Base class for all references (lvalues)

@@ -306,7 +306,7 @@ js2val dump(JS2Metadata *meta, const js2val /* thisValue */, js2val argv[], uint
                     printInstanceVariables(s->type, s->slots);
                     if (meta->objectType(argv[0]) == meta->functionClass) {
                         FunctionWrapper *fWrap;
-                        fWrap = (checked_cast<SimpleInstance *>(fObj))->fWrap;
+                        fWrap = (checked_cast<FunctionInstance *>(fObj))->fWrap;
                         if (fWrap->code)
                             stdOut << "<native code>\n";
                         else

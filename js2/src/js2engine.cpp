@@ -1078,7 +1078,6 @@ namespace MetaData {
                     a = allocString("attribute"); 
                     break;
                 case ClassKind:
-                case MethodClosureKind:
                     a = STRING_TO_JS2VAL(Function_StringAtom); 
                     break;
                 case SimpleInstanceKind:

@@ -153,7 +153,7 @@ void initErrorObject(JS2Metadata *meta)
 
     PrototypeFunction *pf = &errorProtos[0];
     while (pf->name) {
-        SimpleInstance *fInst = new SimpleInstance(meta, meta->functionClass->prototype, meta->functionClass);
+        FunctionInstance *fInst = new FunctionInstance(meta, meta->functionClass->prototype, meta->functionClass);
         fInst->fWrap = new FunctionWrapper(true, new ParameterFrame(JS2VAL_INACCESSIBLE, true), pf->code, meta->env);
     
         Multiname *mn = new Multiname(&meta->world.identifiers[pf->name], &publicNamespaceList);
