@@ -1,7 +1,7 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
  * XPCTL : nsULE.h
  *
- * The contents of this file are subject to the Mozilla Public	
+ * The contents of this file are subject to the Mozilla Public
  * License Version 1.1 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of
  * the License at http://www.mozilla.org/MPL/
@@ -20,7 +20,8 @@
  * by Red Hat Software. Portions created by Redhat are Copyright (C) 
  * 1999 Red Hat Software.
  * 
- * Contributor(s): 
+ * Contributor(s):
+ *   Prabhat Hegde (prabhat.hegde@sun.com)
  */
 
 #ifndef nsULE_H
@@ -88,15 +89,13 @@ public:
                                PRInt32         *aEnd);
 
  private:
-
   // Housekeeping Members
   void Init(void);
   void CleanUp(void);
 
-  PangoEngineShape* GetShaper(const PRUnichar *, PRUint32, const char *);
-  
-  PRInt32 GetRawCtlData(const PRUnichar*, PRUint32, PangoGlyphString*);
-
-  PRInt32 SeparateScript(const PRUnichar*, PRInt32, textRunList*);
+  const char*       GetDefaultFont(const PRUnichar);
+  PangoEngineShape* GetShaper(const PRUnichar *, PRUint32, const char *);  
+  PRInt32           GetCtlData(const PRUnichar*, PRUint32, PangoGlyphString*, const char* = (const char*)NULL);
+  PRInt32           ScriptsByRun(const PRUnichar*, PRInt32, textRunList*);
 };
-#endif /* nsULE_H */
+#endif /* !nsULE_H */

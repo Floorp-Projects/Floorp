@@ -349,6 +349,14 @@ static nsFontCharSetInfo JohabNoAscii =
   { "x-johab-noascii", DoubleByteConvert, 1,
     TT_OS2_CPR1_KO_WANSUNG | TT_OS2_CPR1_KO_JOHAB, 0 };
 
+#ifdef SUNCTL
+/* Hindi range currently unsupported in FT2 range. Change TT* once we 
+   arrive at a way to identify hindi */
+static nsFontCharSetInfo SunIndic =
+  { "x-sun-unicode-india-0", DoubleByteConvert, 0,
+    0, 0 };
+#endif /* SUNCTL */
+
 static nsFontCharSetInfo ISO106461 =
   { nsnull, ISO10646Convert, 1, 0xFFFFFFFF, 0xFFFFFFFF };
 
@@ -523,6 +531,9 @@ static nsFontCharSetMap gCharSetMap[] =
   { "ucs2.cjk-0",         &FLG_NONE,    &Unknown       },
   { "ucs2.cjk_japan-0",   &FLG_NONE,    &Unknown       },
   { "ucs2.cjk_taiwan-0",  &FLG_NONE,    &Unknown       },
+#ifdef SUNCTL
+  { "sun.unicode.india-0",&FLG_NONE,    &SunIndic      },
+#endif /* SUNCTL */
 
   { nsnull,               nsnull,       nsnull         }
 };

@@ -1,5 +1,5 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
- * ucvth : nsUnicodeToTIS620.h
+ * ucvth : nsUnicodeToSunIndic.h
  *
  * The contents of this file are subject to the Mozilla Public
  * License Version 1.1 (the "License"); you may not use this file
@@ -15,16 +15,13 @@
  * The Initial Developer of the Original Code is Sun Microsystems,
  * Inc.  Portions created by SUN are Copyright (C) 2000 SUN
  * Microsystems, Inc. All Rights Reserved.
- *
- * This module ucvth is based on the Thai Shaper in Pango by
- * Red Hat Software. Portions created by Redhat are Copyright (C) 
- * 1999 Red Hat Software.
  * 
  * Contributor(s):
  *   Prabhat Hegde (prabhat.hegde@sun.com)
  */
-#ifndef nsUnicodeToTIS620_h___
-#define nsUnicodeToTIS620_h___
+
+#ifndef nsUnicodeToSunIndic_h___
+#define nsUnicodeToSunIndic_h___
 
 #include "nspr.h"
 #include "nsIFactory.h"
@@ -41,9 +38,9 @@
 struct textRunList;
 
 //----------------------------------------------------------------------
-// Class nsUnicodeToTIS620 [declaration]
+// Class nsUnicodeToSunIndic [declaration]
 
-class nsUnicodeToTIS620 : public nsIUnicodeEncoder, public nsICharRepresentable
+class nsUnicodeToSunIndic : public nsIUnicodeEncoder, public nsICharRepresentable
 {
 
 NS_DECL_ISUPPORTS
@@ -52,8 +49,8 @@ public:
   /**
    * Class constructor.
    */
-  nsUnicodeToTIS620();
-  virtual ~nsUnicodeToTIS620();
+  nsUnicodeToSunIndic();
+  virtual ~nsUnicodeToSunIndic();
 
   NS_IMETHOD Convert(const PRUnichar * aSrc, PRInt32 * aSrcLength,
                      char * aDest, PRInt32 * aDestLength);
@@ -82,4 +79,5 @@ private:
   // handle discontinous ranges
   PRInt32 Itemize(const PRUnichar* aSrcBuf, PRInt32 aSrcLen, textRunList *aRunList);
 };
-#endif /* !nsUnicodeToTIS620_h___ */
+#endif /* !nsUnicodeToSunIndic_h___ */
+
