@@ -95,32 +95,33 @@ PRBool
 nsDragService :: ComputeGlobalRectFromFrame ( nsIDOMNode* aDOMNode, Rect & outScreenRect )
 {
   NS_ASSERTION ( aDOMNode, "Oopps, no DOM node" );
-  
-	PRBool	haveRectFlag = PR_FALSE;
-	outScreenRect.left = outScreenRect.right = outScreenRect.top = outScreenRect.bottom = 0;
+
+  PRBool	haveRectFlag = PR_FALSE;
+  outScreenRect.left = outScreenRect.right = outScreenRect.top = outScreenRect.bottom = 0;
 
   // Get the frame for this content node (note: frames are not refcounted)
-  
-	nsIFrame *aFrame = nsnull;
-	nsCOMPtr<nsIContent>	contentNode;
-	if (aDOMNode)	contentNode = do_QueryInterface(aDOMNode);
-	nsCOMPtr<nsIDocument>	doc;
-	if (contentNode)	contentNode->GetDocument(*getter_AddRefs(doc));
-	nsCOMPtr<nsIPresShell>	presShell;
-	nsCOMPtr<nsIPresContext> presContext;
-	if (doc)
-	  presShell = getter_AddRefs(doc->GetShellAt(0));
-	if (presShell) 	{
-		presShell->GetPresContext(getter_AddRefs(presContext));
-		presShell->GetPrimaryFrameFor(contentNode, &aFrame);
-	}
+  nsIFrame *aFrame = nsnull;
+  nsCOMPtr<nsIContent>	contentNode;
+  if (aDOMNode)	contentNode = do_QueryInterface(aDOMNode);
+  nsCOMPtr<nsIDocument>	doc;
+  if (contentNode)	contentNode->GetDocument(*getter_AddRefs(doc));
+  nsCOMPtr<nsIPresShell>	presShell;
+  nsCOMPtr<nsIPresContext> presContext;
+  if (doc)
+    presShell = getter_AddRefs(doc->GetShellAt(0));
+  if (presShell) 	{
+  	presShell->GetPresContext(getter_AddRefs(presContext));
+  	presShell->GetPrimaryFrameFor(contentNode, &aFrame);
+  }
   NS_ASSERTION ( aFrame, "Can't get frame for this dom node" );
   NS_ASSERTION ( presContext, "Can't get prescontext for this dom node" );
   if ( !aFrame || !presContext )
     return PR_FALSE;
   
+  //
   // Now that we have the frame, we have to convert its coordinates into global screen
-  // coordinates. This is fairly tricky because we may be nested within a frameset, etc.
+  // coordinates.
+  //
   
 	nsRect	aRect(0,0,0,0);
 	nsIView	*parentView = nsnull;
@@ -130,55 +131,37 @@ nsDragService :: ComputeGlobalRectFromFrame ( nsIDOMNode* aDOMNode, Rect & outSc
 	nsIView *containingView = nsnull;
 	nsPoint	viewOffset(0,0);
 	aFrame->GetOffsetFromView(presContext, viewOffset, &containingView);
-NS_ASSERTION(containingView, "No containing view!");
+  NS_ASSERTION(containingView, "No containing view!");
+  if ( !containingView )
+    return PR_FALSE;
 
-printf("-- rect is x %ld, y %ld w %ld h %ld\n", aRect.x, aRect.y, aRect.width, aRect.height );
-printf("-- view offset x %ld, y %ld\n", viewOffset.x, viewOffset.y );
+  // get the widget associated with the containing view. 
+  nsCOMPtr<nsIWidget>	aWidget;
+  nscoord widgetOffsetX = 0, widgetOffsetY = 0;
+  containingView->GetOffsetFromWidget ( &widgetOffsetX, &widgetOffsetY, *getter_AddRefs(aWidget) );
+  if (aWidget) {
+		float t2p = 1.0;
+		presContext->GetTwipsToPixels(&t2p);
 
-#if 0
-	aFrame->GetView(presContext, &parentView);
-	if (!parentView)
-	{
-		nsIFrame	*aParentFrame = nsnull;
-		aFrame->GetParentWithView(presContext, &aParentFrame);
-		if (aParentFrame)
-			aParentFrame->GetView(presContext, &parentView);
-	}
-#endif
-  
-  // get the widget associated with the containing view
-  // XXX: GetOffsetFromWidget() is broken when the parent view has a widget and the child view
-  //        is not at 0,0, which is the case for the mail window. This needs to be revisted.
-	nsCOMPtr<nsIWidget>	aWidget;
-	PRInt32 widgetOffsetX = 0, widgetOffsetY = 0;
-	containingView->GetOffsetFromWidget ( &widgetOffsetX, &widgetOffsetY, *getter_AddRefs(aWidget) );
-	if (aWidget)
-	{
-		float twips2Pixels = 1.0, pixels2Twips = 1.0;
-		presContext->GetTwipsToPixels(&twips2Pixels);
-		presContext->GetPixelsToTwips(&pixels2Twips);
+    // GetOffsetFromWidget() actually returns the _parent's_ offset from its widget, so we
+    // still have to add in the offset to |containingView|'s parent ourselves.
+    nscoord viewOffsetToParentX = 0, viewOffsetToParentY = 0;
+    containingView->GetPosition ( &viewOffsetToParentX, &viewOffsetToParentY );
+    
+    // Shift our offset rect by offset into our view, the view's offset to its parent, and
+    // the parent's offset to the closest widget. Then convert that to global coordinates. 
+    // Recall that WidgetToScreen() will give us the global coordinates of the rectangle we 
+    // give it, but it expects  everything to be in pixels.
+    nsRect screenOffset;                                
+    screenOffset.MoveBy ( NSTwipsToIntPixels(widgetOffsetX + viewOffsetToParentX + viewOffset.x, t2p),
+                            NSTwipsToIntPixels(widgetOffsetY + viewOffsetToParentY + viewOffset.y, t2p) );
+		aWidget->WidgetToScreen ( screenOffset, screenOffset );
 
-    // WidgetToScreen() will give us the global coordinates of the rectangle we give it, but it expects
-    // everything to be in pixels. Convert |frameRect| into pixels first, then offset our rectangle by
-    // that ammount.
-    nsRect frameRectInPixels ( aRect.x * twips2Pixels, aRect.y * twips2Pixels, aRect.width * twips2Pixels,
-                                aRect.height * twips2Pixels );                                
-printf("-- frame in pixels is x %ld, y %ld w %ld h %ld\n", frameRectInPixels.x, frameRectInPixels.y, 
-                                    frameRectInPixels.width, frameRectInPixels.height );
-		nsRect	screenRect(0,0,0,0);
-		aWidget->WidgetToScreen ( frameRectInPixels, screenRect );
-		frameRectInPixels.MoveBy(screenRect.x, screenRect.y);
-printf("-- rect in global coords is x %ld, y %ld w %ld h %ld\n", frameRectInPixels.x, frameRectInPixels.y,
-                     frameRectInPixels.width, frameRectInPixels.height );
-
-    // Finally, offset by where we are in the view (which is also in twips)
-		outScreenRect.left = frameRectInPixels.x + (widgetOffsetX + viewOffset.x) * twips2Pixels;
-		outScreenRect.top = frameRectInPixels.y + (widgetOffsetY + viewOffset.y) * twips2Pixels;
-    outScreenRect.right = outScreenRect.left + aRect.width * twips2Pixels;
-    outScreenRect.bottom = outScreenRect.top + aRect.height * twips2Pixels;
-
-printf("** outscreenRect is %ld %ld %ld %ld\n", outScreenRect.left, outScreenRect.top, 
-            outScreenRect.right, outScreenRect.bottom);
+    // stash it all in a mac rect
+		outScreenRect.left = screenOffset.x;
+		outScreenRect.top = screenOffset.y;
+    outScreenRect.right = outScreenRect.left + NSTwipsToIntPixels(aRect.width, t2p);
+    outScreenRect.bottom = outScreenRect.top + NSTwipsToIntPixels(aRect.height, t2p);
             
 		haveRectFlag = PR_TRUE;
 	}
