@@ -26,8 +26,8 @@ CPPSRCS = \
 
 EXPORTS= jsurl.h
 
-REQUIRES	= network nspr2 dbm util pref js java  \
-	security dom raptor netlib xpcom
+REQUIRES	= network nspr2 dbm util pref js java fileurl \
+	security layer img httpurl lay parse style dom raptor netlib xpcom
 
 include $(DEPTH)/config/rules.mk
 
