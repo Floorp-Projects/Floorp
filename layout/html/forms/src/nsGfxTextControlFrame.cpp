@@ -861,8 +861,6 @@ nsGfxTextControlFrame::CreateWebShell(nsIPresContext& aPresContext,
                    NSToCoordRound((aSize.width  - border.right) * t2p), 
                    NSToCoordRound((aSize.height - border.bottom) * t2p));
 
-  nsScrollPreference scrollPref = nsScrollPreference_kAuto;
-
   mWebShell->Init(widget->GetNativeData(NS_NATIVE_WIDGET), 
                   webBounds.x, webBounds.y,
                   webBounds.width, webBounds.height);
@@ -1037,8 +1035,6 @@ nsGfxTextControlFrame::ReflowNavQuirks(nsIPresContext& aPresContext,
   }
 
   if (addBorder) {
-    nsSize styleSize;
-    GetStyleSize(aPresContext, aReflowState, styleSize);
     if (CSS_NOTSET != styleSize.width || 
         CSS_NOTSET != styleSize.height) {  // css provides width
       nsMargin border;
