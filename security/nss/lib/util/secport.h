@@ -38,7 +38,7 @@
  * 
  * NOTE - These are not public interfaces
  *
- * $Id: secport.h,v 1.3 2002/02/22 04:23:30 wtc%netscape.com Exp $
+ * $Id: secport.h,v 1.4 2002/03/15 05:54:22 wtc%netscape.com Exp $
  */
 
 #ifndef _SECPORT_H_
@@ -206,11 +206,7 @@ extern char *PORT_ArenaStrdup(PLArenaPool *arena, char *str);
 #define PORT_Strrchr    PL_strrchr
 #define PORT_Strcmp 	strcmp
 #define PORT_Strcpy 	strcpy
-#ifdef XP_MAC
-char *PORT_Strdup(const char *);
-#else
-#define PORT_Strdup 	strdup
-#endif
+#define PORT_Strdup 	PL_strdup
 #define PORT_Strlen(s) 	strlen(s)
 #define PORT_Strncasecmp PL_strncasecmp
 #define PORT_Strncat 	strncat

@@ -38,7 +38,7 @@
  * 
  * NOTE - These are not public interfaces
  *
- * $Id: secport.c,v 1.11 2002/02/22 04:23:29 wtc%netscape.com Exp $
+ * $Id: secport.c,v 1.12 2002/03/15 05:54:21 wtc%netscape.com Exp $
  */
 
 #include "seccomon.h"
@@ -127,22 +127,6 @@ PORT_Realloc(void *oldptr, size_t bytes)
     }
     return rv;
 }
-
-#ifdef XP_MAC
-char *
-PORT_Strdup(const char *cp)
-{
-	size_t len = PORT_Strlen(cp);
-	char *buf;
-
-	buf = (char *)PORT_Alloc(len+1);
-	if (buf == NULL) return;
-
-	PORT_Memcpy(buf,cp,len+1);
-	return buf;
-}
-#endif
-
 
 void *
 PORT_ZAlloc(size_t bytes)
