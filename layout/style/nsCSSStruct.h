@@ -174,6 +174,21 @@ struct nsCSSRect {
 
   void SetAllSidesTo(const nsCSSValue& aValue);
 
+  void Reset() {
+    mTop.Reset();
+    mRight.Reset();
+    mBottom.Reset();
+    mLeft.Reset();
+  }
+
+  PRBool HasValue() const {
+    return
+      mTop.GetUnit() != eCSSUnit_Null ||
+      mRight.GetUnit() != eCSSUnit_Null ||
+      mBottom.GetUnit() != eCSSUnit_Null ||
+      mLeft.GetUnit() != eCSSUnit_Null;
+  }
+  
   nsCSSValue mTop;
   nsCSSValue mRight;
   nsCSSValue mBottom;

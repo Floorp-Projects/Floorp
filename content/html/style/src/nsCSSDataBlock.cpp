@@ -200,10 +200,7 @@ nsCSSCompressedDataBlock::MapRuleInfoInto(nsRuleData *aRuleData) const
 
                 case eCSSType_Rect: {
                     const nsCSSRect* val = RectAtCursor(cursor);
-                    NS_ASSERTION(val->mTop.GetUnit() != eCSSUnit_Null ||
-                                 val->mRight.GetUnit() != eCSSUnit_Null ||
-                                 val->mBottom.GetUnit() != eCSSUnit_Null ||
-                                 val->mLeft.GetUnit() != eCSSUnit_Null, "oops");
+                    NS_ASSERTION(val->HasValue(), "oops");
                     nsCSSRect* target = NS_STATIC_CAST(nsCSSRect*, prop);
                     if (target->mTop.GetUnit() == eCSSUnit_Null)
                         target->mTop = val->mTop;
@@ -338,10 +335,7 @@ nsCSSCompressedDataBlock::Clone() const
 
             case eCSSType_Rect: {
                 const nsCSSRect* val = RectAtCursor(cursor);
-                NS_ASSERTION(val->mTop.GetUnit() != eCSSUnit_Null ||
-                             val->mRight.GetUnit() != eCSSUnit_Null ||
-                             val->mBottom.GetUnit() != eCSSUnit_Null ||
-                             val->mLeft.GetUnit() != eCSSUnit_Null, "oops");
+                NS_ASSERTION(val->HasValue(), "oops");
                 nsCSSRect* result_val = RectAtCursor(result_cursor);
                 new (result_val) nsCSSRect(*val);
                 cursor += CDBRectStorage_advance;
@@ -412,10 +406,7 @@ nsCSSCompressedDataBlock::Destroy()
 
             case eCSSType_Rect: {
                 const nsCSSRect* val = RectAtCursor(cursor);
-                NS_ASSERTION(val->mTop.GetUnit() != eCSSUnit_Null ||
-                             val->mRight.GetUnit() != eCSSUnit_Null ||
-                             val->mBottom.GetUnit() != eCSSUnit_Null ||
-                             val->mLeft.GetUnit() != eCSSUnit_Null, "oops");
+                NS_ASSERTION(val->HasValue(), "oops");
                 val->~nsCSSRect();
                 cursor += CDBRectStorage_advance;
             } break;
@@ -526,10 +517,7 @@ nsCSSExpandedDataBlock::DoExpand(nsCSSCompressedDataBlock *aBlock,
 
             case eCSSType_Rect: {
                 const nsCSSRect* val = RectAtCursor(cursor);
-                NS_ASSERTION(val->mTop.GetUnit() != eCSSUnit_Null ||
-                             val->mRight.GetUnit() != eCSSUnit_Null ||
-                             val->mBottom.GetUnit() != eCSSUnit_Null ||
-                             val->mLeft.GetUnit() != eCSSUnit_Null, "oops");
+                NS_ASSERTION(val->HasValue(), "oops");
                 memcpy(prop, val, sizeof(nsCSSRect));
                 cursor += CDBRectStorage_advance;
             } break;
@@ -591,10 +579,7 @@ nsCSSExpandedDataBlock::ComputeSize()
 
                 case eCSSType_Rect: {
                     nsCSSRect* val = NS_STATIC_CAST(nsCSSRect*, prop);
-                    if (val->mTop.GetUnit() != eCSSUnit_Null ||
-                        val->mRight.GetUnit() != eCSSUnit_Null ||
-                        val->mBottom.GetUnit() != eCSSUnit_Null ||
-                        val->mLeft.GetUnit() != eCSSUnit_Null) {
+                    if (val->HasValue()) {
                         increment = CDBRectStorage_advance;
                     }
                 } break;
@@ -686,10 +671,7 @@ nsCSSExpandedDataBlock::Compress(nsCSSCompressedDataBlock **aNormalBlock,
 
                 case eCSSType_Rect: {
                     nsCSSRect* val = NS_STATIC_CAST(nsCSSRect*, prop);
-                    if (val->mTop.GetUnit() != eCSSUnit_Null ||
-                        val->mRight.GetUnit() != eCSSUnit_Null ||
-                        val->mBottom.GetUnit() != eCSSUnit_Null ||
-                        val->mLeft.GetUnit() != eCSSUnit_Null) {
+                    if (val->HasValue()) {
                         CDBRectStorage *storage =
                             NS_REINTERPRET_CAST(CDBRectStorage*, cursor);
                         storage->property = iProp;
@@ -774,10 +756,7 @@ nsCSSExpandedDataBlock::ClearProperty(nsCSSProperty aPropID)
 
         case eCSSType_Rect: {
             nsCSSRect* val = NS_STATIC_CAST(nsCSSRect*, prop);
-            val->mTop.Reset();
-            val->mRight.Reset();
-            val->mBottom.Reset();
-            val->mLeft.Reset();
+            val->Reset();
         } break;
 
         case eCSSType_ValueList: {
