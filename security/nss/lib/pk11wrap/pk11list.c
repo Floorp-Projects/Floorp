@@ -50,11 +50,7 @@
  */
 SECMODListLock *SECMOD_NewListLock()
 {
-#ifdef PKCS11_USE_THREADS
-    return (SECMODListLock *) NSSRWLock_New( 10, "moduleListLock");
-#else
-    return (SECMODListLock *) 1;
-#endif
+    return NSSRWLock_New( 10, "moduleListLock");
 }
 
 /*
@@ -62,7 +58,7 @@ SECMODListLock *SECMOD_NewListLock()
  */
 void SECMOD_DestroyListLock(SECMODListLock *lock) 
 {
-    PK11_USE_THREADS(NSSRWLock_Destroy((NSSRWLock *)lock);)
+    NSSRWLock_Destroy(lock);
 }
 
 
@@ -72,7 +68,7 @@ void SECMOD_DestroyListLock(SECMODListLock *lock)
  */
 void SECMOD_GetReadLock(SECMODListLock *modLock) 
 {
-    PK11_USE_THREADS(NSSRWLock_LockRead((NSSRWLock *)modLock);)
+    NSSRWLock_LockRead(modLock);
 }
 
 /*
@@ -80,7 +76,7 @@ void SECMOD_GetReadLock(SECMODListLock *modLock)
  */
 void SECMOD_ReleaseReadLock(SECMODListLock *modLock) 
 {
-    PK11_USE_THREADS(NSSRWLock_UnlockRead((NSSRWLock *)modLock);)
+    NSSRWLock_UnlockRead(modLock);
 }
 
 
@@ -89,7 +85,7 @@ void SECMOD_ReleaseReadLock(SECMODListLock *modLock)
  */
 void SECMOD_GetWriteLock(SECMODListLock *modLock) 
 {
-    PK11_USE_THREADS(NSSRWLock_LockWrite((NSSRWLock *)modLock);)
+    NSSRWLock_LockWrite(modLock);
 }
 
 
@@ -99,7 +95,7 @@ void SECMOD_GetWriteLock(SECMODListLock *modLock)
  */
 void SECMOD_ReleaseWriteLock(SECMODListLock *modLock) 
 {
-    PK11_USE_THREADS(NSSRWLock_UnlockWrite((NSSRWLock *)modLock);)
+    NSSRWLock_UnlockWrite(modLock);
 }
 
 

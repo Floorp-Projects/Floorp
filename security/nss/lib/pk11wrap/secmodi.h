@@ -48,12 +48,6 @@
 #include "secmodt.h"
 #include "keyt.h"
 
-#ifdef PKCS11_USE_THREADS
-#define PK11_USE_THREADS(x) x
-#else
-#define PK11_USE_THREADS(x)
-#endif
-
 SEC_BEGIN_PROTOS
 
 /* proto-types */

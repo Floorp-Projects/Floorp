@@ -36,6 +36,8 @@
 #ifndef _SECMODT_H_
 #define _SECMODT_H_ 1
 
+#include "nssrwlkt.h"
+#include "nssilckt.h"
 #include "secoid.h"
 #include "secasn1.h"
 
@@ -52,7 +54,7 @@ extern SEC_ASN1TemplateChooser NSS_Get_SECKEY_PointerToPrivateKeyInfoTemplate;
 /* PKCS11 needs to be included */
 typedef struct SECMODModuleStr SECMODModule;
 typedef struct SECMODModuleListStr SECMODModuleList;
-typedef struct SECMODListLockStr SECMODListLock; /* defined in secmodi.h */
+typedef NSSRWLock SECMODListLock;
 typedef struct PK11SlotInfoStr PK11SlotInfo; /* defined in secmodti.h */
 typedef struct PK11PreSlotInfoStr PK11PreSlotInfo; /* defined in secmodti.h */
 typedef struct PK11SymKeyStr PK11SymKey; /* defined in secmodti.h */
@@ -76,7 +78,7 @@ struct SECMODModuleStr {
     void	*library;	/* pointer to the library. opaque. used only by
 				 * pk11load.c */
     void	*functionList; /* The PKCS #11 function table */
-    void	*refLock;	/* only used pk11db.c */
+    PZLock	*refLock;	/* only used pk11db.c */
     int		refCount;	/* Module reference count */
     PK11SlotInfo **slots;	/* array of slot points attached to this mod*/
     int		slotCount;	/* count of slot in above array */
@@ -121,7 +123,7 @@ struct SECMODModuleListStr {
 struct PK11SlotListStr {
     PK11SlotListElement *head;
     PK11SlotListElement *tail;
-    void *lock;
+    PZLock *lock;
 };
 
 struct PK11SlotListElementStr {
