@@ -42,6 +42,7 @@
 #include "nsIDOMElement.h"
 #include "nsIDOMTextListener.h"
 #include "nsIDiskDocument.h"
+#include "nsIDocumentEncoder.h"
 #include "nsEditorCID.h"
 #include "nsISupportsArray.h"
 #include "nsIEnumerator.h"
@@ -80,6 +81,9 @@ static NS_DEFINE_CID(kCClipboardCID,           NS_CLIPBOARD_CID);
 static NS_DEFINE_CID(kCTransferableCID,        NS_TRANSFERABLE_CID);
 static NS_DEFINE_IID(kCXIFFormatConverterCID,  NS_XIFFORMATCONVERTER_CID);
 
+// Document encoders
+static NS_DEFINE_CID(kHTMLEncoderCID, NS_HTML_ENCODER_CID);
+static NS_DEFINE_CID(kTextEncoderCID, NS_TEXT_ENCODER_CID);
 
 #include "nsIComponentManager.h"
 #include "nsIServiceManager.h"
@@ -1540,149 +1544,142 @@ NS_IMETHODIMP nsTextEditor::SetBodyWrapWidth(PRInt32 aWrapColumn)
 
 NS_IMETHODIMP nsTextEditor::OutputTextToString(nsString& aOutputString)
 {
-  return OutputTextInternal(nsnull,&aOutputString,nsnull);
-}
+  nsCOMPtr<nsITextEncoder> encoder;
+  nsresult rv = nsComponentManager::CreateInstance(kTextEncoderCID,
+                                                   nsnull,
+                                                   nsIDocumentEncoder::GetIID(),
+                                                   getter_AddRefs(encoder));
+  if (NS_FAILED(rv))
+    return rv;
 
-NS_IMETHODIMP nsTextEditor::OutputTextToStream(nsIOutputStream* aOutputStream, nsString* aCharsetOverride)
-{
-  return OutputTextInternal(aOutputStream,nsnull,aCharsetOverride);
-}
-
-
-NS_IMETHODIMP nsTextEditor::OutputTextInternal(nsIOutputStream* aOutputStream, nsString* aOutputString, nsString* aCharsetOverride)
-{ 
-  nsresult rv = NS_ERROR_FAILURE;
+  nsCOMPtr<nsIDOMDocument> domdoc;
+  rv = GetDocument(getter_AddRefs(domdoc));
+  if (NS_FAILED(rv))
+    return rv;
+  nsCOMPtr<nsIDocument> doc = do_QueryInterface(domdoc);
+  nsString mimetype ("text/plain");
 
   nsCOMPtr<nsIPresShell> shell;
- 	GetPresShell(getter_AddRefs(shell));
-  if (shell) {
-    nsCOMPtr<nsIDocument> doc;
-    shell->GetDocument(getter_AddRefs(doc));
-    if (doc) {
-      nsString buffer;
 
-      doc->CreateXIF(buffer);
-
-      nsAutoString charset;
-      rv = doc->GetDocumentCharacterSet(charset);
-      if(NS_FAILED(rv)) {
-         charset = "ISO-8859-1"; 
-      }
-      nsIParser* parser;
-
-      static NS_DEFINE_IID(kCParserIID, NS_IPARSER_IID);
-      static NS_DEFINE_IID(kCParserCID, NS_PARSER_IID);
-
-      rv = nsComponentManager::CreateInstance(kCParserCID, 
-                                                 nsnull, 
-                                                 kCParserIID, 
-                                                 (void **)&parser);
-
-      if (NS_SUCCEEDED(rv)) {
-        nsIHTMLContentSink* sink = nsnull;
-        
-        if (NS_SUCCEEDED(rv))
-        {
-          
-          if (aOutputString != nsnull)
-            rv = NS_New_HTMLToTXT_SinkStream(&sink,aOutputString); 
-          else if (aOutputStream != nsnull)
-            rv = NS_New_HTMLToTXT_SinkStream(&sink,aOutputStream,aCharsetOverride);
-
-          if (sink && NS_SUCCEEDED(rv))
-          {
- 	          parser->SetContentSink(sink);
-            parser->SetDocumentCharset(charset, kCharsetFromPreviousLoading);
- 	          nsIDTD* dtd = nsnull;
-	          rv = NS_NewXIFDTD(&dtd);
-	          if (NS_OK == rv) {
-	            parser->RegisterDTD(dtd);
-	            parser->Parse(buffer, 0, "text/xif",PR_FALSE,PR_TRUE);           
-	          }
-
-	          NS_IF_RELEASE(dtd);
-	          NS_IF_RELEASE(sink);
-            NS_IF_RELEASE(parser);
-          }
-
-        }        
-      }
-    }
+ 	rv = GetPresShell(getter_AddRefs(shell));
+  if (NS_SUCCEEDED(rv)) {
+    rv = encoder->Init(shell,doc, mimetype);
+    if (NS_FAILED(rv))
+      return rv;
   }
-  return rv;
-}
 
+  return encoder->EncodeToString(aOutputString);
+}
 
 NS_IMETHODIMP nsTextEditor::OutputHTMLToString(nsString& aOutputString)
 {
-  return OutputHTMLInternal(nsnull,&aOutputString,nsnull);
-}
+#if defined(DEBUG_akkana)
+  printf("============Content dump:===========\n");
 
-NS_IMETHODIMP nsTextEditor::OutputHTMLToStream(nsIOutputStream* aOutputStream,nsString* aCharsetOverride)
-{
-  return OutputHTMLInternal(aOutputStream,nsnull,aCharsetOverride);
-}
+  nsCOMPtr<nsIDocument> thedoc;
+  nsCOMPtr<nsIPresShell> presShell;
+  if (NS_SUCCEEDED(GetPresShell(getter_AddRefs(presShell))))
+  {
+    presShell->GetDocument(getter_AddRefs(thedoc));
+    if (thedoc) {
+      nsIContent* root = thedoc->GetRootContent();
+      if (nsnull != root) {
+        root->List(stdout);
+        NS_RELEASE(root);
+      }
+    }
+  }
+#endif
 
+  nsCOMPtr<nsIHTMLEncoder> encoder;
+  nsresult rv = nsComponentManager::CreateInstance(kHTMLEncoderCID,
+                                                   nsnull,
+                                                   nsIDocumentEncoder::GetIID(),
+                                                   getter_AddRefs(encoder));
+  if (NS_FAILED(rv))
+    return rv;
+ 
+  nsCOMPtr<nsIDOMDocument> domdoc;
+  rv = GetDocument(getter_AddRefs(domdoc));
+  if (NS_FAILED(rv))
+    return rv;
+  nsCOMPtr<nsIDocument> doc = do_QueryInterface(domdoc);
+  nsString mimetype ("text/html");
 
-NS_IMETHODIMP nsTextEditor::OutputHTMLInternal(nsIOutputStream* aOutputStream, nsString* aOutputString, nsString* aCharsetOverride)
-{
-  
-  nsresult rv = NS_ERROR_FAILURE;
   nsCOMPtr<nsIPresShell> shell;
- 	GetPresShell(getter_AddRefs(shell));
-  if (shell) {
-    nsCOMPtr<nsIDocument> doc;
-    shell->GetDocument(getter_AddRefs(doc));
-    if (doc) {
-      nsString buffer;
 
-      doc->CreateXIF(buffer);
+ 	rv = GetPresShell(getter_AddRefs(shell));
+  if (NS_SUCCEEDED(rv)) {
+    rv = encoder->Init(shell,doc, mimetype);
+    if (NS_FAILED(rv))
+      return rv;
+  }
 
-      nsAutoString charset;
-      rv = doc->GetDocumentCharacterSet(charset);
-      if(NS_FAILED(rv)) {
-         charset = "ISO-8859-1"; 
-      }
-      nsIParser* parser;
+  return encoder->EncodeToString(aOutputString);
+}
 
-      static NS_DEFINE_IID(kCParserIID, NS_IPARSER_IID);
-      static NS_DEFINE_IID(kCParserCID, NS_PARSER_IID);
+NS_IMETHODIMP nsTextEditor::OutputTextToStream(nsIOutputStream* aOutputStream, nsString* aCharset)
+{
+  nsCOMPtr<nsITextEncoder> encoder;
+  nsresult rv = nsComponentManager::CreateInstance(kTextEncoderCID,
+                                                   nsnull,
+                                                   nsIDocumentEncoder::GetIID(),
+                                                   getter_AddRefs(encoder));
+  if (NS_FAILED(rv))
+    return rv;
 
-      rv = nsComponentManager::CreateInstance(kCParserCID, 
-                                                 nsnull, 
-                                                 kCParserIID, 
-                                                 (void **)&parser);
+  nsCOMPtr<nsIDOMDocument> domdoc;
+  rv = GetDocument(getter_AddRefs(domdoc));
+  if (NS_FAILED(rv))
+    return rv;
+  nsCOMPtr<nsIDocument> doc = do_QueryInterface(domdoc);
+  nsString mimetype ("text/plain");
 
-      if (NS_OK == rv) {
-        nsIHTMLContentSink* sink = nsnull;
+  if (aCharset && aCharset->Length() != 0 && aCharset->Equals("null")==PR_FALSE)
+    encoder->SetCharset(*aCharset);
 
-        if (aOutputStream)
-          rv = NS_New_HTML_ContentSinkStream(&sink,aOutputStream,aCharsetOverride);
-        else if (aOutputString)
-          rv = NS_New_HTML_ContentSinkStream(&sink,aOutputString);
-  
-      	if (sink && NS_SUCCEEDED(rv)) {
+  nsCOMPtr<nsIPresShell> shell;
 
-	        if (NS_OK == rv) {
-	          parser->SetContentSink(sink);
-	    
-	          parser->SetDocumentCharset(charset, kCharsetFromPreviousLoading);
+ 	rv = GetPresShell(getter_AddRefs(shell));
+  if (NS_SUCCEEDED(rv)) {
+    rv = encoder->Init(shell,doc, mimetype);
+    if (NS_FAILED(rv))
+      return rv;
+  }
 
-	          nsIDTD* dtd = nsnull;
-	          rv = NS_NewXIFDTD(&dtd);
-	          if (NS_OK == rv) {
-	            parser->RegisterDTD(dtd);
-	            parser->Parse(buffer, 0, "text/xif",PR_FALSE,PR_TRUE);           
-	          }
-	          NS_IF_RELEASE(dtd);
-	          NS_IF_RELEASE(sink);
-	        }
-        }
-        NS_RELEASE(parser);
-      }
-  	}
-	}
-  return rv;
+  return encoder->EncodeToStream(aOutputStream);
+}
+
+NS_IMETHODIMP nsTextEditor::OutputHTMLToStream(nsIOutputStream* aOutputStream,nsString* aCharset)
+{
+  nsCOMPtr<nsIHTMLEncoder> encoder;
+  nsresult rv = nsComponentManager::CreateInstance(kHTMLEncoderCID,
+                                                   nsnull,
+                                                   nsIDocumentEncoder::GetIID(),
+                                                   getter_AddRefs(encoder));
+  if (NS_FAILED(rv))
+    return rv;
+
+  nsCOMPtr<nsIDOMDocument> domdoc;
+  rv = GetDocument(getter_AddRefs(domdoc));
+  if (NS_FAILED(rv))
+    return rv;
+  nsCOMPtr<nsIDocument> doc = do_QueryInterface(domdoc);
+  nsString mimetype ("text/html");
+
+  nsCOMPtr<nsIPresShell> shell;
+
+  if (aCharset && aCharset->Length() != 0 && aCharset->Equals("null")==PR_FALSE)
+    encoder->SetCharset(*aCharset);
+
+ 	rv = GetPresShell(getter_AddRefs(shell));
+  if (NS_SUCCEEDED(rv)) {
+    rv = encoder->Init(shell,doc, mimetype);
+    if (NS_FAILED(rv))
+      return rv;
+  }
+
+  return encoder->EncodeToStream(aOutputStream);
 }
 
 

@@ -276,8 +276,6 @@ protected:
   
 
   TypeInState *GetTypeInState(); 
-  NS_IMETHOD OutputTextInternal(nsIOutputStream* aOutputStream, nsString* aOutputString, nsString* aCharsetOverride);
-  NS_IMETHOD OutputHTMLInternal(nsIOutputStream* aOutputStream, nsString* aOutputString, nsString* aCharsetOverride);
 
   /** simple utility to handle any error with event listener allocation or registration */
   void HandleEventListenerError();
