@@ -267,24 +267,44 @@ CERT_FindCertByIssuerAndSN(CERTCertDBHandle *handle, CERTIssuerAndSN *issuerAndS
     return cert;
 }
 
+static NSSCertificate *
+get_best_temp_or_perm(NSSCertificate *ct, NSSCertificate *cp)
+{
+    nssBestCertificateCB best;
+    NSSUsage usage;
+    usage.anyUsage = PR_TRUE;
+    nssBestCertificate_SetArgs(&best, NULL, &usage, NULL);
+    if (ct) {
+	nssBestCertificate_Callback(ct, (void *)&best);
+    }
+    if (cp) {
+	nssBestCertificate_Callback(cp, (void *)&best);
+    }
+    return best.cert;
+}
+
 CERTCertificate *
 CERT_FindCertByName(CERTCertDBHandle *handle, SECItem *name)
 {
-    NSSCertificate *c;
+    NSSCertificate *cp, *ct, *c;
     NSSDER subject;
     NSSUsage usage;
     NSSCryptoContext *cc;
     NSSITEM_FROM_SECITEM(&subject, name);
     usage.anyUsage = PR_TRUE;
     cc = STAN_GetDefaultCryptoContext();
-    c = NSSCryptoContext_FindBestCertificateBySubject(cc, &subject, 
-                                                      NULL, &usage, NULL);
-    if (!c) {
-	c = NSSTrustDomain_FindBestCertificateBySubject(handle, &subject, 
-	                                                NULL, &usage, NULL);
-	if (!c) return NULL;
+    ct = NSSCryptoContext_FindBestCertificateBySubject(cc, &subject, 
+                                                       NULL, &usage, NULL);
+    cp = NSSTrustDomain_FindBestCertificateBySubject(handle, &subject, 
+                                                     NULL, &usage, NULL);
+    c = get_best_temp_or_perm(ct, cp);
+    if (ct) NSSCertificate_Destroy(ct);
+    if (cp) NSSCertificate_Destroy(cp);
+    if (c) {
+	return STAN_GetCERTCertificate(c);
+    } else {
+	return NULL;
     }
-    return STAN_GetCERTCertificate(c);
 }
 
 CERTCertificate *
@@ -310,16 +330,27 @@ CERTCertificate *
 CERT_FindCertByNickname(CERTCertDBHandle *handle, char *nickname)
 {
     NSSCryptoContext *cc;
-    NSSCertificate *c;
+    NSSCertificate *c, *ct;
+    CERTCertificate *cert;
     NSSUsage usage;
     usage.anyUsage = PR_TRUE;
     cc = STAN_GetDefaultCryptoContext();
-    c = NSSCryptoContext_FindBestCertificateByNickname(cc, nickname, 
+    ct = NSSCryptoContext_FindBestCertificateByNickname(cc, nickname, 
                                                        NULL, &usage, NULL);
+    cert = PK11_FindCertFromNickname(nickname, NULL);
+    c = NULL;
+    if (cert) {
+	c = get_best_temp_or_perm(ct, STAN_GetNSSCertificate(cert));
+	CERT_DestroyCertificate(cert);
+	if (ct) NSSCertificate_Destroy(ct);
+    } else {
+	c = ct;
+    }
     if (c) {
 	return STAN_GetCERTCertificate(c);
+    } else {
+	return NULL;
     }
-    return PK11_FindCertFromNickname(nickname, NULL);
 }
 
 CERTCertificate *
@@ -343,21 +374,48 @@ CERTCertificate *
 CERT_FindCertByNicknameOrEmailAddr(CERTCertDBHandle *handle, char *name)
 {
     NSSCryptoContext *cc;
-    NSSCertificate *c;
+    NSSCertificate *c, *ct;
+    CERTCertificate *cert;
     NSSUsage usage;
     usage.anyUsage = PR_TRUE;
     cc = STAN_GetDefaultCryptoContext();
-    c = NSSCryptoContext_FindBestCertificateByNickname(cc, name, 
+    ct = NSSCryptoContext_FindBestCertificateByNickname(cc, name, 
                                                        NULL, &usage, NULL);
+    if (!ct) {
+	ct = NSSCryptoContext_FindBestCertificateByEmail(cc, name, 
+	                                                NULL, &usage, NULL);
+    }
+    cert = PK11_FindCertFromNickname(name, NULL);
+    if (cert) {
+	c = get_best_temp_or_perm(ct, STAN_GetNSSCertificate(cert));
+	CERT_DestroyCertificate(cert);
+	if (ct) NSSCertificate_Destroy(ct);
+    } else {
+	c = ct;
+    }
     if (c) {
 	return STAN_GetCERTCertificate(c);
     }
-    c = NSSCryptoContext_FindBestCertificateByEmail(cc, name, 
-                                                    NULL, &usage, NULL);
-    if (c) {
-	return STAN_GetCERTCertificate(c);
+    return NULL;
+}
+
+static void 
+add_to_subject_list(CERTCertList *certList, CERTCertificate *cert,
+                    PRBool validOnly, int64 sorttime)
+{
+    SECStatus secrv;
+    if (!validOnly ||
+	CERT_CheckCertValidTimes(cert, sorttime, PR_FALSE) 
+	 == secCertTimeValid) {
+	    secrv = CERT_AddCertToListSorted(certList, cert, 
+	                                     CERT_SortCBValidity, 
+	                                     (void *)&sorttime);
+	    if (secrv != SECSuccess) {
+		CERT_DestroyCertificate(cert);
+	    }
+    } else {
+	CERT_DestroyCertificate(cert);
     }
-    return PK11_FindCertFromNickname(name, NULL);
 }
 
 CERTCertList *
@@ -365,54 +423,53 @@ CERT_CreateSubjectCertList(CERTCertList *certList, CERTCertDBHandle *handle,
 			   SECItem *name, int64 sorttime, PRBool validOnly)
 {
     NSSCryptoContext *cc;
-    NSSCertificate **subjectCerts;
-    NSSCertificate *c;
+    NSSCertificate **tSubjectCerts, **pSubjectCerts;
+    NSSCertificate **ci;
+    CERTCertificate *cert;
     NSSDER subject;
-    PRUint32 i;
-    SECStatus secrv;
+    PRBool myList = PR_FALSE;
     cc = STAN_GetDefaultCryptoContext();
     NSSITEM_FROM_SECITEM(&subject, name);
-    subjectCerts = NSSCryptoContext_FindCertificatesBySubject(cc,
-                                                              &subject,
-                                                              NULL,
-                                                              0,
-                                                              NULL);
-    if (!subjectCerts) {
-	subjectCerts = NSSTrustDomain_FindCertificatesBySubject(handle,
-	                                                        &subject,
-	                                                        NULL,
-	                                                        0,
-	                                                        NULL);
-	if (!subjectCerts) {
-	    return NULL;
-	}
+    /* Collect both temp and perm certs for the subject */
+    tSubjectCerts = NSSCryptoContext_FindCertificatesBySubject(cc,
+                                                               &subject,
+                                                               NULL,
+                                                               0,
+                                                               NULL);
+    pSubjectCerts = NSSTrustDomain_FindCertificatesBySubject(handle,
+                                                             &subject,
+                                                             NULL,
+                                                             0,
+                                                             NULL);
+    if (!tSubjectCerts && !pSubjectCerts) {
+	return NULL;
     }
-    i = 0;
-    if (certList == NULL && subjectCerts) {
+    if (certList == NULL) {
 	certList = CERT_NewCertList();
+	myList = PR_TRUE;
 	if (!certList) goto loser;
     }
-    while ((c = subjectCerts[i++])) {
-	CERTCertificate *cc = STAN_GetCERTCertificate(c);
-	if (!validOnly ||
-	     CERT_CheckCertValidTimes(cc, sorttime, PR_FALSE)
-                  == secCertTimeValid) {
-	    secrv = CERT_AddCertToListSorted(certList, cc, 
-	                                     CERT_SortCBValidity, 
-	                                     (void *)&sorttime);
-	    if (secrv != SECSuccess) {
-		CERT_DestroyCertificate(cc);
-		goto loser;
-	    }
-	} else {
-	    CERT_DestroyCertificate(cc);
-	}
+    /* Iterate over the matching temp certs.  Add them to the list */
+    ci = tSubjectCerts;
+    while (ci && *ci) {
+	cert = STAN_GetCERTCertificate(*ci);
+	add_to_subject_list(certList, cert, validOnly, sorttime);
+	ci++;
     }
-    nss_ZFreeIf(subjectCerts);
+    /* Iterate over the matching perm certs.  Add them to the list */
+    ci = pSubjectCerts;
+    while (ci && *ci) {
+	cert = STAN_GetCERTCertificate(*ci);
+	add_to_subject_list(certList, cert, validOnly, sorttime);
+	ci++;
+    }
+    nss_ZFreeIf(tSubjectCerts);
+    nss_ZFreeIf(pSubjectCerts);
     return certList;
 loser:
-    nss_ZFreeIf(subjectCerts);
-    if (certList != NULL) {
+    nss_ZFreeIf(tSubjectCerts);
+    nss_ZFreeIf(pSubjectCerts);
+    if (myList && certList != NULL) {
 	CERT_DestroyCertList(certList);
     }
     return NULL;
