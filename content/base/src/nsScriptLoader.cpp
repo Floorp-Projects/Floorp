@@ -626,7 +626,6 @@ nsScriptLoader::OnStreamComplete(nsIStreamLoader* aLoader,
   if (stringLen) {
     nsAutoString characterSet, preferred;
     nsCOMPtr<nsIUnicodeDecoder> unicodeDecoder;
-    nsXPIDLCString contenttypeheader;
     nsCOMPtr<nsIHttpChannel> httpChannel;
 
     nsCOMPtr<nsIChannel> channel;
@@ -639,22 +638,11 @@ nsScriptLoader::OnStreamComplete(nsIStreamLoader* aLoader,
 
     httpChannel = do_QueryInterface(channel);
     if (httpChannel) {
-      rv = httpChannel->GetResponseHeader("content-type",
-                                          getter_Copies(contenttypeheader));
-    }
-
-    if (NS_SUCCEEDED(rv)) {
-      nsAutoString contentType;
-      contentType.AssignWithConversion(contenttypeheader.get());
-
-      PRInt32 start = contentType.RFind("charset=", PR_TRUE ) ;
-
-      if(kNotFound != start) {
-        start += 8; // 8 = "charset=".length
-        PRInt32 end = contentType.FindCharInSet(";\n\r ", start  );
-        if(kNotFound == end ) end = contentType.Length();
-
-        contentType.Mid(characterSet, start, end - start);
+      nsXPIDLCString charsetheader;
+      rv = httpChannel->GetCharset(getter_Copies(charsetheader));
+    
+      if (NS_SUCCEEDED(rv)) {
+        characterSet = NS_ConvertASCIItoUCS2(charsetheader);      
         nsCOMPtr<nsICharsetAlias> calias(do_GetService(kCharsetAliasCID,&rv));
 
         if(NS_SUCCEEDED(rv) && calias) {
