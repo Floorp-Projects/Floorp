@@ -236,41 +236,39 @@ nsBlockReflowContext::AlignBlockHorizontally(nscoord                 aWidth,
 }
 
 static void
-ComputeShrinkwrapMargins(const nsStyleMargin* aStyleMargin, nscoord aWidth, nsMargin& aMargin, nscoord& aXToUpdate) {
+ComputeShrinkwrapMargins(const nsStyleMargin* aStyleMargin, nscoord aWidth,
+                         nsMargin& aMargin, nscoord& aXToUpdate)
+{
   nscoord boxWidth = aWidth;
-  float   leftPct = 0.0;
-  float   rightPct = 0.0;
+  float leftPct = 0.0, rightPct = 0.0;
+  const nsStyleSides& margin = aStyleMargin->mMargin;
   
-  if (eStyleUnit_Percent == aStyleMargin->mMargin.GetLeftUnit()) {
-    nsStyleCoord  leftCoord;
-    
-    aStyleMargin->mMargin.GetLeft(leftCoord);
-    leftPct = leftCoord.GetPercentValue();
-    
+  if (eStyleUnit_Percent == margin.GetLeftUnit()) {
+    nsStyleCoord coord;
+    leftPct = margin.GetLeft(coord).GetPercentValue();
   } else {
     boxWidth += aMargin.left;
   }
   
-  if (eStyleUnit_Percent == aStyleMargin->mMargin.GetRightUnit()) {
-    nsStyleCoord  rightCoord;
-    
-    aStyleMargin->mMargin.GetRight(rightCoord);
-    rightPct = rightCoord.GetPercentValue();
-    
+  if (eStyleUnit_Percent == margin.GetRightUnit()) {
+    nsStyleCoord coord;
+    rightPct = margin.GetRight(coord).GetPercentValue();
   } else {
     boxWidth += aMargin.right;
   }
   
-  // The total shrink wrap width "sww" is calculated by the expression:
+  // The total shrink wrap width "sww" (i.e., the width that the
+  // containing block needs to be to shrink-wrap this block) is
+  // calculated by the expression:
   //   sww = bw + (mp * sww)
-  // where "bw" is the box width (frame width plus margins that aren't percentage
-  // based) and "mp" are the total margin percentages (i.e., the left percentage
-  // value plus the right percentage value)
-  // Solving for "sww" gives us:
+  // where "bw" is the box width (frame width plus margins that aren't
+  // percentage based) and "mp" are the total margin percentages (i.e.,
+  // the left percentage value plus the right percentage value).
+  // Solving for "sww" gives:
   //  sww = bw / (1 - mp)
-  // Note that this is only well defined for "mp" less than 100%
+  // Note that this is only well defined for "mp" less than 100% and 
+  // greater than -100% (XXXldb but we only accept 0 to 100%).
 
-  // XXXldb  Um... percentage margins are based on the containing block width.
   float marginPct = leftPct + rightPct;
   if (marginPct >= 1.0) {
     // Ignore the right percentage and just use the left percentage
@@ -282,11 +280,11 @@ ComputeShrinkwrapMargins(const nsStyleMargin* aStyleMargin, nscoord aWidth, nsMa
   if ((marginPct > 0.0) && (marginPct < 1.0)) {
     double shrinkWrapWidth = float(boxWidth) / (1.0 - marginPct);
     
-    if (eStyleUnit_Percent == aStyleMargin->mMargin.GetLeftUnit()) {
+    if (eStyleUnit_Percent == margin.GetLeftUnit()) {
       aMargin.left = NSToCoordFloor((float)(shrinkWrapWidth * leftPct));
       aXToUpdate += aMargin.left;
     }
-    if (eStyleUnit_Percent == aStyleMargin->mMargin.GetRightUnit()) {
+    if (eStyleUnit_Percent == margin.GetRightUnit()) {
       aMargin.right = NSToCoordFloor((float)(shrinkWrapWidth * rightPct));
     }
   }
