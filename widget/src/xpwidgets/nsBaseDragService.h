@@ -22,7 +22,6 @@
 #include "nsIDragService.h"
 #include "nsIDragSession.h"
 #include "nsITransferable.h"
-#include "nsSize.h"
 #include "nsISupportsArray.h"
 #include "nsCOMPtr.h"
 
@@ -58,9 +57,12 @@ public:
 
   NS_IMETHOD GetData (nsITransferable * aTransferable, PRUint32 aItemIndex);
   NS_IMETHOD GetNumDropItems (PRUint32 * aNumItems);
-  NS_IMETHOD IsDataFlavorSupported(nsString * aDataFlavor);
+  NS_IMETHOD IsDataFlavorSupported(const char *aDataFlavor, PRBool *_retval);
 
 protected:
+
+  static void CreatePrimitiveForData ( const char* aFlavor, void* aDataBuff, PRUint32 aDataLen, nsISupports** aPrimitive );
+  static void CreateDataFromPrimitive ( const char* aFlavor, nsISupports* aPrimitive, void** aDataBuff, PRUint32 aDataLen );
 
   nsCOMPtr<nsISupportsArray> mTransArray;
   PRBool             mCanDrop;

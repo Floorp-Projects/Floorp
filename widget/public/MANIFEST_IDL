@@ -4,3 +4,7 @@
 
 nsIFileSpecWithUI.idl
 nsISound.idl
+nsITransferable.idl
+nsIDragSession.idl
+nsIDragService.idl
+nsIFormatConverter.idl

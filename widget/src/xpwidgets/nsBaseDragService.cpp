@@ -20,11 +20,12 @@
 #include "nsITransferable.h"
 
 #include "nsIServiceManager.h"
-#include "nsWidgetsCID.h"
 #include "nsITransferable.h"
 #include "nsISupportsArray.h"
 #include "nsSize.h"
 #include "nsIRegion.h"
+#include "nsISupportsPrimitives.h"
+#include "nsCOMPtr.h"
 
 
 NS_IMPL_ADDREF(nsBaseDragService)
@@ -147,7 +148,7 @@ NS_IMETHODIMP nsBaseDragService::GetData (nsITransferable * aTransferable, PRUin
 }
 
 //-------------------------------------------------------------------------
-NS_IMETHODIMP nsBaseDragService::IsDataFlavorSupported(nsString * aDataFlavor)
+NS_IMETHODIMP nsBaseDragService::IsDataFlavorSupported(const char *aDataFlavor, PRBool *_retval)
 {
   return NS_ERROR_FAILURE;
 }
@@ -168,8 +169,8 @@ NS_IMETHODIMP nsBaseDragService::GetCurrentSession (nsIDragSession ** aSession)
   // "this" also implements a drag session, so say we are one but only if there
   // is currently a drag going on. 
   if ( mDoingDrag ) {
-    NS_ADDREF_THIS();      // addRef because we're a "getter"
     *aSession = this;
+    NS_ADDREF(*aSession);      // addRef because we're a "getter"
   }
   else
     *aSession = nsnull;
@@ -195,4 +196,58 @@ NS_IMETHODIMP nsBaseDragService::EndDragSession ()
   }
   mDoingDrag = PR_FALSE;
   return NS_OK;
+}
+
+
+//еее skanky hack until i can correctly re-create primitives from native data. i know this code sucks,
+//еее please forgive me.
+void
+nsBaseDragService :: CreatePrimitiveForData ( const char* aFlavor, void* aDataBuff, PRUint32 aDataLen, nsISupports** aPrimitive )
+{
+  if ( !aPrimitive )
+    return;
+
+  if ( strcmp(aFlavor,kTextMime) == 0 ) {
+    nsCOMPtr<nsISupportsString> primitive;
+    nsresult rv = nsComponentManager::CreateInstance(NS_SUPPORTS_STRING_PROGID, nsnull, 
+                                                      NS_GET_IID(nsISupportsString), getter_AddRefs(primitive));
+    if ( primitive ) {
+      primitive->SetData ( (char*)aDataBuff );
+      nsCOMPtr<nsISupports> genericPrimitive ( do_QueryInterface(primitive) );
+      *aPrimitive = genericPrimitive;
+      NS_ADDREF(*aPrimitive);
+    }
+  }
+  else {
+    nsCOMPtr<nsISupportsWString> primitive;
+    nsresult rv = nsComponentManager::CreateInstance(NS_SUPPORTS_WSTRING_PROGID, nsnull, 
+                                                      NS_GET_IID(nsISupportsWString), getter_AddRefs(primitive));
+    if ( primitive ) {
+      primitive->SetData ( (unsigned short*)aDataBuff );
+      nsCOMPtr<nsISupports> genericPrimitive ( do_QueryInterface(primitive) );
+      *aPrimitive = genericPrimitive;
+      NS_ADDREF(*aPrimitive);
+    }  
+  }
+
+} // CreatePrimitiveForData
+
+
+void
+nsBaseDragService :: CreateDataFromPrimitive ( const char* aFlavor, nsISupports* aPrimitive, void** aDataBuff, PRUint32 aDataLen )
+{
+  if ( !aDataBuff )
+    return;
+
+  if ( strcmp(aFlavor,kTextMime) == 0 ) {
+    nsCOMPtr<nsISupportsString> plainText ( do_QueryInterface(aPrimitive) );
+    if ( plainText )
+      plainText->GetData ( (char**)aDataBuff );
+  }
+  else {
+    nsCOMPtr<nsISupportsWString> doubleByteText ( do_QueryInterface(aPrimitive) );
+    if ( doubleByteText )
+      doubleByteText->GetData ( (unsigned short**)aDataBuff );
+  }
+
 }

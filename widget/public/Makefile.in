@@ -28,7 +28,6 @@ EXPORTS = \
 	nsIFontSizeIterator.h \
 	nsIFontNameIterator.h \
 	nsIFontRetrieverService.h \
-	nsIFileListTransferable.h \
 	nsIMenuBar.h	\
 	nsIMenu.h		\
 	nsIMenuItem.h	\
@@ -62,12 +61,7 @@ EXPORTS = \
 	nsIPopUpMenu.h \
 	nsIContentConnector.h \
 	nsIClipboard.h \
-	nsITransferable.h \
-	nsIFileListTransferable.h \
-	nsIDragService.h \
-	nsIDragSession.h \
 	nsIClipboardOwner.h \
-	nsIFormatConverter.h \
 	nsIFontNameIterator.h \
 	nsIFontSizeIterator.h \
 	nsIFontRetrieverService.h \
@@ -82,6 +76,10 @@ XPIDL_MODULE = widget
 XPIDLSRCS =				\
 	nsIFileSpecWithUI.idl		\
 	nsISound.idl			\
+	nsITransferable.idl			\
+	nsIDragSession.idl			\
+	nsIDragService.idl			\
+	nsIFormatConverter.idl			\
 	$(NULL)
 
 include $(topsrcdir)/config/config.mk

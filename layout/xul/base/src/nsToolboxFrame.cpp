@@ -50,17 +50,15 @@
 #include "nsIDOMDragListener.h"
 #include "nsIDOMEventReceiver.h"
 #include "nsIDOMEventListener.h"
+#include "nsISupportsPrimitives.h"
+#include "nsISupportsArray.h"
+
 
 // Drag & Drop, Clipboard Support
 static NS_DEFINE_CID(kCDragServiceCID,         NS_DRAGSERVICE_CID);
 static NS_DEFINE_CID(kCTransferableCID,        NS_TRANSFERABLE_CID);
 static NS_DEFINE_IID(kCDataFlavorCID,          NS_DATAFLAVOR_CID);
 static NS_DEFINE_IID(kCXIFFormatConverterCID,  NS_XIFFORMATCONVERTER_CID);
-
-static NS_DEFINE_IID(kISupportsIID,  NS_ISUPPORTS_IID);
-static NS_DEFINE_IID(kIDOMEventReceiverIID,  NS_IDOMEVENTRECEIVER_IID);
-
-#include "nsISupportsArray.h"
 
 
 NS_IMPL_ADDREF(nsToolboxFrame::DragListenerDelegate);
@@ -590,21 +588,6 @@ nsToolboxFrame :: HandleEvent ( nsIPresContext& aPresContext,
       OnMouseExit ( );
       break;
 
-    case NS_DRAGDROP_ENTER: 
-      // show drop feedback 
-      break; 
-
-    case NS_DRAGDROP_OVER: 
-      break; 
-
-    case NS_DRAGDROP_EXIT: 
-      // remove drop feedback 
-      break; 
-
-    case NS_DRAGDROP_DROP: 
-      // do drop coolness stuff 
-      break; 
-
     default:
       break;
 
@@ -771,13 +754,16 @@ nsToolboxFrame::DragEnter(nsIDOMEvent* aDragEvent)
   nsresult rv = nsServiceManager::GetService(kCDragServiceCID,
                                              nsIDragService::GetIID(),
                                              (nsISupports **)&dragService);
-  if (NS_OK == rv) {
+  if ( NS_SUCCEEDED(rv) ) {
     nsCOMPtr<nsIDragSession> dragSession(do_QueryInterface(dragService));
 
-    nsAutoString toolbarFlavor(TOOLBAR_MIME);
-    if (dragSession && (NS_OK == dragSession->IsDataFlavorSupported(&toolbarFlavor))) {
-      dragSession->SetCanDrop(PR_TRUE);
-      rv = NS_ERROR_BASE; // consume event
+    if ( dragSession ) {
+      PRBool flavorSupported = PR_FALSE;
+      dragSession->IsDataFlavorSupported(TOOLBAR_MIME, &flavorSupported);
+      if ( flavorSupported ) {
+        dragSession->SetCanDrop(PR_TRUE);
+        rv = NS_ERROR_BASE; // consume event
+      }
     }
     
     nsServiceManager::ReleaseService(kCDragServiceCID, dragService);
@@ -794,19 +780,20 @@ nsToolboxFrame::DragOver(nsIDOMEvent* aDragEvent)
 {
   // now tell the drag session whether we can drop here
   nsIDragService* dragService;
-  nsresult rv = nsServiceManager::GetService(kCDragServiceCID,
-                                           nsIDragService::GetIID(),
-                                           (nsISupports **)&dragService);
-  if (NS_OK == rv) {
+  nsresult rv = nsServiceManager::GetService(kCDragServiceCID, nsIDragService::GetIID(),
+                                              (nsISupports **)&dragService);
+  if ( NS_SUCCEEDED(rv) ) {
     nsCOMPtr<nsIDragSession> dragSession(do_QueryInterface(dragService));
-    nsAutoString toolbarFlavor(TOOLBAR_MIME);
-    if (dragSession && NS_OK == dragSession->IsDataFlavorSupported(&toolbarFlavor)) {
+    if ( dragSession ) {
+      PRBool flavorSupported = PR_FALSE;
+      dragSession->IsDataFlavorSupported(TOOLBAR_MIME, &flavorSupported);
+      if ( flavorSupported ) {
+        // Right here you need to figure out where the mouse is 
+        // and whether you can drop here
 
-      // Right here you need to figure out where the mouse is 
-      // and whether you can drop here
-
-      dragSession->SetCanDrop(PR_TRUE);
-      rv = NS_ERROR_BASE; // consume event
+        dragSession->SetCanDrop(PR_TRUE);
+        rv = NS_ERROR_BASE; // consume event
+      }
     }
     
     nsServiceManager::ReleaseService(kCDragServiceCID, dragService);
@@ -830,9 +817,6 @@ nsToolboxFrame::DragExit(nsIDOMEvent* aDragEvent)
 nsresult
 nsToolboxFrame::DragDrop(nsIDOMEvent* aMouseEvent)
 {
-  // String for doing paste
-  nsString stuffToPaste;
-
   // Create drag service for getting state of drag
   nsIDragService* dragService;
   nsresult rv = nsServiceManager::GetService(kCDragServiceCID,
@@ -849,12 +833,9 @@ nsToolboxFrame::DragDrop(nsIDOMEvent* aMouseEvent)
                                               nsITransferable::GetIID(), 
                                               (void**) getter_AddRefs(trans));
       if ( NS_SUCCEEDED(rv) && trans ) {
-        // Add the text Flavor to the transferable, 
-        // because that is the only type of data we are
+        // Add the toolbar Flavor to the transferable, because that is the only type of data we are
         // looking for at the moment.
-        nsAutoString toolbarMime (TOOLBAR_MIME);
-        trans->AddDataFlavor(&toolbarMime);
-        //trans->AddDataFlavor(mImageDataFlavor);
+        trans->AddDataFlavor(TOOLBAR_MIME);
 
         // Fill the transferable with data for each drag item in succession
         PRUint32 numItems = 0; 
@@ -866,19 +847,18 @@ nsToolboxFrame::DragDrop(nsIDOMEvent* aMouseEvent)
           for (i=0;i<numItems;++i) {
             if (NS_SUCCEEDED(dragSession->GetData(trans, i))) { 
  
-              // Get the string data out of the transferable
-              // Note: the transferable owns the pointer to the data
-              char *str = 0;
+              // Get the string data out of the transferable as a nsISupportsString.
+              nsCOMPtr<nsISupports> data;
               PRUint32 len;
-              trans->GetAnyTransferData(&toolbarMime, (void **)&str, &len);
+              char* whichFlavor;
+              trans->GetAnyTransferData(&whichFlavor, getter_AddRefs(data), &len);
+              nsCOMPtr<nsISupportsString> dataAsString ( do_QueryInterface(data) );
 
-              // If the string was not empty then paste it in
-              if (str) {
-                char buf[256];
-                strncpy(buf, str, len);
-                buf[len] = 0;
-                printf("Dropped: %s\n", buf);
-                stuffToPaste.SetString(str, len);
+              // If the string was not empty then make it so.
+              if ( dataAsString ) {
+                char* stuffToPaste;
+                dataAsString->toString ( &stuffToPaste );
+                printf("Dropped: %s\n", stuffToPaste);
                 dragSession->SetCanDrop(PR_TRUE);
               }
             }

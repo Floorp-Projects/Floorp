@@ -34,7 +34,6 @@ CPPSRCS= \
 	nsXIFFormatConverter.cpp \
 	nsBaseDragService.cpp    \
 	nsBaseClipboard.cpp      \
-	nsFileListTransferable.cpp \
 	nsFileSpecWithUIImpl.cpp \
 	$(NULL)
 

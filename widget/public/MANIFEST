@@ -2,13 +2,8 @@
 # This is a list of local files which get copied to the mozilla:dist:widget directory
 #
 
-nsIDragSessionMac.h
-nsIFormatConverter.h
 nsIClipboardOwner.h
 nsIClipboard.h
-nsITransferable.h
-nsIDragService.h
-nsIDragSession.h
 nsIDragSessionMac.h
 nsui.h
 nsIWidget.h

@@ -30,10 +30,11 @@
 #include "nsITransferable.h"
 #include "nsString.h"
 #include "nsMimeMapper.h"
-#include "nsWidgetsCID.h"
 #include "nsClipboard.h"
 #include "nsIRegion.h"
 #include "nsVoidArray.h"
+#include "nsISupportsPrimitives.h"
+#include "nsCOMPtr.h"
 
 
 DragSendDataUPP nsDragService::sDragSendDataUPP = NewDragSendDataProc(DragSendDataProc);
@@ -196,19 +197,26 @@ nsDragService :: RegisterDragItemsAndFlavors ( nsISupportsArray * inArray )
   for ( int itemIndex = 0; itemIndex < numDragItems; ++itemIndex ) {
     nsMimeMapperMac theMapper;
   
-      // (assumes that the items were placed into the transferable as nsITranferable*'s, not
-      // nsISupports*'s. Don't forget ElementAt() addRefs for us)
-    nsCOMPtr<nsITransferable> currItem = dont_AddRef(NS_STATIC_CAST(nsITransferable*,inArray->ElementAt(itemIndex)));
+    nsCOMPtr<nsISupports> genericItem;
+    inArray->GetElementAt ( itemIndex, getter_AddRefs(genericItem) );
+    nsCOMPtr<nsITransferable> currItem ( do_QueryInterface(genericItem) );
     if ( currItem ) {   
-      nsVoidArray* flavorList = nsnull;
-      if ( NS_SUCCEEDED(currItem->FlavorsTransferableCanExport(&flavorList)) ) {
-        for ( int flavorIndex = 0; flavorIndex < flavorList->Count(); ++flavorIndex ) {
+      nsCOMPtr<nsISupportsArray> flavorList;
+      if ( NS_SUCCEEDED(currItem->FlavorsTransferableCanExport(getter_AddRefs(flavorList))) ) {
+        PRUint32 numFlavors;
+        flavorList->Count ( &numFlavors );
+        for ( int flavorIndex = 0; flavorIndex < numFlavors; ++flavorIndex ) { 
         
-	      nsString* currentFlavor = NS_STATIC_CAST(nsString*, (*flavorList)[flavorIndex]);
-	      if ( nsnull != currentFlavor ) {
-	        FlavorType macOSFlavor = theMapper.MapMimeTypeToMacOSType(*currentFlavor);
+          nsCOMPtr<nsISupports> genericWrapper;
+          flavorList->GetElementAt ( flavorIndex, getter_AddRefs(genericWrapper) );
+          nsCOMPtr<nsISupportsString> currentFlavor ( do_QueryInterface(genericWrapper) );
+	      if ( currentFlavor ) {
+	        char* flavorStr = nsnull;
+	        currentFlavor->toString ( &flavorStr );
+	        FlavorType macOSFlavor = theMapper.MapMimeTypeToMacOSType(flavorStr);
 	        ::AddDragItemFlavor ( mDragRef, itemIndex, macOSFlavor, NULL, 0, flags );
-          }
+	        delete [] flavorStr;
+	      }
           
         } // foreach flavor in item              
       } // if valid flavor list
@@ -237,7 +245,7 @@ nsDragService :: RegisterDragItemsAndFlavors ( nsISupportsArray * inArray )
 // stop as soon as we find a match.
 //
 NS_IMETHODIMP
-nsDragService :: GetData (nsITransferable * aTransferable, PRUint32 aItemIndex)
+nsDragService :: GetData ( nsITransferable * aTransferable, PRUint32 aItemIndex )
 {
   nsresult errCode = NS_ERROR_FAILURE;
 
@@ -246,11 +254,11 @@ nsDragService :: GetData (nsITransferable * aTransferable, PRUint32 aItemIndex)
     return NS_ERROR_INVALID_ARG;
 
   // get flavor list that includes all acceptable flavors (including ones obtained through
-  // conversion)
-  nsVoidArray* flavorList;
-  errCode = aTransferable->FlavorsTransferableCanImport ( &flavorList );
-  if ( errCode != NS_OK )
-    return NS_ERROR_FAILURE;
+  // conversion). Flavors are nsISupportsStrings so that they can be seen from JS.
+  nsCOMPtr<nsISupportsArray> flavorList;
+  errCode = aTransferable->FlavorsTransferableCanImport ( getter_AddRefs(flavorList) );
+  if ( NS_FAILED(errCode) )
+    return errCode;
 
   // get the data for the requested drag item. Remember that GetDragItemReferenceNumber()
   // is one-based NOT zero-based like |aItemIndex| is.   
@@ -265,13 +273,18 @@ nsDragService :: GetData (nsITransferable * aTransferable, PRUint32 aItemIndex)
   // Now walk down the list of flavors. When we find one that is actually present,
   // copy out the data into the transferable in that format. SetTransferData()
   // implicitly handles conversions.
-  PRUint32 cnt = flavorList->Count();
+  PRUint32 cnt;
+  flavorList->Count ( &cnt );
   for ( int i = 0; i < cnt; ++i ) {
-    nsString * currentFlavor = NS_STATIC_CAST(nsString*, (*flavorList)[i]);
-    if ( nsnull != currentFlavor ) {
+    nsCOMPtr<nsISupports> genericWrapper;
+    flavorList->GetElementAt ( i, getter_AddRefs(genericWrapper) );
+    nsCOMPtr<nsISupportsString> currentFlavor ( do_QueryInterface(genericWrapper) );
+    if ( currentFlavor ) {
       // find MacOS flavor
-      FlavorType macOSFlavor = theMapper.MapMimeTypeToMacOSType(*currentFlavor);
-printf("looking for data in type %s, mac flavor %ld\n", currentFlavor->ToNewCString(), macOSFlavor);
+      char* flavorStr;
+      currentFlavor->toString ( &flavorStr );
+      FlavorType macOSFlavor = theMapper.MapMimeTypeToMacOSType(flavorStr);
+printf("looking for data in type %s, mac flavor %ld\n", flavorStr, macOSFlavor);
 	    
       // check if it is present in the current drag item.
       FlavorFlags unused;
@@ -297,11 +310,15 @@ printf("flavor data size is %ld\n", dataSize);
             return NS_ERROR_FAILURE;
           }
 	          
-          // put it into the transferable
-          errCode = aTransferable->SetTransferData ( currentFlavor, dataBuff, dataSize );
+          // put it into the transferable.
+          nsCOMPtr<nsISupports> genericDataWrapper;
+          CreatePrimitiveForData ( flavorStr, dataBuff, dataSize, getter_AddRefs(genericDataWrapper) );
+          errCode = aTransferable->SetTransferData ( flavorStr, genericDataWrapper, dataSize );
           #ifdef NS_DEBUG
             if ( errCode != NS_OK ) printf("nsDragService:: Error setting data into transferable\n");
           #endif
+          
+          delete [] dataBuff;
         } 
         else {
           #ifdef NS_DEBUG
@@ -313,11 +330,11 @@ printf("flavor data size is %ld\n", dataSize);
         // we found one, get out of this loop!
         break;
 	        
-        } // if a flavor found
-      }
+      } // if a flavor found
+        
+      delete [] flavorStr;
+    }
   } // foreach flavor
-    
-  delete flavorList;
   
   return errCode;
 }
@@ -333,15 +350,18 @@ printf("flavor data size is %ld\n", dataSize);
 // ¥¥¥Êand index to this API
 //
 NS_IMETHODIMP
-nsDragService :: IsDataFlavorSupported(nsString * aDataFlavor)
+nsDragService :: IsDataFlavorSupported(const char *aDataFlavor, PRBool *_retval)
 {
-  nsresult flavorSupported = NS_ERROR_FAILURE;
+  if ( !_retval )
+    return NS_ERROR_INVALID_ARG;
+
+  *_retval = PR_FALSE;
 
   // convert to 4 character MacOS type
   //¥¥¥ this is wrong because it doesn't take the mime mappings present in the
   //¥¥¥ drag item flavor into account. FIX ME!
   nsMimeMapperMac theMapper;
-  FlavorType macFlavor = theMapper.MapMimeTypeToMacOSType(*aDataFlavor);
+  FlavorType macFlavor = theMapper.MapMimeTypeToMacOSType(aDataFlavor);
 
   // search through all drag items looking for something with this flavor. Recall
   // that drag item indices are 1-based.
@@ -356,10 +376,10 @@ nsDragService :: IsDataFlavorSupported(nsString * aDataFlavor)
     FlavorFlags ignored;
     char foundFlavor = ::GetFlavorFlags(mDragRef, currItem, macFlavor, &ignored) == noErr;
     if ( foundFlavor )
-      flavorSupported = NS_OK;
+      *_retval = PR_TRUE;
   } // for each item in drag
 
-  return flavorSupported;
+  return NS_OK;
 
 } // IsDataFlavorSupported
 
@@ -452,19 +472,26 @@ nsDragService :: GetDataForFlavor ( nsISupportsArray* inDragItems, DragReference
   
     // (assumes that the items were placed into the transferable as nsITranferable*'s, not
     // nsISupports*'s.  Don't forget ElementAt() addRefs for us.)
-  nsCOMPtr<nsITransferable> item = dont_AddRef(NS_STATIC_CAST(nsITransferable*,inDragItems->ElementAt(inItemIndex)));
+  nsCOMPtr<nsISupports> genericItem;
+  inDragItems->GetElementAt ( inItemIndex, getter_AddRefs(genericItem) );
+  nsCOMPtr<nsITransferable> item ( do_QueryInterface(genericItem) );
   if ( item ) {
     nsString mimeFlavor;
 
     // create a mime mapper to help us out based on data in a special flavor for this item.
     char* mappings = LookupMimeMappingsForItem(inDragRef, inItemIndex) ;
-    nsMimeMapperMac theMapper ( mappings );  
-    theMapper.MapMacOSTypeToMimeType ( inFlavor, mimeFlavor ); 
+    nsMimeMapperMac theMapper ( mappings );
+    theMapper.MapMacOSTypeToMimeType ( inFlavor, mimeFlavor );
     delete [] mappings;
     
     *outDataSize = 0;
-    if ( NS_FAILED(item->GetTransferData(&mimeFlavor, outData, outDataSize)) )    
-      retVal = cantGetFlavorErr;        
+    char* mimeStr = mimeFlavor.ToNewCString();
+    nsCOMPtr<nsISupports> data;
+    if ( NS_SUCCEEDED(item->GetTransferData(mimeStr, getter_AddRefs(data), outDataSize)) )
+      CreateDataFromPrimitive ( mimeStr, data, outData, *outDataSize );
+    else
+      retVal = cantGetFlavorErr;
+    delete [] mimeStr;     
   } // if valid item
 
   return retVal;

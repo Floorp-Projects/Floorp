@@ -25,20 +25,19 @@ XPIDL_MODULE=widget
 XPIDLSRCS =               \
   .\nsIFileSpecWithUI.idl          \
   .\nsISound.idl          \
+  .\nsITransferable.idl          \
+  .\nsIDragSession.idl          \
+  .\nsIDragService.idl          \
+  .\nsIFormatConverter.idl          \
   $(NULL)
 
 EXPORTS=nsui.h \
   nsIFontSizeIterator.h \
   nsIFontNameIterator.h \
   nsIFontRetrieverService.h \
-  nsIFileListTransferable.h \
-  nsIFormatConverter.h \
   nsIClipboardOwner.h \
   nsIClipboard.h \
   nsIFileWidget.h            \
-  nsITransferable.h \
-  nsIDragService.h \
-  nsIDragSession.h \
   nsIWidget.h \
   nsIButton.h \
   nsICheckButton.h \

@@ -52,7 +52,7 @@ public:
 
   //nsIDragSession
   NS_IMETHOD GetData (nsITransferable * aTransferable, PRUint32 aItemIndex);
-  NS_IMETHOD IsDataFlavorSupported(nsString * aDataFlavor);
+  NS_IMETHOD IsDataFlavorSupported(const char *aDataFlavor, PRBool *_retval);
   NS_IMETHOD GetNumDropItems (PRUint32 * aNumItems);
 
   //nsIDragSessionMac

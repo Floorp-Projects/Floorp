@@ -60,6 +60,7 @@
 #include "nsIFrameSelection.h"
 #include "nsViewsCID.h"
 #include "nsIFrameManager.h"
+#include "nsISupportsPrimitives.h"
 
 // Drag & Drop, Clipboard
 #include "nsWidgetsCID.h"
@@ -1462,43 +1463,46 @@ PresShell::DoCopy()
     NS_IF_RELEASE(sel);
 
     // Get the Clipboard
-    nsIClipboard* clipboard;
+    nsIClipboard* clipboard = nsnull;
     nsresult rv = nsServiceManager::GetService(kCClipboardCID,
                                                nsIClipboard::GetIID(),
                                                (nsISupports **)&clipboard);
 
-    if (NS_OK == rv) {
-
-      // Create a data flavor to tell the transferable 
-      // that it is about to receive XIF
-      nsAutoString flavor(kXIFMime);
-
+    if ( clipboard ) {
       // Create a transferable for putting data on the Clipboard
       nsCOMPtr<nsITransferable> trans;
       rv = nsComponentManager::CreateInstance(kCTransferableCID, nsnull, 
                                               nsITransferable::GetIID(), 
                                               (void**) getter_AddRefs(trans));
-      if (NS_OK == rv) {
+      if ( trans ) {
         // The data on the clipboard will be in "XIF" format
         // so give the clipboard transferable a "XIFConverter" for 
         // converting from XIF to other formats
         nsCOMPtr<nsIFormatConverter> xifConverter;
         rv = nsComponentManager::CreateInstance(kCXIFConverterCID, nsnull, 
-                                                nsIFormatConverter::GetIID(), (void**) getter_AddRefs(xifConverter));
-        if (NS_OK == rv) {
+                                                 NS_GET_IID(nsIFormatConverter), getter_AddRefs(xifConverter));
+        if ( xifConverter ) {
           // Add the XIF DataFlavor to the transferable
           // this tells the transferable that it can handle receiving the XIF format
-          trans->AddDataFlavor(&flavor);
+          trans->AddDataFlavor(kXIFMime);
 
           // Add the converter for going from XIF to other formats
           trans->SetConverter(xifConverter);
 
-          // Now add the XIF data to the transferable
+          // Now add the XIF data to the transferable, placing it into a nsISupportsWString object.
           // the transferable wants the number bytes for the data and since it is double byte
-          // we multiply by 2
-          trans->SetTransferData(&flavor, buffer.ToNewUnicode(), buffer.Length()*2);
-          //trans->SetTransferData(&flavor, buffer.ToNewCString(), buffer.Length());
-
+          // we multiply by 2. 
+          nsCOMPtr<nsISupportsWString> dataWrapper;
+          rv = nsComponentManager::CreateInstance(NS_SUPPORTS_WSTRING_PROGID, nsnull, 
+                                                   NS_GET_IID(nsISupportsWString), getter_AddRefs(dataWrapper));
+          if ( dataWrapper ) {
+            dataWrapper->SetData ( NS_CONST_CAST(PRUnichar*,buffer.GetUnicode()) );
+            // QI the data object an |nsISupports| so that when the transferable holds
+            // onto it, it will addref the correct interface.
+            nsCOMPtr<nsISupports> genericDataObj ( do_QueryInterface(dataWrapper) );
+            trans->SetTransferData(kXIFMime, genericDataObj, buffer.Length()*2);
+          }
+          
           // put the transferable on the clipboard
           clipboard->SetData(trans, nsnull);
         }

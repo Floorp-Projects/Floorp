@@ -62,6 +62,7 @@
 #include "nsIImage.h"
 #include "nsAOLCiter.h"
 #include "nsInternetCiter.h"
+#include "nsISupportsPrimitives.h"
 
 // netwerk
 #include "nsIURI.h"
@@ -2787,23 +2788,26 @@ NS_IMETHODIMP nsHTMLEditor::PasteAsPlaintextQuotation()
   if (NS_SUCCEEDED(rv) && trans)
   {
     // We only handle plaintext pastes here
-    nsAutoString flavor(kTextMime);
-    trans->AddDataFlavor(&flavor);
+    trans->AddDataFlavor(kTextMime);
 
-      // Get the Data from the clipboard
+    // Get the Data from the clipboard
     clipboard->GetData(trans);
 
     // Now we ask the transferable for the data
     // it still owns the data, we just have a pointer to it.
     // If it can't support a "text" output of the data the call will fail
-    char *str = 0;
-    PRUint32 len;
-    rv = trans->GetTransferData(&flavor, (void **)&str, &len);
-    if (NS_SUCCEEDED(rv) && str && len > 0)
+    nsCOMPtr<nsISupports> genericDataObj;
+    PRUint32 len = 0;
+    rv = trans->GetTransferData(kTextMime, getter_AddRefs(genericDataObj), &len);
+    if (NS_SUCCEEDED(rv) && genericDataObj && len > 0)
     {
-      nsString stuffToPaste;
-      stuffToPaste.SetString(str, len);
-      rv = InsertAsPlaintextQuotation(stuffToPaste);
+      nsCOMPtr<nsISupportsWString> dataObj ( do_QueryInterface(genericDataObj) );
+      if ( dataObj ) {
+        PRUnichar* textData = nsnull;
+        dataObj->toString ( &textData );
+        nsAutoString text ( textData );
+        rv = InsertAsPlaintextQuotation(text);
+      }
     }
   }
   nsServiceManager::ReleaseService(kCClipboardCID, clipboard);
@@ -2989,11 +2993,11 @@ NS_IMETHODIMP nsHTMLEditor::Paste()
   nsString stuffToPaste;
 
   // Get Clipboard Service
-  nsIClipboard* clipboard;
-  nsresult rv = nsServiceManager::GetService(kCClipboardCID,
-                                             nsIClipboard::GetIID(),
-                                             (nsISupports **)&clipboard);
-
+  nsresult rv;
+  NS_WITH_SERVICE ( nsIClipboard, clipboard, kCClipboardCID, &rv );
+  if ( NS_FAILED(rv) )
+    return rv;
+    
   // Create generic Transferable for getting the data
   nsCOMPtr<nsITransferable> trans;
   rv = nsComponentManager::CreateInstance(kCTransferableCID, nsnull, 
@@ -3006,45 +3010,50 @@ NS_IMETHODIMP nsHTMLEditor::Paste()
     {
       // Create the desired DataFlavor for the type of data
       // we want to get out of the transferable
-      nsAutoString imageFlavor(kJPEGImageMime);
-      nsAutoString htmlFlavor(kHTMLMime);
-      nsAutoString textFlavor(kTextMime);
-
       if ((mFlags & eEditorPlaintextMask) == 0)  // This should only happen in html editors, not plaintext
       {
-        trans->AddDataFlavor(&imageFlavor);
-        trans->AddDataFlavor(&htmlFlavor);
+        trans->AddDataFlavor(kJPEGImageMime);
+        trans->AddDataFlavor(kHTMLMime);
       }
-      trans->AddDataFlavor(&textFlavor);
+      trans->AddDataFlavor(kTextMime);
 
       // Get the Data from the clipboard
       if (NS_SUCCEEDED(clipboard->GetData(trans)))
       {
-        nsAutoString flavor;
-        char *       data;
-        PRUint32     len;
-        if (NS_SUCCEEDED(trans->GetAnyTransferData(&flavor, (void **)&data, &len)))
+        char* bestFlavor = nsnull;
+        nsCOMPtr<nsISupports> genericDataObj;
+        PRUint32 len = 0;
+        if ( NS_SUCCEEDED(trans->GetAnyTransferData(&bestFlavor, getter_AddRefs(genericDataObj), &len)) )
         {
+          nsAutoString flavor ( bestFlavor );   // just so we can use flavor.Equals()
 #ifdef DEBUG_akkana
-          printf("Got flavor [%s]\n", flavor.ToNewCString());
+          printf("Got flavor [%s]\n", flavor);
 #endif
-          if (flavor.Equals(htmlFlavor))
+          if (flavor.Equals(kHTMLMime))
           {
-            if (data && len > 0) // stuffToPaste is ready for insertion into the content
+            nsCOMPtr<nsISupportsWString> textDataObj ( do_QueryInterface(genericDataObj) );
+            if (textDataObj && len > 0)
             {
-              stuffToPaste.SetString((PRUnichar *)data, len/2);
+              PRUnichar* text = nsnull;
+              textDataObj->toString ( &text );
+              nsAutoString stuffToPaste;
+              stuffToPaste.SetString ( text, len / 2 );
               rv = InsertHTML(stuffToPaste);
             }
           }
-          else if (flavor.Equals(textFlavor))
+          else if (flavor.Equals(kTextMime))
           {
-            if (data && len > 0) // stuffToPaste is ready for insertion into the content
+            nsCOMPtr<nsISupportsString> textDataObj ( do_QueryInterface(genericDataObj) );
+            if (textDataObj && len > 0)
             {
-              stuffToPaste.SetString(data, len);
+              char* text = nsnull;
+              textDataObj->toString ( &text );
+              nsAutoString stuffToPaste;
+              stuffToPaste.SetString ( text, len );
               rv = InsertText(stuffToPaste);
             }
           }
-          else if (flavor.Equals(imageFlavor))
+          else if (flavor.Equals(kJPEGImageMime))
           {
             // Insert Image code here
             printf("Don't know how to insert an image yet!\n");
@@ -3057,7 +3066,6 @@ NS_IMETHODIMP nsHTMLEditor::Paste()
       }
     }
   }
-  nsServiceManager::ReleaseService(kCClipboardCID, clipboard);
 
   return rv;
 }

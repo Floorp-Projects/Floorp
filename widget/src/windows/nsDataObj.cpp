@@ -20,7 +20,10 @@
 #include "nsString.h"
 #include "nsVoidArray.h"
 #include "nsITransferable.h"
+#include "nsISupportsPrimitives.h"
 #include "IENUMFE.h"
+#include "nsCOMPtr.h"
+#include "nsIComponentManager.h"
 
 #include "OLE2.h"
 #include "URLMON.h"
@@ -39,6 +42,12 @@ ULONG nsDataObj::g_cRef = 0;
 
 EXTERN_C GUID CDECL CLSID_nsDataObj =
 	{ 0x1bba7640, 0xdf52, 0x11cf, { 0x82, 0x7b, 0, 0xa0, 0x24, 0x3a, 0xe5, 0x05 } };
+
+
+// I don't like having to define these here, but all this should be going away for a generic
+// mechanism at some point in the future.
+void CreateDataFromPrimitive ( const char* aFlavor, nsISupports* aPrimitive, void** aDataBuff, PRUint32 aDataLen ) ;
+void CreatePrimitiveForData ( const char* aFlavor, void* aDataBuff, PRUint32 aDataLen, nsISupports** aPrimitive ) ;
 
 
 /*
@@ -326,14 +335,19 @@ HRESULT nsDataObj::GetDib(FORMATETC&, STGMEDIUM&)
 //-----------------------------------------------------
 HRESULT nsDataObj::GetText(nsString * aDF, FORMATETC& aFE, STGMEDIUM& aSTG)
 {
-  char     * data;
+  void* data;
   PRUint32   len;
+  
+  char* flavorStr = aDF->ToNewCString();
 
-  // NOTE: Transferable creates new memory, that needs to be deleted
-  mTransferable->GetTransferData(aDF, (void **)&data, &len);
+  // NOTE: CreateDataFromPrimitive creates new memory, that needs to be deleted
+  nsCOMPtr<nsISupports> genericDataWrapper;
+  mTransferable->GetTransferData(flavorStr, getter_AddRefs(genericDataWrapper), &len);
   if (0 == len) {
 	  return ResultFromScode(E_FAIL);
   }
+  CreateDataFromPrimitive ( flavorStr, genericDataWrapper, &data, len );
+  delete [] flavorStr;
 
   HGLOBAL     hGlobalMemory = NULL;
   PSTR        pGlobalMemory = NULL;
@@ -375,7 +389,7 @@ HRESULT nsDataObj::GetText(nsString * aDF, FORMATETC& aFE, STGMEDIUM& aSTG)
     //PSTR pstr = pGlobalMemory;
 
     // need to use memcpy here
-    char* s = data;
+    char* s = NS_REINTERPRET_CAST(char*, data);
     PRUint32 inx;
     for (inx=0; inx < len; inx++) {
 	    *pstr++ = *s++;
@@ -387,7 +401,7 @@ HRESULT nsDataObj::GetText(nsString * aDF, FORMATETC& aFE, STGMEDIUM& aSTG)
 
   aSTG.hGlobal = hGlobalMemory;
 
-  // Now, delete the memory that was created by the transferable
+  // Now, delete the memory that was created by CreateDataFromPrimitive
   delete [] data;
 
 	return ResultFromScode(S_OK);
@@ -449,13 +463,13 @@ CLSID nsDataObj::GetClassID() const
 //-----------------------------------------------------
 // Registers a the DataFlavor/FE pair
 //-----------------------------------------------------
-void nsDataObj::AddDataFlavor(nsString * aDataFlavor, LPFORMATETC aFE)
+void nsDataObj::AddDataFlavor(nsString & aDataFlavor, LPFORMATETC aFE)
 {
   // These two lists are the mapping to and from data flavors and FEs
   // Later, OLE will tell us it's needs a certain type of FORMATETC (text, unicode, etc)
   // so we will look up data flavor that corresponds to the FE
   // and then ask the transferable for that type of data
-  mDataFlavors->AppendElement(new nsString(*aDataFlavor));
+  mDataFlavors->AppendElement(new nsString(aDataFlavor));
   m_enumFE->AddFE(aFE);
 
 }
@@ -476,3 +490,58 @@ void nsDataObj::SetTransferable(nsITransferable * aTransferable)
 
   return;
 }
+
+
+//еее skanky hack until i can correctly re-create primitives from native data. i know this code sucks,
+//еее please forgive me.
+void
+CreatePrimitiveForData ( const char* aFlavor, void* aDataBuff, PRUint32 aDataLen, nsISupports** aPrimitive )
+{
+  if ( !aPrimitive )
+    return;
+
+  if ( strcmp(aFlavor,kTextMime) == 0 ) {
+    nsCOMPtr<nsISupportsString> primitive;
+    nsresult rv = nsComponentManager::CreateInstance(NS_SUPPORTS_STRING_PROGID, nsnull, 
+                                                      NS_GET_IID(nsISupportsString), getter_AddRefs(primitive));
+    if ( primitive ) {
+      primitive->SetData ( (char*)aDataBuff );
+      nsCOMPtr<nsISupports> genericPrimitive ( do_QueryInterface(primitive) );
+      *aPrimitive = genericPrimitive;
+      NS_ADDREF(*aPrimitive);
+    }
+  }
+  else {
+    nsCOMPtr<nsISupportsWString> primitive;
+    nsresult rv = nsComponentManager::CreateInstance(NS_SUPPORTS_WSTRING_PROGID, nsnull, 
+                                                      NS_GET_IID(nsISupportsWString), getter_AddRefs(primitive));
+    if ( primitive ) {
+      primitive->SetData ( (unsigned short*)aDataBuff );
+      nsCOMPtr<nsISupports> genericPrimitive ( do_QueryInterface(primitive) );
+      *aPrimitive = genericPrimitive;
+      NS_ADDREF(*aPrimitive);
+    }  
+  }
+
+} // CreatePrimitiveForData
+
+
+void
+CreateDataFromPrimitive ( const char* aFlavor, nsISupports* aPrimitive, void** aDataBuff, PRUint32 aDataLen )
+{
+  if ( !aDataBuff )
+    return;
+
+  if ( strcmp(aFlavor,kTextMime) == 0 ) {
+    nsCOMPtr<nsISupportsString> plainText ( do_QueryInterface(aPrimitive) );
+    if ( plainText )
+      plainText->GetData ( (char**)aDataBuff );
+  }
+  else {
+    nsCOMPtr<nsISupportsWString> doubleByteText ( do_QueryInterface(aPrimitive) );
+    if ( doubleByteText )
+      doubleByteText->GetData ( (unsigned short**)aDataBuff );
+  }
+
+}
+

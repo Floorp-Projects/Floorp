@@ -17,11 +17,12 @@
  */
 
 #include "nsString.h"
-#include "nsWidgetsCID.h"
-#include "nsVoidArray.h"
+#include "nsISupportsArray.h"
 #include "nsRepository.h"
+#include "nsCOMPtr.h"
+#include "nsISupportsPrimitives.h"
 
-#include "nsITransferable.h" // for mime defs
+#include "nsITransferable.h" // for mime defs, this is BAD
 
 
 // These are temporary
@@ -44,15 +45,12 @@
 #include "nsWidgetsCID.h"
 #include "nsXIFFormatConverter.h"
 
-static NS_DEFINE_IID(kIXIFFormatConverterIID,  NS_IFORMATCONVERTER_IID);
-static NS_DEFINE_IID(kISupportsIID,  NS_ISUPPORTS_IID);
-//static NS_DEFINE_IID(kCXIFConverterCID,  NS_XIFCONVERTER_CID);
 
-static NS_DEFINE_IID(kCParserIID, NS_IPARSER_IID);
 static NS_DEFINE_IID(kCParserCID, NS_PARSER_IID);
 
 NS_IMPL_ADDREF(nsXIFFormatConverter)
 NS_IMPL_RELEASE(nsXIFFormatConverter)
+NS_IMPL_QUERY_INTERFACE(nsXIFFormatConverter, NS_GET_IID(nsIFormatConverter))
 
 //-------------------------------------------------------------------------
 //
@@ -73,69 +71,223 @@ nsXIFFormatConverter::~nsXIFFormatConverter()
 {
 }
 
-/**
- * @param aIID The name of the class implementing the method
- * @param _classiiddef The name of the #define symbol that defines the IID
- * for the class (e.g. NS_ISUPPORTS_IID)
- * 
-*/ 
-nsresult nsXIFFormatConverter::QueryInterface(const nsIID& aIID, void** aInstancePtr)
+
+//
+// GetInputDataFlavors
+//
+// Creates a new list and returns the list of all the flavors this converter
+// knows how to import. In this case, it's just XIF.
+//
+// Flavors (strings) are wrapped in a primitive object so that JavaScript can
+// access them easily via XPConnect.
+//
+NS_IMETHODIMP
+nsXIFFormatConverter::GetInputDataFlavors(nsISupportsArray **_retval)
 {
-
-  if (NULL == aInstancePtr) {
-    return NS_ERROR_NULL_POINTER;
-  }
-
-  nsresult rv = NS_NOINTERFACE;
-
-  if (aIID.Equals(kIXIFFormatConverterIID)) {
-    *aInstancePtr = (void*) ((nsIFormatConverter*)this);
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-
-  if (aIID.Equals(kISupportsIID)) {                                      
-    *aInstancePtr = (void*)(nsISupports*)this;                        
-    NS_ADDREF_THIS();                                                    
-    return NS_OK;                                                        
-  }
-
-
+  if ( !_retval )
+    return NS_ERROR_INVALID_ARG;
+  
+  nsresult rv = NS_NewISupportsArray ( _retval );  // addrefs for us
+  if ( NS_SUCCEEDED(rv) )
+    rv = AddFlavorToList ( *_retval, kXIFMime );
+  
   return rv;
-}
+  
+} // GetInputDataFlavors
 
 
-/**
-  * 
-  *
-  */
-NS_IMETHODIMP nsXIFFormatConverter::GetInputDataFlavors(nsVoidArray ** aDataFlavorList)
+//
+// GetOutputDataFlavors
+//
+// Creates a new list and returns the list of all the flavors this converter
+// knows how to export (convert). In this case, it's all sorts of things that XIF can be
+// converted to.
+//
+// Flavors (strings) are wrapped in a primitive object so that JavaScript can
+// access them easily via XPConnect.
+//
+NS_IMETHODIMP
+nsXIFFormatConverter::GetOutputDataFlavors(nsISupportsArray **_retval)
 {
-  nsVoidArray * array = new nsVoidArray();
-  if (nsnull != array) {
-    array->AppendElement(new nsString(kXIFMime));
-    *aDataFlavorList = array;
+  if ( !_retval )
+    return NS_ERROR_INVALID_ARG;
+  
+  nsresult rv = NS_NewISupportsArray ( _retval );  // addrefs for us
+  if ( NS_SUCCEEDED(rv) ) {
+    rv = AddFlavorToList ( *_retval, kXIFMime );
+    if ( NS_FAILED(rv) )
+      return rv;
+    rv = AddFlavorToList ( *_retval, kHTMLMime );
+    if ( NS_FAILED(rv) )
+      return rv;
+    rv = AddFlavorToList ( *_retval, kUnicodeMime );
+    if ( NS_FAILED(rv) )
+      return rv;
+    rv = AddFlavorToList ( *_retval, kTextMime );
+    if ( NS_FAILED(rv) )
+      return rv;
+    rv = AddFlavorToList ( *_retval, kAOLMailMime );
+    if ( NS_FAILED(rv) )
+      return rv;
+  }
+  return rv;
+
+} // GetOutputDataFlavors
+
+
+//
+// AddFlavorToList
+//
+// Convenience routine for adding a flavor wrapped in an nsISupportsString object
+// to a list
+//
+nsresult
+nsXIFFormatConverter :: AddFlavorToList ( nsISupportsArray* inList, const char* inFlavor )
+{
+  nsCOMPtr<nsISupportsString> dataFlavor;
+  nsresult rv = nsComponentManager::CreateInstance(NS_SUPPORTS_STRING_PROGID, nsnull, 
+                                                    NS_GET_IID(nsISupportsString), getter_AddRefs(dataFlavor));
+  if ( dataFlavor ) {
+    dataFlavor->SetData ( NS_CONST_CAST(char*, inFlavor) );
+    // add to list as an nsISupports so the correct interface gets the addref
+    // in AppendElement()
+    nsCOMPtr<nsISupports> genericFlavor ( do_QueryInterface(dataFlavor) );
+    inList->AppendElement ( genericFlavor);
+  }
+  return rv;
+
+} // AddFlavorToList
+
+
+//
+// CanConvert
+//
+// Determines if we support the given conversion. Currently, this method only
+// converts from XIF to others.
+//
+NS_IMETHODIMP
+nsXIFFormatConverter::CanConvert(const char *aFromDataFlavor, const char *aToDataFlavor, PRBool *_retval)
+{
+  if ( !_retval )
+    return NS_ERROR_INVALID_ARG;
+  
+  *_retval = PR_FALSE;
+  nsAutoString fromFlavor ( aFromDataFlavor );
+  if ( fromFlavor.Equals(kXIFMime) ) {
+    nsAutoString toFlavor ( aToDataFlavor );
+    if ( toFlavor.Equals(kTextMime) )
+      *_retval = PR_TRUE;
+    else if ( toFlavor.Equals(kHTMLMime) )
+      *_retval = PR_TRUE;
+    else if ( toFlavor.Equals(kUnicodeMime) )
+      *_retval = PR_TRUE;
+    else if ( toFlavor.Equals(kAOLMailMime) )
+      *_retval = PR_TRUE;
   }
   return NS_OK;
-}
 
-/**
-  * 
-  *
-  */
-NS_IMETHODIMP nsXIFFormatConverter::GetOutputDataFlavors(nsVoidArray ** aDataFlavorList)
+} // CanConvert
+
+
+
+//
+// Convert
+//
+// Convert data from one flavor to another. The data is wrapped in primitive objects so that it is
+// accessable from JS. Currently, this only accepts XIF input, so anything else is invalid.
+//
+//XXX This method copies the data WAAAAY too many time for my liking. Grrrrrr. Mostly it's because
+//XXX we _must_ put things into nsStrings so that the parser will accept it. Lame lame lame lame. We
+//XXX also can't just get raw unicode out of the nsString, so we have to allocate heap to get
+//XXX unicode out of the string. Lame lame lame.
+//
+NS_IMETHODIMP
+nsXIFFormatConverter::Convert(const char *aFromDataFlavor, nsISupports *aFromData, PRUint32 aDataLen, 
+                               const char *aToDataFlavor, nsISupports **aToData, PRUint32 *aDataToLen)
 {
-  nsVoidArray * array = new nsVoidArray();
-  if (nsnull != array) {
-    array->AppendElement(new nsString(kXIFMime));
-    array->AppendElement(new nsString(kHTMLMime));
-    array->AppendElement(new nsString(kUnicodeMime));
-    array->AppendElement(new nsString(kTextMime));
-    array->AppendElement(new nsString(kAOLMailMime));
-    *aDataFlavorList = array;
-  }
-  return NS_OK;
-}
+  if ( !aToData || !aDataToLen )
+    return NS_ERROR_INVALID_ARG;
+
+  nsresult rv = NS_OK;
+  
+  nsAutoString fromFlavor ( aFromDataFlavor );
+  if ( fromFlavor.Equals(kXIFMime) ) {
+    nsAutoString toFlavor ( aToDataFlavor );
+
+    // XIF on clipboard is going to always be double byte so it will be in a primitive
+    // class of nsISupportsWString. Also, since the data is in two byte chunks the 
+    // length represents the length in 1-byte chars, so we need to divide by two.
+    nsCOMPtr<nsISupportsWString> dataWrapper ( do_QueryInterface(aFromData) );
+    if ( dataWrapper ) {
+      PRUnichar* data = nsnull;
+      dataWrapper->toString ( &data );
+      if ( data ) {
+        nsAutoString dataStr ( data );
+        nsAutoString outStr;
+
+        if ( toFlavor.Equals(kTextMime) ) {
+          if ( NS_SUCCEEDED(ConvertFromXIFToText(dataStr, outStr)) ) {
+            nsCOMPtr<nsISupportsString> dataWrapper;
+            nsComponentManager::CreateInstance(NS_SUPPORTS_STRING_PROGID, nsnull, 
+                                                NS_GET_IID(nsISupportsString), getter_AddRefs(dataWrapper) );
+            if ( dataWrapper ) {
+              char* holderBecauseNSStringIsLame = outStr.ToNewCString();
+              dataWrapper->SetData ( holderBecauseNSStringIsLame );
+              nsCOMPtr<nsISupports> genericDataWrapper ( do_QueryInterface(dataWrapper) );
+              *aToData = genericDataWrapper;
+              NS_ADDREF(*aToData);
+              *aDataToLen = outStr.Length();
+              delete [] holderBecauseNSStringIsLame;
+            }
+          }
+        } // if plain text
+        else if ( toFlavor.Equals(kHTMLMime) ) {
+          if ( NS_SUCCEEDED(ConvertFromXIFToHTML(dataStr, outStr)) ) {
+            nsCOMPtr<nsISupportsWString> dataWrapper;
+            nsComponentManager::CreateInstance(NS_SUPPORTS_WSTRING_PROGID, nsnull, 
+                                                NS_GET_IID(nsISupportsWString), getter_AddRefs(dataWrapper) );
+            if ( dataWrapper ) {
+              PRUnichar* holderBecauseNSStringIsLame = outStr.ToNewUnicode();
+              dataWrapper->SetData ( holderBecauseNSStringIsLame );
+              nsCOMPtr<nsISupports> genericDataWrapper ( do_QueryInterface(dataWrapper) );
+              *aToData = genericDataWrapper;
+              NS_ADDREF(*aToData);
+              *aDataToLen = outStr.Length() * 2;
+              delete [] holderBecauseNSStringIsLame;
+            }
+          }
+        } // else if HTML
+        else if ( toFlavor.Equals(kAOLMailMime) ) {
+          if ( NS_SUCCEEDED(ConvertFromXIFToAOLMail(dataStr, outStr)) ) {
+            nsCOMPtr<nsISupportsWString> dataWrapper;
+            nsComponentManager::CreateInstance(NS_SUPPORTS_WSTRING_PROGID, nsnull, 
+                                                NS_GET_IID(nsISupportsWString), getter_AddRefs(dataWrapper) );
+            if ( dataWrapper ) {
+              PRUnichar* holderBecauseNSStringIsLame = outStr.ToNewUnicode();
+              dataWrapper->SetData ( holderBecauseNSStringIsLame );
+              nsCOMPtr<nsISupports> genericDataWrapper ( do_QueryInterface(dataWrapper) );
+              *aToData = genericDataWrapper;
+              NS_ADDREF(*aToData);
+              *aDataToLen = outStr.Length() * 2;
+              delete [] holderBecauseNSStringIsLame;
+            }
+          }
+        } // else if AOL mail
+        else {
+          *aToData = nsnull;
+          *aDataToLen = 0;
+          rv = NS_ERROR_FAILURE;      
+        }
+      }
+    }
+    
+  } // if we got xif mime
+  else
+    rv = NS_ERROR_FAILURE;      
+    
+  return rv;
+  
+} // Convert
 
 
 
@@ -143,88 +295,21 @@ NS_IMETHODIMP nsXIFFormatConverter::GetOutputDataFlavors(nsVoidArray ** aDataFla
   * 
   *
   */
-NS_IMETHODIMP nsXIFFormatConverter::CanConvert(nsString * aFromDataFlavor, nsString * aToDataFlavor)
-{
-
-  // This method currently only converts from XIF to the others
-  if (!aFromDataFlavor->Equals(kXIFMime)) {
-    return NS_ERROR_FAILURE;
-  }
-
-  if (aToDataFlavor->Equals(kTextMime)) {
-    return NS_OK;
-  } else if (aToDataFlavor->Equals(kHTMLMime)) {
-    return NS_OK;
-  } else if (aToDataFlavor->Equals(kUnicodeMime)) {
-    return NS_OK;
-  } else if (aToDataFlavor->Equals(kAOLMailMime)) {
-    return NS_OK;
-  }
-  return NS_ERROR_FAILURE;
-}
-
-/**
-  * 
-  *
-  */
-NS_IMETHODIMP nsXIFFormatConverter::Convert(nsString * aFromDataFlavor, void * aFromData, PRUint32 aDataLen,
-                                            nsString * aToDataFlavor, void ** aToData, PRUint32 * aDataToLen)
-{
-
-  // This method currently only converts from XIF to the others
-
-  if (!aFromDataFlavor->Equals(kXIFMime)) {
-    return NS_ERROR_FAILURE;
-  }
-
-  nsAutoString text;
-  nsAutoString srcText;
-
-  // XIF on clipboard is going to always be double byte
-  // since the data is in two byte chunks the length represents
-  // the length in single 8 bit chars, so we need to divide by two
-  srcText.SetString((PRUnichar *)aFromData, aDataLen/2);
-
-  if (aToDataFlavor->Equals(kTextMime)) {
-    if (NS_OK == ConvertFromXIFToText(srcText, text)) {
-      *aToData = (void *)text.ToNewCString();
-      *aDataToLen = text.Length();
-    }
-  } else if (aToDataFlavor->Equals(kHTMLMime) || aToDataFlavor->Equals(kUnicodeMime)) {
-    if (NS_OK == ConvertFromXIFToHTML(srcText, text)) {
-      *aToData = (void *)text.ToNewUnicode();
-      *aDataToLen = text.Length()*2;
-    }
-  } else if (aToDataFlavor->Equals(kAOLMailMime)) {
-    if (NS_OK == ConvertFromXIFToAOLMail(srcText, text)) {
-      *aToData = (void *)text.ToNewCString();
-      *aDataToLen = text.Length();
-    }
-  }
-
-  return NS_OK;
-}
-
-
-
-/**
-  * 
-  *
-  */
-NS_IMETHODIMP nsXIFFormatConverter::ConvertFromXIFToText(const nsString & aFromStr, nsString & aToStr)
+NS_IMETHODIMP
+nsXIFFormatConverter::ConvertFromXIFToText(const nsString & aFromStr, nsString & aToStr)
 {
   aToStr = "";
   nsIParser* parser;
   nsresult rv = nsComponentManager::CreateInstance(kCParserCID, 
                                              nsnull, 
-                                             kCParserIID, 
+                                             NS_GET_IID(nsIParser), 
                                              (void **)&parser);
   if (NS_OK != rv)
     return rv;
 
   nsIHTMLContentSink* sink = nsnull;
 
-  rv = NS_New_HTMLToTXT_SinkStream(&sink, &aToStr, 0);
+  rv = NS_New_HTMLToTXT_SinkStream(&sink,&aToStr,0);
 
   if (NS_OK == rv) {
     parser->SetContentSink(sink);
@@ -248,21 +333,22 @@ NS_IMETHODIMP nsXIFFormatConverter::ConvertFromXIFToText(const nsString & aFromS
   * 
   *
   */
-NS_IMETHODIMP nsXIFFormatConverter::ConvertFromXIFToHTML(const nsString & aFromStr, nsString & aToStr)
+NS_IMETHODIMP
+nsXIFFormatConverter::ConvertFromXIFToHTML(const nsString & aFromStr, nsString & aToStr)
 {
   aToStr = "";
   nsIParser* parser;
 
   nsresult rv = nsComponentManager::CreateInstance(kCParserCID, 
                                              nsnull, 
-                                             kCParserIID, 
+                                             NS_GET_IID(nsIParser), 
                                              (void **)&parser);
   if (NS_OK != rv)
     return rv;
 
   nsIHTMLContentSink* sink = nsnull;
 
-  rv = NS_New_HTML_ContentSinkStream(&sink, &aToStr, 0);
+  rv = NS_New_HTML_ContentSinkStream(&sink,&aToStr,0);
 
   if (NS_OK == rv) {
     parser->SetContentSink(sink);
@@ -285,7 +371,8 @@ NS_IMETHODIMP nsXIFFormatConverter::ConvertFromXIFToHTML(const nsString & aFromS
   * 
   *
   */
-NS_IMETHODIMP nsXIFFormatConverter::ConvertFromXIFToAOLMail(const nsString & aFromStr, nsString & aToStr)
+NS_IMETHODIMP
+nsXIFFormatConverter::ConvertFromXIFToAOLMail(const nsString & aFromStr, nsString & aToStr)
 {
   nsAutoString html;
   if (NS_OK == ConvertFromXIFToHTML(aFromStr, html)) {
