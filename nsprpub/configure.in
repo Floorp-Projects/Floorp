@@ -1,4 +1,25 @@
+dnl -*- Mode: Autoconf; tab-width: 4; indent-tabs-mode: nil; -*-
+dnl The contents of this file are subject to the Mozilla Public
+dnl License Version 1.1 (the "License"); you may not use this file
+dnl except in compliance with the License. You may obtain a copy of
+dnl the License at http://www.mozilla.org/MPL/
+dnl
+dnl Software distributed under the License is distributed on an "AS
+dnl IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+dnl implied. See the License for the specific language governing
+dnl rights and limitations under the License.
+dnl
+dnl The Original Code is the configure.in script for NSPR.
+dnl
+dnl The Initial Developer of the Original Code is Christopher
+dnl Seawood. Portions created by Christopher Seawood are
+dnl Copyright (C) 1999 Christopher Seawood. All
+dnl Rights Reserved.
+dnl
+dnl Contributor(s):
+dnl
 dnl Process this file with autoconf to produce a configure script.
+dnl
 AC_PREREQ(2.12)
 AC_INIT(config/libc_r.h)
 
@@ -87,10 +108,14 @@ AC_ARG_ENABLE(mdupdate,
 	USE_MDUPDATE=1
     fi ])
 
+AC_PATH_PROG(WHOAMI, whoami, :)
 if test -n "$MOZ_DEBUG"; then
-    DEFINES="$DEFINES -DDEBUG -UNDEBUG -DDEBUG_$(shell whoami)"
+    AC_DEFINE(DEBUG)
+    AC_DEFINE_UNQUOTED(DEBUG_`$WHOAMI`)
+    DEFINES="$DEFINES -UNDEBUG"
 else
-    DEFINES="$DEFINES -UDEBUG -DNDEBUG"    
+    AC_DEFINE(NDEBUG)
+    DEFINES="$DEFINES -UDEBUG"    
 fi
 
 dnl ========================================================
@@ -233,7 +258,7 @@ case "$target" in
     PR_MD_ARCH_DIR=unix
     MKSHLIB='$(LD) $(SHLIB_LD_OPTS) -rdata_shared -shared -soname $(notdir $@)'
     DSO_LDOPTS='-elf -shared -all'
-    case "${target_os}")
+    case "${target_os}" in
 	irix5*)
 	   USE_NSPR_THREADS=1
 	   ;;
