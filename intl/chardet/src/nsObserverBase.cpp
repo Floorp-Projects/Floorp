@@ -67,7 +67,6 @@ NS_IMETHODIMP nsObserverBase::NotifyWebShell(
            atom->ToString(method);
            if(method.EqualsWithConversion("POST"))
              return NS_OK; 
-           NS_RELEASE(atom);
          }
        }
      }
