@@ -410,9 +410,8 @@
       </toolbaritem>
 
       <toolbarbutton id="print-button" class="toolbarbutton-1"
-                      label="&printButton.label;"
-                      oncommand="BrowserPrint();"
-                      tooltiptext="&printButton.tooltip;"/>
+                     label="&printButton.label;" command="cmd_print"
+                     tooltiptext="&printButton.tooltip;"/>
 
       <toolbaritem id="throbber-box" title="&throbberItem.title;" align="center" pack="center">
         <button id="navigator-throbber" oncommand="goClickThrobber('browser.throbber.url')"
