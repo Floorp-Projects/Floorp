@@ -216,9 +216,6 @@ nsresult
 NS_NewSpinnerFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame );
 
 nsresult
-NS_NewColorPickerFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame );
-
-nsresult
 NS_NewFontPickerFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame );
 
 nsresult
@@ -5540,8 +5537,6 @@ nsCSSFrameConstructor::ConstructXULFrame(nsIPresShell*            aPresShell,
     
     else if (aTag == nsXULAtoms::spinner)
       rv = NS_NewSpinnerFrame(aPresShell, &newFrame);
-    else if (aTag == nsXULAtoms::colorpicker)
-      rv = NS_NewColorPickerFrame(aPresShell, &newFrame);
     else if (aTag == nsXULAtoms::fontpicker)
       rv = NS_NewFontPickerFrame(aPresShell, &newFrame);
     else if (aTag == nsXULAtoms::iframe) {
