@@ -21,6 +21,9 @@
 
 #include "nsISupports.idl"
 
+typedef long nsCookieStatus_t;
+typedef long nsCookiePolicy_t;
+
 [scriptable, uuid(E9FCB9A4-D376-458f-B720-E65E7DF593BC)]
 
 /**
@@ -49,6 +52,24 @@ interface nsICookie : nsISupports {
 
     /* expiration time (local timezone) expressed as number of seconds since Jan 1, 1970 */
     readonly attribute PRUint64 expires;
+
+    /* P3P status -- accepted, downgraded, flagged, or rejected */
+    const nsCookieStatus_t STATUS_UNKNOWN=0;
+    const nsCookieStatus_t STATUS_ACCEPTED=1;
+    const nsCookieStatus_t STATUS_DOWNGRADED=2;
+    const nsCookieStatus_t STATUS_FLAGGED=3;
+    const nsCookieStatus_t STATUS_REJECTED=4;
+
+    readonly attribute nsCookieStatus_t status;
+
+    /* Site's compact policy -- none, noConsent, implicitConsent, explicitConsent, noII */
+    const nsCookiePolicy_t POLICY_UNKNOWN=0;
+    const nsCookiePolicy_t POLICY_NONE=1;
+    const nsCookiePolicy_t POLICY_NO_CONSENT=2;
+    const nsCookiePolicy_t POLICY_IMPLICIT_CONSENT=3;
+    const nsCookiePolicy_t POLICY_EXPLICIT_CONSENT=4;
+    const nsCookiePolicy_t POLICY_NO_II=5;
+    readonly attribute nsCookiePolicy_t policy;
 
 };
 

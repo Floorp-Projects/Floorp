@@ -92,6 +92,8 @@ interface nsICookieService : nsISupports
    */
   void setCookieStringFromHttp(in nsIURI aURL, in nsIURI aFirstURL, in nsIPrompt aPrompter, in string aCookie, in string aExpires, in nsIHttpChannel aHttpChannel);
 
+  readonly attribute boolean cookieIconIsVisible;
+
 };
 
 %{ C++

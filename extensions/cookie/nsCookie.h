@@ -62,7 +62,10 @@ public:
      char * host,
      char * path,
      PRBool isSecure,
-     PRUint64 expires);
+     PRUint64 expires,
+     nsCookieStatus_t status,
+     nsCookiePolicy_t policy
+     );
   nsCookie();
   virtual ~nsCookie(void);
   
@@ -74,6 +77,8 @@ protected:
   char * cookiePath;
   PRBool cookieIsSecure;
   PRUint64 cookieExpires;
+  nsCookieStatus_t cookieStatus;
+  nsCookiePolicy_t cookiePolicy;  
 };
 
 #endif /* nsCookie_h__ */

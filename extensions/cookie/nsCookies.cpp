@@ -51,6 +51,7 @@
 #include "nsIPref.h"
 #include "nsTextFormatter.h"
 #include "nsAppDirectoryServiceDefs.h"
+#include "nsIObserverService.h"
 //!!!!!#include "nsIP3PService.h"
 
 #define MAX_NUMBER_OF_COOKIES 300
@@ -82,6 +83,8 @@ typedef struct _cookie_CookieStruct {
   time_t lastAccessed;
   PRBool isSecure;
   PRBool isDomain;   /* is it a domain instead of an absolute host? */
+  nsCookieStatus_t status;
+  nsCookiePolicy_t policy;
 } cookie_CookieStruct;
 
 typedef enum {
@@ -127,9 +130,11 @@ PRIVATE char* cookie_P3P = nsnull;
 #define P3P_ExplicitConsent  6
 #define P3P_NoIdentInfo      8
 
+#define P3P_Unknown    ' '
 #define P3P_Accept     'a'
 #define P3P_Downgrade  'd'
 #define P3P_Reject     'r'
+#define P3P_Flag       'f'
 
 #define cookie_P3P_Default    "drdraaaa"
 
@@ -815,6 +820,38 @@ cookie_isForeign (char * curURL, char * firstURL, nsIIOService* ioService) {
   return retval;
 }
 
+nsCookieStatus_t
+cookie_GetStatus(char decision) {
+  switch (decision) {
+    case ' ':
+      return nsICookie::STATUS_UNKNOWN;
+    case 'a':
+      return nsICookie::STATUS_ACCEPTED;
+    case 'd':
+      return nsICookie::STATUS_DOWNGRADED;
+    case 'f':
+      return nsICookie::STATUS_FLAGGED;
+  }
+  return nsICookie::STATUS_UNKNOWN;
+}
+
+nsCookiePolicy_t
+cookie_GetPolicy(int policy) {
+  switch (policy) {
+    case P3P_NoPolicy:
+      return nsICookie::POLICY_NONE;
+    case P3P_NoConsent:
+      return nsICookie::POLICY_NO_CONSENT;
+    case P3P_ImplicitConsent:
+      return nsICookie::POLICY_IMPLICIT_CONSENT;
+    case P3P_ExplicitConsent:
+      return nsICookie::POLICY_EXPLICIT_CONSENT;
+    case P3P_NoIdentInfo:
+      return nsICookie::POLICY_NO_II;
+  }
+  return nsICookie::POLICY_NONE;
+}
+
 /*
  * returns P3P_NoPolicy, P3P_NoConsent, P3P_ImplicitConsent,
  * P3P_ExplicitConsent, or P3P_NoIdentInfo based on site
@@ -830,7 +867,7 @@ P3P_SitePolicy(char * curURL, nsIHttpChannel* aHttpChannel) {
 }
 
 /*
- * returns P3P_Accept, P3P_Downgrade, or P3P_Reject based on user's preferences
+ * returns P3P_Accept, P3P_Downgrade, P3P_Flag, or P3P_Reject based on user's preferences
  */
 int
 cookie_P3PUserPref(PRInt32 policy, PRBool foreign) {
@@ -853,12 +890,14 @@ cookie_P3PUserPref(PRInt32 policy, PRBool foreign) {
 }
 
 /*
- * returns P3P_Accept, P3P_Downgrade, or P3P_Reject based on user's preferences
+ * returns STATUS_ACCEPT, STATUS_DOWNGRADE, STATUS_FLAG, or STATUS_REJECT based on user's preferences
  */
-int
+nsCookieStatus_t
 cookie_P3PDecision (char * curURL, char * firstURL, nsIIOService* ioService, nsIHttpChannel* aHttpChannel) {
-  return cookie_P3PUserPref(P3P_SitePolicy(curURL, aHttpChannel), 
-                            cookie_isForeign(curURL, firstURL, ioService));
+  return cookie_GetStatus(
+           cookie_P3PUserPref(
+             P3P_SitePolicy(curURL, aHttpChannel),
+             cookie_isForeign(curURL, firstURL, ioService)));
 }
 
 /* returns PR_TRUE if authorization is required
@@ -933,7 +972,9 @@ cookie_Count(char * host) {
  * this via COOKIE_SetCookieStringFromHttp.
  */
 PRIVATE void
-cookie_SetCookieString(char * curURL, nsIPrompt *aPrompter, const char * setCookieHeader, time_t timeToExpire, nsIIOService* ioService, nsIHttpChannel* aHttpChannel) {
+cookie_SetCookieString(char * curURL, nsIPrompt *aPrompter, const char * setCookieHeader,
+                       time_t timeToExpire, nsIIOService* ioService,
+                       nsIHttpChannel* aHttpChannel, nsCookieStatus_t status) {
   cookie_CookieStruct * prev_cookie;
   char *path_from_header=nsnull, *host_from_header=nsnull;
   char *name_from_header=nsnull, *cookie_from_header=nsnull;
@@ -1247,6 +1288,8 @@ cookie_SetCookieString(char * curURL, nsIPrompt *aPrompter, const char * setCook
     prev_cookie->isSecure = isSecure;
     prev_cookie->isDomain = isDomain;
     prev_cookie->lastAccessed = get_current_time();
+    prev_cookie->status = status;
+    prev_cookie->policy = cookie_GetPolicy(P3P_SitePolicy(curURL, aHttpChannel));
   } else {
     cookie_CookieStruct * tmp_cookie_ptr;
     size_t new_len;
@@ -1271,6 +1314,8 @@ cookie_SetCookieString(char * curURL, nsIPrompt *aPrompter, const char * setCook
     prev_cookie->isSecure = isSecure;
     prev_cookie->isDomain = isDomain;
     prev_cookie->lastAccessed = get_current_time();
+    prev_cookie->status = status;
+    prev_cookie->policy = cookie_GetPolicy(P3P_SitePolicy(curURL, aHttpChannel));
     if(!cookie_list) {
       cookie_list = new nsVoidArray();
       if(!cookie_list) {
@@ -1306,6 +1351,16 @@ cookie_SetCookieString(char * curURL, nsIPrompt *aPrompter, const char * setCook
   /* At this point we know a cookie has changed. Make a note to write the cookies to file. */
   cookie_changed = PR_TRUE;
   nsCRT::free(setCookieHeaderInternal);
+
+  /* Notify statusbar if we need to turn on the cookie icon */
+  if (prev_cookie->status == nsICookie::STATUS_DOWNGRADED ||
+      prev_cookie->status == nsICookie::STATUS_FLAGGED) {
+    nsCOMPtr<nsIObserverService> os(do_GetService("@mozilla.org/observer-service;1"));
+    if (os) {
+        rv = os->NotifyObservers(nsnull, "cookieIcon", NS_ConvertASCIItoUCS2("on").get());
+    }
+  }
+
   return;
 }
 
@@ -1344,16 +1399,12 @@ COOKIE_SetCookieStringFromHttp(char * curURL, char * firstURL, nsIPrompt *aPromp
   char *ptr=nsnull;
   time_t gmtCookieExpires=0, expires=0, sDate;
 
-  PRBool downgrade = PR_FALSE;
-
   /* check to see if P3P pref is satisfied */
+  nsCookieStatus_t status = nsICookie::STATUS_UNKNOWN;
   if (cookie_GetBehaviorPref() == PERMISSION_P3P) {
-    PRInt32 decision = cookie_P3PDecision(curURL, firstURL, ioService, aHttpChannel);
-    if (decision == P3P_Reject) {
+    status = cookie_P3PDecision(curURL, firstURL, ioService, aHttpChannel);
+    if (status == nsICookie::STATUS_REJECTED) {
       return;
-    }
-    if (decision == P3P_Downgrade) {
-      downgrade = PR_TRUE;
     }
   }
  
@@ -1385,7 +1436,8 @@ COOKIE_SetCookieStringFromHttp(char * curURL, char * firstURL, nsIPrompt *aPromp
     // Before downgrading we need to test for case of cookie being intentionally set to a
     // time in the past (trick that servers use to delete cookies) and not turn that into
     // a cookie that exires at end of current session.
-    if (!downgrade || ((unsigned)cookie_ParseDate(date) <= (unsigned)get_current_time())) {
+    if ((status != nsICookie::STATUS_DOWNGRADED) ||
+        ((unsigned)cookie_ParseDate(date) <= (unsigned)get_current_time())) {
       expires = cookie_ParseDate(date);
     }
     *ptr=origLast;
@@ -1419,13 +1471,15 @@ COOKIE_SetCookieStringFromHttp(char * curURL, char * firstURL, nsIPrompt *aPromp
       // Before downgrading we need to test for case of cookie being intentionally set to a
       // time in the past (trick that servers use to delete cookies) and not turn that into
       // a cookie that exires at end of current session.
-      if (downgrade && ((unsigned)gmtCookieExpires > (unsigned)get_current_time())) {
+      if ((status == nsICookie::STATUS_DOWNGRADED) &&
+          ((unsigned)gmtCookieExpires > (unsigned)get_current_time())) {
         gmtCookieExpires = 0;
       }
     }
   }
 
-  cookie_SetCookieString(curURL, aPrompter, setCookieHeader, gmtCookieExpires, ioService, aHttpChannel);
+  cookie_SetCookieString(curURL, aPrompter, setCookieHeader, gmtCookieExpires,
+                         ioService, aHttpChannel, status);
 }
 
 /* saves out the HTTP cookies to disk */
@@ -1593,6 +1647,8 @@ COOKIE_Read() {
     new_cookie->expires = strtoul(expiresCString, nsnull, 10);
     nsCRT::free(expiresCString);
 
+    new_cookie->status = nsICookie::STATUS_UNKNOWN;
+    new_cookie->policy = nsICookie::POLICY_UNKNOWN;
     /* start new cookie list if one does not already exist */
     if (!cookie_list) {
       cookie_list = new nsVoidArray();
@@ -1710,7 +1766,9 @@ COOKIE_Enumerate
      char ** host,
      char ** path,
      PRBool * isSecure,
-     PRUint64 * expires) {
+     PRUint64 * expires,
+     nsCookieStatus_t * status,
+     nsCookiePolicy_t * policy) {
   if (count > COOKIE_Count()) {
     return NS_ERROR_FAILURE;
   }
@@ -1730,6 +1788,8 @@ COOKIE_Enumerate
   *isSecure = cookie->isSecure;
   // *expires = cookie->expires; -- no good no mac, using next line instead
   LL_UI2L(*expires, cookie->expires);
+  *status = cookie->status;
+  *policy = cookie->policy;
   return NS_OK;
 }
 
