@@ -34,8 +34,15 @@ LIBS		= \
 	$(NSPR_LIBS) \
 	$(NULL)
 
-PROGRAM		= testPICS
+PROGRAM		= TestPICS
 
 include $(topsrcdir)/config/config.mk
 
 include $(topsrcdir)/config/rules.mk
+
+EXPORT_SAMPLES = 		\
+        samples/picstest1.html	\
+        $(NULL)
+
+install::
+	$(INSTALL) $(EXPORT_SAMPLES) $(DIST)/bin/res/samples
