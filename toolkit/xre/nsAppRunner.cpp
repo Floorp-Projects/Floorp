@@ -1617,6 +1617,9 @@ int xre_main(int argc, char* argv[], const nsXREAppData* aAppData)
   InstallUnixSignalHandlers(argv[0]);
 #endif
 
+  // Unbuffer stdout, needed for tinderbox tests.
+  setbuf(stdout, 0);
+
 #if defined(FREEBSD)
   // Disable all SIGFPE's on FreeBSD, as it has non-IEEE-conformant fp
   // trap behavior that trips up on floating-point tests performed by
