@@ -27,9 +27,9 @@ LIBRARY_NAME	= plug
 
 CSRCS		= npassoc.c
 
-CPPSRCS		= nsplugin.cpp npglue.cpp
+CPPSRCS		= nsplugin.cpp npglue.cpp nsMalloc.cpp
 
-EXPORTS		= nppg.h npglue.h nppriv.h
+EXPORTS		= nppg.h npglue.h nppriv.h nsMalloc.h
 
 EXPORTS		:= $(addprefix $(srcdir)/, $(EXPORTS))
 

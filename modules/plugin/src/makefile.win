@@ -24,7 +24,8 @@ MODULE	= plugimpl
 EXPORTS =        \
         nppg.h   \
         npglue.h \
-        nppriv.h
+        nppriv.h \
+        nsMalloc.h
 
 LIBRARY_NAME = plug
 
@@ -44,7 +45,8 @@ LINCS = -I$(DIST)\include  \
 
 OBJS =  .\$(OBJDIR)\npassoc.obj \
         .\$(OBJDIR)\nsplugin.obj \
-        .\$(OBJDIR)\npglue.obj
+        .\$(OBJDIR)\npglue.obj \
+        .\$(OBJDIR)\nsMalloc.obj
 
 include <$(DEPTH)/config/rules.mak>
 
