@@ -120,7 +120,7 @@ MKSHLIB='$(LD) $(DSO_LDOPTS)'
 DSO_LDOPTS='-shared -h $(@:$(OBJDIR)/%.$(DLL_SUFFIX)=%.$(DLL_SUFFIX))'
 DSO_CFLAGS='-KPIC'
 
-dnl gcc can come with its own linker so its better to use the pass-thru calls
+dnl gcc can come with its own linker so it is better to use the pass-thru calls
 dnl MKSHLIB_FORCE_ALL is used to force the linker to include all object
 dnl files present in an archive. MKSHLIB_UNFORCE_ALL reverts the linker to
 dnl normal behavior.
@@ -415,6 +415,18 @@ AC_CACHE_CHECK(for namespaces,
 if test $ac_cv_cpp_namespaces = yes ; then
    AC_DEFINE(HAVE_CPP_NAMESPACES)
 fi
+
+
+AC_CACHE_CHECK(for C++ \"bool\" keyword,
+               ac_cv_cpp_bool,
+               [AC_TRY_COMPILE(bool b;,
+                               b = true;,
+                               ac_cv_cpp_bool=yes,
+                               ac_cv_cpp_bool=no)])
+if test $ac_cv_cpp_bool = no ; then
+   AC_DEFINE(NEEDS_bool)
+fi
+
 
 AC_CACHE_CHECK(for C++ \"explicit\" keyword,
                ac_cv_cpp_explicit,
