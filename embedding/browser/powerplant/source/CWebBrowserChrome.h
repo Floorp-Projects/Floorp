@@ -17,6 +17,7 @@
  * Copyright (C) 1999, Mozilla.  All Rights Reserved.
  * 
  * Contributor(s):
+ *   Conrad Carlen <conrad@ingress.com> based on work by:
  *   Travis Bogard <travis@netscape.com>
  */
 
@@ -32,6 +33,9 @@
 #include "nsIWebProgressListener.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIPrompt.h"
+
+// Other
+#include "nsIWebBrowser.h"
 
 class CBrowserWindow;
 
@@ -60,6 +64,7 @@ protected:
 
 protected:
    CBrowserWindow*  mBrowserWindow;
+   nsCOMPtr<nsIWebBrowser> mWebBrowser;
 };
 
 #endif /* __CWebBrowserChrome__ */
