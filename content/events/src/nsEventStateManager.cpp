@@ -48,7 +48,6 @@
 #include "nsIFrameSelection.h"
 #include "nsIDeviceContext.h"
 #include "nsIScriptGlobalObject.h"
-#include "nsISelfScrollingFrame.h"
 #include "nsIPrivateDOMEvent.h"
 #include "nsIGfxTextControlFrame.h"
 #include "nsIDOMWindow.h"
@@ -68,6 +67,7 @@
 #include "prlog.h"
 #include "nsIDocShell.h"
 #include "nsIMarkupDocumentViewer.h"
+#include "nsITreeFrame.h"
 
 //we will use key binding by default now. this wil lbreak viewer for now
 #define NON_KEYBINDING 0  
@@ -309,14 +309,7 @@ nsEventStateManager::PreHandleEvent(nsIPresContext* aPresContext,
       printf("Got focus.\n");
 #endif
 
-      nsCOMPtr<nsIPresShell> presShell;
-      aPresContext->GetShell(getter_AddRefs(presShell));
-      
-      if (!mDocument) {  
-        if (presShell) {
-          presShell->GetDocument(&mDocument);
-        }
-      }
+      EnsureDocument(aPresContext);
 
       if (gLastFocusedDocument == mDocument)
          break;
@@ -394,13 +387,7 @@ nsEventStateManager::PreHandleEvent(nsIPresContext* aPresContext,
       // If we have a command dispatcher, and if it has a focused window and a
       // focused element in its focus memory, then restore the focus to those
       // objects.
-      if (!mDocument) {
-        nsCOMPtr<nsIPresShell> presShell;
-        aPresContext->GetShell(getter_AddRefs(presShell));
-        if (presShell) {
-          presShell->GetDocument(&mDocument);
-        }
-      }
+      EnsureDocument(aPresContext);
 
       nsCOMPtr<nsIDOMXULCommandDispatcher> commandDispatcher;
       nsCOMPtr<nsIDOMElement> focusedElement;
@@ -481,13 +468,7 @@ nsEventStateManager::PreHandleEvent(nsIPresContext* aPresContext,
     
  case NS_DEACTIVATE:
     {
-      if (!mDocument) {
-        nsCOMPtr<nsIPresShell> presShell;
-        aPresContext->GetShell(getter_AddRefs(presShell));
-        if (presShell) {
-          presShell->GetDocument(&mDocument);
-        }
-      }
+      EnsureDocument(aPresContext);
 
       // We can get a deactivate on an Ender widget.  In this
       // case, we would like to obtain the DOM Window to start
@@ -926,32 +907,81 @@ nsEventStateManager::PostHandleEvent(nsIPresContext* aPresContext,
         {
           nsIView* focusView = nsnull;
           nsIScrollableView* sv = nsnull;
-          nsISelfScrollingFrame* sf = nsnull;
-          nsIPresContext* mwPresContext = aPresContext;
-          
-          if (NS_SUCCEEDED(GetScrollableFrameOrView(mwPresContext,
-                                                      aTargetFrame, aView, sv,
-                                                      sf, focusView)))
-            {
-              if (sv) {
-                if (action == MOUSE_SCROLL_N_LINES)
-                  sv->ScrollByLines(0, numLines);
-                else
-                  sv->ScrollByPages((numLines > 0) ? 1 : -1);
-                ForceViewUpdate(focusView);
-              } else if (sf) {
-                if (action == MOUSE_SCROLL_N_LINES)
-                  sf->ScrollByLines(aPresContext, numLines);
-                else
-                  sf->ScrollByPages(aPresContext, (numLines > 0) ? 1 : -1);
-              }
+          nsIFrame* focusFrame = nsnull;
+
+          // Special case for tree frames - they handle their own scrolling
+          nsITreeFrame* treeFrame;
+          nsIFrame* curFrame = aTargetFrame;
+
+          while (curFrame) {
+            if (NS_OK == curFrame->QueryInterface(NS_GET_IID(nsITreeFrame), (void**) &treeFrame))
+              break;
+            curFrame->GetParent(&curFrame);
+          }
+
+          if (treeFrame) {
+            PRInt32 scrollIndex, visibleRows;
+            treeFrame->GetIndexOfFirstVisibleRow(&scrollIndex);
+            treeFrame->GetNumberOfVisibleRows(&visibleRows);
+
+            if (action == MOUSE_SCROLL_N_LINES)
+              scrollIndex += numLines;
+            else
+              scrollIndex += ((numLines > 0) ? visibleRows : -visibleRows);
+
+            if (scrollIndex < 0)
+              scrollIndex = 0;
+            else {
+              PRInt32 numRows, lastPageTopRow;
+              treeFrame->GetRowCount(&numRows);
+              lastPageTopRow = numRows - visibleRows;
+              if (scrollIndex > lastPageTopRow)
+                scrollIndex = lastPageTopRow;
             }
 
-           // We may end up with a different PresContext than we started
-           // with. If so, we are done with it now, so release it.
+            treeFrame->ScrollToIndex(scrollIndex);
+            break;
+          }
 
-           if (mwPresContext != aPresContext)
-             NS_RELEASE(mwPresContext);
+          nsCOMPtr<nsIPresShell> presShell;
+          aPresContext->GetShell(getter_AddRefs(presShell));
+
+          // Otherwise, check for a focused content element
+          nsCOMPtr<nsIContent> focusContent;
+          if (mCurrentFocus)
+            focusContent = mCurrentFocus;
+          else {
+            // If there is no focused content, get the document content
+            EnsureDocument(presShell);
+            focusContent = dont_AddRef(mDocument->GetRootContent());
+          }
+
+          if (!focusContent)
+            break;
+          
+          // Get the content's view and scroll it.
+          presShell->GetPrimaryFrameFor(focusContent, &focusFrame);
+          if (focusFrame) {
+            focusFrame->GetView(aPresContext, &focusView);
+          }
+
+          if (!focusView) {
+            nsIFrame* frameWithView;
+            focusFrame->GetParentWithView(aPresContext, &frameWithView);
+            if (frameWithView)
+              frameWithView->GetView(aPresContext, &focusView);
+            else
+              break;
+          }
+
+          sv = GetNearestScrollingView(focusView);
+          if (sv) {
+            if (action == MOUSE_SCROLL_N_LINES)
+              sv->ScrollByLines(0, numLines);
+            else
+              sv->ScrollByPages((numLines > 0) ? 1 : -1);
+            ForceViewUpdate(focusView);
+          }
         }
 
         break;
@@ -1140,25 +1170,6 @@ nsEventStateManager::GetNearestScrollingView(nsIView* aView)
 
   if (nsnull != parent) {
     return GetNearestScrollingView(parent);
-  }
-
-  return nsnull;
-}
-
-nsISelfScrollingFrame*
-nsEventStateManager::GetParentSelfScrollingFrame(nsIFrame* aFrame)
-{
-  nsISelfScrollingFrame *sf;
-  if (NS_OK == aFrame->QueryInterface(NS_GET_IID(nsISelfScrollingFrame),
-                                      (void**)&sf)) {
-    return sf;
-  }
-
-  nsIFrame* parent;
-  aFrame->GetParent(&parent);
-
-  if (nsnull != parent) {
-    return GetParentSelfScrollingFrame(parent);
   }
 
   return nsnull;
@@ -1774,15 +1785,9 @@ nsEventStateManager::ShiftFocus(PRBool forward)
     return;
   }
 
+  EnsureDocument(mPresContext);
   if (nsnull == mDocument) {
-    nsCOMPtr<nsIPresShell> presShell;
-    mPresContext->GetShell(getter_AddRefs(presShell));
-    if (presShell) {
-      presShell->GetDocument(&mDocument);
-      if (nsnull == mDocument) {
-        return;
-      }
-    }
+    return;
   }
   
   if (nsnull == mCurrentFocus) {
@@ -2291,32 +2296,28 @@ nsEventStateManager::SendFocusBlur(nsIPresContext* aPresContext, nsIContent *aCo
           nsEvent event;
           event.eventStructType = NS_EVENT;
           event.message = NS_BLUR_CONTENT;
-
-		  if (!mDocument) {  
-            if (presShell) {
-              presShell->GetDocument(&mDocument);
-			}
-		  }
-
-		  // Make sure we're not switching command dispatchers, if so, surpress the blurred one
-		  if(gLastFocusedDocument && mDocument) {
-		    nsCOMPtr<nsIDOMXULCommandDispatcher> newCommandDispatcher;
+          
+          EnsureDocument(shell);
+          
+          // Make sure we're not switching command dispatchers, if so, surpress the blurred one
+          if(gLastFocusedDocument && mDocument) {
+            nsCOMPtr<nsIDOMXULCommandDispatcher> newCommandDispatcher;
             nsCOMPtr<nsIDOMXULCommandDispatcher> oldCommandDispatcher;
-		    nsCOMPtr<nsPIDOMWindow> oldPIDOMWindow;
-		    nsCOMPtr<nsPIDOMWindow> newPIDOMWindow;
-		    nsCOMPtr<nsIScriptGlobalObject> oldGlobal;
-		    nsCOMPtr<nsIScriptGlobalObject> newGlobal;
-		    gLastFocusedDocument->GetScriptGlobalObject(getter_AddRefs(oldGlobal));
-		    mDocument->GetScriptGlobalObject(getter_AddRefs(newGlobal));
+            nsCOMPtr<nsPIDOMWindow> oldPIDOMWindow;
+            nsCOMPtr<nsPIDOMWindow> newPIDOMWindow;
+            nsCOMPtr<nsIScriptGlobalObject> oldGlobal;
+            nsCOMPtr<nsIScriptGlobalObject> newGlobal;
+            gLastFocusedDocument->GetScriptGlobalObject(getter_AddRefs(oldGlobal));
+            mDocument->GetScriptGlobalObject(getter_AddRefs(newGlobal));
             nsCOMPtr<nsPIDOMWindow> newWindow = do_QueryInterface(newGlobal);
-		    nsCOMPtr<nsPIDOMWindow> oldWindow = do_QueryInterface(oldGlobal);
-
-		    newWindow->GetRootCommandDispatcher(mDocument, getter_AddRefs(newCommandDispatcher));
-		    oldWindow->GetRootCommandDispatcher(gLastFocusedDocument, getter_AddRefs(oldCommandDispatcher));
+            nsCOMPtr<nsPIDOMWindow> oldWindow = do_QueryInterface(oldGlobal);
+            
+            newWindow->GetRootCommandDispatcher(mDocument, getter_AddRefs(newCommandDispatcher));
+            oldWindow->GetRootCommandDispatcher(gLastFocusedDocument, getter_AddRefs(oldCommandDispatcher));
             if(oldCommandDispatcher && oldCommandDispatcher != newCommandDispatcher)
-			  oldCommandDispatcher->SetSuppressFocus(PR_TRUE);
-		  }
-
+              oldCommandDispatcher->SetSuppressFocus(PR_TRUE);
+          }
+          
           nsCOMPtr<nsIEventStateManager> esm;
           oldPresContext->GetEventStateManager(getter_AddRefs(esm));
           esm->SetFocusedContent(gLastFocusedContent);
@@ -2338,12 +2339,8 @@ nsEventStateManager::SendFocusBlur(nsIPresContext* aPresContext, nsIContent *aCo
 
     if(gLastFocusedDocument)
       gLastFocusedDocument->GetScriptGlobalObject(getter_AddRefs(globalObject));
-  
-    if (!mDocument) {  
-      if (presShell) {
-        presShell->GetDocument(&mDocument);
-      }
-    }
+
+    EnsureDocument(presShell);
 
     if (gLastFocusedDocument && (gLastFocusedDocument != mDocument) && globalObject) {  
       nsEventStatus status = nsEventStatus_eIgnore;
@@ -2534,152 +2531,6 @@ nsEventStateManager::UnregisterAccessKey(nsIFrame * aFrame, nsIContent* aContent
   return NS_OK;
 }
 
-// This function MAY CHANGE the PresContext that you pass into it.  It
-// will be changed to the PresContext for the main document.  If the
-// new PresContext differs from the one you passed in, you should
-// be sure to release the new one.
-
-nsIFrame*
-nsEventStateManager::GetDocumentFrame(nsIPresContext* &aPresContext)
-{
-  nsCOMPtr<nsIPresShell> presShell;
-  nsCOMPtr<nsIDocument> aDocument;
-  nsIFrame* aFrame;
-  nsIView* aView;
-
-  aPresContext->GetShell(getter_AddRefs(presShell));
-    
-  if (nsnull == presShell) {
-    PR_LOG(MOUSEWHEEL, PR_LOG_DEBUG, ("GetDocumentFrame: Got a null PresShell\n"));
-    return nsnull;
-  }
-
-  presShell->GetDocument(getter_AddRefs(aDocument));
-
-  // Walk up the document parent chain.  This lets us scroll the main
-  // document, even when the event is fired for an editor control.
-
-  nsCOMPtr<nsIDocument> parentDoc(dont_AddRef(aDocument->GetParentDocument()));
-
-  while(parentDoc) {
-    aDocument = parentDoc;
-    parentDoc = dont_AddRef(aDocument->GetParentDocument());
-  }
-
-  presShell = dont_AddRef(aDocument->GetShellAt(0));
-  presShell->GetPresContext(&aPresContext);
-
-  nsCOMPtr<nsIContent> rootContent(dont_AddRef(aDocument->GetRootContent()));
-  presShell->GetPrimaryFrameFor(rootContent, &aFrame);
-
-  aFrame->GetView(aPresContext, &aView);
-  PR_LOG(MOUSEWHEEL, PR_LOG_DEBUG, ("GetDocumentFrame: got document view = %p\n", aView));
-
-  if (!aView) {
-    PR_LOG(MOUSEWHEEL, PR_LOG_DEBUG, ("GetDocumentFrame: looking for a parent with a view\n"));
-    aFrame->GetParentWithView(aPresContext, &aFrame);
-  }
-
-  return aFrame;
-}
-
-// There are three posibilities for what this function returns:
-//  sv and focusView non-null, sf null  (a nsIScrollableView should be scrolled)
-//  sv and focusView null, sf non-null  (a frame should be scrolled)
-//  sv, focusView, and sf all null (nothing to scroll)
-//
-// The location works like this:
-//  First, check aTargetFrame (and its ancestors) looking for an
-//    nsISelfScrollingFrame.  If we find this, stop immediately.
-//  Next, check for a focused frame and try to get its view.
-//    If we can, and we can also get an nsIScrollableView for it
-//    (using GetNearestScrollingView), use that view to scroll.
-//  If there is no focused frame, we try to get an nsIView corresponding
-//    to the main document, and then call GetNearestScrollingView  on that.
-// Confused yet?
-// This function may call GetDocumentFrame, so read the warning above
-// regarding the PresContext that you pass into this function.
-
-nsresult
-nsEventStateManager::GetScrollableFrameOrView(nsIPresContext* &aPresContext,
-                                              nsIFrame* aTargetFrame,
-                                              nsIView* aView,
-                                              nsIScrollableView* &sv,
-                                              nsISelfScrollingFrame* &sf,
-                                              nsIView* &focusView)
-{
-  nsIFrame* focusFrame = nsnull;
-
-  nsCOMPtr<nsIPresShell> presShell;
-  aPresContext->GetShell(getter_AddRefs(presShell));
-  if (!presShell)    // this is bad
-    {
-      sv = nsnull;
-      sf = nsnull;
-      focusView = nsnull;
-      return NS_OK;
-    }
-
-  PR_LOG(MOUSEWHEEL, PR_LOG_DEBUG, ("------------------------\n"));
-  PR_LOG(MOUSEWHEEL, PR_LOG_DEBUG, ("GetScrollableFrameOrView: aTargetFrame = %p, aView = %p\n", aTargetFrame, aView));
-          
-  sf = GetParentSelfScrollingFrame(aTargetFrame);
-  PR_LOG(MOUSEWHEEL, PR_LOG_DEBUG, ("GetScrollableFrameOrView: SelfScrollingFrame = %p\n", sf));
-
-  if (sf) {
-    sv = nsnull;
-    focusView = nsnull;
-    return NS_OK;
-  }
-
-  if (mCurrentFocus) {
-    PR_LOG(MOUSEWHEEL, PR_LOG_DEBUG, ("GetScrollableFrameOrView: mCurrentFocus = %p\n", mCurrentFocus));
-    
-    presShell->GetPrimaryFrameFor(mCurrentFocus, &focusFrame);
-    if (focusFrame)
-      focusFrame->GetView(aPresContext, &focusView);
-  }
-          
-  if (focusFrame) {
-    if (!focusView) {
-      // The focused frame doesn't have a view
-      // Revert to the parameters passed in
-      // XXX this might not be right
-
-      PR_LOG(MOUSEWHEEL, PR_LOG_DEBUG, ("GetScrollableFrameOrView: Couldn't get a view for focused frame"));
-
-      focusFrame = aTargetFrame;
-      focusView = aView;
-    }
-  } else {
-    // Focus is null.  This means the main document has the focus,
-    // and we should scroll that.
-    
-    PR_LOG(MOUSEWHEEL, PR_LOG_DEBUG, ("GetScrollableFrameOrView: mCurrentFocus = NULL\n"));
-
-    focusFrame = GetDocumentFrame(aPresContext);
-    focusFrame->GetView(aPresContext, &focusView);
-
-    if (focusView)
-      PR_LOG(MOUSEWHEEL, PR_LOG_DEBUG, ("GetScrollableFrameOrView: got doc focusView\n"));
-  }
-
-  PR_LOG(MOUSEWHEEL, PR_LOG_DEBUG, ("GetScrollableFrameOrView: focusFrame=%p, focusView=%p\n", focusFrame, focusView));
-
-  sv = nsnull;
-
-  if (focusView) {
-    sv = GetNearestScrollingView(focusView);
-    
-    if (sv)
-      PR_LOG(MOUSEWHEEL, PR_LOG_DEBUG, ("GetScrollableFrameOrView: got sv\n"));
-    else
-      focusView = nsnull;
-  }
-
-  return NS_OK;
-}
-
 void nsEventStateManager::ForceViewUpdate(nsIView* aView)
 {
   // force the update to happen now, otherwise multiple scrolls can
@@ -2724,6 +2575,19 @@ nsEventStateManager::DispatchNewEvent(nsISupports* aTarget, nsIDOMEvent* aEvent)
     }
   }
   return ret;
+}
+
+void nsEventStateManager::EnsureDocument(nsIPresContext* aPresContext) {
+  if (!mDocument) {
+    nsCOMPtr<nsIPresShell> presShell;
+    aPresContext->GetShell(getter_AddRefs(presShell));
+    EnsureDocument(presShell);
+  }
+}
+
+void nsEventStateManager::EnsureDocument(nsIPresShell* aPresShell) {
+  if (!mDocument && aPresShell)
+    aPresShell->GetDocument(&mDocument);
 }
 
 nsresult NS_NewEventStateManager(nsIEventStateManager** aInstancePtrResult)

@@ -939,6 +939,12 @@ nsXULTreeOuterGroupFrame::ScrollToIndex(PRInt32 aRowIndex)
   PRInt32 newIndex = aRowIndex;
   PRInt32 delta = mCurrentIndex > newIndex ? mCurrentIndex - newIndex : newIndex - mCurrentIndex;
   PRBool up = newIndex < mCurrentIndex;
+
+  // Check to be sure we're not scrolling off the bottom of the tree
+  PRInt32 lastPageTopRow = GetRowCount() - (GetAvailableHeight() / mRowHeight);
+  if (aRowIndex > lastPageTopRow)
+    return;
+
   mCurrentIndex = newIndex;
   InternalPositionChanged(up, delta);
 
