@@ -51,10 +51,6 @@ nsDeviceContextPh :: nsDeviceContextPh( ) {
   mPixelsToTwips = 1.0;
   mDepth = 0 ;
   mSurface = NULL;
-  mPaletteInfo.isPaletteDevice = PR_FALSE;
-  mPaletteInfo.sizePalette = 0;
-  mPaletteInfo.numReserved = 0;
-  mPaletteInfo.palette = NULL;
   mPixelScale = 1.0f;
   mWidthFloat = 0.0f;
   mHeightFloat = 0.0f;
@@ -74,8 +70,6 @@ nsDeviceContextPh :: ~nsDeviceContextPh( ) {
 
   NS_IF_RELEASE(surf);    //this clears the surf pointer...
   mSurface = nsnull;
-
-  if( NULL != mPaletteInfo.palette ) PR_Free( mPaletteInfo.palette );
 
 	if( mFontLoadCache ) { 
 		delete mFontLoadCache;
@@ -212,25 +206,6 @@ void nsDeviceContextPh :: CommonInit( nsNativeDeviceContext aDC ) {
 	mWidthFloat  = (float) aWidth;
 	mHeightFloat = (float) aHeight;
     
-	if( mDepth > 8 ) {
-		mPaletteInfo.isPaletteDevice = PR_FALSE;
-		mPaletteInfo.sizePalette = 0;
-		mPaletteInfo.numReserved = 0;
-		mPaletteInfo.palette = NULL;
-		}
-	else {
-		PgColor_t color[_Pg_MAX_PALETTE];
-
-		PgGetPalette(color);
-		// palette based
-		mPaletteInfo.isPaletteDevice = PR_TRUE;
-		mPaletteInfo.sizePalette = _Pg_MAX_PALETTE;
-		mPaletteInfo.numReserved = 16;  				/* GUESS */
-		mPaletteInfo.palette = PR_Malloc(_Pg_MAX_PALETTE * sizeof(PgColor_t));
-		memcpy(mPaletteInfo.palette, color, _Pg_MAX_PALETTE * sizeof(PgColor_t));
-		}
-  
-
   /* Revisit: the scroll bar sizes is a gross guess based on Phab */
   mScrollbarHeight = 17;
   mScrollbarWidth  = 17;

@@ -1097,6 +1097,9 @@ NS_IMETHODIMP nsRenderingContextPh::DrawTile( nsIImage *aImage, nscoord aSrcXOff
 
 	if( tileRect.width > 0 && tileRect.height > 0 )
   		((nsImagePh*)aImage)->DrawTile(*this, mSurface, srcRect.width, srcRect.height, tileRect);
+	else
+  NS_ASSERTION(aTileRect.width > 0 && aTileRect.height > 0,
+    "You can't draw an image with a 0 width or height!");
 	return NS_OK;
 	}
 

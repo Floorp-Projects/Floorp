@@ -422,6 +422,11 @@ NS_IMETHODIMP nsImageQT::DrawTile(nsIRenderingContext &aContext,
 {
   nsDrawingSurfaceQT *drawing = (nsDrawingSurfaceQT*)aSurface;
 
+  if (aTileRect.width <= 0 || aTileRect.height <= 0) {
+    NS_ASSERTION(aTileRect.width > 0 && aTileRect.height > 0,
+                 "Error: image has 0 width or height!");
+    return NS_OK;
+  }
   if (drawing->GetDepth() == 8 || mAlphaDepth == 8) {
     PRInt32 aY0 = aTileRect.y, aX0 = aTileRect.x;
     PRInt32 aY1 = aTileRect.y + aTileRect.height;

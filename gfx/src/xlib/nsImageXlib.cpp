@@ -1452,6 +1452,12 @@ NS_IMETHODIMP nsImageXlib::DrawTile(nsIRenderingContext &aContext,
 {
   if ((mAlphaDepth == 1) && mIsSpacer)
     return NS_OK;
+
+  if (aTileRect.width <= 0 || aTileRect.height <= 0) {
+    NS_ASSERTION(aTileRect.width > 0 && aTileRect.height > 0,
+                 "You can't draw an image with a 0 width or height!");
+    return NS_OK;
+  }
   
   nsDrawingSurfaceXlib *drawing = (nsDrawingSurfaceXlib*)aSurface;
   if (mDisplay == nsnull)

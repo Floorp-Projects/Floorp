@@ -33,7 +33,6 @@
 #include "nsDeviceContextSpecFactoryQT.h"
 #include "nsScreenManagerQT.h"
 #include "nsScriptableRegion.h"
-#include "nsIImageManager.h"
 #include "nsDeviceContextQT.h"
 #include "nsImageQT.h"
 #include "nsFontList.h"
@@ -86,24 +85,6 @@ static nsresult nsScriptableRegionConstructor(nsISupports *aOuter,REFNSIID aIID,
   return rv;
 }
 
-static nsresult nsImageManagerConstructor(nsISupports *aOuter,REFNSIID aIID,void **aResult)
-{
-    nsresult rv;
-
-  if (NULL == aResult) {
-    rv = NS_ERROR_NULL_POINTER;
-    return rv;
-  }
-  *aResult = NULL;
-  if (NULL != aOuter) {
-    rv = NS_ERROR_NO_AGGREGATION;
-    return rv;
-  }
-  // this will return an image manager with a count of 1
-  rv = NS_NewImageManager((nsIImageManager**)aResult);
-  return rv;
-}
-
 static nsModuleComponentInfo components[] =
 {
   { "Qt Font Metrics",
@@ -142,10 +123,6 @@ static nsModuleComponentInfo components[] =
     NS_DEVICE_CONTEXT_SPEC_FACTORY_CID,
     "@mozilla.org/gfx/devicecontextspecfactory;1",
     nsDeviceContextSpecFactoryQTConstructor },
-  { "Image Manager",
-    NS_IMAGEMANAGER_CID,
-    "@mozilla.org/gfx/imagemanager;1",
-    nsImageManagerConstructor },
    { "Qt Font Enumerator",
     NS_FONT_ENUMERATOR_CID,
     "@mozilla.org/gfx/fontenumerator;1",
