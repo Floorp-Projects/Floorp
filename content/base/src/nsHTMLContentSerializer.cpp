@@ -1144,13 +1144,13 @@ nsHTMLContentSerializer::IsFirstChildOfOL(nsIDOMElement* aElement){
   
   if (parentName.EqualsIgnoreCase("OL")) {
     olState defaultOLState(0, PR_FALSE);
-    olState* state;
+    olState* state = nsnull;
     if (mOLStateStack.Count() > 0) 
       state = (olState*)mOLStateStack.ElementAt(mOLStateStack.Count()-1);
     /* Though we should never reach to a "state" as null at this point as 
     all LI are supposed to be inside some OL and OL tag should have pushed
     a state to the mOLStateStack.*/
-    if (!state || mOLStateStack.Count() == 0)
+    if (!state)
       state = &defaultOLState;
     
     if (state->isFirstListItem)
