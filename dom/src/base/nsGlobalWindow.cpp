@@ -460,11 +460,28 @@ GlobalWindowImpl::SetNewDocument(nsIDOMDocument* aDocument,
     }
 
     if (docURL) {
+      nsCOMPtr<nsIDocShellTreeItem> treeItem(do_QueryInterface(mDocShell));
+      PRBool isContentWindow = PR_FALSE;
+
+      if (treeItem) {
+        PRInt32 itemType = nsIDocShellTreeItem::typeContent;
+        treeItem->GetItemType(&itemType);
+
+        isContentWindow = itemType != nsIDocShellTreeItem::typeChrome;
+      }
+
       nsCAutoString url;
 
-      docURL->GetSpec(url);
+      if (!(isContentWindow && aClearScopeHint)) {
+        docURL->GetSpec(url);
+      }
 
-      if (/* aClearScopeHint || */ !url.Equals(NS_LITERAL_CSTRING("about:blank"))) {
+      // The "isContentWindow && aClearScopeHint" part of the if check
+      // below must be the reverse of the above if check, and vise
+      // versa...
+
+      if ((isContentWindow && aClearScopeHint) ||
+          !url.Equals(NS_LITERAL_CSTRING("about:blank"))) {
         // aClearScopeHint is true, or the current document is *not*
         // about:blank, clear timeouts and clear the scope.
         ClearAllTimeouts();
