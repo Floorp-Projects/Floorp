@@ -126,9 +126,9 @@ public:
 
   nsresult AppendNewFrames(nsIPresContext& aPresContext, nsIFrame*);
 
-  void InsertNewFrame(nsIPresContext& aPresContext,
-                      nsIFrame*       aNewFrame,
-                      nsIFrame*       aPrevSibling);
+  nsresult InsertNewFrame(nsIPresContext& aPresContext,
+                          nsIFrame*       aNewFrame,
+                          nsIFrame*       aPrevSibling);
 
   PRBool SafeToPull(nsIFrame* aFrame);
 
@@ -184,6 +184,7 @@ nsInlineFrame::AppendNewFrames(nsIPresContext& aPresContext,
     frame->GetStyleData(eStyleStruct_Display, (const nsStyleStruct*&)kidDisplay);
     frame->GetStyleData(eStyleStruct_Position, (const nsStyleStruct*&) kidPosition);
 
+    // XXX encapsulte the move-out-of-flow and CreateViewForFrame
     nsIFrame* placeholder;
     if (MoveFrameOutOfFlow(aPresContext, frame, kidDisplay, kidPosition, placeholder)) {
       // Reset the previous frame's next sibling pointer
@@ -193,6 +194,16 @@ nsInlineFrame::AppendNewFrames(nsIPresContext& aPresContext,
         prevFrame->SetNextSibling(placeholder);
       }
       frame = placeholder;
+    }
+    else {
+      // Wrap the frame in a view if necessary
+      nsIStyleContext* kidSC;
+      frame->GetStyleContext(&aPresContext, kidSC);
+      nsresult rv = CreateViewForFrame(aPresContext, frame, kidSC, PR_FALSE);
+      NS_RELEASE(kidSC);
+      if (NS_OK != rv) {
+        return rv;
+      }
     }
 
     prevFrame = frame;
@@ -271,7 +282,7 @@ nsInlineFrame::FindTextRuns(nsLineLayout& aLineLayout)
   return rv;
 }
 
-void
+nsresult
 nsInlineFrame::InsertNewFrame(nsIPresContext& aPresContext,
                               nsIFrame*       aNewFrame,
                               nsIFrame*       aPrevSibling)
@@ -288,6 +299,16 @@ nsInlineFrame::InsertNewFrame(nsIPresContext& aPresContext,
     // Add the placeholder frame to the flow
     aNewFrame = placeholder;
   }
+  else {
+    // Wrap the frame in a view if necessary
+    nsIStyleContext* kidSC;
+    aNewFrame->GetStyleContext(&aPresContext, kidSC);
+    nsresult rv = CreateViewForFrame(aPresContext, aNewFrame, kidSC, PR_FALSE);
+    NS_RELEASE(kidSC);
+    if (NS_OK != rv) {
+      return rv;
+    }
+  }
 
   // Add the new frame to the child list
   nsIFrame* nextSibling;
@@ -299,6 +320,8 @@ nsInlineFrame::InsertNewFrame(nsIPresContext& aPresContext,
     aPrevSibling->SetNextSibling(aNewFrame);
   }
   aNewFrame->SetNextSibling(nextSibling);
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP
