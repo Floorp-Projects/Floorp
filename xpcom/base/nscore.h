@@ -261,7 +261,7 @@
       
       void foo( Base* b )
         {
-          ((Derived*)b)->some_deried_member ... // Error: Ambiguous, expand from which |Base|?
+          ((Derived*)b)->some_derived_member ... // Error: Ambiguous, expand from which |Base|?
         }
 
     an old-style cast (like |static_cast|) will change the pointer, but
