@@ -36,6 +36,15 @@ initialowner tinytext           # Should arguably be a mediumint!
 
 
 
+insert into components (value, program, initialowner) values ("XPFC", "Calendar", "spider@netscape.com");
+insert into components (value, program, initialowner) values ("config", "Calendar", "spider@netscape.com");
+insert into components (value, program, initialowner) values ("Core", "Calendar", "sman@netscape.com");
+insert into components (value, program, initialowner) values ("NLS", "Calendar", "jusn@netscape.com");
+insert into components (value, program, initialowner) values ("UI", "Calendar", "eyork@netscape.com");
+insert into components (value, program, initialowner) values ("Test", "Calendar", "sman@netscape.com");
+insert into components (value, program, initialowner) values ("Install", "Calendar", "sman@netscape.com");
+
+
 insert into components (value, program, initialowner) values ("Macintosh FE", "Mozilla", "sdagley@netscape.com");
 insert into components (value, program, initialowner) values ("Windows FE", "Mozilla", "blythe@netscape.com");
 insert into components (value, program, initialowner) values ("XFE", "Mozilla", "ramiro@netscape.com");

@@ -34,6 +34,7 @@ program tinytext
 
 
 
+insert into versions (value, program) values ("other", "Calendar");
 insert into versions (value, program) values ("other", "Mozilla");
 insert into versions (value, program) values ("1998-03-31", "Mozilla");
 insert into versions (value, program) values ("1998-04-08", "Mozilla");
