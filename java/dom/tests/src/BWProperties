@@ -1,4 +1,7 @@
-BW_TESTDIR=T:
+BW_TESTDIR=/opt/mozilla/java/dom/tests/src
 BW_TESTFILE=BWTestClass.lst
-BW_LOGDIR=T:\\log
+BW_LOGDIR=/opt/mozilla/java/dom/tests/src/log
 BW_LOGFILE=BWTest.log
+BW_THREADMODE=S
+BW_HTMLTEST=file:
+BW_XMLTEST=file:

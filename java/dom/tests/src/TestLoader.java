@@ -1,40 +1,66 @@
-/**
- ****************************************************************************
- *
- *   @author   Raju Pallath
- *   @version  1.0
- *
- *   this class loads all the Test cases and executes them and returns the 
- *   pass/fail status.
- *   The Factory class loads this class and executes all Test Cases
- *   listed in a file whose path is set by env. variable BW_TESTDIR
- *   and filename by itself is set in BW_TESTFILE
- *   This class loops thru' each file entry and tries to execute each test
- *   case. 
- *
- ****************************************************************************
- */
+/*
+ The contents of this file are subject to the Mozilla Public
+ License Version 1.1 (the "License"); you may not use this file
+ except in compliance with the License. You may obtain a copy of
+ the License at http://www.mozilla.org/MPL/
+
+ Software distributed under the License is distributed on an "AS
+ IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ implied. See the License for the specific language governing
+ rights and limitations under the License.
+
+ The Original Code is mozilla.org code.
+
+ The Initial Developer of the Original Code is Sun Microsystems,
+ Inc. Portions created by Sun are
+ Copyright (C) 1999 Sun Microsystems, Inc. All
+ Rights Reserved.
+
+ Contributor(s):
+*/
 
 package org.mozilla.dom.test;
 
 import java.lang.*;
 import java.util.*;
 import java.io.*;
+import java.net.URL;
+import java.applet.Applet;
+import org.w3c.dom.Document;
+import org.mozilla.dom.DOMAccessorImpl;
+import org.mozilla.dom.DocumentLoadListener;
 import org.mozilla.dom.test.*;
-import org.w3c.dom.DOMException;
 
-public class TestLoader
+public class TestLoader extends Applet implements DocumentLoadListener 
 {
+
   private Object targetObj;
-  private int returnType;
+  private int returnType = 0;
   private static String TESTFILE      = "BWTestClass.lst";
-  private static String PROPERTYFILE  = "T:\\BWProperties";
+  private static String PROPERTYFILE  = "BWProperties";
   private static String LOGFILE       = "BWTest.log";
   private static String LOGHTML       = "BWTest.html";
   private static String LOGTXT        = "BWTest.txt";
-  private static String SEP           = "\\";
   public static Properties propTable  = new Properties();
+  private final boolean debug = true;
+  private static String FILE_SEP = "/";
 
+  /**
+   ************************************************************************
+   *  Default constructor
+   *
+   ************************************************************************
+   */
+  public TestLoader()
+  {
+	System.out.println("########################## Createing default TestLoader ...\n");
+	try {
+		throw new Exception();
+	} catch (Exception e) {
+		e.printStackTrace();
+	}
+        FILE_SEP = System.getProperty("file.separator");
+  }
 
   /**
    ************************************************************************
@@ -48,10 +74,31 @@ public class TestLoader
    */
   public TestLoader(Object obj, int areturnType)
   {
+    System.out.println("########################## Createing TestLoader ...");
     targetObj = obj;
     returnType = areturnType;
+    FILE_SEP = System.getProperty("file.separator");
   }
 
+
+  /**
+   *
+   ************************************************************************
+   *
+   * Sets the Testing Target
+   *
+   *  @param  target     Target to be tested   
+   *
+   *  @return void
+   *
+   ************************************************************************
+   *
+   */
+  void setTarget(Object target) 
+  {
+    targetObj = target;
+  }
+  
   /**
    *
    ************************************************************************
@@ -64,7 +111,6 @@ public class TestLoader
    */
   public Object loadTest()
   {
-      System.out.println("<-=-=-= TESTLOADER =-=-=->");
      if (targetObj == null) {
          System.out.println("Target Object " + targetObj.toString() + " is null....");
          return null;
@@ -72,7 +118,32 @@ public class TestLoader
 
      // Read Property File
      TestLoader.readPropertyFile();
-     propTable.list(System.out);
+
+     // Check Property Names, to see if provided with correct file
+     // separators.
+     // For Windows platform FILE_SEP is \ but it has to be escaped with 
+     // another \ , so a property value would look like c:\\mozilla\\java
+     // instead of c:\mozilla\java
+     //
+     String CHECK_SEP = "/";
+
+     if ( FILE_SEP.compareTo("/") == 0) CHECK_SEP = "\\";
+     Enumeration em = propTable.propertyNames();
+     if (em == null) return null;
+
+     while (em.hasMoreElements())
+     {
+         String name = (String)(em.nextElement());
+         String val = propTable.getProperty(name);
+         if (val == null) continue;
+
+         int idx =  val.indexOf(CHECK_SEP);
+         if (idx !=  -1) {
+             System.out.println("********** ERROR:  File Separator for Property " + name + " is incorrect in file " + PROPERTYFILE);
+             return null;
+         } 
+     }
+
 
      String testDir = ".";
      String testFile = TESTFILE;
@@ -85,16 +156,18 @@ public class TestLoader
      testFile = propTable.getProperty("BW_TESTFILE");
      if (testFile == null) testFile = TESTFILE;
   
-     String fname =  testDir + SEP + testFile;
+     String fname =  testDir + FILE_SEP + testFile;
      FileInputStream in = null;
 
      try {
         in = new FileInputStream(fname);
      } catch (SecurityException e) {
         System.out.println ("Security Exception:Could not create stream for file " + fname);
+	System.exit(-1);
         return null;
      } catch (FileNotFoundException e) {
         System.out.println ("Could not create stream for file " + fname);
+	System.exit(-1);
         return null;
      }
 
@@ -145,6 +218,7 @@ public class TestLoader
 
          Class c=null;
          try {
+	   System.out.println("############### Class name: "+s);
            c = Class.forName(s);
          } catch (ClassNotFoundException e) {
            System.out.println ("Could not find class " + s);
@@ -158,37 +232,47 @@ public class TestLoader
            System.out.println ("Could not instantiate class " + s);
            continue;
          }
-	 System.out.println("-- running test: " + s);
-	 
-	 // If single thread execution
-	 if (threadMode.compareTo("S") == 0)
-	     {
-		 if (((BWBaseTest)classObj).execute(targetObj)) {
-		     txtPrint(s, "PASSED");
-		     System.out.println("  PASSED");		 
-		 } else {
-		     txtPrint(s, "FAILED");
-		     System.out.println("  FAILED");		 
-		 }
-		 
-		 // if any return type expected, then it is returned.
-		 // This is just a provision kept for latter use
-		 //
-		 //if (returnType == 1)
-		 //{
-		 //  return (((BWBaseTest)classObj).returnObject());
-		 //}
-	     } else {
-		     BWTestThread t = new BWTestThread(s);
-		     if (t != null)
-			 {
-			     t.setTestObject(classObj, targetObj);
-			     t.start();
-			 }
-	     }
+
+         // If single thread execution
+         if (threadMode.compareTo("S") == 0)
+         {
+           try {
+		System.out.println("################ Starting test ...");
+              if (((BWBaseTest)classObj).execute(targetObj)) {
+                 txtPrint(s, "PASSED");
+		 System.out.println("################ passed");
+              } else {
+                 txtPrint(s, "FAILED");
+		System.out.println("################ failed");
+              }
+           } catch (Exception e) {
+		System.out.println("################ failed with exception: "+e);
+              txtPrint(s, "FAILED: "+e);
+           }
+
+              // if any return type expected, then it is returned.
+              // This is just a provision kept for latter use
+              //
+              //if (returnType == 1)
+	      //{
+              //  return (((BWBaseTest)classObj).returnObject());
+	      //}
+         } else {
+              BWTestThread t = new BWTestThread(s);
+           try {
+              System.out.println("############## Starting test ...");
+              if (t != null)
+              {
+                t.setTestObject(classObj, targetObj);
+                t.start();
+              }
+           } catch (Exception e) {
+              txtPrint(s, "FAILED: "+e);
+           }         
+        }
+
      }
-     
-     System.out.println("<-=-=-= END TESTLOADER =-=-=->");
+     //txtPrint("Parent Thread Done", "PASSED");
      return null;
   }
 
@@ -212,7 +296,7 @@ public class TestLoader
      // Get Input Stream from Property file
      FileInputStream fin=null;
      try {
-      fin = new FileInputStream(PROPERTYFILE);
+      fin = new FileInputStream("./" + PROPERTYFILE);
      } catch (Exception e) {
       System.out.println ("Security Exception:Could not create stream for file " + PROPERTYFILE);
       return;
@@ -232,6 +316,7 @@ public class TestLoader
          System.out.println("Could not close " + PROPERTYFILE);
 	 return;
      }
+
 
   }
 
@@ -267,7 +352,6 @@ public class TestLoader
    */
   public static void logPrint(String msg)
   {
-
      if (msg == null) return;
 
      String logDir = propTable.getProperty("BW_LOGDIR");
@@ -276,8 +360,7 @@ public class TestLoader
      String logFile = propTable.getProperty("BW_LOGFILE");
      if (logFile == null) logFile = LOGFILE;
 
-     
-     String fname = logDir + SEP + logFile;
+     String fname = logDir + FILE_SEP  + logFile;
 
      // Get Output Stream from Log file
      RandomAccessFile raf=null;
@@ -322,7 +405,7 @@ public class TestLoader
 
      
     
-     String fname = logDir + SEP + logFile;
+     String fname = logDir + FILE_SEP +  logFile;
 
      File f=null;
      try {
@@ -408,7 +491,7 @@ public class TestLoader
      String logFile = LOGHTML;
 
      
-     String fname = logDir + SEP + logFile;
+     String fname = logDir + FILE_SEP + logFile;
 
      // Get Output Stream from Log file
      RandomAccessFile raf=null;
@@ -465,7 +548,7 @@ public class TestLoader
      String logFile = LOGHTML;
 
      
-     String fname = logDir + SEP + logFile;
+     String fname = logDir + FILE_SEP  + logFile;
 
      // Get Output Stream from Log file
      RandomAccessFile raf=null;
@@ -522,7 +605,7 @@ public class TestLoader
      String logFile = TestLoader.LOGTXT;
 
      
-     String fname = logDir + SEP + logFile;
+     String fname = logDir + FILE_SEP + logFile;
 
      // Get Output Stream from Log file
      RandomAccessFile raf=null;
@@ -551,4 +634,82 @@ public class TestLoader
        return;
      }
   }
-}
+
+  /*Implementing DocumentLoadListener interface*/
+  public void endDocumentLoad(String url, int status, Document doc) 
+  {
+    System.out.println("################### Got Document: "+url);
+    if ((!(url.endsWith(".html"))) && (!(url.endsWith(".xml")))) {
+	System.out.println("################### Document is not HTML/XML ... "+url);
+	return;
+    }
+
+    if (url.endsWith(".html"))
+    {
+      if (url.indexOf("test.html") == -1) {
+        System.out.println("TestCases Tuned to run with test.html...");
+        return;
+      }
+    }
+
+    if (url.endsWith(".xml"))
+    {
+      if (url.indexOf("test.xml") == -1) {
+        System.out.println("TestCases Tuned to run with test.xml...");
+        return;
+      }
+    }
+   
+    Object obj = (Object) doc;
+
+    setTarget(obj);
+    System.out.println("################## Loading test ... ");
+    try {
+    	Object retobj = loadTest();
+	System.out.println("################## test exited normally ... ");
+    } catch (Exception e) {
+    	System.out.println("################## test exited abnormally: \n" + e);	
+    }
+
+    doc = null;
+
+  };
+  public void startURLLoad(String url, String contentType, Document doc) {};
+  public void endURLLoad(String url, int status, Document doc) {};
+  public void progressURLLoad(String url, int progress, int progressMax, Document doc) {};
+  public void statusURLLoad(String url, String message, Document doc) {};
+  public void startDocumentLoad(String url) {};
+
+  /*Overiding some Applet's methods */
+  public void init() 
+  {
+    System.err.println("################## Regestring DocumentLoadListener !");
+    DOMAccessorImpl.getInstance().addDocumentLoadListener((DocumentLoadListener)this);
+
+    String testURL = propTable.getProperty("BW_HTMLTEST");
+    if (testURL == null) {
+      System.err.println("################# WARNING: BW_HTMLTEST property is not set ! Using file: protocol by default !");
+      testURL="file:";
+    }
+
+    if (getParameter("test_type").equals("XML")) {	
+      testURL = propTable.getProperty("BW_XMLTEST");
+      if (testURL == null)
+        testURL="file:";
+      testURL+="/test.xml";
+    } else if (getParameter("test_type").equals("HTML")) {
+      testURL+="/test.html";
+    } else {
+      System.err.println("################ WARNING: Unrecognized test type (valid are HTML/XML):"+getParameter("test_type")+"\nLoading test.html by default.");
+      testURL+="/test.html";
+    }
+
+    System.err.println("################## Loading "+testURL);
+    try {
+      getAppletContext().showDocument(new URL(testURL));
+    } catch (Exception e) {
+      System.err.println("############ Can't show test document: \nException: " + e.fillInStackTrace());
+    }
+  } 
+
+}//end of class
