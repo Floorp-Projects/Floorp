@@ -204,6 +204,10 @@ ifeq ($(USE_IPV6),1)
 OS_CFLAGS += -D_PR_INET6
 endif
 
+ifdef GC_LEAK_DETECTOR
+OS_CFLAGS += -DGC_LEAK_DETECTOR
+endif
+
 ####################################################################
 #
 # Configuration for the release process

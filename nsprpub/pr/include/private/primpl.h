@@ -188,6 +188,14 @@ struct _PT_Notified
 		(thr->interrupt_blocked = 1)
 #define _PT_THREAD_UNBLOCK_INTERRUPT(thr)			\
 		(thr->interrupt_blocked = 0)
+
+#ifdef GC_LEAK_DETECTOR
+/* All threads are GCable. */
+#define _PT_IS_GCABLE_THREAD(thr) 1
+#else
+#define _PT_IS_GCABLE_THREAD(thr) ((thr)->state & PT_THREAD_GCABLE)
+#endif /* GC_LEAK_DETECTOR */
+
 /* 
 ** Possible values for thread's suspend field
 ** Note that the first two can be the same as they are really mutually exclusive,

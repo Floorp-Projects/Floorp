@@ -46,6 +46,10 @@ endif
 
 CSRCS = prseg.c prshm.c prshma.c
 
+ifdef GC_LEAK_DETECTOR
+CSRCS += prgcleak.c
+endif
+
 TARGETS	= $(OBJS)
 
 INCLUDES = -I$(DIST)/include -I$(MOD_DEPTH)/pr/include -I$(MOD_DEPTH)/pr/include/private
