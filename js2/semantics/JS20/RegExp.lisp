@@ -669,6 +669,7 @@
 (run-regexp "^(a\\1?){4}$" "aaaaaaaaaa")
 (run-regexp "(?:(f)(o)(o)|(b)(a)(r))*" "foobar")
 (run-regexp "(a)?a(b)" "ab")
+(run-regexp "^(?:b|a(?=(.)))*\\1" "abc")
 |#
 
 #+allegro (clean-grammar *rg*) ;Remove this line if you wish to print the grammar's state tables.
