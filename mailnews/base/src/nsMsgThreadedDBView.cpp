@@ -139,6 +139,15 @@ NS_IMETHODIMP nsMsgThreadedDBView::ReloadFolderAfterQuickSearch()
 
   RestoreSelection(&preservedSelection);
 
+  if (preservedSelection.GetSize() == 0)
+  {
+    nsMsgViewIndex resultIndex;
+    nsMsgKey resultKey;
+    nsMsgViewIndex threadIndex;
+    ViewNavigate(nsMsgNavigationType.firstNew, &resultKey, &resultIndex, &threadIndex, PR_TRUE);
+    if (mTree && resultKey != nsMsgKey_None && resultIndex != nsMsgViewIndex_None)
+        mTree->EnsureRowIsVisible(resultIndex);
+  }
   return rv;
 }
 
