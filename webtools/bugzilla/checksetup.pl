@@ -637,7 +637,12 @@ $::ENV{'PATH'} = $origPath;
 # Create initial --DATA-- directory and make the initial empty files there:
 #
 
-unless (-d 'data') {
+# The |require "globals.pl"| above ends up creating a template object with
+# a COMPILE_DIR of 'data'. This means that TT creates the directory for us,
+# so this code wouldn't run if we just checked for the existance of the
+# directory. Instead, check for the existance of 'data/nomail', which is
+# created in this block
+unless (-d 'data' && -e 'data/nomail') {
     print "Creating data directory ...\n";
     # permissions for non-webservergroup are fixed later on
     mkdir 'data', 0770;
