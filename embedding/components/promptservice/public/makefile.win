@@ -1,3 +1,4 @@
+#!nmake
 # 
 # The contents of this file are subject to the Mozilla Public
 # License Version 1.1 (the "License"); you may not use this file
@@ -17,13 +18,13 @@
 # 
 # Contributor(s):
 
-DEPTH		= ../..
-topsrcdir	= @top_srcdir@
-srcdir		= @srcdir@
-VPATH		= @srcdir@
+DEPTH=..\..\..\..
 
-include $(DEPTH)/config/autoconf.mk
+MODULE=promptservice
 
-DIRS = promptservice windowwatcher appstartup build
+XPIDLSRCS = \
+    .\nsIPromptService.idl \
+    $(NULL)
 
-include $(topsrcdir)/config/rules.mk
+include <$(DEPTH)\config\rules.mak>
+

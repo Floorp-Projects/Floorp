@@ -1,3 +1,4 @@
+#!nmake
 # 
 # The contents of this file are subject to the Mozilla Public
 # License Version 1.1 (the "License"); you may not use this file
@@ -17,13 +18,19 @@
 # 
 # Contributor(s):
 
-DEPTH		= ../..
-topsrcdir	= @top_srcdir@
-srcdir		= @srcdir@
-VPATH		= @srcdir@
+DEPTH=..\..\..\..
 
-include $(DEPTH)/config/autoconf.mk
+MODULE=embedcomponents
+LIBRARY_NAME=promptservice_s
 
-DIRS = promptservice windowwatcher appstartup build
+CPP_OBJS= \
+	.\$(OBJDIR)\nsPromptService.obj \
+	$(NULL)
 
-include $(topsrcdir)/config/rules.mk
+include <$(DEPTH)\config\rules.mak>
+
+install:: $(LIBRARY)
+	$(MAKE_INSTALL) $(LIBRARY) $(DIST)\lib
+
+clobber::
+	rm -f $(DIST)\lib\$(LIBRARY_NAME).lib
