@@ -110,6 +110,10 @@
     <command id="cmd_copy"/>
     <command id="cmd_paste"/>
     <command id="cmd_cut"/>
+    <command id="cmd_delete"
+             valueAddressBook="&deleteAbCmd.label;"
+             valueCard="&deleteCardCmd.label;"
+             valueCards="&deleteCardsCmd.label;"/>
     <command id="cmd_selectAll"/>
     <command id="button_delete" oncommand="goDoCommand('button_delete');"/>
     <command id="cmd_swapFirstNameLastName" oncommand="AbSwapFirstNameLastName()"/>
@@ -120,10 +124,6 @@
   <!-- File Menu -->
 
   <!-- Edit Menu -->
-  <broadcaster id="cmd_delete"
-         valueAddressBook="&deleteAbCmd.label;"
-         valueCard="&deleteCardCmd.label;"
-         valueCards="&deleteCardsCmd.label;"/>
   <broadcaster id="broadcaster-throbber" busy="false"/>
   <broadcaster id="button_delete" disabled="true"/>
   <broadcaster id="Communicator:WorkMode"/>
