@@ -31,6 +31,7 @@ locale/XXXX/communicator/security/caps.properties, XXXX/locale/XXXX/communicator
 locale/XXXX/navigator, XXXX/locale/XXXX/navigator
 locale/XXXX/navigator-platform, YYYY/locale/XXXX/navigator-platform
 locale/XXXX/global-platform, YYYY/locale/XXXX/global-platform
+locale/XXXX/global-platform/accessible.properties, XXXX/locale/XXXX/global-platform/accessible.properties
 locale/XXXX/communicator/layout, XXXX/locale/XXXX/communicator/layout
 locale/XXXX/forms, XXXX/locale/XXXX/forms
 
