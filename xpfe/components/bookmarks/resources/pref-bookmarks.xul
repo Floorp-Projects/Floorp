@@ -89,10 +89,10 @@
   <titledbox orient="vertical">
   	<title value="&filingBookmarks.label;"/>
     <html flex="1">&autoFile.label;</html>
-    <box autostretch="never">
+    <box autostretch="never" flex="1">
       <checkbox id="disableAutoFile" value="&disableAutoFile.label;"
                 pref="true" preftype="bool" prefstring="browser.bookmarks.add_without_dialog"
-                prefattribute="checked"/>
+                prefattribute="checked" flex="1" valign="top"/>
     </box>
     <separator/>
     <html flex="1">&defaultFolder.label;</html>

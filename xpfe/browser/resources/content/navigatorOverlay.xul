@@ -141,7 +141,7 @@
 	<broadcaster id="Browser:Home"    oncommand="BrowserHome();"/>
 
 	<!-- Bookmarks Menu -->
-	<broadcaster id="Browser:AddBookmark" value="&addCurPageCmd.label;" 	 oncommand="addBookmark(window._content.location.href,window._content.document.title);"/>
+	<broadcaster id="Browser:AddBookmark" value="&addCurPageCmd.label;" 	 oncommand="BookmarksUtils.addBookmarkToWindow(window._content);"/>
 	<broadcaster id="Browser:ManageBookmark" value="&manBookmarksCmd.label;" oncommand="BrowserEditBookmarks();" />
 
 </broadcasterset>

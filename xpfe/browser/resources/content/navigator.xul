@@ -65,6 +65,7 @@ Contributor(s): ______________________________________. -->
 <script type="text/javascript" src="chrome://global/content/strres.js"/>
 <script type="text/javascript" src="chrome://communicator/content/contentAreaClick.js"/>
 <script type="text/javascript" src="chrome://communicator/content/contentAreaDD.js"/>
+<script type="text/javascript" src="chrome://communicator/content/bookmarks/bookmarksOverlay.js"/>
 <script type="text/javascript" src="chrome://navigator/content/navigator.js"/>
 <script type="text/javascript" src="tooltip.js"/>
 <script type="text/javascript" src="navigatorDD.js"/>
@@ -190,22 +191,18 @@ Contributor(s): ______________________________________. -->
              ondraggesture="nsDragAndDrop.startDrag(event, personalToolbarObserver);"
              ondragexit="nsDragAndDrop.dragExit(event, personalToolbarObserver);"
              grippytooltip="aTooltip" grippytooltiptext="&personalBar.tooltip;"
-             last-toolbar="true">
+             tbautostretch="always">
 
-      
- 
       <!-- "Bookmarks" button on personal toolbar -->                           
-                                                                                 
- 
-      <menubutton hidden="true" persist="hidden" class="button-toolbar bookmarkfolder" id="bookmarks-button"
-        datasources="rdf:bookmarks rdf:files rdf:localsearch rdf:internetsearch rdf:httpindex"
-        ref="NC:BookmarksRoot" container="true" value="&bookmarksButton.label;"        
-        flags="dont-test-empty">
+      <menubutton class="button-toolbar bookmarkfolder" id="bookmarks-button"   
+                  persist="hidden" value="&bookmarksButton.label;"
+                  datasources="rdf:bookmarks rdf:files rdf:localsearch rdf:internetsearch rdf:httpindex"
+                  ref="NC:BookmarksRoot" container="true" flags="dont-test-empty">
         <template>
           <rule iscontainer="true">
             <menupopup>
               <menu class="menu-iconic bookmarkfolder" uri="rdf:*"
-                value="rdf:http://home.netscape.com/NC-rdf#Name" >
+                    value="rdf:http://home.netscape.com/NC-rdf#Name" >
                 <menupopup/>
               </menu>
             </menupopup>
@@ -214,34 +211,39 @@ Contributor(s): ______________________________________. -->
             <menupopup>
               <menuseparator uri="rdf:*"/>
             </menupopup>
-           </rule>
-         <rule>
+          </rule>
+          <rule>
             <menupopup>
               <menuitem class="menuitem-iconic bookmarkitem" uri="rdf:*"
-                 value="rdf:http://home.netscape.com/NC-rdf#Name"                                             oncommand="OpenBookmarkURL(event.target,document.getElementById('BookmarksMenu').database)" />
+                        value="rdf:http://home.netscape.com/NC-rdf#Name"
+                        oncommand="OpenBookmarkURL(event,document.getElementById('BookmarksMenu').database)" />
             </menupopup>
            </rule>
         </template>
         <menupopup>
           <menuitem accesskey="&addCurPageCmd.accesskey;"
-             key="addBookmarkKb" observes="Browser:AddBookmark"/>
-           <menuitem accesskey="&manBookmarksCmd.accesskey;"
-             key="manBookmarkKb" observes="Browser:ManageBookmark"/>
+                    key="addBookmarkKb" observes="Browser:AddBookmark"/>
+          <menuitem accesskey="&manBookmarksCmd.accesskey;"
+                    key="manBookmarkKb" observes="Browser:ManageBookmark"/>
           <menuseparator/>
-         </menupopup>
-       </menubutton>
+        </menupopup>
+      </menubutton>
  
       <!-- Personal toolbar items -->
-      <box id="innermostBox" flex="1" style="min-width: 1px;" 
-        datasources="rdf:bookmarks" ref="NC:PersonalToolbarFolder" flags="dont-test-empty">
-    
+      <box id="innermostBox" flex="1" style="min-width: 1px;" context="contextual"
+           datasources="rdf:bookmarks rdf:files rdf:localsearch rdf:internetsearch rdf:httpindex"
+           ref="NC:PersonalToolbarFolder" flags="dont-test-empty">
         <template>
           <rule parent="box" iscontainer="true">
             <menubutton class="button-toolbar bookmarkfolder" uri="rdf:*" 
-              tooltip="aTooltip" tooltiptext="rdf:http://home.netscape.com/NC-rdf#URL"
-              value="rdf:http://home.netscape.com/NC-rdf#Name">
+                        tooltip="aTooltip" tooltiptext="rdf:http://home.netscape.com/NC-rdf#URL"
+                        value="rdf:http://home.netscape.com/NC-rdf#Name">
               <menupopup/>
             </menubutton>
+          </rule>
+
+          <rule parent="box" rdf:type="http://home.netscape.com/NC-rdf#BookmarkSeparator">
+            <toolbarseparator/>
           </rule>
 
           <rule parent="box">
@@ -254,7 +256,7 @@ Contributor(s): ______________________________________. -->
           <rule iscontainer="true">
             <menupopup>
               <menu class="menu-iconic bookmarkfolder" uri="rdf:*" 
-                value="rdf:http://home.netscape.com/NC-rdf#Name">
+                    value="rdf:http://home.netscape.com/NC-rdf#Name">
                 <menupopup/>
               </menu>
             </menupopup>
@@ -267,8 +269,8 @@ Contributor(s): ______________________________________. -->
           <rule>
             <menupopup>
               <menuitem class="menuitem-iconic bookmarkitem" uri="rdf:*"
-                value="rdf:http://home.netscape.com/NC-rdf#Name"
-                oncommand="OpenBookmarkURL(event.target, document.getElementById('innermostBox').database)"/>
+                        value="rdf:http://home.netscape.com/NC-rdf#Name"
+                        oncommand="OpenBookmarkURL(event.target, document.getElementById('innermostBox').database)"/>
             </menupopup>
           </rule>
         </template>

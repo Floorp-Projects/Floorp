@@ -31,7 +31,7 @@
 var gRDFService = nsJSComponentManager.getService("@mozilla.org/rdf/rdf-service;1",
                                                   "nsIRDFService"); 
 
-function RDF(aType) 
+function _RDF(aType) 
   {
     return "http://www.w3.org/1999/02/22-rdf-syntax-ns#" + aType;
   }
@@ -56,117 +56,94 @@ var RDFUtils = {
   getValueFromResource: function(aResource)
     {
       aResource = aResource.QueryInterface(Components.interfaces.nsIRDFResource);
-      return aResource ? target.Value : null;
+      return aResource ? aResource.Value : null;
     }
 };
 
 function isBookmark(aURI)
   {
-    var rv = true;
-    var typeValue = RDFUtils.getTarget(childWithDatabase.database, uri, RDF("type"));
+    var db = document.getElementById("innermostBox").database;
+    var typeValue = RDFUtils.getTarget(db, aURI, _RDF("type"));
     typeValue = RDFUtils.getValueFromResource(typeValue);
-    if (typeValue != NC_RDF("BookmarkSeparator") && 
-        typeValue != NC_RDF("Bookmark") &&
-        typeValue != NC_RDF("Folder")) 
-      rv = false;
-    return rv;
+    return (typeValue == NC_RDF("BookmarkSeparator") ||
+            typeValue == NC_RDF("Bookmark") ||
+            typeValue == NC_RDF("Folder")) 
   }
 
-function isPToolbarDNDEnabled()
-  {
-    var prefs = nsJSComponentManager.getService("@mozilla.org/preferences;1",
-                                                "nsIPref");
-    var dragAndDropEnabled = false;                                                  
-    try {
-      dragAndDropEnabled = prefs.GetBoolPref("browser.enable.tb_dnd");
-    }
-    catch(e) {
-    }
-    
-    return dragAndDropEnabled;
-  }
-  
 var personalToolbarObserver = {
-  onDragStart: function (aEvent)
+  onDragStart: function (aEvent, aXferData, aDragAction)
     {
-      // temporary
-      if (!isPToolbarDNDEnabled())
-        return false;
-        
       var personalToolbar = document.getElementById("PersonalToolbar");
-      if (aEvent.target == personalToolbar)
-        return null;
+      if (aEvent.target == personalToolbar) return;
         
-      var childWithDatabase = document.getElementById("innermostBox");
+      var db = document.getElementById("innermostBox").database;
       var uri = aEvent.target.id;
-      //if (!isBookmark(uri)) 
-      //  return;
 
-      var title = aEvent.target.value;
-      var htmlString = "<A HREF='" + uri + "'>" + title + "</A>";
+      if (!isBookmark(uri)) return;
+      var url = RDFUtils.getTarget(db, uri, NC_RDF("URL"));
+      var name = RDFUtils.getTarget(db, uri, NC_RDF("Name"));
 
-      var flavourList = { };
-      flavourList["moz/toolbaritem"] = { width: 2, data: uri };
-      flavourList["text/x-moz-url"] = { width: 2, data: uri + "\n" + "[ TEMP TITLE ]" };
-      flavourList["text/html"] = { width: 2, data: htmlString };
-      flavourList["text/unicode"] = { width: 2, data: uri };
-      return flavourList;
+      var urlString = url + "\n" + name;
+      var htmlString = "<A HREF='" + uri + "'>" + name + "</A>";
+
+      aXferData.data = new TransferData();
+      aXferData.data.addDataForFlavour("moz/rdfitem", uri);
+      aXferData.data.addDataForFlavour("text/x-moz-url", urlString);
+      aXferData.data.addDataForFlavour("text/html", htmlString);
+      aXferData.data.addDataForFlavour("text/unicode", url);
     },
   
-  onDrop: function (aEvent, aData, aDragSession) 
+  onDrop: function (aEvent, aXferData, aDragSession) 
     {
-      // temporary
-      if (!isPToolbarDNDEnabled())
-        return false;
-        
-      var element = aData.data.data;
       var dropElement = aEvent.target.id;
-      var elementRes = RDFUtils.getResource(element);
+      var elementRes = RDFUtils.getResource(aXferData.data);
       var dropElementRes = RDFUtils.getResource(dropElement);
       var personalToolbarRes = RDFUtils.getResource("NC:PersonalToolbarFolder");
       
       var childDB = document.getElementById("innermostBox").database;
-      var rdfContainer = nsJSComponentManager.createInstance("@mozilla.org/rdf/container;1",
-                                                             "nsIRDFContainer");
-      rdfContainer.Init(childDB, personalToolbarRes);
+      const kCtrContractID = "@mozilla.org/rdf/container;1";
+      const kCtrIID = Components.interfaces.nsIRDFContainer;
+      var rdfContainer = Components.classes[kCtrContractID].getService(kCtrIID);
       
-      var elementIsOnToolbar = rdfContainer.IndexOf(elementRes);
-      if (elementIsOnToolbar > 0) 
-        rdfContainer.RemoveElement(elementRes, true);
-      else if (dropIndex == -1)
+      var parentContainer = this.findParentContainer(aDragSession.sourceElement);
+      if (parentContainer) 
+        { 
+          rdfContainer.Init(childDB, parentContainer);
+          rdfContainer.RemoveElement(elementRes, true);
+        }
+      else
         {
           // look up this URL's title in global history
           var potentialTitle = null;
           var historyDS = gRDFService.GetDataSource("rdf:history");
-          var historyEntry = gRDFService.GetResource(element);
-          var historyTitleProperty = gRDFService.GetResource(NC_RDF("Name"));
-          var titleFromHistory = historyDS.GetTarget(historyEntry, historyTitleProperty, true);
+          var historyTitleProperty = RDFUtils.getResource(NC_RDF("Name"));
+          var titleFromHistory = historyDS.GetTarget(elementRes, historyTitleProperty, true);
           if (titleFromHistory)
             titleFromHistory = titleFromHistory.QueryInterface(Components.interfaces.nsIRDFLiteral);
           if (titleFromHistory)
             potentialTitle = titleFromHistory.Value;
           linkTitle = potentialTitle ? potentialTitle : element;
-          childDB.Assert(gRDFService.GetResource(element, true), 
-                         gRDFService.GetResource(NC_RDF("Name"), true),
-                         gRDFService.GetLiteral(linkTitle),
-                         true);
+          childDB.Assert(elementRes, historyTitleProperty, 
+                         gRDFService.GetLiteral(linkTitle), true);
         }
+      rdfContainer.Init (childDB, personalToolbarRes);
       var dropIndex = rdfContainer.IndexOf(dropElementRes);
       // determine the drop position
       var dropPosition = this.determineDropPosition(aEvent);
       switch (dropPosition) {
       case -1:
+        rdfContainer.Init(childDB, personalToolbarRes);
+        dump("*** elt= " + elementRes.Value + "\n");
         rdfContainer.InsertElementAt(elementRes, dropIndex, true);
         break;
       case 0:
         // do something here to drop into subfolders
-        var childContainer = nsJSComponentManager.createInstance("@mozilla.org/rdf/container;1",
-                                                                 "nsIRDFContainer");
-        childContainer.Init(childDB, dropElementRes);
-        childContainer.AppendElement(elementRes);
+        rdfContainer.Init(childDB, dropElementRes);
+        rdfContainer.AppendElement(elementRes);
         break;
       case 1:
       default:
+        rdfContainer.Init (childDB, personalToolbarRes);
         rdfContainer.InsertElementAt(elementRes, dropIndex+1, true);
         break;
       }
@@ -189,10 +166,6 @@ var personalToolbarObserver = {
   
   onDragOver: function (aEvent, aFlavour, aDragSession)
     {
-      // temporary
-      if (!isPToolbarDNDEnabled())
-        return false;
-
       var dropPosition = this.determineDropPosition(aEvent);
       
       if (this.mCurrentDragOverButton != aEvent.target ||
@@ -233,14 +206,11 @@ var personalToolbarObserver = {
 
   getSupportedFlavours: function ()
     {
-      // temporary
-      if (!isPToolbarDNDEnabled())
-        return false;
-        
-      var flavourList = { };
-      flavourList["moz/toolbaritem"] = { width: 2, iid: "nsISupportsWString" };
-      flavourList["text/unicode"] = { width: 2, iid: "nsISupportsWString" };
-      return flavourList;
+      var flavourSet = new FlavourSet();
+      flavourSet.appendFlavour("moz/rdfitem");
+      // application/x-moz-file
+      flavourSet.appendFlavour("text/unicode");
+      return flavourSet;
     },
 
   determineDropPosition: function (aEvent)
@@ -269,37 +239,70 @@ var personalToolbarObserver = {
         }
         
       return 0;
+    },
+
+  // returns the parent resource of the dragged element. This is determined
+  // by inspecting the source element of the drag and walking up the DOM tree
+  // to find the appropriate containing node.    
+  findParentContainer: function (aElement) 
+    {
+      switch (aElement.localName) 
+        {
+          case "button":
+          case "menubutton":
+            var box = aElement.parentNode;
+            return RDFUtils.getResource(box.getAttribute("ref"));
+          case "menu":
+          case "menuitem":
+            var menu = aElement.parentNode.parentNode;
+            return RDFUtils.getResource(menu.id);
+          case "treecell":
+            var treeitem = aElement.parentNode.parentNode.parentNode.parentNode;
+            return RDFUtils.getResource(treeitem.id);
+        }
+      return null;
     }
 }; 
 
-//
-// DragProxyIcon
-//
-// Called when the user is starting a drag from the proxy icon next to the URL bar. Basically
-// just gets the url from the url bar and places the data (as plain text) in the drag service.
-//
-// This is by no means the final implementation, just another example of what you can do with
-// JS. Much still left to do here.
-// 
-
 var proxyIconDNDObserver = {
-  onDragStart: function ()
+  onDragStart: function (aEvent, aXferData, aDragAction)
     {
       var urlBar = document.getElementById("urlbar");
-      var flavourList = { };
-      flavourList["text/unicode"] = { width: 2, data: urlBar.value };
-      flavourList["text/x-moz-url"] = { width: 2, data: urlBar.value + "\n" + window._content.document.title };
+      
+      // XXX - do we want to allow the user to set a blank page to their homepage?
+      //       if so then we want to modify this a little to set about:blank as 
+      //       the homepage in the event of an empty urlbar. 
+      if (!urlBar.value) return;
+
+      var urlString = urlBar.value + "\n" + window._content.document.title;
       var htmlString = "<a href=\"" + urlBar.value + "\">" + urlBar.value + "</a>";
-      flavourList["text/html"] = { width: 2, data: htmlString };
-      return flavourList;
+
+      aXferData.data = new TransferData();
+      aXferData.data.addDataForFlavour("text/x-moz-url", urlString);
+      aXferData.data.addDataForFlavour("text/unicode", urlBar.value);
+      aXferData.data.addDataForFlavour("text/html", htmlString);
     }
 };
 
 var homeButtonObserver = {
-  onDrop: function (aEvent, aData, aDragSession)
+  onDragStart: function (aEvent, aXferData, aDragAction)
     {
-      var data = aData.length ? aData[0] : aData;
-      var url = retrieveURLFromData(data);
+      var homepage = nsPreferences.getLocalizedUnicharPref("browser.startup.homepage", "about:blank");
+
+      if (homepage)
+        {
+          // XXX find a readable title string for homepage, perhaps do a history lookup.
+          var htmlString = "<a href=\"" + homepage + "\">" + homepage + "</a>";
+          aXferData.data = new TransferData();
+          aXferData.data.addDataForFlavour("text/x-moz-url", homepage + "\n" + homepage);
+          aXferData.data.addDataForFlavour("text/html", htmlString);
+          aXferData.data.addDataForFlavour("text/unicode", homepage);
+        }
+    },
+  
+  onDrop: function (aEvent, aXferData, aDragSession)
+    {
+      var url = retrieveURLFromData(aXferData.data, aXferData.flavour.contentType);
       var commonDialogService = nsJSComponentManager.getService("@mozilla.org/appshell/commonDialogs;1",
                                 "nsICommonDialogs");
       var pressedVal = { };                            
@@ -321,7 +324,8 @@ var homeButtonObserver = {
   onDragOver: function (aEvent, aFlavour, aDragSession)
     {
       var statusTextFld = document.getElementById("statusbar-display");
-      statusTextFld.setAttribute("value", gNavigatorBundle.getString("droponhomebutton"));
+      statusTextFld.setAttribute("value", bundle.GetStringFromName("droponhomebutton"));
+      aDragSession.dragAction = Components.interfaces.nsIDragService.DRAGDROP_ACTION_LINK;
     },
     
   onDragExit: function (aEvent, aDragSession)
@@ -329,23 +333,12 @@ var homeButtonObserver = {
       statusTextFld.setAttribute("value", "");
     },
         
-  onDragStart: function ()
-    {
-      var homepage = nsPreferences.getLocalizedUnicharPref("browser.startup.homepage", "about:blank");
-      var flavourList = { };
-      var htmlString = "<a href=\"" + homepage + "\">" + homepage + "</a>";
-      flavourList["text/x-moz-url"] = { width: 2, data: homepage };
-      flavourList["text/html"] = { width: 2, data: htmlString };
-      flavourList["text/unicode"] = { width: 2, data: homepage };
-      return flavourList;
-    },
-  
   getSupportedFlavours: function ()
     {
-      var flavourList = { };
-      //flavourList["moz/toolbaritem"] = { width: 2 };
-      flavourList["text/unicode"] = { width: 2, iid: "nsISupportsWString" };
-      flavourList["application/x-moz-file"] = { width: 2, iid: "nsIFile" };
-      return flavourList;
+      var flavourSet = new FlavourSet();
+      flavourSet.appendFlavour("application/x-moz-file", "nsIFile");
+      flavourSet.appendFlavour("text/x-moz-url");
+      flavourSet.appendFlavour("text/unicode");
+      return flavourSet;
     }
 };

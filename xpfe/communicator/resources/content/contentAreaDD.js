@@ -26,16 +26,8 @@
  *   
  */
 
-////////////////////////////////////////////////////////////////////////////
-// XXX - WARNING - DRAG AND DROP API CHANGE ALERT - XXX
-// This file has been extensively modified in a checkin planned for Mozilla
-// 0.8, and the API has been modified. DO NOT MODIFY THIS FILE without 
-// approval from ben@netscape.com, otherwise your changes will be lost. 
-
-
-var gSourceDocument, wasDrag;
 var contentAreaDNDObserver = {
-  onDragStart: function (aEvent)
+  onDragStart: function (aEvent, aXferData, aDragAction)
     {
       // under the assumption that content areas won't contain
       // draggable XBL, we'll ignore the drag if we're dragging XBL
@@ -101,6 +93,7 @@ var contentAreaDNDObserver = {
               case 'A':
                 urlstring = this.getAnchorUrl(draggedNode);
                 textstring = this.getNodeString(draggedNode);
+                aDragAction.action = Components.interfaces.nsIDragService.DRAGDROP_ACTION_LINK;
                 break;
                 
               default:
@@ -114,10 +107,12 @@ var contentAreaDNDObserver = {
                   // this shouldn't be fatal, and
                   // we should still do the drag if this fails
                   try {
-                    this.normalizeSelection(linkNode, domselection);
+                    //this.normalizeSelection(linkNode, domselection);
                   } catch (ex) {
                     // non-fatal, so catch & ignore
                   }
+  
+                  aDragAction.action = Components.interfaces.nsIDragService.DRAGDROP_ACTION_LINK;
                 }
                 else {
                   // Need to throw to indicate that the drag target should not 
@@ -136,15 +131,10 @@ var contentAreaDNDObserver = {
           htmlstring = this.createLinkText(urlstring, urlstring);
 
       // now create the flavour lists
-      var flavourList = { };
-      if (htmlstring)
-        flavourList["text/html"] = { width: 2, data: htmlstring };
-      if (urlstring) 
-        flavourList["text/x-moz-url"] = { width: 2,
-                                          data: urlstring + "\n" + textstring };
-      if (textstring)
-        flavourList["text/unicode"] = { width: 2, data: textstring };
-      return flavourList;
+      aXferData.data = new TransferData();
+      aXferData.data.addDataForFlavour("text/x-moz-url", urlstring + "\n" + textstring);
+      aXferData.data.addDataForFlavour("text/html", htmlstring);
+      aXferData.data.addDataForFlavour("text/unicode", textstring);
     },
 
   onDragOver: function (aEvent, aFlavour, aDragSession)
@@ -153,19 +143,22 @@ var contentAreaDNDObserver = {
       // a URL dragged from the content area into the very same content area (which is
       // almost never the desired action). This code is a bit too simplistic and may
       // have problems with nested frames, but that's not my problem ;)
-      if (aDragSession.sourceDocument == window._content.document)
+      if (aDragSession.sourceDocument == window._content.document) {
         aDragSession.canDrop = false;
+        return;
+      }
+
+      aDragSession.dragAction = Components.interfaces.nsIDragService.DRAGDROP_ACTION_LINK;
     },
 
-  onDrop: function (aEvent, aData, aDragSession)
+  onDrop: function (aEvent, aXferData, aDragSession)
     {
-      var data = (('length' in aData) && aData.length) ? aData[0] : aData;
-      var url = retrieveURLFromData(data);
-      if (url.length == 0)
-        return true;
+      var url = retrieveURLFromData(aXferData.data, aXferData.flavour.contentType);
+
       // valid urls don't contain spaces ' '; if we have a space it isn't a valid url so bail out
-      if ( url.indexOf(" ", 0) != -1 )
-        return true;
+      if (!url || !url.length || url.indexOf(" ", 0) != -1) 
+        return;
+
       switch (document.firstChild.getAttribute('windowtype')) {
         case "navigator:browser":
           loadShortcutOrURI(url);
@@ -173,18 +166,16 @@ var contentAreaDNDObserver = {
         case "navigator:view-source":
           viewSource(url);
           break;
-        default:
       }
-      return true;
     },
 
   getSupportedFlavours: function ()
     {
-      var flavourList = { };
-      flavourList["text/x-moz-url"] = { width: 2, iid: "nsISupportsWString" };
-      flavourList["text/unicode"] = { width: 2, iid: "nsISupportsWString" };
-      flavourList["application/x-moz-file"] = { width: 2, iid: "nsIFile" };
-      return flavourList;
+      var flavourSet = new FlavourSet();
+      flavourSet.appendFlavour("application/x-moz-file", "nsIFile");
+      flavourSet.appendFlavour("text/x-moz-url");
+      flavourSet.appendFlavour("text/unicode");
+      return flavourSet;
     },
 
   createLinkText: function(url, text)
@@ -218,11 +209,7 @@ var contentAreaDNDObserver = {
 
   getAnchorUrl: function(linkNode)
   {
-    if (linkNode.href)
-      return linkNode.href;
-    else if (linkNode.name)
-      return linkNode.name
-    return null;
+    return linkNode.href || linkNode.name || null;
   },
 
   getNodeString: function(node)
@@ -236,28 +223,26 @@ var contentAreaDNDObserver = {
 };
 
 
-function retrieveURLFromData (aData)
+function retrieveURLFromData (aData, flavour)
 {
-  switch (aData.flavour) {
+  switch (flavour) {
   case "text/unicode":
     // this might not be a url, but we'll return it anyway
-    return aData.data.data.toString();
-    break;
+    return aData;
   case "text/x-moz-url":
-    var data = aData.data.data.toString();
+    var data = aData.toString();
     var separator = data.indexOf("\n");
     if (separator != -1)
       data = data.substr(0, separator);
     return data;
-    break;
   case "application/x-moz-file":
-      var dataObj = aData.data.data.QueryInterface(Components.interfaces.nsIFile);
-      if (dataObj) {
-        var fileURL = nsJSComponentManager.createInstance("@mozilla.org/network/standard-url;1",
-                                                           "nsIFileURL");
-        fileURL.file = dataObj;
-        return fileURL.spec;
-      }
+    const kURLContractID = "@mozilla.org/network/standard-url;1";
+    const kFileURLIID = Components.interfaces.nsIFileURL;
+    var fileURL = Components.classes[kURLContractID].createInstance(kFileURLIID);
+    fileURL.file = aData;
+    return fileURL.spec;
   }             
   return null;                                                         
 }
+
+

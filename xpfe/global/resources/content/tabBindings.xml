@@ -117,7 +117,7 @@
     <content>
       <xul:box class="tab-box" flex="1" autostretch="never" orient="horizontal">
         <xul:image class="tab-image" inherits="src"/>
-        <xul:text class="tab-text" inherits="value,accesskey,crop"/>
+        <xul:text class="tab-text" inherits="value,accesskey,crop,disabled"/>
       </xul:box>
     </content>
     <implementation>

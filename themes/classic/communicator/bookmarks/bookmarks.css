@@ -23,15 +23,10 @@
  */
 
 /**
- * XXX  - need to split tree rules out into their own file to
- *        be included by bm window/panel to help with startup time
- *        and bloat. 
- **/ 
- 
-/**
- * Home button
+ * Style rules for bookmark items in Navigator. 
  **/ 
 
+ 
   #home-button
     {
       list-style-image    : url("chrome://communicator/skin/bookmarks/home.gif");
@@ -158,101 +153,4 @@
       background-color    : ThreeDDarkShadow;
       color               : ThreeDHighlight;
     }
-    
-/** 
- * Bookmarks tree items
- **/    
-  .treecell-bookmark
-    {
-      list-style-image    : inherit;
-    }
-
-  .treeitem-bookmark
-    {
-      list-style-image    : url("chrome://communicator/skin/bookmarks/location.gif");
-    }
- 
-  .treeitem-bookmark[container="true"][open="true"][loading="true"]
-    {
-      list-style-image    : url("chrome://global/skin/loading.gif") ! important ;
-    }
-
-  .treeitem-bookmark[status="new"]
-    {
-      list-style-image    : url("chrome://global/skin/loading.gif") ! important ;
-    }
-
-  .treeitem-bookmark[type="http://home.netscape.com/NC-rdf#Folder"],
-  .treeitem-bookmark[container="true"]
-    {
-      list-style-image    : url("chrome://communicator/skin/bookmarks/bookmark-folder-closed.gif");
-    }
-
-  .treeitem-bookmark[type="http://home.netscape.com/NC-rdf#Folder"][open="true"]
-    {
-      list-style-image    : url("chrome://communicator/skin/bookmarks/bookmark-folder-open.gif");
-    }
-
-  .treeitem-bookmark[container="true"][open="true"]
-    {
-      list-style-image    : url("chrome://communicator/skin/bookmarks/bookmark-folder-open.gif");
-    }
-
-  .treeitem-bookmark[type="http://home.netscape.com/NC-rdf#Folder"][id="NC:PersonalToolbarFolder"]
-    {
-      list-style-image    : url("chrome://communicator/skin/bookmarks/bookmark-folder-closed.gif");
-    }
-
-  .treeitem-bookmark[type="http://home.netscape.com/NC-rdf#Folder"][id="NC:PersonalToolbarFolder"][open="true"]
-    {
-     list-style-image     : url("chrome://communicator/skin/bookmarks/bookmark-folder-open.gif");
-    }
-
-  .treeitem-bookmark[type="http://home.netscape.com/NC-rdf#BookmarkSeparator"]
-    {
-      list-style-image    : url("chrome://communicator/skin/bookmarks/location.gif");
-    }
-
-  .treeitem-bookmark[type="http://home.netscape.com/NC-rdf#Bookmark"]
-    {
-      list-style-image    : url("chrome://communicator/skin/bookmarks/location.gif");
-    }
-
-/**
- * XXX - need to create some different icons for file system objects
- **/    
-  .treeitem-bookmark[type="http://home.netscape.com/NC-rdf#FileSystemObject"][container="true"][open="true"]
-    {
-      list-style-image    : url("chrome://communicator/skin/directory/file-folder-open.gif");
-    }
-
-  .treeitem-bookmark[type="http://home.netscape.com/NC-rdf#FileSystemObject"][container="true"]
-    {
-      list-style-image    : url("chrome://communicator/skin/directory/file-folder-closed.gif");
-    }
-
-  .treeitem-bookmark[type="http://home.netscape.com/NC-rdf#FileSystemObject"]
-    {
-      list-style-image    : url("chrome://communicator/skin/directory/file-icon.gif");
-    }
-
-/**
- * Bookmarks tree 
- **/    
-  .bookmarks-panel-tree, .bookmarks-panel-tree > .tree-container-treerows
-    {
-      border              : none;
-    }
-
-  #bookmarksTree
-    {
-      border-top          : none;
-      border-bottom       : none;
-    }
-
-#navprintplus
-    {
-      display:none !important; 
-    }
-
     

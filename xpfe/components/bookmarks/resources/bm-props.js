@@ -44,10 +44,7 @@ RDFC = RDFC.QueryInterface(Components.interfaces.nsIRDFContainerUtils);
 
 var Bookmarks = RDF.GetDataSource("rdf:bookmarks");
 
-// Init() will fill this in.
-var bookmark_url = '';
-
-
+var bookmark_url = "";
 
 function Init()
 {
@@ -74,19 +71,11 @@ function Init()
     if (value) field.value = value;
   }
 
-/*
-	// try and set window title
+  var propsWindow = document.getElementById("bmPropsWindow");
 	var nameNode = document.getElementById("name");
-	if (nameNode)
-	{
-		var name = nameNode.value;
-		if (name && name != "")
-		{
-			dump("\n    Set window name to '" + name + "'\n");
-			window.title = name;
-		}
-	}
-*/
+  var title = propsWindow.getAttribute("title");
+  title = title.replace(/\*\*bm_title\*\*/gi, nameNode.value);
+  propsWindow.setAttribute("title", title);
 
   // check bookmark schedule
     var value = Bookmarks.GetTarget(RDF.GetResource(bookmark_url),
@@ -196,45 +185,22 @@ function Init()
 
 	if (isContainerFlag)
 	{
-		// If it is a folder, it has no URL.
-		var locationBox = document.getElementById("locationBox");
-		if (locationBox)
-		{
-			dump("Hide location box\n");
-			var parentNode = locationBox.parentNode;
-			parentNode.removeChild(locationBox);
-		}
-
-		// If it is a folder, it has no Shortcut URL.
-		var shortcutBox = document.getElementById("shortcutBox");
-		if (shortcutBox)
-		{
-			dump("Hide shortcut box\n");
-			var parentNode = shortcutBox.parentNode;
-			parentNode.removeChild(shortcutBox);
-		}
+		// If it is a folder, it has no URL or Keyword
+		document.getElementById("locationrow").setAttribute("hidden", "true");
+		document.getElementById("shortcutrow").setAttribute("hidden", "true");
 	}
 
-	if ((bookmark_url.indexOf("http://") != 0) && (bookmark_url.indexOf("https://") != 0))
-	{
-		// only allow scheduling of http/https URLs
-		var scheduleTab = document.getElementById("ScheduleTab");
-		if (scheduleTab)
-		{
-			dump("Hide schedule tab\n");
-			var parentNode = scheduleTab.parentNode;
-			parentNode.removeChild(scheduleTab);
-		}
-	}
+  if (bookmark_url.indexOf("http://") != 0 && 
+      bookmark_url.indexOf("https://") != 0) {
+    // only allow scheduling of http/https URLs
+    document.getElementById("ScheduleTab").setAttribute("hidden", "true");
+    document.getElementById("NotifyTab").setAttribute("hidden", "true");
+  }
 
-	window.sizeToContent();
+	sizeToContent();
 
 	// set initial focus
-	var nameNode = document.getElementById("name");
-	if (nameNode)
-	{
-		nameNode.focus();
-	}
+	document.getElementById("name").focus();
 }
 
 

@@ -9,6 +9,7 @@
       min-width           : 47px;
       margin              : 0px;
       border              : 1px solid transparent;
+      color               : WindowText;
       background-color    : transparent;
       -moz-user-focus     : ignore;
     }

@@ -20,6 +20,7 @@
               dump("<StringBundle> Error: Failed to get string from bundle. Are you using the right key?\n");
               dump("The key you provided was: " + aStringKey + "\n");
               dump("The exception thrown was:\n" + e + "\n");
+              throw e;
               return null;
             }
           ]]>
@@ -74,7 +75,6 @@
           ]]>
         </getter>
       </property>
-
       <property name="_bundle"/>
       <property name="_src"/>
 

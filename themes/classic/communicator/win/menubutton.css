@@ -303,6 +303,54 @@ menubutton.button-toolbar-4[open="true"] > .menubutton-toolbar-single-internal-b
   
 /* menubutton button-toolbar-2 */
   
+/** 
+ * Single Menubuttons (for toolbars, etc)
+ */
+menubutton.button-toolbar-2
+  {
+    -moz-binding            : url("chrome://global/content/menulistBindings.xml#menubutton-single-right") !important;
+    border                  : 1px solid transparent;
+    margin                  : 0px;
+  }
+
+menubutton.button-toolbar-2 > .menubutton-internal-box
+  {
+    border                  : 1px solid transparent;
+    padding                 : 2px 2px 2px 4px;    
+    vertical-align          : middle;
+  }  
+
+menubutton.button-toolbar-2 > .menubutton-internal-box > .menubutton-single-icon
+  {
+    list-style-image        : url("chrome://global/skin/scroll-down.gif");
+    padding-left            : 2px;
+  }
+
+menubutton.button-toolbar-2:hover
+  {
+    border                  : 1px solid threeddarkshadow;
+  }    
+
+menubutton.button-toolbar-2:hover > .menubutton-internal-box
+  {
+    border-left             : 1px solid threedhighlight;
+    border-top              : 1px solid threedhighlight;
+    border-right            : 1px solid threedshadow;
+    border-bottom           : 1px solid threedshadow;
+  }
+ 
+ 
+ 
+menubutton.button-toolbar-2:hover:active > .menubutton-internal-box,
+menubutton.button-toolbar-2[open="true"] > .menubutton-internal-box
+  {
+    border-left             : 1px solid threedshadow;
+    border-top              : 1px solid threedshadow;
+    border-right            : 1px solid threedhighlight;
+    border-bottom           : 1px solid threedhighlight;
+    padding                 : 3px 1px 1px 5px;
+  }
+ 
 menubutton.button-toolbar-2.top {
   -moz-binding: url("chrome://global/content/menulistBindings.xml#menubutton-single-top");
 }

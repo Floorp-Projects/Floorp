@@ -21,6 +21,7 @@
  *   Peter Annema <disttsc@bart.nl>
  *   Blake Ross <blakeross@telocity.com>
  *   Alec Flett <alecf@netscape.com>
+ *   Ben Goodger <ben@netscape.com>
  */
 
 // helper routines, for doing rdf-based cut/copy/paste/etc
@@ -50,28 +51,105 @@ var bmTypeRes = RDF.GetResource(NC_NS + "Bookmark");
 // this is a hack for now - just assume containment
 var containment = RDF.GetResource(NC_NS + "child");
 
+<<<<<<< nsTreeController.js
+function nsTreeController (aTreeID, aParent)
+=======
 function isContainer(node)
+>>>>>>> 1.3
 {
-    return node.getAttribute("container") == "true";
+  this._treeID = aTreeID;
+  this.parent = aParent;
 }
 
-function getWStringData(wstring, len)
+nsTreeController.prototype =
 {
-    wstring = wstring.QueryInterface(nsISupportsWString);
-    var result = wstring.data.substring(0, len/2);
-    return result;
+  // store the tree's Id, rather than the tree, to avoid holding a strong ref
+  _treeID: null,
+  get tree ()
+  {
+    return document.getElementById(this.treeId);
+  },
+
+  supportsCommand: function(command)
+  {
+    switch(command) {
+    case "cmd_undo":
+    case "cmd_redo":
+      return false;
+    case "cmd_cut":
+    case "cmd_copy":
+    case "cmd_paste":
+    case "cmd_delete":
+    case "cmd_selectAll":
+      return true;
+    default:
+      return false;
+    }
+  },
+
+  isCommandEnabled: function(command)
+  {
+    switch (command) {
+    case "cmd_undo":
+    case "cmd_redo":
+      return false;
+    case "cmd_paste":
+      return gBookmarksShell.canPaste();
+    case "cmd_cut":
+    case "cmd_copy":
+    case "cmd_delete":
+      return this.tree.selectedItems.length >= 1;
+    case "cmd_selectAll":
+      return true;
+    }
+    return false;        
+  },
+
+  doCommand: function(command)
+  {
+    switch(command) {
+    case "cmd_undo":
+    case "cmd_redo":
+      return;
+    case "cmd_cut":
+      this.cut(this.getTree());
+    case "cmd_copy":
+      this.copy(this.getTree());
+    case "cmd_paste":
+      this.paste(this.getTree());
+    case "cmd_delete":
+      this.doDelete(this.getTree());
+    case "cmd_selectAll":
+      this.tree.selectAll();
+    }
+  },
+
+  onEvent: function (aEvent)
+  {
+    switch (aEvent) {
+    case "tree-select":
+      this.onCommandUpdate();
+      break;
+    }
+  },
+
+  onCommandUpdate: function ()
+  {
+    var commands = ["cmd_cut", "cmd_copy", "cmd_paste", 
+                    "cmd_delete", "cmd_selectAll"];
+    for (var i = 0; i < commands.length; ++i)
+      goUpdateCommand(commands[i]);
+  }
+  
+  SetTransferData : nsTreeController_SetTransferData,
+  copy: nsTreeController_copy,
+  cut: nsTreeController_cut,
+  paste: nsTreeController_paste,
+  doDelete: nsTreeController_delete
 }
 
-function nsTreeController_SetTransferData(transferable, flavor, text)
-{
-    if (!text) return;
-    var textData = Components.classes[supportswstring_contractid].createInstance(nsISupportsWString);
-    textData.data = text;
-
-    transferable.addDataFlavor(flavor);
-    transferable.setTransferData(flavor, textData, text.length*2);
-}
-
+<<<<<<< nsTreeController.js
+=======
 function nsTreeController_copy(tree)
 {
     var select_list = tree.selectedItems;
@@ -131,17 +209,11 @@ function nsTreeController_copy(tree)
 
     // get some useful components
     var trans = Components.classes[nsTransferable_contractid].createInstance(nsITransferable);
+>>>>>>> 1.3
 
-    Clipboard.emptyClipboard(nsIClipboard.kGlobalClipboard);
 
-    this.SetTransferData(trans, "moz/bookmarkclipboarditem", url);
-    this.SetTransferData(trans, "text/unicode", text);
-    this.SetTransferData(trans, "text/html", html);
-
-    Clipboard.setData(trans, null, nsIClipboard.kGlobalClipboard);
-    return true;
-}
-
+<<<<<<< nsTreeController.js
+=======
 function nsTreeController_cut(tree)
 {
     if (this.copy(tree)) {
@@ -439,4 +511,5 @@ nsTreeController.prototype =
     paste: nsTreeController_paste,
     doDelete: nsTreeController_delete
 }
+>>>>>>> 1.3
 

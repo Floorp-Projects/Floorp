@@ -119,6 +119,8 @@ BookmarksTree.prototype = {
       var property = "";
       for (var i = 0; i < editColGroup.childNodes.length; ++i) {
         var currCol = editColGroup.childNodes[i];
+        if (currCol.getAttribute("hidden") == "true") 
+          return;
         if (count == aCell) {
           property = currCol.getAttribute("resource");
           break;
@@ -132,7 +134,7 @@ BookmarksTree.prototype = {
       if (property) {
         editCell.setMode("edit");
         editCell.addObserver(this.postModifyCallback, "accept",
-                             [gBookmarksShell, NODE_ID(aSelectedItem), property]);
+                             [gBookmarksShell, aSelectedItem, property]);
       }
     },
 
@@ -142,9 +144,11 @@ BookmarksTree.prototype = {
     postModifyCallback: function (aParams) 
     {
       var aShell = aParams[0];
-      aShell.propertySet(aParams[1], aParams[2], aParams[3]); 
+      var selItemURI = NODE_ID(aParams[1]);
+      aShell.propertySet(selItemURI, aParams[2], aParams[3]); 
       gBookmarksShell.tree.focus();
-      gBookmarksShell.tree.selectItem(document.getElementById(aParams[2]));
+      gBookmarksShell.selectFolderItem(NODE_ID(gBookmarksShell.findRDFNode(aParams[1], false)), 
+                                       selItemURI, false);
       gSelectionTracker.clickCount = 0;
     },
 

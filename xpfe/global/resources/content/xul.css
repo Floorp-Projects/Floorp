@@ -1,4 +1,4 @@
- /** this should only contain XUL dialog and document window widget defaults. Defaults for widgets of
+/** this should only contain XUL dialog and document window widget defaults. Defaults for widgets of
     a particular application should be in that application's style sheet.
 	For example style definitions for navigator can be found in navigator.css
 
@@ -75,6 +75,12 @@ data {
 keyset, key {
   display: none;
 }
+
+/* templates */
+rule, conditions, action, bindings, binding, content, member, triple 
+  {
+    display: none;
+  }
 
 /**********************************
  * Window
@@ -238,7 +244,7 @@ popup {
   display: none;
 }
 
-popup.tooltip {
+popup.tooltip, .popup-infopopup {
   -moz-binding: url("chrome://global/content/xulBindings.xml#tooltips");
 }
 
@@ -279,6 +285,19 @@ tree > treechildren {
 treeitem { 
  -moz-binding: url("chrome://global/content/treeBindings.xml#treeitem");
 } 
+
+/* Inline Editable Treecell */
+.treecell-indent-editable {
+  -moz-binding: url("chrome://global/content/treeBindings.xml#treecell-indented-leaf-inline-edit");
+}
+
+treeitem[container="true"] > treerow > .treecell-indent-editable {
+  -moz-binding: url("chrome://global/content/treeBindings.xml#treecell-indented-folder-inline-edit");
+}
+
+.treecell-inline-edit {
+  -moz-binding: url("chrome://global/content/treeBindings.xml#treecell-inline-edit");
+}
 
 treecell { 
  vertical-align: middle;
@@ -666,6 +685,41 @@ stringbundle
     visibility            : collapse;
   }
 
+resizer[direction="right"]
+  {
+    -moz-binding          : url("chrome://global/content/popupBindings.xml#r-resizer");
+  }  
+
+resizer[direction="bottom"]
+  {
+    -moz-binding          : url("chrome://global/content/popupBindings.xml#b-resizer");
+  }  
+  
+resizer[direction="bottomright"]
+  {
+    -moz-binding          : url("chrome://global/content/popupBindings.xml#rb-resizer");  
+  }  
+  
+titlebar
+  {
+    -moz-binding          : url("chrome://global/content/popupBindings.xml#titlebar");  
+  }  
+  
+popup[type="floater"]
+  {
+    -moz-binding          : url("chrome://global/content/popupBindings.xml#floater-normal");
+  }
+  
+popup[type="floater"][docked="left"]
+  {
+    -moz-binding          : url("chrome://global/content/popupBindings.xml#floater-dock-left");
+  }
+  
+button.popupClose
+  {
+    -moz-binding          : url("chrome://global/content/popupBindings.xml#close-button") !important;
+  }  
+  
 stringbundleset
   {
     -moz-binding          : url("chrome://global/content/stringbundleBindings.xml#stringbundleset");

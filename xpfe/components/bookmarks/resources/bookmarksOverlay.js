@@ -25,6 +25,14 @@ var NC_NS  = "http://home.netscape.com/NC-rdf#";
 var RDF_NS = "http://www.w3.org/1999/02/22-rdf-syntax-ns#";
 const NC_NS_CMD = NC_NS + "command?cmd=";
 
+/** 
+ * XXX - 02/03/2001 - Work In Progress
+ *  - some of the methods here and in the derived classes in bookmarksTree.js
+ *    and bookmarks.js can probably be broken out into a shared library for RDF
+ *    utilities. So far the focus has been on getting this stuff to work, once 
+ *    I'm done with that I'll look at what can be reorganized. 
+ */
+
 function NODE_ID (aElement)
 {
   return aElement.getAttribute("ref") || aElement.id;
@@ -471,7 +479,12 @@ BookmarksUIElement.prototype = {
       var rCurrent = this.RDF.GetResource(nodes[i]);
       const krTypeProperty = this.RDF.GetResource(RDF_NS + "type");
       var rType = this.db.GetTarget(rCurrent, krTypeProperty, true);
-      rType = rType.QueryInterface(Components.interfaces.nsIRDFResource);
+      try {
+        rType = rType.QueryInterface(Components.interfaces.nsIRDFResource);
+      }
+      catch (e) {
+        rType = rType.QueryInterface(Components.interfaces.nsIRDFLiteral);
+      }
 
       // If the node is a folder, then we need to create a new anonymous 
       // resource and copy all the arcs over.
@@ -638,9 +651,10 @@ BookmarksUIElement.prototype = {
 
   showPropertiesForNode: function (aBookmarkItem) 
   {
-    openDialog("chrome://communicator/content/bookmarks/bm-props.xul",
-               "", "centerscreen,chrome,dialog=no,resizable=no", 
-               NODE_ID(aBookmarkItem));
+    if (aBookmarkItem.getAttribute("type") != NC_NS + "BookmarkSeparator") 
+      openDialog("chrome://communicator/content/bookmarks/bm-props.xul",
+                 "", "centerscreen,chrome,dialog=no,resizable=no", 
+                 NODE_ID(aBookmarkItem));
   },
 
   findInBookmarks: function ()

@@ -61,6 +61,37 @@
     list-style-image      : url("chrome://communicator/skin/content-small.gif");
   }  
 
+/*
+ comment out really bad style rules, but leave them here so future intent is
+ clear
+   
+.tree-sidebar .thumb-box
+  {
+    border                : none;
+  }  
+  
+.tree-sidebar thumb
+  {
+    border-left           : 1px solid ThreeDHighlight;
+    border-top            : 1px solid ThreeDHighlight;
+    border-right          : 1px solid ThreeDShadow;
+    border-bottom         : 1px solid ThreeDShadow;
+  }  
+  
+.tree-sidebar .scrollbarbutton-box
+  {
+    border                : none;
+  }  
+  
+.tree-sidebar scrollbarbutton
+  {
+    border-left           : 1px solid ThreeDHighlight;
+    border-top            : 1px solid ThreeDHighlight;
+    border-right          : 1px solid ThreeDShadow;
+    border-bottom         : 1px solid ThreeDShadow;
+  }
+*/
+
 #skinsTree {
   height                  : 80px;
 }  

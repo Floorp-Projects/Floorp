@@ -28,19 +28,25 @@
  *               that simplifies access to the clipboard. 
  **/ 
 var nsClipboard = {
+  _CB: null,
   get mClipboard()
     {
-      return nsJSComponentManager.getService("@mozilla.org/widget/clipboard;1",
-                                             "nsIClipboard");
+      if (!this._CB) 
+        {
+          const kCBContractID = "@mozilla.org/widget/clipboard;1";
+          const kCBIID = Components.interfaces.nsIClipboard;
+          this._CB = Components.classes[kCBContractID].getService(kCBIID);
+        }
+      return this._CB;
     },
     
-  mCurrentClipboard: null,
+  currentClipboard: null,
   /** 
    * Array/Object read (Object aFlavourList, long aClipboard, Bool aAnyFlag) ;
    *
    * returns the data in the clipboard
    * 
-   * @param Object aFlavourList
+   * @param FlavourSet aFlavourSet
    *        formatted list of desired flavours
    * @param long aClipboard
    *        the clipboard to read data from (kSelectionClipboard/kGlobalClipboard)
@@ -49,9 +55,9 @@ var nsClipboard = {
    **/
   read: function (aFlavourList, aClipboard, aAnyFlag)
     {
-      this.mCurrentClipboard = aClipboard;
+      this.currentClipboard = aClipboard;
       var data = nsTransferable.get(aFlavourList, this.getClipboardTransferable, aAnyFlag);
-      return data;
+      return data.first.first;  // only support one item
     },
     
   /**
@@ -68,7 +74,7 @@ var nsClipboard = {
       var trans = nsTransferable.createTransferable();
       for (var flavour in aFlavourList) 
         trans.addDataFlavor(flavour);
-      nsClipboard.mClipboard.getData(trans, nsClipboard.mCurrentClipboard)
+      nsClipboard.mClipboard.getData(trans, nsClipboard.currentClipboard)
       supportsArray.AppendElement(trans);
       return supportsArray;
     }
