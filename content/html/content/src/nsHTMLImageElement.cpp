@@ -59,7 +59,6 @@
 #include "nsIServiceManager.h"
 #include "nsNetUtil.h"
 #include "nsContentUtils.h"
-#include "nsIWebShell.h"
 #include "nsIFrame.h"
 #include "nsIImageFrame.h"
 #include "nsLayoutAtoms.h"

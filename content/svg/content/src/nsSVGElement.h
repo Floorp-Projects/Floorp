@@ -133,7 +133,7 @@ public:
 //   NS_IMETHOD SetBindingParent(nsIContent* aParent);
 
   // nsIXMLContent
-//   NS_IMETHOD MaybeTriggerAutoLink(nsIWebShell *aShell);
+//   NS_IMETHOD MaybeTriggerAutoLink(nsIDocShell *aShell);
 
   // nsIStyledContent
   NS_IMETHOD GetID(nsIAtom*& aResult) const;

@@ -38,8 +38,7 @@ REQUIRES	= xpcom \
 		  view \
 		  pref \
 		  necko \
-		  xpconnect \
-		  webshell
+		  xpconnect
 
 CPPSRCS		= \
 		nsSVGAnimatedLength.cpp \

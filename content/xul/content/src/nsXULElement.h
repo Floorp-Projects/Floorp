@@ -91,7 +91,7 @@ class nsRDFDOMNodeList;
 class nsString;
 class nsXULAttributes;
 class nsVoidArray;
-class nsIWebShell;
+class nsIDocShell;
 
 class nsIObjectInputStream;
 class nsIObjectOutputStream;
@@ -460,7 +460,7 @@ public:
     NS_IMETHOD GetListenerManager(nsIEventListenerManager** aResult);
 
     // nsIXMLContent
-    NS_IMETHOD MaybeTriggerAutoLink(nsIWebShell *aShell);
+    NS_IMETHOD MaybeTriggerAutoLink(nsIDocShell *aShell);
     NS_IMETHOD GetXMLBaseURI(nsIURI **aURI);
 
     // nsIStyledContent

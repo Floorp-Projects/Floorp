@@ -63,7 +63,6 @@
 #include "nsImageMapUtils.h"
 #include "nsIHTMLDocument.h"
 #include "nsINameSpaceManager.h"
-#include "nsIWebShell.h"
 #include "nsIBaseWindow.h"
 #include "nsIScrollableView.h"
 #include "nsISelection.h"

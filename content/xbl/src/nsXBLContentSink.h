@@ -85,7 +85,7 @@ public:
 
   nsresult Init(nsIDocument* aDoc,
                 nsIURI* aURL,
-                nsIWebShell* aContainer);
+                nsISupports* aContainer);
 
   // nsIContentSink overrides
   NS_IMETHOD HandleStartElement(const PRUnichar *aName, 
@@ -158,5 +158,5 @@ nsresult
 NS_NewXBLContentSink(nsIXMLContentSink** aResult,
                      nsIDocument* aDoc,
                      nsIURI* aURL,
-                     nsIWebShell* aWebShell);
+                     nsISupports* aContainer);
 #endif // nsXBLContentSink_h__

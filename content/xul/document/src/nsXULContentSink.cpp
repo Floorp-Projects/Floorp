@@ -486,14 +486,14 @@ XULContentSinkImpl::DidBuildModel(PRInt32 aQualityLevel)
 NS_IMETHODIMP 
 XULContentSinkImpl::WillInterrupt(void)
 {
-    // XXX Notify the webshell, if necessary
+    // XXX Notify the docshell, if necessary
     return NS_OK;
 }
 
 NS_IMETHODIMP 
 XULContentSinkImpl::WillResume(void)
 {
-    // XXX Notify the webshell, if necessary
+    // XXX Notify the docshell, if necessary
     return NS_OK;
 }
 

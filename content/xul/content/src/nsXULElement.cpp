@@ -149,7 +149,7 @@
 #include "nsITimelineService.h"
 #include "nsIFrame.h"
 
-class nsIWebShell;
+class nsIDocShell;
 
 // Global object maintenance
 nsICSSParser* nsXULPrototypeElement::sCSSParser = nsnull;
@@ -1595,7 +1595,7 @@ nsXULElement::GetElementsByAttribute(const nsAString& aAttribute,
 // nsIXMLContent interface
 
 NS_IMETHODIMP
-nsXULElement::MaybeTriggerAutoLink(nsIWebShell *aShell)
+nsXULElement::MaybeTriggerAutoLink(nsIDocShell *aShell)
 {
   return NS_OK;
 }

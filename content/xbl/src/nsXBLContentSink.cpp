@@ -62,7 +62,7 @@ nsresult
 NS_NewXBLContentSink(nsIXMLContentSink** aResult,
                      nsIDocument* aDoc,
                      nsIURI* aURL,
-                     nsIWebShell* aWebShell)
+                     nsISupports* aContainer)
 {
   NS_ENSURE_ARG_POINTER(aResult);
 
@@ -71,7 +71,7 @@ NS_NewXBLContentSink(nsIXMLContentSink** aResult,
   NS_ENSURE_TRUE(it, NS_ERROR_OUT_OF_MEMORY);
 
   nsCOMPtr<nsIXMLContentSink> kungFuDeathGrip = it;
-  nsresult rv = it->Init(aDoc, aURL, aWebShell);
+  nsresult rv = it->Init(aDoc, aURL, aContainer);
   NS_ENSURE_SUCCESS(rv, rv);
 
   return CallQueryInterface(it, aResult);
@@ -100,7 +100,7 @@ nsXBLContentSink::~nsXBLContentSink()
 nsresult
 nsXBLContentSink::Init(nsIDocument* aDoc,
                        nsIURI* aURL,
-                       nsIWebShell* aContainer)
+                       nsISupports* aContainer)
 {
   nsresult rv;
   rv = nsXMLContentSink::Init(aDoc, aURL, aContainer, nsnull);

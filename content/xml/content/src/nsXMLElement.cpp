@@ -43,7 +43,7 @@
 #include "nsIDocument.h"
 #include "nsIAtom.h"
 #include "nsIEventListenerManager.h"
-#include "nsIWebShell.h"
+#include "nsIDocShell.h"
 #include "nsIEventStateManager.h"
 #include "nsIDOMEvent.h"
 #include "nsINameSpace.h"
@@ -306,7 +306,7 @@ nsXMLElement::SetAttr(nsINodeInfo *aNodeInfo,
   return nsGenericContainerElement::SetAttr(aNodeInfo, aValue, aNotify);
 }
 
-static nsresult WebShellToPresContext(nsIWebShell *aShell,
+static nsresult DocShellToPresContext(nsIDocShell *aShell,
                                       nsIPresContext **aPresContext)
 {
   *aPresContext = nsnull;
@@ -368,7 +368,7 @@ static inline nsresult SpecialAutoLoadReturn(nsresult aRv, nsLinkVerb aVerb)
 }
 
 NS_IMETHODIMP
-nsXMLElement::MaybeTriggerAutoLink(nsIWebShell *aShell)
+nsXMLElement::MaybeTriggerAutoLink(nsIDocShell *aShell)
 {
   NS_ENSURE_ARG_POINTER(aShell);
 
@@ -454,7 +454,7 @@ nsXMLElement::MaybeTriggerAutoLink(nsIWebShell *aShell)
           rv = CheckLoadURI(base,value,getter_AddRefs(uri));
           if (NS_SUCCEEDED(rv)) {
             nsCOMPtr<nsIPresContext> pc;
-            rv = WebShellToPresContext(aShell,getter_AddRefs(pc));
+            rv = DocShellToPresContext(aShell,getter_AddRefs(pc));
             if (NS_SUCCEEDED(rv)) {
               rv = TriggerLink(pc, verb, base, value,
                                NS_LITERAL_STRING(""), PR_TRUE);
