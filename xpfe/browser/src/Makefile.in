@@ -43,7 +43,8 @@ EXPORT_RESOURCE_SAMPLES = \
         $(srcdir)/navigator-goofy.css \
         $(srcdir)/navigator-test1.xul \
         $(srcdir)/raindrops_light.gif \
-	$(NULL)
+        $(srcdir)/skindemo.xul \
+        $(NULL)
 
 install:: 
 	$(INSTALL) $(EXPORT_RESOURCE_SAMPLES) $(DIST)/bin/res/samples
