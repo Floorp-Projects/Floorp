@@ -1785,6 +1785,9 @@ $::vars =
 
     # UserInGroup - you probably want to cache this
     'UserInGroup' => \&UserInGroup ,
+
+    # SyncAnyPendingShadowChanges - called in the footer to sync the shadowdb
+    'SyncAnyPendingShadowChanges' => \&SyncAnyPendingShadowChanges ,
   };
 
 1;
