@@ -1879,7 +1879,10 @@ COOKIE_Write(nsIFile* dir) {
     }
     rv = dirSpec0->GetFileSpec(&dirSpec);
   }
-  nsOutputFileStream strm(dirSpec + kCookiesFileName);
+  dirSpec += kCookiesFileName;
+  PRBool ignored;
+  dirSpec.ResolveSymlink(ignored);
+  nsOutputFileStream strm(dirSpec);
   if (!strm.is_open()) {
     /* file doesn't exist -- that's not an error */
     return NS_OK;

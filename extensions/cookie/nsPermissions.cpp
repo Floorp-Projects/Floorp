@@ -439,7 +439,10 @@ Permission_Save(PRBool notify) {
   if (NS_FAILED(rval)) {
     return;
   }
-  nsOutputFileStream strm(dirSpec + kCookiesPermFileName);
+  dirSpec += kCookiesPermFileName;
+  PRBool ignored;
+  dirSpec.ResolveSymlink(ignored);
+  nsOutputFileStream strm(dirSpec);
   if (!strm.is_open()) {
     return;
   }
