@@ -57,6 +57,7 @@
 #include "reader.h"
 #include "parser.h"
 #include "js2engine.h"
+#include "regexp.h"
 #include "bytecodecontainer.h"
 #include "js2metadata.h"
 
@@ -243,7 +244,29 @@ namespace MetaData {
             return (int32)(d);    
     }
 
+    uint32 JS2Engine::toUInt32(float64 d)
+    {
+        if ((d == 0.0) || !JSDOUBLE_IS_FINITE(d) )
+            return 0;
+        bool neg = (d < 0);
+        d = fd::floor(neg ? -d : d);
+        d = neg ? -d : d;
+        d = fd::fmod(d, two32);
+        d = (d >= 0) ? d : d + two32;
+        return (uint32)(d);    
+    }
 
+    uint16 JS2Engine::toUInt16(float64 d)
+    {
+        if ((d == 0.0) || !JSDOUBLE_IS_FINITE(d))
+            return 0;
+        bool neg = (d < 0);
+        d = fd::floor(neg ? -d : d);
+        d = neg ? -d : d;
+        d = fd::fmod(d, two16);
+        d = (d >= 0) ? d : d + two16;
+        return (uint16)(d);
+    }
 
 
 
@@ -260,7 +283,9 @@ namespace MetaData {
                   INIT_STRINGATOM(public),
                   INIT_STRINGATOM(private),
                   INIT_STRINGATOM(function),
-                  INIT_STRINGATOM(object)
+                  INIT_STRINGATOM(object),
+                  Empty_StringAtom(world.identifiers[""]),
+                  Dollar_StringAtom(world.identifiers["$"])
     {
         for (int i = 0; i < 256; i++)
             float64Table[i] = NULL;
@@ -411,7 +436,7 @@ namespace MetaData {
             return OBJECT_TO_JS2VAL(new DynamicInstance(c));
         else
             if (c->prototype)
-                return OBJECT_TO_JS2VAL(new PrototypeInstance(c->prototype));
+                return OBJECT_TO_JS2VAL(new PrototypeInstance(c->prototype, c));
             else
                 return OBJECT_TO_JS2VAL(new FixedInstance(c));
     }

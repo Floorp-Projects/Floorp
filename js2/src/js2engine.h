@@ -135,6 +135,8 @@ public:
     size_t errorPos();
 
     int32 toInt32(float64 f);
+    uint32 toUInt32(float64 f);
+    uint16 toUInt16(float64 f);
 
     String *convertValueToString(js2val x);
     js2val convertValueToPrimitive(js2val x);
@@ -183,6 +185,8 @@ public:
     StringAtom &private_StringAtom;
     StringAtom &function_StringAtom;
     StringAtom &object_StringAtom;
+    StringAtom &Empty_StringAtom;
+    StringAtom &Dollar_StringAtom;
 
     // The activation stack, when it's empty and a return is executed, the
     // interpreter quits

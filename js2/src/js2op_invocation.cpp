@@ -37,7 +37,7 @@
         {
             uint16 argCount = BytecodeContainer::getShort(pc);
             pc += sizeof(uint16);
-            PrototypeInstance *pInst = new PrototypeInstance(meta->objectClass->prototype);
+            PrototypeInstance *pInst = new PrototypeInstance(meta->objectClass->prototype, meta->objectClass);
             for (uint16 i = 0; i < argCount; i++) {
                 js2val nameVal = pop();
                 ASSERT(JS2VAL_IS_STRING(nameVal));

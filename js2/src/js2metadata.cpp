@@ -51,6 +51,7 @@
 #include "numerics.h"
 #include "reader.h"
 #include "parser.h"
+#include "regexp.h"
 #include "js2engine.h"
 #include "bytecodecontainer.h"
 #include "js2metadata.h"
@@ -2105,19 +2106,29 @@ doUnary:
         writeDynamicProperty(glob, new Multiname(world.identifiers["Infinity"], publicNamespace), true, engine->posInfValue, RunPhase);
 
         // Function properties of the Object prototype object
-        objectClass->prototype = new PrototypeInstance(NULL);
+        objectClass->prototype = new PrototypeInstance(NULL, objectClass);
         FixedInstance *fInst = new FixedInstance(functionClass);
         fInst->fWrap = new FunctionWrapper(true, new ParameterFrame(JS2VAL_VOID, true), Object_toString);
         writeDynamicProperty(objectClass->prototype, new Multiname(world.identifiers["toString"], publicNamespace), true, OBJECT_TO_JS2VAL(fInst), RunPhase);
 
-
-        MAKEBUILTINCLASS(dateClass, objectClass, true, true, true, world.identifiers["Date"]);
-        Variable *v = new Variable(classClass, OBJECT_TO_JS2VAL(dateClass), true);
         NamespaceList publicNamespaceList;
         publicNamespaceList.push_back(publicNamespace);
+        Variable *v;
+
+        MAKEBUILTINCLASS(dateClass, objectClass, true, true, true, world.identifiers["Date"]);
+        v = new Variable(classClass, OBJECT_TO_JS2VAL(dateClass), true);
         defineStaticMember(&env, world.identifiers["Date"], &publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, v, 0);
-        dateClass->prototype = new PrototypeInstance(NULL);
+        dateClass->prototype = new PrototypeInstance(NULL, dateClass);
         initDateObject(this);
+
+        MAKEBUILTINCLASS(regexpClass, objectClass, true, true, true, world.identifiers["RegExp"]);
+        v = new Variable(classClass, OBJECT_TO_JS2VAL(regexpClass), true);
+        defineStaticMember(&env, world.identifiers["RegExp"], &publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, v, 0);
+
+        v = new Variable(classClass, OBJECT_TO_JS2VAL(stringClass), true);
+        defineStaticMember(&env, world.identifiers["String"], &publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, v, 0);
+        stringClass->prototype = new PrototypeInstance(NULL, stringClass);
+        initStringObject(this);
 
     }
 

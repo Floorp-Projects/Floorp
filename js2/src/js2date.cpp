@@ -51,6 +51,7 @@
 #include "numerics.h"
 #include "reader.h"
 #include "parser.h"
+#include "regexp.h"
 #include "js2engine.h"
 #include "bytecodecontainer.h"
 #include "js2metadata.h"
@@ -296,7 +297,8 @@ static int32 WeekDay(float64 t)
 
 static float64 *Date_getProlog(JS2Metadata *meta, const js2val thisValue)
 {
-    if (meta->objectType(thisValue) != meta->prototypeClass)
+    if ((meta->objectType(thisValue) != meta->prototypeClass)
+            || ((checked_cast<PrototypeInstance *>(JS2VAL_TO_OBJECT(thisValue))->type != meta->dateClass)) )
         meta->reportError(Exception::typeError, "You really need a date", meta->engine->errorPos());
     DateInstance *dateInst = checked_cast<DateInstance *>(JS2VAL_TO_OBJECT(thisValue));
     return &dateInst->ms;
@@ -853,8 +855,7 @@ static js2val Date_format(float64 date, formatspec format)
 #define MAXARGS        7
 js2val Date_Constructor(JS2Metadata *meta, const js2val thisValue, js2val *argv, uint32 argc)
 {
-    js2val thatValue = OBJECT_TO_JS2VAL(new DateInstance(meta->dateClass->prototype));
-
+    js2val thatValue = OBJECT_TO_JS2VAL(new DateInstance(meta->dateClass->prototype, meta->dateClass));
     DateInstance *thisInst = checked_cast<DateInstance *>(JS2VAL_TO_OBJECT(thatValue));
 
     /* Date called as constructor */
@@ -1399,78 +1400,80 @@ static js2val Date_valueOf(JS2Metadata *meta, const js2val thisValue, js2val arg
 }
 #endif
 
-
-
-#if 0
-Context::PrototypeFunctions *getDateProtos()
-{
-    Context::ProtoFunDef dateProtos[] = 
-    {
-        { "getTime",            Number_Type, 0, Date_getTime            },
-        { "getTimezoneOffset",  Number_Type, 0, Date_getTimezoneOffset  },
-        { "getYear",            Number_Type, 0, Date_getYear            },
-        { "getFullYear",        Number_Type, 0, Date_getFullYear        },
-        { "getUTCFullYear",     Number_Type, 0, Date_getUTCFullYear     },
-        { "getMonth",           Number_Type, 0, Date_getMonth           },
-        { "getUTCMonth",        Number_Type, 0, Date_getUTCMonth        },
-        { "getDate",            Number_Type, 0, Date_getDate            },
-        { "getUTCDate",         Number_Type, 0, Date_getUTCDate         },
-        { "getDay",             Number_Type, 0, Date_getDay             },
-        { "getUTCDay",          Number_Type, 0, Date_getUTCDay          },
-        { "getHours",           Number_Type, 0, Date_getHours           },
-        { "getUTCHours",        Number_Type, 0, Date_getUTCHours        },
-        { "getMinutes",         Number_Type, 0, Date_getMinutes         },
-        { "getUTCMinutes",      Number_Type, 0, Date_getUTCMinutes      },
-        { "getSeconds",         Number_Type, 0, Date_getUTCSeconds      },
-        { "getUTCSeconds",      Number_Type, 0, Date_getUTCSeconds      },
-        { "getMilliseconds",    Number_Type, 0, Date_getUTCMilliseconds },
-        { "getUTCMilliseconds", Number_Type, 0, Date_getUTCMilliseconds },
-        { "setTime",            Number_Type, 1, Date_setTime            },
-        { "setYear",            Number_Type, 1, Date_setYear            },
-        { "setFullYear",        Number_Type, 1, Date_setFullYear        },
-        { "setUTCFullYear",     Number_Type, 3, Date_setUTCFullYear     },
-        { "setMonth",           Number_Type, 2, Date_setMonth           },
-        { "setUTCMonth",        Number_Type, 2, Date_setUTCMonth        },
-        { "setDate",            Number_Type, 1, Date_setDate            },
-        { "setUTCDate",         Number_Type, 1, Date_setUTCDate         },
-        { "setHours",           Number_Type, 4, Date_setHours           },
-        { "setUTCHours",        Number_Type, 4, Date_setUTCHours        },
-        { "setMinutes",         Number_Type, 3, Date_setMinutes         },
-        { "setUTCMinutes",      Number_Type, 3, Date_setUTCMinutes      },
-        { "setSeconds",         Number_Type, 2, Date_setSeconds         },
-        { "setUTCSeconds",      Number_Type, 2, Date_setUTCSeconds      },
-        { "setMilliseconds",    Number_Type, 1, Date_setMilliseconds    },
-        { "setUTCMilliseconds", Number_Type, 1, Date_setUTCMilliseconds },
-        { "toUTCString",        String_Type, 0, Date_toGMTString        },
-        { "toGMTString",        String_Type, 0, Date_toGMTString        },      // XXX this is a SpiderMonkey extension?
-        { "toLocaleString",     String_Type, 0, Date_toLocaleString     },
-        { "toLocaleDateString", String_Type, 0, Date_toLocaleDateString },
-        { "toLocaleTimeString", String_Type, 0, Date_toLocaleTimeString },
-        { "toDateString",       String_Type, 0, Date_toDateString       },
-        { "toTimeString",       String_Type, 0, Date_toTimeString       },
-        { "toSource",           String_Type, 0, Date_toSource           },
-        { "toString",           String_Type, 0, Date_toString           },
-#if JS_HAS_VALUEOF_HINT
-        { "valueOf",            Number_Type, 0, Date_valueOf            },
-#else
-        { "valueOf",            Number_Type, 0, Date_getTime            },
-#endif
-        { NULL }
-    };
-    return new Context::PrototypeFunctions(&dateProtos[0]);
-}
-#endif
-
 void initDateObject(JS2Metadata *meta)
 {
+
+    typedef struct {
+        char *name;
+        uint16 length;
+        NativeCode *code;
+    } PrototypeFunction;
+
+    PrototypeFunction prototypeFunctions[] =
+    {
+            { "getTime",            0, Date_getTime            },
+            { "getTimezoneOffset",  0, Date_getTimezoneOffset  },
+            { "getYear",            0, Date_getYear            },
+            { "getFullYear",        0, Date_getFullYear        },
+            { "getUTCFullYear",     0, Date_getUTCFullYear     },
+            { "getMonth",           0, Date_getMonth           },
+            { "getUTCMonth",        0, Date_getUTCMonth        },
+            { "getDate",            0, Date_getDate            },
+            { "getUTCDate",         0, Date_getUTCDate         },
+            { "getDay",             0, Date_getDay             },
+            { "getUTCDay",          0, Date_getUTCDay          },
+            { "getHours",           0, Date_getHours           },
+            { "getUTCHours",        0, Date_getUTCHours        },
+            { "getMinutes",         0, Date_getMinutes         },
+            { "getUTCMinutes",      0, Date_getUTCMinutes      },
+            { "getSeconds",         0, Date_getUTCSeconds      },
+            { "getUTCSeconds",      0, Date_getUTCSeconds      },
+            { "getMilliseconds",    0, Date_getUTCMilliseconds },
+            { "getUTCMilliseconds", 0, Date_getUTCMilliseconds },
+            { "setTime",            1, Date_setTime            },
+            { "setYear",            1, Date_setYear            },
+            { "setFullYear",        1, Date_setFullYear        },
+            { "setUTCFullYear",     3, Date_setUTCFullYear     },
+            { "setMonth",           2, Date_setMonth           },
+            { "setUTCMonth",        2, Date_setUTCMonth        },
+            { "setDate",            1, Date_setDate            },
+            { "setUTCDate",         1, Date_setUTCDate         },
+            { "setHours",           4, Date_setHours           },
+            { "setUTCHours",        4, Date_setUTCHours        },
+            { "setMinutes",         3, Date_setMinutes         },
+            { "setUTCMinutes",      3, Date_setUTCMinutes      },
+            { "setSeconds",         2, Date_setSeconds         },
+            { "setUTCSeconds",      2, Date_setUTCSeconds      },
+            { "setMilliseconds",    1, Date_setMilliseconds    },
+            { "setUTCMilliseconds", 1, Date_setUTCMilliseconds },
+            { "toUTCString",        0, Date_toGMTString        },
+            { "toGMTString",        0, Date_toGMTString        },      // XXX this is a SpiderMonkey extension?
+            { "toLocaleString",     0, Date_toLocaleString     },
+            { "toLocaleDateString", 0, Date_toLocaleDateString },
+            { "toLocaleTimeString", 0, Date_toLocaleTimeString },
+            { "toDateString",       0, Date_toDateString       },
+            { "toTimeString",       0, Date_toTimeString       },
+            { "toSource",           0, Date_toSource           },
+            { "toString",           0, Date_toString           },
+#if JS_HAS_VALUEOF_HINT
+            { "valueOf",            0, Date_valueOf            },
+#else
+            { "valueOf",            0, Date_getTime            },
+#endif
+            { NULL }
+    };
+
     LocalTZA = -(PRMJ_LocalGMTDifference() * msPerSecond);
 
     meta->dateClass->construct = Date_Constructor;
 
-    FixedInstance *fInst = new FixedInstance(meta->functionClass);
-    fInst->fWrap = new FunctionWrapper(true, new ParameterFrame(JS2VAL_INACCESSIBLE, true), Date_toString);
-    meta->writeDynamicProperty(meta->dateClass->prototype, new Multiname(meta->world.identifiers["toString"], meta->publicNamespace), true, OBJECT_TO_JS2VAL(fInst), RunPhase);
-
+    PrototypeFunction *pf = &prototypeFunctions[0];
+    while (pf->name) {
+        FixedInstance *fInst = new FixedInstance(meta->functionClass);
+        fInst->fWrap = new FunctionWrapper(true, new ParameterFrame(JS2VAL_INACCESSIBLE, true), pf->code);
+        meta->writeDynamicProperty(meta->dateClass->prototype, new Multiname(meta->world.identifiers[pf->name], meta->publicNamespace), true, OBJECT_TO_JS2VAL(fInst), RunPhase);
+        pf++;
+    }
 
 }
 

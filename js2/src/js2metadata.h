@@ -58,6 +58,7 @@ typedef Invokable Callor;
 typedef js2val (Constructor)(JS2Metadata *meta, const js2val thisValue, js2val *argv, uint32 argc);
 
 extern void initDateObject(JS2Metadata *meta);
+extern void initStringObject(JS2Metadata *meta);
 
 
 // OBJECT is the semantic domain of all possible objects and is defined as:
@@ -511,25 +512,45 @@ public:
 
 // Prototype instances are represented as PROTOTYPE records. Prototype instances
 // contain no fixed properties.
+
 class PrototypeInstance : public JS2Object {
 public:
-    PrototypeInstance(JS2Object *parent) : JS2Object(PrototypeInstanceKind), parent(parent) { }
+    PrototypeInstance(JS2Object *parent, JS2Class *type) : JS2Object(PrototypeInstanceKind), parent(parent), type(type) { }
 
 
     JS2Object   *parent;        // If this instance was created by calling new on a prototype function,
-                                        // the value of the function’s prototype property at the time of the call;
-                                        // none otherwise.
+                                // the value of the function’s prototype property at the time of the call;
+                                // none otherwise.
+    JS2Class    *type;          // XXX used to determine [[class]] value 
     DynamicPropertyMap dynamicProperties; // A set of this instance's dynamic properties
     virtual void markChildren();
 };
 
-// Date instances are prototype instances created by the Date class, they have an extra field 
+// String instances are prototype instances created by the String class, they have an extra field 
 // that contains the millisecond count
 class DateInstance : public PrototypeInstance {
 public:
-    DateInstance(JS2Object *parent) : PrototypeInstance(parent) { }
+    DateInstance(JS2Object *parent, JS2Class *type) : PrototypeInstance(parent, type) { }
 
     float64     ms;
+};
+
+// String instances are prototype instances created by the Date class, they have an extra field 
+// that contains the string
+class StringInstance : public PrototypeInstance {
+public:
+    StringInstance(JS2Object *parent, JS2Class *type) : PrototypeInstance(parent, type) { }
+
+    String     *mValue;
+};
+
+// RegExp instances are prototype instances created by the Date class, they have an extra field 
+// that contains the RegExp object
+class RegExpInstance : public PrototypeInstance {
+public:
+    RegExpInstance(JS2Object *parent, JS2Class *type) : PrototypeInstance(parent, type) { }
+
+    REState     *mRegExp;
 };
 
 // A METHODCLOSURE tuple describes an instance method with a bound this value.
@@ -887,6 +908,7 @@ public:
     JS2Class *prototypeClass;
     JS2Class *packageClass;
     JS2Class *dateClass;
+    JS2Class *regexpClass;
 
     Parser *mParser;                // used for error reporting
 
