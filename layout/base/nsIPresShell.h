@@ -402,14 +402,18 @@ public:
   NS_IMETHOD DoCopy() = 0;
 
   /**
-   * Copy link location.
+   * Get link location.
    */
-  NS_IMETHOD DoCopyLinkLocation(nsIDOMNode* aNode) = 0;
+  NS_IMETHOD GetLinkLocation(nsIDOMNode* aNode, nsAString& aLocation) = 0;
 
   /**
-   * Copy image methods.
+   * Get image location.
    */
-  NS_IMETHOD DoCopyImageLocation(nsIDOMNode* aNode) = 0;
+  NS_IMETHOD GetImageLocation(nsIDOMNode* aNode, nsAString& aLocation) = 0;
+
+  /**
+   * Copy image.
+   */
   NS_IMETHOD DoCopyImageContents(nsIDOMNode* aNode) = 0;
 
   /**
