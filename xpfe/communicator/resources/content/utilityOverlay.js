@@ -118,9 +118,14 @@ function okToPrefill2(formsArray) {
     var element;
     for (element=0; element<elementsArray.length; element++) {
       var type = elementsArray[element].type;
-      var value = elementsArray[element].value;
       if (type=="" || type=="text" || type=="select-one") {
-        return true;
+        /* prefill-able element found, see if there is a saved value for it */
+        var walletService = Components.classes["@mozilla.org/wallet/wallet-service;1"].getService(Components.interfaces.nsIWalletService);
+        var value = walletService.WALLET_PrefillOneElement
+          (window._content, elementsArray[element]);
+        if (value != "") {
+          return true;
+        }
       }
     }
   }
