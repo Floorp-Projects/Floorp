@@ -1477,51 +1477,20 @@ void nsTreeRowGroupFrame::OnContentRemoved(nsIPresContext* aPresContext,
   if (mTopFrame && mTopFrame == aChildFrame)
     mTopFrame->GetNextSibling(&mTopFrame);
 
-  // if we're removing the last frame in this rowgroup, we have
-  // to yank in some rows from above
-  if (!mTopFrame) {
-    nsCOMPtr<nsIContent> oldTopContent;
-    oldTopFrame->GetContent(getter_AddRefs(oldTopContent));
-
-    nsCOMPtr<nsIContent> oldTopContentParent;
-    oldTopContent->GetParent(*getter_AddRefs(oldTopContentParent));
-
-    nsCOMPtr<nsIContent> newTopContent;
+  // if we're removing the last frame in this rowgroup and if we have
+  // a scrollbar, we have to yank in some rows from above
+  if (!mTopFrame && mScrollbar && mCurrentIndex > 0) {  
+    // sync up the scrollbar, now that we've scrolled one row
+     mCurrentIndex--;
+     nsAutoString indexStr;
+     PRInt32 pixelIndex = mCurrentIndex * SCROLL_FACTOR;
+     indexStr.Append(pixelIndex);
     
-    if (aIndex == 0) {
-      // this must be the last content in this row, so get the previous
-      // row from the parent
-      PRInt32 onerow = 1;
-      FindPreviousRowContent(onerow, nsnull, oldTopContentParent,
-                             getter_AddRefs(newTopContent));
-    } else {
-      // the parent still has some content, so scroll up to the content
-      // at aIndex -1;
-      PRInt32 newIndex = aIndex-1;
-      FindRowContentAtIndex(newIndex, oldTopContentParent,
-                            getter_AddRefs(newTopContent));
-    }
-
-    // now make a content chain so that we can rebuild frames correctly
-    if (newTopContent) {
-      ConstructContentChain(newTopContent);
-      
-      // sync up the scrollbar, now that we've scrolled one row
-      if (mScrollbar) {
-        mCurrentIndex--;
-        nsAutoString indexStr;
-        PRInt32 pixelIndex = mCurrentIndex * SCROLL_FACTOR;
-        indexStr.Append(pixelIndex);
-        
-        nsCOMPtr<nsIContent> scrollbarContent;
-        mScrollbar->GetContent(getter_AddRefs(scrollbarContent));
-        // this will actually be a no-op, but we need to do
-        // notification so the thumb adjusts itself
-        scrollbarContent->SetAttribute(kNameSpaceID_None, nsXULAtoms::curpos,
-                                       indexStr, /* notify */ PR_TRUE);
-      }
-    }
-      
+     nsCOMPtr<nsIContent> scrollbarContent;
+     mScrollbar->GetContent(getter_AddRefs(scrollbarContent));
+     scrollbarContent->SetAttribute(kNameSpaceID_None, nsXULAtoms::curpos,
+                                     indexStr, /* notify */ PR_TRUE);
+     return; // All frames got deleted anyway by the pos change.
   }
   
   nsTableFrame* tableFrame;
