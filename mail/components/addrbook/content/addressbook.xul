@@ -237,7 +237,7 @@
                                   accesskey="&showAbToolbarCmd.accesskey;"
                                   oncommand="onViewToolbarCommand('ab-bar', event);"
                                   checked="true" type="checkbox"/>
-                        <menuitem label="&showSearchToolbarCmd.label;"
+                        <menuitem id="menu_showSearchToolbar" label="&showSearchToolbarCmd.label;"
                                   accesskey="&showSearchToolbarCmd.accesskey;" 
                                   oncommand="goToggleToolbar('searchBox','menu_showSearchToolbar')"
                                   checked="true" type="checkbox"/>
