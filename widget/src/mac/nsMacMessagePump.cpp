@@ -250,7 +250,7 @@ void nsMacMessagePump::DoMessagePump()
  *	@param	 NONE
  *	@return	 A boolean which states whether we have a real event
  */
-#define kEventAvailMask			(mDownMask | mUpMask | keyDownMask | keyUpMask | autoKeyMask | activMask | osMask)
+#define kEventAvailMask			(mDownMask | mUpMask | keyDownMask | keyUpMask | autoKeyMask | updateMask | activMask | osMask)
 
 PRBool nsMacMessagePump::GetEvent(EventRecord &theEvent)
 {
@@ -260,7 +260,7 @@ PRBool nsMacMessagePump::GetEvent(EventRecord &theEvent)
 	
 	// Make sure we call WNE if we have user events, or the mouse is down
 	EventRecord tempEvent;
-	if (::OSEventAvail(kEventAvailMask, &tempEvent) || !(tempEvent.modifiers & btnState))
+	if (::EventAvail(kEventAvailMask, &tempEvent) || !(tempEvent.modifiers & btnState))
 		sNextWNECall = 0;
 	
 	// don't call more than once every 4 ticks
