@@ -129,6 +129,9 @@ extern "C" NS_EXPORT nsresult NSGetModule(nsIComponentManager *servMgr,
 			LogError("Python initialization failed!\n");
 			return NS_ERROR_FAILURE;
 		}
+#ifndef NS_DEBUG
+		Py_OptimizeFlag = 1;
+#endif
 		AddStandardPaths();
 		PyObject *mod = PyImport_ImportModule("xpcom._xpcom");
 		if (mod==NULL) {

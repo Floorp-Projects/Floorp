@@ -32,7 +32,7 @@ def _get_good_iid(iid):
     return iid
 
 # The "manager" object.
-manager = xpcom.client.Interface(_xpcom.NS_GetGlobalComponentManager(), _xpcom.IID_nsIComponentManager)
+manager = xpcom.client.Component(_xpcom.NS_GetGlobalComponentManager(), _xpcom.IID_nsIComponentManager)
 
 # The "interfaceInfoManager" object - JS doesnt have this.
 interfaceInfoManager = _xpcom.XPTI_GetInterfaceInfoManager()
@@ -190,6 +190,7 @@ class _ShutdownObserver:
         global interfaceInfoManager
         global _shutdownObserver
         manager = interfaceInfoManager = _shutdownObserver = None
+        xpcom.client._shutdown()
 
 svc = _xpcom.GetGlobalServiceManager().GetService("@mozilla.org/observer-service;1", interfaces.nsIObserverService)
 # Observers will be QI'd for a weak-reference, so we must keep the

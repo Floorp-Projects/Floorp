@@ -70,7 +70,7 @@ static PyObject *PyCreateInstanceByContractID(PyObject *self, PyObject *args)
 		return PyXPCOM_BuildPyException(r);
 
 	/* Return a type based on the IID (with no extra ref) */
-	return Py_nsISupports::PyObjectFromInterface(pis, iid, PR_FALSE);
+	return Py_nsISupports::PyObjectFromInterface(pis, iid, PR_FALSE, PR_FALSE);
 }
 
 static PyObject *PyContractIDToClassID(PyObject *self, PyObject *args)

@@ -70,20 +70,13 @@ PyXPCOM_TypeObject::IsType(PyTypeObject *t)
 /*static*/PyObject *
 PyXPCOM_TypeObject::Py_getattr(PyObject *self, char *name)
 {
-	if (strcmp(name, "IID")==0)
-		return Py_nsIID::PyObjectFromIID( ((Py_nsISupports *)self)->m_iid );
-
-	PyXPCOM_TypeObject *this_type = (PyXPCOM_TypeObject *)self->ob_type;
-	return Py_FindMethodInChain(&this_type->chain, self, name);
+	return ((Py_nsISupports *)self)->getattr(name);
 }
 
 /*static*/int
 PyXPCOM_TypeObject::Py_setattr(PyObject *op, char *name, PyObject *v)
 {
-	char buf[128];
-	sprintf(buf, "%s has read-only attributes", op->ob_type->tp_name );
-	PyErr_SetString(PyExc_TypeError, buf);
-	return -1;
+	return ((Py_nsISupports *)op)->setattr(name, v);
 }
 
 // @pymethod int|Py_nsISupports|__cmp__|Implements XPCOM rules for object identity.

@@ -40,6 +40,7 @@ Revision:
                     of the new xpcom interfaces that provide this info.
 
   May 2000 - Moved into Perforce - track the log there!
+  Early 2001 - Moved into the Mozilla CVS tree - track the log there!  
 
 Todo:
   Fill out this todo list.

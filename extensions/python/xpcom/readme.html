@@ -14,7 +14,7 @@
 
 <h1>Python XPCOM Package</h1>
 
-<p>Mozilla CVS Version - Last updated April 2001</p>
+<p>Mozilla CVS Version - Last updated May 2001</p>
 <p>This is the readme for the Python interface to <b>XPCOM</b>.</p>
 <p><b>XPCOM </b>is an acronym for &quot;Cross Platform COM&quot;.&nbsp; It has
 come out of the <a href="http://www.mozilla.org">Mozilla</a>  project, which
@@ -37,7 +37,7 @@ is, then none of this probably interests you at all!</p>
 </ul>
 <p>Note: <b>This package requires Python 1.6 or later</b>; we recommend using
 the latest
-official Python version (currently 2.0).&nbsp; This package works
+official Python version (currently 2.1).&nbsp; This package works
 very well with the latest <a href="http://www.ActiveState.com/Products/ActivePython">ActivePython</a>,
 and does not require any external modules or packages beyond what is provided in
 the core Python release for each platform.</p>
@@ -85,6 +85,11 @@ documented here just in case!</li>
   <li>Fix a seg fault on Linux when PYTHONPATH is not set.</li>
   <li>Changes to allow building with stand-alone XPCOM.</li>
 </ul>
+
+<h3>Version 0.92 - May 2001</h3>
+<p>Implement interface flattening.&nbsp; You should (almost) never need to use <i>QueryInterface()</i>!&nbsp;
+We are still 100% backwards compatible, so usage of QI still works - just is
+generally not necessary.</p>
 
 </body>
 

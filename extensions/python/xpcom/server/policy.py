@@ -20,32 +20,66 @@ import xpcom
 import traceback
 import xpcom.server
 import operator
+import types
+
+IID_nsISupports = _xpcom.IID_nsISupports
+XPT_MD_IS_GETTER = xpcom_consts.XPT_MD_IS_GETTER
+XPT_MD_IS_SETTER = xpcom_consts.XPT_MD_IS_SETTER
 
 _supports_primitives_map_ = {} # Filled on first use.
+
+_interface_sequence_types_ = types.TupleType, types.ListType
+_string_types_ = types.StringType, types.UnicodeType
+XPTI_GetInterfaceInfoManager = _xpcom.XPTI_GetInterfaceInfoManager
 
 def _GetNominatedInterfaces(obj):
     ret = getattr(obj, "_com_interfaces_", None)
     if ret is None: return None
     # See if the user only gave one.
-    try:
-        ret[0]
-    except TypeError:
+    if type(ret) not in _interface_sequence_types_:
         ret = [ret]
     real_ret = []
     # For each interface, walk to the root of the interface tree.
-    iim = _xpcom.XPTI_GetInterfaceInfoManager()
+    iim = XPTI_GetInterfaceInfoManager()
     for interface in ret:
-        try:
+        # Allow interface name or IID.
+        interface_info = None
+        if type(interface) in _string_types_:
+            try:
+                interface_info = iim.GetInfoForName(interface)
+            except COMException:
+                pass
+        if interface_info is None:
+            # Allow a real IID
             interface_info = iim.GetInfoForIID(interface)
-        except COMException:
-            # Allow an interface name.
-            interface_info = iim.GetInfoForName(interface)
         real_ret.append(interface_info.GetIID())
         parent = interface_info.GetParent()
         while parent is not None:
-            real_ret.append(parent.GetIID())
+            parent_iid = parent.GetIID()
+            if parent_iid == IID_nsISupports:
+                break
+            real_ret.append(parent_iid)
             parent = parent.GetParent()
     return real_ret
+
+class DefaultClassInfo:
+    _com_interfaces_ = _xpcom.IID_nsIClassInfo
+    def __init__(self, klass):
+        self.klass = klass
+        self.contractID = getattr(klass, "_reg_contractid_", None)
+        self.classDescription = getattr(klass, "_reg_desc_", None)
+        self.classID = getattr(klass, "_reg_clsid_", None)
+        self.implementationLanguage = 3 # Python - avoid lookups just for this
+        self.flags = 0 # what to do here??
+        self.interfaces = None
+        
+    def getInterfaces(self):
+        if self.interfaces is None:
+            self.interfaces = _GetNominatedInterfaces(self.klass)
+        return self.interfaces
+
+    def getHelperForLanguage(self, language):
+        return None # Not sure what to do here.
 
 class DefaultPolicy:
     def __init__(self, instance, iid):
@@ -54,16 +88,15 @@ class DefaultPolicy:
         self._iid_ = iid
         if ni is None:
             raise ValueError, "The object '%r' can not be used as a COM object" % (instance,)
-        if iid not in ni:
-            # The object may delegate QI.
-            try:
-                delegate_qi = instance._query_interface_
-            except AttributeError:
-                delegate_qi = None
-            # Perform the actual QI and throw away the result - the _real_
-            # QI performed by the framework will set things right!
-            if delegate_qi is None or not delegate_qi(iid):
-                raise ServerException(nsError.NS_ERROR_NO_INTERFACE)
+        # This is really only a check for the user
+        if __debug__:
+            if iid != IID_nsISupports and iid not in ni:
+                # The object may delegate QI.
+                delegate_qi = getattr(instance, "_query_interface_", None)
+                # Perform the actual QI and throw away the result - the _real_
+                # QI performed by the framework will set things right!
+                if delegate_qi is None or not delegate_qi(iid):
+                    raise ServerException(nsError.NS_ERROR_NO_INTERFACE)
         # Stuff for the magic interface conversion.
         self._interface_info_ = None
         self._interface_iid_map_ = {} # Cache - Indexed by (method_index, param_index)
@@ -80,7 +113,11 @@ class DefaultPolicy:
             # NOTE: We could have simply returned the instance and let the framework
             # do the auto-wrap for us - but this way we prevent a round-trip back into Python
             # code just for the autowrap.
-            return xpcom.server.WrapObject(self._obj_, iid)
+            return xpcom.server.WrapObject(self._obj_, iid, bWrapClient = 0)
+
+        # Always support nsIClassInfo 
+        if iid == _xpcom.IID_nsIClassInfo:
+            return xpcom.server.WrapObject(DefaultClassInfo(self._obj_.__class__), iid, bWrapClient = 0)
 
         # See if the instance has a QI
         # use lower-case "_query_interface_" as win32com does, and it doesnt really matter.
@@ -100,7 +137,7 @@ class DefaultPolicy:
                 _supports_primitives_map_[special_iid] = (attr, cvt)
         attr, cvt = _supports_primitives_map_.get(iid, (None,None))
         if attr is not None and hasattr(self._obj_, attr):
-            return xpcom.server.WrapObject(SupportsPrimitive(iid, self._obj_, attr, cvt), iid)
+            return xpcom.server.WrapObject(SupportsPrimitive(iid, self._obj_, attr, cvt), iid, bWrapClient = 0)
         # Out of clever things to try!
         return None # We dont support this IID.
 
@@ -117,13 +154,13 @@ class DefaultPolicy:
                 iid = self._interface_info_.GetIIDForParam(method_index, param_index)
                 self._interface_iid_map_[(method_index, param_index)] = iid
 #            iid = _xpcom.IID_nsISupports
-        return client.Interface(interface, iid)
+        return client.Component(interface, iid)
     
     def _CallMethod_(self, com_object, index, info, params):
 #        print "_CallMethod_", index, info, params
         flags, name, param_descs, ret = info
         assert ret[1][0] == xpcom_consts.TD_UINT32, "Expected an nsresult (%s)" % (ret,)
-        if xpcom_consts.XPT_MD_IS_GETTER(flags):
+        if XPT_MD_IS_GETTER(flags):
             # Look for a function of that name
             func = getattr(self._obj_, "get_" + name, None)
             if func is None:
@@ -132,7 +169,7 @@ class DefaultPolicy:
             else:
                 ret = func(*params)
             return 0, ret
-        elif xpcom_consts.XPT_MD_IS_SETTER(flags):
+        elif XPT_MD_IS_SETTER(flags):
             # Look for a function of that name
             func = getattr(self._obj_, "set_" + name, None)
             if func is None:

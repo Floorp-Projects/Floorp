@@ -40,6 +40,7 @@ CPP_OBJS= \
 	.\$(OBJDIR)\PyGStub.obj \
 	.\$(OBJDIR)\PyGInputStream.obj \
 	.\$(OBJDIR)\PyGWeakReference.obj \
+	.\$(OBJDIR)\PyIClassInfo.obj \
 	.\$(OBJDIR)\PyIComponentManager.obj \
 	.\$(OBJDIR)\PyIInputStream.obj \
 	.\$(OBJDIR)\PyIEnumerator.obj \
@@ -64,6 +65,7 @@ CPPSRCS = \
 	PyGStub.cpp \
 	PyGInputStream.cpp \
 	PyGWeakReference.cpp \
+	PyIClassInfo.cpp \
 	PyIComponentManager.cpp \
 	PyIInputStream.cpp \
 	PyIEnumerator.cpp \

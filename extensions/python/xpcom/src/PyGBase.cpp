@@ -171,7 +171,7 @@ PyG_Base::AutoWrapPythonInstance(PyObject *ob, const nsIID &iid, nsISupports **p
 
 		obIID = Py_nsIID::PyObjectFromIID(iid);
 		if (obIID==NULL) goto done;
-		args = Py_BuildValue("OO", ob, obIID);
+		args = Py_BuildValue("OOzi", ob, obIID, NULL, 0);
 		if (args==NULL) goto done;
 		wrap_ret = PyEval_CallObject(func, args);
 		if (wrap_ret==NULL) goto done;

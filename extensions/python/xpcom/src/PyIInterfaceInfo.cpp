@@ -117,7 +117,7 @@ static PyObject *PyGetParent(PyObject *self, PyObject *args)
 	Py_END_ALLOW_THREADS;
 	if ( NS_FAILED(r) )
 		return PyXPCOM_BuildPyException(r);
-	return Py_nsISupports::PyObjectFromInterface(pRet, NS_GET_IID(nsIInterfaceInfo), PR_FALSE);
+	return Py_nsISupports::PyObjectFromInterface(pRet, NS_GET_IID(nsIInterfaceInfo), PR_FALSE, PR_FALSE);
 }
 
 static PyObject *PyGetMethodCount(PyObject *self, PyObject *args)

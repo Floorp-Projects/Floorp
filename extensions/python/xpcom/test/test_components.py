@@ -49,8 +49,8 @@ def test_interfaces():
 
 def test_classes():
     # Need a well-known contractID here?
-    prog_id = "@mozilla.org/filelocator;1"
-    clsid = xpcom.components.ID("{78043e01-e603-11d2-915f-f08a208628fc}")
+    prog_id = "@mozilla.org/supports-array;1"
+    clsid = xpcom.components.ID("{bda17d50-0d6b-11d3-9331-00104ba0fd40}")
 
     # Check we can create the instance (dont check we can do anything with it tho!)
     klass = xpcom.components.classes[prog_id]

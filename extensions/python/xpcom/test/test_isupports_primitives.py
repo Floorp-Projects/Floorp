@@ -73,7 +73,7 @@ class ImplicitSupportsFloat:
 def test():
     import xpcom.server, xpcom.client
     ob = xpcom.server.WrapObject( NoSupportsString(), components.interfaces.nsISupports)
-    if not str(ob).startswith("<XPCOM interface"):
+    if not str(ob).startswith("<XPCOM "):
         raise RuntimeError, "Wrong str() value: %s" % (ob,)
 
     ob = xpcom.server.WrapObject( ImplicitSupportsString(), components.interfaces.nsISupports)

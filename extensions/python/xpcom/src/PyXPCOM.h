@@ -206,7 +206,9 @@ public:
 	static void RegisterInterface( const nsIID &iid, PyTypeObject *t);
 	static void InitType();
 
-	~Py_nsISupports();
+	virtual ~Py_nsISupports();
+	virtual PyObject *getattr(const char *name);
+	virtual int setattr(const char *name, PyObject *val);
 protected:
 	// ctor is protected - must create objects via
 	// PyObjectFromInterface()
@@ -398,7 +400,7 @@ protected:
 private:
 };
 
-// For the Gateways me manually implement.
+// For the Gateways we manually implement.
 #define PYGATEWAY_BASE_SUPPORT(INTERFACE, GATEWAY_BASE)                    \
 	NS_IMETHOD QueryInterface(REFNSIID aIID, void** aInstancePtr)      \
 		{return PyG_Base::QueryInterface(aIID, aInstancePtr);}     \
@@ -569,5 +571,92 @@ public:
 private:
 	PRBool created;
 };
+
+// Our classes.
+// Hrm - So we can't have templates, eh??
+// preprocessor to the rescue, I guess.
+#define PyXPCOM_INTERFACE_DECLARE(ClassName, InterfaceName, Methods )     \
+                                                                          \
+extern struct PyMethodDef Methods[];                                      \
+                                                                          \
+class ClassName : public Py_nsISupports                                   \
+{                                                                         \
+public:                                                                   \
+	static PyXPCOM_TypeObject *type;                                  \
+	static Py_nsISupports *Constructor(nsISupports *pInitObj, const nsIID &iid) { \
+		return new ClassName(pInitObj, iid);                      \
+	}                                                                 \
+	static void InitType(PyObject *iidNameDict) {                     \
+		type = new PyXPCOM_TypeObject(                            \
+				#InterfaceName,                           \
+				Py_nsISupports::type,                     \
+				sizeof(ClassName),                        \
+				Methods,                                  \
+				Constructor);                             \
+		const nsIID &iid = NS_GET_IID(InterfaceName);             \
+		RegisterInterface(iid, type);                             \
+		PyObject *iid_ob = Py_nsIID::PyObjectFromIID(iid);        \
+		PyDict_SetItemString(iidNameDict, "IID_"#InterfaceName, iid_ob); \
+		Py_DECREF(iid_ob);                                        \
+	}                                                                 \
+protected:                                                                \
+	ClassName(nsISupports *p, const nsIID &iid) :                     \
+		Py_nsISupports(p, iid, type) {                            \
+		/* The IID _must_ be the IID of the interface we are wrapping! */    \
+		NS_ABORT_IF_FALSE(iid.Equals(NS_GET_IID(InterfaceName)), "Bad IID"); \
+	}                                                                 \
+};                                                                        \
+                                                                          \
+// End of PyXPCOM_INTERFACE_DECLARE macro
+
+#define PyXPCOM_ATTR_INTERFACE_DECLARE(ClassName, InterfaceName, Methods )\
+                                                                          \
+extern struct PyMethodDef Methods[];                                      \
+                                                                          \
+class ClassName : public Py_nsISupports                                   \
+{                                                                         \
+public:                                                                   \
+	static PyXPCOM_TypeObject *type;                                  \
+	static Py_nsISupports *Constructor(nsISupports *pInitObj, const nsIID &iid) { \
+		return new ClassName(pInitObj, iid);                      \
+	}                                                                 \
+	static void InitType(PyObject *iidNameDict) {                     \
+		type = new PyXPCOM_TypeObject(                            \
+				#InterfaceName,                           \
+				Py_nsISupports::type,                     \
+				sizeof(ClassName),                        \
+				Methods,                                  \
+				Constructor);                             \
+		const nsIID &iid = NS_GET_IID(InterfaceName);             \
+		RegisterInterface(iid, type);                             \
+		PyObject *iid_ob = Py_nsIID::PyObjectFromIID(iid);        \
+		PyDict_SetItemString(iidNameDict, "IID_"#InterfaceName, iid_ob); \
+		Py_DECREF(iid_ob);                                        \
+}                                                                         \
+	virtual PyObject *getattr(const char *name);                      \
+	virtual int setattr(const char *name, PyObject *val);             \
+protected:                                                                \
+	ClassName(nsISupports *p, const nsIID &iid) :                     \
+		Py_nsISupports(p, iid, type) {                            \
+		/* The IID _must_ be the IID of the interface we are wrapping! */    \
+		NS_ABORT_IF_FALSE(iid.Equals(NS_GET_IID(InterfaceName)), "Bad IID"); \
+	}                                                                 \
+};                                                                        \
+                                                                          \
+// End of PyXPCOM_ATTR_INTERFACE_DECLARE macro
+
+#define PyXPCOM_INTERFACE_DEFINE(ClassName, InterfaceName, Methods )      \
+PyXPCOM_TypeObject *ClassName::type = NULL;
+
+
+// And the classes
+PyXPCOM_INTERFACE_DECLARE(Py_nsIComponentManager, nsIComponentManager, PyMethods_IComponentManager)
+PyXPCOM_INTERFACE_DECLARE(Py_nsIInterfaceInfoManager, nsIInterfaceInfoManager, PyMethods_IInterfaceInfoManager)
+PyXPCOM_INTERFACE_DECLARE(Py_nsIEnumerator, nsIEnumerator, PyMethods_IEnumerator)
+PyXPCOM_INTERFACE_DECLARE(Py_nsISimpleEnumerator, nsISimpleEnumerator, PyMethods_ISimpleEnumerator)
+PyXPCOM_INTERFACE_DECLARE(Py_nsIInterfaceInfo, nsIInterfaceInfo, PyMethods_IInterfaceInfo)
+PyXPCOM_INTERFACE_DECLARE(Py_nsIServiceManager, nsIServiceManager, PyMethods_IServiceManager)
+PyXPCOM_INTERFACE_DECLARE(Py_nsIInputStream, nsIInputStream, PyMethods_IInputStream)
+PyXPCOM_ATTR_INTERFACE_DECLARE(Py_nsIClassInfo, nsIClassInfo, PyMethods_IClassInfo)
 
 #endif // __PYXPCOM_H__

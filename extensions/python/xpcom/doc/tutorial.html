@@ -74,7 +74,7 @@ and implements the <i>nsISample</i> interface.</p>
 <p>Thus, a complete Python program that uses this component is shown below.</p>
 <pre>from xpcom import components
 cls = components.classes[&quot;@mozilla.org/sample;1&quot;]
-ob = cls.createInstance(components.interfaces.nsISample)
+ob = cls.createInstance() # no need to specify an IID for most components
 # nsISample defines a &quot;value&quot; property - let's use it!
 ob.value = &quot;new value&quot;
 if ob.value != &quot;new value&quot;:
@@ -232,6 +232,20 @@ any given XPCOM method, there is only one possible type for a given parameter.</
     length of the Python sequence passed, the Python programmer need never pass
     these parameters;&nbsp;in contrast, JavaScript requires these redundant parameters.</a></li>
 </ul>
+
+<h2>Interface Flattening</h2>
+<p>Most people can ignore this information - Python XPCOM objects just
+work.&nbsp; However, if you are familiar with xpcom from C++ and the concept of <i>QueryInterface</i>,
+you may like to read this.</p>
+<p>Most components support the concept of &quot;interface
+flattening&quot;.&nbsp; Such objects can report the interfaces they support,
+allowing languages such as Python and Javascript avoid using <i>QueryInterface</i>.&nbsp;
+When you are using an XPCOM object from Python, you can just call methods and
+reference properties without regard for the interface that implements it.</p>
+<p>When multiple interfaces share the same method or property name, you can use
+the name of the interface as a differentiator.&nbsp; Thus, <i>ob.nsIFoo.close()</i>
+will call close on <i>ob</i>'s <i>nsIFoo</i> interface, while <i>ob.nsIBar.close()</i>
+will use the <i>nsIBar</i> interface.&nbsp; <i>ob.close()</i> is not defined.</p>
 
 </body>
 
