@@ -324,20 +324,8 @@ nsScriptLoader::ProcessScriptElement(nsIDOMHTMLScriptElement *aElement,
                                  aObserver);
   }
 
-  // See if script evaluation is enabled.
-  PRBool scriptsEnabled = PR_TRUE;
-  nsCOMPtr<nsIScriptGlobalObject> globalObject;
-  mDocument->GetScriptGlobalObject(getter_AddRefs(globalObject));
-  if (globalObject)
-  {
-    nsCOMPtr<nsIScriptContext> context;
-    if (NS_SUCCEEDED(globalObject->GetContext(getter_AddRefs(context)))
-        && context)
-      context->GetScriptsEnabled(&scriptsEnabled);
-  }
-
   // If scripts aren't enabled there's no point in going on.
-  if (!scriptsEnabled) {
+  if (!mDocument->IsScriptEnabled()) {
     return FireErrorNotification(NS_ERROR_NOT_AVAILABLE, aElement, aObserver);
   }
 
@@ -421,6 +409,8 @@ nsScriptLoader::ProcessScriptElement(nsIDOMHTMLScriptElement *aElement,
       return FireErrorNotification(rv, aElement, aObserver);
     }
     
+    nsCOMPtr<nsIScriptGlobalObject> globalObject;
+    mDocument->GetScriptGlobalObject(getter_AddRefs(globalObject));
     // After the security manager, the content-policy stuff gets a veto
     if (globalObject) {
       nsCOMPtr<nsIDOMWindow> domWin(do_QueryInterface(globalObject));
