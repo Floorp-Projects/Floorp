@@ -21,22 +21,7 @@
 <?xml-stylesheet href="chrome://global/skin/xul.css" type="text/css"?>
 <?xml-stylesheet href="pm.css" type="text/css"?>
 
-<!DOCTYPE window 
-[
-<!ENTITY reg.gif "reg.gif">
-<!ENTITY intro "Communicator stores information about your settings, preferences, bookmarks, and stored messages in your personal Netscape Name.">
-<!ENTITY intro.new "Click New to create a new Netscape Name."> 
-<!ENTITY intro.delete "Click Delete to remove a selected Netscape Name."> 
-<!ENTITY intro.rename "Click Rename to change the name of a selected Netscape Name.">
-<!ENTITY migration.label "Migration">
-<!ENTITY user.label "User Name">
-<!ENTITY newCmd.label "New...">
-<!ENTITY renameCmd.label "Rename...">
-<!ENTITY deleteCmd.label "Delete">
-<!ENTITY startCmd.label "Start">
-<!ENTITY closeCmd.label "Close">
-]>
-
+<!DOCTYPE window SYSTEM "chrome://profile/locale/en-US/pm.dtd" >
 <window 
 xmlns:html="http://www.w3.org/TR/REC-html40"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" class="dialog"
