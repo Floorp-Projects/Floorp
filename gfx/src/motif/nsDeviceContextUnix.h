@@ -77,6 +77,8 @@ public:
   //XXX the return from this really needs to be ref counted somehow. MMP
   virtual PRUint8 * GetGammaTable(void);
 
+  virtual PRUint32 ConvertPixel(nscolor aColor);
+
 protected:
   ~nsDeviceContextUnix();
   nsresult CreateFontCache();
@@ -84,6 +86,12 @@ protected:
   nsIFontCache      *mFontCache;
   float             mGammaValue;
   nsDrawingSurfaceUnix * mSurface ;
+
+  PRUint32 mDepth;
+  Visual * mVisual;
+  PRBool   mWriteable;
+  PRUint32 mNumCells;
+  Colormap mColormap;
 
   // XXX There should be a nsIColormap interface
 public:
