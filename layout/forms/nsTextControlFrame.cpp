@@ -479,6 +479,7 @@ nsTextControlFrame::PostCreateWidget(nsIPresContext* aPresContext,
 
 #ifdef SingleSignon
     /* get name of text */
+    PRBool failed = PR_TRUE;
     nsAutoString name;
     GetName(&name);
 
@@ -490,32 +491,39 @@ nsTextControlFrame::PostCreateWidget(nsIPresContext* aPresContext,
     if (nsnull != doc) {
       docURL = doc->GetDocumentURL();
       NS_RELEASE(doc);
-      const char* spec;
-      (void)docURL->GetSpec(&spec);
-      URLName = (char*)PR_Malloc(PL_strlen(spec)+1);
-      PL_strcpy(URLName, spec);
-      NS_RELEASE(docURL);
-    }
-
-    /* invoke single-signon to get previously-used value of text */
-    nsINetService *service;
-    nsresult res = nsServiceManager::GetService(kNetServiceCID,
-                                          kINetServiceIID,
-                                          (nsISupports **)&service);
-    if ((NS_OK == res) && (nsnull != service)) {
-      char* valueString = NULL;
-      char* nameString = name.ToNewCString();
-      res = service->SI_RestoreSignonData(URLName, nameString, &valueString);
-      delete[] nameString;
-      NS_RELEASE(service);
-      PR_FREEIF(URLName);
-      if (valueString && *valueString) {
-        value = valueString;
-      } else {
-        GetText(&value, PR_TRUE);
+      if (nsnull != docURL) {
+        const char* spec;
+        (void)docURL->GetSpec(&spec);
+        if (nsnull != spec) {
+          URLName = (char*)PR_Malloc(PL_strlen(spec)+1);
+          PL_strcpy(URLName, spec);
+        }
+        NS_RELEASE(docURL);
       }
     }
 
+    if (nsnull != URLName) {
+      /* invoke single-signon to get previously-used value of text */
+      nsINetService *service;
+      nsresult res = nsServiceManager::GetService(kNetServiceCID,
+                                            kINetServiceIID,
+                                            (nsISupports **)&service);
+      if ((NS_OK == res) && (nsnull != service)) {
+        char* valueString = NULL;
+        char* nameString = name.ToNewCString();
+        res = service->SI_RestoreSignonData(URLName, nameString, &valueString);
+        delete[] nameString;
+        NS_RELEASE(service);
+        PR_FREEIF(URLName);
+        if (valueString && *valueString) {
+          value = valueString;
+          failed = PR_FALSE;
+        }
+      }
+    }
+    if (failed) {
+      GetText(&value, PR_TRUE);
+    }
 #else
   GetText(&value, PR_TRUE);
 #endif
