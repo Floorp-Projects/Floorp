@@ -40,6 +40,7 @@
 /**
  * XPCOM constructor for nsIOThreadPool
  */
-NS_METHOD net_NewIOThreadPool(nsISupports *outer, REFNSIID iid, void **result);
+NS_METHOD NS_HIDDEN
+net_NewIOThreadPool(nsISupports *outer, REFNSIID iid, void **result);
 
 #endif // nsIOThreadPool_h__
