@@ -35,29 +35,28 @@
 #include "vmtypes.h"
 
 namespace JavaScript {
-
-    namespace VM {
+namespace VM {
     
-        Formatter& operator<< (Formatter& f, Instruction& i)
-        {
-            return i.print(f);
+    Formatter& operator<< (Formatter& f, Instruction& i)
+    {
+        return i.print(f);
+    }
+    
+    Formatter& operator<< (Formatter& f, RegisterList& rl)
+    {
+        Register* e = rl.end();
+        
+        f << "(";
+        for (RegisterList::iterator r = rl.begin(); r != e; r++) {
+            f << "R" << (*r); 
+            if ((r + 1) != e)
+                f << ", ";
         }
-
-        Formatter& operator<< (Formatter& f, RegisterList& rl)
-        {
-            Register* e = rl.end();
-
-            f << "(";
-            for (RegisterList::iterator r = rl.begin(); r != e; r++) {
-                f << "R" << (*r); 
-                if ((r + 1) != e)
-                    f << ", ";
-            }
-            f << ")";
-
-            return f;
-        }
-    };
-};
+        f << ")";
+        
+        return f;
+    }
+} /* namespace VM */
+} /* namespace JavaScript */
 
 

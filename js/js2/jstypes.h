@@ -44,183 +44,188 @@
 #include "icodegenerator.h"
 
 namespace JavaScript {
-    namespace JSTypes {
-        using namespace VM;
-        using namespace ICG;
+namespace JSTypes {
+    using namespace VM;
+    using namespace ICG;
+    
+    class JSObject;
+    class JSArray;
+    class JSFunction;
+    
+    /**
+     * All JavaScript data types.
+     */        
+    union JSValue {
+        int8 i8;
+        uint8 u8;
+        int16 i16;
+        uint16 u16;
+        int32 i32;
+        uint32 u32;
+        int64 i64;
+        uint64 u64;
+        float32 f32;
+        float64 f64;
+        JSObject* object;
+        JSArray* array;
+        JSFunction *function;
         
-        class JSObject;
-        class JSArray;
-        class JSFunction;
-        
-        /**
-         * All JavaScript data types.
-         */        
-        union JSValue {
-            int8 i8;
-            uint8 u8;
-            int16 i16;
-            uint16 u16;
-            int32 i32;
-            uint32 u32;
-            int64 i64;
-            uint64 u64;
-            float32 f32;
-            float64 f64;
-            JSObject* object;
-            JSArray* array;
-            JSFunction *function;
+        JSValue() : f64(0.0) {}
             
-            JSValue() : f64(0.0) {}
-            
-            explicit JSValue(float64 f64) : f64(f64) {}
-        };
+        explicit JSValue(float64 f64) : f64(f64) {}
+    };
 
 #if defined(XP_MAC)
-        // copied from default template parameters in map.
-        typedef gc_allocator<std::pair<const String, JSValue> > gc_map_allocator;
+    // copied from default template parameters in map.
+    typedef gc_allocator<std::pair<const String, JSValue> > gc_map_allocator;
 #elif defined(XP_UNIX)
-        // FIXME: in libg++, they assume the map's allocator is a byte allocator,
-        // which is wrapped in a simple_allocator. this is crap.
-        typedef char _Char[1];
-        typedef gc_allocator<_Char> gc_map_allocator;
+    // FIXME: in libg++, they assume the map's allocator is a byte allocator,
+    // which is wrapped in a simple_allocator. this is crap.
+    typedef char _Char[1];
+    typedef gc_allocator<_Char> gc_map_allocator;
 #elif defined(_WIN32)
-        // FIXME: MSVC++'s notion. this is why we had to add _Charalloc().
-        typedef gc_allocator<JSValue> gc_map_allocator;
+    // FIXME: MSVC++'s notion. this is why we had to add _Charalloc().
+    typedef gc_allocator<JSValue> gc_map_allocator;
 #endif        
         
-        /**
+    /**
          * GC-scannable array of values.
          */
-        typedef std::vector<JSValue, gc_allocator<JSValue> > JSValues;
+    typedef std::vector<JSValue, gc_allocator<JSValue> > JSValues;
 
-        /**
+    /**
          * Basic behavior of all JS objects, mapping a name to a value.
          * This is provided mainly to avoid having an awkward implementation
          * of JSObject & JSArray, which must each define its own
          * gc_allocator. This is all in flux.
          */
-        class JSMap : public gc_base {
-            std::map<String, JSValue, std::less<String>, gc_map_allocator> properties;
-        public:
-            JSValue& operator[](const String& name)
-            {
-                return properties[name];
-            }
-        };
+    class JSMap : public gc_base {
+        std::map<String, JSValue, std::less<String>,
+            gc_map_allocator> properties;
+    public:
+        JSValue& operator[](const String& name)
+        {
+            return properties[name];
+        }
+    };
 
-        /**
+    /**
          * Private representation of a JavaScript object.
          * This will change over time, so it is treated as an opaque
          * type everywhere else but here.
          */
-        class JSObject : public JSMap {};
+    class JSObject : public JSMap {};
         
-        /**
+    /**
          * Private representation of a JavaScript array.
          */
-        class JSArray : public JSMap {
-            JSValues elements;
-        public:
-            JSArray() : elements(1) {}
-            JSArray(uint32 size) : elements(size) {}
-            JSArray(const JSValues &v) : elements(v) {}
+    class JSArray : public JSMap {
+        JSValues elements;
+    public:
+        JSArray() : elements(1) {}
+        JSArray(uint32 size) : elements(size) {}
+        JSArray(const JSValues &v) : elements(v) {}
             
-            uint32 length()
-            {
-                return elements.size();
-            }
+        uint32 length()
+        {
+            return elements.size();
+        }
             
-            JSValue& operator[](const JSValue& index)
-            {
-                // for now, we can only handle f64 index values.
-                uint32 n = (uint32)index.f64;
-                // obviously, a sparse representation might be better.
-                uint32 size = elements.size();
-                if (n >= size) expand(n, size);
-                return elements[n];
-            }
+        JSValue& operator[](const JSValue& index)
+        {
+            // for now, we can only handle f64 index values.
+            uint32 n = (uint32)index.f64;
+            // obviously, a sparse representation might be better.
+            uint32 size = elements.size();
+            if (n >= size) expand(n, size);
+            return elements[n];
+        }
             
-            JSValue& operator[](uint32 n)
-            {
-                // obviously, a sparse representation might be better.
-                uint32 size = elements.size();
-                if (n >= size) expand(n, size);
-                return elements[n];
-            }
+        JSValue& operator[](uint32 n)
+        {
+            // obviously, a sparse representation might be better.
+            uint32 size = elements.size();
+            if (n >= size) expand(n, size);
+            return elements[n];
+        }
             
-            void resize(uint32 size)
-            {
-                elements.resize(size);
-            }
+        void resize(uint32 size)
+        {
+            elements.resize(size);
+        }
             
-        private:
-            void expand(uint32 n, uint32 size)
-            {
-                do {
-                    size *= 2;
-                } while (n >= size);
-                elements.resize(size);
-            }
-        };
+    private:
+        void expand(uint32 n, uint32 size)
+        {
+            do {
+                size *= 2;
+            } while (n >= size);
+            elements.resize(size);
+        }
+    };
         
-        class JSFunction : public JSMap {
-            ICodeModule* mICode;
-        public:
-            JSFunction(ICodeModule* iCode) : mICode(iCode) {}
-            ICodeModule* getICode() { return mICode; }
-        };
+    class JSFunction : public JSMap {
+        ICodeModule* mICode;
+    public:
+        JSFunction(ICodeModule* iCode) : mICode(iCode) {}
+        ICodeModule* getICode() { return mICode; }
+    };
         
-        /**
+    /**
          * Represents the current function's invocation state.
          */
-        struct JSActivation : public gc_base {
-            JSValues mRegisters;
-            JSValues mLocals;
+    struct JSActivation : public gc_base {
+        JSValues mRegisters;
+        JSValues mLocals;
             
-            JSActivation(ICodeModule* iCode, const JSValues& args)
-                : mRegisters(iCode->itsMaxRegister + 1), mLocals(args)
-            {
-                // ensure that locals array is large enough.
-                uint32 localsSize = iCode->itsMaxVariable + 1;
-                if (localsSize > mLocals.size())
-                    mLocals.resize(localsSize);
-            }
+        JSActivation(ICodeModule* iCode, const JSValues& args)
+            : mRegisters(iCode->itsMaxRegister + 1), mLocals(args)
+        {
+            // ensure that locals array is large enough.
+            uint32 localsSize = iCode->itsMaxVariable + 1;
+            if (localsSize > mLocals.size())
+                mLocals.resize(localsSize);
+        }
 
-            JSActivation(ICodeModule* iCode, JSActivation* caller, const RegisterList& list)
-                : mRegisters(iCode->itsMaxRegister + 1), mLocals(iCode->itsMaxVariable + 1)
-            {
-                // copy caller's parameter list in to locals.
-                JSValues::iterator dest = mLocals.begin();
-                const JSValues& params = caller->mRegisters;
-                for (RegisterList::const_iterator src = list.begin(), end = list.end(); src != end; ++src, ++dest) {
-                    *dest = params[*src];
-                }
+        JSActivation(ICodeModule* iCode, JSActivation* caller, 
+                     const RegisterList& list)
+            : mRegisters(iCode->itsMaxRegister + 1),
+              mLocals(iCode->itsMaxVariable + 1)
+        {
+            // copy caller's parameter list in to locals.
+            JSValues::iterator dest = mLocals.begin();
+            const JSValues& params = caller->mRegisters;
+            for (RegisterList::const_iterator src = list.begin(), 
+                     end = list.end(); src != end; ++src, ++dest) {
+                *dest = params[*src];
             }
-        };
+        }
+    };
 
-        /**
- * Stores saved state from the *previous* activation, the current activation is alive
- * and well in locals of the interpreter loop.
+/**
+ * Stores saved state from the *previous* activation, the current activation is
+ * alive and well in locals of the interpreter loop.
  */
-        struct JSFrame : public gc_base {
-            JSFrame(InstructionIterator returnPC, InstructionIterator basePC,
-                    JSActivation* activation, Register result) 
-                :   itsReturnPC(returnPC), itsBasePC(basePC),
-                    itsActivation(activation),
-                    itsResult(result)
-            {
-            }
+    struct JSFrame : public gc_base {
+        JSFrame(InstructionIterator returnPC, InstructionIterator basePC,
+                JSActivation* activation, Register result) 
+            :   itsReturnPC(returnPC), itsBasePC(basePC),
+                itsActivation(activation),
+                itsResult(result)
+        {
+        }
 
-            InstructionIterator itsReturnPC;
-            InstructionIterator itsBasePC;
-            JSActivation* itsActivation;        // caller's activation.
-            Register itsResult;                 // the desired target register for the return value
-        };
+        InstructionIterator itsReturnPC;
+        InstructionIterator itsBasePC;
+        JSActivation* itsActivation;        // caller's activation.
+        // the desired target register for the return value
+        Register itsResult;                 
+    };
 
-        // a stack of JSFrames.
-        typedef std::stack<JSFrame*, std::vector<JSFrame*, gc_allocator<JSFrame*> > > JSFrameStack;
+    // a stack of JSFrames.
+    typedef std::stack<JSFrame*, std::vector<JSFrame*, gc_allocator<JSFrame*> > > JSFrameStack;
         
-    } /* namespace JSTypes */
+} /* namespace JSTypes */
     
 } /* namespace JavaScript */
 
