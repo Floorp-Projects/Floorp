@@ -278,7 +278,9 @@ function AddAttachmentToMenu(name, oncommand)
 
     var button = document.getElementById("attachmentButton");
     if (button)
+    {
        button.setAttribute("value", popup.childNodes.length);
+    }
   } 
 
   var attachBox = document.getElementById("attachmentBox");
@@ -589,13 +591,13 @@ function UpdateMessageHeaders()
     {
       hdrViewSetNodeWithBox(msgPaneData.UserAgentBox, msgPaneData.UserAgentValue, currentHeaderData["user-agent"].headerValue);
       if (msgPaneData.UserAgentToolbar)
-        msgPaneData.UserAgentToolbar.removeAttribute("hidden");
+        msgPaneData.UserAgentToolbar.removeAttribute("collapsed");
     }
     else
     {
       hdrViewSetNodeWithBox(msgPaneData.UserAgentBox, msgPaneData.UserAgentValue, "");
       if (msgPaneData.UserAgentToolbar)
-        msgPaneData.UserAgentToolbar.setAttribute("hidden", "true"); 
+        msgPaneData.UserAgentToolbar.setAttribute("collapsed", "true"); 
     }
 
   }
@@ -614,43 +616,43 @@ function ShowMessageHeaderPane()
   if (gViewAllHeaders)
   {
     HideMessageHeaderPane();
-    msgPaneData.ViewAllHeadersToolbar.removeAttribute("hidden");
+    msgPaneData.ViewAllHeadersToolbar.removeAttribute("collapsed");
     msgPaneData.ViewAllHeadersBox.removeAttribute("collapsed");
   }
   else
   {
-    msgPaneData.ViewAllHeadersToolbar.setAttribute("hidden", "true");
+    msgPaneData.ViewAllHeadersToolbar.setAttribute("collapsed", "true");
     msgPaneData.ViewAllHeadersBox.setAttribute("collapsed", "true");
     
     var node = document.getElementById("headerPart1");
     if (node)
-      node.removeAttribute("hidden");
+      node.removeAttribute("collapsed");
     node = document.getElementById("headerPart2");
     if (node)
-      node.removeAttribute("hidden");
+      node.removeAttribute("collapsed");
 
 /*
     node = document.getElementById("headerPart3");
     if (node)
-      node.removeAttribute("hidden");
+      node.removeAttribute("collapsed");
 */
   }
 }
 
 function HideMessageHeaderPane()
 {
-  msgPaneData.ViewAllHeadersToolbar.setAttribute("hidden", "true");
+  msgPaneData.ViewAllHeadersToolbar.setAttribute("collapsed", "true");
   msgPaneData.ViewAllHeadersBox.setAttribute("collapsed", "true");
 
   var node = document.getElementById("headerPart1");
   if (node)
-    node.setAttribute("hidden", "true");
+    node.setAttribute("collapsed", "true");
   node = document.getElementById("headerPart2");
   if (node)
-    node.setAttribute("hidden", "true");
+    node.setAttribute("collapsed", "true");
   node = document.getElementById("headerPart3");
   if (msgPaneData.UserAgentToolbar)
-    msgPaneData.UserAgentToolbar.setAttribute("hidden", "true");
+    msgPaneData.UserAgentToolbar.setAttribute("collapsed", "true");
 
 }
 
