@@ -389,6 +389,12 @@ PRBool nsMacEventHandler::HandleMouseDownEvent(
 		case inGoAway:
 		{
 			mTopLevelWidget->Destroy();
+			/* terrible hack alert: this Release matches the Addref that was done when the
+			   window widget was created by the nsWebShellWindow.  It'd be a lot cleaner to
+			   ask the webshellwindow to release its window, but I feel even worse about
+			   getting to the nsWebShellWindow from the nsWindow, so here goes:
+			*/
+			NS_RELEASE(mTopLevelWidget);
 			break;
 		}
 

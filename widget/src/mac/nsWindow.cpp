@@ -203,19 +203,6 @@ NS_IMETHODIMP nsWindow::Destroy()
 
 	ReportDestroyEvent();	// beard: this seems to cause the window to be deleted. moved all release code to destructor.
 
-	/* following is a terrible hack. what the heck is the relationship between the webshell window
-	   and this nsWindow?  To make a new window, you make one of the former, which makes one
-	   of the latter. To delete a window, you come to this method.  What the!!???  Here we are
-	   doing something really awful because it allows you to actually close (or appear to close)
-	   a window on the Mac, whose OS doesn't kill the window for you.
-	*/
-	/* Unfortunately this hack has the nasty side effect of causing a crash when trying
-	   to load a new URL in either appRunner or viewer.  Feeling that it is better to have
-	   windows that you can't close rather than to crash trying to browse I'm commenting
-	   out the Release() for now.
-	*/
-	//Release();	// the ref added when nsWebShellWindow made us
-
 	return NS_OK;
 }
 
