@@ -118,6 +118,7 @@ OBJS =                                          \
 
 WIN_LIBS=                                       \
        ole32.lib                                \
+       version.lib                              \
        $(NULL)
 
 include <$(DEPTH)\config\rules.mak>
