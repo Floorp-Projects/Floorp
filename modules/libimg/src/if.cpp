@@ -165,7 +165,9 @@ il_image_complete_notify(il_container *ic)
     
     XP_BZERO(&message_data, sizeof(IL_MessageData));
 
+#if !defined(STANDALONE_IMAGE_LIB)
 	PR_ASSERT(ic->clients);
+#endif
     for (image_req = ic->clients; image_req; image_req = image_req->next) {
         message_data.image_instance = image_req;
         XP_NotifyObservers(image_req->obs_list, IL_IMAGE_COMPLETE,
@@ -183,7 +185,9 @@ il_frame_complete_notify(il_container *ic)
     
     XP_BZERO(&message_data, sizeof(IL_MessageData));
 
+#if !defined(STANDALONE_IMAGE_LIB)
 	PR_ASSERT(ic->clients);
+#endif
     for (image_req = ic->clients; image_req; image_req = image_req->next) {
         message_data.image_instance = image_req;
         XP_NotifyObservers(image_req->obs_list, IL_FRAME_COMPLETE,
