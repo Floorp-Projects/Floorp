@@ -580,8 +580,8 @@ nsCookieService::GetCookieStringFromHttp(nsIURI     *aHostURI,
   const char *nextDot = currentDot + 1;
 
   // begin hash lookup, walking up the subdomain levels.
-  // we use nextDot to make sure we have at least one embedded dot remaining.
-  while (nextDot) {
+  // we use nextDot to force a lookup of the original host (without leading dot).
+  do {
     nsCookieEntry *entry = mHostTable.GetEntry(currentDot);
     cookie = entry ? entry->Head() : nsnull;
     for (; cookie; cookie = cookie->Next()) {
