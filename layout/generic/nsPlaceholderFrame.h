@@ -50,12 +50,6 @@ public:
                    nsIRenderingContext& aRenderingContext,
                    const nsRect& aDirtyRect);
 
-// XXX CONSTRUCTION
-#if 0
-  NS_IMETHOD  ContentAppended(nsIPresShell*   aShell,
-                              nsIPresContext* aPresContext,
-                              nsIContent*     aContainer);
-#endif
   NS_IMETHOD  ContentInserted(nsIPresShell*   aShell,
                               nsIPresContext* aPresContext,
                               nsIContent*     aContainer,

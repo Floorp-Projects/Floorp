@@ -101,55 +101,11 @@ nsPlaceholderFrame::InlineReflow(nsLineLayout&        aLineLayout,
   }
   NS_ASSERTION(nsnull != container, "no floater container");
 
-  // Have we created the anchored item yet?
-  if (nsnull == mAnchoredItem) {
-    // If the content object is a container then wrap it in a body pseudo-frame
+  if (eReflowReason_Initial == aReflowState.reason) {
+    // By this point we expect to have been told which anchored item we're
+    // associated with
+    NS_ASSERTION(nsnull != mAnchoredItem, "no anchored item");
 
-    // XXX begin hack
-    // XXX More hack. We don't want to blindly wrap a body pseudo-frame around 
-    // a table content object, because the body pseudo-frame will map the table's
-    // content children rather than create a table frame and let it map the
-    // children...
-    PRBool select = PR_FALSE;
-    nsIAtom* atom;
-    mContent->GetTag(atom);
-    nsAutoString tmp;
-    if (nsnull != atom) {
-      atom->ToString(tmp);
-      if (tmp.EqualsIgnoreCase("select") ||
-          tmp.EqualsIgnoreCase("table") ||
-          tmp.EqualsIgnoreCase("embed") ||
-          tmp.EqualsIgnoreCase("object") ||
-          tmp.EqualsIgnoreCase("applet")) {
-        select = PR_TRUE;
-      }
-      NS_RELEASE(atom);
-    }
-    // XXX end hack
-
-    PRBool canHaveKids;
-    mContent->CanContainChildren(canHaveKids);
-    if (canHaveKids && !select) {
-      nsBodyFrame::NewFrame(&mAnchoredItem, mContent, this);
-
-      // Use our style context for the pseudo-frame
-      mAnchoredItem->SetStyleContext(&presContext, mStyleContext);
-    } else {
-      // Create the anchored item
-      nsIContentDelegate* delegate = mContent->GetDelegate(&presContext);
-      nsresult rv = delegate->CreateFrame(&presContext, mContent,
-                                          mGeometricParent, mStyleContext,
-                                          mAnchoredItem);
-      NS_RELEASE(delegate);
-      if (NS_OK != rv) {
-        return rv;
-      }
-    }
-
-    // Notify our containing block that there's a new floater
-    container->AddFloater(&presContext, aReflowState, mAnchoredItem, this);
-
-  } else if (eReflowReason_Initial == aReflowState.reason) {
     // Notify our containing block that there's a new floater
     container->AddFloater(&presContext, aReflowState, mAnchoredItem, this);
   }
@@ -183,23 +139,6 @@ nsPlaceholderFrame::Paint(nsIPresContext& aPresContext,
   }
   return NS_OK;
 }
-
-// XXX CONSTRUCTION
-#if 0
-NS_IMETHODIMP nsPlaceholderFrame::ContentAppended(nsIPresShell*   aShell,
-                                                  nsIPresContext* aPresContext,
-                                                  nsIContent*     aContainer)
-{
-  NS_ASSERTION(mContent == aContainer, "bad content-appended target");
-
-  // Forward the notification to the floater
-  if (nsnull != mAnchoredItem) {
-    return mAnchoredItem->ContentAppended(aShell, aPresContext, aContainer);
-  }
-
-  return NS_OK;
-}
-#endif
 
 NS_IMETHODIMP nsPlaceholderFrame::ContentInserted(nsIPresShell*   aShell,
                                                   nsIPresContext* aPresContext,
