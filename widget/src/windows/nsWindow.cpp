@@ -228,20 +228,17 @@ void nsWindow::RemoveTooltips()
 PRBool nsWindow::ConvertStatus(nsEventStatus aStatus)
 {
   switch(aStatus) {
-    case nsEventStatus_eIgnore:
-      return(PR_FALSE);
-    break;
-    case nsEventStatus_eConsumeNoDefault:
-      return(PR_TRUE);
-    break;
-    case nsEventStatus_eConsumeDoDefault:
-      return(PR_FALSE);
-    break;
-    default:
-      NS_ASSERTION(0, "Illegal nsEventStatus enumeration value");
-      return(PR_FALSE);
+  case nsEventStatus_eIgnore:
+    return PR_FALSE;
+  case nsEventStatus_eConsumeNoDefault:
+    return PR_TRUE;
+  case nsEventStatus_eConsumeDoDefault:
+    return PR_FALSE;
+  default:
+    NS_ASSERTION(0, "Illegal nsEventStatus enumeration value");
     break;
   }
+  return PR_FALSE;
 }
 
 //-------------------------------------------------------------------------
