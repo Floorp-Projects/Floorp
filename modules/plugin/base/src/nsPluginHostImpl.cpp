@@ -1570,7 +1570,7 @@ NS_IMETHODIMP nsPluginHostImpl::InstantiateEmbededPlugin(const char *aMimeType,
   }
 
 #ifdef NS_DEBUG
-  printf("InstantiateFullPagePlugin.. returning\n");
+  printf("InstantiateEmbededPlugin.. returning\n");
 #endif
   return rv;
 }
