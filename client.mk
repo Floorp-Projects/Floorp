@@ -110,7 +110,7 @@ else
 # Default objdir, e.g. mozilla/obj-i686-pc-linux-gnu
   OBJDIR :=
   ifdef CONFIG_GUESS
-    OBJDIR := $(ROOTDIR)/obj-$(CONFIG_GUESS)
+    OBJDIR := $(TOPSRCDIR)
   endif
 endif
 
