@@ -312,8 +312,8 @@ nsMsgDatabase::nsMsgDatabase()
 	  m_threadIdColumnToken(0),
 	  m_threadChildrenColumnToken(0),
 	  m_threadUnreadChildrenColumnToken(0),
-	  m_threadSubjectColumnToken(0),
 	  m_messageThreadIdColumnToken(0),
+	  m_threadSubjectColumnToken(0),
 	  m_numReferencesColumnToken(0),
 	  m_messageCharSetColumnToken(0),
 	  m_HeaderParser(nsnull)
@@ -2400,7 +2400,6 @@ nsIMsgDBHdr *nsMsgDatabase::GetMsgHdrForSubject(nsString2 &subject)
 
 NS_IMETHODIMP nsMsgDatabase::GetThreadContainingMsgHdr(nsIMsgDBHdr *msgHdr, nsIMsgThread **result)
 {
-	nsresult ret = NS_OK;
 	if (!result)
 		return NS_ERROR_NULL_POINTER;
 
