@@ -1779,25 +1779,28 @@ nsBookmarksService::Init()
     // if the user has more than one profile: always include the profile name
     // otherwise, include the profile name only if it is not named 'default'
     // the profile "default" is not localizable and arises when there is no ns4.x install
-    nsCOMPtr<nsIProfile> profileService(do_GetService(NS_PROFILE_CONTRACTID,&rv));
-    nsXPIDLString        currentProfileName;
     nsresult             useProfile;
-
-    useProfile = profileService->GetCurrentProfile(getter_Copies(currentProfileName));
+    nsCOMPtr<nsIProfile> profileService(do_GetService(NS_PROFILE_CONTRACTID,&useProfile));
     if (NS_SUCCEEDED(useProfile))
     {
-        const PRUnichar *param[1] = {currentProfileName.get()};
-        useProfile = mBundle->FormatStringFromName(NS_LITERAL_STRING("bookmarks_root").get(),
-                                                 param, 1, getter_Copies(mBookmarksRootName));
+        nsXPIDLString        currentProfileName;
+    
+        useProfile = profileService->GetCurrentProfile(getter_Copies(currentProfileName));
         if (NS_SUCCEEDED(useProfile))
         {
-            PRInt32 profileCount;
-            useProfile = profileService->GetProfileCount(&profileCount);
-            if (NS_SUCCEEDED(useProfile) && profileCount == 1)
+            const PRUnichar *param[1] = {currentProfileName.get()};
+            useProfile = mBundle->FormatStringFromName(NS_LITERAL_STRING("bookmarks_root").get(),
+                                                    param, 1, getter_Copies(mBookmarksRootName));
+            if (NS_SUCCEEDED(useProfile))
             {
-                ToLowerCase(currentProfileName);
-                if (currentProfileName.Equals(NS_LITERAL_STRING("default")))
-                    useProfile = NS_ERROR_FAILURE;
+                PRInt32 profileCount;
+                useProfile = profileService->GetProfileCount(&profileCount);
+                if (NS_SUCCEEDED(useProfile) && profileCount == 1)
+                {
+                    ToLowerCase(currentProfileName);
+                    if (currentProfileName.Equals(NS_LITERAL_STRING("default")))
+                        useProfile = NS_ERROR_FAILURE;
+                }
             }
         }
     }
