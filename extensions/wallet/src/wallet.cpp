@@ -399,14 +399,24 @@ Wallet_Localize(char* genericString) {
   nsILocale* locale = nsnull;
   nsIStringBundle* bundle = nsnull;
 #if 1
+#ifndef NECKO
   const char* spec = nsnull;
+#else
+  char* spec = nsnull;
+#endif /* NECKO */
   ret = url->GetSpec(&spec);
   if (NS_FAILED(ret)) {
     printf("cannot get url spec\n");
     nsServiceManager::ReleaseService(kStringBundleServiceCID, pStringService);
+#ifdef NECKO
+    nsCRT::free(spec);
+#endif /* NECKO */
     return v.ToNewCString();
   }
   ret = pStringService->CreateBundle(spec, locale, &bundle);
+#ifdef NECKO
+  nsCRT::free(spec);
+#endif /* NECKO */
 #else
   ret = pStringService->CreateBundle(url, locale, &bundle);
 #endif
