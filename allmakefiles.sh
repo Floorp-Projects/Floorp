@@ -286,6 +286,7 @@ rdf/chrome/src/Makefile
 rdf/util/Makefile
 rdf/util/public/Makefile
 rdf/util/src/Makefile
+rdf/resources/Makefile
 rdf/build/Makefile
 rdf/content/Makefile
 rdf/content/public/Makefile
