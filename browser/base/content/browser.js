@@ -366,6 +366,12 @@ function prepareForStartup()
 
 function delayedStartup()
 {
+  gPrefService = Components.classes["@mozilla.org/preferences-service;1"]
+                              .getService(Components.interfaces.nsIPrefService);
+  gPrefService = gPrefService.getBranch(null);
+
+  BrowserOffline.init();
+  
   if (gIsLoadingBlank)
     prepareForStartup();
 
@@ -436,10 +442,6 @@ function delayedStartup()
   var toolbox = document.getElementById("navigator-toolbox");
   toolbox.customizeDone = BrowserToolboxCustomizeDone;
 
-  gPrefService = Components.classes["@mozilla.org/preferences-service;1"]
-                              .getService(Components.interfaces.nsIPrefService);
-  gPrefService = gPrefService.getBranch(null);
-
   // Enable/Disable Form Fill
   var pbi = gPrefService.QueryInterface(Components.interfaces.nsIPrefBranchInternal);
   pbi.addObserver(gFormFillPrefListener.domain, gFormFillPrefListener, false);
@@ -502,6 +504,8 @@ function Shutdown()
   } catch (ex) {
   }
 
+  BrowserOffline.uninit();
+  
   var windowManager = Components.classes['@mozilla.org/appshell/window-mediator;1'].getService();
   var windowManagerInterface = windowManager.QueryInterface(Components.interfaces.nsIWindowMediator);
   var enumerator = windowManagerInterface.getEnumerator(null);
@@ -4033,3 +4037,85 @@ function clearObsoletePrefs()
   } catch (e) {}
 
 }
+
+var BrowserOffline = {
+  /////////////////////////////////////////////////////////////////////////////
+  // BrowserOffline Public Methods
+  init: function ()
+  {
+    var os = Components.classes["@mozilla.org/observer-service;1"].getService(Components.interfaces.nsIObserverService);
+    os.addObserver(this, "network:offline-status-changed", false);
+
+    if (!this._uiElement)
+      this._uiElement = document.getElementById("goOfflineMenuitem");
+
+    // set the initial state
+    var ioService = Components.classes["@mozilla.org/network/io-service;1"].getService(Components.interfaces.nsIIOService);
+    var isOffline = false;
+    try {
+      isOffline = gPrefService.getBoolPref("browser.offline");
+    }
+    catch (e) { }
+    ioService.offline = isOffline;
+
+    this._updateOfflineUI(isOffline);
+  },
+  
+  uninit: function ()
+  {
+    var os = Components.classes["@mozilla.org/observer-service;1"].getService(Components.interfaces.nsIObserverService);
+    os.removeObserver(this, "network:offline-status-changed");
+  },
+
+  toggleOfflineStatus: function ()
+  {
+    if (!this._canGoOffline())
+      return;
+
+    var ioService = Components.classes["@mozilla.org/network/io-service;1"].getService(Components.interfaces.nsIIOService);
+    ioService.offline = !ioService.offline;
+    
+    gPrefService.setBoolPref("browser.offline", ioService.offline);
+  },
+  
+  /////////////////////////////////////////////////////////////////////////////
+  // nsIObserver
+  observe: function (aSubject, aTopic, aState) 
+  {
+    if (aTopic != "network:offline-status-changed")
+      return;
+    
+    this._updateOfflineUI(aState == "offline");
+  },
+
+  /////////////////////////////////////////////////////////////////////////////
+  // BrowserOffline Implementation Methods
+  _canGoOffline: function ()
+  {
+    var os = Components.classes["@mozilla.org/observer-service;1"].getService(Components.interfaces.nsIObserverService);
+    if (os) {
+      try {
+        var cancelGoOffline = Components.classes["@mozilla.org/supports-PRBool;1"].createInstance(Components.interfaces.nsISupportsPRBool);
+        os.notifyObservers(cancelGoOffline, "offline-requested", null);
+        
+        // Something aborted the quit process. 
+        if (cancelGoOffline.data)
+          return false;
+      }
+      catch (ex) {
+      }
+    }
+    return true;
+  },
+
+  _uiElement: null,
+  _updateOfflineUI: function (aOffline)
+  {
+    var offlineLocked = gPrefService.prefIsLocked("network.online");
+    if (offlineLocked) 
+      this._uiElement.setAttribute("disabled", "true");
+      
+    this._uiElement.setAttribute("checked", aOffline);
+  }
+};
+
