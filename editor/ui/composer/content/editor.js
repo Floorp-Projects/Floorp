@@ -3073,8 +3073,11 @@ function GetSelectionContainer()
   var editor = GetCurrentEditor();
   if (!editor) return null;
 
-  var selection = editor.selection;
-  if (!selection) return null;
+  try {
+    var selection = editor.selection;
+    if (!selection) return null;
+  }
+  catch (e) { return null; }
 
   var result = { oneElementSelected:false };
 
@@ -3138,4 +3141,21 @@ function GetSelectionContainer()
     result.node = result.node.parentNode;
 
   return result;
+}
+
+function FillInHTMLTooltip(tooltip)
+{
+  var tooltipText = null;
+  for (var node = document.tooltipNode; node; node = node.parentNode) {
+    if (node instanceof Components.interfaces.nsIDOMHTMLImageElement ||
+        node instanceof Components.interfaces.nsIDOMHTMLInputElement)
+      tooltipText = node.getAttribute("src");
+    else if (node instanceof Components.interfaces.nsIDOMHTMLAnchorElement)
+      tooltipText = node.getAttribute("href") || node.name;
+    if (tooltipText) {
+      tooltip.setAttribute("label", tooltipText);
+      return true;
+    }
+  }
+  return false;
 }
