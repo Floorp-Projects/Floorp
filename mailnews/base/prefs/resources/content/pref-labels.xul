@@ -59,6 +59,9 @@
 
   <script type="application/x-javascript" src="chrome://messenger/content/pref-labels.js"/>
 
+  <groupbox>
+    <caption label="&labelsSettings.label;"/>
+
   <description>&displayText.label;</description>
 
   <!-- label color: 1 (default red) -->
@@ -181,5 +184,7 @@
             oncommand="restoreColorAndDescriptionToDefaults();">
     </button>
    </hbox>
+  </groupbox>
+
 </page>
 
