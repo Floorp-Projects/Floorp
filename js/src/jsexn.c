@@ -51,11 +51,12 @@
 #include "jsapi.h"
 #include "jscntxt.h"
 #include "jsconfig.h"
+#include "jsdbgapi.h"
 #include "jsexn.h"
 #include "jsfun.h"
 #include "jsinterp.h"
-#include "jsopcode.h"
 #include "jsnum.h"
+#include "jsopcode.h"
 #include "jsscript.h"
 
 #if JS_HAS_ERROR_EXCEPTIONS
@@ -535,6 +536,7 @@ Exception(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     jsval pval;
     int32 lineno;
     JSString *message, *filename;
+    JSStackFrame *fp;
 
     if (cx->creatingException)
         return JS_FALSE;
@@ -589,8 +591,18 @@ Exception(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
             goto out;
         }
         argv[1] = STRING_TO_JSVAL(filename);
+        fp = NULL;
     } else {
-        filename = cx->runtime->emptyString;
+        fp = JS_GetScriptedCaller(cx, NULL);
+        if (fp) {
+            filename = JS_NewStringCopyZ(cx, fp->script->filename);
+            if (!filename) {
+                ok = JS_FALSE;
+                goto out;
+            }
+        } else {
+            filename = cx->runtime->emptyString;
+        }
     }
 
     /* Set the 'lineNumber' property. */
@@ -599,7 +611,9 @@ Exception(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
         if (!ok)
             goto out;
     } else {
-        lineno = 0;
+        if (!fp)
+            fp = JS_GetScriptedCaller(cx, NULL);
+        lineno = (fp && fp->pc) ? js_PCToLineNumber(cx, fp->script, fp->pc) : 0;
     }
 
     ok = InitExceptionObject(cx, obj, message, filename, lineno);
@@ -1019,7 +1033,7 @@ js_ReportUncaughtException(JSContext *cx)
     JSObject *exnObject;
     JSString *str;
     jsval exn;
-    JSErrorReport *reportp;
+    JSErrorReport *reportp, report;
     const char *bytes;
 
     if (!JS_IsExceptionPending(cx))
@@ -1049,12 +1063,32 @@ js_ReportUncaughtException(JSContext *cx)
     str = js_ValueToString(cx, exn);
     bytes = str ? js_GetStringBytes(str) : "null";
 
-    if (reportp == NULL) {
-        /*
-         * XXXmccabe todo: Instead of doing this, synthesize an error report
-         * struct that includes the filename, lineno where the exception was
-         * originally thrown.
-         */
+    if (!reportp && exnObject) {
+        jsval v;
+        const char *filename;
+        int32 lineno;
+
+        if (!JS_GetProperty(cx, exnObject, js_message_str, &v))
+            return JS_FALSE;
+        bytes = JSVAL_IS_STRING(v) ? JS_GetStringBytes(JSVAL_TO_STRING(v)) : "";
+
+        if (!JS_GetProperty(cx, exnObject, js_filename_str, &v))
+            return JS_FALSE;
+        filename = JSVAL_IS_STRING(v) ? JS_GetStringBytes(JSVAL_TO_STRING(v))
+                                      : "";
+
+        if (!JS_GetProperty(cx, exnObject, js_lineno_str, &v))
+            return JS_FALSE;
+        if (!js_ValueToInt32 (cx, v, &lineno))
+            return JS_FALSE;
+
+        reportp = &report;
+        memset(&report, 0, sizeof report);
+        report.filename = filename;
+        report.lineno = (lineno >= 0) ? (uintN) lineno : 0;
+    }
+
+    if (!reportp) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
                              JSMSG_UNCAUGHT_EXCEPTION, bytes);
     } else {
