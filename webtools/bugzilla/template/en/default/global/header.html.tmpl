@@ -74,7 +74,7 @@
     
     [% IF javascript_urls %]
       [% FOREACH javascript_url = javascript_urls %]
-        <script src="[% javascript_url %]" type="text/javascript" language="JavaScript"></script>
+        <script src="[% javascript_url FILTER html %]" type="text/javascript" language="JavaScript"></script>
       [% END %]
     [% END %]
 
@@ -90,7 +90,7 @@
 
     [% IF style_urls %]
       [% FOREACH style_url = style_urls %]
-        <link href="[% style_url %]" rel="stylesheet" type="text/css">
+        <link href="[% style_url FILTER html %]" rel="stylesheet" type="text/css">
       [% END %]
     [% END %]
 
