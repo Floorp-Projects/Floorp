@@ -1766,6 +1766,30 @@ NS_IMETHODIMP GlobalWindowImpl::Unescape(const nsString& aStr, nsString& aReturn
    return NS_OK;
 }
 
+NS_IMETHODIMP GlobalWindowImpl::AddXPConnectObject(const nsString& aId, 
+   nsISupports* aXPConnectObj)
+{
+   // XXXTAB Implement me.
+   NS_ERROR("Not yet Implemented");
+   return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP GlobalWindowImpl::RemoveXPConnectObject(const nsString& aId,
+   nsISupports* aXPConnectObj)
+{
+   // XXXTAB Implement me.
+   NS_ERROR("Not yet Implemented");
+   return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP GlobalWindowImpl::GetXPConnectObject(const nsString& aId,
+   nsISupports** aXPConnectObj)
+{
+   // XXXTAB Implement me.
+   NS_ERROR("Not yet Implemented");
+   return NS_ERROR_FAILURE;
+}
+
 //*****************************************************************************
 // GlobalWindowImpl::nsIJSScriptObject
 //*****************************************************************************   

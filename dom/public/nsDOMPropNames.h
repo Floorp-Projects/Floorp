@@ -839,6 +839,7 @@
     "uievent.detail", \
     "uievent.inituievent", \
     "uievent.view", \
+    "window.addxpconnectobject", \
     "window.alert", \
     "window.back", \
     "window.blur", \
@@ -862,6 +863,7 @@
     "window.forward", \
     "window.frames", \
     "window.getattention", \
+    "window.getxpconnectobject", \
     "window.history", \
     "window.home", \
     "window.innerheight", \
@@ -884,6 +886,7 @@
     "window.print", \
     "window.prompt", \
     "window.releaseevents", \
+    "window.removexpconnectobject", \
     "window.resizeby", \
     "window.resizeto", \
     "window.routeevent", \

@@ -45,6 +45,7 @@
 #include "nsIDOMEvent.h"
 #include "nsIDOMEventTarget.h"
 #include "nsISidebar.h"
+#include "nsISupports.h"
 #include "nsIDOMWindow.h"
 #include "nsIControllers.h"
 
@@ -63,6 +64,7 @@ static NS_DEFINE_IID(kIWindowCollectionIID, NS_IDOMWINDOWCOLLECTION_IID);
 static NS_DEFINE_IID(kIEventIID, NS_IDOMEVENT_IID);
 static NS_DEFINE_IID(kIEventTargetIID, NS_IDOMEVENTTARGET_IID);
 static NS_DEFINE_IID(kISidebarIID, NS_ISIDEBAR_IID);
+static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIWindowIID, NS_IDOMWINDOW_IID);
 static NS_DEFINE_IID(kIControllersIID, NS_ICONTROLLERS_IID);
 
@@ -2357,6 +2359,141 @@ WindowUnescape(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rva
 
 
 //
+// Native method AddXPConnectObject
+//
+PR_STATIC_CALLBACK(JSBool)
+WindowAddXPConnectObject(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsIDOMWindow *nativeThis = (nsIDOMWindow*)nsJSUtils::nsGetNativeThis(cx, obj);
+  nsresult result = NS_OK;
+  nsAutoString b0;
+  nsCOMPtr<nsISupports> b1;
+  // If there's no private data, this must be the prototype, so ignore
+  if (nsnull == nativeThis) {
+    return JS_TRUE;
+  }
+
+  {
+    *rval = JSVAL_NULL;
+    nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
+    if (!secMan)
+        return PR_FALSE;
+    result = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_ADDXPCONNECTOBJECT, PR_FALSE);
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, obj, result);
+    }
+    if (argc < 2) {
+      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_TOO_FEW_PARAMETERS_ERR);
+    }
+
+    nsJSUtils::nsConvertJSValToString(b0, cx, argv[0]);
+    if (JS_FALSE == nsJSUtils::nsConvertJSValToXPCObject(getter_AddRefs(b1),
+                                           kISupportsIID, cx, argv[1])) {
+      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_NOT_XPC_OBJECT_ERR);
+    }
+
+    result = nativeThis->AddXPConnectObject(b0, b1);
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, obj, result);
+    }
+
+    *rval = JSVAL_VOID;
+  }
+
+  return JS_TRUE;
+}
+
+
+//
+// Native method RemoveXPConnectObject
+//
+PR_STATIC_CALLBACK(JSBool)
+WindowRemoveXPConnectObject(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsIDOMWindow *nativeThis = (nsIDOMWindow*)nsJSUtils::nsGetNativeThis(cx, obj);
+  nsresult result = NS_OK;
+  nsAutoString b0;
+  nsCOMPtr<nsISupports> b1;
+  // If there's no private data, this must be the prototype, so ignore
+  if (nsnull == nativeThis) {
+    return JS_TRUE;
+  }
+
+  {
+    *rval = JSVAL_NULL;
+    nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
+    if (!secMan)
+        return PR_FALSE;
+    result = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_REMOVEXPCONNECTOBJECT, PR_FALSE);
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, obj, result);
+    }
+    if (argc < 2) {
+      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_TOO_FEW_PARAMETERS_ERR);
+    }
+
+    nsJSUtils::nsConvertJSValToString(b0, cx, argv[0]);
+    if (JS_FALSE == nsJSUtils::nsConvertJSValToXPCObject(getter_AddRefs(b1),
+                                           kISupportsIID, cx, argv[1])) {
+      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_NOT_XPC_OBJECT_ERR);
+    }
+
+    result = nativeThis->RemoveXPConnectObject(b0, b1);
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, obj, result);
+    }
+
+    *rval = JSVAL_VOID;
+  }
+
+  return JS_TRUE;
+}
+
+
+//
+// Native method GetXPConnectObject
+//
+PR_STATIC_CALLBACK(JSBool)
+WindowGetXPConnectObject(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsIDOMWindow *nativeThis = (nsIDOMWindow*)nsJSUtils::nsGetNativeThis(cx, obj);
+  nsresult result = NS_OK;
+  nsISupports* nativeRet;
+  nsAutoString b0;
+  // If there's no private data, this must be the prototype, so ignore
+  if (nsnull == nativeThis) {
+    return JS_TRUE;
+  }
+
+  {
+    *rval = JSVAL_NULL;
+    nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
+    if (!secMan)
+        return PR_FALSE;
+    result = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_GETXPCONNECTOBJECT, PR_FALSE);
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, obj, result);
+    }
+    if (argc < 1) {
+      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_TOO_FEW_PARAMETERS_ERR);
+    }
+
+    nsJSUtils::nsConvertJSValToString(b0, cx, argv[0]);
+
+    result = nativeThis->GetXPConnectObject(b0, &nativeRet);
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, obj, result);
+    }
+
+    // n.b., this will release nativeRet
+    nsJSUtils::nsConvertXPCObjectToJSVal(nativeRet, NS_GET_IID(nsISupports), cx, obj, rval);
+  }
+
+  return JS_TRUE;
+}
+
+
+//
 // Native method AddEventListener
 //
 PR_STATIC_CALLBACK(JSBool)
@@ -2573,6 +2710,9 @@ static JSFunctionSpec WindowMethods[] =
   {"updateCommands",          WindowUpdateCommands,     1},
   {"escape",          WindowEscape,     1},
   {"unescape",          WindowUnescape,     1},
+  {"addXPConnectObject",          WindowAddXPConnectObject,     2},
+  {"removeXPConnectObject",          WindowRemoveXPConnectObject,     2},
+  {"getXPConnectObject",          WindowGetXPConnectObject,     1},
   {"addEventListener",          EventTargetAddEventListener,     3},
   {"removeEventListener",          EventTargetRemoveEventListener,     3},
   {0}
