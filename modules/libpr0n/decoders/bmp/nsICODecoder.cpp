@@ -92,7 +92,7 @@ inline nsresult nsICODecoder::Set4BitPixel(PRUint8*& aDecoded, PRUint8 aData, PR
 {
   PRUint8 idx = aData >> 4;
   nsresult rv = SetPixel(aDecoded, idx);
-  if ((++aPos >= mBIH.width) || NS_FAILED(rv))
+  if ((++aPos >= mDirEntry.mWidth) || NS_FAILED(rv))
       return rv;
 
   idx = aData & 0xF;
@@ -115,11 +115,6 @@ inline nsresult nsICODecoder::SetData(PRUint8* aData)
   // will SetImageData access that data?
   rv = mFrame->SetImageData(aData, bpr, offset);
   NS_ENSURE_SUCCESS(rv, rv);
-
-  nsRect r(0, mCurLine, mBIH.width, 1);
-  rv = mObserver->OnDataAvailable(nsnull, nsnull, mFrame, &r);
-  NS_ENSURE_SUCCESS(rv, rv);
-
   return NS_OK;
 }
 
@@ -137,7 +132,7 @@ inline nsresult nsICODecoder::SetAlphaData(PRUint8* aData)
   rv = mFrame->SetAlphaData(aData, bpr, offset);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsRect r(0, mCurLine, mBIH.width, 1);
+  nsRect r(0, mCurLine, mDirEntry.mWidth, 1);
   rv = mObserver->OnDataAvailable(nsnull, nsnull, mFrame, &r);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -254,10 +249,12 @@ nsresult nsICODecoder::ProcessData(const char* aBuffer, PRUint32 aCount) {
     }
 
     if (mPos == 22+mCurrIcon*sizeof(mDirEntryArray)) {
-      ProcessDirEntry();
       mCurrIcon++;
-      if (mImageOffset == 0 && ((mDirEntry.mWidth == PREFICONSIZE && mDirEntry.mHeight == PREFICONSIZE) || mCurrIcon == mNumIcons))
-        mImageOffset = mDirEntry.mImageOffset;
+      if (mImageOffset == 0) {
+        ProcessDirEntry();
+        if ((mDirEntry.mWidth == PREFICONSIZE && mDirEntry.mHeight == PREFICONSIZE) || mCurrIcon == mNumIcons)
+          mImageOffset = mDirEntry.mImageOffset;
+      }
     }
   }
 
@@ -299,25 +296,20 @@ nsresult nsICODecoder::ProcessData(const char* aBuffer, PRUint32 aCount) {
         return NS_ERROR_OUT_OF_MEMORY;
     }
 
-    // Adjust the height of the icon.  The height is additive and is including
-    // both the XOR and AND masks.  Therefore the height is twice as big and
-    // we can just divide by 2.
-    mBIH.height /= 2;
-
-    nsresult rv = mImage->Init(mBIH.width, mBIH.height, mObserver);
+    nsresult rv = mImage->Init(mDirEntry.mWidth, mDirEntry.mHeight, mObserver);
     NS_ENSURE_SUCCESS(rv, rv);
     rv = mObserver->OnStartContainer(nsnull, nsnull, mImage);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    mCurLine = mBIH.height;
-    mRow = new PRUint8[(mBIH.width * mBIH.bpp)/8 + 4];
+    mCurLine = mDirEntry.mHeight;
+    mRow = new PRUint8[(mDirEntry.mWidth * mBIH.bpp)/8 + 4];
     // +4 because the line is padded to a 4 bit boundary, but I don't want
     // to make exact calculations here, that's unnecessary.
     // Also, it compensates rounding error.
     if (!mRow)
       return NS_ERROR_OUT_OF_MEMORY;
     
-    rv = mFrame->Init(0, 0, mBIH.width, mBIH.height, GFXFORMATALPHA);
+    rv = mFrame->Init(0, 0, mDirEntry.mWidth, mDirEntry.mWidth, GFXFORMATALPHA);
     NS_ENSURE_SUCCESS(rv, rv);
     rv = mImage->AppendFrame(mFrame);
     NS_ENSURE_SUCCESS(rv, rv);
@@ -352,10 +344,11 @@ nsresult nsICODecoder::ProcessData(const char* aBuffer, PRUint32 aCount) {
   }
 
   if (!mDecodingAndMask && (mPos >= (mImageOffset + BITMAPINFOSIZE + mNumColors*4))) {
-    // Increment mPos to avoid re-processing the info header and/or color table.
-    mPos++;
+    // Increment mPos to avoid reprocessing the info header.
+    if (mPos == (mImageOffset + BITMAPINFOSIZE + mNumColors*4))
+      mPos++;
 
-    PRUint32 rowSize = (mBIH.bpp * mBIH.width + 7) / 8; // +7 to round up
+    PRUint32 rowSize = (mBIH.bpp * mDirEntry.mWidth + 7) / 8; // +7 to round up
     if (rowSize % 4)
       rowSize += (4 - (rowSize % 4)); // Pad to DWORD Boundary
     PRUint32 toCopy;
@@ -372,9 +365,9 @@ nsresult nsICODecoder::ProcessData(const char* aBuffer, PRUint32 aCount) {
         if ((rowSize - mRowBytes) == 0) {
             PRUint8* decoded;
 #ifdef XP_MAC
-            decoded = new PRUint8[mBIH.width * 4];
+            decoded = new PRUint8[mDirEntry.mWidth * 4];
 #else
-            decoded = new PRUint8[mBIH.width * 3];
+            decoded = new PRUint8[mDirEntry.mWidth * 3];
 #endif
             if (!decoded)
                 return NS_ERROR_OUT_OF_MEMORY;
@@ -384,11 +377,11 @@ nsresult nsICODecoder::ProcessData(const char* aBuffer, PRUint32 aCount) {
             PRUint32 lpos = 0;
             switch (mBIH.bpp) {
               case 1:
-                while (lpos < mBIH.width) {
+                while (lpos < mDirEntry.mWidth) {
                   PRInt8 bit;
                   PRUint8 idx;
                   for (bit = 7; bit >= 0; bit--) {
-                      if (lpos >= mBIH.width)
+                      if (lpos >= mDirEntry.mWidth)
                           break;
                       idx = (*p >> bit) & 1;
                       SetPixel(d, idx);
@@ -398,20 +391,20 @@ nsresult nsICODecoder::ProcessData(const char* aBuffer, PRUint32 aCount) {
                 }
                 break;
               case 4:
-                while (lpos < mBIH.width) {
+                while (lpos < mDirEntry.mWidth) {
                   Set4BitPixel(d, *p, lpos);
                   ++p;
                 }
                 break;
               case 8:
-                while (lpos < mBIH.width) {
+                while (lpos < mDirEntry.mWidth) {
                   SetPixel(d, *p);
                   ++lpos;
                   ++p;
                 }
                 break;
               case 16:
-                while (lpos < mBIH.width) {
+                while (lpos < mDirEntry.mWidth) {
                   SetPixel(d,
                           (p[1] & 124) << 1,
                           ((p[1] & 3) << 6) | ((p[0] & 224) >> 2),
@@ -423,7 +416,7 @@ nsresult nsICODecoder::ProcessData(const char* aBuffer, PRUint32 aCount) {
                 break;
               case 32:
               case 24:
-                while (lpos < mBIH.width) {
+                while (lpos < mDirEntry.mWidth) {
                   SetPixel(d, p[2], p[1], p[0]);
                   p += 2;
                   ++lpos;
@@ -450,12 +443,16 @@ nsresult nsICODecoder::ProcessData(const char* aBuffer, PRUint32 aCount) {
   }
 
   if (mDecodingAndMask) {
-    mRowBytes = 0;
-    mBIH.bpp = 1;
-    mCurLine = mBIH.height;
-    delete []mRow;
-    mRow = new PRUint8[(mBIH.width * mBIH.bpp)/8 + 4];
-    PRUint32 rowSize = (mBIH.bpp * mBIH.width + 7) / 8; // +7 to round up
+    if (mPos == (1 + mImageOffset + BITMAPINFOSIZE + mNumColors*4)) {
+      mPos++;
+      mRowBytes = 0;
+      mBIH.bpp = 1;
+      mCurLine = mDirEntry.mHeight;
+      delete []mRow;
+      mRow = new PRUint8[(mDirEntry.mWidth * mBIH.bpp)/8 + 4];
+    }
+
+    PRUint32 rowSize = (mBIH.bpp * mDirEntry.mWidth + 7) / 8; // +7 to round up
     if (rowSize % 4)
       rowSize += (4 - (rowSize % 4)); // Pad to DWORD Boundary
     PRUint32 toCopy;
@@ -471,14 +468,14 @@ nsresult nsICODecoder::ProcessData(const char* aBuffer, PRUint32 aCount) {
         }
         if ((rowSize - mRowBytes) == 0) {
             PRUint8* decoded;
-            decoded = new PRUint8[mBIH.width/4];
+            decoded = new PRUint8[mDirEntry.mWidth/4];
 
             if (!decoded)
                 return NS_ERROR_OUT_OF_MEMORY;
 
             PRUint8* p = mRow;
             PRUint32 lpos = 0;
-            while (lpos < mBIH.width/4) {
+            while (lpos < mDirEntry.mWidth/4) {
               PRUint8 idx = *p;
               idx ^= 255;  // We complement the value, since our method of storing transparency is opposite
                            // what Win32 uses in its masks.
