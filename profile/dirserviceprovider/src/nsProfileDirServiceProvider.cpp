@@ -265,8 +265,11 @@ nsProfileDirServiceProvider::GetFile(const char *prop, PRBool *persistant, nsIFi
     rv = domainDir->Clone(getter_AddRefs(localFile));
     if (NS_SUCCEEDED(rv)) {
       rv = localFile->AppendNative(LOCAL_STORE_FILE_50_NAME);
-      if (NS_SUCCEEDED(rv))
-        rv = EnsureProfileFileExists(localFile, domainDir);
+      if (NS_SUCCEEDED(rv)) {
+        // it's OK if we can't copy the file... it will be created
+        // by client code.
+        (void) EnsureProfileFileExists(localFile, domainDir);
+      }
     }
   }
   else if (inAtom == sApp_History50) {
