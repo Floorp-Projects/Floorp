@@ -74,3 +74,14 @@ include $(CORE_DEPTH)/coreconf/rules.mk
 
 export:: private_export
 
+ifdef MOZILLA_BSAFE_BUILD
+ifeq ($(OS_ARCH),WINNT)
+libbsafe=bsafe41.lib
+else
+libbsafe=libbsafe.a
+endif
+
+private_export::
+	$(NSINSTALL) -m 777 $(libbsafe) $(DIST)/lib; \
+
+endif
