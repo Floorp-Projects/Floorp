@@ -21,6 +21,7 @@
 #include "nsICategoryHandler.idl"
 #include "nsIFactory.idl"
 
+// change IID if you change this interface!
 [scriptable, uuid(5a1e1a2c-1dd2-11b2-a72f-967357e43a00)]
 interface nsICategoryManager : nsISupports
 {
