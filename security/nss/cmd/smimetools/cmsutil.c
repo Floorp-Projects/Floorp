@@ -37,7 +37,7 @@
 /*
  * cmsutil -- A command to work with CMS data
  *
- * $Id: cmsutil.c,v 1.51 2004/10/07 04:02:13 julien.pierre.bugs%sun.com Exp $
+ * $Id: cmsutil.c,v 1.52 2004/10/22 22:39:47 julien.pierre.bugs%sun.com Exp $
  */
 
 #include "nspr.h"
@@ -1290,6 +1290,10 @@ main(int argc, char **argv)
 	    }
 	    break;
 	case 'i':
+	    if (!optstate->value) {
+	        fprintf(stderr, "-i option requires filename argument\n");
+	        exit(1);
+	    }
 	    inFile = PR_Open(optstate->value, PR_RDONLY, 00660);
 	    if (inFile == NULL) {
 		fprintf(stderr, "%s: unable to open \"%s\" for reading\n",
