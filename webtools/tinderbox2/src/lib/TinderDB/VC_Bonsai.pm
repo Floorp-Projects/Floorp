@@ -40,8 +40,8 @@
 # Contributor(s): 
 
 
-# $Revision: 1.60 $ 
-# $Date: 2002/05/10 21:20:26 $ 
+# $Revision: 1.61 $ 
+# $Date: 2002/05/10 22:42:08 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/TinderDB/VC_Bonsai.pm,v $ 
 # $Name:  $ 
@@ -102,7 +102,7 @@ use VCDisplay;
 use TinderDB::Notice;
 
 
-$VERSION = ( qw $Revision: 1.60 $ )[1];
+$VERSION = ( qw $Revision: 1.61 $ )[1];
 
 @ISA = qw(TinderDB::BasicTxtDB);
 
@@ -482,6 +482,48 @@ sub render_authors {
             }
             $table .= "</table>";
 
+            # The Link Choices inside the popup.
+
+            my $link_choices; 
+            
+            $link_choices .= 
+              VCDisplay::query(
+                               'tree' => $tree,
+                               'mindate' => $mindate,
+                               'maxdate' => $maxdate,
+                               'who' => $author,
+                               
+                               "linktxt" => "\t\t<tt>This check-in</tt>\n",
+                               );
+
+            $link_choices .= 
+              VCDisplay::query(
+                               'tree' => $tree,
+                               'mindate' => $mindate,
+                               'maxdate' => $maxdate - $main::SECONDS_PER_DAY,
+                               'who' => $author,
+                               
+                               "linktxt" => "\t\t<tt>Check-ins within 24 hours</tt>\n",
+                               );
+
+            $link_choices .= 
+              VCDisplay::query(
+                               'tree' => $tree,
+                               'mindate' => $mindate,
+                               'maxdate' => $maxdate - $main::SECONDS_PER_WEEK,
+                               'who' => $author,
+                               
+                               "linktxt" => "\t\t<tt>Check-ins within 7 days</tt>\n",
+                               );
+
+            $link_choices .= 
+              HTMLPopUp::Link(
+                              "href" => "mailto: $mailto_author",
+                              "linktxt" => "\t\t<tt>$display_author</tt>\n",
+                              );
+
+
+
             # This is a Netscape.com/Mozilla.org specific CVS/Bonsai
             # issue. Most users do not have '%' in their CVS names. Do
             # not display the full mail address in the status column,
@@ -499,7 +541,7 @@ sub render_authors {
             
             my (%popup_args) = (
                                 
-                                "windowtxt" => $table,
+                                "windowtxt" => $table.$link_choices,
                                 "windowtitle" => ("$VC_NAME Info ".
                                                   "Author: $author ".
                                                   "$time_interval_str "),

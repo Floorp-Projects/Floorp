@@ -15,8 +15,8 @@
 
 
 
-# $Revision: 1.11 $ 
-# $Date: 2002/05/10 22:00:42 $ 
+# $Revision: 1.12 $ 
+# $Date: 2002/05/10 22:42:07 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/HTMLPopUp/MozillaLayers.pm,v $ 
 # $Name:  $ 
@@ -107,7 +107,7 @@ function tip(w,h,c) {
 		divPanel.style.top=(divY-10)+"px";
 		divPanel.style.height=h+"px";
 		divPanel.style.width=w+"px";
-		divPanel.style.backgroundColor="#F0A000";
+		divPanel.style.backgroundColor="white";
 		document.body.appendChild(divPanel);
 
 
@@ -129,7 +129,7 @@ function tip(w,h,c) {
 		divPanel.style.top=(divY-10)+"px";
 		divPanel.style.height=h+"px";
 		divPanel.style.width=w+"px";
-		divPanel.style.backgroundColor="#eeee77";
+		divPanel.style.backgroundColor="white";
 		document.body.appendChild(divPanel);
 		document.onmousedown=hideTip;	
 		divPanel.innerHTML=c;
@@ -151,7 +151,7 @@ function tip(w,h,c) {
 		divPanel.clip.width=w;
 		divPanel.width=w;
 		divPanel.height=h;
-		divPanel.bgColor="#eeee77";
+		divPanel.bgColor="white";
 		divPanel.visibility="show";
 
 		document.onmousedown=hideTip;	
@@ -289,7 +289,7 @@ sub Link {
   }
 
 
-  $out .= "<A $name HREF=\"$args{'href'}\" ";
+  $out .= "<A $name HREF=\"javascript:\" ";
 
   if (($args{'statuslinetxt'}) || ($args{'windowtxt'})) {
 
@@ -307,6 +307,18 @@ sub Link {
     # were a hack needed for another implementation.  We ignore them
     # as the window will be sized properly without their help.
 
+
+
+    # perhaps we should not allow the interface to determine the width
+    # but we should determine it ourselves based on longest_line2width
+    # number_of_lines2hight conversion factors, but it is hard to
+    # determine what a HTML row is.
+
+    $args{'windowheight'} = ($args{'windowheight'} || 
+                             $HTMLPopUp::DEFAULT_POPUP_HEIGHT);
+
+    $args{'windowwidth'} = ($args{'windowwidth'} ||
+                            $HTMLPopUp::DEFAULT_POPUP_WIDTH);
 
 
     
@@ -331,37 +343,16 @@ sub Link {
     
 
 
-    $out .= "onMouseOver=\" ";
-    ($args{'windowtxt'}) &&
-      ($out .= "log(".(
-                       "event,".
-                       "\'$#POPUPTXT\'".
-                      "").
-       "); ");
-    $out .= "return true\" ";
-
-    # It is safer to define some null action for the events to ensure
-    # the window is shut down on mouse out and click, but this leaves
-    # a strange box on the screen.
-
-
     $out .= "onClick=\" ";
     ($args{'windowtxt'}) &&
-      ($out .= "log(".(
-                       "event,".
-                       "\'0\'".
+      ($out .= "tip(".(
+                       "$args{'windowwidth'},".
+                       "$args{'windowheight'},".
+                       "\'$args{'windowtxt'}\'".
                       "").
        "); ");
-    $out .= "return true\" ";
+    $out .= "return false\" ";
 
-    $out .= "onMouseOut=\" ";
-    ($args{'windowtxt'}) &&
-      ($out .= "log(".(
-                       "event,".
-                       "\'0\'".
-                      "").
-       "); ");
-    $out .= "return true\" ";
 
   }
 
@@ -381,7 +372,7 @@ sub define_structures {
 
   push @out, "\t<SCRIPT>\n";
   foreach $i (0 .. $#POPUPTXT) {
-    push @out, "\t\tlogtxt$i = \"$POPUPTXT[$i]\"\;\n";
+#    push @out, "\t\tlogtxt$i = \"$POPUPTXT[$i]\"\;\n";
   }
   push @out, "\t</SCRIPT>\n\n";
 
