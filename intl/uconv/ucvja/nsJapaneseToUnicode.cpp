@@ -118,8 +118,7 @@ NS_IMETHODIMP nsShiftJISToUnicode::Convert(
    const unsigned char* src =(unsigned char*) aSrc;
    PRUnichar* destEnd = aDest + *aDestLen;
    PRUnichar* dest = aDest;
-   PRUint16 ibmnec;
-   PRUint8  fbibmnec;
+   PRUint16 ibmnec = 0;
    while((src < srcEnd))
    {
        switch(mState)
@@ -128,11 +127,13 @@ NS_IMETHODIMP nsShiftJISToUnicode::Convert(
           case 4: // IBM extention to NEC extention
           {
             ibmnec += *src;
-            ibmnec = gSjisIBMNECmap[ibmnec - 0xFA40];
+            if (ibmnec < 0xFA40 || ibmnec > 0xFCFF) {   // IBMNEC range check
+              ibmnec = 0;
+            } else {
+              ibmnec = gSjisIBMNECmap[ibmnec - 0xFA40]; // IBMNECmap offset is 0xFA40
+            }
             if ( ibmnec == 0 ) {
               *dest++ = 0xFFFD;
-              ibmnec = 0;
-              fbibmnec = 0;
               mState=0;
               if(dest >= destEnd)
                 goto error1;
@@ -141,6 +142,7 @@ NS_IMETHODIMP nsShiftJISToUnicode::Convert(
                                    + sbIdx[ibmnec & 0x00FF]];
               if(dest >= destEnd)
                 goto error1;
+              ibmnec = 0;
               mState = 0;
               break;
             }
@@ -163,7 +165,6 @@ NS_IMETHODIMP nsShiftJISToUnicode::Convert(
                  } else {
                    if((0xfa == *src) || (0xfb == *src) || (0xfc == *src)) {
                      ibmnec=((*src) << 8) & 0xFF00;
-                     fbibmnec = *src;
                      mState = 4; // IBM Extra
                    } else {
                      *dest++ = mData; // JIS 0201
