@@ -1083,6 +1083,10 @@ nsFontMetricsWin::GetCMAP(HDC aDC, const char* aShortName, int* aFontType, PRUin
     }
     else {
       int j = gCharSetToIndex[charset];
+      
+      //default charset is not dependable, skip it at this time
+      if (j == eCharSet_DEFAULT)
+        return emptyMap;
       PRUint32* charSetMap = gCharSetInfo[j].mMap;
       if (!charSetMap) {
         charSetMap = (PRUint32*) PR_Calloc(2048, 4);
