@@ -480,22 +480,35 @@ NS_IMETHODIMP
 nsHTMLAnchorElement::GetPathname(nsString& aPathname)
 {
   nsAutoString href;
-  nsIURI *url;
+  nsCOMPtr<nsIURI> uri;
   nsresult result = NS_OK;
+
+  aPathname.Truncate();
   
   result = GetHref(href);
-  if (NS_OK == result) {
-    result = NS_NewURI(&url, href);
-    if (NS_OK == result) {
-      char* file;
-      result = url->GetPath(&file);
-      if (result == NS_OK) {
-        aPathname.SetString(file);
-        nsCRT::free(file);
-      }
-      NS_IF_RELEASE(url);
-    }
+  if (NS_FAILED(result)) {
+    return result;
   }
+
+  result = NS_NewURI(getter_AddRefs(uri), href);
+  if (NS_FAILED(result)) {
+    return result;
+  }
+
+  nsCOMPtr<nsIURL> url(do_QueryInterface(uri));
+
+  if (!url) {
+    return NS_OK;
+  }
+
+  char* file;
+  result = url->GetFilePath(&file);
+  if (NS_FAILED(result)) {
+    return result;
+  }
+
+  aPathname.SetString(file);
+  nsCRT::free(file);
 
   return result;
 }
