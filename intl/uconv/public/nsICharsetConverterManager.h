@@ -144,6 +144,8 @@ public:
       nsIUnicodeEncoder ** aResult) = 0;
   NS_IMETHOD GetUnicodeDecoder(const nsString * aSrc, 
       nsIUnicodeDecoder ** aResult) = 0;
+
+  NS_IMETHOD GetCharsetLangGroup(nsString * aCharset, nsIAtom ** aResult) = 0;
 };
 
 #endif /* nsICharsetConverterManager_h___ */
