@@ -813,7 +813,7 @@ nsImageMap::Init(nsIPresShell* aPresShell, nsIFrame* aImageFrame, nsIDOMHTMLMapE
 
 
 nsresult
-nsImageMap::UpdateAreasForBlock(nsIContent* aParent)
+nsImageMap::UpdateAreasForBlock(nsIContent* aParent, PRBool* aFoundAnchor)
 {
   nsresult rv = NS_OK;
   nsIContent* child;
@@ -825,11 +825,12 @@ nsImageMap::UpdateAreasForBlock(nsIContent* aParent)
       nsIDOMHTMLAnchorElement* area;
       rv = child->QueryInterface(NS_GET_IID(nsIDOMHTMLAnchorElement), (void**) &area);
       if (NS_SUCCEEDED(rv)) {
+        *aFoundAnchor = PR_TRUE;
         rv = AddArea(child);
         NS_RELEASE(area);
       }
       else {
-        rv = UpdateAreasForBlock(child);
+        rv = UpdateAreasForBlock(child, aFoundAnchor);
       }
       NS_RELEASE(child);
     }
@@ -845,52 +846,41 @@ nsImageMap::UpdateAreas()
   FreeAreas();
 
   nsresult rv = NS_OK;
-  nsIContent* child;
   PRInt32 i, n;
   PRBool containsBlock = PR_FALSE, containsArea = PR_FALSE;
 
   mMap->ChildCount(n);
-  for (i = 0; (i < n) && NS_SUCCEEDED(rv); i++) {
-    rv = mMap->ChildAt(i, child);
-    if (NS_SUCCEEDED(rv)) {
-      // Only look at elements and not text, comments, etc.
-      nsIDOMHTMLElement* element;
-      rv = child->QueryInterface(NS_GET_IID(nsIDOMHTMLElement), (void**)&element);
-      if (NS_FAILED(rv)) {
-        rv = NS_OK;
-        continue;
-      }
-      NS_RELEASE(element);
+  for (i = 0; i < n; i++) {
+    nsCOMPtr<nsIContent> child;
+    mMap->ChildAt(i, *getter_AddRefs(child));
 
-      // First check if this map element contains an AREA element.
-      // If so, we only look for AREA elements
-      if (!containsBlock) {
-        nsIDOMHTMLAreaElement* area;
-        rv = child->QueryInterface(NS_GET_IID(nsIDOMHTMLAreaElement), (void**) &area);
-        if (NS_SUCCEEDED(rv)) {
-          containsArea = PR_TRUE;
-          rv = AddArea(child);
-          NS_RELEASE(area);
-        }
-        else {
-          containsBlock = PR_TRUE;
-          mContainsBlockContents = PR_TRUE;
-          rv = NS_OK;
-        }
+    // Only look at elements and not text, comments, etc.
+    nsCOMPtr<nsIDOMHTMLElement> element = do_QueryInterface(child);
+    if (! element)
+      continue;
+
+    // First check if this map element contains an AREA element.
+    // If so, we only look for AREA elements
+    if (!containsBlock) {
+      nsCOMPtr<nsIDOMHTMLAreaElement> area = do_QueryInterface(child);
+      if (area) {
+        containsArea = PR_TRUE;
+        AddArea(child);
       }
+    }
       
-      // If the map element doesn't contain an AREA element as its
-      // first element, we make the assumption that it contains
-      // block elements and we look for children that are anchors.
-      if (!containsArea) {
-        rv = UpdateAreasForBlock(child);
-      }
-      
-      NS_RELEASE(child);
+    // If we haven't determined that the map element contains an
+    // AREA element yet, the look for a block element with children
+    // that are anchors.
+    if (!containsArea) {
+      UpdateAreasForBlock(child, &containsBlock);
+
+      if (containsBlock)
+        mContainsBlockContents = PR_TRUE;
     }
   }
 
-  return rv;
+  return NS_OK;
 }
 
 nsresult
