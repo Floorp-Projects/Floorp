@@ -103,6 +103,14 @@ public abstract class ScriptableObject implements Scriptable, Serializable,
      */
     public static final int PERMANENT = 0x04;
 
+    static void checkValidAttributes(int attributes)
+    {
+        final int mask = READONLY | DONTENUM | PERMANENT;
+        if ((attributes & ~mask) != 0) {
+            throw new IllegalArgumentException(String.valueOf(attributes));
+        }
+    }
+
     /**
      * Return the name of the class.
      *
@@ -395,8 +403,7 @@ public abstract class ScriptableObject implements Scriptable, Serializable,
      */
     public void setAttributes(String name, int attributes)
     {
-        final int mask = READONLY | DONTENUM | PERMANENT;
-        attributes &= mask; // mask out unused bits
+        checkValidAttributes(attributes);
         Slot slot = getNamedSlot(name);
         if (slot == null) {
             throw Context.reportRuntimeError1("msg.prop.not.found", name);
@@ -418,8 +425,7 @@ public abstract class ScriptableObject implements Scriptable, Serializable,
      */
     public void setAttributes(int index, int attributes)
     {
-        final int mask = READONLY | DONTENUM | PERMANENT;
-        attributes &= mask; // mask out unused bits
+        checkValidAttributes(attributes);
         Slot slot = getSlot(null, index);
         if (slot == null) {
             throw Context.reportRuntimeError1("msg.prop.not.found",
@@ -429,31 +435,62 @@ public abstract class ScriptableObject implements Scriptable, Serializable,
     }
 
     /**
+     * Returns the default value for prototype of the object.
+     */
+    protected Scriptable defaultPrototype()
+    {
+        return null;
+    }
+
+    /**
      * Returns the prototype of the object.
      */
-    public Scriptable getPrototype() {
-        return prototype;
+    public Scriptable getPrototype()
+    {
+        Scriptable x = prototypeObject;
+        if (x == UNSET_SCRIPTABLE_FIELD) {
+            x = defaultPrototype();
+            prototypeObject = x;
+        }
+        return x;
     }
 
     /**
      * Sets the prototype of the object.
      */
-    public void setPrototype(Scriptable m) {
-        prototype = m;
+    public void setPrototype(Scriptable m)
+    {
+        prototypeObject = m;
+    }
+
+
+    /**
+     * Returns the default value for prototype of the object.
+     */
+    protected Scriptable defaultParentScope()
+    {
+        return null;
     }
 
     /**
      * Returns the parent (enclosing) scope of the object.
      */
-    public Scriptable getParentScope() {
-        return parent;
+    public Scriptable getParentScope()
+    {
+        Scriptable x = parentScopeObject;
+        if (x == UNSET_SCRIPTABLE_FIELD) {
+            x = defaultParentScope();
+            parentScopeObject = x;
+        }
+        return x;
     }
 
     /**
      * Sets the parent (enclosing) scope of the object.
      */
-    public void setParentScope(Scriptable m) {
-        parent = m;
+    public void setParentScope(Scriptable m)
+    {
+        parentScopeObject = m;
     }
 
     /**
@@ -1854,15 +1891,17 @@ public abstract class ScriptableObject implements Scriptable, Serializable,
         }
     }
 
+    private static final Scriptable UNSET_SCRIPTABLE_FIELD = new NativeObject();
+
     /**
      * The prototype of this object.
      */
-    private Scriptable prototype;
+    private Scriptable prototypeObject = UNSET_SCRIPTABLE_FIELD;
 
     /**
      * The parent scope of this object.
      */
-    private Scriptable parent;
+    private Scriptable parentScopeObject = UNSET_SCRIPTABLE_FIELD;
 
     private static final Object HAS_STATIC_ACCESSORS = Void.TYPE;
     private static final Slot REMOVED = new Slot();
