@@ -14,7 +14,7 @@
 //
 // The Initial Developer of the Original Code is Netscape
 // Communications Corporation.  Portions created by Netscape are
-// Copyright (C) 1998 Netscape Communications Corporation. All
+// Copyright (C) 2000 Netscape Communications Corporation. All
 // Rights Reserved.
 
 #ifndef interpreter_h
@@ -22,13 +22,7 @@
 
 #include "icodegenerator.h"
 
-#ifdef XP_MAC
 #include "gc_allocator.h"
-#else
-// for platforms w/o a working gc_allocator.
-#include <memory>
-#define gc_allocator std::allocator
-#endif
 
 namespace JavaScript {
     /**
@@ -58,7 +52,7 @@ namespace JavaScript {
         JSValue() : f64(0.0) {}
 
         explicit JSValue(float64 f64) : f64(f64) {}
-        JSValue(ICodeModule *fn) : icm(fn) {}
+        explicit JSValue(ICodeModule *fn) : icm(fn) {}
     };
 	
     /**
@@ -68,7 +62,7 @@ namespace JavaScript {
 
     JSValue interpret(ICodeModule* iCode, const JSValues& args);
 
-    void addGlobalProperty(String name, JSValue value);
+    JSValue& defineGlobalProperty(const String& name, const JSValue& value);
 
 }
 
