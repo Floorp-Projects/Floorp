@@ -1421,7 +1421,7 @@ nsSocketTransport::OnStopLookup(nsISupports *aContext,
 // --------------------------------------------------------------------------
 //
 NS_IMETHODIMP
-nsSocketTransport::GetURI(nsIURI * *aURL)
+nsSocketTransport::GetOriginalURI(nsIURI * *aURL)
 {
   nsStdURL *url;
   url = new nsStdURL(nsnull);
@@ -1432,6 +1432,12 @@ nsSocketTransport::GetURI(nsIURI * *aURL)
   rv = CallQueryInterface(url, aURL);
 
   return rv;
+}
+
+NS_IMETHODIMP
+nsSocketTransport::GetURI(nsIURI * *aURL)
+{
+  return GetOriginalURI(aURL);
 }
 
 NS_IMETHODIMP

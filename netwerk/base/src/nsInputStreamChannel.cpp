@@ -57,9 +57,10 @@ nsInputStreamChannel::Create(nsISupports *aOuter, REFNSIID aIID,
 
 nsresult
 nsInputStreamChannel::Init(nsIURI* uri, const char* contentType,
-                           PRInt32 contentLength,
-                           nsIInputStream* in, nsILoadGroup* group)
+                           PRInt32 contentLength, nsIInputStream* in,
+                           nsILoadGroup* group, nsIURI* originalURI)
 {
+    mOriginalURI = originalURI ? originalURI : uri;
     mURI = uri;
     mLoadGroup = group;
     mContentLength = contentLength;
@@ -116,6 +117,14 @@ nsInputStreamChannel::Resume(void)
 
 ////////////////////////////////////////////////////////////////////////////////
 // nsIChannel methods:
+
+NS_IMETHODIMP
+nsInputStreamChannel::GetOriginalURI(nsIURI * *aURI)
+{
+    *aURI = mOriginalURI;
+    NS_IF_ADDREF(*aURI);
+    return NS_OK;
+}
 
 NS_IMETHODIMP
 nsInputStreamChannel::GetURI(nsIURI * *aURI)

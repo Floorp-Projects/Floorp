@@ -42,6 +42,7 @@ nsAboutBloat::NewChannel(const char *verb,
                          nsIURI *aURI,
                          nsILoadGroup *aGroup,
                          nsIEventSinkGetter *eventSinkGetter,
+                         nsIURI* originalURI,
                          nsIChannel **result)
 {
     nsresult rv;
@@ -136,7 +137,7 @@ nsAboutBloat::NewChannel(const char *verb,
 
     nsIChannel* channel;
     rv = serv->NewInputStreamChannel(aURI, "text/plain", 
-                                     size, inStr, aGroup, &channel);
+                                     size, inStr, aGroup, originalURI, &channel);
     if (NS_FAILED(rv)) return rv;
 
     *result = channel;

@@ -29,8 +29,9 @@ interface nsIAboutModule : nsISupports
 {
     nsIChannel NewChannel(in string verb,
                           in nsIURI aURI,
-						  in nsILoadGroup aGroup,
-                          in nsIEventSinkGetter eventSinkGetter);
+                          in nsILoadGroup aGroup,
+                          in nsIEventSinkGetter eventSinkGetter,
+                          in nsIURI originalURI);
 };
 
 %{C++

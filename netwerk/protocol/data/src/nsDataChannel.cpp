@@ -64,13 +64,15 @@ nsDataChannel::QueryInterface(const nsIID& aIID, void** aInstancePtr) {
 
 nsresult
 nsDataChannel::Init(const char* verb, nsIURI* uri, nsILoadGroup *aGroup,
-                   nsIEventSinkGetter* getter) {
+                   nsIEventSinkGetter* getter, nsIURI* originalURI)
+{
     // we don't care about event sinks in data
     nsresult rv;
 
     mDataStream = nsnull;
 
     // Data urls contain all the data within the url string itself.
+    mOriginalURI = originalURI ? originalURI : uri;
     mUrl = uri;
     NS_ADDREF(mUrl);
 
@@ -248,6 +250,14 @@ nsDataChannel::Resume(void)
 
 ////////////////////////////////////////////////////////////////////////////////
 // nsIChannel methods:
+
+NS_IMETHODIMP
+nsDataChannel::GetOriginalURI(nsIURI * *aURI)
+{
+    *aURI = mOriginalURI;
+    NS_ADDREF(*aURI);
+    return NS_OK;
+}
 
 NS_IMETHODIMP
 nsDataChannel::GetURI(nsIURI * *aURI)

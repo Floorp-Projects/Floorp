@@ -203,6 +203,7 @@ NS_IMETHODIMP
 nsJSProtocolHandler::NewChannel(const char* verb, nsIURI* uri,
                                 nsILoadGroup *aGroup,
                                 nsIEventSinkGetter* eventSinkGetter,
+                                nsIURI* originalURI,
                                 nsIChannel* *result)
 {
     NS_ENSURE_ARG_POINTER(uri);
@@ -217,8 +218,8 @@ nsJSProtocolHandler::NewChannel(const char* verb, nsIURI* uri,
                                        (nsISupports**)&ownerPtr);
     if (NS_FAILED(rv))
         return rv;
-	nsCOMPtr<nsIScriptContextOwner> owner = ownerPtr;
-	NS_RELEASE(ownerPtr);
+    nsCOMPtr<nsIScriptContextOwner> owner = ownerPtr;
+    NS_RELEASE(ownerPtr);
     
     if (!owner)
         return NS_ERROR_FAILURE;
@@ -241,8 +242,8 @@ nsJSProtocolHandler::NewChannel(const char* verb, nsIURI* uri,
     nsCOMPtr<nsIPrincipal> principal;
     if (hasPrincipal) {
         // script is currently executing; get principal from that script
-		if (NS_FAILED(securityManager->GetSubjectPrincipal(getter_AddRefs(principal))))
-			return NS_ERROR_FAILURE;
+        if (NS_FAILED(securityManager->GetSubjectPrincipal(getter_AddRefs(principal))))
+            return NS_ERROR_FAILURE;
     } else {
         // No scripts currently executing; get principal from referrer of link
         nsCOMPtr<nsIWebShell> webShell;
@@ -254,7 +255,7 @@ nsJSProtocolHandler::NewChannel(const char* verb, nsIURI* uri,
             return NS_ERROR_FAILURE;
         if (NS_FAILED(securityManager->CreateCodebasePrincipal(uri, getter_AddRefs(principal))))
             return NS_ERROR_FAILURE;
-	}
+    }
 
 
     //TODO Change this to GetSpec and then skip past the javascript:
@@ -329,13 +330,13 @@ nsJSProtocolHandler::NewChannel(const char* verb, nsIURI* uri,
 // This is from the old code which need to be hack on a bit more:
 
 #if 0   // plaintext is apparently busted
-    if (ret[0] != PRUnichar('<'))
-        ret.Insert("<plaintext>\n", 0);
+        if (ret[0] != PRUnichar('<'))
+            ret.Insert("<plaintext>\n", 0);
 #endif
-    mLength = ret.Length();
-    PRUint32 resultSize = mLength + 1;
-    mResult = (char *)PR_Malloc(resultSize);
-    ret.ToCString(mResult, resultSize);
+        mLength = ret.Length();
+        PRUint32 resultSize = mLength + 1;
+        mResult = (char *)PR_Malloc(resultSize);
+        ret.ToCString(mResult, resultSize);
     }
 #endif 
 
@@ -349,7 +350,7 @@ nsJSProtocolHandler::NewChannel(const char* verb, nsIURI* uri,
 
     nsCOMPtr<nsISupports> s;
     rv = NS_NewStringInputStream(getter_AddRefs(s), retString);
-	int length = PL_strlen(retString);
+    int length = PL_strlen(retString);
     Recycle(retString);
         
     if (NS_FAILED(rv))
@@ -361,7 +362,7 @@ nsJSProtocolHandler::NewChannel(const char* verb, nsIURI* uri,
     nsIChannel* channel;
 
     rv = serv->NewInputStreamChannel(uri, "text/html", length,
-                                     in, aGroup, &channel);
+                                     in, aGroup, originalURI, &channel);
     if (NS_FAILED(rv))
         return rv;
 

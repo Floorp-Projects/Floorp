@@ -50,10 +50,11 @@ public:
     Create(nsISupports* aOuter, const nsIID& aIID, void* *aResult);
     
     nsresult Init(const char* verb, nsIURI* uri, nsILoadGroup *aGroup,
-                  nsIEventSinkGetter* getter);
+                  nsIEventSinkGetter* getter, nsIURI* originalURI);
     nsresult ParseData();
 
 protected:
+    nsCOMPtr<nsIURI>        mOriginalURI;
     nsIURI                  *mUrl;
     nsIInputStream          *mDataStream;
     PRUint32                mLoadAttributes;

@@ -61,16 +61,16 @@ NS_IMPL_ISUPPORTS2(nsFTPDirListingConv, nsIStreamConverter, nsIStreamListener);
 // No syncronous conversion at this time.
 NS_IMETHODIMP
 nsFTPDirListingConv::Convert(nsIInputStream *aFromStream,
-                          const PRUnichar *aFromType,
-                          const PRUnichar *aToType,
-                          nsISupports *aCtxt, nsIInputStream **_retval) {
+                             const PRUnichar *aFromType,
+                             const PRUnichar *aToType,
+                             nsISupports *aCtxt, nsIInputStream **_retval) {
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 // Stream converter service calls this to initialize the actual stream converter (us).
 NS_IMETHODIMP
 nsFTPDirListingConv::AsyncConvertData(const PRUnichar *aFromType, const PRUnichar *aToType,
-                                   nsIStreamListener *aListener, nsISupports *aCtxt) {
+                                      nsIStreamListener *aListener, nsISupports *aCtxt) {
     NS_ASSERTION(aListener && aFromType && aToType, "null pointer passed into FTP dir listing converter");
     nsresult rv;
 
@@ -124,7 +124,7 @@ nsFTPDirListingConv::AsyncConvertData(const PRUnichar *aFromType, const PRUnicha
     if (NS_FAILED(rv)) return rv;
 
     rv = serv->NewInputStreamChannel(uri, "application/http-index-format", -1,  // XXX fix contentLength
-                                     nsnull, nsnull, &mPartChannel);
+                                     nsnull, nsnull, nsnull, &mPartChannel);
     NS_RELEASE(uri);
     if (NS_FAILED(rv)) return rv;
 

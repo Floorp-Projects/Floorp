@@ -298,6 +298,7 @@ NS_IMETHODIMP
 nsResourceProtocolHandler::NewChannel(const char* verb, nsIURI* uri,
                                       nsILoadGroup *aGroup,
                                       nsIEventSinkGetter* eventSinkGetter,
+                                      nsIURI* originalURI,
                                       nsIChannel* *result)
 {
     nsresult rv;
@@ -321,7 +322,7 @@ nsResourceProtocolHandler::NewChannel(const char* verb, nsIURI* uri,
     
     nsIChannel* channel;
     rv = serv->NewChannel(verb, filePath, uri, aGroup, eventSinkGetter, 
-                          &channel);
+                          originalURI, &channel);
     nsCRT::free(filePath);
     if (NS_FAILED(rv)) return rv;
 

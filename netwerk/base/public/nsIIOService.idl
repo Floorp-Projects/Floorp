@@ -58,11 +58,19 @@ interface nsIIOService : nsISupports
      * Creates a channel for a given URI. The eventSinkGetter is used to
      * obtain the appropriate callbacks for the URI's protocol from the
      * application.
+     *
+     * @param originalURI - Specifies the original URI which caused the creation
+     * of this channel. This can occur when the construction of one channel
+     * (e.g. for resource:) causes another channel to be created on its behalf
+     * (e.g. a file: channel), or if a redirect occurs, causing the current
+     * URL to become different from the original URL. If NULL, the aURI parameter
+     * will be used as the originalURI instead.
      */
     nsIChannel newChannelFromURI(in string verb,
                                  in nsIURI aURI,
                                  in nsILoadGroup aLoadGroup,
-                                 in nsIEventSinkGetter eventSinkGetter);
+                                 in nsIEventSinkGetter eventSinkGetter,
+                                 in nsIURI originalURI);
 
     /**
      * Convenience routine that first creates a URI by calling NewURI, and
@@ -72,7 +80,8 @@ interface nsIIOService : nsISupports
                           in string aSpec,
                           in nsIURI aBaseURI,
                           in nsILoadGroup aLoadGroup,
-                          in nsIEventSinkGetter eventSinkGetter);
+                          in nsIEventSinkGetter eventSinkGetter,
+                          in nsIURI originalURI);
 
     /**
      * Get the application name string that will be used as part
@@ -158,7 +167,8 @@ interface nsIIOService : nsISupports
                                      in string contentType, 
                                      in long contentLength,
                                      in nsIInputStream inStr,
-                                     in nsILoadGroup group);
+                                     in nsILoadGroup group,
+                                     in nsIURI originalURI);
 };
 
 %{C++

@@ -52,6 +52,7 @@ public:
     nsHTTPChannel(nsIURI* i_URL, 
                   const char* verb,
                   nsIEventSinkGetter* i_EventSinkGetter,
+                  nsIURI* originalURI,
                   nsHTTPHandler* i_Handler);
 
     virtual ~nsHTTPChannel();
@@ -80,6 +81,7 @@ public:
     nsresult            SetUsingProxy(PRBool i_UsingProxy);
 
 protected:
+    nsCOMPtr<nsIURI>            mOriginalURI;
     nsCOMPtr<nsIURI>            mURI;
     PRBool                      mConnected; 
     nsCOMPtr<nsHTTPHandler>     mHandler;

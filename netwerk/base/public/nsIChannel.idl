@@ -32,11 +32,16 @@ typedef unsigned long nsLoadFlags;
  * It's abstract in that it doesn't provide a means to specify the
  * location/destination of the data being accessed. 
  */
-[scriptable, uuid(89f4afe0-1868-11d3-9337-00104ba0fd40)]
+[scriptable, uuid(2d905684-8b5c-11d3-8cd9-0060b0fc14a3)]
 interface nsIChannel : nsIRequest
 {
     /**
-     * Returns the URL to which the channel refers.
+     * Returns the original URL used to construct the channel.
+     */
+    readonly attribute nsIURI originalURI;
+
+    /**
+     * Returns the URL to which the channel currently refers.
      */
     readonly attribute nsIURI URI;
 

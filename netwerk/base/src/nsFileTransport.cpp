@@ -1047,6 +1047,12 @@ nsFileTransport::OnEmpty(nsIPipe* pipe)
 ////////////////////////////////////////////////////////////////////////////////
 
 NS_IMETHODIMP
+nsFileTransport::GetOriginalURI(nsIURI * *aURI)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
 nsFileTransport::GetURI(nsIURI * *aURI)
 {
     return NS_ERROR_NOT_IMPLEMENTED;

@@ -60,12 +60,13 @@ public:
     Create(nsISupports* aOuter, const nsIID& aIID, void* *aResult);
     
     nsresult Init(nsIFileProtocolHandler* handler, const char* verb, nsIURI* uri,
-                  nsILoadGroup *aGroup, nsIEventSinkGetter* getter);
+                  nsILoadGroup *aGroup, nsIEventSinkGetter* getter, nsIURI* originalURI);
 
 protected:
     nsresult CreateFileChannelFromFileSpec(nsFileSpec& spec, nsIFileChannel** result);
 
 protected:
+    nsCOMPtr<nsIURI>                    mOriginalURI;
     nsCOMPtr<nsIURI>                    mURI;
     nsCOMPtr<nsIFileProtocolHandler>    mHandler;
     nsCOMPtr<nsIEventSinkGetter>        mGetter;        // XXX it seems wrong keeping this -- used by GetParent
