@@ -39,11 +39,7 @@
 
 
 /* Approximate size of pixel data chunks sent to the FE for display */
-#ifdef XP_OS2
-#define OUTPUT_CHUNK_SIZE        30000
-#else
 #define OUTPUT_CHUNK_SIZE        15000
-#endif
 
 /* Delay from decode to display of first scanline, in milliseconds. */
 #define ROW_OUTPUT_INITIAL_DELAY    50
