@@ -537,7 +537,7 @@ public:
                             const nsStringArray& aLinkTypes,
                             const nsString& aTitle, const nsString& aType,
                             const nsString& aMedia);
-  void ProcessNextLink(const nsAString &aRel);
+  void PrefetchHref(const nsAString &aHref);
 
   void ProcessBaseHref(const nsAString& aBaseHref);
   void ProcessBaseTarget(const nsAString& aBaseTarget);
@@ -4786,9 +4786,10 @@ HTMLContentSink::ProcessLink(nsIHTMLContent* aElement,
   nsStringArray linkTypes;
   nsStyleLinkElement::ParseLinkTypes(aRel, linkTypes);
 
-  // is it a next link?
-  if (linkTypes.IndexOf(NS_LITERAL_STRING("next")) != -1) {
-    ProcessNextLink(aHref);
+  // prefetch href if relation is "next" or "prefetch"
+  if (linkTypes.IndexOf(NS_LITERAL_STRING("next")) != -1 ||
+      linkTypes.IndexOf(NS_LITERAL_STRING("prefetch")) != -1) {
+    PrefetchHref(aHref);
   }
 
   // is it a stylesheet link?
@@ -4907,7 +4908,7 @@ HTMLContentSink::ProcessStyleLink(nsIHTMLContent* aElement,
 }
 
 void
-HTMLContentSink::ProcessNextLink(const nsAString &aHref)
+HTMLContentSink::PrefetchHref(const nsAString &aHref)
 {
   nsCOMPtr<nsIPrefetchService> prefetchService(
           do_GetService(NS_PREFETCHSERVICE_CONTRACTID));
@@ -4984,11 +4985,12 @@ HTMLContentSink::ProcessLINKTag(const nsIParserNode& aNode)
         // XXX seems overkill to generate this string array
         nsStringArray linkTypes;
         nsStyleLinkElement::ParseLinkTypes(relVal, linkTypes);
-        if (linkTypes.IndexOf(NS_LITERAL_STRING("next")) != -1) {
+        if (linkTypes.IndexOf(NS_LITERAL_STRING("next")) != -1 ||
+            linkTypes.IndexOf(NS_LITERAL_STRING("prefetch")) != 1) {
           nsAutoString hrefVal;
           element->GetAttr(kNameSpaceID_None, nsHTMLAtoms::href, hrefVal);
           if (!hrefVal.IsEmpty()) {
-            ProcessNextLink(hrefVal);
+            PrefetchHref(hrefVal);
           }
         }
       }
