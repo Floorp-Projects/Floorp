@@ -385,9 +385,9 @@ private:
 
 	nsresult ParseURL(nsIURI * aURL, PRBool * bValP, char ** aGroup, char ** aMessageID, char ** aCommandSpecificData);
 
-	void SetProgressBarPercent(int percent);
+	void SetProgressBarPercent(PRUint32 aProgress, PRUint32 aProgressMax);
 	void SetProgressStatus(char * message);
-    nsresult InitializeNewsFolderFromUri(const char *uri);
+  nsresult InitializeNewsFolderFromUri(const char *uri);
 };
 
 NS_BEGIN_EXTERN_C

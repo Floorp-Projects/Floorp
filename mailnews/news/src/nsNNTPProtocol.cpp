@@ -3526,15 +3526,7 @@ PRInt32 nsNNTPProtocol::DisplayNewsRC()
 		nsCOMPtr<nsIMsgMailNewsUrl> mailnewsurl = do_QueryInterface(m_runningURL);
 		if (mailnewsurl)
 			status = SendData(mailnewsurl, outputBuffer);
-
-		percent = (m_newsRCListCount) ?
-					(PRInt32) (100.0 * ( (double)m_newsRCListIndex / (double)m_newsRCListCount )) :
-					0;
-#ifdef UNREADY_CODE
-		FE_SetProgressBarPercent (ce->window_id, percent);
-#else
-		SetProgressBarPercent(percent);
-#endif
+		SetProgressBarPercent(m_newsRCListCount, m_newsRCListIndex);
 		
 		/* only update every 20 groups for speed */
 		if ((m_newsRCListCount <= NEWS_GROUP_DISPLAY_FREQ) || (m_newsRCListIndex % NEWS_GROUP_DISPLAY_FREQ) == 0 ||
@@ -3546,18 +3538,11 @@ PRInt32 nsNNTPProtocol::DisplayNewsRC()
 			
 			PR_snprintf (thisGroup, sizeof(thisGroup), "%ld", (long) m_newsRCListIndex);
 			PR_snprintf (totalGroups, sizeof(totalGroups), "%ld", (long) m_newsRCListCount);
-#ifdef UNREADY_CODE
-			statusText = PR_smprintf (XP_GetString(XP_THERMO_PERCENT_FORM), thisGroup, totalGroups);
-#else
+
 			statusText = PR_smprintf ("%s / %s", thisGroup, totalGroups);
-#endif
 			if (statusText)
 			{
-#ifdef UNREADY_CODE
-				FE_Progress (ce->window_id, statusText);
-#else
 				SetProgressStatus(statusText);
-#endif
 				PR_Free(statusText);
 			}
 		}
@@ -3572,11 +3557,7 @@ PRInt32 nsNNTPProtocol::DisplayNewsRC()
 	{
 		if (m_newsRCListCount)
 		{
-#ifdef UNREADY_CODE
-			FE_SetProgressBarPercent (ce->window_id, -1);
-#else
-			SetProgressBarPercent(-1);
-#endif
+			SetProgressBarPercent(0, -1);
 			m_newsRCListCount = 0;
 		}
 		else if (m_responseCode == MK_NNTP_RESPONSE_LIST_OK)  
@@ -4974,56 +4955,22 @@ nsresult nsNNTPProtocol::CloseSocket()
 	return nsMsgProtocol::CloseSocket();
 }
 
-void nsNNTPProtocol::SetProgressBarPercent(int percent)
+void nsNNTPProtocol::SetProgressBarPercent(PRUint32 aProgress, PRUint32 aProgressMax)
 {
-	PR_LOG(NNTP,PR_LOG_ALWAYS,("nsNNTPProtocol::SetProgressBarPercent(%d)",percent));
-	PRUnichar *progressMsg = nsnull;	
-	// PRUnichar *progressMsg = NNTPGetStringByID(aMsgId);
-
-	if (!m_runningURL) return;
-
-	nsCOMPtr <nsIMsgMailNewsUrl> mailnewsUrl = do_QueryInterface(m_runningURL);
-	if (mailnewsUrl) {
-		nsCOMPtr <nsIMsgStatusFeedback> feedback;
-		mailnewsUrl->GetStatusFeedback(getter_AddRefs(feedback));
-
-		char *printfString = PR_smprintf("%d%%", percent);
-		if (printfString) {
-			nsString formattedString; formattedString.AssignWithConversion(printfString);
-			progressMsg = nsCRT::strdup(formattedString.GetUnicode());
-		}
-		if (feedback) {
-			feedback->ShowProgress(percent);
-			feedback->ShowStatusString(progressMsg);
-		} 
-	}                
-	PR_FREEIF(progressMsg);                                           
+  if (mProgressEventSink)
+    mProgressEventSink->OnProgress(this, m_channelContext, aProgress, aProgressMax);                                       
 }
 
 void
 nsNNTPProtocol::SetProgressStatus(char *message)
 {
-		PR_LOG(NNTP,PR_LOG_ALWAYS,("nsNNTPProtocol::SetProgressStatus(%s)",message));
-        PRUnichar *progressMsg = nsnull;
-        // PRUnichar *progressMsg = NNTPGetStringByID(aMsgId);
-
-        if (!m_runningURL) return;
-
-        nsCOMPtr <nsIMsgMailNewsUrl> mailnewsUrl = do_QueryInterface(m_runningURL);
-        if (mailnewsUrl) {
-                nsCOMPtr <nsIMsgStatusFeedback> feedback;
-                mailnewsUrl->GetStatusFeedback(getter_AddRefs(feedback));
-
-                char *printfString = PR_smprintf("%s", message);
-                if (printfString) {
-                        nsString formattedString; formattedString.AssignWithConversion(printfString);
-                        progressMsg = nsCRT::strdup(formattedString.GetUnicode());
-                }
-                if (feedback) {
-                        feedback->ShowStatusString(progressMsg);
-                }
-        }
-        PR_FREEIF(progressMsg);
+  PR_LOG(NNTP,PR_LOG_ALWAYS,("nsNNTPProtocol::SetProgressStatus(%s)",message));
+  if (mProgressEventSink) 
+  {
+    nsAutoString formattedString; 
+    formattedString.AssignWithConversion(message);
+    mProgressEventSink->OnStatus(this, m_channelContext, formattedString.GetUnicode());
+  }
 }
 
 NS_IMETHODIMP nsNNTPProtocol::GetContentType(char * *aContentType)
