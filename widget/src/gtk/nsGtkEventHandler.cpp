@@ -598,8 +598,8 @@ gint handle_key_press_event(GtkObject *w, GdkEventKey* event, gpointer p)
   nsKeyEvent kevent;
   nsWidget *win = (nsWidget*)p;
 
-  if (win->focusWindow)
-    win = win->focusWindow;
+  if (win->sFocusWindow)
+    win = win->sFocusWindow;
 
   // work around for annoying things.
   if (event->keyval == GDK_Tab)
@@ -699,8 +699,8 @@ gint handle_key_release_event(GtkObject *w, GdkEventKey* event, gpointer p)
     return PR_TRUE;
 
   nsWidget *win = (nsWidget *)p;
-  if (win->focusWindow)
-    win = win->focusWindow;
+  if (win->sFocusWindow)
+    win = win->sFocusWindow;
 
   nsKeyEvent kevent;
   InitKeyEvent(event, win, kevent, NS_KEY_UP);
@@ -913,7 +913,7 @@ dispatch_superwin_event(GdkEvent *event, nsWindow *window)
     // Check to see whether or not we need to send this to the
     // toplevel window to get passed to the GtkWidget with focus.
     // This happens in the embedding case.
-    if (!window->focusWindow) 
+    if (!window->sFocusWindow) 
     {
       GtkWidget *mozArea = window->GetMozArea();
       if (mozArea)

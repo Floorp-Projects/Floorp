@@ -188,7 +188,16 @@ public:
   // this will get the nsWindow with the grab.  this will AddRef()
   // before returning.
   static nsWindow *GetGrabWindow(void);
+  
+  virtual void DispatchSetFocusEvent(void);
+  virtual void DispatchLostFocusEvent(void);
+  virtual void DispatchActivateEvent(void);
+  virtual void DispatchDeactivateEvent(void);
 
+  PRBool mBlockMozAreaFocusIn;
+
+  void HandleMozAreaFocusIn(void);
+  void HandleMozAreaFocusOut(void);
 protected:
 
   //////////////////////////////////////////////////////////////////////
@@ -266,9 +275,6 @@ private:
   void         SendExposeEvent();
 
   PRBool       mIsUpdating;
-  // when this is PR_TRUE we will block focus
-  // events to prevent recursion
-  PRBool       mBlockFocusEvents;
 
   void DestroyNativeChildren(void);
 
