@@ -42,7 +42,7 @@
 #include "nsToolbarItemHolder.h"
 
 
-//#include "nsTextAreaWidget.h"
+#include "nsTextAreaWidget.h"
 //#include "nsListBox.h"
 //#include "nsComboBox.h"
 #include "nsLookAndFeel.h"
@@ -174,7 +174,7 @@ nsresult nsWidgetFactory::CreateInstance(nsISupports *aOuter,
     //    inst = (nsISupports*)(nsObject*)new nsRadioGroup();
     //}
     else if (mClassID.Equals(kCFileOpen)) {
-//       inst = (nsISupports*)new nsFileWidget();
+       inst = (nsISupports*)(nsWindow*)new nsFileWidget();
     }
     else if (mClassID.Equals(kCListbox)) {
 //        inst = (nsISupports*)(nsWindow*)new nsListBox();
@@ -186,7 +186,7 @@ nsresult nsWidgetFactory::CreateInstance(nsISupports *aOuter,
         inst = (nsISupports*)(nsWindow*)new nsScrollbar(PR_TRUE);
     }
     else if (mClassID.Equals(kCTextArea)) {
-//        inst = (nsISupports*)(nsWindow*)new nsTextAreaWidget();
+        inst = (nsISupports*)(nsWindow*)new nsTextAreaWidget();
     }
     else if (mClassID.Equals(kCTextField)) {
         inst = (nsISupports*)(nsWindow*)new nsTextWidget();
