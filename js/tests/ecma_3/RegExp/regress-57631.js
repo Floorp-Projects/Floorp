@@ -90,7 +90,7 @@ function test()
 // This function will only be called where all the patterns are illegal, or all the flags
 function testIllegalRegExps(patterns, flags)
 {
-  for (i  in patterns)
+  for (i in patterns)
     {
       s = patterns[i];
   
