@@ -24,6 +24,7 @@
 var elements = [];
 var numItems;
 var list;
+var param;
 
 function selectDialogOnLoad() {
   doSetOKCancel( commonDialogOnOK, commonDialogOnCancel );
@@ -39,9 +40,9 @@ function selectDialogOnLoad() {
     // Let the caller use "\n" to cause breaks
     // Translate these into <br> tags
     var messageParent = (document.getElementById("info.txt"));
-    done = false;
+    var done = false;
     while (!done) {
-    breakIndex =   messageText.indexOf('\n');
+      var breakIndex = messageText.indexOf('\n');
       if (breakIndex == 0) {
         // Ignore break at the first character
         messageText = messageText.slice(1);
@@ -67,6 +68,7 @@ function selectDialogOnLoad() {
   list = document.getElementById("list");
   numItems = param.GetInt( 2 )
 
+  var i;
   for ( i = 2; i <= numItems+1; i++ ) {
     var newString = param.GetString( i );
     if (newString == "") {
@@ -75,6 +77,7 @@ function selectDialogOnLoad() {
     elements[i-2] = AppendStringToTreelist(list, newString);
   }
   list.selectItem(elements[0]);
+  list.focus();
 
   // resize the window to the content
   window.sizeToContent();
