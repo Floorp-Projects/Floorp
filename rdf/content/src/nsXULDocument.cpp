@@ -2319,6 +2319,16 @@ XULDocumentImpl::GetStyleSheets(nsIDOMStyleSheetCollection** aStyleSheets)
 // nsIDOMXULDocument interface
 
 NS_IMETHODIMP
+XULDocumentImpl::GetRdf(nsIRDFService** aRDFService)
+{
+    // XXX this is a temporary hack until the component manager starts
+    // to work.
+    return nsServiceManager::GetService(kRDFServiceCID,
+                                        nsIRDFService::GetIID(),
+                                        (nsISupports**) aRDFService);
+}
+
+NS_IMETHODIMP
 XULDocumentImpl::GetElementById(const nsString& aId, nsIDOMElement** aReturn)
 {
     nsresult rv;
@@ -2697,6 +2707,25 @@ XULDocumentImpl::GetScriptObject(nsIScriptContext *aContext, void** aScriptObjec
 
     if (nsnull == mScriptObject) {
         res = NS_NewScriptXULDocument(aContext, (nsISupports *)(nsIDOMXULDocument *)this, global, (void**)&mScriptObject);
+
+#if defined(XPIDL_JS_STUBS)
+        JSContext* cx = (JSContext*) aContext->GetNativeContext();
+        nsIRDFNode::InitJSClass(cx);
+        nsIRDFResource::InitJSClass(cx);
+        nsIRDFLiteral::InitJSClass(cx);
+        nsIRDFDate::InitJSClass(cx);
+        nsIRDFInt::InitJSClass(cx);
+        nsIRDFCursor::InitJSClass(cx);
+        nsIRDFAssertionCursor::InitJSClass(cx);
+        nsIRDFArcsInCursor::InitJSClass(cx);
+        nsIRDFArcsOutCursor::InitJSClass(cx);
+        nsIRDFResourceCursor::InitJSClass(cx);
+        nsIRDFObserver::InitJSClass(cx);
+        nsIRDFDataSource::InitJSClass(cx);
+        nsIRDFCompositeDataSource::InitJSClass(cx);
+        nsIRDFService::InitJSClass(cx);
+#endif
+
     }
     *aScriptObject = mScriptObject;
 
