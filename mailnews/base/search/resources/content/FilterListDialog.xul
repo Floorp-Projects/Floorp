@@ -89,8 +89,8 @@ Contributor(s):  Hkan Waara <hwaara@chello.se>
                 datasources="rdf:msgfilters rdf:msgaccountmanager" flags="dont-build-content">
 
             <treecols>
-              <treecol id="nameColumn" flex="85%" resource="http://home.netscape.com/NC-rdf#Name" label="&nameColumn.label;"/>
-              <treecol id="activeColumn" flex="15%" fixed="true" label="&activeColumn.label;"/>
+              <treecol id="nameColumn" flex="1" label="&nameColumn.label;" sort="?Name"/>
+              <treecol id="activeColumn" label="&activeColumn.label;"/>
             </treecols>
 
             <template>

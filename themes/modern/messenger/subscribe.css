@@ -45,25 +45,25 @@
 
 /* ::::: subscribed icons  :::::: */
 
-treechildren:-moz-tree-image(SubscribedColumn),
-treechildren:-moz-tree-image(subscribedCol) {
+treechildren:-moz-tree-image(subscribedColumn),
+treechildren:-moz-tree-image(subscribedColumn2) {
   list-style-image: url("chrome://global/skin/checkbox/cbox.gif");
 }
 
-treechildren:-moz-tree-image(SubscribedColumn, Subscribed-true),
-treechildren:-moz-tree-image(subscribedCol, subscribed) {
+treechildren:-moz-tree-image(subscribedColumn, Subscribed-true),
+treechildren:-moz-tree-image(subscribedColumn2, subscribed) {
   list-style-image: url("chrome://global/skin/checkbox/cbox-check.gif");
 }
 
 /* ::::: folder icons :::::: */
 
-treechildren:-moz-tree-image(NameColumn) {
+treechildren:-moz-tree-image(nameColumn) {
   margin-right: 2px;
   list-style-image: url("chrome://messenger/skin/icons/folder-closed.gif");
 }
 
-treechildren:-moz-tree-image(NameColumn, ServerType-nntp),
-treechildren:-moz-tree-image(nameCol, nntp) {
+treechildren:-moz-tree-image(nameColumn, ServerType-nntp),
+treechildren:-moz-tree-image(nameColumn2, nntp) {
   margin-right: 2px;
   list-style-image: url("chrome://messenger/skin/icons/folder-newsgroup.gif");
 }

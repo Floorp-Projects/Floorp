@@ -135,14 +135,12 @@ Rights Reserved.
           </template>
     
           <treecols id="theSubscribeColumns">
-            <treecol id="NameColumn" persist="hidden width" width="0" flex="5" primary="true"
-                     resource="http://home.netscape.com/NC-rdf#Name" label="..."/>
-            <splitter class="tree-splitter"/>
-            <treecol id="SubscribedColumn" persist="hidden width" width="0" flex="1"
-                     resource="http://home.netscape.com/NC-rdf#Subscribed" label="&subscribedHeader.label;"/>
-            <splitter class="tree-splitter"/>
-            <treecol id="TotalMessagesColumn" persist="hidden width" width="0" flex="1"
-                     resource="http://home.netscape.com/NC-rdf#TotalMessages" label="&messagesHeader.label;"/>
+            <treecol id="nameColumn" persist="hidden" flex="1" primary="true" label="..."
+                     sort="?LeafName"/>
+            <treecol id="subscribedColumn" persist="hidden" label="&subscribedHeader.label;"
+                     sort="?Subscribed"/>
+            <treecol id="messagesColumn" persist="hidden" label="&messagesHeader.label;"
+                     sort="?TotalMessages"/>
           </treecols>
         </tree>
      </hbox>
@@ -152,11 +150,9 @@ Rights Reserved.
               onkeypress="onSearchTreeKeyPress(event);"
               onclick="SearchOnClick(event);"> 
          <treecols>
-           <treecol id="nameCol" label="..." flex="5" width="0" persist="hidden width" ignoreincolumnpicker="true" />
-           <splitter class="tree-splitter" />
-           <treecol id="subscribedCol" flex="1" width="0" persist="hidden width" label="&subscribedHeader.label;" />
-           <splitter class="tree-splitter" />
-           <treecol id="messagesCol" label="&messagesHeader.label;" flex="1" width="0" persist="hidden width" />
+           <treecol id="nameColumn2" persist="hidden" flex="1" primary="true" label="..." />
+           <treecol id="subscribedColumn2" persist="hidden" label="&subscribedHeader.label;" />
+           <treecol id="messagesColumn2" persist="hidden" label="&messagesHeader.label;" />
          </treecols>
          <treechildren id="searchTreeBody"/>
        </tree>

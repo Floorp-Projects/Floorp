@@ -43,9 +43,9 @@ function SetServerTypeSpecificTextValues()
     // set the server specific ui elements
     var stringName = "foldersheaderfor-" + serverType;
     var stringval = gSubscribeBundle.getString(stringName);
-    var element = document.getElementById("NameColumn");
+    var element = document.getElementById("nameColumn");
     element.setAttribute('label',stringval);
-    element = document.getElementById("nameCol");
+    element = document.getElementById("nameColumn2");
     element.setAttribute('label',stringval);
 
     //set the delimiter
@@ -310,10 +310,10 @@ function SearchOnClick(event)
   if (row.value == -1 || row.value > gSearchView.rowCount-1)
     return;
 
-  if (colID.value == "subscribedCol") {
+  if (colID.value == "subscribedColumn2") {
     if (event.detail != 2) {
       // single clicked on the check box 
-      // (in the "subscribedCol" column) reverse state
+      // (in the "subscribedColumn2" column) reverse state
       // if double click, do nothing
       ReverseStateFromRow(row.value);
     }
@@ -329,12 +329,12 @@ function SearchOnClick(event)
 function ReverseStateFromRow(row)
 {
     // to determine if the row is subscribed or not,
-    // we get the properties for the "subscribedCol" cell in the row
+    // we get the properties for the "subscribedColumn2" cell in the row
     // and look for the "subscribed" property
     // if the "subscribed" atom is in the list of properties
     // we are subscribed
     var properties = Components.classes["@mozilla.org/supports-array;1"].createInstance(Components.interfaces.nsISupportsArray);
-    gSearchView.getCellProperties(row, "subscribedCol", properties);
+    gSearchView.getCellProperties(row, "subscribedColumn2", properties);
 
     var isSubscribed = (properties.GetIndexOf(gSubscribedAtom) != -1);
     SetStateFromRow(row, !isSubscribed);
@@ -342,7 +342,7 @@ function ReverseStateFromRow(row)
 
 function SetStateFromRow(row, state)
 {
-    var name = gSearchView.getCellText(row,"nameCol");
+    var name = gSearchView.getCellText(row,"nameColumn2");
     // we need to escape the name because
     // some news servers have newsgroups with non ASCII names
     // we need to escape those name before calling SetState()
@@ -356,7 +356,7 @@ function SetSubscribeState(state)
     // all rows in the selection
     var inSearchMode = InSearchMode();
     var view = inSearchMode ? gSearchView : gSubscribeTree.view;
-    var colId = inSearchMode ? "nameCol" : "NameColumn";
+    var colId = inSearchMode ? "nameColumn2" : "nameColumn";
     
     var sel = view.selection;
     for (var i = 0; i < sel.getRangeCount(); ++i) {
@@ -431,7 +431,7 @@ function SubscribeOnClick(event)
   }
   else {
     // if the user single clicks on the subscribe check box, we handle it here
-    if (col.value == "SubscribedColumn")
+    if (col.value == "subscribedColumn")
       ReverseStateFromNode(row.value);
   }
 }
