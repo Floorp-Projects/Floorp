@@ -122,7 +122,7 @@ STDMETHODIMP nsDocAccessibleWrap::get_accChild(
       *ppdispChild = NS_STATIC_CAST(IDispatch*, msaaAccessible);
       return S_OK;
     }
-    else {
+    else if (mDocument) {
       // If child ID from event can't be found in this window, ask parent.
       // This is especially relevant for times when a xul menu item
       // has focus, but the system thinks the content window has focus.

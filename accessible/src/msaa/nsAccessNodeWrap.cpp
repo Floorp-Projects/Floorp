@@ -269,6 +269,10 @@ NS_IMETHODIMP nsAccessNodeWrap::GetComputedStyleDeclaration(nsIDOMCSSStyleDeclar
   if (content) 
     content->GetDocument(*getter_AddRefs(doc));
 
+  if (!doc) {
+    return NS_ERROR_FAILURE;
+  }
+
   nsCOMPtr<nsIScriptGlobalObject> global;
   doc->GetScriptGlobalObject(getter_AddRefs(global));
   nsCOMPtr<nsIDOMViewCSS> viewCSS(do_QueryInterface(global));

@@ -37,15 +37,16 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsAccessNode.h"
-#include "nsIStringBundle.h"
-#include "nsIServiceManager.h"
 #include "nsAccessibilityAtoms.h"
 #include "nsHashtable.h"
-#include "nsIPref.h"
-#include "nsIServiceManager.h"
-#include "nsIPresShell.h"
-#include "nsIPresContext.h"
+#include "nsIAccessibilityService.h"
+#include "nsIDocument.h"
 #include "nsIFrame.h"
+#include "nsIPref.h"
+#include "nsIPresContext.h"
+#include "nsIPresShell.h"
+#include "nsIServiceManager.h"
+#include "nsIStringBundle.h"
 
 /* For documentation of the accessibility architecture, 
  * see http://lxr.mozilla.org/seamonkey/source/accessible/accessible-docs.html
@@ -109,17 +110,43 @@ NS_IMETHODIMP nsAccessNode::Init()
 
   NS_ASSERTION(!mIsInitialized, "Initialized twice!");
   nsCOMPtr<nsIAccessibleDocument> docAccessible(GetDocAccessible());
-  if (docAccessible) {
-    void* uniqueID;
-    GetUniqueID(&uniqueID);
-    docAccessible->CacheAccessNode(uniqueID, this);
-#ifdef DEBUG
-    mIsInitialized = PR_TRUE;
-#endif
+  if (!docAccessible) {
+    // No doc accessible yet for this node's document. 
+    // There was probably an accessible event fired before the 
+    // current document was ever asked for by the assistive technology.
+    // Create a doc accessible so we can cache this node
+    nsCOMPtr<nsIPresShell> presShell(do_QueryReferent(mWeakShell));
+    if (presShell) {
+      nsCOMPtr<nsIDocument> doc;
+      presShell->GetDocument(getter_AddRefs(doc));
+      nsCOMPtr<nsIDOMNode> docNode(do_QueryInterface(doc));
+      if (docNode) {
+        nsCOMPtr<nsIAccessibilityService> accService = 
+          do_GetService("@mozilla.org/accessibilityService;1");
+        NS_ASSERTION(accService, "No accessibility service");
+        if (accService) {
+          nsCOMPtr<nsIAccessible> accessible;
+          accService->GetAccessibleInShell(docNode, presShell, 
+            getter_AddRefs(accessible));
+          docAccessible = do_QueryInterface(accessible);
+        }
+      }
+    }
+    NS_ASSERTION(docAccessible, "Cannot cache new nsAccessNode");
+    if (!docAccessible) {
+      return NS_ERROR_FAILURE;
+    }
   }
+  void* uniqueID;
+  GetUniqueID(&uniqueID);
+  docAccessible->CacheAccessNode(uniqueID, this);
+#ifdef DEBUG
+  mIsInitialized = PR_TRUE;
+#endif
 
   return NS_OK;
 }
+
 
 NS_IMETHODIMP nsAccessNode::Shutdown()
 {

@@ -209,6 +209,22 @@ NS_IMETHODIMP nsAccessible::SetAccNextSibling(nsIAccessible *aNextSibling)
   return NS_OK;
 }
 
+NS_IMETHODIMP nsAccessible::Shutdown()
+{
+  // Make sure none of it's children point to this parent
+  if (mFirstChild) {
+    nsCOMPtr<nsIAccessible> current(mFirstChild), next;
+    while (current) {
+      current->SetAccParent(nsnull);
+      current->GetAccNextSibling(getter_AddRefs(next));
+      current = next;
+    }
+  }
+  // Now invalidate the child count and pointers to other accessibles
+  InvalidateChildren();
+  return nsAccessNodeWrap::Shutdown();
+}
+
 NS_IMETHODIMP nsAccessible::InvalidateChildren()
 {
   // Document has transformed, reset our invalid children and child count
@@ -219,6 +235,11 @@ NS_IMETHODIMP nsAccessible::InvalidateChildren()
 
 NS_IMETHODIMP nsAccessible::GetAccParent(nsIAccessible **  aAccParent)
 {
+  if (!mWeakShell) {
+    // This node has been shut down
+    *aAccParent = nsnull;
+    return NS_ERROR_FAILURE;
+  }
   if (mParent) {
     *aAccParent = mParent;
     NS_ADDREF(*aAccParent);
@@ -239,12 +260,18 @@ NS_IMETHODIMP nsAccessible::GetAccParent(nsIAccessible **  aAccParent)
   /* readonly attribute nsIAccessible accNextSibling; */
 NS_IMETHODIMP nsAccessible::GetAccNextSibling(nsIAccessible * *aAccNextSibling) 
 { 
-  if (mNextSibling && mNextSibling != DEAD_END_ACCESSIBLE) {
-    NS_ADDREF(*aAccNextSibling = mNextSibling); 
+  *aAccNextSibling = nsnull; 
+  if (!mWeakShell) {
+    // This node has been shut down
+    return NS_ERROR_FAILURE;
+  }
+  if (mNextSibling) {
+    if (mNextSibling != DEAD_END_ACCESSIBLE) {
+      *aAccNextSibling = mNextSibling;
+      NS_ADDREF(*aAccNextSibling);
+    }
     return NS_OK;
   }
-
-  *aAccNextSibling = nsnull; 
 
   // Last argument of PR_TRUE indicates to walk anonymous content
   nsAccessibleTreeWalker walker(mWeakShell, mDOMNode, PR_TRUE);
@@ -267,6 +294,11 @@ NS_IMETHODIMP nsAccessible::GetAccNextSibling(nsIAccessible * *aAccNextSibling)
 NS_IMETHODIMP nsAccessible::GetAccPreviousSibling(nsIAccessible * *aAccPreviousSibling) 
 {
   *aAccPreviousSibling = nsnull;
+
+  if (!mWeakShell) {
+    // This node has been shut down
+    return NS_ERROR_FAILURE;
+  }
 
   // Last argument of PR_TRUE indicates to walk anonymous content
   nsAccessibleTreeWalker walker(mWeakShell, mDOMNode, PR_TRUE);
@@ -306,7 +338,7 @@ NS_IMETHODIMP nsAccessible::GetChildAt(PRInt32 aChildNum, nsIAccessible **aChild
   PRInt32 numChildren;
   GetAccChildCount(&numChildren);
 
-  if (aChildNum >= numChildren) {
+  if (aChildNum >= numChildren || !mWeakShell) {
     *aChild = nsnull;
     return NS_ERROR_FAILURE;
   }
@@ -329,6 +361,12 @@ NS_IMETHODIMP nsAccessible::GetChildAt(PRInt32 aChildNum, nsIAccessible **aChild
 
 void nsAccessible::CacheChildren(PRBool aWalkAnonContent)
 {
+  if (!mWeakShell) {
+    // This node has been shut down
+    mAccChildCount = -1;
+    return;
+  }
+
   if (mAccChildCount == eChildCountUninitialized) {
     nsAccessibleTreeWalker walker(mWeakShell, mDOMNode, aWalkAnonContent);
     nsCOMPtr<nsIAccessible> prevAccessible;
@@ -785,13 +823,14 @@ NS_IMETHODIMP nsAccessible::AccGetBounds(PRInt32 *x, PRInt32 *y, PRInt32 *width,
   //  Another frame, same node                <- Example
   //  Another frame, same node
 
-  float t2p;
   nsCOMPtr<nsIPresContext> presContext(GetPresContext());
   if (!presContext)
   {
     *x = *y = *width = *height = 0;
     return NS_ERROR_FAILURE;
   }
+
+  float t2p;
   presContext->GetTwipsToPixels(&t2p);   // Get pixels to twips conversion factor
 
   nsRect unionRectTwips;
@@ -809,16 +848,14 @@ NS_IMETHODIMP nsAccessible::AccGetBounds(PRInt32 *x, PRInt32 *y, PRInt32 *width,
 
   // We have the union of the rectangle, now we need to put it in absolute screen coords
 
-  if (presContext) {
-    nsRect orgRectPixels, pageRectPixels;
-    GetScreenOrigin(presContext, aBoundingFrame, &orgRectPixels);
-    nsCOMPtr<nsIAccessible> accessibleParent;
-    GetAccParent(getter_AddRefs(accessibleParent));
-    if (accessibleParent)     // The root accessible object has no parent
-      GetScrollOffset(&pageRectPixels);  // Add scroll offsets if not the root accessible
-    *x += orgRectPixels.x - pageRectPixels.x;
-    *y += orgRectPixels.y - pageRectPixels.y;
-  }
+  nsRect orgRectPixels, pageRectPixels;
+  GetScreenOrigin(presContext, aBoundingFrame, &orgRectPixels);
+  PRUint32 role;
+  GetAccRole(&role);
+  if (role != ROLE_PANE)
+    GetScrollOffset(&pageRectPixels);  // Add scroll offsets if not the document itself
+  *x += orgRectPixels.x - pageRectPixels.x;
+  *y += orgRectPixels.y - pageRectPixels.y;
 
   return NS_OK;
 }
@@ -923,6 +960,9 @@ NS_IMETHODIMP nsAccessible::AccTakeSelection()
 NS_IMETHODIMP nsAccessible::AccTakeFocus()
 { 
   nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
+  if (!content) {
+    return NS_ERROR_FAILURE;
+  }
   content->SetFocus(nsCOMPtr<nsIPresContext>(GetPresContext()));
   
   return NS_OK;

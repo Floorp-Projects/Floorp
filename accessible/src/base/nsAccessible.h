@@ -72,6 +72,9 @@ public:
 
   NS_IMETHOD GetFocusedNode(nsIDOMNode **aFocusedNode);
 
+  // nsIAccessNode
+  NS_IMETHOD Shutdown();
+
 #ifdef MOZ_ACCESSIBILITY_ATK
   static nsresult GetParentBlockNode(nsIDOMNode *aCurrentNode, nsIDOMNode **aBlockNode);
 #endif
