@@ -840,7 +840,8 @@ NS_IMETHODIMP nsScrollingView::CreateScrollControls(nsNativeWidget aNative)
     rv = mVScrollBarView->Init(mViewManager, trect, this);
     rv = mViewManager->InsertChild(this, mVScrollBarView, mZindex);
     rv = mVScrollBarView->CreateWidget(kCScrollbarIID, &initData,
-                                       mWindow ? nsnull : aNative);
+                                       mWindow ? nsnull : aNative,
+                                       PR_FALSE);
 
     nsIView *scrolledView;
     GetScrolledView(scrolledView);
@@ -900,7 +901,8 @@ NS_IMETHODIMP nsScrollingView::CreateScrollControls(nsNativeWidget aNative)
     rv = mHScrollBarView->Init(mViewManager, trect, this);
     rv = mViewManager->InsertChild(this, mHScrollBarView, mZindex);
     rv = mHScrollBarView->CreateWidget(kCHScrollbarIID, &initData,
-                                       mWindow ? nsnull : aNative);
+                                       mWindow ? nsnull : aNative,
+                                       PR_FALSE);
   }
 
   NS_RELEASE(dx);
