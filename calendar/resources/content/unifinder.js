@@ -263,8 +263,6 @@ function unifinderClickEvent( event )
       }
    }
    
-   gCalendarWindow.EventSelection.setArrayToSelection( ArrayOfEvents );
-
    if( ArrayOfEvents.length == 1 )
    {
       /*start date is either the next or last occurence, or the start date of the event */
@@ -273,6 +271,8 @@ function unifinderClickEvent( event )
       /* you need this in case the current day is not visible. */
       gCalendarWindow.currentView.goToDay( eventStartDate, true);
    }
+   
+   gCalendarWindow.EventSelection.setArrayToSelection( ArrayOfEvents );
 }
 
 /**

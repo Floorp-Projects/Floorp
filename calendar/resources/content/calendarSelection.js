@@ -116,6 +116,7 @@ CalendarEventSelection.prototype.setArrayToSelection = function calSel_setArrayT
    }
    
    this.onSelectionChanged();
+   
 }
 
 CalendarEventSelection.prototype.isSelectedEvent = function calSel_isSelectedEvent( Event )
