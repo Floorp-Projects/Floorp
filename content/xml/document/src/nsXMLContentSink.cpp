@@ -107,18 +107,8 @@
 #include "nsIPrincipal.h"
 #include "nsIAggregatePrincipal.h"
 #include "nsICodebasePrincipal.h"
-#include "nsIDOMDocumentView.h"
-#include "nsIDOMAbstractView.h"
-#include "nsIDOMCSSStyleDeclaration.h"
-#include "nsIDOMViewCSS.h"
 #include "nsXBLAtoms.h"
-#include "nsIPref.h"
-#include "nsIDOMDocumentXBL.h"
-#include "nsIBindingManager.h"
-#include "nsIObserver.h"
-#include "nsIDocumentTransformer.h"
-#include "nsISyncLoadDOMService.h"
-#include "nsIXSLTProcessor.h"
+#include "nsXMLPrettyPrinter.h"
 
 // XXX misnamed header file, but oh well
 #include "nsHTMLTokens.h"
@@ -364,121 +354,20 @@ nsXMLContentSink::MaybePrettyPrint()
     return NS_OK;
   }
 
-  // Check for correct load-command or if we're in a display:none iframe
+  // Check for correct load-command
   nsAutoString command;
   mParser->GetCommand(command);
-  if (!command.Equals(NS_LITERAL_STRING("view")) ||
-      !mDocument->GetNumberOfShells()) {
+  if (!command.Equals(NS_LITERAL_STRING("view"))) {
     mPrettyPrintXML = PR_FALSE;
 
     return NS_OK;
   }
 
-  // check if we're in an invisible iframe
-  nsCOMPtr<nsIScriptGlobalObject> sgo;
-  mDocument->GetScriptGlobalObject(getter_AddRefs(sgo));
-  nsCOMPtr<nsIDOMWindowInternal> internalWin = do_QueryInterface(sgo);
-  nsCOMPtr<nsIDOMElement> frameElem;
-  if (internalWin) {
-    internalWin->GetFrameElement(getter_AddRefs(frameElem));
-  }
-
-  if (frameElem) {
-    nsCOMPtr<nsIDOMCSSStyleDeclaration> computedStyle;
-    nsCOMPtr<nsIDOMDocument> frameOwnerDoc;
-    frameElem->GetOwnerDocument(getter_AddRefs(frameOwnerDoc));
-    nsCOMPtr<nsIDOMDocumentView> docView = do_QueryInterface(frameOwnerDoc);
-    if (docView) {
-      nsCOMPtr<nsIDOMAbstractView> defaultView;
-      docView->GetDefaultView(getter_AddRefs(defaultView));
-      nsCOMPtr<nsIDOMViewCSS> defaultCSSView = do_QueryInterface(defaultView);
-      if (defaultCSSView) {
-        defaultCSSView->GetComputedStyle(frameElem, NS_LITERAL_STRING(""),
-                                         getter_AddRefs(computedStyle));
-      }
-    }
-
-    if (computedStyle) {
-      nsAutoString visibility;
-      computedStyle->GetPropertyValue(NS_LITERAL_STRING("visibility"), visibility);
-      if (!visibility.Equals(NS_LITERAL_STRING("visible"))) {
-        mPrettyPrintXML = PR_FALSE;
-
-        return NS_OK;
-      }
-    }
-  }
-  
-  // check the pref
-  nsCOMPtr<nsIPref> prefs = do_GetService(NS_PREF_CONTRACTID);
-  if (prefs) {
-    PRBool pref = PR_FALSE;
-    prefs->GetBoolPref("layout.xml.prettyprint", &pref);
-    if (!pref) {
-      mPrettyPrintXML = PR_FALSE;
-
-      return NS_OK;
-    }
-  }
-
-
-  // Ok, we should prettyprint. Let's do it!
-  nsresult rv = NS_OK;
-
-  // Load the XSLT
-  nsCOMPtr<nsIURI> xslUri;
-  rv = NS_NewURI(getter_AddRefs(xslUri),
-                 NS_LITERAL_CSTRING("chrome://communicator/content/xml/XMLPrettyPrint.xsl"));
+  nsCOMPtr<nsXMLPrettyPrinter> printer;
+  nsresult rv = NS_NewXMLPrettyPrinter(getter_AddRefs(printer));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCOMPtr<nsIChannel> channel;
-  rv = NS_NewChannel(getter_AddRefs(channel), xslUri, nsnull, nsnull);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsCOMPtr<nsIDOMDocument> xslDocument;
-  nsCOMPtr<nsISyncLoadDOMService> loader =
-    do_GetService("@mozilla.org/content/syncload-dom-service;1", &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = loader->LoadLocalDocument(channel, nsnull, getter_AddRefs(xslDocument));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // Transform the document
-  nsCOMPtr<nsIXSLTProcessor> transformer =
-      do_CreateInstance("@mozilla.org/document-transformer;1?type=text/xsl", &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
-  
-  rv = transformer->ImportStylesheet(xslDocument);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsCOMPtr<nsIDOMDocumentFragment> resultFragment;
-  nsCOMPtr<nsIDOMDocument> sourceDocument = do_QueryInterface(mDocument);
-  rv = transformer->TransformToFragment(sourceDocument, xslDocument,
-                                        getter_AddRefs(resultFragment));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // Add the binding
-  nsCOMPtr<nsIDOMDocumentXBL> xblDoc = do_QueryInterface(mDocument);
-  NS_ASSERTION(xblDoc, "xml document doesn't implement nsIDOMDocumentXBL");
-  NS_ENSURE_TRUE(xblDoc, NS_ERROR_FAILURE);
-
-  nsCOMPtr<nsIDOMDocument> dummy;
-  xblDoc->LoadBindingDocument(NS_LITERAL_STRING("chrome://communicator/content/xml/XMLPrettyPrint.xml"), getter_AddRefs(dummy));
-
-  nsCOMPtr<nsIDOMElement> rootElem = do_QueryInterface(mDocElement);
-  NS_ASSERTION(rootElem, "No root element");
-
-  rv = xblDoc->AddBinding(rootElem, NS_LITERAL_STRING("chrome://communicator/content/xml/XMLPrettyPrint.xml#prettyprint"));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // Hand the result document to the binding
-  nsCOMPtr<nsIBindingManager> manager;
-  mDocument->GetBindingManager(getter_AddRefs(manager));
-  nsCOMPtr<nsIObserver> binding;
-  manager->GetBindingImplementation(mDocElement, NS_GET_IID(nsIObserver), (void**)getter_AddRefs(binding));
-  NS_ASSERTION(binding, "Prettyprint binding doesn't implement nsIObserver");
-  NS_ENSURE_TRUE(binding, NS_ERROR_UNEXPECTED);
-
-  return binding->Observe(resultFragment, "prettyprint-dom-created", NS_LITERAL_STRING("").get());
+  return printer->PrettyPrint(mDocument);
 }
 
 
@@ -2186,6 +2075,8 @@ nsXMLContentSink::ReportError(const PRUnichar* aErrorText,
                               const PRUnichar* aSourceText)
 {
   nsresult rv = NS_OK;
+  
+  mPrettyPrintXML = PR_FALSE;
 
   mState = eXMLContentSinkState_InProlog;
 
