@@ -47,6 +47,12 @@ nsXPIDLString::~nsXPIDLString()
 }
 
 
+nsXPIDLString::operator const PRUnichar*()
+{
+    return mBuf;
+}
+
+
 PRUnichar*
 nsXPIDLString::Copy(const PRUnichar* aString)
 {
@@ -126,6 +132,12 @@ nsXPIDLCString& nsXPIDLCString::operator =(const char* aCString)
     mBufOwner = PR_TRUE;
     
     return *this;
+}
+
+
+nsXPIDLCString::operator const char*()
+{
+    return mBuf;
 }
 
 
