@@ -3787,12 +3787,14 @@ PK11_PutCrl(PK11SlotInfo *slot, SECItem *crl, SECItem *name,
     PK11_SETATTRS(attrs, CKA_CLASS, &crlClass, sizeof(crlClass)); attrs++;
     PK11_SETATTRS(attrs, CKA_NETSCAPE_KRL, (type == SEC_CRL_TYPE) ? 
 			&ck_false : &ck_true, sizeof (CK_BBOOL)); attrs++;
-    PK11_SETATTRS(attrs, CKA_NETSCAPE_URL, url, PORT_Strlen(url)+1); attrs++;
+    if (url) {
+	PK11_SETATTRS(attrs, CKA_NETSCAPE_URL, url, PORT_Strlen(url)+1); attrs++;
+    }
     PK11_SETATTRS(attrs, CKA_VALUE,crl->data,crl->len); attrs++;
     PK11_SETATTRS(attrs, CKA_TOKEN, &ck_true,sizeof(CK_BBOOL)); attrs++;
 
     tsize = attrs - &theTemplate[0];
-    PORT_Assert(tsize >= sizeof(theTemplate)/sizeof(theTemplate[0]));
+    PORT_Assert(tsize <= sizeof(theTemplate)/sizeof(theTemplate[0]));
 
     rwsession = PK11_GetRWSession(slot);
     if (rwsession == CK_INVALID_SESSION) {
