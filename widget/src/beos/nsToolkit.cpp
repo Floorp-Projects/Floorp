@@ -60,32 +60,13 @@ NS_IMPL_THREADSAFE_ISUPPORTS1(nsToolkit, nsIToolkit)
 struct ThreadInterfaceData
 {
   void	*data;
-  int32	sync;
+  thread_id waitingThread;
 };
 
 //
 // main for the message pump thread
 //
 PRBool gThreadState = PR_FALSE;
-
-static sem_id my_find_sem(const char *name)
-{
-  sem_id	ret = B_ERROR;
-
-  /* Get the sem_info for every sempahore in this team. */
-  sem_info info;
-  int32 cookie = 0;
-
-  while(get_next_sem_info(0, &cookie, &info) == B_OK)
-  {
-    if(strcmp(name, info.name) == 0)
-    {
-      ret = info.sem;
-      break;
-    }
-  }
-  return ret;
-}
 
 struct ThreadInitInfo {
   PRMonitor *monitor;
@@ -96,27 +77,23 @@ void nsToolkit::RunPump(void* arg)
 {
   int32		code;
   char		portname[64];
-  char		semname[64];
   ThreadInterfaceData id;
 
   ThreadInitInfo *info = (ThreadInitInfo*)arg;
-  ::PR_EnterMonitor(info->monitor);
+  PR_EnterMonitor(info->monitor);
 
   gThreadState = PR_TRUE;
 
-  ::PR_Notify(info->monitor);
-  ::PR_ExitMonitor(info->monitor);
+  PR_Notify(info->monitor);
+  PR_ExitMonitor(info->monitor);
 
   delete info;
 
   // system wide unique names
   PR_snprintf(portname, sizeof(portname), "event%lx", 
               (long unsigned) PR_GetCurrentThread());
-  PR_snprintf(semname, sizeof(semname), "sync%lx", 
-              (long unsigned) PR_GetCurrentThread());
 
-  port_id	event = create_port(100, portname);
-  sem_id	sync = create_sem(0, semname);
+  port_id event = create_port(100, portname);
 
   while(read_port(event, &code, &id, sizeof(id)) >= 0)
   {
@@ -126,13 +103,11 @@ void nsToolkit::RunPump(void* arg)
         {
           MethodInfo *mInfo = (MethodInfo *)id.data;
           mInfo->Invoke();
-          if(! id.sync)
-          {
-            delete mInfo;
-          }
+          if(id.waitingThread != 0)
+            resume_thread(id.waitingThread);
+          delete mInfo;
         }
         break;
-
       case 'natv' :	// native queue PLEvent
         {
           PREventQueue *queue = (PREventQueue *)id.data;
@@ -143,11 +118,6 @@ void nsToolkit::RunPump(void* arg)
       default :
         printf("nsToolkit::RunPump - UNKNOWN EVENT\n");
         break;
-    }
-
-    if(id.sync)
-    {
-      release_sem(sync);
     }
   }
 }
@@ -183,7 +153,6 @@ void nsToolkit::Kill()
 
     // interrupt message flow
     close_port(eventport);
-    delete_sem(syncsem);
   }
 }
 
@@ -196,7 +165,7 @@ void nsToolkit::CreateUIThread()
 {
   PRMonitor *monitor = ::PR_NewMonitor();
 	
-  ::PR_EnterMonitor(monitor);
+  PR_EnterMonitor(monitor);
 	
   ThreadInitInfo *ti = new ThreadInitInfo();
   if (ti)
@@ -205,10 +174,10 @@ void nsToolkit::CreateUIThread()
     ti->toolkit = this;
   
     // create a gui thread
-    mGuiThread = ::PR_CreateThread(PR_SYSTEM_THREAD,
+    mGuiThread = PR_CreateThread(PR_SYSTEM_THREAD,
                                    RunPump,
                                    (void*)ti,
-                                   PR_PRIORITY_NORMAL,
+                                   PR_PRIORITY_HIGH,
                                    PR_LOCAL_THREAD,
                                    PR_UNJOINABLE_THREAD,
                                    0);
@@ -216,13 +185,13 @@ void nsToolkit::CreateUIThread()
     // wait for the gui thread to start
     while(gThreadState == PR_FALSE)
     {
-      ::PR_Wait(monitor, PR_INTERVAL_NO_TIMEOUT);
+      PR_Wait(monitor, PR_INTERVAL_NO_TIMEOUT);
     }
   }
     
   // at this point the thread is running
-  ::PR_ExitMonitor(monitor);
-  ::PR_DestroyMonitor(monitor);
+  PR_ExitMonitor(monitor);
+  PR_DestroyMonitor(monitor);
 }
 
 
@@ -259,15 +228,11 @@ void nsToolkit::GetInterface()
   if(! cached)
   {
     char portname[64];
-    char semname[64];
 
     PR_snprintf(portname, sizeof(portname), "event%lx", 
                 (long unsigned) mGuiThread);
-    PR_snprintf(semname, sizeof(semname), "sync%lx", 
-                (long unsigned) mGuiThread);
 
     eventport = find_port(portname);
-    syncsem = my_find_sem(semname);
 
     cached = true;
   }
@@ -280,12 +245,11 @@ void nsToolkit::CallMethod(MethodInfo *info)
   GetInterface();
 
   id.data = info;
-  id.sync = true;
+  id.waitingThread = find_thread(NULL);
   if(write_port(eventport, WM_CALLMETHOD, &id, sizeof(id)) == B_OK)
   {
     // semantics for CallMethod are that it should be synchronous
-    while(acquire_sem(syncsem) == B_INTERRUPTED)
-      ;
+    suspend_thread(id.waitingThread);
   }
 }
 
@@ -297,7 +261,7 @@ void nsToolkit::CallMethodAsync(MethodInfo *info)
   GetInterface();
 
   id.data = info;
-  id.sync = false;
+  id.waitingThread = 0;
 	
   // Check message count to not exceed the port's capacity.
   // There seems to be a BeOS bug that allows more 
