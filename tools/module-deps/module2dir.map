@@ -1,14 +1,12 @@
 ../mozilla: :
 config: :
-build: :
-build/unix: :
+build: build:
+build/unix: build:
 dbm: dbm:
 dbm/include: dbm:
 dbm/src: :
 dbm/tests: dbm:
 jpeg: jpeg:
-modules/zlib: zlib:
-modules/zlib/src: zlib:
 modules/zlib/standalone: zlib:
 other-licenses/libart_lgpl: libart_lgpl:
 js: :
@@ -25,11 +23,8 @@ xpcom/typelib/xpidl: xpcom:
 xpcom/string: string:
 xpcom/string/public: string:
 xpcom/string/src: string: xpcom
-xpcom/string/obsolete: string: xpcom
-xpcom/string/embed: embedstring: xpcom
-xpcom/string/embed/standalone: embedstring: xpcom
 xpcom/glue: xpcom:
-xpcom/glue/standalone: xpcom: string embedstring
+xpcom/glue/standalone: xpcom: string
 xpcom/base: xpcom: string
 xpcom/ds: xpcom: string
 xpcom/io: xpcom: string
@@ -49,11 +44,11 @@ xpcom/proxy/public: xpcom:
 xpcom/proxy/src: xpcom: string
 xpcom/build: xpcom: string
 xpcom/tools: xpcom:
-xpcom/tools/registry: xpcom: string embedstring
+xpcom/tools/registry: xpcom: string
 xpcom/tests: xpcom: string
 xpcom/tests/dynamic: xpcom:
 xpcom/tests/services: xpcom:
-xpcom/sample: xpcomsample: string embedstring xpcom
+xpcom/sample: xpcomsample: string xpcom
 xpcom/typelib/xpt/tests: xpcom:
 xpcom/reflect/xptinfo/tests: xpcom:
 xpcom/reflect/xptcall/tests: TestXPTC: xpcom
@@ -77,7 +72,7 @@ intl: :
 intl/unicharutil: unicharutil:
 intl/unicharutil/idl: unicharutil:
 intl/unicharutil/public: unicharutil:
-intl/unicharutil/util: unicharutil: xpcom string
+intl/unicharutil/util: unicharutil: xpcom string uconv
 intl/unicharutil/src: unicharutil: xpcom string uconv intl
 intl/unicharutil/tables: :
 intl/unicharutil/tests: : xpcom string unicharutil necko uconv
@@ -111,15 +106,14 @@ intl/lwbrk/src: lwbrk: xpcom string unicharutil
 intl/lwbrk/tests: : xpcom string
 intl/chardet: :
 intl/chardet/public: chardet:
-intl/chardet/src: chardet: xpcom string uconv unicharutil webshell docshell htmlparser necko widget content embedcomponents
-intl/build: i18n: xpcom string unicharutil chardet uconv lwbrk intl locale htmlparser content widget webshell necko
-modules/libjar: jar: xpcom string caps zlib
-modules/libjar/standalone: jar: xpcom string caps zlib
+intl/chardet/src: chardet: xpcom string uconv unicharutil webshell docshell htmlparser necko widget content dom embedcomponents
+intl/build: i18n: xpcom string unicharutil chardet uconv lwbrk intl locale htmlparser content dom widget webshell necko
+modules/libjar: jar: xpcom string caps
+modules/libjar/standalone: jar: xpcom string caps
 js/src/liveconnect: liveconnect: js xpcom xpconnect java caps necko string
 modules/oji: oji:
 modules/oji/public: oji:
-modules/oji/src: oji: xpcom string liveconnect java js plugin caps pref jar necko dom widget xpconnect windowwatcher gfx layout docshell webbrwsr intl
-widget/src/gtksuperwin: widget:
+modules/oji/src: oji: xpcom string liveconnect java js plugin caps pref jar necko dom widget xpconnect windowwatcher gfx content layout docshell webbrwsr intl
 widget/src/gtkxtbin: gtkxtbin:
 ipc/ipcd: ipcd:
 ipc/ipcd/util: ipcd:
@@ -139,7 +133,7 @@ ipc/ipcd/extensions/transmngr/module: ipcd: nspr xpcom
 ipc/ipcd/extensions/transmngr/public: ipcd:
 ipc/ipcd/extensions/transmngr/src: ipcd: string xpcom
 ipc/ipcd/extensions/transmngr/test: tm_test: ipcd nspr string xpcom
-ipc/ipcd/client/src: ipcd: xpcom string necko
+ipc/ipcd/client/src: ipcd: xpcom string
 ipc/ipcd/daemon/src: ipcd: xpcom
 ipc/ipcd/test: ipcd_test: xpcom string ipcd
 ipc/ipcd/test/module: ipcd_test: xpcom ipcd
@@ -164,7 +158,7 @@ netwerk/mime/src: mimetype: xpcom string necko uconv
 netwerk/streamconv: :
 netwerk/streamconv/public: necko:
 netwerk/streamconv/src: necko: xpcom string
-netwerk/streamconv/converters: necko: xpcom string mimetype locale intl unicharutil util pref uconv imglib2 necko2 zlib
+netwerk/streamconv/converters: necko: xpcom string mimetype locale intl unicharutil util pref uconv imglib2 necko2
 netwerk/streamconv/test: TestStreamConv: necko xpcom string
 netwerk/cache: nkcache:
 netwerk/cache/public: nkcache:
@@ -186,10 +180,10 @@ netwerk/protocol/file/public: necko:
 netwerk/protocol/file/src: necko: xpcom string mimetype pref uconv
 netwerk/protocol/jar: :
 netwerk/protocol/jar/public: necko:
-netwerk/protocol/jar/src: necko: xpcom string jar mimetype caps js pref xpconnect
+netwerk/protocol/jar/src: necko: xpcom string jar mimetype caps js pref xpconnect uconv
 netwerk/protocol/http: :
 netwerk/protocol/http/public: necko:
-netwerk/protocol/http/src: necko: xpcom string pref nkcache mimetype intl caps xpconnect js uconv
+netwerk/protocol/http/src: necko: xpcom string pref nkcache mimetype intl unicharutil caps xpconnect js uconv
 netwerk/protocol/viewsource: necko2:
 netwerk/protocol/viewsource/public: necko2:
 netwerk/protocol/viewsource/src: necko2: xpcom string necko mimetype
@@ -198,19 +192,19 @@ netwerk/protocol/ftp/public: necko:
 netwerk/protocol/ftp/src: necko: xpcom string mimetype pref intl nkcache
 netwerk/protocol/gopher: necko2:
 netwerk/protocol/gopher/src: necko2: xpcom necko string mimetype pref intl
-netwerk/build: necko: xpcom string nkcache pref mimetype util jar locale intl uconv unicharutil caps zlib
+netwerk/build: necko: xpcom string nkcache pref mimetype util jar locale intl uconv unicharutil caps
 netwerk/build2: necko2: xpcom string necko
 netwerk/resources: :
-netwerk/test: test_necko: xpcom string necko util
+netwerk/test: test_necko: xpcom string necko pref util
 uriloader: :
 uriloader/base: uriloader: xpcom string necko dom exthandler js docshell gfx layout content widget caps intl webshell xpconnect mimetype
-uriloader/exthandler: exthandler: xpcom string unicharutil mimetype uriloader dom necko rdf webshell helperAppDlg plugin pref intl uconv windowwatcher history
+uriloader/exthandler: exthandler: xpcom string unicharutil mimetype uriloader dom necko rdf webshell helperAppDlg plugin pref intl uconv windowwatcher docshell
 uriloader/prefetch: prefetch: xpcom string necko uriloader nkcache chardet pref
 modules/libpref: pref:
 modules/libpref/public: pref:
 modules/libpref/src: pref: xpcom xpcom_obsolete string js xpconnect caps intl necko ipcd profilesharingsetup
 modules/libimg: :
-modules/libimg/png: png: zlib
+modules/libimg/png: png:
 caps: caps:
 caps/idl: caps:
 caps/include: caps:
@@ -228,12 +222,6 @@ rdf/datasource/public: rdf:
 rdf/datasource/src: rdf: xpcom string necko
 rdf/resources: :
 rdf/build: rdf: xpcom string content htmlparser necko
-rdf/chrome: :
-rdf/chrome/public: chrome:
-rdf/chrome/src: chrome: xpcom string rdf xuldoc gfx layout content necko dom intl widget js appshell caps pref docshell imglib2 xpconnect jar
-rdf/chrome/build: chrome: xpcom string rdf necko layout content jar
-rdf/chrome/tools: :
-rdf/chrome/tools/chromereg: : xpcom chrome necko string rdf
 rdf/tests: :
 rdf/tests/rdfcat: : xpcom rdf necko
 rdf/tests/rdfpoll: : xpcom string rdf necko
@@ -254,23 +242,22 @@ gfx/public: gfx:
 gfx/idl: gfx:
 gfx/src: gfx: xpcom windowwatcher dom string widget locale view pref unicharutil uconv
 gfx/src/shared: gfx: xpcom string imglib2 widget content layout necko dom locale
-gfx/src/freetype: gfx: xpcom string pref uconv
-gfx/src/ps: gfx: xpcom string widget pref caps locale uconv view necko imglib2
+gfx/src/ps: gfx: xpcom string widget pref caps locale uconv view necko imglib2 unicharutil
 gfx/src/xlibrgb: xlibrgb:
 gfx/src/xprintutil: xprintutil:
 gfx/src/xprint: gfx: xpcom string xlibrgb xprintutil widget view pref locale uconv unicharutil imglib2
-gfx/src/gtk: gfx: xpcom string widget view util pref uconv unicharutil locale necko content layout imglib2 xprintutil
+gfx/src/gtk: gfx: xpcom string widget view util pref uconv unicharutil locale necko content dom layout imglib2 xprintutil
 gfx/tests: : xpcom string gfx
 modules/libpr0n: imglib2:
 modules/libpr0n/public: imglib2:
 modules/libpr0n/src: imglib2: xpcom string necko nkcache gfx
 modules/libpr0n/decoders: :
-modules/libpr0n/decoders/png: imgpng: xpcom gfx imglib2 png zlib
-modules/libpr0n/decoders/gif: imggif: xpcom gfx imglib2
+modules/libpr0n/decoders/png: imgpng: xpcom string gfx imglib2 png
+modules/libpr0n/decoders/gif: imggif: xpcom string gfx imglib2
 modules/libpr0n/decoders/jpeg: imgjpeg: xpcom string gfx imglib2 jpeg
 modules/libpr0n/decoders/bmp: imgbmp: xpcom gfx imglib2
 modules/libpr0n/decoders/xbm: imgxbm: xpcom gfx imglib2
-modules/libpr0n/build: imglib2: xpcom string necko nkcache gfx jpeg png zlib
+modules/libpr0n/build: imglib2: xpcom string necko nkcache gfx jpeg png
 sun-java: java:
 sun-java/stubs: java:
 sun-java/stubs/jri: java:
@@ -278,8 +265,7 @@ sun-java/stubs/include: java:
 modules/plugin: plugin:
 modules/plugin/base/public: plugin:
 modules/plugin/base/src: plugin: xpcom xpconnect string java pref necko caps intl uconv unicharutil dom gfx content widget mimetype oji exthandler docshell windowwatcher imglib2 layout js gtkxtbin
-modules/plugin/samples/default/unix: : java plugin
-modules/plugin/samples/simple: npsimple: xpcom string plugin widget
+modules/plugin/samples/default/unix: plugin: java plugin
 modules/plugin/tools/sdk: :
 modules/plugin/tools/sdk/samples: :
 modules/plugin/tools/sdk/samples/common: : plugin java
@@ -306,18 +292,16 @@ dom/src: :
 dom/src/base: dom: xpcom string webbrwsr commandhandler js widget gfx layout content caps docshell xpconnect pref oji necko mimetype java locale uriloader xuldoc webshell view uconv shistory plugin windowwatcher chardet find appshell intl unicharutil rdf xultmpl
 dom/src/jsurl: jsurl: xpcom string js dom necko caps widget appshell xpconnect jsconsole uconv docshell
 dom/src/events: dom: xpcom string js caps xpconnect content widget gfx
-dom/src/build: dom: xpcom string js xpconnect widget gfx layout content caps webbrwsr commandhandler xuldoc docshell plugin necko jsurl uconv
 view: view:
 view/public: view:
 view/src: view: xpcom string gfx layout content widget dom locale pref necko
 widget: :
 widget/public: widget:
-widget/src: :
+widget/src: widget:
 widget/src/xpwidgets: widget: xpcom string gfx layout content dom pref locale necko htmlparser uconv unicharutil
 widget/src/support: widget: xpcom string gfx
-widget/src/gtksuperwin: widget:
+widget/src/gtk2: widget: xpcom string gfx pref dom necko uconv gtkxtbin xremoteservice accessibility
 widget/src/gtkxtbin: gtkxtbin:
-widget/src/gtk: widget: xpcom string appshell gfx pref dom uconv necko xremoteservice view util unicharutil
 widget/src/xremoteclient: widget: xpcom string
 content: content:
 content/base: :
@@ -344,7 +328,7 @@ content/xml/document/src: content: xpcom string js dom gfx layout widget caps ht
 content/xul: :
 content/xul/document: xuldoc:
 content/xul/document/public: xuldoc:
-content/xul/document/src: xuldoc: xpcom string exthandler mimetype gfx layout content widget dom rdf js xpconnect caps locale view necko uriloader htmlparser lwbrk chrome docshell pref xul xultmpl webshell unicharutil
+content/xul/document/src: xuldoc: xpcom string exthandler mimetype gfx layout content widget dom rdf js xpconnect caps locale view necko uriloader htmlparser lwbrk docshell pref xul xultmpl webshell unicharutil
 content/xul/content: xul:
 content/xul/content/public: xul:
 content/xul/content/src: xul: xpcom string gfx layout content widget htmlparser necko dom js caps rdf xpconnect locale lwbrk xuldoc xultmpl webshell view
@@ -353,7 +337,7 @@ content/xul/templates/public: xultmpl:
 content/xul/templates/src: xultmpl: xpcom string js xpconnect caps gfx htmlparser layout content widget dom rdf necko locale unicharutil xul xuldoc webshell
 content/xbl: :
 content/xbl/public: content:
-content/xbl/src: content: xpcom string js dom gfx layout xultmpl widget view caps htmlparser necko xpconnect pref docshell webshell chrome lwbrk xul xuldoc rdf imglib2 unicharutil locale
+content/xbl/src: content: xpcom string js dom gfx layout xultmpl widget view caps htmlparser necko xpconnect pref docshell webshell lwbrk xul xuldoc rdf imglib2 unicharutil locale intl
 content/xbl/builtin: :
 content/xbl/builtin/unix: :
 content/xsl: :
@@ -388,14 +372,14 @@ layout/html/style: :
 layout/html/style/src: layout: xpcom string dom content gfx widget locale view necko webshell pref docshell plugin xuldoc imglib2
 layout/html/table: :
 layout/html/table/public: layout:
-layout/html/table/src: layout: xpcom string dom content gfx widget locale view accessibility necko
+layout/html/table/src: layout: xpcom string dom content gfx widget locale view accessibility necko webshell
 layout/xul: :
 layout/xul/base: :
 layout/xul/base/public: layout:
 layout/xul/base/src: layout: xpcom string dom locale content gfx widget view docshell necko webshell pref intl imglib2 unicharutil xpconnect js
 layout/xul/base/src/tree: :
 layout/xul/base/src/tree/public: layout:
-layout/xul/base/src/tree/src: layout: xpcom string dom content gfx widget locale view xultmpl rdf necko imglib2 xpconnect js
+layout/xul/base/src/tree/src: layout: xpcom string dom content gfx widget locale view xultmpl rdf necko imglib2 xpconnect js webshell
 layout/xul/base/src/grid: layout: xpcom string content gfx widget locale view necko
 layout/mathml: :
 layout/mathml/content: :
@@ -404,8 +388,13 @@ layout/mathml/base: :
 layout/mathml/base/src: layout: xpcom string dom content gfx widget webshell locale intl unicharutil necko docshell webbrwsr windowwatcher pref
 layout/svg: :
 layout/svg/base: :
-layout/svg/base/src: layout: xpcom string content gfx widget dom locale view pref necko unicharutil
-layout/build: layout: xpcom string content gfx widget view locale necko dom editor webshell docshell htmlparser js xpconnect uriloader caps necko2 rdf xuldoc imglib2 pref unicharutil xul xultmpl lwbrk plugin
+layout/svg/base/src: layout: xpcom string content gfx widget dom locale view pref necko unicharutil webshell
+layout/svg/base/src/resources: :
+layout/svg/renderer: :
+layout/svg/renderer/public: layout:
+layout/svg/renderer/src: :
+layout/svg/renderer/src/libart: layout: xpcom widget pref gfx imglib2 string dom content necko libart_lgpl util uconv windowwatcher
+layout/build: layout: xpcom string content gfx widget view locale necko dom editor webshell docshell htmlparser js xpconnect uriloader caps necko2 rdf xuldoc imglib2 pref unicharutil xul xultmpl lwbrk plugin commandhandler webbrwsr uconv
 layout/html/tests: : xpcom string necko content layout gfx widget locale
 db: :
 db/mdb: :
@@ -430,16 +419,16 @@ profile/public: profile:
 profile/dirserviceprovider: profdirserviceprovider:
 profile/dirserviceprovider/public: profdirserviceprovider:
 profile/dirserviceprovider/src: profdirserviceprovider: xpcom string ipcd profilesharingsetup
-profile/src: profile: xpcom xpcom_obsolete string chrome docshell webbrwsr dom js xpconnect widget necko uriloader intl pref prefmigr appshell uconv windowwatcher profdirserviceprovider
+profile/src: profile: xpcom xpcom_obsolete string content docshell webbrwsr dom js xpconnect widget necko uriloader intl pref prefmigr appshell uconv windowwatcher profdirserviceprovider
 profile/build: profile: xpcom xpcom_obsolete string uriloader appshell
 profile/resources: :
-profile/defaults: :
+profile/defaults: profile:
 profile/defaults/chrome: :
 profile/pref-migrator: prefmigr:
 profile/pref-migrator/public: prefmigr:
 profile/pref-migrator/src: prefmigr: xpcom xpcom_obsolete string pref intl docshell dom js necko widget webbrwsr uconv windowwatcher
 profile/pref-migrator/resources: :
-embedding: :
+embedding: embed:
 embedding/base: embed_base: xpcom string intl embedcomponents
 embedding/components: :
 embedding/components/windowwatcher: :
@@ -455,7 +444,7 @@ embedding/components/webbrowserpersist/public: webbrowserpersist:
 embedding/components/webbrowserpersist/src: webbrowserpersist: xpcom string dom content necko widget exthandler uriloader mimetype intl unicharutil docshell shistory
 embedding/components/commandhandler: commandhandler:
 embedding/components/commandhandler/public: commandhandler:
-embedding/components/commandhandler/src: commandhandler: string xpcom dom widget content xuldoc caps xpconnect js
+embedding/components/commandhandler/src: commandhandler: string xpcom dom widget content necko xuldoc caps xpconnect js
 embedding/components/ui: :
 embedding/components/ui/helperAppDlg: helperAppDlg:
 embedding/components/ui/progressDlg: progressDlg:
@@ -473,7 +462,7 @@ embedding/browser: :
 embedding/browser/webBrowser: webbrwsr: xpcom string docshell widget gfx layout content dom js necko uriloader shistory webshell windowwatcher history webbrowserpersist unicharutil imglib2 locale
 embedding/browser/build: webbrwsr: xpcom string docshell dom widget gfx layout content necko uriloader shistory windowwatcher webbrowserpersist
 embedding/browser/chrome: :
-embedding/lite: embed_lite: xpcom string chrome necko pref history
+embedding/lite: embed_lite: xpcom string content necko pref docshell
 editor: editor:
 editor/public: editor:
 editor/idl: editor:
@@ -492,7 +481,7 @@ editor/txmgr/idl: txmgr:
 editor/txmgr/tests: : xpcom txmgr
 editor/composer: :
 editor/composer/public: composer:
-editor/composer/src: editor: xpcom string dom js layout content uriloader txmgr necko pref webshell docshell gfx widget xuldoc txtsvc chrome imglib2 commandhandler composer appshell
+editor/composer/src: editor: xpcom string unicharutil dom js layout content uriloader txmgr necko pref webshell docshell gfx widget xuldoc txtsvc imglib2 commandhandler composer appshell
 editor/ui: :
 xpfe/appshell: appshell:
 xpfe/appshell/public: appshell:
@@ -500,21 +489,26 @@ xpfe/appshell/src: appshell: xpcom string widget docshell webshell gfx layout co
 xpfe/browser/public: browser:
 xpfe/components/sidebar/public: sidebar:
 xpfe/components/xremote/public: xremoteservice:
-xpfe/components/history/public: history:
+rdf/chrome: :
+rdf/chrome/src: chrome: xpcom string rdf content xuldoc gfx layout content necko dom intl widget js appshell caps pref docshell imglib2 xpconnect jar
+rdf/chrome/build: chrome: xpcom string rdf necko layout content xuldoc jar
+rdf/chrome/tools: :
+rdf/chrome/tools/chromereg: : xpcom content necko content string rdf
 accessible: accessibility:
 accessible/public: accessibility:
+accessible/public/atk: accessibility:
 accessible/src: :
-accessible/src/other: accessibility: content docshell dom editor gfx htmlparser intl layout locale necko plugin pref string uriloader view webshell widget xpcom xuldoc
+accessible/src/atk: accessibility: content docshell dom editor gfx htmlparser intl layout locale necko plugin pref string uriloader view webshell widget xpcom xuldoc
 accessible/src/base: accessibility: commandhandler composer content docshell dom editor gfx intl layout locale necko plugin pref string uriloader view webshell widget xpcom xuldoc
-accessible/src/html: accessibility: content dom gfx imglib2 intl layout locale necko string widget xpcom
-accessible/src/xul: accessibility: content dom gfx intl layout locale necko pref string widget xpcom
+accessible/src/html: accessibility: content dom gfx imglib2 intl layout locale necko string widget xpcom editor
+accessible/src/xul: accessibility: content dom gfx intl layout locale necko pref string widget xpcom editor
 accessible/build: accessibility: xpcom
 directory/xpcom: :
 directory/xpcom/base: mozldap:
 directory/xpcom/base/public: mozldap:
 directory/xpcom/base/src: mozldap: xpcom string necko
 directory/xpcom/base/resources: mozldap:
-security/manager: :
+security/manager: psm:
 security/manager/boot: pipboot:
 security/manager/boot/public: pipboot:
 security/manager/boot/src: pipboot: nspr xpcom string necko uriloader dom intl docshell widget layout content pref
@@ -526,7 +520,8 @@ security/manager/pki: pippki:
 security/manager/pki/public: pippki:
 security/manager/pki/resources: :
 security/manager/pki/src: pippki: nspr xpcom string dom pref intl locale windowwatcher necko pipnss layout
-xpfe: :
+xpfe/components/history/public: history:
+xpfe: browser:
 xpfe/browser: browser:
 xpfe/browser/src: browser: xpcom string webshell necko shistory widget gfx content docshell appshell dom js uriloader pref appcomps webbrwsr windowwatcher history
 xpfe/browser/samples: :
@@ -563,9 +558,9 @@ xpfe/components/find: :
 xpfe/components/find/public: appcomps:
 xpfe/components/find/src: appcomps: xpcom string
 xpfe/components/search: :
-xpfe/components/search/datasets: :
+xpfe/components/search/datasets: appcomps:
 xpfe/components/search/public: appcomps:
-xpfe/components/search/src: appcomps: xpcom xpcom_obsolete string rdf necko pref uconv intl unicharutil
+xpfe/components/search/src: appcomps: xpcom string rdf necko pref uconv intl unicharutil
 xpfe/components/related: :
 xpfe/components/related/public: appcomps:
 xpfe/components/related/src: appcomps: xpcom string rdf necko uconv pref unicharutil
@@ -584,7 +579,7 @@ xpfe/components/shistory/src: shistory: xpcom string necko dom layout docshell p
 xpfe/components/console: :
 xpfe/components/updates: :
 xpfe/components/updates/src: :
-xpfe/components/intl: appcomps: xpcom string uconv locale intl rdf pref necko dom windowwatcher appshell
+xpfe/components/intl: appcomps: xpcom string uconv unicharutil locale intl rdf pref necko dom windowwatcher appshell
 xpfe/components/resetPref: :
 xpfe/components/killAll: :
 xpfe/components/windowds: appcomps: xpcom string appshell rdf dom docshell
@@ -597,19 +592,19 @@ xpfe/components/bookmarks/src: appcomps: xpcom string rdf appshell widget necko 
 xpfe/components/bookmarks/resources: :
 xpfe/components/download-manager: downloadmanager:
 xpfe/components/download-manager/public: downloadmanager:
-xpfe/components/download-manager/src: downloadmanager: xpcom string rdf uriloader mimetype necko progressDlg intl windowwatcher webbrowserpersist appshell dom profile
+xpfe/components/download-manager/src: downloadmanager: xpcom string rdf uriloader mimetype necko progressDlg intl windowwatcher webbrowserpersist appshell dom profile widget pref
 xpfe/components/download-manager/resources: :
 xpfe/components/download-manager/resources/unix: :
 xpfe/components/history: history:
-xpfe/components/history/src: history: xpcom string rdf mork pref necko intl unicharutil uconv appcomps
+xpfe/components/history/src: history: xpcom string docshell rdf mork pref necko intl unicharutil uconv appcomps
 xpfe/components/urlbarhistory: :
 xpfe/components/urlbarhistory/public: appcomps:
 xpfe/components/urlbarhistory/src: appcomps: xpcom string rdf pref necko unicharutil
 xpfe/components/sidebar: :
 xpfe/components/sidebar/src: :
 xpfe/components/xremote: xremoteservice:
-xpfe/components/xremote/src: xremoteservice: xpcom string dom widget gfx uriloader docshell pref windowwatcher necko appshell rdf
-xpfe/components/build: appcomps: xpcom xpcom_obsolete string content rdf necko nkcache intl locale mork widget dom uriloader mimetype webbrowserpersist progressDlg pref docshell webshell appshell browser txmgr chardet history downloadmanager mozldap
+xpfe/components/xremote/src: xremoteservice: xpcom string dom widget gfx uriloader docshell pref windowwatcher necko appshell rdf exthandler
+xpfe/components/build: appcomps: xpcom string content rdf necko nkcache intl locale mork widget dom uriloader mimetype webbrowserpersist progressDlg pref docshell webshell appshell browser txmgr chardet history downloadmanager mozldap
 themes: :
 themes/classic: :
 themes/classic/global/win: :
@@ -618,18 +613,16 @@ themes/modern: :
 xpinstall: xpinstall:
 xpinstall/public: xpinstall:
 xpinstall/res: :
-xpinstall/src: xpinstall: xpcom xpcom_obsolete string jar caps chrome necko intl locale libreg js pref widget uriloader xpconnect dom windowwatcher plugin unicharutil zlib
+xpinstall/src: xpinstall: xpcom xpcom_obsolete string jar caps content necko intl locale libreg js pref widget uriloader xpconnect dom windowwatcher plugin unicharutil appshell
 xpinstall/stub: xpistub: xpcom string xpinstall
 xpinstall/cleanup: xpinstall: libreg
 xpinstall/wizard/libxpnet: :
 xpinstall/wizard/libxpnet/src: xpnet:
 xpinstall/wizard/libxpnet/test: :
-xpinstall/wizard/unix/src2: : xpcom jar
 js/jsd: jsdebug: js string xpcom xpconnect widget dom
 js/jsd/idl: jsdebug:
 extensions: :
 extensions/cookie: cookie: xpcom string necko dom widget content pref uriloader windowwatcher docshell appshell
-extensions/cookie/tests: : xpcom string necko pref
 extensions/wallet: :
 extensions/wallet/public: wallet:
 extensions/wallet/src: wallet: xpcom xpcom_obsolete string necko dom gfx layout content widget uriloader pref webshell docshell intl unicharutil windowwatcher
@@ -637,11 +630,11 @@ extensions/wallet/editor: walletviewers: xpcom string wallet dom docshell necko 
 extensions/wallet/signonviewer: walletviewers: xpcom string wallet dom widget necko
 extensions/wallet/walletpreview: walletviewers: xpcom string wallet dom widget necko docshell
 extensions/wallet/build: walletviewers: xpcom
-extensions/content-packs: :
+extensions/content-packs: content-packs:
 extensions/content-packs/resources: :
 extensions/xml-rpc: :
 extensions/xml-rpc/idl: xml-rpc:
-extensions/xml-rpc/src: :
+extensions/xml-rpc/src: xml-rpc:
 extensions/xmlextras: xmlextras:
 extensions/xmlextras/base: :
 extensions/xmlextras/base/public: xmlextras:
@@ -651,39 +644,41 @@ extensions/xmlextras/pointers/src: xmlextras: xpcom string dom content xpconnect
 extensions/xmlextras/build: :
 extensions/xmlextras/build/src: xmlextras: xpcom string dom js content widget caps necko embedcomponents xpconnect
 extensions/xmlextras/tests: : xpcom string xmlextras necko dom content widget
-extensions/help: :
+extensions/help: help:
 extensions/help/resources: :
 extensions/p3p: p3p:
 extensions/p3p/public: p3p:
-extensions/p3p/src: p3p: xpcom string necko cookie xmlextras dom
+extensions/p3p/src: p3p: xpcom string necko xmlextras dom pref
 extensions/pref: :
 extensions/pref/autoconfig: autoconfig:
 extensions/pref/autoconfig/public: autoconfig:
 extensions/pref/autoconfig/resources: :
 extensions/pref/autoconfig/src: autoconfig: xpcom string intl js xpconnect necko profile pref appshell embedcomponents windowwatcher mozldap
+extensions/pref/system-pref: :
+extensions/pref/system-pref/src: system-pref: xpcom string embedcomponents mozcomps profile pref
+extensions/pref/system-pref/src/gconf: system-pref: pref string xpcom embedcomponents
 extensions/transformiix: transformiix:
 extensions/transformiix/source: :
-extensions/transformiix/source/base: transformiix: string xpcom unicharutil dom content widget necko caps xpconnect js
-extensions/transformiix/source/xml: transformiix: string xpcom dom content widget unicharutil
+extensions/transformiix/source/base: transformiix: string xpcom unicharutil dom content widget necko caps xpconnect js htmlparser
+extensions/transformiix/source/xml: transformiix: string xpcom dom content widget unicharutil necko htmlparser
 extensions/transformiix/source/xml/dom: :
-extensions/transformiix/source/xml/dom/mozImpl: transformiix: string xpcom dom content widget necko unicharutil
 extensions/transformiix/source/xml/parser: transformiix: string xpcom necko dom content widget js xpconnect caps unicharutil
-extensions/transformiix/source/xpath: transformiix: string xpcom dom content widget xpconnect js unicharutil layout
-extensions/transformiix/source/xslt: transformiix: string xpcom dom content widget necko unicharutil xpconnect js htmlparser webshell docshell layout uconv caps windowwatcher mimetype intl
-extensions/transformiix/source/xslt/functions: transformiix: string xpcom dom content widget unicharutil
-extensions/transformiix/source/xslt/util: transformiix: string xpcom dom content widget locale unicharutil
-extensions/transformiix/build: transformiix: xpcom string dom content widget necko js xpconnect caps locale unicharutil htmlparser webshell docshell layout uconv windowwatcher mimetype intl
+extensions/transformiix/source/xpath: transformiix: string xpcom dom content widget xpconnect js unicharutil layout necko htmlparser
+extensions/transformiix/source/xslt: transformiix: string xpcom dom content widget necko unicharutil xpconnect js htmlparser webshell docshell layout uconv caps windowwatcher mimetype intl htmlparser
+extensions/transformiix/source/xslt/functions: transformiix: string xpcom dom content widget unicharutil necko htmlparser
+extensions/transformiix/source/xslt/util: transformiix: string xpcom dom content widget locale unicharutil necko htmlparser
+extensions/transformiix/build: transformiix: xpcom string dom content widget necko js xpconnect caps locale unicharutil htmlparser webshell docshell layout uconv windowwatcher mimetype intl htmlparser
 extensions/transformiix/resources: :
-extensions/venkman: :
+extensions/venkman: venkman:
 extensions/venkman/resources: :
 extensions/inspector: inspector:
 extensions/inspector/base: :
 extensions/inspector/base/public: inspector:
-extensions/inspector/base/src: inspector: xpcom string dom gfx layout content widget locale necko docshell view
+extensions/inspector/base/src: inspector: xpcom string dom gfx layout content widget locale necko docshell view webshell
 extensions/inspector/base/js: :
 extensions/inspector/build: :
 extensions/inspector/build/src: inspector: xpcom string gfx layout content dom widget locale necko
-extensions/irc: :
+extensions/irc: chatzilla:
 extensions/universalchardet: universalchardet:
 extensions/universalchardet/src: universalchardet: xpcom string uconv chardet
 extensions/universalchardet/tests: universalchardet: xpcom chardet
@@ -714,14 +709,6 @@ extensions/spellcheck/idl: spellchecker:
 extensions/spellcheck/myspell: myspell:
 extensions/spellcheck/myspell/src: myspell: xpcom string editor content layout dom necko widget gfx txtsvc uconv unicharutil spellchecker nspr
 extensions/spellcheck/myspell/dictionaries: :
-extensions/xmlterm: xmlterm:
-extensions/xmlterm/lineterm: xmlterm:
-extensions/xmlterm/base: xmlterm: xpcom string gfx layout content docshell caps pref dom js view widget necko webshell uriloader appshell locale
-extensions/xmlterm/ui: :
-extensions/xmlterm/build: xmlterm: xpcom string dom js gfx layout content widget uriloader webshell necko
-extensions/xmlterm/scripts: :
-extensions/xmlterm/doc: :
-extensions/xmlterm/tests: :
 extensions/datetime: nkdatetime: xpcom string necko mimetype
 extensions/finger: nkfinger: xpcom string necko mimetype
 extensions/cview: :
@@ -729,11 +716,12 @@ extensions/cview/resources: :
 extensions/layout-debug: layout_debug:
 extensions/layout-debug/src: layout_debug: xpcom string windowwatcher docshell dom gfx content necko layout widget locale view pref appshell
 extensions/layout-debug/ui: :
-mailnews: :
+extensions/tasks: :
+mailnews: mailnews:
 mailnews/public: mailnews:
 mailnews/base: msgbase:
 mailnews/base/public: msgbase:
-mailnews/base/src: msgbase: xpcom xpcom_obsolete string necko dom appshell uconv intl htmlparser widget docshell rdf gfx layout content mailnews locale unicharutil msgbaseutil webshell txmgr msgcompose msgdb uriloader pref msglocal msgimap mork msgnews addrbook prefmigr chrome mime mimetype windowwatcher webbrwsr exthandler
+mailnews/base/src: msgbase: xpcom xpcom_obsolete string necko dom appshell uconv intl htmlparser widget docshell rdf gfx layout content mailnews locale unicharutil msgbaseutil webshell txmgr msgcompose msgdb uriloader pref msglocal msgimap mork msgnews addrbook prefmigr mime mimetype windowwatcher webbrwsr exthandler mozldap
 mailnews/base/util: msgbaseutil: xpcom xpcom_obsolete string msgbase rdf necko msgdb intl mork mailnews locale pref rdfutil mime caps msgcompose addrbook docshell webshell uriloader appshell msgimap msglocal msgnews txmgr uconv unicharutil nkcache mimetype windowwatcher
 mailnews/base/search: :
 mailnews/base/search/public: msgbase:
@@ -765,7 +753,7 @@ mailnews/mime/cthandlers/resources: :
 mailnews/mime/build: mime: xpcom string necko msgbase pref uconv
 mailnews/compose: msgcompose:
 mailnews/compose/public: msgcompose:
-mailnews/compose/src: msgcompose: xpcom xpcom_obsolete string dom js editor uriloader msgbase mailnews necko mime pref intl uconv locale unicharutil content msgbaseutil msgdb rdf appshell msgimap msgnews docshell webshell addrbook widget htmlparser txmgr caps exthandler nkcache mimetype windowwatcher
+mailnews/compose/src: msgcompose: xpcom xpcom_obsolete string dom js editor uriloader msgbase mailnews necko mime pref intl uconv locale unicharutil content msgbaseutil msgdb rdf appshell msgimap msgnews docshell webshell addrbook widget htmlparser txmgr caps exthandler nkcache mimetype windowwatcher gfx
 mailnews/compose/build: msgcompose: xpcom xpcom_obsolete string msgbase msgbaseutil editor necko dom uriloader mime addrbook rdf intl uconv mailnews widget msgdb appshell nkcache
 mailnews/imap: msgimap:
 mailnews/imap/public: msgimap:
@@ -791,11 +779,13 @@ mailnews/extensions/mailviews: mailview:
 mailnews/extensions/mailviews/public: mailview:
 mailnews/extensions/mailviews/src: mailview: xpcom xpcom_obsolete string msgbase mailnews necko msgbaseutil msgdb mime
 mailnews/extensions/mailviews/resources: :
-mailnews/extensions/mailviews/resources/content: :
+mailnews/extensions/mailviews/resources/content: mailview:
 mailnews/extensions/mailviews/build: mailview: xpcom string msgbase mailnews necko msgbaseutil msgdb mime
 mailnews/extensions/bayesian-spam-filter: bayesflt:
-mailnews/extensions/bayesian-spam-filter/src: bayesflt: xpcom string msgbase necko mailnews msgbaseutil msgdb lwbrk
+mailnews/extensions/bayesian-spam-filter/src: bayesflt: xpcom string unicharutil msgbase necko mailnews msgbaseutil msgdb lwbrk
 mailnews/extensions/bayesian-spam-filter/build: bayesflt: xpcom mailnews msgbase lwbrk
+mailnews/extensions/offline-startup: offline-startup:
+mailnews/extensions/offline-startup/resources: :
 mailnews/extensions/smime: msgsmime:
 mailnews/extensions/smime/public: msgsmime:
 mailnews/extensions/smime/src: msgsmime: xpcom xpcom_obsolete string msgbase mime mimetype pipnss msgcompose necko intl
@@ -807,7 +797,8 @@ other-licenses/libical/src/libicalss: icalss: ical
 calendar: calendar:
 calendar/libxpical: calendar: xpcom appshell string timer necko msgcompose addrbook dom pref ical icalss
 calendar/resources: :
-xpfe/bootstrap: apprunner: xpcom string webbrwsr widget dom necko pref appshell gfx chrome xpinstall uriloader windowwatcher embed_base embedcomponents docshell locale profile jprof xremoteservice
+xpfe/bootstrap: apprunner: xpcom string webbrwsr widget dom necko content pref appshell gfx xpinstall uriloader windowwatcher embed_base embedcomponents docshell locale profile jprof xremoteservice
+xpfe/bootstrap/init.d: apprunner:
 embedding/browser/gtk: gtkembedmoz:
 embedding/browser/gtk/src: gtkembedmoz: xpcom string docshell webshell necko widget dom js gfx layout content uriloader webbrwsr shistory embed_base pref windowwatcher profdirserviceprovider accessibility
 embedding/browser/gtk/tests: gtkembedmoz: xpcom string dom
@@ -815,4 +806,4 @@ webshell/tests: :
 webshell/tests/viewer: webshell_tests: xpcom string embed_base webshell widget gfx layout content dom webbrwsr docshell util uriloader locale necko htmlparser view pref intl unicharutil editor windowwatcher xpconnect js
 webshell/tests/viewer/public: webshell_tests:
 webshell/tests/viewer/unix: :
-webshell/tests/viewer/unix/gtk: webshell_tests: xpcom string webbrwsr widget dom gfx docshell uriloader webshell necko util
+webshell/tests/viewer/unix/gtk2: webshell_tests: xpcom string webbrwsr widget dom gfx docshell uriloader webshell necko util
