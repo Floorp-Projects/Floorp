@@ -2306,6 +2306,10 @@ HRESULT LaunchApps()
 HRESULT ProcessGre(greInfo *aGre)
 {
   char greUninstallCommand[MAX_BUF];
+
+  if(!aGre)
+    return(WIZ_OK);
+
   /* If aGre->homePath does not exist, it means that a compatible version of GRE was
    * not found on the system, so we need to install one.  We also need to get the
    * path to where it's going to install the GRE for in case we need to use it
@@ -2327,7 +2331,8 @@ HRESULT ProcessGre(greInfo *aGre)
    * in the config.ini file.
    */
   /* Unset "Component GRE"'s SELECTED attribute so it doesn't get spawned again later from LaunchApps() */
-  aGre->siCGreComponent->dwAttributes &= ~SIC_SELECTED;
+  if(aGre->siCGreComponent)
+    aGre->siCGreComponent->dwAttributes &= ~SIC_SELECTED;
 
   /* Log the GRE uninstall command to call in order for this app's uninstaller to
    * uninstall GRE.

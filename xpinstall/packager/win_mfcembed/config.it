@@ -94,6 +94,33 @@ Default Setup Type=Setup Type 0
 ;   TRUE
 Refresh Icons=FALSE
 
+; Setting to control whether or not GRE should be installed to app's dir
+; to be used as a private/local GRE.
+;
+; Possible values (default is 'Shared'):
+;   Local
+;   Shared
+;
+; If this key is set to 'Local', make
+; sure to provide a GRE Private Key= below!
+GRE Type=Shared
+
+; Private key that overrides the default shared key
+; (HKEY_LOCAL_MACHINE\Software\mozilla.org\GRE) set by GRE's installer.
+; This key will be created under HKEY_LOCAL_MACHINE and should be 
+; declared in the following format:
+;
+;   Software\[company name]\[product name]
+;   (ie: Software\mozilla.org\GRE_PRIVATE)
+;
+; If it is not in the above format, the GRE installer/uninstaller can
+; fail to work properly.
+; The value to Prodduct Name Internal= (at the beginning of this
+; config.ini file) will be appended as follows:
+;
+;   Software\mozilla.org\GRE_PRIVATE_[Product Name Internal]
+GRE Private Key=Software\mozilla.org\GRE_PRIVATE
+
 ; This section contains info on how to send error information in case of
 ; either a download or xpinstall error.
 ; By default, this feature is enabled, unless disabled.
@@ -174,8 +201,10 @@ Readme App=notepad.exe
 ; List of components to install/enable for this Setup Type.
 ; All other components not listed here will be disabled if
 ; this Setup Type is selected.
-C0=Component MFCEmbed
-C1=Component Uninstaller
+C0=Component XPCOM
+C1=Component GRE
+C2=Component MFCEmbed
+C3=Component Uninstaller
 
 [Dialog Select Components]
 Show Dialog=FALSE
@@ -386,16 +415,33 @@ Close All Process Windows=TRUE
 ;                   will be superseded.
 ;
 
-;[Component XPCOM]
-;Description Short=Mozilla XPCOM
-;;*** LOCALIZE ME BABY ***
-;Description Long=Install Engine
-;Archive=xpcom.xpi
-;$InstallSize$:xpcom
-;$InstallSizeSystem$
-;$InstallSizeArchive$:xpcom.xpi
-;Attributes=SELECTED|INVISIBLE|FORCE_UPGRADE
-;Force Upgrade File0=[SETUP PATH]\xpcom.dll
+[Component XPCOM]
+Description Short=Mozilla XPCOM
+;*** LOCALIZE ME BABY ***
+Description Long=Install Engine
+Archive=xpcom.xpi
+$InstallSize$:xpcom
+$InstallSizeSystem$
+$InstallSizeArchive$:xpcom.xpi
+Attributes=SELECTED|INVISIBLE|DOWNLOAD_ONLY
+
+[Component GRE]
+;*** LOCALIZE ME BABY ***
+Description Short=GRE
+;*** LOCALIZE ME BABY ***
+Description Long=Gecko Runtime Environment
+Archive=gre-win32-installer.zip
+Archive Uncompressed=gre-win32-installer.exe
+$InstallSize$:gre
+$InstallSizeSystem$
+$InstallSizeArchive$:gre-win32-installer.zip
+Attributes=SELECTED|UNCOMPRESS|SUPERSEDE|LAUNCHAPP|INVISIBLE
+Parameter=-mmi -ma -app $ProductName$ -app_path "[SETUP PATH]\$MainExeFile$"
+SupersedeType=GRE
+SupersedeWinReg0=HKEY_LOCAL_MACHINE\Software\mozilla.org\GRE
+SupersedeVersion0=1.3.0.0
+SupersedeMinVersion=1.3.0.0
+SupersedeMaxVersion=1.3.0.0
 
 [Component MFCEmbed]
 Description Short=MFCEmbed
@@ -430,6 +476,11 @@ $InstallSize$:xpcom
 Cleanup=TRUE
 ;*** LOCALIZE ME BABY ***
 Message=Preparing Install, please wait...
+; Status= values: Disabled, Enabled
+; If nothing is set, default value is Enabled.  If set to Disabled,
+; it will then use GRE as the xpinstall engine, in which case, there
+; should be a GRE component in this installer package!
+Status=Enabled
 
 [Redirect]
 Status=Disabled
@@ -673,9 +724,3 @@ Description1=North America
 ;*** LOCALIZE ME BABY ***
 Domain1=$ArchiveUrl$
 
-;RunApp section
-[RunApp0]
-Timing=pre launchapp
-Wait=TRUE
-Target=gre-win32-installer.exe
-Parameters=-mmi -ma -app mfcembed -app_path "[SETUP PATH]"\mfcembed.exe

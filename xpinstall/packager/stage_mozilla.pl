@@ -53,10 +53,6 @@ sub StageProduct
   StageUtils::CopyAdditionalPackage("$dirMozPackager/packages-win",                    $dirDistPackagesProductName);
 #  StageUtils::GeneratePackagesFromSinglePackage($inOs, "$dirMozPackager/packages-win", $dirDistPackagesProductName);
 
-  # Not needed right now since it only copies xpcom-win.pkg.
-  # This pkg file should be part of the GRE build.
-  #StageUtils::CopyAdditionalPackage("$dirMozPackager/xpcom-win.pkg", $dirDistPackagesProductName);
-
   # Call CreateStage() to create the aProductName stage dir using the packages
   # in dist/packages.
   StageUtils::CreateStage($aDirSrcDist, $dirStageProductName, $dirDistPackagesProductName, $aOsPkg);
