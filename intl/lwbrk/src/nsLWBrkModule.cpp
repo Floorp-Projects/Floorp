@@ -24,6 +24,9 @@
 #include "nsLWBreakerFImp.h"
 #include "nsLWBRKDll.h"
 
+PRInt32 g_InstanceCount = 0;
+PRInt32 g_LockCount = 0;
+
 static NS_DEFINE_IID(kLWBrkCID, NS_LWBRK_CID);
 
 // Module implementation for the sample library
