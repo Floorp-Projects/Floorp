@@ -4354,18 +4354,37 @@ dnl ========================================================
 dnl = Support for demangling undefined symbols
 dnl ========================================================
 if test -z "$SKIP_LIBRARY_CHECKS"; then
-    AC_LANG_SAVE
-    AC_LANG_CPLUSPLUS
-    AC_CHECK_FUNCS(__cxa_demangle, HAVE_DEMANGLE=1, HAVE_DEMANGLE=)
-    AC_LANG_RESTORE
+AC_CHECK_LIB(iberty, cplus_demangle, [HAVE_DEMANGLE=1],
+             HAVE_DEMANGLE=, "-liberty")
 fi
 
-# Demangle only for debug or trace-malloc builds
 MOZ_DEMANGLE_SYMBOLS=
-if test "$HAVE_DEMANGLE" -a "$HAVE_GCC3_ABI" && test "$MOZ_DEBUG" -o "$NS_TRACE_MALLOC"; then
-    MOZ_DEMANGLE_SYMBOLS=1
-    AC_DEFINE(MOZ_DEMANGLE_SYMBOLS)
+
+if test "$HAVE_DEMANGLE"
+then
+  case "$target" in
+    *-linux*)
+        # Demangle only for debug or trace-malloc builds
+        if test "$MOZ_DEBUG" || test "$NS_TRACE_MALLOC"
+        then
+            MOZ_DEMANGLE_SYMBOLS=1
+            AC_DEFINE(MOZ_DEMANGLE_SYMBOLS)
+        fi
+	;;
+    *-solaris*)
+        # Demangle only for debug builds which are using the Gnu compiler.
+        if test "$GNU_CC"
+        then
+            if test "$MOZ_DEBUG"
+            then
+                MOZ_DEMANGLE_SYMBOLS=1
+                AC_DEFINE(MOZ_DEMANGLE_SYMBOLS)
+            fi
+        fi
+    ;;
+  esac
 fi
+
 AC_SUBST(MOZ_DEMANGLE_SYMBOLS)
 
 
