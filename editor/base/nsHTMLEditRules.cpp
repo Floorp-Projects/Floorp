@@ -4983,6 +4983,7 @@ nsHTMLEditRules::FindNearSelectableNode(nsIDOMNode *aSelNode,
 nsresult
 nsHTMLEditRules::InDifferentTableElements(nsIDOMNode *aNode1, nsIDOMNode *aNode2, PRBool *aResult)
 {
+  NS_ASSERTION(aNode1 && aNode2 && aResult, "null args");
   if (!aNode1 || !aNode2 || !aResult) return NS_ERROR_NULL_POINTER;
 
   nsCOMPtr<nsIDOMNode> tn1, tn2, node = aNode1, temp;
