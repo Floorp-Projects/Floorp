@@ -33,7 +33,7 @@ a:out-of-date img, img[usemap], object[usemap] {
 }
 
 
-/* new feature, not implemented yet */
+/* new feature, not implemented yet
 
 a[name] {
   display: inline-block;
@@ -43,6 +43,12 @@ a[name] {
   background-image: url(chrome://editor/skin/images/ED_Left.gif);
   border: 1px solid blue;
   cursor: default;
+}
+*/
+
+a[name] {
+  padding-left: 10px; 
+  background: url(chrome://editor/skin/images/ED_Left.gif) 5px 50% no-repeat; 
 }
 
 table {

@@ -532,7 +532,7 @@ function setDimensions()
   var htype                             = dialog.imageheightSelect.getAttribute("value");
 
     // width
-    // NO! this is not the way to do it! Depends on english strings
+    // TODO: NO! this is not the way to do it! Depends on english strings
     //  Instead, store which index is selected when popup "pixel" or "percent of..." is used
     if (wtype.substr(0,4) == "% of")
     {
@@ -564,18 +564,17 @@ function setPopup(dim)
     if (select.nodeName == "TD")
     { 
       if (dim == "w")
-        dialog.imagewidthSelect.setAttribute("value", "% of cell");
+        dialog.imagewidthSelect.setAttribute("value",GetString("PercentOfCell"));
       else
-        dialog.imageheightSelect.setAttribute("value", "% of cell");
-    }
+        dialog.imageheightSelect.setAttribute("value",GetString("PercentOfCell"));
+    
     else
     {
       if (dim == "w")
-        dialog.imagewidthSelect.setAttribute("value", "% of window");
+        dialog.imagewidthSelect.setAttribute("value",GetString("PercentOfWindow"));
       else
-        dialog.imageheightSelect.setAttribute("value", "% of window");
+        dialog.imageheightSelect.setAttribute("value",GetString("PercentOfWindow"));
     }
-
 }
 
 // This function moves the selected item into view

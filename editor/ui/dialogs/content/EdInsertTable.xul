@@ -53,7 +53,7 @@
       </td>
       <td cellspan="2">
         <input type="text" id="rows" maxlength="4" size="4"
-            onkeypress="forceInteger('rows')" />
+            onkeyup="forceInteger('rows')" />
       </td>
     </tr>
     <tr class="vcenter">
@@ -62,7 +62,7 @@
       </td>
       <td cellspan="2">
         <input type="text" id="columns" maxlength="4" size="4"
-            onkeypress="forceInteger('columns')" />
+            onkeyup="forceInteger('columns')" />
       </td>
     </tr>
     <tr class="vcenter">
@@ -71,7 +71,7 @@
       </td>
       <td>
         <input type="text" id="width" size="4" maxlength="4"
-            onkeypress="forceInteger('width')" />
+            onkeyup="forceInteger('width')" />
        </td>
        <td>
         <xul:titledbutton class="popup" id="pixelOrPercentButton" 
@@ -85,7 +85,7 @@
       <td>
         <!-- THIS IS DUMB Can't figure out how to put "pixels" after the 
              input box and make them center vertically. Used another TD instead -->
-        <input type="text" id="border" size="4" onkeypress="forceInteger('border')"/>
+        <input type="text" id="border" size="4" onkeyup="forceInteger('border')"/>
       </td>
       <td>
         <label for="border"> &pixelsPopup.value; </label>
@@ -94,7 +94,7 @@
   </table>
   <xul:spring class="spacer"/>
   <!-- from EdDialogOverlay -->
-  <xul:box id="advancedEditButton"/>
+  <xul:box id="AdvancedEditButton"/>
   <!-- from global dialogOverlay -->
 	<xul:box id="okCancelButtons"/> 
 

@@ -106,7 +106,7 @@ function Startup()
       //   or an image, then shouldn't we clear the selection and insert new text?
       insertNew = selection.isCollapsed;
       dump("insertNew is " + insertNew + "\n");
-      linkCaption.data = "Enter text for the link:"
+      linkCaption.data = GetString("EnterLinkText");
       linkMessage.data = "";
     }
   }
@@ -126,7 +126,7 @@ function Startup()
     }
     linkMessage.data = selectedText;
     // The label above the selected text:
-    linkCaption.data = "Link text:"
+    linkCaption.data = GetString("LinkText");
   }
 
   if (!selection.isCollapsed)
