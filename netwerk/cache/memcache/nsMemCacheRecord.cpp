@@ -143,7 +143,7 @@ nsMemCacheRecord::Delete(void)
 }
 
 NS_IMETHODIMP
-nsMemCacheRecord::GetFilename(nsIFileSpec* *aFilename)
+nsMemCacheRecord::GetFile(nsIFile* *aFilename)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }

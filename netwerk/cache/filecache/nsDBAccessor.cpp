@@ -1,4 +1,5 @@
-/*
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
  * The contents of this file are subject to the Mozilla Public
  * License Version 1.1 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of
@@ -20,7 +21,19 @@
  *                 Carl Wong <carl.wong@intel.com>
  */
 
-// FUR - Add overall description comment here
+/*
+ * This file is part of filecache implementation.
+ * 
+ * nsIDBAccessor is a interface that shields all the direct database access 
+ * method from nsNetDiskCache. 
+ * 
+ * nsDBAccessor is a implementation of the nsIDBAccessor interface. It
+ * uses dbm(Berkely) as the database. 
+ * 
+ * a nsDiskCacheRecord is mapped into two entries in the database, 
+ *    key->recordID
+ *    recordID->metadata
+ */
 
 #include "nsDBAccessor.h"
 #include "nscore.h"
@@ -28,20 +41,21 @@
 #include "prtypes.h"
 #include "plhash.h"
 #include "nsCRT.h"
-#include "nsAutoLock.h"
-
+#include "nsIFile.h"
 nsDBAccessor::nsDBAccessor() :
   mDB(0) ,
+  mDBFile(0) ,
   mSessionID(0) ,
-  mSessionCntr(0)
+  mSessionCntr(0)  
 {
+	 mDBFilesize = LL_Zero();
+  mLastSyncTime = PR_IntervalNow() ;
 
   NS_INIT_REFCNT();
 }
 
 nsDBAccessor::~nsDBAccessor()
 {
-  printf(" ~nsDBAccessor\n") ;
   Shutdown() ;
 }
 
@@ -55,17 +69,14 @@ NS_IMPL_ISUPPORTS(nsDBAccessor, NS_GET_IID(nsIDBAccessor))
 // nsIDBAccessor methods 
 
 NS_IMETHODIMP
-nsDBAccessor::Init(nsIFileSpec* dbfile)
+nsDBAccessor::Init(nsIFile* dbfile)
 {
-  // FUR - lock not needed
-  m_Lock = PR_NewLock() ;
-  if(!m_Lock)
-    return NS_ERROR_OUT_OF_MEMORY ;
-
   char* dbname ;
 
   // this should cover all platforms. 
-  dbfile->GetNativePath(&dbname) ;
+  dbfile->GetPath(&dbname) ;
+  
+  mDBFile = dbfile ;
 
   // FUR - how is page size chosen ?  It's worth putting a comment
   // in here about the possible usefulness of tuning these parameters
@@ -77,27 +88,22 @@ nsDBAccessor::Init(nsIFileSpec* dbfile)
     0 ,       /* hash function */
     0} ;      /* byte order */
 
-  // FUR - lock not needed
-  nsAutoLock lock(m_Lock) ;
-
   mDB = dbopen(dbname,
                O_RDWR | O_CREAT ,
                0600 ,
                DB_HASH ,
                & hash_info) ;
 
-  // FUR - does dbname have to be free'ed ?
+  nsCRT::free(dbname) ;
 
   if(!mDB)
     return NS_ERROR_FAILURE ;
 
   // set mSessionID
-  // FUR - Why the +1 ?  (No need for key to be NUL-terminated string.)
-  PRUint32 len = PL_strlen(SessionKey)+1 ;
   DBT db_key, db_data ;
 
   db_key.data = NS_CONST_CAST(char*, SessionKey) ;
-  db_key.size = len ;
+  db_key.size = PL_strlen(SessionKey) ;
 
   int status = (*mDB->get)(mDB, &db_key, &db_data, 0) ;
   if(status == -1) {
@@ -113,8 +119,6 @@ nsDBAccessor::Init(nsIFileSpec* dbfile)
       return NS_ERROR_FAILURE ;
     }
 
-    // FUR - need to comment out all printfs, or turn them into PR_LOG statements
-    printf("found previous session, id = %d\n", *old_ID) ;
     mSessionID = *old_ID + 1 ;
   } 
   else if(status == 1) {
@@ -126,14 +130,18 @@ nsDBAccessor::Init(nsIFileSpec* dbfile)
 
   // store the new session id
   status = (*mDB->put)(mDB, &db_key, &db_data, 0) ;
+
   if(status == 0) {
     (*mDB->sync)(mDB, 0) ;
-    return NS_OK ;
+
+    // initialize database filesize
+    return mDBFile->GetFileSize(&mDBFilesize) ;
   } 
   else {
     NS_ERROR("reset session ID failure.") ;
     return NS_ERROR_FAILURE ;
   }
+  
 }
 
 NS_IMETHODIMP
@@ -145,9 +153,6 @@ nsDBAccessor::Shutdown(void)
     mDB = nsnull ;
   }
 
-  // FUR - locks not necessary
-  if(m_Lock) 
-    PR_DestroyLock(m_Lock);
   return NS_OK ;
 }
   
@@ -162,8 +167,6 @@ nsDBAccessor::Get(PRInt32 aID, void** anEntry, PRUint32 *aLength)
 
   NS_ASSERTION(mDB, "no database") ;
 
-  // Lock the db
-  nsAutoLock lock(m_Lock) ;
   DBT db_key, db_data ;
 
   db_key.data = NS_REINTERPRET_CAST(void*, &aID) ;
@@ -189,8 +192,6 @@ nsDBAccessor::Put(PRInt32 aID, void* anEntry, PRUint32 aLength)
 {
   NS_ASSERTION(mDB, "no database") ;
 
-  // Lock the db
-  nsAutoLock lock(m_Lock) ;
   DBT db_key, db_data ;
 
   db_key.data = NS_REINTERPRET_CAST(void*, &aID) ;
@@ -200,15 +201,9 @@ nsDBAccessor::Put(PRInt32 aID, void* anEntry, PRUint32 aLength)
   db_data.size = aLength ;
 
   if(0 == (*mDB->put)(mDB, &db_key, &db_data, 0)) {
-    // FUR - I would avoid unnecessary sync'ing for performance's
-    // sake.  Maybe you could limit sync to max rate of, say, once
-    // every few seconds by keeping track of last sync time, using PR_Now().
-    (*mDB->sync)(mDB, 0) ;
-    return NS_OK ;
+    return Sync() ;
   }
   else {
-    // FUR - Try to avoid using NS_ERROR unless error is unrecoverable and serious
-    NS_ERROR("ERROR: Failed to put anEntry into db.\n") ;
     return NS_ERROR_FAILURE ;
   }
 }
@@ -222,9 +217,6 @@ nsDBAccessor::Del(PRInt32 aID, void* anEntry, PRUint32 aLength)
 {
   NS_ASSERTION(mDB, "no database") ;
 
-  // FUR - no locks necessary
-  // Lock the db
-  nsAutoLock lock(m_Lock) ;
   DBT db_key ;
 
   // delete recordID->metadata
@@ -235,8 +227,6 @@ nsDBAccessor::Del(PRInt32 aID, void* anEntry, PRUint32 aLength)
   status = (*mDB->del)(mDB, &db_key, 0) ;
 
   if(-1 == status) {
-    // FUR - no printf's, use PR_LOG, NS_WARNING, or NS_ASSERTION, as the situation warrants
-    printf(" delete error\n") ;
     return NS_ERROR_FAILURE ;
   } 
 
@@ -245,24 +235,16 @@ nsDBAccessor::Del(PRInt32 aID, void* anEntry, PRUint32 aLength)
   db_key.size = aLength ;
   status = (*mDB->del)(mDB, &db_key, 0) ;
   if(-1 == status) {
-    // FUR - no printf's
-    printf(" delete error\n") ;
     return NS_ERROR_FAILURE ;
   } 
 
-  // FUR - Defer sync ?  See above
-  (*mDB->sync)(mDB, 0) ;
-
-  return NS_OK ;
+  return Sync() ;
 }
 
 NS_IMETHODIMP
 nsDBAccessor::GetID(const char* key, PRUint32 length, PRInt32* aID) 
 {
   NS_ASSERTION(mDB, "no database") ;
-
-  // Lock the db
-  nsAutoLock lock(m_Lock) ;
 
   DBT db_key, db_data ;
 
@@ -289,10 +271,8 @@ nsDBAccessor::GetID(const char* key, PRUint32 length, PRInt32* aID)
       NS_ERROR("updating db failure.") ;
       return NS_ERROR_FAILURE ;
     }
-    // FUR - defer sync ?
-    (*mDB->sync)(mDB, 0) ;
     *aID = id ;
-    return NS_OK ;
+    return Sync() ;
   } 
   else {
     NS_ERROR("ERROR: keydb failure.") ;
@@ -318,12 +298,9 @@ nsDBAccessor::EnumEntry(void** anEntry, PRUint32* aLength, PRBool bReset)
   else
     flag = R_NEXT ;
 
-  // Lock the db
-  nsAutoLock lock(m_Lock) ;
   DBT db_key, db_data ;
 
-  // FUR - +1 unnecessary ?
-  PRUint32 len = PL_strlen(SessionKey)+1 ;
+  PRUint32 len = PL_strlen(SessionKey) ;
 
   int status ;
 
@@ -348,4 +325,93 @@ nsDBAccessor::EnumEntry(void** anEntry, PRUint32* aLength, PRBool bReset)
     *aLength = db_data.size ;
   }
   return NS_OK ;
+}
+/*
+ * returns the cached database file size.
+ * mDBFilesize will be updated during Sync().
+ */
+NS_IMETHODIMP
+nsDBAccessor::GetDBFilesize(PRUint64* aSize)
+{
+  *aSize = mDBFilesize ;
+  return NS_OK ; 
+}
+
+NS_IMETHODIMP
+nsDBAccessor::GetSizeEntry(void** anEntry, PRUint32* aLength)
+{
+  if(!anEntry)
+    return NS_ERROR_NULL_POINTER ;
+
+  *anEntry = nsnull ;
+  *aLength = 0 ;
+
+  DBT db_key, db_data ;
+
+  db_key.data = NS_CONST_CAST(char*, SizeEntry) ;
+  db_key.size = PL_strlen(SizeEntry) ;
+
+  int status = (*mDB->get)(mDB, &db_key, &db_data, 0) ;
+
+  if(status == -1) {
+    NS_ERROR("ERROR: failed get special entry in database.") ;
+    return NS_ERROR_FAILURE ;
+  }
+
+  if(status == 0) {
+    *anEntry = db_data.data ;
+    *aLength = db_data.size ;
+  } 
+  
+  return NS_OK ;
+}
+
+NS_IMETHODIMP
+nsDBAccessor::SetSizeEntry(void* anEntry, PRUint32 aLength)
+{
+  if( !mDB )
+  	return NS_ERROR_FAILURE;
+  DBT db_key, db_data ;
+
+  db_key.data = NS_CONST_CAST(char*, SizeEntry) ;
+  db_key.size = PL_strlen(SizeEntry) ;
+
+  db_data.data = anEntry ;
+  db_data.size = aLength ;
+
+  if(0 == (*mDB->put)(mDB, &db_key, &db_data, 0)) {
+    (*mDB->sync)(mDB, 0) ;
+    return NS_OK ;
+  }
+  else {
+    return NS_ERROR_FAILURE ;
+  }
+}
+
+/*
+ * sync routine is only called when the SyncInterval is reached. Otherwise
+ * it just returns. If db synced, the filesize will be updated at the
+ * same time.
+ */
+nsresult
+nsDBAccessor::Sync(void)
+{
+  PRIntervalTime time = PR_IntervalNow() ;
+  PRIntervalTime duration = time - mLastSyncTime ;
+  
+  if (PR_IntervalToMilliseconds(duration) > SyncInterval) {
+    int status = (*mDB->sync)(mDB, 0) ;
+    if(status == 0) {
+//      printf("\tsynced\n") ;
+      mLastSyncTime = time ;
+      
+      // update db filesize here
+      return mDBFile->GetFileSize(&mDBFilesize) ;
+      
+    } else
+      return NS_ERROR_FAILURE ;
+  } else {
+//    printf("\tnot synced\n") ;
+    return NS_OK ;
+  }
 }

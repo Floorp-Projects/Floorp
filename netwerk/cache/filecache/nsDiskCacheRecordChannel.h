@@ -1,4 +1,5 @@
-/*
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
  * The contents of this file are subject to the Mozilla Public
  * License Version 1.1 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of
@@ -26,12 +27,14 @@
 #include "nsIChannel.h"
 #include "nsCOMPtr.h"
 #include "nsDiskCacheRecord.h"
-
+#include "nsIStreamListener.h"
+#include "nsIFile.h"
 /*
  * This class is plagiarized from nsMemCacheChannel
  */
 
-class nsDiskCacheRecordChannel : public nsIChannel
+class nsDiskCacheRecordChannel : public nsIChannel,
+                                 public nsIStreamListener 
 {
   public:
 
@@ -47,6 +50,12 @@ class nsDiskCacheRecordChannel : public nsIChannel
   // Declare nsIChannel methods
   NS_DECL_NSICHANNEL
 
+  // Declare nsIStreamObserver methods
+  NS_DECL_NSISTREAMOBSERVER
+
+  // Declare nsIStreamListener methods
+  NS_DECL_NSISTREAMLISTENER
+
   nsresult Init(void) ;
 
   private:
@@ -57,6 +66,8 @@ class nsDiskCacheRecordChannel : public nsIChannel
   nsCOMPtr<nsILoadGroup>                mLoadGroup ;
   nsCOMPtr<nsISupports>                 mOwner ;
   nsCOMPtr<nsIChannel>                  mFileTransport ;
+  nsCOMPtr< nsIFile >                            mSpec ;
+  nsCOMPtr<nsIStreamListener>           mRealListener;
 
   friend class WriteStreamWrapper ;
 } ;

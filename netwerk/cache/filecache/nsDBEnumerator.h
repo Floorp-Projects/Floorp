@@ -1,4 +1,5 @@
-/*
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
  * The contents of this file are subject to the Mozilla Public
  * License Version 1.1 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of
@@ -20,7 +21,11 @@
  *                 Carl Wong <carl.wong@intel.com>
  */
 
-// FUR - Add overall description comment here
+/*
+ * This file is part of filecache implementation.
+ *
+ * It implements a simple iterator for the database, see nsDBAccessor. 
+ */
 
 #ifndef _NS_DBENUMERATOR_H_
 #define _NS_DBENUMERATOR_H_
@@ -38,24 +43,18 @@ class nsDBEnumerator : public nsISimpleEnumerator {
 public:
     NS_DECL_ISUPPORTS
 
-    // FUR can use NS_DECL_NSISIMPLEENUMERATOR here
-    /* boolean HasMoreElements (); */
-    NS_IMETHOD HasMoreElements(PRBool *_retval) ;
-
-    /* nsISupports GetNext (); */
-    NS_IMETHOD GetNext(nsISupports **_retval) ;
+    NS_DECL_NSISIMPLEENUMERATOR 
 
     nsDBEnumerator(nsIDBAccessor* aDB, nsNetDiskCache* aCache) ;
     virtual ~nsDBEnumerator() ;
 
-    // FUR all members should be prefixed by 'm', e.g. mbReset
 private:
     nsCOMPtr<nsIDBAccessor>                m_DB ;
-    nsCOMPtr<nsNetDiskCache>                        m_DiskCache ;
-    void *                                 tempEntry ;
-    PRUint32                               tempEntry_length ;
-    nsDiskCacheRecord*                    m_CacheEntry ;
-    PRBool                                 bReset ;
+    nsCOMPtr<nsNetDiskCache>               m_DiskCache ;
+    void *                                 m_tempEntry ;
+    PRUint32                               m_tempEntry_length ;
+    nsDiskCacheRecord*                     m_CacheEntry ;
+    PRBool                                 m_bReset ;
 };
 
 #endif // _NS_DBENUMERATOR_H_

@@ -36,7 +36,7 @@ class nsIStreamAsFile;
 class nsIArena;
 class StreamAsFileObserverClosure;
 class CacheMetaData;
-
+class nsIFile;
 // Number of recent access times recorded
 #define MAX_K  3
 
@@ -117,7 +117,7 @@ protected:
 
     nsresult Evict(PRUint32 aTruncatedContentLength);
     
-    nsresult GetFileSpec(nsIFileSpec* *aFileSpec);
+    nsresult GetFile(nsIFile* *aFileSpec);
 
     void NoteDownloadTime(PRIntervalTime start, PRIntervalTime end);
 

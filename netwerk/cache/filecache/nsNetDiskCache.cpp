@@ -1,4 +1,5 @@
-/*
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
  * The contents of this file are subject to the Mozilla Public
  * License Version 1.1 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of
@@ -31,6 +32,7 @@
 #include "plhash.h"
 #include "prclist.h"
 #include "prmem.h"
+#include "prlog.h"
 
 #include "nsIComponentManager.h"
 #include "nsIServiceManager.h"
@@ -40,27 +42,49 @@
 #include "nsDBEnumerator.h"
 
 #include "nsDiskCacheRecord.h"
+#include "netCore.h"
+#include "nsFileLocations.h"
+#include "nsIFileLocator.h"
+#include "nsIFile.h"
+#include "nsILocalFile.h"
+#include "nsIFileSpec.h" // Remove Me later
+#if !defined(IS_LITTLE_ENDIAN) && !defined(IS_BIG_ENDIAN)
+ERROR! Must have a byte order
+#endif
+
+#ifdef IS_LITTLE_ENDIAN
+#define COPY_INT32(_a,_b)  memcpy(_a, _b, sizeof(int32))
+#else
+#define COPY_INT32(_a,_b)  /* swap */                   \
+    do {                                                \
+    ((char *)(_a))[0] = ((char *)(_b))[3];              \
+    ((char *)(_a))[1] = ((char *)(_b))[2];              \
+    ((char *)(_a))[2] = ((char *)(_b))[1];              \
+    ((char *)(_a))[3] = ((char *)(_b))[0];              \
+    } while(0)
+#endif
 
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID) ;
 static NS_DEFINE_CID(kDBAccessorCID, NS_DBACCESSOR_CID) ;
 
 static const PRUint32 DISK_CACHE_SIZE_DEFAULT = 5*1024*1024 ; // 5MB
-static const char * const DISK_CACHE_PREF  = "browser.cache.disk_cache_size";
+static const char * const DISK_CACHE_SIZE_PREF  = "browser.cache.disk_cache_size";
 static const char * const CACHE_DIR_PREF   = "browser.cache.directory";
+static const char * const CACHE_ENABLE_PREF   = "browser.cache.disk.enable";
 
 class nsDiskCacheRecord ;
 
 nsNetDiskCache::nsNetDiskCache() :
-  m_Enabled(PR_TRUE) ,
-  m_NumEntries(0) ,
-  m_pNextCache(0) ,
-  m_pDiskCacheFolder(0) ,
-  m_StorageInUse(0) ,
-  m_DB(0) ,
-  m_BaseDirNum(32) 
+  mEnabled(PR_FALSE) ,
+  mNumEntries(0) ,
+  mpNextCache(0) ,
+  mDiskCacheFolder(0) ,
+  mStorageInUse(0) ,
+  mDB(0) ,
+  mDBCorrupted(PR_FALSE) 
 {
   // set it to INF for now 
-  m_MaxEntries = (PRUint32)-1 ;
+  mMaxEntries = (PRUint32)-1 ;
 
   NS_INIT_REFCNT();
 
@@ -68,17 +92,10 @@ nsNetDiskCache::nsNetDiskCache() :
 
 nsNetDiskCache::~nsNetDiskCache()
 {
-  printf("~nsNetDiskCache\n") ;
+  SetSizeEntry() ;
 
-  NS_IF_RELEASE(m_DB) ;
-
-  // FUR!!
-  // You shouldn't rely on the value of m_BaseDirNum to diagnose whether or not
-  // a cache corruption has occurred since it's possible that the app does not
-  // shut down cleanly and a corrupted cache has still not been cleaned up from
-  // a previous session.  My suggestion is that you pick a different scheme for
-  // renaming the dirs, e.g. rename them as "trash*" and remove all directories
-  // with this name pattern on shutdown.
+  NS_IF_RELEASE(mDB) ;
+  
 
   // FUR
   // I think that, eventually, we also want a distinguished key in the DB which
@@ -91,130 +108,215 @@ nsNetDiskCache::~nsNetDiskCache()
   //
   // We don't necessarily need all this functionality immediately, though.
 
-  if(m_BaseDirNum > 32)
-    RemoveDirs(32) ;
-}
 
-NS_IMETHODIMP
-nsNetDiskCache::Init(void) 
-{
-  nsresult rv ;
+  if(mDBCorrupted) {
+    
+    nsCOMPtr<nsISimpleEnumerator> directoryEnumerator;
+    nsresult rv = mDiskCacheFolder->GetDirectoryEntries( getter_AddRefs( directoryEnumerator) ) ;
+    if ( NS_FAILED ( rv ) )
+    	return;
 
-  // FUR!!
-  // I really don't think prefs belong here, since that breaks modularity.  It
-  // presupposes that the file cache code is embedded in the browser or some
-  // other application that uses the prefs, i.e. the code might be used in a
-  // standalone cache manipulation tool or, someday, in server code.  Pref
-  // reading belongs at a higher level, either in the application itself or
-  // possibly the I/O manager.
-
-
-  // Also, Init() needs to be lazy, since folder name is not set on startup,
-  // i.e. need a call to MaybeInit() at the beginning of every public method
-
-  NS_WITH_SERVICE(nsIPref, pref, kPrefCID, &rv) ;
-  if (NS_FAILED(rv)) 
-    NS_ERROR("Failed to get globle preference!\n") ;
-
-  rv = NS_NewFileSpec(getter_AddRefs(m_pDiskCacheFolder));
-  if (!m_pDiskCacheFolder) {
-    NS_ERROR("ERROR: Could not make a file spec.\n") ;
-    return NS_ERROR_OUT_OF_MEMORY ;
-  }
-
-  if(pref) {
-
-    /*
-    rv = pref->CopyCharPref(CACHE_DIR_PREF, &tempPref) ;
-    if (NS_SUCCEEDED(rv)) {
-      printf("cache dir is %s\n", tempPref) ;
-      m_pDiskCacheFolder->SetUnixStyleFilePath(tempPref) ;
-	  PR_Free(tempPref) ;
-    } else */
+    nsCString trash("trash") ;
+	  nsCOMPtr<nsIFile> file;
+	  
+	  PRBool hasMore;
+    while( NS_SUCCEEDED(directoryEnumerator->HasMoreElements( &hasMore ) ) && hasMore)
     {
-      m_pDiskCacheFolder->SetUnixStyleFilePath("/tmp") ;
-      printf("using default folder, /tmp\n") ;
+    	nsresult rv = directoryEnumerator->GetNext( getter_AddRefs(file) );
+    	if ( NS_FAILED( rv ) )
+    		return ;
+    		
+      char* filename;
+      rv = file->GetLeafName( &filename );
+      if ( NS_FAILED( rv ) )
+    		return;
+    	
+
+      if( trash.Compare( filename, PR_FALSE, 5 ) == 0)
+        file->Delete( PR_TRUE );
+      
+      nsCRT::free(filename) ;  
     }
   }
-  else {
-    // temp hack for now. change later for other platform
-    m_pDiskCacheFolder->SetUnixStyleFilePath("/tmp") ;
-  }
-
-  // FUR - suggest you use nsCOMPtr for m_DB - it will eliminate
-  //       manual addref/release and reduce likelihood of bugs
-  NS_IF_RELEASE(m_DB) ;
-  m_DB = new nsDBAccessor() ;
-  if(!m_DB)
-    return NS_ERROR_OUT_OF_MEMORY ;
-  else
-    NS_ADDREF(m_DB) ;
-
-  rv = InitDB() ;
-
-  // try once for recovery
-  if(rv == NS_ERROR_FAILURE) {
-    rv = DBRecovery() ;
-    return rv ;
-  }
-
-  rv = UpdateInfo() ;
-  return rv ;
 }
 
-NS_IMETHODIMP
-nsNetDiskCache::InitDB(void)
-{
-  // create cache sub directories
-  nsresult rv ; 
-  nsCOMPtr<nsIFileSpec> cacheSubDir;
-  rv = NS_NewFileSpec(getter_AddRefs(cacheSubDir));
 
-  // FUR - any way to avoid doing this, if it's already been done ?
+static int folderChanged(const char *pref, void *closure)
+{
+	nsresult rv;
+	NS_WITH_SERVICE(nsIPref, prefs, NS_PREF_PROGID, &rv);
+	if ( NS_FAILED (rv ) )
+		return rv;
+		
+	nsCOMPtr<nsIFileSpec> folder;
+	rv = prefs->GetFilePref(CACHE_DIR_PREF, getter_AddRefs( folder )  );
+	
+	if ( NS_FAILED( rv ) )
+		return rv;
+	
+	// This is really wrong and should be fixed when the pref code is update
+	// If someone has a system where path names are not unique they are going to
+	// be in a world of hurt.
+	
+	nsCOMPtr<nsILocalFile> cacheFolder;
+	char* path;
+	folder->GetNativePath(& path );
+	rv = NS_NewLocalFile( path, getter_AddRefs(cacheFolder));
+	nsAllocator::Free( path );
+	
+	return ( (nsNetDiskCache*)closure )->SetDiskCacheFolder( cacheFolder );	
+}
+
+static int enableChanged(const char *pref, void *closure)
+{
+	nsresult rv;
+	NS_WITH_SERVICE(nsIPref, prefs, NS_PREF_PROGID, &rv);
+	if ( NS_FAILED (rv ) )
+		return rv;
+		
+	PRBool enabled;
+	rv = prefs->GetBoolPref(CACHE_ENABLE_PREF, &enabled   );
+	if ( NS_FAILED( rv ) )
+		return rv;
+		
+	return ( (nsNetDiskCache*)closure )->SetEnabled( enabled );	
+}
+
+nsresult nsNetDiskCache::InitPrefs()
+{
+	nsresult rv;
+	NS_WITH_SERVICE(nsIPref, prefs, NS_PREF_PROGID, &rv);
+	if ( NS_FAILED (rv ) )
+		return rv; 
+	rv = prefs->RegisterCallback( CACHE_DIR_PREF, folderChanged, this); 
+	if ( NS_FAILED( rv ) )
+		return rv;
+	
+	rv = prefs->RegisterCallback( CACHE_ENABLE_PREF, enableChanged, this); 
+	if ( NS_FAILED( rv ) )
+		return rv;
+	
+	folderChanged(CACHE_DIR_PREF , this );	
+	enableChanged(CACHE_ENABLE_PREF , this );
+	
+	return rv;
+}
+
+NS_IMETHODIMP nsNetDiskCache::InitCacheFolder()
+{
+
+// don't initialize if no cache folder is set. 
+ if(!mDiskCacheFolder) return NS_OK ;
+	
+	nsresult rv;
+	if(!mDB) {
+    mDB = new nsDBAccessor() ;
+    if(!mDB)
+      return NS_ERROR_OUT_OF_MEMORY ;
+    else
+      NS_ADDREF(mDB) ;
+  }
+
+
+  rv = InitDB();
+  if ( NS_FAILED( rv ) )
+  	rv = DBRecovery();
+  if ( NS_FAILED( rv ) )
+  	return rv;
+  
+  // create cache sub directories
+  // Do this after initializing the database to avoid the situtation where on the first initialization
+  // YOu create the folders and then immediately mark them for deletion.
+  nsCOMPtr<nsIFile> cacheSubDir;
+
   for (int i=0; i < 32; i++) {
-    rv = cacheSubDir->FromFileSpec(m_pDiskCacheFolder) ;
+   	rv = mDiskCacheFolder->Clone( getter_AddRefs( cacheSubDir ) );
     if(NS_FAILED(rv))
       return rv ;
 
     char dirName[3];
     PR_snprintf (dirName, 3, "%0.2x", i);
-    cacheSubDir->AppendRelativeUnixPath (dirName) ;
+    cacheSubDir->Append (dirName) ;
     CreateDir(cacheSubDir);
   }
+  return rv;
+}
 
-  NS_NewFileSpec(getter_AddRefs(m_DBFile)) ;
-  // FUR - check for NS_NewFileSpec failure
-  rv = m_DBFile->FromFileSpec(m_pDiskCacheFolder) ;
+NS_IMETHODIMP
+nsNetDiskCache::Init(void) 
+{
+  
+
+	
+// Couldn't find a meaningful pref value for the cache location so create one in the users profile
+	 InitPrefs();
+	 
+	 if (!mDiskCacheFolder.get() )
+	 {	
+
+		nsresult rv ;
+  		
+		nsCOMPtr<nsIFileSpec> cacheSubDir;
+		rv = NS_NewFileSpec(getter_AddRefs(cacheSubDir));
+		if(NS_FAILED(rv))
+	      return rv ;
+	    nsCOMPtr<nsIFileSpec> spec =  NS_LocateFileOrDirectory(nsSpecialFileSpec::App_UserProfileDirectory50);
+	    
+	   	rv = cacheSubDir->FromFileSpec(spec) ;
+	    if(NS_FAILED(rv))
+	      return rv ;
+		
+		rv = cacheSubDir->AppendRelativeUnixPath("Cache") ;
+		if(NS_FAILED(rv))
+	      return rv ;
+	  
+	 	// This is really wrong and should be fixed when the pref code is update
+		// If someone has a system where path names are not unique they are going to
+		// be in a world of hurt.
+	
+		nsCOMPtr<nsILocalFile> cacheFolder;
+		char* path;
+		cacheSubDir->GetNativePath(& path );
+		rv = NS_NewLocalFile( path, getter_AddRefs(cacheFolder));
+		nsAllocator::Free( path );
+	
+		mDiskCacheFolder = cacheFolder;
+
+	}
+
+  	return InitCacheFolder();
+}
+
+NS_IMETHODIMP
+nsNetDiskCache::InitDB(void)
+{
+  nsresult rv ; 
+
+	rv =mDiskCacheFolder->Clone( getter_AddRefs( mDBFile ) );
   if(NS_FAILED(rv))
     return rv ;
 
-  m_DBFile->AppendRelativeUnixPath("cache.db") ;
-
-  rv = m_DB->Init(m_DBFile) ;
+  mDBFile->Append("cache.db") ;
+	#ifdef XP_MAC
+		PRBool exists;
+		if ( NS_SUCCEEDED( mDBFile->Exists(&exists ) ) && !exists)
+		{
+			mDBFile->Create( nsIFile::NORMAL_FILE_TYPE, 0 );
+		}
+	#endif
+  rv = mDB->Init(mDBFile) ;
+	if ( NS_SUCCEEDED( rv ) )
+	  rv = GetSizeEntry();
   return rv ;
 }
 
 //////////////////////////////////////////////////////////////////////////
 // nsISupports methods
 
-// FUR - Suggest you use NS_IMPL_ISUPPORTS3() macro instead
-NS_IMETHODIMP
-nsNetDiskCache::QueryInterface(const nsIID& aIID, void** aInstancePtr)
-{
-  NS_ASSERTION(aInstancePtr, "no instance pointer");
-  if(aIID.Equals(NS_GET_IID(nsINetDataDiskCache)) ||
-     aIID.Equals(NS_GET_IID(nsINetDataCache)) ||
-     aIID.Equals(NS_GET_IID(nsISupports))) {
-    *aInstancePtr = NS_STATIC_CAST(nsINetDataDiskCache*, this);
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  else
-    return NS_NOINTERFACE ;
-}
-
-NS_IMPL_ADDREF(nsNetDiskCache) ;
-NS_IMPL_RELEASE(nsNetDiskCache) ;
+NS_IMPL_ISUPPORTS3(nsNetDiskCache,
+                   nsINetDataDiskCache,
+                   nsINetDataCache,
+                   nsISupports) 
 
 ///////////////////////////////////////////////////////////////////////////
 // nsINetDataCache Method 
@@ -239,133 +341,140 @@ nsNetDiskCache::Contains(const char* key, PRUint32 length, PRBool *_retval)
 {
   *_retval = PR_FALSE ;
 
-  NS_ASSERTION(m_DB, "no db.") ;
+  NS_ASSERTION(mDB, "no db.") ;
 
   PRInt32 id = 0 ;
-  m_DB->GetID(key, length, &id) ;
-  // FUR - Check for GetID failure ?
+  nsresult rv = mDB->GetID(key, length, &id) ;
+
+  if(NS_FAILED(rv)) {
+    // try recovery if error 
+    DBRecovery() ;
+    return rv ;
+  }
 
   void* info = 0 ;
   PRUint32 info_size = 0 ;
 
-  nsresult rv = m_DB->Get(id, &info, &info_size) ;
+  rv = mDB->Get(id, &info, &info_size) ;
   if(NS_SUCCEEDED(rv) && info) 
     *_retval = PR_TRUE ;
         
-  return NS_OK ;
+  if(NS_FAILED(rv)) {
+    // try recovery if error 
+    DBRecovery() ;
+  }
+
+  return rv ;
 }
 
 /* regardless if it's cached or not, a copy of nsNetDiskCache would 
  * always be returned. so release it appropriately. 
- * if mem alloced, updata m_NumEntries also.
+ * if mem allocated, update mNumEntries also.
  * for now, the new nsCachedNetData is not written into db yet since
  * we have nothing to write.
  */
 NS_IMETHODIMP
 nsNetDiskCache::GetCachedNetData(const char* key, PRUint32 length, nsINetDataCacheRecord **_retval) 
 {
-  NS_ASSERTION(m_DB, "no db.") ;
+  NS_ASSERTION(mDB, "no db.");
 
-  nsresult rv = 0 ;
+  nsresult rv = 0;
   if (!_retval)
-    return NS_ERROR_NULL_POINTER ;
+    return NS_ERROR_NULL_POINTER;
 
-  *_retval = nsnull ;
+  *_retval = nsnull;
 
-  PRInt32 id = 0 ;
-  m_DB->GetID(key, length, &id) ;
-  // FUR - Check for GetID failure ?
+  PRInt32 id = 0;
+  rv = mDB->GetID(key, length, &id);
 
-  // construct an empty record
-  nsDiskCacheRecord* newRecord = new nsDiskCacheRecord(m_DB, this) ;
-  if(!newRecord) 
-    return NS_ERROR_OUT_OF_MEMORY ;
+	if ( NS_SUCCEEDED ( rv )) {
+	  // construct an empty record
+	  nsDiskCacheRecord* newRecord = new nsDiskCacheRecord(mDB, this);
+	  if (!newRecord) 
+	    return NS_ERROR_OUT_OF_MEMORY;
 
-  rv = newRecord->Init(key, length) ;
-  if(NS_FAILED(rv)) {
-    delete newRecord ;
-    return rv ;
+	  rv = newRecord->Init(key, length, id);
+	  if ( NS_FAILED( rv) ) {
+	    delete newRecord;
+	    return rv;
+	  }
+
+	  NS_ADDREF(newRecord); // addref for _retval 
+	  *_retval = (nsINetDataCacheRecord*) newRecord;
+	  
+	  void* info = 0;
+	  PRUint32 info_size = 0;
+
+	  rv = mDB->Get(id, &info, &info_size);
+	  if ( NS_SUCCEEDED( rv ) ) {
+			if ( info ) {
+		    // this is a previously cached record    
+		    rv = newRecord->RetrieveInfo(info, info_size);
+		    if ( NS_FAILED( rv ) ) {  
+		      // probably a bad one
+		      NS_RELEASE(newRecord);
+		      *_retval = nsnull;
+		      return rv;
+		    }   
+	 		} else {
+		    // this is a new record. 
+		    mNumEntries ++;
+	    }
+	  } 
   }
-
-  NS_ADDREF(newRecord) ; // addref for _retval 
-  *_retval = (nsINetDataCacheRecord*) newRecord ;
   
-  void* info = 0 ;
-  PRUint32 info_size = 0 ;
-
-  rv = m_DB->Get(id, &info, &info_size) ;
-  if(NS_SUCCEEDED(rv) && info) {
-
-    nsresult r1 ;
-    r1 = newRecord->RetrieveInfo(info, info_size) ;
-
-    // FUR!! need to release and return error if RetrieveInfo() fails
-    if(NS_SUCCEEDED(rv)) 
-      return NS_OK ;
-    else 
-      return r1;
-    
-  } else if (NS_SUCCEEDED(rv) && !info) {
-    // this is a new record. 
-    m_NumEntries ++ ;
-    return NS_OK ;
-  } else 
-    return rv ;
+  if ( NS_FAILED( rv ) ) 
+  	DBRecovery();
+  	
+  return rv;
 }
 
-/* get an nsICachedNetData, mem needs to be de-alloced if not found. */
 NS_IMETHODIMP
 nsNetDiskCache::GetCachedNetDataByID(PRInt32 RecordID, nsINetDataCacheRecord **_retval) 
 {
-  NS_ASSERTION(m_DB, "no db.") ;
+  NS_ASSERTION(mDB, "no db.");
 
-  if (!_retval)
-    return NS_ERROR_NULL_POINTER ;
-
-  *_retval = nsnull ;
-  
-  nsresult rv ;
-
-  void* info = 0 ;
-  PRUint32 info_size = 0 ;
-
-  rv = m_DB->Get(RecordID, &info, &info_size) ;
+	nsresult rv;
+  void* info = 0;
+  PRUint32 info_size = 0;
+	
+	if (!_retval)
+    return NS_ERROR_NULL_POINTER;
+	*_retval = nsnull;
+	 
+  rv = mDB->Get(RecordID, &info, &info_size);
   if(NS_SUCCEEDED(rv) && info) {
-
     // construct an empty record if only found in db
-    nsDiskCacheRecord* newRecord = new nsDiskCacheRecord(m_DB, this) ;
+    nsDiskCacheRecord* newRecord = new nsDiskCacheRecord(mDB, this);
     if(!newRecord) 
-      return NS_ERROR_OUT_OF_MEMORY ;
-
-    NS_ADDREF(newRecord) ; // addref for _retval
-    rv = newRecord->RetrieveInfo(info, info_size) ;
-
+      return NS_ERROR_OUT_OF_MEMORY;
+   
+    rv = newRecord->RetrieveInfo(info, info_size);
     if(NS_SUCCEEDED(rv)) {
-      *_retval = (nsINetDataCacheRecord*) newRecord ;
-      return NS_OK ;
-    } 
-    else {
-      // bad record, I guess
-      NS_RELEASE(newRecord) ; // release if bad things happen
-      return rv ;
+      *_retval = (nsINetDataCacheRecord*) newRecord;
+      NS_ADDREF(*_retval);
+    } else {
+      delete newRecord; 
     }
-  } else {
-    NS_ERROR("Error: RecordID not in DB\n") ;
-    return rv ;
+    return rv;
   }
+
+  NS_ERROR("Error: RecordID not in DB\n");
+  DBRecovery();
+  return rv;
 }
 
 NS_IMETHODIMP
 nsNetDiskCache::GetEnabled(PRBool *aEnabled) 
 {
-  *aEnabled = m_Enabled ;
+  *aEnabled = mEnabled ;
   return NS_OK ;
 }
 
 NS_IMETHODIMP
 nsNetDiskCache::SetEnabled(PRBool aEnabled) 
 {
-  m_Enabled = aEnabled ;
+  mEnabled = aEnabled ;
   return NS_OK ;
 }
 
@@ -379,26 +488,28 @@ nsNetDiskCache::GetFlags(PRUint32 *aFlags)
 NS_IMETHODIMP
 nsNetDiskCache::GetNumEntries(PRUint32 *aNumEntries) 
 {
-  *aNumEntries = m_NumEntries ;
+  *aNumEntries = mNumEntries ;
   return NS_OK ;
 }
 
 NS_IMETHODIMP
 nsNetDiskCache::GetMaxEntries(PRUint32 *aMaxEntries)
 {
-  *aMaxEntries = m_MaxEntries ;
+  *aMaxEntries = mMaxEntries ;
   return NS_OK ;
 }
 
 NS_IMETHODIMP
 nsNetDiskCache::NewCacheEntryIterator(nsISimpleEnumerator **_retval) 
 {
+  NS_ASSERTION(mDB, "no db.") ;
+
   if(!_retval)
     return NS_ERROR_NULL_POINTER ;
 
   *_retval = nsnull ;
 
-  nsISimpleEnumerator* enumerator = new nsDBEnumerator(m_DB, this) ;
+  nsISimpleEnumerator* enumerator = new nsDBEnumerator(mDB, this) ;
   if(enumerator) {
     NS_ADDREF(enumerator) ;
     *_retval = enumerator ;
@@ -414,14 +525,14 @@ nsNetDiskCache::GetNextCache(nsINetDataCache * *aNextCache)
   if(!aNextCache)
     return NS_ERROR_NULL_POINTER ;
 
-  *aNextCache = m_pNextCache ;
+  *aNextCache = mpNextCache ;
   return NS_OK ;
 }
 
 NS_IMETHODIMP
 nsNetDiskCache::SetNextCache(nsINetDataCache *aNextCache)
 {
-  m_pNextCache = aNextCache ;
+  mpNextCache = aNextCache ;
   return NS_OK ;
 }
 
@@ -430,18 +541,9 @@ nsNetDiskCache::SetNextCache(nsINetDataCache *aNextCache)
 NS_IMETHODIMP
 nsNetDiskCache::GetStorageInUse(PRUint32 *aStorageInUse)
 {
-  PRUint32 total_size = m_StorageInUse;
+  NS_ASSERTION(mDB, "no db.");
 
-  // FUR!!
-  // GetStorageInUse() can be called hundreds of times per second, i.e. every
-  // time a buffer of data is written to the cache, so we can't afford to stat
-  // the db file on every call.  I would suggest caching the size of the db and
-  // invalidating that cached value every time a record is written to the db,
-  // or even every ten written records.
-
-  // add the size of the db.
-  //  m_DBFile->GetFileSize(&len) ;
-  //  total_size += len ;
+  PRUint32 total_size = mStorageInUse;
 
   // we need size in kB
   total_size = total_size >> 10 ;
@@ -458,55 +560,76 @@ nsNetDiskCache::GetStorageInUse(PRUint32 *aStorageInUse)
 NS_IMETHODIMP
 nsNetDiskCache::RemoveAll(void)
 {
-  nsresult rv = RemoveDirs(0) ;
-  if(NS_FAILED(rv))
-    return rv ;
+  NS_ASSERTION(mDB, "no db.") ;
+  NS_ASSERTION(mDiskCacheFolder, "no cache folder.") ;
 
-  // don't forget the db file itself
-  m_DB->Shutdown() ;
-  nsFileSpec dbfile ;
-  m_DBFile->GetFileSpec(&dbfile) ;
-  dbfile.Delete(PR_TRUE) ;
 
+
+  // Shutdown the database
+  mDB->Shutdown() ;
+  
+  // Delete all the files in the cache directory
+  // Could I just delete the cache folder????? --DJM
+  nsCOMPtr<nsISimpleEnumerator> directoryEnumerator;
+  nsresult rv = mDiskCacheFolder->GetDirectoryEntries( getter_AddRefs( directoryEnumerator) ) ;
+  if ( NS_FAILED ( rv ) )
+  	return rv;
+
+  nsCOMPtr<nsIFile> file;
+  
+  PRBool hasMore;
+  while( NS_SUCCEEDED(directoryEnumerator->HasMoreElements( &hasMore ) ) && hasMore)
+  {
+  	nsresult rv = directoryEnumerator->GetNext( getter_AddRefs(file) );
+  	if ( NS_FAILED( rv ) )
+  		return rv ;
+  	PRBool isDirectory;		
+		if ( NS_SUCCEEDED(file->IsDirectory( &isDirectory )) && isDirectory )
+    	file->Delete( PR_TRUE );
+     
+  }
+  
   // reinitilize
-  rv = InitDB() ;
-  if(NS_FAILED(rv))
-    return rv ;
-
-  rv = UpdateInfo() ;
-  return rv ;
+  return InitCacheFolder() ;
 }
 
 //////////////////////////////////////////////////////////////////
 // nsINetDataDiskCache methods
 
 NS_IMETHODIMP
-nsNetDiskCache::GetDiskCacheFolder(nsIFileSpec * *aDiskCacheFolder)
+nsNetDiskCache::GetDiskCacheFolder(nsIFile * *aDiskCacheFolder)
 {
-  *aDiskCacheFolder = m_pDiskCacheFolder ;
+  *aDiskCacheFolder = nsnull ;
+  NS_ASSERTION(mDiskCacheFolder, "no cache folder.") ;
+
+  *aDiskCacheFolder = mDiskCacheFolder ;
   NS_ADDREF(*aDiskCacheFolder) ;
   return NS_OK ;
 }
 
 NS_IMETHODIMP
-nsNetDiskCache::SetDiskCacheFolder(nsIFileSpec * aDiskCacheFolder)
+nsNetDiskCache::SetDiskCacheFolder(nsIFile * aDiskCacheFolder)
 {
-  char *newfolder, *oldfolder ;
-  m_pDiskCacheFolder->GetNativePath(&oldfolder) ;
-  aDiskCacheFolder->GetNativePath(&newfolder) ;
+  if(!mDiskCacheFolder){
+    mDiskCacheFolder = aDiskCacheFolder ;
+    return InitCacheFolder() ;
+  } 
+  else {
+		PRBool result;
+    if( NS_SUCCEEDED( mDiskCacheFolder->Equals( aDiskCacheFolder, &result ) ) && result ) {
+      mDiskCacheFolder = aDiskCacheFolder ;
 
-  if(PL_strcmp(newfolder, oldfolder) == 0) {
-    m_pDiskCacheFolder = aDiskCacheFolder ;
+      // do we need to blow away old cache before building a new one?
+     	// mDiskFolder points to the old cache so you can't call RemoveALL
+     	// need to refactor.
+     // return RemoveAll() ;
 
-    // should we do this? 
-    // FUR - no
-    nsresult rv = RemoveAll() ;
-    return rv ;
+      mDB->Shutdown() ;
+      return InitCacheFolder() ;
+
+    } else 
+      return NS_OK ;
   }
-  else 
-    // FUR
-    // Need to blow away old cache, build new one
-    return NS_OK ;
 }
 
 //////////////////////////////////////////////////////////////////
@@ -514,176 +637,154 @@ nsNetDiskCache::SetDiskCacheFolder(nsIFileSpec * aDiskCacheFolder)
 
 // create a directory (recursively)
 NS_IMETHODIMP
-nsNetDiskCache::CreateDir(nsIFileSpec* dir_spec) 
+nsNetDiskCache::CreateDir(nsIFile* dir_spec) 
 {
   PRBool does_exist ;
-  nsCOMPtr<nsIFileSpec> p_spec ;
+  nsCOMPtr<nsIFile> p_spec ;
 
   dir_spec->Exists(&does_exist) ;
   if(does_exist) 
     return NS_OK ;
 
-  dir_spec->GetParent(getter_AddRefs(p_spec)) ;
-  // FUR - check return value
+  nsresult rv = dir_spec->GetParent(getter_AddRefs(p_spec)) ;
+  if(NS_FAILED(rv))
+    return rv ;
+
   p_spec->Exists(&does_exist) ;
   if(!does_exist) {
-    CreateDir(p_spec) ;
-    dir_spec->CreateDir() ;
-    // FUR - check return value
-  }
-  else {
-    dir_spec->CreateDir() ;
-    // FUR - check return value
+    rv = CreateDir(p_spec) ;
+  	if ( NS_FAILED( rv ))
+  		return rv;
   }
   
-  return NS_OK ;
+  rv = dir_spec->Create( nsIFile::DIRECTORY_TYPE, 0) ;  
+  return rv ;
 }
 
-// FUR!!
 // We can't afford to make a *separate* pass over the whole db on every
-// startup, just to figure out m_NumEntries and m_StorageInUse.  (This is a
+// startup, just to figure out mNumEntries and mStorageInUse.  (This is a
 // several second operation on a large db).  We'll likely need to store
 // distinguished keys in the db that contain these values and update them
 // incrementally, except when failure to shut down the db cleanly is detected.
 
-// this will walk through db and update m_NumEntries and m_StorageInUse
 NS_IMETHODIMP
-nsNetDiskCache::UpdateInfo(void)
+nsNetDiskCache::GetSizeEntry(void)
 {
-  // count num of entries in db
-//  NS_ADDREF(this) ; // addref before assign to a nsCOMPtr. 
-  nsISimpleEnumerator* dbEnumerator = new nsDBEnumerator(m_DB, this) ;
-  if(dbEnumerator)
-    NS_ADDREF(dbEnumerator) ;
-  else
-    return NS_ERROR_FAILURE ;
+  void* pInfo ;
+  PRUint32 InfoSize ;
 
-  PRUint32 numEntries = 0, storageInUse = 0, len = 0 ;
-  PRBool more = PR_FALSE ;
+  nsresult rv = mDB->GetSizeEntry(&pInfo, &InfoSize) ;
+  if(NS_FAILED(rv))
+    return rv ;
 
-  do {
-    dbEnumerator->HasMoreElements(&more) ;
-    if(more) {
-      // update entry number
-      numEntries++ ;
-
-      // update storage in use
-      nsINetDataCacheRecord* record ;
-      dbEnumerator->GetNext((nsISupports**)&record) ;
-      record->GetStoredContentLength(&len) ;
-      storageInUse += len ;
-      NS_IF_RELEASE(record) ;
-    }
-  } while (more) ;
-
-  NS_IF_RELEASE(dbEnumerator) ;
-
-  m_NumEntries = numEntries ;
-  m_StorageInUse = storageInUse ;
-
-  printf(" m_NumEntries = %d, size is %d.\n", m_NumEntries, m_StorageInUse) ;
+  if(!pInfo && InfoSize == 0) {
+    // must be a new DB
+    mNumEntries = 0 ;
+    mStorageInUse = 0 ;
+  } 
+  else {
+    char * cur_ptr = NS_STATIC_CAST(char*, pInfo) ;
+    
+    // get mNumEntries
+    COPY_INT32(&mNumEntries, cur_ptr) ;
+    cur_ptr += sizeof(PRUint32) ;
+    
+    // get mStorageInUse
+    COPY_INT32(&mStorageInUse, cur_ptr) ;
+    cur_ptr += sizeof(PRUint32) ;
+    
+    PR_ASSERT(cur_ptr == NS_STATIC_CAST(char*, pInfo) + InfoSize);
+  }
 
   return NS_OK ;
 }
 
-// this routine will add m_BaseDirNum to current CacheSubDir names. 
-// e.g. 00->20, 1f->5f. and update the m_BaseDirNum to another 32. 
-// the idea is as long as we remember the base number,
-// we know how many dirs needs to be removed during shutdown period
-// it will be from 0x20 to m_BaseDirNum. 
-// also, we assume that this operation will not be performed 3 times more
-// within a single session. it is part of scavenging routine. 
-
 NS_IMETHODIMP
-nsNetDiskCache::RenameCacheSubDirs(void) 
+nsNetDiskCache::SetSizeEntry(void)
 {
-  nsCOMPtr<nsIFileSpec> cacheSubDir;
-  nsresult rv = NS_NewFileSpec(getter_AddRefs(cacheSubDir)) ;
+  PRUint32 InfoSize ;
+  
+  InfoSize = sizeof mNumEntries ;
+  InfoSize += sizeof mStorageInUse ;
+  
+  void* pInfo = nsAllocator::Alloc(InfoSize*sizeof(char)) ;
+  if(!pInfo) 
+    return NS_ERROR_OUT_OF_MEMORY ;
+  
+  char* cur_ptr = NS_STATIC_CAST(char*, pInfo) ;
 
-  for (int i=0; i < 32; i++) {
-    rv = cacheSubDir->FromFileSpec(m_pDiskCacheFolder) ;
-    if(NS_FAILED(rv))
-      return rv ;
+  COPY_INT32(cur_ptr, &mNumEntries) ;
+  cur_ptr += sizeof(PRUint32) ;
 
-    char dirName[3];
-    PR_snprintf(dirName, 3, "%0.2x", i) ;
-    cacheSubDir->AppendRelativeUnixPath(dirName) ;
-
-    // re-name the directory
-    PR_snprintf(dirName, 3, "%0.2x", i+m_BaseDirNum) ;
-    rv = cacheSubDir->Rename(dirName) ;
-    if(NS_FAILED(rv))
-      return NS_ERROR_FAILURE ;
-  }
-
-  // update m_BaseDirNum 
-  m_BaseDirNum += 32 ;
-
-  return NS_OK ;
+  COPY_INT32(cur_ptr, &mStorageInUse) ;
+  cur_ptr += sizeof(PRUint32) ;
+  
+  PR_ASSERT(cur_ptr == NS_STATIC_CAST(char*, pInfo) + InfoSize);
+  
+  return mDB->SetSizeEntry(pInfo, InfoSize) ;
 }
 
 // this routine will be called everytime we have a db corruption. 
+// mDB will be re-initialized, mStorageInUse and mNumEntries will
+// be reset.
 NS_IMETHODIMP
 nsNetDiskCache::DBRecovery(void)
 {
+  // rename all the sub cache dirs and remove them later during dtor. 
   nsresult rv = RenameCacheSubDirs() ;
   if(NS_FAILED(rv))
     return rv ;
 
-  // remove corrupted db file
-  rv = m_DB->Shutdown() ;
+  // remove corrupted db file, don't care if db->shutdown fails or not.
+  mDB->Shutdown() ;
   
-  // FUR!!
-  // You shouldn't return if this fails.  Otherwise, it might prevent db deletion
-  if(NS_FAILED(rv))
-    return rv ;
 
-  nsFileSpec dbfile ;
-  m_DBFile->GetFileSpec(&dbfile) ;
-  dbfile.Delete(PR_TRUE) ;
+  // False since we want to delete a file rather than recursively delete a directory 
+  mDBFile->Delete(PR_FALSE) ;
 
   // make sure it's not there any more
-  PRBool exists = dbfile.Exists() ;
+  // DJM shouldn't we just check the return value?
+  
+  PRBool exists =PR_FALSE;
+  mDBFile->Exists( &exists );
+  
   if(exists) {
     NS_ERROR("can't remove old db.") ;
     return NS_ERROR_FAILURE ;
   }
 
-  // reinitilize
-  rv = InitDB() ;
-  if(NS_FAILED(rv))
-    return rv ;
-
-  rv = UpdateInfo() ;
-  return rv ;
+  // reinitilize DB 
+  return InitDB() ;
 }
 
-// this routine is used by dtor and RemoveAll() to clean up dirs.
-// All directory named from aNum - m_BasedDirNum will be deleted. 
+// this routine will add string "trash" to current CacheSubDir names. 
+// e.g. 00->trash00, 1f->trash1f. and update the mDBCorrupted. 
+
 NS_IMETHODIMP
-nsNetDiskCache::RemoveDirs(PRUint32 aNum)
+nsNetDiskCache::RenameCacheSubDirs(void) 
 {
-  nsCOMPtr<nsIFileSpec> cacheSubDir;
-  nsresult rv = NS_NewFileSpec(getter_AddRefs(cacheSubDir));
-  if(NS_FAILED(rv))
-    return NS_ERROR_FAILURE ;
+  nsCOMPtr<nsIFile> cacheSubDir;
+  nsresult rv;
 
-  for (int i=aNum; i < m_BaseDirNum; i++) {
-    cacheSubDir->FromFileSpec(m_pDiskCacheFolder) ;
+  for (int i=0; i < 32; i++) {
+  	rv = mDiskCacheFolder->Clone( getter_AddRefs( cacheSubDir ) );
+    if(NS_FAILED(rv))
+      return rv ;
 
-    char dirName[3];
-    PR_snprintf (dirName, 3, "%0.2x", i);
-    cacheSubDir->AppendRelativeUnixPath (dirName) ;
+    char oldName[3], newName[8];
+    PR_snprintf(oldName, 3, "%0.2x", i) ;
+    cacheSubDir->Append(oldName) ;
 
-    nsFileSpec subdir ;
-    cacheSubDir->GetFileSpec(&subdir) ;
-
-    for(nsDirectoryIterator di(subdir, PR_FALSE); di.Exists(); di++) {
-      di.Spec().Delete(PR_TRUE) ;
-    }
-
-    subdir.Delete(PR_FALSE) ; // recursive delete
+    // re-name the directory
+    PR_snprintf(newName, 8, "trash%0.2x", i) ;
+    rv = cacheSubDir->MoveTo( mDiskCacheFolder, newName );
+    if(NS_FAILED(rv))
+      // TODO, error checking
+      return NS_ERROR_FAILURE ;
   }
+
+  // update mDBCorrupted 
+  mDBCorrupted = PR_TRUE ;
 
   return NS_OK ;
 }

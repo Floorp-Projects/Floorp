@@ -105,8 +105,8 @@ public:
 
     NS_DECL_ISUPPORTS
 
-    NS_IMETHOD GetFileSpec(nsIFileSpec* *aFileSpec) {
-        return mCacheEntry->GetFileSpec(aFileSpec);
+    NS_IMETHOD GetFileSpec(nsIFile* *aFileSpec) {
+        return mCacheEntry->GetFile(aFileSpec);
     }
 
     NS_IMETHOD AddObserver(nsIStreamAsFileObserver *aObserver) {
@@ -151,6 +151,9 @@ class CacheMetaData {
 	    mTag(nsCRT::strdup(aTag)), mOpaqueBytes(0), mLength(0), mNext(0) {}
 
     ~CacheMetaData() {
+    		if( mTag )
+    			nsAllocator::Free( mTag );
+    			
         if (mOpaqueBytes)
             nsAllocator::Free(mOpaqueBytes);
         if (mNext)
@@ -190,7 +193,7 @@ protected:
         return NS_OK;
     }
 
-    const char*     mTag;           // Descriptive tag, e.g. "http headers"
+    char*			      mTag;           // Descriptive tag, e.g. "http headers"
     char*           mOpaqueBytes;   // The meta-data itself
     PRUint32        mLength;        // Length of mOpaqueBytes
     CacheMetaData*  mNext;          // Next in chain for this cache entry
@@ -825,7 +828,7 @@ nsCachedNetData::FindTaggedMetaData(const char* aTag, PRBool aCreate)
     CacheMetaData** metaDatap;
     metaDatap = &mMetaData;
 
-    while ((metaData = *metaDatap)) {
+    while ((metaData = *metaDatap)!= 0) {
         if (!strcmp(aTag, metaData->mTag))
             return metaData;
         metaDatap = &metaData->mNext;
@@ -910,7 +913,7 @@ nsCachedNetData::RemoveObserver(nsIStreamAsFileObserver *aObserver)
     if (!mObservers)
         return NS_ERROR_FAILURE;
     
-    for (closurep = &mObservers; (closure = *closurep); closurep = &(*closurep)->mNext) {
+    for (closurep = &mObservers; (closure = *closurep)!=0; closurep = &(*closurep)->mNext) {
         if (closure->mObserver == aObserver) {
             *closurep = closure->mNext;
             closure->mNext = 0;
@@ -1054,10 +1057,10 @@ nsCachedNetData::NewChannel(nsILoadGroup* aLoadGroup, nsIChannel* aProxyChannel,
 }
 
 nsresult
-nsCachedNetData::GetFileSpec(nsIFileSpec* *aFileSpec)
+nsCachedNetData::GetFile(nsIFile* *aFile)
 {
-    NS_ENSURE_ARG_POINTER(aFileSpec);
-    return mRecord->GetFilename(aFileSpec);
+    NS_ENSURE_ARG_POINTER(aFile);
+    return mRecord->GetFile( aFile );
 }
 
 class InterceptStreamListener : public nsIStreamListener,
@@ -1101,11 +1104,12 @@ public:
                              nsresult status, const PRUnichar *errorMsg) {
         if (NS_FAILED(status))
             mCacheEntry->SetFlag(nsCachedNetData::TRUNCATED_CONTENT);
-        else
-            mCacheEntry->ClearFlag(nsCachedNetData::TRUNCATED_CONTENT);
+    
         mCacheEntry->ClearFlag(nsCachedNetData::VESTIGIAL);
         mCacheEntry->ClearFlag(nsCachedNetData::UPDATE_IN_PROGRESS);
-
+				
+				if (mCacheStream )
+					mCacheStream->Close();
         // Tell any stream-as-file observers that the file has been completely written
         mCacheEntry->Notify(nsIStreamAsFileObserver::NOTIFY_AVAILABLE, NS_OK);
 

@@ -1,4 +1,5 @@
-/*
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
  * The contents of this file are subject to the Mozilla Public
  * License Version 1.1 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of
@@ -20,7 +21,11 @@
  *                 Carl Wong <carl.wong@intel.com>
  */
 
-// FUR - Add overall description comment here
+/*
+ * This file is part of filecache implementation.
+ *
+ * It implements a simple iterator for the database, see nsDBAccessor. 
+ */
 
 #include "nsDBEnumerator.h"
 #include "nsDiskCacheRecord.h"
@@ -28,10 +33,10 @@
 nsDBEnumerator::nsDBEnumerator(nsIDBAccessor* aDB, nsNetDiskCache* aCache) :
   m_DB(aDB) ,
   m_DiskCache(aCache) ,
-  tempEntry(0) ,
-  tempEntry_length(0) ,
+  m_tempEntry(0) ,
+  m_tempEntry_length(0) ,
   m_CacheEntry(0) ,
-  bReset(PR_TRUE) 
+  m_bReset(PR_TRUE) 
 {
   NS_INIT_REFCNT();
 
@@ -39,7 +44,6 @@ nsDBEnumerator::nsDBEnumerator(nsIDBAccessor* aDB, nsNetDiskCache* aCache) :
 
 nsDBEnumerator::~nsDBEnumerator()
 {
-//  printf(" ~nsDBEnumerator()\n") ;
   NS_IF_RELEASE(m_CacheEntry) ;
 }
 
@@ -56,10 +60,17 @@ nsDBEnumerator::HasMoreElements(PRBool *_retval)
 {
   *_retval = PR_FALSE ;
 
-  m_DB->EnumEntry(&tempEntry, &tempEntry_length, bReset) ;
-  bReset = PR_FALSE ;
+  nsresult rv = m_DB->EnumEntry(&m_tempEntry, &m_tempEntry_length, m_bReset) ;
 
-  if(tempEntry && tempEntry_length != 0)
+  if(NS_FAILED(rv)) {
+    // do some error recovery
+    m_DiskCache->DBRecovery() ;
+    return rv ;
+  }
+
+  m_bReset = PR_FALSE ;
+
+  if(m_tempEntry && m_tempEntry_length != 0)
     *_retval = PR_TRUE ;
 
   return NS_OK ;
@@ -86,7 +97,7 @@ nsDBEnumerator::GetNext(nsISupports **_retval)
     return NS_ERROR_NULL_POINTER ;
   *_retval = nsnull ;
 
-  nsresult rv = m_CacheEntry->RetrieveInfo(tempEntry, tempEntry_length) ;
+  nsresult rv = m_CacheEntry->RetrieveInfo(m_tempEntry, m_tempEntry_length) ;
   if(NS_FAILED(rv))
     return rv ;
 

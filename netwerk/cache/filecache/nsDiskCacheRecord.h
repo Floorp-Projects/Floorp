@@ -1,4 +1,5 @@
-/*
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
  * The contents of this file are subject to the Mozilla Public
  * License Version 1.1 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of
@@ -44,7 +45,7 @@ class nsDiskCacheRecord : public nsINetDataCacheRecord
   virtual ~nsDiskCacheRecord() ;
 
   NS_IMETHOD RetrieveInfo(void* aInfo, PRUint32 aInfoLength) ;
-  NS_IMETHOD Init(const char* key, PRUint32 length) ;
+  NS_IMETHOD Init(const char* key, PRUint32 length, PRInt32 ID) ;
 
   nsresult GenInfo(void) ;
 
@@ -55,7 +56,7 @@ class nsDiskCacheRecord : public nsINetDataCacheRecord
   PRInt32                   mRecordID ;
   char*                     mMetaData ;
   PRUint32                  mMetaDataLength ;
-  nsCOMPtr<nsIFileSpec>     mFile ;
+  nsCOMPtr<nsIFile>    		mFile ;
   nsCOMPtr<nsIDBAccessor>            mDB ; 
   void*                     mInfo ;
   PRUint32                  mInfoSize ;

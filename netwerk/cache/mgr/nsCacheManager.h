@@ -70,7 +70,7 @@ private:
     nsCOMPtr<nsINetDataCache> mFlatCache;
 
     // stream-as-file cache
-    nsCOMPtr<nsINetDataCache> mFileCache;
+    nsCOMPtr<nsINetDataCache> mDiskCache;
 
     // Unified replacement policy for flat-cache and file-cache
     nsReplacementPolicy*      mDiskSpaceManager;
@@ -87,6 +87,9 @@ private:
     // Memory cache capacity, in KB
     PRUint32                  mMemCacheCapacity;
 
+	// Helper routines
+		nsresult InitPrefs();
+		nsresult GetCacheAndReplacementPolicy( PRUint32 aFlags, nsINetDataCache*& cache, nsReplacementPolicy *&spaceManager );
 protected:
     static nsresult NoteDormant(nsCachedNetData* aEntry);
     static nsresult LimitCacheSize();

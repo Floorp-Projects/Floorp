@@ -25,7 +25,6 @@
 interface nsIURI;
 interface nsINetDataCacheRecord;
 interface nsISimpleEnumerator;
-interface nsIFileSpec;
 
 /**
  * The nsINetDataCache defines the low-level API for a network-data

@@ -22,7 +22,7 @@
 
 #include "nsINetDataCache.idl"
 
-interface nsIFileSpec;
+interface nsIFile;
 
 /**
  * A network-data disk cache is used to persistently cache the responses to
@@ -36,6 +36,6 @@ interface nsINetDataDiskCache : nsINetDataCache
 	 * This attribute must be set before calling any other methods of this
 	 * interface.
 	 */
-    attribute nsIFileSpec diskCacheFolder;
+    attribute nsIFile diskCacheFolder;
 };
 

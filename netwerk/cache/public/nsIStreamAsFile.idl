@@ -24,7 +24,7 @@
 #include "nsrootidl.idl"
 #include "nsISupports.idl"
 
-interface nsIFileSpec;
+interface nsIFile;
 interface nsIStreamAsFileObserver;
 
 /**
@@ -41,7 +41,7 @@ interface nsIStreamAsFile : nsISupports
     /**
      * Filename containing stream-as-file
      */
-    readonly attribute nsIFileSpec fileSpec;
+    readonly attribute nsIFile fileSpec;
 
     /**
      * Add an observer for this cache record.  When the cache wants to delete

@@ -1,4 +1,5 @@
-/*
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
  * The contents of this file are subject to the Mozilla Public
  * License Version 1.1 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of
@@ -40,6 +41,7 @@
 #include "netCore.h"
 
 #include "nsDBAccessor.h"
+#include "nsILocalFile.h"
 
 #if !defined(IS_LITTLE_ENDIAN) && !defined(IS_BIG_ENDIAN)
 ERROR! Must have a byte order
@@ -69,7 +71,6 @@ nsDiskCacheRecord::nsDiskCacheRecord(nsIDBAccessor* db, nsNetDiskCache* aCache) 
   mNumChannels(0) ,
   mDiskCache(aCache) 
 {
-
   NS_INIT_REFCNT();
   NS_ASSERTION(mDiskCache, "Must have an nsNetDiskCache");
   NS_ADDREF(mDiskCache);
@@ -77,12 +78,8 @@ nsDiskCacheRecord::nsDiskCacheRecord(nsIDBAccessor* db, nsNetDiskCache* aCache) 
 
 // mem alloced. so caller should do free() on key. 
 NS_IMETHODIMP
-nsDiskCacheRecord::Init(const char* key, PRUint32 length) 
+nsDiskCacheRecord::Init(const char* key, PRUint32 length, PRInt32 ID) 
 {
-  NS_NewFileSpec(getter_AddRefs(mFile));
-  if(!mFile)
-    return NS_ERROR_OUT_OF_MEMORY ;
-
   // copy key
   mKeyLength = length ;
   mKey = NS_STATIC_CAST(char*, nsAllocator::Alloc(mKeyLength*sizeof(char))) ;
@@ -92,39 +89,38 @@ nsDiskCacheRecord::Init(const char* key, PRUint32 length)
   memcpy(mKey, key, length) ;
 
   // get RecordID
-  // FUR!! Another disk access ?  If called from GetCachedData, ID is already known
-  mDB->GetID(key, length, &mRecordID) ;
-  // FUR - check for GetID failure
+  mRecordID = ID ;
 
   // setup the file name
-  nsCOMPtr<nsIFileSpec> dbFolder ;
+  nsCOMPtr<nsIFile> dbFolder ;
   mDiskCache->GetDiskCacheFolder(getter_AddRefs(dbFolder)) ;
 
-  nsresult rv = mFile->FromFileSpec(dbFolder) ;
+
+  nsresult rv = dbFolder->Clone( getter_AddRefs( mFile ) );
+  
   if(NS_FAILED(rv))
     return NS_ERROR_FAILURE ;
 
   // dir is a hash result of mRecordID%32, hope it's enough 
   char filename[9], dirName[3] ;
   
-  // FUR!! - should the format string be "%.02x".  How does this work !?
-  PR_snprintf(dirName, 3, "%.2x", (((PRUint32)mRecordID) % 32)) ;
-  mFile->AppendRelativeUnixPath(dirName) ;
+  PR_snprintf(dirName, 3, "%02x", (((PRUint32)mRecordID) % 32)) ;
+  mFile->Append(dirName) ;
 
-  // FUR!! - should the format string be "%.08x".  How does this work !?
-  PR_snprintf(filename, 9, "%.8x", mRecordID) ;
-  mFile->AppendRelativeUnixPath(filename) ;
+  PR_snprintf(filename, 9, "%08x", mRecordID) ;
+  mFile->Append(filename) ;
 
   return NS_OK ;
 }
 
 nsDiskCacheRecord::~nsDiskCacheRecord()
 {
-//  printf(" ~nsDiskCacheRecord()\n") ;
   if(mKey)
     nsAllocator::Free(mKey) ;
   if(mMetaData)
     nsAllocator::Free(mMetaData) ;
+  if(mInfo) 
+    nsAllocator::Free(mInfo) ;
 
   NS_IF_RELEASE(mDiskCache);
 }
@@ -205,14 +201,16 @@ nsDiskCacheRecord::SetMetaData(PRUint32 length, const char* data)
   // write through into mDB
   rv = mDB->Put(mRecordID, mInfo, mInfoSize) ;
 
-  // FUR - mInfo leaking ?
   return rv ;
 }
 
 NS_IMETHODIMP
 nsDiskCacheRecord::GetStoredContentLength(PRUint32 *aStoredContentLength)
 {
-  return mFile->GetFileSize(aStoredContentLength) ;
+  PRInt64 fileSize; 
+  nsresult rv = mFile->GetFileSize( &fileSize) ;
+  LL_L2UI( *aStoredContentLength, fileSize );	 
+  return rv;
 }
 
 // untill nsIFileSpec::Truncate() is in, we have to do all this ugly stuff
@@ -220,7 +218,9 @@ NS_IMETHODIMP
 nsDiskCacheRecord::SetStoredContentLength(PRUint32 aStoredContentLength)
 {
   PRUint32 len = 0 ;
-  nsresult rv = mFile->GetFileSize(&len) ;
+   PRInt64 fileSize; 
+  nsresult rv = mFile->GetFileSize( &fileSize) ;
+  LL_L2UI( len, fileSize );	 
   if(NS_FAILED(rv))
     return rv ;
 
@@ -229,8 +229,16 @@ nsDiskCacheRecord::SetStoredContentLength(PRUint32 aStoredContentLength)
     NS_ERROR("Error: can not set filesize to something bigger than itself.\n") ;
     return NS_ERROR_FAILURE ;
   }
-  else 
-    return mFile->Truncate(aStoredContentLength) ;
+  else {
+    PRInt64 size;
+    LL_UI2L( size, aStoredContentLength ); 
+    rv = mFile->SetFileSize( size ) ;
+    if(NS_FAILED(rv))
+      return rv ;
+    
+    mDiskCache->mStorageInUse -= (len - aStoredContentLength) ;
+    return NS_OK ;
+  }
 }
 
 NS_IMETHODIMP
@@ -239,19 +247,17 @@ nsDiskCacheRecord::Delete(void)
   if(mNumChannels)
     return NS_ERROR_NOT_AVAILABLE ;
 
-  PRUint32 len ;
-  mFile->GetFileSize(&len) ;
+  PRUint32 len = 0 ;
+  PRInt64 fileSize; 
+  nsresult rv = mFile->GetFileSize( &fileSize) ;
+  LL_L2UI( len, fileSize );	 
+  
+  
 
-  nsFileSpec cache_file ;
-  nsresult rv = mFile->GetFileSpec(&cache_file) ;
-
-  if(NS_FAILED(rv)) 
-    return NS_ERROR_FAILURE ;
-
-  cache_file.Delete(PR_TRUE) ;
+  mFile->Delete(PR_TRUE) ;
 
   // updata the storage size
-  mDiskCache->m_StorageInUse -= len ;
+  mDiskCache->mStorageInUse -= len ;
 
   rv = mDB->Del(mRecordID, mKey, mKeyLength) ;
   if(NS_FAILED(rv)) 
@@ -261,13 +267,13 @@ nsDiskCacheRecord::Delete(void)
 }
 
 NS_IMETHODIMP
-nsDiskCacheRecord::GetFilename(nsIFileSpec * *aFilename) 
+nsDiskCacheRecord::GetFile(nsIFile * *aFile) 
 {
-  if(!aFilename)
+  if(!aFile)
     return NS_ERROR_NULL_POINTER ;
 
-  *aFilename = mFile ;
-  NS_ADDREF(*aFilename) ;
+  *aFile = mFile ;
+  NS_ADDREF(*aFile) ;
 
   return NS_OK ;
 }
@@ -301,7 +307,7 @@ nsDiskCacheRecord::GenInfo()
 
   char* file_url=nsnull ;
   PRUint32 name_len ;
-  mFile->GetURLString(&file_url) ;
+  mFile->GetPath(&file_url) ;
   name_len = PL_strlen(file_url)+1 ;
 
   mInfoSize  = sizeof(PRUint32) ;    // checksum for mInfoSize
@@ -440,15 +446,23 @@ nsDiskCacheRecord::RetrieveInfo(void* aInfo, PRUint32 aInfoLength)
   PR_ASSERT(cur_ptr == NS_STATIC_CAST(char*, aInfo) + mInfoSize);
 
   // create mFile if Init() isn't called 
-  if(!mFile) {
-    NS_NewFileSpec(getter_AddRefs(mFile));
-    if(!mFile)
+  if(!mFile.get() ) {
+  	nsCOMPtr< nsILocalFile> file;
+    NS_NewLocalFile( file_url ,getter_AddRefs(file));
+    
+    mFile = file;
+    if(!mFile.get())
       return NS_ERROR_OUT_OF_MEMORY ;
   }
-
-  // setup mFile
-  mFile->SetURLString(file_url) ;
-
+  else
+  {
+  	// setup mFile
+  	nsCOMPtr<nsILocalFile> file;
+  	nsresult rv;
+  	file  = do_QueryInterface( mFile, &rv ) ;
+  	if ( NS_SUCCEEDED( rv ) )
+  		file->InitWithPath(file_url) ;
+  }
   return NS_OK ;
 }
 

@@ -20,7 +20,13 @@
  *                 Carl Wong <carl.wong@intel.com>
  */
 
-// FUR - Add overall description comment here
+/*
+ * This file is part of filecache implementation.
+ *
+ * nsNetDiskCache is the main disk cache module that will create 
+ * the cache database, and then store and retrieve nsDiskCacheRecord 
+ * objects from it. It also contains some basic error recovery procedure.
+ */
 
 #ifndef __gen_nsNetDiskCache_h__
 #define __gen_nsNetDiskCache_h__
@@ -34,7 +40,7 @@
 class nsIURI; /* forward decl */
 class nsICachedNetData; /* forward decl */
 class nsISimpleEnumerator; /* forward decl */
-class nsIFileSpec; /* forward decl */
+class nsIFile; /* forward decl */
 
 /* starting interface:    nsNetDiskCache */
 
@@ -53,30 +59,33 @@ class nsNetDiskCache : public nsINetDataDiskCache {
   protected:
 
   NS_IMETHOD InitDB(void) ;
-  NS_IMETHOD CreateDir(nsIFileSpec* dir_spec) ;
-  NS_IMETHOD UpdateInfo(void) ;
+  NS_IMETHOD CreateDir(nsIFile* dir_spec) ;
+  NS_IMETHOD GetSizeEntry(void) ;
+  NS_IMETHOD SetSizeEntry(void) ;
 
   NS_IMETHOD RenameCacheSubDirs(void) ;
   NS_IMETHOD DBRecovery(void) ;
-  NS_IMETHOD RemoveDirs(PRUint32 aNum) ;
 
   private:
+  nsresult InitPrefs();
+  NS_IMETHODIMP InitCacheFolder();
+		
+  PRBool 			                mEnabled ;
+  PRUint32 			                mNumEntries ;
+  nsCOMPtr<nsINetDataCache> 	    mpNextCache ;
+  nsCOMPtr<nsIFile>   	        	mDiskCacheFolder ;
+  nsCOMPtr<nsIFile>            		mDBFile ;
 
-  PRBool 			                m_Enabled ;
-  PRUint32 			                m_NumEntries ;
-  nsCOMPtr<nsINetDataCache> 	    m_pNextCache ;
-  nsCOMPtr<nsIFileSpec>   	        m_pDiskCacheFolder ;
-  nsCOMPtr<nsIFileSpec>             m_DBFile ;
+  PRUint32                          mMaxEntries ;
+  PRUint32                          mStorageInUse ;
+  nsIDBAccessor*                    mDB ;
 
-  PRUint32                          m_MaxEntries ;
-  PRUint32                          m_StorageInUse ;
-  nsIDBAccessor*                    m_DB ;
-
-  // this is used to indicate a db corruption
-  PRInt32                           m_BaseDirNum ;
+  // this is used to indicate a db corruption 
+  PRBool                            mDBCorrupted ;
 
   friend class nsDiskCacheRecord ;
   friend class nsDiskCacheRecordChannel ;
+  friend class nsDBEnumerator ;
 } ;
 
 #endif /* __gen_nsNetDiskCache_h__ */
