@@ -602,8 +602,8 @@ nsBrowserWindow::DispatchMenuItem(PRInt32 aID)
                                      kIWalletServiceIID,
                                      (nsISupports **)&walletservice);
   if ((NS_OK == res) && (nsnull != walletservice)) {
-    nsString urlString = nsString("");
-    res = walletservice->WALLET_Prefill(shell, urlString, (PRVCY_QPREFILL == aID));
+    nsString urlString2 = nsString("");
+    res = walletservice->WALLET_Prefill(shell, urlString2, (PRVCY_QPREFILL == aID));
     NS_RELEASE(walletservice);
   }
 
