@@ -67,11 +67,6 @@
 #include "nsSprocketLayout.h"
 #include "nsIPref.h"
 #include "nsIServiceManager.h"
-#include "nslog.h"
-
-NS_IMPL_LOG(nsSliderFrameLog)
-#define PRINTF NS_LOG_PRINTF(nsSliderFrameLog)
-#define FLUSH  NS_LOG_FLUSH(nsSliderFrameLog)
 
 #define DEBUG_SLIDER PR_FALSE
 
@@ -380,7 +375,7 @@ nsSliderFrame::DoLayout(nsBoxLayoutState& aState)
   if (DEBUG_SLIDER) {
      PRInt32 c = GetCurrentPosition(scrollbar);
      PRInt32 m = GetMaxPosition(scrollbar);
-     PRINTF("Current=%d, max=%d\n",c,m);
+     printf("Current=%d, max=%d\n",c,m);
   }
   
   // redraw only if thumb changed size.
@@ -451,7 +446,7 @@ nsSliderFrame::HandleEvent(nsIPresContext* aPresContext,
          parent->GetParent(&parent);
        }
 
-       //PRINTF("Translated to start=%d\n",start);
+      //printf("Translated to start=%d\n",start);
 
        start -= mThumbStart;
 
@@ -476,7 +471,7 @@ nsSliderFrame::HandleEvent(nsIPresContext* aPresContext,
 
     case NS_MOUSE_LEFT_BUTTON_UP:
        // stop capturing
-      //PRINTF("stop capturing\n");
+      //printf("stop capturing\n");
       AddListener();
       DragThumb(aPresContext, PR_FALSE);
       mRedrawImmediate = PR_FALSE;//we MUST call nsFrame HandleEvent for mouse ups to maintain the selection state and capture state.
@@ -723,7 +718,7 @@ nsSliderFrame::SetCurrentPosition(nsIContent* scrollbar, nsIFrame* aThumbFrame, 
   scrollbar->SetAttribute(kNameSpaceID_None, nsXULAtoms::curpos, NS_ConvertASCIItoUCS2(ch), PR_TRUE);
 
   if (DEBUG_SLIDER)
-    PRINTF("Current Pos=%s\n",ch);
+     printf("Current Pos=%s\n",ch);
   
 }
 
@@ -795,7 +790,7 @@ nsSliderMediator::MouseUp(nsIDOMEvent* aMouseEvent)
 nsresult
 nsSliderFrame::MouseDown(nsIDOMEvent* aMouseEvent)
 {
-  //PRINTF("Begin dragging\n");
+  //printf("Begin dragging\n");
   
   PRBool isHorizontal = IsHorizontal();
 
@@ -889,7 +884,7 @@ nsSliderFrame::MouseDown(nsIDOMEvent* aMouseEvent)
   else
      mThumbStart = thumbRect.y;
      
-  //PRINTF("Pressed mDragStartPx=%d\n",mDragStartPx);
+  //printf("Pressed mDragStartPx=%d\n",mDragStartPx);
   
   return NS_OK;
 }
@@ -897,7 +892,7 @@ nsSliderFrame::MouseDown(nsIDOMEvent* aMouseEvent)
 nsresult
 nsSliderFrame::MouseUp(nsIDOMEvent* aMouseEvent)
 {
-  // PRINTF("Finish dragging\n");
+ // printf("Finish dragging\n");
 
   return NS_OK;
 }

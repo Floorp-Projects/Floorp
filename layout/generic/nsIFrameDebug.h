@@ -25,8 +25,6 @@
 #include "nslayout.h"
 #include "nsISupports.h"
 
-#undef PRLogModuleInfo
-
 class nsIFrame;
 class nsIPresContext;
 

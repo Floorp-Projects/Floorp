@@ -39,11 +39,6 @@
 #include "nsSpecialSystemDirectory.h"
 #include "prmem.h"
 #include "prenv.h"
-#include "nslog.h"
-
-NS_IMPL_LOG(nsPluginsDirUnixLog)
-#define PRINTF NS_LOG_PRINTF(nsPluginsDirUnixLog)
-#define FLUSH  NS_LOG_FLUSH(nsPluginsDirUnixLog)
 
 #define PLUGIN_PATH 	"NS600_PLUGIN_PATH"	
 #define PLUGIN_DIR 	"/plugins"	
@@ -124,7 +119,9 @@ nsPluginsDir::nsPluginsDir(PRUint16 location)
         *(nsFileSpec*)this = pluginsDir;
     }
 
-    PRINTF("********** Got plugins path: %s\n", pluginsDir);
+#ifdef NS_DEBUG
+    printf("********** Got plugins path: %s\n", pluginsDir);
+#endif
 }
 
 nsPluginsDir::~nsPluginsDir()
@@ -136,7 +133,9 @@ PRBool nsPluginsDir::IsPluginFile(const nsFileSpec& fileSpec)
 {
     const char* pathname = fileSpec.GetCString();
 
-    PRINTF("IsPluginFile(%s)\n", pathname);
+#ifdef NS_DEBUG
+    printf("IsPluginFile(%s)\n", pathname);
+#endif
 
     return PR_TRUE;
 }
@@ -189,8 +188,10 @@ nsresult nsPluginFile::LoadPlugin(PRLibrary* &outLibrary)
     libSpec.value.pathname = this->GetCString();
     pLibrary = outLibrary = PR_LoadLibraryWithFlags(libSpec, 0);
     
-    PRINTF("LoadPlugin() %s returned %lx\n", 
+#ifdef NS_DEBUG
+    printf("LoadPlugin() %s returned %lx\n", 
            libSpec.value.pathname, (unsigned long)pLibrary);
+#endif
     
     return NS_OK;
 }
@@ -248,7 +249,9 @@ nsresult nsPluginFile::GetPluginInfo(nsPluginInfo& info)
         info.fDescription = PL_strdup("");
     }
 
-    PRINTF("GetMIMEDescription() returned \"%s\"\n", mimedescr);
+#ifdef NS_DEBUG
+    printf("GetMIMEDescription() returned \"%s\"\n", mimedescr);
+#endif
 
     // Copy MIME type input.
     mdesc = (char *)PR_Malloc(strlen(mimedescr)+1);
@@ -291,8 +294,10 @@ nsresult nsPluginFile::GetPluginInfo(nsPluginInfo& info)
         if(descr)
             *descr++=0;
 
-        PRINTF("Registering plugin %d for: \"%s\",\"%s\",\"%s\"\n",
+//#ifdef NS_DEBUG
+        printf("Registering plugin %d for: \"%s\",\"%s\",\"%s\"\n",
                i, mtype,descr ? descr : "null",exten ? exten : "null");
+//#endif
 
         if(!*mtype && !descr && !exten) {
             i--;

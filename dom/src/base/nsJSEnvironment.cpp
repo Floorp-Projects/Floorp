@@ -61,16 +61,14 @@
 #include "nsIJVMManager.h"
 #include "nsILiveConnectManager.h"
 
-#include "nslog.h"
-
-NS_IMPL_LOG(nsJSEnvironmentLog)
-#define PRINTF NS_LOG_PRINTF(nsJSEnvironmentLog)
-#define FLUSH  NS_LOG_FLUSH(nsJSEnvironmentLog)
-
 const size_t gStackSize = 8192;
 
 static NS_DEFINE_IID(kCScriptNameSetRegistryCID, NS_SCRIPT_NAMESET_REGISTRY_CID);
 static NS_DEFINE_IID(kPrefServiceCID, NS_PREF_CID);
+
+#ifdef PR_LOGGING
+static PRLogModuleInfo* gJSDiagnostics = nsnull;
+#endif
 
 #include "nsIScriptError.h"
 
@@ -173,25 +171,28 @@ NS_ScriptErrorReporter(JSContext *cx,
   if (status != nsEventStatus_eIgnore)
     error.AppendWithConversion("Error was suppressed by event handler\n");
   
-#ifdef NS_ENABLE_LOGGING
   char *errorStr = error.ToNewCString();
   if (errorStr) {
-    PRINTF("%s\n", errorStr);
+    fprintf(stderr, "%s\n", errorStr);
     nsMemory::Free(errorStr);
   }
-#endif
 
 #ifdef PR_LOGGING
   if (report) {
-    PR_LOG(nsJSEnvironmentLog,
-           JSREPORT_IS_WARNING(report->flags) ? PR_LOG_WARNING : PR_LOG_ERROR,
-           ("file %s, line %u: %s\n%s%s",
-            report->filename, report->lineno, message,
-            report->linebuf ? report->linebuf : "",
-            (report->linebuf &&
-             report->linebuf[strlen(report->linebuf)-1] != '\n')
-            ? "\n"
-            : ""));
+    if (!gJSDiagnostics)
+      gJSDiagnostics = PR_NewLogModule("JSDiagnostics");
+
+    if (gJSDiagnostics) {
+      PR_LOG(gJSDiagnostics,
+             JSREPORT_IS_WARNING(report->flags) ? PR_LOG_WARNING : PR_LOG_ERROR,
+             ("file %s, line %u: %s\n%s%s",
+              report->filename, report->lineno, message,
+              report->linebuf ? report->linebuf : "",
+              (report->linebuf &&
+               report->linebuf[strlen(report->linebuf)-1] != '\n')
+              ? "\n"
+              : ""));
+    }
   }
 #endif
 

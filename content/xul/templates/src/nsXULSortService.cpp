@@ -107,11 +107,6 @@
 #include "nsILocale.h"
 #include "nsLocaleCID.h"
 #include "nsILocaleService.h"
-#include "nslog.h"
-
-NS_IMPL_LOG(nsXULSortServiceLog)
-#define PRINTF NS_LOG_PRINTF(nsXULSortServiceLog)
-#define FLUSH  NS_LOG_FLUSH(nsXULSortServiceLog)
 
 
 
@@ -441,7 +436,7 @@ XULSortServiceImpl::~XULSortServiceImpl(void)
 {
 #ifdef DEBUG_REFS
     --gInstanceCount;
-    PRINTF("%d - RDF: XULSortServiceImpl\n", gInstanceCount);
+    fprintf(stdout, "%d - RDF: XULSortServiceImpl\n", gInstanceCount);
 #endif
 
 	--gRefCnt;

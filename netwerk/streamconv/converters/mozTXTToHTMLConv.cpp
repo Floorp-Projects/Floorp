@@ -35,11 +35,6 @@
 
 #include "mozTXTToHTMLConv.h"
 #include "nsIServiceManager.h"
-#include "nslog.h"
-
-NS_IMPL_LOG(mozTXTToHTMLConvLog)
-#define PRINTF NS_LOG_PRINTF(mozTXTToHTMLConvLog)
-#define FLUSH  NS_LOG_FLUSH(mozTXTToHTMLConvLog)
 
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 
@@ -1069,7 +1064,7 @@ mozTXTToHTMLConv::ScanHTML(nsString& aInString, PRUint32 whattodo, nsString &aOu
   }
 
 #ifdef DEBUG_BenB_Perf
-  PRINTF("ScanHTML time:    %d ms\n", PR_IntervalToMilliseconds(PR_IntervalNow() - parsing_start));
+  printf("ScanHTML time:    %d ms\n", PR_IntervalToMilliseconds(PR_IntervalNow() - parsing_start));
 #endif
 }
 

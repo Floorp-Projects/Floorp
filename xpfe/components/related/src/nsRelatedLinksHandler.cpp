@@ -54,11 +54,6 @@
 
 #include "nsICharsetConverterManager.h"
 #include "nsICharsetAlias.h"
-#include "nslog.h"
-
-NS_IMPL_LOG(nsRelatedLinksHandlerLog)
-#define PRINTF NS_LOG_PRINTF(nsRelatedLinksHandlerLog)
-#define FLUSH  NS_LOG_FLUSH(nsRelatedLinksHandlerLog)
 
 static NS_DEFINE_CID(kRDFServiceCID,              NS_RDFSERVICE_CID);
 static NS_DEFINE_CID(kRDFInMemoryDataSourceCID,   NS_RDFINMEMORYDATASOURCE_CID);
@@ -294,13 +289,17 @@ RelatedLinksStreamListener::OnDataAvailable(nsIChannel* channel, nsISupports *ct
 
 	if (NS_FAILED(rv = aIStream->Read(buffer, aLength, &count)) || count == 0)
 	{
-		PRINTF("Related Links datasource read failure.\n");
+#ifdef	DEBUG
+		printf("Related Links datasource read failure.\n");
+#endif
 		delete []buffer;
 		return(rv);
 	}
 	if (count != aLength)
 	{
-		PRINTF("Related Links datasource read # of bytes failure.\n");
+#ifdef	DEBUG
+		printf("Related Links datasource read # of bytes failure.\n");
+#endif
 		delete []buffer;
 		return(NS_ERROR_UNEXPECTED);
 	}
@@ -368,7 +367,7 @@ RelatedLinksStreamListener::OnDataAvailable(nsIChannel* channel, nsISupports *ct
 		if (oneLiner.Length() < 1)	break;
 
 #if 0
-		PRINTF("RL: '%s'\n", oneLiner.ToNewCString());
+		printf("RL: '%s'\n", oneLiner.ToNewCString());
 #endif
 
 		// yes, very primitive RDF parsing follows
@@ -481,7 +480,7 @@ RelatedLinksStreamListener::OnDataAvailable(nsIChannel* channel, nsISupports *ct
 		{
 
 #if 0
-			PRINTF("RL: '%s'  -  '%s'\n", title.ToNewCString(), child.ToNewCString());
+			printf("RL: '%s'  -  '%s'\n", title.ToNewCString(), child.ToNewCString());
 #endif
 			const PRUnichar	*url = child.GetUnicode();
 			if (nsnull != url)

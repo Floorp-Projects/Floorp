@@ -71,11 +71,6 @@
 
 #include "nsITimer.h"
 #include "nsITimerQueue.h"
-#include "nslog.h"
-
-NS_IMPL_LOG(nsWindowLog)
-#define PRINTF NS_LOG_PRINTF(nsWindowLog)
-#define FLUSH  NS_LOG_FLUSH(nsWindowLog)
 
 #define kWindowPositionSlop 10
 
@@ -105,13 +100,13 @@ OleRegisterMgr::OleRegisterMgr()
   if (FAILED(::OleInitialize(NULL))) {
     NS_ASSERTION(0, "***** OLE has not been initialized!\n");
   } else {
-    //PRINTF("***** OLE has been initialized!\n");
+    //printf("***** OLE has been initialized!\n");
   }
 }
 
 OleRegisterMgr::~OleRegisterMgr()
 {
-  //PRINTF("***** OLE has been Uninitialized!\n");
+  //printf("***** OLE has been Uninitialized!\n");
   ::OleUninitialize();
 }
 
@@ -149,7 +144,7 @@ static LONG  gLastClickCount = 0;
 static PRBool is_vk_down(int vk)
 {
    SHORT st = GetKeyState(vk);
-   PRINTF("is_vk_down vk=%x st=%x\n",vk, st);
+   printf("is_vk_down vk=%x st=%x\n",vk, st);
    return (st & 0x80) ? PR_TRUE : PR_FALSE;
 }
 #define IS_VK_DOWN is_vk_down
@@ -1463,7 +1458,7 @@ NS_METHOD nsWindow::Move(PRInt32 aX, PRInt32 aY)
             ::SystemParametersInfo(SPI_GETWORKAREA, 0, &workArea, 0);
             // no annoying assertions. just mention the issue.
             if (aX < 0 || aX >= workArea.right || aY < 0 || aY >= workArea.bottom)
-              PRINTF("window moved to offscreen position\n");
+              printf("window moved to offscreen position\n");
           }
         ::ReleaseDC(mWnd, dc);
         }
@@ -2271,11 +2266,11 @@ PRBool nsWindow::DispatchKeyEvent(PRUint32 aEventType, WORD aCharCode, UINT aVir
 
 #ifdef KE_DEBUG
   static cnt=0;
-  PRINTF("%d DispatchKE Type: %s charCode %d  keyCode %d ", cnt++,  
+  printf("%d DispatchKE Type: %s charCode %d  keyCode %d ", cnt++,  
         (NS_KEY_PRESS == aEventType)?"PRESS":(aEventType == NS_KEY_UP?"Up":"Down"), 
          event.charCode, event.keyCode);
-  PRINTF("Shift: %s Control %s Alt: %s \n",  (mIsShiftDown?"D":"U"), (mIsControlDown?"D":"U"), (mIsAltDown?"D":"U"));
-  PRINTF("[%c][%c][%c] <==   [%c][%c][%c][ space bar ][%c][%c][%c]\n", 
+  printf("Shift: %s Control %s Alt: %s \n",  (mIsShiftDown?"D":"U"), (mIsControlDown?"D":"U"), (mIsAltDown?"D":"U"));
+  printf("[%c][%c][%c] <==   [%c][%c][%c][ space bar ][%c][%c][%c]\n", 
              IS_VK_DOWN(NS_VK_SHIFT) ? 'S' : ' ',
              IS_VK_DOWN(NS_VK_CONTROL) ? 'C' : ' ',
              IS_VK_DOWN(NS_VK_ALT) ? 'A' : ' ',
@@ -2286,7 +2281,7 @@ PRBool nsWindow::DispatchKeyEvent(PRUint32 aEventType, WORD aCharCode, UINT aVir
              IS_VK_DOWN(VK_RCONTROL) ? 'C' : ' ',
              IS_VK_DOWN(VK_RSHIFT) ? 'S' : ' '
 
-    );
+  );
 #endif
 
   event.isShift   = mIsShiftDown;
@@ -2324,7 +2319,7 @@ BOOL nsWindow::OnKeyDown( UINT aVirtualKeyCode, UINT aScanCode)
 
   aVirtualKeyCode = !mIMEIsComposing?MapFromNativeToDOM(aVirtualKeyCode):aVirtualKeyCode;
 
-  //PRINTF("In OnKeyDown ascii %d  virt: %d  scan: %d\n", asciiKey, aVirtualKeyCode, aScanCode);
+  //printf("In OnKeyDown ascii %d  virt: %d  scan: %d\n", asciiKey, aVirtualKeyCode, aScanCode);
 
   BOOL result = DispatchKeyEvent(NS_KEY_DOWN, asciiKey, aVirtualKeyCode);
 
@@ -2695,7 +2690,7 @@ void PrintEvent(UINT msg, PRBool aShowAllEvents, PRBool aShowMouseMoves)
   }
   if (aShowAllEvents || (!aShowAllEvents && gLastEventMsg != (long)msg)) {
     if (aShowMouseMoves || (!aShowMouseMoves && msg != 0x0020 && msg != 0x0200 && msg != 0x0084)) {
-      PRINTF("%6d - 0x%04X %s\n", gEventCounter++, msg, gAllEvents[inx].mStr?gAllEvents[inx].mStr:"Unknown");
+      printf("%6d - 0x%04X %s\n", gEventCounter++, msg, gAllEvents[inx].mStr?gAllEvents[inx].mStr:"Unknown");
       gLastEventMsg = msg;
     }
   }
@@ -2771,7 +2766,7 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
 
               MSG wmsg;
               do {
-                //PRINTF("fire\n");
+                //printf("fire\n");
                 queue->FireNextReadyTimer(NS_PRIORITY_LOWEST);
               } while (queue->HasReadyTimers(NS_PRIORITY_LOWEST) && 
                   !::PeekMessage(&wmsg, NULL, 0, 0, PM_NOREMOVE));
@@ -2822,7 +2817,7 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
 	case WM_CHAR: 
         {
 #ifdef KE_DEBUG
-          PRINTF("%s\tchar=%c\twp=%4x\tlp=%8x\n", (msg == WM_SYSCHAR) ? "WM_SYSCHAR" : "WM_CHAR" , wParam, wParam, lParam);
+            printf("%s\tchar=%c\twp=%4x\tlp=%8x\n", (msg == WM_SYSCHAR) ? "WM_SYSCHAR" : "WM_CHAR" , wParam, wParam, lParam);
 #endif
 
             mIsShiftDown   = IS_VK_DOWN(NS_VK_SHIFT);
@@ -2860,7 +2855,7 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
         case WM_SYSKEYUP:
         case WM_KEYUP: 
 #ifdef KE_DEBUG
-            PRINTF("%s\t\twp=%x\tlp=%x\n",  
+            printf("%s\t\twp=%x\tlp=%x\n",  
                    (WM_KEYUP==msg)?"WM_KEYUP":"WM_SYSKEYUP" , wParam, lParam);
 #endif
             mIsShiftDown   = IS_VK_DOWN(NS_VK_SHIFT);
@@ -2896,7 +2891,7 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
         case WM_SYSKEYDOWN:
         case WM_KEYDOWN: {
 #ifdef KE_DEBUG
-            PRINTF("%s\t\twp=%4x\tlp=%8x\n",  
+            printf("%s\t\twp=%4x\tlp=%8x\n",  
                    (WM_KEYDOWN==msg)?"WM_KEYDOWN":"WM_SYSKEYDOWN" , wParam, lParam);
 #endif
             mIsShiftDown   = IS_VK_DOWN(NS_VK_SHIFT);
@@ -3210,7 +3205,7 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
                 // Realize the drawing palette
                 int i = ::RealizePalette(hDC);
 
-                //PRINTF("number of colors that changed=%d\n",i);
+                //printf("number of colors that changed=%d\n",i);
 
                 // we should always invalidate.. because the lookup may have changed
                 ::InvalidateRect(mWnd, (LPRECT)NULL, TRUE);
@@ -3273,7 +3268,7 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
 	        for (UINT iFile = 0; iFile < nFiles; iFile++) {
 		        TCHAR szFileName[_MAX_PATH];
 		        ::DragQueryFile(hDropInfo, iFile, szFileName, _MAX_PATH);
-            PRINTF("szFileName [%s]\n", szFileName);
+            printf("szFileName [%s]\n", szFileName);
             nsAutoString fileStr(szFileName);
             nsEventStatus status;
             nsDragDropEvent event;
@@ -3373,7 +3368,7 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
                 }
                 #ifdef DEBUG
                 else
-                  PRINTF("WARNING: couldn't get child window for MW event\n");
+                    printf("WARNING: couldn't get child window for MW event\n");
                 #endif
             }
             
@@ -3847,8 +3842,8 @@ PRBool nsWindow::DispatchMouseEvent(PRUint32 aEventType, nsPoint* aPoint)
     mp.x      = LOWORD(pos);
     mp.y      = HIWORD(pos);
     
-    //PRINTF("Msg: %d Last: %d Dif: %d Max %d\n", curMsgTime, gLastMsgTime, curMsgTime-gLastMsgTime, ::GetDoubleClickTime());
-    //PRINTF("Mouse %d %d\n", abs(gLastMousePoint.x - mp.x), abs(gLastMousePoint.y - mp.y));
+    //printf("Msg: %d Last: %d Dif: %d Max %d\n", curMsgTime, gLastMsgTime, curMsgTime-gLastMsgTime, ::GetDoubleClickTime());
+    //printf("Mouse %d %d\n", abs(gLastMousePoint.x - mp.x), abs(gLastMousePoint.y - mp.y));
     if (((curMsgTime - gLastMsgTime) < (LONG)::GetDoubleClickTime()) &&
         (((abs(gLastMousePoint.x - mp.x) < kDoubleClickMoveThreshold) &&
            (abs(gLastMousePoint.y - mp.y) < kDoubleClickMoveThreshold)))) {    
@@ -3860,7 +3855,7 @@ PRBool nsWindow::DispatchMouseEvent(PRUint32 aEventType, nsPoint* aPoint)
     event.clickCount = gLastClickCount;
   }
 
-  //PRINTF("Msg Time: %d Click Count: %d\n", curMsgTime, event.clickCount);
+  //printf("Msg Time: %d Click Count: %d\n", curMsgTime, event.clickCount);
 
   gLastMsgTime = curMsgTime;
 #endif
@@ -4003,7 +3998,7 @@ PRBool nsWindow::DispatchMouseEvent(PRUint32 aEventType, nsPoint* aPoint)
             gCurrentWindow = this;
           }
         } else {
-          //PRINTF("Mouse exit");
+          //printf("Mouse exit");
         }
 
       } break;
@@ -4254,7 +4249,7 @@ nsWindow::HandleTextEvent(HIMC hIMEContext,PRBool aCheckAttr)
   candForm.ptCurrentPos.y = event.theReply.mCursorPosition.y + IME_Y_OFFSET
                           + event.theReply.mCursorPosition.height ;
 
-  PRINTF("Candidate window position: x=%d, y=%d\n",candForm.ptCurrentPos.x,candForm.ptCurrentPos.y);
+  printf("Candidate window position: x=%d, y=%d\n",candForm.ptCurrentPos.x,candForm.ptCurrentPos.y);
 
   NS_IMM_SETCANDIDATEWINDOW(hIMEContext,&candForm);
 
@@ -4285,7 +4280,7 @@ nsWindow::HandleStartComposition(HIMC hIMEContext)
 	candForm.ptCurrentPos.y = event.theReply.mCursorPosition.y + IME_Y_OFFSET
 	                        + event.theReply.mCursorPosition.height;
 #ifdef DEBUG_IME2
-	PRINTF("Candidate window position: x=%d, y=%d\n",candForm.ptCurrentPos.x,candForm.ptCurrentPos.y);
+	printf("Candidate window position: x=%d, y=%d\n",candForm.ptCurrentPos.x,candForm.ptCurrentPos.y);
 #endif
 	NS_IMM_SETCANDIDATEWINDOW(hIMEContext, &candForm);
 	NS_RELEASE(event.widget);
@@ -4436,7 +4431,7 @@ nsWindow::MapDBCSAtrributeArrayToUnicodeOffsets(PRUint32* textRangeListLengthRes
 BOOL nsWindow::OnInputLangChange(HKL aHKL, LRESULT *oRetValue)			
 {
 #ifdef KE_DEBUG
-	PRINTF("OnInputLanguageChange\n");
+	printf("OnInputLanguageChange\n");
 #endif
 
 
@@ -4453,7 +4448,7 @@ BOOL nsWindow::OnInputLangChange(HKL aHKL, LRESULT *oRetValue)
 BOOL nsWindow::OnIMEChar(BYTE aByte1, BYTE aByte2, LPARAM aKeyState)
 {
 #ifdef DEBUG_IME
-	PRINTF("OnIMEChar\n");
+	printf("OnIMEChar\n");
 #endif
 	NS_ASSERTION(PR_TRUE, "should not got an WM_IME_CHAR");
 
@@ -4464,7 +4459,7 @@ BOOL nsWindow::OnIMEChar(BYTE aByte1, BYTE aByte2, LPARAM aKeyState)
 BOOL nsWindow::OnIMEComposition(LPARAM  aGCS)			
 {
 #ifdef DEBUG_IME
-	PRINTF("OnIMEComposition\n");
+	printf("OnIMEComposition\n");
 #endif
   NS_ASSERTION( mIMECompString, "mIMECompString is null");
   NS_ASSERTION( mIMECompUnicode, "mIMECompUnicode is null");
@@ -4483,7 +4478,7 @@ BOOL nsWindow::OnIMEComposition(LPARAM  aGCS)
 	//
 	if (aGCS & GCS_RESULTSTR) {
 #ifdef DEBUG_IME
-		PRINTF("Handling GCS_RESULTSTR\n");
+		fprintf(stderr,"Handling GCS_RESULTSTR\n");
 #endif
 		if(! mIMEIsComposing) 
 			HandleStartComposition(hIMEContext);
@@ -4517,7 +4512,7 @@ BOOL nsWindow::OnIMEComposition(LPARAM  aGCS)
       mIMECompString->mLength = compStrLen;
     }
 #ifdef DEBUG_IME
-		PRINTF("GCS_RESULTSTR compStrLen = %d\n", compStrLen);
+		fprintf(stderr,"GCS_RESULTSTR compStrLen = %d\n", compStrLen);
 #endif
 		result = PR_TRUE;
 		HandleTextEvent(hIMEContext, PR_FALSE);
@@ -4532,7 +4527,7 @@ BOOL nsWindow::OnIMEComposition(LPARAM  aGCS)
 			(GCS_COMPSTR | GCS_COMPATTR | GCS_COMPCLAUSE | GCS_CURSORPOS ))
 	{
 #ifdef DEBUG_IME
-		PRINTF("Handling GCS_COMPSTR\n");
+		fprintf(stderr,"Handling GCS_COMPSTR\n");
 #endif
 
 		if(! mIMEIsComposing) 
@@ -4656,7 +4651,7 @@ BOOL nsWindow::OnIMEComposition(LPARAM  aGCS)
       mIMECompString->mLength = compStrLen;
     }
 #ifdef DEBUG_IME
-		PRINTF("GCS_COMPSTR compStrLen = %d\n", compStrLen);
+		fprintf(stderr,"GCS_COMPSTR compStrLen = %d\n", compStrLen);
 #endif
 #ifdef DEBUG
                 for(int kk=0;kk<mIMECompClauseStringLength;kk++)
@@ -4673,7 +4668,7 @@ BOOL nsWindow::OnIMEComposition(LPARAM  aGCS)
 	if(! result)
 	{
 #ifdef DEBUG_IME
-		PRINTF("Haandle 0 length TextEvent. \n");
+		fprintf(stderr,"Haandle 0 length TextEvent. \n");
 #endif
 		if(! mIMEIsComposing) 
 			HandleStartComposition(hIMEContext);
@@ -4696,7 +4691,7 @@ BOOL nsWindow::OnIMEComposition(LPARAM  aGCS)
 BOOL nsWindow::OnIMECompositionFull()			
 {
 #ifdef DEBUG_IME2
-	PRINTF("OnIMECompositionFull\n");
+	printf("OnIMECompositionFull\n");
 #endif
 
 	// not implement yet
@@ -4706,7 +4701,7 @@ BOOL nsWindow::OnIMECompositionFull()
 BOOL nsWindow::OnIMEEndComposition()			
 {
 #ifdef DEBUG_IME
-	PRINTF("OnIMEEndComposition\n");
+	printf("OnIMEEndComposition\n");
 #endif
 	if(mIMEIsComposing)
 	{
@@ -4742,49 +4737,49 @@ BOOL nsWindow::OnIMEEndComposition()
 BOOL nsWindow::OnIMENotify(WPARAM  aIMN, LPARAM aData, LRESULT *oResult)	
 {
 #ifdef DEBUG_IME2
-	PRINTF("OnIMENotify ");
+	printf("OnIMENotify ");
 	switch(aIMN) {
 		case IMN_CHANGECANDIDATE:
-			PRINTF("IMN_CHANGECANDIDATE %x\n", aData);
+			printf("IMN_CHANGECANDIDATE %x\n", aData);
 		break;
 		case IMN_CLOSECANDIDATE:
-			PRINTF("IMN_CLOSECANDIDATE %x\n", aData);
+			printf("IMN_CLOSECANDIDATE %x\n", aData);
 		break;
 		case IMN_CLOSESTATUSWINDOW:
-			PRINTF("IMN_CLOSESTATUSWINDOW\n");
+			printf("IMN_CLOSESTATUSWINDOW\n");
 		break;
 		case IMN_GUIDELINE:
-			PRINTF("IMN_GUIDELINE\n");
+			printf("IMN_GUIDELINE\n");
 		break;
 		case IMN_OPENCANDIDATE:
-			PRINTF("IMN_OPENCANDIDATE %x\n", aData);
+			printf("IMN_OPENCANDIDATE %x\n", aData);
 		break;
 		case IMN_OPENSTATUSWINDOW:
-			PRINTF("IMN_OPENSTATUSWINDOW\n");
+			printf("IMN_OPENSTATUSWINDOW\n");
 		break;
 		case IMN_SETCANDIDATEPOS:
-			PRINTF("IMN_SETCANDIDATEPOS %x\n", aData);
+			printf("IMN_SETCANDIDATEPOS %x\n", aData);
 		break;
 		case IMN_SETCOMPOSITIONFONT:
-			PRINTF("IMN_SETCOMPOSITIONFONT\n");
+			printf("IMN_SETCOMPOSITIONFONT\n");
 		break;
 		case IMN_SETCOMPOSITIONWINDOW:
-			PRINTF("IMN_SETCOMPOSITIONWINDOW\n");
+			printf("IMN_SETCOMPOSITIONWINDOW\n");
 		break;
 		case IMN_SETCONVERSIONMODE:
-			PRINTF("IMN_SETCONVERSIONMODE\n");
+			printf("IMN_SETCONVERSIONMODE\n");
 		break;
 		case IMN_SETOPENSTATUS:
-			PRINTF("IMN_SETOPENSTATUS\n");
+			printf("IMN_SETOPENSTATUS\n");
 		break;
 		case IMN_SETSENTENCEMODE:
-			PRINTF("IMN_SETSENTENCEMODE\n");
+			printf("IMN_SETSENTENCEMODE\n");
 		break;
 		case IMN_SETSTATUSWINDOWPOS:
-			PRINTF("IMN_SETSTATUSWINDOWPOS\n");
+			printf("IMN_SETSTATUSWINDOWPOS\n");
 		break;
 		case IMN_PRIVATE:
-			PRINTF("IMN_PRIVATE\n");
+			printf("IMN_PRIVATE\n");
 		break;
 	};
 #endif
@@ -4805,7 +4800,7 @@ BOOL nsWindow::OnIMENotify(WPARAM  aIMN, LPARAM aData, LRESULT *oResult)
 BOOL nsWindow::OnIMERequest(WPARAM  aIMR, LPARAM aData, LRESULT *oResult, PRBool aUseUnicode)
 {
 #ifdef DEBUG_IME
-	PRINTF("OnIMERequest\n");
+	printf("OnIMERequest\n");
 #endif
 
   PRBool result = PR_FALSE;
@@ -4823,7 +4818,7 @@ BOOL nsWindow::OnIMERequest(WPARAM  aIMR, LPARAM aData, LRESULT *oResult, PRBool
 PRBool nsWindow::OnIMEReconvert(LPARAM aData, LRESULT *oResult, PRBool aUseUnicode)
 {
 #ifdef DEBUG_IME
-  PRINTF("OnIMEReconvert\n");
+  printf("OnIMEReconvert\n");
 #endif
 
   PRBool           result  = PR_FALSE;
@@ -4918,7 +4913,7 @@ PRBool nsWindow::OnIMEReconvert(LPARAM aData, LRESULT *oResult, PRBool aUseUnico
 BOOL nsWindow::OnIMESelect(BOOL  aSelected, WORD aLangID)			
 {
 #ifdef DEBUG_IME2
-	PRINTF("OnIMESelect\n");
+	printf("OnIMESelect\n");
 #endif
 
 	// not implement yet
@@ -4928,7 +4923,7 @@ BOOL nsWindow::OnIMESelect(BOOL  aSelected, WORD aLangID)
 BOOL nsWindow::OnIMESetContext(BOOL aActive, LPARAM& aISC)			
 {
 #ifdef DEBUG_IME2
-	PRINTF("OnIMESetContext %x %s %s %s Candidate[%s%s%s%s]\n", this, 
+	printf("OnIMESetContext %x %s %s %s Candidate[%s%s%s%s]\n", this, 
 		(aActive ? "Active" : "Deactiv"),
 		((aISC & ISC_SHOWUICOMPOSITIONWINDOW) ? "[Comp]" : ""),
 		((aISC & ISC_SHOWUIGUIDELINE) ? "[GUID]" : ""),
@@ -4936,7 +4931,7 @@ BOOL nsWindow::OnIMESetContext(BOOL aActive, LPARAM& aISC)
 		((aISC & (ISC_SHOWUICANDIDATEWINDOW<<1)) ? "1" : ""),
 		((aISC & (ISC_SHOWUICANDIDATEWINDOW<<2)) ? "2" : ""),
 		((aISC & (ISC_SHOWUICANDIDATEWINDOW<<3)) ? "3" : "")
-    );
+	);
 #endif
 	if(! aActive)
 		ResetInputState();
@@ -4951,7 +4946,7 @@ BOOL nsWindow::OnIMESetContext(BOOL aActive, LPARAM& aISC)
 BOOL nsWindow::OnIMEStartComposition()
 {
 #ifdef DEBUG_IME
-	PRINTF("OnIMEStartComposition\n");
+	printf("OnIMEStartComposition\n");
 #endif
 	HIMC hIMEContext;
 
@@ -4972,7 +4967,7 @@ BOOL nsWindow::OnIMEStartComposition()
 NS_IMETHODIMP nsWindow::ResetInputState()
 {
 #ifdef DEBUG_KBSTATE
-	PRINTF("ResetInputState\n");
+	printf("ResetInputState\n");
 #endif 
 	//if(mIMEIsComposing) {
 		HIMC hIMC;
@@ -5073,14 +5068,14 @@ void nsWindow::GetCompositionWindowPos(HIMC hIMC, PRUint32 aEventType, COMPOSITI
 NS_IMETHODIMP nsWindow::PasswordFieldInit()
 {
 #ifdef DEBUG_KBSTATE
-	PRINTF("PasswordFieldInit\n");
+	printf("PasswordFieldInit\n");
 #endif 
 	return NS_OK;
 }
 NS_IMETHODIMP nsWindow::PasswordFieldEnter(PRUint32& oState)
 {
 #ifdef DEBUG_KBSTATE
-	PRINTF("PasswordFieldEnter\n");
+	printf("PasswordFieldEnter\n");
 #endif 
 	if(IS_IME_CODEPAGE(gCurrentKeyboardCP))
 	{
@@ -5106,7 +5101,7 @@ NS_IMETHODIMP nsWindow::PasswordFieldEnter(PRUint32& oState)
 NS_IMETHODIMP nsWindow::PasswordFieldExit(PRUint32 aState)
 {
 #ifdef DEBUG_KBSTATE
-	PRINTF("PasswordFieldExit\n");
+	printf("PasswordFieldExit\n");
 #endif 
 	if(IS_IME_CODEPAGE(gCurrentKeyboardCP))
 	{

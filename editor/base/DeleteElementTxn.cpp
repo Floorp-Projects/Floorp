@@ -25,11 +25,12 @@
 #include "nsIDOMElement.h"
 #endif
 
-#include "nslog.h"
+#ifdef NS_DEBUG
+static PRBool gNoisy = PR_FALSE;
+#else
+static const PRBool gNoisy = PR_FALSE;
+#endif
 
-NS_IMPL_LOG(DeleteElementTxnLog)
-#define PRINTF NS_LOG_PRINTF(DeleteElementTxnLog)
-#define FLUSH  NS_LOG_FLUSH(DeleteElementTxnLog)
 
 DeleteElementTxn::DeleteElementTxn()
   : EditTxn()
@@ -55,7 +56,7 @@ DeleteElementTxn::~DeleteElementTxn()
 
 NS_IMETHODIMP DeleteElementTxn::Do(void)
 {
-  PRINTF("%p Do Delete Element element = %p\n", this, mElement.get());
+  if (gNoisy) { printf("%p Do Delete Element element = %p\n", this, mElement.get()); }
   if (!mElement) return NS_ERROR_NOT_INITIALIZED;
 
   nsresult result = mElement->GetParentNode(getter_AddRefs(mParent));
@@ -79,7 +80,8 @@ NS_IMETHODIMP DeleteElementTxn::Do(void)
   p = parentElementTag.ToNewCString();
   if (c&&p)
   {
-    PRINTF("  DeleteElementTxn:  deleting child %s from parent %s\n", c, p); 
+    if (gNoisy)
+      printf("  DeleteElementTxn:  deleting child %s from parent %s\n", c, p); 
     nsCRT::free(c);
     nsCRT::free(p);
   }
@@ -96,7 +98,7 @@ NS_IMETHODIMP DeleteElementTxn::Do(void)
 
 NS_IMETHODIMP DeleteElementTxn::Undo(void)
 {
-  PRINTF("%p Undo Delete Element element = %p, parent = %p\n", this, mElement.get(), mParent.get());
+  if (gNoisy) { printf("%p Undo Delete Element element = %p, parent = %p\n", this, mElement.get(), mParent.get()); }
   if (!mParent) { return NS_OK; } // this is a legal state, the txn is a no-op
   if (!mElement) { return NS_ERROR_NULL_POINTER; }
 
@@ -117,7 +119,8 @@ NS_IMETHODIMP DeleteElementTxn::Undo(void)
   p = parentElementTag.ToNewCString();
   if (c&&p)
   {
-    PRINTF("  DeleteElementTxn:  inserting child %s back into parent %s\n", c, p); 
+    if (gNoisy)
+      printf("  DeleteElementTxn:  inserting child %s back into parent %s\n", c, p); 
     nsCRT::free(c);
     nsCRT::free(p);
   }
@@ -131,7 +134,7 @@ NS_IMETHODIMP DeleteElementTxn::Undo(void)
 
 NS_IMETHODIMP DeleteElementTxn::Redo(void)
 {
-  PRINTF("%p Redo Delete Element element = %p, parent = %p\n", this, mElement.get(), mParent.get());
+  if (gNoisy) { printf("%p Redo Delete Element element = %p, parent = %p\n", this, mElement.get(), mParent.get()); }
   if (!mParent) { return NS_OK; } // this is a legal state, the txn is a no-op
   if (!mElement) { return NS_ERROR_NULL_POINTER; }
 

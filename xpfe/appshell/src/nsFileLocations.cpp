@@ -58,11 +58,6 @@
 #include "plstr.h"
 #include "prenv.h"
 #include "prmem.h"
-#include "nslog.h"
-
-NS_IMPL_LOG(nsFileLocationsLog)
-#define PRINTF NS_LOG_PRINTF(nsFileLocationsLog)
-#define FLUSH  NS_LOG_FLUSH(nsFileLocationsLog)
 
 // for profile manager
 static NS_DEFINE_CID(kProfileCID,           NS_PROFILE_CID);
@@ -254,8 +249,8 @@ static PRBool GetProfileDirectory(nsFileSpec& outSpec)
 #if defined(NS_DEBUG)
     if (currProfileName) {
         nsCAutoString currProfileNameCStr; currProfileNameCStr.AssignWithConversion(currProfileName);
-        PRINTF("ProfileName : %s\n", currProfileNameCStr.GetBuffer());
-        PRINTF("ProfileDir  : %s\n", currProfileDirSpec.GetNativePathCString());
+        printf("ProfileName : %s\n", currProfileNameCStr.GetBuffer());
+        printf("ProfileDir  : %s\n", currProfileDirSpec.GetNativePathCString());
     }
 #endif /* NS_DEBUG */
         PR_FREEIF(currProfileName);

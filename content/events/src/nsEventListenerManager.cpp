@@ -56,11 +56,6 @@
 #include "nsIJSContextStack.h"
 #include "nsIDocument.h"
 #include "nsIPresShell.h"
-#include "nslog.h"
-
-NS_IMPL_LOG(nsEventListenerManagerLog)
-#define PRINTF NS_LOG_PRINTF(nsEventListenerManagerLog)
-#define FLUSH  NS_LOG_FLUSH(nsEventListenerManagerLog)
 
 static NS_DEFINE_IID(kIEventListenerManagerIID, NS_IEVENTLISTENERMANAGER_IID);
 static NS_DEFINE_IID(kIDOMEventListenerIID, NS_IDOMEVENTLISTENER_IID);
@@ -996,7 +991,9 @@ nsresult nsEventListenerManager::HandleEvent(nsIPresContext* aPresContext,
     case NS_COMPOSITION_END:
     case NS_COMPOSITION_QUERY:
     case NS_RECONVERSION_QUERY:
-      PRINTF("DOM: got composition event\n");
+#if DEBUG_TAGUE
+      printf("DOM: got composition event\n");
+#endif
       if (nsnull != mCompositionListeners) {
         if (nsnull == *aDOMEvent) {
           ret = NS_NewDOMUIEvent(aDOMEvent,aPresContext,empty,aEvent);
@@ -1059,7 +1056,9 @@ nsresult nsEventListenerManager::HandleEvent(nsIPresContext* aPresContext,
       break;
 
     case NS_TEXT_EVENT:
-      PRINTF("DOM: got text event\n");
+#if DEBUG_TAGUE
+      printf("DOM: got text event\n");
+#endif
       if (nsnull != mTextListeners) {
         if (nsnull == *aDOMEvent) {
           ret = NS_NewDOMUIEvent(aDOMEvent,aPresContext,empty,aEvent);

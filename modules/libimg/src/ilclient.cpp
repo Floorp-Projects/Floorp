@@ -34,11 +34,6 @@
 #include "nsIFactory.h"
 #include "nsCRT.h"
 #include "xpcompat.h" //temporary, for timers
-#include "nslog.h"
-
-NS_IMPL_LOG(ilclientLog)
-#define PRINTF NS_LOG_PRINTF(ilclientLog)
-#define FLUSH  NS_LOG_FLUSH(ilclientLog)
 
 #undef PIN_CHROME 
 /* Note that default cache size is set in 
@@ -47,7 +42,7 @@ NS_IMPL_LOG(ilclientLog)
 static PRUint32 image_cache_size;
 static PRUint32 max_cache_items = 192;
 
-//PRLogModuleInfo *il_log_module = NULL;
+PRLogModuleInfo *il_log_module = NULL;
 ilISystemServices *il_ss = NULL;
 
 /* simple list, in use order */
@@ -643,7 +638,7 @@ il_delete_container(il_container *ic)
          */
         if (ic->is_url_loading) {
 #ifdef DEBUG_kipp
-            PRINTF("il_delete_container: bad: can't delete ic=%p '%s'\n",
+            printf("il_delete_container: bad: can't delete ic=%p '%s'\n",
                    ic, ic->url_address ? ic->url_address : "(null)");
 #endif
             ic->state = IC_ABORT_PENDING;
@@ -663,7 +658,7 @@ il_delete_container(il_container *ic)
         /* delete the image */
         if (!(ic->image || ic->mask)) {
 #ifdef DEBUG_kipp
-            PRINTF("il_delete_container: bad: ic=%p '%s' image=%p mask=%p\n",
+            printf("il_delete_container: bad: ic=%p '%s' image=%p mask=%p\n",
                    ic, ic->url_address ? ic->url_address : "(null)",
                    ic->image, ic->mask);
 #endif
@@ -877,7 +872,7 @@ IL_FlushCache(PRUint8 img_catagory)
     {
         if (ic->is_in_use ||((img_catagory == 0 )&&(ic->moz_type == TYPE_CHROME))){
 #ifdef DEBUG_kipp
-            PRINTF("IL_FlushCache: il_container %p in use '%s'\n",
+            printf("IL_FlushCache: il_container %p in use '%s'\n",
                    ic, ic->url_address ? ic->url_address : "(null)");
 #endif
             ic = ic->next;
@@ -1060,6 +1055,9 @@ il_delete_all_clients(il_container *ic)
 IL_IMPLEMENT(int)
 IL_Init(ilISystemServices *ss)
 {
+    if (il_log_module == NULL) {
+        il_log_module = PR_NewLogModule("IMGLIB");
+    }
     il_ss = ss;
 
     /* XXXM12N - finish me. */

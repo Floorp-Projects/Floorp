@@ -24,11 +24,6 @@
 #include "nsHashtable.h"
 #include "nsIEventQueueService.h"
 #include "nsIServiceManager.h"
-#include "nslog.h"
-
-NS_IMPL_LOG(nsAppShellLog)
-#define PRINTF NS_LOG_PRINTF(nsAppShellLog)
-#define FLUSH  NS_LOG_FLUSH(nsAppShellLog)
 
 NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 
@@ -90,7 +85,7 @@ class nsAppshellManager
       nsIAppShell *pShell = (nsIAppShell*) mTable->Get( &key);
 
       if( pShell != aShell)
-          PRINTF( "Appshell object dying in a foreign thread\n");
+         printf( "Appshell object dying in a foreign thread\n");
       else
          mTable->Remove( &key);
 
@@ -173,7 +168,7 @@ nsresult nsAppShell::Run()
       else
       {
          ULONG pmerr = WinGetLastError( mHab);
-         PRINTF( "WinGetMsg failed with error %x -- bailing out!\n", pmerr);
+         printf( "WinGetMsg failed with error %x -- bailing out!\n", pmerr);
          break;
       }
 

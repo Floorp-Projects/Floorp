@@ -1,5 +1,7 @@
 nsIFileSpec.idl
+nsIBufferInputStream.idl
 nsIInputStream.idl
+nsIBaseStream.idl
 nsIOutputStream.idl
 nsIPipe.idl
 nsIFile.idl

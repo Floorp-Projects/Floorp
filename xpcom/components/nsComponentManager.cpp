@@ -83,12 +83,8 @@
 
 // Logging of debug output
 #define FORCE_PR_LOG /* Allow logging in the release build */
-
-#include "nslog.h"
-
-NS_IMPL_LOG(nsComponentManagerLog)
-#define PRINTF NS_LOG_PRINTF(nsComponentManagerLog)
-#define FLUSH  NS_LOG_FLUSH(nsComponentManagerLog)
+#include "prlog.h"
+PRLogModuleInfo* nsComponentManagerLog = NULL;
 
 // Enable printing of critical errors on screen even for release builds
 #define PRINT_CRITICAL_ERROR_TO_SCREEN
@@ -279,8 +275,12 @@ nsresult nsComponentManagerImpl::Init(void)
 
     mShuttingDown = NS_SHUTDOWN_NEVERHAPPENED;
 
-    PR_LOG(nsComponentManagerLog, PR_LOG_ALWAYS,
-           ("xpcom-log-version : " NS_XPCOM_COMPONENT_MANAGER_VERSION_STRING));
+    if (nsComponentManagerLog == NULL)
+    {
+        nsComponentManagerLog = PR_NewLogModule("nsComponentManager");
+        PR_LOG(nsComponentManagerLog, PR_LOG_ALWAYS,
+               ("xpcom-log-version : " NS_XPCOM_COMPONENT_MANAGER_VERSION_STRING));
+    }
 
     if (mFactories == NULL) {
         mFactories = new nsObjectHashtable(nsnull, nsnull,      // should never be copied
@@ -901,7 +901,7 @@ nsresult nsComponentManagerImpl::PlatformPrePopulateRegistry()
         // put the {contractid, Cid} mapping into our map
         nsCStringKey key(contractidString);
         mContractIDs->Put(&key, aClass);
-        //  PRINTF("Populating [ %s, %s ]\n", cidString, contractidString);
+        //  printf("Populating [ %s, %s ]\n", cidString, contractidString);
     }
 
     (void)mRegistry->SetBufferSize( 10*1024 );
@@ -1270,7 +1270,7 @@ MakeRegistryName(const char *aDllName, const char *prefix, char **regName)
     *regName = registryName;
 
 #ifdef DEBUG_shaver_off
-    PRINTF("MakeRegistryName(%s, %s, &[%s])\n",
+    fprintf(stderr, "MakeRegistryName(%s, %s, &[%s])\n",
             aDllName, prefix, *regName);
 #endif
 
@@ -1833,8 +1833,10 @@ CanUnload_enumerate(nsHashKey *key, void *aData, void *aClosure)
     (struct CanUnload_closure *)aClosure;
 
     if (loader == closure->native) {
-        PRINTF("CanUnload_enumerate: skipping native\n");
-        return PR_TRUE;
+#ifdef DEBUG
+    fprintf(stderr, "CanUnload_enumerate: skipping native\n");
+#endif
+    return PR_TRUE;
     }
 
     closure->status = loader->UnloadAll(closure->when);

@@ -37,11 +37,6 @@
 #include <Entry.h>
 #include <Path.h>
 #include <Volume.h>
-#include "nslog.h"
-
-NS_IMPL_LOG(nsFileSpecBeOSLog)
-#define PRINTF NS_LOG_PRINTF(nsFileSpecBeOSLog)
-#define FLUSH  NS_LOG_FLUSH(nsFileSpecBeOSLog)
 
 //----------------------------------------------------------------------------------------
 void nsFileSpecHelpers::Canonify(nsSimpleCharString& ioPath, PRBool inMakeDirs)
@@ -467,7 +462,7 @@ PRInt64 nsFileSpec::GetDiskSpaceAvailable() const
     BVolume v(ref.device);
 
 #ifdef DEBUG_DISK_SPACE
-    PRINTF("DiskSpaceAvailable: %d bytes\n", space);
+    printf("DiskSpaceAvailable: %d bytes\n", space);
 #endif
     return v.FreeBytes();
 } // nsFileSpec::GetDiskSpace()

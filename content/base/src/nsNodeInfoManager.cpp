@@ -25,15 +25,6 @@
 #include "nsCOMPtr.h"
 #include "nsString.h"
 #include "nsIAtom.h"
-#include "nslog.h"
-
-#ifdef DEBUG_jst
-NS_IMPL_LOG_ENABLED(nsNodeInfoManagerLog)
-#else
-NS_IMPL_LOG(nsNodeInfoManagerLog)
-#endif
-#define PRINTF NS_LOG_PRINTF(nsNodeInfoManagerLog)
-#define FLUSH  NS_LOG_FLUSH(nsNodeInfoManagerLog)
 
 nsNodeInfoManager* nsNodeInfoManager::gAnonymousNodeInfoManager = nsnull;
 PRUint32 nsNodeInfoManager::gNodeManagerCount = 0;
@@ -74,7 +65,9 @@ nsNodeInfoManager::nsNodeInfoManager()
                                   nsNodeInfoInner::KeyCompare,
                                   PL_CompareValues, nsnull, nsnull);
 
-  PRINTF("Creating NodeInfoManager, gcount = %d\n", gNodeManagerCount);
+#ifdef DEBUG_jst
+  printf ("Creating NodeInfoManager, gcount = %d\n", gNodeManagerCount);
+#endif
 }
 
 
@@ -95,7 +88,9 @@ nsNodeInfoManager::~nsNodeInfoManager()
   if (mNodeInfoHash)
     PL_HashTableDestroy(mNodeInfoHash);
 
-  PRINTF("Removing NodeInfoManager, gcount = %d\n", gNodeManagerCount);
+#ifdef DEBUG_jst
+  printf ("Removing NodeInfoManager, gcount = %d\n", gNodeManagerCount);
+#endif
 }
 
 

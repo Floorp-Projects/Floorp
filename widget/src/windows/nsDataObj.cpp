@@ -34,20 +34,15 @@
 #include "OLE2.h"
 #include "URLMON.h"
 #include "shlobj.h"
-#include "nslog.h"
-
-NS_IMPL_LOG(nsDataObjLog)
-#define PRINTF NS_LOG_PRINTF(nsDataObjLog)
-#define FLUSH  NS_LOG_FLUSH(nsDataObjLog)
 
 #if 0
-#define PRNTDEBUG(_x) PRINTF(_x);
-#define PRNTDEBUG2(_x1, _x2) PRINTF(_x1, _x2);
-#define PRNTDEBUG3(_x1, _x2, _x3) PRINTF(_x1, _x2, _x3);
+#define PRNTDEBUG(_x) printf(_x);
+#define PRNTDEBUG2(_x1, _x2) printf(_x1, _x2);
+#define PRNTDEBUG3(_x1, _x2, _x3) printf(_x1, _x2, _x3);
 #else
-#define PRNTDEBUG(_x) // PRINTF(_x);
-#define PRNTDEBUG2(_x1, _x2) // PRINTF(_x1, _x2);
-#define PRNTDEBUG3(_x1, _x2, _x3) // PRINTF(_x1, _x2, _x3);
+#define PRNTDEBUG(_x) // printf(_x);
+#define PRNTDEBUG2(_x1, _x2) // printf(_x1, _x2);
+#define PRNTDEBUG3(_x1, _x2, _x3) // printf(_x1, _x2, _x3);
 #endif
 
 ULONG nsDataObj::g_cRef = 0;
@@ -114,7 +109,7 @@ STDMETHODIMP nsDataObj::QueryInterface(REFIID riid, void** ppv)
 STDMETHODIMP_(ULONG) nsDataObj::AddRef()
 {
 	++g_cRef;
-  //PRNTDEBUG3("nsDataObj::AddRef  >>>>>>>>>>>>>>>>>> %d on %p", (m_cRef+1), this);
+  //PRNTDEBUG3("nsDataObj::AddRef  >>>>>>>>>>>>>>>>>> %d on %p\n", (m_cRef+1), this);
 	return ++m_cRef;
 }
 
@@ -122,7 +117,7 @@ STDMETHODIMP_(ULONG) nsDataObj::AddRef()
 //-----------------------------------------------------
 STDMETHODIMP_(ULONG) nsDataObj::Release()
 {
-  //PRNTDEBUG3("nsDataObj::Release >>>>>>>>>>>>>>>>>> %d on %p", (m_cRef-1), this);
+  //PRNTDEBUG3("nsDataObj::Release >>>>>>>>>>>>>>>>>> %d on %p\n", (m_cRef-1), this);
 	if (0 < g_cRef)
 		--g_cRef;
 
@@ -151,9 +146,9 @@ BOOL nsDataObj::FormatsMatch(const FORMATETC& source, const FORMATETC& target) c
 //-----------------------------------------------------
 STDMETHODIMP nsDataObj::GetData(LPFORMATETC pFE, LPSTGMEDIUM pSTM)
 {
-  PRINTF("nsDataObj::GetData2");
-  PRNTDEBUG("nsDataObj::GetData");
-  PRNTDEBUG3("  format: %d  Text: %d", pFE->cfFormat, CF_TEXT);
+  printf("nsDataObj::GetData2\n");
+  PRNTDEBUG("nsDataObj::GetData\n");
+  PRNTDEBUG3("  format: %d  Text: %d\n", pFE->cfFormat, CF_TEXT);
   if ( !mTransferable )
 	  return ResultFromScode(DATA_E_FORMATETC);
 
@@ -191,7 +186,7 @@ STDMETHODIMP nsDataObj::GetData(LPFORMATETC pFE, LPSTGMEDIUM pSTM)
             else if ( format == fileFlavor )
               return GetFileContents ( *pFE, *pSTM );
             else {
-              PRNTDEBUG2("***** nsDataObj::GetData - Unknown format %x", format);
+              PRNTDEBUG2("***** nsDataObj::GetData - Unknown format %x\n", format);
 					    return GetText(df, *pFE, *pSTM);
             }
             break;
@@ -209,7 +204,7 @@ STDMETHODIMP nsDataObj::GetData(LPFORMATETC pFE, LPSTGMEDIUM pSTM)
 //-----------------------------------------------------
 STDMETHODIMP nsDataObj::GetDataHere(LPFORMATETC pFE, LPSTGMEDIUM pSTM)
 {
-  PRNTDEBUG("nsDataObj::GetDataHere");
+  PRNTDEBUG("nsDataObj::GetDataHere\n");
 		return ResultFromScode(E_FAIL);
 }
 
@@ -221,7 +216,7 @@ STDMETHODIMP nsDataObj::GetDataHere(LPFORMATETC pFE, LPSTGMEDIUM pSTM)
 STDMETHODIMP nsDataObj::QueryGetData(LPFORMATETC pFE)
 {
   PRNTDEBUG("nsDataObj::QueryGetData  ");
-  PRNTDEBUG3("format: %d  Text: %d", pFE->cfFormat, CF_TEXT);
+  PRNTDEBUG3("format: %d  Text: %d\n", pFE->cfFormat, CF_TEXT);
 
   PRUint32 dfInx = 0;
 
@@ -234,7 +229,7 @@ STDMETHODIMP nsDataObj::QueryGetData(LPFORMATETC pFE)
     }
   }
   
-  PRNTDEBUG2("***** nsDataObj::QueryGetData - Unknown format %d", pFE->cfFormat);
+  PRNTDEBUG2("***** nsDataObj::QueryGetData - Unknown format %d\n", pFE->cfFormat);
 	return ResultFromScode(E_FAIL);
 }
 
@@ -242,7 +237,7 @@ STDMETHODIMP nsDataObj::QueryGetData(LPFORMATETC pFE)
 STDMETHODIMP nsDataObj::GetCanonicalFormatEtc
 	 (LPFORMATETC pFEIn, LPFORMATETC pFEOut)
 {
-  PRNTDEBUG("nsDataObj::GetCanonicalFormatEtc");
+  PRNTDEBUG("nsDataObj::GetCanonicalFormatEtc\n");
 		return ResultFromScode(E_FAIL);
 }
 
@@ -250,7 +245,7 @@ STDMETHODIMP nsDataObj::GetCanonicalFormatEtc
 //-----------------------------------------------------
 STDMETHODIMP nsDataObj::SetData(LPFORMATETC pFE, LPSTGMEDIUM pSTM, BOOL fRelease)
 {
-  PRNTDEBUG("nsDataObj::SetData");
+  PRNTDEBUG("nsDataObj::SetData\n");
 
   return ResultFromScode(E_FAIL);
 }
@@ -259,7 +254,7 @@ STDMETHODIMP nsDataObj::SetData(LPFORMATETC pFE, LPSTGMEDIUM pSTM, BOOL fRelease
 //-----------------------------------------------------
 STDMETHODIMP nsDataObj::EnumFormatEtc(DWORD dwDir, LPENUMFORMATETC *ppEnum)
 {
-  PRNTDEBUG("nsDataObj::EnumFormatEtc");
+  PRNTDEBUG("nsDataObj::EnumFormatEtc\n");
 
   switch (dwDir) {
     case DATADIR_GET: {
@@ -289,7 +284,7 @@ STDMETHODIMP nsDataObj::EnumFormatEtc(DWORD dwDir, LPENUMFORMATETC *ppEnum)
 STDMETHODIMP nsDataObj::DAdvise(LPFORMATETC pFE, DWORD dwFlags,
 										            LPADVISESINK pIAdviseSink, DWORD* pdwConn)
 {
-  PRNTDEBUG("nsDataObj::DAdvise");
+  PRNTDEBUG("nsDataObj::DAdvise\n");
 	return ResultFromScode(E_FAIL);
 }
 
@@ -297,14 +292,14 @@ STDMETHODIMP nsDataObj::DAdvise(LPFORMATETC pFE, DWORD dwFlags,
 //-----------------------------------------------------
 STDMETHODIMP nsDataObj::DUnadvise(DWORD dwConn)
 {
-  PRNTDEBUG("nsDataObj::DUnadvise");
+  PRNTDEBUG("nsDataObj::DUnadvise\n");
 	return ResultFromScode(E_FAIL);
 }
 
 //-----------------------------------------------------
 STDMETHODIMP nsDataObj::EnumDAdvise(LPENUMSTATDATA *ppEnum)
 {
-  PRNTDEBUG("nsDataObj::EnumDAdvise");
+  PRNTDEBUG("nsDataObj::EnumDAdvise\n");
 	return ResultFromScode(E_FAIL);
 }
 
@@ -327,28 +322,28 @@ ULONG nsDataObj::GetRefCount() const
 //-----------------------------------------------------
 HRESULT nsDataObj::AddSetFormat(FORMATETC& aFE)
 {
-  PRNTDEBUG("nsDataObj::AddSetFormat");
+  PRNTDEBUG("nsDataObj::AddSetFormat\n");
 	return ResultFromScode(S_OK);
 }
 
 //-----------------------------------------------------
 HRESULT nsDataObj::AddGetFormat(FORMATETC& aFE)
 {
-  PRNTDEBUG("nsDataObj::AddGetFormat");
+  PRNTDEBUG("nsDataObj::AddGetFormat\n");
 	return ResultFromScode(S_OK);
 }
 
 //-----------------------------------------------------
 HRESULT nsDataObj::GetBitmap(FORMATETC&, STGMEDIUM&)
 {
-  PRNTDEBUG("nsDataObj::GetBitmap");
+  PRNTDEBUG("nsDataObj::GetBitmap\n");
 	return ResultFromScode(E_NOTIMPL);
 }
 
 //-----------------------------------------------------
 HRESULT nsDataObj::GetDib(FORMATETC&, STGMEDIUM&)
 {
-  PRNTDEBUG("nsDataObj::GetDib");
+  PRNTDEBUG("nsDataObj::GetDib\n");
 	return E_NOTIMPL;
 }
 
@@ -368,7 +363,7 @@ nsDataObj :: GetFileDescriptor ( FORMATETC& aFE, STGMEDIUM& aSTG )
   if ( IsInternetShortcut() )
     res = GetFileDescriptorInternetShortcut ( aFE, aSTG );
   else
-    NS_WARNING ( "Not yet implemented" );
+    NS_WARNING ( "Not yet implemented\n" );
   
 	return res;
 	
@@ -386,7 +381,7 @@ nsDataObj :: GetFileContents ( FORMATETC& aFE, STGMEDIUM& aSTG )
   if ( IsInternetShortcut() )  
     res = GetFileContentsInternetShortcut ( aFE, aSTG );
   else
-    NS_WARNING ( "Not yet implemented" );
+    NS_WARNING ( "Not yet implemented\n" );
 
 	return res;
 	

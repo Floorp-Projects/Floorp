@@ -97,7 +97,7 @@ private:
 NS_IMETHODIMP
 nsSampleAppShellComponent::DoDialogTests( nsISupports *parent, nsIObserver *observer ) {
     nsresult rv = NS_OK;
-    PRINTF(("nsSampleAppShellComponent::DoDialogTests called\n" ));
+    DEBUG_PRINTF( PR_STDOUT, "nsSampleAppShellComponent::DoDialogTests called\n" );
 
     if ( parent && observer ) {
     // Open the dialog from C++.
@@ -160,12 +160,12 @@ nsSampleAppShellComponent::DoDialogTests( nsISupports *parent, nsIObserver *obse
         } else {
         }
     } else {
-        PRINTF(("%s %d: QueryInterface failed, rv=0x%08X\n",
-                __FILE__, (int)__LINE__, (int)rv ));
+        DEBUG_PRINTF( PR_STDOUT, "%s %d: QueryInterface failed, rv=0x%08X\n",
+                      __FILE__, (int)__LINE__, (int)rv );
     }
     } else {
-        PRINTF(("%s %d: DoDialogTests was passed a null pointer!\n",
-                __FILE__, (int)__LINE__ ));
+        DEBUG_PRINTF( PR_STDOUT, "%s %d: DoDialogTests was passed a null pointer!\n",
+                      __FILE__, (int)__LINE__ );
         rv = NS_ERROR_NULL_POINTER;
     }
 

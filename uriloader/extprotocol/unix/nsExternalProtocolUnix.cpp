@@ -28,6 +28,15 @@
 #include "nsExternalProtocol.h"
 #include "nsXPIDLString.h"
 
+
+#ifdef NS_DEBUG
+#define DEBUG_LOG0( x) printf( x)
+#define DEBUG_LOG1( x, y) printf( x, y)
+#else
+#define DEBUG_LOG0( x)
+#define DEBUG_LOG1( x, y)
+#endif
+
 #endif
 
 ////////////////////////////////////////////////////////////////////////

@@ -41,11 +41,6 @@
 #include "nsINameSpaceManager.h"
 #include "nsBoxLayoutState.h"
 #include "nsMenuBarListener.h"
-#include "nslog.h"
-
-NS_IMPL_LOG(nsTextBoxFrameLog)
-#define PRINTF NS_LOG_PRINTF(nsTextBoxFrameLog)
-#define FLUSH  NS_LOG_FLUSH(nsTextBoxFrameLog)
 
 #define ELLIPSIS "..."
 
@@ -465,7 +460,7 @@ nsTextBoxFrame::CalculateTitleForWidth(nsIPresContext*      aPresContext,
             char chc[100];
             copy.ToCString(chc,100);
 
-            PRINTF("i=%d, i2=%d, diff=%d, old='%s', new='%s', aWidth=%d\n", i, i2, i2-i, cht,chc, aWidth);
+            printf("i=%d, i2=%d, diff=%d, old='%s', new='%s', aWidth=%d\n", i, i2, i2-i, cht,chc, aWidth);
             */
 
             mCroppedTitle.Insert(ellipsisLeft + copy, 0);

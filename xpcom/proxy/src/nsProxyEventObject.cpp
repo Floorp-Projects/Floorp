@@ -34,11 +34,6 @@
 #include "xptcall.h"
 
 #include "nsAutoLock.h"
-#include "nslog.h"
-
-NS_IMPL_LOG(nsProxyEventObjectLog)
-#define PRINTF NS_LOG_PRINTF(nsProxyEventObjectLog)
-#define FLUSH  NS_LOG_FLUSH(nsProxyEventObjectLog)
 
 static NS_DEFINE_IID(kProxyObject_Identity_Class_IID, NS_PROXYEVENT_IDENTITY_CLASS_IID);
 
@@ -93,8 +88,8 @@ nsProxyEventObject::DebugDump(const char * message, PRUint32 hashKey)
 
     if (message)
     {
-        PRINTF("\n-=-=-=-=-=-=-=-=-=-=-=-=-\n");
-        PRINTF("%s\n", message);
+        printf("\n-=-=-=-=-=-=-=-=-=-=-=-=-\n");
+        printf("%s\n", message);
 
         if(strcmp(message, "Create") == 0)
         {
@@ -106,39 +101,39 @@ nsProxyEventObject::DebugDump(const char * message, PRUint32 hashKey)
             outstandingProxyObjects--;
         }
     }
-    PRINTF("nsProxyEventObject @ %x with mRefCnt = %d\n", this, mRefCnt);
+    printf("nsProxyEventObject @ %x with mRefCnt = %d\n", this, mRefCnt);
 
     PRBool isRoot = mRoot == nsnull;
-    PRINTF("%s wrapper around  @ %x\n", isRoot ? "ROOT":"non-root\n", GetRealObject());
+    printf("%s wrapper around  @ %x\n", isRoot ? "ROOT":"non-root\n", GetRealObject());
 
     nsCOMPtr<nsISupports> rootObject = do_QueryInterface(mProxyObject->mRealObject);
     nsCOMPtr<nsISupports> rootQueue = do_QueryInterface(mProxyObject->mDestQueue);
     nsProxyEventKey key(rootObject, rootQueue, mProxyObject->mProxyType);
-    PRINTF("Hashkey: %d\n", key.HashCode());
+    printf("Hashkey: %d\n", key.HashCode());
         
     char* name;
     GetClass()->GetInterfaceInfo()->GetName(&name);
-    PRINTF("interface name is %s\n", name);
+    printf("interface name is %s\n", name);
     if(name)
         nsMemory::Free(name);
     char * iid = GetClass()->GetProxiedIID().ToString();
-    PRINTF("IID number is %s\n", iid);
+    printf("IID number is %s\n", iid);
     delete iid;
-    PRINTF("nsProxyEventClass @ %x\n", mClass);
+    printf("nsProxyEventClass @ %x\n", mClass);
     
     if(mNext)
     {
         if(isRoot)
         {
-            PRINTF("Additional wrappers for this object...\n");
+            printf("Additional wrappers for this object...\n");
         }
         mNext->DebugDump(nsnull, 0);
     }
 
-    PRINTF("[proxyobjects] %d total used in system, %d outstading\n", totalProxyObjects, outstandingProxyObjects);
+    printf("[proxyobjects] %d total used in system, %d outstading\n", totalProxyObjects, outstandingProxyObjects);
 
     if (message)
-        PRINTF("-=-=-=-=-=-=-=-=-=-=-=-=-\n");
+        printf("-=-=-=-=-=-=-=-=-=-=-=-=-\n");
 
     PR_ExitMonitor(mon);
 }

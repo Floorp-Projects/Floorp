@@ -63,11 +63,6 @@
 #include "nsITextContent.h"
 #include "nsISupportsArray.h"
 #include "nsXPIDLString.h"
-#include "nslog.h"
-
-NS_IMPL_LOG(nsFormControlHelperLog)
-#define PRINTF NS_LOG_PRINTF(nsFormControlHelperLog)
-#define FLUSH  NS_LOG_FLUSH(nsFormControlHelperLog)
 
 static NS_DEFINE_CID(kIOServiceCID,            NS_IOSERVICE_CID);
 static NS_DEFINE_CID(kStringBundleServiceCID,  NS_STRINGBUNDLESERVICE_CID);
@@ -348,8 +343,8 @@ nsFormControlHelper::CalcNavQuirkSizing(nsIPresContext*      aPresContext,
   }
 
 #ifdef DEBUG_rodsXXXX
-  PRINTF("********* Nav Quirks: %d,%d  max:%d average:%d ascent:%d descent:%d\n", 
-         width, height, maxCharWidth, average, ascent, descent);
+  printf("********* Nav Quirks: %d,%d  max:%d average:%d ascent:%d descent:%d\n", 
+          width, height, maxCharWidth, average, ascent, descent);
 #endif
 
   aSize.width  = NSIntPixelsToTwips(width, p2t);

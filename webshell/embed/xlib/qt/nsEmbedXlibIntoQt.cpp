@@ -23,11 +23,6 @@
 
 #include <qapplication.h>
 #include "MainWidget.h"
-#include "nslog.h"
-
-NS_IMPL_LOG(nsEmbedXlibIntoQtLog)
-#define PRINTF NS_LOG_PRINTF(nsEmbedXlibIntoQtLog)
-#define FLUSH  NS_LOG_FLUSH(nsEmbedXlibIntoQtLog)
 
 int main( int argc, char** argv )
 {
@@ -35,13 +30,13 @@ int main( int argc, char** argv )
 	MainWidget    main_widget;
 
 	main_widget.setGeometry( 100, 100, 500, 500 );
-	PRINTF("main(): done setting main_widget geometry\n");
+	printf("main(): done setting main_widget geometry\n");
 
 	QObject::connect(main_widget.getQuitWidget(), SIGNAL(clicked()), &qapp, SLOT(quit()));
-	PRINTF("main(): done getting Quit widget and connecting to app quit()\n");
+	printf("main(): done getting Quit widget and connecting to app quit()\n");
 
 	qapp.setMainWidget( &main_widget );
-	PRINTF("main(): done setting main_widget to app\n");
+	printf("main(): done setting main_widget to app\n");
 
 	main_widget.show();
 

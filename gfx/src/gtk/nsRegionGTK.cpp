@@ -25,11 +25,6 @@
 #include "nsRegionGTK.h"
 #include "xregion.h"
 #include "prmem.h"
-#include "nslog.h"
-
-NS_IMPL_LOG(nsRegionGTKLog)
-#define PRINTF NS_LOG_PRINTF(nsRegionGTKLog)
-#define FLUSH  NS_LOG_FLUSH(nsRegionGTKLog)
 
 #ifdef DEBUG_REGIONS
 static int nRegions;
@@ -44,7 +39,7 @@ nsRegionGTK::nsRegionGTK()
 
 #ifdef DEBUG_REGIONS
   ++nRegions;
-  PRINTF("REGIONS+ = %i\n", nRegions);
+  printf("REGIONS+ = %i\n", nRegions);
 #endif
 
   mRegion = nsnull;
@@ -54,7 +49,7 @@ nsRegionGTK::~nsRegionGTK()
 {
 #ifdef DEBUG_REGIONS
   --nRegions;
-  PRINTF("REGIONS- = %i\n", nRegions);
+  printf("REGIONS- = %i\n", nRegions);
 #endif
 
   if (mRegion)

@@ -44,11 +44,6 @@
 #include "nsStyleUtil.h"
 #include "nsFont.h"
 #include "nsCOMPtr.h"
-#include "nslog.h"
-
-NS_IMPL_LOG(nsFieldSetFrameLog)
-#define PRINTF NS_LOG_PRINTF(nsFieldSetFrameLog)
-#define FLUSH  NS_LOG_FLUSH(nsFieldSetFrameLog)
 
 static NS_DEFINE_IID(kLegendFrameCID, NS_LEGEND_FRAME_CID);
 static NS_DEFINE_IID(kIDOMHTMLFieldSetElementIID, NS_IDOMHTMLFIELDSETELEMENT_IID);
@@ -373,9 +368,9 @@ nsFieldSetFrame::Reflow(nsIPresContext*          aPresContext,
           ReflowChild(mLegendFrame, aPresContext, legendDesiredSize, legendReflowState,
                       0, 0, NS_FRAME_NO_MOVE_FRAME, aStatus);
 #ifdef NOISY_REFLOW
-          PRINTF("  returned (%d, %d)\n", legendDesiredSize.width, legendDesiredSize.height);
+          printf("  returned (%d, %d)\n", legendDesiredSize.width, legendDesiredSize.height);
           if (legendDesiredSize.maxElementSize)
-            PRINTF("  and maxES (%d, %d)\n", 
+            printf("  and maxES (%d, %d)\n", 
                    legendDesiredSize.maxElementSize->width, legendDesiredSize.maxElementSize->height);
 #endif
           // figure out the legend's rectangle
@@ -445,20 +440,20 @@ nsFieldSetFrame::Reflow(nsIPresContext*          aPresContext,
                         kidReflowState.mComputedMargin.left, kidReflowState.mComputedMargin.top,
                         0, aStatus);
 #ifdef NOISY_REFLOW
-            PRINTF("  returned (%d, %d)\n", kidDesiredSize.width, kidDesiredSize.height);
+            printf("  returned (%d, %d)\n", kidDesiredSize.width, kidDesiredSize.height);
             if (kidDesiredSize.maxElementSize)
-              PRINTF("  and maxES (%d, %d)\n", 
+              printf("  and maxES (%d, %d)\n", 
                      kidDesiredSize.maxElementSize->width, kidDesiredSize.maxElementSize->height);
 #endif
 
             /*
-              PRINTF("*** %p computedHgt: %d ", this, aReflowState.mComputedHeight);
-              PRINTF("Reason: ");
+            printf("*** %p computedHgt: %d ", this, aReflowState.mComputedHeight);
+              printf("Reason: ");
               switch (aReflowState.reason) {
-              case eReflowReason_Initial:PRINTF("Initil");break;
-              case eReflowReason_Incremental:PRINTF("Increm");break;
-              case eReflowReason_Resize: PRINTF("Resize");      break;
-              case eReflowReason_StyleChange:PRINTF("eReflowReason_StyleChange");break;
+                case eReflowReason_Initial:printf("Initil");break;
+                case eReflowReason_Incremental:printf("Increm");break;
+                case eReflowReason_Resize: printf("Resize");      break;
+                case eReflowReason_StyleChange:printf("eReflowReason_StyleChange");break;
               }
               */
 
@@ -474,7 +469,7 @@ nsFieldSetFrame::Reflow(nsIPresContext*          aPresContext,
             nsFrameState  kidState;
             mContentFrame->GetFrameState(&kidState);
 
-            // PRINTF("width: %d, height: %d\n", desiredSize.mCombinedArea.width, desiredSize.mCombinedArea.height);
+           // printf("width: %d, height: %d\n", desiredSize.mCombinedArea.width, desiredSize.mCombinedArea.height);
 
             /*
             if (kidState & NS_FRAME_OUTSIDE_CHILDREN) {
@@ -575,11 +570,11 @@ nsFieldSetFrame::Reflow(nsIPresContext*          aPresContext,
         aDesiredSize.maxElementSize->height += borderPadding.top + borderPadding.bottom + mLegendRect.height;
     }
 #ifdef NOISY_REFLOW
-    PRINTF("FIELDSET:  w=%d, maxWidth=%d, MES=%d\n",
+    printf("FIELDSET:  w=%d, maxWidth=%d, MES=%d\n",
            aDesiredSize.width, aDesiredSize.mMaximumWidth, 
            aDesiredSize.maxElementSize ? aDesiredSize.maxElementSize->width : -1);
     if (aDesiredSize.mFlags & NS_REFLOW_CALC_MAX_WIDTH)
-      PRINTF("  and preferred size = %d\n", aDesiredSize.mMaximumWidth);
+      printf("  and preferred size = %d\n", aDesiredSize.mMaximumWidth);
 
 #endif
   return NS_OK;

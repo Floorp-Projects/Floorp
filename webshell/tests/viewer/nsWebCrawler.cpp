@@ -58,7 +58,6 @@
 #include "nsIContentViewerFile.h"
 #include "nsIDocShell.h"
 #include "nsIWebNavigation.h"
-#undef printf
 
 static NS_DEFINE_IID(kIDocumentLoaderObserverIID, NS_IDOCUMENTLOADEROBSERVER_IID);
 static NS_DEFINE_IID(kIDocumentViewerIID, NS_IDOCUMENT_VIEWER_IID);

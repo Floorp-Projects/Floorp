@@ -31,12 +31,6 @@
 #include "nsLayoutAtoms.h"
 #include "nsString.h"
 #include "nsIXMLContent.h"
-#include "nslog.h"
-#undef fprintf
-
-NS_IMPL_LOG(nsXMLNotationLog)
-#define PRINTF NS_LOG_PRINTF(nsXMLNotationLog)
-#define FLUSH  NS_LOG_FLUSH(nsXMLNotationLog)
 
 
 class nsXMLNotation : public nsIDOMNotation,

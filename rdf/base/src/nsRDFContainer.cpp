@@ -60,11 +60,6 @@
 #include "nsString.h"
 #include "nsXPIDLString.h"
 #include "rdf.h"
-#include "nslog.h"
-
-NS_IMPL_LOG(nsRDFContainerLog)
-#define PRINTF NS_LOG_PRINTF(nsRDFContainerLog)
-#define FLUSH  NS_LOG_FLUSH(nsRDFContainerLog)
 
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
 static NS_DEFINE_CID(kRDFContainerUtilsCID, NS_RDFCONTAINERUTILS_CID);
@@ -466,7 +461,7 @@ RDFContainerImpl::~RDFContainerImpl()
 {
 #ifdef DEBUG_REFS
     --gInstanceCount;
-    PRINTF("%d - RDF: RDFContainerImpl\n", gInstanceCount);
+    fprintf(stdout, "%d - RDF: RDFContainerImpl\n", gInstanceCount);
 #endif
 
     NS_IF_RELEASE(mContainer);

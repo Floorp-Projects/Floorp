@@ -64,15 +64,6 @@
 #include "nsISupportsPrimitives.h"
 #include "nsLayoutCID.h"
 #include "nsIDOMNSRange.h"
-#include "nslog.h"
-
-#ifdef DEBUG_IME
-NS_IMPL_LOG_ENABLED(nsEditorEventListenersLog)
-#else
-NS_IMPL_LOG(nsEditorEventListenersLog)
-#endif
-#define PRINTF NS_LOG_PRINTF(nsEditorEventListenersLog)
-#define FLUSH  NS_LOG_FLUSH(nsEditorEventListenersLog)
 
 // Drag & Drop, Clipboard Support
 static NS_DEFINE_CID(kCDataFlavorCID,          NS_DATAFLAVOR_CID);
@@ -519,7 +510,9 @@ nsTextEditorTextListener::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 nsresult
 nsTextEditorTextListener::HandleEvent(nsIDOMEvent* aEvent)
 {
-  PRINTF("nsTextEditorTextListener::HandleEvent\n");
+#ifdef DEBUG_IME
+   printf("nsTextEditorTextListener::HandleEvent\n");
+#endif
   return NS_OK;
 }
 
@@ -528,7 +521,9 @@ nsTextEditorTextListener::HandleEvent(nsIDOMEvent* aEvent)
 nsresult
 nsTextEditorTextListener::HandleText(nsIDOMEvent* aTextEvent)
 {
-  PRINTF("nsTextEditorTextListener::HandleText\n");
+#ifdef DEBUG_IME
+   printf("nsTextEditorTextListener::HandleText\n");
+#endif
    nsAutoString            composedText;
    nsresult            result = NS_OK;
    nsCOMPtr<nsIPrivateTextEvent> textEvent;
@@ -811,7 +806,9 @@ NS_IMPL_RELEASE(nsTextEditorCompositionListener)
 nsresult
 nsTextEditorCompositionListener::HandleEvent(nsIDOMEvent* aEvent)
 {
-  PRINTF("nsTextEditorCompositionListener::HandleEvent\n");
+#ifdef DEBUG_IME
+   printf("nsTextEditorCompositionListener::HandleEvent\n");
+#endif
   return NS_OK;
 }
 
@@ -827,7 +824,9 @@ void nsTextEditorCompositionListener::SetEditor(nsIEditor *aEditor)
 nsresult
 nsTextEditorCompositionListener::HandleStartComposition(nsIDOMEvent* aCompositionEvent)
 {
-  PRINTF("nsTextEditorCompositionListener::HandleStartComposition\n");
+#ifdef DEBUG_IME
+   printf("nsTextEditorCompositionListener::HandleStartComposition\n");
+#endif
   nsCOMPtr<nsIPrivateCompositionEvent> pCompositionEvent = do_QueryInterface(aCompositionEvent);
   nsTextEventReply* eventReply;
 
@@ -841,7 +840,9 @@ nsTextEditorCompositionListener::HandleStartComposition(nsIDOMEvent* aCompositio
 nsresult
 nsTextEditorCompositionListener::HandleQueryComposition(nsIDOMEvent* aCompositionEvent)
 {
-  PRINTF("nsTextEditorCompositionListener::HandleQueryComposition\n");
+#ifdef DEBUG_IME
+   printf("nsTextEditorCompositionListener::HandleQueryComposition\n");
+#endif
   nsCOMPtr<nsIPrivateCompositionEvent> pCompositionEvent = do_QueryInterface(aCompositionEvent);
   nsTextEventReply* eventReply;
 
@@ -856,7 +857,9 @@ nsTextEditorCompositionListener::HandleQueryComposition(nsIDOMEvent* aCompositio
 nsresult
 nsTextEditorCompositionListener::HandleEndComposition(nsIDOMEvent* aCompositionEvent)
 {
-  PRINTF("nsTextEditorCompositionListener::HandleEndComposition\n");
+#ifdef DEBUG_IME
+   printf("nsTextEditorCompositionListener::HandleEndComposition\n");
+#endif
    return mEditor->EndComposition();
 }
 
@@ -864,7 +867,9 @@ nsTextEditorCompositionListener::HandleEndComposition(nsIDOMEvent* aCompositionE
 nsresult
 nsTextEditorCompositionListener::HandleQueryReconversion(nsIDOMEvent* aReconversionEvent)
 {
-  PRINTF("nsTextEditorCompositionListener::HandleQueryReconversion\n");
+#ifdef DEBUG_IME
+  printf("nsTextEditorCompositionListener::HandleQueryReconversion\n");
+#endif
   nsCOMPtr<nsIPrivateCompositionEvent> pCompositionEvent = do_QueryInterface(aReconversionEvent);
   nsReconversionEventReply* eventReply;
 

@@ -282,7 +282,7 @@ nsXBLStreamListener::OnStopRequest(nsIChannel* aChannel, nsISupports* aCtxt, nsr
   }
 
   if (NS_FAILED(rv) || NS_FAILED(aStatus)) {
-    NS_WARNING("Failed to load XBL document!!!!!!!!!!!!!");
+    NS_WARNING("Failed to load XBL document!!!!!!!!!!!!!\n");
 
     PRUint32 count = mBindingRequests.Count();
     for (PRUint32 i = 0; i < count; i++) {
@@ -321,7 +321,7 @@ nsXBLStreamListener::Load(nsIDOMEvent* aEvent)
   // See if we're still alive.
   nsCOMPtr<nsIDocument> doc(do_QueryReferent(mDocument));
   if (!doc) {
-    NS_WARNING("XBL load did not complete until after document went away! Modal dialog bug?");
+    NS_WARNING("XBL load did not complete until after document went away! Modal dialog bug?\n");
   }
   else {
     // Remove ourselves from the set of pending docs.

@@ -88,11 +88,6 @@
 // Interfaces Needed
 #include "nsIDocShell.h"
 #include "nsIXULWindow.h"
-#include "nslog.h"
-
-NS_IMPL_LOG(nsBookmarksServiceLog)
-#define PRINTF NS_LOG_PRINTF(nsBookmarksServiceLog)
-#define FLUSH  NS_LOG_FLUSH(nsBookmarksServiceLog)
 
 nsIRDFResource		*kNC_IEFavoritesRoot;
 nsIRDFResource		*kNC_Bookmark;
@@ -1837,8 +1832,8 @@ nsBookmarksService::ExamineBookmarkSchedule(nsIRDFResource *theBookmark, PRBool 
 	char *methodStr = notificationMethod.ToNewCString();
 	if (methodStr)
 	{
-		PRINTF("Start Hour: %d    End Hour: %d    Duration: %d mins    Method: '%s'\n",
-		       startHour, endHour, duration, methodStr);
+		printf("Start Hour: %d    End Hour: %d    Duration: %d mins    Method: '%s'\n",
+			startHour, endHour, duration, methodStr);
 		delete [] methodStr;
 		methodStr = nsnull;
 	}
@@ -1878,7 +1873,7 @@ nsBookmarksService::ExamineBookmarkSchedule(nsIRDFResource *theBookmark, PRBool 
 						examineFlag = PR_FALSE;
 
 #ifdef	DEBUG_BOOKMARK_PING_OUTPUT
-						PRINTF("Skipping URL, its too soon.\n");
+						printf("Skipping URL, its too soon.\n");
 #endif
 					}
 				}
@@ -1973,7 +1968,7 @@ nsBookmarksService::FireTimer(nsITimer* aTimer, void* aClosure)
 			bookmark->GetValueConst(&url);
 
 #ifdef	DEBUG_BOOKMARK_PING_OUTPUT
-			PRINTF("nsBookmarksService::FireTimer - Pinging '%s'\n", url);
+			printf("nsBookmarksService::FireTimer - Pinging '%s'\n", url);
 #endif
 
 			nsCOMPtr<nsIURI>	uri;
@@ -2005,7 +2000,7 @@ nsBookmarksService::FireTimer(nsITimer* aTimer, void* aClosure)
 #ifdef	DEBUG_BOOKMARK_PING_OUTPUT
 else
 	{
-	    PRINTF("nsBookmarksService::FireTimer - busy pinging.\n");
+	printf("nsBookmarksService::FireTimer - busy pinging.\n");
 	}
 #endif
 
@@ -2058,7 +2053,7 @@ nsBookmarksService::OnStopRequest(nsIChannel* channel, nsISupports *ctxt,
 	if (NS_SUCCEEDED(rv = busyResource->GetValueConst(&uri)) && (uri))
 	{
 #ifdef	DEBUG_BOOKMARK_PING_OUTPUT
-	    PRINTF("Finished polling '%s'\n", uri);
+		printf("Finished polling '%s'\n", uri);
 #endif
 	}
 
@@ -2129,7 +2124,7 @@ nsBookmarksService::OnStopRequest(nsIChannel* channel, nsISupports *ctxt,
 				{
 #ifdef	DEBUG_BOOKMARK_PING_OUTPUT
 					const char *eTagVal = eTagValue.GetBuffer();
-					PRINTF("eTag: '%s'\n", eTagVal);
+					printf("eTag: '%s'\n", eTagVal);
 #endif
 					nsAutoString		eTagStr;
 					nsCOMPtr<nsIRDFNode>	currentETagNode;
@@ -2174,7 +2169,7 @@ nsBookmarksService::OnStopRequest(nsIChannel* channel, nsISupports *ctxt,
 		{
 #ifdef	DEBUG_BOOKMARK_PING_OUTPUT
 			const char *lastModVal = lastModValue.GetBuffer();
-			PRINTF("Last-Modified: '%s'\n", lastModVal);
+			printf("Last-Modified: '%s'\n", lastModVal);
 #endif
 			nsAutoString		lastModStr;
 			nsCOMPtr<nsIRDFNode>	currentLastModNode;
@@ -2217,7 +2212,7 @@ nsBookmarksService::OnStopRequest(nsIChannel* channel, nsISupports *ctxt,
 		{
 #ifdef	DEBUG_BOOKMARK_PING_OUTPUT
 			const char *contentLengthVal = contentLengthValue.GetBuffer();
-			PRINTF("Content-Length: '%s'\n", contentLengthVal);
+			printf("Content-Length: '%s'\n", contentLengthVal);
 #endif
 			nsAutoString		contentLenStr;
 			nsCOMPtr<nsIRDFNode>	currentContentLengthNode;
@@ -2283,7 +2278,7 @@ nsBookmarksService::OnStopRequest(nsIChannel* channel, nsISupports *ctxt,
 		if (changedFlag == PR_TRUE)
 		{
 #ifdef	DEBUG_BOOKMARK_PING_OUTPUT
-		    PRINTF("URL has changed!\n\n");
+			printf("URL has changed!\n\n");
 #endif
 
 			nsAutoString		schedule;
@@ -2407,7 +2402,7 @@ nsBookmarksService::OnStopRequest(nsIChannel* channel, nsISupports *ctxt,
 					if (stopCheckingFlag == PR_TRUE)
 					{
 #ifdef	DEBUG_BOOKMARK_PING_OUTPUT
-					    PRINTF("\nStop checking this URL.\n");
+						printf("\nStop checking this URL.\n");
 #endif
 						rv = mInner->Unassert(busyResource, kWEB_Schedule, scheduleNode);
 						NS_ASSERTION(NS_SUCCEEDED(rv), "unable to unassert kWEB_Schedule");
@@ -2462,7 +2457,7 @@ nsBookmarksService::OnStopRequest(nsIChannel* channel, nsISupports *ctxt,
 #ifdef	DEBUG_BOOKMARK_PING_OUTPUT
 		else
 		{
-		    PRINTF("URL has not changed status.\n\n");
+			printf("URL has not changed status.\n\n");
 		}
 #endif
 	}
@@ -3975,7 +3970,7 @@ nsBookmarksService::ReadFavorites()
 #ifdef	DEBUG
 	PRTime		now;
 	Microseconds((UnsignedWide *)&now);
-	PRINTF("Start reading in IE Favorites.html\n");
+	printf("Start reading in IE Favorites.html\n");
 #endif
 
 	// look for and import any IE Favorites
@@ -4007,7 +4002,7 @@ nsBookmarksService::ReadFavorites()
 	LL_SUB(loadTime64, now2, now);
 	PRUint32	loadTime32;
 	LL_L2UI(loadTime32, loadTime64);
-	PRINTF("Finished reading in IE Favorites.html  (%u microseconds)\n", loadTime32);
+	printf("Finished reading in IE Favorites.html  (%u microseconds)\n", loadTime32);
 #endif
 	return(rv);
 }
@@ -4056,7 +4051,7 @@ nsBookmarksService::ReadBookmarks()
 #else
 	now = PR_Now();
 #endif
-	PRINTF("Start reading in bookmarks.html\n");
+	printf("Start reading in bookmarks.html\n");
 #endif
 
 #ifdef	XP_WIN
@@ -4242,7 +4237,7 @@ nsBookmarksService::ReadBookmarks()
 	LL_SUB(loadTime64, now2, now);
 	PRUint32	loadTime32;
 	LL_L2UI(loadTime32, loadTime64);
-	PRINTF("Finished reading in bookmarks.html  (%u microseconds)\n", loadTime32);
+	printf("Finished reading in bookmarks.html  (%u microseconds)\n", loadTime32);
 #endif
 
 	return(NS_OK);

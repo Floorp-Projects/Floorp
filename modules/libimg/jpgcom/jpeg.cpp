@@ -22,7 +22,7 @@
 
 /*
  *    jpeg.c --- Glue code to Independent JPEG Group decoder library
- *    $Id: jpeg.cpp,v 1.23 2000/10/27 22:41:10 warren%netscape.com Exp $
+ *    $Id: jpeg.cpp,v 1.24 2000/10/28 22:15:46 warren%netscape.com Exp $
  */
 
 
@@ -65,11 +65,7 @@ PR_END_EXTERN_C
 #define MAX_JPEG_MARKER_LENGTH  (((PRUint32)1 << 16) - 1)
 
 int il_debug;
-#include "nslog.h"
-
-NS_IMPL_LOG(IMGLIBLog)
-#define PRINTF NS_LOG_PRINTF(IMGLIBLog)
-#define FLUSH  NS_LOG_FLUSH(IMGLIBLog)
+PRLogModuleInfo *il_log_module = NULL;
 
 /*
  * States that the jpeg decoder might be in

@@ -55,11 +55,6 @@
 
 #include "nsHTTPRequest.h"
 #include "nsIWebFilters.h"
-#include "nslog.h"
-
-NS_IMPL_LOG(HTTPLog)
-#define PRINTF NS_LOG_PRINTF(HTTPLog)
-#define FLUSH  NS_LOG_FLUSH(HTTPLog)
 
 #ifdef XP_UNIX
 #include <sys/utsname.h>
@@ -68,6 +63,21 @@ NS_IMPL_LOG(HTTPLog)
 #if defined(XP_PC) && !defined(XP_OS2)
 #include <windows.h>
 #endif
+
+#if defined(PR_LOGGING)
+//
+// Log module for HTTP Protocol logging...
+//
+// To enable logging (see prlog.h for full details):
+//
+//    set NSPR_LOG_MODULES=nsHTTPProtocol:5
+//    set NSPR_LOG_FILE=nspr.log
+//
+// this enables PR_LOG_ALWAYS level information and places all output in
+// the file nspr.log
+//
+PRLogModuleInfo* gHTTPLog = nsnull;
+#endif /* PR_LOGGING */
 
 static PRInt32 PR_CALLBACK HTTPPrefsCallback(const char* pref, void* instance);
 static const char NETWORK_PREFS[] = "network.";
@@ -150,7 +160,7 @@ CategoryCreateService( const char *category )
         }
 
 #ifdef DEBUG_HTTP_STARTUP_CATEGORY
-        PRINTF("HTTP Handler: Instantiating contractid %s \
+        printf("HTTP Handler: Instantiating contractid %s \
                 in http startup category.\n", (const char *)contractID);
 #endif /* DEBUG_HTTP_STARTUP_CATEGORY */
         nsCOMPtr<nsISupports> instance = do_GetService(contractID, &rv);
@@ -767,9 +777,13 @@ nsHTTPHandler::Init()
                 HTTPPrefsCallback, (void *)this);
     PrefsChanged();
 
+#if defined (PR_LOGGING)
+    gHTTPLog = PR_NewLogModule("nsHTTPProtocol");
+#endif /* PR_LOGGING */
+
     mSessionStartTime = PR_Now();
 
-    PR_LOG(HTTPLog, PR_LOG_ALWAYS, ("Creating nsHTTPHandler [this=%x].\n", 
+    PR_LOG(gHTTPLog, PR_LOG_ALWAYS, ("Creating nsHTTPHandler [this=%x].\n", 
                 this));
 
     // Initialize the Atoms used by the HTTP protocol...
@@ -804,7 +818,7 @@ nsHTTPHandler::Init()
 
 nsHTTPHandler::~nsHTTPHandler()
 {
-    PR_LOG(HTTPLog, PR_LOG_ALWAYS, 
+    PR_LOG(gHTTPLog, PR_LOG_ALWAYS, 
            ("Deleting nsHTTPHandler [this=%x].\n", this));
 
     mIdleTransports    ->Clear();
@@ -966,7 +980,7 @@ nsresult nsHTTPHandler::RequestTransport(nsIURI* i_Uri,
                         ? NS_OK : NS_ERROR_FAILURE;  
                 NS_ASSERTION (NS_SUCCEEDED(rv), "AppendElement failed");
 
-                PR_LOG (HTTPLog, PR_LOG_ALWAYS, 
+                PR_LOG (gHTTPLog, PR_LOG_ALWAYS, 
                        ("nsHTTPHandler::RequestTransport.""\tAll socket transports are busy."
                         "\tAdding nsHTTPChannel [%x] to pending list.\n",
                         i_Channel));
@@ -1010,7 +1024,7 @@ nsresult nsHTTPHandler::RequestTransport(nsIURI* i_Uri,
     *o_pTrans = trans;
     NS_IF_ADDREF(*o_pTrans);
     
-    PR_LOG(HTTPLog, PR_LOG_ALWAYS, 
+    PR_LOG(gHTTPLog, PR_LOG_ALWAYS, 
            ("nsHTTPHandler::RequestTransport."
             "\tGot a socket transport for nsHTTPChannel [%x]. %d " 
             " Active transports.\n",
@@ -1073,7 +1087,7 @@ nsHTTPHandler::ReleaseTransport (nsIChannel* i_pTrans  ,
 
     PRUint32 capabilities = (mCapabilities & aCapabilities);
 
-    PR_LOG (HTTPLog, PR_LOG_DEBUG, ("nsHTTPHandler::ReleaseTransport [this=%x] "
+    PR_LOG (gHTTPLog, PR_LOG_DEBUG, ("nsHTTPHandler::ReleaseTransport [this=%x] "
                 "i_pTrans=%x, aCapabilites=%o, aKeepAliveTimeout=%d, aKeepAliveMaxCon=%d, "
                 "maxKeepAlives=%d\n",
                 this, i_pTrans, aCapabilities, 
@@ -1088,7 +1102,7 @@ nsHTTPHandler::ReleaseTransport (nsIChannel* i_pTrans  ,
     if (aKeepAliveTimeout > (PRUint32)mKeepAliveTimeout)
         aKeepAliveTimeout = (PRUint32)mKeepAliveTimeout;
 
-    PR_LOG (HTTPLog, PR_LOG_ALWAYS, 
+    PR_LOG (gHTTPLog, PR_LOG_ALWAYS, 
            ("nsHTTPHandler::ReleaseTransport."
             "\tReleasing socket transport %x.\n",
             i_pTrans));
@@ -1211,7 +1225,7 @@ nsHTTPHandler::ReleaseTransport (nsIChannel* i_pTrans  ,
         mPendingChannelList->Count(&count);
         mTransportList->Count(&transportsInUseCount);
 
-        PR_LOG (HTTPLog, PR_LOG_ALWAYS, ("nsHTTPHandler::ReleaseTransport():"
+        PR_LOG (gHTTPLog, PR_LOG_ALWAYS, ("nsHTTPHandler::ReleaseTransport():"
                 "pendingChannels=%d, InUseCount=%d\n", count, transportsInUseCount));
 
         if (!count || (transportsInUseCount >= (PRUint32) mMaxConnections))
@@ -1226,7 +1240,7 @@ nsHTTPHandler::ReleaseTransport (nsIChannel* i_pTrans  ,
         mPendingChannelList->RemoveElement(item);
         channel = (nsHTTPChannel*)(nsIRequest*)(nsISupports*)item;
 
-        PR_LOG (HTTPLog, PR_LOG_ALWAYS, ("nsHTTPHandler::ReleaseTransport."
+        PR_LOG (gHTTPLog, PR_LOG_ALWAYS, ("nsHTTPHandler::ReleaseTransport."
                 "\tRestarting nsHTTPChannel [%x]\n", channel));
 
         channel->Open();
@@ -1243,7 +1257,7 @@ nsresult nsHTTPHandler::CancelPendingChannel(nsHTTPChannel* aChannel)
   ret = (PRBool) mPendingChannelList->RemoveElement(
             (nsISupports*)(nsIRequest*)aChannel);
 
-  PR_LOG(HTTPLog, PR_LOG_ALWAYS, 
+  PR_LOG(gHTTPLog, PR_LOG_ALWAYS, 
          ("nsHTTPHandler::CancelPendingChannel."
           "\tCancelling nsHTTPChannel [%x]\n",
           aChannel));

@@ -20,9 +20,6 @@
  * Contributor(s): 
  */
 
-#include "nslog.h"
-#undef printf
-
 #include "nsPluginHostImpl.h"
 #include <stdio.h>
 #include "prio.h"
@@ -53,10 +50,6 @@
 #include "nsNetUtil.h"
 #include "nsIProgressEventSink.h"
 #include "nsIDocument.h"
-
-NS_IMPL_LOG(nsPluginHostImplLog)
-#define PRINTF NS_LOG_PRINTF(nsPluginHostImplLog)
-#define FLUSH  NS_LOG_FLUSH(nsPluginHostImplLog)
 
 // Friggin' X11 has to "#define None". Lame!
 #ifdef None
@@ -988,7 +981,7 @@ nsPluginStreamListenerPeer::~nsPluginStreamListenerPeer()
   {
     char* spec;
 	(void)mURL->GetSpec(&spec);
-	PRINTF("killing stream for %s\n", mURL ? spec : "(unknown URL)");
+	printf("killing stream for %s\n", mURL ? spec : "(unknown URL)");
 	nsCRT::free(spec);
   }
 #endif
@@ -1044,7 +1037,7 @@ nsresult nsPluginStreamListenerPeer::Initialize(nsIURI *aURL,
 #ifdef NS_DEBUG
   char* spec;
   (void)aURL->GetSpec(&spec);
-  PRINTF("created stream for %s\n", spec);
+  printf("created stream for %s\n", spec);
   nsCRT::free(spec);
 #endif
 
@@ -1077,7 +1070,7 @@ nsresult nsPluginStreamListenerPeer::InitializeEmbeded(nsIURI *aURL,
 #ifdef NS_DEBUG
   char* spec;
   (void)aURL->GetSpec(&spec);
-  PRINTF("created stream for %s\n", spec);
+  printf("created stream for %s\n", spec);
   nsCRT::free(spec);
 #endif
 
@@ -1109,8 +1102,8 @@ nsresult nsPluginStreamListenerPeer::InitializeEmbeded(nsIURI *aURL,
 nsresult nsPluginStreamListenerPeer::InitializeFullPage(nsIPluginInstance *aInstance)
 {
 #ifdef NS_DEBUG
-  PRINTF("created stream for (unknown URL)\n");
-  PRINTF("Inside nsPluginStreamListenerPeer::InitializeFullPage...\n");
+  printf("created stream for (unknown URL)\n");
+  printf("Inside nsPluginStreamListenerPeer::InitializeFullPage...\n");
 #endif
 
   NS_ASSERTION(mInstance == nsnull, "nsPluginStreamListenerPeer::InitializeFullPage mInstance != nsnull");
@@ -1481,7 +1474,7 @@ nsPluginHostImpl::nsPluginHostImpl()
 nsPluginHostImpl::~nsPluginHostImpl()
 {
 #ifdef NS_DEBUG
-  PRINTF("killing plugin host\n");
+printf("killing plugin host\n");
 #endif
   Destroy();
   if (nsnull != mPluginPath)
@@ -2081,13 +2074,13 @@ NS_IMETHODIMP nsPluginHostImpl::InstantiateEmbededPlugin(const char *aMimeType,
 
 #ifdef NS_DEBUG
   if(aMimeType)
-    PRINTF("InstantiateEmbededPlugin for %s\n",aMimeType);
+    printf("InstantiateEmbededPlugin for %s\n",aMimeType);
 #endif
 
   if(FindStoppedPluginForURL(aURL, aOwner) == NS_OK)
   {
 #ifdef NS_DEBUG
-    PRINTF("InstantiateEmbededPlugin find stopped\n");
+      printf("InstantiateEmbededPlugin find stopped\n");
 #endif
 
 	  aOwner->GetInstance(instance);
@@ -2192,7 +2185,7 @@ NS_IMETHODIMP nsPluginHostImpl::InstantiateEmbededPlugin(const char *aMimeType,
   }
 
 #ifdef NS_DEBUG
-  PRINTF("InstantiateEmbededPlugin.. returning\n");
+  printf("InstantiateEmbededPlugin.. returning\n");
 #endif
   return rv;
 }
@@ -2209,7 +2202,7 @@ NS_IMETHODIMP nsPluginHostImpl::InstantiateFullPagePlugin(const char *aMimeType,
   PRBool isJavaEnabled = PR_TRUE;
 
 #ifdef NS_DEBUG
-  PRINTF("InstantiateFullPagePlugin for %s\n",aMimeType);
+  printf("InstantiateFullPagePlugin for %s\n",aMimeType);
 #endif
   
   //create a URL so that the instantiator can do file ext.
@@ -2222,7 +2215,7 @@ NS_IMETHODIMP nsPluginHostImpl::InstantiateFullPagePlugin(const char *aMimeType,
   if(FindStoppedPluginForURL(url, aOwner) == NS_OK)
   {
 #ifdef NS_DEBUG
-    PRINTF("InstantiateFullPagePlugin, got a stopped plugin\n");
+      printf("InstantiateFullPagePlugin, got a stopped plugin\n");
 #endif
 
     nsIPluginInstance* instance;
@@ -2243,7 +2236,7 @@ NS_IMETHODIMP nsPluginHostImpl::InstantiateFullPagePlugin(const char *aMimeType,
     nsPluginWindow    *window = nsnull;
 
 #ifdef NS_DEBUG
-    PRINTF("InstantiateFullPagePlugin, got it... now stream\n");
+    printf("InstantiateFullPagePlugin, got it... now stream\n");
 #endif
     //we got a plugin built, now stream
 
@@ -2266,7 +2259,7 @@ NS_IMETHODIMP nsPluginHostImpl::InstantiateFullPagePlugin(const char *aMimeType,
   }
 
 #ifdef NS_DEBUG
-  PRINTF("Falling out of InstantiateFullPagePlugin...\n");
+  printf("Falling out of InstantiateFullPagePlugin...\n");
 #endif
   return rv;
 }
@@ -2279,7 +2272,7 @@ nsresult nsPluginHostImpl::FindStoppedPluginForURL(nsIURI* aURL,
   	return NS_ERROR_FAILURE;
   	
 #ifdef NS_DEBUG
-  PRINTF("Inside nsPluginHostImpl::FindStoppedPluginForURL...\n");
+  printf("Inside nsPluginHostImpl::FindStoppedPluginForURL...\n");
 #endif
 
   (void)aURL->GetSpec(&url);
@@ -2851,7 +2844,7 @@ NS_IMETHODIMP nsPluginHostImpl::GetPluginFactory(const char *aMimeType, nsIPlugi
 #ifdef XP_WIN // actually load a dll on Windows
 
 #ifdef NS_DEBUG
-    PRINTF("For %s found plugin %s\n", aMimeType, pluginTag->mFileName);
+  printf("For %s found plugin %s\n", aMimeType, pluginTag->mFileName);
 #endif
 
     nsFileSpec file(pluginTag->mFileName);

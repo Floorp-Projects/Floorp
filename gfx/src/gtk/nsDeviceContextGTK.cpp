@@ -34,11 +34,6 @@
 
 #include "nsGfxPSCID.h"
 #include "nsIDeviceContextPS.h"
-#include "nslog.h"
-
-NS_IMPL_LOG(nsDeviceContextGTKLog)
-#define PRINTF NS_LOG_PRINTF(nsDeviceContextGTKLog)
-#define FLUSH  NS_LOG_FLUSH(nsDeviceContextGTKLog)
 
 #ifdef USE_XPRINT
 #include "nsGfxXPrintCID.h"
@@ -185,7 +180,7 @@ NS_IMETHODIMP nsDeviceContextGTK::Init(nsNativeWidget aNativeWidget)
 #ifdef DEBUG
   static PRBool once = PR_TRUE;
   if (once) {
-    PRINTF("GFX: dpi=%d t2p=%g p2t=%g depth=%d\n", mDpi, mTwipsToPixels, mPixelsToTwips,mDepth);
+    printf("GFX: dpi=%d t2p=%g p2t=%g depth=%d\n", mDpi, mTwipsToPixels, mPixelsToTwips,mDepth);
     once = PR_FALSE;
   }
 #endif

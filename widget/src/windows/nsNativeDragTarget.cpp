@@ -30,11 +30,6 @@
 
 #include "nsIWidget.h"
 #include "nsWindow.h"
-#include "nslog.h"
-
-NS_IMPL_LOG(nsNativeDragTargetLog)
-#define PRINTF NS_LOG_PRINTF(nsNativeDragTargetLog)
-#define FLUSH  NS_LOG_FLUSH(nsNativeDragTargetLog)
 
 #if (_MSC_VER == 1100)
 #define INITGUID
@@ -42,6 +37,8 @@ NS_IMPL_LOG(nsNativeDragTargetLog)
 DEFINE_OLEGUID(IID_IDropTarget, 0x00000122L, 0, 0);
 DEFINE_OLEGUID(IID_IUnknown, 0x00000000L, 0, 0);
 #endif
+
+#define DRAG_DEBUG 0
 
 /* Define Class IDs */
 static NS_DEFINE_IID(kCDragServiceCID,  NS_DRAGSERVICE_CID);
@@ -228,7 +225,7 @@ STDMETHODIMP nsNativeDragTarget::DragEnter(LPDATAOBJECT pIDataSource,
 												                   POINTL       pt, 
                                            DWORD*       pdwEffect)
 {
-  PRINTF("DragEnter\n");
+  if (DRAG_DEBUG) printf("DragEnter\n");
 
 	if (mDragService) {
 
@@ -259,7 +256,7 @@ STDMETHODIMP nsNativeDragTarget::DragOver(DWORD   grfKeyState,
                                           POINTL  pt, 
                                           LPDWORD pdwEffect)
 {
-  PRINTF("DragOver\n");
+  if (DRAG_DEBUG) printf("DragOver\n");
 	if (mDragService) {
     // Now process the native drag state and then dispatch the event
     ProcessDrag(nsnull, NS_DRAGDROP_OVER, grfKeyState, pt, pdwEffect);
@@ -273,7 +270,7 @@ STDMETHODIMP nsNativeDragTarget::DragOver(DWORD   grfKeyState,
 //-----------------------------------------------------
 STDMETHODIMP nsNativeDragTarget::DragLeave() {
 
-  PRINTF("DragLeave\n");
+  if (DRAG_DEBUG) printf("DragLeave\n");
 	if (mDragService) {
 
     // dispatch the event into Gecko

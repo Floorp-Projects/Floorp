@@ -23,12 +23,6 @@
 #include "nsISupportsUtils.h"
 #include "nsTraceRefcnt.h" // for NS_MeanAndStdDev
 #include "plhash.h"
-#include "nslog.h"
-#undef fprintf
-
-NS_IMPL_LOG(nsStatisticsLog)
-#define PRINTF NS_LOG_PRINTF(nsStatisticsLog)
-#define FLUSH  NS_LOG_FLUSH(nsStatisticsLog)
 
 inline PLHashNumber
 nsStatistics::HashPRInt32(const void* aKey)

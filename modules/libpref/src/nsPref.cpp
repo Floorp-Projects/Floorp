@@ -89,12 +89,6 @@
 #define DEBUG_prefs
 #endif
 
-#include "nslog.h"
-
-NS_IMPL_LOG(nsPrefLog)
-#define PRINTF NS_LOG_PRINTF(nsPrefLog)
-#define FLUSH  NS_LOG_FLUSH(nsPrefLog)
-
 static NS_DEFINE_CID(kSecurityManagerCID,   NS_SCRIPTSECURITYMANAGER_CID);
 static NS_DEFINE_CID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
 
@@ -324,11 +318,15 @@ nsresult nsPref::getLockPrefFileInfo()
     if (NS_SUCCEEDED(rv = CopyCharPref("general.config.filename",
 			&gLockFileName)) && (gLockFileName)) 
     {
-        PRINTF("\ngLockFileName %s \n", gLockFileName);
+#ifdef NS_DEBUG
+        printf("\ngLockFileName %s \n", gLockFileName);
+#endif
         if (NS_SUCCEEDED(rv = CopyCharPref("general.config.vendor",
 			&gLockVendor)) && (gLockVendor)) 
         {
-            PRINTF("\ngLockVendor %s \n", gLockVendor);
+#ifdef NS_DEBUG
+            printf("\ngLockVendor %s \n", gLockVendor);
+#endif
         }
         else
         {
@@ -364,22 +362,25 @@ nsresult nsPref::useLockPrefFile()
     if (NS_SUCCEEDED(rv = GetLocalizedUnicharPref("browser.startup.homepage",
 			getter_Copies(prefVal)) && (prefVal))) 
     {
-        const char* str = NS_ConvertUCS2toUTF8(prefVal);
-        PRINTF("\nStartup homepage %s \n", str);
+#ifdef DEBUG_tao
+        printf("\nStartup homepage %s \n", (const char *)NS_ConvertUCS2toUTF8(prefVal));
+#endif
     }
 
     if (NS_SUCCEEDED(rv = CopyCharPref("general.config.filename",
 			getter_Copies(lockFileName)) && (lockFileName)))
     {
-        const char* str = lockFileName;
-        PRINTF("\nlockFile %s \n", str);
+#ifdef NS_DEBUG
+        printf("\nlockFile %s \n", (const char *)lockFileName);
+#endif
     }
 
     if (NS_SUCCEEDED(rv = CopyCharPref("general.config.vendor",
 			getter_Copies(lockVendor)) && (lockVendor))) 
     {
-        const char* str = lockVendor;
-        PRINTF("\nlockVendor %s \n", str);
+#ifdef NS_DEBUG
+        printf("\nlockVendor %s \n", (const char *)lockVendor);
+#endif
     }
 
     if ((gLockFileName == nsnull) && (gLockVendor == nsnull))
@@ -486,9 +487,10 @@ nsresult nsPref::useLockPrefFile()
                 JS_EndRequest(gMochaContext);
             }
         }
-        GetLocalizedUnicharPref("browser.startup.homepage",getter_Copies(prefVal));
-        const char* str = NS_ConvertUCS2toUTF8(prefVal);
-        PRINTF("\nStartup homepage %s \n", str);
+    GetLocalizedUnicharPref("browser.startup.homepage",getter_Copies(prefVal));
+#ifdef DEBUG_tao
+    printf("\nStartup homepage %s \n", (const char *)NS_ConvertUCS2toUTF8(prefVal));
+#endif
     }
     return rv;
 } // nsPref::useLockPrefFile
@@ -618,7 +620,9 @@ NS_IMETHODIMP nsPref::ShutDown()
 //----------------------------------------------------------------------------------------
 {
     mObservers.Enumerate(UnregisterObservers, nsnull);
-    PRINTF("PREF_Cleanup()\n");
+#ifdef DEBUG_alecf
+    printf("PREF_Cleanup()\n");
+#endif
     PREF_Cleanup();
     return NS_OK;
 } // nsPref::ShutDown
@@ -886,7 +890,7 @@ static void checkPref(const char* fname, const char* pref) {
     nsCString cstr(strArr[i]);
     while (cstr.Length()) { 
         if (pref == cstr) {
-            PRINTF("\n --> %s:: SHALL use GetLocalizedUnicharPrefto get --%s--\n", fname, pref); 
+            printf("\n --> %s:: SHALL use GetLocalizedUnicharPrefto get --%s--\n", fname, pref); 
             NS_ASSERTION(0, "\n\n");
             return;
         }
@@ -931,7 +935,7 @@ NS_IMETHODIMP
 nsPref::GetLocalizedUnicharPref(const char *pref, PRUnichar **return_buf)
 {
 #if defined(DEBUG_tao_)
-    PRINTF("\n --> nsPref::GetLocalizedUnicharPref(%s) --", pref);
+    printf("\n --> nsPref::GetLocalizedUnicharPref(%s) --", pref);
 #endif
     // if the user has set this pref, then just return the user value
     if (PREF_HasUserPref(pref))
@@ -1501,11 +1505,13 @@ PRBool pref_VerifyLockFileSpec(char* buf, long buflen)
 	        (int)digest[8],(int)digest[9],(int)digest[10],(int)digest[11],
 	        (int)digest[12],(int)digest[13],(int)digest[14],(int)digest[15]);
 
-        PRINTF("%02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x",
+#ifdef DEBUG_neeti
+        printf("%02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x",
 	        (int)digest[0],(int)digest[1],(int)digest[2],(int)digest[3],
 	        (int)digest[4],(int)digest[5],(int)digest[6],(int)digest[7],
 	        (int)digest[8],(int)digest[9],(int)digest[10],(int)digest[11],
 	        (int)digest[12],(int)digest[13],(int)digest[14],(int)digest[15]); 
+#endif
 
    
 		success = ( PL_strncmp((const char*) buf + 3, szHash, (PRUint32)(hash_length - 4)) == 0 );
@@ -1677,7 +1683,7 @@ extern "C" JSBool pref_InitInitialObjects()
     // Keep this child
 
 #ifdef DEBUG_prefs
-    PRINTF("Parsing default JS files.\n");
+    printf("Parsing default JS files.\n");
 #endif /* DEBUG_prefs */
 	for (; Exists(dirIterator); dirIterator->Next())
 	{
@@ -1702,7 +1708,7 @@ extern "C" JSBool pref_InitInitialObjects()
 		    if (shouldParse)
 		    {
     #ifdef DEBUG_prefs
-                PRINTF("Adding %s to the list to be sorted\n", leafName);
+                printf("Adding %s to the list to be sorted\n", leafName);
     #endif /* DEBUG_prefs */
 			    rv = NS_NewFileSpec(&(defaultPrefFiles[numFiles]));
 			    NS_ASSERTION(NS_SUCCEEDED(rv),"failed to create a file spec");
@@ -1727,7 +1733,7 @@ extern "C" JSBool pref_InitInitialObjects()
 	    }
     }
 #ifdef DEBUG_prefs
-	PRINTF("Sort defaultPrefFiles.  we need them sorted so all-ns.js will override all.js (where override == parsed later)\n");
+	printf("Sort defaultPrefFiles.  we need them sorted so all-ns.js will override all.js (where override == parsed later)\n");
 #endif /* DEBUG_prefs */
 	NS_QuickSort((void *)defaultPrefFiles, numFiles,sizeof(nsIFileSpec *), inplaceSortCallback, nsnull);
 
@@ -1736,7 +1742,7 @@ extern "C" JSBool pref_InitInitialObjects()
 		if (defaultPrefFiles[k]) {
 				rv = defaultPrefFiles[k]->GetLeafName(&currentLeafName);
 #ifdef DEBUG_prefs
-				PRINTF("Parsing %s\n", currentLeafName);
+				printf("Parsing %s\n", currentLeafName);
 #endif /* DEBUG_prefs */
 				if (currentLeafName) nsCRT::free((char*)currentLeafName);
 
@@ -1758,7 +1764,7 @@ extern "C" JSBool pref_InitInitialObjects()
 	defaultPrefFiles = nsnull;
 
 #ifdef DEBUG_prefs
-    PRINTF("Parsing platform-specific JS files.\n");
+            printf("Parsing platform-specific JS files.\n");
 #endif /* DEBUG_prefs */
 	// Finally, parse any other special files (platform-specific ones).
 	for (k = 1; k < (int) (sizeof(specialFiles) / sizeof(char*)); k++)
@@ -1777,7 +1783,7 @@ extern "C" JSBool pref_InitInitialObjects()
         if (NS_FAILED(rv)) continue;        
 
 #ifdef DEBUG_prefs
-        PRINTF("Parsing %s\n", specialFiles[k]);
+            printf("Parsing %s\n", specialFiles[k]);
 #endif /* DEBUG_prefs */
 
         if (NS_FAILED(anotherSpecialChild2->Exists(&exists)) || !exists)

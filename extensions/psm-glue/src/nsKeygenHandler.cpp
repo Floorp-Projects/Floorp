@@ -35,11 +35,6 @@
 #include "nsCrypto.h"
 #include "cmtcmn.h"
 #include "cmtjs.h"
-#include "nslog.h"
-
-NS_IMPL_LOG(nsKeygenHandlerLog)
-#define PRINTF NS_LOG_PRINTF(nsKeygenHandlerLog)
-#define FLUSH  NS_LOG_FLUSH(nsKeygenHandlerLog)
 
 //These defines are taken from the PKCS#11 spec
 #define CKM_RSA_PKCS_KEY_PAIR_GEN     0x00000000
@@ -233,7 +228,7 @@ nsKeygenFormProcessor::ProcessValue(nsIDOMHTMLElement *aElement,
 #ifdef DEBUG_javi
   char *name = aName.ToNewCString(); 
   char *value = aValue.ToNewCString(); 
-  PRINTF("ProcessValue: name %s value %s\n",  name, value); 
+  printf("ProcessValue: name %s value %s\n",  name, value); 
   delete [] name; 
   delete [] value; 
 #endif 

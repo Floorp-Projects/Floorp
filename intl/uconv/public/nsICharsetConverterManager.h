@@ -30,10 +30,6 @@
 #include "nsIUnicodeEncoder.h"
 #include "nsIUnicodeDecoder.h"
 #include "nsVoidArray.h"
-#include "nslog.h"
-
-#define CHARSET_PRINTF NS_LOG_PRINTF(nsICharsetConverterManagerLog)
-#define CHARSET_FLUSH  NS_LOG_FLUSH(nsICharsetConverterManagerLog)
 
 #define NS_ICHARSETCONVERTERMANAGER_IID \
   {0x3c1c0161, 0x9bd0, 0x11d3, { 0x9d, 0x9, 0x0, 0x50, 0x4, 0x0, 0x7, 0xb2}}
@@ -55,7 +51,6 @@
 
 
 #define NS_IMPL_NSUCONVERTERREGSELF                                     \
-NS_IMPL_LOG(nsICharsetConverterManagerLog)                           \
 static NS_IMETHODIMP                                                    \
 nsUConverterRegSelf( const char* aFromCharset,                          \
                      const char* aToCharset,                            \
@@ -65,7 +60,7 @@ nsUConverterRegSelf( const char* aFromCharset,                          \
   nsRegistryKey key;                                                    \
   char buff[1024];                                                      \
   PRBool isOpen = PR_FALSE;                                             \
-  NS_WITH_SERVICE( nsIRegistry, registry, NS_REGISTRY_CONTRACTID, &res);\
+  NS_WITH_SERVICE( nsIRegistry, registry, NS_REGISTRY_CONTRACTID, &res);    \
   if (NS_FAILED(res))                                                   \
     goto done;                                                          \
   res = registry->IsOpen(&isOpen);                                      \
@@ -84,14 +79,14 @@ nsUConverterRegSelf( const char* aFromCharset,                          \
   res = registry -> AddSubtree(nsIRegistry::Common, buff, &key);        \
   if (NS_FAILED(res))                                                   \
     goto done;                                                          \
-  res = registry -> SetStringUTF8(key, "source", aFromCharset);         \
+  res = registry -> SetStringUTF8(key, "source", aFromCharset);             \
   if (NS_FAILED(res))                                                   \
     goto done;                                                          \
-  res = registry -> SetStringUTF8(key, "destination", aToCharset);      \
+  res = registry -> SetStringUTF8(key, "destination", aToCharset);          \
   if (NS_FAILED(res))                                                   \
     goto done;                                                          \
-  CHARSET_PRINTF("RegSelf %s to %s converter complete\n",               \
-                 aFromCharset, aToCharset);                             \
+  printf("RegSelf %s to %s converter complete\n",                       \
+         aFromCharset, aToCharset);                                     \
 done:                                                                   \
   return res;                                                           \
 }
@@ -111,7 +106,7 @@ _InstanceClass##UnRegSelf (nsIComponentManager *aCompMgr,             \
                            nsIFile *aPath,                            \
                            const char* registryLocation)              \
 {                                                                     \
-  CHARSET_PRINTF("UnRegSelf " _From " to " _To "converter not implement\n");  \
+  printf("UnRegSelf " _From " to " _To "converter not implement\n");  \
   return NS_OK;                                                       \
 }
 

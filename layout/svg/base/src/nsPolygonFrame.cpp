@@ -39,12 +39,6 @@
 #include "nsIDeviceContext.h"
 
 #include "nsIReflowCommand.h"
-#include "nslog.h"
-
-NS_IMPL_LOG(nsPolygonFrameLog)
-#define PRINTF NS_LOG_PRINTF(nsPolygonFrameLog)
-#define FLUSH  NS_LOG_FLUSH(nsPolygonFrameLog)
-
 extern nsresult
 NS_NewHTMLReflowCommand(nsIReflowCommand**           aInstancePtrResult,
                         nsIFrame*                    aTargetFrame,
@@ -270,9 +264,9 @@ nsPolygonFrame::GetPoints()
   }
   mPnts[mNumPnts-1] = mPnts[0];
 
-  //PRINTF("0x%X Points are:\n", this);
+  //printf("0x%X Points are:\n", this);
   //for (PRInt32 i=0;i<mNumPnts;i++) {
-  //  PRINTF("%d -> [%d,%d]\n", i, mPnts[i].x, mPnts[i].y);
+  //  printf("%d -> [%d,%d]\n", i, mPnts[i].x, mPnts[i].y);
   //}
 
   return NS_OK;

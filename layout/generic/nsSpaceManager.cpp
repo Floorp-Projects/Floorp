@@ -31,7 +31,6 @@
 #ifdef DEBUG
 #include "nsIFrameDebug.h"
 #endif
-
 static NS_DEFINE_IID(kISpaceManagerIID, NS_ISPACEMANAGER_IID);
 
 /////////////////////////////////////////////////////////////////////////////
@@ -924,7 +923,8 @@ nsSpaceManager::List(FILE* out)
 
     if (NS_SUCCEEDED(mFrame->QueryInterface(NS_GET_IID(nsIFrameDebug), (void**)&frameDebug))) {
       frameDebug->GetFrameName(tmp);
-      fprintf(out, " frame=%s", tmp);
+      fprintf(out, " frame=");
+      fputs(tmp, out);
       fprintf(out, "@%p", mFrame);
     }
   }
@@ -943,7 +943,8 @@ nsSpaceManager::List(FILE* out)
 
         if (NS_SUCCEEDED(band->mFrame->QueryInterface(NS_GET_IID(nsIFrameDebug), (void**)&frameDebug))) {
           frameDebug->GetFrameName(tmp);
-          fprintf(out, " frame=%s", tmp);
+          fprintf(out, " frame=");
+          fputs(tmp, out);
           fprintf(out, "@%p", band->mFrame);
         }
       }
@@ -958,7 +959,8 @@ nsSpaceManager::List(FILE* out)
 
             if (NS_SUCCEEDED(frame->QueryInterface(NS_GET_IID(nsIFrameDebug), (void**)&frameDebug))) {
               frameDebug->GetFrameName(tmp);
-              fprintf(out, "%s@%p ", tmp, frame);
+              fputs(tmp, out);
+              fprintf(out, "@%p ", frame);
             }
           }
         }

@@ -60,11 +60,6 @@
 #include "nsIXULContent.h"
 #include "nsIDOMElement.h"
 
-#include "nslog.h"
-
-NS_IMPL_LOG(nsDragServiceLog)
-#define PRINTF NS_LOG_PRINTF(nsDragServiceLog)
-#define FLUSH  NS_LOG_FLUSH(nsDragServiceLog)
 
 #if !TARGET_CARBON
 DragSendDataUPP nsDragService::sDragSendDataUPP = NewDragSendDataProc(DragSendDataProc);
@@ -207,7 +202,7 @@ nsDragService :: InvokeDragSession (nsIDOMNode *aDOMNode, nsISupportsArray * aTr
     return NS_ERROR_FAILURE;
   mDragRef = theDragRef;
 #if DEBUG_DD
-  PRINTF("**** created drag ref %ld\n", theDragRef);
+printf("**** created drag ref %ld\n", theDragRef);
 #endif
   
   // add the flavors from the transferables. Cache this array for the send data proc
@@ -270,7 +265,7 @@ nsDragService :: InvokeDragSession (nsIDOMNode *aDOMNode, nsISupportsArray * aTr
   ::DisposeRgn ( theDragRgn );
   result = ::DisposeDrag ( theDragRef );
 #if DEBUG_DD
-  PRINTF("**** disposing drag ref %ld\n", theDragRef);
+printf("**** disposing drag ref %ld\n", theDragRef);
 #endif
   NS_ASSERTION ( result == noErr, "Error disposing drag" );
   mDragRef = 0L;
@@ -447,7 +442,7 @@ nsDragService :: GetData ( nsITransferable * aTransferable, PRUint32 aItemIndex 
       currentFlavor->ToString ( getter_Copies(flavorStr) );
       FlavorType macOSFlavor = theMapper.MapMimeTypeToMacOSType(flavorStr, PR_FALSE);
 #if DEBUG_DD
-      PRINTF("looking for data in type %s, mac flavor %ld\n", NS_STATIC_CAST(const char*,flavorStr), macOSFlavor);
+printf("looking for data in type %s, mac flavor %ld\n", NS_STATIC_CAST(const char*,flavorStr), macOSFlavor);
 #endif
 
       // check if it is present in the current drag item.
@@ -504,7 +499,7 @@ nsDragService :: GetData ( nsITransferable * aTransferable, PRUint32 aItemIndex 
         // put it into the transferable.
         errCode = aTransferable->SetTransferData ( flavorStr, genericDataWrapper, dataSize );
         #ifdef NS_DEBUG
-        if ( errCode != NS_OK ) PRINTF("nsDragService:: Error setting data into transferable\n");
+         if ( errCode != NS_OK ) printf("nsDragService:: Error setting data into transferable\n");
         #endif
           
         nsMemory::Free ( dataBuff );
@@ -754,7 +749,7 @@ nsDragService :: LookupMimeMappingsForItem ( DragReference inDragRef, ItemRefere
     err = ::GetFlavorData ( inDragRef, itemRef, nsMimeMapperMac::MappingFlavor(), mapperData, &mapperSize, 0 );
     if ( err ) {
       #ifdef NS_DEBUG
-      PRINTF("nsDragService: Error getting data out of drag manager for mime mapper, #%ld\n", err);
+        printf("nsDragService: Error getting data out of drag manager for mime mapper, #%ld\n", err);
       #endif
       return nsnull;
     }
@@ -790,7 +785,7 @@ nsDragService :: ExtractDataFromOS ( DragReference inDragRef, ItemReference inIt
       err = ::GetFlavorData ( inDragRef, inItemRef, inFlavor, buff, &buffSize, 0 );
       if ( err ) {
         #ifdef NS_DEBUG
-        PRINTF("nsDragService: Error getting data out of drag manager, #%ld\n", err);
+          printf("nsDragService: Error getting data out of drag manager, #%ld\n", err);
         #endif
         retval = NS_ERROR_FAILURE;
       }

@@ -43,11 +43,6 @@
 #include "nsIWebBrowserChrome.h"
 #include "nsIDOMDocument.h"
 #include "nsPluginViewer.h"
-#include "nslog.h"
-
-NS_IMPL_LOG(nsPluginViewerLog)
-#define PRINTF NS_LOG_PRINTF(nsPluginViewerLog)
-#define FLUSH  NS_LOG_FLUSH(nsPluginViewerLog)
 
 // Class IDs
 static NS_DEFINE_IID(kChildWindowCID, NS_CHILD_CID);
@@ -271,7 +266,9 @@ PluginViewerImpl::~PluginViewerImpl()
 NS_IMETHODIMP
 PluginViewerImpl::BindToDocument(nsISupports *aDoc, const char *aCommand)
 {
-  PRINTF("PluginViewerImpl::BindToDocument\n");
+#ifdef NS_DEBUG
+  printf("PluginViewerImpl::BindToDocument\n");
+#endif
   return aDoc->QueryInterface(kIDocumentIID, (void**)&mDocument);
   return NS_OK;
 }
@@ -322,7 +319,7 @@ PluginViewerImpl::StartLoad(nsIChannel* channel, nsIStreamListener*& aResult)
 #ifdef DEBUG
   char* contentType;
   mChannel->GetContentType(&contentType);
-  PRINTF("PluginViewerImpl::StartLoad: content-type=%s\n", contentType);
+  printf("PluginViewerImpl::StartLoad: content-type=%s\n", contentType);
   nsCRT::free(contentType);
 #endif
 

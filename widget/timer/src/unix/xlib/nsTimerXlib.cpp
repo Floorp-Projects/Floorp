@@ -35,11 +35,6 @@
 #include "prlog.h"
 
 #include <X11/Xlib.h>
-#include "nslog.h"
-
-NS_IMPL_LOG(nsTimerXlibLog)
-#define PRINTF NS_LOG_PRINTF(nsTimerXlibLog)
-#define FLUSH  NS_LOG_FLUSH(nsTimerXlibLog)
 
 static NS_DEFINE_IID(kITimerIID, NS_ITIMER_IID);
 
@@ -62,7 +57,7 @@ PRBool nsTimerXlib::gProcessingTimer = PR_FALSE;
 nsTimerXlib::nsTimerXlib()
 {
 #ifdef TIMER_DEBUG
-  PRINTF("nsTimerXlib::nsTimerXlib (%p) called.\n", this);
+  fprintf(stderr, "nsTimerXlib::nsTimerXlib (%p) called.\n", this);
 #endif
 
   NS_INIT_REFCNT();
@@ -77,7 +72,7 @@ nsTimerXlib::nsTimerXlib()
 nsTimerXlib::~nsTimerXlib()
 {
 #ifdef TIMER_DEBUG
-  PRINTF("nsTimerXlib::~nsTimerXlib (%p) called.\n", this);
+  fprintf(stderr, "nsTimerXlib::~nsTimerXlib (%p) called.\n", this);
 #endif
   
   Cancel();
@@ -117,7 +112,7 @@ nsTimerXlib::Init(PRUint32 aDelay, PRUint32 aPriority)
 {
   struct timeval Now;
 #ifdef TIMER_DEBUG
-  PRINTF("nsTimerXlib::Init (%p) called with delay %d\n", this, aDelay);
+  fprintf(stderr, "nsTimerXlib::Init (%p) called with delay %d\n", this, aDelay);
 #endif
   
   mDelay = aDelay;
@@ -134,7 +129,7 @@ nsTimerXlib::Init(PRUint32 aDelay, PRUint32 aPriority)
   }
 
 #ifdef TIMER_DEBUG
-  PRINTF("fire set to %ld / %ld\n", mFireTime.tv_sec, mFireTime.tv_usec);
+  fprintf(stderr, "fire set to %ld / %ld\n", mFireTime.tv_sec, mFireTime.tv_usec);
 #endif
 
   if (!gTimeoutAdded)
@@ -181,14 +176,14 @@ nsTimerXlib::Fire()
   nsCOMPtr<nsITimer> kungFuDeathGrip = this;
 
 #ifdef TIMER_DEBUG
-  PRINTF("*** PRIORITY is %x ***\n", mPriority);
+  fprintf(stderr, "*** PRIORITY is %x ***\n", mPriority);
 #endif
   
   timeval aNow;
   gettimeofday(&aNow, NULL);
 
 #ifdef TIMER_DEBUG  
-  PRINTF("nsTimerXlib::Fire (%p) called at %ld / %ld\n",
+  fprintf(stderr, "nsTimerXlib::Fire (%p) called at %ld / %ld\n",
           this, aNow.tv_sec, aNow.tv_usec);
 #endif
   
@@ -243,8 +238,8 @@ nsTimerXlib::ProcessTimeouts(nsVoidArray *array)
   gettimeofday(&aNow, NULL);
 
 #ifdef TIMER_DEBUG  
-  PRINTF("nsTimerXlib::ProcessTimeouts called at %ld / %ld\n",
-          aNow.tv_sec, aNow.tv_usec);
+  fprintf(stderr, "nsTimerXlib::ProcessTimeouts called at %ld / %ld\n",
+         aNow.tv_sec, aNow.tv_usec);
 #endif
   
   for (int i = count; i >=0; i--)
@@ -262,7 +257,7 @@ nsTimerXlib::ProcessTimeouts(nsVoidArray *array)
         //  Fire(...) call which may release *all* other references
         //  to p...
 #ifdef TIMER_DEBUG
-        PRINTF("Firing timeout for (%p)\n", timer);
+        fprintf(stderr, "Firing timeout for (%p)\n", timer);
 #endif
 //        NS_ADDREF(timer); //FIXME: Does this still apply??? TonyT
       
@@ -343,7 +338,7 @@ int NS_TimeToNextTimeout(struct timeval *aTimer)
   {
     once = 0;
 
-    PRINTF("NS_TimeToNextTimeout() lives!\n");
+    printf("NS_TimeToNextTimeout() lives!\n");
   }
 #endif /* !MOZ_MONOLITHIC_TOOLKIT */
   
@@ -414,7 +409,7 @@ NS_ProcessTimeouts(Display *aDisplay)
   {
     once = 0;
 
-    PRINTF("NS_ProcessTimeouts() lives!\n");
+    printf("NS_ProcessTimeouts() lives!\n");
   }
 #endif /* !MOZ_MONOLITHIC_TOOLKIT */
 
@@ -428,14 +423,14 @@ NS_ProcessTimeouts(Display *aDisplay)
   if (XPending(aDisplay) == 0)
   {
 #ifdef TIMER_DEBUG
-    PRINTF("\n Handling Low Priority Stuff!!! Display is 0x%x\n", aDisplay);
+    fprintf(stderr, "\n Handling Low Priority Stuff!!! Display is 0x%x\n", aDisplay);
 #endif    
     nsTimerXlib::ProcessTimeouts(nsTimerXlib::gLowList);
     nsTimerXlib::ProcessTimeouts(nsTimerXlib::gLowestList);
   }
 #ifdef TIMER_DEBUG  
   else
-    PRINTF("\n Handling Event Stuff!!!", aDisplay);
+    fprintf(stderr, "\n Handling Event Stuff!!!", aDisplay);
 #endif
   
   nsTimerXlib::gProcessingTimer = PR_FALSE;

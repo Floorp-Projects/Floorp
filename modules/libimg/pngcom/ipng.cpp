@@ -42,11 +42,6 @@
 #include "nsPNGDecoder.h"
 #include "nsIImgDCallbk.h"
 #include "ilISystemServices.h"
-#include "nslog.h"
-
-NS_IMPL_LOG(IMGLIBLog)
-#define PRINTF NS_LOG_PRINTF(IMGLIBLog)
-#define FLUSH  NS_LOG_FLUSH(IMGLIBLog)
 
 #define MINIMUM_DELAY_TIME 10
 
@@ -57,6 +52,7 @@ static void PR_CALLBACK end_callback(png_structp png_ptr, png_infop info);
 static void PR_CALLBACK il_png_error_handler(png_structp png_ptr, png_const_charp msg);
 
 int il_debug;
+PRLogModuleInfo *il_log_module = NULL;
 
 #define CAN_SUPPORT_8_BIT_MASK
 
@@ -428,14 +424,14 @@ il_png_error_handler(png_structp png_ptr, png_const_charp msg)
      * been defined.  Adapted from readpng2_error_handler() in "PNG: The
      * Definitive Guide" (O'Reilly, 1999). */
 
-    PRINTF("nspng libpng error: %s\n", msg);
-    FLUSH();
+    fprintf(stderr, "nspng libpng error: %s\n", msg);
+    fflush(stderr);
 
     ipng_p = (ipng_structp)png_get_error_ptr(png_ptr);
     if (ipng_p == NULL) {            /* we are completely hosed now */
-      PRINTF("nspng severe error:  jmpbuf not recoverable.\n");
-      FLUSH();
-      PR_ASSERT(ipng_p != NULL);   /* instead of exit(99); */
+        fprintf(stderr, "nspng severe error:  jmpbuf not recoverable.\n");
+        fflush(stderr);
+        PR_ASSERT(ipng_p != NULL);   /* instead of exit(99); */
     }
 
     longjmp(ipng_p->jmpbuf, 1);

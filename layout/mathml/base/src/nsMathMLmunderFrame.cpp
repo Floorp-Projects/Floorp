@@ -40,11 +40,6 @@
 #include "nsStyleUtil.h"
 
 #include "nsMathMLmunderFrame.h"
-#include "nslog.h"
-
-NS_IMPL_LOG(nsMathMLmunderFrameLog)
-#define PRINTF NS_LOG_PRINTF(nsMathMLmunderFrameLog)
-#define FLUSH  NS_LOG_FLUSH(nsMathMLmunderFrameLog)
 
 //
 // <munder> -- attach an underscript to a base - implementation
@@ -266,7 +261,7 @@ nsMathMLmunderFrame::Place(nsIPresContext*      aPresContext,
   }
   if ((2 != count) || !baseFrame || !underFrame) {
 #ifdef NS_DEBUG
-      PRINTF("munder: invalid markup");
+    printf("munder: invalid markup");
 #endif
     // report an error, encourage people to get their markups in order
     return ReflowError(aPresContext, aRenderingContext, aDesiredSize);

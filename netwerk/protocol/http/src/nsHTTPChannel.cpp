@@ -65,15 +65,15 @@
 // platforms
 #include "nsIPref.h"
 #include "nsIAuthenticator.h"
-#include "nslog.h"
-
-NS_DECL_LOG(HTTPLog)
-#define PRINTF NS_LOG_PRINTF(HTTPLog)
-#define FLUSH  NS_LOG_FLUSH(HTTPLog)
 
 static NS_DEFINE_CID(kNetModuleMgrCID, NS_NETMODULEMGR_CID);
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 static NS_DEFINE_CID(kWalletServiceCID, NS_WALLETSERVICE_CID);
+
+#if defined(PR_LOGGING)
+extern PRLogModuleInfo* gHTTPLog;
+#endif /* PR_LOGGING */
+
 
 nsHTTPChannel::nsHTTPChannel(nsIURI* i_URL, nsHTTPHandler* i_Handler): 
     mResponse(nsnull),
@@ -112,7 +112,7 @@ nsHTTPChannel::nsHTTPChannel(nsIURI* i_URL, nsHTTPHandler* i_Handler):
     nsXPIDLCString urlCString; 
     mURI->GetSpec(getter_Copies(urlCString));
   
-    PR_LOG(HTTPLog, PR_LOG_DEBUG, 
+    PR_LOG(gHTTPLog, PR_LOG_DEBUG, 
            ("Creating nsHTTPChannel [this=%x] for URI: %s.\n", 
             this, (const char *)urlCString));
 #endif
@@ -124,7 +124,7 @@ nsHTTPChannel::nsHTTPChannel(nsIURI* i_URL, nsHTTPHandler* i_Handler):
 
 nsHTTPChannel::~nsHTTPChannel()
 {
-    PR_LOG(HTTPLog, PR_LOG_ALWAYS, 
+    PR_LOG(gHTTPLog, PR_LOG_ALWAYS, 
            ("Deleting nsHTTPChannel [this=%x].\n", this));
 
 #ifdef NS_DEBUG
@@ -1082,7 +1082,7 @@ nsHTTPChannel::CheckCache()
     // If validation is inhibited, we'll just use whatever data is in
     // the cache, regardless of whether or not it has expired.
     if (mLoadAttributes & nsIChannel::VALIDATE_NEVER) {
-        PR_LOG(HTTPLog, PR_LOG_ALWAYS, 
+        PR_LOG(gHTTPLog, PR_LOG_ALWAYS, 
               ("nsHTTPChannel::checkCache() [this=%x].\t"
                "obeying VALIDATE_NEVER\n", this));
         mCachedContentIsValid = PR_TRUE;
@@ -1222,7 +1222,7 @@ nsHTTPChannel::ReadFromCache()
         URLSpec = nsCRT::strdup("?");
     }
 
-    PR_LOG(HTTPLog, PR_LOG_ALWAYS, 
+    PR_LOG(gHTTPLog, PR_LOG_ALWAYS, 
            ("nsHTTPChannel::ReadFromCache [this=%x].\t"
             "Using cache copy for: %s\n",
             this, URLSpec));
@@ -1740,7 +1740,7 @@ nsresult nsHTTPChannel::Redirect(const char *aNewLocation,
   log_rv = newURI->GetSpec(&newURLSpec);
   if (NS_FAILED(log_rv))
     newURLSpec = nsCRT::strdup("?");
-  PR_LOG(HTTPLog, PR_LOG_ALWAYS, 
+  PR_LOG(gHTTPLog, PR_LOG_ALWAYS, 
          ("ProcessRedirect [this=%x].\tRedirecting to: %s.\n",
           this, newURLSpec));
   nsMemory::Free(newURLSpec);
@@ -1831,7 +1831,7 @@ nsresult nsHTTPChannel::ResponseCompleted(nsIStreamListener *aListener,
 {
     nsresult rv = NS_OK;
 
-    PR_LOG(HTTPLog, PR_LOG_ERROR,
+    PR_LOG(gHTTPLog, PR_LOG_ERROR,
             ("nsHTTPChannel::ResponseComplete() [this=%x] "
              " mDataListenet=%x, Status=%o\n",
              this, (void*)mResponseDataListener, aStatus));
@@ -1924,7 +1924,7 @@ nsresult nsHTTPChannel::ResponseCompleted(nsIStreamListener *aListener,
 
         if (NS_FAILED (rv))
         {
-            PR_LOG(HTTPLog, PR_LOG_ERROR, ("nsHTTPChannel::OnStopRequest(...) [this=%x]."
+            PR_LOG(gHTTPLog, PR_LOG_ERROR, ("nsHTTPChannel::OnStopRequest(...) [this=%x]."
                 "\tOnStopRequest to consumer failed! Status:%x\n",
                 this, rv));
         }
@@ -2115,7 +2115,7 @@ nsHTTPChannel::Authenticate(const char *iChallenge, PRBool iProxyAuth)
             authLine.Left(authType, space);
 
 #if defined(DEBUG_shaver) || defined(DEBUG_gagan)
-        PRINTF("Auth type: \"%s\"\n", authType.GetBuffer());
+        fprintf(stderr, "Auth type: \"%s\"\n", authType.GetBuffer());
 #endif
         // normalize to lowercase
         char *authLower = nsCRT::strdup(authType.GetBuffer());
@@ -2200,7 +2200,9 @@ nsHTTPChannel::Authenticate(const char *iChallenge, PRBool iProxyAuth)
             if (pEngine)
                 pEngine->GetAuthStringForRealm(mURI, authRealm, getter_Copies(authString));
 
-            PRINTF(">>>>> Authentication for Realm: [realm=%s, auth=%s]\n\n", (const char*) authRealm, (const char*) authString);
+#ifdef DEBUG_darin
+            fprintf(stderr, "\n>>>>> Authentication for Realm: [realm=%s, auth=%s]\n\n", (const char*) authRealm, (const char*) authString);
+#endif
         }
 
         // Skip prompting if we already have an authentication string.
@@ -2256,7 +2258,7 @@ nsHTTPChannel::Authenticate(const char *iChallenge, PRBool iProxyAuth)
     }
 
 #if defined(DEBUG_shaver) || defined(DEBUG_gagan)
-    PRINTF("Auth string: %s\n", (const char *)authString);
+    fprintf(stderr, "Auth string: %s\n", (const char *)authString);
 #endif
 
     // Construct a new channel
@@ -2320,7 +2322,7 @@ nsHTTPChannel::FinishedResponseHeaders(void)
 
     rv = NS_OK;
 
-    PR_LOG(HTTPLog, PR_LOG_ALWAYS, 
+    PR_LOG(gHTTPLog, PR_LOG_ALWAYS, 
            ("nsHTTPChannel::FinishedResponseHeaders [this=%x].\n",
             this));
 
@@ -2376,7 +2378,9 @@ nsHTTPChannel::ProcessStatusCode(void)
                 {
                     rv = GetRequestHeader(nsHTTPAtoms::Authorization,
                             getter_Copies(authString));
-                    PRINTF(">>>>> Auth Accepted!! [realm=%s, auth=%s]\n\n", mAuthRealm, (const char*) authString);
+#ifdef DEBUG_darin
+                    fprintf(stderr, "\n>>>>> Auth Accepted!! [realm=%s, auth=%s]\n\n", mAuthRealm, (const char*) authString);
+#endif
                     if (mAuthRealm)
                         pEngine->SetAuthStringForRealm(mURI, mAuthRealm, authString);
                     else
@@ -2384,9 +2388,11 @@ nsHTTPChannel::ProcessStatusCode(void)
                 }
                 else // clear out entry from single signon and our cache. 
                 {
+#ifdef DEBUG_darin
                     rv = GetRequestHeader(nsHTTPAtoms::Authorization,
                             getter_Copies(authString));
-                    PRINTF(">>>>> Auth Rejected!! [realm=%s, auth=%s]\n\n", mAuthRealm, (const char*) authString);
+                    fprintf(stderr, "\n>>>>> Auth Rejected!! [realm=%s, auth=%s]\n\n", mAuthRealm, (const char*) authString);
+#endif
                     pEngine->SetAuthString(mURI, 0);
 
                     NS_WITH_SERVICE(nsIWalletService, walletService, 
@@ -2420,7 +2426,7 @@ nsHTTPChannel::ProcessStatusCode(void)
         // Informational: 1xx
         //
     case 1:
-        PR_LOG(HTTPLog, PR_LOG_ALWAYS, 
+        PR_LOG(gHTTPLog, PR_LOG_ALWAYS, 
                ("ProcessStatusCode [this=%x].\tStatus - Informational: %d.\n",
                 this, statusCode));
         break;
@@ -2429,7 +2435,7 @@ nsHTTPChannel::ProcessStatusCode(void)
         // Successful: 2xx
         //
     case 2:
-        PR_LOG(HTTPLog, PR_LOG_ALWAYS, 
+        PR_LOG(gHTTPLog, PR_LOG_ALWAYS, 
                ("ProcessStatusCode [this=%x].\tStatus - Successful: %d.\n",
                 this, statusCode));
       
@@ -2443,7 +2449,7 @@ nsHTTPChannel::ProcessStatusCode(void)
         }
 
         if (statusCode == 204) {
-        PR_LOG(HTTPLog, PR_LOG_ALWAYS, 
+        PR_LOG(gHTTPLog, PR_LOG_ALWAYS, 
                ("ProcessStatusCode [this=%x].\tStatus - Successful: %d.\n",
                 this, statusCode));
         }
@@ -2453,7 +2459,7 @@ nsHTTPChannel::ProcessStatusCode(void)
         // Redirection: 3xx
         //
     case 3:
-        PR_LOG(HTTPLog, PR_LOG_ALWAYS, 
+        PR_LOG(gHTTPLog, PR_LOG_ALWAYS, 
                ("ProcessStatusCode [this=%x].\tStatus - Redirection: %d.\n",
                 this, statusCode));
 
@@ -2481,7 +2487,7 @@ nsHTTPChannel::ProcessStatusCode(void)
         // Client Error: 4xx
         //
     case 4:
-        PR_LOG(HTTPLog, PR_LOG_ALWAYS, 
+        PR_LOG(gHTTPLog, PR_LOG_ALWAYS, 
                ("ProcessStatusCode [this=%x].\tStatus - Client Error: %d.\n",
                 this, statusCode));
         if ((401 == statusCode) || (407 == statusCode)) {
@@ -2495,7 +2501,7 @@ nsHTTPChannel::ProcessStatusCode(void)
         // Server Error: 5xo
         //
     case 5:
-        PR_LOG(HTTPLog, PR_LOG_ALWAYS, 
+        PR_LOG(gHTTPLog, PR_LOG_ALWAYS, 
                ("ProcessStatusCode [this=%x].\tStatus - Server Error: %d.\n",
                 this, statusCode));
         break;
@@ -2504,7 +2510,7 @@ nsHTTPChannel::ProcessStatusCode(void)
         // Unknown Status Code category...
         //
     default:
-        PR_LOG(HTTPLog, PR_LOG_ALWAYS, 
+        PR_LOG(gHTTPLog, PR_LOG_ALWAYS, 
            ("ProcessStatusCode [this=%x].\tStatus - "
             "Unknown Status Code category: %d.\n",
                 this, statusCode));
@@ -2540,7 +2546,7 @@ nsHTTPChannel::ProcessNotModifiedResponse(nsIStreamListener *aListener)
   	URLSpec = nsCRT::strdup("?");
   }
 
-  PR_LOG(HTTPLog, PR_LOG_ALWAYS, 
+  PR_LOG(gHTTPLog, PR_LOG_ALWAYS, 
          ("nsHTTPChannel::ProcessNotModifiedResponse [this=%x].\t"
           "Using cache copy for: %s\n",
           this, URLSpec));

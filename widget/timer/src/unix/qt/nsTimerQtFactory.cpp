@@ -24,6 +24,7 @@
 #include "nsIGenericFactory.h"
 #include "nsIModule.h"
 #include "nsCOMPtr.h"
+
 #include "nsTimerQt.h"
 
 // {C373F981-5480-11d3-B22A-000064657374}

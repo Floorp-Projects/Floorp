@@ -49,11 +49,6 @@
 #include "nsXBLService.h"
 #include "nsXBLPrototypeBinding.h"
 #include "nsFixedSizeAllocator.h"
-#include "nslog.h"
-
-NS_IMPL_LOG(nsXBLPrototypeBindingLog)
-#define PRINTF NS_LOG_PRINTF(nsXBLPrototypeBindingLog)
-#define FLUSH  NS_LOG_FLUSH(nsXBLPrototypeBindingLog)
 
 // Helper Classes =====================================================================
 
@@ -152,7 +147,7 @@ nsXBLPrototypeBinding::nsXBLPrototypeBinding(const nsCString& aID, nsIContent* a
   mXBLDocInfoWeak = getter_AddRefs(NS_GetWeakReference(aInfo));
   
   gRefCnt++;
-  //  PRINTF("REF COUNT UP: %d %s\n", gRefCnt, (const char*)mID);
+  //  printf("REF COUNT UP: %d %s\n", gRefCnt, (const char*)mID);
 
   if (gRefCnt == 1) {
     kPool.Init("XBL Attribute Entries", kBucketSizes, kNumBuckets, kInitialSize);

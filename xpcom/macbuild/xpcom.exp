@@ -204,3 +204,5 @@ NS_NewPipe__FPP14nsIInputStreamPP15nsIOutputStreamiUi
 NS_NewPipe__FPP20nsIBufferInputStreamPP21nsIBufferOutputStreamP15nsIPipeObserverUiUi
 
 NS_GetLog__FPCcUi
+
+NS_GetLog__FPCcUi

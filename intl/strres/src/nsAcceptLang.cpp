@@ -30,11 +30,6 @@
 #include "nsILocale.h"
 #include "nsIStringBundle.h"
 #include "nsAcceptLang.h"
-#include "nslog.h"
-
-NS_IMPL_LOG(nsAcceptLangLog)
-#define PRINTF NS_LOG_PRINTF(nsAcceptLangLog)
-#define FLUSH  NS_LOG_FLUSH(nsAcceptLangLog)
 
 /* define CID & IID */
 static NS_DEFINE_CID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
@@ -76,7 +71,7 @@ nsAcceptLang::GetAcceptLangFromLocale(const PRUnichar *aLocale, PRUnichar **_ret
 {
   nsString lc_name(aLocale);
   if (lc_name.Length() <=0) {
-    PRINTF("nsAcceptLang::GetAcceptLangFromLocale: aLocale is empty!");
+    printf("nsAcceptLang::GetAcceptLangFromLocale: aLocale is empty!");
 
     // TODO: don't return; instead, use system locale: lc_name=...
     return NS_ERROR_FAILURE;
@@ -180,7 +175,7 @@ nsAcceptLang::GetLocaleFromAcceptLang(const PRUnichar *aName, PRUnichar **_retva
    */
   NS_WITH_SERVICE(nsIStringBundleService, sBundleService, kStringBundleServiceCID, &res);
   if (NS_FAILED(res) || (nsnull == sBundleService)) {
-    PRINTF("\n** nsAcceptLang::GetLocaleFromAcceptLang: failed to get nsIStringBundleService!! **\n");
+    printf("\n** nsAcceptLang::GetLocaleFromAcceptLang: failed to get nsIStringBundleService!! **\n");
     return NS_ERROR_FAILURE;
   }
   

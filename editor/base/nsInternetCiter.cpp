@@ -26,11 +26,6 @@
 #include "nsString.h"
 
 #include "nsCOMPtr.h"
-#include "nslog.h"
-
-NS_IMPL_LOG(nsInternetCiterLog)
-#define PRINTF NS_LOG_PRINTF(nsInternetCiterLog)
-#define FLUSH  NS_LOG_FLUSH(nsInternetCiterLog)
 
 // Line breaker stuff
 #include "nsIServiceManager.h"
@@ -215,7 +210,7 @@ nsInternetCiter::Rewrap(const nsString& aInString,
   {
 #ifdef DEBUG_wrapping
     nsAutoString debug (nsPromiseSubstring<PRUnichar>(aInString, posInString, length-posInString));
-    PRINTF("Outer loop: '%s'\n", debug.ToNewCString());
+    printf("Outer loop: '%s'\n", debug.ToNewCString());
 #endif
 
     // Get the new cite level here since we're at the beginning of a line
@@ -269,8 +264,8 @@ nsInternetCiter::Rewrap(const nsString& aInString,
     else if (outStringCol > 0)
     {
 #ifdef DEBUG_wrapping
-      PRINTF("Appending space; citeLevel=%d, outStringCol=%d\n", citeLevel,
-              outStringCol);
+      printf("Appending space; citeLevel=%d, outStringCol=%d\n", citeLevel,
+             outStringCol);
 #endif
       aOutString.Append(space);
       ++outStringCol;
@@ -292,7 +287,7 @@ nsInternetCiter::Rewrap(const nsString& aInString,
 #ifdef DEBUG_wrapping
       nsAutoString debug (nsPromiseSubstring<PRUnichar>(aInString, posInString,
                                     nextNewline-posInString));
-      PRINTF("Unquoted: appending '%s'\n", debug.ToNewCString());
+      printf("Unquoted: appending '%s'\n", debug.ToNewCString());
 #endif
       aOutString.Append(nsPromiseSubstring<PRUnichar>(aInString, posInString,
                                   nextNewline-posInString));
@@ -300,7 +295,7 @@ nsInternetCiter::Rewrap(const nsString& aInString,
       if (nextNewline != length)
       {
 #ifdef DEBUG_wrapping
-        PRINTF("unquoted: appending a newline\n");
+        printf("unquoted: appending a newline\n");
 #endif
         aOutString.Append(nl);
         outStringCol = 0;
@@ -315,7 +310,7 @@ nsInternetCiter::Rewrap(const nsString& aInString,
     {
 #ifdef DEBUG_wrapping
       nsAutoString debug (nsPromiseSubstring<PRUnichar>(aInString, posInString, nextNewline-posInString));
-      PRINTF("Inner loop: '%s'\n", debug.ToNewCString());
+      printf("Inner loop: '%s'\n", debug.ToNewCString());
 #endif
 
       // If this is a short line, just append it and continue:
@@ -327,7 +322,7 @@ nsInternetCiter::Rewrap(const nsString& aInString,
           ++nextNewline;
 #ifdef DEBUG_wrapping
         nsAutoString debug (nsPromiseSubstring<PRUnichar>(aInString, posInString, nextNewline - posInString));
-        PRINTF("Short line: '%s'\n", debug.ToNewCString());
+        printf("Short line: '%s'\n", debug.ToNewCString());
 #endif
         aOutString += nsPromiseSubstring<PRUnichar>(aInString,
                                 posInString, nextNewline - posInString);
@@ -362,12 +357,12 @@ nsInternetCiter::Rewrap(const nsString& aInString,
       if (NS_FAILED(rv))
       {
 #ifdef DEBUG_akkana
-        PRINTF("nsInternetCiter: LineBreaker not working -- breaking hard\n");
+        printf("nsInternetCiter: LineBreaker not working -- breaking hard\n");
 #endif
         breakPt = eol;
       }
 #ifdef DEBUG_wrapping
-      PRINTF("breakPt = %d\n", breakPt);
+      printf("breakPt = %d\n", breakPt);
 #endif
 
       aOutString += nsPromiseSubstring<PRUnichar>(aInString, posInString, breakPt);
@@ -383,7 +378,7 @@ nsInternetCiter::Rewrap(const nsString& aInString,
       }
     } // end inner loop within one line of aInString
 #ifdef DEBUG_wrapping
-    PRINTF("---------\nEnd inner loop: out string is now '%s'\n-----------\n",
+    printf("---------\nEnd inner loop: out string is now '%s'\n-----------\n",
            aOutString.ToNewCString());
 #endif
   } // end outer loop over lines of aInString

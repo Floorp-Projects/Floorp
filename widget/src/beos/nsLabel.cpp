@@ -29,11 +29,6 @@
 #include "nsStringUtil.h"
 #include "nsIFontMetrics.h"
 #include "nsIDeviceContext.h"
-#include "nslog.h"
-
-NS_IMPL_LOG(nsLabelLog)
-#define PRINTF NS_LOG_PRINTF(nsLabelLog)
-#define FLUSH  NS_LOG_FLUSH(nsLabelLog)
 
 NS_IMPL_ADDREF(nsLabel)
 NS_IMPL_RELEASE(nsLabel)
@@ -147,7 +142,7 @@ PRBool nsLabel::OnMove(PRInt32, PRInt32)
 
 PRBool nsLabel::OnPaint(nsRect &r)
 {
-  //PRINTF("** nsLabel::OnPaint **\n");
+  //printf("** nsLabel::OnPaint **\n");
   return PR_FALSE;
 }
 

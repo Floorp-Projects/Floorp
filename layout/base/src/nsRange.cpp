@@ -45,11 +45,6 @@
 #include "nsIHTMLFragmentContentSink.h"
 // XXX Temporary inclusion to deal with fragment parsing
 #include "nsHTMLParts.h"
-#include "nslog.h"
-
-NS_IMPL_LOG(nsRangeLog)
-#define PRINTF NS_LOG_PRINTF(nsRangeLog)
-#define FLUSH  NS_LOG_FLUSH(nsRangeLog)
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIScriptObjectOwnerIID, NS_ISCRIPTOBJECTOWNER_IID);
@@ -1576,7 +1571,7 @@ nsresult nsRange::ToString(nsAWritableString& aReturn)
   }
 
 #ifdef DEBUG_range
-  PRINTF("Range dump: -----------------------\n");
+      printf("Range dump: -----------------------\n");
 #endif /* DEBUG */
     
   // effeciency hack for simple case
@@ -1590,7 +1585,7 @@ nsresult nsRange::ToString(nsAWritableString& aReturn)
       // If debug, dump it:
       nsCOMPtr<nsIContent> cN (do_QueryInterface(mStartParent));
       if (cN) cN->List(stdout);
-      PRINTF("End Range dump: -----------------------\n");
+      printf("End Range dump: -----------------------\n");
 #endif /* DEBUG */
 
       // grab the text
@@ -1651,7 +1646,7 @@ nsresult nsRange::ToString(nsAWritableString& aReturn)
   }
 
 #ifdef DEBUG_range
-  PRINTF("End Range dump: -----------------------\n");
+  printf("End Range dump: -----------------------\n");
 #endif /* DEBUG */
   return NS_OK;
 }

@@ -42,11 +42,6 @@
 #include "EditTxn.h"
 #include "TypeInState.h"
 #include "nsIPref.h"
-#include "nslog.h"
-
-NS_IMPL_LOG(nsTextEditRulesLog)
-#define PRINTF NS_LOG_PRINTF(nsTextEditRulesLog)
-#define FLUSH  NS_LOG_FLUSH(nsTextEditRulesLog)
 
 static NS_DEFINE_CID(kContentIteratorCID,   NS_CONTENTITERATOR_CID);
 static NS_DEFINE_IID(kRangeCID, NS_RANGE_CID);
@@ -235,7 +230,7 @@ nsTextEditRules::WillDoAction(nsISelection *aSelection,
   // null selection is legal
   if (!aInfo || !aCancel || !aHandled) { return NS_ERROR_NULL_POINTER; }
 #if defined(DEBUG_ftang)
-  PRINTF("nsTextEditRules::WillDoAction action= %d", aInfo->action);
+  printf("nsTextEditRules::WillDoAction action= %d", aInfo->action);
 #endif
 
   *aCancel = PR_FALSE;
@@ -483,7 +478,7 @@ nsTextEditRules::WillInsertBreak(nsISelection *aSelection, PRBool *aCancel, PRBo
                                                       mozQuoteVal, isMozQuote))
               && isMozQuote)
           {
-            PRINTF("It's a moz quote -- splitting\n");
+            printf("It's a moz quote -- splitting\n");
             nsCOMPtr<nsIDOMNode> outLeftNode;
             nsCOMPtr<nsIDOMNode> outRightNode;
             res = mEditor->SplitNodeDeep(preNode, selNode, selOffset, &newOffset, PR_TRUE, &outLeftNode, &outRightNode);
@@ -897,7 +892,7 @@ nsTextEditRules::WillDeleteSelection(nsISelection *aSelection,
 
 #ifdef DEBUG_buster
     char *password = mPasswordText.ToNewCString();
-    PRINTF("mPasswordText is %s\n", password);
+    printf("mPasswordText is %s\n", password);
     nsCRT::free(password);
 #endif
   }

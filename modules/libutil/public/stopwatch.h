@@ -4,8 +4,6 @@
 #include "nscore.h"
 #include "prlog.h"
 #include "nsDeque.h"
-#undef printf
-#undef fprintf
 
 #ifdef XP_MAC
 #define R__MAC

@@ -44,11 +44,6 @@
 static NS_DEFINE_IID(kIHTMLTableCellElementIID, NS_IHTMLTABLECELLELEMENT_IID);
 // end includes for style optimizations that require real content knowledge
 
-#include "nslog.h"
-
-NS_IMPL_LOG(nsTableRowFrameLog)
-#define PRINTF NS_LOG_PRINTF(nsTableRowFrameLog)
-#define FLUSH  NS_LOG_FLUSH(nsTableRowFrameLog)
 
 struct nsTableCellReflowState : public nsHTMLReflowState
 {
@@ -974,8 +969,8 @@ NS_METHOD nsTableRowFrame::ResizeReflow(nsIPresContext*      aPresContext,
 #ifdef NS_DEBUG_karnaze
           if (desiredSize.width > availWidth)
           {
-            PRINTF("WARNING: cell returned desired width %d given avail width %d\n",
-                   desiredSize.width, availWidth);
+            printf("WARNING: cell returned desired width %d given avail width %d\n",
+                    desiredSize.width, availWidth);
           }
 #endif
 
@@ -1062,7 +1057,7 @@ NS_METHOD nsTableRowFrame::ResizeReflow(nsIPresContext*      aPresContext,
     float p2t;
     aPresContext->GetScaledPixelsToTwips(&p2t);
     if (overAllocated > p2t) {
-      PRINTF("row over allocated by %d\n twips", overAllocated);
+      printf("row over allocated by %d\n twips", overAllocated);
     }
   }
 #endif
@@ -1126,15 +1121,15 @@ nsTableRowFrame::InitialReflow(nsIPresContext*      aPresContext,
       // the following signals bugs in the content frames.  
       if (kidMaxElementSize.width > kidSize.width) {
 #ifdef DEBUG_karnaze
-        PRINTF("WARNING - table cell content max element width %d greater than desired width %d\n",
-               kidMaxElementSize.width, kidSize.width);
+        printf("WARNING - table cell content max element width %d greater than desired width %d\n",
+          kidMaxElementSize.width, kidSize.width);
 #endif
         kidSize.width = kidMaxElementSize.width;
       }
       if (kidMaxElementSize.height > kidSize.height) {
 #ifdef DEBUG_karnaze
-        PRINTF("Warning - table cell content max element height %d greater than desired height %d\n",
-               kidMaxElementSize.height, kidSize.height);
+        printf("Warning - table cell content max element height %d greater than desired height %d\n",
+          kidMaxElementSize.height, kidSize.height);
 #endif
         kidSize.height = kidMaxElementSize.height;
       }

@@ -41,14 +41,15 @@
 #include "nsILocalFile.h"
 
 #include "prprf.h"
-#include "nslog.h"
-
-NS_IMPL_LOG(nsStreamXferOpLog)
-#define PRINTF NS_LOG_PRINTF(nsStreamXferOpLog)
-#define FLUSH  NS_LOG_FLUSH(nsStreamXferOpLog)
 
 #include "nsIStringBundle.h"
 static NS_DEFINE_CID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
+
+#ifdef NS_DEBUG
+#define DEBUG_PRINTF PR_fprintf
+#else
+#define DEBUG_PRINTF (void)
+#endif
 
 #ifdef USE_ASYNC_READ
 NS_IMPL_ISUPPORTS5(nsStreamXferOp, nsIStreamListener, nsIStreamObserver, nsIStreamTransferOperation, nsIProgressEventSink, nsIInterfaceRequestor);
@@ -73,7 +74,7 @@ nsStreamXferOp::nsStreamXferOp( nsIChannel *source, nsIFileSpec *target )
 nsStreamXferOp::~nsStreamXferOp() {
     // Delete dynamically allocated members (file and buffer).
 #ifdef DEBUG_law
-    PRINTF("nsStreamXferOp destructor called\n" );
+    DEBUG_PRINTF( PR_STDOUT, "nsStreamXferOp destructor called\n" );
 #endif
 }
 
@@ -102,28 +103,28 @@ nsStreamXferOp::OpenDialog( nsIDOMWindowInternal *parent ) {
                     nsCOMPtr<nsIDOMWindowInternal> newWindow;
                     rv = parent->OpenDialog( jsContext, argv, 4, getter_AddRefs( newWindow ) );
                     if ( NS_FAILED( rv ) ) {
-                        PRINTF("%s %d: nsIDOMWindowInternal::OpenDialog failed, rv=0x%08X\n",
-                               (char*)__FILE__, (int)__LINE__, (int)rv );
+                        DEBUG_PRINTF( PR_STDOUT, "%s %d: nsIDOMWindowInternal::OpenDialog failed, rv=0x%08X\n",
+                                      (char*)__FILE__, (int)__LINE__, (int)rv );
                     }
                     JS_PopArguments( jsContext, stackPtr );
                 } else {
-                    PRINTF("%s %d: JS_PushArguments failed\n",
-                           (char*)__FILE__, (int)__LINE__ );
+                    DEBUG_PRINTF( PR_STDOUT, "%s %d: JS_PushArguments failed\n",
+                                  (char*)__FILE__, (int)__LINE__ );
                     rv = NS_ERROR_FAILURE;
                 }
             } else {
-                PRINTF("%s %d: GetNativeContext failed\n",
-                       (char*)__FILE__, (int)__LINE__ );
+                DEBUG_PRINTF( PR_STDOUT, "%s %d: GetNativeContext failed\n",
+                              (char*)__FILE__, (int)__LINE__ );
                 rv = NS_ERROR_FAILURE;
             }
         } else {
-            PRINTF("%s %d: GetContext failed\n",
-                   (char*)__FILE__, (int)__LINE__ );
+            DEBUG_PRINTF( PR_STDOUT, "%s %d: GetContext failed\n",
+                          (char*)__FILE__, (int)__LINE__ );
             rv = NS_ERROR_FAILURE;
         }
     } else {
-        PRINTF("%s %d: QueryInterface (for nsIScriptGlobalObject) failed, rv=0x%08X\n",
-               (char*)__FILE__, (int)__LINE__, (int)rv );
+        DEBUG_PRINTF( PR_STDOUT, "%s %d: QueryInterface (for nsIScriptGlobalObject) failed, rv=0x%08X\n",
+                      (char*)__FILE__, (int)__LINE__, (int)rv );
     }
     return rv;
 }
@@ -134,8 +135,8 @@ nsStreamXferOp::OnError( int operation, nsresult errorCode ) {
     nsresult rv = NS_OK;
 
 #ifdef DEBUG_law
-    PRINTF("nsStreamXferOp::OnError; op=%d, rv=0x%08X\n",
-           operation, (int)errorCode );
+    DEBUG_PRINTF( PR_STDOUT, "nsStreamXferOp::OnError; op=%d, rv=0x%08X\n",
+                  operation, (int)errorCode );
 #endif
 
     if ( mObserver ) {
@@ -145,8 +146,8 @@ nsStreamXferOp::OnError( int operation, nsresult errorCode ) {
                                  NS_ConvertASCIItoUCS2( NS_ISTREAMTRANSFER_CONTRACTID ";onError" ).GetUnicode(),
                                  NS_ConvertASCIItoUCS2( buf ).GetUnicode() );
         if ( NS_FAILED( rv ) ) {
-            PRINTF("%s %d: Observe failed, rv=0x%08X\n",
-                   (char*)__FILE__, (int)__LINE__, (int)rv );
+            DEBUG_PRINTF( PR_STDOUT, "%s %d: Observe failed, rv=0x%08X\n",
+                          (char*)__FILE__, (int)__LINE__, (int)rv );
         }
     }
 
@@ -274,8 +275,8 @@ nsStreamXferOp::OnStartRequest(nsIChannel* channel, nsISupports* aContext) {
     nsresult rv = NS_OK;
 
 #ifdef DEBUG_law
-    PRINTF("nsStreamXferOp::OnStartRequest; channel=0x%08X, context=0x%08X\n",
-           (int)(void*)channel, (int)(void*)aContext );
+    DEBUG_PRINTF( PR_STDOUT, "nsStreamXferOp::OnStartRequest; channel=0x%08X, context=0x%08X\n",
+                  (int)(void*)channel, (int)(void*)aContext );
 #endif
 
 #ifdef USE_ASYNC_READ
@@ -384,8 +385,8 @@ nsStreamXferOp::OnProgress(nsIChannel* channel, nsISupports* aContext,
                                   NS_ConvertASCIItoUCS2( NS_ISTREAMTRANSFER_CONTRACTID ";onProgress" ).GetUnicode(),
                                   NS_ConvertASCIItoUCS2( buf ).GetUnicode() );
         if ( NS_FAILED( rv ) ) {
-            PRINTF("%s %d: Observe failed, rv=0x%08X\n",
-                   (char*)__FILE__, (int)__LINE__, (int)rv );
+            DEBUG_PRINTF( PR_STDOUT, "%s %d: Observe failed, rv=0x%08X\n",
+                          (char*)__FILE__, (int)__LINE__, (int)rv );
         }
     }
 
@@ -413,8 +414,8 @@ nsStreamXferOp::OnStatus( nsIChannel      *channel,
                                   NS_ConvertASCIItoUCS2( NS_ISTREAMTRANSFER_CONTRACTID ";onStatus" ).GetUnicode(),
                                   msg.GetUnicode() );
         if ( NS_FAILED( rv ) ) {
-            PRINTF("%s %d: Observe failed, rv=0x%08X\n",
-                   (char*)__FILE__, (int)__LINE__, (int)rv );
+            DEBUG_PRINTF( PR_STDOUT, "%s %d: Observe failed, rv=0x%08X\n",
+                          (char*)__FILE__, (int)__LINE__, (int)rv );
         }
     }
 
@@ -455,8 +456,8 @@ nsStreamXferOp::OnStopRequest( nsIChannel      *channel,
                                   NS_ConvertASCIItoUCS2( NS_ISTREAMTRANSFER_CONTRACTID ";onCompletion" ).GetUnicode(),
                                   msg.GetUnicode() );
         if ( NS_FAILED( rv ) ) {
-            PRINTF("%s %d: Observe failed, rv=0x%08X\n",
-                   (char*)__FILE__, (int)__LINE__, (int)rv );
+            DEBUG_PRINTF( PR_STDOUT, "%s %d: Observe failed, rv=0x%08X\n",
+                          (char*)__FILE__, (int)__LINE__, (int)rv );
         }
     }
 

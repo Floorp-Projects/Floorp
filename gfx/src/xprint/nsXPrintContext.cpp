@@ -24,11 +24,6 @@
 #include <stdlib.h>
 #include "xlibrgb.h"
 #include "nsXPrintContext.h"
-#include "nslog.h"
-
-NS_IMPL_LOG(nsXPrintContextLog)
-#define PRINTF NS_LOG_PRINTF(nsXPrintContextLog)
-#define FLUSH  NS_LOG_FLUSH(nsXPrintContextLog)
 
 #undef XPRINT_ON_SCREEN
 
@@ -37,7 +32,7 @@ Display * nsXPrintContext::mDisplay = (Display *)0;
 static int xerror_handler(Display *display, XErrorEvent *ev) {
     char errmsg[80];
     XGetErrorText(display, ev->error_code, errmsg, 80);
-    PRINTF("lib_xprint: Warning (X Error) -  %s\n", errmsg);
+    fprintf(stderr, "lib_xprint: Warning (X Error) -  %s\n", errmsg);
     return 0;
 }
 
@@ -91,7 +86,7 @@ nsXPrintContext::Init(nsIDeviceContextSpecXP *aSpec)
   }
   if (nsnull == mDisplay) {
      if (!(mDisplay = XOpenDisplay(printservername))) {
-       PRINTF("failed to open display '%s'\n", printservername);
+        fprintf(stderr,"failed to open display '%s'\n", printservername);
 	return NS_ERROR_FAILURE;
      }
   }

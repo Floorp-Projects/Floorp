@@ -27,11 +27,6 @@
 #include "nsString.h"
 #include "nsStringUtil.h"
 #include <TextView.h>
-#include "nslog.h"
-
-NS_IMPL_LOG(nsTextHelperLog)
-#define PRINTF NS_LOG_PRINTF(nsTextHelperLog)
-#define FLUSH  NS_LOG_FLUSH(nsTextHelperLog)
 
 NS_METHOD nsTextHelper::PreCreateWidget(nsWidgetInitData *aInitData)
 {
@@ -114,7 +109,7 @@ NS_METHOD  nsTextHelper::RemoveText()
 NS_METHOD  nsTextHelper::SetPassword(PRBool aIsPassword)
 {
   mIsPassword = aIsPassword;
-  if(mIsPassword) PRINTF("nsTextHelper::SetPassword not implemented\n");
+if(mIsPassword) printf("nsTextHelper::SetPassword not implemented\n");
   return NS_OK;
 }
 

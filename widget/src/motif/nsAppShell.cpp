@@ -30,11 +30,6 @@
 #include "nsIMotifAppContextService.h"
 
 #include <stdlib.h>
-#include "nslog.h"
-
-NS_IMPL_LOG(nsAppShellLog)
-#define PRINTF NS_LOG_PRINTF(nsAppShellLog)
-#define FLUSH  NS_LOG_FLUSH(nsAppShellLog)
 
 #ifdef LINUX
 #define DO_THE_EDITRES_THING
@@ -111,11 +106,11 @@ NS_METHOD nsAppShell::Create(int* bac, char ** bav)
                               NULL,           // args
                               0);             // num_args
 
-  PRINTF("nsAppShell::Create() app_context = %p\n",sAppContext);
+  printf("nsAppShell::Create() app_context = %p\n",sAppContext);
 
   xlib_rgb_init(XtDisplay(mTopLevel), XtScreen(mTopLevel));
 
-  PRINTF("xlib_rgb_init(display=%p,screen=%p)\n",
+  printf("xlib_rgb_init(display=%p,screen=%p)\n",
          XtDisplay(mTopLevel),
          XtScreen(mTopLevel));
 
@@ -152,7 +147,7 @@ NS_METHOD nsAppShell::Run()
   }
 
 #ifdef DEBUG
-  PRINTF("Got the event queue from the service\n");
+  printf("Got the event queue from the service\n");
 #endif /* DEBUG */
 
   //Get the event queue for the thread.
@@ -178,7 +173,7 @@ NS_METHOD nsAppShell::Run()
 
 done:
 
-  PRINTF("Calling XtAppAddInput() with event queue\n");
+  printf("Calling XtAppAddInput() with event queue\n");
 
   XtAppAddInput(nsAppShell::GetAppContext(),
                 EQueue->GetEventQueueSelectFD(),
@@ -311,13 +306,13 @@ nsAppShell::SetAppContext(XtAppContext aAppContext)
 
     if (ac_service)
     {
-        PRINTF("nsAppShell::SetAppContext() ac_service = %p\n",ac_service);
+      printf("nsAppShell::SetAppContext() ac_service = %p\n",ac_service);
 
       nsresult rv2 = ac_service->SetAppContext(aAppContext);
 
       NS_ASSERTION(rv2 == NS_OK,"Cannot set the app context.");
 
-      PRINTF("nsAppShell::SetAppContext() All is ok.\n");
+      printf("nsAppShell::SetAppContext() All is ok.\n");
 
       NS_RELEASE(ac_service);
     }

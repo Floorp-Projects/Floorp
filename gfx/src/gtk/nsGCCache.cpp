@@ -28,12 +28,6 @@
 #include <gdk/gdkx.h>
 #include <gdk/gdkprivate.h>
 #include <X11/Xlib.h>
-#include "nslog.h"
-
-NS_IMPL_LOG(nsGCCacheLog)
-#define PRINTF NS_LOG_PRINTF(nsGCCacheLog)
-#define FLUSH  NS_LOG_FLUSH(nsGCCacheLog)
-
 /* The GC cache is shared among all windows, since it doesn't hog
    any scarce resources (like colormap entries.) */
 
@@ -98,18 +92,18 @@ nsGCCache::~nsGCCache()
 void
 nsGCCache::ReportStats() { 
   DEBUG_METER(
-    PRINTF("GC Cache:\n\thits:");
-    int hits = 0;
-    for (int i = 0; i < GC_CACHE_SIZE; i++) {
-      PRINTF(" %4d", GCCacheStats.hits[i]);
-      hits+=GCCacheStats.hits[i];
-    }
-    int total = hits + GCCacheStats.misses;
-    float percent = float(float(hits) / float(total));
-    percent *= 100;
-    PRINTF("\n\thits: %d, misses: %d, hit percent: %f%%\n", 
-             hits, GCCacheStats.misses, percent);
-    );
+              fprintf(stderr, "GC Cache:\n\thits:");
+              int hits = 0;
+              for (int i = 0; i < GC_CACHE_SIZE; i++) {
+                fprintf(stderr, " %4d", GCCacheStats.hits[i]);
+                hits+=GCCacheStats.hits[i];
+              }
+              int total = hits + GCCacheStats.misses;
+              float percent = float(float(hits) / float(total));
+              percent *= 100;
+              fprintf(stderr, "\n\thits: %d, misses: %d, hit percent: %f%%\n", 
+                      hits, GCCacheStats.misses, percent);
+              );
 }
 
 GdkRegion *
@@ -184,7 +178,7 @@ GdkGC *nsGCCache::GetGC(GdkWindow *window, GdkGCValues *gcv, GdkGCValuesMask fla
     entry->flags = flags;
     entry->gcv = *gcv;
     entry->clipRegion = NULL;
-    //PRINTF("creating new gc=%X\n",entry->gc); 
+    //printf("creating new gc=%X\n",entry->gc); 
   }
   else if ( ((GdkGCPrivate*)entry->gc)->ref_count > 1 ) {
     // Old GC still in use, create new
@@ -193,7 +187,7 @@ GdkGC *nsGCCache::GetGC(GdkWindow *window, GdkGCValues *gcv, GdkGCValuesMask fla
     entry->flags = flags;
     entry->gcv = *gcv;
     entry->clipRegion = NULL;
-    //PRINTF("creating new (use)gc=%X\n",entry->gc); 
+    //printf("creating new (use)gc=%X\n",entry->gc); 
   }
   else {
     ReuseGC(entry, gcv, flags);

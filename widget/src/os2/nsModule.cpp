@@ -37,11 +37,6 @@
 #include "resid.h"
 #include <stdio.h>
 #include <stdlib.h>
-#include "nslog.h"
-
-NS_IMPL_LOG(nsModuleLog)
-#define PRINTF NS_LOG_PRINTF(nsModuleLog)
-#define FLUSH  NS_LOG_FLUSH(nsModuleLog)
 
 // Module-level data & utility functions:
 //       * unicode keycode & string conversion
@@ -73,7 +68,7 @@ void nsWidgetModuleData::Init( nsIAppShell *aPrimaevalAppShell)
 
    if( rc)
    {
-      PRINTF( "Widget failed to load resource DLL. rc = %d, cause = %s\n",
+      printf( "Widget failed to load resource DLL. rc = %d, cause = %s\n",
               (int)rc, buffer);
       hModResources = 0;
    }
@@ -185,7 +180,7 @@ HPOINTER nsWidgetModuleData::GetPointer( nsCursor aCursor)
    if( idPtr == 0)
    {
       idPtr = ID_PTR_SELECTURL; // default to hyperlink cursor?
-      PRINTF( "\n*** Need to implement cursor type %d (see widget/src/os2/nsModule.cpp)\n\n", (int) aCursor);
+      printf( "\n*** Need to implement cursor type %d (see widget/src/os2/nsModule.cpp)\n\n", (int) aCursor);
    }
 
    // Use an array and indices here since we have all the pointers in place?
@@ -218,14 +213,14 @@ int nsWidgetModuleData::CreateUcsConverter()
 #ifdef DEBUG
       if( unirc == ULS_SUCCESS)
       {
-         PRINTF( "Widget library created unicode converter for cp %s\n",
+         printf( "Widget library created unicode converter for cp %s\n",
                  ConvertFromUcs( (PRUnichar *) codepage));
       }
 #endif
    }
    if( unirc != ULS_SUCCESS)
    {
-       PRINTF( "Couldn't create widget unicode converter.\n");
+      printf( "Couldn't create widget unicode converter.\n");
    }
 
    return unirc;
@@ -285,7 +280,7 @@ PRUnichar *nsWidgetModuleData::ConvertToUcs( const char *szText,
    }
    else if( unirc != ULS_SUCCESS)
    {
-       PRINTF( "UniUconvToUcs failed, rc %X\n", unirc);
+      printf( "UniUconvToUcs failed, rc %X\n", unirc);
       supplantConverter = TRUE;
       pBuffer = ConvertToUcs( szText, pBuffer, ulSize);
       supplantConverter = FALSE;
@@ -347,7 +342,7 @@ char *nsWidgetModuleData::ConvertFromUcs( const PRUnichar *pText,
    }
    else if( unirc != ULS_SUCCESS)
    {
-       PRINTF( "UniUconvFromUcs failed, rc %X\n", unirc);
+      printf( "UniUconvFromUcs failed, rc %X\n", unirc);
       supplantConverter = TRUE;
       szBuffer = ConvertFromUcs( pText, szBuffer, ulSize);
       supplantConverter = FALSE;

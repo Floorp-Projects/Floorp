@@ -39,11 +39,6 @@
 #include "nsStyleUtil.h"
 
 #include "nsMathMLmfracFrame.h"
-#include "nslog.h"
-
-NS_IMPL_LOG(nsMathMLmfracFrameLog)
-#define PRINTF NS_LOG_PRINTF(nsMathMLmfracFrameLog)
-#define FLUSH  NS_LOG_FLUSH(nsMathMLmfracFrameLog)
 
 //
 // <mfrac> -- form a fraction from two subexpressions - implementation
@@ -152,7 +147,7 @@ nsMathMLmfracFrame::CalcLineThickness(nsIPresContext*  aPresContext,
       else {
         char str[50];
         aThicknessAttribute.ToCString(str, 50);
-        PRINTF("Invalid attribute linethickness=%s\n", str);
+        printf("Invalid attribute linethickness=%s\n", str);
       }
 #endif
     }
@@ -274,7 +269,7 @@ nsMathMLmfracFrame::Place(nsIPresContext*      aPresContext,
     rv = childFrame->GetNextSibling(&childFrame);
   }
 #ifdef NS_DEBUG
-  if (2 != count) PRINTF("mfrac: invalid markup");
+  if (2 != count) printf("mfrac: invalid markup");
 #endif
   if ((2 != count) || !frameNum || !frameDen) {
     // report an error, encourage people to get their markups in order

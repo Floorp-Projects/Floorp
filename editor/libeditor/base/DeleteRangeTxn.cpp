@@ -37,11 +37,11 @@
 #include "nsIDOMElement.h"
 #endif
 
-#include "nslog.h"
-
-NS_IMPL_LOG(DeleteRangeTxnLog)
-#define PRINTF NS_LOG_PRINTF(DeleteRangeTxnLog)
-#define FLUSH  NS_LOG_FLUSH(DeleteRangeTxnLog)
+#ifdef NS_DEBUG
+static PRBool gNoisy = PR_FALSE;
+#else
+static const PRBool gNoisy = PR_FALSE;
+#endif
 
 // note that aEditor is not refcounted
 DeleteRangeTxn::DeleteRangeTxn()
@@ -97,8 +97,11 @@ NS_IMETHODIMP DeleteRangeTxn::Init(nsIEditor *aEditor, nsIDOMRange *aRange)
       children->GetLength(&count);
     }
     NS_ASSERTION(mEndOffset<=(PRInt32)count, "bad end offset");
-    PRINTF("DeleteRange: %d of %p to %d of %p\n", 
-           mStartOffset, (void *)mStartParent, mEndOffset, (void *)mEndParent);
+    if (gNoisy)
+    {
+      printf ("DeleteRange: %d of %p to %d of %p\n", 
+               mStartOffset, (void *)mStartParent, mEndOffset, (void *)mEndParent);
+    }         
   }
 #endif
   return result;
@@ -111,7 +114,7 @@ DeleteRangeTxn::~DeleteRangeTxn()
 
 NS_IMETHODIMP DeleteRangeTxn::Do(void)
 {
-  PRINTF("Do Delete Range\n");
+  if (gNoisy) { printf("Do Delete Range\n"); }
   if (!mStartParent || !mEndParent || !mCommonParent || !mEditor) 
     return NS_ERROR_NOT_INITIALIZED;
 
@@ -166,7 +169,7 @@ NS_IMETHODIMP DeleteRangeTxn::Do(void)
 
 NS_IMETHODIMP DeleteRangeTxn::Undo(void)
 {
-  PRINTF("Undo Delete Range\n");
+  if (gNoisy) { printf("Undo Delete Range\n"); }
   if (!mStartParent || !mEndParent || !mCommonParent || !mEditor) 
     return NS_ERROR_NOT_INITIALIZED;
 
@@ -176,7 +179,7 @@ NS_IMETHODIMP DeleteRangeTxn::Undo(void)
 
 NS_IMETHODIMP DeleteRangeTxn::Redo(void)
 {
-  PRINTF("Redo Delete Range\n");
+  if (gNoisy) { printf("Redo Delete Range\n"); }
   if (!mStartParent || !mEndParent || !mCommonParent || !mEditor) 
     return NS_ERROR_NOT_INITIALIZED;
 

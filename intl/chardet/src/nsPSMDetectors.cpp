@@ -46,12 +46,6 @@
 #include "nsISupports.h"
 #include "nsCharDetDll.h"
 #include "pratom.h"
-#include "nslog.h"
-
-NS_IMPL_LOG(nsPSMDetectorsLog)
-#define PRINTF NS_LOG_PRINTF(nsPSMDetectorsLog)
-#define FLUSH  NS_LOG_FLUSH(nsPSMDetectorsLog)
-
 // temp fix for XPCOM should be remove after alechf fix the xpcom one
 #define MY_NS_IMPL_QUERY_INTERFACE(_class,_classiiddef,_interface)       \
 NS_IMETHODIMP _class::QueryInterface(REFNSIID aIID, void** aInstancePtr) \
@@ -329,7 +323,7 @@ PRBool nsPSMDetector::HandleData(const char* aBuf, PRUint32 aLen)
 #ifdef ftang_TRACE_STATE
        if(  mVerifier[mItemIdx[j]] == & TRACE_VERIFIER )
        {
-         PRINTF("%d = %d\n", i + mDbgLen, mState[j]);
+           printf("%d = %d\n", i + mDbgLen, mState[j]);
        }
 #endif
 #ifdef DETECTOR_DEBUG
@@ -339,12 +333,12 @@ PRBool nsPSMDetector::HandleData(const char* aBuf, PRUint32 aLen)
         if(eItsMe == st) 
         {
 #ifdef DETECTOR_DEBUG
-          PRINTF("It's %s- byte %d(%x) test %d\n", 
-                 mVerifier[mItemIdx[j]]->charset,
-                 i+mDbgLen,
-                 i+mDbgLen,
-                 mDbgTest
-            );
+            printf("It's %s- byte %d(%x) test %d\n", 
+                    mVerifier[mItemIdx[j]]->charset,
+                    i+mDbgLen,
+                    i+mDbgLen,
+                    mDbgTest
+                  );
 #endif
             Report( mVerifier[mItemIdx[j]]->charset);
             mDone = PR_TRUE;
@@ -352,10 +346,10 @@ PRBool nsPSMDetector::HandleData(const char* aBuf, PRUint32 aLen)
         } else if (eError == st) 
         {
 #ifdef DETECTOR_DEBUG
-          PRINTF("It's NOT %s- byte %d(%x)\n", 
-                 mVerifier[mItemIdx[j]]->charset,
-                 i+mDbgLen,
-                 i+mDbgLen);
+            printf("It's NOT %s- byte %d(%x)\n", 
+                    mVerifier[mItemIdx[j]]->charset,
+                    i+mDbgLen,
+                    i+mDbgLen);
 #endif
             mItems--;
             if(j < mItems )
@@ -371,11 +365,11 @@ PRBool nsPSMDetector::HandleData(const char* aBuf, PRUint32 aLen)
      {
          if( 1 == mItems) {
 #ifdef DETECTOR_DEBUG
-           PRINTF("It's %s- byte %d (%x) Test %d. The only left\n", 
-                  mVerifier[mItemIdx[0]]->charset,
-                  i+mDbgLen,
-                  i+mDbgLen,
-                  mDbgTest);
+             printf("It's %s- byte %d (%x) Test %d. The only left\n", 
+                       mVerifier[mItemIdx[0]]->charset,
+                       i+mDbgLen,
+                       i+mDbgLen,
+                       mDbgTest);
 #endif
              Report( mVerifier[mItemIdx[0]]->charset);
          }
@@ -394,11 +388,11 @@ PRBool nsPSMDetector::HandleData(const char* aBuf, PRUint32 aLen)
         }
         if(1 == nonUCS2Num) {
 #ifdef DETECTOR_DEBUG
-          PRINTF("It's %s- byte %d (%x) Test %d. The only left except UCS2LE/BE\n", 
-                 mVerifier[mItemIdx[nonUCS2Idx]]->charset,
-                 i+mDbgLen,
-                 i+mDbgLen,
-                 mDbgTest);
+             printf("It's %s- byte %d (%x) Test %d. The only left except UCS2LE/BE\n", 
+                       mVerifier[mItemIdx[nonUCS2Idx]]->charset,
+                       i+mDbgLen,
+                       i+mDbgLen,
+                       mDbgTest);
 #endif
             Report( mVerifier[mItemIdx[nonUCS2Idx]]->charset);
             mDone = PR_TRUE;
@@ -436,13 +430,13 @@ void nsPSMDetector::Sample(const char* aBuf, PRUint32 aLen, PRBool aLastChance)
            && (eucNum == nonUCS2Num)) {
           mSampler.CalFreq();
 #ifdef DETECTOR_DEBUG
-          PRINTF("We cannot figure out charset from the encoding, "
+          printf("We cannot figure out charset from the encoding, "
                  "All EUC based charset share the same encoding structure.\n"
                  "Detect based on statistics"); 
           if(aLastChance) {
-            PRINTF(" after we receive all the data.\n"); 
+             printf(" after we receive all the data.\n"); 
           } else {
-            PRINTF(" after we receive enough data.\n");
+             printf(" after we receive enough data.\n");
           }
 #endif
           PRInt32 bestIdx;
@@ -458,7 +452,7 @@ void nsPSMDetector::Sample(const char* aBuf, PRUint32 aLen, PRBool aLastChance)
                    mStatisticsData[mItemIdx[j]]->mSecoundByteFreq,
                    mStatisticsData[mItemIdx[j]]->mSecoundByteWeight );
 #ifdef DETECTOR_DEBUG
-                PRINTF("Differences between %s and this data is %2.8f\n",
+                printf("Differences between %s and this data is %2.8f\n",
                        mVerifier[mItemIdx[j]]->charset,
                        score);
 #endif
@@ -469,8 +463,8 @@ void nsPSMDetector::Sample(const char* aBuf, PRUint32 aLen, PRBool aLastChance)
             } // if(nsnull != ...)
          } // for
 #ifdef DETECTOR_DEBUG
-         PRINTF("Based on the statistic, we decide it is %s",
-                mVerifier[mItemIdx[bestIdx]]->charset);
+         printf("Based on the statistic, we decide it is %s",
+          mVerifier[mItemIdx[bestIdx]]->charset);
 #endif
          Report( mVerifier[mItemIdx[bestIdx]]->charset);
          mDone = PR_TRUE;

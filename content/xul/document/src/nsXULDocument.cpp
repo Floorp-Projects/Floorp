@@ -128,7 +128,6 @@
 #include "nsIXBLService.h"
 #include "nsReadableUtils.h"
 
-NS_IMPL_LOG(nsXULDocumentLog)
 
 //----------------------------------------------------------------------
 //
@@ -225,6 +224,8 @@ nsIXULContentUtils* nsXULDocument::gXULUtils;
 nsIXULPrototypeCache* nsXULDocument::gXULCache;
 nsIScriptSecurityManager* nsXULDocument::gScriptSecurityManager;
 nsIPrincipal* nsXULDocument::gSystemPrincipal;
+
+PRLogModuleInfo* nsXULDocument::gXULLog;
 
 class nsProxyLoadStream : public nsIInputStream
 {
@@ -3960,6 +3961,11 @@ static const char kXULNameSpaceURI[] = XUL_NAMESPACE_URI;
         if (NS_FAILED(rv)) return rv;
     }
 
+#ifdef PR_LOGGING
+    if (! gXULLog)
+        gXULLog = PR_NewLogModule("nsXULDocument");
+#endif
+
     return NS_OK;
 }
 
@@ -5392,7 +5398,7 @@ nsXULDocument::OnStreamComplete(nsIStreamLoader* aLoader,
           {
             char* uriSpec;
             uri->GetSpec(&uriSpec);
-            PRINTF("Failed to load %s\n", uriSpec ? uriSpec : "");
+            printf("Failed to load %s\n", uriSpec ? uriSpec : "");
             nsCRT::free(uriSpec);
           }
         }
@@ -6461,7 +6467,7 @@ nsXULDocument::ParserObserver::OnStopRequest(nsIChannel* aChannel,
         nsXPIDLCString spec;
         uri->GetSpec(getter_Copies(spec));
 
-        PRINTF("*** Failed to load overlay %s\n", (const char*) spec);
+        printf("*** Failed to load overlay %s\n", (const char*) spec);
 #endif
 
         rv = mDocument->ResumeWalk();

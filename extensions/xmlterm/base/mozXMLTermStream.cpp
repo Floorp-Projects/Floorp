@@ -58,9 +58,6 @@
 #include "nsIURL.h"
 #include "nsNetUtil.h"
 
-#undef printf
-#undef fprintf
-
 #include "mozXMLT.h"
 #include "mozXMLTermUtils.h"
 #include "mozXMLTermStream.h"

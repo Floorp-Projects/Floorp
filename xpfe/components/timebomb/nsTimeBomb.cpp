@@ -35,11 +35,6 @@
 //Interfaces Needed
 #include "nsIXULWindow.h"
 #include "nsIWebBrowserChrome.h"
-#include "nslog.h"
-
-NS_IMPL_LOG(nsTimeBombLog)
-#define PRINTF NS_LOG_PRINTF(nsTimeBombLog)
-#define FLUSH  NS_LOG_FLUSH(nsTimeBombLog)
 
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 static NS_DEFINE_CID(kAppShellServiceCID, NS_APPSHELL_SERVICE_CID);
@@ -133,7 +128,9 @@ nsTimeBomb::CheckWithUI(PRBool *expired)
     
     if (NS_SUCCEEDED(rv) && val)
     {
-      PRINTF("********  Expired version  ********\n");
+#ifdef DEBUG
+        printf("********  Expired version  ********\n");
+#endif
         DisplayURI("chrome://communicator/content/timebomb/expireText.xul", PR_FALSE);
         *expired = PR_TRUE;
         return NS_OK;
@@ -143,7 +140,9 @@ nsTimeBomb::CheckWithUI(PRBool *expired)
     
     if (NS_SUCCEEDED(rv) && val)
     {
-      PRINTF("********  ABOUT TO EXPIRE  ********\n");
+#ifdef DEBUG
+        printf("********  ABOUT TO EXPIRE  ********\n");
+#endif
         DisplayURI("chrome://communicator/content/timebomb/warnText.xul", PR_FALSE);
     }
 

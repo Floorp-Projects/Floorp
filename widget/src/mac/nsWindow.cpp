@@ -51,11 +51,6 @@
 
 #include "nsCarbonHelpers.h"
 #include "nsGfxUtils.h"
-#include "nslog.h"
-
-NS_IMPL_LOG(nsWindowLog)
-#define PRINTF NS_LOG_PRINTF(nsWindowLog)
-#define FLUSH  NS_LOG_FLUSH(nsWindowLog)
 
 
 ////////////////////////////////////////////////////
@@ -1366,7 +1361,7 @@ nsresult nsWindow::HandleUpdateEvent(RgnHandle regionToValidate)
 #if DEBUG
     if (measure_duration) {
       finish = microseconds();
-      PRINTF("update took %g microseconds.\n", double(finish - start));
+      printf("update took %g microseconds.\n", double(finish - start));
     }
 #endif
 
@@ -1753,13 +1748,13 @@ PRBool nsWindow::DispatchMouseEvent(nsMouseEvent &aEvent)
         	{
           //if (mWindowPtr == NULL || mWindowPtr != this) 
           	//{
-            // PRINTF("Mouse enter");
+            // printf("Mouse enter");
             //mCurrentWindow = this;
           	//}
         	} 
         else 
         	{
-            // PRINTF("Mouse exit");
+          // printf("Mouse exit");
         	}
 
       } break;

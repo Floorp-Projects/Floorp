@@ -24,11 +24,12 @@
 #include "nsEditor.h"
 #include "nsIDOMNodeList.h"
 #include "nsIDOMCharacterData.h"
-#include "nslog.h"
 
-NS_IMPL_LOG(JoinElementTxnLog)
-#define PRINTF NS_LOG_PRINTF(JoinElementTxnLog)
-#define FLUSH  NS_LOG_FLUSH(JoinElementTxnLog)
+#ifdef NS_DEBUG
+static PRBool gNoisy = PR_FALSE;
+#else
+static const PRBool gNoisy = PR_FALSE;
+#endif
 
 JoinElementTxn::JoinElementTxn()
   : EditTxn()
@@ -57,7 +58,7 @@ JoinElementTxn::~JoinElementTxn()
 // After Do() and Redo(), the left node is removed from the content tree and right node remains.
 NS_IMETHODIMP JoinElementTxn::Do(void)
 {
-  PRINTF("%p Do Join of %p and %p\n", this, mLeftNode.get(), mRightNode.get());
+  if (gNoisy) { printf("%p Do Join of %p and %p\n", this, mLeftNode.get(), mRightNode.get()); }
   NS_PRECONDITION((mEditor && mLeftNode && mRightNode), "null arg");
   if (!mEditor || !mLeftNode || !mRightNode) { return NS_ERROR_NOT_INITIALIZED; }
 
@@ -96,7 +97,7 @@ NS_IMETHODIMP JoinElementTxn::Do(void)
     result = mEditor->JoinNodesImpl(mRightNode, mLeftNode, mParent, PR_FALSE);
     if (NS_SUCCEEDED(result))
     {
-      PRINTF("  left node = %p removed\n", mLeftNode.get());
+      if (gNoisy) { printf("  left node = %p removed\n", mLeftNode.get()); }
     }
   }
   else 
@@ -111,7 +112,7 @@ NS_IMETHODIMP JoinElementTxn::Do(void)
 //     and re-inserted mLeft?
 NS_IMETHODIMP JoinElementTxn::Undo(void)
 {
-  PRINTF("%p Undo Join, right node = %p\n", this, mRightNode.get());
+  if (gNoisy) { printf("%p Undo Join, right node = %p\n", this, mRightNode.get()); }
   NS_ASSERTION(mRightNode && mLeftNode && mParent, "bad state");
   if (!mRightNode || !mLeftNode || !mParent) { return NS_ERROR_NOT_INITIALIZED; }
   nsresult result;

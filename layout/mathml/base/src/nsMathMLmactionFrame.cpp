@@ -98,7 +98,7 @@ nsMathMLmactionFrame::nsMathMLmactionFrame()
 nsMathMLmactionFrame::~nsMathMLmactionFrame()
 {
   // unregister us as a mouse event listener ...
-//  PRINTF("maction:%p unregistering as mouse event listener ...\n", this);
+//  printf("maction:%p unregistering as mouse event listener ...\n", this);
   nsCOMPtr<nsIDOMEventReceiver> receiver(do_QueryInterface(mContent));
   receiver->RemoveEventListenerByIID(this, NS_GET_IID(nsIDOMMouseListener));
 }
@@ -263,7 +263,7 @@ nsMathMLmactionFrame::SetInitialChildList(nsIPresContext* aPresContext,
   GetSelectedFrame();
 
   // register us as a mouse event listener ...
-//  PRINTF("maction:%p registering as mouse event listener ...\n", this);
+//  printf("maction:%p registering as mouse event listener ...\n", this);
   nsCOMPtr<nsIDOMEventReceiver> receiver(do_QueryInterface(mContent));
   receiver->AddEventListenerByIID(this, NS_GET_IID(nsIDOMMouseListener));
 

@@ -39,11 +39,6 @@
 #include "nsIPref.h"
 
 #include "glib.h"
-#include "nslog.h"
-
-NS_IMPL_LOG(nsAppShellLog)
-#define PRINTF NS_LOG_PRINTF(nsAppShellLog)
-#define FLUSH  NS_LOG_FLUSH(nsAppShellLog)
 
 static PRBool sInitialized = PR_FALSE;
 static PLHashTable *sQueueHashTable = nsnull;
@@ -69,7 +64,7 @@ static void
 our_gdk_io_destroy(gpointer data)
 {
 #ifdef DEBUG_APPSHELL
-    PRINTF("our_gdk_io_destroy()\n");
+  printf("our_gdk_io_destroy()\n");
 #endif
   OurGdkIOClosure* ioc = (OurGdkIOClosure*) data;
   if (ioc) {
@@ -84,7 +79,7 @@ our_gdk_input_add (gint              source,
                    gint              priority)
 {
 #ifdef DEBUG_APPSHELL
-    PRINTF("our_gdk_input_add()\n");
+  printf("our_gdk_input_add()\n");
 #endif
   guint result;
   OurGdkIOClosure *closure = g_new (OurGdkIOClosure, 1);
@@ -122,7 +117,7 @@ nsAppShell::nsAppShell()
 {
   NS_INIT_REFCNT();
 #ifdef DEBUG_APPSHELL
-  PRINTF("nsAppShell::nsAppShell()\n");
+  printf("nsAppShell::nsAppShell()\n");
 #endif
 }
 
@@ -134,7 +129,7 @@ nsAppShell::nsAppShell()
 nsAppShell::~nsAppShell()
 {
 #ifdef DEBUG_APPSHELL
-    PRINTF("nsAppShell::~nsAppShell()\n");
+  printf("nsAppShell::~nsAppShell()\n");
 #endif
   // XXX we need to free this hashtable
   //  PL_HashTableDestroy(sQueueHashTable);
@@ -211,7 +206,7 @@ HandleColormapPrefs( void )
 NS_IMETHODIMP nsAppShell::Create(int *bac, char **bav)
 {
 #ifdef DEBUG_APPSHELL
-    PRINTF("nsAppShell::Create()\n");
+  printf("nsAppShell::Create()\n");
 #endif
   if (sInitialized)
     return NS_OK;
@@ -270,7 +265,7 @@ NS_IMETHODIMP nsAppShell::Spinup()
   nsresult   rv = NS_OK;
 
 #ifdef DEBUG_APPSHELL
-  PRINTF("nsAppShell::Spinup()\n");
+  printf("nsAppShell::Spinup()\n");
 #endif
 
   // Get the event queue service
@@ -313,7 +308,7 @@ NS_IMETHODIMP nsAppShell::Spinup()
 NS_IMETHODIMP nsAppShell::Spindown()
 {
 #ifdef DEBUG_APPSHELL
-    PRINTF("nsAppShell::Spindown()\n");
+  printf("nsAppShell::Spindown()\n");
 #endif
   if (mEventQueue) {
     ListenToEventQueue(mEventQueue, PR_FALSE);
@@ -391,7 +386,7 @@ NS_IMETHODIMP nsAppShell::ListenToEventQueue(nsIEventQueue *aQueue,
                                              PRBool aListen)
 {
 #ifdef DEBUG_APPSHELL
-    PRINTF("ListenToEventQueue(%p, %d) this=%p\n", aQueue, aListen, this);
+  printf("ListenToEventQueue(%p, %d) this=%p\n", aQueue, aListen, this);
 #endif
   if (!sQueueHashTable) {
     sQueueHashTable = PL_NewHashTable(3, (PLHashFunction)IntHashKey,

@@ -47,11 +47,6 @@ Notes to self:
 #include "nsIInputStream.h"
 
 #include "nsSpecialSystemDirectory.h"
-#include "nslog.h"
-
-NS_IMPL_LOG(nsTransferableLog)
-#define PRINTF NS_LOG_PRINTF(nsTransferableLog)
-#define FLUSH  NS_LOG_FLUSH(nsTransferableLog)
 
 NS_IMPL_ADDREF(nsTransferable)
 NS_IMPL_RELEASE(nsTransferable)
@@ -102,14 +97,14 @@ DataStruct::SetData ( nsISupports* aData, PRUint32 aDataLen )
   if (aDataLen > LARGE_DATASET_SIZE) {
     // if so, cache it to disk instead of memory
     if ( NS_SUCCEEDED(WriteCache(aData, aDataLen)) ) {
-      PRINTF("->>>>>>>>>>>>>> Wrote Clipboard to cache file\n");
+      printf("->>>>>>>>>>>>>> Wrote Clipboard to cache file\n");
       return;
     }
     else
-	    PRINTF("->>>>>>>>>>>>>> Writing Clipboard to cache file FAILED\n");
+	    printf("->>>>>>>>>>>>>> Writing Clipboard to cache file FAILED\n");
 	    
   } else {
-    PRINTF("->>>>>>>>>>>>>> Write Clipboard to memory\n");
+    printf("->>>>>>>>>>>>>> Write Clipboard to memory\n");
   }
   
   mData    = aData;
@@ -126,7 +121,7 @@ DataStruct::GetData ( nsISupports** aData, PRUint32 *aDataLen )
     // if so, read it in and pass it back
     // ReadCache creates memory and copies the data into it.
     if ( NS_SUCCEEDED(ReadCache(aData, aDataLen)) ) {
-      PRINTF("->>>>>>>>>>>>>> Read Clipboard from cache file\n");
+      printf("->>>>>>>>>>>>>> Read Clipboard from cache file\n");
       return;
     }
     else {
@@ -137,7 +132,7 @@ DataStruct::GetData ( nsISupports** aData, PRUint32 *aDataLen )
       return;
     }
   } else {
-    PRINTF("->>>>>>>>>>>>>> Read Clipboard from memory\n");
+    printf("->>>>>>>>>>>>>> Read Clipboard from memory\n");
   }
   
   *aData = mData;

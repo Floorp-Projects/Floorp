@@ -26,11 +26,6 @@
 #include "nsIServiceManager.h"
 
 #include "nsWidgetsCID.h"
-#include "nslog.h"
-
-NS_IMPL_LOG(nsDragServiceLog)
-#define PRINTF NS_LOG_PRINTF(nsDragServiceLog)
-#define FLUSH  NS_LOG_FLUSH(nsDragServiceLog)
 
 static NS_DEFINE_IID(kIDragServiceIID,   NS_IDRAGSERVICE_IID);
 static NS_DEFINE_CID(kCDragServiceCID,   NS_DRAGSERVICE_CID);
@@ -106,7 +101,7 @@ NS_IMETHODIMP nsDragService::GetData (nsITransferable * aTransferable,
 //-------------------------------------------------------------------------
 void nsDragService::SetTopLevelView(BView *v)
 {
-  PRINTF("  nsDragService::SetTopLevelWidget\n");
+  printf("  nsDragService::SetTopLevelWidget\n");
   
   // Don't set up any more event handlers if we're being called twice
   // for the same toplevel widget

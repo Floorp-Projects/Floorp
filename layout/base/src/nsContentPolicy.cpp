@@ -25,15 +25,6 @@
 #include "nsContentPolicyUtils.h"
 #include "nsContentPolicy.h"
 #include "nsICategoryManager.h"
-#include "nslog.h"
-
-#ifdef DEBUG_shaver
-NS_IMPL_LOG_ENABLED(nsContentPolicyLog)
-#else
-NS_IMPL_LOG(nsContentPolicyLog)
-#endif
-#define PRINTF NS_LOG_PRINTF(nsContentPolicyLog)
-#define FLUSH  NS_LOG_FLUSH(nsContentPolicyLog)
 
 NS_IMPL_ISUPPORTS1(nsContentPolicy, nsIContentPolicy)
 
@@ -94,7 +85,9 @@ nsContentPolicy::nsContentPolicy()
 	if (NS_FAILED(string->GetData(getter_Copies(contractid))))
 	    continue;
 
-	PRINTF("POLICY: loading %s\n", (const char *)contractid);
+#ifdef DEBUG_shaver
+	fprintf(stderr, "POLICY: loading %s\n", (const char *)contractid);
+#endif
 	/*
 	 * Create this policy service and add to mPolicies.
 	 *

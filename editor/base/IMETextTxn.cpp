@@ -30,15 +30,6 @@
 #include "nsIPresShell.h"
 #include "EditAggregateTxn.h"
 #include "nsLayoutCID.h"
-#include "nslog.h"
-
-#ifdef DEBUG_IMETXN
-NS_IMPL_LOG_ENABLED(IMETextTxnLog)
-#else
-NS_IMPL_LOG(IMETextTxnLog)
-#endif
-#define PRINTF NS_LOG_PRINTF(IMETextTxnLog)
-#define FLUSH  NS_LOG_FLUSH(IMETextTxnLog)
 
 // #define DEBUG_IMETXN
 static NS_DEFINE_IID(kRangeCID, NS_RANGE_CID);
@@ -95,7 +86,11 @@ NS_IMETHODIMP IMETextTxn::Init(nsIDOMCharacterData     *aElement,
 
 NS_IMETHODIMP IMETextTxn::Do(void)
 {
-  PRINTF("Do IME Text element = %p replace = %d len = %d\n", mElement.get(), mReplaceLength, mStringToInsert.Length());
+
+#ifdef DEBUG_IMETXN
+  printf("Do IME Text element = %p replace = %d len = %d\n", mElement.get(), mReplaceLength, mStringToInsert.Length());
+#endif
+
   nsCOMPtr<nsISelectionController> selCon = do_QueryReferent(mSelConWeak);
   if (!selCon) return NS_ERROR_NOT_INITIALIZED;
 
@@ -115,7 +110,10 @@ NS_IMETHODIMP IMETextTxn::Do(void)
 
 NS_IMETHODIMP IMETextTxn::Undo(void)
 {
-  PRINTF("Undo IME Text element = %p\n", mElement.get());
+#ifdef DEBUG_IMETXN
+  printf("Undo IME Text element = %p\n", mElement.get());
+#endif
+
   nsCOMPtr<nsISelectionController> selCon = do_QueryReferent(mSelConWeak);
   if (!selCon) return NS_ERROR_NOT_INITIALIZED;
 
@@ -142,7 +140,9 @@ NS_IMETHODIMP IMETextTxn::Merge(PRBool *aDidMerge, nsITransaction *aTransaction)
   	return NS_ERROR_NULL_POINTER;
     
   nsresult  result;
-  PRINTF("Merge IME Text element = %p\n", mElement.get());
+#ifdef DEBUG_IMETXN
+  printf("Merge IME Text element = %p\n", mElement.get());
+#endif
 
   //
   // check to make sure we have valid return pointers
@@ -174,7 +174,9 @@ NS_IMETHODIMP IMETextTxn::Merge(PRBool *aDidMerge, nsITransaction *aTransaction)
     otherTxn->GetData(mStringToInsert,&newTextRangeList);
     mRangeList = do_QueryInterface(newTextRangeList);
     *aDidMerge = PR_TRUE;
-    PRINTF("IMETextTxn assimilated IMETextTxn:%p\n", aTransaction);
+#ifdef DEBUG_IMETXN
+    printf("IMETextTxn assimilated IMETextTxn:%p\n", aTransaction);
+#endif
     NS_RELEASE(otherTxn);
     return NS_OK;
   }
@@ -290,24 +292,24 @@ NS_IMETHODIMP IMETextTxn::CollapseTextSelection(void)
     PRUint16 listlen,start,stop,type;
     nsIPrivateTextRange* rangePtr;
     result = mRangeList->GetLength(&listlen);
-    PRINTF("nsIPrivateTextRangeList[%p]\n",mRangeList);
+    printf("nsIPrivateTextRangeList[%p]\n",mRangeList);
     for (i=0;i<listlen;i++) {
       (void)mRangeList->Item(i,&rangePtr);
       rangePtr->GetRangeStart(&start);
       rangePtr->GetRangeEnd(&stop);
       rangePtr->GetRangeType(&type);
-      PRINTF("range[%d] start=%d end=%d type=",i,start,stop,type);
+      printf("range[%d] start=%d end=%d type=",i,start,stop,type);
       if (type==nsIPrivateTextRange::TEXTRANGE_RAWINPUT)
-        PRINTF("TEXTRANGE_RAWINPUT\n");
+                             printf("TEXTRANGE_RAWINPUT\n");
       else if (type==nsIPrivateTextRange::TEXTRANGE_SELECTEDRAWTEXT)
-        PRINTF("TEXTRANGE_SELECTEDRAWTEXT\n");
+                                  printf("TEXTRANGE_SELECTEDRAWTEXT\n");
       else if (type==nsIPrivateTextRange::TEXTRANGE_CONVERTEDTEXT)
-        PRINTF("TEXTRANGE_CONVERTEDTEXT\n");
+                                  printf("TEXTRANGE_CONVERTEDTEXT\n");
       else if (type==nsIPrivateTextRange::TEXTRANGE_SELECTEDCONVERTEDTEXT)
-        PRINTF("TEXTRANGE_SELECTEDCONVERTEDTEXT\n");
+                                  printf("TEXTRANGE_SELECTEDCONVERTEDTEXT\n");
       else if (type==nsIPrivateTextRange::TEXTRANGE_CARETPOSITION)
-        PRINTF("TEXTRANGE_CARETPOSITION\n");
-      else PRINTF("unknown constant\n");
+                                  printf("TEXTRANGE_CARETPOSITION\n");
+      else printf("unknown constant\n");
     }
 #endif
         

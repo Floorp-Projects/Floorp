@@ -37,13 +37,6 @@
 #include "nsIExternalHelperAppService.h"
 #include "nsIStringBundle.h"
 #include "nsIFilePicker.h"
-#include "nslog.h"
-
-NS_IMPL_LOG(nsUnknownContentTypeHandlerLog)
-#define PRINTF NS_LOG_PRINTF(nsUnknownContentTypeHandlerLog)
-#define FLUSH  NS_LOG_FLUSH(nsUnknownContentTypeHandlerLog)
-
-NS_IMPL_LOG(nsIAppShellComponentImplLog)
 
 static NS_DEFINE_CID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
 #define HELPERAPP_DIALOG_URL       "chrome://global/locale/helperAppLauncher.properties"
@@ -122,8 +115,8 @@ nsUnknownContentTypeHandler::HandleUnknownContentType( nsIChannel *aChannel,
         // Cancel input channel now.
         rv = aChannel->Cancel(NS_BINDING_ABORTED);
         if ( NS_FAILED( rv ) ) {
-            PRINTF("%s %d: Cancel failed, rv=0x%08X\n",
-                   (char*)__FILE__, (int)__LINE__, (int)rv );
+            DEBUG_PRINTF( PR_STDOUT, "%s %d: Cancel failed, rv=0x%08X\n",
+                          (char*)__FILE__, (int)__LINE__, (int)rv );
         }
     }
 
@@ -156,28 +149,28 @@ nsUnknownContentTypeHandler::HandleUnknownContentType( nsIChannel *aChannel,
                         nsCOMPtr<nsIDOMWindowInternal> newWindow;
                         rv = aWindow->OpenDialog( jsContext, argv, 6, getter_AddRefs( newWindow ) );
                         if ( NS_FAILED( rv ) ) {
-                            PRINTF("%s %d: OpenDialog failed, rv=0x%08X\n",
-                                   (char*)__FILE__, (int)__LINE__, (int)rv );
+                            DEBUG_PRINTF( PR_STDOUT, "%s %d: OpenDialog failed, rv=0x%08X\n",
+                                          (char*)__FILE__, (int)__LINE__, (int)rv );
                         }
                         JS_PopArguments( jsContext, stackPtr );
                     } else {
-                        PRINTF("%s %d: JS_PushArguments failed\n",
-                               (char*)__FILE__, (int)__LINE__ );
+                        DEBUG_PRINTF( PR_STDOUT, "%s %d: JS_PushArguments failed\n",
+                                      (char*)__FILE__, (int)__LINE__ );
                         rv = NS_ERROR_FAILURE;
                     }
                 } else {
-                    PRINTF("%s %d: GetNativeContext failed\n",
-                           (char*)__FILE__, (int)__LINE__ );
+                    DEBUG_PRINTF( PR_STDOUT, "%s %d: GetNativeContext failed\n",
+                                  (char*)__FILE__, (int)__LINE__ );
                     rv = NS_ERROR_FAILURE;
                 }
             } else {
-                PRINTF("%s %d: GetContext failed\n",
-                       (char*)__FILE__, (int)__LINE__ );
+                DEBUG_PRINTF( PR_STDOUT, "%s %d: GetContext failed\n",
+                              (char*)__FILE__, (int)__LINE__ );
                 rv = NS_ERROR_FAILURE;
             }
         } else {
-            PRINTF("%s %d: QueryInterface (for nsIScriptGlobalObject) failed, rv=0x%08X\n",
-                   (char*)__FILE__, (int)__LINE__, (int)rv );
+            DEBUG_PRINTF( PR_STDOUT, "%s %d: QueryInterface (for nsIScriptGlobalObject) failed, rv=0x%08X\n",
+                          (char*)__FILE__, (int)__LINE__, (int)rv );
         }
     } else {
         // If no error recorded so far, set one now.
@@ -531,7 +524,7 @@ className##Module::RegisterSelf(nsIComponentManager *compMgr,
     rv = compMgr->RegisterComponentSpec( className::GetCID(), #className, 
                                           contractId, aPath, PR_TRUE, PR_TRUE ); 
     if ( NS_SUCCEEDED( rv ) ) { 
-      PRINTF(#className " registration successfuln" ); 
+        DEBUG_PRINTF( PR_STDOUT, #className " registration successfuln" ); 
         if ( autoInit ) { 
             /* Add to appshell component list. */ 
             nsIRegistry *registry; 
@@ -549,16 +542,16 @@ className##Module::RegisterSelf(nsIComponentManager *compMgr,
                 nsRegistryKey key; 
                 rv = registry->AddSubtree( nsIRegistry::Common, buffer, &key ); 
                 if ( NS_SUCCEEDED( rv ) ) { 
-                  PRINTF(#className " added to appshell component listn" ); 
+                    DEBUG_PRINTF( PR_STDOUT, #className " added to appshell component listn" ); 
                 } else { 
-                  PRINTF(#className " not added to appshell component list, rv=0x%Xn", (int)rv ); 
+                    DEBUG_PRINTF( PR_STDOUT, #className " not added to appshell component list, rv=0x%Xn", (int)rv ); 
                 } 
             } else { 
-              PRINTF(#className " not added to appshell component list, rv=0x%Xn", (int)rv ); 
+                DEBUG_PRINTF( PR_STDOUT, #className " not added to appshell component list, rv=0x%Xn", (int)rv ); 
             } 
         } 
     } else { 
-      PRINTF(#className " registration failed, RegisterComponent rv=0x%Xn", (int)rv ); 
+        DEBUG_PRINTF( PR_STDOUT, #className " registration failed, RegisterComponent rv=0x%Xn", (int)rv ); 
     } 
  
     return rv; 
@@ -571,16 +564,16 @@ className##Module::UnregisterSelf( nsIComponentManager *compMgr,
     nsresult rv = NS_OK; 
     if (NS_FAILED(rv)) 
     { 
-      PRINTF(#className " registration failed, GetService rv=0x%Xn", (int)rv ); 
+        DEBUG_PRINTF( PR_STDOUT, #className " registration failed, GetService rv=0x%Xn", (int)rv ); 
         return rv; 
     } 
  
     /* Unregister our component. */ 
     rv = compMgr->UnregisterComponentSpec( className::GetCID(), aPath); 
     if ( NS_SUCCEEDED( rv ) ) { 
-      PRINTF(#className " unregistration successfuln" ); 
+        DEBUG_PRINTF( PR_STDOUT, #className " unregistration successfuln" ); 
     } else { 
-      PRINTF(#className " unregistration failed, UnregisterComponent rv=0x%Xn", (int)rv ); 
+        DEBUG_PRINTF( PR_STDOUT, #className " unregistration failed, UnregisterComponent rv=0x%Xn", (int)rv ); 
     } 
  
     return rv; 

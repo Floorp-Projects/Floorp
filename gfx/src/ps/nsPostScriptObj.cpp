@@ -41,12 +41,6 @@
 #include "nsIUnicodeDecoder.h"
 
 #include "nsICharsetAlias.h"
-#include "nslog.h"
-#undef fprintf
-
-NS_IMPL_LOG(nsPostScriptObjLog)
-#define PRINTF NS_LOG_PRINTF(nsPostScriptObjLog)
-#define FLUSH  NS_LOG_FLUSH(nsPostScriptObjLog)
 
 #ifdef VMS
 #include <stdlib.h>
@@ -217,8 +211,8 @@ nsPostScriptObj::Init( nsIDeviceContextSpecPS *aSpec )
       aSpec->GetLeftMargin( left );
       aSpec->GetRightMargin( right );
 
-      PRINTF("\nPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPP\n");
-      PRINTF("top %f bottom %f left %f right %f\n", top, bottom, left, right );
+printf("\nPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPP\n");
+printf( "top %f bottom %f left %f right %f\n", top, bottom, left, right );
       aSpec->GetFirstPageFirst( isFirstPageFirst );
       if ( isFirstPageFirst == PR_FALSE )
         mPrintSetup->reverse = 1;
@@ -261,8 +255,8 @@ nsPostScriptObj::Init( nsIDeviceContextSpecPS *aSpec )
     aSpec->GetPageDimensions( fwidth, fheight );
     mPrintSetup->width = (int)(fwidth * mPrintSetup->dpi);
     mPrintSetup->height = (int)(fheight * mPrintSetup->dpi);
-    PRINTF("\nPreWidth = %f PreHeight = %f\n",fwidth,fheight);
-    PRINTF("\nWidth = %d Height = %d\n",mPrintSetup->width,mPrintSetup->height);
+    printf("\nPreWidth = %f PreHeight = %f\n",fwidth,fheight);
+    printf("\nWidth = %d Height = %d\n",mPrintSetup->width,mPrintSetup->height);
     mPrintSetup->header = "header";
     mPrintSetup->footer = "footer";
     mPrintSetup->sizes = NULL;
@@ -276,7 +270,7 @@ nsPostScriptObj::Init( nsIDeviceContextSpecPS *aSpec )
     mPrintSetup->bottom = (int) (bottom * mPrintSetup->dpi);
     mPrintSetup->left = (int) (left * mPrintSetup->dpi);
     mPrintSetup->right = (int) (right * mPrintSetup->dpi); 
-    PRINTF( "dpi %f top %d bottom %d left %d right %d\n", mPrintSetup->dpi, mPrintSetup->top, mPrintSetup->bottom, mPrintSetup->left, mPrintSetup->right );
+printf( "dpi %f top %d bottom %d left %d right %d\n", mPrintSetup->dpi, mPrintSetup->top, mPrintSetup->bottom, mPrintSetup->left, mPrintSetup->right );
     mPrintSetup->rules = 1.0f;			            // Scale factor for rulers 
     mPrintSetup->n_up = 0;                     // cool page combining 
     mPrintSetup->bigger = 1;                   // Used to init sizes if sizesin NULL 

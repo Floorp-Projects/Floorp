@@ -144,7 +144,7 @@ static PRInt32 gReflowInx = -1;
   if (mReflowId > -1) {\
     gTotalReqs    += gReflowControlCntRQ[mReflowId];\
     gTotalReflows += gReflowControlCnt[mReflowId];\
-    PRINTF("** Id:%5d %s RF: %d RQ: %d   %d/%d  %5.2f\n", \
+    printf("** Id:%5d %s RF: %d RQ: %d   %d/%d  %5.2f\n", \
            mReflowId, (__desc), \
            gReflowControlCnt[mReflowId], \
            gReflowControlCntRQ[mReflowId],\
@@ -162,10 +162,10 @@ static PRInt32 gReflowInx = -1;
   }
 
 // reflow messages
-#define REFLOW_DEBUG_MSG(_msg1) PRINTF((_msg1))
-#define REFLOW_DEBUG_MSG2(_msg1, _msg2) PRINTF((_msg1), (_msg2))
-#define REFLOW_DEBUG_MSG3(_msg1, _msg2, _msg3) PRINTF((_msg1), (_msg2), (_msg3))
-#define REFLOW_DEBUG_MSG4(_msg1, _msg2, _msg3, _msg4) PRINTF((_msg1), (_msg2), (_msg3), (_msg4))
+#define REFLOW_DEBUG_MSG(_msg1) printf((_msg1))
+#define REFLOW_DEBUG_MSG2(_msg1, _msg2) printf((_msg1), (_msg2))
+#define REFLOW_DEBUG_MSG3(_msg1, _msg2, _msg3) printf((_msg1), (_msg2), (_msg3))
+#define REFLOW_DEBUG_MSG4(_msg1, _msg2, _msg3, _msg4) printf((_msg1), (_msg2), (_msg3), (_msg4))
 
 #else //-------------
 
@@ -186,10 +186,10 @@ static PRInt32 gReflowInx = -1;
 // This is for being VERY noisy
 //------------------------------------------
 #ifdef DO_VERY_NOISY
-#define REFLOW_NOISY_MSG(_msg1) PRINTF((_msg1))
-#define REFLOW_NOISY_MSG2(_msg1, _msg2) PRINTF((_msg1), (_msg2))
-#define REFLOW_NOISY_MSG3(_msg1, _msg2, _msg3) PRINTF((_msg1), (_msg2), (_msg3))
-#define REFLOW_NOISY_MSG4(_msg1, _msg2, _msg3, _msg4) PRINTF((_msg1), (_msg2), (_msg3), (_msg4))
+#define REFLOW_NOISY_MSG(_msg1) printf((_msg1))
+#define REFLOW_NOISY_MSG2(_msg1, _msg2) printf((_msg1), (_msg2))
+#define REFLOW_NOISY_MSG3(_msg1, _msg2, _msg3) printf((_msg1), (_msg2), (_msg3))
+#define REFLOW_NOISY_MSG4(_msg1, _msg2, _msg3, _msg4) printf((_msg1), (_msg2), (_msg3), (_msg4))
 #else
 #define REFLOW_NOISY_MSG(_msg) 
 #define REFLOW_NOISY_MSG2(_msg1, _msg2) 
@@ -215,7 +215,7 @@ static PRInt32 gReflowInx = -1;
 if (aReflowState.mComputedWidth != NS_UNCONSTRAINEDSIZE) { \
   nscoord width = aDesiredSize.width - borderPadding.left - borderPadding.right; \
   if (width != aReflowState.mComputedWidth) { \
-    PRINTF("aDesiredSize.width %d %d != aReflowState.mComputedWidth %d\n", aDesiredSize.width, width, aReflowState.mComputedWidth); \
+    printf("aDesiredSize.width %d %d != aReflowState.mComputedWidth %d\n", aDesiredSize.width, width, aReflowState.mComputedWidth); \
   } \
   NS_ASSERTION(width == aReflowState.mComputedWidth, "Returning bad value when constrained!"); \
 }
@@ -698,7 +698,7 @@ nsComboboxControlFrame::PositionDropdown(nsIPresContext* aPresContext,
 
   mDropdownFrame->SetRect(aPresContext, dropdownRect);
 #ifdef DEBUG_rodsXXXXXX
-  PRINTF("%d Position Dropdown at: %d %d %d %d\n", counter++, dropdownRect.x, dropdownRect.y, dropdownRect.width, dropdownRect.height);
+  printf("%d Position Dropdown at: %d %d %d %d\n", counter++, dropdownRect.x, dropdownRect.y, dropdownRect.width, dropdownRect.height);
 #endif
 
   return rv;
@@ -774,7 +774,7 @@ nsComboboxControlFrame::ReflowItems(nsIPresContext* aPresContext,
                                     const nsHTMLReflowState& aReflowState,
                                     nsHTMLReflowMetrics& aDesiredSize) 
 {
-  //PRINTF("*****************\n");
+  //printf("*****************\n");
   const nsStyleFont* dspFont;
   mDisplayFrame->GetStyleData(eStyleStruct_Font,  (const nsStyleStruct *&)dspFont);
   nsCOMPtr<nsIDeviceContext> deviceContext;
@@ -798,7 +798,7 @@ nsComboboxControlFrame::ReflowItems(nsIPresContext* aPresContext,
   if (options) {
     PRUint32 numOptions;
     options->GetLength(&numOptions);
-    //PRINTF("--- Num of Items %d ---\n", numOptions);
+    //printf("--- Num of Items %d ---\n", numOptions);
     for (PRUint32 i=0;i<numOptions;i++) {
       nsCOMPtr<nsIDOMHTMLOptionElement> optionElement = getter_AddRefs(GetOption(*options, i));
       if (optionElement) {
@@ -813,7 +813,7 @@ nsComboboxControlFrame::ReflowItems(nsIPresContext* aPresContext,
               maxWidth = width;
             }
             //maxWidth = PR_MAX(width, maxWidth);
-            //PRINTF("[%d] - %d %s \n", i, width, text.ToNewCString());
+            //printf("[%d] - %d %s \n", i, width, text.ToNewCString());
           }
         }          
       }
@@ -823,7 +823,7 @@ nsComboboxControlFrame::ReflowItems(nsIPresContext* aPresContext,
     maxWidth = 11 * 15;
   }
   char * str = maxStr.ToNewCString();
-  PRINTF("id: %d maxWidth %d [%s]\n", mReflowId, maxWidth, str);
+  printf("id: %d maxWidth %d [%s]\n", mReflowId, maxWidth, str);
   delete [] str;
 
   // get the borderPadding for the display area
@@ -842,7 +842,7 @@ nsComboboxControlFrame::ReflowItems(nsIPresContext* aPresContext,
   aDesiredSize.width  = frmWidth;
   aDesiredSize.height = frmHeight;
 #else
-  PRINTF("Size frm:%d,%d   DS:%d,%d   DIF:%d,%d(tp)  %d,%d(px)\n", 
+  printf("Size frm:%d,%d   DS:%d,%d   DIF:%d,%d(tp)  %d,%d(px)\n", 
          frmWidth, frmHeight, 
          aDesiredSize.width, aDesiredSize.height,
          frmWidth-aDesiredSize.width, frmHeight-aDesiredSize.height,
@@ -1026,11 +1026,11 @@ static int myCounter = 0;
 
 static void printSize(char * aDesc, nscoord aSize) 
 {
-  PRINTF(" %s: ", aDesc);
+  printf(" %s: ", aDesc);
   if (aSize == NS_UNCONSTRAINEDSIZE) {
-    PRINTF("UC");
+    printf("UC");
   } else {
-    PRINTF("%d", PX(aSize));
+    printf("%d", PX(aSize));
   }
 }
 #endif
@@ -1051,21 +1051,21 @@ nsComboboxControlFrame::Reflow(nsIPresContext*          aPresContext,
   REFLOW_COUNTER_REQUEST();
 
 #ifdef DO_REFLOW_DEBUG
-  PRINTF("-------------Starting Combobox Reflow ----------------------------\n");
-  PRINTF("%p ** Id: %d nsCCF::Reflow %d R: ", this, mReflowId, myCounter++);
+  printf("-------------Starting Combobox Reflow ----------------------------\n");
+  printf("%p ** Id: %d nsCCF::Reflow %d R: ", this, mReflowId, myCounter++);
   switch (aReflowState.reason) {
     case eReflowReason_Initial:
-      PRINTF("Ini");break;
+      printf("Ini");break;
     case eReflowReason_Incremental:
-      PRINTF("Inc");break;
+      printf("Inc");break;
     case eReflowReason_Resize:
-      PRINTF("Rsz");break;
+      printf("Rsz");break;
     case eReflowReason_StyleChange:
-      PRINTF("Sty");break;
+      printf("Sty");break;
     case eReflowReason_Dirty:
-      PRINTF("Drt ");
+      printf("Drt ");
       break;
-    default:PRINTF("<unknown>%d", aReflowState.reason);break;
+    default:printf("<unknown>%d", aReflowState.reason);break;
   }
   
   printSize("AW", aReflowState.availableWidth);
@@ -1078,7 +1078,7 @@ nsComboboxControlFrame::Reflow(nsIPresContext*          aPresContext,
   optionsTemp->GetLength(&numOptions);
   printSize("NO", (nscoord)numOptions);
 
-  PRINTF(" *\n");
+  printf(" *\n");
 
 #endif
 
@@ -1918,7 +1918,7 @@ NS_IMETHODIMP
 nsComboboxControlFrame::AddOption(nsIPresContext* aPresContext, PRInt32 aIndex)
 {
 #ifdef DO_REFLOW_DEBUG
-  PRINTF("**********\n*********AddOption: %d\n", aIndex);
+  printf("**********\n*********AddOption: %d\n", aIndex);
 #endif
   nsISelectControlFrame* listFrame = nsnull;
   nsresult rv = mDropdownFrame->QueryInterface(NS_GET_IID(nsISelectControlFrame), 
@@ -2424,8 +2424,8 @@ nsComboboxControlFrame::Paint(nsIPresContext* aPresContext,
                              nsFramePaintLayer aWhichLayer)
 {
 #ifdef NOISY
-  PRINTF("%p paint layer %d at (%d, %d, %d, %d)\n", this, aWhichLayer, 
-         aDirtyRect.x, aDirtyRect.y, aDirtyRect.width, aDirtyRect.height);
+  printf("%p paint layer %d at (%d, %d, %d, %d)\n", this, aWhichLayer, 
+    aDirtyRect.x, aDirtyRect.y, aDirtyRect.width, aDirtyRect.height);
 #endif
   nsAreaFrame::Paint(aPresContext,aRenderingContext,aDirtyRect,aWhichLayer);
 

@@ -46,11 +46,6 @@
 
 #include "nsEditorUtils.h"
 #include "nsHTMLEditUtils.h"
-#include "nslog.h"
-
-NS_IMPL_LOG(nsTableEditorLog)
-#define PRINTF NS_LOG_PRINTF(nsTableEditorLog)
-#define FLUSH  NS_LOG_FLUSH(nsTableEditorLog)
 
 //#define DEBUG_TABLE 1
 
@@ -362,7 +357,7 @@ nsHTMLEditor::GetNextRow(nsIDOMElement* aTableElement, nsIDOMElement* &aRow)
       return NS_OK;
     }
 #ifdef DEBUG_cmanske
-    PRINTF("GetNextRow: firstChild of row's parent's sibling is not a TR!\n");
+    printf("GetNextRow: firstChild of row's parent's sibling is not a TR!\n");
 #endif
     // We arrive here only if a table section has no children 
     //  or first child of section is not a row (bad HTML!)
@@ -2505,7 +2500,9 @@ nsHTMLEditor::NormalizeTable(nsIDOMElement *aTable)
       if (!cell)
       {
         //We are missing a cell at a cellmap location
-        PRINTF("NormalizeTable found missing cell at row=%d, col=%d\n", rowIndex, colIndex);
+#ifdef DEBUG
+        printf("NormalizeTable found missing cell at row=%d, col=%d\n", rowIndex, colIndex);
+#endif
         // Add a cell after the previous Cell in the current row
         if(previousCellInRow)
         {
@@ -2518,7 +2515,9 @@ nsHTMLEditor::NormalizeTable(nsIDOMElement *aTable)
             startRowIndex = rowIndex;   
         } else {
           // We don't have any cells in this row -- We are really messed up!
-          PRINTF("NormalizeTable found no cells in row=%d, col=%d\n", rowIndex, colIndex);
+#ifdef DEBUG
+          printf("NormalizeTable found no cells in row=%d, col=%d\n", rowIndex, colIndex);
+#endif
           return NS_ERROR_FAILURE;
         }
       }
@@ -2935,7 +2934,7 @@ nsHTMLEditor::GetNextSelectedCell(nsIDOMElement **aCell, nsIDOMRange **aRange)
     if (*aCell) break;
 #ifdef DEBUG_cmanske
     else
-      PRINTF("GetNextSelectedCell: Collapsed range found\n");
+      printf("GetNextSelectedCell: Collapsed range found\n");
 #endif
 
     // If we didn't find a cell, continue to next range in selection
@@ -3028,7 +3027,7 @@ nsHTMLEditor::SetSelectionAfterTableEdit(nsIDOMElement* aTable, PRInt32 aRow, PR
   if (!selection)
   {
 #ifdef DEBUG_cmanske
-    PRINTF("Selection not found after table manipulation!\n");
+    printf("Selection not found after table manipulation!\n");
 #endif
     return NS_ERROR_FAILURE;
   }

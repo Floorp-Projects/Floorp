@@ -33,11 +33,6 @@
 #ifdef MOZ_AIMM
 #include "aimm.h"
 #endif
-#include "nslog.h"
-
-NS_IMPL_LOG(nsAppShellLog)
-#define PRINTF NS_LOG_PRINTF(nsAppShellLog)
-#define FLUSH  NS_LOG_FLUSH(nsAppShellLog)
 
 static NS_DEFINE_IID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 static NS_DEFINE_CID(kTimerManagerCID, NS_TIMERMANAGER_CID);
@@ -177,7 +172,7 @@ nsAppShell::GetNativeEvent(PRBool &aRealEvent, void *&aEvent)
 
 #ifdef DEBUG_danm
   if (msg.message != WM_TIMER)
-      PRINTF("-> %d", msg.message);
+    printf("-> %d", msg.message);
 #endif
 
 //#ifdef MOZ_AIMM // not need?

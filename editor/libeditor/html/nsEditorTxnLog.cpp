@@ -24,11 +24,6 @@
 #include <stdio.h>
 #include "nsHTMLEditorLog.h"
 #include "nsEditorTxnLog.h"
-#include "nslog.h"
-
-NS_IMPL_LOG(nsEditorTxnLogLog)
-#define PRINTF NS_LOG_PRINTF(nsEditorTxnLogLog)
-#define FLUSH  NS_LOG_FLUSH(nsEditorTxnLogLog)
 
 #define LOCK_LOG(doc)
 #define UNLOCK_LOG(doc)
@@ -399,7 +394,7 @@ nsEditorTxnLog::Write(const char *aBuffer)
   if (mEditorLog)
     mEditorLog->Write(aBuffer);
   else
-    PRINTF(aBuffer);
+    printf(aBuffer);
 
   return NS_OK;
 }
@@ -413,7 +408,7 @@ nsEditorTxnLog::WriteInt(const char *aFormat, PRInt32 aInt)
   if (mEditorLog)
     mEditorLog->WriteInt(aFormat, aInt);
   else
-    PRINTF(aFormat, aInt);
+    printf(aFormat, aInt);
 
   return NS_OK;
 }

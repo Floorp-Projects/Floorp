@@ -28,11 +28,6 @@
 #include "nsGUIEvent.h"
 #include "nsSwitchToUIThread.h"
 #include "plevent.h"
-#include "nslog.h"
-
-NS_IMPL_LOG(nsToolkitLog)
-#define PRINTF NS_LOG_PRINTF(nsToolkitLog)
-#define FLUSH  NS_LOG_FLUSH(nsToolkitLog)
 
 // 
 // Static thread local storage index of the Toolkit 
@@ -133,7 +128,7 @@ void nsToolkit::RunPump(void* arg)
 				break;
 
 			default :
-				PRINTF("nsToolkit::RunPump - UNKNOWN EVENT\n");
+				printf("nsToolkit::RunPump - UNKNOWN EVENT\n");
 				break;
 		}
 

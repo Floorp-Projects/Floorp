@@ -31,11 +31,6 @@
 
 #include "nsIDeviceContext.h"
 #include "nsIFontMetrics.h"
-#include "nslog.h"
-
-NS_IMPL_LOG(nsTextAreaWidgetLog)
-#define PRINTF NS_LOG_PRINTF(nsTextAreaWidgetLog)
-#define FLUSH  NS_LOG_FLUSH(nsTextAreaWidgetLog)
 
 static NS_DEFINE_IID(kLookAndFeelCID, NS_LOOKANDFEEL_CID);
 static NS_DEFINE_IID(kILookAndFeelIID, NS_ILOOKANDFEEL_IID);
@@ -137,7 +132,7 @@ NS_METHOD nsTextAreaWidget::GetBounds(nsRect &aRect)
 #if 0
   nsWindow::GetNonClientBounds(aRect);
 #endif
-  PRINTF("nsTextAreaWidget::GetBounds not wrong\n");	// the following is just a placeholder
+printf("nsTextAreaWidget::GetBounds not wrong\n");	// the following is just a placeholder
   nsWindow::GetClientBounds(aRect);
   return NS_OK;
 }

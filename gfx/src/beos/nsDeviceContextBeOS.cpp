@@ -34,11 +34,6 @@
 
 #include <ScrollBar.h>
 #include <Screen.h>
-#include "nslog.h"
-
-NS_IMPL_LOG(nsDeviceContextBeOSLog)
-#define PRINTF NS_LOG_PRINTF(nsDeviceContextBeOSLog)
-#define FLUSH  NS_LOG_FLUSH(nsDeviceContextBeOSLog)
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kDeviceContextIID, NS_IDEVICE_CONTEXT_IID);
@@ -85,7 +80,7 @@ NS_IMETHODIMP nsDeviceContextBeOS::Init(nsNativeWidget aNativeWidget)
 
 NS_IMETHODIMP nsDeviceContextBeOS::CreateRenderingContext(nsIRenderingContext *&aContext)
 {
-  PRINTF("nsDeviceContextBeOS::CreateRenderingContext - FIXME: not implemented\n");
+printf("nsDeviceContextBeOS::CreateRenderingContext - FIXME: not implemented\n");
   return NS_ERROR_FAILURE;
 }
 
@@ -225,7 +220,7 @@ NS_IMETHODIMP nsDeviceContextBeOS::CheckFontExistence(const nsString& aFontName)
 		} 
 	}
 
-	//PRINTF("%s there? %s\n", cStr, isthere?"Yes":"No" );
+	//printf("%s there? %s\n", cStr, isthere?"Yes":"No" );
 	
   delete[] cStr;
 

@@ -34,7 +34,6 @@
 #include "nsIPresShell.h"
 #include "nsIReflowCommand.h"
 #include "nsIFrameSelection.h"
-#include "prlog.h"
 
 /**
  * nsFrame logging constants. We redefine the nspr
@@ -388,8 +387,8 @@ public:
     if (NS_SUCCEEDED(aFrame->QueryInterface(NS_GET_IID(nsIFrameDebug), (void**)&frameDebug))) {
       frameDebug->GetFrameName(tmp);
     }
-    nsCAutoString tmp2; tmp2.AssignWithConversion(tmp);
-    fprintf(out, "%s@%p", tmp2.GetBuffer(), aFrame);
+    fputs(tmp, out);
+    fprintf(out, "@%p", aFrame);
   }
 
   static void IndentBy(FILE* out, PRInt32 aIndent) {

@@ -58,15 +58,6 @@
 #include "nsIMdbFactoryFactory.h"
 
 #include "nsIPref.h"
-#include "nslog.h"
-
-#ifdef DEBUG_sspitzer
-NS_IMPL_LOG_ENABLED(nsGlobalHistoryLog)
-#else
-NS_IMPL_LOG(nsGlobalHistoryLog)
-#endif
-#define PRINTF NS_LOG_PRINTF(nsGlobalHistoryLog)
-#define FLUSH  NS_LOG_FLUSH(nsGlobalHistoryLog)
 
 PRInt32 nsGlobalHistory::gRefCnt;
 nsIRDFService* nsGlobalHistory::gRDFService;
@@ -80,6 +71,10 @@ nsIRDFResource* nsGlobalHistory::kNC_URL;
 nsIRDFResource* nsGlobalHistory::kNC_HistoryRoot;
 nsIRDFResource* nsGlobalHistory::kNC_HistoryBySite;
 nsIRDFResource* nsGlobalHistory::kNC_HistoryByDate;
+
+#ifdef DEBUG_sspitzer
+#define DEBUG_LAST_PAGE_VISITED 1
+#endif /* DEBUG_sspitzer */
 
 #define BROWSER_HISTORY_LAST_PAGE_VISITED_PREF "browser.history.last_page_visited"
 
@@ -683,7 +678,9 @@ nsGlobalHistory::SaveLastPageVisited(const char *aURL)
 
   rv = prefs->SetCharPref(BROWSER_HISTORY_LAST_PAGE_VISITED_PREF, aURL);
 
-  PRINTF("XXX saving last page visited as: %s\n", aURL);
+#ifdef DEBUG_LAST_PAGE_VISITED
+  printf("XXX saving last page visited as: %s\n", aURL);
+#endif /* DEBUG_LAST_PAGE_VISITED */
 
   return rv;
 }
@@ -704,7 +701,9 @@ nsGlobalHistory::GetLastPageVisted(char **_retval)
 
   *_retval = nsCRT::strdup((const char *)lastPageVisited);
 
-  PRINTF("XXX getting last page visited as: %s\n", (const char *)lastPageVisited);
+#ifdef DEBUG_LAST_PAGE_VISITED
+  printf("XXX getting last page visited as: %s\n", (const char *)lastPageVisited);
+#endif /* DEBUG_LAST_PAGE_VISITED */
 
   return NS_OK;
 }

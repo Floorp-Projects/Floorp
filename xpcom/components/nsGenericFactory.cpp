@@ -26,12 +26,6 @@
 
 #include "nsGenericFactory.h"
 #include "nsCRT.h"
-#include "nslog.h"
-
-NS_IMPL_LOG(nsGenericFactoryLog)
-#define PRINTF NS_LOG_PRINTF(nsGenericFactoryLog)
-#define FLUSH  NS_LOG_FLUSH(nsGenericFactoryLog)
-
 nsGenericFactory::nsGenericFactory(ConstructorProcPtr constructor)
 	: mConstructor(constructor), mDestructor(NULL)
 {
@@ -192,9 +186,9 @@ nsGenericModule::GetClassObject(nsIComponentManager *aCompMgr,
             desc++;
         }
         // not found in descriptions
-#ifdef NS_ENABLE_LOGGING
+#ifdef DEBUG
         char* cs = aClass.ToString();
-        PRINTF("+++ nsGenericModule %s: unable to create factory for %s\n", mModuleName, cs);
+        printf("+++ nsGenericModule %s: unable to create factory for %s\n", mModuleName, cs);
         nsCRT::free(cs);
 #endif
         // XXX put in stop-gap so that we don't search for this one again
@@ -213,7 +207,9 @@ nsGenericModule::RegisterSelf(nsIComponentManager *aCompMgr,
 {
     nsresult rv = NS_OK;
 
-    PRINTF("*** Registering %s components (all right -- a generic module!)\n", mModuleName);
+#ifdef DEBUG
+    printf("*** Registering %s components (all right -- a generic module!)\n", mModuleName);
+#endif
 
     nsModuleComponentInfo* cp = mComponents;
     for (PRUint32 i = 0; i < mComponentCount; i++) {
@@ -221,8 +217,10 @@ nsGenericModule::RegisterSelf(nsIComponentManager *aCompMgr,
                                              cp->mContractID, aPath, PR_TRUE,
                                              PR_TRUE);
         if (NS_FAILED(rv)) {
-            PRINTF("nsGenericModule %s: unable to register %s component => %x\n",
+#ifdef DEBUG
+            printf("nsGenericModule %s: unable to register %s component => %x\n",
                    mModuleName?mModuleName:"(null)", cp->mDescription?cp->mDescription:"(null)", rv);
+#endif
             break;
         }
         // Call the registration hook of the component, if any
@@ -230,8 +228,10 @@ nsGenericModule::RegisterSelf(nsIComponentManager *aCompMgr,
         {
             rv = cp->mRegisterSelfProc(aCompMgr, aPath, registryLocation, componentType);
             if (NS_FAILED(rv)) {
-                PRINTF("nsGenericModule %s: Register hook for %s component returned error => %x\n",
+#ifdef DEBUG
+                printf("nsGenericModule %s: Register hook for %s component returned error => %x\n",
                        mModuleName?mModuleName:"(null)", cp->mDescription?cp->mDescription:"(null)", rv);
+#endif
                 break;
             }
         }
@@ -246,7 +246,9 @@ nsGenericModule::UnregisterSelf(nsIComponentManager* aCompMgr,
                             nsIFile* aPath,
                             const char* registryLocation)
 {
-    PRINTF("*** Unregistering %s components (all right -- a generic module!)\n", mModuleName);
+#ifdef DEBUG
+    printf("*** Unregistering %s components (all right -- a generic module!)\n", mModuleName);
+#endif
     nsModuleComponentInfo* cp = mComponents;
     for (PRUint32 i = 0; i < mComponentCount; i++) {
         // Call the unregistration hook of the component, if any
@@ -257,8 +259,10 @@ nsGenericModule::UnregisterSelf(nsIComponentManager* aCompMgr,
         // Unregister the component
         nsresult rv = aCompMgr->UnregisterComponentSpec(cp->mCID, aPath);
         if (NS_FAILED(rv)) {
-            PRINTF("nsGenericModule %s: unable to unregister %s component => %x\n",
+#ifdef DEBUG
+            printf("nsGenericModule %s: unable to unregister %s component => %x\n",
                    mModuleName, cp->mDescription, rv);
+#endif
         }
         cp++;
     }

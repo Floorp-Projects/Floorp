@@ -29,11 +29,8 @@
 #include "xlibrgb.h"
 #include "nsString.h"
 #include "nsXtEventHandler.h"
-#include "nslog.h"
 
-NS_IMPL_LOG(nsTextWidgetLog)
-#define PRINTF NS_LOG_PRINTF(nsTextWidgetLog)
-#define FLUSH  NS_LOG_FLUSH(nsTextWidgetLog)
+#define DBG 0
 
 extern int mIsPasswordCallBacksInstalled;
 
@@ -74,11 +71,11 @@ NS_METHOD nsTextWidget::Create(nsIWidget *aParent,
                                nsIToolkit *aToolkit,
                                nsWidgetInitData *aInitData)
 {
-  PRINTF("nsTextWidget::Create called\n");
+  printf("nsTextWidget::Create called\n");
   aParent->AddChild(this);
   Widget parentWidget = nsnull;
 
-  PRINTF("aParent 0x%x\n", (unsigned int)aParent);
+  if (DBG) fprintf(stderr, "aParent 0x%x\n", (unsigned int)aParent);
 
   if (aParent) {
     parentWidget = (Widget) aParent->GetNativeData(NS_NATIVE_WIDGET);

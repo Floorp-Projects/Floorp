@@ -39,11 +39,6 @@ static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 #include "nsIWebShellServices.h"
 #include "plstr.h"
 #include "prenv.h"
-#include "nslog.h"
-
-NS_IMPL_LOG(nsPICSElementObserverLog)
-#define PRINTF NS_LOG_PRINTF(nsPICSElementObserverLog)
-#define FLUSH  NS_LOG_FLUSH(nsPICSElementObserverLog)
 
 //static NS_DEFINE_IID(kIObserverIID, NS_IOBSERVER_IID);
 //static NS_DEFINE_IID(kObserverCID, NS_OBSERVER_CID);
@@ -151,7 +146,7 @@ NS_IMETHODIMP nsPICSElementObserver::Notify(PRUint32 aDocumentID,
       const nsString& theValue1=valueArray[0];
       char *val1 = theValue1.ToNewCString();
       if(theValue1.EqualsIgnoreCase("\"PICS-LABEL\"")) {
-        PRINTF("\nReceived notification for a PICS-LABEL\n");
+        printf("\nReceived notification for a PICS-LABEl\n");
         const nsString& theValue2=valueArray[1];
         char *label = theValue2.ToNewCString();
         if (valueArray[numOfAttributes]) {

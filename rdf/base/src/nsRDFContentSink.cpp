@@ -77,11 +77,6 @@
 #include "rdfutil.h"
 
 #include "nsHTMLTokens.h" // XXX so we can use nsIParserNode::GetTokenType()
-#include "nslog.h"
-
-NS_IMPL_LOG(nsRDFContentSinkLog)
-#define PRINTF NS_LOG_PRINTF(nsRDFContentSinkLog)
-#define FLUSH  NS_LOG_FLUSH(nsRDFContentSinkLog)
 
 ////////////////////////////////////////////////////////////////////////
 
@@ -106,7 +101,9 @@ static NS_DEFINE_CID(kRDFInMemoryDataSourceCID, NS_RDFINMEMORYDATASOURCE_CID);
 
 ////////////////////////////////////////////////////////////////////////
 
-#define gLog nsRDFContentSinkLog
+#ifdef PR_LOGGING
+static PRLogModuleInfo* gLog;
+#endif
 
 ////////////////////////////////////////////////////////////////////////
 // Utility routines
@@ -359,6 +356,11 @@ RDFContentSinkImpl::RDFContentSinkImpl()
         kLiAtom          = NS_NewAtom("li");
         kXMLNSAtom       = NS_NewAtom("xmlns");
     }
+
+#ifdef PR_LOGGING
+    if (! gLog)
+        gLog = PR_NewLogModule("nsRDFContentSink");
+#endif
 }
 
 
@@ -366,7 +368,7 @@ RDFContentSinkImpl::~RDFContentSinkImpl()
 {
 #ifdef DEBUG_REFS
     --gInstanceCount;
-    PRINTF("%d - RDF: RDFContentSinkImpl\n", gInstanceCount);
+    fprintf(stdout, "%d - RDF: RDFContentSinkImpl\n", gInstanceCount);
 #endif
 
     NS_IF_RELEASE(mDocumentURL);

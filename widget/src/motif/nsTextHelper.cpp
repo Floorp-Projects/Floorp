@@ -29,11 +29,6 @@
 #include "nsStringUtil.h"
 
 #include <Xm/Text.h>
-#include "nslog.h"
-
-NS_IMPL_LOG(nsTextHelperLog)
-#define PRINTF NS_LOG_PRINTF(nsTextHelperLog)
-#define FLUSH  NS_LOG_FLUSH(nsTextHelperLog)
 
 #define DBG 0
 
@@ -191,7 +186,7 @@ NS_METHOD nsTextHelper::GetSelection(PRUint32 *aStartSel, PRUint32 *aEndSel)
     *aStartSel = (PRUint32)left;
     *aEndSel   = (PRUint32)right;
   } else {
-    PRINTF("nsTextHelper::GetSelection Error getting positions\n");
+    printf("nsTextHelper::GetSelection Error getting positions\n");
     return NS_ERROR_FAILURE;
   }
   return NS_OK;

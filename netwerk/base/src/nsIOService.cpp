@@ -34,11 +34,6 @@
 #include "nsXPIDLString.h" 
 #include "nsIErrorService.h" 
 #include "netCore.h" 
-#include "nslog.h"
-
-NS_IMPL_LOG(nsIOServiceLog)
-#define PRINTF NS_LOG_PRINTF(nsIOServiceLog)
-#define FLUSH  NS_LOG_FLUSH(nsIOServiceLog)
 
 static NS_DEFINE_CID(kFileTransportService, NS_FILETRANSPORTSERVICE_CID);
 static NS_DEFINE_CID(kEventQueueService, NS_EVENTQUEUESERVICE_CID);
@@ -168,7 +163,9 @@ nsIOService::CacheProtocolHandler(const char *scheme, nsIProtocolHandler *handle
             {
                 // Dont cache handlers that dont support weak reference as
                 // there is real danger of a circular reference.
-                PRINTF("DEBUG: %s protcol handler doesn't support weak ref. Not cached.\n", scheme);
+#ifdef DEBUG_dp
+                printf("DEBUG: %s protcol handler doesn't support weak ref. Not cached.\n", scheme);
+#endif /* DEBUG_dp */
                 return NS_ERROR_FAILURE;
             }
             mWeakHandler[i] = getter_AddRefs(NS_GetWeakReference(handler));
