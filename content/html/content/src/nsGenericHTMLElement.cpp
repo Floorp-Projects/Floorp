@@ -1676,39 +1676,47 @@ nsGenericHTMLElement::SetAttr(nsINodeInfo* aNodeInfo,
 
 PRBool nsGenericHTMLElement::IsEventName(nsIAtom* aName)
 {
-  return (nsLayoutAtoms::onclick == aName ||
-    nsLayoutAtoms::ondblclick == aName ||
-    nsLayoutAtoms::onmousedown == aName ||
-    nsLayoutAtoms::onmouseup == aName ||
-    nsLayoutAtoms::onmouseover == aName ||
-    nsLayoutAtoms::onmouseout == aName ||
-    nsLayoutAtoms::onkeydown == aName ||
-    nsLayoutAtoms::onkeyup == aName ||
-    nsLayoutAtoms::onkeypress == aName ||
-    nsLayoutAtoms::onmousemove == aName ||
-    nsLayoutAtoms::onload == aName ||
-    nsLayoutAtoms::onunload == aName ||
-    nsLayoutAtoms::onabort == aName ||
-    nsLayoutAtoms::onerror == aName ||
-    nsLayoutAtoms::onfocus == aName ||
-    nsLayoutAtoms::onblur == aName ||
-    nsLayoutAtoms::onsubmit == aName ||
-    nsLayoutAtoms::onreset == aName ||
-    nsLayoutAtoms::onchange == aName ||
-    nsLayoutAtoms::onselect == aName || 
-    nsLayoutAtoms::onpaint == aName ||
-    nsLayoutAtoms::onresize == aName ||
-    nsLayoutAtoms::onscroll == aName ||
-    nsLayoutAtoms::oninput == aName ||
-    nsLayoutAtoms::oncontextmenu == aName || 
-    nsLayoutAtoms::onDOMAttrModified == aName ||
-    nsLayoutAtoms::onDOMCharacterDataModified == aName || 
-    nsLayoutAtoms::onDOMSubtreeModified == aName ||
-    nsLayoutAtoms::onDOMNodeInsertedIntoDocument == aName || 
-    nsLayoutAtoms::onDOMNodeRemovedFromDocument == aName ||
-    nsLayoutAtoms::onDOMNodeInserted  == aName || 
-    nsLayoutAtoms::onDOMNodeRemoved == aName
-    );
+  const PRUnichar *name = nsnull;
+
+  aName->GetUnicode(&name);
+  NS_ASSERTION(name, "Null string in atom!");
+
+  if (name[0] != 'o' || name[1] != 'n') {
+    return PR_FALSE;
+  }
+
+  return (aName == nsLayoutAtoms::onclick                       ||
+          aName == nsLayoutAtoms::ondblclick                    ||
+          aName == nsLayoutAtoms::onmousedown                   ||
+          aName == nsLayoutAtoms::onmouseup                     ||
+          aName == nsLayoutAtoms::onmouseover                   ||
+          aName == nsLayoutAtoms::onmouseout                    ||
+          aName == nsLayoutAtoms::onkeydown                     ||
+          aName == nsLayoutAtoms::onkeyup                       ||
+          aName == nsLayoutAtoms::onkeypress                    ||
+          aName == nsLayoutAtoms::onmousemove                   ||
+          aName == nsLayoutAtoms::onload                        ||
+          aName == nsLayoutAtoms::onunload                      ||
+          aName == nsLayoutAtoms::onabort                       ||
+          aName == nsLayoutAtoms::onerror                       ||
+          aName == nsLayoutAtoms::onfocus                       ||
+          aName == nsLayoutAtoms::onblur                        ||
+          aName == nsLayoutAtoms::onsubmit                      ||
+          aName == nsLayoutAtoms::onreset                       ||
+          aName == nsLayoutAtoms::onchange                      ||
+          aName == nsLayoutAtoms::onselect                      || 
+          aName == nsLayoutAtoms::onpaint                       ||
+          aName == nsLayoutAtoms::onresize                      ||
+          aName == nsLayoutAtoms::onscroll                      ||
+          aName == nsLayoutAtoms::oninput                       ||
+          aName == nsLayoutAtoms::oncontextmenu                 ||
+          aName == nsLayoutAtoms::onDOMAttrModified             ||
+          aName == nsLayoutAtoms::onDOMCharacterDataModified    || 
+          aName == nsLayoutAtoms::onDOMSubtreeModified          ||
+          aName == nsLayoutAtoms::onDOMNodeInsertedIntoDocument || 
+          aName == nsLayoutAtoms::onDOMNodeRemovedFromDocument  ||
+          aName == nsLayoutAtoms::onDOMNodeInserted             || 
+          aName == nsLayoutAtoms::onDOMNodeRemoved);
 }
 
 static PRInt32 GetStyleImpactFrom(const nsHTMLValue& aValue)

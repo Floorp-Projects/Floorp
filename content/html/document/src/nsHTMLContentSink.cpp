@@ -338,9 +338,8 @@ public:
   PRBool IsTimeToNotify();
   PRBool IsInScript();
   void ReduceEntities(nsString& aString);
-  void GetAttributeValueAt(const nsIParserNode& aNode,
-                           PRInt32 aIndex,
-                           nsString& aResult);
+  const nsDependentSubstring GetAttributeValueAt(const nsIParserNode& aNode,
+                                                 PRInt32 aIndex);
   nsresult AddAttributes(const nsIParserNode& aNode, nsIHTMLContent* aContent,
                          PRBool aNotify = PR_FALSE);
   nsresult CreateContentObject(const nsIParserNode& aNode,
@@ -739,14 +738,13 @@ GetEntityTerminator(nsString& aSource,PRUnichar& aChar,PRInt32 aStartOffset=0) {
  * it as a string. Whitespace in the end and beginning are stripped from
  * the string. 
  */
-void
+const nsDependentSubstring
 HTMLContentSink::GetAttributeValueAt(const nsIParserNode& aNode,
-                                     PRInt32 aIndex,
-                                     nsString& aResult)
+                                     PRInt32 aIndex)
 {
   // Copy value
   const nsString& value = aNode.GetValueAt(aIndex);
-  nsAString::const_iterator iter, end_iter;
+  nsString::const_iterator iter, end_iter;
   value.BeginReading(iter);
   value.EndReading(end_iter);
   PRUnichar the_char;
@@ -756,28 +754,28 @@ HTMLContentSink::GetAttributeValueAt(const nsIParserNode& aNode,
          (((the_char = *iter) == '\n') ||
           (the_char == '\t') ||
           (the_char == '\r') ||
-          (the_char == '\b')))
+          (the_char == '\b'))) {
     ++iter;
-
-  if (iter == end_iter) {
-    // Nothing left
-    aResult.Truncate();
-    return;
   }
 
-  --end_iter; // To make it point to a char
+  if (iter != end_iter) {
+    --end_iter; // To make it point to a char
 
-  // There has to be a char between the whitespace,
-  // otherwise iter would be equal to end_iter, so
-  // we can just go until we find that char.
-  while (((the_char = *end_iter)== '\n') ||
-         (the_char == '\t') ||
-         (the_char == '\r') ||
-         (the_char == '\b'))
-    --end_iter;
+    // There has to be a char between the whitespace,
+    // otherwise iter would be equal to end_iter, so
+    // we can just go until we find that char.
+    while (((the_char = *end_iter)== '\n') ||
+           (the_char == '\t') ||
+           (the_char == '\r') ||
+           (the_char == '\b')) {
+      --end_iter;
+    }
+
+    ++end_iter; // Step beond the last character we want in the value.
+  }
 
   // end_iter should point to the char after the last to copy
-  aResult = Substring(iter, ++end_iter);
+  return Substring(iter, end_iter);
 }
 
 nsresult
@@ -785,8 +783,17 @@ HTMLContentSink::AddAttributes(const nsIParserNode& aNode,
                                nsIHTMLContent* aContent, PRBool aNotify)
 {
   // Add tag attributes to the content attributes
-  nsAutoString k, v;
+
   PRInt32 ac = aNode.GetAttributeCount();
+
+  if (ac == 0) {
+    // No attributes, nothing to do. Do an early return to avoid
+    // constructing the nsAutoString object for nothing.
+
+    return NS_OK;
+  }
+
+  nsAutoString k;
   nsHTMLTag nodeType = nsHTMLTag(aNode.GetNodeType());
 
   for (PRInt32 i = 0; i < ac; i++) {
@@ -795,25 +802,28 @@ HTMLContentSink::AddAttributes(const nsIParserNode& aNode,
     k.Assign(key);
     k.ToLowerCase();
 
-    nsIAtom*  keyAtom = NS_NewAtom(k);
+    nsCOMPtr<nsIAtom>  keyAtom(dont_AddRef(NS_NewAtom(k)));
     nsHTMLValue value;
 
     if (NS_CONTENT_ATTR_NOT_THERE == 
         aContent->GetHTMLAttribute(keyAtom, value)) {
       // Get value and remove mandatory quotes
-      GetAttributeValueAt(aNode, i, v);
+      const nsAString& v = GetAttributeValueAt(aNode, i);
 
       if (nodeType == eHTMLTag_a && keyAtom == nsHTMLAtoms::name) {
         NS_ConvertUCS2toUTF8 cname(v);
-        v.Assign(NS_ConvertUTF8toUCS2(nsUnescape(NS_CONST_CAST(char *,
-                                                               cname.get()))));
-      }
+        NS_ConvertUTF8toUCS2 uv(nsUnescape(NS_CONST_CAST(char *,
+                                                         cname.get())));
 
-      // Add attribute to content
-      aContent->SetAttr(kNameSpaceID_HTML, keyAtom, v, aNotify);
+        // Add attribute to content
+        aContent->SetAttr(kNameSpaceID_HTML, keyAtom, uv, aNotify);
+      } else {
+        // Add attribute to content
+        aContent->SetAttr(kNameSpaceID_HTML, keyAtom, v, aNotify);
+      }
     }
-    NS_RELEASE(keyAtom);
   }
+
   return NS_OK;
 }
 
