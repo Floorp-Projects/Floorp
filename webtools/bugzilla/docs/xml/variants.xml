@@ -1,0 +1,87 @@
+<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook V4.1//EN">
+
+<chapter id="variants">
+  <title>Bugzilla Variants</title>
+  <note>
+    <para>
+      I <emphasis>know</emphasis> there are more variants than just RedHat Bugzilla out there.
+      Please help me get information about them, their project status, and benefits there
+      might be in using them or in using their code in main-tree Bugzilla.
+    </para>
+  </note>
+
+  <section id="rhbugzilla">
+    <title>Red Hat Bugzilla</title>
+    <para>
+      Red Hat Bugzilla is probably the most popular Bugzilla variant, aside from Mozilla Bugzilla,
+      on the planet.
+      One of the major benefits of Red Hat Bugzilla is the ability to work with Oracle as a
+      database, as well as MySQL.
+      Here's what Dave Lawrence had to say about the status of Red Hat Bugzilla,
+      <blockquote>
+	<literallayout>
+	  Hello. I apologize that I am getting back to you so late. It has been difficult to keep
+up with email this past week. I have checked out your updated documentation and I will
+have to say very good work. A few notes and additions as follows.
+
+(ed: from the FAQ)
+>For the record, we are not using any template type implementation for the cosmetic changes 
+>maded to Bugzilla. It is just alot of html changes in the code itself. I admit I may have 
+>gotten a little carried away with it but the corporate types asked for a more standardized 
+>interface to match up with other projects relating to Red Hat web sites. A lot of other web 
+>based internal tools I am working on also look like Bugzilla. 
+
+
+This should probably be changed since we are now in fact using Text::Template for most
+of the html rendering. You actually state this later in your numbered list.
+
+Also number 6 contradicts number 8 where number 6 would be the most up to date status
+on the Oracle port.
+
+Additional Information:
+-----------------------------
+1. Comments are now stored in varchar fields of 4k in size each. If the comment is more
+than 4k it is broken up into chunks and given a sort number so each comment can be re
+assembled in the correct order. This was done because originally I was storing the comments
+in a long datatype which unfortunately cannot be indexed or joined with another table. This
+cause the search of text within the long description to be disabled for a long time. That
+is now working and is nto showing any noticeble performance hit that I can tell. 
+
+2. Work is being started on internationalizing the Bugzilla source we have to allow our
+Japanese customers to enter bug reports into a single bugzilla system. This will probably
+be done by using the nvarchar data types supported by Oracle which allows storage of
+double byte characters and also the use of the Accept-Language in the http header for 
+detection by Bugilla of which language to render.
+
+3. Of course even more cosmetic changes. It is difficult to keep up with the ever 
+changing faces of www.redhat.com.
+
+4. Some convenience enhancements in the administration utilities. And more integration
+with other internal/external Red Hat web sites.
+
+I hope this information may prove helpful for your documentation. Please contact
+me if you have any more question or I can do anything else.
+
+Regards
+	</literallayout>
+      </blockquote>
+    </para>
+  </section>
+</chapter>
+<!-- Keep this comment at the end of the file
+Local variables:
+mode: sgml
+sgml-omittag:t
+sgml-shorttag:t
+sgml-namecase-general:t
+sgml-general-insert-case:lower
+sgml-minimize-attributes:nil
+sgml-always-quote-attributes:t
+sgml-indent-step:2
+sgml-indent-data:t
+sgml-parent-document:nil
+sgml-exposed-tags:nil
+sgml-local-catalogs:nil
+sgml-local-ecat-files:nil
+End:
+-->

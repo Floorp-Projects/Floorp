@@ -1,4 +1,4 @@
-<!-- <!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook V4.1//EN" > -->
+<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook V4.1//EN" >
 
 <!-- Keep these tools listings in alphabetical order please. -MPB -->
 
@@ -18,10 +18,31 @@
   <section id="scm">
     <title>Perforce SCM</title>
     <para>
-      Richard Brooksby and his team have an integration tool
-      in public beta.  You can find it at
-      <ulink url="http://www.ravenbrook.com/project/p4dt">
-	http://www.ravenbrook.com/project/p4dti</ulink>.
+      Richard Brooksby created a Perforce integration tool for Bugzilla and TeamTrack.
+      You can find the main project page at
+      <ulink url="http://www.ravenbrook.com/project/p4dti/">
+	http://www.ravenbrook.com/project/p4dti</ulink>.  "p4dti" is now an officially
+      supported product from Perforce, and you can find the "Perforce Public Depot"
+      p4dti page at <ulink url="http://public.perforce.com/public/perforce/p4dti/index.html">
+	http://public.perforce.com/public/perforce/p4dti/index.html</ulink>.
+    </para>
+    <para>
+      Integration of Perforce with Bugzilla, once patches are applied, is fairly seamless.  However,
+      p4dti is a patch against the Bugzilla 2.10 release, not the current 2.12 release.  I anticipate
+      patches for 2.12 will be out shortly.  Check the project page regularly for updates, or
+      take the given patches and patch it manually.  p4dti is designed to support multiple defect
+      trackers, and maintains its own documentation for it.  Please consult the pages linked
+      above for further information.
+    </para>
+    <para>
+      Right now, there is no way to synchronize the Bug ID and the Perforce Transaction Number, or
+      to change the Bug ID to read (PRODUCT).bugID unless you hack it in.  Additionally, if you
+      have synchronization problems, the easiest way to avoid them is to only put the bug
+      information, comments, etc. into Bugzilla, and not into the Perforce change records.
+      They will link anyway; merely reference the bug ID fixed in your change description,
+      and put a comment into Bugzilla
+      giving the change ID that fixed the Bugzilla bug.  It's a process issue, not a technology
+      question.
     </para>
   </section>
 

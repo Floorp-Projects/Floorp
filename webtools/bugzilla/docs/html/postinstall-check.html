@@ -4,7 +4,7 @@
 >Post-Installation Checklist</TITLE
 ><META
 NAME="GENERATOR"
-CONTENT="Modular DocBook HTML Stylesheet Version 1.61
+CONTENT="Modular DocBook HTML Stylesheet Version 1.64
 "><LINK
 REL="HOME"
 TITLE="The Bugzilla Guide"
@@ -86,6 +86,17 @@ CLASS="PROCEDURE"
 TYPE="1"
 ><LI
 ><P
+>	  Bring up "editparams.cgi" in your web browser.  For instance, to edit parameters
+	  at mozilla.org, the URL would be <A
+HREF="http://bugzilla.mozilla.org/editparams.cgi"
+TARGET="_top"
+>	  http://bugzilla.mozilla.org/editparams.cgi</A
+>, also available under the "edit parameters"
+	  link on your query page.
+	</P
+></LI
+><LI
+><P
 >	  Set "maintainer" to <EM
 >your</EM
 > email address.
@@ -115,7 +126,7 @@ TYPE="1"
 ></LI
 ><LI
 ><P
->	  Set "usebuggroupsentry" to "1" if you want to be able to restrict access to products.
+>	  Set "usebuggroupsentry" to "1" if you want to restrict access to products.
 	  Once again, if you are simply testing your installation, I suggest against
 	  turning this parameter on; the strict security checking may stop you from
 	  being able to modify your new entries.
@@ -152,14 +163,16 @@ CLASS="NOTE"
 	  attempting to commit a change to the database.
         </P
 ><P
->	  If you use the "shadowdb" option, it is only natural that you should turn the "queryagainstshadowdb"
+>	  If you use the "shadowdb" option,
+	  it is only natural that you should turn the "queryagainstshadowdb"
 	  option "On" as well.  Otherwise you are replicating data into a shadow database for no reason!
 	</P
 ></LI
 ><LI
 ><P
 >	  If you have custom logos or HTML you must put in place to fit within your site design guidelines,
-	  place the code in the "headerhtml", "footerhtml", "errorhtml", "bannerhtml", or "blurbhtml" text boxes.
+	  place the code in the "headerhtml", "footerhtml", "errorhtml",
+	  "bannerhtml", or "blurbhtml" text boxes.
 	  <DIV
 CLASS="NOTE"
 ><BLOCKQUOTE
@@ -167,10 +180,12 @@ CLASS="NOTE"
 ><P
 ><B
 >Note: </B
->	      The "headerhtml" text box is the HTML printed out <EM
+>	      The "headerhtml" text box is the HTML printed out
+	      <EM
 >before</EM
 > any other code on the page.
-	      If you have a special banner, put the code for it in "bannerhtml".  You may want to leave these
+	      If you have a special banner, put the code for it in "bannerhtml".
+	      You may want to leave these
 	      settings at the defaults initially.
 	    </P
 ></BLOCKQUOTE
@@ -187,27 +202,33 @@ CLASS="NOTE"
 ></LI
 ><LI
 ><P
->	  Set "newemailtech" to "on".  Your users will thank you.  This is the default in the post-2.12 world.
+>	  Ensure "newemailtech" is "on".
+	  Your users will thank you.  This is the default in the post-2.12 world, and is
+	  only an issue if you are upgrading.
 	</P
 ></LI
 ><LI
 ><P
->	  Do you want to use the qa contact ("useqacontact") and status whiteboard ("usestatuswhiteboard") fields?
-	  These fields are useful because they allow for more flexibility, particularly when you have an existing
+>	  Do you want to use the qa contact ("useqacontact")
+	  and status whiteboard ("usestatuswhiteboard") fields?
+	  These fields are useful because they allow for more flexibility,
+	  particularly when you have an existing
 	  Quality Assurance and/or Release Engineering team, 
 	  but they may not be needed for smaller installations.
 	</P
 ></LI
 ><LI
 ><P
->	  Set "whinedays" to the amount of days you want to let bugs go in the "New" or "Reopened" state before
+>	  Set "whinedays" to the amount of days you want to let bugs go
+	  in the "New" or "Reopened" state before
 	  notifying people they have untouched new bugs.  If you do not plan to use this feature, simply do
 	  not set up the whining cron job described in the README, or set this value to "0".
 	</P
 ></LI
 ><LI
 ><P
->	  Set the "commenton" options according to your site policy.  It is a wise idea to require comments when users
+>	  Set the "commenton" options according to your site policy.
+	  It is a wise idea to require comments when users
 	  resolve, reassign, or reopen bugs.
 	  <DIV
 CLASS="NOTE"

@@ -4,7 +4,7 @@
 >The Bugzilla Guide</TITLE
 ><META
 NAME="GENERATOR"
-CONTENT="Modular DocBook HTML Stylesheet Version 1.61
+CONTENT="Modular DocBook HTML Stylesheet Version 1.64
 "><LINK
 REL="NEXT"
 TITLE="About This Guide"
@@ -61,6 +61,84 @@ CLASS="ADDRESS"
 CLASS="ADDRESS"
 >barnboy@trilobyte.net</P
 ></DIV
+></DIV
+><DIV
+CLASS="REVHISTORY"
+><TABLE
+WIDTH="100%"
+BORDER="0"
+><TR
+><TH
+ALIGN="LEFT"
+VALIGN="TOP"
+COLSPAN="3"
+><B
+>Revision History</B
+></TH
+></TR
+><TR
+><TD
+ALIGN="LEFT"
+>Revision v2.11</TD
+><TD
+ALIGN="LEFT"
+>20 December 2000</TD
+><TD
+ALIGN="LEFT"
+>Revised by: MPB</TD
+></TR
+><TR
+><TD
+ALIGN="LEFT"
+COLSPAN="3"
+>Converted the README, FAQ, and DATABASE information into SGML
+	  docbook format.</TD
+></TR
+><TR
+><TD
+ALIGN="LEFT"
+>Revision 2.11.1</TD
+><TD
+ALIGN="LEFT"
+>06 March 2001</TD
+><TD
+ALIGN="LEFT"
+>Revised by: MPB</TD
+></TR
+><TR
+><TD
+ALIGN="LEFT"
+COLSPAN="3"
+>Took way too long to revise this for 2.12 release.
+	  Updated FAQ to use qandaset tags instead of literallayout,
+	  cleaned up administration section, added User Guide section,
+	  miscellaneous FAQ updates and third-party integration information.
+	  From this point on all new tags are lowercase in preparation for the
+	  2.13 release of the Guide in XML format instead of SGML.</TD
+></TR
+><TR
+><TD
+ALIGN="LEFT"
+>Revision 2.12.0</TD
+><TD
+ALIGN="LEFT"
+>24 April 2001</TD
+><TD
+ALIGN="LEFT"
+>Revised by: MPB</TD
+></TR
+><TR
+><TD
+ALIGN="LEFT"
+COLSPAN="3"
+>Things fixed this release: Elaborated on queryhelp interface, added FAQ regarding
+	  moving bugs from one keyword to another, clarified possible problems with the Landfill
+	  tutorial, fixed a boatload of typos and unclear sentence structures.  Incorporated the
+	  README into the UNIX installation section, and changed the README to indicate the deprecated
+	  status.  Things I know need work:  Used "simplelist" a lot, where I should have used
+	  "procedure" to tag things.  Need to lowercase all tags to be XML compliant.</TD
+></TR
+></TABLE
 ></DIV
 ><DIV
 ><DIV
@@ -150,11 +228,143 @@ HREF="installation.html"
 HREF="readme.unix.html"
 >UNIX Installation</A
 ></DT
+><DD
+><DL
+><DT
+>2.1.1. <A
+HREF="readme.unix.html#AEN190"
+>ERRATA</A
+></DT
+><DT
+>2.1.2. <A
+HREF="readme.unix.html#AEN204"
+>Step-by-step Install</A
+></DT
+><DD
+><DL
+><DT
+>2.1.2.1. <A
+HREF="readme.unix.html#AEN206"
+>Introduction</A
+></DT
+><DT
+>2.1.2.2. <A
+HREF="readme.unix.html#AEN211"
+>Installing the Prerequisites</A
+></DT
+><DT
+>2.1.2.3. <A
+HREF="readme.unix.html#AEN242"
+>Installing MySQL Database</A
+></DT
+><DT
+>2.1.2.4. <A
+HREF="readme.unix.html#AEN248"
+>Perl (5.004 or greater)</A
+></DT
+><DT
+>2.1.2.5. <A
+HREF="readme.unix.html#AEN259"
+>DBI Perl Module</A
+></DT
+><DT
+>2.1.2.6. <A
+HREF="readme.unix.html#AEN296"
+>Data::Dumper Perl Module</A
+></DT
+><DT
+>2.1.2.7. <A
+HREF="readme.unix.html#AEN300"
+>MySQL related Perl Module Collection</A
+></DT
+><DT
+>2.1.2.8. <A
+HREF="readme.unix.html#AEN309"
+>TimeDate Perl Module Collection</A
+></DT
+><DT
+>2.1.2.9. <A
+HREF="readme.unix.html#AEN312"
+>GD Perl Module (1.8.3)</A
+></DT
+><DT
+>2.1.2.10. <A
+HREF="readme.unix.html#AEN318"
+>Chart::Base Perl Module (0.99c)</A
+></DT
+><DT
+>2.1.2.11. <A
+HREF="readme.unix.html#AEN321"
+>DB_File Perl Module</A
+></DT
+><DT
+>2.1.2.12. <A
+HREF="readme.unix.html#AEN324"
+>HTTP Server</A
+></DT
+><DT
+>2.1.2.13. <A
+HREF="readme.unix.html#AEN334"
+>Installing the Bugzilla Files</A
+></DT
+><DT
+>2.1.2.14. <A
+HREF="readme.unix.html#AEN343"
+>Setting Up the MySQL Database</A
+></DT
+><DT
+>2.1.2.15. <A
+HREF="readme.unix.html#AEN379"
+>Tweaking "localconfig"</A
+></DT
+><DT
+>2.1.2.16. <A
+HREF="readme.unix.html#AEN401"
+>Setting Up Maintainers Manuall (Optional)</A
+></DT
+><DT
+>2.1.2.17. <A
+HREF="readme.unix.html#AEN410"
+>The Whining Cron (Optional)</A
+></DT
+><DT
+>2.1.2.18. <A
+HREF="readme.unix.html#AEN417"
+>Bug Graphs (Optional)</A
+></DT
+><DT
+>2.1.2.19. <A
+HREF="readme.unix.html#AEN429"
+>Securing MySQL</A
+></DT
+><DT
+>2.1.2.20. <A
+HREF="readme.unix.html#AEN495"
+>Installation General Notes</A
+></DT
+></DL
+></DD
+></DL
+></DD
 ><DT
 >2.2. <A
 HREF="readme.windows.html"
 >Win32 (Win98+/NT/2K) Installation</A
 ></DT
+><DD
+><DL
+><DT
+>2.2.1. <A
+HREF="readme.windows.html#NTVERIFIED"
+>Win32 Installation: Step-by-step</A
+></DT
+><DT
+>2.2.2. <A
+HREF="readme.windows.html#ADDLWINTIPS"
+>Additional Windows Tips</A
+></DT
+></DL
+></DD
 ></DL
 ></DD
 ><DT
@@ -174,11 +384,83 @@ HREF="postinstall-check.html"
 HREF="useradmin.html"
 >User Administration</A
 ></DT
+><DD
+><DL
+><DT
+>3.2.1. <A
+HREF="useradmin.html#DEFAULTUSER"
+>Creating the Default User</A
+></DT
+><DT
+>3.2.2. <A
+HREF="useradmin.html#MANAGEUSERS"
+>Managing Other Users</A
+></DT
+><DD
+><DL
+><DT
+>3.2.2.1. <A
+HREF="useradmin.html#LOGIN"
+>Logging In</A
+></DT
+><DT
+>3.2.2.2. <A
+HREF="useradmin.html#CREATENEWUSERS"
+>Creating new users</A
+></DT
+><DT
+>3.2.2.3. <A
+HREF="useradmin.html#DISABLEUSERS"
+>Disabling Users</A
+></DT
+><DT
+>3.2.2.4. <A
+HREF="useradmin.html#MODIFYUSERS"
+>Modifying Users</A
+></DT
+></DL
+></DD
+></DL
+></DD
 ><DT
 >3.3. <A
 HREF="programadmin.html"
 >Product, Component, Milestone, and Version Administration</A
 ></DT
+><DD
+><DL
+><DT
+>3.3.1. <A
+HREF="programadmin.html#PRODUCTS"
+>Products</A
+></DT
+><DT
+>3.3.2. <A
+HREF="programadmin.html#COMPONENTS"
+>Components</A
+></DT
+><DT
+>3.3.3. <A
+HREF="programadmin.html#VERSIONS"
+>Versions</A
+></DT
+><DT
+>3.3.4. <A
+HREF="programadmin.html#MILESTONES"
+>Milestones</A
+></DT
+><DT
+>3.3.5. <A
+HREF="programadmin.html#VOTING"
+>Voting</A
+></DT
+><DT
+>3.3.6. <A
+HREF="programadmin.html#GROUPS"
+>Groups and Group Security</A
+></DT
+></DL
+></DD
 ><DT
 >3.4. <A
 HREF="security.html"
@@ -208,11 +490,87 @@ HREF="why.html"
 HREF="how.html"
 >How do I use Bugzilla?</A
 ></DT
+><DD
+><DL
+><DT
+>4.3.1. <A
+HREF="how.html#MYACCOUNT"
+>Create a Bugzilla Account</A
+></DT
+><DT
+>4.3.2. <A
+HREF="how.html#QUERY"
+>The Bugzilla Query Page</A
+></DT
+><DT
+>4.3.3. <A
+HREF="how.html#BUGREPORTS"
+>Creating and Managing Bug Reports</A
+></DT
+><DD
+><DL
+><DT
+>4.3.3.1. <A
+HREF="how.html#BUG_WRITING"
+>Writing a Great Bug Report</A
+></DT
+><DT
+>4.3.3.2. <A
+HREF="how.html#BUG_MANAGE"
+>Managing your Bug Reports</A
+></DT
+></DL
+></DD
+></DL
+></DD
 ><DT
 >4.4. <A
 HREF="init4me.html"
 >What's in it for me?</A
 ></DT
+><DD
+><DL
+><DT
+>4.4.1. <A
+HREF="init4me.html#ACCOUNTSETTINGS"
+>Account Settings</A
+></DT
+><DT
+>4.4.2. <A
+HREF="init4me.html#EMAILSETTINGS"
+>Email Settings</A
+></DT
+><DD
+><DL
+><DT
+>4.4.2.1. <A
+HREF="init4me.html#NOTIFICATION"
+>Email Notification</A
+></DT
+><DT
+>4.4.2.2. <A
+HREF="init4me.html#NEWEMAILTECH"
+>New Email Technology</A
+></DT
+><DT
+>4.4.2.3. <A
+HREF="init4me.html#WATCHSETTINGS"
+>"Watching" Users</A
+></DT
+></DL
+></DD
+><DT
+>4.4.3. <A
+HREF="init4me.html#FOOTERSETTINGS"
+>Page Footer</A
+></DT
+><DT
+>4.4.4. <A
+HREF="init4me.html#PERMISSIONSETTINGS"
+>Permissions</A
+></DT
+></DL
+></DD
 ><DT
 >4.5. <A
 HREF="usingbz-conc.html"
@@ -295,59 +653,78 @@ HREF="faq.html"
 ></DT
 ><DT
 >B. <A
+HREF="downloadlinks.html"
+>Software Download Links</A
+></DT
+><DT
+>C. <A
 HREF="database.html"
 >The Bugzilla Database</A
 ></DT
 ><DD
 ><DL
 ><DT
->B.1. <A
+>C.1. <A
 HREF="dbschema.html"
 >Database Schema Chart</A
 ></DT
 ><DT
->B.2. <A
+>C.2. <A
 HREF="dbdoc.html"
 >MySQL Bugzilla Database Introduction</A
 ></DT
 ><DT
->B.3. <A
+>C.3. <A
 HREF="granttables.html"
 >MySQL Permissions &#38; Grant Tables</A
 ></DT
 ><DT
->B.4. <A
+>C.4. <A
 HREF="cleanupwork.html"
 >Cleaning up after mucking with Bugzilla</A
 ></DT
 ></DL
 ></DD
 ><DT
->C. <A
+>7. <A
+HREF="variants.html"
+>Bugzilla Variants</A
+></DT
+><DD
+><DL
+><DT
+>7.1. <A
+HREF="rhbugzilla.html"
+>Red Hat Bugzilla</A
+></DT
+></DL
+></DD
+><DT
+>D. <A
 HREF="patches.html"
 >Useful Patches and Utilities for Bugzilla</A
 ></DT
 ><DD
 ><DL
 ><DT
->C.1. <A
+>D.1. <A
 HREF="setperl.html"
->The setperl.pl Utility</A
+>The setperl.csh Utility</A
 ></DT
 ><DT
->C.2. <A
+>D.2. <A
 HREF="cmdline.html"
 >Command-line Bugzilla Queries</A
 ></DT
 ><DT
->C.3. <A
+>D.3. <A
 HREF="quicksearch.html"
 >The Quicksearch Utility</A
 ></DT
 ></DL
 ></DD
 ><DT
->D. <A
+>E. <A
 HREF="gfdl.html"
 >GNU Free Documentation License</A
 ></DT
@@ -431,53 +808,65 @@ CLASS="LOT"
 >List of Examples</B
 ></DT
 ><DT
+>2-1. <A
+HREF="readme.windows.html#AEN646"
+>Removing encrypt() for Windows NT installations</A
+></DT
+><DT
 >3-1. <A
-HREF="programadmin.html#AEN491"
+HREF="programadmin.html#AEN838"
 >Creating some Components</A
 ></DT
 ><DT
 >3-2. <A
-HREF="programadmin.html#AEN520"
+HREF="programadmin.html#AEN867"
 >Common Use of Versions</A
 ></DT
 ><DT
 >3-3. <A
-HREF="programadmin.html#AEN524"
+HREF="programadmin.html#AEN871"
 >A Different Use of Versions</A
 ></DT
 ><DT
 >3-4. <A
-HREF="programadmin.html#AEN552"
+HREF="programadmin.html#AEN899"
 >Using SortKey with Target Milestone</A
 ></DT
 ><DT
 >3-5. <A
-HREF="programadmin.html#AEN590"
+HREF="programadmin.html#AEN937"
 >When to Use Group Security</A
 ></DT
 ><DT
 >3-6. <A
-HREF="programadmin.html#AEN607"
+HREF="programadmin.html#AEN954"
 >Creating a New Group</A
 ></DT
 ><DT
 >4-1. <A
-HREF="how.html#AEN745"
+HREF="how.html#AEN1095"
 >Some Famous Software Versions</A
 ></DT
 ><DT
 >4-2. <A
-HREF="how.html#AEN755"
+HREF="how.html#AEN1105"
 >Mozilla Webtools Components</A
 ></DT
 ><DT
+>D-1. <A
+HREF="setperl.html#AEN1963"
+>Using Setperl to set your perl path</A
+></DT
+><DT
 >1. <A
-HREF="glossary.html#AEN1735"
+HREF="glossary.html#AEN2145"
 >A Sample Product</A
 ></DT
 ></DL
 ></DIV
-></DIV
+>] &#62;
+
+</DIV
 ><DIV
 CLASS="NAVFOOTER"
 ><HR

@@ -4,7 +4,7 @@
 >What is Bugzilla?</TITLE
 ><META
 NAME="GENERATOR"
-CONTENT="Modular DocBook HTML Stylesheet Version 1.61
+CONTENT="Modular DocBook HTML Stylesheet Version 1.64
 "><LINK
 REL="HOME"
 TITLE="The Bugzilla Guide"
@@ -77,11 +77,14 @@ NAME="WHATIS"
 >      Bugzilla is one example of a class of programs called "Defect Tracking Systems",
       or, more commonly, "Bug-Tracking Systems".  Defect Tracking Systems allow individual or
       groups of developers to keep track of outstanding bugs in their product effectively.
-      At the time Bugzilla was originally written, as a port from Netscape Communications'
-      "Bugsplat!" program to Perl from TCL, there were very few competitors in the market
-      for bug-tracking software.  Most commercial defect-tracking software vendors at the
-      time charged enormous licensing fees.  Bugzilla quickly became a favorite of the
-      open-source crowd (with its genesis in the open-source browser project, Mozilla) and
+      Bugzilla was originally written by Terry Weissman in a programming language called
+      "TCL", to replace a crappy
+      bug-tracking database used internally for Netscape Communications.  Terry later ported
+      Bugzilla to
+      Perl from TCL, and in Perl it remains to this day.
+      Most commercial defect-tracking software vendors at the
+      time charged enormous licensing fees, and Bugzilla quickly became a favorite of the
+      open-source crowd (with its genesis in the open-source browser project, Mozilla).  It
       is now the de-facto standard defect-tracking system against which all others are
       measured.
     </P
@@ -127,7 +130,8 @@ NAME="WHATIS"
 ></LI
 ><LI
 ><P
->	    integration with several automated software configuration management systems
+>	    available integration with automated software configuration management systems, including
+	    Perforce and CVS.
 	  </P
 ></LI
 ><LI
@@ -145,6 +149,12 @@ NAME="WHATIS"
       notifications, a powerful but daunting query interface, little reporting configurability,
       problems with extremely large queries, some unsupportable bug resolution options,
       no internationalization, and dependence on some nonstandard libraries.
+    </P
+><P
+>      Some recent headway has been made on the query front, however.  If you are using the latest
+      version of Bugzilla, you should see a "simple search" form on the default front page of
+      your Bugzilla install.  Type in two or three search terms and you should pull up some
+      relevant information.  This is also available as "queryhelp.cgi".
     </P
 ><P
 >      Despite these small problems, Bugzilla is very hard to beat.  It is under <EM

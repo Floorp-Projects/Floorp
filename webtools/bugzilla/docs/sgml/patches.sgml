@@ -4,15 +4,17 @@
   <title>Useful Patches and Utilities for Bugzilla</title>		
 
 <section id="setperl">
-    <title>The setperl.pl Utility</title>
+    <title>The setperl.csh Utility</title>
     <para>	
-      You can use the "setperl.pl" utility to quickly and easily
+      You can use the "setperl.csh" utility to quickly and easily
       change the path to perl on all your Bugzilla files.
+      This is a C-shell script; if you do not have "csh" or "tcsh" in the search
+      path on your system, it will not work!
     </para>	
     <procedure>
       <step>
 	<para>
-	  Download the "setperl.pl" utility to your Bugzilla
+	  Download the "setperl.csh" utility to your Bugzilla
 	  directory and make it executable.
 	</para>
 	<substeps>
@@ -28,7 +30,7 @@
 	  <para>
 	      <computeroutput>
 		<prompt>bash#</prompt>
-		<command>wget -O setperl.pl 'http://bugzilla.mozilla.org/showattachment.cgi?attach_id=10795'</command>
+		<command>wget -O setperl.csh 'http://bugzilla.mozilla.org/showattachment.cgi?attach_id=10795'</command>
 	      </computeroutput>
 	    </para>
 	  </step>
@@ -36,7 +38,7 @@
 	    <para>
 	      <computeroutput>
 		<prompt>bash#</prompt>
-		<command>chmod u+x setperl.pl</command>
+		<command>chmod u+x setperl.csh</command>
 	      </computeroutput>
 	    </para>
 	  </step>
@@ -80,8 +82,17 @@
 	<para>
 	  <computeroutput>
 	    <prompt>bash#</prompt>
-	    <command>./setperl.pl /your/path/to/perl</command>
+	    <command>./setperl.csh /your/path/to/perl</command>
 	  </computeroutput>
+<example>
+	    <title>Using Setperl to set your perl path</title>
+	    <para>
+	      <computeroutput>
+	      <prompt>bash#</prompt>
+	      <command>./setperl.csh /usr/bin/perl</command>
+	      </computeroutput>
+            </para>
+	  </example>
 	</para>
       </step>
     </procedure>
@@ -207,3 +218,20 @@
   </section>
 
 </appendix>
+<!-- Keep this comment at the end of the file
+Local variables:
+mode: sgml
+sgml-omittag:t
+sgml-shorttag:t
+sgml-namecase-general:t
+sgml-general-insert-case:lower
+sgml-minimize-attributes:nil
+sgml-always-quote-attributes:t
+sgml-indent-step:2
+sgml-indent-data:t
+sgml-parent-document:nil
+sgml-exposed-tags:nil
+sgml-local-catalogs:nil
+sgml-local-ecat-files:nil
+End:
+-->

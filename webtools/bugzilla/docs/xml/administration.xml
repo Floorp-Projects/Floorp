@@ -30,7 +30,7 @@ Chapter: Administration
 <PARA>
 So you followed the README isntructions to the letter, and
 just logged into bugzilla with your super-duper god account and you are sitting at the query
-screen. Yet, you have nothing to query. Your first act of bisuness needs to be to setup the
+screen. Yet, you have nothing to query. Your first act of business needs to be to setup the
 operating parameters for bugzilla.</PARA>
 
   <SECTION id="postinstall-check">
@@ -46,6 +46,14 @@ operating parameters for bugzilla.</PARA>
 	<PRIMARY>checklist</PRIMARY>
       </INDEXTERM>
     <PROCEDURE>
+      <STEP>
+	<PARA>
+	  Bring up "editparams.cgi" in your web browser.  For instance, to edit parameters
+	  at mozilla.org, the URL would be <ULINK URL="http://bugzilla.mozilla.org/editparams.cgi">
+	  http://bugzilla.mozilla.org/editparams.cgi</ULINK>, also available under the "edit parameters"
+	  link on your query page.
+	</PARA>
+      </STEP>
       <STEP>
 	<PARA>
 	  Set "maintainer" to <EMPHASIS>your</EMPHASIS> email address.
@@ -71,7 +79,7 @@ operating parameters for bugzilla.</PARA>
       </STEP>
       <STEP>
 	<PARA>
-	  Set "usebuggroupsentry" to "1" if you want to be able to restrict access to products.
+	  Set "usebuggroupsentry" to "1" if you want to restrict access to products.
 	  Once again, if you are simply testing your installation, I suggest against
 	  turning this parameter on; the strict security checking may stop you from
 	  being able to modify your new entries.
@@ -99,18 +107,22 @@ operating parameters for bugzilla.</PARA>
 	  attempting to commit a change to the database.
         </PARA>
 	<PARA>
-	  If you use the "shadowdb" option, it is only natural that you should turn the "queryagainstshadowdb"
+	  If you use the "shadowdb" option,
+	  it is only natural that you should turn the "queryagainstshadowdb"
 	  option "On" as well.  Otherwise you are replicating data into a shadow database for no reason!
 	</PARA>
       </STEP>
       <STEP>
         <PARA>
 	  If you have custom logos or HTML you must put in place to fit within your site design guidelines,
-	  place the code in the "headerhtml", "footerhtml", "errorhtml", "bannerhtml", or "blurbhtml" text boxes.
+	  place the code in the "headerhtml", "footerhtml", "errorhtml",
+	  "bannerhtml", or "blurbhtml" text boxes.
 	  <NOTE>
 	    <PARA>
-	      The "headerhtml" text box is the HTML printed out <EMPHASIS>before</EMPHASIS> any other code on the page.
-	      If you have a special banner, put the code for it in "bannerhtml".  You may want to leave these
+	      The "headerhtml" text box is the HTML printed out
+	      <EMPHASIS>before</EMPHASIS> any other code on the page.
+	      If you have a special banner, put the code for it in "bannerhtml".
+	      You may want to leave these
 	      settings at the defaults initially.
 	    </PARA>
 	  </NOTE>
@@ -125,27 +137,33 @@ operating parameters for bugzilla.</PARA>
       </STEP>
       <STEP>
         <PARA>
-	  Set "newemailtech" to "on".  Your users will thank you.  This is the default in the post-2.12 world.
+	  Ensure "newemailtech" is "on".
+	  Your users will thank you.  This is the default in the post-2.12 world, and is
+	  only an issue if you are upgrading.
 	</PARA>
       </STEP>
       <STEP>
 	<PARA>
-	  Do you want to use the qa contact ("useqacontact") and status whiteboard ("usestatuswhiteboard") fields?
-	  These fields are useful because they allow for more flexibility, particularly when you have an existing
+	  Do you want to use the qa contact ("useqacontact")
+	  and status whiteboard ("usestatuswhiteboard") fields?
+	  These fields are useful because they allow for more flexibility,
+	  particularly when you have an existing
 	  Quality Assurance and/or Release Engineering team, 
 	  but they may not be needed for smaller installations.
 	</PARA>
       </STEP>
       <STEP>
 	<PARA>
-	  Set "whinedays" to the amount of days you want to let bugs go in the "New" or "Reopened" state before
+	  Set "whinedays" to the amount of days you want to let bugs go
+	  in the "New" or "Reopened" state before
 	  notifying people they have untouched new bugs.  If you do not plan to use this feature, simply do
 	  not set up the whining cron job described in the README, or set this value to "0".
 	</PARA>
       </STEP>
       <STEP>
 	<PARA>
-	  Set the "commenton" options according to your site policy.  It is a wise idea to require comments when users
+	  Set the "commenton" options according to your site policy.
+	  It is a wise idea to require comments when users
 	  resolve, reassign, or reopen bugs.
 	  <NOTE>
 	    <PARA>
@@ -456,9 +474,6 @@ operating parameters for bugzilla.</PARA>
 	Dear Lord, we have to get our users to do WHAT?
       </PARA>
     </EPIGRAPH>
-    <REMARK>
-      Many thanks to Zach Lipton for his contributions to this section
-    </REMARK>
 
     <SECTION id="products">
       <TITLE>Products</TITLE>
@@ -1033,15 +1048,17 @@ operating parameters for bugzilla.</PARA>
 	</LISTITEM>
 	<LISTITEM>
 	  <PARA>
-	    Ensure you have adequate access controls for $BUGZILLA_HOME/data/ and $BUGZILLA_HOME/localconfig.
-	    The localconfig file stores your "bugs" user password, which would be terrible to have in the hands
+	    Ensure you have adequate access controls for $BUGZILLA_HOME/data/, $BUGZILLA_HOME/localconfig,
+	    and $BUGZILLA_HOME/shadow directories.
+	    The localconfig file stores your "bugs" user password,
+	    which would be terrible to have in the hands
 	    of a criminal.  Also some files under $BUGZILLA_HOME/data store sensitive information.
 	  </PARA>
 	  <PARA>
 	    On Apache, you can use .htaccess files to protect access to these directories, as outlined
 	    in <ULINK URL="http://bugzilla.mozilla.org/show_bug.cgi?id=57161">Bug 57161</ULINK> for the
 	    localconfig file, and <ULINK URL="http://bugzilla.mozilla.org/show_bug.cgi?id=65572">
-	    Bug 65572</ULINK> for adequate protection in your data/ and shadow/ directories. 
+	    Bug 65572</ULINK> for adequate protection in your data/ and shadow/ directories.
 	  </PARA>
 	  <PARA>
 	    Note the instructions which follow are Apache-specific.  If you use IIS, Netscape, or other
@@ -1076,12 +1093,6 @@ operating parameters for bugzilla.</PARA>
 	    </LITERALLAYOUT>
 	  </PARA>
 	</LISTITEM>
-	<LISTITEM>
-	  <PARA>
-	    
-	  </PARA>
-	</LISTITEM>
-
       </ORDEREDLIST>
     </PARA>
   </SECTION>

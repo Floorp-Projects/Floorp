@@ -4,7 +4,7 @@
 >Bugzilla Security</TITLE
 ><META
 NAME="GENERATOR"
-CONTENT="Modular DocBook HTML Stylesheet Version 1.61
+CONTENT="Modular DocBook HTML Stylesheet Version 1.64
 "><LINK
 REL="HOME"
 TITLE="The Bugzilla Guide"
@@ -172,8 +172,10 @@ TARGET="_top"
 ></LI
 ><LI
 ><P
->	    Ensure you have adequate access controls for $BUGZILLA_HOME/data/ and $BUGZILLA_HOME/localconfig.
-	    The localconfig file stores your "bugs" user password, which would be terrible to have in the hands
+>	    Ensure you have adequate access controls for $BUGZILLA_HOME/data/, $BUGZILLA_HOME/localconfig,
+	    and $BUGZILLA_HOME/shadow directories.
+	    The localconfig file stores your "bugs" user password,
+	    which would be terrible to have in the hands
 	    of a criminal.  Also some files under $BUGZILLA_HOME/data store sensitive information.
 	  </P
 ><P
@@ -187,7 +189,7 @@ TARGET="_top"
 HREF="http://bugzilla.mozilla.org/show_bug.cgi?id=65572"
 TARGET="_top"
 >	    Bug 65572</A
-> for adequate protection in your data/ and shadow/ directories. 
+> for adequate protection in your data/ and shadow/ directories.
 	  </P
 ><P
 >	    Note the instructions which follow are Apache-specific.  If you use IIS, Netscape, or other
@@ -226,11 +228,6 @@ CLASS="LITERALLAYOUT"
 >	&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;deny&nbsp;from&nbsp;all<br>
 	&nbsp;&nbsp;&nbsp;&nbsp;</P
 >
-	  </P
-></LI
-><LI
-><P
->	    
 	  </P
 ></LI
 ></OL

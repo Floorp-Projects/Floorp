@@ -41,11 +41,14 @@ Chapter: Using Bugzilla
       Bugzilla is one example of a class of programs called "Defect Tracking Systems",
       or, more commonly, "Bug-Tracking Systems".  Defect Tracking Systems allow individual or
       groups of developers to keep track of outstanding bugs in their product effectively.
-      At the time Bugzilla was originally written, as a port from Netscape Communications'
-      "Bugsplat!" program to Perl from TCL, there were very few competitors in the market
-      for bug-tracking software.  Most commercial defect-tracking software vendors at the
-      time charged enormous licensing fees.  Bugzilla quickly became a favorite of the
-      open-source crowd (with its genesis in the open-source browser project, Mozilla) and
+      Bugzilla was originally written by Terry Weissman in a programming language called
+      "TCL", to replace a crappy
+      bug-tracking database used internally for Netscape Communications.  Terry later ported
+      Bugzilla to
+      Perl from TCL, and in Perl it remains to this day.
+      Most commercial defect-tracking software vendors at the
+      time charged enormous licensing fees, and Bugzilla quickly became a favorite of the
+      open-source crowd (with its genesis in the open-source browser project, Mozilla).  It
       is now the de-facto standard defect-tracking system against which all others are
       measured.
     </para>
@@ -89,7 +92,8 @@ Chapter: Using Bugzilla
 	</listitem>
 	<listitem>
 	  <para>
-	    integration with several automated software configuration management systems
+	    available integration with automated software configuration management systems, including
+	    Perforce and CVS.
 	  </para>
 	</listitem>
 	<listitem>
@@ -106,6 +110,12 @@ Chapter: Using Bugzilla
       notifications, a powerful but daunting query interface, little reporting configurability,
       problems with extremely large queries, some unsupportable bug resolution options,
       no internationalization, and dependence on some nonstandard libraries.
+    </para>
+    <para>
+      Some recent headway has been made on the query front, however.  If you are using the latest
+      version of Bugzilla, you should see a "simple search" form on the default front page of
+      your Bugzilla install.  Type in two or three search terms and you should pull up some
+      relevant information.  This is also available as "queryhelp.cgi".
     </para>
     <para>
       Despite these small problems, Bugzilla is very hard to beat.  It is under <emphasis>very</emphasis>
@@ -147,7 +157,7 @@ Chapter: Using Bugzilla
       Bugzilla is very adaptable to various situations.  Known uses currently
       include IT support queues, Systems Administration deployment management,
       chip design and development problem tracking (both pre-and-post fabrication),
-      and software bug tracking for luminaries such as Redhat, Loki software,
+      and software and hardware bug tracking for luminaries such as Redhat, Loki software,
       Linux-Mandrake, and VA Systems.  Combined with systems such as CVS, Bonsai,
       or Perforce SCM, Bugzilla provides a powerful, easy-to-use  solution to
       configuration management and replication problems
@@ -178,7 +188,7 @@ Chapter: Using Bugzilla
     </epigraph>
     
     <para>
-      Bugzilla is a large and complex system.  Describing how to use it
+      Bugzilla is a large, complex system.  Describing how to use it
       requires some time.  If you are only interested in installing or administering
       a Bugzilla installation, please consult the Installing and Administering
       Bugzilla portions of this Guide.  This section is principally aimed towards
@@ -190,11 +200,24 @@ Chapter: Using Bugzilla
       options available at the Bugzilla test installation,
       <ulink url="http://landfill.tequilarista.org/">
       landfill.tequilarista.org</ulink>.
+      <note>
+	<para>
+	  Some people have run into difficulties completing this tutorial.  If
+	  you run into problems, please check the updated, online documentation available
+	  at <ulink url="http://www.trilobyte.net/barnsons/">http://www.trilobyte.net/barnsons</ulink>.
+	  If you're still stumped, please subscribe to the newsgroup and provide details of exactly
+	  what's stumping you!  If enough people complain, I'll have to fix it in the next
+	  version of this Guide.  You can subscribe to the newsgroup at
+	  <ulink url="news://news.mozilla.org/netscape.public.mozilla.webtools">
+	  news://news.mozilla.org/netscape.public.mozilla.webtools</ulink>
+	</para>
+ 
+      </note>
       Although Landfill serves as a great introduction to Bugzilla, it does not offer
       all the options you would have as a user on your own installation of Bugzilla,
-      nor can it do more than serve as a general introduction to Bugzilla.
-  However, please use it if you want to
-      follow this tutorial.
+      nor can it do more than serve as a general introduction to Bugzilla.  Additionally,
+      Landfill often runs cutting-edge versions of Bugzilla for testing, so some things
+      may work slightly differently than mentioned here.
     </para>
     
     <section id="myaccount">
@@ -714,6 +737,14 @@ Chapter: Using Bugzilla
       <title>Email Settings</title>
       <section id="notification">
 	<title>Email Notification</title>
+	<note>
+	  <para>
+	    The email notification settings described below have been obsoleted in Bugzilla 2.12, and
+	    this section will be replaced with a comprehensive description of the amazing array of 
+	    new options at your disposal.  However, in the meantime, throw this chunk out the window
+	    and go crazy with goofing around with different notification options.
+	  </para>
+	</note>
 	<para>
 	  Ahh, here you can reduce or increase the amount of email sent you from Bugzilla!
 	  In the drop-down "Notify me of changes to", select one of

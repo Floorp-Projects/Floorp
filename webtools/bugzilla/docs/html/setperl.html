@@ -1,10 +1,10 @@
 <HTML
 ><HEAD
 ><TITLE
->The setperl.pl Utility</TITLE
+>The setperl.csh Utility</TITLE
 ><META
 NAME="GENERATOR"
-CONTENT="Modular DocBook HTML Stylesheet Version 1.61
+CONTENT="Modular DocBook HTML Stylesheet Version 1.64
 "><LINK
 REL="HOME"
 TITLE="The Bugzilla Guide"
@@ -51,7 +51,7 @@ HREF="patches.html"
 WIDTH="80%"
 ALIGN="center"
 VALIGN="bottom"
->Appendix C. Useful Patches and Utilities for Bugzilla</TD
+>Appendix D. Useful Patches and Utilities for Bugzilla</TD
 ><TD
 WIDTH="10%"
 ALIGN="right"
@@ -71,12 +71,14 @@ CLASS="SECTION"
 CLASS="SECTION"
 ><A
 NAME="SETPERL"
->C.1. The setperl.pl Utility</A
+>D.1. The setperl.csh Utility</A
 ></H1
 ><P
 >	
-      You can use the "setperl.pl" utility to quickly and easily
+      You can use the "setperl.csh" utility to quickly and easily
       change the path to perl on all your Bugzilla files.
+      This is a C-shell script; if you do not have "csh" or "tcsh" in the search
+      path on your system, it will not work!
     </P
 ><DIV
 CLASS="PROCEDURE"
@@ -84,7 +86,7 @@ CLASS="PROCEDURE"
 TYPE="1"
 ><LI
 ><P
->	  Download the "setperl.pl" utility to your Bugzilla
+>	  Download the "setperl.csh" utility to your Bugzilla
 	  directory and make it executable.
 	</P
 ><OL
@@ -116,7 +118,7 @@ CLASS="PROMPT"
 >
 		<B
 CLASS="COMMAND"
->wget -O setperl.pl 'http://bugzilla.mozilla.org/showattachment.cgi?attach_id=10795'</B
+>wget -O setperl.csh 'http://bugzilla.mozilla.org/showattachment.cgi?attach_id=10795'</B
 >
 	      </TT
 >
@@ -132,7 +134,7 @@ CLASS="PROMPT"
 >
 		<B
 CLASS="COMMAND"
->chmod u+x setperl.pl</B
+>chmod u+x setperl.csh</B
 >
 	      </TT
 >
@@ -210,9 +212,34 @@ CLASS="PROMPT"
 >
 	    <B
 CLASS="COMMAND"
->./setperl.pl /your/path/to/perl</B
+>./setperl.csh /your/path/to/perl</B
 >
 	  </TT
+>
+<DIV
+CLASS="EXAMPLE"
+><A
+NAME="AEN1963"
+></A
+><P
+><B
+>Example D-1. Using Setperl to set your perl path</B
+></P
+><P
+>	      <TT
+CLASS="COMPUTEROUTPUT"
+>	      <TT
+CLASS="PROMPT"
+>bash#</TT
+>
+	      <B
+CLASS="COMMAND"
+>./setperl.csh /usr/bin/perl</B
+>
+	      </TT
+>
+            </P
+></DIV
 >
 	</P
 ></LI

@@ -272,7 +272,14 @@
 
     <qandadiv id="faq_redhat">
       <title>Red Hat Bugzilla</title>
-
+      <para>
+	<note>
+	  <para>
+	    <emphasis>This section is no longer up-to-date.</emphasis>
+	    Please see the section on "Red Hat Bugzilla" under "Variants" in The Bugzilla Guide.
+	  </para>
+	</note>
+      </para>
       <qandaentry>
 	<question>
 	  <para>
@@ -430,7 +437,8 @@
 	    <note>
 	      <para>
 		This information is somewhat dated; I last updated it
-		7 June 2000.
+		7 June 2000.  Please see the "Variants" section of "The Bugzilla Guide"
+		for more up-to-date information regarding Red Hat Bugzilla.
 	      </para>
 	    </note>
 	    <emphasis>Dave Lawrence</emphasis>:
@@ -465,7 +473,7 @@
 		thing going to help others that may need it.
 	      </para>
 	      <para>
-		     As Matt has mentioned it is still using out-dated code and with a
+		As Matt has mentioned it is still using out-dated code and with a
 		little help I would like to bring everything up to date for
 		eventual  incorporation with the main cvs tree. Due to other
 		duties I have with the company any help with this wiould be
@@ -490,16 +498,21 @@
 
     <qandadiv id="faq_loki">
       <title>Loki Bugzilla (AKA Fenris)</title>
-      <note>
-	<para>
-	  Loki's "Fenris" Bugzilla is no longer actively maintained.
-	  It works well enough for Loki.  Additionally, the major
-	  differences in Fenris have now been integrated into
-	  the main source tree of Bugzilla, so there's not much
-	  reason to go grab the source.  I left this section of the
-	  FAQ principally for historical interest.
-	</para>
-      </note>
+      <para>
+	<note>
+	  <para>
+	    Loki's "Fenris" Bugzilla is based upon the (now ancient) Bugzilla 2.8
+	    tree, and is no longer actively maintained.
+	    It works well enough for Loki.  Additionally, the major
+	    differences in Fenris have now been integrated into
+	    the main source tree of Bugzilla, so there's not much
+	    reason to go grab the source.  I leave this section of the
+	    FAQ principally for historical interest, but unless Loki has further
+	    input into Bugzilla's future, it will be deprecated in future versions
+	    of the Guide.
+	  </para>
+	</note>
+      </para>
 
       <qandaentry>
 	<question>
@@ -558,12 +571,14 @@
 
     <qandadiv id="faq_phb">
       <title>Pointy-Haired-Boss Questions</title>
-      <note>
-	<para>
-	  The title of this section doesn't mean you're a PHB -- it just means
-	  you probably HAVE a PHB who wants to know this :)
-	</para>
-      </note>
+      <para>
+	<note>
+	  <para>
+	    The title of this section doesn't mean you're a PHB -- it just means
+	    you probably HAVE a PHB who wants to know this :)
+	  </para>
+	</note>
+      </para>
 
       <qandaentry>
 	<question>
@@ -1228,7 +1243,7 @@
 	    is unavailable.
 	  </para>
 	  <para>
-	    This is now a configurable parameter called "sendmailparm", available
+	    This is now a configurable parameter called "sendmailnow", available
 	    from editparams.cgi.
 	  </para>
 	</answer>
@@ -1760,6 +1775,26 @@ A: Sure! Here ya go!
 	      Bugzilla Project Page</ulink> for details on how to
 	    check current sources out of CVS so you can have these
 	    bug fixes early!
+	  </para>
+	</answer>
+      </qandaentry>
+
+      <qandaentry>
+	<question>
+	  <para>
+	    How can I change the default priority to a null value?  For instance, have the default
+	    priority be "---" instead of "P2"?
+	  </para>
+	</question>
+	<answer>
+	  <para>
+	    This is well-documented here: <ulink url="http://bugzilla.mozilla.org/show_bug.cgi?id=49862">
+	    http://bugzilla.mozilla.org/show_bug.cgi?id=49862</ulink>.  Ultimately, it's as easy
+	    as adding the "---" priority field to your localconfig file in the appropriate area,
+	    re-running checksetup.pl, and then changing the default priority in your browser using
+	    "editparams.cgi".  Hmm, now that I think about it, that is kind of a klunky way to handle
+	    it, but for now it's what we have!  Although the bug has been closed "resolved wontfix",
+	    there may be a better way to handle this...
 	  </para>
 	</answer>
       </qandaentry>

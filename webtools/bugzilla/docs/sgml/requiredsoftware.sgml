@@ -1,0 +1,82 @@
+<!DOCTYPE appendix PUBLIC "-//OASIS//DTD DocBook V4.1//EN">
+
+<appendix id="downloadlinks">
+  <title>Software Download Links</title>
+  <para>
+    All of these sites are current as of April, 2001.  Hopefully
+    they'll stay current for a while.
+  </para>
+  <para>
+    Apache Web Server: <ulink url="http://www.apache.org/">http://www.apache.org</ulink>
+    Optional web server for Bugzilla, but recommended because of broad user base and support.
+  </para>
+  <para>
+    Bugzilla: <ulink url="http://www.mozilla.org/projects/bugzilla/">
+      http://www.mozilla.org/projects/bugzilla/</ulink>
+  </para>
+  <para>
+    MySQL: <ulink url="http://www.mysql.org/">http://www.mysql.org/</ulink>
+  </para>
+  <para>
+    Perl: <ulink url="http://www.perl.org">http://www.perl.org/</ulink>
+  </para>
+  <para>
+    CPAN: <ulink url="http://www.cpan.org/">http://www.cpan.org/</ulink>
+  </para>
+  <para>
+    DBI Perl module: 
+    <ulink url="ftp://ftp.cpan.org/pub/perl/CPAN/modules/by-module/DBI/">
+      ftp://ftp.cpan.org/pub/perl/CPAN/modules/by-module/DBI/</ulink>
+  </para>
+  <para>
+    Data::Dumper module: 
+    <ulink url="ftp://ftp.cpan.org/pub/perl/CPAN/modules/by-module/Data/">
+      ftp://ftp.cpan.org/pub/perl/CPAN/modules/by-module/Data/</ulink>
+  </para>
+  <para>
+    MySQL related Perl modules:
+    <ulink url="ftp://ftp.cpan.org/pub/perl/CPAN/modules/by-module/Mysql/">
+      ftp://ftp.cpan.org/pub/perl/CPAN/modules/by-module/Mysql/</ulink>
+  </para>
+  <para>
+    TimeDate Perl module collection:
+    <ulink url="ftp://ftp.cpan.org/pub/perl/CPAN/modules/by-module/Date/">
+      ftp://ftp.cpan.org/pub/perl/CPAN/modules/by-module/Date/</ulink>
+  </para>
+  <para>
+    GD Perl module:
+    <ulink url="ftp://ftp.cpan.org/pub/perl/CPAN/modules/by-module/GD/">
+      ftp://ftp.cpan.org/pub/perl/CPAN/modules/by-module/GD/</ulink>
+    Alternately, you should be able to find the latest version of
+    GD at <ulink url="http://www.boutell.com/gd/">http://www.boutell.com/gd/</ulink>
+  </para>
+  <para>
+    Chart::Base module:
+    <ulink url="ftp://ftp.cpan.org/pub/perl/CPAN/modules/by-module/Chart/">
+    ftp://ftp.cpan.org/pub/perl/CPAN/modules/by-module/Chart/</ulink>
+  </para>
+  <para>
+    LinuxDoc Software: 
+    <ulink url="http://www.linuxdoc.org/">http://www.linuxdoc.org/</ulink>
+    (for documentation maintenance)
+  </para>
+
+</appendix>
+
+<!-- Keep this comment at the end of the file
+Local variables:
+mode: sgml
+sgml-omittag:t
+sgml-shorttag:t
+sgml-namecase-general:t
+sgml-general-insert-case:lower
+sgml-minimize-attributes:nil
+sgml-always-quote-attributes:t
+sgml-indent-step:2
+sgml-indent-data:t
+sgml-parent-document:nil
+sgml-exposed-tags:nil
+sgml-local-catalogs:nil
+sgml-local-ecat-files:nil
+End:
+-->

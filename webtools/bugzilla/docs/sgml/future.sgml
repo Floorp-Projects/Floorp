@@ -2,7 +2,7 @@
 
 <chapter id="future">
   <title>The Future of Bugzilla</title>
-  <synopsis>This section largely contributed by Matthew Tuck</synopsis>
+  <synopsis>Bugzilla's Future.  Much of this is the present, now.</synopsis>
   <section id="spamlite">
     <title>Reducing Spam</title>
     <para><literallayout>
@@ -51,6 +51,10 @@ dependency and keyword changes, for example.
 
 Both of these proposals live at
 "http://bugzilla.mozilla.org/show_bug.cgi?id=14137".
+Note that they also live at
+"http://bugzilla.mozilla.org/show_bug.cgi?id=17464", and the change 
+has been checked in.  This is fixed with Bugzilla 2.12 and is no longer
+an issue.  Woo-Hoo!
 </literallayout></para>
   </section>
 

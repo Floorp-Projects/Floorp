@@ -1,10 +1,10 @@
-<!-- <!DOCTYPE appendix PUBLIC "-//OASIS//DTD DocBook V4.1//EN"> -->
+<!DOCTYPE appendix PUBLIC "-//OASIS//DTD DocBook V4.1//EN">
 
 <APPENDIX id="database">
 
 <TITLE>The Bugzilla Database</TITLE>
 <NOTE>
-<PARA>This document really needs to be updated with more fleshed out information about primary keys, interrelationships, and maybe some nifty tables to document dependencies.  Any takers? <REMARK>MPB</REMARK></PARA>
+<PARA>This document really needs to be updated with more fleshed out information about primary keys, interrelationships, and maybe some nifty tables to document dependencies.  Any takers?</PARA>
 </NOTE>
   <SECTION id="dbschema">
     <TITLE>Database Schema Chart</TITLE>
@@ -405,7 +405,13 @@ http://www.devshed.com/Server_Side/MySQL/
     <TITLE>MySQL Permissions & Grant Tables</TITLE>
 
     <NOTE>
-      <PARA>The following portion of documentation comes from my answer to an old discussion of Keynote, a cool product that does trouble-ticket tracking for IT departments.  I wrote this post to the Keynote support group regarding MySQL grant table permissions, and how to use them effectively.  It is badly in need of updating, as I believe MySQL has added a field or two to the grant tables since this time, but it serves as a decent introduction and troubleshooting document for grant table issues.  I used Keynote to track my troubles until I discovered Bugzilla, which gave me a whole new set of troubles to work on : )</PARA>
+      <PARA>The following portion of documentation comes from my answer to an old discussion of Keystone,
+	a cool product that does trouble-ticket tracking for IT departments.  I wrote this post to the 
+	Keystone support group regarding MySQL grant table permissions, and how to use them effectively.
+	It is badly in need of updating, as I believe MySQL has added a field or two to the grant tables 
+	since this time, but it serves as a decent introduction and troubleshooting document for grant
+	table issues.  I used Keynote to track my troubles until I discovered Bugzilla,
+	which gave me a whole new set of troubles to work on : )</PARA>
     </NOTE>
 
     <LITERALLAYOUT>
@@ -589,7 +595,7 @@ NEW CONTACT INFORMATION:
   <SECTION id="cleanupwork">
     <TITLE>Cleaning up after mucking with Bugzilla</TITLE>
     <LITERALLAYOUT>
-Contributed by Eric Hansen:
+Contributed by Eric Hanson:
 There are several things, and one trick.  There is a small tiny piece of
 documentation I saw once that said something very important.
 1)  After pretty much any manual working of the Mysql db, you must

@@ -16,6 +16,7 @@
 <!ENTITY database SYSTEM "database.sgml">
 <!ENTITY patches SYSTEM "patches.sgml">
 <!ENTITY variants SYSTEM "variants.sgml">
+<!ENTITY requiredsoftware SYSTEM "requiredsoftware.sgml">
 
 ]>
 
@@ -58,7 +59,7 @@ http://www.linuxdoc.org/LDP/LDP-Author-Guide/tools-hints.html
 
   <BOOKINFO>
     <TITLE>The Bugzilla Guide</TITLE>
-    <PUBDATE>v2.11.1, 06 March 2001</PUBDATE>
+    <PUBDATE>v2.12.0, 24 April 2001</PUBDATE>
     <AUTHOR>
       <FIRSTNAME>Matthew</FIRSTNAME>
       <OTHERNAME>P.</OTHERNAME>
@@ -84,6 +85,7 @@ http://www.linuxdoc.org/LDP/LDP-Author-Guide/tools-hints.html
       <revision>
 	<revnumber>2.11.1</revnumber>
 	<date>06 March 2001</date>
+	<authorinitials>MPB</authorinitials>
 	<revremark>
 	  Took way too long to revise this for 2.12 release.
 	  Updated FAQ to use qandaset tags instead of literallayout,
@@ -91,6 +93,20 @@ http://www.linuxdoc.org/LDP/LDP-Author-Guide/tools-hints.html
 	  miscellaneous FAQ updates and third-party integration information.
 	  From this point on all new tags are lowercase in preparation for the
 	  2.13 release of the Guide in XML format instead of SGML.
+	</revremark>
+      </revision>
+
+      <revision>
+	<revnumber>2.12.0</revnumber>
+	<date>24 April 2001</date>
+	<authorinitials>MPB</authorinitials>
+	<revremark>
+	  Things fixed this release: Elaborated on queryhelp interface, added FAQ regarding
+	  moving bugs from one keyword to another, clarified possible problems with the Landfill
+	  tutorial, fixed a boatload of typos and unclear sentence structures.  Incorporated the
+	  README into the UNIX installation section, and changed the README to indicate the deprecated
+	  status.  Things I know need work:  Used "simplelist" a lot, where I should have used
+	  "procedure" to tag things.  Need to lowercase all tags to be XML compliant.
 	</revremark>
       </revision>
     </REVHISTORY>
@@ -128,6 +144,9 @@ http://www.linuxdoc.org/LDP/LDP-Author-Guide/tools-hints.html
 
 <!-- Appendix: The Frequently Asked Questions -->
 &faq;
+
+<!-- Appendix: Required Bugzilla Software Links -->
+&requiredsoftware
 
 <!-- Appendix: The Database Schema -->
 &database;
