@@ -1121,7 +1121,7 @@ nsDOMClassInfo::DefineStaticJSVals(JSContext *cx)
   SET_JSVAL_TO_STRING(sLength_id,          cx, "length");
   SET_JSVAL_TO_STRING(sInnerHeight_id,     cx, "innerHeight");
   SET_JSVAL_TO_STRING(sInnerWidth_id,      cx, "innerWidth");
-  SET_JSVAL_TO_STRING(sOuterHeight_id,     cx, "outerWidth");
+  SET_JSVAL_TO_STRING(sOuterHeight_id,     cx, "outerHeight");
   SET_JSVAL_TO_STRING(sOuterWidth_id,      cx, "outerWidth");
   SET_JSVAL_TO_STRING(sScreenX_id,         cx, "screenX");
   SET_JSVAL_TO_STRING(sScreenY_id,         cx, "screenY");
