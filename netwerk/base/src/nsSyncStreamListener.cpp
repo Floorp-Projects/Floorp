@@ -116,8 +116,17 @@ nsSyncStreamListener::OnDataAvailable(nsIRequest     *request,
     PRUint32 bytesWritten;
 
     nsresult rv = mPipeOut->WriteFrom(stream, count, &bytesWritten);
+
+    // if we get an error, then return failure.  this will cause the
+    // channel to be canceled, and as a result our OnStopRequest method
+    // will be called immediately.  because of this we do not need to
+    // set mStatus or mKeepWaiting here.
     if (NS_FAILED(rv))
         return rv;
+
+    // we expect that all data will be written to the pipe because
+    // the pipe was created to have "infinite" room.
+    NS_ASSERTION(bytesWritten == count, "did not write all data"); 
 
     mKeepWaiting = PR_FALSE; // unblock Read
     return NS_OK;
