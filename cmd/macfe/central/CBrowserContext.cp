@@ -1105,7 +1105,13 @@ void CBrowserContext::AllConnectionsComplete(void)
 		LO_InvalidateFontData(*this);
 		this->Repaginate();
 	}
-		
+	else if (mContext.requires_reflow)
+	{
+		// Okay, we've blasted over an image with no width or height, so
+		// now we have to pay our dues and reflow the page.
+		mContext.requires_reflow = PR_FALSE;
+		LO_RelayoutFromElement(*this, NULL);
+	}
 }
 
 
