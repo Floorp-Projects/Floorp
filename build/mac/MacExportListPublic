@@ -24,7 +24,8 @@
 ###################
 
 #INCLUDE
-mozilla:config:mac:export.mac						:config
+## mozilla:config:mac needs to be added to the MozillaSourceMac module
+#mozilla:config:mac:export.mac						:config
 mozilla:include:export.mac							:include
 mozilla:cmd:macfe:pch:export.mac					:include
 
