@@ -23,7 +23,7 @@
 // Global functions and data [declaration]
 
 static PRUint16 g_Latin1MappingTable[] = {
-#include "8859-1.ut"
+#include "cp1252.ut"
 };
 
 static PRInt16 g_Latin1ShiftTable[] =  {
