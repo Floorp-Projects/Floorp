@@ -40,8 +40,8 @@
 # Contributor(s): 
 
 
-# $Revision: 1.21 $ 
-# $Date: 2002/05/02 04:12:40 $ 
+# $Revision: 1.22 $ 
+# $Date: 2002/05/02 23:57:16 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/TinderDB/VC_Bonsai.pm,v $ 
 # $Name:  $ 
@@ -93,6 +93,7 @@ use lib '#tinder_libdir#';
 
 use TinderHeader;
 use BonsaiData;
+use BTData;
 use TinderDB::BasicTxtDB;
 use Utils;
 use HTMLPopUp;
@@ -100,13 +101,16 @@ use TreeData;
 use VCDisplay;
 
 
-$VERSION = ( qw $Revision: 1.21 $ )[1];
+$VERSION = ( qw $Revision: 1.22 $ )[1];
 
 @ISA = qw(TinderDB::BasicTxtDB);
 
 # name of the version control system
-$VC_NAME = $TinderDB::VC_NAME || "CVS";
+$VC_NAME = $TinderConfig::VC_NAME || "CVS";
 
+# how we recoginise bug number in the checkin comments.
+$VC_BUGNUM_REGEXP = $TinderConfig::VC_BUGNUM_REGEXP ||
+    "(\d\d\d+)";
 
 # remove all records from the database which are older then last_time.
 
@@ -403,11 +407,25 @@ sub status_table_row {
 
   my $cell_options;
   my $text_browser_color_string;
+  my $empty_cell_contents = $HTMLPopUp::EMPTY_TABLE_CELL;
+  
   if ( ($LAST_TREESTATE) && ($cell_color) ) {
        $cell_options = "bgcolor=$cell_color ";
 
        $text_browser_color_string = 
          HTMLPopUp::text_browser_color_string($cell_color, $char);
+
+       # for those who like empty cells to be truely empty, we need to
+       # be sure that they see the different cell colors when they
+       # change.
+
+       if (
+           ($cell_color !~ m/white/) &&
+           (!($text_browser_color_string)) &&
+           (!($empty_cell_contents) &&
+            ) {
+               $empty_cell_contents = "&nbsp;";
+           }
   }
 
   my $query_links = '';
@@ -458,12 +476,16 @@ sub status_table_row {
                  "<th>Log</th>".
                  "</tr>\n".
                  "");
-      
+
+      my @bug_numbers;
       # sort numerically descending
       foreach $time ( sort {$b <=> $a} keys %{ $authors{$author} }) {
         foreach $file (keys %{ $authors{$author}{$time}}) {
           $num_rows++;
           my ($log) = $authors{$author}{$time}{$file};
+          if ($log =~ m/$VC_BUGNUM_REGEXP/) {
+              push @bug_numbers, $1;
+          }
           $max_length = main::max(
                                   $max_length , 
                                   (length($file) + length($log)),
@@ -479,8 +501,10 @@ sub status_table_row {
       }
       $table .= "</table>";
 
-      # Do not display the full mail address in the status column, it
-      # takes up too much space.  Keep only the user name.
+      # This is a Netscape specific CVS/Bonsai issue. Most users do
+      # not have '%' in their CVS names. Do not display the full mail
+      # address in the status column, it takes up too much space.
+      # Keep only the user name.
 
       my $display_author=$author;
       $display_author =~ s/\%.*//;
@@ -492,7 +516,6 @@ sub status_table_row {
       # the group of links.
 
       my (%popup_args) = (
-                          "linktxt" => "\t\t<tt>$display_author</tt>",
                           
                           "windowtxt" => $table,
                           "windowtitle" => ("$VC_NAME Info ".
@@ -520,7 +543,8 @@ sub status_table_row {
         $query_link .= 
           HTMLPopUp::Link(
                           "href" => "mailto: $mailto_author",
-                          
+                          "linktxt" => "\t\t<tt>$display_author</tt>",
+
                           %popup_args,
                          );
       } else {
@@ -532,8 +556,20 @@ sub status_table_row {
                            'maxdate' => $maxdate,
                            'who' => $author,
                            
+                          "linktxt" => "\t\t<tt>$display_author</tt>",
                            %popup_args,
                              );
+      }
+
+      foreach $bug_number (@bug_numbers) {
+          my $href = BTData::bug_id2bug_url($bug_number);
+          $query_link .= 
+            HTMLPopUp::Link(
+                            "href" => $href,
+                            "linktxt" => "\t\t<tt>$bug_number</tt>",
+                            
+                            %popup_args,
+                         );
       }
 
       # put each link on its own line and add good comments so we
@@ -543,6 +579,7 @@ sub status_table_row {
 
       $query_links .= (
                        "\t\t<!-- VC: ".("Author: $author, ".
+                                        "Bug_Numbers: '@bug_numbers', ".
                                         "Time: '$date_str', ".
                                         "Tree: $tree, ".
                                        "").
@@ -562,12 +599,9 @@ sub status_table_row {
                "");
     
   } else {
-    
-      my $cell_contents = $text_browser_color_string ||
-          $HTMLPopUp::EMPTY_TABLE_CELL;
 
     @outrow = ("\t<!-- skipping: VC_Bonsai: tree: $tree -->".
-               "<td align=center $cell_options>$cell_contents</td>\n");
+               "<td align=center $cell_options>$empty_cell_contents</td>\n");
   }
   
   
