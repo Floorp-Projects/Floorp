@@ -274,6 +274,9 @@ public:
     /* void SetReceiverReturnOldReceiver (inout nsIEcho aReceiver); */
     NS_IMETHOD SetReceiverReturnOldReceiver(nsIEcho **aReceiver);
 
+    /* void MethodWithForwardDeclaredParam (in nsITestXPCSomeUselessThing sut); */
+    NS_IMETHOD MethodWithForwardDeclaredParam(nsITestXPCSomeUselessThing *sut);
+
     MyEcho();
 private:
     nsIEcho* mReceiver;
@@ -509,6 +512,13 @@ MyEcho::SetReceiverReturnOldReceiver(nsIEcho **aReceiver)
 
     /* don't release the reference, that is the caller's problem */
     *aReceiver = oldReceiver;
+    return NS_OK;
+}
+
+/* void MethodWithForwardDeclaredParam (in nsITestXPCSomeUselessThing sut); */
+NS_IMETHODIMP
+MyEcho::MethodWithForwardDeclaredParam(nsITestXPCSomeUselessThing *sut)
+{
     return NS_OK;
 }
 
