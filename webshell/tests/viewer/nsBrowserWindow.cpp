@@ -1878,32 +1878,34 @@ nsBrowserWindow::ShowPrintPreview(PRInt32 aID)
     if ((NS_OK == mWebShell->GetContentViewer(cv)) && (nsnull != cv)) {
       nsIDocumentViewer* docv = nsnull;
       if (NS_OK == cv->QueryInterface(kIDocumentViewerIID, (void**)&docv)) {
-	nsIPresContext* printContext;
-	if (NS_OK == NS_NewPrintPreviewContext(&printContext)) {
-	  // Prepare new printContext for print-preview
-	  nsIDeviceContext* dc;
-	  nsIPresContext* presContext;
-	  docv->GetPresContext(presContext);
-	  dc = presContext->GetDeviceContext();
-	  printContext->Init(dc, mPrefs);
-	  NS_RELEASE(presContext);
-	  NS_RELEASE(dc);
+	      nsIPresContext* printContext;
+	      if (NS_OK == NS_NewPrintPreviewContext(&printContext)) {
+      	  // Prepare new printContext for print-preview
+      	  nsIDeviceContext* dc;
+      	  nsIPresContext* presContext;
+      	  docv->GetPresContext(presContext);
+      	  dc = presContext->GetDeviceContext();
+      	  printContext->Init(dc, mPrefs);
+      	  NS_RELEASE(presContext);
+      	  NS_RELEASE(dc);
 
-	  // Make a window using that content viewer
-	  nsBrowserWindow* bw = new nsNativeBrowserWindow();
-	  bw->Init(mAppShell, mPrefs, nsRect(0, 0, 600, 400),
-		   NS_CHROME_MENU_BAR_ON, PR_TRUE,
-		   docv, printContext);
-	  bw->Show();
+      	  // Make a window using that content viewer
+          // XXX Some piece of code needs to properly hold the reference to this
+          // browser window. For the time being the reference is released by the
+          // browser event handling code during processing of the NS_DESTROY event...
+      	  nsBrowserWindow* bw = new nsNativeBrowserWindow;
+          bw->SetApp(mApp);
+      	  bw->Init(mAppShell, mPrefs, nsRect(0, 0, 600, 400),
+    		           NS_CHROME_MENU_BAR_ON, PR_TRUE, docv, printContext);
+	        bw->Show();
 
-	  NS_RELEASE(printContext);
-	}
-	NS_RELEASE(docv);
+      	  NS_RELEASE(printContext);
+      	}
+      	NS_RELEASE(docv);
       }
       NS_RELEASE(cv);
     }
   }
-
 }
 
 //----------------------------------------------------------------------
