@@ -254,6 +254,7 @@ sub do_copyfile
 				$PD = "/";
 				$path =~ s/$srcdir$PD//g;
 				$path =~ s/\//\\/g;
+				$srcdir =~ s/\//\\/g;
 				$PD = "\\";
 			} else {
 				$path =~ s/$srcdir$PD//;
