@@ -646,11 +646,61 @@ public class Context {
      *
      * This method does not affect the Context it is called upon.
      *
+     * @return the initialized scope
+     */
+    public GlobalScope initStandardObjects()
+    {
+        return initStandardObjects(false);
+    }
+
+    /**
+     * Initialize the standard objects.
+     *
+     * Creates instances of the standard objects and their constructors
+     * (Object, String, Number, Date, etc.), setting up 'scope' to act
+     * as a global object as in ECMA 15.1.<p>
+     *
+     * This method must be called to initialize a scope before scripts
+     * can be evaluated in that scope.<p>
+     *
+     * This form of the method also allows for creating "sealed" standard
+     * objects. An object that is sealed cannot have properties added, changed,
+     * or removed. This is useful to create a "superglobal" that can be shared
+     * among several top-level objects. Note that sealing is not allowed in
+     * the current ECMA/ISO language specification, but is likely for
+     * the next version.
+     *
+     * This method does not affect the Context it is called upon.
+     *
+     * @param sealed whether or not to create sealed standard objects that
+     *        cannot be modified.
+     * @return the initialized scope
+     */
+    public GlobalScope initStandardObjects(boolean sealed)
+    {
+        GlobalScope global = new GlobalScope();
+        initStandardObjects(global, sealed);
+        return global;
+    }
+
+    /**
+     * Initialize the standard objects.
+     *
+     * Creates instances of the standard objects and their constructors
+     * (Object, String, Number, Date, etc.), setting up 'scope' to act
+     * as a global object as in ECMA 15.1.<p>
+     *
+     * This method must be called to initialize a scope before scripts
+     * can be evaluated in that scope.<p>
+     *
+     * This method does not affect the Context it is called upon.
+     *
      * @param scope the scope to initialize, or null, in which case a new
      *        object will be created to serve as the scope
      * @return the initialized scope
      */
-    public Scriptable initStandardObjects(ScriptableObject scope) {
+    public ScriptableObject initStandardObjects(ScriptableObject scope)
+    {
         return initStandardObjects(scope, false);
     }
 
@@ -667,8 +717,8 @@ public class Context {
      * This method does not affect the Context it is called upon.<p>
      *
      * This form of the method also allows for creating "sealed" standard
-     * objects. An object that is sealed cannot have properties added or
-     * removed. This is useful to create a "superglobal" that can be shared
+     * objects. An object that is sealed cannot have properties added, changed,
+     * or removed. This is useful to create a "superglobal" that can be shared
      * among several top-level objects. Note that sealing is not allowed in
      * the current ECMA/ISO language specification, but is likely for
      * the next version.
@@ -1141,10 +1191,10 @@ public class Context {
     /**
      * Get the elements of a JavaScript array.
      * <p>
-     * If the object defines a length property which can be converted to
-     * a number a Java array with length given by
-     * {@link ScriptRuntime#toUint32(double)} is created and initialized with
-     * the values obtained by
+     * If the object defines a length property convertible to double number,
+     * then the number is converted Uint32 value as defined in Ecma 9.6
+     * and Java array of that size is allocated.
+     * The array is initialized with the values obtained by
      * calling get() on object for each value of i in [0,length-1]. If
      * there is not a defined value for a property the Undefined value
      * is used to initialize the corresponding element in the array. The
@@ -1251,7 +1301,7 @@ public class Context {
      * Uses the semantics defined with LiveConnect3 and throws an
      * Illegal argument exception if the conversion cannot be performed.
      * @param value the JavaScript value to convert
-     * @param desired type the Java type to convert to. Primitive Java
+     * @param desiredType the Java type to convert to. Primitive Java
      *        types are represented using the TYPE fields in the corresponding
      *        wrapper class in java.lang.
      * @return the converted value
