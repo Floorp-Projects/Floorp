@@ -207,7 +207,7 @@ void nsHTMLLIAccessible::CacheChildren(PRBool aWalkAnonContent)
     walker.mState.frame = GetFrame();
     walker.GetFirstChild();
 
-    nsCOMPtr<nsPIAccessible> privatePrevAccessible = mBulletAccessible;
+    nsCOMPtr<nsPIAccessible> privatePrevAccessible = mBulletAccessible.get();
     while (walker.mState.accessible) {
       ++mAccChildCount;
       privatePrevAccessible->SetNextSibling(walker.mState.accessible);
