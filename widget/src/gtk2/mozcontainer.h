@@ -1,3 +1,6 @@
+/* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* vim:expandtab:shiftwidth=4:tabstop=4:
+ */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -54,31 +57,31 @@ typedef struct _MozContainerClass MozContainerClass;
 
 struct _MozContainer
 {
-  GtkContainer   container;
-  GList         *children;
+    GtkContainer   container;
+    GList         *children;
 };
 
 struct _MozContainerClass
 {
-  GtkContainerClass parent_class;
+    GtkContainerClass parent_class;
 };
 
 GtkType    moz_container_get_type (void);
 GtkWidget *moz_container_new      (void);
 void       moz_container_put      (MozContainer *container,
-				   GtkWidget    *child_widget,
-				   gint          x,
-				   gint          y);
+                                   GtkWidget    *child_widget,
+                                   gint          x,
+                                   gint          y);
 void       moz_container_move          (MozContainer *container,
-					GtkWidget    *child_widget,
-					gint          x,
-					gint          y,
-					gint          width,
-					gint          height);
+                                        GtkWidget    *child_widget,
+                                        gint          x,
+                                        gint          y,
+                                        gint          width,
+                                        gint          height);
 void       moz_container_scroll_update (MozContainer *container,
-					GtkWidget    *child_widget,
-					gint          x,
-					gint          y);
+                                        GtkWidget    *child_widget,
+                                        gint          x,
+                                        gint          y);
 
 #ifdef __cplusplus
 }

@@ -1,3 +1,6 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* vim:expandtab:shiftwidth=4:tabstop=4:
+ */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -54,91 +57,91 @@ extern PRLogModuleInfo *gWidgetLog;
 #define LOG(args) PR_LOG(gWidgetLog, 4, args)
 
 class nsCommonWidget : public nsBaseWidget {
- public:
-  nsCommonWidget();
-  virtual ~nsCommonWidget();
+public:
+    nsCommonWidget();
+    virtual ~nsCommonWidget();
 
-  virtual nsIWidget *GetParent(void);
+    virtual nsIWidget *GetParent(void);
 
-  void CommonCreate(nsIWidget *aParent, nsNativeWidget aNativeParent);
+    void CommonCreate(nsIWidget *aParent, nsNativeWidget aNativeParent);
 
-  // event handling code
-  void InitPaintEvent(nsPaintEvent &aEvent);
-  void InitSizeEvent(nsSizeEvent &aEvent);
-  void InitGUIEvent(nsGUIEvent &aEvent, PRUint32 aMsg);
-  void InitMouseEvent(nsMouseEvent &aEvent, PRUint32 aMsg);
-  void InitButtonEvent(nsMouseEvent &aEvent, PRUint32 aMsg,
-		       GdkEventButton *aGdkEvent);
-  void InitMouseScrollEvent(nsMouseScrollEvent &aEvent,
-			    GdkEventScroll *aGdkEvent, PRUint32 aMsg);
-  void InitKeyEvent(nsKeyEvent &aEvent, GdkEventKey *aGdkEvent, PRUint32 aMsg);
-  void InitScrollbarEvent(nsScrollbarEvent &aEvent, PRUint32 aMsg);
+    // event handling code
+    void InitPaintEvent(nsPaintEvent &aEvent);
+    void InitSizeEvent(nsSizeEvent &aEvent);
+    void InitGUIEvent(nsGUIEvent &aEvent, PRUint32 aMsg);
+    void InitMouseEvent(nsMouseEvent &aEvent, PRUint32 aMsg);
+    void InitButtonEvent(nsMouseEvent &aEvent, PRUint32 aMsg,
+                         GdkEventButton *aGdkEvent);
+    void InitMouseScrollEvent(nsMouseScrollEvent &aEvent,
+                              GdkEventScroll *aGdkEvent, PRUint32 aMsg);
+    void InitKeyEvent(nsKeyEvent &aEvent, GdkEventKey *aGdkEvent, PRUint32 aMsg);
+    void InitScrollbarEvent(nsScrollbarEvent &aEvent, PRUint32 aMsg);
 
-  void DispatchGotFocusEvent(void);
-  void DispatchLostFocusEvent(void);
-  void DispatchActivateEvent(void);
-  void DispatchDeactivateEvent(void);
-  void DispatchResizeEvent(nsRect &aRect, nsEventStatus &aStatus);
+    void DispatchGotFocusEvent(void);
+    void DispatchLostFocusEvent(void);
+    void DispatchActivateEvent(void);
+    void DispatchDeactivateEvent(void);
+    void DispatchResizeEvent(nsRect &aRect, nsEventStatus &aStatus);
 
-  NS_IMETHOD DispatchEvent(nsGUIEvent *aEvent, nsEventStatus &aStatus);
+    NS_IMETHOD DispatchEvent(nsGUIEvent *aEvent, nsEventStatus &aStatus);
 
-  // virtual interfaces for some nsIWidget methods
-  virtual void NativeResize(PRInt32 aWidth,
-			    PRInt32 aHeight,
-			    PRBool  aRepaint) = 0;
-  
-  virtual void NativeResize(PRInt32 aX,
-			    PRInt32 aY,
-			    PRInt32 aWidth,
-			    PRInt32 aHeight,
-			    PRBool  aRepaint) = 0;
-  
-  virtual void NativeShow  (PRBool  aAction) = 0;
+    // virtual interfaces for some nsIWidget methods
+    virtual void NativeResize(PRInt32 aWidth,
+                              PRInt32 aHeight,
+                              PRBool  aRepaint) = 0;
 
-  // Some of the nsIWidget methods
-  NS_IMETHOD         Show             (PRBool aState);
-  NS_IMETHOD         Resize           (PRInt32 aWidth,
-				       PRInt32 aHeight,
-				       PRBool  aRepaint);
-  NS_IMETHOD         Resize           (PRInt32 aX,
-				       PRInt32 aY,
-				       PRInt32 aWidth,
-				       PRInt32 aHeight,
-				       PRBool   aRepaint);
-  NS_IMETHOD         GetPreferredSize (PRInt32 &aWidth,
-				       PRInt32 &aHeight);
-  NS_IMETHOD         SetPreferredSize (PRInt32 aWidth,
-				       PRInt32 aHeight);
-  NS_IMETHOD         Enable           (PRBool  aState);
-  NS_IMETHOD         IsEnabled        (PRBool *aState);
+    virtual void NativeResize(PRInt32 aX,
+                              PRInt32 aY,
+                              PRInt32 aWidth,
+                              PRInt32 aHeight,
+                              PRBool  aRepaint) = 0;
 
-  // called when we are destroyed
-  void OnDestroy(void);
+    virtual void NativeShow  (PRBool  aAction) = 0;
 
-  // called to check and see if a widget's dimensions are sane
-  PRBool AreBoundsSane(void);
+    // Some of the nsIWidget methods
+    NS_IMETHOD         Show             (PRBool aState);
+    NS_IMETHOD         Resize           (PRInt32 aWidth,
+                                         PRInt32 aHeight,
+                                         PRBool  aRepaint);
+    NS_IMETHOD         Resize           (PRInt32 aX,
+                                         PRInt32 aY,
+                                         PRInt32 aWidth,
+                                         PRInt32 aHeight,
+                                         PRBool   aRepaint);
+    NS_IMETHOD         GetPreferredSize (PRInt32 &aWidth,
+                                         PRInt32 &aHeight);
+    NS_IMETHOD         SetPreferredSize (PRInt32 aWidth,
+                                         PRInt32 aHeight);
+    NS_IMETHOD         Enable           (PRBool  aState);
+    NS_IMETHOD         IsEnabled        (PRBool *aState);
 
- protected:
-  nsCOMPtr<nsIWidget> mParent;
-  // Is this a toplevel window?
-  PRPackedBool        mIsTopLevel;
-  // Has this widget been destroyed yet?
-  PRPackedBool        mIsDestroyed;
+    // called when we are destroyed
+    void OnDestroy(void);
 
-  // This is a flag that tracks if we need to resize a widget or
-  // window before we call |Show| on that widget.
-  PRPackedBool        mNeedsResize;
-  // Should we send resize events on all resizes?
-  PRPackedBool        mListenForResizes;
-  // This flag tracks if we're hidden or shown.
-  PRPackedBool        mIsShown;
-  PRPackedBool        mNeedsShow;
-  // is this widget enabled?
-  PRBool              mEnabled;
+    // called to check and see if a widget's dimensions are sane
+    PRBool AreBoundsSane(void);
 
-  // Preferred sizes
-  PRUint32            mPreferredWidth;
-  PRUint32            mPreferredHeight;
+protected:
+    nsCOMPtr<nsIWidget> mParent;
+    // Is this a toplevel window?
+    PRPackedBool        mIsTopLevel;
+    // Has this widget been destroyed yet?
+    PRPackedBool        mIsDestroyed;
+
+    // This is a flag that tracks if we need to resize a widget or
+    // window before we call |Show| on that widget.
+    PRPackedBool        mNeedsResize;
+    // Should we send resize events on all resizes?
+    PRPackedBool        mListenForResizes;
+    // This flag tracks if we're hidden or shown.
+    PRPackedBool        mIsShown;
+    PRPackedBool        mNeedsShow;
+    // is this widget enabled?
+    PRBool              mEnabled;
+
+    // Preferred sizes
+    PRUint32            mPreferredWidth;
+    PRUint32            mPreferredHeight;
 };
 
 #endif /* __nsCommonWidget_h__ */

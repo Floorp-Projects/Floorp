@@ -1,4 +1,6 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* vim:expandtab:shiftwidth=4:tabstop=4:
+ */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: NPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -43,30 +45,30 @@
 
 class nsLookAndFeel: public nsXPLookAndFeel {
 public:
-  nsLookAndFeel();
-  virtual ~nsLookAndFeel();
-  
-  nsresult NativeGetColor(const nsColorID aID, nscolor &aColor);
-  NS_IMETHOD GetMetric(const nsMetricID aID, PRInt32 & aMetric);
-  NS_IMETHOD GetMetric(const nsMetricFloatID aID, float & aMetric);
+    nsLookAndFeel();
+    virtual ~nsLookAndFeel();
+
+    nsresult NativeGetColor(const nsColorID aID, nscolor &aColor);
+    NS_IMETHOD GetMetric(const nsMetricID aID, PRInt32 & aMetric);
+    NS_IMETHOD GetMetric(const nsMetricFloatID aID, float & aMetric);
 
 protected:
-  GtkStyle *mStyle;
-  GtkWidget *mWidget;
+    GtkStyle *mStyle;
+    GtkWidget *mWidget;
 
-  // Cached colors, we have to create a dummy widget to actually
-  // get the style
-  static PRBool sColorsInitialized;
-  static nscolor sInfoBackground;
-  static nscolor sInfoText;
-  static nscolor sMenuBackground;
-  static nscolor sMenuText;
-  static nscolor sButtonBackground;
-  static nscolor sButtonText;
-  static nscolor sButtonOuterLightBorder;
-  static nscolor sButtonInnerDarkBorder;
+    // Cached colors, we have to create a dummy widget to actually
+    // get the style
+    static PRBool sColorsInitialized;
+    static nscolor sInfoBackground;
+    static nscolor sInfoText;
+    static nscolor sMenuBackground;
+    static nscolor sMenuText;
+    static nscolor sButtonBackground;
+    static nscolor sButtonText;
+    static nscolor sButtonOuterLightBorder;
+    static nscolor sButtonInnerDarkBorder;
 
-  static void InitColors();
+    static void InitColors();
 };
 
 #endif

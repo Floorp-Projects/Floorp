@@ -1,3 +1,6 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* vim:expandtab:shiftwidth=4:tabstop=4:
+ */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -41,17 +44,16 @@
 #include "nsCOMPtr.h"
 
 class nsAppShell : public nsIAppShell {
- public:
+public:
 
-  nsAppShell();
-  virtual ~nsAppShell();
+    nsAppShell();
+    virtual ~nsAppShell();
 
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSIAPPSHELL
+    NS_DECL_ISUPPORTS
+    NS_DECL_NSIAPPSHELL
 
- private:
-
-  nsCOMPtr<nsIEventQueue> mEventQueue;
+private:
+    nsCOMPtr<nsIEventQueue> mEventQueue;
 };
 
 #endif /* nsAppShell_h__ */

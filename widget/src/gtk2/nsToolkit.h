@@ -1,4 +1,6 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* vim:expandtab:shiftwidth=4:tabstop=4:
+ */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: NPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -49,20 +51,19 @@
 
 class nsToolkit : public nsIToolkit
 {
-
 public:
-  nsToolkit();
-  virtual ~nsToolkit();
-  
-  NS_DECL_ISUPPORTS
+    nsToolkit();
+    virtual ~nsToolkit();
 
-  NS_IMETHOD    Init(PRThread *aThread);
+    NS_DECL_ISUPPORTS
 
-  void          CreateSharedGC(void);
-  GdkGC         *GetSharedGC(void);
-  
+    NS_IMETHOD    Init(PRThread *aThread);
+
+    void          CreateSharedGC(void);
+    GdkGC         *GetSharedGC(void);
+
 private:
-  GdkGC         *mSharedGC;
+    GdkGC         *mSharedGC;
 };
 
 
