@@ -1465,7 +1465,13 @@ esac
 
 dnl Checks for libraries.
 dnl ========================================================
-AC_CHECK_LIB(c_r, gethostbyname_r)
+case $target in
+*-hpux11.*)
+	;;
+*)
+	AC_CHECK_LIB(c_r, gethostbyname_r)
+	;;
+esac
 AC_CHECK_LIB(m, atan)
 AC_CHECK_LIB(dl, dlopen)
 if test ! "$GNU_CXX"; then
