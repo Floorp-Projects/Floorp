@@ -495,9 +495,10 @@ protected:
     PRPackedBool  mIsVisible;
     PRPackedBool  mIMEIsComposing;
     PRPackedBool  mIMEIsStatusChanged;
-    PRPackedBool  mIMEWaitForTrailingByte;
     PRPackedBool  mIsInMouseCapture;
     PRPackedBool  mIsInMouseWheelProcessing;
+
+    char        mLeadByte;
 
     // XXX Temporary, should not be caching the font
     nsFont *    mFont;

@@ -775,7 +775,7 @@ nsWindow::nsWindow() : nsBaseWidget()
 	  mIMECompClauseStringSize = 0;
 	  mIMECompClauseStringLength = 0;
 	  mIMEReconvertUnicode = NULL;
-	  mIMEWaitForTrailingByte = PR_FALSE;
+	  mLeadByte = '\0';
 
   static BOOL gbInitGlobalValue = FALSE;
   if(! gbInitGlobalValue) {
@@ -2959,15 +2959,16 @@ BOOL nsWindow::OnChar( UINT mbcsCharCode, UINT virtualKeyCode, bool isMultiByte 
     } 
     else 
     {
-      if (PR_TRUE == mIMEWaitForTrailingByte)  {
+      if (mLeadByte)  {	// mLeadByte is used for keeping the lead-byte of CJK char
+        charToConvert[0] = mLeadByte;
         charToConvert[1] = LOBYTE(mbcsCharCode);
-        mIMEWaitForTrailingByte = PR_FALSE;
+        mLeadByte = '\0';
         length=2;
       } 
       else {
         charToConvert[0] = LOBYTE(mbcsCharCode);
         if (::IsDBCSLeadByte(charToConvert[0])) {
-          mIMEWaitForTrailingByte = PR_TRUE;
+          mLeadByte = charToConvert[0];
           return TRUE;
         }
         length=1;
