@@ -1878,16 +1878,7 @@ public class Codegen extends Interpreter {
     }
 
     private void visitFunction(Node node) {
-        addByteCode(ByteCode.NEW, "org/mozilla/javascript/NativeClosure");
-        addByteCode(ByteCode.DUP);
-
-        // Context argument to constructor
-        aload(contextLocal);
-        
-        // Scope argument to constructor
         aload(variableObjectLocal);
-
-        // Function argument to constructor
         Node fn = (Node) node.getProp(Node.FUNCTION_PROP);
         Short index = (Short) fn.getProp(Node.FUNCTION_PROP);
         aload(funObjLocal);
@@ -1895,12 +1886,14 @@ public class Codegen extends Interpreter {
                 "nestedFunctions", "[Lorg/mozilla/javascript/NativeFunction;");
         push(index.shortValue());
         addByteCode(ByteCode.AALOAD);
+        addVirtualInvoke("java/lang/Object", "getClass", "()", "Ljava/lang/Class;");
+        aload(contextLocal);
+        addScriptRuntimeInvoke("createFunctionObject", 
+                                    "(Lorg/mozilla/javascript/Scriptable;"+
+                                    "Ljava/lang/Class;" +
+                                    "Lorg/mozilla/javascript/Context;)", 
+                                    "Lorg/mozilla/javascript/NativeFunction;");
 
-        addSpecialInvoke("org/mozilla/javascript/NativeClosure",
-                         "<init>",
-                         "(Lorg/mozilla/javascript/Context;" +
-                          "Lorg/mozilla/javascript/Scriptable;" +
-                          "Lorg/mozilla/javascript/NativeFunction;)", "V");
     }
 
     private void visitTarget(Node node) {
