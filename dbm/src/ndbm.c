@@ -52,10 +52,6 @@ static char sccsid[] = "@(#)ndbm.c	8.4 (Berkeley) 7/21/94";
 #include <linux/limits.h>
 #endif
 
-#ifdef __OS2__
-#include "dirent.h"
-#endif
-
 #include <stdio.h>
 #include <string.h>
 

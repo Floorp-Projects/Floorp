@@ -69,11 +69,6 @@ static char sccsid[] = "@(#)hash.c	8.9 (Berkeley) 6/16/94";
 #include <windows.h>
 #endif
 
-#ifdef XP_OS2_VACPP
-#include "types.h"
-#define EPERM SOCEPERM
-#endif
-
 #include <assert.h>
 
 #include "mcom_db.h"
