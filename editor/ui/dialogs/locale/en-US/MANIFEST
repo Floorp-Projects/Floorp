@@ -28,6 +28,7 @@ EditorInsertSource.dtd
 EditorInsertChars.dtd
 EditorInsertTable.dtd
 EditorLinkProperties.dtd
+EdLinkChecker.dtd
 EditorListProperties.dtd
 EditorPageProperties.dtd
 EditorColorProperties.dtd
@@ -35,6 +36,13 @@ EdColorPicker.dtd
 EditorPersonalDictionary.dtd
 EditorSpellCheck.dtd
 EditorTableProperties.dtd
+EditorFormProperties.dtd
+EditorInputProperties.dtd
+EditorTextAreaProperties.dtd
+EditorSelectProperties.dtd
+EditorButtonProperties.dtd
+EditorLabelProperties.dtd
+EditorFieldSetProperties.dtd
 EdNamedAnchorProperties.dtd
 EdDialogOverlay.dtd
 EdAdvancedEdit.dtd
