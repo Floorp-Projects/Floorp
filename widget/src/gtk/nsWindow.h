@@ -89,8 +89,10 @@ public:
 
     virtual PRBool IsChild() { return(PR_FALSE); };
 
+     // nsBaseWidget overrides
+    NS_IMETHOD SetBounds(const nsRect &aRect);
+
      // Utility methods
-    void     SetBounds(const nsRect &aRect);
     virtual  PRBool OnPaint(nsPaintEvent &event);
     virtual  void   OnDestroy();
     PRBool   OnKey(PRUint32 aEventType, PRUint32 aKeyCode, nsKeyEvent* aEvent);
