@@ -159,10 +159,11 @@ ENHANCEMENTS to "ns/coreconf":
                 - a 32 has been added as a suffix to both dynamic and
                   import libraries built on 32-bit Windows platforms
 
-            Since, the HCL release process currently only contains a
+            Since the HCL release process currently only contains a
             single instance of building a dynamic library,
             ns/security/lib/fortcrypt/fort12.dll, the impact of this
-            change should be relatively small.
+            change should be relatively small.  (Note: HCL was the
+            old name of NSS.)
 
             It should be noted that although this would additionally
             limit the 8.3 namespace on 16-bit platforms, it is highly
