@@ -1970,13 +1970,13 @@ void DlgSequenceNext()
       {
         /* POST_DOWNLOAD process file manipulation functions */
         ProcessFileOps(T_POST_DOWNLOAD);
-        /* PRE_CORE process file manipulation functions */
-        ProcessFileOps(T_PRE_CORE);
+        /* PRE_XPCOM process file manipulation functions */
+        ProcessFileOps(T_PRE_XPCOM);
 
-        ProcessCoreFile();
+        ProcessXpcomFile();
 
-        /* POST_CORE process file manipulation functions */
-        ProcessFileOps(T_POST_CORE);
+        /* POST_XPCOM process file manipulation functions */
+        ProcessFileOps(T_POST_XPCOM);
         /* PRE_SMARTUPDATE process file manipulation functions */
         ProcessFileOps(T_PRE_SMARTUPDATE);
 
@@ -1998,25 +1998,25 @@ void DlgSequenceNext()
 
           if(NeedReboot())
           {
-            CleanupCoreFile();
+            CleanupXpcomFile();
             InstantiateDialog(DLG_RESTART, diReboot.szTitle, DlgProcReboot);
           }
           else
           {
-            CleanupCoreFile();
+            CleanupXpcomFile();
             PostQuitMessage(0);
           }
         }
         else
         {
-          CleanupCoreFile();
+          CleanupXpcomFile();
           PostQuitMessage(0);
         }
       }
       else
       {
         bSDUserCanceled = TRUE;
-        CleanupCoreFile();
+        CleanupXpcomFile();
         PostQuitMessage(0);
       }
       gbProcessingXpnstallFiles = FALSE;

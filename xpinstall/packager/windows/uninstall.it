@@ -53,6 +53,8 @@ Root Key=HKEY_LOCAL_MACHINE
 Key=[Mozilla Seamonkey CurrentVersion]\Uninstall
 Decrypt Key=TRUE
 
+Uninstall Filename=$UninstallFile$
+
 
 [Dialog Uninstall]
 Show Dialog=FALSE
@@ -74,8 +76,8 @@ Message0=This will uninstall %s from your system.  Click Uninstall to begin unin
 ; The Timing key needs to be one of the following values:
 ;   pre download     - process before any files have been downloaded.
 ;   post download    - process after all files have been downloaded.
-;   pre core         - process before the core file has been uncompressed.
-;   post core        - process after the core file has been uncompressed.
+;   pre xpcom        - process before the xpcom file has been uncompressed.
+;   post xpcom       - process after the xpcom file has been uncompressed.
 ;   pre smartupdate  - process before the smartupdate engine has been launched.
 ;   post smartupdate - process after the smartupdate engine has been launched.
 ;   pre launchapp    - process before the launching of executables.
@@ -87,7 +89,7 @@ Message0=This will uninstall %s from your system.  Click Uninstall to begin unin
 ;Uncompress FileX sections
 ;[Uncompress File0]
 ;Timing=post download
-;Source=[XPI PATH]\core.xpi
+;Source=[XPI PATH]\xpcom.xpi
 ;Destination=[SETUP PATH]
 ;Message=Configuring Seamonkey, please wait...
 

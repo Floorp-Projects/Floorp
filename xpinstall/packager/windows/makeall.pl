@@ -72,12 +72,12 @@ if(!(-e "$inDistPath"))
 }
 
 # Make .js files
-MakeJsFile("core");
+MakeJsFile("xpcom");
 MakeJsFile("browser");
 MakeJsFile("mail");
 
 # Make .xpi files
-MakeXpiFile("core");
+MakeXpiFile("xpcom");
 MakeXpiFile("browser");
 MakeXpiFile("mail");
 
@@ -117,7 +117,7 @@ system("xcopy /f $inDistPath\\setuprsc.dll  $inDistPath\\setup\\");
 print "\nbuilding self-extracting uninstaller ($seuFileNameSpecific)...\n";
 system("copy $inDistPath\\$seiFileNameGeneric $inDistPath\\$seuFileNameSpecific");
 system("$inDistPath\\nszip.exe $inDistPath\\$seuFileNameSpecific $inDistPath\\uninstall\\*.*");
-system("xcopy /f $inDistPath\\$seuFileNameSpecific $inDistPath\\setup\\");
+system("xcopy /f $inDistPath\\$seuFileNameSpecific $inDistPath\\xpi\\");
 
 # build the self-extracting .exe (installer) file.
 print "\nbuilding self-extracting installer ($seiFileNameSpecific)...\n";

@@ -61,9 +61,10 @@ LPSTR           szSiteSelectorDescription;
 
 DWORD           dwWizardState;
 DWORD           dwSetupType;
-DWORD           dwOSType;
 DWORD           dwScreenX;
 DWORD           dwScreenY;
+
+ULONG           ulOSType;
 
 DWORD           dwTempSetupType;
 
@@ -85,7 +86,7 @@ diSS            diSiteSelector;
 diSI            diStartInstall;
 diR             diReboot;
 siSD            siSDObject;
-siCF            siCFCoreFile;
+siCF            siCFXpcomFile;
 siC             *siComponents;
 ssi             *ssiSiteSelector;
 

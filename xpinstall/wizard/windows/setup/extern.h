@@ -61,9 +61,10 @@ extern LPSTR            szSiteSelectorDescription;
 
 extern DWORD            dwWizardState;
 extern DWORD            dwSetupType;
-extern DWORD            dwOSType;
 extern DWORD            dwScreenX;
 extern DWORD            dwScreenY;
+
+extern ULONG            ulOSType;
 
 extern DWORD            dwTempSetupType;
 
@@ -85,7 +86,7 @@ extern diSS             diSiteSelector;
 extern diSI             diStartInstall;
 extern diR              diReboot;
 extern siSD             siSDObject;
-extern siCF             siCFCoreFile;
+extern siCF             siCFXpcomFile;
 extern siC              *siComponents;
 extern ssi              *ssiSiteSelector;
 

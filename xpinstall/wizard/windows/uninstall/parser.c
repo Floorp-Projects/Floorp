@@ -28,6 +28,49 @@
 #include "ifuncns.h"
 #include "dialogs.h"
 
+void RemoveUninstaller(LPSTR szUninstallFilename)
+{
+  FILE      *ofp;
+  char      szBuf[MAX_BUF];
+  char      szWinDir[MAX_BUF];
+  char      szUninstallFile[MAX_BUF];
+  char      szWininitFile[MAX_BUF];
+  BOOL      bWriteRenameSection;
+
+  if(GetWindowsDirectory(szWinDir, sizeof(szWinDir)) == 0)
+    return;
+
+  lstrcpy(szBuf, szWinDir);
+  AppendBackSlash(szBuf, sizeof(szBuf));
+  lstrcat(szBuf, szUninstallFilename);
+  GetShortPathName(szBuf, szUninstallFile, sizeof(szUninstallFile));
+
+  if(ulOSType & OS_NT)
+  {
+    MoveFileEx(szUninstallFile, NULL, MOVEFILE_DELAY_UNTIL_REBOOT);
+  }
+  else
+  {
+    lstrcpy(szWininitFile, szWinDir);
+    AppendBackSlash(szWininitFile, sizeof(szUninstallFile));
+    lstrcat(szWininitFile, "wininit.ini");
+
+    if(FileExists(szWininitFile) == FALSE)
+      bWriteRenameSection = TRUE;
+    else
+      bWriteRenameSection = FALSE;
+
+    if((ofp = fopen(szWininitFile, "a+")) == NULL)
+      return;
+
+    if(bWriteRenameSection == TRUE)
+      fprintf(ofp, "[RENAME]\n");
+
+    fprintf(ofp, "NUL=%s\n", szUninstallFile);
+    fclose(ofp);
+  }
+}
+
 sil *InitSilNodes(char *szInFile)
 {
   FILE      *ifp;

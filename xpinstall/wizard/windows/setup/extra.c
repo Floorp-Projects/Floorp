@@ -62,6 +62,24 @@ DWORD   GetPerfData    (HKEY        hPerfKey,
                         PPERF_DATA  *ppData,
                         DWORD       *pDataSize);
 
+BOOL InitDialogClass(HINSTANCE hInstance)
+{
+  WNDCLASS wc;
+
+  wc.style         = CS_DBLCLKS | CS_SAVEBITS | CS_BYTEALIGNWINDOW;
+  wc.lpfnWndProc   = DefDlgProc;
+  wc.cbClsExtra    = 0;
+  wc.cbWndExtra    = DLGWINDOWEXTRA;
+  wc.hInstance     = hInstance;
+  wc.hIcon         = LoadIcon(hInstance, MAKEINTRESOURCE(IDI_SETUP));
+  wc.hCursor       = LoadCursor(NULL, IDC_ARROW);
+  wc.hbrBackground = (HBRUSH)(COLOR_WINDOW + 1);
+  wc.lpszMenuName  = NULL;
+  wc.lpszClassName = szClassName;
+
+  return(RegisterClass(&wc));
+}
+
 BOOL InitApplication(HINSTANCE hInstance, HINSTANCE hSetupRscInst)
 {
   WNDCLASS wc;
@@ -77,6 +95,7 @@ BOOL InitApplication(HINSTANCE hInstance, HINSTANCE hSetupRscInst)
   wc.lpszMenuName  = NULL;
   wc.lpszClassName = szClassName;
 
+//  InitDialogClass(HINSTANCE hInstance);
   return(RegisterClass(&wc));
 }
 
@@ -1029,11 +1048,11 @@ long RetrieveRedirectFile()
      any jar files needed to be downloaded */
   if(FileExists(szFileIdiGetRedirect))
   {
-    DecryptString(szBuf, siSDObject.szCoreDir);
-    lstrcpy(siSDObject.szCoreDir, szBuf);
+    DecryptString(szBuf, siSDObject.szXpcomDir);
+    lstrcpy(siSDObject.szXpcomDir, szBuf);
 
-    WritePrivateProfileString("Netscape Install", "core_file",        siSDObject.szCoreFile,        szFileIdiGetRedirect);
-    WritePrivateProfileString("Netscape Install", "core_dir",         siSDObject.szCoreDir,         szFileIdiGetRedirect);
+    WritePrivateProfileString("Netscape Install", "core_file",        siSDObject.szXpcomFile,       szFileIdiGetRedirect);
+    WritePrivateProfileString("Netscape Install", "core_dir",         siSDObject.szXpcomDir,        szFileIdiGetRedirect);
     WritePrivateProfileString("Netscape Install", "no_ads",           siSDObject.szNoAds,           szFileIdiGetRedirect);
     WritePrivateProfileString("Netscape Install", "silent",           siSDObject.szSilent,          szFileIdiGetRedirect);
     WritePrivateProfileString("Netscape Install", "execution",        siSDObject.szExecution,       szFileIdiGetRedirect);
@@ -1105,11 +1124,11 @@ long RetrieveArchives()
      any jar files needed to be downloaded */
   if(FileExists(szFileIdiGetArchives))
   {
-    DecryptString(szBuf, siSDObject.szCoreDir);
-    lstrcpy(siSDObject.szCoreDir, szBuf);
+    DecryptString(szBuf, siSDObject.szXpcomDir);
+    lstrcpy(siSDObject.szXpcomDir, szBuf);
 
-    WritePrivateProfileString("Netscape Install", "core_file",        siSDObject.szCoreFile,        szFileIdiGetArchives);
-    WritePrivateProfileString("Netscape Install", "core_dir",         siSDObject.szCoreDir,         szFileIdiGetArchives);
+    WritePrivateProfileString("Netscape Install", "core_file",        siSDObject.szXpcomFile,       szFileIdiGetArchives);
+    WritePrivateProfileString("Netscape Install", "core_dir",         siSDObject.szXpcomDir,        szFileIdiGetArchives);
     WritePrivateProfileString("Netscape Install", "no_ads",           siSDObject.szNoAds,           szFileIdiGetArchives);
     WritePrivateProfileString("Netscape Install", "silent",           siSDObject.szSilent,          szFileIdiGetArchives);
     WritePrivateProfileString("Netscape Install", "execution",        siSDObject.szExecution,       szFileIdiGetArchives);
@@ -1347,6 +1366,7 @@ void DetermineOSVersion()
   BOOL          bIsWin95Debute;
   char          szESetupRequirement[MAX_BUF];
 
+  ulOSType        = 0;
   dwVersion       = GetVersion();
   bIsWin95Debute  = IsWin95Debute();
 
@@ -1358,22 +1378,26 @@ void DetermineOSVersion()
   // Get build numbers for Windows NT or Win95/Win98
   if(dwVersion < 0x80000000) // Windows NT
   {
+    ulOSType |= OS_NT;
     if(dwWindowsMajorVersion == 3)
-      dwOSType = OS_NT3;
+      ulOSType |= OS_NT3;
+    else if(dwWindowsMajorVersion == 4)
+      ulOSType |= OS_NT4;
     else
-      dwOSType = OS_NT4;
+      ulOSType |= OS_NT5;
   }
   else if(dwWindowsMajorVersion == 4)
   {
+    ulOSType |= OS_WIN9x;
     if(dwWindowsMinorVersion == 0)
     {
-      dwOSType |= OS_WIN95;
+      ulOSType |= OS_WIN95;
 
       if(bIsWin95Debute)
-        dwOSType |= OS_WIN95_DEBUTE;
+        ulOSType |= OS_WIN95_DEBUTE;
     }
     else
-      dwOSType = OS_WIN98;
+      ulOSType |= OS_WIN98;
   }
   else
   {
@@ -1722,9 +1746,9 @@ void DeInitSetupGeneral()
 
 HRESULT InitSDObject()
 {
-  if((siSDObject.szCoreFile = NS_GlobalAlloc(MAX_BUF)) == NULL)
+  if((siSDObject.szXpcomFile = NS_GlobalAlloc(MAX_BUF)) == NULL)
     return(1);
-  if((siSDObject.szCoreDir = NS_GlobalAlloc(MAX_BUF)) == NULL)
+  if((siSDObject.szXpcomDir = NS_GlobalAlloc(MAX_BUF)) == NULL)
     return(1);
   if((siSDObject.szNoAds = NS_GlobalAlloc(MAX_BUF)) == NULL)
     return(1);
@@ -1740,7 +1764,7 @@ HRESULT InitSDObject()
     return(1);
   if((siSDObject.szExeParam = NS_GlobalAlloc(MAX_BUF)) == NULL)
     return(1);
-  if((siSDObject.szCoreFilePath = NS_GlobalAlloc(MAX_BUF)) == NULL)
+  if((siSDObject.szXpcomFilePath = NS_GlobalAlloc(MAX_BUF)) == NULL)
     return(1);
 
   return(0);
@@ -1748,8 +1772,8 @@ HRESULT InitSDObject()
 
 void DeInitSDObject()
 {
-  FreeMemory(&(siSDObject.szCoreFile));
-  FreeMemory(&(siSDObject.szCoreDir));
+  FreeMemory(&(siSDObject.szXpcomFile));
+  FreeMemory(&(siSDObject.szXpcomDir));
   FreeMemory(&(siSDObject.szNoAds));
   FreeMemory(&(siSDObject.szSilent));
   FreeMemory(&(siSDObject.szExecution));
@@ -1757,28 +1781,28 @@ void DeInitSDObject()
   FreeMemory(&(siSDObject.szExtractMsg));
   FreeMemory(&(siSDObject.szExe));
   FreeMemory(&(siSDObject.szExeParam));
-  FreeMemory(&(siSDObject.szCoreFilePath));
+  FreeMemory(&(siSDObject.szXpcomFilePath));
 }
 
-HRESULT InitSCoreFile()
+HRESULT InitSXpcomFile()
 {
-  if((siCFCoreFile.szSource = NS_GlobalAlloc(MAX_BUF)) == NULL)
+  if((siCFXpcomFile.szSource = NS_GlobalAlloc(MAX_BUF)) == NULL)
     return(1);
-  if((siCFCoreFile.szDestination = NS_GlobalAlloc(MAX_BUF)) == NULL)
+  if((siCFXpcomFile.szDestination = NS_GlobalAlloc(MAX_BUF)) == NULL)
     return(1);
-  if((siCFCoreFile.szMessage = NS_GlobalAlloc(MAX_BUF)) == NULL)
+  if((siCFXpcomFile.szMessage = NS_GlobalAlloc(MAX_BUF)) == NULL)
     return(1);
 
-  siCFCoreFile.bCleanup         = TRUE;
-  siCFCoreFile.ullInstallSize   = 0;
+  siCFXpcomFile.bCleanup         = TRUE;
+  siCFXpcomFile.ullInstallSize   = 0;
   return(0);
 }
 
-void DeInitSCoreFile()
+void DeInitSXpcomFile()
 {
-  FreeMemory(&(siCFCoreFile.szSource));
-  FreeMemory(&(siCFCoreFile.szDestination));
-  FreeMemory(&(siCFCoreFile.szMessage));
+  FreeMemory(&(siCFXpcomFile.szSource));
+  FreeMemory(&(siCFXpcomFile.szDestination));
+  FreeMemory(&(siCFXpcomFile.szMessage));
 }
 
 siC *CreateSiCNode()
@@ -2509,7 +2533,7 @@ ULONGLONG GetDiskSpaceRequired(DWORD dwType)
   /* add the amount of disk space it will take for the 
      xpinstall engine in the TEMP area */
   if(dwType == DSR_TEMP)
-    ullTotalSize += siCFCoreFile.ullInstallSize;
+    ullTotalSize += siCFXpcomFile.ullInstallSize;
 
   return(ullTotalSize);
 }
@@ -2529,7 +2553,7 @@ ULONGLONG GetDiskSpaceAvailable(LPSTR szPath)
   DWORD           dwNumberOfFreeClusters;
   DWORD           dwTotalNumberOfClusters;
 
-  if((dwOSType & OS_WIN95_DEBUTE) && (NS_GetDiskFreeSpace != NULL))
+  if((ulOSType & OS_WIN95_DEBUTE) && (NS_GetDiskFreeSpace != NULL))
   {
     ParsePath(szPath, szTempPath, MAX_BUF, PP_ROOT_ONLY);
     NS_GetDiskFreeSpace(szTempPath, 
@@ -2716,9 +2740,9 @@ HRESULT InitComponentDiskSpaceInfo(dsN **dsnComponentDSRequirement)
     siCObject = SiCNodeGetObject(dwIndex0, TRUE, AC_ALL);
   }
 
-  /* take the uncompressed size of core into account */
+  /* take the uncompressed size of Xpcom into account */
   if(*szBufTempPath != '\0')
-    UpdatePathDiskSpaceRequired(szBufTempPath, siCFCoreFile.ullInstallSize, dsnComponentDSRequirement);
+    UpdatePathDiskSpaceRequired(szBufTempPath, siCFXpcomFile.ullInstallSize, dsnComponentDSRequirement);
 
   return(hResult);
 }
@@ -3930,7 +3954,7 @@ HRESULT ParseConfigIni(LPSTR lpszCmdLine)
     return(1);
   if(InitSDObject())
     return(1);
-  if(InitSCoreFile())
+  if(InitSXpcomFile())
     return(1);
  
   /* get install Mode information */
@@ -4223,16 +4247,16 @@ HRESULT ParseConfigIni(LPSTR lpszCmdLine)
     }
   }
 
-  /* get install size required in temp for component core.  Sould be in Kilobytes */
-  GetPrivateProfileString("Core", "Install Size", "", szBuf, MAX_BUF, szFileIniConfig);
+  /* get install size required in temp for component Xpcom.  Sould be in Kilobytes */
+  GetPrivateProfileString("Xpcom", "Install Size", "", szBuf, MAX_BUF, szFileIniConfig);
   if(*szBuf != '\0')
-    siCFCoreFile.ullInstallSize = _atoi64(szBuf);
+    siCFXpcomFile.ullInstallSize = _atoi64(szBuf);
   else
-    siCFCoreFile.ullInstallSize = 0;
+    siCFXpcomFile.ullInstallSize = 0;
 
-  GetPrivateProfileString("SmartDownload-Netscape Install", "core_file",        "", siSDObject.szCoreFile,        MAX_BUF, szFileIniConfig);
-  GetPrivateProfileString("SmartDownload-Netscape Install", "core_file_path",   "", siSDObject.szCoreFilePath,    MAX_BUF, szFileIniConfig);
-  GetPrivateProfileString("SmartDownload-Netscape Install", "core_dir",         "", siSDObject.szCoreDir,         MAX_BUF, szFileIniConfig);
+  GetPrivateProfileString("SmartDownload-Netscape Install", "core_file",        "", siSDObject.szXpcomFile,       MAX_BUF, szFileIniConfig);
+  GetPrivateProfileString("SmartDownload-Netscape Install", "core_file_path",   "", siSDObject.szXpcomFilePath,   MAX_BUF, szFileIniConfig);
+  GetPrivateProfileString("SmartDownload-Netscape Install", "xpcom_dir",        "", siSDObject.szXpcomDir,        MAX_BUF, szFileIniConfig);
   GetPrivateProfileString("SmartDownload-Netscape Install", "no_ads",           "", siSDObject.szNoAds,           MAX_BUF, szFileIniConfig);
   GetPrivateProfileString("SmartDownload-Netscape Install", "silent",           "", siSDObject.szSilent,          MAX_BUF, szFileIniConfig);
   GetPrivateProfileString("SmartDownload-Netscape Install", "execution",        "", siSDObject.szExecution,       MAX_BUF, szFileIniConfig);
@@ -4242,18 +4266,18 @@ HRESULT ParseConfigIni(LPSTR lpszCmdLine)
   GetPrivateProfileString("SmartDownload-Execution",        "exe_param",        "", siSDObject.szExeParam,        MAX_BUF, szFileIniConfig);
 
   GetPrivateProfileString("Core",                           "Source",           "", szBuf,                        MAX_BUF, szFileIniConfig);
-  DecryptString(siCFCoreFile.szSource, szBuf);
+  DecryptString(siCFXpcomFile.szSource, szBuf);
   GetPrivateProfileString("Core",                           "Destination",      "", szBuf,                        MAX_BUF, szFileIniConfig);
-  DecryptString(siCFCoreFile.szDestination, szBuf);
-  GetPrivateProfileString("Core",                           "Message",          "", siCFCoreFile.szMessage,       MAX_BUF, szFileIniConfig);
+  DecryptString(siCFXpcomFile.szDestination, szBuf);
+  GetPrivateProfileString("Core",                           "Message",          "", siCFXpcomFile.szMessage,      MAX_BUF, szFileIniConfig);
   GetPrivateProfileString("Core",                           "Cleanup",          "", szBuf,                        MAX_BUF, szFileIniConfig);
   if(lstrcmpi(szBuf, "FALSE") == 0)
   {
-    siCFCoreFile.bCleanup = FALSE;
+    siCFXpcomFile.bCleanup = FALSE;
   }
   else
   {
-    siCFCoreFile.bCleanup = TRUE;
+    siCFXpcomFile.bCleanup = TRUE;
   }
 
   hdc = GetDC(hWndMain);
@@ -4554,7 +4578,7 @@ HRESULT DecryptVariable(LPSTR szVariable, DWORD dwVariableSize)
   else if(lstrcmpi(szVariable, "CONFIGPATH") == 0)
   {
     /* parse for the "c:\Windows\Config" directory */
-    if((dwOSType & OS_WIN95) || (dwOSType & OS_WIN98))
+    if(ulOSType & OS_WIN9x)
     {
       GetWinReg(HKEY_LOCAL_MACHINE, "Software\\Microsoft\\Windows\\CurrentVersion", "ConfigPath", szVariable, dwVariableSize);
     }
@@ -4567,7 +4591,7 @@ HRESULT DecryptVariable(LPSTR szVariable, DWORD dwVariableSize)
   else if(lstrcmpi(szVariable, "COMMON_STARTUP") == 0)
   {
     /* parse for the "C:\WINNT40\Profiles\All Users\Start Menu\\Programs\\Startup" directory */
-    if((dwOSType & OS_WIN95) || (dwOSType & OS_WIN98))
+    if(ulOSType & OS_WIN9x)
     {
       GetWinReg(HKEY_CURRENT_USER, "Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Shell Folders", "Startup", szVariable, dwVariableSize);
     }
@@ -4579,7 +4603,7 @@ HRESULT DecryptVariable(LPSTR szVariable, DWORD dwVariableSize)
   else if(lstrcmpi(szVariable, "COMMON_PROGRAMS") == 0)
   {
     /* parse for the "C:\WINNT40\Profiles\All Users\Start Menu\\Programs" directory */
-    if((dwOSType & OS_WIN95) || (dwOSType & OS_WIN98))
+    if(ulOSType & OS_WIN9x)
     {
       GetWinReg(HKEY_CURRENT_USER, "Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Shell Folders", "Programs", szVariable, dwVariableSize);
     }
@@ -4591,7 +4615,7 @@ HRESULT DecryptVariable(LPSTR szVariable, DWORD dwVariableSize)
   else if(lstrcmpi(szVariable, "COMMON_STARTMENU") == 0)
   {
     /* parse for the "C:\WINNT40\Profiles\All Users\Start Menu" directory */
-    if((dwOSType & OS_WIN95) || (dwOSType & OS_WIN98))
+    if(ulOSType & OS_WIN9x)
     {
       GetWinReg(HKEY_CURRENT_USER, "Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Shell Folders", "Start Menu", szVariable, dwVariableSize);
     }
@@ -4603,7 +4627,7 @@ HRESULT DecryptVariable(LPSTR szVariable, DWORD dwVariableSize)
   else if(lstrcmpi(szVariable, "COMMON_DESKTOP") == 0)
   {
     /* parse for the "C:\WINNT40\Profiles\All Users\Desktop" directory */
-    if((dwOSType & OS_WIN95) || (dwOSType & OS_WIN98))
+    if(ulOSType & OS_WIN9x)
     {
       GetWinReg(HKEY_CURRENT_USER, "Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Shell Folders", "Desktop", szVariable, dwVariableSize);
     }
@@ -4675,7 +4699,7 @@ HRESULT DecryptVariable(LPSTR szVariable, DWORD dwVariableSize)
   else if(lstrcmpi(szVariable, "PERSONAL_PRINTHOOD") == 0)
   {
     /* parse for the "C:\WINNT40\Profiles\%USERNAME%\PrintHood" directory */
-    if((dwOSType & OS_NT3) || (dwOSType & OS_NT4))
+    if(ulOSType & OS_NT)
     {
       GetWinReg(HKEY_CURRENT_USER, "Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Shell Folders", "PrintHood", szVariable, dwVariableSize);
     }
@@ -5243,7 +5267,7 @@ void DeInitialize()
   CleanTempFiles();
 
   DeInitSiComponents();
-  DeInitSCoreFile();
+  DeInitSXpcomFile();
   DeInitSDObject();
   DeInitDlgReboot(&diReboot);
   DeInitDlgStartInstall(&diStartInstall);

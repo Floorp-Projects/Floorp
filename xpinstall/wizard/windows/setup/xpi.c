@@ -70,7 +70,7 @@ HRESULT InitializeXPIStub()
     return(1);
 
   /* change current directory to where xpistub.dll */
-  lstrcpy(szBuf, siCFCoreFile.szDestination);
+  lstrcpy(szBuf, siCFXpcomFile.szDestination);
   AppendBackSlash(szBuf, sizeof(szBuf));
   lstrcat(szBuf, "bin");
   chdir(szBuf);

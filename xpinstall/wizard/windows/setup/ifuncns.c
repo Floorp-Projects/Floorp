@@ -47,13 +47,13 @@ HRESULT TimingCheck(DWORD dwTiming, LPSTR szSection, LPSTR szFile)
           return(TRUE);
         break;
 
-      case T_PRE_CORE:
-        if(lstrcmpi(szBuf, "pre core") == 0)
+      case T_PRE_XPCOM:
+        if(lstrcmpi(szBuf, "pre xpcom") == 0)
           return(TRUE);
         break;
 
-      case T_POST_CORE:
-        if(lstrcmpi(szBuf, "post core") == 0)
+      case T_POST_XPCOM:
+        if(lstrcmpi(szBuf, "post xpcom") == 0)
           return(TRUE);
         break;
 
@@ -140,39 +140,39 @@ HRESULT FileUncompress(LPSTR szFrom, LPSTR szTo)
   return(FO_SUCCESS);
 }
 
-HRESULT ProcessCoreFile()
+HRESULT ProcessXpcomFile()
 {
   char szSource[MAX_BUF];
   char szDestination[MAX_BUF];
 
-  if(*siCFCoreFile.szMessage != '\0')
-    ShowMessage(siCFCoreFile.szMessage, TRUE);
+  if(*siCFXpcomFile.szMessage != '\0')
+    ShowMessage(siCFXpcomFile.szMessage, TRUE);
 
-  FileUncompress(siCFCoreFile.szSource, siCFCoreFile.szDestination);
+  FileUncompress(siCFXpcomFile.szSource, siCFXpcomFile.szDestination);
 
-  /* copy msvcrt.dll and msvcirt.dll to the bin of the core temp dir:
-   *   (c:\temp\core.ns\bin)
+  /* copy msvcrt.dll and msvcirt.dll to the bin of the Xpcom temp dir:
+   *   (c:\temp\Xpcom.ns\bin)
    * This is incase these files do not exist on the system */
-  lstrcpy(szSource, siCFCoreFile.szDestination);
+  lstrcpy(szSource, siCFXpcomFile.szDestination);
   AppendBackSlash(szSource, sizeof(szSource));
   lstrcat(szSource, "ms*.dll");
 
-  lstrcpy(szDestination, siCFCoreFile.szDestination);
+  lstrcpy(szDestination, siCFXpcomFile.szDestination);
   AppendBackSlash(szDestination, sizeof(szDestination));
   lstrcat(szDestination, "bin");
 
   FileCopy(szSource, szDestination, TRUE);
 
-  if(*siCFCoreFile.szMessage != '\0')
-    ShowMessage(siCFCoreFile.szMessage, FALSE);
+  if(*siCFXpcomFile.szMessage != '\0')
+    ShowMessage(siCFXpcomFile.szMessage, FALSE);
 
   return(FO_SUCCESS);
 }
 
-HRESULT CleanupCoreFile()
+HRESULT CleanupXpcomFile()
 {
-  if(siCFCoreFile.bCleanup == TRUE)
-    DirectoryRemove(siCFCoreFile.szDestination, TRUE);
+  if(siCFXpcomFile.bCleanup == TRUE)
+    DirectoryRemove(siCFXpcomFile.szDestination, TRUE);
 
   return(FO_SUCCESS);
 }

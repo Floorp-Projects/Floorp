@@ -84,6 +84,9 @@ LRESULT CALLBACK DlgProcUninstall(HWND hDlg, UINT msg, WPARAM wParam, LONG lPara
           lstrcat(szKey, ugUninstall.szUninstallKeyDescription);
           RegDeleteKey(HKEY_LOCAL_MACHINE, szKey);
 
+          /* update Wininit.ini to remove itself at reboot */
+          RemoveUninstaller(ugUninstall.szUninstallFilename);
+
           DestroyWindow(hDlg);
           PostQuitMessage(0);
           break;
