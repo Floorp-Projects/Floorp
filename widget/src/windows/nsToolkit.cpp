@@ -220,7 +220,7 @@ BOOL CallOpenSaveFileNameA(LPOPENFILENAMEW aFileNameW, BOOL aOpen)
   OPENFILENAMEA ofnA;
   char filterA[MAX_FILTER_NAME+2];
   char customFilterA[MAX_FILTER_NAME+1];
-  char fileA[MAX_PATH+1];
+  char fileA[FILE_BUFFER_SIZE+1];
   char fileTitleA[MAX_PATH+1];
   char initDirA[MAX_PATH+1];
   char titleA[MAX_PATH+1];
@@ -256,9 +256,9 @@ BOOL CallOpenSaveFileNameA(LPOPENFILENAMEW aFileNameW, BOOL aOpen)
   }
   ofnA.nFilterIndex = aFileNameW->nFilterIndex; // Index of pair of filter strings. Should be ok.
   if (aFileNameW->lpstrFile)  {
-    ConvertWtoA(aFileNameW->lpstrFile, MAX_PATH, fileA);
+    ConvertWtoA(aFileNameW->lpstrFile, FILE_BUFFER_SIZE, fileA);
     ofnA.lpstrFile = fileA;
-    ofnA.nMaxFile = MAX_PATH;
+    ofnA.nMaxFile = FILE_BUFFER_SIZE;
     if (strlen(fileA))  {
       // find last file offset
       ofnA.nFileOffset = strrchr(fileA, '\\') - fileA + 1; 
