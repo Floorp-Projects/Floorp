@@ -129,6 +129,7 @@
 #include "nsIJSNativeInitializer.h"
 #include "nsIFullScreen.h"
 #include "nsIStringBundle.h"
+#include "nsIScriptEventManager.h" // For GetInterface()
 
 #include "plbase64.h"
 
@@ -4113,6 +4114,17 @@ GlobalWindowImpl::GetInterface(const nsIID & aIID, void **aSink)
       if (viewer) {
         nsCOMPtr<nsIWebBrowserPrint> webBrowserPrint(do_QueryInterface(viewer));
         *aSink = webBrowserPrint;
+      }
+    }
+  }
+  else if (aIID.Equals(NS_GET_IID(nsIScriptEventManager))) {
+    nsCOMPtr<nsIDocument> doc(do_QueryInterface(mDocument));
+    if (doc) {
+      nsCOMPtr<nsIScriptEventManager> mgr;
+
+      doc->GetScriptEventManager(getter_AddRefs(mgr));
+      if (mgr) {
+        *aSink = mgr;
       }
     }
   }
