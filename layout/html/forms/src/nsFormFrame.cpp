@@ -1302,7 +1302,7 @@ nsFormFrame::GetFileNameWithinPath(nsString aPathName)
   // so we have to avoid the test for '\'. We can't use
   // PR_DIRECTORY_SEPARATOR_STR (even though ':' is a dir sep for MacOS)
   // because this is set to '/' for reasons unknown to this coder.
-  PRInt32 fileNameStart = aPathname.RFind(":");
+  PRInt32 fileNameStart = aPathName.RFind(":");
 #else
   PRInt32 fileNameStart = aPathName.RFind(PR_DIRECTORY_SEPARATOR_STR);
 #endif
