@@ -21,6 +21,7 @@ sub RegisterConfig {
         ['lasttreesStates', 0, 0, []], # copy of trees in last test
         ['tinderboxStates', 0, 0, {}], # ->tree->build->(current, previous, lastupdate)
         ['updateDelay', 1, 1, 120],
+        ['useNotice', 1, 1, 1], # set to 1 to use notice and 0 to use a normal message
         ['_lastupdate', 0, 0, 0],
         ['preferredLineLength', 1, 1, 100], 
         ['mutes', 1, 1, {}],  # tree -> "channel channel channel"
@@ -261,14 +262,14 @@ sub CheckForUpdates {
             unless ($mutedChannels{$_}) {
                 local $event->{'target'} = $_;
                 foreach (@changes) {
-                    $self->say($event, $_);
+                    $self->sayOrNotice($event, $_);
                 }
                 if (@output < 3) {
                     foreach (@output) {
-                        $self->say($event, $_);
+                        $self->sayOrNotice($event, $_);
                     }
                 } else {
-                    $self->say($event, "Many tree changes just occured. Check tinderbox to see what they were.");
+                    $self->sayOrNotice($event, "Many tree changes just occured. Check tinderbox to see what they were.");
                 }
             }
         }
@@ -468,5 +469,14 @@ sub Report {
         foreach (@output) {
             $self->say($event, $_);
         }
+    }
+}
+
+sub sayOrNotice {
+    my $self = shift;
+    if ($self->{'useNotice'}) {
+        $self->notice(@_);
+    } else {
+        $self->say(@_);
     }
 }
