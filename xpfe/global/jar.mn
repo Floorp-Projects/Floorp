@@ -11,6 +11,7 @@ toolkit.jar:
 	content/global/logo.gif                     (resources/content/logo.gif) 
 	content/global/about.xul                    (resources/content/about.xul) 
 	content/global/mozilla.html                 (resources/content/mozilla.html) 
+	content/global/plugins.html                 (resources/content/plugins.html) 
 	content/global/credits.html                 (resources/content/credits.html) 
 	content/global/charsetOverlay.xul           (resources/content/charsetOverlay.xul) 
 	content/global/charsetOverlay.js            (resources/content/charsetOverlay.js) 
