@@ -1264,7 +1264,11 @@ nsresult nsMsgComposeAndSend::BeginCryptoEncapsulation ()
   nsresult rv = NS_OK;
   nsCOMPtr<nsIMsgComposeSecure> secureCompose;
   secureCompose = do_CreateInstance(NS_MSGCOMPOSESECURE_CONTRACTID, &rv);
-  if (NS_SUCCEEDED(rv) && secureCompose)
+  // it's not an error scenario of there is secure compose
+  if (NS_FAILED(rv))
+    return NS_OK;
+
+  if (secureCompose)
   {
     PRBool requiresEncryptionWork = PR_FALSE;
     secureCompose->RequiresCryptoEncapsulation(mUserIdentity, mCompFields, &requiresEncryptionWork);
