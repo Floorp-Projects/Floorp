@@ -1651,8 +1651,8 @@ public class Interpreter extends LabelTable {
                             lhs = getString(theData.itsStringTable, iCode, 
                                             pc + 1);
                         }
-                        stack[stackTop] = ScriptRuntime.call(cx, lhs, 
-                                                             rhs, outArgs);
+                        stack[stackTop] = ScriptRuntime.call(cx, lhs, rhs, 
+                                                             outArgs, scope);
                         pc += 4;                                                            
                         break;
                     case TokenStream.NEW :

@@ -846,6 +846,8 @@ public class IRFactory {
             return createSetProp(nodeType, nodeOp, left.getFirstChild(),
                                  id, right, convert, postfix);
           default:
+            // TODO: This should be a ReferenceError--but that's a runtime 
+            //  exception. Should we compile an exception into the code?
             reportError("msg.bad.lhs.assign");
             return left;
         }

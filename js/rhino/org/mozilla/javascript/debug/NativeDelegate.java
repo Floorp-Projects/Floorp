@@ -238,7 +238,7 @@ public final class NativeDelegate
     // wrapper to be called by our generated subclass
 
     public static Object callDebug(Context cx, Object fun, Object thisArg,
-                                   Object[] args)
+                                   Object[] args, Scriptable scope)
         throws JavaScriptException
     {
         Object o = null;
@@ -247,7 +247,7 @@ public final class NativeDelegate
         {
             Object hookData = hook.preCall(cx, fun, thisArg, args);
             try {
-                o = ScriptRuntime.call(cx, fun, thisArg, args);
+                o = ScriptRuntime.call(cx, fun, thisArg, args, scope);
             }
             catch(JavaScriptException e) {
                 hook.postCall(cx, hookData, null, e);
@@ -256,7 +256,7 @@ public final class NativeDelegate
             hook.postCall(cx, hookData, o, null);
         }
         else
-            o = ScriptRuntime.call(cx, fun, thisArg, args);
+            o = ScriptRuntime.call(cx, fun, thisArg, args, scope);
         return o;
     }
 

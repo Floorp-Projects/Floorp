@@ -1273,7 +1273,7 @@ public class ScriptRuntime {
     }
 
     public static Object call(Context cx, Object fun, Object thisArg,
-                              Object[] args)
+                              Object[] args, Scriptable scope)
         throws JavaScriptException
     {
         Function function;
@@ -1281,12 +1281,13 @@ public class ScriptRuntime {
             function = (Function) fun;
         }
         catch (ClassCastException e) {
+            // XXX fails for "a".b()
             Object[] errorArgs = { toString(fun) };
             throw NativeGlobal.constructError(
                         Context.getContext(), "TypeError",
                         ScriptRuntime.getMessage("msg.isnt.function", 
                                                  errorArgs),
-                        thisArg);
+                        scope);
         }
 
         Scriptable thisObj;
@@ -1294,8 +1295,7 @@ public class ScriptRuntime {
             thisObj = (Scriptable) thisArg;
         }
         catch (ClassCastException e) {
-            thisObj = ScriptRuntime.toObject(
-                        ScriptableObject.getTopLevelScope(function), thisArg);
+            thisObj = ScriptRuntime.toObject(scope, thisArg);
         }
 
         return function.call(cx, function.getParentScope(), thisObj, args);
@@ -1322,14 +1322,14 @@ public class ScriptRuntime {
             if (name.equals("exec") 
                         && (cx.getRegExpProxy() != null)
                         && (cx.getRegExpProxy().isRegExp(jsThis)))
-                return call(cx, fun, jsThis, args);
+                return call(cx, fun, jsThis, args, scope);
         }
         else    // could've been <java>.XXX.exec() that was re-directed here
             if (fun instanceof NativeJavaMethod)
-                return call(cx, fun, jsThis, args);
+                return call(cx, fun, jsThis, args, scope);
                 
         if (isCall)
-            return call(cx, fun, thisArg, args);
+            return call(cx, fun, thisArg, args, scope);
         return newObject(cx, fun, args, scope);
     }
     

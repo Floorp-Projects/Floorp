@@ -934,7 +934,7 @@ public class NativeFunction extends ScriptableObject implements Function {
         }
         else
             newArgs = new Object[0];
-        return ScriptRuntime.call(cx, val, newThis, newArgs);
+        return ScriptRuntime.call(cx, val, newThis, newArgs, newThis);
     }
 
     /**
@@ -949,8 +949,9 @@ public class NativeFunction extends ScriptableObject implements Function {
         Object val = thisObj.getDefaultValue(ScriptRuntime.FunctionClass);
         if (args.length == 0) {
             Scriptable s = ScriptRuntime.toObject(funObj, val);
-            return ScriptRuntime.call(cx, val, s.getParentScope(),
-                                                ScriptRuntime.emptyArgs);
+            Scriptable scope = s.getParentScope();
+            return ScriptRuntime.call(cx, val, scope, ScriptRuntime.emptyArgs, 
+                                      scope);
         } else {
             Scriptable newThis = args[0] == null
                                  ? ScriptableObject.getTopLevelScope(thisObj)
@@ -958,7 +959,7 @@ public class NativeFunction extends ScriptableObject implements Function {
 
             Object[] newArgs = new Object[args.length - 1];
             System.arraycopy(args, 1, newArgs, 0, newArgs.length);
-            return ScriptRuntime.call(cx, val, newThis, newArgs);
+            return ScriptRuntime.call(cx, val, newThis, newArgs, newThis);
         }
     }
 

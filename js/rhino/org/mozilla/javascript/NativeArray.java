@@ -500,7 +500,7 @@ public class NativeArray extends ScriptableObject {
                 working[i] = getElem(thisObj, i);
             }
 
-            qsort(cx, compare, working, 0, (int)length - 1);
+            qsort(cx, compare, working, 0, (int)length - 1, funObj);
 
             // copy the working array back into thisObj
             for (int i=0; i<length; i++) {
@@ -511,7 +511,7 @@ public class NativeArray extends ScriptableObject {
     }
 
     private static double qsortCompare(Context cx, Object jsCompare, Object x,
-                                       Object y)
+                                       Object y, Scriptable scope)
         throws JavaScriptException
     {
         Object undef = Undefined.instance;
@@ -543,14 +543,14 @@ public class NativeArray extends ScriptableObject {
 //                                                              args));
             // for now, just ignore it:
             double d = ScriptRuntime.
-                toNumber(ScriptRuntime.call(cx, jsCompare, null, args));
+                toNumber(ScriptRuntime.call(cx, jsCompare, null, args, scope));
 
             return (d == d) ? d : 0;
         }
     }
 
     private static void qsort(Context cx, Object jsCompare, Object[] working,
-                              int lo, int hi)
+                              int lo, int hi, Scriptable scope)
         throws JavaScriptException
     {
         Object pivot;
@@ -565,13 +565,14 @@ public class NativeArray extends ScriptableObject {
             while (i < j) {
                 for(;;) {
                     b = j;
-                    if (qsortCompare(cx, jsCompare, working[j], pivot) <= 0)
+                    if (qsortCompare(cx, jsCompare, working[j], pivot, 
+                                     scope) <= 0)
                         break;
                     j--;
                 }
                 working[a] = working[b];
                 while (i < j && qsortCompare(cx, jsCompare, working[a],
-                                             pivot) <= 0)
+                                             pivot, scope) <= 0)
                 {
                     i++;
                     a = i;
@@ -580,10 +581,10 @@ public class NativeArray extends ScriptableObject {
             }
             working[a] = pivot;
             if (i - lo < hi - i) {
-                qsort(cx, jsCompare, working, lo, i - 1);
+                qsort(cx, jsCompare, working, lo, i - 1, scope);
                 lo = i + 1;
             } else {
-                qsort(cx, jsCompare, working, i + 1, hi);
+                qsort(cx, jsCompare, working, i + 1, hi, scope);
                 hi = i - 1;
             }
         }
@@ -608,13 +609,14 @@ public class NativeArray extends ScriptableObject {
                 for(;;) {
                     b = j;
                     if (qsortCompare(cx, jsCompare, getElem(target, j),
-                                     pivot) <= 0)
+                                     pivot, target) <= 0)
                         break;
                     j--;
                 }
                 setElem(target, a, getElem(target, b));
                 while (i < j && qsortCompare(cx, jsCompare,
-                                             getElem(target, a), pivot) <= 0)
+                                             getElem(target, a), 
+                                             pivot, target) <= 0)
                 {
                     i++;
                     a = i;

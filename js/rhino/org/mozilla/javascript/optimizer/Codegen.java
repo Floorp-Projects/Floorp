@@ -2379,17 +2379,18 @@ if (true) {
                 methodNameCall = "callSimple"; 
                 className      = "org/mozilla/javascript/optimizer/OptRuntime";
             } else {
+                aload(variableObjectLocal);
                 if (type == TokenStream.NEW) {
                     callSignature    = "(Lorg/mozilla/javascript/Context;" +
                                         "Ljava/lang/Object;" +
                                         "[Ljava/lang/Object;" +
                                         "Lorg/mozilla/javascript/Scriptable;)";
-                    aload(variableObjectLocal);
                 } else {
                     callSignature    = "(Lorg/mozilla/javascript/Context;" +
                                         "Ljava/lang/Object;" +
                                         "Ljava/lang/Object;" +
-                                        "[Ljava/lang/Object;)";
+                                        "[Ljava/lang/Object;" +
+                                        "Lorg/mozilla/javascript/Scriptable;)";
                 }
                 methodNameCall   = "call"; 
                 className        = "org/mozilla/javascript/ScriptRuntime";

@@ -249,7 +249,7 @@ public class FlattenedObject {
         if (!(obj instanceof Function)) {
             throw new NotAFunctionException();
         }
-        return ScriptRuntime.call(cx, obj, thisObj, args);
+        return ScriptRuntime.call(cx, obj, thisObj, args, (Function) obj);
     }
 
     /**

@@ -259,16 +259,9 @@ public class JavaAdapter extends ScriptableObject {
 	        try {
 		        Context cx = Context.enter();
 		        Object fun = object.get(methodId, object);
-		        return ScriptRuntime.call(cx, fun, object, args);
+		        return ScriptRuntime.call(cx, fun, object, args, object);
 	        } catch (JavaScriptException ex) {
 	              // TODO: could occur
-	            /*
-	        } catch (Exception ex) {
-	            // TODO: wouldn't it be better to let the exception propagate
-	            // up so that it could be dealt with by the calling code?
-	            ex.printStackTrace(System.err);
-	            throw new Error(ex.getMessage());
-	            */
 	        } finally {	
 	            Context.exit();
 	        }
