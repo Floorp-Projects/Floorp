@@ -36,9 +36,7 @@
 #include "nsIDOMNSDocument.h"
 #include "nsIContentViewerContainer.h"
 #include "nsIDOMElement.h"
-#include "nsIDOMElementObserver.h"
 #include "nsIDOMNode.h"
-#include "nsIDOMNodeObserver.h"
 #include "nsIDOMText.h"
 #include "nsIDOMXULDocument.h"
 #include "nsIDOMXULElement.h"
@@ -130,9 +128,7 @@ static PRLogModuleInfo* gLog;
 ////////////////////////////////////////////////////////////////////////
 
 class RDFXULBuilderImpl : public nsIRDFContentModelBuilder,
-                          public nsIRDFObserver,
-                          public nsIDOMNodeObserver,
-                          public nsIDOMElementObserver
+                          public nsIRDFObserver
 {
 private:
     nsIRDFDocument*                     mDocument; // [WEAK]
@@ -178,15 +174,6 @@ private:
     };
 
     friend class Sentry;
-
-    // These "zombie elements" are a pool of elements that are
-    // removed from the content model. When a new element is created
-    // via the DOM document.createElement() API, or an element is
-    // removed from the content model using the DOM APIs, the element
-    // is placed in the pool. This ensures that subsequent
-    // insertion of the node will result in the same object being
-    // re-used, rather than a new element being created.
-    nsCOMPtr<nsISupportsArray> mZombiePool;
 
     // pseudo-constants and shared services
     static PRInt32 gRefCnt;
@@ -264,12 +251,6 @@ public:
                       nsIRDFNode* aTarget);
 
 
-    // nsIDOMNodeObserver interface
-    NS_DECL_IDOMNODEOBSERVER
-
-    // nsIDOMElementObserver interface
-    NS_DECL_IDOMELEMENTOBSERVER
-
     // Implementation methods
     nsresult AppendChild(nsINameSpace* aNameSpace,
                          nsIContent* aElement,
@@ -338,9 +319,6 @@ public:
 
     nsresult
     MakeProperty(PRInt32 aNameSpaceID, nsIAtom* aTagName, nsIRDFResource** aResult);
-
-    nsresult
-    AddElementToZombiePool(nsIContent* aElement);
 
     nsresult
     GetParentNodeWithHTMLHack(nsIDOMNode* aNode, nsCOMPtr<nsIDOMNode>* aResult);
@@ -545,12 +523,6 @@ RDFXULBuilderImpl::QueryInterface(REFNSIID iid, void** aResult)
     else if (iid.Equals(kIRDFObserverIID)) {
         *aResult = NS_STATIC_CAST(nsIRDFObserver*, this);
     }
-    else if (iid.Equals(nsIDOMNodeObserver::GetIID())) {
-        *aResult = NS_STATIC_CAST(nsIDOMNodeObserver*, this);
-    }
-    else if (iid.Equals(nsIDOMElementObserver::GetIID())) {
-        *aResult = NS_STATIC_CAST(nsIDOMElementObserver*, this);
-    }
     else {
         *aResult = nsnull;
         return NS_NOINTERFACE;
@@ -646,12 +618,11 @@ RDFXULBuilderImpl::CreateContents(nsIContent* aElement)
     // generated: this prevents a re-entrant call from triggering
     // another generation.
     nsAutoString attrValue;
-    if (NS_FAILED(rv = aElement->GetAttribute(kNameSpaceID_None,
-                                              kXULContentsGeneratedAtom,
-                                              attrValue))) {
-        NS_ERROR("unable to test contents-generated attribute");
-        return rv;
-    }
+    rv = aElement->GetAttribute(kNameSpaceID_None,
+                                kXULContentsGeneratedAtom,
+                                attrValue);
+    NS_ASSERTION(NS_SUCCEEDED(rv), "unable to test contents-generated attribute");
+    if (NS_FAILED(rv)) return rv;
 
     if ((rv == NS_CONTENT_ATTR_HAS_VALUE) && (attrValue.EqualsIgnoreCase("true")))
         return NS_OK;
@@ -704,13 +675,12 @@ RDFXULBuilderImpl::CreateContents(nsIContent* aElement)
 
     // Now mark the element's contents as being generated so that
     // any re-entrant calls don't trigger an infinite recursion.
-    if (NS_FAILED(rv = aElement->SetAttribute(kNameSpaceID_None,
-                                              kXULContentsGeneratedAtom,
-                                              "true",
-                                              PR_FALSE))) {
-        NS_ERROR("unable to set contents-generated attribute");
-        return rv;
-    }
+    rv = aElement->SetAttribute(kNameSpaceID_None,
+                                kXULContentsGeneratedAtom,
+                                "true",
+                                PR_FALSE);
+    NS_ASSERTION(NS_SUCCEEDED(rv), "unable to set contents-generated attribute");
+    if (NS_FAILED(rv)) return rv;
 
     nsCOMPtr<nsINameSpace> containingNameSpace;
     rv = GetContainingNameSpace(aElement, getter_AddRefs(containingNameSpace));
@@ -803,72 +773,13 @@ RDFXULBuilderImpl::CreateElement(PRInt32 aNameSpaceID,
 
     nsresult rv;
 
-    nsCOMPtr<nsIRDFResource> resource;
-    if (! aResource) {
-        // This is really a brand new element. Assign it an
-        // "anonymous" identifier so that it can be referred to in the
-        // graph.
-        nsCOMPtr<nsIDocument> document = do_QueryInterface(mDocument);
-        if (! document)
-            return NS_ERROR_UNEXPECTED;
-
-        nsCOMPtr<nsIURI> url = dont_AddRef( document->GetDocumentURL() );
-        if (! url)
-            return NS_ERROR_UNEXPECTED;
-
-#ifdef NECKO
-        char* context;
-#else
-        const char* context;
-#endif
-        rv = url->GetSpec(&context);
-        if (NS_FAILED(rv)) return rv;
-
-        rv = rdf_CreateAnonymousResource(context, getter_AddRefs(resource));
-#ifdef NECKO
-        nsCRT::free(context);
-#endif
-        if (NS_FAILED(rv)) return rv;
-
-        // Set it's RDF:type in the graph s.t. the element's tag can be
-        // constructed from it.
-        nsCOMPtr<nsIRDFResource> type;
-        rv = MakeProperty(aNameSpaceID, aTagName, getter_AddRefs(type));
-        if (NS_FAILED(rv)) return rv;
-
-        rv = mDB->Assert(resource, kRDF_type, type, PR_TRUE);
-        NS_ASSERTION(NS_SUCCEEDED(rv), "unable to set element's tag info in graph");
-        if (NS_FAILED(rv)) return rv;
-
-        // Mark it as a XUL element
-        rv = mDB->Assert(resource, kRDF_instanceOf, kXUL_element, PR_TRUE);
-        NS_ASSERTION(rv == NS_OK, "unable to mark as XUL element");
-        if (NS_FAILED(rv)) return rv;
-
-        // ...part of which entails making it a container
-        NS_WITH_SERVICE(nsIRDFContainerUtils, rdfc, kRDFContainerUtilsCID, &rv);
-        if (NS_FAILED(rv)) return rv;
-
-        rv = rdfc->MakeSeq(mDB, resource, nsnull);
-        NS_ASSERTION(rv == NS_OK, "unable to mark as XUL element");
-        if (NS_FAILED(rv)) return rv;
-    }
-    else {
-        resource = dont_QueryInterface(aResource);
-    }
-
     nsCOMPtr<nsIContent> result;
     if (aNameSpaceID == kNameSpaceID_HTML) {
-        rv = CreateHTMLElement(nsnull, resource, aTagName, getter_AddRefs(result));
+        rv = CreateHTMLElement(nsnull, aResource, aTagName, getter_AddRefs(result));
     }
     else {
-        rv = CreateXULElement(nsnull, resource, aNameSpaceID, aTagName, getter_AddRefs(result));
+        rv = CreateXULElement(nsnull, aResource, aNameSpaceID, aTagName, getter_AddRefs(result));
     }
-    if (NS_FAILED(rv)) return rv;
-
-    // Add the element to the zombie pool immediately, so it will be
-    // resurrected when somebody wants to insert it into the document.
-    rv = AddElementToZombiePool(result);
     if (NS_FAILED(rv)) return rv;
 
     *aResult = result;
@@ -1275,527 +1186,6 @@ RDFXULBuilderImpl::OnMove(nsIRDFResource* aOldSource,
 	return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-
-
-////////////////////////////////////////////////////////////////////////
-// nsIDOMNodeObserver interface
-
-NS_IMETHODIMP
-RDFXULBuilderImpl::OnSetNodeValue(nsIDOMNode* aNode, const nsString& aValue)
-{
-    NS_NOTYETIMPLEMENTED("write me!");
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-RDFXULBuilderImpl::OnInsertBefore(nsIDOMNode* aParent, nsIDOMNode* aNewChild, nsIDOMNode* aRefChild)
-{
-    NS_PRECONDITION(aParent != nsnull, "null ptr");
-    if (!aParent)
-        return NS_ERROR_NULL_POINTER;
-
-    NS_PRECONDITION(aNewChild != nsnull, "null ptr");
-    if (!aNewChild)
-        return NS_ERROR_NULL_POINTER;
-
-    NS_PRECONDITION(aRefChild != nsnull, "null ptr");
-    if (!aRefChild)
-        return NS_ERROR_NULL_POINTER;
-
-    nsresult rv;
-
-    // Translate each of the DOM nodes into the RDF resource for which
-    // they are acting as a proxy. This implementation will only
-    // update nodes that are an RDF:instanceOf a XUL:element.
-
-    // XXX If aNewChild doesn't have a resource, then somebody is
-    // inserting a non-RDF element into aParent. Panic for now.
-    nsCOMPtr<nsIRDFNode> newChild;
-    rv = GetGraphNodeForXULElement(aNewChild, getter_AddRefs(newChild));
-    if (NS_FAILED(rv)) return rv;
-
-    if (rv == NS_RDF_NO_VALUE)
-        return NS_OK;
-
-    // If there was an old parent for newChild, then make sure to
-    // remove that relationship.
-    nsCOMPtr<nsIDOMNode> oldParentNode;
-    //rv = aNewChild->GetParentNode(getter_AddRefs(oldParentNode));
-    rv = GetParentNodeWithHTMLHack(aNewChild, &oldParentNode);
-    NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get new child's parent");
-    if (NS_FAILED(rv)) return rv;
-
-    if (oldParentNode) {
-        nsCOMPtr<nsIRDFResource> oldParent;
-
-        // If the old parent has a resource...
-        if (NS_SUCCEEDED(rv = GetRDFResourceFromXULElement(oldParentNode, getter_AddRefs(oldParent)))) {
-
-            // ...and it's a XUL element...
-            PRBool isXULElement;
-            rv = mDB->HasAssertion(oldParent, kRDF_instanceOf, kXUL_element, PR_TRUE, &isXULElement);
-            if (NS_FAILED(rv)) return rv;
-
-            if (isXULElement) {
-                // remove the child from the old collection
-                nsCOMPtr<nsIRDFContainer> container;
-                rv = NS_NewRDFContainer(mDB, oldParent, getter_AddRefs(container));
-                if (NS_FAILED(rv)) return rv;
-
-                Sentry s(*this, newChild); // ignore renumbering assertions
-
-                rv = container->RemoveElement(newChild, PR_TRUE);
-                NS_ASSERTION(NS_SUCCEEDED(rv), "unable to remove newChild from oldParent");
-                if (NS_FAILED(rv)) return rv;
-            }
-        }
-    }
-
-    // If the new parent has a resource...
-    nsCOMPtr<nsIRDFResource> parent;
-    if (NS_SUCCEEDED(rv = GetRDFResourceFromXULElement(aParent, getter_AddRefs(parent)))) {
-
-        // ...and it's a XUL element...
-        PRBool isXULElement;
-        rv = mDB->HasAssertion(parent, kRDF_instanceOf, kXUL_element, PR_TRUE, &isXULElement);
-        if (NS_FAILED(rv)) return rv;
-
-        if (isXULElement) {
-            // XXX For now, we panic if the refChild doesn't have a resouce
-            nsCOMPtr<nsIRDFNode> refChild;
-            rv = GetGraphNodeForXULElement(aRefChild, getter_AddRefs(refChild));
-            NS_ASSERTION(NS_SUCCEEDED(rv), "ref child doesn't have a resource");
-            if (NS_FAILED(rv)) return rv;
-
-            // Create a container wrapper
-            nsCOMPtr<nsIRDFContainer> container;
-            rv = NS_NewRDFContainer(mDB, parent, getter_AddRefs(container));
-
-            // Determine the index of the refChild in the container
-            PRInt32 i;
-            rv = container->IndexOf(refChild, &i);
-            NS_ASSERTION(NS_SUCCEEDED(rv), "unable to determine index of refChild in container");
-            if (NS_FAILED(rv)) return rv;
-
-            Sentry s(*this, newChild); // ignore renumbering assertions
-
-            // ...and insert the newChild before it.
-            rv = container->InsertElementAt(newChild, i, PR_TRUE);
-            NS_ASSERTION(NS_SUCCEEDED(rv), "unable to insert new element into container");
-            if (NS_FAILED(rv)) return rv;
-        }
-    }
-
-    return NS_OK;
-}
-
-
-
-NS_IMETHODIMP
-RDFXULBuilderImpl::OnReplaceChild(nsIDOMNode* aParent, nsIDOMNode* aNewChild, nsIDOMNode* aOldChild)
-{
-    NS_PRECONDITION(aParent != nsnull, "null ptr");
-    if (!aParent)
-        return NS_ERROR_NULL_POINTER;
-
-    NS_PRECONDITION(aNewChild != nsnull, "null ptr");
-    if (!aNewChild)
-        return NS_ERROR_NULL_POINTER;
-
-    NS_PRECONDITION(aOldChild != nsnull, "null ptr");
-    if (!aOldChild)
-        return NS_ERROR_NULL_POINTER;
-
-    nsresult rv;
-
-    // Translate each of the DOM nodes into the RDF resource for which
-    // they are acting as a proxy. This implementation will only
-    // update nodes that are an RDF:instanceOf a XUL:element.
-
-    // XXX If aNewChild doesn't have a resource, then somebody is
-    // inserting a non-RDF element into aParent. Panic for now.
-    nsCOMPtr<nsIRDFNode> newChild;
-    rv = GetGraphNodeForXULElement(aNewChild, getter_AddRefs(newChild));
-    if (NS_FAILED(rv)) return rv;
-
-    if (rv == NS_RDF_NO_VALUE)
-        return NS_OK;
-
-    // XXX ibid
-    nsCOMPtr<nsIRDFNode> oldChild;
-    rv = GetGraphNodeForXULElement(aOldChild, getter_AddRefs(oldChild));
-    if (NS_FAILED(rv)) return rv;
-
-    if (rv == NS_RDF_NO_VALUE)
-        return NS_OK;
-
-    // Now if we can get the parent's resource...
-    nsCOMPtr<nsIRDFResource> parent;
-    if (NS_SUCCEEDED(rv = GetRDFResourceFromXULElement(aParent, getter_AddRefs(parent)))) {
-        // ...and it's a XUL element...
-        PRBool isXULElement;
-        rv = mDB->HasAssertion(parent, kRDF_instanceOf, kXUL_element, PR_TRUE, &isXULElement);
-        if (NS_FAILED(rv)) return rv;
-
-        if (isXULElement) {
-            nsCOMPtr<nsIRDFContainer> container;
-            rv = NS_NewRDFContainer(mDB, parent, getter_AddRefs(container));
-            if (NS_FAILED(rv)) return rv;
-
-            // Remember the old child's index...
-            PRInt32 i;
-            rv = container->IndexOf(oldChild, &i);
-            NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get index of old child in container");
-            if (NS_FAILED(rv)) return rv;
-
-            // ...then remove the old child from the old collection.
-            // and add the new child to the collection at the old
-            // child's index. N.B., we set aRenumber to 'false': there
-            // is no need to renumber the container since we're
-            // putting the new child in the exact same place as the
-            // old.
-            rv = container->RemoveElement(oldChild, PR_FALSE);
-            NS_ASSERTION(NS_SUCCEEDED(rv), "unable to remove old child from container");
-            if (NS_FAILED(rv)) return rv;
-
-            rv = container->InsertElementAt(newChild, i, PR_FALSE);
-            NS_ASSERTION(NS_SUCCEEDED(rv), "unable to add new child to container");
-            if (NS_FAILED(rv)) return rv;
-        }
-    }
-
-    return NS_OK;
-}
-
-
-
-NS_IMETHODIMP
-RDFXULBuilderImpl::OnRemoveChild(nsIDOMNode* aParent, nsIDOMNode* aOldChild)
-{
-    NS_PRECONDITION(aParent != nsnull, "null ptr");
-    if (!aParent)
-        return NS_ERROR_NULL_POINTER;
-
-    NS_PRECONDITION(aOldChild != nsnull, "null ptr");
-    if (!aOldChild)
-        return NS_ERROR_NULL_POINTER;
-
-    nsresult rv;
-
-    // XXX may want to check _here_ to make sure that aOldChild is
-    // actually a child of aParent...
-
-    // XXX If aOldChild doesn't have a resource, then somebody is
-    // removing a non-RDF element from aParent. This probably isn't a
-    // big deal, but panic for now.
-    nsCOMPtr<nsIRDFNode> oldChild;
-    rv = GetGraphNodeForXULElement(aOldChild, getter_AddRefs(oldChild));
-    if (NS_FAILED(rv)) return rv;
-
-    if (rv == NS_RDF_NO_VALUE)
-        return NS_OK;
-
-    // If the new parent has a resource...
-    nsCOMPtr<nsIRDFResource> parent;
-    if (NS_SUCCEEDED(rv = GetRDFResourceFromXULElement(aParent, getter_AddRefs(parent)))) {
-
-        // ...and it's a XUL element...
-        PRBool isXULElement;
-        rv = mDB->HasAssertion(parent, kRDF_instanceOf, kXUL_element, PR_TRUE, &isXULElement);
-        if (NS_FAILED(rv)) return rv;
-
-        if (isXULElement) {
-            // ...then remove it from the container
-            nsCOMPtr<nsIRDFContainer> container;
-            rv = NS_NewRDFContainer(mDB, parent, getter_AddRefs(container));
-            if (NS_FAILED(rv)) return rv;
-
-            Sentry s(*this, oldChild); // ignore renumbering assertions
-
-            rv = container->RemoveElement(oldChild, PR_TRUE);
-            NS_ASSERTION(NS_SUCCEEDED(rv), "unable to remove element from container");
-            if (NS_FAILED(rv)) return rv;
-        }
-    }
-
-    return NS_OK;
-}
-
-
-
-NS_IMETHODIMP
-RDFXULBuilderImpl::OnAppendChild(nsIDOMNode* aParent, nsIDOMNode* aNewChild)
-{
-    NS_PRECONDITION(aParent != nsnull, "null ptr");
-    if (!aParent)
-        return NS_ERROR_NULL_POINTER;
-
-    NS_PRECONDITION(aNewChild != nsnull, "null ptr");
-    if (!aNewChild)
-        return NS_ERROR_NULL_POINTER;
-
-    nsresult rv;
-
-    nsCOMPtr<nsIRDFNode> newChild;
-    rv = GetGraphNodeForXULElement(aNewChild, getter_AddRefs(newChild));
-    if (NS_FAILED(rv)) return rv;
-
-    if (rv == NS_RDF_NO_VALUE)
-        return NS_OK;
-
-    // If there was an old parent for newChild, then make sure to
-    // remove that relationship.
-    nsCOMPtr<nsIDOMNode> oldParentNode;
-    //rv = aNewChild->GetParentNode(getter_AddRefs(oldParentNode));
-    rv = GetParentNodeWithHTMLHack(aNewChild, &oldParentNode);
-    NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get new child's parent");
-    if (NS_FAILED(rv)) return rv;
-
-    if (oldParentNode) {
-        nsCOMPtr<nsIRDFResource> oldParent;
-
-        // If the old parent has a resource...
-        if (NS_SUCCEEDED(rv = GetRDFResourceFromXULElement(oldParentNode, getter_AddRefs(oldParent)))) {
-
-            // ...and it's a XUL element...
-            PRBool isXULElement;
-
-            rv = mDB->HasAssertion(oldParent, kRDF_instanceOf, kXUL_element, PR_TRUE, &isXULElement);
-            if (NS_FAILED(rv)) return rv;
-
-            if (isXULElement) {
-                // remove the child from the old collection
-                nsCOMPtr<nsIRDFContainer> container;
-                rv = NS_NewRDFContainer(mDB, oldParent, getter_AddRefs(container));
-                if (NS_FAILED(rv)) return rv;
-
-                Sentry s(*this, newChild); // ignore renumbering assertions
-
-                rv = container->RemoveElement(newChild, PR_TRUE);
-                NS_ASSERTION(NS_SUCCEEDED(rv), "unable to remove newChild from oldParent");
-                if (NS_FAILED(rv)) return rv;
-            }
-        }
-    }
-
-    // If the new parent has a resource...
-    nsCOMPtr<nsIRDFResource> parent;
-    if (NS_SUCCEEDED(rv = GetRDFResourceFromXULElement(aParent, getter_AddRefs(parent)))) {
-
-        // ...and it's a XUL element...
-        PRBool isXULElement;
-        rv = mDB->HasAssertion(parent, kRDF_instanceOf, kXUL_element, PR_TRUE, &isXULElement);
-        if (NS_FAILED(rv)) return rv;
-
-        if (isXULElement) {
-            // ...then append it to the container
-            nsCOMPtr<nsIRDFContainer> container;
-            rv = NS_NewRDFContainer(mDB, parent, getter_AddRefs(container));
-            if (NS_FAILED(rv)) return rv;
-
-            rv = container->AppendElement(newChild);
-            NS_ASSERTION(NS_SUCCEEDED(rv), "unable to insert new element into container");
-            if (NS_FAILED(rv)) return rv;
-        }
-    }
-
-    return NS_OK;
-}
-
-
-////////////////////////////////////////////////////////////////////////
-// nsIDOMElementObserver interface
-
-
-NS_IMETHODIMP
-RDFXULBuilderImpl::OnSetAttribute(nsIDOMElement* aElement, const nsString& aName, const nsString& aValue)
-{
-    nsresult rv;
-
-    nsCOMPtr<nsIRDFResource> resource;
-    if (NS_FAILED(rv = GetRDFResourceFromXULElement(aElement, getter_AddRefs(resource)))) {
-        // XXX it's not a resource element, so there's no assertions
-        // we need to make on the back-end. Should we just do the
-        // update?
-        return NS_OK;
-    }
-
-    // Make sure it's a XUL element; otherwise, we really don't have
-    // any business with the attribute.
-    PRBool isXULElement;
-    rv = mDB->HasAssertion(resource,
-                           kRDF_instanceOf,
-                           kXUL_element,
-                           PR_TRUE,
-                           &isXULElement);
-    NS_ASSERTION(NS_SUCCEEDED(rv), "unable to determine if element is a XUL element");
-    if (NS_FAILED(rv)) return rv;
-
-    if (! isXULElement)
-        return NS_OK;
-
-    // Okay, so it _is_ a XUL element. Deal with it.
-
-    // Get the nsIContent interface, it's a bit more utilitarian
-    nsCOMPtr<nsIContent> element( do_QueryInterface(aElement) );
-    if (! element) {
-        NS_ERROR("element doesn't support nsIContent");
-        return NS_ERROR_UNEXPECTED;
-    }
-
-    // Split the property name into its namespace and tag components
-    PRInt32  nameSpaceID;
-    nsCOMPtr<nsIAtom> nameAtom;
-    rv = element->ParseAttributeString(aName, *getter_AddRefs(nameAtom), nameSpaceID);
-    NS_ASSERTION(NS_SUCCEEDED(rv), "unable to parse attribute string");
-    if (NS_FAILED(rv)) return rv;
-
-    // Check for "special" properties that may wreak havoc on the
-    // content model.
-    if ((nameSpaceID == kNameSpaceID_None) && (nameAtom.get() == kIdAtom)) {
-        // They're changing the ID of the element.
-
-        // XXX Punt for now.
-        PR_LOG(gLog, PR_LOG_ALWAYS,
-               ("ignoring id change on XUL element"));
-
-        return NS_OK;
-    }
-    else if (nameSpaceID == kNameSpaceID_RDF) {
-        if (nameAtom.get() == kDataSourcesAtom) {
-            NS_NOTYETIMPLEMENTED("can't change the data sources yet");
-            return NS_ERROR_NOT_IMPLEMENTED;
-        }
-
-        // XXX we should probably just ignore any changes to rdf: attribute
-        PR_LOG(gLog, PR_LOG_ALWAYS,
-               ("changing an rdf: attribute; this is probably not a good thing"));
-
-        return NS_OK;
-    }
-
-    // If we get here, it's a vanilla property that we need to go into
-    // the RDF graph to update. So, build an RDF resource from the
-    // property name...
-    nsCOMPtr<nsIRDFResource> property;
-    if (kNameSpaceID_Unknown == nameSpaceID) {
-      nameSpaceID = kNameSpaceID_None;  // ignore unknown prefix XXX is this correct?
-    }
-    rv = GetResource(nameSpaceID, nameAtom, getter_AddRefs(property));
-    NS_ASSERTION(NS_SUCCEEDED(rv), "unable to construct resource");
-    if (NS_FAILED(rv)) return rv;
-
-    // See if there was an old value
-    nsAutoString oldValueStr;
-    nsCOMPtr<nsIRDFLiteral> oldvalue;
-    rv = element->GetAttribute(nameSpaceID, nameAtom, oldValueStr);
-    if (NS_FAILED(rv)) return rv;
-
-    if (NS_CONTENT_ATTR_HAS_VALUE == rv) {
-        rv = gRDFService->GetLiteral(oldValueStr.GetUnicode(), getter_AddRefs(oldvalue));
-        NS_ASSERTION(NS_SUCCEEDED(rv), "unable to construct literal");
-        if (NS_FAILED(rv)) return rv;
-    }
-
-    // Get the new value
-    nsCOMPtr<nsIRDFLiteral> newvalue;
-    rv = gRDFService->GetLiteral(aValue.GetUnicode(), getter_AddRefs(newvalue));
-    if (NS_FAILED(rv)) return rv;
-
-    // Depending on whether or not there was an old value, we'll
-    // either do a "change" or an "assert".
-    if (oldvalue) {
-        rv = mDB->Change(resource, property, oldvalue, newvalue);
-        NS_ASSERTION(rv == NS_RDF_ASSERTION_ACCEPTED, "unable to change new property value");
-        if (NS_FAILED(rv)) return rv;
-    }
-    else {
-        rv = mDB->Assert(resource, property, newvalue, PR_TRUE);
-        NS_ASSERTION(rv == NS_RDF_ASSERTION_ACCEPTED, "unable to assert new property value");
-        if (NS_FAILED(rv)) return rv;
-    }
-
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-RDFXULBuilderImpl::OnRemoveAttribute(nsIDOMElement* aElement, const nsString& aName)
-{
-    nsresult rv;
-
-    nsCOMPtr<nsIRDFResource> resource;
-    if (NS_FAILED(rv = GetRDFResourceFromXULElement(aElement, getter_AddRefs(resource)))) {
-        // XXX it's not a resource element, so there's no assertions
-        // we need to make on the back-end. Should we just do the
-        // update?
-        return NS_OK;
-    }
-
-    // Make sure it's a XUL element; otherwise, we really don't have
-    // any business with the attribute.
-    PRBool isXULElement;
-    rv = mDB->HasAssertion(resource,
-                           kRDF_instanceOf,
-                           kXUL_element,
-                           PR_TRUE,
-                           &isXULElement);
-
-    if (NS_FAILED(rv)) return rv;
-
-    if (! isXULElement)
-        return NS_OK;
-
-    // Get the nsIContent interface, it's a bit more utilitarian
-    nsCOMPtr<nsIContent> element( do_QueryInterface(aElement) );
-    if (! element) {
-        NS_ERROR("element doesn't support nsIContent");
-        return NS_ERROR_UNEXPECTED;
-    }
-
-    // Split the property name into its namespace and tag components
-    PRInt32  nameSpaceID;
-    nsCOMPtr<nsIAtom> nameAtom;
-    rv = element->ParseAttributeString(aName, *getter_AddRefs(nameAtom), nameSpaceID);
-    NS_ASSERTION(NS_SUCCEEDED(rv), "unable to parse attribute string");
-    if (NS_FAILED(rv)) return rv;
-
-    nsCOMPtr<nsIRDFResource> property;
-    if (kNameSpaceID_Unknown == nameSpaceID) {
-        nameSpaceID = kNameSpaceID_None;  // ignore unknown prefix XXX is this correct?
-    }
-
-    rv = GetResource(nameSpaceID, nameAtom, getter_AddRefs(property));
-    if (NS_FAILED(rv)) return rv;
-
-    // Unassert the old value, if there was one.
-    nsAutoString oldValue;
-    if (NS_CONTENT_ATTR_HAS_VALUE == element->GetAttribute(nameSpaceID, nameAtom, oldValue)) {
-        nsCOMPtr<nsIRDFLiteral> value;
-        rv = gRDFService->GetLiteral(oldValue.GetUnicode(), getter_AddRefs(value));
-        if (NS_FAILED(rv)) return rv;
-
-        rv = mDB->Unassert(resource, property, value);
-        NS_ASSERTION(NS_SUCCEEDED(rv), "unable to unassert old property value");
-        if (NS_FAILED(rv)) return rv;
-    }
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-RDFXULBuilderImpl::OnSetAttributeNode(nsIDOMElement* aElement, nsIDOMAttr* aNewAttr)
-{
-    NS_NOTYETIMPLEMENTED("write me!");
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-RDFXULBuilderImpl::OnRemoveAttributeNode(nsIDOMElement* aElement, nsIDOMAttr* aOldAttr)
-{
-    NS_NOTYETIMPLEMENTED("write me!");
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-
 ////////////////////////////////////////////////////////////////////////
 // Implementation methods
 
@@ -1853,7 +1243,7 @@ RDFXULBuilderImpl::AppendChild(nsINameSpace* aNameSpace,
         }
 #endif
 
-        rv = aElement->AppendChildTo(child, PR_TRUE);
+        rv = aElement->AppendChildTo(child, PR_FALSE);
         NS_ASSERTION(NS_SUCCEEDED(rv), "unable to add element to content model");
         if (NS_FAILED(rv)) return rv;
     }
@@ -2085,12 +1475,6 @@ RDFXULBuilderImpl::RemoveChild(nsIContent* aElement, nsIRDFNode* aValue)
 #endif
             // okay, found it. now blow it away...
             aElement->RemoveChildAt(count, PR_TRUE);
-
-            // ...and add it to the zombie pool, so we can recycle it
-            // later if we need to.
-            rv = AddElementToZombiePool(child);
-            if (NS_FAILED(rv)) return rv;
-
             return NS_OK;
         }
     }
@@ -2139,53 +1523,6 @@ RDFXULBuilderImpl::CreateOrReuseElement(nsINameSpace* aContainingNameSpace,
     NS_ASSERTION(NS_SUCCEEDED(rv), "unable to split resource into namespace/tag pair");
     if (NS_FAILED(rv)) return rv;
 
-    // XXX We can make this faster if we need to.
-    if (mZombiePool) {
-        PRUint32 count;
-        rv = mZombiePool->Count(&count);
-        if (NS_FAILED(rv)) return rv;
-
-        while (PRInt32(--count) >= 0) {
-            nsISupports* isupports = mZombiePool->ElementAt(count);
-            nsCOMPtr<nsIContent> element = do_QueryInterface( isupports );
-            NS_IF_RELEASE(isupports);
-
-            NS_ASSERTION(element, "element is not a nsIContent");
-            if (! element)
-                continue;
-
-            nsCOMPtr<nsIRDFResource> resource;
-            rv = nsRDFContentUtils::GetElementResource(element, getter_AddRefs(resource));
-            NS_ASSERTION(NS_SUCCEEDED(rv), "an element without a resource is in the zombie pool");
-            if (NS_FAILED(rv)) continue;
-
-            if (resource.get() != aResource)
-                continue;
-
-            // found it!
-            mZombiePool->RemoveElementAt(count);
-
-#ifdef PR_LOGGING
-            if (PR_LOG_TEST(gLog, PR_LOG_DEBUG)) {
-                nsAutoString elementStr;
-                rv = nsRDFContentUtils::GetElementLogString(element, elementStr);
-                NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get element string");
-
-                char* elementCStr = elementStr.ToNewCString();
-
-                PR_LOG(gLog, PR_LOG_DEBUG, ("xulbuilder create-or-reuse resurrecting zombie"));
-                PR_LOG(gLog, PR_LOG_DEBUG, ("  %s", elementCStr));
-
-                delete[] elementCStr;
-            }
-#endif
-
-            *aResult = element;
-            NS_ADDREF(*aResult);
-            return NS_OK;
-        }
-    }
-
     if (nameSpaceID == kNameSpaceID_HTML) {
         rv = CreateHTMLElement(aContainingNameSpace, aResource, tag, aResult);
     }
@@ -2223,7 +1560,7 @@ RDFXULBuilderImpl::CreateHTMLElement(nsINameSpace* aContainingNameSpace,
     // bit of a hack: a bridge until we get to a more DOM-based
     // solution.
     nsCOMPtr<nsIHTMLContent> element;
-    PRUnichar *unicodeString;
+    /* const */ PRUnichar *unicodeString;
     aTagName->GetUnicode(&unicodeString);
     rv = mHTMLElementFactory->CreateInstanceByTag(unicodeString,
                                                   getter_AddRefs(element));
@@ -2237,144 +1574,132 @@ RDFXULBuilderImpl::CreateHTMLElement(nsINameSpace* aContainingNameSpace,
     // Eventually we'll really want to be tracking all forms full force.
     nsCOMPtr<nsIFormControl> htmlFormControl = do_QueryInterface(element);
     if (htmlFormControl) {
-      // Retrieve the hidden form from the XUL document.
-      nsCOMPtr<nsIDOMHTMLFormElement> htmlFormElement;
-      mDocument->GetForm(getter_AddRefs(htmlFormElement));
+        // Retrieve the hidden form from the XUL document.
+        nsCOMPtr<nsIDOMHTMLFormElement> htmlFormElement;
+        mDocument->GetForm(getter_AddRefs(htmlFormElement));
       
-      // Set the form
-      htmlFormControl->SetForm(htmlFormElement);
+        // Set the form
+        htmlFormControl->SetForm(htmlFormElement);
     }
 
     // Force the document to be set _here_. Many of the
     // AppendChildTo() implementations do not recursively ensure
     // that the child's doc is the same as the parent's.
-    nsCOMPtr<nsIDocument> doc;
-    if (NS_FAILED(rv = mDocument->QueryInterface(kIDocumentIID, getter_AddRefs(doc)))) {
-        NS_ERROR("uh, this isn't a document!");
-        return rv;
-    }
+    nsCOMPtr<nsIDocument> doc = do_QueryInterface(mDocument);
+    if (! doc)
+        return NS_ERROR_UNEXPECTED;
 
-    // Make sure our ID is set. Unlike XUL elements, we want to make sure
-    // that our ID is relative if possible.
-    //
-    // XXX Why? Is this for supporting inline style or something?
-    nsXPIDLCString uri;
-    if (NS_FAILED(rv = aResource->GetValue( getter_Copies(uri) )))
-        return rv;
-
-    // XXX Won't somebody just cram this back into a fully qualified
-    // URI somewhere?
-    nsAutoString id;
-    rv = nsRDFContentUtils::MakeElementID(doc, nsAutoString(uri), id);
+    // Set the document.
+    rv = element->SetDocument(doc, PR_FALSE);
+    NS_ASSERTION(NS_SUCCEEDED(rv), "couldn't set document on the element");
     if (NS_FAILED(rv)) return rv;
+
+    if (aResource) {
+        // Set the 'id' attribute
+        nsXPIDLCString uri;
+        rv = aResource->GetValue( getter_Copies(uri) );
+        if (NS_FAILED(rv)) return rv;
+
+        nsAutoString id;
+        rv = nsRDFContentUtils::MakeElementID(doc, nsAutoString(uri), id);
+        if (NS_FAILED(rv)) return rv;
        
-    if (NS_FAILED(rv = element->SetAttribute(kNameSpaceID_None, kIdAtom, id, PR_FALSE))) {
-        NS_ERROR("unable to set element's ID");
-        return rv;
-    }
-
-    // Set the document. N.B. that we do this _after_ setting up the
-    // ID so that we get the element hashed correctly in the
-    // document's resource-to-element map.
-    if (NS_FAILED(rv = element->SetDocument(doc, PR_FALSE))) {
-        NS_ERROR("couldn't set document on the element");
-        return rv;
-    }
-
-    // XXX Do we add ourselves to the map here? If so, this is non-dynamic! 
-    // If the HTML element's ID changes, we won't adjust
-    // the map.  XUL elements do this in the SetAttribute call, but we don't have
-    // access to that for HTML elements.  Should they even be in the map?
-    // For now the answer is NO.
-
-    // Now iterate through all the properties and add them as
-    // attributes on the element.  First, create a cursor that'll
-    // iterate through all the properties that lead out of this
-    // resource.
-    nsCOMPtr<nsISimpleEnumerator> properties;
-    rv = mDB->ArcLabelsOut(aResource, getter_AddRefs(properties));
-    NS_ASSERTION(NS_SUCCEEDED(rv), "unable to create arcs-out cursor");
-    if (NS_FAILED(rv)) return rv;
-
-    // Advance that cursor 'til it runs outta steam
-    while (1) {
-        PRBool hasMore;
-        rv = properties->HasMoreElements(&hasMore);
+        rv = element->SetAttribute(kNameSpaceID_None, kIdAtom, id, PR_FALSE);
+        NS_ASSERTION(NS_SUCCEEDED(rv), "unable to set element's ID");
         if (NS_FAILED(rv)) return rv;
 
-        if (! hasMore)
-            break;
-
-        nsCOMPtr<nsISupports> isupports;
-        rv = properties->GetNext(getter_AddRefs(isupports));
-        NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get property from cursor");
+        // Since we didn't notify when setting the 'id' attribute, we
+        // need to explicitly add ourselves to the resource-to-element
+        // map. XUL elements don't need to do this, because they've
+        // got a hacked SetAttribute() method...
+        rv = mDocument->AddElementForResource(aResource, element);
         if (NS_FAILED(rv)) return rv;
 
-        nsCOMPtr<nsIRDFResource> property = do_QueryInterface(isupports);
-
-        // These are special beacuse they're used to specify the tree
-        // structure of the XUL: ignore them b/c they're not attributes
-        if ((property.get() == kRDF_instanceOf) ||
-            (property.get() == kRDF_nextVal) ||
-            (property.get() == kRDF_type))
-            continue;
-
-        PRBool isOrdinal;
-        rv = gRDFContainerUtils->IsOrdinalProperty(property, &isOrdinal);
+        // Now iterate through all the properties and add them as
+        // attributes on the element.  First, create a cursor that'll
+        // iterate through all the properties that lead out of this
+        // resource.
+        nsCOMPtr<nsISimpleEnumerator> properties;
+        rv = mDB->ArcLabelsOut(aResource, getter_AddRefs(properties));
+        NS_ASSERTION(NS_SUCCEEDED(rv), "unable to create arcs-out cursor");
         if (NS_FAILED(rv)) return rv;
 
-        if (isOrdinal)
-            continue;
-
-        // For each property, get its value: this will be the value of
-        // the new attribute.
-        nsCOMPtr<nsIRDFNode> value;
-        if (NS_FAILED(rv = mDB->GetTarget(aResource, property, PR_TRUE, getter_AddRefs(value)))) {
-            NS_ERROR("unable to get value for property");
-            return rv;
-        }
-
-        NS_ASSERTION(rv != NS_RDF_NO_VALUE, "null value in cursor");
-        if (rv == NS_RDF_NO_VALUE)
-            continue;
-
-        // Add the attribute to the newly constructed element
-        if (NS_FAILED(rv = AddAttribute(element, property, value))) {
-            NS_ERROR("unable to add attribute to element");
-            return rv;
-        }
-    }
-
-    // Create the children NOW, because we can't do it lazily.
-    if (NS_FAILED(rv = CreateHTMLContents(aContainingNameSpace, element, aResource))) {
-        NS_ERROR("error creating child contents");
-        return rv;
-    }
-
-    // Check for a 'datasources' tag, in which case we'll create a
-    // template builder.
-    {
-        nsAutoString dataSources;
-        if (NS_CONTENT_ATTR_HAS_VALUE ==
-            element->GetAttribute(kNameSpaceID_None,
-                                  kDataSourcesAtom,
-                                  dataSources)) {
-
-            nsCOMPtr<nsIRDFContentModelBuilder> builder;
-            rv = CreateTemplateBuilder(element, dataSources, getter_AddRefs(builder));
-            NS_ASSERTION(NS_SUCCEEDED(rv), "unable to add datasources");
-
-            // Force construction of template content _now_.
-            rv = builder->CreateContents(element);
+        // Advance that cursor 'til it runs outta steam
+        while (1) {
+            PRBool hasMore;
+            rv = properties->HasMoreElements(&hasMore);
             if (NS_FAILED(rv)) return rv;
+
+            if (! hasMore)
+                break;
+
+            nsCOMPtr<nsISupports> isupports;
+            rv = properties->GetNext(getter_AddRefs(isupports));
+            NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get property from cursor");
+            if (NS_FAILED(rv)) return rv;
+
+            nsCOMPtr<nsIRDFResource> property = do_QueryInterface(isupports);
+
+            // These are special beacuse they're used to specify the tree
+            // structure of the XUL: ignore them b/c they're not attributes
+            if ((property.get() == kRDF_instanceOf) ||
+                (property.get() == kRDF_nextVal) ||
+                (property.get() == kRDF_type))
+                continue;
+
+            PRBool isOrdinal;
+            rv = gRDFContainerUtils->IsOrdinalProperty(property, &isOrdinal);
+            if (NS_FAILED(rv)) return rv;
+
+            if (isOrdinal)
+                continue;
+
+            // For each property, get its value: this will be the value of
+            // the new attribute.
+            nsCOMPtr<nsIRDFNode> value;
+            rv = mDB->GetTarget(aResource, property, PR_TRUE, getter_AddRefs(value));
+            NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get value for property");
+            if (NS_FAILED(rv)) return rv;
+
+            NS_ASSERTION(rv != NS_RDF_NO_VALUE, "null value in cursor");
+            if (rv == NS_RDF_NO_VALUE)
+                continue;
+
+            // Add the attribute to the newly constructed element
+            rv = AddAttribute(element, property, value);
+            NS_ASSERTION(NS_SUCCEEDED(rv), "unable to add attribute to element");
+            if (NS_FAILED(rv)) return rv;
+        }
+
+        // Create the children NOW, because we can't do it lazily.
+        rv = CreateHTMLContents(aContainingNameSpace, element, aResource);
+        NS_ASSERTION(NS_SUCCEEDED(rv), "error creating child contents");
+        if (NS_FAILED(rv)) return rv;
+
+        // Check for a 'datasources' tag, in which case we'll create a
+        // template builder.
+        {
+            nsAutoString dataSources;
+            if (NS_CONTENT_ATTR_HAS_VALUE ==
+                element->GetAttribute(kNameSpaceID_None,
+                                      kDataSourcesAtom,
+                                      dataSources)) {
+
+                nsCOMPtr<nsIRDFContentModelBuilder> builder;
+                rv = CreateTemplateBuilder(element, dataSources, getter_AddRefs(builder));
+                NS_ASSERTION(NS_SUCCEEDED(rv), "unable to add datasources");
+
+                // Force construction of template content _now_.
+                rv = builder->CreateContents(element);
+                if (NS_FAILED(rv)) return rv;
+            }
         }
     }
     
     // ...and finally, return the result.
-    if (NS_FAILED(rv = element->QueryInterface(kIContentIID, (void**) aResult))) {
-        NS_ERROR("unable to get nsIContent interface");
-        return rv;
-    }
+    rv = element->QueryInterface(kIContentIID, (void**) aResult);
+    NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get nsIContent interface");
+    if (NS_FAILED(rv)) return rv;
 
     return NS_OK;
 }
@@ -2432,18 +1757,11 @@ RDFXULBuilderImpl::CreateXULElement(nsINameSpace* aContainingNameSpace,
     NS_ASSERTION(NS_SUCCEEDED(rv), "unable to create new content element");
     if (NS_FAILED(rv)) return rv;
 
-    // Set the element's ID. We do this _before_ we insert the element
-    // into the document so that it gets properly hashed into the
-    // document's resource-to-element map.
-    nsXPIDLCString uri;
-    rv = aResource->GetValue( getter_Copies(uri) );
-    if (NS_FAILED(rv)) return rv;
-
-    rv = element->SetAttribute(kNameSpaceID_None, kIdAtom, (const char*) uri, PR_FALSE);
-    if (NS_FAILED(rv)) return rv;
+    nsCOMPtr<nsIDocument> document = do_QueryInterface(mDocument);
+    if (! document)
+        return NS_ERROR_UNEXPECTED;
 
     // Set the document for this element.
-    nsCOMPtr<nsIDocument> document( do_QueryInterface(mDocument) );
     element->SetDocument(document, PR_FALSE);
 
     // Initialize the element's containing namespace to that of its
@@ -2456,134 +1774,149 @@ RDFXULBuilderImpl::CreateXULElement(nsINameSpace* aContainingNameSpace,
     rv = xml->SetContainingNameSpace(aContainingNameSpace);
     if (NS_FAILED(rv)) return rv;
 
-    // Now iterate through all the properties and add them as
-    // attributes on the element.  First, create a cursor that'll
-    // iterate through all the properties that lead out of this
-    // resource.
-    nsCOMPtr<nsISimpleEnumerator> properties;
-    rv = mDB->ArcLabelsOut(aResource, getter_AddRefs(properties));
-    NS_ASSERTION(NS_SUCCEEDED(rv), "unable to create arcs-out cursor");
-    if (NS_FAILED(rv)) return rv;
-
-    // Advance that cursor 'til it runs outta steam
-    while (1) {
-        PRBool hasMore;
-        rv = properties->HasMoreElements(&hasMore);
+    if (aResource) {
+        // Set the element's ID. The XUL document will be listening
+        // for 'id' and 'ref' attribute changes, so we're sure that
+        // this will get properly hashed into the document's
+        // resource-to-element map.
+        nsXPIDLCString uri;
+        rv = aResource->GetValue( getter_Copies(uri) );
         if (NS_FAILED(rv)) return rv;
 
-        if (! hasMore)
-            break;
-
-        nsCOMPtr<nsISupports> isupports;
-        rv = properties->GetNext(getter_AddRefs(isupports));
-        NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get property from cursor");
+        nsAutoString id;
+        rv = nsRDFContentUtils::MakeElementID(document, nsAutoString(uri), id);
         if (NS_FAILED(rv)) return rv;
 
-        nsCOMPtr<nsIRDFResource> property = do_QueryInterface(isupports);
-
-        // These are special beacuse they're used to specify the tree
-        // structure of the XUL: ignore them b/c they're not attributes
-        if ((property.get() == kRDF_nextVal) ||
-            (property.get() == kRDF_type))
-            continue;
-
-        PRBool isOrdinal;
-        rv = gRDFContainerUtils->IsOrdinalProperty(property, &isOrdinal);
+        rv = element->SetAttribute(kNameSpaceID_None, kIdAtom, id, PR_FALSE);
         if (NS_FAILED(rv)) return rv;
 
-        if (isOrdinal)
-            continue;
+        // The XUL element's implementation has a hacked
+        // SetAttribute() method that'll be smart enough to add the
+        // element to the document's element-to-resource map, so no
+        // need to do it ourselves. N.B. that this is _different_ from
+        // an HTML element...
 
-        // For each property, set its value.
-        nsCOMPtr<nsIRDFNode> value;
-        if (NS_FAILED(rv = mDB->GetTarget(aResource, property, PR_TRUE, getter_AddRefs(value)))) {
-            NS_ERROR("unable to get value for property");
-            return rv;
+        // Now iterate through all the properties and add them as
+        // attributes on the element.  First, create a cursor that'll
+        // iterate through all the properties that lead out of this
+        // resource.
+        nsCOMPtr<nsISimpleEnumerator> properties;
+        rv = mDB->ArcLabelsOut(aResource, getter_AddRefs(properties));
+        NS_ASSERTION(NS_SUCCEEDED(rv), "unable to create arcs-out cursor");
+        if (NS_FAILED(rv)) return rv;
+
+        // Advance that cursor 'til it runs outta steam
+        while (1) {
+            PRBool hasMore;
+            rv = properties->HasMoreElements(&hasMore);
+            if (NS_FAILED(rv)) return rv;
+
+            if (! hasMore)
+                break;
+
+            nsCOMPtr<nsISupports> isupports;
+            rv = properties->GetNext(getter_AddRefs(isupports));
+            NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get property from cursor");
+            if (NS_FAILED(rv)) return rv;
+
+            nsCOMPtr<nsIRDFResource> property = do_QueryInterface(isupports);
+
+            // These are special beacuse they're used to specify the tree
+            // structure of the XUL: ignore them b/c they're not attributes
+            if ((property.get() == kRDF_nextVal) ||
+                (property.get() == kRDF_type))
+                continue;
+
+            PRBool isOrdinal;
+            rv = gRDFContainerUtils->IsOrdinalProperty(property, &isOrdinal);
+            if (NS_FAILED(rv)) return rv;
+
+            if (isOrdinal)
+                continue;
+
+            // For each property, set its value.
+            nsCOMPtr<nsIRDFNode> value;
+            if (NS_FAILED(rv = mDB->GetTarget(aResource, property, PR_TRUE, getter_AddRefs(value)))) {
+                NS_ERROR("unable to get value for property");
+                return rv;
+            }
+
+            // Add the attribute to the newly constructed element
+            if (NS_FAILED(rv = AddAttribute(element, property, value))) {
+                NS_ERROR("unable to add attribute to element");
+                return rv;
+            }
         }
 
-        // Add the attribute to the newly constructed element
-        if (NS_FAILED(rv = AddAttribute(element, property, value))) {
-            NS_ERROR("unable to add attribute to element");
-            return rv;
+        // Set the XML tag info: namespace prefix and ID. We do this
+        // _after_ processing all the attributes so that we can extract an
+        // appropriate prefix based on whatever namespace decls are
+        // active.
+        rv = xml->SetNameSpaceID(aNameSpaceID);
+        if (NS_FAILED(rv)) return rv;
+
+        if (aNameSpaceID != kNameSpaceID_None) {
+            nsCOMPtr<nsINameSpace> nameSpace;
+            rv = xml->GetContainingNameSpace(*getter_AddRefs(nameSpace));
+            if (NS_FAILED(rv)) return rv;
+
+            nsCOMPtr<nsIAtom> prefix;
+            rv = nameSpace->FindNameSpacePrefix(aNameSpaceID, *getter_AddRefs(prefix));
+            if (NS_FAILED(rv)) return rv;
+
+            rv = xml->SetNameSpacePrefix(prefix);
+            if (NS_FAILED(rv)) return rv;
         }
-    }
 
-    // Set the XML tag info: namespace prefix and ID. We do this
-    // _after_ processing all the attributes so that we can extract an
-    // appropriate prefix based on whatever namespace decls are
-    // active.
-    rv = xml->SetNameSpaceID(aNameSpaceID);
-    if (NS_FAILED(rv)) return rv;
-
-    if (aNameSpaceID != kNameSpaceID_None) {
-        nsCOMPtr<nsINameSpace> nameSpace;
-        rv = xml->GetContainingNameSpace(*getter_AddRefs(nameSpace));
+        // Make it a lazy so that its contents get recursively
+        // generated on-demand.
+        rv = element->SetAttribute(kNameSpaceID_None, kLazyContentAtom, "true", PR_FALSE);
+        NS_ASSERTION(NS_SUCCEEDED(rv), "unable to make element lazy");
         if (NS_FAILED(rv)) return rv;
 
-        nsCOMPtr<nsIAtom> prefix;
-        rv = nameSpace->FindNameSpacePrefix(aNameSpaceID, *getter_AddRefs(prefix));
-        if (NS_FAILED(rv)) return rv;
+        // Check for a 'datasources' tag, in which case we'll create a
+        // template builder.
+        {
+            nsAutoString dataSources;
+            if (NS_CONTENT_ATTR_HAS_VALUE ==
+                element->GetAttribute(kNameSpaceID_None,
+                                      kDataSourcesAtom,
+                                      dataSources)) {
 
-        rv = xml->SetNameSpacePrefix(prefix);
-        if (NS_FAILED(rv)) return rv;
-    }
-
-    // Make it a container so that its contents get recursively
-    // generated on-demand.
-    if (NS_FAILED(rv = element->SetAttribute(kNameSpaceID_None, kLazyContentAtom, "true", PR_FALSE))) {
-        NS_ERROR("unable to make element a container");
-        return rv;
-    }
-
-    // Check for a 'datasources' tag, in which case we'll create a
-    // template builder.
-    {
-        nsAutoString dataSources;
-        if (NS_CONTENT_ATTR_HAS_VALUE ==
-            element->GetAttribute(kNameSpaceID_None,
-                                  kDataSourcesAtom,
-                                  dataSources)) {
-
-            nsCOMPtr<nsIRDFContentModelBuilder> builder;
-            rv = CreateTemplateBuilder(element, dataSources, getter_AddRefs(builder));
-            NS_ASSERTION(NS_SUCCEEDED(rv), "unable to add datasources");
+                nsCOMPtr<nsIRDFContentModelBuilder> builder;
+                rv = CreateTemplateBuilder(element, dataSources, getter_AddRefs(builder));
+                NS_ASSERTION(NS_SUCCEEDED(rv), "unable to add datasources");
+            }
         }
-    }
     
-    // We also need to pay special attention to the keyset tag to set up a listener
-    if(aTagName == kKeysetAtom) {
-        // Create our nsXULKeyListener and hook it up.
-        nsIXULKeyListener * keyListener = nsnull;
-        if (NS_FAILED(rv = nsComponentManager::CreateInstance(
-            kXULKeyListenerCID,
-            nsnull,
-            kIXULKeyListenerIID,
-            (void**) &keyListener))) {
-            NS_ERROR("unable to create a key listener");
-            return rv;
-        }
+        // We also need to pay special attention to the keyset tag to set up a listener
+        if(aTagName == kKeysetAtom) {
+            // Create our nsXULKeyListener and hook it up.
+            nsCOMPtr<nsIXULKeyListener> keyListener;
+            rv = nsComponentManager::CreateInstance(kXULKeyListenerCID,
+                                                    nsnull,
+                                                    kIXULKeyListenerIID,
+                                                    getter_AddRefs(keyListener));
+            NS_ASSERTION(NS_SUCCEEDED(rv), "unable to create a key listener");
+            if (NS_FAILED(rv)) return rv;
         
-        nsCOMPtr<nsIDOMEventListener> domEventListener = do_QueryInterface(keyListener);
-        if (domEventListener) {
-            // Take the key listener and add it as an event listener for keypress events.
-            nsCOMPtr<nsIDOMDocument> document = do_QueryInterface(mDocument);
+            nsCOMPtr<nsIDOMEventListener> domEventListener = do_QueryInterface(keyListener);
+            if (domEventListener) {
+                // Take the key listener and add it as an event listener for keypress events.
+                nsCOMPtr<nsIDOMDocument> domDocument = do_QueryInterface(mDocument);
+
+                // Init the listener with the keyset node
+                nsCOMPtr<nsIDOMElement> domElement = do_QueryInterface(element);
+                keyListener->Init(domElement, domDocument);
             
-            // Init the listener with the keyset node
-            nsIDOMElement* domElement = nsnull;
-            element->QueryInterface(kIDOMElementIID, (void**) &domElement);
-        
-            keyListener->Init(domElement, document);
-            
-            nsIDOMEventTarget* target;
-            document->QueryInterface(kIDOMEventReceiverIID, (void**) &target);
-            if(target) {
-				target->AddEventListener("keypress", domEventListener, PR_TRUE); 
-				target->AddEventListener("keydown", domEventListener, PR_TRUE);  
-				target->AddEventListener("keyup", domEventListener, PR_TRUE);   
-			}
-			NS_RELEASE(target);
+                nsCOMPtr<nsIDOMEventReceiver> receiver = do_QueryInterface(document);
+                if(receiver) {
+                    receiver->AddEventListener("keypress", domEventListener, PR_TRUE); 
+                    receiver->AddEventListener("keydown",  domEventListener, PR_TRUE);  
+                    receiver->AddEventListener("keyup",    domEventListener, PR_TRUE);   
+                }
+            }
         }
-        // Who has ownership of the listener?
     }
 
     // Finally, assign the newly constructed element to the result
@@ -3077,45 +2410,6 @@ RDFXULBuilderImpl::MakeProperty(PRInt32 aNameSpaceID, nsIAtom* aTagName, nsIRDFR
 }
 
 
-nsresult
-RDFXULBuilderImpl::AddElementToZombiePool(nsIContent* aElement)
-{
-    // Place the specified element in the zombie pool so that it
-    // may be re-used.
-    nsresult rv;
-
-    // See if the element has an ID attribute (and thus, a node in the
-    // graph to which it corresponds). If not, we can't re-use it.
-    nsAutoString id;
-    rv = aElement->GetAttribute(kNameSpaceID_None, kIdAtom, id);
-    if (rv != NS_CONTENT_ATTR_HAS_VALUE)
-        return NS_OK;
-
-    if (! mZombiePool) {
-        rv = NS_NewISupportsArray(getter_AddRefs(mZombiePool));
-        if (NS_FAILED(rv)) return rv;
-    }
-
-    NS_ASSERTION(mZombiePool->IndexOf(aElement) < 0, "Element already in the zombie pool");
-
-#ifdef PR_LOGGING
-    if (PR_LOG_TEST(gLog, PR_LOG_DEBUG)) {
-        nsAutoString elementStr;
-        rv = nsRDFContentUtils::GetElementLogString(aElement, elementStr);
-        NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get element string");
-
-        char* elementCStr = elementStr.ToNewCString();
-
-        PR_LOG(gLog, PR_LOG_DEBUG, ("xulbuilder add-node-to-zombie-pool"));
-        PR_LOG(gLog, PR_LOG_DEBUG, ("  %s", elementCStr));
-
-        delete[] elementCStr;
-    }
-#endif
-
-    mZombiePool->AppendElement(aElement);
-    return NS_OK;
-}
 
 
 nsresult

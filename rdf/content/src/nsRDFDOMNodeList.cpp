@@ -101,18 +101,23 @@ static NS_DEFINE_IID(kIScriptObjectOwnerIID, NS_ISCRIPTOBJECTOWNER_IID);
     if (! aResult)
         return NS_ERROR_NULL_POINTER;
 
-    if (aIID.Equals(nsIDOMNodeList::GetIID()) ||
+    if (aIID.Equals(nsCOMTypeInfo<nsIDOMNodeList>::GetIID()) ||
         aIID.Equals(kISupportsIID)) {
         *aResult = NS_STATIC_CAST(nsIDOMNodeList*, this);
-        NS_ADDREF(this);
-        return NS_OK;
+    }
+    else if (aIID.Equals(nsCOMTypeInfo<nsIRDFNodeList>::GetIID())) {
+        *aResult = NS_STATIC_CAST(nsIRDFNodeList*, this);
     }
     else if (aIID.Equals(kIScriptObjectOwnerIID)) {
         *aResult = NS_STATIC_CAST(nsIScriptObjectOwner*, this);
-        NS_ADDREF(this);
-        return NS_OK;
     }
-    return NS_NOINTERFACE;
+    else {
+        *aResult = nsnull;
+        return NS_NOINTERFACE;
+    }
+
+    NS_ADDREF(this);
+    return NS_OK;
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -206,7 +211,7 @@ nsRDFDOMNodeList::Init(void)
 }
 
 
-nsresult
+NS_IMETHODIMP
 nsRDFDOMNodeList::AppendNode(nsIDOMNode* aNode)
 {
     NS_PRECONDITION(aNode != nsnull, "null ptr");
@@ -216,7 +221,7 @@ nsRDFDOMNodeList::AppendNode(nsIDOMNode* aNode)
     return mElements->AppendElement(aNode);
 }
 
-nsresult
+NS_IMETHODIMP
 nsRDFDOMNodeList::RemoveNode(nsIDOMNode* aNode)
 {
     NS_PRECONDITION(aNode != nsnull, "null ptr");

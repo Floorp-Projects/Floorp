@@ -190,6 +190,10 @@ XULCommandDispatcherImpl::SetFocusedWindow(nsIDOMWindow* aElement)
 NS_IMETHODIMP
 XULCommandDispatcherImpl::AddCommand(nsIDOMElement* aElement)
 {
+  NS_PRECONDITION(aElement != nsnull, "null ptr");
+  if (! aElement)
+    return NS_ERROR_NULL_POINTER;
+
   if (!mFocusListeners) {
     mFocusListeners = new nsVoidArray();
     mFocusListeners->AppendElement((void*)aElement); // Weak ref to element.

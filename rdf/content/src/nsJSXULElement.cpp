@@ -25,6 +25,7 @@
 #include "nsIJSScriptObject.h"
 #include "nsIScriptObjectOwner.h"
 #include "nsIScriptGlobalObject.h"
+#include "nsCOMPtr.h"
 #include "nsIPtr.h"
 #include "nsString.h"
 #include "nsIController.h"
@@ -83,14 +84,14 @@ GetXULElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
   if (JSVAL_IS_INT(id)) {
     nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
-    nsIScriptSecurityManager *secMan;
-    PRBool ok = PR_FALSE;
-    if (NS_OK != scriptCX->GetSecurityManager(&secMan)) {
+    nsCOMPtr<nsIScriptSecurityManager> secMan;
+    if (NS_OK != scriptCX->GetSecurityManager(getter_AddRefs(secMan))) {
       return JS_FALSE;
     }
     switch(JSVAL_TO_INT(id)) {
       case XULELEMENT_ID:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "xulelement.id", &ok);
         if (!ok) {
           //Need to throw error here
@@ -107,6 +108,7 @@ GetXULElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case XULELEMENT_CLASSNAME:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "xulelement.classname", &ok);
         if (!ok) {
           //Need to throw error here
@@ -123,6 +125,7 @@ GetXULElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case XULELEMENT_STYLE:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "xulelement.style", &ok);
         if (!ok) {
           //Need to throw error here
@@ -140,6 +143,7 @@ GetXULElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case XULELEMENT_DATABASE:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "xulelement.database", &ok);
         if (!ok) {
           //Need to throw error here
@@ -157,6 +161,7 @@ GetXULElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case XULELEMENT_RESOURCE:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "xulelement.resource", &ok);
         if (!ok) {
           //Need to throw error here
@@ -174,6 +179,7 @@ GetXULElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case XULELEMENT_CONTROLLER:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "xulelement.controller", &ok);
         if (!ok) {
           //Need to throw error here
@@ -192,7 +198,6 @@ GetXULElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       default:
         return nsJSUtils::nsCallJSScriptObjectGetProperty(a, cx, id, vp);
     }
-    NS_RELEASE(secMan);
   }
   else {
     return nsJSUtils::nsCallJSScriptObjectGetProperty(a, cx, id, vp);
@@ -217,14 +222,14 @@ SetXULElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
   if (JSVAL_IS_INT(id)) {
     nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
-    nsIScriptSecurityManager *secMan;
-    PRBool ok = PR_FALSE;
-    if (NS_OK != scriptCX->GetSecurityManager(&secMan)) {
+    nsCOMPtr<nsIScriptSecurityManager> secMan;
+    if (NS_OK != scriptCX->GetSecurityManager(getter_AddRefs(secMan))) {
       return JS_FALSE;
     }
     switch(JSVAL_TO_INT(id)) {
       case XULELEMENT_ID:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "xulelement.id", &ok);
         if (!ok) {
           //Need to throw error here
@@ -239,6 +244,7 @@ SetXULElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case XULELEMENT_CLASSNAME:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "xulelement.classname", &ok);
         if (!ok) {
           //Need to throw error here
@@ -253,6 +259,7 @@ SetXULElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case XULELEMENT_DATABASE:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "xulelement.database", &ok);
         if (!ok) {
           //Need to throw error here
@@ -270,6 +277,7 @@ SetXULElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case XULELEMENT_CONTROLLER:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "xulelement.controller", &ok);
         if (!ok) {
           //Need to throw error here
@@ -288,7 +296,6 @@ SetXULElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       default:
         return nsJSUtils::nsCallJSScriptObjectSetProperty(a, cx, id, vp);
     }
-    NS_RELEASE(secMan);
   }
   else {
     return nsJSUtils::nsCallJSScriptObjectSetProperty(a, cx, id, vp);
@@ -341,8 +348,8 @@ XULElementAddBroadcastListener(JSContext *cx, JSObject *obj, uintN argc, jsval *
   *rval = JSVAL_NULL;
 
   nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
-  nsIScriptSecurityManager *secMan;
-  if (NS_OK != scriptCX->GetSecurityManager(&secMan)) {
+  nsCOMPtr<nsIScriptSecurityManager> secMan;
+  if (NS_OK != scriptCX->GetSecurityManager(getter_AddRefs(secMan))) {
     return JS_FALSE;
   }
   {
@@ -352,7 +359,6 @@ XULElementAddBroadcastListener(JSContext *cx, JSObject *obj, uintN argc, jsval *
       //Need to throw error here
       return JS_FALSE;
     }
-    NS_RELEASE(secMan);
   }
 
   // If there's no private data, this must be the prototype, so ignore
@@ -399,8 +405,8 @@ XULElementRemoveBroadcastListener(JSContext *cx, JSObject *obj, uintN argc, jsva
   *rval = JSVAL_NULL;
 
   nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
-  nsIScriptSecurityManager *secMan;
-  if (NS_OK != scriptCX->GetSecurityManager(&secMan)) {
+  nsCOMPtr<nsIScriptSecurityManager> secMan;
+  if (NS_OK != scriptCX->GetSecurityManager(getter_AddRefs(secMan))) {
     return JS_FALSE;
   }
   {
@@ -410,7 +416,6 @@ XULElementRemoveBroadcastListener(JSContext *cx, JSObject *obj, uintN argc, jsva
       //Need to throw error here
       return JS_FALSE;
     }
-    NS_RELEASE(secMan);
   }
 
   // If there's no private data, this must be the prototype, so ignore
@@ -455,8 +460,8 @@ XULElementDoCommand(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval
   *rval = JSVAL_NULL;
 
   nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
-  nsIScriptSecurityManager *secMan;
-  if (NS_OK != scriptCX->GetSecurityManager(&secMan)) {
+  nsCOMPtr<nsIScriptSecurityManager> secMan;
+  if (NS_OK != scriptCX->GetSecurityManager(getter_AddRefs(secMan))) {
     return JS_FALSE;
   }
   {
@@ -466,7 +471,6 @@ XULElementDoCommand(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval
       //Need to throw error here
       return JS_FALSE;
     }
-    NS_RELEASE(secMan);
   }
 
   // If there's no private data, this must be the prototype, so ignore
@@ -501,8 +505,8 @@ XULElementGetElementsByAttribute(JSContext *cx, JSObject *obj, uintN argc, jsval
   *rval = JSVAL_NULL;
 
   nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
-  nsIScriptSecurityManager *secMan;
-  if (NS_OK != scriptCX->GetSecurityManager(&secMan)) {
+  nsCOMPtr<nsIScriptSecurityManager> secMan;
+  if (NS_OK != scriptCX->GetSecurityManager(getter_AddRefs(secMan))) {
     return JS_FALSE;
   }
   {
@@ -512,7 +516,6 @@ XULElementGetElementsByAttribute(JSContext *cx, JSObject *obj, uintN argc, jsval
       //Need to throw error here
       return JS_FALSE;
     }
-    NS_RELEASE(secMan);
   }
 
   // If there's no private data, this must be the prototype, so ignore

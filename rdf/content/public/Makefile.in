@@ -25,8 +25,6 @@ include $(DEPTH)/config/autoconf.mk
 MODULE = rdf
 
 EXPORTS =				\
-	nsIDOMElementObserver.h		\
-	nsIDOMNodeObserver.h		\
 	nsIDOMXULDocument.h		\
 	nsIDOMXULElement.h		\
 	nsIDOMXULTreeElement.h		\

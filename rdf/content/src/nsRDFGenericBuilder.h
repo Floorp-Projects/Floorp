@@ -27,8 +27,6 @@
 #include "nsIRDFContainerUtils.h" 
 #include "nsIRDFContentModelBuilder.h"
 #include "nsIRDFObserver.h"
-#include "nsIDOMNodeObserver.h"
-#include "nsIDOMElementObserver.h"
 #include "nsITimer.h"
 #include "nsIXULSortService.h"
 
@@ -42,9 +40,7 @@ class nsIRDFService;
 class nsIHTMLElementFactory;
 
 class RDFGenericBuilderImpl : public nsIRDFContentModelBuilder,
-                              public nsIRDFObserver,
-                              public nsIDOMNodeObserver,
-                              public nsIDOMElementObserver
+                              public nsIRDFObserver
 {
 public:
     RDFGenericBuilderImpl();
@@ -86,12 +82,6 @@ public:
                       nsIRDFResource* aProperty,
                       nsIRDFNode* aTarget);
 
-    // nsIDOMNodeObserver interface
-    NS_DECL_IDOMNODEOBSERVER
-
-    // nsIDOMElementObserver interface
-    NS_DECL_IDOMELEMENTOBSERVER
-
     // Implementation methods
     nsresult
     FindTemplate(nsIContent* aElement,
@@ -131,6 +121,7 @@ public:
 
     enum eUpdateAction { eSet, eClear };
 
+#if 0
     PRBool
     IsAttributePersisent(nsIContent *element, PRInt32 aNameSpaceID, nsIAtom* aAtom);
 
@@ -149,6 +140,7 @@ public:
     			nsIRDFResource *aProperty,
     			nsIRDFNode *aTarget,
     			eUpdateAction action);
+#endif
 
     nsresult
     SynchronizeUsingTemplate(nsIContent *aTemplateNode,
@@ -203,15 +195,6 @@ public:
     GetResource(PRInt32 aNameSpaceID,
                 nsIAtom* aNameAtom,
                 nsIRDFResource** aResource);
-
-    nsresult
-    OpenWidgetItem(nsIContent* aElement);
-
-    nsresult
-    CloseWidgetItem(nsIContent* aElement);
-
-    nsresult
-    RemoveAndRebuildGeneratedChildren(nsIContent* aElement);
 
     // XXX. Urg. Hack until layout can batch reflows. See bug 10818.
     PRBool

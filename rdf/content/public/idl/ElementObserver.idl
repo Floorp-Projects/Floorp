@@ -1,9 +1,0 @@
-interface ElementObserver {
-/* IID: { 0x17ddd8c2, 0xc5f8, 0x11d2, \
-        { 0xa6, 0xae, 0x0, 0x10, 0x4b, 0xde, 0x60, 0x48 } } */
-
-        void onSetAttribute(in Element element, in DOMString name, in DOMString value);
-        void onRemoveAttribute(in Element element, in DOMString name);
-        void onSetAttributeNode(in Element element, in Attr newAttr);
-        void onRemoveAttributeNode(in Element element, in Attr oldAttr);
-};

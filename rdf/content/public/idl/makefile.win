@@ -21,8 +21,6 @@ IGNORE_MANIFEST=1
 MODULE=rdf
 
 IDLSRCS =  \
-        ElementObserver.idl     \
-        NodeObserver.idl        \
         XULDocument.idl         \
         XULElement.idl          \
         XULCommandDispatcher.idl   \

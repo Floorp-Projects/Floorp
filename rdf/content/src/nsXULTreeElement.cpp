@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
  *
  * The contents of this file are subject to the Netscape Public License
  * Version 1.0 (the "License"); you may not use this file except in
@@ -36,7 +36,30 @@
 nsIAtom*             nsXULTreeElement::kSelectedAtom;
 int                  nsXULTreeElement::gRefCnt = 0;
 
-NS_IMPL_ISUPPORTS_INHERITED(nsXULTreeElement, nsXULElement, nsIDOMXULTreeElement);
+NS_IMPL_ADDREF_INHERITED(nsXULTreeElement, nsXULElement);
+NS_IMPL_RELEASE_INHERITED(nsXULTreeElement, nsXULElement);
+
+nsresult
+nsXULTreeElement::QueryInterface(REFNSIID aIID, void** aResult)
+{
+    NS_PRECONDITION(aResult != nsnull, "null ptr");
+    if (! aResult)
+        return NS_ERROR_NULL_POINTER;
+
+    if (aIID.Equals(nsCOMTypeInfo<nsIDOMXULTreeElement>::GetIID())) {
+        *aResult = NS_STATIC_CAST(nsIDOMXULTreeElement*, this);
+    }
+    else if (aIID.Equals(nsCOMTypeInfo<nsIXULTreeContent>::GetIID())) {
+        *aResult = NS_STATIC_CAST(nsIXULTreeContent*, this);
+    }
+    else {
+        return nsXULElement::QueryInterface(aIID, aResult);
+    }
+
+    NS_ADDREF(NS_REINTERPRET_CAST(nsISupports*, *aResult));
+    return NS_OK;
+}
+
 
 nsXULTreeElement::nsXULTreeElement(nsIDOMXULElement* aOuter)
 :nsXULElement(aOuter)
@@ -306,7 +329,7 @@ nsXULTreeElement::InvertSelection()
   return NS_OK;
 }
 
-void
+nsresult
 nsXULTreeElement::FireOnSelectHandler()
 {
   nsCOMPtr<nsIContent> content = do_QueryInterface(mOuter);
@@ -319,7 +342,7 @@ nsXULTreeElement::FireOnSelectHandler()
   nsAutoString value;
   content->GetAttribute(kNameSpaceID_None, kSuppressSelectChange, value);
   if (value == "true")
-    return;
+    return NS_OK;
 
   PRInt32 count = document->GetNumberOfShells();
 	for (PRInt32 i = 0; i < count; i++) {
@@ -340,5 +363,7 @@ nsXULTreeElement::FireOnSelectHandler()
 
     content->HandleDOMEvent(*aPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, status);
   }
+
+  return NS_OK;
 }
 

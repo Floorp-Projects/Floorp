@@ -32,8 +32,6 @@ CPP_OBJS=\
 	.\$(OBJDIR)\nsXULAttributes.obj		  \
 	.\$(OBJDIR)\nsXULCommandDispatcher.obj         \
 	.\$(OBJDIR)\nsXULPopupListener.obj        \
-        .\$(OBJDIR)\nsJSElementObserver.obj       \
-        .\$(OBJDIR)\nsJSNodeObserver.obj          \
         .\$(OBJDIR)\nsJSXULDocument.obj           \
         .\$(OBJDIR)\nsJSXULElement.obj            \
         .\$(OBJDIR)\nsJSXULTreeElement.obj        \

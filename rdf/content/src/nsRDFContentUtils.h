@@ -74,6 +74,9 @@ public:
     MakeElementURI(nsIDocument* aDocument, const nsString& aElementID, nsCString& aURI);
 
     static nsresult
+    MakeElementResource(nsIDocument* aDocument, const nsString& aElementID, nsIRDFResource** aResult);
+
+    static nsresult
     MakeElementID(nsIDocument* aDocument, const nsString& aURI, nsString& aElementID);
 
     static PRBool

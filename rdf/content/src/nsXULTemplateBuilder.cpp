@@ -39,9 +39,7 @@
 #include "nsIAtom.h"
 #include "nsIContent.h"
 #include "nsIDOMElement.h"
-#include "nsIDOMElementObserver.h"
 #include "nsIDOMNode.h"
-#include "nsIDOMNodeObserver.h"
 #include "nsIDOMXULDocument.h"
 #include "nsIDocument.h"
 #include "nsINameSpaceManager.h"
@@ -390,12 +388,6 @@ RDFGenericBuilderImpl::QueryInterface(REFNSIID iid, void** aResult)
     else if (iid.Equals(kIRDFObserverIID)) {
         *aResult = NS_STATIC_CAST(nsIRDFObserver*, this);
     }
-    else if (iid.Equals(nsIDOMNodeObserver::GetIID())) {
-        *aResult = NS_STATIC_CAST(nsIDOMNodeObserver*, this);
-    }
-    else if (iid.Equals(nsIDOMElementObserver::GetIID())) {
-        *aResult = NS_STATIC_CAST(nsIDOMElementObserver*, this);
-    }
     else {
         *aResult = nsnull;
         return NS_NOINTERFACE;
@@ -539,21 +531,37 @@ RDFGenericBuilderImpl::CreateElement(PRInt32 aNameSpaceID,
         if (NS_FAILED(rv)) return rv;
     }
 
+    nsCOMPtr<nsIDocument> doc( do_QueryInterface(mDocument) );
+
     if (aResource) {
-        const char		*uri;
+        const char *uri;
         rv = aResource->GetValueConst(&uri);
         NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get resource URI");
         if (NS_FAILED(rv)) return rv;
 
-        rv = result->SetAttribute(kNameSpaceID_None, kIdAtom, (const char*) uri, PR_FALSE);
+        nsAutoString id;
+        rv = nsRDFContentUtils::MakeElementID(doc, nsAutoString(uri), id);
+        if (NS_FAILED(rv)) return rv;
+
+        rv = result->SetAttribute(kNameSpaceID_None, kIdAtom, id, PR_FALSE);
         NS_ASSERTION(NS_SUCCEEDED(rv), "unable to set id attribute");
         if (NS_FAILED(rv)) return rv;
     }
 
-    nsCOMPtr<nsIDocument> doc( do_QueryInterface(mDocument) );
     rv = result->SetDocument(doc, PR_FALSE);
     NS_ASSERTION(NS_SUCCEEDED(rv), "unable to set element's document");
     if (NS_FAILED(rv)) return rv;
+
+    if (aResource && aNameSpaceID == kNameSpaceID_HTML) {
+        // If this is an HTML element, then explicitly add it to the
+        // map. (XUL elements don't have to do this because their
+        // SetDocument() call does the magic.) Don't worry: the
+        // document observer methods are on the lookout to update the
+        // map for "attribute changed" calls that monkey with the 'id'
+        // or 'ref' parameters.
+        rv = mDocument->AddElementForResource(aResource, result);
+        if (NS_FAILED(rv)) return rv;
+    }
 
     *aResult = result;
     NS_ADDREF(*aResult);
@@ -628,15 +636,17 @@ RDFGenericBuilderImpl::OnAssert(nsIRDFResource* aSource,
             // child to this node.
 
             // XXX Bug 10818.
-            PRBool notify;
-            if (IsTreeWidgetItem(element) && !IsReflowScheduled()) {
-                notify = PR_TRUE;
-
-                rv = ScheduleReflow();
-                if (NS_FAILED(rv)) return rv;
-            }
-            else {
-                notify = PR_FALSE;
+            PRBool notify = PR_TRUE;
+            if (IsTreeWidgetItem(element)) {
+				if (!IsReflowScheduled()) {
+                    rv = ScheduleReflow();
+                    if (NS_FAILED(rv)) return rv;
+				}
+                else {
+                    // a reflow has been scheduled. we'll add the
+                    // element but won't notify right now.
+                    notify = PR_FALSE;
+                }
             }
 
             rv = CreateWidgetItem(element, aProperty, resource, 0, notify);
@@ -676,9 +686,6 @@ RDFGenericBuilderImpl::OnAssert(nsIRDFResource* aSource,
                 // this node was created by a XUL template, so update it accordingly
                 rv = SynchronizeUsingTemplate(templateNode, element, eSet, aProperty, aTarget);
                 if (NS_FAILED(rv)) return rv;
-
-            	PersistProperty(element, aProperty, aTarget, eSet);
-
             }
         }
     }
@@ -790,9 +797,6 @@ RDFGenericBuilderImpl::OnUnassert(nsIRDFResource* aSource,
                 // this node was created by a XUL template, so update it accordingly
                 rv = SynchronizeUsingTemplate(templateNode, element, eClear, aProperty, aTarget);
                 if (NS_FAILED(rv)) return rv;
-
-		PersistProperty(element, aProperty, aTarget, eClear);
-
             }
         }
     }
@@ -907,9 +911,6 @@ RDFGenericBuilderImpl::OnChange(nsIRDFResource* aSource,
                 // this node was created by a XUL template, so update it accordingly
                 rv = SynchronizeUsingTemplate(templateNode, element, eSet, aProperty, aNewTarget);
                 if (NS_FAILED(rv)) return rv;
-
-		PersistProperty(element, aProperty, aNewTarget, eSet);
-
             }
         }
     }
@@ -928,55 +929,7 @@ RDFGenericBuilderImpl::OnMove(nsIRDFResource* aOldSource,
 }
 
 
-////////////////////////////////////////////////////////////////////////
-// nsIDOMNodeObserver interface
-//
-//   XXX Any of these methods that can't be implemented in a generic
-//   way should become pure virtual on this class.
-//
-
-NS_IMETHODIMP
-RDFGenericBuilderImpl::OnSetNodeValue(nsIDOMNode* aNode, const nsString& aValue)
-{
-    NS_NOTYETIMPLEMENTED("write me!");
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-RDFGenericBuilderImpl::OnInsertBefore(nsIDOMNode* aParent, nsIDOMNode* aNewChild, nsIDOMNode* aRefChild)
-{
-    return NS_OK;
-}
-
-
-
-NS_IMETHODIMP
-RDFGenericBuilderImpl::OnReplaceChild(nsIDOMNode* aParent, nsIDOMNode* aNewChild, nsIDOMNode* aOldChild)
-{
-    return NS_OK;
-}
-
-
-
-NS_IMETHODIMP
-RDFGenericBuilderImpl::OnRemoveChild(nsIDOMNode* aParent, nsIDOMNode* aOldChild)
-{
-    return NS_OK;
-}
-
-
-
-NS_IMETHODIMP
-RDFGenericBuilderImpl::OnAppendChild(nsIDOMNode* aParent, nsIDOMNode* aNewChild)
-{
-    return NS_OK;
-}
-
-
-////////////////////////////////////////////////////////////////////////
-// nsIDOMElementObserver interface
-
-
+#if 0
 PRBool
 RDFGenericBuilderImpl::IsAttributePersisent(nsIContent *element, PRInt32 aNameSpaceID, nsIAtom *aAtom)
 {
@@ -1151,361 +1104,7 @@ RDFGenericBuilderImpl::PersistProperty(nsIContent *element, nsIRDFResource *aPro
 		}
 	}
 }
-
-
-NS_IMETHODIMP
-RDFGenericBuilderImpl::OnSetAttribute(nsIDOMElement* aElement, const nsString& aName, const nsString& aValue)
-{
-    nsresult rv;
-
-    nsCOMPtr<nsIRDFResource> resource;
-    if (NS_FAILED(rv = GetDOMNodeResource(aElement, getter_AddRefs(resource)))) {
-        // XXX it's not a resource element, so there's no assertions
-        // we need to make on the back-end. Should we just do the
-        // update?
-        return NS_OK;
-    }
-
-    // Get the nsIContent interface, it's a bit more utilitarian
-    nsCOMPtr<nsIContent> element( do_QueryInterface(aElement) );
-    if (! element) {
-        NS_ERROR("element doesn't support nsIContent");
-        return NS_ERROR_UNEXPECTED;
-    }
-
-    // Make sure that the element is in the widget. XXX Even this may be
-    // a bit too promiscuous: an element may also be a XUL element...
-    if (!IsElementInWidget(element))
-        return NS_OK;
-
-    // Split the element into its namespace and tag components
-    PRInt32  elementNameSpaceID;
-    if (NS_FAILED(rv = element->GetNameSpaceID(elementNameSpaceID))) {
-        NS_ERROR("unable to get element namespace ID");
-        return rv;
-    }
-
-    nsCOMPtr<nsIAtom> elementNameAtom;
-    if (NS_FAILED(rv = element->GetTag( *getter_AddRefs(elementNameAtom) ))) {
-        NS_ERROR("unable to get element tag");
-        return rv;
-    }
-
-    // Split the property name into its namespace and tag components
-    PRInt32  attrNameSpaceID;
-    nsCOMPtr<nsIAtom> attrNameAtom;
-    if (NS_FAILED(rv = element->ParseAttributeString(aName, *getter_AddRefs(attrNameAtom), attrNameSpaceID))) {
-        NS_ERROR("unable to parse attribute string");
-        return rv;
-    }
-
-    // Now do the work to change the attribute. There are a couple of
-    // special cases that we need to check for here...
-    if ((elementNameSpaceID == kNameSpaceID_XUL) &&
-        IsResourceElement(element) && // XXX IsResourceElement(): is this what we really mean?
-        (attrNameSpaceID    == kNameSpaceID_None) &&
-        (attrNameAtom.get() == kOpenAtom)) {
-
-        // We are (possibly) changing the value of the "open"
-        // attribute. This may require us to generate or destroy
-        // content in the widget. See what the old value was...
-        nsAutoString attrValue;
-        if (NS_FAILED(rv = element->GetAttribute(kNameSpaceID_None, kOpenAtom, attrValue))) {
-            NS_ERROR("unable to get current open state");
-            return rv;
-        }
-
-        if ((rv == NS_CONTENT_ATTR_NO_VALUE) || (rv == NS_CONTENT_ATTR_NOT_THERE) ||
-            ((rv == NS_CONTENT_ATTR_HAS_VALUE) && (! attrValue.EqualsIgnoreCase(aValue))) ||
-            PR_TRUE // XXX just always allow this to fire.
-            ) {
-            // Okay, it's really changing.
-
-            // This is a "transient" property, so we _don't_ go to the
-            // RDF graph to set it.
-            if (NS_FAILED(rv = element->SetAttribute(kNameSpaceID_None, kOpenAtom, aValue, PR_TRUE))) {
-                NS_ERROR("unable to update attribute on content node");
-                return rv;
-            }
-            
-            PersistAttribute(element, kNameSpaceID_None, kOpenAtom, aValue, eSet);
-
-            if (aValue.EqualsIgnoreCase("true")) {
-                rv = OpenWidgetItem(element);
-            }
-            else {
-                rv = CloseWidgetItem(element);
-            }
-
-            NS_ASSERTION(NS_SUCCEEDED(rv), "unable to open/close tree item");
-            return rv;
-        }
-    }
-    else if ((elementNameSpaceID == kNameSpaceID_XUL) &&
-             (IsResourceElement(element)) &&
-             (attrNameSpaceID    == kNameSpaceID_None) &&
-             (attrNameAtom.get() == kIdAtom)) {
-
-        // We are (possibly) changing the actual identity of the
-        // element; e.g., re-rooting an item in the tree.
-
-        nsCOMPtr<nsIRDFResource> newResource;
-        if (NS_FAILED(rv = gRDFService->GetUnicodeResource(aValue.GetUnicode(), getter_AddRefs(newResource)))) {
-            NS_ERROR("unable to get new resource");
-            return rv;
-        }
-
-#if 0 // XXX we're fighting with the XUL builder, so just _always_ let this through.
-        // Didn't change. So bail!
-        if (resource == newResource)
-            return NS_OK;
-#endif
-
-        // Allright, it really is changing. So blow away the old
-        // content node and insert a new one with the new ID in
-        // its place.
-        nsCOMPtr<nsIContent> parent;
-        if (NS_FAILED(rv = element->GetParent(*getter_AddRefs(parent)))) {
-            NS_ERROR("unable to get element's parent");
-            return rv;
-        }
-
-        PRInt32 elementIndex;
-        if (NS_FAILED(rv = parent->IndexOf(element, elementIndex))) {
-            NS_ERROR("unable to get element's index within parent");
-            return rv;
-        }
-
-        if (! parent)
-            return NS_ERROR_UNEXPECTED;
-
-        if (NS_FAILED(rv = parent->RemoveChildAt(elementIndex, PR_TRUE))) {
-            NS_ERROR("unable to remove element");
-            return rv;
-        }
-
-        nsCOMPtr<nsIContent> newElement;
-        if (NS_FAILED(rv = CreateElement(elementNameSpaceID,
-                                         elementNameAtom,
-                                         newResource,
-                                         getter_AddRefs(newElement)))) {
-            NS_ERROR("unable to create new element");
-            return rv;
-        }
-
-        // Attach transient properties to the new element.
-        //
-        // XXX all I really care about right this minute is the
-        // "open" state. We could put this stuff in a table and
-        // drive it that way.
-        nsAutoString attrValue;
-        if (NS_FAILED(rv = element->GetAttribute(kNameSpaceID_None, kOpenAtom, attrValue))) {
-            NS_ERROR("unable to get open state of old element");
-            return rv;
-        }
-
-        if (rv == NS_CONTENT_ATTR_HAS_VALUE) {
-            if (NS_FAILED(rv = newElement->SetAttribute(kNameSpaceID_None, kOpenAtom, attrValue, PR_FALSE))) {
-                NS_ERROR("unable to set open state of new element");
-                return rv;
-            }
-
-            PersistAttribute(newElement, kNameSpaceID_None, kOpenAtom, attrValue, eSet);
-
-        }
-
-        // Mark as a container so the contents get regenerated
-        if (NS_FAILED(rv = newElement->SetAttribute(kNameSpaceID_None,
-                                                    kLazyContentAtom,
-                                                    "true",
-                                                    PR_FALSE))) {
-            NS_ERROR("unable to mark as a container");
-            return rv;
-        }
-
-        // Now insert the new element into the parent. This should
-        // trigger a reflow and cause the contents to be regenerated.
-        if (NS_FAILED(rv = parent->InsertChildAt(newElement, elementIndex, PR_TRUE))) {
-            NS_ERROR("unable to add new element to the parent");
-            return rv;
-        }
-
-        return NS_OK;
-    }
-    else if ((attrNameSpaceID == kNameSpaceID_None) &&
-             (attrNameAtom.get() == kRefAtom)) {
-        // Remove all of the template children and rebuild them
-        rv = RemoveAndRebuildGeneratedChildren(element);
-        if (NS_FAILED(rv)) return rv;
-
-        return NS_OK;
-    }
-
-    // If we get here, it's a "vanilla" property: push its value into the graph.
-    if (kNameSpaceID_Unknown == attrNameSpaceID) {
-      attrNameSpaceID = kNameSpaceID_None;  // ignore unknown prefix XXX is this correct?
-    }
-    nsCOMPtr<nsIRDFResource> property;
-    if (NS_FAILED(rv = GetResource(attrNameSpaceID, attrNameAtom, getter_AddRefs(property)))) {
-        NS_ERROR("unable to construct resource");
-        return rv;
-    }
-
-    // Get the old value, if there was one.
-    nsAutoString oldValueStr;
-    rv = element->GetAttribute(attrNameSpaceID, attrNameAtom, oldValueStr);
-    if (NS_FAILED(rv)) return rv;
-
-    nsCOMPtr<nsIRDFLiteral> oldvalue;
-    if (NS_CONTENT_ATTR_HAS_VALUE == rv) {
-        rv = gRDFService->GetLiteral(oldValueStr.GetUnicode(), getter_AddRefs(oldvalue));
-        NS_ASSERTION(NS_SUCCEEDED(rv), "unable to construct literal");
-        if (NS_FAILED(rv)) return rv;
-    }
-
-    // Get the new value
-    nsCOMPtr<nsIRDFLiteral> newvalue;
-    rv = gRDFService->GetLiteral(aValue.GetUnicode(), getter_AddRefs(newvalue));
-    NS_ASSERTION(NS_SUCCEEDED(rv), "unable to construct literal");
-    if (NS_FAILED(rv)) return rv;
-
-    if (oldvalue) {
-        rv = mDB->Change(resource, property, oldvalue, newvalue);
-        if (NS_FAILED(rv)) return rv;
-    }
-    else {
-        rv = mDB->Assert(resource, property, newvalue, PR_TRUE);
-        if (NS_FAILED(rv)) return rv;
-    }
-
-    if (rv == NS_RDF_ASSERTION_REJECTED) {
-        // Okay, just force the attribute to be set.
-        rv = element->SetAttribute(attrNameSpaceID, attrNameAtom, aValue, PR_TRUE);
-        if (NS_FAILED(rv)) return rv;
-    }
-
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-RDFGenericBuilderImpl::OnRemoveAttribute(nsIDOMElement* aElement, const nsString& aName)
-{
-    nsresult rv;
-
-    nsCOMPtr<nsIRDFResource> resource;
-    if (NS_FAILED(rv = GetDOMNodeResource(aElement, getter_AddRefs(resource)))) {
-        // XXX it's not a resource element, so there's no assertions
-        // we need to make on the back-end. Should we just do the
-        // update?
-        return NS_OK;
-    }
-
-    // Get the nsIContent interface, it's a bit more utilitarian
-    nsCOMPtr<nsIContent> element( do_QueryInterface(aElement) );
-    if (! element) {
-        NS_ERROR("element doesn't support nsIContent");
-        return NS_ERROR_UNEXPECTED;
-    }
-
-    // Make sure that the element is in the widget. XXX Even this may be
-    // a bit too promiscuous: an element may also be a XUL element...
-    if (!IsElementInWidget(element))
-        return NS_OK;
-
-    // Split the element into its namespace and tag components
-    PRInt32  elementNameSpaceID;
-    if (NS_FAILED(rv = element->GetNameSpaceID(elementNameSpaceID))) {
-        NS_ERROR("unable to get element namespace ID");
-        return rv;
-    }
-
-    nsCOMPtr<nsIAtom> elementNameAtom;
-    if (NS_FAILED(rv = element->GetTag( *getter_AddRefs(elementNameAtom) ))) {
-        NS_ERROR("unable to get element tag");
-        return rv;
-    }
-
-    // Split the property name into its namespace and tag components
-    PRInt32  attrNameSpaceID;
-    nsCOMPtr<nsIAtom> attrNameAtom;
-    if (NS_FAILED(rv = element->ParseAttributeString(aName, *getter_AddRefs(attrNameAtom), attrNameSpaceID))) {
-        NS_ERROR("unable to parse attribute string");
-        return rv;
-    }
-
-    if ((elementNameSpaceID    == kNameSpaceID_XUL) &&
-        IsResourceElement(element) && // XXX Is this what we really mean?
-        (attrNameSpaceID       == kNameSpaceID_None) &&
-        (attrNameAtom.get()    == kOpenAtom)) {
-        // We are removing the value of the "open" attribute. This may
-        // require us to destroy content from the tree.
-
-
-        nsAutoString	openVal;
-        if (NS_FAILED(rv = element->GetAttribute(kNameSpaceID_None, kOpenAtom, openVal))) {
-            NS_ERROR("unable to get open attribute on update content node");
-            return rv;
-        }
-
-        // XXX should we check for existence of the attribute first?
-        if (NS_FAILED(rv = element->UnsetAttribute(kNameSpaceID_None, kOpenAtom, PR_TRUE))) {
-            NS_ERROR("unable to attribute on update content node");
-            return rv;
-        }
-
-        PersistAttribute(element, kNameSpaceID_None, kOpenAtom, openVal, eClear);
-
-        if (NS_FAILED(rv = CloseWidgetItem(element))) {
-            NS_ERROR("unable to close widget item");
-            return rv;
-        }
-    }
-    else if ((attrNameSpaceID == kNameSpaceID_None) &&
-             (attrNameAtom.get() == kRefAtom)) {
-        // Ignore changes to the 'ref=' attribute; the XUL builder
-        // will take care of that for us.
-    }
-    else {
-        // It's a "vanilla" property: push its value into the graph.
-
-        nsCOMPtr<nsIRDFResource> property;
-        if (kNameSpaceID_Unknown == attrNameSpaceID) {
-          attrNameSpaceID = kNameSpaceID_None;  // ignore unknown prefix XXX is this correct?
-        }
-        if (NS_FAILED(rv = GetResource(attrNameSpaceID, attrNameAtom, getter_AddRefs(property)))) {
-            NS_ERROR("unable to construct resource");
-            return rv;
-        }
-
-        // Unassert the old value, if there was one.
-        nsAutoString oldValue;
-        if (NS_CONTENT_ATTR_HAS_VALUE == element->GetAttribute(attrNameSpaceID, attrNameAtom, oldValue)) {
-            nsCOMPtr<nsIRDFLiteral> value;
-            if (NS_FAILED(rv = gRDFService->GetLiteral(oldValue.GetUnicode(), getter_AddRefs(value)))) {
-                NS_ERROR("unable to construct literal");
-                return rv;
-            }
-
-            rv = mDB->Unassert(resource, property, value);
-            NS_ASSERTION(NS_SUCCEEDED(rv), "unable to unassert old property value");
-        }
-    }
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-RDFGenericBuilderImpl::OnSetAttributeNode(nsIDOMElement* aElement, nsIDOMAttr* aNewAttr)
-{
-    NS_NOTYETIMPLEMENTED("write me!");
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-RDFGenericBuilderImpl::OnRemoveAttributeNode(nsIDOMElement* aElement, nsIDOMAttr* aOldAttr)
-{
-    NS_NOTYETIMPLEMENTED("write me!");
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
+#endif // 0
 
 
 ////////////////////////////////////////////////////////////////////////
@@ -1977,23 +1576,6 @@ RDFGenericBuilderImpl::BuildContentFromTemplate(nsIContent *aTemplateNode,
                 }
             }
 
-            // get any persistant attributes
-            if ((!aIsUnique) && (isResourceElement)) {
-                GetPersistentAttributes(realKid);
-            }
-
-#if 0
-            // If item says its "open", then recurse now and build up its children
-            nsAutoString openState;
-            rv = realKid->GetAttribute(kNameSpaceID_None, kOpenAtom, openState);
-            if (NS_FAILED(rv)) return rv;
-
-            if ((rv == NS_CONTENT_ATTR_HAS_VALUE) && (openState.EqualsIgnoreCase("true"))) {
-                rv = OpenWidgetItem(realKid);
-                if (NS_FAILED(rv)) return rv;
-            }
-#endif
-
             if (nameSpaceID == kNameSpaceID_HTML) {
                 // If we just built HTML, then we have to recurse "by
                 // hand" because HTML won't build itself up lazily.
@@ -2323,7 +1905,7 @@ RDFGenericBuilderImpl::CreateContainerContents(nsIContent* aElement, nsIRDFResou
         // This will insert all of the elements into the
         // container, but _won't_ bother layout about it.
         for (loop=0; loop<numElements; loop+=2) {
-            rv = CreateWidgetItem(aElement, flatArray[loop+1], flatArray[loop], loop+1, (istree ? PR_FALSE : PR_TRUE));
+            rv = CreateWidgetItem(aElement, flatArray[loop+1], flatArray[loop], loop+1, PR_FALSE);
             NS_ASSERTION(NS_SUCCEEDED(rv), "unable to create widget item");
             if (NS_FAILED(rv)) break;
         }
@@ -2799,212 +2381,6 @@ RDFGenericBuilderImpl::GetResource(PRInt32 aNameSpaceID,
 }
 
 
-nsresult
-RDFGenericBuilderImpl::OpenWidgetItem(nsIContent* aElement)
-{
-#ifdef PR_LOGGING
-    if (PR_LOG_TEST(gLog, PR_LOG_DEBUG)) {
-        nsresult rv;
-
-        nsCOMPtr<nsIAtom> tag;
-        rv = aElement->GetTag(*getter_AddRefs(tag));
-        if (NS_FAILED(rv)) return rv;
-
-        nsAutoString tagStr;
-        tag->ToString(tagStr);
-
-        PR_LOG(gLog, PR_LOG_DEBUG,
-               ("rdfgeneric open-widget-item %s",
-                (const char*) nsCAutoString(tagStr)));
-    }
-#endif
-    return CreateContents(aElement);
-}
-
-
-nsresult
-RDFGenericBuilderImpl::CloseWidgetItem(nsIContent* aElement)
-{
-    nsresult rv;
-
-#ifdef PR_LOGGING
-    if (PR_LOG_TEST(gLog, PR_LOG_DEBUG)) {
-        nsCOMPtr<nsIAtom> tag;
-        rv = aElement->GetTag(*getter_AddRefs(tag));
-        if (NS_FAILED(rv)) return rv;
-
-        nsAutoString tagStr;
-        tag->ToString(tagStr);
-
-        PR_LOG(gLog, PR_LOG_DEBUG,
-               ("rdfgeneric close-widget-item %s",
-                (const char*) nsCAutoString(tagStr)));
-    }
-#endif
-
-    // Find the tag that contains the children so that we can remove
-    // all of the children.
-    //
-    // XXX We make a bit of a leap here and assume that the same
-    // template that was used to generate _us_ was used to generate
-    // our _kids_. I'm sure this'll break when we do toolbars or
-    // something.
-    nsAutoString tmplID;
-    rv = aElement->GetAttribute(kNameSpaceID_None, kTemplateAtom, tmplID);
-    if (NS_FAILED(rv)) return rv;
-
-    if (rv != NS_CONTENT_ATTR_HAS_VALUE)
-        return NS_OK;
-
-    nsCOMPtr<nsIDOMXULDocument> xulDoc = do_QueryInterface(mDocument);
-    if (! xulDoc)
-        return NS_ERROR_UNEXPECTED;
-
-    nsCOMPtr<nsIDOMElement> tmplDOMEle;
-    rv = xulDoc->GetElementById(tmplID, getter_AddRefs(tmplDOMEle));
-    if (NS_FAILED(rv)) return rv;
-
-    nsCOMPtr<nsIContent> tmpl = do_QueryInterface(tmplDOMEle);
-    if (! tmpl)
-        return NS_ERROR_UNEXPECTED;
-
-    nsCOMPtr<nsIContent> tmplParent;
-    rv = tmpl->GetParent(*getter_AddRefs(tmplParent));
-    if (NS_FAILED(rv)) return rv;
-
-    NS_ASSERTION(tmplParent != nsnull, "template node has no parent");
-    if (! tmplParent)
-        return NS_ERROR_UNEXPECTED;
-
-    nsCOMPtr<nsIAtom> tmplParentTag;
-    rv = tmplParent->GetTag(*getter_AddRefs(tmplParentTag));
-    if (NS_FAILED(rv)) return rv;
-
-    nsCOMPtr<nsIContent> childcontainer;
-    if ((tmplParentTag.get() == kRuleAtom) || (tmplParentTag.get() == kTemplateAtom)) {
-        childcontainer = dont_QueryInterface(aElement);
-    }
-    else {
-        rv = nsRDFContentUtils::FindChildByTag(aElement,
-                                               kNameSpaceID_XUL,
-                                               tmplParentTag,
-                                               getter_AddRefs(childcontainer));
-
-        if (NS_FAILED(rv)) return rv;
-
-        if (rv == NS_RDF_NO_VALUE) {
-            // No tag; must've already been closed
-            return NS_OK;
-        }
-    }
-
-    PRInt32 count;
-    rv = childcontainer->ChildCount(count);
-    NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get count of the parent's children");
-    if (NS_FAILED(rv)) return rv;
-
-    while (--count >= 0) {
-        nsCOMPtr<nsIContent> child;
-        rv = childcontainer->ChildAt(count, *getter_AddRefs(child));
-        if (NS_FAILED(rv)) return rv;
-
-        rv = childcontainer->RemoveChildAt(count, PR_TRUE);
-        NS_ASSERTION(NS_SUCCEEDED(rv), "error removing child");
-
-        do {
-            // If it's _not_ a XUL element, then we want to blow it and
-            // all of its kids out of the XUL document's
-            // resource-to-element map.
-            nsCOMPtr<nsIRDFResource> resource;
-            rv = nsRDFContentUtils::GetElementResource(child, getter_AddRefs(resource));
-            if (NS_FAILED(rv)) break;
-
-            PRBool isXULElement;
-            rv = mDB->HasAssertion(resource, kRDF_instanceOf, kXUL_element, PR_TRUE, &isXULElement);
-            if (NS_FAILED(rv)) break;
-
-            if (! isXULElement)
-                break;
-            
-            rv = child->SetDocument(nsnull, PR_TRUE);
-            if (NS_FAILED(rv)) return rv;
-        } while (0);
-    }
-
-    // Clear the container-contents-generated attribute so that the next time we
-    // come back, we'll regenerate the kids we just killed.
-    rv = aElement->UnsetAttribute(kNameSpaceID_None,
-                                  kContainerContentsGeneratedAtom,
-                                  PR_FALSE);
-	if (NS_FAILED(rv)) return rv;
-
-	// This is a _total_ hack to make sure that any XUL we blow away
-	// gets rebuilt.
-	rv = childcontainer->UnsetAttribute(kNameSpaceID_None,
-                                        kXULContentsGeneratedAtom,
-                                        PR_FALSE);
-	if (NS_FAILED(rv)) return rv;
-
-	rv = childcontainer->SetAttribute(kNameSpaceID_None,
-                                      kLazyContentAtom,
-                                      "true",
-                                      PR_FALSE);
-	if (NS_FAILED(rv)) return rv;
-
-    return NS_OK;
-}
-
-
-nsresult
-RDFGenericBuilderImpl::RemoveAndRebuildGeneratedChildren(nsIContent* aElement)
-{
-    nsresult rv;
-
-    PRInt32 count;
-    rv = aElement->ChildCount(count);
-    if (NS_FAILED(rv)) return rv;
-
-    while (--count >= 0) {
-        nsCOMPtr<nsIContent> child;
-        rv = aElement->ChildAt(count, *getter_AddRefs(child));
-        if (NS_FAILED(rv)) return rv;
-
-        nsAutoString tmplID;
-        rv = child->GetAttribute(kNameSpaceID_None, kTemplateAtom, tmplID);
-        if (NS_FAILED(rv)) return rv;
-
-        if (rv != NS_CONTENT_ATTR_HAS_VALUE)
-            continue;
-
-        // It's a generated element. Remove it, and set its document
-        // to null so that it'll get knocked out of the XUL doc's
-        // resource-to-element map.
-        rv = aElement->RemoveChildAt(count, PR_TRUE);
-        NS_ASSERTION(NS_SUCCEEDED(rv), "error removing child");
-
-        rv = child->SetDocument(nsnull, PR_TRUE);
-        if (NS_FAILED(rv)) return rv;
-    }
-
-    // Clear the contents-generated attribute so that the next time we
-    // come back, we'll regenerate the kids we just killed.
-    rv = aElement->UnsetAttribute(kNameSpaceID_None,
-                                  kTemplateContentsGeneratedAtom,
-                                  PR_FALSE);
-    if (NS_FAILED(rv)) return rv;
-
-    rv = aElement->UnsetAttribute(kNameSpaceID_None,
-                                  kContainerContentsGeneratedAtom,
-                                  PR_FALSE);
-    if (NS_FAILED(rv)) return rv;
-
-    rv = CreateContents(aElement);
-    if (NS_FAILED(rv)) return rv;
-
-    return NS_OK;
-}
-
-
 PRBool
 RDFGenericBuilderImpl::IsTreeWidgetItem(nsIContent* aElement)
 {
@@ -3053,7 +2429,7 @@ RDFGenericBuilderImpl::ScheduleReflow()
     rv = NS_NewTimer(getter_AddRefs(mTimer));
     if (NS_FAILED(rv)) return rv;
 
-    mTimer->Init(RDFGenericBuilderImpl::ForceTreeReflow, this, 1000);
+    mTimer->Init(RDFGenericBuilderImpl::ForceTreeReflow, this, 100);
     NS_ADDREF(this); // the timer will hold a reference to the builder
     
     return NS_OK;
