@@ -760,7 +760,7 @@ nsTableRowFrame::ReflowUnmappedChildren( nsIPresContext*      aPresContext,
   VerifyLastIsComplete();
 #endif
   nsIFrame*     kidPrevInFlow = nsnull;
-  nsReflowStatus  result = 0;  // not complete
+  nsReflowStatus  result = NS_FRAME_NOT_COMPLETE;
 
   // If we have no children and we have a prev-in-flow then we need to pick
   // up where it left off. If we have children, e.g. we're being resized, then
