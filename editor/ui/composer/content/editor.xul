@@ -81,7 +81,7 @@
 
   <menubar id="main-menubar" chromeclass="menubar">
     <menu id="fileMenu"/>
-    <menu id="editMenu" oncreate="EditorInitEditMenu()"/>
+    <menu id="editMenu"/>
 
     <menu value="&viewMenu.label;" accesskey="&viewmenu.accesskey;">
     <!-- id pulls in "Show Sidebar" item from sidebarOverlay -->
@@ -197,7 +197,6 @@
       <spring class="spacer3"/>
       <titledbutton id="EditModeButton"    class="DisplayModeButton" selected="1" value="&showExtraMarkup.label;"    onclick="EditorSetDisplayStyle(0)"/>
       <titledbutton id="BrowserModeButton" class="DisplayModeButton" selected="0" value="&hideExtraMarkup.label;" onclick="EditorSetDisplayStyle(1)"/>
-      <html:div class="VerticalSeparator"/>
       <spring flex="100%"/>
 <!--
 Use this when implemented...

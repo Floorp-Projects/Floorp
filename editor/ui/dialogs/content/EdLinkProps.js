@@ -237,7 +237,9 @@ function chooseFile()
 function RemoveLink()
 {
   // Simple clear the input field!
+  // BUG: This doesn't clear the input field!
   dialog.hrefInput.value = "";
+  dialog.hrefInput.focus();
 }
 
 function FillListboxes()

@@ -146,7 +146,6 @@ function ValidateNumberString(value, minValue, maxValue)
 
 function ShowInputErrorMessage(message)
 {
-  dump("ShowInputErrorMessage:"+message+"[end]\n");
   window.openDialog("chrome://editor/content/EdMessage.xul", "_blank", "chrome,close,titlebar,modal", "", message, "Input Error");
 }
 
@@ -225,7 +224,6 @@ function SetElementEnabledByID( elementID, doEnable )
   element = document.getElementById(elementID);
   if ( element )
   {
-//dump("*** SetElementEnabledByID: Element="+element+" ID="+elementID+"\n");
     if ( doEnable )
     {
       element.removeAttribute( "disabled" );
@@ -269,27 +267,38 @@ function SetClassEnabledByID( elementID, doEnable )
 
 // Get the text appropriate to parent container
 //  that may be a cell or window
-function GetAppropriatePercentString()
+function GetAppropriatePercentString(elementForAtt, elementInDoc)
 {
-  var selection = window.editorShell.editorSelection;
-  if (selection) {
-    if (editorShell.GetElementOrParentByTagName("td",selection.anchorNode))
-      return GetString("PercentOfCell");
-  }
-  return GetString("PercentOfWindow");
+  if (elementForAtt.nodeName == "TD" || elementForAtt.nodeName == "TH")
+    return GetString("PercentOfTable");
+
+//TEMP: UNTIL InitPixelOrPercentCombobox() has elementInDoc param:
+  if(elementForAtt.nodeName == "TABLE")
+    return GetString("PercentOfWindow");
+
+  // Check if element is within a cell
+  if(editorShell.GetElementOrParentByTagName("td",elementInDoc))
+    return GetString("PercentOfCell");
+  else
+    return GetString("PercentOfWindow");
 }
 
+// TODO: MODIFY THIS TO PASS IN 2 ELEMENTS: ADD elementInDoc
+//  1st is a temporary element containing current attributes,
+//  2nd is element in document needed to check parent context for "percent of..." string
 // Returns the value for the "size" input element ("%" is stripped)
 // Appends option elements with the correct strings to the select widget
-function InitPixelOrPercentCombobox(element, attribute, selectID)
+function InitPixelOrPercentCombobox(elementForAtt, attribute, selectID)
 {
-  size   = element.getAttribute(attribute);
+  size   = elementForAtt.getAttribute(attribute);
   select = document.getElementById(selectID);
 
   if (select) {
     ClearList(select);
     AppendStringToList(select,GetString("Pixels"));
-    AppendStringToList(select,GetAppropriatePercentString());
+    // TEMPORARY: THIS WILL ALLOW US TO NOT HAVE TO CHANGE CALLS 
+    //  FROM IMAGE AN HLINE DIAOLGS -- USE SELECTION ANCHOR NODE
+    AppendStringToList(select,GetAppropriatePercentString(elementForAtt,window.editorShell.editorSelection.anchorNode));
   }
 
   // Search for a "%" character
@@ -323,7 +332,7 @@ function InitPixelOrPercentPopupButton(element, attribute, buttonID)
     size = size.substr(0, percentIndex);
 
     if (btn)
-      btn.setAttribute("value",GetAppropriatePercentString());
+      btn.setAttribute("value",GetAppropriatePercentString(element));
   } else {
     if (btn)
       btn.setAttribute("value",GetString("Pixels"));
@@ -375,8 +384,10 @@ function forceInteger(elementID)
   var stringIn = editField.value;
   if (stringIn && stringIn.length > 0)
   {
+    stringIn = stringIn.replace(/\D+/g,"");
+    if (!stringIn) stringIn = "";
     // Strip out all nonnumeric characters
-    editField.value = stringIn.replace(/\D+/g,"");
+    editField.value = stringIn;
 
     // we hope to remove the following line for blur() once xp widgets land
     // cmanske (9/15) testing this now that GFX ender widget is active
@@ -474,10 +485,14 @@ function getColor(ColorPickerID)
   if (colorPicker) 
   {
     // Extract color from colorPicker and assign to colorWell.
-    color = colorPicker.getAttribute('color');
+    color = colorPicker.getAttribute("color");
     if (color && color == "")
       return null;
+    // Clear color so next if it's called again before
+    //  color picker is actually used, we dedect the "don't set color" state
+    colorPicker.setAttribute("color","");
   }
+
   return color;
 }
 
@@ -491,6 +506,9 @@ function setColorWell(ColorWellID, color)
       // Don't set color (use default)
       // Trigger change to not show color swatch
       colorWell.setAttribute("default","true");
+      // Style in CSS sets "background-color",
+      //   but color won't clear unless we do this:
+      colorWell.removeAttribute("style");
     }
     else
     {

@@ -25,10 +25,10 @@
 <!-- File menu items -->
 <!ENTITY fileMenu.label "File">
 <!ENTITY filemenu.accesskey "f">
-<!ENTITY newBlankPage.label "New Blank Page">
-<!ENTITY newBlankPage.accesskey "b" >
+<!ENTITY newBlankPageCmd.label "New Blank Page">
+<!ENTITY newBlankPage.accesskey "n" >
 <!ENTITY newMenu.label "New">
-<!ENTITY newMenu.accesskey "n">
+<!ENTITY newMenu.accesskey "e">
 <!ENTITY openFileCmd.label "Open File...">
 <!ENTITY fileopen.accesskey "o">
 <!ENTITY fileopen.keybinding "o">
@@ -40,12 +40,12 @@
 <!ENTITY filesave.keybinding "s">
 <!ENTITY saveAsCmd.label "Save As...">
 <!ENTITY filesaveas.accesskey "a">
-<!ENTITY previewCmd.label "Preview">
-<!ENTITY filepreview.accesskey "v">
+<!ENTITY previewCmd.label "Preview in Browser">
+<!ENTITY filepreview.accesskey "b">
 <!ENTITY printSetupCmd.label "Print Setup...">
 <!ENTITY fileprintsetup.accesskey "t">
 <!ENTITY printPreviewCmd.label "Print Preview">
-<!ENTITY fileprintpreview.accesskey "r">
+<!ENTITY fileprintpreview.accesskey "v">
 <!ENTITY printCmd.label "Print...">
 <!ENTITY printButtonCmd.label "Print...">
 <!ENTITY fileprint.accesskey "p">
@@ -245,7 +245,7 @@
 <!ENTITY formatmenu.accesskey "o">
 
 <!-- Font Face SubMenu -->
-<!ENTITY fontfaceMenu.label "Font Face">
+<!ENTITY fontfaceMenu.label "Font">
 <!ENTITY formatfontmenu.accesskey "f">
 <!ENTITY defaultVariableWidthCmd.label "Variable Width">
 <!ENTITY fontvarwidth.accesskey "v">
@@ -284,7 +284,7 @@
 <!ENTITY size-xx-large.accesskey "e">
 
 <!-- Font Style SubMenu -->
-<!ENTITY fontStyleMenu.label "Style">
+<!ENTITY fontStyleMenu.label "Text Style">
 <!ENTITY formatstylemenu.accesskey "s">
 <!ENTITY styleBoldCmd.label "Bold">
 <!ENTITY stylebold.accesskey "b">
@@ -326,17 +326,18 @@
 <!ENTITY coloryellow.accesskey "y">
 <!ENTITY colorMagentaCmd.label "Magenta">
 <!ENTITY colormagenta.accesskey "m">
-
-<!ENTITY backgroundColorMenu.label "Background Color">
+<!-- 
+Menu item text for "[Page|Table|Cell] Background color" is filled from 
+ editor.properties strings, so accesskey should be compatable with those
+-->
 <!ENTITY formatbkgdcolormenu.accesskey "b">
-<!ENTITY removeAllStylesCmd.label "Remove All Styles">
+<!ENTITY removeAllStylesCmd.label "Remove All Text Styles">
 <!ENTITY formatremovestyles.accesskey "r">
 <!ENTITY formatremovestyles.keybinding "k">
 <!ENTITY removeLinksCmd.label "Remove Link(s)">
 <!ENTITY formatremovelinks.accesskey "m">
 <!ENTITY formatindent.keybinding "=">
 <!ENTITY formatoutdent.keybinding "-">
-
 <!ENTITY headingMenu.label "Heading">
 <!ENTITY formatheadingmenu.accesskey "h">
 <!ENTITY headingNormalCmd.label "Normal">
@@ -374,7 +375,7 @@
 <!ENTITY paragraphdesc.accesskey "d">
 
 <!-- List menu items -->
-<!ENTITY listProps.label "List Properties...">
+<!ENTITY listProps.label "List...">
 <!ENTITY formatlistmenu.accesskey "l">
 
 <!-- Style Sheet submenu -->
@@ -406,10 +407,10 @@
 <!ENTITY alignjustify.accesskey "j">
 
 <!ENTITY increaseIndent.label "Increase indent">
-<!ENTITY increaseindent.accesskey "n">
+<!ENTITY increaseindent.accesskey "i">
 <!ENTITY increaseindentkb "=">
 <!ENTITY decreaseIndent.label "Decrease indent">
-<!ENTITY decreaseindent.accesskey "e">
+<!ENTITY decreaseindent.accesskey "d">
 <!ENTITY decreaseindentkb "-">
 
 <!ENTITY pageProperties.label "Page Title and Properties...">
@@ -491,6 +492,7 @@
 
 <!-- toolbar-only items -->
 <!ENTITY openToolbarCmd.label "Open">
+<!ENTITY previewToolbarCmd.label "Preview">
 <!ENTITY printToolbarCmd.label "Print">
 <!ENTITY findToolbarCmd.label "Find">
 <!ENTITY linkToolbarCmd.label "Link">
@@ -510,7 +512,10 @@
 <!ENTITY formatToolbar.boldChar "B">
 <!ENTITY formatToolbar.italicChar "I">
 <!ENTITY formatToolbar.underlineChar "U">
-<!ENTITY formatToolbar.colorPicker.default.label "Don't Specify Color">
+
+<!-- Used with color pickers in Format toolbar and Format Menu -->
+<!ENTITY colorPicker.default.label "Reader's default color">
+<!ENTITY colorPicker.default.accesskey "r">
 
 <!ENTITY tempNotification.label "[status message]">
 <!ENTITY tempDoneLoading.label "[Document loading message]">

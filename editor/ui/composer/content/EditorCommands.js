@@ -312,7 +312,10 @@ function EditorOpen()
 
 function EditorOpenRemote()
 {
-  /* note that if the last parameter is not 0, the default will be for a browser window rather than a composer window */
+  /* The last parameter is the current browser window.
+     Use 0 and the default checkbox will be to load into an editor
+     and loading into existing browser option is removed
+   */
   window.openDialog( "chrome://navigator/content/openLocation.xul", "_blank", "chrome,modal", 0);
 }
 
@@ -493,6 +496,7 @@ function EditorSelectParagraphFormat()
       return;
     editorShell.SetParagraphFormat(gParagraphTagNames[select.selectedIndex]);
   }
+  contentWindow.focus();
 }
 
 function onParagraphFormatChange()
@@ -505,6 +509,7 @@ function onParagraphFormatChange()
   	var format = select.getAttribute("format");
     if ( format == "mixed")
     {
+dump("Mixed paragraph format *******\n");
       // No single type selected
       newIndex = -1;
     }
@@ -541,6 +546,7 @@ function EditorSelectFontFace()
 
     EditorSetFontFace(gFontFaceNames[select.selectedIndex]);
   }
+  contentWindow.focus();
 }
 
 function onFontFaceChange()
@@ -590,6 +596,7 @@ function EditorSetFontFace(fontFace)
       editorShell.SetTextProperty("font", "face", fontFace);
     }
   }        
+dump("Setting focus to content window...\n");
   contentWindow.focus();
 }
 
@@ -685,36 +692,71 @@ function EditorSetFontSize(size)
 function EditorIncreaseFontSize()
 {
   editorShell.IncreaseFontSize();
+  contentWindow.focus();
 }
 
 function EditorDecreaseFontSize()
 {
   editorShell.DecreaseFontSize();
+  contentWindow.focus();
 }
 
 function EditorSelectTextColor(ColorPickerID, ColorWellID)
 {
   var color = getColorAndSetColorWell(ColorPickerID, ColorWellID);
   dump("EditorSelectTextColor: "+color+"\n");
-  EditorSetFontColor(color);
-}
 
-function EditorSelectBackColor(ColorPickerID, ColorWellID)
-{
-  var color = getColorAndSetColorWell(ColorPickerID, ColorWellID);
-  dump("EditorSelectBackColor: "+color+"\n");
-  EditorSetBackgroundColor(color);
+  // Close appropriate menupopup  
+  var menupopup;
+  if (ColorPickerID == "menuTextCP")
+    menupopup = document.getElementById("formatMenuPopup");
+  else if (ColorPickerID == "TextColorPicker")
+    menupopup = document.getElementById("TextColorPopup");
+
+  if (menupopup) menupopup.closePopup();
+
+  EditorSetFontColor(color);
+  contentWindow.focus();
 }
 
 function EditorRemoveTextColor(ColorWellID)
 {
+  if (ColorWellID)
+  {
+    var menupopup = document.getElementById("TextColorPopup");
+    if (menupopup) menupopup.closePopup();
+  }
+
   //TODO: Set colorwell to browser's default color
   editorShell.SetTextProperty("font", "color", "");
   contentWindow.focus();
 }
 
+function EditorSelectBackColor(ColorPickerID, ColorWellID)
+{
+  var color = getColorAndSetColorWell(ColorPickerID, ColorWellID);
+dump("EditorSelectBackColor: "+color+"\n");
+
+  // Close appropriate menupopup  
+  var menupopup;
+  if (ColorPickerID == "menuBackCP")
+    menupopup = document.getElementById("formatMenuPopup");
+  else if (ColorPickerID == "BackColorPicker")
+    menupopup = document.getElementById("BackColorPopup");
+
+  if (menupopup) menupopup.closePopup();
+
+  EditorSetBackgroundColor(color);
+  contentWindow.focus();
+}
+
 function EditorRemoveBackColor(ColorWellID)
 {
+  if (ColorWellID)
+  {
+    var menupopup = document.getElementById("BackColorPopup");
+    if (menupopup) menupopup.closePopup();
+  }
   //TODO: Set colorwell to browser's default color
   editorShell.SetBackgroundColor("");
   contentWindow.focus();
@@ -1111,25 +1153,30 @@ function CheckSpelling()
   contentWindow.focus();
 }
 
-function InitBackColorPopup()
+function SetBackColorString(xulElementID)
 {
-  var caption = document.getElementById("BackColorCaption"); 
-  if (caption)
+  var xulElement = document.getElementById(xulElementID);
+  if (xulElement)
   {
-    var captionStr;
+    var textVal;
     var isSelectedObj = new Object();
     var tagNameObj = new Object();
     var element = editorShell.GetSelectedOrParentTableElement(tagNameObj, isSelectedObj);  
 
     if (tagNameObj.value == "table")
-      captionStr = editorShell.GetString("TableBackColor");
+      textVal = editorShell.GetString("TableBackColor");
     else if (tagNameObj.value == "td")
-      captionStr = editorShell.GetString("CellBackColor");
+      textVal = editorShell.GetString("CellBackColor");
     else
-      captionStr = editorShell.GetString("PageBackColor");
+      textVal = editorShell.GetString("PageBackColor");
 
-    caption.setAttribute("value",captionStr);
+    xulElement.setAttribute("value",textVal);
   }
+}
+
+function InitBackColorPopup()
+{
+  SetBackColorString("BackColorCaption"); 
 }
 
 function EditorInitEditMenu()
@@ -1139,8 +1186,11 @@ function EditorInitEditMenu()
 
 function EditorInitFormatMenu()
 {
-  var propertiesMenu = document.getElementById("objectProperties");
-  if (propertiesMenu)
+  // Set the string for the background color menu item
+  SetBackColorString("backgroundColorMenu"); 
+
+  var menuItem = document.getElementById("objectProperties");
+  if (menuItem)
   {
     var element = GetSelectedElementOrParentCell();
     if (element)
@@ -1148,8 +1198,8 @@ function EditorInitFormatMenu()
       dump("TagName="+element.nodeName+"\n");
       if (element.nodeName)
       {
-        propertiesMenu.removeAttribute("hidden");
-        propertiesMenu.removeAttribute("disabled");
+        menuItem.removeAttribute("hidden");
+        menuItem.removeAttribute("disabled");
 
         var objStr;
         var menuStr = editorShell.GetString("ObjectProperties");
@@ -1163,12 +1213,8 @@ function EditorInitFormatMenu()
             break;
           case 'TABLE':
             objStr = editorShell.GetString("Table");
-//TEMP FOR BETA1: Disable item - dialog not working
-            propertiesMenu.setAttribute("disabled", "true")
             break;
           case 'TD':
-//TEMP FOR BETA1: Disable item - dialog not working
-            propertiesMenu.setAttribute("disabled", "true")
             objStr = editorShell.GetString("TableCell");
             break;
           case 'A':
@@ -1179,11 +1225,13 @@ function EditorInitFormatMenu()
             break;
         }
         menuStr = menuStr.replace(/%obj%/,objStr);        
-        propertiesMenu.setAttribute("value", menuStr)
+        menuItem.setAttribute("value", menuStr)
       }
     } else {
       // No element to set properties on - hide menu item
-      propertiesMenu.setAttribute("hidden","true");
+      // This works only on Mac and Linux
+      menuItem.setAttribute("hidden","true");
+
     }
   }
 }
@@ -1483,7 +1531,10 @@ function onListFormatChange(listType)
 
 function getColorAndSetColorWell(ColorPickerID, ColorWellID)
 {
-  var colorWell = document.getElementById(ColorWellID);
+  var colorWell;
+  if (ColorWellID)
+    colorWell = document.getElementById(ColorWellID);
+
   var colorPicker = document.getElementById(ColorPickerID);
   if (colorPicker) 
   {
@@ -1507,9 +1558,6 @@ function EditorInsertOrEditTable(insertAllowed)
 {
   var table = editorShell.GetElementOrParentByTagName("table", null);
   if (table) {
-   //TEMP FOR BETA1: Disable item - dialog not working
-     dump("Function not implemented\n");
-     return;
     // Edit properties of existing table
     dump("Existing table found ... Editing its properties\n");
 
@@ -1522,9 +1570,6 @@ function EditorInsertOrEditTable(insertAllowed)
 
 function EditorTableCellProperties()
 {
-//TEMP FOR BETA1: Disable item - dialog not working
-  dump("Function not implemented\n");
-  return;
   var cell = editorShell.GetElementOrParentByTagName("td", null);
   if (cell) {
     // Start Table Properties dialog on the "Cell" panel
@@ -1535,36 +1580,31 @@ function EditorTableCellProperties()
 
 function EditorSelectTableCell()
 {
-//TEMP FOR BETA1: Disable item - dialog not working
-//  editorShell.SelectTableCell();
+  editorShell.SelectTableCell();
   contentWindow.focus();
 }
 
 function EditorSelectAllTableCells()
 {
-//TEMP FOR BETA1: Disable item - dialog not working
-//  editorShell.SelectAllTableCells();
+  editorShell.SelectAllTableCells();
   contentWindow.focus();
 }
 
 function EditorSelectTable()
 {
-//TEMP FOR BETA1: Disable item - dialog not working
-//  editorShell.SelectTableCell();
+  editorShell.SelectTableCell();
   contentWindow.focus();
 }
 
 function EditorSelectTableRow()
 {
-//TEMP FOR BETA1: Disable item - dialog not working
-//  editorShell.SelectTableRow();
+  editorShell.SelectTableRow();
   contentWindow.focus();
 }
 
 function EditorSelectTableColumn()
 {
-//TEMP FOR BETA1: Disable item - dialog not working
-//  editorShell.SelectTableColumn();
+  editorShell.SelectTableColumn();
   contentWindow.focus();
 }
 
@@ -1583,12 +1623,14 @@ function EditorInsertTableCell(after)
 
 function EditorInsertTableRow(below)
 {
+dump("EditorInsertTableRow, below="+below+"\n");
   editorShell.InsertTableRow(1,below);
   contentWindow.focus();
 }
 
 function EditorInsertTableColumn(after)
 {
+dump("EditorInsertTableColumn, after="+after+"\n");
   editorShell.InsertTableColumn(1,after);
   contentWindow.focus();
 }
