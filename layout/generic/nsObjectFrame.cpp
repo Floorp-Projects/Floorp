@@ -1417,11 +1417,12 @@ nsPluginInstanceOwner::~nsPluginInstanceOwner()
 
   if (nsnull != mInstance)
   {
-    mPluginHost->StopPluginInstance(mInstance);
+    if (mPluginHost)
+      mPluginHost->StopPluginInstance(mInstance);
     NS_RELEASE(mInstance);
   }
 
-  NS_RELEASE(mPluginHost);
+  NS_IF_RELEASE(mPluginHost);
   mOwner = nsnull;
 
   for (cnt = 0; cnt < mNumAttrs; cnt++)
