@@ -14,6 +14,8 @@ function OnLoadAddressBook()
 										"cv"  = card view (normal fields) */
 	cvData = new Object;
 
+	// Card View Box
+	cvData.CardViewBox		= doc.getElementById("CardViewBox");
 	// Title
 	cvData.CardTitle		= doc.getElementById("CardTitle");
 	// Name section
@@ -131,16 +133,6 @@ function EditCardCancelButton()
 	window.close();
 }
 
-function TestSelectionChange(abNode)
-{
-	var selArray = document.getElementsByAttribute('selected', 'true');
-	if ( selArray && (selArray.length == 2) )
-	{
-		var uri = selArray[1].getAttribute('id');
-		dump("Clicked on = " + uri + "\n");
-	}
-}
-
 function ResultsPaneSelectionChange()
 {
 	// not in ab window if no parent.parent.rdf
@@ -159,17 +151,17 @@ function ResultsPaneSelectionChange()
 function DisplayCardViewPane(abNode)
 {
 	var uri = abNode.getAttribute('id');
-	dump("Clicked on = " + uri + "\n");
 	var cardResource = parent.parent.rdf.GetResource(uri);
 	var card = cardResource.QueryInterface(Components.interfaces.nsIAbCard);
 	
-	var name = card.personName;
+	var name = card.personName;// FIX ME - this should be displayName
 	
 	var data = parent.parent.cvData;
 	var visible;
 	
 	/* set fields in card view pane */
-	visible = cvSetNode(data.CardTitle, "Card for " + name);
+	// FIX ME - waiting for bug fix... cvSetVisible(data.CardViewBox, true);
+	cvSetNode(data.CardTitle, "Card for " + name);
 	
 	// FIX ME!
 	// Code needs to be fixed to make the entire box visible or not.  Current hack just hides
@@ -177,33 +169,35 @@ function DisplayCardViewPane(abNode)
 	
 	/* Name section */
 	cvSetNode(data.cvhName, name);
-	cvSetNode(data.cvNickname, "\"" + card.nickname + "\"");
-	cvSetNode(data.cvEmail1, card.email);
-	cvSetNode(data.cvEmail2, "poohbear@netscape.net");
+	cvSetNode(data.cvNickname, "\"" + card.nickName + "\"");
+	cvSetNode(data.cvEmail1, card.primaryEmail);
+	cvSetNode(data.cvEmail2, card.secondEmail);
 	/* Home section */
-	visible = cvSetNode(data.cvHomeAddress, "123 Treehouse Lane");
-	visible = cvSetNode(data.cvHomeCityStZip, "Hundred Acre Wood, CA 94087") && visible;
+	visible = cvSetNode(data.cvHomeAddress, "not yet supported");
+	visible = cvSetNode(data.cvHomeCityStZip, "not yet supported") || visible;
 	cvSetVisible(data.cvhHome, visible);
 	/* Other section */
-	visible = cvSetNode(data.cvNotes, "This data is fake.  It is inserted into the DOM from JavaScript.");
+	visible = cvSetNode(data.cvNotes, "not yet supported");
 	cvSetVisible(data.cvhOther, visible);
 	/* Phone section */
-	visible = cvSetNode(data.cvPhWork, "Work: " + card.workPhone);
-	visible = cvSetNode(data.cvPhHome, "Home: (408) 732-1212") && visible;
-	visible = cvSetNode(data.cvPhFax, "Fax: (650) 937-3434") && visible;
-	visible = cvSetNode(data.cvPhCellular, "Cellular: (408) 734-9090") && visible;
-	visible = cvSetNode(data.cvPhPager, "Pager: (408) 732-6545") && visible;
+	visible = cvSetPhone(data.cvPhWork, "Work: ", card.workPhone);
+	visible = cvSetPhone(data.cvPhHome, "Home: ", card.homePhone) || visible;
+	visible = cvSetPhone(data.cvPhFax, "Fax: ", card.faxNumber) || visible;
+	visible = cvSetPhone(data.cvPhCellular, "Cellular: ", card.cellularNumber) || visible;
+	visible = cvSetPhone(data.cvPhPager, "Pager: ", card.pagerNumber) || visible;
 	cvSetVisible(data.cvhPhone, visible);
 	/* Work section */
-	visible = cvSetNode(data.cvJobTitle, "Interaction Designer");
-	visible = cvSetNode(data.cvOrganization, card.organization) && visible;
-	visible = cvSetNode(data.cvWorkAddress, "501 E Middlefield Road") && visible;
-	visible = cvSetNode(data.cvWorkCityStZip, card.city + ", CA 94043") && visible;
+	visible = cvSetNode(data.cvJobTitle, "not yet supported");
+	visible = cvSetNode(data.cvOrganization, card.organization) || visible;
+	visible = cvSetNode(data.cvWorkAddress, "not yet supported") || visible;
+	visible = cvSetNode(data.cvWorkCityStZip, "not yet supported") || visible;
 	cvSetVisible(data.cvhWork, visible);
 }
 
 function ClearCardViewPane()
 {
+	// FIX ME - waiting for bug fix...cvSetVisible(data.CardViewBox, false);
+
 	// HACK - we need to be able to set the entire box or div to display:none when bug fixed
 	var data = parent.parent.cvData;
 
@@ -236,20 +230,26 @@ function ClearCardViewPane()
 	cvSetVisible(data.cvWorkCityStZip, false);
 }
 
+function cvSetPhone(node, phone, text)
+{
+	if ( text )
+		return cvSetNode(node, phone + text);
+	else
+		return cvSetNode(node, "");
+}
+
 function cvSetNode(node, text)
 {
 	node.childNodes[0].nodeValue = text;
-	if ( text == "" )
+	if ( text )
 	{
-		node.setAttribute("style", "display:none");
-		//node.style.display = "none";
-		return false;
+		node.setAttribute("style", "display:block");
+		return true;
 	}
 	else
 	{
-		node.setAttribute("style", "display:block");
-		//node.style.display = "block";
-		return true;
+		node.setAttribute("style", "display:none");
+		return false;
 	}
 }
 
@@ -257,10 +257,8 @@ function cvSetVisible(node, visible)
 {
 	if ( visible )
 		node.setAttribute("style", "display:block");
-		//node.style.display = "block";
 	else
 		node.setAttribute("style", "display:none");
-		//node.style.display = "none";
 }
 
 // -------
