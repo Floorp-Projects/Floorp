@@ -51,6 +51,7 @@ static NS_DEFINE_CID(kRDFInMemoryDataSourceCID, NS_RDFINMEMORYDATASOURCE_CID);
 static NS_DEFINE_CID(kRDFServiceCID,            NS_RDFSERVICE_CID);
 
 static const char kURINC_BookmarksRoot[]         = "NC:BookmarksRoot"; // XXX?
+static const char kURINC_IEFavoritesRoot[]       = "NC:IEFavoritesRoot"; // XXX?
 static const char kURINC_PersonalToolbarFolder[] = "NC:PersonalToolbarFolder"; // XXX?
 
 DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, child);
@@ -209,7 +210,7 @@ BookmarkParser::Parse(nsIRDFResource* aContainer)
         char c = mStream.get();
         line.Append(c);
 
-        if (line.Last() != '\n' && !mStream.eof())
+        if (line.Last() != '\n' && line.Last() != '\r' && !mStream.eof())
             continue; // keep building the string
 
         PRInt32 offset;
@@ -570,8 +571,10 @@ private:
     // pseudo-constants
     nsIRDFResource* kNC_URL;
     nsIRDFResource* kNC_BookmarksRoot;
+    nsIRDFResource* kNC_IEFavoritesRoot;
     nsIRDFResource* kNC_Bookmark;
     nsIRDFResource* kRDF_type;
+    nsIRDFResource* kNC_Folder;
 
     nsIRDFService* mRDFService;
 
@@ -690,10 +693,12 @@ BookmarkDataSourceImpl::BookmarkDataSourceImpl(void)
                                                kIRDFServiceIID,
                                                (nsISupports**) &mRDFService);
 
-    mRDFService->GetResource(kURINC_URL,           &kNC_URL);
-    mRDFService->GetResource(kURINC_Bookmark,      &kNC_Bookmark);
-    mRDFService->GetResource(kURINC_BookmarksRoot, &kNC_BookmarksRoot);
-    mRDFService->GetResource(kURIRDF_type,         &kRDF_type);
+    mRDFService->GetResource(kURINC_URL,             &kNC_URL);
+    mRDFService->GetResource(kURINC_Bookmark,        &kNC_Bookmark);
+    mRDFService->GetResource(kURINC_BookmarksRoot,   &kNC_BookmarksRoot);
+    mRDFService->GetResource(kURINC_IEFavoritesRoot, &kNC_IEFavoritesRoot);
+    mRDFService->GetResource(kURIRDF_type,           &kRDF_type);
+    mRDFService->GetResource(kURINC_Folder,          &kNC_Folder);
 }
 
 BookmarkDataSourceImpl::~BookmarkDataSourceImpl(void)
@@ -706,7 +711,11 @@ BookmarkDataSourceImpl::~BookmarkDataSourceImpl(void)
     mRDFService = nsnull;
 
     NS_RELEASE(kNC_URL);
+    NS_RELEASE(kNC_Bookmark);
     NS_RELEASE(kNC_BookmarksRoot);
+    NS_RELEASE(kNC_IEFavoritesRoot);
+    NS_RELEASE(kRDF_type);
+    NS_RELEASE(kNC_Folder);
 
     NS_RELEASE(mInner);
 }
@@ -852,6 +861,41 @@ BookmarkDataSourceImpl::ReadBookmarks(void)
 
 	BookmarkParser parser(strm, this);
 	parser.Parse(kNC_BookmarksRoot);
+
+	// look for and import any IE Favorites
+#ifdef	XP_MAC
+	nsSpecialSystemDirectory ieFavoritesFile(nsSpecialSystemDirectory::Mac_PreferencesDirectory);
+	ieFavoritesFile += "Explorer";
+	ieFavoritesFile += "Favorites.html";
+
+	nsInputFileStream	ieStream(ieFavoritesFile);
+	if (strm.is_open())
+	{
+		nsCOMPtr<nsIRDFResource>	ieFolder;
+		if (NS_SUCCEEDED(rv = rdf_CreateAnonymousResource(kURINC_IEFavoritesRoot, getter_AddRefs(ieFolder))))
+		{
+			if (NS_SUCCEEDED(rv = rdf_MakeSeq(mInner, ieFolder)))
+			{
+				if (NS_SUCCEEDED(rv = mInner->Assert(ieFolder, kRDF_type, kNC_Folder, PR_TRUE)))
+				{
+					BookmarkParser parser(ieStream, this);
+					parser.Parse(ieFolder);
+					
+					nsAutoString	ieTitle("Imported IE Favorites");
+					nsCOMPtr<nsIRDFLiteral>	ieTitleLiteral;
+					if (NS_SUCCEEDED(rv = mRDFService->GetLiteral(ieTitle, getter_AddRefs(ieTitleLiteral))))
+					{
+						rv = rdf_Assert(mInner, ieFolder, kURINC_Name, ieTitleLiteral);
+					}
+					if (NS_SUCCEEDED(rv = rdf_ContainerAppendElement(mInner, kNC_BookmarksRoot, ieFolder)))
+					{
+					}
+				}
+			}
+		}
+	}
+#endif
+
 	return NS_OK;	
 }
 
