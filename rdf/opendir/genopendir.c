@@ -71,90 +71,123 @@ cookiePropValue (char* cookie, char* prop) {
   }
 }
 
-void 
-AnswerOpenDirQuery (WriteClientProc callBack, void* obj, char *query, char* cookie) {
-  char buff[1000];
-  RDF_Resource narrow = RDF_GetResource("narrow", 1);
-  RDF_Resource link = RDF_GetResource("link", 1);
-  RDF_Resource name = RDF_GetResource("name", 1);
-  RDF_Resource topic = RDF_GetResource("Topic", 1);
-  RDF_Resource desc = RDF_GetResource("description", 1);
-  RDF_Resource editor = RDF_GetResource("editor", 1);
-  RDF_Resource newsGroup = RDF_GetResource("newsGroup", 1);
-  RDF_Resource node = getNodeFromQuery(query);
-  char        widthc = cookiePropValue(cookie, "cols");
-  char        sort   = cookiePropValue(cookie, "sort");
-  size_t      rw      = (widthc ? ((int)widthc - 48) : 3);
+RDF_Resource    gNarrow;
+RDF_Resource    gLink; 
+RDF_Resource    gName; 
+RDF_Resource    gTopic;
+RDF_Resource    gDesc; 
+RDF_Resource    gEditor; 
+RDF_Resource    gNewsGroup;
+char*           gTemplate;
+int gInited = 0;
+#define MAX_TEMPLATE_SIZE 20000
 
-  if (!sort) sort = 'D';
+void
+Init () {
+  if (!gInited) {
+    int n = 0;
+    FILE *templateFile = fopen("template.html", "r");
+    gInited = 1;    
+    gNarrow = RDF_GetResource("narrow", 1);
+    gLink = RDF_GetResource("link", 1);
+    gName = RDF_GetResource("name", 1);
+    gTopic = RDF_GetResource("Topic", 1);
+    gDesc = RDF_GetResource("description", 1);
+    gEditor = RDF_GetResource("editor", 1);
+    gNewsGroup = RDF_GetResource("newsGroup", 1);
+    gTemplate = malloc(MAX_TEMPLATE_SIZE+1);
+    memset(gTemplate, '\0', MAX_TEMPLATE_SIZE);
+    n = fread(gTemplate, 1, MAX_TEMPLATE_SIZE, templateFile);
+    gTemplate[n] = '\0';
+    fclose(templateFile);
+  }
+}
 
+char*
+resourceName (RDF_Resource u) {
+  char* nm = (char*) RDF_OnePropValue(0, u, gName, RDF_STRING_TYPE);
+  char* id = RDF_ResourceID(u);
+  if (!nm || strchr(nm, '/')) nm = strrchr(id, '/') +1;
+  return nm;
+}
+
+void
+outputTopicName (WriteClientProc callBack, void* obj, RDF_Resource node) {
+  char* nm = (char*) RDF_OnePropValue(0, node, gName, RDF_STRING_TYPE);
+  char* id = RDF_ResourceID(node);
+
+  if (!nm || strchr(nm, '/')) 
+	  if (strchr(id, '/')) {
+		  nm = strrchr(id, '/') +1;
+	  } else {
+		  nm = id;
+	  }
+
+  (*callBack)(obj, nm);
+}
+  
+void
+listSubTopics (WriteClientProc callBack, void* obj, RDF_Resource node, char* cookie, RDF_Resource p) {
   if (node) {
-    RDF_Cursor c = RDF_GetTargets(0, node, narrow, RDF_RESOURCE_TYPE);
-    RDF_Resource u = (RDF_Resource) RDF_NextValue(c);
-    (*callBack)(obj, PREFIX); 
-    listParents(callBack, obj, node, 0);     
-    if (u) {
-      (*callBack)(obj, "<BR><hr><table cellspacing=\"6\" cellpadding=\"6\" width=\"80%\">");
-      while (u) {
-        int w = 0;
-        (*callBack)(obj, "<tr>");
-        while ((w < rw) && u) {
-          char* nm = (char*) RDF_OnePropValue(0, u, name, RDF_STRING_TYPE);
-          char* id = RDF_ResourceID(u);
-          if (!nm || strchr(nm, '/')) nm = strrchr(id, '/') +1;
-          sprintf(buff, "<td width=\"%i%\"><li><a href=\"OpenDir?browse=%s\">%s</a></td>",
-                  (100 / rw), id, (nm ? nm : id));
-          (*callBack)(obj, buff);
-          w++;
-          u =  (RDF_Resource) RDF_NextValue(c);
-        }
-        (*callBack)(obj, "</tr>");
-      }
-      (*callBack)(obj, "</table>");
+    RDF_Cursor c = RDF_GetTargets(0, node, p, RDF_RESOURCE_TYPE);
+    char        widthc = cookiePropValue(cookie, "cols");
+    RDF_Resource u;
+    char buff[5000];
+    RDF_Resource subTopicList[200];
+    int n = 0;
+    int w = 0;
+    while (u =  (RDF_Resource) RDF_NextValue(c)) {
+      subTopicList[n++] = u;
     }
-
-    RDF_DisposeCursor(c);
-    (*callBack)(obj, "<hr><UL>");
-    c = RDF_GetTargets(0, node, link, RDF_RESOURCE_TYPE);
-    u = (RDF_Resource) RDF_NextValue(c);
-    while (u) {
-      describeItem(callBack, obj, u);
-      u =  (RDF_Resource) RDF_NextValue(c);
-    }
-    (*callBack)(obj, "</UL>");
-    RDF_DisposeCursor(c);
-
-    c = RDF_GetTargets(0, node, newsGroup, RDF_RESOURCE_TYPE);
-    u = (RDF_Resource) RDF_NextValue(c);
-    if (u) {
-      (*callBack)(obj, "<hr><b>NewsGroups:</B>");      
-      while (u) {
-        char* id = RDF_ResourceID(u);
-        sprintf(buff, "<li><a href=\"%s\">%s</a>", id, id);
-        (*callBack)(obj, buff);
-        u =  (RDF_Resource) RDF_NextValue(c);
+    for (w = 0; w < n; w++) {
+      char* id;
+      if (((w == 0) || (w == ((n+1)/2))) && (p == gNarrow)) {
+        if (w != 0)  (*callBack)(obj, "</td>");
+        (*callBack)(obj, "</UL>\n<TD width=\"40%\" valign=top><UL><FONT Face=\"sans-serif, Arial, Helvetica\">\n<UL>\n");
       }
-      (*callBack)(obj, "</UL>");
-    }
-    RDF_DisposeCursor(c);
-
-
-    c = RDF_GetTargets(0, node, editor, RDF_RESOURCE_TYPE);
-    u = (RDF_Resource) RDF_NextValue(c);
-    if (u) {
-      (*callBack)(obj, "<hr><b>Editors:</b>");
-      while (u) {
-        char* id = RDF_ResourceID(u);
-        sprintf(buff, " %s", id);
-        (*callBack)(obj, buff);
-        u =  (RDF_Resource) RDF_NextValue(c);
-      }
-
-      RDF_DisposeCursor(c);
+      u = subTopicList[w];
+      id = RDF_ResourceID(u);
+      if (p == gNarrow) {
+        sprintf(buff, "<li><a href=\"OpenDir?browse=%s\">%s</a>\n", id, resourceName(u));
+      } else {
+        char* des = (char*) RDF_OnePropValue(0, u, gDesc, RDF_STRING_TYPE);
+        sprintf(buff, "<li><a href=\"%s\">%s</a> %s %s\n", id, resourceName(u), 
+                (des ? " : " : ""), (des ? des : ""));
+      }        
+      (*callBack)(obj, buff);
     }
   }
-
 }
+
+void 
+AnswerOpenDirQuery (WriteClientProc callBack, void* obj, char *query, char* cookie) {
+  RDF_Resource node = getNodeFromQuery(query);
+  size_t n = 0;
+  char buff[MAX_TEMPLATE_SIZE];
+  char* pbegin = 0;
+  char* begin;   
+  Init();
+  begin = gTemplate;
+  while (pbegin = strstr(begin, "&Topic")) {
+    memset(buff, '\0', 10000);
+    memcpy(buff, begin, pbegin-begin);
+    (*callBack)(obj, buff);
+    if (startsWith("&TopicName;", pbegin)) {
+      outputTopicName(callBack, obj, node);
+    } else if (startsWith("&TopicPath;", pbegin)) {
+      listParents(callBack, obj, node, 0);
+    } else if (startsWith("&TopicSubTopics;", pbegin)) {
+      listSubTopics(callBack, obj, node, cookie, gNarrow);
+    } else if (startsWith("&TopicItems;", pbegin)) {
+      listSubTopics(callBack, obj, node, cookie, gLink);
+    } 
+ 
+    begin = pbegin + (strchr(pbegin, ';') - pbegin) + 1; 
+
+  }
+  (*callBack)(obj, begin);
+}
+  
 
 
 void describeCategory (WriteClientProc callBack, void* obj, RDF_Resource u) {
@@ -198,11 +231,11 @@ AnswerSearchQuery (WriteClientProc callBack, void* obj, char *query, char* cooki
     RDF_Resource topic = RDF_GetResource("Topic", 1);
     RDF_Resource type = RDF_GetResource("type", 1);
     RDF_Resource u ;
-    RDF_Resource* cats = (RDF_Resource*)xGetMem(sizeof(RDF_Resource) * (MRN + 1));
-    RDF_Resource* items =  (RDF_Resource*)xGetMem(sizeof(RDF_Resource) * (MRN + 1));;
     size_t catn = 0;
     size_t itemn = 0;    
     size_t index;
+    RDF_Resource* cats = (RDF_Resource*)xGetMem(sizeof(RDF_Resource) * (MRN + 1));
+    RDF_Resource* items =  (RDF_Resource*)xGetMem(sizeof(RDF_Resource) * (MRN + 1));
     char showDesc = cookiePropValue(cookie, "searchDesc");
 
     (*callBack)(obj, PREFIX);

@@ -52,14 +52,14 @@ Run(ServerSession_t obj)
   val++;
   *(val -1) = '\0';
   WAIStartResponse(obj);
-  WriteClient(obj, PREFIX);
+  /*  WriteClient(obj, PREFIX); */
   
   if (strcmp(query, "browse") == 0) {
     AnswerOpenDirQuery(WriteClient, obj, val, cookie);
   } else if (strcmp(query, "search") == 0) {
     AnswerSearchQuery(WriteClient, obj, val, cookie);
   }
-  WriteClient(obj, POSTFIX);
+  /*  WriteClient(obj, POSTFIX); */
   return 0;
 }
 
@@ -71,6 +71,7 @@ int WINAPI WinMain(
     LPSTR lpCmdLine,	// pointer to command line
     int nCmdShow 	// show state of window
    )
+
 {
 	int argc = 0;
 	char **argv = NULL;
@@ -80,7 +81,8 @@ int main(int argc, char **argv)
 #endif
     char localhost[256];
     char *host;
-	RDF_Resource u;
+    RDF_Resource u;
+    int n = 2;
     IIOPWebAppService_t obj;
 
 	//
@@ -106,6 +108,7 @@ int main(int argc, char **argv)
 	// that appears as argv[0].
 	// GetCommandLine can be used to retrieve the
 	// whole thing.
+        n = 1;
 	if (lpCmdLine && *lpCmdLine){
 		if (*lpCmdLine != '-'){
 			char *sep = strchr(lpCmdLine, ' ');
@@ -129,8 +132,13 @@ int main(int argc, char **argv)
 	WAIregisterService(obj, host);
         RDF_Initialize();
         printf("RDF Initialized!\n");
-        RDF_ReadFile(argv[2]);
- 
+		if (argc == 0) {
+			RDF_ReadFile("three_level");
+		} else {
+        while (n <= argc) {
+             RDF_ReadFile(argv[n++]);
+       }
+		}
         printf("done");
 
 	WAIimplIsReady();

@@ -68,9 +68,11 @@ TNS
 findChildOfChar (TNS node, char c) {
   TNS ch = node->child;
   char c1 = tolower(c);
+  int n = 0;
   while (ch) {
     if (c1 == ch->c) return ch;
     ch = ch->next;
+	n++;
   }
   return 0;
 }
