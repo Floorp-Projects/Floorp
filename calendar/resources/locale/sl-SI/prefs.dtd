@@ -141,7 +141,7 @@
 <!-- Calendar Timezone preferences information -->
 <!ENTITY pref.calendar.timezone.label "Moj časovni pas">
 <!ENTITY pref.calendar.timezone.caption "Časovni pas">
-<!ENTITY pref.calendar.timezone.description "Timezone ID is (continent or ocean)/(largest city in legal timezone region).">
+<!ENTITY pref.calendar.timezone.description "Oznaka časovnega pasu je (kontinent ali ocean)/(največje mesto v upravnem področju časovnega pasu).">
 <!ENTITY pref.defaultzone.label "Privzet časovni pas:">
 
 <!ENTITY pref.timezone.Africa.Abidjan "Afrika/Abidžan">
