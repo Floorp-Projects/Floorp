@@ -69,7 +69,7 @@ interface nsIRDFService : nsISupports {
     nsIRDFInt      GetIntLiteral(in long aValue);
 
     // Construct an RDF literal from a data blob
-    [noscript] nsIRDFBlob getBlobLiteral(in octet_ptr aValue, in long aLength);
+    [noscript] nsIRDFBlob getBlobLiteral(in const_octet_ptr aValue, in long aLength);
 
     boolean IsAnonymousResource(in nsIRDFResource aResource);
 

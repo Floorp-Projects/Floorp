@@ -1826,10 +1826,10 @@ nsXULOutlinerBuilder::CompareMatches(nsTemplateMatch* aLeft, nsTemplateMatch* aR
 
                 if (mCollation) {
                     mCollation->CompareRawSortKey(NS_REINTERPRET_CAST(const PRUint8*, lstr),
-                                                        nsCRT::strlen(lstr) * sizeof(PRUnichar),
-                                                        NS_REINTERPRET_CAST(const PRUint8*, rstr),
-                                                        nsCRT::strlen(rstr) * sizeof(PRUnichar),
-                                                        &result);
+                                                  nsCRT::strlen(lstr) * sizeof(PRUnichar),
+                                                  NS_REINTERPRET_CAST(const PRUint8*, rstr),
+                                                  nsCRT::strlen(rstr) * sizeof(PRUnichar),
+                                                  &result);
                 }
                 else
                     result = ::Compare(nsDependentString(lstr),
@@ -1879,6 +1879,26 @@ nsXULOutlinerBuilder::CompareMatches(nsTemplateMatch* aLeft, nsTemplateMatch* aR
                 result = lval - rval;
 
                 return result * mSortDirection;
+            }
+        }
+    }
+
+    if (mCollation) {
+        // Blobs? (We can only compare these reasonably if we have a
+        // collation object.)
+        nsCOMPtr<nsIRDFBlob> l = do_QueryInterface(leftNode);
+        if (l) {
+            nsCOMPtr<nsIRDFBlob> r = do_QueryInterface(rightNode);
+            if (r) {
+                const PRUint8 *lval, *rval;
+                PRInt32 llen, rlen;
+                l->GetValue(&lval);
+                l->GetLength(&llen);
+                r->GetValue(&rval);
+                r->GetLength(&rlen);
+                
+                mCollation->CompareRawSortKey(lval, llen, rval, rlen, &result);
+                return result;
             }
         }
     }
