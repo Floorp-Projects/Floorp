@@ -234,7 +234,8 @@ function MsgAccountManager(selectPage)
                       { server: server, selectPage: selectPage });
 }
 
-function loadInboxForNewAccount() {
+function loadInboxForNewAccount() 
+{
   // gNewAccountToLoad is set in the final screen of the Account Wizard if a POP account
   // was created, the download messages box is checked, and the wizard was opened from the 3pane
   if (gNewAccountToLoad) {

@@ -63,7 +63,6 @@ var gSearchBox = null;
 var gAccountCentralLoaded = false;
 var gFakeAccountPageLoaded = false;
 var gPaneConfig = null;
-var gStandAloneMail = false;
 //End progress and Status variables
 
 // for checking if the folder loaded is Draft or Unsent which msg is editable
@@ -190,8 +189,6 @@ function CreateMailWindowGlobals()
   accountCentralBox = document.getElementById("accountCentralBox");
   gSearchBox = document.getElementById("searchBox");
   gPaneConfig = pref.getIntPref("mail.pane_config");
-
-  gStandAloneMail = pref.getBoolPref("mail.standalone");
 }
 
 function InitMsgWindow()
@@ -210,7 +207,7 @@ function messagePaneOnClick(event)
 {
   // if this is stand alone mail (no browser)
   // or this isn't a simple left click, do nothing, and let the normal code execute
-  if (gStandAloneMail || event.button != 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey)
+  if (event.button != 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey)
     return;
 
   // try to determine the href for what you are clicking on.  
