@@ -24,22 +24,16 @@
 <!ENTITY windowTitle.label "Page Colors and Background">
 <!ENTITY pageColors.label "Page Colors: ">
 <!ENTITY defaultColorsRadio.label "Reader's default colors (Don't set colors in page)">
-<!ENTITY defaultColorsRadio.tooltip "Default colors tooltip">
+<!ENTITY defaultColorsRadio.tooltip "Use the color settings from the viewer (reader's) browser only">
 <!ENTITY customColorsRadio.label "Use custom colors:">
-<!ENTITY customColorsRadio.tooltip "Custom colors tooltip">
+<!ENTITY customColorsRadio.tooltip "These color settings override the viewer's browser settings">
 <!ENTITY normalText.label "Normal text">
-<!ENTITY normalText.tooltip "Normal text tooltip">
 <!ENTITY linkText.label "Link text">
-<!ENTITY linkText.tooltip "Link text tooltip">
 <!ENTITY activeLinkText.label "Active link text">
-<!ENTITY activeLinkText.tooltip "Active link text tooltip">
 <!ENTITY visitedLinkText.label "Visited link text">
-<!ENTITY visitedLinkText.tooltip "Visited link text tooltip">
 <!ENTITY background.label "Background:">
-<!ENTITY background.tooltip "Background tooltip">
 <!ENTITY colon.character ":">
-<!ENTITY backgroundImage.label "Background Image (Uncheck to edit without image): ">
-<!ENTITY backgroundImage.tooltip "Background Image tooltip">
-<!ENTITY saveImageMsg.label "Location will be saved so you can use it later.">
-<!ENTITY ChooseFile.tooltip "Choose File tooltip">
-<!ENTITY AdvancedEditButton.tooltip "Edit additional properties of page">
+<!ENTITY backgroundImage.label "Background Image (Uncheck to edit page without image): ">
+<!ENTITY backgroundImage.tooltip "Use an image file as the background for your document">
+<!ENTITY saveImageMsg.label "Filename and location will be saved for future use.">
+<!ENTITY AdvancedEditButton.tooltip "Add or modify HTML elements, style attributes, and JavaScript">

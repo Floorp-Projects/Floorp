@@ -28,22 +28,14 @@
 <!ENTITY heightEditField.label "Height">
 <!ENTITY heightEditField.tooltip "Height tooltip">
 <!ENTITY widthEditField.label "Width">
-<!ENTITY widthEditField.tooltip "Width tooltip">
-<!ENTITY pixelsPercentPopup.tooltip "pixels percent popup tooltip">
 <!ENTITY pixelsPopup.value "pixels">
-<!ENTITY pixels.tooltip "pixels label tooltip">
 <!ENTITY percentPopup.value "percent">
 <!ENTITY alignmentBox.label "Alignment">
-<!ENTITY alignmentBox.tooltip "Alignment tooltip">
 <!ENTITY leftRadio.value "Left">
-<!ENTITY leftRadio.tooltip "Left tooltip">
 <!ENTITY centerRadio.value "Center">
-<!ENTITY centerRadio.tooltip "Center tooltip">
 <!ENTITY rightRadio.value "Right">
-<!ENTITY rightRadio.tooltip "Right tooltip">
 
 <!ENTITY threeDShading.label "3-D Shading">
-<!ENTITY threeDShading.tooltip "3-D Shading tooltip">
 <!ENTITY saveSettings.label "Save Settings">
-<!ENTITY saveSettings.tooltip "Save Settings tooltip">
-<!ENTITY advancedButton.tooltip "Edit additional properties for this Horizontal Line">
+<!ENTITY saveSettings.tooltip "Use these settings for all horizontal lines">
+<!ENTITY advancedButton.tooltip "Add or modify HTML elements, style attributes, and JavaScript">
