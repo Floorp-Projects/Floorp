@@ -6,8 +6,8 @@
 # URL.
 
 
-# $Revision: 1.9 $ 
-# $Date: 2000/11/09 19:14:20 $ 
+# $Revision: 1.10 $ 
+# $Date: 2000/11/28 00:23:16 $ 
 # $Author: kestes%staff.mail.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/test/genbuilds.tst,v $ 
 # $Name:  $ 
@@ -68,6 +68,13 @@ $TINDERBOX_DATA_DIR = ( $TinderConfig::TINDERBOX_DATA_DIR ||
 		'Lint_Tests', 
 		'Next_Milestone',
 	       );
+
+# status for the first build in a column 
+@INITIAL_STATUS_LIST = ( 'success', 'test_failed', 'build_failed',  
+			 'building', 'not_running');
+
+# status for all other builds
+@STATUS_LIST         = ( 'success', 'test_failed', 'build_failed', );
 
 
 # generate random build times to simulate real builds and stress the
@@ -135,13 +142,12 @@ sub rand_status {
 
   my ($random_status) = rand 6;
   my $status; 
-  @status_list = ( 'success', 'test_failed', 'build_failed', );
 
   $random_status =~ s/\..*//;
-  if ( $random_status > 2 ) {
+  if ( $random_status > $#STATUS_LIST ) {
     $status = 'success'; 
   } else {
-    $status = @status_list[$random_status];
+    $status = @STATUS_LIST[$random_status];
   }
 
   return $status;
@@ -150,71 +156,134 @@ sub rand_status {
 
 
 
-foreach $tree (@TREES) {
+# This is just like rand_status except that the first status in any
+# column could be 'building' or 'not_running'
 
-foreach $build (@BUILD_NAMES) {
-    
-    $starttime = time();
-    foreach $i (0 .. 45) {
+sub rand_initial_status {
+
+  # all ( $random_status > 2 ) will be converted to success everything
+  # else has equal weight.
+
+  my ($random_status) = rand 6;
+  my $status; 
+
+  $random_status =~ s/\..*//;
+  if ( $random_status > $#INITIAL_STATUS_LIST ) {
+    $status = 'success'; 
+  } else {
+    $status = @INITIAL_STATUS_LIST[$random_status];
+  }
+
+  return $status;
+}
 
 
-    $starttime -= rand_gap();
-    $timenow = $starttime;
-    $runtime = rand_runtime();
-    
-    # If the run was less then six minutes increase the gap between
-    # start times.
-    
-    $gap = (6*60) - $runtime;
-    if ($gap < 0){
-      $gap = 0;
-    }
-    
-    $starttime -= ($runtime + gap) ;
-    
-    $status = rand_status();
-    
-    # put the localtimes in the update file to ease debugging.
-    
-    $local_starttime = localtime($starttime);
-    $local_endtime = localtime($timenow);
-    
-$out = <<EOF;
+# generate a random build time.  We are generating builds backwards
+# from most recent to oldest time.  We need to generate random gaps as
+# well as random size builds.
+
+sub gen_rnd_build {
+  my ($starttime) = @_;
+
+  my ($end) = $starttime;
+  $end -= rand_gap();
+  
+  my ($runtime) = rand_runtime();
+  
+  # If the run was less then six minutes increase the gap between
+  # start times.
+  
+  my ($run_gap) = (6*60) - $runtime;
+  if ($run_gap < 0){
+    $run_gap = 0;
+  }
+  
+  my ($begin) = $end - ($runtime + $run_gap) ;
+  $begin =~ s/\..*//;
+
+  return ($end, $begin);
+}
+
+
+      
+
+sub write_update_record {
+  my ($tree, $build, $status, $begin, $end,) = @_;
+
+      # put the localtimes in the update file to ease debugging.
+      
+      my ($local_starttime) = localtime($begin);
+      my ($local_endtime) = localtime($end);
+      
+      my ($data) = <<EOF;
 
 \$r = {
               'tree' => '$tree',
               'buildname' => '$build',
               'buildfamily' => 'unix',
               'status' => '$status',
-              'starttime' => '$starttime',
+              'starttime' => '$begin',
 #  starttime: '$local_starttime', endtime: '$local_endtime', buildname: '$build',
-              'timenow' => '$timenow',
+              'timenow' => '$end',
+
+# this link does not point to real log files, it is only to help give
+# an idea of what the real link will look like and acts as a comment to make debugging easier.
+
 	      'brieflog' => 'http://www.mozilla.org/tree=$tree/buildname=$build/starttime=$starttime/status=$status',
               'errorparser' => 'unix'
            };
 EOF
   ;
- 
-       mkdir_R("$TINDERBOX_DATA_DIR/$tree/db", 0777);
-       mkdir_R("$TINDERBOX_DATA_DIR/$tree/h", 0777);
-    
-       my ($update_file) = ("$TINDERBOX_DATA_DIR/$tree/db/".
-			   "Build.Update.$tree.$build.$timenow");
-    
-      $update_file =~ s/([^0-9a-zA-Z\.\-\_\/\:]+)/\./g;
 
-      $update_file = main::extract_filename_chars($update_file);
-
-      open(FILE, ">$update_file");
-      
-      print FILE $out;
-      
-      close(FILE);
-      
-      
-    }
     
-  }
-  
+  my ($update_file) = ("$TINDERBOX_DATA_DIR/$tree/db/".
+		       "Build.Update.$tree.$build.$begin");
+
+  $update_file =~ s/([^0-9a-zA-Z\.\-\_\/\:]+)/\./g;
+
+  $update_file = main::extract_filename_chars($update_file);
+
+  mkdir_R("$TINDERBOX_DATA_DIR/$tree/db", 0777);
+  mkdir_R("$TINDERBOX_DATA_DIR/$tree/h", 0777);
+
+  open(FILE, ">$update_file") || 
+    die("Could not open file: $update_file : $! \n");
+
+  print FILE $data;
+
+  close(FILE) || 
+    die("Could not close file: $update_file : $! \n");
+
+  return 1;
 }
+
+
+
+
+foreach $tree (@TREES) {
+  
+  foreach $build (@BUILD_NAMES) {
+    
+    my ($starttime) = time();
+
+    my ($end, $begin) = gen_rnd_build($starttime);
+    $starttime = $begin;
+    
+    my ($status) = rand_initial_status(); 
+
+    ($status eq 'not_running') ||
+      write_update_record($tree, $build, $status, $begin, $end,);
+
+    foreach $i (0 .. 45) {
+      
+      my ($end, $begin) = gen_rnd_build($starttime);
+      $starttime = $begin;
+
+      my ($status) = rand_status(); 
+      write_update_record($tree, $build, $status, $begin, $end,);
+    } # $i
+    
+  } # $build
+  
+} # $tree
 
