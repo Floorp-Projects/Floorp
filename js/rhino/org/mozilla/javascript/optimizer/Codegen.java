@@ -2398,7 +2398,7 @@ if (true) {
                                      "Ljava/lang/String;I)";   // filename & linenumber
                 aload(thisObjLocal);
                 aload(variableObjectLocal);
-                push(itsSourceFile);
+                push(itsSourceFile == null ? "" : itsSourceFile);
                 push(itsLineNumber);
             } else {
                 callSignature    = "(Lorg/mozilla/javascript/Context;" +
