@@ -85,6 +85,8 @@
 #include "nsMsgComposeService.h"
 #include "nsIMsgComposeProgressParams.h"
 #include "nsMsgUtils.h"
+#include "nsIMsgImapMailFolder.h"
+#include "nsImapCore.h"
 
 // Defines....
 static NS_DEFINE_CID(kHeaderParserCID, NS_MSGHEADERPARSER_CID);
@@ -1948,6 +1950,30 @@ nsMsgComposeSendListener::OnStopCopy(nsresult aStatus)
 }
 
 nsresult
+nsMsgComposeSendListener::GetMsgFolder(nsIMsgCompose *compObj, nsIMsgFolder **msgFolder)
+{
+	nsresult    rv;
+	nsCOMPtr<nsIMsgFolder> aMsgFolder;
+	nsXPIDLCString folderUri;
+
+	rv = compObj->GetSavedFolderURI(getter_Copies(folderUri));
+	NS_ENSURE_SUCCESS(rv, rv);
+
+	nsCOMPtr<nsIRDFService> rdfService (do_GetService("@mozilla.org/rdf/rdf-service;1", &rv));
+	NS_ENSURE_SUCCESS(rv, rv); 
+
+	nsCOMPtr <nsIRDFResource> resource;
+	rv = rdfService->GetResource(folderUri, getter_AddRefs(resource));
+	NS_ENSURE_SUCCESS(rv, rv); 
+
+	aMsgFolder = do_QueryInterface(resource, &rv);
+	NS_ENSURE_SUCCESS(rv, rv);
+	*msgFolder = aMsgFolder;
+	NS_IF_ADDREF(*msgFolder);
+	return rv;
+}
+
+nsresult
 nsMsgComposeSendListener::RemoveCurrentDraftMessage(nsIMsgCompose *compObj, PRBool calledByCopy)
 {
 	nsresult    rv;
@@ -1994,6 +2020,51 @@ nsMsgComposeSendListener::RemoveCurrentDraftMessage(nsIMsgCompose *compObj, PRBo
 		  }
 		}
 	  }
+	  else
+	  {
+		  // If we get here we have the case where the draft folder 
+                  // is on the server and
+		  // it's not currently open (in thread pane), so draft 
+                  // msgs are saved to the server
+		  // but they're not in our local DB. In this case, 
+		  // GetMsgDBHdrFromURI() will never
+		  // find the msg. If the draft folder is a local one 
+		  // then we'll not get here because
+		  // the draft msgs are saved to the local folder and 
+		  // are in local DB. Make sure the
+		  // msg folder is imap.  Even if we get here due to 
+		  // DB errors (worst case), we should
+		  // still try to delete msg on the server because 
+		  // that's where the master copy of the
+		  // msgs are stored, if draft folder is on the server.  
+		  // For local case, since DB is bad
+		  // we can't do anything with it anyway so it'll be 
+		  // noop in this case.
+		  rv = GetMsgFolder(compObj, getter_AddRefs(msgFolder));
+		  if (NS_SUCCEEDED(rv) && msgFolder)
+		  {
+			  nsCOMPtr <nsIMsgImapMailFolder> imapFolder = do_QueryInterface(msgFolder);
+			  NS_ASSERTION(imapFolder, "The draft folder MUST be an imap folder in order to mark the msg delete!");
+			  if (NS_SUCCEEDED(rv) && imapFolder)
+			  {
+				  char * str = PL_strstr(curDraftIdURL.get(), "#");
+				  NS_ASSERTION(str, "Failed to get current draft id url");
+				  if (str)
+				  {
+					nsMsgKeyArray messageID;
+					nsCAutoString srcStr(str+1);
+					PRInt32 num=0, err;
+					num = srcStr.ToInteger(&err);
+					NS_ASSERTION(err == 0, "failed to get uid for current draft msg");
+					if (num)
+					{
+					  messageID.Add(num);
+						rv = imapFolder->StoreImapFlags(kImapMsgDeletedFlag, PR_TRUE, messageID.GetArray(), messageID.GetSize());
+					}
+				  }
+			  }
+		  }
+	  }
   
 	}
 
@@ -2013,18 +2084,7 @@ nsMsgComposeSendListener::RemoveCurrentDraftMessage(nsIMsgCompose *compObj, PRBo
 		// Make sure we have a folder interface pointer
 		if (!msgFolder)
 		{
-			nsXPIDLCString folderUri;
-			rv = compObj->GetSavedFolderURI(getter_Copies(folderUri));
-			NS_ENSURE_SUCCESS(rv, rv);
-
-			nsCOMPtr<nsIRDFService> rdfService (do_GetService("@mozilla.org/rdf/rdf-service;1", &rv));
-			NS_ENSURE_SUCCESS(rv, rv); 
-
-			nsCOMPtr <nsIRDFResource> resource;
-			rv = rdfService->GetResource(folderUri, getter_AddRefs(resource));
-			NS_ENSURE_SUCCESS(rv, rv); 
-
-			msgFolder = do_QueryInterface(resource, &rv);
+			rv = GetMsgFolder(compObj, getter_AddRefs(msgFolder));
 			NS_ENSURE_SUCCESS(rv, rv);
 		}
 

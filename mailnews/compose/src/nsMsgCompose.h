@@ -185,6 +185,7 @@ public:
 	NS_DECL_NSIWEBPROGRESSLISTENER
 
   nsresult    RemoveCurrentDraftMessage(nsIMsgCompose *compObj, PRBool calledByCopy);
+  nsresult    GetMsgFolder(nsIMsgCompose *compObj, nsIMsgFolder **msgFolder);
 
 private:
   nsWeakPtr               mWeakComposeObj;
