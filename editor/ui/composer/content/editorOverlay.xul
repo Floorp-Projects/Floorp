@@ -534,10 +534,10 @@
             oncommand="EditorObjectProperties()"/>
   <menuitem id="pageProperties" value="&pageProperties.label;"
             accesskey="&pageproperties.accesskey;"
-            oncommand="EditorPageProperties('GeneralTab')"/>
+            oncommand="EditorPageProperties()"/>
   <menuitem id="colorsAndBackground" value="&colorsAndBackground.label;"
             accesskey="&colorsandbackground.accesskey;"
-            oncommand="EditorPageProperties('ColorTab')"/>
+            oncommand="EditorColorProperties()"/>
 
   <menu id="tableMenu" value="&tableMenu.label;" accesskey="&tablemenu.accesskey;">
   <menupopup>

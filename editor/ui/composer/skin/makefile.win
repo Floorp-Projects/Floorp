@@ -46,8 +46,8 @@ install:: $(DLL)
   $(MAKE_INSTALL) images\table.gif			$(DIST)\bin\chrome\editor\skin\default\images
   $(MAKE_INSTALL) images\anchor.gif         $(DIST)\bin\chrome\editor\skin\default\images
   $(MAKE_INSTALL) images\anchor-in-doc.gif  $(DIST)\bin\chrome\editor\skin\default\images
-  $(MAKE_INSTALL) images\div-in-doc.gif  $(DIST)\bin\chrome\editor\skin\default\images
-  $(MAKE_INSTALL) images\span-in-doc.gif  $(DIST)\bin\chrome\editor\skin\default\images
+  $(MAKE_INSTALL) images\div.gif  $(DIST)\bin\chrome\editor\skin\default\images
+  $(MAKE_INSTALL) images\span.gif  $(DIST)\bin\chrome\editor\skin\default\images
   $(MAKE_INSTALL) images\underline.gif	    $(DIST)\bin\chrome\editor\skin\default\images
   $(MAKE_INSTALL) images\color.gif     $(DIST)\bin\chrome\editor\skin\default\images
   $(MAKE_INSTALL) images\newfile.gif   $(DIST)\bin\chrome\editor\skin\default\images
@@ -93,8 +93,8 @@ clobber::
   rm -f $(DIST)\bin\chrome\editor\skin\default\images\table.gif			
   rm -f $(DIST)\bin\chrome\editor\skin\default\images\anchor.gif
   rm -f $(DIST)\bin\chrome\editor\skin\default\images\anchor-in-doc.gif
-  rm -f $(DIST)\bin\chrome\editor\skin\default\images\div-in-doc.gif
-  rm -f $(DIST)\bin\chrome\editor\skin\default\images\span-in-doc.gif
+  rm -f $(DIST)\bin\chrome\editor\skin\default\images\div.gif
+  rm -f $(DIST)\bin\chrome\editor\skin\default\images\span.gif
   rm -f $(DIST)\bin\chrome\editor\skin\default\images\underline.gif
   rm -f $(DIST)\bin\chrome\editor\skin\default\images\color.gif
   rm -f $(DIST)\bin\chrome\editor\skin\default\images\object-popup.gif			

@@ -778,9 +778,15 @@ function EditorListProperties()
   contentWindow.focus();
 }
 
-function EditorPageProperties(startTab)
+function EditorPageProperties()
 {
-  window.openDialog("chrome://editor/content/EdPageProps.xul","_blank", "chrome,close,titlebar,modal", "", startTab);
+  window.openDialog("chrome://editor/content/EdPageProps.xul","_blank", "chrome,close,titlebar,modal", "");
+  contentWindow.focus();
+}
+
+function EditorColorProperties()
+{
+  window.openDialog("chrome://editor/content/EdColorProps.xul","_blank", "chrome,close,titlebar,modal", "");
   contentWindow.focus();
 }
 

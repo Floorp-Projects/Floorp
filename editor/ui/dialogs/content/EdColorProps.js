@@ -27,49 +27,18 @@ function Startup()
   if (!InitEditorShell())
     return;
 
-  colorPage = new Object;
-  if (!colorPage)
+  dialog = new Object;
+  if (!dialog)
   {
-    dump("Failed to create colorPage object!!!\n");
+    dump("Failed to create dialog object!!!\n");
     window.close();
   }
 
-  colorPage.ColorPreview = document.getElementById("ColorPreview");
-  colorPage.NormalText = document.getElementById("NormalText");
-  colorPage.LinkText = document.getElementById("LinkText");
-  colorPage.ActiveLinkText = document.getElementById("ActiveLinkText");
-  colorPage.FollowedLinkText = document.getElementById("FollowedLinkText");
-
-//  colorPage. = documentgetElementById("");
-
-  tabPanel = document.getElementById("tabPanel");
-
-  // Set the starting Tab:
-  var tabName = window.arguments[1];
-  currentTab = document.getElementById(tabName);
-  if (!currentTab)
-    currentTab = document.getElementById("GeneralTab");
-
-  if (!tabPanel || !currentTab)
-  {
-    dump("Not all dialog controls were found!!!\n");
-    window.close;
-  }
-
-  // Trigger setting of style for the selected tab widget
-  currentTab.setAttribute("selected", "true");
-  // Activate the corresponding panel
-  var index = 0;
-  switch(tabName)
-  {
-    case "ColorTab":
-      index = 1;
-      break;
-    case "MetaTab":
-      index = 2;
-      break;
-  }
-  tabPanel.setAttribute("index",index);
+  dialog.ColorPreview = document.getElementById("ColorPreview");
+  dialog.NormalText = document.getElementById("NormalText");
+  dialog.LinkText = document.getElementById("LinkText");
+  dialog.ActiveLinkText = document.getElementById("ActiveLinkText");
+  dialog.FollowedLinkText = document.getElementById("FollowedLinkText");
 
   doSetOKCancel(onOK, null);
 
@@ -97,24 +66,24 @@ dump("GetColor, color="+color+"\n");
   switch( ColorPickerID )
   {
     case "textCP":
-      colorPage.textColor = color;
-      colorPage.NormalText.setAttribute("style",colorString);
+      dialog.textColor = color;
+      dialog.NormalText.setAttribute("style",colorString);
       break;
     case "linkCP":
-      colorPage.linkColor = color;
-      colorPage.LinkText.setAttribute("style",colorString);
+      dialog.linkColor = color;
+      dialog.LinkText.setAttribute("style",colorString);
       break;
     case "followedCP":
-      colorPage.followedLinkColor = color;
-      colorPage.FollowedLinkText.setAttribute("style",colorString);
+      dialog.followedLinkColor = color;
+      dialog.FollowedLinkText.setAttribute("style",colorString);
       break;
     case "activeCP":
-      colorPage.activeLinkColor = color;
-      colorPage.ActiveLinkText.setAttribute("style",colorString);
+      dialog.activeLinkColor = color;
+      dialog.ActiveLinkText.setAttribute("style",colorString);
       break;
     case "backgroundCP":
-      colorPage.backgroundColor = color;
-      colorPage.ColorPreview.setAttribute("bgcolor",color);
+      dialog.backgroundColor = color;
+      dialog.ColorPreview.setAttribute("bgcolor",color);
       break;
   }
 }
