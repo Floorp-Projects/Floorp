@@ -76,8 +76,11 @@ struct _PangoAnalysis
   PangoDirection   aDir;
 };
 
+#ifndef MOZ_WIDGET_GTK2 
+/*glib2 already defined following 2 types*/
 typedef guint32 gunichar;
 typedef guint16 gunichar2;
+#endif
 
 #define G_CONST_RETURN const
 
