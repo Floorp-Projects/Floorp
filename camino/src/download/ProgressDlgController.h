@@ -98,11 +98,7 @@
 -(IBAction)open:(id)sender;
 
 -(int)numDownloadsInProgress;
-
--(void)setupDownloadTimer;
--(void)killDownloadTimer;
--(void)setDownloadProgress:(NSTimer *)aTimer;
-
+-(void)clearAllDownloads;
 -(void)didStartDownload:(id <CHDownloadProgressDisplay>)progressDisplay;
 -(void)didEndDownload:(id <CHDownloadProgressDisplay>)progressDisplay;
 -(void)removeDownload:(id <CHDownloadProgressDisplay>)progressDisplay;

@@ -52,6 +52,8 @@ static NSString *ProgressWindowFrameSaveName = @"ProgressWindow";
 -(NSMutableArray*)getSelectedProgressViewControllers;
 -(void)deselectAllDLInstances:(NSArray*)instances;
 -(void)makeDLInstanceVisibleIfItsNotAlready:(ProgressViewController*)controller;
+-(void)killDownloadTimer;
+-(void)setupDownloadTimer;
 
 @end
 
@@ -174,6 +176,19 @@ static id gSharedProgressController = nil;
 	    [self removeDownload:[mProgressViewControllers objectAtIndex:i]]; // remove the download
 	    i--; // leave index at the same position because the dl there got removed
     }
+  }
+  mSelectionPivotIndex = -1;
+}
+
+// remove all downloads, cancelling if necessary
+// this is used for the browser reset function
+-(void)clearAllDownloads
+{
+  for (int i = [mProgressViewControllers count] - 1; i >= 0; i--) {
+    // the ProgressViewController method "cancel:" has a sanity check, so its ok to call on anything
+    // make sure downloads are not active before removing them
+    [[mProgressViewControllers objectAtIndex:i] cancel:self];
+    [self removeDownload:[mProgressViewControllers objectAtIndex:i]]; // remove the download
   }
   mSelectionPivotIndex = -1;
 }
@@ -456,6 +471,12 @@ static id gSharedProgressController = nil;
   }
 }
 
+// Called by our timer to refresh all the download stats
+- (void)setDownloadProgress:(NSTimer *)aTimer
+{
+  [mProgressViewControllers makeObjectsPerformSelector:@selector(refreshDownloadInfo)];
+}
+
 - (void)setupDownloadTimer
 {
   [self killDownloadTimer];
@@ -464,12 +485,6 @@ static id gSharedProgressController = nil;
                                                    selector:@selector(setDownloadProgress:)
                                                    userInfo:nil
                                                     repeats:YES] retain];
-}
-
-// Called by our timer to refresh all the download stats
-- (void)setDownloadProgress:(NSTimer *)aTimer
-{
-  [mProgressViewControllers makeObjectsPerformSelector:@selector(refreshDownloadInfo)];
 }
 
 -(NSApplicationTerminateReply)allowTerminate

@@ -81,6 +81,7 @@ enum KeychainPromptResult { kSave, kDontRemember, kNeverRemember } ;
 - (BOOL) findUsernameAndPassword:(NSString*)realm port:(PRInt32)inPort;
 - (void) storeUsernameAndPassword:(NSString*)realm port:(PRInt32)inPort user:(NSString*)username password:(NSString*)pwd;
 - (void) removeUsernameAndPassword:(NSString*)realm port:(PRInt32)inPort item:(KCItemRef)item;
+- (void) removeAllUsernamesAndPasswords;
 - (void) updateUsernameAndPassword:(NSString*)realm port:(PRInt32)inPort user:(NSString*)username password:(NSString*)pwd item:(KCItemRef)item;
 
 - (void) addListenerToView:(CHBrowserView*)view;

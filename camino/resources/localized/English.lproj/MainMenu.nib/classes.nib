@@ -45,6 +45,7 @@
                 printPage = id; 
                 releaseNoteLink = id; 
                 reloadWithCharset = id; 
+                resetBrowser = id; 
                 savePage = id; 
                 searchCustomizeLink = id; 
                 sendURL = id; 

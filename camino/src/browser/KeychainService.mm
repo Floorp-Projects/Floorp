@@ -309,20 +309,37 @@ int KeychainPrefChangedCallback(const char* inPref, void* unused)
 // removes the username/password combo from the keychain. If |inItemRef| is a valid item, it
 // uses that. If it's a null ref, it will look it up in the keychain based on the realm.
 //
-- (void) removeUsernameAndPassword:(NSString*)realm port:(PRInt32)inPort item:(KCItemRef)inItemRef
+- (void)removeUsernameAndPassword:(NSString*)realm port:(PRInt32)inPort item:(KCItemRef)inItemRef
 {
-  if ( !inItemRef ) {
-    if ( inPort == -1 )
+  if (!inItemRef) {
+    if (inPort == -1)
       inPort = kAnyPort;
     const int kBufferLen = 255;
     char buffer[kBufferLen];
     UInt32 actualSize;
-    kcfindinternetpassword([realm UTF8String], 0, 0, inPort, kKCProtocolTypeHTTP, kKCAuthTypeHTTPDigest, 
+    kcfindinternetpassword([realm UTF8String], NULL, NULL, inPort, kKCProtocolTypeHTTP, kKCAuthTypeHTTPDigest, 
                             kBufferLen, buffer, &actualSize, &inItemRef);
   }
                             
-  if ( inItemRef )
+  if (inItemRef)
     KCDeleteItem(inItemRef);
+}
+
+- (void)removeAllUsernamesAndPasswords {
+  const int kBufferLen = 255;
+  char buffer[kBufferLen];
+  UInt32 actualSize;
+  KCItemRef itemRef = NULL;
+  
+  while (TRUE) {
+    kcfindinternetpassword(NULL, NULL, NULL, kAnyPort, kKCProtocolTypeHTTP, kKCAuthTypeHTTPDigest,
+                           kBufferLen, buffer, &actualSize, &itemRef);
+    if (itemRef)
+      KCDeleteItem(itemRef);
+    else
+      break;
+    itemRef = NULL;
+  }
 }
 
 //

@@ -194,6 +194,9 @@ typedef enum EBookmarkOpenBehavior
 -(IBAction) setFileExtension:(id)aSender;
 
 // utility routine to test if a url is "blank" (either empty or about:blank)
-+(BOOL) isBlankURL:(NSString*)inURL;
++(BOOL)isBlankURL:(NSString*)inURL;
+
+// security feature to reset browser
+-(IBAction)resetBrowser:(id)sender;
 
 @end

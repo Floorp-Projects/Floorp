@@ -77,6 +77,11 @@
 #include "nsIObserverService.h"
 #include "nsIGenericFactory.h"
 #include "nsIEventQueueService.h"
+#include "nsNetCID.h"
+#include "nsIPermissionManager.h"
+#include "nsICookieManager.h"
+#include "nsIBrowserHistory.h"
+#include "nsICacheService.h"
 
 #ifdef _BUILD_STATIC_BIN
 #include "nsStaticComponent.h"
@@ -192,7 +197,7 @@ const int kReuseWindowOnAE = 2;
   // (for example, from an GetURL Apple Event)
   NSWindow* browserWindow = [self getFrontmostBrowserWindow];
   if (!browserWindow)
-    [self newWindow: self];
+    [self newWindow:self];
   
   // Initialize offline mode.
   mOffline = NO;
@@ -726,11 +731,10 @@ const int kReuseWindowOnAE = 2;
 {
   // for some reason, [NSApp mainWindow] doesn't always work, so we have to
   // do this manually
-  NSArray		*windowList   = [NSApp orderedWindows];
-  NSWindow	*foundWindow 	= NULL;
+  NSArray *windowList = [NSApp orderedWindows];
+  NSWindow *foundWindow = nil;
 
-  for (unsigned int i = 0; i < [windowList count]; i ++)
-  {
+  for (unsigned int i = 0; i < [windowList count]; i ++) {
     NSWindow*	thisWindow = [windowList objectAtIndex:i];
     
     // not all browser windows are created equal. We only consider those with
@@ -1299,6 +1303,60 @@ const int kReuseWindowOnAE = 2;
   [self openNewWindowOrTabWithURL:urlString andReferrer:nil];
 }
 
+/*
+ *  Here we need to:
+ *  - warn user about what is going to happen
+ *  - if its OK...
+ *  - close all open windows, delete cache, history, cookies, site permissions,
+ *    downloads, saved names and passwords
+ */
+- (IBAction)resetBrowser:(id)sender
+{
+  if (NSRunCriticalAlertPanel(NSLocalizedString(@"Reset Camino Title", @"Are you sure you want to reset Camino?"),
+                      NSLocalizedString(@"Reset Warning Message",
+                      @"Resetting Camino will erase your browsing hisory, empty the cache, clear downloads, clear all cookies, clear all site permissions, and remove all remembered usernames and passwords. This action cannot be undone."),
+                      NSLocalizedString(@"Reset Camino", @"Reset Camino"),
+                      NSLocalizedString(@"CancelButtonText", @"Cancel"),
+                      nil) == NSAlertDefaultReturn) {
+    
+    // close all windows
+    NSArray *windows = [NSApp orderedWindows];
+    for (int i = 0; i < [windows count]; i++) {
+      [[windows objectAtIndex:i] performClose:self];
+    }
+    
+    // remove cache
+    nsCOMPtr<nsICacheService> cacheServ (do_GetService("@mozilla.org/network/cache-service;1"));
+    if (cacheServ)
+      cacheServ->EvictEntries(nsICache::STORE_ANYWHERE);
+
+    // remove cookies
+    nsCOMPtr<nsICookieManager> cm(do_GetService(NS_COOKIEMANAGER_CONTRACTID));
+    nsICookieManager* mCookieManager = cm.get();
+    if (mCookieManager)
+      mCookieManager->RemoveAll();
+
+    // remove site permissions
+    nsCOMPtr<nsIPermissionManager> pm(do_GetService(NS_PERMISSIONMANAGER_CONTRACTID));
+    nsIPermissionManager* mPermissionManager = pm.get();
+    if (mPermissionManager)
+      mPermissionManager->RemoveAll();
+
+    // remove history
+    nsCOMPtr<nsIBrowserHistory> hist (do_GetService("@mozilla.org/browser/global-history;2"));
+    if (hist)
+      hist->RemoveAllPages();
+
+    // remove downloads
+    [[ProgressDlgController sharedDownloadController] clearAllDownloads];
+
+    // remove saved names and passwords
+    [[KeychainService instance] removeAllUsernamesAndPasswords];
+    
+    // open a new window
+    [self newWindow:self];
+  }
+}
 
 #pragma mark -
 
