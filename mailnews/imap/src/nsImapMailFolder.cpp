@@ -29,7 +29,6 @@
 #include "nsMsgFolderFlags.h"
 #include "nsLocalFolderSummarySpec.h"
 #include "nsImapFlagAndUidState.h"
-#include "nsParseMailbox.h"
 #include "nsIEventQueueService.h"
 #include "nsIImapUrl.h"
 #include "nsImapUtils.h"
@@ -38,6 +37,7 @@
 #include "nsImapMessage.h"
 #include "nsIWebShell.h"
 #include "nsMsgBaseCID.h"
+#include "nsMsgLocalCID.h"
 
 // we need this because of an egcs 1.0 (and possibly gcc) compiler bug
 // that doesn't allow you to call ::nsISupports::GetIID() inside of a class
@@ -51,6 +51,7 @@ static NS_DEFINE_CID(kCImapDB, NS_IMAPDB_CID);
 static NS_DEFINE_CID(kCImapService, NS_IMAPSERVICE_CID);
 static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 static NS_DEFINE_CID(kMsgMailSessionCID, NS_MSGMAILSESSION_CID);
+static NS_DEFINE_CID(kParseMailMsgStateCID, NS_PARSEMAILMSGSTATE_CID);
 
 ////////////////////////////////////////////////////////////////////////////////
 // for temp message hack
@@ -68,7 +69,7 @@ static NS_DEFINE_CID(kMsgMailSessionCID, NS_MSGMAILSESSION_CID);
 
 nsImapMailFolder::nsImapMailFolder() :
     m_initialized(PR_FALSE),m_haveDiscoverAllFolders(PR_FALSE),
-    m_haveReadNameFromDB(PR_FALSE), m_msgParser(nsnull), 
+    m_haveReadNameFromDB(PR_FALSE), 
     m_curMsgUid(0), m_nextMessageByteLength(0),
     m_urlRunning(PR_FALSE), m_tempMessageFile(MESSAGE_PATH)
 {
@@ -82,7 +83,6 @@ nsImapMailFolder::nsImapMailFolder() :
     if (NS_SUCCEEDED(rv) && pEventQService)
         pEventQService->GetThreadEventQueue(PR_GetCurrentThread(),
                                             getter_AddRefs(m_eventQueue));
-	m_msgParser = nsnull;
 }
 
 nsImapMailFolder::~nsImapMailFolder()
@@ -1273,16 +1273,16 @@ NS_IMETHODIMP nsImapMailFolder::SetupHeaderParseStream(
 	m_nextMessageByteLength = aStreamInfo->size;
 	if (!m_msgParser)
 	{
-		m_msgParser = new nsParseMailMessageState;
-		m_msgParser->SetMailDB(mDatabase);
+		rv = nsComponentManager::CreateInstance(kParseMailMsgStateCID, nsnull, 
+			nsIMsgParseMailMsgState::GetIID(), (void **) getter_AddRefs(m_msgParser));
+		if (NS_SUCCEEDED(rv))
+			m_msgParser->SetMailDB(mDatabase);
 	}
 	else
 		m_msgParser->Clear();
+	
 	if (m_msgParser)
-	{
-		m_msgParser->m_state =  MBOX_PARSE_HEADERS;           
-		return NS_OK;
-	}
+		return m_msgParser->SetState(MBOX_PARSE_HEADERS);
 	else
 		return NS_ERROR_OUT_OF_MEMORY;
     return rv;
@@ -1295,7 +1295,7 @@ NS_IMETHODIMP nsImapMailFolder::ParseAdoptedHeaderLine(
     // but they never contain partial lines
 	char *str = aMsgLineInfo->adoptedMessageLine;
 	m_curMsgUid = aMsgLineInfo->uidOfMessage;
-	m_msgParser->m_envelope_pos = m_curMsgUid;	// OK, this is silly (but
+	m_msgParser->SetEnvelopePos(m_curMsgUid);	// OK, this is silly (but
                                                 // we'll fix
                                                 // it). m_envelope_pos, for
                                                 // local folders, 
@@ -1308,7 +1308,7 @@ NS_IMETHODIMP nsImapMailFolder::ParseAdoptedHeaderLine(
     {
         if (currentEOL)
         {
-            m_msgParser->ParseFolderLine(currentLine, 
+            m_msgParser->ParseAFolderLine(currentLine, 
                                          (currentEOL + MSG_LINEBREAK_LEN) -
                                          currentLine);
             currentLine = currentEOL + MSG_LINEBREAK_LEN;
@@ -1316,7 +1316,7 @@ NS_IMETHODIMP nsImapMailFolder::ParseAdoptedHeaderLine(
         }
         else
         {
-			m_msgParser->ParseFolderLine(currentLine, PL_strlen(currentLine));
+			m_msgParser->ParseAFolderLine(currentLine, PL_strlen(currentLine));
             currentLine = str + len + 1;
         }
     }
@@ -1326,12 +1326,17 @@ NS_IMETHODIMP nsImapMailFolder::ParseAdoptedHeaderLine(
 NS_IMETHODIMP nsImapMailFolder::NormalEndHeaderParseStream(nsIImapProtocol*
                                                            aProtocol)
 {
-	if (m_msgParser && m_msgParser->m_newMsgHdr)
+	nsCOMPtr<nsIMsgDBHdr> newMsgHdr;
+	nsresult rv = NS_OK;
+
+	if (m_msgParser)
+		m_msgParser->GetNewMsgHdr(getter_AddRefs(newMsgHdr));
+	if (NS_SUCCEEDED(rv) && newMsgHdr)
 	{
-		m_msgParser->m_newMsgHdr->SetMessageKey(m_curMsgUid);
-		TweakHeaderFlags(aProtocol, m_msgParser->m_newMsgHdr);
+		newMsgHdr->SetMessageKey(m_curMsgUid);
+		TweakHeaderFlags(aProtocol, newMsgHdr);
 		// here we need to tweak flags from uid state..
-		mDatabase->AddNewHdrToDB(m_msgParser->m_newMsgHdr, PR_TRUE);
+		mDatabase->AddNewHdrToDB(newMsgHdr, PR_TRUE);
 		m_msgParser->FinishHeader();
 		if (mDatabase)
 			mDatabase->Commit(kLargeCommit);	// don't really want to do this

@@ -28,13 +28,12 @@
 #include "nsIImapService.h"
 #include "nsIUrlListener.h"
 #include "nsIImapIncomingServer.h" // we need this for its IID
+#include "nsIMsgParseMailMsgState.h"
 
 /* fa32d000-f6a0-11d2-af8d-001083002da8 */
 #define NS_IMAPRESOURCE_CID \
 { 0xfa32d000, 0xf6a0, 0x11d2, \
     { 0xaf, 0x8d, 0x00, 0x10, 0x83, 0x00, 0x2d, 0xa8 } }
-
-class nsParseMailMessageState;
 
 class nsImapMailFolder : public nsMsgDBFolder, 
                          public nsIMsgImapMailFolder,
@@ -262,7 +261,7 @@ protected:
     PRBool m_initialized;
     PRBool m_haveDiscoverAllFolders;
     PRBool m_haveReadNameFromDB;
-	nsParseMailMessageState *m_msgParser;
+	nsCOMPtr<nsIMsgParseMailMsgState> m_msgParser;
 	nsMsgKey			m_curMsgUid;
 	PRInt32			m_nextMessageByteLength;
     nsCOMPtr<nsIEventQueue> m_eventQueue;
