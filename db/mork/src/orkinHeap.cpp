@@ -69,7 +69,7 @@ orkinHeap::Free(nsIMdbEnv* ev, // free block allocated earlier by Alloc()
   MORK_USED_1(ev);
   MORK_ASSERT(inBlock);
   if ( inBlock )
-    delete [] inBlock;
+    delete [] (char *)inBlock;
     
   return 0;
 }
