@@ -4007,7 +4007,7 @@ PresShell::HandleEventWithTarget(nsEvent* aEvent, nsIFrame* aFrame, nsIContent* 
 nsresult
 PresShell::HandleEventInternal(nsEvent* aEvent, nsIView *aView, nsEventStatus* aStatus)
 {
-  nsresult rv;
+  nsresult rv = NS_OK;
 
   nsIEventStateManager *manager;
   if (NS_OK == mPresContext->GetEventStateManager(&manager) && GetCurrentEventFrame()) {
