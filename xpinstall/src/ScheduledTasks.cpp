@@ -251,11 +251,13 @@ PRInt32 ReplaceFileNow(nsIFile* replacementFile, nsIFile* doomedFile )
                                                                   //   changed during the MoveTo call
         if (NS_FAILED(rv)) result = nsInstall::UNEXPECTED_ERROR;
         rv = renamedDoomedFile->MoveTo(parent, uniqueLeafName);        
-        if (NS_FAILED(rv)) result = nsInstall::UNEXPECTED_ERROR;
 
-        renamedDoomedFile = parent;                //MoveTo on Mac doesn't reset the tmpFile object to 
-        renamedDoomedFile->Append(uniqueLeafName); //the new name or location. That's why there's this 
-                                             //explict assignment and Append call.
+        if (NS_SUCCEEDED(rv))
+        {
+            renamedDoomedFile = parent;                //MoveTo on Mac doesn't reset the tmpFile object to 
+            renamedDoomedFile->Append(uniqueLeafName); //the new name or location. That's why there's this 
+                                                       //explict assignment and Append call.
+        }
 
         if (result == nsInstall::UNEXPECTED_ERROR)
             return result;
