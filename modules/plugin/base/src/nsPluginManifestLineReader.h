@@ -54,11 +54,11 @@
 
 #define PLUGIN_REGISTRY_END_OF_LINE_MARKER '$'
 
-class nsManifestLineReader
+class nsPluginManifestLineReader
 {
 public:
-    nsManifestLineReader() {mBase = mCur = mNext = mLimit = 0;} 
-    ~nsManifestLineReader() {delete [] mBase;}
+    nsPluginManifestLineReader() {mBase = mCur = mNext = mLimit = 0;} 
+    ~nsPluginManifestLineReader() { if (mBase) delete[] mBase; mBase=0;}
 
     char* Init(PRUint32 flen) 
     {
