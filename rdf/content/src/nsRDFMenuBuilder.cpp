@@ -118,8 +118,8 @@ public:
 
     nsresult
     GetInsertionRootAtom(nsIAtom** aResult) {
-        NS_ADDREF(kMenuBarAtom);
-        *aResult = kMenuBarAtom;
+        NS_ADDREF(kMenuAtom);
+        *aResult = kMenuAtom;
         return NS_OK;
     }
 
