@@ -79,6 +79,7 @@
 #include "nsBlockFrame.h"
 
 #include "nsGfxTextControlFrame.h"
+#include "nsIScrollableFrame.h"
 
 #include "nsIServiceManager.h"
 #include "nsIXBLService.h"
@@ -5623,9 +5624,15 @@ nsCSSFrameConstructor::GetFrameFor(nsIPresShell*    aPresShell,
       const nsStyleDisplay* display;
       frame->GetStyleData(eStyleStruct_Display, (const nsStyleStruct*&)display);
 
-      if (display->IsBlockLevel() && IsScrollable(aPresContext, display)) {
-        frame->FirstChild(aPresContext, nsnull, &frame);
+      // If the primary frame supports IScrollableFrame, then get the scrolled frame.
+      // That's the frame that gets the reflow command                          
+      nsIScrollableFrame *pScrollableFrame = nsnull;                            
+      if (NS_SUCCEEDED( frame->QueryInterface(nsIScrollableFrame::GetIID(),     
+                                              (void **)&pScrollableFrame) ))    
+      {                                                                         
+        pScrollableFrame->GetScrolledFrame( aPresContext, frame );              
       } 
+
       // if we get an outer table frame use its 1st child which is a table inner frame
       // if we get a table cell frame   use its 1st child which is an area frame
       else if ((NS_STYLE_DISPLAY_TABLE      == display->mDisplay) ||
