@@ -308,7 +308,7 @@ size_t mac_get_file_length(const char* filename)
 
 void mac_warning(const char* warning_message)
 {
-	CWReportMessage(gPluginContext, 0, warning_message, 0, messagetypeError, 0);
+	CWReportMessage(gPluginContext, 0, warning_message, 0, messagetypeWarning, 0);
 }
 
 void mac_error(const char* error_message)
