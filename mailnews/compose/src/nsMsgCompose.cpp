@@ -1887,8 +1887,6 @@ QuotingOutputStreamListener::QuotingOutputStreamListener(const char * originalMs
               // Format date using "mailnews.reply_header_locale", if empty then use application default locale.
               if (!replyHeaderLocale.IsEmpty())
                 rv = localeService->NewLocale(replyHeaderLocale, getter_AddRefs(locale));
-              else
-                rv = localeService->GetApplicationLocale(getter_AddRefs(locale));
               
               if (NS_SUCCEEDED(rv))
               {
