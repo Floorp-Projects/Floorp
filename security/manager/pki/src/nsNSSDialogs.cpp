@@ -36,6 +36,7 @@
 #include "nsIStringBundle.h"
 #include "nsIPref.h"
 #include "nsIInterfaceRequestor.h"
+#include "nsIInterfaceRequestorUtils.h"
 #include "nsIX509Cert.h"
 #include "nsIX509CertDB.h"
 #include "nsILocaleService.h"

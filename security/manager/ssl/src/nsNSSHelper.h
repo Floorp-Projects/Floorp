@@ -37,6 +37,7 @@
 #define NSS_HELPER_
 
 #include "nsIInterfaceRequestor.h"
+#include "nsIInterfaceRequestorUtils.h"
 #include "pk11func.h"
 
 //

@@ -30,6 +30,7 @@
 #include "nsCOMPtr.h"
 #include "nsISupports.h"
 #include "nsIInterfaceRequestor.h"
+#include "nsIInterfaceRequestorUtils.h"
 #include "nsIServiceManager.h"
 #include "nsISecurityManagerComponent.h"
 #include "nsIWindowWatcher.h"

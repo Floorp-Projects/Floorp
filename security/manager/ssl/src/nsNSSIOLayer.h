@@ -28,6 +28,7 @@
 #include "prio.h"
 #include "nsString.h"
 #include "nsIInterfaceRequestor.h"
+#include "nsIInterfaceRequestorUtils.h"
 #include "nsITransportSecurityInfo.h"
 #include "nsISSLSocketControl.h"
 #include "nsISSLStatus.h"
