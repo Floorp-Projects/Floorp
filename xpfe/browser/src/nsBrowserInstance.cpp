@@ -29,6 +29,7 @@
 
 // Interfaces Needed
 #include "nsIXULWindow.h"
+#include "nsIBaseWindow.h"
 #include "nsIDocShell.h"
 #include "nsIDocShellTreeItem.h"
 #include "nsISHistory.h"
@@ -404,6 +405,17 @@ nsIDocShell*
 nsBrowserInstance::GetContentAreaDocShell()
 {
   nsCOMPtr<nsIDocShell> docShell(do_QueryReferent(mContentAreaDocShellWeak));
+  if (docShell) {
+    // the docshell still exists, but has it been destroyed?
+    nsCOMPtr<nsIBaseWindow> hack = do_QueryInterface(docShell);
+    if (hack) {
+      nsCOMPtr<nsIWidget> parent;
+      hack->GetParentWidget(getter_AddRefs(parent));
+      if (!parent)
+        // it's a zombie. a new one is in place. set up to use it.
+        docShell = 0;
+    }
+  }
   if (!docShell)
     ReinitializeContentVariables();
   docShell = do_QueryReferent(mContentAreaDocShellWeak);
@@ -419,7 +431,7 @@ nsBrowserInstance::GetContentWindow()
   domWindow = do_QueryReferent(mContentWindowWeak);
   return domWindow.get();
 }
-    
+
 nsIDocumentLoader* 
 nsBrowserInstance::GetContentAreaDocLoader()
 {
