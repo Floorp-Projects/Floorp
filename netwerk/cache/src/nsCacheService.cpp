@@ -562,22 +562,26 @@ nsCacheService::IsStorageEnabledForPolicy(nsCacheStoragePolicy  storagePolicy,
 {
     if (gService == nsnull) return NS_ERROR_NOT_AVAILABLE;
     nsAutoLock lock(gService->mCacheServiceLock);
-        
-    if (gService->mEnableMemoryDevice &&
+
+    *result = gService->IsStorageEnabledForPolicy_Locked(storagePolicy);
+    return NS_OK;
+}
+
+PRBool        
+nsCacheService::IsStorageEnabledForPolicy_Locked(nsCacheStoragePolicy  storagePolicy)
+{
+    if (mEnableMemoryDevice &&
         (storagePolicy == nsICache::STORE_ANYWHERE ||
          storagePolicy == nsICache::STORE_IN_MEMORY)) {
-        *result = PR_TRUE;   
+        return PR_TRUE;
     }
-    else if (gService->mEnableDiskDevice &&
-             (storagePolicy == nsICache::STORE_ANYWHERE ||
-              storagePolicy == nsICache::STORE_ON_DISK  ||
-              storagePolicy == nsICache::STORE_ON_DISK_AS_FILE)) {
-        *result = PR_TRUE;         
-    } else {
-        *result = PR_FALSE;
+    if (mEnableDiskDevice &&
+        (storagePolicy == nsICache::STORE_ANYWHERE ||
+         storagePolicy == nsICache::STORE_ON_DISK  ||
+         storagePolicy == nsICache::STORE_ON_DISK_AS_FILE)) {
+        return PR_TRUE;
     }
-    
-    return NS_OK;
+    return PR_FALSE;
 }
 
 
@@ -839,9 +843,11 @@ nsCacheService::ActivateEntry(nsCacheRequest * request,
     if (result) *result = nsnull;
     if ((!request) || (!result))  return NS_ERROR_NULL_POINTER;
 
-    if (!mEnableMemoryDevice && (!mEnableDiskDevice || !request->IsStreamBased() ))
+    // check if the request can be satisfied
+    if (!mEnableMemoryDevice && !request->IsStreamBased())
         return NS_ERROR_FAILURE;
-
+    if (!IsStorageEnabledForPolicy_Locked(request->StoragePolicy()))
+        return NS_ERROR_FAILURE;
 
     // search active entries (including those not bound to device)
     nsCacheEntry *entry = mActiveEntries.GetEntry(request->mKey);
