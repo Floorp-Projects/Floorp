@@ -18,7 +18,10 @@
 DEPTH=..\..\..
 
 LIBRARY_NAME=wallet
+DLLNAME=walletlib
+DLL=.\$(OBJDIR)\$(DLLNAME).dll
 CPP_OBJS= .\$(OBJDIR)\wallet.obj		\
+	.\$(OBJDIR)\singsign.obj		\
 	.\$(OBJDIR)\nsWalletFactory.obj		\
 	.\$(OBJDIR)\nsWalletService.obj		\
 	$(NULL)
@@ -34,14 +37,25 @@ MODULE=wallet
 REQUIRES=wallet
 EXPORTS= $(NULL)
 
+LLIBS=$(LLIBS)  $(LIBNSPR)		\
+	$(WALLETLIBS)			\
+	$(DIST)\lib\raptorbase.lib	\
+	$(DIST)\lib\secfreenav32.lib	\
+	$(DIST)\lib\plc3.lib	\
+	$(DIST)\lib\xppref32.lib	\
+	$(DIST)\lib\xpcom32.lib		\
+	$(DIST)\lib\xplib.lib		\
+	$(DIST)\lib\netlib.lib		\
+	$(NULL)
+
 LINCS= \
-    -I$(PUBLIC)\raptor	 \
-    -I$(PUBLIC)\xpcom	 \
-    -I$(PUBLIC)\dom	 \
-    -I$(PUBLIC)\js	 \
-    -I$(PUBLIC)\netlib	 \
-    -I$(PUBLIC)\security \
-    -I$(PUBLIC)\pref	 \
+    -I$(PUBLIC)\raptor	\
+    -I$(PUBLIC)\xpcom	\
+    -I$(PUBLIC)\dom	\
+    -I$(PUBLIC)\js	\
+    -I$(PUBLIC)\netlib	\
+    -I$(PUBLIC)\security\
+    -I$(PUBLIC)\pref	\
     -I$(PUBLIC)\wallet
 
 LCFLAGS = \
@@ -56,3 +70,8 @@ libs:: $(LIBRARY)
 
 clobber::
 	rm -f $(DIST)\lib\$(LIBRARY_NAME).lib
+	rm -f $(DIST)\bin\components\$(DLLNAME).dll
+	rm -f $(DIST)\lib\$(DLLNAME).lib
+
+install:: $(DLL)
+		$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).dll $(DIST)\bin\components
