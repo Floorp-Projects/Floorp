@@ -300,7 +300,7 @@ NS_METHOD nsListBox::GetSelectedIndices(PRInt32 aIndices[], PRInt32 aSize)
 
   for (i=0; i < clist->rows && num < aSize; i++, list = list->next) {
     if (GTK_CLIST_ROW (list)->state == GTK_STATE_SELECTED) {
-      aIndices[i] = (PRInt32)i;
+      aIndices[num] = i;
       num++;
     }
   }
