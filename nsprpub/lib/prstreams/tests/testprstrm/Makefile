@@ -54,9 +54,14 @@ ifeq ($(OS_TARGET), WIN16)
   LIBPR = $(DIST)/lib/nspr$(MOD_VERSION).lib
   LIBPRSTRMS = $(DIST)/lib/prstrms$(MOD_VERSION).lib
 else
-LDOPTS = -NOLOGO -DEBUG -DEBUGTYPE:CV -INCREMENTAL:NO
-LIBPR = $(DIST)/lib/libnspr$(MOD_VERSION).$(LIB_SUFFIX)
-LIBPRSTRMS = $(DIST)/lib/libprstrms$(MOD_VERSION).$(LIB_SUFFIX)
+  LDOPTS = -NOLOGO -DEBUG -DEBUGTYPE:CV -INCREMENTAL:NO
+  ifeq ($(OS_TARGET), WIN95)
+    LIBPR = $(DIST)/lib/nspr$(MOD_VERSION).$(LIB_SUFFIX)
+    LIBPRSTRMS = $(DIST)/lib/prstrms$(MOD_VERSION).$(LIB_SUFFIX)
+  else
+    LIBPR = $(DIST)/lib/libnspr$(MOD_VERSION).$(LIB_SUFFIX)
+    LIBPRSTRMS = $(DIST)/lib/libprstrms$(MOD_VERSION).$(LIB_SUFFIX)
+  endif
 endif
 endif
 

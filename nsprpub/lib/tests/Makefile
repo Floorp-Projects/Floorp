@@ -59,10 +59,16 @@ ifeq ($(OS_TARGET), WIN16)
   LIBPLC= $(DIST)/lib/plc$(MOD_VERSION).lib
   LIBPLDS= $(DIST)/lib/plds$(MOD_VERSION).lib
 else
-LDOPTS = -NOLOGO -DEBUG -DEBUGTYPE:CV -INCREMENTAL:NO
-LIBPR = $(DIST)/lib/libnspr$(MOD_VERSION).$(LIB_SUFFIX)
-LIBPLC= $(DIST)/lib/libplc$(MOD_VERSION).$(LIB_SUFFIX)
-LIBPLDS= $(DIST)/lib/libplds$(MOD_VERSION).$(LIB_SUFFIX)
+  LDOPTS = -NOLOGO -DEBUG -DEBUGTYPE:CV -INCREMENTAL:NO
+  ifeq ($(OS_TARGET), WIN95)
+  LIBPR = $(DIST)/lib/nspr$(MOD_VERSION).$(LIB_SUFFIX)
+  LIBPLC= $(DIST)/lib/plc$(MOD_VERSION).$(LIB_SUFFIX)
+  LIBPLDS= $(DIST)/lib/plds$(MOD_VERSION).$(LIB_SUFFIX)
+  else
+  LIBPR = $(DIST)/lib/libnspr$(MOD_VERSION).$(LIB_SUFFIX)
+  LIBPLC= $(DIST)/lib/libplc$(MOD_VERSION).$(LIB_SUFFIX)
+  LIBPLDS= $(DIST)/lib/libplds$(MOD_VERSION).$(LIB_SUFFIX)
+  endif
 endif
 endif
 

@@ -188,8 +188,13 @@ else
 endif
 else
   LDOPTS = -NOLOGO -DEBUG -DEBUGTYPE:CV -INCREMENTAL:NO
-  LIBPR = $(DIST)/lib/libnspr$(MOD_VERSION).$(LIB_SUFFIX)
-  LIBPLC= $(DIST)/lib/libplc$(MOD_VERSION).$(LIB_SUFFIX)
+  ifeq ($(OS_TARGET), WIN95)
+    LIBPR = $(DIST)/lib/nspr$(MOD_VERSION).$(LIB_SUFFIX)
+    LIBPLC= $(DIST)/lib/plc$(MOD_VERSION).$(LIB_SUFFIX)
+  else
+    LIBPR = $(DIST)/lib/libnspr$(MOD_VERSION).$(LIB_SUFFIX)
+    LIBPLC= $(DIST)/lib/libplc$(MOD_VERSION).$(LIB_SUFFIX)
+  endif
   ifdef PROFILE                                                                              
     LDOPTS += -PROFILE -MAP                                                                  
   endif # profile

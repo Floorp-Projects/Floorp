@@ -68,10 +68,10 @@ ifdef LIBRARY_NAME
 ifeq ($(OS_ARCH), WINNT)
 
 #
-# Win16 and OS/2 require library names conforming to the 8.3 rule.
+# Win95, Win16, and OS/2 require library names conforming to the 8.3 rule.
 # other platforms do not.
 #
-ifeq (,$(filter-out WIN16 OS2,$(OS_TARGET)))
+ifeq (,$(filter-out WIN95 WIN16 OS2,$(OS_TARGET)))
 LIBRARY		= $(OBJDIR)/$(LIBRARY_NAME)$(LIBRARY_VERSION)_s.$(LIB_SUFFIX)
 SHARED_LIBRARY	= $(OBJDIR)/$(LIBRARY_NAME)$(LIBRARY_VERSION).$(DLL_SUFFIX)
 IMPORT_LIBRARY	= $(OBJDIR)/$(LIBRARY_NAME)$(LIBRARY_VERSION).$(LIB_SUFFIX)

@@ -20,4 +20,4 @@
 # A module is also called a component or a subsystem.
 
 MOD_NAME = nspr20
-MOD_VERSION = 21
+MOD_VERSION = 3

@@ -96,8 +96,6 @@ static void        _md_CreateEventQueue( PLEventQueue *eventQueue );
 
 
 #if defined(_WIN32) || defined(WIN16) || defined(XP_OS2)
-PLEventQueue * _pr_MainEventQueue;
-
 #if defined(XP_OS2)
 ULONG _pr_PostEventMsgId;
 static char *_pr_eventWindowClass = "NSPR:EventWindow";
@@ -641,15 +639,8 @@ _pl_CleanupNativeNotifier(PLEventQueue* self)
 static PRStatus
 _pl_NativeNotify(PLEventQueue* self)
 {
-    /*
-    ** Post a message to the NSPR window on the main thread requesting 
-    ** it to process the pending events. This is only necessary for the
-    ** main event queue, since the main thread is waiting for OS events.
-    */
-    if (self == _pr_MainEventQueue ) {
-       PostMessage( self->eventReceiverWindow, _pr_PostEventMsgId,
-                      (WPARAM)0, (LPARAM)self);
-    }
+	PostMessage( self->eventReceiverWindow, _pr_PostEventMsgId,
+	    (WPARAM)0, (LPARAM)self);
     return PR_SUCCESS;
 }/* --- end _pl_NativeNotify() --- */
 #endif
@@ -794,13 +785,6 @@ BOOL WINAPI DllMain (HINSTANCE hDLL, DWORD dwReason, LPVOID lpReserved)
 
 
 #if defined(WIN16) || defined(_WIN32) || defined(XP_OS2)
-PR_IMPLEMENT(PLEventQueue *)
-    PL_GetMainEventQueue( void )
-{
-   PR_ASSERT( _pr_MainEventQueue );
-
-   return _pr_MainEventQueue;
-}
 #ifdef XP_OS2
 MRESULT EXPENTRY
 _md_EventReceiverProc(HWND hwnd, ULONG uMsg, MPARAM wParam, MPARAM lParam)
@@ -814,19 +798,15 @@ _md_EventReceiverProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
     if (_pr_PostEventMsgId == uMsg )
     {
-        PREventQueue *queue = (PREventQueue *)lParam;
-
-        PR_ASSERT(queue == PL_GetMainEventQueue());
-        if (queue == PL_GetMainEventQueue()) 
-        {
-            PR_ProcessPendingEvents(queue);
+		PREventQueue *queue = (PREventQueue *)lParam;
+    
+    	PR_ProcessPendingEvents(queue);
 #ifdef XP_OS2
             return MRFROMLONG(TRUE);
 #else
             return TRUE;
 #endif
         }
-    } 
     return DefWindowProc(hwnd, uMsg, wParam, lParam);
 }
 
@@ -850,41 +830,10 @@ static PRStatus InitEventLib( void )
         return PR_SUCCESS;
 } /* end InitWinEventLib() */
 
-
-PR_IMPLEMENT(void)
-    PL_InitializeEventsLib( char *name )
-{
-    PLEventQueue    *eventQueue;
-
-    PR_CallOnce( &once, InitEventLib );
-
-    PR_Lock( initLock );
-    if ( isInitialized == PR_FALSE )
-    {
-        isInitialized = PR_TRUE;
-
-        eventQueue = PL_CreateEventQueue( name, PR_GetCurrentThread() );
-        _pr_MainEventQueue = eventQueue;
-    }
-    PR_Unlock( initLock );
-
-    PR_LOG(event_lm, PR_LOG_DEBUG,("PL_InitializeeventsLib(). Done!\n"));
-    return;
-}
 #endif /* Win16, Win32, OS2 */
 
 #if defined(_WIN32) || defined(WIN16) || defined(XP_OS2)
 
-PR_IMPLEMENT(HWND)
-    PR_GetEventReceiverWindow( void )
-{
-    HWND    eventReceiver = _pr_MainEventQueue->eventReceiverWindow;
-
-    if( eventReceiver != 0 )
-    	return eventReceiver;
-    else
-        return 0;
-}
 #endif
 
 #if defined(_WIN32) || defined(WIN16)

@@ -63,7 +63,11 @@ else
 DLLBASE=/BASE:0x30000000
 RES=$(OBJDIR)/plc.res
 RESNAME=$(MOD_DEPTH)/pr/src/nspr.rc
+ifeq ($(OS_TARGET),WIN95)
+EXTRA_LIBS = $(DIST)/lib/nspr$(MOD_VERSION).lib
+else
 EXTRA_LIBS = $(DIST)/lib/libnspr$(MOD_VERSION).lib
+endif
 
 ifdef MOZ_DEBUG
 ifdef GLOWCODE

@@ -59,7 +59,11 @@ ifeq ($(OS_ARCH), WINNT)
         RES=$(OBJDIR)/prstrms.res
         RESNAME=$(MOD_DEPTH)/pr/src/nspr.rc
         OS_LIBS = user32.lib
-        EXTRA_LIBS = $(DIST)/lib/libnspr$(MOD_VERSION).lib
+        ifeq ($(OS_TARGET), WIN95)
+            EXTRA_LIBS = $(DIST)/lib/nspr$(MOD_VERSION).lib
+        else
+            EXTRA_LIBS = $(DIST)/lib/libnspr$(MOD_VERSION).lib
+        endif
     endif
 else
     ifeq ($(OS_ARCH), AIX)
