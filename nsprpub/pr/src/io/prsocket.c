@@ -1304,7 +1304,7 @@ PR_IMPLEMENT(PRStatus) PR_NewTCPSocketPair(PRFileDesc *f[])
     }
     selfAddr.sin_family = AF_INET;
     selfAddr.sin_port = 0;
-    selfAddr.sin_addr.s_addr = htonl(INADDR_ANY);
+    selfAddr.sin_addr.s_addr = htonl(INADDR_LOOPBACK); /* BugZilla: 32048 */
     addrLen = sizeof(selfAddr);
     if (bind(listenSock, (struct sockaddr *) &selfAddr,
             addrLen) == SOCKET_ERROR) {
@@ -1382,7 +1382,7 @@ failed:
     if (listenSock == NULL) {
         goto failed;
     }
-    PR_InitializeNetAddr(PR_IpAddrAny, 0, &selfAddr);
+    PR_InitializeNetAddr(PR_IpAddrLoopback, 0, &selfAddr); /* BugZilla: 32048 */
     if (PR_Bind(listenSock, &selfAddr) == PR_FAILURE) {
         goto failed;
     }
