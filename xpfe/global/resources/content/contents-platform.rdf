@@ -12,6 +12,6 @@
         chrome:displayName="Platform Specific"
         chrome:author="mozilla.org"
         chrome:name="global-platform"
- 	chrome:localeVersion="1.2a">
+ 	chrome:localeVersion="1.2b">
   </RDF:Description>
 </RDF:RDF>

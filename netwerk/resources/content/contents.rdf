@@ -12,7 +12,7 @@
         chrome:displayName="Necko"
         chrome:author="mozilla.org"
         chrome:name="necko"
- 	chrome:localeVersion="1.2a">
+ 	chrome:localeVersion="1.2b">
   </RDF:Description>
 
 </RDF:RDF>

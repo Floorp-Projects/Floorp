@@ -12,7 +12,7 @@
         chrome:displayName="Toolkit"
         chrome:author="mozilla.org"
         chrome:name="global"
-        chrome:localeVersion="1.2a"
+        chrome:localeVersion="1.2b"
         chrome:skinVersion="1.2">
   </RDF:Description>
 </RDF:RDF>
