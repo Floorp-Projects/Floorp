@@ -49,7 +49,7 @@ protected:
 	virtual PRBool	GetRadioState();
 	virtual void 		SetRadioState(PRBool aValue);
 
-  virtual nscoord GetRadioboxSize(float aPixToTwip) const;
+  virtual nscoord GetRadioboxSize(nsIPresContext* aPresContext, float aPixToTwip) const;
   virtual void GetDesiredSize(nsIPresContext* aPresContext,
                               const nsHTMLReflowState& aReflowState,
                               nsHTMLReflowMetrics& aDesiredLayoutSize,
