@@ -32,9 +32,9 @@
 #include "nsIPipe.h"
 #include "nsIBufferInputStream.h"
 #include "nsIBufferOutputStream.h"
+#include "nsXPIDLString.h"
 
-static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
-static NS_DEFINE_CID(kEventQueueService, NS_EVENTQUEUESERVICE_CID);
+static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 
 
 // nsDataChannel methods
@@ -116,12 +116,12 @@ nsDataChannel::ParseData() {
     NS_ASSERTION(mUrl, "no url in the data channel");
     if (!mUrl) return NS_ERROR_NULL_POINTER;
 
-    char *spec;
-    rv = mUrl->GetSpec(&spec);
+    nsXPIDLCString spec;
+    rv = mUrl->GetSpec(getter_Copies(spec));
     if (NS_FAILED(rv)) return rv;
 
     // move past "data:"
-    char *buffer = PL_strstr(spec, "data:");
+    char *buffer = PL_strstr((const char*)spec, "data:");
     if (!buffer) {
         // malfored url
         return NS_ERROR_MALFORMED_URI;
@@ -158,10 +158,10 @@ nsDataChannel::ParseData() {
             *semiColon = ';';
     }
     
-    nsIBufferInputStream *bufInStream;
-    nsIBufferOutputStream *bufOutStream;
+    nsCOMPtr<nsIBufferInputStream> bufInStream;
+    nsCOMPtr<nsIBufferOutputStream> bufOutStream;
 
-    rv = NS_NewPipe(&bufInStream, &bufOutStream);
+    rv = NS_NewPipe(getter_AddRefs(bufInStream), getter_AddRefs(bufOutStream));
     if (NS_FAILED(rv)) return rv;
 
     PRUint32 dataLen = PL_strlen(comma+1);
@@ -194,15 +194,11 @@ nsDataChannel::ParseData() {
     mContentLength = dataToWrite->dataLen;
 
     rv = bufInStream->QueryInterface(NS_GET_IID(nsIInputStream), getter_AddRefs(mDataStream));
-    NS_RELEASE(bufInStream);
-    NS_RELEASE(bufOutStream);
     if (NS_FAILED(rv)) return rv;
 
     *comma = ',';
 
     nsAllocator::Free(dataToWrite);
-    nsAllocator::Free(spec);
-
     return NS_OK;
 }
 
@@ -297,13 +293,18 @@ nsDataChannel::AsyncRead(PRUint32 startPosition, PRInt32 readCount,
                         nsIStreamListener *aListener)
 {
     nsresult rv;
-    nsIEventQueue *eventQ;
-    nsIStreamListener *listener;
+    nsCOMPtr<nsIEventQueue> eventQ;
+    nsCOMPtr<nsIStreamListener> listener;
+
+    NS_WITH_SERVICE(nsIEventQueueService, eventQService, kEventQueueServiceCID, &rv);
+    if (NS_FAILED(rv)) return rv;
+
+    rv = eventQService->GetThreadEventQueue(NS_CURRENT_THREAD, getter_AddRefs(eventQ));
+    if (NS_FAILED(rv)) return rv;
 
     // we'll just fire everything off at once because we've already got all
     // the data.
-    rv = NS_NewAsyncStreamListener(aListener, nsnull, &listener);
-    NS_RELEASE(eventQ);
+    rv = NS_NewAsyncStreamListener(aListener, eventQ, getter_AddRefs(listener));
     if (NS_FAILED(rv)) return rv;
 
     rv = listener->OnStartRequest(this, ctxt);
@@ -317,7 +318,6 @@ nsDataChannel::AsyncRead(PRUint32 startPosition, PRInt32 readCount,
     if (NS_FAILED(rv)) return rv;
 
     rv = listener->OnStopRequest(this, ctxt, NS_OK, nsnull);
-    NS_RELEASE(listener);
 
     return rv;
 }
