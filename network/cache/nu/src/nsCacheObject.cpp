@@ -16,7 +16,6 @@
  * Reserved.
  */
 #include <string.h>
-#include <time.h>
 #include <assert.h>
 
 #include "nsCacheObject.h"
@@ -29,7 +28,7 @@
  * 
  */
 
-const int DEFAULT_EXPIRES = 86400;
+static const PRIntervalTime DEFAULT_EXPIRES = PR_SecondsToInterval(86400);
 
 nsCacheObject::nsCacheObject():
 	m_Flags(INIT), 
@@ -70,6 +69,7 @@ nsCacheObject::nsCacheObject(const char* i_url):
 	Init();
 	assert(i_url);
 	strcpy(m_Url, i_url);
+	*m_Etag = '\0';
 }
 
 void nsCacheObject::Address(const char* i_url) 
@@ -80,14 +80,6 @@ void nsCacheObject::Address(const char* i_url)
 	m_Url = new char[strlen(i_url) + 1];
 	strcpy(m_Url, i_url);
 }
-
-#ifdef _DEBUG
-int nsCacheObject::IsExpired(void) const
-{
-	time_t now = time(0);
-	return (m_Expires > now) ? 0 : 1; 
-}
-#endif
 
 void nsCacheObject::Etag(const char* i_etag) 
 {
@@ -100,8 +92,8 @@ void nsCacheObject::Etag(const char* i_etag)
 
 void nsCacheObject::Init() 
 {
-	time_t now = time(0);
-	m_Expires = now + DEFAULT_EXPIRES;
+	m_Expires = PR_IntervalNow() + DEFAULT_EXPIRES;
+    m_Hits = 0;
 }
 
 const char*	nsCacheObject::Trace() const

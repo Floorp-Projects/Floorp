@@ -35,40 +35,43 @@ class nsCacheModule
 
 public:
 	nsCacheModule();
-	nsCacheModule(const long i_size);
+	nsCacheModule(const PRUint32 i_size);
 
 	virtual
 		~nsCacheModule();
 
 	virtual 
-		int			    AddObject(nsCacheObject* i_pObject)=0;
+		PRBool          AddObject(nsCacheObject* i_pObject)=0;
     virtual
-        int             Contains(const char* i_url) const=0;
+        PRBool          Contains(const char* i_url) const=0;
 	virtual 
-		int			    Contains(nsCacheObject* i_pObject) const=0;
-	void				Enable(int i_Enable);
-	const int			Entries() const;
-	nsCacheObject*		GetFirstObject() const ;
+		PRBool		    Contains(nsCacheObject* i_pObject) const=0;
+	void				Enable(PRBool i_Enable);
+	const PRUint32      Entries() const;
+
+	nsCacheObject*		GetFirstObject() const ;//TODO-?/
 
     virtual
 	    nsCacheObject*	GetObject(const char* i_url) const=0;
 
     virtual
-		nsCacheObject*	GetObject(long i_index) const =0;
+		nsCacheObject*	GetObject(PRUint32 i_index) const =0;
 
-    int					IsEnabled() const;
+    PRBool				IsEnabled() const;
+
 	nsCacheModule*		Next() const;
 	void				Next(nsCacheModule*);
-	const long			Size() const;
+
+	const PRUint32		Size() const;
+	void			    Size(const PRUint32 i_size);
+
 	const char*		    Trace() const;
 
 protected:
 
-	void			Size(const long i_size);
-
-	int		m_Entries;
-	long	m_Size;
-	int		m_Enabled;
+	PRUint32    m_Entries;
+	PRUint32	m_Size;
+	PRBool		m_Enabled;
 
 	nsCacheModule* m_pNext;
 
@@ -78,31 +81,24 @@ private:
 
 };
 
-#if 0 // XXX remove
-inline int  nsCacheModule::Contains(nsCacheObject* i_pObject) const 
+inline void nsCacheModule::Enable(PRBool i_Enable)
 {
-	return 0;
-}
-#endif
-
-inline void nsCacheModule::Enable(int i_Enable)
-{
-	m_Enabled = (i_Enable > 0) ? 1 : 0;
+	m_Enabled = i_Enable;
 }
 
-inline int nsCacheModule::IsEnabled() const
+inline PRBool nsCacheModule::IsEnabled() const
 {
 	return m_Enabled;
 }
 
-inline const int nsCacheModule::Entries() const 
+inline const PRUint32 nsCacheModule::Entries() const 
 {
 	return m_Entries;
 }
 
 inline nsCacheObject* nsCacheModule::GetFirstObject() const 
 {
-	return this->GetObject((long)0);
+	return this->GetObject((PRUint32)0);
 }
 
 inline nsCacheModule* nsCacheModule::Next() const 
@@ -115,12 +111,12 @@ inline void nsCacheModule::Next(nsCacheModule* pNext)
 	m_pNext = pNext;
 }
 
-inline const long nsCacheModule::Size() const
+inline const PRUint32 nsCacheModule::Size() const
 {
 	return m_Size;
 }
 
-inline void nsCacheModule::Size(const long size)
+inline void nsCacheModule::Size(const PRUint32 size)
 {
 	m_Size = size;
 }

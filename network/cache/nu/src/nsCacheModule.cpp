@@ -36,7 +36,7 @@ nsCacheModule::nsCacheModule():
 {
 }
 
-nsCacheModule::nsCacheModule(const long i_size):
+nsCacheModule::nsCacheModule(const PRUint32 i_size):
 	m_Size(i_size),
 	m_pNext(0),
 	m_Entries(0)
@@ -57,7 +57,7 @@ const char* nsCacheModule::Trace() const
 	char linebuffer[128];
 	char* total = 0;
 
-	sprintf(linebuffer, "CacheModule: Objects = %d\n", Entries());
+	sprintf(linebuffer, "nsCacheModule: Objects = %d\n", Entries());
 	APPEND(linebuffer);
 
 	return total;

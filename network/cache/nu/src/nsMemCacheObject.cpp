@@ -22,7 +22,7 @@
  * Gagan Saksena 04/22/98
  * 
  */
-
+#include <prtypes.h>
 #include "nsMemCacheObject.h"
 
 nsMemCacheObject::~nsMemCacheObject()

@@ -23,6 +23,7 @@
  * 
  */
 
+#include <prtypes.h>
 #include "nsDiskModule.h"
 #include "nsCacheObject.h"
 //
@@ -38,12 +39,12 @@ nsDiskModule::~nsDiskModule()
 
 }
 
-nsCacheObject* nsDiskModule::GetObject(long i_index) const
+nsCacheObject* nsDiskModule::GetObject(PRUint32 i_index) const
 {
 	return 0;
 }
 
-int nsDiskModule::AddObject(nsCacheObject* i_pObject)
+PRBool nsDiskModule::AddObject(nsCacheObject* i_pObject)
 {
-	return 0;
+	return PR_FALSE;
 }

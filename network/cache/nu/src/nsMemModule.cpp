@@ -16,9 +16,11 @@
  * Reserved.
  */
 
+#include <string.h>
+#include <prtypes.h>
+
 #include "nsMemModule.h"
 #include "nsMemCacheObject.h"
-#include <string.h>
 
 /* 
  * nsMemModule
@@ -28,16 +30,16 @@
  */
 
 
-const long DEFAULT_SIZE = 5*1024*1024;
+static const PRUint32 DEFAULT_SIZE = 5*1024*1024;
 
 nsMemModule::nsMemModule():m_pFirstObject(0)
 {
-	//Size(DEFAULT_SIZE);
+    Size(DEFAULT_SIZE);
 }
 
-nsMemModule::nsMemModule(const long size):m_pFirstObject(0)
+nsMemModule::nsMemModule(const PRUint32 size): m_pFirstObject(0)
 {
-	Size(size);	
+    Size(size);
 }
 
 nsMemModule::~nsMemModule()
@@ -48,7 +50,7 @@ nsMemModule::~nsMemModule()
 	}
 }
 
-int nsMemModule::AddObject(nsCacheObject* i_pObject)
+PRBool nsMemModule::AddObject(nsCacheObject* i_pObject)
 {
 	if (i_pObject)
 	{
@@ -61,12 +63,12 @@ int nsMemModule::AddObject(nsCacheObject* i_pObject)
 			m_pFirstObject = new nsMemCacheObject(*i_pObject);
 		}
 		m_Entries++;
-		return 1;
+		return PR_TRUE;
 	}
-	return 0;
+	return PR_FALSE;
 }
 
-int nsMemModule::Contains(const char* i_url) const
+PRBool nsMemModule::Contains(const char* i_url) const
 {
 	if (m_pFirstObject && i_url && *i_url)
 	{
@@ -75,15 +77,15 @@ int nsMemModule::Contains(const char* i_url) const
 		do
 		{
 			if (0 == _strnicmp(pObj->Address(), i_url, inlen))
-				return 1;
+				return PR_TRUE;
 			pObj = pObj->Next();
 		}
 		while (pObj);
 	}
-	return 0;
+	return PR_FALSE;
 }
 
-int nsMemModule::Contains(nsCacheObject* i_pObject) const
+PRBool nsMemModule::Contains(nsCacheObject* i_pObject) const
 {
     if (i_pObject && i_pObject->Address())
     {
@@ -106,12 +108,12 @@ int nsMemModule::Contains(nsCacheObject* i_pObject) const
     */
 }
 
-nsCacheObject* nsMemModule::GetObject(long i_index) const
+nsCacheObject* nsMemModule::GetObject(PRUint32 i_index) const
 {
 	nsMemCacheObject* pNth = 0;
 	if (m_pFirstObject)
 	{
-		int index = 0;
+		PRUint32 index = 0;
 		pNth = m_pFirstObject;
 		while (pNth->Next() && (index++ != i_index ))
 		{
