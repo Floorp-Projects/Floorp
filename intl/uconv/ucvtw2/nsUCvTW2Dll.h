@@ -28,7 +28,17 @@ extern "C" PRInt32 g_LockCount;
 extern "C" PRUint16 g_ASCIIMappingTable[] ;
 extern "C" PRUint16 g_ufCNS1MappingTable[];
 extern "C" PRUint16 g_ufCNS2MappingTable[];
-extern "C" PRUint16 g_CNS1MappingTable[];
-extern "C" PRUint16 g_CNS2MappingTable[];
+extern "C" PRUint16 g_ufCNS3MappingTable[];
+extern "C" PRUint16 g_ufCNS4MappingTable[];
+extern "C" PRUint16 g_ufCNS5MappingTable[];
+extern "C" PRUint16 g_ufCNS6MappingTable[];
+extern "C" PRUint16 g_ufCNS7MappingTable[];
+extern "C" PRUint16 g_utCNS1MappingTable[];
+extern "C" PRUint16 g_utCNS2MappingTable[];
+extern "C" PRUint16 g_utCNS3MappingTable[];
+extern "C" PRUint16 g_utCNS4MappingTable[];
+extern "C" PRUint16 g_utCNS5MappingTable[];
+extern "C" PRUint16 g_utCNS6MappingTable[];
+extern "C" PRUint16 g_utCNS7MappingTable[];
 
 #endif /* nsUCvTW2Dll_h___ */

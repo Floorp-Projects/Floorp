@@ -60,11 +60,41 @@ PRUint16 g_ufCNS1MappingTable[] = {
 PRUint16 g_ufCNS2MappingTable[] = {
 #include "cns_2.uf"
 };
-PRUint16 g_CNS1MappingTable[] = {
+PRUint16 g_ufCNS3MappingTable[] = {
+#include "cns3.uf"
+};
+PRUint16 g_ufCNS4MappingTable[] = {
+#include "cns4.uf"
+};
+PRUint16 g_ufCNS5MappingTable[] = {
+#include "cns5.uf"
+};
+PRUint16 g_ufCNS6MappingTable[] = {
+#include "cns6.uf"
+};
+PRUint16 g_ufCNS7MappingTable[] = {
+#include "cns7.uf"
+};
+PRUint16 g_utCNS1MappingTable[] = {
 #include "cns_1.ut"
 };
-PRUint16 g_CNS2MappingTable[] = {
+PRUint16 g_utCNS2MappingTable[] = {
 #include "cns_2.ut"
+};
+PRUint16 g_utCNS3MappingTable[] = {
+#include "cns3.ut"
+};
+PRUint16 g_utCNS4MappingTable[] = {
+#include "cns4.ut"
+};
+PRUint16 g_utCNS5MappingTable[] = {
+#include "cns5.ut"
+};
+PRUint16 g_utCNS6MappingTable[] = {
+#include "cns6.ut"
+};
+PRUint16 g_utCNS7MappingTable[] = {
+#include "cns7.ut"
 };
 
 typedef nsresult (* fpCreateInstance) (nsISupports **);
