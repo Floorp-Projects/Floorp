@@ -136,9 +136,13 @@ menuitem[_moz-menuactive="true"][disabled="true"] {
 /* ::::: menu/menuitems in menubar ::::: */
 
 menubar > menu {
+#ifdef MOZ_WIDGET_GTK2
+  padding: 0px 6px 0px 4px;
+#else
   border: 1px solid transparent;
   padding: 2px 5px 2px 7px;
   margin: 1px 0px 1px 0px;
+#endif
 }
 
 menubar > menu[_moz-menuactive="true"] {
@@ -173,7 +177,9 @@ menupopup > menu,
 popup > menu,
 menupopup > menuitem,
 popup > menuitem {
+#ifndef MOZ_WIDGET_GTK2
   padding: 2px;
+#endif
   max-width: 42em;
 }
 
