@@ -37,6 +37,7 @@
 #include "nsCOMPtr.h"
 
 static NS_DEFINE_IID(kCFontMetrics, NS_FONT_METRICS_CID);
+static NS_DEFINE_IID(kCFontEnumerator, NS_FONT_ENUMERATOR_CID);
 static NS_DEFINE_IID(kCRenderingContext, NS_RENDERING_CONTEXT_CID);
 static NS_DEFINE_IID(kCImage, NS_IMAGE_CID);
 static NS_DEFINE_IID(kCDeviceContext, NS_DEVICE_CONTEXT_CID);
@@ -132,6 +133,12 @@ nsresult nsGfxFactoryMac::CreateInstance(nsISupports *aOuter,
 	  if (NS_FAILED(res)) return res;
 	  return iManager->QueryInterface(aIID, aResult);
 	}
+	else if (mClassID.Equals(kCFontEnumerator)) {
+    nsFontEnumeratorMac* fe;
+    NS_NEWXPCOM(fe, nsFontEnumeratorMac);
+    inst = (nsISupports *)fe;
+  } 
+
 
 	if (inst == NULL) {  
 		return NS_ERROR_OUT_OF_MEMORY;  
