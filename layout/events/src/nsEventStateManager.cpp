@@ -988,10 +988,12 @@ nsEventStateManager::PostHandleEvent(nsIPresContext* aPresContext,
         
       case MOUSE_SCROLL_HISTORY:
         {
-          nsCOMPtr<nsIWebShell> webShell;
-          mPresContext->GetContainer(getter_AddRefs(webShell));
-          if (nsnull != webShell) {
-            nsCOMPtr<nsIWebShell> root;
+          nsCOMPtr<nsISupports> pcContainer;
+          mPresContext->GetContainer(getter_AddRefs(pcContainer));
+          if (pcContainer) {
+            nsCOMPtr<nsIWebShell> webShell = do_QueryInterface(pcContainer);
+            if (webShell) {
+              nsCOMPtr<nsIWebShell> root;
               webShell->GetRootWebShell(*getter_AddRefs(root));
               if (nsnull != root) {
                 nsCOMPtr<nsISessionHistory> sHist;
@@ -1007,6 +1009,7 @@ nsEventStateManager::PostHandleEvent(nsIPresContext* aPresContext,
                   }
                 }
               }
+            }
           }
         }
         break;
