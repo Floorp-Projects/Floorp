@@ -1527,6 +1527,11 @@ use Template;
 
 # Create the global template object that processes templates and specify
 # configuration parameters that apply to all templates processed in this script.
+
+# IMPORTANT - If you make any configuration changes here, make sure to make
+# them in t/004.template.t and checksetup.pl. You may also need to change the
+# date settings were last changed - see the comments in checksetup.pl for
+# details
 $::template ||= Template->new(
   {
     # Colon-separated list of directories containing templates.
@@ -1538,6 +1543,8 @@ $::template ||= Template->new(
     # of directives to maintain white space (i.e. [%+ DIRECTIVE %]).
     PRE_CHOMP => 1 ,
     TRIM => 1 , 
+
+    COMPILE_DIR => 'data',
 
     # Functions for processing text within templates in various ways.
     FILTERS =>

@@ -181,7 +181,7 @@ unless (have_vers("Data::Dumper",0))      { push @missing,"Data::Dumper" }
 unless (have_vers("DBD::mysql","1.2209")) { push @missing,"DBD::mysql" }
 unless (have_vers("Date::Parse",0))       { push @missing,"Date::Parse" }
 unless (have_vers("AppConfig","1.52"))    { push @missing,"AppConfig" }
-unless (have_vers("Template","2.06"))     { push @missing,"Template" }
+unless (have_vers("Template","2.07"))     { push @missing,"Template" }
 unless (have_vers("Text::Wrap","2001.0131")) { push @missing,"Text::Wrap" }
 unless (have_vers("File::Spec", "0.82"))  { push @missing,"File::Spec" }
 
@@ -525,6 +525,20 @@ my @my_priorities = @{*{$main::{'priorities'}}{ARRAY}};
 my @my_platforms = @{*{$main::{'platforms'}}{ARRAY}};
 my @my_opsys = @{*{$main::{'opsys'}}{ARRAY}};
 
+if ($my_webservergroup && ($< != 0)) { # zach: if not root, yell at them, bug 87398 
+    print <<EOF;
+
+Warning: you have entered a value for the "webservergroup" parameter
+in localconfig, but you are not running this script as root.
+This can cause permissions problems and decreased security.  If you
+experience problems running Bugzilla scripts, log in as root and re-run
+this script, or remove the value of the "webservergroup" parameter.
+Note that any warnings about "uninitialized values" that you may
+see below are caused by this.
+
+EOF
+    }
+
 ###########################################################################
 # Global Utility Library
 ###########################################################################
@@ -737,6 +751,90 @@ END
     }
 }
 
+{
+    eval("use Date::Parse");
+    # Templates will be recompiled if the source changes, but not if the
+    # settings in globals.pl change, so we need to be able to force a rebuild
+    # if that happens
+
+    # The last time the global template params were changed. Keep in UTC,
+    # YYYY-MM-DD
+    my $lastTemplateParamChange = str2time("2002-04-24", "UTC");
+    if (-e 'data/template') {
+        unless (-d 'data/template' && -e 'data/template/.lastRebuild' &&
+                (stat('data/template/.lastRebuild'))[9] >= $lastTemplateParamChange) {
+            # If File::Path::rmtree reported errors, then I'd use that
+            use File::Find;
+            sub remove {
+                return if $_ eq ".";
+                if (-d $_) {
+                    rmdir $_ || die "Couldn't rmdir $_: $!\n";
+                } else {
+                    unlink $_ || die "Couldn't unlink $_: $!\n";
+                }
+            }
+            finddepth(\&remove, 'data/template');
+        }
+    }
+
+    # Precompile stuff. This speeds up initial access (so the template isn't
+    # compiled multiple times simulataneously by different servers), and helps
+    # to get the permissions right.
+    eval("use Template");
+    my $redir = ($^O =~ /MSWin32/i) ? "NUL" : "/dev/null";
+    my $template = Template->new(
+      {
+        # Output to /dev/null here
+        OUTPUT => $redir,
+
+        # Colon-separated list of directories containing templates.
+        INCLUDE_PATH => "template/en/custom:template/en/default",
+
+        PRE_CHOMP => 1 ,
+        TRIM => 1 ,
+
+        COMPILE_DIR => "data", # becomes data/template/en/{custom,default}
+
+        # These don't actually need to do anything here, just exist
+        FILTERS =>
+        {
+         strike => sub { return $_; } ,
+         js => sub { return $_; },
+         html => sub { return $_; },
+         url_quote => sub { return $_; }
+        },
+      }) || die ("Could not create Template: " . Template->error() . "\n");
+
+    sub compile {
+        return if (-d $_);
+        return if ($_ !~ /\.tmpl$/);
+        s!template/en/default/!!; # trim the bit we don't pass to TT
+
+        $template->process($_, {})
+          || die "Could not compile $_:" . $template->error() . "\n";
+    }
+
+    {
+        use File::Find;
+
+        # Disable warnings which come from running the compiled templates
+        # This way is OK, because they're all runtime warnings.
+        # The reason we get these warnings here is that none of the required
+        # vars will be present.
+        local ($^W) = 0;
+
+        # Traverse the default hierachy. Custom templates will be picked up
+        # via the INCLUDE_PATH, but we know that bugzilla will only be
+        # calling stuff which exists in en/default
+        # FIXME - if we start doing dynamic INCLUDE_PATH we may have to
+        # recurse all of template/, changing the INCLUDE_PATH each time
+
+        find({wanted => \&compile, no_chdir => 1}, "template/en/default");
+    }
+    # update the time on the stamp file
+    open FILE, '>data/template/.lastRebuild'; close FILE;
+    utime $lastTemplateParamChange, $lastTemplateParamChange, ('data/template/.lastRebuild');
+}
 
 # Just to be sure ...
 unlink "data/versioncache";
@@ -852,20 +950,6 @@ sub fixPerms {
 }
 
 if ($my_webservergroup) {
-        unless ($< == 0) { # zach: if not root, yell at them, bug 87398 
-        print <<EOF;
-
-Warning: you have entered a value for the "webservergroup" parameter
-in localconfig, but you are not running this script as root.
-This can cause permissions problems and decreased security.  If you
-experience problems running Bugzilla scripts, log in as root and re-run
-this script, or remove the value of the "webservergroup" parameter.
-Note that any warnings about "uninitialized values" that you may
-see below are caused by this.
-
-EOF
-    }
-
     # Funny! getgrname returns the GID if fed with NAME ...
     my $webservergid = getgrnam($my_webservergroup);
     # chown needs to be called with a valid uid, not 0.  $< returns the
@@ -873,6 +957,7 @@ EOF
     # userid.
     fixPerms('.htaccess', $<, $webservergid, 027); # glob('*') doesn't catch dotfiles
     fixPerms('data/.htaccess', $<, $webservergid, 027);
+    fixPerms('data/template', $<, $webservergid, 007, 1); # webserver will write to these
     fixPerms('data/webdot/.htaccess', $<, $webservergid, 027);
     fixPerms('data/params', $<, $webservergid, 017);
     fixPerms('*', $<, $webservergid, 027);
@@ -887,6 +972,7 @@ EOF
     my $gid = (split " ", $()[0];
     fixPerms('.htaccess', $<, $gid, 022); # glob('*') doesn't catch dotfiles
     fixPerms('data/.htaccess', $<, $gid, 022);
+    fixPerms('data/template', $<, $gid, 022, 1);
     fixPerms('data/webdot/.htaccess', $<, $gid, 022);
     fixPerms('data/params', $<, $gid, 011);
     fixPerms('*', $<, $gid, 022);

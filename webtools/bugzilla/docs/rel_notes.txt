@@ -41,7 +41,7 @@ Perl v5.005
 DBI v1.13
 DBD::MySQL v1.2209
 AppConfig v1.52
-Template Toolkit v2.06
+Template Toolkit v2.07
 Text::Wrap v20001.0131
 Data::Dumper, Date::Parse, CGI::Carp (any)
 GD v1.19 (optional)
@@ -86,6 +86,30 @@ XML::Parser (any)
   the search can be very slow.  This is because of limitations of
   the MySQL optimiser.
   (bug 96101)
+
+- This release of Bugzilla uses the Template Toolkit. For speed,
+  compiled templates are cached on disk. If you modify the templates
+  in order to customise the look and feel of your Bugzilla instalation,
+  the toolkit will normally detect the changes, and recompile the
+  changed templates.
+
+  However, if you do not set a webservergroup in the localconfig file, 
+  (a generally unwise thing on a production installation of Bugzilla)
+  the template directory would have to be world-writable for automatic
+  recompilation to happen.
+
+  Doing that would be a security risk. So, if you modify templates locally 
+  and do not have a webservergroup set, you will have to rerun checksetup.pl
+  to recompile the templates manually. If you do not do this, the changes 
+  you make will not appear, and an error message will be reported.
+
+  Adding new directories anywhere inside the template directory may cause 
+  permission errors. If you see these, rerun checksetup.pl as root. If you
+  do not have root access, or cannot get someone who does to do this for you,
+  you can rename the data/template directory to data/template.old (or any
+  other name bugzilla doesn't use). Then rerun checksetup.pl to regenerate
+  the compiled templates.
+  (bug 97832)
 
 ************************************************************
 *** USERS UPGRADING FROM 2.14.1 OR EARLIER - 2.16 ISSUES ***
