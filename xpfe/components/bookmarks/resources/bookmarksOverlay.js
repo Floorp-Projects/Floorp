@@ -95,34 +95,6 @@ BookmarksUIElement.prototype = {
     }
   },
 
-  /* XXX template problems.
-  listener: null,  
-  exDB: ["rdf:files", "rdf:httpindex"],
-  setUpCompositeDataSource: function ()
-  {
-    if (!this.listener) 
-      this.listener = new AggregationPrefListener ();
-      
-    const kPrefSvcContractID = "@mozilla.org/preferences;1";
-    const kPrefSvcIID = Components.interfaces.nsIPref;
-    const kPrefSvc = Components.classes[kPrefSvcContractID].getService(kPrefSvcIID);
-    var bUseExtendedDataViews = false;
-    try {
-      bUseExtendedDataViews = kPrefSvc.GetBoolPref("browser.bookmarks.show_extended_data");
-    }
-    catch (e) {
-    }
-    var element = document.getElementById(this.id);
-    var db = element.database;
-
-    for (var i = 0; i < this.exDB.length; ++i) {
-      dump("** txxsdflks = " + this.exDB[i] + "\n");
-      db[bUseExtendedDataViews ? "AddDataSource" : "RemoveDataSource"](this.RDF.GetDataSource(this.exDB[i]));
-    }
-    element.builder.rebuild();
-  },
-  */
-  
   /////////////////////////////////////////////////////////////////////////////
   // Fill a context menu popup with menuitems that are appropriate for the current
   // selection.
@@ -140,6 +112,7 @@ BookmarksUIElement.prototype = {
       throw "Clients must implement findRDFNode!";
     var itemNode = this.findRDFNode(popupNode, true);
     if (!itemNode || !itemNode.getAttribute("type") || itemNode.getAttribute("mode") == "edit") {
+      aEvent.preventDefault();
       return;
     }
 
@@ -150,6 +123,10 @@ BookmarksUIElement.prototype = {
     for (var i = 0; i < selection.length; ++i) {
       var nodeURI = NODE_ID(selection[i]);
       var commands = this.getAllCmds(nodeURI);
+      if (!commands) {
+        aEvent.preventDefault();
+        return;
+      }
       commands = this.flattenEnumerator(commands);
       if (!commonCommands.length) commonCommands = commands;
       commonCommands = this.findCommonNodes(commands, commonCommands);
@@ -216,25 +193,34 @@ BookmarksUIElement.prototype = {
   getAllCmds: function (aNodeID)
   {
     var type = this.resolveType(aNodeID);
+    if (!type) {
+      if (aNodeID == "NC:PersonalToolbarFolder" || aNodeID == "NC:BookmarksRoot")
+        type = "http://home.netscape.com/NC-rdf#Folder";
+      else
+        return null;
+    }
     var commands = [];
     switch (type) {
     case "http://home.netscape.com/NC-rdf#BookmarkSeparator":
       commands = ["find", "separator", "bm_cut", "bm_copy", "bm_paste", 
-                  "bm_delete", "separator", "newfolder"];
+                  "bm_delete", "separator", "bm_fileBookmark", "separator", 
+                  "newfolder"];
       break;
     case "http://home.netscape.com/NC-rdf#Bookmark":
       commands = ["open", "find", "separator", "bm_cut", "bm_copy", "bm_paste", 
-                  "bm_delete", "separator", "rename", "separator", "newfolder", 
+                  "bm_delete", "separator", "rename", "separator", 
+                  "bm_fileBookmark", "separator", "newfolder", 
                   "separator", "properties"];
       break;
     case "http://home.netscape.com/NC-rdf#Folder":
       commands = ["openfolder", "openfolderinnewwindow", "find", "separator", 
                   "bm_cut", "bm_copy", "bm_paste", "bm_delete", "separator", "rename", 
-                  "separator", "newfolder", "separator", "properties"];
+                  "separator", "bm_fileBookmark", "separator", 
+                  "newfolder", "separator", "properties"];
       break;
     case "http://home.netscape.com/NC-rdf#IEFavoriteFolder":
-      commands = ["open", "find", "separator", "bm_copy", "separator", "rename", 
-                  "separator", "properties"];
+      commands = ["open", "find", "separator", "bm_copy", "separator", "rename", "separator",
+                  "bm_fileBookmark", "separator", "separator", "properties"];
       break;
     case "http://home.netscape.com/NC-rdf#IEFavorite":
       commands = ["open", "find", "separator", "bm_copy"];
@@ -321,29 +307,47 @@ BookmarksUIElement.prototype = {
       this.findInBookmarks();
       break;
     case "bm_cut":
-      this.copySelection (selection);
-      this.deleteSelection (selection);
+      this.copySelection(selection);
+      this.deleteSelection(selection);
       break;
     case "bm_copy":
-      this.copySelection (selection);
+      this.copySelection(selection);
       break;
     case "bm_paste":
-      this.paste (selection);
+      this.paste(selection);
       break;
     case "bm_delete":
-      this.deleteSelection (selection);
+      this.deleteSelection(selection);
+      break;
+    case "bm_fileBookmark":
+      var rv = { selectedFolder: null };      
+      openDialog("chrome://communicator/content/bookmarks/addBookmark.xul", "", 
+                 "centerscreen,chrome,modal=yes,dialog=no,resizable=yes", null, null, folder, null, "selectFolder", rv);
+      if (rv.selectedFolder) {
+        var additiveFlag = false;
+        var selectedItems = [].concat(this.getSelection())
+        for (var i = 0; i < selectedItems.length; ++i) {
+          var currItem = selectedItems[i];
+          var currURI = NODE_ID(currItem);
+          var parent = gBookmarksShell.findRDFNode(currItem, false);
+          gBookmarksShell.moveBookmark(currURI, NODE_ID(parent), rv.selectedFolder);
+          gBookmarksShell.selectFolderItem(rv.selectedFolder, currURI, additiveFlag);
+          if (!additiveFlag) additiveFlag = true;
+        }
+        gBookmarksShell.flushDataSource();
+      }
       break;
     case "newfolder":
-      var nfseln = this.getBestItem ();
+      var nfseln = this.getBestItem();
       this.commands.createBookmarkItem("folder", nfseln);
       break;
     case "newbookmark":
       var folder = this.getSelectedFolder();
       openDialog("chrome://communicator/content/bookmarks/addBookmark.xul", "", 
-                 "centerscreen,chrome,dialog=no,resizable=no", null, null, folder, null);
+                 "centerscreen,chrome,modal=yes,dialog=no,resizable=no", null, null, folder, null, "newBookmark");
       break;
     case "newseparator":
-      nfseln = this.getBestItem ();
+      nfseln = this.getBestItem();
       var parentNode = this.findRDFNode(nfseln, false);
       args = [{ property: NC_NS + "parent", 
                 resource: NODE_ID(parentNode) }];
@@ -562,10 +566,19 @@ BookmarksUIElement.prototype = {
       const kSelectionURI = NODE_ID(aSelection[count]);
 
       // Disallow the removal of certain 'special' nodes
-      if (kSelectionURI == "NC:BookmarksRoot" || 
-          kSelectionURI == "NC:IEFavoritesRoot") {
+      if (kSelectionURI == "NC:BookmarksRoot") {
         aSelection.splice(count++,1);
         continue;
+      }
+
+      // If the current bookmark is the IE Favorites folder, we have a little
+      // extra work to do - set the pref |browser.bookmarks.import_system_favorites|
+      // to ensure that we don't re-import next time. 
+      if (aSelection[count].getAttribute("type") == (NC_NS + "IEFavoriteFolder")) {
+        const kPrefSvcContractID = "@mozilla.org/preferences;1";
+        const kPrefSvcIID = Components.interfaces.nsIPref;
+        const kPrefSvc = Components.classes[kPrefSvcContractID].getService(kPrefSvcIID);
+        kPrefSvc.SetBoolPref("browser.bookmarks.import_system_favorites", false);
       }
         
       const krParent = this.RDF.GetResource(NODE_ID(currParent));
@@ -629,15 +642,15 @@ BookmarksUIElement.prototype = {
   {
     if (aBookmarkItem.getAttribute("type") != NC_NS + "BookmarkSeparator") 
       openDialog("chrome://communicator/content/bookmarks/bm-props.xul",
-                 "", "centerscreen,chrome,dialog=no,resizable=no", 
+                 "BookmarkProperties", "centerscreen,chrome,dialog=no,resizable=no", 
                  NODE_ID(aBookmarkItem));
   },
 
   findInBookmarks: function ()
   {
-    openDialog("chrome://communicator/content/bookmarks/bm-find.xul",
+    openDialog("chrome://communicator/content/bookmarks/findBookmark.xul",
                "FindBookmarksWindow",
-               "centerscreen,chrome,resizable,dialog=no");
+               "centerscreen,chrome,dependent");
   },
 
   getLocaleString: function (aStringKey)
@@ -664,7 +677,12 @@ BookmarksUIElement.prototype = {
       return type.QueryInterface(Components.interfaces.nsIRDFResource).Value;
     }
     catch (e) {
-      return type.QueryInterface(Components.interfaces.nsIRDFLiteral).Value;
+      try { 
+        return type.QueryInterface(Components.interfaces.nsIRDFLiteral).Value;
+      }
+      catch (e) {
+        return null;
+      }
     }    
   },
 
@@ -776,7 +794,9 @@ var BookmarksUtils = {
   
   createFolderWithID: function (aTitle, aRelativeItem, aParentFolder)
   {
-    const krAnonymous = this.RDF.GetAnonymousResource();
+    const krBMDS = this.RDF.GetDataSource("rdf:bookmarks");
+    const kBMSvc = krBMDS.QueryInterface(Components.interfaces.nsIBookmarksService);
+    const krAnonymous = kBMSvc.GetAnonymousResource();
     
     var args = [{ property: NC_NS + "parent", resource: aParentFolder },
                 { property: NC_NS + "Name",   literal:  aTitle },
@@ -785,7 +805,6 @@ var BookmarksUtils = {
 
     // Tidy up.
     const krURL = this.RDF.GetResource(NC_NS + "URL");
-    const krBMDS = this.RDF.GetDataSource("rdf:bookmarks");
     const krCurrURL = krBMDS.GetTarget(krAnonymous, krURL, true);
     const krEmpty = this.RDF.GetLiteral("");
     krBMDS.Change(krAnonymous, krURL, krCurrURL, krEmpty);
@@ -809,6 +828,17 @@ var BookmarksUtils = {
     catch (e) {
       title = url;
     }
+
+    const kPrefContractID = "@mozilla.org/preferences;1";
+    const kPrefIID = Components.interfaces.nsIPref;
+    const kPrefSvc = Components.classes[kPrefContractID].getService(kPrefIID);
+    try {
+      var temp = kPrefSvc.GetBoolPref("browser.bookmarks.add_without_dialog");
+      aShowDialog = !temp;
+    }
+    catch (e) {
+    }
+
     this.addBookmark(url, title, docCharset, aShowDialog);
   },
   
@@ -821,7 +851,7 @@ var BookmarksUtils = {
   
     if (aShowDialog)
       openDialog("chrome://communicator/content/bookmarks/addBookmark.xul", "", 
-                 "centerscreen,chrome,dialog=no,resizable=yes", aTitle, aURL, null, aCharset);
+                 "centerscreen,chrome,dialog=no,resizable,dependent", aTitle, aURL, null, aCharset);
     else {
       // User has elected to override the file dialog and always file bookmarks
       // into the default bookmark folder. 

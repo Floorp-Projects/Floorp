@@ -61,8 +61,9 @@ BookmarksToolbar.prototype = {
     const kXULNS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
     var xulElement = document.createElementNS(kXULNS, "menuitem");
     xulElement.setAttribute("cmd", aCommandName);
-    xulElement.setAttribute("command", "cmd_" + aCommandName.substring(NC_NS_CMD.length));
-
+    var cmd = "cmd_" + aCommandName.substring(NC_NS_CMD.length)
+    xulElement.setAttribute("command", cmd);
+    
     switch (aCommandName) {
     case NC_NS_CMD + "open":
       xulElement.setAttribute("label", aDisplayName);
@@ -153,10 +154,11 @@ BookmarksToolbar.prototype = {
       if (!gBookmarksShell.commands.validateNameAndTopic(name, aTopic, relativeNode, dummyButton))
         return;
 
-      var parentNode = relativeNode.parentNode;
+      parentNode = relativeNode.parentNode;
       if (relativeNode.localName == "hbox") {
         parentNode = relativeNode;
-        relativeNode = relativeNode.lastChild;
+        relativeNode = (gBookmarksShell.commands.nodeIsValidType(relativeNode) && 
+                        relativeNode.lastChild) || relativeNode;
       }
 
       var args = [{ property: NC_NS + "parent",
@@ -168,7 +170,19 @@ BookmarksToolbar.prototype = {
                                         NC_NS_CMD + "newfolder", args);
       // We need to do this because somehow focus shifts and no commands 
       // operate any more. 
-      gBookmarksShell._focusElt.focus();
+      //gBookmarksShell._focusElt.focus();
+    },
+
+    nodeIsValidType: function (aNode)
+    {
+      switch (aNode.localName) {
+      case "button":
+      case "menubutton":
+      // case "menu":
+      // case "menuitem":
+        return true;
+      }
+      return false;
     },
 
     ///////////////////////////////////////////////////////////////////////////
@@ -318,6 +332,7 @@ BookmarksToolbar.prototype = {
       case "cmd_setnewsearchfolder":
       case "cmd_import":
       case "cmd_export":
+      case "cmd_bm_fileBookmark":
         return true;
       default:
         return false;
@@ -336,7 +351,7 @@ BookmarksToolbar.prototype = {
       case "cmd_bm_cut":
       case "cmd_bm_copy":
       case "cmd_bm_delete":
-        return document.popupNode != null;
+        return (document.popupNode != null) && (NODE_ID(document.popupNode) != "NC:PersonalToolbarFolder");
       case "cmd_bm_selectAll":
         return false;
       case "cmd_open":
@@ -371,6 +386,9 @@ BookmarksToolbar.prototype = {
         if (!seln.length) return false;
         folderType = seln[0].getAttribute("type") == (NC_NS + "Folder");
         return document.popupNode != null && !(NODE_ID(seln[0]) == "NC:NewSearchFolder") && folderType;
+      case "cmd_bm_fileBookmark":
+        seln = gBookmarksShell.getSelection();
+        return seln.length > 0;
       default:
         return false;
       }
@@ -400,6 +418,7 @@ BookmarksToolbar.prototype = {
       case "cmd_find":
       case "cmd_import":
       case "cmd_export":
+      case "cmd_bm_fileBookmark":
         gBookmarksShell.execCommand(aCommand.substring("cmd_".length));
         break;
       case "cmd_bm_selectAll":
@@ -422,6 +441,7 @@ function BM_navigatorLoad(aEvent)
   if (!gBookmarksShell) {
     gBookmarksShell = new BookmarksToolbar("innermostBox");
     controllers.appendController(gBookmarksShell.controller);
+    removeEventListener("load", BM_navigatorLoad, false);
   }
 }
 

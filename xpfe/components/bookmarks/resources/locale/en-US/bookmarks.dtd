@@ -39,7 +39,7 @@
 <!ENTITY edit.properties.keybinding    "i">
 <!ENTITY command.rename.label          "Rename...">
 <!ENTITY command.delete.label          "Delete">
-<!ENTITY command.fileBookmark.label    "File Bookmark">
+<!ENTITY command.fileBookmark.label    "File Bookmark(s)...">
 <!ENTITY command.fileBookmark.accesskey "l">
 <!ENTITY command.addBookmark.label     "Add...">
 <!ENTITY command.manageBookmarks.label "Manage">
@@ -70,8 +70,4 @@
 <!ENTITY tree.header.lastvisit.label    "Last Visited">
 <!ENTITY tree.header.description.label  "Description">
 <!ENTITY bookmarksWindowTitle.label	    "Bookmarks">
-
-
-<!ENTITY search.name.label              "name">
-<!ENTITY search.contains.label          "contains">
 

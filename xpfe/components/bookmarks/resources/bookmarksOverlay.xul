@@ -34,7 +34,7 @@
                   src="chrome://communicator/locale/bookmarks/bookmark.properties"/>
   </stringbundleset>
          
-  <popupset id="popupset">
+  <popupset id="bookmarksPopupset" appendto="_root">
     <popup id="bmContext" 
            oncreate="gBookmarksShell.createContextMenu(event);"/>
   </popupset>
@@ -55,6 +55,7 @@
       <command id="cmd_openfolderinnewwindow"     oncommand="goDoCommand('cmd_openfolderinnewwindow');"/>
       <command id="cmd_import"                    oncommand="goDoCommand('cmd_import');"/>
       <command id="cmd_export"                    oncommand="goDoCommand('cmd_export');"/>
+      <command id="cmd_bm_fileBookmark"           oncommand="goDoCommand('cmd_bm_fileBookmark');"/>
 
       <command id="cmd_bm_cut"                    oncommand="goDoCommand('cmd_bm_cut');"/>
       <command id="cmd_bm_copy"                   oncommand="goDoCommand('cmd_bm_copy');"/>
