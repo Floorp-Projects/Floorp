@@ -1686,6 +1686,10 @@ dnl = NSPR does not use autoconf.  However, it support reading
 dnl = environment from a file.  That is what build/nsprenv.mk
 dnl = does.  It is generated from builds/nsprenv.mk.in.
 dnl =
+dnl = This file is them copied to nsprpub/config/myconfig.mk
+dnl =
+dnl = NSPR will then include that file in its build system.
+dnl =
 dnl = The following variables might need to be set to properly
 dnl = build NSPR for unix:
 dnl = 
@@ -1695,9 +1699,11 @@ dnl = NS_USE_GCC
 dnl = NO_MDUPDATE
 dnl = NS_USE_NATIVE
 dnl = MOZILLA_CLIENT
+dnl = DIST
 dnl = 
 dnl ========================================================
-
+if test ! "$MOZ_NATIVE_NSPR"
+then
 dnl 
 dnl USE_PTHREADS
 dnl
@@ -1755,12 +1761,21 @@ dnl
 MOZ_NSPRENV_MOZILLA_CLIENT=1
 MOZ_NSPRENV_NO_MDUPDATE=1
 
+dnl 
+dnl DIST
+dnl
+dnl Where the NSPR sutff gets installed: $DIST/{bin,lib,include}
+dnl 
+MOZ_NSPRENV_DIST=`pwd`/dist
+
 AC_SUBST(MOZ_NSPRENV_USE_PTHREADS)
 AC_SUBST(MOZ_NSPRENV_BUILD_OPT)
 AC_SUBST(MOZ_NSPRENV_NS_USE_GCC)
 AC_SUBST(MOZ_NSPRENV_NO_MDUPDATE)
 AC_SUBST(MOZ_NSPRENV_NS_USE_NATIVE)
 AC_SUBST(MOZ_NSPRENV_MOZILLA_CLIENT)
+AC_SUBST(MOZ_NSPRENV_DIST)
+fi
 dnl ========================================================
 
 
@@ -1797,3 +1812,20 @@ done
 . ${srcdir}/allmakefiles.sh
 
 AC_OUTPUT($MAKEFILES)
+
+dnl ========================================================
+dnl = 
+dnl = If is not native, copy build/nsprenv.mk to 
+dnl = nsprpub/config/myconfig.mk, so that NSPR will be 
+dnl = built with the same options as mozilla.
+dnl = 
+dnl ========================================================
+
+dnl 
+dnl XXX commented out pending nspr checkin
+dnl 
+dnl if test ! "$MOZ_NATIVE_NSPR"
+dnl then
+dnl   rm -f nsprpub/config/myconfig.mk
+dnl   cp build/nsprenv.mk nsprpub/config/myconfig.mk
+dnl fi
