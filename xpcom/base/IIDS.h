@@ -1232,7 +1232,7 @@ nsIJSEventListener = { /* a6cf9118-15b3-11d2-932e-00805f8add32 */
     0x11d2,
     {0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32}
   };
-INTERFACENAME = { /* a6cf9119-15b3-11d2-932e-00805f8add32 */
+nsICharSet = { /* a6cf9119-15b3-11d2-932e-00805f8add32 */
     0xa6cf9119,
     0x15b3,
     0x11d2,
