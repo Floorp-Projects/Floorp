@@ -24,10 +24,10 @@ include $(DEPTH)/config/autoconf.mk
 
 include $(topsrcdir)/config/config.mk
 
-DIRS = $(MOZ_GFX_TOOLKIT)
+DIRS = $(MOZ_WIDGET_TOOLKIT)
 ### XXX ### DIRS = gtk motif xlib
 ### XXX ### 
-### XXX ### LIBRARY_NAME = timerutil_s
+### XXX ### LIBRARY_NAME = timer_s
 ### XXX ### 
 ### XXX ### REQUIRES=xpcom
 ### XXX ### 

@@ -112,30 +112,13 @@ nsTimerMotif::Cancel()
   XtRemoveTimeOut(mTimerId);
 }
 
-NS_GFX nsresult NS_NewTimer(nsITimer** aInstancePtrResult)
-{
-    NS_PRECONDITION(nsnull != aInstancePtrResult, "null ptr");
-    if (nsnull == aInstancePtrResult) {
-      return NS_ERROR_NULL_POINTER;
-    }  
-
-    nsTimerMotif *timer = new nsTimerMotif();
-    if (nsnull == timer) {
-        return NS_ERROR_OUT_OF_MEMORY;
-    }
-
-    return timer->QueryInterface(kITimerIID, (void **) aInstancePtrResult);
-}
-
-
 void nsTimerExpired(XtPointer aCallData)
 {
   nsTimerMotif* timer = (nsTimerMotif *)aCallData;
   timer->FireTimeout();
 }
 
-#if 1
-/* NS_GFXNONXP */ nsresult NS_NewTimer(nsITimer** aInstancePtrResult)
+NS_TIMER nsresult NS_NewTimer(nsITimer** aInstancePtrResult)
 {
     NS_PRECONDITION(nsnull != aInstancePtrResult, "null ptr");
     if (nsnull == aInstancePtrResult) {
@@ -149,4 +132,3 @@ void nsTimerExpired(XtPointer aCallData)
 
     return timer->QueryInterface(kITimerIID, (void **) aInstancePtrResult);
 }
-#endif

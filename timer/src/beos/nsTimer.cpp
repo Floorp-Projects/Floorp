@@ -341,7 +341,7 @@ void TimerImpl::Cancel()
 	TimerImpl::sTimerManager.RemoveRequest(this);
 }
 
-NS_BASE nsresult NS_NewTimer(nsITimer** aInstancePtrResult)
+NS_TIMER nsresult NS_NewTimer(nsITimer** aInstancePtrResult)
 {
     NS_PRECONDITION(nsnull != aInstancePtrResult, "null ptr");
     if(nsnull == aInstancePtrResult)

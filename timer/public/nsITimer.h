@@ -95,7 +95,7 @@ extern
 #ifdef XP_MAC // On the macintosh, this is built into the network library.
 NS_NET
 #else
-NS_GFX
+NS_TIMER
 #endif
 nsresult NS_NewTimer(nsITimer** aInstancePtrResult);
 

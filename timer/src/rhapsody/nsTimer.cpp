@@ -177,7 +177,7 @@ TimerImpl::Cancel()
 #endif
 }
 
-NS_GFX nsresult NS_NewTimer(nsITimer** aInstancePtrResult)
+NS_TIMER nsresult NS_NewTimer(nsITimer** aInstancePtrResult)
 {
     NS_PRECONDITION(nsnull != aInstancePtrResult, "null ptr");
     if (nsnull == aInstancePtrResult) {

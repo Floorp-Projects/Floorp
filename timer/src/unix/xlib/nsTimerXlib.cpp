@@ -200,23 +200,6 @@ nsTimerXlib::ProcessTimeouts(struct timeval *aNow)
   }
 }
 
-#if 0
-NS_GFX nsresult NS_NewTimer(nsITimer **aInstancePtrResult)
-{
-  NS_PRECONDITION(nsnull != aInstancePtrResult, "null ptr");
-  if (nsnull == aInstancePtrResult) {
-    return NS_ERROR_NULL_POINTER;
-  }  
-  
-  nsTimerXlib *timer = new nsTimerXlib();
-  if (nsnull == timer) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  
-  return timer->QueryInterface(kITimerIID, (void **) aInstancePtrResult);
-}
-#endif
-
 int NS_TimeToNextTimeout(struct timeval *aTimer) {
   nsTimerXlib *timer;
   timer = nsTimerXlib::gTimerList;
@@ -255,8 +238,7 @@ void NS_ProcessTimeouts(void) {
   nsTimerXlib::ProcessTimeouts(&now);
 }
 
-#if 1
-/* NS_GFXNONXP */ nsresult NS_NewTimer(nsITimer** aInstancePtrResult)
+NS_TIMER nsresult NS_NewTimer(nsITimer** aInstancePtrResult)
 {
     NS_PRECONDITION(nsnull != aInstancePtrResult, "null ptr");
     if (nsnull == aInstancePtrResult) {
@@ -270,4 +252,3 @@ void NS_ProcessTimeouts(void) {
 
     return timer->QueryInterface(kITimerIID, (void **) aInstancePtrResult);
 }
-#endif
