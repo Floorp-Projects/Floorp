@@ -117,6 +117,19 @@ nsresult NS_RegisterApplicationShellFactory()
   return res;
 }
 
+static PRFileDesc *output = NULL;
+
+static nsresult Usage(void)
+{
+  PR_fprintf(output, "zulu usage:\n");
+  PR_fprintf(output, ">zulu [-d] [-c] [-v] [-s <filename>]\n");
+  PR_fprintf(output, "\td\tdebug mode \t(false)\n");
+  PR_fprintf(output, "\tc\tLaunch Command Server\t(none)\n");
+  PR_fprintf(output, "\tv\tverbose output\t(none)\n");
+  PR_fprintf(output, "\ts <filename>\tLaunch Command Script \t(implies -c)\n");
+  return NS_OK; 
+} 
+
 /*
  * nsCalendarShell Definition
  */
@@ -248,7 +261,9 @@ nsresult nsCalendarShell::ParseCommandLine()
 	PLOptStatus os;
  	PLOptState *opt;
   
-  mShellInstance->GetCommandLineOptions(&opt,"Gdl:c:");
+  output = PR_GetSpecialFD(PR_StandardError);
+
+  mShellInstance->GetCommandLineOptions(&opt,"cGdl:s:");
 
 	while (PL_OPT_EOL != (os = PL_GetNextOpt(opt)))
   {
@@ -259,21 +274,25 @@ nsresult nsCalendarShell::ParseCommandLine()
     {
       case 'G':  /* GLOBAL threads */
     		//thread_scope = PR_GLOBAL_THREAD;
-        break;
+      break;
     
       case 'd':  /* debug mode */
-        break;
+      break;
       
-      case 'l':  /* loop count */
-		    //loops = atoi(opt->value);
-        break;
+      case 'c':  /*  */
+        StartCommandServer();
+      break;
+
+      case 's':
+      {
+        nsString script = opt->value;
+        ExecuteCommandScript(script);
+      }
+      break;
       
-      case 'c':  /* concurrency limit */
-		    //cpus = atoi(opt->value);
-        break;
-      
+      case 'h':  /* confused */
       default:
-        break;
+        return Usage();
     }
   }
   return NS_OK;
@@ -896,6 +915,11 @@ nsresult nsCalendarShell::ReceiveCommand(nsString& aCommand, nsString& aReply)
   }
 
   NS_RELEASE(root);
+  return NS_OK;
+}
+
+nsresult nsCalendarShell::ExecuteCommandScript(nsString aScript)
+{
   return NS_OK;
 }
 

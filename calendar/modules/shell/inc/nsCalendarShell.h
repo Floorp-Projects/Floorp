@@ -61,6 +61,7 @@ public:
   NS_METHOD LoadUI();
   NS_METHOD LoadPreferences();
   NS_METHOD ParseCommandLine();
+  NS_METHOD ExecuteCommandScript(nsString aScript);
 
   NS_METHOD EnsureUserPath( JulianString& sPath );
 
