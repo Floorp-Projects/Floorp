@@ -192,6 +192,7 @@ nsresult nsNetlibService::OpenStream(nsIURL *aUrl,
     nsConnectionInfo *pConn;
     nsIProtocolConnection *pProtocol;
     nsresult result;
+    NET_ReloadMethod reloadType;
 
     if ((NULL == aConsumer) || (NULL == aUrl)) {
         return NS_FALSE;
@@ -213,7 +214,19 @@ nsresult nsNetlibService::OpenStream(nsIURL *aUrl,
     }
 
     /* Create the URLStruct... */
-    URL_s = NET_CreateURLStruct(aUrl->GetSpec(), NET_NORMAL_RELOAD);
+
+    /* Set the NET_ReloadMethod to correspond with what we've 
+     * been asked to do.
+     *
+     * 0 = nsReload (normal)
+     * 1 = nsReloadBypassCache
+     * 2 = nsReloadBypassProxy
+     */
+    if (aUrl->GetReloadType() == 1)
+        reloadType = NET_SUPER_RELOAD;
+    else
+        reloadType = NET_NORMAL_RELOAD;
+    URL_s = NET_CreateURLStruct(aUrl->GetSpec(), reloadType);
     if (NULL == URL_s) {
         pConn->Release();
         return NS_FALSE;
@@ -289,6 +302,8 @@ nsresult nsNetlibService::OpenBlockingStream(nsIURL *aUrl,
     if (NULL != aUrl) {
         /* Create the blocking stream... */
         pBlockingStream = new nsBlockingStream();
+        NET_ReloadMethod reloadType;
+
         if (NULL == pBlockingStream) {
             goto loser;
         }
@@ -315,7 +330,20 @@ nsresult nsNetlibService::OpenBlockingStream(nsIURL *aUrl,
         }
 
         /* Create the URLStruct... */
-        URL_s = NET_CreateURLStruct(aUrl->GetSpec(), NET_NORMAL_RELOAD);
+
+        /* Set the NET_ReloadMethod to correspond with what we've 
+         * been asked to do.
+         *
+         * 0 = nsReload (normal)
+         * 1 = nsReloadBypassCache
+         * 2 = nsReloadBypassProxy
+         */
+        if (aUrl->GetReloadType() == 1)
+            reloadType = NET_SUPER_RELOAD;
+        else
+            reloadType = NET_NORMAL_RELOAD;
+
+        URL_s = NET_CreateURLStruct(aUrl->GetSpec(), reloadType);
         if (NULL == URL_s) {
             pBlockingStream->Release();
             pConn->Release();

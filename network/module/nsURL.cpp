@@ -48,6 +48,7 @@ public:
 
   virtual PRBool operator==(const nsIURL& aURL) const;
   virtual nsresult Set(const char *aNewSpec);
+  virtual nsresult SetReloadType(const PRInt32 type);
 
   virtual const char* GetProtocol() const;
   virtual const char* GetHost() const;
@@ -57,6 +58,7 @@ public:
   virtual const char* GetSpec() const;
   virtual PRInt32 GetPort() const;
   virtual nsISupports* GetContainer() const;
+  virtual PRInt32 GetReloadType() const;
 
   virtual void ToString(nsString& aString) const;
 
@@ -67,6 +69,12 @@ public:
   char* mRef;
   char* mSearch;
   nsISupports* mContainer;
+
+  // The reload type can be set to one of the following.
+  // 0 - normal reload (uses cache) (defined as nsReload in nsIWebShell.h)
+  // 1 - bypass the cache (defined as nsReloadBypassCache)
+  // 2 - bypass the proxy (not yet implemented) (defined as nsReloadBypassProxy)
+  PRInt32 mReloadType;
   PRInt32 mPort;
   PRBool mOK;
 
@@ -89,6 +97,7 @@ URLImpl::URLImpl(const nsString& aSpec)
   mPort = -1;
   mSpec = nsnull;
   mContainer = nsnull;
+  mReloadType = 0;
 
   ParseURL(nsnull, aSpec);
 }
@@ -128,6 +137,7 @@ URLImpl::URLImpl(const nsIURL* aURL, const nsString& aSpec)
   mPort = -1;
   mSpec = nsnull;
   mContainer = nsnull;
+  mReloadType = 0;
 
   ParseURL(aURL, aSpec);
 }
@@ -181,6 +191,14 @@ nsresult URLImpl::Set(const char *aNewSpec)
     return ParseURL(nsnull, aNewSpec);
 }
 
+nsresult URLImpl::SetReloadType(const PRInt32 type)
+{
+    if ( !((type >= 0) && (type <= 2)) )
+        return NS_ERROR_ILLEGAL_VALUE;
+    mReloadType = type;
+    return NS_OK;
+}
+
 
 PRBool URLImpl::operator==(const nsIURL& aURL) const
 {
@@ -228,6 +246,11 @@ PRInt32 URLImpl::GetPort() const
 nsISupports* URLImpl::GetContainer() const
 {
     return mContainer;
+}
+
+PRInt32 URLImpl::GetReloadType() const
+{
+    return mReloadType;
 }
 
 void URLImpl::ToString(nsString& aString) const
