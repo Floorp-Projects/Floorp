@@ -1455,10 +1455,15 @@ if ($my_db_check) {
     my @databases = $dbh->func('_ListDBs');
     unless (grep /^$my_db_name$/, @databases) {
        print "Creating database $my_db_name ...\n";
-       $dbh->func('createdb', $my_db_name, 'admin')
-            or die <<"EOF"
+       if (!$dbh->func('createdb', $my_db_name, 'admin')) {
+            my $error = $dbh->errstr;
+            die <<"EOF"
 
-The '$my_db_name' database is not accessible. This might have several reasons:
+The '$my_db_name' database could not be created.  The error returned was:
+
+$error
+
+This might have several reasons:
 
 * MySQL is not running.
 * MySQL is running, but the rights are not set correct. Go and read the
@@ -1468,6 +1473,7 @@ The '$my_db_name' database is not accessible. This might have several reasons:
   sure all settings in '$localconfig' are correct. If all else fails, set
   '\$db_check' to zero.\n
 EOF
+        }
     }
     $dbh->disconnect if $dbh;
 }
