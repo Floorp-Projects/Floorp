@@ -39,8 +39,10 @@
 
 #ifdef DEBUG
 #undef NOISY_ANON_BLOCK
+#undef NOISY_REFLOW_REASON
 #else
 #undef NOISY_ANON_BLOCK
+#undef NOISY_REFLOW_REASON
 #endif
 
 #define INLINE_FRAME_CID \
@@ -443,6 +445,18 @@ nsInlineFrame::AppendFrames(nsIPresContext& aPresContext,
                             nsIFrame* aFrameList,
                             PRBool aGenerateReflowCommands)
 {
+#ifdef NOISY_REFLOW_REASON
+  ListTag(stdout);
+  printf(": append ");
+  nsFrame::ListTag(stdout, aFrameList);
+  nsIFrame* lastKid = mFrames.LastChild();
+  if (lastKid) {
+    printf(" after ");
+    nsFrame::ListTag(stdout, lastKid);
+  }
+  printf("\n");
+#endif
+
   nsresult rv = NS_OK;
   SectionData sd(aFrameList);
   if (sd.HasABlock()) {
@@ -581,6 +595,17 @@ nsInlineFrame::InsertFrames(nsIPresContext& aPresContext,
   if (nsnull == aFrameList) {
     return NS_OK;
   }
+
+#ifdef NOISY_REFLOW_REASON
+  ListTag(stdout);
+  printf(": insert ");
+  nsFrame::ListTag(stdout, aFrameList);
+  if (aPrevFrame) {
+    printf(" after ");
+    nsFrame::ListTag(stdout, aPrevFrame);
+  }
+  printf("\n");
+#endif
 
   nsresult rv = NS_OK;
   SectionData sd(aFrameList);
@@ -911,6 +936,13 @@ nsInlineFrame::RemoveFrame(nsIPresContext& aPresContext,
   if (nsnull != aListName) {
     return NS_ERROR_INVALID_ARG;
   }
+
+#ifdef NOISY_REFLOW_REASON
+  ListTag(stdout);
+  printf(": remove ");
+  nsFrame::ListTag(stdout, aOldFrame);
+  printf("\n");
+#endif
 
   nsresult rv = NS_OK;
   PRBool generateReflowCommand = PR_FALSE;
