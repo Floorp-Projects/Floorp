@@ -5151,15 +5151,13 @@ ResDef(XP_PLUGIN_CANT_LOAD_PLUGIN,               XP_MSG_BASE+326,
   Make sure enough memory is available and that the plug-in is installed correctly.")
 
 
-ResDef(XP_JAVA_NO_CLASSES,          XP_MSG_BASE+327,
-"Unable to start a java applet: Can't find '%s' in your\n\
-CLASSPATH. Read the release notes and install '%s'\n\
-properly before restarting.\n\nCurrent value of CLASSPATH:\n%s\n")
+ResDef(XP_JAVA_NO_CLASSES,                      XP_MSG_BASE+327,
+"Unable to start a java applet: Can't find the system classes in\n\
+your CLASSPATH. Read the release notes and install them\n\
+properly before restarting.\n")
 
-ResDef(XP_JAVA_WRONG_CLASSES,           XP_MSG_BASE+328,
-"Unable to start a java applet: the version number for your\n\
-classes is wrong. The version number found was %d. The correct\n\
-version number is %d.\n")
+ResDef(XP_JAVA_GENERAL_FAILURE,                 XP_MSG_BASE+328,
+"Java virtual machine failure. Error %d.\n")
 
 ResDef(XP_JAVA_STARTUP_FAILED,          XP_MSG_BASE+329,
 "Java reported the following error on startup:\n\n%s\n")
