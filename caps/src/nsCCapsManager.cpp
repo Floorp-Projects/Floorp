@@ -100,10 +100,10 @@ nsCCapsManager::CreateCertificatePrincipal(const unsigned char **certChain,
 * @param state  - the return value is passed in this parameter.
 */
 NS_METHOD
-nsCCapsManager::GetPermission(nsIPrincipal * prin, nsTarget * ignoreTarget, PRInt16 * privilegeState)
+nsCCapsManager::GetPermission(nsIPrincipal * prin, nsITarget * ignoreTarget, PRInt16 * privilegeState)
 {
 	* privilegeState = nsIPrivilege::PrivilegeState_Blank;
-	nsTarget * target = nsTarget::FindTarget(ALL_JAVA_PERMISSION);
+	nsITarget * target = nsTarget::FindTarget(ALL_JAVA_PERMISSION);
 	nsresult result = NS_OK;
 	if( target == NULL ) return NS_OK;
 	if (privilegeManager != NULL) {
@@ -124,9 +124,9 @@ nsCCapsManager::GetPermission(nsIPrincipal * prin, nsTarget * ignoreTarget, PRIn
 *                 and target parameters.
 */
 NS_METHOD
-nsCCapsManager::SetPermission(nsIPrincipal * prin, nsTarget * ignoreTarget, PRInt16 * privilegeState)
+nsCCapsManager::SetPermission(nsIPrincipal * prin, nsITarget * ignoreTarget, PRInt16 * privilegeState)
 {
-	nsTarget * target = nsTarget::FindTarget(ALL_JAVA_PERMISSION);
+	nsITarget * target = nsTarget::FindTarget(ALL_JAVA_PERMISSION);
 	if(target == NULL ) return NS_OK;
 	if (privilegeManager != NULL) {
 // WORK ON THIS ARIEL
@@ -146,9 +146,9 @@ nsCCapsManager::SetPermission(nsIPrincipal * prin, nsTarget * ignoreTarget, PRIn
 *                 target
 */
 NS_METHOD
-nsCCapsManager::AskPermission(nsIPrincipal * prin, nsTarget * ignoreTarget, PRInt16 * privilegeState)
+nsCCapsManager::AskPermission(nsIPrincipal * prin, nsITarget * ignoreTarget, PRInt16 * privilegeState)
 {
-	nsTarget *target = nsTarget::FindTarget(ALL_JAVA_PERMISSION);
+	nsITarget *target = nsTarget::FindTarget(ALL_JAVA_PERMISSION);
 	if( target == NULL ) {
 	   * privilegeState = nsIPrivilege::PrivilegeState_Blank;
 	   return NS_OK;
@@ -213,7 +213,7 @@ nsCCapsManager::RegisterPrincipal(nsIPrincipal * prin)
 NS_METHOD
 nsCCapsManager::EnablePrivilege(void* context, const char* targetName, PRInt32 callerDepth, PRBool *ret_val)
 {
-   nsTarget *target = nsTarget::FindTarget((char*)targetName);
+   nsITarget *target = nsTarget::FindTarget((char*)targetName);
    nsresult result = NS_OK;
    if( target == NULL )
    {
@@ -239,7 +239,7 @@ nsCCapsManager::EnablePrivilege(void* context, const char* targetName, PRInt32 c
 NS_METHOD
 nsCCapsManager::IsPrivilegeEnabled(void* context, const char* targetName, PRInt32 callerDepth, PRBool *ret_val)
 {
-   nsTarget *target = nsTarget::FindTarget((char*)targetName);
+   nsITarget *target = nsTarget::FindTarget((char*)targetName);
    nsresult result = NS_OK;
    if( target == NULL )
    {
@@ -267,7 +267,7 @@ nsCCapsManager::IsPrivilegeEnabled(void* context, const char* targetName, PRInt3
 NS_METHOD
 nsCCapsManager::RevertPrivilege(void* context, const char* targetName, PRInt32 callerDepth, PRBool *ret_val)
 {
-	nsTarget *target = nsTarget::FindTarget((char*)targetName);
+	nsITarget *target = nsTarget::FindTarget((char*)targetName);
 	nsresult result = NS_OK;
 	if( target == NULL ) {
 		* ret_val = PR_FALSE;
@@ -292,7 +292,7 @@ nsCCapsManager::RevertPrivilege(void* context, const char* targetName, PRInt32 c
 NS_METHOD
 nsCCapsManager::DisablePrivilege(void* context, const char* targetName, PRInt32 callerDepth, PRBool *ret_val)
 {
-	nsTarget *target = nsTarget::FindTarget((char*)targetName);
+	nsITarget *target = nsTarget::FindTarget((char*)targetName);
 	nsresult result = NS_OK;
 	if( target == NULL ) {
 		* ret_val = PR_FALSE;
@@ -489,12 +489,12 @@ nsCCapsManager::GetPrincipalArraySize(void *prinArrayArg, PRUint32 *ret_val)
 
 /* The following interfaces will replace all of the following old calls.
  * nsCapsGetPermission(struct nsPrivilege *privilege)
- * nsCapsGetPrivilege(struct nsPrivilegeTable *annotation, struct nsTarget *target)
+ * nsCapsGetPrivilege(struct nsPrivilegeTable *annotation, struct nsITarget *target)
  */
 NS_METHOD
 nsCCapsManager::IsAllowed(void *annotation, char* targetName, PRBool *ret_val)
 {
-	nsTarget *target = nsTarget::FindTarget(targetName);
+	nsITarget *target = nsTarget::FindTarget(targetName);
 	nsresult result = NS_OK;
 	if( target == NULL ) {
 		*ret_val = PR_FALSE;

@@ -55,9 +55,8 @@ NS_IMETHODIMP
 nsPrivilege::SameState(nsIPrivilege * other, PRBool * result)
 {
 	nsresult rv;
-	PRInt16 * myState;
+	PRInt16 * myState = 0, * otherState = 0;
 	rv = this->GetState(myState);
-	PRInt16 * otherState;
 	rv = other->GetState(otherState);
 	* result = (otherState == myState) ? PR_TRUE : PR_FALSE;
 	return rv;
@@ -67,9 +66,8 @@ NS_IMETHODIMP
 nsPrivilege::SameDuration(nsIPrivilege * other, PRBool * result)
 {
 	nsresult rv;
-	PRInt16 * myDur;
+	PRInt16 * myDur =0, * otherDur = 0;
 	rv = this->GetState(myDur);
-	PRInt16 * otherDur;
 	rv = other->GetState(otherDur);
 	* result = (otherDur == myDur) ? PR_TRUE : PR_FALSE;
 	return rv;
@@ -79,7 +77,7 @@ NS_IMETHODIMP
 nsPrivilege::IsAllowed(PRBool * result) 
 {	
 	nsresult rv;
-	PRInt16 * myState;
+	PRInt16 * myState = 0;
 	rv = this->GetState(myState);
 	* result = (myState == (PRInt16 *)nsIPrivilege::PrivilegeState_Allowed) ? PR_TRUE : PR_FALSE;
 	return rv;
@@ -89,7 +87,7 @@ NS_IMETHODIMP
 nsPrivilege::IsForbidden(PRBool * result)
 {
 	nsresult rv;
-	PRInt16 * myState;
+	PRInt16 * myState = 0;
 	rv = this->GetState(myState);
 	* result = (myState == (PRInt16 *)nsIPrivilege::PrivilegeState_Forbidden) ? PR_TRUE : PR_FALSE;
 	return rv;
@@ -99,7 +97,7 @@ NS_IMETHODIMP
 nsPrivilege::IsBlank(PRBool * result)
 {
 	nsresult rv;
-	PRInt16 * myState;
+	PRInt16 * myState = 0;
 	rv = this->GetState(myState);
 	* result = (myState == (PRInt16 *)nsIPrivilege::PrivilegeState_Blank) ? PR_TRUE : PR_FALSE;
 	return rv;
@@ -161,10 +159,10 @@ NS_IMETHODIMP
 nsPrivilege::Equals(nsIPrivilege * other, PRBool * result)
 {
 	nsresult rv;
-	PRBool * sameState, * sameDuration;
-	rv = this->SameState(other, sameState);
-	rv = this->SameDuration(other, sameDuration);
-	*result = (sameState && sameDuration) ? PR_TRUE : PR_FALSE;
+	PRBool sameState = PR_FALSE, sameDuration = PR_FALSE;
+	rv = this->SameState(other, & sameState);
+	rv = this->SameDuration(other, & sameDuration);
+	* result = (sameState && sameDuration) ? PR_TRUE : PR_FALSE;
 	return rv;
 }
 

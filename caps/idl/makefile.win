@@ -24,6 +24,7 @@ XPIDLSRCS=                                \
            .\nsICapsSecurityCallbacks.idl \
            .\nsIPrincipal.idl             \
            .\nsIPrivilege.idl             \
+           .\nsITarget.idl                \
             $(NULL)
 
 include <$(DEPTH)\config\rules.mak>

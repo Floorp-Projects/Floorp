@@ -2,3 +2,4 @@ nsIPrincipal.idl
 nsIScriptSecurityManager.idl
 nsICapsSecurityCallbacks.idl
 nsIPrivilege.idl
+nsITarget.idl

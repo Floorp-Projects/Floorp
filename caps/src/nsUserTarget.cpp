@@ -18,8 +18,6 @@
 
 #include "xp.h"
 #include "nsUserTarget.h"
-#include "nsPrivilegeManager.h"
-
 #include "prtypes.h"
 
 #ifdef __cplusplus
