@@ -702,7 +702,7 @@ nsresult
 nsNntpIncomingServer::WriteHostInfoFile()
 {
 	nsresult rv;
-#ifdef DEBUG_sspitzer
+#ifdef DEBUG_NEWS
 	printf("WriteHostInfoFile()\n");
 #endif
 
@@ -721,7 +721,7 @@ nsNntpIncomingServer::WriteHostInfoFile()
 
     nsIOFileStream hostinfoStream(hostinfoFileSpec, (PR_RDWR | PR_CREATE_FILE | PR_TRUNCATE));
 
-#ifdef DEBUG_sspitzer
+#ifdef DEBUG_NEWS
 	printf("xxx todo missing some formatting, need to fix this, see nsNNTPHost.cpp\n");
 #endif
 
@@ -788,7 +788,7 @@ nsNntpIncomingServer::LoadHostInfoFile()
   	}
 
   	hostinfoStream.close();
-#ifdef DEBUG_sspitzer
+#ifdef DEBUG_NEWS
 	printf("LoadHostInfoFile()\n");
 #endif
   	mHostInfoLoaded = PR_TRUE;
@@ -799,7 +799,7 @@ nsresult
 nsNntpIncomingServer::PopulateSubscribeDatasourceFromHostInfo(nsIMsgWindow *aMsgWindow)
 {
 	nsresult rv;
-#ifdef DEBUG_sspitzer
+#ifdef DEBUG_NEWS
 	printf("PopulateSubscribeDatasourceFromHostInfo()\n");
 #endif
 	mGroupsOnServerCount = mGroupsOnServer.Count();
@@ -809,7 +809,7 @@ nsNntpIncomingServer::PopulateSubscribeDatasourceFromHostInfo(nsIMsgWindow *aMsg
 		mGroupsOnServer.CStringAt(mGroupsOnServerIndex, currentGroup);
 		rv = AddToSubscribeDS((const char *)currentGroup, PR_FALSE, PR_TRUE);
 		if (NS_FAILED(rv)) return rv;
-#ifdef DEBUG_seth
+#ifdef DEBUG_NEWS
 		printf("%d = %s\n",mGroupsOnServerIndex,(const char *)currentGroup);
 #endif
 
@@ -818,7 +818,7 @@ nsNntpIncomingServer::PopulateSubscribeDatasourceFromHostInfo(nsIMsgWindow *aMsg
 	}
 
 	if (mGroupsOnServerIndex < mGroupsOnServerCount) {
-#ifdef DEBUG_seth
+#ifdef DEBUG_NEWS
 		printf("there is more to do...\n");
 #endif
 		if (mUpdateTimer) {
@@ -836,7 +836,7 @@ nsNntpIncomingServer::PopulateSubscribeDatasourceFromHostInfo(nsIMsgWindow *aMsg
         if (NS_FAILED(rv)) return rv;
 	}
 	else {
-#ifdef DEBUG_seth
+#ifdef DEBUG_NEWS
 		printf("we are done\n");
 #endif
 		rv = UpdateSubscribedInSubscribeDS();
@@ -862,7 +862,7 @@ nsNntpIncomingServer::PopulateSubscribeDatasourceWithUri(nsIMsgWindow *aMsgWindo
 {
 	nsresult rv;
 
-#ifdef DEBUG_sspitzer
+#ifdef DEBUG_NEWS
 	printf("PopulateSubscribeDatasourceWithUri(%s)\n",uri);
 #endif
 
