@@ -137,7 +137,7 @@
       <!-- XXX -->                
       <property name="selected">
         <getter>
-          return this.getAttribute("selected");
+          return this.getAttribute("selected") == "true" ? true : false;
         </getter>
         <setter>
           this.setAttribute("selected",val);
@@ -153,10 +153,10 @@
       <handler event="click">
       <![CDATA[
         var tabbox = this.parentNode;
-        while (tabbox.localName != "tabcontrol") {
+        do {
           if (tabbox.localName == "tabbox") break;
           tabbox = tabbox.parentNode;
-        }
+        } while(tabbox.localName != "tabcontrol");
         tabbox.selectedTab = this;
         if (!this.selected) this.selected = true;
       ]]>
