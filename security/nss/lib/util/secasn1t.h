@@ -35,7 +35,7 @@
  * Types for encoding/decoding of ASN.1 using BER/DER (Basic/Distinguished
  * Encoding Rules).
  *
- * $Id: secasn1t.h,v 1.4 2001/01/18 16:36:43 wtc%netscape.com Exp $
+ * $Id: secasn1t.h,v 1.5 2001/08/03 00:37:53 javi%netscape.com Exp $
  */
 
 #ifndef _SECASN1T_H_
@@ -178,6 +178,13 @@ typedef struct sec_ASN1Template_struct {
 #define SEC_ASN1_SKIP_REST	0x80000	/* skip all following fields;
 					   only for decoding */
 #define SEC_ASN1_CHOICE        0x100000 /* pick one from a template */
+#define SEC_ASN1_NO_STREAM     0X200000 /* This entry will not stream
+                                           even if the sub-template says
+                                           streaming is possible.  Helps
+                                           to solve ambiguities with potential
+                                           streaming entries that are 
+                                           optional */
+                                          
 
 /* Shorthand/Aliases */
 #define SEC_ASN1_SEQUENCE_OF	(SEC_ASN1_GROUP | SEC_ASN1_SEQUENCE)
