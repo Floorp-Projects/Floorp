@@ -687,7 +687,7 @@ nsMimeURLUtils::ScanForURLs(const char *input, PRInt32 input_size,
 						    quoted_url);
 
 			  output_ptr += PL_strlen(output_ptr);
-			  PR_Free(quoted_url);
+			  nsCRT::free(quoted_url);
         PR_FREEIF(linkPrefix);
 			  output_ptr += PL_strlen(output_ptr);
 			}
