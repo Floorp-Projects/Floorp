@@ -27,6 +27,10 @@ titledbutton {
   background-image: inherit;
 }
 
+treeitem > treerow > treecell > titledbutton[value="AOL Netfind"] {
+	list-style-image: url("resource:/res/samples/AOL_NetFind.gif");
+}
+
 treeitem > treerow > treecell > titledbutton[value="GoTo.com"] {
 	list-style-image: url("resource:/res/samples/GoTo.com.gif");
 }
