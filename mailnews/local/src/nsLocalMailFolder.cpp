@@ -749,7 +749,11 @@ nsresult nsMsgLocalMailFolder::GetDatabase(nsIMsgWindow *aMsgWindow)
         {
           mDatabase->GetDBFolderInfo(getter_AddRefs(dbFolderInfo));
           if (dbFolderInfo)
+          {
+            if (folderOpen == NS_MSG_ERROR_FOLDER_SUMMARY_MISSING)
+                dbFolderInfo->SetFlags(mFlags);
             dbFolderInfo->GetTransferInfo(getter_AddRefs(transferInfo));
+          }
           dbFolderInfo = nsnull;
         }
 				// if it's out of date then reopen with upgrade.
