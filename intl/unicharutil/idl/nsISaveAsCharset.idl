@@ -1,0 +1,59 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ *
+ * The contents of this file are subject to the Netscape Public License
+ * Version 1.0 (the "NPL"); you may not use this file except in
+ * compliance with the NPL.  You may obtain a copy of the NPL at
+ * http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the NPL is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
+ * for the specific language governing rights and limitations under the
+ * NPL.
+ *
+ * The Initial Developer of this code under the NPL is Netscape
+ * Communications Corporation.  Portions created by Netscape are
+ * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
+ * Reserved.
+ */
+
+#include "nsISupports.idl"
+#include "nsIEntityConverter.idl"
+
+%{C++
+#define NS_SAVEASCHARSET_CID { 0xcd233e0, 0x7a86, 0x11d3, { 0x91, 0x5c, 0x0, 0x60, 0x8, 0xa6, 0xed, 0xf6 } }
+#define NS_SAVEASCHARSET_PROGID "component://netscape/intl/saveascharset"
+%}
+
+[scriptable, uuid(33B87F70-7A9C-11d3-915C-006008A6EDF6)]
+interface nsISaveAsCharset : nsISupports
+{
+  // attributes
+  const unsigned long mask_Fallback = 0x000000FF;              // mask for fallback (8bits)
+  const unsigned long mask_Entity = 0x00000300;                // mask for entity (2bits)
+
+  const unsigned long attr_FallbackNone = 0;                   // no fall back for unconverted chars (skipped)
+  const unsigned long attr_FallbackQuestionMark = 1;           // unconverted chars are replaced by '?'
+  const unsigned long attr_FallbackEscapeU = 2;                // unconverted chars are escaped as \uxxxx
+  const unsigned long attr_FallbackDecimalNCR = 3;             // unconverted chars are replaced by decimal NCR
+  const unsigned long attr_FallbackHexNCR = 4;                 // unconverted chars are replaced by hex NCR
+
+  const unsigned long attr_EntityNone = 0;                       // generate no Named Entity
+  const unsigned long attr_EntityBeforeCharsetConv = 0x00000100; // generate Named Entity before charset conversion
+  const unsigned long attr_EntityAfterCharsetConv =  0x00000200; // generate Named Entity after charset conversion
+
+                                                               // default attribute for plain text
+  const unsigned long attr_plainTextDefault = attr_FallbackNone + attr_EntityNone;               
+  
+                                                               // default attribute for html text
+                                                               // generate entity before charset conversion, use decimal NCR
+  const unsigned long attr_htmlTextDefault = attr_FallbackDecimalNCR + attr_EntityBeforeCharsetConv;
+
+  // set up charset, attribute and entity version 
+  // see nsIEntityConverter.idl for possible value of entityVersion (entityNone for plain text).
+  void Init(in string charset, in unsigned long attr, in unsigned long entityVersion);
+
+  // convert UCS-2 html to target charset
+  // may return the result code of the unicode converter (NS_ERROR_UENC_NOMAPPING)
+  // if the attribute does not specify any fall back (e.g. attrPlainTextDefault)
+	string Convert(in wstring inString);
+};
