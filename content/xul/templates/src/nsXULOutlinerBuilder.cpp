@@ -1103,7 +1103,21 @@ nsXULOutlinerBuilder::ReplaceMatch(nsIRDFResource* aMember,
             }
 
             mRows.InsertRowAt(aNewMatch, parent, index);
-            mBoxObject->RowCountChanged(row + index + 1, +1);
+
+            row += index + 1;
+            mBoxObject->RowCountChanged(row, +1);
+
+            // See if this newly added row is open; in which case,
+            // recursively add its children to the outliner, too.
+            Value memberValue;
+            aNewMatch->GetAssignmentFor(mConflictSet, mMemberVar, &memberValue);
+
+            nsIRDFResource* member = VALUE_TO_IRDFRESOURCE(memberValue);
+
+            PRBool open;
+            IsContainerOpen(member, &open);
+            if (open)
+                OpenContainer(row, member);
         }
     }
 
