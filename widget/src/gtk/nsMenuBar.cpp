@@ -97,6 +97,7 @@ NS_METHOD nsMenuBar::AddMenu(nsIMenu * aMenu)
   labelStr = Label.ToNewCString();
 
   widget = gtk_menu_item_new_with_label (labelStr);
+  gtk_widget_show(widget);
   gtk_menu_bar_append (GTK_MENU_BAR (mMenu), widget);
 
   delete[] labelStr;

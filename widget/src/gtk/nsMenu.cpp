@@ -127,6 +127,7 @@ NS_METHOD nsMenu::AddItem(const nsString &aText)
   GtkWidget *widget;
 
   widget = gtk_menu_item_new_with_label (labelStr);
+  gtk_widget_show(widget);
   gtk_menu_shell_append (GTK_MENU_SHELL (mMenu), widget);
 
   delete[] labelStr;
@@ -165,6 +166,7 @@ NS_METHOD nsMenu::AddMenu(nsIMenu * aMenu)
   parentmenu = GTK_WIDGET(voidData);
 
   item = gtk_menu_item_new_with_label (labelStr);
+  gtk_widget_show(item);
   gtk_menu_shell_append (GTK_MENU_SHELL (parentmenu), item);
 
   delete[] labelStr;
@@ -186,6 +188,7 @@ NS_METHOD nsMenu::AddSeparator()
 {
   GtkWidget *widget;
   widget = gtk_menu_item_new ();
+  gtk_widget_show(widget);
   gtk_menu_shell_append (GTK_MENU_SHELL (mMenu), widget);
   return NS_OK;
 }
