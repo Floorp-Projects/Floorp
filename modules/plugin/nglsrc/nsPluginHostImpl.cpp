@@ -1715,8 +1715,15 @@ void nsPluginHostImpl::AddInstanceToActiveList(nsIPluginInstance* aInstance,
   }
   else
   {
-    // XXX - TODO: we need to make sure that this plugin is currently 
-    //             not active destroy the oldest plugin on the list
+    // Check if the plugin has been stopped
+    if (mActivePluginList[mOldestActivePlugin].mStopped == PR_FALSE)
+    {
+        mActivePluginList[mOldestActivePlugin].mInstance->SetWindow(nsnull);
+        mActivePluginList[mOldestActivePlugin].mInstance->Stop();
+        mActivePluginList[mOldestActivePlugin].mStopped = PR_TRUE;
+    }
+
+    // destroy the oldest plugin on the list
     mActivePluginList[mOldestActivePlugin].mInstance->Destroy();
     NS_RELEASE(mActivePluginList[mOldestActivePlugin].mInstance);
     NS_RELEASE(mActivePluginList[mOldestActivePlugin].mPeer);
