@@ -72,8 +72,8 @@ REQUIRES = \
 	$(NULL)
 
 CPPSRCS		= \
-	    nsIHttpChannelTests.cpp \
-	    nsIChannelTests.cpp \
+	    nsihttpchanneltests.cpp \
+	    nsichanneltests.cpp \
 	    TestEmbed.cpp     \
 	    BrowserFrm.cpp   \
 	    BrowserFrameGlue.cpp   \
@@ -95,13 +95,13 @@ CPPSRCS		= \
 	    QaUtils.cpp \
 	    Tests.cpp \
 	    nsirequest.cpp \
-	    nsihistory.cpp \
-	    nsiwebnav.cpp \
+	    nsiHistory.cpp \
+	    nsIWebNav.cpp \
 	    nsiDirServ.cpp \
-	    domwindow.cpp \
-	    selection.cpp \
+	    DomWindow.cpp \
+	    Selection.cpp \
 	    nsProfile.cpp \
-	    nsIClipBoardCmd.cpp \
+	    nsIclipboardcmd.cpp \
 	    nsIObserServ.cpp \
 	    nsIFile.cpp \
 	    nsIWebBrow.cpp \
