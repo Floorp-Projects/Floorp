@@ -957,6 +957,8 @@ NS_IMETHODIMP nsWindow::Invalidate(const nsRect &aRect, PRBool aIsSynchronous)
 #endif
 
 	::InvalWindowRect(mWindowPtr, &macRect);
+	if ( aIsSynchronous )
+	  Update();
 	::SetOrigin(savePortRect.left, savePortRect.top);
 
 	return NS_OK;
@@ -995,6 +997,8 @@ NS_IMETHODIMP nsWindow::InvalidateRegion(const nsIRegion *aRegion, PRBool aIsSyn
 #endif
 
 	::InvalWindowRgn(mWindowPtr, windowRgn);
+	if ( aIsSynchronous )
+	  Update();
 	::SetOrigin(savePortRect.left, savePortRect.top);
 
 	return NS_OK;
