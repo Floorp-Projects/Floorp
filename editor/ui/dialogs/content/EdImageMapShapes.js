@@ -41,9 +41,6 @@ var polyCount = 1;
 var pointCount = 1;
 var xlock = false;
 var ylock = false;
-var marquee = null;
-var frameDoc = null;
-var buttonArray = new Array();
 var resize = false;
 var currentZoom = 1;
 var clipBoard = new Array();
@@ -169,11 +166,14 @@ function Poly(coords, href, target, alt, construct){
   newPoly.setAttribute("id", "poly"+polyCount++);
   newPoly.setAttribute("name", "hotspot");
   currentPoly = selectElement(frameDoc.body.appendChild(newPoly));
+  if (currentZoom > 1){
+    currentPoly.style.width = imageEl.offsetWidth+"px";
+    currentPoly.style.height = imageEl.offsetHeight+"px";
+  }
   if (!coords){
     addPoint(null, startX, startY, true);
     //currentPoly.onclick = addPoint;
     currentPoly.style.cursor = "crosshair";
-    currentPoly.addEventListener("click", addPoint, false);
   }
   else{
     var coordArray = coords.split(',');
@@ -195,8 +195,8 @@ function Poly(coords, href, target, alt, construct){
 function addPoint(event, pointX, pointY, start){
   if (event){
     dump('addPoint Called with event\n');
-    pointX = event.clientX;
-    pointY = event.clientY;
+    pointX = event.clientX+window.frames[0].pageXOffset;
+    pointY = event.clientY+window.frames[0].pageYOffset;
     event.preventBubble();
     if (event.detail == 2){
       polyFinish();
@@ -214,7 +214,7 @@ function addPoint(event, pointX, pointY, start){
     newPoint.setAttribute("class", "pointStart");
     newPoint.style.cursor = "pointer";
     //newPoint.onclick = polyFinish;
-    newPoint.addEventListener("click", polyFinish, false);
+    //newPoint.addEventListener("click", polyFinish, false);
   }
   currentPoly.appendChild(newPoint);
 }
@@ -258,8 +258,8 @@ function polyFinish(event, construct){
     //currentPoly.childNodes[0].onclick = null;
     //currentPoly.onclick = null;
     currentPoly.style.cursor = "auto";
-    currentPoly.childNodes[0].removeEventListener("click", polyFinish, false);
-    currentPoly.removeEventListener("click", addPoint, false);
+    //currentPoly.childNodes[0].removeEventListener("click", polyFinish, false);
+    //currentPoly.removeEventListener("click", addPoint, true);
     if (!construct)
       hotSpotProps(currentPoly);
   }
@@ -416,8 +416,8 @@ function upMouse(event){
 
 function moveMouse(event){
   if (downTool){
-    endX = event.clientX;
-    endY = event.clientY;
+    endX = event.clientX+window.frames[0].pageXOffset;
+    endY = event.clientY+window.frames[0].pageYOffset;
 
     if (dragActive){
       if (currentElement.length > 0){
@@ -517,8 +517,8 @@ function downMouse(event){
   dump(event.target.parentNode.id+"\n");
   if (event.button == 1){
     if (currentTool != "poly"){
-      startX = event.clientX;
-      startY = event.clientY;
+      startX = event.clientX+window.frames[0].pageXOffset;
+      startY = event.clientY+window.frames[0].pageYOffset;
       downTool = true;
       if (currentTool == "pointer"){
         if (event.target.getAttribute("name") == "hotspot"){
@@ -551,14 +551,14 @@ function downMouse(event){
           if (isSelected){
             var len = currentElement.length;
             for(i=0; i<len; i++){
-              currentElement[i].startX = parseInt(event.clientX)-parseInt(currentElement[i].style.left);
-              currentElement[i].startY = parseInt(event.clientY)-parseInt(currentElement[i].style.top);
+              currentElement[i].startX = parseInt(event.clientX+window.frames[0].pageXOffset)-parseInt(currentElement[i].style.left);
+              currentElement[i].startY = parseInt(event.clientY+window.frames[0].pageYOffset)-parseInt(currentElement[i].style.top);
             }
           }
           else{
             curObj = selectElement(el);
-            curObj.startX = parseInt(event.clientX)-parseInt(curObj.style.left);
-            curObj.startY = parseInt(event.clientY)-parseInt(curObj.style.top);
+            curObj.startX = parseInt(event.clientX+window.frames[0].pageXOffset)-parseInt(curObj.style.left);
+            curObj.startY = parseInt(event.clientY+window.frames[0].pageYOffset)-parseInt(curObj.style.top);
           }
           dragObject = true;
         }
@@ -616,8 +616,8 @@ function downMouse(event){
           dump("down on a point\n");
           selectElement(event.target.parentNode);
           currentPoint = event.target;
-          currentPoint.startX = parseInt(event.clientX)-(parseInt(currentPoint.style.left)+parseInt(currentPoint.parentNode.style.left));
-          currentPoint.startY = parseInt(event.clientY)-(parseInt(currentPoint.style.top)+parseInt(currentPoint.parentNode.style.top));
+          currentPoint.startX = parseInt(event.clientX+window.frames[0].pageXOffset)-(parseInt(currentPoint.style.left)+parseInt(currentPoint.parentNode.style.left));
+          currentPoint.startY = parseInt(event.clientY+window.frames[0].pageYOffset)-(parseInt(currentPoint.style.top)+parseInt(currentPoint.parentNode.style.top));
           currentPoly = currentPoint.parentNode;
         }
         else{
@@ -633,13 +633,24 @@ function clickMouse(event){
   if (event.button == 1){
     dump("body clicked\n");
     //alert(frameDoc.+'\n');
-    startX = event.clientX;
-    startY = event.clientY;
+    startX = event.clientX+window.frames[0].pageXOffset;
+    startY = event.clientY+window.frames[0].pageYOffset;
     if (currentTool == "poly"){
-      //dump(event.detail+"\n");
       if (event.target != currentPoly){
-      //else if (event.target.getAttribute("class").indexOf("point") == -1)
-        Poly();
+        if (currentPoly != null){
+          if (event.target == currentPoly.childNodes[0]){
+            polyFinish();
+          }
+          else if (event.detail == 2){
+            polyFinish();
+          }
+        }
+        else{
+          Poly();
+        }
+      }
+      else{
+        addPoint(event);          
       }
     }
   }
@@ -748,13 +759,13 @@ function zoom(direction, ratio){
   dump(imgEl.getAttribute("width")+'\n');
   if (ratio > currentZoom){
     imgEl.setAttribute("width", (parseInt(imgEl.offsetWidth)*(ratio/currentZoom)));
-    //imgEl.setAttribute("height", (parseInt(imgEl.offsetHeight)*(ratio/currentZoom));
+    imgEl.setAttribute("height", (parseInt(imgEl.offsetHeight)*(ratio/currentZoom)));
     bgDiv.style.width = imgEl.offsetWidth;
     bgDiv.style.height = imgEl.offsetHeight;
   }
   else{
     imgEl.setAttribute("width", (parseInt(imgEl.offsetWidth)/(currentZoom/ratio)));
-    //imgEl.setAttribute("height", (parseInt(imgEl.offsetHeight)/(currentZoom/ratio)));
+    imgEl.setAttribute("height", (parseInt(imgEl.offsetHeight)/(currentZoom/ratio)));
     bgDiv.style.width = imgEl.offsetWidth;
     bgDiv.style.height = imgEl.offsetHeight;
   }
