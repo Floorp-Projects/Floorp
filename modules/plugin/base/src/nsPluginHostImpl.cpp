@@ -2138,7 +2138,7 @@ NS_IMETHODIMP nsPluginStreamListenerPeer::OnDataAvailable(nsIRequest *request,
   if (NS_FAILED(rv)) 
     return rv;
 
-  if(!mPStreamListener)
+  if(!mPStreamListener || !mPluginStreamInfo)
     return NS_ERROR_FAILURE;
 
   char* urlString;
