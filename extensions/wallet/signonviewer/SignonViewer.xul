@@ -24,7 +24,6 @@
 
 <!-- CHANGE THIS WHEN MOVING FILES -->
 <?xml-stylesheet href="chrome://wallet/skin/" type="text/css"?>
-<?xml-stylesheet href="chrome://wallet/skin/SignonViewer.css" type="text/css"?> 
 <?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
 
 <!-- CHANGE THIS WHEN MOVING FILES -->
@@ -38,9 +37,8 @@
         align="vertical"
         onload="Startup()">
 
-  <html:script src="SignonViewer.js"/>
-	<html:script language="javascript" src="chrome://global/content/strres.js" />
-  <html:script language="JavaScript" src="chrome://editor/content/EdDialogCommon.js"/>
+  <html:script src="chrome://wallet/content/SignonViewer.js"/>
+	<html:script src="chrome://global/content/strres.js" />
 
   <tabcontrol flex="100%" align="vertical">
     <tabbox>
@@ -55,7 +53,9 @@
         <box><html:div>&spiel.signonsstored.label;</html:div></box>
         <spring style="height: 10px;"/>
         <html:div style="width: 380px;">
-          <tree id="signonstree" style="height: 280px; width: 380px;" align="vertical">
+          <tree id="signonstree" class="inset" style="height: 280px; width: 380px;" align="vertical"
+                onclick="HandleEvent(event);"
+                onkeypress="HandleEvent(event,0)">
             <treecol width="45%"/>
             <treecol width="55%"/>
             <treehead>
@@ -69,7 +69,7 @@
         </html:div>
         <spring style="height: 5px;"/>
         <box align="horizontal">
-          <titledbutton class="dialog push" value="&remove.label;" onclick="goneSS += DeleteItemSelected('signonstree','signon_','savesignonlist');"/>
+          <titledbutton id="removeSignon" disabled="true" class="dialog push" value="&remove.label;" onclick="DeleteSignon();"/>
         </box>
         <spring style="height: 5px;"/>
       </box>
@@ -78,7 +78,9 @@
         <html:div>&spiel.signonsnotstored.label;</html:div>
         <spring style="height: 10px;"/>
         <html:div flex="100%">
-          <tree id="ignoretree" style="height: 280px; width: 380px;" align="vertical">
+          <tree id="ignoretree" class="inset" style="height: 280px; width: 380px;" align="vertical"
+                onclick="HandleEvent(event);"
+                onkeypress="HandleEvent(event,1)">
             <treecol width="45%"/>
             <treecol width="55%"/>
             <treehead>
@@ -92,7 +94,7 @@
         </html:div>
         <spring style="height: 5px;"/>
         <box align="horizontal">
-          <titledbutton class="dialog push" value="&remove.label;" onclick="goneIS += DeleteItemSelected('ignoretree','reject_','ignoredlist');"/>
+          <titledbutton id="removeIgnoredSite" disabled="true" class="dialog push" value="&remove.label;" onclick="DeleteIgnoredSite();"/>
         </box>
         <spring style="height: 5px;"/>
       </box>
@@ -101,7 +103,9 @@
         <html:div>&spiel.nopreview.label;</html:div>
         <spring style="height: 10px;"/>
         <html:div flex="100%">
-          <tree id="nopreviewtree" style="height: 280px; width: 380px;" align="vertical">
+          <tree id="nopreviewtree" class="inset" style="height: 280px; width: 380px;" align="vertical"
+                onclick="HandleEvent(event);"
+                onkeypress="HandleEvent(event,2)">
             <treehead>
               <treerow>
                 <treecell value="&treehead.nopreviewforms.label;"/>
@@ -112,7 +116,7 @@
         </html:div>
         <spring style="height: 5px;"/>
         <box align="horizontal">
-          <titledbutton class="dialog push" value="&remove.label;" onclick="goneFR += DeleteItemSelected('nopreviewtree','nopreview_','nopreviewlist');"/>
+          <titledbutton id="removeNoPreview" disabled="true" class="dialog push" value="&remove.label;" onclick="DeleteNoPreviewForm();"/>
         </box>
         <spring style="height: 5px;"/>
       </box>

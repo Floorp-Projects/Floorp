@@ -19,7 +19,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
- *   Ben Goodger
+ *   Ben "Count XULula" Goodger
  */
 
 /*** =================== INITIALISATION CODE =================== ***/
@@ -69,6 +69,14 @@ function LoadSignons()
   }
 }
 
+// function : <SignonViewer.js>::DeleteSignon();
+// purpose  : deletes a particular signon
+function DeleteSignon()
+{
+  goneSS += DeleteItemSelected('signonstree','signon_','savesignonlist');
+  DoButtonEnabling("signonstree");
+}
+
 /*** =================== IGNORED SIGNONS CODE =================== ***/
 
 // function : <SignonViewer.js>::LoadReject();
@@ -87,6 +95,14 @@ function LoadReject()
     var user = currSignon.substring(currSignon.lastIndexOf(":")+1,currSignon.length);
     AddItem("ignoredlist",[site,user],"reject_",i-1);
   }
+}
+
+// function : <SignonViewer.js>::DeleteIgnoredSite();
+// purpose  : deletes ignored site(s)
+function DeleteIgnoredSite()
+{
+  goneIS += DeleteItemSelected('ignoretree','reject_','ignoredlist');
+  DoButtonEnabling("ignoretree");
 }
 
 /*** =================== NO PREVIEW FORMS CODE =================== ***/
@@ -108,6 +124,18 @@ function LoadNopreview()
   }
 }
 
+// function : <SignonViewer>::DeleteNoPreviewForm()
+// purpose  : deletes no-preview entry(s)
+function DeleteNoPreviewForm()
+{
+  goneFR += DeleteItemSelected('nopreviewtree','nopreview_','nopreviewlist');
+  DoButtonEnabling("nopreviewtree");
+}
+
+/*** =================== GENERAL CODE =================== ***/
+
+// function : <SignonViewer>::onOK()
+// purpose  : dialog confirm & tidy up.
 function onOK()
 {
   var result = "|goneS|"+goneSS+"|goneR|"+goneIS;
@@ -151,7 +179,8 @@ function AddItem(children,cells,prefix,idfier)
   for(var i = 0; i < cells.length; i++)
   {
     var cell  = document.createElement("treecell");
-    cell.setAttribute("value", cells[i]);
+    cell.setAttribute("class", "propertylist");
+    cell.setAttribute("value", cells[i])
     row.appendChild(cell);
   }
   item.appendChild(row);
@@ -177,4 +206,64 @@ function DeleteItemSelected(tree, prefix, kids) {
     document.getElementById(kids).removeChild(delnarray[i]);
   }
   return rv;
+}
+
+// function: <SignonViewer.js>::HandleKeyPress();
+// purpose : handles keypress events 
+function HandleEvent( event, page )
+{
+  // click event
+  if( event.type == "click" ) {
+    var node = event.target;
+    while ( node.nodeName != "tree" )
+      node = node.parentNode;
+    var tree = node;
+    DoButtonEnabling( node.id );
+  }
+  
+  // keypress event
+  if( event.type == "keypress" && event.which == 46 ) {
+    switch( page ) {
+    case 0:
+      DeleteSignon();
+      break;
+    case 1:
+      DeleteIgnoredSite();
+      break;
+    case 2:
+      DeleteNoPreviewForm();
+      break;
+    default:
+      break;
+    }
+  }
+}
+
+function DoButtonEnabling( treeid )
+{
+  var tree = document.getElementById( treeid );
+  switch( treeid ) {
+  case "signonstree":
+    var button = document.getElementById("removeSignon");
+    break;
+  case "ignoretree":
+    var button = document.getElementById("removeIgnoredSite");
+    break;
+  case "nopreviewtree":
+    var button = document.getElementById("removeNoPreview");
+    break;
+  default:
+    break;
+  }
+  if( button.getAttribute("disabled") && tree.selectedItems.length )
+    button.removeAttribute("disabled", "true");
+  else if( !button.getAttribute("disabled") && !tree.selectedItems.length )
+    button.setAttribute("disabled","true");
+}
+
+// Remove whitespace from both ends of a string
+function TrimString(string)
+{
+  if (!string) return "";
+  return string.replace(/(^\s+)|(\s+$)/g, '')
 }
