@@ -5,7 +5,7 @@ function newFolderNameOnLoad(pickerDOMID)
 {
 	pickerID = pickerDOMID;
 
-	doSetOKCancel(newFolderNameOKButtonCallback, 0);
+	doSetOKCancel(newFolderNameOKButtonCallback, newFolderNameCancelButtonCallback);
 
 	// look in arguments[0] for parameters
 	if (window.arguments && window.arguments[0])
@@ -47,5 +47,12 @@ function newFolderNameOKButtonCallback()
 		top.okCallback(name, uri);
 	}
 	
+	return true;
+}
+
+function newFolderNameCancelButtonCallback()
+{
+	// close the window
+	dump("in newFolderNameCancelButtonCallback\n");
 	return true;
 }

@@ -27,14 +27,14 @@ function onInit() {
     initFolderDisplay("identity.stationeryFolder", "msgStationeryFolderPicker");
     initFolderDisplay("identity.junkMailFolder", "msgJunkMailFolderPicker");
     initBccSelf();
-    dump("document is " + document + "\n");
+    //dump("document is " + document + "\n");
 
 }
 
 function initFolderDisplay(fieldname, pickerID) {
     var formElement = document.getElementById(fieldname);
     var uri = formElement.value;
-    SetTitleButton(uri,pickerID);
+    SetFolderPicker(uri,pickerID);
 }
 
 function initBccSelf() {
@@ -54,8 +54,6 @@ function setDivText(divid, str) {
 
 function onSave()
 {
-    dump("in onSave()\n");
-
     SaveUriFromPicker("identity.fccFolder", "msgFccFolderPicker");
     SaveUriFromPicker("identity.draftFolder", "msgDraftsFolderPicker");
     SaveUriFromPicker("identity.stationeryFolder", "msgStationeryFolderPicker");
@@ -66,10 +64,10 @@ function SaveUriFromPicker(fieldName, pickerID)
 {
 	var picker = document.getElementById(pickerID);
 	var uri = picker.getAttribute("uri");
-	dump("uri = " + uri + "\n");
+	//dump("uri = " + uri + "\n");
 	
 	formElement = document.getElementById(fieldName);
-	dump("old value = " + formElement.value + "\n");
+	//dump("old value = " + formElement.value + "\n");
 	formElement.value = uri;
-	dump("new value = " + formElement.value + "\n");
+	//dump("new value = " + formElement.value + "\n");
 }
