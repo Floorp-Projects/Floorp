@@ -21,6 +21,12 @@
   *                 Svetlana Harisova <light@rathedg.com>
   */
 
+body
+{
+    color: #000;
+    background-color: #fff;
+}
+
 /* banner (begin) */
     #banner
     {

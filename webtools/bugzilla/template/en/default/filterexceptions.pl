@@ -264,7 +264,6 @@
 'global/header.html.tmpl' => [
   'javascript', 
   'style', 
-  'bgcolor', 
   'onload',
   'h1',
   'h2',

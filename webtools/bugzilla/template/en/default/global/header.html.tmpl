@@ -26,7 +26,6 @@
   # h1: string. Main page header.
   # h2: string. Page subheader.
   # h3: string. Right-aligned subheader.
-  # bgcolor: string. the page's background color ("#rrggbb").
   # bodyclasses: array of extra CSS classes for the <body>
   # onload: string. JavaScript code to run when the page finishes loading.
   # javascript: string. Javascript to go in the header.
@@ -43,7 +42,6 @@
 [% DEFAULT
   h2 = ""
   h3 = ""
-  bgcolor = "#ffffff"
   onload = ""
 %]
 
@@ -101,10 +99,10 @@
   </head>
 
 [%# Migration note: contents of the old Param 'bodyhtml' go in the body tag,
-  # but set the bgcolor and onload attributes in the DEFAULT directive above.
+  # but set the onload attribute in the DEFAULT directive above.
   #%]
 
-  <body bgcolor="[% bgcolor %]" onload="[% onload %]"
+  <body onload="[% onload %]"
         class="[% Param('urlbase').replace('^https?://','').replace('/$','').replace('[-~@:/.]+','-') %]
                [% FOREACH class = bodyclasses %]
                  [% ' ' %][% class FILTER css_class_quote %]
