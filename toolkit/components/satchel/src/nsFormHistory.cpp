@@ -59,6 +59,7 @@
 #include "nsIPrefBranch.h"
 #include "nsIPrefBranchInternal.h"
 #include "nsVoidArray.h"
+#include "nsCOMArray.h"
 
 #define PREF_FORMFILL_BRANCH "browser.formfill."
 #define PREF_FORMFILL_ENABLE "enable"
@@ -309,10 +310,10 @@ nsFormHistory::EntryExists(const nsAString &aName, const nsAString &aValue, PRBo
   mdb_err err = mTable->GetTableRowCursor(mEnv, -1, getter_AddRefs(rowCursor));
   NS_ENSURE_TRUE(!err, NS_ERROR_FAILURE);
   
-  nsIMdbRow *row = nsnull;
+  nsCOMPtr<nsIMdbRow> row;
   mdb_pos pos;
   do {
-    rowCursor->NextRow(mEnv, &row, &pos);
+    rowCursor->NextRow(mEnv, getter_AddRefs(row), &pos);
     NS_ENSURE_TRUE(row != nsnull, NS_ERROR_FAILURE);
 
     // Check if the name and value combination match this row
@@ -633,10 +634,10 @@ nsFormHistory::CopyRowsFromTable(nsIMdbTable *sourceTable)
   mdb_err err = sourceTable->GetTableRowCursor(mEnv, -1, getter_AddRefs(rowCursor));
   NS_ENSURE_TRUE(!err, NS_ERROR_FAILURE);
   
-  nsIMdbRow *row = nsnull;
+  nsCOMPtr<nsIMdbRow> row;
   mdb_pos pos;
   do {
-    rowCursor->NextRow(mEnv, &row, &pos);
+    rowCursor->NextRow(mEnv, getter_AddRefs(row), &pos);
     if (!row)
       break;
 
@@ -757,18 +758,18 @@ nsFormHistory::AutoCompleteSearch(const nsAString &aInputName,
     
     // Store only the matching values
     nsAutoVoidArray matchingValues;
-    nsAutoVoidArray matchingRows;
+    nsCOMArray<nsIMdbRow> matchingRows;
 
-    nsIMdbRow *row = nsnull;
+    nsCOMPtr<nsIMdbRow> row;
     mdb_pos pos;
     do {
-      rowCursor->NextRow(mEnv, &row, &pos);
+      rowCursor->NextRow(mEnv, getter_AddRefs(row), &pos);
       if (!row)
         break;
 
       PRUnichar *value = 0; // We will own the allocated string value
       if (RowMatch(row, aInputName, aInputValue, &value)) {
-        matchingRows.AppendElement(row);
+        matchingRows.AppendObject(row);
         matchingValues.AppendElement(value);
       }
     } while (row);
@@ -788,7 +789,7 @@ nsFormHistory::AutoCompleteSearch(const nsAString &aInputName,
 
       for (i = 0; i < count; ++i) {
         // Place the sorted result into the autocomplete result
-        result->AddRow((nsIMdbRow *)matchingRows[items[i]]);
+        result->AddRow(matchingRows[items[i]]);
 
         // Free up these strings we owned.
         delete (PRUnichar *) matchingValues[i];
