@@ -2022,27 +2022,29 @@ static nsresult dir_GetChildList(const nsAFlatCString &aBranch,
         NS_QuickSort(*aChildList, *aCount, sizeof(char*), comparePrefArrayMembers, &branchLen);
 
         // traverse the list and remove duplicate entries.
-        // we use two positions in the list; the current entry and the previous entry
-        // (note that we do the traversal backwards, so the prev entry is actually
-        // ahead of the current one). we know we have >= 2 elements in the list here,
-        // so we just init the two counters sensibly to begin with.
-        PRUint32 prev = *aCount - 1;
-        PRUint32 cur = prev - 1;
-        do {
-            // if the elements are equal, move the trailing portion of the array
-            // forward a notch.
-            if (!comparePrefArrayMembers(&((*aChildList)[cur]), &((*aChildList)[prev]), &branchLen)) {
-                // free up memory.
-                nsMemory::Free((*aChildList)[cur]);
-                // move previous elements forward a notch
-                memmove(&((*aChildList)[cur]), &((*aChildList)[prev]), (*aCount - prev) * sizeof(char*));
-                // decrement the count
-                --(*aCount);
-            }
+        // we use two positions in the list; the current entry and the next
+        // entry; and perform a bunch of in-place ptr moves. so |cur| points
+        // to the last unique entry, and |next| points to some (possibly much
+        // later) entry to test, at any given point. we know we have >= 2
+        // elements in the list here, so we just init the two counters sensibly
+        // to begin with.
+        PRUint32 cur = 0;
+        for (PRUint32 next = 1; next < *aCount; ++next) {
+            // check if the elements are equal or unique
+            if (!comparePrefArrayMembers(&((*aChildList)[cur]), &((*aChildList)[next]), &branchLen)) {
+                // equal - just free & increment the next element ptr
 
-            // move the prev element forward a notch
-            prev = cur;
-        } while (cur--);
+                nsMemory::Free((*aChildList)[next]);
+            } else {
+                // cur & next are unique, so we need to shift the element.
+                // ++cur will point to the next free location in the
+                // reduced array (it's okay if that's == next)
+                (*aChildList)[++cur] = (*aChildList)[next];
+            }
+        }
+
+        // update the unique element count
+        *aCount = cur + 1;
     }
 
     return NS_OK;
