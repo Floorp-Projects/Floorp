@@ -181,17 +181,15 @@ PACKAGE			= .
 endif
 
 ifdef JAVA_OR_NSJVM
-ALL_TRASH		= $(TARGETS) $(OBJS) LOGS TAGS $(GARBAGE) \
+ALL_TRASH		= $(TARGETS) $(OBJS) LOGS TAGS $(GARBAGE) a.out \
 			  $(NOSUCHFILE) $(JDK_HEADER_CFILES) $(JDK_STUB_CFILES) \
 			  $(JRI_HEADER_CFILES) $(JRI_STUB_CFILES) $(JMC_STUBS) \
 			  $(JMC_HEADERS) $(JMC_EXPORT_FILES) so_locations \
 			  _gen _jmc _jri _stubs $(MDDEPDIR) $(wildcard gts_tmp_*) \
 			  $(wildcard $(JAVA_DESTPATH)/$(PACKAGE)/*.class)
 else
-ALL_TRASH		= $(TARGETS) $(OBJS) LOGS TAGS $(GARBAGE) \
-			  $(NOSUCHFILE) \
-			  $(JMC_STUBS) \
-			  so_locations \
+ALL_TRASH		= $(TARGETS) $(OBJS) LOGS TAGS $(GARBAGE) a.out \
+			  $(NOSUCHFILE) $(JMC_STUBS) so_locations \
 			  _gen _stubs $(MDDEPDIR) $(wildcard gts_tmp_*)
 endif
 
@@ -410,7 +408,7 @@ clean clobber::
 	rm -rf $(ALL_TRASH)
 	+$(LOOP_OVER_DIRS)
 
-realclean clobber_all::
+distclean realclean clobber_all::
 	rm -rf $(wildcard *.OBJ) dist $(ALL_TRASH)
 	+$(LOOP_OVER_DIRS)
 
