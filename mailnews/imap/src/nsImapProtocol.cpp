@@ -5030,6 +5030,43 @@ void nsImapProtocol::List(const char *mailboxPattern, PRBool addDirectoryIfNeces
         ParseIMAPandCheckForNewMail();
 }
 
+void nsImapProtocol::Subscribe(const char *mailboxName)
+{
+    ProgressEventFunctionUsingIdWithString (IMAP_STATUS_SUBSCRIBE_TO_MAILBOX, mailboxName);
+
+    IncrementCommandTagNumber();
+    
+    char *escapedName = CreateEscapedMailboxName(mailboxName);
+
+	nsCString command (GetServerCommandTag());
+	command += " subscribe \"";
+	command += escapedName;
+	command += "\""CRLF;
+    delete []escapedName;
+
+	nsresult rv = SendData(command.GetBuffer());  
+    if (NS_SUCCEEDED(rv))
+        ParseIMAPandCheckForNewMail();
+}
+
+void nsImapProtocol::Unsubscribe(const char *mailboxName)
+{
+    ProgressEventFunctionUsingIdWithString (IMAP_STATUS_UNSUBSCRIBE_MAILBOX, mailboxName);
+    IncrementCommandTagNumber();
+    
+    char *escapedName = CreateEscapedMailboxName(mailboxName);
+    
+	nsCString command (GetServerCommandTag());
+	command += " unsubscribe \"";
+	command += escapedName;
+	command += "\""CRLF;
+    delete []escapedName;
+
+	nsresult rv = SendData(command.GetBuffer());  
+    if (NS_SUCCEEDED(rv))
+        ParseIMAPandCheckForNewMail();
+}
+
 
 void nsImapProtocol::Search(nsCString &searchCriteria,
 									  PRBool useUID, 

@@ -431,6 +431,8 @@ private:
     void NthLevelChildList(const char *onlineMailboxPrefix, PRInt32 depth);
 	void Lsub(const char *mailboxPattern, PRBool addDirectoryIfNecessary);
 	void List(const char *mailboxPattern, PRBool addDirectoryIfNecessary);
+	void Subscribe(const char *mailboxName);
+	void Unsubscribe(const char *mailboxName);
 
 
 	// End Process AuthenticatedState Url helper methods
