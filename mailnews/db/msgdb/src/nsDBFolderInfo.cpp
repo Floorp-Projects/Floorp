@@ -797,7 +797,7 @@ NS_IMETHODIMP nsDBFolderInfo::SetSortType(nsMsgViewSortTypeValue aSortType)
 NS_IMETHODIMP nsDBFolderInfo::GetSortOrder(nsMsgViewSortOrderValue *aSortOrder)
 {
   PRUint32 sortOrderValue;
-  nsresult rv = GetUint32Property("sortOrder",  &sortOrderValue, nsMsgViewSortOrder::none);
+  nsresult rv = GetUint32Property("sortOrder",  &sortOrderValue, nsMsgViewSortOrder::ascending);
   *aSortOrder = sortOrderValue;
   return rv;
 }
