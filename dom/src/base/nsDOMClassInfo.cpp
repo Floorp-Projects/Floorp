@@ -774,12 +774,14 @@ CutPrefix(const char *aName) {
   static const char prefix_nsIDOM[] = "nsIDOM";
   static const char prefix_nsI[]    = "nsI";
 
-  if (nsCRT::strncmp(aName, prefix_nsIDOM, sizeof(prefix_nsIDOM) - 1) == 0) {
+  if (nsCRT::strncmp(aName, prefix_nsIDOM,
+                     (PRUint32)(sizeof(prefix_nsIDOM) - 1)) == 0) {
     return aName + sizeof(prefix_nsIDOM) - 1;
   }
 
 
-  if (nsCRT::strncmp(aName, prefix_nsI, sizeof(prefix_nsI) - 1) == 0) {
+  if (nsCRT::strncmp(aName, prefix_nsI,
+                     (PRUint32)(sizeof(prefix_nsI) - 1)) == 0) {
     return aName + sizeof(prefix_nsI) - 1;
   }
 
