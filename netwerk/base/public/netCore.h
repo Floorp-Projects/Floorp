@@ -48,6 +48,7 @@
 // DNS RANGE:   41-50 
 // SOCKET RANGE 51-60
 // CACHE RANGE: 61-70
+// NET RANGE 2: 71-80
 
 // XXX Why can't we put all Netwerk error codes in one file to help avoid collisions?
 
@@ -97,6 +98,9 @@
 
 #define NS_ERROR_REDIRECT_LOOP \
     NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_NETWORK, 31)
+
+#define NS_ERROR_NET_INTERRUPT \
+    NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_NETWORK, 71)
 
 /**
  * nsresult passed through onStopRequest if the document could not be fetched from the cache.

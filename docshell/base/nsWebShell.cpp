@@ -976,6 +976,7 @@ nsresult nsWebShell::EndPageLoad(nsIWebProgress *aProgress,
     else if (aStatus == NS_ERROR_NET_TIMEOUT ||
              aStatus == NS_ERROR_REDIRECT_LOOP ||
              aStatus == NS_ERROR_UNKNOWN_SOCKET_TYPE ||
+             aStatus == NS_ERROR_NET_INTERRUPT ||
              aStatus == NS_ERROR_NET_RESET) {
       DisplayLoadError(aStatus, url, nsnull);
     }
