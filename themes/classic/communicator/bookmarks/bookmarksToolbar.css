@@ -58,6 +58,24 @@
       vertical-align      : middle;
     }
   
+  .bookmark-item.button-toolbar[container="true"]
+    {
+      border              : 1px solid transparent !important;
+    }
+    
+  .bookmark-item.button-toolbar[container="true"]:hover
+    {
+      border              : 1px outset ThreeDFace !important;
+      color               : #0000FF;
+    }
+
+  .bookmark-item.button-toolbar[container="true"]:hover:active,
+  .bookmark-item.button-toolbar[container="true"][open="true"]
+    {
+      border              : 1px inset ThreeDFace !important;
+      color               : #FF0000;
+    }
+
   .bookmark-item > .menubutton-toolbar-single-internal-box > .menubutton-toolbar-single-dropmarker
     {
       display             : none;
