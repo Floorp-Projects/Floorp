@@ -1738,21 +1738,6 @@ XfeCreateComboBox(Widget pw,char * name,Arg * av,Cardinal ac)
 	return XtCreateWidget(name,xfeComboBoxWidgetClass,pw,av,ac);
 }
 /*----------------------------------------------------------------------*/
-/* extern */ Widget
-XfeComboBoxSetEditableText(Widget w,char * text)
-{
-    XfeComboBoxPart *		cp = _XfeComboBoxPart(w);
-	
-	assert( cp->combo_box_type == XmCOMBO_BOX_EDITABLE );
-}
-/*----------------------------------------------------------------------*/
-/* extern */ Widget
-XfeComboBoxSetText(Widget w,char * text)
-{
-    XfeComboBoxPart *		cp = _XfeComboBoxPart(w);
-
-}
-/*----------------------------------------------------------------------*/
 /* extern */ void
 XfeComboBoxAddItem(Widget w,XmString item,int position)
 {
@@ -1830,5 +1815,22 @@ XfeComboBoxGetTextString(Widget w)
 	}
 
 	return InvokeGetTextFunc(cp->title);
+}
+/*----------------------------------------------------------------------*/
+/* extern */ void
+XfeComboBoxSetTextString(Widget w,String string)
+{
+    XfeComboBoxPart *		cp = _XfeComboBoxPart(w);
+
+	assert( XfeIsComboBox(w) );
+	assert( cp->combo_box_type == XmCOMBO_BOX_EDITABLE );
+	assert( string != NULL );
+
+	if (cp->combo_box_type != XmCOMBO_BOX_EDITABLE)
+	{
+		return NULL;
+	}
+
+	return InvokeSetTextProc(cp->title,string);
 }
 /*----------------------------------------------------------------------*/

@@ -150,20 +150,20 @@ typedef struct _XfeComboBoxRec *				XfeComboBoxWidget;
 /*																		*/
 /*----------------------------------------------------------------------*/
 extern Widget
-XfeCreateComboBox				(Widget		pw,
-								 String		name,
-								 Arg *		av,
-								 Cardinal	ac);
+XfeCreateComboBox				(Widget			pw,
+								 String			name,
+								 Arg *			av,
+								 Cardinal		ac);
 /*----------------------------------------------------------------------*/
 extern void
-XfeComboBoxAddItem				(Widget		w,
-								 XmString	item,
-								 int		position);
+XfeComboBoxAddItem				(Widget			w,
+								 XmString		item,
+								 int			position);
 /*----------------------------------------------------------------------*/
 extern void
-XfeComboBoxAddItemUnique		(Widget		w,
-								 XmString	item,
-								 int		position);
+XfeComboBoxAddItemUnique		(Widget			w,
+								 XmString		item,
+								 int			position);
 /*----------------------------------------------------------------------*/
 
 /*----------------------------------------------------------------------*/
@@ -172,7 +172,11 @@ XfeComboBoxAddItemUnique		(Widget		w,
 /*																		*/
 /*----------------------------------------------------------------------*/
 extern String
-XfeComboBoxGetTextString		(Widget		w);
+XfeComboBoxGetTextString		(Widget			w);
+/*----------------------------------------------------------------------*/
+extern void
+XfeComboBoxSetTextString		(Widget			w,
+								 String			string);
 /*----------------------------------------------------------------------*/
 
 XFE_END_CPLUSPLUS_PROTECTION
