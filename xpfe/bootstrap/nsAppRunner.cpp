@@ -122,7 +122,8 @@ static NS_DEFINE_CID(kProfileCID,           NS_PROFILE_CID);
 /*********************************************/
 // Default implemenations for nativeAppSupport
 // If your platform implements these functions if def out this code.
-#if !defined (XP_MAC ) && !defined(NTO) && ( !defined( XP_PC ) || !defined( WIN32 ) )
+#if !defined (XP_UNIX) && !defined (XP_MAC ) && !defined(NTO) && ( !defined( XP_PC ) || !defined( WIN32 ) )
+
 nsresult NS_CreateSplashScreen( nsISplashScreen **aResult )
 {	
     nsresult rv = NS_OK;
