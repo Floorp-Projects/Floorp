@@ -1609,7 +1609,7 @@ nsCSSFrameConstructor::CreateGeneratedContentFrame(nsIPresShell*        aPresShe
 nsresult
 nsCSSFrameConstructor::CreateInputFrame(nsIPresShell    *aPresShell,
                                         nsIPresContext  *aPresContext,
-                                        nsIContent      *aContent, 
+                                        nsIContent      *aContent,
                                         nsIFrame        *&aFrame,
                                         nsStyleContext  *aStyleContext)
 {
@@ -1635,7 +1635,14 @@ nsCSSFrameConstructor::CreateInputFrame(nsIPresShell    *aPresShell,
       return ConstructRadioControlFrame(aPresShell, aPresContext, aFrame, aContent, aStyleContext);
 
     case NS_FORM_INPUT_FILE:
-      return NS_NewFileControlFrame(aPresShell, &aFrame);
+    {
+      nsresult rv = NS_NewFileControlFrame(aPresShell, &aFrame);
+      if (NS_SUCCEEDED(rv)) {
+        // The (block-like) file control frame should have a space manager
+        aFrame->AddStateBits(NS_BLOCK_SPACE_MGR);
+      }
+      return rv;
+    }
 
     case NS_FORM_INPUT_HIDDEN:
       return NS_OK;
