@@ -20,7 +20,7 @@ use File::Basename; # for basename();
 use Config; # for $Config{sig_name} and $Config{sig_num}
 
 
-$::UtilsVersion = '$Revision: 1.73 $ ';
+$::UtilsVersion = '$Revision: 1.74 $ ';
 
 package TinderUtils;
 
@@ -746,8 +746,7 @@ sub run_all_tests {
     # Before running tests, run regxpcom so that we don't crash when 
     # people change contractids on us (since we don't autoreg opt builds)
     #
-    $test_result = AliveTest("regxpcom", $build_dir, 
-			     "$binary_dir/regxpcom", 0, 15);
+    AliveTest("regxpcom", $build_dir, "$binary_dir/regxpcom", 0, 15);
 
     # Mozilla alive test
     #
