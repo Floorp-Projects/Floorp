@@ -44,6 +44,7 @@
 #include "nsIContent.h"
 #include "nsIDOMHTMLInputElement.h"
 #include "nsIDOMHTMLTextAreaElement.h"
+#include "nsIScrollbar.h"
 
 #include "nsCSSRendering.h"
 #include "nsIDeviceContext.h"
@@ -148,6 +149,7 @@ nsGfxTextControlFrame::CreateEditor()
 
   mWebShell       = nsnull;
   mCreatingViewer = PR_FALSE;
+
   // create the stream observer
   mTempObserver   = new EnderTempObserver();
   if (!mTempObserver) { return NS_ERROR_OUT_OF_MEMORY; }
@@ -196,7 +198,9 @@ nsGfxTextControlFrame::nsGfxTextControlFrame()
   mFramePresContext(nsnull),
   mCachedState(nsnull),
   mWeakReferent(this),
-  mDisplayFrame(nsnull)
+  mDisplayFrame(nsnull),
+  mDidSetFocus(PR_FALSE)
+
 {
 }
 
@@ -559,18 +563,21 @@ nsGfxTextControlFrame::CreateSubDoc(nsRect *aSizeOfSubdocContainer)
       }
       else
       {
-        nsMargin borderPadding;
-        borderPadding.SizeTo(0, 0, 0, 0);
+        nsMargin border;
+        nsMargin padding;
+        border.SizeTo(0, 0, 0, 0);
+        padding.SizeTo(0, 0, 0, 0);
         // Get the CSS border
         const nsStyleSpacing* spacing;
         GetStyleData(eStyleStruct_Spacing,  (const nsStyleStruct *&)spacing);
-        spacing->CalcBorderPaddingFor(this, borderPadding);
-        CalcSizeOfSubDocInTwips(borderPadding, size, subBounds);
+        spacing->CalcBorderFor(this, border);
+        spacing->CalcPaddingFor(this, padding);
+        CalcSizeOfSubDocInTwips(border, padding, size, subBounds);
         float t2p;
         mFramePresContext->GetTwipsToPixels(&t2p);
-        subBounds.x = NSToCoordRound(subBounds.x * t2p);
-        subBounds.y = NSToCoordRound(subBounds.y * t2p);
-        subBounds.width = NSToCoordRound(subBounds.width * t2p);
+        subBounds.x      = NSToCoordRound(subBounds.x * t2p);
+        subBounds.y      = NSToCoordRound(subBounds.y * t2p);
+        subBounds.width  = NSToCoordRound(subBounds.width * t2p);
         subBounds.height = NSToCoordRound(subBounds.height * t2p);
       }
 
@@ -651,15 +658,18 @@ nsGfxTextControlFrame::CreateSubDoc(nsRect *aSizeOfSubdocContainer)
   return rv;
 }
 
-void nsGfxTextControlFrame::CalcSizeOfSubDocInTwips(const nsMargin &aBorderPadding, const nsSize &aFrameSize, nsRect &aSubBounds)
+void nsGfxTextControlFrame::CalcSizeOfSubDocInTwips(const nsMargin &aBorder, 
+                                                    const nsMargin &aPadding, 
+                                                    const nsSize &aFrameSize, 
+                                                    nsRect &aSubBounds)
 {
 
     // XXX: the point here is to make a single-line edit field as wide as it wants to be, 
     //      so it will scroll horizontally if the characters take up more space than the field
-    aSubBounds.x      = aBorderPadding.left;
-    aSubBounds.y      = aBorderPadding.top;
-    aSubBounds.width  = (aFrameSize.width - (aBorderPadding.left + aBorderPadding.right));
-    aSubBounds.height = (aFrameSize.height - (aBorderPadding.top + aBorderPadding.bottom));
+    aSubBounds.x      = aBorder.left + aPadding.left;
+    aSubBounds.y      = aBorder.top + aPadding.top;
+    aSubBounds.width  = (aFrameSize.width - (aBorder.left + aPadding.left + aBorder.right + aPadding.right));
+    aSubBounds.height = (aFrameSize.height - (aBorder.top + aPadding.top + aBorder.bottom + aPadding.bottom));
 }
 
 PRBool
@@ -964,16 +974,56 @@ NS_IMETHODIMP nsGfxTextControlFrame::GetProperty(nsIAtom* aName, nsString& aValu
   return NS_OK;
 }  
 
+nsIWidget * GetDeepestWidget(nsIView * aView)
+{
+
+  PRInt32 count;
+  aView->GetChildCount(count);
+  if (0 != count) {
+    for (PRInt32 i=0;i<count;i++) {
+      nsIView * child;
+      aView->GetChild(i, child);
+      nsIWidget * widget = GetDeepestWidget(child);
+      if (widget) {
+        return widget;
+      } else {
+        nsIWidget * widget;
+        aView->GetWidget(widget);
+        if (widget) {
+          nsCOMPtr<nsIScrollbar> scrollbar(do_QueryInterface(widget));
+          if (scrollbar) {
+            NS_RELEASE(widget);
+          } else {
+            return widget;
+          }
+        }
+      }
+    }
+  }
+
+  return nsnull;
+}
+
+
 void nsGfxTextControlFrame::SetFocus(PRBool aOn, PRBool aRepaint)
 {
+  // !! IF REMOVING THIS ANY CODE HERE 
+  // !! READ HIDE THIS AND BELOW
+  //
+  // There are 3 cases where focus can get set:
+  // 1) from script
+  // 2) from tabbing into it
+  // 3) from clicking on it
+  //
+  // If removing any of this code PLEASE read comment below
   nsresult result;
   if (!mWebShell)
   {
     result = CreateSubDoc(nsnull);
     if (NS_FAILED(result)) return;
   }
-
   if (aOn) {
+
     nsresult result = NS_OK;
 
     nsIContentViewer *viewer = nsnull;
@@ -988,15 +1038,27 @@ void nsGfxTextControlFrame::SetFocus(PRBool aOn, PRBool aRepaint)
           nsIPresShell  *shell = nsnull;
           cx->GetShell(&shell);
           if (nsnull != shell) {
+            nsIFrame * rootFrame;
+            shell->GetRootFrame(&rootFrame);
+
             nsIViewManager  *vm = nsnull;
             shell->GetViewManager(&vm);
             if (nsnull != vm) {
               nsIView *rootview = nsnull;
               vm->GetRootView(rootview);
               if (rootview) {
-                nsIWidget* widget;
-                rootview->GetWidget(widget);
+                // instead of using the rootview's widget we must find the deepest
+                // the deepest view and use its widget
+                nsIWidget* widget = GetDeepestWidget(rootview);
                 if (widget) {
+                  // XXX Here we need to remember whether we set focus on the widget
+                  // Later this is used to decided to continue to dispatch a Focus 
+                  // notification into the DOM. So if we reach here, it means 
+                  // a Focus message will be dispatched to the nsEnderEventListner 
+                  // and setting this to true won't propigate into the DOM, because we
+                  // got here via the DOM
+                  // See: nsEnderEventListener::Focus
+                  mDidSetFocus = PR_TRUE;
                   result = widget->SetFocus();
                   NS_RELEASE(widget);
                 }
@@ -1016,7 +1078,6 @@ void nsGfxTextControlFrame::SetFocus(PRBool aOn, PRBool aRepaint)
     mWebShell->RemoveFocus();
   }
 }
-
 /* --------------------- Ender methods ---------------------- */
 
 
@@ -1135,7 +1196,8 @@ nsGfxTextControlFrame::CalculateSizeNavQuirks (nsIPresContext*       aPresContex
                                               PRBool&               aWidthExplicit, 
                                               PRBool&               aHeightExplicit, 
                                               nscoord&              aRowHeight,
-                                              nsMargin&             aBorderPadding) 
+                                              nsMargin&             aBorder,
+                                              nsMargin&             aPadding)
 {
   nscoord charWidth   = 0; 
   aWidthExplicit      = PR_FALSE;
@@ -1174,24 +1236,27 @@ nsGfxTextControlFrame::CalculateSizeNavQuirks (nsIPresContext*       aPresContex
                                                         aFrame, aSpec, aDesiredSize);
     aMinSize.width = aDesiredSize.width;
 
+    // XXX I am commenting this out below to let CSS 
+    // override the column setting - rods
+
     // If COLS was not set then check to see if CSS has the width set
-    if (NS_CONTENT_ATTR_HAS_VALUE != colStatus) {  // col attr will provide width
+    //if (NS_CONTENT_ATTR_HAS_VALUE != colStatus) {  // col attr will provide width
       if (CSS_NOTSET != aCSSSize.width) {  // css provides width
         NS_ASSERTION(aCSSSize.width >= 0, "form control's computed width is < 0"); 
         if (NS_INTRINSICSIZE != aCSSSize.width) {
           aDesiredSize.width = aCSSSize.width;
-          aDesiredSize.width += aBorderPadding.left + aBorderPadding.right;
+          AddBoxSizing(aDesiredSize, PR_TRUE, aBorder, aPadding);
           aWidthExplicit = PR_TRUE;
         }
       }
-    }
+    //}
 
     aDesiredSize.height = aDesiredSize.height * aSpec.mRowDefaultSize;
     if (CSS_NOTSET != aCSSSize.height) {  // css provides height
       NS_ASSERTION(aCSSSize.height > 0, "form control's computed height is <= 0"); 
       if (NS_INTRINSICSIZE != aCSSSize.height) {
         aDesiredSize.height = aCSSSize.height;
-        aDesiredSize.height += aBorderPadding.top + aBorderPadding.bottom;
+        AddBoxSizing(aDesiredSize, PR_FALSE, aBorder, aPadding);
         aHeightExplicit = PR_TRUE;
       }
     }
@@ -1212,11 +1277,12 @@ nsGfxTextControlFrame::CalculateSizeNavQuirks (nsIPresContext*       aPresContex
 
 //------------------------------------------------------------------
 NS_IMETHODIMP
-nsGfxTextControlFrame::ReflowNavQuirks(nsIPresContext& aPresContext,
-                                        nsHTMLReflowMetrics& aDesiredSize,
+nsGfxTextControlFrame::ReflowNavQuirks(nsIPresContext&           aPresContext,
+                                        nsHTMLReflowMetrics&     aDesiredSize,
                                         const nsHTMLReflowState& aReflowState,
-                                        nsReflowStatus& aStatus,
-                                        nsMargin& aBorderPadding)
+                                        nsReflowStatus&          aStatus,
+                                        nsMargin&                aBorder,
+                                        nsMargin&                aPadding)
 {
   nsMargin borderPadding;
   borderPadding.SizeTo(0, 0, 0, 0);
@@ -1246,14 +1312,14 @@ nsGfxTextControlFrame::ReflowNavQuirks(nsIPresContext& aPresContext,
                                   PR_FALSE, nsnull, 1);
     CalculateSizeNavQuirks(&aPresContext, aReflowState.rendContext, this, styleSize, 
                            textSpec, desiredSize, minSize, widthExplicit, 
-                           heightExplicit, ignore, aBorderPadding);
+                           heightExplicit, ignore, aBorder, aPadding);
   } else {
     nsInputDimensionSpec areaSpec(nsHTMLAtoms::cols, PR_FALSE, nsnull, 
                                   nsnull, GetDefaultColumnWidth(), 
                                   PR_FALSE, nsHTMLAtoms::rows, 1);
     CalculateSizeNavQuirks(&aPresContext, aReflowState.rendContext, this, styleSize, 
                            areaSpec, desiredSize, minSize, widthExplicit, 
-                           heightExplicit, ignore, aBorderPadding);
+                           heightExplicit, ignore, aBorder, aPadding);
   }
 
   aDesiredSize.width   = desiredSize.width;
@@ -1262,8 +1328,8 @@ nsGfxTextControlFrame::ReflowNavQuirks(nsIPresContext& aPresContext,
   aDesiredSize.descent = 0;
 
   if (aDesiredSize.maxElementSize) {
-    aDesiredSize.maxElementSize->width  = minSize.width;
-    aDesiredSize.maxElementSize->height = minSize.height;
+    aDesiredSize.maxElementSize->width  = widthExplicit?desiredSize.width:minSize.width;
+    aDesiredSize.maxElementSize->height = heightExplicit?desiredSize.height:minSize.height;
   }
 
   // In Nav Quirks mode we only add in extra size for padding
@@ -1271,15 +1337,16 @@ nsGfxTextControlFrame::ReflowNavQuirks(nsIPresContext& aPresContext,
   padding.SizeTo(0, 0, 0, 0);
   spacing->CalcPaddingFor(this, padding);
 
-  aDesiredSize.width  += padding.left + padding.right;
-  aDesiredSize.height += padding.top + padding.bottom;
-
   // Check to see if style was responsible 
   // for setting the height or the width
   PRBool addBorder = PR_FALSE;
   PRInt32 width;
   if (NS_CONTENT_ATTR_HAS_VALUE == GetSizeFromContent(&width)) {
-    addBorder = (width < GetDefaultColumnWidth());
+    // if a size attr gets incorrectly 
+    // put on a textarea it comes back as -1
+    if (width > -1) { 
+      addBorder = (width < GetDefaultColumnWidth()) && !widthExplicit;
+    }
   }
 
   if (addBorder) {
@@ -1347,7 +1414,8 @@ nsGfxTextControlFrame::CalculateSizeStandard (nsIPresContext*       aPresContext
                                               PRBool&               aWidthExplicit, 
                                               PRBool&               aHeightExplicit, 
                                               nscoord&              aRowHeight,
-                                              nsMargin&             aBorderPadding) 
+                                              nsMargin&             aBorder,
+                                              nsMargin&             aPadding) 
 {
   nscoord charWidth   = 0; 
   aWidthExplicit      = PR_FALSE;
@@ -1375,7 +1443,7 @@ nsGfxTextControlFrame::CalculateSizeStandard (nsIPresContext*       aPresContext
     col = (col <= 0) ? 1 : col; // XXX why a default of 1 char, why hide it
     charWidth = nsFormControlHelper::GetTextSize(*aPresContext, aFrame, col, aDesiredSize, aRendContext);
     aMinSize.width = aDesiredSize.width;
-    aDesiredSize.width += aBorderPadding.left + aBorderPadding.right;
+    AddBoxSizing(aDesiredSize, PR_TRUE, aBorder, aPadding);
   } else {
     charWidth = nsFormControlHelper::GetTextSize(*aPresContext, aFrame, aSpec.mColDefaultSize, aDesiredSize, aRendContext); 
     aMinSize.width = aDesiredSize.width;
@@ -1383,11 +1451,12 @@ nsGfxTextControlFrame::CalculateSizeStandard (nsIPresContext*       aPresContext
       NS_ASSERTION(aCSSSize.width >= 0, "form control's computed width is < 0"); 
       if (NS_INTRINSICSIZE != aCSSSize.width) {
         aDesiredSize.width = aCSSSize.width;
-        aDesiredSize.width += aBorderPadding.left + aBorderPadding.right;
+        AddBoxSizing(aDesiredSize, PR_TRUE, aBorder, aPadding);
         aWidthExplicit = PR_TRUE;
       }
     } else {
-      aDesiredSize.width += aBorderPadding.left + aBorderPadding.right;
+      //AddBoxSizing(aDesiredSize, PR_TRUE, aBorder, aPadding);
+      aDesiredSize.width += aBorder.left + aBorder.right + aPadding.left + aPadding.right;
     }
   }
 
@@ -1399,8 +1468,9 @@ nsGfxTextControlFrame::CalculateSizeStandard (nsIPresContext*       aPresContext
   if (fontMet) {
     aRendContext->SetFont(fontMet);
     fontMet->GetHeight(fontHeight);
-    fontMet->GetLeading(fontLeading);
-    aDesiredSize.height += fontLeading;
+    // leading is NOT suppose to be added in
+    //fontMet->GetLeading(fontLeading);
+    //aDesiredSize.height += fontLeading;
   }
   aRowHeight      = aDesiredSize.height;
   aMinSize.height = aDesiredSize.height;
@@ -1411,18 +1481,19 @@ nsGfxTextControlFrame::CalculateSizeStandard (nsIPresContext*       aPresContext
                             ? rowAttr.GetPixelValue() : rowAttr.GetIntValue());
     numRows = (rowAttrInt > 0) ? rowAttrInt : 1;
     aDesiredSize.height = aDesiredSize.height * numRows;
-    aDesiredSize.height += aBorderPadding.top + aBorderPadding.bottom;
+    AddBoxSizing(aDesiredSize, PR_FALSE, aBorder, aPadding);
   } else {
     aDesiredSize.height = aDesiredSize.height * aSpec.mRowDefaultSize;
     if (CSS_NOTSET != aCSSSize.height) {  // css provides height
       NS_ASSERTION(aCSSSize.height > 0, "form control's computed height is <= 0"); 
       if (NS_INTRINSICSIZE != aCSSSize.height) {
         aDesiredSize.height = aCSSSize.height;
-        aDesiredSize.height += aBorderPadding.top + aBorderPadding.bottom;
+        AddBoxSizing(aDesiredSize, PR_FALSE, aBorder, aPadding);
         aHeightExplicit = PR_TRUE;
       }
     } else {
-      aDesiredSize.height += aBorderPadding.top + aBorderPadding.bottom;
+      //AddBoxSizing(aDesiredSize, PR_FALSE, aBorder, aPadding);
+      aDesiredSize.height += aBorder.top + aBorder.bottom + aPadding.top + aPadding.bottom;
     }
   }
 
@@ -1439,11 +1510,12 @@ nsGfxTextControlFrame::CalculateSizeStandard (nsIPresContext*       aPresContext
 }
 
 NS_IMETHODIMP
-nsGfxTextControlFrame::ReflowStandard(nsIPresContext& aPresContext,
-                                      nsHTMLReflowMetrics& aDesiredSize,
+nsGfxTextControlFrame::ReflowStandard(nsIPresContext&          aPresContext,
+                                      nsHTMLReflowMetrics&     aDesiredSize,
                                       const nsHTMLReflowState& aReflowState,
-                                      nsReflowStatus& aStatus,
-                                      nsMargin& aBorderPadding)
+                                      nsReflowStatus&          aStatus,
+                                      nsMargin&                aBorder,
+                                      nsMargin&                aPadding)
 {
   // get the css size and let the frame use or override it
   nsSize styleSize;
@@ -1466,14 +1538,14 @@ nsGfxTextControlFrame::ReflowStandard(nsIPresContext& aPresContext,
                                   PR_FALSE, nsnull, 1);
     CalculateSizeStandard(&aPresContext, aReflowState.rendContext, this, styleSize, 
                            textSpec, desiredSize, minSize, widthExplicit, 
-                           heightExplicit, ignore, aBorderPadding);
+                           heightExplicit, ignore, aBorder, aPadding);
   } else {
     nsInputDimensionSpec areaSpec(nsHTMLAtoms::cols, PR_FALSE, nsnull, 
                                   nsnull, GetDefaultColumnWidth(), 
                                   PR_FALSE, nsHTMLAtoms::rows, 1);
     CalculateSizeStandard(&aPresContext, aReflowState.rendContext, this, styleSize, 
                            areaSpec, desiredSize, minSize, widthExplicit, 
-                           heightExplicit, ignore, aBorderPadding);
+                           heightExplicit, ignore, aBorder, aPadding);
   }
 
   // CalculateSize makes calls in the nsFormControlHelper that figures
@@ -1546,12 +1618,15 @@ nsGfxTextControlFrame::Reflow(nsIPresContext& aPresContext,
   nsCompatibility mode;
   aPresContext.GetCompatibilityMode(&mode);
 
-  nsMargin borderPadding;
-  borderPadding.SizeTo(0, 0, 0, 0);
+  nsMargin border;
+  border.SizeTo(0, 0, 0, 0);
+  nsMargin padding;
+  padding.SizeTo(0, 0, 0, 0);
   // Get the CSS border
   const nsStyleSpacing* spacing;
   GetStyleData(eStyleStruct_Spacing,  (const nsStyleStruct *&)spacing);
-  spacing->CalcBorderPaddingFor(this, borderPadding);
+  spacing->CalcBorderFor(this, border);
+  spacing->CalcPaddingFor(this, padding);
 
   // calculate the the desired size for the text control
   // use the suggested size if it has been set
@@ -1582,9 +1657,9 @@ nsGfxTextControlFrame::Reflow(nsIPresContext& aPresContext,
     // GetDesiredSize calculates the size without CSS borders
     // the nsLeafFrame::Reflow will add in the borders
     if (eCompatibility_NavQuirks == mode) {
-      rv = ReflowNavQuirks(aPresContext, aDesiredSize, aReflowState, aStatus, borderPadding);
+      rv = ReflowNavQuirks(aPresContext, aDesiredSize, aReflowState, aStatus, border, padding);
     } else {
-      rv = ReflowStandard(aPresContext, aDesiredSize, aReflowState, aStatus, borderPadding);
+      rv = ReflowStandard(aPresContext, aDesiredSize, aReflowState, aStatus, border, padding);
     }
 
     if (NS_UNCONSTRAINEDSIZE != aReflowState.mComputedWidth) {
@@ -1615,7 +1690,7 @@ nsGfxTextControlFrame::Reflow(nsIPresContext& aPresContext,
     nsRect subBounds;
     nsRect subBoundsInPixels;
     nsSize desiredSize(aDesiredSize.width, aDesiredSize.height);
-    CalcSizeOfSubDocInTwips(borderPadding, desiredSize, subBounds);
+    CalcSizeOfSubDocInTwips(border, padding, desiredSize, subBounds);
     subBoundsInPixels.x = NSToCoordRound(subBounds.x * t2p);
     subBoundsInPixels.y = NSToCoordRound(subBounds.y * t2p);
     subBoundsInPixels.width = NSToCoordRound(subBounds.width * t2p);
@@ -2087,6 +2162,7 @@ nsGfxTextControlFrame::InstallEditor()
     {
       if (mContent==focusContent)
       {
+        // XXX WebShell redesign work
         SetFocus();
       }
     }
@@ -2687,6 +2763,10 @@ nsEnderEventListener::nsEnderEventListener()
 {
   NS_INIT_REFCNT();
   mView = nsnull;
+
+  // needed for when mouse down set focus on native widgets
+  mSkipFocusDispatch = PR_FALSE;
+
   // other fields are objects that initialize themselves
 }
 
@@ -2940,6 +3020,15 @@ nsresult
 nsEnderEventListener::DispatchMouseEvent(nsIDOMMouseEvent *aEvent, PRInt32 aEventType)
 {
   nsresult result = NS_OK;
+
+  // The ESM has already dispatched the "click" event to DOM
+  // so we need to ignore it here or we will get double notifications
+  if (aEventType == NS_MOUSE_LEFT_CLICK ||
+      aEventType == NS_MOUSE_MIDDLE_CLICK ||
+      aEventType == NS_MOUSE_RIGHT_CLICK) {
+    return result;
+  }
+
   if (aEvent)
   {
     nsGfxTextControlFrame *gfxFrame = mFrame.Reference();
@@ -2990,9 +3079,20 @@ nsEnderEventListener::DispatchMouseEvent(nsIDOMMouseEvent *aEvent, PRInt32 aEven
   return result;
 }
 
+// This makes sure the the mSkipFocusDispatch gets set to false
+class SemiphoreFocusDispatch {
+  PRBool * mBool;
+public:
+  SemiphoreFocusDispatch(PRBool * aBool) :mBool(NULL) { if (aBool) {mBool = aBool; *mBool = PR_TRUE;} }
+  ~SemiphoreFocusDispatch()              { if (mBool) *mBool = PR_FALSE; }
+};
+  
 nsresult
 nsEnderEventListener::MouseDown(nsIDOMEvent* aEvent)
 {
+  SemiphoreFocusDispatch skipFocusDispatch(&mSkipFocusDispatch);
+  mSkipFocusDispatch = PR_TRUE;
+
   nsCOMPtr<nsIDOMMouseEvent>mouseEvent;
   mouseEvent = do_QueryInterface(aEvent);
   if (!mouseEvent) { //non-key event passed in.  bad things.
@@ -3023,6 +3123,7 @@ nsEnderEventListener::MouseDown(nsIDOMEvent* aEvent)
     }
     result = DispatchMouseEvent(mouseEvent, eventType);
   }  
+  mSkipFocusDispatch = PR_FALSE;
   return result;
 }
 
@@ -3180,6 +3281,14 @@ nsEnderEventListener::MouseOut(nsIDOMEvent* aEvent)
 nsresult
 nsEnderEventListener::Focus(nsIDOMEvent* aEvent)
 {
+  // In this case, the focus has all ready been set because of the mouse down
+  // and setting it on the native widget causes an event to be dispatched
+  // and this listener then gets call. So we want to skip it here
+  // this is probably NOt need when native widgets are removed
+  if (mSkipFocusDispatch == PR_TRUE) {
+    return NS_OK;
+  }
+
   nsCOMPtr<nsIDOMUIEvent>uiEvent;
   uiEvent = do_QueryInterface(aEvent);
   if (!uiEvent) { 
@@ -3190,7 +3299,14 @@ nsEnderEventListener::Focus(nsIDOMEvent* aEvent)
 
   nsGfxTextControlFrame *gfxFrame = mFrame.Reference();
 
-  if (gfxFrame && mContent && mView)
+  // Here are notified that we received focus, this event
+  // may come as a result of JS or of the native Widget getting
+  // the focus set on it
+  // Check here to see if the GfxText was able to set focus, if it did
+  // the we want to skip this notification
+  // If this came from the DOM (and not the widget) then we DO 
+  // want to do the notification
+  if (gfxFrame && mContent && mView && !gfxFrame->DidSetFocus())
   {
     mTextValue = "";
     gfxFrame->GetText(&mTextValue, PR_FALSE);
@@ -3231,6 +3347,7 @@ nsEnderEventListener::Focus(nsIDOMEvent* aEvent)
 nsresult
 nsEnderEventListener::Blur(nsIDOMEvent* aEvent)
 {
+
   nsCOMPtr<nsIDOMUIEvent>uiEvent;
   uiEvent = do_QueryInterface(aEvent);
   if (!uiEvent) {
@@ -3259,36 +3376,14 @@ nsEnderEventListener::Blur(nsIDOMEvent* aEvent)
       mContent->HandleDOMEvent(*mContext, &event, nsnull, NS_EVENT_FLAG_INIT, status); 
     }
 
-    // Dispatch the blur event
-    nsEventStatus status = nsEventStatus_eIgnore;
-    nsGUIEvent event;
-    event.eventStructType = NS_GUI_EVENT;
-    event.widget = nsnull;
-    event.message = NS_BLUR_CONTENT;
-    event.flags = NS_EVENT_FLAG_INIT;
+    // XXX No longer dispatching event
+    // this notification has already taken place
+    // this causes two blur notifcations to be sent
+    // I removed this 
+    // rods - 11/12/99 
 
-    nsIEventStateManager *manager=nsnull;
-    result = mContext->GetEventStateManager(&manager);
-    if (NS_SUCCEEDED(result) && manager) 
-    {
-      //1. Give event to event manager for pre event state changes and generation of synthetic events.
-      result = manager->PreHandleEvent(*mContext, &event, gfxFrame, status, mView);
-
-      //2. Give event to the DOM for third party and JS use.
-      if (NS_SUCCEEDED(result)) {
-        result = mContent->HandleDOMEvent(*mContext, &event, nsnull, NS_EVENT_FLAG_INIT, status); 
-      }
-    
-      //3. In this case, the frame does no processing of the event
-
-      //4. Give event to event manager for post event state changes and generation of synthetic events.
-      gfxFrame = mFrame.Reference(); // check for deletion
-      if (gfxFrame && NS_SUCCEEDED(result)) {
-        result = manager->PostHandleEvent(*mContext, &event, gfxFrame, status, mView);
-      }
-      NS_RELEASE(manager);
-    }
   }
+
   return NS_OK;
 }
 
