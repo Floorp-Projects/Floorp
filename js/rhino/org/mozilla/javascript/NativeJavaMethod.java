@@ -164,21 +164,23 @@ public class NativeJavaMethod extends NativeFunction implements Function {
             args[i] = NativeJavaObject.coerceType(paramTypes[i], args[i]);
         }
         Object javaObject;
-        try {
-            javaObject = ((NativeJavaObject) thisObj).unwrap();        
-        }
-        catch (ClassCastException e) {
-            if (Modifier.isStatic(meth.getModifiers())) {
-                javaObject = null;  // don't need it anyway
-            } else {
-                Object errArgs[] = { names[0] };
-                throw Context.reportRuntimeError(
-                    Context.getMessage("msg.nonjava.method", errArgs));
+        if (Modifier.isStatic(meth.getModifiers())) {
+            javaObject = null;  // don't need an object
+        } else {
+            Scriptable o = thisObj;
+            while (!(o instanceof NativeJavaObject)) {
+                o = o.getPrototype();
+                if (o == null) {
+                    Object errArgs[] = { names[0] };
+                    throw Context.reportRuntimeError(
+                        Context.getMessage("msg.nonjava.method", errArgs));
+                }
             }
+            javaObject = ((NativeJavaObject) o).unwrap();        
         }
         try {
             if (debug) {
-                printDebug("Calling", meth, args);
+                printDebug("Calling ", meth, args);
             }
 
             Object retval = meth.invoke(javaObject, args);

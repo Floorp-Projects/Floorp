@@ -1851,8 +1851,8 @@ public class ScriptRuntime {
         catch (JavaScriptException e) {
             throw WrappedException.wrapException(e);
         }
-        for (int i=1; i < args.length; i++) {
-            argsObj.put(i-1, argsObj, args[i]);
+        for (int i=0; i < args.length; i++) {
+            argsObj.put(i, argsObj, args[i]);
         }
         global.put("arguments", global, argsObj);
 
@@ -1867,6 +1867,9 @@ public class ScriptRuntime {
         catch (InstantiationException e) {
         }
         catch (IllegalAccessException e) {
+        }
+        finally {
+            Context.exit();
         }
         throw new RuntimeException("Error creating script object");
     }
@@ -1910,6 +1913,28 @@ public class ScriptRuntime {
         }
         
         return scope;
+    }
+    
+    public static FlattenedObject runScript(Script script) {
+        Context cx = Context.enter();
+        Scriptable global = cx.initStandardObjects(new ImporterTopLevel());
+        try {
+            script.exec(cx, global);
+        } catch (JavaScriptException e) {
+            throw new Error(e.toString());
+        }
+        Context.exit();
+        return new FlattenedObject(global);
+    }
+    
+    public static void setAdapterProto(FlattenedObject fobj, Object adapter) {
+        Scriptable obj = fobj.getObject();
+        Scriptable p = obj.getPrototype();
+        Scriptable scope = ScriptableObject.getTopLevelScope(obj);
+        if (p == null || p == ScriptableObject.getObjectPrototype(scope)) {
+            Scriptable wrapped = (Scriptable) Context.toObject(adapter, scope);
+            obj.setPrototype(wrapped);
+        }
     }
     
     public static Scriptable initVarObj(Context cx, Scriptable scope,

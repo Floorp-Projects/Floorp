@@ -31,4 +31,8 @@ public interface ClassNameHelper {
     public String getTargetClassFileName(String className);
     
     public String getGeneratingDirectory();
+    
+    public void setTargetExtends(Class extendsClass);
+    
+    public void setTargetImplements(Class[] implementsClasses);
 }

@@ -1278,6 +1278,29 @@ public final class Context {
     public boolean isInterpreterClass(Class cl) {
         return cl == Interpreter.class;
     }
+    
+    /**
+     * Set the class that the generated target will extend.
+     * 
+     * @param extendsClass the class it extends
+     */
+    public void setTargetExtends(Class extendsClass) {
+        if (nameHelper != null) {
+            nameHelper.setTargetExtends(extendsClass);
+        }
+    }
+       
+    /**
+     * Set the interfaces that the generated target will implement.
+     * 
+     * @param implementsClasses an array of Class objects, one for each
+     *                          interface the target will extend
+     */
+    public void setTargetImplements(Class[] implementsClasses) {
+        if (nameHelper != null) {
+            nameHelper.setTargetImplements(implementsClasses);
+        }
+    }
         
     /**** debugger oriented portion of API ****/
 
@@ -1826,9 +1849,9 @@ public final class Context {
             requireSecurityDomain = s.equals("true");
         } catch (java.util.MissingResourceException mre) {
             requireSecurityDomain = true;
-            throw new SecurityException("Resource \"" + securityResourceName +
-                                        "\" not found.");
-        }
+        } catch (SecurityException se) {
+            requireSecurityDomain = true;
+        }   
     }      
     
     static final boolean useJSObject = false;

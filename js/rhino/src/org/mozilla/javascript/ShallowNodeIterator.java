@@ -26,7 +26,7 @@ import java.util.Enumeration;
  * @see Node
  * @author Norris Boyd
  */
-class ShallowNodeIterator implements Enumeration {
+public class ShallowNodeIterator implements Enumeration {
 
     public ShallowNodeIterator(Node n) {
         current = n;

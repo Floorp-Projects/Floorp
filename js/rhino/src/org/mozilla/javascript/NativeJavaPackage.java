@@ -127,7 +127,7 @@ public class NativeJavaPackage extends ScriptableObject {
         // Can't add properties to Java packages.  Sorry.
     }
 
-    public synchronized Object get(String id, Scriptable start) {
+    public Object get(String id, Scriptable start) {
         return getPkgProperty(id, start, true);
     }
 
