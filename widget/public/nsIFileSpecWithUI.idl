@@ -36,7 +36,6 @@ interface nsIFileSpecWithUI : nsIFileSpec
 	// The "choose" functions present the file picker UI in order to set the
 	// value of the file spec.
 %}
-	void chooseOutputFile(in string windowTitle, in string suggestedLeafName);
 
 %{C++
 	// The mask for standard filters is given as follows:
@@ -46,7 +45,9 @@ interface nsIFileSpecWithUI : nsIFileSpec
 	,	eHTMLFiles			= (1<<1)
 	,	eXMLFiles			= (1<<2)
 	,	eImageFiles			= (1<<3)
-	,	eAllFiles			= (1<<4)
+    ,   eMailFiles          = (1<<4)
+    ,   eTextFiles          = (1<<5)
+	,	eAllFiles			= (1<<6)
 	
 	// Mask containing all the above default filters
 	,	eAllStandardFilters = (
@@ -54,13 +55,19 @@ interface nsIFileSpecWithUI : nsIFileSpec
 							| eHTMLFiles
 							| eXMLFiles
 							| eImageFiles
+                            | eMailFiles
+                            | eTextFiles
 							| eAllFiles)
+    ,   eAllMailOutputFilters = (
+                                 eHTMLFiles
+                               | eMailFiles
+                               | eTextFiles)
 	
 	// The "extra filter" bit should be set if the "extra filter"
 	// is passed in to chooseInputFile.
 	,   eExtraFilter        = (1<<31)
 	};
-	enum { kNumStandardFilters = 5 };
+	enum { kNumStandardFilters = 7, kNumMailFilters = 3 };
 %}
 	[noscript] void chooseInputFile(
 		in string title
@@ -68,6 +75,11 @@ interface nsIFileSpecWithUI : nsIFileSpec
 	,	in string extraFilterTitle
 	,	in string extraFilter
 		);
+
+	[noscript] void chooseOutputFile(in string windowTitle, 
+                                     in string suggestedLeafName,
+                                     in StandardFilterMask standardFilterMask);
+
   string chooseFile(in string title);
 	string chooseDirectory(in string title);
 };

@@ -20,6 +20,7 @@
 #define nsIFileSpecWithUIImpl_h__
 
 #include "nsIFileSpecWithUI.h" // Always first, to ensure that it compiles alone.
+#include "nsIFileWidget.h"
 #include "nsCOMPtr.h"
 
 //========================================================================================
@@ -240,6 +241,12 @@ class nsFileSpecWithUIImpl
 
 	// Data
 protected:
+    // helper 
+  void SetFileWidgetFilterList(nsIFileWidget* fileWidget,
+                               nsIFileSpecWithUI::StandardFilterMask mask,
+                               const char *inExtraFilterTitle, 
+                               const char *inExtraFilter);
+
 	nsCOMPtr<nsIFileSpec>	mBaseFileSpec;
 
 }; // class nsFileSpecWithUIImpl
