@@ -8016,10 +8016,10 @@ ResDef(MK_SIGNON_NOTIFICATION_1, (XP_MSG_BASE + 1496),
 saved on your hard drive.  Do you want this feature enabled?")
 
 ResDef(MK_SIGNON_NAG, (XP_MSG_BASE + 1497),
-"Do you want to remember the user name and password contained on this form?")
+"Do you want to save the user name and password for this form?")
 
 ResDef(MK_SIGNON_REMEMBER, (XP_MSG_BASE + 1498),
-"If not, do you want to remember this decision?")
+"Never save when viewing this page in the future.")
 
 ResDef(MK_SIGNON_SELECTUSER, (XP_MSG_BASE + 1499),
 "Select a username to be entered on this form")
