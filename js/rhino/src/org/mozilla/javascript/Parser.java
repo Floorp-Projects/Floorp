@@ -300,7 +300,7 @@ class Parser {
                 // The following can be removed but then code generators should
                 // be modified not to push on the stack function expression
                 // statements
-                pn = nf.createExprStatement(pn, baseLineno);
+                pn = nf.createExprStatementNoReturn(pn, baseLineno);
             }
             // Add EOL but only if function is not part of expression, in which
             // case it gets SEMI + EOL from Statement.

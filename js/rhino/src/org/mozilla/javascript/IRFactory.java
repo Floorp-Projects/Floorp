@@ -102,6 +102,10 @@ public class IRFactory {
         return new Node(TokenStream.EXPRSTMT, (Node) expr, lineno);
     }
 
+    public Object createExprStatementNoReturn(Object expr, int lineno) {
+        return new Node(TokenStream.POP, (Node) expr, lineno);
+    }
+
     /**
      * Name
      */
