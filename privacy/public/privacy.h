@@ -33,6 +33,9 @@
 
 XP_BEGIN_PROTOS
 
+extern void
+PRVCY_CheckStandardLocation(MWContext * context);
+
 extern Bool 
 PRVCY_CurrentHasPrivacyPolicy(MWContext * ctxt);
 

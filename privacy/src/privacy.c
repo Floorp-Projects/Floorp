@@ -164,7 +164,151 @@ prvcy_formIsSignificant(MWContext *ctxt,
          (prvcy_countAreaBoxes(top_state->doc_state, ele_struct) > 0));
 }
 
+typedef struct _prvcy_PolicyCacheStruct {
+    char * host;
+    Bool found;
+} prvcy_PolicyCacheStruct;
 
+PRIVATE XP_List * prvcy_policy_list = 0;
+
+PRIVATE void
+prvcy_lock_policy_list() {
+}
+
+PRIVATE void
+prvcy_unlock_policy_list() {
+}
+
+PRIVATE Bool
+prvcy_inCache(char *host, XP_Bool *found)
+{
+  XP_List * list_ptr;
+  prvcy_PolicyCacheStruct * policy;
+  prvcy_lock_policy_list();
+
+  /* search through list looking for host */
+  list_ptr = prvcy_policy_list;
+  while((policy = (prvcy_PolicyCacheStruct *) XP_ListNextObject(list_ptr))) {
+    if(!XP_STRCASECMP(host, policy->host)) {
+
+      /* move to head of list since it is most-recently used */
+      XP_ListRemoveObject(prvcy_policy_list, policy);
+      XP_ListAddObject (prvcy_policy_list, policy);
+      prvcy_unlock_policy_list();
+
+      /* return TRUE since it was in the list */
+      *found = policy->found;
+      return TRUE;
+    }
+  }
+
+  /* return false since it was not in the list */
+  prvcy_unlock_policy_list();
+  return FALSE;
+}
+
+#define MAX_CACHE 10
+PRIVATE void
+prvcy_addToCache(char *host, XP_Bool found)
+{
+  prvcy_PolicyCacheStruct * policy;
+
+  /* create list if it doesn't already exist */
+  if(!prvcy_policy_list) {
+    prvcy_policy_list = XP_ListNew();
+    if(!prvcy_policy_list) {
+      return;
+    }
+  }
+
+  /* remove least-recently used (last) entry if list is too full */
+  if (XP_ListCount(prvcy_policy_list) > MAX_CACHE) {
+    policy = XP_ListRemoveEndObject (prvcy_policy_list);
+    XP_FREEIF(policy->host);
+    XP_FREE(policy);
+  }
+
+  /* add to head of list */
+  policy = XP_NEW(prvcy_PolicyCacheStruct);
+  if (policy) {
+    policy->host = XP_STRDUP(host);
+    policy->found = found;
+    prvcy_lock_policy_list();
+    XP_ListAddObject(prvcy_policy_list, policy);
+    prvcy_unlock_policy_list();
+  }
+}
+
+static void
+prvcy_checkStandardLocation_finished
+  (URL_Struct* pUrl, int status, MWContext* context)
+{
+  History_entry * entry = SHIST_GetCurrent(&context->hist);
+  if(entry && pUrl->server_status == 200) {
+/// char * pathPart = NULL;
+    prvcy_addToCache(pUrl->address, TRUE);
+    entry->privacy_policy_url = XP_STRDUP(pUrl->address);
+/// StrAllocCat(entry->privacy_policy_url, "?");
+/// pathPart = NET_ParseURL(pUrl->address, GET_PATH_PART);
+/// StrAllocCat(entry->privacy_policy_url, pathPart);
+/// XP_FREEIF(pathPart);
+  } else {
+    prvcy_addToCache(pUrl->address, FALSE);
+  }
+}
+
+/*
+  Check for privacy policy at standard location
+ */
+
+PUBLIC void
+PRVCY_CheckStandardLocation(MWContext * context)
+{
+  if (context) {
+    History_entry * entry = SHIST_GetCurrent(&context->hist);
+    URL_Struct *pUrl;
+    char * privacyURL = NULL;
+    XP_Bool found;
+/// char * pathPart = NULL;
+    if (!entry || !entry->address || entry->privacy_policy_url) {
+      return;
+    }
+
+    /*
+     * This routine is called from the HTTP_DONE case of NET_ProcessHTTP.  But
+     * that will be repeatedly called as long as we keep issuing an http request
+     * in this routine.  So, to prevent looping, we will set privacy_policy_url
+     * to -1 to indicate that we already did the http request for privacy.html.
+     */
+    entry->privacy_policy_url = (char*)(-1); /* prevents looping */
+
+    /* Create a URL for privacy.html */
+    privacyURL = NET_ParseURL(entry->address, GET_PROTOCOL_PART | GET_HOST_PART);
+    StrAllocCat(privacyURL, "/privacy.html");
+    if (prvcy_inCache(privacyURL, &found)) {
+      if (found) {
+	entry->privacy_policy_url = privacyURL;
+      } else {
+	XP_FREEIF(privacyURL);
+      }
+      return;
+    }
+/// StrAllocCat(privacyURL, "/privacy.html?");
+/// pathPart = NET_ParseURL(entry->address, GET_PATH_PART);
+/// StrAllocCat(privacyURL, pathPart);
+    pUrl = NET_CreateURLStruct(privacyURL, NET_NORMAL_RELOAD);
+    XP_FREEIF(privacyURL);
+/// XP_FREEIF(pathPart);
+    if (!pUrl) {
+      return;
+    }
+
+    /* See if file exists for this URL */
+    pUrl->method = URL_HEAD_METHOD;
+    pUrl->fe_data = entry;
+    NET_GetURL(pUrl, FO_CACHE_AND_PRESENT, context, prvcy_checkStandardLocation_finished);
+  }
+}
 
 /*
   Returns TRUE if the current page has an associated privacy policy,
@@ -174,12 +318,10 @@ prvcy_formIsSignificant(MWContext *ctxt,
 PUBLIC Bool 
 PRVCY_CurrentHasPrivacyPolicy(MWContext * ctxt)
 {
-  History_entry * entry;
-  
   if (ctxt) {
-    entry = SHIST_GetCurrent(&ctxt->hist);
+    History_entry * entry = SHIST_GetCurrent(&ctxt->hist);
     if (entry) {
-      if (entry->privacy_policy_url)
+      if (entry->privacy_policy_url && (entry->privacy_policy_url != (char*)(-1)))
         return TRUE;
       return FALSE;
     }
@@ -198,7 +340,7 @@ PRVCY_GetCurrentPrivacyPolicyURL(MWContext * ctxt)
   
   if (ctxt) {
     entry = SHIST_GetCurrent(&ctxt->hist);
-    if (entry) {
+    if (entry && (entry->privacy_policy_url != (char*)(-1))) {
       return entry->privacy_policy_url;
     }
   }
@@ -243,7 +385,8 @@ PRVCY_PrivacyPolicyConfirmSubmit(MWContext *ctxt,
   if (!ctxt) return TRUE;
   entry = SHIST_GetCurrent(&ctxt->hist);
   if (!entry) return TRUE;
-  if (entry->privacy_policy_url) return TRUE;
+  if (entry->privacy_policy_url && (entry->privacy_policy_url != (char*)(-1)))
+    return TRUE;
   if (!PRVCY_ExternalContextDescendant(ctxt))
     {
       D(printf("Privacy Policies: Don't care about this context type.\n"));
