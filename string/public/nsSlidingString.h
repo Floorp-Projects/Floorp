@@ -114,7 +114,12 @@ class nsSlidingString
   };
 
 
+#if 0
+  // this (or something similar) is what should appear in the parser, I think
+#include "nsSlidingString.h"
+
 typedef nsSlidingString     nsParserString;
-typedef nsSlidingSubstring  nsParserSubstring;
+typedef nsSlidingSubstring  nsParserToken;
+#endif
 
 #endif // !defined(nsSlidingString_h___)
