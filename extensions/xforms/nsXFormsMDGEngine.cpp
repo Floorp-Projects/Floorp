@@ -367,7 +367,10 @@ nsXFormsMDGEngine::Recalculate(nsXFormsMDGSet* aChangedNodes)
         rv = xpath_res->GetStringValue(nodeval);
         NS_ENSURE_SUCCESS(rv, rv);
 
-        rv = SetNodeValue(g->mContextNode, nodeval, PR_FALSE, nsnull); 
+        rv = SetNodeValueInternal(g->mContextNode,
+                                  nodeval,
+                                  PR_FALSE,
+                                  PR_TRUE);
         if (NS_SUCCEEDED(rv)) {
           NS_ENSURE_TRUE(aChangedNodes->AddNode(g->mContextNode),
                          NS_ERROR_FAILURE);
@@ -609,8 +612,21 @@ nsXFormsMDGEngine::GetNodeValue(nsIDOMNode *aContextNode,
 nsresult
 nsXFormsMDGEngine::SetNodeValue(nsIDOMNode       *aContextNode,
                                 const nsAString  &aNodeValue,
-                                PRBool            aMarkNode,
                                 PRBool           *aNodeChanged)
+{
+  return SetNodeValueInternal(aContextNode,
+                              aNodeValue,
+                              PR_TRUE,
+                              PR_FALSE,
+                              aNodeChanged);
+}
+
+nsresult
+nsXFormsMDGEngine::SetNodeValueInternal(nsIDOMNode       *aContextNode,
+                                        const nsAString  &aNodeValue,
+                                        PRBool            aMarkNode,
+                                        PRBool            aIsCalculate,
+                                        PRBool           *aNodeChanged)
 {
   if (aNodeChanged) {
     *aNodeChanged = PR_FALSE;
@@ -619,7 +635,9 @@ nsXFormsMDGEngine::SetNodeValue(nsIDOMNode       *aContextNode,
   const nsXFormsNodeState* ns = GetNodeState(aContextNode);
   NS_ENSURE_TRUE(ns, NS_ERROR_FAILURE);
 
-  if (ns->IsReadonly()) {
+  // If the node is read-only and not set by a @calculate MIP,
+  // ignore the call
+  if (ns->IsReadonly() && !aIsCalculate) {
     ///
     /// @todo Better feedback for readonly nodes? (XXX)
     return NS_OK;

@@ -313,6 +313,20 @@ protected:
    */
   nsresult Invalidate();
   
+  /**
+   * Set the value of a node.
+
+   * @param aContextNode     The node to set the value for
+   * @param aNodeValue       The value
+   * @param aMarkNode        Whether to mark node as changed
+   * @param aNodeChanged     Was node changed?
+   * @param aIsCalculate     Is it a @calculate setting the value?
+   */
+  nsresult SetNodeValueInternal(nsIDOMNode      *aContextNode,
+                                const nsAString &aNodeValue,
+                                PRBool           aMarkNode = PR_TRUE,
+                                PRBool           aIsCalculate = PR_FALSE,
+                                PRBool          *aNodeChanged = nsnull);
 public:
   /**
    * Constructor
@@ -382,16 +396,14 @@ public:
   nsresult MarkNodeAsChanged(nsIDOMNode *aContextNode);
 
   /**
-   * Set the value of a node. (used by nsXFormsMDG)
-
+   * Set the value of a node -- the public version of SetNodeValueInternal().
+   *
    * @param aContextNode     The node to set the value for
    * @param aNodeValue       The value
-   * @param aMarkNode        Whether to mark node as changed
    * @param aNodeChanged     Was node changed?
    */
   nsresult SetNodeValue(nsIDOMNode      *aContextNode,
                         const nsAString &aNodeValue,
-                        PRBool           aMarkNode = PR_TRUE,
                         PRBool          *aNodeChanged = nsnull);
 
   /**

@@ -841,7 +841,6 @@ nsXFormsModelElement::SetNodeValue(nsIDOMNode      *aContextNode,
 { 
   return mMDG.SetNodeValue(aContextNode,
                            aNodeValue,
-                           PR_TRUE,
                            aNodeChanged);
 }
 
