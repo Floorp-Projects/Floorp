@@ -35,7 +35,6 @@
 #define PP_PATH_ONLY                    2
 #define PP_ROOT_ONLY                    3
 
-char            *GetSubString(char *Strings);
 void            PrintError(LPSTR szMsg, DWORD dwErrorCodeSH);
 void            RemoveQuotes(LPSTR lpszSrc, LPSTR lpszDest, int dwDestSize);
 void            RemoveBackSlash(LPSTR szInput);

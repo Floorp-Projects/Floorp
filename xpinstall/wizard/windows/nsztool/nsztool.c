@@ -34,11 +34,7 @@
 
 #define APP_NAME "nsz.exe"
 
-char *GetSubString(char *Strings)
-{
-    return(strchr(Strings,0)+1);
-}
-
+/* Function to show the usage for this application */
 void ShowUsage(char *name)
 {
     char szBuf[MAX_BUF];
@@ -50,6 +46,7 @@ void ShowUsage(char *name)
     MessageBox(NULL, szBuf, "Usage", MB_OK);
 }
 
+/* Function to print error message with/without error code */
 void PrintError(LPSTR szMsg, DWORD dwErrorCodeSH)
 {
   DWORD dwErr;
@@ -66,6 +63,7 @@ void PrintError(LPSTR szMsg, DWORD dwErrorCodeSH)
   MessageBox(NULL, szErrorString, NULL, MB_ICONEXCLAMATION);
 }
 
+/* Function to remove quotes from a string */
 void RemoveQuotes(LPSTR lpszSrc, LPSTR lpszDest, int iDestSize)
 {
   char *lpszBegin;
@@ -84,6 +82,7 @@ void RemoveQuotes(LPSTR lpszSrc, LPSTR lpszDest, int iDestSize)
     lpszDest[lstrlen(lpszDest) - 1] = '\0';
 }
 
+/* Function to remove the last backslash from a path string */
 void RemoveBackSlash(LPSTR szInput)
 {
   int   iCounter;
@@ -103,6 +102,7 @@ void RemoveBackSlash(LPSTR szInput)
   }
 }
 
+/* Function to append a backslash to a path string */
 void AppendBackSlash(LPSTR szInput, DWORD dwInputSize)
 {
   if(szInput != NULL)
@@ -117,6 +117,10 @@ void AppendBackSlash(LPSTR szInput, DWORD dwInputSize)
   }
 }
 
+/* Function to parse a path string for one of three parts of a path:
+ *   Filename only
+ *   Path only
+ *   drive only */
 void ParsePath(LPSTR szInput, LPSTR szOutput, DWORD dwOutputSize, DWORD dwType)
 {
   int   iCounter;
@@ -196,6 +200,8 @@ void ParsePath(LPSTR szInput, LPSTR szOutput, DWORD dwOutputSize, DWORD dwType)
   }
 }
 
+/* Function to check to see if a file exists.
+ * If it does, return it's attributes */
 long FileExists(LPSTR szFile)
 {
   DWORD rv;
@@ -210,6 +216,8 @@ long FileExists(LPSTR szFile)
   }
 }
 
+/* Function to locate the first non space character in a string,
+ * and return a pointer to it. */
 LPSTR GetFirstNonSpace(LPSTR lpszString)
 {
   int   i;
@@ -226,6 +234,8 @@ LPSTR GetFirstNonSpace(LPSTR lpszString)
   return(NULL);
 }
 
+/* Function to return the argument count given a command line input
+ * format string */
 int GetArgC(LPSTR lpszCommandLine)
 {
   int   i;
@@ -276,6 +286,8 @@ int GetArgC(LPSTR lpszCommandLine)
   return(iArgCount);
 }
 
+/* Function to return a specific argument parameter from a given command line input
+ * format string. */
 LPSTR GetArgV(LPSTR lpszCommandLine, int iIndex, LPSTR lpszDest, int iDestSize)
 {
   int   i;
@@ -354,6 +366,8 @@ LPSTR GetArgV(LPSTR lpszCommandLine, int iIndex, LPSTR lpszDest, int iDestSize)
   return(lpszDest);
 }
 
+/* Function to add a file to a self-extracting .exe file.
+ * It compresses the file, then adds it as a resource type "FILE". */
 void AddFile(LPSTR lpszSeaExe, LPSTR lpszFile)
 {
   char        szBuf[MAX_BUF];
@@ -427,6 +441,8 @@ void AddFile(LPSTR lpszSeaExe, LPSTR lpszFile)
   }
 }
 
+/* Function to extract a resourced file from a .exe file.
+ * It also uncompresss the file after extracting it. */
 BOOL APIENTRY ExtractFilesProc(HANDLE hModule, LPCTSTR lpszType, LPTSTR lpszName, LONG lParam)
 {
   char    szBuf[MAX_BUF];
@@ -567,7 +583,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmd
     }
     if(!FileExists(szAppName))
     {
-      wsprintf(szBuf, "file not found: %s", szAppName);
+      wsprintf(szBuf, "File not found: %s", szAppName);
       PrintError(szBuf, ERROR_CODE_HIDE);
       exit(1);
     }
