@@ -288,7 +288,7 @@ nsUnknownContentTypeDialog.prototype = {
            
 
          this.mTitle = this.dialogElement("strings").getFormattedString("title", [fname]);
-         win.setAttribute( "title", this.mTitle );
+         win.document.title = this.mTitle;
 
          // Put content type, filename and location into intro.
          this.initIntro(url, fname);

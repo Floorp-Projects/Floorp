@@ -44,7 +44,7 @@ function init()
   if (creator)
     creator = creator.QueryInterface(Components.interfaces.nsIRDFLiteral).Value;
   
-  document.documentElement.setAttribute("title", extensionsStrings.getFormattedString("aboutWindowTitle", [name]));
+  document.title = extensionsStrings.getFormattedString("aboutWindowTitle", [name]);
   var extensionName = document.getElementById("extensionName");
   extensionName.setAttribute("value", name);
   var extensionVersion = document.getElementById("extensionVersion");

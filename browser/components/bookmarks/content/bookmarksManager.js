@@ -63,7 +63,7 @@ function Startup()
 
   bookmarksView.treeBoxObject.view.selection.select(0);
 
-  windowNode.setAttribute("title", titleString);
+  document.title = titleString;
 
   document.getElementById("CommandUpdate_Bookmarks").setAttribute("commandupdater","true");
   bookmarksView.focus();

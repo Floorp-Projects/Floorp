@@ -94,11 +94,8 @@ function Init()
       field.value = value;
   }
 
-  var propsWindow = document.getElementById("bmPropsWindow");
   var nameNode = document.getElementById("name");
-  var title = propsWindow.getAttribute("title");
-  title = title.replace(/\*\*bm_title\*\*/gi, nameNode.value);
-  propsWindow.setAttribute("title", title);
+  document.title = document.title.replace(/\*\*bm_title\*\*/gi, nameNode.value);
 
   // check bookmark schedule
   var scheduleArc = RDF.GetResource(WEB_NS+"Schedule");
