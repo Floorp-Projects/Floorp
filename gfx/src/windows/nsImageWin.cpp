@@ -726,6 +726,7 @@ NS_IMETHODIMP nsImageWin::DrawTile(nsIRenderingContext &aContext,
     HDC           memDC=nsnull;
     HBITMAP       tmpBitmap=nsnull,oldBitmap;
     unsigned char alpha;
+    PRInt32       targetBytesPerPixel,imageBytesPerPixel;
 
     if (!mImageBits) {
       ConvertDDBtoDIB();
@@ -742,11 +743,20 @@ NS_IMETHODIMP nsImageWin::DrawTile(nsIRenderingContext &aContext,
       ALPHA24BITMAPINFO bmi(width, height);
       tmpBitmap = ::CreateDIBSection(memDC, (LPBITMAPINFO)&bmi, DIB_RGB_COLORS, (LPVOID *)&screenBits, NULL, 0);
       oldBitmap = (HBITMAP)::SelectObject(memDC, tmpBitmap);
+
+      // number of bytes in a row on a 32 bit boundary
+      targetRowBytes = (bmi.bmiHeader.biWidth * bmi.bmiHeader.biBitCount) >> 5;  // number of 32 bit longs
+      if (((PRUint32)bmi.bmiHeader.biWidth * bmi.bmiHeader.biBitCount) & 0x1F) { // make sure its a multiple of 32
+        targetRowBytes++;     // or else there will not be enough bytes per line
+      }
+      targetRowBytes <<= 2;   // divide by 4 to get the number of bytes from the number of 32 bit longs
+
+      targetBytesPerPixel = bmi.bmiHeader.biBitCount/8;
     }
 
     if (!tmpBitmap) {
       if (memDC) {
-        ::DeleteObject(memDC);
+        ::DeleteDC(memDC);
       }
       // this failed..and will fall into the slow blitting code
       NS_WARNING("The Creation of the tmpBitmap failed \n");
@@ -755,12 +765,12 @@ NS_IMETHODIMP nsImageWin::DrawTile(nsIRenderingContext &aContext,
       // this will be the image on the screen into a buffer for the blend.
       ::StretchBlt(memDC, 0, 0, width, height,theHDC, aDestRect.x, aDestRect.y, width, height, SRCCOPY);
   
-      targetRowBytes = ((width * 3) + 3) & ~3;
+      imageBytesPerPixel = mBHead->biBitCount/8;
       ScaledTileHeight_Offset = ScaledTileHeight + aSYOffset;
       ScaledTileWidth_Offset = ScaledTileWidth + aSXOffset;
 
       // this is the adjusted width of these imagebuffers
-      temp1 = mRowBytes + 3 * aSXOffset;
+      temp1 = mRowBytes + imageBytesPerPixel * aSXOffset;
       temp2 = mARowBytes + aSXOffset;
 
       for (int y = 0,byw=aSYOffset; y < height; y++,byw++) {
@@ -771,7 +781,7 @@ NS_IMETHODIMP nsImageWin::DrawTile(nsIRenderingContext &aContext,
         imageRow = mImageBits + (byw * temp1);
         alphaRow = mAlphaBits + (byw * temp2);
 
-        for (int x=0,bxw=aSXOffset;x<width;x++,targetRow+=3,imageRow+=3,bxw++, alphaRow++) {
+        for (int x=0,bxw=aSXOffset;x<width;x++,targetRow+=targetBytesPerPixel,imageRow+=imageBytesPerPixel,bxw++, alphaRow++) {
           // if we went past the row width of our buffer.. go back and start again
           if (bxw>=ScaledTileWidth_Offset) {
             bxw = aSXOffset;
@@ -791,7 +801,7 @@ NS_IMETHODIMP nsImageWin::DrawTile(nsIRenderingContext &aContext,
 
       ::SelectObject(memDC, oldBitmap);
       ::DeleteObject(tmpBitmap);
-      ::DeleteObject(memDC);
+      ::DeleteDC(memDC);
   
     return(NS_OK);
     } 
@@ -854,7 +864,7 @@ nsImageWin::ProgressiveDoubleBlit(nsDrawingSurface aSurface,
     tileBits = ::CreateCompatibleBitmap(theHDC, aDestBufferWidth,aDestBufferHeight);
 
     if (NULL == tileBits) {
-      ::DeleteObject(offDC);
+      ::DeleteDC(offDC);
       return (PR_FALSE);
     }
     oldBits =(HBITMAP) ::SelectObject(offDC,tileBits);
@@ -865,15 +875,15 @@ nsImageWin::ProgressiveDoubleBlit(nsDrawingSurface aSurface,
       if (NULL ==maskDC){
         ::SelectObject(offDC,oldBits);
         ::DeleteObject(tileBits);
-        ::DeleteObject(offDC);
+        ::DeleteDC(offDC);
         return (PR_FALSE);
       }
       maskBits = ::CreateCompatibleBitmap(theHDC, aDestBufferWidth, aDestBufferHeight);
       if (NULL ==maskBits) {
         ::SelectObject(offDC,oldBits);
         ::DeleteObject(tileBits);
-        ::DeleteObject(offDC);
-        ::DeleteObject(maskDC);
+        ::DeleteDC(offDC);
+        ::DeleteDC(maskDC);
         return (PR_FALSE);
       }
 
@@ -929,12 +939,12 @@ nsImageWin::ProgressiveDoubleBlit(nsDrawingSurface aSurface,
       } 
       ::SelectObject(maskDC,oldMaskBits);
       ::DeleteObject(maskBits);
-      ::DeleteObject(maskDC);
+      ::DeleteDC(maskDC);
     }
 
   ::SelectObject(offDC,oldBits);
   ::DeleteObject(tileBits);
-  ::DeleteObject(offDC);
+  ::DeleteDC(offDC);
 
   return(PR_TRUE);
 }
@@ -1457,6 +1467,6 @@ CompositeBitsInMemory(HDC aTheHDC, int aDX, int aDY, int aDWidth, int aDHeight,
       }
       ::DeleteObject(tmpBitmap);
     }
-    ::DeleteObject(memDC);
+    ::DeleteDC(memDC);
   }
 }
