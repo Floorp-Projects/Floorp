@@ -70,8 +70,9 @@ public:
                                nsISupports* aCatalogData);
   NS_IMETHOD HandleProcessingInstruction(const PRUnichar *aTarget, 
                                          const PRUnichar *aData);
-  NS_IMETHOD HandleXMLDeclaration(const PRUnichar *aData, 
-                                  PRUint32 aLength);
+  NS_IMETHOD HandleXMLDeclaration(const PRUnichar *aVersion,
+                                  const PRUnichar *aEncoding,
+                                  PRInt32 aStandalone);
   NS_IMETHOD ReportError(const PRUnichar* aErrorText, 
                          const PRUnichar* aSourceText);
 
@@ -287,8 +288,9 @@ nsXMLFragmentContentSink::HandleProcessingInstruction(const PRUnichar *aTarget,
 }
 
 NS_IMETHODIMP
-nsXMLFragmentContentSink::HandleXMLDeclaration(const PRUnichar *aData, 
-                                               PRUint32 aLength)
+nsXMLFragmentContentSink::HandleXMLDeclaration(const PRUnichar *aVersion,
+                                               const PRUnichar *aEncoding,
+                                               PRInt32 aStandalone)
 {
   NS_NOTREACHED("fragments shouldn't have XML declarations");
   return NS_OK;
