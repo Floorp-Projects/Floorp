@@ -19,12 +19,9 @@
        (%subsection "Identifiers")
        (production :identifier ($identifier) identifier-identifier)
        (production :identifier (box) identifier-box)
-       (production :identifier (constructor) identifier-constructor)
-       (production :identifier (field) identifier-field)
        (production :identifier (get) identifier-get)
        (production :identifier (language) identifier-language)
        (production :identifier (local) identifier-local)
-       (production :identifier (method) identifier-method)
        (production :identifier (set) identifier-set)
        (production :identifier (override) identifier-override)
        (production :identifier (version) identifier-version)
@@ -56,8 +53,8 @@
        
        
        (%subsection "Function Expressions")
-       (production :function-expression (:anonymous-function) function-expression-anonymous-function)
-       (production :function-expression (:named-function) function-expression-named-function)
+       (production :function-expression (function :function-signature :block) function-expression-anonymous)
+       (production :function-expression (function :identifier :function-signature :block) function-expression-named)
        
        
        (%subsection "Object Literals")
@@ -419,8 +416,7 @@
        
        ;(production (:definition :omega) (:version-definition (:semicolon :omega)) definition-version-definition)
        (production (:definition :omega) (:variable-definition (:semicolon :omega)) definition-variable-definition)
-       (production (:definition :omega) (:function-definition) definition-function-definition)
-       (production (:definition :omega) ((:member-definition :omega)) definition-member-definition)
+       (production (:definition :omega) ((:function-definition :omega)) definition-function-definition)
        (production (:definition :omega) (:class-definition) definition-class-definition)       
        
        
@@ -470,6 +466,8 @@
        
        (production :variable-definition-kind (var) variable-definition-kind-var)
        (production :variable-definition-kind (const) variable-definition-kind-const)
+       (production :variable-definition-kind (static :no-line-break var) variable-definition-kind-static-var)
+       (production :variable-definition-kind (static :no-line-break const) variable-definition-kind-static-const)
        
        (production (:variable-binding-list :beta) ((:variable-binding :beta)) variable-binding-list-one)
        (production (:variable-binding-list :beta) ((:variable-binding-list :beta) \, (:variable-binding :beta)) variable-binding-list-more)
@@ -485,15 +483,24 @@
        
        
        (%subsection "Function Definition")
-       (production :function-definition (:named-function) function-definition-named-function)
-       (production :function-definition (:accessor-function) function-definition-accessor-function)
+       (production (:function-definition :omega) (:concrete-function-definition) function-definition-concrete)
+       (production (:function-definition :omega) ((:abstract-function-definition :omega)) function-definition-abstract)
        
-       (production :anonymous-function (function :function-signature :block) anonymous-function-signature-and-body)
+       (production :concrete-function-definition (:function-prefix function :function-name :function-signature :block) concrete-function-definition-signature-and-body)
        
-       (production :named-function (function :identifier :function-signature :block) named-function-signature-and-body)
+       (production (:abstract-function-definition :omega) (:function-prefix function :function-name :function-signature (:semicolon :omega)) abstract-function-definition-signature)
        
-       (production :accessor-function (function get :no-line-break :identifier :function-signature :block) accessor-function-getter)
-       (production :accessor-function (function set :no-line-break :identifier :function-signature :block) accessor-function-setter)
+       (production :function-prefix () function-prefix-none)
+       (production :function-prefix (override :no-line-break) function-prefix-override)
+       (production :function-prefix (final :no-line-break) function-prefix-final)
+       (production :function-prefix (final :no-line-break override :no-line-break) function-prefix-final-override)
+       (production :function-prefix (static :no-line-break) function-prefix-static)
+       
+       (production :function-name (:identifier) function-name-function)
+       (production :function-name (get :no-line-break :identifier) function-name-getter)
+       (production :function-name (set :no-line-break :identifier) function-name-setter)
+       (production :function-name (new :no-line-break :identifier) function-name-constructor)
+       (production :function-name (new) function-name-default-constructor)
 
        (production :function-signature (:parameter-signature :result-signature) function-signature-parameter-and-result-signatures)
        
@@ -524,35 +531,6 @@
        (production :result-signature () result-signature-none)
        (production :result-signature (\: (:type-expression allow-in)) result-signature-colon-and-type-expression)
        ;(production :result-signature ((:- {) (:type-expression allow-in)) result-signature-type-expression)
-       
-       
-       (%subsection "Class Member Definitions")
-       (production (:member-definition :omega) (:field-definition (:semicolon :omega)) member-definition-field-definition)
-       (production (:member-definition :omega) ((:method-definition :omega)) member-definition-method-definition)
-       (production (:member-definition :omega) (:constructor-definition) member-definition-constructor-definition)
-       
-       (production :field-definition (field :no-line-break (:variable-binding-list allow-in)) field-definition-variable-binding-list)
-       
-       (production (:method-definition :omega) (:concrete-method-definition) method-definition-concrete-method-definition)
-       (production (:method-definition :omega) ((:abstract-method-definition :omega)) method-definition-abstract-method-definition)
-       
-       (production :concrete-method-definition (:method-prefix :no-line-break :method-name :function-signature :block) concrete-method-definition-signature-and-body)
-       
-       (production (:abstract-method-definition :omega) (:method-prefix :no-line-break :method-name :function-signature (:semicolon :omega)) abstract-method-definition-signature)
-       
-       (production :method-prefix (method) method-prefix-method)
-       (production :method-prefix (override :no-line-break method) method-prefix-override-method)
-       (production :method-prefix (final :no-line-break method) method-prefix-final-method)
-       (production :method-prefix (final :no-line-break override :no-line-break method) method-prefix-final-override-method)
-       
-       (production :method-name (:identifier) method-name-method)
-       (production :method-name (get :no-line-break :identifier) method-name-getter-method)
-       (production :method-name (set :no-line-break :identifier) method-name-setter-method)
-       
-       (production :constructor-definition (constructor :no-line-break :constructor-name :parameter-signature :block) constructor-definition-signature-and-body)
-       
-       (production :constructor-name (new) constructor-name-new)
-       (production :constructor-name (:identifier) constructor-name-identifier)
        
        
        (%section "Class Definition")
