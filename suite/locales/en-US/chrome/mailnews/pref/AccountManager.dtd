@@ -6,3 +6,6 @@
 <!ENTITY setDefaultButton.label "Set as Default">
 <!ENTITY duplicateButton.label "Duplicate">
 <!ENTITY deleteButton.label "Delete">
+
+<!ENTITY nameCol.label "Name">
+<!ENTITY duplicate.label "Duplicate">

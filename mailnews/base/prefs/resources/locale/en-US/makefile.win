@@ -38,7 +38,6 @@ install::
 	$(MAKE_INSTALL) aw-server.dtd $(DISTBROWSER)
 	$(MAKE_INSTALL) AccountManager.dtd $(DISTBROWSER)
 	$(MAKE_INSTALL) AccountWizard.dtd $(DISTBROWSER)
-	$(MAKE_INSTALL) accounttree.dtd $(DISTBROWSER)
 	$(MAKE_INSTALL) am-advanced.dtd $(DISTBROWSER)
 	$(MAKE_INSTALL) am-copies.dtd $(DISTBROWSER)
 	$(MAKE_INSTALL) am-main.dtd $(DISTBROWSER)
