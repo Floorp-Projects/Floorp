@@ -64,6 +64,7 @@ REQUIRES	= \
 		  imglib2 \
 		  gfx \
 		  locale \
+		  xulapp \
 		  $(NULL)
 
 FORCE_STATIC_LIB = 1
