@@ -112,8 +112,7 @@ public:
     virtual void         	StartDraw(nsIRenderingContext* aRenderingContext = nsnull);
     virtual void         	EndDraw();
     virtual PRBool          OnPaint(nsPaintEvent &event);
-	virtual nsresult		Update(nsIRenderingContext* aRenderingContext);
-	NS_IMETHOD				Update()	{return(Update(nsnull));}
+		NS_IMETHOD				Update();
     
     virtual void  ConvertToDeviceCoordinates(nscoord &aX, nscoord &aY);
 	virtual void  LocalToWindowCoordinate(nsPoint& aPoint);
