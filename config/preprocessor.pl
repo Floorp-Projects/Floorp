@@ -43,6 +43,14 @@ while ($_ = $ARGV[0], defined($_) && /^-./) {
                 die "$0: invalid argument to -D: $_\n";
             }
         }
+    } elsif (/^-F(.*)$/os) { 
+        for ($1) {
+            if (/^(\w+)$/os) {
+                $stack->filter($1, 1);
+            } else {
+                die "$0: invalid argument to -F: $_\n";
+            }
+        }
     } elsif (/^-I(.*)$/os) { 
         push(@includes, $1);
     } elsif (/^-E$/os) { 
