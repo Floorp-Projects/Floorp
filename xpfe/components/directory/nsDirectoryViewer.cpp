@@ -121,13 +121,13 @@ protected:
   static nsIRDFResource* kHTTPIndex_Loading;
   static nsIRDFLiteral*  kTrueLiteral;
 
-  static nsresult ParseLiteral(const nsString& aValue, nsIRDFNode** aResult);
-  static nsresult ParseDate(const nsString& aValue, nsIRDFNode** aResult);
-  static nsresult ParseInt(const nsString& aValue, nsIRDFNode** aResult);
+  static nsresult ParseLiteral(nsIRDFResource *arc, const nsString& aValue, nsIRDFNode** aResult);
+  static nsresult ParseDate(nsIRDFResource *arc, const nsString& aValue, nsIRDFNode** aResult);
+  static nsresult ParseInt(nsIRDFResource *arc, const nsString& aValue, nsIRDFNode** aResult);
 
   struct Field {
     const char*     mName;
-    nsresult        (*mParse)(const nsString& aValue, nsIRDFNode** aResult);
+    nsresult        (*mParse)(nsIRDFResource *arc, const nsString& aValue, nsIRDFNode** aResult);
     nsIRDFResource* mProperty;
   };
 
@@ -142,7 +142,7 @@ protected:
   nsCOMPtr<nsIRDFContainer> mDirectoryContainer;
 
   nsCAutoString mLine;
-  nsresult ProcessOneLine();
+  nsresult ProcessData();
   nsresult ParseFormat(const char* aFormatStr);
   nsresult ParseData(const char* aDataStr);
 
@@ -190,12 +190,15 @@ nsHTTPIndexParser::gFieldTable[] = {
   { nsnull,           nsHTTPIndexParser::ParseLiteral, nsnull },
 };
 
+
+
 nsHTTPIndexParser::nsHTTPIndexParser(nsHTTPIndex* aHTTPIndex, nsIContentViewerContainer* aContainer)
   : mHTTPIndex(aHTTPIndex),
     mContainer(aContainer)
 {
   NS_INIT_REFCNT();
 }
+
 
 
 nsresult
@@ -232,8 +235,7 @@ nsHTTPIndexParser::Init()
     if (NS_FAILED(rv)) return rv;
 
     for (Field* field = gFieldTable; field->mName; ++field) {
-      nsCAutoString str;
-      str += HTTPINDEX_NAMESPACE_URI;
+      nsCAutoString str(HTTPINDEX_NAMESPACE_URI);
       str += field->mName;
 
       rv = gRDF->GetResource(str, &field->mProperty);
@@ -242,6 +244,8 @@ nsHTTPIndexParser::Init()
   }
   return NS_OK;
 }
+
+
 
 nsHTTPIndexParser::~nsHTTPIndexParser()
 {
@@ -258,6 +262,7 @@ nsHTTPIndexParser::~nsHTTPIndexParser()
     nsServiceManager::ReleaseService("component://netscape/rdf/rdf-service", gRDF);
   }
 }
+
 
 
 nsresult
@@ -285,8 +290,11 @@ nsHTTPIndexParser::Create(nsHTTPIndex* aHTTPIndex,
 }
 
 
+
 NS_IMPL_ADDREF(nsHTTPIndexParser);
 NS_IMPL_RELEASE(nsHTTPIndexParser);
+
+
 
 NS_IMETHODIMP
 nsHTTPIndexParser::QueryInterface(REFNSIID aIID, void** aResult)
@@ -309,13 +317,14 @@ nsHTTPIndexParser::QueryInterface(REFNSIID aIID, void** aResult)
 }
 
 
+
 NS_IMETHODIMP
 nsHTTPIndexParser::OnStartRequest(nsIChannel* aChannel, nsISupports* aContext)
 {
   nsresult rv;
 
   if (mContainer) {
-    // We need to undo the AddRef() on the nsHTTPIndex objectthat
+    // We need to undo the AddRef() on the nsHTTPIndex object that
     // happened in nsDirectoryViewerFactory::CreateInstance(). We'll
     // stuff it into an nsCOMPtr (because we _know_ it'll get release
     // if any errors occur)...
@@ -394,6 +403,8 @@ nsHTTPIndexParser::OnStartRequest(nsIChannel* aChannel, nsISupports* aContext)
   return NS_OK;
 }
 
+
+
 NS_IMETHODIMP
 nsHTTPIndexParser::OnStopRequest(nsIChannel* aChannel,
                                  nsISupports* aContext,
@@ -409,7 +420,7 @@ nsHTTPIndexParser::OnStopRequest(nsIChannel* aChannel,
   // XXX Should we do anything different if aStatus != NS_OK?
 
   if (mLine.Length() > 0)
-    ProcessOneLine();
+    ProcessData();
 
   nsresult rv;
 
@@ -435,84 +446,110 @@ nsHTTPIndexParser::OnDataAvailable(nsIChannel* aChannel,
                                    PRUint32 aSourceOffset,
                                    PRUint32 aCount)
 {
-  nsresult rv;
+	nsresult	rv;
 
-  while (aCount > 0) {
-    char buf[128];
-    PRUint32 count = (aCount > sizeof(buf)) ? sizeof(buf) : aCount;
-    PRUint32 nread;
+	if (aCount < 1)	return(NS_OK);
 
-    rv = aStream->Read(buf, count, &nread);
-    if (NS_FAILED(rv) || nread == 0) return rv;
+	char		*buffer = new char[ aCount ];
+	if (!buffer)	return(NS_ERROR_OUT_OF_MEMORY);
 
-    char* p = buf;
-    while (nread != 0) {
-      mLine.Append(*p);
+	PRUint32	count;
+	if (NS_FAILED(rv = aStream->Read(buffer, aCount, &count)) || (count == 0))
+	{
+#ifdef	DEBUG
+		printf("nsHTTPIndexParser: OnDataAvailable read failure.\n");
+#endif
+		delete []buffer;
+		return(rv);
+	}
+	if (count != aCount)
+	{
+#ifdef	DEBUG
+		printf("nsHTTPIndexParser: OnDataAvailable read # of bytes failure.\n");
+#endif
+		delete []buffer;
+		return(NS_ERROR_UNEXPECTED);
+	}
 
-      if (*p == '\n') {
-        rv = ProcessOneLine();
-        NS_ASSERTION(NS_SUCCEEDED(rv), "error processing http-index line");
-        if (NS_FAILED(rv)) return rv;
+	mLine.Append(buffer, aCount);
+	delete [] buffer;
 
-        mLine.Truncate();
-      }
-
-      ++p;
-      --nread;
-    }
-  }
-
-  return NS_OK;
+        rv = ProcessData();
+	return(rv);
 }
+
 
 
 nsresult
-nsHTTPIndexParser::ProcessOneLine()
+nsHTTPIndexParser::ProcessData()
 {
-  if (mLine.Length() >= 4) {
-    nsresult rv;
-    const char* buf = mLine;
+	while(PR_TRUE)
+	{
+		PRInt32		eol = mLine.FindCharInSet("\n\r");
+		if (eol < 0)	break;
+		
+		nsCString	aLine;
+		mLine.Left(aLine, eol);
+		mLine.Cut(0, eol + 1);
 
-    if (buf[0] == '1') {
-      if (buf[1] == '0') {
-        if (buf[2] == '0' && buf[3] == ':') {
-          // 100. Human-readable comment line. Ignore
-        }
-        else if (buf[2] == '1' && buf[3] == ':') {
-          // 101. Human-readable information line.
-          mComment += (buf + 4);
-        }
-        else if (buf[2] == '2' && buf[3] == ':') {
-          // 102. Human-readable information line, HTML.
-          mComment += (buf + 4);
-        }
-      }
-    }
-    else if (buf[0] == '2') {
-      if (buf[1] == '0') {
-        if (buf[2] == '0' && buf[3] == ':') {
-          // 200. Define field names
-          rv = ParseFormat(buf + 4);
-          if (NS_FAILED(rv)) return rv;
-        }
-        else if (buf[2] == '1' && buf[3] == ':') {
-          // 201. Field data
-          rv = ParseData(buf + 4);
-          if (NS_FAILED(rv)) return rv;
-        }
-      }
-    }
-    else if (buf[0] == '3') {
-      if (buf[1] == '0') {
-        if (buf[2] == '0' && buf[3] == ':') {
-          // 300. Self-referring URL
-        }
-      }
-    }
-  }
+		if (aLine.Length() >= 4)
+		{
+			nsresult	rv;
+			const char	*buf = aLine;
 
-  return NS_OK;
+			if (buf[0] == '1')
+			{
+				if (buf[1] == '0')
+				{
+					if (buf[2] == '0' && buf[3] == ':')
+					{
+						// 100. Human-readable comment line. Ignore
+					}
+					else if (buf[2] == '1' && buf[3] == ':')
+					{
+						// 101. Human-readable information line.
+						mComment += (buf + 4);
+					}
+					else if (buf[2] == '2' && buf[3] == ':')
+					{
+						// 102. Human-readable information line, HTML.
+						mComment += (buf + 4);
+					}
+				}
+			}
+			else if (buf[0] == '2')
+			{
+				if (buf[1] == '0')
+				{
+					if (buf[2] == '0' && buf[3] == ':')
+					{
+						// 200. Define field names
+						rv = ParseFormat(buf + 4);
+						if (NS_FAILED(rv)) return rv;
+					}
+					else if (buf[2] == '1' && buf[3] == ':')
+					{
+						// 201. Field data
+						rv = ParseData(buf + 4);
+						if (NS_FAILED(rv)) return rv;
+					}
+				}
+			}
+			else if (buf[0] == '3')
+			{
+				if (buf[1] == '0')
+				{
+					if (buf[2] == '0' && buf[3] == ':')
+					{
+						// 300. Self-referring URL
+					}
+				}
+			}
+		}
+	}
+	return(NS_OK);
 }
+
 
 
 nsresult
@@ -526,12 +563,16 @@ nsHTTPIndexParser::ParseFormat(const char* aFormatStr)
     while (*aFormatStr && nsString::IsSpace(PRUnichar(*aFormatStr)))
       ++aFormatStr;
 
-    if (! aFormatStr)
+    if (! *aFormatStr)
       break;
 
     nsCAutoString name;
-    while (*aFormatStr && !nsString::IsSpace(PRUnichar(*aFormatStr)))
-      name.Append(*aFormatStr++);
+    PRInt32	len = 0;
+    while (aFormatStr[len] && !nsString::IsSpace(PRUnichar(aFormatStr[len])))
+    	++len;
+    name.SetCapacity(len + 1);
+    name.Append(aFormatStr, len);
+    aFormatStr += len;
 
     // Okay, we're gonna monkey with the nsStr. Bold!
     name.mLength = nsUnescapeCount(name.mStr);
@@ -551,7 +592,10 @@ nsHTTPIndexParser::ParseFormat(const char* aFormatStr)
 }
 
 
+
 #define MAX_AUTO_VALUES 8
+
+
 
 nsresult
 nsHTTPIndexParser::ParseData(const char* aDataStr)
@@ -609,13 +653,18 @@ nsHTTPIndexParser::ParseData(const char* aDataStr)
     while (*aDataStr && nsString::IsSpace(PRUnichar(*aDataStr)))
       ++aDataStr;
 
-    nsCAutoString value;
+    nsCAutoString	value;
+    PRInt32		len;
 
     if (*aDataStr == '"' || *aDataStr == '\'') {
       // it's a quoted string. snarf everything up to the next quote character
       const char quotechar = *(aDataStr++);
-      while (*aDataStr && *aDataStr != quotechar)
-        value.Append(*aDataStr++);
+      len = 0;
+      while (aDataStr[len] && (aDataStr[len] != quotechar))
+      	++len;
+      value.SetCapacity(len + 1);
+      value.Append(aDataStr, len);
+      aDataStr += len;
 
       if (! aDataStr) {
         NS_WARNING("quoted value not terminated");
@@ -623,8 +672,12 @@ nsHTTPIndexParser::ParseData(const char* aDataStr)
     }
     else {
       // it's unquoted. snarf until we see whitespace.
-      while (*aDataStr && !nsString::IsSpace(*aDataStr))
-        value.Append(*aDataStr++);
+      len = 0;
+      while (aDataStr[len] && !nsString::IsSpace(aDataStr[len]))
+        ++len;
+      value.SetCapacity(len + 1);
+      value.Append(aDataStr, len);
+      aDataStr += len;
     }
 
     // Monkey with the nsStr, because we're bold.
@@ -639,7 +692,6 @@ nsHTTPIndexParser::ParseData(const char* aDataStr)
       rv = NS_MakeAbsoluteURI(value, realbase, entryuri);
       NS_ASSERTION(NS_SUCCEEDED(rv), "unable make absolute URI");
       if (NS_FAILED(rv)) break;
-
       rv = gRDF->GetResource(nsCAutoString(entryuri), getter_AddRefs(entry));
     }
   }
@@ -655,11 +707,13 @@ nsHTTPIndexParser::ParseData(const char* aDataStr)
         continue;
 
       nsCOMPtr<nsIRDFNode> value;
-      rv = (*field->mParse)(values[indx], getter_AddRefs(value));
+      rv = (*field->mParse)(field->mProperty, values[indx], getter_AddRefs(value));
       if (NS_FAILED(rv)) break;
-
-      rv = mDataSource->Assert(entry, field->mProperty, value, PR_TRUE);
-      if (NS_FAILED(rv)) break;
+      if (value)
+      {
+        rv = mDataSource->Assert(entry, field->mProperty, value, PR_TRUE);
+        if (NS_FAILED(rv)) break;
+      }
     }
 
     rv = mDirectoryContainer->AppendElement(entry);
@@ -674,10 +728,24 @@ nsHTTPIndexParser::ParseData(const char* aDataStr)
 }
 
 
+
 nsresult
-nsHTTPIndexParser::ParseLiteral(const nsString& aValue, nsIRDFNode** aResult)
+nsHTTPIndexParser::ParseLiteral(nsIRDFResource *arc, const nsString& aValue, nsIRDFNode** aResult)
 {
   nsresult rv;
+
+  if (arc == kHTTPIndex_Filename)
+  {
+	// strip off trailing slash(s) from directory names
+  	PRInt32	len = aValue.Length();
+  	if (len > 0)
+  	{
+  		if (aValue[len - 1] == '/')
+  		{
+  			aValue.SetLength(len - 1);
+  		}
+  	}
+  }
 
   nsCOMPtr<nsIRDFLiteral> result;
   rv = gRDF->GetLiteral(aValue.GetUnicode(), getter_AddRefs(result));
@@ -687,8 +755,9 @@ nsHTTPIndexParser::ParseLiteral(const nsString& aValue, nsIRDFNode** aResult)
 }
 
 
+
 nsresult
-nsHTTPIndexParser::ParseDate(const nsString& aValue, nsIRDFNode** aResult)
+nsHTTPIndexParser::ParseDate(nsIRDFResource *arc, const nsString& aValue, nsIRDFNode** aResult)
 {
   PRTime tm;
   PRStatus err = PR_ParseTimeString(nsCAutoString(aValue), PR_TRUE, &tm);
@@ -704,13 +773,21 @@ nsHTTPIndexParser::ParseDate(const nsString& aValue, nsIRDFNode** aResult)
 }
 
 
+
 nsresult
-nsHTTPIndexParser::ParseInt(const nsString& aValue, nsIRDFNode** aResult)
+nsHTTPIndexParser::ParseInt(nsIRDFResource *arc, const nsString& aValue, nsIRDFNode** aResult)
 {
   PRInt32 err;
   PRInt32 i = aValue.ToInteger(&err);
   if (nsresult(err) != NS_OK)
     return NS_ERROR_FAILURE;
+
+  if (i == 0)
+  {
+  	// disregard "zero" values
+  	*aResult = nsnull;
+  	return(NS_OK);
+  }
 
   nsresult rv;
   nsCOMPtr<nsIRDFInt> result;
@@ -720,14 +797,19 @@ nsHTTPIndexParser::ParseInt(const nsString& aValue, nsIRDFNode** aResult)
   return result->QueryInterface(nsCOMTypeInfo<nsIRDFNode>::GetIID(), (void**) aResult);
 }
 
+
+
 ////////////////////////////////////////////////////////////////////////
 // nsHTTPIndex implementation
+
+
 
 nsHTTPIndex::nsHTTPIndex(nsIContentViewerContainer* aContainer)
   : mContainer(aContainer)
 {
   NS_INIT_REFCNT();
 }
+
 
 
 nsresult
@@ -755,6 +837,7 @@ nsHTTPIndex::Init(nsIURI* aBaseURL)
 }
 
 
+
 nsresult
 nsHTTPIndex::Create(nsIURI* aBaseURL, nsIContentViewerContainer* aContainer, nsIHTTPIndex** aResult)
 {
@@ -773,12 +856,18 @@ nsHTTPIndex::Create(nsIURI* aBaseURL, nsIContentViewerContainer* aContainer, nsI
   return NS_OK;
 }
 
+
+
 nsHTTPIndex::~nsHTTPIndex()
 {
 }
 
+
+
 NS_IMPL_ADDREF(nsHTTPIndex);
 NS_IMPL_RELEASE(nsHTTPIndex);
+
+
 
 NS_IMETHODIMP
 nsHTTPIndex::QueryInterface(REFNSIID aIID, void** aResult)
@@ -799,6 +888,8 @@ nsHTTPIndex::QueryInterface(REFNSIID aIID, void** aResult)
   }
 }
 
+
+
 NS_IMETHODIMP
 nsHTTPIndex::GetBaseURL(char** _result)
 {
@@ -810,6 +901,7 @@ nsHTTPIndex::GetBaseURL(char** _result)
 }
 
 
+
 NS_IMETHODIMP
 nsHTTPIndex::GetDataSource(nsIRDFDataSource** _result)
 {
@@ -817,6 +909,8 @@ nsHTTPIndex::GetDataSource(nsIRDFDataSource** _result)
   NS_IF_ADDREF(*_result);
   return NS_OK;
 }
+
+
 
 NS_IMETHODIMP
 nsHTTPIndex::CreateListener(nsIStreamListener** _result)
@@ -866,14 +960,19 @@ public:
                                        nsIContentViewer** aDocViewerResult);
 };
 
+
+
 nsDirectoryViewerFactory::nsDirectoryViewerFactory()
 {
   NS_INIT_REFCNT();
 }
 
+
+
 nsDirectoryViewerFactory::~nsDirectoryViewerFactory()
 {
 }
+
 
 
 NS_IMETHODIMP
@@ -897,8 +996,11 @@ nsDirectoryViewerFactory::Create(nsISupports* aOuter, REFNSIID aIID, void** aRes
 }
 
 
+
 NS_IMPL_ADDREF(nsDirectoryViewerFactory);
 NS_IMPL_RELEASE(nsDirectoryViewerFactory);
+
+
 
 NS_IMETHODIMP
 nsDirectoryViewerFactory::QueryInterface(REFNSIID aIID, void** aResult)
@@ -919,6 +1021,8 @@ nsDirectoryViewerFactory::QueryInterface(REFNSIID aIID, void** aResult)
   NS_ADDREF(this);
   return NS_OK;
 }
+
+
 
 NS_IMETHODIMP
 nsDirectoryViewerFactory::CreateInstance(const char *aCommand,
@@ -980,6 +1084,8 @@ nsDirectoryViewerFactory::CreateInstance(const char *aCommand,
 
   return NS_OK;
 }
+
+
 
 NS_IMETHODIMP
 nsDirectoryViewerFactory::CreateInstanceForDocument(nsIContentViewerContainer* aContainer,
