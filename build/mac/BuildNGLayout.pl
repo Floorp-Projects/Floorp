@@ -47,9 +47,9 @@ $build{intl} = 0;
 $build{nglayout} = 0;
 $build{resources} = 0;
 $build{editor} = 0;
+$build{mailnews} = 0;
 $build{viewer} = 0;
 $build{xpapp} = 0;
-$build{mailnews} = 1;
 
 if ($pull{all})
 {
