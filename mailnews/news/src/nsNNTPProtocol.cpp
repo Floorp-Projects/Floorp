@@ -2282,7 +2282,7 @@ PRInt32 nsNNTPProtocol::ReadArticle(nsIInputStream * inputStream, PRUint32 lengt
 void nsNNTPProtocol::ParseHeaderForCancel(char *buf)
 {
     nsString header(buf, eOneByte);
-    PRInt32 colon = header.Find(':');
+    PRInt32 colon = header.FindChar(':');
     if (!colon)
 		return;
 

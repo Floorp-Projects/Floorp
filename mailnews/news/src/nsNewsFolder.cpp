@@ -780,7 +780,7 @@ nsresult nsMsgNewsFolder::AbbreviatePrettyName(PRUnichar ** prettyName, PRInt32 
   // get the total no. of words
   for (PRInt32 pos = 0;
        (pos++) != name.Length();
-       pos = name.Find('.', pos))
+       pos = name.FindChar('.', PR_FALSE,pos))
     totalwords ++;
 
   // get the no. of words to abbreviate

@@ -41,7 +41,7 @@ peqWithParameter(nsIRDFResource *r1, nsIRDFResource *r2, PRBool *isParameter, co
 	nsAllocator::Free(r1Str);
 
 	//Look to see if there are any parameters
-	PRInt32 paramStart = r2nsStr.Find('?');
+	PRInt32 paramStart = r2nsStr.FindChar('?');
 	//If not, then just return whether or not the strings are equal.
 	if(paramStart == -1)
 	{

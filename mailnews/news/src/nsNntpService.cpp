@@ -187,7 +187,7 @@ nsresult nsNntpService::ConvertNewsMessageURI2NewsURI(const char *messageURI, ns
   // take news.mcom.com/mcom.linux (in hostname) and put
   // "mcom.linux" into newsgroupName and truncate to leave
   // "news.mcom.com" in hostname
-  PRInt32 hostEnd = hostname.Find('/');
+  PRInt32 hostEnd = hostname.FindChar('/');
   if (hostEnd > 0) {
     hostname.Right(newsgroupName, hostname.Length() - hostEnd - 1);
     hostname.Truncate(hostEnd);
@@ -379,7 +379,7 @@ nsresult nsNntpService::DetermineHostForPosting(nsString &host, const char *news
 #endif
       
       // theRest is "group" or "host/group"
-      PRInt32 slashpos = theRest.Find('/');
+      PRInt32 slashpos = theRest.FindChar('/');
       if (slashpos > 0 ) {
         // theRest is "host/group"
         theRest.Left(currentHost, slashpos);
@@ -490,7 +490,7 @@ nsresult nsNntpService::ConvertNewsgroupsString(const char *newsgroupsNames, cha
 #endif
       
       // theRest is "group" or "host/group"
-      PRInt32 slashpos = theRest.Find('/');
+      PRInt32 slashpos = theRest.FindChar('/');
       if (slashpos > 0 ) {
         nsString currentGroup("",eOneByte);
         

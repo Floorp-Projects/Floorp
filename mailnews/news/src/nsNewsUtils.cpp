@@ -116,7 +116,7 @@ nsNewsURI2Path(const char* rootURI, const char* uriStr, nsFileSpec& pathResult)
   // the server name is the first component of the path, so extract it out
   PRInt32 hostStart = 0;
 
-  hostStart = uri.Find('/');
+  hostStart = uri.FindChar('/');
   if (hostStart <= 0) return NS_ERROR_FAILURE;
 
   // skip past all //
@@ -126,9 +126,9 @@ nsNewsURI2Path(const char* rootURI, const char* uriStr, nsFileSpec& pathResult)
   nsAutoString hostname (eOneByte);
   uri.Right(hostname, uri.Length() - hostStart);
 
-  PRInt32 hostEnd = hostname.Find('/');
+  PRInt32 hostEnd = hostname.FindChar('/');
 
-  PRInt32 atPos = hostname.Find('@');
+  PRInt32 atPos = hostname.FindChar('@');
   nsAutoString username(eOneByte);
 
   username = "";
@@ -140,7 +140,7 @@ nsNewsURI2Path(const char* rootURI, const char* uriStr, nsFileSpec& pathResult)
     
     username = "";
     
-    hostEnd = hostname.Find('/');
+    hostEnd = hostname.FindChar('/');
   }
 
   // newsgroup comes after the hostname, after the '/'
@@ -209,7 +209,7 @@ nsParseNewsMessageURI(const char* uri, nsString& messageUriWithoutKey, PRUint32 
 		return NS_ERROR_NULL_POINTER;
 
 	nsAutoString uriStr = uri;
-	PRInt32 keySeparator = uriStr.Find('#');
+	PRInt32 keySeparator = uriStr.FindChar('#');
 	if(keySeparator != -1)
 	{
 		uriStr.Left(messageUriWithoutKey, keySeparator);

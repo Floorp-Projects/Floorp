@@ -238,7 +238,7 @@ nsresult nsParseLocalMessageURI(const char* uri,
 		return NS_ERROR_NULL_POINTER;
 
 	nsAutoString uriStr = uri;
-	PRInt32 keySeparator = uriStr.Find('#');
+	PRInt32 keySeparator = uriStr.FindChar('#');
 	if(keySeparator != -1)
 	{
 		nsAutoString folderPath;

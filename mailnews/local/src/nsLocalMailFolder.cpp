@@ -1292,7 +1292,7 @@ nsMsgLocalMailFolder::CopyMessages(nsIMsgFolder* srcFolder, nsISupportsArray*
   rv = srcFolder->GetURI(&uri);
   nsString2 protocolType(uri, eOneByte);
   PR_FREEIF(uri);
-  protocolType.SetLength(protocolType.Find(':'));
+  protocolType.SetLength(protocolType.FindChar(':'));
 
   if (!protocolType.EqualsIgnoreCase("mailbox"))
   {

@@ -2855,7 +2855,7 @@ SI_FindValueInArgs(nsAutoString results, char* name) {
         return nsAutoString("").ToNewCString();
     }
     start += PL_strlen(name); /* get passed the |name| part */
-    length = results.Find('|', start) - start;
+    length = results.FindChar('|', PR_FALSE,start) - start;
     results.Mid(value, start, length);
     return value.ToNewCString();
 }

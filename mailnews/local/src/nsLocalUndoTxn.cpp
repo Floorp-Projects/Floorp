@@ -131,7 +131,7 @@ nsLocalMoveCopyMsgTxn::UndoImapDeleteFlag(nsIMsgFolder* folder,
     rv = folder->GetURI(&uri);
     nsString2 protocolType(uri, eOneByte);
     PR_FREEIF(uri);
-    protocolType.SetLength(protocolType.Find(':'));
+    protocolType.SetLength(protocolType.FindChar(':'));
     if (protocolType.EqualsIgnoreCase("imap"))
     {
         NS_WITH_SERVICE(nsIImapService, imapService, kCImapService, &rv);

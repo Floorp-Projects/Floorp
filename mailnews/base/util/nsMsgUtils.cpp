@@ -33,7 +33,7 @@ nsresult GetMessageServiceProgIDForURI(const char *uri, nsString &progID)
 	nsresult rv = NS_OK;
 	//Find protocol
 	nsString uriStr = uri;
-	PRInt32 pos = uriStr.Find(':');
+	PRInt32 pos = uriStr.FindChar(':');
 	if(pos == -1)
 		return NS_ERROR_FAILURE;
 	nsString protocol;
