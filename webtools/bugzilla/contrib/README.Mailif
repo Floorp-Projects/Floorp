@@ -1,6 +1,9 @@
 
 The Bugzilla Mail interface
 ===========================
+
+(UPDATE 03/14/00 to better reflect reality by SML)
+
 The Bugzilla Mail interface allows to submit bugs to Bugzilla by email.
 
 The Mail Interface Contribution consists of three files:
@@ -9,11 +12,6 @@ bug_email.pl  - the script
 bugmail_help.html - a user help html site
 
 Installation:
-
-Copy the files
- bugmail_help.html
- bug_email.pl
-to your bugzilla-directory, where all your bugzilla cgi-files reside.
 
 Next is to add a user who receives the bugmails, e. g. bugmail. Create a 
 mail account and a home directory for the user. 
@@ -27,6 +25,14 @@ BUGZILLA_HOME=/usr/local/httpd/htdocs/bugzilla
 
 This defines the Bugzilla directory as the variable BUGZILLA_HOME and passes
 all incoming mail to the script after cd'ing into the bugzilla home.
+
+In some cases, it is necessary to alter the headers of incoming email.  The 
+additional line to procmail :
+
+:0 fhw
+| formail -I "From " -a "From "
+
+fixes many problems.
 
 Customation:
 
@@ -66,3 +72,6 @@ There are two command line switches :
 
 
 02/2000 - Klaas Freitag, SuSE GmbH <freitag@suse.de>
+03/2000 - Seth M. Landsman <seth@cs.brandeis.edu>
+ bug_email.pl now lives out of bugzilla/contrib
+ added line about formail
