@@ -341,7 +341,12 @@ nsScriptLoader::ProcessScriptElement(nsIDOMHTMLScriptElement *aElement,
     if (NS_FAILED(rv)) {
       return FireErrorNotification(rv, aElement, aObserver);
     }
-    rv = securityManager->CheckLoadURI(baseURI, scriptURI, 
+    nsCOMPtr<nsIURI> docURI;
+    mDocument->GetDocumentURL(getter_AddRefs(docURI));
+    if (!docURI) {
+      return FireErrorNotification(NS_ERROR_UNEXPECTED, aElement, aObserver);
+    }
+    rv = securityManager->CheckLoadURI(docURI, scriptURI, 
                                        nsIScriptSecurityManager::ALLOW_CHROME);
     if (NS_FAILED(rv)) {
       return FireErrorNotification(rv, aElement, aObserver);

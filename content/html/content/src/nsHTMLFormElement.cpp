@@ -1054,10 +1054,10 @@ nsHTMLFormElement::GetActionURL(nsIURI** aActionURL)
   }
 
   // Get base URL
-  nsCOMPtr<nsIURI> docURL;
-  GetBaseURL(*getter_AddRefs(docURL));
-  NS_ASSERTION(docURL, "No Base URL found in Form Submit!\n");
-  if (!docURL) {
+  nsCOMPtr<nsIURI> baseURL;
+  GetBaseURL(*getter_AddRefs(baseURL));
+  NS_ASSERTION(baseURL, "No Base URL found in Form Submit!\n");
+  if (!baseURL) {
     return NS_OK; // No base URL -> exit early, see Bug 30721
   }
 
@@ -1077,10 +1077,10 @@ nsHTMLFormElement::GetActionURL(nsIURI** aActionURL)
       return NS_OK;
     }
 
-    rv = docURL->Clone(getter_AddRefs(actionURL));
+    rv = baseURL->Clone(getter_AddRefs(actionURL));
     NS_ENSURE_SUCCESS(rv, rv);
   } else {
-    rv = NS_NewURI(getter_AddRefs(actionURL), action, nsnull, docURL);
+    rv = NS_NewURI(getter_AddRefs(actionURL), action, nsnull, baseURL);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
@@ -1095,6 +1095,10 @@ nsHTMLFormElement::GetActionURL(nsIURI** aActionURL)
     do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
+  nsCOMPtr<nsIURI> docURL;
+  mDocument->GetDocumentURL(getter_AddRefs(docURL));
+  NS_ENSURE_TRUE(docURL, NS_ERROR_UNEXPECTED);
+  
   rv = securityManager->CheckLoadURI(docURL, actionURL,
                                      nsIScriptSecurityManager::STANDARD);
   NS_ENSURE_SUCCESS(rv, rv);
