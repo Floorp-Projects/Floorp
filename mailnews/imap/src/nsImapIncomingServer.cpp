@@ -67,11 +67,6 @@
 #include "nsINetDataCacheManager.h"
 #include "nsINetDataCache.h"
 #include "nsICachedNetData.h"
-#include "nslog.h"
-
-NS_IMPL_LOG(nsImapIncomingServerLog)
-#define PRINTF NS_LOG_PRINTF(nsImapIncomingServerLog)
-#define FLUSH  NS_LOG_FLUSH(nsImapIncomingServerLog)
 
 #include "nsITimer.h"
 static NS_DEFINE_CID(kCImapHostSessionList, NS_IIMAPHOSTSESSIONLIST_CID);
@@ -2141,7 +2136,7 @@ nsImapIncomingServer::PopulateSubscribeDatasourceWithUri(nsIMsgWindow *aMsgWindo
 {
 	nsresult rv;
 #ifdef DEBUG_sspitzer
-	PRINTF("in PopulateSubscribeDatasourceWithUri(%s)\n",uri);
+	printf("in PopulateSubscribeDatasourceWithUri(%s)\n",uri);
 #endif
 	mDoingSubscribeDialog = PR_TRUE;	
 
@@ -2163,7 +2158,7 @@ nsImapIncomingServer::PopulateSubscribeDatasourceWithUri(nsIMsgWindow *aMsgWindo
 	*/
 	const char *path = uri + nsCRT::strlen((const char *)serverUri) + 1;
 #ifdef DEBUG_seth
-	PRINTF("path = %s\n",path);
+	printf("path = %s\n",path);
 #endif
 
     rv = imapService->BuildSubscribeDatasourceWithPath(this, aMsgWindow, path);
@@ -2177,7 +2172,7 @@ nsImapIncomingServer::PopulateSubscribeDatasource(nsIMsgWindow *aMsgWindow, PRBo
 {
 	nsresult rv;
 #ifdef DEBUG_sspitzer
-	PRINTF("in PopulateSubscribeDatasource()\n");
+	printf("in PopulateSubscribeDatasource()\n");
 #endif
 	mDoingSubscribeDialog = PR_TRUE;	
 
@@ -2264,7 +2259,7 @@ NS_IMETHODIMP
 nsImapIncomingServer::UpdateSubscribedInSubscribeDS()
 {
 #ifdef DEBUG_sspitzer
-	PRINTF("for imap, do this when we populate\n");
+	printf("for imap, do this when we populate\n");
 #endif
 	return NS_OK;
 }

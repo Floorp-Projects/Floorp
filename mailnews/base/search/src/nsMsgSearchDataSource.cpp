@@ -34,12 +34,6 @@
 #include "nsXPIDLString.h"
 #endif
 
-#include "nslog.h"
-
-NS_IMPL_LOG(nsMsgSearchDataSourceLog)
-#define PRINTF NS_LOG_PRINTF(nsMsgSearchDataSourceLog)
-#define FLUSH  NS_LOG_FLUSH(nsMsgSearchDataSourceLog)
-
 nsCOMPtr<nsIRDFResource> nsMsgSearchDataSource::kNC_MessageChild;
 nsrefcnt nsMsgSearchDataSource::gInstanceCount = 0;
 PRUint32 nsMsgSearchDataSource::gCurrentURINum = 0;
@@ -91,7 +85,7 @@ nsMsgSearchDataSource::OnSearchHit(nsIMsgDBHdr* aMsgHdr, nsIMsgFolder *folder)
     nsresult rv;
 
 #ifdef DEBUG
-    PRINTF("nsMsgSearchDataSource::OnSearchHit!!\n");
+    printf("nsMsgSearchDataSource::OnSearchHit!!\n");
 #endif
     
     nsCOMPtr<nsIMessage> message;

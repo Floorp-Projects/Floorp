@@ -46,11 +46,6 @@
 #include "nsLayoutCID.h"
 #include "nsString.h"
 #include "nsITreeBoxObject.h"
-#include "nslog.h"
-
-NS_IMPL_LOG(nsXULTreeElementLog)
-#define PRINTF NS_LOG_PRINTF(nsXULTreeElementLog)
-#define FLUSH  NS_LOG_FLUSH(nsXULTreeElementLog)
 
 static NS_DEFINE_CID(kCRangeCID, NS_RANGE_CID);
 static NS_DEFINE_IID(kCContentIteratorCID, NS_CONTENTITERATOR_CID);
@@ -118,7 +113,7 @@ nsXULTreeElement::~nsXULTreeElement()
 {
 #ifdef DEBUG_REFS
     --gInstanceCount;
-    PRINTF("%d - RDF: nsXULTreeElement\n", gInstanceCount);
+    fprintf(stdout, "%d - RDF: nsXULTreeElement\n", gInstanceCount);
 #endif
 
   NS_IF_RELEASE(mSelectedItems);
@@ -420,7 +415,7 @@ nsresult
 nsXULTreeElement::FireOnSelectHandler()
 {
 #ifdef DEBUG_bryner
-  PRINTF("FireOnSelectHandler\n");
+  printf("FireOnSelectHandler\n");
 #endif
   nsCOMPtr<nsIContent> content = do_QueryInterface(mOuter);
   nsCOMPtr<nsIDocument> document;

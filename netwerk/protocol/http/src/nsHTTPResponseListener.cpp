@@ -45,11 +45,12 @@
 #include "nsXPIDLString.h" 
 
 #include "nsIIOService.h"
-#include "nslog.h"
-
-NS_DECL_LOG(HTTPLog)
 
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID) ;
+
+#if defined(PR_LOGGING) 
+extern PRLogModuleInfo* gHTTPLog;
+#endif /* PR_LOGGING */
 
 //
 // This specifies the maximum allowable size for a server Status-Line
@@ -79,7 +80,7 @@ nsHTTPResponseListener::nsHTTPResponseListener(nsHTTPChannel *aChannel,
     url->GetSpec(getter_Copies(urlCString)) ;
   }
   
-  PR_LOG(HTTPLog, PR_LOG_DEBUG, 
+  PR_LOG(gHTTPLog, PR_LOG_DEBUG, 
 ("Creating nsHTTPResponseListener [this=%x] for URI: %s.\n", 
            this,(const char *) urlCString)) ;
 #endif
@@ -120,14 +121,14 @@ NS_IMPL_QUERY_INTERFACE2(nsHTTPResponseListener,
 nsHTTPCacheListener::nsHTTPCacheListener(nsHTTPChannel* aChannel, nsHTTPHandler *handler) 
                    : nsHTTPResponseListener(aChannel, handler) 
 {
-    PR_LOG(HTTPLog, PR_LOG_ALWAYS, 
+    PR_LOG(gHTTPLog, PR_LOG_ALWAYS, 
           ("Creating nsHTTPCacheListener [this=%x].\n", this)) ;
 
 }
 
 nsHTTPCacheListener::~nsHTTPCacheListener() 
 {
-    PR_LOG(HTTPLog, PR_LOG_ALWAYS, 
+    PR_LOG(gHTTPLog, PR_LOG_ALWAYS, 
             ("Deleting nsHTTPCacheListener [this=%x].\n", this)) ;
 }
 
@@ -138,7 +139,7 @@ NS_IMETHODIMP
 nsHTTPCacheListener::OnStartRequest(nsIChannel *aChannel,
                                     nsISupports *aContext) 
 {
-    PR_LOG(HTTPLog, PR_LOG_DEBUG,
+    PR_LOG(gHTTPLog, PR_LOG_DEBUG,
             ("nsHTTPCacheListener::OnStartRequest [this=%x]\n", this)) ;
     mBodyBytesReceived = 0;
     
@@ -152,7 +153,7 @@ NS_IMETHODIMP
 nsHTTPCacheListener::OnStopRequest(nsIChannel *aChannel, nsISupports *aContext,
                                    nsresult aStatus, const PRUnichar* aStatusArg) 
 {
-    PR_LOG(HTTPLog, PR_LOG_DEBUG,
+    PR_LOG(gHTTPLog, PR_LOG_DEBUG,
             ("nsHTTPCacheListener::OnStopRequest [this=%x]\n", this)) ;
 
     //
@@ -255,13 +256,13 @@ nsHTTPServerListener::nsHTTPServerListener(nsHTTPChannel* aChannel, nsHTTPHandle
     if (mChunkHeaderEOF) 
         mChunkHeaderEOF->SetData(&mChunkHeaderCtx) ;
 
-    PR_LOG(HTTPLog, PR_LOG_ALWAYS, 
+    PR_LOG(gHTTPLog, PR_LOG_ALWAYS, 
 ("Creating nsHTTPServerListener [this=%x].\n", this)) ;
 }
 
 nsHTTPServerListener::~nsHTTPServerListener() 
 {
-    PR_LOG(HTTPLog, PR_LOG_ALWAYS, 
+    PR_LOG(gHTTPLog, PR_LOG_ALWAYS, 
 ("Deleting nsHTTPServerListener [this=%x].\n", this)) ;
 
     // These two should go away in the OnStopRequest() callback.
@@ -292,7 +293,7 @@ nsHTTPServerListener::OnDataAvailable(nsIChannel* channel,
     nsCOMPtr<nsIInputStream> bufferInStream = 
         do_QueryInterface(i_pStream) ;
 
-    PR_LOG(HTTPLog, PR_LOG_ALWAYS, 
+    PR_LOG(gHTTPLog, PR_LOG_ALWAYS, 
 ("nsHTTPServerListener::OnDataAvailable [this=%x].\n"
             "\tstream=%x. \toffset=%d. \tlength=%d.\n",
             this, i_pStream, i_SourceOffset, i_Length)) ;
@@ -332,7 +333,7 @@ nsHTTPServerListener::OnDataAvailable(nsIChannel* channel,
             i_Length -= actualBytesRead;
         }
 
-        PR_LOG(HTTPLog, PR_LOG_ALWAYS, 
+        PR_LOG(gHTTPLog, PR_LOG_ALWAYS, 
 ("\tOnDataAvailable [this=%x]. Parsing Headers\n", this)) ;
         //
         // Parse the response headers as long as there is more data and
@@ -396,7 +397,7 @@ nsHTTPServerListener::OnDataAvailable(nsIChannel* channel,
                 mResponse = nsnull;
                 mBytesReceived = 0;
 
-                PR_LOG(HTTPLog, PR_LOG_DEBUG, 
+                PR_LOG(gHTTPLog, PR_LOG_DEBUG, 
                     ("\tOnDataAvailable [this=%x].(100) Continue\n", this)) ;
             }
             else
@@ -417,7 +418,7 @@ nsHTTPServerListener::OnDataAvailable(nsIChannel* channel,
 
                 return NS_OK;
 
-                PR_LOG(HTTPLog, PR_LOG_DEBUG, 
+                PR_LOG(gHTTPLog, PR_LOG_DEBUG, 
                         ("\tOnDataAvailable [this=%x].(200) SSL CONNECT\n", 
                         this)) ;
             }
@@ -624,7 +625,7 @@ nsHTTPServerListener::OnDataAvailable(nsIChannel* channel,
 NS_IMETHODIMP
 nsHTTPServerListener::OnStartRequest(nsIChannel* channel, nsISupports* i_pContext) 
 {
-    PR_LOG(HTTPLog, PR_LOG_ALWAYS, 
+    PR_LOG(gHTTPLog, PR_LOG_ALWAYS, 
 ("nsHTTPServerListener::OnStartRequest [this=%x].\n", this)) ;
 
     // Initialize header varaibles...  
@@ -672,7 +673,7 @@ nsHTTPServerListener::OnStopRequest(nsIChannel* channel, nsISupports* i_pContext
     if (mChannel) 
         mChannel->GetStatus(&channelStatus) ;
 
-    PR_LOG(HTTPLog, PR_LOG_ALWAYS, 
+    PR_LOG(gHTTPLog, PR_LOG_ALWAYS, 
            ("nsHTTPServerListener::OnStopRequest [this=%x]."
             "\tStatus = %x, mDataReceived=%d\n", this, i_Status, mDataReceived)) ;
 
@@ -817,7 +818,7 @@ nsHTTPServerListener::OnStopRequest(nsIChannel* channel, nsISupports* i_pContext
 
 nsresult nsHTTPServerListener::Abort() 
 {
-  PR_LOG(HTTPLog, PR_LOG_ALWAYS, 
+  PR_LOG(gHTTPLog, PR_LOG_ALWAYS, 
 ("nsHTTPServerListener::Abort [this=%x].", this)) ;
 
   //
@@ -881,7 +882,7 @@ nsresult nsHTTPServerListener::ParseStatusLine(nsIInputStream* in,
   nsresult rv = NS_OK;
   PRUint32 actualBytesRead;
 
-  PR_LOG(HTTPLog, PR_LOG_ALWAYS, 
+  PR_LOG(gHTTPLog, PR_LOG_ALWAYS, 
          ("nsHTTPServerListener::ParseStatusLine [this=%x].\taLength=%d\n", 
           this, aLength)) ;
 
@@ -919,7 +920,7 @@ nsresult nsHTTPServerListener::ParseStatusLine(nsIInputStream* in,
   // Wait for more data to arrive before processing the header...
   if (bL > 0 && mHeaderBuffer.CharAt(bL - 1) != LF) return NS_OK;
 
-  PR_LOG(HTTPLog, PR_LOG_ALWAYS, 
+  PR_LOG(gHTTPLog, PR_LOG_ALWAYS, 
          ("\tParseStatusLine [this=%x].\tGot Status-Line:%s\n"
          , this, mHeaderBuffer.GetBuffer()) ) ;
 
@@ -940,7 +941,7 @@ nsresult nsHTTPServerListener::ParseStatusLine(nsIInputStream* in,
       // This is a HTTP/0.9 response...
       // Pretend that the headers have been consumed.
       //
-      PR_LOG(HTTPLog, PR_LOG_ALWAYS, 
+      PR_LOG(gHTTPLog, PR_LOG_ALWAYS, 
              ("\tParseStatusLine [this=%x]. HTTP/0.9 Server Response!"
               " Hold onto you seats!\n", this)) ;
 
@@ -1012,7 +1013,7 @@ nsresult nsHTTPServerListener::ParseHTTPHeader(nsIInputStream* in,
     newlineOffset++;
   } while (PR_TRUE);
 
-  PR_LOG(HTTPLog, PR_LOG_ALWAYS, 
+  PR_LOG(gHTTPLog, PR_LOG_ALWAYS, 
          ("\tParseHTTPHeader [this=%x].\tGot header string:%s\n",
           this, mHeaderBuffer.GetBuffer()) ) ;
 
@@ -1047,7 +1048,7 @@ nsHTTPServerListener::FinishedResponseHeaders()
         rv = mResponseDataListener->OnStartRequest(mChannel, mChannel->mResponseContext) ;
         if (NS_FAILED(rv)) 
         {
-            PR_LOG(HTTPLog, PR_LOG_ERROR,("\tOnStartRequest [this=%x]. Consumer failed!"
+            PR_LOG(gHTTPLog, PR_LOG_ERROR,("\tOnStartRequest [this=%x]. Consumer failed!"
                         "Status: %x\n", this, rv)) ;
         }
     } 
@@ -1080,7 +1081,7 @@ nsHTTPFinalListener::nsHTTPFinalListener(
     mBusy(PR_FALSE) ,
     mOnStopPending(PR_FALSE) 
 {
-    PR_LOG(HTTPLog, PR_LOG_ALWAYS, 
+    PR_LOG(gHTTPLog, PR_LOG_ALWAYS, 
 ("Creating nsHTTPFinalListener [this=%x], created=%u, deleted=%u\n", 
             this, ++sFinalListenersCreated, sFinalListenersDeleted)) ;
 
@@ -1096,7 +1097,7 @@ nsHTTPFinalListener::nsHTTPFinalListener(
 
 nsHTTPFinalListener::~nsHTTPFinalListener() 
 {
-    PR_LOG(HTTPLog, PR_LOG_ALWAYS, 
+    PR_LOG(gHTTPLog, PR_LOG_ALWAYS, 
 ("Deleting nsHTTPFinalListener [this=%x], created=%u, deleted=%u\n",
             this, sFinalListenersCreated, ++sFinalListenersDeleted)) ;
 
@@ -1110,7 +1111,7 @@ NS_IMETHODIMP
 nsHTTPFinalListener::OnStartRequest(nsIChannel *aChannel,
                                     nsISupports *aContext) 
 {
-    PR_LOG(HTTPLog, PR_LOG_DEBUG,
+    PR_LOG(gHTTPLog, PR_LOG_DEBUG,
 ("nsHTTPFinalListener::OnStartRequest [this=%x]"
             ", mOnStartFired=%u\n", this, mOnStartFired)) ;
 
@@ -1125,7 +1126,7 @@ NS_IMETHODIMP
 nsHTTPFinalListener::OnStopRequest(nsIChannel *aChannel, nsISupports *aContext,
                                    nsresult aStatus, const PRUnichar* aStatusArg) 
 {
-    PR_LOG(HTTPLog, PR_LOG_DEBUG,
+    PR_LOG(gHTTPLog, PR_LOG_DEBUG,
            ("nsHTTPFinalListener::OnStopRequest [this=%x]"
             ", mOnStopFired=%u\n", this, mOnStopFired)) ;
 
@@ -1170,7 +1171,7 @@ nsHTTPFinalListener::OnDataAvailable(nsIChannel *aChannel,
                                      PRUint32 aSourceOffset,
                                      PRUint32 aCount) 
 {
-    PR_LOG(HTTPLog, PR_LOG_DEBUG,
+    PR_LOG(gHTTPLog, PR_LOG_DEBUG,
 ("nsHTTPFinalListener::OnDataAvailable [this=%x]\n",
             this)) ;
 
@@ -1205,7 +1206,7 @@ nsHTTPFinalListener::OnDataAvailable(nsIChannel *aChannel,
 void
 nsHTTPFinalListener::FireNotifications() 
 {
-    PR_LOG(HTTPLog, PR_LOG_DEBUG,
+    PR_LOG(gHTTPLog, PR_LOG_DEBUG,
 ("nsHTTPFinalListener::FireNotifications [this=%x]\n",
             this)) ;
 

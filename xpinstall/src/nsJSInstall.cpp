@@ -44,12 +44,6 @@ extern JSClass WinProfileClass;
 #endif
 
 #include "nsJSFileSpecObj.h"
-#include "nslog.h"
-
-NS_IMPL_LOG(nsJSInstallLog)
-#define PRINTF NS_LOG_PRINTF(nsJSInstallLog)
-#define FLUSH  NS_LOG_FLUSH(nsJSInstallLog)
-
 extern JSClass FileSpecObjectClass;
 
 extern JSClass FileOpClass;
@@ -1648,7 +1642,7 @@ InstallTRACE(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
   
   char *tempStr;
   tempStr = b0.ToNewCString();
-  PRINTF("Install:\t%s\n", tempStr);
+  printf("Install:\t%s\n", tempStr);
 
   Recycle(tempStr);
 

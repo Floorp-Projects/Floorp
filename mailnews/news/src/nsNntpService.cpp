@@ -58,11 +58,6 @@
 #include "nsIMsgSearchSession.h"
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsIWebNavigation.h"
-#include "nslog.h"
-
-NS_IMPL_LOG(nsNntpServiceLog)
-#define PRINTF NS_LOG_PRINTF(nsNntpServiceLog)
-#define FLUSH  NS_LOG_FLUSH(nsNntpServiceLog)
 
 #undef GetPort  // XXX Windows!
 #undef SetPort  // XXX Windows!
@@ -120,7 +115,7 @@ nsNntpService::SaveMessageToDisk(const char *aMessageURI,
         return NS_ERROR_NULL_POINTER;
 
 #ifdef DEBUG_NEWS
-    PRINTF("nsNntpService::SaveMessageToDisk(%s,...)\n",aMessageURI);
+    printf("nsNntpService::SaveMessageToDisk(%s,...)\n",aMessageURI);
 #endif
 
     nsCAutoString uri(aMessageURI);
@@ -171,7 +166,7 @@ nsNntpService::DisplayMessage(const char* aMessageURI, nsISupports * aDisplayCon
   }
 
 #ifdef DEBUG_NEWS
-  PRINTF("nsNntpService::DisplayMessage(%s,...)\n",aMessageURI);
+  printf("nsNntpService::DisplayMessage(%s,...)\n",aMessageURI);
 #endif
 
   nsCAutoString uri(aMessageURI);
@@ -311,7 +306,7 @@ nsresult nsNntpService::ConvertNewsMessageURI2NewsURI(const char *messageURI, ns
   }
 
 #ifdef DEBUG_NEWS
-  PRINTF("ConvertNewsMessageURI2NewsURI(%s,??) -> %s %u\n", messageURI, newsgroupName.GetBuffer(), *key);
+  printf("ConvertNewsMessageURI2NewsURI(%s,??) -> %s %u\n", messageURI, newsgroupName.GetBuffer(), *key);
 #endif
 
   nsFileSpec pathResult;
@@ -353,8 +348,8 @@ nsresult nsNntpService::ConvertNewsMessageURI2NewsURI(const char *messageURI, ns
   rv = msgHdr->GetMessageSize(&bytes);
   rv = msgHdr->GetLineCount(&lines);
 
-  PRINTF("bytes = %u\n",bytes);
-  PRINTF("lines = %u\n",lines);
+  printf("bytes = %u\n",bytes);
+  printf("lines = %u\n",lines);
 #endif
 
   if (NS_FAILED(rv)) {
@@ -368,7 +363,7 @@ nsresult nsNntpService::ConvertNewsMessageURI2NewsURI(const char *messageURI, ns
   newsURI += (const char*)messageId;
 
 #ifdef DEBUG_NEWS
-  PRINTF("newsURI = %s\n", (const char *)nsCAutoString(newsURI));
+  printf("newsURI = %s\n", (const char *)nsCAutoString(newsURI));
 #endif
 
   return NS_OK;
@@ -495,7 +490,7 @@ nsNntpService::SetUpNntpUrlForPosting(nsINntpUrl *nntpUrl, const char *newsgroup
   if (PL_strlen(newsgroupsNames) == 0) return NS_ERROR_FAILURE;
 
 #ifdef DEBUG_NEWS
-  PRINTF("newsgroupsNames == %s\n",newsgroupsNames);
+  printf("newsgroupsNames == %s\n",newsgroupsNames);
 #endif
   
   // newsgroupsNames can be a comma seperated list of these:
@@ -527,7 +522,7 @@ nsNntpService::SetUpNntpUrlForPosting(nsINntpUrl *nntpUrl, const char *newsgroup
 
     if (!str.IsEmpty()) {
 #ifdef DEBUG_NEWS
-        PRINTF("value = %s\n", str.GetBuffer());
+      printf("value = %s\n", str.GetBuffer());
 #endif
       nsCAutoString theRest;
       nsCAutoString currentHost;
@@ -540,7 +535,7 @@ nsNntpService::SetUpNntpUrlForPosting(nsINntpUrl *nntpUrl, const char *newsgroup
       }
       else if (str.Find(":/") != -1) {
 #ifdef DEBUG_NEWS
-          PRINTF("we have x:/y where x != news. this is bad, return failure\n");
+	printf("we have x:/y where x != news. this is bad, return failure\n");
 #endif
         CRTFREEIF(list);
         return NS_ERROR_FAILURE;
@@ -550,7 +545,7 @@ nsNntpService::SetUpNntpUrlForPosting(nsINntpUrl *nntpUrl, const char *newsgroup
       }
       
 #ifdef DEBUG_NEWS
-      PRINTF("theRest == %s\n",theRest.GetBuffer());
+      printf("theRest == %s\n",theRest.GetBuffer());
 #endif
       
       // theRest is "group" or "host/group"
@@ -560,7 +555,7 @@ nsNntpService::SetUpNntpUrlForPosting(nsINntpUrl *nntpUrl, const char *newsgroup
         theRest.Left(currentHost, slashpos);
         theRest.Right(currentGroup, slashpos);
 #ifdef DEBUG_NEWS
-        PRINTF("currentHost == %s\n", currentHost.GetBuffer());
+        printf("currentHost == %s\n", currentHost.GetBuffer());
 #endif
       }
       else if (newshost && nsCRT::strlen(newshost) > 0)
@@ -586,7 +581,7 @@ nsNntpService::SetUpNntpUrlForPosting(nsINntpUrl *nntpUrl, const char *newsgroup
       }
       else {
         if (!host.Equals(currentHost)) {
-            PRINTF("todo, implement an alert:  no cross posting to multiple hosts!\n"); 
+          printf("todo, implement an alert:  no cross posting to multiple hosts!\n"); 
           CRTFREEIF(list);
           return NS_ERROR_FAILURE;
         }
@@ -597,7 +592,7 @@ nsNntpService::SetUpNntpUrlForPosting(nsINntpUrl *nntpUrl, const char *newsgroup
     }
 #ifdef DEBUG_NEWS
     else {
-        PRINTF("nothing between two commas. ignore and keep going...\n");
+        printf("nothing between two commas. ignore and keep going...\n");
     }
 #endif
     token = nsCRT::strtok(rest, ",", &rest);
@@ -633,7 +628,7 @@ nsNntpService::ConvertNewsgroupsString(const char *newsgroupsNames, char **_retv
   if (PL_strlen(newsgroupsNames) == 0) return NS_ERROR_FAILURE;
 
 #ifdef DEBUG_NEWS
-  PRINTF("newsgroupsNames == %s\n",newsgroupsNames);
+  printf("newsgroupsNames == %s\n",newsgroupsNames);
 #endif
   
   // newsgroupsNames can be a comma seperated list of these:
@@ -660,7 +655,7 @@ nsNntpService::ConvertNewsgroupsString(const char *newsgroupsNames, char **_retv
 
     if (!str.IsEmpty()) {
 #ifdef DEBUG_NEWS
-        PRINTF("value = %s\n", str.GetBuffer());
+      printf("value = %s\n", str.GetBuffer());
 #endif
       nsCAutoString currentHost;
       nsCAutoString theRest;
@@ -673,7 +668,7 @@ nsNntpService::ConvertNewsgroupsString(const char *newsgroupsNames, char **_retv
       }
       else if (str.Find(":/") != -1) {
 #ifdef DEBUG_NEWS
-          PRINTF("we have x:/y where x != news. this is bad, return failure\n");
+	printf("we have x:/y where x != news. this is bad, return failure\n");
 #endif
         CRTFREEIF(list);
         return NS_ERROR_FAILURE;
@@ -683,7 +678,7 @@ nsNntpService::ConvertNewsgroupsString(const char *newsgroupsNames, char **_retv
       }
       
 #ifdef DEBUG_NEWS
-      PRINTF("theRest == %s\n",theRest.GetBuffer());
+      printf("theRest == %s\n",theRest.GetBuffer());
 #endif
       
       // theRest is "group" or "host/group"
@@ -695,7 +690,7 @@ nsNntpService::ConvertNewsgroupsString(const char *newsgroupsNames, char **_retv
         theRest.Left(currentHost, slashpos);
         
 #ifdef DEBUG_NEWS
-        PRINTF("currentHost == %s\n", currentHost.GetBuffer());
+        printf("currentHost == %s\n", currentHost.GetBuffer());
 #endif
         // from "host/group", put "group" into currentGroup;
         theRest.Right(currentGroup, theRest.Length() - currentHost.Length() - 1);
@@ -729,7 +724,7 @@ nsNntpService::ConvertNewsgroupsString(const char *newsgroupsNames, char **_retv
 
       if (currentHost.IsEmpty()) {
 #ifdef DEBUG_NEWS
-          PRINTF("empty current host!\n");
+        printf("empty current host!\n");
 #endif
         CRTFREEIF(list);
         return NS_ERROR_FAILURE;
@@ -737,14 +732,14 @@ nsNntpService::ConvertNewsgroupsString(const char *newsgroupsNames, char **_retv
       
       if (host.IsEmpty()) {
 #ifdef DEBUG_NEWS
-          PRINTF("got a host, set it\n");
+        printf("got a host, set it\n");
 #endif
         host = currentHost;
       }
       else {
         if (!host.Equals(currentHost)) {
 #ifdef DEBUG_NEWS
-            PRINTF("no cross posting to multiple hosts!\n");
+          printf("no cross posting to multiple hosts!\n");
 #endif
           CRTFREEIF(list);
           return NS_ERROR_NNTP_NO_CROSS_POSTING;
@@ -756,7 +751,7 @@ nsNntpService::ConvertNewsgroupsString(const char *newsgroupsNames, char **_retv
     }
 #ifdef DEBUG_NEWS
     else {
-        PRINTF("nothing between two commas. ignore and keep going...\n");
+        printf("nothing between two commas. ignore and keep going...\n");
     }
 #endif
     token = nsCRT::strtok(rest, ",", &rest);
@@ -767,7 +762,7 @@ nsNntpService::ConvertNewsgroupsString(const char *newsgroupsNames, char **_retv
   if (!*_retval) return NS_ERROR_OUT_OF_MEMORY;
   
 #ifdef DEBUG_NEWS
-  PRINTF("Newsgroups header = %s\n", *_retval);
+  printf("Newsgroups header = %s\n", *_retval);
 #endif
 
   return NS_OK;
@@ -777,7 +772,7 @@ NS_IMETHODIMP
 nsNntpService::PostMessage(nsIFileSpec *fileToPost, const char *newsgroupsNames, const char *newshost, nsIUrlListener * aUrlListener, nsIMsgWindow *aMsgWindow, nsIURI **_retval)
 {
 #ifdef DEBUG_NEWS
-    PRINTF("nsNntpService::PostMessage(??,%s,??,??)\n",newsgroupsNames);
+  printf("nsNntpService::PostMessage(??,%s,??,??)\n",newsgroupsNames);
 #endif
   if (!aMsgWindow) return NS_ERROR_NULL_POINTER;
   if (!newsgroupsNames) return NS_ERROR_NULL_POINTER;
@@ -934,7 +929,7 @@ nsNntpService::GetProtocolForUri(nsIURI *aUri, nsIMsgWindow *aMsgWindow, nsINNTP
 #ifdef DEBUG_sspitzer
   nsXPIDLCString spec;
   rv = aUri->GetSpec(getter_Copies(spec));
-  PRINTF("GetProtocolForUri(%s,...)\n",(const char *)spec);
+  printf("GetProtocolForUri(%s,...)\n",(const char *)spec);
 #endif
 
   rv = aUri->GetHost(getter_Copies(hostName));
@@ -953,7 +948,7 @@ nsNntpService::GetProtocolForUri(nsIURI *aUri, nsIMsgWindow *aMsgWindow, nsINNTP
   nsCOMPtr<nsINntpIncomingServer> nntpServer;
 
 #ifdef DEBUG_sspitzer
-  PRINTF("for bug, #36661, see if there are any accounts, if not, try migrating.  should this be pushed into FindServer()?\n");
+  printf("for bug, #36661, see if there are any accounts, if not, try migrating.  should this be pushed into FindServer()?\n");
 #endif
   nsCOMPtr <nsISupportsArray> accounts;
   rv = accountManager->GetAccounts(getter_AddRefs(accounts));
@@ -1022,7 +1017,7 @@ NS_IMETHODIMP nsNntpService::GetNewNews(nsINntpIncomingServer *nntpServer, const
   if (!uri) return NS_ERROR_NULL_POINTER;
 
 #ifdef DEBUG_NEWS
-  PRINTF("nsNntpService::GetNewNews(%s)\n", uri);
+  printf("nsNntpService::GetNewNews(%s)\n", uri);
 #endif
   
   NS_LOCK_INSTANCE();
@@ -1040,16 +1035,16 @@ NS_IMETHODIMP nsNntpService::GetNewNews(nsINntpIncomingServer *nntpServer, const
   }
 #ifdef DEBUG_NEWS
   else {
-	  PRINTF("server == nsnull\n");
+	  printf("server == nsnull\n");
   }
 #endif
   
 #ifdef DEBUG_NEWS
   if (nntpHostName) {
-      PRINTF("get news from news://%s\n", (const char *) nntpHostName);
+    printf("get news from news://%s\n", (const char *) nntpHostName);
   }
   else {
-      PRINTF("nntpHostName is null\n");
+    printf("nntpHostName is null\n");
   }
 #endif
 
@@ -1130,7 +1125,7 @@ NS_IMETHODIMP nsNntpService::CancelMessages(const char *hostname, const char *ne
   rv = messages->Count(&count);
   if (NS_FAILED(rv)) {
 #ifdef DEBUG_NEWS
-      PRINTF("Count failed\n");
+    printf("Count failed\n");
 #endif
     return rv;
   }
@@ -1166,7 +1161,7 @@ NS_IMETHODIMP nsNntpService::CancelMessages(const char *hostname, const char *ne
   urlStr += "?cancel";
 
 #ifdef DEBUG_NEWS
-  PRINTF("attempt to cancel the message (key,ID,cancel url): (%d,%s,%s)\n", key, (const char *)messageId, (const char *)urlStr);
+  printf("attempt to cancel the message (key,ID,cancel url): (%d,%s,%s)\n", key, (const char *)messageId, (const char *)urlStr);
 #endif /* DEBUG_NEWS */ 
 
   nsCAutoString newsgroupNameStr(newsgroupname);
@@ -1402,7 +1397,7 @@ nsNntpService::UpdateCounts(nsINntpIncomingServer *aNntpServer, nsIMsgWindow *aM
 {
 	nsresult rv;
 #ifdef DEBUG_NEWS
-	PRINTF("in UpdateCountsForNewsgroup()\n");
+	printf("in UpdateCountsForNewsgroup()\n");
 #endif
 	if (!aNntpServer) return NS_ERROR_NULL_POINTER;
 
@@ -1430,7 +1425,7 @@ nsNntpService::BuildSubscribeDatasource(nsINntpIncomingServer *aNntpServer, nsIM
 {
 	nsresult rv;
 #ifdef DEBUG_NEWS
-	PRINTF("in BuildSubscribeDatasource()\n");
+	printf("in BuildSubscribeDatasource()\n");
 #endif
 	if (!aNntpServer) return NS_ERROR_NULL_POINTER;
 

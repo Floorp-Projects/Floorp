@@ -48,7 +48,7 @@
 
 #ifdef PLUGIN_TRACE
 #include <stdio.h>
-#define PLUGINDEBUGSTR(msg) printf("%s\n", msg)
+#define PLUGINDEBUGSTR(msg) fprintf(stderr, "%s\n", msg)
 #else
 #define PLUGINDEBUGSTR(msg)
 #endif

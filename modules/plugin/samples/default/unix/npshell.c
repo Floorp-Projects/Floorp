@@ -201,11 +201,11 @@ NPP_SetWindow(NPP instance, NPWindow* window)
            id.
         */
 #ifdef DEBUG
-      printf("Nullplugin: plugin received window resize.\n");
-      printf("Window=(%i)\n", (int)window);
+        fprintf(stderr, "Nullplugin: plugin received window resize.\n");
+        fprintf(stderr, "Window=(%i)\n", (int)window);
         if (window) {
-           printf("W=(%i) H=(%i)\n",
-                  (int)window->width, (int)window->height);
+           fprintf(stderr, "W=(%i) H=(%i)\n",
+               (int)window->width, (int)window->height);
         }
 #endif
         return NPERR_NO_ERROR;

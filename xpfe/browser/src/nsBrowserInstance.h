@@ -128,7 +128,7 @@ class nsBrowserInstance : public nsIBrowserInstance,
     nsCOMPtr<nsISupports>  mSearchContext;				// at last, something we really own
     nsInstanceCounter   mInstanceCounter;
     nsCOMPtr<nsIInputStream> mPostData; // Post data for current page.
-#ifdef NS_ENABLE_LOGGING
+#ifdef DEBUG_warren
     PRIntervalTime      mLoadStartTime;
 #endif
 };

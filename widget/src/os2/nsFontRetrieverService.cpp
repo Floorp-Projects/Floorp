@@ -27,11 +27,6 @@
 #include "nsFont.h"
 #include "nsVoidArray.h"
 #include "nsFontSizeIterator.h"
-#include "nslog.h"
-
-NS_IMPL_LOG(nsFontRetrieverServiceLog)
-#define PRINTF NS_LOG_PRINTF(nsFontRetrieverServiceLog)
-#define FLUSH  NS_LOG_FLUSH(nsFontRetrieverServiceLog)
  
 NS_IMPL_ADDREF(nsFontRetrieverService)
 NS_IMPL_RELEASE(nsFontRetrieverService)
@@ -207,7 +202,7 @@ NS_IMETHODIMP nsFontRetrieverService::LoadFontList()
     font->mIsScalable = PR_FALSE;
     font->mSizes      = nsnull;
 #ifdef DEBUG_sobotka
-    PRINTF("Added FONT %s\n", font->mName.ToNewCString());
+    printf("Added FONT %s\n", font->mName.ToNewCString());
 #endif
 
     mFontList->AppendElement(font);

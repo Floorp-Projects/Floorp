@@ -32,11 +32,6 @@
 #include "nsProperties.h"
 #include "pratom.h"
 #include "nsEnumeratorUtils.h"
-#include "nslog.h"
-
-NS_IMPL_LOG(nsPersistentPropertiesLog)
-#define PRINTF NS_LOG_PRINTF(nsPersistentPropertiesLog)
-#define FLUSH  NS_LOG_FLUSH(nsPersistentPropertiesLog)
 
 static PLHashNumber
 HashKey(const PRUnichar *aString)
@@ -108,7 +103,9 @@ nsPersistentProperties::Load(nsIInputStream *aIn)
   ret = NS_NewConverterStream(&mIn, nsnull, aIn, 0, &uesc);
 #endif /* XPCOM_STANDALONE */
   if (ret != NS_OK) {
-      PRINTF("NS_NewConverterStream failed\n");
+#ifdef NS_DEBUG
+      printf("NS_NewConverterStream failed\n");
+#endif
     return NS_ERROR_FAILURE;
   }
   c = Read();
@@ -233,10 +230,10 @@ nsPersistentProperties::SetStringProperty(const nsString& aKey, nsString& aNewVa
   PLHashEntry *he = *hep;
   if (he) {
     // XXX should we copy the old value to aOldValue, and then remove it?
-#ifdef NS_ENABLE_LOGGING
+#ifdef NS_DEBUG
     char buf[128];
     aKey.ToCString(buf, sizeof(buf));
-    PRINTF("warning: property %s already exists\n", buf);
+    printf("warning: property %s already exists\n", buf);
 #endif
     return NS_OK;
   }

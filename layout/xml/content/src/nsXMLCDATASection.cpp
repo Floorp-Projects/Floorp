@@ -31,12 +31,6 @@
 #include "nsCRT.h"
 #include "nsLayoutAtoms.h"
 #include "nsIXMLContent.h"
-#include "nslog.h"
-#undef fprintf
-
-NS_IMPL_LOG(nsXMLCDATASectionLog)
-#define PRINTF NS_LOG_PRINTF(nsXMLCDATASectionLog)
-#define FLUSH  NS_LOG_FLUSH(nsXMLCDATASectionLog)
 
 
 class nsXMLCDATASection : public nsIDOMCDATASection,

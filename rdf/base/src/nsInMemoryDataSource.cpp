@@ -77,11 +77,6 @@
 #include "plstr.h"
 #include "prlog.h"
 #include "rdf.h"
-#include "nslog.h"
-
-NS_IMPL_LOG(nsInMemoryDataSourceLog)
-#define PRINTF NS_LOG_PRINTF(nsInMemoryDataSourceLog)
-#define FLUSH  NS_LOG_FLUSH(nsInMemoryDataSourceLog)
 
 #if defined(MOZ_THREADSAFE_RDF)
 #define NS_AUTOLOCK(_lock) nsAutoLock _autolock(_lock)
@@ -89,7 +84,9 @@ NS_IMPL_LOG(nsInMemoryDataSourceLog)
 #define NS_AUTOLOCK(_lock)
 #endif
 
-#define gLog nsInMemoryDataSourceLog
+#ifdef PR_LOGGING
+static PRLogModuleInfo* gLog = nsnull;
+#endif
 
 // This struct is used as the slot value in the forward and reverse
 // arcs hash tables.
@@ -173,7 +170,7 @@ Assertion::~Assertion()
     MOZ_COUNT_DTOR(RDF_Assertion);
 #ifdef DEBUG_REFS
     --gInstanceCount;
-    PRINTF("%d - RDF: Assertion\n", gInstanceCount);
+    fprintf(stdout, "%d - RDF: Assertion\n", gInstanceCount);
 #endif
 
     NS_RELEASE(mSource);
@@ -408,7 +405,7 @@ InMemoryAssertionEnumeratorImpl::~InMemoryAssertionEnumeratorImpl()
 {
 #ifdef DEBUG_REFS
     --gInstanceCount;
-    PRINTF( "%d - RDF: InMemoryAssertionEnumeratorImpl\n", gInstanceCount);
+    fprintf(stdout, "%d - RDF: InMemoryAssertionEnumeratorImpl\n", gInstanceCount);
 #endif
 
     if (mNextAssertion)
@@ -563,7 +560,7 @@ InMemoryArcsEnumeratorImpl::~InMemoryArcsEnumeratorImpl()
 {
 #ifdef DEBUG_REFS
     --gInstanceCount;
-    PRINTF( "%d - RDF: InMemoryArcsEnumeratorImpl\n", gInstanceCount);
+    fprintf(stdout, "%d - RDF: InMemoryArcsEnumeratorImpl\n", gInstanceCount);
 #endif
 
     NS_RELEASE(mDataSource);
@@ -734,6 +731,11 @@ InMemoryDataSource::Init()
         return NS_ERROR_OUT_OF_MEMORY;
 #endif
 
+#ifdef PR_LOGGING
+    if (! gLog)
+        gLog = PR_NewLogModule("InMemoryDataSource");
+#endif
+
     return NS_OK;
 }
 
@@ -742,7 +744,7 @@ InMemoryDataSource::~InMemoryDataSource()
 {
 #ifdef DEBUG_REFS
     --gInstanceCount;
-    PRINTF("%d - RDF: InMemoryDataSource\n", gInstanceCount);
+    fprintf(stdout, "%d - RDF: InMemoryDataSource\n", gInstanceCount);
 #endif
 
     if (mForwardArcs) {

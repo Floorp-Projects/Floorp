@@ -48,11 +48,6 @@
 #include "DropTar.h"
 #include "DropSrc.h"
 #endif
-#include "nslog.h"
-
-NS_IMPL_LOG(nsWindowLog)
-#define PRINTF NS_LOG_PRINTF(nsWindowLog)
-#define FLUSH  NS_LOG_FLUSH(nsWindowLog)
 
 static NS_DEFINE_IID(kIWidgetIID,       NS_IWIDGET_IID);
 
@@ -520,7 +515,7 @@ nsresult nsWindow::StandardWindowCreate(nsIWidget *aParent,
      DWORD dwVer = ::OleBuildVersion();
 
      if (FAILED(::OleInitialize(NULL))){
-       PRINTF("***** OLE has been initialized!\n");
+       printf("***** OLE has been initialized!\n");
      }
      gOLEInited = TRUE;
    }
@@ -744,7 +739,7 @@ NS_METHOD nsWindow::IsVisible(PRBool & bState)
 //-------------------------------------------------------------------------
 NS_METHOD nsWindow::ConstrainPosition(PRInt32 *aX, PRInt32 *aY)
 {
-	PRINTF("nsWindow::ConstrainPosition - not implemented\n");
+	printf("nsWindow::ConstrainPosition - not implemented\n");
 	return NS_OK;
 }
 
@@ -807,7 +802,7 @@ NS_METHOD nsWindow::Resize(PRInt32 aWidth, PRInt32 aHeight, PRBool aRepaint)
 			havewindow = true;
 
 		if(! aRepaint)
-			PRINTF("nsWindow::Resize FIXME: no repaint not implemented\n");
+			printf("nsWindow::Resize FIXME: no repaint not implemented\n");
 
 		if(mView->Parent() || ! havewindow)
                        mView->ResizeTo(aWidth-1, GetHeight(aHeight)-1);
@@ -859,7 +854,7 @@ NS_METHOD nsWindow::Resize(PRInt32 aX,
 			havewindow = true;
 
 		if(! aRepaint)
-			PRINTF("nsWindow::Resize FIXME: no repaint not implemented\n");
+			printf("nsWindow::Resize FIXME: no repaint not implemented\n");
 		
 		if(mView->Parent() || ! havewindow)
 		{
@@ -893,7 +888,7 @@ NS_METHOD nsWindow::Resize(PRInt32 aX,
 //-------------------------------------------------------------------------
 NS_METHOD nsWindow::Enable(PRBool bState)
 {
-  PRINTF("nsWindow::Enable - FIXME: not implemented\n");
+printf("nsWindow::Enable - FIXME: not implemented\n");
     return NS_OK;
 }
 
@@ -1206,7 +1201,7 @@ void* nsWindow::GetNativeData(PRUint32 aDataType)
 //-------------------------------------------------------------------------
 NS_METHOD nsWindow::SetColorMap(nsColorMap *aColorMap)
 {
-  PRINTF("nsWindow::SetColorMap - not implemented\n");
+printf("nsWindow::SetColorMap - not implemented\n");
     return NS_OK;
 }
 
@@ -1405,7 +1400,7 @@ PRBool nsWindow::OnKey(PRUint32 aEventType, const char *bytes, int32 numBytes, P
 		nsKeyEvent event;
 		InitEvent(event, aEventType);
 
-    PRINTF("nsWindow::OnKey - FIXME: keycode translation incomplete\n");
+printf("nsWindow::OnKey - FIXME: keycode translation incomplete\n");
 		event.charCode   = bytes[0];
 
 		char c = bytes[0];
@@ -1424,7 +1419,7 @@ PRBool nsWindow::OnKey(PRUint32 aEventType, const char *bytes, int32 numBytes, P
 	}
 	else
 	{
-		PRINTF("nsWindow::OnKey - FIXME: handle non ASCII chars\n");
+		printf("nsWindow::OnKey - FIXME: handle non ASCII chars\n");
 		return NS_OK;
 	}
 }
@@ -1597,7 +1592,7 @@ nsresult nsWindow::MenuHasBeenSelected(HMENU aNativeMenu, UINT aItemNum, UINT aF
 
   // if aNativeMenu is NULL then the menu is being deselected
   if (!aNativeMenu) {
-    PRINTF("///////////// Menu is NULL!\n");
+    printf("///////////// Menu is NULL!\n");
     // check to make sure something had been selected
     AdjustMenus(mHitMenu, nsnull, event);
     NS_IF_RELEASE(mHitMenu);
@@ -1659,11 +1654,11 @@ nsresult nsWindow::MenuHasBeenSelected(HMENU aNativeMenu, UINT aItemNum, UINT aF
 
         // Skip if it is a menu item, otherwise, we get the menu by position
         if (!isMenuItem) {
-          PRINTF("Getting submenu by position %d from parentMenu\n", aItemNum);
+          printf("Getting submenu by position %d from parentMenu\n", aItemNum);
           nsISupports * item;
           parentMenu->GetItemAt((PRUint32)aItemNum, item);
           if (NS_OK != item->QueryInterface(kIMenuIID, (void **)&newMenu)) {
-            PRINTF("Item was not a menu! What are we doing here? Return early....\n");
+            printf("Item was not a menu! What are we doing here? Return early....\n");
             return NS_ERROR_FAILURE;
           }
         }
@@ -1743,7 +1738,7 @@ nsresult nsWindow::MenuHasBeenSelected(HMENU aNativeMenu, UINT aItemNum, UINT aF
 
         NS_RELEASE(parentMenu);
       } else {
-        PRINTF("no menu was found. This is bad.\n");
+        printf("no menu was found. This is bad.\n");
         // XXX need to assert here!
       }
     }
@@ -2040,11 +2035,11 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
         }
 #if 0 // these are needed for now
         case WM_INITMENU: {
-          PRINTF("WM_INITMENU\n");
+          printf("WM_INITMENU\n");
           } break;
 
         case WM_INITMENUPOPUP: {
-          PRINTF("WM_INITMENUPOPUP\n");
+          printf("WM_INITMENUPOPUP\n");
           } break;
 #endif
 
@@ -2062,7 +2057,7 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
         case WM_MOUSEWHEEL: {
          if (firstTime) {
            firstTime = FALSE;
-           //PRINTF("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ WM_SETTINGCHANGE\n");
+            //printf("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ WM_SETTINGCHANGE\n");
             SystemParametersInfo (104, 0, &ulScrollLines, 0) ;
             //SystemParametersInfo (SPI_GETWHEELSCROLLLINES, 0, &ulScrollLines, 0) ;
           
@@ -2073,7 +2068,7 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
               iDeltaPerLine = WHEEL_DELTA / ulScrollLines ;
             else
               iDeltaPerLine = 0 ;
-            //PRINTF("ulScrollLines %d  iDeltaPerLine %d\n", ulScrollLines, iDeltaPerLine);
+            //printf("ulScrollLines %d  iDeltaPerLine %d\n", ulScrollLines, iDeltaPerLine);
 
             if (msg == WM_SETTINGCHANGE) {
               return 0;
@@ -2090,13 +2085,13 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
             iAccumDelta += (short) HIWORD (wParam) ;     // 120 or -120
 
             while (iAccumDelta >= iDeltaPerLine) {    
-              //PRINTF("iAccumDelta %d\n", iAccumDelta);
+              //printf("iAccumDelta %d\n", iAccumDelta);
               SendMessage (mView, WM_VSCROLL, SB_LINEUP, (LONG)scrollbar) ;
               iAccumDelta -= iDeltaPerLine ;
             }
 
             while (iAccumDelta <= -iDeltaPerLine) {
-              //PRINTF("iAccumDelta %d\n", iAccumDelta);
+              //printf("iAccumDelta %d\n", iAccumDelta);
               SendMessage (mView, WM_VSCROLL, SB_LINEDOWN, (LONG)scrollbar) ;
               iAccumDelta += iDeltaPerLine ;
             }
@@ -2145,7 +2140,7 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
 	        for (UINT iFile = 0; iFile < nFiles; iFile++) {
 		        TCHAR szFileName[_MAX_PATH];
 		        ::DragQueryFile(hDropInfo, iFile, szFileName, _MAX_PATH);
-            PRINTF("szFileName [%s]\n", szFileName);
+            printf("szFileName [%s]\n", szFileName);
             nsAutoString fileStr(szFileName);
             nsEventStatus status;
             nsDragDropEvent event;
@@ -2397,7 +2392,7 @@ NS_METHOD nsWindow::SetMenuBar(nsIMenuBar * aMenuBar)
 	if(mMenuBar)
 	{
 		// Get rid of the old menubar
-    PRINTF("nsWindow::SetMenuBar - FIXME: Get rid of the old menubar!\n");
+printf("nsWindow::SetMenuBar - FIXME: Get rid of the old menubar!\n");
 //		GtkWidget* oldMenuBar;
 //		mMenuBar->GetNativeData((void*&) oldMenuBar);
 //		if (oldMenuBar) {
@@ -2438,7 +2433,7 @@ NS_METHOD nsWindow::SetMenuBar(nsIMenuBar * aMenuBar)
 
 NS_METHOD nsWindow::ShowMenuBar(PRBool aShow)
 {
-  PRINTF("nsWindow::ShowMenuBar - FIXME: not implemented!\n");
+printf("nsWindow::ShowMenuBar - FIXME: not implemented!\n");
 //  if (!mMenuBar)
 //    //    return NS_ERROR_FAILURE;
 //    return NS_OK;

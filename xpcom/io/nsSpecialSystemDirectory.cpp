@@ -67,11 +67,6 @@
 
 #include "nsHashtable.h"
 #include "prlog.h"
-#include "nslog.h"
-
-NS_IMPL_LOG(nsSpecialSystemDirectoryLog)
-#define PRINTF NS_LOG_PRINTF(nsSpecialSystemDirectoryLog)
-#define FLUSH  NS_LOG_FLUSH(nsSpecialSystemDirectoryLog)
 
 class SystemDirectoriesKey : public nsHashKey {
 public:
@@ -255,7 +250,7 @@ static void GetCurrentProcessDirectory(nsFileSpec& aFileSpec)
 
         if(firstWarning) {
             // Warn that MOZILLA_FIVE_HOME not set, once.
-            NS_WARNING("Warning: MOZILLA_FIVE_HOME not set.\n");
+            printf("Warning: MOZILLA_FIVE_HOME not set.\n");
             firstWarning = PR_FALSE;
         }
 
@@ -349,7 +344,7 @@ void nsSpecialSystemDirectory::operator = (SystemDirectories aSystemSystemDirect
         }
 #elif defined(XP_OS2)
         {
-            // PRINTF( "*** Warning warning OS_DriveDirectory called for");
+            // printf( "*** Warning warning OS_DriveDirectory called for");
             
             ULONG ulBootDrive = 0;
             char  buffer[] = " :\\OS2\\";
@@ -357,7 +352,9 @@ void nsSpecialSystemDirectory::operator = (SystemDirectories aSystemSystemDirect
                              &ulBootDrive, sizeof ulBootDrive);
             buffer[0] = 'A' - 1 + ulBootDrive; // duh, 1-based index...
             *this = buffer;
-            PRINTF( "Got OS_DriveDirectory: %s\n", buffer);
+#ifdef DEBUG
+            printf( "Got OS_DriveDirectory: %s\n", buffer);
+#endif
         }
 #elif defined(XP_MAC)
         {
@@ -839,7 +836,9 @@ void nsSpecialSystemDirectory::operator = (SystemDirectories aSystemSystemDirect
                              &ulBootDrive, sizeof ulBootDrive);
             buffer[0] = 'A' - 1 + ulBootDrive; // duh, 1-based index...
             *this = buffer;
-            PRINTF( "Got OS2_SystemDirectory: %s\n", buffer);
+#ifdef DEBUG
+            printf( "Got OS2_SystemDirectory: %s\n", buffer);
+#endif
             break;
         }
 
@@ -851,7 +850,9 @@ void nsSpecialSystemDirectory::operator = (SystemDirectories aSystemSystemDirect
                              &ulBootDrive, sizeof ulBootDrive);
             buffer[0] = 'A' - 1 + ulBootDrive; // duh, 1-based index...
             *this = buffer;
-            PRINTF( "Got OS2_OS2Directory: %s\n", buffer);
+#ifdef DEBUG
+            printf( "Got OS2_OS2Directory: %s\n", buffer);
+#endif
             break;
         }
 
@@ -865,11 +866,13 @@ void nsSpecialSystemDirectory::operator = (SystemDirectories aSystemSystemDirect
                break;
             szPath[len] = '\\';     
             szPath[len + 1] = '\0';
+#ifdef DEBUG
             if (fSuccess) {
-                PRINTF ("Got OS2_DesktopDirectory: %s\n", szPath);
+               printf ("Got OS2_DesktopDirectory: %s\n", szPath);
             } else {
-                PRINTF ("Failed getting OS2_DesktopDirectory: %s\n", szPath);
+               printf ("Failed getting OS2_DesktopDirectory: %s\n", szPath);
             }
+#endif
             break;           
         }
 

@@ -35,11 +35,6 @@
 
 #include "nsIDocument.h"
 #include "nsSupportsPrimitives.h"
-#include "nslog.h"
-
-NS_IMPL_LOG(nsAutoCopyLog)
-#define PRINTF NS_LOG_PRINTF(nsAutoCopyLog)
-#define FLUSH  NS_LOG_FLUSH(nsAutoCopyLog)
 
 // private clipboard data flavors for html copy, used by editor when pasting
 #define kHTMLContext   "text/_moz_htmlcontext"
@@ -141,7 +136,7 @@ nsAutoCopyService::NotifySelectionChanged(nsIDOMDocument *aDoc, nsISelection *aS
   PRBool collapsed;
   if (!aDoc || !aSel || NS_FAILED(aSel->GetIsCollapsed(&collapsed)) || collapsed) {
 #ifdef DEBUG_CLIPBOARD
-      PRINTF("CLIPBOARD: no selection/collapsed selection\n");
+    fprintf(stderr, "CLIPBOARD: no selection/collapsed selection\n");
 #endif
     /* clear X clipboard? */
     return NS_OK;
@@ -221,7 +216,7 @@ nsAutoCopyService::NotifySelectionChanged(nsIDOMDocument *aDoc, nsISelection *aS
   nsAutoString str;
   aSel->ToString(str);
   char *selStr = str.ToNewCString();
-  PRINTF("SELECTION: %s, %p, %p [%s]\n", reasons[reason], doc, aSel,
+  fprintf(stderr, "SELECTION: %s, %p, %p [%s]\n", reasons[reason], doc, aSel,
           selStr);
   nsMemory::Free(selStr);
 #endif

@@ -35,11 +35,6 @@
 #include <X11/extensions/shape.h>
 
 #include "xlibrgb.h"
-#include "nslog.h"
-
-NS_IMPL_LOG(nsDragServiceLog)
-#define PRINTF NS_LOG_PRINTF(nsDragServiceLog)
-#define FLUSH  NS_LOG_FLUSH(nsDragServiceLog)
 
 NS_IMPL_ADDREF_INHERITED(nsDragService, nsBaseDragService)
 NS_IMPL_RELEASE_INHERITED(nsDragService, nsBaseDragService)
@@ -82,7 +77,7 @@ NS_IMETHODIMP nsDragService::InvokeDragSession (nsIDOMNode *aDOMNode,
     return NS_ERROR_FAILURE;
 
   if (numItemsToDrag > 1) {
-    PRINTF("nsDragService: Cannot drag more than one item!\n");
+    fprintf(stderr, "nsDragService: Cannot drag more than one item!\n");
     return NS_ERROR_FAILURE;
   }
   mDragging = PR_TRUE;
@@ -103,14 +98,14 @@ NS_IMETHODIMP nsDragService::InvokeDragSession (nsIDOMNode *aDOMNode,
                             CWOverrideRedirect, &wattr);
     
     attr.valuemask = 0;
-    PRINTF("%s\n", XpmGetErrorString(
+    fprintf(stderr, "%s\n", XpmGetErrorString(
     XpmCreatePixmapFromData(xlib_rgb_get_display(),
                             sWindow,
                             drag_xpm,
                             &aPixmap,
                             &aShapeMask,
                             &attr))
-      );
+    );
     wmHints.flags = StateHint;
     wmHints.initial_state = NormalState;
     XSetWMProperties(xlib_rgb_get_display(), sWindow, NULL, NULL, NULL, 0, NULL,

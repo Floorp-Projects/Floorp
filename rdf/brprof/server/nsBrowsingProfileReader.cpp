@@ -46,11 +46,6 @@
 #include "plstr.h"
 #include "prlog.h"
 #include "rdf.h"
-#include "nslog.h"
-
-NS_IMPL_LOG(nsBrowsingProfileReaderLog)
-#define PRINTF NS_LOG_PRINTF(nsBrowsingProfileReaderLog)
-#define FLUSH  NS_LOG_FLUSH(nsBrowsingProfileReaderLog)
 
 ////////////////////////////////////////////////////////////////////////
 
@@ -508,7 +503,7 @@ int main(int argc, char **argv)
     if (NS_FAILED(rv)) return rv;
 
     if (! service.RegisterService(host)) {
-        PRINTF("Failed to Register with %s\n", host);
+        printf("Failed to Register with %s\n", host);
         return 1;
     }
 

@@ -25,11 +25,6 @@
 #include "nsDirPicker.h"
 
 #include <stdlib.h>
-#include "nslog.h"
-
-NS_IMPL_LOG(nsFileDialogLog)
-#define PRINTF NS_LOG_PRINTF(nsFileDialogLog)
-#define FLUSH  NS_LOG_FLUSH(nsFileDialogLog)
 
 // File dialog.
 //
@@ -110,7 +105,7 @@ nsresult nsFileDialog::SetDisplayDirectory( const nsFileSpec &aDirectory)
    strcat( mFileDlg.szFullFile, buff);
 
 #ifdef DEBUG
-   PRINTF( "SetDisplayDir, szFullFile = %s\n", mFileDlg.szFullFile);
+   printf( "SetDisplayDir, szFullFile = %s\n", mFileDlg.szFullFile);
 #endif
 
    return NS_OK;
@@ -120,7 +115,7 @@ nsresult nsFileDialog::GetDisplayDirectory( nsFileSpec &aDirectory)
 {
    char buff[CCHMAXPATH] = "";
    strcpy( buff, mFileDlg.szFullFile);
-   PRINTF( "mFileDlg.szFullFile = %s\n", buff);
+   printf( "mFileDlg.szFullFile = %s\n", buff);
    char *lastslash = strrchr( buff, '\\');
 
    if( lastslash && '\0' != *lastslash)

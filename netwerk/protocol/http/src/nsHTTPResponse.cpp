@@ -30,9 +30,10 @@
 #include "nsString.h"
 #include "nsXPIDLString.h"
 #include "nsHTTPAtoms.h"
-#include "nslog.h"
 
-NS_DECL_LOG(HTTPLog)
+#if defined(PR_LOGGING)
+extern PRLogModuleInfo* gHTTPLog;
+#endif /* PR_LOGGING */
 
 // When deciding heuristically whether or not to validate an HTTP response with
 // the server, this constant can be used to tune how conservative the algorithm
@@ -293,7 +294,7 @@ nsresult nsHTTPResponse::ParseStatusLine(nsCString& aStatusLine)
     rv = SetServerVersion(token);
     if (NS_FAILED(rv)) return rv;
 
-    PR_LOG(HTTPLog, PR_LOG_ALWAYS, 
+    PR_LOG(gHTTPLog, PR_LOG_ALWAYS, 
            ("\tParseStatusLine [this=%x].\tHTTP-Version: %s\n",
             this, token));
 
@@ -316,7 +317,7 @@ nsresult nsHTTPResponse::ParseStatusLine(nsCString& aStatusLine)
 
     SetStatus(statusCode);
 
-    PR_LOG(HTTPLog, PR_LOG_ALWAYS, 
+    PR_LOG(gHTTPLog, PR_LOG_ALWAYS, 
            ("\tParseStatusLine [this=%x].\tStatus-Code: %d\n",
             this, statusCode));
 
@@ -328,7 +329,7 @@ nsresult nsHTTPResponse::ParseStatusLine(nsCString& aStatusLine)
     token = aStatusLine.GetBuffer();
     SetStatusString(token);
 
-    PR_LOG(HTTPLog, PR_LOG_ALWAYS, 
+    PR_LOG(gHTTPLog, PR_LOG_ALWAYS, 
            ("\tParseStatusLine [this=%x].\tReason-Phrase: %s\n",
             this, token));
 
@@ -795,7 +796,7 @@ nsresult nsHTTPResponse::UpdateHeaders(nsISimpleEnumerator *aEnumerator)
   nsCOMPtr<nsIAtom>       headerAtom;
   nsXPIDLCString          headerValue;
 
-  PR_LOG(HTTPLog, PR_LOG_DEBUG, 
+  PR_LOG(gHTTPLog, PR_LOG_DEBUG, 
         ("nsHTTPResponse::UpdateHeaders [this=%x].\n", this));
 
   rv = aEnumerator->HasMoreElements(&bMoreHeaders);
@@ -841,7 +842,7 @@ nsresult nsHTTPResponse::UpdateHeaders(nsISimpleEnumerator *aEnumerator)
         // Convert the atom name from unicode to ascii...
         atom->GetUnicode(&name);
         nameBuffer.AssignWithConversion(name);
-        PR_LOG(HTTPLog, PR_LOG_ALWAYS, 
+        PR_LOG(gHTTPLog, PR_LOG_ALWAYS, 
               ("\tUpdateHeaders [this=%x]."
                "\tIgnoring response header: \'%s\'\n",
               this, nameBuffer.GetBuffer()));
@@ -863,7 +864,7 @@ nsresult nsHTTPResponse::UpdateHeaders(nsISimpleEnumerator *aEnumerator)
 
         atom->GetUnicode(&name);
         nameBuffer.AssignWithConversion(name);
-        PR_LOG(HTTPLog, PR_LOG_ALWAYS, 
+        PR_LOG(gHTTPLog, PR_LOG_ALWAYS, 
               ("\tUpdateHeaders [this=%x].\tNew response header: \'%s: %s\'\n",
               this, nameBuffer.GetBuffer(), (const char*)headerValue));
 #endif /* PR_LOGGING */

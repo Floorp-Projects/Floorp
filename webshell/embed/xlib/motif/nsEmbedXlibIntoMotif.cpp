@@ -13,11 +13,6 @@
 #include "nsRepository.h"
 #include "nsIPref.h"
 #include "xlibrgb.h"
-#include "nslog.h"
-
-NS_IMPL_LOG(nsEmbedXlibIntoMotifLog)
-#define PRINTF NS_LOG_PRINTF(nsEmbedXlibIntoMotifLog)
-#define FLUSH  NS_LOG_FLUSH(nsEmbedXlibIntoMotifLog)
 
 static NS_DEFINE_IID(kIEventQueueServiceIID,
                      NS_IEVENTQUEUESERVICE_IID);
@@ -39,7 +34,7 @@ static void event_processor_callback(XtPointer       aClosure,
                                      int *           aFd,
                                      XtIntervalId *  aId)
 {
-//   PRINTF("event_processor_callback()\n");
+//   printf("event_processor_callback()\n");
   nsIEventQueue *eventQueue = (nsIEventQueue*)aClosure;
   eventQueue->ProcessPendingEvents();
 }
@@ -61,11 +56,11 @@ static void EmbedEventHandler(Widget     w,
 //   nsXtWidget_InitNSMouseEvent(event, p, mevent, NS_MOUSE_LEFT_BUTTON_DOWN);
 //   widgetWindow->DispatchMouseEvent(mevent);
 
-    PRINTF("test_filter called\n");
+	printf("test_filter called\n");
 
   if (nsnull != gsEventDispatcher)
   {
-      PRINTF("dispatching native event\n");
+	printf("dispatching native event\n");
 	(*gsEventDispatcher)((nsXlibNativeEvent) xevent);
   }
 
@@ -97,12 +92,12 @@ static void WindowCreateCallback(PRUint32 aID)
 					EmbedEventHandler,
 					NULL);
 
-//   PRINTF("window created\n");
+//   printf("window created\n");
 }
 
 static void WindowDestroyCallback(PRUint32 aID)
 {
-    PRINTF("window destroyed\n");
+  printf("window destroyed\n");
 }
 
 
@@ -173,7 +168,7 @@ int main(int argc, char **argv)
   //////////////////////////////////////////////////////////////////////
   NS_SetupRegistry();
 
-  PRINTF("Creating event queue.\n");
+  printf("Creating event queue.\n");
     
   nsIEventQueueService * eventQueueService = nsnull;
   nsIEventQueue * eventQueue = nsnull;
@@ -244,7 +239,7 @@ int main(int argc, char **argv)
 					  (void **) &sgPrefs);
 
   if (NS_OK != rv) {
-      PRINTF("failed to get prefs instance\n");
+    printf("failed to get prefs instance\n");
     return rv;
   }
   

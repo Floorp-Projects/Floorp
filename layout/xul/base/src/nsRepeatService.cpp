@@ -28,11 +28,6 @@
 //
 
 #include "nsRepeatService.h"
-#include "nslog.h"
-
-NS_IMPL_LOG(nsRepeatServiceLog)
-#define PRINTF NS_LOG_PRINTF(nsRepeatServiceLog)
-#define FLUSH  NS_LOG_FLUSH(nsRepeatServiceLog)
 
 #if XP_MAC
 #define INITAL_REPEAT_DELAY 250
@@ -78,7 +73,7 @@ void nsRepeatService::Start(nsITimerCallback* aCallback)
 
 void nsRepeatService::Stop()
 {
-  //PRINTF("Stopping repeat timer\n");
+  //printf("Stopping repeat timer\n");
   if (mRepeatTimer) {
      mRepeatTimer->Cancel();
      mRepeatTimer = nsnull;

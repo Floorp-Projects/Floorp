@@ -29,11 +29,7 @@
 #define WINVER 0x0500
 
 #include "nsScreenWin.h"
-#include "nslog.h"
 
-NS_IMPL_LOG(nsScreenWinLog)
-#define PRINTF NS_LOG_PRINTF(nsScreenWinLog)
-#define FLUSH  NS_LOG_FLUSH(nsScreenWinLog)
 
 // needed because there are unicode/ansi versions of this routine
 // and we need to make sure we get the correct one.
@@ -71,7 +67,7 @@ nsScreenWin :: nsScreenWin ( void* inScreen )
     if ( mGetMonitorInfoProc )
       mHasMultiMonitorAPIs = PR_TRUE;
   }
-  PRINTF("has multiple monitor apis is %ld\n", mHasMultiMonitorAPIs);
+  printf("has multiple monitor apis is %ld\n", mHasMultiMonitorAPIs);
 #endif
 
   // nothing else to do. I guess we could cache a bunch of information

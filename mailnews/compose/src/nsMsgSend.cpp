@@ -78,11 +78,6 @@
 #include "nsAppShellCIDs.h" // TODO remove later
 #include "nsIAppShellService.h" // TODO remove later
 #include "nsIXULWindow.h" // TODO remove later
-#include "nslog.h"
-
-NS_IMPL_LOG(nsMsgSendLog)
-#define PRINTF NS_LOG_PRINTF(nsMsgSendLog)
-#define FLUSH  NS_LOG_FLUSH(nsMsgSendLog)
 
 // use these macros to define a class IID for our component. Our object currently 
 // supports two interfaces (nsISupports and nsIMsgCompose) so we want to define constants 
@@ -241,7 +236,7 @@ void
 nsMsgComposeAndSend::Clear()
 {
 #ifdef NS_DEBUG
-  PRINTF("\nTHE CLEANUP ROUTINE FOR nsMsgComposeAndSend() WAS CALLED\n");
+  printf("\nTHE CLEANUP ROUTINE FOR nsMsgComposeAndSend() WAS CALLED\n");
 #endif
 	PR_FREEIF (m_attachment1_type);
 	PR_FREEIF (m_attachment1_encoding);
@@ -1754,7 +1749,7 @@ nsMsgComposeAndSend::CountCompFieldAttachments()
 
   // parse the attachment list 
 #ifdef NS_DEBUG
-  PRINTF("Comp fields attachment list = %s\n", (const char*)attachmentList);
+  printf("Comp fields attachment list = %s\n", (const char*)attachmentList);
 #endif
 
   char      *token = nsnull;
@@ -1776,16 +1771,16 @@ nsMsgComposeAndSend::CountCompFieldAttachments()
       {
         mCompFieldLocalAttachments++;
 #ifdef NS_DEBUG
-        PRINTF("Counting LOCAL attachment %d: %s\n", 
-               mCompFieldLocalAttachments, str.GetBuffer());
+        printf("Counting LOCAL attachment %d: %s\n", 
+                mCompFieldLocalAttachments, str.GetBuffer());
 #endif
       }
       else    // This is a remote URL...
       {
         mCompFieldRemoteAttachments++;
 #ifdef NS_DEBUG
-        PRINTF("Counting REMOTE attachment %d: %s\n", 
-               mCompFieldRemoteAttachments, str.GetBuffer());
+        printf("Counting REMOTE attachment %d: %s\n", 
+                mCompFieldRemoteAttachments, str.GetBuffer());
 #endif
       }
 
@@ -1834,7 +1829,7 @@ nsMsgComposeAndSend::AddCompFieldLocalAttachments()
       if (str.CompareWithConversion("file://", PR_TRUE, 7) == 0)
       {
 #ifdef NS_DEBUG
-        PRINTF("Adding LOCAL attachment %d: %s\n", newLoc, str.GetBuffer());
+        printf("Adding LOCAL attachment %d: %s\n", newLoc, str.GetBuffer());
 #endif
 #ifdef XP_WIN
         str.ReplaceChar('|', ':');
@@ -1948,7 +1943,7 @@ nsMsgComposeAndSend::AddCompFieldRemoteAttachments(PRUint32   aStartLocation,
       if (str.CompareWithConversion("file://", PR_TRUE, 7) != 0)
       {
 #ifdef NS_DEBUG
-        PRINTF("Adding REMOTE attachment %d: %s\n", newLoc, str.GetBuffer());
+        printf("Adding REMOTE attachment %d: %s\n", newLoc, str.GetBuffer());
 #endif
 
         m_attachments[newLoc].mDeleteFile = PR_TRUE;
@@ -2994,7 +2989,7 @@ nsMsgComposeAndSend::DoDeliveryExitProcessing(nsIURI * aUri, nsresult aExitCode,
   if (NS_FAILED(aExitCode))
   {
 #ifdef NS_DEBUG
-    PRINTF("\nMessage Delivery Failed!\n");
+  printf("\nMessage Delivery Failed!\n");
 #endif
 
     nsXPIDLString eMsg; 
@@ -3025,7 +3020,7 @@ nsMsgComposeAndSend::DoDeliveryExitProcessing(nsIURI * aUri, nsresult aExitCode,
   }
 #ifdef NS_DEBUG
   else
-    PRINTF("\nMessage Delivery SUCCEEDED!\n");
+    printf("\nMessage Delivery SUCCEEDED!\n");
 #endif
 
   
@@ -3062,7 +3057,7 @@ nsMsgComposeAndSend::DoDeliveryExitProcessing(nsIURI * aUri, nsresult aExitCode,
   if (NS_FAILED(retCode))
   {
 #ifdef NS_DEBUG
-    PRINTF("\nDoDeliveryExitProcessing(): DoFcc() call Failed!\n");
+  printf("\nDoDeliveryExitProcessing(): DoFcc() call Failed!\n");
 #endif
     return;
   } 
@@ -3100,7 +3095,7 @@ nsMsgComposeAndSend::DoFcc()
   if (!mCompFields->GetFcc() || !*mCompFields->GetFcc())
   {
 #ifdef NS_DEBUG
-    PRINTF("\nCopy operation disabled by user!\n");
+  printf("\nCopy operation disabled by user!\n");
 #endif
 
     NotifyListenersOnStopSending(nsnull, NS_OK, nsnull, nsnull);

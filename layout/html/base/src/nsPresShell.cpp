@@ -139,15 +139,6 @@
 // SubShell map
 #include "nsDST.h"
 
-#include "nslog.h"
-#undef fprintf
-#undef PR_NewLogModule
-#undef PRLogModuleInfo
-
-NS_IMPL_LOG(nsPresShellLog)
-#define PRINTF NS_LOG_PRINTF(nsPresShellLog)
-#define FLUSH  NS_LOG_FLUSH(nsPresShellLog)
-
 // supporting bugs 31816, 20760, 22963
 // define USE_OVERRIDE to put prefs in as an override stylesheet
 // otherwise they go in as a Backstop stylesheets
@@ -1153,24 +1144,24 @@ nsIPresShell::GetVerifyReflowEnable()
     if (VERIFY_REFLOW_ON & gVerifyReflowFlags) {
       gVerifyReflowEnabled = PR_TRUE;
     }
-    PRINTF("Note: verifyreflow is %sabled",
+    printf("Note: verifyreflow is %sabled",
            gVerifyReflowEnabled ? "en" : "dis");
     if (VERIFY_REFLOW_NOISY & gVerifyReflowFlags) {
-      PRINTF(" (noisy)");
+      printf(" (noisy)");
     }
     if (VERIFY_REFLOW_ALL & gVerifyReflowFlags) {
-      PRINTF(" (all)");
+      printf(" (all)");
     }
     if (VERIFY_REFLOW_DUMP_COMMANDS & gVerifyReflowFlags) {
-      PRINTF(" (show reflow commands)");
+      printf(" (show reflow commands)");
     }
     if (VERIFY_REFLOW_NOISY_RC & gVerifyReflowFlags) {
-      PRINTF(" (noisy reflow commands)");
+      printf(" (noisy reflow commands)");
       if (VERIFY_REFLOW_REALLY_NOISY_RC & gVerifyReflowFlags) {
-        PRINTF(" (REALLY noisy reflow commands)");
+        printf(" (REALLY noisy reflow commands)");
       }
     }
-    PRINTF("\n");
+    printf("\n");
   }
 #endif
   return gVerifyReflowEnabled;
@@ -1673,9 +1664,11 @@ PresShell::EnablePrefStyleRules(PRBool aEnable, PRUint8 aPrefType/*=0xFF*/)
   // set to desired state
   mEnablePrefStyleSheet = aEnable;
 
-  PRINTF("PrefStyleSheet %s %s\n",
-         mEnablePrefStyleSheet ? "ENABLED" : "DISABLED",
-         bChanging ? "(state toggled)" : "(state unchanged)");
+#ifdef NS_DEBUG
+  printf("PrefStyleSheet %s %s\n",
+    mEnablePrefStyleSheet ? "ENABLED" : "DISABLED",
+    bChanging ? "(state toggled)" : "(state unchanged)");
+#endif
 
   // deal with changing state
   if(bChanging){
@@ -1711,7 +1704,9 @@ PresShell::SetPreferenceStyleRules(PRBool aForceReflow)
     // XXX: may get more granularity later 
     //      (i.e. each pref may be controlled independently)
     if (!mEnablePrefStyleSheet) {
-      PRINTF("PrefStyleSheet disabled\n");
+#ifdef NS_DEBUG
+      printf("PrefStyleSheet disabled\n");
+#endif
       return PR_TRUE;
     }
 
@@ -1732,7 +1727,9 @@ PresShell::SetPreferenceStyleRules(PRBool aForceReflow)
     }
     if (NS_SUCCEEDED(result)) {
     
-      PRINTF("Setting Preference Style Rules:\n");
+#ifdef NS_DEBUG
+      printf("Setting Preference Style Rules:\n");
+#endif
       // if here, we need to create rules for the prefs
       // - this includes the background-color, the text-color,
       //   the link color, the visited link color and the link-underlining
@@ -1759,10 +1756,14 @@ PresShell::SetPreferenceStyleRules(PRBool aForceReflow)
         }
       }
     }
-    PRINTF( "Preference Style Rules set: error=%ld\n", (long)result);
+#ifdef NS_DEBUG
+    printf( "Preference Style Rules set: error=%ld\n", (long)result);
+#endif    
 
     if (aForceReflow){
-      PRINTF( "*** Forcing reframe! ***\n");
+#ifdef NS_DEBUG
+      printf( "*** Forcing reframe! ***\n");
+#endif
       // this is harsh, but without it the new colors don't appear on the current page
       // Fortunately, it only happens when the prefs change, a rare event.
       // XXX - determine why the normal PresContext::RemapStyleAndReflow doesn't cut it
@@ -1799,6 +1800,7 @@ nsresult PresShell::ClearPreferenceStyleRules(void)
       mStyleSet->RemoveBackstopStyleSheet(mPrefStyleSheet);
  #endif
 
+#ifdef NS_DEBUG
  #ifdef PREFS_USE_OVERRIDE
       NS_ASSERTION((numBefore - 1) == mStyleSet->GetNumberOfOverrideStyleSheets(),
                    "Pref stylesheet was not removed");
@@ -1806,7 +1808,8 @@ nsresult PresShell::ClearPreferenceStyleRules(void)
       NS_ASSERTION((numBefore - 1) == mStyleSet->GetNumberOfBackstopStyleSheets(),
                    "Pref stylesheet was not removed");
  #endif
-      PRINTF("PrefStyleSheet removed\n");
+      printf("PrefStyleSheet removed\n");
+#endif
       // clear the sheet pointer: it is strictly historical now
       NS_IF_RELEASE(mPrefStyleSheet);
     }
@@ -1840,7 +1843,9 @@ nsresult PresShell::CreatePreferenceStyleSheet(void)
     result = NS_ERROR_OUT_OF_MEMORY;
   }
 
-  PRINTF("CreatePrefStyleSheet completed: error=%ld\n",(long)result);
+#ifdef NS_DEBUG
+  printf("CreatePrefStyleSheet completed: error=%ld\n",(long)result);
+#endif
 
   return result;
 }
@@ -1856,7 +1861,9 @@ nsresult PresShell::SetPrefColorRules(void)
     if (NS_SUCCEEDED(mPresContext->GetCachedBoolPref(kPresContext_UseDocumentColors, useDocColors))) {
       if (!useDocColors) {
 
-        PRINTF(" - Creating rules for document colors\n");
+#ifdef NS_DEBUG
+        printf(" - Creating rules for document colors\n");
+#endif
 
         // OK, not using document colors, so we have to force the user's colors via style rules
         if (!mPrefStyleSheet) {
@@ -1926,7 +1933,9 @@ nsresult PresShell::SetPrefLinkRules(void)
       nsCOMPtr<nsIDOMCSSStyleSheet> sheet(do_QueryInterface(mPrefStyleSheet,&result));
       if (NS_SUCCEEDED(result)) {
 
-        PRINTF(" - Creating rules for link and visited colors\n");
+#ifdef NS_DEBUG
+        printf(" - Creating rules for link and visited colors\n");
+#endif
 
         // support default link colors: 
         //   this means the link colors need to be overridable, 
@@ -1990,11 +1999,15 @@ nsresult PresShell::SetPrefLinkRules(void)
               // no need for important, we want these to be overridable
               // NOTE: these must go in the backstop stylesheet or they cannot be
               //       overridden by authors
-              PRINTF (" - Creating rules for enabling link underlines\n");
+  #ifdef NS_DEBUG
+              printf (" - Creating rules for enabling link underlines\n");
+  #endif
               // make a rule to make text-decoration: underline happen for links
               strRule.Append(NS_LITERAL_STRING(":link, :visited {text-decoration:underline;}"));
             } else {
-              PRINTF (" - Creating rules for disabling link underlines\n");
+  #ifdef NS_DEBUG
+              printf (" - Creating rules for disabling link underlines\n");
+  #endif
               // make a rule to make text-decoration: none happen for links
               strRule.Append(NS_LITERAL_STRING(":link, :visited {text-decoration:none;}"));
             }
@@ -2234,7 +2247,7 @@ PresShell::InitialReflow(nscoord aWidth, nscoord aHeight)
       if (uri) {
         char* url = nsnull;
         uri->GetSpec(&url);
-        PRINTF("*** PresShell::InitialReflow (this=%p, url='%s')\n", this, url);
+        printf("*** PresShell::InitialReflow (this=%p, url='%s')\n", this, url);
         Recycle(url);
       }
     }
@@ -2459,7 +2472,7 @@ PresShell::ResizeReflow(nscoord aWidth, nscoord aHeight)
     // XXX if debugging then we should assert that the cache is empty
   } else {
 #ifdef NOISY
-    PRINTF("PresShell::ResizeReflow: null root frame\n");
+    printf("PresShell::ResizeReflow: null root frame\n");
 #endif
   }
   DidCauseReflow();
@@ -3062,7 +3075,7 @@ PresShell::AlreadyInQueue(nsIReflowCommand* aReflowCommand)
             RCType == queuedRCType) {            
 #ifdef DEBUG
             if (VERIFY_REFLOW_NOISY_RC & gVerifyReflowFlags) {
-              PRINTF("*** PresShell::AlreadyInQueue(): Discarding reflow command: this=%p\n", this);
+              printf("*** PresShell::AlreadyInQueue(): Discarding reflow command: this=%p\n", this);
               aReflowCommand->List(stdout);
             }
 #endif
@@ -3081,15 +3094,15 @@ NS_IMETHODIMP
 PresShell::AppendReflowCommand(nsIReflowCommand* aReflowCommand)
 {
 #ifdef DEBUG
-  //PRINTF("gShellCounter: %d\n", gShellCounter++);
+  //printf("gShellCounter: %d\n", gShellCounter++);
   if (mInVerifyReflow) {
     return NS_OK;
   }  
   if (VERIFY_REFLOW_NOISY_RC & gVerifyReflowFlags) {
-    PRINTF("\nPresShell@%p: adding reflow command\n", this);
+    printf("\nPresShell@%p: adding reflow command\n", this);
     aReflowCommand->List(stdout);
     if (VERIFY_REFLOW_REALLY_NOISY_RC & gVerifyReflowFlags) {
-      PRINTF("Current content model:\n");
+      printf("Current content model:\n");
       nsCOMPtr<nsIContent> rootContent;
       rootContent = getter_AddRefs(mDocument->GetRootContent());
       if (rootContent) {
@@ -3165,9 +3178,9 @@ PresShell::CancelReflowCommand(nsIFrame* aTargetFrame, nsIReflowCommand::ReflowT
           }
 #ifdef DEBUG
           if (VERIFY_REFLOW_NOISY_RC & gVerifyReflowFlags) {
-            PRINTF("PresShell: removing rc=%p for frame ", rc);
+            printf("PresShell: removing rc=%p for frame ", rc);
             nsFrame::ListTag(stdout, aTargetFrame);
-            PRINTF("\n");
+            printf("\n");
           }
 #endif
           mReflowCommands.RemoveElementAt(i);
@@ -4995,7 +5008,7 @@ struct ReflowEvent : public PLEvent {
     if (presShell) {
 #ifdef DEBUG
       if (VERIFY_REFLOW_NOISY_RC & gVerifyReflowFlags) {
-        PRINTF("\n*** Handling reflow event: PresShell=%p, event=%p\n", presShell.get(), this);
+         printf("\n*** Handling reflow event: PresShell=%p, event=%p\n", presShell.get(), this);
       }
 #endif
       // XXX Statically cast the pres shell pointer so that we can call
@@ -5058,7 +5071,7 @@ PresShell::PostReflowEvent()
     mPendingReflowEvent = PR_TRUE;
 #ifdef DEBUG
     if (VERIFY_REFLOW_NOISY_RC & gVerifyReflowFlags) {
-      PRINTF("\n*** PresShell::PostReflowEvent(), this=%p, event=%p\n", this, ev);
+      printf("\n*** PresShell::PostReflowEvent(), this=%p, event=%p\n", this, ev);
     }
 #endif    
   }
@@ -5104,12 +5117,12 @@ PresShell::ProcessReflowCommands(PRBool aInterruptible)
 #ifdef DEBUG
     if (GetVerifyReflowEnable()) {
       if (VERIFY_REFLOW_ALL & gVerifyReflowFlags) {
-        PRINTF("ProcessReflowCommands: begin incremental reflow\n");
+        printf("ProcessReflowCommands: begin incremental reflow\n");
       }
     }
     if (VERIFY_REFLOW_DUMP_COMMANDS & gVerifyReflowFlags) {   
       PRInt32 i, n = mReflowCommands.Count();
-      PRINTF("\nPresShell::ProcessReflowCommands: this=%p, count=%d\n", this, n);
+      printf("\nPresShell::ProcessReflowCommands: this=%p, count=%d\n", this, n);
       for (i = 0; i < n; i++) {
         nsIReflowCommand* rc = (nsIReflowCommand*)
           mReflowCommands.ElementAt(i);
@@ -5160,8 +5173,8 @@ PresShell::ProcessReflowCommands(PRBool aInterruptible)
       }
 #ifdef DEBUG
       if (VERIFY_REFLOW_DUMP_COMMANDS & gVerifyReflowFlags) {        
-        PRINTF("Time spent in PresShell::ProcessReflowCommands(), this=%p, time=%d micro seconds\n", 
-               this, mAccumulatedReflowTime);
+        printf("Time spent in PresShell::ProcessReflowCommands(), this=%p, time=%d micro seconds\n", 
+          this, mAccumulatedReflowTime);
       }
 #endif
       mAccumulatedReflowTime = 0;
@@ -5169,7 +5182,7 @@ PresShell::ProcessReflowCommands(PRBool aInterruptible)
     
 #ifdef DEBUG
     if (VERIFY_REFLOW_DUMP_COMMANDS & gVerifyReflowFlags) {
-      PRINTF("\nPresShell::ProcessReflowCommands() finished: this=%p\n", this);
+      printf("\nPresShell::ProcessReflowCommands() finished: this=%p\n", this);
     }
 
     if (nsIFrameDebug::GetVerifyTreeEnable()) {
@@ -5191,12 +5204,12 @@ PresShell::ProcessReflowCommands(PRBool aInterruptible)
       PRBool ok = VerifyIncrementalReflow();
       mInVerifyReflow = PR_FALSE;
       if (VERIFY_REFLOW_ALL & gVerifyReflowFlags) {
-        PRINTF("ProcessReflowCommands: finished (%s)\n",
+        printf("ProcessReflowCommands: finished (%s)\n",
                ok ? "ok" : "failed");
       }
 
       if (0 != mReflowCommands.Count()) {
-        PRINTF("XXX yikes! reflow commands queued during verify-reflow\n");
+        printf("XXX yikes! reflow commands queued during verify-reflow\n");
       }
     }
 #endif
@@ -5288,7 +5301,7 @@ PresShell::ReflowCommandAdded(nsIReflowCommand* aRC)
       }
 
   #ifdef DEBUG_nisheeth
-      PRINTF("presshell=%p, mRCCreatedDuringLoad=%d\n", this, mRCCreatedDuringLoad);
+      printf("presshell=%p, mRCCreatedDuringLoad=%d\n", this, mRCCreatedDuringLoad);
   #endif
     }
   }
@@ -5305,7 +5318,7 @@ PresShell::ReflowCommandRemoved(nsIReflowCommand* aRC)
     if (flags & NS_RC_CREATED_DURING_DOCUMENT_LOAD) {
       mRCCreatedDuringLoad--;
   #ifdef DEBUG_nisheeth
-      PRINTF("presshell=%p, mRCCreatedDuringLoad=%d\n", this, mRCCreatedDuringLoad);
+      printf("presshell=%p, mRCCreatedDuringLoad=%d\n", this, mRCCreatedDuringLoad);
   #endif
     }
 
@@ -5340,7 +5353,7 @@ PresShell::AddDummyLayoutRequest(void)
     }
 
 #ifdef DEBUG_nisheeth
-    PRINTF("presshell=%p, Added dummy layout request.\n", this);
+    printf("presshell=%p, Added dummy layout request.\n", this);
 #endif
   }
   return rv;
@@ -5366,7 +5379,7 @@ PresShell::RemoveDummyLayoutRequest(void)
     }
 
 #ifdef DEBUG_nisheeth
-    PRINTF("presshell=%p, Removed dummy layout request.\n", this);
+    printf("presshell=%p, Removed dummy layout request.\n", this);
 #endif
   }
   return rv;
@@ -5393,7 +5406,7 @@ static NS_DEFINE_CID(kWidgetCID, NS_CHILD_CID);
 static void
 LogVerifyMessage(nsIFrame* k1, nsIFrame* k2, const char* aMsg)
 {
-  PRINTF("verifyreflow: ");
+  printf("verifyreflow: ");
   nsAutoString name;
   if (nsnull != k1) {
     nsIFrameDebug*  frameDebug;
@@ -5406,8 +5419,9 @@ LogVerifyMessage(nsIFrame* k1, nsIFrame* k2, const char* aMsg)
   else {
     name.AssignWithConversion("(null)");
   }
-  const char* str = NS_ConvertUCS2toUTF8(name);
-  PRINTF("%s != ", str);
+  fputs(name, stdout);
+
+  printf(" != ");
 
   if (nsnull != k2) {
     nsIFrameDebug*  frameDebug;
@@ -5420,40 +5434,40 @@ LogVerifyMessage(nsIFrame* k1, nsIFrame* k2, const char* aMsg)
   else {
     name.AssignWithConversion("(null)");
   }
-  str = NS_ConvertUCS2toUTF8(name);
+  fputs(name, stdout);
 
-  PRINTF("%s %s", str, aMsg);
+  printf(" %s", aMsg);
 }
 
 static void
 LogVerifyMessage(nsIFrame* k1, nsIFrame* k2, const char* aMsg,
                  const nsRect& r1, const nsRect& r2)
 {
-  PRINTF("VerifyReflow Error:\n");
+  printf("VerifyReflow Error:\n");
   nsAutoString name;
   nsIFrameDebug*  frameDebug;
 
   if (NS_SUCCEEDED(k1->QueryInterface(NS_GET_IID(nsIFrameDebug),
                                       (void**)&frameDebug))) {
-    PRINTF("  ");
+    fprintf(stdout, "  ");
     frameDebug->GetFrameName(name);
-    nsCAutoString tmp; tmp.AssignWithConversion(name);
-    PRINTF("%s %p ", tmp.GetBuffer(), k1);
+    fputs(name, stdout);
+    fprintf(stdout, " %p ", k1);
   }
-  PRINTF("{%d, %d, %d, %d}", r1.x, r1.y, r1.width, r1.height);
+  printf("{%d, %d, %d, %d}", r1.x, r1.y, r1.width, r1.height);
 
-  PRINTF(" != \n");
+  printf(" != \n");
 
   if (NS_SUCCEEDED(k2->QueryInterface(NS_GET_IID(nsIFrameDebug),
                                       (void**)&frameDebug))) {
-    PRINTF("  ");
+    fprintf(stdout, "  ");
     frameDebug->GetFrameName(name);
-    nsCAutoString tmp; tmp.AssignWithConversion(name);
-    PRINTF("%s %p ", tmp.GetBuffer(), k2);
+    fputs(name, stdout);
+    fprintf(stdout, " %p ", k2);
   }
-  PRINTF("{%d, %d, %d, %d}\n", r2.x, r2.y, r2.width, r2.height);
+  printf("{%d, %d, %d, %d}\n", r2.x, r2.y, r2.width, r2.height);
 
-  PRINTF("  %s\n", aMsg);
+  printf("  %s\n", aMsg);
 }
 
 static PRBool
@@ -5474,7 +5488,7 @@ CompareTrees(nsIPresContext* aFirstPresContext, nsIFrame* aFirstFrame,
     if (l1 != l2) {
       ok = PR_FALSE;
       LogVerifyMessage(k1, k2, "child counts don't match: ");
-      PRINTF("%d != %d\n", l1, l2);
+      printf("%d != %d\n", l1, l2);
       if (0 == (VERIFY_REFLOW_ALL & gVerifyReflowFlags)) {
         break;
       }
@@ -5594,8 +5608,8 @@ CompareTrees(nsIPresContext* aFirstPresContext, nsIFrame* aFirstFrame,
               if (band1.mCount != band2.mCount) 
               { // count mismatch, stop comparing
                 LogVerifyMessage(k1, k2, "band.mCount of space managers differs\n");
-                PRINTF("count1= %d, count2=%d, yOffset = %d, size=%d\n",
-                       band1.mCount, band2.mCount, yOffset, small);
+                printf("count1= %d, count2=%d, yOffset = %d, size=%d\n",
+                        band1.mCount, band2.mCount, yOffset, small);
                 ok = PR_FALSE;
                       
               }
@@ -5609,7 +5623,7 @@ CompareTrees(nsIPresContext* aFirstPresContext, nsIFrame* aFirstFrame,
                   if (!match)
                   {
                     LogVerifyMessage(k1, k2, "band.mTrapezoids of space managers differs\n");
-                    PRINTF("index %d\n", trapIndex);
+                    printf ("index %d\n", trapIndex);
                   }
                 }
               }
@@ -5619,7 +5633,7 @@ CompareTrees(nsIPresContext* aFirstPresContext, nsIFrame* aFirstFrame,
               if (band1.mCount != band2.mCount) 
               { // count mismatch, stop comparing
                 LogVerifyMessage(k1, k2, "band.mCount of space managers differs\n");
-                PRINTF("count1= %d, count2=%d, yOffset = %d, size=%d\n",
+                printf("count1= %d, count2=%d, yOffset = %d, size=%d\n",
                         band1.mCount, band2.mCount, yOffset, small);
                 ok = PR_FALSE;
                       
@@ -5634,7 +5648,7 @@ CompareTrees(nsIPresContext* aFirstPresContext, nsIFrame* aFirstFrame,
                   if (!match)
                   {
                     LogVerifyMessage(k1, k2, "band.mTrapezoids of space managers differs\n");
-                    PRINTF("index %d\n", trapIndex);
+                    printf ("index %d\n", trapIndex);
                   }
                 }
               }
@@ -5679,20 +5693,18 @@ CompareTrees(nsIPresContext* aFirstPresContext, nsIFrame* aFirstFrame,
       nsAutoString tmp;
       if (nsnull != listName1) {
         listName1->ToString(tmp);
-        const char* str = NS_ConvertUCS2toUTF8(tmp);
-        PRINTF(str);
+        fputs(tmp, stdout);
       }
       else
-        PRINTF("(null)");
-      PRINTF(" != ");
+        fputs("(null)", stdout);
+      printf(" != ");
       if (nsnull != listName2) {
         listName2->ToString(tmp);
-        const char* str = NS_ConvertUCS2toUTF8(tmp);
-        PRINTF(str);
+        fputs(tmp, stdout);
       }
       else
-        PRINTF("(null)");
-      PRINTF("\n");
+        fputs("(null)", stdout);
+      printf("\n");
       NS_IF_RELEASE(listName1);
       NS_IF_RELEASE(listName2);
       break;
@@ -5746,7 +5758,7 @@ PRBool
 PresShell::VerifyIncrementalReflow()
 {
    if (VERIFY_REFLOW_NOISY & gVerifyReflowFlags) {
-     PRINTF("Building Verification Tree...\n");
+     printf("Building Verification Tree...\n");
    }
   // All the stuff we are creating that needs releasing
   nsIPresContext* cx;
@@ -5851,7 +5863,7 @@ PresShell::VerifyIncrementalReflow()
   sh->InitialReflow(r.width, r.height);
   sh->SetVerifyReflowEnable(PR_TRUE);  // turn on verify reflow again now that we're done reflowing the test frame tree
   if (VERIFY_REFLOW_NOISY & gVerifyReflowFlags) {
-    PRINTF("Verification Tree built, comparing...\n");
+     printf("Verification Tree built, comparing...\n");
   }
 
   // Now that the document has been reflowed, use its frame tree to
@@ -5862,14 +5874,14 @@ PresShell::VerifyIncrementalReflow()
   sh->GetRootFrame(&root2);
   PRBool ok = CompareTrees(mPresContext, root1, cx, root2);
   if (!ok && (VERIFY_REFLOW_NOISY & gVerifyReflowFlags)) {
-    PRINTF("Verify reflow failed, primary tree:\n");
+    printf("Verify reflow failed, primary tree:\n");
     nsIFrameDebug*  frameDebug;
 
     if (NS_SUCCEEDED(root1->QueryInterface(NS_GET_IID(nsIFrameDebug),
                                            (void**)&frameDebug))) {
       frameDebug->List(mPresContext, stdout, 0);
     }
-    PRINTF("Verification tree:\n");
+    printf("Verification tree:\n");
     if (NS_SUCCEEDED(root2->QueryInterface(NS_GET_IID(nsIFrameDebug),
                                            (void**)&frameDebug))) {
       frameDebug->List(mPresContext, stdout, 0);
@@ -5883,7 +5895,7 @@ PresShell::VerifyIncrementalReflow()
   NS_RELEASE(sh);
   NS_RELEASE(vm);
   if (VERIFY_REFLOW_NOISY & gVerifyReflowFlags) {
-    PRINTF("Finished Verifying Reflow...\n");
+    printf("Finished Verifying Reflow...\n");
   }
 
   return ok;
@@ -6158,14 +6170,14 @@ void ReflowCounter::DisplayTotals(PRUint32 * aArray, const char * aTitle)
   }
   ReflowCounter * gTots = (ReflowCounter *)mMgr->LookUp(kGrandTotalsStr);
 
-  PRINTF("%25s\t", aTitle);
+  printf("%25s\t", aTitle);
   for (i=0;i<NUM_REFLOW_TYPES;i++) {
-    PRINTF("%d\t", aArray[i]);
+    printf("%d\t", aArray[i]);
     if (gTots != this &&  aArray[i] > 0) {
       gTots->Add((nsReflowReason)i, aArray[i]);
     }
   }
-  PRINTF("%d\n", total);
+  printf("%d\n", total);
 }
 
 //------------------------------------------------------------------
@@ -6293,16 +6305,16 @@ void ReflowCountMgr::DoGrandTotals()
     }
 
     static const char * title[] = {"Init", "Incrm", "Resze", "Style", "Dirty", "Total"};
-    PRINTF("\t\t\t");
+    printf("\t\t\t");
     PRUint32 i;
     for (i=0;i<NUM_REFLOW_TYPES+1;i++) {
-      PRINTF("\t%s", title[i]);
+      printf("\t%s", title[i]);
     }
-    PRINTF("\n");
+    printf("\n");
     for (i=0;i<78;i++) {
-      PRINTF("-");
+      printf("-");
     }
-    PRINTF("\n");
+    printf("\n");
     PL_HashTableEnumerateEntries(mCounts, DoSingleTotal, this);
   }
 }
@@ -6344,7 +6356,7 @@ void ReflowCountMgr::DoGrandHTMLTotals()
 //------------------------------------
 void ReflowCountMgr::DisplayTotals(const char * aStr)
 {
-  PRINTF("%s\n", aStr?aStr:"No name");
+  printf("%s\n", aStr?aStr:"No name");
   DoGrandTotals();
 
 }
@@ -6429,11 +6441,11 @@ PRIntn ReflowCountMgr::DoDisplayDiffTotals(PLHashEntry *he, PRIntn i, void *arg)
 void ReflowCountMgr::DisplayDiffsInTotals(const char * aStr)
 {
   if (mCycledOnce) {
-    PRINTF("Differences\n");
+    printf("Differences\n");
     for (PRInt32 i=0;i<78;i++) {
-      PRINTF("-");
+      printf("-");
     }
-    PRINTF("\n");
+    printf("\n");
     ClearGrandTotals();
   }
   PL_HashTableEnumerateEntries(mCounts, DoDisplayDiffTotals, (void *)mCycledOnce);

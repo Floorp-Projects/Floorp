@@ -74,12 +74,6 @@
 #include <NodeInfo.h>
 #endif
 
-#include "nslog.h"
-
-NS_IMPL_LOG(nsFileSystemDataSourceLog)
-#define PRINTF NS_LOG_PRINTF(nsFileSystemDataSourceLog)
-#define FLUSH  NS_LOG_FLUSH(nsFileSystemDataSourceLog)
-
 #if defined(XP_UNIX) || defined(XP_OS2)
 #define USE_NC_EXTENSION
 #endif
@@ -328,7 +322,7 @@ FileSystemDataSource::~FileSystemDataSource (void)
 {
 #ifdef DEBUG_REFS
     --gInstanceCount;
-    PRINTF("%d - RDF: FileSystemDataSource\n", gInstanceCount);
+    fprintf(stdout, "%d - RDF: FileSystemDataSource\n", gInstanceCount);
 #endif
 
     if (--gRefCnt == 0) {

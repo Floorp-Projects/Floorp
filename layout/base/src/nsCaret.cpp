@@ -49,11 +49,6 @@
 #include "nsISelectionController.h"
 
 #include "nsCaret.h"
-#include "nslog.h"
-
-NS_IMPL_LOG(nsCaretLog)
-#define PRINTF NS_LOG_PRINTF(nsCaretLog)
-#define FLUSH  NS_LOG_FLUSH(nsCaretLog)
 
 // Because of drawing issues, we currently always make a new RC. See bug 28068
 // Before removing this, stuff will need to be fixed and tested on all platforms.
@@ -744,7 +739,7 @@ void nsCaret::DrawCaret()
     mLastCaretFrame->GetPointFromOffset(presContext, mRendContext, mLastContentOffset, &framePos);
     caretRect += framePos;
     
-    //PRINTF("Content offset %ld, frame offset %ld\n", focusOffset, framePos.x);
+    //printf("Content offset %ld, frame offset %ld\n", focusOffset, framePos.x);
     if(mCaretTwipsWidth < 0)
     {// need to re-compute the pixel width
       mCaretTwipsWidth  = 15 * mCaretPixelsWidth;//uhhhh...

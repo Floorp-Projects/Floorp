@@ -33,12 +33,6 @@
 #include "nsIXMLContent.h"
 #include "nsISizeOfHandler.h"
 #include "nsDOMAttributeMap.h"
-#include "nslog.h"
-#undef fprintf
-
-NS_IMPL_LOG(nsXMLDocumentTypeLog)
-#define PRINTF NS_LOG_PRINTF(nsXMLDocumentTypeLog)
-#define FLUSH  NS_LOG_FLUSH(nsXMLDocumentTypeLog)
 
 
 class nsXMLDocumentType : public nsIDOMDocumentType,

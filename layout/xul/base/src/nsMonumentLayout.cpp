@@ -32,11 +32,6 @@
 #include "nsIBox.h"
 #include "nsIScrollableFrame.h"
 #include "nsBox.h"
-#include "nslog.h"
-
-NS_IMPL_LOG(nsMonumentLayoutLog)
-#define PRINTF NS_LOG_PRINTF(nsMonumentLayoutLog)
-#define FLUSH  NS_LOG_FLUSH(nsMonumentLayoutLog)
 
 // ----- Monument Iterator -----
 
@@ -191,7 +186,7 @@ nsBoxSizeListNodeImpl::~nsBoxSizeListNodeImpl()
 {
     MOZ_COUNT_DTOR(nsBoxSizeListNodeImpl);
     //_nodes--;
-    //PRINTF("Nodes %d\n",_nodes);
+    //printf("Nodes %d\n",_nodes);
 }
 
 void
@@ -245,7 +240,7 @@ nsBoxSizeListNodeImpl::nsBoxSizeListNodeImpl(nsIBox* aBox):mNext(nsnull),
 {
     MOZ_COUNT_CTOR(nsBoxSizeListNodeImpl);
  // _nodes++;
-    // PRINTF("Created. Nodes %d\n",_nodes);
+ // printf("Created. Nodes %d\n",_nodes);
 }
 
 nsBoxSizeList* 
@@ -291,7 +286,7 @@ nsBoxSizeListImpl::nsBoxSizeListImpl(nsIBox* aBox):nsBoxSizeListNodeImpl(aBox),
 {
     MOZ_COUNT_CTOR(nsBoxSizeListImpl);
  //   _lists++;
-    //   PRINTF("Lists %d\n",_lists);
+ //   printf("Lists %d\n",_lists);
 }
 
         
@@ -299,7 +294,7 @@ nsBoxSizeListImpl::~nsBoxSizeListImpl()
 {
     MOZ_COUNT_DTOR(nsBoxSizeListImpl);
  //   _lists--;
-    //   PRINTF("Lists %d\n",_lists);
+ //   printf("Lists %d\n",_lists);
 }
 
 /* Ownership model nsMonumentLayout

@@ -37,11 +37,6 @@
 #include "nscanvas.h"
 #include "nsIDeviceContext.h"
 #include <stdio.h>
-#include "nslog.h"
-
-NS_IMPL_LOG(nsCanvasLog)
-#define PRINTF NS_LOG_PRINTF(nsCanvasLog)
-#define FLUSH  NS_LOG_FLUSH(nsCanvasLog)
 
 nsCanvas::nsCanvas() : mIsTLB(FALSE)
 {}
@@ -84,11 +79,11 @@ void nsCanvas::RealDoCreate( HWND hwndP, nsWindow *aParent, const nsRect &aRect,
                               aContext, aAppShell, aInitData, hwndO);
    }
 #if DEBUG_sobotka
-   PRINTF("\nIn nsCanvas::RealDoCreate aParent = 0x%lx\n", &aParent);
-   PRINTF("   hwndP = %lu\n", hwndP);
-   PRINTF("   hwnd0 = %lu\n", hwndO);
-   PRINTF("   aContext = 0x%lx\n", &aContext);
-   PRINTF("   aAppShell = 0x%lx\n", &aAppShell);
+   printf("\nIn nsCanvas::RealDoCreate aParent = 0x%lx\n", &aParent);
+   printf("   hwndP = %lu\n", hwndP);
+   printf("   hwnd0 = %lu\n", hwndO);
+   printf("   aContext = 0x%lx\n", &aContext);
+   printf("   aAppShell = 0x%lx\n", &aAppShell);
 #endif
 }
 

@@ -60,12 +60,6 @@ static NS_DEFINE_CID(kCMorkFactory, NS_MORK_CID);
 #define DEBUG_MSGKEYSET 1
 #endif
 
-#include "nslog.h"
-
-NS_IMPL_LOG(nsMsgDatabaseLog)
-#define PRINTF NS_LOG_PRINTF(nsMsgDatabaseLog)
-#define FLUSH  NS_LOG_FLUSH(nsMsgDatabaseLog)
-
 static NS_DEFINE_IID(kIPrefIID, NS_IPREF_IID);
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 static NS_DEFINE_CID(kCMimeConverterCID, NS_MIME_CONVERTER_CID);
@@ -423,7 +417,7 @@ NS_IMETHODIMP nsMsgDatabase::NotifyKeyAddedAll(nsMsgKey keyAdded, nsMsgKey paren
 	nsIDBChangeListener *instigator)
 {
 #ifdef DEBUG_bienvenu1
-	PRINTF("notifying add of %ld parent %ld\n", keyAdded, parentKey);
+	printf("notifying add of %ld parent %ld\n", keyAdded, parentKey);
 #endif
     if (m_ChangeListeners == nsnull) 
 		return NS_OK;
@@ -677,7 +671,7 @@ nsMsgDatabase::~nsMsgDatabase()
         char *str = nsnull;
         nsresult rv = m_newSet->Output(&str);
         if (NS_SUCCEEDED(rv) && str) {
-            PRINTF("setStr = %s on destroy\n",str);
+            printf("setStr = %s on destroy\n",str);
             nsMemory::Free(str);
             str = nsnull;
         }
@@ -954,7 +948,7 @@ NS_IMETHODIMP nsMsgDatabase::ForceClosed()
   if (m_headersInUse && m_headersInUse->entryCount > 0)
   {
 //    NS_ASSERTION(PR_FALSE, "leaking headers");
-      PRINTF("leaking %d headers in %s\n", m_headersInUse->entryCount, (const char *) m_dbName);
+    printf("leaking %d headers in %s\n", m_headersInUse->entryCount, (const char *) m_dbName);
   }
 #endif
 	ClearUseHdrCache();
@@ -3280,7 +3274,7 @@ nsresult nsMsgDatabase::DumpContents()
 			msgHdr->GetMessageKey(&key);
 			msgHdr->GetAuthor(getter_Copies(author));
 			msgHdr->GetSubject(getter_Copies(subject));
-			PRINTF("hdr key = %u, author = %s subject = %s\n", key,
+			printf("hdr key = %u, author = %s subject = %s\n", key,
                    ((const char *)author) ? (const char *)author : "",
                    ((const char*)subject) ? (const char*)subject : "");
 			NS_RELEASE(msgHdr);
@@ -3291,7 +3285,7 @@ nsresult nsMsgDatabase::DumpContents()
     for ( i = 0; i < threads.GetSize(); i++) 
 	{
         key = threads[i];
-		PRINTF("thread key = %u\n", key);
+		printf("thread key = %u\n", key);
 //		DumpThread(key);
     }
 

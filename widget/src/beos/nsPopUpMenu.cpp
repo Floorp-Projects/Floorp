@@ -34,11 +34,6 @@
 #include "nsIDeviceContext.h"
 #include "nsRect.h"
 #include "nsGfxCIID.h"
-#include "nslog.h"
-
-NS_IMPL_LOG(nsPopUpMenuLog)
-#define PRINTF NS_LOG_PRINTF(nsPopUpMenuLog)
-#define FLUSH  NS_LOG_FLUSH(nsPopUpMenuLog)
 
 static NS_DEFINE_IID(kPopUpMenuIID, NS_IPOPUPMENU_IID);
 NS_IMPL_ISUPPORTS(nsPopUpMenu, kPopUpMenuIID)
@@ -76,7 +71,7 @@ nsPopUpMenu::~nsPopUpMenu()
 //-------------------------------------------------------------------------
 NS_METHOD nsPopUpMenu::Create(nsIWidget *aParent)
 {
-  PRINTF("nsPopUpMenu::Create - FIXME: not implemented\n");
+printf("nsPopUpMenu::Create - FIXME: not implemented\n");
 
   mParent = aParent;
   NS_ADDREF(mParent);
@@ -209,7 +204,7 @@ NS_METHOD nsPopUpMenu::RemoveAll()
 //-------------------------------------------------------------------------
 NS_METHOD nsPopUpMenu::ShowMenu(PRInt32 aX, PRInt32 aY)
 {
-  PRINTF("nsPopUpMenu::ShowMenu - FIXME: not implemented\n");
+printf("nsPopUpMenu::ShowMenu - FIXME: not implemented\n");
 #if 0
   if (nsnull != mParent) {
     HWND pWnd = (HWND)mParent->GetNativeData(NS_NATIVE_WIDGET);

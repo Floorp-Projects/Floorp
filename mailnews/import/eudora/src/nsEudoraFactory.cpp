@@ -32,9 +32,8 @@
 #include "nsEudoraStringBundle.h"
 #include "EudoraDebugLog.h"
 
-NS_IMPL_LOG(EudoraDebugLogLog)
-
 static NS_DEFINE_CID(kEudoraImportCID,    	NS_EUDORAIMPORT_CID);
+
 
 ///////////////////////////////////////////////////////////////////////
 

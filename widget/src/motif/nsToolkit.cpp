@@ -22,11 +22,6 @@
 
 #include "nsToolkit.h"
 #include <stdio.h>
-#include "nslog.h"
-
-NS_IMPL_LOG(nsToolkitLog)
-#define PRINTF NS_LOG_PRINTF(nsToolkitLog)
-#define FLUSH  NS_LOG_FLUSH(nsToolkitLog)
 
 //-------------------------------------------------------------------------
 //
@@ -38,9 +33,9 @@ int nsToolkitErrorHandler (Display * mydisplay, XErrorEvent * myerr)
   char msg[80] ; 
 
   XGetErrorText (mydisplay, myerr->error_code, msg, 80) ; 
-  PRINTF("-------------------------------------\n");
-  PRINTF("Error code %s\n", msg) ; 
-  PRINTF("-------------------------------------\n");
+  fprintf (stderr, "-------------------------------------\n");
+  fprintf (stderr, "Error code %s\n", msg) ; 
+  fprintf (stderr, "-------------------------------------\n");
   //exit() ;
   return 0;
 } 

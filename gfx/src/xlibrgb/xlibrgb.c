@@ -61,12 +61,6 @@
 #  include <stdlib.h>
 #endif
 
-#include "nslog.h"
-
-NS_IMPL_LOG(xlibrgbLog)
-#define PRINTF NS_LOG_PRINTF(xlibrgbLog)
-#define FLUSH  NS_LOG_FLUSH(xlibrgbLog)
-
 #define ENABLE_GRAYSCALE
 
 #define G_LITTLE_ENDIAN 1
@@ -240,7 +234,9 @@ xlib_rgb_cmap_fail (const char *msg, Colormap cmap, unsigned long *pixels)
   int n_free;
   int i;
 
-  PRINTF ("%s", msg);
+#ifdef VERBOSE
+  printf ("%s", msg);
+#endif
   n_free = 0;
   for (i = 0; i < 256; i++)
     if (pixels[i] < 256)
@@ -273,7 +269,9 @@ xlib_rgb_make_colorcube (unsigned long *pixels, int nr, int ng, int nb)
   for (i = 0; i < 4096; i++)
     {
       colorcube[i] = pixels[rt[i >> 8] + gt[(i >> 4) & 0x0f] + bt[i & 0x0f]];
-      PRINTF ("%03x %02x %x %x %x\n", i, colorcube[i], rt[i >> 8], gt[(i >> 4) & 0x0f], bt[i & 0x0f]);
+#ifdef VERBOSE
+      printf ("%03x %02x %x %x %x\n", i, colorcube[i], rt[i >> 8], gt[(i >> 4) & 0x0f], bt[i & 0x0f]);
+#endif
     }
 }
 
@@ -423,7 +421,9 @@ xlib_rgb_try_colormap (int nr, int ng, int nb)
 		}
 	      pixels[i] = color.pixel;
 	    }
-	  PRINTF ("%d: %lx\n", i, pixels[i]);
+#ifdef VERBOSE
+	  printf ("%d: %lx\n", i, pixels[i]);
+#endif
 	}
 
   image_info->nred_shades = nr;
@@ -585,7 +585,7 @@ xlib_rgb_score_visual (XVisualInfo *visual)
   pseudo = (visual->class == PseudoColor || visual->class == TrueColor);
 
   if (xlib_rgb_verbose)
-    PRINTF ("Visual 0x%x, type = %s, depth = %d, %ld:%ld:%ld%s; score=%x\n",
+    printf ("Visual 0x%x, type = %s, depth = %d, %ld:%ld:%ld%s; score=%x\n",
 	    (int)visual->visualid,
 	    visual_names[visual->class],
 	    visual->depth,
@@ -593,7 +593,7 @@ xlib_rgb_score_visual (XVisualInfo *visual)
 	    visual->green_mask,
 	    visual->blue_mask,
 	    sys ? " (system)" : "",
-            (quality << 12) | (speed << 8) | (sys << 4) | pseudo);
+	    (quality << 12) | (speed << 8) | (sys << 4) | pseudo);
   
   return (quality << 12) | (speed << 8) | (sys << 4) | pseudo;
 }
@@ -720,8 +720,10 @@ xlib_rgb_set_gray_cmap (Colormap cmap)
       color.blue = i * 257;
       status = XAllocColor(image_info->display, cmap, &color);
       pixels[i] = color.pixel;
-      PRINTF ("allocating pixel %d, %x %x %x, result %d\n",
-              color.pixel, color.red, color.green, color.blue, status);
+#ifdef VERBOSE
+      printf ("allocating pixel %d, %x %x %x, result %d\n",
+	       color.pixel, color.red, color.green, color.blue, status);
+#endif
     }
 
   /* Now, we make fake colorcubes - we ultimately just use the pseudocolor
@@ -767,12 +769,12 @@ xlib_rgb_init_with_depth (Display *display, Screen *screen, int prefDepth)
   /* check endian sanity */
 #if G_BYTE_ORDER == G_BIG_ENDIAN
   if (((char *)byte_order)[0] == 1) {
-    PRINTF ("xlib_rgb_init: compiled for big endian, but this is a little endian machine.\n\n");
+    printf ("xlib_rgb_init: compiled for big endian, but this is a little endian machine.\n\n");
     exit(1);
   }
 #else
   if (((char *)byte_order)[0] != 1) {
-    PRINTF ("xlib_rgb_init: compiled for little endian, but this is a big endian machine.\n\n");
+    printf ("xlib_rgb_init: compiled for little endian, but this is a big endian machine.\n\n");
     exit(1);
   }
 #endif
@@ -849,10 +851,10 @@ xlib_rgb_init_with_depth (Display *display, Screen *screen, int prefDepth)
 	      xlib_rgb_do_colormaps ();
 	    }
 	  if (xlib_rgb_verbose)
-	    PRINTF ("color cube: %d x %d x %d\n",
+	    printf ("color cube: %d x %d x %d\n",
 		    image_info->nred_shades,
 		    image_info->ngreen_shades,
-              image_info->nblue_shades);
+		    image_info->nblue_shades);
 
 	  if (!image_info->cmap_alloced)
 	      image_info->cmap = image_info->default_colormap;
@@ -962,13 +964,15 @@ xlib_rgb_xpixel_from_rgb (uint32 rgb)
   else if (image_info->x_visual_info->class == TrueColor ||
 	   image_info->x_visual_info->class == DirectColor)
     {
-      PRINTF ("shift, prec: r %d %d g %d %d b %d %d\n",
-              image_info->red_shift,
-              image_info->red_prec,
-              image_info->green_shift,
-              image_info->green_prec,
-              image_info->blue_shift,
-              image_info->blue_prec);
+#ifdef VERBOSE
+      printf ("shift, prec: r %d %d g %d %d b %d %d\n",
+	      image_info->red_shift,
+	      image_info->red_prec,
+	      image_info->green_shift,
+	      image_info->green_prec,
+	      image_info->blue_shift,
+	      image_info->blue_prec);
+#endif
 
       pixel = (((((rgb & 0xff0000) >> 16) >>
 		 (8 - image_info->red_prec)) <<
@@ -1299,7 +1303,9 @@ xlib_rgb_preprocess_dm_565 (void)
 	{
 	  dith = DM[0][i] >> 3;
 	  DM_565[i] = (dith << 20) | dith | (((7 - dith) >> 1) << 10);
-	  PRINTF ("%i %x %x\n", i, dith, DM_565[i]);
+#ifdef VERBOSE
+	  printf ("%i %x %x\n", i, dith, DM_565[i]);
+#endif
 	}
     }
 }
@@ -2949,9 +2955,9 @@ xlib_rgb_select_conv (XImage *image, ByteOrder byte_order)
   depth = image_info->x_visual_info->depth;
   bpp = image->bits_per_pixel;
   if (xlib_rgb_verbose)
-    PRINTF ("Chose visual 0x%x, image bpp=%d, %s first\n",
-            (int)image_info->x_visual_info->visual->visualid,
-            bpp, byte_order == LSB_FIRST ? "lsb" : "msb");
+    printf ("Chose visual 0x%x, image bpp=%d, %s first\n",
+	    (int)image_info->x_visual_info->visual->visualid,
+	    bpp, byte_order == LSB_FIRST ? "lsb" : "msb");
 
 #if G_BYTE_ORDER == G_BIG_ENDIAN
   byterev = (byte_order == LSB_FIRST);
@@ -3141,7 +3147,7 @@ xlib_rgb_alloc_scratch_image (void)
       XFlush(image_info->display);
 #endif
 #ifdef VERBOSE
-      PRINTF ("flush, %d puts since last flush\n", sincelast);
+      printf ("flush, %d puts since last flush\n", sincelast);
       sincelast = 0;
 #endif
       static_image_idx = 0;
@@ -3220,7 +3226,7 @@ xlib_rgb_alloc_scratch (int width, int height, int *ax, int *ay)
     }
   image = static_image[idx];
 #ifdef VERBOSE
-  PRINTF ("index %d, x %d, y %d (%d x %d)\n", idx, *ax, *ay, width, height);
+  printf ("index %d, x %d, y %d (%d x %d)\n", idx, *ax, *ay, width, height);
   sincelast++;
 #endif
   return image;
@@ -3411,14 +3417,16 @@ xlib_rgb_cmap_new (uint32 *colors, int n_colors)
       (image_info->x_visual_info->class == PseudoColor ||
        image_info->x_visual_info->class == GrayScale))
     for (i = 0; i < n_colors; i++)
-    {
-      rgb = colors[i];
-      j = ((rgb & 0xf00000) >> 12) |
-        ((rgb & 0xf000) >> 8) |
-        ((rgb & 0xf0) >> 4);
-      PRINTF ("%d %x %x %d\n", i, j, colorcube[j]);
-      cmap->lut[i] = colorcube[j];
-    }
+      {
+	rgb = colors[i];
+	j = ((rgb & 0xf00000) >> 12) |
+		   ((rgb & 0xf000) >> 8) |
+		   ((rgb & 0xf0) >> 4);
+#ifdef VERBOSE
+	printf ("%d %x %x %d\n", i, j, colorcube[j]);
+#endif
+	cmap->lut[i] = colorcube[j];
+      }
   return cmap;
 }
 

@@ -45,11 +45,6 @@
 #include "nsMsgCompose.h"
 #include "nsMsgMailNewsUrl.h"
 #include "nsXPIDLString.h"
-#include "nslog.h"
-
-NS_IMPL_LOG(nsMsgQuoteLog)
-#define PRINTF NS_LOG_PRINTF(nsMsgQuoteLog)
-#define FLUSH  NS_LOG_FLUSH(nsMsgQuoteLog)
 
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 static NS_DEFINE_CID(kIStreamConverterServiceCID, NS_STREAMCONVERTERSERVICE_CID);
@@ -94,7 +89,7 @@ NS_IMETHODIMP nsMsgQuoteListener::GetMsgQuote(nsIMsgQuote ** aMsgQuote)
 nsresult nsMsgQuoteListener::OnHeadersReady(nsIMimeHeaders * headers)
 {
 
-	PRINTF("RECEIVE CALLBACK: OnHeadersReady\n");
+	printf("RECEIVE CALLBACK: OnHeadersReady\n");
 	nsCOMPtr<nsIStreamListener> aStreamListener;
     if (mMsgQuote)
     mMsgQuote->GetStreamListener(getter_AddRefs(aStreamListener));

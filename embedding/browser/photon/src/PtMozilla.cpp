@@ -63,12 +63,6 @@
 #include "nsIDOMMouseListener.h"
 #include "nsIDOMMouseEvent.h"
 
-#include "nslog.h"
-
-NS_IMPL_LOG(PtMozillaLog)
-#define PRINTF NS_LOG_PRINTF(PtMozillaLog)
-#define FLUSH  NS_LOG_FLUSH(PtMozillaLog)
-
 static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 static NS_DEFINE_CID(kAppShellCID, NS_APPSHELL_CID);
 static NS_DEFINE_CID(kAppShellServiceCID, NS_APPSHELL_SERVICE_CID);
@@ -501,7 +495,7 @@ PhMozEmbedPrivate::OnChromeStateChange(nsIWebProgress *aWebProgress,
       {
 	// apparently our primary content area hasn't been loaded.
 	// tis ok
-	PRINTF("Warning: Failed to find primary content shell!  I will try again later.\n");
+	printf("Warning: Failed to find primary content shell!  I will try again later.\n");
 	return NS_OK;
       }
       // if we made it this far, our primary content shell has been
@@ -1394,7 +1388,7 @@ static void mozilla_defaults( PtWidget_t *widget )
     	int retval;
     	retval = _mozilla_embed_startup_xpcom();
     	if (retval != TRUE)
-            PRINTF("moz_embed_startup_xpcom(): FAILED\n");
+    		printf("moz_embed_startup_xpcom(): FAILED\n");
   	}
   	// increment the number of widgets
   	num_widgets++;
@@ -1407,7 +1401,7 @@ static void mozilla_defaults( PtWidget_t *widget )
   	nsresult rv;
   	rv = moz->embed_private->Init((PtWidget_t *)moz);
   	if (!NS_SUCCEEDED(rv))
-            PRINTF("moz->embed_private->Init(moz): FAILED\n");
+  		printf("moz->embed_private->Init(moz): FAILED\n");
 
   	// widget related
 	basic->flags = Pt_ALL_OUTLINES | Pt_ALL_BEVELS | Pt_FLAT_FILL;
@@ -1454,13 +1448,13 @@ static void mozilla_realized( PtWidget_t *widget )
   nsresult rv;
   rv = embed_private->Realize(widget);
   if (!NS_SUCCEEDED(rv))
-      PRINTF("embed_private->Realize(widget): FAILED\n");
+  	printf("embed_private->Realize(widget): FAILED\n");
   
   // get our hands on the base window
   nsCOMPtr<nsIBaseWindow> webBrowserBaseWindow = 
     do_QueryInterface(embed_private->mWebBrowser);
   if (!webBrowserBaseWindow)
-      PRINTF("webBrowserBaseWindow: FAILED\n");
+  	printf("webBrowserBaseWindow: FAILED\n");
   // show it
   webBrowserBaseWindow->SetVisibility(PR_TRUE);
 

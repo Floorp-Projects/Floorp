@@ -29,21 +29,15 @@
 #endif
 */
 
-#include "nslog.h"
-
-NS_DECL_LOG(MapiDbgLogLog)
-#define PRINTF NS_LOG_PRINTF(MapiDbgLogLog)
-#define FLUSH  NS_LOG_FLUSH(MapiDbgLogLog)
-
 #ifdef MAPI_DEBUG
 #include "stdio.h"
 
-#define MAPI_DUMP_STRING( x)		PRINTF( "%s", (const char *)x)
-#define MAPI_TRACE0( x)				PRINTF( x)
-#define MAPI_TRACE1( x, y)			PRINTF( x, y)
-#define MAPI_TRACE2( x, y, z)		PRINTF( x, y, z)
-#define MAPI_TRACE3( x, y, z, a)	PRINTF( x, y, z, a)
-#define MAPI_TRACE4( x, y, z, a, b) PRINTF( x, y, z, a, b)
+#define MAPI_DUMP_STRING( x)		printf( "%s", (const char *)x)
+#define MAPI_TRACE0( x)				printf( x)
+#define MAPI_TRACE1( x, y)			printf( x, y)
+#define MAPI_TRACE2( x, y, z)		printf( x, y, z)
+#define MAPI_TRACE3( x, y, z, a)	printf( x, y, z, a)
+#define MAPI_TRACE4( x, y, z, a, b) printf( x, y, z, a, b)
 
 
 #else

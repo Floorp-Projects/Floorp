@@ -36,9 +36,6 @@
 #include "nsOutlookStringBundle.h"
 #include "OutlookDebugLog.h"
 
-NS_IMPL_LOG(OutlookDebugLogLog)
-NS_IMPL_LOG(MapiDbgLogLog)
-
 static NS_DEFINE_CID(kOutlookImportCID,    	NS_OUTLOOKIMPORT_CID);
 
 ////////////////////////////////////////////////////////////////////////////

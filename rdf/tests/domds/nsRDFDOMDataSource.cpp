@@ -64,11 +64,6 @@
 #endif
 
 #include "prprf.h"
-#include "nslog.h"
-
-NS_IMPL_LOG(nsRDFDOMDataSourceLog)
-#define PRINTF NS_LOG_PRINTF(nsRDFDOMDataSourceLog)
-#define FLUSH  NS_LOG_FLUSH(nsRDFDOMDataSourceLog)
 
 #define NC_RDF_Name  NC_NAMESPACE_URI "Name"
 #define NC_RDF_Value NC_NAMESPACE_URI "Value"
@@ -153,7 +148,7 @@ nsRDFDOMDataSource::GetTarget(nsIRDFResource *aSource, nsIRDFResource *aProperty
   aSource->GetValue(getter_Copies(sourceval));
   nsXPIDLCString propval;
   aProperty->GetValue(getter_Copies(propval));
-  PRINTF("GetTarget(%s, %s,..)\n", (const char*)sourceval,
+  printf("GetTarget(%s, %s,..)\n", (const char*)sourceval,
          (const char*)propval);
 #endif
 
@@ -270,7 +265,7 @@ nsRDFDOMDataSource::GetTargets(nsIRDFResource *aSource, nsIRDFResource *aPropert
 #ifdef DEBUG_alecf_
   nsXPIDLCString propval;
   aProperty->GetValue(getter_Copies(propval));
-  PRINTF("GetTargets(%s, %s,..)\n", (const char*)sourceval,
+  printf("GetTargets(%s, %s,..)\n", (const char*)sourceval,
          (const char*)propval);
 #endif
 
@@ -839,7 +834,7 @@ nsRDFDOMDataSource::getTargetForKnownObject(nsISupports* object,
 
   //
   // doh! I don't know what the heck this is.
-  PRINTF("getTargetForKnownObject: unknown Object!\n");
+  printf("getTargetForKnownObject: unknown Object!\n");
   return NS_OK;
 }
 
@@ -878,7 +873,7 @@ nsRDFDOMDataSource::getTargetsForKnownObject(nsISupports *object,
     //      rv = createContentArcs(content, arcs);
     //      NS_RELEASE(content);
     //    }
-    PRINTF("This is a document.\n");
+    printf("This is a document.\n");
     createDOMNodeArcs(document, arcs);
     return NS_OK;
   }
@@ -889,7 +884,7 @@ nsRDFDOMDataSource::getTargetsForKnownObject(nsISupports *object,
     nsIFrame* frame;
     rv = object->QueryInterface(kFrameIID, (void **)&frame);
     if (NS_SUCCEEDED(rv)) {
-      PRINTF("creating arcs for frame\n");
+      printf("creating arcs for frame\n");
       createFrameArcs(frame, arcs);
     }
   }
@@ -1082,7 +1077,7 @@ nsRDFDOMDataSource::ArcLabelsOut(nsIRDFResource *aSource, nsISimpleEnumerator **
 #ifdef DEBUG_alecf_
   nsXPIDLCString sourceval;
   aSource->GetValue(getter_Copies(sourceval));
-  PRINTF("ArcLabelsOut(%s)\n", (const char*)sourceval);
+  printf("ArcLabelsOut(%s)\n", (const char*)sourceval);
 #endif
   
   arcs->AppendElement(kNC_Name);
@@ -1231,27 +1226,27 @@ nsRDFDOMDataSource::SetWindow(nsIDOMWindowInternal *window) {
   nsCOMPtr<nsIScriptGlobalObject> scriptGlobalObject =
     do_QueryInterface(window, &rv);
   if (NS_FAILED(rv)) {
-    PRINTF("Couldn't get scriptglobalobject\n");
+    printf("Couldn't get scriptglobalobject\n");
     return NS_OK;
   }
   
   nsCOMPtr<nsIDocShell> docShell;
   scriptGlobalObject->GetDocShell(getter_AddRefs(docShell));
   if (!docShell) {
-    PRINTF("Couldn't get webshell\n");
+    printf("Couldn't get webshell\n");
     return NS_OK;
   }
 
   nsCOMPtr<nsIPresShell> pshell;
   rv = docShell->GetPresShell(getter_AddRefs(pshell));
   if (NS_FAILED(rv)) {
-    PRINTF("Couldn't get presshell\n");
+    printf("Couldn't get presshell\n");
     return NS_OK;
   }
     
   pshell->GetRootFrame(&mRootFrame);
   if (NS_FAILED(rv)) {
-    PRINTF("Couldn't get frame\n");
+    printf("Couldn't get frame\n");
     return NS_OK;
   }
   
@@ -1264,14 +1259,14 @@ nsRDFDOMDataSource::SetWindow(nsIDOMWindowInternal *window) {
   }
 #endif
 
-  PRINTF("Got root frame: %s\n", framename.ToNewCString());
+  printf("Got root frame: %s\n", framename.ToNewCString());
   return rv;
 }
 
 nsresult
 nsRDFDOMDataSource::SetMode(const char *mode, PRBool active)
 {
-  PRINTF("Turning %s the %s mode\n", active ? "ON" : "OFF",
+  printf("Turning %s the %s mode\n", active ? "ON" : "OFF",
          mode);
   nsCStringKey modeKey(mode);
   mModeTable.Put(&modeKey, (void *)active);

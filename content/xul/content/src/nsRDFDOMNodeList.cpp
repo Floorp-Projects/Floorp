@@ -39,11 +39,6 @@
 #include "nsIServiceManager.h"
 #include "nsISupportsArray.h"
 #include "nsRDFDOMNodeList.h"
-#include "nslog.h"
-
-NS_IMPL_LOG(nsRDFDOMNodeListLog)
-#define PRINTF NS_LOG_PRINTF(nsRDFDOMNodeListLog)
-#define FLUSH  NS_LOG_FLUSH(nsRDFDOMNodeListLog)
 
 ////////////////////////////////////////////////////////////////////////
 // GUID definitions
@@ -70,7 +65,7 @@ nsRDFDOMNodeList::~nsRDFDOMNodeList(void)
 {
 #ifdef DEBUG_REFS
     --gInstanceCount;
-    PRINTF("%d - RDF: nsRDFDOMNodeList\n", gInstanceCount);
+    fprintf(stdout, "%d - RDF: nsRDFDOMNodeList\n", gInstanceCount);
 #endif
 
     NS_IF_RELEASE(mElements);

@@ -72,11 +72,6 @@
 #include "nsIMsgFilterList.h"
 
 #include "nsIPrefMigration.h"	// for NEW_LOCAL_MAIL_DIR_NAME
-#include "nslog.h"
-
-NS_IMPL_LOG(nsMessengerMigratorLog)
-#define PRINTF NS_LOG_PRINTF(nsMessengerMigratorLog)
-#define FLUSH  NS_LOG_FLUSH(nsMessengerMigratorLog)
 
 #define BUF_STR_LEN 1024
 
@@ -474,7 +469,7 @@ nsMessengerMigrator::ProceedWithMigration()
   }
   else {
 #ifdef DEBUG_MIGRATOR
-    PRINTF("Unrecognized server type %d\n", m_oldMailType);
+    printf("Unrecognized server type %d\n", m_oldMailType);
 #endif
     rv = NS_ERROR_UNEXPECTED;
   }
@@ -602,13 +597,13 @@ nsMessengerMigrator::UpgradePrefs()
     rv = ProceedWithMigration();
     if (NS_FAILED(rv)) {
 #ifdef DEBUG_MIGRATOR
-      PRINTF("FAIL:  don't proceed with migration.\n");
+      printf("FAIL:  don't proceed with migration.\n");
 #endif
       return rv;
     }
 #ifdef DEBUG_MIGRATOR
     else {
-      PRINTF("PASS:  proceed with migration.\n");
+      printf("PASS:  proceed with migration.\n");
     }
 #endif 
 
@@ -665,7 +660,7 @@ nsMessengerMigrator::UpgradePrefs()
 #endif /* HAVE_MOVEMAIL */
     else {
 #ifdef DEBUG_MIGRATOR
-      PRINTF("Unrecognized server type %d\n", m_oldMailType);
+      printf("Unrecognized server type %d\n", m_oldMailType);
 #endif
       return NS_ERROR_UNEXPECTED;
     }
@@ -895,7 +890,7 @@ nsMessengerMigrator::Convert4XUri(const char *old_uri, PRBool for_news, const ch
   }
 
 #ifdef DEBUG_MIGRATOR
-  PRINTF("old 4.x folder uri = >%s<\n", old_uri);
+  printf("old 4.x folder uri = >%s<\n", old_uri);
 #endif /* DEBUG_MIGRATOR */
 
   if (PL_strncasecmp(IMAP_SCHEMA,old_uri,IMAP_SCHEMA_LENGTH) == 0) {
@@ -932,7 +927,7 @@ nsMessengerMigrator::Convert4XUri(const char *old_uri, PRBool for_news, const ch
 		else {
 			// new_uri = imap://<username>@<hostname>/<folder name>
 #ifdef DEBUG_MIGRATOR
-          PRINTF("new_uri = %s/%s@%s/%s\n",IMAP_SCHEMA, imap_username, (const char *)hostname, default_folder_name);
+			printf("new_uri = %s/%s@%s/%s\n",IMAP_SCHEMA, imap_username, (const char *)hostname, default_folder_name);
 #endif /* DEBUG_MIGRATOR */
 			*new_uri = PR_smprintf("%s/%s@%s/%s",IMAP_SCHEMA, imap_username, (const char *)hostname, default_folder_name);
 			return NS_OK;      
@@ -941,7 +936,7 @@ nsMessengerMigrator::Convert4XUri(const char *old_uri, PRBool for_news, const ch
     else {
 		// IMAP uri's began with "IMAP:/".  we need that to be "imap:/"
 #ifdef DEBUG_MIGRATOR
-      PRINTF("new_uri = %s%s\n",IMAP_SCHEMA,old_uri+IMAP_SCHEMA_LENGTH);
+		printf("new_uri = %s%s\n",IMAP_SCHEMA,old_uri+IMAP_SCHEMA_LENGTH);
 #endif /* DEBUG_MIGRATOR */
 		*new_uri = PR_smprintf("%s%s",IMAP_SCHEMA,old_uri+IMAP_SCHEMA_LENGTH);
 		return NS_OK;
@@ -957,7 +952,7 @@ nsMessengerMigrator::Convert4XUri(const char *old_uri, PRBool for_news, const ch
   }
   if (NS_FAILED(rv) || !mail_directory_value || (PL_strlen(mail_directory_value) == 0)) {
 #ifdef DEBUG_MIGRATOR
-    PRINTF("%s was not set, attempting to use %s instead.\n",PREF_PREMIGRATION_MAIL_DIRECTORY,PREF_MAIL_DIRECTORY);
+    printf("%s was not set, attempting to use %s instead.\n",PREF_PREMIGRATION_MAIL_DIRECTORY,PREF_MAIL_DIRECTORY);
 #endif
     PR_FREEIF(mail_directory_value);
 
@@ -1006,7 +1001,7 @@ nsMessengerMigrator::Convert4XUri(const char *old_uri, PRBool for_news, const ch
 #endif /* HAVE_MOVEMAIL */
   else {
 #ifdef DEBUG_MIGRATOR
-    PRINTF("Unrecognized server type %d\n", m_oldMailType);
+    printf("Unrecognized server type %d\n", m_oldMailType);
 #endif
     return NS_ERROR_UNEXPECTED;
   }
@@ -1016,7 +1011,7 @@ nsMessengerMigrator::Convert4XUri(const char *old_uri, PRBool for_news, const ch
   // mail_directory_value is already in UNIX style at this point...
   if (PL_strncasecmp(MAILBOX_SCHEMA,old_uri,MAILBOX_SCHEMA_LENGTH) == 0) {
 #ifdef DEBUG_MIGRATOR
-	PRINTF("turn %s into %s/%s/(%s - %s)\n",old_uri,MAILBOX_SCHEMA,usernameAtHostname,old_uri + MAILBOX_SCHEMA_LENGTH,mail_directory_value);
+	printf("turn %s into %s/%s/(%s - %s)\n",old_uri,MAILBOX_SCHEMA,usernameAtHostname,old_uri + MAILBOX_SCHEMA_LENGTH,mail_directory_value);
 #endif
 	// the extra -1 is because in 4.x, we had this:
 	// mailbox:<PATH> instead of mailbox:/<PATH> 
@@ -1024,7 +1019,7 @@ nsMessengerMigrator::Convert4XUri(const char *old_uri, PRBool for_news, const ch
   }
   else {
 #ifdef DEBUG_MIGRATOR
-    PRINTF("turn %s into %s/%s/(%s - %s)\n",old_uri,MAILBOX_SCHEMA,usernameAtHostname,old_uri,mail_directory_value);
+    printf("turn %s into %s/%s/(%s - %s)\n",old_uri,MAILBOX_SCHEMA,usernameAtHostname,old_uri,mail_directory_value);
 #endif
 	folderPath = old_uri + PL_strlen(mail_directory_value);
   }
@@ -1046,7 +1041,7 @@ nsMessengerMigrator::Convert4XUri(const char *old_uri, PRBool for_news, const ch
 
   if (!*new_uri) {
 #ifdef DEBUG_MIGRATOR
-    PRINTF("failed to convert 4.x uri: %s\n", old_uri);
+    printf("failed to convert 4.x uri: %s\n", old_uri);
 #endif
     NS_ASSERTION(0,"uri conversion code not complete");
     return NS_ERROR_FAILURE;
@@ -1356,8 +1351,8 @@ nsMessengerMigrator::MigratePopAccount(nsIMsgIdentity *identity)
 #ifdef DEBUG_MIGRATOR
   PRInt32 portValue;
   rv = server->GetPort(&portValue);
-  PRINTF("HOSTNAME = %s\n", (const char *)hostname);
-  PRINTF("PORT = %d\n", portValue);
+  printf("HOSTNAME = %s\n", (const char *)hostname);
+  printf("PORT = %d\n", portValue);
 #endif /* DEBUG_MIGRATOR */
 
   rv = MigrateOldMailPrefs(server);
@@ -1587,8 +1582,8 @@ nsMessengerMigrator::MigrateImapAccount(nsIMsgIdentity *identity, const char *ho
 #ifdef DEBUG_MIGRATOR
   PRInt32 portValue;
   rv = server->GetPort(&portValue);
-  PRINTF("HOSTNAME = %s\n", (const char *)hostname);
-  PRINTF("PORT = %d\n", portValue);
+  printf("HOSTNAME = %s\n", (const char *)hostname);
+  printf("PORT = %d\n", portValue);
 #endif /* DEBUG_MIGRATOR */
 
   // create the identity
@@ -1758,7 +1753,7 @@ nsMessengerMigrator::migrateAddressBookPrefEnum(const char *aPref, void *aClosur
   nsIPref *prefs = (nsIPref *)aClosure;
 
 #ifdef DEBUG_AB_MIGRATION
-  PRINTF("investigate pref: %s\n",aPref);
+  printf("investigate pref: %s\n",aPref);
 #endif
   // we only care about ldap_2.servers.*.filename" prefs
   if (!charEndsWith(aPref, ADDRESSBOOK_PREF_NAME_SUFFIX)) return;
@@ -1775,7 +1770,7 @@ nsMessengerMigrator::migrateAddressBookPrefEnum(const char *aPref, void *aClosur
   if (!(PL_strlen((const char *)abFileName))) return;
 
 #ifdef DEBUG_AB_MIGRATION
-  PRINTF("pref value: %s\n",(const char *)abFileName);
+  printf("pref value: %s\n",(const char *)abFileName);
 #endif /* DEBUG_AB_MIGRATION */
   // if this a 5.x addressbook file name, skip it.
   if (charEndsWith((const char *)abFileName, ADDRESSBOOK_PREF_VALUE_5x_SUFFIX)) return;
@@ -1796,7 +1791,7 @@ nsMessengerMigrator::migrateAddressBookPrefEnum(const char *aPref, void *aClosur
   nsCOMPtr <nsIFileSpec> tmpLDIFFileSpec;
 
 #ifdef DEBUG_AB_MIGRATION
-  PRINTF("turn %s%s into %s%s\n", (const char *)abName,ADDRESSBOOK_PREF_VALUE_4x_SUFFIX,(const char *)abName,TEMP_LDIF_FILE_SUFFIX);
+  printf("turn %s%s into %s%s\n", (const char *)abName,ADDRESSBOOK_PREF_VALUE_4x_SUFFIX,(const char *)abName,TEMP_LDIF_FILE_SUFFIX);
 #endif /* DEBUG_AB_MIGRATION */
 
   rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR, getter_AddRefs(ab4xFile));
@@ -1879,7 +1874,7 @@ nsMessengerMigrator::migrateAddressBookPrefEnum(const char *aPref, void *aClosur
   // this sucks.
   // ConvertLDIFtoMAB should set this pref value for us. 
 #ifdef DEBUG_AB_MIGRATION
-  PRINTF("set %s the pref to %s%s\n",aPref,(const char *)abName,ADDRESSBOOK_PREF_VALUE_5x_SUFFIX);
+  printf("set %s the pref to %s%s\n",aPref,(const char *)abName,ADDRESSBOOK_PREF_VALUE_5x_SUFFIX);
 #endif /* DEBUG_AB_MIGRATION */
   
   nsCAutoString newPrefValue;
@@ -1890,7 +1885,7 @@ nsMessengerMigrator::migrateAddressBookPrefEnum(const char *aPref, void *aClosur
   if (NS_FAILED(rv)) return;
  
 #ifdef DEBUG_AB_MIGRATION
-  PRINTF("remove the tmp file\n");
+  printf("remove the tmp file\n");
 #endif /* DEBUG_AB_MIGRATION */
   rv = tmpLDIFFile->Delete(PR_TRUE);
   NS_ASSERTION(NS_SUCCEEDED(rv),"failed to delete the temp ldif file");
@@ -1906,7 +1901,7 @@ nsMessengerMigrator::MigrateAddressBooks()
 
   nsCOMPtr <nsIAbUpgrader> abUpgrader = do_GetService(NS_AB4xUPGRADER_CONTRACTID, &rv);
   if (NS_FAILED(rv) || !abUpgrader) {
-    PRINTF("the addressbook migrator is only in the commercial builds.\n");
+    printf("the addressbook migrator is only in the commercial builds.\n");
     return NS_OK;
   }
 
@@ -2111,7 +2106,7 @@ nsMessengerMigrator::MigrateNewsAccounts(nsIMsgIdentity *identity)
       
       if ((PL_strncmp(NEWSRC_FILE_PREFIX_IN_5x, filename, PL_strlen(NEWSRC_FILE_PREFIX_IN_5x)) == 0) && (PL_strlen(filename) > PL_strlen(NEWSRC_FILE_PREFIX_IN_5x))) {
 #ifdef DEBUG_MIGRATOR
-        PRINTF("found a newsrc file: %s\n", filename);
+        printf("found a newsrc file: %s\n", filename);
 #endif
         char *hostname = filename + PL_strlen(NEWSRC_FILE_PREFIX_IN_5x);
         rv = MigrateNewsAccount(identity, hostname, possibleRcFile, newsHostsDir, PR_FALSE /* isSecure */);
@@ -2123,7 +2118,7 @@ nsMessengerMigrator::MigrateNewsAccounts(nsIMsgIdentity *identity)
       }
       else if ((PL_strncmp(SNEWSRC_FILE_PREFIX_IN_5x, filename, PL_strlen(SNEWSRC_FILE_PREFIX_IN_5x)) == 0) && (PL_strlen(filename) > PL_strlen(SNEWSRC_FILE_PREFIX_IN_5x))) {
 #ifdef DEBUG_MIGRATOR
-        PRINTF("found a secure newsrc file: %s\n", filename);
+        printf("found a secure newsrc file: %s\n", filename);
 #endif
         char *hostname = filename + PL_strlen(SNEWSRC_FILE_PREFIX_IN_5x);
         rv = MigrateNewsAccount(identity, hostname, possibleRcFile, newsHostsDir, PR_TRUE /* isSecure */);
@@ -2187,8 +2182,8 @@ nsMessengerMigrator::MigrateNewsAccount(nsIMsgIdentity *identity, const char *ho
 #ifdef DEBUG_MIGRATOR
 	PRInt32 portValue;
 	rv = server->GetPort(&portValue);
-	PRINTF("HOSTNAME = %s\n", (const char *)hostname);
-	PRINTF("PORT = %d\n", portValue);
+	printf("HOSTNAME = %s\n", (const char *)hostname);
+	printf("PORT = %d\n", portValue);
 #endif /* DEBUG_MIGRATOR */
 
     // we only need to do this once
@@ -2239,7 +2234,7 @@ nsMessengerMigrator::MigrateNewsAccount(nsIMsgIdentity *identity, const char *ho
     if (NS_FAILED(rv)) return rv;
 	
 #ifdef DEBUG_MIGRATOR
-    PRINTF("migrate old nntp prefs\n");
+    printf("migrate old nntp prefs\n");
 #endif /* DEBUG_MIGRATOR */
 
     rv = MigrateOldNntpPrefs(server, hostAndPort, newsrcfile);
@@ -2270,7 +2265,7 @@ nsMessengerMigrator::MigrateNewsAccount(nsIMsgIdentity *identity, const char *ho
     rv = newsDir->GetUnixStyleFilePath(getter_Copies(nativePathStr));
     if (NS_FAILED(rv)) return rv;
 
-    PRINTF("set the local path for this nntp server to: %s\n",(const char *)nativePathStr);
+    printf("set the local path for this nntp server to: %s\n",(const char *)nativePathStr);
 #endif 
     rv = server->SetLocalPath(newsDir);
     if (NS_FAILED(rv)) return rv;

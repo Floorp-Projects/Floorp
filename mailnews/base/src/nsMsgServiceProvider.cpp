@@ -34,11 +34,6 @@
 
 #include "nsIFileSpec.h"
 #include "nsAppDirectoryServiceDefs.h"
-#include "nslog.h"
-
-NS_IMPL_LOG(nsMsgServiceProviderLog)
-#define PRINTF NS_LOG_PRINTF(nsMsgServiceProviderLog)
-#define FLUSH  NS_LOG_FLUSH(nsMsgServiceProviderLog)
 
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
 static NS_DEFINE_CID(kRDFCompositeDataSourceCID, NS_RDFCOMPOSITEDATASOURCE_CID);
@@ -152,7 +147,7 @@ nsMsgServiceProviderService::LoadDataSource(const char *aURI)
     rv = remote->GetLoaded(&loaded);
     NS_ASSERTION(NS_SUCCEEDED(rv), "failed getload\n");
 
-    PRINTF("Before refresh: datasource is %s\n", loaded ? "loaded" : "not loaded");
+    printf("Before refresh: datasource is %s\n", loaded ? "loaded" : "not loaded");
 #endif
 
     // for now load synchronously (async seems to be busted)
@@ -162,7 +157,7 @@ nsMsgServiceProviderService::LoadDataSource(const char *aURI)
 #ifdef DEBUG_alecf
     rv = remote->GetLoaded(&loaded);
     NS_ASSERTION(NS_SUCCEEDED(rv), "failed getload\n");
-    PRINTF("After refresh: datasource is %s\n", loaded ? "loaded" : "not loaded");
+    printf("After refresh: datasource is %s\n", loaded ? "loaded" : "not loaded");
 #endif
 
     rv = mInnerDataSource->AddDataSource(ds);

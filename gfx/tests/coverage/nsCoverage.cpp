@@ -40,11 +40,6 @@
 #include "nsIComponentManager.h"
 #include "nsWidgetsCID.h"
 #include "nsIAppShell.h"
-#include "nslog.h"
-
-NS_IMPL_LOG(nsCoverageLog)
-#define PRINTF NS_LOG_PRINTF(nsCoverageLog)
-#define FLUSH  NS_LOG_FLUSH(nsCoverageLog)
 
 //------------------------------------------------------------------------------
 
@@ -281,7 +276,7 @@ nsEventStatus PR_CALLBACK HandleEvent(nsGUIEvent *aEvent)
               (ke->isShift?"Pressed":"Released"),
               (ke->isControl?"Pressed":"Released"),
               (ke->isAlt?"Pressed":"Released"));
-            PRINTF("%s\n", str);
+            printf("%s\n", str);
             switch(ke->keyCode) {
                case 'U':
                  gOffsetY -= 9;
@@ -370,7 +365,7 @@ nsresult CoverageTest(int *argc, char **argv)
       fputs("Created AppShell\n", stderr);
       appShell->Create(argc, argv);
     } else {
-      PRINTF("AppShell is null!\n");
+      printf("AppShell is null!\n");
     }
 
     nsIDeviceContext* deviceContext = 0;

@@ -25,11 +25,6 @@
 #include "nsMsgLineBuffer.h"
 
 #include "nsIInputStream.h" // used by nsMsgLineStreamBuffer
-#include "nslog.h"
-
-NS_IMPL_LOG(nsMsgLineBufferLog)
-#define PRINTF NS_LOG_PRINTF(nsMsgLineBufferLog)
-#define FLUSH  NS_LOG_FLUSH(nsMsgLineBufferLog)
 
 MOZ_DECL_CTOR_COUNTER(nsByteArray);
 
@@ -200,7 +195,7 @@ PRInt32	nsMsgLineBuffer::BufferInput(const char *net_buffer, PRInt32 net_buffer_
         m_bufferPos = 0;
 	}
 #ifdef DEBUG_bienvenu
-	PRINTF("returning from buffer input m_bufferPos = %ld\n", m_bufferPos);
+	printf("returning from buffer input m_bufferPos = %ld\n", m_bufferPos);
 #endif	
     return 0;
 }
@@ -357,7 +352,7 @@ char * nsMsgLineStreamBuffer::ReadNextLine(nsIInputStream * aInputStream, PRUint
           m_startPos = 0;
           startOfLine = m_dataBuffer;
           numFreeBytesInBuffer = m_dataBufferSize - m_numBytesInBuffer;
-//				PRINTF("moving data in read line around because buffer filling up\n");
+//				printf("moving data in read line around because buffer filling up\n");
       }
       else if (!m_startPos)
       {

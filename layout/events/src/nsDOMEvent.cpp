@@ -40,11 +40,6 @@
 #include "nsIDOMAbstractView.h"
 #include "prmem.h"
 #include "nsLayoutAtoms.h"
-#include "nslog.h"
-
-NS_IMPL_LOG(nsDOMEventLog)
-#define PRINTF NS_LOG_PRINTF(nsDOMEventLog)
-#define FLUSH  NS_LOG_FLUSH(nsDOMEventLog)
 
 static NS_DEFINE_IID(kIFrameIID, NS_IFRAME_IID);
 
@@ -586,7 +581,7 @@ NS_METHOD nsDOMEvent::GetCharCode(PRUint32* aCharCode)
   case NS_KEY_UP:
   case NS_KEY_DOWN:
 #if defined(NS_DEBUG) && defined(DEBUG_brade)
-    PRINTF("GetCharCode used for wrong key event; should use onkeypress.\n");
+    printf("GetCharCode used for wrong key event; should use onkeypress.\n");
 #endif
     *aCharCode = 0;
     break;
@@ -594,7 +589,7 @@ NS_METHOD nsDOMEvent::GetCharCode(PRUint32* aCharCode)
     *aCharCode = ((nsKeyEvent*)mEvent)->charCode;
 #if defined(NS_DEBUG) && defined(DEBUG_buster)
     if (0==*aCharCode)
-      PRINTF("GetCharCode used correctly but no valid key!\n");
+      printf("GetCharCode used correctly but no valid key!\n");
 #endif
     break;
   default:

@@ -28,11 +28,6 @@
 #include "nsRenderingContextGTK.h"
 
 #include "nspr.h"
-#include "nslog.h"
-
-NS_IMPL_LOG(nsImageGTKLog)
-#define PRINTF NS_LOG_PRINTF(nsImageGTKLog)
-#define FLUSH  NS_LOG_FLUSH(nsImageGTKLog)
 
 #define IsFlagSet(a,b) ((a) & (b))
 
@@ -78,7 +73,7 @@ nsImageGTK::nsImageGTK()
   mNaturalHeight = 0;
 
 #ifdef TRACE_IMAGE_ALLOCATION
-  PRINTF("nsImageGTK::nsImageGTK(this=%p)\n",
+  printf("nsImageGTK::nsImageGTK(this=%p)\n",
          this);
 #endif
 }
@@ -110,7 +105,7 @@ nsImageGTK::~nsImageGTK()
   }
 
 #ifdef TRACE_IMAGE_ALLOCATION
-  PRINTF("nsImageGTK::~nsImageGTK(this=%p)\n",
+  printf("nsImageGTK::~nsImageGTK(this=%p)\n",
          this);
 #endif
 }
@@ -162,7 +157,7 @@ nsresult nsImageGTK::Init(PRInt32 aWidth, PRInt32 aHeight,
   mIsTopToBottom = PR_TRUE;
 
 #ifdef TRACE_IMAGE_ALLOCATION
-  PRINTF("nsImageGTK::Init(this=%p,%d,%d,%d,%d)\n",
+  printf("nsImageGTK::Init(this=%p,%d,%d,%d,%d)\n",
          this,
          aWidth,
          aHeight,
@@ -294,7 +289,7 @@ void nsImageGTK::ImageUpdated(nsIDeviceContext *aContext,
                               nsRect *aUpdateRect)
 {
 #ifdef TRACE_IMAGE_ALLOCATION
-  PRINTF("nsImageGTK::ImageUpdated(this=%p,%d)\n",
+  printf("nsImageGTK::ImageUpdated(this=%p,%d)\n",
          this,
          aFlags);
 #endif
@@ -317,7 +312,7 @@ nsImageGTK::Draw(nsIRenderingContext &aContext, nsDrawingSurface aSurface,
 
 
 #ifdef TRACE_IMAGE_ALLOCATION
-    PRINTF("nsImageGTK::Draw(this=%p) (%d, %d, %d, %d), (%d, %d, %d, %d)\n",
+    printf("nsImageGTK::Draw(this=%p) (%d, %d, %d, %d), (%d, %d, %d, %d)\n",
            this,
            aSX, aSY, aSWidth, aSHeight,
            aDX, aDY, aDWidth, aDHeight);
@@ -402,7 +397,7 @@ nsImageGTK::DrawComposited32(PRBool isLSB, PRBool flipBytes,
     blueIndex  = 3-blueIndex;
   }
 
-//  PRINTF("startX=%u startY=%u activeX=%u activeY=%u\n",
+//  fprintf(stderr, "startX=%u startY=%u activeX=%u activeY=%u\n",
 //          startX, startY, activeX, activeY);
 //  fprintf(stderr, "width=%u height=%u\n", ximage->width, ximage->height);
 
@@ -716,9 +711,9 @@ nsImageGTK::DrawComposited(nsIRenderingContext &aContext,
     readHeight = surfaceHeight-readY;
 
 
-//  PRINTF("aX=%d aY=%d, aWidth=%u aHeight=%u\n", aX, aY, aWidth, aHeight);
-//  PRINTF("surfaceWidth=%u surfaceHeight=%u\n", surfaceWidth, surfaceHeight);
-//  PRINTF("readX=%u readY=%u readWidth=%u readHeight=%u destX=%u destY=%u\n\n",
+//  fprintf(stderr, "aX=%d aY=%d, aWidth=%u aHeight=%u\n", aX, aY, aWidth, aHeight);
+//  fprintf(stderr, "surfaceWidth=%u surfaceHeight=%u\n", surfaceWidth, surfaceHeight);
+//  fprintf(stderr, "readX=%u readY=%u readWidth=%u readHeight=%u destX=%u destY=%u\n\n",
 //          readX, readY, readWidth, readHeight, destX, destY);
 
   XImage *ximage = XGetImage(dpy, drawable,
@@ -853,7 +848,7 @@ void nsImageGTK::CreateOffscreenPixmap(PRInt32 aWidth, PRInt32 aHeight)
   // example: animated GIFs.
   if (!mImagePixmap) {
 #ifdef TRACE_IMAGE_ALLOCATION
-    PRINTF("nsImageGTK::Draw(this=%p) gdk_pixmap_new(nsnull,width=%d,height=%d,depth=%d)\n",
+    printf("nsImageGTK::Draw(this=%p) gdk_pixmap_new(nsnull,width=%d,height=%d,depth=%d)\n",
            this,
            aWidth, aHeight,
            mDepth);
@@ -927,7 +922,7 @@ nsImageGTK::Draw(nsIRenderingContext &aContext,
 
 
 #ifdef TRACE_IMAGE_ALLOCATION
-  PRINTF("nsImageGTK::Draw(this=%p,x=%d,y=%d,width=%d,height=%d)\n",
+  printf("nsImageGTK::Draw(this=%p,x=%d,y=%d,width=%d,height=%d)\n",
          this,
          aX, aY,
          aWidth, aHeight);
@@ -996,7 +991,7 @@ nsImageGTK::Draw(nsIRenderingContext &aContext,
     copyGC = ((nsRenderingContextGTK&)aContext).GetGC();
   }
 #ifdef TRACE_IMAGE_ALLOCATION
-  PRINTF("nsImageGTK::Draw(this=%p) gdk_draw_pixmap(x=%d,y=%d,width=%d,height=%d)\n",
+  printf("nsImageGTK::Draw(this=%p) gdk_draw_pixmap(x=%d,y=%d,width=%d,height=%d)\n",
          this,
          validX+aX,
          validY+aY,
@@ -1026,7 +1021,7 @@ nsImageGTK::Draw(nsIRenderingContext &aContext,
 
 #ifdef CHEAP_PERFORMANCE_MEASURMENT
   gEndTime = PR_Now();
-  PRINTF("nsImageGTK::Draw(this=%p,w=%d,h=%d) total=%lld pixmap=%lld, alpha=%lld, copy=%lld\n",
+  printf("nsImageGTK::Draw(this=%p,w=%d,h=%d) total=%lld pixmap=%lld, alpha=%lld, copy=%lld\n",
          this,
          aWidth, aHeight,
          gEndTime - gStartTime,
@@ -1064,7 +1059,7 @@ void nsImageGTK::TilePixmap(GdkPixmap *src, GdkPixmap *dest,
 
   // draw to destination window
   #ifdef DEBUG_TILING
-  PRINTF("nsImageGTK::TilePixmap(..., %d, %d, %d, %d)\n",
+  printf("nsImageGTK::TilePixmap(..., %d, %d, %d, %d)\n",
          destRect.x, destRect.y, 
          destRect.width, destRect.height);
   #endif
@@ -1093,11 +1088,11 @@ NS_IMETHODIMP nsImageGTK::DrawTile(nsIRenderingContext &aContext,
                                    nsRect &aTileRect)
 {
 #ifdef DEBUG_TILING
-  PRINTF("nsImageGTK::DrawTile: mWidth=%d, mHeight=%d\n", mWidth, mHeight);
-  PRINTF("                      aSrcRect.width=%d, aSrcRect.height=%d\n",
+  printf("nsImageGTK::DrawTile: mWidth=%d, mHeight=%d\n", mWidth, mHeight);
+  printf("                      aSrcRect.width=%d, aSrcRect.height=%d\n",
          aSrcRect.width, aSrcRect.height);
 
-  PRINTF("nsImageGTK::DrawTile((src: %d, %d), (tile: %d,%d, %d, %d) %p\n", mWidth, mHeight,
+  printf("nsImageGTK::DrawTile((src: %d, %d), (tile: %d,%d, %d, %d) %p\n", mWidth, mHeight,
          aTileRect.x, aTileRect.y,
          aTileRect.width, aTileRect.height, this);
 #endif
@@ -1134,7 +1129,7 @@ NS_IMETHODIMP nsImageGTK::DrawTile(nsIRenderingContext &aContext,
 
   if ((partial) || (drawing->GetDepth() == 8) || (mAlphaDepth == 8)) {
 #ifdef DEBUG_TILING
-    PRINTF("Warning: using slow tiling\n");
+    printf("Warning: using slow tiling\n");
 #endif
     PRInt32 aY0 = aTileRect.y,
             aX0 = aTileRect.x,
@@ -1206,8 +1201,8 @@ NS_IMETHODIMP nsImageGTK::DrawTile(nsIRenderingContext &aContext,
                                    const nsRect &aTileRect)
 {
 #ifdef DEBUG_TILING
-  PRINTF("nsImageGTK::DrawTile: mWidth=%d, mHeight=%d\n", mWidth, mHeight);
-  PRINTF("nsImageGTK::DrawTile((src: %d, %d), (tile: %d,%d, %d, %d) %p\n", aSXOffset, aSYOffset,
+  printf("nsImageGTK::DrawTile: mWidth=%d, mHeight=%d\n", mWidth, mHeight);
+  printf("nsImageGTK::DrawTile((src: %d, %d), (tile: %d,%d, %d, %d) %p\n", aSXOffset, aSYOffset,
          aTileRect.x, aTileRect.y,
          aTileRect.width, aTileRect.height, this);
 #endif
@@ -1244,7 +1239,7 @@ NS_IMETHODIMP nsImageGTK::DrawTile(nsIRenderingContext &aContext,
 
   if ((partial) || (mAlphaDepth == 8)) {
 #ifdef DEBUG_TILING
-    PRINTF("Warning: using slow tiling\n");
+    printf("Warning: using slow tiling\n");
 #endif
     PRInt32 aY0 = aTileRect.y - aSYOffset,
             aX0 = aTileRect.x - aSXOffset,

@@ -59,11 +59,6 @@
 #include "nsCExternalHandlerService.h"
 #include "nsIMIMEService.h"
 #include "nsIMIMEInfo.h"
-#include "nslog.h"
-
-NS_IMPL_LOG(mimedrftLog)
-#define PRINTF NS_LOG_PRINTF(mimedrftLog)
-#define FLUSH  NS_LOG_FLUSH(mimedrftLog)
 
 //
 // Header strings...
@@ -147,22 +142,22 @@ mime_dump_attachments ( nsMsgAttachmentData *attachData )
 
   while ( (tmp) && (tmp->real_name) )
   {
-	  PRINTF("Real Name         : %s\n", tmp->real_name);
+	  printf("Real Name         : %s\n", tmp->real_name);
 
     if ( tmp->url ) 
     {
       char *spec = nsnull;
 
       tmp->url->GetSpec(&spec);
-  	  PRINTF("URL               : %s\n", spec);
+  	  printf("URL               : %s\n", spec);
     }
 
-    PRINTF("Desired Type      : %s\n", tmp->desired_type);
-    PRINTF("Real Type         : %s\n", tmp->real_type);
-    PRINTF("Real Encoding     : %s\n", tmp->real_encoding); 
-    PRINTF("Description       : %s\n", tmp->description);
-    PRINTF("Mac Type          : %s\n", tmp->x_mac_type);
-    PRINTF("Mac Creator       : %s\n", tmp->x_mac_creator);
+	  printf("Desired Type      : %s\n", tmp->desired_type);
+    printf("Real Type         : %s\n", tmp->real_type);
+	  printf("Real Encoding     : %s\n", tmp->real_encoding); 
+    printf("Description       : %s\n", tmp->description);
+    printf("Mac Type          : %s\n", tmp->x_mac_type);
+    printf("Mac Creator       : %s\n", tmp->x_mac_creator);
     i++;
     tmp++;
   }
@@ -179,7 +174,7 @@ nsresult            rv;
 MSG_ComposeFormat   format = nsIMsgCompFormat::Default;
 
 #ifdef NS_DEBUG
- PRINTF("RICHIE: Need to do something with the attachment data!!!!\n");
+printf("RICHIE: Need to do something with the attachment data!!!!\n");
 mime_dump_attachments ( attachmentList );
 #endif
 
@@ -1367,14 +1362,14 @@ mime_parse_stream_complete (nsMIMESession *stream)
       if (mdd->format_out == nsMimeOutput::nsMimeMessageEditorTemplate)
       {
 #ifdef NS_DEBUG
-          PRINTF("RICHIE: Time to create the EDITOR with this template - HAS a body!!!!\n");
+        printf("RICHIE: Time to create the EDITOR with this template - HAS a body!!!!\n");
 #endif
         CreateTheComposeWindow(fields, newAttachData, nsIMsgCompType::Template, composeFormat, mdd->identity);
       }
       else
       {
 #ifdef NS_DEBUG
-          PRINTF("Time to create the composition window WITH a body!!!!\n");
+        printf("Time to create the composition window WITH a body!!!!\n");
 #endif
         if (mdd->forwardInline)
           CreateTheComposeWindow(fields, newAttachData, nsIMsgCompType::ForwardInline, composeFormat, mdd->identity);
@@ -1398,14 +1393,14 @@ mime_parse_stream_complete (nsMIMESession *stream)
       if (mdd->format_out == nsMimeOutput::nsMimeMessageEditorTemplate)
       {
 #ifdef NS_DEBUG
-          PRINTF("RICHIE: Time to create the EDITOR with this template - NO body!!!!\n");
+        printf("RICHIE: Time to create the EDITOR with this template - NO body!!!!\n");
 #endif
         CreateTheComposeWindow(fields, newAttachData, nsIMsgCompType::Template, nsIMsgCompFormat::Default, mdd->identity);
       }
       else
       {
 #ifdef NS_DEBUG
-          PRINTF("Time to create the composition window WITHOUT a body!!!!\n");
+        printf("Time to create the composition window WITHOUT a body!!!!\n");
 #endif
         if (mdd->forwardInline)
           CreateTheComposeWindow(fields, newAttachData, nsIMsgCompType::ForwardInline, nsIMsgCompFormat::Default, mdd->identity);

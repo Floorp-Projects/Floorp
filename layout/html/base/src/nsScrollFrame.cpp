@@ -45,11 +45,6 @@
 #include "nsBoxLayoutState.h"
 #include "nsISupportsPrimitives.h"
 #include "nsIPresState.h"
-#include "nslog.h"
-
-NS_IMPL_LOG(nsScrollFrameLog)
-#define PRINTF NS_LOG_PRINTF(nsScrollFrameLog)
-#define FLUSH  NS_LOG_FLUSH(nsScrollFrameLog)
 
 #undef NOISY_SECOND_REFLOW
 
@@ -802,7 +797,7 @@ nsScrollFrame::Reflow(nsIPresContext*          aPresContext,
   // whether we correctly predicted whether a vertical scrollbar is needed
 #ifdef NOISY_SECOND_REFLOW
   ListTag(stdout);
-  PRINTF(": childTotalSize=%d,%d scrollArea=%d,%d computedHeight=%d\n",
+  printf(": childTotalSize=%d,%d scrollArea=%d,%d computedHeight=%d\n",
          kidDesiredSize.width, kidDesiredSize.height,
          scrollAreaSize.width, scrollAreaSize.height,
          aReflowState.mComputedHeight);
@@ -826,7 +821,7 @@ nsScrollFrame::Reflow(nsIPresContext*          aPresContext,
           mustReflow = PR_TRUE;
   #ifdef NOISY_SECOND_REFLOW
           ListTag(stdout);
-          PRINTF(": kid-height=%d < scrollArea-height=%d\n",
+          printf(": kid-height=%d < scrollArea-height=%d\n",
                  kidDesiredSize.height, scrollAreaSize.height);
   #endif
         }
@@ -840,7 +835,7 @@ nsScrollFrame::Reflow(nsIPresContext*          aPresContext,
           mustReflow = PR_TRUE;
   #ifdef NOISY_SECOND_REFLOW
           ListTag(stdout);
-          PRINTF(": kid-height=%d > scrollArea-height=%d\n",
+          printf(": kid-height=%d > scrollArea-height=%d\n",
                  kidDesiredSize.height, scrollAreaSize.height);
   #endif
         }

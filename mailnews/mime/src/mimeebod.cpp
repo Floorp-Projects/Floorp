@@ -33,11 +33,6 @@
 #include "nsMimeTransition.h"
 #include "nsMimeStringResources.h"
 #include "mimemoz2.h"
-#include "nslog.h"
-
-NS_IMPL_LOG(mimeebodLog)
-#define PRINTF NS_LOG_PRINTF(mimeebodLog)
-#define FLUSH  NS_LOG_FLUSH(mimeebodLog)
 
 #define MIME_SUPERCLASS mimeObjectClass
 MimeDefClass(MimeExternalBody, MimeExternalBodyClass,
@@ -488,7 +483,7 @@ MimeExternalBody_debug_print (MimeObject *obj, PRFileDesc *stream, PRInt32 depth
   for (i=0; i < depth; i++)
 	PR_Write(stream, "  ", 2);
 /***
-  FPRINTF(stream,
+  fprintf(stream,
 		  "<%s %s\n"
 		  "\tcontent-type: %s\n"
 		  "\tcontent-type: %s\n"

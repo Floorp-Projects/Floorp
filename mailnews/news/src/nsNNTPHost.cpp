@@ -26,11 +26,6 @@
 #include "prlog.h"
 
 #include "nsMsgNewsCID.h"
-#include "nslog.h"
-
-NS_IMPL_LOG(nsNNTPHostLog)
-#define PRINTF NS_LOG_PRINTF(nsNNTPHostLog)
-#define FLUSH  NS_LOG_FLUSH(nsNNTPHostLog)
 
 static NS_DEFINE_CID(kNNTPNewsgroupCID, NS_NNTPNEWSGROUP_CID);
 static NS_DEFINE_CID(kNNTPNewsgroupListCID, NS_NNTPNEWSGROUPLIST_CID);
@@ -938,7 +933,7 @@ nsNNTPHost::FindGroup(const char* name, nsINNTPNewsgroup* *_retval)
 		return NS_ERROR_NULL_POINTER;
 	}
 #ifdef DEBUG_NEWS
-    PRINTF("FindGroup(%s)\n",name);
+		printf("FindGroup(%s)\n",name);
 #endif
 			
 	if (!m_groups) return result;
@@ -954,7 +949,7 @@ nsNNTPHost::FindGroup(const char* name, nsINNTPNewsgroup* *_retval)
         rv = info->GetName(&groupname);
        
 #ifdef DEBUG_NEWS
-		PRINTF("%d = %s\n",i,groupname?groupname:"null");
+		printf("%d = %s\n",i,groupname?groupname:"null");
 #endif
 
 		if (NS_SUCCEEDED(rv) && (name != nsnull) && PL_strcmp(name, groupname) == 0) {
@@ -980,7 +975,7 @@ nsNNTPHost::AddGroup(const char *name,
                      nsINNTPNewsgroup **_retval)
 {
 #ifdef DEBUG_NEWS
-	PRINTF("nsNNTPHost::AddGroup(%s)\n",name);
+	printf("nsNNTPHost::AddGroup(%s)\n",name);
 #endif
 	nsINNTPNewsgroup *newsInfo = nsnull;
 	nsCOMPtr <nsINNTPCategoryContainer> categoryContainer;
@@ -2429,7 +2424,7 @@ nsNNTPHost::GetNewsgroupList(const char* name, nsINNTPNewsgroupList **_retval)
 		return NS_ERROR_NULL_POINTER;
 	}
 #ifdef DEBUG_NEWS
-	PRINTF("GetNewsgroupList(%s)\n",name);	
+	printf("GetNewsgroupList(%s)\n",name);	
 #endif
 			
 	if (!m_newsgrouplists) return result;
@@ -2443,7 +2438,7 @@ nsNNTPHost::GetNewsgroupList(const char* name, nsINNTPNewsgroupList **_retval)
         rv = list->GetGroupName(&newsgroupname);
        
 #ifdef DEBUG_NEWS
-		PRINTF("%d = %s\n",i,newsgroupname?newsgroupname:"null");
+		printf("%d = %s\n",i,newsgroupname?newsgroupname:"null");
 #endif
 
 		if (NS_SUCCEEDED(rv) && newsgroupname && PL_strcmp(name,newsgroupname) == 0) {
@@ -2496,7 +2491,7 @@ nsNNTPHost::AddNewNewsgroup(const char *name,
     nsMsgGroupRecord     *groupRecord = nsnull;
     
 #ifdef DEBUG_NEWS
-	PRINTF("nsNNTPHost::AddNewNewsgroup(%s,...)\n",name);
+	printf("nsNNTPHost::AddNewNewsgroup(%s,...)\n",name);
 #endif
 
     PRInt32 status = NoticeNewGroup(name, &groupRecord);

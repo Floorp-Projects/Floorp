@@ -25,11 +25,6 @@
    the NNTP protocol */
 
 #include "nsNNTPCategoryContainer.h"
-#include "nslog.h"
-
-NS_IMPL_LOG(nsNNTPCategoryContainerLog)
-#define PRINTF NS_LOG_PRINTF(nsNNTPCategoryContainerLog)
-#define FLUSH  NS_LOG_FLUSH(nsNNTPCategoryContainerLog)
 
 NS_IMPL_ISUPPORTS(nsNNTPCategoryContainer, NS_GET_IID(nsINNTPCategoryContainer));
 
@@ -41,7 +36,7 @@ nsNNTPCategoryContainer::nsNNTPCategoryContainer()
 
 nsNNTPCategoryContainer::~nsNNTPCategoryContainer()
 {
-	PRINTF("Destroying category container. \n");
+	printf("Destroying category container. \n");
 	NS_IF_RELEASE(m_newsgroup);
 }
 
@@ -70,7 +65,7 @@ nsresult nsNNTPCategoryContainer::SetRootCategory(nsINNTPNewsgroup * aRootCatego
 		char * name = nsnull;
 		aRootCategory->GetName(&name);
 #ifdef DEBUG_NEWS
-		PRINTF("Setting root category for container to %s", name ? name : "unspecified");
+		printf("Setting root category for container to %s", name ? name : "unspecified");
 #endif
 		m_newsgroup = aRootCategory;
 		NS_IF_ADDREF(m_newsgroup);

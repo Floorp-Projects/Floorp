@@ -43,9 +43,10 @@
 #include "nsISocketTransport.h"
 #include "nsISecureSocketInfo.h"
 #include "plstr.h"
-#include "nslog.h"
 
-NS_DECL_LOG(HTTPLog)
+#if defined(PR_LOGGING)
+extern PRLogModuleInfo* gHTTPLog;
+#endif /* PR_LOGGING */
 
 static NS_DEFINE_CID(kIOServiceCID,     NS_IOSERVICE_CID);
 static NS_DEFINE_CID(kHTTPHandlerCID,   NS_IHTTPHANDLER_CID);
@@ -82,7 +83,7 @@ nsHTTPRequest::nsHTTPRequest(nsIURI* i_URL,
   nsXPIDLCString urlCString; 
     mURI->GetSpec(getter_Copies(urlCString));
   
-    PR_LOG(HTTPLog, PR_LOG_DEBUG, 
+    PR_LOG(gHTTPLog, PR_LOG_DEBUG, 
 ("Creating nsHTTPRequest [this=%p] for URI: %s.\n", 
            this,(const char *)urlCString));
 #endif
@@ -100,7 +101,7 @@ nsHTTPRequest::nsHTTPRequest(nsIURI* i_URL,
 
 nsHTTPRequest::~nsHTTPRequest()
 {
-    PR_LOG(HTTPLog, PR_LOG_ALWAYS, 
+    PR_LOG(gHTTPLog, PR_LOG_ALWAYS, 
 ("Deleting nsHTTPRequest [this=%x].\n", this));
 
     CRTFREEIF(mRequestSpec);
@@ -563,7 +564,7 @@ nsHTTPPipelinedRequest::nsHTTPPipelinedRequest(nsHTTPHandler* i_Handler, const c
     NS_INIT_REFCNT();
 
     mHost = host;
-    PR_LOG(HTTPLog, PR_LOG_DEBUG,("Creating nsHTTPPipelinedRequest [this=%p], created=%d, deleted=%d\n",
+    PR_LOG(gHTTPLog, PR_LOG_DEBUG,("Creating nsHTTPPipelinedRequest [this=%p], created=%d, deleted=%d\n",
                 this, ++sPipelinedRequestCreated, sPipelinedRequestDeleted));
 
     NS_NewISupportsArray(getter_AddRefs(mRequests));
@@ -576,7 +577,7 @@ nsHTTPPipelinedRequest::~nsHTTPPipelinedRequest()
     PRUint32 count = 0;
     PRInt32  index;
 
-    PR_LOG(HTTPLog, PR_LOG_DEBUG,("Deleting nsHTTPPipelinedRequest [this=%p], created=%d, deleted=%d\n",
+    PR_LOG(gHTTPLog, PR_LOG_DEBUG,("Deleting nsHTTPPipelinedRequest [this=%p], created=%d, deleted=%d\n",
                 this, sPipelinedRequestCreated, ++sPipelinedRequestDeleted));
 
     if (mRequests)
@@ -628,7 +629,7 @@ nsHTTPPipelinedRequest::WriteRequest(nsIInputStream* iRequestStream)
     PRUint32 count = 0;
     PRUint32 index;
 
-    PR_LOG(HTTPLog, PR_LOG_ALWAYS, ("nsHTTPPipelinedRequest::WriteRequest()[%p], mOnStopDone=%d, mTransport=%x\n", this, mOnStopDone, mTransport.get()));
+    PR_LOG(gHTTPLog, PR_LOG_ALWAYS, ("nsHTTPPipelinedRequest::WriteRequest()[%p], mOnStopDone=%d, mTransport=%x\n", this, mOnStopDone, mTransport.get()));
 
     if (!mRequests)
         return NS_ERROR_FAILURE;
@@ -692,7 +693,7 @@ nsHTTPPipelinedRequest::WriteRequest(nsIInputStream* iRequestStream)
     //
     // Build up the request into mRequestBuffer...
     //
-    PR_LOG(HTTPLog, PR_LOG_ALWAYS, 
+    PR_LOG(gHTTPLog, PR_LOG_ALWAYS, 
 ("\nnsHTTPRequest::Build() [this=%p].\tWriting Request:\n"
             "=== Start\n%s=== End\n",
             this, mRequestBuffer.GetBuffer()));
@@ -743,7 +744,7 @@ nsHTTPPipelinedRequest::WriteRequest(nsIInputStream* iRequestStream)
 NS_IMETHODIMP
 nsHTTPPipelinedRequest::OnStartRequest(nsIChannel* channel, nsISupports* i_Context)
 {
-    PR_LOG(HTTPLog, PR_LOG_ALWAYS, 
+    PR_LOG(gHTTPLog, PR_LOG_ALWAYS, 
 ("nsHTTPRequest [this=%x]. Starting to write data to the server.\n",
             this));
     // this needs to propogate up if mInputStream was set...
@@ -761,7 +762,7 @@ nsHTTPPipelinedRequest::OnStopRequest(nsIChannel* channel, nsISupports* i_Contex
 
     rv = aStatus;
 
-    PR_LOG(HTTPLog, PR_LOG_DEBUG,("\nnsHTTPRequest::OnStopRequest() [this=%x], aStatus=%u\n", this, aStatus));
+    PR_LOG(gHTTPLog, PR_LOG_DEBUG,("\nnsHTTPRequest::OnStopRequest() [this=%x], aStatus=%u\n", this, aStatus));
 
     if (NS_SUCCEEDED(rv))
     {
@@ -777,7 +778,7 @@ nsHTTPPipelinedRequest::OnStopRequest(nsIChannel* channel, nsISupports* i_Contex
             //
             if (mInputStream)
             {
-                PR_LOG(HTTPLog, PR_LOG_ALWAYS, 
+                PR_LOG(gHTTPLog, PR_LOG_ALWAYS, 
                        ("nsHTTPRequest [this=%x]. "
                         "Writing PUT/POST data to the server.\n", this));
 
@@ -791,7 +792,7 @@ nsHTTPPipelinedRequest::OnStopRequest(nsIChannel* channel, nsISupports* i_Contex
             //
             else
             {
-                PR_LOG(HTTPLog, PR_LOG_ALWAYS, 
+                PR_LOG(gHTTPLog, PR_LOG_ALWAYS, 
                        ("nsHTTPRequest [this=%p]. "
                         "Finished writing request to server." 
                         "\tStatus: %x\n", this, aStatus));
@@ -829,7 +830,7 @@ nsHTTPPipelinedRequest::OnStopRequest(nsIChannel* channel, nsISupports* i_Contex
     //
     else
     {
-        PR_LOG(HTTPLog, PR_LOG_ERROR, 
+        PR_LOG(gHTTPLog, PR_LOG_ERROR, 
                ("nsHTTPRequest [this=%p]. Error writing request to server."
                 "\tStatus: %x\n", this, aStatus));
         rv = aStatus;
@@ -853,7 +854,7 @@ nsHTTPPipelinedRequest::OnStopRequest(nsIChannel* channel, nsISupports* i_Contex
 
             req->mConnection->GetStatus(&channelStatus);
 
-            PR_LOG(HTTPLog, PR_LOG_DEBUG,("nsHTTPRequest::OnStopRequest() [this=%p]. wasKeptAlive=%d, channelStatus=%x\n", this, wasKeptAlive, channelStatus));
+            PR_LOG(gHTTPLog, PR_LOG_DEBUG,("nsHTTPRequest::OnStopRequest() [this=%p]. wasKeptAlive=%d, channelStatus=%x\n", this, wasKeptAlive, channelStatus));
 
             if (wasKeptAlive && NS_SUCCEEDED(channelStatus))
             {
@@ -920,7 +921,7 @@ nsHTTPPipelinedRequest::RestartRequest(PRUint32 aType)
 {
     nsresult rval = NS_ERROR_FAILURE;
 
-    PR_LOG(HTTPLog, PR_LOG_DEBUG,("nsHTTPPipelinedRequest::RestartRequest() [this=%p], mTotalProcessed=%u\n", this, mTotalProcessed));
+    PR_LOG(gHTTPLog, PR_LOG_DEBUG,("nsHTTPPipelinedRequest::RestartRequest() [this=%p], mTotalProcessed=%u\n", this, mTotalProcessed));
 
     if (aType == REQUEST_RESTART_SSL)
     {
@@ -974,7 +975,7 @@ nsHTTPPipelinedRequest::RestartRequest(PRUint32 aType)
             NS_RELEASE(req);
         }
 
-        PR_LOG(HTTPLog, PR_LOG_DEBUG,("nsHTTPPipelinedRequest::RestartRequest() [this=%p], wasKepAlive=%u, mAttempts=%d, mOnStopDone=%d\n", this, wasKeptAlive, mAttempts, mOnStopDone));
+        PR_LOG(gHTTPLog, PR_LOG_DEBUG,("nsHTTPPipelinedRequest::RestartRequest() [this=%p], wasKepAlive=%u, mAttempts=%d, mOnStopDone=%d\n", this, wasKeptAlive, mAttempts, mOnStopDone));
 
         if (wasKeptAlive && mAttempts == 0 && NS_SUCCEEDED(channelStatus))
         {
@@ -1102,7 +1103,7 @@ nsHTTPPipelinedRequest::AddToPipeline(nsHTTPRequest *aRequest)
     if (sLongestPipeline < count + 1)
         sLongestPipeline = count + 1;
 
-    PR_LOG(HTTPLog, PR_LOG_DEBUG, 
+    PR_LOG(gHTTPLog, PR_LOG_DEBUG, 
 ("nsHTTPPipelinedRequest::AddToPipeline() [this=%p]"
         " count=%u, longest pipeline=%u\n",
         this, count + 1, sLongestPipeline));

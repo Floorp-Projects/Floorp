@@ -37,9 +37,7 @@
 
 ////////////////// nsImapServerResponseParser /////////////////////////
 
-#include "nslog.h"
-
-NS_DECL_LOG(IMAPLog)
+extern PRLogModuleInfo* IMAP;
 
 nsImapServerResponseParser::nsImapServerResponseParser(nsImapProtocol &imapProtocolConnection) :
 	nsIMAPGenericParser(),
@@ -447,7 +445,7 @@ void nsImapServerResponseParser::ProcessOkCommand(const char *commandToken)
 				// If we have a valid shell that has not already been cached, then cache it.
 				if (!m_shell->IsShellCached() && fHostSessionList)	// cache is responsible for destroying it
 				{
-					PR_LOG(IMAPLog, PR_LOG_ALWAYS, 
+					PR_LOG(IMAP, PR_LOG_ALWAYS, 
                            ("BODYSHELL:  Adding shell to cache."));
                     const char *serverKey = fServerConnection.GetImapServerKey();
 					fHostSessionList->AddShellToCacheForHost(
@@ -2377,7 +2375,7 @@ void	nsImapServerResponseParser::UseCachedShell(nsIMAPBodyShell *cachedShell)
 	// We shouldn't already have another shell we're dealing with.
 	if (m_shell && cachedShell)
 	{
-		PR_LOG(IMAPLog, PR_LOG_ALWAYS, ("PARSER: Shell Collision"));
+		PR_LOG(IMAP, PR_LOG_ALWAYS, ("PARSER: Shell Collision"));
 		NS_ASSERTION(PR_FALSE, "shell collision");
 	}
 	m_shell = cachedShell;
@@ -2467,7 +2465,7 @@ PRBool nsImapServerResponseParser::msg_fetch_literal(PRBool chunk, PRInt32 origi
 
 	// This would be a good thing to log.
 	if (lastCRLFwasCRCRLF)
-		PR_LOG(IMAPLog, PR_LOG_ALWAYS, ("PARSER: CR/LF fell on chunk boundary."));
+		PR_LOG(IMAP, PR_LOG_ALWAYS, ("PARSER: CR/LF fell on chunk boundary."));
 	
 	if (ContinueParse())
 	{

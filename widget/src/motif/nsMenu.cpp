@@ -40,12 +40,6 @@
 #include <Xm/SeparatoG.h>
 #include <Xm/RowColumn.h>
 
-#include "nslog.h"
-
-NS_IMPL_LOG(nsMenuLog)
-#define PRINTF NS_LOG_PRINTF(nsMenuLog)
-#define FLUSH  NS_LOG_FLUSH(nsMenuLog)
-
 static NS_DEFINE_CID(kMenuCID,             NS_MENU_CID);
 static NS_DEFINE_CID(kMenuItemCID,         NS_MENUITEM_CID);
 static NS_DEFINE_IID(kISupportsIID,        NS_ISUPPORTS_IID);
@@ -131,7 +125,7 @@ Widget nsMenu::GetNativeParent()
 //-------------------------------------------------------------------------
 NS_METHOD nsMenu::Create(nsISupports * aParent, const nsString &aLabel)
 {
-  PRINTF("nsMenu::Create called\n");
+  printf("nsMenu::Create called\n");
   if(aParent)
   {
     nsIMenuBar * menubar = nsnull;
@@ -219,7 +213,7 @@ NS_METHOD nsMenu::SetAccessKey(const nsString &aText)
 //-------------------------------------------------------------------------
 NS_METHOD nsMenu::AddItem(nsISupports * aItem)
 {
-  PRINTF("nsMenu::AddItem called\n");
+  printf("nsMenu::AddItem called\n");
   if(aItem)
   {
     nsIMenuItem * menuitem = nsnull;
@@ -264,7 +258,7 @@ NS_METHOD nsMenu::AddMenu(nsIMenu * aMenu)
 //-------------------------------------------------------------------------
 NS_METHOD nsMenu::AddSeparator() 
 {
-  PRINTF("nsMenu::AddSeparator() called\n");
+  printf("nsMenu::AddSeparator() called\n");
   XtVaCreateManagedWidget("__sep", xmSeparatorGadgetClass, mMenu, NULL);
   return NS_OK;
 }
@@ -364,7 +358,7 @@ void nsMenu::LoadSubMenu(nsIMenu *       pParentMenu,
 {
   nsString menuName;
   menuElement->GetAttribute(nsAutoString("value"), menuName);
-  //PRINTF("Creating Menu [%s] \n", menuName.ToNewCString()); // this leaks
+  //printf("Creating Menu [%s] \n", menuName.ToNewCString()); // this leaks
   
   // Create nsMenu
   nsIMenu * pnsMenu = nsnull;
@@ -403,7 +397,7 @@ void nsMenu::LoadSubMenu(nsIMenu *       pParentMenu,
         menuitemElement->GetNodeName(menuitemNodeType);
     
 #ifdef DEBUG_saari
-PRINTF("Type [%s] %d\n", menuitemNodeType.ToNewCString(), menuitemNodeType.Equals("menuseparator"));
+        printf("Type [%s] %d\n", menuitemNodeType.ToNewCString(), menuitemNodeType.Equals("menuseparator"));
 #endif
     
         if (menuitemNodeType.Equals("menuitem")) {
@@ -447,7 +441,7 @@ nsEventStatus nsMenu::MenuConstruct(const nsMenuEvent & aMenuEvent,
                                     void              * menuNode,
                                     void              * aWebShell)
 {
-  PRINTF("nsMenu::MenuConstruct called\n");
+  printf("nsMenu::MenuConstruct called\n");
   if(menuNode){
     SetDOMNode((nsIDOMNode*)menuNode);
   }
@@ -516,7 +510,7 @@ nsEventStatus nsMenu::MenuConstruct(const nsMenuEvent & aMenuEvent,
 
 nsEventStatus nsMenu::MenuDestruct(const nsMenuEvent & aMenuEvent)
 {
-  PRINTF("nsMenu::MenuDestruct called\n");
+  printf("nsMenu::MenuDestruct called\n");
   // Close the node.   
   nsCOMPtr<nsIDOMElement> domElement = do_QueryInterface(mDOMNode);
   if (domElement)

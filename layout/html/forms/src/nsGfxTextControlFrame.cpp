@@ -106,11 +106,6 @@
 #include "nsINodeInfo.h"
 
 #include "nsLayoutAtoms.h"
-#include "nslog.h"
-
-NS_IMPL_LOG(nsGfxTextControlFrameLog)
-#define PRINTF NS_LOG_PRINTF(nsGfxTextControlFrameLog)
-#define FLUSH  NS_LOG_FLUSH(nsGfxTextControlFrameLog)
 
 static NS_DEFINE_IID(kIFrameIID, NS_IFRAME_IID);
 static NS_DEFINE_IID(kIFormControlIID, NS_IFORMCONTROL_IID);
@@ -388,11 +383,11 @@ nsGfxTextControlFrame::~nsGfxTextControlFrame()
   }
 #ifdef DEBUG
 #if NOISY
-  PRINTF("gfxTC: %p reflow stats at destructor:\n\ttotal\tresize\tunconst\tchanged\tmoved\n", this);
-  PRINTF("\t%d\t%d\t%d\t%d\t%d\n", 
+  printf("gfxTC: %p reflow stats at destructor:\n\ttotal\tresize\tunconst\tchanged\tmoved\n", this);
+  printf("\t%d\t%d\t%d\t%d\t%d\n", 
           mDebugTotalReflows, mDebugResizeReflows, 
           mDebugResizeUnconstrained,
-         mDebugResizeReflowsThatChangedMySize, mDebugReflowsThatMovedSubdoc);
+          mDebugResizeReflowsThatChangedMySize, mDebugReflowsThatMovedSubdoc);
 #endif
 #endif
 }
@@ -1374,7 +1369,7 @@ nsGfxTextControlFrame::CreateSubDoc(nsRect *aSizeOfSubdocContainer)
       NS_ENSURE_SUCCESS(rv, rv);
       NS_ENSURE_TRUE(mDocShell, NS_ERROR_FAILURE);
 #ifdef NOISY 
-      PRINTF("%p docshell in CreateSubDoc set to bounds: x=%d, y=%d, w=%d, h=%d\n", mDocShell.get(), subBounds.x, subBounds.y, subBounds.width, subBounds.height);
+      printf("%p docshell in CreateSubDoc set to bounds: x=%d, y=%d, w=%d, h=%d\n", mDocShell.get(), subBounds.x, subBounds.y, subBounds.width, subBounds.height);
 #endif
       nsCOMPtr<nsIBaseWindow> docShellWin(do_QueryInterface(mDocShell));
       NS_ENSURE_TRUE(docShellWin, NS_ERROR_FAILURE);
@@ -1521,8 +1516,8 @@ nsGfxTextControlFrame::Paint(nsIPresContext* aPresContext,
                              nsFramePaintLayer aWhichLayer)
 {
 #ifdef NOISY
-  PRINTF("%p paint layer %d at (%d, %d, %d, %d)\n", this, aWhichLayer, 
-         aDirtyRect.x, aDirtyRect.y, aDirtyRect.width, aDirtyRect.height);
+  printf("%p paint layer %d at (%d, %d, %d, %d)\n", this, aWhichLayer, 
+    aDirtyRect.x, aDirtyRect.y, aDirtyRect.width, aDirtyRect.height);
 #endif
   if (NS_FRAME_PAINT_LAYER_FOREGROUND == aWhichLayer) 
   {
@@ -1652,8 +1647,8 @@ nsGfxTextControlFrame::PaintTextControl(nsIPresContext* aPresContext,
   }
 #ifdef DEBUG
 #ifdef NOISY
-  PRINTF("gfxTC: %p totalPaints=%d, paintsSinceLastReflow=%d\n",
-         mDebugTotalPaints, mDebugPaintsSinceLastReflow);
+  printf("gfxTC: %p totalPaints=%d, paintsSinceLastReflow=%d\n",
+          mDebugTotalPaints, mDebugPaintsSinceLastReflow);
 #endif
 #endif
 }
@@ -1956,7 +1951,7 @@ nsGfxTextControlFrame::CreateDocShell(nsIPresContext* aPresContext,
 
   nsRect viewBounds(origin.x, origin.y, aSize.width, aSize.height);
 #ifdef NOISY
-  PRINTF("%p view bounds: x=%d, y=%d, w=%d, h=%d\n", view, origin.x, origin.y, aSize.width, aSize.height);
+  printf("%p view bounds: x=%d, y=%d, w=%d, h=%d\n", view, origin.x, origin.y, aSize.width, aSize.height);
 #endif
 
   nsCOMPtr<nsIViewManager> viewMan;
@@ -2449,7 +2444,7 @@ nsGfxTextControlFrame::Reflow(nsIPresContext* aPresContext,
     nsFormFrame::AddFormControlFrame(aPresContext, *NS_STATIC_CAST(nsIFrame*, this));
   }
 #ifdef NOISY
-  PRINTF("gfxTCF: reflow reason=%d\n", aReflowState.reason);
+  printf("gfxTCF: reflow reason=%d\n", aReflowState.reason);
 #endif
 
   // Turning off optimization for now
@@ -2536,8 +2531,8 @@ nsGfxTextControlFrame::Reflow(nsIPresContext* aPresContext,
 #endif
 
 #ifdef NOISY
-  PRINTF ("exit nsGfxTextControlFrame::Reflow: size=%d,%d\n",
-          aDesiredSize.width, aDesiredSize.height);
+  printf ("exit nsGfxTextControlFrame::Reflow: size=%d,%d\n",
+           aDesiredSize.width, aDesiredSize.height);
 #endif
 
   float t2p, p2t;
@@ -2568,7 +2563,7 @@ nsGfxTextControlFrame::Reflow(nsIPresContext* aPresContext,
         else if (mDisplayFrame)
         {
 #ifdef NOISY
-          PRINTF("Error in nsGfxTextControlFrame: already created display content on intial reflow!\n");
+          printf("Error in nsGfxTextControlFrame: already created display content on intial reflow!\n");
 #endif
         }
         else
@@ -2708,7 +2703,7 @@ nsGfxTextControlFrame::Reflow(nsIPresContext* aPresContext,
         mDisplayFrame = nsnull;
       }
 #ifdef NOISY
-      PRINTF("%p docshell in reflow set to bounds: x=%d, y=%d, w=%d, h=%d\n", mDocShell.get(), subBoundsInPixels.x, subBoundsInPixels.y, subBoundsInPixels.width, subBoundsInPixels.height);
+      printf("%p docshell in reflow set to bounds: x=%d, y=%d, w=%d, h=%d\n", mDocShell.get(), subBoundsInPixels.x, subBoundsInPixels.y, subBoundsInPixels.width, subBoundsInPixels.height);
 #endif
 #ifdef DEBUG
       mDebugReflowsThatMovedSubdoc++;
@@ -2761,7 +2756,7 @@ nsGfxTextControlFrame::Reflow(nsIPresContext* aPresContext,
         rv = mDisplayFrame->Reflow(aPresContext, kidSize, kidReflowState, status);
         // notice how status is ignored here
 #ifdef NOISY
-        PRINTF("%p mDisplayFrame resized to: x=%d, y=%d, w=%d, h=%d\n", mDisplayFrame, subBounds.x, subBounds.y, subBounds.width, subBounds.height); 
+        printf("%p mDisplayFrame resized to: x=%d, y=%d, w=%d, h=%d\n", mDisplayFrame, subBounds.x, subBounds.y, subBounds.width, subBounds.height); 
 #endif
         mDisplayFrame->SetRect(aPresContext, subBounds);
         // finish the reflow
@@ -2771,7 +2766,7 @@ nsGfxTextControlFrame::Reflow(nsIPresContext* aPresContext,
   }
 
 #ifdef NOISY
-  PRINTF("at the time of the reflow, the frame looks like...\n");
+        printf("at the time of the reflow, the frame looks like...\n");
         List(aPresContext, stdout, 0);
 #endif
 
@@ -2841,11 +2836,11 @@ nsGfxTextControlFrame::Reflow(nsIPresContext* aPresContext,
 #endif
 #ifdef DEBUG
 #if NOISY
-  PRINTF("gfxTC: %p reflow stats at end of reflow:\n\ttotal\tresize\tunconst\tchanged\tmoved\n", this);
-  PRINTF("\t%d\t%d\t%d\t%d\t%d\n", 
+  printf("gfxTC: %p reflow stats at end of reflow:\n\ttotal\tresize\tunconst\tchanged\tmoved\n", this);
+  printf("\t%d\t%d\t%d\t%d\t%d\n", 
           mDebugTotalReflows, mDebugResizeReflows, 
           mDebugResizeUnconstrained,
-         mDebugResizeReflowsThatChangedMySize, mDebugReflowsThatMovedSubdoc);
+          mDebugResizeReflowsThatChangedMySize, mDebugReflowsThatMovedSubdoc);
 #endif
 #endif
   return NS_OK;
@@ -3642,11 +3637,11 @@ nsGfxTextControlFrame::List(nsIPresContext* aPresContext, FILE* out, PRInt32 aIn
   nsIView* view;
   GetView(aPresContext, &view);
   if (nsnull != view) {
-    FPRINTF(out, " [view=%p]", view);
+    fprintf(out, " [view=%p]", view);
   }
-  FPRINTF(out, " {%d,%d,%d,%d}", mRect.x, mRect.y, mRect.width, mRect.height);
+  fprintf(out, " {%d,%d,%d,%d}", mRect.x, mRect.y, mRect.width, mRect.height);
   if (0 != mState) {
-    FPRINTF(out, " [state=%08x]", mState);
+    fprintf(out, " [state=%08x]", mState);
   }
   fputs("<\n", out);
 
@@ -4978,7 +4973,7 @@ nsEnderListenerForContent::HandleEvent(nsIDOMEvent* aEvent)
 nsresult
 nsEnderListenerForContent::DragGesture(nsIDOMEvent* aDragEvent)
 {
-  //PRINTF("frame forContent DragGesture\n");
+  //printf("frame forContent DragGesture\n");
   // ...figure out if a drag should be started...
   
   // ...until we have this implemented, just eat the drag event so it
@@ -4992,7 +4987,7 @@ nsEnderListenerForContent::DragGesture(nsIDOMEvent* aDragEvent)
 nsresult
 nsEnderListenerForContent::DragEnter(nsIDOMEvent* aDragEvent)
 {
-  //PRINTF("frame forContent DragEnter\n");
+  //printf("frame forContent DragEnter\n");
   // see nsTextEditorDragListener
   return NS_OK;
 }
@@ -5001,7 +4996,7 @@ nsEnderListenerForContent::DragEnter(nsIDOMEvent* aDragEvent)
 nsresult
 nsEnderListenerForContent::DragOver(nsIDOMEvent* aDragEvent)
 {
-  //PRINTF("frame forContent DragOver\n");
+  //printf("frame forContent DragOver\n");
   // see nsTextEditorDragListener
   return NS_OK;
 }
@@ -5010,7 +5005,7 @@ nsEnderListenerForContent::DragOver(nsIDOMEvent* aDragEvent)
 nsresult
 nsEnderListenerForContent::DragExit(nsIDOMEvent* aDragEvent)
 {
-  //PRINTF("frame forContent DragExit\n");
+  //printf("frame forContent DragExit\n");
   // see nsTextEditorDragListener
   return NS_OK;
 }
@@ -5020,7 +5015,7 @@ nsEnderListenerForContent::DragExit(nsIDOMEvent* aDragEvent)
 nsresult
 nsEnderListenerForContent::DragDrop(nsIDOMEvent* aMouseEvent)
 {
-  //PRINTF("frame forContent DragDrop\n");
+  //printf("frame forContent DragDrop\n");
   // see nsTextEditorDragListener
   return NS_OK;
 }

@@ -31,18 +31,13 @@
 #include "nsINntpIncomingServer.h"
 #include "nsMsgBaseCID.h"
 #include "nsMsgUtils.h"
-#include "nslog.h"
-
-NS_IMPL_LOG(nsNewsUtilsLog)
-#define PRINTF NS_LOG_PRINTF(nsNewsUtilsLog)
-#define FLUSH  NS_LOG_FLUSH(nsNewsUtilsLog)
 
 static nsresult
 nsGetNewsServer(const char* username, const char *hostname,
                 nsIMsgIncomingServer** aResult)
 {
 #ifdef DEBUG_NEWS
-  PRINTF("nsGetNewsServer(%s,%s,??)\n",username,hostname);
+  printf("nsGetNewsServer(%s,%s,??)\n",username,hostname);
 #endif
   nsresult rv = NS_OK;
 
@@ -70,7 +65,7 @@ nsresult
 nsNewsURI2Path(const char* rootURI, const char* uriStr, nsFileSpec& pathResult)
 {
 #ifdef DEBUG_NEWS
-  PRINTF("nsNewsURI2Path(%s,%s,??)\n",rootURI,uriStr);
+  printf("nsNewsURI2Path(%s,%s,??)\n",rootURI,uriStr);
 #endif
   nsresult rv = NS_OK;
   
@@ -114,7 +109,7 @@ nsNewsURI2Path(const char* rootURI, const char* uriStr, nsFileSpec& pathResult)
   if (atPos != -1) {
     hostname.Left(username, atPos);	
 #ifdef DEBUG_NEWS
-    PRINTF("username = %s\n",username.GetBuffer());
+    printf("username = %s\n",username.GetBuffer());
 #endif
   }
 
@@ -139,7 +134,7 @@ nsNewsURI2Path(const char* rootURI, const char* uriStr, nsFileSpec& pathResult)
   else {
     exacthostname = hostname.GetBuffer();
 #ifdef DEBUG_NEWS
-    PRINTF("exacthostname = %s, hostname = %s\n",exacthostname.GetBuffer(),hostname.GetBuffer());
+    printf("exacthostname = %s, hostname = %s\n",exacthostname.GetBuffer(),hostname.GetBuffer());
 #endif
   } 
 

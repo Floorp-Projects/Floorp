@@ -40,11 +40,6 @@
 #include "nsIPresContext.h"
 #include "nsICookieService.h"
 #include "nsIServiceManager.h"
-#include "nslog.h"
-
-NS_IMPL_LOG(IMGLIBLog)
-#define PRINTF NS_LOG_PRINTF(IMGLIBLog)
-#define FLUSH  NS_LOG_FLUSH(IMGLIBLog)
 
 
 #define HOWMANY(x, r)     (((x) + ((r) - 1)) / (r))
@@ -1281,10 +1276,10 @@ IL_ChromeAlphaAbuseCheck(il_container *ic)
           num255++;
       }
     if (num000+num255 == header->width*header->height) {
-      PRINTF("CHROME ALPHA ABUSE\n");
-      PRINTF("\tusing an 8-bit alpha channel to represent binary alpha\n");
-      PRINTF("\t%s\n", ic->url_address);
-      PRINTF("\tnum000=%d num255=%d sum=%d w*h=%d\n",
+      fprintf(stderr, "CHROME ALPHA ABUSE\n");
+      fprintf(stderr, "\tusing an 8-bit alpha channel to represent binary alpha\n");
+      fprintf(stderr, "\t%s\n", ic->url_address);
+      fprintf(stderr, "\tnum000=%d num255=%d sum=%d w*h=%d\n",
               num000, num255, num000+num255, header->width*header->height);
     }
   } else if (ic->image->header.alpha_bits == 1) {
@@ -1313,9 +1308,9 @@ IL_ChromeAlphaAbuseCheck(il_container *ic)
         }
     
     if (constAlpha) {
-      PRINTF("CHROME ALPHA ABUSE\n");
-      PRINTF("\tfully opaque 1-bit alpha mask\n");
-      PRINTF("\t%s\n", ic->url_address);
+      fprintf(stderr, "CHROME ALPHA ABUSE\n");
+      fprintf(stderr, "\tfully opaque 1-bit alpha mask\n");
+      fprintf(stderr, "\t%s\n", ic->url_address);
     }
   }
 }

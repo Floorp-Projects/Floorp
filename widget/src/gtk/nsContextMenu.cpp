@@ -33,11 +33,6 @@
 #include "nsGtkEventHandler.h"
 #include "nsCOMPtr.h"
 #include "nsWidgetsCID.h"
-#include "nslog.h"
-
-NS_IMPL_LOG(nsContextMenuLog)
-#define PRINTF NS_LOG_PRINTF(nsContextMenuLog)
-#define FLUSH  NS_LOG_FLUSH(nsContextMenuLog)
 
 static NS_DEFINE_CID(kMenuCID,             NS_MENU_CID);
 static NS_DEFINE_CID(kMenuItemCID,         NS_MENUITEM_CID);
@@ -628,7 +623,7 @@ void nsContextMenu::LoadSubMenu(nsIMenu         *pParentMenu,
 {
   nsString menuName;
   menuElement->GetAttribute(nsAutoString("name"), menuName);
-  //PRINTF("Creating Menu [%s] \n", menuName.ToNewCString()); // this leaks
+  //printf("Creating Menu [%s] \n", menuName.ToNewCString()); // this leaks
 
   // Create nsMenu
   nsIMenu * pnsMenu = nsnull;
@@ -667,7 +662,7 @@ void nsContextMenu::LoadSubMenu(nsIMenu         *pParentMenu,
         menuitemElement->GetNodeName(menuitemNodeType);
 
 #ifdef DEBUG_saari
-PRINTF("Type [%s] %d\n", menuitemNodeType.ToNewCString(), menuitemNodeType.Equals("separator"));
+        printf("Type [%s] %d\n", menuitemNodeType.ToNewCString(), menuitemNodeType.Equals("separator"));
 #endif
 
         if (menuitemNodeType.Equals("menuitem")) {

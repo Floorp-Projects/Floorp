@@ -24,11 +24,6 @@
 
 #include "nsCOMPtr.h"
 #include "nsMathMLContainerFrame.h"
-#include "nslog.h"
-
-NS_IMPL_LOG(nsMathMLmactionFrameLog)
-#define PRINTF NS_LOG_PRINTF(nsMathMLmactionFrameLog)
-#define FLUSH  NS_LOG_FLUSH(nsMathMLmactionFrameLog)
 
 //
 // <maction> -- bind actions to a subexpression
@@ -37,7 +32,7 @@ NS_IMPL_LOG(nsMathMLmactionFrameLog)
 //#define DEBUG_mouse 1
 
 #if DEBUG_mouse
-#define MOUSE(_msg) PRINTF("maction:%p MOUSE: "#_msg" ...\n", this);
+#define MOUSE(_msg) printf("maction:%p MOUSE: "#_msg" ...\n", this);
 #else
 #define MOUSE(_msg)
 #endif

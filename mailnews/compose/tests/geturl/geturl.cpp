@@ -55,8 +55,6 @@ static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 #include "windows.h"
 #endif
 
-#undef fprintf
-
 ////////////////////////////////////////////////////////////////////////////////////
 // THIS IS THE STUFF TO GET THE TEST HARNESS OFF THE GROUND
 ////////////////////////////////////////////////////////////////////////////////////
@@ -102,7 +100,7 @@ SetupRegistry(void)
   nsresult res = nsServiceManager::GetService(kCharsetConverterManagerCID, NS_GET_IID(nsICharsetConverterManager), (nsISupports **)&ccMan);
   if (NS_FAILED(res)) 
   {
-    fprintf(stderr, "ERROR at GetService() code=0x%x.\n",res);
+    printf("ERROR at GetService() code=0x%x.\n",res);
     return NS_ERROR_FAILURE;
   }
 
@@ -196,7 +194,7 @@ FlushEvents(void)
 nsresult 
 MyCallback(nsIURI* aURL, nsresult aStatus, PRInt32 totalSize, const PRUnichar* aMsg, void *tagData)
 {
-  fprintf(stderr, "Done with URL Request. Exit Code = [%d] - Received [%d] bytes\n", aStatus, totalSize);
+  printf("Done with URL Request. Exit Code = [%d] - Received [%d] bytes\n", aStatus, totalSize);
   return NS_OK;
 }
 
@@ -228,7 +226,7 @@ main(int argc, char** argv)
   // Create an nsIURI object needed for the URL operation IO...
   if (NS_FAILED(nsMsgNewURL(&aURL, argv[1])))
   {
-    fprintf(stderr, "Unable to create URL\n");
+    printf("Unable to create URL\n");
     return NS_ERROR_FAILURE;
   }
 
@@ -236,7 +234,7 @@ main(int argc, char** argv)
   nsURLFetcher *sFetcher = new nsURLFetcher();
   if (!sFetcher)
   {
-    fprintf(stderr, "Failed to create an attachment stream listener...\n");
+    printf("Failed to create an attachment stream listener...\n");
     return rv;
   }
 
@@ -244,14 +242,14 @@ main(int argc, char** argv)
   nsOutputFileStream dstFile(fSpec, PR_WRONLY | PR_CREATE_FILE | PR_TRUNCATE );
   if (!dstFile.is_open() )
   {
-    fprintf(stderr, "Failed to open the output file!\n");
+    printf("Failed to open the output file!\n");
     return rv;
   }
 
   rv = sFetcher->FireURLRequest(aURL, &dstFile, MyCallback, sFetcher);
   if (NS_FAILED(rv)) 
   {
-    fprintf(stderr, "Failed to fire the URL request\n");
+    printf("Failed to fire the URL request\n");
     return rv;
   }
 

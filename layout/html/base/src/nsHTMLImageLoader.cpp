@@ -24,11 +24,6 @@
 #include "nsFrame.h"
 #include "nsIURL.h"
 #include "nsNetUtil.h"
-#include "nslog.h"
-
-NS_IMPL_LOG(nsHTMLImageLoaderLog)
-#define PRINTF NS_LOG_PRINTF(nsHTMLImageLoaderLog)
-#define FLUSH  NS_LOG_FLUSH(nsHTMLImageLoaderLog)
 
 #ifdef DEBUG
 #undef NOISY_IMAGE_LOADING
@@ -146,7 +141,7 @@ nsHTMLImageLoader::Update(nsIPresContext* aPresContext,
 {
 #ifdef NOISY_IMAGE_LOADING
   nsFrame::ListTag(stdout, aFrame);
-  PRINTF(": update: status=%x [loader=%p] callBack=%p squelch=%s\n",
+  printf(": update: status=%x [loader=%p] callBack=%p squelch=%s\n",
          aStatus, mImageLoader, mCallBack,
          mFlags.mSquelchCallback ? "yes" : "no");
 #endif
@@ -222,25 +217,25 @@ nsHTMLImageLoader::StartLoadImage(nsIPresContext* aPresContext)
                                              mFrame, &mImageLoader);
 #ifdef NOISY_IMAGE_LOADING
   nsFrame::ListTag(stdout, mFrame);
-  PRINTF(": loading image '");
+  printf(": loading image '");
   fputs(mURL, stdout);
-  PRINTF("' @ ");
+  printf("' @ ");
   if (mFlags.mNeedIntrinsicImageSize) {
-    PRINTF("intrinsic size ");
+    printf("intrinsic size ");
   }
-  PRINTF("%d,%d; oldLoader=%p newLoader=%p",
+  printf("%d,%d; oldLoader=%p newLoader=%p",
          mComputedImageSize.width, mComputedImageSize.height,
          oldLoader, mImageLoader);
   if (sizeToLoadWidth) {
-    PRINTF(" sizeToLoadWidth=%d,%d",
+    printf(" sizeToLoadWidth=%d,%d",
            sizeToLoadWidth->width, sizeToLoadWidth->height);
   }
   else {
-    PRINTF(" autoImageSize=%s needIntrinsicImageSize=%s",
+    printf(" autoImageSize=%s needIntrinsicImageSize=%s",
            mFlags.mAutoImageSize ? "yes" : "no",
            mFlags.mNeedIntrinsicImageSize ? "yes" : "no");
   }
-  PRINTF("\n");
+  printf("\n");
 #endif
 
   if (oldLoader != mImageLoader) {
@@ -461,7 +456,7 @@ nsHTMLImageLoader::GetDesiredSize(nsIPresContext* aPresContext,
     mComputedImageSize.height = newHeight;
 #ifdef NOISY_IMAGE_LOADING
     nsFrame::ListTag(stdout, mFrame);
-    PRINTF(": %s%scomputedSize=%d,%d min=%d,%d max=%d,%d fixed=%s,%s\n",
+    printf(": %s%scomputedSize=%d,%d min=%d,%d max=%d,%d fixed=%s,%s\n",
            mFlags.mNeedIntrinsicImageSize ? "need-instrinsic-size " : "",
            mFlags.mHaveComputedSize ? "have-computed-size " : "",
            mComputedImageSize.width, mComputedImageSize.height,
@@ -487,7 +482,7 @@ nsHTMLImageLoader::GetDesiredSize(nsIPresContext* aPresContext,
       if (mFlags.mNeedIntrinsicImageSize && mFlags.mHaveIntrinsicImageSize) {
         // We just learned our intrinisic size. Start over from the top...
 #ifdef NOISY_IMAGE_LOADING
-        PRINTF("  *** size arrived during StartLoadImage, looping...\n");
+        printf("  *** size arrived during StartLoadImage, looping...\n");
 #endif
         continue;
       }
@@ -498,7 +493,7 @@ nsHTMLImageLoader::GetDesiredSize(nsIPresContext* aPresContext,
   aDesiredSize.width = mComputedImageSize.width;
   aDesiredSize.height = mComputedImageSize.height;
 #ifdef NOISY_IMAGE_LOADING
-  PRINTF("nsHTMLImageLoader::GetDesiredSize returning %d, %d\n",
+  printf("nsHTMLImageLoader::GetDesiredSize returning %d, %d\n",
          aDesiredSize.width, aDesiredSize.height);
 #endif
   if ((mFlags.mNeedIntrinsicImageSize && !mFlags.mHaveIntrinsicImageSize) ||

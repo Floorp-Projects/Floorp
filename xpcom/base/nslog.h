@@ -31,8 +31,8 @@
  *      - isn't scriptable,
  *      - can't control printing format, including indentation,
  *      - it's ugly.
- * We've solved these problems with xpcom logging facility, nslog, the new modern
- * equivalent. Here's how you use it:
+ * We've solved these problems with NS_LOG, the new modern equivalent. Here's
+ * how you use it:
  *
  *     #include "nslog.h"
  *
@@ -55,7 +55,7 @@
  *     a33e50 Foo         hello world 42
  *
  * The hex number at the beginning of the line indicates the ID of the thread
- * executing the PRINTF statement. The name of the log appears next.
+ * executing the NS_LOG statement. The name of the log appears next.
  *
  * A cool feature of how these macros work is that when NS_DISABLE_LOGGING is
  * defined, all the logging code macro-expands to nothing. 

@@ -74,11 +74,6 @@
 #include "nsIDocument.h"
 
 #include "nsISelectionController.h"//for the enums
-#include "nslog.h"
-
-NS_IMPL_LOG(nsSelectionLog)
-#define PRINTF NS_LOG_PRINTF(nsSelectionLog)
-#define FLUSH  NS_LOG_FLUSH(nsSelectionLog)
 
 #define STATUS_CHECK_RETURN_MACRO() {if (!mTracker) return NS_ERROR_FAILURE;}
 //#define DEBUG_TABLE 1
@@ -1248,7 +1243,7 @@ void printRange(nsIDOMRange *aDomRange)
 {
   if (!aDomRange)
   {
-    PRINTF("NULL nsIDOMRange\n");
+    printf("NULL nsIDOMRange\n");
   }
   nsCOMPtr<nsIDOMNode> startNode;
   nsCOMPtr<nsIDOMNode> endNode;
@@ -1259,7 +1254,7 @@ void printRange(nsIDOMRange *aDomRange)
   aDomRange->GetEndParent(getter_AddRefs(endNode));
   aDomRange->GetEndOffset(&endOffset);
   
-  PRINTF("range: 0x%lx\t start: 0x%lx %ld, \t end: 0x%lx,%ld\n",
+  printf("range: 0x%lx\t start: 0x%lx %ld, \t end: 0x%lx,%ld\n",
          (unsigned long)aDomRange,
          (unsigned long)(nsIDOMNode*)startNode, (long)startOffset,
          (unsigned long)(nsIDOMNode*)endNode, (long)endOffset);
@@ -1346,7 +1341,7 @@ nsSelection::HandleTextEvent(nsGUIEvent *aGUIEvent)
 		return NS_ERROR_NULL_POINTER;
 
 #ifdef DEBUG_TAGUE
-	PRINTF("nsSelection: HandleTextEvent\n");
+	printf("nsSelection: HandleTextEvent\n");
 #endif
   nsresult result(NS_OK);
 	if (NS_TEXT_EVENT == aGUIEvent->message) {
@@ -1843,7 +1838,7 @@ nsSelection::SetMouseDownState(PRBool aState)
   {
     // Mouse up kills dragging-table cell selection
 #ifdef DEBUG_TABLE_SELECTION
-    PRINTF("SetMouseDownState to FALSE - stopping cell selection\n");
+printf("SetMouseDownState to FALSE - stopping cell selection\n");
 #endif
     mSelectingTableCells = PR_FALSE;
     mStartSelectedCell = nsnull;
@@ -2282,7 +2277,7 @@ nsSelection::HandleTableSelection(nsIContent *aParentContent, PRInt32 aContentOf
             return NS_OK;
         }
 #ifdef DEBUG_TABLE_SELECTION
-        PRINTF("HandleTableSelection: Dragged into a new column or row\n");
+printf("HandleTableSelection: Dragged into a new column or row\n");
 #endif
         // Continue dragging row or column selection
         return SelectRowOrColumn(childContent, mSelectingTableCellMode);
@@ -2290,7 +2285,7 @@ nsSelection::HandleTableSelection(nsIContent *aParentContent, PRInt32 aContentOf
       else if (mSelectingTableCellMode == TABLESELECTION_CELL)
       {
 #ifdef DEBUG_TABLE_SELECTION
-        PRINTF("HandleTableSelection: Dragged into a new cell\n");
+printf("HandleTableSelection: Dragged into a new cell\n");
 #endif
         // Clear this to be sure SelectBlockOfCells works correctly
         mAppendStartSelectedCell = nsnull;
@@ -2334,7 +2329,7 @@ nsSelection::HandleTableSelection(nsIContent *aParentContent, PRInt32 aContentOf
     if (mMouseDownState)
     {
 #ifdef DEBUG_TABLE_SELECTION
-      PRINTF("HandleTableSelection: Mouse down event\n");
+printf("HandleTableSelection: Mouse down event\n");
 #endif
       // Clear cell we stored in mouse-down
       mUnselectCellOnMouseUp = nsnull;
@@ -2375,7 +2370,7 @@ nsSelection::HandleTableSelection(nsIContent *aParentContent, PRInt32 aContentOf
           // Remember this cell to (possibly) unselect it on mouseup
           mUnselectCellOnMouseUp = childContent;
 #ifdef DEBUG_TABLE_SELECTION
-          PRINTF("HandleTableSelection: Saving mUnselectCellOnMouseUp\n");
+printf("HandleTableSelection: Saving mUnselectCellOnMouseUp\n");
 #endif
         }
         else
@@ -2427,7 +2422,7 @@ nsSelection::HandleTableSelection(nsIContent *aParentContent, PRInt32 aContentOf
     else
     {
 #ifdef DEBUG_TABLE_SELECTION
-      PRINTF("HandleTableSelection: Mouse UP event\n");
+printf("HandleTableSelection: Mouse UP event\n");
 #endif
       // First check if we are extending a block selection
       PRInt32 rangeCount;
@@ -2450,7 +2445,7 @@ nsSelection::HandleTableSelection(nsIContent *aParentContent, PRInt32 aContentOf
         nsCOMPtr<nsIDOMRange> range;
         PRInt32 offset;
 #ifdef DEBUG_TABLE_SELECTION
-        PRINTF("HandleTableSelection: Unselecting mUnselectCellOnMouseUp; rangeCount=%d\n", rangeCount);
+printf("HandleTableSelection: Unselecting mUnselectCellOnMouseUp; rangeCount=%d\n", rangeCount);
 #endif
         for( PRInt32 i = 0; i < rangeCount; i++)
         {
@@ -2481,7 +2476,7 @@ nsSelection::HandleTableSelection(nsIContent *aParentContent, PRInt32 aContentOf
             if (rangeCount == 1)
             {
 #ifdef DEBUG_TABLE_SELECTION
-              PRINTF("HandleTableSelection: Unselecting single selected cell\n");
+printf("HandleTableSelection: Unselecting single selected cell\n");
 #endif
               // This was the only cell selected.
               // Collapse to "normal" selection inside the cell
@@ -2495,7 +2490,7 @@ nsSelection::HandleTableSelection(nsIContent *aParentContent, PRInt32 aContentOf
               return mDomSelections[index]->Collapse(childNode, 0);
             }
 #ifdef DEBUG_TABLE_SELECTION
-            PRINTF("HandleTableSelection: Removing cell from multi-cell selection\n");
+printf("HandleTableSelection: Removing cell from multi-cell selection\n");
 #endif
             //TODO: Should we try to reassign to a different existing cell?
             //mStartSelectedCell = nsnull;
@@ -2515,7 +2510,7 @@ nsSelection::HandleTableSelection(nsIContent *aParentContent, PRInt32 aContentOf
       //  we may append by using Shift+click in another cell
       mAppendStartSelectedCell = childContent;
 #ifdef DEBUG_TABLE_SELECTION
-      PRINTF("HandleTableSelection: Setting mAppendStartSelectedCell for append block\n");
+printf("HandleTableSelection: Setting mAppendStartSelectedCell for append block\n");
 #endif
     }
   }
@@ -2535,7 +2530,7 @@ nsSelection::SelectBlockOfCells(nsIContent *aEndCell)
   {
     // We are appending a new block
 #ifdef DEBUG_TABLE_SELECTION
-    PRINTF("SelectBlockOfCells -- using mAppendStartSelectedCell\n");
+printf("SelectBlockOfCells -- using mAppendStartSelectedCell\n");
 #endif
     startCell = mAppendStartSelectedCell;
   }
@@ -2543,14 +2538,14 @@ nsSelection::SelectBlockOfCells(nsIContent *aEndCell)
   {
     startCell = mStartSelectedCell;
 #ifdef DEBUG_TABLE_SELECTION
-    PRINTF("SelectBlockOfCells -- using mStartSelectedCell\n");
+printf("SelectBlockOfCells -- using mStartSelectedCell\n");
 #endif
   }
 
   if (!startCell)
   {
 #ifdef DEBUG_TABLE_SELECTION
-    PRINTF("SelectBlockOfCells -- NO START CELL!\n");
+printf("SelectBlockOfCells -- NO START CELL!\n");
 #endif
     return NS_OK;
   }
@@ -2596,8 +2591,8 @@ nsSelection::SelectBlockOfCells(nsIContent *aEndCell)
       if (NS_FAILED(result)) return result;
 
 #ifdef DEBUG_TABLE_SELECTION
-      if (!range)
-        PRINTF("SelectBlockOfCells -- range is null\n");
+if (!range)
+printf("SelectBlockOfCells -- range is null\n");
 #endif
       if (range &&
           (curRowIndex < minRowIndex || curRowIndex > maxRowIndex || 
@@ -3099,7 +3094,7 @@ nsSelection::DeleteFromDocument()
     else
     {
       // Otherwise it's harder, have to find the previous node
-      PRINTF("Sorry, don't know how to delete across frame boundaries yet\n");
+      printf("Sorry, don't know how to delete across frame boundaries yet\n");
       return NS_ERROR_NOT_IMPLEMENTED;
     }
   }
@@ -3131,7 +3126,7 @@ nsSelection::DeleteFromDocument()
     mDomSelections[index]->Collapse(mDomSelections[index]->FetchAnchorNode(), mDomSelections[index]->FetchAnchorOffset());
 #ifdef DEBUG
   else
-    PRINTF("Don't know how to set selection back past frame boundary\n");
+    printf("Don't know how to set selection back past frame boundary\n");
 #endif
 
   return NS_OK;
@@ -4725,12 +4720,12 @@ nsDOMSelection::Collapse(nsIDOMNode* aParentNode, PRInt32 aOffset)
 	    nsAutoString tagString;
 	    tag->ToString(tagString);
 	    char * tagCString = tagString.ToNewCString();
-	    PRINTF ("Sel. Collapse to %p %s %d\n", content, tagCString, aOffset);
+	    printf ("Sel. Collapse to %p %s %d\n", content, tagCString, aOffset);
 	    delete [] tagCString;
     }
   }
   else {
-    PRINTF ("Sel. Collapse set to null parent.\n");
+    printf ("Sel. Collapse set to null parent.\n");
   }
 #endif
 
@@ -5524,9 +5519,9 @@ nsDOMSelection::Extend(nsIDOMNode* aParentNode, PRInt32 aOffset)
   DEBUG_OUT_RANGE(range);
 #if 0
   if (eDirNext == mDirection)
-    PRINTF("    direction = 1  LEFT TO RIGHT\n");
+    printf("    direction = 1  LEFT TO RIGHT\n");
   else
-    PRINTF("    direction = 0  RIGHT TO LEFT\n");
+    printf("    direction = 0  RIGHT TO LEFT\n");
 #endif
   SetDirection(dir);
 #ifdef DEBUG_SELECTION
@@ -5541,12 +5536,12 @@ nsDOMSelection::Extend(nsIDOMNode* aParentNode, PRInt32 aOffset)
 	    nsAutoString tagString;
 	    tag->ToString(tagString);
 	    char * tagCString = tagString.ToNewCString();
-	    PRINTF ("Sel. Extend to %p %s %d\n", content, tagCString, aOffset);
+	    printf ("Sel. Extend to %p %s %d\n", content, tagCString, aOffset);
 	    delete [] tagCString;
     }
   }
   else {
-    PRINTF ("Sel. Extend set to null parent.\n");
+    printf ("Sel. Extend set to null parent.\n");
   }
 #endif
   if (!mFrameSelection)
@@ -5638,7 +5633,7 @@ nsDOMSelection::ContainsNode(nsIDOMNode* aNode, PRBool aRecursive, PRBool* aYes)
           nsAutoString name, value;
           aNode->GetNodeName(name);
           aNode->GetNodeValue(value);
-          PRINTF("%s [%s]: %d, %d\n", name.ToNewCString(), value.ToNewCString(),
+          printf("%s [%s]: %d, %d\n", name.ToNewCString(), value.ToNewCString(),
                  nodeStartsBeforeRange, nodeEndsAfterRange);
 #endif
           PRUint16 nodeType;

@@ -23,11 +23,6 @@
 #include "nsWrapUtils.h"
 
 #include "nsCOMPtr.h"
-#include "nslog.h"
-
-NS_IMPL_LOG(nsWrapUtilsLog)
-#define PRINTF NS_LOG_PRINTF(nsWrapUtilsLog)
-#define FLUSH  NS_LOG_FLUSH(nsWrapUtilsLog)
 
 // Line breaker stuff
 #include "nsIServiceManager.h"
@@ -106,7 +101,7 @@ nsWrapUtils::Rewrap(const nsString& aInString,
     if (NS_FAILED(rv))
     {
 #ifdef DEBUG_akkana
-      PRINTF("nsILineBreaker not working -- breaking hard\n");
+      printf("nsILineBreaker not working -- breaking hard\n");
 #endif
       breakPt = eol+1;
     }

@@ -84,12 +84,6 @@
 #define OLD_REGISTRY_FILE_NAME "nsreg.dat"
 #endif /* XP_UNIX */
 
-#include "nslog.h"
-
-NS_IMPL_LOG(nsProfileLog)
-#define PRINTF NS_LOG_PRINTF(nsProfileLog)
-#define FLUSH  NS_LOG_FLUSH(nsProfileLog)
-
 // hack for copying panels.rdf, localstore.rdf & mimeTypes.rdf into migrated profile dir
 #define PANELS_RDF_FILE                "panels.rdf"
 #define LOCALSTORE_RDF_FILE                "localstore.rdf"
@@ -289,7 +283,7 @@ nsProfile::nsProfile()
 nsProfile::~nsProfile() 
 {
 #if defined(DEBUG_profile_verbose)
-    PRINTF("~nsProfile \n");
+    printf("~nsProfile \n");
 #endif
 
    if (--gInstanceCount == 0) {
@@ -359,7 +353,7 @@ nsProfile::StartupWithArgs(nsICmdLineService *cmdLineArgs)
     nsCString profileURLStr("");
 
 #ifdef DEBUG_profile_verbose
-    PRINTF("Profile Manager : Profile Wizard and Manager activites : Begin\n");
+    printf("Profile Manager : Profile Wizard and Manager activites : Begin\n");
 #endif
 
     if (cmdLineArgs)
@@ -377,7 +371,7 @@ nsProfile::StartupWithArgs(nsICmdLineService *cmdLineArgs)
     }
 
 #ifdef DEBUG_profile_verbose
-    PRINTF("Profile Manager : Profile Wizard and Manager activites : End\n");
+    printf("Profile Manager : Profile Wizard and Manager activites : End\n");
 #endif
 
     return NS_OK;
@@ -545,7 +539,7 @@ nsProfile::AutoMigrate()
     if (NS_FAILED(rv) && !mOutofDiskSpace) 
     {
 #ifdef DEBUG_profile
-        PRINTF("AutoMigration failed. Let's create a default 5.0 profile.\n");
+        printf("AutoMigration failed. Let's create a default 5.0 profile.\n");
 #endif
         
         rv = CreateDefaultProfile();
@@ -575,7 +569,7 @@ nsProfile::ProcessArgs(nsICmdLineService *cmdLineArgs,
 	PRBool foundProfileCommandArg = PR_FALSE;
 
 #ifdef DEBUG_profile_verbose
-    PRINTF("Profile Manager : Command Line Options : Begin\n");
+    printf("Profile Manager : Command Line Options : Begin\n");
 #endif
  
     // check for command line arguments for profile manager
@@ -592,7 +586,7 @@ nsProfile::ProcessArgs(nsICmdLineService *cmdLineArgs,
             nsAutoString currProfileName; currProfileName.AssignWithConversion(cmdResult);
 
 #ifdef DEBUG_profile
-            PRINTF("ProfileName : %s\n", (const char*)cmdResult);
+            printf("ProfileName : %s\n", (const char*)cmdResult);
 #endif /* DEBUG_profile */
             PRBool exists;
             rv = ProfileExists(currProfileName.GetUnicode(), &exists);
@@ -665,7 +659,7 @@ nsProfile::ProcessArgs(nsICmdLineService *cmdLineArgs,
                 NS_ENSURE_SUCCESS(rv, rv);
             }
 #ifdef DEBUG_profile_verbose
-            PRINTF("profileName & profileDir are: %s\n", (const char*)cmdResult);
+            printf("profileName & profileDir are: %s\n", (const char*)cmdResult);
 #endif /* DEBUG_profile */
 
             nsXPIDLString currProfilePath;
@@ -771,7 +765,7 @@ nsProfile::ProcessArgs(nsICmdLineService *cmdLineArgs,
     }
 
 #ifdef DEBUG_profile_verbose
-    PRINTF("Profile Manager : Command Line Options : End\n");
+    printf("Profile Manager : Command Line Options : End\n");
 #endif
 
     return NS_OK;
@@ -792,7 +786,7 @@ NS_IMETHODIMP nsProfile::GetProfileDir(const PRUnichar *profileName, nsIFile **p
     nsresult rv = NS_OK;
 
 #if defined(DEBUG_profile_verbose)
-    PRINTF("ProfileManager : GetProfileDir\n");
+    printf("ProfileManager : GetProfileDir\n");
 #endif
 
     ProfileStruct    *aProfile;
@@ -1159,14 +1153,14 @@ nsProfile::CreateNewProfile(const PRUnichar* profileName,
 
 #if defined(DEBUG_profile)
     {
-        PRINTF("ProfileManager : CreateNewProfile\n");
+      printf("ProfileManager : CreateNewProfile\n");
 
       nsCAutoString temp1; temp1.AssignWithConversion(profileName);
-      PRINTF("Profile Name: %s\n", NS_STATIC_CAST(const char*, temp1));
+      printf("Profile Name: %s\n", NS_STATIC_CAST(const char*, temp1));
 
       if (nativeProfileDir) {
       nsCAutoString temp2; temp2.AssignWithConversion(nativeProfileDir);
-      PRINTF("Profile Dir: %s\n", NS_STATIC_CAST(const char*, temp2));
+      printf("Profile Dir: %s\n", NS_STATIC_CAST(const char*, temp2));
     }
     }
 #endif
@@ -1209,7 +1203,7 @@ nsProfile::CreateNewProfile(const PRUnichar* profileName,
     }
 
 #if defined(DEBUG_profile_verbose)
-    PRINTF("before SetProfileDir\n");
+    printf("before SetProfileDir\n");
 #endif
 
     rv = profileDir->Exists(&exists);
@@ -1230,7 +1224,7 @@ nsProfile::CreateNewProfile(const PRUnichar* profileName,
     rv = SetProfileDir(profileName, profileDir);
 
 #if defined(DEBUG_profile_verbose)
-    PRINTF("after SetProfileDir\n");
+    printf("after SetProfileDir\n");
 #endif
 
     // Get profile defaults folder..
@@ -1283,7 +1277,7 @@ nsresult nsProfile::CreateUserDirectories(nsILocalFile *profileDir)
     nsresult rv = NS_OK;
 
 #if defined(DEBUG_profile_verbose)
-    PRINTF("ProfileManager : CreateUserDirectories\n");
+    printf("ProfileManager : CreateUserDirectories\n");
 #endif
 
     const char* subDirNames[] = {
@@ -1320,7 +1314,7 @@ nsresult nsProfile::DeleteUserDirectories(nsILocalFile *profileDir)
     nsresult rv;
 
 #if defined(DEBUG_profile_verbose)
-    PRINTF("ProfileManager : DeleteUserDirectories\n");
+    printf("ProfileManager : DeleteUserDirectories\n");
 #endif
 
     PRBool exists;
@@ -1346,13 +1340,13 @@ nsProfile::RenameProfile(const PRUnichar* oldName, const PRUnichar* newName)
 
 #if defined(DEBUG_profile)
     {
-        PRINTF("ProfileManager : Renaming profile\n");
+      printf("ProfileManager : Renaming profile\n");
 
       nsCAutoString temp1; temp1.AssignWithConversion(oldName);
-      PRINTF("Old name:  %s\n", NS_STATIC_CAST(const char*, temp1));
+      printf("Old name:  %s\n", NS_STATIC_CAST(const char*, temp1));
 
       nsCAutoString temp2; temp2.AssignWithConversion(newName);
-      PRINTF("New name:  %s\n", NS_STATIC_CAST(const char*, temp2));
+      printf("New name:  %s\n", NS_STATIC_CAST(const char*, temp2));
     }
 #endif
 
@@ -1363,7 +1357,7 @@ nsProfile::RenameProfile(const PRUnichar* oldName, const PRUnichar* newName)
     // That profile already exists...
     if (exists) {
 #if defined(DEBUG_profile)  
-        PRINTF("ProfileManager : Rename Operation failed : Profile exists. Provide a different new name for profile.\n");
+        printf("ProfileManager : Rename Operation failed : Profile exists. Provide a different new name for profile.\n");
 #endif
         return NS_ERROR_FAILURE;
     }
@@ -1503,10 +1497,10 @@ NS_IMETHODIMP nsProfile::StartApprunner(const PRUnichar* profileName)
 
 #if defined(DEBUG_profile)
     {
-        PRINTF("ProfileManager : StartApprunner\n");
+      printf("ProfileManager : StartApprunner\n");
 
       nsCAutoString temp; temp.AssignWithConversion(profileName);
-      PRINTF("profileName passed in: %s", NS_STATIC_CAST(const char*, temp));
+      printf("profileName passed in: %s", NS_STATIC_CAST(const char*, temp));
     }
 #endif
 
@@ -1555,7 +1549,7 @@ NS_IMETHODIMP nsProfile::MigrateProfileInfo()
 #if defined(XP_PC) || defined(XP_MAC)
 
 #if defined(DEBUG_profile_verbose)
-    PRINTF("Entered MigrateProfileInfo.\n");
+    printf("Entered MigrateProfileInfo.\n");
 #endif
 
     char oldRegFile[_MAX_LENGTH] = {'\0'};
@@ -1657,7 +1651,7 @@ nsProfile::MigrateProfile(const PRUnichar* profileName, PRBool showProgressAsMod
     nsresult rv = NS_OK;
 
 #if defined(DEBUG_profile)
-    PRINTF("Inside Migrate Profile routine.\n" );
+    printf("Inside Migrate Profile routine.\n" );
 #endif
 
     nsCOMPtr<nsIFile> oldProfDir;    
@@ -1677,7 +1671,6 @@ nsProfile::MigrateProfile(const PRUnichar* profileName, PRBool showProgressAsMod
     if (NS_FAILED(rv)) return rv;
     rv = newProfDir->CreateUnique(suggestedName, nsIFile::DIRECTORY_TYPE, 0775);
     if (NS_FAILED(rv)) return rv;
-    
     
     // always create level indirection when migrating
     rv = AddLevelOfIndirection(newProfDir);
@@ -2001,7 +1994,7 @@ NS_IMETHODIMP nsProfile::CloneProfile(const PRUnichar* newProfile)
     nsresult rv = NS_OK;
 
 #if defined(DEBUG_profile)
-    PRINTF("ProfileManager : CloneProfile\n");
+    printf("ProfileManager : CloneProfile\n");
 #endif
     
     nsCOMPtr<nsIFile> currProfileDir;
@@ -2032,10 +2025,10 @@ NS_IMETHODIMP nsProfile::CloneProfile(const PRUnichar* newProfile)
 #if defined(DEBUG_profile_verbose)
     {
       if (NS_SUCCEEDED(rv))
-          PRINTF("ProfileManager : Cloned CurrentProfile\n");
+      printf("ProfileManager : Cloned CurrentProfile\n");
 
       nsCAutoString temp; temp.AssignWithConversion(newProfile);
-      PRINTF("The new profile is ->%s<-\n", NS_STATIC_CAST(const char*, temp));
+      printf("The new profile is ->%s<-\n", NS_STATIC_CAST(const char*, temp));
     }
 #endif
 

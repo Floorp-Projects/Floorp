@@ -32,11 +32,6 @@
 
 #include "nsIComponentManager.h"
 #include "nsIMotifAppContextService.h"
-#include "nslog.h"
-
-NS_IMPL_LOG(nsTimerMotifLog)
-#define PRINTF NS_LOG_PRINTF(nsTimerMotifLog)
-#define FLUSH  NS_LOG_FLUSH(nsTimerMotifLog)
 
 static NS_DEFINE_IID(kITimerIID, NS_ITIMER_IID);
 
@@ -163,7 +158,7 @@ nsTimerMotif::EnsureAppContext()
 
     if (ac_service)
     {
-      PRINTF("nsTimerMotif::EnsureAppContext() ac_service = %p\n",ac_service);
+      printf("nsTimerMotif::EnsureAppContext() ac_service = %p\n",ac_service);
 
       nsresult rv2 = ac_service->GetAppContext(&gsAppContext);
 
@@ -173,7 +168,7 @@ nsTimerMotif::EnsureAppContext()
 
       NS_RELEASE(ac_service);
 
-      PRINTF("nsTimerMotif::EnsureAppContext() gsAppContext = %p\n",gsAppContext);
+      printf("nsTimerMotif::EnsureAppContext() gsAppContext = %p\n",gsAppContext);
     }
   }
 

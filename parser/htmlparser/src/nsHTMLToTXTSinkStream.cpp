@@ -52,13 +52,6 @@
 #include "nsIOutputStream.h"
 #include "nsFileStream.h"
 #include "nsIPref.h"
-#include "nslog.h"
-#undef PRINTF
-#undef FLUSH
-
-NS_IMPL_LOG(nsHTMLToTXTSinkStreamLog)
-#define PRINTF NS_LOG_PRINTF(nsHTMLToTXTSinkStreamLog)
-#define FLUSH  NS_LOG_FLUSH(nsHTMLToTXTSinkStreamLog)
 
 static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CID);
 static NS_DEFINE_CID(kLWBrkCID,                   NS_LWBRK_CID);
@@ -558,7 +551,7 @@ nsHTMLToTXTSinkStream::OpenContainer(const nsIParserNode& aNode)
       if (-1 != style.Find("-moz-pre-wrap", PR_TRUE, whitespace))
       {
 #ifdef DEBUG_preformatted
-        PRINTF("Set mPreFormatted based on style moz-pre-wrap\n");
+        printf("Set mPreFormatted based on style moz-pre-wrap\n");
 #endif
         mPreFormatted = PR_TRUE;
         mCacheLine = PR_TRUE;
@@ -581,7 +574,7 @@ nsHTMLToTXTSinkStream::OpenContainer(const nsIParserNode& aNode)
           {
             SetWrapColumn((PRUint32)col);
 #ifdef DEBUG_preformatted
-            PRINTF("Set wrap column to %d based on style\n", mWrapColumn);
+            printf("Set wrap column to %d based on style\n", mWrapColumn);
 #endif
           }
         }
@@ -589,7 +582,7 @@ nsHTMLToTXTSinkStream::OpenContainer(const nsIParserNode& aNode)
       else if (-1 != style.Find("pre", PR_TRUE, whitespace))
       {
 #ifdef DEBUG_preformatted
-        PRINTF("Set mPreFormatted based on style pre\n");
+        printf("Set mPreFormatted based on style pre\n");
 #endif
         mPreFormatted = PR_TRUE;
         mCacheLine = PR_TRUE;
@@ -1403,7 +1396,7 @@ nsHTMLToTXTSinkStream::Write(const nsString& aString)
 {
 #ifdef DEBUG_wrapping
   char* foo = aString.ToNewCString();
-  PRINTF("Write(%s): wrap col = %d, mColPos = %d\n", foo, mWrapColumn, mColPos);
+  printf("Write(%s): wrap col = %d, mColPos = %d\n", foo, mWrapColumn, mColPos);
   nsMemory::Free(foo);
 #endif
 
@@ -1462,7 +1455,7 @@ nsHTMLToTXTSinkStream::Write(const nsString& aString)
     }
 
 #ifdef DEBUG_wrapping
-    PRINTF("No wrapping: newline is %d, totLen is %d; leaving mColPos = %d\n",
+    printf("No wrapping: newline is %d, totLen is %d; leaving mColPos = %d\n",
            newline, totLen, mColPos);
 #endif
     return;
@@ -1482,8 +1475,8 @@ nsHTMLToTXTSinkStream::Write(const nsString& aString)
     nsString remaining;
     aString.Right(remaining, totLen - bol);
     foo = remaining.ToNewCString();
-    //    PRINTF("Next line: bol = %d, newlinepos = %d, totLen = %d, string = '%s'\n",
-    //           bol, nextpos, totLen, foo));
+    //    printf("Next line: bol = %d, newlinepos = %d, totLen = %d, string = '%s'\n",
+    //           bol, nextpos, totLen, foo);
     nsMemory::Free(foo);
 #endif
 
@@ -1553,7 +1546,7 @@ nsHTMLToTXTSinkStream::Write(const nsString& aString)
          }
       }
     }
-  }// Continue looping over the string
+  } // Continue looping over the string
 }
 
 /**

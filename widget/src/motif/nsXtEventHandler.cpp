@@ -34,11 +34,8 @@
 #include "nsIMenuItem.h"
 
 #include "stdio.h"
-#include "nslog.h"
 
-NS_IMPL_LOG(nsXtEventHandlerLog)
-#define PRINTF NS_LOG_PRINTF(nsXtEventHandlerLog)
-#define FLUSH  NS_LOG_FLUSH(nsXtEventHandlerLog)
+#define DBG 0
 
 struct nsKeyConverter {
   int vkCode; // Platform independent key code
@@ -286,7 +283,7 @@ void nsXtWidget_EnterMask_EventHandler(Widget w, XtPointer p, XEvent * event, Bo
 //==============================================================
 void nsXtWidget_LeaveMask_EventHandler(Widget w, XtPointer p, XEvent * event, Boolean * b)
 {
-  PRINTF("***************** nsXtWidget_LeaveMask_EventHandler\n");
+  if (DBG) fprintf(stderr, "***************** nsXtWidget_LeaveMask_EventHandler\n");
   nsWindow * widgetWindow = (nsWindow *) p ;
   nsMouseEvent mevent;
   nsXtWidget_InitNSMouseEvent(event, p, mevent, NS_MOUSE_EXIT);
@@ -312,7 +309,7 @@ void nsXtWidget_Toggle_ArmCallback(Widget w, XtPointer p, XtPointer call_data)
 
   XmToggleButtonCallbackStruct * cbs = (XmToggleButtonCallbackStruct*)call_data;
   
-  PRINTF("Callback struct 0x%x\n", cbs);fflush(stderr);
+  if (DBG) fprintf(stderr, "Callback struct 0x%x\n", cbs);fflush(stderr);
   checkBtn->Armed();
 
 }
@@ -433,7 +430,7 @@ void nsXtWidget_Text_Callback(Widget w, XtPointer p, XtPointer call_data)
 
   if (cbs->reason == XmCR_ACTIVATE) {
     char* password = data->mPassword.ToNewCString();
-    PRINTF ("Password: %s\n", password);
+    printf ("Password: %s\n", password);
     delete[] password;
     return;
   }
@@ -449,7 +446,7 @@ void nsXtWidget_Text_Callback(Widget w, XtPointer p, XtPointer call_data)
     data->mPassword.Insert(insStr, cbs->currInsert, strlen(cbs->text->ptr));
   } else if (cbs->startPos == cbs->currInsert && cbs->endPos != cbs->startPos) {
     data->mPassword.SetLength(cbs->startPos);
-    PRINTF("Setting Length [%s] at %d\n", cbs->text->ptr, cbs->currInsert);
+    printf("Setting Length [%s] at %d\n", cbs->text->ptr, cbs->currInsert);
   } else if (cbs->startPos == cbs->currInsert) {   /* backspace */
     data->mPassword.Append(cbs->text->ptr);
   } 

@@ -31,12 +31,6 @@
 #include "nsWidget.h"
 #include <qwindowdefs.h>
 #include "X11/Xlib.h"
-#include "xlibrgb.h"
-#include "nslog.h"
-
-NS_IMPL_LOG(nsAppShellLog)
-#define PRINTF NS_LOG_PRINTF(nsAppShellLog)
-#define FLUSH  NS_LOG_FLUSH(nsAppShellLog)
 
 //-------------------------------------------------------------------------
 //
@@ -118,7 +112,7 @@ NS_METHOD nsAppShell::Create(int *bac, char **bav)
     aDisplay = XOpenDisplay(NULL);
     
     if (aDisplay == NULL) {
-      PRINTF("%s: Cannot connect to X server\n",argv[0]);
+      fprintf(stderr, "%s: Cannot connect to X server\n",argv[0]);
       exit(1);
     }
 

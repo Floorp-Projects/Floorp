@@ -41,11 +41,6 @@
 #include "nsIDOMText.h"
 
 #include "nsMathMLmoFrame.h"
-#include "nslog.h"
-
-NS_IMPL_LOG(nsMathMLmoFrameLog)
-#define PRINTF NS_LOG_PRINTF(nsMathMLmoFrameLog)
-#define FLUSH  NS_LOG_FLUSH(nsMathMLmoFrameLog)
 
 //
 // <mo> -- operator, fence, or separator - implementation
@@ -599,7 +594,7 @@ nsMathMLmoFrame::Stretch(nsIPresContext*      aPresContext,
                          nsHTMLReflowMetrics& aDesiredStretchSize)
 {
   if (NS_MATHML_STRETCH_WAS_DONE(mEmbellishData.flags)) {
-      PRINTF("WARNING *** it is wrong to fire stretch more than once on a frame...\n");
+    printf("WARNING *** it is wrong to fire stretch more than once on a frame...\n");
     return NS_OK;
   }
   mEmbellishData.flags |= NS_MATHML_STRETCH_DONE;

@@ -34,11 +34,6 @@
 #include "nsLocalUtils.h"
 #include "nsMsgLocalFolderHdrs.h"
 #include "nsIMsgFolder.h" // TO include biffState enum. Change to bool later...
-#include "nslog.h"
-
-NS_IMPL_LOG(nsPop3SinkLog)
-#define PRINTF NS_LOG_PRINTF(nsPop3SinkLog)
-#define FLUSH  NS_LOG_FLUSH(nsPop3SinkLog)
 
 NS_IMPL_ISUPPORTS(nsPop3Sink, NS_GET_IID(nsIPop3Sink));
 
@@ -77,9 +72,9 @@ nsPop3Sink::SetUserAuthenticated(PRBool authed)
 {
 #ifdef DEBUG
     if (authed)
-        PRINTF("User is authenticated. \n");
+        printf("User is authenticated. \n");
     else
-        PRINTF("User is NOT authenticated. \n");
+        printf("User is NOT authenticated. \n");
 #endif 
     m_authed = authed;
     return NS_OK;
@@ -100,9 +95,9 @@ nsPop3Sink::SetSenderAuthedFlag(void* closure, PRBool authed)
 {
 #ifdef DEBUG
     if (authed)
-        PRINTF("Sender is authenticated. \n");
+        printf("Sender is authenticated. \n");
     else
-        PRINTF("Sender is NOT authenticated. \n");
+        printf("Sender is NOT authenticated. \n");
 #endif 
     m_authed = authed;
     return NS_OK;
@@ -188,7 +183,7 @@ nsPop3Sink::BeginMailDelivery(PRBool uidlDownload, PRBool* aBool)
         m_newMailParser->DisableFilters();
 
 #ifdef DEBUG
-    PRINTF("Begin mail message delivery.\n");
+    printf("Begin mail message delivery.\n");
 #endif 
     if (aBool)
         *aBool = PR_TRUE;
@@ -213,7 +208,7 @@ nsPop3Sink::EndMailDelivery()
     }
 
 #ifdef DEBUG
-    PRINTF("End mail message delivery.\n");
+    printf("End mail message delivery.\n");
 #endif 
     return NS_OK;
 }
@@ -227,7 +222,7 @@ nsPop3Sink::AbortMailDelivery()
         m_outFileStream = 0;
     }
 #ifdef DEBUG
-    PRINTF("Abort mail message delivery.\n");
+    printf("Abort mail message delivery.\n");
 #endif 
     return NS_OK;
 }
@@ -239,9 +234,9 @@ nsPop3Sink::IncorporateBegin(const char* uidlString,
                              void** closure)
 {
 #ifdef DEBUG
-    PRINTF("Incorporate message begin:\n");
+    printf("Incorporate message begin:\n");
     if (uidlString)
-        PRINTF("uidl string: %s\n", uidlString);
+        printf("uidl string: %s\n", uidlString);
 #endif 
     if (closure)
         *closure = (void*) this;
@@ -404,7 +399,7 @@ nsPop3Sink::IncorporateComplete(void* closure)
 	// do not take out this printf as it is used by QA 
     // as part of the smoketest process!. They depend on seeing
 	// this string printed out to the screen.
-	PRINTF("Incorporate message complete.\n");
+	printf("Incorporate message complete.\n");
     return NS_OK;
 }
 
@@ -414,7 +409,7 @@ nsPop3Sink::IncorporateAbort(void* closure, PRInt32 status)
 	WriteLineToMailbox(MSG_LINEBREAK);
 
 #ifdef DEBUG
-  PRINTF("Incorporate message abort.\n");
+    printf("Incorporate message abort.\n");
 #endif 
     return NS_OK;
 }
@@ -423,7 +418,7 @@ nsresult
 nsPop3Sink::BiffGetNewMail()
 {
 #ifdef DEBUG
-    PRINTF("Biff get new mail.\n");
+    printf("Biff get new mail.\n");
 #endif 
     return NS_OK;
 }
@@ -432,7 +427,7 @@ nsresult
 nsPop3Sink::SetBiffStateAndUpdateFE(PRUint32 aBiffState, PRInt32 numNewMessages)
 {
 #ifdef DEBUG
-    PRINTF("Set biff state: %d\n", aBiffState);
+    printf("Set biff state: %d\n", aBiffState);
 #endif 
 
     m_biffState = aBiffState;
@@ -448,13 +443,13 @@ nsPop3Sink::SetBiffStateAndUpdateFE(PRUint32 aBiffState, PRInt32 numNewMessages)
     {
     case nsIMsgFolder::nsMsgBiffState_Unknown:
     default:
-      PRINTF("Excuse me, Sir. I have no idea.\n");
+        printf("Excuse me, Sir. I have no idea.\n");
         break;
     case nsIMsgFolder::nsMsgBiffState_NewMail:
-      PRINTF("Y'all got mail!\n");
+        printf("Y'all got mail!\n");
         break;
     case nsIMsgFolder::nsMsgBiffState_NoMail:
-      PRINTF("You have no mail.\n");
+        printf("You have no mail.\n");
         break;
     }
     return NS_OK;

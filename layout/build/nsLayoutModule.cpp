@@ -73,12 +73,6 @@
 #include "nsContentPolicyUtils.h"
 #define PRODUCT_NAME "Gecko"
 
-#include "nslog.h"
-
-NS_IMPL_LOG(nsLayoutModuleLog)
-#define PRINTF NS_LOG_PRINTF(nsLayoutModuleLog)
-#define FLUSH  NS_LOG_FLUSH(nsLayoutModuleLog)
-
 static NS_DEFINE_CID(kHTTPHandlerCID, NS_IHTTPHANDLER_CID);
 static nsLayoutModule *gModule = NULL;
 
@@ -404,7 +398,9 @@ nsLayoutModule::RegisterSelf(nsIComponentManager *aCompMgr,
 {
   nsresult rv = NS_OK;
 
-  PRINTF("*** Registering layout components\n");
+#ifdef DEBUG
+  printf("*** Registering layout components\n");
+#endif
 
   Components* cp = gComponents;
   Components* end = cp + NUM_COMPONENTS;
@@ -412,8 +408,10 @@ nsLayoutModule::RegisterSelf(nsIComponentManager *aCompMgr,
     rv = aCompMgr->RegisterComponentSpec(cp->mCID, cp->mDescription,
                                          cp->mContractID, aPath, PR_TRUE, PR_TRUE);
     if (NS_FAILED(rv)) {
-      PRINTF("nsLayoutModule: unable to register %s component => %x\n",
+#ifdef DEBUG
+      printf("nsLayoutModule: unable to register %s component => %x\n",
              cp->mDescription, rv);
+#endif
       break;
     }
     cp++;
@@ -429,14 +427,18 @@ nsLayoutModule::UnregisterSelf(nsIComponentManager* aCompMgr,
                                nsIFile* aPath,
                                const char* registryLocation)
 {
-  PRINTF("*** Unregistering layout components\n");
+#ifdef DEBUG
+  printf("*** Unregistering layout components\n");
+#endif
   Components* cp = gComponents;
   Components* end = cp + NUM_COMPONENTS;
   while (cp < end) {
     nsresult rv = aCompMgr->UnregisterComponentSpec(cp->mCID, aPath);
     if (NS_FAILED(rv)) {
-      PRINTF("nsLayoutModule: unable to unregister %s component => %x\n",
+#ifdef DEBUG
+      printf("nsLayoutModule: unable to unregister %s component => %x\n",
              cp->mDescription, rv);
+#endif
     }
     cp++;
   }

@@ -25,11 +25,6 @@
 #include "nsTextHelper.h"
 #include "nsTextWidget.h"
 #include "nsString.h"
-#include "nslog.h"
-
-NS_IMPL_LOG(nsTextHelperLog)
-#define PRINTF NS_LOG_PRINTF(nsTextHelperLog)
-#define FLUSH  NS_LOG_FLUSH(nsTextHelperLog)
 
 NS_IMPL_ADDREF_INHERITED(nsTextHelper, nsWidget)
 NS_IMPL_RELEASE_INHERITED(nsTextHelper, nsWidget)
@@ -199,7 +194,7 @@ NS_IMETHODIMP nsTextHelper::GetSelection(PRUint32 *aStartSel, PRUint32 *aEndSel)
     *aStartSel = (PRUint32)left;
     *aEndSel   = (PRUint32)right;
   } else {
-    PRINTF("nsTextHelper::GetSelection Error getting positions\n");
+    printf("nsTextHelper::GetSelection Error getting positions\n");
     return NS_ERROR_FAILURE;
   }
 #endif

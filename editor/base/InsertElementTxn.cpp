@@ -24,11 +24,13 @@
 #include "nsISelection.h"
 #include "nsIContent.h"
 #include "nsIDOMNodeList.h"
-#include "nslog.h"
 
-NS_IMPL_LOG(InsertElementTxnLog)
-#define PRINTF NS_LOG_PRINTF(InsertElementTxnLog)
-#define FLUSH  NS_LOG_FLUSH(InsertElementTxnLog)
+#ifdef NS_DEBUG
+static PRBool gNoisy = PR_FALSE;
+#else
+static const PRBool gNoisy = PR_FALSE;
+#endif
+
 
 InsertElementTxn::InsertElementTxn()
   : EditTxn()
@@ -62,14 +64,14 @@ InsertElementTxn::~InsertElementTxn()
 
 NS_IMETHODIMP InsertElementTxn::Do(void)
 {
-  if (NS_LOG_ENABLED(InsertElementTxnLog)) 
+  if (gNoisy) 
   { 
     nsCOMPtr<nsIContent>nodeAsContent = do_QueryInterface(mNode);
     nsCOMPtr<nsIContent>parentAsContent = do_QueryInterface(mParent);
     nsString namestr;
     mNode->GetNodeName(namestr);
     char* nodename = namestr.ToNewCString();
-    PRINTF("%p Do Insert Element of %p <%s> into parent %p at offset %d\n", 
+    printf("%p Do Insert Element of %p <%s> into parent %p at offset %d\n", 
            this, nodeAsContent.get(), nodename,
            parentAsContent.get(), mOffset); 
     nsMemory::Free(nodename);
@@ -119,8 +121,8 @@ NS_IMETHODIMP InsertElementTxn::Do(void)
 
 NS_IMETHODIMP InsertElementTxn::Undo(void)
 {
-  PRINTF("%p Undo Insert Element of %p into parent %p at offset %d\n", 
-         this, mNode.get(), mParent.get(), mOffset);
+  if (gNoisy) { printf("%p Undo Insert Element of %p into parent %p at offset %d\n", 
+                       this, mNode.get(), mParent.get(), mOffset); }
   if (!mNode || !mParent) return NS_ERROR_NOT_INITIALIZED;
 
   nsCOMPtr<nsIDOMNode> resultNode;

@@ -40,11 +40,6 @@
 #include "nsStyleUtil.h"
 
 #include "nsMathMLmrootFrame.h"
-#include "nslog.h"
-
-NS_IMPL_LOG(nsMathMLmrootFrameLog)
-#define PRINTF NS_LOG_PRINTF(nsMathMLmrootFrameLog)
-#define FLUSH  NS_LOG_FLUSH(nsMathMLmrootFrameLog)
 
 //
 // <msqrt> and <mroot> -- form a radical - implementation
@@ -219,7 +214,7 @@ nsMathMLmrootFrame::Reflow(nsIPresContext*          aPresContext,
   }
   if ((2 != count) || !baseFrame || !indexFrame) {
 #ifdef NS_DEBUG
-      PRINTF("mroot: invalid markup");
+    printf("mroot: invalid markup");
 #endif
     // report an error, encourage people to get their markups in order
     return ReflowError(aPresContext, renderingContext, aDesiredSize);

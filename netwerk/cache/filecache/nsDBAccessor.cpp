@@ -42,12 +42,6 @@
 #include "plhash.h"
 #include "nsCRT.h"
 #include "nsIFile.h"
-#include "nslog.h"
-
-NS_IMPL_LOG(nsDBAccessorLog)
-#define PRINTF NS_LOG_PRINTF(nsDBAccessorLog)
-#define FLUSH  NS_LOG_FLUSH(nsDBAccessorLog)
-
 nsDBAccessor::nsDBAccessor() :
   mDB(0) ,
   mDBFile(0) ,
@@ -428,7 +422,7 @@ nsDBAccessor::Sync(void)
   if (PR_IntervalToMilliseconds(duration) > SyncInterval) {
     int status = (*mDB->sync)(mDB, 0) ;
     if(status == 0) {
-      PRINTF("\tsynced\n") ;
+//      printf("\tsynced\n") ;
       mLastSyncTime = time ;
       
       // update db filesize here
@@ -437,7 +431,7 @@ nsDBAccessor::Sync(void)
     } else
       return NS_ERROR_FAILURE ;
   } else {
-    PRINTF("\tnot synced\n") ;
+//    printf("\tnot synced\n") ;
     return NS_OK ;
   }
 }

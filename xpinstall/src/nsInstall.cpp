@@ -80,11 +80,6 @@
 
 #include "nsILocalFile.h"
 #include "nsIURL.h"
-#include "nslog.h"
-
-NS_IMPL_LOG(nsInstallLog)
-#define PRINTF NS_LOG_PRINTF(nsInstallLog)
-#define FLUSH  NS_LOG_FLUSH(nsInstallLog)
 
 static NS_DEFINE_IID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 static NS_DEFINE_IID(kIEventQueueServiceIID, NS_IEVENTQUEUESERVICE_IID);
@@ -1224,7 +1219,7 @@ nsInstall::LoadResources(JSContext* cx, const nsString& aBaseName, jsval* aRetur
       char* spec = nsnull;
       ret = resFileURL->GetSpec(&spec);
       if (NS_FAILED(ret)) {
-          PRINTF("cannot get url spec\n");
+        printf("cannot get url spec\n");
         nsServiceManager::ReleaseService(kStringBundleServiceCID, service);
         nsCRT::free(spec);
         return ret;

@@ -75,13 +75,9 @@
 #include "nsTraceMalloc.h"
 #endif
 
-#include "nslog.h"
-#undef printf
-#undef fprintf
-
-NS_IMPL_LOG(nsAppRunnerLog)
-#define PRINTF NS_LOG_PRINTF(nsAppRunnerLog)
-#define FLUSH  NS_LOG_FLUSH(nsAppRunnerLog)
+#if defined(DEBUG_sspitzer) || defined(DEBUG_seth)
+#define DEBUG_CMD_LINE
+#endif
 
 // Standalone App defines
 #define STANDALONE_APP_PREF        "profile.standalone_app.enable"
@@ -228,7 +224,9 @@ PrintUsage(void)
 
 static nsresult OpenWindow( const char*urlstr, const PRUnichar *args )
 {
-  PRINTF("OpenWindow(%s,?)\n",urlstr);
+#ifdef DEBUG_CMD_LINE
+  printf("OpenWindow(%s,?)\n",urlstr);
+#endif /* DEBUG_CMD_LINE */
   nsresult rv;
   nsCOMPtr<nsIAppShellService> appShellService = do_GetService(kAppShellServiceCID, &rv);
     if (NS_SUCCEEDED(rv)) {
@@ -264,7 +262,9 @@ static nsresult OpenWindow( const char*urlstr, const PRUnichar *args )
 
 static nsresult OpenChromeURL( const char * urlstr, PRInt32 height = NS_SIZETOCONTENT, PRInt32 width = NS_SIZETOCONTENT )
 {
-  PRINTF("OpenChromeURL(%s,%d,%d)\n",urlstr,height,width);
+#ifdef DEBUG_CMD_LINE
+    printf("OpenChromeURL(%s,%d,%d)\n",urlstr,height,width);
+#endif /* DEBUG_CMD_LINE */
 
 	nsCOMPtr<nsIURI> url;
 	nsresult  rv;
@@ -305,7 +305,9 @@ static void DumpArbitraryHelp()
         rv = catman->GetCategoryEntry(COMMAND_LINE_ARGUMENT_HANDLERS,(const char *)entryString, getter_Copies(contractidString));
         if (NS_FAILED(rv) || !((const char *)contractidString)) break;
 
-        PRINTF("cmd line handler contractid = %s\n", (const char *)contractidString);
+#ifdef DEBUG_CMD_LINE
+        printf("cmd line handler contractid = %s\n", (const char *)contractidString);
+#endif /* DEBUG_CMD_LINE */
 
         nsCOMPtr <nsICmdLineHandler> handler = do_GetService((const char *)contractidString, &rv);
 
@@ -383,11 +385,15 @@ static nsresult LaunchApplicationWithArgs(const char *commandLineArg, nsICmdLine
   rv = handler->GetChromeUrlForTask(getter_Copies(chromeUrlForTask));
   if (NS_FAILED(rv)) return rv;
 
-  PRINTF("XXX got this one:\t%s\n\t%s\n\n",commandLineArg,(const char *)chromeUrlForTask);
+#ifdef DEBUG_CMD_LINE
+  printf("XXX got this one:\t%s\n\t%s\n\n",commandLineArg,(const char *)chromeUrlForTask);
+#endif /* DEBUG_CMD_LINE */
 
   rv = cmdLineArgs->GetCmdLineValue(commandLineArg, getter_Copies(cmdResult));
   if (NS_FAILED(rv)) return rv;
-  PRINTF("%s, cmdResult = %s\n",commandLineArg,(const char *)cmdResult);
+#ifdef DEBUG_CMD_LINE
+  printf("%s, cmdResult = %s\n",commandLineArg,(const char *)cmdResult);
+#endif /* DEBUG_CMD_LINE */
 
   PRBool handlesArgs = PR_FALSE;
   rv = handler->GetHandlesArgs(&handlesArgs);
@@ -400,11 +406,15 @@ static nsresult LaunchApplicationWithArgs(const char *commandLineArg, nsICmdLine
 
         if (openWindowWithArgs) {
           nsString cmdArgs; cmdArgs.AssignWithConversion(NS_STATIC_CAST(const char *, cmdResult));
-          PRINTF("opening %s with %s\n",(const char *)chromeUrlForTask,"OpenWindow");
+#ifdef DEBUG_CMD_LINE
+          printf("opening %s with %s\n",(const char *)chromeUrlForTask,"OpenWindow");
+#endif /* DEBUG_CMD_LINE */
           rv = OpenWindow((const char *)chromeUrlForTask, cmdArgs.GetUnicode());
         }
         else {
-          PRINTF("opening %s with %s\n",(const char *)cmdResult,"OpenChromeURL");
+#ifdef DEBUG_CMD_LINE
+          printf("opening %s with %s\n",(const char *)cmdResult,"OpenChromeURL");
+#endif /* DEBUG_CMD_LINE */
           rv = OpenChromeURL((const char *)cmdResult,height, width);
           if (NS_FAILED(rv)) return rv;
         }
@@ -453,12 +463,16 @@ void startupPrefEnumerationFunction(const char *prefName, void *data)
 
   StartupClosure *closure = (StartupClosure *)data;
 
-  PRINTF("getting %s\n", prefName);
+#ifdef DEBUG_CMD_LINE
+  printf("getting %s\n", prefName);
+#endif /* DEBUG_CMD_LINE */
 
   rv = closure->prefs->GetBoolPref(prefName, &prefValue);
   if (NS_FAILED(rv)) return;
 
-  PRINTF("%s = %d\n", prefName, prefValue);
+#ifdef DEBUG_CMD_LINE
+  printf("%s = %d\n", prefName, prefValue);
+#endif /* DEBUG_CMD_LINE */
 
   PRUint32 prefixLen = PL_strlen(PREF_STARTUP_PREFIX);
 
@@ -470,7 +484,9 @@ void startupPrefEnumerationFunction(const char *prefName, void *data)
     nsCAutoString contractID("@mozilla.org/commandlinehandler/general-startup;1?type=");
     contractID += (prefName + prefixLen);
 
-    PRINTF("contractid = %s\n", (const char *)contractID);
+#ifdef DEBUG_CMD_LINE
+    printf("contractid = %s\n", (const char *)contractID);
+#endif /* DEBUG_CMD_LINE */
     rv = LaunchApplication((const char *)contractID, closure->height, closure->width);
   }
   return;
@@ -514,7 +530,9 @@ static nsresult HandleArbitraryStartup( nsICmdLineService* cmdLineArgs, nsIPref 
 	if ((const char*)tempString) PR_sscanf(tempString, "%d", &height);
 
   if (heedGeneralStartupPrefs) {
-    PRINTF("XXX iterate over all the general.startup.* prefs\n");
+#ifdef DEBUG_CMD_LINE
+    printf("XXX iterate over all the general.startup.* prefs\n");
+#endif /* DEBUG_CMD_LINE */
     StartupClosure closure;
 
     closure.prefs = prefs;
@@ -537,7 +555,9 @@ static nsresult HandleArbitraryStartup( nsICmdLineService* cmdLineArgs, nsIPref 
 
     PRInt32 i = 0;
     for (i=1;i<argc;i++) {
-      PRINTF("XXX argv[%d] = %s\n",i,argv[i]);
+#ifdef DEBUG_CMD_LINE
+      printf("XXX argv[%d] = %s\n",i,argv[i]);
+#endif /* DEBUG_CMD_LINE */
       if (IsStartupCommand(argv[i])) {
         nsCAutoString contractID("@mozilla.org/commandlinehandler/general-startup;1?type=");
 

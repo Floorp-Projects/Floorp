@@ -40,12 +40,6 @@
 #include <iostream>
 #endif
 
-#include "nslog.h"
-
-NS_IMPL_LOG(nsIFileStreamLog)
-#define PRINTF NS_LOG_PRINTF(nsIFileStreamLog)
-#define FLUSH  NS_LOG_FLUSH(nsIFileStreamLog)
-
 //========================================================================================
 class FileImpl
     : public nsIRandomAccessStore
@@ -161,7 +155,7 @@ FileImpl::FileImpl(const nsFileSpec& inFile, int nsprMode, PRIntn accessMode)
         mFailed = PR_TRUE;
 #if DEBUG
         char *fileName = inFile.GetLeafName();
-        PRINTF("Opening file %s failed\n", fileName);
+        printf("Opening file %s failed\n", fileName);
         nsCRT::free(fileName);
 #endif
     }

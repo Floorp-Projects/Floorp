@@ -24,11 +24,6 @@
 #include "nsRenderingContextBeOS.h"
 #include "nspr.h"
 #include <string.h>
-#include "nslog.h"
-
-NS_IMPL_LOG(nsImageBeOSLog)
-#define PRINTF NS_LOG_PRINTF(nsImageBeOSLog)
-#define FLUSH  NS_LOG_FLUSH(nsImageBeOSLog)
 
 #define IsFlagSet(a,b) (a & b)
 
@@ -138,7 +133,7 @@ nsresult
       mAlphaBits = nsnull;
       mAlphaWidth = 0;
       mAlphaHeight = 0;
-      PRINTF("nsImageBeOS::Init: 8 bit image mask unimplemented\n");
+printf("nsImageBeOS::Init: 8 bit image mask unimplemented\n");
       break;
   }
 
@@ -229,27 +224,27 @@ nsImageBeOS::GetAlphaLineStride()
 nsIImage*
 nsImageBeOS::DuplicateImage()
 {
-	PRINTF("nsImageBeOS::DuplicateImage - FIXME: not implamented\n");
+	printf("nsImageBeOS::DuplicateImage - FIXME: not implamented\n");
 	return nsnull;
 }
 
 void
 nsImageBeOS::SetAlphaLevel(PRInt32 aAlphaLevel)
 {
-	PRINTF("nsImageBeOS::SetAlphaLevel - FIXME: not implamented\n");
+	printf("nsImageBeOS::SetAlphaLevel - FIXME: not implamented\n");
 }
 
 PRInt32
 nsImageBeOS::GetAlphaLevel()
 {
-	PRINTF("nsImageBeOS::GetAlphaLevel - FIXME: not implamented\n");
+	printf("nsImageBeOS::GetAlphaLevel - FIXME: not implamented\n");
 	return 0;
 }
 
 void
 nsImageBeOS::MoveAlphaMask(PRInt32 aX, PRInt32 aY)
 {
-	PRINTF("nsImageBeOS::MoveAlphaMask - FIXME: not implamented\n");
+	printf("nsImageBeOS::MoveAlphaMask - FIXME: not implamented\n");
 }
 
 //------------------------------------------------------------

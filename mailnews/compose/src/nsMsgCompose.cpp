@@ -73,11 +73,6 @@
 #include "nsIMsgMailSession.h"
 #include "nsMsgBaseCID.h"
 #include "nsIPrompt.h"
-#include "nslog.h"
-
-NS_IMPL_LOG(nsMsgComposeLog)
-#define PRINTF NS_LOG_PRINTF(nsMsgComposeLog)
-#define FLUSH  NS_LOG_FLUSH(nsMsgComposeLog)
 
 // Defines....
 static NS_DEFINE_CID(kMsgQuoteCID, NS_MSGQUOTE_CID);
@@ -530,15 +525,15 @@ nsresult nsMsgCompose::_SendMsg(MSG_DeliverMode deliverMode, nsIMsgIdentity *ide
     m_compFields->SetOrganization(organization);
     
 #if defined(DEBUG_ducarroz) || defined(DEBUG_seth_)
-    PRINTF("----------------------------\n");
-    PRINTF("--  Sending Mail Message  --\n");
-    PRINTF("----------------------------\n");
-    PRINTF("from: %s\n", m_compFields->GetFrom());
-    PRINTF("To: %s  Cc: %s  Bcc: %s\n", m_compFields->GetTo(), m_compFields->GetCc(), m_compFields->GetBcc());
-    PRINTF("Newsgroups: %s\n", m_compFields->GetNewsgroups());
-    PRINTF("Subject: %s  \nMsg: %s\n", m_compFields->GetSubject(), m_compFields->GetBody());
-    PRINTF("Attachments: %s\n",m_compFields->GetAttachments());
-    PRINTF("----------------------------\n");
+    printf("----------------------------\n");
+    printf("--  Sending Mail Message  --\n");
+    printf("----------------------------\n");
+    printf("from: %s\n", m_compFields->GetFrom());
+    printf("To: %s  Cc: %s  Bcc: %s\n", m_compFields->GetTo(), m_compFields->GetCc(), m_compFields->GetBcc());
+    printf("Newsgroups: %s\n", m_compFields->GetNewsgroups());
+    printf("Subject: %s  \nMsg: %s\n", m_compFields->GetSubject(), m_compFields->GetBody());
+    printf("Attachments: %s\n",m_compFields->GetAttachments());
+    printf("----------------------------\n");
 #endif //DEBUG
 
     nsMsgComposeAndSend *tMsgComp = new nsMsgComposeAndSend();
@@ -591,7 +586,7 @@ nsresult nsMsgCompose::_SendMsg(MSG_DeliverMode deliverMode, nsIMsgIdentity *ide
       if (!tArray)
       {
 #ifdef DEBUG
-        PRINTF("Error creating listener array.\n");
+        printf("Error creating listener array.\n");
 #endif
         return NS_ERROR_FAILURE;
       }
@@ -1558,7 +1553,7 @@ nsMsgCompose::QuoteOriginalMessage(const PRUnichar *originalMsgURI, PRInt32 what
   if (!mQuoteStreamListener)
   {
 #ifdef NS_DEBUG
-    PRINTF("Failed to create mQuoteStreamListener\n");
+    printf("Failed to create mQuoteStreamListener\n");
 #endif
     return NS_ERROR_FAILURE;
   }
@@ -1673,7 +1668,7 @@ nsresult
 nsMsgComposeSendListener::OnStartSending(const char *aMsgID, PRUint32 aMsgSize)
 {
 #ifdef NS_DEBUG
-  PRINTF("nsMsgComposeSendListener::OnStartSending()\n");
+  printf("nsMsgComposeSendListener::OnStartSending()\n");
 #endif
   return NS_OK;
 }
@@ -1682,7 +1677,7 @@ nsresult
 nsMsgComposeSendListener::OnProgress(const char *aMsgID, PRUint32 aProgress, PRUint32 aProgressMax)
 {
 #ifdef NS_DEBUG
-  PRINTF("nsMsgComposeSendListener::OnProgress()\n");
+  printf("nsMsgComposeSendListener::OnProgress()\n");
 #endif
   return NS_OK;
 }
@@ -1691,7 +1686,7 @@ nsresult
 nsMsgComposeSendListener::OnStatus(const char *aMsgID, const PRUnichar *aMsg)
 {
 #ifdef NS_DEBUG
-  PRINTF("nsMsgComposeSendListener::OnStatus()\n");
+  printf("nsMsgComposeSendListener::OnStatus()\n");
 #endif
 
   return NS_OK;
@@ -1707,7 +1702,7 @@ nsresult nsMsgComposeSendListener::OnStopSending(const char *aMsgID, nsresult aS
 		if (NS_SUCCEEDED(aStatus))
 		{
 #ifdef NS_DEBUG
-			PRINTF("nsMsgComposeSendListener: Success on the message send operation!\n");
+			printf("nsMsgComposeSendListener: Success on the message send operation!\n");
 #endif
       nsIMsgCompFields *compFields = nsnull;
       mComposeObj->GetCompFields(&compFields); //GetCompFields will addref, you need to release when your are done with it
@@ -1737,7 +1732,7 @@ nsresult nsMsgComposeSendListener::OnStopSending(const char *aMsgID, nsresult aS
 		else
 		{
 #ifdef NS_DEBUG
-			PRINTF("nsMsgComposeSendListener: the message send operation failed!\n");
+			printf("nsMsgComposeSendListener: the message send operation failed!\n");
 #endif
 			mComposeObj->NotifyStateListeners(nsMsgCompose::eSaveAndSendProcessDone);
 			mComposeObj->ShowWindow(PR_TRUE);
@@ -1754,7 +1749,7 @@ nsresult
 nsMsgComposeSendListener::OnStartCopy()
 {
 #ifdef NS_DEBUG
-  PRINTF("nsMsgComposeSendListener::OnStartCopy()\n");
+  printf("nsMsgComposeSendListener::OnStartCopy()\n");
 #endif
 
   return NS_OK;
@@ -1764,7 +1759,7 @@ nsresult
 nsMsgComposeSendListener::OnProgress(PRUint32 aProgress, PRUint32 aProgressMax)
 {
 #ifdef NS_DEBUG
-  PRINTF("nsMsgComposeSendListener::OnProgress() - COPY\n");
+  printf("nsMsgComposeSendListener::OnProgress() - COPY\n");
 #endif
   return NS_OK;
 }
@@ -1782,7 +1777,7 @@ nsMsgComposeSendListener::OnStopCopy(nsresult aStatus)
 		if (NS_SUCCEEDED(aStatus))
 		{
 #ifdef NS_DEBUG
-			PRINTF("nsMsgComposeSendListener: Success on the message copy operation!\n");
+			printf("nsMsgComposeSendListener: Success on the message copy operation!\n");
 #endif
 			mComposeObj->NotifyStateListeners(nsMsgCompose::eSaveAndSendProcessDone);
       // We should only close the window if we are done. Things like templates
@@ -1794,7 +1789,7 @@ nsMsgComposeSendListener::OnStopCopy(nsresult aStatus)
 		else
 		{
 #ifdef NS_DEBUG
-			PRINTF("nsMsgComposeSendListener: the message copy operation failed!\n");
+			printf("nsMsgComposeSendListener: the message copy operation failed!\n");
 #endif
 			mComposeObj->NotifyStateListeners(nsMsgCompose::eSaveAndSendProcessDone);
 			mComposeObj->ShowWindow(PR_TRUE);

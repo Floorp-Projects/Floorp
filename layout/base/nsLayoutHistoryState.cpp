@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  *
  * The contents of this file are subject to the Netscape Public
  * License Version 1.1 (the "License"); you may not use this file
@@ -24,11 +24,6 @@
 #include "nsILayoutHistoryState.h"
 #include "nsHashtable.h"
 #include "nsIStatefulFrame.h" // Get StateType enum
-#include "nslog.h"
-
-NS_IMPL_LOG(nsLayoutHistoryStateLog)
-#define PRINTF NS_LOG_PRINTF(nsLayoutHistoryStateLog)
-#define FLUSH  NS_LOG_FLUSH(nsLayoutHistoryStateLog)
 
 MOZ_DECL_CTOR_COUNTER(HistoryKey);
 
@@ -109,8 +104,10 @@ nsLayoutHistoryState::AddState(PRUint32 aContentID,
   PRBool replaced = mStates.Put (&key, aState);
   if (replaced)
   {
-    // done this way by indication of warren@netscape.com [ipg]
-    PRINTF("nsLayoutHistoryState::AddState OOPS!. There was already a state in the hash table for the key\n");
+          // done this way by indication of warren@netscape.com [ipg]
+#if 0
+      printf("nsLayoutHistoryState::AddState OOPS!. There was already a state in the hash table for the key\n");
+#endif
   }
 
   return NS_OK;
@@ -129,7 +126,9 @@ nsLayoutHistoryState::GetState(PRUint32 aContentID,
     *aState = (nsIPresState *)state;
   }
   else {
-    PRINTF("nsLayoutHistoryState::GetState, ERROR getting History state for the key\n");
+#if 0
+      printf("nsLayoutHistoryState::GetState, ERROR getting History state for the key\n");
+#endif
     *aState = nsnull;
     rv = NS_OK;
   }

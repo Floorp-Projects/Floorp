@@ -40,11 +40,6 @@
 #include "nsMathMLmpaddedFrame.h"
 
 #include "xp_str.h"  // to get XP_IS_SPACE
-#include "nslog.h"
-
-NS_IMPL_LOG(nsMathMLmpaddedFrameLog)
-#define PRINTF NS_LOG_PRINTF(nsMathMLmpaddedFrameLog)
-#define FLUSH  NS_LOG_FLUSH(nsMathMLmpaddedFrameLog)
 
 //
 // <mpadded> -- adjust space around content - implementation
@@ -198,7 +193,7 @@ nsMathMLmpaddedFrame::ParseAttribute(nsString&   aString,
 #ifdef NS_DEBUG
     char str[50];
     aString.ToCString(str, 50);
-    PRINTF("mpadded: attribute with bad numeric value: %s\n", str);
+    printf("mpadded: attribute with bad numeric value: %s\n", str);
 #endif
     aSign = NS_MATHML_SIGN_INVALID;
     return PR_FALSE;
@@ -226,7 +221,7 @@ nsMathMLmpaddedFrame::ParseAttribute(nsString&   aString,
 #ifdef NS_DEBUG
       char str[50];
       aString.ToCString(str, 50);
-      PRINTF("mpadded: attribute with bad numeric value: %s\n", str);
+      printf("mpadded: attribute with bad numeric value: %s\n", str);
 #endif
       aCSSValue.Reset();
       aSign = NS_MATHML_SIGN_INVALID;
@@ -281,7 +276,7 @@ nsMathMLmpaddedFrame::ParseAttribute(nsString&   aString,
 #ifdef NS_DEBUG
     char str[50];
     aString.ToCString(str, 50);
-    PRINTF("mpadded: attribute with bad numeric value: %s\n", str);
+    printf("mpadded: attribute with bad numeric value: %s\n", str);
 #endif
     aCSSValue.Reset();
     aSign = NS_MATHML_SIGN_INVALID;

@@ -122,11 +122,6 @@ static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 
 #include "nsIPopupSetFrame.h"
 #include "nsIWalletService.h"
-#include "nslog.h"
-
-NS_IMPL_LOG(nsWebShellWindowLog)
-#define PRINTF NS_LOG_PRINTF(nsWebShellWindowLog)
-#define FLUSH  NS_LOG_FLUSH(nsWebShellWindowLog)
 
 /* Define Class IDs */
 static NS_DEFINE_CID(kWindowCID,           NS_WINDOW_CID);
@@ -454,7 +449,7 @@ nsWebShellWindow::HandleEvent(nsGUIEvent *aEvent)
       
       case NS_ACTIVATE: {
 #ifdef DEBUG_saari
-        PRINTF("nsWebShellWindow::NS_ACTIVATE\n");
+        printf("nsWebShellWindow::NS_ACTIVATE\n");
 #endif
 // Sucky platform specific code to get around event dispatch ordering
 #ifdef WIN32
@@ -492,7 +487,7 @@ nsWebShellWindow::HandleEvent(nsGUIEvent *aEvent)
 
       case NS_DEACTIVATE: {
 #ifdef DEBUG_saari
-        PRINTF("nsWebShellWindow::NS_DEACTIVATE\n");
+        printf("nsWebShellWindow::NS_DEACTIVATE\n");
 #endif
         
         void* data;
@@ -527,7 +522,7 @@ nsWebShellWindow::HandleEvent(nsGUIEvent *aEvent)
       
       case NS_GOTFOCUS: {
 #ifdef DEBUG_saari
-        PRINTF("nsWebShellWindow::GOTFOCUS\n");
+        printf("nsWebShellWindow::GOTFOCUS\n");
 #endif
         void* data;
         aEvent->widget->GetClientData(data);
@@ -765,13 +760,13 @@ NS_IMETHODIMP nsWebShellWindow::LoadMenuItem(
         pnsMenuItem->AddMenuListener(listener);
         
 #ifdef DEBUG_MENUSDEL
-        PRINTF("Adding menu listener to [%s]\n", menuitemName.ToNewCString());
+        printf("Adding menu listener to [%s]\n", menuitemName.ToNewCString());
 #endif
       } 
 #ifdef DEBUG_MENUSDEL
       else 
       {
-        PRINTF("*** NOT Adding menu listener to [%s]\n", menuitemName.ToNewCString());
+        printf("*** NOT Adding menu listener to [%s]\n", menuitemName.ToNewCString());
       }
 #endif
       NS_RELEASE(icmd);
@@ -791,7 +786,7 @@ void nsWebShellWindow::LoadSubMenu(
 {
   nsString menuName;
   menuElement->GetAttribute(NS_ConvertASCIItoUCS2("value"), menuName);
-  //PRINTF("Creating Menu [%s] \n", menuName.ToNewCString()); // this leaks
+  //printf("Creating Menu [%s] \n", menuName.ToNewCString()); // this leaks
 
   // Create nsMenu
   nsIMenu * pnsMenu = nsnull;
@@ -845,7 +840,7 @@ void nsWebShellWindow::LoadSubMenu(
         menuitemElement->GetNodeName(menuitemNodeType);
 
 #ifdef DEBUG_saari
-        PRINTF("Type [%s] %d\n", menuitemNodeType.ToNewCString(), menuitemNodeType.Equals("menuseparator"));
+        printf("Type [%s] %d\n", menuitemNodeType.ToNewCString(), menuitemNodeType.Equals("menuseparator"));
 #endif
 
         if (menuitemNodeType.EqualsWithConversion("menuitem")) {
@@ -992,7 +987,7 @@ void nsWebShellWindow::LoadMenus(nsIDOMDocument * aDOMDoc, nsIWidget * aParentWi
               menuElement->GetAttribute(NS_ConvertASCIItoUCS2("value"), menuName);
 
 #ifdef DEBUG_rods
-              PRINTF("Creating Menu [%s] \n", menuName.ToNewCString()); // this leaks
+              printf("Creating Menu [%s] \n", menuName.ToNewCString()); // this leaks
 #endif
               CreateMenu(pnsMenuBar, menuNode, menuName);
             } 
@@ -1237,7 +1232,7 @@ nsWebShellWindow::OnEndDocumentLoad(nsIDocumentLoader* loader,
                                     nsIChannel* channel, nsresult aStatus)
 {
 #ifdef DEBUG_MENUSDEL
-  PRINTF("OnEndDocumentLoad\n");
+  printf("OnEndDocumentLoad\n");
 #endif
 
   /* We get notified every time a page/Frame is loaded. But we need to
@@ -1344,7 +1339,7 @@ nsCOMPtr<nsIDOMNode> nsWebShellWindow::FindNamedDOMNode(const nsString &aName, n
   while (node) {
     nsString name;
     node->GetNodeName(name);
-    //PRINTF("FindNamedDOMNode[%s]==[%s] %d == %d\n", aName.ToNewCString(), name.ToNewCString(), aCount+1, aEndCount); //this leaks
+    //printf("FindNamedDOMNode[%s]==[%s] %d == %d\n", aName.ToNewCString(), name.ToNewCString(), aCount+1, aEndCount); //this leaks
     if (name.Equals(aName)) {
       aCount++;
       if (aCount == aEndCount)
@@ -1597,7 +1592,7 @@ nsWebShellWindow::AttributeChanged(nsIDocument *aDocument,
                                    PRInt32      aHint)
 {
 #if 0
-  //PRINTF("AttributeChanged\n");
+  //printf("AttributeChanged\n");
   PRInt32 i;
   for (i=0;i<mMenuDelegates.Count();i++) {
     nsIXULCommand * cmd  = (nsIXULCommand *)mMenuDelegates[i];

@@ -34,11 +34,6 @@
 #define _COTHERELEMENTS_
 
 #include "nsDTDUtils.h"
-#include "nslog.h"
-
-NS_IMPL_LOG(COtherElementsLog)
-#define PRINTF NS_LOG_PRINTF(COtherElementsLog)
-#define FLUSH  NS_LOG_FLUSH(COtherElementsLog)
 
 /************************************************************************
   This union is a bitfield which describes the group membership
@@ -2368,88 +2363,88 @@ void CElementTable::DebugDumpGroups(CElement* aTag){
 
   const char* tag=nsHTMLTags::GetStringValue(aTag->mTag);
   const char* prefix="     ";
-  PRINTF("\n\nTag: <%s>\n",tag);
-  PRINTF(prefix);
+  printf("\n\nTag: <%s>\n",tag);
+  printf(prefix);
 
   if(aTag->IsContainer()) {
-    if(aTag->mContainsGroups.mBits.mHead)           PRINTF("head ");    
-    if(aTag->mContainsGroups.mBits.mHeadMisc)       PRINTF("headmisc ");  
-    if(aTag->mContainsGroups.mBits.mHeadContent)    PRINTF("headcontent ");  
-    if(aTag->mContainsGroups.mBits.mTable)          PRINTF("table ");
-    if(aTag->mContainsGroups.mBits.mTextContainer)  PRINTF("text ");
-    if(aTag->mContainsGroups.mBits.mTopLevel)       PRINTF("toplevel ");
-    if(aTag->mContainsGroups.mBits.mDTDInternal)    PRINTF("internal ");
+    if(aTag->mContainsGroups.mBits.mHead)           printf("head ");    
+    if(aTag->mContainsGroups.mBits.mHeadMisc)       printf("headmisc ");  
+    if(aTag->mContainsGroups.mBits.mHeadContent)    printf("headcontent ");  
+    if(aTag->mContainsGroups.mBits.mTable)          printf("table ");
+    if(aTag->mContainsGroups.mBits.mTextContainer)  printf("text ");
+    if(aTag->mContainsGroups.mBits.mTopLevel)       printf("toplevel ");
+    if(aTag->mContainsGroups.mBits.mDTDInternal)    printf("internal ");
 
     if(aTag->mContainsGroups.mBits.mFlowEntity) {
-      PRINTF("block inline ");
+      printf("block inline ");
     }
     else {
 
       if (aTag->mContainsGroups.mBits.mBlockEntity)  {
-        PRINTF("blockEntity ");
+        printf("blockEntity ");
       }
 
       if (aTag->mContainsGroups.mBits.mBlock)  {
-        PRINTF("block ");
+        printf("block ");
       }
 
       if(aTag->mContainsGroups.mBits.mInlineEntity)   {
-        PRINTF("inline ");
+        printf("inline ");
       }
 
       else {
 
-        if(aTag->mContainsGroups.mBits.mFontStyle )     PRINTF("fontstyle ");
-        if(aTag->mContainsGroups.mBits.mPhrase)         PRINTF("phrase ");
-        if(aTag->mContainsGroups.mBits.mSpecial)        PRINTF("special ");
-        if(aTag->mContainsGroups.mBits.mFormControl)    PRINTF("form ");
-        if(aTag->mContainsGroups.mBits.mHeading)        PRINTF("heading ");  
-        if(aTag->mContainsGroups.mBits.mFrame)          PRINTF("frame ");
-        if(aTag->mContainsGroups.mBits.mList)           PRINTF("list ");
-        if(aTag->mContainsGroups.mBits.mPreformatted)   PRINTF("pre ");
-        if(aTag->mContainsGroups.mBits.mSelf)           PRINTF("self ");
-        if(aTag->mContainsGroups.mBits.mLeaf)           PRINTF("leaf ");
-        if(aTag->mContainsGroups.mBits.mWhiteSpace)     PRINTF("ws ");
-        if(aTag->mContainsGroups.mBits.mComment)        PRINTF("comment ");
+        if(aTag->mContainsGroups.mBits.mFontStyle )     printf("fontstyle ");
+        if(aTag->mContainsGroups.mBits.mPhrase)         printf("phrase ");
+        if(aTag->mContainsGroups.mBits.mSpecial)        printf("special ");
+        if(aTag->mContainsGroups.mBits.mFormControl)    printf("form ");
+        if(aTag->mContainsGroups.mBits.mHeading)        printf("heading ");  
+        if(aTag->mContainsGroups.mBits.mFrame)          printf("frame ");
+        if(aTag->mContainsGroups.mBits.mList)           printf("list ");
+        if(aTag->mContainsGroups.mBits.mPreformatted)   printf("pre ");
+        if(aTag->mContainsGroups.mBits.mSelf)           printf("self ");
+        if(aTag->mContainsGroups.mBits.mLeaf)           printf("leaf ");
+        if(aTag->mContainsGroups.mBits.mWhiteSpace)     printf("ws ");
+        if(aTag->mContainsGroups.mBits.mComment)        printf("comment ");
       }
     
     }
 
     if(aTag->mIncludeKids) {
-      PRINTF("\n%s",prefix);
+      printf("\n%s",prefix);
       eHTMLTags *theKid=aTag->mIncludeKids;
-      PRINTF("+ ");
+      printf("+ ");
       while(eHTMLTag_unknown!=*theKid){
         tag=nsHTMLTags::GetCStringValue(*theKid++);
-        PRINTF("%s ",tag);
+        printf("%s ",tag);
       }
     }
 
     if(aTag->mExcludeKids) {
-      PRINTF("\n%s",prefix);
+      printf("\n%s",prefix);
       eHTMLTags *theKid=aTag->mExcludeKids;
-      PRINTF("- ");
+      printf("- ");
       while(eHTMLTag_unknown!=*theKid){
         tag=nsHTMLTags::GetCStringValue(*theKid++);
-        PRINTF("%s ",tag);
+        printf("%s ",tag);
       }
     }
 
     if(!aTag->mContainsGroups.mBits.mSelf){
-      PRINTF("\n%s - self",prefix);
+      printf("\n%s - self",prefix);
     }
  
   }
   else {
-    PRINTF("empty\n");
+    printf("empty\n");
   }
 }
 
 void CElementTable::DebugDumpContainment(CElement* anElement){
   const char* tag=nsHTMLTags::GetStringValue(anElement->mTag);
   const char* prefix="     ";
-  PRINTF("\n\nTag: <%s>\n",tag);
-  PRINTF(prefix);
+  printf("\n\nTag: <%s>\n",tag);
+  printf(prefix);
 
   int count=0;
   int i=0;
@@ -2457,11 +2452,11 @@ void CElementTable::DebugDumpContainment(CElement* anElement){
     CElement* theChild=mElements[i];
     if(anElement->CanContain(theChild,0)){
       tag=nsHTMLTags::GetCStringValue(theChild->mTag);
-      PRINTF("%s ",tag);
+      printf("%s ",tag);
       count++;
       if(18==count) {
         count=0;
-        PRINTF("\n%s",prefix);
+        printf("\n%s",prefix);
       }
     }
   }
@@ -2471,14 +2466,14 @@ void CElementTable::DebugDumpInlineElements(const char* aTitle) {
   PRInt32   theTagID=eHTMLTag_unknown;
   PRBool    result=PR_FALSE;
 
-  PRINTF("Inline Elements -- %s: \n",aTitle);
+  printf("Inline Elements -- %s: \n",aTitle);
   while(theTagID<=eHTMLTag_userdefined) {
     CElement *theTag=GetElement((eHTMLTags)theTagID);
     if(theTag) {
       result=theTag->IsInlineElement(eHTMLTag_unknown);
       if(result) {
         const char* theName=nsHTMLTags::GetCStringValue(theTag->mTag);
-        PRINTF("  %s\n",theName);
+        printf("  %s\n",theName);
       }
     }
     theTagID++;
@@ -2489,14 +2484,14 @@ void CElementTable::DebugDumpBlockElements(const char* aTitle) {
   PRInt32   theTagID=eHTMLTag_unknown;
   PRBool    result=PR_FALSE;
 
-  PRINTF("Block Elements -- %s: \n",aTitle);
+  printf("Block Elements -- %s: \n",aTitle);
   while(theTagID<=eHTMLTag_userdefined) {
     CElement *theTag=GetElement((eHTMLTags)theTagID);
     if(theTag) {
       result=theTag->IsBlockElement(eHTMLTag_unknown);
       if(result) {
         const char* theName=nsHTMLTags::GetCStringValue(theTag->mTag);
-        PRINTF("  %s\n",theName);
+        printf("  %s\n",theName);
       }
     }
     theTagID++;
@@ -2508,12 +2503,12 @@ void CElementTable::DebugDumpContainment(const char* aTitle){
   DebugDumpContainment(mElements[eHTMLTag_head]);
   DebugDumpContainment(mElements[eHTMLTag_html]);
   DebugDumpContainment(mElements[eHTMLTag_table]);
-  PRINTF("\n");
+  printf("\n");
 #endif
 
-  PRINTF("==================================================\n");
-  PRINTF("%s\n",aTitle);
-  PRINTF("==================================================\n");
+  printf("==================================================\n");
+  printf("%s\n",aTitle);
+  printf("==================================================\n");
   int i=0;
 
   for(i=1;i<NS_HTML_TAG_MAX;i++){

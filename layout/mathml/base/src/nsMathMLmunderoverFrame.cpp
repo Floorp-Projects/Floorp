@@ -40,11 +40,6 @@
 #include "nsStyleUtil.h"
 
 #include "nsMathMLmunderoverFrame.h"
-#include "nslog.h"
-
-NS_IMPL_LOG(nsMathMLmunderoverFrameLog)
-#define PRINTF NS_LOG_PRINTF(nsMathMLmunderoverFrameLog)
-#define FLUSH  NS_LOG_FLUSH(nsMathMLmunderoverFrameLog)
 
 //
 // <munderover> -- attach an underscript-overscript pair to a base - implementation
@@ -308,7 +303,7 @@ nsMathMLmunderoverFrame::Place(nsIPresContext*      aPresContext,
   }
   if ((3 != count) || !baseFrame || !underFrame || !overFrame) {
 #ifdef NS_DEBUG
-      PRINTF("munderover: invalid markup\n");
+    printf("munderover: invalid markup\n");
 #endif
     // report an error, encourage people to get their markups in order
     return ReflowError(aPresContext, aRenderingContext, aDesiredSize);

@@ -37,11 +37,6 @@
 #include "nsRect.h"
 #include "nsGfxCIID.h"
 #include "nsMenu.h"
-#include "nslog.h"
-
-NS_IMPL_LOG(nsMenuBarLog)
-#define PRINTF NS_LOG_PRINTF(nsMenuBarLog)
-#define FLUSH  NS_LOG_FLUSH(nsMenuBarLog)
 
 // IIDs
 static NS_DEFINE_IID(kIMenuBarIID, NS_IMENUBAR_IID);
@@ -100,7 +95,7 @@ nsEventStatus nsMenuBar::MenuItemSelected(const nsMenuEvent & aMenuEvent)
 //-------------------------------------------------------------------------
 nsEventStatus nsMenuBar::MenuSelected(const nsMenuEvent & aMenuEvent)
 {
-  PRINTF("nsMenuBar::MenuSelected \n");
+  printf("nsMenuBar::MenuSelected \n");
   // Find which menu was selected and call MenuConstruct on it
   HMENU aNativeMenu = (HMENU) aMenuEvent.nativeMsg;
 

@@ -43,11 +43,6 @@
 
 #include "nsIPref.h"
 #include "nsTextFormatter.h"
-#include "nslog.h"
-
-NS_IMPL_LOG(nsCookieLog)
-#define PRINTF NS_LOG_PRINTF(nsCookieLog)
-#define FLUSH  NS_LOG_FLUSH(nsCookieLog)
 
 static NS_DEFINE_CID(kNetSupportDialogCID, NS_NETSUPPORTDIALOG_CID);
 static NS_DEFINE_IID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
@@ -200,14 +195,18 @@ cookie_Localize(char* genericString) {
   /* create a bundle for the localization */
   NS_WITH_SERVICE(nsIStringBundleService, pStringService, kStringBundleServiceCID, &ret);
   if (NS_FAILED(ret)) {
-    PRINTF("cannot get string service\n");
+#ifdef DEBUG
+    printf("cannot get string service\n");
+#endif
     return v.ToNewUnicode();
   }
   nsCOMPtr<nsILocale> locale;
   nsCOMPtr<nsIStringBundle> bundle;
   ret = pStringService->CreateBundle(cookie_localization, locale, getter_AddRefs(bundle));
   if (NS_FAILED(ret)) {
-    PRINTF("cannot create instance\n");
+#ifdef DEBUG
+    printf("cannot create instance\n");
+#endif
     return v.ToNewUnicode();
   }
 
@@ -218,7 +217,9 @@ cookie_Localize(char* genericString) {
   ret = bundle->GetStringFromName(ptrtmp, getter_Copies(ptrv));
   v = ptrv;
   if (NS_FAILED(ret)) {
-    PRINTF("cannot get string from name\n");
+#ifdef DEBUG
+    printf("cannot get string from name\n");
+#endif
     return v.ToNewUnicode();
   }
   return v.ToNewUnicode();
@@ -1402,7 +1403,7 @@ cookie_SetCookieString(char * curURL, nsIPrompt *aPrompter, char * setCookieHead
     return;
   }
 
-//PRINTF("\nSetCookieString(URL '%s', header '%s') time %d == %s\n",curURL,setCookieHeader,timeToExpire,asctime(gmtime(&timeToExpire)));
+//printf("\nSetCookieString(URL '%s', header '%s') time %d == %s\n",curURL,setCookieHeader,timeToExpire,asctime(gmtime(&timeToExpire)));
   if(cookie_GetLifetimePref() == COOKIE_Discard) {
     if(cookie_GetLifetimeTime() < timeToExpire) {
       PR_Free(cur_path);

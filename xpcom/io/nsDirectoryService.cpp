@@ -57,11 +57,6 @@
 #endif
 
 #include "nsSpecialSystemDirectory.h"
-#include "nslog.h"
-
-NS_IMPL_LOG(nsDirectoryServiceLog)
-#define PRINTF NS_LOG_PRINTF(nsDirectoryServiceLog)
-#define FLUSH  NS_LOG_FLUSH(nsDirectoryServiceLog)
 
 #ifdef XP_MAC
 #define COMPONENT_REGISTRY_NAME "Component Registry"
@@ -233,7 +228,7 @@ nsDirectoryService::GetCurrentProcessDirectory(nsILocalFile** aFile)
 
         if(firstWarning) {
             // Warn that MOZILLA_FIVE_HOME not set, once.
-            NS_WARNING("Warning: MOZILLA_FIVE_HOME not set.\n");
+            printf("Warning: MOZILLA_FIVE_HOME not set.\n");
             firstWarning = PR_FALSE;
         }
 

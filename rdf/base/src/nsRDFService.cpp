@@ -65,11 +65,6 @@
 #include "prprf.h"
 #include "prmem.h"
 #include "rdf.h"
-#include "nslog.h"
-
-NS_IMPL_LOG(nsRDFServiceLog)
-#define PRINTF NS_LOG_PRINTF(nsRDFServiceLog)
-#define FLUSH  NS_LOG_FLUSH(nsRDFServiceLog)
 
 ////////////////////////////////////////////////////////////////////////
 
@@ -84,7 +79,9 @@ static NS_DEFINE_IID(kIRDFResourceIID,        NS_IRDFRESOURCE_IID);
 static NS_DEFINE_IID(kIRDFNodeIID,            NS_IRDFNODE_IID);
 static NS_DEFINE_IID(kISupportsIID,           NS_ISUPPORTS_IID);
 
-#define gLog nsRDFServiceLog
+#ifdef PR_LOGGING
+static PRLogModuleInfo* gLog = nsnull;
+#endif
 
 // Defining these will re-use the string pointer that is owned by the
 // resource (or literal) as the key for the hashtable. It avoids two
@@ -246,7 +243,7 @@ LiteralImpl::~LiteralImpl()
 {
 #ifdef DEBUG_REFS
     --gInstanceCount;
-    PRINTF("%d - RDF: LiteralImpl\n", gInstanceCount);
+    fprintf(stdout, "%d - RDF: LiteralImpl\n", gInstanceCount);
 #endif
 
     gRDFService->UnregisterLiteral(this);
@@ -351,7 +348,7 @@ DateImpl::~DateImpl()
 {
 #ifdef DEBUG_REFS
     --gInstanceCount;
-    PRINTF("%d - RDF: DateImpl\n", gInstanceCount);
+    fprintf(stdout, "%d - RDF: DateImpl\n", gInstanceCount);
 #endif
 }
 
@@ -453,7 +450,7 @@ IntImpl::~IntImpl()
 {
 #ifdef DEBUG_REFS
     --gInstanceCount;
-    PRINTF("%d - RDF: IntImpl\n", gInstanceCount);
+    fprintf(stdout, "%d - RDF: IntImpl\n", gInstanceCount);
 #endif
 }
 
@@ -581,6 +578,11 @@ RDFServiceImpl::Init()
     NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get default resource factory");
     if (NS_FAILED(rv)) return rv;
 
+#ifdef PR_LOGGING
+    if (! gLog)
+        gLog = PR_NewLogModule("nsRDFService");
+#endif
+
     return NS_OK;
 }
 
@@ -589,7 +591,7 @@ RDFServiceImpl::~RDFServiceImpl()
 {
 #ifdef DEBUG_REFS
     --gInstanceCount;
-    PRINTF("%d - RDF: RDFServiceImpl\n", gInstanceCount);
+    fprintf(stdout, "%d - RDF: RDFServiceImpl\n", gInstanceCount);
 #endif
 
     if (mNamedDataSources) {

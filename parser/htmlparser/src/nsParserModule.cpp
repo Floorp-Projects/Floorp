@@ -45,11 +45,6 @@
 #include "nsExpatTokenizer.h"
 #include "nsIParserService.h"
 #include "nsElementTable.h"
-#include "nslog.h"
-
-NS_IMPL_LOG(nsParserModuleLog)
-#define PRINTF NS_LOG_PRINTF(nsParserModuleLog)
-#define FLUSH  NS_LOG_FLUSH(nsParserModuleLog)
 
 static NS_DEFINE_IID(kIParserServiceIID, NS_IPARSERSERVICE_IID);
 
@@ -398,8 +393,10 @@ nsParserModule::RegisterSelf(nsIComponentManager *aCompMgr,
     rv = aCompMgr->RegisterComponentSpec(*cp->mCID, cp->mDescription,
                                          nsnull, aPath, PR_TRUE, PR_TRUE);
     if (NS_FAILED(rv)) {
-      PRINTF("nsParserModule: unable to register %s component => %x\n",
+#ifdef DEBUG
+      printf("nsParserModule: unable to register %s component => %x\n",
              cp->mDescription, rv);
+#endif
       break;
     }
     cp++;
@@ -417,8 +414,10 @@ nsParserModule::UnregisterSelf(nsIComponentManager *aCompMgr,
   while (cp < end) {
     nsresult rv = aCompMgr->UnregisterComponentSpec(*cp->mCID, aPath);
     if (NS_FAILED(rv)) {
-      PRINTF("nsParserModule: unable to unregister %s component => %x\n",
+#ifdef DEBUG
+      printf("nsParserModule: unable to unregister %s component => %x\n",
              cp->mDescription, rv);
+#endif
     }
     cp++;
   }

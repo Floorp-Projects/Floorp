@@ -647,7 +647,7 @@ PRIVATE
 void DebugPrint(char* aLabel, nsString aString)
 {
   char* out = aString.ToNewCString();
-  PRINTF("\n %s=%s\n", aLabel, out);
+  printf("\n %s=%s\n", aLabel, out);
   delete [] out;
 }
 
@@ -1010,7 +1010,7 @@ void nsFormFrame::GetSubmitCharset(nsString& oCharset)
     }
   }
 #ifdef DEBUG_ftang
-  PRINTF("accept-charset = %s\n", acceptCharsetValue.ToNewUTF8String());
+  printf("accept-charset = %s\n", acceptCharsetValue.ToNewUTF8String());
 #endif
   PRInt32 l = acceptCharsetValue.Length();
   if(l > 0 ) {
@@ -1026,7 +1026,7 @@ void nsFormFrame::GetSubmitCharset(nsString& oCharset)
           nsAutoString charset;
           acceptCharsetValue.Mid(charset, offset, cnt);
 #ifdef DEBUG_ftang
-          PRINTF("charset[i] = %s\n",charset.ToNewUTF8String());
+          printf("charset[i] = %s\n",charset.ToNewUTF8String());
 #endif
           if(NS_SUCCEEDED(calias->GetPreferred(charset,oCharset)))
             return;
@@ -1053,7 +1053,7 @@ NS_IMETHODIMP nsFormFrame::GetEncoder(nsIUnicodeEncoder** encoder)
   nsresult rv = NS_OK;
   GetSubmitCharset(charset);
 #ifdef DEBUG_ftang
-  PRINTF("charset=%s\n", charset.ToNewCString());
+  printf("charset=%s\n", charset.ToNewCString());
 #endif
   
   // Get Charset, get the encoder.

@@ -26,11 +26,6 @@
 #include "prio.h"
 #include "mimecont.h"
 #include "nsMimeStringResources.h"
-#include "nslog.h"
-
-NS_IMPL_LOG(mimecontLog)
-#define PRINTF NS_LOG_PRINTF(mimecontLog)
-#define FLUSH  NS_LOG_FLUSH(mimecontLog)
 
 #define MIME_SUPERCLASS mimeObjectClass
 MimeDefClass(MimeContainer, MimeContainerClass,
@@ -221,7 +216,7 @@ MimeContainer_debug_print (MimeObject *obj, PRFileDesc *stream, PRInt32 depth)
 
 /*
   if (cont->nchildren > 0)
-  FPRINTF(stream, "\n");
+	fprintf(stream, "\n");
  */
 
   for (i = 0; i < cont->nchildren; i++)
@@ -233,7 +228,7 @@ MimeContainer_debug_print (MimeObject *obj, PRFileDesc *stream, PRInt32 depth)
 
 /*
   if (cont->nchildren > 0)
-  FPRINTF(stream, "\n");
+	fprintf(stream, "\n");
  */
 
   return 0;

@@ -26,11 +26,6 @@
 #include "MailNewsTypes.h"
 #include "nsMsgKeySet.h"
 #include "prprf.h"
-#include "nslog.h"
-
-NS_IMPL_LOG(nsMsgKeySetLog)
-#define PRINTF NS_LOG_PRINTF(nsMsgKeySetLog)
-#define FLUSH  NS_LOG_FLUSH(nsMsgKeySetLog)
 
 #if defined(DEBUG_seth_) || defined(DEBUG_sspitzer_)
 #define DEBUG_MSGKEYSET 1
@@ -226,7 +221,7 @@ nsMsgKeySet*
 nsMsgKeySet::Create(const char* value /* , MSG_NewsHost* host */)
 {
 #ifdef DEBUG_MSGKEYSET
-  PRINTF("create from %s\n",value);
+    printf("create from %s\n",value);
 #endif
 
 	nsMsgKeySet* set = new nsMsgKeySet(value /* , host */);
@@ -668,7 +663,7 @@ nsMsgKeySet::Add(PRInt32 number)
 	PRInt32 *end;
 
 #ifdef DEBUG_MSGKEYSET
-    PRINTF("add %d\n",number);
+    printf("add %d\n",number);
 #endif
     
 	size = m_length;
@@ -764,7 +759,7 @@ nsMsgKeySet::Remove(PRInt32 number)
 	PRInt32 *tail;
 	PRInt32 *end;
 #ifdef DEBUG_MSGKEYSET
-    PRINTF("remove %d\n",number);
+    printf("remove %d\n",number);
 #endif
 
 	size = m_length;
@@ -1176,7 +1171,7 @@ nsMsgKeySet::test_decoder (const char *string)
   nsMsgKeySet set(string /* , NULL */);
   char* tmp;
   set.Output(&tmp);
-  PRINTF ("\t\"%s\"\t--> \"%s\"\n", string, tmp);
+  printf ("\t\"%s\"\t--> \"%s\"\n", string, tmp);
   nsMemory::Free(tmp);
 }
 
@@ -1188,7 +1183,7 @@ nsMsgKeySet::test_decoder (const char *string)
 #define FROB(N,PUSHP)									\
   i = N;												\
   if (!(NS_SUCCEEDED(set->Output(&s)))) abort ();					\
-  PRINTF ("%3lu: %-58s %c %3lu =\n", (unsigned long)set->m_length, s,	\
+  printf ("%3lu: %-58s %c %3lu =\n", (unsigned long)set->m_length, s,	\
 		  (PUSHP ? '+' : '-'), (unsigned long)i);						\
   nsMemory::Free(s);											\
   if (PUSHP												\
@@ -1196,12 +1191,12 @@ nsMsgKeySet::test_decoder (const char *string)
 	  : set->Remove(i) < 0)								\
 	abort ();											\
   if (!(NS_SUCCEEDED(set->Output(&s)))) abort ();					\
-  PRINTF ("%3lu: %-58s optimized =\n", (unsigned long)set->m_length, s);	\
+  printf ("%3lu: %-58s optimized =\n", (unsigned long)set->m_length, s);	\
   nsMemory::Free(s);											\
 
 #define END()							   \
   if (!(NS_SUCCEEDED(set->Output(&s)))) abort ();					\
-  PRINTF ("%3lu: %s\n\n", (unsigned long)set->m_length, s); \
+  printf ("%3lu: %s\n\n", (unsigned long)set->m_length, s); \
   nsMemory::Free(s);											\
   delete set;							   \
 
@@ -1297,11 +1292,11 @@ nsMsgKeySet::test_adder (void)
   i = N;														\
   j = M;														\
   if (!(NS_SUCCEEDED(set->Output(&s)))) abort ();					\
-  PRINTF ("%3lu: %-58s + %3lu-%3lu =\n", (unsigned long)set->m_length, s, (unsigned long)i, (unsigned long)j);	\
+  printf ("%3lu: %-58s + %3lu-%3lu =\n", (unsigned long)set->m_length, s, (unsigned long)i, (unsigned long)j);	\
   nsMemory::Free(s);											\
   switch (set->AddRange(i, j)) {								\
   case 0:														\
-	PRINTF("(no-op)\n");										\
+	printf("(no-op)\n");										\
 	break;														\
   case 1:														\
 	break;														\
@@ -1309,13 +1304,13 @@ nsMsgKeySet::test_adder (void)
 	abort();													\
   }																\
   if (!(NS_SUCCEEDED(set->Output(&s)))) abort ();					\
-  PRINTF ("%3lu: %-58s\n", (unsigned long)set->m_length, s);						\
+  printf ("%3lu: %-58s\n", (unsigned long)set->m_length, s);						\
   nsMemory::Free(s);											\
 
 
 #define END()							   \
   if (!(NS_SUCCEEDED(set->Output(&s)))) abort ();					\
-  PRINTF ("%3lu: %s\n\n", (unsigned long)set->m_length, s); \
+  printf ("%3lu: %s\n\n", (unsigned long)set->m_length, s); \
   nsMemory::Free(s);											\
   delete set;
 
@@ -1355,7 +1350,7 @@ nsMsgKeySet::test_ranges(void)
 #define TEST(N)									  \
   if (! with_cache) set->m_cached_value = -1;	  \
   if (!(NS_SUCCEEDED(set->Output(&s)))) abort ();					\
-  PRINTF (" %3d = %s\n", N,						  \
+  printf (" %3d = %s\n", N,						  \
 		  (set->IsMember(N) ? "true" : "false")); \
   delete [] s
 
@@ -1366,7 +1361,7 @@ nsMsgKeySet::test_member(PRBool with_cache)
   char *s;
 
   s = "1-70,72-99,105,107,110-111,117-200";
-  PRINTF ("\n\nTesting %s (with%s cache)\n", s, with_cache ? "" : "out");
+  printf ("\n\nTesting %s (with%s cache)\n", s, with_cache ? "" : "out");
   if (!(set = Create(s))) {
 	abort ();
   }
@@ -1378,7 +1373,7 @@ nsMsgKeySet::test_member(PRBool with_cache)
   
   delete set;
   s = "0-70,72-99,105,107,110-111,117-200";
-  PRINTF ("\n\nTesting %s (with%s cache)\n", s, with_cache ? "" : "out");
+  printf ("\n\nTesting %s (with%s cache)\n", s, with_cache ? "" : "out");
   if (!(set = Create(s))) {
 	abort ();
   }

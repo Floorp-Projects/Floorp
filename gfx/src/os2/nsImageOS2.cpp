@@ -32,11 +32,6 @@
 #include "nsImageOS2.h"
 #include "nsIDeviceContext.h"
 #include "nsRenderingContextOS2.h"
-#include "nslog.h"
-
-NS_IMPL_LOG(nsImageOS2Log)
-#define PRINTF NS_LOG_PRINTF(nsImageOS2Log)
-#define FLUSH  NS_LOG_FLUSH(nsImageOS2Log)
 
 #define ROP_NOTSRCAND 0x22 // NOT(SRC) AND DST
 
@@ -341,7 +336,7 @@ void nsImageOS2::CreateBitmaps( nsDrawingSurfaceOS2 *surf)
             PMERROR( "GpiCreateBitmap (mask)");
       }
       else
-          PRINTF("8 bit alpha mask, no chance...\n");
+         printf( "8 bit alpha mask, no chance...\n");
    }
 }
 

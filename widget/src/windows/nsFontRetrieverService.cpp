@@ -27,11 +27,6 @@
 #include "nsFont.h"
 #include "nsVoidArray.h"
 #include "nsFontSizeIterator.h"
-#include "nslog.h"
-
-NS_IMPL_LOG(nsFontRetrieverServiceLog)
-#define PRINTF NS_LOG_PRINTF(nsFontRetrieverServiceLog)
-#define FLUSH  NS_LOG_FLUSH(nsFontRetrieverServiceLog)
  
 NS_IMPL_ADDREF(nsFontRetrieverService)
 NS_IMPL_RELEASE(nsFontRetrieverService)
@@ -186,27 +181,27 @@ static int CALLBACK MyEnumFontFamProc(ENUMLOGFONT FAR *lpelf,
 {
   FontInfo * font = (FontInfo *)lParam;
 
-  ////PRINTF("  sizes-> %d\n", lpelf->elfLogFont.lfHeight);
+  ////printf("  sizes-> %d\n", lpelf->elfLogFont.lfHeight);
   LOGFONT  ourLogFont;    // Local copy of the LOGFONT structure.
   memcpy(&ourLogFont,  (const void *)&lpelf->elfLogFont, sizeof LOGFONT); // Make the copy
-  //PRINTF("Size: %d", ourLogFont.lfHeight);
+  //printf("Size: %d", ourLogFont.lfHeight);
 
   if (fontType & TRUETYPE_FONTTYPE) {
-      //PRINTF("TRUETYPE_FONTTYPE;");
+    //printf("TRUETYPE_FONTTYPE;");
     font->mIsScalable = PR_TRUE;
     return 1;
   } else if (fontType & RASTER_FONTTYPE) {
-      //PRINTF("RASTER_FONTTYPE;");
+    //printf("RASTER_FONTTYPE;");
     if (nsnull == font->mSizes ) {
       font->mSizes = new nsVoidArray();
     }
   } else if (fontType & DEVICE_FONTTYPE) {
-      //PRINTF("DEVICE_FONTTYPE;");
+    //printf("DEVICE_FONTTYPE;");
     //if (nsnull == font->mSizes ) {
     //  font->mSizes = new nsVoidArray();
     //}
   } else {
-      //PRINTF("VECTOR_FONTTYPE;");
+    //printf("VECTOR_FONTTYPE;");
     font->mIsScalable = PR_TRUE;
   }
 
@@ -216,9 +211,9 @@ static int CALLBACK MyEnumFontFamProc(ENUMLOGFONT FAR *lpelf,
 
 #if 0
    if (ourLogFont.lfCharSet != ANSI_CHARSET)
-       //PRINTF("FNT_NONANSI;");
+      //printf("FNT_NONANSI;");
    else
-       //PRINTF("FNT_ANSI;");
+      //printf("FNT_ANSI;");
 
    //
    // We also need to set the family type (we use it for filtering)
@@ -226,27 +221,27 @@ static int CALLBACK MyEnumFontFamProc(ENUMLOGFONT FAR *lpelf,
    switch (ourLogFont.lfPitchAndFamily & 0xF0)
       {
       case FF_SWISS:
-        //PRINTF("FNT_SANSSERIF;");
+         //printf("FNT_SANSSERIF;");
          break;
 
       case FF_ROMAN:
-        //PRINTF("FNT_SERIF;");
+         //printf("FNT_SERIF;");
          break;
 
       case FF_MODERN:
-        //PRINTF("FNT_MODERN;");
+         //printf("FNT_MODERN;");
          break;
 
       case FF_SCRIPT:
-        //PRINTF("FNT_SCRIPT;");
+         //printf("FNT_SCRIPT;");
          break;
 
       default:
-        //PRINTF("FNT_OTHER;"); 
+         //printf("FNT_OTHER;"); 
          break;
       }
 #endif
-   //PRINTF("\n");
+  //printf("\n");
 
   return 1;
 }
@@ -267,14 +262,14 @@ static int CALLBACK EnumerateMyFonts(ENUMLOGFONTEX    *lpLogFontEx,
 { 
   nsVoidArray * fontList = (nsVoidArray *)lParam;
 
-  /*PRINTF("%s [%s][%s][%s]", lpLogFontEx->elfLogFont.lfFaceName, 
+  /*printf("%s [%s][%s][%s]", lpLogFontEx->elfLogFont.lfFaceName, 
                  lpLogFontEx->elfFullName, 
                  lpLogFontEx->elfStyle, 
                  lpLogFontEx->elfScript 
                  ); */
   LOGFONT  ourLogFont;    // Local copy of the LOGFONT structure.
   memcpy(&ourLogFont,  (const void *)&lpLogFontEx->elfLogFont, sizeof LOGFONT); // Make the copy
-  //PRINTF("Size: %d\n", ourLogFont.lfHeight);
+  //printf("Size: %d\n", ourLogFont.lfHeight);
 
   FontInfo * font   = new FontInfo();
   font->mName.AssignWithConversion((char *)lpLogFontEx->elfLogFont.lfFaceName); // XXX I18N ?

@@ -27,11 +27,6 @@
 #include "nsIView.h"
 #include "nsIViewManager.h"
 #include "nsHTMLAtoms.h"
-#include "nslog.h"
-
-NS_IMPL_LOG(nsButtonFrameRendererLog)
-#define PRINTF NS_LOG_PRINTF(nsButtonFrameRendererLog)
-#define FLUSH  NS_LOG_FLUSH(nsButtonFrameRendererLog)
 
 #define ACTIVE   "active"
 #define HOVER    "hover"
@@ -119,7 +114,7 @@ nsButtonFrameRenderer::PaintButton     (nsIPresContext* aPresContext,
           nsFramePaintLayer aWhichLayer,
           const nsRect& aRect)
 {
-  //PRINTF("painted width='%d' height='%d'\n",aRect.width, aRect.height);
+  //printf("painted width='%d' height='%d'\n",aRect.width, aRect.height);
 
   // draw the border and background inside the focus and outline borders
   PaintBorderAndBackground(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer, aRect);

@@ -33,8 +33,6 @@
 
 #include "TextDebugLog.h"
 
-NS_IMPL_LOG(TextDebugLogLog)
-
 static NS_DEFINE_CID(kTextImportCID,    	NS_TEXTIMPORT_CID);
 
 

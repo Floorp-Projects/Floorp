@@ -40,11 +40,6 @@
 #include "nsHTMLAtoms.h"
 #include "nsIDocument.h"
 #include "nsIScrollableFrame.h"
-#include "nslog.h"
-
-NS_IMPL_LOG(nsCSSRenderingLog)
-#define PRINTF NS_LOG_PRINTF(nsCSSRenderingLog)
-#define FLUSH  NS_LOG_FLUSH(nsCSSRenderingLog)
 
 static NS_DEFINE_IID(kScrollViewIID, NS_ISCROLLABLEVIEW_IID);
 
@@ -1054,8 +1049,8 @@ PRIntn  whichSide=0;
             dashRect.y -= topEdge->mWidth;  // account for the topmost left edge corner with the leftmost top edge
           if (0)
           {
-            PRINTF("  L: totalLength = %d, borderOutside.y = %d, midpoint %d, dashRect.y = %d\n", 
-                   totalLength, borderOutside.y, borderOutside.y +(totalLength/2), dashRect.y); 
+            printf("  L: totalLength = %d, borderOutside.y = %d, midpoint %d, dashRect.y = %d\n", 
+            totalLength, borderOutside.y, borderOutside.y +(totalLength/2), dashRect.y); 
           }
           currRect = dashRect;
 
@@ -1075,8 +1070,8 @@ PRIntn  whichSide=0;
             //draw if necessary
             if (0)
             {
-              PRINTF("DASHED LEFT: xywh in loop currRect = %d %d %d %d %s\n", 
-                     currRect.x, currRect.y, currRect.width, currRect.height, bSolid?"TRUE":"FALSE");
+              printf("DASHED LEFT: xywh in loop currRect = %d %d %d %d %s\n", 
+                   currRect.x, currRect.y, currRect.width, currRect.height, bSolid?"TRUE":"FALSE");
             }
             if (bSolid) {
               aContext.FillRect(currRect);
@@ -1109,8 +1104,8 @@ PRIntn  whichSide=0;
             //draw if necessary
             if (0)
             {
-              PRINTF("DASHED LEFT: xywh in loop currRect = %d %d %d %d %s\n", 
-                     currRect.x, currRect.y, currRect.width, currRect.height, bSolid?"TRUE":"FALSE");
+              printf("DASHED LEFT: xywh in loop currRect = %d %d %d %d %s\n", 
+                   currRect.x, currRect.y, currRect.width, currRect.height, bSolid?"TRUE":"FALSE");
             }
             if (bSolid) {
               aContext.FillRect(currRect);
@@ -1420,7 +1415,7 @@ PRBool GetBGColorForHTMLElement( nsIPresContext *aPresContext,
           }// if tag == html or body
 #ifdef DEBUG
           else {
-            PRINTF( "Root Content is not HTML or BODY: cannot get bgColor of HTML or BODY\n");
+            printf( "Root Content is not HTML or BODY: cannot get bgColor of HTML or BODY\n");
           }
 #endif
           NS_RELEASE(tag);

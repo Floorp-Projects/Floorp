@@ -55,11 +55,6 @@
 #include "nsIScrollbarMediator.h"
 #include "nsIGfxTextControlFrame.h"
 #include "nsIDOMHTMLTextAreaElement.h"
-#include "nslog.h"
-
-NS_IMPL_LOG(nsGfxScrollFrameLog)
-#define PRINTF NS_LOG_PRINTF(nsGfxScrollFrameLog)
-#define FLUSH  NS_LOG_FLUSH(nsGfxScrollFrameLog)
 
 static NS_DEFINE_IID(kWidgetCID, NS_CHILD_CID);
 static NS_DEFINE_IID(kScrollingViewCID, NS_SCROLLING_VIEW_CID);
@@ -1178,7 +1173,7 @@ nsGfxScrollFrameInner::Layout(nsBoxLayoutState& aState)
            // suddenly need a vertical scrollbar. Is a special case but its 
            // important.
            //if (!mHasVerticalScrollbar && scrolledContentSize.height > scrollAreaRect.height - sbSize.height)
-          //  PRINTF("****Gfx Scrollbar Special case hit!!*****\n");
+           //  printf("****Gfx Scrollbar Special case hit!!*****\n");
            
       }
     } else {
@@ -1317,7 +1312,7 @@ nsGfxScrollFrameInner::ScrollbarChanged(nsIPresContext* aPresContext, nscoord aX
 {
   nsIScrollableView* scrollable = GetScrollableView(aPresContext);
   scrollable->ScrollTo(aX,aY, NS_SCROLL_PROPERTY_ALWAYS_BLIT);
-  // PRINTF("scrolling to: %d, %d\n", aX, aY);
+ // printf("scrolling to: %d, %d\n", aX, aY);
 }
 
 nsGfxScrollFrameInner::~nsGfxScrollFrameInner()

@@ -38,11 +38,6 @@
 #include "nsNNTPProtocol.h"
 #include "nsIDirectoryService.h"
 #include "nsAppDirectoryServiceDefs.h"
-#include "nslog.h"
-
-NS_IMPL_LOG(nsNntpIncomingServerLog)
-#define PRINTF NS_LOG_PRINTF(nsNntpIncomingServerLog)
-#define FLUSH  NS_LOG_FLUSH(nsNntpIncomingServerLog)
 
 #define VALID_VERSION			1
 #define NEW_NEWS_DIR_NAME        "News"
@@ -293,7 +288,7 @@ nsNntpIncomingServer::WriteNewsrcFile()
 
     if (newsrcHasChanged) {        
 #ifdef DEBUG_NEWS
-        PRINTF("write newsrc file for %s\n", (const char *)hostname);
+        printf("write newsrc file for %s\n", (const char *)hostname);
 #endif
         nsCOMPtr <nsIFileSpec> newsrcFile;
         rv = GetNewsrcFilePath(getter_AddRefs(newsrcFile));
@@ -318,12 +313,12 @@ nsNntpIncomingServer::WriteNewsrcFile()
         if (NS_SUCCEEDED(rv) && ((const char *)optionLines)) {
                newsrcStream << (const char *)optionLines;
 #ifdef DEBUG_NEWS
-               PRINTF("option lines:\n%s",(const char *)optionLines);
+               printf("option lines:\n%s",(const char *)optionLines);
 #endif /* DEBUG_NEWS */
         }
 #ifdef DEBUG_NEWS
         else {
-            PRINTF("no option lines to write out\n");
+            printf("no option lines to write out\n");
         }
 #endif /* DEBUG_NEWS */
 
@@ -332,12 +327,12 @@ nsNntpIncomingServer::WriteNewsrcFile()
         if (NS_SUCCEEDED(rv) && ((const char *)unsubscribedLines)) {
                newsrcStream << (const char *)unsubscribedLines;
 #ifdef DEBUG_NEWS
-               PRINTF("unsubscribedLines:\n%s",(const char *)unsubscribedLines);
+               printf("unsubscribedLines:\n%s",(const char *)unsubscribedLines);
 #endif /* DEBUG_NEWS */
         }
 #ifdef DEBUG_NEWS
         else {
-            PRINTF("no unsubscribed lines to write out\n");
+            printf("no unsubscribed lines to write out\n");
         } 
 #endif /* DEBUG_NEWS */
 
@@ -360,8 +355,8 @@ nsNntpIncomingServer::WriteNewsrcFile()
                     if (NS_SUCCEEDED(rv) && ((const char *)newsrcLine)) {
                         newsrcStream << (const char *)newsrcLine;
 #ifdef DEBUG_NEWS
-                        PRINTF("writing to newsrc file:\n");
-                        PRINTF("%s",(const char *)newsrcLine);
+                        printf("writing to newsrc file:\n");
+                        printf("%s",(const char *)newsrcLine);
 #endif /* DEBUG_NEWS */
                     }
                 }
@@ -376,7 +371,7 @@ nsNntpIncomingServer::WriteNewsrcFile()
     }
 #ifdef DEBUG_NEWS
     else {
-        PRINTF("no need to write newsrc file for %s, it was not dirty\n", (const char *)hostname);
+        printf("no need to write newsrc file for %s, it was not dirty\n", (const char *)hostname);
     }
 #endif /* DEBUG_NEWS */
 
@@ -570,7 +565,7 @@ nsNntpIncomingServer::PerformExpand(nsIMsgWindow *aMsgWindow)
 {
 	nsresult rv;
 #ifdef DEBUG_NEWS
-	PRINTF("PerformExpand for nntp\n");
+	printf("PerformExpand for nntp\n");
 #endif
 
 	nsCOMPtr<nsINntpService> nntpService = do_GetService(kNntpServiceCID, &rv);
@@ -661,7 +656,7 @@ nsNntpIncomingServer::DisplaySubscribedGroup(nsIMsgNewsFolder *aMsgFolder, PRInt
 
 	if (!aMsgFolder) return NS_ERROR_NULL_POINTER;
 #ifdef DEBUG_NEWS
-	PRINTF("DisplaySubscribedGroup(...,%ld,%ld,%ld)\n",aFirstMessage,aLastMessage,aTotalMessages);
+	printf("DisplaySubscribedGroup(...,%ld,%ld,%ld)\n",aFirstMessage,aLastMessage,aTotalMessages);
 #endif
 	rv = aMsgFolder->UpdateSummaryFromNNTPInfo(aFirstMessage,aLastMessage,aTotalMessages);
 	return rv;
@@ -671,7 +666,7 @@ NS_IMETHODIMP
 nsNntpIncomingServer::PerformBiff()
 {
 #ifdef DEBUG_NEWS
-	PRINTF("PerformBiff for nntp\n");
+	printf("PerformBiff for nntp\n");
 #endif
 	return PerformExpand(nsnull);
 }
@@ -771,7 +766,7 @@ nsNntpIncomingServer::WriteHostInfoFile()
 {
 	nsresult rv;
 #ifdef DEBUG_NEWS
-	PRINTF("WriteHostInfoFile()\n");
+	printf("WriteHostInfoFile()\n");
 #endif
 
 	PRInt32 firstnewdate;
@@ -790,7 +785,7 @@ nsNntpIncomingServer::WriteHostInfoFile()
     nsIOFileStream hostinfoStream(hostinfoFileSpec, (PR_RDWR | PR_CREATE_FILE | PR_TRUNCATE));
 
 #ifdef DEBUG_NEWS
-	PRINTF("xxx todo missing some formatting, need to fix this, see nsNNTPHost.cpp\n");
+	printf("xxx todo missing some formatting, need to fix this, see nsNNTPHost.cpp\n");
 #endif
 
     hostinfoStream << "# News host information file." << MSG_LINEBREAK;
@@ -857,7 +852,7 @@ nsNntpIncomingServer::LoadHostInfoFile()
 
   	hostinfoStream.close();
 #ifdef DEBUG_NEWS
-	PRINTF("LoadHostInfoFile()\n");
+	printf("LoadHostInfoFile()\n");
 #endif
 	mHostInfoLoaded = PR_TRUE;
 	return NS_OK;
@@ -868,7 +863,7 @@ nsNntpIncomingServer::PopulateSubscribeDatasourceFromHostInfo()
 {
 	nsresult rv;
 #ifdef DEBUG_NEWS
-	PRINTF("PopulateSubscribeDatasourceFromHostInfo()\n");
+	printf("PopulateSubscribeDatasourceFromHostInfo()\n");
 #endif
 	mGroupsOnServerCount = mGroupsOnServer.Count();
 	nsCString currentGroup;
@@ -878,7 +873,7 @@ nsNntpIncomingServer::PopulateSubscribeDatasourceFromHostInfo()
 		rv = AddToSubscribeDS((const char *)currentGroup, PR_FALSE, PR_TRUE);
 		if (NS_FAILED(rv)) return rv;
 #ifdef DEBUG_NEWS
-		PRINTF("%d = %s\n",mGroupsOnServerIndex,(const char *)currentGroup);
+		printf("%d = %s\n",mGroupsOnServerIndex,(const char *)currentGroup);
 #endif
 
 		mGroupsOnServerIndex++;
@@ -903,7 +898,7 @@ nsNntpIncomingServer::PopulateSubscribeDatasourceFromHostInfo()
 
 	if (mGroupsOnServerIndex < mGroupsOnServerCount) {
 #ifdef DEBUG_NEWS
-		PRINTF("there is more to do...\n");
+		printf("there is more to do...\n");
 #endif
 		if (mUpdateTimer) {
 			mUpdateTimer->Cancel();
@@ -921,7 +916,7 @@ nsNntpIncomingServer::PopulateSubscribeDatasourceFromHostInfo()
 	}
 	else {
 #ifdef DEBUG_NEWS
-		PRINTF("we are done\n");
+		printf("we are done\n");
 #endif
 		rv = UpdateSubscribedInSubscribeDS();
 		if (NS_FAILED(rv)) return rv;
@@ -947,7 +942,7 @@ nsNntpIncomingServer::PopulateSubscribeDatasourceWithUri(nsIMsgWindow *aMsgWindo
 	nsresult rv;
 
 #ifdef DEBUG_NEWS
-	PRINTF("PopulateSubscribeDatasourceWithUri(%s)\n",uri);
+	printf("PopulateSubscribeDatasourceWithUri(%s)\n",uri);
 #endif
 
 	rv = StopPopulatingSubscribeDS();

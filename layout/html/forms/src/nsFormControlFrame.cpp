@@ -61,8 +61,6 @@
 #include "nsIEventStateManager.h"
 #include "nsIScrollableView.h"
 
-NS_IMPL_LOG(nsFormControlFrameLog)
-
 #ifdef DEBUG_evaughan
 //#define DEBUG_rods
 #endif
@@ -72,15 +70,15 @@ NS_IMPL_LOG(nsFormControlFrameLog)
 #endif
 
 #ifdef FCF_NOISY
-#define REFLOW_DEBUG_MSG(_msg1) PRINTF((_msg1))
-#define REFLOW_DEBUG_MSG2(_msg1, _msg2) PRINTF((_msg1), (_msg2))
-#define REFLOW_DEBUG_MSG3(_msg1, _msg2, _msg3) PRINTF((_msg1), (_msg2), (_msg3))
-#define REFLOW_DEBUG_MSG4(_msg1, _msg2, _msg3, _msg4) PRINTF((_msg1), (_msg2), (_msg3), (_msg4))
+#define REFLOW_DEBUG_MSG(_msg1) printf((_msg1))
+#define REFLOW_DEBUG_MSG2(_msg1, _msg2) printf((_msg1), (_msg2))
+#define REFLOW_DEBUG_MSG3(_msg1, _msg2, _msg3) printf((_msg1), (_msg2), (_msg3))
+#define REFLOW_DEBUG_MSG4(_msg1, _msg2, _msg3, _msg4) printf((_msg1), (_msg2), (_msg3), (_msg4))
 
-#define IF_REFLOW_DEBUG_MSG(_bool, _msg1) if ((_bool)) PRINTF((_msg1))
-#define IF_REFLOW_DEBUG_MSG2(_bool, _msg1, _msg2) if ((_bool)) PRINTF((_msg1), (_msg2))
-#define IF_REFLOW_DEBUG_MSG3(_bool, _msg1, _msg2, _msg3) if ((_bool)) PRINTF((_msg1), (_msg2), (_msg3))
-#define IF_REFLOW_DEBUG_MSG4(_bool, _msg1, _msg2, _msg3, _msg4) if ((_bool)) PRINTF((_msg1), (_msg2), (_msg3), (_msg4))
+#define IF_REFLOW_DEBUG_MSG(_bool, _msg1) if ((_bool)) printf((_msg1))
+#define IF_REFLOW_DEBUG_MSG2(_bool, _msg1, _msg2) if ((_bool)) printf((_msg1), (_msg2))
+#define IF_REFLOW_DEBUG_MSG3(_bool, _msg1, _msg2, _msg3) if ((_bool)) printf((_msg1), (_msg2), (_msg3))
+#define IF_REFLOW_DEBUG_MSG4(_bool, _msg1, _msg2, _msg3, _msg4) if ((_bool)) printf((_msg1), (_msg2), (_msg3), (_msg4))
 
 #else //-------------
 #define REFLOW_DEBUG_MSG(_msg) 
@@ -285,7 +283,7 @@ void nsFormControlFrame::SkipResizeReflow(nsSize& aCacheSize,
         aBailOnWidth = aCacheSize.width != kSizeNotSet;
 #ifdef FCF_NOISY
         if (aBailOnWidth) {
-          PRINTF("-------------- #1 Bailing on aCachedAvailableSize.width %d != kSizeNotSet\n", aCachedAvailableSize.width);
+          printf("-------------- #1 Bailing on aCachedAvailableSize.width %d != kSizeNotSet\n", aCachedAvailableSize.width);
         }
 #endif
       } else {
@@ -294,12 +292,12 @@ void nsFormControlFrame::SkipResizeReflow(nsSize& aCacheSize,
         aBailOnWidth = aCachedAvailableSize.width <= width && aCachedAvailableSize.width != kSizeNotSet;
 #ifdef FCF_NOISY
         if (aBailOnWidth) {
-          PRINTF("-------------- #2 Bailing on aCachedAvailableSize.width %d <= width %d\n", aCachedAvailableSize.width, width );
+          printf("-------------- #2 Bailing on aCachedAvailableSize.width %d <= width %d\n", aCachedAvailableSize.width, width );
         } else {
           aBailOnWidth = width <= (aCacheSize.width - aReflowState.mComputedBorderPadding.left - aReflowState.mComputedBorderPadding.right) &&
                          aCachedAvailableSize.width == kSizeNotSet;
           if (aBailOnWidth) {
-            PRINTF("-------------- #2.2 Bailing on width %d <= aCachedAvailableSize.width %d\n",(aCacheSize.width - aReflowState.mComputedBorderPadding.left - aReflowState.mComputedBorderPadding.right), width );
+            printf("-------------- #2.2 Bailing on width %d <= aCachedAvailableSize.width %d\n",(aCacheSize.width - aReflowState.mComputedBorderPadding.left - aReflowState.mComputedBorderPadding.right), width );
           }        
         }
 #endif
@@ -314,7 +312,7 @@ void nsFormControlFrame::SkipResizeReflow(nsSize& aCacheSize,
       //}
 #ifdef FCF_NOISY
       if (aBailOnWidth) {
-        PRINTF("-------------- #3 Bailing on aCachedAvailableSize.width %d == aReflowState.mComputedWidth %d\n", aCachedAvailableSize.width, width );
+        printf("-------------- #3 Bailing on aCachedAvailableSize.width %d == aReflowState.mComputedWidth %d\n", aCachedAvailableSize.width, width );
       }
 #endif
     }
@@ -326,7 +324,7 @@ void nsFormControlFrame::SkipResizeReflow(nsSize& aCacheSize,
         aBailOnHeight = aCacheSize.height != kSizeNotSet;
 #ifdef FCF_NOISY
         if (aBailOnHeight) {
-          PRINTF("-------------- #1 Bailing on aCachedAvailableSize.height %d != kSizeNotSet\n", aCachedAvailableSize.height);
+          printf("-------------- #1 Bailing on aCachedAvailableSize.height %d != kSizeNotSet\n", aCachedAvailableSize.height);
         }
 #endif
       } else {
@@ -335,12 +333,12 @@ void nsFormControlFrame::SkipResizeReflow(nsSize& aCacheSize,
         aBailOnHeight = aCachedAvailableSize.height <= height && aCachedAvailableSize.height != kSizeNotSet;
 #ifdef FCF_NOISY
         if (aBailOnHeight) {
-          PRINTF("-------------- #2 Bailing on aCachedAvailableSize.height %d <= height %d\n", aCachedAvailableSize.height, height );
+          printf("-------------- #2 Bailing on aCachedAvailableSize.height %d <= height %d\n", aCachedAvailableSize.height, height );
         } else {
           aBailOnHeight = height <= (aCacheSize.height - aReflowState.mComputedBorderPadding.left - aReflowState.mComputedBorderPadding.right) &&
                          aCachedAvailableSize.height == kSizeNotSet;
           if (aBailOnHeight) {
-            PRINTF("-------------- #2.2 Bailing on height %d <= aCachedAvailableSize.height %d\n",(aCacheSize.height - aReflowState.mComputedBorderPadding.left - aReflowState.mComputedBorderPadding.right), height );
+            printf("-------------- #2.2 Bailing on height %d <= aCachedAvailableSize.height %d\n",(aCacheSize.height - aReflowState.mComputedBorderPadding.left - aReflowState.mComputedBorderPadding.right), height );
           }        
         }
 #endif
@@ -355,7 +353,7 @@ void nsFormControlFrame::SkipResizeReflow(nsSize& aCacheSize,
       //}
 #ifdef FCF_NOISY
       if (aBailOnHeight) {
-        PRINTF("-------------- #3 Bailing on aCachedAvailableSize.height %d == aReflowState.mComputedHeight %d\n", aCachedAvailableSize.height, height );
+        printf("-------------- #3 Bailing on aCachedAvailableSize.height %d == aReflowState.mComputedHeight %d\n", aCachedAvailableSize.height, height );
       }
 #endif
     }

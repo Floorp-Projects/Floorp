@@ -24,11 +24,6 @@
 #include "nsDeque.h"
 #include "nsCRT.h"
 #include <stdio.h>
-#include "nslog.h"
-
-NS_IMPL_LOG(nsDequeLog)
-#define PRINTF NS_LOG_PRINTF(nsDequeLog)
-#define FLUSH  NS_LOG_FLUSH(nsDequeLog)
 
 //#define _SELFTEST_DEQUE 1
 #undef _SELFTEST_DEQUE 
@@ -55,7 +50,7 @@ nsDeque::~nsDeque() {
 
 #if 0
   char buffer[30];
-  PRINTF("Capacity: %i\n",mCapacity);
+  printf("Capacity: %i\n",mCapacity);
 
   static int mCaps[15] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
   switch(mCapacity) {

@@ -31,11 +31,6 @@
 #include <Resources.h>
 #include <MixedMode.h>
 #include <A4Stuff.h>
-#include "nslog.h"
-
-NS_IMPL_LOG(nsDynamicMDEFLog)
-#define PRINTF NS_LOG_PRINTF(nsDynamicMDEFLog)
-#define FLUSH  NS_LOG_FLUSH(nsDynamicMDEFLog)
   
 extern nsWeakPtr    gMacMenubar;
 extern Handle       gSystemMDEFHandle;  
@@ -188,11 +183,11 @@ pascal void nsDynamicMDEFMain(
 {
   switch (message) {
     case kMenuDrawMsg: 
-      //PRINTF("  Draw passed in menu is = %d \n", *theMenu);
-      //PRINTF("  t= %d l= %d b= %d r= %d\n", (*menuRect).top, (*menuRect).left, (*menuRect).bottom, (*menuRect).right);
-      //PRINTF("  Point.v = %d  Point.h = %d\n", hitPt.v, hitPt.h);
-      //PRINTF("  whichItem = %d \n", *whichItem);
-      //PRINTF("  theMenu.menuID = %d \n", (**theMenu).menuID);
+      //printf("  Draw passed in menu is = %d \n", *theMenu);
+      //printf("  t= %d l= %d b= %d r= %d\n", (*menuRect).top, (*menuRect).left, (*menuRect).bottom, (*menuRect).right);
+      //printf("  Point.v = %d  Point.h = %d\n", hitPt.v, hitPt.h);
+      //printf("  whichItem = %d \n", *whichItem);
+      //printf("  theMenu.menuID = %d \n", (**theMenu).menuID);
       
       nsCheckDestroy(theMenu, whichItem);
       break;
@@ -204,11 +199,11 @@ pascal void nsDynamicMDEFMain(
       break;
       
     case kMenuSizeMsg:
-      //PRINTF("Size passed in menu is = %d \n", *theMenu); 
-      //PRINTF("  t= %d l= %d b= %d r= %d \n", (*menuRect).top, (*menuRect).left, (*menuRect).bottom ,(*menuRect).right);
-      //PRINTF("  Point.v = %d  Point.h = %d \n", hitPt.v, hitPt.h);
-      //PRINTF("  whichItem = %d \n", *whichItem);
-      //PRINTF("  theMenu.menuID = %d \n", (**theMenu).menuID);
+      //printf("Size passed in menu is = %d \n", *theMenu); 
+      //printf("  t= %d l= %d b= %d r= %d \n", (*menuRect).top, (*menuRect).left, (*menuRect).bottom ,(*menuRect).right);
+      //printf("  Point.v = %d  Point.h = %d \n", hitPt.v, hitPt.h);
+      //printf("  whichItem = %d \n", *whichItem);
+      //printf("  theMenu.menuID = %d \n", (**theMenu).menuID);
       
       nsCheckDestroy(theMenu, whichItem);
       
@@ -220,8 +215,8 @@ pascal void nsDynamicMDEFMain(
           // nsIMenu * menu = (nsIMenu *) gPreviousMenuStack[gPreviousMenuStack.Count() - 1];
           MenuHandle menuHandle = (MenuHandle) gPreviousMenuHandleStack[gPreviousMenuHandleStack.Count() - 1];
           
-          //PRINTF("  gPreviousMenuStack.Count() = %d \n", gPreviousMenuStack.Count());
-          //PRINTF("  gPreviousMenuHandleStack.Count() = %d \n", gPreviousMenuHandleStack.Count()); 
+          //printf("  gPreviousMenuStack.Count() = %d \n", gPreviousMenuStack.Count());
+          //printf("  gPreviousMenuHandleStack.Count() = %d \n", gPreviousMenuHandleStack.Count()); 
                 
           if( menu && menuHandle ) {
             
@@ -229,7 +224,7 @@ pascal void nsDynamicMDEFMain(
                  
       	    nsCOMPtr<nsIMenuListener> listener(do_QueryInterface(menu));
       		  if(listener) {
-              //PRINTF("MenuPop \n");
+              //printf("MenuPop \n");
               
               nsMenuEvent mevent;
               mevent.message = NS_MENU_SELECTED;
@@ -247,7 +242,7 @@ pascal void nsDynamicMDEFMain(
       		    gPreviousMenuStack.RemoveMenuAt(gPreviousMenuStack.Count() - 1);
       		    //NS_IF_RELEASE(menu);      		    
               
-              //PRINTF("%d items now on gPreviousMenuStack \n", gPreviousMenuStack.Count());
+              //printf("%d items now on gPreviousMenuStack \n", gPreviousMenuStack.Count());
               gPreviousMenuHandleStack.RemoveElementAt(gPreviousMenuHandleStack.Count() - 1);
               
             }
@@ -305,24 +300,24 @@ void nsDynamicChooseItem(
   Point hitPt, 
   short * whichItem)
 {
-  //PRINTF("enter DynamicChooseItem \n");
+  //printf("enter DynamicChooseItem \n");
   nsCallSystemMDEF(kMenuChooseMsg, theMenu, menuRect, hitPt, whichItem);
    
   nsCheckDestroy(theMenu, whichItem);
   
   gCurrentMenuItem = *whichItem;
   
-  //PRINTF("exit DynamicChooseItem \n");
+  //printf("exit DynamicChooseItem \n");
 }
 
 //------------------------------------------------------------------------------
 void nsDynamicSizeTheMenu(
   MenuHandle theMenu)
 {
-  //PRINTF("enter DynamicSizeTheMenu \n");
+  //printf("enter DynamicSizeTheMenu \n");
   
   nsDoMagic(theMenu);
-  //PRINTF("exit DynamicSizeTheMenu \n");
+  //printf("exit DynamicSizeTheMenu \n");
 }
 
 //------------------------------------------------------------------------------
@@ -343,7 +338,7 @@ bool nsIsHierChild(MenuHandle theMenu)
 //------------------------------------------------------------------------------
 void nsDoMagic(MenuHandle theMenu)
 {
-  //PRINTF("DoMagic \n");
+  //printf("DoMagic \n");
   // ask if this is a child of the previous menu
   PRBool isChild = PR_FALSE;
   
@@ -374,7 +369,7 @@ void nsDoMagic(MenuHandle theMenu)
 //------------------------------------------------------------------------------
 void nsBuildMenu(MenuHandle theMenu, PRBool isChild)
 { 
-  // PRINTF("enter BuildMenu \n");
+ // printf("enter BuildMenu \n");
   nsCOMPtr<nsIMenuBar> menubar = do_QueryReferent(gMacMenubar);
   if (!menubar || !theMenu) {
     return;
@@ -410,7 +405,7 @@ void nsBuildMenu(MenuHandle theMenu, PRBool isChild)
               gPreviousTopLevelMenu = menu;
               
               gPreviousMenuBar = getter_AddRefs(NS_GetWeakReference(menubar));
-	            //PRINTF("exit BuildMenu \n");
+	            //printf("exit BuildMenu \n");
 	            return;   
 	          }
 	        }
@@ -420,7 +415,7 @@ void nsBuildMenu(MenuHandle theMenu, PRBool isChild)
       // Not top level, so we can't use recursive MenuSelect <sigh>
       // We must use the previously chosen menu item in combination
       // with the current menu to determine what menu needs to be constructed
-    //PRINTF("gCurrentMenuItem = %d \n", gCurrentMenuItem);
+      //printf("gCurrentMenuItem = %d \n", gCurrentMenuItem);
         if (gCurrentMenuItem){
         	if (gPreviousMenuStack.Count() > 0)
         	{
@@ -428,7 +423,7 @@ void nsBuildMenu(MenuHandle theMenu, PRBool isChild)
         	    gPreviousMenuStack.GetMenuAt(gPreviousMenuStack.Count() - 1, getter_AddRefs(prevMenu));
         	  
 	            //nsIMenu * prevMenu = (nsIMenu *) gPreviousMenuStack[gPreviousMenuStack.Count() - 1];
-	            //PRINTF("gPreviousMenuStack.Count() = %d \n", gPreviousMenuStack.Count() );
+	            //printf("gPreviousMenuStack.Count() = %d \n", gPreviousMenuStack.Count() );
 	            
           if(prevMenu)
           {
@@ -445,7 +440,7 @@ void nsBuildMenu(MenuHandle theMenu, PRBool isChild)
         }
      }
   }
-  //PRINTF("exit BuildMenu \n");
+  //printf("exit BuildMenu \n");
 }
 
 //------------------------------------------------------------------------------
@@ -456,7 +451,7 @@ void nsPostBuild(nsIMenu * menu, MenuHandle theMenu, PRBool isChild)
   {
     nsPushMenu(menu);  
     nsPushMenuHandle(theMenu);    
-    //PRINTF("Push: %d items in gMenuHandleStack \n", gMenuHandleStack.Count());
+    //printf("Push: %d items in gMenuHandleStack \n", gMenuHandleStack.Count());
   } 
 }
 
@@ -511,8 +506,8 @@ void nsPreviousMenuStackUnwind(nsIMenu * aMenuJustBuilt, MenuHandle aMenuHandleJ
 {
   //PRBool shouldReleaseMenubar = PR_FALSE;
   
-  //PRINTF("PreviousMenuStackUnwind called \n");
-  //PRINTF("%d items on gPreviousMenuStack \n", gPreviousMenuStack.Count());
+  //printf("PreviousMenuStackUnwind called \n");
+  //printf("%d items on gPreviousMenuStack \n", gPreviousMenuStack.Count());
   while (gPreviousMenuHandleStack.Count())
   {
     nsCOMPtr<nsIMenu> menu; // = (nsIMenu *) gPreviousMenuStack[gPreviousMenuStack.Count() - 1];
@@ -523,8 +518,8 @@ void nsPreviousMenuStackUnwind(nsIMenu * aMenuJustBuilt, MenuHandle aMenuHandleJ
     if (menu)
     {  
       
-      //PRINTF("  gPreviousMenuStack.Count() = %d \n", gPreviousMenuStack.Count());
-      //PRINTF("  gPreviousMenuHandleStack.Count() = %d \n", gPreviousMenuHandleStack.Count()); 
+      //printf("  gPreviousMenuStack.Count() = %d \n", gPreviousMenuStack.Count());
+      //printf("  gPreviousMenuHandleStack.Count() = %d \n", gPreviousMenuHandleStack.Count()); 
             
       if( menuHandle ) {
         
@@ -548,13 +543,13 @@ void nsPreviousMenuStackUnwind(nsIMenu * aMenuJustBuilt, MenuHandle aMenuHandleJ
             // NS_IF_RELEASE(menu);
             //shouldReleaseMenubar = PR_TRUE;
             
-            //PRINTF("%d items now on gPreviousMenuStack \n", gPreviousMenuStack.Count());
+            //printf("%d items now on gPreviousMenuStack \n", gPreviousMenuStack.Count());
             gPreviousMenuHandleStack.RemoveElementAt(gPreviousMenuHandleStack.Count() - 1);          
           }
         } 
         else {
-          //PRINTF("  gPreviousMenuStack.Count() = %d \n", gPreviousMenuStack.Count());
-          //PRINTF("  gPreviousMenuHandleStack.Count() = %d \n", gPreviousMenuHandleStack.Count()); 
+            //printf("  gPreviousMenuStack.Count() = %d \n", gPreviousMenuStack.Count());
+            //printf("  gPreviousMenuHandleStack.Count() = %d \n", gPreviousMenuHandleStack.Count()); 
             
           // we are the aMenuHandleJustBuilt
           return;
@@ -576,8 +571,8 @@ void nsPreviousMenuStackUnwind(nsIMenu * aMenuJustBuilt, MenuHandle aMenuHandleJ
   //if ( shouldReleaseMenubar )
   //  gPreviousMenuBar = nsnull;
   
-  //PRINTF("  gPreviousMenuStack.Count() = %d \n", gPreviousMenuStack.Count());
-  //PRINTF("  gPreviousMenuHandleStack.Count() = %d \n", gPreviousMenuHandleStack.Count()); 
+  //printf("  gPreviousMenuStack.Count() = %d \n", gPreviousMenuStack.Count());
+  //printf("  gPreviousMenuHandleStack.Count() = %d \n", gPreviousMenuHandleStack.Count()); 
 }
 
 //------------------------------------------------------------------------------

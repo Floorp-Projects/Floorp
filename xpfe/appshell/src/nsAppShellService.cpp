@@ -63,11 +63,6 @@
 #include "jsapi.h"
 
 #include "nsAppShellService.h"
-#include "nslog.h"
-
-NS_IMPL_LOG(nsAppShellServiceLog)
-#define PRINTF NS_LOG_PRINTF(nsAppShellServiceLog)
-#define FLUSH  NS_LOG_FLUSH(nsAppShellServiceLog)
 
 /* Define Class IDs */
 static NS_DEFINE_CID(kAppShellCID,          NS_APPSHELL_CID);
@@ -333,8 +328,10 @@ nsAppShellService::EnumerateComponents( EnumeratorMemberFunction function ) {
         }
     } else {
         // Unable to set up for subkey enumeration.
-      PRINTF( "Unable to enumerator app shell components, %s rv=0x%08X\n",
-              failed, (int)rv );
+        #ifdef NS_DEBUG
+            printf( "Unable to enumerator app shell components, %s rv=0x%08X\n",
+                    failed, (int)rv );
+        #endif
     }
 
     return;
@@ -353,7 +350,7 @@ nsAppShellService::InitializeComponent( const nsCID &aComponentCID ) {
         rv = component->Initialize( this, mCmdLineService );
         #ifdef NS_DEBUG
             char *name = aComponentCID.ToString();
-            PRINTF( "Initialized app shell component %s, rv=0x%08X\n",
+            printf( "Initialized app shell component %s, rv=0x%08X\n",
                     name, (int)rv );
             Recycle(name);
         #endif
@@ -363,7 +360,7 @@ nsAppShellService::InitializeComponent( const nsCID &aComponentCID ) {
         // Error creating component.
         #ifdef NS_DEBUG
             char *name = aComponentCID.ToString();
-            PRINTF( "Error creating app shell component %s, rv=0x%08X\n",
+            printf( "Error creating app shell component %s, rv=0x%08X\n",
                     name, (int)rv );
             Recycle(name);
         #endif
@@ -384,7 +381,7 @@ nsAppShellService::ShutdownComponent( const nsCID &aComponentCID ) {
         rv = component->Shutdown();
 #ifdef NS_DEBUG
             char *name = aComponentCID.ToString();
-            PRINTF( "Shut down app shell component %s, rv=0x%08X\n",
+            printf( "Shut down app shell component %s, rv=0x%08X\n",
                     name, (int)rv );
             nsCRT::free(name);
 #endif
@@ -395,7 +392,7 @@ nsAppShellService::ShutdownComponent( const nsCID &aComponentCID ) {
         // a service).
 #ifdef NS_DEBUG
             char *name = aComponentCID.ToString();
-            PRINTF( "Unable to shut down app shell component %s, rv=0x%08X\n",
+            printf( "Unable to shut down app shell component %s, rv=0x%08X\n",
                     name, (int)rv );
             nsCRT::free(name);
 #endif

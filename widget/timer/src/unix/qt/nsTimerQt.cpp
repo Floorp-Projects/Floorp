@@ -25,11 +25,6 @@
 #include <qtimer.h>
 
 #include <stdio.h>
-#include "nslog.h"
-
-NS_IMPL_LOG(nsTimerQtLog)
-#define PRINTF NS_LOG_PRINTF(nsTimerQtLog)
-#define FLUSH  NS_LOG_FLUSH(nsTimerQtLog)
 
 static NS_DEFINE_IID(kITimerIID, NS_ITIMER_IID);
 

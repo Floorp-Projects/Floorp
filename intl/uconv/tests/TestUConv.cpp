@@ -24,8 +24,6 @@
 #include "nsICharsetConverterManager.h"
 #include "nsICharsetConverterManager2.h"
 #include "nsString.h"
-#undef printf
-#undef fprintf
 
 //----------------------------------------------------------------------------
 // Global functions and data [declaration]

@@ -64,6 +64,7 @@
 #include "nsICachedNetData.h"
 
 #include "nsCOMPtr.h"
+PRLogModuleInfo *IMAP;
 
 // netlib required files
 #include "nsIStreamListener.h"
@@ -76,11 +77,6 @@
 #if 0
 #include "nsIHashAlgorithm.h"
 #endif
-#include "nslog.h"
-
-NS_IMPL_LOG(IMAPLog)
-#define PRINTF NS_LOG_PRINTF(IMAPLog)
-#define FLUSH  NS_LOG_FLUSH(IMAPLog)
 
 #define ONE_SECOND ((PRUint32)1000)    // one second
 
@@ -284,6 +280,10 @@ nsImapProtocol::nsImapProtocol() :
 
   Configure(gTooFastTime, gIdealTime, gChunkAddSize, gChunkSize,
                     gChunkThreshold, gFetchByChunks, gMaxChunkSize);
+
+  // where should we do this? Perhaps in the factory object?
+  if (!IMAP)
+    IMAP = PR_NewLogModule("IMAP");
 }
 
 nsresult nsImapProtocol::Configure(PRInt32 TooFastTime, PRInt32 IdealTime,
@@ -871,7 +871,7 @@ nsImapProtocol::PseudoInterruptMsgLoad(nsIImapUrl *aImapUrl, PRBool *interrupted
     }
   }
 #ifdef DEBUG_bienvenu
-  PRINTF("interrupt msg load : %s\n", (*interrupted) ? "TRUE" : "FALSE");
+  printf("interrupt msg load : %s\n", (*interrupted) ? "TRUE" : "FALSE");
 #endif
   return NS_OK;
 }
@@ -907,7 +907,7 @@ nsImapProtocol::ImapThreadMainLoop()
     PR_ExitMonitor(m_urlReadyToRunMonitor);
     if (err == PR_FAILURE && PR_PENDING_INTERRUPT_ERROR == PR_GetError()) 
     {
-        PRINTF("error waiting for monitor\n");
+      printf("error waiting for monitor\n");
       break;
     }
 
@@ -998,7 +998,7 @@ PRBool nsImapProtocol::ProcessCurrentURL()
 #ifdef DEBUG_bienvenu1
     nsXPIDLCString urlSpec;
     mailnewsurl->GetSpec(getter_Copies(urlSpec));
-    PRINTF("processing url %s\n", (const char *) urlSpec);
+    printf("processing url %s\n", (const char *) urlSpec);
 #endif
   if (NS_SUCCEEDED(rv) && mailnewsurl && m_imapMiscellaneousSink)
   {
@@ -1111,7 +1111,7 @@ PRBool nsImapProtocol::ProcessCurrentURL()
 
 #ifdef DEBUG_bienvenu1
     mailnewsurl->GetSpec(getter_Copies(urlSpec));
-    PRINTF("end processing url %s\n", (const char *) urlSpec);
+    printf("end processing url %s\n", (const char *) urlSpec);
 #endif
   // this is so hokey...we MUST clear any local references to the url 
   // BEFORE calling ReleaseUrlState
@@ -1333,7 +1333,7 @@ nsresult nsImapProtocol::LoadUrl(nsIURI * aURL, nsISupports * aConsumer)
 #ifdef DEBUG_bienvenu1
     nsXPIDLCString urlSpec;
     aURL->GetSpec(getter_Copies(urlSpec));
-    PRINTF("loading url %s\n", (const char *) urlSpec);
+    printf("loading url %s\n", (const char *) urlSpec);
 #endif
     m_urlInProgress = PR_TRUE;
     rv = SetupWithUrl(aURL, aConsumer); 
@@ -1518,9 +1518,9 @@ NS_IMETHODIMP nsImapProtocol::CanHandleUrl(nsIImapUrl * aImapUrl,
                       }
                   }
 #ifdef DEBUG_bienvenu1
-                  PRINTF("proposed url = %s folder for connection %s has To Wait = %s can run = %s\n",
+                  printf("proposed url = %s folder for connection %s has To Wait = %s can run = %s\n",
                     folderNameForProposedUrl, curUrlFolderName.GetBuffer(),
-                         (*hasToWait) ? "TRUE" : "FALSE", (*aCanRunUrl) ? "TRUE" : "FALSE");
+                    (*hasToWait) ? "TRUE" : "FALSE", (*aCanRunUrl) ? "TRUE" : "FALSE");
 #endif
                   PR_FREEIF(folderNameForProposedUrl);
               }
@@ -1732,7 +1732,7 @@ void nsImapProtocol::ProcessSelectedStateURL()
                 {
                   // The shell wasn't in the cache.  Deal with this case later.
                   Log("SHELL",NULL,"Loading part, shell not found in cache!");
-                  //PRINTF("BODYSHELL: Loading part, shell not found in cache!");
+                  //PR_LOG(IMAP, out, ("BODYSHELL: Loading part, shell not found in cache!"));
                   // The parser will extract the part number from the current URL.
                   SetContentModified(modType);
                   Bodystructure(messageIdString, bMessageIdsAreUids);
@@ -1740,7 +1740,7 @@ void nsImapProtocol::ProcessSelectedStateURL()
                 else
                 {
                   Log("SHELL", NULL, "Loading Part, using cached shell.");
-                  //PRINTF("BODYSHELL: Loading part, using cached shell.");
+                  //PR_LOG(IMAP, out, ("BODYSHELL: Loading part, using cached shell."));
                   SetContentModified(modType);
                   foundShell->SetConnection(this);
                   GetServerStateParser().UseCachedShell(foundShell);
@@ -1795,7 +1795,7 @@ void nsImapProtocol::ProcessSelectedStateURL()
                   if (foundShell)
                   {
                     Log("SHELL",NULL,"Loading message, using cached shell.");
-                    //PRINTF("BODYSHELL: Loading message, using cached shell.");
+                    //PR_LOG(IMAP, out, ("BODYSHELL: Loading message, using cached shell."));
                     foundShell->SetConnection(this);
                     GetServerStateParser().UseCachedShell(foundShell);
                     foundShell->Generate(NULL);
@@ -3301,7 +3301,7 @@ PRBool nsImapProtocol::CheckNewMail()
 // log info including current state...
 void nsImapProtocol::Log(const char *logSubName, const char *extraInfo, const char *logData)
 {
-  if (NS_LOG_ENABLED(IMAPLog))
+  if (PR_LOG_TEST(IMAP, PR_LOG_ALWAYS))
   {
     static char *nonAuthStateName = "NA";
     static char *authStateName = "A";
@@ -3315,9 +3315,9 @@ void nsImapProtocol::Log(const char *logSubName, const char *extraInfo, const ch
       if (m_runningUrl)
       {
         if (extraInfo)
-          PRINTF("%s:%s-%s:%s:%s: %s", hostName,selectedStateName, GetServerStateParser().GetSelectedMailboxName(), logSubName, extraInfo, logData);
+          PR_LOG(IMAP, PR_LOG_ALWAYS, ("%s:%s-%s:%s:%s: %s", hostName,selectedStateName, GetServerStateParser().GetSelectedMailboxName(), logSubName, extraInfo, logData));
         else
-          PRINTF("%s:%s-%s:%s: %s", hostName,selectedStateName, GetServerStateParser().GetSelectedMailboxName(), logSubName, logData);
+          PR_LOG(IMAP, PR_LOG_ALWAYS, ("%s:%s-%s:%s: %s", hostName,selectedStateName, GetServerStateParser().GetSelectedMailboxName(), logSubName, logData));
       }
       return;
       break;
@@ -3337,9 +3337,9 @@ void nsImapProtocol::Log(const char *logSubName, const char *extraInfo, const ch
     if (m_runningUrl)
     {
       if (extraInfo)
-        PRINTF("%s:%s:%s:%s: %s", hostName,stateName,logSubName,extraInfo,logData);
+        PR_LOG(IMAP, PR_LOG_ALWAYS, ("%s:%s:%s:%s: %s", hostName,stateName,logSubName,extraInfo,logData));
       else
-        PRINTF("%s:%s:%s: %s",hostName,stateName,logSubName,logData);
+        PR_LOG(IMAP, PR_LOG_ALWAYS, ("%s:%s:%s: %s",hostName,stateName,logSubName,logData));
     }
   }
 }
@@ -3690,7 +3690,7 @@ char* nsImapProtocol::CreateNewLineFromSocket()
       // death signal may have been received which means we should still kick out of the loop.
       do
       {
-//		  PRINTF("waiting for data\n");
+//		  printf("waiting for data\n");
         // wait on the data available monitor!!
         PR_EnterMonitor(m_dataAvailableMonitor);
         // wait for data arrival

@@ -73,11 +73,6 @@
 
 #include <stdlib.h>
 #include <ctype.h>
-#include "nslog.h"
-
-NS_IMPL_LOG(nsWindowLog)
-#define PRINTF NS_LOG_PRINTF(nsWindowLog)
-#define FLUSH  NS_LOG_FLUSH(nsWindowLog)
 
 #ifdef DEBUG_sobotka
 static int WINDOWCOUNT = 0;
@@ -329,7 +324,7 @@ void nsWindow::InitEvent(nsGUIEvent& event, PRUint32 aEventType, nsPoint* aPoint
       WinMapWindowPoints( HWND_DESKTOP, mWnd, &ptl, 1);
 
 #if 0
-      PRINTF("++++++++++nsWindow::InitEvent (!pt) mapped point = %ld, %ld\n", ptl.x, ptl.y);
+      printf("++++++++++nsWindow::InitEvent (!pt) mapped point = %ld, %ld\n", ptl.x, ptl.y);
 #endif
 
       PM2NS( ptl);
@@ -338,7 +333,7 @@ void nsWindow::InitEvent(nsGUIEvent& event, PRUint32 aEventType, nsPoint* aPoint
       event.point.y = ptl.y;
 
 #if 0
-      PRINTF("++++++++++nsWindow::InitEvent (!pt) converted point = %ld, %ld\n", ptl.x, ptl.y);
+      printf("++++++++++nsWindow::InitEvent (!pt) converted point = %ld, %ld\n", ptl.x, ptl.y);
 #endif
    }
    else
@@ -347,7 +342,7 @@ void nsWindow::InitEvent(nsGUIEvent& event, PRUint32 aEventType, nsPoint* aPoint
       event.point.y = aPoint->y;
 
 #if 0
-      PRINTF("++++++++++nsWindow::InitEvent point = %ld, %ld\n", aPoint->x, aPoint->y);
+      printf("++++++++++nsWindow::InitEvent point = %ld, %ld\n", aPoint->x, aPoint->y);
 #endif
    }
 
@@ -828,11 +823,11 @@ void nsWindow::RealDoCreate( HWND              hwndP,
    NS_ASSERTION( mWnd, "Couldn't create window");
 
 #if DEBUG_sobotka
-   PRINTF("\n+++++++++++In nsWindow::RealDoCreate created 0x%lx, %d x %d\n",
-          mWnd, aRect.width, aRect.height);
-   PRINTF("+++++++++++Location =  %d x %d\n", aRect.x, aRect.y);
-   PRINTF("+++++++++++Parent = 0x%lx\n", GetParentHWND());
-   PRINTF("+++++++++++WINDOWCOUNT+ = %d\n", ++WINDOWCOUNT);
+   printf("\n+++++++++++In nsWindow::RealDoCreate created 0x%lx, %d x %d\n",
+	  mWnd, aRect.width, aRect.height);
+   printf("+++++++++++Location =  %d x %d\n", aRect.x, aRect.y);
+   printf("+++++++++++Parent = 0x%lx\n", GetParentHWND());
+   printf("+++++++++++WINDOWCOUNT+ = %d\n", ++WINDOWCOUNT);
 #endif
 
    // Make sure we have a device context from somewhere
@@ -853,7 +848,7 @@ void nsWindow::RealDoCreate( HWND              hwndP,
          mContext->Init( (nsNativeWidget) mWnd);
 #ifdef DEBUG
       else
-        PRINTF( "Couldn't find DC instance for nsWindow\n");
+         printf( "Couldn't find DC instance for nsWindow\n");
 #endif
    }
    WinSetPresParam( mWnd, PP_FONTNAMESIZE,
@@ -961,8 +956,8 @@ NS_METHOD nsWindow::Destroy()
    else
    {
 #if DEBUG_sobotka
-     PRINTF("\n++++++++++nsWindow::Destroy trashing 0x%lx\n\n", mHackDestroyWnd ? mHackDestroyWnd : mWnd);
-     PRINTF("+++++++++++WINDOWCOUNT- = %d\n\n", --WINDOWCOUNT);
+     printf("\n++++++++++nsWindow::Destroy trashing 0x%lx\n\n", mHackDestroyWnd ? mHackDestroyWnd : mWnd);
+     printf("+++++++++++WINDOWCOUNT- = %d\n\n", --WINDOWCOUNT);
 #endif
       // avoid calling into other objects if we're being deleted, 'cos
       // they must have no references to us.
@@ -1022,7 +1017,7 @@ void nsWindow::NS2PM( POINTL &ptl)
 {
    ptl.y = GetClientHeight() - ptl.y - 1;
 #if 0
-   PRINTF("+++++++++In NS2PM client height = %ld\n", GetClientHeight());
+   printf("+++++++++In NS2PM client height = %ld\n", GetClientHeight());
 #endif
 }
 
@@ -1192,7 +1187,7 @@ NS_METHOD nsWindow::Resize(PRInt32 aX,
             Update();
 
 #if DEBUG_sobotka
-      PRINTF("+++++++++++Resized 0x%lx at %ld, %ld to %ld x %ld\n\n", mWnd, ptl.x, ptl.y, w, GetHeight(h));
+   printf("+++++++++++Resized 0x%lx at %ld, %ld to %ld x %ld\n\n", mWnd, ptl.x, ptl.y, w, GetHeight(h));
 #endif
 
    }
@@ -1334,7 +1329,7 @@ NS_METHOD nsWindow::SetFont(const nsFont &aFont)
       BOOL rc = WinSetPresParam( mWnd, PP_FONTNAMESIZE,
                                  strlen( buffer) + 1, buffer);
       if( !rc)
-        PRINTF( "WinSetPresParam PP_FONTNAMESIZE %s failed\n", buffer);
+         printf( "WinSetPresParam PP_FONTNAMESIZE %s failed\n", buffer);
    
       delete [] buffer;
    }
@@ -1540,7 +1535,7 @@ void* nsWindow::GetNativeData(PRUint32 aDataType)
             break;
         default: 
 #ifdef DEBUG
-          PRINTF( "*** Someone's added a new NS_NATIVE value...\n");
+            printf( "*** Someone's added a new NS_NATIVE value...\n");
 #endif
             break;
     }
@@ -1561,7 +1556,7 @@ void nsWindow::FreeNativeData(void * data, PRUint32 aDataType)
         if( mDragInside) rc = DrgReleasePS( mPS);
         else rc = WinReleasePS( mPS);
         if( !rc)
-          PRINTF( "Error from {Win/Drg}ReleasePS()\n");
+          printf( "Error from {Win/Drg}ReleasePS()\n");
         mPS = 0;
       }
       break;
@@ -1575,7 +1570,9 @@ void nsWindow::FreeNativeData(void * data, PRUint32 aDataType)
     case NS_NATIVE_COLORMAP:
       break;
     default: 
-      PRINTF( "*** Someone's added a new NS_NATIVE value...\n");
+#ifdef DEBUG
+      printf( "*** Someone's added a new NS_NATIVE value...\n");
+#endif
       break;
   }
 }
@@ -2362,7 +2359,7 @@ PRBool nsWindow::DispatchMouseEvent( PRUint32 aEventType, MPARAM mp1, MPARAM mp2
             gCurrentWindow = this;
           }
         } else {
-          //PRINTF("Mouse exit");
+          //printf("Mouse exit");
         }
 
       } break;

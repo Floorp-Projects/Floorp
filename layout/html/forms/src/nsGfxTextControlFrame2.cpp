@@ -100,6 +100,7 @@
 #define DEFAULT_COLUMN_WIDTH 20
 #define GUESS_INPUT_SIZE 150  // 10 pixels wide
 
+
 static NS_DEFINE_CID(kHTMLEditorCID, NS_HTMLEDITOR_CID);
 static NS_DEFINE_CID(kFrameSelectionCID, NS_FRAMESELECTION_CID);
 
@@ -1374,8 +1375,8 @@ nsGfxTextControlFrame2::CalculateSizeStandard (nsIPresContext*       aPresContex
   aDesiredSize.width = charWidth;
 
 #ifdef DEBUG_rodsXXX
-  PRINTF("Ave: %d  MA: %d  %d\n", charWidth, measAveWidth, charWidth-measAveWidth);
-  PRINTF("Ave: %d  MA: %d  %d\n", charWidth/15, measAveWidth/15, (charWidth/15)-(measAveWidth/15));
+  printf("Ave: %d  MA: %d  %d\n", charWidth, measAveWidth, charWidth-measAveWidth);
+  printf("Ave: %d  MA: %d  %d\n", charWidth/15, measAveWidth/15, (charWidth/15)-(measAveWidth/15));
 #endif
 
   // set the default col size back
@@ -2083,7 +2084,7 @@ nsGfxTextControlFrame2::GetPrefSize(nsBoxLayoutState& aState, nsSize& aSize)
     nsSize size(169, 24);
     nsSize actual(aSize.width/15, 
                   aSize.height/15);
-    PRINTF("nsGfxText(field) %d,%d  %d,%d  %d,%d\n", 
+    printf("nsGfxText(field) %d,%d  %d,%d  %d,%d\n", 
            size.width, size.height, actual.width, actual.height, actual.width-size.width, actual.height-size.height);  // text field
   }
 #endif

@@ -48,11 +48,6 @@
 #define NS_IMPL_IDS
 #  include "nsIPlatformCharset.h"
 #undef NS_IMPL_IDS
-#include "nslog.h"
-
-NS_IMPL_LOG(nsClipboardLog)
-#define PRINTF NS_LOG_PRINTF(nsClipboardLog)
-#define FLUSH  NS_LOG_FLUSH(nsClipboardLog)
 
 
 // The class statics:
@@ -235,7 +230,7 @@ NS_IMETHODIMP nsClipboard::GetData(nsITransferable * aTransferable, PRInt32 aWhi
   if (nsnull != aTransferable) {
     return GetNativeClipboardData(aTransferable, aWhichClipboard);
   } else {
-    PRINTF("  nsClipboard::GetData(), aTransferable is NULL.\n");
+    printf("  nsClipboard::GetData(), aTransferable is NULL.\n");
   }
 
   return NS_ERROR_FAILURE;
@@ -293,7 +288,7 @@ NS_IMETHODIMP nsClipboard::SetNativeClipboardData(PRInt32 aWhichClipboard)
 
   // make sure we have a good transferable
   if (nsnull == transferable) {
-    PRINTF("nsClipboard::SetNativeClipboardData(): no transferable!\n");
+    printf("nsClipboard::SetNativeClipboardData(): no transferable!\n");
     return NS_ERROR_FAILURE;
   }
 
@@ -406,7 +401,7 @@ nsClipboard::GetNativeClipboardData(nsITransferable * aTransferable,
 
   // make sure we have a good transferable
   if (nsnull == aTransferable) {
-    PRINTF("  GetNativeClipboardData: Transferable is null!\n");
+    printf("  GetNativeClipboardData: Transferable is null!\n");
     return NS_ERROR_FAILURE;
   }
 
@@ -556,7 +551,7 @@ nsClipboard::SelectionReceiver (GtkWidget *aWidget,
     status = XmbTextPropertyToTextList(GDK_DISPLAY(), &prop, &tmpData, &foo);
 
     if (foo > 1)
-      PRINTF("Got multiple strings from XmbTextPropertyToTextList.. don't know how to handle this yet\n");
+      printf("Got multiple strings from XmbTextPropertyToTextList.. don't know how to handle this yet\n");
 
     PRInt32 numberOfBytes = 0;
 
@@ -607,7 +602,7 @@ nsClipboard::SelectionReceiver (GtkWidget *aWidget,
         PRInt32 numberTmp = numberOfBytes;
         rv = decoder->Convert(data, &numberTmp, unicodeData, &outUnicodeLen);
         if (numberTmp != numberOfBytes)
-          PRINTF("didn't consume all the bytes\n");
+          printf("didn't consume all the bytes\n");
 
         (unicodeData)[outUnicodeLen] = '\0';    // null terminate. Convert() doesn't do it for us
       }
@@ -628,7 +623,7 @@ nsClipboard::SelectionReceiver (GtkWidget *aWidget,
     PRInt32 numberOfBytes = (PRInt32)aSD->length;
 
 #ifdef DEBUG_CLIPBOARD
-    PRINTF("UTF8_STRING is %s\nlength is %i\n", aSD->data, aSD->length);
+    printf("UTF8_STRING is %s\nlength is %i\n", aSD->data, aSD->length);
 #endif
 
     nsCOMPtr<nsIUnicodeDecoder> decoder;
@@ -647,7 +642,7 @@ nsClipboard::SelectionReceiver (GtkWidget *aWidget,
         PRInt32 numberTmp = numberOfBytes;
         rv = decoder->Convert(data, &numberTmp, unicodeData, &outUnicodeLen);
         if (numberTmp != numberOfBytes)
-          PRINTF("didn't consume all the bytes\n");
+          printf("didn't consume all the bytes\n");
 
         (unicodeData)[outUnicodeLen] = '\0';    // null terminate. Convert() doesn't do it for us
       }
@@ -864,9 +859,9 @@ void nsClipboard::SelectionGetCB(GtkWidget        *widget,
     
 
 #ifdef DEBUG_CLIPBOARD
-    PRINTF("got data from transferable\n");
-    PRINTF("clipboardData is %s\n", clipboardData);
-    PRINTF("length is %d\n", dataLength);
+    printf("got data from transferable\n");
+    printf("clipboardData is %s\n", clipboardData);
+    printf("length is %d\n", dataLength);
 #endif
 
     if (type.Equals("STRING")) {
@@ -978,7 +973,7 @@ void nsClipboard::SelectionGetCB(GtkWidget        *widget,
   }
 #ifdef DEBUG_pavlov
   else
-    PRINTF("Transferable didn't support data flavor %s (type = %d)\n",
+    printf("Transferable didn't support data flavor %s (type = %d)\n",
            dataFlavor ? dataFlavor : "None", aInfo);
 #endif
 }
@@ -1188,7 +1183,7 @@ PRBool nsClipboard::GetTargets(GdkAtom aSelectionAtom)
 void nsClipboard::SendClipPing()
 {
 #ifdef DEBUG_CLIPBOARD
-  PRINTF("nsClipboard::SendClipPing()\n");
+  printf("nsClipboard::SendClipPing()\n");
 #endif
   XClientMessageEvent send_event;
   send_event.type = ClientMessage;
@@ -1251,7 +1246,7 @@ PRBool nsClipboard::FindSelectionNotifyEvent()
       return PR_TRUE;
     } else if (xevent.type == ClientMessage) {
 #ifdef DEBUG_CLIPBOARD
-      PRINTF("got client message %i\n", i);
+      printf("got client message %i\n", i);
 #endif
       SendClipPing(); // send out the message again
     }
@@ -1264,14 +1259,14 @@ PRBool nsClipboard::FindSelectionNotifyEvent()
                              SelectionNotify,
                              &xevent)) {
 #ifdef DEBUG_CLIPBOARD
-    PRINTF("call to XCheckTypedWindowEvent returned me a SelectionNotify event!\n");
+    printf("call to XCheckTypedWindowEvent returned me a SelectionNotify event!\n");
 #endif
     send_selection_notify_to_widget(&xevent, sWidget);
     return PR_TRUE;
   }
 
 #ifdef DEBUG_CLIPBOARD
-  PRINTF("can't find a SelectionNotify event, giving up\n");
+  printf("can't find a SelectionNotify event, giving up\n");
 #endif
 
   return PR_FALSE;

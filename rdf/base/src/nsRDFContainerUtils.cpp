@@ -40,11 +40,6 @@
 #include "prprf.h"
 #include "rdf.h"
 #include "rdfutil.h"
-#include "nslog.h"
-
-NS_IMPL_LOG(nsRDFContainerUtilsLog)
-#define PRINTF NS_LOG_PRINTF(nsRDFContainerUtilsLog)
-#define FLUSH  NS_LOG_FLUSH(nsRDFContainerUtilsLog)
 
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
 static const char kRDFNameSpaceURI[] = RDF_NAMESPACE_URI;
@@ -378,7 +373,7 @@ RDFContainerUtilsImpl::~RDFContainerUtilsImpl()
 {
 #ifdef DEBUG_REFS
     --gInstanceCount;
-    PRINTF("%d - RDF: RDFContainerUtilsImpl\n", gInstanceCount);
+    fprintf(stdout, "%d - RDF: RDFContainerUtilsImpl\n", gInstanceCount);
 #endif
 
     if (--gRefCnt == 0) {

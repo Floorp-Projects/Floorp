@@ -24,11 +24,6 @@
 #include "nsDeviceContextSpecPh.h"
 #include "nsGfxCIID.h"
 #include "plstr.h"
-#include "nslog.h"
-
-NS_IMPL_LOG(nsDeviceContextSpecFactoryPLog)
-#define PRINTF NS_LOG_PRINTF(nsDeviceContextSpecFactoryPLog)
-#define FLUSH  NS_LOG_FLUSH(nsDeviceContextSpecFactoryPLog)
 
 #include <Pt.h>
 #include "nsPhGfxLog.h"
@@ -77,7 +72,7 @@ NS_IMETHODIMP nsDeviceContextSpecFactoryPh :: CreateDeviceContextSpec(nsIDeviceC
 	{
 #else
 	PpLoadPrinter(pc, NULL);
-	PRINTF("LoadPrinter: %X\n", pc);
+	printf("LoadPrinter: %X\n", pc);
 #endif
 
 	  nsIDeviceContextSpec    *devSpec = nsnull;

@@ -46,11 +46,6 @@
 #include "nsCOMPtr.h"
 #include "nsIMenuListener.h"
 #include "nsIComponentManager.h"
-#include "nslog.h"
-
-NS_IMPL_LOG(nsMenuLog)
-#define PRINTF NS_LOG_PRINTF(nsMenuLog)
-#define FLUSH  NS_LOG_FLUSH(nsMenuLog)
 
 // IIDs
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
@@ -355,7 +350,7 @@ NS_METHOD nsMenu::InsertItemAt(const PRUint32 aCount, nsISupports * aMenuItem)
   nsCOMPtr<nsIMenuItem> menuItem(do_QueryInterface(aMenuItem));
   if (menuItem) {
     menuItem->GetLabel(name);
-    PRINTF("%s \n", name.ToNewCString());
+	printf("%s \n", name.ToNewCString());
     nsIWidget * win = GetParentWidget();
     PRInt32 id = ((nsWindow *)win)->GetNewCmdMenuId();
     ((nsMenuItem *)((nsIMenuItem *)menuItem))->SetCmdId(id);   
@@ -539,7 +534,7 @@ nsEventStatus nsMenu::MenuItemSelected(const nsMenuEvent & aMenuEvent)
 {
 #ifdef saari_debug
   char* menuLabel = GetACPString(mLabel);
-  PRINTF("Menu Item Selected %s\n", menuLabel);
+  printf("Menu Item Selected %s\n", menuLabel);
   delete[] menuLabel;
 #endif
   if (nsnull != mListener) {
@@ -552,7 +547,7 @@ nsEventStatus nsMenu::MenuItemSelected(const nsMenuEvent & aMenuEvent)
 
 nsEventStatus nsMenu::MenuSelected(const nsMenuEvent & aMenuEvent)
 {
-  //PRINTF("nsMenu::MenuSelected called\n");
+  //printf("nsMenu::MenuSelected called\n");
   
   if(mConstructed){
 	MenuDestruct(aMenuEvent);
@@ -578,7 +573,7 @@ nsEventStatus nsMenu::MenuSelected(const nsMenuEvent & aMenuEvent)
 //-------------------------------------------------------------------------
 nsEventStatus nsMenu::MenuDeselected(const nsMenuEvent & aMenuEvent)
 {
-  //PRINTF("nsMenu::MenuDeselected called\n");  
+  //printf("nsMenu::MenuDeselected called\n");  
   //MenuDestruct(aMenuEvent);
   //mConstructed = false;
 
@@ -596,7 +591,7 @@ nsEventStatus nsMenu::MenuConstruct(
     void              * menuNode,
 	void              * aWebShell)
 {
-  //PRINTF("nsMenu::MenuConstruct called \n");
+   //printf("nsMenu::MenuConstruct called \n");
    // Begin menuitem inner loop
 
   // Open the node.
@@ -654,7 +649,7 @@ nsEventStatus nsMenu::MenuConstruct(
 //-------------------------------------------------------------------------
 nsEventStatus nsMenu::MenuDestruct(const nsMenuEvent & aMenuEvent)
 {
-  //PRINTF("nsMenu::MenuDestruct called \n");
+  //printf("nsMenu::MenuDestruct called \n");
   // We cannot call RemoveAll() yet because menu item selection may need it
   //RemoveAll();
   
@@ -713,7 +708,7 @@ void nsMenu::LoadMenuItem(
     nsString cmdName;
 
     domElement->GetAttribute(cmdAtom, cmdName);
-    PRINTF("%s \n", cmdName.ToNewCString());
+    printf("%s \n", cmdName.ToNewCString());
 
     pnsMenuItem->SetCommand(cmdName);
 	// DO NOT use passed in wehshell because of messed up windows dynamic loading
@@ -801,7 +796,7 @@ void nsMenu::LoadSubMenu(
 {
   nsString menuName;
   menuElement->GetAttribute(nsAutoString("value"), menuName);
-  //PRINTF("Creating Menu [%s] \n", menuName.ToNewCString()); // this leaks
+  //printf("Creating Menu [%s] \n", menuName.ToNewCString()); // this leaks
 
   // Create nsMenu
   nsIMenu * pnsMenu = nsnull;

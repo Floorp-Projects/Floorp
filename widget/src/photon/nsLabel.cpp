@@ -29,11 +29,6 @@
 #include <Pt.h>
 
 #include "nsPhWidgetLog.h"
-#include "nslog.h"
-
-NS_IMPL_LOG(nsLabelLog)
-#define PRINTF NS_LOG_PRINTF(nsLabelLog)
-#define FLUSH  NS_LOG_FLUSH(nsLabelLog)
 
 NS_IMPL_ADDREF_INHERITED(nsLabel, nsWidget)
 NS_IMPL_RELEASE_INHERITED(nsLabel, nsWidget)
@@ -210,7 +205,7 @@ PRBool nsLabel::OnMove(PRInt32, PRInt32)
 
 PRBool nsLabel::OnPaint(nsPaintEvent &aEvent)
 {
-  //PRINTF("** nsLabel::OnPaint **\n");
+  //printf("** nsLabel::OnPaint **\n");
   return PR_FALSE;
 }
 

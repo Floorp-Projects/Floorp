@@ -33,9 +33,6 @@
 #include "nsUrlWidget.h"
 #include "nsWindowsHooks.h"
 #endif // Windows
-#include "nslog.h"
-
-NS_IMPL_LOG(nsIAppShellComponentImplLog)
 
 // Factory constructors
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsAutoCompleteItem)

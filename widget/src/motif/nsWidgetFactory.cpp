@@ -40,11 +40,6 @@
 #include "nsComboBox.h"
 #include "nsLookAndFeel.h"
 #include "nsLabel.h"
-#include "nslog.h"
-
-NS_IMPL_LOG(nsWidgetFactoryLog)
-#define PRINTF NS_LOG_PRINTF(nsWidgetFactoryLog)
-#define FLUSH  NS_LOG_FLUSH(nsWidgetFactoryLog)
 // #include "nsFontRetrieverService.h"
 
 // Drag & Drop, Clipboard
@@ -228,7 +223,7 @@ nsresult nsWidgetFactory::CreateInstance(nsISupports *aOuter,
     }
 #endif
     else {
-        PRINTF("nsWidgetFactory::CreateInstance(), unhandled class.\n");
+        printf("nsWidgetFactory::CreateInstance(), unhandled class.\n");
     }
   
     if (inst == NULL) {  

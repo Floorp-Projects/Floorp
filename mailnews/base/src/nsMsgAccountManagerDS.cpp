@@ -40,11 +40,6 @@
 #include "nsMsgRDFUtils.h"
 #include "nsIMsgFolder.h"
 #include "nsMsgBaseCID.h"
-#include "nslog.h"
-
-NS_IMPL_LOG(nsMsgAccountManagerDSLog)
-#define PRINTF NS_LOG_PRINTF(nsMsgAccountManagerDSLog)
-#define FLUSH  NS_LOG_FLUSH(nsMsgAccountManagerDSLog)
 
 // turn this on to see useful output
 #undef DEBUG_amds
@@ -124,7 +119,7 @@ nsCOMPtr<nsISupportsArray> nsMsgAccountManagerDataSource::mAccountRootArcsOut;
 nsMsgAccountManagerDataSource::nsMsgAccountManagerDataSource()
 {
 #ifdef DEBUG_amds
-    PRINTF("nsMsgAccountManagerDataSource() being created\n");
+  printf("nsMsgAccountManagerDataSource() being created\n");
 #endif
   
   // do per-class initialization here
@@ -433,7 +428,7 @@ nsMsgAccountManagerDataSource::GetTargets(nsIRDFResource *source,
   rv = property->GetValue(getter_Copies(property_arc));
   if (NS_FAILED(rv)) return rv;
   
-  PRINTF("GetTargets(%s with arc %s...)\n",
+  printf("GetTargets(%s with arc %s...)\n",
          (const char*)source_value,
          (const char*)property_arc);
 #endif
@@ -471,7 +466,7 @@ nsMsgAccountManagerDataSource::createRootResources(nsIRDFResource *property,
 #ifdef DEBUG_amds
         PRUint32 nodecount;
         aNodeArray->Count(&nodecount);
-        PRINTF("GetTargets(): added %d servers on %s\n", nodecount,
+        printf("GetTargets(): added %d servers on %s\n", nodecount,
                (const char*)property_arc);
 #endif
         // for the "settings" arc, we also want to do an SMTP tag
@@ -482,7 +477,7 @@ nsMsgAccountManagerDataSource::createRootResources(nsIRDFResource *property,
 
 #ifdef DEBUG_amds
     else {
-        PRINTF("unknown arc %s on msgaccounts:/\n", (const char*)property_arc);
+        printf("unknown arc %s on msgaccounts:/\n", (const char*)property_arc);
     }
 #endif
 
@@ -645,7 +640,7 @@ nsMsgAccountManagerDataSource::ArcLabelsOut(nsIRDFResource *source,
   if (NS_FAILED(rv)) return rv;
   
 #ifdef DEBUG_amds_
-  PRINTF("GetArcLabelsOut(%s): Adding child, settings, and name arclabels\n", value);
+  printf("GetArcLabelsOut(%s): Adding child, settings, and name arclabels\n", value);
 #endif
   
   return NS_OK;
@@ -887,7 +882,7 @@ nsMsgAccountManagerDataSource::OnServerLoaded(nsIMsgIncomingServer* aServer)
 #ifdef DEBUG_alecf
   nsXPIDLCString serverUri;
   serverResource->GetValue(getter_Copies(serverUri));
-  PRINTF("nsMsgAccountmanagerDataSource::OnServerLoaded(%s)\n", (const char*)serverUri);
+  printf("nsMsgAccountmanagerDataSource::OnServerLoaded(%s)\n", (const char*)serverUri);
 #endif
   
   NotifyObservers(kNC_AccountRoot, kNC_Child, serverResource, PR_TRUE, PR_FALSE);

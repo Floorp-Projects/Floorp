@@ -516,19 +516,21 @@ void ButtonHack(nsHTMLReflowState& aReflowState, char* aMessage)
   if ((aReflowState.mComputedWidth != NS_INTRINSICSIZE) &&
       (aReflowState.mComputedWidth > aReflowState.availableWidth) &&
       (aReflowState.availableWidth > 0)) {
-//    PRINTF("BUG - %s has a computed width = %d, available width = %d \n", 
-//    aMessage, aReflowState.mComputedWidth, aReflowState.availableWidth));
+//    printf("BUG - %s has a computed width = %d, available width = %d \n", 
+//    aMessage, aReflowState.mComputedWidth, aReflowState.availableWidth);
     aReflowState.mComputedWidth = aReflowState.availableWidth;
-  }  if (aReflowState.mComputedHeight == 0) {
+  }
+  if (aReflowState.mComputedHeight == 0) {
     aReflowState.mComputedHeight = aReflowState.availableHeight;
   }
   if ((aReflowState.mComputedHeight != NS_INTRINSICSIZE) &&
       (aReflowState.mComputedHeight > aReflowState.availableHeight) &&
       (aReflowState.availableHeight > 0)) {
-//    PRINTF("BUG - %s has a computed height = %d, available height = %d \n", 
-//    aMessage, aReflowState.mComputedHeight, aReflowState.availableHeight));
+//    printf("BUG - %s has a computed height = %d, available height = %d \n", 
+//    aMessage, aReflowState.mComputedHeight, aReflowState.availableHeight);
     aReflowState.mComputedHeight = aReflowState.availableHeight;
-  }}
+  }
+}
 
 NS_IMETHODIMP 
 nsHTMLButtonControlFrame::AddComputedBorderPaddingToDesiredSize(nsHTMLReflowMetrics& aDesiredSize,

@@ -49,11 +49,6 @@
 #include "nsIImageManager.h"
 #include "nsScreenManagerOS2.h"
 #include "nsString.h"
-#include "nslog.h"
-
-NS_IMPL_LOG(nsGfxFactoryOS2Log)
-#define PRINTF NS_LOG_PRINTF(nsGfxFactoryOS2Log)
-#define FLUSH  NS_LOG_FLUSH(nsGfxFactoryOS2Log)
 
 static NS_DEFINE_IID(kCFontMetrics, NS_FONT_METRICS_CID);
 static NS_DEFINE_IID(kCFontEnumerator, NS_FONT_ENUMERATOR_CID);
@@ -309,7 +304,7 @@ void PMERROR( const char *api)
 {
    ERRORID eid = WinGetLastError(0);
    USHORT usError = ERRORIDERROR(eid);
-   PRINTF("%s failed, error = 0x%X\n", api, usError);
+   printf( "%s failed, error = 0x%X\n", api, usError);
 }
 
 nsGfxModuleData::nsGfxModuleData() : hModResources(0), hpsScreen(0),
@@ -325,7 +320,7 @@ void nsGfxModuleData::Init()
 
    if( rc)
    {
-       PRINTF("Gfx failed to load self.  rc = %d, cause = %s\n", (int)rc, buffer);
+      printf( "Gfx failed to load self.  rc = %d, cause = %s\n", (int)rc, buffer);
       // rats.  Can't load ourselves.  Oh well.  Try to be harmless...
       hModResources = 0;
    }
@@ -393,7 +388,7 @@ int WideCharToMultiByte( int CodePage, const PRUnichar *pText, ULONG ulLength, c
   }
   else if( unirc != ULS_SUCCESS)
   {
-      PRINTF("very bad");
+     printf("very bad");
   }
   return ulSize - cplen;
 }

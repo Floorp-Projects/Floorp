@@ -34,11 +34,6 @@
 
 #include <stdio.h>
 #include <unistd.h>
-#include "nslog.h"
-
-NS_IMPL_LOG(nsSoundLog)
-#define PRINTF NS_LOG_PRINTF(nsSoundLog)
-#define FLUSH  NS_LOG_FLUSH(nsSoundLog)
 
 
 NS_IMPL_THREADSAFE_ISUPPORTS2(nsSound, nsISound, nsIStreamLoaderObserver);
@@ -58,7 +53,7 @@ nsresult nsSound::Init()
 {
   
 #ifdef DEBUG_faulkner
-  PRINTF("\n////////// nsSound::Init() in xlib called //////////\n");
+  fprintf(stderr, "\n////////// nsSound::Init() in xlib called //////////\n");
 #endif /* DEBUG_faulkner */
   return NS_OK;
 }
@@ -70,7 +65,7 @@ NS_IMETHODIMP nsSound::OnStreamComplete(nsIStreamLoader *aLoader,
                                         const char *string)
 {
 #ifdef DEBUG_faulkner
-  PRINTF("\n////////// nsSound::Init() in xlib called //////////\n");
+  fprintf(stderr, "\n////////// nsSound::Init() in xlib called //////////\n");
 #endif /* DEBUG_faulkner */
   return NS_OK;
 }
@@ -78,7 +73,7 @@ NS_IMETHODIMP nsSound::OnStreamComplete(nsIStreamLoader *aLoader,
 NS_METHOD nsSound::Beep()
 {
 #ifdef DEBUG_faulkner
-	PRINTF("\n////////// nsSound::Beep() in xlib called //////////\n");
+	fprintf(stderr, "\n////////// nsSound::Beep() in xlib called //////////\n");
 #endif /* DEBUG_faulkner */
   return NS_OK;
 }
@@ -86,7 +81,7 @@ NS_METHOD nsSound::Beep()
 NS_METHOD nsSound::Play(nsIURL *aURL)
 {
 #ifdef DEBUG_faulkner
-  PRINTF("\n////////// nsSound::Play() in xlib called //////////\n");
+  fprintf(stderr, "\n////////// nsSound::Play() in xlib called //////////\n");
 #endif /* DEBUG_faulkner */
   return NS_OK;	
 }

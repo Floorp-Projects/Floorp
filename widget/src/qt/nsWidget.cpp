@@ -40,11 +40,6 @@
 
 #include <X11/Xatom.h>
 #include <X11/Xlib.h>
-#include "nslog.h"
-
-NS_IMPL_LOG(nsWidgetLog)
-#define PRINTF NS_LOG_PRINTF(nsWidgetLog)
-#define FLUSH  NS_LOG_FLUSH(nsWidgetLog)
 
 static NS_DEFINE_IID(kILookAndFeelIID, NS_ILOOKANDFEEL_IID);
 static NS_DEFINE_IID(kLookAndFeelCID, NS_LOOKANDFEEL_CID);
@@ -1337,11 +1332,11 @@ PRBool nsWidget::DispatchMouseEvent(nsMouseEvent& aEvent)
 //              GetBounds(rect);
 //              if (rect.Contains(event.point.x, event.point.y)) {
 //              if (mCurrentWindow == NULL || mCurrentWindow != this) {
-//              PRINTF("Mouse enter");
+//              printf("Mouse enter");
 //              mCurrentWindow = this;
 //              }
 //              } else {
-//              PRINTF("Mouse exit");
+//              printf("Mouse exit");
 //              }
           }
           break;

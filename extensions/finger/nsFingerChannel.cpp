@@ -32,15 +32,6 @@
 #include "nsMimeTypes.h"
 #include "nsIStreamConverterService.h"
 #include "nsITXTToHTMLConv.h"
-#include "nslog.h"
-
-#ifdef DEBUG_bryner
-NS_IMPL_LOG_ENABLED(nsFingerChannelLog)
-#else
-NS_IMPL_LOG(nsFingerChannelLog)
-#endif
-#define PRINTF NS_LOG_PRINTF(nsFingerChannelLog)
-#define FLUSH  NS_LOG_FLUSH(nsFingerChannelLog)
 
 static NS_DEFINE_CID(kSocketTransportServiceCID, NS_SOCKETTRANSPORTSERVICE_CID);
 static NS_DEFINE_CID(kStreamConverterServiceCID, NS_STREAMCONVERTERSERVICE_CID);
@@ -104,8 +95,10 @@ nsFingerChannel::Init(nsIURI* uri)
       mHost = cString;
     }
 
-    PRINTF("Status:mUser = %s, mHost = %s\n", (const char*)mUser,
+#ifdef DEBUG_bryner
+    printf("Status:mUser = %s, mHost = %s\n", (const char*)mUser,
            (const char*)mHost);
+#endif
     if (!*(const char *)mHost) return NS_ERROR_NOT_INITIALIZED;
 
     return NS_OK;
@@ -459,9 +452,11 @@ NS_IMETHODIMP
 nsFingerChannel::OnStopRequest(nsIChannel* aChannel, nsISupports* aContext,
                                nsresult aStatus, const PRUnichar* aStatusArg)
 {
-    PRINTF("nsFingerChannel::OnStopRequest, mActAsObserver=%d\n",
-           mActAsObserver);
-    PRINTF("  aChannel = %p\n", aChannel);
+#ifdef DEBUG_bryner
+    printf("nsFingerChannel::OnStopRequest, mActAsObserver=%d\n",
+            mActAsObserver);
+    printf("  aChannel = %p\n", aChannel);
+#endif
     nsresult rv = NS_OK;
 
     if (NS_FAILED(aStatus) || !mActAsObserver) {
@@ -539,7 +534,9 @@ nsFingerChannel::SendRequest(nsIChannel* aChannel) {
   charstream = do_QueryInterface(result, &rv);
   if (NS_FAILED(rv)) return rv;
 
-  PRINTF("Sending: %s\n", requestBuffer.GetBuffer());
+#ifdef DEBUG_bryner
+  printf("Sending: %s\n", requestBuffer.GetBuffer());
+#endif
 
   rv = aChannel->SetTransferCount(requestBuffer.Length());
   if (NS_FAILED(rv)) return rv;

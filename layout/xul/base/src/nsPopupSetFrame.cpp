@@ -53,11 +53,6 @@
 #include "nsBoxLayoutState.h"
 #include "nsIScrollableFrame.h"
 #include "nsCSSFrameConstructor.h"
-#include "nslog.h"
-
-NS_IMPL_LOG(nsPopupSetFrameLog)
-#define PRINTF NS_LOG_PRINTF(nsPopupSetFrameLog)
-#define FLUSH  NS_LOG_FLUSH(nsPopupSetFrameLog)
 
 #define NS_MENU_POPUP_LIST_INDEX   0
 
@@ -283,7 +278,7 @@ nsPopupSetFrame::DoLayout(nsBoxLayoutState& aState)
            if (bounds.width < prefSize.width + width)
            {
              bounds.width += width;
-             //PRINTF("Width=%d\n",width);
+             //printf("Width=%d\n",width);
              ibox->SetBounds(aState, bounds);
            }
         }
@@ -466,8 +461,8 @@ nsPopupSetFrame::CreatePopup(nsIContent* aElementContent, nsIContent* aPopupCont
     return NS_OK;
 
 #ifdef DEBUG_PINK
-  PRINTF("X Pos: %d\n", mXPos);
-  PRINTF("Y Pos: %d\n", mYPos);
+  printf("X Pos: %d\n", mXPos);
+  printf("Y Pos: %d\n", mYPos);
 #endif
 
   // Generate the popup.

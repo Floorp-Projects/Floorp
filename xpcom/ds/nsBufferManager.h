@@ -29,11 +29,6 @@
 
 
 #include "nsStringValue.h"
-#include "nslog.h"
-
-NS_IMPL_LOG(nsBufferManagerLog)
-#define PRINTF NS_LOG_PRINTF(nsBufferManagerLog)
-#define FLUSH  NS_LOG_FLUSH(nsBufferManagerLog)
 
 
 #define NS_MEMORY_ERROR 1000
@@ -62,14 +57,14 @@ public:
    void ReportCastUp(const char* data, const char* msg)
    {
       if(mFile) {
-          fprintf(mFile, "ERRORTEXT= %s\n", msg);
-          fprintf(mFile, "BEGINDATA\n");
+        fprintf(mFile, "ERRORTEXT= %s\n", msg);
+        fprintf(mFile, "BEGINDATA\n");
         const char* s=data;
         while(*s) {
            if(*s & 0x80) {
-               fprintf(mFile, "[%2X]", (char)*s);
+             fprintf(mFile, "[%2X]", (char)*s);
 	   } else {
-               fprintf(mFile, "%c", *s);
+             fprintf(mFile, "%c", *s);
            }
            s++;
         }
@@ -85,14 +80,14 @@ public:
    void ReportCastDown(const PRUnichar* data, const char* msg)
    {
       if(mFile) {
-          fprintf(mFile, "ERRORTEXT=%s\n", msg);
-          fprintf(mFile, "BEGINDATA\n");
+        fprintf(mFile, "ERRORTEXT=%s\n", msg);
+        fprintf(mFile, "BEGINDATA\n");
         const PRUnichar* s=data;
         while(*s) {
            if(*s & 0xFF80) {
-               fprintf(mFile, "\\u%X", *s);
+             fprintf(mFile, "\\u%X", *s);
 	   } else {
-               fprintf(mFile, "%c", *s);
+             fprintf(mFile, "%c", *s);
            }
            s++;
         }
@@ -1435,7 +1430,7 @@ void SVDebugDump(const nsStringValueImpl<CharType> &aString) {
   while(cp<end_cp) {
     if(outp==outendp) {
       *outp=0; //write null
-      PRINTF("%s",theBuffer);
+      printf("%s",theBuffer);
       outp=theBuffer;
       cp--;
     }
@@ -1445,7 +1440,7 @@ void SVDebugDump(const nsStringValueImpl<CharType> &aString) {
     cp++;
   } //while
   *outp=0; //force a null
-  PRINTF("%s",theBuffer);
+  printf("%s",theBuffer);
 
 }
 

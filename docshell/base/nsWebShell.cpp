@@ -115,23 +115,29 @@ typedef unsigned long HMTX;
 
 #define SH_IN_FRAMES 1
 
-#include "nslog.h"
-#undef PRINTF
-#undef FLUSH
+#ifdef NS_DEBUG
+/**
+ * Note: the log module is created during initialization which
+ * means that you cannot perform logging before then.
+ */
+static PRLogModuleInfo* gLogModule = PR_NewLogModule("webshell");
+#endif
 
-NS_IMPL_LOG(nsWebShellLog)
-#define PRINTF NS_LOG_PRINTF(nsWebShellLog)
-#define FLUSH  NS_LOG_FLUSH(nsWebShellLog)
+#define WEB_TRACE_CALLS        0x1
+#define WEB_TRACE_HISTORY      0x2
 
-#define gLogModule nsWebShellLog
+#define WEB_LOG_TEST(_lm,_bit) (PRIntn((_lm)->level) & (_bit))
 
-NS_IMPL_LOG(nsWebShellCallsLog)
-#define CALLS_PRINTF NS_LOG_PRINTF(nsWebShellCallsLog)
-#define CALLS_FLUSH  NS_LOG_FLUSH(nsWebShellCallsLog)
-
-//NS_IMPL_LOG(nsWebShellHistoryLog)
-//#define HISTORY_PRINTF NS_LOG_PRINTF(nsWebShellHistoryLog)
-//#define HISTORY_FLUSH  NS_LOG_FLUSH(nsWebShellHistoryLog)
+#ifdef NS_DEBUG
+#define WEB_TRACE(_bit,_args)            \
+  PR_BEGIN_MACRO                         \
+    if (WEB_LOG_TEST(gLogModule,_bit)) { \
+      PR_LogPrint _args;                 \
+    }                                    \
+  PR_END_MACRO
+#else
+#define WEB_TRACE(_bit,_args)
+#endif
 
 //static NS_DEFINE_CID(kGlobalHistoryCID, NS_GLOBALHISTORY_CID);
 //static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
@@ -153,7 +159,9 @@ nsWebShell::nsWebShell() : nsDocShell()
 #ifdef DEBUG
   // We're counting the number of |nsWebShells| to help find leaks
   ++gNumberOfWebShells;
-  PRINTF("WEBSHELL+ = %ld\n", gNumberOfWebShells);
+#endif
+#ifdef DEBUG
+    printf("WEBSHELL+ = %ld\n", gNumberOfWebShells);
 #endif
 
   NS_INIT_REFCNT();
@@ -203,7 +211,9 @@ nsWebShell::~nsWebShell()
 #ifdef DEBUG
   // We're counting the number of |nsWebShells| to help find leaks
   --gNumberOfWebShells;
-  PRINTF("WEBSHELL- = %ld\n", gNumberOfWebShells);
+#endif
+#ifdef DEBUG
+  printf("WEBSHELL- = %ld\n", gNumberOfWebShells);
 #endif
 }
 
@@ -1191,7 +1201,7 @@ nsWebShell::OnEndURLLoad(nsIDocumentLoader* loader,
 #if 0
   const char* spec;
   aURL->GetSpec(&spec);
-  PRINTF("nsWebShell::OnEndURLLoad:%p: loader=%p url=%s status=%d\n", this, loader, spec, aStatus);
+  printf("nsWebShell::OnEndURLLoad:%p: loader=%p url=%s status=%d\n", this, loader, spec, aStatus);
 #endif
   /*
    *Fire the OnEndDocumentLoad of the webshell observer
@@ -1357,7 +1367,8 @@ NS_IMETHODIMP nsWebShell::Create()
   NS_ENSURE_SUCCESS(eventService->GetThreadEventQueue(NS_CURRENT_THREAD,
    &mThreadEventQueue), NS_ERROR_FAILURE);
 
-  CALLS_PRINTF("nsWebShell::Init: this=%p", this);
+  WEB_TRACE(WEB_TRACE_CALLS,
+            ("nsWebShell::Init: this=%p", this));
 
   // HACK....force the uri loader to give us a load cookie for this webshell...then get it's
   // doc loader and store it...as more of the docshell lands, we'll be able to get rid

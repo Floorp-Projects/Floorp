@@ -32,11 +32,6 @@
 #include "prmem.h"
 #include "plhash.h"
 #include "prprf.h"
-#include "nslog.h"
-
-NS_IMPL_LOG(nsFontMetricsWinLog)
-#define PRINTF NS_LOG_PRINTF(nsFontMetricsWinLog)
-#define FLUSH  NS_LOG_FLUSH(nsFontMetricsWinLog)
 
 #define NS_FONT_TYPE_UNKNOWN          -1
 #define NS_FONT_TYPE_UNICODE           0
@@ -1287,7 +1282,7 @@ nsFontMetricsWin::GetCMAP(HDC aDC, const char* aShortName, int* aFontType, PRUin
           // XXX should we trust this font at all if it does this?
         }
       }
-      //PRINTF("0x%04X-0x%04X ", startC, endC);
+      //printf("0x%04X-0x%04X ", startC, endC);
     }
     else {
       PRUint16 endC = endCode[i];
@@ -1304,10 +1299,10 @@ nsFontMetricsWin::GetCMAP(HDC aDC, const char* aShortName, int* aFontType, PRUin
           }
         }
       }
-      //PRINTF("0x%04X-0x%04X ", startCode[i], endC);
+      //printf("0x%04X-0x%04X ", startCode[i], endC);
     }
   }
-  //PRINTF("\n");
+  //printf("\n");
 
   PR_Free(buf);
   PR_Free(isSpace);
@@ -1391,7 +1386,9 @@ GetGlyphIndices(HDC              aDC,
         break;
     }
     if (i == n) {
-      PRINTF("nsFontMetricsWin::GetGlyphIndices() called for a non-unicode font!");
+#ifdef NS_DEBUG
+      printf("nsFontMetricsWin::GetGlyphIndices() called for a non-unicode font!");
+#endif
       PR_Free(buf);
       return nsnull;
     }
@@ -1779,7 +1776,7 @@ static int CALLBACK enumProc(const LOGFONT* logFont, const TEXTMETRIC* metrics,
 #ifdef MOZ_MATHML
   // XXX need a better way to deal with non-TrueType fonts?
   if (!(fontType & TRUETYPE_FONTTYPE)) {
-    //PRINTF("rejecting %s\n", logFont->lfFaceName);
+    //printf("rejecting %s\n", logFont->lfFaceName);
     return 1;
   }
 #endif
@@ -2167,7 +2164,7 @@ typedef struct {
 static int CALLBACK nsFontWeightCallback(const LOGFONT* logFont, const TEXTMETRIC * metrics,
   DWORD fontType, LPARAM closure)
 {
-  // PRINTF("Name %s Log font sizes %d\n",logFont->lfFaceName,logFont->lfWeight);
+  // printf("Name %s Log font sizes %d\n",logFont->lfFaceName,logFont->lfWeight);
   
   nsFontWeightInfo* weightInfo = (nsFontWeightInfo*)closure;
   if (NULL != metrics) {
@@ -2218,11 +2215,12 @@ static void SearchSimulatedFontWeight(HDC aDC, nsFontWeightInfo* aWeightInfo)
     TEXTMETRIC metrics;
     GetTextMetrics(aDC, &metrics);
     if (metrics.tmWeight == weight) {
-//      PRINTF("font weight for %s found: %d%s\n", logFont.lfFaceName, weight,
+//      printf("font weight for %s found: %d%s\n", logFont.lfFaceName, weight,
 //        nsFontMetricsWin::IsFontWeightAvailable(weight, aWeightInfo->mWeights) ?
-//        "" : " (simulated)"));
+//        "" : " (simulated)");
       nsFontMetricsWin::SetFontWeight(weight / 100, &aWeightInfo->mWeights);
     }
+
     ::SelectObject(aDC, (HGDIOBJ)oldfont);
     ::DeleteObject((HGDIOBJ)hfont);
   }
@@ -2246,7 +2244,7 @@ nsFontMetricsWin::GetFontWeightTable(HDC aDC, nsString* aFontName) {
   weightInfo.mFontCount = 0;
    ::EnumFontFamiliesEx(aDC, &logFont, nsFontWeightCallback, (LPARAM)&weightInfo, 0);
   SearchSimulatedFontWeight(aDC, &weightInfo);
-//  PRINTF("font weights for %s dec %d hex %x \n", logFont.lfFaceName, weightInfo.mWeights, weightInfo.mWeights);
+ //  printf("font weights for %s dec %d hex %x \n", logFont.lfFaceName, weightInfo.mWeights, weightInfo.mWeights);
   return weightInfo.mWeights;
 }
 
@@ -2411,7 +2409,7 @@ nsFontMetricsWin::GetFontWeight(PRInt32 aWeight, PRUint16 aWeightTable) {
     }
   }
 
-//  PRINTF("XXX Input weight %d output weight %d weight table hex %x\n", aWeight, selectedWeight, aWeightTable);
+//  printf("XXX Input weight %d output weight %d weight table hex %x\n", aWeight, selectedWeight, aWeightTable);
   return selectedWeight;
 }
 
@@ -2444,13 +2442,13 @@ nsFontMetricsWin::LookForFontWeightTable(HDC aDC, nsString* aName)
 
   nsFontWeightEntry* weightEntry = (nsFontWeightEntry*)PL_HashTableLookup(gFontWeights, &searchEntry);
   if (nsnull != weightEntry) {
-    //   PRINTF("Re-use weight entry\n");
+ //   printf("Re-use weight entry\n");
     return weightEntry->mWeightTable;
   }
 
    // Hasn't been computed, so need to compute and store it.
   PRUint16 weightTable = GetFontWeightTable(aDC, aName);
-//  PRINTF("Compute font weight %d\n",  weightTable);
+//  printf("Compute font weight %d\n",  weightTable);
 
     // Store it in font weight HashTable.
    nsFontWeightEntry* fontWeightEntry = new nsFontWeightEntry;
@@ -3214,8 +3212,8 @@ nsFontWinUnicode::GetBoundingMetrics(HDC                aDC,
 void 
 nsFontWinUnicode::DumpFontInfo()
 {
-  PRINTF("FontName: %s @%p\n", mName, this);
-  PRINTF("FontType: nsFontWinUnicode\n");
+  printf("FontName: %s @%p\n", mName, this);
+  printf("FontType: nsFontWinUnicode\n");
 }
 #endif // NS_DEBUG
 #endif
@@ -3363,8 +3361,8 @@ nsFontWinNonUnicode::GetBoundingMetrics(HDC                aDC,
 void 
 nsFontWinNonUnicode::DumpFontInfo()
 {
-  PRINTF("FontName: %s @%p\n", mName, this);
-  PRINTF("FontType: nsFontWinNonUnicode\n");
+  printf("FontName: %s @%p\n", mName, this);
+  printf("FontType: nsFontWinNonUnicode\n");
 }
 #endif // NS_DEBUG
 #endif
@@ -3555,8 +3553,8 @@ nsFontWinSubstitute::GetBoundingMetrics(HDC                aDC,
 void 
 nsFontWinSubstitute::DumpFontInfo()
 {
-  PRINTF("FontName: %s @%p\n", mName, this);
-  PRINTF("FontType: nsFontWinSubstitute\n");
+  printf("FontName: %s @%p\n", mName, this);
+  printf("FontType: nsFontWinSubstitute\n");
 }
 #endif // NS_DEBUG
 #endif
@@ -3564,7 +3562,7 @@ nsFontWinSubstitute::DumpFontInfo()
 static void
 GenerateDefault(nsCharSetInfo* aSelf)
 { 
-  PRINTF("%s defaulted\n", aSelf->mName);
+printf("%s defaulted\n", aSelf->mName);
   PRUint32* map = aSelf->mMap;
   for (int i = 0; i < 2048; i++) {
     map[i] = 0xFFFFFFFF;
@@ -3582,7 +3580,7 @@ GenerateSingleByte(nsCharSetInfo* aSelf)
   }
   int len = MultiByteToWideChar(aSelf->mCodePage, 0, (char*) mb, 256, wc, 256);
   if (len != 256) {
-    PRINTF("%s: MultiByteToWideChar returned %d\n", aSelf->mName, len);
+    printf("%s: MultiByteToWideChar returned %d\n", aSelf->mName, len);
   }
   PRUint32* map = aSelf->mMap;
   for (i = 0; i < 256; i++) {
@@ -3641,7 +3639,7 @@ nsFontWinA::GetSubsets(HDC aDC)
       if ((array[dword] >> bit) & 1) {
         PRUint8 charSet = bitToCharSet[i];
 #ifdef DEBUG_FONT_SIGNATURE
-        PRINTF("  %02d %s\n", i, gCharSetInfo[gCharSetToIndex[charSet]].mName);
+        printf("  %02d %s\n", i, gCharSetInfo[gCharSetToIndex[charSet]].mName);
 #endif
         if (charSet != DEFAULT_CHARSET) {
           if (HaveConverterFor(charSet)) {
@@ -3834,8 +3832,8 @@ nsFontSubset::GetBoundingMetrics(HDC                aDC,
 void 
 nsFontSubset::DumpFontInfo()
 {
-  PRINTF("FontName: %s @%p\n", mName, this);
-  PRINTF("FontType: nsFontSubset\n");
+  printf("FontName: %s @%p\n", mName, this);
+  printf("FontType: nsFontSubset\n");
 }
 #endif // NS_DEBUG
 #endif
@@ -3957,7 +3955,7 @@ nsFontMetricsWinA::LoadFont(HDC aDC, nsString* aName)
       return nsnull;
     }
 #ifdef DEBUG_FONT_SIGNATURE
-    PRINTF("%s\n", logFont.lfFaceName);
+    printf("%s\n", logFont.lfFaceName);
 #endif
     if (!font->GetSubsets(aDC)) {
       delete font;

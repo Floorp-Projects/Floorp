@@ -36,7 +36,6 @@
 #include "pratom.h"
 #include "nsCOMPtr.h"
 #include "prprf.h"
-#include "nslog.h"
 
 /*------------------------------------------------------------------------------
 | This file contains macros to assist in the implementation of application     |
@@ -54,6 +53,12 @@
 |       "contractId" is the contractId corresponding to the interface your             |
 |           class implements.                                                  |
 ------------------------------------------------------------------------------*/
+
+#if defined( NS_DEBUG ) && !defined( XP_MAC )
+    #define DEBUG_PRINTF PR_fprintf
+#else
+    #define DEBUG_PRINTF (void)
+#endif
 
 #define NS_IMPL_NSGETMODULE1(_class)                                           \
 static _class *g##_class;                                                     \
@@ -139,26 +144,21 @@ public:
 nsIAppShellService *nsAppShellComponentImpl::mAppShell   = 0; \
 nsICmdLineService  *nsAppShellComponentImpl::mCmdLine    = 0;
 
-#define NS_IAPPSHELLCOMPONENTIMPL_PRINTF NS_LOG_PRINTF(nsIAppShellComponentImplLog)
-#define NS_IAPPSHELLCOMPONENTIMPL_FLUSH  NS_LOG_FLUSH(nsIAppShellComponentImplLog)
-
 // Macros to define ctor/dtor for implementation class.
 // These differ in debug vs. non-debug situations.
 #ifdef NS_DEBUG
 #define NS_IMPL_IAPPSHELLCOMPONENTIMPL_CTORDTOR(className) \
-NS_DECL_LOG(nsIAppShellComponentImplLog) \
 nsAppShellComponentImpl::nsAppShellComponentImpl() { \
-    NS_IAPPSHELLCOMPONENTIMPL_PRINTF(#className " component created\n" ); \
+    DEBUG_PRINTF( PR_STDOUT, #className " component created\n" ); \
 } \
 nsAppShellComponentImpl::~nsAppShellComponentImpl() { \
-    NS_IAPPSHELLCOMPONENTIMPL_PRINTF(#className " component destroyed\n" ); \
+    DEBUG_PRINTF( PR_STDOUT, #className " component destroyed\n" ); \
 }
 #else
 #define NS_IMPL_IAPPSHELLCOMPONENTIMPL_CTORDTOR(className)
 #endif
 
 #define NS_IMPL_IAPPSHELLCOMPONENT( className, interfaceName, contractId, autoInit ) \
-NS_IMPL_LOG(nsIAppShellComponentImplLog) \
 /* Define instance counter implementation stuff. */\
 NS_DEFINE_MODULE_INSTANCE_COUNTER() \
 /* Define component globals. */\
@@ -316,7 +316,7 @@ className##Module::RegisterSelf(nsIComponentManager *compMgr, \
     rv = compMgr->RegisterComponentSpec( className::GetCID(), #className, \
                                           contractId, aPath, PR_TRUE, PR_TRUE ); \
     if ( NS_SUCCEEDED( rv ) ) { \
-        NS_IAPPSHELLCOMPONENTIMPL_PRINTF(#className " registration successful\n" ); \
+        DEBUG_PRINTF( PR_STDOUT, #className " registration successful\n" ); \
         if ( autoInit ) { \
             /* Add to appshell component list. */ \
             nsIRegistry *registry; \
@@ -334,16 +334,16 @@ className##Module::RegisterSelf(nsIComponentManager *compMgr, \
                 nsRegistryKey key; \
                 rv = registry->AddSubtree( nsIRegistry::Common, buffer, &key ); \
                 if ( NS_SUCCEEDED( rv ) ) { \
-                    NS_IAPPSHELLCOMPONENTIMPL_PRINTF(#className " added to appshell component list\n" ); \
+                    DEBUG_PRINTF( PR_STDOUT, #className " added to appshell component list\n" ); \
                 } else { \
-                    NS_IAPPSHELLCOMPONENTIMPL_PRINTF(#className " not added to appshell component list, rv=0x%X\n", (int)rv ); \
+                    DEBUG_PRINTF( PR_STDOUT, #className " not added to appshell component list, rv=0x%X\n", (int)rv ); \
                 } \
             } else { \
-                NS_IAPPSHELLCOMPONENTIMPL_PRINTF(#className " not added to appshell component list, rv=0x%X\n", (int)rv ); \
+                DEBUG_PRINTF( PR_STDOUT, #className " not added to appshell component list, rv=0x%X\n", (int)rv ); \
             } \
         } \
     } else { \
-        NS_IAPPSHELLCOMPONENTIMPL_PRINTF(#className " registration failed, RegisterComponent rv=0x%X\n", (int)rv ); \
+        DEBUG_PRINTF( PR_STDOUT, #className " registration failed, RegisterComponent rv=0x%X\n", (int)rv ); \
     } \
  \
     return rv; \
@@ -356,16 +356,16 @@ className##Module::UnregisterSelf( nsIComponentManager *compMgr, \
     nsresult rv = NS_OK; \
     if (NS_FAILED(rv)) \
     { \
-        NS_IAPPSHELLCOMPONENTIMPL_PRINTF(#className " registration failed, GetService rv=0x%X\n", (int)rv ); \
+        DEBUG_PRINTF( PR_STDOUT, #className " registration failed, GetService rv=0x%X\n", (int)rv ); \
         return rv; \
     } \
  \
     /* Unregister our component. */ \
     rv = compMgr->UnregisterComponentSpec( className::GetCID(), aPath); \
     if ( NS_SUCCEEDED( rv ) ) { \
-        NS_IAPPSHELLCOMPONENTIMPL_PRINTF(#className " unregistration successful\n" ); \
+        DEBUG_PRINTF( PR_STDOUT, #className " unregistration successful\n" ); \
     } else { \
-        NS_IAPPSHELLCOMPONENTIMPL_PRINTF(#className " unregistration failed, UnregisterComponent rv=0x%X\n", (int)rv ); \
+        DEBUG_PRINTF( PR_STDOUT, #className " unregistration failed, UnregisterComponent rv=0x%X\n", (int)rv ); \
     } \
  \
     return rv; \

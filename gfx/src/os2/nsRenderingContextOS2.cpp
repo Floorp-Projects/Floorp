@@ -52,11 +52,6 @@
 #include "nsFont.h"
 #include "libimg.h"
 #include "prprf.h"
-#include "nslog.h"
-
-NS_IMPL_LOG(nsRenderingContextOS2Log)
-#define PRINTF NS_LOG_PRINTF(nsRenderingContextOS2Log)
-#define FLUSH  NS_LOG_FLUSH(nsRenderingContextOS2Log)
 
 // helper clip region functions - defined at the bottom of this file.
 LONG GpiCombineClipRegion( HPS hps, HRGN hrgnCombine, LONG lOp);
@@ -97,7 +92,7 @@ void GraphicsState::Destruct()
 {
    if( mClipRegion)
    {
-       PRINTF( "oops, leaked a region from rc-gs\n");
+      printf( "oops, leaked a region from rc-gs\n");
       mClipRegion = 0;
    }
    NS_IF_RELEASE( mFontMetrics);
@@ -123,16 +118,16 @@ class GraphicsStateCache
   ~GraphicsStateCache()
    {
 #ifdef PROFILE_GSTATE
-       PRINTF( "---- Graphics-State Stats -----\n");
-       PRINTF( "  GStates requested:       %d\n", mCount);
-       PRINTF( "  Actual GStates created:  %d\n", mPeak);
+      printf( "---- Graphics-State Stats -----\n");
+      printf( "  GStates requested:       %d\n", mCount);
+      printf( "  Actual GStates created:  %d\n", mPeak);
       double d = mCount ? (double)(mCount - mPeak) / (double)mCount : 0;
-      PRINTF( "  Gstates recycled:        %d (%d%%)\n", mCount - mPeak, (int)(d*100.0));
+      printf( "  Gstates recycled:        %d (%d%%)\n", mCount - mPeak, (int)(d*100.0));
       UINT i = mSize+mDeleted;
-      PRINTF( "  Cached+Deleted:          %d\n", i);
+      printf( "  Cached+Deleted:          %d\n", i);
       if( i != mPeak)
-          PRINTF( "  WARNING: GStates leaked: %d\n", mPeak - i);
-      PRINTF( "------------------------------\n\n");
+         printf( "  WARNING: GStates leaked: %d\n", mPeak - i);
+      printf( "------------------------------\n\n");
 #endif
 
       // Clear up the cache
@@ -563,7 +558,7 @@ nsresult nsRenderingContextOS2::PopState( PRBool &aClipEmpty)
 nsresult nsRenderingContextOS2::Reset()
 {
    // okay, what's this supposed to do?  Empty the state stack?
-    PRINTF( "nsRenderingContext::Reset() -- hmm\n");
+   printf( "nsRenderingContext::Reset() -- hmm\n");
    return NS_OK;
 }
 

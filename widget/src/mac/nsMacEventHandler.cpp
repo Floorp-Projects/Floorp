@@ -39,11 +39,6 @@
 #ifndef RHAPSODY
 #include <locale>
 #endif
-#include "nslog.h"
-
-NS_IMPL_LOG(nsMacEventHandlerLog)
-#define PRINTF NS_LOG_PRINTF(nsMacEventHandlerLog)
-#define FLUSH  NS_LOG_FLUSH(nsMacEventHandlerLog)
 
 //#define DEBUG_TSM
 extern nsIRollupListener * gRollupListener;
@@ -154,7 +149,7 @@ void nsMacEventDispatchHandler::SetFocus(nsWindow *aFocusedWidget)
 	{
 		mActiveWidget->ResetInputState();
 		mActiveWidget->RemoveDeleteObserver(this);
-		//PRINTF("nsMacEventDispatcher::SetFocus sends NS_LOSTFOCUS\n");
+		//printf("nsMacEventDispatcher::SetFocus sends NS_LOSTFOCUS\n");
 		DispatchGuiEvent(mActiveWidget, NS_LOSTFOCUS);
 	}
 
@@ -164,7 +159,7 @@ void nsMacEventDispatchHandler::SetFocus(nsWindow *aFocusedWidget)
 	if (mActiveWidget)
 	{
 		mActiveWidget->AddDeleteObserver(this);
-		//PRINTF("nsMacEventDispatcher::SetFocus sends NS_GOTFOCUS\n");
+		//printf("nsMacEventDispatcher::SetFocus sends NS_GOTFOCUS\n");
 		DispatchGuiEvent(mActiveWidget, NS_GOTFOCUS);
 	}
 }
@@ -175,16 +170,16 @@ void nsMacEventDispatchHandler::SetFocus(nsWindow *aFocusedWidget)
 
 void nsMacEventDispatchHandler::SetActivated(nsWindow *aActivatedWidget)
 {
-  //PRINTF("nsMacEventDispatcher::SetActivated \n");
+  //printf("nsMacEventDispatcher::SetActivated \n");
   
 	if (aActivatedWidget == mActiveWidget) {
-		//PRINTF("already the active widget. Bailing!\n");
+		//printf("already the active widget. Bailing!\n");
 		return;
 	}
 
   if(aActivatedWidget) {
     if ( eWindowType_popup == aActivatedWidget->GetWindowType() ) {
-      //PRINTF("nsMacEventDispatcher::SetActivated type popup, bail\n");
+      //printf("nsMacEventDispatcher::SetActivated type popup, bail\n");
       return;
     }
   }
@@ -194,7 +189,7 @@ void nsMacEventDispatchHandler::SetActivated(nsWindow *aActivatedWidget)
 	{
 		mActiveWidget->ResetInputState();
 		mActiveWidget->RemoveDeleteObserver(this);
-		//PRINTF("nsMacEventDispatchHandler::SetActivated sends NS_LOSTFOCUS\n");
+		//printf("nsMacEventDispatchHandler::SetActivated sends NS_LOSTFOCUS\n");
 		DispatchGuiEvent(mActiveWidget, NS_LOSTFOCUS);
 	}
 
@@ -204,10 +199,10 @@ void nsMacEventDispatchHandler::SetActivated(nsWindow *aActivatedWidget)
 	if (mActiveWidget)
 	{
 		mActiveWidget->AddDeleteObserver(this);
-		//PRINTF("nsMacEventDispatcher::SetActivated sends NS_GOTFOCUS\n");
+		//printf("nsMacEventDispatcher::SetActivated sends NS_GOTFOCUS\n");
 		DispatchGuiEvent(mActiveWidget, NS_GOTFOCUS);
 		
-		//PRINTF("nsMacEventDispatchHandler::SetActivated sends NS_ACTIVATE\n");
+		//printf("nsMacEventDispatchHandler::SetActivated sends NS_ACTIVATE\n");
 		DispatchGuiEvent(mActiveWidget, NS_ACTIVATE);
 	}
 }
@@ -218,10 +213,10 @@ void nsMacEventDispatchHandler::SetActivated(nsWindow *aActivatedWidget)
 
 void nsMacEventDispatchHandler::SetDeactivated(nsWindow *aDeactivatedWidget)
 {
-  //PRINTF("nsMacEventDispatchHandler::SetDeactivated\n");
+    //printf("nsMacEventDispatchHandler::SetDeactivated\n");
     if(aDeactivatedWidget) {
       if ( eWindowType_popup == aDeactivatedWidget->GetWindowType() ) {
-        //PRINTF("nsMacEventDispatchHandler::SetDeactivated type popup, bail\n");
+        //printf("nsMacEventDispatchHandler::SetDeactivated type popup, bail\n");
         return;
       }
     }
@@ -229,7 +224,7 @@ void nsMacEventDispatchHandler::SetDeactivated(nsWindow *aDeactivatedWidget)
 	// let the old one know it lost activation
 	if (mActiveWidget)
 	{	
-    //PRINTF("   nsMacEventDispatchHandler::SetDeactivated sends NS_DEACTIVATE\n");
+	    //printf("   nsMacEventDispatchHandler::SetDeactivated sends NS_DEACTIVATE\n");
 		DispatchGuiEvent(mActiveWidget, NS_DEACTIVATE);		
 		mActiveWidget->RemoveDeleteObserver(this);
 		mActiveWidget = nsnull;
@@ -316,7 +311,7 @@ nsMacEventHandler::nsMacEventHandler(nsMacWindow* aTopLevelWidget)
 	NS_ASSERTION(err==noErr,"nsMacEventHandler::nsMacEventHandler: NewTSMDocument failed.");
 
 #ifdef DEBUG_TSM
-	PRINTF("nsMacEventHandler::nsMacEventHandler: created TSMDocument[%p]\n",mTSMDocument);
+	printf("nsMacEventHandler::nsMacEventHandler: created TSMDocument[%p]\n",mTSMDocument);
 #endif
 #endif
 
@@ -1046,8 +1041,8 @@ PRBool nsMacEventHandler::HandleActivateEvent(EventRecord& aOSEvent)
 #if 0
 		NS_ASSERTION(err==noErr,"nsMacEventHandler::HandleActivateEvent: ActivateTSMDocument failed");
 #endif
-		PRINTF("nsEventHandler::HandleActivateEvent: ActivateTSMDocument[%p] %s return %d\n",mTSMDocument,
-           (err==noErr)?"":"ERROR", err);
+		printf("nsEventHandler::HandleActivateEvent: ActivateTSMDocument[%p] %s return %d\n",mTSMDocument,
+		(err==noErr)?"":"ERROR", err);
 #endif
 		
 		
@@ -1086,8 +1081,8 @@ PRBool nsMacEventHandler::HandleActivateEvent(EventRecord& aOSEvent)
 			err = ::DeactivateTSMDocument(mTSMDocument);
 #ifdef DEBUG_TSM
 		NS_ASSERTION((noErr==err)||(tsmDocNotActiveErr==err),"nsMacEventHandler::HandleActivateEvent: DeactivateTSMDocument failed");
-		PRINTF("nsEventHandler::HandleActivateEvent: DeactivateTSMDocument[%p] %s return %d\n",mTSMDocument,
-           (err==noErr)?"":"ERROR", err);
+		printf("nsEventHandler::HandleActivateEvent: DeactivateTSMDocument[%p] %s return %d\n",mTSMDocument,
+		(err==noErr)?"":"ERROR", err);
 #endif
 		// Dispatch an NS_DEACTIVATE event 
 		gEventDispatchHandler.SetDeactivated(mTopLevelWidget);
@@ -1491,13 +1486,13 @@ nsresult nsMacEventHandler::HandleOffsetToPosition(long offset,Point* thePoint)
 {
 	thePoint->v = mIMEPos.y;
 	thePoint->h = mIMEPos.x;
-	PRINTF("local (x,y) = (%d, %d)\n", thePoint->h, thePoint->v);
+	printf("local (x,y) = (%d, %d)\n", thePoint->h, thePoint->v);
 	WindowRef wind = reinterpret_cast<WindowRef>(mTopLevelWidget->GetNativeData(NS_NATIVE_DISPLAY));
 	::SetPortWindowPort(wind);
 	Rect savePortRect;
 	::GetWindowPortBounds(wind, &savePortRect);
 	::LocalToGlobal(thePoint);
-	PRINTF("global (x,y) = (%d, %d)\n", thePoint->h, thePoint->v);
+	printf("global (x,y) = (%d, %d)\n", thePoint->h, thePoint->v);
 
 	return PR_TRUE;
 }
@@ -1512,8 +1507,8 @@ nsresult nsMacEventHandler::HandleOffsetToPosition(long offset,Point* thePoint)
 nsresult nsMacEventHandler::HandleUpdateInputArea(char* text,Size text_size, ScriptCode textScript,long fixedLength,TextRangeArray* textRangeList)
 {
 #ifdef DEBUG_TSM
-	PRINTF("********************************************************************************\n");
-	PRINTF("nsMacEventHandler::HandleUpdateInputArea size=%d fixlen=%d\n",text_size, fixedLength);
+	printf("********************************************************************************\n");
+	printf("nsMacEventHandler::HandleUpdateInputArea size=%d fixlen=%d\n",text_size, fixedLength);
 #endif
 	TextToUnicodeInfo	textToUnicodeInfo;
 	TextEncoding		textEncodingFromScript;
@@ -1576,7 +1571,7 @@ nsresult nsMacEventHandler::HandleUpdateInputArea(char* text,Size text_size, Scr
 	if(0 != committedLen)
 	{
 #ifdef DEBUG_TSM
-		PRINTF("Have commit text from 0 to %d\n",committedLen);
+		printf("Have commit text from 0 to %d\n",committedLen);
 #endif
 		//------------------------------------------------------------------------------------------------
 		// 1.1 send textEvent to commit the text
@@ -1607,7 +1602,7 @@ nsresult nsMacEventHandler::HandleUpdateInputArea(char* text,Size text_size, Scr
 		mIMECompositionStr->mLength = len;
 		// for committed text, set no highlight ? (Do we need to set CaretPosition here ??? )
 #ifdef DEBUG_TSM
-    PRINTF("1.2====================================\n");
+			printf("1.2====================================\n");
 #endif
 		res = HandleTextEvent(0,nsnull);
 		NS_ASSERTION(NS_SUCCEEDED(res),"nsMacEventHandler::UpdateInputArea: HandleTextEvent failed.");
@@ -1628,7 +1623,7 @@ nsresult nsMacEventHandler::HandleUpdateInputArea(char* text,Size text_size, Scr
 	if((-1 != fixedLength) && (text_size != fixedLength ))
 	{	
 #ifdef DEBUG_TSM
-		PRINTF("Have new uncommited text from %d to text_size(%d)\n",committedLen,text_size);
+		printf("Have new uncommited text from %d to text_size(%d)\n",committedLen,text_size);
 #endif
 		//------------------------------------------------------------------------------------------------
 		// 2.1 send compositionEvent to start the comosition
@@ -1663,7 +1658,7 @@ nsresult nsMacEventHandler::HandleUpdateInputArea(char* text,Size text_size, Scr
 
 		
 #ifdef DEBUG_TSM
-		PRINTF("nsMacEventHandler::HandleUpdateInputArea textRangeList is %s\n", textRangeList ? "NOT NULL" : "NULL");
+		printf("nsMacEventHandler::HandleUpdateInputArea textRangeList is %s\n", textRangeList ? "NOT NULL" : "NULL");
 #endif
 		nsTextRangeArray	xpTextRangeArray  = new nsTextRange[rangeArray->fNumOfRanges];
 		NS_ASSERTION(xpTextRangeArray!=NULL,"nsMacEventHandler::UpdateInputArea: xpTextRangeArray memory allocation failed.");
@@ -1696,8 +1691,8 @@ nsresult nsMacEventHandler::HandleUpdateInputArea(char* text,Size text_size, Scr
 			NS_ASSERTION( rangeArray->fRange[i].fEnd <= text_size,"illegal range");
 
 #ifdef DEBUG_TSM
-			PRINTF("nsMacEventHandler::HandleUpdateInputArea textRangeList[%d] = (%d,%d) text_size = %d\n",i,
-             rangeArray->fRange[i].fStart, rangeArray->fRange[i].fEnd, text_size);
+			printf("nsMacEventHandler::HandleUpdateInputArea textRangeList[%d] = (%d,%d) text_size = %d\n",i,
+				rangeArray->fRange[i].fStart, rangeArray->fRange[i].fEnd, text_size);
 #endif			
 			// 2.2.2.2 fill sourceOffset array
 			typedef enum {
@@ -1808,9 +1803,9 @@ nsresult nsMacEventHandler::HandleUpdateInputArea(char* text,Size text_size, Scr
 			NS_ASSERTION(xpTextRangeArray[i].mStartOffset <= len,"illegal range");
 			NS_ASSERTION(xpTextRangeArray[i].mEndOffset <= len,"illegal range");
 #ifdef DEBUG_TSM
-			PRINTF("nsMacEventHandler::HandleUpdateInputArea textRangeList[%d] => type=%d (%d,%d)\n",i,
+			printf("nsMacEventHandler::HandleUpdateInputArea textRangeList[%d] => type=%d (%d,%d)\n",i,
 				xpTextRangeArray[i].mRangeType,
-             xpTextRangeArray[i].mStartOffset, xpTextRangeArray[i].mEndOffset);
+				xpTextRangeArray[i].mStartOffset, xpTextRangeArray[i].mEndOffset);
 #endif			
 
 			NS_ASSERTION((NS_TEXTRANGE_CARETPOSITION!=xpTextRangeArray[i].mRangeType) ||
@@ -1827,7 +1822,7 @@ nsresult nsMacEventHandler::HandleUpdateInputArea(char* text,Size text_size, Scr
 		// 2.2.4 send the text event
 		//------------------------------------------------------------------------------------------------
 #ifdef DEBUG_TSM
-    PRINTF("2.2.4====================================\n");
+			printf("2.2.4====================================\n");
 #endif			
 
 		res = HandleTextEvent(rangeArray->fNumOfRanges,xpTextRangeArray);
@@ -1846,7 +1841,7 @@ nsresult nsMacEventHandler::HandleUpdateInputArea(char* text,Size text_size, Scr
 		ubuf[0] = '\0';		 // null terminate
 		mIMECompositionStr->mLength = 0;			
 #ifdef DEBUG_TSM
-    PRINTF("3.====================================\n");
+			printf("3.====================================\n");
 #endif
 		// 3.1 send the empty text event.
 		res = HandleTextEvent(0,nsnull);
@@ -1873,7 +1868,7 @@ error:
 nsresult nsMacEventHandler::HandleStartComposition(void)
 {
 #ifdef DEBUG_TSM
-	PRINTF("HandleStartComposition\n");
+	printf("HandleStartComposition\n");
 #endif
 	mIMEIsComposing = PR_TRUE;
 	if(nsnull == mIMECompositionStr)
@@ -1914,7 +1909,7 @@ nsresult nsMacEventHandler::HandleStartComposition(void)
 		          + compositionEvent.theReply.mCursorPosition.height;
 		focusedWidget->LocalToWindowCoordinate(mIMEPos);
 #ifdef DEBUG_TSM
-		PRINTF("HandleStartComposition reply (%d,%d)\n", mIMEPos.x , mIMEPos.y);
+		printf("HandleStartComposition reply (%d,%d)\n", mIMEPos.x , mIMEPos.y);
 #endif
 	}
 	return res;
@@ -1928,7 +1923,7 @@ nsresult nsMacEventHandler::HandleStartComposition(void)
 nsresult nsMacEventHandler::HandleEndComposition(void)
 {
 #ifdef DEBUG_TSM
-	PRINTF("HandleEndComposition\n");
+	printf("HandleEndComposition\n");
 #endif
 	mIMEIsComposing = PR_FALSE;
 	// 
@@ -1965,13 +1960,13 @@ nsresult nsMacEventHandler::HandleEndComposition(void)
 nsresult nsMacEventHandler::HandleTextEvent(PRUint32 textRangeCount, nsTextRangeArray textRangeArray)
 {
 #ifdef DEBUG_TSM
-	PRINTF("HandleTextEvent\n");
+	printf("HandleTextEvent\n");
 	PRUint32 i;
-	PRINTF("text event \n[");
+	printf("text event \n[");
 	const PRUnichar *ubuf = mIMECompositionStr->GetUnicode();
 	for(i=0; '\0' != *ubuf; i++)
-		PRINTF("U+%04X ", *ubuf++);
-	PRINTF("] len = %d\n",i);
+		printf("U+%04X ", *ubuf++);
+	printf("] len = %d\n",i);
 	if(textRangeCount > 0)
 	{
 		for(i=0;i<textRangeCount;i++ )
@@ -1995,12 +1990,12 @@ nsresult nsMacEventHandler::HandleTextEvent(PRUint32 textRangeCount, nsTextRange
 				"ConvertedText",
 				"SelectedConvertedText"
 			};
-			PRINTF("[%d,%d]=%s\n", 
+			printf("[%d,%d]=%s\n", 
 			textRangeArray[i].mStartOffset, 
 			textRangeArray[i].mEndOffset,
 			((textRangeArray[i].mRangeType<=NS_TEXTRANGE_SELECTEDCONVERTEDTEXT) ?
 				name[textRangeArray[i].mRangeType] : name[0])
-        );
+			);
 		}
 	}
 #endif
@@ -2038,7 +2033,7 @@ nsresult nsMacEventHandler::HandleTextEvent(PRUint32 textRangeCount, nsTextRange
 		            textEvent.theReply.mCursorPosition.height;
 		focusedWidget->LocalToWindowCoordinate(mIMEPos);
 #ifdef DEBUG_TSM
-		PRINTF("HandleTextEvent reply (%d,%d)\n", mIMEPos.x , mIMEPos.y);
+		printf("HandleTextEvent reply (%d,%d)\n", mIMEPos.x , mIMEPos.y);
 #endif
 	} 
 	return res;

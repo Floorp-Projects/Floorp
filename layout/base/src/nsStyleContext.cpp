@@ -49,16 +49,6 @@
 #include "nsIStyleSet.h"
 #include "nsISizeOfHandler.h"
 #include "nsIPresShell.h"
-#include "nslog.h"
-#undef fprintf
-
-#ifdef NOISY_DEBUG
-NS_IMPL_LOG_ENABLED(nsStyleContextLog)
-#else
-NS_IMPL_LOG(nsStyleContextLog)
-#endif
-#define PRINTF NS_LOG_PRINTF(nsStyleContextLog)
-#define FLUSH  NS_LOG_FLUSH(nsStyleContextLog)
 
 static NS_DEFINE_IID(kIStyleContextIID, NS_ISTYLECONTEXT_IID);
 
@@ -2031,8 +2021,8 @@ PRUint32 nsStyleContextData::Release(void)
   --mRefCnt;
   NS_LOG_RELEASE(this,mRefCnt,"nsStyleContextData");
   if (0 == mRefCnt) {
-#ifdef DEBUG
-    PRINTF("deleting nsStyleContextData instance: (%ld)\n", (long)(--gInstanceCount));
+#ifdef NOISY_DEBUG
+    printf("deleting nsStyleContextData instance: (%ld)\n", (long)(--gInstanceCount));
 #endif
     delete this;
     return 0;
@@ -2052,10 +2042,10 @@ nsStyleContextData *nsStyleContextData::Create(nsIPresContext *aPresContext)
     pData = new nsStyleContextData(aPresContext);
     if (pData) {
       NS_ADDREF(pData);
-#ifdef DEBUG
-      PRINTF("new nsStyleContextData instance: (%ld) CRC=%lu\n", 
+#ifdef NOISY_DEBUG
+      printf("new nsStyleContextData instance: (%ld) CRC=%lu\n", 
              (long)(++gInstanceCount), (unsigned long)pData->ComputeCRC32(0));
-#endif
+#endif // NOISY_DEBUG
     }
   }
   return pData;
@@ -2917,10 +2907,14 @@ StyleContextImpl::RemapStyle(nsIPresContext* aPresContext, PRBool aRecurse)
     if ((NS_SUCCEEDED(mStyleSet->FindMatchingContext(this, &matchingSC))) && 
         (nsnull != matchingSC)) {
       ShareStyleDataFrom(matchingSC);
-      PRINTF("SC Data Shared :)\n");
+#ifdef NOISY_DEBUG
+      printf("SC Data Shared :)\n");
+#endif
       NS_IF_RELEASE(matchingSC);
     } else {
-      PRINTF("Unique SC Data - Not Shared :(\n");
+#ifdef NOISY_DEBUG
+      printf("Unique SC Data - Not Shared :(\n");
+#endif
     }
   } // if(bDisableSharing==false)
 
@@ -3136,7 +3130,7 @@ StyleContextImpl::StyleDataMatches(nsIStyleContext* aStyleContextToMatch,
 #ifdef DEBUG
       if (hint > 0) {
         gFalsePos++;
-        // PRINTF("CRC match but CalcStyleDifference shows differences: crc is not sufficient?");
+        // printf("CRC match but CalcStyleDifference shows differences: crc is not sufficient?");
       }
 #endif
       *aMatches = (0 == hint) ? PR_TRUE : PR_FALSE;
@@ -3154,7 +3148,7 @@ StyleContextImpl::StyleDataMatches(nsIStyleContext* aStyleContextToMatch,
       NS_ASSERTION(hint>0,"!!!FALSE-NEGATIVE in StyleMatchesData!!!");
       */
     }
-    // PRINTF("False-Pos: %ld - Screened: %ld\n", gFalsePos, gScreenedByCRC);
+    // printf("False-Pos: %ld - Screened: %ld\n", gFalsePos, gScreenedByCRC);
 #endif
   }
   return rv;
@@ -3255,32 +3249,32 @@ void StyleContextImpl::SizeOf(nsISizeOfHandler *aSizeOfHandler, PRUint32 &aSize)
     bDetailDumpDone = PR_TRUE;
     PRUint32 totalSize=0;
 
-    PRINTF( "Detailed StyleContextImpl dump: basic class sizes of members\n" );
-    PRINTF( "*************************************\n");
-    PRINTF( " - StyleFontImpl:          %ld\n", (long)sizeof(GETSCDATA(Font)) );
+    printf( "Detailed StyleContextImpl dump: basic class sizes of members\n" );
+    printf( "*************************************\n");
+    printf( " - StyleFontImpl:          %ld\n", (long)sizeof(GETSCDATA(Font)) );
     totalSize += (long)sizeof(GETSCDATA(Font));
-    PRINTF( " - StyleColorImpl:         %ld\n", (long)sizeof(GETSCDATA(Color)) );
+    printf( " - StyleColorImpl:         %ld\n", (long)sizeof(GETSCDATA(Color)) );
     totalSize += (long)sizeof(GETSCDATA(Color));
-    PRINTF( " - StyleSpacingImpl:       %ld\n", (long)sizeof(GETSCDATA(Spacing)) );
+    printf( " - StyleSpacingImpl:       %ld\n", (long)sizeof(GETSCDATA(Spacing)) );
     totalSize += (long)sizeof(GETSCDATA(Spacing));
-    PRINTF( " - StyleListImpl:          %ld\n", (long)sizeof(GETSCDATA(List)) );
+    printf( " - StyleListImpl:          %ld\n", (long)sizeof(GETSCDATA(List)) );
     totalSize += (long)sizeof(GETSCDATA(List));
-    PRINTF( " - StylePositionImpl:      %ld\n", (long)sizeof(GETSCDATA(Position)) );
+    printf( " - StylePositionImpl:      %ld\n", (long)sizeof(GETSCDATA(Position)) );
     totalSize += (long)sizeof(GETSCDATA(Position));
-    PRINTF( " - StyleTextImpl:          %ld\n", (long)sizeof(GETSCDATA(Text)) );
+    printf( " - StyleTextImpl:          %ld\n", (long)sizeof(GETSCDATA(Text)) );
     totalSize += (long)sizeof(GETSCDATA(Text));
-    PRINTF( " - StyleDisplayImpl:       %ld\n", (long)sizeof(GETSCDATA(Display)) );
+    printf( " - StyleDisplayImpl:       %ld\n", (long)sizeof(GETSCDATA(Display)) );
     totalSize += (long)sizeof(GETSCDATA(Display));
-    PRINTF( " - StyleTableImpl:         %ld\n", (long)sizeof(GETSCDATA(Table)) );
+    printf( " - StyleTableImpl:         %ld\n", (long)sizeof(GETSCDATA(Table)) );
     totalSize += (long)sizeof(GETSCDATA(Table));
-    PRINTF( " - StyleContentImpl:       %ld\n", (long)sizeof(GETSCDATA(Content)) );
+    printf( " - StyleContentImpl:       %ld\n", (long)sizeof(GETSCDATA(Content)) );
     totalSize += (long)sizeof(GETSCDATA(Content));
-    PRINTF( " - StyleUserInterfaceImpl: %ld\n", (long)sizeof(GETSCDATA(UserInterface)) );
+    printf( " - StyleUserInterfaceImpl: %ld\n", (long)sizeof(GETSCDATA(UserInterface)) );
     totalSize += (long)sizeof(GETSCDATA(UserInterface));
-	  PRINTF( " - StylePrintImpl:         %ld\n", (long)sizeof(GETSCDATA(Print)));
+	  printf( " - StylePrintImpl:         %ld\n", (long)sizeof(GETSCDATA(Print)));
     totalSize += (long)sizeof(GETSCDATA(Print));
-    PRINTF( " - Total:                  %ld\n", (long)totalSize);
-    PRINTF( "*************************************\n");
+    printf( " - Total:                  %ld\n", (long)totalSize);
+    printf( "*************************************\n");
   }
 
   // first get the unique items collection

@@ -58,11 +58,6 @@
 #include "nsMsgFolderFlags.h"
 #include "nsIRDFService.h"
 #include "nsRDFCID.h"
-#include "nslog.h"
-
-NS_IMPL_LOG(nsMsgAccountManagerLog)
-#define PRINTF NS_LOG_PRINTF(nsMsgAccountManagerLog)
-#define FLUSH  NS_LOG_FLUSH(nsMsgAccountManagerLog)
 
 #if defined(DEBUG_alecf) || defined(DEBUG_sspitzer) || defined(DEBUG_seth)
 #define DEBUG_ACCOUNTMANAGER 1
@@ -460,7 +455,7 @@ nsMsgAccountManager::createKeyedServer(const char* key,
   
   // finally, create the server
 #ifdef DEBUG_ACCOUNTMANAGER
-  PRINTF("serverContractID = %s\n", (const char *)serverContractID);
+  printf("serverContractID = %s\n", (const char *)serverContractID);
 #endif
   rv = nsComponentManager::CreateInstance(serverContractID,
                                           nsnull,
@@ -679,7 +674,7 @@ nsMsgAccountManager::GetDefaultAccount(nsIMsgAccount * *aDefaultAccount)
     PRUint32 count;
     m_accounts->Count(&count);
 #ifdef DEBUG_ACCOUNTMANAGER
-    PRINTF("There are %d accounts\n", count);
+    printf("There are %d accounts\n", count);
 #endif
     if (count == 0) {
       *aDefaultAccount=nsnull;
@@ -1002,7 +997,7 @@ nsMsgAccountManager::addIdentityIfUnique(nsISupports *element, void *aData)
   nsresult rv;
   nsCOMPtr<nsIMsgIdentity> identity = do_QueryInterface(element, &rv);
   if (NS_FAILED(rv)) {
-      PRINTF("addIdentityIfUnique problem\n");
+    printf("addIdentityIfUnique problem\n");
     return PR_TRUE;
   }
   
@@ -1123,7 +1118,7 @@ nsMsgAccountManager::LoadAccounts()
   
   if (NS_FAILED(rv) || !accountList || !accountList[0]) {
 #ifdef DEBUG_ACCOUNTMANAGER
-      PRINTF("No accounts.\n");
+    printf("No accounts.\n");
 #endif
     return NS_OK;
   }
@@ -1132,7 +1127,7 @@ nsMsgAccountManager::LoadAccounts()
   
     /* parse accountList and run loadAccount on each string, comma-separated */
 #ifdef DEBUG_ACCOUNTMANAGER
-  PRINTF("accountList = %s\n", (const char*)accountList);
+    printf("accountList = %s\n", (const char*)accountList);
 #endif
    
     nsCOMPtr<nsIMsgAccount> account;
@@ -1147,7 +1142,7 @@ nsMsgAccountManager::LoadAccounts()
       
       if (!str.IsEmpty()) {
 #ifdef DEBUG_ACCOUNTMANAGER
-          PRINTF("account = %s\n",(const char *)str.GetBuffer());
+	  printf("account = %s\n",(const char *)str.GetBuffer());
 #endif
           rv = GetAccount(str.GetBuffer(), getter_AddRefs(account));
       }
@@ -1500,7 +1495,7 @@ nsMsgAccountManager::FindServer(const char* username,
   nsCOMPtr<nsISupportsArray> servers;
 	
 #ifdef DEBUG_ACCOUNTMANAGER
-  PRINTF("FindServer(%s,%s,%s,??)\n", username,hostname,type);
+  printf("FindServer(%s,%s,%s,??)\n", username,hostname,type);
 #endif
  
   rv = GetAllServers(getter_AddRefs(servers));

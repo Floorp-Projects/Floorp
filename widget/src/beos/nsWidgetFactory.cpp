@@ -49,11 +49,6 @@
 #include "nsDragService.h"
 
 #include "nsSound.h"
-#include "nslog.h"
-
-NS_IMPL_LOG(nsWidgetFactoryLog)
-#define PRINTF NS_LOG_PRINTF(nsWidgetFactoryLog)
-#define FLUSH  NS_LOG_FLUSH(nsWidgetFactoryLog)
 
 static NS_DEFINE_IID(kCWindow,        NS_WINDOW_CID);
 static NS_DEFINE_IID(kCChild,         NS_CHILD_CID);
@@ -227,7 +222,7 @@ nsresult nsWidgetFactory::CreateInstance(nsISupports *aOuter,
         inst = (nsISupports*) (nsIDragService *) new nsDragService();
     }
     else {
-        PRINTF("nsWidgetFactory::CreateInstance(), unhandled class.\n");
+        printf("nsWidgetFactory::CreateInstance(), unhandled class.\n");
     }
   
     if (inst == NULL) {  

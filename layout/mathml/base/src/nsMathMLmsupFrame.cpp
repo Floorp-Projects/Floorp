@@ -38,11 +38,6 @@
 #include "nsStyleUtil.h"
 
 #include "nsMathMLmsupFrame.h"
-#include "nslog.h"
-
-NS_IMPL_LOG(nsMathMLmsupFrameLog)
-#define PRINTF NS_LOG_PRINTF(nsMathMLmsupFrameLog)
-#define FLUSH  NS_LOG_FLUSH(nsMathMLmsupFrameLog)
 
 //
 // <msup> -- attach a superscript to a base - implementation
@@ -147,7 +142,7 @@ nsMathMLmsupFrame::Place(nsIPresContext*      aPresContext,
     NS_ASSERTION(NS_SUCCEEDED(rv),"failed to get next child");
   }
 #ifdef NS_DEBUG
-  if (2 != count) PRINTF("msup: invalid markup");
+  if (2 != count) printf("msup: invalid markup");
 #endif
   if ((2 != count) || !baseFrame || !supScriptFrame) {
     // report an error, encourage people to get their markups in order

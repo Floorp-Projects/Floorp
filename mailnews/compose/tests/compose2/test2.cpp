@@ -50,11 +50,6 @@
 #include "nsCRT.h"
 #include "prmem.h"
 #include "nsFileStream.h"
-#include "nslog.h"
-
-NS_IMPL_LOG(test2Log)
-#define PRINTF NS_LOG_PRINTF(test2Log)
-#define FLUSH  NS_LOG_FLUSH(test2Log)
 
 #ifdef XP_PC
 #ifdef XP_OS2
@@ -138,7 +133,7 @@ nsresult rv;
                   NS_MSGACCOUNTMANAGER_CONTRACTID, &rv);
   if (NS_FAILED(rv)) 
   {
-      PRINTF("Failure on Mail Session Init!\n");
+    printf("Failure on Mail Session Init!\n");
     return nsnull;
   }  
 
@@ -154,7 +149,7 @@ nsresult rv;
                                   (void **)getter_AddRefs(identity));
   if (NS_FAILED(rv)) 
   {
-      PRINTF("Failure getting Identity!\n");
+    printf("Failure getting Identity!\n");
     return nsnull;
   }  
 
@@ -242,7 +237,7 @@ nsresult
 SendOperationListener::OnStartSending(const char *aMsgID, PRUint32 aMsgSize)
 {
 #ifdef NS_DEBUG
-    PRINTF("SendOperationListener::OnStartSending()\n");
+  printf("SendOperationListener::OnStartSending()\n");
 #endif
   return NS_OK;
 }
@@ -251,7 +246,7 @@ nsresult
 SendOperationListener::OnProgress(const char *aMsgID, PRUint32 aProgress, PRUint32 aProgressMax)
 {
 #ifdef NS_DEBUG
-    PRINTF("SendOperationListener::OnProgress()\n");
+  printf("SendOperationListener::OnProgress()\n");
 #endif
   return NS_OK;
 }
@@ -260,7 +255,7 @@ nsresult
 SendOperationListener::OnStatus(const char *aMsgID, const PRUnichar *aMsg)
 {
 #ifdef NS_DEBUG
-    PRINTF("SendOperationListener::OnStatus()\n");
+  printf("SendOperationListener::OnStatus()\n");
 #endif
 
   return NS_OK;
@@ -272,15 +267,15 @@ SendOperationListener::OnStopSending(const char *aMsgID, nsresult aStatus, const
 {
   if (NS_SUCCEEDED(aStatus))
   {
-      PRINTF("Save Mail File Operation Completed Successfully!\n");
+    printf("Save Mail File Operation Completed Successfully!\n");
   }
   else
   {
-      PRINTF("Save Mail File Operation FAILED!\n");
+    printf("Save Mail File Operation FAILED!\n");
   }
 
   keepOnRunning = PR_FALSE;
-  PRINTF("Exit code = [%d]\n", aStatus);
+  printf("Exit code = [%d]\n", aStatus);
   return NS_OK;
 }
 
@@ -376,14 +371,14 @@ int main(int argc, char *argv[])
 
 	if (NS_FAILED(rv)) 
   {
-      PRINTF("Failed to get event queue\n");
+    printf("Failed to get event queue\n");
     return rv;
   }
 
   rv = pEventQService->CreateThreadEventQueue();
 	if (NS_FAILED(rv)) 
   {
-      PRINTF("Failed to create event queue\n");
+    printf("Failed to create event queue\n");
     return rv;
   }
 
@@ -394,21 +389,21 @@ int main(int argc, char *argv[])
   NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &rv); 
   if (NS_FAILED(rv) || (prefs == nsnull)) 
   {
-      PRINTF("Failed to get the prefs service...\n");
+    printf("Failed to get the prefs service...\n");
     exit(rv);
   }
   if (NS_FAILED(prefs->ReadUserPrefs()))
   {
-      PRINTF("Failed on reading user prefs!\n");
+    printf("Failed on reading user prefs!\n");
     exit(rv);
   }
 
 
-  PRINTF("Creating temp mail file...\n");
+  printf("Creating temp mail file...\n");
   mailFile = nsMsgCreateTempFileSpec("mailTest.eml");
   if (NS_FAILED(WriteTempMailFile(mailFile)))
   {
-      PRINTF("Failed to create temp mail file!\n");
+    printf("Failed to create temp mail file!\n");
     return 0;
   }
 
@@ -419,7 +414,7 @@ int main(int argc, char *argv[])
   rv = nsComponentManager::CreateInstance(kMsgSendCID, NULL, kIMsgSendIID, (void **) &pMsgSend); 
   if (NS_SUCCEEDED(rv) && pMsgSend) 
   { 
-      PRINTF("We succesfully obtained a nsIMsgSend interface....\n");    
+    printf("We succesfully obtained a nsIMsgSend interface....\n");    
     rv = nsComponentManager::CreateInstance(kMsgCompFieldsCID, NULL, kIMsgCompFieldsIID, 
                                              (void **) &pMsgCompFields); 
     if (NS_SUCCEEDED(rv) && pMsgCompFields)
@@ -435,7 +430,7 @@ int main(int argc, char *argv[])
       nsIMsgSendListener **tArray = CreateListenerArray(mSendListener);
       if (!tArray)
       {
-          PRINTF("Error creating listener array.\n");
+        printf("Error creating listener array.\n");
         return NS_ERROR_FAILURE;
       }
 
@@ -452,7 +447,7 @@ int main(int argc, char *argv[])
   }
 
 #if defined(XP_PC) && !defined(XP_OS2)
-  PRINTF("Sitting in an event processing loop ...Hit Cntl-C to exit...");
+  printf("Sitting in an event processing loop ...Hit Cntl-C to exit...");
   while (keepOnRunning)
   {
     MSG msg;
@@ -464,7 +459,7 @@ int main(int argc, char *argv[])
   }
 #endif
 
-  PRINTF("Releasing the interface now...\n");
+  printf("Releasing the interface now...\n");
   pMsgSend->Release(); 
   pMsgCompFields->Release(); 
 
