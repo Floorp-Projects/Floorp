@@ -52,6 +52,8 @@
 #include "nsParserNode.h"
 #include "nsHTMLEntities.h"
 #include "nsLinebreakConverter.h"
+#include "nsIFormProcessor.h"
+#include "nsVoidArray.h"
 
 #include "prmem.h"
 
@@ -60,6 +62,8 @@ static NS_DEFINE_IID(kIHTMLContentSinkIID, NS_IHTML_CONTENT_SINK_IID);
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);                 
 static NS_DEFINE_IID(kIDTDIID,      NS_IDTD_IID);
 static NS_DEFINE_IID(kClassIID,     NS_INAVHTML_DTD_IID); 
+
+static NS_DEFINE_IID(kFormProcessorCID, NS_IFORMPROCESSOR_CID); 
  
 static const  char* kNullToken = "Error: Null token given";
 static const  char* kInvalidTagStackPos = "Error: invalid tag stack position";
@@ -1254,6 +1258,77 @@ nsresult CNavDTD::HandleOmittedTag(CToken* aToken,eHTMLTags aChildTag,eHTMLTags 
   return result;
 }
 
+/** 
+ *  This method gets called when a kegen token is found.
+ *   
+ *  @update  harishd 05/02/00
+ *  @param   aNode -- CParserNode representing keygen
+ *  @return  NS_OK if all went well; ERROR if error occured
+ */
+nsresult CNavDTD::HandleKeyGen(nsIParserNode* aNode) { 
+  nsresult result=NS_OK; 
+
+  if(aNode) { 
+  
+    NS_WITH_SERVICE(nsIFormProcessor, theFormProcessor, kFormProcessorCID, &result) 
+  
+    if(NS_SUCCEEDED(result)) { 
+      PRInt32      theAttrCount=aNode->GetAttributeCount(); 
+      nsVoidArray  theContent; 
+      nsAutoString theAttribute; 
+      nsAutoString theFormType; 
+      CToken*      theToken=nsnull; 
+
+      theFormType.AssignWithConversion("select"); 
+  
+      result=theFormProcessor->ProvideContent(theFormType,theContent,theAttribute); 
+
+      if(NS_SUCCEEDED(result)) {
+        nsString* theTextValue=nsnull; 
+        PRInt32   theIndex=nsnull; 
+  
+        if(mTokenizer && mTokenRecycler) {
+          // Populate the tokenizer with the fabricated elements in the reverse order 
+          // such that <SELECT> is on the top fo the tokenizer followed by <OPTION>s 
+          // and </SELECT> 
+          theToken=mTokenRecycler->CreateTokenOfType(eToken_end,eHTMLTag_select); 
+          mTokenizer->PushTokenFront(theToken); 
+  
+          for(theIndex=theContent.Count()-1;theIndex>-1;theIndex--) { 
+            theTextValue=(nsString*)theContent[theIndex]; 
+            theToken=mTokenRecycler->CreateTokenOfType(eToken_text,eHTMLTag_text,*theTextValue); 
+            mTokenizer->PushTokenFront(theToken); 
+            theToken=mTokenRecycler->CreateTokenOfType(eToken_start,eHTMLTag_option); 
+            mTokenizer->PushTokenFront(theToken); 
+          } 
+  
+          // The attribute ( provided by the form processor ) should be a part of the SELECT.
+          // Placing the attribute token on the tokenizer to get picked up by the SELECT.
+          theToken=mTokenRecycler->CreateTokenOfType(eToken_attribute,eHTMLTag_unknown,theAttribute);
+
+          nsString& theKey=((CAttributeToken*)theToken)->GetKey(); 
+          theKey.AssignWithConversion("_moz-type"); 
+          mTokenizer->PushTokenFront(theToken); 
+  
+          // Pop out NAME and CHALLENGE attributes ( from the keygen NODE ) 
+          // and place it in the tokenizer such that the attribtues get 
+          // sucked into SELECT node. 
+          for(theIndex=theAttrCount;theIndex>0;theIndex--) { 
+            mTokenizer->PushTokenFront(((nsCParserNode*)aNode)->PopAttributeToken()); 
+          } 
+  
+          theToken=mTokenRecycler->CreateTokenOfType(eToken_start,eHTMLTag_select); 
+          // Increament the count because of the additional attribute from the form processor.
+          theToken->SetAttributeCount(theAttrCount+1); 
+          mTokenizer->PushTokenFront(theToken); 
+        }//if(mTokenizer && mTokenRecycler)
+      }//if(NS_SUCCEEDED(result))
+    }// if(NS_SUCCEEDED(result)) 
+  } //if(aNode) 
+  return result; 
+} 
+
+
 /**
  *  This method gets called when a start token has been 
  *  encountered in the parse process. If the current container
@@ -1343,6 +1418,11 @@ nsresult CNavDTD::HandleStartToken(CToken* aToken) {
 
         case eHTMLTag_image:
           aToken->SetTypeID(theChildTag=eHTMLTag_img);
+          break;
+
+        case eHTMLTag_keygen:
+          result=HandleKeyGen(theNode);
+          isTokenHandled=PR_TRUE;
           break;
 
         case eHTMLTag_noframes:
