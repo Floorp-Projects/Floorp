@@ -434,8 +434,12 @@ nsHttpTransaction::HandleContentStart()
             // eliminate any references to this content length value, so our
             // consumers don't get confused.
             mContentLength = -1;
-            mResponseHead->SetHeader(nsHttp::Content_Length, nsnull);
             mResponseHead->SetContentLength(-1);
+            // if a client is really interested in the content length,
+            // even though we think it is invalid, them them hut for it
+            // in the raw headers.
+            //          mResponseHead->SetHeader(nsHttp::Content_Length, nsnull);
+
         }
     }
 
