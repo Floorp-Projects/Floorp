@@ -55,7 +55,7 @@ typedef struct {
     int flags;                  /* e.g. PKG_SYSTEM, PKG_CLASS */
 } JavaPackage_Private;
 
-JSObject *
+static JSObject *
 define_JavaPackage(JSContext *cx, JSObject *parent_obj,
                    const char *obj_name, const char *path, int flags)
 {
