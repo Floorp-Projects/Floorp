@@ -76,7 +76,7 @@
 // Class ID's
 
 // WIDGET
-#ifndef XP_UNIX
+#if !defined(XP_UNIX) && !defined(XP_OS2)
 static NS_DEFINE_IID(kCLookAndFeelCID, NS_LOOKANDFEEL_CID);
 static NS_DEFINE_IID(kCWindowCID, NS_WINDOW_CID);
 static NS_DEFINE_IID(kCVScrollbarCID, NS_VERTSCROLLBAR_CID);
@@ -155,7 +155,7 @@ NS_SetupRegistry()
 #endif /* defined(XP_UNIX) */
 
   // WIDGET
-#ifndef XP_UNIX
+#if !defined(XP_UNIX) && !defined(XP_OS2)
   nsComponentManager::RegisterComponentLib(kCLookAndFeelCID, NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
   nsComponentManager::RegisterComponentLib(kCWindowCID, NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
   nsComponentManager::RegisterComponentLib(kCVScrollbarCID, NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);

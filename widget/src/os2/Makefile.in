@@ -24,6 +24,7 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 LIBRARY_NAME	= wdgtos2
+IS_COMPONENT    = 1
 
 EXTRA_DSO_LIBS	= gkgfx
 
@@ -32,7 +33,7 @@ REQUIRES	= util img xpcom raptor netlib
 DIRS		= res
 
 ifdef ENABLE_TESTS
-DIRS		+= tests
+#DIRS		+= tests
 endif
 
 CPPSRCS		= \
