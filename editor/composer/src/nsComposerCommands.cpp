@@ -242,6 +242,7 @@ nsCloseCommand::DoCommand(const nsAReadableString & aCommandName, const nsAReada
 #pragma mark -
 #endif
 
+#if 0
 NS_IMETHODIMP
 nsPrintingCommands::IsCommandEnabled(const nsAReadableString & aCommandName, nsISupports *refCon, PRBool *outCmdEnabled)
 {
@@ -284,6 +285,7 @@ nsPrintingCommands::DoCommand(const nsAReadableString & aCommandName, nsISupport
 
   return rv;  
 }
+#endif
 
 #ifdef XP_MAC
 #pragma mark -

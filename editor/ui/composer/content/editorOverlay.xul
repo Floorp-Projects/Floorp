@@ -302,7 +302,7 @@
       <menuitem label="&previewCmd.label;"  accesskey="&filepreview.accesskey;" observes="cmd_preview"/>
       <!-- menuitem id="menu_SendPage" is merged here from mailEditorOverlay.xul,
            where "position" is assumed to be 14. Change that label if menu position changes.      -->
-      <menuitem accesskey="&fileprintsetup.accesskey;" observes="cmd_printSetup" />
+      <!--Page setup gets overlaid here from platformGlobalOverlay.xul / -->
       <menuitem id="printMenuItem" accesskey="&fileprint.accesskey;" key="printkb" observes="cmd_print" label="&printCmd.label;"/>
       <menuseparator/>
       <!-- The Exit/Quit item is merged from platformGlobalOverlay.xul -->
@@ -656,7 +656,7 @@
                  tooltip="aTooltip" tooltiptext="&printToolbarCmd.tooltip;">
     <menupopup id="printMenu">
       <menuitem accesskey="&fileprint.accesskey;"      label="&printCmd.label;" default="true"/>
-      <menuitem accesskey="&fileprintsetup.accesskey;" observes="cmd_printSetup" />
+      <menuitem accesskey="&fileprintsetup.accesskey;" label="&printSetupCmd.label;" oncommand="goDoCommand('cmd_printSetup'); event.preventBubble();"/>
     </menupopup>
   </toolbarbutton>
     
