@@ -32,7 +32,6 @@
 
 menulist {
   -moz-appearance: menulist;
-  -moz-user-focus: ignore;
   margin: 2px 4px;
 }
 
@@ -75,23 +74,9 @@ menulist[editable="true"] {
 
 .menulist-editable-box {
   margin-right: 4px;
-  border: 3px solid;
-  -moz-border-top-colors: transparent #888888 #000000;
-  -moz-border-right-colors: transparent #FFFFFF #000000;
-  -moz-border-bottom-colors: transparent #FFFFFF #000000;
-  -moz-border-left-colors: transparent #888888 #000000;
-  -moz-border-radius-topright: 2px;
-  -moz-border-radius-bottomleft: 2px;
   padding: 1px 0px 1px 2px;
   background-color: -moz-Field;
   color: -moz-FieldText;
-}
-
-menulist[editable="true"][focused="true"] > .menulist-editable-box {
-  -moz-border-top-colors: -moz-mac-focusring -moz-mac-focusring #000000;
-  -moz-border-right-colors: -moz-mac-focusring -moz-mac-focusring #000000;
-  -moz-border-bottom-colors: -moz-mac-focusring -moz-mac-focusring #000000;
-  -moz-border-left-colors: -moz-mac-focusring -moz-mac-focusring #000000;
 }
 
 html|*.menulist-editable-input {
