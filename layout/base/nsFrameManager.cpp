@@ -1030,26 +1030,23 @@ FrameManager::CantRenderReplacedElement(nsIPresContext* aPresContext,
 #ifdef NOISY_EVENTS
   printf("%p FrameManager::CantRenderReplacedElement called\n", this);
 #endif
-  nsIEventQueueService* eventService;
-  nsresult              rv;
 
   // We need to notify the style stystem, but post the notification so it
   // doesn't happen now
-  rv = nsServiceManager::GetService(kEventQueueServiceCID,
-                                    NS_GET_IID(nsIEventQueueService),
-                                    (nsISupports **)&eventService);
-  if (NS_SUCCEEDED(rv)) {
+  nsresult rv;
+  nsCOMPtr<nsIEventQueueService> eventService = do_GetService(kEventQueueServiceCID, &rv);
+
+  if (eventService) {
     nsCOMPtr<nsIEventQueue> eventQueue;
     rv = eventService->GetThreadEventQueue(NS_CURRENT_THREAD, 
                                            getter_AddRefs(eventQueue));
-    nsServiceManager::ReleaseService(kEventQueueServiceCID, eventService);
 
     if (NS_SUCCEEDED(rv) && eventQueue) {
-#ifdef NS_DEBUG
       // Verify that there isn't already a posted event associated with
-      // this frame
-      NS_ASSERTION(!*FindPostedEventFor(aFrame), "frame already has posted event");
-#endif
+      // this frame.
+      if (*FindPostedEventFor(aFrame))
+        return NS_OK;
+
       CantRenderReplacedElementEvent* ev;
 
       // Create a new event
