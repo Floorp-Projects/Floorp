@@ -239,7 +239,11 @@ void setupProfilingStuff(void)
 	 *               finding time spent by the X server.
 	*/
 	if(tst) {
-	    if(strstr(tst, "JP_DEFER")) startTimer = 0;
+	    if(strstr(tst, "JP_DEFER"))
+	    {
+		doNotStart = 0;
+		startTimer = 0;
+	    }
 	    if(strstr(tst, "JP_START")) doNotStart = 0;
 	    if(strstr(tst, "JP_REALTIME")) realTime = 1;
 
