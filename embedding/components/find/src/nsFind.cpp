@@ -75,6 +75,8 @@ nsIAtom* nsFind::sScriptAtom = nsnull;
 nsIAtom* nsFind::sNoframesAtom = nsnull;
 nsIAtom* nsFind::sSelectAtom = nsnull;
 nsIAtom* nsFind::sTextareaAtom = nsnull;
+nsIAtom* nsFind::sThAtom = nsnull;
+nsIAtom* nsFind::sTdAtom = nsnull;
 
 NS_IMPL_ISUPPORTS1(nsFind, nsIFind)
 
@@ -96,6 +98,8 @@ nsFind::nsFind()
     sNoframesAtom = NS_NewAtom("noframes");
     sSelectAtom = NS_NewAtom("select");
     sTextareaAtom = NS_NewAtom("textarea");
+    sThAtom = NS_NewAtom("th");
+    sTdAtom = NS_NewAtom("td");
   }
   ++sInstanceCount;
 }
@@ -112,6 +116,8 @@ nsFind::~nsFind()
     NS_IF_RELEASE(sNoframesAtom);
     NS_IF_RELEASE(sSelectAtom);
     NS_IF_RELEASE(sTextareaAtom);
+    NS_IF_RELEASE(sThAtom);
+    NS_IF_RELEASE(sTdAtom);
   }
   --sInstanceCount;
 }
@@ -416,7 +422,8 @@ PRBool nsFind::IsBlockNode(nsIContent* aContent)
   nsCOMPtr<nsIAtom> atom;
   aContent->GetTag(*getter_AddRefs(atom));
 
-  if (atom.get() == sImgAtom || atom.get() == sHRAtom)
+  if (atom.get() == sImgAtom || atom.get() == sHRAtom
+      || atom.get() == sThAtom || atom.get() == sTdAtom)
     return PR_TRUE;
 
   if (!mParserService) {
