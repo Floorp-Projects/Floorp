@@ -30,7 +30,7 @@ CHROME_DIR=packages/chatzilla
 CHROME_L10N_DIR=chatzilla/locale
 
 CHROME_L10N = \
-	$(srcdir)/chatzillaOverlay.dtd \
+	chatzillaOverlay.dtd \
 	$(NULL)
 
 EXPORT_PREF_CONTENT = \

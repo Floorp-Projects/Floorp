@@ -30,8 +30,8 @@ CHROME_DIR=packages/chatzilla
 CHROME_CONTENT_DIR=chatzilla/content
 
 CHROME_CONTENT = \
-		$(srcdir)/chatzillaOverlay.xul \
-		$(srcdir)/chatzillaOverlay.js \
+		chatzillaOverlay.xul \
+		chatzillaOverlay.js \
 		$(NULL)
 
 EXPORT_PREF_CONTENT = \
