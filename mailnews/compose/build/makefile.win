@@ -93,6 +93,7 @@ LLIBS=										\
 			$(DIST)\lib\js32$(VERSION_NUMBER).lib	\
 			$(DIST)\lib\msgcore.lib			\
 			$(DIST)\lib\compose.lib			\
+			$(DIST)\lib\raptorbase.lib		\
 			$(LIBNSPR)						\
 			$(NULL)
 
