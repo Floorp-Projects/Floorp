@@ -188,8 +188,6 @@ bin\chrome\menulistBindings.xml
 bin\chrome\platformHTMLBindings.xml
 bin\chrome\xul.css
 bin\chrome\xulBindings.xml
-; temporary, until the installer begins generating one of its own
-bin\chrome\installed-chrome.txt
 
 bin\defaults\pref\all.js
 bin\defaults\pref\mailnews.js
