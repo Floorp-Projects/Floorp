@@ -272,6 +272,7 @@ protected:
                                 nsIDocShell **aResult);
 
     PRBool IsFrame();
+    PRBool IsIFrame();
 
     //
     // Helper method that is called when a new document (including any
