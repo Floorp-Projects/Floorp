@@ -48,6 +48,7 @@
 #include "nsIScriptElement.h"
 #include "nsGUIEvent.h"
 #include "nsIURI.h"
+#include "nsNetUtil.h"
 
 #include "nsUnicharUtils.h"  // for nsCaseInsensitiveCaseComparator()
 #include "jsapi.h"
@@ -201,7 +202,7 @@ nsHTMLScriptEventHandler::Invoke(nsISupports *aTargetObject,
   PRUint32 lineNumber = 0;
   nsCOMPtr<nsIScriptElement> sele(do_QueryInterface(mOuter));
   if (sele) {
-    (void) sele->GetLineNumber(&lineNumber);
+    lineNumber = sele->GetScriptLineNumber();
   }
 
   // Get the script context...
@@ -334,8 +335,12 @@ public:
   NS_DECL_NSISCRIPTLOADEROBSERVER
 
   // nsIScriptElement
-  NS_IMETHOD SetLineNumber(PRUint32 aLineNumber);
-  NS_IMETHOD GetLineNumber(PRUint32* aLineNumber);
+  virtual void GetScriptType(nsAString& type);
+  virtual already_AddRefed<nsIURI> GetScriptURI();
+  virtual void GetScriptText(nsAString& text);
+  virtual void GetScriptCharset(nsAString& charset); 
+  virtual void SetScriptLineNumber(PRUint32 aLineNumber);
+  virtual PRUint32 GetScriptLineNumber();
 
   // nsIContent
   nsresult SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
@@ -501,7 +506,8 @@ nsHTMLScriptElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 NS_IMETHODIMP
 nsHTMLScriptElement::GetText(nsAString& aValue)
 {
-  return GetContentsAsText(aValue);
+  GetContentsAsText(aValue);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -521,7 +527,8 @@ NS_IMPL_STRING_ATTR(nsHTMLScriptElement, Event, _event)
 nsresult
 nsHTMLScriptElement::GetInnerHTML(nsAString& aInnerHTML)
 {
-  return GetContentsAsText(aInnerHTML);
+  GetContentsAsText(aInnerHTML);
+  return NS_OK;
 }
 
 nsresult
@@ -530,10 +537,13 @@ nsHTMLScriptElement::SetInnerHTML(const nsAString& aInnerHTML)
   return ReplaceContentsWithText(aInnerHTML, PR_TRUE);
 }
 
-/* void scriptAvailable (in nsresult aResult, in nsIDOMHTMLScriptElement aElement, in nsIURI aURI, in PRInt32 aLineNo, in PRUint32 aScriptLength, [size_is (aScriptLength)] in wstring aScript); */
+// variation of this code in nsSVGScriptElement - check if changes
+// need to be transfered when modifying
+
+/* void scriptAvailable (in nsresult aResult, in nsIScriptElement aElement , in nsIURI aURI, in PRInt32 aLineNo, in PRUint32 aScriptLength, [size_is (aScriptLength)] in wstring aScript); */
 NS_IMETHODIMP
 nsHTMLScriptElement::ScriptAvailable(nsresult aResult,
-                                     nsIDOMHTMLScriptElement *aElement,
+                                     nsIScriptElement *aElement,
                                      PRBool aIsInline,
                                      PRBool aWasPending,
                                      nsIURI *aURI,
@@ -565,10 +575,13 @@ nsHTMLScriptElement::ScriptAvailable(nsresult aResult,
   return NS_OK;
 }
 
-/* void scriptEvaluated (in nsresult aResult, in nsIDOMHTMLScriptElement aElement); */
+// variation of this code in nsSVGScriptElement - check if changes
+// need to be transfered when modifying
+
+/* void scriptEvaluated (in nsresult aResult, in nsIScriptElement aElement); */
 NS_IMETHODIMP
 nsHTMLScriptElement::ScriptEvaluated(nsresult aResult,
-                                     nsIDOMHTMLScriptElement *aElement,
+                                     nsIScriptElement *aElement,
                                      PRBool aIsInline,
                                      PRBool aWasPending)
 {
@@ -586,23 +599,52 @@ nsHTMLScriptElement::ScriptEvaluated(nsresult aResult,
   return rv;
 }
 
-NS_IMETHODIMP
-nsHTMLScriptElement::SetLineNumber(PRUint32 aLineNumber)
+void
+nsHTMLScriptElement::GetScriptType(nsAString& type)
+{
+  GetType(type);
+}
+
+// variation of this code in nsSVGScriptElement - check if changes
+// need to be transfered when modifying
+
+already_AddRefed<nsIURI>
+nsHTMLScriptElement::GetScriptURI()
+{
+  nsIURI *uri = nsnull;
+  nsAutoString src;
+  GetSrc(src);
+  if (!src.IsEmpty())
+    NS_NewURI(&uri, src);
+  return uri;
+}
+
+void
+nsHTMLScriptElement::GetScriptText(nsAString& text)
+{
+  GetText(text);
+}
+
+void
+nsHTMLScriptElement::GetScriptCharset(nsAString& charset)
+{
+  GetCharset(charset);
+}
+
+void 
+nsHTMLScriptElement::SetScriptLineNumber(PRUint32 aLineNumber)
 {
   mLineNumber = aLineNumber;
-
-  return NS_OK;
 }
 
-NS_IMETHODIMP
-nsHTMLScriptElement::GetLineNumber(PRUint32* aLineNumber)
+PRUint32
+nsHTMLScriptElement::GetScriptLineNumber()
 {
-  NS_ENSURE_ARG_POINTER(aLineNumber);
-
-  *aLineNumber = mLineNumber;
-
-  return NS_OK;
+  return mLineNumber;
 }
+
+// variation of this code in nsSVGScriptElement - check if changes
+// need to be transfered when modifying
 
 void
 nsHTMLScriptElement::MaybeProcessScript()

@@ -38,7 +38,7 @@
 
 #include "nsISupports.idl"
 
-interface nsIDOMHTMLScriptElement;
+interface nsIScriptElement;
 interface nsIURI;
 
 [scriptable, uuid(501209d3-7edf-437d-9948-3c6d1c08ef7f)]
@@ -65,7 +65,7 @@ interface nsIScriptLoaderObserver : nsISupports {
    * @param aScript String representation of the string to be evaluated.
    */
   void scriptAvailable(in nsresult aResult, 
-                       in nsIDOMHTMLScriptElement aElement,
+                       in nsIScriptElement aElement,
                        in boolean aIsInline,
                        in boolean aWasPending,
                        in nsIURI aURI,
@@ -85,7 +85,7 @@ interface nsIScriptLoaderObserver : nsISupports {
    *                    script was delayed?
    */
   void scriptEvaluated(in nsresult aResult, 
-                       in nsIDOMHTMLScriptElement aElement,
+                       in nsIScriptElement aElement,
                        in boolean aIsInline,
                        in boolean aWasPending);
 		       

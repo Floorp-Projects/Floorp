@@ -3586,3 +3586,26 @@ nsGenericElement::IndexOf(nsIContent* aPossibleChild) const
 
   return mAttrsAndChildren.IndexOfChild(aPossibleChild);
 }
+
+void
+nsGenericElement::GetContentsAsText(nsAString& aText)
+{
+  aText.Truncate();
+  PRInt32 children = GetChildCount();
+  
+  nsCOMPtr<nsIDOMText> tc;
+  nsAutoString textData;
+
+  PRInt32 i;
+  for (i = 0; i < children; ++i) {
+    tc = do_QueryInterface(GetChildAt(i));
+    if (tc) {
+      if (aText.IsEmpty()) {
+        tc->GetData(aText);
+      } else {
+        tc->GetData(textData);
+        aText.Append(textData);
+      }
+    }
+  }
+}

@@ -70,7 +70,7 @@ public:
     NS_IMETHOD StyleSheetLoaded(nsICSSStyleSheet* aSheet, PRBool aNotify);
 
     void Init(nsITransformObserver* aObserver);
-    void AddScriptElement(nsIDOMHTMLScriptElement* aElement);
+    void AddScriptElement(nsIScriptElement* aElement);
     void AddStyleSheet(nsIStyleSheet* aStyleSheet);
     void OnTransformEnd();
     void OnTransformStart();
@@ -81,7 +81,7 @@ private:
 
     nsCOMPtr<nsIDOMDocument> mDocument;
     nsCOMPtr<nsITransformObserver> mObserver;
-    nsCOMArray<nsIDOMHTMLScriptElement> mScriptElements;
+    nsCOMArray<nsIScriptElement> mScriptElements;
     nsCOMArray<nsIStyleSheet> mStylesheets;
     PRPackedBool mInTransform;
 };

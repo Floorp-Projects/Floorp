@@ -41,7 +41,7 @@
 
 #include "nsCOMPtr.h"
 #include "nsIScriptLoader.h"
-#include "nsIDOMHTMLScriptElement.h"
+#include "nsIScriptElement.h"
 #include "nsIScriptLoaderObserver.h"
 #include "nsIURI.h"
 #include "nsCOMArray.h"
@@ -66,10 +66,10 @@ public:
   NS_DECL_NSISTREAMLOADEROBSERVER
 
 protected:
-  PRBool InNonScriptingContainer(nsIDOMHTMLScriptElement* aScriptElement);
-  PRBool IsScriptEventHandler(nsIDOMHTMLScriptElement* aScriptElement);
+  PRBool InNonScriptingContainer(nsIScriptElement* aScriptElement);
+  PRBool IsScriptEventHandler(nsIScriptElement* aScriptElement);
   nsresult FireErrorNotification(nsresult aResult,
-                                 nsIDOMHTMLScriptElement* aElement,
+                                 nsIScriptElement* aElement,
                                  nsIScriptLoaderObserver* aObserver);
   nsresult ProcessRequest(nsScriptLoadRequest* aRequest);
   void FireScriptAvailable(nsresult aResult,

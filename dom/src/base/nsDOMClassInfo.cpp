@@ -338,6 +338,7 @@
 #include "nsIDOMSVGStyleElement.h"
 #include "nsIDOMSVGStylable.h"
 #include "nsIDOMSVGDefsElement.h"
+#include "nsIDOMSVGScriptElement.h"
 #endif
 
 #include "nsIImageDocument.h"
@@ -889,6 +890,8 @@ static nsDOMClassInfoData sClassInfoData[] = {
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(SVGPreserveAspectRatio, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
+  NS_DEFINE_CLASSINFO_DATA(SVGScriptElement, nsElementSH,
+                           ELEMENT_SCRIPTABLE_FLAGS)  
 #endif  
 };
 
@@ -2373,6 +2376,12 @@ nsDOMClassInfo::Init()
 
   DOM_CLASSINFO_MAP_BEGIN(SVGPreserveAspectRatio, nsIDOMSVGPreserveAspectRatio)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMSVGPreserveAspectRatio)
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(SVGScriptElement, nsIDOMSVGScriptElement)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMSVGScriptElement)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMSVGURIReference)
+    DOM_CLASSINFO_SVG_GRAPHIC_ELEMENT_MAP_ENTRIES
   DOM_CLASSINFO_MAP_END
 
 #endif //MOZ_SVG

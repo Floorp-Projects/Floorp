@@ -113,7 +113,7 @@ protected:
   nsCOMPtr<nsICSSLoader>        mCSSLoader;
   nsRefPtr<nsNodeInfoManager>   mNodeInfoManager;
 
-  nsCOMArray<nsIDOMHTMLScriptElement> mScriptElements;
+  nsCOMArray<nsIScriptElement> mScriptElements;
 
   nsCString mRef; // ScrollTo #ref
   PRBool mNeedToBlockParser;

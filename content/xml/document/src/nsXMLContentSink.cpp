@@ -60,7 +60,6 @@
 #include "nsIDOMCDATASection.h"
 #include "nsDOMDocumentType.h"
 #include "nsIHTMLContent.h"
-#include "nsIDOMHTMLScriptElement.h"
 #include "nsHTMLParts.h"
 #include "nsVoidArray.h"
 #include "nsCRT.h"
@@ -98,6 +97,10 @@
 #include "nsXMLPrettyPrinter.h"
 #include "nsNodeInfoManager.h"
 #include "nsContentCreatorFunctions.h"
+
+#ifdef MOZ_SVG
+#include "nsSVGAtoms.h"
+#endif
 
 static const char kNameSpaceSeparator = ':';
 #define kXSLType "text/xsl"
@@ -442,6 +445,18 @@ nsXMLContentSink::CreateElement(const PRUnichar** aAtts, PRUint32 aAttsCount,
                      aNodeInfo);
   NS_ENSURE_SUCCESS(rv, rv);
 
+  if (aNodeInfo->Equals(nsHTMLAtoms::script, kNameSpaceID_XHTML)
+#ifdef MOZ_SVG
+      || aNodeInfo->Equals(nsSVGAtoms::script, kNameSpaceID_SVG)
+#endif
+    ) {
+    // Don't append the content to the tree until we're all
+    // done collecting its contents
+    mConstrainSize = PR_FALSE;
+    mScriptLineNo = aLineNumber;
+    *aAppendContent = PR_FALSE;
+  }
+
   // XHTML needs some special attention
   if (aNodeInfo->NamespaceEquals(kNameSpaceID_XHTML)) {
     mPrettyPrintHasFactoredElements = PR_TRUE;
@@ -462,14 +477,7 @@ nsXMLContentSink::CreateElement(const PRUnichar** aAtts, PRUint32 aAttsCount,
     }
   }
 
-  if (aNodeInfo->Equals(nsHTMLAtoms::script, kNameSpaceID_XHTML)) {
-    // Don't append the content to the tree until we're all
-    // done collecting its contents
-    mConstrainSize = PR_FALSE;
-    mScriptLineNo = aLineNumber;
-    *aAppendContent = PR_FALSE;
-  }
-  else if (aNodeInfo->Equals(nsHTMLAtoms::title, kNameSpaceID_XHTML)) {
+  if (aNodeInfo->Equals(nsHTMLAtoms::title, kNameSpaceID_XHTML)) {
     if (mTitleText.IsEmpty()) {
       mInTitle = PR_TRUE; // The first title wins
     }
@@ -523,11 +531,17 @@ nsXMLContentSink::CloseElement(nsIContent* aContent, PRBool* aAppendContent)
 
   nsresult rv = NS_OK;
 
-  if (nodeInfo->Equals(nsHTMLAtoms::script, kNameSpaceID_XHTML)) {
+  if (nodeInfo->Equals(nsHTMLAtoms::script, kNameSpaceID_XHTML)
+#ifdef MOZ_SVG
+      || nodeInfo->Equals(nsSVGAtoms::script, kNameSpaceID_SVG)
+#endif
+    ) {
     rv = ProcessEndSCRIPTTag(aContent);
     *aAppendContent = PR_TRUE;
+    return rv;
   }
-  else if (nodeInfo->Equals(nsHTMLAtoms::title, kNameSpaceID_XHTML) &&
+  
+  if (nodeInfo->Equals(nsHTMLAtoms::title, kNameSpaceID_XHTML) &&
            mInTitle) {
     // The first title wins
     nsCOMPtr<nsIDOMNSDocument> dom_doc(do_QueryInterface(mDocument));
@@ -1497,14 +1511,11 @@ nsXMLContentSink::ProcessEndSCRIPTTag(nsIContent* aContent)
 {
   nsresult result = NS_OK;
 
-  nsCOMPtr<nsIDOMHTMLScriptElement> scriptElement(do_QueryInterface(aContent));
+  nsCOMPtr<nsIScriptElement> scriptElement(do_QueryInterface(aContent));
   NS_ASSERTION(scriptElement, "null script element in XML content sink");
   mScriptElements.AppendObject(scriptElement);
 
-  nsCOMPtr<nsIScriptElement> sele(do_QueryInterface(aContent));
-  if (sele) {
-    sele->SetLineNumber(mScriptLineNo);
-  }
+  scriptElement->SetScriptLineNumber(mScriptLineNo);
 
   mConstrainSize = PR_TRUE; 
   // Assume that we're going to block the parser with a script load.

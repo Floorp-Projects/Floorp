@@ -252,7 +252,8 @@ nsHTMLStyleElement::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
 nsresult
 nsHTMLStyleElement::GetInnerHTML(nsAString& aInnerHTML)
 {
-  return GetContentsAsText(aInnerHTML);
+  GetContentsAsText(aInnerHTML);
+  return NS_OK;
 }
 
 nsresult

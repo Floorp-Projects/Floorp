@@ -49,7 +49,7 @@
 #include "nsIDOMProcessingInstruction.h"
 #include "nsIDOMText.h"
 #include "nsIDOMHTMLTableSectionElem.h"
-#include "nsIDOMHTMLScriptElement.h"
+#include "nsIScriptElement.h"
 #include "nsIDOMNSDocument.h"
 #include "nsIParser.h"
 #include "nsIRefreshURI.h"
@@ -264,6 +264,15 @@ void txMozillaXMLOutput::endElement(const nsAString& aName, const PRInt32 aNsID)
         endHTMLElement(element);
     }
 
+    // Handle svg script elements
+    if (aNsID == kNameSpaceID_SVG && txHTMLAtoms::script->Equals(aName)) {
+        // Add this script element to the array of loading script elements.
+        nsCOMPtr<nsIScriptElement> scriptElement =
+            do_QueryInterface(mCurrentNode);
+        NS_ASSERTION(scriptElement, "Need script element");
+        mNotifier->AddScriptElement(scriptElement);
+    }
+
     if (mCreatingNewDocument) {
         // Handle all sorts of stylesheets
         nsCOMPtr<nsIStyleSheetLinkingElement> ssle =
@@ -428,8 +437,12 @@ void txMozillaXMLOutput::startElement(const nsAString& aName,
             return;
         }
 
-        if (aNsID == kNameSpaceID_XHTML)
+        if (aNsID == kNameSpaceID_XHTML) {
             startHTMLElement(element, PR_TRUE);
+        } else if (aNsID == kNameSpaceID_SVG &&
+                   txHTMLAtoms::script->Equals(aName)) {
+            mDontAddCurrent = PR_TRUE;
+        }
     }
 
     if (mCreatingNewDocument) {
@@ -619,7 +632,7 @@ void txMozillaXMLOutput::endHTMLElement(nsIDOMElement* aElement)
     // Load scripts
     if (mNotifier && atom == txHTMLAtoms::script) {
         // Add this script element to the array of loading script elements.
-        nsCOMPtr<nsIDOMHTMLScriptElement> scriptElement =
+        nsCOMPtr<nsIScriptElement> scriptElement =
             do_QueryInterface(mCurrentNode);
         NS_ASSERTION(scriptElement, "Need script element");
         mNotifier->AddScriptElement(scriptElement);
@@ -816,7 +829,7 @@ NS_IMPL_ISUPPORTS2(txTransformNotifier,
 
 NS_IMETHODIMP
 txTransformNotifier::ScriptAvailable(nsresult aResult, 
-                                     nsIDOMHTMLScriptElement *aElement, 
+                                     nsIScriptElement *aElement, 
                                      PRBool aIsInline,
                                      PRBool aWasPending,
                                      nsIURI *aURI, 
@@ -833,7 +846,7 @@ txTransformNotifier::ScriptAvailable(nsresult aResult,
 
 NS_IMETHODIMP 
 txTransformNotifier::ScriptEvaluated(nsresult aResult, 
-                                     nsIDOMHTMLScriptElement *aElement,
+                                     nsIScriptElement *aElement,
                                      PRBool aIsInline,
                                      PRBool aWasPending)
 {
@@ -864,7 +877,7 @@ txTransformNotifier::Init(nsITransformObserver* aObserver)
 }
 
 void
-txTransformNotifier::AddScriptElement(nsIDOMHTMLScriptElement* aElement)
+txTransformNotifier::AddScriptElement(nsIScriptElement* aElement)
 {
     mScriptElements.AppendObject(aElement);
 }

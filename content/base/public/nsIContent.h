@@ -468,7 +468,9 @@ public:
     /** XUL elements */
     eXUL                 = 0x00000010,
     /** xml processing instructions */
-    ePROCESSING_INSTRUCTION = 0x00000020
+    ePROCESSING_INSTRUCTION = 0x00000020,
+    /** svg elements */
+    eSVG                 = 0x00000040
   };
 
   /**

@@ -81,6 +81,7 @@ public:
                            PRBool aNotify);
 
   virtual nsresult SetBindingParent(nsIContent* aParent);
+  virtual PRBool IsContentOfType(PRUint32 aFlags) const;
 
   // nsIStyledContent
   NS_IMETHOD GetID(nsIAtom** aResult) const;

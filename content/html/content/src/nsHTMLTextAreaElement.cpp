@@ -462,7 +462,8 @@ nsHTMLTextAreaElement::SetValueChanged(PRBool aValueChanged)
 NS_IMETHODIMP
 nsHTMLTextAreaElement::GetDefaultValue(nsAString& aDefaultValue)
 {
-  return GetContentsAsText(aDefaultValue);
+  GetContentsAsText(aDefaultValue);
+  return NS_OK;
 }  
 
 NS_IMETHODIMP
@@ -649,7 +650,8 @@ nsHTMLTextAreaElement::IsDoneAddingChildren()
 nsresult
 nsHTMLTextAreaElement::GetInnerHTML(nsAString& aInnerHTML)
 {
-  return GetContentsAsText(aInnerHTML);
+  GetContentsAsText(aInnerHTML);
+  return NS_OK;
 }
 
 nsresult
