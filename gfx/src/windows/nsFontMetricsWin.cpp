@@ -192,11 +192,14 @@ nsFontMetricsWin::RealizeFont()
   mDeviceContext->GetCanonicalPixelScale(scale);
   app2twip *= app2dev * scale;
 
-  float rounded = ((float)NSIntPointsToTwips(NSTwipsToFloorIntPoints(nscoord(mFont->size * app2twip)))) / app2twip;
+  // this interesting bit of code rounds the font size off to the floor point value
+  // this is necessary for proper font scaling under windows
+  PRInt32 sizePoints = NSTwipsToFloorIntPoints(nscoord(mFont->size * app2twip));
+  float rounded = ((float)NSIntPointsToTwips(sizePoints)) / app2twip;
 
   // round font size off to floor point size to be windows compatible
-//  logFont.lfHeight = - NSToIntRound(rounded * app2dev);  // this is proper (windows) rounding
-  logFont.lfHeight = - LONG(rounded * app2dev);  // this floor rounding is to make ours compatible with Nav 4.0
+  logFont.lfHeight = - NSToIntRound(rounded * app2dev);  // this is proper (windows) rounding
+//  logFont.lfHeight = - LONG(rounded * app2dev);  // this floor rounding is to make ours compatible with Nav 4.0
 
 #ifdef NS_DEBUG
   // Make Purify happy
