@@ -54,16 +54,21 @@ function LoadModules()
         slots.isDone();
       } catch (e) { slots_done = true; }
       while (!slots_done) {
-        var slot = slots.currentItem().QueryInterface(nsIPKCS11Slot);
+        var slot = null;
+ 	try {
+          slot = slots.currentItem().QueryInterface(nsIPKCS11Slot);
+        } catch (e) { slot = null; }
         // in the ongoing discussion of whether slot names or token names
         // are to be shown, I've gone with token names because NSS will
         // prefer lookup by token name.  However, the token may not be
         // present, so maybe slot names should be listed, while token names
         // are "remembered" for lookup?
-        if (slot.tokenName)
-          slotnames[slotnames.length] = slot.tokenName;
-        else
-          slotnames[slotnames.length] = slot.name;
+	if (slot != null) {
+          if (slot.tokenName)
+            slotnames[slotnames.length] = slot.tokenName;
+          else
+            slotnames[slotnames.length] = slot.name;
+	}
         try {
           slots.next();
         } catch (e) { slots_done = true; }
