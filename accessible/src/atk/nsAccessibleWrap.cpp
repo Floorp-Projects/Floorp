@@ -858,32 +858,8 @@ getIndexInParentCB(AtkObject *aAtkObj)
     nsAccessibleWrap *accWrap =
         NS_REINTERPRET_CAST(MaiAtkObject*, aAtkObj)->accWrap;
 
-    // we use accId to decide two accessible objects are the same.
-    void *accId = nsnull;
-    NS_ENSURE_SUCCESS(accWrap->GetUniqueID(&accId), -1);
-
-    nsCOMPtr<nsIAccessible> accParent;
-    nsresult rv = accWrap->GetParent(getter_AddRefs(accParent));
-    if (NS_FAILED(rv) || !accParent)
-        return -1;
-
-    nsCOMPtr<nsIAccessible> accChild;
-    nsCOMPtr<nsIAccessible> accTmpChild;
-    accParent->GetFirstChild(getter_AddRefs(accChild));
-
     PRInt32 currentIndex = -1;
-    void *currentAccId = nsnull;
-    while (accChild) {
-        ++currentIndex;
-        nsCOMPtr<nsIAccessNode> accNode(do_QueryInterface(accChild));
-        if (accNode) {
-            accNode->GetUniqueID(&currentAccId);
-            if (currentAccId == accId)
-                break;
-        }
-        accChild->GetNextSibling(getter_AddRefs(accTmpChild));
-        accChild = accTmpChild;
-    }
+    accWrap->GetIndexInParent(&currentIndex);
     return currentIndex;
 }
 
