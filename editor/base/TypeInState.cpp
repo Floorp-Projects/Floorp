@@ -154,8 +154,11 @@ nsresult TypeInState::ClearProp(nsIAtom *aProp, const nsString &aAttr, const nsS
 }
 
 
-  
-nsresult TypeInState::ProcessClearProperty(PropItem **outPropItem)
+/***************************************************************************
+ *    TakeClearProperty: hands back next poroperty item on the clear list.
+ *                       caller assumes ownership of PropItem and must delete it.
+ */  
+nsresult TypeInState::TakeClearProperty(PropItem **outPropItem)
 {
   if (!outPropItem) return NS_ERROR_NULL_POINTER;
   *outPropItem = nsnull;
@@ -169,8 +172,11 @@ nsresult TypeInState::ProcessClearProperty(PropItem **outPropItem)
   return NS_OK;
 }
 
-
-nsresult TypeInState::ProcessSetProperty(PropItem **outPropItem)
+/***************************************************************************
+ *    TakeSetProperty: hands back next poroperty item on the set list.
+ *                     caller assumes ownership of PropItem and must delete it.
+ */  
+nsresult TypeInState::TakeSetProperty(PropItem **outPropItem)
 {
   if (!outPropItem) return NS_ERROR_NULL_POINTER;
   *outPropItem = nsnull;
@@ -271,6 +277,7 @@ PRBool TypeInState::IsPropSet(nsIAtom *aProp,
                               const nsString &aValue,
                               PRInt32 &outIndex)
 {
+  // linear search.  list should be short.
   PRInt32 i, count = mSetArray.Count();
   for (i=0; i<count; i++)
   {
@@ -300,10 +307,11 @@ PRBool TypeInState::IsPropCleared(nsIAtom *aProp,
                                   const nsString &aValue,
                                   PRInt32 &outIndex)
 {
-  PRInt32 i, count = mSetArray.Count();
+  // linear search.  list should be short.
+  PRInt32 i, count = mClearedArray.Count();
   for (i=0; i<count; i++)
   {
-    PropItem *item = (PropItem*)mSetArray[i];
+    PropItem *item = (PropItem*)mClearedArray[i];
     if ( (item->tag == aProp) &&
          (item->attr == aAttr) )
     {

@@ -53,12 +53,20 @@ public:
   nsresult SetProp(nsIAtom *aProp);
   nsresult SetProp(nsIAtom *aProp, const nsString &aAttr);
   nsresult SetProp(nsIAtom *aProp, const nsString &aAttr, const nsString &aValue);
+
   nsresult ClearProp(nsIAtom *aProp);
   nsresult ClearProp(nsIAtom *aProp, const nsString &aAttr);
   nsresult ClearProp(nsIAtom *aProp, const nsString &aAttr, const nsString &aValue);
   
-  nsresult ProcessClearProperty(PropItem **outPropItem);
-  nsresult ProcessSetProperty(PropItem **outPropItem);
+  //**************************************************************************
+  //    TakeClearProperty: hands back next poroperty item on the clear list.
+  //                       caller assumes ownership of PropItem and must delete it.
+  nsresult TakeClearProperty(PropItem **outPropItem);
+
+  //**************************************************************************
+  //    TakeSetProperty: hands back next poroperty item on the set list.
+  //                     caller assumes ownership of PropItem and must delete it.
+  nsresult TakeSetProperty(PropItem **outPropItem);
 
   nsresult GetTypingState(PRBool &isSet, PRBool &theSetting, nsIAtom *aProp);
   nsresult GetTypingState(PRBool &isSet, PRBool &theSetting, nsIAtom *aProp, 
@@ -81,5 +89,5 @@ protected:
 
 
 
-#endif	// TypeInState_h__
+#endif  // TypeInState_h__
 

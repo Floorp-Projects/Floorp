@@ -313,9 +313,15 @@ NS_IMETHODIMP
 nsHTMLEditRules::DidDoAction(nsIDOMSelection *aSelection,
                              nsRulesInfo *aInfo, nsresult aResult)
 {
-  // pass thru to nsTextEditRules:
-  nsresult res = nsTextEditRules::DidDoAction(aSelection, aInfo, aResult);
-  return res;
+  nsTextRulesInfo *info = NS_STATIC_CAST(nsTextRulesInfo*, aInfo);
+  switch (info->action)
+  {
+    case kMakeBasicBlock:
+      return DidMakeBasicBlock(aSelection, aInfo, aResult);
+  }
+  
+  // default: pass thru to nsTextEditRules
+  return nsTextEditRules::DidDoAction(aSelection, aInfo, aResult);
 }
   
 
@@ -1472,6 +1478,24 @@ nsHTMLEditRules::WillMakeBasicBlock(nsIDOMSelection *aSelection,
   return res;
 }
 
+NS_IMETHODIMP 
+nsHTMLEditRules::DidMakeBasicBlock(nsIDOMSelection *aSelection,
+                                   nsRulesInfo *aInfo, nsresult aResult)
+{
+  if (!aSelection) return NS_ERROR_NULL_POINTER;
+  // check for empty block.  if so, put a moz br in it.
+  PRBool isCollapsed;
+  nsresult res = aSelection->GetIsCollapsed(&isCollapsed);
+  if (NS_FAILED(res)) return res;
+  if (!isCollapsed) return NS_OK;
+
+  nsCOMPtr<nsIDOMNode> parent;
+  PRInt32 offset;
+  res = nsEditor::GetStartNodeAndOffset(aSelection, &parent, &offset);
+  if (NS_FAILED(res)) return res;
+  res = InsertMozBRIfNeeded(parent);
+  return res;
+}
 
 nsresult
 nsHTMLEditRules::WillIndent(nsIDOMSelection *aSelection, PRBool *aCancel, PRBool * aHandled)
@@ -1710,18 +1734,18 @@ nsHTMLEditRules::CreateStyleForInsertText(nsIDOMSelection *aSelection, nsIDOMDoc
   PropItem *item = nsnull;
   
   // process clearing any styles first
-  mEditor->mTypeInState->ProcessClearProperty(&item);
+  mEditor->mTypeInState->TakeClearProperty(&item);
   while (item)
   {
     res = mEditor->SplitStyleAbovePoint(&node, &offset, item->tag, &item->attr);
     if (NS_FAILED(res)) return res;
-    // we own item now (ProcessClearProperty hands ownership to us)
+    // we own item now (TakeClearProperty hands ownership to us)
     delete item;
-    mEditor->mTypeInState->ProcessClearProperty(&item);
+    mEditor->mTypeInState->TakeClearProperty(&item);
   }
   
   // then process setting any styles
-  mEditor->mTypeInState->ProcessSetProperty(&item);
+  mEditor->mTypeInState->TakeSetProperty(&item);
   
   if (item) // we have at least one style to add; make a
   {         // new text node to insert style nodes above.
@@ -1750,9 +1774,9 @@ nsHTMLEditRules::CreateStyleForInsertText(nsIDOMSelection *aSelection, nsIDOMDoc
   {
     res = mEditor->SetInlinePropertyOnNode(node, item->tag, &item->attr, &item->value);
     if (NS_FAILED(res)) return res;
-    // we own item now (ProcessSetProperty hands ownership to us)
+    // we own item now (TakeSetProperty hands ownership to us)
     delete item;
-    mEditor->mTypeInState->ProcessSetProperty(&item);
+    mEditor->mTypeInState->TakeSetProperty(&item);
   }
   
   return aSelection->Collapse(node, offset);
@@ -2883,6 +2907,16 @@ nsHTMLEditRules::ReturnInParagraph(nsIDOMSelection *aSelection,
         // get rid of the break
         res = mEditor->DeleteNode(sibling);  
         if (NS_FAILED(res)) return res;
+        // check both halves of para to see if we need mozBR
+        res = InsertMozBRIfNeeded(aPara);
+        if (NS_FAILED(res)) return res;
+        res = mEditor->GetPriorHTMLSibling(aPara, &sibling);
+        if (NS_FAILED(res)) return res;
+        if (sibling && nsHTMLEditUtils::IsParagraph(sibling))
+        {
+          res = InsertMozBRIfNeeded(sibling);
+          if (NS_FAILED(res)) return res;
+        }
         // position selection inside right hand para
         res = aSelection->Collapse(aPara,0);
       }
@@ -4255,7 +4289,22 @@ nsHTMLEditRules::IsDescendantOfBody(nsIDOMNode *inNode)
   return PR_FALSE;
 }
 
-
+nsresult 
+nsHTMLEditRules::InsertMozBRIfNeeded(nsIDOMNode *aNode)
+{
+  if (!aNode) return NS_ERROR_NULL_POINTER;
+  if (!mEditor->IsBlockNode(aNode)) return NS_OK;
+  
+  PRBool isEmpty;
+  nsCOMPtr<nsIDOMNode> brNode;
+  nsresult res = IsEmptyNode(aNode, &isEmpty);
+  if (NS_FAILED(res)) return res;
+  if (isEmpty)
+  {
+    res = CreateMozBR(aNode, 0, &brNode);
+  }
+  return res;
+}
 
 #ifdef XP_MAC
 #pragma mark -
