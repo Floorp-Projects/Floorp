@@ -415,7 +415,7 @@ JavaArray_checkAccess(JSContext *cx, JSObject *obj, jsid id,
 JSObjectOps JavaArray_ops = {
     /* Mandatory non-null function pointer members. */
     jsj_wrapper_newObjectMap,       /* newObjectMap */
-    jsj_wrapper_destroyObjectMap,   /* destroyObjectMap */
+    jsj_wrapper_dropObjectMap,      /* dropObjectMap */
     JavaArray_lookupProperty,
     JavaArray_defineProperty,
     JavaArray_getPropertyById,      /* getProperty */

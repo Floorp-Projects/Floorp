@@ -57,6 +57,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "jslock.h"
 #include "jsobj.h"
 #include "jsj_private.h"      /* LiveConnect internals */
 #include "jsj_hash.h"         /* Hash table with Java object as key */
@@ -655,7 +656,7 @@ JavaObject_getPropertyById(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
     field_val = method_val = JSVAL_VOID;
 
     if (jaApplet && (*jEnv)->IsInstanceOf(jEnv, java_obj, jaApplet)) {
-        JSIsCallingApplet = JS_TRUE;
+        jsj_JSIsCallingApplet = JS_TRUE;
     }
 
     /* If a field member, get the value of the field */
@@ -783,7 +784,7 @@ JavaObject_setPropertyById(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
     java_obj = java_wrapper->java_obj;
 
     if (jaApplet && (*jEnv)->IsInstanceOf(jEnv, java_obj, jaApplet)) {
-        JSIsCallingApplet = JS_TRUE;
+        jsj_JSIsCallingApplet = JS_TRUE;
     }
 
     result = jsj_SetJavaFieldValue(cx, jEnv, member_descriptor->field, java_obj, *vp);
@@ -1008,10 +1009,15 @@ jsj_wrapper_newObjectMap(JSContext *cx, jsrefcount nrefs, JSObjectOps *ops,
     return map;
 }
 
-void JS_DLL_CALLBACK
-jsj_wrapper_destroyObjectMap(JSContext *cx, JSObjectMap *map)
+JSObjectMap * JS_DLL_CALLBACK
+jsj_wrapper_dropObjectMap(JSContext *cx, JSObjectMap *map, JSObject *obj)
 {
-    JS_free(cx, map);
+    JS_ASSERT(map->nrefs > 0);
+    if (JS_ATOMIC_DECREMENT(&map->nrefs) == 0) {
+        JS_free(cx, map);
+        return NULL;
+    }
+    return map;
 }
 
 jsval JS_DLL_CALLBACK
@@ -1037,7 +1043,7 @@ jsj_wrapper_setRequiredSlot(JSContext *cx, JSObject *obj, uint32 slot, jsval v)
 JSObjectOps JavaObject_ops = {
     /* Mandatory non-null function pointer members. */
     jsj_wrapper_newObjectMap,       /* newObjectMap */
-    jsj_wrapper_destroyObjectMap,   /* destroyObjectMap */
+    jsj_wrapper_dropObjectMap,      /* dropObjectMap */
     JavaObject_lookupProperty,
     JavaObject_defineProperty,
     JavaObject_getPropertyById,     /* getProperty */

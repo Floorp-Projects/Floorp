@@ -357,7 +357,7 @@ extern jfieldID njJSException_wrappedException;        /* netscape.javascript.JS
  * XXX, bug 146458, 
  * whether we are doing a liveconnect call from javascript to java applet 
  */
-extern JSBool JSIsCallingApplet;
+extern JSBool jsj_JSIsCallingApplet;
 
 /**************** Java <==> JS conversions and Java types *******************/
 extern JSBool
@@ -652,8 +652,8 @@ extern JSObjectMap * JS_DLL_CALLBACK
 jsj_wrapper_newObjectMap(JSContext *cx, jsrefcount nrefs, JSObjectOps *ops,
                          JSClass *clasp, JSObject *obj);
 
-extern void JS_DLL_CALLBACK
-jsj_wrapper_destroyObjectMap(JSContext *cx, JSObjectMap *map);
+extern JSObjectMap * JS_DLL_CALLBACK
+jsj_wrapper_dropObjectMap(JSContext *cx, JSObjectMap *map, JSObject *obj);
 
 extern jsval JS_DLL_CALLBACK
 jsj_wrapper_getRequiredSlot(JSContext *cx, JSObject *obj, uint32 slot);

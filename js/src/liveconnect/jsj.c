@@ -55,7 +55,7 @@
 #    include "prmon.h"
 #endif
 
-JSBool JSIsCallingApplet = JS_FALSE;
+JSBool jsj_JSIsCallingApplet = JS_FALSE;
 
 /*
  * At certain times during initialization, there may be no JavaScript context
@@ -880,5 +880,5 @@ JSJ_ConvertJSValueToJavaObject(JSContext *cx, jsval v, jobject *vp)
 JS_EXPORT_API(JSBool)
 JSJ_IsJSCallApplet()
 {
-    return JSIsCallingApplet;
+    return jsj_JSIsCallingApplet;
 }
