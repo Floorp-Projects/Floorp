@@ -357,7 +357,6 @@ function EditorDumpContent()
   if (window.editorShell) {
     dump("==============  Content Tree: ================\n");
     window.editorShell.DumpContentTree();
-    dump(outputHTML + "\n");
   }
 }
 
