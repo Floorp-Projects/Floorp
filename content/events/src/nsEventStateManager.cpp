@@ -4620,9 +4620,8 @@ void nsEventStateManager::FocusElementButNotDocument(nsIContent *aContent)
 {
   // Focus an element in the current document, but don't switch document/window focus!
 
-  if (gLastFocusedDocument == mDocument || !gLastFocusedContent) {
+  if (gLastFocusedDocument == mDocument) {
     // If we're already focused in this document, 
-    // or if there was no last focus
     // use normal focus method
     if (mCurrentFocus != aContent) {
       if (aContent) 
@@ -4630,6 +4629,10 @@ void nsEventStateManager::FocusElementButNotDocument(nsIContent *aContent)
       else
         SetContentState(nsnull, NS_EVENT_STATE_FOCUS);
     }
+    return;
+  }
+
+  if (!gLastFocusedContent) {
     return;
   }
 
