@@ -27,6 +27,7 @@
 #include "nsVoidArray.h"
 #include "rdf.h"
 #include "nsIBaseWindow.h"
+#include "nsIDOMWindow.h"
 #include "nsIDOMWindowInternal.h"
 #include "nsIDOMElement.h"
 #include "nsIDocumentViewer.h"
@@ -41,7 +42,6 @@
 #include "nsIServiceManager.h"
 #include "nsISimpleEnumerator.h"
 #include "nsIWebShell.h"
-#include "nsIWindowMediator.h"
 #include "nsRDFCID.h"
 #include "nsWindowMediator.h"
 #include "nsXPIDLString.h"
@@ -492,6 +492,18 @@ NS_IMETHODIMP nsWindowMediator::UnregisterWindow( nsWindowInfo *inInfo )
     mTopmostWindow = 0;
   delete inInfo;	
 
+  // inform WindowWatcher
+  nsWindowInfo *info = MostRecentWindowInfo(0);
+  nsCOMPtr<nsIDOMWindow> domWindow;
+  if (info && info->mWindow) {
+    nsCOMPtr<nsIDOMWindowInternal> idomWindow;
+    GetDOMWindow(info->mWindow, idomWindow);
+    domWindow = do_QueryInterface(idomWindow);
+  }
+
+  // failure or no more windows sets it to 0, which is acceptable
+  mWatcher->SetActiveWindow(domWindow);
+
   return NS_OK;
 }
 
@@ -539,34 +551,18 @@ PRInt32 nsWindowMediator::RemoveEnumerator( nsWindowEnumerator* inEnumerator)
 */
 NS_IMETHODIMP nsWindowMediator::GetMostRecentWindow( const PRUnichar* inType, nsIDOMWindowInternal** outWindow ) {
 
+  NS_ENSURE_ARG_POINTER(outWindow);
   *outWindow = NULL;
-  PRInt32 lastTimeStamp = -1;
-  nsIXULWindow* mostRecentWindow = NULL;
-  nsAutoString  typeString( inType );
-  PRBool        allWindows = !inType || typeString.Length() == 0;
 
   // Find the most window with the highest time stamp that matches
   // the requested type
-  nsWindowInfo *info,
-               *listEnd;
 
   nsAutoLock lock(mListLock);
-  info = mOldestWindow;
-  listEnd = 0;
-  while (info != listEnd) {
-    if ((allWindows || info->GetType() == typeString) &&
-        info->mTimeStamp >= lastTimeStamp) {
+  nsWindowInfo *info = MostRecentWindowInfo(inType);
 
-      mostRecentWindow = info->mWindow;
-      lastTimeStamp = info->mTimeStamp;
-    }
-    info = info->mYounger;
-    listEnd = mOldestWindow;
-  }
-
-  if (mostRecentWindow) {
+  if (info && info->mWindow) {
     nsCOMPtr <nsIDOMWindowInternal> DOMWindow;
-    if( NS_SUCCEEDED ( GetDOMWindow( mostRecentWindow, DOMWindow  ) ) ) {	
+    if(NS_SUCCEEDED(GetDOMWindow(info->mWindow, DOMWindow))) {	
       *outWindow = DOMWindow;
       (*outWindow)->AddRef();
       return NS_OK;
@@ -575,6 +571,35 @@ NS_IMETHODIMP nsWindowMediator::GetMostRecentWindow( const PRUnichar* inType, ns
   }
 
   return NS_OK;
+}
+
+
+nsWindowInfo *
+nsWindowMediator::MostRecentWindowInfo(const PRUnichar* inType)
+{
+  PRInt32       lastTimeStamp = -1;
+  nsAutoString  typeString(inType);
+  PRBool        allWindows = !inType || typeString.Length() == 0;
+
+  // Find the most window with the highest time stamp that matches
+  // the requested type
+  nsWindowInfo *searchInfo,
+               *listEnd,
+               *foundInfo = 0;
+
+  searchInfo = mOldestWindow;
+  listEnd = 0;
+  while (searchInfo != listEnd) {
+    if ((allWindows || searchInfo->GetType() == typeString) &&
+        searchInfo->mTimeStamp >= lastTimeStamp) {
+
+      foundInfo = searchInfo;
+      lastTimeStamp = searchInfo->mTimeStamp;
+    }
+    searchInfo = searchInfo->mYounger;
+    listEnd = mOldestWindow;
+  }
+  return foundInfo;
 }
 
 
@@ -588,7 +613,17 @@ NS_IMETHODIMP nsWindowMediator::UpdateWindowTimeStamp( nsIXULWindow* inWindow )
   listEnd = 0;
   while (info != listEnd) {
     if (info->mWindow.get() == inWindow) {
+      // increment the window's time stamp
       info->mTimeStamp = ++mTimeStamp;
+
+      // inform WindowWatcher
+      nsCOMPtr<nsIDOMWindowInternal> idomwindow;
+      GetDOMWindow(info->mWindow, idomwindow);
+      nsCOMPtr<nsIDOMWindow> domwindow(do_QueryInterface(idomwindow));
+      // if for some reason anything failed, it'll be set to 0, which is
+      // better than an invalid pointer.
+      mWatcher->SetActiveWindow(domwindow);
+
       return NS_OK;
     }
     info = info->mYounger;
@@ -957,6 +992,10 @@ nsWindowMediator::Init()
       return rv;
     if ( gRDFService == NULL )
       return NS_ERROR_NULL_POINTER;
+
+    mWatcher = do_GetService("@mozilla.org/embedcomp/window-watcher;1", &rv);
+    if (NS_FAILED(rv))
+      return rv;
 
     // register this as a named data source with the RDF service
     return gRDFService->RegisterDataSource(this, PR_FALSE);

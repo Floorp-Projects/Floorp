@@ -75,12 +75,13 @@ class nsWindowWatcher;
 
 struct WindowInfo {
 
-  WindowInfo(nsIDOMWindow* inWindow) {
+  WindowInfo(nsIDOMWindow *inWindow, nsIWebBrowserChrome *inChrome) {
 #ifdef USEWEAKREFS
     mWindow = getter_AddRefs(NS_GetWeakReference(inWindow));
 #else
     mWindow = inWindow;
 #endif
+    mChrome = inChrome;
     ReferenceSelf();
   }
   ~WindowInfo() {}
@@ -94,6 +95,7 @@ struct WindowInfo {
 #else // still not an owning ref
   nsIDOMWindow              *mWindow;
 #endif
+  nsIWebBrowserChrome       *mChrome;
   // each struct is in a circular, doubly-linked list
   WindowInfo                *mYounger, // next younger in sequence
                             *mOlder;
@@ -742,19 +744,29 @@ nsWindowWatcher::SetActiveWindow(nsIDOMWindow *aActiveWindow)
 }
 
 NS_IMETHODIMP
-nsWindowWatcher::AddWindow(nsIDOMWindow *aWindow)
+nsWindowWatcher::AddWindow(nsIDOMWindow *aWindow, nsIWebBrowserChrome *aChrome)
 {
   nsresult rv;
 
   if (!aWindow)
     return NS_ERROR_INVALID_ARG;
+
+  WindowInfo *info;
+  nsAutoLock lock(mListLock);
+
+  // if we already have an entry for this window, adjust
+  // its chrome mapping and return
+  info = FindWindowInfo(aWindow);
+  if (info) {
+    info->mChrome = aChrome;
+    return NS_OK;
+  }
   
-  // create window info struct and add to list of windows
-  WindowInfo* info = new WindowInfo(aWindow);
+  // create a window info struct and add it to the list of windows
+  info = new WindowInfo(aWindow, aChrome);
   if (!info)
     return NS_ERROR_OUT_OF_MEMORY;
 
-  nsAutoLock lock(mListLock);
   if (mOldestWindow)
     info->InsertAfter(mOldestWindow->mOlder);
   else
@@ -775,6 +787,23 @@ NS_IMETHODIMP
 nsWindowWatcher::RemoveWindow(nsIDOMWindow *aWindow)
 {
   // find the corresponding WindowInfo, remove it
+
+  if (!aWindow)
+    return NS_ERROR_INVALID_ARG;
+
+  WindowInfo *info = FindWindowInfo(aWindow);
+  if (info) {
+    RemoveWindow(info);
+    return NS_OK;
+  }
+  NS_WARNING("requested removal of nonexistent window\n");
+  return NS_ERROR_INVALID_ARG;
+}
+
+WindowInfo *
+nsWindowWatcher::FindWindowInfo(nsIDOMWindow *aWindow)
+{
+  // find the corresponding WindowInfo
   WindowInfo *info,
              *listEnd;
 #ifdef USEWEAKREFS
@@ -782,9 +811,6 @@ nsWindowWatcher::RemoveWindow(nsIDOMWindow *aWindow)
   PRBool      found;
 #endif
 
-  if (!aWindow)
-    return NS_ERROR_INVALID_ARG;
-  
   info = mOldestWindow;
   listEnd = 0;
 #ifdef USEWEAKREFS
@@ -792,25 +818,23 @@ nsWindowWatcher::RemoveWindow(nsIDOMWindow *aWindow)
   found = PR_FALSE;
   while (info != listEnd && NS_SUCCEEDED(rv)) {
     nsCOMPtr<nsIDOMWindow> infoWindow(do_QueryReferent(info->mWindow));
-    if (!infoWindow)
+    if (!infoWindow) // clean up dangling reference, while we're here
       rv = RemoveWindow(info);
-    else if (infoWindow.get() == aWindow) {
-      found = PR_TRUE;
-      rv = RemoveWindow(info);
-    }
+    else if (infoWindow.get() == aWindow)
+      return info;
+
     info = info->mYounger;
     listEnd = mOldestWindow;
   }
-  return found ? rv : NS_ERROR_INVALID_ARG;
+  return 0;
 #else
   while (info != listEnd) {
     if (info->mWindow == aWindow)
-      return RemoveWindow(info);
+      return info;
     info = info->mYounger;
     listEnd = mOldestWindow;
   }
-  NS_WARNING("requested removal of nonexistent window\n");
-  return NS_ERROR_INVALID_ARG;
+  return 0;
 #endif
 }
 
@@ -830,6 +854,10 @@ nsresult nsWindowWatcher::RemoveWindow(WindowInfo *inInfo)
     if (inInfo == mOldestWindow)
       mOldestWindow = inInfo->mYounger == mOldestWindow ? 0 : inInfo->mYounger;
     inInfo->Unlink();
+
+    // clear the active window, if they're the same
+    if (mActiveWindow == inInfo->mWindow)
+      mActiveWindow = 0;
   }
 
   // a window being removed from us signifies a newly closed window.
@@ -848,6 +876,22 @@ nsresult nsWindowWatcher::RemoveWindow(WindowInfo *inInfo)
   }
 
   delete inInfo;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsWindowWatcher::GetChromeForWindow(nsIDOMWindow *aWindow, nsIWebBrowserChrome **_retval)
+{
+  if (!aWindow || !_retval)
+    return NS_ERROR_INVALID_ARG;
+  *_retval = 0;
+
+  nsAutoLock lock(mListLock);
+  WindowInfo *info = FindWindowInfo(aWindow);
+  if (info) {
+    *_retval = info->mChrome;
+    NS_IF_ADDREF(*_retval);
+  }
   return NS_OK;
 }
 

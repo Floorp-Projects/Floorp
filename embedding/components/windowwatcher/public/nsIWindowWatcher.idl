@@ -48,6 +48,7 @@ interface nsIObserver;
 interface nsIPrompt;
 interface nsIAuthPrompt;
 interface nsISimpleEnumerator;
+interface nsIWebBrowserChrome;
 interface nsIWindowCreator;
 
 [scriptable, uuid(002286a8-494b-43b3-8ddd-49e3fc50622b)]
@@ -124,6 +125,16 @@ interface nsIWindowWatcher : nsISupports {
   */
   void setWindowCreator(in nsIWindowCreator creator);
 
+
+  /** Retrieve the chrome window mapped to the given DOM window. Window
+      Watcher keeps a list of all top-level DOM windows currently open,
+      along with their corresponding chrome interfaces. Since DOM Windows
+      lack a (public) means of retrieving their corresponding chrome,
+      this method will do that.
+      @param aWindow the DOM window whose chrome window the caller needs
+      @return the corresponding chrome window
+  */
+  nsIWebBrowserChrome getChromeForWindow(in nsIDOMWindow aWindow);
 
   /** The Watcher serves as a global storage facility for the current active
       (frontmost non-floating-palette-type) window, storing and returning

@@ -298,7 +298,7 @@ void nsDocShellTreeOwner::AddToWatcher() {
     if (domWindow) {
       nsCOMPtr<nsPIWindowWatcher> wwatch(do_GetService(sWindowWatcherContractID));
       if (wwatch)
-        wwatch->AddWindow(domWindow);
+        wwatch->AddWindow(domWindow, mWebBrowserChrome);
     }
   }
 }
