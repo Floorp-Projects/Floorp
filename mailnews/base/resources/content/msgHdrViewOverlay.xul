@@ -31,50 +31,59 @@ Rights Reserved.
 <script src="chrome://messenger/content/mime.js"/>
 
 	<toolbox id="msgHeaderView">
-        <toolbar id="viewAllHeadersToolbar" hidden="true">
-            <box id="viewAllHeadersBox" class="header-part1" align="vertical" flex="1" collapsed="true">
-            </box>
-        </toolbar>
+    <toolbar id="viewAllHeadersToolbar" hidden="true">
+        <box id="viewAllHeadersBox" class="header-part1" orient="vertical" flex="1" collapsed="true">
+        </box>
+    </toolbar>
 
 		<toolbar id="headerPart1" hidden="true">
-			<box class="header-splitter" align="horizontal" flex="1">
-				<box class="header-part1" align="vertical" flex="1">
-					<box id="SubjectBox" class="headerBox" align="horizontal" collapsed="true">
-                       <text class="headerdisplayname" value="&subjectField.label;" popup="allHeadersPopup"/>
-                       <html class="headerValue subjectvalue" id="SubjectValue" flex="1">*</html>
+			<box class="header-splitter" orient="horizontal" flex="1">
+				<box class="header-part1" orient="vertical" flex="1">
+					
+          <box id="SubjectBox" class="headerBox" orient="horizontal" collapsed="true">
+             <hbox class="headerValueBox">
+              <text class="headerdisplayname" value="&subjectField.label;" popup="allHeadersPopup"/>
+             </hbox>
+             <html class="headerValue subjectvalue" id="SubjectValue" flex="1">*</html>
 					</box>
 		      
-					<box id="FromBox" class="headerBox" align="horizontal" collapsed="true">
-                      <text class="headerdisplayname" value="&fromField.label;" popup="allHeadersPopup"/>
-                      <html class="headerValue" id="FromValue" flex="1"></html>
+					<box id="FromBox" class="headerBox" orient="horizontal" collapsed="true">
+            <hbox class="headerValueBox">
+              <text class="headerdisplayname" value="&fromField.label;" popup="allHeadersPopup"/>
+            </hbox>
+            <html class="headerValue" id="FromValue" flex="1"></html>
 					</box>
 
-					<box id = "DateBox" class="headerBox" align="horizontal" collapsed="true">
-                        <text class="headerdisplayname" value="&dateField.label;" popup="allHeadersPopup"/>
+					<box id = "DateBox" class="headerBox" orient="horizontal" collapsed="true">
+            <hbox class="headerValueBox">
+              <text class="headerdisplayname" value="&dateField.label;" popup="allHeadersPopup"/>
+            </hbox>
 						<html class="headerValue" id="DateValue" flex="1">*</html>
 					</box>
 				</box>
 
-        <box id="attachmentBox" class="header-part1" align="horizontal" collapsed="true">
+        <box id="attachmentBox" class="header-part1" orient="horizontal" collapsed="true">
           <spring class="buttonSpacer"/>
-            <box align="vertical">
+            <vbox>
                <spring class="buttonTopSpacer"/>
                <menu id="attachmentMenu" class="attachment-menu">
-                  <button id="attachmentButton" value="1" align="right"/>
+                  <button id="attachmentButton" value="1" orient="right"/>
                   <menupopup id="attachmentPopup" popupanchor="bottomright" popupalign="topright">
                   </menupopup>
                </menu>
               <spring flex="1"/>
-          </box>
+          </vbox>
           <spring class="buttonSpacer"/>
         </box>
       </box>
 		</toolbar>
 
 		<toolbar id="headerPart2" hidden="true">
-			<box class="header-part2" align="vertical" flex="1">
-				<box id="ToBox" class="headerBox" align="horizontal" collapsed="true">
+			<box class="header-part2" orient="vertical" flex="1">
+				<box id="ToBox" class="headerBox" orient="horizontal" collapsed="true">
+          <hbox class="headerValueBox">
             <text class="headerdisplayname" value="&toField.label;" popup="allHeadersPopup"/>
+           </hbox>
             <html class="headerValue" id="ToValueShort" flex="1">
             <image class="showMoreAddressesButton" id="ToValueToggleIcon" 
                 onclick="ToggleLongShortAddresses('ToValueShort', 'ToValueLong');"/>
@@ -86,8 +95,10 @@ Rights Reserved.
             </html>
 				</box>
 
-			    <box id="CcBox" class="headerBox" align="horizontal" collapsed="true">
-            <text class="headerdisplayname" value="&ccField.label;" popup="allHeadersPopup"/>
+			    <box id="CcBox" class="headerBox" orient="horizontal" collapsed="true">
+            <hbox class="headerValueBox">
+              <text class="headerdisplayname" value="&ccField.label;" popup="allHeadersPopup"/>
+            </hbox>
               <html class="headerValue" id="CcValueShort" flex="1">
               <image class="showMoreAddressesButton" id="CcValueToggleIcon" 
                 onclick="ToggleLongShortAddresses('CcValueShort', 'CcValueLong');"/>
@@ -99,17 +110,21 @@ Rights Reserved.
               </html>
 				  </box>
 
-        	<box id="NewsgroupBox" class="headerBox" align="horizontal" collapsed="true">
-            <text class="headerdisplayname" value="&newsgroupsField.label;" popup="allHeadersPopup"/>
+        	<box id="NewsgroupBox" class="headerBox" orient="horizontal" collapsed="true">
+            <hbox class="headerValueBox">
+              <text class="headerdisplayname" value="&newsgroupsField.label;" popup="allHeadersPopup"/>
+            </hbox>
             <html class="headerValue" id="NewsgroupValue" flex="1">*</html>
 				  </box>
 			</box>
 		</toolbar>
     
     <toolbar id="headerPart3" hidden="true">
-      <box class="header-part3" align="vertical" flex="1">
-        <box id="UserAgentBox" class="headerBox" align="horizontal" collapsed="true">
-          <text class="headerdisplayname" value="&userAgentField.label;" popup="allHeadersPopup"/>
+      <box class="header-part3" orient="vertical" flex="1">
+        <box id="UserAgentBox" class="headerBox" orient="horizontal" collapsed="true">
+          <hbox class="headerValueBox">
+            <text class="headerdisplayname" value="&userAgentField.label;" popup="allHeadersPopup"/>
+          </hbox>
           <html class="headerValue" id="UserAgentValue" flex="1">*</html>
         </box>
       </box>
