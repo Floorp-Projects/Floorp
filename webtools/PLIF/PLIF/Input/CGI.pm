@@ -73,13 +73,17 @@ sub splitArguments {
                 my $value = $2;
                 # decode the strings
                 foreach my $string ($name, $value) {
-                    $string =~ tr/+/ /; # convert + to spaces
-                    $string =~ s/% # a percent symbol
-                                 ( # followed by
-                    [0-9A-Fa-f]{2} # 2 hexidecimal characters
-                                 ) # which we shall put in $1
-                     /chr(hex($1)) # and convert back into a character
-                            /egox; # (evaluate, globally, optimised, with comments)
+                    if (defined($string)) {
+                        $string =~ tr/+/ /; # convert + to spaces
+                        $string =~ s/% # a percent symbol
+                                     ( # followed by
+                        [0-9A-Fa-f]{2} # 2 hexidecimal characters
+                                     ) # which we shall put in $1
+                         /chr(hex($1)) # and convert back into a character
+                                /egox; # (evaluate, globally, optimised, with comments)
+                    } else {
+                        $string = '';
+                    }
                 }
                 $self->addArgument($name, $value);
             } else {
