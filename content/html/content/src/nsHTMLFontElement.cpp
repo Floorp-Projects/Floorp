@@ -142,9 +142,10 @@ nsHTMLFontElement::ParseAttribute(nsIAtom* aAttribute,
   if (aAttribute == nsHTMLAtoms::size) {
     nsAutoString tmp(aValue);
     tmp.CompressWhitespace(PR_TRUE, PR_TRUE);
-    PRUnichar ch = tmp.First();
-    if (ch == '+' || ch == '-') {
-      return aResult.ParseEnumValue(aValue, kRelFontSizeTable);
+    PRUnichar ch = tmp.IsEmpty() ? 0 : tmp.First();
+    if ((ch == '+' || ch == '-') &&
+        aResult.ParseEnumValue(aValue, kRelFontSizeTable)) {
+      return PR_TRUE;
     }
 
     return aResult.ParseIntValue(aValue);
