@@ -35,7 +35,7 @@
 #define BASE_H
 
 #ifdef DEBUG
-static const char BASE_CVS_ID[] = "@(#) $RCSfile: base.h,v $ $Revision: 1.4 $ $Date: 2001/09/19 20:20:04 $ $Name:  $";
+static const char BASE_CVS_ID[] = "@(#) $RCSfile: base.h,v $ $Revision: 1.5 $ $Date: 2001/09/20 00:28:36 $ $Name:  $";
 #endif /* DEBUG */
 
 /*
@@ -932,6 +932,108 @@ nssListIterator_Finish
 (
   nssListIterator *iter
 );
+
+/*
+ * nssHash
+ *
+ *  nssHash_Create
+ *  nssHash_Destroy
+ *  nssHash_Add
+ *  nssHash_Remove
+ *  nssHash_Count
+ *  nssHash_Exists
+ *  nssHash_Lookup
+ *  nssHash_Iterate
+ */
+
+/*
+ * nssHash_Create
+ *
+ */
+NSS_EXTERN nssHash *
+nssHash_Create
+(
+  NSSArena *arenaOpt,
+  PRUint32 numBuckets
+);
+
+/*
+ * nssHash_Destroy
+ *
+ */
+NSS_EXTERN void
+nssHash_Destroy
+(
+  nssHash *hash
+);
+
+/*
+ * nssHash_Add
+ *
+ */
+NSS_EXTERN PRStatus
+nssHash_Add
+(
+  nssHash *hash,
+  const void *key,
+  const void *value
+);
+
+/*
+ * nssHash_Remove
+ *
+ */
+NSS_EXTERN void
+nssHash_Remove
+(
+  nssHash *hash,
+  const void *it
+);
+
+/*
+ * nssHash_Count
+ *
+ */
+NSS_EXTERN PRUint32
+nssHash_Count
+(
+  nssHash *hash
+);
+
+/*
+ * nssHash_Exists
+ *
+ */
+NSS_EXTERN PRBool
+nssHash_Exists
+(
+  nssHash *hash,
+  const void *it
+);
+
+/*
+ * nssHash_Lookup
+ *
+ */
+NSS_EXTERN void *
+nssHash_Lookup
+(
+  nssHash *hash,
+  const void *it
+);
+
+/*
+ * nssHash_Iterate
+ *
+ */
+NSS_EXTERN void
+nssHash_Iterate
+(
+  nssHash *hash,
+  nssHashIterator fcn,
+  void *closure
+);
+
 
 /*
  * nssPointerTracker

@@ -30,7 +30,7 @@
 # may use your version of this file under either the MPL or the
 # GPL.
 #
-MANIFEST_CVS_ID = "@(#) $RCSfile: manifest.mn,v $ $Revision: 1.3 $ $Date: 2001/09/19 20:20:06 $ $Name:  $"
+MANIFEST_CVS_ID = "@(#) $RCSfile: manifest.mn,v $ $Revision: 1.4 $ $Date: 2001/09/20 00:28:36 $ $Name:  $"
 
 CORE_DEPTH = ../../..
 
@@ -55,6 +55,7 @@ CSRCS =		   \
 	tracker.c  \
 	utf8.c	   \
 	list.c     \
+	hash.c     \
 	whatnspr.c \
 	$(NULL)
 
