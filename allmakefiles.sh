@@ -636,3 +636,14 @@ if [ "$MOZ_LEAKY" ]; then
   tools/leaky/Makefile
 END_LEAKY_MAKEFILES
 fi
+
+# layout/mathml
+if [ "$MOZ_MATHML" ]; then
+  add_makefiles <<END_MATHML_MAKEFILES
+  layout/mathml/Makefile
+  layout/mathml/base/Makefile
+  layout/mathml/base/src/Makefile
+  layout/mathml/content/Makefile
+  layout/mathml/content/src/Makefile
+END_MATHML_MAKEFILES
+fi

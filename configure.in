@@ -2669,6 +2669,23 @@ MOZ_ARG_ENABLE_BOOL(xterm-updates,
 [  --enable-xterm-updates  Update XTERM titles with current command.],
   MOZ_UPDATE_XTERM=1)
 
+dnl
+dnl --enable mathml
+dnl if enabled, also update CFLAGS & CXXFLAGS
+dnl so you don't have to worry about those flags in Makefiles
+dnl TODO: handle include files here ?
+dnl
+MOZ_ARG_ENABLE_BOOL(mathml,
+[  --enable-mathml         Enable MathML (default=no) ],
+  MOZ_MATHML=1
+  AC_DEFINE(MOZ_MATHML))
+
+if test "$MOZ_MATHML"
+then
+  CFLAGS="$CFLAGS -DMOZ_MATHML"
+  CXXFLAGS="$CXXFLAGS -DMOZ_MATHML"
+fi
+
 dnl Need the contents of config-defs.h in the build logs
 VERBOSE_CONFIG_DEFS=1
 AC_ARG_ENABLE(verbose-config-defs,
@@ -2789,6 +2806,7 @@ AC_SUBST(NS_USE_NATIVE)
 AC_SUBST(MOZ_WIDGET_TOOLKIT)
 AC_SUBST(MOZ_GFX_TOOLKIT)
 AC_SUBST(MOZ_UPDATE_XTERM)
+AC_SUBST(MOZ_MATHML)
 AC_SUBST(MOZ_MONOLITHIC_TOOLKIT)
 AC_SUBST(MOZ_TIMER_LIBS)
 AC_SUBST(MOZ_SECURITY)
