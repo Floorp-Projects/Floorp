@@ -2474,6 +2474,7 @@ void nsPluginInstanceOwner::Paint(const nsRect& aDirtyRect)
   pluginEvent.lParam = nsnull;
 	PRBool eventHandled = PR_FALSE;
 	mInstance->HandleEvent(&pluginEvent, &eventHandled);
+  ReleasePluginPort(pluginPort);
 #endif
 }
 
