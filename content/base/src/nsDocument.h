@@ -528,7 +528,7 @@ public:
   NS_IMETHOD RemoveEventListener(const nsAReadableString& aType,
                                  nsIDOMEventListener* aListener, 
                                  PRBool aUseCapture);
-  NS_IMETHOD DispatchEvent(nsIDOMEvent* aEvent);
+  NS_IMETHOD DispatchEvent(nsIDOMEvent* aEvent, PRBool *_retval);
 
 
   NS_IMETHOD HandleDOMEvent(nsIPresContext* aPresContext, 

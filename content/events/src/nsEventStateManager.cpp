@@ -3913,7 +3913,7 @@ void nsEventStateManager::ForceViewUpdate(nsIView* aView)
 }
 
 NS_IMETHODIMP
-nsEventStateManager::DispatchNewEvent(nsISupports* aTarget, nsIDOMEvent* aEvent)
+nsEventStateManager::DispatchNewEvent(nsISupports* aTarget, nsIDOMEvent* aEvent, PRBool *aPreventDefault)
 {
   nsresult ret = NS_OK;
 
@@ -3945,8 +3945,11 @@ nsEventStateManager::DispatchNewEvent(nsISupports* aTarget, nsIDOMEvent* aEvent)
           }
         }
       }
+
+      *aPreventDefault = status == nsEventStatus_eConsumeNoDefault ? PR_FALSE : PR_TRUE;
     }
   }
+
   return ret;
 }
 

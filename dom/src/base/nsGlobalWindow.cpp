@@ -2683,7 +2683,7 @@ GlobalWindowImpl::RemoveEventListener(const nsAReadableString& aType,
   return NS_ERROR_FAILURE;
 }
 
-NS_IMETHODIMP GlobalWindowImpl::DispatchEvent(nsIDOMEvent* aEvent)
+NS_IMETHODIMP GlobalWindowImpl::DispatchEvent(nsIDOMEvent* aEvent, PRBool* _retval)
 {
   if (mDocument) {
     nsCOMPtr<nsIDocument> idoc(do_QueryInterface(mDocument));
@@ -2703,7 +2703,7 @@ NS_IMETHODIMP GlobalWindowImpl::DispatchEvent(nsIDOMEvent* aEvent)
       nsCOMPtr<nsIEventStateManager> esm;
       if (NS_SUCCEEDED(aPresContext->GetEventStateManager(getter_AddRefs(esm)))) {
         return esm->DispatchNewEvent(NS_STATIC_CAST(nsIScriptGlobalObject *,
-                                                    this), aEvent);
+                                                    this), aEvent, _retval);
       }
     }
   }
@@ -2763,7 +2763,8 @@ GlobalWindowImpl::GetNewListenerManager(nsIEventListenerManager **aResult)
 
 NS_IMETHODIMP GlobalWindowImpl::HandleEvent(nsIDOMEvent *aEvent)
 {
-  return DispatchEvent(aEvent);
+  PRBool noDefault;
+  return DispatchEvent(aEvent, &noDefault);
 }
 
 //*****************************************************************************

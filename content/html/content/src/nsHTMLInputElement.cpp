@@ -1686,7 +1686,8 @@ nsHTMLInputElement::FireEventForAccessibility(nsIPresContext* aPresContext,
   nsCOMPtr<nsIDOMEventReceiver> eventReceiver(do_QueryInterface(listenerManager));
   if ( ! eventReceiver )
     return NS_ERROR_FAILURE;
-  eventReceiver->DispatchEvent(domEvent);
+  PRBool noDefault;
+  eventReceiver->DispatchEvent(domEvent, &noDefault);
 
   return NS_OK;
 }
