@@ -22,6 +22,7 @@
 #include "nsCRT.h"
 #include "nsString.h"
 #include "prprf.h"
+#include "prnetdb.h"
 
 NS_IMPL_THREADSAFE_ISUPPORTS(nsNoAuthURLParser, NS_GET_IID(nsIURLParser))
 
@@ -96,14 +97,25 @@ nsNoAuthURLParser::ParseAtPreHost(const char* i_Spec, char* *o_Username,
                                   PRInt32 *o_Port, char* *o_Path)
 {
     nsresult rv = NS_OK;
-    // Skip leading two slashes
+    // Skip leading two slashes if possible
     char* fwdPtr= (char*) i_Spec;
-    if (fwdPtr && (*fwdPtr != '\0') && (*fwdPtr == '/'))
-        fwdPtr++;
-    if (fwdPtr && (*fwdPtr != '\0') && (*fwdPtr == '/'))
-        fwdPtr++;
-
-    // There is no PreHost
+    if (fwdPtr) {
+        if (*fwdPtr != '\0')
+            if (*fwdPtr != '/')
+                // No Host, go directly to path
+                return ParseAtPath(fwdPtr,o_Path);
+            else
+                // Move over the slash
+                fwdPtr++;
+        if (*fwdPtr != '\0') 
+            if (*fwdPtr != '/')
+                // No Host, go directly to path
+                return ParseAtPath(fwdPtr,o_Path);
+            else
+                // Move over the slash
+                fwdPtr++;
+    }
+    // There maybe is a host
     rv = ParseAtHost(fwdPtr, o_Host, o_Port, o_Path);
     return rv;
 
@@ -126,19 +138,41 @@ nsNoAuthURLParser::ParseAtHost(const char* i_Spec, char* *o_Host,
         // No host, okay ...
         rv = ParseAtPath(i_Spec, o_Path);
     } else {
-        // There seems be a host, drop it
-        char* brk = PL_strchr(i_Spec, '/');
+        // There seems be a host ...
+        if (len > 1 && *i_Spec == '[') {
+            // Possible IPv6 address
+            PRNetAddr netaddr;
+            char* fwdPtr = strchr(i_Spec+1, ']');
+            if (fwdPtr) {
+                rv = ExtractString((char*)i_Spec+1, o_Host, 
+                                   (fwdPtr - i_Spec - 1));
+                if (NS_FAILED(rv)) return rv;
+                rv = PR_StringToNetAddr(*o_Host, &netaddr);
+                if (rv != PR_SUCCESS || netaddr.raw.family != PR_AF_INET6) {
+                    // try something else
+                    CRTFREEIF(*o_Host);
+                }
+            }
+        }
+        static const char delimiters[] = "/?#"; 
+        char* brk = PL_strpbrk(i_Spec, delimiters);
         if (!brk) {
-            // everything is the host
-            rv = DupString(o_Host, i_Spec);
-            if (NS_FAILED(rv)) return rv;
-            ToLowerCase(*o_Host);
+            // do we already have a host?
+            if (!*o_Host) {
+                // everything is the host
+                rv = DupString(o_Host, i_Spec);
+                if (NS_FAILED(rv)) return rv;
+                ToLowerCase(*o_Host);
+            }
             // parse after the host
             rv = ParseAtPath(i_Spec+len, o_Path);
         } else {
-            rv = ExtractString((char*)i_Spec, o_Host, (brk - i_Spec));
-            if (NS_FAILED(rv)) return rv;
-            ToLowerCase(*o_Host);
+            // do we already have a host?
+            if (!*o_Host) {
+                rv = ExtractString((char*)i_Spec, o_Host, (brk - i_Spec));
+                if (NS_FAILED(rv)) return rv;
+                ToLowerCase(*o_Host);
+            }
             // parse after the host
             rv = ParseAtPath(brk, o_Path);
         }
