@@ -808,7 +808,7 @@ nsGfxTextControlFrame2::CalculateSizeStandard (nsIPresContext*       aPresContex
   } else {
     aDesiredSize.height = aDesiredSize.height * aSpec.mRowDefaultSize;
     if (CSS_NOTSET != aCSSSize.height) {  // css provides height
-      //NS_ASSERTION(aCSSSize.height > 0, "form control's computed height is <= 0"); 
+      NS_ASSERTION(aCSSSize.height > 0, "form control's computed height is <= 0"); 
       if (NS_INTRINSICSIZE != aCSSSize.height) {
         aDesiredSize.height = aCSSSize.height;
         aHeightExplicit = PR_TRUE;
@@ -1234,6 +1234,41 @@ nsGfxTextControlFrame2::GetPrefSize(nsBoxLayoutState& aState, nsSize& aSize)
   if (!aReflowState)
     return NS_OK;
 
+  if (eReflowReason_Initial == aReflowState->reason)
+  {
+    nsFormControlFrame::RegUnRegAccessKey(aPresContext, NS_STATIC_CAST(nsIFrame*, this), PR_TRUE);
+    nsFormFrame::AddFormControlFrame(aPresContext, *NS_STATIC_CAST(nsIFrame*, this));
+    nsCOMPtr<nsIHTMLContent> htmlContent;
+    if (mCachedState) //we have to initialize the editor with this value.
+    {
+      SetTextControlFrameState(*mCachedState);
+    }
+    else
+    {
+      nsString value;
+      if (mContent)
+      {
+        htmlContent = do_QueryInterface(mContent);
+        if (htmlContent) 
+        {
+          nsHTMLValue htmlValue;
+          if (NS_CONTENT_ATTR_HAS_VALUE ==
+              htmlContent->GetHTMLAttribute(nsHTMLAtoms::value, htmlValue)) 
+          {
+            if (eHTMLUnit_String == htmlValue.GetUnit()) 
+            {
+              htmlValue.GetStringValue(value);
+            }
+          }
+        }
+      }
+      if (value.Length())
+      {
+          SetTextControlFrameState(value);
+      }        
+    }
+  }
+
   nsCompatibility mode;
   aPresContext->GetCompatibilityMode(&mode); 
 
@@ -1343,7 +1378,7 @@ NS_IMETHODIMP nsGfxTextControlFrame2::Reflow(nsIPresContext*          aPresConte
       if (!incrementalChild) {
         nsIFrame* target;
         aReflowState.reflowCommand->GetTarget(target);
-        NS_ASSERTION(target == this, "Not our target!");
+//        NS_ASSERTION(target == this, "Not our target!");
 
         nsIReflowCommand::ReflowType  type;
         aReflowState.reflowCommand->GetType(type);
@@ -2016,6 +2051,13 @@ nsGfxTextControlFrame2::SetTextControlFrameState(const nsString& aValue)
       htmlEditor->InsertText(currentValue);
       mEditor->SetFlags(savedFlags);
     }
+  }
+  else
+  {
+    mCachedState = new nsString;
+    if (!mCachedState)
+      return;
+    *mCachedState = aValue; //store value for later initialization;
   }
 }
 
