@@ -462,7 +462,7 @@ nsHTMLEditor::SetDocumentCharacterSet(const PRUnichar* characterSet)
 
             PRInt32 offset = currentValue.Find(content.GetUnicode(), PR_TRUE); 
             if (kNotFound != offset) { 
-              newMetaString.SetString(currentValue, offset); // copy current value before "charset=" (e.g. text/html) 
+              newMetaString.Assign(currentValue, offset); // copy current value before "charset=" (e.g. text/html) 
               newMetaString.Append(content); 
               newMetaString.Append(characterSet); 
               result = nsEditor::SetAttribute(metaElement, "content", newMetaString); 
@@ -495,7 +495,7 @@ nsHTMLEditor::SetDocumentCharacterSet(const PRUnichar* characterSet)
                 // not undoable, undo should undo CreateNode 
                 result = metaElement->SetAttribute("http-equiv", "Content-Type"); 
                 if (NS_SUCCEEDED(result)) { 
-                  newMetaString.SetString("text/html;charset="); 
+                  newMetaString.Assign("text/html;charset="); 
                   newMetaString.Append(characterSet); 
                   // not undoable, undo should undo CreateNode 
                   result = metaElement->SetAttribute("content", newMetaString); 
@@ -3851,7 +3851,7 @@ NS_IMETHODIMP nsHTMLEditor::Paste()
             {
               PRUnichar* text = nsnull;
               textDataObj->ToString ( &text );
-              stuffToPaste.SetString ( text, len / 2 );
+              stuffToPaste.Assign ( text, len / 2 );
               nsAutoEditBatch beginBatching(this);
               rv = InsertHTML(stuffToPaste);
             }
@@ -3863,7 +3863,7 @@ NS_IMETHODIMP nsHTMLEditor::Paste()
             {
               PRUnichar* text = nsnull;
               textDataObj->ToString ( &text );
-              stuffToPaste.SetString ( text, len / 2 );
+              stuffToPaste.Assign ( text, len / 2 );
               nsAutoEditBatch beginBatching(this);
               rv = InsertText(stuffToPaste);
             }
@@ -4054,7 +4054,7 @@ NS_IMETHODIMP nsHTMLEditor::PasteAsPlaintextQuotation()
       {
         PRUnichar* text = nsnull;
         textDataObj->ToString ( &text );
-        stuffToPaste.SetString ( text, len / 2 );
+        stuffToPaste.Assign ( text, len / 2 );
         nsAutoEditBatch beginBatching(this);
         rv = InsertAsPlaintextQuotation(stuffToPaste, 0);
       }
