@@ -216,6 +216,13 @@ nsHttpProtocolConnection::RemoveHeader(const char* header)
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+// XXX jud
+#if 0
+static NS_DEFINE_CID(kNetModuleMgrCID, NS_NETMODULEMGR_CID);
+static NS_DEFINE_IID(kINetModuleMgrIID, NS_INETMODULEMGR_IID);
+static NS_DEFINE_CID(kCookieModuleCID, NS_COOKIEMODULE_CID);
+#endif // jud
+
 NS_IMETHODIMP
 nsHttpProtocolConnection::Get(void)
 {
@@ -246,6 +253,52 @@ nsHttpProtocolConnection::Get(void)
     // blank line to end the request
     rv = Write(in, CRLF, 2);
     if (NS_FAILED(rv)) goto done;
+
+// jud
+#if 0
+    // XXX this is not the right place for this
+    // Check for any modules that want to set headers before we
+    // send out a request.
+    nsINetModuleMgr* pNetModuleMgr = nsnull;
+    nsresult ret = nsServiceManager::GetService(kNetModuleMgrCID, kINetModuleMgrIID,
+        (nsISupports**) &pNetModuleMgr);
+
+    if (NS_SUCCEEDED(ret)) {
+        nsIEnumerator* pModules = nsnull;
+        ret = pNetModuleMgr->EnumerateModules("http-request", &pModules);
+        if (NS_SUCCEEDED(ret)) ) {
+            nsIProxyObjectManager*  proxyObjectManager = nsnull; 
+            ret = nsComponentManager::CreateInstance(kProxyObjectManagerCID, 
+                                               nsnull, 
+                                               nsIProxyObjectManager::GetIID(), 
+                                               (void**)&proxyObjectManager);
+            nsNetModuleEntry *entry = nsnull;
+            pModules->First(&entry);
+            while (NS_SUCCEEDED(ret)) {
+                // send the SetHeaders event to each registered module,
+                // using the nsISupports Proxy service
+                nsIHttpNotify *pNotify = nsnull;
+                
+                ret = proxyObjectManager->GetProxyObject(entry->mEventQ, 
+                                                   kCookieModuleCID,
+                                                   nsnull,
+                                                   nsIHttpNotify::GetIID(),
+                                                   (void**)&nsIHttpNotify);
+
+                if (NS_SUCCEEDED(ret)) {
+                    // send off the notification, and block.
+                    ret = nsIHttpNotify->SetHeaders();
+                    if (NS_SUCCEEDED(ret)) {
+                        ;
+                    }
+                }
+
+                pModules->Next(&entry);
+  
+            }
+        }
+    }
+#endif // jud
 
     // send it to the server:
     rv = mTransport->AsyncWrite(in,
