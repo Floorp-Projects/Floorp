@@ -72,6 +72,7 @@
 #include "nsDOMError.h"
 #include "nsScriptSecurityManager.h"
 #include "nsIPrincipal.h"
+#include "nsIAggregatePrincipal.h"
 
 
 // XXX The XML world depends on the html atoms
@@ -194,20 +195,27 @@ NS_IMETHODIMP
 nsXMLDocument::QueryInterface(REFNSIID aIID,
                               void** aInstancePtr)
 {
-  if (NULL == aInstancePtr) {
-    return NS_ERROR_NULL_POINTER;
-  }
+  NS_ENSURE_ARG_POINTER(aInstancePtr);
+
+  nsISupports *inst = nsnull;
+
   if (aIID.Equals(NS_GET_IID(nsIXMLDocument))) {
-    NS_ADDREF_THIS();
-    *aInstancePtr = (void**) (nsIXMLDocument *)this;
-    return NS_OK;
+    inst = NS_STATIC_CAST(nsIXMLDocument *, this);
+  } else if (aIID.Equals(NS_GET_IID(nsIHTMLContentContainer))) {
+    inst = NS_STATIC_CAST(nsIHTMLContentContainer *, this);
+  } else if (aIID.Equals(NS_GET_IID(nsIInterfaceRequestor))) {
+    inst = NS_STATIC_CAST(nsIInterfaceRequestor *, this);
+  } else if (aIID.Equals(NS_GET_IID(nsIHTTPEventSink))) {
+    inst = NS_STATIC_CAST(nsIHTTPEventSink *, this);
+  } else {
+    return nsDocument::QueryInterface(aIID, aInstancePtr);
   }
-  if (aIID.Equals(NS_GET_IID(nsIHTMLContentContainer))) {
-    NS_ADDREF_THIS();
-    *aInstancePtr = (void**) (nsIHTMLContentContainer *)this;
-    return NS_OK;
-  }
-  return nsDocument::QueryInterface(aIID, aInstancePtr);
+
+  NS_ADDREF(inst);
+
+  *aInstancePtr = inst;
+
+  return NS_OK;
 }
 
 nsrefcnt nsXMLDocument::AddRef()
@@ -254,6 +262,53 @@ nsXMLDocument::GetContentType(nsAWritableString& aContentType) const
 }
 
 NS_IMETHODIMP
+nsXMLDocument::GetInterface(const nsIID& aIID, void** aSink)
+{
+  // Since we implement all the interfaces that you can get with
+  // GetInterface() we can simply call QueryInterface() here and let
+  // it do all the work.
+
+  return QueryInterface(aIID, aSink);
+}
+
+
+// nsIHTTPEventSink
+NS_IMETHODIMP
+nsXMLDocument::OnHeadersAvailable(nsISupports *aContext)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXMLDocument::OnRedirect(nsISupports *aContext, nsIURI *aNewLocation)
+{
+  nsresult rv;
+
+  NS_WITH_SERVICE(nsIScriptSecurityManager, securityManager,
+                  NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
+
+  if (NS_FAILED(rv))
+    return NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsIPrincipal> newCodebase;
+  rv = securityManager->GetCodebasePrincipal(aNewLocation,
+                                             getter_AddRefs(newCodebase));
+
+  if (NS_FAILED(rv))
+    return NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsIAggregatePrincipal> agg = do_QueryInterface(mPrincipal, &rv);
+  NS_ASSERTION(NS_SUCCEEDED(rv), "Principal not an aggregate.");
+
+  if (NS_FAILED(rv))
+    return NS_ERROR_FAILURE;
+
+  rv = agg->SetCodebase(newCodebase);
+
+  return rv;
+}
+
+NS_IMETHODIMP
 nsXMLDocument::Load(const nsAReadableString& aUrl)
 {
   nsCOMPtr<nsIChannel> channel;
@@ -276,7 +331,7 @@ nsXMLDocument::Load(const nsAReadableString& aUrl)
   if (!mPrincipal) return rv;
 
   // Create a channel
-  rv = NS_OpenURI(getter_AddRefs(channel), uri, nsnull);
+  rv = NS_OpenURI(getter_AddRefs(channel), uri, nsnull, nsnull, this);
   if (NS_FAILED(rv)) return rv;
 
   // Prepare for loading the XML document "into oneself"
