@@ -260,16 +260,19 @@ STDMETHODIMP nsAccessNodeWrap::get_attributesForNames(
 
 NS_IMETHODIMP nsAccessNodeWrap::GetComputedStyleDeclaration(nsIDOMCSSStyleDeclaration **aCssDecl, PRUint32 *aLength)
 {
-  nsCOMPtr<nsIDOMElement> domElement(do_QueryInterface(mDOMNode));
   nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
-  if (!domElement || !content) 
+  if (!content) 
     return NS_ERROR_FAILURE;   
 
-  nsCOMPtr<nsIDocument> doc;
-  if (content) 
-    doc = content->GetDocument();
+  if (content->IsContentOfType(nsIContent::eTEXT)) {
+    content = content->GetParent();
+    NS_ASSERTION(content, "No parent for text node");
+  }
 
-  if (!doc) {
+  nsCOMPtr<nsIDOMElement> domElement(do_QueryInterface(content));
+  nsCOMPtr<nsIDocument> doc = content->GetDocument();
+
+  if (!domElement || !doc) {
     return NS_ERROR_FAILURE;
   }
 
