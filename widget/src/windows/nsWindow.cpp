@@ -4149,6 +4149,7 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
               case APPCOMMAND_BROWSER_STOP:
                 DispatchAppCommandEvent(appCommand);
                 // tell the driver that we handled the event
+                *aRetValue = 1;
                 result = PR_TRUE;
                 break;
             }
