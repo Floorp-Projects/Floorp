@@ -207,10 +207,17 @@ endif
 else
 PDBFILE=$(basename $(@F)).pdb
 ifdef MOZ_DEBUG
-MAPFILE=$(basename $(@F)).map
 CODFILE=$(basename $(@F)).cod
 endif
 endif
+
+ifdef MOZ_MAPINFO
+ifdef LIBRARY_NAME
+MAPFILE=$(LIBRARY_NAME).map
+else
+MAPFILE=$(basename $(@F)).map
+endif # LIBRARY_NAME
+endif # MOZ_MAPINFO
 
 ifdef DEFFILE
 CFLAGS += /DEF:$(DEFFILE)
@@ -219,7 +226,7 @@ DSO_LDOPTS += /DEF:$(DEFFILE)
 endif
 
 ifdef MAPFILE
-DSO_LDOPTS += /MAP:$(MAPFILE) /MAPINFO:LINES
+OS_LDFLAGS += /MAP:$(MAPFILE) /MAPINFO:LINES
 #CFLAGS += -Fm$(MAPFILE)
 #CXXFLAGS += -Fm$(MAPFILE)
 endif

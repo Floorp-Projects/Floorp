@@ -219,6 +219,12 @@ ifdef NS_TRACE_MALLOC
 tier_9_dirs	+= tools/trace-malloc
 endif
 
+ifdef MOZ_MAPINFO
+ifeq ($(OS_ARCH),WINNT)
+tier_9_dirs	+= tools/codesighs
+endif
+endif
+
 tier_9_dirs	+= l10n
 
 ifdef MOZ_PHOENIX
