@@ -74,8 +74,10 @@ sub seMaxLength() { 80 }
 sub seMaxArguments() { 10 }
 sub seEllipsis() { '...' }
 
-sub syntax($@) {
-    my($message, $package, $filename, $line) = @_;
+sub syntax($;$) {
+    my($message, $offset) = @_;
+    $offset = 0 unless defined($offset);
+    my($package, $filename, $line) = caller(1 + $offset);
     die "$message at $filename line $line\n";
 }
 
@@ -138,14 +140,14 @@ sub init {
 
 sub raise {
     my($exception, @data) = @_;
-    syntax "Syntax error in \"raise\": \"$exception\" is not a PLIF::Exception class", caller(1) unless UNIVERSAL::isa($exception, __PACKAGE__);
+    syntax "Syntax error in \"raise\": \"$exception\" is not a PLIF::Exception class", 1 unless UNIVERSAL::isa($exception, __PACKAGE__);
     die $exception->init(@data);
 }
 
 # similar to raise, but only warns instead of dying
 sub report {
     my($exception, @data) = @_;
-    syntax "Syntax error in \"report\": \"$exception\" is not a PLIF::Exception class", caller(1) unless UNIVERSAL::isa($exception, __PACKAGE__);
+    syntax "Syntax error in \"report\": \"$exception\" is not a PLIF::Exception class", 1 unless UNIVERSAL::isa($exception, __PACKAGE__);
     warn $exception->init(@data);
 }
 
@@ -153,7 +155,7 @@ sub try(&;$) {
     my($code, $continuation) = @_;
     if (defined($continuation) and
         (not ref($continuation) or not $continuation->isa('PLIF::Exception::Internal::Continuation'))) {
-        syntax 'Syntax error in continuation of "try" clause', caller;
+        syntax 'Syntax error in continuation of "try" clause';
     }
     my $context = wantarray;
     my @result; # for array context
@@ -178,19 +180,19 @@ sub try(&;$) {
 
 sub catch($$) {
     my($class, $continuation, @more) = @_;
-    syntax "Syntax error in \"catch ... with\" clause: \"$class\" is not a PLIF::Exception class", caller unless $class->isa('PLIF::Exception');
+    syntax "Syntax error in \"catch ... with\" clause: \"$class\" is not a PLIF::Exception class" unless $class->isa('PLIF::Exception');
     if (not defined($continuation) or
         not ref($continuation) or
         not $continuation->isa('PLIF::Exception::Internal::With')) {
-        syntax 'Syntax error: missing "with" operator in "catch" clause', caller;
+        syntax 'Syntax error: missing "with" operator in "catch" clause';
     }
     { local $" = '\', \'';
-      syntax "Syntax error after \"catch ... with\" clause ('@_'?)", caller if (scalar(@more)); }
+      syntax "Syntax error after \"catch ... with\" clause ('@_'?)" if (scalar(@more)); }
     $continuation->{'resolved'} = 1;
     my $handler = $continuation->{'handler'};
     $continuation = $continuation->{'continuation'};
     if (not defined($continuation)) {
-        $continuation = PLIF::Exception::Internal::Continuation->create(caller);
+        $continuation = PLIF::Exception::Internal::Continuation->create();
     }
     unshift(@{$continuation->{'handlers'}}, [$class, $handler]);
     return $continuation;
@@ -201,9 +203,9 @@ sub with(&;$) {
     if (defined($continuation) and
         (not ref($continuation) or
          not $continuation->isa('PLIF::Exception::Internal::Continuation'))) {
-        syntax 'Syntax error after "catch ... with" clause', caller;
+        syntax 'Syntax error after "catch ... with" clause';
     }
-    return PLIF::Exception::Internal::With->create($handler, $continuation, caller);
+    return PLIF::Exception::Internal::With->create($handler, $continuation);
 }
 
 sub except(&;$) {
@@ -213,10 +215,10 @@ sub except(&;$) {
          not $continuation->isa('PLIF::Exception::Internal::Continuation') or
          defined($continuation->{'except'}) or
          scalar(@{$continuation->{'handlers'}}))) {
-        syntax 'Syntax error after "except" clause', caller;
+        syntax 'Syntax error after "except" clause';
     }
     if (not defined($continuation)) {
-        $continuation = PLIF::Exception::Internal::Continuation->create(caller);
+        $continuation = PLIF::Exception::Internal::Continuation->create();
     }
     $continuation->{'except'} = $handler;
     return $continuation;
@@ -230,10 +232,10 @@ sub otherwise(&;$) {
          defined($continuation->{'otherwise'}) or
          defined($continuation->{'except'}) or
          scalar(@{$continuation->{'handlers'}}))) {
-        syntax 'Syntax error after "otherwise" clause', caller;
+        syntax 'Syntax error after "otherwise" clause';
     }
     if (not defined($continuation)) {
-        $continuation = PLIF::Exception::Internal::Continuation->create(caller);
+        $continuation = PLIF::Exception::Internal::Continuation->create();
     }
     $continuation->{'otherwise'} = $handler;
     return $continuation;
@@ -241,14 +243,14 @@ sub otherwise(&;$) {
 
 sub finally(&;@) {
     my($handler, @continuation) = @_;
-    syntax 'Missing semicolon after "finally" clause', caller if (scalar(@continuation));
-    my $continuation = PLIF::Exception::Internal::Continuation->create(caller);
+    syntax 'Missing semicolon after "finally" clause' if (scalar(@continuation));
+    my $continuation = PLIF::Exception::Internal::Continuation->create();
     $continuation->{'finally'} = $handler;
     return $continuation;
 }
 
 sub fallthrough() {
-    return PLIF::Exception::Internal::Fallthrough->create(caller);
+    return PLIF::Exception::Internal::Fallthrough->create();
 }
 
 sub stringify {
@@ -394,13 +396,14 @@ sub wrap($) {
 }
 
 sub create {
+    my($package, $filename, $line) = caller(1);
     return bless {
         'handlers' => [],
         'except' => undef,
         'otherwise' => undef,
         'finally' => undef,
-        'filename' => $_[2],
-        'line' => $_[3],
+        'filename' => $filename,
+        'line' => $line,
         'resolved' => 0,
     }, $_[0];
 }
@@ -472,11 +475,12 @@ sub DESTROY {
 package PLIF::Exception::Internal::With;
 
 sub create {
+    my($package, $filename, $line) = caller(1);
     return bless {
         'handler' => $_[1],
         'continuation' => $_[2],
-        'filename' => $_[4],
-        'line' => $_[5],
+        'filename' => $filename,
+        'line' => $line,
         'resolved' => 0,
     }, $_[0];
 }
@@ -491,10 +495,10 @@ sub DESTROY {
 package PLIF::Exception::Internal::Fallthrough;
 
 sub create {
-    my($package, $filename, $line) = @_;
+    my($package, $filename, $line) = caller(1);
     return bless {
-        'filename' => $_[2],
-        'line' => $_[3],
+        'filename' => $filename,
+        'line' => $line,
         'resolved' => 0,
     }, $_[0];
 }
