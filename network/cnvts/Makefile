@@ -29,7 +29,6 @@ CSRCS		= \
 	cvjscfg.c	\
 	cvsimple.c	\
 	cvunzip.c	\
-	cvview.c	\
 	txview.c	\
 	$(NULL)
 
@@ -37,6 +36,7 @@ ifndef MODULAR_NETLIB
 CSRCS += \
 	cvmime.c	\
 	cvpics.c	\
+	cvview.c	\
 	$(NULL)
 endif
 
