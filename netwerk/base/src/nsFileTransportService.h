@@ -29,7 +29,7 @@
 
 #define NS_FILE_TRANSPORT_WORKER_COUNT  4
 
-class nsFileTransportService : public nsISupports
+class nsFileTransportService : public nsIFileTransportService
 {
 public:
     NS_DECL_ISUPPORTS
