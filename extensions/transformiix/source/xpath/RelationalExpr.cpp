@@ -108,7 +108,7 @@ RelationalExpr::compareResults(txIEvalContext* aContext, txAExprResult* aLeft,
                  rtype == txAExprResult::NUMBER) {
             double lval = aLeft->numberValue();
             double rval = aRight->numberValue();
-#if defined(XP_WIN) || defined(XP_OS2)
+#if defined(XP_WIN)
             if (Double::isNaN(lval) || Double::isNaN(rval))
                 result = PR_FALSE;
             else
@@ -147,7 +147,7 @@ RelationalExpr::compareResults(txIEvalContext* aContext, txAExprResult* aLeft,
 
     double leftDbl = aLeft->numberValue();
     double rightDbl = aRight->numberValue();
-#if defined(XP_WIN) || defined(XP_OS2)
+#if defined(XP_WIN)
     if (Double::isNaN(leftDbl) || Double::isNaN(rightDbl))
         return PR_FALSE;
 #endif
