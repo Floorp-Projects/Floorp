@@ -1,4 +1,5 @@
-/*
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ *
  * (C) Copyright The MITRE Corporation 1999  All rights reserved.
  *
  * The contents of this file are subject to the Mozilla Public License
@@ -963,6 +964,8 @@ char* String::toCharArray() const
 {
   char* tmpBuffer = new char[strLength+1];
 
+  NS_ASSERTION(tmpBuffer, "out of memory");
+
   return toCharArray(tmpBuffer);
 }
 
@@ -974,6 +977,9 @@ char* String::toCharArray() const
 **/
 char* String::toCharArray(char* dest) const
 {
+  if (!dest)
+    return 0;
+
   PRInt32 copyLoop;
 
   for (copyLoop = 0; copyLoop < strLength; copyLoop++)

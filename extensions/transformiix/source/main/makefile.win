@@ -29,7 +29,6 @@ CPP_OBJS=                                       \
   ../base/$(OBJDIR)/ArrayList.obj \
   ../base/$(OBJDIR)/CommandLineUtils.obj \
   ../base/$(OBJDIR)/Double.obj \
-  ../base/$(OBJDIR)/Integer.obj \
   ../base/$(OBJDIR)/List.obj \
   ../base/$(OBJDIR)/TxObjectWrapper.obj \
   ../base/$(OBJDIR)/Map.obj \

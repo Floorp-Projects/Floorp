@@ -1,4 +1,5 @@
-/*
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ *
  * The contents of this file are subject to the Mozilla Public
  * License Version 1.1 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of
@@ -339,8 +340,7 @@ double NodeSet::numberValue() {
   // of its string value.
   String str;
   stringValue(str);
-  Double dbl(str);
-  return dbl.doubleValue();
+  return Double::toDouble(str);
   // OG-
 } //-- numberValue
 

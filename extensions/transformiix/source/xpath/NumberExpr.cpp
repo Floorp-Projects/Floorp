@@ -1,4 +1,5 @@
-/*
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ *
  * The contents of this file are subject to the Mozilla Public
  * License Version 1.1 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of
@@ -53,10 +54,6 @@ ExprResult* NumberExpr::evaluate(Node* context, ContextState* cs) {
  * @return the String representation of this Expr.
 **/
 void NumberExpr::toString(String& str) {
-    int intVal = (int)_value;
-    if (intVal == _value) { //-- no fraction
-        Integer::toString(intVal, str);
-    }
-    else Double::toString(_value, str);
+    Double::toString(_value, str);
 } //-- toString
 

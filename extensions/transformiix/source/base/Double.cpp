@@ -1,4 +1,5 @@
-/*
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ *
  * The contents of this file are subject to the Mozilla Public
  * License Version 1.1 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of
@@ -42,14 +43,16 @@
 #ifdef __FreeBSD__
 #include <floatingpoint.h>
 #endif
+#ifndef TX_EXE
+#include "prdtoa.h"
+#else
+#include "stdlib.h"
+#include "stdio.h"
+#endif
 
-//----------------------------/
-//- Implementation of Double -/
-//----------------------------/
-/**
- * A wrapper for the primitive double type, and provides some simple
- * floating point related routines
-**/
+/*
+ * Utility class for doubles
+ */
 
 //A trick to handle IEEE floating point exceptions on FreeBSD - E.D.
 #ifdef __FreeBSD__
@@ -57,9 +60,9 @@ fp_except_t allmask = FP_X_INV|FP_X_OFL|FP_X_UFL|FP_X_DZ|FP_X_IMP|FP_X_DNML;
 fp_except_t oldmask = fpsetmask(~allmask);
 #endif
 
-/**
+/*
  * Macros to workaround math-bugs bugs in various platforms
-**/
+ */
 
 #ifdef IS_BIG_ENDIAN
 #define TX_DOUBLE_HI32(x)        (((PRUint32 *)&(x))[0])
@@ -90,161 +93,181 @@ const double Double::NaN = *((double*)nanMask);
 const double Double::POSITIVE_INFINITY = *((double*)infMask);
 const double Double::NEGATIVE_INFINITY = *((double*)negInfMask);
 
-/**
- * Creates a new Double with it's value initialized from the given String.
- * The String will be converted to a double. If the String does not
- * represent an IEEE 754 double, the value will be initialized to NaN
-**/
-Double::Double(const String& string) {
-    this->value = toDouble(string);
-} //-- Double
-
-
-
-/**
- * Returns the value of this Double as a double
-**/
-double Double::doubleValue() {
-    return this->value;
-} //-- doubleValue
-
-/**
- * Returns the value of this Double as an int
-**/
-int Double::intValue() {
-    return (int)value;
-} //-- intValue
-
-/**
+/*
  * Determines whether the given double represents positive or negative
  * inifinity
-**/
-MBool Double::isInfinite(double dbl) {
-    return ((TX_DOUBLE_HI32(dbl) & ~TX_DOUBLE_HI32_SIGNBIT) == TX_DOUBLE_HI32_EXPMASK &&
-            !TX_DOUBLE_LO32(dbl));
-} //-- isInfinite
+ */
+MBool Double::isInfinite(double aDbl)
+{
+    return ((TX_DOUBLE_HI32(aDbl) & ~TX_DOUBLE_HI32_SIGNBIT) == TX_DOUBLE_HI32_EXPMASK &&
+            !TX_DOUBLE_LO32(aDbl));
+}
 
-/**
+/*
  * Determines whether the given double is NaN
-**/
-MBool Double::isNaN(double dbl) {
-    return ((TX_DOUBLE_HI32(dbl) & TX_DOUBLE_HI32_EXPMASK) == TX_DOUBLE_HI32_EXPMASK &&
-            (TX_DOUBLE_LO32(dbl) || (TX_DOUBLE_HI32(dbl) & TX_DOUBLE_HI32_MANTMASK)));
-} //-- isNaN
+ */
+MBool Double::isNaN(double aDbl)
+{
+    return ((TX_DOUBLE_HI32(aDbl) & TX_DOUBLE_HI32_EXPMASK) == TX_DOUBLE_HI32_EXPMASK &&
+            (TX_DOUBLE_LO32(aDbl) || (TX_DOUBLE_HI32(aDbl) & TX_DOUBLE_HI32_MANTMASK)));
+}
 
-/**
+/*
  * Determines whether the given double is negative
-**/
-MBool Double::isNeg(double dbl) {
-    return (TX_DOUBLE_HI32(dbl) & TX_DOUBLE_HI32_SIGNBIT) != 0;
-} //-- isNeg
+ */
+MBool Double::isNeg(double aDbl)
+{
+    return (TX_DOUBLE_HI32(aDbl) & TX_DOUBLE_HI32_SIGNBIT) != 0;
+}
 
-/**
+/*
  * Converts the given String to a double, if the String value does not
  * represent a double, NaN will be returned
-**/
-double Double::toDouble(const String& src) {
-
-    double dbl = 0.0;
-    double multiplier = 10.0;
+ */
+double Double::toDouble(const String& aSrc)
+{
     PRInt32 idx = 0;
+    PRInt32 len = aSrc.length();
+    MBool digitFound = MB_FALSE;
 
     double sign = 1.0;
 
-    //-- trim leading whitespace
-    for ( ; idx < src.length(); idx++ )
-        if ( src.charAt(idx) != ' ' ) break;
+    // leading whitespace
+    while (idx < len &&
+           (aSrc.charAt(idx) == ' ' ||
+            aSrc.charAt(idx) == '\n' ||
+            aSrc.charAt(idx) == '\r' ||
+            aSrc.charAt(idx) == '\t'))
+        ++idx;
 
-    //-- check first character for sign
-    if ( idx < src.length() ) {
-        PRInt32 ch = src.charAt(idx);
-        if ( ch == '-' ) {
-            sign = -1.0;
+    // sign char
+    if (idx < len && aSrc.charAt(idx) == '-')
+        ++idx;
+
+    // integer chars
+    while (idx < len &&
+           aSrc.charAt(idx) >= '0' &&
+           aSrc.charAt(idx) <= '9') {
+        ++idx;
+        digitFound = MB_TRUE;
+    }
+
+    // decimal separator
+    if (idx < len && aSrc.charAt(idx) == '.') {
+        ++idx;
+
+        // fraction chars
+        while (idx < len &&
+               aSrc.charAt(idx) >= '0' &&
+               aSrc.charAt(idx) <= '9') {
             ++idx;
+            digitFound = MB_TRUE;
         }
     }
-    else {
-        return Double::NaN;
+
+    // ending whitespace
+    while ((aSrc.charAt(idx) == ' ' ||
+            aSrc.charAt(idx) == '\n' ||
+            aSrc.charAt(idx) == '\r' ||
+            aSrc.charAt(idx) == '\t') &&
+           idx < len)
+        ++idx;
+
+    // "."==NaN, ".0"=="0."==0
+    if (digitFound && idx == len) {
+        char* buf = aSrc.toCharArray();
+        double res = buf ? atof(buf) : Double::NaN;
+        delete [] buf;
+        return res;
     }
 
-    //-- convert remaining to number
-    for ( ; idx < src.length(); idx++ ) {
+    return Double::NaN;
+}
 
-        PRInt32 ch = src.charAt(idx);
-
-        if (( ch >= '0') && (ch <= '9')) {
-             if ( multiplier > 1.0 ) {
-                dbl = dbl*multiplier;
-                dbl += (double) (ch-48);
-             }
-             else {
-                 dbl += multiplier * (ch-48);
-                 multiplier = multiplier * 0.1;
-             }
-        }
-        else if ( ch == '.') {
-            if ( multiplier < 1.0 ) return Double::NaN;
-            multiplier = 0.1;
-        }
-        else return Double::NaN;
-    }
-    dbl = dbl*sign;
-    return dbl;
-} //-- toDouble
-
-
-/**
+/*
  * Converts the value of the given double to a String, and places
  * The result into the destination String.
  * @return the given dest string
-**/
-String& Double::toString(double value, String& dest) {
+ */
+String& Double::toString(double aValue, String& aDest)
+{
 
-    //-- check for special cases
+    // check for special cases
 
-    if ( isNaN(value) ) {
-        dest.append("NaN");
-        return dest;
+    if (isNaN(aValue)) {
+        aDest.append("NaN");
+        return aDest;
     }
-    if ( isInfinite(value) ) {
-        if (value < 0) dest.append('-');
-        dest.append("Infinity");
-        return dest;
+    if (isInfinite(aValue)) {
+        if (aValue < 0)
+            aDest.append('-');
+        aDest.append("Infinity");
+        return aDest;
     }
 
-    MBool isNegative = (MBool)(value<0.0);
-    double val = value;
-    if ( isNegative ) val = val * -1.0;
+    int bufsize;
+    if (fabs(aValue) > 1)
+        bufsize = (int)log10(fabs(aValue)) + 30;
+    else
+        bufsize = 30;
+    
+    char* buf = new char[bufsize];
+    if (!buf) {
+        NS_ASSERTION(0, "out of memory");
+        return aDest;
+    }
 
-    double ival = 0;
-    double fval = modf(val, &ival);
+#ifndef TX_EXE
 
-    String iStr;
+    PRIntn intDigits, sign;
+    char* endp;
+    PR_dtoa(aValue, 0, 0, &intDigits, &sign, &endp, buf, bufsize-1);
 
-    int temp = (int)ival;
+    if (sign)
+        aDest.append('-');
 
+    int i;
+    for (i = 0; i < endp - buf; i++) {
+        if (i == intDigits)
+            aDest.append('.');
+        aDest.append(buf[i]);
+    }
+    
+    for (; i < intDigits; i++)
+        aDest.append('0');
 
-    if ( temp > 0.0 ) {
-        while ( temp > 0.0 ) {
-            iStr.append( (char) ((temp % 10)+48) );
-            temp = temp / 10;
+#else
+
+    sprintf(buf, "%1.10f", aValue);
+
+    MBool deciPassed = MB_FALSE;
+    MBool printDeci = MB_FALSE;
+    int zeros=0;
+    int i;
+    for (i = 0; buf[i]; i++) {
+        if (buf[i] == '.') {
+            deciPassed = MB_TRUE;
+            printDeci = MB_TRUE;
         }
-        if ( isNegative ) iStr.append('-');
-        iStr.reverse();
-    }
-    else iStr.append('0');
+        else if (deciPassed && buf[i] == '0') {
+            zeros++;
+        }
+        else {
+            if (printDeci) {
+                aDest.append('.');
+                printDeci = MB_FALSE;
+            }
 
-    iStr.append('.');
-    if ( fval > 0.0 ) {
-        while ( fval > 0.0000001 ) {
-            fval = fval*10.0;
-            fval = modf(fval, &ival);
-            iStr.append( (char) (ival+48) );
+            for ( ;zeros ;zeros--)
+                aDest.append('0');
+
+            aDest.append(buf[i]);
         }
     }
-    else iStr.append('0');
 
-    dest.append(iStr);
-    return dest;
-} //-- toString
-
+#endif
+    
+    delete [] buf;
+    
+    return aDest;
+}

@@ -33,7 +33,6 @@ DEFINES= $(DEFINES) -DTX_EXE
 CPPSRCS=				\
 	ArrayList.cpp 			\
 	Double.cpp			\
-	Integer.cpp			\
 	List.cpp			\
 	TxObjectWrapper.cpp		\
 	NamedMap.cpp			\
@@ -58,7 +57,6 @@ CPPSRCS = $(CPPSRCS)		\
 CPP_OBJS=                                       \
 	.\$(OBJDIR)\ArrayList.obj 		\
 	.\$(OBJDIR)\Double.obj			\
-	.\$(OBJDIR)\Integer.obj			\
 	.\$(OBJDIR)\List.obj			\
 	.\$(OBJDIR)\TxObjectWrapper.obj	\
 	.\$(OBJDIR)\NamedMap.obj		\

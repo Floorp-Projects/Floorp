@@ -42,7 +42,6 @@ CPPSRCS=						\
 CPP_OBJS=							\
 	..\source\base\$(OBJDIR)\ArrayList.obj \
 	..\source\base\$(OBJDIR)\Double.obj \
-	..\source\base\$(OBJDIR)\Integer.obj \
 	..\source\base\$(OBJDIR)\List.obj \
 	..\source\base\$(OBJDIR)\TxObjectWrapper.obj \
 	..\source\base\$(OBJDIR)\Map.obj \
