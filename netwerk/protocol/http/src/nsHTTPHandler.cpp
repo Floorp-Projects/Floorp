@@ -18,7 +18,7 @@
 
 #include "nsHTTPHandler.h"
 #include "nsHTTPConnection.h"
-#include "nsITimer.h" 
+//#include "nsITimer.h" 
 #include "nsIProxy.h"
 #include "plstr.h" // For PL_strcasecmp maybe DEBUG only... TODO check
 #include "nsIUrl.h"
