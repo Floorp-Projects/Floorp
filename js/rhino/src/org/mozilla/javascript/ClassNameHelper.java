@@ -69,14 +69,7 @@ public abstract class ClassNameHelper {
      *
      * @since 1.5 Release 4
      */
-    public String getTargetClassFileName() {
-        ClassRepository repository = getClassRepository();
-        if (repository instanceof FileClassRepository) {
-            return ((FileClassRepository)repository).
-                getTargetClassFileName(getClassName());
-        }
-        return null;
-    }
+    public abstract String getTargetClassFileName();
 
     /**
      * Set the current target class file name.
@@ -87,41 +80,7 @@ public abstract class ClassNameHelper {
      *
      * @since 1.5 Release 4
      */
-    public void setTargetClassFileName(String classFileName) {
-        if (classFileName != null) {
-            setClassRepository(new FileClassRepository(classFileName));
-        } else {
-            setClassName(null);
-        }
-    }
-
-    /**
-     * @deprecated Application should use {@link ClassRepository} instead of
-     * {@link ClassOutput}.
-     *
-     * @see #getClassRepository
-     */
-    public final ClassOutput getClassOutput() {
-        ClassRepository repository = getClassRepository();
-        if (repository instanceof ClassOutputWrapper) {
-            return ((ClassOutputWrapper)repository).classOutput;
-        }
-        return null;
-    }
-
-    /**
-     * @deprecated Application should use {@link ClassRepository} instead of
-     * {@link ClassOutput}.
-     *
-     * @see #setClassRepository
-     */
-    public void setClassOutput(ClassOutput classOutput) {
-        if (classOutput != null) {
-            setClassRepository(new ClassOutputWrapper(classOutput));
-        } else {
-            setClassRepository(null);
-        }
-    }
+    public abstract void setTargetClassFileName(String classFileName);
 
     /**
      * Get the current package to generate classes into.
@@ -177,76 +136,6 @@ public abstract class ClassNameHelper {
      * @since 30/10/01 tip + patch (Kemal Bayram)
      */
     public abstract void setClassName(String initialName);
-
-    // Implement class file saving here instead of inside codegen.
-    private class FileClassRepository implements ClassRepository {
-
-        FileClassRepository(String classFileName) {
-            int lastSeparator = classFileName.lastIndexOf(File.separatorChar);
-            String initialName;
-            if (lastSeparator == -1) {
-                generatingDirectory = null;
-                initialName = classFileName;
-            } else {
-                generatingDirectory = classFileName.substring(0, lastSeparator);
-                initialName = classFileName.substring(lastSeparator+1);
-            }
-            if (initialName.endsWith(".class"))
-                initialName = initialName.substring(0, initialName.length()-6);
-            setClassName(initialName);
-        }
-
-        public boolean storeClass(String className, byte[] bytes, boolean tl)
-            throws IOException
-        {
-            // no "elegant" way of getting file name from fully
-            // qualified class name.
-            String targetPackage = getTargetPackage();
-            if ((targetPackage != null) && (targetPackage.length()>0) &&
-                className.startsWith(targetPackage+"."))
-            {
-                className = className.substring(targetPackage.length()+1);
-            }
-
-            FileOutputStream out = new FileOutputStream(getTargetClassFileName(className));
-            out.write(bytes);
-            out.close();
-
-            return false;
-        }
-
-        String getTargetClassFileName(String className) {
-            StringBuffer sb = new StringBuffer();
-            if (generatingDirectory != null) {
-                sb.append(generatingDirectory);
-                sb.append(File.separator);
-            }
-            sb.append(className);
-            sb.append(".class");
-            return sb.toString();
-        }
-
-        String generatingDirectory;
-    };
-
-    private static class ClassOutputWrapper implements ClassRepository {
-
-        ClassOutputWrapper(ClassOutput classOutput) {
-            this.classOutput = classOutput;
-        }
-
-        public boolean storeClass(String name, byte[] bytes, boolean tl)
-            throws IOException
-        {
-            OutputStream out = classOutput.getOutputStream(name, tl);
-            out.write(bytes);
-            out.close();
-
-            return true;
-        }
-
-        ClassOutput classOutput;
-    }
 
     private static ClassNameHelper savedNameHelper;
     private static boolean helperNotAvailable;

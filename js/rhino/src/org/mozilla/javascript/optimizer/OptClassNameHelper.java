@@ -75,6 +75,40 @@ public class OptClassNameHelper extends ClassNameHelper {
         return s.toString();
     }
 
+    /**
+     * Get the current target class file name.
+     * <p>
+     * If nonnull, requests to compile source will result in one or
+     * more class files being generated.
+     *
+     * @since 1.5 Release 4
+     */
+    public String getTargetClassFileName() {
+        ClassRepository repository = getClassRepository();
+        if (repository instanceof FileClassRepository) {
+            return ((FileClassRepository)repository).
+                getTargetClassFileName(getClassName());
+        }
+        return null;
+    }
+
+    /**
+     * Set the current target class file name.
+     * <p>
+     * If nonnull, requests to compile source will result in one or
+     * more class files being generated. If null, classes will only
+     * be generated in memory.
+     *
+     * @since 1.5 Release 4
+     */
+    public void setTargetClassFileName(String classFileName) {
+        if (classFileName != null) {
+            setClassRepository(new FileClassRepository(this, classFileName));
+        } else {
+            setClassName(null);
+        }
+    }
+
     public String getTargetPackage() {
         return packageName;
     }
@@ -133,3 +167,57 @@ public class OptClassNameHelper extends ClassNameHelper {
     private Class[] targetImplements;
     private ClassRepository classRepository;
 }
+
+// Implement class file saving here instead of inside codegen.
+class FileClassRepository implements ClassRepository
+{
+    FileClassRepository(OptClassNameHelper nameHelper, String classFileName) {
+        this.nameHelper = nameHelper;
+        int lastSeparator = classFileName.lastIndexOf(File.separatorChar);
+        String initialName;
+        if (lastSeparator == -1) {
+            generatingDirectory = null;
+            initialName = classFileName;
+        } else {
+            generatingDirectory = classFileName.substring(0, lastSeparator);
+            initialName = classFileName.substring(lastSeparator+1);
+        }
+        if (initialName.endsWith(".class"))
+            initialName = initialName.substring(0, initialName.length()-6);
+        nameHelper.setClassName(initialName);
+    }
+
+    public boolean storeClass(String className, byte[] bytes, boolean tl)
+        throws IOException
+    {
+        // no "elegant" way of getting file name from fully
+        // qualified class name.
+        String targetPackage = nameHelper.getTargetPackage();
+        if ((targetPackage != null) && (targetPackage.length()>0) &&
+            className.startsWith(targetPackage+"."))
+        {
+            className = className.substring(targetPackage.length()+1);
+        }
+
+        FileOutputStream out = new FileOutputStream(getTargetClassFileName(className));
+        out.write(bytes);
+        out.close();
+
+        return false;
+    }
+
+    String getTargetClassFileName(String className) {
+        StringBuffer sb = new StringBuffer();
+        if (generatingDirectory != null) {
+            sb.append(generatingDirectory);
+            sb.append(File.separator);
+        }
+        sb.append(className);
+        sb.append(".class");
+        return sb.toString();
+    }
+
+    OptClassNameHelper nameHelper;
+    String generatingDirectory;
+}
+

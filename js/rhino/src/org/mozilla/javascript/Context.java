@@ -1444,31 +1444,6 @@ public class Context {
     }
 
     /**
-     * @deprecated Use
-     * <tt>ClassNameHelper.get(cx).getClassOutput()</tt> instead.
-     * @see ClassNameHelper#getClassOutput
-     */
-    public ClassOutput getClassOutput() {
-        ClassNameHelper nameHelper = ClassNameHelper.get(this);
-        if (nameHelper != null) {
-            return nameHelper.getClassOutput();
-        }
-        return null;
-    }
-
-    /**
-     * @deprecated Use
-     * <tt>ClassNameHelper.get(cx).setClassOutput(classOutput)</tt> instead.
-     * @see ClassNameHelper#setClassOutput
-     */
-    public void setClassOutput(ClassOutput classOutput) {
-        ClassNameHelper nameHelper = ClassNameHelper.get(this);
-        if (nameHelper != null) {
-            nameHelper.setClassOutput(classOutput);
-        }
-    }
-
-    /**
      * Set the security controller for this context.
      * <p> SecurityController may only be set if it is currently null.
      * Otherwise a SecurityException is thrown.
