@@ -442,8 +442,6 @@ nsSoftwareUpdateFactory::CreateInstance(nsISupports *aOuter, REFNSIID aIID, void
         *aResult = NULL;
     }
 
-    NS_ADDREF(inst);  // Are we sure that we need to addref???
-
     return result;
 }
 
