@@ -1409,7 +1409,8 @@ nsTreeRowGroupFrame::IndexOfCell(nsIPresContext& aPresContext,
   // To determine the column index, just ask what our indexOf is.
   row->IndexOf(aCellContent, aColIndex);
 }
-  
+
+// returns the 0-based index of the content node, within the content tree
 void
 nsTreeRowGroupFrame::IndexOfRow(nsIPresContext& aPresContext,
                                 nsIContent* aRowContent, PRInt32& aRowIndex)
@@ -1443,6 +1444,11 @@ nsTreeRowGroupFrame::IndexOfRow(nsIPresContext& aPresContext,
 PRBool
 nsTreeRowGroupFrame::IsValidRow(PRInt32 aRowIndex)
 {
+  // adjust for zero-based mRowCount
+  nsTableRowFrame* firstRow=nsnull;
+  GetFirstRow(&firstRow);
+  aRowIndex -= firstRow->GetRowIndex();
+  
   if (aRowIndex >= 0 && aRowIndex < mRowCount)
     return PR_TRUE;
   return PR_FALSE;
@@ -1454,9 +1460,14 @@ nsTreeRowGroupFrame::EnsureRowIsVisible(PRInt32 aRowIndex)
   // if no scrollbar, then it must be visible
   if (!mScrollbar) return;
 
+  // adjust row index for zero-based scrollbar
+  nsTableRowFrame* firstRow=nsnull;
+  GetFirstRow(&firstRow);
+  aRowIndex -= firstRow->GetRowIndex();
+
   PRInt32 rows;
   GetRowCount(rows);
-  PRInt32 bottomIndex = mCurrentIndex +rows - 1;
+  PRInt32 bottomIndex = mCurrentIndex + rows - 1;
   
   // if row is visible, ignore
   if (mCurrentIndex <= aRowIndex && aRowIndex <= bottomIndex)
@@ -1473,7 +1484,7 @@ nsTreeRowGroupFrame::EnsureRowIsVisible(PRInt32 aRowIndex)
   PRInt32 scrollTo = mCurrentIndex;
   if (aRowIndex < mCurrentIndex) {
     // row is above us, scroll up from mCurrentIndex
-    // scroll such that mCurrentIndex = aRowIndex
+    // scroll such that the top row is aRowIndex
 #ifdef DEBUG_tree
     printf("row is above, scroll to %d\n", aRowIndex);
 #endif
@@ -1481,7 +1492,7 @@ nsTreeRowGroupFrame::EnsureRowIsVisible(PRInt32 aRowIndex)
   } else {
     // aRowIndex > bottomIndex here
     // row is below us, so scroll down from bottomIndex
-    // scroll such that mCurrentIndex = (aRowIndex - aRowCount)
+    // scroll such that the top row is "rows" above aRowIndex
     NS_ASSERTION(aRowIndex - rows >=0, "scrolling to negative row?!");
     scrollTo=aRowIndex - rows + 1;
 #ifdef DEBUG_tree
@@ -1502,10 +1513,7 @@ nsTreeRowGroupFrame::EnsureRowIsVisible(PRInt32 aRowIndex)
   value="";
 #endif
   
-  //  scrollTo++;                   // off by one?
   value.Append(scrollTo);
-  //rv = scrollbarContent->GetAttribute(kNamespaceID_None, nsXULAtoms::curpos,
-  //                                      value, PR_TRUE);
   scrollbarContent->SetAttribute(kNameSpaceID_None, nsXULAtoms::curpos,
                                  value, PR_TRUE);
 }
@@ -1675,6 +1683,28 @@ nsTreeRowGroupFrame::GetInsertionIndex(nsIFrame *aFrame, PRInt32 aCurrentIndex, 
   }
 
   return index;
+}
+
+void
+nsTreeRowGroupFrame::GetFirstRow(nsTableRowFrame **aRowFrame)
+{
+  nsIFrame* child = mFrames.FirstChild();
+
+  while (child) {
+    if (IsTableRowFrame(child)) {
+      *aRowFrame = (nsTableRowFrame*)child;
+      return;
+    }
+    
+    if (IsTableRowGroupFrame(child)) {
+      ((nsTreeRowGroupFrame*)child)->GetFirstRow(aRowFrame);
+      if (*aRowFrame) return;
+    }      
+      
+    child->GetNextSibling(&child);
+  }
+  
+  return;
 }
 
 //
