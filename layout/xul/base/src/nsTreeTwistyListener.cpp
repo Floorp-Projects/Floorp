@@ -103,7 +103,8 @@ nsTreeTwistyListener::MouseDown(nsIDOMEvent* aEvent)
       // Eat the event.
       aEvent->PreventCapture();
       aEvent->PreventBubble();
-      
+      aEvent->PreventDefault();
+
       nsAutoString open;
       treeItem->GetAttribute("open", open);
       if (open == "true")

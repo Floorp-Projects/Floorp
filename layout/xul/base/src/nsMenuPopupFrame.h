@@ -30,6 +30,8 @@
 #include "prtypes.h"
 #include "nsIAtom.h"
 #include "nsCOMPtr.h"
+#include "nsIDOMEventReceiver.h"
+#include "nsMenuListener.h"
 
 #include "nsBoxFrame.h"
 #include "nsIMenuParent.h"
@@ -67,6 +69,9 @@ public:
   // Hides the chain of cascaded menus without closing them up.
   NS_IMETHOD HideChain();
 
+  NS_IMETHOD InstallKeyboardNavigator();
+  NS_IMETHOD RemoveKeyboardNavigator();
+
   NS_IMETHOD GetWidget(nsIWidget **aWidget);
 
   // The dismissal listener gets created and attached to the window.
@@ -99,13 +104,13 @@ public:
 
   NS_IMETHOD CaptureMouseEvents(nsIPresContext* aPresContext, PRBool aGrabMouseEvents);
 
-  void KeyboardNavigation(PRUint32 aDirection, PRBool& aHandledFlag);
+  NS_IMETHOD KeyboardNavigation(PRUint32 aDirection, PRBool& aHandledFlag);
+  NS_IMETHOD ShortcutNavigation(PRUint32 aLetter, PRBool& aHandledFlag);
   
-  void ShortcutNavigation(PRUint32 aLetter, PRBool& aHandledFlag);
-  nsIMenuFrame* FindMenuWithShortcut(PRUint32 aLetter);
+  NS_IMETHOD Escape(PRBool& aHandledFlag);
+  NS_IMETHOD Enter();
 
-  void Escape(PRBool& aHandledFlag);
-  void Enter();
+  nsIMenuFrame* FindMenuWithShortcut(PRUint32 aLetter);
 
   PRBool IsValidItem(nsIContent* aContent);
   PRBool IsDisabled(nsIContent* aContent);
@@ -123,6 +128,10 @@ protected:
   PRBool mIsCapturingMouseEvents; // Whether or not we're grabbing the mouse events.
   // XXX Hack
   nsIPresContext* mPresContext;  // weak reference
+
+  nsMenuListener* mKeyboardNavigator; // The listener that tells us about key events.
+  nsIDOMEventReceiver* mTarget;
+
 }; // class nsMenuPopupFrame
 
 #endif

@@ -402,8 +402,7 @@ nsMenuPopupFrame::SyncViewWithFrame(nsIPresContext* aPresContext,
   //
   // At this point, we should be positioned where we're told. Ensure that we fit
   // on the screen. 
-  //
-  
+  //  
   nsCOMPtr<nsIDOMWindow> window(do_QueryInterface(scriptGlobalObject));
   nsCOMPtr<nsIDOMScreen> screen;
   window->GetScreen(getter_AddRefs(screen));
@@ -647,11 +646,11 @@ nsMenuPopupFrame::CaptureMouseEvents(nsIPresContext* aPresContext, PRBool aGrabM
   return NS_OK;
 }
 
-void
+NS_IMETHODIMP
 nsMenuPopupFrame::Escape(PRBool& aHandledFlag)
 {
   if (!mCurrentMenu)
-    return;
+    return NS_OK;
 
   // See if our menu is open.
   PRBool isOpen = PR_FALSE;
@@ -664,16 +663,19 @@ nsMenuPopupFrame::Escape(PRBool& aHandledFlag)
       mCurrentMenu->OpenMenu(PR_FALSE);
       aHandledFlag = PR_TRUE;
     }
-    return;
   }
+
+  return NS_OK;
 }
 
-void
+NS_IMETHODIMP
 nsMenuPopupFrame::Enter()
 {
   // Give it to the child.
   if (mCurrentMenu)
     mCurrentMenu->Enter();
+
+  return NS_OK;
 }
 
 nsIMenuFrame*
@@ -688,13 +690,16 @@ nsMenuPopupFrame::FindMenuWithShortcut(PRUint32 aLetter)
     // See if it's a menu item.
     if (IsValidItem(current)) {
       // Get the shortcut attribute.
-      nsString shortcutKey = "";
+      nsAutoString shortcutKey = "";
       current->GetAttribute(kNameSpaceID_None, nsXULAtoms::accesskey, shortcutKey);
-      shortcutKey.ToUpperCase();
       if (shortcutKey.Length() > 0) {
         // We've got something.
-        PRUnichar shortcutChar = shortcutKey.CharAt(0);
-        if (shortcutChar == aLetter) {
+        char tempChar[2];
+        tempChar[0] = aLetter;
+        tempChar[1] = 0;
+        nsAutoString tempChar2 = tempChar;
+  
+        if (shortcutKey.EqualsIgnoreCase(tempChar2)) {
           // We match!
           nsCOMPtr<nsIMenuFrame> menuFrame = do_QueryInterface(currFrame);
           if (menuFrame)
@@ -708,7 +713,7 @@ nsMenuPopupFrame::FindMenuWithShortcut(PRUint32 aLetter)
   return nsnull;
 }
 
-void 
+NS_IMETHODIMP 
 nsMenuPopupFrame::ShortcutNavigation(PRUint32 aLetter, PRBool& aHandledFlag)
 {
   if (mCurrentMenu) {
@@ -717,7 +722,7 @@ nsMenuPopupFrame::ShortcutNavigation(PRUint32 aLetter, PRBool& aHandledFlag)
     if (isOpen) {
       // No way this applies to us. Give it to our child.
       mCurrentMenu->ShortcutNavigation(aLetter, aHandledFlag);
-      return;
+      return NS_OK;
     }
   }
 
@@ -729,9 +734,11 @@ nsMenuPopupFrame::ShortcutNavigation(PRUint32 aLetter, PRBool& aHandledFlag)
     SetCurrentMenuItem(result);
     result->Enter();
   }
+
+  return NS_OK;
 }
 
-void
+NS_IMETHODIMP
 nsMenuPopupFrame::KeyboardNavigation(PRUint32 aDirection, PRBool& aHandledFlag)
 {
   // This method only gets called if we're open.
@@ -746,7 +753,7 @@ nsMenuPopupFrame::KeyboardNavigation(PRUint32 aDirection, PRBool& aHandledFlag)
         SetCurrentMenuItem(nextItem);
       }
     }
-    return;
+    return NS_OK;
   }
 
   PRBool isContainer = PR_FALSE;
@@ -768,7 +775,7 @@ nsMenuPopupFrame::KeyboardNavigation(PRUint32 aDirection, PRBool& aHandledFlag)
   }
 
   if (aHandledFlag)
-    return; // The child menu took it for us.
+    return NS_OK; // The child menu took it for us.
 
   // For the vertical direction, we can move up or down.
   if (aDirection == NS_VK_UP || aDirection == NS_VK_DOWN) {
@@ -790,6 +797,8 @@ nsMenuPopupFrame::KeyboardNavigation(PRUint32 aDirection, PRBool& aHandledFlag)
       aHandledFlag = PR_TRUE;
     }
   }
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -904,6 +913,38 @@ nsMenuPopupFrame::CreateDismissalListener()
   NS_ADDREF(listener);
   return NS_OK;
 }
+
+NS_IMETHODIMP
+nsMenuPopupFrame::InstallKeyboardNavigator()
+{
+  nsCOMPtr<nsIDocument> doc;
+  mContent->GetDocument(*getter_AddRefs(doc));
+  nsCOMPtr<nsIDOMEventReceiver> target = do_QueryInterface(doc);
+  
+  mTarget = target;
+  mKeyboardNavigator = new nsMenuListener(this);
+  NS_IF_ADDREF(mKeyboardNavigator);
+
+  target->AddEventListener("keypress", (nsIDOMKeyListener*)mKeyboardNavigator, PR_TRUE); 
+  target->AddEventListener("keydown", (nsIDOMKeyListener*)mKeyboardNavigator, PR_TRUE);  
+  target->AddEventListener("keyup", (nsIDOMKeyListener*)mKeyboardNavigator, PR_TRUE);   
+  
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsMenuPopupFrame::RemoveKeyboardNavigator()
+{
+  mTarget->RemoveEventListener("keypress", (nsIDOMKeyListener*)mKeyboardNavigator, PR_TRUE);
+  mTarget->RemoveEventListener("keydown", (nsIDOMKeyListener*)mKeyboardNavigator, PR_TRUE);
+  mTarget->RemoveEventListener("keyup", (nsIDOMKeyListener*)mKeyboardNavigator, PR_TRUE);
+  
+  NS_IF_RELEASE(mKeyboardNavigator);
+
+  return NS_OK;
+}
+
+// helpers /////////////////////////////////////////////////////////////
 
 PRBool 
 nsMenuPopupFrame::IsValidItem(nsIContent* aContent)
