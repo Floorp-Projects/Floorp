@@ -2260,11 +2260,6 @@ nsFastLoadFileUpdater::Open(nsFastLoadFileReader* aReader)
 
     // Map from reader dense, zero-based MFL_OID_TO_SHARP_INDEX(oid) to sharp
     // object offset and refcnt information in updater.
-    PRUint32 saveReadOffset;
-    rv = aReader->Tell(&saveReadOffset);
-    if (NS_FAILED(rv))
-        return rv;
-
     nsFastLoadFileReader::nsObjectMapEntry* readObjectMap =
         aReader->mFooter.mObjectMap;
     for (i = 0, n = aReader->mFooter.mNumSharpObjects; i < n; i++) {
@@ -2291,10 +2286,6 @@ nsFastLoadFileUpdater::Open(nsFastLoadFileReader* aReader)
         writeEntry->mInfo = *NS_STATIC_CAST(nsFastLoadSharpObjectInfo*,
                                             readEntry);
     }
-
-    rv = aReader->Seek(nsISeekableStream::NS_SEEK_SET, saveReadOffset);
-    if (NS_FAILED(rv))
-        return rv;
 
     // Copy URI spec string and initial segment offset in FastLoad file from
     // nsDocumentMapReadEntry in reader to mDocumentMapWriteEntry in updater.
@@ -2340,9 +2331,24 @@ nsFastLoadFileUpdater::Open(nsFastLoadFileReader* aReader)
     if (NS_FAILED(rv))
         return rv;
 
+    // Avoid creating yet another object by implementing nsIFastLoadFileIO on
+    // this updater, and save aReader's input stream so it can be returned by
+    // GetInputStream called from nsFastLoadFileWriter::Close.  This requires
+    // that we override Close to break the resulting zero-length cycle.
     mFileIO = this;
     mInputStream = aReader->mInputStream;
     return NS_OK;
+}
+
+NS_IMETHODIMP
+nsFastLoadFileUpdater::Close()
+{
+    // Call base-class Close implementation, which uses mFileIO.
+    nsresult rv = nsFastLoadFileWriter::Close();
+
+    // Break degenerate cycle from this->mFileIO to this.
+    mFileIO = nsnull;
+    return rv;
 }
 
 NS_COM nsresult
