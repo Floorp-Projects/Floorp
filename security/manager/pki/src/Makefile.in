@@ -45,25 +45,25 @@ MODULE		= pippki
 LIBRARY_NAME	= pippki
 IS_COMPONENT	= 1
 
-EXPORTS = 			\
+EXPORTS =  \
 	$(NULL)
 
-CPPSRCS = 				\
-	nsNSSDialogs.cpp	\
-    nsPKIModule.cpp     \
+CPPSRCS = \
+	nsNSSDialogs.cpp \
+	nsPKIModule.cpp \
 	$(NULL)
 
 REQUIRES = nspr security js
 
 include $(topsrcdir)/config/rules.mk
 
-INCLUDES	+=	\
+INCLUDES	+= \
 		-I$(DIST)/public/security \
 		$(NULL)
 
 EXTRA_DSO_LDOPTS = \
 		$(MOZ_COMPONENT_LIBS) \
-        $(MOZ_JS_LIBS) \
+		$(MOZ_JS_LIBS) \
 		$(NULL)
 
 EXTRA_LIBS	+= \
