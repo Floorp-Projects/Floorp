@@ -43,6 +43,7 @@
 
 #include "nsIDOMHTMLDocument.h"
 #include "nsIDOMNSHTMLDocument.h"
+#include "nsIDOMNSDocument.h"
 
 #include "MozillaBrowser.h"
 
