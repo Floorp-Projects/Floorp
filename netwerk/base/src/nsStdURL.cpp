@@ -28,13 +28,6 @@ static NS_DEFINE_CID(kStdURLCID, NS_STANDARDURL_CID);
 static NS_DEFINE_CID(kThisStdURLImplementationCID,
                      NS_THIS_STANDARDURL_IMPLEMENTATION_CID);
 
-#define CRTFREEIF(x) \
-    if (x)  \
-    PR_BEGIN_MACRO \
-    nsCRT::free(x); \
-    x = 0;  \
-    PR_END_MACRO
-
 PRInt32 ExtractPortFrom(char* src, int start, int length);
 void ReplaceDotMess(char* io_Path);
 
