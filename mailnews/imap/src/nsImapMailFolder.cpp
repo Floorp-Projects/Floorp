@@ -3325,3 +3325,18 @@ NS_IMETHODIMP nsImapMailFolder::MatchName(nsString *name, PRBool *matches)
 	*matches = mName.Equals(*name, isInbox);
 	return NS_OK;
 }
+
+NS_IMETHODIMP NS_NewImapMailFolder(nsISupports * aOuter, REFNSIID iid, void ** aResult)
+{
+  if (!aResult) return NS_ERROR_NULL_POINTER;
+
+  if (aOuter)
+  {
+      *aResult = nsnull;
+      return NS_ERROR_NO_AGGREGATION;
+  }
+
+  nsImapMailFolder *imapFolder = new nsImapMailFolder();
+  if (!imapFolder) return NS_ERROR_OUT_OF_MEMORY;
+  return imapFolder->QueryInterface(iid, aResult); 
+}

@@ -22,10 +22,6 @@
 #include "nsIImapIncomingServer.h"
 #include "nscore.h"
 
-NS_BEGIN_EXTERN_C
-
-nsresult NS_NewImapIncomingServer(const nsIID& iid, void **result);
-
-NS_END_EXTERN_C
+NS_IMETHODIMP NS_NewImapIncomingServer(nsISupports * aOuter, REFNSIID iid, void **result);
 
 #endif

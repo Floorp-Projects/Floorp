@@ -2139,3 +2139,18 @@ nsImapService::GetServerIID(nsIID* *aServerIID)
     *aServerIID = new nsIID(NS_GET_IID(nsIImapIncomingServer));
     return NS_OK;
 }
+
+NS_IMETHODIMP NS_NewImapService(nsISupports * aOuter, REFNSIID iid, void ** aResult)
+{
+  if (!aResult) return NS_ERROR_NULL_POINTER;
+
+  if (aOuter)
+  {
+      *aResult = nsnull;
+      return NS_ERROR_NO_AGGREGATION;
+  }
+
+  nsImapService *imapService = new nsImapService();
+  if (!imapService) return NS_ERROR_OUT_OF_MEMORY;
+  return imapService->QueryInterface(iid, aResult); 
+}

@@ -226,4 +226,9 @@ protected:
 
 };
 
+// factory method
+ 
+NS_IMETHODIMP NS_NewImapService(nsISupports * aOuter, REFNSIID iid, void ** aResult);
+
+
 #endif /* nsImapService_h___ */

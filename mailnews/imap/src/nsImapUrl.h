@@ -160,4 +160,6 @@ protected:
     PRBool                m_addDummyEnvelope;
 };
 
+NS_IMETHODIMP NS_NewImapUrl(nsISupports * aOuter, REFNSIID iid, void **result);
+
 #endif /* nsImapUrl_h___ */

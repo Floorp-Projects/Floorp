@@ -525,6 +525,21 @@ NS_IMETHODIMP nsImapIncomingServer::PerformBiff()
 	return rv;
 }
     
+NS_IMETHODIMP NS_NewImapIncomingServer(nsISupports * aOuter, REFNSIID iid, void **result)
+{
+    if (!result) return NS_ERROR_NULL_POINTER;
+
+    if (aOuter)
+    {
+        *result = nsnull;
+        return NS_ERROR_NO_AGGREGATION;
+    }
+
+    nsImapIncomingServer *server = new nsImapIncomingServer();
+    if (!server) return NS_ERROR_OUT_OF_MEMORY;
+    return server->QueryInterface(iid, result);
+}
+
 NS_IMETHODIMP
 nsImapIncomingServer::CloseCachedConnections()
 {
@@ -548,15 +563,6 @@ nsImapIncomingServer::CloseCachedConnections()
     
     PR_CExitMonitor(this);
 	return rv;
-}
-
-nsresult NS_NewImapIncomingServer(const nsIID& iid,
-                                  void **result)
-{
-    nsImapIncomingServer *server;
-    if (!result) return NS_ERROR_NULL_POINTER;
-    server = new nsImapIncomingServer();
-    return server->QueryInterface(iid, result);
 }
 
 // nsIImapServerSink impl

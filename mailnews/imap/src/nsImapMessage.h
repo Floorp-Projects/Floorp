@@ -41,4 +41,8 @@ protected:
 
 };
 
+// factory method
+
+NS_IMETHODIMP NS_NewImapMessage(nsISupports * aOuter, REFNSIID iid, void **result);
+
 #endif //nsImapMessage_h__

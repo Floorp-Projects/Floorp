@@ -129,6 +129,22 @@ void TLineDownloadCache::CacheLine(const char *line, PRUint32 uid)
     fBytesUsed += lineLength;
 }
 
+NS_IMETHODIMP NS_NewImapProtocol(nsISupports * aOuter, REFNSIID iid, void ** aResult)
+{
+  if (!aResult) return NS_ERROR_NULL_POINTER;
+
+  if (aOuter)
+  {
+      *aResult = nsnull;
+      return NS_ERROR_NO_AGGREGATION;
+  }
+
+  nsImapProtocol *imapProtocol = new nsImapProtocol();
+  if (!imapProtocol) return NS_ERROR_OUT_OF_MEMORY;
+  return imapProtocol->QueryInterface(iid, aResult); 
+}
+
+
 /* the following macros actually implement addref, release and query interface for our component. */
 NS_IMPL_THREADSAFE_ADDREF(nsImapProtocol)
 NS_IMPL_THREADSAFE_RELEASE(nsImapProtocol)
@@ -6158,26 +6174,11 @@ nsImapMockChannel::~nsImapMockChannel()
 {
 }
 
+
 NS_IMETHODIMP nsImapMockChannel::Close()
 {
     m_channelListener = null_nsCOMPtr();
     return NS_OK;
-}
-
-nsresult nsImapMockChannel::Create(const nsIID &iid, void ** aInstancePtrResult)
-{
-	/* note this new macro for assertions...they can take a string describing the assertion */
-	NS_PRECONDITION(nsnull != aInstancePtrResult, "nsnull ptr");
-	if (aInstancePtrResult)
-	{
-        nsImapMockChannel * mockChannel = new nsImapMockChannel();
-		if (mockChannel)
-			return mockChannel->QueryInterface(iid, aInstancePtrResult);
-		else
-			return NS_ERROR_OUT_OF_MEMORY; /* we couldn't allocate the object */
-	}
-	else
-		return NS_ERROR_NULL_POINTER; /* aInstancePtrResult was NULL....*/
 }
 
 NS_IMETHODIMP  nsImapMockChannel::GetChannelListener(nsIStreamListener **aChannelListener)
@@ -6348,4 +6349,19 @@ NS_IMETHODIMP nsImapMockChannel::Suspend()
 NS_IMETHODIMP nsImapMockChannel::Resume()
 {
     return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP NS_NewImapMockChannel(nsISupports * aOuter, REFNSIID iid, void ** aResult)
+{
+  if (!aResult) return NS_ERROR_NULL_POINTER;
+
+  if (aOuter)
+  {
+      *aResult = nsnull;
+      return NS_ERROR_NO_AGGREGATION;
+  }
+
+  nsImapMockChannel * mockChannel = new nsImapMockChannel();
+  if (!mockChannel) return NS_ERROR_OUT_OF_MEMORY;
+  return mockChannel->QueryInterface(iid, aResult); 
 }

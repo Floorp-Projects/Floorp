@@ -144,4 +144,8 @@ protected:
 	nsIMAPHostInfo *FindHost(const char *serverKey);
 };
 
+// factory method
+
+NS_IMETHODIMP NS_NewImapHostSessionList(nsISupports * aOuter, REFNSIID iid, void **result);
+
 #endif

@@ -96,3 +96,17 @@ nsresult nsImapMessage::GetFolderFromURI(nsIMsgFolder **folder)
 	return rv;
 }
 
+NS_IMETHODIMP NS_NewImapMessage(nsISupports * aOuter, REFNSIID iid, void ** aResult)
+{
+  if (!aResult) return NS_ERROR_NULL_POINTER;
+
+  if (aOuter)
+  {
+      *aResult = nsnull;
+      return NS_ERROR_NO_AGGREGATION;
+  }
+
+  nsImapMessage * imapMsg = new nsImapMessage();
+  if (!imapMsg) return NS_ERROR_OUT_OF_MEMORY;
+  return imapMsg->QueryInterface(iid, aResult); 
+}
