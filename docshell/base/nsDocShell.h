@@ -86,7 +86,12 @@
 
 /* load commands were moved to nsIDocShell.h */
 
-/* load types are legal combinations of load commands and flags */
+/* load types are legal combinations of load commands and flags 
+ *  
+ * NOTE:
+ *  Remember to update the IsValidLoadType function below if you change this
+ *  enum to ensure bad flag combinations will be rejected.
+ */
 enum LoadType {
     LOAD_NORMAL = MAKE_LOAD_TYPE(nsIDocShell::LOAD_CMD_NORMAL, nsIWebNavigation::LOAD_FLAGS_NONE),
     LOAD_NORMAL_REPLACE = MAKE_LOAD_TYPE(nsIDocShell::LOAD_CMD_NORMAL, nsIWebNavigation::LOAD_FLAGS_REPLACE_HISTORY),
@@ -99,7 +104,27 @@ enum LoadType {
     LOAD_REFRESH = MAKE_LOAD_TYPE(nsIDocShell::LOAD_CMD_NORMAL, nsIWebNavigation::LOAD_FLAGS_IS_REFRESH),
     LOAD_RELOAD_CHARSET_CHANGE = MAKE_LOAD_TYPE(nsIDocShell::LOAD_CMD_RELOAD, nsIWebNavigation::LOAD_FLAGS_CHARSET_CHANGE),
     LOAD_BYPASS_HISTORY = MAKE_LOAD_TYPE(nsIDocShell::LOAD_CMD_NORMAL, nsIWebNavigation::LOAD_FLAGS_BYPASS_HISTORY)
+    // NOTE: Adding a new value? Remember to update IsValidLoadType!
 };
+static inline PRBool IsValidLoadType(PRUint32 aLoadType)
+{
+    switch (aLoadType)
+    {
+    case LOAD_NORMAL:
+    case LOAD_NORMAL_REPLACE:
+    case LOAD_HISTORY:
+    case LOAD_RELOAD_NORMAL:
+    case LOAD_RELOAD_BYPASS_CACHE:
+    case LOAD_RELOAD_BYPASS_PROXY:
+    case LOAD_RELOAD_BYPASS_PROXY_AND_CACHE:
+    case LOAD_LINK:
+    case LOAD_REFRESH:
+    case LOAD_RELOAD_CHARSET_CHANGE:
+    case LOAD_BYPASS_HISTORY:
+        return PR_TRUE;
+    }
+    return PR_FALSE;
+}
 
 /* internally used ViewMode types */
 enum ViewMode {
