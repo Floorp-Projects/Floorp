@@ -1,0 +1,50 @@
+/* -*- Mode: IDL; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ *
+ * The contents of this file are subject to the Netscape Public License
+ * Version 1.0 (the "NPL"); you may not use this file except in
+ * compliance with the NPL.  You may obtain a copy of the NPL at
+ * http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the NPL is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
+ * for the specific language governing rights and limitations under the
+ * NPL.
+ *
+ * The Initial Developer of this code under the NPL is Netscape
+ * Communications Corporation.  Portions created by Netscape are
+ * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
+ * Reserved.
+ */
+
+/* DOM stubs so that we can pass DOM objects across XPConnect */
+
+%{C++
+/* C++ should ignore this file because there are real DOM interfaces
+   elsewhere, so if 0 it out
+*/
+#if 0
+%}
+
+#include "nsISupports.idl"
+
+/* put your DOM stub interfaces here */
+/* if you have XUL element stubs, put them in
+ * mozilla/rdf/public/xulstubs.idl
+ */
+
+[scriptable, uuid(a6cf906b-15b3-11d2-932e-00805f8add32)]
+interface nsIDOMWindow : nsISupports {};
+
+[scriptable, uuid(a6cf907d-15b3-11d2-932e-00805f8add32)]
+interface nsIDOMNodeList : nsISupports {};
+
+[scriptable, uuid(a6cf907c-15b3-11d2-932e-00805f8add32)]
+interface nsIDOMNode : nsISupports {};
+
+[scriptable, uuid(a6cf9078-15b3-11d2-932e-00805f8add32)]
+interface nsIDOMElement : nsIDOMNode {};
+
+
+%{C++
+#endif
+%}
