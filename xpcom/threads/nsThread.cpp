@@ -477,7 +477,8 @@ inline nsThreadPoolBusyBody::~nsThreadPoolBusyBody() {
 
 nsThreadPool::nsThreadPool()
     : mMinThreads(0), mMaxThreads(0), mBusyThreads(0),
-      mShuttingDown(PR_FALSE)
+      mShuttingDown(PR_FALSE), mLock(nsnull), mThreadExit(nsnull),
+      mPendingRequestAdded(nsnull), mPendingRequestsAtZero(nsnull)
 {
     NS_INIT_REFCNT();
 }
@@ -797,15 +798,22 @@ nsThreadPool::Init(PRUint32 minThreadCount,
     return NS_OK;
 
  cleanup:
-    if (mLock)
+    if (mLock) {
         PR_DestroyLock(mLock);
-    if (mThreadExit)
+        mLock = nsnull;
+    }
+    if (mThreadExit) {
         PR_DestroyCondVar(mThreadExit);
-    if (mPendingRequestAdded)
+        mThreadExit = nsnull;
+    }
+    if (mPendingRequestAdded) {
         PR_DestroyCondVar(mPendingRequestAdded);
-    if (mPendingRequestsAtZero)
+        mPendingRequestAdded = nsnull;
+    }
+    if (mPendingRequestsAtZero) {
         PR_DestroyCondVar(mPendingRequestsAtZero);
-        
+        mPendingRequestsAtZero = nsnull;
+    }
     return NS_ERROR_OUT_OF_MEMORY;
 }
 
