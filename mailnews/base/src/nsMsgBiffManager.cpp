@@ -42,6 +42,7 @@
 #include "nsMsgBaseCID.h"
 #include "nsIObserverService.h"
 #include "nsStatusBarBiffManager.h"
+#include "nsCOMArray.h"
 
 static NS_DEFINE_CID(kStatusBarBiffManagerCID, NS_STATUSBARBIFFMANAGER_CID);
 
@@ -320,6 +321,8 @@ nsresult nsMsgBiffManager::SetupNextBiff()
 nsresult nsMsgBiffManager::PerformBiff()
 {
   nsTime currentTime;
+  nsCOMArray <nsIMsgFolder> targetFolders;
+
   for(PRInt32 i = 0; i < mBiffArray->Count(); i++)
   {
     nsBiffEntry *current = (nsBiffEntry*)mBiffArray->ElementAt(i);
@@ -328,18 +331,35 @@ nsresult nsMsgBiffManager::PerformBiff()
       PRBool serverBusy = PR_FALSE;
       PRBool serverRequiresPassword = PR_TRUE;
       PRBool passwordPromptRequired; 
+
       current->server->GetPasswordPromptRequired(&passwordPromptRequired);
       current->server->GetServerBusy(&serverBusy);
       current->server->GetServerRequiresPasswordForBiff(&serverRequiresPassword);
+      // find the dest folder we're actually downloading to...
+      nsCOMPtr<nsIMsgFolder> rootMsgFolder;
+      current->server->GetRootMsgFolder(getter_AddRefs(rootMsgFolder));
+      PRInt32 targetFolderIndex = targetFolders.IndexOfObject(rootMsgFolder);
+      if (targetFolderIndex == kNotFound)
+        targetFolders.AppendObject(rootMsgFolder);
+
       // so if we need to be authenticated to biff, check that we are
       // (since we don't want to prompt the user for password UI)
       // and make sure the server isn't already in the middle of downloading new messages
-      if(!serverBusy && (!serverRequiresPassword || !passwordPromptRequired))
+      if(!serverBusy && (!serverRequiresPassword || !passwordPromptRequired) && targetFolderIndex == kNotFound)
         current->server->PerformBiff(nsnull);
-      mBiffArray->RemoveElementAt(i);
-      i--; //Because we removed it we need to look at the one that just moved up.
-      SetNextBiffTime(current, currentTime);
-      AddBiffEntry(current);
+      // if we didn't do this server because the destination server was already being
+      // biffed into, leave this server in the biff array so it will fire next.
+      if (targetFolderIndex == kNotFound)
+      {
+        mBiffArray->RemoveElementAt(i);
+        i--; //Because we removed it we need to look at the one that just moved up.
+        SetNextBiffTime(current, currentTime);
+        AddBiffEntry(current);
+      }
+#ifdef DEBUG_David_Bienvenu
+      else
+        printf("dest account performing biff\n");
+#endif
     }
     else
       //since we're in biff order, there's no reason to keep checking
