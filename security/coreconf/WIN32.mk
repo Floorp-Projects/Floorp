@@ -92,6 +92,10 @@ else
 	endif
 	OPTIMIZER  += -Od -Z7
 	#OPTIMIZER += -Zi -Fd$(OBJDIR)/ -Od
+	NULLSTRING :=
+	SPACE      := $(NULLSTRING) # end of the line
+	USERNAME   := $(subst $(SPACE),_,$(USERNAME))
+	USERNAME   := $(subst -,_,$(USERNAME))
 	DEFINES    += -DDEBUG -D_DEBUG -UNDEBUG -DDEBUG_$(USERNAME)
 	DLLFLAGS   += -DEBUG -DEBUGTYPE:CV -OUT:"$@"
 	LDFLAGS    += -DEBUG -DEBUGTYPE:CV
