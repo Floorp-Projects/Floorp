@@ -34,11 +34,11 @@ nsGetImapRoot(const char* hostname, nsFileSpec &result)
 {
     nsresult rv = NS_OK; 
 
-	  NS_WITH_SERVICE(nsIMsgMailSession, session, kMsgMailSessionCID, &rv); 
+	NS_WITH_SERVICE(nsIMsgMailSession, session, kMsgMailSessionCID, &rv); 
     if (NS_FAILED(rv)) return rv;
 
-	  nsCOMPtr<nsIMsgAccountManager> accountManager;
-	  rv = session->GetAccountManager(getter_AddRefs(accountManager));
+	nsCOMPtr<nsIMsgAccountManager> accountManager;
+	rv = session->GetAccountManager(getter_AddRefs(accountManager));
     if(NS_FAILED(rv)) return rv;
 
     nsCOMPtr<nsISupportsArray> servers;
@@ -53,7 +53,7 @@ nsGetImapRoot(const char* hostname, nsFileSpec &result)
     char *localPath = nsnull;
 
     if (server)
-				rv = server->GetLocalPath(&localPath);
+		rv = server->GetLocalPath(&localPath);
 
     result = localPath;
     return rv;
