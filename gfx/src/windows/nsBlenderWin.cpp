@@ -75,7 +75,7 @@ nsBlenderWin :: ~nsBlenderWin()
  * @update dc 11/4/98
  * @param - aTheDevCon is the device context we will use to get information from for the blend
  */
-nsresult
+NS_IMETHODIMP
 nsBlenderWin::Init(nsIDeviceContext *aTheDevCon)
 {
   if (mSaveBytes != nsnull){
@@ -102,7 +102,7 @@ nsBlenderWin::Init(nsIDeviceContext *aTheDevCon)
  * @param aSaveBlendArea -- If true, will save off the blended area to restore later
  * @result NS_OK if the blend worked.
  */
-nsresult
+NS_IMETHODIMP
 nsBlenderWin::Blend(PRInt32 aSX, PRInt32 aSY, PRInt32 aWidth, PRInt32 aHeight,nsDrawingSurface aSrc,
                     nsDrawingSurface aDst, PRInt32 aDX, PRInt32 aDY, float aSrcOpacity,PRBool aSaveBlendArea)
 {
@@ -294,7 +294,7 @@ nsDrawingSurfaceWin   *SrcWinSurf,*DstWinSurf;
 
 #ifdef NGLAYOUT_DDRAW
   if (PR_TRUE == srcissurf)
-    aSrc->mSurface->Unlock(mSrcSurf.lpSurface);
+    SrcWinSurf->mSurface->Unlock(mSrcSurf.lpSurface);
 
   if (PR_TRUE == dstissurf)
     DstWinSurf->mSurface->Unlock(mDstSurf.lpSurface);
@@ -309,10 +309,10 @@ nsDrawingSurfaceWin   *SrcWinSurf,*DstWinSurf;
  * @param aDst -- Destination drawing surface to restore to
  * @result PR_TRUE if the restore worked.
  */
-PRBool
+NS_IMETHODIMP
 nsBlenderWin::RestoreImage(nsDrawingSurface aDst)
 {
-PRBool    result = PR_FALSE;
+nsresult  result = NS_ERROR_FAILURE;
 PRInt32   y,x;
 PRUint8   *saveptr,*savebyteptr;
 PRUint8   *orgptr,*orgbyteptr;
@@ -322,7 +322,7 @@ HBITMAP   dstbits, tb1;
   //XXX this is busted with directdraw... MMP
 
   if(mSaveBytes!=nsnull){
-    result = PR_TRUE;
+    result = NS_OK;
     saveptr = mSaveBytes;
     orgptr = mRestorePtr;
 
@@ -347,7 +347,7 @@ HBITMAP   dstbits, tb1;
     ::DeleteObject(tb1);
   }
 
-  return(result);
+  return result;
 }
 
 #ifdef NGLAYOUT_DDRAW
