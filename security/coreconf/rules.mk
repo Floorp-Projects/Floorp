@@ -418,7 +418,7 @@ $(OBJDIR)/$(PROG_PREFIX)%$(OBJ_SUFFIX): %.c
 	@$(MAKE_OBJDIR)
 ifdef USE_NT_C_SYNTAX
 ifdef XP_OS2_VACPP
-	$(CC) -Fo$@ -c $(CFLAGS) $(subst /,\\,$(shell pwd)\\$<)
+	$(CC) -Fo$@ -c $(CFLAGS) $(subst /,\\,$(shell pwd)/$<)
 else
 	$(CC) -Fo$@ -c $(CFLAGS) $(subst /,\\,$<)
 endif
@@ -428,7 +428,11 @@ endif
 
 $(PROG_PREFIX)%$(OBJ_SUFFIX): %.c
 ifdef USE_NT_C_SYNTAX
+ifdef XP_OS2_VACPP
+	$(CC) -Fo$@ -c $(CFLAGS) $(subst /,\\,$(shell pwd)/$<)
+else
 	$(CC) -Fo$@ -c $(CFLAGS) $(subst /,\\,$<)
+endif
 else
 	$(CC) -o $@ -c $(CFLAGS) $<
 endif
@@ -441,7 +445,11 @@ endif
 
 $(OBJDIR)/$(PROG_PREFIX)%$(OBJ_SUFFIX): %.asm
 	@$(MAKE_OBJDIR)
+ifdef XP_OS2_VACPP
+	cd $(OBJDIR) ; $(AS) $(ASFLAGS) $(subst /,\\,$(shell pwd)/$<)
+else
 	$(AS) -Fo$@ $(ASFLAGS) -c $<
+endif
 
 $(OBJDIR)/$(PROG_PREFIX)%$(OBJ_SUFFIX): %.S
 	@$(MAKE_OBJDIR)
@@ -450,7 +458,11 @@ $(OBJDIR)/$(PROG_PREFIX)%$(OBJ_SUFFIX): %.S
 $(OBJDIR)/$(PROG_PREFIX)%: %.cpp
 	@$(MAKE_OBJDIR)
 ifdef USE_NT_C_SYNTAX
+ifdef XP_OS2_VACPP
+	$(CCC) -Fo$@ -c $(CFLAGS) $(subst /,\\,$(shell pwd)/$<)
+else
 	$(CCC) -Fo$@ -c $(CFLAGS) $<
+endif
 else
 	$(CCC) -o $@ -c $(CFLAGS) $<
 endif
@@ -470,7 +482,11 @@ ifdef STRICT_CPLUSPLUS_SUFFIX
 	rm -f $(OBJDIR)/t_$*.cc
 else
 ifdef USE_NT_C_SYNTAX
+ifdef XP_OS2_VACPP
+	$(CCC) -Fo$@ -c $(CFLAGS) $(subst /,\\,$(shell pwd)/$<)
+else
 	$(CCC) -Fo$@ -c $(CFLAGS) $<
+endif
 else
 	$(CCC) -o $@ -c $(CFLAGS) $<
 endif
