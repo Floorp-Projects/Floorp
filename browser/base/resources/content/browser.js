@@ -824,7 +824,7 @@ function OpenSearch(tabName, forceDialogFlag, searchStr, newWindowFlag)
 function BrowserOpenWindow()
 {
   //opens a window where users can select a web location to open
-  openDialog("chrome://communicator/content/openLocation.xul", "_blank", "chrome,modal,titlebar", window);
+  openDialog("chrome://browser/content/openLocation.xul", "_blank", "chrome,modal,titlebar", window);
 }
 
 function BrowserOpenTab()

@@ -146,6 +146,7 @@ Contributor(s): ______________________________________. -->
                        oncommand="BrowserStop();" observes="canStop"  
                        tooltiptext="&stopButton.tooltip;"/>
       </hbox>
+      <toolbarseparator/>
       <toolbarbutton id="print-button" class="toolbarbutton-1"
                      label="&printButton.label;" persist="hidden"
                      oncommand="BrowserPrint();"
