@@ -1523,6 +1523,16 @@ NS_METHOD nsDocumentBindInfo::OnStopBinding(nsIURL* aURL, nsresult aStatus,
             this, spec, aStatus));
 #endif /* DEBUG */
 
+    if (NS_FAILED(aStatus)) {
+      const char *url;
+      if (nsnull != aURL) 
+        aURL->GetSpec(&url);
+      else
+        url = "";      
+      cerr << "Load of URL '" << url << "' failed.  Error code: " 
+        << NS_ERROR_GET_CODE(aStatus) << "\n";
+    }
+
     if (nsnull != m_NextStream) {
         rv = m_NextStream->OnStopBinding(aURL, aStatus, aMsg);
     }
