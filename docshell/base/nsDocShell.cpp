@@ -58,6 +58,12 @@
 #include "nsIPluginViewer.h"
 #include "nsContentPolicyUtils.h" // NS_CheckContentLoadPolicy(...)
 
+// we want to explore making the document own the load group
+// so we can associate the document URI with the load group.
+// until this point, we have an evil hack:
+#include "nsIHttpChannelInternal.h"  
+
+
 // Local Includes
 #include "nsDocShell.h"
 #include "nsDocShellLoadInfo.h"
@@ -5099,12 +5105,14 @@ nsDocShell::DoURILoad(nsIURI * aURI,
 
     channel->SetOriginalURI(aURI);
 
+    //hack
     nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(channel));
-    if (httpChannel) {
+    nsCOMPtr<nsIHttpChannelInternal> httpChannelInternal(do_QueryInterface(channel));
+    if (httpChannelInternal) {
       if (firstParty) {
-        httpChannel->SetDocumentURI(aURI);
+        httpChannelInternal->SetDocumentURI(aURI);
       } else {
-        httpChannel->SetDocumentURI(aReferrerURI);
+        httpChannelInternal->SetDocumentURI(aReferrerURI);
       }
     }
 

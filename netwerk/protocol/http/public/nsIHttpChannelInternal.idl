@@ -1,0 +1,40 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/*
+ * The contents of this file are subject to the Mozilla Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/MPL/
+ * 
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ * 
+ * The Original Code is Mozilla.
+ * 
+ * The Initial Developer of the Original Code is Netscape
+ * Communications.  Portions created by Netscape Communications are
+ * Copyright (C) 2001 by Netscape Communications.  All
+ * Rights Reserved.
+ * 
+ * Contributor(s): 
+ */
+
+#include "nsISupports.idl"
+
+interface nsIURI;
+/** 
+ * Dumping ground for http.  This interface will never be frozen.  If you are 
+ * using any feature exposed by this interface, be aware that this interface 
+ * will change and you will be broken.  You have been warned.
+ */
+
+[scriptable, uuid(7552588e-d018-48a2-b67c-432414d0b64c)]
+interface nsIHttpChannelInternal : nsISupports
+{
+    /**
+     * An http channel can own a reference to the document URI
+     */
+    attribute nsIURI documentURI;
+
+};

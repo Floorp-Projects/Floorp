@@ -31,6 +31,7 @@ XPIDL_MODULE = necko_http
 
 XPIDLSRCS	= \
 		nsIHttpChannel.idl \
+		nsIHttpChannelInternal.idl \
 		nsIHttpHeaderVisitor.idl \
 		nsIHttpNotify.idl \
 		nsIHttpProtocolHandler.idl \

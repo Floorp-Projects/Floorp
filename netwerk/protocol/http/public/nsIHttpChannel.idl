@@ -47,11 +47,6 @@ interface nsIHttpChannel : nsIChannel
     attribute nsIURI referrer;
 
     /**
-     * An http channel can own a reference to the document URI
-     */
-    attribute nsIURI documentURI;
-
-    /**
      * Header strings are case insensitive.  Setting a header is additive; to
      * clear a header, assign an empty string.
      */

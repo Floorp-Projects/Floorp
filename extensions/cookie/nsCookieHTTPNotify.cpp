@@ -58,6 +58,11 @@
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsIPrompt.h"
 
+// we want to explore making the document own the load group
+// so we can associate the document URI with the load group.
+// until this point, we have an evil hack:
+#include "nsIHttpChannelInternal.h"  
+
 static NS_DEFINE_CID(kINetModuleMgrCID, NS_NETMODULEMGR_CID);
 
 ///////////////////////////////////
@@ -165,9 +170,12 @@ nsCookieHTTPNotify::OnModifyRequest(nsIHttpChannel *aHttpChannel)
     rv = aHttpChannel->GetURI(getter_AddRefs(pURL));
     if (NS_FAILED(rv)) return rv;
 
+    nsCOMPtr<nsIHttpChannelInternal> httpInternal = do_QueryInterface(aHttpChannel);
+    NS_ENSURE_TRUE(httpInternal, NS_ERROR_UNEXPECTED);
+
     // Get the original url that the user either typed in or clicked on
     nsCOMPtr<nsIURI> pFirstURL;
-    rv = aHttpChannel->GetDocumentURI(getter_AddRefs(pFirstURL));
+    rv = httpInternal->GetDocumentURI(getter_AddRefs(pFirstURL));
     if (NS_FAILED(rv)) return rv;
     if (!pFirstURL) {
       rv = aHttpChannel->GetOriginalURI(getter_AddRefs(pFirstURL));
@@ -213,9 +221,12 @@ nsCookieHTTPNotify::OnExamineResponse(nsIHttpChannel *aHttpChannel)
     rv = aHttpChannel->GetURI(getter_AddRefs(pURL));
     if (NS_FAILED(rv)) return rv;
 
+    nsCOMPtr<nsIHttpChannelInternal> httpInternal = do_QueryInterface(aHttpChannel);
+    NS_ENSURE_TRUE(httpInternal, NS_ERROR_UNEXPECTED);
+
     // Get the original url that the user either typed in or clicked on
     nsCOMPtr<nsIURI> pFirstURL;
-    rv = aHttpChannel->GetDocumentURI(getter_AddRefs(pFirstURL));
+    rv = httpInternal->GetDocumentURI(getter_AddRefs(pFirstURL));
     if (NS_FAILED(rv)) return rv;
 
     // Get the prompter
