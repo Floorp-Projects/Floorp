@@ -1,6 +1,8 @@
 <!ENTITY viewLog.title "Filter Log">
-<!ENTITY viewLogInfo.text "The Filter Log is a file that documents what filters have been run. Use the check box below to enable logging.">
+<!ENTITY viewLogInfo.text "The Filter Log documents the filters that have been run for this account. Use the check box below to enable logging.">
 <!ENTITY clearLog.label "Clear Log">
 <!ENTITY clearLog.accesskey "C">
 <!ENTITY enableLog.label "Enable the Filter Log">
 <!ENTITY enableLog.accesskey "E">
+<!ENTITY closeLog.label "Close">
+<!ENTITY closeLog.accesskey "o">
