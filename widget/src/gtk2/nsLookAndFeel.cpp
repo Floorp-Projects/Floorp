@@ -394,7 +394,7 @@ NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricID aID, PRInt32 & aMetric)
             g_object_get(gtk_widget_get_settings(box),
                          "gtk-dnd-drag-threshold", &threshold,
                          NULL);
-            gtk_widget_destroy(box);
+            gtk_object_sink(GTK_OBJECT(box));
             aMetric = threshold;
         }
         break;
