@@ -71,6 +71,8 @@ function getPlatform()
       platformNode = 'mac';
     else if (!platformStr.search(/^Win/))
       platformNode = 'win';
+    else if (!platformStr.search(/^OS\/2/))
+      platformNode = 'win';
     else
       platformNode = 'unix';
   }
