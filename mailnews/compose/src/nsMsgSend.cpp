@@ -73,6 +73,7 @@
 #include "nsMimeTypes.h"
 #include "nsISmtpUrl.h"
 #include "nsIInterfaceRequestor.h"
+#include "nsIDocumentEncoder.h"    // for editor output flags
 
 
 // use these macros to define a class IID for our component. Our object currently 
@@ -1259,11 +1260,11 @@ nsMsgComposeAndSend::GetBodyFromEditor()
   char          *attachment1_type = TEXT_HTML;  // we better be "text/html" at this point
   PRInt32       attachment1_body_length = 0;
 
-  // 
+ // 
   // Query the editor, get the body of HTML!
   //
   nsString  format; format.AssignWithConversion(TEXT_HTML);
-  PRUint32  flags = 0;
+  PRUint32  flags = nsIDocumentEncoder::OutputFormatted;
   PRUnichar *bodyText = nsnull;
   nsresult rv;
   PRUnichar *origHTMLBody = nsnull;
@@ -1272,7 +1273,7 @@ nsMsgComposeAndSend::GetBodyFromEditor()
   // Content ID's already
   mEditor->GetContentsAs(format.GetUnicode(), flags, &bodyText);
 
-  //
+ //
   // If we really didn't get a body, just return NS_OK
   //
   if ((!bodyText) || (!*bodyText))
