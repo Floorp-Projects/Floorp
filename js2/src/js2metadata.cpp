@@ -59,83 +59,6 @@
 namespace JavaScript {
 namespace MetaData {
 
-    inline char narrow(char16 ch) { return char(ch); }
-
-    js2val JS2Metadata::readEvalString(const String &str, const String& fileName)
-    {
-        js2val result = JS2VAL_VOID;
-
-        Arena a;
-        Pragma::Flags flags = Pragma::es4;
-        Parser p(world, a, flags, str, fileName);
-        CompilationData *oldData = NULL;
-        try {
-            StmtNode *parsedStatements = p.parseProgram();
-            ASSERT(p.lexer.peek(true).hasKind(Token::end));
-            if (showTrees)
-            {
-                PrettyPrinter f(stdOut, 80);
-                {
-                    PrettyPrinter::Block b(f, 2);
-                    f << "Program =";
-                    f.linearBreak(1);
-                    StmtNode::printStatements(f, parsedStatements);
-                }
-                f.end();
-                stdOut << '\n';
-            }
-            if (parsedStatements) {
-                oldData = startCompilationUnit(NULL, str, fileName);
-                ValidateStmtList(parsedStatements);
-                result = ExecuteStmtList(RunPhase, parsedStatements);
-            }
-        }
-        catch (Exception &x) {
-            if (oldData)
-                restoreCompilationUnit(oldData);
-            throw x;
-        }
-        if (oldData)
-            restoreCompilationUnit(oldData);
-        return result;
-    }
-
-    js2val JS2Metadata::readEvalFile(const String& fileName)
-    {
-        String buffer;
-        int ch;
-
-        js2val result = JS2VAL_VOID;
-
-        std::string str(fileName.length(), char());
-        std::transform(fileName.begin(), fileName.end(), str.begin(), narrow);
-        FILE* f = fopen(str.c_str(), "r");
-        if (f) {
-            while ((ch = getc(f)) != EOF)
-                buffer += static_cast<char>(ch);
-            fclose(f);
-            result = readEvalString(buffer, fileName);
-        }
-        return result;
-    }
-
-    js2val JS2Metadata::readEvalFile(const char *fileName)
-    {
-        String buffer;
-        int ch;
-
-        js2val result = JS2VAL_VOID;
-
-        FILE* f = fopen(fileName, "r");
-        if (f) {
-            while ((ch = getc(f)) != EOF)
-                buffer += static_cast<char>(ch);
-            fclose(f);
-            result = readEvalString(buffer, widenCString(fileName));
-        }
-        return result;
-    }
-
 
 
 /************************************************************************************
@@ -523,7 +446,7 @@ namespace MetaData {
                                 }
                                 else {
                                     Variable *v = new Variable(functionClass, OBJECT_TO_JS2VAL(fObj), true);
-                                    vb->mn = defineLocalMember(env, f->function.name, a->namespaces, a->overrideMod, a->xplicit, ReadWriteAccess, v, p->pos);
+                                    defineLocalMember(env, f->function.name, a->namespaces, a->overrideMod, a->xplicit, ReadWriteAccess, v, p->pos);
                                 }
                             }
                         }
@@ -544,7 +467,7 @@ namespace MetaData {
                             ASSERT(!prototype); // XXX right?
                             JS2Object *fObj = validateStaticFunction(f, compileThis, prototype, unchecked, cxt, env);
                             ConstructorMethod *cm = new ConstructorMethod(OBJECT_TO_JS2VAL(fObj));
-                            vb->mn = defineLocalMember(env, f->function.name, a->namespaces, a->overrideMod, a->xplicit, ReadWriteAccess, cm, p->pos);
+                            defineLocalMember(env, f->function.name, a->namespaces, a->overrideMod, a->xplicit, ReadWriteAccess, cm, p->pos);
                         }
                         break;
                     }
@@ -722,26 +645,6 @@ namespace MetaData {
         JS2Object::removeRoot(ri);
     }
 
-
-    /*
-     * Evaluate the linked list of statement nodes beginning at 'p' 
-     * (generate bytecode and then execute that bytecode
-     */
-    js2val JS2Metadata::ExecuteStmtList(Phase phase, StmtNode *p)
-    {
-        size_t lastPos = p->pos;
-        while (p) {
-            SetupStmt(env, phase, p);
-            lastPos = p->pos;
-            p = p->next;
-        }
-        bCon->emitOp(eReturnVoid, lastPos);
-        uint8 *savePC = engine->pc;
-        engine->pc = NULL;
-        js2val retval = engine->interpret(phase, bCon);
-        engine->pc = savePC;
-        return retval;
-    }
 
     JS2Class *JS2Metadata::getVariableType(Variable *v, Phase phase, size_t pos)
     {
@@ -1245,13 +1148,13 @@ namespace MetaData {
                                     bCon->emitOp(eCoerce, p->pos);
                                     bCon->addType(v->type);
                                     LexicalReference *lVal = new LexicalReference(vb->mn, cxt.strict);
-                                    lVal->emitWriteBytecode(bCon, p->pos);      
+                                    lVal->emitInitBytecode(bCon, p->pos);      
                                     bCon->emitOp(ePop, p->pos);
                                 }
                                 else {
                                     v->type->emitDefaultValue(bCon, p->pos);
                                     LexicalReference *lVal = new LexicalReference(vb->mn, cxt.strict);
-                                    lVal->emitWriteBytecode(bCon, p->pos);      
+                                    lVal->emitInitBytecode(bCon, p->pos);      
                                     bCon->emitOp(ePop, p->pos);
                                 }
                             }
@@ -1759,34 +1662,6 @@ namespace MetaData {
     }
 
 
-
-    /*
-     * Evaluate an expression 'p' AND execute the associated bytecode
-     */
-    js2val JS2Metadata::EvalExpression(Environment *env, Phase phase, ExprNode *p)
-    {
-        js2val retval;
-        uint8 *savePC = NULL;
-        JS2Class *exprType;
-
-        CompilationData *oldData = startCompilationUnit(NULL, bCon->mSource, bCon->mSourceLocation);
-        try {
-            Reference *r = SetupExprNode(env, phase, p, &exprType);
-            if (r) r->emitReadBytecode(bCon, p->pos);
-            bCon->emitOp(eReturn, p->pos);
-            savePC = engine->pc;
-            engine->pc = NULL;
-            retval = engine->interpret(phase, bCon);
-        }
-        catch (Exception &x) {
-            engine->pc = savePC;
-            restoreCompilationUnit(oldData);
-            throw x;
-        }
-        engine->pc = savePC;
-        restoreCompilationUnit(oldData);
-        return retval;
-    }
 
     /*
      * Process the expression (i.e. generate bytecode, but don't execute) rooted at p.
@@ -2384,18 +2259,6 @@ doUnary:
         return returnRef;
     }
 
-    // Execute an expression and return the result, which must be a type
-    JS2Class *JS2Metadata::EvalTypeExpression(Environment *env, Phase phase, ExprNode *p)
-    {
-        js2val retval = EvalExpression(env, phase, p);
-        if (JS2VAL_IS_PRIMITIVE(retval))
-            reportError(Exception::badValueError, "Type expected", p->pos);
-        JS2Object *obj = JS2VAL_TO_OBJECT(retval);
-        if (obj->kind != ClassKind)
-            reportError(Exception::badValueError, "Type expected", p->pos);
-        return checked_cast<JS2Class *>(obj);        
-    }
-
 /************************************************************************************
  *
  *  Environment
@@ -2475,6 +2338,27 @@ doUnary:
     // Attempt the write in the top frame in the current environment - if the property
     // exists, then fine. Otherwise create the property there.
     void Environment::lexicalWrite(JS2Metadata *meta, Multiname *multiname, js2val newValue, bool createIfMissing, Phase phase)
+    {
+        LookupKind lookup(true, findThis(false));
+        FrameListIterator fi = getBegin();
+        while (fi != getEnd()) {
+            if (meta->writeProperty(*fi, multiname, &lookup, false, newValue, phase))
+                return;
+            fi++;
+        }
+        if (createIfMissing) {
+            Frame *pf = getPackageOrGlobalFrame();
+            if (pf->kind == GlobalObjectKind) {
+                if (meta->writeProperty(pf, multiname, &lookup, true, newValue, phase))
+                    return;
+            }
+        }
+        meta->reportError(Exception::referenceError, "{0} is undefined", meta->engine->errorPos(), multiname->name);
+    }
+
+    // Attempt the write in the top frame in the current environment - if the property
+    // exists, then fine. Otherwise create the property there.
+    void Environment::lexicalInit(JS2Metadata *meta, Multiname *multiname, js2val newValue, bool createIfMissing, Phase phase)
     {
         LookupKind lookup(true, findThis(false));
         FrameListIterator fi = getBegin();
@@ -2580,7 +2464,7 @@ doUnary:
  ************************************************************************************/
 
     // return true if the given namespace is on the namespace list
-    bool Multiname::onList(Namespace *nameSpace)
+    bool Multiname::listContains(Namespace *nameSpace)
     { 
         if (nsList.empty())
             return true;
@@ -2641,6 +2525,7 @@ doUnary:
         }
         Multiname *mn = new Multiname(id);
         mn->addNamespace(namespaces);
+        // Search the local frame for an overlapping definition
 	LocalBindingIterator b, end;
         if (access & ReadAccess) {
             for (b = localFrame->localReadBindings.lower_bound(*id),
@@ -2660,40 +2545,32 @@ doUnary:
         // Check all frames below the current - up to the RegionalFrame - for a non-forbidden definition
         Frame *regionalFrame = *(env->getRegionalFrame());
         if (localFrame != regionalFrame) {
+            // The frame iterator is pointing at the top of the environment's
+            // frame list, start at the one below that and continue to the frame
+            // returned by 'getRegionalFrame()'.
             Frame *fr = *++fi;
             while (true) {
-                for (b = fr->localReadBindings.lower_bound(*id),
-                        end = fr->localReadBindings.upper_bound(*id); (b != end); b++) {
-                    if (mn->matches(b->second->qname) && (b->second->content->kind != LocalMember::Forbidden))
-                        reportError(Exception::definitionError, "Duplicate definition {0}", pos, id);
+                if (access & ReadAccess) {
+                    for (b = fr->localReadBindings.lower_bound(*id),
+                            end = fr->localReadBindings.upper_bound(*id); (b != end); b++) {
+                        if (mn->matches(b->second->qname) && (b->second->content->kind != LocalMember::Forbidden))
+                            reportError(Exception::definitionError, "Duplicate definition {0}", pos, id);
+                    }
+                }
+                if (access & WriteAccess) {
+                    for (b = fr->localWriteBindings.lower_bound(*id),
+                            end = fr->localWriteBindings.upper_bound(*id); (b != end); b++) {
+                        if (mn->matches(b->second->qname) && (b->second->content->kind != LocalMember::Forbidden))
+                            reportError(Exception::definitionError, "Duplicate definition {0}", pos, id);
+                    }
                 }
                 if (fr == regionalFrame)
                     break;
                 fr = *++fi;
-            }
-            fi = env->getBegin();
-            fr = *++fi;
-            while (true) {
-                for (b = fr->localWriteBindings.lower_bound(*id),
-                        end = fr->localWriteBindings.upper_bound(*id); (b != end); b++) {
-                    if (mn->matches(b->second->qname) && (b->second->content->kind != LocalMember::Forbidden))
-                        reportError(Exception::definitionError, "Duplicate definition {0}", pos, id);
-                }
-                if (fr == regionalFrame)
-                    break;
-                fr = *++fi;
+                ASSERT(fr);
             }
         }
 
-        // If the regional frame is the global object, make sure there's not a dynamic
-        // property with the same id as the one we're about to define
-        if (regionalFrame->kind == GlobalObjectKind) {
-            GlobalObject *gObj = checked_cast<GlobalObject *>(regionalFrame);
-            DynamicPropertyIterator dp = gObj->dynamicProperties.find(*id);
-            if (dp != gObj->dynamicProperties.end())
-                reportError(Exception::definitionError, "Duplicate definition {0}", pos, id);
-        }
-        
         // Now insert the id, via all it's namespaces into the local frame
         for (NamespaceListIterator nli = mn->nsList.begin(), nlend = mn->nsList.end(); (nli != nlend); nli++) {
             QualifiedName qName(*nli, id);
@@ -2705,23 +2582,47 @@ doUnary:
                 localFrame->localWriteBindings.insert(e);
         }
         
-        // And mark all (any) lower definitions as Forbidden
-        // XXX there's a discrepancy in the spec. -- the comment says:
-        // "Mark the bindings of multiname as Forbidden in all non-innermost frames in the current
-        //  region if they haven't been marked as such already"
-        // But the code simply adds a Forbidden binding in each namespace to each frame in the region
+        // Mark the bindings of multiname as Forbidden in all non-innermost frames in the current
+        // region if they haven't been marked as such already.
         if (localFrame != regionalFrame) {
             fi = env->getBegin();
             Frame *fr = *++fi;
             while (true) {
                 for (NamespaceListIterator nli = mn->nsList.begin(), nlend = mn->nsList.end(); (nli != nlend); nli++) {
-                    QualifiedName qName(*nli, id);
-                    LocalBinding *sb = new LocalBinding(qName, forbiddenMember);
-                    const LocalBindingMap::value_type e(*id, sb);
-                    if (access & ReadAccess)
-                        fr->localReadBindings.insert(e);
-                    if (access & WriteAccess)
-                        fr->localWriteBindings.insert(e);
+                    if (access & ReadAccess) {
+                        bool foundEntry = false;
+                        for (b = fr->localReadBindings.lower_bound(*id),
+                                end = fr->localReadBindings.upper_bound(*id); (b != end); b++) {        
+                            if (b->second->qname.nameSpace == *nli) {
+                                ASSERT(b->second->content->kind == LocalMember::Forbidden);
+                                foundEntry = true;
+                                break;
+                            }
+                        }
+                        if (!foundEntry) {
+                            QualifiedName qName(*nli, id);
+                            LocalBinding *sb = new LocalBinding(qName, forbiddenMember);
+                            const LocalBindingMap::value_type e(*id, sb);
+                            fr->localReadBindings.insert(e);
+                        }
+                    }
+                    if (access & WriteAccess) {
+                        bool foundEntry = false;
+                        for (b = fr->localWriteBindings.lower_bound(*id),
+                                end = fr->localWriteBindings.upper_bound(*id); (b != end); b++) {        
+                            if (b->second->qname.nameSpace == *nli) {
+                                ASSERT(b->second->content->kind == LocalMember::Forbidden);
+                                foundEntry = true;
+                                break;
+                            }
+                        }
+                        if (!foundEntry) {
+                            QualifiedName qName(*nli, id);
+                            LocalBinding *sb = new LocalBinding(qName, forbiddenMember);
+                            const LocalBindingMap::value_type e(*id, sb);
+                            fr->localWriteBindings.insert(e);
+                        }
+                    }
                 }
                 if (fr == regionalFrame)
                     break;
@@ -3313,7 +3214,7 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
         ASSERT(container && ((container->kind == SimpleInstanceKind) 
                                 || (container->kind == GlobalObjectKind)
                                 || (container->kind == PrototypeInstanceKind)));
-        if (!multiname->onList(publicNamespace))
+        if (!multiname->listContains(publicNamespace))
             return false;
         const String *name = multiname->name;
         if (phase == CompilePhase) 
@@ -3385,7 +3286,7 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
         ASSERT(container && ((container->kind == SimpleInstanceKind) 
                                 || (container->kind == GlobalObjectKind)
                                 || (container->kind == PrototypeInstanceKind)));
-        if (!multiname->onList(publicNamespace))
+        if (!multiname->listContains(publicNamespace))
             return false;
         const String *name = multiname->name;
         DynamicPropertyMap *dMap = NULL;
@@ -3813,7 +3714,7 @@ deleteClassProperty:
         ASSERT(container && ((container->kind == SimpleInstanceKind) 
                                 || (container->kind == GlobalObjectKind)
                                 || (container->kind == PrototypeInstanceKind)));
-        if (!multiname->onList(publicNamespace))
+        if (!multiname->listContains(publicNamespace))
             return false;
         const String *name = multiname->name;
         DynamicPropertyMap *dMap = NULL;

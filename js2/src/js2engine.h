@@ -99,6 +99,7 @@ enum JS2Op {
 
     eLexicalRead,       // <multiname index:u16>
     eLexicalWrite,      // <multiname index:u16>
+    eLexicalInit,       // <multiname index:u16>
     eLexicalRef,        // <multiname index:u16>
     eLexicalDelete,     // <multiname index:u16>
     eDotRead,           // <multiname index:u16>

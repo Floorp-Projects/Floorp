@@ -113,6 +113,17 @@
 	}
         break;
 
+    // Write the top value to the multiname in the environment, leave
+    // the value on the stack top.
+    case eLexicalInit: 
+        {
+            a = top();
+            Multiname *mn = bCon->mMultinameList[BytecodeContainer::getShort(pc)];
+            pc += sizeof(short);
+            meta->env->lexicalInit(meta, mn, a, true, phase);
+	}
+        break;
+
     // Construct a reference pair consisting of a NULL base and the read value
     case eLexicalRef: 
         {

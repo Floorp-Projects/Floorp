@@ -241,8 +241,8 @@ public:
     void addNamespace(NamespaceList *ns);
     void addNamespace(Context &cxt);
 
-    bool matches(QualifiedName &q)                  { return (*name == *q.id) && onList(q.nameSpace); }
-    bool onList(Namespace *nameSpace);
+    bool matches(QualifiedName &q)                  { return (*name == *q.id) && listContains(q.nameSpace); }
+    bool listContains(Namespace *nameSpace);
 
     NamespaceList nsList;
     const String *name;
@@ -754,6 +754,7 @@ public:
     Environment *env;               // The environment in which the reference was created.
     bool strict;                    // The strict setting from the context in effect at the point where the reference was created
     
+    void emitInitBytecode(BytecodeContainer *bCon, size_t pos)     { bCon->emitOp(eLexicalInit, pos); bCon->addMultiname(variableMultiname); }
     
     virtual void emitReadBytecode(BytecodeContainer *bCon, size_t pos)      { bCon->emitOp(eLexicalRead, pos); bCon->addMultiname(variableMultiname); }
     virtual void emitWriteBytecode(BytecodeContainer *bCon, size_t pos)     { bCon->emitOp(eLexicalWrite, pos); bCon->addMultiname(variableMultiname); }
@@ -941,6 +942,7 @@ public:
     js2val findThis(bool allowPrototypeThis);
     js2val lexicalRead(JS2Metadata *meta, Multiname *multiname, Phase phase);
     void lexicalWrite(JS2Metadata *meta, Multiname *multiname, js2val newValue, bool createIfMissing, Phase phase);
+    void lexicalInit(JS2Metadata *meta, Multiname *multiname, js2val newValue, bool createIfMissing, Phase phase);
     bool lexicalDelete(JS2Metadata *meta, Multiname *multiname, Phase phase);
 
     void instantiateFrame(Frame *pluralFrame, Frame *singularFrame);
@@ -1174,6 +1176,9 @@ public:
     bool showTrees;                 // debug only, causes parse tree dump 
 
 };
+
+    inline char narrow(char16 ch) { return char(ch); }
+
 
 }; // namespace MetaData
 }; // namespace Javascript
