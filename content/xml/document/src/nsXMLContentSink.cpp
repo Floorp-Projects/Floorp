@@ -340,6 +340,13 @@ nsXMLContentSink::DidBuildModel(PRInt32 aQualityLevel)
     }
   }
 
+  if (mTitleText.IsEmpty()) {
+    nsCOMPtr<nsIDOMNSDocument> dom_doc(do_QueryInterface(mDocument));
+    if (dom_doc) {
+      dom_doc->SetTitle(NS_LITERAL_STRING(""));
+    }
+  }
+
   mDocument->SetRootContent(mDocElement);
 
   nsresult rv = NS_OK;
