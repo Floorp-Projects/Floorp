@@ -1475,9 +1475,7 @@ function handleURLBarRevert()
 
 function handleURLBarCommand(aUserAction)
 {
-  if (aUserAction == "typing")
-    addToUrlbarHistory();
-
+  addToUrlbarHistory();
   BrowserLoadURL(); 
 }
 
