@@ -329,17 +329,15 @@ var nsUpdateDatasourceObserver =
     //     This will enable us to |compareVersion()|s even when 
     //     XPInstall is disabled but update notifications are enabled.
     //     See <http://bugzilla.mozilla.org/show_bug.cgi?id=121506>.
-    //
-    //     Also, once |compareVersion()| is changed to return -5 when
-    //     the component was not registered/was removed we should change
-    //     this code to handle the situation and inform users that an
-    //     update is available.
-    //     See <http://bugzilla.mozilla.org/show_bug.cgi?id=119370>.
     var ass = Components.classes["@mozilla.org/appshell/appShellService;1"].
       getService(Components.interfaces.nsIAppShellService);
-    var diffLevel = ass.hiddenDOMWindow.InstallTrigger.compareVersion(
-                      aUpdateInfo.registryName, aUpdateInfo.version);
-    return (diffLevel < 0);
+    var trigger = ass.hiddenDOMWindow.InstallTrigger;
+    var diffLevel = trigger.compareVersion(aUpdateInfo.registryName, 
+      aUpdateInfo.version);
+    if (diffLevel < trigger.EQUAL && diffLevel != trigger.NOT_FOUND)
+      return true;
+    return false; // already have newer version or 
+                  // fail silently if old version not found on disk
   },
 
   getBundle: function(aURI)
