@@ -52,6 +52,12 @@ interface nsIURL : nsIURI
      */
     attribute string FileName;
 
+	/**
+	 * Returns the parameters specified after the ; in the URL. 
+	 *
+    attribute string Param;
+	 */
+
     /**
      * Returns the query portion (the part after the "?") of the URL.
      * If there isn't one, an empty string is returned.
@@ -64,6 +70,10 @@ interface nsIURL : nsIURI
      */
     attribute string Ref;
 
+	 /**
+	  * Returns the Directory + "/" + Filename. Just a convenience function
+	  */
+	 void DirFile(out string o_DirFile);
 };
 
 %{C++

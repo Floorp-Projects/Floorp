@@ -21,6 +21,8 @@
 
 #include "nsIURL.h"
 #include "nsAgg.h"
+#include "nsCRT.h"
+#include "nsString.h" // REMOVE Later!!
 
 #define NS_THIS_STANDARDURL_IMPLEMENTATION_CID       \
 { /* e3939dc8-29ab-11d3-8cce-0060b0fc14a3 */         \
@@ -77,6 +79,9 @@ public:
     /* nsIURI Clone (); */
     NS_IMETHOD Clone(nsIURI **_retval);
 
+    /* void SetRelativePath (in string i_RelativePath); */
+    NS_IMETHOD SetRelativePath(const char *i_RelativePath);
+
     ////////////////////////////////////////////////////////////////////////////
     // nsIURL methods:
 
@@ -96,12 +101,19 @@ public:
     NS_IMETHOD GetRef(char * *aRef);
     NS_IMETHOD SetRef(char * aRef);
 
+    /* void DirFile (out string o_DirFile); */
+    NS_IMETHOD DirFile(char **o_DirFile);
+
+	/* todo move this to protected later */
+	nsresult ParsePath(void);
 protected:
     nsresult Parse(void);
+    nsresult ReconstructPath(void);
     nsresult ReconstructSpec(void);
 
+    // Some handy functions 
 	nsresult DupString(char* *o_Destination, char* i_Source);
-	nsresult ExtractString(char* *io_Destination, PRUint32 start, PRUint32 length);
+	nsresult ExtractString(char* i_Source, char* *o_Destination, PRUint32 start, PRUint32 length);
 protected:
 
     char*       mScheme;
@@ -178,16 +190,9 @@ nsStdURL::GetQuery(char* *o_Query)
 }
 
 inline NS_METHOD
-nsStdURL::SetSpec(char* i_Spec)
-{
-	nsresult status = DupString(&mSpec, i_Spec);
-	if (NS_FAILED(status)) return status;
-	return Parse();
-}
-
-inline NS_METHOD
 nsStdURL::SetScheme(char* i_Scheme)
 {
+    if (mScheme) nsCRT::free(mScheme);
 	nsresult status = DupString(&mScheme, i_Scheme);
 	ReconstructSpec();
 	return status;
@@ -196,6 +201,7 @@ nsStdURL::SetScheme(char* i_Scheme)
 inline NS_METHOD
 nsStdURL::SetPreHost(char* i_PreHost)
 {
+    if (mPreHost) nsCRT::free(mPreHost);
 	nsresult status = DupString(&mPreHost, i_PreHost);
 	ReconstructSpec();
 	return status;
@@ -204,15 +210,8 @@ nsStdURL::SetPreHost(char* i_PreHost)
 inline NS_METHOD
 nsStdURL::SetHost(char* i_Host)
 {
+    if (mHost) nsCRT::free(mHost);
 	nsresult status = DupString(&mHost, i_Host);
-	ReconstructSpec();
-	return status;
-}
-
-inline NS_METHOD
-nsStdURL::SetPath(char* i_Path)
-{
-	nsresult status = DupString(&mPath, i_Path);
 	ReconstructSpec();
 	return status;
 }

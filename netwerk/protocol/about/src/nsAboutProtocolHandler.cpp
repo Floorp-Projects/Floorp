@@ -108,15 +108,17 @@ nsAboutProtocolHandler::NewURI(const char *aSpec, nsIURI *aBaseURI,
     nsIURI* url;
     if (aBaseURI) {
         rv = aBaseURI->Clone(&url);
+        if (NS_FAILED(rv)) return rv;
+        rv = url->SetRelativePath(aSpec);
     }
     else {
         rv = nsComponentManager::CreateInstance(kSimpleURICID, nsnull,
                                                 nsIURI::GetIID(),
                                                 (void**)&url);
-    }
-    if (NS_FAILED(rv)) return rv;
+        if (NS_FAILED(rv)) return rv;
+        rv = url->SetSpec((char*)aSpec);
 
-    rv = url->SetSpec((char*)aSpec);
+    }
     if (NS_FAILED(rv)) {
         NS_RELEASE(url);
         return rv;

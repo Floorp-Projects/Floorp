@@ -132,15 +132,12 @@ nsHTTPRequest::Build()
     rv = m_pURI->GetPath(&name);
     lineBuffer.Append(name);
     nsCRT::free(name);
-
-    // Append the Query string if any...
     name = nsnull;
-    rv = m_pURI->GetQuery(&name);
-    if (name && *name) {
-      lineBuffer.Append("?");
-      lineBuffer.Append(name);
-    }
-    nsCRT::free(name);
+    
+    //Trim off the # portion if any...
+    int refLocation = lineBuffer.RFind("#");
+    if (-1 != refLocation)
+        lineBuffer.Truncate(refLocation);
 
     lineBuffer.Append(" HTTP/1.0"CRLF);
     

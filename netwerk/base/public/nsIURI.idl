@@ -116,6 +116,15 @@ interface nsIURI : nsISupports
      * channel is opened the URI may get redirected to a new location.
      */
     nsIURI Clone();
+
+	/**
+	 * Sets the given string to be a relative path for this URL, and 
+	 * changes this to read relative. Thus for example- if this = 
+	 * http://foo.com/bar/index.html, then calling SetRelativePath("/baz") will 
+	 * change this to http://foo.com/baz and calling it with "baz" will
+	 * change this to http://foo.com/bar/baz. 
+	 */
+	 void SetRelativePath(in string i_RelativePath);
 };
 
 %{C++

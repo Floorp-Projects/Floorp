@@ -68,6 +68,11 @@ public:
     /* nsIURI Clone (); */
     NS_IMETHOD Clone(nsIURI **_retval);
 
+    /* void SetRelativePath (in string i_RelativePath); */
+    NS_IMETHOD SetRelativePath(const char *i_RelativePath) { 
+         NS_ASSERTION(PR_FALSE, "This is meaningless in hack context!"); 
+         return NS_ERROR_FAILURE;};
+
     ////////////////////////////////////////////////////////////////////////////
     // nsSimpleURI methods:
 
