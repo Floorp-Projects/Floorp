@@ -89,7 +89,8 @@ nsresult nsXPFCHTMLCanvas :: Init()
                   0,
                   0,
                   DEFAULT_WIDTH, 
-                  DEFAULT_HEIGHT);
+                  DEFAULT_HEIGHT,
+                  nsScrollPreference_kAuto, PR_TRUE);
 
   nsIWebShellContainer * container = nsnull;
 
