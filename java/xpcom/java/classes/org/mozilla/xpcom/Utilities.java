@@ -36,6 +36,7 @@ public class Utilities {
         try {
             
             if (method != null) {
+                Class[] parameterTypes = method.getParameterTypes();
                 for (int i = 0 ; i < args.length; i++) { 
                     /* this is hack. at the time we are doing holders for [out] interfaces 
                        we might do not know the expected type and we are producing Object[] insted of
@@ -43,16 +44,23 @@ public class Utilities {
                        If args[i] is Object[] of size 1 we are checking with expected type from method.
                        In case it is not expeceted type we are creating object[] of expected type.
                     */  
-
                     if (objectArrayClass.equals(args[i].getClass()) 
                         && ((Object[])args[i]).length == 1) {
-                        Class[] parameterTypes = method.getParameterTypes();
                         if (!objectArrayClass.equals(parameterTypes[i])
                             && parameterTypes[i].isArray()) {
                             Class componentType = parameterTypes[i].getComponentType();
                             args[i] = java.lang.reflect.Array.newInstance(componentType,1);
                         }
                     }
+                    /* another hack. Some IIDs are CIDs. We can not get this data from typelib. Here we can.
+                     */ 
+                    if (args[i] instanceof IID
+                        && !parameterTypes[i].equals(IID.class)) {
+                        IID iidTmp = (IID)args[i];
+                        CID cidTmp = new CID(iidTmp.getString());
+                        args[i] = cidTmp;
+                    }
+                        
                 }
                 retObject = method.invoke(obj,args); 
                 Debug.log("--[java] Utilities.callMethodByIndex: retObject = " + retObject);
