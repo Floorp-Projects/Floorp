@@ -20,16 +20,12 @@
 * Date: 2001-07-15
 *
 * SUMMARY: Testing Number.prototype.toExponential(fractionDigits)
-*
-* See http://bugzilla.mozilla.org/show_bug.cgi?id=90551
 * See EMCA 262 Edition 3 Section 15.7.4.6
 *
-* The toExponential method should throw a RangeError exception if
-* fractionDigits < 0  or  fractionDigits > 20
 */
-//-------------------------------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 var UBound = 0;
-var bug = 90551;
+var bug = '(none)';
 var summary = 'Testing Number.prototype.toExponential(fractionDigits)';
 var cnIsRangeError = 'instanceof RangeError';
 var cnNotRangeError = 'NOT instanceof RangeError';
@@ -48,6 +44,15 @@ actual = testNum.toExponential(4);
 expect = '7.7123e+1';
 captureThis();
 
+
+///////////////////////////    OOPS....    ///////////////////////////////
+/*************************************************************************
+ * 15.7.4.6 Number.prototype.toExponential(fractionDigits)
+ *
+ * An implementation is permitted to extend the behaviour of toExponential
+ * for values of fractionDigits less than 0 or greater than 20. In this
+ * case toExponential would not necessarily throw RangeError for such values.
+
 status = 'Section B of test: expect RangeError because fractionDigits < 0';
 actual = catchError('testNum.toExponential(-4)');
 expect = cnIsRangeError;
@@ -57,11 +62,13 @@ status = 'Section C of test: expect RangeError because fractionDigits > 20 ';
 actual = catchError('testNum.toExponential(21)');
 expect = cnIsRangeError;
 captureThis();
+*************************************************************************/
 
 
-//-------------------------------------------------------------------------------------------------
+
+//-----------------------------------------------------------------------------
 test();
-//-------------------------------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 
 
 function captureThis()

@@ -19,18 +19,14 @@
 * Contributor(s): pschwartau@netscape.com
 * Date: 2001-07-15
 *
-* SUMMARY: Testing Number.prototype.toPrecision(fractionDigits)
-*
-* See http://bugzilla.mozilla.org/show_bug.cgi?id=90551
+* SUMMARY: Testing Number.prototype.toPrecision(precision)
 * See EMCA 262 Edition 3 Section 15.7.4.7
 *
-* The toPrecision method should throw a RangeError exception if
-* fractionDigits < 1  or  fractionDigits > 21
 */
-//-------------------------------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 var UBound = 0;
-var bug = 90551;
-var summary = 'Testing Number.prototype.toPrecision(fractionDigits)';
+var bug = '(none)';
+var summary = 'Testing Number.prototype.toPrecision(precision)';
 var cnIsRangeError = 'instanceof RangeError';
 var cnNotRangeError = 'NOT instanceof RangeError';
 var cnNoErrorCaught = 'NO ERROR CAUGHT...';
@@ -48,25 +44,36 @@ actual = testNum.toPrecision(4);
 expect = '5.123';
 captureThis();
 
-status = 'Section B of test: expect RangeError because fractionDigits < 1';
+
+///////////////////////////    OOPS....    ///////////////////////////////
+/*************************************************************************
+ * 15.7.4.7 Number.prototype.toPrecision(precision)
+ *
+ * An implementation is permitted to extend the behaviour of toPrecision
+ * for values of precision less than 1 or greater than 21. In this
+ * case toPrecision would not necessarily throw RangeError for such values.
+
+status = 'Section B of test: expect RangeError because precision < 1';
 actual = catchError('testNum.toPrecision(0)');
 expect = cnIsRangeError;
 captureThis();
 
-status = 'Section C of test: expect RangeError because fractionDigits < 1';
+status = 'Section C of test: expect RangeError because precision < 1';
 actual = catchError('testNum.toPrecision(-4)');
 expect = cnIsRangeError;
 captureThis();
 
-status = 'Section D of test: expect RangeError because fractionDigits > 21 ';
+status = 'Section D of test: expect RangeError because precision > 21 ';
 actual = catchError('testNum.toPrecision(22)');
 expect = cnIsRangeError;
 captureThis();
+*************************************************************************/
 
 
-//-------------------------------------------------------------------------------------------------
+
+//-----------------------------------------------------------------------------
 test();
-//-------------------------------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 
 
 function captureThis()
