@@ -31,6 +31,7 @@
 #include "nsXPIDLString.h"
 #include "nsIParser.h"
 #include "nsParserCIID.h"
+#include "nsIMsgHeaderParser.h"
 #include "nsHTMLToTXTSinkStream.h"
 #include "CNavDTD.h"
 #include "nsMsgCompUtils.h"
@@ -59,6 +60,7 @@ static NS_DEFINE_CID(kMsgMailSessionCID, NS_MSGMAILSESSION_CID);
 // Defines....
 static NS_DEFINE_CID(kMsgQuoteCID, NS_MSGQUOTE_CID);
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
+static NS_DEFINE_CID(kHeaderParserCID, NS_MSGHEADERPARSER_CID);
 
 // RICHIE
 // This is a temp hack and will go away soon!
@@ -236,14 +238,31 @@ nsresult nsMsgCompose::_SendMsg(MSG_DeliverMode deliverMode,
   {
     // Pref values are supposed to be stored as UTF-8, so no conversion
     nsXPIDLCString email;
+    nsXPIDLCString fullName;
     nsXPIDLCString replyTo;
     nsXPIDLCString organization;
     
     identity->GetEmail(getter_Copies(email));
+    identity->GetFullName(getter_Copies(fullName));
     identity->GetReplyTo(getter_Copies(replyTo));
     identity->GetOrganization(getter_Copies(organization));
     
-    m_compFields->SetFrom(NS_CONST_CAST(char*, (const char *)email));
+	char * sender = nsnull;
+	nsCOMPtr<nsIMsgHeaderParser> parser;
+    nsComponentManager::CreateInstance(kHeaderParserCID,
+                                            nsnull,
+                                            nsCOMTypeInfo<nsIMsgHeaderParser>::GetIID(),
+                                            getter_AddRefs(parser));
+	if (parser)
+		parser->MakeFullAddress(nsnull, NS_CONST_CAST(char*, (const char *)fullName),
+										NS_CONST_CAST(char*, (const char *)email),
+										&sender);
+	if (!sender)
+		m_compFields->SetFrom(NS_CONST_CAST(char*, (const char *)email));
+	else
+		m_compFields->SetFrom(sender);
+	PR_FREEIF(sender);
+
 	//Set the reply-to only if the user have not specified one in the message
 	const char * reply = m_compFields->GetReplyTo();
 	if (reply == nsnull || *reply == 0)
