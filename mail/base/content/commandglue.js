@@ -889,6 +889,8 @@ function FolderPaneSelectionChange()
             else if (viewType == nsMsgViewType.eShowQuickSearchResults)
               viewType = nsMsgViewType.eShowAllThreads;  //override viewType - we don't want to start w/ quick search
             ChangeFolderByURI(uriToLoad, viewType, viewFlags, sortType, sortOrder);
+            if (gVirtualFolderTerms)
+              gDBView.viewFolder = msgFolder;
         }
     }
     else

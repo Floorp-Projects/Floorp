@@ -280,6 +280,7 @@ interface nsIMsgDBView : nsISupports
     boolean navigateStatus(in nsMsgNavigationTypeValue motion);
 
     readonly attribute nsIMsgFolder msgFolder;
+    attribute nsIMsgFolder viewFolder; // in the case of virtual folders, the VF db.
 
     nsMsgKey getKeyAt(in nsMsgViewIndex index);
     nsIMsgFolder getFolderForViewIndex(in nsMsgViewIndex index); // mainly for search

@@ -1765,6 +1765,7 @@ NS_IMETHODIMP nsMsgDBView::Open(nsIMsgFolder *folder, nsMsgViewSortTypeValue sor
     NS_ENSURE_SUCCESS(rv,rv);
     m_db->AddListener(this);
     m_folder = folder;
+    m_viewFolder = folder;
     // determine if we are in a news folder or not.
     // if yes, we'll show lines instead of size, and special icons in the thread pane
     nsCOMPtr <nsIMsgIncomingServer> server;
@@ -3437,10 +3438,11 @@ nsMsgDBView::GetLocationCollationKey(nsIMsgHdr *msgHdr, PRUint8 **result, PRUint
 
 nsresult nsMsgDBView::SaveSortInfo(nsMsgViewSortTypeValue sortType, nsMsgViewSortOrderValue sortOrder)
 {
-  if (m_folder)
+  if (m_viewFolder)
   {
     nsCOMPtr <nsIDBFolderInfo> folderInfo;
-    nsresult rv = m_folder->GetDBFolderInfoAndDB(getter_AddRefs(folderInfo), getter_AddRefs(m_db));
+    nsCOMPtr <nsIMsgDatabase> db;
+    nsresult rv = m_viewFolder->GetDBFolderInfoAndDB(getter_AddRefs(folderInfo), getter_AddRefs(db));
     if (NS_SUCCEEDED(rv) && folderInfo)
     {
       // save off sort type and order, view type and flags
@@ -5423,6 +5425,20 @@ NS_IMETHODIMP nsMsgDBView::GetMsgFolder(nsIMsgFolder **aMsgFolder)
   NS_IF_ADDREF(*aMsgFolder = m_folder);
   return NS_OK;
 }
+
+NS_IMETHODIMP nsMsgDBView::SetViewFolder(nsIMsgFolder *aMsgFolder)
+{
+  m_viewFolder = aMsgFolder;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsMsgDBView::GetViewFolder(nsIMsgFolder **aMsgFolder)
+{
+  NS_ENSURE_ARG_POINTER(aMsgFolder);
+  NS_IF_ADDREF(*aMsgFolder = m_viewFolder);
+  return NS_OK;
+}
+
 
 NS_IMETHODIMP 
 nsMsgDBView::GetNumSelected(PRUint32 *numSelected)

@@ -66,7 +66,7 @@ public:
 
 protected:
 
-  nsCOMPtr <nsIMsgFolder> m_virtualFolder;
+  nsCOMPtr <nsIMsgFolder> m_viewFolder;
   nsWeakPtr m_searchSession;
   PRInt32 m_numUnread;
   PRInt32 m_numTotal;
