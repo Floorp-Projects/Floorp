@@ -93,7 +93,7 @@
   <binding name="radiogroup">
 	<handlers>
       <handler type="mouseup" value="try { this.selectedItem = event.target; } catch (e) {}"/>
-	  <handler type="keypress" key=" " value="this.checked = !this.checked;"/>
+	  <handler type="keypress" key=" " value="try { this.selectedItem = event.target; } catch (e) {}"/>
 	</handlers>
   </binding>
 
