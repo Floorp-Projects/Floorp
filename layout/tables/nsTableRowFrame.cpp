@@ -841,16 +841,24 @@ nsTableRowFrame::ReflowChildren(nsIPresContext*          aPresContext,
         nsIFrame* kidNextInFlow;
         kidFrame->GetNextInFlow(&kidNextInFlow);
         if ((aReflowState.availableHeight != NS_UNCONSTRAINEDSIZE) ||
-            (availWidth != cellFrame->GetPriorAvailWidth()) ||
+            (availWidth != cellFrame->GetPriorAvailWidth())        ||
+            (eReflowReason_StyleChange == aReflowState.reason)     ||
             kidNextInFlow) {
           // Reflow the cell to fit the available width, height
           nsSize  kidAvailSize(availWidth, aReflowState.availableHeight);
           nsReflowReason reason = eReflowReason_Resize;
-          PRBool newCellToWatch = PR_FALSE;
+          PRBool cellToWatch = PR_FALSE;
           nsSize maxElementSize;
           // If it's a dirty frame, then check whether it's the initial reflow
           if (frameState & NS_FRAME_FIRST_REFLOW) {
             reason = eReflowReason_Initial;
+            cellToWatch = PR_TRUE;
+          }
+          else if (eReflowReason_StyleChange == aReflowState.reason) {
+            reason = eReflowReason_StyleChange;
+            cellToWatch = PR_TRUE;
+          }
+          if (cellToWatch) {
             cellFrame->DidSetStyleContext(aPresContext); // XXX check this
             if (!tablePrevInFlow && isAutoLayout) {
               // request the maximum width if availWidth is constrained
@@ -858,10 +866,11 @@ nsTableRowFrame::ReflowChildren(nsIPresContext*          aPresContext,
               if (NS_UNCONSTRAINEDSIZE != availWidth) {
                 desiredSize.mFlags |= NS_REFLOW_CALC_MAX_WIDTH; 
               }
-              //kidAvailSize.height = NS_UNCONSTRAINEDSIZE;
               // request to get the max element size 
               desiredSize.maxElementSize = &maxElementSize;
-              newCellToWatch = PR_TRUE;
+            }
+            else {
+              cellToWatch = PR_FALSE;
             }
           }
   
@@ -875,7 +884,7 @@ nsTableRowFrame::ReflowChildren(nsIPresContext*          aPresContext,
           rv = ReflowChild(kidFrame, aPresContext, desiredSize, kidReflowState,
                            x, 0, 0, status);
 
-          if (newCellToWatch) { 
+          if (cellToWatch) { 
             nscoord maxWidth = (NS_UNCONSTRAINEDSIZE == availWidth) 
                                 ? desiredSize.width : desiredSize.mMaximumWidth;
             // save the max element width and max width
@@ -888,7 +897,7 @@ nsTableRowFrame::ReflowChildren(nsIPresContext*          aPresContext,
           }
 
           // allow the table to determine if/how the table needs to be rebalanced
-          if (newCellToWatch && needToNotifyTable) {
+          if (cellToWatch && needToNotifyTable) {
             needToNotifyTable = !tableFrame->CellChangedWidth(*cellFrame, oldMaxWidth, oldMaxElemWidth);
           }
 
