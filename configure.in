@@ -468,6 +468,11 @@ dnl the qsort routine under solaris is faulty
            ASFLAGS='-xarch=v8 -P -L -D_ASM -D__STDC__=0 -K PIC'
            ;;
        esac
+       dnl The C++ compiler in Workshop 5.0 uses standard iostreams by
+       dnl default. -library=iostream will force use of classic iostreams.
+       if test ! -z "`${CC} -V 2>&1 | head -1 | grep '5.0'`"; then
+	  CXX="$CXX -library=iostream"
+       fi
     else
        MKSHLIB='$(CC) $(DSO_LDOPTS)'
        _WARNINGS_CFLAGS=''
