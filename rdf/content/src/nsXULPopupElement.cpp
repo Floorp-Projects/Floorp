@@ -38,6 +38,7 @@
 #include "nsIServiceManager.h"
 #include "nsString.h"
 #include "nsIPopupSetFrame.h"
+#include "nsIFrame.h"
 
 NS_IMPL_ADDREF_INHERITED(nsXULPopupElement, nsXULAggregateElement);
 NS_IMPL_RELEASE_INHERITED(nsXULPopupElement, nsXULAggregateElement);
@@ -76,7 +77,6 @@ nsXULPopupElement::OpenPopup(nsIDOMElement* aElement, PRInt32 aXPos, PRInt32 aYP
                              const nsString& aPopupType, const nsString& aAnchorAlignment, 
                              const nsString& aPopupAlignment)
 {
-  /*
   nsresult rv = NS_OK;
 
   nsCOMPtr<nsIContent> content = do_QueryInterface(mOuter);
@@ -109,13 +109,19 @@ nsXULPopupElement::OpenPopup(nsIDOMElement* aElement, PRInt32 aXPos, PRInt32 aYP
   if (!frame)
     return NS_OK;
 
+  // Obtain the element frame.
+  nsCOMPtr<nsIContent> elementContent = do_QueryInterface(aElement);
+  nsIFrame* elementFrame;
+  presShell->GetPrimaryFrameFor(elementContent, &elementFrame);  
+  if (!elementFrame)
+    return NS_OK;
+
   // Pass this all off to the popup set frame.
   nsCOMPtr<nsIPopupSetFrame> popupSetFrame = do_QueryInterface(frame);
-  nsCOMPtr<nsIContent> popupContent = do_QueryInterface(aPopupContent);
-  popupSetFrame->CreatePopup(aElement, content, aXPos, aYPos,
-                             aPopupType, anAnchorAlignment,
+  popupSetFrame->CreatePopup(elementFrame, content, aXPos, aYPos,
+                             aPopupType, aAnchorAlignment,
                              aPopupAlignment);
-  */
+  
   return NS_OK;
 }
 
@@ -123,7 +129,6 @@ nsXULPopupElement::OpenPopup(nsIDOMElement* aElement, PRInt32 aXPos, PRInt32 aYP
 NS_IMETHODIMP
 nsXULPopupElement::ClosePopup()
 {
-  /*
   // Close the popup by simulating proper dismissal.
   nsCOMPtr<nsIContent> content = do_QueryInterface(mOuter);
   nsCOMPtr<nsIDocument> document;
@@ -159,6 +164,6 @@ nsXULPopupElement::ClosePopup()
 
   nsCOMPtr<nsIPopupSetFrame> popupSetFrame = do_QueryInterface(frame);
   popupSetFrame->DestroyPopup();
-*/
+
   return NS_OK;
 }
