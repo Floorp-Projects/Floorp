@@ -59,7 +59,7 @@ static NS_DEFINE_IID(kIHTMLElementIID, NS_IDOMHTMLELEMENT_IID);
 static NS_DEFINE_IID(kIBodyElementIID, NS_IDOMHTMLBODYELEMENT_IID);
 static NS_DEFINE_IID(kITableRowGroupFrameIID, NS_ITABLEROWGROUPFRAME_IID);
 
-static const PRInt32 kColumnWidthIncrement=100;
+static const PRInt32 kColumnWidthIncrement=10;
 
 #if 1
 PRBool nsDebugTable::gRflTableOuter = PR_FALSE;
@@ -266,23 +266,21 @@ nsTableFrame::GetFrameType(nsIAtom** aType) const
 
 nsTableFrame::nsTableFrame()
   : nsHTMLContainerFrame(),
-    mColumnWidthsValid(PR_FALSE),
-    mFirstPassValid(PR_FALSE),
-    mColumnCacheValid(PR_FALSE),
-    mCellMapValid(PR_TRUE),
-    mIsInvariantWidth(PR_FALSE),
-    mHasScrollableRowGroup(PR_FALSE),
     mCellMap(nsnull),
     mColCache(nsnull),
     mTableLayoutStrategy(nsnull),
     mPercentBasisForRows(0)
 {
-  mColumnWidthsSet=PR_FALSE;
-  mColumnWidthsLength = kColumnWidthIncrement;  
-  mColumnWidths = new PRInt32[mColumnWidthsLength];
-  nsCRT::memset (mColumnWidths, 0, mColumnWidthsLength*sizeof(PRInt32));
+  mBits.mColumnWidthsSet = PR_FALSE;
+  mBits.mColumnWidthsValid = PR_FALSE;
+  mBits.mFirstPassValid = PR_FALSE;
+  mBits.mColumnCacheValid = PR_FALSE;
+  mBits.mCellMapValid = PR_TRUE;
+  mBits.mIsInvariantWidth = PR_FALSE;
+  mBits.mHasScrollableRowGroup = PR_FALSE;
+  mColumnWidthsLength = 0;  
+  mColumnWidths = nsnull;
   mCellMap = new nsCellMap(0, 0);
-  mBorderEdges.mOutsideEdge=PR_TRUE;
 }
 
 NS_IMPL_ADDREF_INHERITED(nsTableFrame, nsHTMLContainerFrame)
@@ -329,19 +327,20 @@ nsTableFrame::Init(nsIPresContext&  aPresContext,
 
 nsTableFrame::~nsTableFrame()
 {
-  if (NS_STYLE_BORDER_COLLAPSE==GetBorderCollapseStyle())
+  if ((NS_STYLE_BORDER_COLLAPSE==GetBorderCollapseStyle()) && mBorderEdges)
   {
 		PRInt32 i=0;
 		for ( ; i<4; i++)
 		{
-			nsBorderEdge *border = (nsBorderEdge *)(mBorderEdges.mEdges[i].ElementAt(0));
+			nsBorderEdge *border = (nsBorderEdge *)(mBorderEdges->mEdges[i].ElementAt(0));
 			while (border) 
 			{
 				delete border;
-				mBorderEdges.mEdges[i].RemoveElementAt(0);
-				border = (nsBorderEdge *)(mBorderEdges.mEdges[i].ElementAt(0));
+				mBorderEdges->mEdges[i].RemoveElementAt(0);
+				border = (nsBorderEdge *)(mBorderEdges->mEdges[i].ElementAt(0));
 			}
 		}
+    delete mBorderEdges;
   }
 
   if (nsnull!=mCellMap) {
@@ -956,7 +955,7 @@ NS_METHOD nsTableFrame::ReBuildCellMap()
       BuildCellMapForRowGroup(rowGroupFrame);
     }
   }
-  mCellMapValid=PR_TRUE;
+  mBits.mCellMapValid=PR_TRUE;
   return rv;
 }
 
@@ -1013,7 +1012,10 @@ void nsTableFrame::ListColumnLayoutData(FILE* out, PRInt32 aIndent)
 
 void nsTableFrame::SetBorderEdgeLength(PRUint8 aSide, PRInt32 aIndex, nscoord aLength)
 {
-  nsBorderEdge *border = (nsBorderEdge *)(mBorderEdges.mEdges[aSide].ElementAt(aIndex));
+  if (!mBorderEdges) {
+    mBorderEdges = new nsBorderEdges;
+  }
+  nsBorderEdge *border = (nsBorderEdge *)(mBorderEdges->mEdges[aSide].ElementAt(aIndex));
   if (border)
   {
     border->mLength = aLength;
@@ -1024,6 +1026,7 @@ void nsTableFrame::DidComputeHorizontalCollapsingBorders(nsIPresContext& aPresCo
                                                          PRInt32 aStartRowIndex,
                                                          PRInt32 aEndRowIndex)
 {
+  NS_PRECONDITION(mBorderEdges, "haven't allocated border edges struct");
   // XXX: for now, this only does table edges.  May need to do interior edges also?  Probably not.
   nsCellMap *cellMap = GetCellMap();
   PRInt32 lastRowIndex = cellMap->GetRowCount()-1;
@@ -1037,13 +1040,13 @@ void nsTableFrame::DidComputeHorizontalCollapsingBorders(nsIPresContext& aPresCo
       nsIFrame *rowFrame;
       cellFrame->GetParent(&rowFrame);
       rowFrame->GetRect(rowRect);
-      nsBorderEdge *leftBorder = (nsBorderEdge *)(mBorderEdges.mEdges[NS_SIDE_LEFT].ElementAt(0));
-      nsBorderEdge *rightBorder = (nsBorderEdge *)(mBorderEdges.mEdges[NS_SIDE_RIGHT].ElementAt(0));
-      nsBorderEdge *topBorder = (nsBorderEdge *)(mBorderEdges.mEdges[NS_SIDE_TOP].ElementAt(0));
+      nsBorderEdge *leftBorder = (nsBorderEdge *)(mBorderEdges->mEdges[NS_SIDE_LEFT].ElementAt(0));
+      nsBorderEdge *rightBorder = (nsBorderEdge *)(mBorderEdges->mEdges[NS_SIDE_RIGHT].ElementAt(0));
+      nsBorderEdge *topBorder = (nsBorderEdge *)(mBorderEdges->mEdges[NS_SIDE_TOP].ElementAt(0));
       if (leftBorder)
         leftBorder->mLength = rowRect.height + topBorder->mWidth;
       if (topBorder)
-        topBorder = (nsBorderEdge *)(mBorderEdges.mEdges[NS_SIDE_TOP].ElementAt(lastColIndex));
+        topBorder = (nsBorderEdge *)(mBorderEdges->mEdges[NS_SIDE_TOP].ElementAt(lastColIndex));
       if (rightBorder)
         rightBorder->mLength = rowRect.height + topBorder->mWidth;
     }
@@ -1058,21 +1061,21 @@ void nsTableFrame::DidComputeHorizontalCollapsingBorders(nsIPresContext& aPresCo
       nsIFrame *rowFrame;
       cellFrame->GetParent(&rowFrame);
       rowFrame->GetRect(rowRect);
-      nsBorderEdge *leftBorder = (nsBorderEdge *)(mBorderEdges.mEdges[NS_SIDE_LEFT].ElementAt(lastRowIndex));
-      nsBorderEdge *rightBorder = (nsBorderEdge *)(mBorderEdges.mEdges[NS_SIDE_RIGHT].ElementAt(lastRowIndex));
-      nsBorderEdge *bottomBorder = (nsBorderEdge *)(mBorderEdges.mEdges[NS_SIDE_BOTTOM].ElementAt(0));
+      nsBorderEdge *leftBorder = (nsBorderEdge *)(mBorderEdges->mEdges[NS_SIDE_LEFT].ElementAt(lastRowIndex));
+      nsBorderEdge *rightBorder = (nsBorderEdge *)(mBorderEdges->mEdges[NS_SIDE_RIGHT].ElementAt(lastRowIndex));
+      nsBorderEdge *bottomBorder = (nsBorderEdge *)(mBorderEdges->mEdges[NS_SIDE_BOTTOM].ElementAt(0));
       if (leftBorder)
         leftBorder->mLength = rowRect.height + bottomBorder->mWidth;
       if (bottomBorder)
-        bottomBorder = (nsBorderEdge *)(mBorderEdges.mEdges[NS_SIDE_BOTTOM].ElementAt(lastColIndex));
+        bottomBorder = (nsBorderEdge *)(mBorderEdges->mEdges[NS_SIDE_BOTTOM].ElementAt(lastColIndex));
       if (rightBorder)
         rightBorder->mLength = rowRect.height + bottomBorder->mWidth;
     }
   }
   //XXX this won't work if the constants are redefined, too bad
   for (PRInt32 borderX = NS_SIDE_TOP; borderX <= NS_SIDE_LEFT; borderX++) {
-    if (!mBorderEdges.mEdges[borderX].ElementAt(0)) {
-      mBorderEdges.mEdges[borderX].AppendElement(new nsBorderEdge());
+    if (!mBorderEdges->mEdges[borderX].ElementAt(0)) {
+      mBorderEdges->mEdges[borderX].AppendElement(new nsBorderEdge());
     }
   }
 }
@@ -1130,6 +1133,10 @@ void nsTableFrame::ComputeVerticalCollapsingBorders(nsIPresContext& aPresContext
   if (NS_STYLE_BORDER_COLLAPSE != GetBorderCollapseStyle())
     return;
   
+  if (!mBorderEdges) {
+    mBorderEdges = new nsBorderEdges;
+  }
+  
   PRInt32 colCount = mCellMap->GetColCount();
   PRInt32 rowCount = mCellMap->GetRowCount();
   PRInt32 endRowIndex = aEndRowIndex;
@@ -1159,16 +1166,17 @@ void nsTableFrame::ComputeLeftBorderForEdgeAt(nsIPresContext& aPresContext,
                                               PRInt32 aRowIndex, 
                                               PRInt32 aColIndex)
 {
+  NS_PRECONDITION(mBorderEdges, "haven't allocated border edges struct");
   // this method just uses mCellMap, because it can't get called unless nCellMap!=nsnull
-  PRInt32 numSegments = mBorderEdges.mEdges[NS_SIDE_LEFT].Count();
+  PRInt32 numSegments = mBorderEdges->mEdges[NS_SIDE_LEFT].Count();
   while (numSegments<=aRowIndex)
   {
     nsBorderEdge *borderToAdd = new nsBorderEdge();
-    mBorderEdges.mEdges[NS_SIDE_LEFT].AppendElement(borderToAdd);
+    mBorderEdges->mEdges[NS_SIDE_LEFT].AppendElement(borderToAdd);
     numSegments++;
   }
   // "border" is the border segment we are going to set
-  nsBorderEdge *border = (nsBorderEdge *)(mBorderEdges.mEdges[NS_SIDE_LEFT].ElementAt(aRowIndex));
+  nsBorderEdge *border = (nsBorderEdge *)(mBorderEdges->mEdges[NS_SIDE_LEFT].ElementAt(aRowIndex));
   if (!border) 
     return;
 
@@ -1231,20 +1239,21 @@ void nsTableFrame::ComputeLeftBorderForEdgeAt(nsIPresContext& aPresContext,
     cellFrame->SetBorderEdge(NS_SIDE_LEFT, aRowIndex, aColIndex, border, 0);  // set the left edge of the cell frame
   }
   border->mWidth += widthToAdd;
-  mBorderEdges.mMaxBorderWidth.left = PR_MAX(border->mWidth, mBorderEdges.mMaxBorderWidth.left);
+  mBorderEdges->mMaxBorderWidth.left = PR_MAX(border->mWidth, mBorderEdges->mMaxBorderWidth.left);
 }
 
 void nsTableFrame::ComputeRightBorderForEdgeAt(nsIPresContext& aPresContext,
                                                PRInt32 aRowIndex, 
                                                PRInt32 aColIndex)
 {
+  NS_PRECONDITION(mBorderEdges, "haven't allocated border edges struct");
   // this method just uses mCellMap, because it can't get called unless nCellMap!=nsnull
   PRInt32 colCount = mCellMap->GetColCount();
-  PRInt32 numSegments = mBorderEdges.mEdges[NS_SIDE_RIGHT].Count();
+  PRInt32 numSegments = mBorderEdges->mEdges[NS_SIDE_RIGHT].Count();
   while (numSegments<=aRowIndex)
   {
     nsBorderEdge *borderToAdd = new nsBorderEdge();
-    mBorderEdges.mEdges[NS_SIDE_RIGHT].AppendElement(borderToAdd);
+    mBorderEdges->mEdges[NS_SIDE_RIGHT].AppendElement(borderToAdd);
     numSegments++;
   }
   // "border" is the border segment we are going to set
@@ -1353,10 +1362,10 @@ void nsTableFrame::ComputeRightBorderForEdgeAt(nsIPresContext& aPresContext,
   }
   if (nsnull==rightNeighborFrame)
   {
-    nsBorderEdge * tableBorder = (nsBorderEdge *)(mBorderEdges.mEdges[NS_SIDE_RIGHT].ElementAt(aRowIndex));
+    nsBorderEdge * tableBorder = (nsBorderEdge *)(mBorderEdges->mEdges[NS_SIDE_RIGHT].ElementAt(aRowIndex));
     *tableBorder = border;
     tableBorder->mInsideNeighbor = &cellFrame->mBorderEdges;
-    mBorderEdges.mMaxBorderWidth.right = PR_MAX(border.mWidth, mBorderEdges.mMaxBorderWidth.right);
+    mBorderEdges->mMaxBorderWidth.right = PR_MAX(border.mWidth, mBorderEdges->mMaxBorderWidth.right);
     // since the table is our right neightbor, we need to factor in the table's horizontal borders.
     // can't compute that length here because we don't know how thick top and bottom borders are
     // see DidComputeHorizontalCollapsingBorders
@@ -1371,16 +1380,17 @@ void nsTableFrame::ComputeTopBorderForEdgeAt(nsIPresContext& aPresContext,
                                              PRInt32 aRowIndex, 
                                              PRInt32 aColIndex)
 {
+  NS_PRECONDITION(mBorderEdges, "haven't allocated border edges struct");
   // this method just uses mCellMap, because it can't get called unless nCellMap!=nsnull
-  PRInt32 numSegments = mBorderEdges.mEdges[NS_SIDE_TOP].Count();
+  PRInt32 numSegments = mBorderEdges->mEdges[NS_SIDE_TOP].Count();
   while (numSegments<=aColIndex)
   {
     nsBorderEdge *borderToAdd = new nsBorderEdge();
-    mBorderEdges.mEdges[NS_SIDE_TOP].AppendElement(borderToAdd);
+    mBorderEdges->mEdges[NS_SIDE_TOP].AppendElement(borderToAdd);
     numSegments++;
   }
   // "border" is the border segment we are going to set
-  nsBorderEdge *border = (nsBorderEdge *)(mBorderEdges.mEdges[NS_SIDE_TOP].ElementAt(aColIndex));
+  nsBorderEdge *border = (nsBorderEdge *)(mBorderEdges->mEdges[NS_SIDE_TOP].ElementAt(aColIndex));
   if (!border) 
     return;
 
@@ -1435,13 +1445,13 @@ void nsTableFrame::ComputeTopBorderForEdgeAt(nsIPresContext& aPresContext,
   border->mInsideNeighbor = &cellFrame->mBorderEdges;
   if (0==aColIndex)
   { // if we're the first column, factor in the thickness of the left table border
-    nsBorderEdge *leftBorder = (nsBorderEdge *)(mBorderEdges.mEdges[NS_SIDE_LEFT].ElementAt(0));
+    nsBorderEdge *leftBorder = (nsBorderEdge *)(mBorderEdges->mEdges[NS_SIDE_LEFT].ElementAt(0));
     if (leftBorder) 
       border->mLength += leftBorder->mWidth;
   }
   if ((mCellMap->GetColCount()-1)==aColIndex)
   { // if we're the last column, factor in the thickness of the right table border
-    nsBorderEdge *rightBorder = (nsBorderEdge *)(mBorderEdges.mEdges[NS_SIDE_RIGHT].ElementAt(0));
+    nsBorderEdge *rightBorder = (nsBorderEdge *)(mBorderEdges->mEdges[NS_SIDE_RIGHT].ElementAt(0));
     if (rightBorder) 
       border->mLength += rightBorder->mWidth;
   }
@@ -1450,20 +1460,21 @@ void nsTableFrame::ComputeTopBorderForEdgeAt(nsIPresContext& aPresContext,
     cellFrame->SetBorderEdge(NS_SIDE_TOP, aRowIndex, aColIndex, border, 0);  // set the top edge of the cell frame
   }
   border->mWidth += widthToAdd;
-  mBorderEdges.mMaxBorderWidth.top = PR_MAX(border->mWidth, mBorderEdges.mMaxBorderWidth.top);
+  mBorderEdges->mMaxBorderWidth.top = PR_MAX(border->mWidth, mBorderEdges->mMaxBorderWidth.top);
 }
 
 void nsTableFrame::ComputeBottomBorderForEdgeAt(nsIPresContext& aPresContext,
                                                 PRInt32 aRowIndex, 
                                                 PRInt32 aColIndex)
 {
+  NS_PRECONDITION(mBorderEdges, "haven't allocated border edges struct");
   // this method just uses mCellMap, because it can't get called unless nCellMap!=nsnull
   PRInt32 rowCount = mCellMap->GetRowCount();
-  PRInt32 numSegments = mBorderEdges.mEdges[NS_SIDE_BOTTOM].Count();
+  PRInt32 numSegments = mBorderEdges->mEdges[NS_SIDE_BOTTOM].Count();
   while (numSegments<=aColIndex)
   {
     nsBorderEdge *borderToAdd = new nsBorderEdge();
-    mBorderEdges.mEdges[NS_SIDE_BOTTOM].AppendElement(borderToAdd);
+    mBorderEdges->mEdges[NS_SIDE_BOTTOM].AppendElement(borderToAdd);
     numSegments++;
   }
   // "border" is the border segment we are going to set
@@ -1570,21 +1581,21 @@ void nsTableFrame::ComputeBottomBorderForEdgeAt(nsIPresContext& aPresContext,
   }
   if (nsnull==bottomNeighborFrame)
   {
-    nsBorderEdge * tableBorder = (nsBorderEdge *)(mBorderEdges.mEdges[NS_SIDE_BOTTOM].ElementAt(aColIndex));
+    nsBorderEdge * tableBorder = (nsBorderEdge *)(mBorderEdges->mEdges[NS_SIDE_BOTTOM].ElementAt(aColIndex));
     *tableBorder = border;
     tableBorder->mInsideNeighbor = &cellFrame->mBorderEdges;
-    mBorderEdges.mMaxBorderWidth.bottom = PR_MAX(border.mWidth, mBorderEdges.mMaxBorderWidth.bottom);
+    mBorderEdges->mMaxBorderWidth.bottom = PR_MAX(border.mWidth, mBorderEdges->mMaxBorderWidth.bottom);
     // since the table is our bottom neightbor, we need to factor in the table's vertical borders.
     PRInt32 lastColIndex = mCellMap->GetColCount()-1;
     if (0==aColIndex)
     { // if we're the first column, factor in the thickness of the left table border
-      nsBorderEdge *leftBorder = (nsBorderEdge *)(mBorderEdges.mEdges[NS_SIDE_LEFT].ElementAt(rowCount-1));
+      nsBorderEdge *leftBorder = (nsBorderEdge *)(mBorderEdges->mEdges[NS_SIDE_LEFT].ElementAt(rowCount-1));
       if (leftBorder) 
         tableBorder->mLength += leftBorder->mWidth;
     }
     if (lastColIndex==aColIndex)
     { // if we're the last column, factor in the thickness of the right table border
-      nsBorderEdge *rightBorder = (nsBorderEdge *)(mBorderEdges.mEdges[NS_SIDE_RIGHT].ElementAt(rowCount-1));
+      nsBorderEdge *rightBorder = (nsBorderEdge *)(mBorderEdges->mEdges[NS_SIDE_RIGHT].ElementAt(rowCount-1));
       if (rightBorder) 
         tableBorder->mLength += rightBorder->mWidth;
     }
@@ -1940,7 +1951,7 @@ NS_METHOD nsTableFrame::Paint(nsIPresContext& aPresContext,
       {
         //printf("paint table frame\n");
         nsCSSRendering::PaintBorderEdges(aPresContext, aRenderingContext, this,
-                                         aDirtyRect, rect,  &mBorderEdges, mStyleContext, skipSides);
+                                         aDirtyRect, rect,  mBorderEdges, mStyleContext, skipSides);
       }
     }
   }
@@ -2008,7 +2019,7 @@ PRBool nsTableFrame::NeedsReflow(const nsHTMLReflowState& aReflowState)
 {
   PRBool result = PR_TRUE;
 
-  if (PR_TRUE == mIsInvariantWidth) {
+  if (mBits.mIsInvariantWidth) {
     result = PR_FALSE;
 
   } else if ((eReflowReason_Incremental == aReflowState.reason) &&
@@ -2239,7 +2250,7 @@ NS_METHOD nsTableFrame::Reflow(nsIPresContext& aPresContext,
       if (nsnull!=mTableLayoutStrategy)
       {
         mTableLayoutStrategy->Initialize(aDesiredSize.maxElementSize, GetColCount(), aReflowState.mComputedWidth);
-        mColumnWidthsValid=PR_TRUE; //so we don't do this a second time below
+        mBits.mColumnWidthsValid=PR_TRUE; //so we don't do this a second time below
       }
     }
     if (PR_FALSE==IsColumnWidthsValid())
@@ -2247,7 +2258,7 @@ NS_METHOD nsTableFrame::Reflow(nsIPresContext& aPresContext,
       if (nsnull!=mTableLayoutStrategy)
       {
         mTableLayoutStrategy->Initialize(aDesiredSize.maxElementSize, GetColCount(), aReflowState.mComputedWidth);
-        mColumnWidthsValid=PR_TRUE;
+        mBits.mColumnWidthsValid=PR_TRUE;
       }
     }
 
@@ -2398,7 +2409,7 @@ NS_METHOD nsTableFrame::ResizeReflowPass1(nsIPresContext&          aPresContext,
   }
 
   aDesiredSize.width = kidSize.width;
-  mFirstPassValid = PR_TRUE;
+  mBits.mFirstPassValid = PR_TRUE;
 
   return rv;
 }
@@ -3790,18 +3801,23 @@ void nsTableFrame::BalanceColumnWidths(nsIPresContext& aPresContext,
 {
   NS_ASSERTION(nsnull==mPrevInFlow, "never ever call me on a continuing frame!");
   NS_ASSERTION(nsnull!=mCellMap, "never ever call me until the cell map is built!");
-  NS_ASSERTION(nsnull!=mColumnWidths, "never ever call me until the col widths array is built!");
 
   PRInt32 numCols = mCellMap->GetColCount();
   if (numCols>mColumnWidthsLength)
   {
     PRInt32 priorColumnWidthsLength=mColumnWidthsLength;
-    while (numCols>mColumnWidthsLength)
-      mColumnWidthsLength += kColumnWidthIncrement;
+    if (0 == priorColumnWidthsLength) {
+      mColumnWidthsLength = numCols;
+    } else {
+      while (numCols>mColumnWidthsLength)
+        mColumnWidthsLength += kColumnWidthIncrement;
+    }
     PRInt32 * newColumnWidthsArray = new PRInt32[mColumnWidthsLength];
     nsCRT::memset (newColumnWidthsArray, 0, mColumnWidthsLength*sizeof(PRInt32));
-    nsCRT::memcpy (newColumnWidthsArray, mColumnWidths, priorColumnWidthsLength*sizeof(PRInt32));
-    delete [] mColumnWidths;
+    if (mColumnWidths) {
+      nsCRT::memcpy (newColumnWidthsArray, mColumnWidths, priorColumnWidthsLength*sizeof(PRInt32));
+      delete [] mColumnWidths;
+    }
     mColumnWidths = newColumnWidthsArray;
    }
 
@@ -3832,7 +3848,7 @@ void nsTableFrame::BalanceColumnWidths(nsIPresContext& aPresContext,
     else
       mTableLayoutStrategy = new BasicTableLayoutStrategy(this, eCompatibility_NavQuirks == mode);
     mTableLayoutStrategy->Initialize(aMaxElementSize, GetColCount(), aReflowState.mComputedWidth);
-    mColumnWidthsValid=PR_TRUE;
+    mBits.mColumnWidthsValid=PR_TRUE;
   }
   // fixed-layout tables need to reinitialize the layout strategy. When there are scroll bars
   // reflow gets called twice and the 2nd time has the correct space available.
@@ -3842,7 +3858,7 @@ void nsTableFrame::BalanceColumnWidths(nsIPresContext& aPresContext,
 
   mTableLayoutStrategy->BalanceColumnWidths(mStyleContext, aReflowState, maxWidth);
   //Dump(PR_TRUE, PR_TRUE);
-  mColumnWidthsSet=PR_TRUE;
+  mBits.mColumnWidthsSet=PR_TRUE;
 
   // if collapsing borders, compute the top and bottom edges now that we have column widths
   if (NS_STYLE_BORDER_COLLAPSE == GetBorderCollapseStyle())
@@ -3899,7 +3915,7 @@ void nsTableFrame::SetTableWidth(nsIPresContext& aPresContext)
   tableSize.width = tableWidth;
     
   // account for scroll bars. XXX needs optimization/caching
-  if (mHasScrollableRowGroup) {
+  if (mBits.mHasScrollableRowGroup) {
     float sbWidth, sbHeight;
     nsCOMPtr<nsIDeviceContext> dc;
     aPresContext.GetDeviceContext(getter_AddRefs(dc));
@@ -4055,12 +4071,13 @@ void nsTableFrame::DistributeSpaceToRows(nsIPresContext& aPresContext,
         rowFrame->SetRect(newRowRect);
         if (NS_STYLE_BORDER_COLLAPSE == GetBorderCollapseStyle())
         {
+          NS_PRECONDITION(mBorderEdges, "haven't allocated border edges struct");
           nsBorderEdge *border = (nsBorderEdge *)
-            (mBorderEdges.mEdges[NS_SIDE_LEFT].ElementAt(((nsTableRowFrame*)rowFrame)->GetRowIndex()));
+            (mBorderEdges->mEdges[NS_SIDE_LEFT].ElementAt(((nsTableRowFrame*)rowFrame)->GetRowIndex()));
           if (border)
             border->mLength=newRowRect.height;
           border = (nsBorderEdge *)
-            (mBorderEdges.mEdges[NS_SIDE_RIGHT].ElementAt(((nsTableRowFrame*)rowFrame)->GetRowIndex()));
+            (mBorderEdges->mEdges[NS_SIDE_RIGHT].ElementAt(((nsTableRowFrame*)rowFrame)->GetRowIndex()));
           if (border) 
             border->mLength=newRowRect.height;
         }
@@ -4353,7 +4370,7 @@ PRBool nsTableFrame::IsColumnWidthsSet()
 { 
   nsTableFrame * firstInFlow = (nsTableFrame *)GetFirstInFlow();
   NS_ASSERTION(nsnull!=firstInFlow, "illegal state -- no first in flow");
-  return firstInFlow->mColumnWidthsSet; 
+  return (PRBool)firstInFlow->mBits.mColumnWidthsSet; 
 }
 
 /* We have to go through our child list twice.
@@ -4458,7 +4475,7 @@ void nsTableFrame::BuildColumnCache( nsIPresContext&          aPresContext,
     }
     childFrame->GetNextSibling(&childFrame);
   }
-  mColumnCacheValid=PR_TRUE;
+  mBits.mColumnCacheValid=PR_TRUE;
 }
 
 void nsTableFrame::CacheColFramesInCellMap()
@@ -4520,49 +4537,49 @@ void nsTableFrame::InvalidateColumnWidths()
 {
   nsTableFrame * firstInFlow = (nsTableFrame *)GetFirstInFlow();
   NS_ASSERTION(nsnull!=firstInFlow, "illegal state -- no first in flow");
-  firstInFlow->mColumnWidthsValid=PR_FALSE;
+  firstInFlow->mBits.mColumnWidthsValid=PR_FALSE;
 }
 
 PRBool nsTableFrame::IsColumnWidthsValid() const
 {
   nsTableFrame * firstInFlow = (nsTableFrame *)GetFirstInFlow();
   NS_ASSERTION(nsnull!=firstInFlow, "illegal state -- no first in flow");
-  return firstInFlow->mColumnWidthsValid;
+  return (PRBool)firstInFlow->mBits.mColumnWidthsValid;
 }
 
 PRBool nsTableFrame::IsFirstPassValid() const
 {
   nsTableFrame * firstInFlow = (nsTableFrame *)GetFirstInFlow();
   NS_ASSERTION(nsnull!=firstInFlow, "illegal state -- no first in flow");
-  return firstInFlow->mFirstPassValid;
+  return (PRBool)firstInFlow->mBits.mFirstPassValid;
 }
 
 void nsTableFrame::InvalidateFirstPassCache()
 {
   nsTableFrame * firstInFlow = (nsTableFrame *)GetFirstInFlow();
   NS_ASSERTION(nsnull!=firstInFlow, "illegal state -- no first in flow");
-  firstInFlow->mFirstPassValid=PR_FALSE;
+  firstInFlow->mBits.mFirstPassValid=PR_FALSE;
 }
 
 PRBool nsTableFrame::IsColumnCacheValid() const
 {
   nsTableFrame * firstInFlow = (nsTableFrame *)GetFirstInFlow();
   NS_ASSERTION(nsnull!=firstInFlow, "illegal state -- no first in flow");
-  return firstInFlow->mColumnCacheValid;
+  return (PRBool)firstInFlow->mBits.mColumnCacheValid;
 }
 
 void nsTableFrame::InvalidateColumnCache()
 {
   nsTableFrame * firstInFlow = (nsTableFrame *)GetFirstInFlow();
   NS_ASSERTION(nsnull!=firstInFlow, "illegal state -- no first in flow");
-  firstInFlow->mColumnCacheValid=PR_FALSE;
+  firstInFlow->mBits.mColumnCacheValid=PR_FALSE;
 }
 
 PRBool nsTableFrame::IsCellMapValid() const
 {
   nsTableFrame * firstInFlow = (nsTableFrame *)GetFirstInFlow();
   NS_ASSERTION(nsnull!=firstInFlow, "illegal state -- no first in flow");
-  return firstInFlow->mCellMapValid;
+  return (PRBool)firstInFlow->mBits.mCellMapValid;
 }
 
 static void InvalidateCellMapForRowGroup(nsIFrame* aRowGroupFrame)
@@ -4589,7 +4606,7 @@ void nsTableFrame::InvalidateCellMap()
 {
   nsTableFrame * firstInFlow = (nsTableFrame *)GetFirstInFlow();
   NS_ASSERTION(nsnull!=firstInFlow, "illegal state -- no first in flow");
-  firstInFlow->mCellMapValid=PR_FALSE;
+  firstInFlow->mBits.mCellMapValid=PR_FALSE;
   // reset the state in each row
   nsIFrame *rowGroupFrame=mFrames.FirstChild();
   for ( ; nsnull!=rowGroupFrame; rowGroupFrame->GetNextSibling(&rowGroupFrame))
@@ -4638,10 +4655,18 @@ void  nsTableFrame::SetColumnWidth(PRInt32 aColIndex, nscoord aWidth)
     firstInFlow->SetColumnWidth(aColIndex, aWidth);
   else
   {
-    NS_ASSERTION(nsnull!=mColumnWidths, "illegal state, nsnull mColumnWidths");
-    NS_ASSERTION(aColIndex<mColumnWidthsLength, "illegal state, aColIndex<mColumnWidthsLength");
-    if (nsnull!=mColumnWidths && aColIndex<mColumnWidthsLength)
+    // Note: in the case of incremental reflow sometimes the table layout
+    // strategy will call to set a column width before we've allocated the
+    // column width array
+    if (!mColumnWidths) {
+      mColumnWidthsLength = mCellMap->GetColCount();
+      mColumnWidths = new PRInt32[mColumnWidthsLength];
+      nsCRT::memset (mColumnWidths, 0, mColumnWidthsLength*sizeof(PRInt32));
+    }
+    
+    if (nsnull!=mColumnWidths && aColIndex<mColumnWidthsLength) {
       mColumnWidths[aColIndex] = aWidth;
+    }
   }
 }
 
@@ -4783,7 +4808,7 @@ void nsTableFrame::GetTableBorder(nsMargin &aBorder)
 {
   if (NS_STYLE_BORDER_COLLAPSE==GetBorderCollapseStyle())
   {
-    aBorder = mBorderEdges.mMaxBorderWidth;
+    aBorder = mBorderEdges->mMaxBorderWidth;
   }
   else
   {
@@ -4803,16 +4828,16 @@ void nsTableFrame::GetTableBorderAt(nsMargin &aBorder, PRInt32 aRowIndex, PRInt3
 {
   if (NS_STYLE_BORDER_COLLAPSE==GetBorderCollapseStyle())
   {
-    nsBorderEdge *border = (nsBorderEdge *)(mBorderEdges.mEdges[NS_SIDE_LEFT].ElementAt(aRowIndex));
+    nsBorderEdge *border = (nsBorderEdge *)(mBorderEdges->mEdges[NS_SIDE_LEFT].ElementAt(aRowIndex));
 		if (border) {
 			aBorder.left = border->mWidth;
-			border = (nsBorderEdge *)(mBorderEdges.mEdges[NS_SIDE_RIGHT].ElementAt(aRowIndex));
+			border = (nsBorderEdge *)(mBorderEdges->mEdges[NS_SIDE_RIGHT].ElementAt(aRowIndex));
       if (border)
 			  aBorder.right = border->mWidth;
-			border = (nsBorderEdge *)(mBorderEdges.mEdges[NS_SIDE_TOP].ElementAt(aColIndex));
+			border = (nsBorderEdge *)(mBorderEdges->mEdges[NS_SIDE_TOP].ElementAt(aColIndex));
       if (border)
 			  aBorder.top = border->mWidth;
-			border = (nsBorderEdge *)(mBorderEdges.mEdges[NS_SIDE_TOP].ElementAt(aColIndex));
+			border = (nsBorderEdge *)(mBorderEdges->mEdges[NS_SIDE_TOP].ElementAt(aColIndex));
       if (border)
 			  aBorder.bottom = border->mWidth;
 		}
@@ -5078,7 +5103,7 @@ nsTableFrame::GetRowGroupFrameFor(nsIFrame* aFrame, const nsStyleDisplay* aDispl
       ;
     } else { // it is a scroll frame that contains the row group frame
       aFrame->FirstChild(nsnull, &result);
-      mHasScrollableRowGroup = PR_TRUE;
+      mBits.mHasScrollableRowGroup = PR_TRUE;
     }
   }
 
@@ -5477,6 +5502,11 @@ nsTableFrame::SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const
 
   // Add in the amount of space for the column width array
   sum += mColumnWidthsLength * sizeof(PRInt32);
+
+  // And the column info cache
+  if (mColCache) {
+    sum += sizeof(*mColCache);
+  }
 
   // Add in size of cell map
   PRUint32 cellMapSize;

@@ -871,23 +871,28 @@ protected:
 // data members
   PRInt32     *mColumnWidths;       // widths of each column
   PRInt32      mColumnWidthsLength; // the number of column lengths this frame has allocated
-  PRBool       mColumnWidthsSet;    // PR_TRUE if column widths have been set at least once
-  PRBool       mColumnWidthsValid;  // PR_TRUE if column width data is still legit, PR_FALSE if it needs to be recalculated
-  PRBool       mFirstPassValid;     // PR_TRUE if first pass data is still legit, PR_FALSE if it needs to be recalculated
-  PRBool       mColumnCacheValid;   // PR_TRUE if column cache info is still legit, PR_FALSE if it needs to be recalculated
-  PRBool       mCellMapValid;       // PR_TRUE if cell map data is still legit, PR_FALSE if it needs to be recalculated
-  PRBool       mIsInvariantWidth;   // PR_TRUE if table width cannot change
-  PRBool       mHasScrollableRowGroup; // PR_TRUE if any section has overflow == "auto" or "scroll"
+
+  struct TableBits {
+    unsigned mColumnWidthsSet:1;       // PR_TRUE if column widths have been set at least once
+    unsigned mColumnWidthsValid:1;     // PR_TRUE if column width data is still legit, PR_FALSE if it needs to be recalculated
+    unsigned mFirstPassValid:1;        // PR_TRUE if first pass data is still legit, PR_FALSE if it needs to be recalculated
+    unsigned mColumnCacheValid:1;      // PR_TRUE if column cache info is still legit, PR_FALSE if it needs to be recalculated
+    unsigned mCellMapValid:1;          // PR_TRUE if cell map data is still legit, PR_FALSE if it needs to be recalculated
+    unsigned mIsInvariantWidth:1;      // PR_TRUE if table width cannot change
+    unsigned mHasScrollableRowGroup:1; // PR_TRUE if any section has overflow == "auto" or "scroll"
+    unsigned mNonPercentSpansPercent:1;
+    int : 24;                          // unused
+  } mBits;
+
   PRInt32      mColCount;           // the number of columns in this table
   nsCellMap*   mCellMap;            // maintains the relationships between rows, cols, and cells
   ColumnInfoCache *mColCache;       // cached information about the table columns
   nsITableLayoutStrategy * mTableLayoutStrategy; // the layout strategy for this frame
   nsFrameList  mColGroups;          // the list of colgroup frames
 
-  nsBorderEdges mBorderEdges;       // one list of border segments for each side of the table frame
+  nsBorderEdges* mBorderEdges;      // one list of border segments for each side of the table frame
                                     // used only for the collapsing border model
   nscoord      mPercentBasisForRows;
-  PRPackedBool mNonPercentSpansPercent;
 };
 
 
@@ -905,12 +910,12 @@ inline nscoord nsTableFrame::GetPercentBasisForRows()
 
 inline PRBool nsTableFrame::HasNonPercentSpanningPercent() const
 {
-  return mNonPercentSpansPercent;
+  return (PRBool)mBits.mNonPercentSpansPercent;
 }
 
 inline void nsTableFrame::SetHasNonPercentSpanningPercent(PRBool aValue)
 {
-  mNonPercentSpansPercent = aValue;
+  mBits.mNonPercentSpansPercent = (unsigned)aValue;
 }
 
 enum nsTableIteration {
