@@ -66,9 +66,10 @@ protected:
     void ResetMatchTypeConters();
     PRBool ItsADuplicate(PRUnichar* fullAddrStr, nsIAutoCompleteResults* results);
     void AddToResult(const PRUnichar* pNickNameStr, const PRUnichar* pNameStr, const PRUnichar*pEmailStr, MatchType type, nsIAutoCompleteResults* results);
-    nsresult SearchCards(nsIAbDirectory* directory, const PRUnichar* searchStr, nsIAutoCompleteResults* results);
+	PRBool CheckEntry(const PRUnichar* searchStr, PRUint32 searchStrLen,const PRUnichar* nickName, const PRUnichar* userName, const PRUnichar* emailAddress, MatchType* matchType);
+	nsresult SearchCards(nsIAbDirectory* directory, const PRUnichar* searchStr, nsIAutoCompleteResults* results);
     nsresult SearchDirectory(nsString& fileName, const PRUnichar* searchStr, nsIAutoCompleteResults* results, PRBool searchSubDirectory = PR_FALSE);
-    nsresult SearchPreviousResults(const PRUnichar *uSearchString, nsIAutoCompleteResults *previousSearchResult);
+    nsresult SearchPreviousResults(const PRUnichar *uSearchString, nsIAutoCompleteResults *previousSearchResult, nsIAutoCompleteResults* results);
 
     nsCOMPtr<nsIMsgHeaderParser> mParser;
     nsString mDefaultDomain;

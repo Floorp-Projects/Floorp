@@ -176,6 +176,53 @@ void nsAbAutoCompleteSession::AddToResult(const PRUnichar* pNickNameStr, const P
     PR_Free(fullAddrStr);
 }
 
+PRBool nsAbAutoCompleteSession::CheckEntry(const PRUnichar* searchStr, PRUint32 searchStrLen,
+	const PRUnichar* nickName, const PRUnichar* userName, const PRUnichar* emailAddress, MatchType* matchType)
+{
+    // First check for a Nickname exact match
+    if (nsCRT::strcasecmp(searchStr, nickName) == 0)
+    {
+        *matchType = NICKNAME_EXACT_MATCH;
+        return PR_TRUE;
+    }
+
+    // Then check for a Name exact match
+    if (nsCRT::strcasecmp(searchStr, (const PRUnichar*)userName) == 0)
+    {
+        *matchType = NAME_EXACT_MATCH;
+        return PR_TRUE;
+    }
+
+    // Then check for a Email exact match
+    if (nsCRT::strcasecmp(searchStr, (const PRUnichar*)emailAddress) == 0)
+    {
+        *matchType = EMAIL_EXACT_MATCH;
+        return PR_TRUE;
+    }
+
+    // Then check for a NickName partial match
+    if (nsCRT::strncasecmp(searchStr, (const PRUnichar*)nickName, searchStrLen) == 0)
+    {
+    	*matchType = NICKNAME_MATCH;
+        return PR_TRUE;
+    }
+
+    // Then check for a Name partial match
+    if (nsCRT::strncasecmp(searchStr, (const PRUnichar*)userName, searchStrLen) == 0)
+    {
+    	*matchType = NAME_MATCH;
+        return PR_TRUE;
+    }
+
+    // Then check for a Email partial match
+    if (nsCRT::strncasecmp(searchStr, (const PRUnichar*)emailAddress, searchStrLen) == 0)
+    {
+    	*matchType = EMAIL_MATCH;
+        return PR_TRUE;
+    }
+
+	return PR_FALSE;
+}
 
 nsresult nsAbAutoCompleteSession::SearchCards(nsIAbDirectory* directory, const PRUnichar* searchStr, nsIAutoCompleteResults* results)
 {
@@ -216,47 +263,9 @@ nsresult nsAbAutoCompleteSession::SearchCards(nsIAbDirectory* directory, const P
              	    if (NS_FAILED(rv))
              	        continue;
                     
-                    // First check for a Nickname exact match
-        			if (nsCRT::strcasecmp(searchStr, (const PRUnichar*)pNickNameStr) == 0)
-        			{
+					MatchType matchType;
+ 					if (CheckEntry(searchStr, searchStrLen, (const PRUnichar*)pNickNameStr, (const PRUnichar*)pNameStr, (const PRUnichar*)pEmailStr, &matchType))
         			    AddToResult((const PRUnichar*)pNickNameStr, (const PRUnichar*)pNameStr, (const PRUnichar*)pEmailStr, NICKNAME_EXACT_MATCH, results);
-        			    continue;
-        			}
-
-                    // Then check for a Name exact match
-        			if (nsCRT::strcasecmp(searchStr, (const PRUnichar*)pNameStr) == 0)
-        			{
-        			    AddToResult((const PRUnichar*)pNickNameStr, (const PRUnichar*)pNameStr, (const PRUnichar*)pEmailStr, NAME_EXACT_MATCH, results);
-        			    continue;
-        			}
-
-                    // Then check for a Email exact match
-        			if (nsCRT::strcasecmp(searchStr, (const PRUnichar*)pEmailStr) == 0)
-        			{
-        			    AddToResult((const PRUnichar*)pNickNameStr, (const PRUnichar*)pNameStr, (const PRUnichar*)pEmailStr, EMAIL_EXACT_MATCH, results);
-        			    continue;
-        			}
-
-                    // Then check for a NickName partial match
-    			    if (nsCRT::strncasecmp(searchStr, (const PRUnichar*)pNickNameStr, searchStrLen) == 0)
-    			    {
-    			        AddToResult((const PRUnichar*)pNickNameStr, (const PRUnichar*)pNameStr, (const PRUnichar*)pEmailStr, NICKNAME_MATCH, results);
-        			    continue;
-    			    }
-
-                    // Then check for a Name partial match
-    			    if (nsCRT::strncasecmp(searchStr, (const PRUnichar*)pNameStr, searchStrLen) == 0)
-    			    {
-    			        AddToResult((const PRUnichar*)pNickNameStr, (const PRUnichar*)pNameStr, (const PRUnichar*)pEmailStr, NAME_MATCH, results);
-        			    continue;
-    			    }
-
-                    // Then check for a Email partial match
-    			    if (nsCRT::strncasecmp(searchStr, (const PRUnichar*)pEmailStr, searchStrLen) == 0)
-    			    {
-    			        AddToResult((const PRUnichar*)pNickNameStr, (const PRUnichar*)pNameStr, (const PRUnichar*)pEmailStr, EMAIL_MATCH, results);
-        			    continue;
-    			    }
 	            }
             }
         }
@@ -318,7 +327,7 @@ nsresult nsAbAutoCompleteSession::SearchDirectory(nsString& fileName, const PRUn
     return rv;
 }
 
-nsresult nsAbAutoCompleteSession::SearchPreviousResults(const PRUnichar *searchStr, nsIAutoCompleteResults *previousSearchResult)
+nsresult nsAbAutoCompleteSession::SearchPreviousResults(const PRUnichar *searchStr, nsIAutoCompleteResults *previousSearchResult, nsIAutoCompleteResults* results)
 {
     if (!previousSearchResult)
         return NS_ERROR_NULL_POINTER;
@@ -368,26 +377,11 @@ nsresult nsAbAutoCompleteSession::SearchPreviousResults(const PRUnichar *searchS
 	        if (NS_FAILED(rv) || !param)
                 return NS_ERROR_FAILURE;
             
-		    if (nsCRT::strncasecmp(searchStr, param->mNickName, searchStrLen) == 0 ||
-                nsCRT::strncasecmp(searchStr, param->mUserName, searchStrLen) == 0 ||
-			    nsCRT::strncasecmp(searchStr, param->mEmailAddress, searchStrLen) == 0)
-			{
-			    NS_RELEASE(param);
-			    continue;
-			}
-			
-			//No match at all with the new search string. Thefore remove this result item from the results array
-			if (array->RemoveElementAt(pos))
-			{
-			    pos --;
-			    mMatchTypeConters[param->mType] --;
-			    NS_RELEASE(param);
-			}
-			else
-			{
-			    NS_RELEASE(param);
-			    return NS_ERROR_FAILURE;
-			}
+			MatchType matchType;
+			if (CheckEntry(searchStr, searchStrLen, param->mNickName, param->mUserName, param->mEmailAddress, &matchType))
+        		AddToResult(param->mNickName, param->mUserName, param->mEmailAddress, matchType, results);
+
+			NS_RELEASE(param);
 	    }
 	    return NS_OK;
     }
@@ -416,20 +410,15 @@ NS_IMETHODIMP nsAbAutoCompleteSession::OnStartLookup(const PRUnichar *uSearchStr
             return NS_OK;
         }
     
+	  ResetMatchTypeConters();       
     nsCOMPtr<nsIAutoCompleteResults> results;
-    if (NS_FAILED(SearchPreviousResults(uSearchString, previousSearchResult)))
-    {
-        ResetMatchTypeConters();
-        
-    	rv = nsComponentManager::CreateInstance(kAutoCompleteResultsCID, nsnull, NS_GET_IID(nsIAutoCompleteResults), getter_AddRefs(results));
-        if (NS_SUCCEEDED(rv))
-        {
-            nsAutoString root; root.AssignWithConversion(kDirectoryDataSourceRoot);
-            rv = SearchDirectory(root, uSearchString, results, PR_TRUE);
-        }
-    }
-    else
-        results = previousSearchResult;
+    rv = nsComponentManager::CreateInstance(kAutoCompleteResultsCID, nsnull, NS_GET_IID(nsIAutoCompleteResults), getter_AddRefs(results));
+    if (NS_SUCCEEDED(rv))
+		  if (NS_FAILED(SearchPreviousResults(uSearchString, previousSearchResult, results)))
+		  {
+			  nsAutoString root; root.AssignWithConversion(kDirectoryDataSourceRoot);
+			  rv = SearchDirectory(root, uSearchString, results, PR_TRUE);
+		  }
                 
     AutoCompleteStatus status = nsIAutoCompleteStatus::failed;
     if (NS_SUCCEEDED(rv) && results)
@@ -449,22 +438,27 @@ NS_IMETHODIMP nsAbAutoCompleteSession::OnStartLookup(const PRUnichar *uSearchStr
         rv = results->GetItems(getter_AddRefs(array));
         if (NS_SUCCEEDED(rv))
         {
-            PRUint32 nbrOfItems;
-            rv = array->Count(&nbrOfItems);
-            if (NS_SUCCEEDED(rv))
-                if (nbrOfItems > 1)
-                {
-                    results->SetDefaultItemIndex(addedDefaultItem ? 1 : 0);
-                    status = nsIAutoCompleteStatus::matchFound;
-                }
+          //If we have more than a match (without counting the default item), we don't
+          //want to auto complete the user input therefore set the default item index to -1
+
+          PRUint32 nbrOfItems;
+          rv = array->Count(&nbrOfItems);
+          if (NS_SUCCEEDED(rv))
+            if (nbrOfItems == 0)
+              status = nsIAutoCompleteStatus::noMatch;
+            else
+            {
+              status = nsIAutoCompleteStatus::matchFound;
+              if (addedDefaultItem)
+              {
+                if (nbrOfItems > 2)
+                  results->SetDefaultItemIndex(-1);
                 else
-                    if (nbrOfItems == 1)
-                    {
-                        results->SetDefaultItemIndex(0);
-                        status = nsIAutoCompleteStatus::matchFound;
-                    }
-                    else
-                        status = nsIAutoCompleteStatus::noMatch;
+                  results->SetDefaultItemIndex(nbrOfItems == 2 ? 1 : 0);
+              }
+              else
+                results->SetDefaultItemIndex(nbrOfItems > 1 ? -1 : 0);
+            }
         }
     }
     listener->OnAutoComplete(results, status);
