@@ -2544,15 +2544,6 @@ PRBool CNavDTD::CanContain(PRInt32 aParent,PRInt32 aChild) const
   }
 #endif
 
-  if(!result) {
-    // Bug 42429 - Preserve whitespace inside TABLE,TR,TBODY,TFOOT,etc.,
-    if(gHTMLElements[aParent].HasSpecialProperty(kBadContentWatch)) {
-      if(nsHTMLElement::IsWhitespaceTag((eHTMLTags)aChild)) { 
-        result=PR_TRUE; 
-      }
-    }
-  }
-
   if(eHTMLTag_nobr==aChild) {
     if(IsInlineElement(aParent,aParent)){
       if(HasOpenContainer((eHTMLTags)aChild)) {
@@ -2722,12 +2713,6 @@ PRBool CNavDTD::CanOmit(eHTMLTags aParent,eHTMLTags aChild,PRBool& aParentContai
     return PR_FALSE;
   }
 
-
-  if(gHTMLElements[aParent].HasSpecialProperty(kOmitWS)) {
-    if(nsHTMLElement::IsWhitespaceTag(aChild)) {
-      return PR_TRUE;
-    }
-  }
 
   if(gHTMLElements[aParent].CanExclude(aChild)){
     return PR_TRUE;
