@@ -294,7 +294,7 @@ static JSValue String_lastIndexOf(Context *cx, const JSValue& thisValue, JSValue
                 if (fpos >= str->size()) 
                     pos = str->size();
                 else
-                    pos = (int32)(fpos);
+                    pos = (uint32)(fpos);
         }
     }
     pos = str->rfind(*searchStr, pos);
