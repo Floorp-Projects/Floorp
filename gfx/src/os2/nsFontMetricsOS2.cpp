@@ -27,8 +27,6 @@
 #include "nsIServiceManager.h"
 #include "nsILanguageAtomService.h"
 #include "nsICharsetConverterManager.h"
-#include "nsICollation.h"
-#include "nsCollationCID.h"
 #include "nsLocaleCID.h"
 #include "nsILocaleService.h"
 #include "nsICharRepresentable.h"
@@ -54,7 +52,6 @@
 
 static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CID);
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
-static NS_DEFINE_CID(kCollationFactoryCID, NS_COLLATIONFACTORY_CID);
 static NS_DEFINE_CID(kLocaleServiceCID, NS_LOCALESERVICE_CID); 
 
 #define NS_MAX_FONT_WEIGHT 900
@@ -65,11 +62,9 @@ static NS_DEFINE_CID(kLocaleServiceCID, NS_LOCALESERVICE_CID);
 
 
 /***** Global variables *****/
-nsVoidArray  *nsFontMetricsOS2::gGlobalFonts = nsnull;
+nsTHashtable<GlobalFontEntry>* nsFontMetricsOS2::gGlobalFonts = nsnull;
 PRBool        nsFontMetricsOS2::gSubstituteVectorFonts = PR_TRUE;
 PLHashTable  *nsFontMetricsOS2::gFamilyNames = nsnull;
-int           nsFontMetricsOS2::gCachedIndex = 0;
-nsICollation *nsFontMetricsOS2::gCollation = nsnull;
 
 static nsIPref           *gPref = nsnull;
 static nsIAtom           *gUsersLocale = nsnull;
@@ -143,13 +138,9 @@ FreeGlobals(void)
   NS_IF_RELEASE(gUsersLocale);
   NS_IF_RELEASE(gSystemLocale);
   NS_IF_RELEASE(gUserDefined);
-  NS_IF_RELEASE(nsFontMetricsOS2::gCollation);
 
   if (nsFontMetricsOS2::gGlobalFonts) {
-    for (int i = nsFontMetricsOS2::gGlobalFonts->Count()-1; i >= 0; --i) {
-      nsGlobalFont* font = (nsGlobalFont*)nsFontMetricsOS2::gGlobalFonts->ElementAt(i);
-      delete font;
-    }
+    nsFontMetricsOS2::gGlobalFonts->Clear();
     delete nsFontMetricsOS2::gGlobalFonts;
     nsFontMetricsOS2::gGlobalFonts = nsnull;
   }
@@ -349,20 +340,6 @@ nsFontMetricsOS2::Destroy()
   return NS_OK;
 }
 
-static PLHashNumber PR_CALLBACK
-HashKey(const void* aString)
-{
-  const nsString* str = (const nsString*)aString;
-  return (PLHashNumber) nsCRT::HashCode(str->get());
-}
-
-static PRIntn PR_CALLBACK
-CompareKeys(const void* aStr1, const void* aStr2)
-{
-  return nsCRT::strcmp(((const nsString*) aStr1)->get(),
-    ((const nsString*) aStr2)->get()) == 0;
-}
-
 // Utility; delete [] when done.
 static FONTMETRICS* getMetrics( long &lFonts, PCSZ facename, HPS hps)
 {
@@ -440,7 +417,7 @@ nsFontMetricsOS2::SetFontHandle(HPS aPS, nsFontOS2* aFont)
       // record the min/max point size available for given font
       if (pMetrics[i].lEmHeight > maxSize)
         maxSize = pMetrics[i].lEmHeight;
-      else if (pMetrics[i].lEmHeight < minSize)
+      if (pMetrics[i].lEmHeight < minSize)
         minSize = pMetrics[i].lEmHeight;
     }
 
@@ -515,7 +492,7 @@ nsFontMetricsOS2::SetFontHandle(HPS aPS, nsFontOS2* aFont)
 nsFontOS2*
 nsFontMetricsOS2::LoadFont(HPS aPS, const nsString& aFontname)
 {
-  nsFontOS2* fh = nsnull;
+  nsFontOS2* font = nsnull;
   char alias[FACESIZE];
 
    // set style flags
@@ -523,199 +500,124 @@ nsFontMetricsOS2::LoadFont(HPS aPS, const nsString& aFontname)
   PRBool bItalic = (mFont.style & (NS_FONT_STYLE_ITALIC | NS_FONT_STYLE_OBLIQUE));
   USHORT flags = bBold ? FM_SEL_BOLD : 0;
   flags |= bItalic ? FM_SEL_ITALIC : 0;
- 
+
    // always pass vector fonts to the printer
   if (!mDeviceContext->SupportsRasterFonts() &&
       GetVectorSubstitute(aPS, aFontname, alias))
   {
-    fh = new nsFontOS2();
-    strcpy( fh->mFattrs.szFacename, alias );
-    fh->mFattrs.fsFontUse = FATTR_FONTUSE_OUTLINE | FATTR_FONTUSE_TRANSFORMABLE;
-    SetFontHandle(aPS, fh);
-    return fh;
+    font = new nsFontOS2();
+    strcpy(font->mFattrs.szFacename, alias);
+    font->mFattrs.fsFontUse = FATTR_FONTUSE_OUTLINE |
+                              FATTR_FONTUSE_TRANSFORMABLE;
+    SetFontHandle(aPS, font);
+    return font;
   }
-  
-   /* rather than doing string compare all the way through the loop, create
-    * a collation key out of the incoming fontname, and compare with that.  */
-  nsAutoString tempname(aFontname);
-  PRUint8* key;
-  PRUint32 keylen;
-  if (aFontname.Find("@", PR_FALSE, 0, 1) != kNotFound) {
-    tempname.Trim( "@", PR_TRUE, PR_FALSE );  /* remove leading "@" */
-    tempname.Append( NS_LITERAL_STRING(" ") );
-  }
-    
-  PRInt32 res = gCollation->AllocateRawSortKey( kCollationCaseInSensitive, 
-                                          tempname, &key,
-                                          &keylen );
-  NS_ASSERTION( NS_SUCCEEDED(res), "Create collation keys failed!" );
- 
-  int i = gCachedIndex;
-  int count = gGlobalFonts->Count();
-  int limit = count + gCachedIndex;
-  
-  while( i < limit && !fh )
-  {
-    nsGlobalFont* font = (nsGlobalFont*)gGlobalFonts->ElementAt(i%count);
 
-    gCollation->CompareRawSortKey(key, keylen, font->key, font->len, &res);
-    if( res == 0 )
-    {
-       /* Save current index such that next time LoadFont() is called, we
-        * start the loop at the last used index                           */
-      gCachedIndex = i % count;
-      int plainIndex = -1;
-      
-      for( int j = i%count; j < font->nextFamily; j++ )
-      {
-        nsGlobalFont* fontj = (nsGlobalFont*)gGlobalFonts->ElementAt(j);
-        nsMiniFontMetrics *fm = &(fontj->metrics);
-        if( (fm->fsSelection & (FM_SEL_ITALIC | FM_SEL_BOLD)) == flags )
-        {
-          fh = new nsFontOS2();
-          FATTRS* fattrs = &(fh->mFattrs);
-     
-          strcpy( fattrs->szFacename, fm->szFacename );
-          if( fm->fsDefn & FM_DEFN_OUTLINE ||
-              !mDeviceContext->SupportsRasterFonts() )
-            fh->mFattrs.fsFontUse = FATTR_FONTUSE_OUTLINE | FATTR_FONTUSE_TRANSFORMABLE;
-          if( fm->fsType & FM_TYPE_MBCS )
-            fh->mFattrs.fsType |= FATTR_TYPE_MBCS;
-          if( fm->fsType & FM_TYPE_DBCS )
-            fh->mFattrs.fsType |= FATTR_TYPE_DBCS;
-          fh->mFattrs.usCodePage = fm->usCodePage;
-            
-          SetFontHandle(aPS, fh);
-          break;
+  GlobalFontEntry* globalEntry = gGlobalFonts->GetEntry(aFontname);
+  if (globalEntry) {
+    nsMiniMetrics* metrics = globalEntry->mMetrics;
+    nsMiniMetrics* plainFont = nsnull;
+    while (metrics) {
+      if ((metrics->fsSelection & (FM_SEL_ITALIC | FM_SEL_BOLD)) == flags) {
+        font = new nsFontOS2();
+        FATTRS* fattrs = &(font->mFattrs);
+
+        strcpy(fattrs->szFacename, metrics->szFacename);
+        if (metrics->fsDefn & FM_DEFN_OUTLINE ||
+            !mDeviceContext->SupportsRasterFonts()) {
+          font->mFattrs.fsFontUse = FATTR_FONTUSE_OUTLINE |
+                                    FATTR_FONTUSE_TRANSFORMABLE;
         }
+        if (metrics->fsType & FM_TYPE_MBCS)
+          font->mFattrs.fsType |= FATTR_TYPE_MBCS;
+        if (metrics->fsType & FM_TYPE_DBCS)
+          font->mFattrs.fsType |= FATTR_TYPE_DBCS;
+        font->mFattrs.usCodePage = globalEntry->mCodePage;
 
-        /* Set index for 'plain' font (non-bold, non-italic) */
-        if( plainIndex == -1 && !(fm->fsSelection & (FM_SEL_ITALIC | FM_SEL_BOLD)))
-          plainIndex = j;
-      }
- 
-       // A font of family "familyname" and with the applied effects (bold &
-       // italic) was not found.  Therefore, just look for a 'regular' font
-       // (that is not italic and not bold), and then have the
-       // system simulate the appropriate effects (see RealizeFont()).
-      if( !fh && plainIndex != -1 )
-      {
-        nsGlobalFont* fontm = (nsGlobalFont*)gGlobalFonts->ElementAt(plainIndex);
-        nsMiniFontMetrics *fm = &(fontm->metrics);
-          
-        fh = new nsFontOS2();
-        FATTRS* fattrs = &(fh->mFattrs);
-   
-        strcpy( fattrs->szFacename, fm->szFacename );
-        if( fm->fsDefn & FM_DEFN_OUTLINE ||
-            !mDeviceContext->SupportsRasterFonts() )
-          fattrs->fsFontUse = FATTR_FONTUSE_OUTLINE | FATTR_FONTUSE_TRANSFORMABLE;
-        else
-          fattrs->fsFontUse = 0;
-        if( fm->fsType & FM_TYPE_MBCS )
-          fattrs->fsType |= FATTR_TYPE_MBCS;
-        if( fm->fsType & FM_TYPE_DBCS )
-          fattrs->fsType |= FATTR_TYPE_DBCS;
-
-         // fake the effects
-        if( bBold )
-          fattrs->fsSelection |= FATTR_SEL_BOLD;
-        if( bItalic )
-          fattrs->fsSelection |= FATTR_SEL_ITALIC;
-        fh->mFattrs.usCodePage = fm->usCodePage;
-
-        SetFontHandle(aPS, fh);
+        SetFontHandle(aPS, font);
         break;
       }
-    }
- 
-    if( i < count )
-      i = font->nextFamily;
-    else
-      i = font->nextFamily + count;
-  }   // end while
 
-  PR_FREEIF(key);
-  if (fh) {
-    mLoadedFonts.AppendElement(fh);
-    return fh;
+      // Save ref to 'plain' font (non-bold, non-italic)
+      if (!plainFont && !(metrics->fsSelection & (FM_SEL_ITALIC | FM_SEL_BOLD)))
+        plainFont = metrics;
+
+      metrics = metrics->mNext;
+    }
+
+    // A font of family "familyname" and with the applied effects (bold &
+    // italic) was not found.  Therefore, just look for a 'regular' font
+    // (that is not italic and not bold), and then have the
+    // system simulate the appropriate effects (see RealizeFont()).
+    if (!font && plainFont) {
+      font = new nsFontOS2();
+      FATTRS* fattrs = &(font->mFattrs);
+ 
+      strcpy(fattrs->szFacename, plainFont->szFacename);
+      if (plainFont->fsDefn & FM_DEFN_OUTLINE ||
+          !mDeviceContext->SupportsRasterFonts()) {
+        fattrs->fsFontUse = FATTR_FONTUSE_OUTLINE |
+                            FATTR_FONTUSE_TRANSFORMABLE;
+      } else {
+        fattrs->fsFontUse = 0;
+      }
+      if (plainFont->fsType & FM_TYPE_MBCS)
+        fattrs->fsType |= FATTR_TYPE_MBCS;
+      if (plainFont->fsType & FM_TYPE_DBCS)
+        fattrs->fsType |= FATTR_TYPE_DBCS;
+
+       // fake the effects
+      if (bBold)
+        fattrs->fsSelection |= FATTR_SEL_BOLD;
+      if (bItalic)
+        fattrs->fsSelection |= FATTR_SEL_ITALIC;
+      fattrs->usCodePage = globalEntry->mCodePage;
+
+      SetFontHandle(aPS, font);
+    }
   }
 
-   // If a font was not found, then maybe "familyname" is really a face name.
-   // See if a font with that facename exists on system and fake any applied
-   // effects
+  if (font) {
+    mLoadedFonts.AppendElement(font);
+    return font;
+  }
+
+  // If a font was not found, then maybe "familyname" is really a face name.
+  // See if a font with that facename exists on system and fake any applied
+  // effects
   long lFonts = 0;
-  char fontname[FACESIZE];
-  WideCharToMultiByte(0, aFontname.get(), aFontname.Length() + 1,
-    fontname, FACESIZE);
-  FONTMETRICS* pMetrics = getMetrics( lFonts, fontname, aPS );
+  char* fontname = ToNewCString(aFontname);
+  FONTMETRICS* pMetrics = getMetrics(lFonts, fontname, aPS);
 
-  if( lFonts > 0 )
-  {
-    fh = new nsFontOS2();
-    strcpy( fh->mFattrs.szFacename, fontname );
-    fh->mFattrs.fsFontUse = FATTR_FONTUSE_OUTLINE | FATTR_FONTUSE_TRANSFORMABLE;
+  if (lFonts > 0) {
+    font = new nsFontOS2();
+    strcpy(font->mFattrs.szFacename, fontname);
+    font->mFattrs.fsFontUse = FATTR_FONTUSE_OUTLINE |
+                              FATTR_FONTUSE_TRANSFORMABLE;
 
-    if( bBold )
-      fh->mFattrs.fsSelection |= FATTR_SEL_BOLD;
-    if( bItalic )
-      fh->mFattrs.fsSelection |= FATTR_SEL_ITALIC;
+    if (bBold)
+      font->mFattrs.fsSelection |= FATTR_SEL_BOLD;
+    if (bItalic)
+      font->mFattrs.fsSelection |= FATTR_SEL_ITALIC;
 
-    if( mDeviceContext->SupportsRasterFonts() )
-    {
-      for (int i = 0 ; i < lFonts ; i++)
-        if( !(pMetrics[i].fsDefn & FM_DEFN_OUTLINE) )
-        {
-          fh->mFattrs.fsFontUse = 0;
+    if (mDeviceContext->SupportsRasterFonts()) {
+      for (int i = 0 ; i < lFonts ; i++) {
+        if (!(pMetrics[i].fsDefn & FM_DEFN_OUTLINE)) {
+          font->mFattrs.fsFontUse = 0;
           break;
         }
+      }
     }
   }
 
   nsMemory::Free(pMetrics);
 
-  if (fh) {
-    SetFontHandle(aPS, fh);
-    mLoadedFonts.AppendElement(fh);
+  if (font) {
+    SetFontHandle(aPS, font);
+    mLoadedFonts.AppendElement(font);
   }
 
-  return fh;
-}
-
-static nsresult
-GetCollation(void)
-{
-  nsresult res = NS_OK;
-  nsCOMPtr<nsILocale> locale = nsnull;
-  nsICollationFactory * collationFactory = nsnull;
-  
-  nsCOMPtr<nsILocaleService> localeServ = 
-           do_GetService(kLocaleServiceCID, &res);
-  if (NS_FAILED(res)) return res;
-
-  res = localeServ->GetApplicationLocale(getter_AddRefs(locale));
-  if (NS_FAILED(res)) return res;
-
-  res = nsComponentManager::CreateInstance(kCollationFactoryCID, NULL, 
-      NS_GET_IID(nsICollationFactory), (void**) &collationFactory);
-  if (NS_FAILED(res)) return res;
-
-  res = collationFactory->CreateCollation(locale, &nsFontMetricsOS2::gCollation);
-  NS_RELEASE(collationFactory);
-  return res;
-}
-
-static int PR_CALLBACK
-CompareFontFamilyNames(const void* aArg1, const void* aArg2, void* aData)
-{
-  PRInt32 res; 
-  nsICollation * collation = (nsICollation *) aData;
-  nsGlobalFont* font1 = (nsGlobalFont*) aArg1;
-  nsGlobalFont* font2 = (nsGlobalFont*) aArg2;
-
-  collation->CompareRawSortKey(font1->key, font1->len, font2->key, font2->len, &res);
-
-  return res;
+  return font;
 }
 
 typedef struct nsFontFamilyName
@@ -754,51 +656,79 @@ static nsFontFamilyName gBadDBCSFontMapping[] =
   { nsnull, nsnull }
 };
 
+#ifdef DEBUG
+PR_STATIC_CALLBACK(PLDHashOperator)
+DebugOutputEnumerator(GlobalFontEntry* aEntry, void* aData)
+{
+  printf("---------------------------------------------------------------------\n");
+  printf(" [[]] %s\n", NS_LossyConvertUCS2toASCII(aEntry->GetKey()).get());
+  nsMiniMetrics* metrics = aEntry->mMetrics;
+  while (metrics) {
+    printf("  %32s", metrics->szFacename);
+
+    if (metrics->fsDefn & FM_DEFN_OUTLINE)
+      printf(" : vector");
+    else
+      printf(" : bitmap");
+      
+    if (metrics->fsSelection & FM_SEL_BOLD)
+      printf(" : bold");
+    else
+      printf(" :     ");
+      
+    if (metrics->fsSelection & FM_SEL_ITALIC)
+      printf(" : italic");
+    else
+      printf(" :       ");
+
+    if (metrics->fsType & FM_TYPE_DBCS ||
+        metrics->fsType & FM_TYPE_MBCS)
+      printf(" : M/DBCS");
+    else
+      printf(" :       ");
+
+    printf("  : cp=%5d\n", aEntry->mCodePage );
+    
+    metrics = metrics->mNext;
+  }
+
+  return PL_DHASH_NEXT;
+}
+#endif
 
 nsresult
 nsFontMetricsOS2::InitializeGlobalFonts()
 {
-  gGlobalFonts = new nsVoidArray();
+  gGlobalFonts = new nsTHashtable<GlobalFontEntry>;
+  if (!gGlobalFonts->Init(64))
+    return NS_ERROR_OUT_OF_MEMORY;
 
   HPS ps = ::WinGetScreenPS(HWND_DESKTOP);
   LONG lRemFonts = 0, lNumFonts;
-  lNumFonts = GFX (::GpiQueryFonts (ps, QF_PUBLIC, NULL, &lRemFonts, 0, 0),
+  lNumFonts = GFX (::GpiQueryFonts(ps, QF_PUBLIC, NULL, &lRemFonts, 0, 0),
                    GPI_ALTERROR);
   FONTMETRICS* pFontMetrics = (PFONTMETRICS) nsMemory::Alloc(lNumFonts * sizeof(FONTMETRICS));
-  lRemFonts = GFX (::GpiQueryFonts (ps, QF_PUBLIC, NULL, &lNumFonts,
-                                    sizeof (FONTMETRICS), pFontMetrics),
+  lRemFonts = GFX (::GpiQueryFonts(ps, QF_PUBLIC, NULL, &lNumFonts,
+                                   sizeof (FONTMETRICS), pFontMetrics),
                    GPI_ALTERROR);
 
-  PRUnichar* str = (PRUnichar*)nsMemory::Alloc((FACESIZE+1) * sizeof(PRUnichar));
-
-  PRInt32 res = GetCollation();
-  NS_ASSERTION( NS_SUCCEEDED(res), "GetCollation failed!" );
-
-  int convertedLength;
   for( int i = 0; i < lNumFonts; i++ )
   {
+    FONTMETRICS* font = &(pFontMetrics[i]);
      // The discrepencies between the Courier bitmap and outline fonts are
      // too much to deal with, so we only use the outline font
-    if( stricmp(pFontMetrics[i].szFamilyname, "Courier") == 0 &&
-        !(pFontMetrics[i].fsDefn & FM_DEFN_OUTLINE))
+    if (strcmp(font->szFamilyname, "Courier") == 0 &&
+        !(font->fsDefn & FM_DEFN_OUTLINE)) {
       continue;
+    }
 
-    if (stricmp(pFontMetrics[i].szFamilyname, "Roman") == 0 ||
-        stricmp(pFontMetrics[i].szFamilyname, "Swiss") == 0)
+    // The facenames for Roman are "Tms Rmn...", for Swiss "Helv...".  This
+    // conflicts with the actual "Tms Rmn" and "Helv" font families.  So, we
+    // skip over these.
+    if (strcmp(pFontMetrics[i].szFamilyname, "Roman") == 0 ||
+        strcmp(pFontMetrics[i].szFamilyname, "Swiss") == 0) {
       continue;
-
-    nsGlobalFont* font = new nsGlobalFont;
-    strcpy(font->metrics.szFamilyname, pFontMetrics[i].szFamilyname);
-    strcpy(font->metrics.szFacename, pFontMetrics[i].szFacename);
-    font->metrics.fsType = pFontMetrics[i].fsType;
-    font->metrics.fsDefn = pFontMetrics[i].fsDefn;
-    font->metrics.fsSelection = pFontMetrics[i].fsSelection;
-    font->metrics.usCodePage = pFontMetrics[i].usCodePage;
-
-     // Set the FM_SEL_BOLD flag in fsSelection.  This makes the check for
-     // bold and italic much easier in LoadFont
-    if( pFontMetrics[i].usWeightClass > 5 )
-      font->metrics.fsSelection |= FM_SEL_BOLD;
+    }
 
      // Problem:  OS/2 has many non-standard fonts that do not follow the
      //           normal Family-name/Face-name conventions (i.e. 'foo',
@@ -812,29 +742,34 @@ nsFontMetricsOS2::InitializeGlobalFonts()
      //           'italic', 'oblique', 'regular').  If the Facename contains
      //           one of these indicators, then we will create the sort key
      //           based on the Familyname.  Otherwise, use the Facename.
-    char* fontptr = nsnull;
-    if (PL_strcasestr(font->metrics.szFacename, "bold") != nsnull ||
-        PL_strcasestr(font->metrics.szFacename, "italic") != nsnull ||
-        PL_strcasestr(font->metrics.szFacename, "oblique") != nsnull ||
-        PL_strcasestr(font->metrics.szFacename, "regular") != nsnull ||
-        PL_strcasestr(font->metrics.szFacename, "-normal") != nsnull)
+    nsAutoString fontptr;
+    if (PL_strcasestr(font->szFacename, "bold") != nsnull ||
+        PL_strcasestr(font->szFacename, "italic") != nsnull ||
+        PL_strcasestr(font->szFacename, "oblique") != nsnull ||
+        PL_strcasestr(font->szFacename, "regular") != nsnull ||
+        PL_strcasestr(font->szFacename, "-normal") != nsnull)
     {
-      fontptr = font->metrics.szFamilyname;
+      CopyASCIItoUCS2(nsDependentCString(NS_STATIC_CAST(char*, font->szFamilyname)),
+                      fontptr);
     } else {
-      fontptr = font->metrics.szFacename;
+      CopyASCIItoUCS2(nsDependentCString(NS_STATIC_CAST(char*, font->szFacename)),
+                      fontptr);
     }
-    
-     // The fonts in gBadDBCSFontMapping do not display well in non-Chinese
-     //   systems.  Map them to a more intelligible name.
-    if (font->metrics.fsType & FM_TYPE_DBCS)
+
+    // The fonts in gBadDBCSFontMapping do not display well in non-Chinese
+    //   systems.  Map them to a more intelligible name.
+    if (font->fsType & FM_TYPE_DBCS)
     {
       if ((gSystemCodePage != 1386) &&
           (gSystemCodePage != 1381) &&
           (gSystemCodePage != 950)) {
         int j=0;
         while (gBadDBCSFontMapping[j].mName) {
-           if ((strcmp(fontptr, gBadDBCSFontMapping[j].mName) == 0)) {
-              fontptr = gBadDBCSFontMapping[j].mWinName;
+           if (fontptr.Equals(NS_ConvertASCIItoUCS2(gBadDBCSFontMapping[j].mName),
+                              nsCaseInsensitiveStringComparator()))
+           {
+              CopyASCIItoUCS2(nsDependentCString(gBadDBCSFontMapping[j].mWinName),
+                              fontptr);
               break;
            }
            j++;
@@ -842,106 +777,44 @@ nsFontMetricsOS2::InitializeGlobalFonts()
       }
     }
 
-     // For vertical DBCS fonts (those that start with '@'), we want them to
-     //   appear directly below the non-vertical font of the same family.
-    convertedLength = MultiByteToWideChar(0, fontptr, strlen(fontptr), str, FACESIZE);
-    if (fontptr[0] == '@')
-    {
-      font->name.Assign( str + 1, convertedLength-1 );
-      font->name.Append( NS_LITERAL_STRING(" ") );
-    } else {
-      font->name.Assign( str, convertedLength );
+    // Create entry for family name, or retrieve already created entry
+    GlobalFontEntry* globalEntry = gGlobalFonts->PutEntry(fontptr);
+    if (!globalEntry)
+      return NS_ERROR_OUT_OF_MEMORY;
+
+    // Init the nsMiniMetrics structure...
+    nsMiniMetrics* metrics = new nsMiniMetrics;
+    strcpy(metrics->szFacename, font->szFacename);
+    metrics->fsType = font->fsType;
+    metrics->fsDefn = font->fsDefn;
+    metrics->fsSelection = font->fsSelection;
+     // Set the FM_SEL_BOLD flag in fsSelection.  This makes the check for
+     // bold and italic much easier in LoadFont
+    if (font->usWeightClass > 5)
+      metrics->fsSelection |= FM_SEL_BOLD;
+
+    // The 'Lucida' set of fonts does not set the bold flag correctly on OS/2,
+    // so we'll just set it properly.
+    if (strncmp(font->szFamilyname, "Lucida", 6) == 0 &&
+        PL_strcasestr(font->szFacename, "bold") != nsnull) {
+      metrics->fsSelection |= FM_SEL_BOLD;
     }
 
-     // Create collation sort key
-    res = gCollation->AllocateRawSortKey(kCollationCaseInSensitive,
-                                         font->name, &font->key, &font->len);
-
-    if (NS_SUCCEEDED(res))
-    {
-       // reset DBCS name to actual value
-      if (fontptr[0] == '@')
-        font->name.Insert( NS_LITERAL_STRING("@"), 0 );
-    }
-    
-    gGlobalFonts->AppendElement(font);
+    // ... and add it to globalEntry
+    metrics->mNext = globalEntry->mMetrics;
+    globalEntry->mMetrics = metrics;
+    globalEntry->mCodePage = font->usCodePage;
   }
 
-  gGlobalFonts->Sort(CompareFontFamilyNames, gCollation);
-
-   // Set nextFamily in the array, such that we can skip from family to
-   //   family in order to speed up searches.
-  int prevIndex = 0;
-  nsGlobalFont* font = (nsGlobalFont*)gGlobalFonts->ElementAt(0);
-  PRUint8* lastkey = font->key;
-  PRUint32 lastlen = font->len;
-
-  int count = gGlobalFonts->Count(); 
-  for( int j = 0; j < count; j++ )
-  {
-    font = (nsGlobalFont*)gGlobalFonts->ElementAt(j);
-    
-    gCollation->CompareRawSortKey(font->key, font->len, lastkey, lastlen, &res);
-    if( res != 0 )
-    {
-      lastkey = font->key;
-      lastlen = font->len;
-
-      font = (nsGlobalFont*)gGlobalFonts->ElementAt(prevIndex);
-      font->nextFamily = j;
-      prevIndex = j;
-    }
-    else
-      font->nextFamily = 0;
-  }
-
-  font = (nsGlobalFont*)gGlobalFonts->ElementAt(prevIndex);
-  font->nextFamily = count;
   ::WinReleasePS(ps);
-    
+
 #ifdef DEBUG_pedemont
-  for( int k = 0; k < gGlobalFonts->Count(); k++ )
-  {
-    font = (nsGlobalFont*)gGlobalFonts->ElementAt(k);
-    nsMiniFontMetrics* fm = &(font->metrics);
-    printf( " %3d: %32s :", k, fm->szFamilyname );
-    printf( " %32s", fm->szFacename );
-    
-    if( fm->fsDefn & FM_DEFN_OUTLINE )
-      printf( " : vector" );
-    else
-      printf( " : bitmap" );
-      
-    if( fm->fsSelection & FM_SEL_BOLD )
-      printf( " : bold" );
-    else
-      printf( " :     " );
-      
-    if( fm->fsSelection & FM_SEL_ITALIC )
-      printf( " : italic" );
-    else
-      printf( " :       " );
-
-    if( fm->fsType & FM_TYPE_DBCS ||
-        fm->fsType & FM_TYPE_MBCS )
-      printf( " : M/DBCS" );
-    else
-      printf( " :       " );
-
-    printf( "  : %5d", fm->usCodePage );
-
-    if( font->nextFamily )
-      printf( " : %d", font->nextFamily );
-      
-    printf( "\n" );
-  }
-  fflush( stdout );
+  gGlobalFonts->EnumerateEntries(DebugOutputEnumerator, nsnull);
+  fflush(stdout);
 #endif
-
-  nsMemory::Free(str);
   nsMemory::Free(pFontMetrics);
-    
-  return res;
+
+  return NS_OK;
 }
 
 nsFontOS2*
@@ -1000,7 +873,20 @@ static nsFontFamilyName gFamilyNameTableDBCS[] =
 /*-----------------------
 ** Hash table allocation
 **----------------------*/
-//-- Font FamilyNames
+static PLHashNumber PR_CALLBACK
+HashKey(const void* aString)
+{
+  const nsString* str = (const nsString*)aString;
+  return (PLHashNumber) nsCRT::HashCode(str->get());
+}
+
+static PRIntn PR_CALLBACK
+CompareKeys(const void* aStr1, const void* aStr2)
+{
+  return nsCRT::strcmp(((const nsString*) aStr1)->get(),
+    ((const nsString*) aStr2)->get()) == 0;
+}
+
 PR_STATIC_CALLBACK(void*) familyname_AllocTable(void *pool, size_t size)
 {
   return nsMemory::Alloc(size);
@@ -1330,10 +1216,7 @@ PRBool
 nsFontMetricsOS2::GetVectorSubstitute(HPS aPS, const nsString& aFamilyname,
                                       char* alias)
 {
-  char fontname[FACESIZE];
-  WideCharToMultiByte(0, aFamilyname.get(), aFamilyname.Length() + 1,
-    fontname, FACESIZE);
-
+  char* fontname = ToNewCString(aFamilyname);
   return GetVectorSubstitute(aPS, fontname, alias);
 }
 
@@ -1462,7 +1345,7 @@ nsFontMetricsOS2::RealizeFont()
   nsFontOS2* font = FindFont(ps);
   NS_ASSERTION(font, "FindFont() returned null.  THIS IS BAD!");
   if (!font) {
-    if( mDeviceContext->mPrintDC == NULL) {
+    if (mDeviceContext->mPrintDC == NULL) {
       ::WinReleasePS(ps);
     }
     return NS_ERROR_FAILURE;
@@ -2074,11 +1957,54 @@ nsFontEnumeratorOS2::nsFontEnumeratorOS2()
 
 NS_IMPL_ISUPPORTS1(nsFontEnumeratorOS2, nsIFontEnumerator)
 
+// We want vertical fonts (those whose name start with '@') to appear
+// immediately following the non-vertical font of the same name.
+static int
+CompareFontNames(const void* aArg1, const void* aArg2, void* aClosure)
+{
+  const PRUnichar* str1 = *((const PRUnichar**) aArg1);
+  const PRUnichar* str2 = *((const PRUnichar**) aArg2);
+
+  int rc = 9;
+  if ((char)str1[0] == '@') {
+    str1++;
+    rc = nsCRT::strcmp(str1, str2);
+    if (rc == 0)
+      return 1;
+  }
+  if ((char)str2[0] == '@') {
+    str2++;
+    rc = nsCRT::strcmp(str1, str2);
+    if (rc == 0)
+      return -1;
+  }
+
+  if (rc == 9)
+    rc = nsCRT::strcmp(str1, str2);
+  return rc;
+}
+
 NS_IMETHODIMP
 nsFontEnumeratorOS2::EnumerateFonts(const char* aLangGroup,
   const char* aGeneric, PRUint32* aCount, PRUnichar*** aResult)
 {
   return EnumerateAllFonts(aCount, aResult);
+}
+
+struct EnumerateAllFontsData
+{
+  PRUnichar** array;
+  int count;
+};
+
+PR_STATIC_CALLBACK(PLDHashOperator)
+EnumerateAllFontsCallback(GlobalFontEntry* aEntry, void* aData)
+{
+  EnumerateAllFontsData* data = NS_STATIC_CAST(EnumerateAllFontsData*, aData);
+
+  data->array[data->count++] = ToNewUnicode(aEntry->GetKey());
+
+  return PL_DHASH_NEXT;
 }
 
 NS_IMETHODIMP
@@ -2087,30 +2013,26 @@ nsFontEnumeratorOS2::EnumerateAllFonts(PRUint32* aCount, PRUnichar*** aResult)
   NS_ENSURE_ARG_POINTER(aCount);
   NS_ENSURE_ARG_POINTER(aResult);
 
-  if( !nsFontMetricsOS2::gGlobalFonts )
-  {
+  if (!nsFontMetricsOS2::gGlobalFonts) {
     nsresult res = nsFontMetricsOS2::InitializeGlobalFonts();
-    if( NS_FAILED(res) )
-    {
+    if (NS_FAILED(res)) {
       FreeGlobals();
       return res;
     }
   }
 
-  int count = nsFontMetricsOS2::gGlobalFonts->Count();
-  PRUnichar** array = (PRUnichar**)nsMemory::Alloc(count * sizeof(PRUnichar*));
-  NS_ENSURE_TRUE( array, NS_ERROR_OUT_OF_MEMORY );
+  *aCount = nsFontMetricsOS2::gGlobalFonts->Count();
+  PRUnichar** array = (PRUnichar**)nsMemory::Alloc(*aCount * sizeof(PRUnichar*));
+  NS_ENSURE_TRUE(array, NS_ERROR_OUT_OF_MEMORY);
 
-  int i = 0;
-  int j = 0;
-  while( i < count )
-  {
-    nsGlobalFont* font = (nsGlobalFont*)nsFontMetricsOS2::gGlobalFonts->ElementAt(i);
-    array[j++] = ToNewUnicode( font->name );
-    i = font->nextFamily;
-  }
+  EnumerateAllFontsData data;
+  data.array = array;
+  data.count = 0;
+  nsFontMetricsOS2::gGlobalFonts->EnumerateEntries(EnumerateAllFontsCallback,
+                                                  &data);
 
-  *aCount = j;
+  NS_QuickSort(array, *aCount, sizeof(PRUnichar*), CompareFontNames, nsnull);
+
   *aResult = array;
 
   return NS_OK;
