@@ -1518,8 +1518,8 @@ nsWindow::StandardWindowCreate(nsIWidget *aParent,
                                       NULL);
   }
 
-  VERIFY(mWnd);
-
+  if (!mWnd)
+    return NS_ERROR_FAILURE;
 
   /*mNativeDragTarget = new nsNativeDragTarget(this);
   if (NULL != mNativeDragTarget) {
