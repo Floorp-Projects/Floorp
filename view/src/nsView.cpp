@@ -942,7 +942,7 @@ nsresult nsView :: LoadWidget(const nsCID &aClassIID)
   nsresult      rv;
 
   static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
-  rv = NSRepository::CreateInstance(aClassIID, nsnull, kISupportsIID, (void**)&window);
+  rv = nsRepository::CreateInstance(aClassIID, nsnull, kISupportsIID, (void**)&window);
 
   if (NS_OK == rv) {
     // get a pointer to the nsIWidget* interface

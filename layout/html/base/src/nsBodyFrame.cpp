@@ -806,7 +806,7 @@ nsIView* nsBodyFrame::CreateAbsoluteView(const nsStylePosition* aPosition,
   static NS_DEFINE_IID(kIViewIID, NS_IVIEW_IID);
 
   // Create the view
-  nsresult result = NSRepository::CreateInstance(kViewCID, 
+  nsresult result = nsRepository::CreateInstance(kViewCID, 
                                                  nsnull, 
                                                  kIViewIID, 
                                                  (void **)&view);

@@ -479,7 +479,7 @@ nsIRegion * pRegion ;
   static NS_DEFINE_IID(kCRegionCID, NS_REGION_CID);
   static NS_DEFINE_IID(kIRegionIID, NS_IREGION_IID);
 
-  nsresult rv = NSRepository::CreateInstance(kCRegionCID,nsnull,  kIRegionIID, (void **)aRegion);
+  nsresult rv = nsRepository::CreateInstance(kCRegionCID,nsnull,  kIRegionIID, (void **)aRegion);
 
   if (NS_OK == rv) 
   	{

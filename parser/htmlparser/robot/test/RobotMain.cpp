@@ -22,7 +22,7 @@ int main(int argc, char **argv)
   }
 
   static NS_DEFINE_IID(kCParserCID, NS_PARSER_IID);
-  NSRepository::RegisterFactory(kCParserCID, PARSER_DLL, PR_FALSE, PR_FALSE);
+  nsRepository::RegisterFactory(kCParserCID, PARSER_DLL, PR_FALSE, PR_FALSE);
 
   return DebugRobot(gWorkList, nsnull);
 }

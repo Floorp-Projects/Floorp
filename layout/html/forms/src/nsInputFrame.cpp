@@ -253,7 +253,7 @@ nsInputFrame::Reflow(nsIPresContext&      aPresContext,
       GetStyleContext(&aPresContext, mStyleContext);
     }
     nsresult result = 
-	    NSRepository::CreateInstance(kViewCID, nsnull, kIViewIID,
+	    nsRepository::CreateInstance(kViewCID, nsnull, kIViewIID,
                                    (void **)&view);
 	  if (NS_OK != result) {
 	    NS_ASSERTION(0, "Could not create view for button"); 

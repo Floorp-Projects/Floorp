@@ -295,7 +295,7 @@ void nsWindow::InitDeviceContext(nsIDeviceContext *aContext,nsNativeWidget aPare
     static NS_DEFINE_IID(kDeviceContextCID, NS_DEVICE_CONTEXT_CID);
     static NS_DEFINE_IID(kDeviceContextIID, NS_IDEVICE_CONTEXT_IID);
 
-    res = NSRepository::CreateInstance(kDeviceContextCID,
+    res = nsRepository::CreateInstance(kDeviceContextCID,
                                        nsnull, 
                                        kDeviceContextIID, 
                                        (void **)&mContext);
@@ -725,7 +725,7 @@ nsIRenderingContext* nsWindow::GetRenderingContext()
     static NS_DEFINE_IID(kRenderingContextCID, NS_RENDERING_CONTEXT_CID);
     static NS_DEFINE_IID(kRenderingContextIID, NS_IRENDERING_CONTEXT_IID);
     
-    res = NSRepository::CreateInstance(kRenderingContextCID, nsnull, kRenderingContextIID, (void **)&ctx);
+    res = nsRepository::CreateInstance(kRenderingContextCID, nsnull, kRenderingContextIID, (void **)&ctx);
     
     if (NS_OK == res)
     	{
@@ -948,7 +948,7 @@ nsRect 		rr;
     static NS_DEFINE_IID(kRenderingContextCID, NS_RENDERING_CONTEXT_CID);
     static NS_DEFINE_IID(kRenderingContextIID, NS_IRENDERING_CONTEXT_IID);
     
-    if (NS_OK == NSRepository::CreateInstance(kRenderingContextCID, 
+    if (NS_OK == nsRepository::CreateInstance(kRenderingContextCID, 
 					      nsnull, 
 					      kRenderingContextIID, 
 					      (void **)&event.renderingContext))

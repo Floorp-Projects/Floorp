@@ -397,7 +397,7 @@ int createTestButton(nsIWidget * aWin,
                      EVENT_CALLBACK aHandleEventFunction) {
   nsIButton *button;
   nsRect rect(aX, aY, aWidth, 25);  
-  NSRepository::CreateInstance(kCButtonCID, nsnull, kIButtonIID, (void **) &button);
+  nsRepository::CreateInstance(kCButtonCID, nsnull, kIButtonIID, (void **) &button);
   button->Create(window, rect, aHandleEventFunction, NULL);
   nsString label(aTitle);
   button->SetLabel(label);
@@ -417,7 +417,7 @@ nsIButton* createSimpleButton(nsIWidget * aWin,
                      EVENT_CALLBACK aHandleEventFunction) {
   nsIButton *button;
   nsRect rect(aX, aY, aWidth, 25);  
-  NSRepository::CreateInstance(kCButtonCID, nsnull, kIButtonIID, (void**)&button);
+  nsRepository::CreateInstance(kCButtonCID, nsnull, kIButtonIID, (void**)&button);
   button->Create(aWin, rect, aHandleEventFunction, NULL);
   nsString label(aTitle);
   button->SetLabel(label);
@@ -438,7 +438,7 @@ nsITooltipWidget* createTooltipWindow(nsIWidget * aWin,
                      EVENT_CALLBACK aHandleEventFunction) {
   nsITooltipWidget *tooltip;
   nsRect rect(aX, aY, aWidth, 40);  
-  NSRepository::CreateInstance(kCTooltipWidgetCID, nsnull, kITooltipWidgetIID, (void**)&tooltip);
+  nsRepository::CreateInstance(kCTooltipWidgetCID, nsnull, kITooltipWidgetIID, (void**)&tooltip);
   tooltip->Create((nsIWidget*)NULL, rect, aHandleEventFunction, NULL);
   nsIButton *toolTipButton = createSimpleButton(tooltip, "tooltip",5, 5, 80, 0);
   tooltip->Show(PR_TRUE);
@@ -970,7 +970,7 @@ nsEventStatus PR_CALLBACK HandleFileButtonEvent(nsGUIEvent *aEvent)
       nsIFileWidget *fileWidget;
 
       nsString title("FileWidget Title <here> mode = save");
-      NSRepository::CreateInstance(kCFileWidgetCID, nsnull, kIFileWidgetIID, (void**)&fileWidget);
+      nsRepository::CreateInstance(kCFileWidgetCID, nsnull, kIFileWidgetIID, (void**)&fileWidget);
   
       nsString titles[] = {"all files","html","executables" };
       nsString filters[] = {"*.*", "*.html", "*.exe" };
@@ -1124,24 +1124,24 @@ nsresult WidgetTest(int *argc, char **argv)
     }
 
     // register widget classes
-    NSRepository::RegisterFactory(kCWindowCID, WIDGET_DLL, PR_FALSE, PR_FALSE);
-    NSRepository::RegisterFactory(kCAppShellCID, WIDGET_DLL, PR_FALSE, PR_FALSE);
-    NSRepository::RegisterFactory(kCChildCID, WIDGET_DLL, PR_FALSE, PR_FALSE);
-    NSRepository::RegisterFactory(kCButtonCID, WIDGET_DLL, PR_FALSE, PR_FALSE);
+    nsRepository::RegisterFactory(kCWindowCID, WIDGET_DLL, PR_FALSE, PR_FALSE);
+    nsRepository::RegisterFactory(kCAppShellCID, WIDGET_DLL, PR_FALSE, PR_FALSE);
+    nsRepository::RegisterFactory(kCChildCID, WIDGET_DLL, PR_FALSE, PR_FALSE);
+    nsRepository::RegisterFactory(kCButtonCID, WIDGET_DLL, PR_FALSE, PR_FALSE);
 
     
 #ifdef NOTNOW       
-    NSRepository::RegisterFactory(kCCheckButtonCID, WIDGET_DLL, PR_FALSE, PR_FALSE);
-    NSRepository::RegisterFactory(kCComboBoxCID, WIDGET_DLL, PR_FALSE, PR_FALSE);
-    NSRepository::RegisterFactory(kCFileWidgetCID, WIDGET_DLL, PR_FALSE, PR_FALSE);
-    NSRepository::RegisterFactory(kCListBoxCID, WIDGET_DLL, PR_FALSE, PR_FALSE);
-    NSRepository::RegisterFactory(kCRadioButtonCID, WIDGET_DLL, PR_FALSE, PR_FALSE);
-    NSRepository::RegisterFactory(kCHorzScrollbarCID, WIDGET_DLL, PR_FALSE, PR_FALSE);
-    NSRepository::RegisterFactory(kCVertScrollbarCID, WIDGET_DLL, PR_FALSE, PR_FALSE);
-    NSRepository::RegisterFactory(kCTextAreaCID, WIDGET_DLL, PR_FALSE, PR_FALSE);
-    NSRepository::RegisterFactory(kCTextFieldCID, WIDGET_DLL, PR_FALSE, PR_FALSE);
-    NSRepository::RegisterFactory(kCTabWidgetCID, WIDGET_DLL, PR_FALSE, PR_FALSE);
-    NSRepository::RegisterFactory(kCTooltipWidgetCID, WIDGET_DLL, PR_FALSE, PR_FALSE);
+    nsRepository::RegisterFactory(kCCheckButtonCID, WIDGET_DLL, PR_FALSE, PR_FALSE);
+    nsRepository::RegisterFactory(kCComboBoxCID, WIDGET_DLL, PR_FALSE, PR_FALSE);
+    nsRepository::RegisterFactory(kCFileWidgetCID, WIDGET_DLL, PR_FALSE, PR_FALSE);
+    nsRepository::RegisterFactory(kCListBoxCID, WIDGET_DLL, PR_FALSE, PR_FALSE);
+    nsRepository::RegisterFactory(kCRadioButtonCID, WIDGET_DLL, PR_FALSE, PR_FALSE);
+    nsRepository::RegisterFactory(kCHorzScrollbarCID, WIDGET_DLL, PR_FALSE, PR_FALSE);
+    nsRepository::RegisterFactory(kCVertScrollbarCID, WIDGET_DLL, PR_FALSE, PR_FALSE);
+    nsRepository::RegisterFactory(kCTextAreaCID, WIDGET_DLL, PR_FALSE, PR_FALSE);
+    nsRepository::RegisterFactory(kCTextFieldCID, WIDGET_DLL, PR_FALSE, PR_FALSE);
+    nsRepository::RegisterFactory(kCTabWidgetCID, WIDGET_DLL, PR_FALSE, PR_FALSE);
+    nsRepository::RegisterFactory(kCTooltipWidgetCID, WIDGET_DLL, PR_FALSE, PR_FALSE);
 
     
     static NS_DEFINE_IID(kCRenderingContextIID, NS_RENDERING_CONTEXT_CID); 
@@ -1150,10 +1150,10 @@ nsresult WidgetTest(int *argc, char **argv)
     static NS_DEFINE_IID(kCImageIID, NS_IMAGE_CID); 
 
 
-    NSRepository::RegisterFactory(kCRenderingContextIID, GFX_DLL, PR_FALSE, PR_FALSE); 
-    NSRepository::RegisterFactory(kCDeviceContextIID, GFX_DLL, PR_FALSE, PR_FALSE); 
-    NSRepository::RegisterFactory(kCFontMetricsIID, GFX_DLL, PR_FALSE, PR_FALSE); 
-    NSRepository::RegisterFactory(kCImageIID, GFX_DLL, PR_FALSE, PR_FALSE); 
+    nsRepository::RegisterFactory(kCRenderingContextIID, GFX_DLL, PR_FALSE, PR_FALSE); 
+    nsRepository::RegisterFactory(kCDeviceContextIID, GFX_DLL, PR_FALSE, PR_FALSE); 
+    nsRepository::RegisterFactory(kCFontMetricsIID, GFX_DLL, PR_FALSE, PR_FALSE); 
+    nsRepository::RegisterFactory(kCImageIID, GFX_DLL, PR_FALSE, PR_FALSE); 
 #endif
 
 
@@ -1163,14 +1163,14 @@ nsresult WidgetTest(int *argc, char **argv)
     //static NS_DEFINE_IID(kCImageIID, NS_IMAGE_CID); 
 
 
-    //NSRepository::RegisterFactory(kCRenderingContextIID, GFX_DLL, PR_FALSE, PR_FALSE); 
-    NSRepository::RegisterFactory(kCDeviceContextIID, GFX_DLL, PR_FALSE, PR_FALSE); 
-    //NSRepository::RegisterFactory(kCFontMetricsIID, GFX_DLL, PR_FALSE, PR_FALSE); 
-    //NSRepository::RegisterFactory(kCImageIID, GFX_DLL, PR_FALSE, PR_FALSE); 
+    //nsRepository::RegisterFactory(kCRenderingContextIID, GFX_DLL, PR_FALSE, PR_FALSE); 
+    nsRepository::RegisterFactory(kCDeviceContextIID, GFX_DLL, PR_FALSE, PR_FALSE); 
+    //nsRepository::RegisterFactory(kCFontMetricsIID, GFX_DLL, PR_FALSE, PR_FALSE); 
+    //nsRepository::RegisterFactory(kCImageIID, GFX_DLL, PR_FALSE, PR_FALSE); 
 
       // Create a application shell
     nsIAppShell *appShell;
-    NSRepository::CreateInstance(kCAppShellCID, nsnull, kIAppShellIID, (void**)&appShell);
+    nsRepository::CreateInstance(kCAppShellCID, nsnull, kIAppShellIID, (void**)&appShell);
     if (appShell != nsnull) {
       appShell->Create(argc, argv);
     } else {
@@ -1188,7 +1188,7 @@ nsresult WidgetTest(int *argc, char **argv)
     //
     // create the main window
     //
-    NSRepository::CreateInstance(kCWindowCID, nsnull, kIWidgetIID, (void**)&window);
+    nsRepository::CreateInstance(kCWindowCID, nsnull, kIWidgetIID, (void**)&window);
     nsRect rect(100, 100, 600, 700);
     //nsRect rect(100, 100, 600, 600);
     window->Create((nsIWidget*) nsnull, rect, HandleEvent, 
@@ -1201,7 +1201,7 @@ nsresult WidgetTest(int *argc, char **argv)
     //
     // Create Device Context based on main window
     //
-    res = NSRepository::CreateInstance(kDeviceContextCID, nsnull, kDeviceContextIID, (void **)&deviceContext);
+    res = nsRepository::CreateInstance(kDeviceContextCID, nsnull, kDeviceContextIID, (void **)&deviceContext);
 
     if (NS_OK == res)
     	{
@@ -1219,7 +1219,7 @@ nsresult WidgetTest(int *argc, char **argv)
     //
     nsIButton *button;
     rect.SetRect(x, y, 60, 25);  
-    NSRepository::CreateInstance(kCButtonCID, nsnull, kIButtonIID, (void**)&button);
+    nsRepository::CreateInstance(kCButtonCID, nsnull, kIButtonIID, (void**)&button);
     button->Create(window, rect, HandleEvent, NULL);
     nsString label("Slider");
     button->SetLabel(label);
@@ -1262,7 +1262,7 @@ nsresult WidgetTest(int *argc, char **argv)
     int y = 10;
     rect.SetRect(x, y, 100, 100);  
 
-    NSRepository::CreateInstance(kCChildCID, nsnull, kIWidgetIID, (void**)&child);
+    nsRepository::CreateInstance(kCChildCID, nsnull, kIWidgetIID, (void**)&child);
       
 #if 0 
     child->SetBorderStyle(eBorderStyle_dialog);
@@ -1288,7 +1288,7 @@ nsresult WidgetTest(int *argc, char **argv)
     nsICheckButton * checkButton;
     rect.SetRect(x, y, 100, 25);  
 
-    NSRepository::CreateInstance(kCCheckButtonCID, nsnull, kICheckButtonIID, (void**)&checkButton);
+    nsRepository::CreateInstance(kCCheckButtonCID, nsnull, kICheckButtonIID, (void**)&checkButton);
     checkButton->Create(window, rect, CheckButtonTestHandleEvent, NULL);
     nsString cbLabel("CheckButton");
     checkButton->SetLabel(cbLabel);
@@ -1303,7 +1303,7 @@ nsresult WidgetTest(int *argc, char **argv)
     nsITextWidget * textWidget;
     rect.SetRect(x, y, 100, TEXT_HEIGHT);  
 
-    NSRepository::CreateInstance(kCTextFieldCID, nsnull, kITextWidgetIID, (void**)&textWidget);
+    nsRepository::CreateInstance(kCTextFieldCID, nsnull, kITextWidgetIID, (void**)&textWidget);
     textWidget->Create(window, rect, HandleEvent, deviceContext);
 
 
@@ -1329,7 +1329,7 @@ nsresult WidgetTest(int *argc, char **argv)
 
     nsITextWidget * ptextWidget;
     rect.SetRect(x, y, 100, TEXT_HEIGHT);  
-    NSRepository::CreateInstance(kCTextFieldCID, nsnull, kITextWidgetIID, (void**)&ptextWidget);
+    nsRepository::CreateInstance(kCTextFieldCID, nsnull, kITextWidgetIID, (void**)&ptextWidget);
     ptextWidget->SetPassword(PR_TRUE);
     ptextWidget->Create(window, rect, HandleEvent, NULL);
     nsString pinitialText("password text");
@@ -1360,7 +1360,7 @@ nsresult WidgetTest(int *argc, char **argv)
 
     nsITextWidget * rtextWidget;
     rect.SetRect(x, y, 100, TEXT_HEIGHT);  
-    NSRepository::CreateInstance(kCTextFieldCID, nsnull, kITextWidgetIID, (void**)&rtextWidget);
+    nsRepository::CreateInstance(kCTextFieldCID, nsnull, kITextWidgetIID, (void**)&rtextWidget);
     rtextWidget->SetReadOnly(PR_TRUE);
     rtextWidget->Create(window, rect, HandleEvent, NULL);
     nsString rinitialText("This is readonly");
@@ -1374,7 +1374,7 @@ nsresult WidgetTest(int *argc, char **argv)
 
     nsITextAreaWidget * textAreaWidget;
     rect.SetRect(x, y, 150, 100);  
-    NSRepository::CreateInstance(kCTextAreaCID, nsnull, kITextAreaWidgetIID, (void**)&textAreaWidget);
+    nsRepository::CreateInstance(kCTextAreaCID, nsnull, kITextAreaWidgetIID, (void**)&textAreaWidget);
     textAreaWidget->Create(window, rect, HandleEvent, NULL);
     nsString textAreaInitialText("Text Area Widget");
     textWidgetInstance = textAreaWidget;
@@ -1391,7 +1391,7 @@ nsresult WidgetTest(int *argc, char **argv)
     // create a scrollbar
     //
     rect.SetRect(x, 10, 25, 300);  
-    NSRepository::CreateInstance(kCVertScrollbarCID, nsnull, kIScrollbarIID, (void**)&scrollbar);
+    nsRepository::CreateInstance(kCVertScrollbarCID, nsnull, kIScrollbarIID, (void**)&scrollbar);
     scrollbar->Create(window, rect, HandleEvent, NULL);
     scrollbar->SetMaxRange(300);
     scrollbar->SetThumbSize(50);
@@ -1403,7 +1403,7 @@ nsresult WidgetTest(int *argc, char **argv)
     //
     y = 10;
     rect.SetRect(x, y, 350, TEXT_HEIGHT);  
-    NSRepository::CreateInstance(kCTextFieldCID, nsnull, kITextWidgetIID, (void**)&statusText);
+    nsRepository::CreateInstance(kCTextFieldCID, nsnull, kITextWidgetIID, (void**)&statusText);
     statusText->Create(window, rect, HandleEvent, deviceContext);
     statusText->Show(PR_TRUE);
     y += rect.height + 5;
@@ -1412,7 +1412,7 @@ nsresult WidgetTest(int *argc, char **argv)
     // create a Failed Button
     //
     rect.SetRect(x, y, 100, 25);  
-    NSRepository::CreateInstance(kCButtonCID, nsnull, kIButtonIID, (void**)&button);
+    nsRepository::CreateInstance(kCButtonCID, nsnull, kIButtonIID, (void**)&button);
     button->Create(window, rect, FailedButtonHandleEvent, NULL);
     nsString failedLabel("Failed");
     button->SetLabel(failedLabel);
@@ -1420,7 +1420,7 @@ nsresult WidgetTest(int *argc, char **argv)
     //NS_RELEASE(button);
 
     rect.SetRect(x, y+30, 150, 25);  
-    NSRepository::CreateInstance(kCButtonCID, nsnull, kIButtonIID, (void**)&button);
+    nsRepository::CreateInstance(kCButtonCID, nsnull, kIButtonIID, (void**)&button);
     button->Create(window, rect, DoSelfTests, NULL);
     nsString selfTestLabel("Perform Self Tests");
     button->SetLabel(selfTestLabel);
@@ -1431,7 +1431,7 @@ nsresult WidgetTest(int *argc, char **argv)
     // create a Succeeded Button
     //
     rect.SetRect(x, y, 100, 25);  
-    NSRepository::CreateInstance(kCButtonCID, nsnull, kIButtonIID, (void**)&button);
+    nsRepository::CreateInstance(kCButtonCID, nsnull, kIButtonIID, (void**)&button);
     button->Create(window, rect, SucceededButtonHandleEvent, NULL);
     nsString succeededLabel("Succeeded");
     button->SetLabel(succeededLabel);
@@ -1445,7 +1445,7 @@ nsresult WidgetTest(int *argc, char **argv)
     y = saveY;
     x = saveX;
     rect.SetRect(x, y, 150, 100);  
-    NSRepository::CreateInstance(kCListBoxCID, nsnull, kIListBoxIID, (void**)&listBox);
+    nsRepository::CreateInstance(kCListBoxCID, nsnull, kIListBoxIID, (void**)&listBox);
     listBox->Create(window, rect, HandleEvent, NULL);
     listBox->Show(PR_TRUE);
     char str[256];
@@ -1469,7 +1469,7 @@ nsresult WidgetTest(int *argc, char **argv)
 
     rect.SetRect(x, y, 150, 100);  
 //#ifdef XP_PC
-    NSRepository::CreateInstance(kCListBoxCID, nsnull, kIListBoxIID, (void**)&gMultiListBox);
+    nsRepository::CreateInstance(kCListBoxCID, nsnull, kIListBoxIID, (void**)&gMultiListBox);
       // Notice the extra agrument PR_TRUE below which indicates that
       // the list widget is multi-select
     gMultiListBox->SetMultipleSelection(PR_TRUE);
@@ -1494,7 +1494,7 @@ nsresult WidgetTest(int *argc, char **argv)
     //
     rect.SetRect(300, 500, 200, 50);  
 #ifdef XP_PC
-    NSRepository::CreateInstance(kCTabWidgetCID, nsnull, kITabWidgetIID, (void**)&tabWidget);
+    nsRepository::CreateInstance(kCTabWidgetCID, nsnull, kITabWidgetIID, (void**)&tabWidget);
     tabWidget->Create(window, rect, HandleTabEvent, NULL);
     nsString tabs[] = {"low", "medium", "high" };
    
@@ -1508,7 +1508,7 @@ nsresult WidgetTest(int *argc, char **argv)
     nsIRadioButton * radioButton;
     rect.SetRect(x, y, 120, 25);  
 
-    NSRepository::CreateInstance(kCRadioButtonCID, nsnull, kIRadioButtonIID, (void**)&radioButton);
+    nsRepository::CreateInstance(kCRadioButtonCID, nsnull, kIRadioButtonIID, (void**)&radioButton);
     radioButton->Create(window, rect, HandleEvent, NULL);
     nsString rbLabel("RadioButton1");
     radioButton->SetLabel(rbLabel);
@@ -1522,7 +1522,7 @@ nsresult WidgetTest(int *argc, char **argv)
     //
     rect.SetRect(x, y, 120, 25);  
 
-    NSRepository::CreateInstance(kCRadioButtonCID, nsnull, kIRadioButtonIID, (void**)&radioButton);
+    nsRepository::CreateInstance(kCRadioButtonCID, nsnull, kIRadioButtonIID, (void**)&radioButton);
     radioButton->Create(window, rect, HandleEvent, NULL);
     nsString rbLabel2("RadioButton2");
     radioButton->SetLabel(rbLabel2);
@@ -1538,7 +1538,7 @@ nsresult WidgetTest(int *argc, char **argv)
     //
     rect.SetRect(x, y, 120, 100);  
 
-    NSRepository::CreateInstance(kCComboBoxCID, nsnull, kIComboBoxIID, (void**)&comboBox);
+    nsRepository::CreateInstance(kCComboBoxCID, nsnull, kIComboBoxIID, (void**)&comboBox);
     comboBox->Create(window, rect, HandleEvent, NULL);
     comboBox->Show(PR_TRUE);
     for (i=0;i<NUM_COMBOBOX_ITEMS;i++) {

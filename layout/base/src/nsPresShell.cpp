@@ -1096,7 +1096,7 @@ PresShell::VerifyIncrementalReflow()
   void* nativeParentWidget = rootWidget->GetNativeData(NS_NATIVE_WIDGET);
 
   // Create a new view manager.
-  rv = NSRepository::CreateInstance(kViewManagerCID, nsnull, kIViewManagerIID,
+  rv = nsRepository::CreateInstance(kViewManagerCID, nsnull, kIViewManagerIID,
                                     (void**) &vm);
   if ((NS_OK != rv) || (NS_OK != vm->Init(dc))) {
     NS_ASSERTION(NS_OK == rv, "failed to create view manager");
@@ -1109,7 +1109,7 @@ PresShell::VerifyIncrementalReflow()
   nsRect tbounds;
   mPresContext->GetVisibleArea(tbounds);
 //  tbounds *= mPresContext->GetPixelsToTwips();
-  rv = NSRepository::CreateInstance(kScrollingViewCID, nsnull, kIViewIID,
+  rv = nsRepository::CreateInstance(kScrollingViewCID, nsnull, kIViewIID,
                                     (void **) &view);
   if ((NS_OK != rv) || (NS_OK != view->Init(vm, tbounds, nsnull, &kWidgetCID,
                                             nsnull, nativeParentWidget))) {

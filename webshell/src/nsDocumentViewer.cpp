@@ -483,7 +483,7 @@ nsresult DocumentViewerImpl::MakeWindow(nsNativeWidget aNativeParent,
 {
     nsresult rv;
 
-    rv = NSRepository::CreateInstance(kViewManagerCID, 
+    rv = nsRepository::CreateInstance(kViewManagerCID, 
                                       nsnull, 
                                       kIViewManagerIID, 
                                       (void **)&mViewManager);
@@ -501,7 +501,7 @@ nsresult DocumentViewerImpl::MakeWindow(nsNativeWidget aNativeParent,
 
     // Create a child window of the parent that is our "root view/window"
     // Create a view
-    rv = NSRepository::CreateInstance(kScrollingViewCID, 
+    rv = nsRepository::CreateInstance(kScrollingViewCID, 
                                       nsnull, 
                                       kIViewIID, 
                                       (void **)&mView);

@@ -404,7 +404,7 @@ static PRBool GetFileNameFromFileSelector(nsIWidget* aParentWindow,
   PRBool selectedFileName = PR_FALSE;
   nsIFileWidget *fileWidget;
   nsString title("Open HTML");
-  nsresult rv = NSRepository::CreateInstance(kFileWidgetCID,
+  nsresult rv = nsRepository::CreateInstance(kFileWidgetCID,
                                              nsnull,
                                              kIFileWidgetIID,
                                              (void**)&fileWidget);
@@ -612,7 +612,7 @@ nsBrowserWindow::DoFind()
   nsRect rect;
   rect.SetRect(0, 0, 380, 110);  
 
-  NSRepository::CreateInstance(kDialogCID, nsnull, kIDialogIID, (void**)&mDialog);
+  nsRepository::CreateInstance(kDialogCID, nsnull, kIDialogIID, (void**)&mDialog);
   mDialog->Create(mWindow, rect, HandleEvent, NULL);
   mDialog->SetLabel("Find");
   mDialog->SetClientData(this);
@@ -620,7 +620,7 @@ nsBrowserWindow::DoFind()
   nscoord xx = 5;
   // Create Label
   rect.SetRect(xx, 8, 75, 24);  
-  NSRepository::CreateInstance(kLabelCID, nsnull, kILabelIID, (void**)&mLabel);
+  nsRepository::CreateInstance(kLabelCID, nsnull, kILabelIID, (void**)&mLabel);
   mLabel->SetAlignment(eAlign_Right);
   mLabel->Create(mDialog, rect, HandleEvent, NULL);
   mLabel->SetLabel("Find what:");
@@ -631,7 +631,7 @@ nsBrowserWindow::DoFind()
 
   // Create TextField
   rect.SetRect(xx, 5, 200, 24);  
-  NSRepository::CreateInstance(kTextFieldCID, nsnull, kITextWidgetIID, (void**)&mTextField);
+  nsRepository::CreateInstance(kTextFieldCID, nsnull, kITextWidgetIID, (void**)&mTextField);
   mTextField->Create(mDialog, rect, HandleEvent, NULL);
   mTextField->SetBackgroundColor(NS_RGB(255,255,255));
   mTextField->SetFont(font);
@@ -646,7 +646,7 @@ nsBrowserWindow::DoFind()
 
   // Create Up RadioButton
   rect.SetRect(x, y, w, h);  
-  NSRepository::CreateInstance(kRadioButtonCID, nsnull, kIRadioButtonIID, (void**)&mUpRadioBtn);
+  nsRepository::CreateInstance(kRadioButtonCID, nsnull, kIRadioButtonIID, (void**)&mUpRadioBtn);
   mUpRadioBtn->Create(mDialog, rect, HandleEvent, NULL);
   mUpRadioBtn->SetLabel("Up");
   mUpRadioBtn->SetFont(font);
@@ -656,7 +656,7 @@ nsBrowserWindow::DoFind()
   
   // Create Up RadioButton
   rect.SetRect(x, y, w, h);  
-  NSRepository::CreateInstance(kRadioButtonCID, nsnull, kIRadioButtonIID, (void**)&mDwnRadioBtn);
+  nsRepository::CreateInstance(kRadioButtonCID, nsnull, kIRadioButtonIID, (void**)&mDwnRadioBtn);
   mDwnRadioBtn->Create(mDialog, rect, HandleEvent, NULL);
   mDwnRadioBtn->SetLabel("Down");
   mDwnRadioBtn->SetFont(font);
@@ -665,7 +665,7 @@ nsBrowserWindow::DoFind()
   
   // Create Match CheckButton
   rect.SetRect(5, y, 125, 24);  
-  NSRepository::CreateInstance(kCheckButtonCID, nsnull, kICheckButtonIID, (void**)&mMatchCheckBtn);
+  nsRepository::CreateInstance(kCheckButtonCID, nsnull, kICheckButtonIID, (void**)&mMatchCheckBtn);
   mMatchCheckBtn->Create(mDialog, rect, HandleEvent, NULL);
   mMatchCheckBtn->SetLabel("Match Case");
   mMatchCheckBtn->SetFont(font);
@@ -677,7 +677,7 @@ nsBrowserWindow::DoFind()
   
   // Create Find Next Button
   rect.SetRect(xx, 5, 75, 24);  
-  NSRepository::CreateInstance(kButtonCID, nsnull, kIButtonIID, (void**)&mFindBtn);
+  nsRepository::CreateInstance(kButtonCID, nsnull, kIButtonIID, (void**)&mFindBtn);
   mFindBtn->Create(mDialog, rect, HandleEvent, NULL);
   mFindBtn->SetLabel("Find Next");
   mFindBtn->SetFont(font);
@@ -686,7 +686,7 @@ nsBrowserWindow::DoFind()
   
   // Create Cancel Button
   rect.SetRect(xx, 35, 75, 24);  
-  NSRepository::CreateInstance(kButtonCID, nsnull, kIButtonIID, (void**)&mCancelBtn);
+  nsRepository::CreateInstance(kButtonCID, nsnull, kIButtonIID, (void**)&mCancelBtn);
   mCancelBtn->Create(mDialog, rect, HandleEvent, NULL);
   mCancelBtn->SetLabel("Cancel");
   mCancelBtn->SetFont(font);
@@ -800,7 +800,7 @@ nsBrowserWindow::Init(nsIAppShell* aAppShell,
   mAllowPlugins = aAllowPlugins;
 
   // Create top level window
-  nsresult rv = NSRepository::CreateInstance(kWindowCID, nsnull, kIWidgetIID,
+  nsresult rv = nsRepository::CreateInstance(kWindowCID, nsnull, kIWidgetIID,
                                              (void**)&mWindow);
   if (NS_OK != rv) {
     return rv;
@@ -811,7 +811,7 @@ nsBrowserWindow::Init(nsIAppShell* aAppShell,
   mWindow->GetBounds(r);
 
   // Create web shell
-  rv = NSRepository::CreateInstance(kWebShellCID, nsnull,
+  rv = nsRepository::CreateInstance(kWebShellCID, nsnull,
                                     kIWebShellIID,
                                     (void**)&mWebShell);
   if (NS_OK != rv) {
@@ -876,7 +876,7 @@ nsBrowserWindow::CreateToolBar(PRInt32 aWidth)
   NS_RELEASE(dc);
 
   // Create and place back button
-  rv = NSRepository::CreateInstance(kButtonCID, nsnull, kIButtonIID,
+  rv = nsRepository::CreateInstance(kButtonCID, nsnull, kIButtonIID,
                                     (void**)&mBack);
   if (NS_OK != rv) {
     return rv;
@@ -889,7 +889,7 @@ nsBrowserWindow::CreateToolBar(PRInt32 aWidth)
 
   // Create and place forward button
   r.SetRect(BUTTON_WIDTH, 0, BUTTON_WIDTH, BUTTON_HEIGHT);  
-  rv = NSRepository::CreateInstance(kButtonCID, nsnull, kIButtonIID,
+  rv = nsRepository::CreateInstance(kButtonCID, nsnull, kIButtonIID,
                                     (void**)&mForward);
   if (NS_OK != rv) {
     return rv;
@@ -903,7 +903,7 @@ nsBrowserWindow::CreateToolBar(PRInt32 aWidth)
   r.SetRect(2*BUTTON_WIDTH, 0,
             aWidth - 2*BUTTON_WIDTH - THROBBER_WIDTH,
             BUTTON_HEIGHT);
-  rv = NSRepository::CreateInstance(kTextFieldCID, nsnull, kITextWidgetIID,
+  rv = nsRepository::CreateInstance(kTextFieldCID, nsnull, kITextWidgetIID,
                                     (void**)&mLocation);
   if (NS_OK != rv) {
     return rv;
@@ -918,7 +918,7 @@ nsBrowserWindow::CreateToolBar(PRInt32 aWidth)
   // Create and place throbber
   r.SetRect(aWidth - THROBBER_WIDTH, 0,
             THROBBER_WIDTH, THROBBER_HEIGHT);
-  rv = NSRepository::CreateInstance(kThrobberCID, nsnull, kIThrobberIID,
+  rv = nsRepository::CreateInstance(kThrobberCID, nsnull, kIThrobberIID,
                                     (void**)&mThrobber);
   if (NS_OK != rv) {
     return rv;
@@ -943,7 +943,7 @@ nsBrowserWindow::CreateStatusBar(PRInt32 aWidth)
   NS_RELEASE(dc);
 
   nsRect r(0, 0, aWidth, THROBBER_HEIGHT);
-  rv = NSRepository::CreateInstance(kTextFieldCID, nsnull, kITextWidgetIID,
+  rv = nsRepository::CreateInstance(kTextFieldCID, nsnull, kITextWidgetIID,
                                     (void**)&mStatus);
   if (NS_OK != rv) {
     return rv;
@@ -1451,7 +1451,7 @@ nsBrowserWindow::DoCopy()
       static NS_DEFINE_IID(kCParserIID, NS_IPARSER_IID);
       static NS_DEFINE_IID(kCParserCID, NS_PARSER_IID);
 
-      nsresult rv = NSRepository::CreateInstance(kCParserCID, 
+      nsresult rv = nsRepository::CreateInstance(kCParserCID, 
                                                  nsnull, 
                                                  kCParserIID, 
                                                  (void **)&parser);
@@ -1813,7 +1813,7 @@ static PRBool GetSaveFileNameFromFileSelector(nsIWidget* aParentWindow,
   PRBool selectedFileName = PR_FALSE;
   nsIFileWidget *fileWidget;
   nsString title("Save HTML");
-  nsresult rv = NSRepository::CreateInstance(kFileWidgetCID,
+  nsresult rv = nsRepository::CreateInstance(kFileWidgetCID,
                                              nsnull,
                                              kIFileWidgetIID,
                                              (void**)&fileWidget);
@@ -1880,7 +1880,7 @@ nsBrowserWindow::DoDebugSave()
       static NS_DEFINE_IID(kCParserIID, NS_IPARSER_IID);
       static NS_DEFINE_IID(kCParserCID, NS_PARSER_IID);
 
-      nsresult rv = NSRepository::CreateInstance(kCParserCID, 
+      nsresult rv = nsRepository::CreateInstance(kCParserCID, 
                                                  nsnull, 
                                                  kCParserIID, 
                                                  (void **)&parser);

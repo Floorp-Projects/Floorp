@@ -475,7 +475,7 @@ nsHTMLFrameInnerFrame::CreateWebShell(nsIPresContext& aPresContext,
   nsHTMLFrame* content;
   GetParentContent(content);
 
-  rv = NSRepository::CreateInstance(kWebShellCID, nsnull, kIWebShellIID,
+  rv = nsRepository::CreateInstance(kWebShellCID, nsnull, kIWebShellIID,
                                     (void**)&mWebShell);
   if (NS_OK != rv) {
     NS_ASSERTION(0, "could not create web widget");
@@ -526,7 +526,7 @@ nsHTMLFrameInnerFrame::CreateWebShell(nsIPresContext& aPresContext,
 
   // create, init, set the parent of the view
   nsIView* view;
-  rv = NSRepository::CreateInstance(kCViewCID, nsnull, kIViewIID,
+  rv = nsRepository::CreateInstance(kCViewCID, nsnull, kIViewIID,
                                         (void **)&view);
   if (NS_OK != rv) {
     NS_ASSERTION(0, "Could not create view for nsHTMLFrame");

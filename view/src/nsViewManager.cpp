@@ -83,7 +83,7 @@ nsViewManager :: ~nsViewManager()
     static NS_DEFINE_IID(kRenderingContextCID, NS_RENDERING_CONTEXT_CID);
     static NS_DEFINE_IID(kIRenderingContextIID, NS_IRENDERING_CONTEXT_IID);
 
-    nsresult rv = NSRepository::CreateInstance(kRenderingContextCID, 
+    nsresult rv = nsRepository::CreateInstance(kRenderingContextCID, 
                                        nsnull, 
                                        kIRenderingContextIID, 
                                        (void **)&rc);
@@ -1234,7 +1234,7 @@ void nsViewManager :: AddRectToDirtyRegion(nsRect &aRect)
     static NS_DEFINE_IID(kRegionCID, NS_REGION_CID);
     static NS_DEFINE_IID(kIRegionIID, NS_IREGION_IID);
 
-    nsresult rv = NSRepository::CreateInstance(kRegionCID, 
+    nsresult rv = nsRepository::CreateInstance(kRegionCID, 
                                        nsnull, 
                                        kIRegionIID, 
                                        (void **)&mDirtyRegion);

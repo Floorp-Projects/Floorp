@@ -216,7 +216,7 @@ extern "C" NS_EXPORT int DebugRobot(
     static NS_DEFINE_IID(kCParserIID, NS_IPARSER_IID);
     static NS_DEFINE_IID(kCParserCID, NS_PARSER_IID);
 
-    rv = NSRepository::CreateInstance(kCParserCID, 
+    rv = nsRepository::CreateInstance(kCParserCID, 
                                       nsnull, 
                                       kCParserIID, 
                                       (void **)&parser);

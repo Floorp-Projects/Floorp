@@ -93,7 +93,7 @@ nsHTMLBase::CreateViewForFrame(nsIPresContext*  aPresContext,
       static NS_DEFINE_IID(kViewCID, NS_VIEW_CID);
       static NS_DEFINE_IID(kIViewIID, NS_IVIEW_IID);
 
-      nsresult result = NSRepository::CreateInstance(kViewCID, 
+      nsresult result = nsRepository::CreateInstance(kViewCID, 
                                                      nsnull, 
                                                      kIViewIID, 
                                                      (void **)&view);
