@@ -54,7 +54,6 @@
 #include "nsIWebBrowserPersist.h"
 #include "nsIWindowWatcher.h"
 #include "nsIStringBundle.h"
-#include "nsISupportsPrimitives.h"
 #include "nsCRT.h"
 #include "nsIWindowMediator.h"
 #include "nsIPromptService.h"
@@ -69,7 +68,7 @@
   
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
 static NS_DEFINE_CID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
-static PRBool gQuitting = PR_FALSE;
+static PRBool gEnumeratingDownloads = PR_FALSE;
 
 #define DOWNLOAD_MANAGER_FE_URL "chrome://mozapps/content/downloads/downloads.xul"
 #define DOWNLOAD_MANAGER_BUNDLE "chrome://mozapps/locale/downloads/downloads.properties"
@@ -117,6 +116,7 @@ nsDownloadManager::~nsDownloadManager()
 
   gObserverService->RemoveObserver(this, "quit-application");
   gObserverService->RemoveObserver(this, "quit-application-requested");
+  gObserverService->RemoveObserver(this, "offline-requested");
 
   NS_IF_RELEASE(gNC_DownloadsRoot);                                             
   NS_IF_RELEASE(gNC_File);                                                      
@@ -168,6 +168,7 @@ nsDownloadManager::Init()
   
   gObserverService->AddObserver(this, "quit-application", PR_FALSE);
   gObserverService->AddObserver(this, "quit-application-requested", PR_FALSE);
+  gObserverService->AddObserver(this, "offline-requested", PR_FALSE);
 
   rv = CallGetService(kRDFServiceCID, &gRDFService);
   if (NS_FAILED(rv)) return rv;                                                 
@@ -263,7 +264,7 @@ nsDownloadManager::DownloadEnded(const PRUnichar* aPath, const PRUnichar* aMessa
     nsDownload* download = NS_STATIC_CAST(nsDownload*, mCurrDownloads.Get(&key));
     NS_RELEASE(download);
 
-    if (!gQuitting)
+    if (!gEnumeratingDownloads)
       mCurrDownloads.Remove(&key);
   }
 
@@ -1146,7 +1147,7 @@ nsDownloadManager::Observe(nsISupports* aSubject, const char* aTopic, const PRUn
     }
   }
   else if (nsCRT::strcmp(aTopic, "quit-application") == 0 && mCurrDownloads.Count()) {
-    gQuitting = PR_TRUE;
+    gEnumeratingDownloads = PR_TRUE;
     mCurrDownloads.Enumerate(CancelAllDownloads, this);
 
     // Now go and update the datasource so that we "cancel" all paused downloads. 
@@ -1196,54 +1197,81 @@ nsDownloadManager::Observe(nsISupports* aSubject, const char* aTopic, const PRUn
   }
   else if (nsCRT::strcmp(aTopic, "quit-application-requested") == 0 && 
            (currDownloadCount = mCurrDownloads.Count())) {
-    nsXPIDLString title, message, quitButton;
-    
-    nsCOMPtr<nsIStringBundleService> bundleService = do_GetService(kStringBundleServiceCID, &rv);
-    nsCOMPtr<nsIStringBundle> bundle;
-    if (bundleService)
-      rv = bundleService->CreateBundle(DOWNLOAD_MANAGER_BUNDLE, getter_AddRefs(bundle));
-    if (bundle) {
-      bundle->GetStringFromName(NS_LITERAL_STRING("quitCancelDownloadsAlertTitle").get(), getter_Copies(title));    
-
-      nsAutoString countString;
-      countString.AppendInt(currDownloadCount);
-      const PRUnichar* strings[1] = { countString.get() };
+    nsCOMPtr<nsISupportsPRBool> cancelDownloads(do_QueryInterface(aSubject));
 #ifndef XP_MACOSX
-      if (currDownloadCount > 1)
-        bundle->FormatStringFromName(NS_LITERAL_STRING("quitCancelDownloadsAlertMsgMultiple").get(), strings, 1, getter_Copies(message));
-      else
-        bundle->GetStringFromName(NS_LITERAL_STRING("quitCancelDownloadsAlertMsg").get(), getter_Copies(message));
+    ConfirmCancelDownloads(currDownloadCount, cancelDownloads,
+                           NS_LITERAL_STRING("quitCancelDownloadsAlertTitle").get(),
+                           NS_LITERAL_STRING("quitCancelDownloadsAlertMsgMultiple").get(),
+                           NS_LITERAL_STRING("quitCancelDownloadsAlertMsg").get());
 #else
-      if (currDownloadCount > 1)
-        bundle->FormatStringFromName(NS_LITERAL_STRING("quitCancelDownloadsAlertMsgMacMultiple").get(), strings, 1, getter_Copies(message));
-      else
-        bundle->GetStringFromName(NS_LITERAL_STRING("quitCancelDownloadsAlertMsgMac").get(), getter_Copies(message));
+    ConfirmCancelDownloads(currDownloadCount, cancelDownloads,
+                           NS_LITERAL_STRING("quitCancelDownloadsAlertTitle").get(),
+                           NS_LITERAL_STRING("quitCancelDownloadsAlertMsgMacMultiple").get(),
+                           NS_LITERAL_STRING("quitCancelDownloadsAlertMsgMac").get());
 #endif
-      if (currDownloadCount > 1)
-        bundle->FormatStringFromName(NS_LITERAL_STRING("quitCancelDownloadsOKTextMultiple").get(), strings, 1, getter_Copies(quitButton));
-      else
-        bundle->GetStringFromName(NS_LITERAL_STRING("quitCancelDownloadsOKText").get(), getter_Copies(quitButton));
-    }
-
-    // Get Download Manager window, to be parent of alert.
-    nsCOMPtr<nsIWindowMediator> wm = do_GetService(NS_WINDOWMEDIATOR_CONTRACTID, &rv);
-    nsCOMPtr<nsIDOMWindowInternal> dmWindow;
-    if (wm)
-      wm->GetMostRecentWindow(NS_LITERAL_STRING("Download:Manager").get(), getter_AddRefs(dmWindow));
-
-    // Show alert.
-    nsCOMPtr<nsIPromptService> prompter(do_GetService("@mozilla.org/embedcomp/prompt-service;1"));
-    if (prompter) {
-      PRInt32 flags = (nsIPromptService::BUTTON_TITLE_IS_STRING * nsIPromptService::BUTTON_POS_0) + (nsIPromptService::BUTTON_TITLE_CANCEL * nsIPromptService::BUTTON_POS_1);
-      PRBool nothing = PR_FALSE;
-      PRInt32 button;
-      prompter->ConfirmEx(dmWindow, title, message, flags, quitButton.get(), nsnull, nsnull, nsnull, &nothing, &button);
-
-      nsCOMPtr<nsISupportsPRBool> theBool(do_QueryInterface(aSubject));
-      theBool->SetData(button == 1);
+  }
+  else if (nsCRT::strcmp(aTopic, "offline-requested") == 0 && 
+           (currDownloadCount = mCurrDownloads.Count())) {
+    nsCOMPtr<nsISupportsPRBool> cancelDownloads(do_QueryInterface(aSubject));
+    ConfirmCancelDownloads(currDownloadCount, cancelDownloads,
+                           NS_LITERAL_STRING("offlineCancelDownloadsAlertTitle").get(),
+                           NS_LITERAL_STRING("offlineCancelDownloadsAlertMsgMultiple").get(),
+                           NS_LITERAL_STRING("offlineCancelDownloadsAlertMsg").get());
+    PRBool data;
+    cancelDownloads->GetData(&data);
+    if (!data) {
+      gEnumeratingDownloads = PR_TRUE;
+      mCurrDownloads.Enumerate(CancelAllDownloads, this);
+      gEnumeratingDownloads = PR_FALSE;
     }
   }
   return NS_OK;
+}
+
+void
+nsDownloadManager::ConfirmCancelDownloads(PRInt32 aCount, nsISupportsPRBool* aCancelDownloads,
+                                          const PRUnichar* aTitle, 
+                                          const PRUnichar* aCancelMessageMultiple, 
+                                          const PRUnichar* aCancelMessageSingle)
+{
+  nsXPIDLString title, message, quitButton;
+  
+  nsCOMPtr<nsIStringBundleService> bundleService = do_GetService(kStringBundleServiceCID);
+  nsCOMPtr<nsIStringBundle> bundle;
+  if (bundleService)
+    bundleService->CreateBundle(DOWNLOAD_MANAGER_BUNDLE, getter_AddRefs(bundle));
+  if (bundle) {
+    bundle->GetStringFromName(aTitle, getter_Copies(title));    
+
+    nsAutoString countString;
+    countString.AppendInt(aCount);
+    const PRUnichar* strings[1] = { countString.get() };
+    if (aCount > 1) {
+      bundle->FormatStringFromName(aCancelMessageMultiple, strings, 1, getter_Copies(message));
+      bundle->FormatStringFromName(NS_LITERAL_STRING("cancelDownloadsOKTextMultiple").get(), strings, 1, getter_Copies(quitButton));
+    }
+    else {
+      bundle->GetStringFromName(aCancelMessageSingle, getter_Copies(message));
+      bundle->GetStringFromName(NS_LITERAL_STRING("cancelDownloadsOKText").get(), getter_Copies(quitButton));
+    }
+  }
+
+  // Get Download Manager window, to be parent of alert.
+  nsCOMPtr<nsIWindowMediator> wm = do_GetService(NS_WINDOWMEDIATOR_CONTRACTID);
+  nsCOMPtr<nsIDOMWindowInternal> dmWindow;
+  if (wm)
+    wm->GetMostRecentWindow(NS_LITERAL_STRING("Download:Manager").get(), getter_AddRefs(dmWindow));
+
+  // Show alert.
+  nsCOMPtr<nsIPromptService> prompter(do_GetService("@mozilla.org/embedcomp/prompt-service;1"));
+  if (prompter) {
+    PRInt32 flags = (nsIPromptService::BUTTON_TITLE_IS_STRING * nsIPromptService::BUTTON_POS_0) + (nsIPromptService::BUTTON_TITLE_CANCEL * nsIPromptService::BUTTON_POS_1);
+    PRBool nothing = PR_FALSE;
+    PRInt32 button;
+    prompter->ConfirmEx(dmWindow, title, message, flags, quitButton.get(), nsnull, nsnull, nsnull, &nothing, &button);
+
+    aCancelDownloads->SetData(button == 1);
+  }
 }
 
 #ifdef XP_WIN 
