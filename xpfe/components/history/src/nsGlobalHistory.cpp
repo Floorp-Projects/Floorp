@@ -601,6 +601,12 @@ NS_IMPL_ISUPPORTS7(nsGlobalHistory,
 NS_IMETHODIMP
 nsGlobalHistory::AddPage(const char *aURL)
 {
+  // If history is set to expire after 0 days,
+  // then it's technically disabled. Don't even
+  // bother adding the page
+  if (mExpireDays == 0)
+    return NS_OK;
+
   NS_ENSURE_ARG_POINTER(aURL);
   NS_ENSURE_SUCCESS(OpenDB(), NS_ERROR_FAILURE);
 
