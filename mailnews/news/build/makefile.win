@@ -86,8 +86,8 @@ LLIBS=												\
 			$(DIST)\lib\msgcoreutil.lib				\
 			$(DIST)\lib\nntp.lib					\
 			$(DIST)\lib\netlib.lib					\
-			$(DIST)\lib\rdfutil_s.lib		\
 			$(LIBNSPR)								\
+			$(DIST)\lib\rdfutil_s.lib				\
 			$(NULL)
 
 MISCDEP=$(LLIBS)
