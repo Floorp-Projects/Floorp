@@ -86,52 +86,52 @@ enum Pop3CapabilityEnum {
 };
 
 enum Pop3StatesEnum {
-    POP3_READ_PASSWORD, // 0
+    POP3_READ_PASSWORD,                         // 0
+                                                // 
+    POP3_START_CONNECT,                         // 1
+    POP3_FINISH_CONNECT,                        // 2
+    POP3_WAIT_FOR_RESPONSE,                     // 3
+    POP3_WAIT_FOR_START_OF_CONNECTION_RESPONSE, // 4
+    POP3_SEND_USERNAME,                         // 5
 
-    POP3_START_CONNECT,
-    POP3_FINISH_CONNECT,
-    POP3_WAIT_FOR_RESPONSE,
-    POP3_WAIT_FOR_START_OF_CONNECTION_RESPONSE,
-    POP3_SEND_USERNAME, // 5
+    POP3_SEND_PASSWORD,                         // 6
+    POP3_SEND_STAT,                             // 7
+    POP3_GET_STAT,                              // 8
+    POP3_SEND_LIST,                             // 9
+    POP3_GET_LIST,                              // 10
 
-    POP3_SEND_PASSWORD,
-    POP3_SEND_STAT,
-    POP3_GET_STAT,
-    POP3_SEND_LIST,
-    POP3_GET_LIST, // 10
+    POP3_SEND_UIDL_LIST,                        // 11
+    POP3_GET_UIDL_LIST,                         // 12
+    POP3_SEND_XTND_XLST_MSGID,                  // 13
+    POP3_GET_XTND_XLST_MSGID,                   // 14
+    POP3_GET_MSG,                               // 15
 
-    POP3_SEND_UIDL_LIST,
-    POP3_GET_UIDL_LIST,
-    POP3_SEND_XTND_XLST_MSGID,
-    POP3_GET_XTND_XLST_MSGID,
-    POP3_GET_MSG, // 15
+    POP3_SEND_TOP,                              // 16
+    POP3_TOP_RESPONSE,                          // 17
+    POP3_SEND_RETR,                             // 18
+    POP3_RETR_RESPONSE,                         // 19
+    POP3_SEND_DELE,                             // 20
 
-    POP3_SEND_TOP,
-    POP3_TOP_RESPONSE,
-    POP3_SEND_RETR,
-    POP3_RETR_RESPONSE,
-    POP3_SEND_DELE, // 20
-
-    POP3_DELE_RESPONSE,
-    POP3_SEND_QUIT,
-    POP3_DONE,
-    POP3_ERROR_DONE,
-    POP3_FREE, // 25
+    POP3_DELE_RESPONSE,                         // 21
+    POP3_SEND_QUIT,                             // 22
+    POP3_DONE,                                  // 23
+    POP3_ERROR_DONE,                            // 24
+    POP3_FREE,                                  // 25
     /* The following 3 states support the use of the 'TOP' command instead of UIDL
        for leaving mail on the pop server -km */
-    POP3_START_USE_TOP_FOR_FAKE_UIDL, 
-    POP3_SEND_FAKE_UIDL_TOP, 
-    POP3_GET_FAKE_UIDL_TOP,
-    POP3_SEND_AUTH,
-    POP3_AUTH_RESPONSE, // 25
+    POP3_START_USE_TOP_FOR_FAKE_UIDL,           // 26
+    POP3_SEND_FAKE_UIDL_TOP,                    // 27
+    POP3_GET_FAKE_UIDL_TOP,                     // 28
+    POP3_SEND_AUTH,                             // 29
+    POP3_AUTH_RESPONSE,                         // 30
 
-    POP3_AUTH_LOGIN,
-    POP3_AUTH_LOGIN_RESPONSE,
-    POP3_SEND_XSENDER,
-    POP3_XSENDER_RESPONSE,
-    POP3_SEND_GURL, // 30
+    POP3_AUTH_LOGIN,                            // 31
+    POP3_AUTH_LOGIN_RESPONSE,                   // 32
+    POP3_SEND_XSENDER,                          // 33
+    POP3_XSENDER_RESPONSE,                      // 34
+    POP3_SEND_GURL,                             // 35
 
-    POP3_GURL_RESPONSE,
+    POP3_GURL_RESPONSE,                         // 36
 #ifdef POP_ALWAYS_USE_UIDL_FOR_DUPLICATES
     POP3_QUIT_RESPONSE,
 #endif

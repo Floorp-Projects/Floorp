@@ -648,8 +648,8 @@ nsresult nsPop3Protocol::LoadUrl(nsIURI* aURL, nsISupports * /* aConsumer */)
 	}
 	
 	// m_pop3ConData->next_state = POP3_READ_PASSWORD;
-	m_pop3ConData->next_state = POP3_WAIT_FOR_START_OF_CONNECTION_RESPONSE;
-	m_pop3ConData->next_state_after_response = POP3_SEND_USERNAME;
+	m_pop3ConData->next_state = POP3_START_CONNECT;
+	m_pop3ConData->next_state_after_response = POP3_FINISH_CONNECT;
 	if (NS_SUCCEEDED(rv))
 		return nsMsgProtocol::LoadUrl(aURL);
 	else
@@ -1116,19 +1116,6 @@ nsPop3Protocol::GetStat()
         }
     }
 
-/*
-#ifdef POP_ALWAYS_USE_UIDL_FOR_DUPLICATES
-	if (net_uidl_command_unimplemented && net_xtnd_xlst_command_unimplemented && net_top_command_unimplemented) 
-#else
-	if ((net_uidl_command_unimplemented && net_xtnd_xlst_command_unimplemented && net_top_command_unimplemented) ||
-		(!m_pop3ConData->only_uidl && !m_pop3ConData->leave_on_server &&
-		 (m_pop3ConData->size_limit < 0 || net_top_command_unimplemented)))
-#endif */
-		 /* We don't need message size or uidl info; go directly to getting
-		 messages. */
-	/*  m_pop3ConData->next_state = POP3_GET_MSG;
-	else */  /* Fix bug 51262 where pop messages kept on server are re-downloaded after unchecking keep on server */
-	
     m_pop3ConData->next_state = POP3_SEND_LIST;
     return 0;
 }
@@ -1447,11 +1434,15 @@ PRInt32 nsPop3Protocol::GetFakeUidlTop(nsIInputStream* inputStream,
 */
 PRInt32 nsPop3Protocol::SendXtndXlstMsgid()
 {
-    if (!(m_pop3ConData->capability_flags & POP3_HAS_XTND_XLST))
+    if ((m_pop3ConData->capability_flags & POP3_HAS_XTND_XLST) ||
+        (m_pop3ConData->capability_flags & POP3_XTND_XLST_UNDEFINED))
+    {
+        m_pop3ConData->next_state_after_response = POP3_GET_XTND_XLST_MSGID;
+        m_pop3ConData->pause_for_read = PR_TRUE;
+        return SendData(m_url, "XTND XLST Message-Id" CRLF);
+    }
+    else
         return StartUseTopForFakeUidl();
-    m_pop3ConData->next_state_after_response = POP3_GET_XTND_XLST_MSGID;
-    m_pop3ConData->pause_for_read = PR_TRUE;
-    return SendData(m_url, "XTND XLST Message-Id" CRLF);
 }
 
 
@@ -1478,14 +1469,21 @@ nsPop3Protocol::GetXtndXlstMsgid(nsIInputStream* inputStream,
      * but it's alright since command_succeeded
      * will remain constant
      */
-    if(!m_pop3ConData->command_succeeded) {
+    if (m_pop3ConData->capability_flags & POP3_XTND_XLST_UNDEFINED)
         m_pop3ConData->capability_flags &= ~POP3_XTND_XLST_UNDEFINED;
+
+    if(!m_pop3ConData->command_succeeded) {
         m_pop3ConData->capability_flags &= ~POP3_HAS_XTND_XLST;
         m_pop3Server->SetPop3CapabilityFlags(m_pop3ConData->capability_flags);
         m_pop3ConData->next_state = POP3_START_USE_TOP_FOR_FAKE_UIDL;
         m_pop3ConData->pause_for_read = PR_FALSE;
         return(0);
     }
+    else
+    {
+        m_pop3ConData->capability_flags |= POP3_HAS_XTND_XLST;
+        m_pop3Server->SetPop3CapabilityFlags(m_pop3ConData->capability_flags);
+    }        
 
 	PRBool pauseForMoreData = PR_FALSE;
 	line = m_lineStreamBuffer->ReadNextLine(inputStream, ln, pauseForMoreData);
@@ -1541,12 +1539,15 @@ nsPop3Protocol::GetXtndXlstMsgid(nsIInputStream* inputStream,
 
 PRInt32 nsPop3Protocol::SendUidlList()
 {
-    if (!(m_pop3ConData->capability_flags & POP3_HAS_XTND_XLST))
+    if ((m_pop3ConData->capability_flags & POP3_HAS_UIDL) ||
+        (m_pop3ConData->capability_flags & POP3_UIDL_UNDEFINED))
+    {
+        m_pop3ConData->next_state_after_response = POP3_GET_UIDL_LIST;
+        m_pop3ConData->pause_for_read = PR_TRUE;
+        return SendData(m_url,"UIDL" CRLF);
+    }
+    else
         return SendXtndXlstMsgid();
-
-    m_pop3ConData->next_state_after_response = POP3_GET_UIDL_LIST;
-    m_pop3ConData->pause_for_read = PR_TRUE;
-    return SendData(m_url,"UIDL" CRLF);
 }
 
 
@@ -1562,42 +1563,21 @@ PRInt32 nsPop3Protocol::GetUidlList(nsIInputStream* inputStream,
      * but it's alright since command_succeeded
      * will remain constant
      */
-    if(!m_pop3ConData->command_succeeded) {
+    if (m_pop3ConData->capability_flags & POP3_UIDL_UNDEFINED)
+        m_pop3ConData->capability_flags &= ~POP3_UIDL_UNDEFINED;
+
+    if(!m_pop3ConData->command_succeeded) 
+    {
         m_pop3ConData->next_state = POP3_SEND_XTND_XLST_MSGID;
         m_pop3ConData->pause_for_read = PR_FALSE;
         m_pop3ConData->capability_flags &= ~POP3_HAS_UIDL;
         m_pop3Server->SetPop3CapabilityFlags(m_pop3ConData->capability_flags);
         return(0);
-        
-#if 0  /* this if block shows what UIDL used to do in this case */
-        /* UIDL doesn't work so we can't retrieve the message later, and we
-         * can't play games notating how to keep it on the server.  Therefore
-         * just go download the whole thing, and warn the user.
-         */
-        char *host, *fmt, *buf;
-        
-        net_uidl_command_unimplemented = PR_TRUE;
-        
-        fmt = XP_GetString( XP_THE_POP3_SERVER_DOES_NOT_SUPPORT_UIDL_ETC );
-        
-        host = NET_ParseURL(ce->URL_s->address, GET_HOST_PART);
-        PR_ASSERT(host);
-        if (!host)
-            host = "(null)";
-        buf = PR_smprintf (fmt, host);
-        if (!buf)
-            return MK_OUT_OF_MEMORY;
-        FE_Alert (ce->window_id, buf);
-        PR_Free (buf);
-        
-        /* Free up the msg_info structure, as we use its presence later to
-           decide if we can do UIDL-based games. */
-        net_pop3_free_msg_info(ce);
-        
-        m_pop3ConData->next_state = POP3_GET_MSG;
-        return(0);
-        
-#endif /* 0 */
+    }
+    else
+    {
+        m_pop3ConData->capability_flags |= POP3_HAS_UIDL;
+        m_pop3Server->SetPop3CapabilityFlags(m_pop3ConData->capability_flags);
     }
     
     PRBool pauseForMoreData = PR_FALSE;
@@ -1815,7 +1795,8 @@ nsPop3Protocol::GetMsg()
                 m_pop3ConData->next_state = POP3_GET_MSG;
             } else if ((c != TOO_BIG) && (m_pop3ConData->size_limit > 0) &&
                        (info->size > m_pop3ConData->size_limit) && 
-                       !(m_pop3ConData->capability_flags & POP3_HAS_TOP) &&
+                       (m_pop3ConData->capability_flags & POP3_TOP_UNDEFINED
+                        || (m_pop3ConData->capability_flags & POP3_HAS_TOP)) &&
                        (m_pop3ConData->only_uidl == NULL)) { 
                 /* message is too big */
                 m_pop3ConData->truncating_cur_msg = PR_TRUE;
@@ -1876,10 +1857,8 @@ nsPop3Protocol::GetMsg()
 PRInt32
 nsPop3Protocol::SendTop()
 {
-    PR_ASSERT(!(m_pop3ConData->capability_flags & (POP3_HAS_UIDL | POP3_HAS_XTND_XLST |
-                                         POP3_HAS_TOP)));
-
-	char * cmd = PR_smprintf( "TOP %ld 20" CRLF,  m_pop3ConData->last_accessed_msg+1);
+	char * cmd = PR_smprintf( "TOP %ld 20" CRLF,
+                              m_pop3ConData->last_accessed_msg+1);
 	PRInt32 status = -1;
 	if (cmd)
 	{
@@ -2121,16 +2100,23 @@ nsPop3Protocol::RetrResponse(nsIInputStream* inputStream,
     
     m_bytesInMsgReceived += buffer_size;
     m_totalBytesReceived            += buffer_size;
+
+    // *** jefft in case of the message size that server tells us is different
+    // from the actual message size
+    if (pauseForMoreData && m_pop3ConData->dot_fix &&
+        m_pop3ConData->assumed_end)
+    {
+        status = 
+            m_nsIPop3Sink->IncorporateComplete(m_pop3ConData->msg_closure);
+        m_pop3ConData->msg_closure = 0;
+    }
     
     if (!m_pop3ConData->msg_closure) 
         /* meaning _handle_line read ".\r\n" at end-of-msg */
     {
         m_pop3ConData->pause_for_read = PR_FALSE;
         if (m_pop3ConData->truncating_cur_msg ||
-            (m_pop3ConData->leave_on_server &&
-            !(m_pop3ConData->capability_flags & (POP3_HAS_UIDL |
-                                                 POP3_HAS_XTND_XLST | 
-                                                 POP3_HAS_TOP))))
+            m_pop3ConData->leave_on_server )
         {
             /* We've retrieved all or part of this message, but we want to
                keep it on the server.  Go on to the next message. */
@@ -2162,6 +2148,16 @@ nsPop3Protocol::RetrResponse(nsIInputStream* inputStream,
 PRInt32
 nsPop3Protocol::TopResponse(nsIInputStream* inputStream, PRUint32 length)
 {
+    if (m_pop3ConData->capability_flags & POP3_TOP_UNDEFINED)
+    {
+        m_pop3ConData->capability_flags &= ~POP3_TOP_UNDEFINED;
+        if (m_pop3ConData->command_succeeded)
+            m_pop3ConData->capability_flags |= POP3_HAS_TOP;
+        else
+            m_pop3ConData->capability_flags &= ~POP3_HAS_TOP;
+        m_pop3Server->SetPop3CapabilityFlags(m_pop3ConData->capability_flags);
+    }
+    
     if(m_pop3ConData->cur_msg_size == -1 &&  /* first line after TOP command sent */
        !m_pop3ConData->command_succeeded)	/* and TOP command failed */
     {
@@ -2172,11 +2168,13 @@ nsPop3Protocol::TopResponse(nsIInputStream* inputStream, PRUint32 length)
            Oops. #### */
         PRBool prefBool = PR_FALSE;
 
-        m_pop3ConData->capability_flags &= ~POP3_HAS_TOP;
+#if 0
         m_pop3Server->SetPop3CapabilityFlags(m_pop3ConData->capability_flags);
         m_pop3ConData->truncating_cur_msg = PR_FALSE;
+#endif
 
-		PRUnichar * statusTemplate = LocalGetStringByID(POP3_SERVER_DOES_NOT_SUPPORT_THE_TOP_COMMAND);
+		PRUnichar * statusTemplate =
+            LocalGetStringByID(POP3_SERVER_DOES_NOT_SUPPORT_THE_TOP_COMMAND); 
 		if (statusTemplate)
 		{
 			nsXPIDLCString hostName;
@@ -2194,8 +2192,9 @@ nsPop3Protocol::TopResponse(nsIInputStream* inputStream, PRUint32 length)
 
         m_pop3Server->GetAuthLogin(&prefBool);
 
-        if (prefBool && (POP3_XSENDER_UNDEFINED & m_pop3ConData->capability_flags ||
-                         POP3_HAS_XSENDER & m_pop3ConData->capability_flags))
+        if (prefBool && 
+            (POP3_XSENDER_UNDEFINED & m_pop3ConData->capability_flags ||
+             POP3_HAS_XSENDER & m_pop3ConData->capability_flags))
             m_pop3ConData->next_state = POP3_SEND_XSENDER;
         else
             m_pop3ConData->next_state = POP3_SEND_RETR;
@@ -2515,9 +2514,9 @@ nsresult nsPop3Protocol::ProcessProtocolState(nsIURI * url, nsIInputStream * aIn
             PRBool prefBool = PR_FALSE;
             
             m_pop3ConData->pause_for_read = PR_FALSE;
-			m_pop3ConData->next_state = POP3_SEND_USERNAME;
-//            m_pop3ConData->next_state =
-//                POP3_WAIT_FOR_START_OF_CONNECTION_RESPONSE;
+			// m_pop3ConData->next_state = POP3_SEND_USERNAME;
+            m_pop3ConData->next_state =
+                POP3_WAIT_FOR_START_OF_CONNECTION_RESPONSE;
 
             m_pop3Server->GetAuthLogin(&prefBool);
             
@@ -2744,11 +2743,6 @@ nsresult nsPop3Protocol::ProcessProtocolState(nsIURI * url, nsIInputStream * aIn
 
         case POP3_INTERRUPTED:
 			SendData(mailnewsurl, "QUIT" CRLF);
-#if 0
-            /*
-              nnet_graceful_shutdown(ce->socket, PR_FALSE);
-              */ /* make sure QUIT get send before closing down the socket */
-#endif 
             m_pop3ConData->pause_for_read = PR_FALSE;
             m_pop3ConData->next_state = POP3_ERROR_DONE;
 			break;
@@ -2813,14 +2807,7 @@ nsresult nsPop3Protocol::ProcessProtocolState(nsIURI * url, nsIInputStream * aIn
 				if (server)
 					server->SetServerBusy(PR_FALSE); // the server is now busy
 			}
-#if 0 // mscott - i believe this can be removed now
-            if (m_pop3ConData->graph_progress_bytes_p) {
-                /* Only destroy it if we have initialized it. */
-                FE_GraphProgressDestroy(ce->window_id, ce->URL_s,
-										  m_pop3ConData->cur_msg_size,
-										  m_totalBytesReceived);
-            }
-#endif          
+
 			CloseSocket();
             return NS_OK;
             break;

@@ -226,6 +226,13 @@ nsPop3Sink::IncorporateBegin(const char* uidlString,
     char *dummyEnvelope = GetDummyEnvelope();
 
     WriteLineToMailbox(dummyEnvelope);
+    if (uidlString)
+    {
+        nsCAutoString uidlCString = "X-UIDL: ";
+        uidlCString += uidlString;
+        uidlCString += MSG_LINEBREAK;
+        WriteLineToMailbox(uidlCString);
+    }
     WriteLineToMailbox("X-Mozilla-Status: 8000" MSG_LINEBREAK);
     WriteLineToMailbox("X-Mozilla-Status2: 00000000" MSG_LINEBREAK);
 
