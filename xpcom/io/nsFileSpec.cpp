@@ -413,12 +413,8 @@ void nsFileSpecHelpers::MakeAllDirectories(const char* inPath, int mode)
 			// then make a directory (We cannot make the initial (volume) node).
 			if (!spec.Exists() && *currentStart != kSeparator)
 				spec.CreateDirectory(mode);
-			if (!spec.Exists())
-			{
-				NS_ASSERTION(spec.Exists(), "Could not create the directory?");
-				break;
-			}
-			currentStart = ++currentEnd;
+			
+            currentStart = ++currentEnd;
 			currentEnd = strchr(currentStart, kSeparator);
 			if (!currentEnd)
 				break;
@@ -1147,4 +1143,48 @@ nsAutoCString::~nsAutoCString()
 //----------------------------------------------------------------------------------------
 {
 	delete [] (char*)mCString;
+}
+
+//========================================================================================
+//	class nsprPath
+//========================================================================================
+
+//----------------------------------------------------------------------------------------
+nsprPath::operator const char*()
+//----------------------------------------------------------------------------------------
+{
+
+#ifdef XP_PC
+
+	if (modifiedNSPRPath != nsnull)
+		delete [] modifiedNSPRPath;
+	
+	modifiedNSPRPath = strdup( mFilePath );
+	char* resultPath = modifiedNSPRPath;
+	
+	/* strip the leading seperator */
+	if(resultPath[0] == '/')
+		resultPath = resultPath + 1;
+    
+    /* Replace the bar */
+    if(resultPath[1] == '|')
+		 resultPath[1] = ':';
+	
+	/* Remove the ending seperator */
+    if(resultPath[strlen(resultPath) - 1 ] == '/')
+		 resultPath[strlen(resultPath) - 1 ] = '\0';	 
+		
+    return resultPath;
+	
+#else
+	return mFilePath;
+#endif
+}
+
+//----------------------------------------------------------------------------------------
+nsprPath::~nsprPath()
+//----------------------------------------------------------------------------------------
+{
+	if (modifiedNSPRPath != nsnull)
+			delete [] modifiedNSPRPath;
 }
