@@ -141,6 +141,8 @@ void InitializeMacToolbox(void)
 	if (!alreadyInitialized)
 	{
 		alreadyInitialized = true;
+#if !TARGET_CARBON
+// pinkerton - don't need to init toolbox under Carbon. They finally do that for us!
 		InitGraf(&qd.thePort);
 		InitFonts();
 		InitWindows();
@@ -148,6 +150,7 @@ void InitializeMacToolbox(void)
 		TEInit();
 		InitDialogs(0);
 		InitCursor();
+#endif
 #if DEBUG
 		InitializeSIOUX(false);
 #endif
