@@ -97,7 +97,6 @@
 
 static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
 static NS_DEFINE_CID(kSmtpServiceCID, NS_SMTPSERVICE_CID);   
-static NS_DEFINE_CID(kAB4xUpgraderServiceCID, NS_AB4xUPGRADER_CID);
 static NS_DEFINE_CID(kAddressBookCID, NS_ADDRESSBOOK_CID);
 
 #define IMAP_SCHEMA "imap:/"
