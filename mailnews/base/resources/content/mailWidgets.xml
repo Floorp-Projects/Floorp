@@ -645,8 +645,20 @@
         </xul:menupopup>
       </xul:menulist>
       <xul:textbox flex="1" class="search-value-textbox"/>
+      <xul:menulist flex="1" class="search-value-menulist">
+        <xul:menupopup ref="moz-abdirectory://" class="search-value-popup" datasources="rdf:addressdirectory">
+          <xul:template>
+            <xul:rule>
+              <xul:menuitem uri="..."
+                    label="rdf:http://home.netscape.com/NC-rdf#DirName"
+                    value="rdf:http://home.netscape.com/NC-rdf#DirUri"/>
+            </xul:rule>
+          </xul:template>
+        </xul:menupopup>
+      </xul:menulist>
     </content>
     <implementation>
+
       <field name="internalAttribute">null</field>
       <field name="internalValue">null</field>
       <!-- parentValue forwards to the attribute -->
@@ -666,6 +678,14 @@
               this.setAttribute("selectedIndex", "2");
             else if (val == Components.interfaces.nsMsgSearchAttrib.Date)
               this.setAttribute("selectedIndex", "3");
+            else if (val == Components.interfaces.nsMsgSearchAttrib.SenderInAddressBook)
+            {
+              var children = document.getAnonymousNodes(this);
+              var abs = children[4].getElementsByAttribute("value", "moz-abmdbdirectory://abook.mab");
+              if (abs.length > 0) 
+                children[4].selectedItem = abs[0];   
+              this.setAttribute("selectedIndex", "4");              
+            }
             else
               this.setAttribute("selectedIndex", "0");
             return val;
@@ -697,7 +717,13 @@
             children[0].value = val.age;
           else if (attrib == nsMsgSearchAttrib.Date)
             children[3].value = convertPRTimeToString(val.date);
-          else
+          else if (attrib == nsMsgSearchAttrib.SenderInAddressBook)
+          {
+            var abs = children[4].getElementsByAttribute("value", val.str);
+            if (abs.length > 0) 
+              children[4].selectedItem = abs[0];    
+          }
+          else            
             children[0].value = val.str;
           return val;
           ]]>
@@ -721,6 +747,8 @@
                searchValue.age = children[0].value;
             else if (searchAttribute == nsMsgSearchAttrib.Date)
                searchValue.date = convertStringToPRTime(children[3].value);
+            else if (searchAttribute == nsMsgSearchAttrib.SenderInAddressBook)
+              searchValue.str = children[4].selectedItem.value;
             else
                searchValue.str = children[0].value;
           ]]>
@@ -777,6 +805,9 @@
 
         // initialize the status picker
         this.initialize(document.getAnonymousNodes(this)[2], bundle);
+
+        // initialize the address book picker
+        this.initialize(document.getAnonymousNodes(this)[4], bundle);
 
         var datePicker = document.getAnonymousNodes(this)[3];
         var searchAttribute = this.searchAttribute;
