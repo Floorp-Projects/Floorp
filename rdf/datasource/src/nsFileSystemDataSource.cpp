@@ -120,6 +120,7 @@ private:
     static nsIRDFResource		*kNC_URL;
     static nsIRDFResource		*kNC_Icon;
     static nsIRDFResource		*kNC_Length;
+    static nsIRDFResource		*kNC_IsDirectory;
     static nsIRDFResource		*kWEB_LastMod;
     static nsIRDFResource		*kNC_FileSystemObject;
     static nsIRDFResource		*kNC_pulse;
@@ -141,6 +142,9 @@ private:
     static nsIRDFResource		*kNC_NetPositiveObject;
     static char			*netPositiveDir;
 #endif
+
+    static nsIRDFLiteral		*kLiteralTrue;
+    static nsIRDFLiteral		*kLiteralFalse;
 
 public:
 
@@ -191,6 +195,7 @@ nsIRDFResource		*FileSystemDataSource::kNC_Name;
 nsIRDFResource		*FileSystemDataSource::kNC_URL;
 nsIRDFResource		*FileSystemDataSource::kNC_Icon;
 nsIRDFResource		*FileSystemDataSource::kNC_Length;
+nsIRDFResource		*FileSystemDataSource::kNC_IsDirectory;
 nsIRDFResource		*FileSystemDataSource::kWEB_LastMod;
 nsIRDFResource		*FileSystemDataSource::kNC_FileSystemObject;
 nsIRDFResource		*FileSystemDataSource::kNC_pulse;
@@ -211,6 +216,10 @@ char			*FileSystemDataSource::ieFavoritesDir;
 nsIRDFResource		*FileSystemDataSource::kNC_NetPositiveObject;
 char			*FileSystemDataSource::netPositiveDir;
 #endif
+
+nsIRDFLiteral		*FileSystemDataSource::kLiteralTrue;
+nsIRDFLiteral		*FileSystemDataSource::kLiteralFalse;
+
 
 
 
@@ -321,6 +330,7 @@ FileSystemDataSource::FileSystemDataSource(void)
 		gRDFService->GetResource(NC_NAMESPACE_URI  "URL",              &kNC_URL);
 		gRDFService->GetResource(NC_NAMESPACE_URI  "Icon",             &kNC_Icon);
 		gRDFService->GetResource(NC_NAMESPACE_URI  "Content-Length",   &kNC_Length);
+		gRDFService->GetResource(NC_NAMESPACE_URI  "IsDirectory", &kNC_IsDirectory);
 		gRDFService->GetResource(WEB_NAMESPACE_URI "LastModifiedDate", &kWEB_LastMod);
 		gRDFService->GetResource(NC_NAMESPACE_URI  "FileSystemObject", &kNC_FileSystemObject);
 		gRDFService->GetResource(NC_NAMESPACE_URI  "pulse",            &kNC_pulse);
@@ -331,6 +341,8 @@ FileSystemDataSource::FileSystemDataSource(void)
 #ifdef USE_NC_EXTENSION
 		gRDFService->GetResource(NC_NAMESPACE_URI "extension",        &kNC_extension);
 #endif
+		gRDFService->GetLiteral(NS_LITERAL_STRING("true").get(), &kLiteralTrue);
+		gRDFService->GetLiteral(NS_LITERAL_STRING("false").get(), &kLiteralFalse);
 		gFileSystemDataSource = this;
 	}
 }
@@ -351,6 +363,7 @@ FileSystemDataSource::~FileSystemDataSource (void)
         NS_RELEASE(kNC_URL);
         NS_RELEASE(kNC_Icon);
         NS_RELEASE(kNC_Length);
+        NS_RELEASE(kNC_IsDirectory);
         NS_RELEASE(kWEB_LastMod);
         NS_RELEASE(kNC_FileSystemObject);
         NS_RELEASE(kNC_pulse);
@@ -371,6 +384,9 @@ FileSystemDataSource::~FileSystemDataSource (void)
 #ifdef USE_NC_EXTENSION
 	NS_RELEASE(kNC_extension);
 #endif
+
+	NS_RELEASE(kLiteralTrue);
+	NS_RELEASE(kLiteralFalse);
 
         gFileSystemDataSource = nsnull;
         nsServiceManager::ReleaseService(kRDFServiceCID, gRDFService);
@@ -521,6 +537,12 @@ FileSystemDataSource::GetTarget(nsIRDFResource *source,
 			if (rv == NS_RDF_NO_VALUE)	return(rv);
 
 			return fileSize->QueryInterface(NS_GET_IID(nsIRDFNode), (void**) target);
+		}
+		else  if (property == kNC_IsDirectory)
+		{
+			*target = (isDirURI(source)) ? kLiteralTrue : kLiteralFalse;
+			NS_ADDREF(*target);
+			return NS_OK;
 		}
 		else if (property == kWEB_LastMod)
 		{
@@ -838,6 +860,19 @@ FileSystemDataSource::HasAssertion(nsIRDFResource *source,
 			}
 		}
 #endif
+		else if (property == kNC_IsDirectory)
+		{
+			PRBool isDir = isDirURI(source);
+			PRBool isEqual = PR_FALSE;
+			target->EqualsNode(kLiteralTrue, &isEqual);
+			if (isEqual)
+				*hasAssertion = isDir;
+			else {
+				target->EqualsNode(kLiteralFalse, &isEqual);
+				if (isEqual)
+					*hasAssertion = !isDir;
+			}
+		}
 	}
 
 	return NS_OK;
