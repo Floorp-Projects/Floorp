@@ -73,12 +73,12 @@ struct leaky {
   malloc_log_entry* firstLogEntry;
   malloc_log_entry* lastLogEntry;
 
-  u_long  stacks;
+  int    stacks;
 
   int sfd;
   Symbol* externalSymbols;
-  u_int usefulSymbols;
-  u_int numExternalSymbols;
+  int     usefulSymbols;
+  int     numExternalSymbols;
   StrSet exclusions;
   u_long lowestSymbolAddr;
   u_long highestSymbolAddr;
