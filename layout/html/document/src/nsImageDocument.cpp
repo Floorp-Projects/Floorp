@@ -331,7 +331,7 @@ nsImageDocument::StartLayout()
       nsIPresContext* cx = shell->GetPresContext();
       nsRect r;
       cx->GetVisibleArea(r);
-      shell->ResizeReflow(r.width, r.height);
+      shell->InitialReflow(r.width, r.height);
       NS_RELEASE(cx);
 
       // Now trigger a refresh
