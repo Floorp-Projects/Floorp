@@ -38,6 +38,7 @@
 #include <stdio.h>
 #elif defined(XP_OS2)
 #define MAX_PATH _MAX_PATH
+#define INCL_WINWORKPLACE
 #include <os2.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -823,14 +824,20 @@ void nsSpecialSystemDirectory::operator = (SystemDirectories aSystemSystemDirect
 
         case OS2_DesktopDirectory:
         {
-            ULONG ulBootDrive = 0;
-            char  buffer[] = " :\\desktop\\";
-            DosQuerySysInfo( QSV_BOOT_DRIVE, QSV_BOOT_DRIVE,
-                             &ulBootDrive, sizeof ulBootDrive);
-            buffer[0] = 'A' - 1 + ulBootDrive; // duh, 1-based index...
-            *this = buffer;
+            char szPath[CCHMAXPATH + 1];        
+            BOOL fSuccess;
+            fSuccess = WinQueryActiveDesktopPathname (szPath, sizeof(szPath));
+            int len = strlen (szPath);   
+            if (len > CCHMAXPATH -1)
+               break;
+            szPath[len] = '\\';     
+            szPath[len + 1] = '\0';
 #ifdef DEBUG
-            printf( "Got OS2_DesktopDirectory: %s\n", buffer);
+            if (fSuccess) {
+               printf ("Got OS2_DesktopDirectory: %s\n", szPath);
+            } else {
+               printf ("Failed getting OS2_DesktopDirectory: %s\n", szPath);
+            }
 #endif
             break;           
         }
