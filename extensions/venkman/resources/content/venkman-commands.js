@@ -51,7 +51,9 @@ function initCommands(commandObject)
          ["chrome-filter",  cmdChromeFilter,       CMD_CONSOLE],
          ["clear",          cmdClear,              CMD_CONSOLE],
          ["clear-all",      cmdClearAll,           CMD_CONSOLE],
+         ["clear-profile",  cmdClearProfile,       CMD_CONSOLE],
          ["clear-script",   cmdClearScript,        0],
+         ["close",          cmdClose,              CMD_CONSOLE],
          ["commands",       cmdCommands,           CMD_CONSOLE],
          ["cont",           cmdCont,               CMD_CONSOLE | CMD_NEED_STACK],
          ["emode",          cmdEMode,              CMD_CONSOLE],
@@ -61,6 +63,7 @@ function initCommands(commandObject)
          ["find-bp",        cmdFindBp,             0],
          ["find-creator",   cmdFindCreatorOrCtor,  0],
          ["find-ctor",      cmdFindCreatorOrCtor,  0],
+         ["find-file",      cmdFindFile,           CMD_CONSOLE],
          ["find-frame",     cmdFindFrame,          CMD_NEED_STACK],
          ["find-url",       cmdFindURL,            CMD_CONSOLE],
          ["find-url-soft",  cmdFindURL,            0],
@@ -72,12 +75,16 @@ function initCommands(commandObject)
          ["loadd",          cmdLoadd,              CMD_CONSOLE],
          ["next",           cmdNext,               CMD_CONSOLE | CMD_NEED_STACK],
          ["open-dialog",    cmdOpenDialog,         CMD_CONSOLE],
+         ["open-url",       cmdOpenURL,            0],
          ["pprint",         cmdPPrint,             CMD_CONSOLE],
          ["pref",           cmdPref,               CMD_CONSOLE],
+         ["profile",        cmdProfile,            CMD_CONSOLE],
          ["props",          cmdProps,              CMD_CONSOLE | CMD_NEED_STACK],
          ["propsd",         cmdPropsd,             CMD_CONSOLE],
          ["quit",           cmdQuit,               CMD_CONSOLE],
          ["reload",         cmdReload,             CMD_CONSOLE],
+         ["save-source",    cmdSaveSource,         CMD_CONSOLE],
+         ["save-profile",   cmdSaveProfile,        CMD_CONSOLE],
          ["scope",          cmdScope,              CMD_CONSOLE | CMD_NEED_STACK],
          ["startup-init",   cmdStartupInit,        CMD_CONSOLE],
          ["step",           cmdStep,               CMD_CONSOLE | CMD_NEED_STACK],
@@ -87,17 +94,19 @@ function initCommands(commandObject)
          ["where",          cmdWhere,              CMD_CONSOLE | CMD_NEED_STACK],
          
          /* aliases */
-         ["this",          "props this",           CMD_CONSOLE],
-         ["toggle-chrome", "chrome-filter toggle", 0],
-         ["toggle-ias",    "startup-init toggle",  0],
-         ["em-cycle",      "emode cycle",          0],
-         ["em-ignore",     "emode ignore",         0],
-         ["em-trace",      "emode trace",          0],
-         ["em-break",      "emode break",          0],
-         ["tm-cycle",      "tmode cycle",          0],
-         ["tm-ignore",     "tmode ignore",         0],
-         ["tm-trace",      "tmode trace",          0],
-         ["tm-break",      "tmode break",          0]
+         ["profile-tb",     "profile toggle",       CMD_CONSOLE],
+         ["this",           "props this",           CMD_CONSOLE],
+         ["toggle-chrome",  "chrome-filter toggle", 0],
+         ["toggle-ias",     "startup-init toggle",  0],
+         ["toggle-profile", "profile toggle",       0],
+         ["em-cycle",       "emode cycle",          0],
+         ["em-ignore",      "emode ignore",         0],
+         ["em-trace",       "emode trace",          0],
+         ["em-break",       "emode break",          0],
+         ["tm-cycle",       "tmode cycle",          0],
+         ["tm-ignore",      "tmode ignore",         0],
+         ["tm-trace",       "tmode trace",          0],
+         ["tm-break",       "tmode break",          0]
         ];
 
     defineVenkmanCommands (cmdary);
@@ -105,7 +114,8 @@ function initCommands(commandObject)
     console.commandManager.argTypes.__aliasTypes__ (["index", "breakpointIndex",
                                                      "lineNumber"], "int");
     console.commandManager.argTypes.__aliasTypes__ (["scriptText", "windowFlags",
-                                                     "expression"], "rest");
+                                                     "expression", "prefValue"],
+                                                    "rest");
 }
 
 /**
@@ -175,8 +185,10 @@ function getCommandContext (id, cx)
         default:
             dd ("getCommandContext: unknown id '" + id + "'");
 
-        case "mainmenu:debug-popup":            
+        case "mainmenu:file-popup":
         case "mainmenu:view-popup":
+        case "mainmenu:debug-popup":            
+        case "mainmenu:profile-popup":
         case "popup:console":
             cx = {
                 commandManager: console.commandManager,
@@ -190,7 +202,7 @@ function getCommandContext (id, cx)
         cx.commandManager = console.commandManager;
         if (!("contextSource" in cx))
             cx.contextSource = id;
-        if (console.dbgContexts)
+        if ("dbgContexts" in console && console.dbgContexts)
             dd ("context '" + id + "'\n" + dumpObjectTree(cx));
     }
 
@@ -355,6 +367,25 @@ function cmdClearAll(e)
         clearBreakpointByNumber (i);
 }
 
+function cmdClearProfile(e)
+{
+    if ("scriptRecList" in e)
+    {
+        for (var i = 0; i < e.scriptRecList.length; ++i)
+            e.scriptRecList[i].script.clearProfileData();
+    }
+    else if ("scriptRec" in e)
+    {
+        e.scriptRec.script.clearProfileData();
+    }
+    else
+    {
+        console.jsds.clearProfileData();
+    }
+    
+    feedback (e, MSG_PROFILE_CLEARED);
+}
+
 function cmdClearScript (e)
 {
     var i;
@@ -371,13 +402,15 @@ function cmdClearScript (e)
     {
         var bpr = console.breakpoints.childData[i];
         if (bpr.hasScriptRecord(e.scriptRec))
-        {
-            dd ("found one");
             clearBreakpointByNumber (i);
-        }
     }
 
     return true;
+}
+
+function cmdClose()
+{
+    window.close();
 }
 
 function cmdCommands (e)
@@ -528,11 +561,10 @@ function cmdFinish (e)
 }
 
 function cmdFindBp (e)
-{
-    cmdFindURL ({url: e.breakpointRec.fileName,
-                 rangeStart: e.breakpointRec.line,
-                 rangeEnd: e.breakpointRec.line});
-    return true;
+{    
+    return dispatch ("find-url", {url: e.breakpointRec.fileName,
+                                  rangeStart: e.breakpointRec.line,
+                                  rangeEnd: e.breakpointRec.line});
 }
 
 function cmdFindCreatorOrCtor (e)
@@ -558,7 +590,8 @@ function cmdFindCreatorOrCtor (e)
         line = objVal.constructorLine;
     }
 
-    return cmdFindURL ({url: url, rangeStart: line - 1, rangeEnd: line - 1});
+    return dispatch ("find-url",
+                     {url: url, rangeStart: line - 1, rangeEnd: line - 1});
 }
 
 function cmdFindURL (e)
@@ -566,10 +599,22 @@ function cmdFindURL (e)
     if (!e.url)
     {
         console.sourceView.displaySourceText(null);
-        return true;
+        return null;
     }
     
     var sourceText;
+    
+    if (e.url.indexOf("x-jsd:") == 0)
+    {
+        if (e.url == "x-jsd:help")
+        {
+            dispatch ("help");
+            return e.url;
+        }
+
+        display (getMsg(MSN_ERR_INVALID_PARAM, ["url", e.url]), MT_ERROR);
+        return null;
+    }
     
     if (e.url in console.scripts)
         sourceText = console.scripts[e.url].sourceText;
@@ -602,7 +647,20 @@ function cmdFindURL (e)
         console.sourceView.softScrollTo (line);
     else
         console.sourceView.scrollTo (line - 2, -1);
-    return true;
+    return e.url;
+}
+
+function cmdFindFile (e)
+{
+    if (!e.fileName || e.fileName == "?")
+    {
+        var rv = pickOpen(MSG_OPEN_FILE, "$all");
+        if (rv.reason == PICK_CANCEL)
+            return null;
+        e.fileName = rv.file;
+    }
+    
+    return dispatch ("find-url", {url: getURLSpecFromFile (e.fileName)});
 }
 
 function cmdFindFrame (e)
@@ -633,25 +691,27 @@ function cmdFindFrame (e)
 
 function cmdFindScript (e)
 {
+    var rv;
+
     if (console.sourceView.prettyPrint)
     {
         delete console.highlightFile;
         delete console.highlightStart;
         delete console.highlightEnd;
         console.sourceView.displaySourceText(e.scriptRec.sourceText);
+        rv = e.scriptRec.script.fileName;
     }
     else
     {
-        cmdFindURL({url: e.scriptRec.parentRecord.fileName,
-                     rangeStart: e.scriptRec.baseLineNumber,
-                     rangeEnd: e.scriptRec.baseLineNumber + 
-                               e.scriptRec.lineExtent - 1
-                    });
+        rv = dispatch("find-url", {url: e.scriptRec.parentRecord.fileName,
+                                   rangeStart: e.scriptRec.baseLineNumber,
+                                   rangeEnd: e.scriptRec.baseLineNumber + 
+                                             e.scriptRec.lineExtent - 1});
     }
 
     console.sourceView.details = e.scriptRec;
     
-    return true;
+    return rv;
 }
 
 function cmdFocusInput (e)
@@ -746,11 +806,18 @@ function cmdOpenDialog (e)
     return openDialog (e.url, e.windowName, e.windowFlags);
 }
 
+function cmdOpenURL (e)
+{
+    var url = prompt (MSG_OPEN_URL);
+    if (url)
+        return dispatch ("find-url",{url: url});
+
+    return null;
+}    
+
 function cmdPPrint (e)
 {
-    console.sourceView.prettyPrint = !console.sourceView.prettyPrint;
-    if (console.sourceView.details)
-        cmdFindScript({scriptRec: console.sourceView.details});        
+    setPrettyPrintState(!console.sourceView.prettyPrint);
     return true;
 }
 
@@ -758,6 +825,12 @@ function cmdPref (e)
 {
     if (e.prefName)
     {
+        if (e.prefName[0] == "-")
+        {
+            console.prefs.prefBranch.clearUserPref(e.prefName.substr(1));
+            return true;
+        }
+        
         if (!(e.prefName in console.prefs))
         {
             display (getMsg(MSN_ERR_INVALID_PARAM, ["prefName", e.prefName]),
@@ -783,7 +856,21 @@ function cmdPref (e)
 
     return true;
 }
-        
+
+function cmdProfile(e)
+{
+    if (e.toggle && e.toggle == "toggle")
+        e.toggle = !(console.jsds.flags & COLLECT_PROFILE_DATA);
+    
+    if (e.toggle != null)
+        setProfileState(e.toggle);
+    else
+        e.toggle = console.jsds.flags & COLLECT_PROFILE_DATA;
+    
+    feedback (e, getMsg(MSN_PROFILE_STATE,
+                        [e.toggle ? MSG_VAL_ON : MSG_VAL_OFF]));
+}
+
 function cmdProps (e, forceDebuggerScope)
 {
     var v;
@@ -812,10 +899,9 @@ function cmdPropsd (e)
     return cmdProps (e, true);
 }
 
-function cmdQuit ()
+function cmdQuit()
 {
-    window.close();
-    return true;
+    goQuitApplication();
 }
 
 function cmdReload ()
@@ -826,6 +912,125 @@ function cmdReload ()
     console.sourceView.childData.reloadSource();
     return true;
 }
+
+function cmdSaveSource (e)
+{
+    if (!e.targetFile || e.targetFile == "?")
+    {
+        var fileName = console.sourceView.childData.fileName;
+        if (fileName.search(/^\w+:/) < 0)
+        {
+            var shortName = getFileFromPath(fileName);
+            if (fileName != shortName)
+                fileName = shortName;
+            else
+                fileName = "";
+        }
+        else
+            fileName = "";
+
+        var rv = pickSaveAs(MSG_SAVE_SOURCE, "$all $text *.js", fileName);
+        if (rv.reason == PICK_CANCEL)
+            return null;
+        e.targetFile = rv.file;
+    }
+
+    var file = fopen (e.targetFile, MODE_WRONLY | MODE_CREATE | MODE_TRUNCATE);
+    var lines = console.sourceView.childData.lines;
+    for (var i = 0; i < lines.length; ++i)
+        file.write(lines[i] + "\n");
+    file.close();
+
+    return file.localFile.path;
+}
+
+function cmdSaveProfile (e)
+{
+    function writeHeaderCSV(file)
+    {
+        file.write ("# path, file, function, start-line, end-line, " +
+                    "call-count, recurse-depth, total-time, min-time, " +
+                    "max-time, avg-time\n");
+    };
+    
+    function writeSummaryCSV(file, summary)
+    {
+        for (var i = 0; i < summary.length; ++i)
+        {
+            var r = summary[i];
+            file.write (r.path + ", " + r.file + ", " + r.fun + ", " + r.base +
+                        ", " + r.end + ", " + r.ccount + ", " + r.recurse +
+                        ", " + r.total + ", " + r.min + ", " + r.max +
+                        ", " + r.avg +"\n");
+        }
+    };
+        
+    function writeSummaryText(file, summary, fileName)
+    {
+        file.write ((fileName ? fileName : "** all files **") + "\n");
+        for (var i = 0; i < summary.length; ++i)
+            file.write ("\t" + summary[i].str + "\n");
+    };
+    
+    if (!e.targetFile || e.targetFile == "?")
+    {
+        var rv = pickSaveAs(MSG_SAVE_PROFILE, "$html *.csv $text $all");
+        if (rv.reason == PICK_CANCEL)
+            return null;
+        e.targetFile = rv.file;
+    }
+    
+    var file = fopen (e.targetFile, MODE_WRONLY | MODE_CREATE | MODE_TRUNCATE);
+    var ary = file.localFile.path.match(/(csv|html?)$/i);
+    var writeHeader = null;
+    var writeSummary = writeSummaryText;
+    var writeFooter = null;
+    if (ary)
+    {
+        var ext = ary[1].toLowerCase();
+        if (ext == "csv")
+        {
+            writeHeader = writeHeaderCSV;
+            writeSummary = writeSummaryCSV;
+        }
+        else
+        {
+            writeHeader = writeHeaderHTML;
+            writeSummary = writeSummaryHTML;
+            writeFooter = writeFooterHTML;
+        }
+    }
+    
+    if (writeHeader)
+        writeHeader(file);
+
+    var i;
+    
+    if ("urlList" in e && e.urlList.length > 0 ||
+        "url" in e && e.url && (e.urlList = [e.url]))
+    {
+        for (i = 0; i < e.urlList.length; ++i)
+            writeSummary(file, console.getProfileSummary(e.urlList[i]),
+                         e.urlList[i]);
+    }
+    else
+    {
+        var scriptURLs = keys(console.scripts).sort();
+        for (i = 0; i < scriptURLs.length; ++i)
+        {
+            var fileName = console.scripts[scriptURLs[i]].fileName;
+            writeSummary(file, console.getProfileSummary(fileName), fileName);
+        }
+    }
+
+    if (writeFooter)
+        writeFooter(file);
+
+    display (getMsg(MSN_PROFILE_SAVED, getURLSpecFromFile(file.localFile)));
+    file.close();
+    return file.localFile;
+}
+
 
 function cmdScope ()
 {

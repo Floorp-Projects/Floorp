@@ -151,14 +151,7 @@ function initOutliners()
     FileContainerRecord.prototype.property = console.projectView.atomFiles;
     FileRecord.prototype.property = console.projectView.atomFile;
     BPRecord.prototype.property = console.projectView.atomBreakpoint;
-    BLRecord.prototype.property = console.projectView.atomBLItem;
-    
-    var enumerator = console.windowWatcher.getWindowEnumerator();
-    while (enumerator.hasMoreElements())
-    {
-        var win = enumerator.getNext();
-        console.windows.appendChild (new WindowRecord(win));
-    }   
+    BLRecord.prototype.property = console.projectView.atomBLItem;    
 }
 
 function destroyOutliners()
@@ -827,7 +820,6 @@ function scv_getcx(cx)
     }
     else if (rec instanceof ScriptRecord)
     {
-        cx.url = cx.fileName = rec.script.fileName;
         cx.scriptRec = rec;
         cx.lineNumber = rec.script.baseLineNumber;
         cx.rangeStart = cx.lineNumber;
@@ -842,7 +834,7 @@ function scv_getcx(cx)
     
     if (rangeCount > 0)
     {
-        cx.fileNameList   = new Array();
+        cx.urlList = cx.fileNameList = new Array();
         if (firstRec instanceof ScriptRecord)
             cx.scriptRecList  = new Array();
         cx.lineNumberList = new Array();
@@ -867,7 +859,7 @@ function scv_getcx(cx)
             }
             else if (rec instanceof ScriptRecord)
             {
-                cx.fileNameList.push (rec.script.fileName);
+                //cx.fileNameList.push (rec.script.fileName);
                 if (firstRec instanceof ScriptRecord)
                     cx.scriptRecList.push (rec);
                 cx.lineNumberList.push (rec.script.baseLineNumber);

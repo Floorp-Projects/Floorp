@@ -50,9 +50,6 @@
 
     <!-- Commands -->
     <commandset id="venkmanCommands">
-      <!-- File commands -->
-      <command id="cmd_close" oncommand="window.close();"/>
-      <command id="cmd_quit"/>
 
       <!-- Edit commands -->
       <commandset id="selectEditMenuItems"/>
@@ -77,9 +74,6 @@
       <key id="key:reloadui" modifiers="accel alt" key="R"
         oncommand="if (typeof cmdReloadUI =='function') cmdReloadUI(); else window.location.href = window.location.href;"/>
 
-      <!-- File keys -->
-      <key id="key_close"/>
-
       <!-- Edit keys -->
       <key id="key_undo"/>
       <key id="key_redo"/>
@@ -98,12 +92,8 @@
       <menubar id="mainmenu" persist="collapsed"
         grippytooltiptext="&MenuBar.tooltip;">
 
-        <!-- File menu -->
-        <menu id="menu_File">
-          <menupopup id="menu_FilePopup">
-            <menuitem id="menu_close"/>
-          </menupopup>
-        </menu>
+        <!-- File menu placeholder, see venkman-menus.js -->
+        <menu id="mainmenu:file"/>
   
         <!-- Edit menu -->
         <menu id="menu_Edit">
@@ -128,6 +118,9 @@
   
         <!-- Debug menu placeholder, see venkman-menus.js -->
         <menu id="mainmenu:debug"/>
+
+        <!-- Profile menu placeholder, see venkman-menus.js -->
+        <menu id="mainmenu:profile"/>
 
         <!-- Tasks menu -->
         <menu id="tasksMenu"/>

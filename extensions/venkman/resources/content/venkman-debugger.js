@@ -44,6 +44,8 @@ const jsdIScript          = Components.interfaces.jsdIScript;
 const jsdIStackFrame      = Components.interfaces.jsdIStackFrame;
 const jsdIFilter          = Components.interfaces.jsdIFilter;
 
+const COLLECT_PROFILE_DATA = jsdIDebuggerService.COLLECT_PROFILE_DATA;
+
 const PCMAP_SOURCETEXT    = jsdIScript.PCMAP_SOURCETEXT;
 const PCMAP_PRETTYPRINT   = jsdIScript.PCMAP_PRETTYPRINT;
 
@@ -308,10 +310,10 @@ function realizeScript(script)
         container.reserveChildren();
         if (!isURLFiltered(script.fileName))
             console.scriptsView.childData.appendChild(container);
-    }
-    
+    }    
+
     var scriptRec = new ScriptRecord (script);
-    if ("dbgRealize" in console)
+    if ("dbgRealize" in console && console.dbgRealize)
     {
         dd ("new scriptrecord: " + formatScript(script) + "\n" + 
             script.functionSource);
@@ -350,7 +352,7 @@ function unrealizeScript(script)
         return;
     }
 
-    if ("dbgRealize" in console)
+    if ("dbgRealize" in console && console.dbgRealize)
         dd ("remove scriptrecord: " + formatScript(script));
 
     var scriptRec = container.locateChildByScript (script);

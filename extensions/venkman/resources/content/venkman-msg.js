@@ -179,7 +179,12 @@ const MSG_NOTE_NEEDSTACK   = getMsg("msg.note.needstack");
 const MSG_NOTE_NOSTACK     = getMsg("msg.note.nostack");
 const MSG_DOC_NOTES        = getMsg("msg.doc.notes");
 const MSG_DOC_DESCRIPTION  = getMsg("msg.doc.description");
-const MSG_HELP_TITLE       = getMsg("msg.help.title");
+
+const MSG_PROFILE_CLEARED  = getMsg("msg.profile.cleared");
+const MSG_OPEN_FILE        = getMsg("msg.open.file");
+const MSG_OPEN_URL         = getMsg("msg.open.url");
+const MSG_SAVE_PROFILE     = getMsg("msg.save.profile");
+const MSG_SAVE_SOURCE      = getMsg("msg.save.source");
 
 /* message names for parameterized messages */
 const MSN_ERR_INTERNAL_DISPATCH = "msg.err.internal.dispatch";
@@ -241,6 +246,9 @@ const MSN_SOURCE_LINE        = "msg.source.line";
 const MSN_EXCP_TRACE         = "msg.exception.trace";
 const MSN_ERPT_ERROR         = "msg.erpt.error";
 const MSN_ERPT_WARN          = "msg.erpt.warn";
+const MSN_PROFILE_LOST       = "msg.profile.lost";
+const MSN_PROFILE_STATE      = "msg.profile.state";
+const MSN_PROFILE_SAVED      = "msg.profile.saved";
 const MSN_VERSION            = "msg.version";
 const MSN_DEFAULT_ALIAS_HELP = "msg.default.alias.help";
 

@@ -46,20 +46,36 @@ function initHandlers()
 
     console.wwObserver = {observe: wwObserve};
     console.windowWatcher.registerNotification (console.wwObserver);
+    console.windows.hookedWindows = new Array();
+
+    var enumerator = console.windowWatcher.getWindowEnumerator();
+    while (enumerator.hasMoreElements())
+    {
+        var win = enumerator.getNext();
+        if (win.location.href != "chrome://venkman/content/venkman.xul")
+        {
+            console.onWindowOpen(win);
+            console.onWindowLoad();
+        }
+    }
 }
 
 function destroyHandlers()
 {
-    const WW_CTRID = "@mozilla.org/embedcomp/window-watcher;1";
-    const nsIWindowWatcher = Components.interfaces.nsIWindowWatcher;
-    var ww = Components.classes[WW_CTRID].getService(nsIWindowWatcher);
-    ww.unregisterNotification (console.wwObserver);
+    console.windowWatcher.unregisterNotification (console.wwObserver);
+    while (console.windows.hookedWindows.length)
+    {
+        var win = console.windows.hookedWindows.pop();
+        win.removeEventListener ("load", console.onWindowLoad, false);
+        win.removeEventListener ("unload", console.onWindowUnload, false);
+    }
 }
 
 console.onWindowOpen =
 function con_winopen (win)
 {
-    if (win.location.href == "about:blank" || win.location.href == "")
+    if ("ChromeWindow" in win && win instanceof win.ChromeWindow &&
+        (win.location.href == "about:blank" || win.location.href == ""))
     {
         //dd ("not loaded yet?");
         setTimeout (con_winopen, 100, win);
@@ -67,7 +83,8 @@ function con_winopen (win)
     }
     
     //dd ("window opened: " + win); // + ", " + getInterfaces(win));
-    console.windows.appendChild (new WindowRecord(win));
+    console.windows.appendChild (new WindowRecord(win, ""));
+    console.windows.hookedWindows.push(win);
     win.addEventListener ("load", console.onWindowLoad, false);
     win.addEventListener ("unload", console.onWindowUnload, false);
     console.scriptsView.freeze();
@@ -89,10 +106,16 @@ console.onWindowClose =
 function con_winunload (win)
 {
     //dd ("window closed: " + win);
-    var winRecord = console.windows.locateChildByWindow(win);
-    if (!ASSERT(winRecord, "onWindowClose: Can't find window record."))
-        return;
-    console.windows.removeChildAtIndex(winRecord.childIndex);
+    if (win.location.href != "chrome://venkman/content/venkman.xul")
+    {
+        var winRecord = console.windows.locateChildByWindow(win);
+        if (!ASSERT(winRecord, "onWindowClose: Can't find window record."))
+            return;
+        console.windows.removeChildAtIndex(winRecord.childIndex);
+        var idx = arrayIndexOf(console.windows.hookedWindows, win);
+        if (idx != -1)
+            arrayRemoveAt(console.windows.hookedWindows, idx);
+    }
     console.scriptsView.freeze();
 }
 

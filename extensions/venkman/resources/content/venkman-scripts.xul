@@ -58,6 +58,7 @@
     <script src="chrome://global/content/strres.js"/>
   
     <script src="chrome://venkman/content/outliner-utils.js"/>
+    <script src="chrome://venkman/content/file-utils.js"/>
     <script src="chrome://venkman/content/html-consts.js"/>
     <script src="chrome://venkman/content/command-manager.js"/>
   

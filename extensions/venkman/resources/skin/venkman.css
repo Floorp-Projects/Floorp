@@ -151,6 +151,47 @@ outliner {
     list-style-image: url("chrome://venkman/skin/images/step-out-act.png");
 }
 
+#maintoolbar-profile-tb {
+    list-style-image: url("chrome://venkman/skin/images/profile.png");
+}
+
+#maintoolbar-profile-tb[profile="true"] {
+    list-style-image: url("chrome://venkman/skin/images/profile-checked.png");
+}
+
+#maintoolbar-profile-tb[profile="true"]:hover {
+    list-style-image: url("chrome://venkman/skin/images/profile-checked-hov.png");
+}
+
+#maintoolbar-profile-tb:hover {
+    list-style-image: url("chrome://venkman/skin/images/profile-hov.png");
+}
+
+#maintoolbar-profile-tb:active {
+    list-style-image: url("chrome://venkman/skin/images/profile-act.png");
+}
+
+
+#maintoolbar-pprint {
+    list-style-image: url("chrome://venkman/skin/images/prettyprint.png");
+}
+
+#maintoolbar-pprint[state="true"] {
+    list-style-image: url("chrome://venkman/skin/images/prettyprint-checked.png");
+}
+
+#maintoolbar-pprint[state="true"]:hover {
+    list-style-image: url("chrome://venkman/skin/images/prettyprint-checked-hov.png");
+}
+
+#maintoolbar-pprint:hover {
+    list-style-image: url("chrome://venkman/skin/images/prettyprint-hov.png");
+}
+
+#maintoolbar-pprint:active {
+    list-style-image: url("chrome://venkman/skin/images/prettyprint-act.png");
+}
+
 outlinerchildren:-moz-outliner-cell(breakpoint-col) {
     background: #CCCCCC;
     border-right: 1px grey solid;

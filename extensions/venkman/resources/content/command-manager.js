@@ -219,7 +219,7 @@ function cmgr_showpop (id)
         catch (ex)
         {
             dd ("caught exception evaling '" + node.getAttribute("id") + "'.'" +
-                attr + "'");
+                attr + "'\n" + ex);
         }
         return true;
     }
@@ -386,6 +386,7 @@ function cmgr_addsmenu (parent, id, label, attribs)
     
     menu.setAttribute ("accesskey", getAccessKey(label));
     menu.setAttribute ("label", label.replace("&", ""));
+    menu.setAttribute ("isSeparator", true);
     var menupopup = document.createElement ("menupopup");
     menupopup.setAttribute ("id", id + "-popup");
     if (typeof attribs == "object")
@@ -872,7 +873,7 @@ function parse_number (e, name)
     var ary = e.unparsedData.match (/(\d+)(?:\s+(.*))?$/);
     if (!ary)
         return false;
-    e[name] = ary[1];
+    e[name] = Number(ary[1]);
     e.unparsedData = (2 in ary) ? ary[2] : "";
     return true;
 }

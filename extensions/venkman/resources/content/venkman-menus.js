@@ -65,7 +65,21 @@ function initMenus()
     t("maintoolbar", "next");
     t("maintoolbar", "step");
     t("maintoolbar", "finish");
+    t("maintoolbar", "-");
+    t("maintoolbar", "profile-tb");
+    t("maintoolbar", "pprint");
 
+
+    M("mainmenu", "file");
+     m("open-url");
+     m("find-file");
+     m("-");
+     m("close");
+     m("save-source");
+     m("save-profile");
+     m("-");
+     m("quit");
+    
     /* View menu */
     M("mainmenu", "view");
      m("reload");
@@ -77,7 +91,8 @@ function initMenus()
      
     /* Debug menu */
     M("mainmenu", "debug");
-     m("stop");
+     m("stop", {type: "checkbox",
+                checkedif: "console.jsds.interruptHook"});
      m("cont");
      m("next");
      m("step");
@@ -97,12 +112,21 @@ function initMenus()
      m("tm-break",  {type: "radio", name: "tm",
                      checkedif: "console.throwMode == TMODE_BREAK"});
      m("-");
-     m("toggle-ias", {type: "checkbox",
-                      checkedif: "console.jsds.initAtStartup"});
+     m("toggle-ias",
+         {type: "checkbox",
+          checkedif: "console.jsds.initAtStartup"});
+
+    M("mainmenu", "profile");
+     m("toggle-profile", {type: "checkbox",
+                          checkedif:
+                            "console.jsds.flags & COLLECT_PROFILE_DATA"});
+     m("clear-profile");
+     m("save-profile");
 
     /* Context menu for console view */
     C("output-iframe", "console");
-     m("stop");
+     m("stop", {type: "checkbox",
+                checkedif: "console.jsds.interruptHook"});
      m("cont");
      m("next");
      m("step");
@@ -130,11 +154,13 @@ function initMenus()
                      "cx.target instanceof BPRecord || " +
                      "(has('breakpointLabel') && cx.target.childData.length)"});
      m("clear");
-     //m("-");
-     //m("bp-props");
+     m("-");
+     m("save-profile", {enabledif: "has('url')"});
 
     /* Context menu for source view */
     C("source-outliner", "source");
+     m("save-source");
+     m("-");
      m("break",  {enabledif: "cx.lineIsExecutable && !has('breakpointRec')"});
      m("fbreak", {enabledif: "!cx.lineIsExecutable && !has('breakpointRec')"});
      m("clear");
@@ -149,13 +175,13 @@ function initMenus()
 
     /* Context menu for script view */
     C("script-list-outliner", "script");
-     m("find-url",     {enabledif:
-                         "cx.target instanceof ScriptContainerRecord"});
-     m("find-script",  {enabledif: 
-                         "cx.target instanceof ScriptRecord"});
-     m("clear-script", {enabledif:
-                         "cx.target.bpcount"});
-    
+     m("find-url");
+     m("find-script");
+     m("clear-script", {enabledif: "cx.target.bpcount"});
+     m("-");
+     m("save-profile");
+     m("clear-profile");
+     
     /* Context menu for stack view */
     C("stack-outliner", "stack");
      m("frame",        {enabledif: "cx.target instanceof FrameRecord"});

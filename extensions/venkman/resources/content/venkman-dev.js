@@ -38,6 +38,7 @@ function initDev()
     var cmdary =
         [["dumpcontexts",  cmdDumpContexts,  CMD_CONSOLE | CMD_NO_HELP],
          ["dumpfilters",   cmdDumpFilters,   CMD_CONSOLE | CMD_NO_HELP],
+         ["dumpprofile",   cmdDumpProfile,   CMD_CONSOLE | CMD_NO_HELP],
          ["dumptree",      cmdDumpTree,      CMD_CONSOLE | CMD_NO_HELP],
          ["dumpscripts",   cmdDumpScripts,   CMD_CONSOLE | CMD_NO_HELP],
          ["reloadui",      cmdReloadUI,      CMD_CONSOLE | CMD_NO_HELP],
@@ -52,9 +53,15 @@ function initDev()
     
     defineVenkmanCommands (cmdary);
 
-    console.addPref ("dbgContexts", false);
-    console.addPref ("dbgDispatch", false);
-    console.addPref ("dbgRealize", false);
+    if (!("devState" in console.pluginState))
+    {
+        console.addPref ("dbgContexts", false);
+        console.addPref ("dbgDispatch", false);
+        console.addPref ("dbgRealize", false);
+    }
+    
+    console.pluginState.devState = true;
+    
     dispatch ("sync-debug");
     
     return "Venkman development functions loaded OK.";
@@ -114,6 +121,13 @@ function cmdDumpFilters()
     console.jsds.enumerateFilters (enumer);
 }
 
+function cmdDumpProfile(e)
+{
+    var list = console.getProfileSummary();
+    for (var i = 0; i < list.length; ++i)
+        dd(list[i].str);
+}
+        
 function cmdDumpTree(e)
 {
     if (!e.depth)
@@ -150,17 +164,17 @@ function cmdReloadUI()
 
 function cmdSyncDebug()
 {
-    if (console.prefs["dbgContexts"])
+    if (eval(console.prefs["dbgContexts"]))
         console.dbgContexts = true;
     else
         delete console.dbgContexts;
 
-    if (console.prefs["dbgDispatch"])
+    if (eval(console.prefs["dbgDispatch"]))
         console.dbgDispatch = true;
     else
         delete console.dbgDispatch;
 
-    if (console.prefs["dbgRealize"])
+    if (eval(console.prefs["dbgRealize"]))
         console.dbgRealize = true;
     else
         delete console.dbgRealize;

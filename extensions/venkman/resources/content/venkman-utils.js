@@ -260,7 +260,7 @@ function wordCap (str)
  */
 function Clone (obj)
 {
-    robj = new Object();
+    var robj = new Object();
 
     for (var p in obj)
         robj[p] = obj[p];
@@ -306,6 +306,29 @@ function getFileFromPath (path)
         return ary[1];
 
     return path;
+}
+
+function getURLSpecFromFile (file)
+{
+    if (!file)
+        return null;
+
+    const IOS_CTRID = "@mozilla.org/network/io-service;1";
+    const LOCALFILE_CTRID = "@mozilla.org/file/local;1";
+
+    const nsIIOService = Components.interfaces.nsIIOService;
+    const nsILocalFile = Components.interfaces.nsILocalFile;
+    
+    if (typeof file == "string")
+    {
+        var fileObj =
+            Components.classes[LOCALFILE_CTRID].createInstance(nsILocalFile);
+        fileObj.initWithUnicodePath(file);
+        file = fileObj;
+    }
+    
+    var service = Components.classes[IOS_CTRID].getService(nsIIOService);
+    return service.getURLSpecFromFile(file);
 }
 
 function getCommonPfx (list)
@@ -371,6 +394,16 @@ function keys (o)
 
     return rv;
     
+}
+
+
+function replaceStrings (str, obj)
+{
+    if (!str)
+        return str;
+    for (var p in obj)
+        str = str.replace(RegExp(p, "g"), obj[p]);
+    return str;
 }
 
 function stringTrim (s)
@@ -459,6 +492,9 @@ function arrayContains (ary, elem)
 
 function arrayIndexOf (ary, elem)
 {
+    if (!ary)
+        return -1;
+    
     for (var i in ary)
         if (ary[i] == elem)
             return i;
@@ -511,10 +547,7 @@ function leftPadString (str, num, ch)
     
 function roundTo (num, prec)
 {
-
-    return parseInt ( Math.round(num * Math.pow (10, prec))) /
-        Math.pow (10, prec);   
-
+    return Math.round(num * Math.pow (10, prec)) / Math.pow (10, prec);
 }
 
 function randomRange (min, max)
