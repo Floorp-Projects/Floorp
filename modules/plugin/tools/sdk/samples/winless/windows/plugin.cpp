@@ -139,6 +139,11 @@ uint16 nsPluginInstance::HandleEvent(void* aEvent)
       }
       break;
     }
+    case WM_KEYDOWN:
+    {
+      Beep(1000,100);
+      break;
+    }
     default:
       return 0;
   }
