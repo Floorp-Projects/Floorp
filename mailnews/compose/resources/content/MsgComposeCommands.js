@@ -234,9 +234,7 @@ var gComposeRecyclingListener = {
       identityElement.focus();
 
     InitializeGlobalVariables();
-    window.content.focus();
     ComposeStartup(true, params);
-    enableEditableFields();
 
     var event = document.createEvent('Events');
     event.initEvent('compose-window-reopen', false, true);
@@ -1105,6 +1103,7 @@ function ComposeFieldsReady(msgType)
   }
   CompFields2Recipients(gMsgCompose.compFields, gMsgCompose.type);
   SetComposeWindowTitle();
+  enableEditableFields();
   AdjustFocus();
 }
 
