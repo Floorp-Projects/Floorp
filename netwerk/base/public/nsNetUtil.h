@@ -64,6 +64,7 @@
 #include "nsIDownloader.h"
 #include "nsIResumableEntityID.h"
 #include "nsIStreamLoader.h"
+#include "nsIUnicharStreamLoader.h"
 #include "nsIStreamIO.h"
 #include "nsIPipe.h"
 #include "nsIProtocolHandler.h"
@@ -431,6 +432,29 @@ NS_NewStreamLoader(nsIStreamLoader* *result,
     if (NS_FAILED(rv)) return rv;
     *result = loader;
     NS_ADDREF(*result);
+    return rv;
+}
+
+inline nsresult
+NS_NewUnicharStreamLoader(nsIUnicharStreamLoader **aResult,
+                          nsIChannel *aChannel,
+                          nsIUnicharStreamLoaderObserver *aObserver,
+                          nsISupports *aContext = nsnull,
+                          PRUint32 aSegmentSize = nsIUnicharStreamLoader::DEFAULT_SEGMENT_SIZE)
+{
+    nsresult rv;
+    nsCOMPtr<nsIUnicharStreamLoader> loader;
+    static NS_DEFINE_CID(kUnicharStreamLoaderCID, NS_UNICHARSTREAMLOADER_CID);
+    rv = nsComponentManager::CreateInstance(kUnicharStreamLoaderCID,
+                                            nsnull,
+                                            NS_GET_IID(nsIUnicharStreamLoader),
+                                            getter_AddRefs(loader));
+    if (NS_FAILED(rv)) return rv;
+    rv = loader->Init(aChannel, aObserver, aContext, aSegmentSize);
+                      
+    if (NS_FAILED(rv)) return rv;
+    *aResult = loader;
+    NS_ADDREF(*aResult);
     return rv;
 }
 

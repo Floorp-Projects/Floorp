@@ -30,6 +30,7 @@ nsIStreamListenerTee.idl
 nsIFileStreams.idl
 nsITransport.idl
 nsIStreamLoader.idl
+nsIUnicharStreamLoader.idl
 nsIDownloader.idl
 nsIResumableChannel.idl
 nsIResumableEntityID.idl

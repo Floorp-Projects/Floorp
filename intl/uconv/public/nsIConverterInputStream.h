@@ -48,6 +48,6 @@ class nsIConverterInputStream : public nsIUnicharInputStream {
     NS_DEFINE_STATIC_IID_ACCESSOR(NS_ICONVERTERSTREAM_IID)
 
     NS_IMETHOD Init(nsIInputStream *aStream, const PRUnichar *aCharset,
-                    PRInt32 aBufferSize) = 0;
+                    PRInt32 aBufferSize, PRBool aRecoverFromErrors) = 0;
 };
 
