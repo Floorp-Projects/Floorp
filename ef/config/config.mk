@@ -37,7 +37,7 @@ ifeq ($(OS_ARCH),WINNT)
 	OS_DLLFLAGS = -nologo -DLL -incremental:yes -subsystem:console -machine:I386 wsock32.lib
 	EF_LIBS = $(DIST)/lib/EF.lib $(DIST)/lib/DebuggerChannel.lib $(DIST)/lib/EFDisassemble
 	EF_LIB_FILES = $(EF_LIBS)
-	NSPR_LIBS = $(DIST)/lib/libnspr21.lib $(DIST)/lib/libplc21_s.lib
+	NSPR_LIBS = $(DIST)/lib/libnspr3.lib $(DIST)/lib/libplc3_s.lib
 	BROWSE_INFO_DIR = $(DEPTH)/$(OBJDIR)/BrowseInfo
 	BROWSE_INFO_OBJS = $(wildcard $(BROWSE_INFO_DIR)/*.sbr)
 	BROWSE_INFO_PROGRAM = bscmake 
@@ -56,7 +56,7 @@ else
 	EXC_FLAGS = -fexceptions
 	EF_LIBS = -L$(DIST)/lib -lEF -lDebuggerChannel -lEFDisassemble
 	EF_LIB_FILES = $(DIST)/lib/libEF.a $(DIST)/lib/libDebuggerChannel.a $(DIST)/lib/libEFDisassemble.a
-	NSPR_LIBS = $(NSPR_THREAD_LIBS) -L$(NSPR_PREFIX)/lib -lnspr21 -lplc21
+	NSPR_LIBS = $(NSPR_THREAD_LIBS) -L$(NSPR_PREFIX)/lib -lnspr3 -lplc3
 	MKDIR = mkdir -p
 	LN = ln -s -f
 endif
