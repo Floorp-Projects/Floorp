@@ -48,16 +48,26 @@ static NS_DEFINE_CID(kDOMScriptObjectFactoryCID,  NS_DOM_SCRIPT_OBJECT_FACTORY_C
 ////////////////////////////////////////////////////////////////////////
 // ctors & dtors
 
+MOZ_DECL_CTOR_COUNTER(RDF_nsRDFDOMNodeList);
+
 nsRDFDOMNodeList::nsRDFDOMNodeList(void)
     : mInner(nsnull),
       mElements(nsnull),
       mScriptObject(nsnull)
 {
+    MOZ_COUNT_CTOR(RDF_nsRDFDOMNodeList);
+
     NS_INIT_REFCNT();
 }
 
 nsRDFDOMNodeList::~nsRDFDOMNodeList(void)
 {
+    MOZ_COUNT_DTOR(RDF_nsRDFDOMNodeList);
+#ifdef DEBUG_REFS
+    --gInstanceCount;
+    fprintf(stdout, "%d - RDF: nsRDFDOMNodeList\n", gInstanceCount);
+#endif
+
     NS_IF_RELEASE(mElements);
     delete mInner;
 }

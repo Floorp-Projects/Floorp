@@ -660,6 +660,8 @@ nsIXULContentUtils* XULDocumentImpl::gXULUtils;
 ////////////////////////////////////////////////////////////////////////
 // ctors & dtors
 
+MOZ_DECL_CTOR_COUNTER(RDF_XULDocumentImpl);
+
 XULDocumentImpl::XULDocumentImpl(void)
     : mParentDocument(nsnull),
       mScriptContextOwner(nsnull),
@@ -671,11 +673,18 @@ XULDocumentImpl::XULDocumentImpl(void)
       mIsPopup(PR_FALSE),
       mForwardReferencesResolved(PR_FALSE)
 {
+    MOZ_COUNT_CTOR(RDF_XULDocumentImpl);
     NS_INIT_REFCNT();
 }
 
 XULDocumentImpl::~XULDocumentImpl()
 {
+    MOZ_COUNT_DTOR(RDF_XULDocumentImpl);
+#ifdef DEBUG_REFS
+    --gInstanceCount;
+    fprintf(stdout, "%d - RDF: XULDocumentImpl\n", gInstanceCount);
+#endif
+
     // In case we failed somewhere early on and the forward observer
     // decls never got resolved.
     DestroyForwardReferences();

@@ -152,8 +152,12 @@ nsIDateTimeFormat* nsXULContentUtils::gFormat;
 //------------------------------------------------------------------------
 // Constructors n' stuff
 
+MOZ_DECL_CTOR_COUNTER(RDF_nsXULContentUtils);
+
 nsXULContentUtils::nsXULContentUtils()
 {
+    MOZ_COUNT_CTOR(RDF_nsXULContentUtils);
+
     NS_INIT_REFCNT();
 }
 
@@ -186,6 +190,12 @@ nsXULContentUtils::Init()
 
 nsXULContentUtils::~nsXULContentUtils()
 {
+    MOZ_COUNT_DTOR(RDF_nsXULContentUtils);
+#ifdef DEBUG_REFS
+    --gInstanceCount;
+    fprintf(stdout, "%d - RDF: nsXULContentUtils\n", gInstanceCount);
+#endif
+
     if (--gRefCnt == 0) {
         if (gRDF) {
             nsServiceManager::ReleaseService(kRDFServiceCID, gRDF);

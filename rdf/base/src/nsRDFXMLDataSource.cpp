@@ -406,6 +406,7 @@ NS_NewRDFXMLDataSource(nsIRDFDataSource** aResult)
     return NS_OK;
 }
 
+MOZ_DECL_CTOR_COUNTER(RDF_RDFXMLDataSourceImpl);
 
 RDFXMLDataSourceImpl::RDFXMLDataSourceImpl(void)
     : mInner(nsnull),
@@ -416,6 +417,8 @@ RDFXMLDataSourceImpl::RDFXMLDataSourceImpl(void)
       mNameSpaces(nsnull),
       mURLSpec(nsnull)
 {
+    MOZ_COUNT_CTOR(RDF_RDFXMLDataSourceImpl);
+
     NS_INIT_REFCNT();
 }
 
@@ -469,6 +472,12 @@ RDFXMLDataSourceImpl::Init()
 
 RDFXMLDataSourceImpl::~RDFXMLDataSourceImpl(void)
 {
+    MOZ_COUNT_DTOR(RDF_RDFXMLDataSourceImpl);
+#ifdef DEBUG_REFS
+    --gInstanceCount;
+    fprintf(stdout, "%d - RDF: RDFXMLDataSourceImpl\n", gInstanceCount);
+#endif
+
     nsresult rv;
 
     // Unregister first so that nobody else tries to get us.

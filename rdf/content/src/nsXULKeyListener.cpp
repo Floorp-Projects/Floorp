@@ -227,14 +227,22 @@ private:
 
 ////////////////////////////////////////////////////////////////////////
 
+MOZ_DECL_CTOR_COUNTER(RDF_nsXULKeyListenerImpl);
+
 nsXULKeyListenerImpl::nsXULKeyListenerImpl(void)
 {
-	NS_INIT_REFCNT();
-	
+	MOZ_COUNT_CTOR(RDF_nsXULKeyListenerImpl);
+
+	NS_INIT_REFCNT();	
 }
 
 nsXULKeyListenerImpl::~nsXULKeyListenerImpl(void)
 {
+    MOZ_COUNT_DTOR(RDF_nsXULKeyListenerImpl);
+#ifdef DEBUG_REFS
+    --gInstanceCount;
+    fprintf(stdout, "%d - RDF: nsXULKeyListenerImpl\n", gInstanceCount);
+#endif
 }
 
 NS_IMPL_ADDREF(nsXULKeyListenerImpl)

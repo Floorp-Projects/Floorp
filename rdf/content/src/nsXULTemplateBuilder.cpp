@@ -406,6 +406,7 @@ NS_NewXULTemplateBuilder(nsIRDFContentModelBuilder** aResult)
     return rv;
 }
 
+MOZ_DECL_CTOR_COUNTER(RDF_RDFGenericBuilderImpl);
 
 RDFGenericBuilderImpl::RDFGenericBuilderImpl(void)
     : mDocument(nsnull),
@@ -413,11 +414,18 @@ RDFGenericBuilderImpl::RDFGenericBuilderImpl(void)
       mRoot(nsnull),
       mTimer(nsnull)
 {
+    MOZ_COUNT_CTOR(RDF_RDFGenericBuilderImpl);
     NS_INIT_REFCNT();
 }
 
 RDFGenericBuilderImpl::~RDFGenericBuilderImpl(void)
 {
+  MOZ_COUNT_DTOR(RDF_RDFGenericBuilderImpl);
+#ifdef DEBUG_REFS
+  --gInstanceCount;
+  fprintf(stdout, "%d - RDF: RDFGenericBuilderImpl\n", gInstanceCount);
+#endif
+
     // NS_IF_RELEASE(mDocument) not refcounted
 
     --gRefCnt;

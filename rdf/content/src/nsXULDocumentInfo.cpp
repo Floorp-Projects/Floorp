@@ -17,7 +17,7 @@
  */
 
 /*
-  This file provides the implementation for the sort service manager.
+  This file provides the implementation for the XUL Document Info.
  */
 
 
@@ -60,15 +60,25 @@ private:
 
 ////////////////////////////////////////////////////////////////////////
 
+MOZ_DECL_CTOR_COUNTER(RDF_XULDocumentInfoImpl);
+
 XULDocumentInfoImpl::XULDocumentInfoImpl(void)
 :mParentDocument(nsnull), mContentSink(nsnull)
 {
+	MOZ_COUNT_CTOR(RDF_XULDocumentInfoImpl);
+
 	NS_INIT_REFCNT();
 }
 
 
 XULDocumentInfoImpl::~XULDocumentInfoImpl(void)
 {
+    MOZ_COUNT_DTOR(RDF_XULDocumentInfoImpl);
+#ifdef DEBUG_REFS
+    --gInstanceCount;
+    fprintf(stdout, "%d - RDF: XULDocumentInfoImpl\n", gInstanceCount);
+#endif
+
   NS_IF_RELEASE(mParentDocument);
   NS_IF_RELEASE(mContentSink);
 }

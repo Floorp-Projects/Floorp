@@ -60,10 +60,13 @@ nsXULTreeElement::QueryInterface(REFNSIID aIID, void** aResult)
     return NS_OK;
 }
 
+MOZ_DECL_CTOR_COUNTER(RDF_nsXULTreeElement);
 
 nsXULTreeElement::nsXULTreeElement(nsIDOMXULElement* aOuter)
 :nsXULElement(aOuter)
 {
+    MOZ_COUNT_CTOR(RDF_nsXULTreeElement);
+
   if (gRefCnt++ == 0) {
     kSelectedAtom    = NS_NewAtom("selected");
   }
@@ -87,6 +90,12 @@ nsXULTreeElement::nsXULTreeElement(nsIDOMXULElement* aOuter)
 
 nsXULTreeElement::~nsXULTreeElement()
 {
+    MOZ_COUNT_DTOR(RDF_nsXULTreeElement);
+#ifdef DEBUG_REFS
+    --gInstanceCount;
+    fprintf(stdout, "%d - RDF: nsXULTreeElement\n", gInstanceCount);
+#endif
+
   NS_IF_RELEASE(mSelectedItems);
   NS_IF_RELEASE(mSelectedCells);
 

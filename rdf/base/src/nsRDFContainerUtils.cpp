@@ -308,8 +308,12 @@ RDFContainerUtilsImpl::MakeAlt(nsIRDFDataSource *aDataSource, nsIRDFResource *aR
 
 ////////////////////////////////////////////////////////////////////////
 
+MOZ_DECL_CTOR_COUNTER(RDF_RDFContainerUtilsImpl);
+
 RDFContainerUtilsImpl::RDFContainerUtilsImpl()
 {
+    MOZ_COUNT_CTOR(RDF_RDFContainerUtilsImpl);
+
     NS_INIT_REFCNT();
 
     if (gRefCnt++ == 0) {
@@ -333,6 +337,12 @@ RDFContainerUtilsImpl::RDFContainerUtilsImpl()
 
 RDFContainerUtilsImpl::~RDFContainerUtilsImpl()
 {
+    MOZ_COUNT_DTOR(RDF_RDFContainerUtilsImpl);
+#ifdef DEBUG_REFS
+    --gInstanceCount;
+    fprintf(stdout, "%d - RDF: RDFContainerUtilsImpl\n", gInstanceCount);
+#endif
+
     if (--gRefCnt == 0) {
         if (gRDFService) {
             nsServiceManager::ReleaseService(kRDFServiceCID, gRDFService);
