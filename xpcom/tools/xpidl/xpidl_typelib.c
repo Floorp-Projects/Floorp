@@ -504,6 +504,9 @@ fill_td_from_type(TreeState *state, XPTTypeDescriptor *td, IDL_tree type)
           case IDLN_TYPE_BOOLEAN:
             td->prefix.flags = TD_BOOL;
             break;
+          case IDLN_TYPE_OCTET:
+            td->prefix.flags = TD_UINT8;
+            break;
           case IDLN_TYPE_FLOAT:
             switch (IDL_TYPE_FLOAT (type).f_type) {
               case IDL_FLOAT_TYPE_FLOAT: 
@@ -526,11 +529,15 @@ fill_td_from_type(TreeState *state, XPTTypeDescriptor *td, IDL_tree type)
             switch (IDL_NODE_TYPE(up)) {
                 /* This whole section is abominably ugly */
               case IDLN_INTERFACE: {
-                XPTInterfaceDirectoryEntry *ide,
-                    *ides = HEADER(state)->interface_directory;
-                uint16 num_ifaces = HEADER(state)->num_interfaces;
-                char *className = IDL_IDENT(IDL_INTERFACE(up).ident).str;
-                const char *iid_is = NULL;
+                XPTInterfaceDirectoryEntry *ide, *ides;
+                uint16 num_ifaces;
+                char *className;
+                const char *iid_is;
+handle_iid_is:
+                ides = HEADER(state)->interface_directory;
+                num_ifaces = HEADER(state)->num_interfaces;
+                className = IDL_IDENT(IDL_INTERFACE(up).ident).str;
+                iid_is = NULL;
 
                 if (IDL_NODE_TYPE(state->tree) == IDLN_PARAM_DCL) {
                     iid_is =
@@ -573,18 +580,32 @@ fill_td_from_type(TreeState *state, XPTTypeDescriptor *td, IDL_tree type)
                 break;
               }
               case IDLN_NATIVE: {
-                  char *ident = IDL_IDENT(type).str;
-                  gboolean isID = FALSE;
-                  /* check for nsID, nsCID, nsIID */
+                  char *ident;
+                  gboolean isID;
+
+                  /* jband - adding goto for iid_is when type is native */
+                  if (IDL_NODE_TYPE(state->tree) == IDLN_PARAM_DCL &&
+                      IDL_tree_property_get(IDL_PARAM_DCL(state->tree).simple_declarator,
+                                              "iid_is"))
+                      goto handle_iid_is;
+
+                  ident = IDL_IDENT(type).str;
+                  isID = FALSE;
+                  /* check for nsID, nsCID, nsIID, nsIIDRef */
                   if (ident[0] == 'n' && ident[1] == 's') {
                       ident += 2;
                       if (ident[0] == 'C')
                           ident ++;
                       else if (ident[0] == 'I' && ident[1] == 'I')
                           ident ++;
-                      if (ident[0] == 'I' && ident[1] == 'D' &&
-                          ident[2] == '\0')
-                          isID = TRUE;
+                      if (ident[0] == 'I' && ident[1] == 'D') {
+                          ident += 2;
+                          if ((ident[0] == '\0') || 
+                              (ident[0] == 'R' && ident[1] == 'e' &&
+                               ident[2] == 'f' && ident[3] == '\0')) {
+                              isID = TRUE;
+                          }
+                      }
                   }
                   if (isID) {
 #ifdef DEBUG_shaver
