@@ -1340,6 +1340,29 @@ if (regexp.anchorCh >= 0) {
     }
 
     private static void
+    pushProgState(REGlobalData gData, int min, int max,
+                  REBackTrackData backTrackLastToSave,
+                  int continuation_pc, int continuation_op)
+    {
+        REProgState state;
+        state = gData.stateStack[gData.stateStackTop];
+        state.continuation_pc = continuation_pc;
+        state.continuation_op = continuation_op;
+        state.min = min;
+        state.max = max;
+        state.index = gData.cp;
+        state.savedBackTrackLast = backTrackLastToSave;
+        ++gData.stateStackTop;
+    }
+
+    private static REProgState
+    popProgState(REGlobalData gData)
+    {
+        --gData.stateStackTop;
+        return gData.stateStack[gData.stateStackTop];
+    }
+
+    private static void
     pushBackTrackState(REGlobalData gData, byte op, int target)
     {
         REBackTrackData backTrack = new REBackTrackData(gData, op, target);
@@ -1852,11 +1875,9 @@ System.out.println("Testing at " + gData.cp + ", op = " + op);
                 {
                     int nextpc;
                     byte nextop;
-                    REProgState state;
-                    state = gData.stateStack[gData.stateStackTop];
-                    state.continuation_pc = currentContinuation_pc;
-                    state.continuation_op = currentContinuation_op;
-                    ++gData.stateStackTop;
+                    pushProgState(gData, 0, 0, null,
+                                  currentContinuation_pc,
+                                  currentContinuation_op);
                     nextpc = pc + GET_OFFSET(program, pc);
                     nextop = program[nextpc++];
                     pushBackTrackState(gData, nextop, nextpc);
@@ -1868,9 +1889,7 @@ System.out.println("Testing at " + gData.cp + ", op = " + op);
             case REOP_JUMP:
                 {
                     int offset;
-                    REProgState state;
-                    --gData.stateStackTop;
-                    state = gData.stateStack[gData.stateStackTop];
+                    REProgState state = popProgState(gData);
                     currentContinuation_pc = state.continuation_pc;
                     currentContinuation_op = state.continuation_op;
                     offset = GET_OFFSET(program, pc);
@@ -1930,18 +1949,14 @@ System.out.println("Testing at " + gData.cp + ", op = " + op);
             case REOP_ASSERT_NOT:
                 {
                     byte testOp;
-                    REProgState state;
+                    pushProgState(gData, 0, 0, gData.backTrackLast,
+                                  currentContinuation_pc,
+                                  currentContinuation_op);
                     if (op == REOP_ASSERT) {
                         testOp = REOP_ASSERTTEST;
                     } else {
                         testOp = REOP_ASSERTNOTTEST;
                     }
-                    state = gData.stateStack[gData.stateStackTop];
-                    state.continuation_pc = currentContinuation_pc;
-                    state.continuation_op = currentContinuation_op;
-                    state.savedBackTrackLast = gData.backTrackLast;
-                    state.index = gData.cp;
-                    ++gData.stateStackTop;
                     pushBackTrackState(gData, testOp,
                                        pc + GET_OFFSET(program, pc));
                     pc += ARG_LEN;
@@ -1952,9 +1967,7 @@ System.out.println("Testing at " + gData.cp + ", op = " + op);
             case REOP_ASSERTTEST:
             case REOP_ASSERTNOTTEST:
                 {
-                    REProgState state;
-                    --gData.stateStackTop;
-                    state = gData.stateStack[gData.stateStackTop];
+                    REProgState state = popProgState(gData);
                     gData.cp = state.index;
                     gData.backTrackLast = state.savedBackTrackLast;
                     currentContinuation_pc = state.continuation_pc;
@@ -1984,7 +1997,6 @@ System.out.println("Testing at " + gData.cp + ", op = " + op);
             case REOP_MINIMALOPT:
             case REOP_MINIMALQUANT:
                 {
-                    REProgState state;
                     int min, max;
                     boolean greedy = false;
                     switch (op) {
@@ -2021,13 +2033,9 @@ System.out.println("Testing at " + gData.cp + ", op = " + op);
                       default:
                         throw Kit.codeBug();
                     }
-                    state = gData.stateStack[gData.stateStackTop];
-                    state.min = min;
-                    state.max = max;
-                    state.index = gData.cp;
-                    state.continuation_pc = currentContinuation_pc;
-                    state.continuation_op = currentContinuation_op;
-                    ++gData.stateStackTop;
+                    pushProgState(gData, min, max, null,
+                                  currentContinuation_pc,
+                                  currentContinuation_op);
                     if (greedy) {
                         currentContinuation_op = REOP_REPEAT;
                         currentContinuation_pc = pc;
@@ -2044,7 +2052,7 @@ System.out.println("Testing at " + gData.cp + ", op = " + op);
                             op = program[pc++];
                         } else {
                             pushBackTrackState(gData, REOP_MINIMALREPEAT, pc);
-                            --gData.stateStackTop;
+                            popProgState(gData);
                             pc += 2 * ARG_LEN;  // <parencount> & <parenindex>
                             pc = pc + GET_OFFSET(program, pc);
                             op = program[pc++];
@@ -2060,9 +2068,7 @@ System.out.println("Testing at " + gData.cp + ", op = " + op);
 
             case REOP_REPEAT:
                 {
-                    REProgState state;
-                    --gData.stateStackTop;
-                    state = gData.stateStack[gData.stateStackTop];
+                    REProgState state = popProgState(gData);
                     if (!result) {
                         //
                         // There's been a failure, see if we have enough
@@ -2086,9 +2092,10 @@ System.out.println("Testing at " + gData.cp + ", op = " + op);
                             pc = pc + GET_OFFSET(program, pc);
                             break;
                         }
-                        if (state.min != 0) state.min--;
-                        if (state.max != -1) state.max--;
-                        if (state.max == 0) {
+                        int new_min = state.min, new_max = state.max;
+                        if (new_min != 0) new_min--;
+                        if (new_max != -1) new_max--;
+                        if (new_max == 0) {
                             result = true;
                             currentContinuation_pc = state.continuation_pc;
                             currentContinuation_op = state.continuation_op;
@@ -2096,8 +2103,9 @@ System.out.println("Testing at " + gData.cp + ", op = " + op);
                             pc = pc + GET_OFFSET(program, pc);
                             break;
                         }
-                        state.index = gData.cp;
-                        ++gData.stateStackTop;
+                        pushProgState(gData, new_min, new_max, null,
+                                      state.continuation_pc,
+                                      state.continuation_op);
                         currentContinuation_op = REOP_REPEAT;
                         currentContinuation_pc = pc;
                         pushBackTrackState(gData, REOP_REPEAT, pc);
@@ -2115,16 +2123,15 @@ System.out.println("Testing at " + gData.cp + ", op = " + op);
 
             case REOP_MINIMALREPEAT:
                 {
-                    REProgState state;
-                    --gData.stateStackTop;
-                    state = gData.stateStack[gData.stateStackTop];
-
+                    REProgState state = popProgState(gData);
                     if (!result) {
                         //
                         // Non-greedy failure - try to consume another child.
                         //
                         if (state.max == -1 || state.max > 0) {
-                            state.index = gData.cp;
+                            pushProgState(gData, state.min, state.max, null,
+                                          state.continuation_pc,
+                                          state.continuation_op);
                             currentContinuation_op = REOP_MINIMALREPEAT;
                             currentContinuation_pc = pc;
                             int parenCount = GET_ARG(program, pc);
@@ -2134,7 +2141,6 @@ System.out.println("Testing at " + gData.cp + ", op = " + op);
                             for (int k = 0; k < parenCount; k++) {
                                 gData.set_parens(parenIndex + k, -1, 0);
                             }
-                            ++gData.stateStackTop;
                             op = program[pc++];
                             continue;
                         } else {
@@ -2151,9 +2157,13 @@ System.out.println("Testing at " + gData.cp + ", op = " + op);
                             currentContinuation_op = state.continuation_op;
                             break;
                         }
-                        if (state.min != 0) state.min--;
-                        if (state.max != -1) state.max--;
-                        if (state.min != 0) {
+                        int new_min = state.min, new_max = state.max;
+                        if (new_min != 0) new_min--;
+                        if (new_max != -1) new_max--;
+                        pushProgState(gData, new_min, new_max, null,
+                                      state.continuation_pc,
+                                      state.continuation_op);
+                        if (new_min != 0) {
                             currentContinuation_op = REOP_MINIMALREPEAT;
                             currentContinuation_pc = pc;
                             int parenCount = GET_ARG(program, pc);
@@ -2163,16 +2173,12 @@ System.out.println("Testing at " + gData.cp + ", op = " + op);
                             for (int k = 0; k < parenCount; k++) {
                                 gData.set_parens(parenIndex + k, -1, 0);
                             }
-                            state.index = gData.cp;
-                            ++gData.stateStackTop;
                             op = program[pc++];
                         } else {
                             currentContinuation_pc = state.continuation_pc;
                             currentContinuation_op = state.continuation_op;
-                            state.index = gData.cp;
-                            ++gData.stateStackTop;
                             pushBackTrackState(gData, REOP_MINIMALREPEAT, pc);
-                            --gData.stateStackTop;
+                            popProgState(gData);
                             pc += 2 * ARG_LEN;
                             pc = pc + GET_OFFSET(program, pc);
                             op = program[pc++];
