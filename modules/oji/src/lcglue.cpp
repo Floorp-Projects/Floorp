@@ -22,20 +22,9 @@
  */
 
 #include "prthread.h"
-#include "pprthred.h"
-#include "plstr.h"
-#include "jni.h"
-#include "jsjava.h"
-#include "jsdbgapi.h"
 #include "nsJVMManager.h"
 #include "nsIPluginInstancePeer2.h"
-//#include "npglue.h"
-#include "prinrval.h"
 #include "ProxyJNI.h"
-#include "prcmon.h"
-#include "nsCSecurityContext.h"
-#include "nsISecurityContext.h"
-#include "xpgetstr.h"
 #include "lcglue.h"
 #include "nscore.h"
 

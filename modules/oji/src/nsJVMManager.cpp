@@ -25,31 +25,13 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 #include "nsJVMManager.h"
-//#include "npglue.h"
-#include "prefapi.h"
-#include "np.h"
+#include "nspr.h"
 #include "xp_path.h"
-#include "prio.h"
-#include "prmem.h"
-#include "prthread.h"
-#include "pprthred.h"
-#include "plstr.h"
-#include "plevent.h"
-#include "jni.h"
-#include "jsjava.h"
-#include "jsdbgapi.h"
-#include "prinrval.h"
 #include "ProxyJNI.h"
-#include "prcmon.h"
-#include "nsCSecurityContext.h"
-#include "nsISecurityContext.h"
 #include "nsIPluginHost.h"
-#include "nsIPluginManager.h"
 #include "nsIServiceManager.h"
 #include "nsIEventQueueService.h"
 #include "lcglue.h"
-#include "xpgetstr.h"
-#include "nsCOMPtr.h"
 
 extern "C" int XP_PROGRESS_STARTING_JAVA;
 extern "C" int XP_PROGRESS_STARTING_JAVA_DONE;
