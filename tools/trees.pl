@@ -17,7 +17,7 @@
 # Copyright (C) 1999 Netscape Communications Corporation. All
 # Rights Reserved.
 #
-# Contributor(s): 
+# Contributor(s): Stephen Lamm <slamm@netscape.com>
 
 #
 # trees.pl - Navigate mozilla source trees.
@@ -27,7 +27,6 @@
 #
 # Be sure to define a ~/.moztrees file (Run 'trees.pl -c' for an example).
 #
-# Send comments, improvements, bugs to Steve Lamm (slamm@netscape.com).
 
 require 'getopts.pl';
 
@@ -91,6 +90,7 @@ if ($opt_t)
 # begin defines
 
 $root_dir = "mozilla";
+$test_file = "client.mk";  # Some file to verify the existence of a tree.
 
 if (not -f "$ENV{HOME}/.moztrees")
 {
@@ -112,8 +112,7 @@ if ($opt_l)
 }
 
 # Build regex pattern to match root directory.
-$root_pat = "(?:$root_dir)";
-$root_pat =~ s/([-+_.])/\\\1/g;
+$root_pat = "(?:\Q$root_dir\E)";
 
 # Make 'moz /' goto '$tree_dir/mozilla'.
 $dir_aliases{'/'} = '/';
@@ -163,7 +162,9 @@ if ($#ARGV >= 0)
   ($tree_dir, $tree_subdir) = &dir_lookup($tree_dir, $tree_subdir, @ARGV);
 }
 
-print "$tree_dir/$tree_subdir\n";
+$tree_dir =~ s|^(\S):|//$1|;  # For bash on Windows, change "C:" to "//C"
+
+print "$tree_dir/$tree_subdir";
 
 # end main
 ######################################################################
@@ -211,7 +212,10 @@ sub parse_tree_path
   my ($tree_dir) = '';
   my ($tree_subdir)  = '';
 
-  if ($pwd =~ m@^(.*/$root_pat)(/.*)?$@)
+  # Adjust cygwin path to one perl understands
+  $pwd =~ s@^//(\S)/@$1:/@;
+
+  if ($pwd =~ m@^(.*/$root_pat)(/.*)?$@ and -e "$1/$test_file")
   {
     $topsrcdir = $1;
     $tree_dir = $topsrcdir;
@@ -222,7 +226,7 @@ sub parse_tree_path
 	$tree_dir = $objdir;
 	$tree_subdir = $1;
     }
-  } elsif (-d "$pwd/$root_dir")
+  } elsif (-d "$pwd/$root_dir" and -e "$pwd/$root_dir/$test_file")
   {
     $tree_dir = "$pwd/$root_dir";
     $tree_subdir = "..";
