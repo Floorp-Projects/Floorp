@@ -37,9 +37,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-const kFTSCID = "@mozilla.org/network/file-transport-service;1";
-const nsIFileTransportService = Components.interfaces.nsIFileTransportService;
-const kFileTransportService = doCreate(kFTSCID, nsIFileTransportService);
+const kFileOutStreamCID = "@mozilla.org/network/file-output-stream;1";
+const nsIFileOutputStream = Components.interfaces.nsIFileOutputStream;
 
 var cmdFileController = 
 {
@@ -61,44 +60,32 @@ var cmdFileController =
     {
         switch(aCommand) {
             case 'cmd_fl_save':
-                var serial = doCreate(kRDFXMLSerializerID,
-                                      nsIRDFXMLSerializer);
                 var sink = new Object;
-                sink.content = '';
                 sink.write = function(aContent, aCount)
                 {
-                    this.content += aContent;
+                    // replace NC:succ with NC:orig_succ,
+                    //  so the rdf stuff differs
+                    var content = aContent.replace(/NC:succ/g,"NC:orig_succ");
+                    content = content.replace(/NC:failCount/g,"NC:orig_failCount");
+                    this.mSink.write(content, content.length);
                     return aCount;
                 };
-                serial.init(view.mResultDS);
-                serial.QueryInterface(nsIRDFXMLSource);
-                serial.Serialize(sink);
-                if (!sink.content.length) {
-                    return;
-                }
-                // replace NC:succ with NC:orig_succ, so the rdf stuff differs
-                var content = sink.content.replace(/NC:succ/g,"NC:orig_succ");
-                content = content.replace(/NC:failCount/g,"NC:orig_failCount");
                 var fp = doCreateRDFFP('Xalan results',
                                        nsIFilePicker.modeSave);
                 var res = fp.show();
 
                 if (res == nsIFilePicker.returnOK ||
                     res == nsIFilePicker.returnReplace) {
+                    var serial = doCreate(kRDFXMLSerializerID,
+                                          nsIRDFXMLSerializer);
+                    serial.init(view.mResultDS);
+                    serial.QueryInterface(nsIRDFXMLSource);
                     var fl = fp.file;
-                    var trans = kFileTransportService.createTransport
-                        (fl, 26, // NS_WRONLY + NS_CREATE_FILE + NS_TRUNCATE
-                         'w', true);
-                    var out = trans.openOutputStream(0, -1, 0);
-                    out.write(content, content.length);
-                    out.close();
-                    delete out;
-                    delete trans;
-                    try {
-                        fp.file.permissions = 420;
-                    }
-                    catch (e) {
-                    }
+                    var fstream = doCreate(kFileOutStreamCID,
+                                           nsIFileOutputStream);
+                    fstream.init(fl, 26, 420, 0);
+                    sink.mSink = fstream;
+                    serial.Serialize(sink);
                 }
                 break;
             case 'cmd_fl_import':
