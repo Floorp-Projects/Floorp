@@ -166,13 +166,37 @@
    background-color       : #6699CC;
 }
 
+.oe-time-picker-more-control-label
+{
+   background-color       : #6699CC;
+   color				        : #ffffff;
+   font-weight		        : bold;
+	padding 					  : 2px 4px;
+	min-width				  : 40px;
+	margin					  : 0px;
+   border-top	           : 1px solid #003399; 
+   border-right           : 1px solid #003399; 
+	text-align				  : center;
+}
 
+.oe-time-picker-more-control-label:hover
+{
+   background-color       : #477eb7;
+}
+
+.oe-time-picker-more-control-label:hover:active
+{
+   background-color       : #2063a8;
+}
 
 /* line across the bottom of the minute boxes, made to line up with more & less tabs */
 
-#oe-time-picker-minutes-bottom-image
+.oe-time-picker-minutes-bottom
 {
-   list-style-image     : url("chrome://calendar/skin/timepicker/time_picker_minutes_bottom.png");
-   padding-right        : 2px;
+   background-color      : #e7eeec;
+   border-bottom         : 1px solid #003399; 
+   border-left           : 1px solid #003399; 
+   border-right          : 1px solid #003399; 
+   margin-right          : 2px;
 }
 

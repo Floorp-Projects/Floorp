@@ -259,10 +259,9 @@
             </rows>
         </grid> <!-- Five  Minute Grid -->
      
-        <hbox>
-            <label id="oe-time-picker-more-control-image" value="&more.label;" onclick="oeTimePicker.clickMore()" />
+        <hbox class="oe-time-picker-minutes-bottom">
+            <label class="oe-time-picker-more-control-label" value="&more.label;" onclick="oeTimePicker.clickMore()" />
             <spacer flex="1"/>
-            <image id="oe-time-picker-minutes-bottom-image"/>
         </hbox>
     
     </vbox> <!-- Five  Minute Grid Box -->
@@ -624,10 +623,9 @@
             </rows>
         </grid>  <!-- One  Minute Grid -->
         
-        <hbox>
-            <label id="oe-time-picker-less-control-image" value="&less.label;" onclick="oeTimePicker.clickLess()"/>
+        <hbox class="oe-time-picker-minutes-bottom">
+            <label class="oe-time-picker-more-control-label" value="&less.label;" onclick="oeTimePicker.clickLess()"/>
             <spacer flex="1"/>
-            <image id="oe-time-picker-minutes-bottom-image" />
         </hbox>
     
     </vbox> <!-- One  Minute Grid Box -->
