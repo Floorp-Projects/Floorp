@@ -697,10 +697,6 @@ function ComposeStartup()
 			// Now that we have an Editor AppCore, we can finish to initialize the Compose AppCore
 			msgCompose.editor = window.editorShell;
 			
-			//We need to unregister some of the editor commands to avoid conflict
-			if (gHTMLEditorCommandManager)
-			  gHTMLEditorCommandManager.unregisterCommand("cmd_preferences", nsPreferencesCommand);
-
 			msgCompose.RegisterStateListener(stateListener);
 
 			// call updateCommands to disable while we're loading the page
