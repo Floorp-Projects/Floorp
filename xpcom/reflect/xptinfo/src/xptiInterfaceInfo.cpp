@@ -450,6 +450,9 @@ xptiInterfaceInfo::GetIIDForParam(uint16 methodIndex,
         mInterface->mWorkingSet->GetTypelibGuts(mInterface->mTypelib)->
             GetInfoAtNoAddRef(td->type.iface - 1);
 
+    if(!theInfo)
+        return NS_ERROR_FAILURE;
+
     return theInfo->GetIID(iid);
 }
 
