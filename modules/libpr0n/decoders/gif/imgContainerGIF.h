@@ -115,12 +115,37 @@ private:
                    PRInt32 aPrevFrame, PRInt32 aNextFrame);
 
   void BuildCompositeMask(gfxIImageFrame* aCompositingFrame, gfxIImageFrame* aOverlayFrame);
-  void ZeroMask(gfxIImageFrame *aCompositingFrame);
-  void ZeroMaskArea(gfxIImageFrame *aCompositingFrame, PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight);
-  void OneMaskArea(gfxIImageFrame *aCompositingFrame, PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight);
-  void BlackenFrame(gfxIImageFrame* aFrame);
-  void BlackenFrame(gfxIImageFrame *aFrame, PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight);
 
+  /** Sets an area of the frame's mask.
+   *
+   * @param aFrame Target Frame
+   * @param aVisible Turn on (PR_TRUE) or off (PR_FALSE) visibility
+   *
+   * @note Invisible area of frame's image will need to be set to 0
+   */
+  void SetMaskVisibility(gfxIImageFrame *aFrame, PRBool aVisible);
+  //! @overload
+  void SetMaskVisibility(gfxIImageFrame *aFrame,
+                         PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight,
+                         PRBool aVisible);
+  //! @overload
+  void SetMaskVisibility(gfxIImageFrame *aFrame, nsRect &aRect, PRBool aVisible) {
+    SetMaskVisibility(aFrame, aRect.x, aRect.y, aRect.width, aRect.height, aVisible);
+  }
+
+  /** Fills an area of <aFrame> with black.
+   *
+   * @param aFrame Target Frame
+   *
+   * @note Does not set the mask
+   */
+  void BlackenFrame(gfxIImageFrame* aFrame);
+  //! @overload
+  void BlackenFrame(gfxIImageFrame *aFrame, PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight);
+  //! @overload
+  inline void BlackenFrame(gfxIImageFrame* aFrame, nsRect &aRect) {
+    BlackenFrame(aFrame, aRect.x, aRect.y, aRect.width, aRect.height);
+  }
 };
 
 #endif /* __imgContainerGIF_h__ */
