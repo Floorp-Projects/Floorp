@@ -828,6 +828,22 @@ morkBuf* morkParser::ReadValue(morkEnv* ev)
         if ( (c = s->Getc(ev)) == EOF || ev->Bad() )
           break; // end while loop
       }
+      else if ( c == '$' ) // "$" escapes next two hex digits?
+      {
+      	if ( (c = s->Getc(ev)) != EOF && ev->Good() )
+      	{
+	      	mork_ch first = (mork_ch) c; // first hex digit
+	      	if ( (c = s->Getc(ev)) != EOF && ev->Good() )
+	      	{
+		      	mork_ch second = (mork_ch) c; // second hex digit
+		      	c = ev->HexToByte(first, second);
+	      	}
+	      	else
+	      		break;
+      	}
+      	else
+      		break;
+      }
       spool->Putc(ev, c);
     }
       
