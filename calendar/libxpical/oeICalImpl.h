@@ -37,6 +37,7 @@
 #include "oeIICal.h"
 #include <vector>
 #include "nsITimer.h"
+#include "oeICalEventImpl.h"
 
 #define OE_ICAL_CID \
 { 0x0a8c5de7, 0x0d19, 0x4b95, { 0x82, 0xf4, 0xe0, 0xaf, 0x92, 0x45, 0x32, 0x27 } }
@@ -67,23 +68,19 @@ public:
             next->Add( e );
         }
     }
-    oeIICalEvent* GetEventById( PRUint32 id ) {
+    oeIICalEvent* GetEventById( const char *id ) {
         if( !event )
             return nsnull;
-        PRUint32 eid=0;
-        event->GetId( &eid );
-        if( eid == id )
+        if( ((oeICalEventImpl *)event)->matchId( id ) )
             return event;
         if( next )
             return next->GetEventById( id );
         return nsnull;
     }
-    void Remove( PRUint32 id ) {
+    void Remove( const char *id ) {
         if( !event )
             return;
-        PRUint32 eid=0;
-        event->GetId( &eid );
-        if( eid == id ) {
+        if( ((oeICalEventImpl *)event)->matchId( id ) ) {
             event->Release();
             if( next ) {
                 event = next->event;

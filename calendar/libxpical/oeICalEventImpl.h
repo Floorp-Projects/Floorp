@@ -33,6 +33,8 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+#ifndef _OEICALEVENTIMPL_H_
+#define _OEICALEVENTIMPL_H_
 
 #include "oeIICal.h"
 #include "oeDateTimeImpl.h"
@@ -67,23 +69,24 @@ oeDateEnumerator : public nsISimpleEnumerator
 
   private:
     PRUint32 mCurrentIndex;
-    std::vector<PRTime> mIdVector;
+    std::vector<PRTime> mDateVector;
 };
 
 /* oeIcalEvent Header file */
 class oeICalEventImpl : public oeIICalEvent
 {
 public:
-  NS_DECL_ISUPPORTS
-  NS_DECL_OEIICALEVENT
-  oeICalEventImpl();
-  virtual ~oeICalEventImpl();
-  /* additional members */
-  void ParseIcalComponent( icalcomponent *vcalendar );
-  icalcomponent *AsIcalComponent();
-  icaltimetype GetNextAlarmTime( icaltimetype begin );
+    NS_DECL_ISUPPORTS
+    NS_DECL_OEIICALEVENT
+    oeICalEventImpl();
+    virtual ~oeICalEventImpl();
+    /* additional members */
+    void ParseIcalComponent( icalcomponent *vcalendar );
+    icalcomponent *AsIcalComponent();
+    icaltimetype GetNextAlarmTime( icaltimetype begin );
+    bool matchId( const char *id );
 private:
-    unsigned long m_id;
+    char *m_id;
     char *m_syncid;
     char *m_title;
     char *m_description;
@@ -114,3 +117,4 @@ private:
     bool IsExcepted( PRTime date );
 };
 
+#endif

@@ -70,13 +70,11 @@ oeEventEnumerator : public nsISimpleEnumerator
     // nsISimpleEnumerator interface
     NS_DECL_NSISIMPLEENUMERATOR
 
-    NS_IMETHOD Init( oeIICal* iCal );
-    NS_IMETHOD AddEventId( PRInt32 id );
+    NS_IMETHOD AddEvent( oeIICalEvent *event );
 
   private:
     PRUint32 mCurrentIndex;
-    std::vector<PRInt32> mIdVector;
-    nsCOMPtr<oeIICal> mICal;
+    std::vector<oeIICalEvent *> mEventVector;
 };
 
 oeEventEnumerator::oeEventEnumerator( ) 
@@ -88,6 +86,7 @@ oeEventEnumerator::oeEventEnumerator( )
 
 oeEventEnumerator::~oeEventEnumerator()
 {
+    mEventVector.clear();
 }
 
 NS_IMPL_ISUPPORTS1(oeEventEnumerator, nsISimpleEnumerator)
@@ -95,7 +94,7 @@ NS_IMPL_ISUPPORTS1(oeEventEnumerator, nsISimpleEnumerator)
 NS_IMETHODIMP
 oeEventEnumerator::HasMoreElements(PRBool *result)
 {
-    if( mCurrentIndex >= mIdVector.size() )
+    if( mCurrentIndex >= mEventVector.size() )
     {
         *result = PR_FALSE;
     }
@@ -110,19 +109,14 @@ NS_IMETHODIMP
 oeEventEnumerator::GetNext(nsISupports **_retval)
 {
         
-    if( mCurrentIndex >= mIdVector.size() )
+    if( mCurrentIndex >= mEventVector.size() )
     {
         *_retval = nsnull;
     }
     else
     {
-        PRInt32 eventId = mIdVector[ mCurrentIndex ];
-        
-        oeIICalEvent* event;      
-        nsresult rv = mICal->FetchEvent( eventId, &event);
-        if( NS_FAILED( rv ) ) 
-           return rv;
-
+        oeIICalEvent* event = mEventVector[ mCurrentIndex ];
+        event->AddRef();
         *_retval = event;
         ++mCurrentIndex;
     }
@@ -132,19 +126,11 @@ oeEventEnumerator::GetNext(nsISupports **_retval)
 
 
 NS_IMETHODIMP
-oeEventEnumerator::AddEventId(PRInt32 id)
+oeEventEnumerator::AddEvent(oeIICalEvent* event)
 {
-    mIdVector.push_back( id );
+    mEventVector.push_back( event );
     return NS_OK;
 }
-
-NS_IMETHODIMP
-oeEventEnumerator::Init(oeIICal* iCal)
-{
-    mICal = iCal;
-    return NS_OK;
-}
-
 
 /* date enumerator */
 oeDateEnumerator::oeDateEnumerator( ) 
@@ -156,6 +142,7 @@ oeDateEnumerator::oeDateEnumerator( )
 
 oeDateEnumerator::~oeDateEnumerator()
 {
+    mDateVector.clear();
 }
 
 NS_IMPL_ISUPPORTS1(oeDateEnumerator, nsISimpleEnumerator)
@@ -163,7 +150,7 @@ NS_IMPL_ISUPPORTS1(oeDateEnumerator, nsISimpleEnumerator)
 NS_IMETHODIMP
 oeDateEnumerator::HasMoreElements(PRBool *result)
 {
-    if( mCurrentIndex >= mIdVector.size() )
+    if( mCurrentIndex >= mDateVector.size() )
     {
         *result = PR_FALSE;
     }
@@ -178,7 +165,7 @@ NS_IMETHODIMP
 oeDateEnumerator::GetNext(nsISupports **_retval) 
 { 
 
-    if( mCurrentIndex >= mIdVector.size() ) 
+    if( mCurrentIndex >= mDateVector.size() ) 
     { 
         *_retval = nsnull; 
     } 
@@ -197,7 +184,7 @@ oeDateEnumerator::GetNext(nsISupports **_retval)
             return rv; 
         } 
 
-        date->SetData( mIdVector[ mCurrentIndex ] ); 
+        date->SetData( mDateVector[ mCurrentIndex ] ); 
         *_retval = date; 
         ++mCurrentIndex; 
     } 
@@ -208,7 +195,7 @@ oeDateEnumerator::GetNext(nsISupports **_retval)
 NS_IMETHODIMP
 oeDateEnumerator::AddDate(PRTime date)
 {
-    mIdVector.push_back( date );
+    mDateVector.push_back( date );
     return NS_OK;
 }
 
@@ -254,7 +241,7 @@ oeICalImpl::~oeICalImpl()
 #ifdef ICAL_DEBUG
     printf( "oeICalImpl::~oeICalImpl()\n" );
 #endif
-    for( int i=0; i<m_observerlist.size(); i++ ) {
+    for( unsigned int i=0; i<m_observerlist.size(); i++ ) {
         m_observerlist[i]->Release();
     }
     if( m_alarmtimer  ) {
@@ -573,8 +560,8 @@ END:VCALENDAR\n\
     for( tmpprop = icalcomponent_get_first_property( fetchedevent, ICAL_X_PROPERTY );
             tmpprop != 0 ;
             tmpprop = icalcomponent_get_next_property( fetchedevent, ICAL_X_PROPERTY ) ) {
-            icalparameter *tmppar = icalproperty_get_first_parameter( tmpprop, ICAL_MEMBER_PARAMETER );
 #ifdef ICAL_DEBUG
+            icalparameter *tmppar = icalproperty_get_first_parameter( tmpprop, ICAL_MEMBER_PARAMETER );
             printf("%s: %s\n", icalparameter_get_member( tmppar ), icalproperty_get_value_as_string( tmpprop ) );
 #endif
     }
@@ -680,7 +667,7 @@ oeICalImpl::SetServer( const char *str ) {
     
     icalfileset_free(stream);
     
-    for( int i=0; i<m_observerlist.size(); i++ ) {
+    for( unsigned int i=0; i<m_observerlist.size(); i++ ) {
         m_observerlist[i]->OnLoad();
     }
     
@@ -716,7 +703,7 @@ NS_IMETHODIMP oeICalImpl::SetBatchMode(PRBool aBatchMode)
         
         // tell observers about the change
 
-        for( int i=0; i<m_observerlist.size(); i++ ) 
+        for( unsigned int i=0; i<m_observerlist.size(); i++ ) 
         {
             if( m_batchMode )
                 m_observerlist[i]->OnStartBatch();
@@ -743,17 +730,14 @@ NS_IMETHODIMP oeICalImpl::SetBatchMode(PRBool aBatchMode)
 *   RETURN
 *      None
 */
-NS_IMETHODIMP oeICalImpl::AddEvent(oeIICalEvent *icalevent, PRInt32 *retid)
+NS_IMETHODIMP oeICalImpl::AddEvent(oeIICalEvent *icalevent,char **retid)
 {
 #ifdef ICAL_DEBUG
     printf( "oeICalImpl::AddEvent()\n" );
 #endif
-	unsigned long newid;
     icalfileset *stream;
     icalcomponent *vcalendar,*fetchedcal;
-    char uidstr[10];
 
-	*retid = 0;
     stream = icalfileset_new(serveraddr);
     if ( !stream ) {
         #ifdef ICAL_DEBUG
@@ -762,32 +746,42 @@ NS_IMETHODIMP oeICalImpl::AddEvent(oeIICalEvent *icalevent, PRInt32 *retid)
         return NS_OK;
     }
     
-    ((oeICalEventImpl *)icalevent)->GetId( (PRUint32 *)&newid );
+    printf( "HERE1\n" );
+    ((oeICalEventImpl *)icalevent)->GetId( retid );
+    printf( "HERE2: %s\n", *retid );
 
-    if( newid == 0 ) {
+    if( *retid == nsnull ) {
+        printf( "HERE3\n" );
+        char uidstr[10];
         do {
+            unsigned long newid;
             newid = 900000000 + ((rand()%0x4ff) << 16) + rand()%0xFFFF;
             sprintf( uidstr, "%lu", newid );
         } while ( (fetchedcal = icalfileset_fetch( stream, uidstr )) != 0 );
 
-        ((oeICalEventImpl *)icalevent)->SetId( newid );
+        ((oeICalEventImpl *)icalevent)->SetId( uidstr );
+        ((oeICalEventImpl *)icalevent)->GetId( retid );
     }
+    printf( "HERE4\n" );
 
     vcalendar = ((oeICalEventImpl *)icalevent)->AsIcalComponent();
+    printf( "HERE5\n" );
 	
     icalfileset_add_component( stream, vcalendar );
-	*retid = newid;
+    printf( "HERE6\n" );
 
     icalfileset_commit( stream );
     icalfileset_free( stream );
+    printf( "HERE7\n" );
 
     icalevent->AddRef();
     m_eventlist.Add( icalevent );
 
-    for( int i=0; i<m_observerlist.size(); i++ ) {
+    for( unsigned int i=0; i<m_observerlist.size(); i++ ) {
         m_observerlist[i]->OnAddItem( icalevent );
     }
 
+    printf( "HERE8\n" );
     SetupAlarmManager();
     return NS_OK;
 }
@@ -805,17 +799,14 @@ NS_IMETHODIMP oeICalImpl::AddEvent(oeIICalEvent *icalevent, PRInt32 *retid)
 *   RETURN
 *      None
 */
-NS_IMETHODIMP oeICalImpl::ModifyEvent(oeIICalEvent *icalevent, PRInt32 *retid)
+NS_IMETHODIMP oeICalImpl::ModifyEvent(oeIICalEvent *icalevent, char **retid)
 {
 #ifdef ICAL_DEBUG
     printf( "oeICalImpl::ModifyEvent()\n" );
 #endif
-	unsigned long id;
     icalfileset *stream;
     icalcomponent *vcalendar;
-    char uidstr[10];
 
-    *retid = 0;
     stream = icalfileset_new(serveraddr);
     if ( !stream ) {
         #ifdef ICAL_DEBUG
@@ -824,17 +815,24 @@ NS_IMETHODIMP oeICalImpl::ModifyEvent(oeIICalEvent *icalevent, PRInt32 *retid)
         return NS_OK;
     }
     
-    ((oeICalEventImpl *)icalevent)->GetId( (PRUint32 *)&id );
+    ((oeICalEventImpl *)icalevent)->GetId( retid );
+    if( *retid == nsnull ) {
+        #ifdef ICAL_DEBUG
+        printf( "oeICalImpl::ModifyEvent() - Invalid Id.\n" );
+        #endif
+        icalfileset_free(stream);
+        return NS_OK;
+    }
     
-    sprintf( uidstr, "%lu", id );
-    
-    icalcomponent *fetchedcal = icalfileset_fetch( stream, uidstr );
+    icalcomponent *fetchedcal = icalfileset_fetch( stream, *retid );
     
     oeICalEventImpl *oldevent=nsnull;
     if( fetchedcal ) {
         icalfileset_remove_component( stream, fetchedcal );
         nsresult rv;
         if( NS_FAILED( rv = NS_NewICalEvent((oeIICalEvent**) &oldevent ))) {
+            nsMemory::Free( *retid );
+            *retid = nsnull;
             icalfileset_free(stream);
             return rv;
         }
@@ -842,8 +840,10 @@ NS_IMETHODIMP oeICalImpl::ModifyEvent(oeIICalEvent *icalevent, PRInt32 *retid)
         icalcomponent_free( fetchedcal );
     } else {
 #ifdef ICAL_DEBUG
-    printf( "WARNING Event not found.\n" );
+    printf( "oeICalImpl::ModifyEvent() - WARNING Event not found.\n" );
 #endif
+        nsMemory::Free( *retid );
+        *retid = nsnull;
         icalfileset_free(stream);
         return NS_OK;
     }
@@ -851,12 +851,10 @@ NS_IMETHODIMP oeICalImpl::ModifyEvent(oeIICalEvent *icalevent, PRInt32 *retid)
     vcalendar = ((oeICalEventImpl *)icalevent)->AsIcalComponent();
     icalfileset_add_component( stream, vcalendar );
     
-    *retid = id;
-	
     icalfileset_commit( stream );
     icalfileset_free(stream);
     
-    for( int i=0; i<m_observerlist.size(); i++ ) {
+    for( unsigned int i=0; i<m_observerlist.size(); i++ ) {
         m_observerlist[i]->OnModifyItem( icalevent, oldevent );
     }
 
@@ -880,7 +878,7 @@ NS_IMETHODIMP oeICalImpl::ModifyEvent(oeIICalEvent *icalevent, PRInt32 *retid)
 *   RETURN
 *      None
 */
-NS_IMETHODIMP oeICalImpl::FetchEvent(PRInt32 id, oeIICalEvent **ev)
+NS_IMETHODIMP oeICalImpl::FetchEvent( const char *id, oeIICalEvent **ev)
 {
 #ifdef ICAL_DEBUG_ALL
     printf( "oeICalImpl::FetchEvent()\n" );
@@ -906,13 +904,12 @@ NS_IMETHODIMP oeICalImpl::FetchEvent(PRInt32 id, oeIICalEvent **ev)
 *      None
 */
 NS_IMETHODIMP
-oeICalImpl::DeleteEvent( PRInt32 id )
+oeICalImpl::DeleteEvent( const char *id )
 {
 #ifdef ICAL_DEBUG
-    printf( "oeICalImpl::DeleteEvent( %lu )\n", id );
+    printf( "oeICalImpl::DeleteEvent( %s )\n", id );
 #endif
     icalfileset *stream;
-    char uidstr[10];
     
     stream = icalfileset_new(serveraddr);
     if ( !stream ) {
@@ -922,14 +919,20 @@ oeICalImpl::DeleteEvent( PRInt32 id )
         return NS_OK;
     }
     
-    sprintf( uidstr, "%lu", id );
+    if( id == nsnull ) {
+        #ifdef ICAL_DEBUG
+        printf( "oeICalImpl::DeleteEvent() - Invalid Id.\n" );
+        #endif
+        icalfileset_free(stream);
+        return NS_OK;
+    }
 
-    icalcomponent *fetchedcal = icalfileset_fetch( stream, uidstr );
+    icalcomponent *fetchedcal = icalfileset_fetch( stream, id );
     
     if( fetchedcal == 0 ) {
         icalfileset_free(stream);
 #ifdef ICAL_DEBUG
-    printf( "WARNING Event not found.\n" );
+    printf( "oeICalImpl::DeleteEvent() - WARNING Event not found.\n" );
 #endif
         return NS_OK;
     }
@@ -945,7 +948,7 @@ oeICalImpl::DeleteEvent( PRInt32 id )
 
     m_eventlist.Remove( id );
     
-    for( int i=0; i<m_observerlist.size(); i++ ) {
+    for( unsigned int i=0; i<m_observerlist.size(); i++ ) {
         m_observerlist[i]->OnDeleteItem( icalevent );
     }
 
@@ -966,14 +969,10 @@ oeICalImpl::GetAllEvents(nsISimpleEnumerator **resultList )
     if (!eventEnum)
         return NS_ERROR_OUT_OF_MEMORY;
 
-    eventEnum->Init( this );
-    
     EventList *tmplistptr = &m_eventlist;
     while( tmplistptr ) {
         if( tmplistptr->event ) {
-            PRUint32 tmpid;
-            tmplistptr->event->GetId( &tmpid );
-            eventEnum->AddEventId( tmpid );
+            eventEnum->AddEvent( tmplistptr->event );
         }
         tmplistptr = tmplistptr->next;
     }
@@ -996,8 +995,6 @@ oeICalImpl::SearchBySQL( const char *sqlstr,  nsISimpleEnumerator **resultList )
     if (!eventEnum)
         return NS_ERROR_OUT_OF_MEMORY;
 
-    eventEnum->Init( this );
-    
     stream = icalfileset_new(serveraddr);
     if ( !stream ) {
         #ifdef ICAL_DEBUG
@@ -1036,7 +1033,10 @@ oeICalImpl::SearchBySQL( const char *sqlstr,  nsISimpleEnumerator **resultList )
             return NS_OK;
         }
 
-        eventEnum->AddEventId( atol( icalproperty_get_uid( prop ) ) );
+        oeIICalEvent* event = m_eventlist.GetEventById( icalproperty_get_uid( prop ) );
+        if( event != nsnull ) {
+            eventEnum->AddEvent( event );
+        }
     }
 	
     icalfileset_free(stream);
@@ -1138,8 +1138,6 @@ oeICalImpl::GetEventsForRange( PRTime checkdateinms, PRTime checkenddateinms, ns
     if (!dateEnum)
         return NS_ERROR_OUT_OF_MEMORY;
 
-    eventEnum->Init( this );
-
     EventList *tmplistptr = &m_eventlist;
     int i=0;
     while( tmplistptr ) {
@@ -1149,9 +1147,7 @@ oeICalImpl::GetEventsForRange( PRTime checkdateinms, PRTime checkenddateinms, ns
             PRTime checkdateloop = checkdateinms;
             tmpevent->GetNextRecurrence( checkdateloop, &checkdateloop, &isvalid );
             while( isvalid && LL_CMP( checkdateloop, <, checkenddateinms ) ) {
-                PRUint32 tmpid;
-                tmpevent->GetId( &tmpid );
-                eventEnum->AddEventId( tmpid );
+                eventEnum->AddEvent( tmpevent );
                 dateEnum->AddDate( checkdateloop );
                 tmpevent->GetNextRecurrence( checkdateloop, &checkdateloop, &isvalid );
             }
@@ -1181,8 +1177,6 @@ oeICalImpl::GetNextNEvents( PRTime datems, PRInt32 maxcount, nsISimpleEnumerator
     if (!dateEnum)
         return NS_ERROR_OUT_OF_MEMORY;
 
-    eventEnum->Init( this );
-
     struct icaltimetype checkdate = ConvertFromPrtime( datems );
     checkdate.hour = 0;
     checkdate.minute = 0;
@@ -1199,9 +1193,7 @@ oeICalImpl::GetNextNEvents( PRTime datems, PRInt32 maxcount, nsISimpleEnumerator
             PRTime checkdateloop = checkdateinms;
             tmpevent->GetNextRecurrence( checkdateloop, &checkdateloop, &isvalid );
             while( isvalid ) {
-                PRUint32 tmpid;
-                tmpevent->GetId( &tmpid );
-                eventEnum->AddEventId( tmpid );
+                eventEnum->AddEvent( tmpevent );
                 dateEnum->AddDate( checkdateloop );
                 count++;
                 if( count == maxcount )
@@ -1279,7 +1271,7 @@ void oeICalImpl::SetupAlarmManager() {
                     printf( "ALARM WENT OFF: %s\n", icaltime_as_ctime( alarmtime ) );
 #endif
                     
-                    for( int i=0; i<m_observerlist.size(); i++ ) {
+                    for( unsigned int i=0; i<m_observerlist.size(); i++ ) {
                         m_observerlist[i]->OnAlarm( event );
                     }
                 }
