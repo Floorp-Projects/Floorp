@@ -828,7 +828,7 @@ NET_AskForAuthString(MWContext *context,
 
 
 			NET_Progress(context, XP_GetString( XP_CONNECT_PLEASE_ENTER_PASSWORD_FOR_HOST) );
-#if 1
+#if 0
 #if defined(SingleSignon)
 			/* prefill prompt with previous username/passwords if any 
              * this returns 1 if user pressed OK, or 0 if they Canceled
