@@ -52,7 +52,7 @@ static PRBool     gRecordingStatistics=PR_TRUE;
 static const int  gTransferBufferSize=4096;  //size of the buffer used in moving data from iistream
 static char*      gURLRef=0;
 
-#define DEBUG_SAVE_SOURCE_DOC 1
+//#define DEBUG_SAVE_SOURCE_DOC 1
 #ifdef DEBUG_SAVE_SOURCE_DOC
 fstream* gTempStream=0;
 #endif
