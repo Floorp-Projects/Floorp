@@ -634,21 +634,23 @@ sub GetSelectableProductHash {
 
     PushGlobalSQLState();
     foreach my $table (@tables) {
-        # Why oh why can't we standardize on these names?!?
-        my $fld = ($table eq "components" ? "name" : "value");
-
-        my $query = "SELECT $fld, product_id FROM $table WHERE product_id IN " .
-                    "(" . join(",", keys %products) . ") ORDER BY $fld";
-        SendSQL($query);
-
         my %values;
         my %values_by_product;
 
-        while (MoreSQLData()) {
-            my ($name, $product_id) = FetchSQLData();
-            next unless $name;
-            $values{$name} = 1;
-            push @{$values_by_product{$products{$product_id}}}, $name;
+        if (scalar(keys %products)) {
+            # Why oh why can't we standardize on these names?!?
+            my $fld = ($table eq "components" ? "name" : "value");
+
+            my $query = "SELECT $fld, product_id FROM $table WHERE product_id " .
+                        "IN (" . join(",", keys %products) . ") ORDER BY $fld";
+            SendSQL($query);
+
+            while (MoreSQLData()) {
+                my ($name, $product_id) = FetchSQLData();
+                next unless $name;
+                $values{$name} = 1;
+                push @{$values_by_product{$products{$product_id}}}, $name;
+            }
         }
 
         $selectables->{"legal_$table"} = [sort keys %values];
