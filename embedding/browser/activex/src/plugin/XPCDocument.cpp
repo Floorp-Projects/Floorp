@@ -114,6 +114,7 @@ public:
 #include "nsNetUtil.h"
 
 #include "nsIURI.h"
+#include "nsIDocument.h"
 #include "nsIDOMWindow.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMDocument.h"
@@ -121,6 +122,9 @@ public:
 #include "nsIDOMLocation.h"
 #include "nsIWebNavigation.h"
 #include "nsILinkHandler.h"
+#include "nsIScriptGlobalObject.h"
+#include "nsIScriptContext.h"
+#include "nsIPrincipal.h"
 
 #include "XPConnect.h"
 #include "XPCBrowser.h"
@@ -717,7 +721,65 @@ END_COM_MAP()
         /* [in][defaultvalue] */ BSTR language,
         /* [out][retval] */ VARIANT __RPC_FAR *pvarRet)
     {
-        return E_NOTIMPL;
+        nsresult rv;
+
+        nsCOMPtr<nsIDOMWindow> domWindow;
+        NPN_GetValue(mData->pPluginInstance, NPNVDOMWindow, 
+                     NS_STATIC_CAST(nsIDOMWindow **, getter_AddRefs(domWindow)));
+        if (!domWindow)
+        {
+            return E_UNEXPECTED;
+        }
+
+        // Now get the DOM Document.  Accessing the document will create one
+        // if necessary.  So, basically, this call ensures that a document gets
+        // created -- if necessary.
+        nsCOMPtr<nsIDOMDocument> domDocument;
+        rv = domWindow->GetDocument(getter_AddRefs(domDocument));
+        NS_ASSERTION(domDocument, "No DOMDocument!");
+        if (NS_FAILED(rv)) {
+            return E_UNEXPECTED;
+        }
+
+        nsCOMPtr<nsIScriptGlobalObject> globalObject(do_QueryInterface(domWindow));
+        if (!globalObject)
+            return E_UNEXPECTED;
+
+        nsCOMPtr<nsIScriptContext> scriptContext;
+        if (NS_FAILED(globalObject->GetContext(getter_AddRefs(scriptContext))) ||
+                !scriptContext)
+            return E_UNEXPECTED;
+
+        nsCOMPtr<nsIDocument> doc(do_QueryInterface(domDocument));
+        if (!doc)
+            return E_UNEXPECTED;
+
+        nsCOMPtr<nsIPrincipal> principal;      
+        doc->GetPrincipal(getter_AddRefs(principal));
+        if (!principal)
+            return E_UNEXPECTED;
+
+        // Execute the script.
+        //
+        // Note: The script context takes care of the JS stack and of ensuring
+        //       nothing is executed when JS is disabled.
+        //
+        nsAutoString scriptString(code);
+        NS_NAMED_LITERAL_CSTRING(url, "javascript:axplugin");
+        nsAutoString result;
+        rv = scriptContext->EvaluateString(scriptString,
+                                           nsnull,      // obj
+                                           principal,
+                                           url.get(),   // url
+                                           1,           // line no
+                                           nsnull,
+                                           result,
+                                           nsnull);
+
+        if (NS_FAILED(rv))
+            return NS_ERROR_FAILURE;
+
+        return S_OK;
     }
     
     virtual /* [id] */ HRESULT STDMETHODCALLTYPE toString( 
