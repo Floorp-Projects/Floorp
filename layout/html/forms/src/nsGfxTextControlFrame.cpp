@@ -1677,6 +1677,11 @@ nsGfxTextControlFrame::Reflow(nsIPresContext& aPresContext,
           }        
 
           // create the pseudo frame for the anonymous content
+          if (mDisplayFrame) {
+            rv = mDisplayFrame->Destroy(aPresContext);
+            if (NS_FAILED(rv)) return rv;
+          }
+
           rv = NS_NewBlockFrame((nsIFrame**)&mDisplayFrame, NS_BLOCK_SPACE_MGR);
           if (NS_FAILED(rv)) { return rv; }
           if (!mDisplayFrame) { return NS_ERROR_NULL_POINTER; }
