@@ -69,6 +69,8 @@ CPPSRCS=				\
 	nsHTMLValue.cpp 		\
 	nsStyleUtil.cpp 		\
 	nsDOMCSSDeclaration.cpp		\
+	nsComputedDOMStyle.cpp		\
+	nsROCSSPrimitiveValue.cpp	\
 	$(NULL)
 
 CPP_OBJS =					\
@@ -92,6 +94,8 @@ CPP_OBJS =					\
 	.\$(OBJDIR)\nsHTMLValue.obj 		\
 	.\$(OBJDIR)\nsStyleUtil.obj 		\
 	.\$(OBJDIR)\nsDOMCSSDeclaration.obj 	\
+	.\$(OBJDIR)\nsComputedDOMStyle.obj 	\
+	.\$(OBJDIR)\nsROCSSPrimitiveValue.obj 	\
 	$(NULL)
 
 LINCS=-I$(PUBLIC)\xpcom -I$(PUBLIC)\raptor -I$(PUBLIC)\netlib \
