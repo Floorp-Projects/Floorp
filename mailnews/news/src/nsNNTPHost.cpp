@@ -63,6 +63,14 @@ static const char LINEBREAK_START = '\012';
 static const char LINEBREAK_START = '\015';
 #endif
 
+/* externally declare this function...it doesn't exist in mailnews yet though...hmmm */
+
+extern int msg_LineBuffer (const char *net_buffer, PRInt32 net_buffer_size,
+						   char **bufferP, PRUint32 *buffer_sizeP,
+						   PRUint32 *buffer_fpP,
+						   PRBool convert_newlines_p,
+						   PRInt32 (*per_line_fn) (char *line, PRUint32 line_length, void *closure),
+						   void *closure);
 
 class nsNNTPHost : public nsINNTPHost {
 public:
