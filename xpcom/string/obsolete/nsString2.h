@@ -43,6 +43,11 @@
   #define NEW_STRING_APIS 1
 #endif //NEW_STRING_APIS
 
+  // Need this to enable comparison profiling for a while
+#ifdef OLD_STRING_APIS
+  #undef NEW_STRING_APIS
+#endif
+
 
 #ifndef _nsString_
 #define _nsString_
@@ -892,6 +897,15 @@ NS_DEF_STRING_COMPARISON_OPERATORS(nsString, PRUnichar)
 NS_DEF_DERIVED_STRING_OPERATOR_PLUS(nsString, PRUnichar)
 #endif
 
+#ifdef NEW_STRING_APIS
+inline
+nsPromiseConcatenation<PRUnichar>
+operator+( const nsPromiseConcatenation<PRUnichar>& lhs, const nsString& rhs )
+  {
+    return nsPromiseConcatenation<PRUnichar>(lhs, rhs);
+  }
+#endif
+
 extern NS_COM int fputs(const nsString& aString, FILE* out);
 //ostream& operator<<(ostream& aStream,const nsString& aString);
 //virtual void  DebugDump(ostream& aStream) const;
@@ -973,6 +987,13 @@ class NS_COM NS_ConvertASCIItoUCS2
       class nsCString;
       NS_ConvertASCIItoUCS2( const nsCString& );
 #endif
+#endif
+
+#ifdef NEW_STRING_APIS
+      operator nsLiteralString() const
+        {
+          return nsLiteralString(mUStr, mLength);
+        }
 #endif
 
     private:
