@@ -176,7 +176,7 @@ fi
 #
 ./mozilla/dist/bin/codesighs --totalonly --input $COPYSORTTSV
 if [ -e $DIFFFILE ]; then
-    ./mozilla/dist/bin/maptsvdifftool --totalonly --input $DIFFFILE
+    ./mozilla/dist/bin/maptsvdifftool --summary --input $DIFFFILE
 fi
 
 #
