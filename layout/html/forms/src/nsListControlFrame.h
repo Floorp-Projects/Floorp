@@ -50,7 +50,7 @@ public:
   friend nsresult NS_NewListControlFrame(nsIFrame** aNewFrame);
 
    // nsISupports
-  NS_DECL_ISUPPORTS
+  NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
 
     // nsIFrame
   NS_IMETHOD HandleEvent(nsIPresContext& aPresContext,
@@ -73,6 +73,7 @@ public:
                    nsIFrame*        aPrevInFlow);
 
   NS_IMETHOD DidReflow(nsIPresContext& aPresContext, nsDidReflowStatus aStatus);
+  NS_IMETHOD MoveTo(nscoord aX, nscoord aY);
 
     // nsIFormControlFrame
   NS_IMETHOD GetType(PRInt32* aType) const;
@@ -112,6 +113,7 @@ public:
   NS_IMETHOD GetMaximumSize(nsSize &aSize);
   NS_IMETHOD SetSuggestedSize(nscoord aWidth, nscoord aHeight);
   NS_IMETHOD GetNumberOfOptions(PRInt32* aNumOptions);  
+  NS_IMETHOD SyncViewWithFrame();
 
   // nsISelectControlFrame
   NS_IMETHOD AddOption(PRInt32 index);
@@ -171,7 +173,6 @@ protected:
   nsIFrame *GetOptionFromChild(nsIFrame* aParentFrame);
   PRBool   IsAncestor(nsIView* aAncestor, nsIView* aChild);
   nsIView* GetViewFor(nsIWidget* aWidget);
-  nsresult SyncViewWithFrame();
   PRBool   IsInDropDownMode();
   PRBool   IsOptionElement(nsIContent* aContent);
   PRBool   IsOptionElementFrame(nsIFrame *aFrame);
@@ -214,6 +215,10 @@ protected:
 
   // XXX temprary only until full system mouse capture works
   PRBool mIsScrollbarVisible;
+
+private:
+  NS_IMETHOD_(nsrefcnt) AddRef() { return NS_OK; }
+  NS_IMETHOD_(nsrefcnt) Release() { return NS_OK; }
 };
 
 #endif /* nsListControlFrame_h___ */

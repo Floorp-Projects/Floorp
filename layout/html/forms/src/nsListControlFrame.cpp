@@ -97,14 +97,24 @@ nsListControlFrame::nsListControlFrame()
 //---------------------------------------------------------
 nsListControlFrame::~nsListControlFrame()
 {
+
+  nsCOMPtr<nsIDOMEventReceiver> reciever(do_QueryInterface(mContent));
+
+  // we shouldn't have to unregister this listener because when
+  // our frame goes away all these content node go away as well
+  // because our frame is the only one who references them.
+  reciever->RemoveEventListenerByIID((nsIDOMMouseListener *)this, kIDOMMouseListenerIID);
+  reciever->RemoveEventListenerByIID((nsIDOMMouseMotionListener *)this, kIDOMMouseMotionListenerIID);
+  reciever->RemoveEventListenerByIID((nsIDOMKeyListener *)this, kIDOMKeyListenerIID);
+
   mComboboxFrame = nsnull;
   mFormFrame = nsnull;
   NS_IF_RELEASE(mPresContext);
 }
 
 //---------------------------------------------------------
-NS_IMPL_ADDREF(nsListControlFrame)
-NS_IMPL_RELEASE(nsListControlFrame)
+//NS_IMPL_ADDREF(nsListControlFrame)
+//NS_IMPL_RELEASE(nsListControlFrame)
 
 //---------------------------------------------------------
 NS_IMETHODIMP
@@ -153,6 +163,13 @@ nsListControlFrame::Reflow(nsIPresContext&          aPresContext,
                            const nsHTMLReflowState& aReflowState, 
                            nsReflowStatus&          aStatus)
 {
+  printf("nsListControlFrame::Reflow    Reason: ");
+  switch (aReflowState.reason) {
+    case eReflowReason_Initial:printf("eReflowReason_Initial\n");break;
+    case eReflowReason_Incremental:printf("eReflowReason_Incremental\n");break;
+    case eReflowReason_Resize:printf("eReflowReason_Resize\n");break;
+    case eReflowReason_StyleChange:printf("eReflowReason_StyleChange\n");break;
+  }
    // Strategy: Let the inherited reflow happen as though the width and height of the
    // ScrollFrame are big enough to allow the listbox to
    // shrink to fit the longest option element line in the list.
@@ -1670,15 +1687,15 @@ nsListControlFrame::GetViewOffset(nsIViewManager* aManager, nsIView* aView,
   }
 }
  
-
 //---------------------------------------------------------
-nsresult 
+NS_IMETHODIMP 
 nsListControlFrame::SyncViewWithFrame()
 {
     // Resync the view's position with the frame.
     // The problem is the dropdown's view is attached directly under
     // the root view. This means it's view needs to have it's coordinates calculated
     // as if it were in it's normal position in the view hierarchy.
+  mComboboxFrame->AbsolutelyPositionDropDown();
 
   nsPoint parentPos;
   nsCOMPtr<nsIViewManager> viewManager;
@@ -1700,32 +1717,36 @@ nsListControlFrame::SyncViewWithFrame()
   nsIView* containingView = nsnull;
   nsPoint offset;
   GetOffsetFromView(offset, &containingView);
-  nsSize size;
-  GetSize(size);
-  
-  viewManager->ResizeView(view, mRect.width, mRect.height);
-  viewManager->MoveViewTo(view, parentPos.x + offset.x, parentPos.y + offset.y );
+  //nsSize size;
+  //GetSize(size);
 
-////////////////////////////////////
-    const nsStyleColor* color;
-    const nsStyleDisplay* disp; 
-   GetStyleData(eStyleStruct_Color, (const nsStyleStruct*&) color);
-   GetStyleData(eStyleStruct_Display, (const nsStyleStruct*&) disp);
+  nscoord width;
+  nscoord height;
+  view->GetDimensions(&width, &height);
 
+  if (width != mRect.width || height != mRect.height) {
+    viewManager->ResizeView(view, mRect.width, mRect.height);
+  }
+  nscoord x;
+  nscoord y;
+  view->GetPosition(&x, &y);
+
+  nscoord newX = parentPos.x + offset.x;
+  nscoord newY = parentPos.y + offset.y;
+
+  //if (newX != x || newY != y) {
+    viewManager->MoveViewTo(view, newX, newY);
+  //}
+
+  nsViewVisibility visibility;
+
+  view->GetVisibility(visibility);
+  const nsStyleDisplay* disp; 
+  GetStyleData(eStyleStruct_Display, (const nsStyleStruct*&) disp);
+
+  if (visibility != disp->mVisible) {
     view->SetVisibility(NS_STYLE_VISIBILITY_HIDDEN == disp->mVisible ?nsViewVisibility_kHide:nsViewVisibility_kShow); 
-
-    /*viewManager->SetViewOpacity(view, color->mOpacity);
-    PRInt32 num;
-    view->GetChildCount(num);
-    for (PRInt32 cnt = 0; cnt < num; cnt++){
-      nsIView *kid;
-      view->GetChild(cnt, kid);
-      if (nsnull != kid) {
-        kid->SetVisibility(NS_STYLE_VISIBILITY_HIDDEN == disp->mVisible ?nsViewVisibility_kHide:nsViewVisibility_kShow); 
-      }
-    }*/
-
-/////////////////////////////
+  }
 
   return NS_OK;
 }
@@ -1764,16 +1785,32 @@ nsListControlFrame::DidReflow(nsIPresContext& aPresContext,
 {
   if (PR_TRUE == IsInDropDownMode()) 
   {
-    SyncViewWithFrame();
-    //mState &= ~NS_FRAME_SYNC_FRAME_AND_VIEW;
+    //SyncViewWithFrame();
+    mState &= ~NS_FRAME_SYNC_FRAME_AND_VIEW;
     nsresult rv = nsScrollFrame::DidReflow(aPresContext, aStatus);
-    //mState |= NS_FRAME_SYNC_FRAME_AND_VIEW;
+    mState |= NS_FRAME_SYNC_FRAME_AND_VIEW;
     SyncViewWithFrame();
     return rv;
   } else {
     return nsScrollFrame::DidReflow(aPresContext, aStatus);
   }
 }
+
+NS_IMETHODIMP nsListControlFrame::MoveTo(nscoord aX, nscoord aY)
+{
+  if (PR_TRUE == IsInDropDownMode()) 
+  {
+    //SyncViewWithFrame();
+    mState &= ~NS_FRAME_SYNC_FRAME_AND_VIEW;
+    nsresult rv = nsScrollFrame::MoveTo(aX, aY);
+    mState |= NS_FRAME_SYNC_FRAME_AND_VIEW;
+    //SyncViewWithFrame();
+    return rv;
+  } else {
+    return nsScrollFrame::MoveTo(aX, aY);
+  }
+}
+
 
 //---------------------------------------------------------
 NS_IMETHODIMP 
@@ -1844,7 +1881,16 @@ nsListControlFrame::GetIndexFromDOMEvent(nsIDOMEvent* aMouseEvent,
   if (NS_OK == mPresContext->GetEventStateManager(&stateManager)) {
     nsIContent * content;
     stateManager->GetEventTargetContent(&content);
-
+    ///////////////////
+    {
+  nsCOMPtr<nsIDOMHTMLOptionElement> optElem;
+  if (NS_SUCCEEDED(content->QueryInterface(nsCOMTypeInfo<nsIDOMHTMLOptionElement>::GetIID(),(void**) getter_AddRefs(optElem)))) {      
+    nsAutoString val;
+    optElem->GetValue(val);
+    printf("val [%s]\n", val.ToNewCString());
+  }
+  }
+    ///////////////////
     nsIContent * optionContent = GetOptionFromContent(content);
     NS_RELEASE(content);
     if (nsnull != optionContent) {
