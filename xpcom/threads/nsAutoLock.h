@@ -130,14 +130,69 @@ public:
 
 class nsAutoMonitor {
 public:
-    nsAutoMonitor(void* lockObject)
+    nsAutoMonitor(PRMonitor* mon)
+        : mMonitor(mon)
+    {
+        NS_ASSERTION(mMonitor, "null lock object");
+        PR_EnterMonitor(mMonitor);
+    }
+
+    ~nsAutoMonitor() {
+        PR_ExitMonitor(mMonitor);
+    }
+
+    nsresult Wait(PRIntervalTime interval = PR_INTERVAL_NO_TIMEOUT) {
+        return PR_Wait(mMonitor, interval) == PR_SUCCESS
+            ? NS_OK : NS_ERROR_FAILURE;
+    }
+
+    nsresult Notify() {
+        return PR_Notify(mMonitor) == PR_SUCCESS
+            ? NS_OK : NS_ERROR_FAILURE;
+    }
+
+    nsresult NotifyAll() {
+        return PR_NotifyAll(mMonitor) == PR_SUCCESS
+            ? NS_OK : NS_ERROR_FAILURE;
+    }
+
+private:
+    PRMonitor* mMonitor;
+
+    // Not meant to be implemented. This makes it a compiler error to
+    // construct or assign an nsAutoLock object incorrectly.
+    nsAutoMonitor(void) {}
+    nsAutoMonitor(nsAutoMonitor& aMon) {}
+    nsAutoMonitor& operator =(nsAutoMonitor& aMon) {
+        return *this;
+    }
+
+    // Not meant to be implemented. This makes it a compiler error to
+    // attempt to create an nsAutoLock object on the heap.
+    static void* operator new(size_t size) {
+        return nsnull;
+    }
+    static void operator delete(void* memory) {}
+};
+
+////////////////////////////////////////////////////////////////////////////////
+// Once again, this time with a cache...
+// (Using this avoids the need to allocate a PRMonitor, which may be useful when
+// a large number of objects of the same class need associated monitors.)
+
+#include "prcmon.h"
+#include "nsError.h"
+
+class nsAutoCMonitor {
+public:
+    nsAutoCMonitor(void* lockObject)
         : mLockObject(lockObject)
     {
         NS_ASSERTION(lockObject, "null lock object");
         PR_CEnterMonitor(mLockObject);
     }
 
-    ~nsAutoMonitor() {
+    ~nsAutoCMonitor() {
         PR_CExitMonitor(mLockObject);
     }
 
@@ -161,9 +216,9 @@ private:
 
     // Not meant to be implemented. This makes it a compiler error to
     // construct or assign an nsAutoLock object incorrectly.
-    nsAutoMonitor(void) {}
-    nsAutoMonitor(nsAutoMonitor& aMon) {}
-    nsAutoMonitor& operator =(nsAutoMonitor& aMon) {
+    nsAutoCMonitor(void) {}
+    nsAutoCMonitor(nsAutoCMonitor& aMon) {}
+    nsAutoCMonitor& operator =(nsAutoCMonitor& aMon) {
         return *this;
     }
 

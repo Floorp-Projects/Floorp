@@ -34,7 +34,7 @@ public:
 
     NS_IMETHOD Run() {
         nsresult rv;
-        nsAutoMonitor mon(this);
+        nsAutoCMonitor mon(this);
 
         char buf[100];
         PRUint32 readCnt;
@@ -128,7 +128,7 @@ WriteMessages(nsIBuffer* buffer)
             return rv;
         }
         if (cnt == 0) {
-            nsAutoMonitor mon(reader);
+            nsAutoCMonitor mon(reader);
             mon.Notify();       // wake up reader
             mon.Wait();         // and wait for reader to read all
         }
@@ -142,7 +142,7 @@ WriteMessages(nsIBuffer* buffer)
     PR_FREEIF(mem);
     {
         reader->SetEOF();
-        nsAutoMonitor mon(reader);
+        nsAutoCMonitor mon(reader);
         mon.Notify();       // wake up reader
     }
 
