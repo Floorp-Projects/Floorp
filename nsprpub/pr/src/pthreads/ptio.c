@@ -1582,10 +1582,9 @@ static PRStatus pt_Connect(
     addrCopy = *addr;
     ((struct sockaddr*)&addrCopy)->sa_len = addr_len;
     ((struct sockaddr*)&addrCopy)->sa_family = md_af;
-    rv = connect(fd->secret->md.osfd, (struct sockaddr*)&addrCopy, addr_len);
-#else
-    rv = connect(fd->secret->md.osfd, (struct sockaddr*)addrp, addr_len);
+    addrp = &addrCopy;
 #endif
+    rv = connect(fd->secret->md.osfd, (struct sockaddr*)addrp, addr_len);
     syserrno = errno;
     if ((-1 == rv) && (EINPROGRESS == syserrno) && (!fd->secret->nonblocking))
     {
@@ -1594,11 +1593,7 @@ static PRStatus pt_Connect(
         {
             pt_Continuation op;
             op.arg1.osfd = fd->secret->md.osfd;
-#ifdef _PR_HAVE_SOCKADDR_LEN
-            op.arg2.buffer = (void*)&addrCopy;
-#else
-            op.arg2.buffer = (void*)addr;
-#endif
+            op.arg2.buffer = (void*)addrp;
             op.arg3.amount = addr_len;
             op.timeout = timeout;
             op.function = pt_connect_cont;
@@ -1777,10 +1772,9 @@ static PRStatus pt_Bind(PRFileDesc *fd, const PRNetAddr *addr)
     addrCopy = *addr;
     ((struct sockaddr*)&addrCopy)->sa_len = addr_len;
     ((struct sockaddr*)&addrCopy)->sa_family = md_af;
-    rv = bind(fd->secret->md.osfd, (struct sockaddr*)&addrCopy, addr_len);
-#else
-    rv = bind(fd->secret->md.osfd, (struct sockaddr*)addrp, addr_len);
+    addrp = &addrCopy;
 #endif
+    rv = bind(fd->secret->md.osfd, (struct sockaddr*)addrp, addr_len);
 
     if (rv == -1) {
         pt_MapError(_PR_MD_MAP_BIND_ERROR, errno);
@@ -2017,14 +2011,11 @@ static PRInt32 pt_SendTo(
     addrCopy = *addr;
     ((struct sockaddr*)&addrCopy)->sa_len = addr_len;
     ((struct sockaddr*)&addrCopy)->sa_family = md_af;
-    bytes = sendto(
-        fd->secret->md.osfd, buf, amount, flags,
-        (struct sockaddr*)&addrCopy, addr_len);
-#else
+    addrp = &addrCopy;
+#endif
     bytes = sendto(
         fd->secret->md.osfd, buf, amount, flags,
         (struct sockaddr*)addrp, addr_len);
-#endif
     syserrno = errno;
     if ( (bytes == -1) && (syserrno == EWOULDBLOCK || syserrno == EAGAIN)
         && (!fd->secret->nonblocking) )
@@ -2039,11 +2030,7 @@ static PRInt32 pt_SendTo(
         op.arg2.buffer = (void*)buf;
         op.arg3.amount = amount;
         op.arg4.flags = flags;
-#ifdef _PR_HAVE_SOCKADDR_LEN
-        op.arg5.addr = (PRNetAddr*)&addrCopy;
-#else
-        op.arg5.addr = (PRNetAddr*)addr;
-#endif
+        op.arg5.addr = (PRNetAddr*)addrp;
         op.timeout = timeout;
         op.result.code = 0;  /* initialize the number sent */
         op.function = pt_sendto_cont;
