@@ -86,6 +86,18 @@ class mozXMLTermSession
    */
   NS_IMETHOD ReadAll(mozILineTermAux* lineTermAux, PRBool& processedData);
 
+  /** Exports HTML to file, with META REFRESH, if refreshSeconds is non-zero.
+   * Nothing is done if display has not changed since last export, unless
+   * forceExport is true. Returns true if export actually takes place.
+   * If filename is a null string, HTML is written to STDERR.
+   */
+  NS_IMETHOD ExportHTML(const PRUnichar* aFilename,
+                        PRInt32 permissions,
+                        const PRUnichar* style,
+                        PRUint32 refreshSeconds,
+                        PRBool forceExport,
+                        PRBool* exported);
+
   /** Aborts session by closing LineTerm and displays an error message
    * @param lineTermAux LineTermAux object to be closed
    * @param abortCode abort code string to be displayed
@@ -118,8 +130,8 @@ class mozXMLTermSession
    */
   NS_IMETHOD SetPrompt(const PRUnichar* aPrompt);
 
-  /** Gets flag denoting whether terminal is in full screen mode
-   * @param aFlag (output) screen mode flag
+  /** Gets webcast filename
+   * @param aFilename (output) webcast filename
    */
   NS_IMETHOD GetScreenMode(PRBool* aFlag);
 
@@ -593,6 +605,9 @@ protected:
   /** BODY node of document containing XMLterm */
   nsCOMPtr<nsIDOMNode> mBodyNode;
 
+  /** XMLterm menus node */
+  nsCOMPtr<nsIDOMNode> mMenusNode;
+
   /** XMLterm session node */
   nsCOMPtr<nsIDOMNode> mSessionNode;
 
@@ -618,13 +633,13 @@ protected:
   /** flag indicating whether current entry has output data */
   PRBool               mEntryHasOutput;
 
-  /** span node for current command prompt (is this necessary?) */
-  nsCOMPtr<nsIDOMNode> mPromptSpanNode;
+  /** text node terminating current command prompt */
+  nsCOMPtr<nsIDOMNode> mPromptTextNode;
 
-  /** span node for current command input (is this necessary?) */
+  /** span node for current command input */
   nsCOMPtr<nsIDOMNode> mCommandSpanNode;
 
-  /** text node for current command input (is this necessary?) */
+  /** text node for current command input */
   nsCOMPtr<nsIDOMNode> mInputTextNode;
 
 
@@ -699,6 +714,14 @@ protected:
 
   /** restore input echo flag */
   PRBool               mRestoreInputEcho;
+
+
+  /** count of exported HTML */
+  PRInt32  mCountExportHTML;
+
+  /** last exported HTML */
+  nsString mLastExportHTML;
+
 
   /** shell prompt string */
   nsString             mShellPrompt;

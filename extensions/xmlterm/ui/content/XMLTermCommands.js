@@ -7,9 +7,25 @@
 //             letter.
 
 // Global variables
-var AltWin;                   // Alternate (browser) window
+///var gStyleRuleNames;
 
-var gStyleRuleNames;
+WRITE_LOG = function (str) {};
+DEBUG_LOG = function (str) {};
+
+if (navigator) {
+   var userAgent = navigator.userAgent;
+
+   if (userAgent && (userAgent.search(/Mozilla\/4\./i) == -1)) {
+
+     if (dump) {
+        WRITE_LOG = dump;
+     }
+  }
+} else {
+  if (dump) {
+     WRITE_LOG = dump;
+  }
+}
 
 var Tips = new Array();       // Usage tip strings
 var TipNames = new Array();   // Usage tip names
@@ -95,7 +111,7 @@ function NewTip() {
   SelectedTip = Math.floor(ranval * TipCount);
   if (SelectedTip >= TipCount) SelectedTip = 0;
 
-  //dump("xmlterm: NewTip "+SelectedTip+","+ranval+"\n");
+  DEBUG_LOG("xmlterm: NewTip "+SelectedTip+","+ranval+"\n");
 
   var tipdata = document.getElementById('tipdata');
   tipdata.firstChild.data = Tips[SelectedTip];
@@ -107,7 +123,7 @@ function NewTip() {
 
 // Explain tip
 function ExplainTip(tipName) {
-  //dump("xmlterm: ExplainTip("+tipName+")\n");
+  DEBUG_LOG("xmlterm: ExplainTip("+tipName+")\n");
 
   if (tipName) {
     var tipdata = document.getElementById('tipdata');
@@ -148,7 +164,7 @@ function F9Key(isShift, isControl) {
 
 // Scroll Home key
 function ScrollHomeKey(isShift, isControl) {
-  //dump("ScrollHomeKey("+isShift+","+isControl+")\n");
+  DEBUG_LOG("ScrollHomeKey("+isShift+","+isControl+")\n");
 
   if (isControl) {
     return F1Key(isShift, 0);
@@ -160,7 +176,7 @@ function ScrollHomeKey(isShift, isControl) {
 
 // Scroll End key
 function ScrollEndKey(isShift, isControl) {
-  //dump("ScrollEndKey("+isShift+","+isControl+")\n");
+  DEBUG_LOG("ScrollEndKey("+isShift+","+isControl+")\n");
 
   if (isControl) {
     return F2Key(isShift, 0);
@@ -172,7 +188,7 @@ function ScrollEndKey(isShift, isControl) {
 
 // Scroll PageUp key
 function ScrollPageUpKey(isShift, isControl) {
-  //dump("ScrollPageUpKey("+isShift+","+isControl+")\n");
+  DEBUG_LOG("ScrollPageUpKey("+isShift+","+isControl+")\n");
 
   ScrollWin(isShift,isControl).scrollBy(0,-120);
   return false;
@@ -180,7 +196,7 @@ function ScrollPageUpKey(isShift, isControl) {
 
 // Scroll PageDown key
 function ScrollPageDownKey(isShift, isControl) {
-  //dump("ScrollPageDownKey("+isShift+","+isControl+")\n");
+  DEBUG_LOG("ScrollPageDownKey("+isShift+","+isControl+")\n");
 
   ScrollWin(isShift,isControl).scrollBy(0,120);
   return false;
@@ -197,16 +213,16 @@ function ScrollWin(isShift, isControl) {
 
 // Set history buffer size
 function SetHistory(value) {
-  //dump("SetHistory("+value+")\n");
-  window.xmlterm.SetHistory(value, document.cookie);
-  return (false);
+  DEBUG_LOG("SetHistory("+value+")\n");
+  window.xmlterm.setHistory(value, document.cookie);
+  return false;
 }
 
 // Set prompt
 function SetPrompt(value) {
-  //dump("SetPrompt("+value+")\n");
-  window.xmlterm.SetPrompt(value, document.cookie);
-  return (false);
+  DEBUG_LOG("SetPrompt("+value+")\n");
+  window.xmlterm.setPrompt(value, document.cookie);
+  return false;
 }
 
 // Create new XMLTerm window
@@ -214,40 +230,40 @@ function NewXMLTerm(firstcommand) {
   newwin = window.openDialog( "chrome://xmlterm/content/xmlterm.xul",
                               "xmlterm", "chrome,dialog=no,resizable",
                               firstcommand);
-  dump("NewXMLTerm: "+newwin+"\n")
-  return (false);
+  WRITE_LOG("NewXMLTerm: "+newwin+"\n")
+  return false;
 }
 
 // Handle resize events
 function Resize(event) {
-  //dump("Resize()\n");
-  window.xmlterm.Resize();
-  return (false);
+  DEBUG_LOG("Resize()\n");
+  window.xmlterm.resize();
+  return false;
 }
 
 // Form Focus (workaround for form input being transmitted to xmlterm)
 function FormFocus() {
-  //dump("FormFocus()\n");
-  window.xmlterm.IgnoreKeyPress(true, document.cookie);
+  DEBUG_LOG("FormFocus()\n");
+  window.xmlterm.ignoreKeyPress(true, document.cookie);
   return false;
 }
 
 // Form Blur (workaround for form input being transmitted to xmlterm)
 function FormBlur() {
-  //dump("FormBlur()\n");
-  window.xmlterm.IgnoreKeyPress(false, document.cookie);
+  DEBUG_LOG("FormBlur()\n");
+  window.xmlterm.ignoreKeyPress(false, document.cookie);
   return false;
 }
 
 // Set user level, icons mode etc.
 function UpdateSettings(selectName) {
 
-   //dump("UpdateSettings: "+selectName+"\n");
+   DEBUG_LOG("UpdateSettings: "+selectName+"\n");
 
    var selectedIndex = document.xmltform1[selectName].selectedIndex;
    var selectedOption = document.xmltform1[selectName].options[selectedIndex].value;
 
-   //dump("UpdateSettings: selectedOption=="+selectedOption+"\n");
+   DEBUG_LOG("UpdateSettings: selectedOption=="+selectedOption+"\n");
 
    switch(selectName) {
       case "userLevel":
@@ -288,37 +304,40 @@ function UpdateSettings(selectName) {
          break;
 
       default:
-         //dump("UpdateSettings: Unknown selectName "+selectName+"\n");
+         DEBUG_LOG("UpdateSettings: Unknown selectName "+selectName+"\n");
          break;
    }
 
    window.xmltform1Index[selectName] = selectedIndex;
    window.xmltform1Option[selectName] = selectedOption;
 
+   Webcast();
+
    return false;
 }
 
 // Alter style in stylesheet of specified document doc, or current document
 // if doc is omitted.
-// ****CSS DOM IS BROKEN****; selectorText seems to be null for all rules
 function AlterStyle(ruleName, propertyName, propertyValue, doc) {
 
-  //dump("AlterStyle("+ruleName+"{"+propertyName+":"+propertyValue+"})\n");
+  DEBUG_LOG("AlterStyle("+ruleName+"{"+propertyName+":"+propertyValue+"})\n");
 
   if (!doc) doc = window.document;
 
   var sheet = doc.styleSheets[0];
   var r;
   for (r = 0; r < sheet.cssRules.length; r++) {
-    //dump("selectorText["+r+"]="+sheet.cssRules[r].selectorText+"\n");
+    DEBUG_LOG("selectorText["+r+"]="+sheet.cssRules[r].selectorText+"\n");
 
-    //if (sheet.cssRules[r].selectorText == ruleName) {
+    if (sheet.cssRules[r].selectorText.toLowerCase() == ruleName.toLowerCase()) {
+
     // Ugly workaround for accessing rules until bug 53448 is fixed
-    if (gStyleRuleNames[r] == ruleName) {
+    // (****CSS DOM IS BROKEN****; selectorText seems to be null for all rules)
+    ///if (gStyleRuleNames[r] == ruleName) {
 
-      //dump("cssText["+r+"]="+sheet.cssRules[r].cssText+"\n");
+      DEBUG_LOG("cssText["+r+"]="+sheet.cssRules[r].cssText+"\n");
       var style = sheet.cssRules[r].style;
-      //dump("style="+style.getPropertyValue(propertyName)+"\n");
+      DEBUG_LOG("style="+style.getPropertyValue(propertyName)+"\n");
 
       style.setProperty(propertyName,propertyValue,"");
     }
@@ -333,22 +352,10 @@ function MetaDefault(arg1) {
 
 // Load URL in XMLTermBrowser window
 function Load(url) {
-  var succeeded = false;
-  if (window.xmltbrowser) {
-     //dump("Load:xmltbrowser.location.href="+window.xmltbrowser.location.href+"\n");
-     if (window.xmltbrowser.location.href.length) {
-        window.xmltbrowser.location = url;
-        succeeded = true;
-     }
-  }
-  if (!succeeded) {
-     window.xmltbrowser = window.open(url, "xmltbrowser");
-  }
+  DEBUG_LOG("Load:url="+url+"\n");
+  window.open(url);
 
-  // Save browser window object in global variable
-  AltWin = window.xmltbrowser;
-
-  return (false);
+  return false;
 }
 
 // Control display of all output elements
@@ -356,14 +363,24 @@ function DisplayAllOutput(flag) {
   var outputElements = document.getElementsByName("output");
   for (i=0; i<outputElements.length-1; i++) {
     var outputElement = outputElements[i];
-    outputElement.style.display = (flag) ? "block" : "none";
+    ///outputElement.style.display = (flag) ? "block" : "none";
+
+    if (flag) 
+       outputElement.removeAttribute('xmlt-block-collapsed');
+    else
+       outputElement.setAttribute('xmlt-block-collapsed', 'true');
   }
 
   var promptElements = document.getElementsByName("prompt");
   for (i=0; i<promptElements.length-1; i++) {
     promptElement = promptElements[i];
-    promptElement.style.setProperty("text-decoration",
-                                     (flag) ? "none" : "underline", "")
+    ///promptElement.style.setProperty("text-decoration",
+    ///                                 (flag) ? "none" : "underline", "");
+
+    if (flag) 
+       promptElement.removeAttribute('xmlt-underline');
+    else
+       promptElement.setAttribute('xmlt-underline', 'true');
   }
 
   if (!flag) {
@@ -371,7 +388,9 @@ function DisplayAllOutput(flag) {
 //    ScrollEndKey(0,0);
   }
 
-  return (false);
+  Webcast();
+
+  return false;
 }
 
 // Centralized event handler
@@ -401,13 +420,13 @@ function DisplayAllOutput(flag) {
 //
 function HandleEvent(eventObj, eventType, targetType, entryNumber,
                      arg1, arg2) {
-  //dump("HandleEvent("+eventObj+","+eventType+","+targetType+","+entryNumber+","+arg1+","+arg2+")\n");
+  DEBUG_LOG("HandleEvent("+eventObj+","+eventType+","+targetType+","+entryNumber+","+arg1+","+arg2+")\n");
 
   // Entry independent targets
-  if (action === "textlink") {
+  if (targetType === "textlink") {
     // Single click opens hyperlink
     // Browser-style
-    //dump("textlink = "+arg1+"\n");
+    DEBUG_LOG("textlink = "+arg1+"\n");
     Load(arg1);
 
   } else if (targetType === "prompt") {
@@ -415,15 +434,24 @@ function HandleEvent(eventObj, eventType, targetType, entryNumber,
     var outputElement = document.getElementById("output"+entryNumber);
     var helpElement = document.getElementById("help"+entryNumber);
     var promptElement = document.getElementById("prompt"+entryNumber);
-    //dump(promptElement.style.getPropertyValue("text-decoration"));
+    DEBUG_LOG(promptElement.style.getPropertyValue("text-decoration"));
 
-    if (outputElement.style.display == "none") {
-      outputElement.style.display = "block";
-      promptElement.style.setProperty("text-decoration","none","");
+    var collapsed = outputElement.getAttribute('xmlt-block-collapsed');
+
+    if (collapsed) {
+    ///if (outputElement.style.display == "none") {
+      ///outputElement.style.display = "block";
+      ///promptElement.style.setProperty("text-decoration","none","");
+
+      outputElement.removeAttribute('xmlt-block-collapsed');
+      promptElement.removeAttribute('xmlt-underline');
 
     } else {
-      outputElement.style.display = "none";
-      promptElement.style.setProperty("text-decoration","underline","");
+      ///outputElement.style.display = "none";
+      ///promptElement.style.setProperty("text-decoration","underline","");
+
+      outputElement.setAttribute('xmlt-block-collapsed', 'true');
+      promptElement.setAttribute('xmlt-underline', 'true');
       if (helpElement) {
         ShowHelp("",entryNumber);
       }
@@ -431,7 +459,7 @@ function HandleEvent(eventObj, eventType, targetType, entryNumber,
 
   } else if (eventType === "click") {
 
-     //dump("clickCount="+eventObj.detail+"\n");
+     DEBUG_LOG("clickCount="+eventObj.detail+"\n");
 
      var shiftClick = eventObj.shiftKey;
      var dblClick = (eventObj.detail == 2);
@@ -447,14 +475,14 @@ function HandleEvent(eventObj, eventType, targetType, entryNumber,
      if (currentCmdElement && currentCmdElement.hasChildNodes()) {
 
        if (currentCmdElement.firstChild.nodeType == Node.TEXT_NODE) {
-         //dump("textLength = "+currentCmdElement.firstChild.data.length+"\n");
+         DEBUG_LOG("textLength = "+currentCmdElement.firstChild.data.length+"\n");
          currentCommandEmpty = (currentCmdElement.firstChild.data.length == 0);
 
        } else {
          currentCommandEmpty = false;
        }
      }
-     //dump("empty = "+currentCommandEmpty+"\n");
+     DEBUG_LOG("empty = "+currentCommandEmpty+"\n");
 
      if (targetType === "command") {
        if (!dblClick)
@@ -462,9 +490,9 @@ function HandleEvent(eventObj, eventType, targetType, entryNumber,
        var commandElement = document.getElementById(targetType+entryNumber);
        var command = commandElement.firstChild.data;
        if (currentCommandEmpty) {
-         window.xmlterm.SendText("\025"+command+"\n", document.cookie);
+         window.xmlterm.sendText("\025"+command+"\n", document.cookie);
        } else {
-         window.xmlterm.SendText(command, document.cookie);
+         window.xmlterm.sendText(command, document.cookie);
        }
 
      } else {
@@ -472,8 +500,8 @@ function HandleEvent(eventObj, eventType, targetType, entryNumber,
 
        if ((entryNumber >= 0) &&
          (window.xmlterm.currentEntryNumber != entryNumber)) {
-         //dump("NOT CURRENT COMMAND\n");
-         return (false);
+         DEBUG_LOG("NOT CURRENT COMMAND\n");
+         return false;
        }
 
        var action, sendStr;
@@ -537,21 +565,23 @@ function HandleEvent(eventObj, eventType, targetType, entryNumber,
 
        // Primitive actions
        if (action === "send") {
-         //dump("send = "+sendStr+"\n");
-         window.xmlterm.SendText(sendStr, document.cookie);
+         DEBUG_LOG("send = "+sendStr+"\n");
+         window.xmlterm.sendText(sendStr, document.cookie);
 
        } else if (action === "sendln") {
-         //dump("sendln = "+sendStr+"\n\n");
-         window.xmlterm.SendText("\025"+sendStr+"\n", document.cookie);
+         DEBUG_LOG("sendln = "+sendStr+"\n\n");
+         window.xmlterm.sendText("\025"+sendStr+"\n", document.cookie);
 
        } else if (action === "createln") {
-         //dump("createln = "+sendStr+"\n\n");
+         DEBUG_LOG("createln = "+sendStr+"\n\n");
          newwin = NewXMLTerm(sendStr+"\n");
        }
     }
   }
 
-  return (false);
+  Webcast();
+
+  return false;
 }
 
 // Set history buffer count using form entry
@@ -566,6 +596,54 @@ function SetPromptValue() {
   return SetPrompt(field.value);
 }
 
+function Webcast() {
+  if (!window.webcastIntervalId)
+    return;
+
+  DEBUG_LOG("XMLTermCommands.js: Webcast: "+window.webcastFile+"\n");
+
+  var style = "";
+
+  if (window.xmltform1Option.showIcons == "on") {
+     style += "SPAN.noicons {display: none}\n";
+     style += "SPAN.icons   {display: inline}\n";
+     style += "IMG.icons    {display: inline}\n";
+     style += "TR.icons     {display: table-row}\n";
+  }
+
+  var exported = window.xmlterm.exportHTML(window.webcastFile, 0644, style,
+                                           0, false, document.cookie);
+  DEBUG_LOG("XMLTermCommands.js: exported="+exported+"\n");
+}
+
+function InitiateWebcast() {
+  var field = document.getElementById('inputvalue');
+
+  window.webcastFile = field.value ? field.value : "";
+  window.webcastFile = "/var/www/html/users/xmlt.html";
+
+  WRITE_LOG("XMLTermCommands.js: InitiateWebcast: "+window.webcastFile+"\n");
+
+  Webcast();
+  window.webcastIntervalId = window.setInterval(Webcast, 2000);
+}
+
+function TerminateWebcast() {
+  window.webcastFile = null;
+
+  if (window.webcastIntervalId) {
+      window.clearInterval(window.webcastIntervalId);
+      window.webcastIntervalId = null;
+  }
+}
+
+function ToggleWebcast() {
+  if (window.webcastIntervalId)
+    TerminateWebcast();
+  else
+    InitiateWebcast();
+}
+
 // Insert help element displaying URL in an IFRAME before output element
 // of entryNumber, or before the SESSION element if entryNumber is zero.
 // Height is the height of the IFRAME in pixels.
@@ -575,7 +653,7 @@ function ShowHelp(url, entryNumber, height) {
 
   if (!height) height = 120;
 
-  //dump("xmlterm: ShowHelp("+url+","+entryNumber+","+height+")\n");
+  DEBUG_LOG("xmlterm: ShowHelp("+url+","+entryNumber+","+height+")\n");
 
   if (entryNumber) {
     beforeID = "output"+entryNumber;
@@ -588,7 +666,7 @@ function ShowHelp(url, entryNumber, height) {
   var beforeElement = document.getElementById(beforeID);
 
   if (!beforeElement) {
-    //dump("InsertIFrame: beforeElement ID="+beforeID+"not found\n");
+    DEBUG_LOG("InsertIFrame: beforeElement ID="+beforeID+"not found\n");
     return false;
   }
 
@@ -611,7 +689,7 @@ function ShowHelp(url, entryNumber, height) {
     var closeElement = document.createElement("span");
     closeElement.setAttribute('class', 'helplink');
     closeElement.appendChild(document.createTextNode("Close help frame"));
-    //closeElement.appendChild(document.createElement("p"));
+    closeElement.appendChild(document.createElement("p"));
 
     var iframe = document.createElement("iframe");
     iframe.setAttribute('id', helpID+'frame');
@@ -624,7 +702,7 @@ function ShowHelp(url, entryNumber, height) {
     helpElement.appendChild(iframe);
     helpElement.appendChild(closeElement);
 
-    //dump(helpElement);
+    DEBUG_LOG(helpElement);
 
     // Insert help element
     parentNode.insertBefore(helpElement, beforeElement);
@@ -639,7 +717,7 @@ function ShowHelp(url, entryNumber, height) {
 
 // About XMLTerm
 function AboutXMLTerm() {
-  //dump("xmlterm: AboutXMLTerm\n");
+  DEBUG_LOG("xmlterm: AboutXMLTerm\n");
 
   var tipdata = document.getElementById('tipdata');
   tipdata.firstChild.data = "";
@@ -649,19 +727,39 @@ function AboutXMLTerm() {
   return false;
 }
 
+function Redirect() {
+   window.location = window.redirectURL;
+}
+
+
+function GetQueryParam(paramName) {
+  var url = document.location.href;
+
+  var paramExp = new RegExp("[?&]"+paramName+"=([^&]*)");
+
+  var matches = url.match(paramExp);
+
+  var paramVal = "";
+  if (matches && (matches.length > 1)) {
+     paramVal = matches[1];
+  }
+
+  return paramVal;
+}
+
 // onLoad event handler
 function LoadHandler() {
-  //dump("xmlterm: LoadHandler ... "+window.xmlterm+"\n");
+  WRITE_LOG("xmlterm: LoadHandler ... "+window.xmlterm+"\n");
 
   // Ugly workaround for accessing rules in stylesheet until bug 53448 is fixed
-  var sheet = document.styleSheets[0];
-  //dump("sheet.cssRules.length="+sheet.cssRules.length+"\n");
+  ///var sheet = document.styleSheets[0];
+  //WRITE_LOG("sheet.cssRules.length="+sheet.cssRules.length+"\n");
 
-  var styleElement = (document.getElementsByTagName("style"))[0];
-  var styleText = styleElement.firstChild.data;
+  ///var styleElement = (document.getElementsByTagName("style"))[0];
+  ///var styleText = styleElement.firstChild.data;
 
-  gStyleRuleNames = styleText.match(/\b[\w-.]+(?=\s*\{)/g);
-  //dump("gStyleRuleNames.length="+gStyleRuleNames.length+"\n");
+  ///gStyleRuleNames = styleText.match(/\b[\w-.]+(?=\s*\{)/g);
+  //WRITE_LOG("gStyleRuleNames.length="+gStyleRuleNames.length+"\n");
 
   //NewTip();
 
@@ -669,14 +767,52 @@ function LoadHandler() {
   window.xmltform1Index  = new Object();
   window.xmltform1Option = new Object();
 
-  window.xmltform1Index.userLevel = 1;
-  window.xmltform1Option.userLevel = "intermediate";
+  window.xmltform1Index.userLevel = 2;
+  window.xmltform1Option.userLevel = "advanced";
 
   window.xmltform1Index.showIcons = 0;
   window.xmltform1Option.showIcons = "off";
 
   window.xmltform1Index.windowsMode = 0;
   window.xmltform1Option.windowsMode = "off";
+
+  if (!window.xmlterm && exportCount) {
+    var redirectURL = document.location.href;
+    var urlLen = redirectURL.indexOf("?");
+
+    if (urlLen > 0) redirectURL = redirectURL.substr(0,urlLen);
+
+    DEBUG_LOG("exportCount="+exportCount+"\n");
+
+    var minrefresh = GetQueryParam("minrefresh");
+    var maxrefresh = GetQueryParam("maxrefresh");
+    var refresh = GetQueryParam("refresh");
+    var id = GetQueryParam("id");
+
+    if (minrefresh) {
+       if (!maxrefresh) maxrefresh = 10*minrefresh;
+       if (!refresh) refresh = minrefresh;
+       if (!id) id = 0;
+
+       if (exportCount > id*1)
+         refresh = minrefresh;
+       else
+         refresh = 2*refresh;
+
+       if (refresh > maxrefresh) refresh=maxrefresh;
+
+       var refreshTime = refresh*1000;
+
+       redirectURL += "?minrefresh="+minrefresh + "&maxrefresh="+maxrefresh +"&refresh="+refresh + "&id="+exportCount;
+
+       DEBUG_LOG("redirectURL="+redirectURL+"\n");
+
+       window.redirectURL = redirectURL;
+       window.timeoutId = window.setTimeout(Redirect, refreshTime);
+    }
+
+    window.scrollTo(0,4000);       // Scroll to bottom of page
+  }
 
   return false;
 
@@ -687,17 +823,17 @@ function LoadHandler() {
      return false;
   }
 
-  //dump("LoadHandler: WINDOW.ARGUMENTS="+window.arguments+"\n");
+  DEBUG_LOG("LoadHandler: WINDOW.ARGUMENTS="+window.arguments+"\n");
 
-  dump("Trying to make an XMLTerm Shell through the component manager...\n");
+  WRITE_LOG("Trying to make an XMLTerm Shell through the component manager...\n");
 
   var xmltshell = Components.classes["@mozilla.org/xmlterm/xmltermshell;1"].createInstance();
 
   xmltshell = xmltshell.QueryInterface(Components.interfaces.mozIXMLTermShell);
-  //dump("Interface xmltshell2 = " + xmltshell + "\n");
+  DEBUG_LOG("Interface xmltshell2 = " + xmltshell + "\n");
 
   if (!xmltshell) {
-    dump("Failed to create XMLTerm shell\n");
+    WRITE_LOG("Failed to create XMLTerm shell\n");
     window.close();
     return;
   }
@@ -709,13 +845,13 @@ function LoadHandler() {
   var contentWindow = window;
 
   // Initialize XMLTerm shell in content window with argvals
-  window.xmlterm.Init(contentWindow, "", "");
+  window.xmlterm.init(contentWindow, "", "");
 
-  //dump("LoadHandler:"+document.cookie+"\n");
+  DEBUG_LOG("LoadHandler:"+document.cookie+"\n");
 
-  //dump("contentWindow="+contentWindow+"\n");
-  //dump("document="+document+"\n");
-  //dump("documentElement="+document.documentElement+"\n");
+  DEBUG_LOG("contentWindow="+contentWindow+"\n");
+  DEBUG_LOG("document="+document+"\n");
+  DEBUG_LOG("documentElement="+document.documentElement+"\n");
 
   // Handle resize events
   //contentWindow.addEventListener("onresize", Resize);
@@ -726,37 +862,37 @@ function LoadHandler() {
 
   //contentWindow.xmlterm = xmlterm;
 
-  //dump(contentWindow.xmlterm);
+  DEBUG_LOG(contentWindow.xmlterm);
 
   // The following code is for testing IFRAMEs only
-  //dump("[Main] "+window+"\n");
-  //dump(window.screenX+", "+window.screenY+"\n");
-  //dump(window.scrollX+", "+window.scrollY+"\n");
-  //dump(window.pageXOffset+", "+window.pageYOffset+"\n");
+  DEBUG_LOG("[Main] "+window+"\n");
+  DEBUG_LOG(window.screenX+", "+window.screenY+"\n");
+  DEBUG_LOG(window.scrollX+", "+window.scrollY+"\n");
+  DEBUG_LOG(window.pageXOffset+", "+window.pageYOffset+"\n");
 
-  //dump("IFRAME checks\n");
+  DEBUG_LOG("IFRAME checks\n");
   var iframe = document.getElementById('iframe1');
 
-  //dump("iframe="+iframe+"\n");
+  DEBUG_LOG("iframe="+iframe+"\n");
 
   frames=document.frames;
-  //dump("frames="+frames+"\n");
-  //dump("frames.length="+frames.length+"\n");
+  DEBUG_LOG("frames="+frames+"\n");
+  DEBUG_LOG("frames.length="+frames.length+"\n");
 
   framewin = frames[0];
 
-  //dump("framewin="+framewin+"\n");
-  //dump("framewin.document="+framewin.document+"\n");
+  DEBUG_LOG("framewin="+framewin+"\n");
+  DEBUG_LOG("framewin.document="+framewin.document+"\n");
 
-  //dump(framewin.screenX+", "+framewin.screenY+"\n");
-  //dump(framewin.scrollX+", "+framewin.scrollY+"\n");
-  //dump(framewin.pageXOffset+", "+framewin.pageYOffset+"\n");
+  DEBUG_LOG(framewin.screenX+", "+framewin.screenY+"\n");
+  DEBUG_LOG(framewin.scrollX+", "+framewin.scrollY+"\n");
+  DEBUG_LOG(framewin.pageXOffset+", "+framewin.pageYOffset+"\n");
 
   var body = framewin.document.getElementsByTagName("BODY")[0];
-  //dump("body="+body+"\n");
+  DEBUG_LOG("body="+body+"\n");
 
   var height= body.scrollHeight;
-  //dump("height="+height+"\n");
+  DEBUG_LOG("height="+height+"\n");
 
 //        iframe.height = 800;
 //        iframe.width = 700;
@@ -764,9 +900,9 @@ function LoadHandler() {
 //        framewin.sizeToContent();
 
   framewin.xmltshell = xmltshell;
-  //dump(framewin.xmltshell+"\n");
+  DEBUG_LOG(framewin.xmltshell+"\n");
 
-  //dump("xmlterm: LoadHandler completed\n");
-  return (false);
+  DEBUG_LOG("xmlterm: LoadHandler completed\n");
+  return false;
 }
 

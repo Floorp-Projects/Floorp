@@ -1143,15 +1143,46 @@ static int ltermProcessXMLTermSequence(struct lterms *lts, const UNICHAR *buf,
   param3 = (paramCount > 2) ? paramValues[2] : 0;
 
   switch (termChar) {
-  int streamOpcodes;
+    int streamOpcodes, nRows, nCols, sprint_len;
+    char sprint_buf[81];
 
   case U_A_CHAR:    /* Send XMLterm device attributes */
+  case U_B_CHAR:    /* Send XMLterm device attributes (Bourne shell format) */
+  case U_C_CHAR:    /* Send XMLterm device attributes (C shell format) */
     LTERM_LOG(ltermProcessXMLTermSequence,52,("Sending device attributes\n"));
-    if (ltermSendChar(lts, "\033{?", 3) != 0)
-      return -1;
+
+
+    nRows = lts->nRows;
+    nCols = lts->nCols;
+
+    if ((nRows >= 0) && (nRows < 10000) && (nCols >= 0) && (nCols < 10000)) {
+
+      if (termChar == U_C_CHAR) {
+        /* C shell format */
+
+        sprint_len = sprintf(sprint_buf, "setenv LINES %d;setenv COLUMNS %d;setenv LTERM_COOKIE ", nRows, nCols);
+
+      } else {
+
+        sprint_len = sprintf(sprint_buf, "LINES=%d;COLUMNS=%d;LTERM_COOKIE=", nRows, nCols);
+      }
+
+      if (sprint_len > 80) {
+        LTERM_ERROR("ltermProcessXMLTermSequence: Error - sprintf buffer overflow\n");
+      }
+
+      if (ltermSendChar(lts, sprint_buf, strlen(sprint_buf)) != 0)
+        return -1;
+    }
 
     if (strlen(lts->cookie) > 0) {
       if (ltermSendChar(lts, lts->cookie, strlen(lts->cookie)) != 0)
+        return -1;
+    }
+
+    if (termChar == U_B_CHAR) {
+      const char exportStr[] = ";export LINES COLUMNS LTERM_COOKIE";
+      if (ltermSendChar(lts, exportStr, strlen(exportStr)) != 0)
         return -1;
     }
 

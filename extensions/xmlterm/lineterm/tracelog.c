@@ -49,6 +49,8 @@
 /* TRACELOG global variable structure */
 TlogGlobal tlogGlobal;
 
+static int initGlobal = 0;
+
 /** Initializes all TRACELOG operations and sets filestream for trace/log
  * output. Setting filestream to NULL suppresses all output.
  * (documented in tracelog.h)
@@ -61,6 +63,12 @@ void tlog_init(FILE* fileStream)
   fprintf(stderr, "tlog_init:\n");
 #endif
 
+  /* Do not re-initialize */
+  if (initGlobal)
+    return;
+
+  initGlobal = 1;
+
   /* Error output stream */
   tlogGlobal.errorStream = fileStream;
 
@@ -71,6 +79,8 @@ void tlog_init(FILE* fileStream)
     tlogGlobal.messageLevel[imodule] = 0;
     tlogGlobal.functionList[imodule] = NULL;
   }
+
+  return;
 }
 
 
@@ -91,11 +101,6 @@ int tlog_set_level(int imodule, int messageLevel, const char *functionList)
 
   /* Message level */
   tlogGlobal.messageLevel[imodule] = messageLevel;
-
-  if (messageLevel > 0) {
-    tlog_warning("tlog_set_level: module %d, messageLevel=%d\n",
-                                    imodule, messageLevel);
-  }
 
   /* Free function list string */
   free(tlogGlobal.functionList[imodule]);
@@ -135,6 +140,11 @@ int tlog_set_level(int imodule, int messageLevel, const char *functionList)
     }
   }
 
+  if (messageLevel > 0) {
+    tlog_warning("tlog_set_level: module %d, messageLevel=%d\n",
+                                    imodule, messageLevel);
+  }
+
   return 0;
 }
 
@@ -151,11 +161,10 @@ int tlog_test(int imodule, char *procstr, int level)
   if ((imodule < 0) || (imodule >= TLOG_MAXMODULES))
     return 0;
 
-  if ( (level%10 <= tlogGlobal.messageLevel[imodule]%10) &&
-       ( (level <= tlogGlobal.messageLevel[imodule]) ||
+  if ( (level <= tlogGlobal.messageLevel[imodule]) ||
          ((tlogGlobal.functionList[imodule] != NULL) &&
           ( (strstr(tlogGlobal.functionList[imodule],procstr) != NULL) ||
-             (strstr(procstr,tlogGlobal.functionList[imodule]) != NULL)) ) )) {
+             (strstr(procstr,tlogGlobal.functionList[imodule]) != NULL)) ) ) {
     /* Display message */
 #if defined(USE_NSPR_BASE) && !defined(DEBUG_LTERM)
     PR_LogPrint("%s%2d: ", procstr, level);

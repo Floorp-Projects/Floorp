@@ -131,7 +131,16 @@ interface mozIXMLTerminal : nsISupports
    */
   void resize();
 
-  /** Shows the caret and make it editable.
+  /** Exports HTML to file, with META REFRESH, if refreshSeconds is non-zero.
+   * Nothing is done if display has not changed since last export, unless
+   * forceExport is true. Returns true if export actually takes place.
+   * If filename is a null string, HTML is written to STDERR.
+   */
+  boolean exportHTML(in wstring aFilename, in long permissions,
+                     in wstring style, in unsigned long refreshSeconds,
+                     in boolean forceRefresh);
+
+   /** Shows the caret and make it editable.
    */
   void showCaret();
 

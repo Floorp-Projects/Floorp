@@ -769,7 +769,7 @@ NS_IMETHODIMP mozXMLTerminal::Paste()
     return NS_ERROR_FAILURE;
 
   // DataFlavors to get out of transferable
-  trans->AddDataFlavor(kHTMLMime);
+  // trans->AddDataFlavor(kHTMLMime); // Cannot handle HTML yet
   trans->AddDataFlavor(kUnicodeMime);
 
   // Get data from clipboard
@@ -1013,6 +1013,26 @@ NS_IMETHODIMP mozXMLTerminal::Resize(void)
   }
 
   return NS_OK;
+}
+
+/** Exports HTML to file, with META REFRESH, if refreshSeconds is non-zero.
+ * Nothing is done if display has not changed since last export, unless
+ * forceExport is true. Returns true if export actually takes place.
+ * If filename is a null string, HTML is written to STDERR.
+ */
+NS_IMETHODIMP mozXMLTerminal::ExportHTML(const PRUnichar* aFilename,
+                                         PRInt32 permissions,
+                                         const PRUnichar* style,
+                                         PRUint32 refreshSeconds,
+                                         PRBool forceExport,
+                                         PRBool* exported)
+{
+  if (!mXMLTermSession)
+    return NS_ERROR_FAILURE;
+
+  return mXMLTermSession->ExportHTML( aFilename, permissions, style,
+                                      refreshSeconds, forceExport,
+                                      exported);
 }
 
 // nsIWebProgressListener methods

@@ -1,5 +1,14 @@
 /* xmltpage.css: default style sheet for xmlterm.html */
 
+*[xmlt-block-collapsed="true"],
+*[xmlt-inline-collapsed="true"] {
+  display: none;
+}
+
+*[xmlt-underline="true"] {
+  text-decoration: underline
+}
+
 BODY { font-family: monaco, courier, elite, monospace;
        background-color: #FFFFFF;
      }
@@ -56,7 +65,7 @@ SPAN.helplink      { font-family: sans-serif; color: blue; cursor: hand;
                      text-decoration: underline }
 
 /* Level style */
-DIV.intermediate {display: block}
+DIV.intermediate {display: none}
 DIV.beginner     {display: none}
 
 /* Icons style */

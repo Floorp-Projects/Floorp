@@ -68,10 +68,6 @@ ifeq ($(OS_ARCH),FreeBSD)
 DEFINES    += -DBSDFAMILY
 endif
 
-ifeq ($(MOZ_WIDGET_TOOLKIT),gtk)
-USE_GTK_WIDGETS = 1
-endif
-
 #
 # Netscape Portable Runtime options
 #
@@ -79,9 +75,15 @@ ifdef STAND_ALONE
 ifdef USE_NCURSES
 DEFINES        += -DUSE_NCURSES
 endif
+
 else
 # Use NSPR base
 USE_NSPR_BASE   = 1
+
+ifeq ($(MOZ_WIDGET_TOOLKIT),gtk)
+USE_GTK_WIDGETS = 1
+endif
+
 endif
 
 ifdef USE_GTK_WIDGETS

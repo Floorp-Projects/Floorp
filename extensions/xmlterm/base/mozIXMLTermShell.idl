@@ -51,48 +51,57 @@ interface mozIXMLTermShell : nsISupports
    * @param args argument string to be passed to XMLterm
    *             (at the moment this just contains any initial input data)
    */
-  void Init(in nsIDOMWindowInternal aContentWin, in wstring URL, in wstring args);
+  void init(in nsIDOMWindowInternal aContentWin, in wstring URL, in wstring args);
 
   /** Closes XMLterm, freeing resources
    * @param aCookie document.cookie string for authentication
    */
-  void Close(in wstring aCookie);
+  void close(in wstring aCookie);
   
   /** Polls for readable data from XMLterm
    */
-  void Poll();
+  void poll();
 
   /** Resizes XMLterm to match a resized window.
    */
-  void Resize();
+  void resize();
 
   /** Writes string to terminal as if the user had typed it (command input)
    * @param buf string to be transmitted to terminal
    * @param aCookie document.cookie string for authentication
    */
-  void SendText(in wstring aString, in wstring aCookie);
+  void sendText(in wstring aString, in wstring aCookie);
 
   /** Sets command history buffer count
    * @param aHistory history buffer count
    * @param aCookie document.cookie string for authentication
    */
-  void SetHistory(in long aHistory, in wstring aCookie);
+  void setHistory(in long aHistory, in wstring aCookie);
 
   /** Sets command prompt
    * @param aPrompt command prompt string (HTML)
    * @param aCookie document.cookie string for authentication
    */
-  void SetPrompt(in wstring aPrompt, in wstring aCookie);
+  void setPrompt(in wstring aPrompt, in wstring aCookie);
+
+  /** Exports HTML to file, with META REFRESH, if refreshSeconds is non-zero.
+   * Nothing is done if display has not changed since last export, unless
+   * forceExport is true. Returns true if export actually takes place.
+   * If filename is a null string, HTML is written to STDERR.
+   */
+  boolean exportHTML(in wstring aFilename, in long permissions,
+                     in wstring style, in unsigned long refreshSeconds,
+                     in boolean forceRefresh, in wstring aCookie);
 
   /** Ignore key press events
    * (workaround for form input being transmitted to xmlterm)
    * @param aIgnore ignore flag (true/false)
    * @param aCookie document.cookie string for authentication
    */
-  void IgnoreKeyPress(in boolean aIgnore, in wstring aCookie);
+  void ignoreKeyPress(in boolean aIgnore, in wstring aCookie);
 
   /** Exit browser, closing all windows (not yet implemented)
    */ 
-  void Exit();
+  void exit();
 };
 
