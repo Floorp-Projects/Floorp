@@ -38,6 +38,8 @@ public:
 
   NS_IMETHOD CheckFontExistence(const char * aFontName);
 
+  NS_IMETHOD CreateILColorSpace(IL_ColorSpace*& aColorSpace);
+
 protected:
   virtual ~nsDeviceContextWin();
 

@@ -18,6 +18,10 @@
 
 #include "nsDeviceContextWin.h"
 #include "nsRenderingContextWin.h"
+#include "il_util.h"
+
+// Size of the color cube
+#define COLOR_CUBE_SIZE       216
 
 nsDeviceContextWin :: nsDeviceContextWin()
   : DeviceContextImpl()
@@ -82,5 +86,80 @@ NS_IMETHODIMP nsDeviceContextWin :: CheckFontExistence(const char * aFontName)
     return NS_OK;
   else
     return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP nsDeviceContextWin::CreateILColorSpace(IL_ColorSpace*& aColorSpace)
+{
+  HWND      hwnd = (HWND)GetNativeWidget();
+  HDC       hdc = ::GetDC(hwnd);
+  nsresult  result = NS_OK;
+  int       bitsPerPixel = ::GetDeviceCaps(hdc, BITSPIXEL);
+  int       rasterCaps = ::GetDeviceCaps(hdc, RASTERCAPS);
+  ::ReleaseDC(hwnd, hdc);
+
+  // See if we're dealing with an 8-bit palette device
+  if ((8 == bitsPerPixel) && (rasterCaps & RC_PALETTE)) {
+    // Create a color cube. We want to use DIB_PAL_COLORS because it's faster
+    // than DIB_RGB_COLORS, so make sure the indexes match that of the
+    // GDI physical palette
+    //
+    // Note: the image library doesn't use the reserved colors, so it doesn't
+    // matter what they're set to...
+    IL_RGB  reserved[10];
+    IL_ColorMap* colorMap = IL_NewCubeColorMap(reserved, 10, COLOR_CUBE_SIZE + 10);
+    if (nsnull == colorMap) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+
+    // Create a physical palette if we haven't already done so. Each HDC can
+    // share the same physical palette
+    //
+    // XXX Device context should own the palette...
+    if (nsnull == nsRenderingContextWin::gPalette) {
+      // Create a logical palette
+      BYTE         tmp[sizeof(LOGPALETTE) + ((COLOR_CUBE_SIZE + 20) * sizeof(PALETTEENTRY))];
+      LPLOGPALETTE logPal = (LPLOGPALETTE)tmp;
+
+      logPal->palVersion = 0x300;
+      logPal->palNumEntries = COLOR_CUBE_SIZE + 20;
+  
+      // Initialize it from the default Windows palette
+      HPALETTE  hDefaultPalette = ::GetStockObject(DEFAULT_PALETTE);
+  
+      // First ten system colors
+      ::GetPaletteEntries(hDefaultPalette, 0, 10, logPal->palPalEntry);
+
+      // Last ten system colors
+      ::GetPaletteEntries(hDefaultPalette, 10, 10, &logPal->palPalEntry[COLOR_CUBE_SIZE + 10]);
+  
+      // Now set the color cube entries
+      PALETTEENTRY* entry = &logPal->palPalEntry[10];
+      NI_RGB*       map = colorMap->map + 10;
+      for (PRInt32 i = 0; i < COLOR_CUBE_SIZE; i++) {
+        entry->peRed = map->red;
+        entry->peGreen = map->green;
+        entry->peBlue = map->blue; 
+        entry->peFlags = 0;
+  
+        entry++;
+        map++;
+      }
+  
+      // Create a GDI palette
+      nsRenderingContextWin::gPalette = ::CreatePalette(logPal);
+    }
+
+    // Create an IL pseudo color space
+    aColorSpace = IL_CreatePseudoColorSpace(colorMap, 8, 8);
+    if (nsnull == aColorSpace) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+
+  } else {
+    // Create a default color space.
+    result = DeviceContextImpl::CreateILColorSpace(aColorSpace);
+  }
+
+  return result;
 }
 

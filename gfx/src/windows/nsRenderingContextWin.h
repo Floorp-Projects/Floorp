@@ -168,11 +168,12 @@ protected:
   PRUint8           *mGammaTable;
   COLORREF          mCurrTextColor;
 
-  static HPALETTE   gPalette;
-
 #ifdef NS_DEBUG
   PRBool          mInitialized;
 #endif
+
+public:
+  static HPALETTE   gPalette;
 };
 
 #endif /* nsRenderingContextWin_h___ */
