@@ -298,9 +298,9 @@ nsGlobalHistory::~nsGlobalHistory()
     PL_HashTableDestroy(mLastVisitDateHash);
 
 
-  PRInt32 index;
-  for (index = mPendingWrites.Count() - 1; index >= 0; --index) {
-    HistoryEntry* entry = (HistoryEntry*) mPendingWrites.ElementAt(index);
+  PRInt32 writeIndex;
+  for (writeIndex = mPendingWrites.Count() - 1; writeIndex >= 0; --writeIndex) {
+    HistoryEntry* entry = (HistoryEntry*) mPendingWrites.ElementAt(writeIndex);
     delete entry;
   }
 
@@ -705,7 +705,7 @@ nsGlobalHistory::ReadOneHistoryFile(nsInputFileStream& aStream, const nsFileSpec
   nsAutoString  buffer;
 
   while (! aStream.eof() && ! aStream.failed()) {
-    nsresult rv;
+    nsresult rv=NS_OK;
 
     char c = aStream.get();
     if ((c != '\r') && (c != '\n')) {
@@ -822,30 +822,36 @@ nsGlobalHistory::AddPageToGraph(const char* aURL,
 
   nsCOMPtr<nsIRDFResource> page;
   rv = gRDFService->GetResource(aURL, getter_AddRefs(page));
-  mInner->Assert(history, kNC_Page, page, PR_TRUE);
+  if (NS_SUCCEEDED(rv))
+    mInner->Assert(history, kNC_Page, page, PR_TRUE);
 
   if (aReferrerURL) {
     nsCOMPtr<nsIRDFResource> referrer;
     rv = gRDFService->GetResource(aReferrerURL, getter_AddRefs(referrer));
-    mInner->Assert(history, kNC_Referrer, referrer, PR_TRUE);
+    if (NS_SUCCEEDED(rv))
+      mInner->Assert(history, kNC_Referrer, referrer, PR_TRUE);
   }
 
   nsCOMPtr<nsIRDFDate> date;
   rv = gRDFService->GetDateLiteral(aDate, getter_AddRefs(date));
-  mInner->Assert(history, kNC_Date, date, PR_TRUE);
+  if (NS_SUCCEEDED(rv))
+    mInner->Assert(history, kNC_Date, date, PR_TRUE);
 
   nsCOMPtr<nsIRDFInt> visitCount;
   rv = gRDFService->GetIntLiteral(aVisitCount, getter_AddRefs(visitCount));
-  mInner->Assert(history, kNC_VisitCount, visitCount, PR_TRUE);
+  if (NS_SUCCEEDED(rv))
+    mInner->Assert(history, kNC_VisitCount, visitCount, PR_TRUE);
 
   nsCOMPtr<nsIRDFLiteral> title;
   rv = gRDFService->GetLiteral(aTitle, getter_AddRefs(title));
-  mInner->Assert(page, kNC_Title, title, PR_TRUE);
+  if (NS_SUCCEEDED(rv))
+    mInner->Assert(page, kNC_Title, title, PR_TRUE);
 
   // Add to site hierarchy
   nsCOMPtr<nsIRDFResource> site;
   rv = GetSiteOfURL(aURL, getter_AddRefs(site));
-  mInner->Assert(site, kNC_child, page, PR_TRUE);
+  if (NS_SUCCEEDED(rv))
+    mInner->Assert(site, kNC_child, page, PR_TRUE);
 
   // Add to date hierarchy. XXX Use page URL instead of history URL?
   rv = AddToDateHierarchy(aDate, aURL);
