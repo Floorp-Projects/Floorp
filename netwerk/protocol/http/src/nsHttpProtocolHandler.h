@@ -21,6 +21,9 @@
 
 #include "nsIProtocolHandler.h"
 
+class nsITransport;
+class nsHashtable;
+
 // XXX regenerate:
 #define NS_HTTPPROTOCOLHANDLER_CID                   \
 { /* 59321440-f125-11d2-9322-000000000000 */         \
@@ -52,8 +55,45 @@ public:
     nsHttpProtocolHandler();
     virtual ~nsHttpProtocolHandler();
 
+    nsresult Init(void);
+    nsresult GetTransport(const char* host, PRInt32 port,
+                          nsITransport* *result);
+    nsresult ReleaseTransport(const char* host, PRInt32 port,
+                              nsITransport* trans);
+
 protected:
-    
+    nsHashtable*        mConnectionPool;
 };
+
+////////////////////////////////////////////////////////////////////////////////
+
+#include "nsHashtable.h"
+#include "plstr.h"
+
+class nsSocketTransportKey : public nsCStringKey 
+{
+private:
+    PRInt32     mPort;
+  
+public:
+    nsSocketTransportKey(const char* host, PRInt32 port)
+        : nsCStringKey(host), mPort(port)
+    {
+    }
+  
+    ~nsSocketTransportKey(void) {
+    }
+  
+    PRBool Equals(const nsHashKey *aKey) const {
+        return mPort == ((nsSocketTransportKey*)aKey)->mPort
+            && nsCStringKey::Equals(aKey);
+    }
+
+    nsHashKey *Clone(void) const {
+        return new nsSocketTransportKey(mStr, mPort);
+    }
+};
+
+////////////////////////////////////////////////////////////////////////////////
 
 #endif /* nsHttpProtocolHandler_h___ */
