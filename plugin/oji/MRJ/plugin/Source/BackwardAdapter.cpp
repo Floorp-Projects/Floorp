@@ -655,6 +655,19 @@ public:
     NS_IMETHOD
     GetAttribute(const char* name, const char* *result);
 
+    /**
+     * Returns the DOM element corresponding to the tag which references
+     * this plugin in the document.
+     *
+     * REMIND: do we need to expose as an nsISupports * to avoid
+     * introducing runtime dependencies on XPCOM?
+     *
+     * @param result - resulting DOM element
+     * @result - NS_OK if this operation was successful
+     */
+    NS_IMETHOD
+    GetDOMElement(nsIDOMElement* *result);
+
 	/**
 	 * Returns a JRI env corresponding to the current Java thread of the
 	 * browser.
@@ -1145,8 +1158,10 @@ NPP_New(NPMIMEType pluginType,
     // XXX - Since np_instance is not implemented in the 4.0x browser, I
     // XXX - had to save the plugin parameter in the peer class.
     // XXX - Ask Warren about np_instance.
-    CPluginInstancePeer* peer = new CPluginInstancePeer(pluginInstance, instance, (nsMIMEType)pluginType, 
-						                                (nsPluginMode)mode, (PRUint16)argc, (const char** )argn, (const char** )argv);
+    CPluginInstancePeer* peer = new CPluginInstancePeer(pluginInstance, instance,
+    													(nsMIMEType)pluginType, 
+						                                (nsPluginMode)mode, (PRUint16)argc,
+						                                (const char** )argn, (const char** )argv);
     assert( peer != NULL );
     if (!peer) return NPERR_OUT_OF_MEMORY_ERROR;
     peer->AddRef();
@@ -2178,6 +2193,24 @@ CPluginInstancePeer::GetAttribute(const char* name, const char* *result)
     }
 
     return NS_ERROR_FAILURE;
+}
+
+/**
+ * Returns the DOM element corresponding to the tag which references
+ * this plugin in the document.
+ *
+ * REMIND: do we need to expose as an nsISupports * to avoid
+ * introducing runtime dependencies on XPCOM?
+ *
+ * @param result - resulting DOM element
+ * @result - NS_OK if this operation was successful
+ */
+NS_METHOD
+CPluginInstancePeer::GetDOMElement(nsIDOMElement* *result)
+{
+/** PENDING **/
+
+	return NS_OK;
 }
 
 //+++++++++++++++++++++++++++++++++++++++++++++++++
