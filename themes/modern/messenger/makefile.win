@@ -129,3 +129,4 @@ install::
 	$(MAKE_INSTALL) winwide.gif $(DIST)\bin\chrome\$(THEME)\messenger\skin
 	$(MAKE_INSTALL) wizard.css $(DIST)\bin\chrome\$(THEME)\messenger\skin
 	$(MAKE_INSTALL) importDialog.css $(DIST)\bin\chrome\$(THEME)\messenger\skin
+	$(MAKE_INSTALL) manifest.rdf $(DIST)\bin\chrome\$(THEME)\messenger\skin

@@ -30,3 +30,9 @@ clobber::
 
 install:: 
 	$(MAKE_INSTALL) directory.css $(DIST)\bin\chrome\$(THEME)\communicator\skin\directory
+	$(MAKE_INSTALL) file-folder-closed-sel.gif $(DIST)\bin\chrome\$(THEME)\communicator\skin\directory
+	$(MAKE_INSTALL) file-folder-closed.gif $(DIST)\bin\chrome\$(THEME)\communicator\skin\directory
+	$(MAKE_INSTALL) file-folder-open-sel.gif $(DIST)\bin\chrome\$(THEME)\communicator\skin\directory
+	$(MAKE_INSTALL) file-folder-open.gif $(DIST)\bin\chrome\$(THEME)\communicator\skin\directory
+	$(MAKE_INSTALL) file-icon-sel.gif $(DIST)\bin\chrome\$(THEME)\communicator\skin\directory
+	$(MAKE_INSTALL) file-icon.gif $(DIST)\bin\chrome\$(THEME)\communicator\skin\directory
