@@ -100,7 +100,8 @@ nsMenuStack::~nsMenuStack()
 nsresult
 nsMenuStack::GetMenuAt(PRInt32 aIndex, nsIMenu **outMenu)
 {
-  nsCOMPtr<nsISupports> elementPtr = getter_AddRefs(mMenuArray.ElementAt(aIndex));
+  // I'd prefer to fix the caller, but this will be safe
+  nsCOMPtr<nsISupports> elementPtr = getter_AddRefs(mMenuArray.SafeElementAt(aIndex));
   if (!elementPtr)
     return NS_ERROR_NULL_POINTER;
 
@@ -111,7 +112,8 @@ nsMenuStack::GetMenuAt(PRInt32 aIndex, nsIMenu **outMenu)
 PRBool
 nsMenuStack::HaveMenuAt(PRInt32 aIndex)
 {
-  nsCOMPtr<nsISupports> elementPtr = getter_AddRefs(mMenuArray.ElementAt(aIndex));
+  // I'd prefer to fix the caller, but this will be safe
+  nsCOMPtr<nsISupports> elementPtr = getter_AddRefs(mMenuArray.SafeElementAt(aIndex));
   if (!elementPtr)
     return NS_ERROR_NULL_POINTER;
 
