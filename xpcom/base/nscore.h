@@ -253,6 +253,7 @@ typedef PRUint16 PRUnichar;
 /* Because this may be included bogously a C file (or an extern "C"
    block), we'll "extern C++" it. There's a bug filed against that
    somewhere. */
+#ifdef __cplusplus
 extern "C++" {
 
 template <class T>
@@ -271,5 +272,7 @@ NS_MAX( const T& a, const T& b )
     return a > b ? a : b;
   }
 }
+
+#endif /* __cplusplus */
 
 #endif /* nscore_h___ */
