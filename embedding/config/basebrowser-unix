@@ -95,8 +95,10 @@ components/libcookie.so
 components/libdocshell.so                 
 components/docshell.xpt
 components/uriloader.xpt
+; we have either chrome or chrmlite, depending on MOZ_XUL
 components/libchrome.so                   
 components/chrome.xpt                   
+components/libchrmlite.so 
 components/libwebbrwsr.so
 components/webBrowser_core.xpt
 components/libembedcomponents.so
