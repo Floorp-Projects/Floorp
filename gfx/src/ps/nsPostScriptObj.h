@@ -104,11 +104,6 @@ struct PrintInfo_ {
   int pt_size;		    /* Size of above table  */
   int n_pages;		    /* # of valid entries in above table */
 
-#if 0
-  void (*scnatt)(MWContext*);   // SetCallNetlibAllTheTime 
-  void (*ccnatt)(MWContext*);   // CLearCallNetlibAllTheTime 
-#endif
-
   char*	doc_title;	/* best guess at title */
   int32 doc_width;	/* Total document width */
   int32 doc_height;	/* Total document height */
