@@ -67,7 +67,9 @@ sub expand {
     }
     # ok, let's try to process it
     my $result = '';
-    $self->assert($template->process($document, $data, \$result), 1, 'Error processing template: '.$template->error()); # XXX assumes ltr argument evaluation
+    if (not $template->process($document, $data, \$result)) {
+        $self->error(1, 'Error processing template: '.$template->error());
+    }
     return $result;
 }
 
