@@ -1195,20 +1195,22 @@ RDFElementImpl::ChildAt(PRInt32 aIndex, nsIContent*& aResult) const
     if (NS_FAILED(rv = EnsureContentsGenerated()))
         return rv;
 
-    if (! mChildren) {
-        aResult = nsnull;
+    aResult = nsnull;
+    if (! mChildren)
         return NS_OK;
-    }
 
     // XXX The ultraparanoid way to do this...
-    //nsISupports* obj = mChildren->ElementAt(aIndex);
-    //nsIContent* content;
-    //nsresult rv = obj->QueryInterface(kIContentIID, (void**) &content);
-    //obj->Release();
-    //aResult = content;
+    nsISupports* obj = mChildren->ElementAt(aIndex);  // this automatically addrefs
+    if (obj) {
+      nsIContent* content;
+      rv = obj->QueryInterface(kIContentIID, (void**) &content);
+      NS_ASSERTION(rv == NS_OK, "not a content");
+      obj->Release();
+      aResult = content;
+    }
 
     // But, since we're in a closed system, we can just do the following...
-    aResult = (nsIContent*) mChildren->ElementAt(aIndex);
+    //aResult = (nsIContent*) mChildren->ElementAt(aIndex); // this automatically addrefs
     return NS_OK;
 }
 
