@@ -276,6 +276,14 @@ NS_METHOD nsTableCellFrame::Reflow(nsIPresContext& aPresContext,
   if (NS_UNCONSTRAINEDSIZE!=availSize.height)
     availSize.height -= topInset+bottomInset+margin.top+margin.bottom;
 
+  // XXX Kipp added this hack
+  if (eReflowReason_Incremental == aReflowState.reason) {
+    // XXX We *must* do this otherwise incremental reflow that's
+    // passing through will not work right.
+    nsIFrame* next;
+    aReflowState.reflowCommand->GetNext(next);
+  }
+
   // Try to reflow the child into the available space. It might not
   // fit or might need continuing.
   if (availSize.height < 0)
