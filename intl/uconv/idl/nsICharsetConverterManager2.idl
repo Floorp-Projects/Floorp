@@ -48,7 +48,7 @@
  * I provide here some nonscriptable "friendly methods". They accept nsString 
  * as params and assign the result to them, freeing the received memory result.
  * These methods are prone to optimisation, in order to elliminate any 
- * allocation when it not strictly necessary.
+ * allocation when it is not strictly necessary.
  *
  * @created         21/Feb/2000
  * @author  Catalin Rotaru [CATA]
