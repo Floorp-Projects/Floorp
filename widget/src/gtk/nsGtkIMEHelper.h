@@ -42,7 +42,7 @@
 #include <gtk/gtk.h>
 
 /*
- * We are gratduate moving IME related function into this class
+ * We are gradually moving IME related function into this class
  */
 class nsGtkIMEHelper {
 public:
@@ -54,11 +54,26 @@ public:
   static void Shutdown();
   PRInt32 MultiByteToUnicode(const char*, const PRInt32,
                              PRUnichar**, PRInt32*);
+#if defined(USE_XIM) && defined(_AIX)
+  PRUnichar* GetUnichars() const { return mUnichars; }
+  PRInt32 GetUnicharsSize() const { return mUnicharsSize; }
+
+  // It is the caller's responsibility to free any data in
+  // mUnichars prior to calling SetUnichars()
+  void SetUnichars(PRUnichar *aUnichars) { mUnichars = aUnichars; }
+  void SetUnicharsSize(PRInt32 aUnicharsSize)
+    { mUnicharsSize = aUnicharsSize; }
+#endif
+
 private:
   nsGtkIMEHelper();
   nsIUnicodeDecoder* mDecoder;
   void SetupUnicodeDecoder();
   static nsGtkIMEHelper *gSingleton;
+#if defined(USE_XIM) && defined(_AIX)
+  PRUnichar* mUnichars;
+  PRInt32 mUnicharsSize;
+#endif
 };
 
 #ifdef USE_XIM

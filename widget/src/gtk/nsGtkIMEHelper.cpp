@@ -86,11 +86,23 @@ nsGtkIMEHelper::nsGtkIMEHelper()
 {
   MOZ_COUNT_CTOR(nsGtkIMEHelper);
   SetupUnicodeDecoder(); 
+
+#if defined(USE_XIM) && defined (_AIX)
+  mUnicharsSize = 2;
+  mUnichars = new PRUnichar[mUnicharsSize];
+#endif
 }
 nsGtkIMEHelper::~nsGtkIMEHelper()
 {
   MOZ_COUNT_DTOR(nsGtkIMEHelper);
   NS_IF_RELEASE(mDecoder);
+
+#if defined(USE_XIM) && defined(_AIX)
+  if (mUnichars) {
+    delete[] mUnichars;
+    mUnichars = nsnull;
+  }
+#endif
 }
 //-----------------------------------------------------------------------
 nsresult
