@@ -22,11 +22,16 @@
  *     Daniel Veditz <dveditz@netscape.com>
  */
 
-#include "prtypes.h"
 
-#define ZIP_MAGIC   0x5F5A4950L   /* "_ZIP" */
-#define ZIP_TABSIZE 256
-#define ZIP_BUFLEN  32767
+#define ZIP_MAGIC     0x5A49505FL   /* "ZIP_" */
+#define ZIPFIND_MAGIC 0x5A495046L   /* "ZIPF" */
+#define ZIP_TABSIZE   256
+#define ZIP_BUFLEN    32767
+
+
+
+
+class nsZipFind;
 
 /**
  * nsZipItem -- a helper class for nsZipArchive
@@ -57,6 +62,7 @@ private:
   nsZipItem& operator=(const nsZipItem& rhs);
   nsZipItem(const nsZipItem& rhs);
 };
+
 
 
 
@@ -97,20 +103,34 @@ public:
    */
   PRInt32 ExtractFile( const char * aFilename, const char * aOutname );
 
-  PRInt32 FindInit( const char * aPattern );
-  PRInt32 FindNext( char * aBuf, PRUint16 aSize );
+  /**
+   * FindInit
+   *
+   * Initializes a search for files in the archive. FindNext() returns
+   * the actual matches. FindFree() must be called when you're done
+   *
+   * @param   aPattern    a string or RegExp pattern to search for
+   *                      (may be NULL to find all files in archive)
+   * @return  a structure used in FindNext. NULL indicates error
+   */
+  nsZipFind* FindInit( const char * aPattern );
+
+  /**
+   * FindNext
+   *
+   * @param   aFind   the Find structure returned by FindInit
+   * @param   aBuf    A buffer to hold filenames that match pattern
+   * @param   aSize   size of the buffer
+   */
+  PRInt32 FindNext( nsZipFind* aFind, char * aBuf, PRUint16 aSize );
+
+  PRInt32 FindFree( nsZipFind *aFind );
 
 private:
   //--- private members ---
   
   PRFileDesc    *mFd;
-
   nsZipItem*    mFiles[ZIP_TABSIZE];
-
-  char*         mPattern;
-  PRUint16      mPatternSlot;
-  nsZipItem*    mPatternItem;
-  PRBool        mPatternIsRegExp;
 
   //--- private methods ---
   
@@ -120,7 +140,37 @@ private:
   PRInt32           BuildFileList();
   PRInt32           CopyItemToDisk( const nsZipItem* aItem, const char* aOutname );
   const nsZipItem*  GetFileItem( const char * aFilename );
-  PRUint16          HashName( const char* aName );
+  PRUint32          HashName( const char* aName );
   PRInt32           InflateItemToDisk( const nsZipItem* aItem, const char* aOutname );
 };
 
+
+
+
+/** 
+ * nsZipFind 
+ *
+ * a helper class for nsZipArchive, representing a search
+ */
+class nsZipFind
+{
+  friend class nsZipArchive;
+  friend PR_EXTERN(PRInt32) ZIP_FindNext( void*, char*, PRUint16 );
+  friend PR_EXTERN(PRInt32) ZIP_FindFree( void* );
+public:
+  const PRInt32       kMagic;
+
+  nsZipFind( nsZipArchive* aZip, char* aPattern, PRBool regExp );
+  ~nsZipFind();
+
+private:
+  nsZipArchive* mArchive;
+  char*         mPattern;
+  PRUint16      mSlot;
+  nsZipItem*    mItem;
+  PRBool        mRegExp;
+
+  //-- prevent copies and assignments
+  nsZipFind& operator=(const nsZipFind& rhs);
+  nsZipFind(const nsZipFind& rhs);
+};
