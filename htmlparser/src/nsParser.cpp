@@ -636,10 +636,10 @@ nsresult nsParser::EnableParser(PRBool aState){
       result=mInternalState;
   }
 
+  NS_STOP_STOPWATCH(mTotalTime)
+
   // Release reference if we added one at the top of this routine
   NS_IF_RELEASE(me);
-
-  NS_STOP_STOPWATCH(mTotalTime)
   return result;
 }
 
