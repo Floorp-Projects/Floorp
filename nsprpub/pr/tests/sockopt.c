@@ -129,8 +129,10 @@ PRIntn main(PRIntn argc, char *argv)
                 value = &boolean;
                 size = &booleansize;
                 break;
+#ifndef WIN32
             case PR_SockOpt_MaxSegment:      /* maximum segment size */
                 socket = tcp;
+#endif
             case PR_SockOpt_RecvBufferSize:  /* send buffer size */
             case PR_SockOpt_SendBufferSize:  /* receive buffer size */
                 value = &segment;
@@ -150,9 +152,20 @@ PRIntn main(PRIntn argc, char *argv)
             default:
                 continue;
             }
-
-            rv = PR_SetSockOpt(socket, option, value, *size);
-            if (PR_FAILURE == rv) Failed("PR_SetSockOpt()", tag[option]);
+			/*
+			 * TCP_MAXSEG can only be read, not set
+			 */
+            if (option != PR_SockOpt_MaxSegment) {
+#ifdef WIN32
+            	if ((option != PR_SockOpt_McastTimeToLive) &&
+								(option != PR_SockOpt_McastLoopback))
+#endif
+				{
+            		rv = PR_SetSockOpt(socket, option, value, *size);
+            		if (PR_FAILURE == rv) Failed("PR_SetSockOpt()",
+														tag[option]);
+				}
+			}
             
             rv = PR_GetSockOpt(socket, option, &value, size);
             if (PR_FAILURE == rv) Failed("PR_GetSockOpt()", tag[option]);
@@ -200,14 +213,28 @@ PRIntn main(PRIntn argc, char *argv)
                 case PR_SockOpt_NoDelay:
                     data.value.no_delay = PR_TRUE;         
                     break;    
+#ifndef WIN32
                 case PR_SockOpt_MaxSegment:
                     data.value.max_segment = segment;      
                     break;    
+#endif
                 default: continue;
             }
 
-            rv = PR_SetSocketOption(fd, &data);
-            if (PR_FAILURE == rv) Failed("PR_SetSocketOption()", tag[option]);
+			/*
+			 * TCP_MAXSEG can only be read, not set
+			 */
+            if (option != PR_SockOpt_MaxSegment) {
+#ifdef WIN32
+            	if ((option != PR_SockOpt_McastTimeToLive) &&
+								(option != PR_SockOpt_McastLoopback))
+#endif
+				{
+            		rv = PR_SetSocketOption(fd, &data);
+            		if (PR_FAILURE == rv)
+							Failed("PR_SetSocketOption()", tag[option]);
+				}
+			}
 
             rv = PR_GetSocketOption(fd, &data);
             if (PR_FAILURE == rv) Failed("PR_GetSocketOption()", tag[option]);

@@ -25,9 +25,24 @@
 #include <sys/utsname.h>
 #endif
 
-PR_IMPLEMENT(char) PR_GetDirectorySepartor()
+PR_IMPLEMENT(char) PR_GetDirectorySeparator()
 {
     return PR_DIRECTORY_SEPARATOR;
+}  /* PR_GetDirectorySeparator */
+
+/*
+** OBSOLETE -- the function name is misspelled.
+*/
+PR_IMPLEMENT(char) PR_GetDirectorySepartor()
+{
+#if defined(DEBUG)
+    static PRBool warn = PR_TRUE;
+    if (warn) {
+        warn = _PR_Obsolete("PR_GetDirectorySepartor()",
+                "PR_GetDirectorySeparator()");
+    }
+#endif
+    return PR_GetDirectorySeparator();
 }  /* PR_GetDirectorySepartor */
 
 PR_IMPLEMENT(PRStatus) PR_GetSystemInfo(PRSysInfo cmd, char *buf, PRUint32 buflen)

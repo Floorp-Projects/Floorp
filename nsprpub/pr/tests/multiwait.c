@@ -156,6 +156,9 @@ static void PR_CALLBACK ClientThread(void* arg)
     if (verbosity > chatty)
         PR_fprintf(debug, "%s: Server socket @0x%x\n", shared->title, server);
 
+    /* Initialize the buffer so that Purify won't complain */
+    memset(buffer, 0, sizeof(buffer));
+
     rv = PR_InitializeNetAddr(PR_IpAddrLoopback, default_port, &server_address);
     MW_ASSERT(PR_SUCCESS == rv);
 
@@ -258,8 +261,6 @@ static void ManyOpOneThread(Shared *shared)
     PRIntn index;
     PRRecvWait *desc_in;
     PRRecvWait *desc_out;
-
-    desc_in = (PRRecvWait*)PR_CALLOC(sizeof(PRRecvWait*) * wait_objects);
 
     if (verbosity > quiet)
         PR_fprintf(debug, "%s: adding %d descs\n", shared->title, wait_objects);
@@ -604,6 +605,7 @@ static void RealOneGroupIO(Shared *shared)
         rv = PR_JoinThread(client_thread[index]);
         MW_ASSERT(PR_SUCCESS == rv);
     }
+    PR_DELETE(client_thread);
 
     if (verbosity > quiet)
         PR_fprintf(debug, "%s: interrupting/joining enumeration_thread\n", shared->title);

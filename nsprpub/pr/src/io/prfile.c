@@ -507,6 +507,8 @@ PR_IMPLEMENT(PRStatus) PR_CreatePipe(
     HANDLE readEnd, writeEnd;
     SECURITY_ATTRIBUTES pipeAttributes;
 
+    if (!_pr_initialized) _PR_ImplicitInitialization();
+
     ZeroMemory(&pipeAttributes, sizeof(pipeAttributes));
     pipeAttributes.nLength = sizeof(pipeAttributes);
     pipeAttributes.bInheritHandle = TRUE;
@@ -533,6 +535,8 @@ PR_IMPLEMENT(PRStatus) PR_CreatePipe(
     return PR_SUCCESS;
 #elif defined(XP_UNIX)
     int pipefd[2];
+
+    if (!_pr_initialized) _PR_ImplicitInitialization();
 
     if (pipe(pipefd) == -1) {
         /* XXX map pipe error */

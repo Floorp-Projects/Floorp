@@ -48,7 +48,7 @@
 #include "plgetopt.h"
 #include "plerror.h"
 
-#define BASE_PORT 8001
+#define BASE_PORT 10000
 
 #define CLIENT_DATA        128
 
@@ -61,6 +61,8 @@
 #define CLIENT_NORMAL        0x1
 #define CLIENT_TIMEOUT_ACCEPT    0x2
 #define CLIENT_TIMEOUT_SEND    0x3
+
+#define SERVER_MAX_BIND_COUNT        100
 
 #if defined(XP_MAC) || defined(XP_OS2)
 #define TIMEOUTSECS 10
@@ -185,6 +187,7 @@ static  PRInt32 bytesRead;
 static void 
 RunTest(PRInt32 acceptType, PRInt32 clientAction)
 {
+int i;
 
     /* First bind to the socket */
     listenSock = PR_NewTCPSocket();
@@ -194,16 +197,27 @@ RunTest(PRInt32 acceptType, PRInt32 clientAction)
             PR_fprintf(output, "unable to create listen socket\n");
         return;
     }
+	memset(&listenAddr, 0 , sizeof(listenAddr));
     listenAddr.inet.family = PR_AF_INET;
     listenAddr.inet.port = PR_htons(BASE_PORT);
     listenAddr.inet.ip = PR_htonl(PR_INADDR_ANY);
-    rv = PR_Bind(listenSock, &listenAddr);
-    if (rv == PR_FAILURE) {
+    /*
+     * try a few times to bind server's address, if addresses are in
+     * use
+     */
+    i = 0;
+    while (PR_Bind(listenSock, &listenAddr) == PR_FAILURE) {
+        if (PR_GetError() == PR_ADDRESS_IN_USE_ERROR) {
+            listenAddr.inet.port += 2;
+            if (i++ < SERVER_MAX_BIND_COUNT)
+                continue;
+        }
         failed_already=1;
         if (debug_mode)
-            PR_fprintf(output, "unable to bind\n");
-        return;
+        	PR_fprintf(output,"accept: ERROR - PR_Bind failed\n");
+		return;
     }
+
 
     rv = PR_Listen(listenSock, 100);
     if (rv == PR_FAILURE) {
@@ -308,7 +322,7 @@ RunTest(PRInt32 acceptType, PRInt32 clientAction)
                 TEST_ASSERT(status == CLIENT_DATA);
                 break;
             case CLIENT_TIMEOUT_SEND:
-                TEST_ASSERT(clientSock);
+                TEST_ASSERT(clientSock == NULL);
                 TEST_ASSERT(status == -1);
                 TEST_ASSERT(PR_GetError() == PR_IO_TIMEOUT_ERROR);
                 break;
@@ -330,7 +344,7 @@ RunTest(PRInt32 acceptType, PRInt32 clientAction)
             case CLIENT_TIMEOUT_SEND:
                 if (debug_mode)
                     PR_fprintf(output, "clientSock = 0x%8.8lx\n", clientSock);
-                TEST_ASSERT(clientSock);
+                TEST_ASSERT(clientSock == NULL);
                 TEST_ASSERT(status == -1);
                 TEST_ASSERT(PR_GetError() == PR_IO_TIMEOUT_ERROR);
                 break;

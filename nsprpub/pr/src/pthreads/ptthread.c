@@ -199,24 +199,15 @@ static PRThread* pt_AttachThread(void)
      * We cannot have PR_AttachThread call implicit initialization
      * because if multiple threads call PR_AttachThread simultaneously,
      * NSPR may be initialized more than once.
-     * We can't call PR_SetError() either.
+     * We can't call any function that calls PR_GetCurrentThread()
+     * either (e.g., PR_SetError()) as that will result in infinite
+     * recursion.
      */
     if (!_pr_initialized) return NULL;
 
-    /*
-     * If the thread is already known, it will have a non-NULL value
-     * in its private data. If that's the case, simply suppress the
-     * attach and note an error.
-     */
-    PTHREAD_GETSPECIFIC(pt_book.key, privateData);
-    if (NULL != privateData)
-    {
-        PR_SetError(PR_INVALID_ARGUMENT_ERROR, 0);
-        return NULL;
-    }
+    /* PR_NEWZAP must not call PR_GetCurrentThread() */
     thred = PR_NEWZAP(PRThread);
-    if (NULL == thred) PR_SetError(PR_OUT_OF_MEMORY_ERROR, 0);
-    else
+    if (NULL != thred)
     {
         int rv;
 
@@ -717,6 +708,17 @@ PR_IMPLEMENT(PRStatus) PR_Sleep(PRIntervalTime ticks)
 static void _pt_thread_death(void *arg)
 {
     PRThread *thred = (PRThread*)arg;
+
+    if (thred->state & PT_THREAD_FOREIGN)
+    {
+        PR_Lock(pt_book.ml);
+        thred->prev->next = thred->next;
+        if (NULL == thred->next)
+            pt_book.last = thred->prev;
+        else
+            thred->next->prev = thred->prev;
+        PR_Unlock(pt_book.ml);
+    }
     _PR_DestroyThreadPrivate(thred);
     if (NULL != thred->errorString)
         PR_Free(thred->errorString);
@@ -835,6 +837,7 @@ PR_IMPLEMENT(PRStatus) PR_Cleanup()
             PR_DestroyLock(pt_book.ml); pt_book.ml = NULL;
         }
         _pt_thread_death(me);
+        _pr_initialized = PR_FALSE;
         return PR_SUCCESS;
     }
     return PR_FAILURE;

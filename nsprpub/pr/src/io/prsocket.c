@@ -1116,6 +1116,8 @@ PR_IMPLEMENT(PRStatus) PR_NewTCPSocketPair(PRFileDesc *f[])
 #ifdef XP_UNIX
 	PRInt32 rv, osfd[2];
 
+	if (!_pr_initialized) _PR_ImplicitInitialization();
+
 	rv = _PR_MD_SOCKETPAIR(AF_UNIX, SOCK_STREAM, 0, osfd);
 	if (rv == -1) {
 		return PR_FAILURE;
@@ -1356,7 +1358,6 @@ PRInt32 _PR_EmulateAcceptRead(
         return rv;
     }
 
-failed:
     PR_Close(accepted);
     return rv;
 }

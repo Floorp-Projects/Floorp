@@ -58,7 +58,7 @@ extern void SetupMacPrintfLog(char *logFile);
 #define DPRINTF(arg) if (_debug_on) printf arg
 
 #ifdef XP_PC
-char *TEST_DIR = "C:\\tmp\\prdir";
+char *TEST_DIR = "prdir";
 char *SMALL_FILE_NAME = "prsmallf";
 char *LARGE_FILE_NAME = "prlargef";
 #else

@@ -165,7 +165,7 @@ PRIntn main(PRIntn argc, char **argv)
     if (NULL == filename)
     {
         if (DEFAULT_FILESIZE != filesize) return Usage();
-        else filename = "/usr/tmp/bigfile.dat";
+        else filename = "bigfile.dat";
     }
 
     if (PR_FAILURE == DeleteIfFound(filename)) return 1;

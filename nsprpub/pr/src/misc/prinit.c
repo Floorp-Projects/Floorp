@@ -355,6 +355,7 @@ PR_IMPLEMENT(PRStatus) PR_Cleanup()
          * _PR_XXXCleanup() that we can call here.
          */
         _PR_CleanupBeforeExit();
+        _pr_initialized = PR_FALSE;
         return PR_SUCCESS;
     }
     return PR_FAILURE;

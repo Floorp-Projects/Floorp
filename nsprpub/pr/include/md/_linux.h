@@ -59,10 +59,6 @@
 #define HAVE_DLL
 #define USE_DLFCN
 
-#if !defined(MKLINUX) && !defined(NEED_TIME_R)
-#define NEED_TIME_R
-#endif
-
 #define USE_SETJMP
 #if defined(__GLIBC__) && __GLIBC__ >= 2
 #define _PR_POLL_AVAILABLE
@@ -89,8 +85,17 @@ extern void _MD_CleanupBeforeExit(void);
 #define CONTEXT(_th) ((_th)->md.context)
 
 #ifdef __powerpc__
-/* PowerPC based MkLinux */
+/*
+ * PowerPC based MkLinux
+ *
+ * On the PowerPC, the new style jmp_buf isn't used until glibc
+ * 2.1.
+ */
+#if __GLIBC__ >= 2 && __GLIBC_MINOR__ >= 1
+#define _MD_GET_SP(_t) (_t)->md.context[0].__jmpbuf[JB_GPR1]
+#else
 #define _MD_GET_SP(_t) (_t)->md.context[0].__jmpbuf[0].__misc[0]
+#endif /* __GLIBC__ >= 2 && __GLIBC_MINOR__ >= 1 */
 #define _MD_SET_FP(_t, val)
 #define _MD_GET_SP_PTR(_t) &(_MD_GET_SP(_t))
 #define _MD_GET_FP_PTR(_t) ((void *) 0)
@@ -192,6 +197,18 @@ extern void _MD_CleanupBeforeExit(void);
 #define _MD_SP_TYPE __ptr_t
 #else
 #error "Linux/MIPS pre-glibc2 not supported yet"
+#endif /* defined(__GLIBC__) && __GLIBC__ >= 2 */
+
+#elif defined(__arm__)
+/* ARM/Linux */
+#if defined(__GLIBC__) && __GLIBC__ >= 2
+#define _MD_GET_SP(_t) (_t)->md.context[0].__jmpbuf[20]
+#define _MD_SET_FP(_t, val) ((_t)->md.context[0].__jmpbuf[19] = (val))
+#define _MD_GET_SP_PTR(_t) &(_MD_GET_SP(_t))
+#define _MD_GET_FP_PTR(_t) (&(_t)->md.context[0].__jmpbuf[19])
+#define _MD_SP_TYPE __ptr_t
+#else
+#error "ARM/Linux pre-glibc2 not supported yet"
 #endif /* defined(__GLIBC__) && __GLIBC__ >= 2 */
 
 #else

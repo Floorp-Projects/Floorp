@@ -340,7 +340,6 @@ extern int _select(int nfds, fd_set *readfds, fd_set *writefds,
 	fd_set *exceptfds, struct timeval *timeout);
 #define _MD_SELECT	_select
 
-#include <stropts.h>
 #include <poll.h>
 #define _MD_POLL _poll
 extern int _poll(struct pollfd *fds, unsigned long nfds, int timeout);

@@ -334,7 +334,6 @@ static void TraceTest( void )
     size = SMALL_TRACE_BUFSIZE;
     PR_SET_TRACE_OPTION( PRTraceBufSize, &size );
     PR_GET_TRACE_OPTION( PRTraceBufSize, &i );
-    PR_ASSERT( i == size );
     
     PR_CREATE_TRACE( th, "TraceTest", "tt2", "A description for the trace test" );
     PR_CREATE_TRACE( th, "TraceTest", "tt3", "A description for the trace test" );

@@ -1429,16 +1429,15 @@ extern sigset_t ints_off;
      */
     if (npollfds > _PR_IOQ_POLLFDS_SIZE(me->cpu)) {
         if (_PR_IOQ_POLLFDS(me->cpu) != NULL)
-            PR_DELETE(pollfds);
+            PR_DELETE(_PR_IOQ_POLLFDS(me->cpu));
         pollfds_size =  PR_MAX(_PR_IOQ_MIN_POLLFDS_SIZE(me->cpu), npollfds);
         pollfds = (struct pollfd *) PR_MALLOC(pollfds_size * sizeof(struct pollfd));
         _PR_IOQ_POLLFDS(me->cpu) = pollfds;
         _PR_IOQ_POLLFDS_SIZE(me->cpu) = pollfds_size;
-        pollfdPtr = pollfds;
     } else {
         pollfds = _PR_IOQ_POLLFDS(me->cpu);
-        pollfdPtr = pollfds;
     }
+    pollfdPtr = pollfds;
 
     /*
      * If we need to poll the pipe for waking up a native thread,
@@ -2522,7 +2521,12 @@ static PRIntn _MD_solaris25_stat64(const char *fn, _MDStat64 *buf)
 
 static PRIntn _MD_Unix_lockf64(PRIntn osfd, PRIntn function, PRInt64 size)
 {
-#if defined(RHAPSODY) || defined(BSDI)
+#if defined(HAVE_BSD_FLOCK)
+    /*
+     * XXX: HAVE_BSD_FLOCK is not really the appropriate macro
+     * to test for here.  We are trying to identify the platforms
+     * that don't have lockf, e.g., BSD/OS, FreeBSD, and Rhapsody.
+     */
     /* No lockf */
     PR_SetError(PR_NOT_IMPLEMENTED_ERROR, 0);
     return -1;

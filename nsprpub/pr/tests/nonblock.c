@@ -74,6 +74,9 @@ clientThreadFunc(void *arg)
     PRStatus retVal;
     PRInt32 nBytes;
 
+    /* Initialize the buffer so that Purify won't complain */
+    memset(buf, 0, sizeof(buf));
+
     addr.inet.family = PR_AF_INET;
     addr.inet.port = PR_htons((PRUint16)port);
     addr.inet.ip = PR_htonl(PR_INADDR_LOOPBACK);

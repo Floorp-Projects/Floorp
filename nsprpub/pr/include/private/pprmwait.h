@@ -25,14 +25,19 @@
 #include "prclist.h"
 #include "prthread.h"
 
-#define _PR_HASH_OFFSET 75013
 #define MAX_POLLING_INTERVAL 100
 #define _PR_POLL_COUNT_FUDGE 64
 #define MAX_POLLING_INTERVAL 100
 #define _PR_DEFAULT_HASH_LENGTH 59
 
-#define _MW_REHASH(a, i, m) _MW_HASH((PRUptrdiff)(a) + (i) + _PR_HASH_OFFSET, m)
+/*
+ * Our hash table resolves collisions by open addressing with
+ * double hashing.  See Cormen, Leiserson, and Rivest,
+ * Introduction to Algorithms, p. 232, The MIT Press, 1990.
+ */
+
 #define _MW_HASH(a, m) ((((PRUptrdiff)(a) >> 4) ^ ((PRUptrdiff)(a) >> 10)) % (m))
+#define _MW_HASH2(a, m) (1 + ((((PRUptrdiff)(a) >> 4) ^ ((PRUptrdiff)(a) >> 10)) % (m - 2)))
 #define _MW_ABORTED(_rv) \
     ((PR_FAILURE == (_rv)) && (PR_PENDING_INTERRUPT_ERROR == PR_GetError()))
 

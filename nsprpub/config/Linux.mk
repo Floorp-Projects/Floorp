@@ -79,8 +79,7 @@ PLATFORM_FLAGS		+= -D_ALPHA_ -D__alpha -mieee
 PORT_FLAGS		+= -D_XOPEN_SOURCE
 endif
 ifeq ($(CPU_ARCH),ppc)
-PLATFORM_FLAGS		+= -DMKLINUX
-OS_INCLUDES		+= -I/usr/local/include
+PORT_FLAGS		+= -D_XOPEN_SOURCE
 endif
 ifeq ($(CPU_ARCH),x86)
 PLATFORM_FLAGS		+= -mno-486 -Di386
@@ -99,7 +98,7 @@ PLATFORM_FLAGS		+= -m68020-40
 endif
 
 #
-# Linux ppc and 2.0 have shared libraries.
+# Linux 2.x has shared libraries.
 #
 
 MKSHLIB			= $(LD) $(DSO_LDOPTS) -soname $(@:$(OBJDIR)/%.so=%.so)

@@ -42,7 +42,7 @@ PRIntn main(PRIntn argc, char **argv)
     PLOptStatus os;
     PRUint8 *buffer;
     PRFileDesc *file = NULL;
-    const char *filename = "/usr/tmp/sync.dat";
+    const char *filename = "sync.dat";
     PRUint32 index, loops, iterations = 10, filesize = 10;
     PRIntn flags = PR_WRONLY | PR_CREATE_FILE | PR_TRUNCATE;
     PLOptState *opt = PL_CreateOptState(argc, argv, "hSK:c:");
