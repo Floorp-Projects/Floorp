@@ -45,3 +45,8 @@ override NO_STATIC_LIB=
 export:: libs
 
 include $(topsrcdir)/config/rules.mk
+
+ifdef HOST_NSPR_MDCPUCFG
+CFLAGS += -DMDCPUCFG=$(HOST_NSPR_MDCPUCFG)
+endif
+
