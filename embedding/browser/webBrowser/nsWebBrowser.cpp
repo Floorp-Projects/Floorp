@@ -156,16 +156,10 @@ NS_IMETHODIMP nsWebBrowser::GetInterface(const nsIID& aIID, void** aSink)
 
 // listeners that currently support registration through AddWebBrowserListener:
 //  - nsIWebProgressListener
-NS_IMETHODIMP nsWebBrowser::AddWebBrowserListener(nsISupports *aListener, const nsIID& aIID)
+NS_IMETHODIMP nsWebBrowser::AddWebBrowserListener(nsIWeakReference *aListener, const nsIID& aIID)
 {           
     nsresult rv = NS_ERROR_INVALID_ARG;
     NS_ENSURE_ARG_POINTER(aListener);
-
-    // first determine if the listener supports weak references; it's required.
-    // see http://www.mozilla.org/projects/xpcom/weak_references.html for info 
-    // on how to support weak references.
-    nsWeakPtr listener = getter_AddRefs(NS_GetWeakReference(aListener));
-    if (!listener) return NS_ERROR_INVALID_ARG;
 
     if (!mWebProgress) {
         // The window hasn't been created yet, so queue up the listener. They'll be
@@ -174,7 +168,7 @@ NS_IMETHODIMP nsWebBrowser::AddWebBrowserListener(nsISupports *aListener, const 
         NS_NEWXPCOM(state, nsWebBrowserListenerState);
         if (!state) return NS_ERROR_OUT_OF_MEMORY;
 
-        state->mWeakPtr = listener;
+        state->mWeakPtr = aListener;
         state->mID = aIID;
 
         if (!mListenerArray) {
@@ -184,7 +178,9 @@ NS_IMETHODIMP nsWebBrowser::AddWebBrowserListener(nsISupports *aListener, const 
 
         if (!mListenerArray->AppendElement(state)) return NS_ERROR_OUT_OF_MEMORY;
     } else {
-        rv = BindListener(aListener, aIID);
+        nsCOMPtr<nsISupports> supports(do_QueryReferent(aListener));
+        if (!supports) return NS_ERROR_INVALID_ARG;
+        rv = BindListener(supports, aIID);
     }
     
     return rv;
@@ -211,7 +207,7 @@ NS_IMETHODIMP nsWebBrowser::BindListener(nsISupports *aListener, const nsIID& aI
     return rv;
 }
 
-NS_IMETHODIMP nsWebBrowser::RemoveWebBrowserListener(nsISupports *aListener, const nsIID& aIID)
+NS_IMETHODIMP nsWebBrowser::RemoveWebBrowserListener(nsIWeakReference *aListener, const nsIID& aIID)
 {
     nsresult rv = NS_ERROR_INVALID_ARG;
     NS_ENSURE_ARG_POINTER(aListener);
@@ -243,6 +239,8 @@ NS_IMETHODIMP nsWebBrowser::RemoveWebBrowserListener(nsISupports *aListener, con
         }
 
     } else {
+        nsCOMPtr<nsISupports> supports(do_QueryReferent(aListener));
+        if (!supports) return NS_ERROR_INVALID_ARG;
         rv = UnBindListener(aListener, aIID);
     }
     

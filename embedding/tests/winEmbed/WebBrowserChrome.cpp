@@ -164,13 +164,13 @@ nsresult WebBrowserChrome::CreateBrowser(PRInt32 aX, PRInt32 aY,
                              aX, aY, aCX, aCY);
     mBaseWindow->Create();
 
-    nsCOMPtr<nsIWebProgressListener> listener = NS_STATIC_CAST(nsIWebProgressListener*, this);
-    nsCOMPtr<nsISupports> supports = do_QueryInterface(listener);
-    (void)mWebBrowser->AddWebBrowserListener(supports, 
+    nsCOMPtr<nsIWebProgressListener> listener(NS_STATIC_CAST(nsIWebProgressListener*, this));
+    nsCOMPtr<nsIWeakReference> thisListener(dont_AddRef(NS_GetWeakReference(listener)));
+    (void)mWebBrowser->AddWebBrowserListener(thisListener, 
         NS_GET_IID(nsIWebProgressListener));
 
     // The window has been created. Now register for history notifications
-    mWebBrowser->AddWebBrowserListener(supports, NS_GET_IID(nsISHistoryListener));
+    mWebBrowser->AddWebBrowserListener(thisListener, NS_GET_IID(nsISHistoryListener));
 
     if (mWebBrowser) {
       *aBrowser = mWebBrowser;

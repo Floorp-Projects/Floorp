@@ -26,6 +26,7 @@ interface nsIInterfaceRequestor;
 interface nsIWebBrowserChrome;
 interface nsIURIContentListener;
 interface nsIDOMWindow;
+interface nsIWeakReference;
 
 /**
  * The nsIWebBrowser
@@ -50,7 +51,7 @@ interface nsIWebBrowser : nsISupports
                          for the specified IID, or some other internal error
                          occurred.
 	*/
-	void addWebBrowserListener(in nsISupports aListener, in nsIIDRef aIID);
+	void addWebBrowserListener(in nsIWeakReference aListener, in nsIIDRef aIID);
 
     /*
     Removes a previously registered listener.
@@ -66,7 +67,7 @@ interface nsIWebBrowser : nsISupports
                          for the specified IID, or some other internal error
                          occurred.
     */
-	void removeWebBrowserListener(in nsISupports aListener, in nsIIDRef aIID);
+	void removeWebBrowserListener(in nsIWeakReference aListener, in nsIIDRef aIID);
 
 	/*
 	This is the top level window embedding the browser.  The object passed in

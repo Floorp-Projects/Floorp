@@ -48,6 +48,7 @@
 #include "nsIDocument.h"
 #include "nsIDOMHTMLCollection.h"
 #include "nsIWebBrowserFind.h"
+#include "nsWeakPtr.h"
 
 #include <UModalDialogs.h>
 #include <LStream.h>
@@ -450,7 +451,8 @@ NS_IMETHODIMP CBrowserShell::SetTopLevelWindow(nsIWebBrowserChrome * aTopLevelWi
     
     mWebBrowser->SetContainerWindow(aTopLevelWindow);  
     if (aTopLevelWindow) {
-        rv = mWebBrowser->AddWebBrowserListener(aTopLevelWindow, NS_GET_IID(nsIWebProgressListener));
+        nsWeakPtr weakling(dont_AddRef(NS_GetWeakReference(aTopLevelWindow)));
+        rv = mWebBrowser->AddWebBrowserListener(weakling, NS_GET_IID(nsIWebProgressListener));
         NS_ASSERTION(NS_SUCCEEDED(rv), "Call to AddWebBrowserListener failed");
     }
 

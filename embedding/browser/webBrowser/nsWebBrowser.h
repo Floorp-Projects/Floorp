@@ -70,9 +70,8 @@ public:
 class nsWebBrowserListenerState
 {
 public:
-    PRBool Equals(nsISupports *aListener, const nsIID& aID) {
-        nsCOMPtr<nsISupports> listener = do_QueryReferent(mWeakPtr);
-        if (listener.get() == aListener && mID.Equals(aID)) return PR_TRUE;
+    PRBool Equals(nsIWeakReference *aListener, const nsIID& aID) {
+        if (mWeakPtr.get() == aListener && mID.Equals(aID)) return PR_TRUE;
         return PR_FALSE;
     };
 
