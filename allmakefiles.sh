@@ -766,6 +766,7 @@ extensions/psm-glue/public/Makefile
 extensions/psm-glue/Makefile
 extensions/psm-glue/src/Makefile
 netwerk/base/public/Makefile
+netwerk/build/Makefile
 netwerk/socket/base/Makefile
 dom/public/Makefile
 uriloader/base/Makefile
@@ -782,7 +783,7 @@ gfx/public/Makefile
 docshell/base/Makefile
 layout/html/forms/public/Makefile
 layout/base/public/Makefile
-rdf/content/public/Makefile
+content/base/public/Makefile
 dom/src/base/Makefile
 modules/oji/public/Makefile
 "
