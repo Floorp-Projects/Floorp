@@ -105,8 +105,8 @@ nsLoggingProgressNotifier::InstallStarted(const PRUnichar *URL, const PRUnichar*
 //    char* time;
 //    GetTime(&time);
 
-    nsString name(UIPackageName,eOneByte);
-    nsString uline(eOneByte);
+    nsCString name(UIPackageName);
+    nsCString uline;
     uline.SetCapacity(name.Length());
     for ( int i=0; i < name.Length(); ++i)
         uline.SetCharAt('-', i);
