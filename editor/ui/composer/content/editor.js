@@ -78,6 +78,8 @@ var gColorObj = { LastTextColor:"", LastBackgroundColor:"", LastHighlightColor:"
 var gDefaultTextColor = "";
 var gDefaultBackgroundColor = "";
 var gCSSPrefListener;
+var gEditorToolbarPrefListener;
+var gReturnInParagraphPrefListener;
 var gPrefs;
 var gLocalFonts = null;
 
@@ -90,6 +92,8 @@ var gFontSizeNames = ["xx-small","x-small","small","medium","large","x-large","x
 const nsIFilePicker = Components.interfaces.nsIFilePicker;
 
 const kEditorToolbarPrefs = "editor.toolbars.showbutton.";
+const kUseCssPref         = "editor.use_css";
+const kCRInParagraphsPref = "editor.CR_creates_new_p";
 
 function ShowHideToolbarSeparators(toolbar) {
   var childNodes = toolbar.childNodes;
@@ -123,55 +127,18 @@ function ShowHideToolbarButtons()
   ShowHideToolbarSeparators(document.getElementById("FormatToolbar"));
 }
   
-function AddToolbarPrefListener()
+function nsPrefListener(prefName)
 {
-  try {
-    var pbi = GetPrefs().QueryInterface(Components.interfaces.nsIPrefBranchInternal);
-    pbi.addObserver(kEditorToolbarPrefs, gEditorToolbarPrefListener, false);
-  } catch(ex) {
-    dump("Failed to observe prefs: " + ex + "\n");
-  }
-}
-
-function RemoveToolbarPrefListener()
-{
-  try {
-    var pbi = GetPrefs().QueryInterface(Components.interfaces.nsIPrefBranchInternal);
-    pbi.removeObserver(kEditorToolbarPrefs, gEditorToolbarPrefListener);
-  } catch(ex) {
-    dump("Failed to remove pref observer: " + ex + "\n");
-  }
-}
-
-// Pref listener constants
-const gEditorToolbarPrefListener =
-{
-  observe: function(subject, topic, prefName)
-  {
-    // verify that we're changing a button pref
-    if (topic != "nsPref:changed")
-      return;
-
-    var id = prefName.substr(kEditorToolbarPrefs.length) + "Button";
-    var button = document.getElementById(id);
-    if (button) {
-      button.hidden = !gPrefs.getBoolPref(prefName);
-      ShowHideToolbarSeparators(button.parentNode);
-    }
-  }
-};
-
-function nsButtonPrefListener()
-{
-  this.startup();
+  this.startup(prefName);
 }
 
 // implements nsIObserver
-nsButtonPrefListener.prototype =
+nsPrefListener.prototype =
 {
-  domain: "editor.use_css",
-  startup: function()
+  domain: "",
+  startup: function(prefName)
   {
+    this.domain = prefName;
     try {
       var pbi = pref.QueryInterface(Components.interfaces.nsIPrefBranchInternal);
       pbi.addObserver(this.domain, this, false);
@@ -194,27 +161,45 @@ nsButtonPrefListener.prototype =
       return;
     // verify that we're changing a button pref
     if (topic != "nsPref:changed") return;
-    if (prefName.substr(0, this.domain.length) != this.domain) return;
+    
+    if (prefName.substr(0, kUseCssPref.length) == kUseCssPref)
+    {
+      var cmd = document.getElementById("cmd_highlight");
+      if (cmd) {
+        var prefs = GetPrefs();
+        var useCSS = prefs.getBoolPref(prefName);
+        var editor = GetCurrentEditor();
+        if (useCSS && editor) {
+          var mixedObj = {};
+          var state = editor.getHighlightColorState(mixedObj);
+          cmd.setAttribute("state", state);
+          cmd.collapsed = false;
+        }      
+        else {
+          cmd.setAttribute("state", "transparent");
+          cmd.collapsed = true;
+        }
 
-    var cmd = document.getElementById("cmd_highlight");
-    if (cmd) {
-      var prefs = GetPrefs();
-      var useCSS = prefs.getBoolPref(prefName);
-      var editor = GetCurrentEditor();
-      if (useCSS && editor) {
-        var mixedObj = {};
-        var state = editor.getHighlightColorState(mixedObj);
-        cmd.setAttribute("state", state);
-        cmd.collapsed = false;
-      }      
-      else {
-        cmd.setAttribute("state", "transparent");
-        cmd.collapsed = true;
+        if (editor)
+          editor.isCSSEnabled = useCSS;
       }
-
+     }
+     else if (prefName.substr(0, kEditorToolbarPrefs.length) == kEditorToolbarPrefs)
+     {
+       var id = prefName.substr(kEditorToolbarPrefs.length) + "Button";
+       var button = document.getElementById(id);
+       if (button) {
+         button.hidden = !gPrefs.getBoolPref(prefName);
+         ShowHideToolbarSeparators(button.parentNode);
+       }
+     }
+    else if (prefName.substr(0, kCRInParagraphsPref.length) == kCRInParagraphsPref)
+    {
+      var crInParagraphCreatesParagraph = gPrefs.getBoolPref(prefName);
+      var editor = GetCurrentEditor();
       if (editor)
-        editor.isCSSEnabled = useCSS;
-    }
+        editor.returnInParagraphCreatesNewParagraph = crInParagraphCreatesParagraph;
+    }   
   }
 }
 
@@ -418,6 +403,9 @@ var gEditorDocumentObserver =
         // Things for just the Web Composer application
         if (IsWebComposer())
         {
+          var prefs = GetPrefs();
+          editor.returnInParagraphCreatesNewParagraph = prefs.getBoolPref(kCRInParagraphsPref);
+
           // Set focus to content window if not a mail composer
           // Race conditions prevent us from setting focus here
           //   when loading a url into blank window
@@ -566,15 +554,17 @@ function EditorStartup()
   SetupComposerWindowCommands();
 
   ShowHideToolbarButtons();
-  AddToolbarPrefListener();
+  gEditorToolbarPrefListener = new nsPrefListener(kEditorToolbarPrefs);
 
-  gCSSPrefListener = new nsButtonPrefListener();
+  gCSSPrefListener = new nsPrefListener(kUseCssPref);
+  gReturnInParagraphPrefListener = new nsPrefListener(kCRInParagraphsPref);
 
   // hide Highlight button if we are in an HTML editor with CSS mode off
+  // and tell the editor if a CR in a paragraph creates a new paragraph
+  var prefs = GetPrefs();
   var cmd = document.getElementById("cmd_highlight");
   if (cmd) {
-    var prefs = GetPrefs();
-    var useCSS = prefs.getBoolPref("editor.use_css");
+    var useCSS = prefs.getBoolPref(kUseCssPref);
     if (!useCSS && is_HTMLEditor) {
       cmd.collapsed = true;
     }
@@ -692,8 +682,9 @@ function EditorResetFontAndColorAttributes()
 
 function EditorShutdown()
 {
-  RemoveToolbarPrefListener();
+  gEditorToolbarPrefListener.shutdown();
   gCSSPrefListener.shutdown();
+  gReturnInParagraphPrefListener.shutdown();
 
   try {
     var commandManager = GetCurrentCommandManager();
@@ -1332,7 +1323,7 @@ function GetBackgroundElementWithColor()
   else
   {
     var prefs = GetPrefs();
-    var IsCSSPrefChecked = prefs.getBoolPref("editor.use_css");
+    var IsCSSPrefChecked = prefs.getBoolPref(kUseCssPref);
     if (IsCSSPrefChecked && IsHTMLEditor())
     {
       var selection = editor.selection;
