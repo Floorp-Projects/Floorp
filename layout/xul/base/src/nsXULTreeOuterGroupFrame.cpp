@@ -1763,9 +1763,12 @@ nsXULTreeOuterGroupFrame::ComputeIntrinsicWidth(nsBoxLayoutState& aBoxLayoutStat
                                                              getter_AddRefs(styleContext));
 
     nscoord width = 0;
-    nsMargin margin;
-    const nsStyleBorderPadding*  bPad = (const nsStyleBorderPadding*)styleContext->GetStyleData(eStyleStruct_BorderPaddingShortcut);
-    bPad->GetBorderPadding(margin);
+    nsMargin margin(0,0,0,0);
+
+    nsStyleBorderPadding  bPad;
+    styleContext->GetBorderPaddingFor(bPad);
+    bPad.GetBorderPadding(margin);
+
     width += (margin.left + margin.right);
 
     const nsStyleMargin* styleMargin = (const nsStyleMargin*)styleContext->GetStyleData(eStyleStruct_Margin);
