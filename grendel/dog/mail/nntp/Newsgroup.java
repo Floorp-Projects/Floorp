@@ -176,16 +176,16 @@ public class Newsgroup extends Folder {
         NNTPStore s = (NNTPStore)store;
 		if (articles==null)
 			articles = s.getArticles(this);
-		else { // check for new articles
-			Article[] nm = s.getNewArticles(this, checkpoint);
-			if (nm.length>0) {
-				Article[] m2 = new Article[articles.length+nm.length];
-				System.arraycopy(articles, 0, m2, 0, articles.length);
-				System.arraycopy(nm, 0, m2, articles.length, nm.length);
-				articles = m2;
-			}
-		}
-		checkpoint = new Date();
+		//else { // check for new articles
+		//	Article[] nm = s.getNewArticles(this, checkpoint);
+		//	if (nm.length>0) {
+		//		Article[] m2 = new Article[articles.length+nm.length];
+		//		System.arraycopy(articles, 0, m2, 0, articles.length);
+		//		System.arraycopy(nm, 0, m2, articles.length, nm.length);
+		//		articles = m2;
+		//	}
+		//}
+		//checkpoint = new Date();
         return articles;
 	}
 	
