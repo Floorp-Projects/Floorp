@@ -51,7 +51,6 @@
 
 #include "nsEditRules.h"
  
-class nsIDOMKeyEvent;
 class nsITransferable;
 class nsIDOMEventReceiver;
 class nsIDocumentEncoder;
@@ -86,19 +85,7 @@ public:
   NS_DECL_NSIPLAINTEXTEDITOR
 
   /* ------------ nsIEditorMailSupport overrides -------------- */
-  NS_IMETHOD InsertTextWithQuotations(const nsAString &aStringToInsert);
-  NS_IMETHOD PasteAsQuotation(PRInt32 aSelectionType);
-  NS_IMETHOD InsertAsQuotation(const nsAString& aQuotedText,
-                               nsIDOMNode** aNodeInserted);
-  NS_IMETHOD PasteAsCitedQuotation(const nsAString& aCitation,
-                                   PRInt32 aSelectionType);
-  NS_IMETHOD InsertAsCitedQuotation(const nsAString& aQuotedText,
-                                    const nsAString& aCitation,
-                                    PRBool aInsertHTML,
-                                    nsIDOMNode** aNodeInserted);
-  NS_IMETHOD Rewrap(PRBool aRespectNewlines);
-  NS_IMETHOD StripCites();
-  NS_IMETHOD GetEmbeddedObjects(nsISupportsArray** aNodeList);
+  NS_DECL_NSIEDITORMAILSUPPORT
 
   /* ------------ nsIEditorIMESupport overrides -------------- */
   
@@ -224,9 +211,6 @@ protected:
                          EDirection aSelect);
   NS_IMETHOD InsertBR(nsCOMPtr<nsIDOMNode> *outBRNode);
 
-  NS_IMETHOD IsRootTag(nsString &aTag, PRBool &aIsTag);
-
-
   // factored methods for handling insertion of data from transferables (drag&drop or clipboard)
   NS_IMETHOD PrepareTransferable(nsITransferable **transferable);
   NS_IMETHOD InsertTextFromTransferable(nsITransferable *transferable,
@@ -235,6 +219,9 @@ protected:
                                         PRBool aDoDeleteSelection);
   virtual nsresult SetupDocEncoder(nsIDocumentEncoder **aDocEncoder);
   virtual nsresult PutDragDataInTransferable(nsITransferable **aTransferable);
+
+  /** shared outputstring; returns whether selection is collapsed and resulting string */
+  nsresult SharedOutputString(PRUint32 aFlags, PRBool* aIsCollapsed, nsAString& aResult);
 
   /** simple utility to handle any error with event listener allocation or registration */
   void HandleEventListenerError();

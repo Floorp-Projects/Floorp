@@ -774,7 +774,7 @@ nsHTMLEditor::DoContentFilterCallback(const nsAString &aFlavor,
                                       PRInt32 *aFragStartOffset,
                                       nsIDOMNode **aFragEndNode, 
                                       PRInt32 *aFragEndOffset,
-                                      nsIDOMNode **aTargetNode, 
+                                      nsIDOMNode **aTargetNode,
                                       PRInt32 *aTargetOffset,
                                       PRBool *aDoContinue)
 {
@@ -1001,13 +1001,12 @@ NS_IMETHODIMP nsHTMLEditor::InsertFromTransferable(nsITransferable *transferable
   if ( NS_SUCCEEDED(transferable->GetAnyTransferData(&bestFlavor, getter_AddRefs(genericDataObj), &len)) )
   {
     nsAutoTxnsConserveSelection dontSpazMySelection(this);
-    nsAutoString flavor, stuffToPaste;
-    flavor.AssignWithConversion(bestFlavor);   // just so we can use flavor.Equals()
+    nsAutoString flavor(bestFlavor);
+    nsAutoString stuffToPaste;
 #ifdef DEBUG_clipboard
     printf("Got flavor [%s]\n", bestFlavor);
 #endif
-    
-    if (flavor.Equals(NS_LITERAL_STRING(kNativeHTMLMime)))
+    if (0 == nsCRT::strcmp(bestFlavor, kNativeHTMLMime))
     {
       // note cf_html uses utf8, hence use length = len, not len/2 as in flavors below
       nsCOMPtr<nsISupportsCString> textDataObj(do_QueryInterface(genericDataObj));
@@ -1030,7 +1029,7 @@ NS_IMETHODIMP nsHTMLEditor::InsertFromTransferable(nsITransferable *transferable
         }
       }
     }
-    else if (flavor.Equals(NS_LITERAL_STRING(kHTMLMime)))
+    else if (0 == nsCRT::strcmp(bestFlavor, kHTMLMime))
     {
       nsCOMPtr<nsISupportsString> textDataObj(do_QueryInterface(genericDataObj));
       if (textDataObj && len > 0)
@@ -1047,7 +1046,7 @@ NS_IMETHODIMP nsHTMLEditor::InsertFromTransferable(nsITransferable *transferable
                                    aDoDeleteSelection);
       }
     }
-    else if (flavor.Equals(NS_LITERAL_STRING(kUnicodeMime)))
+    else if (0 == nsCRT::strcmp(bestFlavor, kUnicodeMime))
     {
       nsCOMPtr<nsISupportsString> textDataObj(do_QueryInterface(genericDataObj));
       if (textDataObj && len > 0)
@@ -1061,7 +1060,7 @@ NS_IMETHODIMP nsHTMLEditor::InsertFromTransferable(nsITransferable *transferable
         rv = InsertTextAt(stuffToPaste, aDestinationNode, aDestOffset, aDoDeleteSelection);
       }
     }
-    else if (flavor.Equals(NS_LITERAL_STRING(kFileMime)))
+    else if (0 == nsCRT::strcmp(bestFlavor, kFileMime))
     {
       nsCOMPtr<nsIFile> fileObj(do_QueryInterface(genericDataObj));
       if (fileObj && len > 0)
@@ -1117,7 +1116,7 @@ NS_IMETHODIMP nsHTMLEditor::InsertFromTransferable(nsITransferable *transferable
         }
       }
     }
-    else if (flavor.Equals(NS_LITERAL_STRING(kJPEGImageMime)))
+    else if (0 == nsCRT::strcmp(bestFlavor, kJPEGImageMime))
     {
       // need to provide a hook from here
       // Insert Image code here
@@ -1776,20 +1775,18 @@ NS_IMETHODIMP nsHTMLEditor::PasteAsPlaintextQuotation(PRInt32 aSelectionType)
 #endif
       return rv;
     }
+
+    if (flav && 0 == nsCRT::strcmp((flav), kUnicodeMime))
+    {
 #ifdef DEBUG_clipboard
     printf("Got flavor [%s]\n", flav);
 #endif
-    nsAutoString flavor; flavor.AssignWithConversion(flav);
-    nsAutoString stuffToPaste;
-    if (flavor.Equals(NS_LITERAL_STRING(kUnicodeMime)))
-    {
       nsCOMPtr<nsISupportsString> textDataObj(do_QueryInterface(genericDataObj));
       if (textDataObj && len > 0)
       {
-        nsAutoString text;
-        textDataObj->GetData(text);
-        NS_ASSERTION(text.Length() <= (len/2), "Invalid length!");
-        stuffToPaste.Assign(text.get(), len / 2);
+        nsAutoString stuffToPaste;
+        textDataObj->GetData(stuffToPaste);
+        NS_ASSERTION(stuffToPaste.Length() <= (len/2), "Invalid length!");
         nsAutoEditBatch beginBatching(this);
         rv = InsertAsPlaintextQuotation(stuffToPaste, PR_TRUE, 0);
       }
@@ -2008,6 +2005,18 @@ nsHTMLEditor::InsertAsPlaintextQuotation(const nsAString & aQuotedText,
       selection->Collapse(parent, offset+1);
   }
   return rv;
+}
+
+NS_IMETHODIMP    
+nsHTMLEditor::StripCites()
+{
+  return nsPlaintextEditor::StripCites();
+}
+
+NS_IMETHODIMP    
+nsHTMLEditor::Rewrap(PRBool aRespectNewlines)
+{
+  return nsPlaintextEditor::Rewrap(aRespectNewlines);
 }
 
 NS_IMETHODIMP
