@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: tdcache.c,v $ $Revision: 1.25 $ $Date: 2002/02/08 02:51:38 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: tdcache.c,v $ $Revision: 1.26 $ $Date: 2002/02/08 21:47:05 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef PKIM_H
@@ -797,6 +797,7 @@ collect_subject_certs
     NSSCertificate *c;
     NSSCertificate **rvArray = NULL;
     PRUint32 count;
+    nssCertificateList_AddReferences(subjectList);
     if (rvCertListOpt) {
 	nssListIterator *iter = nssList_CreateIterator(subjectList);
 	for (c  = (NSSCertificate *)nssListIterator_Start(iter);
@@ -841,13 +842,9 @@ nssTrustDomain_GetCertsForSubjectFromCache
 #ifdef DEBUG_CACHE
 	PR_LOG(s_log, PR_LOG_DEBUG, ("... found, %d hits", ce->hits));
 #endif
-	/* get references before leaving the cache's lock protection */
-	nssCertificateList_AddReferences(ce->entry.list);
-    }
-    PZ_Unlock(td->cache->lock);
-    if (ce) {
 	rvArray = collect_subject_certs(ce->entry.list, certListOpt);
     }
+    PZ_Unlock(td->cache->lock);
     return rvArray;
 }
 
@@ -875,13 +872,9 @@ nssTrustDomain_GetCertsForNicknameFromCache
 #ifdef DEBUG_CACHE
 	PR_LOG(s_log, PR_LOG_DEBUG, ("... found, %d hits", ce->hits));
 #endif
-	/* get references before leaving the cache's lock protection */
-	nssCertificateList_AddReferences(ce->entry.list);
-    }
-    PZ_Unlock(td->cache->lock);
-    if (ce) {
 	rvArray = collect_subject_certs(ce->entry.list, certListOpt);
     }
+    PZ_Unlock(td->cache->lock);
     return rvArray;
 }
 
@@ -913,21 +906,22 @@ nssTrustDomain_GetCertsForEmailAddressFromCache
 	PR_LOG(s_log, PR_LOG_DEBUG, ("... found, %d hits", ce->hits));
 #endif
 	/* loop over subject lists and get refs for certs */
-	iter = nssList_CreateIterator(ce->entry.list);
-	for (subjectList  = (nssList *)nssListIterator_Start(iter);
-	     subjectList != (nssList *)NULL;
-	     subjectList  = (nssList *)nssListIterator_Next(iter)) 
-	{
-	    /* get references before leaving the cache's lock protection */
-	    nssCertificateList_AddReferences(subjectList);
-	}
-    }
-    PZ_Unlock(td->cache->lock);
-    if (ce) {
 	if (certListOpt) {
 	    collectList = certListOpt;
 	} else {
 	    collectList = nssList_Create(NULL, PR_FALSE);
+	    if (!collectList) {
+		PZ_Unlock(td->cache->lock);
+		return NULL;
+	    }
+	}
+	iter = nssList_CreateIterator(ce->entry.list);
+	if (!iter) {
+	    PZ_Unlock(td->cache->lock);
+	    if (!certListOpt) {
+		nssList_Destroy(collectList);
+	    }
+	    return NULL;
 	}
 	for (subjectList  = (nssList *)nssListIterator_Start(iter);
 	     subjectList != (nssList *)NULL;
@@ -937,6 +931,7 @@ nssTrustDomain_GetCertsForEmailAddressFromCache
 	nssListIterator_Finish(iter);
 	nssListIterator_Destroy(iter);
     }
+    PZ_Unlock(td->cache->lock);
     if (!certListOpt && collectList) {
 	PRUint32 count = nssList_Count(collectList);
 	rvArray = nss_ZNEWARRAY(NULL, NSSCertificate *, count);
