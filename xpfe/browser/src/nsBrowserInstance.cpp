@@ -2168,7 +2168,7 @@ nsBrowserInstance::GetProtocolHandler(nsIURI * /* aURI */, nsIProtocolHandler **
 }
 
 NS_IMETHODIMP 
-nsBrowserInstance::DoContent(const char *aContentType, const char *aCommand, const char *aWindowTarget, 
+nsBrowserInstance::DoContent(const char *aContentType, nsURILoadCommand aCommand, const char *aWindowTarget, 
                              nsIChannel *aChannel, nsIStreamListener **aContentHandler, PRBool *aAbortProcess)
 {
   // forward the DoContent call to our content area webshell
@@ -2180,24 +2180,67 @@ nsBrowserInstance::DoContent(const char *aContentType, const char *aCommand, con
 
 NS_IMETHODIMP 
 nsBrowserInstance::CanHandleContent(const char * aContentType,
-                                    const char * aCommand,
+                                    nsURILoadCommand aCommand,
                                     const char * aWindowTarget,
                                     char ** aDesiredContentType,
                                     PRBool * aCanHandleContent)
 
 {
-  // need to list all the content types the browser window knows how to handle here:
+  // the browser window is the primary content handler for the following types:
+  // If we are asked to handle any of these types, we will always say Yes!
+  // regardlesss of the uri load command.
+  //    incoming Type                     Preferred type
+  //      text/html
+  //      text/xul
+  //      multipart/x-mixed-replace         text/html
+  //      text/rdf
+  //      text/xml
+  //      text/css
+  //      image/gif
+  //      image/jpeg
+  //      image/png
+  //      image/tiff
+  //      application/http-index-format
+  //
+  // the browser window can also show the following content types. However, it isn't
+  // the primary content handler for these types. So we won't try to accept this content
+  // unless the uri load command is viewNormal (which implies that we are trying to view a url inline)
+  //    incoming Type                     Preferred type
+  //      message/rfc822                    text/xul
+
   if (aContentType)
   {
+     // (1) list all content types we want to  be the primary handler for....
+     // and suggest a desired content type if appropriate...
      if (nsCRT::strcasecmp(aContentType, "multipart/x-mixed-replace") == 0)
      {
        *aDesiredContentType = nsCRT::strdup("text/html");
        *aCanHandleContent = PR_TRUE;
      }
-     if (nsCRT::strcasecmp(aContentType, "text/html") == 0
-       || nsCRT::strcasecmp(aContentType, "text/xul") == 0)
+     if (nsCRT::strcasecmp(aContentType,  "text/html") == 0
+       || nsCRT::strcasecmp(aContentType, "text/xul") == 0
+       || nsCRT::strcasecmp(aContentType, "text/rdf") == 0 
+       || nsCRT::strcasecmp(aContentType, "text/xml") == 0
+       || nsCRT::strcasecmp(aContentType, "text/css") == 0
+       || nsCRT::strcasecmp(aContentType, "image/gif") == 0
+       || nsCRT::strcasecmp(aContentType, "image/jpeg") == 0
+       || nsCRT::strcasecmp(aContentType, "image/png") == 0
+       || nsCRT::strcasecmp(aContentType, "image/tiff") == 0
+       || nsCRT::strcasecmp(aContentType, "application/http-index-format") == 0)
        *aCanHandleContent = PR_TRUE;
-        
+     
+     // (2) we aren't the desired content type handlers for these types; however,
+     // if we are given a view normal load command, we can view them if we have too....
+     if (aCommand == nsIURILoader::viewNormal)
+     {
+        if (nsCRT::strcasecmp(aContentType, "message/rfc822") == 0)
+        {
+          *aCanHandleContent = PR_TRUE;
+           *aDesiredContentType = nsCRT::strdup("text/xul");
+        }
+
+     }
+       
   }
   else
     *aCanHandleContent = PR_FALSE;
