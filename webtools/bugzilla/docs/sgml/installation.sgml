@@ -621,7 +621,7 @@ bash# ln -s /usr/bin/perl /usr/bosaitools/bin/perl
 	    change your path to perl in all the files in your Bugzilla
 	    installation:
 	    <programlisting>
-perl -pi -e 's@#!/usr/bonsaitools/bin/perl@/usr/bin/perl@' *cgi *pl Bug.pm
+perl -pi -e 's@#!/usr/bonsaitools/bin/perl@#!/usr/bin/perl@' *cgi *pl Bug.pm
 	    </programlisting>
 	    Change the second path to perl to match your installation.
 	  </para>
