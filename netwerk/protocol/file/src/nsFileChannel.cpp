@@ -263,7 +263,9 @@ public:
             return rv;
         }
         *inStr = str->mInputStream;
+        NS_ADDREF(*inStr);
         *outStr = str;
+        NS_ADDREF(*outStr);
         return NS_OK;
     }
 
