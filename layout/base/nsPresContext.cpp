@@ -44,6 +44,10 @@ nsPresContext::nsPresContext()
   mLinkHandler = nsnull;
   mContainer = nsnull;
   mEventManager = nsnull;
+
+#ifdef DEBUG
+  mInitialized = PR_FALSE;
+#endif
 }
 
 nsPresContext::~nsPresContext()
@@ -72,6 +76,7 @@ nsPresContext::~nsPresContext()
   NS_IF_RELEASE(mLinkHandler);
   NS_IF_RELEASE(mContainer);
   NS_IF_RELEASE(mEventManager);
+  NS_IF_RELEASE(mDeviceContext);
 }
 
 nsrefcnt
@@ -92,6 +97,21 @@ nsPresContext::Release(void)
 }
 
 NS_IMPL_QUERY_INTERFACE(nsPresContext, kIPresContextIID);
+
+nsresult
+nsPresContext::Init(nsIDeviceContext* aDeviceContext)
+{
+  NS_ASSERTION(!(mInitialized == PR_TRUE), "attempt to reinit pres context");
+
+  mDeviceContext = aDeviceContext;
+  NS_IF_ADDREF(mDeviceContext);
+
+#ifdef DEBUG
+  mInitialized = PR_TRUE;
+#endif
+
+  return NS_OK;
+}
 
 // Note: We don't hold a reference on the shell; it has a reference to
 // us

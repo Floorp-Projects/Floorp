@@ -89,7 +89,7 @@ void   nsFileWidget:: Create(nsIWidget  *aParent,
   //XtManageChild(mWidget);
 }
 
-void nsFileWidget::Create(nsNativeWindow aParent,
+void nsFileWidget::Create(nsNativeWidget aParent,
                       const nsRect &aRect,
                       EVENT_CALLBACK aHandleEventFunction,
                       nsIDeviceContext *aContext,

@@ -516,7 +516,7 @@ void nsWindow::Create(nsIWidget *aParent,
 // create with a native parent
 //
 //-------------------------------------------------------------------------
-void nsWindow::Create(nsNativeWindow aParent,
+void nsWindow::Create(nsNativeWidget aParent,
                          const nsRect &aRect,
                          EVENT_CALLBACK aHandleEventFunction,
                          nsIDeviceContext *aContext,
@@ -1238,7 +1238,7 @@ BOOL nsWindow::CallMethod(MethodInfo *info)
 
         case nsWindow::CREATE_NATIVE:
             NS_ASSERTION(info->nArgs == 6, "Wrong number of arguments to CallMethod");
-            Create((nsNativeWindow)(info->args[0]), 
+            Create((nsNativeWidget)(info->args[0]), 
                         (nsRect&)*(nsRect*)(info->args[1]), 
                         (EVENT_CALLBACK)(info->args[2]), 
                         (nsIDeviceContext*)(info->args[3]),

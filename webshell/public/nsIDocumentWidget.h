@@ -32,7 +32,7 @@ class nsString;
 class nsIDocumentWidget : public nsISupports {
 public:
   // Create a native window for this web widget; may be called once
-  virtual nsresult Init(nsNativeWindow aNativeParent,
+  virtual nsresult Init(nsNativeWidget aNativeParent,
                         const nsRect& aBounds,
                         nsScrollPreference aScrolling = nsScrollPreference_kAuto) = 0;
 

@@ -112,7 +112,7 @@ void nsScrollbar::Create(nsIWidget *aParent,
 // Create
 //
 //-------------------------------------------------------------------------
-void nsScrollbar::Create(nsNativeWindow aParent,
+void nsScrollbar::Create(nsNativeWidget aParent,
                       const nsRect &aRect,
                       EVENT_CALLBACK aHandleEventFunction,
                       nsIDeviceContext *aContext,

@@ -210,6 +210,7 @@ nsresult nsDocument::CreateShell(nsIPresContext* aContext,
   if (NS_OK != rv) {
     return rv;
   }
+
   if (NS_OK != shell->Init(this, aContext, aViewManager, aStyleSet)) {
     NS_RELEASE(shell);
     return rv;

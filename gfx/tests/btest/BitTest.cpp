@@ -1020,7 +1020,7 @@ static HWND CreateTopLevel(const char* clazz, const char* title,int aWidth, int 
 
   if (NS_OK == rv) 
     {
-    gWindow->Create((nsNativeWindow)window, rect, MyHandleEvent, NULL);
+    gWindow->Create((nsNativeWidget)window, rect, MyHandleEvent, NULL);
     }
 
   // something for input

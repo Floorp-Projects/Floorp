@@ -44,7 +44,7 @@ public:
 
   NS_DECL_ISUPPORTS
 
-  virtual nsresult Init(nsNativeDeviceContext aNativeDeviceContext);
+  virtual nsresult Init(nsNativeWidget aNativeWidget);
 
   virtual nsIRenderingContext * CreateRenderingContext(nsIView *aView);
   virtual nsresult InitRenderingContext(nsIRenderingContext *aContext, nsIWidget *aWidget);
@@ -70,7 +70,6 @@ public:
   virtual float GetZoom() const;
 
   virtual nsDrawingSurface GetDrawingSurface(nsIRenderingContext &aContext);
-  virtual nsDrawingSurface GetDrawingSurface();
 
   //functions for handling gamma correction of output device
   virtual float GetGamma(void);
@@ -78,6 +77,8 @@ public:
 
   //XXX the return from this really needs to be ref counted somehow. MMP
   virtual PRUint8 * GetGammaTable(void);
+
+  virtual nsNativeWidget GetNativeWidget(void);
 
   virtual PRUint32 ConvertPixel(nscolor aColor);
 
@@ -107,7 +108,7 @@ public:
   void InstallColormap(void);
   void SetDrawingSurface(nsDrawingSurfaceUnix * aSurface) { mSurface = aSurface; }
   void SetGammaTable(PRUint8 * aTable, float aCurrentGamma, float aNewGamma);
-  nsNativeDeviceContext GetNativeDeviceContext();
+  nsDrawingSurface GetDrawingSurface();
 
 private:
   PRUint32 mRedMask;
@@ -120,8 +121,7 @@ private:
   PRUint32 mGreenOffset;
   PRUint32 mBlueOffset;
 
-  nsNativeDeviceContext mNativeDisplay;
-
+  nsNativeWidget mNativeWidget;
 };
 
 #endif /* nsDeviceContextUnix_h___ */

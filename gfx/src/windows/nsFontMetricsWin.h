@@ -42,7 +42,7 @@ public:
 
   NS_DECL_ISUPPORTS
 
-  virtual nsresult Init(const nsFont& aFont, nsIDeviceContext* aContext);
+  virtual nsresult Init(const nsFont& aFont, nsIDeviceContext *aContext);
   virtual nscoord GetWidth(char aC);
   virtual nscoord GetWidth(PRUnichar aC);
   virtual nscoord GetWidth(const nsString& aString);
@@ -58,11 +58,10 @@ public:
   virtual nsFontHandle GetFontHandle();
 
 protected:
-  void RealizeFont();
+  void RealizeFont(nsIDeviceContext *aContext);
   static const char* MapFamilyToFont(const nsString& aLogicalFontName);
 
   nsFont            *mFont;
-  nsIDeviceContext  *mContext;
   nscoord           mCharWidths[256];
   nscoord           mHeight;
   nscoord           mAscent;

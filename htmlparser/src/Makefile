@@ -46,8 +46,6 @@ EXPORTS =     \
   nsToken.h   \
   $(NULL)
 
-#  nsIParserDebug.h \
-
 MODULE = raptor
 
 REQUIRES = xpcom netlib raptor

@@ -31,6 +31,7 @@ public:
   NS_DECL_ISUPPORTS
 
   // nsIPresContext methods
+  virtual nsresult Init(nsIDeviceContext* aDeviceContext);
   virtual void SetShell(nsIPresShell* aShell);
   virtual nsIPresShell* GetShell();
   virtual nsIStyleContext* ResolveStyleContextFor(nsIContent* aContent,
@@ -74,6 +75,10 @@ protected:
   nsFont                mDefaultFont;
   nsVoidArray           mImageLoaders;
   nsIEventStateManager* mEventManager;
+
+#ifdef DEBUG
+  PRBool                mInitialized;
+#endif
 };
 
 #endif /* nsPresContext_h___ */

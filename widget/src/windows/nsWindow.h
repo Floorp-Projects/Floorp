@@ -61,7 +61,7 @@ public:
                                      nsIDeviceContext *aContext,
                                      nsIToolkit *aToolkit = nsnull,
                                      nsWidgetInitData *aInitData = nsnull);
-    virtual void            Create(nsNativeWindow aParent,
+    virtual void            Create(nsNativeWidget aParent,
                                      const nsRect &aRect,
                                      EVENT_CALLBACK aHandleEventFunction,
                                      nsIDeviceContext *aContext,
@@ -258,7 +258,7 @@ protected:
     } \
 
 #define BASE_WINDOWS_METHODS \
-    void Create(nsNativeWindow aParent, \
+    void Create(nsNativeWidget aParent, \
                  const nsRect &aRect, \
                  EVENT_CALLBACK aHandleEventFunction, \
                  nsIDeviceContext *aContext, \

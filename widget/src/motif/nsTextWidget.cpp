@@ -99,7 +99,7 @@ void nsTextWidget::Create(nsIWidget *aParent,
 }
 
 //-------------------------------------------------------------------------
-void nsTextWidget::Create(nsNativeWindow aParent,
+void nsTextWidget::Create(nsNativeWidget aParent,
                       const nsRect &aRect,
                       EVENT_CALLBACK aHandleEventFunction,
                       nsIDeviceContext *aContext,

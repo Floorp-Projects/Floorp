@@ -124,7 +124,7 @@ void nsCheckButton::Create(nsIWidget *aParent,
 // nsCheckButton Creator
 //
 //-------------------------------------------------------------------------
-void nsCheckButton::Create(nsNativeWindow aParent,
+void nsCheckButton::Create(nsNativeWidget aParent,
                       const nsRect &aRect,
                       EVENT_CALLBACK aHandleEventFunction,
                       nsIDeviceContext *aContext,

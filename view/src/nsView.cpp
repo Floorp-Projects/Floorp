@@ -272,7 +272,7 @@ nsresult nsView :: Init(nsIViewManager* aManager,
                         nsIView *aParent,
                         const nsCID *aWindowCIID,
                         nsWidgetInitData *aWidgetInitData,
-                        nsNativeWindow aNative,
+                        nsNativeWidget aNative,
                         PRInt32 aZIndex,
                         const nsViewClip *aClip,
                         float aOpacity,
@@ -408,10 +408,6 @@ PRBool nsView :: Paint(nsIRenderingContext& rc, const nsRect& rect,
         nsRect kidRect;
         kid->GetBounds(kidRect);
         nsRect damageArea;
-//        nsRect damageArea = rect;
-//        damageArea.x -= mBounds.x;
-//        damageArea.y -= mBounds.y;
-//        PRBool overlap = damageArea.IntersectRect(damageArea, kidRect);
         PRBool overlap = damageArea.IntersectRect(rect, kidRect);
 
         if (overlap == PR_TRUE)
@@ -435,17 +431,58 @@ PRBool nsView :: Paint(nsIRenderingContext& rc, const nsRect& rect,
       {
         rc.PushState();
 
-#if 0
         if (HasTransparency() || (opacity < 1.0f))
         {
-          nsRect  crect;
-          PRBool  goodclip = rc.GetClipRect(crect);
+          //overview of algorithm:
+          //1. clip is set to intersection of this view and whatever is
+          //   left of the damage region in the rc.
+          //2. walk tree from this point down through the view list,
+          //   rendering and clipping out opaque views encountered until
+          //   there is nothing left in the clip area or the bottommost
+          //   view is reached.
+          //3. walk back up through view list restoring clips and painting
+          //   or blending any non-opaque views encountered until we reach the
+          //   view that started the whole process
 
           //walk down rendering only views within this clip
 
-          rc.SetClipRect(crect, nsClipCombine_kReplace);
+          nsIView *child = GetNextSibling(), *prevchild = this;
+
+          while (nsnull != child)
+          {
+            nsRect kidRect;
+            child->GetBounds(kidRect);
+            nsRect damageArea;
+            PRBool overlap = damageArea.IntersectRect(rect, kidRect);
+
+            //as we tell each kid to paint, we need to mark the kid as one that was hit
+            //in the front to back rendering so that when we do the back to front pass,
+            //we can re-add the child's rect back into the clip.
+
+            if (overlap == PR_TRUE)
+            {
+              // Translate damage area into kid's coordinate system
+              nsRect kidDamageArea(damageArea.x - kidRect.x, damageArea.y - kidRect.y,
+                                   damageArea.width, damageArea.height);
+              clipres = child->Paint(rc, kidDamageArea, aPaintFlags);
+            }
+
+            prevchild = child;
+
+            child = child->GetNextSibling();
+
+            if (nsnull == child)
+              child = child->GetParent();
+
+            if (clipres == PR_TRUE)
+              break;
+          }
+
+          if ((nsnull != prevchild) && (this != prevchild))
+          {
+            //walk backwards, rendering views
+          }
         }
-#endif
 
         if (nsnull != mFrame)
         {

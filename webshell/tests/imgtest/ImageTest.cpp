@@ -340,7 +340,7 @@ static HWND CreateTopLevel(const char* clazz, const char* title,
   nsresult rv = NSRepository::CreateInstance(kCChildWindowIID, NULL, kIWidgetIID, (void**)&gWindow);
 
   if (NS_OK == rv) {
-      gWindow->Create((nsNativeWindow)window, rect, MyHandleEvent, NULL);
+      gWindow->Create((nsNativeWidget)window, rect, MyHandleEvent, NULL);
   }
 
   ::ShowWindow(window, SW_SHOW);

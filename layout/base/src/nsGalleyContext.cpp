@@ -32,26 +32,11 @@ public:
 
 GalleyContext::GalleyContext()
 {
-  nsresult  res;
-
-  static NS_DEFINE_IID(kDeviceContextCID, NS_DEVICE_CONTEXT_CID);
-  static NS_DEFINE_IID(kDeviceContextIID, NS_IDEVICE_CONTEXT_IID);
-
-  res = NSRepository::CreateInstance(kDeviceContextCID, nsnull,
-                                     kDeviceContextIID,
-                                     (void **)&mDeviceContext);
-  if (NS_OK == res) {
-    mDeviceContext->Init(nsnull);
-    mDeviceContext->SetDevUnitsToAppUnits(mDeviceContext->GetDevUnitsToTwips());
-    mDeviceContext->SetAppUnitsToDevUnits(mDeviceContext->GetTwipsToDevUnits());
-    mDeviceContext->SetGamma(1.7f);
-  }
 }
 
 GalleyContext::~GalleyContext()
 {
   mDeviceContext->FlushFontCache();
-  NS_IF_RELEASE(mDeviceContext);
 }
 
 PRBool GalleyContext::IsPaginated()

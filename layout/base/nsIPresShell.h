@@ -29,6 +29,7 @@ class nsIPresContext;
 class nsIStyleSet;
 class nsIViewManager;
 class nsIReflowCommand;
+class nsIDeviceContext;
 
 #define NS_IPRESSHELL_IID     \
 { 0x76e79c60, 0x944e, 0x11d1, \

@@ -503,15 +503,15 @@ void nsRenderingContextUnix :: SetFont(const nsFont& aFont)
 
   if (mFontMetrics)
   {  
-
-    mCurrFontHandle = ::XLoadFont(mRenderingSurface->display, (char *)mFontMetrics->GetFontHandle());
+//    mCurrFontHandle = ::XLoadFont(mRenderingSurface->display, (char *)mFontMetrics->GetFontHandle());
+    mCurrFontHandle = (Font)mFontMetrics->GetFontHandle());
     
     ::XSetFont(mRenderingSurface->display,
-	       mRenderingSurface->gc,
-	       mCurrFontHandle);
+	             mRenderingSurface->gc,
+	             mCurrFontHandle);
       
     ::XFlushGC(mRenderingSurface->display,
-	       mRenderingSurface->gc);
+	             mRenderingSurface->gc);
   }
 }
 

@@ -43,7 +43,7 @@ class nsIFontMetrics : public nsISupports
 
 public:
   //initializer
-  virtual nsresult Init(const nsFont& aFont, nsIDeviceContext* aContext) = 0;
+  virtual nsresult Init(const nsFont& aFont, nsIDeviceContext *aContext) = 0;
 
   //get the width of an 8 bit char
   virtual nscoord GetWidth(char aC) = 0;

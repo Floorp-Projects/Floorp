@@ -44,7 +44,7 @@ class nsIWebWidget : public nsIDocumentWidget {
 public:
 
   // Create a native window for this web widget; may be called once
-  virtual nsresult Init(nsNativeWindow aNativeParent,
+  virtual nsresult Init(nsNativeWidget aNativeParent,
                         const nsRect& aBounds,
                         nsScrollPreference aScrolling = nsScrollPreference_kAuto) = 0;
 
@@ -52,7 +52,7 @@ public:
   // Use the given presentation context and document for the widget
   // (this widget becomes a second view on the document using the
   // context for presentation).
-  virtual nsresult Init(nsNativeWindow aNativeParent,
+  virtual nsresult Init(nsNativeWidget aNativeParent,
                         const nsRect& aBounds,
                         nsIDocument* aDocument,
                         nsIPresContext* aPresContext,
