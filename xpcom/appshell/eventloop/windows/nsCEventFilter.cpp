@@ -46,7 +46,7 @@ nsCEventFilter::~nsCEventFilter()
 // nsCEventFilter::nsISupports
 //*****************************************************************************   
 
-NS_IMPL_ISUPPORTS1(nsCEventFilter, nsIEventFilter)
+NS_IMPL_ISUPPORTS2(nsCEventFilter, nsIEventFilter, nsIWinEventFilter)
 
 //*****************************************************************************
 // nsCEventFilter::nsIEventFilter
@@ -73,5 +73,61 @@ NS_IMETHODIMP nsCEventFilter::SetNativeData(nsNativeFilterDataType dataType,
 	else
 		nsCRT::memcpy(&m_filter, data, sizeof(m_filter));
 
+	return NS_OK;
+}
+
+//*****************************************************************************
+// nsCEventFilter::nsIEventFilter
+//*****************************************************************************   
+
+NS_IMETHODIMP nsCEventFilter::GetHwnd(void** aHwnd)
+{
+	NS_ENSURE_ARG_POINTER(aHwnd);
+	*aHwnd = m_filter.hWnd;
+	return NS_OK;
+}
+
+NS_IMETHODIMP nsCEventFilter::SetHwnd(void* aHwnd)
+{
+	m_filter.hWnd = (HWND)aHwnd;
+	return NS_OK;
+}
+
+NS_IMETHODIMP nsCEventFilter::GetMsgFilterMin(PRUint32* aMsgFilterMin)
+{
+	NS_ENSURE_ARG_POINTER(aMsgFilterMin);
+	*aMsgFilterMin = m_filter.wMsgFilterMin;
+	return NS_OK;
+}
+
+NS_IMETHODIMP nsCEventFilter::SetMsgFilterMin(PRUint32 aMsgFilterMin)
+{
+	m_filter.wMsgFilterMin = aMsgFilterMin;
+	return NS_OK;
+}
+
+NS_IMETHODIMP nsCEventFilter::GetMsgFilterMax(PRUint32* aMsgFilterMax)
+{
+	NS_ENSURE_ARG_POINTER(aMsgFilterMax);
+	*aMsgFilterMax = m_filter.wMsgFilterMax;
+	return NS_OK;
+}
+
+NS_IMETHODIMP nsCEventFilter::SetMsgFilterMax(PRUint32 aMsgFilterMax)
+{
+	m_filter.wMsgFilterMax = aMsgFilterMax;
+	return NS_OK;
+}
+
+NS_IMETHODIMP nsCEventFilter::GetRemoveFlags(PRUint32* aRemoveFlags)
+{
+	NS_ENSURE_ARG_POINTER(aRemoveFlags);
+	*aRemoveFlags = m_filter.wRemoveFlags;
+	return NS_OK;
+}
+
+NS_IMETHODIMP nsCEventFilter::SetRemoveFlags(PRUint32 aRemoveFlags)
+{
+	m_filter.wRemoveFlags = aRemoveFlags;
 	return NS_OK;
 }

@@ -24,10 +24,10 @@
 #define nsCEventFilter_h__
 
 #include "windows.h"
-#include "nsIEventFilter.h"
+#include "nsIWinEventFilter.h"
 #include "nsCWinFilter.h"
 
-class nsCEventFilter : public nsIEventFilter
+class nsCEventFilter : public nsIWinEventFilter
 {
 public:
 	nsCEventFilter(void* platformFilterData=nsnull);
@@ -35,6 +35,7 @@ public:
 	NS_DECL_ISUPPORTS
 
 	NS_DECL_NSIEVENTFILTER
+	NS_DECL_NSIWINEVENTFILTER
 
 protected:
 	virtual ~nsCEventFilter();

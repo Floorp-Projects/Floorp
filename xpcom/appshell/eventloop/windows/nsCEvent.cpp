@@ -46,7 +46,7 @@ nsCEvent::~nsCEvent()
 // nsCEvent::nsISupports
 //*****************************************************************************   
 
-NS_IMPL_ISUPPORTS1(nsCEvent, nsIEvent)
+NS_IMPL_ISUPPORTS2(nsCEvent, nsIEvent, nsIWinEvent)
 
 //*****************************************************************************
 // nsCEvent::nsIEvent
@@ -73,5 +73,99 @@ NS_IMETHODIMP nsCEvent::SetNativeData(nsNativeEventDataType dataType,
 	else
 		nsCRT::memcpy(&m_msg, data, sizeof(m_msg));
 
+	return NS_OK;
+}
+//*****************************************************************************
+// nsCEvent::nsIWinEvent
+//*****************************************************************************   
+
+NS_IMETHODIMP nsCEvent::GetHwnd(void** aHwnd)
+{
+	NS_ENSURE_ARG_POINTER(aHwnd);
+	*aHwnd = m_msg.hwnd;
+	return NS_OK;
+}
+
+NS_IMETHODIMP nsCEvent::SetHwnd(void* aHwnd)
+{
+	m_msg.hwnd = (HWND)aHwnd;
+	return NS_OK;
+}
+
+NS_IMETHODIMP nsCEvent::GetMessage(PRUint32*	aMessage)
+{
+	NS_ENSURE_ARG_POINTER(aMessage);
+	*aMessage = m_msg.message;
+	return NS_OK;
+}
+
+NS_IMETHODIMP nsCEvent::SetMessage(PRUint32 aMessage)
+{
+	m_msg.message = aMessage;
+	return NS_OK;
+}
+
+NS_IMETHODIMP nsCEvent::GetWParam(PRUint32* aWParam)
+{
+	NS_ENSURE_ARG_POINTER(aWParam);
+	*aWParam = m_msg.wParam;
+	return NS_OK;
+}
+
+NS_IMETHODIMP nsCEvent::SetWParam(PRUint32 aWParam)
+{
+	m_msg.wParam = aWParam;
+	return NS_OK;
+}
+
+NS_IMETHODIMP nsCEvent::GetLParam(PRUint32* aLParam)
+{
+	NS_ENSURE_ARG_POINTER(aLParam);
+	*aLParam = m_msg.lParam;
+	return NS_OK;
+}
+
+NS_IMETHODIMP nsCEvent::SetLParam(PRUint32 aLParam)
+{
+	m_msg.lParam = aLParam;
+	return NS_OK;
+}
+
+NS_IMETHODIMP nsCEvent::GetTime(PRUint32* aTime)
+{
+	NS_ENSURE_ARG_POINTER(aTime);
+	*aTime = m_msg.time;
+	return NS_OK;
+}
+
+NS_IMETHODIMP nsCEvent::SetTime(PRUint32 aTime)
+{
+	m_msg.time = aTime;
+	return NS_OK;
+}
+
+NS_IMETHODIMP nsCEvent::GetPointX(PRInt32* aPointX)
+{
+	NS_ENSURE_ARG_POINTER(aPointX);
+	*aPointX = m_msg.pt.x;
+	return NS_OK;
+}
+
+NS_IMETHODIMP nsCEvent::SetPointX(PRInt32 aPointX)
+{
+	m_msg.pt.x = aPointX;
+	return NS_OK;
+}
+
+NS_IMETHODIMP nsCEvent::GetPointY(PRInt32* aPointY)
+{
+	NS_ENSURE_ARG_POINTER(aPointY);
+	*aPointY = m_msg.pt.y;
+	return NS_OK;
+}
+
+NS_IMETHODIMP nsCEvent::SetPointY(PRInt32 aPointY)
+{
+	m_msg.pt.y = aPointY;
 	return NS_OK;
 }
