@@ -51,9 +51,10 @@ function commonDialogOnLoad()
 
   // set the icon
   var iconElement = document.getElementById("info.icon");
-  var iconURL = gCommonDialogParam.GetString(2);
-  if (iconURL)
-    iconElement.setAttribute("src", iconURL);
+  var iconClass = gCommonDialogParam.GetString(2);
+  if (!iconClass)
+    iconClass = "message-icon";
+  iconElement.setAttribute("class", iconElement.getAttribute("class") + " " + iconClass);
 
   // set the number of command buttons
   var nButtons = gCommonDialogParam.GetInt(2);

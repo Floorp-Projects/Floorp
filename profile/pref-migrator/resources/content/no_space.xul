@@ -41,7 +41,7 @@ Contributor(s):
     <box orient="horizontal">
         <text id="outOfSpace" value="&errorText1.label;"/>
         <spring flex="100%"/>
-        <image id="info.icon" src="chrome://global/skin/message-icon.gif" />
+        <image id="info.icon" class="message-icon"/>
     </box>
     <separator orient="vertical" class="thin"/>
   </box>

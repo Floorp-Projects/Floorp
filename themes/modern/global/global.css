@@ -85,19 +85,19 @@ window[wait-cursor] {
 /* ::::: alert icons :::::*/
 
 .message-icon {
-  list-style-image: url("chrome://global/skin/icon/alert-message.gif");
+  list-style-image: url("chrome://global/skin/icons/alert-message.gif");
 }
 
 .alert-icon {
-  list-style-image: url("chrome://global/skin/icon/alert-exclam.gif");
+  list-style-image: url("chrome://global/skin/icons/alert-exclam.gif");
 }
 
 .error-icon {
-  list-style-image: url("chrome://global/skin/icon/alert-error.gif");
+  list-style-image: url("chrome://global/skin/icons/alert-error.gif");
 }
 
 .question-icon {
-  list-style-image: url("chrome://global/skin/icon/alert-question.gif");
+  list-style-image: url("chrome://global/skin/icons/alert-question.gif");
 }
 
 /* ::::: status bar ::::: */

@@ -407,7 +407,7 @@ function CheckAndSaveDocument(reasonToSave, allowDontSave)
     null,
     {value:0},
     {value:0},
-    "chrome://global/skin/question-icon.gif",
+    "question-icon",
     {value:"false"},
     (allowDontSave ? 3 : 2),
     0,

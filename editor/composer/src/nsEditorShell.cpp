@@ -2836,8 +2836,8 @@ nsEditorShell::ConfirmWithCancel(const nsString& aTitle, const nsString& aQuesti
   { 
     // Stuff in Parameters 
     block->SetString( nsPIPromptService::eMsg, aQuestion.GetUnicode()); 
-    nsAutoString url; url.AssignWithConversion( "chrome://global/skin/question-icon.gif" ); 
-    block->SetString( nsPIPromptService::eIconURL, url.GetUnicode()); 
+    NS_NAMED_LITERAL_STRING(styleClass, "question-icon");
+    block->SetString(nsPIPromptService::eIconClass, styleClass.get());
 
     nsAutoString yesStr, noStr;
     // Default is Yes, No, Cancel

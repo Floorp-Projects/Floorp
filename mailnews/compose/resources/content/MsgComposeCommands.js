@@ -1418,7 +1418,7 @@ function ComposeCanClose()
 				null,
 				{value:0},
 				{value:0},
-				"chrome://global/skin/question-icon.gif",
+				"question-icon",
 				{value:"false"},
 				3,
 				0,
