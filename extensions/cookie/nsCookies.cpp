@@ -52,7 +52,7 @@
 #include "nsTextFormatter.h"
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsIObserverService.h"
-//!!!!!#include "nsIP3PService.h"
+#include "nsICookieConsent.h"
 
 #define MAX_NUMBER_OF_COOKIES 300
 #define MAX_COOKIES_PER_SERVER 20
@@ -131,6 +131,7 @@ PRIVATE char* cookie_P3P = nsnull;
  * The following defines are used to refer to these character positions and values
  */
 
+#define P3P_UnknownPolicy   -1
 #define P3P_NoPolicy         0
 #define P3P_NoConsent        2
 #define P3P_ImplicitConsent  4
@@ -404,12 +405,6 @@ cookie_BehaviorPrefChanged(const char * newpref, void * data) {
     n = PERMISSION_Accept;
   }
     
-  if (n == PERMISSION_P3P) {
-    // load p3p dll
-//!!!!!    nsCOMPtr<nsIP3PService> p3p(do_GetService(NS_P3PSERVICE_CONTRACTID));
-//!!!!!    if (!p3p) return 0;
-  }
-
   cookie_SetBehaviorPref((PERMISSION_BehaviorEnum)n);
   return 0;
 }
@@ -514,12 +509,6 @@ COOKIE_RegisterPrefCallbacks(void) {
   // Initialize for cookie_behaviorPref
   if (NS_FAILED(prefs->GetIntPref(cookie_behaviorPref, &n))) {
     n = PERMISSION_Accept;
-  }
-
-  if (n == PERMISSION_P3P) {
-    // load p3p dll
-//!!!!!    nsCOMPtr<nsIP3PService> p3p(do_GetService(NS_P3PSERVICE_CONTRACTID));
-//!!!!!    if (!p3p) return;
   }
 
   cookie_SetBehaviorPref((PERMISSION_BehaviorEnum)n);
@@ -856,7 +845,7 @@ cookie_GetPolicy(int policy) {
     case P3P_NoIdentInfo:
       return nsICookie::POLICY_NO_II;
   }
-  return nsICookie::POLICY_NONE;
+  return nsICookie::POLICY_UNKNOWN;
 }
 
 /*
@@ -865,11 +854,13 @@ cookie_GetPolicy(int policy) {
  */
 int
 P3P_SitePolicy(char * curURL, nsIHttpChannel* aHttpChannel) {
-  int consent = P3P_NoPolicy;
-//!!!!!  nsCOMPtr<nsIP3PService> p3p(do_GetService(NS_P3PSERVICE_CONTRACTID));
-//!!!!!  if (p3p) {
-//!!!!!    p3p->GetConsent(curURL,aHttpChannel,&consent);
-//!!!!!  }
+  int consent = P3P_UnknownPolicy;
+  if (cookie_GetBehaviorPref() == PERMISSION_P3P) {
+    nsCOMPtr<nsICookieConsent> p3p(do_GetService(NS_COOKIECONSENT_CONTRACTID));
+    if (p3p) {
+      p3p->GetConsent(curURL,aHttpChannel,&consent);
+    }
+  }
   return consent;
 }
 

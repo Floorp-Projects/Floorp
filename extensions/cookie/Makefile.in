@@ -64,6 +64,7 @@ CPPSRCS		= \
 
 XPIDLSRCS	= \
 		nsICookieManager.idl \
+		nsICookieConsent.idl \
 		nsIImgManager.idl \
 		nsIPermissionManager.idl \
 		nsICookie.idl \
