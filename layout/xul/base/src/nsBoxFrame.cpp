@@ -273,12 +273,9 @@ nsBoxFrame::Init(nsIPresContext*  aPresContext,
         if (!HasView()) {
            nsHTMLContainerFrame::CreateViewForFrame(aPresContext,this,mStyleContext,nsnull,PR_TRUE); 
         }
-        nsIView* view = GetView(aPresContext);
 
-        nsCOMPtr<nsIWidget> widget;
-        view->GetWidget(*getter_AddRefs(widget));
-
-        if (!widget)
+        nsIView* view = GetView();
+        if (!view->HasWidget())
            view->CreateWidget(kWidgetCID);   
     }
   }
@@ -1481,8 +1478,7 @@ nsBoxFrame::PaintChild(nsIPresContext*      aPresContext,
      return;
 
   if (!aFrame->HasView()) {
-    nsRect kidRect;
-    aFrame->GetRect(kidRect);
+    nsRect kidRect = aFrame->GetRect();
  
     nsRect damageArea;
     PRBool overlap;
@@ -1866,7 +1862,7 @@ nsBoxFrame::GetFrameForPoint(nsIPresContext*   aPresContext,
       }
     }
 
-    kid->GetNextSibling(&kid);
+    kid = kid->GetNextSibling();
   }
 
   if (*aFrame) {
@@ -1894,10 +1890,9 @@ nsBoxFrame::GetBoxForFrame(nsIFrame* aFrame, PRBool& aIsAdaptor)
 
     // if we hit a non box. Find the box in out last container
     // and clear its cache.
-    nsIFrame* parent = nsnull;
-    aFrame->GetParent(&parent);
     nsIBox* parentBox = nsnull;
-    if (NS_FAILED(parent->QueryInterface(NS_GET_IID(nsIBox), (void**)&parentBox))) 
+    if (NS_FAILED(aFrame->GetParent()->
+                  QueryInterface(NS_GET_IID(nsIBox), (void**)&parentBox)))
        return nsnull;
 
     if (parentBox) {
@@ -2013,15 +2008,17 @@ nsBoxFrame::GetContentOf(nsIContent** aContent)
     nsIFrame* frame;
     GetFrame(&frame);
 
-    while(frame != nsnull) {
-       
-      frame->GetContent(aContent);
-        if (*aContent != nsnull)
-            return NS_OK;
+    while (frame) {
+      *aContent = frame->GetContent();
+      if (*aContent) {
+        NS_ADDREF(*aContent);
+        return NS_OK;
+      }
 
-        frame->GetParent(&frame);
+      frame = frame->GetParent();
     }
 
+    *aContent = nsnull;
     return NS_OK;
 }
 
@@ -2343,22 +2340,16 @@ nsBoxFrame::DisplayDebugInfoFor(nsIBox*         aBox,
                         if (mDebugChild == child)
                             return NS_OK;
 
-                            nsCOMPtr<nsIContent> content;
-                            ourFrame->GetContent(getter_AddRefs(content));
+                        if (ourFrame->GetContent()) {
+                          printf("---------------\n");
+                          DumpBox(stdout);
+                          printf("\n");
+                        }
 
-                            if (content) {                             
-                              printf("---------------\n");
-                              DumpBox(stdout);
-                              printf("\n");
-                            }
-
-                        childFrame->GetContent(getter_AddRefs(content));
-
-                        if (content) {
+                        if (childFrame->GetContent()) {
                             printf("child #%d: ", count);
                             child->DumpBox(stdout);
                             printf("\n");
-
                         }
 
                         mDebugChild = child;
@@ -2488,10 +2479,9 @@ nsBoxFrame::CreateViewForFrame(nsIPresContext*  aPresContext,
 
     if (aForce) {
       // Create a view
-      nsIFrame* parent;
-      aFrame->GetParentWithView(aPresContext, &parent);
-      NS_ASSERTION(parent, "GetParentWithView failed");
-      nsIView* parentView = parent->GetView(aPresContext);
+      nsIFrame* parent = aFrame->GetAncestorWithView();
+      NS_ASSERTION(parent, "GetAncestorWithView failed");
+      nsIView* parentView = parent->GetView();
       NS_ASSERTION(parentView, "no parent with view");
 
       // Create a view
@@ -2499,14 +2489,11 @@ nsBoxFrame::CreateViewForFrame(nsIPresContext*  aPresContext,
       nsIView *view;
       nsresult result = CallCreateInstance(kViewCID, &view);
       if (NS_SUCCEEDED(result)) {
-        nsIViewManager* viewManager;
-        parentView->GetViewManager(viewManager);
+        nsIViewManager* viewManager = parentView->GetViewManager();
         NS_ASSERTION(nsnull != viewManager, "null view manager");
 
         // Initialize the view
-        nsRect bounds;
-        aFrame->GetRect(bounds);
-        view->Init(viewManager, bounds, parentView);
+        view->Init(viewManager, aFrame->GetRect(), parentView);
 
         // If the frame has a fixed background attachment, then indicate that the
         // view's contents should be repainted and not bitblt'd
@@ -2537,11 +2524,8 @@ nsBoxFrame::CreateViewForFrame(nsIPresContext*  aPresContext,
         }
         else if (NS_STYLE_VISIBILITY_HIDDEN == vis->mVisible) {
           // If it has a widget, hide the view because the widget can't deal with it
-          nsIWidget* widget = nsnull;
-          view->GetWidget(widget);
-          if (widget) {
+          if (view->HasWidget()) {
             viewIsVisible = PR_FALSE;
-            NS_RELEASE(widget);
           }
           else {
             // If it's a container element, then leave the view visible, but
@@ -2552,10 +2536,9 @@ nsBoxFrame::CreateViewForFrame(nsIPresContext*  aPresContext,
             // Because this function is called before processing the content
             // object's child elements, we can't tell if it's a leaf by looking
             // at whether the frame has any child frames
-            nsCOMPtr<nsIContent> content;
+            nsIContent* content = aFrame->GetContent();
             PRBool canContainChildren = PR_FALSE;
 
-            aFrame->GetContent(getter_AddRefs(content));
             if (content) {
               content->CanContainChildren(canContainChildren);
             }
@@ -2581,11 +2564,10 @@ nsBoxFrame::CreateViewForFrame(nsIPresContext*  aPresContext,
         }
 
         viewManager->SetViewOpacity(view, vis->mOpacity);
-        NS_RELEASE(viewManager);
       }
 
       // Remember our view
-      aFrame->SetView(aPresContext, view);
+      aFrame->SetView(view);
 
       NS_FRAME_LOG(NS_FRAME_TRACE_CALLS,
         ("nsBoxFrame::CreateViewForFrame: frame=%p view=%p",
