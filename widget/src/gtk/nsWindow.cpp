@@ -60,6 +60,7 @@
 #include "nsIDragSessionGTK.h"
 
 #include "nsGtkIMEHelper.h"
+#include "nsKeyboardUtils.h"
 
 #include <unistd.h>
 
@@ -86,7 +87,7 @@ extern "C" int usleep(unsigned int);
 
 static NS_DEFINE_IID(kCDragServiceCID,  NS_DRAGSERVICE_CID);
 
-static PRBool gRaisePrefInitialized = PR_FALSE;
+static PRBool gGlobalsInitialized   = PR_FALSE;
 static PRBool gRaiseWindows         = PR_TRUE;
 
 gint handle_mozarea_focus_in (
@@ -202,9 +203,11 @@ nsWindow::nsWindow()
   }
 #endif // USE_XIM
 
-  // check to see if we should set our raise pref
-  if (!gRaisePrefInitialized) {
-    gRaisePrefInitialized = PR_TRUE;
+  // initialize globals
+  if (!gGlobalsInitialized) {
+    gGlobalsInitialized = PR_TRUE;
+
+    // check to see if we should set our raise pref
     nsCOMPtr<nsIPref> prefs = do_GetService(NS_PREF_CONTRACTID);
     if (prefs) {
       PRBool val = PR_TRUE;
@@ -213,6 +216,15 @@ nsWindow::nsWindow()
                               &val);
       if (NS_SUCCEEDED(rv))
         gRaiseWindows = val;
+
+      //
+      // control the "keyboard Mode_switch during XGrabKeyboard" workaround
+      //
+      val = PR_TRUE;
+      rv = prefs->GetBoolPref("keyboard.mode_switch.enable_workaround",
+                              &val);
+      if (NS_SUCCEEDED(rv))
+        nsXKBModeSwitch::EnableWorkaround(val);
     }
   }
 }
@@ -909,8 +921,13 @@ void nsWindow::NativeGrab(PRBool aGrab)
     printf("nsWindow::NativeGrab %p keyboard_grab %d\n", this, retval);
 #endif
     // check and set our flag if the grab failed
-    if (retval != 0)
+    if (retval != 0) {
       mLastGrabFailed = PR_TRUE;
+      nsXKBModeSwitch::AreGrabbingKeyboard(PR_FALSE);
+    }
+    else {
+      nsXKBModeSwitch::AreGrabbingKeyboard(PR_TRUE);
+    }
 
     gdk_cursor_destroy(cursor);
   } else {
@@ -918,6 +935,7 @@ void nsWindow::NativeGrab(PRBool aGrab)
     printf("nsWindow::NativeGrab %p ungrab\n", this);
 #endif
     gdk_keyboard_ungrab(GDK_CURRENT_TIME);
+    nsXKBModeSwitch::AreGrabbingKeyboard(PR_FALSE);
     DropMotionTarget();
     gdk_pointer_ungrab(GDK_CURRENT_TIME);
   }
@@ -2027,6 +2045,8 @@ void nsWindow::InitCallbacks(char * aName)
                                  handle_xlib_shell_event,
                                  handle_superwin_paint,
                                  handle_superwin_flush,
+                                 nsXKBModeSwitch::HandleKeyPress,
+                                 nsXKBModeSwitch::HandleKeyRelease,
                                  this, NULL);
   }
 }

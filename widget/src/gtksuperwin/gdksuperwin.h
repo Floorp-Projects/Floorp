@@ -44,6 +44,9 @@ typedef void (*GdkSuperWinPaintFunc) (gint x, gint y,
                                       gpointer data);
 typedef void (*GdkSuperWinPaintFlushFunc) (gpointer data);
 
+typedef void (*GdkSuperWinKeyPressFunc) (XKeyEvent *event);
+typedef void (*GdkSuperWinKeyReleaseFunc) (XKeyEvent *event);
+
 struct _GdkSuperWin
 {
   GtkObject object;
@@ -55,6 +58,8 @@ struct _GdkSuperWin
   GdkSuperWinFunc            shell_func;
   GdkSuperWinPaintFunc       paint_func;
   GdkSuperWinPaintFlushFunc  flush_func;
+  GdkSuperWinKeyPressFunc    keyprs_func;
+  GdkSuperWinKeyReleaseFunc  keyrel_func;
   gpointer                   func_data;
   GDestroyNotify             notify;
 
@@ -79,6 +84,8 @@ gdk_superwin_set_event_funcs (GdkSuperWin               *superwin,
                               GdkSuperWinFunc            shell_func,
                               GdkSuperWinPaintFunc       paint_func,
                               GdkSuperWinPaintFlushFunc  flush_func,
+                              GdkSuperWinKeyPressFunc    keyprs_func,
+                              GdkSuperWinKeyReleaseFunc  keyrel_func,
                               gpointer                   func_data,
                               GDestroyNotify             notify);
 

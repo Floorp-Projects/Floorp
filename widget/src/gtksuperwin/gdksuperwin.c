@@ -440,6 +440,8 @@ gdk_superwin_set_event_funcs (GdkSuperWin               *superwin,
                               GdkSuperWinFunc            shell_func,
                               GdkSuperWinPaintFunc       paint_func,
                               GdkSuperWinPaintFlushFunc  flush_func,
+                              GdkSuperWinKeyPressFunc    keyprs_func,
+                              GdkSuperWinKeyReleaseFunc  keyrel_func,
                               gpointer                   func_data,
                               GDestroyNotify             notify)
 {
@@ -449,6 +451,8 @@ gdk_superwin_set_event_funcs (GdkSuperWin               *superwin,
   superwin->shell_func = shell_func;
   superwin->paint_func = paint_func;
   superwin->flush_func = flush_func;
+  superwin->keyprs_func = keyprs_func;
+  superwin->keyrel_func = keyrel_func;
   superwin->func_data = func_data;
   superwin->notify = notify;
 
@@ -496,6 +500,14 @@ gdk_superwin_bin_filter (GdkXEvent *gdk_xevent,
     retval = GDK_FILTER_REMOVE;
     gdk_superwin_handle_expose(superwin, xevent, &region, FALSE);
     gdk_region_destroy(region);
+    break;
+  case KeyPress:
+    if (superwin->keyprs_func)
+      superwin->keyprs_func(&xevent->xkey);
+    break;
+  case KeyRelease:
+    if (superwin->keyrel_func)
+      superwin->keyrel_func(&xevent->xkey);
     break;
   default:
     break;
