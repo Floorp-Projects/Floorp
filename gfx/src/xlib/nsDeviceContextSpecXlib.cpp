@@ -482,6 +482,14 @@ NS_IMETHODIMP nsPrinterEnumeratorXlib::EnumeratePrinters(PRUint32* aCount, PRUni
   return NS_OK;
 }
 
+/* readonly attribute wstring defaultPrinterName; */
+NS_IMETHODIMP nsPrinterEnumeratorXlib::GetDefaultPrinterName(PRUnichar * *aDefaultPrinterName)
+{
+  NS_ENSURE_ARG_POINTER(aDefaultPrinterName);
+  *aDefaultPrinterName = nsnull;
+  return NS_OK;
+}
+
 /* void initPrintSettingsFromPrinter (in wstring aPrinterName, in nsIPrintSettings aPrintSettings); */
 NS_IMETHODIMP nsPrinterEnumeratorXlib::InitPrintSettingsFromPrinter(const PRUnichar *aPrinterName, nsIPrintSettings *aPrintSettings)
 {
