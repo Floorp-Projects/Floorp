@@ -38,7 +38,6 @@
 #ifndef nsICSSCharsetRule_h___
 #define nsICSSCharsetRule_h___
 
-#include "nslayout.h"
 #include "nsICSSRule.h"
 
 class nsString;
@@ -54,7 +53,7 @@ public:
   NS_IMETHOD  GetEncoding(nsString& aEncoding) const = 0;
 };
 
-extern NS_HTML nsresult
+extern NS_EXPORT nsresult
   NS_NewCSSCharsetRule(nsICSSCharsetRule** aInstancePtrResult, const nsString& aEncoding);
 
 #endif /* nsICSSCharsetRule_h___ */

@@ -38,7 +38,6 @@
 #ifndef nsICSSLoader_h___
 #define nsICSSLoader_h___
 
-#include "nslayout.h"
 #include "nsISupports.h"
 #include "nsAReadableString.h"
 #include "nsICSSImportRule.h"
@@ -139,10 +138,10 @@ public:
   NS_IMETHOD StopLoadingSheet(nsIURI* aURL) = 0;
 };
 
-extern NS_HTML nsresult 
+extern NS_EXPORT nsresult 
 NS_NewCSSLoader(nsIDocument* aDocument, nsICSSLoader** aLoader);
 
-extern NS_HTML nsresult 
+extern NS_EXPORT nsresult 
 NS_NewCSSLoader(nsICSSLoader** aLoader);
 
 #endif /* nsICSSLoader_h___ */

@@ -37,7 +37,6 @@
 #ifndef nsContentUtils_h___
 #define nsContentUtils_h___
 
-#include "nslayout.h"
 #include "jspubtd.h"
 #include "nsAReadableString.h"
 #include "nsIDOMScriptObjectFactory.h"

@@ -38,7 +38,6 @@
 #ifndef nsTextFragment_h___
 #define nsTextFragment_h___
 
-#include "nslayout.h"
 #include "nsAWritableString.h"
 class nsString;
 
@@ -71,11 +70,12 @@ class nsString;
  * This class does not have a virtual destructor therefore it is not
  * meant to be subclassed.
  */
-class NS_LAYOUT nsTextFragment {
+class nsTextFragment {
 public:
   /**
    * Default constructor. Initialize the fragment to be empty.
    */
+  inline
   nsTextFragment() {
     m1b = nsnull;
     mAllBits = 0;
@@ -134,6 +134,7 @@ public:
   /**
    * Return PR_TRUE if this fragment is represented by PRUnichar data
    */
+  inline
   PRBool Is2b() const {
     return mState.mIs2b;
   }
@@ -141,6 +142,7 @@ public:
   /**
    * Get a pointer to constant PRUnichar data.
    */
+  inline
   const PRUnichar* Get2b() const {
     NS_ASSERTION(Is2b(), "not 2b text"); 
     return m2b;
@@ -149,6 +151,7 @@ public:
   /**
    * Get a pointer to constant char data.
    */
+  inline
   const char* Get1b() const {
     NS_ASSERTION(!Is2b(), "not 1b text"); 
     return (const char*) m1b;
@@ -158,6 +161,7 @@ public:
    * Get the length of the fragment. The length is the number of logical
    * characters, not the number of bytes to store the characters.
    */
+  inline
   PRInt32 GetLength() const {
     return PRInt32(mState.mLength);
   }
@@ -166,6 +170,7 @@ public:
    * Mutable version of Get2b. Only works for a non-const object.
    * Returns a pointer to the PRUnichar data.
    */
+  inline
   PRUnichar* Get2b() {
     NS_ASSERTION(Is2b(), "not 2b text"); 
     return m2b;
@@ -175,6 +180,7 @@ public:
    * Mutable version of Get1b. Only works for a non-const object.
    * Returns a pointer to the char data.
    */
+  inline
   char* Get1b() {
     NS_ASSERTION(!Is2b(), "not 1b text"); 
     return (char*) m1b;
@@ -231,6 +237,7 @@ public:
    * Return the character in the text-fragment at the given
    * index. This always returns a PRUnichar.
    */
+  inline
   PRUnichar CharAt(PRInt32 aIndex) const {
     NS_ASSERTION(PRUint32(aIndex) < mState.mLength, "bad index");
     return mState.mIs2b ? m2b[aIndex] : PRUnichar(m1b[aIndex]);

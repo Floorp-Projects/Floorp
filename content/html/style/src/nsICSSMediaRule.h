@@ -38,7 +38,6 @@
 #ifndef nsICSSMediaRule_h___
 #define nsICSSMediaRule_h___
 
-#include "nslayout.h"
 #include "nsICSSGroupRule.h"
 //#include "nsString.h"
 
@@ -56,7 +55,7 @@ public:
   NS_IMETHOD_(PRBool)  UseForMedium(nsIAtom* aMedium) const = 0;
 };
 
-extern NS_HTML nsresult
+extern NS_EXPORT nsresult
   NS_NewCSSMediaRule(nsICSSMediaRule** aInstancePtrResult);
 
 #endif /* nsICSSMediaRule_h___ */

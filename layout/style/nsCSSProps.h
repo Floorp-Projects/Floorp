@@ -38,7 +38,6 @@
 #ifndef nsCSSProps_h___
 #define nsCSSProps_h___
 
-#include "nslayout.h"
 #include "nsString.h"
 
 /*
@@ -57,7 +56,7 @@ enum nsCSSProperty {
 #undef CSS_PROP
 
 
-class NS_LAYOUT nsCSSProps {
+class nsCSSProps {
 public:
   static void AddRefTable(void);
   static void ReleaseTable(void);

@@ -40,7 +40,6 @@
 #define nsICSSStyleRule_h___
 
 //#include <stdio.h>
-#include "nslayout.h"
 #include "nsICSSRule.h"
 #include "nsString.h"
 
@@ -170,7 +169,7 @@ public:
   virtual nsIStyleRule* GetImportantRule(void) = 0;
 };
 
-extern NS_HTML nsresult
+extern NS_EXPORT nsresult
   NS_NewCSSStyleRule(nsICSSStyleRule** aInstancePtrResult, const nsCSSSelector& aSelector);
 
 #endif /* nsICSSStyleRule_h___ */

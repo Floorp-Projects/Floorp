@@ -38,7 +38,6 @@
 #ifndef nsITextContent_h___
 #define nsITextContent_h___
 
-#include "nslayout.h"
 #include "nsIContent.h"
 class nsString;
 class nsTextFragment;

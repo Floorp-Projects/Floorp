@@ -39,7 +39,6 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nscore.h"
-#include "nslayout.h"
 #include "nsCOMPtr.h"
 #include "nsCRT.h"
 #include "nsString.h"

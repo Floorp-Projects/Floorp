@@ -38,7 +38,6 @@
 #ifndef nsIHTMLCSSStyleSheet_h___
 #define nsIHTMLCSSStyleSheet_h___
 
-#include "nslayout.h"
 #include "nsIStyleSheet.h"
 
 // IID for the nsIHTMLCSSStyleSheet interface {b5cc4ac0-eab6-11d1-8031-006008159b5a}
@@ -54,11 +53,11 @@ public:
 };
 
 // XXX for convenience and backward compatibility
-extern NS_HTML nsresult
+extern NS_EXPORT nsresult
   NS_NewHTMLCSSStyleSheet(nsIHTMLCSSStyleSheet** aInstancePtrResult, nsIURI* aURL,
                           nsIDocument* aDocument);
 
-extern NS_HTML nsresult
+extern NS_EXPORT nsresult
   NS_NewHTMLCSSStyleSheet(nsIHTMLCSSStyleSheet** aInstancePtrResult);
 
 #endif /* nsIHTMLCSSStyleSheet_h___ */

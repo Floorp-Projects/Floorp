@@ -38,7 +38,6 @@
 #ifndef nsIHTMLAttributes_h___
 #define nsIHTMLAttributes_h___
 
-#include "nslayout.h"
 #include "nsISupports.h"
 #include "nsHTMLValue.h"
 #include "nsIHTMLContent.h"
@@ -136,7 +135,7 @@ public:
 #endif
 };
 
-extern NS_HTML nsresult
+extern NS_EXPORT nsresult
   NS_NewHTMLAttributes(nsIHTMLAttributes** aInstancePtrResult);
 
 #endif /* nsIHTMLAttributes_h___ */

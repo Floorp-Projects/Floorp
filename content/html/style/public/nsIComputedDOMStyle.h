@@ -38,7 +38,6 @@
 #ifndef nsIComputedDOMStyle_h___
 #define nsIComputedDOMStyle_h___
 
-#include "nslayout.h"
 #include "nsIDOMCSSStyleDeclaration.h"
 
 class nsIDOMElement;
@@ -57,7 +56,7 @@ public:
                   nsIPresShell *aPresShell) = 0;
 };
 
-extern NS_HTML nsresult 
+extern NS_EXPORT nsresult 
 NS_NewComputedDOMStyle(nsIComputedDOMStyle** aComputedStyle);
 
 #endif /* nsIComputedDOMStyle_h___ */

@@ -1421,7 +1421,7 @@ HTMLStyleSheetImpl::AttributeAffectsStyle(nsIAtom *aAttribute,
 }
 
 // XXX For convenience and backwards compatibility
-NS_HTML nsresult
+NS_EXPORT nsresult
 NS_NewHTMLStyleSheet(nsIHTMLStyleSheet** aInstancePtrResult, nsIURI* aURL, 
                      nsIDocument* aDocument)
 {
@@ -1440,7 +1440,7 @@ NS_NewHTMLStyleSheet(nsIHTMLStyleSheet** aInstancePtrResult, nsIURI* aURL,
 }
 
 
-NS_HTML nsresult
+NS_EXPORT nsresult
 NS_NewHTMLStyleSheet(nsIHTMLStyleSheet** aInstancePtrResult)
 {
   NS_PRECONDITION(aInstancePtrResult, "null out param");

@@ -219,7 +219,7 @@ ImageListener::OnDataAvailable(nsIRequest* request, nsISupports *ctxt,
 
 //----------------------------------------------------------------------
 
-NS_LAYOUT nsresult
+NS_EXPORT nsresult
 NS_NewImageDocument(nsIDocument** aInstancePtrResult)
 {
   nsImageDocument* doc = new nsImageDocument();
