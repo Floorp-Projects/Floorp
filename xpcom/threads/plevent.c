@@ -466,11 +466,22 @@ PR_IMPLEMENT(void)
 PL_ProcessPendingEvents(PLEventQueue* self)
 {
     PRInt32 count;
-    
-    if (self == NULL)
-    return;
+    PRCList* node;
 
-  if (PR_FALSE != self->processingEvents) return;
+    if (self == NULL)
+      return;
+
+    if (self->processingEvents) {
+#ifdef XP_UNIX /* because this appears necessary only for unix and scares me */
+      /* if we're called re-entrantly many times, the notification pipe
+         must be allowed to empty or the fool thing will notify us
+         so anxiously that the CPU will peg and system events will be
+         drowned out. */
+      if (self->notifyCount > 0 && self->type == EventQueueIsNative)
+        _pl_AcknowledgeNativeNotify(self);
+#endif
+      return;
+    }
 
     self->processingEvents = PR_TRUE;
 
@@ -480,13 +491,30 @@ PL_ProcessPendingEvents(PLEventQueue* self)
      */
     count = _pl_GetEventCount(self);
     while (count-- > 0) {
-    PLEvent* event = PL_GetEvent(self);
-        if (event == NULL) break;
+      PLEvent* event = PL_GetEvent(self);
+      if (event == NULL)
+        break;
 
-    PR_LOG(event_lm, PR_LOG_DEBUG, ("$$$ processing event"));
-    PL_HandleEvent(event);
-    PR_LOG(event_lm, PR_LOG_DEBUG, ("$$$ done processing event"));
+      PR_LOG(event_lm, PR_LOG_DEBUG, ("$$$ processing event"));
+      PL_HandleEvent(event);
+      PR_LOG(event_lm, PR_LOG_DEBUG, ("$$$ done processing event"));
     }
+
+#ifdef XP_UNIX
+    /* now restore any notifications that we destroyed re-entrantly, above */
+    PR_EnterMonitor(self->monitor);
+    if (self->type == EventQueueIsNative) {
+      count = self->notifyCount;
+      node = PR_LIST_HEAD(&self->queue);
+      while (node != &self->queue) {
+        if (--count < 0)
+          _pl_NativeNotify(self);
+        node = PR_NEXT_LINK(node);
+      }
+    }
+    PR_ExitMonitor(self->monitor);
+#endif
+
     self->processingEvents = PR_FALSE;
 }
 
