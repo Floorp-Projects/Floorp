@@ -308,14 +308,12 @@ nsCheckboxControlFrame::PaintCheckBox(nsIPresContext& aPresContext,
   nsresult result = GetCurrentCheckState(&checked);
   if (PR_TRUE == checked) {
       // Draw check mark
- //XXX: TODO Use fixed size checkmark when size matches default 
- //This will make the checkmark look better -->PaintFixedSizeCheckMark(aRenderingContext, p2t);
     const nsStyleColor* color = (const nsStyleColor*)
       mStyleContext->GetStyleData(eStyleStruct_Color);
     aRenderingContext.SetColor(color->mColor);
-    nsFormControlHelper::PaintScaledCheckMark(aRenderingContext,
+    nsFormControlHelper::PaintCheckMark(aRenderingContext,
                          p2t, mRect.width, mRect.height);
-
+   
   }
   PRBool clip;
   aRenderingContext.PopState(clip);

@@ -410,7 +410,7 @@ NS_IMETHODIMP nsButtonControlFrame::GetProperty(nsIAtom* aName, nsString& aValue
 
 nsresult nsButtonControlFrame::RequiresWidget(PRBool& aRequiresWidget)
 {
-  aRequiresWidget = PR_FALSE;
+  aRequiresWidget = PR_TRUE;
   return NS_OK;
 }
 

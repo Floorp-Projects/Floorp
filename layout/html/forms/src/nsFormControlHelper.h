@@ -77,6 +77,8 @@ struct nsInputDimensionSpec
 
 };
 
+
+
 /** 
   * nsFormControlHelper is the base class for frames of form controls. It
   * provides a uniform way of creating widgets, resizing, and painting.
@@ -86,6 +88,8 @@ class nsFormControlHelper
 {
 
 public:
+  
+
   static nscoord CalculateSize (nsIPresContext* aPresContext, nsIFormControlFrame* aFrame,
                                 const nsSize& aCSSSize, nsInputDimensionSpec& aDimensionSpec, 
                                 nsSize& aBounds, PRBool& aWidthExplicit, 
@@ -294,7 +298,7 @@ public:
                                      float aPixelsToTwips);
                        
   /**
-    * Paint a scaled checkmark
+    * Paint a checkmark
 	  * 
     * @param aRenderingContext the rendering context
 	  * @param aPixelsToTwips scale factor for convering pixels to twips.
@@ -302,15 +306,15 @@ public:
     * @param aHeight height in twips
     */
 
-  static void PaintScaledCheckMark(nsIRenderingContext& aRenderingContext,
-                         float aPixelsToTwips, PRUint32 aWidth, PRUint32 aHeight);
+  static void PaintCheckMark(nsIRenderingContext& aRenderingContext,
+                             float aPixelsToTwips, PRUint32 aWidth, PRUint32 aHeight);
 
    /**
     * Paint a fixed size checkmark border
 	  * 
     * @param aRenderingContext the rendering context
 	  * @param aPixelsToTwips scale factor for convering pixels to twips.
-    * @param aBackgroundColor color for background of checkbox 
+    * @param aBackgroundColor color for background of the checkbox 
     */
 
   static void PaintFixedSizeCheckMarkBorder(nsIRenderingContext& aRenderingContext,
@@ -348,6 +352,37 @@ public:
 
   static void PaintFocus(nsIRenderingContext& aRenderingContext,
                          const nsRect& aDirtyRect, nsRect& aInside, nsRect& aOutside);
+
+   /**
+    * Get the rectangle for a circular area. To maintain the aspect ratio of the circular
+    * area the rectangle is offset to center the circular area within the width and height
+    * specified.
+	  * 
+    * @param aWidth width to center within
+    * @param aHeight height to center within 
+    * @param aRect the computed rectangle centering the circle by setting the x and y of the rect.
+    */
+
+  static void GetCircularRect(PRUint32 aWidth, PRUint32 aHeight, nsRect& aRect);
+
+   /**
+    * Paint a circular background
+	  * 
+    * @param aPresContext the presentation context
+    * @param aRenderingContext the rendering context
+    * @param aDirtyRect rectangle requiring update
+    * @param aStyleContext style context specifying colors and spacing
+    * @param aInset if PR_TRUE draw inset, otherwise draw outset
+    * @param aForFrame the frame that the scrollbar will be rendered in to
+    * @param aWidth width of the border in TWIPS
+    * @param aHeight height ofthe border in TWIPS
+    */
+
+  static void PaintCircularBackground(nsIPresContext& aPresContext,
+                         nsIRenderingContext& aRenderingContext,
+                         const nsRect& aDirtyRect, nsIStyleContext* aStyleContext, PRBool aInset,
+                         nsIFrame* aForFrame, PRUint32 aWidth, PRUint32 aHeight);
+
 
    /**
     * Paint a circular border

@@ -223,102 +223,101 @@ nsFormControlFrame::Reflow(nsIPresContext&      aPresContext,
 
   nsIDeviceContext* dx = nsnull;
   dx = aPresContext.GetDeviceContext();
-  PRBool supportsWidgets = PR_TRUE;
-  //XXX: Temporary flag for getting GFX rendered widgets on the screen
-  PRBool useGfxWidgets = PR_FALSE;
-
-  if (PR_FALSE == useGfxWidgets) {
-    supportsWidgets = PR_TRUE;
-    if (nsnull != dx) { 
-      dx->SupportsNativeWidgets(supportsWidgets);
-      NS_RELEASE(dx);
-    }
+  PRBool requiresWidget = PR_TRUE;
+ 
+    // Checkto see if the device context supports widgets at all
+  if (nsnull != dx) { 
+    dx->SupportsNativeWidgets(requiresWidget);
+    NS_RELEASE(dx);
   }
-  else
-    supportsWidgets = PR_FALSE;
+
+#ifdef NS_GFX_RENDER_FORM_ELEMENTS
+    // Check with the frame to see if requires a widget to render
+  if (PR_TRUE == requiresWidget) {
+    RequiresWidget(requiresWidget);   
+  }
+#endif
 
   GetDesiredSize(&aPresContext, aReflowState, aDesiredSize, mWidgetSize);
 
   if (!mDidInit) {
-	  nsIPresShell   *presShell = aPresContext.GetShell();     // need to release
-  	nsIViewManager *viewMan   = presShell->GetViewManager();  // need to release
-	  NS_RELEASE(presShell); 
-    nsRect boundBox(0, 0, aDesiredSize.width, aDesiredSize.height); 
+    if (PR_TRUE == requiresWidget) {
+	    nsIPresShell   *presShell = aPresContext.GetShell();     // need to release
+  	  nsIViewManager *viewMan   = presShell->GetViewManager();  // need to release
+	    NS_RELEASE(presShell); 
+      nsRect boundBox(0, 0, aDesiredSize.width, aDesiredSize.height); 
 
-    // absolutely positioned controls already have a view but not a widget
-    nsIView* view = nsnull;
-    GetView(view);
-    if (nsnull == view) {
-      result = nsRepository::CreateInstance(kViewCID, nsnull, kIViewIID, (void **)&view);
-	    if (!NS_SUCCEEDED(result)) {
-	      NS_ASSERTION(0, "Could not create view for form control"); 
-        aStatus = NS_FRAME_NOT_COMPLETE;
-        return result;
-	    }
+      // absolutely positioned controls already have a view but not a widget
+      nsIView* view = nsnull;
+      GetView(view);
+      if (nsnull == view) {
+        result = nsRepository::CreateInstance(kViewCID, nsnull, kIViewIID, (void **)&view);
+	      if (!NS_SUCCEEDED(result)) {
+	        NS_ASSERTION(0, "Could not create view for form control"); 
+          aStatus = NS_FRAME_NOT_COMPLETE;
+          return result;
+	      }
 
-      nsIFrame* parWithView;
-	    nsIView *parView;
+        nsIFrame* parWithView;
+	      nsIView *parView;
 
-      GetParentWithView(parWithView);
-	    parWithView->GetView(parView);
+        GetParentWithView(parWithView);
+	      parWithView->GetView(parView);
 
-	    // initialize the view as hidden since we don't know the (x,y) until Paint
-      result = view->Init(viewMan, boundBox, parView, nsnull, nsViewVisibility_kHide);
-      if (NS_OK != result) {
-	      NS_ASSERTION(0, "view initialization failed"); 
-        aStatus = NS_FRAME_NOT_COMPLETE;
-        return NS_OK;
-	    }
+	      // initialize the view as hidden since we don't know the (x,y) until Paint
+        result = view->Init(viewMan, boundBox, parView, nsnull, nsViewVisibility_kHide);
+        if (NS_OK != result) {
+	        NS_ASSERTION(0, "view initialization failed"); 
+          aStatus = NS_FRAME_NOT_COMPLETE;
+          return NS_OK;
+	      }
 
-      viewMan->InsertChild(parView, view, 0);
-      SetView(view);
-    }
-
-    PRInt32 type;
-    GetType(&type);
-    const nsIID& id = GetCID();
-
-#ifdef NS_GFX_RENDER_FORM_ELEMENTS
-    RequiresWidget(supportsWidgets);   
-#else
-    supportsWidgets = PR_TRUE;
-#endif
-
-    if ((NS_FORM_INPUT_HIDDEN != type) && (PR_TRUE == supportsWidgets)) {
-	    // Do the following only if a widget is created
-      nsWidgetInitData* initData = GetWidgetInitData(aPresContext); // needs to be deleted
-      view->CreateWidget(id, initData);
-
-      if (nsnull != initData) {
-        delete(initData);
-	  }
-	
- 	  // set our widget
-	  result = GetWidget(view, &mWidget);
-	  if ((NS_OK == result) && mWidget) { // keep the ref on mWidget
-      nsIFormControl* formControl = nsnull;
-      result = mContent->QueryInterface(kIFormControlIID, (void**)&formControl);
-      if ((NS_OK == result) && formControl) {
-        // set the content's widget, so it can get content modified by the widget
-        formControl->SetWidget(mWidget);
-        NS_RELEASE(formControl);
+        viewMan->InsertChild(parView, view, 0);
+        SetView(view);
       }
-  //    PostCreateWidget(&aPresContext, aDesiredSize.width, aDesiredSize.height);
-  //    mDidInit = PR_TRUE;
-	  } else {
-	    NS_ASSERTION(0, "could not get widget");
-	  }
-	}
-	
-	PostCreateWidget(&aPresContext, aDesiredSize.width, aDesiredSize.height);
-    mDidInit = PR_TRUE;
 
-    if ((aDesiredSize.width != boundBox.width) || (aDesiredSize.height != boundBox.height)) {
-      viewMan->ResizeView(view, aDesiredSize.width, aDesiredSize.height);
+      PRInt32 type;
+      GetType(&type);
+      const nsIID& id = GetCID();
+
+      if ((NS_FORM_INPUT_HIDDEN != type) && (PR_TRUE == requiresWidget)) {
+	      // Do the following only if a widget is created
+        nsWidgetInitData* initData = GetWidgetInitData(aPresContext); // needs to be deleted
+        view->CreateWidget(id, initData);
+
+        if (nsnull != initData) {
+          delete(initData);
+        }
+	  
+ 	      // set our widget
+	      result = GetWidget(view, &mWidget);
+	      if ((NS_OK == result) && mWidget) { // keep the ref on mWidget
+          nsIFormControl* formControl = nsnull;
+          result = mContent->QueryInterface(kIFormControlIID, (void**)&formControl);
+          if ((NS_OK == result) && formControl) {
+            // set the content's widget, so it can get content modified by the widget
+            formControl->SetWidget(mWidget);
+            NS_RELEASE(formControl);
+          }
+ 	      } else {
+	        NS_ASSERTION(0, "could not get widget");
+	      }
+      }
+	  
+	    PostCreateWidget(&aPresContext, aDesiredSize.width, aDesiredSize.height);
+      mDidInit = PR_TRUE;
+
+      if ((aDesiredSize.width != boundBox.width) || (aDesiredSize.height != boundBox.height)) {
+        viewMan->ResizeView(view, aDesiredSize.width, aDesiredSize.height);
+      }
+
+	    NS_IF_RELEASE(viewMan);    
     }
-
-	  NS_IF_RELEASE(viewMan);    
-  } 
+    else {
+      PostCreateWidget(&aPresContext, aDesiredSize.width, aDesiredSize.height);
+      mDidInit = PR_TRUE;
+    }
+  }
   
   aDesiredSize.ascent = aDesiredSize.height;
   aDesiredSize.descent = 0;
@@ -643,8 +642,7 @@ nsFormControlFrame::GetFont(nsIPresContext*        aPresContext,
 }
 
 nsresult nsFormControlFrame::GetDefaultCheckState(PRBool *aState)
-{
-	nsresult res = NS_OK;
+{	nsresult res = NS_OK;
   nsIDOMHTMLInputElement* inputElement;
   if (NS_OK == mContent->QueryInterface(kIDOMHTMLInputElementIID, (void**)&inputElement)) {
     res = inputElement->GetDefaultChecked(aState);

@@ -568,13 +568,12 @@ nsFormControlHelper::PaintScrollbar(nsIRenderingContext& aRenderingContext,
 }
 
 
+
 void
 nsFormControlHelper::PaintFixedSizeCheckMark(nsIRenderingContext& aRenderingContext,
                          float aPixelsToTwips)
 {
-   //XXX: Check mark is always draw in black. If the this code is used to Render the widget 
-   //to the screen the color should be set using the CSS style color instead.
-  aRenderingContext.SetColor(NS_RGB(0, 0, 0));
+
     // Offsets to x,y location, These offsets are used to place the checkmark in the middle
     // of it's 12X12 pixel box.
   const PRUint32 ox = 3;
@@ -630,9 +629,20 @@ nsFormControlHelper::PaintFixedSizeCheckMarkBorder(nsIRenderingContext& aRenderi
 
 //Draw a checkmark in any size.
 void
-nsFormControlHelper::PaintScaledCheckMark(nsIRenderingContext& aRenderingContext,
+nsFormControlHelper::PaintCheckMark(nsIRenderingContext& aRenderingContext,
                          float aPixelsToTwips, PRUint32 aWidth, PRUint32 aHeight)
 {
+ // Width and height of the fixed size checkmark in TWIPS.
+  const PRUint32 fixedSizeCheckmarkWidth = 165;
+  const PRUint32 fixedSizeCheckmarkHeight = 165;
+
+  if ((fixedSizeCheckmarkWidth == aWidth)  &&
+      (fixedSizeCheckmarkHeight == aHeight)) {
+      // Standard size, so draw a fixed size check mark instead of a scaled check mark.
+      PaintFixedSizeCheckMark(aRenderingContext, aPixelsToTwips);
+    return;
+  }
+
   const PRUint32 checkpoints = 7;
   const PRUint32 checksize   = 9; //This is value is determined by added 2 units to the end
                                 //of the 7X& pixel rectangle below to provide some white space
@@ -773,13 +783,52 @@ nsFormControlHelper::PaintRectangularButton(nsIPresContext& aPresContext,
 }
 
 
+void 
+nsFormControlHelper::GetCircularRect(PRUint32 aWidth, PRUint32 aHeight, nsRect& aRect)
+{
+ if (aWidth > aHeight)
+    aRect.SetRect((aWidth/2) - (aHeight/2), 0, aHeight, aHeight);
+  else
+    aRect.SetRect(0, (aHeight/2) - (aWidth/2), aWidth, aWidth);
+}
+
+
+void
+nsFormControlHelper::PaintCircularBackground(nsIPresContext& aPresContext,
+                         nsIRenderingContext& aRenderingContext,
+                         const nsRect& aDirtyRect, nsIStyleContext* aStyleContext, PRBool aInset,
+                         nsIFrame* aForFrame, PRUint32 aWidth, PRUint32 aHeight)
+{
+  float p2t;
+  aPresContext.GetScaledPixelsToTwips(p2t);
+  nscoord onePixel     = NSIntPixelsToTwips(1, p2t);
+
+  nsRect outside;
+  nsFormControlHelper::GetCircularRect(aWidth, aHeight, outside);
+  
+  outside.Deflate(onePixel, onePixel);
+  outside.Deflate(onePixel, onePixel);
+  const nsStyleColor* color = (const nsStyleColor*)
+     aStyleContext->GetStyleData(eStyleStruct_Color);
+  aRenderingContext.SetColor(color->mBackgroundColor);
+  aRenderingContext.FillArc(outside, 0, 180);
+  aRenderingContext.FillArc(outside, 180, 360);
+}
+
+
 void
 nsFormControlHelper::PaintCircularBorder(nsIPresContext& aPresContext,
                          nsIRenderingContext& aRenderingContext,
                          const nsRect& aDirtyRect, nsIStyleContext* aStyleContext, PRBool aInset,
                          nsIFrame* aForFrame, PRUint32 aWidth, PRUint32 aHeight)
 {
+  const PRUint32 standardWidth = 180;
+  const PRUint32 standardHeight = 180;
+
   aRenderingContext.PushState();
+
+  const nsStyleColor* color = (const nsStyleColor*)
+     aStyleContext->GetStyleData(eStyleStruct_Color);
 
   float p2t;
   aPresContext.GetScaledPixelsToTwips(p2t);
@@ -793,15 +842,9 @@ nsFormControlHelper::PaintCircularBorder(nsIPresContext& aPresContext,
 
   nsRect outside(0, 0, aWidth, aHeight);
 
-  aRenderingContext.SetColor(NS_RGB(192,192,192));
-  aRenderingContext.FillRect(outside);
-
-  PRBool standardSize = PR_FALSE;
-  if (standardSize) {
+  PRBool standardSize = ((aWidth == standardWidth) && (aHeight == standardHeight));
+  if (PR_TRUE == standardSize) {
     outside.SetRect(0, 0, twelvePixels, twelvePixels);
-    aRenderingContext.SetColor(NS_RGB(255,255,255));
-    aRenderingContext.FillArc(outside, 0, 180);
-    aRenderingContext.FillArc(outside, 180, 360);
 
     if (PR_TRUE == aInset) {
       outside.Deflate(onePixel, onePixel);
@@ -812,8 +855,12 @@ nsFormControlHelper::PaintCircularBorder(nsIPresContext& aPresContext,
       outside.SetRect(0, 0, twelvePixels, twelvePixels);
     }
 
-    // DrakGray
+    // DrakGray    
+//    PRUint8 borderStyle = aBorderStyle.GetBorderStyle(NS_SIDE_TOP),
+//    nscolor borderColor = aBorderStyle.GetBorderColor(NS_SIDE_TOP),
+		
     aRenderingContext.SetColor(NS_RGB(128,128,128));
+//    aRenderingContext.SetColor(borderColor);
     PaintLine(aRenderingContext, 4, 0, 7, 0, PR_TRUE, 1, onePixel);
     PaintLine(aRenderingContext, 2, 1, 3, 1, PR_TRUE, 1, onePixel);
     PaintLine(aRenderingContext, 8, 1, 9, 1, PR_TRUE, 1, onePixel);
@@ -823,6 +870,8 @@ nsFormControlHelper::PaintCircularBorder(nsIPresContext& aPresContext,
     PaintLine(aRenderingContext, 1, 8, 1, 9, PR_FALSE, 1, onePixel);
 
     // Black
+//    nscolor borderColor = aBorderStyle.GetBorderColor(NS_SIDE_BOTTOM);
+//    aRenderingContext.SetColor(borderColor);
     aRenderingContext.SetColor(NS_RGB(0,0,0));
     PaintLine(aRenderingContext, 4, 1, 7, 1, PR_TRUE, 1, onePixel);
     PaintLine(aRenderingContext, 2, 2, 3, 2, PR_TRUE, 1, onePixel);
@@ -847,8 +896,9 @@ nsFormControlHelper::PaintCircularBorder(nsIPresContext& aPresContext,
     outside.Deflate(onePixel, onePixel);
     outside.Deflate(onePixel, onePixel);
   } else {
-    outside.SetRect(0, 0, twelvePixels, twelvePixels);
-
+    nsRect outside;
+    nsFormControlHelper::GetCircularRect(aWidth, aHeight, outside);
+    
     aRenderingContext.SetColor(NS_RGB(128,128,128));
     aRenderingContext.FillArc(outside, 46, 225);
     aRenderingContext.SetColor(NS_RGB(255,255,255));
@@ -861,13 +911,6 @@ nsFormControlHelper::PaintCircularBorder(nsIPresContext& aPresContext,
     aRenderingContext.SetColor(NS_RGB(192,192,192));
     aRenderingContext.FillArc(outside, 225, 360);
     aRenderingContext.FillArc(outside, 0, 44);
-
-    outside.Deflate(onePixel, onePixel);
-    aRenderingContext.SetColor(NS_RGB(255,255,255));
-    aRenderingContext.FillArc(outside, 0, 180);
-    aRenderingContext.FillArc(outside, 180, 360);
-    outside.Deflate(onePixel, onePixel);
-    outside.Deflate(onePixel, onePixel);
   }
 
   PRBool clip;
