@@ -1025,7 +1025,6 @@ nsExternalAppHandler::nsExternalAppHandler()
   mReceivedDispositionInfo = PR_FALSE;
   mHandlingAttachment = PR_FALSE;
   mStopRequestIssued = PR_FALSE;
-  mDataBuffer = (char *) nsMemory::Alloc((sizeof(char) * DATA_BUFFER_SIZE));
   mProgressListenerInitialized = PR_FALSE;
   mContentLength = -1;
   mProgress      = 0;
@@ -1034,8 +1033,6 @@ nsExternalAppHandler::nsExternalAppHandler()
 
 nsExternalAppHandler::~nsExternalAppHandler()
 {
-  if (mDataBuffer)
-    nsMemory::Free(mDataBuffer);
   NS_IF_RELEASE(mHelperAppService);
 }
 
@@ -1557,7 +1554,7 @@ NS_IMETHODIMP nsExternalAppHandler::OnDataAvailable(nsIRequest *request, nsISupp
     return request->Cancel(NS_BINDING_ABORTED);
 
   // read the data out of the stream and write it to the temp file.
-  if (mOutStream && mDataBuffer && count > 0)
+  if (mOutStream && count > 0)
   {
     PRUint32 numBytesRead = 0; 
     PRUint32 numBytesWritten = 0;
