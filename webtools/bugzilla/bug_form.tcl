@@ -199,7 +199,6 @@ puts "
 <FONT size=\"+1\"><B>
  <A HREF=\"show_activity.cgi?id=$FORM(id)\">View Bug Activity</A>
  <A HREF=\"long_list.cgi?buglist=$FORM(id)\">Format For Printing</A>
- <A HREF=\"edit_desc.cgi?id=$FORM(id)\">Edit Long Description</A>
 </B></FONT><BR>
 </FORM>
 <table><tr><td align=left><B>Description:</B></td><td width=100%>&nbsp;</td>
@@ -209,6 +208,12 @@ puts "
 [html_quote $bug(long_desc)]
 </PRE>
 <HR>"
+
+# To add back option of editing the long description, insert after the above
+# long_list.cgi line:
+#  <A HREF=\"edit_desc.cgi?id=$FORM(id)\">Edit Long Description</A>
+
+
 
 navigation_header
 
