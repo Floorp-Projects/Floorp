@@ -61,7 +61,7 @@ REQUIRES	= xpcom \
 		  $(NULL)
 
 ifdef MOZ_PHOENIX
-REQUIRES	+= browsercomps
+REQUIRES	+= bookmarks
 else
 REQUIRES	+= appcomps
 endif
