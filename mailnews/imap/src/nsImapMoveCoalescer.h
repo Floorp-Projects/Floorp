@@ -52,17 +52,18 @@ class nsImapMailFolder;
 
 #include "nsISupportsArray.h"
 
-class nsImapMoveCoalescer 
+class nsImapMoveCoalescer : public nsISupports
 {
 public:
+  NS_DECL_ISUPPORTS
   nsImapMoveCoalescer(nsIMsgFolder *sourceFolder, nsIMsgWindow *msgWindow);
   virtual ~nsImapMoveCoalescer();
 
   nsresult AddMove(nsIMsgFolder *folder, nsMsgKey key);
-  nsresult PlaybackMoves(nsIEventQueue *eventQueue);
+  nsresult PlaybackMoves();
 protected:
   // m_sourceKeySets and m_destFolders are parallel arrays.
-  nsVoidArray					m_sourceKeyArrays;
+  nsVoidArray m_sourceKeyArrays;
   nsCOMPtr <nsISupportsArray> m_destFolders;
   nsCOMPtr <nsIMsgWindow> m_msgWindow;
   nsCOMPtr <nsIMsgFolder> m_sourceFolder;

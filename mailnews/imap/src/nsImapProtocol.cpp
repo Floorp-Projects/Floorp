@@ -1963,13 +1963,15 @@ void nsImapProtocol::ProcessSelectedStateURL()
         break;
         case nsIImapUrl::nsImapSaveMessageToDisk:
         case nsIImapUrl::nsImapMsgFetch:
+        case nsIImapUrl::nsImapMsgFetchPeek:
         case nsIImapUrl::nsImapMsgDownloadForOffline:
             {
               nsXPIDLCString messageIdString;
               m_runningUrl->CreateListOfMessageIdsString(getter_Copies(messageIdString));
               // we dont want to send the flags back in a group
               // GetServerStateParser().ResetFlagInfo(0);
-              if (HandlingMultipleMessages(messageIdString) || m_imapAction == nsIImapUrl::nsImapMsgDownloadForOffline)
+              if (HandlingMultipleMessages(messageIdString) || m_imapAction == nsIImapUrl::nsImapMsgDownloadForOffline
+                || m_imapAction == nsIImapUrl::nsImapMsgFetchPeek)
               {
                 // multiple messages, fetch them all
                 SetProgressString(IMAP_FOLDER_RECEIVING_MESSAGE_OF);
@@ -2488,8 +2490,8 @@ nsresult nsImapProtocol::BeginMessageDownLoad(
 void
 nsImapProtocol::GetShouldDownloadAllHeaders(PRBool *aResult)
 {
-  if (m_imapServerSink)
-    m_imapServerSink->GetShouldDownloadAllHeaders(aResult);
+  if (m_imapMailFolderSink)
+    m_imapMailFolderSink->GetShouldDownloadAllHeaders(aResult);
 }
 
 void
@@ -2775,8 +2777,10 @@ nsImapProtocol::FetchMessage(const char * messageIds,
       {
         PRUint32 server_capabilityFlags = GetServerStateParser().GetCapabilityFlag();
         PRBool aolImapServer = ((server_capabilityFlags & kAOLImapCapability) != 0);
-        PRBool downloadAllHeaders = PR_FALSE; // we don't currently ever need to do this.
-//        GetShouldDownloadAllHeaders(&downloadAllHeaders); // checks if we're filtering on "any header"
+        PRBool downloadAllHeaders = PR_FALSE; 
+        // checks if we're filtering on "any header" or running a spam filter requiring all headers
+        GetShouldDownloadAllHeaders(&downloadAllHeaders); 
+
         if (!downloadAllHeaders)  // if it's ok -- no filters on any header, etc.
         {
           char *headersToDL = nsnull;
@@ -7816,7 +7820,8 @@ NS_IMETHODIMP nsImapMockChannel::AsyncOpen(nsIStreamListener *listener, nsISuppo
     // 2) message fetch
     // 3) message part fetch
 
-    if (! (imapAction == nsIImapUrl::nsImapSelectFolder || imapAction == nsIImapUrl::nsImapMsgFetch || imapAction == nsIImapUrl::nsImapOpenMimePart))
+    if (! (imapAction == nsIImapUrl::nsImapSelectFolder || imapAction == nsIImapUrl::nsImapMsgFetch || imapAction == nsIImapUrl::nsImapOpenMimePart
+      || imapAction == nsIImapUrl::nsImapMsgFetchPeek))
       return NS_ERROR_FAILURE; // abort the running of this url....it failed a security check
   }
   

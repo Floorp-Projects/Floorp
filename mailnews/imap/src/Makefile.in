@@ -39,6 +39,7 @@ REQUIRES	= xpcom \
 		  necko \
 		  appshell \
 		  msgdb \
+      addrbook \
       dom \
 		  uconv \
 		  unicharutil \

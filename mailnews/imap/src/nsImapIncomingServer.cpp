@@ -3673,22 +3673,6 @@ nsImapIncomingServer::GetNewMessagesForNonInboxFolders(nsIMsgFolder *aRootFolder
   return retval;
 }
 
-NS_IMETHODIMP 
-nsImapIncomingServer::GetShouldDownloadAllHeaders(PRBool *aResult)
-{
-  *aResult = PR_FALSE;
-
-  //for now checking for filters is enough
-  //later on we might have to check for MDN
-  nsCOMPtr <nsIMsgFilterList> filterList;  
-  nsresult rv = GetFilterList(nsnull, getter_AddRefs(filterList));
-  NS_ENSURE_SUCCESS(rv,rv);
-
-  rv = filterList->GetShouldDownloadAllHeaders(aResult);
-  NS_ENSURE_SUCCESS(rv,rv);
-  return rv;
-}
-
 NS_IMETHODIMP
 nsImapIncomingServer::GetArbitraryHeaders(char **aResult)
 {

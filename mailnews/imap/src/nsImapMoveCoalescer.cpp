@@ -47,10 +47,13 @@
 
 static NS_DEFINE_CID(kCImapService, NS_IMAPSERVICE_CID);
 
+NS_IMPL_ISUPPORTS1(nsImapMoveCoalescer, nsISupports)
+
 nsImapMoveCoalescer::nsImapMoveCoalescer(nsIMsgFolder *sourceFolder, nsIMsgWindow *msgWindow)
 {
   m_sourceFolder = sourceFolder; 
   m_msgWindow = msgWindow;
+  NS_INIT_ISUPPORTS();
 }
 
 nsImapMoveCoalescer::~nsImapMoveCoalescer()
@@ -98,7 +101,7 @@ nsresult nsImapMoveCoalescer::AddMove(nsIMsgFolder *folder, nsMsgKey key)
   
 }
 
-nsresult nsImapMoveCoalescer::PlaybackMoves(nsIEventQueue *eventQueue)
+nsresult nsImapMoveCoalescer::PlaybackMoves()
 {
   PRUint32 numFolders;
   nsresult rv = NS_OK;
@@ -118,10 +121,12 @@ nsresult nsImapMoveCoalescer::PlaybackMoves(nsIEventQueue *eventQueue)
       nsMsgKeyArray *keysToAdd = (nsMsgKeyArray *) m_sourceKeyArrays.ElementAt(i);
       if (keysToAdd)
       {
-        nsCString messageIds;
+        nsCAutoString messageIds;
         
         nsImapMailFolder::AllocateUidStringFromKeys(keysToAdd->GetArray(), keysToAdd->GetSize(), messageIds);
         PRUint32 numKeysToAdd = keysToAdd->GetSize();
+        if (numKeysToAdd == 0)
+          continue;
         
         destFolder->SetNumNewMessages(numKeysToAdd);
         destFolder->SetHasNewMessages(PR_TRUE);
@@ -151,14 +156,11 @@ nsresult nsImapMoveCoalescer::PlaybackMoves(nsIEventQueue *eventQueue)
             messages->AppendElement(iSupports);
           }
         }
+        keysToAdd->RemoveAll();
         nsCOMPtr<nsIMsgCopyService> copySvc = do_GetService(NS_MSGCOPYSERVICE_CONTRACTID);
         if (copySvc)
           rv = copySvc->CopyMessages(m_sourceFolder, messages, destFolder, PR_TRUE,
           /*nsIMsgCopyServiceListener* listener*/ nsnull, m_msgWindow, PR_FALSE /*allowUndo*/);
-          //			   rv = imapService->OnlineMessageCopy(eventQueue,
-          //						m_sourceFolder, messageIds.get(),
-          //						destFolder, PR_TRUE, PR_TRUE,
-          //						urlListener, nsnull, nsnull);
       }
     }
   }

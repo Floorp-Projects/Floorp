@@ -53,12 +53,14 @@
 #include "nsIMsgMessageService.h"
 #include "nsIMsgFilterHitNotify.h"
 #include "nsIMsgFilterList.h"
+#include "nsIMsgFilterPlugin.h"
 #include "prmon.h"
 #include "nsIEventQueue.h"
 #include "nsIMsgImapMailFolder.h"
 #include "nsIMsgLocalMailFolder.h"
 #include "nsIImapMailFolderSink.h"
 #include "nsIImapServerSink.h"
+#include "nsIMsgFilterPlugin.h"
 class nsImapMoveCoalescer;
 class nsHashtable;
 class nsHashKey;
@@ -191,7 +193,8 @@ class nsImapMailFolder : public nsMsgDBFolder,
                          public nsIImapExtensionSink,
                          public nsIImapMiscellaneousSink,
                          public nsICopyMessageListener,
-                         public nsIMsgFilterHitNotify
+                         public nsIMsgFilterHitNotify,
+                         public nsIJunkMailClassificationListener
 {
 public:
 	nsImapMailFolder();
@@ -315,34 +318,38 @@ public:
                           nsCString* messageId,
                           nsIImapUrl * aUrl);
     
-    // nsIImapMiscellaneousSink methods
-	NS_IMETHOD AddSearchResult(nsIImapProtocol* aProtocol, 
-                               const char* searchHitLine);
-	NS_IMETHOD HeaderFetchCompleted(nsIImapProtocol* aProtocol);
-	NS_IMETHOD UpdateSecurityStatus(nsIImapProtocol* aProtocol);
-	// ****
-	NS_IMETHOD SetBiffStateAndUpdate(nsIImapProtocol* aProtocol,
-                                     nsMsgBiffState biffState);
-	NS_IMETHOD GetStoredUIDValidity(nsIImapProtocol* aProtocol,
-                                    uid_validity_info* aInfo);
-	NS_IMETHOD LiteSelectUIDValidity(nsIImapProtocol* aProtocol,
-                                     PRUint32 uidValidity);
-	NS_IMETHOD ProgressStatus(nsIImapProtocol* aProtocol,
-                              PRUint32 aMsgId, const PRUnichar *extraInfo);
-	NS_IMETHOD PercentProgress(nsIImapProtocol* aProtocol,
-                               ProgressInfo* aInfo);
-	NS_IMETHOD MatchName(nsString *name, PRBool *matches);
-	
+  // nsIImapMiscellaneousSink methods
+  NS_IMETHOD AddSearchResult(nsIImapProtocol* aProtocol, 
+                         const char* searchHitLine);
+  NS_IMETHOD HeaderFetchCompleted(nsIImapProtocol* aProtocol);
+  NS_IMETHOD UpdateSecurityStatus(nsIImapProtocol* aProtocol);
+  // ****
+  NS_IMETHOD SetBiffStateAndUpdate(nsIImapProtocol* aProtocol,
+                               nsMsgBiffState biffState);
+  NS_IMETHOD GetStoredUIDValidity(nsIImapProtocol* aProtocol,
+                              uid_validity_info* aInfo);
+  NS_IMETHOD LiteSelectUIDValidity(nsIImapProtocol* aProtocol,
+                               PRUint32 uidValidity);
+  NS_IMETHOD ProgressStatus(nsIImapProtocol* aProtocol,
+                        PRUint32 aMsgId, const PRUnichar *extraInfo);
+  NS_IMETHOD PercentProgress(nsIImapProtocol* aProtocol,
+                         ProgressInfo* aInfo);
+  NS_IMETHOD MatchName(nsString *name, PRBool *matches);
+  
   NS_DECL_NSIMSGFILTERHITNOTIFY
+  NS_DECL_NSIJUNKMAILCLASSIFICATIONLISTENER
 
-	      NS_IMETHOD IsCommandEnabled(const char *command, PRBool *result);
-        NS_IMETHOD SetFilterList(nsIMsgFilterList *aMsgFilterList);
-        
-	nsresult MoveIncorporatedMessage(nsIMsgDBHdr *mailHdr, 
-									   nsIMsgDatabase *sourceDB, 
-                                     const char *destFolder,
-                                   nsIMsgFilter *filter,
-                                   nsIMsgWindow *msgWindow);
+  NS_IMETHOD IsCommandEnabled(const char *command, PRBool *result);
+  NS_IMETHOD SetFilterList(nsIMsgFilterList *aMsgFilterList);
+  
+  nsresult MoveIncorporatedMessage(nsIMsgDBHdr *mailHdr, 
+                             nsIMsgDatabase *sourceDB, 
+                             const char *destFolder,
+                             nsIMsgFilter *filter,
+                             nsIMsgWindow *msgWindow);
+    nsresult InitializeFilterPlugins(void);
+    nsresult CallFilterPlugins(void);
+
   static nsresult  AllocateUidStringFromKeys(nsMsgKey *keys, PRInt32 numKeys, nsCString &msgIds);
 protected:
     // Helper methods
@@ -414,6 +421,7 @@ protected:
   nsresult BuildIdsAndKeyArray(nsISupportsArray* messages,
                                nsCString& msgIds, nsMsgKeyArray& keyArray);
 
+  nsresult GetMoveCoalescer();
 	virtual nsresult CreateBaseMessageURI(const char *aURI);
   // offline-ish methods
   nsresult GetClearedOriginalOp(nsIMsgOfflineImapOperation *op, nsIMsgOfflineImapOperation **originalOp, 
@@ -431,13 +439,16 @@ protected:
   PRBool m_initialized;
   PRBool m_haveDiscoveredAllFolders;
   PRBool m_haveReadNameFromDB;
-	nsCOMPtr<nsIMsgParseMailMsgState> m_msgParser;
-	nsCOMPtr<nsIMsgFilterList> m_filterList;
-	PRBool				m_msgMovedByFilter;
-	nsImapMoveCoalescer *m_moveCoalescer;
-	nsMsgKey			m_curMsgUid;
-  PRUint32    m_uidValidity;
-	PRInt32			m_nextMessageByteLength;
+  nsCOMPtr<nsIMsgParseMailMsgState> m_msgParser;
+  nsCOMPtr<nsIMsgFilterList> m_filterList;
+  nsCOMPtr<nsIMsgFilterPlugin> m_filterPlugin;  // XXX should be a list
+// used with filter plugins to know when we've finished classifying and can playback moves
+  PRInt32 m_numFilterClassifyRequests;
+  PRBool m_msgMovedByFilter;
+  nsImapMoveCoalescer *m_moveCoalescer; // strictly owned by the nsImapMailFolder
+  nsMsgKey m_curMsgUid;
+  PRUint32 m_uidValidity;
+  PRInt32  m_nextMessageByteLength;
   nsCOMPtr<nsIEventQueue> m_eventQueue;
   nsCOMPtr<nsIUrlListener> m_urlListener;
   PRBool m_urlRunning;

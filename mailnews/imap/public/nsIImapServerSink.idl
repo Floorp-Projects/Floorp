@@ -73,7 +73,6 @@ interface nsIImapServerSink : nsISupports {
   /* this is a bogus method on this interface but i need it until misc. sink is scriptable.. */
   void RemoveChannelFromUrl(in nsIMsgMailNewsUrl aUrl, in unsigned long statusCode);
   readonly attribute string arbitraryHeaders;
-  readonly attribute boolean shouldDownloadAllHeaders;
   void forgetPassword();
 };
 
