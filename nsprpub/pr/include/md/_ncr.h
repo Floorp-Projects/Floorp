@@ -47,6 +47,8 @@
 
 #define _PR_POLL_AVAILABLE
 #define _PR_USE_POLL
+#define _PR_NO_LARGE_FILES
+#define _PR_STAT_HAS_ST_ATIM_UNION
 
 #undef  HAVE_STACK_GROWING_UP
 #define HAVE_NETCONFIG

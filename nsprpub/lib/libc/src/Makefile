@@ -99,9 +99,7 @@ include $(MOD_DEPTH)/config/rules.mk
 #
 # Version information generation (begin)
 #
-RM = rm
 ECHO = echo
-INCLUDES = -I$(DIST)/include
 TINC = $(OBJDIR)/_pl_bld.h
 PROD = libplc$(MOD_VERSION).$(DLL_SUFFIX)
 NOW = $(MOD_DEPTH)/config/$(OBJDIR)/now
@@ -110,17 +108,17 @@ SH_NOW = $(shell $(NOW))
 
 ifeq ($(OS_ARCH), WINNT)
 	SUF = i64
-	SH_QUOTE =
 else
 	SUF = LL
-	SH_QUOTE = "
 endif
 
 $(TINC):
 	@$(MAKE_OBJDIR)
-	@$(ECHO) $(SH_QUOTE)#define _BUILD_STRING \"$(SH_DATE)\"$(SH_QUOTE) > $(TINC)
-	@$(ECHO) $(SH_QUOTE)#define _BUILD_TIME $(SH_NOW)$(SUF)$(SH_QUOTE) >> $(TINC)
-	@$(ECHO) $(SH_QUOTE)#define _PRODUCTION \"$(PROD)\"$(SH_QUOTE) >> $(TINC)
+	@$(ECHO) '#define _BUILD_STRING "$(SH_DATE)"' > $(TINC)
+	@if test ! -z "$(SH_NOW)"; then \
+	    $(ECHO) '#define _BUILD_TIME $(SH_NOW)$(SUF)' >> $(TINC); \
+	fi
+	@$(ECHO) '#define _PRODUCTION "$(PROD)"' >> $(TINC)
 
 
 $(OBJDIR)/plvrsion.$(OBJ_SUFFIX): $(TINC)

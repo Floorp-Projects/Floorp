@@ -2260,6 +2260,44 @@ static void _MD_set_fileinfo64_times(
     info->creationTime = ((PRTime)sb->st_ctim.tv_sec * PR_USEC_PER_SEC);
     info->creationTime += (sb->st_ctim.tv_nsec / 1000);
 }
+#elif defined(_PR_STAT_HAS_ST_ATIM_UNION)
+/*
+** The st_atim, st_mtim, and st_ctim fields in struct stat are
+** unions with a st__tim union member of type timestruc_t.
+*/
+static void _MD_set_fileinfo_times(
+    const struct stat *sb,
+    PRFileInfo *info)
+{
+    PRInt64 us, s2us;
+
+    LL_I2L(s2us, PR_USEC_PER_SEC);
+    LL_I2L(info->modifyTime, sb->st_mtim.st__tim.tv_sec);
+    LL_MUL(info->modifyTime, info->modifyTime, s2us);
+    LL_I2L(us, sb->st_mtim.st__tim.tv_nsec / 1000);
+    LL_ADD(info->modifyTime, info->modifyTime, us);
+    LL_I2L(info->creationTime, sb->st_ctim.st__tim.tv_sec);
+    LL_MUL(info->creationTime, info->creationTime, s2us);
+    LL_I2L(us, sb->st_ctim.st__tim.tv_nsec / 1000);
+    LL_ADD(info->creationTime, info->creationTime, us);
+}
+
+static void _MD_set_fileinfo64_times(
+    const _MDStat64 *sb,
+    PRFileInfo64 *info)
+{
+    PRInt64 us, s2us;
+
+    LL_I2L(s2us, PR_USEC_PER_SEC);
+    LL_I2L(info->modifyTime, sb->st_mtim.st__tim.tv_sec);
+    LL_MUL(info->modifyTime, info->modifyTime, s2us);
+    LL_I2L(us, sb->st_mtim.st__tim.tv_nsec / 1000);
+    LL_ADD(info->modifyTime, info->modifyTime, us);
+    LL_I2L(info->creationTime, sb->st_ctim.st__tim.tv_sec);
+    LL_MUL(info->creationTime, info->creationTime, s2us);
+    LL_I2L(us, sb->st_ctim.st__tim.tv_nsec / 1000);
+    LL_ADD(info->creationTime, info->creationTime, us);
+}
 #elif defined(_PR_STAT_HAS_ST_ATIMESPEC)
 /*
 ** struct stat has st_atimespec, st_mtimespec, and st_ctimespec
@@ -2572,7 +2610,7 @@ static void* _MD_Unix_mmap64(
 }  /* _MD_Unix_mmap64 */
 #endif /* defined(_PR_NO_LARGE_FILES) || defined(SOLARIS2_5) */
 
-#if defined(IRIX)
+#if defined(IRIX) || defined(UNIXWARE)
 
 /*
 ** This function emulates a lock64 for IRIX using fcntl calls. It is a true
@@ -2642,7 +2680,7 @@ static void _PR_InitIOV(void)
 ** $$$ IRIX does not have a lockf64. One must fabricate it from fcntl
 ** calls with 64 bit arguments.
 */
-#if defined(IRIX)
+#if defined(IRIX) || defined(UNIXWARE)
     _md_iovector._lockf64 = _MD_irix_lockf64;
 #else
     _md_iovector._lockf64 = lockf64;
