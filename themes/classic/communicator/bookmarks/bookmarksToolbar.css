@@ -33,13 +33,13 @@ toolbarbutton.bookmark-item:not([container="true"]):hover:active > .toolbarbutto
   background: transparent !important;
 }
 
-<<<<<<< bookmarksToolbar.css
+
 toolbarbutton.bookmark-item:not([container="true"]):hover:active,
 toolbarbutton.bookmark-item:not([container="true"]):hover:active > .toolbarbutton-box {
    color: #FF0000;
 }
 
-=======
+
 toolbarbutton.bookmark-item[disabled="true"],
 toolbarbutton.bookmark-item[disabled="true"]:hover,
 toolbarbutton.bookmark-item[disabled="true"]:hover:active
@@ -68,7 +68,6 @@ toolbarbutton.bookmark-item[disabled="true"][container="true"]:hover:active
   list-style-image    : url("chrome://communicator/skin/bookmarks/bookmark-folder-disabled.gif");
 }
 
->>>>>>> 1.10
 /* ::::: toolbarbutton drag and drop feedback ::::: */
 
 toolbarbutton.bookmark-item[dragover-right="true"] {
