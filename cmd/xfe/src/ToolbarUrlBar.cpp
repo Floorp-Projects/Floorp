@@ -31,6 +31,8 @@
 #include "IconGroup.h"
 #include "Button.h"
 
+#include "HTMLView.h"			// For XFE_HTMLView::newURLLoading
+
 #include <Xfe/FancyBox.h>
 #include <Xfe/ToolBar.h>
 
@@ -51,10 +53,16 @@ XFE_ToolbarUrlBar::XFE_ToolbarUrlBar(XFE_Frame *		frame,
 	m_proxyIcon(NULL),
 	m_proxyIconDragSite(NULL)
 {
+	getAncestorFrame()->registerInterest(XFE_HTMLView::newURLLoading, 
+										 this,
+										 newPageLoadingNotice_cb);
 }
 //////////////////////////////////////////////////////////////////////////
 XFE_ToolbarUrlBar::~XFE_ToolbarUrlBar()
 {
+	getAncestorFrame()->unregisterInterest(XFE_HTMLView::newURLLoading, 
+										   this,
+										   newPageLoadingNotice_cb);
 }
 //////////////////////////////////////////////////////////////////////////
 
@@ -117,13 +125,31 @@ XFE_ToolbarUrlBar::setTextStringFromURL(URL_Struct * url)
 	// Update the proxy icon
 	if (m_proxyIconDragSite != NULL)
 	{
-        m_proxyIconDragSite->setDragData(url);
+        m_proxyIconDragSite->setDragDataFromURL(url);
 	}
 
 	// Lots of munging and sanitization need to happen here.  See
 	// URLBar.cpp for the insanity
 
 	XfeComboBoxSetTextString(m_widget,url->address);
+}
+//////////////////////////////////////////////////////////////////////////
+void
+XFE_ToolbarUrlBar::setTextString(const String str)
+{
+	XP_ASSERT( isAlive() );
+	XP_ASSERT( str != NULL );
+
+	// Update the proxy icon
+	if (m_proxyIconDragSite != NULL)
+	{
+        m_proxyIconDragSite->setDragDataFromString(str);
+	}
+
+	// Lots of munging and sanitization need to happen here.  See
+	// URLBar.cpp for the insanity
+
+	XfeComboBoxSetTextString(m_widget,str);
 }
 //////////////////////////////////////////////////////////////////////////
 
@@ -224,5 +250,24 @@ XFE_ToolbarUrlBar::textActivateCB(Widget		/* w */,
 	XP_ASSERT( urlbar != NULL );
 
 	urlbar->textActivate();
+}
+//////////////////////////////////////////////////////////////////////////
+XFE_CALLBACK_DEFN(XFE_ToolbarUrlBar, newPageLoadingNotice)
+    (XFE_NotificationCenter *    /* obj */, 
+     void *                      clientData, 
+     void *                      callData)
+{
+	URL_Struct * url = (URL_Struct *) callData;
+
+	XP_ASSERT( url != NULL );
+
+	if (url == NULL)
+	{
+		setTextString("Carajo, ahora si que estamos jodidos.");
+	}
+	else
+	{
+		setTextStringFromURL(url);
+	}
 }
 //////////////////////////////////////////////////////////////////////////

@@ -721,7 +721,7 @@ XFE_CALLBACK_DEFN(XFE_RDFToolbar,urlBarTextActivatedNotice)
 		//
 		// Have a nive day -re
 		// 
-		urlbar->setTextStringFromURL(url);
+//		urlbar->setTextStringFromURL(url);
 	}
 }
 //////////////////////////////////////////////////////////////////////////

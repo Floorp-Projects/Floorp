@@ -36,7 +36,8 @@ class XFE_LocationDrag : public XFE_DragNetscape
 public:
     XFE_LocationDrag(Widget);
     ~XFE_LocationDrag();
-    void setDragData(URL_Struct*);
+    void setDragDataFromURL(URL_Struct*);
+    void setDragDataFromString(const String str);
 protected:
     char *_dragDataURL;
 

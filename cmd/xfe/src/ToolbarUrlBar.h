@@ -58,7 +58,8 @@ public:
 	// Text string methods                                              //
 	//                                                                  //
 	//////////////////////////////////////////////////////////////////////
-	void setTextStringFromURL(URL_Struct * url);
+	void setTextStringFromURL		(URL_Struct * url);
+	void setTextString				(const String str);
 
 	//////////////////////////////////////////////////////////////////////
 	//                                                                  //
@@ -125,6 +126,13 @@ private:
  										 XtPointer		clientData,
  										 XtPointer		callData);
 
+
+	//////////////////////////////////////////////////////////////////////
+	//                                                                  //
+	// Called when a new page loads as a result of fe_GetUrl() - i think//
+	//                                                                  //
+	//////////////////////////////////////////////////////////////////////
+	XFE_CALLBACK_DECL(newPageLoadingNotice)
 };
 
 #endif // _xfe_toolbar_url_bar_h_

@@ -59,12 +59,20 @@ XFE_LocationDrag::~XFE_LocationDrag()
 
 // set drag data, for later use by drag callback
 
-void XFE_LocationDrag::setDragData(URL_Struct* u)
+void XFE_LocationDrag::setDragDataFromURL(URL_Struct* u)
 {
     if (_dragDataURL)
         XP_FREE(_dragDataURL);
     
     _dragDataURL=((u && u->address) ? XP_STRDUP(u->address) : 0);
+}
+
+void XFE_LocationDrag::setDragDataFromString(const String str)
+{
+    if (_dragDataURL)
+        XP_FREE(_dragDataURL);
+    
+    _dragDataURL = str ? XP_STRDUP(str) : 0;
 }
 
 

@@ -632,7 +632,11 @@ void XFE_PrefsPageBrowser::cb_expireNow(Widget    /* widget */,
 	if (XFE_Confirm(fep->context, fe_globalData.expire_now_message)) {
 		GH_ClearGlobalHistory();
 		fe_RefreshAllAnchors();
-        XFE_URLBar::clearAll();
+
+//
+// XXX Please fix me. XXX
+//
+//        XFE_URLBar::clearAll();
 	}
 }
 

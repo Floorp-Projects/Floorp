@@ -581,7 +581,7 @@ XFE_URLBar::setURLString(URL_Struct *url)
 
   /* update ProxyIcon drag object with new URL */
   if (m_proxyIconDragSite)
-        m_proxyIconDragSite->setDragData(url);
+        m_proxyIconDragSite->setTextStringFromURL(url);
 
   XtCallbackRec *cblist, *text_cb;
   int i;
