@@ -213,6 +213,11 @@ void
 addElementProps (char** attlist, char* elementName, RDFFile f, RDF_Resource obj)
 {
   uint32 count = 0;
+  char *tv = NULL;
+  
+  tv = getAttributeValue(attlist, "tv");
+  if (tv == NULL) tv = "true";
+
   while (count < 2*MAX_ATTRIBUTES) {
     char* attName = attlist[count++];
     char* attValue = attlist[count++];
@@ -220,8 +225,8 @@ addElementProps (char** attlist, char* elementName, RDFFile f, RDF_Resource obj)
     if (!tagEquals(f, attName, "href") && !tagEquals(f, attName, "rdf:href")  && 
         !tagEquals(f, attName, "RDF:href") && !tagEquals(f, attName, "tv") 
         && !tagEquals(f, attName, "id")) {
-      addSlotValue(f, obj, ResourceFromElementName(f, attName), copyStringIgnoreWhiteSpace(attValue), 
-		   RDF_STRING_TYPE, "true");
+      addSlotValue(f, obj, ResourceFromElementName(f, attName),
+		copyStringIgnoreWhiteSpace(attValue), RDF_STRING_TYPE, tv);
     }
   }
 }
