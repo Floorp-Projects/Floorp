@@ -1247,6 +1247,9 @@ function EditorSetDefaultPrefs()
     return;
   }
 
+  // doctype
+//  var doct = domdoc.implementation.createDocumentType("html", "-//W3C//DTD HTML 4.01 Transitional//EN", "");
+  
   // try to get preferences service
   var prefs = null;
   try {
@@ -1259,61 +1262,83 @@ function EditorSetDefaultPrefs()
     prefs = null;
   }
 
+  // search for head; we'll need this for meta tag additions
+  var headelement = 0;
+  var headnodelist = domdoc.getElementsByTagName("head");
+  if (headnodelist)
+  {
+    var sz = headnodelist.length;
+    if ( sz >= 1 )
+    {
+      headelement = headnodelist.item(0);
+    }
+  }
+  
   // search for author meta tag.
   // if one is found, don't do anything.
   // if not, create one and make it a child of the head tag 
   //   and set its content attribute to the value of the editor.author preference.
   
-  prefAuthorString = prefs.CopyCharPref("editor.author");
-  if ( prefAuthorString && prefAuthorString != 0)
+  var nodelist = domdoc.getElementsByTagName("meta");
+  if ( nodelist )
   {
-    var nodelist = domdoc.getElementsByTagName("meta");
-    if ( nodelist )
-    {
-      var found = false;
-      var node = 0;
-      var listlength = nodelist.length;
+    var node = 0;
+    var listlength = nodelist.length;
 
-      for (var i = 0; i < listlength && !found; i++)
+    // let's start by assuming we have an author in case we don't have the pref
+    var authorFound = false;
+    for (var i = 0; i < listlength && !authorFound; i++)
+    {
+      node = nodelist.item(i);
+      if ( node )
       {
-        node = nodelist.item(i);
-        if ( node )
+        var value = node.getAttribute("name");
+        if (value == "author")
         {
-          var value = node.getAttribute("name");
-          if (value == "author")
-          {
-            found = true;
-          }
+          authorFound = true;
         }
       }
+    }
 
-      if ( !found )
+    var prefAuthorString = 0;
+    try
+    {
+      prefAuthorString = prefs.CopyCharPref("editor.author");
+    }
+    catch (ex) {}
+    if ( prefAuthorString && prefAuthorString != 0)
+    {
+      if ( !authorFound && headelement)
       {
         /* create meta tag with 2 attributes */
         var element = domdoc.createElement("meta");
         if ( element )
         {
           AddAttrToElem(domdoc, "name", "Author", element);
-          AddAttrToElem(domdoc, "content", prefs.CopyCharPref("editor.author"), element);
-
-          var headelement = 0;
-          var headnodelist = domdoc.getElementsByTagName("head");
-          if (headnodelist)
-          {
-            var sz = headnodelist.length;
-            if ( sz >= 1 )
-            {
-              headelement = headnodelist.item(0);
-            }
-          }
-
-          if ( headelement )
-          {
-              headelement.appendChild( element );
-          }
+          AddAttrToElem(domdoc, "content", prefAuthorString, element);
+          headelement.appendChild( element );
         }
       }
     }
+    
+    // grab charset pref and make it the default charset
+    var prefCharsetString = 0;
+    try
+    {
+      prefCharsetString = prefs.CopyCharPref("intl.charset.default");
+    }
+    catch (ex) {}
+    if ( prefCharsetString && prefCharsetString != 0)
+    {
+        var element = domdoc.createElement("meta");
+        if ( element )
+        {
+          AddAttrToElem(domdoc, "http-equiv", "content-type", element);
+          AddAttrToElem(domdoc, "content", "text/html; charset=" + prefCharsetString, element);
+          headelement.appendChild( element );
+        }
+    }
+
   }
 
   // color prefs
