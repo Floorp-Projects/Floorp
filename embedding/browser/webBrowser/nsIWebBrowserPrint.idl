@@ -116,7 +116,7 @@ interface nsIWebBrowserPrint : nsISupports
    *
    * aThePrintOptions - Printer Settings for the print job, if aThePrintSettings is null
    *                    then the global PS will be used.
-   * nsIWebProgressListener - is updated during the print
+   * aWPListener - is updated during the print
    * @return void
    */
   void print(in nsIPrintSettings aThePrintSettings,
@@ -128,7 +128,7 @@ interface nsIWebBrowserPrint : nsISupports
    * aThePrintOptions - Printer Settings for the print preview, if aThePrintSettings is null
    *                    then the global PS will be used.
    * aChildDOMWin - DOM Window of the child document to be PP (FrameSet frames)
-   * nsIWebProgressListener - is updated during the printpreview
+   * aWPListener - is updated during the printpreview
    * @return void
    */
   void printPreview(in nsIPrintSettings aThePrintSettings,
