@@ -710,7 +710,8 @@ nsresult CNavDTD::HandleToken(CToken* aToken,nsIParser* aParser){
               //If the child belongs in the head, then handle it (which may open the head);
               //otherwise, push it onto the misplaced stack.
 
-              PRBool theChildBelongsInHead=gHTMLElements[eHTMLTag_head].IsChildOfHead(theTag);
+              PRBool theExclusive=PR_FALSE;
+              PRBool theChildBelongsInHead=gHTMLElements[eHTMLTag_head].IsChildOfHead(theTag,theExclusive);
               if(!theChildBelongsInHead) {
 
                 //If you're here then we found a child of the body that was out of place.
@@ -742,7 +743,8 @@ nsresult CNavDTD::HandleToken(CToken* aToken,nsIParser* aParser){
         // placed. This would avoid unnecessary node creation and 
         // extra string append. BTW, watch out in handling the head
         // children ( especially the TITLE tag).
-        if(!gHTMLElements[eHTMLTag_head].IsChildOfHead(theTag)) {
+        PRBool theExclusive=PR_FALSE;
+        if(!gHTMLElements[eHTMLTag_head].IsChildOfHead(theTag,theExclusive)) {
           eHTMLTags theParentTag      = mBodyContext->Last();
           PRBool    theParentContains = -1;
           if(CanOmit(theParentTag,theTag,theParentContains)) {
@@ -1161,15 +1163,14 @@ nsresult CNavDTD::WillHandleStartTag(CToken* aToken,eHTMLTags aTag,nsCParserNode
       result=gHTMLElements[aTag].HasSpecialProperty(kDiscardTag) ? 1 : NS_OK;
     }
 
-    PRBool isHeadChild=gHTMLElements[eHTMLTag_head].IsChildOfHead(aTag);
-
       //this code is here to make sure the head is closed before we deal 
       //with any tags that don't belong in the head.
     if(NS_OK==result) {
       if(mHasOpenHead){
         static eHTMLTags skip2[]={eHTMLTag_newline,eHTMLTag_whitespace};
         if(!FindTagInSet(aTag,skip2,sizeof(skip2)/sizeof(eHTMLTag_unknown))){
-          if(!isHeadChild){      
+          PRBool theExclusive=PR_FALSE;
+          if(!gHTMLElements[eHTMLTag_head].IsChildOfHead(aTag,theExclusive)){      
 
               //because this code calls CloseHead() directly, stack-based token/nodes are ok.
             CEndToken     theToken(eHTMLTag_head);
@@ -1345,7 +1346,8 @@ nsresult CNavDTD::HandleStartToken(CToken* aToken) {
       }
 
       mLineNumber += aToken->mNewlineCount;
-      theHeadIsParent=nsHTMLElement::IsChildOfHead(theChildTag);
+      PRBool theExclusive=PR_FALSE;
+      theHeadIsParent=nsHTMLElement::IsChildOfHead(theChildTag,theExclusive);
       
       switch(theChildTag) { 
         case eHTMLTag_newline:
@@ -1383,6 +1385,17 @@ nsresult CNavDTD::HandleStartToken(CToken* aToken) {
             break;
       }//switch
 
+#if 0
+        //we'll move to this approach after beta...
+      if(!isTokenHandled) {
+
+        if(theHeadIsParent && (theExclusive || mHasOpenHead)) {
+          result=AddHeadLeaf(theNode);
+        }
+        else result=HandleDefaultStartToken(aToken,theChildTag,theNode); 
+      }
+#else
+        //the old way...
       if(!isTokenHandled) {
         if(theHeadIsParent || 
            (mHasOpenHead && ((eHTMLTag_newline==theChildTag) || (eHTMLTag_whitespace==theChildTag)))) {
@@ -1390,6 +1403,7 @@ nsresult CNavDTD::HandleStartToken(CToken* aToken) {
         }
         else result=HandleDefaultStartToken(aToken,theChildTag,theNode); 
       }
+#endif
       //now do any post processing necessary on the tag...
       if(NS_OK==result)
         DidHandleStartTag(*theNode,theChildTag);
@@ -3094,6 +3108,9 @@ nsresult CNavDTD::CloseContainersTo(PRInt32 anIndex,eHTMLTags aTarget, PRBool aC
                   if (0==theNode->mUseCount) {
                     theChildStyleStack->PushFront(theNode);
                   }
+                }
+                else if(1==theNode->mUseCount) {
+                  theNode->mUseCount--;  //cause it to get popped from style stack.
                 }
                 mBodyContext->PushStyles(theChildStyleStack);
               }

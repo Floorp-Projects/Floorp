@@ -184,7 +184,7 @@ struct nsHTMLElement {
   static  PRBool  IsInlineParent(eHTMLTags aTag); 
   static  PRBool  IsFlowParent(eHTMLTags aTag);
   static  PRBool  IsSectionTag(eHTMLTags aTag);
-  static  PRBool  IsChildOfHead(eHTMLTags aTag) ;
+  static  PRBool  IsChildOfHead(eHTMLTags aTag,PRBool& aExclusively) ;
 
   eHTMLTags       mTagID;
   eHTMLTags       mRequiredAncestor;
