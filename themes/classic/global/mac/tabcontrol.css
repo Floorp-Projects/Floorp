@@ -31,7 +31,7 @@ tab {
 
 .tab-text {
   padding			: 3px 0px 6px 0px;
-  font				: 12px charcoal;
+  font				: menu;
 }
 
 tab:hover:active {
@@ -100,7 +100,7 @@ tabbox {
  * SMALL TABS FOR NOW */
 
 .tab-bottom > .tab-image-middle > .tab-text {
-	font			: 10px geneva;
+	font			: message-box;
 	font-weight		: bold;
 }
 

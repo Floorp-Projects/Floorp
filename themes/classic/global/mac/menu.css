@@ -42,7 +42,7 @@ menupopup, popup
 menupopup > menu, popup > menu,
 menupopup > menuitem, popup > menuitem
   {
-	font				  : 12px charcoal;
+	font				  : menu;
     max-width             : 42em;
     min-width             : 14em;
     padding 			  : 0px;
@@ -220,7 +220,7 @@ menuitem[checked="true"][menuactive="true"]
     background-color      : InfoBackground;
     border                : none;
     color                 : InfoText;
-    font                  : 9px geneva;
+    font                  : message-box;
     padding               : 0px 5px 3px 4px;
     margin				  : 0px;
   }

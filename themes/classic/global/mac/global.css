@@ -38,7 +38,7 @@
     { 
       background-color    : #DDDDDD;
       padding             : 0px;
-      font				        : 10px geneva;
+      font				  : message-box;
     }
   
   window[wait-cursor] 
