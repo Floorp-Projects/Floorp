@@ -659,7 +659,7 @@
           <xul:label flex="1" value=" " inherits="value=label"/>
         </xul:hbox>
         <xul:dropmarker class="select-dropmarker" type="menu"/>
-        <xul:menupopup style="display:-moz-popup!important">
+        <xul:menupopup class="select-menupopup">
           <children/>
         </xul:menupopup>
     </content>
