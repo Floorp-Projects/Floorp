@@ -119,8 +119,8 @@ pref("font.name.serif.x-western", "Tms Rmn");
 pref("font.name-list.serif.x-western", "Times New Roman");
 pref("font.name.sans-serif.x-western", "Helv");
 pref("font.name-list.sans-serif.x-western", "Helvetica, Arial");
-pref("font.name.monospace.x-western", "Courier New");
-pref("font.name-list.monospace.x-western", "Courier");
+pref("font.name.monospace.x-western", "Courier");
+pref("font.name-list.monospace.x-western", "Courier New");
 pref("font.name.fantasy.x-western", "Symbol Set");
 pref("font.name-list.fantasy.x-western", "Wingdings");
 
