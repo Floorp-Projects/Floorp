@@ -1,5 +1,5 @@
 #!/usr/bonsaitools/bin/perl
-# $Id: source,v 1.8 1998/06/20 01:09:35 jwz Exp $
+# $Id: source,v 1.9 1998/06/20 01:29:23 jwz Exp $
 
 # source --	Present sourcecode as html, complete with references
 #
@@ -29,56 +29,24 @@ use LXR::Common;
 use LXR::Config;
 
 
-# Search the beginning of a source file for a short description
-# to be displayed in directory listings. Not all files have
-# them and the ones that do use different formats so there are
-# lots of ways to end up with junk. The basic format is: a file
-# name possibly followed by a colon or dash(es) with whitespace
-# strewn in followed by the description and maybe some stray comment
-# characters. Don't be confused by #includes or rcs comments 
-# at the beginning of the file.
-# -dme
 sub fdescexpand {
-    my $linecount=0;
 
     $desc= "";
-
-    #ignore files that aren't source code
-    if (!(
-	    ($filename =~ /\.c$/) |
-	    ($filename =~ /\.h$/) | 
-	    ($filename =~ /\.cc$/) |
-	    ($filename =~ /\.cp$/) | 
-	    ($filename =~ /\.cpp$/) | 
-	    ($filename =~ /\.java$/)
-	    )){
-	return("");
-	}
-
-    if (open(FILE, $Path->{'real'}."/".$filename)) {
-	while(<FILE>){
-	    if($linecount++ > 40) {
-		last;
-	    }elsif (/[$]Id: $filename/){
-		#ignore cvs headers
-	    }elsif (/^#/){
-		#ignore cpp directives
-	    }elsif (/$filename\s*- ?-*\s*/i){
-	        ($null, $desc) = split(/ $filename\s*- ?-*\s*/i);
-		if ($desc) {last};
-	    }elsif (/$filename\s*:\s*/i){
-	        ($null, $desc) = split(/ $filename\s*:\s*/i);
-		if ($desc) {last};
-	    }elsif (/$filename\s\s*/i){
-	        ($null, $desc) = split(/ $filename\s\s*/i);
-		if ($desc) {last};
-	    }
-	}
-	close(FILE);
-    }
-    #strip trailing asterisks and "*/"
-    $desc =~ s#\*/?\s*$##;
-
+#    if (open(FILE, $Path->{'real'}."/".$filename)) {
+#	while(<FILE>){
+#	    if(/$filename\s*--*\s*/i){
+#	        ($null, $desc) = split(/ $filename\s*--*\s*/i);
+#		if ($desc) {last};
+#	    }elsif (/$filename\s*:\s*/i){
+#	        ($null, $desc) = split(/ $filename\s*:\s*/i);
+#		if ($desc) {last};
+#	    }elsif (/$filename\s*/i){
+#	        ($null, $desc) = split(/ $filename\s*/i);
+#		if ($desc) {last};
+#	    }
+#	}
+#	close(FILE);
+#    }
     return($desc);
 }
 
@@ -355,3 +323,6 @@ if (!($Path->{'file'} =~ /\.(html)$/)) {
 	&makefooter('sourcedir');
     }
 }
+
+#$len = length($file);
+#print ("length is: ", $len) ;
