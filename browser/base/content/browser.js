@@ -3782,7 +3782,7 @@ nsDefaultEngine.prototype =
    }
    if (linkNode) {
      if (fieldNormalClicks && !event.ctrlKey && !event.shiftKey && 
-         !event.altKey && !linkNode.getAttribute("target")) {
+         !event.altKey && !event.metaKey && !linkNode.getAttribute("target")) {
        var url = getShortcutOrURI(linkNode.href);
        if (!url)
          return false;

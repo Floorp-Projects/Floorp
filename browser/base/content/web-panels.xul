@@ -15,6 +15,6 @@
   <script type="application/x-javascript" src="chrome://browser/content/contentAreaUtils.js"/>
   <script type="application/x-javascript" src="chrome://browser/content/web-panels.js"/>
   <browser id="browser" type="content" flex="1" src="chrome://browser/content/web-panels.xml"
-           onclick="return window.parent.contentAreaClick(event);"
+           onclick="return window.parent.contentAreaClick(event, true);"
            ondragdrop="nsDragAndDrop.drop(event, panelAreaDNDObserver);"/>
 </page>
