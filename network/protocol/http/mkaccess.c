@@ -2940,6 +2940,12 @@ NET_SaveCookies(char * filename)
     return(0);
 }
 
+/* This isn't needed any more */
+PUBLIC int
+NET_ReadCookies(char * filename)
+{
+}
+
 /* reads HTTP cookies from disk
  *
  * on entry pass in the name of the file to read
