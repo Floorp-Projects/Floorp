@@ -104,7 +104,7 @@ class nsWindow : public nsBaseWidget,
 
    // Physical properties
    NS_IMETHOD Show( PRBool bState);
-   NS_IMETHOD ConstrainPosition(PRInt32 *aX, PRInt32 *aY);
+   NS_IMETHOD ConstrainPosition(PRBool aAllowSlop, PRInt32 *aX, PRInt32 *aY);
    NS_IMETHOD Move( PRInt32 aX, PRInt32 aY);
    NS_IMETHOD Resize( PRInt32 aWidth,
                       PRInt32 aHeight,

@@ -371,9 +371,10 @@ NS_METHOD nsWidget::IsVisible( PRBool &aState ) {
 // Constrain a potential move to see if it fits onscreen
 //
 //-------------------------------------------------------------------------
-NS_METHOD nsWidget::ConstrainPosition( PRInt32 *aX, PRInt32 *aY ) {
+NS_METHOD nsWidget::ConstrainPosition( PRBool aAllowSlop,
+                                       PRInt32 *aX, PRInt32 *aY ) {
   return NS_OK;
-	}
+}
 
 //-------------------------------------------------------------------------
 //

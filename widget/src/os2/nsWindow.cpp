@@ -1189,7 +1189,8 @@ NS_METHOD nsWindow::ModalEventFilter(PRBool aRealEvent, void *aEvent,
 // Constrain a potential move to fit onscreen
 //
 //-------------------------------------------------------------------------
-NS_METHOD nsWindow::ConstrainPosition(PRInt32 *aX, PRInt32 *aY)
+NS_METHOD nsWindow::ConstrainPosition(PRBool aAllowSlop,
+                                      PRInt32 *aX, PRInt32 *aY)
 {
     return NS_OK;
 }

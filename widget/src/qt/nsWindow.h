@@ -58,7 +58,7 @@ public:
     NS_IMETHOD SetColorMap(nsColorMap *aColorMap);
     NS_IMETHOD Scroll(PRInt32 aDx,PRInt32 aDy,nsRect *aClipRect);
 
-    NS_IMETHOD ConstrainPosition(PRInt32 *aX,PRInt32 *aY);
+    NS_IMETHOD ConstrainPosition(PRBool aAllowSlop, PRInt32 *aX,PRInt32 *aY);
     NS_IMETHOD Move(PRInt32 aX,PRInt32 aY);
 
     NS_IMETHOD CaptureRollupEvents(nsIRollupListener *aListener,

@@ -385,7 +385,8 @@ NS_IMETHODIMP nsWidget::Destroy()
 
 }
 
-NS_IMETHODIMP nsWidget::ConstrainPosition(PRInt32 *aX, PRInt32 *aY)
+NS_IMETHODIMP nsWidget::ConstrainPosition(PRBool aAllowSlop,
+                                          PRInt32 *aX, PRInt32 *aY)
 {
   return NS_OK;
 }

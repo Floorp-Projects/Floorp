@@ -920,7 +920,8 @@ NS_METHOD nsWindow::Restore(void)
 }
 */
 
-NS_IMETHODIMP nsCocoaWindow::ConstrainPosition(PRInt32 *aX, PRInt32 *aY)
+NS_IMETHODIMP nsCocoaWindow::ConstrainPosition(PRBool aAllowSlop,
+                                               PRInt32 *aX, PRInt32 *aY)
 {
 #if 0
   if (eWindowType_popup == mWindowType || !mWindowMadeHere)

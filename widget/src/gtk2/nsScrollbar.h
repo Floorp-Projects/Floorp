@@ -65,7 +65,7 @@ class nsScrollbar : public nsCommonWidget,
                     nsWidgetInitData *aInitData = nsnull);
   NS_IMETHOD Destroy(void);
   NS_IMETHOD IsVisible(PRBool & aState);
-  NS_IMETHOD ConstrainPosition(PRInt32 *aX, PRInt32 *aY);
+  NS_IMETHOD ConstrainPosition(PRBool aAllowSlop, PRInt32 *aX, PRInt32 *aY);
   NS_IMETHOD Move(PRInt32 aX, PRInt32 aY);
   NS_IMETHOD Enable(PRBool aState);
   NS_IMETHOD SetFocus(PRBool aRaise = PR_FALSE);

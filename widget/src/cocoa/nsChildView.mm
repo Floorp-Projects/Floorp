@@ -799,7 +799,8 @@ NS_METHOD nsChildView::SetBounds(const nsRect &aRect)
 }
 
 
-NS_IMETHODIMP nsChildView::ConstrainPosition(PRInt32 *aX, PRInt32 *aY)
+NS_IMETHODIMP nsChildView::ConstrainPosition(PRBool aAllowSlop,
+                                             PRInt32 *aX, PRInt32 *aY)
 {
   return NS_OK;
 }

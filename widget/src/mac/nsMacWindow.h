@@ -107,7 +107,8 @@ public:
 				                            nsNativeWidget aNativeParent = nsnull);
 
     NS_IMETHOD              Show(PRBool aState);
-    NS_IMETHOD              ConstrainPosition(PRInt32 *aX, PRInt32 *aY);
+    NS_IMETHOD              ConstrainPosition(PRBool aAllowSlop,
+                                              PRInt32 *aX, PRInt32 *aY);
     NS_IMETHOD              Move(PRInt32 aX, PRInt32 aY);
     NS_IMETHOD              PlaceBehind(nsIWidget *aWidget, PRBool aActivate);
     NS_IMETHOD              SetSizeMode(PRInt32 aMode);
