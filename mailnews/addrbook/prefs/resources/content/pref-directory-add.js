@@ -307,6 +307,20 @@ function onAccept()
                                Components.interfaces.nsISupportsWString, 
                                dnWString);
 
+      // We don't actually allow the password to be saved in the preferences;
+      // this preference is (effectively) ignored by the current code base.  
+      // It's here because versions of Mozilla 1.0 and earlier (maybe 1.1alpha
+      // too?) would blow away the .auth.dn preference if .auth.savePassword
+      // is not set.  To avoid trashing things for users who switch between
+      // versions, we'll set it.  Once the versions in question become 
+      // obsolete enough, this workaround can be gotten rid of.
+      //
+      try { 
+        gPrefInt.setBoolPref(gPref_string_desc + ".auth.savePassword", true);
+      } catch (ex) {
+        // if this fails, we can live with that; keep going
+      }
+
       window.opener.gNewServer = description;
       window.opener.gNewServerString = gPref_string_desc;
       // set window.opener.gUpdate to true so that LDAP Directory Servers
