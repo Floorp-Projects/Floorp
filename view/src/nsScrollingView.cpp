@@ -29,6 +29,7 @@
 #include "nsIScrollableView.h"
 #include "nsIFrame.h"
 #include "nsILookAndFeel.h"
+#include "nsIClipView.h"
 
 static inline PRBool
 ViewIsShowing(nsIView *aView)
@@ -45,14 +46,15 @@ static NS_DEFINE_IID(kWidgetCID, NS_CHILD_CID);
 static NS_DEFINE_IID(kIViewIID, NS_IVIEW_IID);
 static NS_DEFINE_IID(kLookAndFeelCID, NS_LOOKANDFEEL_CID);
 static NS_DEFINE_IID(kILookAndFeelIID, NS_ILOOKANDFEEL_IID);
+static NS_DEFINE_IID(kIClipViewIID, NS_ICLIPVIEW_IID);
 
-//----------------------------------------------------------------------
 
 class ScrollBarView : public nsView
 {
 public:
   ScrollBarView(nsScrollingView *aScrollingView);
   ~ScrollBarView();
+
   NS_IMETHOD  HandleEvent(nsGUIEvent *aEvent, PRUint32 aEventFlags, nsEventStatus &aStatus);
   NS_IMETHOD  SetPosition(nscoord x, nscoord y);
   NS_IMETHOD  SetDimensions(nscoord width, nscoord height, PRBool aPaint = PR_TRUE);
@@ -140,13 +142,13 @@ NS_IMETHODIMP ScrollBarView :: SetDimensions(nscoord width, nscoord height, PRBo
   return NS_OK;
 }
 
-//----------------------------------------------------------------------
 
 class CornerView : public nsView
 {
 public:
   CornerView();
   ~CornerView();
+
   NS_IMETHOD  ShowQuality(PRBool aShow);
   NS_IMETHOD  SetQuality(nsContentQuality aQuality);
   NS_IMETHOD  Paint(nsIRenderingContext& rc, const nsRect& rect,
@@ -249,7 +251,7 @@ NS_IMETHODIMP CornerView :: Paint(nsIRenderingContext& rc, const nsRect& rect,
     if (nsnull == mLookAndFeel)
     {
       nsComponentManager::CreateInstance(kLookAndFeelCID, nsnull,
-                                   kILookAndFeelIID, (void **)&mLookAndFeel);
+                                         kILookAndFeelIID, (void **)&mLookAndFeel);
     }
 
     if (nsnull != mLookAndFeel)
@@ -327,7 +329,55 @@ NS_IMETHODIMP CornerView :: Paint(nsIRenderingContext& rc, const nsRect& rect,
   return NS_OK;
 }
 
-//----------------------------------------------------------------------
+
+class ClipView : public nsView, public nsIClipView
+{
+public:
+  ClipView();
+  ~ClipView();
+
+  NS_IMETHOD QueryInterface(REFNSIID aIID,
+                            void** aInstancePtr);
+
+private:
+  NS_IMETHOD_(nsrefcnt) AddRef(void);
+  NS_IMETHOD_(nsrefcnt) Release(void);
+};
+
+ClipView :: ClipView()
+{
+}
+
+ClipView :: ~ClipView()
+{
+}
+
+nsresult ClipView :: QueryInterface(const nsIID& aIID, void** aInstancePtr)
+{
+  if (nsnull == aInstancePtr) {
+    return NS_ERROR_NULL_POINTER;
+  }
+  
+  if (aIID.Equals(kIClipViewIID)) {
+    *aInstancePtr = (void*)(nsIClipView*)this;
+    return NS_OK;
+  }
+
+  return nsView::QueryInterface(aIID, aInstancePtr);
+}
+
+
+nsrefcnt ClipView :: AddRef()
+{
+  NS_WARNING("not supported for views");
+  return 1;
+}
+
+nsrefcnt ClipView :: Release()
+{
+  NS_WARNING("not supported for views");
+  return 1;
+}
 
 nsScrollingView :: nsScrollingView()
   : mInsets(0, 0, 0, 0)
@@ -588,13 +638,23 @@ void nsScrollingView :: HandleScrollEvent(nsGUIEvent *aEvent, PRUint32 aEventFla
   if ((dx != 0) || (dy != 0))
   {
     nsIWidget *clipWidget;
+    PRBool    trans;
+    float     opacity;
+
     mClipView->GetWidget(clipWidget);
-    if (nsnull == clipWidget)
+
+    HasTransparency(trans);
+    GetOpacity(opacity);
+
+    if ((nsnull == clipWidget) ||
+        ((trans || opacity) && !(mScrollProperties & NS_SCROLL_PROPERTY_ALWAYS_BLIT)) ||
+        (mScrollProperties & NS_SCROLL_PROPERTY_NEVER_BLIT))
     {
       // XXX Repainting is really slow. The widget's Scroll() member function
       // needs an argument that specifies whether child widgets are scrolled,
       // and we need to be able to specify the rect to be scrolled...
       mViewManager->UpdateView(mClipView, nsnull, 0);
+      AdjustChildWidgets(this, scrolledView, 0, 0, t2p);
     }
     else
     {
@@ -821,7 +881,7 @@ NS_IMETHODIMP nsScrollingView :: CreateScrollControls(nsNativeWidget aNative)
   nsresult rv = NS_ERROR_FAILURE;
 
   // Create a clip view
-  mClipView = new nsView;
+  mClipView = new ClipView;
 
   if (nsnull != mClipView)
   {
@@ -1518,6 +1578,18 @@ NS_IMETHODIMP nsScrollingView :: GetScrollPosition(nscoord &aX, nscoord &aY) con
 {
   aX = mOffsetX;
   aY = mOffsetY;
+
   return NS_OK;
 }
 
+NS_IMETHODIMP nsScrollingView :: SetScrollProperties(PRUint32 aProperties)
+{
+  mScrollProperties = aProperties;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsScrollingView :: GetScrollProperties(PRUint32 *aProperties)
+{
+  *aProperties = mScrollProperties;
+  return NS_OK;
+}

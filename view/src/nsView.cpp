@@ -1347,3 +1347,11 @@ NS_IMETHODIMP nsView :: SetDirtyRegion(nsIRegion *aRegion)
   return NS_OK;
 }
 
+NS_IMETHODIMP nsView :: GetScratchPoint(nsPoint **aPoint)
+{
+  NS_ASSERTION(!(!aPoint), "no point");
+
+  *aPoint = &mScratchPoint;
+
+  return NS_OK;
+}

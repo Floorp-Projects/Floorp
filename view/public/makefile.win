@@ -19,7 +19,8 @@ DEPTH=..\..
 IGNORE_MANIFEST=1
 
 DEFINES=-D_IMPL_NS_UI 
-EXPORTS=nsIView.h nsIViewManager.h nsIScrollableView.h nsViewsCID.h nsIViewObserver.h
+EXPORTS=nsIView.h nsIViewManager.h nsIScrollableView.h nsViewsCID.h nsIViewObserver.h \
+ nsIClipView.h
 MODULE=raptor 
 
 include <$(DEPTH)\config\rules.mak>
