@@ -180,13 +180,13 @@
 
   <treehead>
     <treerow id="headRow">
-      <treecell class="treecell-header" value="&tree.header.name.label;" onclick="return doSort('NameColumn');" observes="NameColumn" />
-      <treecell class="treecell-header" value="&tree.header.url.label;" onclick="return doSort('URLColumn');" observes="URLColumn" />
-      <treecell class="treecell-header" value="&tree.header.shortcut.label;" onclick="return doSort('ShortcutURLColumn');" observes="ShortcutURLColumn" />
-      <treecell class="treecell-header" value="&tree.header.description.label;" onclick="return doSort('DescriptionColumn');" observes="DescriptionColumn" />
-      <treecell class="treecell-header" value="&tree.header.lastvisit.label;" onclick="return doSort('astVisitColumn');" observes="LastVisitColumn" />
-      <treecell class="treecell-header" value="&tree.header.addedon.label;" onclick="return doSort('AddedOnColumn');" observes="AddedOnColumn" />
-      <treecell class="treecell-header" value="&tree.header.lastmod.label;" onclick="return doSort('LastModColumn');" observes="LastModColumn" />
+      <treecell class="treecell-header sortDirectionIndicator" value="&tree.header.name.label;" onclick="return doSort('NameColumn');" observes="NameColumn" />
+      <treecell class="treecell-header sortDirectionIndicator" value="&tree.header.url.label;" onclick="return doSort('URLColumn');" observes="URLColumn" />
+      <treecell class="treecell-header sortDirectionIndicator" value="&tree.header.shortcut.label;" onclick="return doSort('ShortcutURLColumn');" observes="ShortcutURLColumn" />
+      <treecell class="treecell-header sortDirectionIndicator" value="&tree.header.description.label;" onclick="return doSort('DescriptionColumn');" observes="DescriptionColumn" />
+      <treecell class="treecell-header sortDirectionIndicator" value="&tree.header.lastvisit.label;" onclick="return doSort('astVisitColumn');" observes="LastVisitColumn" />
+      <treecell class="treecell-header sortDirectionIndicator" value="&tree.header.addedon.label;" onclick="return doSort('AddedOnColumn');" observes="AddedOnColumn" />
+      <treecell class="treecell-header sortDirectionIndicator" value="&tree.header.lastmod.label;" onclick="return doSort('LastModColumn');" observes="LastModColumn" />
       <treecell class="treecell-header" allowevents="true" id="popupCell">
         <menu>
           <titledbutton src="chrome://global/skin/opentwisty.gif"/>
