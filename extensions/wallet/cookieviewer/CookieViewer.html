@@ -209,7 +209,7 @@
                     "<p>" +
                       "<select name='selname' size='15' multiple='multiple'> "
       );
-      for (i=1; (!i>=permissionList.length); i+=2) {
+      for (i=1; !(i>=permissionList.length); i+=2) {
         if (!deleted_permissions[permissionList[i]]) {
           top.frames[list_frame].document.write(
                         "<option value=" + permissionList[i] + ">" +

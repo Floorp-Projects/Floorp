@@ -389,7 +389,7 @@ si_SelectDialog(const char* szMessage, char** pList, PRInt32* pCount)
 
 extern void Wallet_RestartKey();
 extern char Wallet_GetKey();
-extern PRBool Wallet_BadKey();
+extern PRBool Wallet_KeySet();
 extern PRBool Wallet_SetKey(PRBool newkey);
 extern char * Wallet_Localize(char * genericString);
 
@@ -404,8 +404,8 @@ si_GetKey() {
 }
 
 PRBool
-si_BadKey() {
-  return Wallet_BadKey();
+si_KeySet() {
+  return Wallet_KeySet();
 }
 
 PRBool
@@ -1198,7 +1198,7 @@ si_OkToSave(char *URLName, char *userName) {
     char *strippedURLName = 0;
 
     /* do not save signons if user didn't know the key */
-    if (si_BadKey()) {
+    if (!si_KeySet()) {
         return(-1);
     }
 
@@ -1849,12 +1849,10 @@ SI_LoadSignonData(PRBool fullLoad) {
     if (fullLoad) {
       si_RestartKey();
       char * message = Wallet_Localize("IncorrectKey_TryAgain?");
-      char * failed = Wallet_Localize("KeyFailure");
       while (!si_SetKey()) {
-          if (!Wallet_Confirm(message)) {
-              Wallet_Alert(failed);
-              return 1;
-          }
+        if (!Wallet_Confirm(message)) {
+          return 1;
+        }
       }
     }
 
@@ -2163,16 +2161,14 @@ si_SaveSignonDataLocked(PRBool fullSave) {
     if (fullSave) {
         si_RestartKey();
         char * message = Wallet_Localize("IncorrectKey_TryAgain?");
-        char * failed = Wallet_Localize("KeyFailure");
         while (!si_SetKey()) {
-            if (!Wallet_Confirm(message)) {
-                Wallet_Alert(failed);
-                return 1;
-            }
+          if (!Wallet_Confirm(message)) {
+            return 1;
+          }
         }
 
         /* do not save signons if user didn't know the key */
-        if (si_BadKey()) {
+        if (!si_KeySet()) {
             return(-1);
         }
     }

@@ -923,11 +923,7 @@ wallet_ReadFromSublist(nsAutoString& value, XP_List*& resume)
 #define maxKeySize 100
 char key[maxKeySize+1];
 PRUint32 keyPosition = 0;
-PRBool keyFailure = PR_FALSE;
-#ifndef NECKO
-/* avoid bug 9326 */
-PUBLIC
-#endif
+PRBool keyCancel = PR_FALSE;
 PRBool keySet = PR_FALSE;
 
 PUBLIC void
@@ -944,8 +940,13 @@ Wallet_GetKey() {
 }
 
 PUBLIC PRBool
-Wallet_BadKey() {
-  return keyFailure;
+Wallet_KeySet() {
+  return keySet;
+}
+
+PUBLIC PRBool
+Wallet_CancelKey() {
+  return keyCancel;
 }
 
 PUBLIC nsresult Wallet_ProfileDirectory(nsFileSpec& dirSpec) {
@@ -979,7 +980,7 @@ wallet_KeySize() {
 
 PUBLIC PRBool
 Wallet_SetKey(PRBool isNewkey) {
-  if (keySet && !isNewkey) {
+  if (Wallet_KeySet() && !isNewkey) {
     return PR_TRUE;
   }
 
@@ -1001,10 +1002,14 @@ Wallet_SetKey(PRBool isNewkey) {
   } else {
     newkey = wallet_GetString(password);
   }
+  keyCancel = PR_FALSE;
   if (newkey == NULL) { /* user hit cancel button */
     if (wallet_KeySize() < 0) { /* no password file existed before */
       newkey  = PL_strdup(""); /* use zero-length password */
+    } else if (isNewkey) { /* user is changing the password */
+      newkey  = PL_strdup(""); /* use zero-length password */
     } else {
+      keyCancel = PR_TRUE;
       return PR_FALSE; /* user could not supply the correct password */
     }
   }
@@ -1027,12 +1032,10 @@ Wallet_SetKey(PRBool isNewkey) {
     nsFileSpec dirSpec;
     nsresult rval = Wallet_ProfileDirectory(dirSpec);
     if (NS_FAILED(rval)) {
-      keyFailure = PR_TRUE;
       return PR_FALSE;
     }
     nsOutputFileStream strm2(dirSpec + "key");
     if (!strm2.is_open()) {
-      keyFailure = PR_TRUE;
       *key = '\0';
       return PR_FALSE;
     }
@@ -1053,7 +1056,6 @@ Wallet_SetKey(PRBool isNewkey) {
     strm2.close();
     Wallet_RestartKey();
     keySet = PR_TRUE;
-    keyFailure = PR_FALSE;
     return PR_TRUE;
 
   } else {
@@ -1070,14 +1072,12 @@ Wallet_SetKey(PRBool isNewkey) {
     if ((PL_strlen(key) == 0) && (wallet_KeySize() == 0) ) {
       Wallet_RestartKey();
       keySet = PR_TRUE;
-      keyFailure = PR_FALSE;
       return PR_TRUE;
     }
 
     nsFileSpec dirSpec;
     nsresult rval = Wallet_ProfileDirectory(dirSpec);
     if (NS_FAILED(rval)) {
-      keyFailure = PR_TRUE;
       return PR_FALSE;
     }
     nsInputFileStream strm(dirSpec + "key");
@@ -1086,14 +1086,12 @@ Wallet_SetKey(PRBool isNewkey) {
     while (*p) {
       if (strm.get() != (*(p++)^Wallet_GetKey()) || strm.eof()) {
         strm.close();
-        keyFailure = PR_TRUE;
         *key = '\0';
         return PR_FALSE;
       }
     }
     if (strm.get() != ((*key)^Wallet_GetKey()) || strm.eof()) {
       strm.close();
-      keyFailure = PR_TRUE;
       *key = '\0';
       return PR_FALSE;
     }
@@ -1103,10 +1101,8 @@ Wallet_SetKey(PRBool isNewkey) {
     if (rv) {
       Wallet_RestartKey();
       keySet = PR_TRUE;
-      keyFailure = PR_FALSE;
       return PR_TRUE;
     } else {
-      keyFailure = PR_TRUE;
       *key = '\0';
       return PR_FALSE;
     }
@@ -1184,7 +1180,7 @@ wallet_WriteToFile(char* filename, XP_List* list, PRBool obscure) {
   XP_List * list_ptr;
   wallet_MapElement * ptr;
 
-  if (obscure && Wallet_BadKey()) {
+  if (obscure && !Wallet_KeySet()) {
     return;
   }
 
@@ -1807,6 +1803,7 @@ wallet_GetPrefills(
 void
 wallet_Initialize() {
   static PRBool wallet_Initialized = PR_FALSE;
+  static PRBool wallet_keyInitialized = PR_FALSE;
   if (!wallet_Initialized) {
     wallet_FetchFieldSchemaFromNetCenter();
     wallet_FetchURLFieldSchemaFromNetCenter();
@@ -1817,23 +1814,20 @@ wallet_Initialize() {
     wallet_ReadFromFile("SchemaConcat.tbl", wallet_SchemaConcat_list, PR_FALSE);
 
     wallet_Initialized = PR_TRUE;
+  }
 
+  if (!wallet_keyInitialized) {
     Wallet_RestartKey();
     char * message = Wallet_Localize("IncorrectKey_TryAgain?");
-    char * failed = Wallet_Localize("KeyFailure");
     while (!Wallet_SetKey(PR_FALSE)) {
-      if (!Wallet_Confirm(message)) {
-        Wallet_Alert(failed);
+      if (Wallet_CancelKey() || !Wallet_Confirm(message)) {
         PR_FREEIF(message);
-        PR_FREEIF(failed);
         return;
       }
     }
     PR_FREEIF(message);
-    PR_FREEIF(failed);
-
-
     wallet_ReadFromFile("SchemaValue.tbl", wallet_SchemaToValue_list, PR_TRUE);
+    wallet_keyInitialized = PR_TRUE;
   }
 
 #if DEBUG
@@ -1879,7 +1873,7 @@ void WLLT_ChangePassword() {
 #ifdef SingleSignon
   SI_LoadSignonData(PR_TRUE);
 #endif
-  if (Wallet_BadKey()) {
+  if (!Wallet_KeySet()) {
     return;
   }
 
@@ -2176,7 +2170,7 @@ wallet_Capture(nsIDocument* doc, nsString field, nsString value, nsString vcard)
   if (!vcard.Length()) {
     wallet_Initialize();
     wallet_InitializeCurrentURL(doc);
-    if (Wallet_BadKey()) {
+    if (!Wallet_KeySet()) {
       return;
     }
   }
@@ -2294,7 +2288,7 @@ WLLT_GetNocaptureListForViewer(nsString& aNocaptureList)
 
 PUBLIC void
 WLLT_PostEdit(nsAutoString walletList) {
-  if (Wallet_BadKey()) {
+  if (Wallet_KeySet()) {
     return;
   }
 
@@ -2360,6 +2354,9 @@ WLLT_PostEdit(nsAutoString walletList) {
 PUBLIC void
 WLLT_PreEdit(nsAutoString& walletList) {
   wallet_Initialize();
+  if (!Wallet_KeySet()) {
+    return;
+  }
   walletList = BREAK;
   XP_List * list_ptr;
   wallet_MapElement * ptr;
@@ -2608,6 +2605,11 @@ WLLT_Prefill(nsIPresShell* shell, nsString url, PRBool quick) {
 
   /* return if no elements were put into the list */
   if (!wallet_PrefillElement_list || !XP_ListCount(wallet_PrefillElement_list)) {
+    if (Wallet_KeySet()) {
+      char * message = Wallet_Localize("noPrefills");
+      Wallet_Alert(message);
+      PR_FREEIF(message);
+    }
     return NS_ERROR_FAILURE; // indicates to caller not to display preview screen
   }
 

@@ -8,7 +8,6 @@
         Components.classes
           ["component://netscape/walleteditor/walleteditor-world"].createInstance();
       walleteditor = walleteditor.QueryInterface(Components.interfaces.nsIWalletEditor);
-      dump("walleteditor = " + walleteditor + "\n");
 
       function get()
       {
@@ -56,9 +55,11 @@
         var input;
         input = get();
 
-        /* following is for going to wallet editor from URL line */ 
+        /* check for user supplying invalid database key */
         if (input.length == 0) {
-          input = "+name.first+steve++";
+          flushTables();
+          BREAK = '+';
+          return false;
         }
 
         BREAK = input[0];
@@ -86,6 +87,7 @@
           }
         }
         schemas[j] = valuesLength;
+        return true;
       }
 
       function dumpStrings() {
@@ -511,8 +513,11 @@
       }
 
       function loadFrames() {
-        parseInput();
-        loadMain();
+        if (!parseInput()) {
+          setTimeout('parent.generateOutput("Cancel")',0);
+        } else {
+          loadMain();
+        }
       }
 
     </script>
