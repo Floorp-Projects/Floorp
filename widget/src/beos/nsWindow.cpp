@@ -28,6 +28,7 @@
 #include "nsIRenderingContext.h"
 #include "nsIDeviceContext.h"
 #include "nsRect.h"
+#include "nsIRegion.h"
 #include "nsTransform2D.h"
 #include "nsStringUtil.h"
 //#include "sysmets.h"
@@ -520,22 +521,28 @@ nsresult nsWindow::StandardWindowCreate(nsIWidget *aParent,
 
     if (mWindowType == eWindowType_dialog) {
 		// create window (dialog)
+		bool is_subset = (parent)? true : false;
+		window_feel feel = (is_subset)? 
+		    B_MODAL_SUBSET_WINDOW_FEEL :
+		    B_MODAL_APP_WINDOW_FEEL;
 		BRect winrect = BRect(aRect.x, aRect.y, aRect.x + aRect.width - 1, aRect.y + aRect.height - 1);
 		winrect.OffsetBy( 10, 30 );
 		nsWindowBeOS *w = new nsWindowBeOS(this,
 				winrect,
-				"", B_TITLED_WINDOW_LOOK, B_FLOATING_APP_WINDOW_FEEL,
+				"", B_TITLED_WINDOW_LOOK, feel,
 				B_WILL_ACCEPT_FIRST_CLICK | B_ASYNCHRONOUS_CONTROLS);
 		w->AddChild(mView);
+		if (is_subset) {
+		  w->AddToSubset(parent->Window());
+		}
 
 		// FIXME: we have to use the window size because
 		// the window might not like sizes less then 30x30 or something like that
 		mView->MoveTo(0, 0);
 		mView->ResizeTo(w->Bounds().Width(), w->Bounds().Height());
 		mView->SetResizingMode(B_FOLLOW_ALL);
-		w->Run();
 	} else
-	if (parent) {
+	if (mWindowType == eWindowType_child) {
 		// create view only
 		bool mustunlock=false;
 
@@ -550,15 +557,23 @@ nsresult nsWindow::StandardWindowCreate(nsIWidget *aParent,
 			parent->UnlockLooper();
 	} else {
 		// create window (normal or popup)
-		BRect winrect = BRect(aRect.x, aRect.y, aRect.x + aRect.width - 1, aRect.y + aRect.height - 1);
+		BRect winrect = BRect(aRect.x, aRect.y, 
+		    aRect.x + aRect.width - 1, aRect.y + aRect.height - 1);
 		nsWindowBeOS *w;
-		
-		if (mWindowType == eWindowType_popup && mBorderlessParent) {
-			// popup window : no border
+
+		if (mWindowType == eWindowType_popup) {
+			bool is_subset = (mBorderlessParent)? true : false;
+			window_feel feel = (is_subset) ?
+			    B_FLOATING_SUBSET_WINDOW_FEEL :
+			    B_FLOATING_APP_WINDOW_FEEL;
 			w = new nsWindowBeOS(this,
 				winrect,
-				"", B_NO_BORDER_WINDOW_LOOK, B_FLOATING_APP_WINDOW_FEEL,
+				"", B_NO_BORDER_WINDOW_LOOK, feel,
 				B_WILL_ACCEPT_FIRST_CLICK | B_ASYNCHRONOUS_CONTROLS);
+			// popup window : no border
+			if (is_subset) {
+			  w->AddToSubset(mBorderlessParent->Window());
+			}
 		} else {
 			// normal window :normal look & feel
 			winrect.OffsetBy( 10, 30 );
@@ -575,7 +590,6 @@ nsresult nsWindow::StandardWindowCreate(nsIWidget *aParent,
 		mView->MoveTo(0, 0);
 		mView->ResizeTo(w->Bounds().Width(), w->Bounds().Height());
 		mView->SetResizingMode(B_FOLLOW_ALL);
-		w->Run();
 	}
 
 #if 0
@@ -768,8 +782,7 @@ NS_METHOD nsWindow::Show(PRBool bState)
 
 		if(PR_FALSE == bState)
 		{
-			// BWindow and BView's Show() and Hide() can be nested,
-			// while Mozilla doesn't.
+			// be careful : BWindow and BView's Show() and Hide() can be nested
 			if (!mView->IsHidden())
 				mView->Hide();
 			if(havewindow && !mView->Window()->IsHidden())
@@ -777,8 +790,10 @@ NS_METHOD nsWindow::Show(PRBool bState)
 		}
 		else
 		{
-			mView->Show();
-			if(havewindow)
+			// be careful : BWindow and BView's Show() and Hide() can be nested
+			if (mView->IsHidden())
+				mView->Show();
+			if(havewindow && mView->Window()->IsHidden())
 				mView->Window()->Show();
 		}
 
@@ -835,7 +850,7 @@ NS_METHOD nsWindow::Move(PRInt32 aX, PRInt32 aY)
 		if (mWindowType == eWindowType_popup && mBorderlessParent) {
 			BWindow *parentwindow = mBorderlessParent->Window();
 			if (parentwindow && parentwindow->Lock()) {
-				BPoint p = parentwindow->ConvertToScreen(BPoint(aX,aY));
+				BPoint p = mBorderlessParent->ConvertToScreen(BPoint(aX,aY));
 				aX = (nscoord)p.x;
 				aY = (nscoord)p.y;
 				parentwindow->Unlock();
@@ -1243,6 +1258,35 @@ NS_METHOD nsWindow::Invalidate(const nsRect & aRect, PRBool aIsSynchronous)
 
 //-------------------------------------------------------------------------
 //
+// Invalidate this component visible area
+//
+//-------------------------------------------------------------------------
+NS_IMETHODIMP 
+nsWindow::InvalidateRegion(const nsIRegion *aRegion, PRBool aIsSynchronous)
+{
+  nsresult rv = NS_ERROR_FAILURE;
+  nsRect r;
+  BRegion *rgn = nsnull;
+
+  if (!aRegion)
+    return NS_ERROR_FAILURE;
+  
+  aRegion->GetNativeRegion((void*&)rgn);
+
+  if (rgn) {
+    BRect br(0,0,0,0);
+    br = rgn->Frame(); // get bounding box of the region
+    if (br.IsValid()) {
+      r.SetRect(br.left, br.top, br.IntegerWidth() + 1, br.IntegerHeight() + 1);
+      rv = this->Invalidate(r, aIsSynchronous);
+    }
+  }
+  
+  return rv;  
+}
+
+//-------------------------------------------------------------------------
+//
 // Force a synchronous repaint of the window
 //
 //-------------------------------------------------------------------------
@@ -1410,6 +1454,24 @@ bool nsWindow::CallMethod(MethodInfo *info)
             SetFocus();
             break;
 
+        case nsWindow::GOT_FOCUS:
+            NS_ASSERTION(info->nArgs == 0, "Wrong number of arguments to CallMethod");
+        	DispatchFocus(NS_GOTFOCUS);
+        	//if(gJustGotActivate) {
+        	//  gJustGotActivate = PR_FALSE;
+        	  DispatchFocus(NS_ACTIVATE);
+        	//}
+        	break;
+
+        case nsWindow::KILL_FOCUS:
+            NS_ASSERTION(info->nArgs == 0, "Wrong number of arguments to CallMethod");
+        	DispatchFocus(NS_LOSTFOCUS);
+        	//if(gJustGotDeactivate) {
+        	//  gJustGotDeactivate = PR_FALSE;
+        	  DispatchFocus(NS_DEACTIVATE);
+        	//} 
+        	break;
+
 		case nsWindow::ONMOUSE :
             NS_ASSERTION(info->nArgs == 5, "Wrong number of arguments to CallMethod");
 			DispatchMouseEvent(((int32 *)info->args)[0],
@@ -1419,10 +1481,17 @@ bool nsWindow::CallMethod(MethodInfo *info)
 			break;
 
 		case nsWindow::ONKEY :
-            NS_ASSERTION(info->nArgs == 4, "Wrong number of arguments to CallMethod");
-			OnKey(((int32 *)info->args)[0],
-				(const char *)(&((uint32 *)info->args)[1]), ((int32 *)info->args)[2],
-				((uint32 *)info->args)[3]);
+            NS_ASSERTION(info->nArgs == 5, "Wrong number of arguments to CallMethod");
+			if (((int32 *)info->args)[0] == NS_KEY_DOWN) {
+				OnKeyDown(((int32 *)info->args)[0],
+					(const char *)(&((uint32 *)info->args)[1]), ((int32 *)info->args)[2],
+					((uint32 *)info->args)[3], ((uint32 *)info->args)[4]);
+			} else
+			if (((int32 *)info->args)[0] == NS_KEY_UP) {
+				OnKeyUp(((int32 *)info->args)[0],
+					(const char *)(&((uint32 *)info->args)[1]), ((int32 *)info->args)[2],
+					((uint32 *)info->args)[3], ((uint32 *)info->args)[4]);
+			}
 			break;
 
 		case nsWindow::ONPAINT :
@@ -1473,83 +1542,337 @@ bool nsWindow::CallMethod(MethodInfo *info)
 
 //-------------------------------------------------------------------------
 //
-// OnKey
+// Key code translation related data
 //
 //-------------------------------------------------------------------------
-PRBool nsWindow::OnKey(PRUint32 aEventType, const char *bytes, int32 numBytes, PRUint32 mod)
+
+struct nsKeyConverter {
+  int vkCode; // Platform independent key code
+  char bekeycode; // BeOS key code
+};
+
+//
+// Netscape keycodes are defined in widget/public/nsGUIEvent.h
+// BeOS keycodes can be viewd at
+// http://www.be.com/documentation/be_book/Keyboard/KeyboardKeyCodes.html
+//
+
+struct nsKeyConverter nsKeycodesBeOS[] = {
+//  { NS_VK_CANCEL,     GDK_Cancel },
+  { NS_VK_BACK,       0x1e },
+  { NS_VK_TAB,        0x26 },
+//  { NS_VK_TAB,        GDK_ISO_Left_Tab },
+//  { NS_VK_CLEAR,      GDK_Clear },
+  { NS_VK_RETURN,     0x47 },
+  { NS_VK_SHIFT,      0x4b },
+  { NS_VK_SHIFT,      0x56 },
+  { NS_VK_CONTROL,    0x5c },
+  { NS_VK_CONTROL,    0x60 },
+  { NS_VK_ALT,        0x5d },
+  { NS_VK_ALT,        0x5f },
+  { NS_VK_PAUSE,      0x22 },
+  { NS_VK_CAPS_LOCK,  0x3b },
+  { NS_VK_ESCAPE,     0x1 },
+  { NS_VK_SPACE,      0x5e },
+  { NS_VK_PAGE_UP,    0x21 },
+  { NS_VK_PAGE_DOWN,  0x36 },
+  { NS_VK_END,        0x35 },
+  { NS_VK_HOME,       0x20 },
+  { NS_VK_LEFT,       0x61 },
+  { NS_VK_UP,         0x57 },
+  { NS_VK_RIGHT,      0x63 },
+  { NS_VK_DOWN,       0x62 },
+  { NS_VK_PRINTSCREEN, 0xe },
+  { NS_VK_INSERT,     0x1f },
+  { NS_VK_DELETE,     0x34 },
+
+  // keypad keys (constant keys)
+  { NS_VK_MULTIPLY,   0x24 },
+  { NS_VK_ADD,        0x3a },
+//  { NS_VK_SEPARATOR,   }, ???
+  { NS_VK_SUBTRACT,   0x25 },
+  { NS_VK_DIVIDE,     0x23 },
+  { NS_VK_RETURN,     0x5b },
+
+  { NS_VK_COMMA,      0x53 },
+  { NS_VK_PERIOD,     0x54 },
+  { NS_VK_SLASH,      0x55 },
+  { NS_VK_BACK_SLASH, 0x33 },
+  { NS_VK_BACK_SLASH, 0x6a }, // got this code on japanese keyboard
+  { NS_VK_BACK_SLASH, 0x6b }, // got this code on japanese keyboard
+  { NS_VK_BACK_QUOTE, 0x11 },
+  { NS_VK_OPEN_BRACKET, 0x31 },
+  { NS_VK_CLOSE_BRACKET, 0x32 },
+  { NS_VK_SEMICOLON, 0x45 },
+  { NS_VK_QUOTE, 0x46 },
+
+  // NS doesn't have dash or equals distinct from the numeric keypad ones,
+  // so we'll use those for now.  See bug 17008:
+  { NS_VK_SUBTRACT, 0x1c },
+  { NS_VK_EQUALS, 0x1d },
+
+  { NS_VK_F1, B_F1_KEY },
+  { NS_VK_F2, B_F2_KEY },
+  { NS_VK_F3, B_F3_KEY },
+  { NS_VK_F4, B_F4_KEY },
+  { NS_VK_F5, B_F5_KEY },
+  { NS_VK_F6, B_F6_KEY },
+  { NS_VK_F7, B_F7_KEY },
+  { NS_VK_F8, B_F8_KEY },
+  { NS_VK_F9, B_F9_KEY },
+  { NS_VK_F10, B_F10_KEY },
+  { NS_VK_F11, B_F11_KEY },
+  { NS_VK_F12, B_F12_KEY },
+
+  { NS_VK_1, 0x12 },
+  { NS_VK_2, 0x13 },
+  { NS_VK_3, 0x14 },
+  { NS_VK_4, 0x15 },
+  { NS_VK_5, 0x16 },
+  { NS_VK_6, 0x17 },
+  { NS_VK_7, 0x18 },
+  { NS_VK_8, 0x19 },
+  { NS_VK_9, 0x1a },
+  { NS_VK_0, 0x1b },
+
+  { NS_VK_A, 0x3c },
+  { NS_VK_B, 0x50 },
+  { NS_VK_C, 0x4e },
+  { NS_VK_D, 0x3e },
+  { NS_VK_E, 0x29 },
+  { NS_VK_F, 0x3f },
+  { NS_VK_G, 0x40 },
+  { NS_VK_H, 0x41 },
+  { NS_VK_I, 0x2e },
+  { NS_VK_J, 0x42 },
+  { NS_VK_K, 0x43 },
+  { NS_VK_L, 0x44 },
+  { NS_VK_M, 0x52 },
+  { NS_VK_N, 0x51 },
+  { NS_VK_O, 0x2f },
+  { NS_VK_P, 0x30 },
+  { NS_VK_Q, 0x27 },
+  { NS_VK_R, 0x2a },
+  { NS_VK_S, 0x3d },
+  { NS_VK_T, 0x2b },
+  { NS_VK_U, 0x2d },
+  { NS_VK_V, 0x4f },
+  { NS_VK_W, 0x28 },
+  { NS_VK_X, 0x4d },
+  { NS_VK_Y, 0x2c },
+  { NS_VK_Z, 0x4c }
+};
+
+// keycode of keypad when num-locked
+struct nsKeyConverter nsKeycodesBeOSNumLock[] = {
+  { NS_VK_NUMPAD0, 0x64 },
+  { NS_VK_NUMPAD1, 0x58 },
+  { NS_VK_NUMPAD2, 0x59 },
+  { NS_VK_NUMPAD3, 0x5a },
+  { NS_VK_NUMPAD4, 0x48 },
+  { NS_VK_NUMPAD5, 0x49 },
+  { NS_VK_NUMPAD6, 0x4a },
+  { NS_VK_NUMPAD7, 0x37 },
+  { NS_VK_NUMPAD8, 0x38 },
+  { NS_VK_NUMPAD9, 0x39 },
+  { NS_VK_DECIMAL, 0x65 }
+};
+
+// keycode of keypad when not num-locked
+struct nsKeyConverter nsKeycodesBeOSNoNumLock[] = {
+  { NS_VK_LEFT,       0x48 },
+  { NS_VK_RIGHT,      0x4a },
+  { NS_VK_UP,         0x38 },
+  { NS_VK_DOWN,       0x59 },
+  { NS_VK_PAGE_UP,    0x39 },
+  { NS_VK_PAGE_DOWN,  0x5a },
+  { NS_VK_HOME,       0x37 },
+  { NS_VK_END,        0x58 },
+  { NS_VK_INSERT,     0x64 },
+  { NS_VK_DELETE,     0x65 }
+};
+
+//-------------------------------------------------------------------------
+//
+// Translate key code
+// Input is BeOS keyboard key-code; output is in NS_VK format
+//
+//-------------------------------------------------------------------------
+
+static int TranslateBeOSKeyCode(int32 bekeycode, bool isnumlock)
 {
-	if(numBytes == 1)
-	{
-		nsKeyEvent event;
-		InitEvent(event, aEventType);
+//printf("bekeycode=%x\n",bekeycode);
+  int i;
+  int length = sizeof(nsKeycodesBeOS) / sizeof(struct nsKeyConverter);
+  int length_numlock = sizeof(nsKeycodesBeOSNumLock) / sizeof(struct nsKeyConverter);
+  int length_nonumlock = sizeof(nsKeycodesBeOSNoNumLock) / sizeof(struct nsKeyConverter);
 
-printf("nsWindow::OnKey - FIXME: keycode translation incomplete\n");
-		event.charCode   = bytes[0];
-
-		char c = bytes[0];
-		if(numBytes == 1 && (c == 10 || c == 13))
-			c = NS_VK_RETURN;
-
-		event.keyCode  = c;
-		event.isShift   = mod & B_SHIFT_KEY;
-		event.isControl = mod & B_CONTROL_KEY;
-		event.isAlt     = mod & B_COMMAND_KEY;
-		event.eventStructType = NS_KEY_EVENT;
-
-		PRBool result = DispatchWindowEvent(&event);
-		NS_RELEASE(event.widget);
-		return result;
-	}
-	else
-	{
-		printf("nsWindow::OnKey - FIXME: handle non ASCII chars\n");
-		return NS_OK;
-	}
+  // key code conversion
+  for (i = 0; i < length; i++) {
+    if (nsKeycodesBeOS[i].bekeycode == bekeycode)
+      return(nsKeycodesBeOS[i].vkCode);
+  }
+  // numpad keycode vary with numlock
+  if (isnumlock) {
+    for (i = 0; i < length_numlock; i++) {
+      if (nsKeycodesBeOSNumLock[i].bekeycode == bekeycode)
+        return(nsKeycodesBeOSNumLock[i].vkCode);
+    }
+  } else {
+    for (i = 0; i < length_nonumlock; i++) {
+      if (nsKeycodesBeOSNoNumLock[i].bekeycode == bekeycode)
+        return(nsKeycodesBeOSNoNumLock[i].vkCode);
+    }
+  }
+  return((int)0);
 }
 
-#if 0
 //-------------------------------------------------------------------------
 //
-// OnKey
+// OnKeyDown
 //
 //-------------------------------------------------------------------------
-
-PRBool nsWindow::OnKey(PRUint32 aEventType, uint32 nChar, uint32 nRepCnt, uint32 nFlags)
+PRBool nsWindow::OnKeyDown(PRUint32 aEventType, const char *bytes, 
+  int32 numBytes, PRUint32 mod, PRUint32 bekeycode)
 {
-  if (nChar == NS_VK_CAPS_LOCK ||
-      nChar == NS_VK_ALT ||
-      nChar == NS_VK_SHIFT ||
-      nChar == NS_VK_CONTROL) {
-    return FALSE;
+  PRUint32 aTranslatedKeyCode;
+  PRBool result = PR_FALSE;
+
+  mIsShiftDown   = mod & B_SHIFT_KEY;
+  mIsControlDown = mod & B_CONTROL_KEY;
+  mIsAltDown     = mod & B_COMMAND_KEY;
+  bool IsNumLocked = ((mod & B_NUM_LOCK) != 0);
+
+  aTranslatedKeyCode = TranslateBeOSKeyCode(bekeycode, IsNumLocked);
+  
+  if (numBytes <= 1)
+  {
+    result = DispatchKeyEvent(NS_KEY_DOWN, 0, aTranslatedKeyCode);
+  } else {
+    //   non ASCII chars
   }
 
+// ------------  On Char  ------------
+  PRUint32	uniChar;
+
+  if (numBytes == 0) // deal with unmapped key
+    return result;
+
+  switch((unsigned char)bytes[0])
+  {
+  case 0xc8://System Request
+  case 0xca://Break
+    return result;// do not send 'KEY_PRESS' message
+
+  case B_INSERT:
+  case B_ESCAPE:
+  case B_FUNCTION_KEY:
+  case B_HOME:
+  case B_PAGE_UP:
+  case B_END:
+  case B_PAGE_DOWN:
+  case B_UP_ARROW:
+  case B_LEFT_ARROW:
+  case B_DOWN_ARROW:
+  case B_RIGHT_ARROW:
+  case B_TAB:
+  case B_DELETE:
+  case B_BACKSPACE:
+  case B_ENTER:
+    uniChar = 0;
+    break;
+
+  default:
+    // UTF-8 to unicode conversion
+    if (numBytes >= 1 && (bytes[0] & 0x80) == 0) { 
+      // 1 byte utf-8 char
+      uniChar = bytes[0];
+    } else
+    if (numBytes >= 2 && (bytes[0] & 0xe0) == 0xc0) { 
+      // 2 byte utf-8 char
+      uniChar = ((uint16)(bytes[0] & 0x1f) << 6) | (uint16)(bytes[1] & 0x3f);
+    } else
+    if (numBytes >= 3 && (bytes[0] & 0xf0) == 0xe0) {
+      // 3 byte utf-8 char
+      uniChar = ((uint16)(bytes[0] & 0x0f) << 12) | ((uint16)(bytes[1] & 0x3f) << 6)
+                | (uint16)(bytes[2] & 0x3f);
+    } else {
+      //error
+      uniChar = 0;
+      printf("nsWindow::OnKeyDown() error: bytes[] has not enough chars.\n");
+    } 
+    
+    aTranslatedKeyCode = 0;
+    mIsShiftDown = PR_FALSE;
+    break;
+  }
+
+  PRBool result2 = DispatchKeyEvent(NS_KEY_PRESS, uniChar, aTranslatedKeyCode);
+  
+  return result && result2;
+}
+
+//-------------------------------------------------------------------------
+//
+// OnKeyUp
+//
+//-------------------------------------------------------------------------
+PRBool nsWindow::OnKeyUp(PRUint32 aEventType, const char *bytes,
+  int32 numBytes, PRUint32 mod, PRUint32 bekeycode)
+{
+  PRUint32 aTranslatedKeyCode;
+  bool IsNumLocked = ((mod & B_NUM_LOCK) != 0);
+
+  mIsShiftDown   = mod & B_SHIFT_KEY;
+  mIsControlDown = mod & B_CONTROL_KEY;
+  mIsAltDown     = mod & B_COMMAND_KEY;
+
+  aTranslatedKeyCode = TranslateBeOSKeyCode(bekeycode, IsNumLocked);
+
+  PRBool result = DispatchKeyEvent(NS_KEY_UP, 0, aTranslatedKeyCode);
+  return result;
+
+}
+
+//-------------------------------------------------------------------------
+//
+// DispatchKeyEvent
+//
+//-------------------------------------------------------------------------
+
+PRBool nsWindow::DispatchKeyEvent(PRUint32 aEventType, PRUint32 aCharCode, 
+  PRUint32 aKeyCode)
+{
   nsKeyEvent event;
   nsPoint point;
 
   point.x = 0;
   point.y = 0;
 
-  InitEvent(event, aEventType, &point);
+  InitEvent(event, aEventType, &point); // this add ref's event.widget
 
-  // Now let windows do the conversion to the ascii code
-  WORD asciiChar = 0;
-  BYTE kbstate[256];
-  ::GetKeyboardState(kbstate);
-  ToAscii(nChar, nFlags & 0xff, kbstate, &asciiChar, 0);
+  event.charCode = aCharCode;
+  event.keyCode  = aKeyCode;
 
-  event.keyCode = nChar;
-  event.charCode = (char)asciiChar;
+#ifdef KE_DEBUG
+  static int cnt=0;
+  printf("%d DispatchKE Type: %s charCode 0x%x  keyCode 0x%x ", cnt++,  
+        (NS_KEY_PRESS == aEventType)?"PRESS":(aEventType == NS_KEY_UP?"Up":"Down"), 
+         event.charCode, event.keyCode);
+  printf("Shift: %s Control %s Alt: %s \n",  (mIsShiftDown?"D":"U"), (mIsControlDown?"D":"U"), (mIsAltDown?"D":"U"));
+#endif
 
   event.isShift   = mIsShiftDown;
   event.isControl = mIsControlDown;
+  event.isMeta   =  PR_FALSE;
   event.isAlt     = mIsAltDown;
   event.eventStructType = NS_KEY_EVENT;
 
   PRBool result = DispatchWindowEvent(&event);
   NS_RELEASE(event.widget);
+
   return result;
 }
-#endif
 
 #if 0
 //-------------------------------------------------------------------------
@@ -2045,7 +2368,7 @@ PRBool nsWindow::OnScroll()
 
 NS_METHOD nsWindow::SetTitle(const nsString& aTitle) 
 {
-	const char *text = aTitle.ToNewCString();
+	const char *text = aTitle.ToNewUTF8String();
 	if(text && mView->LockLooper())
 	{
 		mView->Window()->SetTitle(text);
@@ -2435,10 +2758,35 @@ void nsViewBeOS::MouseUp(BPoint point)
 	buttons = 0;
 }
 
+void nsViewBeOS::MessageReceived(BMessage *msg)
+{
+	switch(msg->what)
+	{
+	case B_UNMAPPED_KEY_DOWN:
+		//printf("unmapped_key_down\n");
+		this->KeyDown(NULL, 0);
+		break;
+	case B_UNMAPPED_KEY_UP:
+		//printf("unmapped_key_up\n");
+		this->KeyUp(NULL, 0);
+		break;
+	default :
+		BView::MessageReceived(msg);
+		break;
+	}
+}
+
 void nsViewBeOS::KeyDown(const char *bytes, int32 numBytes)
 {
 	nsWindow	*w = (nsWindow *)GetMozillaWidget();
 	nsToolkit	*t;
+	int32 keycode = 0;
+	
+	BMessage *msg = this->Window()->CurrentMessage();
+	if (msg) {
+		msg->FindInt32("key", &keycode);
+	}
+	
 	if(w && (t = w->GetToolkit()) != 0)
 	{
 		uint32 bytebuf = 0;
@@ -2446,14 +2794,16 @@ void nsViewBeOS::KeyDown(const char *bytes, int32 numBytes)
 		for(int32 i = 0; i < numBytes; i++)
 			byteptr[i] = bytes[i];
 
-		uint32	args[4];
+		uint32	args[5];
 		args[0] = NS_KEY_DOWN;
 		args[1] = bytebuf;
 		args[2] = numBytes;
 		args[3] = modifiers();
+		args[4] = keycode;
 
-		MethodInfo *info = new MethodInfo(w, w, nsWindow::ONKEY, 4, args);
+		MethodInfo *info = new MethodInfo(w, w, nsWindow::ONKEY, 5, args);
 		t->CallMethodAsync(info);
+		NS_RELEASE(t);
 	}
 }
 
@@ -2461,6 +2811,13 @@ void nsViewBeOS::KeyUp(const char *bytes, int32 numBytes)
 {
 	nsWindow	*w = (nsWindow *)GetMozillaWidget();
 	nsToolkit	*t;
+	int32 keycode = 0;
+	
+	BMessage *msg = this->Window()->CurrentMessage();
+	if (msg) {
+		msg->FindInt32("key", &keycode);
+	}
+
 	if(w && (t = w->GetToolkit()) != 0)
 	{
 		uint32 bytebuf = 0;
@@ -2468,13 +2825,34 @@ void nsViewBeOS::KeyUp(const char *bytes, int32 numBytes)
 		for(int32 i = 0; i < numBytes; i++)
 			byteptr[i] = bytes[i];
 
-		uint32	args[4];
+		uint32	args[5];
 		args[0] = NS_KEY_UP;
 		args[1] = (int32)bytebuf;
 		args[2] = numBytes;
 		args[3] = modifiers();
+		args[4] = keycode;
 
-		MethodInfo *info = new MethodInfo(w, w, nsWindow::ONKEY, 4, args);
+		MethodInfo *info = new MethodInfo(w, w, nsWindow::ONKEY, 5, args);
 		t->CallMethodAsync(info);
+		NS_RELEASE(t);
 	}
 }
+
+void nsViewBeOS::MakeFocus(bool focused)
+{
+//printf("MakeFocus %s\n",(focused)?"get":"lost");
+	if (IsFocus()) return;
+
+
+	BView::MakeFocus(focused);
+
+	nsWindow	*w = (nsWindow *)GetMozillaWidget();
+	nsToolkit	*t;
+	if(w && (t = w->GetToolkit()) != 0)
+	{
+		MethodInfo *info = new MethodInfo(w, w, (focused)? nsWindow::GOT_FOCUS : nsWindow::KILL_FOCUS);
+		t->CallMethodAsync(info);
+		NS_RELEASE(t);
+	}
+}
+

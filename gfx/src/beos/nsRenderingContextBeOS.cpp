@@ -808,12 +808,7 @@ NS_IMETHODIMP nsRenderingContextBeOS::InvertRect(nscoord aX, nscoord aY, nscoord
 
     if(mView && mView->LockLooper())
     {
-      if( 1 == h )
-{
-        mView->StrokeLine(BPoint(x, y), BPoint(x + w-1, y));	// FIXME: add line style
-      }
-      else
-        mView->FillRect(BRect(x, y, x + w - 1, y + h - 1), B_SOLID_LOW);
+      mView->InvertRect(BRect(x, y, x + w - 1, y + h - 1));
       mView->UnlockLooper();
     }
 
