@@ -6229,7 +6229,7 @@ nsXULDocument::CreateXIF(nsString & aBuffer, nsIDOMSelection* aSelection)
   nsresult result=NS_OK;
 
   nsCOMPtr<nsIXIFConverter> converter;
-  nsresult res = nsComponentManager::CreateInstance(kXIFConverterCID,
+  nsComponentManager::CreateInstance(kXIFConverterCID,
                            nsnull,
                            NS_GET_IID(nsIXIFConverter),
                            getter_AddRefs(converter));
