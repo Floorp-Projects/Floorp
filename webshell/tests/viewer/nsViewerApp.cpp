@@ -65,9 +65,6 @@
 
 #include "nsIDOMHTMLSelectElement.h"
 
-// Charset converter
-#include "nsMetaCharsetCID.h"
-#include "nsIMetaCharsetService.h"
 
 // new widget stuff
 #ifdef USE_LOCAL_WIDGETS
@@ -112,9 +109,6 @@ static NS_DEFINE_IID(kIAppShellIID, NS_IAPPSHELL_IID);
 static NS_DEFINE_IID(kIPrefIID, NS_IPREF_IID);
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIXPBaseWindowIID, NS_IXPBASE_WINDOW_IID);
-
-static NS_DEFINE_IID(kMetaCharsetCID, NS_META_CHARSET_CID);
-static NS_DEFINE_IID(kIMetaCharsetServiceIID, NS_IMETA_CHARSET_SERVICE_IID);
 
 static NS_DEFINE_CID(kFormProcessorCID,   NS_FORMPROCESSOR_CID);
 static NS_DEFINE_IID(kIDOMHTMLSelectElementIID, NS_IDOMHTMLSELECTELEMENT_IID);
@@ -179,8 +173,6 @@ nsViewerApp::QueryInterface(REFNSIID aIID, void** aInstancePtrResult)
 void
 nsViewerApp::Destroy()
 {
-  nsresult rv;
-
   // Close all of our windows
   nsBrowserWindow::CloseAllWindows();
 
@@ -191,11 +183,6 @@ nsViewerApp::Destroy()
     NS_RELEASE(mCrawler);
   }
 
-  NS_WITH_SERVICE(nsIMetaCharsetService, metacharset, kMetaCharsetCID, &rv);
-  if (NS_SUCCEEDED(rv)) {
-    rv = metacharset->End();
-  }
-  
   if (nsnull != mPrefs) {
     mPrefs->ShutDown();
     NS_RELEASE(mPrefs);
@@ -265,11 +252,6 @@ nsViewerApp::SetupRegistry()
   AutoregisterComponents();
 
   NS_SetupRegistry();
-
-  NS_WITH_SERVICE(nsIMetaCharsetService, metacharset, kMetaCharsetCID, &rv);
-  if (NS_SUCCEEDED(rv)) {
-    rv = metacharset->Start();
-  }
 
   // Register our browser window factory
   nsIFactory* bwf;

@@ -55,9 +55,6 @@
 #include "nsWidgetsCID.h"
 #include "nsIRequestObserver.h"
 
-#include "nsMetaCharsetCID.h"
-#include "nsIMetaCharsetService.h"
-
 /* For implementing GetHiddenWindowAndJSContext */
 #include "nsIScriptGlobalObject.h"
 #include "jsapi.h"
@@ -68,7 +65,6 @@
 static NS_DEFINE_CID(kAppShellCID,          NS_APPSHELL_CID);
 static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 static NS_DEFINE_CID(kWindowMediatorCID, NS_WINDOWMEDIATOR_CID);
-static NS_DEFINE_CID(kMetaCharsetCID, NS_META_CHARSET_CID);
 static NS_DEFINE_CID(kXPConnectCID, NS_XPCONNECT_CID);
 
 // copied from nsEventQueue.cpp
@@ -136,19 +132,9 @@ nsAppShellService::Initialize( nsICmdLineService *aCmdLineService,
       mSplashScreen = do_QueryInterface( aNativeAppSupportOrSplashScreen );
   }
 
-  NS_WITH_SERVICE(nsIMetaCharsetService, metacharset, kMetaCharsetCID, &rv);
-  if(NS_FAILED(rv)) {
-    goto done;
-  }
-
   // Create the toplevel window list...
   rv = NS_NewISupportsArray(getter_AddRefs(mWindowList));
   if (NS_FAILED(rv)) {
-    goto done;
-  }
-
-  rv = metacharset->Start();
-  if(NS_FAILED(rv)) {
     goto done;
   }
 

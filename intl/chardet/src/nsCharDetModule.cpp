@@ -39,6 +39,8 @@
 #include "nsIWebShellServices.h"
 #include "nsIStringCharsetDetector.h"
 #include "nsIGenericFactory.h"
+#include "nsIAppStartupNotifier.h"
+#include "nsICategoryManager.h"
 #include "nsMetaCharsetObserver.h"
 #include "nsXMLEncodingObserver.h"
 #include "nsDetectionAdaptor.h"
@@ -109,6 +111,24 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(ns1stBlkDbgDetector);
 NS_GENERIC_FACTORY_CONSTRUCTOR(ns2ndBlkDbgDetector);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsLastBlkDbgDetector);
 #endif /* INCLUDE_DBGDETECTOR */
+
+static NS_METHOD nsMetaCharsetObserverRegistrationProc(nsIComponentManager *aCompMgr,
+                                          nsIFile *aPath,
+                                          const char *registryLocation,
+                                          const char *componentType,
+                                          const nsModuleComponentInfo *info)
+{
+  nsresult rv;
+  nsCOMPtr<nsICategoryManager> 
+    categoryManager(do_GetService("@mozilla.org/categorymanager;1", &rv));
+  if (NS_SUCCEEDED(rv)) {
+    rv = categoryManager->AddCategoryEntry(APPSTARTUP_CATEGORY, "Meta Charset",
+                        "service," NS_META_CHARSET_CONTRACTID,
+                        PR_TRUE, PR_TRUE,
+                        nsnull);
+  }
+  return rv;
+}
 
 static NS_METHOD nsDetectionAdaptorRegistrationProc(nsIComponentManager *aCompMgr,
                                           nsIFile *aPath,
@@ -377,7 +397,7 @@ static nsModuleComponentInfo components[] =
 {
  { "Meta Charset", NS_META_CHARSET_CID, 
     NS_META_CHARSET_CONTRACTID, nsMetaCharsetObserverConstructor, 
-    NULL, NULL},
+    nsMetaCharsetObserverRegistrationProc, NULL},
  { "Document Charset Info", NS_DOCUMENTCHARSETINFO_CID, 
     NS_DOCUMENTCHARSETINFO_CONTRACTID, nsDocumentCharsetInfoConstructor, 
     NULL, NULL},
