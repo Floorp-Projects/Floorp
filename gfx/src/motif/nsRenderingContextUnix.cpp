@@ -485,7 +485,7 @@ void nsRenderingContextUnix :: GetClipRegion(nsIRegion **aRegion)
   static NS_DEFINE_IID(kCRegionCID, NS_REGION_CID);
   static NS_DEFINE_IID(kIRegionIID, NS_IREGION_IID);
 
-  nsresult rv = NSRepository::CreateInstance(kCRegionCID, 
+  nsresult rv = nsRepository::CreateInstance(kCRegionCID, 
 					     nsnull, 
 					     kIRegionIID, 
 					     (void **)aRegion);

@@ -108,7 +108,7 @@ nsObjectFrame::CreateWidget(nsIPresContext* aPresContext,
   // Create our view and widget
 
   nsresult result = 
-    NSRepository::CreateInstance(kViewCID, nsnull, kIViewIID,
+    nsRepository::CreateInstance(kViewCID, nsnull, kIViewIID,
 				 (void **)&view);
   if (NS_OK != result) {
     return result;

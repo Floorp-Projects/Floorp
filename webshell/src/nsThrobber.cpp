@@ -317,7 +317,7 @@ nsThrobber::Init(nsIWidget* aParent, const nsRect& aBounds)
   mHeight = aBounds.height;
 
   // Create widget
-  nsresult rv = NSRepository::CreateInstance(kChildCID,
+  nsresult rv = nsRepository::CreateInstance(kChildCID,
                                              (nsIThrobber *)this,
                                              kISupportsIID,
                                              (void**)&mInnerWidget);

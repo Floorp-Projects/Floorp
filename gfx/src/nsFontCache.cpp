@@ -97,7 +97,7 @@ NS_IMETHODIMP FontCacheImpl :: GetMetricsFor(const nsFont& aFont, nsIFontMetrics
   static NS_DEFINE_IID(kFontMetricsIID, NS_IFONT_METRICS_IID);
 
   nsIFontMetrics* fm;
-  nsresult        rv = NSRepository::CreateInstance(kFontMetricsCID, nsnull,
+  nsresult        rv = nsRepository::CreateInstance(kFontMetricsCID, nsnull,
                                                     kFontMetricsIID, (void **)&fm);
   if (NS_OK != rv) {
     aMetrics = nsnull;

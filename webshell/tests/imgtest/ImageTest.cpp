@@ -338,7 +338,7 @@ static HWND CreateTopLevel(const char* clazz, const char* title,
 
   nsRect rect(0, 0, aWidth, aHeight);  
 
-  nsresult rv = NSRepository::CreateInstance(kCChildWindowIID, NULL, kIWidgetIID, (void**)&gWindow);
+  nsresult rv = nsRepository::CreateInstance(kCChildWindowIID, NULL, kIWidgetIID, (void**)&gWindow);
 
   if (NS_OK == rv) {
       gWindow->Create((nsNativeWidget)window, rect, MyHandleEvent, NULL);
@@ -357,19 +357,19 @@ WinMain(HINSTANCE instance, HINSTANCE prevInstance, LPSTR cmdParam, int nCmdShow
 {
   gInstance = instance;
 
-  NSRepository::RegisterFactory(kCWindowIID, WIDGET_DLL, PR_FALSE, PR_FALSE);
-  NSRepository::RegisterFactory(kCChildWindowIID, WIDGET_DLL, PR_FALSE, PR_FALSE);
-  NSRepository::RegisterFactory(kCScrollbarIID, WIDGET_DLL, PR_FALSE, PR_FALSE);
+  nsRepository::RegisterFactory(kCWindowIID, WIDGET_DLL, PR_FALSE, PR_FALSE);
+  nsRepository::RegisterFactory(kCChildWindowIID, WIDGET_DLL, PR_FALSE, PR_FALSE);
+  nsRepository::RegisterFactory(kCScrollbarIID, WIDGET_DLL, PR_FALSE, PR_FALSE);
 
   static NS_DEFINE_IID(kCRenderingContextIID, NS_RENDERING_CONTEXT_CID);
   static NS_DEFINE_IID(kCDeviceContextIID, NS_DEVICE_CONTEXT_CID);
   static NS_DEFINE_IID(kCFontMetricsIID, NS_FONT_METRICS_CID);
   static NS_DEFINE_IID(kCImageIID, NS_IMAGE_CID);
 
-  NSRepository::RegisterFactory(kCRenderingContextIID, GFXWIN_DLL, PR_FALSE, PR_FALSE);
-  NSRepository::RegisterFactory(kCDeviceContextIID, GFXWIN_DLL, PR_FALSE, PR_FALSE);
-  NSRepository::RegisterFactory(kCFontMetricsIID, GFXWIN_DLL, PR_FALSE, PR_FALSE);
-  NSRepository::RegisterFactory(kCImageIID, GFXWIN_DLL, PR_FALSE, PR_FALSE);
+  nsRepository::RegisterFactory(kCRenderingContextIID, GFXWIN_DLL, PR_FALSE, PR_FALSE);
+  nsRepository::RegisterFactory(kCDeviceContextIID, GFXWIN_DLL, PR_FALSE, PR_FALSE);
+  nsRepository::RegisterFactory(kCFontMetricsIID, GFXWIN_DLL, PR_FALSE, PR_FALSE);
+  nsRepository::RegisterFactory(kCImageIID, GFXWIN_DLL, PR_FALSE, PR_FALSE);
 
   if (!prevInstance) {
     WNDCLASS wndClass;

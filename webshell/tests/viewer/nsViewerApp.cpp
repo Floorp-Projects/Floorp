@@ -108,7 +108,7 @@ nsViewerApp::SetupRegistry()
   // Register our browser window factory
   nsIFactory* bwf;
   NS_NewBrowserWindowFactory(&bwf);
-  NSRepository::RegisterFactory(kBrowserWindowCID, bwf, PR_FALSE);
+  nsRepository::RegisterFactory(kBrowserWindowCID, bwf, PR_FALSE);
 
   return NS_OK;
 }
@@ -124,7 +124,7 @@ nsViewerApp::Initialize(int argc, char** argv)
   }
 
   // Create widget application shell
-  rv = NSRepository::CreateInstance(kAppShellCID, nsnull, kIAppShellIID,
+  rv = nsRepository::CreateInstance(kAppShellCID, nsnull, kIAppShellIID,
                                     (void**)&mAppShell);
   if (NS_OK != rv) {
     return rv;
@@ -133,7 +133,7 @@ nsViewerApp::Initialize(int argc, char** argv)
   mAppShell->SetDispatchListener((nsDispatchListener*) this);
 
   // Load preferences
-  rv = NSRepository::CreateInstance(kPrefCID, NULL, kIPrefIID,
+  rv = nsRepository::CreateInstance(kPrefCID, NULL, kIPrefIID,
                                     (void **) &mPrefs);
   if (NS_OK != rv) {
     return rv;
@@ -362,7 +362,7 @@ nsViewerApp::OpenWindow()
   // browser window. For the time being the reference is released by the
   // browser event handling code during processing of the NS_DESTROY event...
   nsBrowserWindow* bw = nsnull;
-  nsresult rv = NSRepository::CreateInstance(kBrowserWindowCID, nsnull,
+  nsresult rv = nsRepository::CreateInstance(kBrowserWindowCID, nsnull,
                                              kIBrowserWindowIID,
                                              (void**) &bw);
   bw->SetApp(this);
@@ -402,7 +402,7 @@ nsViewerApp::OpenWindow(PRUint32 aNewChromeMask, nsIBrowserWindow*& aNewWindow)
 {
   // Create browser window
   nsBrowserWindow* bw = nsnull;
-  nsresult rv = NSRepository::CreateInstance(kBrowserWindowCID, nsnull,
+  nsresult rv = nsRepository::CreateInstance(kBrowserWindowCID, nsnull,
                                              kIBrowserWindowIID,
                                              (void**) &bw);
   bw->SetApp(this);

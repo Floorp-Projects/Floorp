@@ -30,7 +30,7 @@ int main(int argc, char **argv) {
   RegisterTestFactories();
 
   ITestClass *t = NULL;
-  NSRepository::CreateInstance(kTestFactoryCID,
+  nsRepository::CreateInstance(kTestFactoryCID,
                                NULL,
                                kTestClassIID,
                                (void **) &t);
@@ -44,7 +44,7 @@ int main(int argc, char **argv) {
 
   t = NULL;
 
-  NSRepository::CreateInstance(kTestLoadedFactoryCID,
+  nsRepository::CreateInstance(kTestLoadedFactoryCID,
                                NULL,
                                kTestClassIID,
                                (void **) &t);
@@ -56,7 +56,7 @@ int main(int argc, char **argv) {
     cout << "Dynamic CreateInstance failed\n";
   }
 
-  NSRepository::FreeLibraries();
+  nsRepository::FreeLibraries();
 
   return 0;
 }
@@ -130,12 +130,12 @@ nsresult TestFactory::CreateInstance(nsISupports *aDelegate,
  */
 
 extern "C" void RegisterTestFactories() {
-  NSRepository::RegisterFactory(kTestFactoryCID, new TestFactory(),
+  nsRepository::RegisterFactory(kTestFactoryCID, new TestFactory(),
                                 PR_FALSE);
 
   // Windows can use persistant registry  
 #ifndef USE_NSREG
-  NSRepository::RegisterFactory(kTestLoadedFactoryCID,
+  nsRepository::RegisterFactory(kTestLoadedFactoryCID,
                                 "libtestdynamic.so",
                                 PR_FALSE,
                                 PR_TRUE);

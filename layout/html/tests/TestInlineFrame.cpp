@@ -1587,7 +1587,7 @@ int main(int argc, char** argv)
   static NS_DEFINE_IID(kDeviceContextCID, NS_DEVICE_CONTEXT_CID);
   static NS_DEFINE_IID(kDeviceContextIID, NS_IDEVICE_CONTEXT_IID);
 
-  nsresult rv = NSRepository::CreateInstance(kDeviceContextCID, nsnull, kDeviceContextIID, (void **)&dx);
+  nsresult rv = nsRepository::CreateInstance(kDeviceContextCID, nsnull, kDeviceContextIID, (void **)&dx);
 
   if (NS_OK == rv) {
     dx->Init(nsull);

@@ -290,7 +290,7 @@ nsresult          rv;
     gSobits = (HBITMAP)::SelectObject(gSrcdc, gSrcbits);
     gDobits = (HBITMAP)::SelectObject(gDestdc, gDestbits);
 
-    rv = NSRepository::CreateInstance(kBlenderCID, nsnull, kBlenderIID, (void **)&gImageblender);
+    rv = nsRepository::CreateInstance(kBlenderCID, nsnull, kBlenderIID, (void **)&gImageblender);
     gImageblender->Init(gSrcdc,gDestdc);
   }
 }
@@ -1102,7 +1102,7 @@ static HWND CreateTopLevel(const char* clazz, const char* title,int aWidth, int 
 
   nsRect rect(0, 0, aWidth, aHeight);  
 
-  nsresult rv = NSRepository::CreateInstance(kCChildWindowIID, NULL, kIWidgetIID, (void**)&gWindow);
+  nsresult rv = nsRepository::CreateInstance(kCChildWindowIID, NULL, kIWidgetIID, (void**)&gWindow);
 
 
   if (NS_OK == rv) 
@@ -1111,14 +1111,14 @@ static HWND CreateTopLevel(const char* clazz, const char* title,int aWidth, int 
     }
 
   // something for input
-  NSRepository::RegisterFactory(kCTextFieldCID, "raptorwidget.dll", PR_FALSE, PR_FALSE);
+  nsRepository::RegisterFactory(kCTextFieldCID, "raptorwidget.dll", PR_FALSE, PR_FALSE);
   rect.SetRect(25, 370, 40, 25);  
-  NSRepository::CreateInstance(kCTextFieldCID, nsnull, kITextWidgetIID, (void**)&gBlendMessage);
+  nsRepository::CreateInstance(kCTextFieldCID, nsnull, kITextWidgetIID, (void**)&gBlendMessage);
   gBlendMessage->Create(gWindow, rect, nsnull, nsnull);
   gBlendMessage->SetText("50");
 
   rect.SetRect(70,370,40,25);
-  NSRepository::CreateInstance(kCTextFieldCID, nsnull, kITextWidgetIID, (void**)&gQualMessage);
+  nsRepository::CreateInstance(kCTextFieldCID, nsnull, kITextWidgetIID, (void**)&gQualMessage);
   gQualMessage->Create(gWindow, rect, nsnull, nsnull);
   gQualMessage->SetText("3");
 
@@ -1137,9 +1137,9 @@ WinMain(HINSTANCE instance, HINSTANCE prevInstance, LPSTR cmdParam, int nCmdShow
 {
   gInstance = instance;
 
-  NSRepository::RegisterFactory(kCWindowIID, WIDGET_DLL, PR_FALSE, PR_FALSE);
-  NSRepository::RegisterFactory(kCChildWindowIID, WIDGET_DLL, PR_FALSE, PR_FALSE);
-  NSRepository::RegisterFactory(kCScrollbarIID, WIDGET_DLL, PR_FALSE, PR_FALSE);
+  nsRepository::RegisterFactory(kCWindowIID, WIDGET_DLL, PR_FALSE, PR_FALSE);
+  nsRepository::RegisterFactory(kCChildWindowIID, WIDGET_DLL, PR_FALSE, PR_FALSE);
+  nsRepository::RegisterFactory(kCScrollbarIID, WIDGET_DLL, PR_FALSE, PR_FALSE);
 
   static NS_DEFINE_IID(kCRenderingContextIID, NS_RENDERING_CONTEXT_CID);
   static NS_DEFINE_IID(kCDeviceContextIID, NS_DEVICE_CONTEXT_CID);
@@ -1147,11 +1147,11 @@ WinMain(HINSTANCE instance, HINSTANCE prevInstance, LPSTR cmdParam, int nCmdShow
   static NS_DEFINE_IID(kCImageIID, NS_IMAGE_CID);
   static NS_DEFINE_IID(kCBlenderIID, NS_BLENDER_CID);
 
-  NSRepository::RegisterFactory(kCRenderingContextIID, GFXWIN_DLL, PR_FALSE, PR_FALSE);
-  NSRepository::RegisterFactory(kCDeviceContextIID, GFXWIN_DLL, PR_FALSE, PR_FALSE);
-  NSRepository::RegisterFactory(kCFontMetricsIID, GFXWIN_DLL, PR_FALSE, PR_FALSE);
-  NSRepository::RegisterFactory(kCImageIID, GFXWIN_DLL, PR_FALSE, PR_FALSE);
-  NSRepository::RegisterFactory(kCBlenderIID, GFXWIN_DLL, PR_FALSE, PR_FALSE);
+  nsRepository::RegisterFactory(kCRenderingContextIID, GFXWIN_DLL, PR_FALSE, PR_FALSE);
+  nsRepository::RegisterFactory(kCDeviceContextIID, GFXWIN_DLL, PR_FALSE, PR_FALSE);
+  nsRepository::RegisterFactory(kCFontMetricsIID, GFXWIN_DLL, PR_FALSE, PR_FALSE);
+  nsRepository::RegisterFactory(kCImageIID, GFXWIN_DLL, PR_FALSE, PR_FALSE);
+  nsRepository::RegisterFactory(kCBlenderIID, GFXWIN_DLL, PR_FALSE, PR_FALSE);
 
   if (!prevInstance) {
     WNDCLASS wndClass;

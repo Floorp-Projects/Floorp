@@ -86,7 +86,7 @@ void nsInputFileFrame::MouseClicked(nsIPresContext* aPresContext)
   nsIFileWidget *fileWidget;
 
   nsString title("FileWidget Title <here> mode = save");
-  NSRepository::CreateInstance(kCFileWidgetCID, nsnull, kIFileWidgetIID, (void**)&fileWidget);
+  nsRepository::CreateInstance(kCFileWidgetCID, nsnull, kIFileWidgetIID, (void**)&fileWidget);
   
   nsString titles[] = {"all files"};
   nsString filters[] = {"*.*"};

@@ -494,7 +494,7 @@ void nsWindow::Create(nsIWidget *aParent,
       static NS_DEFINE_IID(kDeviceContextCID, NS_DEVICE_CONTEXT_CID);
       static NS_DEFINE_IID(kDeviceContextIID, NS_IDEVICE_CONTEXT_IID);
 
-      res = NSRepository::CreateInstance(kDeviceContextCID, nsnull, kDeviceContextIID, (void **)&mContext);
+      res = nsRepository::CreateInstance(kDeviceContextCID, nsnull, kDeviceContextIID, (void **)&mContext);
 
       if (NS_OK == res)
         mContext->Init(nsnull);
@@ -605,7 +605,7 @@ void nsWindow::Create(nsNativeWidget aParent,
       static NS_DEFINE_IID(kDeviceContextCID, NS_DEVICE_CONTEXT_CID);
       static NS_DEFINE_IID(kDeviceContextIID, NS_IDEVICE_CONTEXT_IID);
 
-      res = NSRepository::CreateInstance(kDeviceContextCID, nsnull, kDeviceContextIID, (void **)&mContext);
+      res = nsRepository::CreateInstance(kDeviceContextCID, nsnull, kDeviceContextIID, (void **)&mContext);
 
       if (NS_OK == res)
         mContext->Init(nsnull);
@@ -1239,7 +1239,7 @@ nsRect  bounds;
         static NS_DEFINE_IID(kRenderingContextCID, NS_RENDERING_CONTEXT_CID);
         static NS_DEFINE_IID(kRenderingContextIID, NS_IRENDERING_CONTEXT_IID);
 
-        res = NSRepository::CreateInstance(kRenderingContextCID, nsnull, kRenderingContextIID, (void **)&renderingCtx);
+        res = nsRepository::CreateInstance(kRenderingContextCID, nsnull, kRenderingContextIID, (void **)&renderingCtx);
 
         if (NS_OK == res)
           renderingCtx->Init(mContext, this);
@@ -1882,7 +1882,7 @@ PRBool nsWindow::OnPaint()
             static NS_DEFINE_IID(kRenderingContextCID, NS_RENDERING_CONTEXT_CID);
             static NS_DEFINE_IID(kRenderingContextIID, NS_IRENDERING_CONTEXT_IID);
 
-            if (NS_OK == NSRepository::CreateInstance(kRenderingContextCID, nsnull, kRenderingContextIID, (void **)&event.renderingContext))
+            if (NS_OK == nsRepository::CreateInstance(kRenderingContextCID, nsnull, kRenderingContextIID, (void **)&event.renderingContext))
             {
               event.renderingContext->Init(mContext, this);
               result = DispatchEvent(&event);

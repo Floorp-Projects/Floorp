@@ -305,7 +305,7 @@ nsresult nsWebShell::CreatePluginHost(void)
 
   if (nsnull == mPluginManager)
   {
-    rv = NSRepository::CreateInstance(kCPluginHostCID, nsnull,
+    rv = nsRepository::CreateInstance(kCPluginHostCID, nsnull,
                                       kIPluginManagerIID,
                                       (void**)&mPluginManager);
     if (NS_OK == rv)
@@ -544,7 +544,7 @@ nsWebShell::Init(nsNativeWidget aNativeParent,
       NS_RELEASE(parentLoader);
     }
   } else {
-    rv = NSRepository::CreateInstance(kDocumentLoaderCID,
+    rv = nsRepository::CreateInstance(kDocumentLoaderCID,
                                       nsnull,
                                       kIDocumentLoaderIID,
                                       (void**)&mDocLoader);
@@ -556,7 +556,7 @@ nsWebShell::Init(nsNativeWidget aNativeParent,
   mDocLoader->AddObserver((nsIDocumentLoaderObserver*)this);
 
   // Create device context
-  rv = NSRepository::CreateInstance(kDeviceContextCID, nsnull,
+  rv = nsRepository::CreateInstance(kDeviceContextCID, nsnull,
                                     kIDeviceContextIID,
                                     (void **)&mDeviceContext);
   if (NS_OK != rv) {
@@ -573,7 +573,7 @@ nsWebShell::Init(nsNativeWidget aNativeParent,
   mDeviceContext->SetGamma(1.0f);
 
   // Create a Native window for the shell container...
-  rv = NSRepository::CreateInstance(kChildCID,
+  rv = nsRepository::CreateInstance(kChildCID,
                                     (nsISupports*)((nsIWebShell*)this),
                                     kISupportsIID,
                                     (void**)&mInnerWindow);

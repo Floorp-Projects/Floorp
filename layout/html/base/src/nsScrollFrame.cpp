@@ -351,7 +351,7 @@ nsScrollInnerFrame::Reflow(nsIPresContext&      aPresContext,
     nsIViewManager* viewManager;
     parentView->GetViewManager(viewManager);
 
-    nsresult rv = NSRepository::CreateInstance(kScrollingViewCID, 
+    nsresult rv = nsRepository::CreateInstance(kScrollingViewCID, 
                                                nsnull, 
                                                kIViewIID, 
                                                (void **)&view);

@@ -56,10 +56,10 @@ typedef nsresult (*nsUnregisterProc)(const char *path);
 class FactoryEntry;
 
 /*
- * NSRepository class
+ * nsRepository class
  */
 
-class NS_COM NSRepository {
+class NS_COM nsRepository {
 private:
   static nsHashtable *factories;
   static PRMonitor *monitor;
