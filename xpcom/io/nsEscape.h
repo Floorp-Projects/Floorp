@@ -105,9 +105,12 @@ enum EscapeMask {
   esc_Minimal        = esc_Scheme | esc_Username | esc_Password | esc_Host | esc_FilePath | esc_Param | esc_Query | esc_Ref, 
   esc_Forced         = PR_BIT(10), /* forces escaping of existing escape sequences */
   esc_OnlyASCII      = PR_BIT(11), /* causes non-ascii octets to be skipped */
-  esc_OnlyNonASCII   = PR_BIT(12), /* causes ascii octets to be skipped */
+  esc_OnlyNonASCII   = PR_BIT(12), /* causes _graphic_ ascii octets (0x20-0x7E) 
+                                    * to be skipped when escaping. causes all
+                                    * ascii octets to be skipped when unescaping */
   esc_AlwaysCopy     = PR_BIT(13), /* copy input to result buf even if escaping is unnecessary */
-  esc_Colon          = PR_BIT(14)  /* force escape of colon */
+  esc_Colon          = PR_BIT(14), /* forces escape of colon */
+  esc_ExcludeControl = PR_BIT(15)  /* excludes C0 and DEL from unescaping */
 };
 
 /**
@@ -134,7 +137,8 @@ NS_COM PRBool NS_EscapeURL(const char *str,
  *
  * @param  str     url string to unescape
  * @param  len     length of |str|
- * @param  flags   only esc_OnlyNonASCII and esc_AlwaysCopy are recognized
+ * @param  flags   only esc_OnlyNonASCII, esc_ExcludeControl and esc_AlwaysCopy 
+ *                 are recognized
  * @param  result  result buffer, untouched if |str| is already unescaped
  *
  * @return TRUE if unescaping was performed, FALSE otherwise.
