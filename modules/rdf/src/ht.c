@@ -6243,7 +6243,7 @@ rdfProcDialogHandler(XPDialogState *dlgstate, char **argv, int argc, unsigned in
 			XP_CopyDialogString(strings, 1, dynStr);
 			if (postHTMLdynStr != NULL)	XP_CopyDialogString(strings, 2, postHTMLdynStr);
 			XP_MakeHTMLDialog(NULL, &rdfColorPropDialogInfo, RDF_COLOR_TITLE,
-				strings, node, PR_FALSE);
+				strings, node, PR_TRUE);
 		}
 		if (dynStr != NULL)	XP_FREE(dynStr);
 		if (strings != NULL)	XP_FreeDialogStrings(strings);
@@ -6799,7 +6799,7 @@ HT_Find(char *hint)
 		}
 		context = gRDFMWContext(NULL);
 		XP_MakeHTMLDialog(context, &rdfFindDialogInfo, RDF_FIND_TITLE,
-			strings, NULL, PR_FALSE);
+			strings, NULL, PR_TRUE);
 	}
 	if (dynStr != NULL)	XP_FREE(dynStr);
 	if (strings != NULL)	XP_FreeDialogStrings(strings);
@@ -7024,7 +7024,7 @@ HT_Properties (HT_Resource node)
 			context = gRDFMWContext(NULL);
 		}
 		XP_MakeHTMLDialog(context, &rdfWorkspacePropDialogInfo,
-			RDF_MAIN_TITLE, strings, node, PR_FALSE);
+			RDF_MAIN_TITLE, strings, node, PR_TRUE);
 	}
 	else
 	{
