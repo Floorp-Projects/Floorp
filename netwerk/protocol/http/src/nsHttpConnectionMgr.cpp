@@ -554,6 +554,11 @@ nsHttpConnectionMgr::DispatchTransaction(nsConnectionEntry *ent,
         LOG(("  conn->Activate failed [rv=%x]\n", rv));
         ent->mActiveConns.RemoveElement(conn);
         mNumActiveConns--;
+        // sever back references to connection, and do so without triggering
+        // a call to ReclaimConnection ;-)
+        trans->SetConnection(nsnull);
+        NS_RELEASE(handle->mConn);
+        // destroy the connection
         NS_RELEASE(conn);
     }
 
