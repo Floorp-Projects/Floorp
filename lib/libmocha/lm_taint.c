@@ -23,7 +23,6 @@
 #include "lm.h"
 #include "xp.h"
 #include "mkparse.h"
-#include "mkutils.h"
 #include "prclist.h"
 #include "plhash.h"
 #include "prmem.h"

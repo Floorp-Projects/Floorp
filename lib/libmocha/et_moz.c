@@ -34,6 +34,7 @@
 #include "np.h"
 #include "prefapi.h"
 #include "pa_parse.h"
+#include "netcache.h"
 
 #define IL_CLIENT
 #include "libimg.h"             /* Image Library public API. */
@@ -1249,9 +1250,6 @@ ET_PostJsEventAck(MWContext* context, LO_Element * pEle, int type,
 
 
 /****************************************************************************/
-
-#include "mkaccess.h"
-#include "mkcache.h"
 
 /****************************************************************************/
 /****************************************************************************/

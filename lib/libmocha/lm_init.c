@@ -24,7 +24,6 @@
 #include "xp.h"
 #include "net.h"
 #include "structs.h"
-#include "mkutils.h"    /* XXX for NET_URL_Type() */
 #include "layout.h"     /* for lo_FormData */
 #include "pa_tags.h"    /* included via -I../libparse */
 #include "prmem.h"

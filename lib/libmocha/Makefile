@@ -22,8 +22,8 @@ DEPTH		= ../..
 MODULE		= mocha
 LIBRARY_NAME	= mocha
 
-REQUIRES	= lay net parse img js style layer applet dbm nspr security \
-		  htmldlgs util jtools pref java libreg softupdt jsdebug
+REQUIRES	= lay parse img js style layer applet dbm nspr security \
+		  htmldlgs util jtools pref java libreg softupdt jsdebug netcache network httpurl
 
 ifndef NO_SECURITY
 REQUIRES       += jar

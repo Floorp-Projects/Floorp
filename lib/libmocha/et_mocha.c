@@ -39,6 +39,7 @@
 #include "pa_parse.h"
 #include "jsjava.h"
 #include "intl_csi.h"
+#include "netcache.h"
 
 QueueStackElement * et_TopQueue = NULL;
 

@@ -28,10 +28,9 @@
 #include "xp.h"
 #include "lo_ele.h"
 #include "shist.h"
+#include "cookies.h"
 #include "structs.h"            /* for MWContext */
 #include "layout.h"             /* included via -I../layout */
-#include "mkaccess.h"           /* from ../libnet */
-#include "mkcache.h"            /* from ../libnet */
 #include "pa_parse.h"           /* included via -I../libparse */
 #include "pa_tags.h"            /* included via -I../libparse */
 #include "secnav.h"
