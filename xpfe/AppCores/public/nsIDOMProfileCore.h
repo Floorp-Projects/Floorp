@@ -38,7 +38,7 @@ public:
 
   NS_IMETHOD    RenameProfile(const nsString& aOldName, const nsString& aNewName)=0;
 
-  NS_IMETHOD    DeleteProfile(const nsString& aProfileName)=0;
+  NS_IMETHOD    DeleteProfile(const nsString& aProfileName, const nsString& aDeleteFlag)=0;
 
   NS_IMETHOD    GetProfileList(nsString& aReturn)=0;
 
@@ -53,7 +53,7 @@ public:
 #define NS_DECL_IDOMPROFILECORE   \
   NS_IMETHOD    CreateNewProfile(const nsString& aData);  \
   NS_IMETHOD    RenameProfile(const nsString& aOldName, const nsString& aNewName);  \
-  NS_IMETHOD    DeleteProfile(const nsString& aProfileName);  \
+  NS_IMETHOD    DeleteProfile(const nsString& aProfileName, const nsString& aDeleteFlag);  \
   NS_IMETHOD    GetProfileList(nsString& aReturn);  \
   NS_IMETHOD    StartCommunicator(const nsString& aProfileName);  \
   NS_IMETHOD    GetCurrentProfile(nsString& aReturn);  \
@@ -64,7 +64,7 @@ public:
 #define NS_FORWARD_IDOMPROFILECORE(_to)  \
   NS_IMETHOD    CreateNewProfile(const nsString& aData) { return _to CreateNewProfile(aData); }  \
   NS_IMETHOD    RenameProfile(const nsString& aOldName, const nsString& aNewName) { return _to RenameProfile(aOldName, aNewName); }  \
-  NS_IMETHOD    DeleteProfile(const nsString& aProfileName) { return _to DeleteProfile(aProfileName); }  \
+  NS_IMETHOD    DeleteProfile(const nsString& aProfileName, const nsString& aDeleteFlag) { return _to DeleteProfile(aProfileName, aDeleteFlag); }  \
   NS_IMETHOD    GetProfileList(nsString& aReturn) { return _to GetProfileList(aReturn); }  \
   NS_IMETHOD    StartCommunicator(const nsString& aProfileName) { return _to StartCommunicator(aProfileName); }  \
   NS_IMETHOD    GetCurrentProfile(nsString& aReturn) { return _to GetCurrentProfile(aReturn); }  \

@@ -180,7 +180,7 @@ NS_IMETHODIMP nsProfileCore::RenameProfile(const nsString& oldName, const nsStri
 
 
 //----------------------------------------------------------------------------------------
-NS_IMETHODIMP nsProfileCore::DeleteProfile(const nsString& profileName)
+NS_IMETHODIMP nsProfileCore::DeleteProfile(const nsString& profileName, const nsString& deleteFlag)
 // Start loading of a new Profile panel.
 //----------------------------------------------------------------------------------------
 {
@@ -188,7 +188,7 @@ NS_IMETHODIMP nsProfileCore::DeleteProfile(const nsString& profileName)
 
 	printf ("Requesting deletion of profile -> %s <-\n", profileName.ToNewCString());
 
-	mProfile->DeleteProfile(profileName.ToNewCString());
+	mProfile->DeleteProfile(profileName.ToNewCString(), deleteFlag.ToNewCString());
     return NS_OK;
 }
 

@@ -7,7 +7,7 @@ interface ProfileCore : BaseAppCore
 
 	void 	CreateNewProfile(in wstring data);
 	void 	RenameProfile(in wstring oldName, in wstring newName);
-	void 	DeleteProfile(in wstring profileName);
+	void 	DeleteProfile(in wstring profileName, in wstring deleteFlag);
 	wstring GetProfileList();
 	void	StartCommunicator(in wstring profileName);
 	wstring GetCurrentProfile();
