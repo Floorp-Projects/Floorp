@@ -31,8 +31,6 @@
 
 #include <stdio.h>
 
-#include "../src/nsInterfaceInfo.h"
-
 // This file expects the nsInterfaceInfoManager to be able to discover
 // .xpt files corresponding to those in xpcom/idl.  Currently this
 // means setting XPTDIR in the environment to some directory
