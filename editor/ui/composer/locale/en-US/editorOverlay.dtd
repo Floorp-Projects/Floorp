@@ -85,12 +85,12 @@
      clipboard formats are available -->
 <!ENTITY pasteTextCmd.label "Text">
 <!ENTITY editpastetext.accesskey "t">
-<!ENTITY pasteTextCmd.label "Image">
-<!ENTITY editpastetext.accesskey "i">
-<!ENTITY pasteTextCmd.label "Link">
-<!ENTITY editpastetext.accesskey "l">
-<!ENTITY pasteTextCmd.label "HTML">
-<!ENTITY editpastetext.accesskey "h">
+<!ENTITY pasteImageCmd.label "Image">
+<!ENTITY editpasteimage.accesskey "i">
+<!ENTITY pasteLinkCmd.label "Link">
+<!ENTITY editpastelink.accesskey "l">
+<!ENTITY pasteHTMLCmd.label "HTML">
+<!ENTITY editpastehtml.accesskey "h">
 <!ENTITY pasteAsQuotationCmd.label "Paste As Quotation">
 <!ENTITY editpastequotation.accesskey "q">
 <!ENTITY editStripQuotesCmd.label "Strip Quotes">
