@@ -17,7 +17,6 @@
  */
 #include "nsSplittableFrame.h"
 #include "nsIContent.h"
-#include "nsIContentDelegate.h"
 #include "nsIPresContext.h"
 #include "nsIStyleContext.h"
 #include "nsISizeOfHandler.h"

@@ -22,7 +22,6 @@ MODULE = raptor
 EXPORTS =			\
 	nslayout.h		\
 	nsIContent.h		\
-	nsIContentDelegate.h	\
 	nsIDocument.h		\
 	nsIDocumentContainer.h	\
 	nsIDocumentObserver.h	\

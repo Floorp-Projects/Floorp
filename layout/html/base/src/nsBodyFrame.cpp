@@ -17,7 +17,6 @@
  */
 #include "nsBodyFrame.h"
 #include "nsIContent.h"
-#include "nsIContentDelegate.h"
 #include "nsIReflowCommand.h"
 #include "nsIStyleContext.h"
 #include "nsStyleConsts.h"

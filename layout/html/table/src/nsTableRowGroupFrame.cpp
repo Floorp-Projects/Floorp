@@ -23,7 +23,6 @@
 #include "nsIStyleContext.h"
 #include "nsStyleConsts.h"
 #include "nsIContent.h"
-#include "nsIContentDelegate.h"
 #include "nsIView.h"
 #include "nsIPtr.h"
 #include "nsIReflowCommand.h"

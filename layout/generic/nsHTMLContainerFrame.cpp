@@ -33,7 +33,6 @@
 #include "nsIPtr.h"
 #include "nsAbsoluteFrame.h"
 #include "nsPlaceholderFrame.h"
-#include "nsIContentDelegate.h"
 #include "nsIHTMLContent.h"
 #include "nsHTMLParts.h"
 #include "nsHTMLBase.h"

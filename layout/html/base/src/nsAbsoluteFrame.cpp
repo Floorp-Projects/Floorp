@@ -18,7 +18,6 @@
 #include "nsAbsoluteFrame.h"
 #include "nsBodyFrame.h"
 #include "nsIAbsoluteItems.h"
-#include "nsIContentDelegate.h"
 #include "nsIStyleContext.h"
 #include "nsStyleConsts.h"
 #include "nsHTMLIIDs.h"

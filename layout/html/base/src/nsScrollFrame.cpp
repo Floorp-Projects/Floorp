@@ -17,7 +17,6 @@
  */
 #include "nsScrollFrame.h"
 #include "nsIPresContext.h"
-#include "nsIContentDelegate.h"
 #include "nsIStyleContext.h"
 #include "nsIReflowCommand.h"
 #include "nsIDeviceContext.h"

@@ -24,7 +24,6 @@
 #include "nsStyleConsts.h"
 #include "nsIPresContext.h"
 #include "nsIPtr.h"
-#include "nsIContentDelegate.h"
 #include "nsHTMLAtoms.h"
 
 NS_DEF_PTR(nsIContent);

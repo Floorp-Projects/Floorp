@@ -24,7 +24,6 @@
 #include "nsIRenderingContext.h"
 #include "nsCSSRendering.h"
 #include "nsIContent.h"
-#include "nsIContentDelegate.h"
 #include "nsIHTMLContent.h"
 #include "nsHTMLIIDs.h"
 #include "nsCSSLayout.h"

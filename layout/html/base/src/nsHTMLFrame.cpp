@@ -25,7 +25,6 @@
 #include "nsViewsCID.h"
 #include "nsIView.h"
 #include "nsIViewManager.h"
-#include "nsIContentDelegate.h"
 #include "nsIWidget.h"
 #include "nsHTMLIIDs.h"
 #include "nsPageFrame.h"
