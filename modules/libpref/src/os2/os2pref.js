@@ -39,7 +39,7 @@ platform.windows = true;
 
 pref("ui.key.menuAccessKeyFocuses", true);
 
-pref("font.name.serif.ar", "Tms Rm");
+pref("font.name.serif.ar", "Tms Rmn");
 pref("font.name-list.serif.ar", "Times New Roman MT 30");
 pref("font.name.sans-serif.ar", "Helv");
 pref("font.name-list.sans-serif.ar", "Times New Roman MT 30");
@@ -110,7 +110,9 @@ pref("font.name.monospace.x-cyrillic", "Courier");
 pref("font.name.fantasy.x-cyrillic", "Symbol Set");
 
 pref("font.name.serif.x-unicode", "Times New Roman MT 30");
+pref("font.name-list.serif.x-unicode", "Tms Rmn");
 pref("font.name.sans-serif.x-unicode", "Times New Roman MT 30");
+pref("font.name-list.sans-serif.x-unicode", "Helv");
 pref("font.name.monospace.x-unicode", "Courier");
 
 pref("font.name.serif.x-western", "Tms Rmn");

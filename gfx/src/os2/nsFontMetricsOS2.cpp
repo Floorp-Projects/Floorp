@@ -1528,7 +1528,7 @@ nsFontMetricsOS2::GetUnicodeFont( HPS aPS )
   font.EnumerateFamilies(GenericFontEnumCallback, &context);
   if (context.mFont) // a suitable font was found
   {
-    fh->fattrs.usCodePage = 1208;
+    context.mFont->fattrs.usCodePage = 1208;
     return context.mFont;
   }
   
@@ -1725,27 +1725,9 @@ CompareFontFamilyNames(const void* aArg1, const void* aArg2, void* aClosure)
   const nsMiniFontMetrics* fm1 = &(font1->metrics);
   const nsMiniFontMetrics* fm2 = &(font2->metrics);
 
-   // Sorting criteria is like a tree:
-   // + Bitmap fonts
-   //    + non-Symbol fonts   0x000
-   //    + Symbol fonts       0x001
-   // + Vector fonts
-   //    + non-Symbol fonts   0x010
-   //    + Symbol fonts       0x011
-   // + Vertical fonts        0x100
-   
-  PRInt32 weight1 = 0, weight2 = 0; // computed as node mask 
+  PRInt32 weight1 = 0, weight2 = 0;
 
-  if( fm1->fsDefn & FM_DEFN_OUTLINE )
-    weight1 |= 0x010;
-  if( fm2->fsDefn & FM_DEFN_OUTLINE )
-    weight2 |= 0x010; 
-
-  if( fm1->panose.bFamilyType > 3 )
-    weight1 |= 0x001;
-  if( fm2->panose.bFamilyType > 3 )
-    weight2 |= 0x001;
-
+   // put vertical fonts last
   if( fm1->szFamilyname[0] == '@' )
     weight1 |= 0x100;
   if( fm2->szFamilyname[0] == '@' )
@@ -1788,7 +1770,6 @@ nsFontMetricsOS2::InitializeGlobalFonts()
     font->metrics.fsType = pFontMetrics[i].fsType;
     font->metrics.fsDefn = pFontMetrics[i].fsDefn;
     font->metrics.fsSelection = pFontMetrics[i].fsSelection;
-    font->metrics.panose = pFontMetrics[i].panose;
   #ifdef DEBUG_pedemont
     font->metrics.lMatch = pFontMetrics[i].lMatch;
   #endif
@@ -1887,105 +1868,6 @@ nsFontEnumeratorOS2::nsFontEnumeratorOS2()
 
 NS_IMPL_ISUPPORTS1(nsFontEnumeratorOS2, nsIFontEnumerator)
 
-enum eLangGruopTypes
-{
-  LANG_TYPE_JA,
-  LANG_TYPE_ZH_TW,
-  LANG_TYPE_ZH_CN,
-  LANG_TYPE_KO,
-  LANG_TYPE_TH,
-  LANG_TYPE_HE,
-  LANG_TYPE_AR,
-  LANG_TYPE_OTHER
-};
-
-static int
-SignatureMatchesLangGroup( USHORT* aSignature, const char* aLangGroup )
-{
-#if 0
-  for( int i=0; i < eCharset_COUNT; i++ )
-  {
-    if( PL_strcasecmp(aLangGroup, gCharsetInfo[i].mLangGroup) )
-      if( *aSignature & gCharsetInfo[i].mMask )
-        return 1;
-  }
-  
-  return 0;
-#else
-   // Many fonts in OS/2 don't properly set the FONTMETRICS.fsDefn flags
-   // so we can't rely on it for language information
-  return 1;
-#endif
-}
-
-static int
-FontMatchesGenericType( nsMiniFontMetrics* aFont, int aGenericType,
-                        int aLangGroupType )
-{
-  if( aLangGroupType == LANG_TYPE_JA )    return 1;
-  if( aLangGroupType == LANG_TYPE_ZH_TW ) return 1;
-  if( aLangGroupType == LANG_TYPE_ZH_CN ) return 1;
-  if( aLangGroupType == LANG_TYPE_KO )    return 1;
-  if( aLangGroupType == LANG_TYPE_TH )    return 1;
-  if( aLangGroupType == LANG_TYPE_HE )    return 1;
-  if( aLangGroupType == LANG_TYPE_AR )    return 1;
-
-  if( aFont->fsType & FM_TYPE_FIXED || aFont->panose.bProportion == 9 )
-  {                                       // Monospace fonts
-    return( aGenericType == kGenericFont_monospace );
-  }
-  else if( aFont->panose.bFamilyType == 2 )  // Text and Display
-  {
-    if( aFont->panose.bSerifStyle > 10 )     // sans-serif          
-    {                                     // 11-15 of bSerifStyle
-      return( aGenericType == kGenericFont_sans_serif );
-    }
-    else if( aFont->panose.bSerifStyle < 2 ) // if of type "Any" or "No Fit"
-    {                                     // add to both                 
-      return( aGenericType == kGenericFont_serif ||
-              aGenericType == kGenericFont_sans_serif );
-    }
-    else
-      return( aGenericType == kGenericFont_serif ); // assume remaining fonts of
-                                                // type 2 are serif         
-  }
-  else if( aFont->panose.bFamilyType == 3 )  // Script
-  {
-    return( aGenericType == kGenericFont_cursive );
-  }
-  else if( aFont->panose.bFamilyType > 3 )   // Decorative, Pictorial
-  {
-    return( aGenericType == kGenericFont_fantasy );
-  }
-  else
-  {
-     // These common bitmap fonts do not have PANOSE info, so we hardcode
-     // these checks here
-    if( PL_strcasecmp(aFont->szFamilyname, "Tms Rmn") == 0 )
-    {
-      return( aGenericType == kGenericFont_serif );
-    }
-    else if( PL_strcasecmp(aFont->szFamilyname, "Helv") == 0 ||
-             PL_strcasecmp(aFont->szFamilyname, "System Proportional") == 0 ||
-             PL_strcasecmp(aFont->szFamilyname, "WarpSans") == 0 )
-    {
-      return( aGenericType == kGenericFont_sans_serif );
-    }
-    else if( PL_strcasecmp(aFont->szFamilyname, "Symbol Set") == 0 )
-    {
-      return( aGenericType == kGenericFont_fantasy );
-    }
-    else
-    {
-       // Any font that has not set any of the above fields gets added to
-       // every font menu in prefs
-      return 0;
-    }
-  }
-
-  return 0;
-}
-
 static int PR_CALLBACK
 CompareFontNames(const void* aArg1, const void* aArg2, void* aClosure)
 {
@@ -2026,91 +1908,7 @@ NS_IMETHODIMP
 nsFontEnumeratorOS2::EnumerateFonts(const char* aLangGroup,
   const char* aGeneric, PRUint32* aCount, PRUnichar*** aResult)
 {
-  NS_ENSURE_ARG_POINTER(aLangGroup);
-  NS_ENSURE_ARG_POINTER(aGeneric);
-  NS_ENSURE_ARG_POINTER(aCount);
-  NS_ENSURE_ARG_POINTER(aResult);
-
-  if ((!strcmp(aLangGroup, "x-unicode")) ||
-      (!strcmp(aLangGroup, "x-user-def"))) {
-    return EnumerateAllFonts(aCount, aResult);
-  }
-
-  if (!nsFontMetricsOS2::gGlobalFonts) {
-    if (!nsFontMetricsOS2::InitializeGlobalFonts()) {
-      return nsnull;
-    }
-  }
-
-  int genericType;
-  if( PL_strcmp(aGeneric, "serif") == 0 )
-    genericType = kGenericFont_serif;
-  else if( PL_strcmp(aGeneric, "sans-serif") == 0 )
-    genericType = kGenericFont_sans_serif;
-  else if( PL_strcmp(aGeneric, "monospace") == 0 )
-    genericType = kGenericFont_monospace;
-  else if( PL_strcmp(aGeneric, "fantasy") == 0 )
-    genericType = kGenericFont_fantasy;
-  else if( PL_strcmp(aGeneric, "cursive") == 0 )
-    genericType = kGenericFont_cursive;
-  else
-    NS_ASSERTION( 0, "Unknown font type given" );
-    
-  int langType;
-  if( PL_strcmp(aLangGroup, "ja") == 0 )
-    langType = LANG_TYPE_JA;
-  else if( PL_strcmp(aLangGroup, "zh-TW") == 0 )
-    langType = LANG_TYPE_ZH_TW;
-  else if( PL_strcmp(aLangGroup, "zh-CN") == 0 )
-    langType = LANG_TYPE_ZH_CN;
-  else if( PL_strcmp(aLangGroup, "ko") == 0 )
-    langType = LANG_TYPE_KO;
-  else if( PL_strcmp(aLangGroup, "th") == 0 )
-    langType = LANG_TYPE_TH;
-  else if( PL_strcmp(aLangGroup, "he") == 0 )
-    langType = LANG_TYPE_HE;
-  else if( PL_strcmp(aLangGroup, "ar") == 0 )
-    langType = LANG_TYPE_AR;
-  else
-    langType = LANG_TYPE_OTHER;
-
-  int count = nsFontMetricsOS2::gGlobalFonts->Count();
-  PRUnichar** array = (PRUnichar**)nsMemory::Alloc(count * sizeof(PRUnichar*));
-  if (!array) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  int i = 0;
-  int j = 0;
-  while( i < count )
-  {
-    nsGlobalFont* font = (nsGlobalFont*)nsFontMetricsOS2::gGlobalFonts->ElementAt(i);
-    if (SignatureMatchesLangGroup(&font->metrics.fsDefn, aLangGroup) &&
-        FontMatchesGenericType(&font->metrics, genericType, langType))
-    {
-      PRUnichar* str = (PRUnichar*)nsMemory::Alloc((FACESIZE+1) * sizeof(PRUnichar));
-      if (!str) {
-        for (j = j - 1; j >= 0; --j) {
-          nsMemory::Free(array[j]);
-        }
-        nsMemory::Free(array);
-        return NS_ERROR_OUT_OF_MEMORY;
-      }
-
-      str[0] = L'\0';
-      MultiByteToWideChar(0, font->metrics.szFamilyname,
-         strlen(font->metrics.szFamilyname)+1, str, FACESIZE+1);
-      array[j++] = str;
-    }
-    i = font->nextFamily;
-  }
-
-  NS_QuickSort(array, j, sizeof(PRUnichar*), CompareFontNames, nsnull);
-
-  *aCount = j;
-  *aResult = array;
-
-  return NS_OK;
+  return EnumerateAllFonts(aCount, aResult);
 }
 
 NS_IMETHODIMP
