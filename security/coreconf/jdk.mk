@@ -82,11 +82,6 @@ endif
 
 # set [Microsoft Windows] platforms
 ifeq ($(OS_ARCH), WINNT)
-	# (1) specify "location" information
-	ifeq ($(JAVA_HOME),)
-		JAVA_HOME = //hs-sca15c/components/jdk/1.2.2_01/WINNT
-	endif
-
 	JAVA_CLASSES = $(JAVA_HOME)/lib/classes.zip
 
 	ifeq ($(JRE_HOME),)
@@ -124,11 +119,6 @@ endif
 
 # set [Sun Solaris] platforms
 ifeq ($(OS_ARCH), SunOS)
-	# (1) specify "location" information
-	ifeq ($(JAVA_HOME),)
-		JAVA_HOME = /share/builds/components/jdk/1.2.2_01/SunOS
-	endif
-
 	JAVA_CLASSES = $(JAVA_HOME)/lib/classes.zip
 
 	ifeq ($(JRE_HOME),)
@@ -171,11 +161,6 @@ endif
 
 # set [Hewlett Packard HP-UX] platforms
 ifeq ($(OS_ARCH), HP-UX)
-	# (1) specify "location" information  (currently ONLY on "orville")
-	ifeq ($(JAVA_HOME),)
-		JAVA_HOME = /opt/java1.2
-	endif
-
 	JAVA_CLASSES = $(JAVA_HOME)/lib/classes.zip
 
 	ifeq ($(JRE_HOME),)
@@ -215,11 +200,6 @@ endif
 
 # set [Redhat Linux] platforms
 ifeq ($(OS_ARCH), Linux)
-	# (1) specify "location" information
-	ifeq ($(JAVA_HOME),)
-		JAVA_HOME = /share/builds/components/jdk/1.2.2/Linux
-	endif
-
 	JAVA_CLASSES = $(JAVA_HOME)/lib/classes.zip
 
 	ifeq ($(JRE_HOME),)
@@ -259,11 +239,6 @@ endif
 
 # set [IBM AIX] platforms
 ifeq ($(OS_ARCH), AIX)
-	# (1) specify "location" information
-	ifeq ($(JAVA_HOME),)
-		JAVA_HOME = /share/builds/components/jdk/1.2.2/AIX
-	endif
-
 	JAVA_CLASSES = $(JAVA_HOME)/lib/classes.zip
 
 	ifeq ($(JRE_HOME),)
@@ -302,11 +277,6 @@ endif
 
 # set [Digital UNIX] platforms
 ifeq ($(OS_ARCH), OSF1)
-	# (1) specify "location" information
-	ifeq ($(JAVA_HOME),)
-		JAVA_HOME = /share/builds/components/jdk/1.2.2_3/OSF1
-	endif
-
 	JAVA_CLASSES = $(JAVA_HOME)/lib/classes.zip
 
 	ifeq ($(JRE_HOME),)
@@ -346,11 +316,6 @@ endif
 
 # set [Silicon Graphics IRIX] platforms
 ifeq ($(OS_ARCH), IRIX)
-	# (1) specify "location" information
-	ifeq ($(JAVA_HOME),)
-		JAVA_HOME = /share/builds/components/jdk/1.2.1/IRIX
-	endif
-
 	JAVA_CLASSES = $(JAVA_HOME)/lib/dev.jar:$(JAVA_HOME)/lib/rt.jar
 
 	ifeq ($(JRE_HOME),)
