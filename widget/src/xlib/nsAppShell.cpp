@@ -291,8 +291,8 @@ NS_METHOD nsAppShell::Create(int* bac, char ** bav)
       displayName=argv[i+1];
       break;
     }
-  for (int i = 0; ++i < argc; )
-    if (COMPARE_FLAG2 ("sync",argv[i])){
+  for (int j = 0; ++j < argc; )
+    if (COMPARE_FLAG2 ("sync",argv[j])){
       synchronize=true;
       break;
     } 
