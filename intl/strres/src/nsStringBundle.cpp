@@ -22,6 +22,7 @@
 #include "nsIProperties.h"
 #include "nsIStringBundle.h"
 #include "nscore.h"
+#include "nsILocale.h"
 #include "nsINetService.h"
 #include "nsIServiceManager.h"
 #include "nsIURL.h"
@@ -42,7 +43,7 @@ static NS_DEFINE_IID(kNetServiceCID, NS_NETSERVICE_CID);
 class nsStringBundle : public nsISupports
 {
 public:
-  nsStringBundle(nsIURL* aURL, const nsString& aLocale, nsresult* aResult);
+  nsStringBundle(nsIURL* aURL, nsILocale* aLocale, nsresult* aResult);
   ~nsStringBundle();
 
   NS_DECL_ISUPPORTS
@@ -53,7 +54,7 @@ public:
   nsIProperties* mProps;
 };
 
-nsStringBundle::nsStringBundle(nsIURL* aURL, const nsString& aLocale,
+nsStringBundle::nsStringBundle(nsIURL* aURL, nsILocale* aLocale,
   nsresult* aResult)
 {
   mProps = nsnull;
@@ -113,7 +114,7 @@ public:
   NS_IMETHOD CreateInstance(nsISupports* aOuter, REFNSIID aIID, void** aResult);
   NS_IMETHOD LockFactory(PRBool aLock);
 
-  NS_IMETHOD CreateBundle(nsIURL* aURL, const nsString& aLocale,
+  NS_IMETHOD CreateBundle(nsIURL* aURL, nsILocale* aLocale,
     nsIStringBundle** aResult);
 };
 
@@ -133,7 +134,7 @@ nsStringBundleFactory::LockFactory(PRBool aLock)
 }
 
 NS_IMETHODIMP
-nsStringBundleFactory::CreateBundle(nsIURL* aURL, const nsString& aLocale,
+nsStringBundleFactory::CreateBundle(nsIURL* aURL, nsILocale* aLocale,
   nsIStringBundle** aResult)
 {
   nsresult ret = NS_OK;

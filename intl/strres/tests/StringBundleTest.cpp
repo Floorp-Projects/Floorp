@@ -18,6 +18,7 @@
 
 #include "nsIStringBundle.h"
 #include "nsIEventQueueService.h"
+#include "nsILocale.h"
 #include "nsINetService.h"
 #include "nsIServiceManager.h"
 #include "nsRepository.h"
@@ -79,7 +80,7 @@ main(int argc, char *argv[])
     return 1;
   }
 
-  nsAutoString locale("en-US");
+  nsILocale* locale = nsnull;
 
   nsIStringBundle* bundle = nsnull;
   ret = factory->CreateBundle(url, locale, &bundle);
