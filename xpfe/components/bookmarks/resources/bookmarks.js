@@ -597,26 +597,26 @@ function doUnload()
 
 function BookmarkProperties()
 {
-	var treeNode = document.getElementById('bookmarksTree');
-//	var select_list = treeNode.getElementsByAttribute("selected", "true");
-	var select_list = treeNode.selectedItems;
-
-	if (select_list.length >= 1)
-	{
-		// don't bother showing properties on bookmark separators
-		var type = select_list[0].getAttribute('type');
-		if (type != "http://home.netscape.com/NC-rdf#BookmarkSeparator")
-		{
-			var props = window.open("chrome://bookmarks/content/bm-props.xul",
-						"BookmarkProperties", "chrome, menubar");
-			props.BookmarkURL = select_list[0].getAttribute("id");
-		}
-	}
-	else
-	{
-		debug("nothing selected!"); 
-	}
-	return(true);
+  var treeNode = document.getElementById('bookmarksTree');
+  //	var select_list = treeNode.getElementsByAttribute("selected", "true");
+  var select_list = treeNode.selectedItems;
+  
+  if (select_list.length >= 1)
+    {
+      // don't bother showing properties on bookmark separators
+      var type = select_list[0].getAttribute('type');
+      if (type != "http://home.netscape.com/NC-rdf#BookmarkSeparator")
+        {
+          window.openDialog("chrome://bookmarks/content/bm-props.xul",
+                            "_blank", "chrome,menubar",
+                            select_list[0].getAttribute("id"));
+        }
+    }
+  else
+    {
+      debug("nothing selected!\n"); 
+    }
+  return(true);
 }
 
 

@@ -50,16 +50,20 @@ RDFC = RDFC.QueryInterface(Components.interfaces.nsIRDFContainerUtils);
 
 var Bookmarks = RDF.GetDataSource("rdf:bookmarks");
 
+// Init() will fill this in.
+var bookmark_url = '';
 
 function Init()
 {
+  bookmark_url = window.arguments[0];
+
   // Initialize the properties panel by copying the values from the
   // RDF graph into the fields on screen.
 
   for (var i = 0; i < Fields.length; ++i) {
     var field = document.getElementById(Fields[i]);
 
-    var value = Bookmarks.GetTarget(RDF.GetResource(BookmarkURL),
+    var value = Bookmarks.GetTarget(RDF.GetResource(bookmark_url),
                                     RDF.GetResource(Properties[i]),
                                     true);
 
@@ -72,7 +76,7 @@ function Init()
   }
 
   // check bookmark schedule
-    var value = Bookmarks.GetTarget(RDF.GetResource(BookmarkURL),
+    var value = Bookmarks.GetTarget(RDF.GetResource(bookmark_url),
                                     RDF.GetResource("http://home.netscape.com/WEB-rdf#Schedule"),
                                     true);
 
@@ -172,7 +176,7 @@ function Init()
     }
   
   // if its a container, disable some things
-  var isContainerFlag = RDFC.IsContainer(Bookmarks, RDF.GetResource(BookmarkURL));
+  var isContainerFlag = RDFC.IsContainer(Bookmarks, RDF.GetResource(bookmark_url));
   if (!isContainerFlag)
   {
   	// XXX To do: the "RDFC.IsContainer" call above only works for RDF sequences;
@@ -224,7 +228,7 @@ function Commit()
     var newvalue = field.value;
     dump("field value = " + newvalue + "\n");
 
-    var oldvalue = Bookmarks.GetTarget(RDF.GetResource(BookmarkURL),
+    var oldvalue = Bookmarks.GetTarget(RDF.GetResource(bookmark_url),
                                        RDF.GetResource(Properties[i]),
                                        true);
 
@@ -238,7 +242,7 @@ function Commit()
   
   // Update bookmark schedule if necessary
   	var scheduleRes = "http://home.netscape.com/WEB-rdf#Schedule";
-	var oldvalue = Bookmarks.GetTarget(RDF.GetResource(BookmarkURL),
+	var oldvalue = Bookmarks.GetTarget(RDF.GetResource(bookmark_url),
                                RDF.GetResource(scheduleRes), true);
         var newvalue = "";
 
@@ -332,18 +336,18 @@ function updateAttribute(prop, oldvalue, newvalue)
       dump("  newvalue = " + newvalue + "\n");
 
       if (oldvalue && !newvalue) {
-        Bookmarks.Unassert(RDF.GetResource(BookmarkURL),
+        Bookmarks.Unassert(RDF.GetResource(bookmark_url),
                            RDF.GetResource(prop),
                            oldvalue);
       }
       else if (!oldvalue && newvalue) {
-        Bookmarks.Assert(RDF.GetResource(BookmarkURL),
+        Bookmarks.Assert(RDF.GetResource(bookmark_url),
                          RDF.GetResource(prop),
                          newvalue,
                          true);
       }
       else if (oldvalue && newvalue) {
-        Bookmarks.Change(RDF.GetResource(BookmarkURL),
+        Bookmarks.Change(RDF.GetResource(bookmark_url),
                          RDF.GetResource(prop),
                          oldvalue,
                          newvalue);
