@@ -26,7 +26,6 @@ require "CGI.pl";
 
 # Shut up misguided -w warnings about "used only once":
 use vars @::legal_platform,
-    @::buffer,
     @::legal_severity,
     @::legal_opsys,
     @::legal_priority;
@@ -49,7 +48,7 @@ if (!defined $::FORM{'product'}) {
                 # to allow people to specify that product here.
                 next;
             }
-            print "<tr><th align=right valign=top><a href=\"enter_bug.cgi?product=" . url_quote($p) . "\"&$::buffer>$p</a>:</th>\n";
+            print "<tr><th align=right valign=top><a href=\"enter_bug.cgi?product=" . url_quote($p) . "\">$p</a>:</th>\n";
             if (defined $::proddesc{$p}) {
                 print "<td valign=top>$::proddesc{$p}</td>\n";
             }
