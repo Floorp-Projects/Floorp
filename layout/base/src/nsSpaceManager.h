@@ -20,7 +20,6 @@
 
 #include "nsISpaceManager.h"
 #include "prclist.h"
-#include "plhash.h"
 
 /**
  * Implementation of nsISpaceManager that maintains a region data structure of
@@ -66,6 +65,7 @@ protected:
   struct FrameInfo {
     nsIFrame* const mFrame;
     nsRect          mRect;       // rectangular region
+    FrameInfo*      mNext;
 
     FrameInfo(nsIFrame* aFrame, const nsRect& aRect);
   };
@@ -138,7 +138,7 @@ protected:
   nsIFrame* const mFrame;     // frame associated with the space manager
   nscoord         mX, mY;     // translation from local to global coordinate space
   BandList        mBandList;  // header/sentinel for circular linked list of band rects
-  PLHashTable*    mFrameInfoMap;
+  FrameInfo*      mFrameInfoMap;
 
 protected:
   virtual ~nsSpaceManager();
@@ -164,12 +164,7 @@ protected:
 private:
 	nsSpaceManager(const nsSpaceManager&);  // no implementation
 	void operator=(const nsSpaceManager&);  // no implementation
-  friend PR_CALLBACK PRIntn NS_RemoveFrameInfoEntries(PLHashEntry*, PRIntn, void*);
 };
-
-/* prototypes */
-PR_CALLBACK PLHashNumber
-NS_HashNumber(const void* key);
 
 #endif /* nsSpaceManager_h___ */
 
