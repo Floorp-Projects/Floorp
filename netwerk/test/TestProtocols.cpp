@@ -311,7 +311,7 @@ InputTestConsumer::OnDataAvailable(nsIChannel* channel,
   URLLoadInfo* info = (URLLoadInfo*)context;
 
   while (aLength) {
-    size = min(aLength, sizeof(buf));
+    size = PR_MIN(aLength, sizeof(buf));
 
     rv = aIStream->Read(buf, size, &amt);
     if (NS_FAILED(rv)) {
