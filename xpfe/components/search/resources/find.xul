@@ -9,6 +9,9 @@
 <!ENTITY search1.label               "Search for items in ">
 <!ENTITY search2.label               " whose ">
 
+<!ENTITY search.button.label         "Search">
+<!ENTITY save.button.label           "Save Search in Bookmarks">
+
 <!ENTITY bookmarks.label             "Bookmarks">
 <!ENTITY history.label               "History">
 
@@ -49,7 +52,7 @@
 			</html:tr>
 
 			<html:tr>
-				<html:td>
+				<html:td colspan="2">
 					<html:select id="match">
 						<html:option value="http://home.netscape.com/NC-rdf#Name">&name.label;</html:option>
 						<html:option value="http://home.netscape.com/NC-rdf#URL">&url.label;</html:option>
@@ -69,8 +72,11 @@
 			</html:tr>
 
 			<html:tr>
+				<html:td align="left">
+					<html:input id="SaveSearch" type="button" disabled="true" value="&save.button.label;" onclick="return saveSearch();" />
+				</html:td>
 				<html:td align="right">
-					<html:input type="button" value="Find" onclick="return doFind();" />
+					<html:input type="button" value="&search.button.label;" onclick="return doFind();" />
 				</html:td>
 			</html:tr>
 		</html:table>
