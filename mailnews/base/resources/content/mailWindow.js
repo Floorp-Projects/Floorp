@@ -108,13 +108,19 @@ function CreateMailWindowGlobals()
   var securityIcon = document.getElementById("security-button");
   if (securityIcon)
   {
-    var secureUI = Components.classes[secureUIContractID].createInstance();
-    // we may not have a secure UI if psm isn't installed!
-    if (secureUI)
+    // if the client isn't built with psm enabled then we won't have a secure UI to monitor the lock icon
+    // so be sure to wrap this in a try / catch clause...
+    try 
     {
-      secureUI = secureUI.QueryInterface(Components.interfaces.nsSecureBrowserUI);
-      secureUI.init(_content, securityIcon);
+      var secureUI = Components.classes[secureUIContractID].createInstance();
+      // we may not have a secure UI if psm isn't installed!
+      if (secureUI)
+      {
+        secureUI = secureUI.QueryInterface(Components.interfaces.nsSecureBrowserUI);
+        secureUI.init(_content, securityIcon);
+      }
     }
+    catch (ex) {}
   }
 
 	window.MsgWindowCommands = new nsMsgWindowCommands();
