@@ -856,7 +856,7 @@ nsGfxTextControlFrame::CreateWebShell(nsIPresContext& aPresContext,
   // if the visibility is hidden, reflect that in the view
   const nsStyleDisplay* display;
   GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)display));
-  if (NS_STYLE_VISIBILITY_HIDDEN == display->mVisible) {
+  if (NS_STYLE_VISIBILITY_VISIBLE != display->mVisible) {
     view->SetVisibility(nsViewVisibility_kHide);
   }
 
