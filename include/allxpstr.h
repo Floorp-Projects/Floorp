@@ -6515,13 +6515,24 @@ ResDef(XP_EDT_CHARSET_LABEL, (XP_MSG_BASE + 849),
 ResDef(XP_EDT_CHARSET_CANT_EDIT, (XP_MSG_BASE + 850),
 "\nCommunicator does not recognize this and cannot edit it.")
 ResDef(XP_EDT_CURRENT_CHARSET, (XP_MSG_BASE + 851),
-"\nYour current character set is '%s'.")
+"\nYour current character set is '%s'.\n")
 ResDef(XP_EDT_CHARSET_EDIT_REPLACE, (XP_MSG_BASE + 852),
 "\nSelect OK to edit the page and change the character set label to '%s'.")
 ResDef(XP_EDT_CHARSET_EDIT_CANCEL, (XP_MSG_BASE + 853),
 "\nSelect Cancel to abort editing this page.")
 ResDef(XP_EDT_CHARSET_EDIT_NOREPLACE, (XP_MSG_BASE + 854),
 "\nSelect Cancel to edit the page and keep '%s'.")
+ResDef(XP_EDT_CHARSET_CORRECTED, (XP_MSG_BASE + 855),
+"\nThe suggested character set to use is '%s'.\n")
+ResDef(XP_EDT_CHARSET_EDIT_SUGGESTED, (XP_MSG_BASE + 856),
+"\nThe suggested character set to use is '%s'.")
+
+ResDef(XP_EDT_CHARSET_CONVERT_PAGE, (XP_MSG_BASE + 857),
+"This may alter some of the characters in your page.\nYou cannot undo this action.")
+
+ResDef(XP_EDT_CHARSET_SET_METATAG, (XP_MSG_BASE + 858),
+"This changes the Content-Type label saved with the page.\nIt will not convert any characters in your page.")
+
 
 ResDef(MK_ADDR_DELETE_ALL, XP_MSG_BASE+860, "Delete From All Lists")  /* new entry in address book context menus - delete all from list */
 ResDef(MK_ADDR_IMPORT_CARDS, XP_MSG_BASE+861, "Adding cards to %s") /* line text for progress window on importing an address book */
@@ -6907,8 +6918,7 @@ ResDef (MK_CACHE_FROM_NETSITE_SERVER, XP_MSG_BASE + 1016,
 ResDef (XP_EDT_I18N_HAS_CHARSET, XP_MSG_BASE + 1017,
   "Changing the character encoding may alter some\n\
 of the characters in your document.\n\
-This change is not undoable.\n\
-Are you sure you want to proceed?")
+This change cannot be undone.")
 
 ResDef (XP_EDT_BREAKING_LINKS, XP_MSG_BASE + 1018,
   "The following links could become invalid because\n\
