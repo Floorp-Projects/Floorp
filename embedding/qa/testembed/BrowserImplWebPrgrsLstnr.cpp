@@ -150,18 +150,7 @@ NS_IMETHODIMP CBrowserImpl::OnStateChange(nsIWebProgress *progress, nsIRequest *
 		displayMode = 1;
 		strcpy(theDocType, "REQUEST");
 		if (progressStateFlags & STATE_START)
-		{
 			strcpy(theStateType, "STATE_START");
-
-			// a few nsIRequest tests
-			CQaUtils::QAOutput("Some nsIRequest tests thru web prog lstnr: ");
-			CTests::IsPendingReqTest(request);
-			CTests::GetStatusReqTest(request);
-
-			CTests::SuspendReqTest(request);	
-			CQaUtils::QAOutput("Between Suspend and Resume.");
-			CTests::ResumeReqTest(request);	
-		}
 		else if (progressStateFlags & STATE_REDIRECTING)
 			strcpy(theStateType, "STATE_REDIRECTING");
 
