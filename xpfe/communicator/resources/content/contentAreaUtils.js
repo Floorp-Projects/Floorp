@@ -695,13 +695,6 @@ function makeWebBrowserPersist()
   return Components.classes[persistContractID].createInstance(persistIID);
 }
 
-function makeProgressDialog()
-{
-  const progressDialogContractID = "@mozilla.org/progressdialog;1";
-  const progressDialogIID = Components.interfaces.nsIProgressDialog;
-  return Components.classes[progressDialogContractID].createInstance(progressDialogIID);
-}
-
 function makeURL(aURL)
 {
   var ioService = Components.classes["@mozilla.org/network/io-service;1"]
