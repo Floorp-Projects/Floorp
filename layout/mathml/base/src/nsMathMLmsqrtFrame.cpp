@@ -57,6 +57,8 @@
 // additional style context to be used by our MathMLChar.
 #define NS_SQR_CHAR_STYLE_CONTEXT_INDEX   0
 
+static const PRUnichar kSqrChar = PRUnichar(0x221A);
+
 nsresult
 NS_NewMathMLmsqrtFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame)
 {
@@ -95,7 +97,8 @@ nsMathMLmsqrtFrame::Init(nsIPresContext*  aPresContext,
 
   mEmbellishData.flags |= NS_MATHML_STRETCH_ALL_CHILDREN_VERTICALLY;
 
-  mSqrChar.SetEnum(aPresContext, eMathMLChar_Sqrt);
+  nsAutoString sqrChar; sqrChar.Assign(kSqrChar);
+  mSqrChar.SetData(aPresContext, sqrChar);
   ResolveMathMLCharStyle(aPresContext, mContent, mStyleContext, &mSqrChar);
 
 #if defined(NS_DEBUG) && defined(SHOW_BOUNDING_BOX)
@@ -129,8 +132,7 @@ nsMathMLmsqrtFrame::Paint(nsIPresContext*      aPresContext,
       nsStyleColor color;
       mStyleContext->GetStyle(eStyleStruct_Color, color);
       aRenderingContext.SetColor(color.mColor);
-      aRenderingContext.FillRect(mBarRect.x, mBarRect.y, 
-                                 mBarRect.width, mBarRect.height);
+      aRenderingContext.FillRect(mBarRect);
     }
 
 #if defined(NS_DEBUG) && defined(SHOW_BOUNDING_BOX)
@@ -188,9 +190,9 @@ nsMathMLmsqrtFrame::Reflow(nsIPresContext*          aPresContext,
   nsCOMPtr<nsIFontMetrics> fm;
   renderingContext.GetFontMetrics(*getter_AddRefs(fm));
 
-  nscoord ruleThickness;
+  nscoord ruleThickness, leading;
   GetRuleThickness(renderingContext, fm, ruleThickness);
-
+ 
   // Rule 11, App. G, TeXbook
   // psi = clearance between rule and content
   nscoord phi = 0, psi = 0;
@@ -205,13 +207,10 @@ nsMathMLmsqrtFrame::Reflow(nsIPresContext*          aPresContext,
   contSize.ascent = ruleThickness;
   contSize.descent = bmBase.ascent + bmBase.descent + psi;
 
-  nsBoundingMetrics radicalSize;
-  radicalSize.Clear(); // this tells Stretch() that we don't know the current size
-
   // height(radical) should be >= height(base) + psi + ruleThickness
-  // however, nsMathMLChar will only try to meet this condition
-  // with no guarantee.
-  mSqrChar.SetEnum(aPresContext, eMathMLChar_Sqrt); // XXX hack to reset the enum, bug 45010
+  nsBoundingMetrics radicalSize;
+  nsAutoString sqrChar; sqrChar.Assign(kSqrChar);
+  mSqrChar.SetData(aPresContext, sqrChar); // XXX hack to reset the char, bug 45010
   mSqrChar.Stretch(aPresContext, renderingContext,
                    NS_STRETCH_DIRECTION_VERTICAL, 
                    contSize, radicalSize,
@@ -223,6 +222,16 @@ nsMathMLmsqrtFrame::Reflow(nsIPresContext*          aPresContext,
   // According to TeX, the ascent of the returned radical should be
   // the thickness of the overline
   ruleThickness = bmSqr.ascent;
+  // make sure that the rule appears on the screen
+  float p2t;
+  aPresContext->GetScaledPixelsToTwips(&p2t);
+  nscoord onePixel = NSIntPixelsToTwips(1, p2t);
+  if (ruleThickness < onePixel) {
+    ruleThickness = onePixel;
+  }
+  // get the leading to be left at the top of the resulting frame 
+  float em = float(font.mFont.size);
+  leading = nscoord(0.2f * em);
 
   // adjust clearance psi to absorb any excess difference if any
   // in height between radical and content
@@ -231,13 +240,10 @@ nsMathMLmsqrtFrame::Reflow(nsIPresContext*          aPresContext,
     psi = (psi + bmSqr.descent - (bmBase.ascent + bmBase.descent))/2;
 
   nscoord dx = 0, dy = 0;
-  // place the radical symbol
-  dy = ruleThickness; // leave a kern=ruleThickness at the top
+  // place the radical symbol and the radical bar
+  dy = leading; // leave a leading at the top
   mSqrChar.SetRect(nsRect(dx, dy, bmSqr.width, bmSqr.ascent + bmSqr.descent));
-
-  // place the radical bar
   dx = bmSqr.width;
-  dy = ruleThickness; // leave a kern=ruleThickness at the top
   mBarRect.SetRect(dx, dy, bmBase.width, ruleThickness);
 
   // Update the desired size for the container.
@@ -250,7 +256,7 @@ nsMathMLmsqrtFrame::Reflow(nsIPresContext*          aPresContext,
   mBoundingMetrics.rightBearing = bmSqr.width + 
     PR_MAX(bmBase.width, bmBase.rightBearing); // take also care of the rule
 
-  aDesiredSize.ascent = bmBase.ascent + psi + 2*ruleThickness;
+  aDesiredSize.ascent = bmBase.ascent + psi + ruleThickness + leading;
   aDesiredSize.descent =
     PR_MAX(baseSize.descent, (mBoundingMetrics.descent + ruleThickness));
   aDesiredSize.height = aDesiredSize.ascent + aDesiredSize.descent;
@@ -271,8 +277,7 @@ nsMathMLmsqrtFrame::Reflow(nsIPresContext*          aPresContext,
       childFrame->GetOrigin(origin);
       childFrame->MoveTo(aPresContext, origin.x + dx, origin.y + dy);
     }
-    rv = childFrame->GetNextSibling(&childFrame);
-    NS_ASSERTION(NS_SUCCEEDED(rv),"failed to get next child");
+    childFrame->GetNextSibling(&childFrame);
   }
 
   if (nsnull != aDesiredSize.maxElementSize) {

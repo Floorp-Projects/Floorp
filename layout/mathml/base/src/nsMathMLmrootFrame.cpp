@@ -57,6 +57,8 @@
 // additional style context to be used by our MathMLChar.
 #define NS_SQR_CHAR_STYLE_CONTEXT_INDEX   0
 
+static const PRUnichar kSqrChar = PRUnichar(0x221A);
+
 nsresult
 NS_NewMathMLmrootFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame)
 {
@@ -95,7 +97,8 @@ nsMathMLmrootFrame::Init(nsIPresContext*  aPresContext,
 
   mEmbellishData.flags |= NS_MATHML_STRETCH_ALL_CHILDREN_VERTICALLY;
 
-  mSqrChar.SetEnum(aPresContext, eMathMLChar_Sqrt);
+  nsAutoString sqrChar; sqrChar.Assign(kSqrChar);
+  mSqrChar.SetData(aPresContext, sqrChar);
   ResolveMathMLCharStyle(aPresContext, mContent, mStyleContext, &mSqrChar);
 
 #if defined(NS_DEBUG) && defined(SHOW_BOUNDING_BOX)
@@ -129,8 +132,7 @@ nsMathMLmrootFrame::Paint(nsIPresContext*      aPresContext,
       nsStyleColor color;
       mStyleContext->GetStyle(eStyleStruct_Color, color);
       aRenderingContext.SetColor(color.mColor);
-      aRenderingContext.FillRect(mBarRect.x, mBarRect.y, 
-                                 mBarRect.width, mBarRect.height);
+      aRenderingContext.FillRect(mBarRect);
     }
 
 #if defined(NS_DEBUG) && defined(SHOW_BOUNDING_BOX)
@@ -209,12 +211,11 @@ nsMathMLmrootFrame::Reflow(nsIPresContext*          aPresContext,
       }
       count++;
     }
-    rv = childFrame->GetNextSibling(&childFrame);
-    NS_ASSERTION(NS_SUCCEEDED(rv),"failed to get next child");
+    childFrame->GetNextSibling(&childFrame);
   }
   if ((2 != count) || !baseFrame || !indexFrame) {
 #ifdef NS_DEBUG
-    printf("mroot: invalid markup");
+    printf("mroot: invalid markup\n");
 #endif
     // report an error, encourage people to get their markups in order
     return ReflowError(aPresContext, renderingContext, aDesiredSize);
@@ -229,7 +230,7 @@ nsMathMLmrootFrame::Reflow(nsIPresContext*          aPresContext,
   nsCOMPtr<nsIFontMetrics> fm;
   renderingContext.GetFontMetrics(*getter_AddRefs(fm));
 
-  nscoord ruleThickness;
+  nscoord ruleThickness, leading;
   GetRuleThickness(renderingContext, fm, ruleThickness);
 
   // Rule 11, App. G, TeXbook
@@ -246,12 +247,8 @@ nsMathMLmrootFrame::Reflow(nsIPresContext*          aPresContext,
   contSize.descent = bmBase.ascent + bmBase.descent + psi;
   contSize.ascent = ruleThickness;
 
-  nsBoundingMetrics radicalSize;
-  radicalSize.Clear(); // this tells Stretch() that we don't know the current size
-
   // height(radical) should be >= height(base) + psi + ruleThickness
-  // however, nsMathMLChar will only try to meet this condition
-  // with no guarantee.
+  nsBoundingMetrics radicalSize;
   mSqrChar.Stretch(aPresContext, renderingContext,
                    NS_STRETCH_DIRECTION_VERTICAL, 
                    contSize, radicalSize,
@@ -263,6 +260,16 @@ nsMathMLmrootFrame::Reflow(nsIPresContext*          aPresContext,
   // According to TeX, the ascent of the returned radical should be
   // the thickness of the overline
   ruleThickness = bmSqr.ascent;
+  // make sure that the rule appears on on screen
+  float p2t;
+  aPresContext->GetScaledPixelsToTwips(&p2t);
+  nscoord onePixel = NSIntPixelsToTwips(1, p2t);
+  if (ruleThickness < onePixel) {
+    ruleThickness = onePixel;
+  }
+  // get the leading to be left at the top of the resulting frame 
+  float em = float(font.mFont.size);
+  leading = nscoord(0.2f * em);
 
   // adjust clearance psi to absorb any excess difference if any
   // in height between radical and content
@@ -270,7 +277,7 @@ nsMathMLmrootFrame::Reflow(nsIPresContext*          aPresContext,
   if (bmSqr.descent > (bmBase.ascent + bmBase.descent) + psi)
     psi = (psi + bmSqr.descent - (bmBase.ascent + bmBase.descent))/2;
 
-  // Update the desired size for the container (like msqrt, index is not yet uncluded)
+  // Update the desired size for the container (like msqrt, index is not yet included)
   // the baseline will be that of the base.
   mBoundingMetrics.ascent = bmBase.ascent + psi + ruleThickness;
   mBoundingMetrics.descent = 
@@ -280,7 +287,7 @@ nsMathMLmrootFrame::Reflow(nsIPresContext*          aPresContext,
   mBoundingMetrics.rightBearing = bmSqr.width + 
     PR_MAX(bmBase.width, bmBase.rightBearing); // take also care of the rule
 
-  aDesiredSize.ascent = mBoundingMetrics.ascent + ruleThickness;
+  aDesiredSize.ascent = mBoundingMetrics.ascent + leading;
   aDesiredSize.descent =
     PR_MAX(baseSize.descent, (mBoundingMetrics.descent + ruleThickness));
   aDesiredSize.height = aDesiredSize.ascent + aDesiredSize.descent;
@@ -301,57 +308,68 @@ nsMathMLmrootFrame::Reflow(nsIPresContext*          aPresContext,
     indexClearance = 
       indexRaisedAscent - mBoundingMetrics.ascent; // excess gap introduced by a tall index 
     mBoundingMetrics.ascent = indexRaisedAscent;
-    aDesiredSize.ascent = mBoundingMetrics.ascent + ruleThickness;
+    aDesiredSize.ascent = mBoundingMetrics.ascent + leading;
     aDesiredSize.height = aDesiredSize.ascent + aDesiredSize.descent;
   }
 
-  // the index is tucked in closer to the radical 
-  // XXX assumes that the kern does not make the content and radical collide.
+  // the index is tucked in closer to the radical while making sure
+  // that the kern does not make the index and radical collide
+  nscoord dxIndex, dxSqr, dx, dy;
   nscoord xHeight = 0;
   fm->GetXHeight(xHeight);
   nscoord indexRadicalKern = NSToCoordRound(1.35f * xHeight);
-  if (indexRadicalKern < bmIndex.width)
-  {
-    mBoundingMetrics.width += (bmIndex.width - indexRadicalKern);
-    aDesiredSize.width = mBoundingMetrics.width;
+  if (indexRadicalKern > bmIndex.width) {
+    dxIndex = indexRadicalKern - bmIndex.width;
+    dxSqr = 0;
+  }
+  else {
+    dxIndex = 0;
+    dxSqr = bmIndex.width - indexRadicalKern;
+  }
+  // avoid collision by leaving a minimun space between index and radical
+  nscoord minimumClearance = bmSqr.width/2;
+  if (dxIndex + bmIndex.width + minimumClearance > dxSqr + bmSqr.width) {
+    if (bmIndex.width + minimumClearance < bmSqr.width) {
+      dxIndex = bmSqr.width - (bmIndex.width + minimumClearance);
+      dxSqr = 0;
+    }
+    else {
+      dxIndex = 0;
+      dxSqr = (bmIndex.width + minimumClearance) - bmSqr.width;
+    }
   }
 
-  mReference.x = 0;
-  mReference.y = aDesiredSize.ascent;
-
-  nscoord dx = 0, dy = 0, lbearing;
-
-  // place the index 
-  dx = (indexRadicalKern > bmIndex.width) ? indexRadicalKern - bmIndex.width : 0;
+  // place the index
+  dx = dxIndex;
   dy = aDesiredSize.ascent - (indexRaisedAscent + indexSize.ascent - bmIndex.ascent);
   FinishReflowChild(indexFrame, aPresContext, indexSize, dx, dy, 0);
 
-  lbearing = dx + bmIndex.leftBearing;
-
-  // place the radical symbol
-  dx = (indexRadicalKern > bmIndex.width) ? 0 : bmIndex.width - indexRadicalKern;
-  dy = indexClearance + ruleThickness; // leave a kern=ruleThickness at the top
+  // place the radical symbol and the radical bar
+  dx = dxSqr;
+  dy = indexClearance + leading; // leave a leading at the top
   mSqrChar.SetRect(nsRect(dx, dy, bmSqr.width, bmSqr.ascent + bmSqr.descent));
-
-  if (lbearing < dx + bmSqr.leftBearing) {
-    mBoundingMetrics.leftBearing = lbearing;
-    mBoundingMetrics.rightBearing += dx;
-  }
-
-  // place the radical bar
   dx += bmSqr.width;
-  dy = indexClearance + ruleThickness; // leave a kern=ruleThickness at the top
   mBarRect.SetRect(dx, dy, bmBase.width, ruleThickness);
 
   // place the base
   dy = aDesiredSize.ascent - baseSize.ascent;
   FinishReflowChild(baseFrame, aPresContext, baseSize, dx, dy, 0);
 
+  mReference.x = 0;
+  mReference.y = aDesiredSize.ascent;
+
+  mBoundingMetrics.width = dx + bmBase.width;
+  mBoundingMetrics.leftBearing = 
+    PR_MIN(dxIndex + bmIndex.leftBearing, dxSqr + bmSqr.leftBearing);
+  mBoundingMetrics.rightBearing = dx +
+    PR_MAX(bmBase.width, bmBase.rightBearing);
+
+  aDesiredSize.width = mBoundingMetrics.width;
+
   if (nsnull != aDesiredSize.maxElementSize) {
     aDesiredSize.maxElementSize->width = aDesiredSize.width;
     aDesiredSize.maxElementSize->height = aDesiredSize.height;
   }
-  aDesiredSize.mBoundingMetrics = mBoundingMetrics;
   aStatus = NS_FRAME_COMPLETE;
   return NS_OK;
 }
