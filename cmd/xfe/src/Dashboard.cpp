@@ -38,8 +38,6 @@
 #include <Xm/Form.h>
 #include <Xm/MwmUtil.h>
 
-#include <Xfe/XfeAll.h>
-
 #include <Xfe/DashBoard.h>
 
 #if 0
