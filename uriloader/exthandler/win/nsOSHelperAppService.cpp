@@ -36,9 +36,7 @@ BYTE * GetValueBytes( HKEY hKey, const char *pValueName);
 nsresult GetExtensionFrom4xRegistryInfo(const char * aMimeType, nsCString& aFileExtension);
 
 nsOSHelperAppService::nsOSHelperAppService() : nsExternalHelperAppService()
-{
-  nsExternalHelperAppService::Init();
-}
+{}
 
 nsOSHelperAppService::~nsOSHelperAppService()
 {}

@@ -27,6 +27,7 @@
 #include "nsIExternalProtocolService.h"
 
 #include "nsIMIMEInfo.h"
+#include "nsIMIMEService.h"
 #include "nsIStreamListener.h"
 #include "nsIFile.h"
 #include "nsIFileStreams.h"
@@ -41,17 +42,19 @@ class nsExternalAppHandler;
 class nsIMIMEInfo;
 class nsIRDFService;
 
-class nsExternalHelperAppService : public nsIExternalHelperAppService, public nsPIExternalAppLauncher, public nsIExternalProtocolService
+class nsExternalHelperAppService : public nsIExternalHelperAppService, public nsPIExternalAppLauncher, 
+                                   public nsIExternalProtocolService, public nsIMIMEService
 {
 public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIEXTERNALHELPERAPPSERVICE
   NS_DECL_NSPIEXTERNALAPPLAUNCHER
   NS_DECL_NSIEXTERNALPROTOCOLSERVICE
+  NS_DECL_NSIMIMESERVICE
 
   nsExternalHelperAppService();
   virtual ~nsExternalHelperAppService();
-  nsresult Init();
+  nsresult InitDataSource();
 
   // CreateNewExternalHandler is implemented only by the base class...
   // create an external app handler and binds it with a mime info object which represents
@@ -81,6 +84,8 @@ protected:
   nsCOMPtr<nsIRDFResource> kNC_AlwaysAsk;
   nsCOMPtr<nsIRDFResource> kNC_HandleInternal;
   nsCOMPtr<nsIRDFResource> kNC_PrettyName;
+
+  PRBool mDataSourceInitialized;
 
   // helper routines for digesting the data source and filling in a mime info object for a given
   // content type inside that data source.
