@@ -28,6 +28,7 @@
  *   Roland Mainz <roland.mainz@informatik.med.uni-giessen.de>
  *   Brian Stell <bstell@ix.netcom.com>
  *   Jungshik Shin <jshin@mailaps.org>
+ *   IBM Corporation
  *
  *
  * Alternatively, the contents of this file may be used under the terms of
@@ -314,6 +315,9 @@ static nsFontCharSetInfoXlib ISO885968x =
       TT_OS2_CPR1_ARABIC, TT_OS2_CPR2_ARABIC | TT_OS2_CPR2_ARABIC_708 };
 static nsFontCharSetInfoXlib ISO8859616 =
   { "x-iso-8859-6-16", SingleByteConvert, 0,
+      TT_OS2_CPR1_ARABIC, TT_OS2_CPR2_ARABIC | TT_OS2_CPR2_ARABIC_708 };
+static nsFontCharSetInfoXlib IBM1046 =
+  { "x-IBM1046", SingleByteConvert, 0,
       TT_OS2_CPR1_ARABIC, TT_OS2_CPR2_ARABIC | TT_OS2_CPR2_ARABIC_708 };
 static nsFontCharSetInfoXlib ISO88597 =
   { "ISO-8859-7", SingleByteConvert, 0,
@@ -604,6 +608,7 @@ static const nsFontCharSetMapXlib gConstCharSetMap[] =
   { "hpbig5-",            &FLG_ZHTW,    &Big5          },
   { "hphkbig5-",          &FLG_ZHHK,    &HKSCS         },
   { "hproc16-",           &FLG_NONE,    &Unknown       },
+  { "ibm-1046",           &FLG_ARABIC,  &IBM1046       },
   { "ibm-1252",           &FLG_NONE,    &Unknown       },
   { "ibm-850",            &FLG_NONE,    &Unknown       },
   { "ibm-fontspecific",   &FLG_NONE,    &Unknown       },
