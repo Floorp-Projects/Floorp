@@ -6515,9 +6515,9 @@ ResDef(XP_EDT_CHARSET_LABEL, (XP_MSG_BASE + 849),
 ResDef(XP_EDT_CHARSET_CANT_EDIT, (XP_MSG_BASE + 850),
 "\nCommunicator does not recognize this and cannot edit it.")
 ResDef(XP_EDT_CURRENT_CHARSET, (XP_MSG_BASE + 851),
-"\nYour current character set is '%s'.\n")
+"\nYour current character set is '%s'.")
 ResDef(XP_EDT_CHARSET_EDIT_REPLACE, (XP_MSG_BASE + 852),
-"\nSelect OK to edit the page and change the character set label to '%s'.")
+"\n\nSelect OK to edit the page and change the character set label to '%s'.")
 ResDef(XP_EDT_CHARSET_EDIT_CANCEL, (XP_MSG_BASE + 853),
 "\nSelect Cancel to abort editing this page.")
 ResDef(XP_EDT_CHARSET_EDIT_NOREPLACE, (XP_MSG_BASE + 854),
@@ -7376,6 +7376,12 @@ ResDef(XP_EDT_DRAG_TABLE, XP_MSG_BASE + 1185,
 
 ResDef(XP_EDT_NOT_ALL_CELLS_PASTED, XP_MSG_BASE + 1186,
        "Not all cells in source were pasted\n")
+
+ResDef(XP_EDT_CLICK_TO_SELECT_IMAGE, XP_MSG_BASE + 1187,
+       "Click to select the image before you can drag it")
+
+ResDef(XP_EDT_CLICK_AND_DRAG_IMAGE, XP_MSG_BASE + 1188,
+       "Click mouse button down and drag to move or copy image")
 
 /* XP_NSCOLOR_BASE and the 70 color strings removed 
  * We would like to reserve the range through 1250 for Editor
