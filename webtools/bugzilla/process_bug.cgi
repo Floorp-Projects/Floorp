@@ -529,6 +529,35 @@ if (defined $::FORM{'qa_contact'}) {
 
 
 
+
+# If the user is submitting changes from show_bug.cgi for a single bug
+# and they have access to an active bug group, process the flags that
+# indicate whether or not the reporter, assignee, QA contact, and users
+# on the CC list can see the bug regardless of its group restrictions.
+if ( $::FORM{'id'} ) {
+    SendSQL("SELECT bit FROM groups WHERE bit & $::usergroupset != 0 
+             AND isbuggroup != 0 AND isactive = 1");
+    my ($groupbits) = FetchSQLData();
+    if ( $groupbits ) {
+        DoComma();
+        $::FORM{'reporter_accessible'} = $::FORM{'reporter_accessible'} ? '1' : '0';
+        $::query .= "reporter_accessible = $::FORM{'reporter_accessible'}";
+
+        DoComma();
+        $::FORM{'assignee_accessible'} = $::FORM{'assignee_accessible'} ? '1' : '0';
+        $::query .= "assignee_accessible = $::FORM{'assignee_accessible'}";
+
+        DoComma();
+        $::FORM{'qacontact_accessible'} = $::FORM{'qacontact_accessible'} ? '1' : '0';
+        $::query .= "qacontact_accessible = $::FORM{'qacontact_accessible'}";
+
+        DoComma();
+        $::FORM{'cclist_accessible'} = $::FORM{'cclist_accessible'} ? '1' : '0';
+        $::query .= "cclist_accessible = $::FORM{'cclist_accessible'}";
+    }
+}
+
+
 my $removedCcString = "";
 my $duplicate = 0;
 

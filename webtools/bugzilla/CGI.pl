@@ -266,33 +266,72 @@ sub ValidateBugID {
     # the user is a member of all groups to which the bug is restricted
     # and is authorized to access the bug.
 
+    # A user is also authorized to access a bug if she is the reporter, 
+    # assignee, QA contact, or member of the cc: list of the bug and the bug 
+    # allows users in those roles to see the bug.  The boolean fields 
+    # reporter_accessible, assignee_accessible, qacontact_accessible, and 
+    # cclist_accessible identify whether or not those roles can see the bug.
+
     # Bit arithmetic is performed by MySQL instead of Perl because bitset
     # fields in the database are 64 bits wide (BIGINT), and Perl installations
     # may or may not support integers larger than 32 bits.  Using bitsets
     # and doing bitset arithmetic is probably not cross-database compatible,
     # however, so these mechanisms are likely to change in the future.
-    SendSQL("SELECT ((groupset & $usergroupset) = groupset) 
-             FROM bugs WHERE bug_id = $id");
+
+    # Get data from the database about whether or not the user belongs to
+    # all groups the bug is in, and who are the bug's reporter and qa_contact
+    # along with which roles can always access the bug.
+    SendSQL("SELECT ((groupset & $usergroupset) = groupset) , reporter , assigned_to , qa_contact , 
+                    reporter_accessible , assignee_accessible , qacontact_accessible , cclist_accessible 
+             FROM   bugs 
+             WHERE  bug_id = $id");
 
     # Make sure the bug exists in the database.
     MoreSQLData()
       || DisplayError("Bug #$id does not exist.")
       && exit;
 
-    # Make sure the user is authorized to access the bug.
-    my ($isauthorized) = FetchSQLData();
-    $isauthorized
-      || (
-           $userid ?
-           DisplayError("You are not authorized to access bug #$id.") : 
-           DisplayError(
-             qq|You are not authorized to access bug #$id. 
-             To see this bug, you must first 
-             <a href="show_bug.cgi?id=$id&GoAheadAndLogIn=1">log in</a> 
-             to an account with the appropriate permissions.|
-           )
-         )
-      && exit;
+    my ($isauthorized, $reporter, $assignee, $qacontact, $reporter_accessible, 
+        $assignee_accessible, $qacontact_accessible, $cclist_accessible) = FetchSQLData();
+
+    # Finish validation and return if the user is authorized either by being
+    # a member of all necessary groups or by being the reporter, assignee, or QA contact.
+    return
+      if $isauthorized 
+        || ($reporter_accessible && $reporter == $userid)
+        || ($assignee_accessible && $assignee == $userid)
+        || ($qacontact_accessible && $qacontact == $userid);
+
+    # Try to authorize the user one more time by seeing if they are on 
+    # the cc: list.  If so, finish validation and return.
+    if ( $cclist_accessible ) {
+        my @cclist;
+        SendSQL("SELECT cc.who 
+                 FROM   bugs , cc
+                 WHERE  bugs.bug_id = $id
+                 AND    cc.bug_id = bugs.bug_id
+                ");
+        while (my ($ccwho) = FetchSQLData()) {
+            push @cclist , $ccwho;
+        }
+        return if grep($userid == $_ , @cclist);
+    }
+
+    # The user did not pass any of the authorization tests, which means they
+    # are not authorized to see the bug.  Display an error and stop execution.
+    # The error the user sees depends on whether or not they are logged in
+    # (i.e. $userid contains the user's positive integer ID).
+    if ($userid) {
+        DisplayError("You are not authorized to access bug #$id.");
+    } else {
+        DisplayError(
+          qq|You are not authorized to access bug #$id.  To see this bug, you
+          must first <a href="show_bug.cgi?id=$id&GoAheadAndLogIn=1">log in 
+          to an account</a> with the appropriate permissions.|
+        );
+    }
+    exit;
+
 }
 
 # check and see if a given string actually represents a positive

@@ -74,46 +74,24 @@ select
 	sum(votes.count)
 from bugs left join votes using(bug_id)
 where bugs.bug_id = $id
-and bugs.groupset & $::usergroupset = bugs.groupset
 group by bugs.bug_id";
 
 SendSQL($query);
 my %bug;
 my @row;
-if (@row = FetchSQLData()) {
-    my $count = 0;
-    foreach my $field ("bug_id", "product", "version", "rep_platform",
-		       "op_sys", "bug_status", "resolution", "priority",
-		       "bug_severity", "component", "assigned_to", "reporter",
-		       "bug_file_loc", "short_desc", "target_milestone",
-                       "qa_contact", "status_whiteboard", "creation_ts",
-                       "groupset", "delta_ts", "votes") {
-	$bug{$field} = shift @row;
-	if (!defined $bug{$field}) {
-	    $bug{$field} = "";
-	}
-	$count++;
+@row = FetchSQLData();
+my $count = 0;
+foreach my $field ("bug_id", "product", "version", "rep_platform",
+                   "op_sys", "bug_status", "resolution", "priority",
+                   "bug_severity", "component", "assigned_to", "reporter",
+                   "bug_file_loc", "short_desc", "target_milestone",
+                   "qa_contact", "status_whiteboard", "creation_ts",
+                   "groupset", "delta_ts", "votes") {
+    $bug{$field} = shift @row;
+    if (!defined $bug{$field}) {
+        $bug{$field} = "";
     }
-} else {
-    SendSQL("select groupset from bugs where bug_id = $id");
-    if (@row = FetchSQLData()) {
-        print "<H1>Permission denied.</H1>\n";
-        if ($loginok) {
-            print "Sorry; you do not have the permissions necessary to see\n";
-            print "bug $id.\n";
-        } else {
-            print "Sorry; bug $id can only be viewed when logged\n";
-            print "into an account with the appropriate permissions.  To\n";
-            print "see this bug, you must first\n";
-            print "<a href=\"show_bug.cgi?id=$id&GoAheadAndLogIn=1\">";
-            print "log in</a>.";
-        }
-    } else {
-        print "<H1>Bug not found</H1>\n";
-        print "There does not seem to be a bug numbered $id.\n";
-    }
-    PutFooter();
-    exit;
+    $count++;
 }
 
 my $assignedtoid = $bug{'assigned_to'};
@@ -205,7 +183,7 @@ print "
     make_options($::versions{$bug{'product'}}, $bug{'version'}) .
     "</SELECT></TD>
   <TD>&nbsp;</TD>
-    <TD ROWSPAN=4 ALIGN=RIGHT VALIGN=TOP><B>Cc:</B></TD>
+    <TD ROWSPAN=4 ALIGN=RIGHT VALIGN=TOP><B>CC:</B></TD>
     <TD ROWSPAN=4 VALIGN=TOP> $cc_element </TD>
 </TR><TR>
     <TD ALIGN=RIGHT><B><A HREF=\"bug_status.html\">Status:</A></B></TD>
@@ -401,7 +379,51 @@ if ($::usergroupset ne '0') {
         print "$description<br>\n";
       }
     }
+
+    # If the user is a member of an active bug group, then they also have the 
+    # ability to determine whether or not the reporter, assignee, QA contact, 
+    # or users on the cc: list should be able to see the bug even when they 
+    # are not members of the groups to which the bug is restricted, so display 
+    # checkboxes that allow the user to make these determinations.
+    SendSQL("SELECT bit FROM groups WHERE bit & $::usergroupset != 0 AND isbuggroup != 0 AND isactive = 1");
+    if ( FetchSQLData() ) {
+        # Determine whether or not the bug is always accessible by the reporter,
+        # QA contact, and/or users on the cc: list.
+        SendSQL("SELECT  reporter_accessible , assignee_accessible , 
+                         qacontact_accessible , cclist_accessible
+                 FROM    bugs
+                 WHERE   bug_id = $id
+                ");
+        my ($reporter_accessible, $assignee_accessible, $qacontact_accessible, $cclist_accessible) = FetchSQLData();
+
+        # Convert boolean data about which roles always have access to the bug
+        # into "checked" attributes for the HTML checkboxes by which users
+        # set and change these values.
+        my $reporter_checked = $reporter_accessible ? " checked" : "";
+        my $assignee_checked = $assignee_accessible ? " checked" : "";
+        my $qacontact_checked = $qacontact_accessible ? " checked" : "";
+        my $cclist_checked = $cclist_accessible ? " checked" : "";
+
+        # Display interface for changing the values.
+        print qq|
+            <p>
+            <b>But users in the roles selected below can always view this bug:</b><br>
+            <small>(Does not take effect unless the bug is restricted to at least one group.)</small>
+            </p>
+
+            <p>
+            <input type="checkbox" name="reporter_accessible" value="1" $reporter_checked>Reporter
+            <input type="checkbox" name="assignee_accessible" value="1" $assignee_checked>Assignee
+            <input type="checkbox" name="qacontact_accessible" value="1" $qacontact_checked>QA Contact
+            <input type="checkbox" name="cclist_accessible" value="1" $cclist_checked>CC List
+            </p>
+        |;
+    }
 }
+
+
+
+
 
 print "<br>
 <INPUT TYPE=radio NAME=knob VALUE=none CHECKED>

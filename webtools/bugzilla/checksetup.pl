@@ -894,6 +894,10 @@ $table{bugs} =
     . '
     lastdiffed datetime not null,
     everconfirmed tinyint not null,
+    reporter_accessible tinyint not null default 1,
+    assignee_accessible tinyint not null default 1,
+    qacontact_accessible tinyint not null default 1,
+    cclist_accessible tinyint not null default 1,
 
     index (assigned_to),
     index (creation_ts),
@@ -2454,6 +2458,15 @@ if (GetFieldDef('bugs_activity', 'oldvalue')) {
 # 2001-07-24 jake@acutex.net - disabledtext was being handled inconsitantly
 # http://bugzilla.mozilla.org/show_bug.cgi?id=90933
 ChangeFieldType("profiles", "disabledtext", "mediumtext not null");
+
+# 2001-07-26 myk@mozilla.org bug39816: 
+# Add fields to the bugs table that record whether or not the reporter,
+# assignee, QA contact, and users on the cc: list can see bugs even when
+# they are not members of groups to which the bugs are restricted.
+AddField("bugs", "reporter_accessible", "tinyint not null default 1");
+AddField("bugs", "assignee_accessible", "tinyint not null default 1");
+AddField("bugs", "qacontact_accessible", "tinyint not null default 1");
+AddField("bugs", "cclist_accessible", "tinyint not null default 1");
 
 # If you had to change the --TABLE-- definition in any way, then add your
 # differential change code *** A B O V E *** this comment.
