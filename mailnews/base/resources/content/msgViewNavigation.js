@@ -224,7 +224,7 @@ function CrossFolderNavigation(type, supportsFolderPane )
     return null;
   }
 
-  var nextMode = pref.GetIntPref("mailnews.nav_crosses_folders");
+  var nextMode = pref.getIntPref("mailnews.nav_crosses_folders");
   // 0: "next" goes to the next folder, without prompting
   // 1: "next" goes to the next folder, and prompts (the default)
   // 2: "next" does nothing when there are no unread messages

@@ -58,11 +58,10 @@ function Startup()
 
   // remove wallet functions (unless overruled by the "wallet.enabled" pref)
   try {
-    pref = Components.classes['@mozilla.org/preferences;1'];
-    pref = pref.getService();
-    pref = pref.QueryInterface(Components.interfaces.nsIPref);
+    pref = Components.classes["@mozilla.org/preferences-service;1"]
+                     .getService(Components.interfaces.nsIPrefBranch);
     try {
-      if (!pref.GetBoolPref("wallet.enabled")) {
+      if (!pref.getBoolPref("wallet.enabled")) {
         var element;
         element = document.getElementById("nopreview");
         element.setAttribute("hidden", "true");
@@ -74,7 +73,7 @@ function Startup()
     }
 
     try {
-      encrypted = pref.GetBoolPref("wallet.crypto");
+      encrypted = pref.getBoolPref("wallet.crypto");
     } catch(e) {
       dump("wallet.crypto pref is missing from all.js");
     }

@@ -31,7 +31,7 @@ var nsPrefBranch = null;
 var gOfflineManager;
 var gWindowManagerInterface;
 
-var gPrefs = Components.classes["@mozilla.org/preferences;1"].getService(Components.interfaces.nsIPref);
+var gPrefs = Components.classes["@mozilla.org/preferences-service;1"].getService(Components.interfaces.nsIPrefBranch);
 
 // Disable the new account menu item if the account preference is locked.
 // Two other affected areas are the account central and the account manager
@@ -615,7 +615,7 @@ function MsgForwardMessage(event)
 {
   var forwardType = 0;
   try {
-      forwardType = gPrefs.GetIntPref("mail.forward_message_mode");
+      forwardType = gPrefs.getIntPref("mail.forward_message_mode");
   } catch (e) {dump ("failed to retrieve pref mail.forward_message_mode");}
 
   // mail.forward_message_mode could be 1, if the user migrated from 4.x
@@ -818,7 +818,7 @@ function MsgOpenNewWindowForFolder(uri, key)
   }
 
   if (uriToOpen) {
-    var layoutType = gPrefs.GetIntPref("mail.pane_config");
+    var layoutType = gPrefs.getIntPref("mail.pane_config");
 
     if(layoutType == 0)
       window.openDialog("chrome://messenger/content/messenger.xul", "_blank", "chrome,all,dialog=no", {uri: uriToOpen, key: keyToSelect});
@@ -992,21 +992,21 @@ function MsgFilters(emailAddress)
 
 function MsgViewAllHeaders()
 {
-    gPrefs.SetIntPref("mail.show_headers",2);
+    gPrefs.setIntPref("mail.show_headers",2);
     MsgReload();
     return true;
 }
 
 function MsgViewNormalHeaders()
 {
-    gPrefs.SetIntPref("mail.show_headers",1);
+    gPrefs.setIntPref("mail.show_headers",1);
     MsgReload();
     return true;
 }
 
 function MsgViewBriefHeaders()
 {
-    gPrefs.SetIntPref("mail.show_headers",0);
+    gPrefs.setIntPref("mail.show_headers",0);
     MsgReload();
     return true;
 }

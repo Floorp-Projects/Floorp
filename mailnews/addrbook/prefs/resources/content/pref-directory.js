@@ -80,7 +80,8 @@ function setupDirectoriesList()
   var directoryServer = 
         document.getElementById("identity.directoryServer").getAttribute('value');
   try {
-    var directoryServerString = gPrefInt.CopyUnicharPref(directoryServer + ".description");
+    var directoryServerString = gPrefInt.getComplexValue(directoryServer + ".description",
+                                                         Components.interfaces.nsISupportsWString);
   }
   catch(ex) {}
   if (directoryServerFlag || !directoryServerString) {
@@ -106,47 +107,52 @@ function createDirectoriesList(flag)
 
 function LoadDirectories(popup)
 {
-  var children;
+  var prefCount = {value:0};
   var enabled = false;
   var description = "";
   var item;
   var formElement;
   var j=0;
-  var arrayOfDirectories = null;
+  var arrayOfDirectories;
   var position = 0;
   var dirType = 1;
   if (!gPrefInt) { 
     try {
-      gPrefInt = Components.classes["@mozilla.org/preferences;1"];
-      gPrefInt = gPrefInt.getService(Components.interfaces.nsIPref);
+      gPrefInt = Components.classes["@mozilla.org/preferences-service;1"]
+                           .getService(Components.interfaces.nsIPrefBranch);
     }
     catch (ex) {
       gPrefInt = null;
     }
   }
-  children = gPrefInt.CreateChildList("ldap_2.servers");
-  if (children && !gAvailDirectories) {
-    arrayOfDirectories = children.split(';');
+  try {
+    arrayOfDirectories = gPrefInt.getChildList("ldap_2.servers", prefCount);
+  }
+  catch (ex) {
+    arrayOfDirectories = null;
+  }
+  if (arrayOfDirectories && !gAvailDirectories) {
     gAvailDirectories = new Array();
-    for (var i=0; i<arrayOfDirectories.length; i++)
+    for (var i = 0; i < prefCount.value; i++)
     {
       if ((arrayOfDirectories[i] != "ldap_2.servers.pab") && 
         (arrayOfDirectories[i] != "ldap_2.servers.history")) {
         try{
-          position = gPrefInt.GetIntPref(arrayOfDirectories[i]+".position");
+          position = gPrefInt.getIntPref(arrayOfDirectories[i]+".position");
         }
         catch(ex){
           position = 1;
         }
         try{
-          dirType = gPrefInt.GetIntPref(arrayOfDirectories[i]+".dirType");
+          dirType = gPrefInt.getIntPref(arrayOfDirectories[i]+".dirType");
         }
         catch(ex){
           dirType = 1;
         }
         if ((position != 0) && (dirType == 1)) {
           try{
-            description = gPrefInt.CopyUnicharPref(arrayOfDirectories[i]+".description");
+            description = gPrefInt.getComplexValue(arrayOfDirectories[i]+".description",
+                                                   Components.interfaces.nsISupportsWString);
           }
           catch(ex){
             description="";
@@ -183,7 +189,8 @@ function LoadDirectories(popup)
           // make sure the selected directory still exists
           try {
             directoryDescription = gPrefInt.
-                     CopyUnicharPref(directoriesList.value + ".description"); 
+                     getComplexValue(directoriesList.value + ".description",
+                                     Components.interfaces.nsISupportsWString);
           }
           catch (ex) {}
         }
@@ -210,7 +217,8 @@ function LoadDirectories(popup)
           // make sure the selected directory still exists
           try {
             directoryDescription = gPrefInt.
-                     CopyUnicharPref(directoriesList.value + ".description"); 
+                     getComplexValue(directoriesList.value + ".description",
+                                     Components.interfaces.nsISupportsWString);
           }
           catch (ex) {}
         }
@@ -238,7 +246,7 @@ function LoadDirectories(popup)
       }
       var pref_string_title = "ldap_2.autoComplete.directoryServer";
       try {
-        var directoryServer = gPrefInt.CopyCharPref(pref_string_title);
+        var directoryServer = gPrefInt.getCharPref(pref_string_title);
       }
       catch (ex)
       {
@@ -248,7 +256,8 @@ function LoadDirectories(popup)
       {
         pref_string_title = directoryServer + ".description";
         try {
-          description = gPrefInt.CopyUnicharPref(pref_string_title);
+          description = gPrefInt.getComplexValue(pref_string_title,
+                                                 Components.interfaces.nsISupportsWString);
         }
         catch (ex) {
           description = "";
@@ -262,13 +271,13 @@ function LoadDirectories(popup)
       else if(gAvailDirectories.length >= 1) {
          directoriesList.label = gAvailDirectories[0][1];
          directoriesList.value = gAvailDirectories[0][0];
-         gPrefInt.SetCharPref("ldap_2.autoComplete.directoryServer", 
+         gPrefInt.setCharPref("ldap_2.autoComplete.directoryServer", 
                               gAvailDirectories[0][0]);
       }
       else {
         directoriesList.label = "";
         directoriesList.value = null;
-        gPrefInt.SetCharPref("ldap_2.autoComplete.directoryServer", "");
+        gPrefInt.setCharPref("ldap_2.autoComplete.directoryServer", "");
       }
 	}
   }
@@ -424,7 +433,7 @@ function onOK()
   var len = gDeletedDirectories.length;
   if (len) {
     try {
-      var directoryServer = gPrefInt.CopyCharPref("ldap_2.autoComplete.directoryServer");
+      var directoryServer = gPrefInt.getCharPref("ldap_2.autoComplete.directoryServer");
     }
     catch(ex)  {
       directoryServer = null;
@@ -444,7 +453,7 @@ function onOK()
       var deletedGlobal = false;
       for (var i=0; i< len; i++){
         if (!deletedGlobal && directoryServer && (gDeletedDirectories[i] == directoryServer)) {
-          gPrefInt.SetCharPref("ldap_2.autoComplete.directoryServer", "");
+          gPrefInt.setCharPref("ldap_2.autoComplete.directoryServer", "");
           deletedGlobal = true;
         }
         for (j=0; j<identitiesCount; j++){
@@ -453,9 +462,11 @@ function onOK()
             identityServer[j].deleted = true;
           }
         }
-        gPrefInt.DeleteBranch(gDeletedDirectories[i]);
+        gPrefInt.deleteBranch(gDeletedDirectories[i]);
       }
-      gPrefInt.savePrefFile(null);
+      var svc = Components.classes["@mozilla.org/preferences-service;1"]
+                        .getService(Components.interfaces.nsIPrefService);
+      svc.savePrefFile(null);
     }
   }
   window.opener.gRefresh = true;

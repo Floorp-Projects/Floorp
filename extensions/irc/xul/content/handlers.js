@@ -310,10 +310,9 @@ function onToggleSaveOnExit()
     var m = document.getElementById ("menu-settings-autosave");
     m.setAttribute ("checked", String(client.SAVE_SETTINGS));
 
-    var pref =
-        Components.classes["@mozilla.org/preferences;1"].createInstance(Components.interfaces.nsIPref);
-
-    pref.SetBoolPref ("extensions.irc.settings.autoSave",
+    var pref = Components.classes["@mozilla.org/preferences-service;1"]
+                         .getService(Components.interfaces.nsIPrefBranch);
+    pref.setBoolPref ("extensions.irc.settings.autoSave",
                       client.SAVE_SETTINGS);
 }
 

@@ -75,7 +75,7 @@ var contentWindow;
 var smtpService;
 var am;
 var accountm = Components.classes["@mozilla.org/messenger/account-manager;1"].getService(Components.interfaces.nsIMsgAccountManager);
-var gPrefs = Components.classes["@mozilla.org/preferences;1"].getService(Components.interfaces.nsIPref);
+var gPrefs = Components.classes["@mozilla.org/preferences-service;1"].getService(Components.interfaces.nsIPrefBranch);
 
 var accounts = accountm.accounts;
 
@@ -484,11 +484,11 @@ function finishAccount(account, accountData) {
     if (accountData.addGlobalHtmlDomains) {
         // Check to see if we have already added the 
         // domain list on a previous account creation process
-        var isDomainListAdded = gPrefs.GetBoolPref("mailnews.global_html_domains.added");
+        var isDomainListAdded = gPrefs.getBoolPref("mailnews.global_html_domains.added");
         if (!isDomainListAdded) {
-            var globalHtmlDomainList = gPrefs.CopyCharPref("mailnews.global_html_domains");
-            var currentHtmlDomainList = gPrefs.CopyCharPref("mailnews.html_domains");
-            var currentPlaintextDomainList = gPrefs.CopyCharPref("mailnews.plaintext_domains");
+            var globalHtmlDomainList = gPrefs.getCharPref("mailnews.global_html_domains");
+            var currentHtmlDomainList = gPrefs.getCharPref("mailnews.html_domains");
+            var currentPlaintextDomainList = gPrefs.getCharPref("mailnews.plaintext_domains");
             // If there is a list already, we need to preserve that
             if (currentHtmlDomainList || currentPlaintextDomainList) {
                 // Avoid duplication in adding domains. Check both HTML and PlainText domains
@@ -502,8 +502,8 @@ function finishAccount(account, accountData) {
             else
                 currentHtmlDomainList = globalHtmlDomainList;
 
-            gPrefs.SetCharPref("mailnews.html_domains", currentHtmlDomainList);
-            gPrefs.SetBoolPref("mailnews.global_html_domains.added", true);
+            gPrefs.setCharPref("mailnews.html_domains", currentHtmlDomainList);
+            gPrefs.setBoolPref("mailnews.global_html_domains.added", true);
         }
     }
 
@@ -902,8 +902,8 @@ function getInterfaceForType(type) {
 
 // flush the XUL cache - just for debugging purposes - not called
 function onFlush() {
-        gPrefs.SetBoolPref("nglayout.debug.disable_xul_cache", true);
-        gPrefs.SetBoolPref("nglayout.debug.disable_xul_cache", false);
+        gPrefs.setBoolPref("nglayout.debug.disable_xul_cache", true);
+        gPrefs.setBoolPref("nglayout.debug.disable_xul_cache", false);
 
 }
 

@@ -118,7 +118,7 @@ function onSaveDefault()
       } else {
         alignInt = 1;
       }
-      prefs.SetIntPref("editor.hrule.align", alignInt);
+      prefs.setIntPref("editor.hrule.align", alignInt);
 
       var percentIndex = width.search(/%/);
       var percent;
@@ -143,13 +143,15 @@ function onSaveDefault()
 
       heightInt = height ? Number(height) : 2;
 
-      prefs.SetIntPref("editor.hrule.width", widthInt);
-      prefs.SetBoolPref("editor.hrule.width_percent", percent);
-      prefs.SetIntPref("editor.hrule.height", heightInt);
-      prefs.SetBoolPref("editor.hrule.shading", shading);
+      prefs.setIntPref("editor.hrule.width", widthInt);
+      prefs.setBoolPref("editor.hrule.width_percent", percent);
+      prefs.setIntPref("editor.hrule.height", heightInt);
+      prefs.setBoolPref("editor.hrule.shading", shading);
 
       // Write the prefs out NOW!
-      prefs.savePrefFile(null);
+      var prefService = Components.classes["@mozilla.org/preferences-service;1"]
+                                  .getService(Components.interfaces.nsIPrefService);
+      prefService.savePrefFile(null);
     }
 	}
 }

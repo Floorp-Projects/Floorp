@@ -930,11 +930,10 @@ function SwitchToValidatePanel()
 
 function GetPrefs()
 {
-  var prefs;
   try {
-    prefs = Components.classes['@mozilla.org/preferences;1'];
-    if (prefs) prefs = prefs.getService();
-    if (prefs) prefs = prefs.QueryInterface(Components.interfaces.nsIPref);
+    var prefService = Components.classes["@mozilla.org/preferences-service;1"]
+                                .getService(Components.interfaces.nsIPrefService);
+    var prefs = prefService.getBranch(null);
     if (prefs)
       return prefs;
     else
@@ -1159,13 +1158,13 @@ function GetDefaultBrowserColors()
   var useSysColors = false;
   colors.TextColor = 0;
   colors.BackgroundColor = 0;
-  try { useSysColors = prefs.GetBoolPref("browser.display.use_system_colors"); } catch (e) {}
+  try { useSysColors = prefs.getBoolPref("browser.display.use_system_colors"); } catch (e) {}
 
   if (!useSysColors)
   {
-    try { colors.TextColor = prefs.CopyCharPref("browser.display.foreground_color"); } catch (e) {}
+    try { colors.TextColor = prefs.getCharPref("browser.display.foreground_color"); } catch (e) {}
 
-    try { colors.BackgroundColor = prefs.CopyCharPref("browser.display.background_color"); } catch (e) {}
+    try { colors.BackgroundColor = prefs.getCharPref("browser.display.background_color"); } catch (e) {}
   }
   // Use OS colors for text and background if explicitly asked or pref is not set
   if (!colors.TextColor)
@@ -1174,8 +1173,8 @@ function GetDefaultBrowserColors()
   if (!colors.BackgroundColor)
     colors.BackgroundColor = "window";
 
-  colors.LinkColor = prefs.CopyCharPref("browser.anchor_color");
-  colors.VisitedLinkColor = prefs.CopyCharPref("browser.visited_color");
+  colors.LinkColor = prefs.getCharPref("browser.anchor_color");
+  colors.VisitedLinkColor = prefs.getCharPref("browser.visited_color");
 
   return colors;
 }

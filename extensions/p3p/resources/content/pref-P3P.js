@@ -34,8 +34,8 @@ function DoEnableService() {
   var warn3_setting  = document.getElementById( "P3PWarningPostToBrokenPolicy" );
   var warn4_setting  = document.getElementById( "P3PWarningPostToNoPolicy" );
 
-  var pref = Components.classes["@mozilla.org/preferences;1"].getService();
-  pref = pref.QueryInterface( Components.interfaces.nsIPref );
+  var pref = Components.classes["@mozilla.org/preferences-service;1"]
+                       .getService(Components.interfaces.nsIPrefBranch);
 
   if (enable_setting.checked) {
     warn0_setting.removeAttribute( "disabled" );
@@ -47,35 +47,35 @@ function DoEnableService() {
     // Look for the warning settings.  If not defined then an exception will occur.
     // If exception occurs then set the checkbox.
     try {
-      pref.GetBoolPref( "P3P.warningnotprivate" );
+      pref.getBoolPref( "P3P.warningnotprivate" );
     }
     catch (ex) {
       warn0_setting.setAttribute("checked", "true");
     }
 
     try {
-      pref.GetBoolPref( "P3P.warningpartialprivacy" );
+      pref.getBoolPref( "P3P.warningpartialprivacy" );
     }
     catch (ex) {
       warn1_setting.setAttribute("checked", "true");
     }
 
     try {
-      pref.GetBoolPref( "P3P.warningposttonotprivate" );
+      pref.getBoolPref( "P3P.warningposttonotprivate" );
     }
     catch (ex) {
       warn2_setting.setAttribute("checked", "true");
     }
 
     try {
-      pref.GetBoolPref( "P3P.warningposttobrokenpolicy" );
+      pref.getBoolPref( "P3P.warningposttobrokenpolicy" );
     }
     catch (ex) {
       warn3_setting.setAttribute("checked", "true");
     }
 
     try {
-      pref.GetBoolPref( "P3P.warningposttonopolicy" );
+      pref.getBoolPref( "P3P.warningposttonopolicy" );
     }
     catch (ex) {
       warn4_setting.setAttribute("checked", "true");
@@ -103,10 +103,10 @@ function DoEnableSettings() {
     EnableTree(level_setting);
 
     try {
-      var pref = Components.classes["@mozilla.org/preferences;1"].getService();
-      pref = pref.QueryInterface( Components.interfaces.nsIPref );
+      var pref = Components.classes["@mozilla.org/preferences-service;1"]
+                           .getService(Components.interfaces.nsIPrefBranch);
 
-      var level = pref.GetIntPref( "P3P.level" );
+      var level = pref.getIntPref( "P3P.level" );
     }
     catch (ex) {
       level_setting.setAttribute( "data", "0" );

@@ -40,8 +40,8 @@
 var newmessages = "";
 var newsgroupname = "";
 var gNewsBundle;
-var prefs = Components.classes['@mozilla.org/preferences;1'].getService();
-prefs = prefs.QueryInterface(Components.interfaces.nsIPref);
+var prefs = Components.classes['@mozilla.org/preferences-service;1'].getService();
+prefs = prefs.QueryInterface(Components.interfaces.nsIPrefBranch);
 
 var serverid = null;
 var markreadElement = null;

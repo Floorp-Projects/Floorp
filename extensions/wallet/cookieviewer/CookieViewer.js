@@ -71,12 +71,10 @@ function Startup()
 
   // install imageblocker tab if instructed to do so by the "imageblocker.enabled" pref
   try {
-    var pref;
-    pref = Components.classes['@mozilla.org/preferences;1'];
-    pref = pref.getService();
-    pref = pref.QueryInterface(Components.interfaces.nsIPref);
+    var pref = Components.classes["@mozilla.org/preferences-service;1"]
+                         .getService(Components.interfaces.nsIPrefBranch);
     try {
-      if (pref.GetBoolPref("imageblocker.enabled")) {
+      if (pref.getBoolPref("imageblocker.enabled")) {
         var element;
         element = document.getElementById("imagesTab");
         element.setAttribute("hidden","false" );

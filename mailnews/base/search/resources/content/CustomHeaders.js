@@ -30,11 +30,11 @@ var gContainer;
 
 function onLoad()
 {
-    gPrefs = Components.classes["@mozilla.org/preferences;1"].getService(Components.interfaces.nsIPref);
+    gPrefs = Components.classes["@mozilla.org/preferences-service;1"].getService(Components.interfaces.nsIPrefBranch);
     var hdrs;
     try
     {
-       hdrs = gPrefs.GetCharPref("mailnews.customHeaders");
+       hdrs = gPrefs.getCharPref("mailnews.customHeaders");
     }
     catch(ex)
     {
@@ -75,7 +75,7 @@ function onOk()
   if (gArrayHdrs.length)
   {
     var hdrs = gArrayHdrs.join(": ");
-    gPrefs.SetCharPref("mailnews.customHeaders", hdrs);
+    gPrefs.setCharPref("mailnews.customHeaders", hdrs);
   }
   window.close();
 }

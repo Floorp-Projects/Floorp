@@ -44,11 +44,12 @@
   {
     var tutorialURL = "chrome://communicator/locale/wallet/privacy.html";
     try {
-      var pref = Components.classes["@mozilla.org/preferences;1"].getService();
+      var pref = Components.classes["@mozilla.org/preferences-service;1"].getService();
       if(pref) {
-        pref = pref.QueryInterface( Components.interfaces.nsIPref );
+        pref = pref.QueryInterface( Components.interfaces.nsIPrefBranch );
         if(pref) {
-          tutorialURL = pref.getLocalizedUnicharPref("wallet.TutorialFromMenu");
+          tutorialURL = pref.getComplexValue("wallet.TutorialFromMenu",
+                                             Components.interfaces.nsIPrefLocalizedString);
         }
       }
     }

@@ -44,7 +44,7 @@ var gPromptService = null;
 var test_addresses_sequence = false;
 if (prefs)
   try {
-    test_addresses_sequence = prefs.GetBoolPref("mail.debug.test_addresses_sequence");
+    test_addresses_sequence = prefs.getBoolPref("mail.debug.test_addresses_sequence");
   }
   catch (ex) {}
 

@@ -23,7 +23,7 @@
  *     Scott MacGregor <mscott@netscape.com>
  */
 
-var prefContractID             = "@mozilla.org/preferences;1";
+var prefContractID            = "@mozilla.org/preferences-service;1";
 var externalProtocolServiceID = "@mozilla.org/uriloader/external-protocol-service;1";
 
 // dialog is just an array we'll use to store various properties from the dialog document...
@@ -298,9 +298,9 @@ function loadDialog()
   dialog.location.setAttribute("value", sourceUrl.spec );
   dialog.fileName.setAttribute( "value", targetFile.unicodePath );
 
-  var prefs = Components.classes[prefContractID].getService(Components.interfaces.nsIPref);
+  var prefs = Components.classes[prefContractID].getService(Components.interfaces.nsIPrefBranch);
   if (prefs)
-    keepProgressWindowUpBox.checked = prefs.GetBoolPref("browser.download.progressDnldDialog.keepAlive");
+    keepProgressWindowUpBox.checked = prefs.getBoolPref("browser.download.progressDnldDialog.keepAlive");
 }
 
 function replaceInsert( text, index, value ) {
@@ -366,9 +366,9 @@ function onUnload()
 
   // remember the user's decision for the checkbox.
 
-  var prefs = Components.classes[prefContractID].getService(Components.interfaces.nsIPref);
+  var prefs = Components.classes[prefContractID].getService(Components.interfaces.nsIPrefBranch);
   if (prefs)
-    prefs.SetBoolPref("browser.download.progressDnldDialog.keepAlive", keepProgressWindowUpBox.checked);
+    prefs.setBoolPref("browser.download.progressDnldDialog.keepAlive", keepProgressWindowUpBox.checked);
 
    // Cancel app launcher.
    if (helperAppLoader)

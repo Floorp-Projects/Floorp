@@ -58,7 +58,7 @@ function SelectDetectors( event )
   {
    uri =  event.target.getAttribute("id");
    debug(uri + "\n");
-   pref = Components.classes['@mozilla.org/preferences;1'];
+   pref = Components.classes['@mozilla.org/preferences-service;1'];
    prefvalue = uri.substring(
                      'urn:mozilla-registry:key:/software/netscape/intl/charsetdetector/'.length
                      ,uri.length);
@@ -71,13 +71,13 @@ function SelectDetectors( event )
    if (pref) {
         debug("get pref\n");
         pref = pref.getService();
-        pref = pref.QueryInterface(Components.interfaces.nsIPref);
+        pref = pref.QueryInterface(Components.interfaces.nsIPrefBranch);
    }
 
 
    if (pref) {
        debug("get pref 2\n");
-       pref.SetCharPref("intl.charset.detector", prefvalue);
+       pref.setCharPref("intl.charset.detector", prefvalue);
        window._content.location.reload();
    }
   }

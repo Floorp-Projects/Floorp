@@ -29,10 +29,8 @@ function readIRCPrefs (rootNode)
     if (!getPriv("UniversalXPConnect"))
         return false;
 
-    var pref =
-        Components.classes["@mozilla.org/preferences;1"].createInstance();
-    if(!pref)
-        throw ("Can't find pref component.");
+    var pref = Components.classes["@mozilla.org/preferences-service;1"]
+                         .getService(Components.interfaces.nsIPrefBranch);
 
     if (!rootNode)
         rootNode = "extensions.irc.";
@@ -40,8 +38,6 @@ function readIRCPrefs (rootNode)
     if (!rootNode.match(/\.$/))
         rootNode += ".";
     
-    pref = pref.QueryInterface(Components.interfaces.nsIPref);
-
     CIRCNetwork.prototype.INITIAL_NICK =
         getCharPref (pref, rootNode + "nickname",
                      CIRCNetwork.prototype.INITIAL_NICK);
@@ -79,7 +75,7 @@ function getCharPref (prefObj, prefName, defaultValue)
     
     try
     {
-        return prefObj.CopyCharPref (prefName);
+        return prefObj.getCharPref (prefName);
     }
     catch (e)
     {
@@ -93,7 +89,7 @@ function getIntPref (prefObj, prefName, defaultValue)
 
     try
     {
-        return prefObj.GetIntPref (prefName);
+        return prefObj.getIntPref (prefName);
     }
     catch (e)
     {
@@ -108,7 +104,7 @@ function getBoolPref (prefObj, prefName, defaultValue)
 
     try
     {
-        return prefObj.GetBoolPref (prefName);
+        return prefObj.getBoolPref (prefName);
     }
     catch (e)
     {

@@ -40,9 +40,8 @@
  * ***** END LICENSE BLOCK ***** */
 
   var pref = null;
-  pref = Components.classes["@mozilla.org/preferences;1"];
-  pref = pref.getService();
-  pref = pref.QueryInterface(Components.interfaces.nsIPref);
+  pref = Components.classes["@mozilla.org/preferences-service;1"]
+                   .getService(Components.interfaces.nsIPrefBranch);
 
   // Prefill a single text field
   function prefillTextBox(target) {
@@ -156,14 +155,15 @@
 
   function handleLinkClick(event, href)
   {
+    var theTab;
     switch (event.button) {                                   
       case 0:                                                         // if left button clicked
         if (event.metaKey || event.ctrlKey) {                         // and meta or ctrl are down
           if (pref && pref.getBoolPref("browser.tabs.opentabfor.middleclick") && getBrowser && 
             getBrowser() && getBrowser().localName == "tabbrowser") {
-            var t = getBrowser().addTab(href); // open link in new tab
+            theTab = getBrowser().addTab(href); // open link in new tab
             if (!event.shiftKey && !pref.getBoolPref("browser.tabs.loadInBackground"))
-              getBrowser().selectedTab = t;
+              getBrowser().selectedTab = theTab;
             event.preventBubble();
             return true;
           }
@@ -194,9 +194,9 @@
       case 1:                                                         // if middle button clicked
         if (pref && pref.getBoolPref("browser.tabs.opentabfor.middleclick") && getBrowser && 
             getBrowser() && getBrowser().localName == "tabbrowser") {
-          var t = getBrowser().addTab(href); // open link in new tab
+          theTab = getBrowser().addTab(href); // open link in new tab
           if (!event.shiftKey && !pref.getBoolPref("browser.tabs.loadInBackground"))
-            getBrowser().selectedTab = t;
+            getBrowser().selectedTab = theTab;
           event.preventBubble();
           return true;
         }

@@ -16,11 +16,12 @@
     // which is included by most clients. 
     function toMessengerWindow()
       {
-  var pref = Components.classes["@mozilla.org/preferences;1"].getService(Components.interfaces.nsIPref);
+        var pref = Components.classes["@mozilla.org/preferences-service;1"]
+                             .getService(Components.interfaces.nsIPrefBranch);
         var windowDoc = "chrome://messenger/content/messenger.xul";
         try
           {
-            var layoutType = pref.GetIntPref("mail.pane_config");
+            var layoutType = pref.getIntPref("mail.pane_config");
             windowDoc = !layoutType ? "chrome://messenger/content/messenger.xul" : 
                                           "chrome://messenger/content/mail3PaneWindowVertLayout.xul";
           }

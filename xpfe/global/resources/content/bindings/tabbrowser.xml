@@ -471,7 +471,7 @@
               return; // Don't allow the last tab to close.
 
             if (l == 2) {
-              var pref = Components.classes['@mozilla.org/preferences;1'].getService(Components.interfaces.nsIPrefService).getBranch(null);
+              var pref = Components.classes['@mozilla.org/preferences-service;1'].getService(Components.interfaces.nsIPrefService).getBranch(null);
               var autohide = pref.getBoolPref("browser.tabs.autoHide");
               if (autohide)
                 this.setStripVisibilityTo(false);
@@ -555,7 +555,7 @@
           <![CDATA[
             if (!this.mProgressListeners) {
               this.mProgressListeners = new Array();
-              var pref = Components.classes['@mozilla.org/preferences;1'].getService(Components.interfaces.nsIPrefService).getBranch(null);
+              var pref = Components.classes['@mozilla.org/preferences-service;1'].getService(Components.interfaces.nsIPrefService).getBranch(null);
               var autohide = pref.getBoolPref("browser.tabs.autoHide");
               if (!autohide) {
                 this.setStripVisibilityTo(true);
@@ -661,7 +661,7 @@
             if (!url || !url.length || url.indexOf(" ", 0) != -1) 
               return;
             
-            var pref = Components.classes['@mozilla.org/preferences;1'].getService(Components.interfaces.nsIPrefService).getBranch(null);
+            var pref = Components.classes['@mozilla.org/preferences-service;1'].getService(Components.interfaces.nsIPrefService).getBranch(null);
             var bgLoad = pref.getBoolPref("browser.tabs.loadInBackground");
 
             if (aEvent.target.localName == "tabs") {

@@ -26,19 +26,19 @@ var recommended_as_default = true;
 var display_recommendation = true;
 var useDefault =false;
 
-var prefs = Components.classes["@mozilla.org/preferences;1"].getService();
+var prefs = Components.classes["@mozilla.org/preferences-service;1"].getService();
 if (prefs) {
-  prefs = prefs.QueryInterface(Components.interfaces.nsIPref);
+  prefs = prefs.QueryInterface(Components.interfaces.nsIPrefBranch);
   if (prefs) {
     try {
-      defaultAction = prefs.GetIntPref("mail.asksendformat.default");
+      defaultAction = prefs.getIntPref("mail.asksendformat.default");
       useDefault = true;
     } catch (ex) {}
     try {
-      recommended_as_default = prefs.GetBoolPref("mail.asksendformat.recommended_as_default");
+      recommended_as_default = prefs.getBoolPref("mail.asksendformat.recommended_as_default");
     } catch (ex) {}
     try {
-      display_recommendation = prefs.GetBoolPref("mail.asksendformat.display_recommendation");
+      display_recommendation = prefs.getBoolPref("mail.asksendformat.display_recommendation");
     } catch (ex) {}
   }
 }

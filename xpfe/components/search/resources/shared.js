@@ -165,7 +165,7 @@ function fillContextMenu(name, treeName)
   }
 
   var   searchMode = 0;
-  if (pref) searchMode = pref.GetIntPref("browser.search.mode");
+  if (pref) searchMode = pref.getIntPref("browser.search.mode");
   if (pref && bundle)
   {
     // then add a menu separator (if necessary)
@@ -195,10 +195,10 @@ function fillContextMenu(name, treeName)
 function setSearchMode()
 {
   var   searchMode = 0;
-  if (pref) searchMode = pref.GetIntPref("browser.search.mode");
+  if (pref) searchMode = pref.getIntPref("browser.search.mode");
   if (searchMode == 0)  searchMode = 1;
   else      searchMode = 0;
-  if (pref) pref.SetIntPref("browser.search.mode", searchMode);
+  if (pref) pref.setIntPref("browser.search.mode", searchMode);
   return(true);
 }
 

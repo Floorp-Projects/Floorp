@@ -93,20 +93,20 @@ function GetCurrentPrefs()
 	if ( cvPrefs == 0 )
 		cvPrefs = new Object;
 
-	var prefs = Components.classes["@mozilla.org/preferences;1"];
+	var prefs = Components.classes["@mozilla.org/preferences-service;1"];
 	if ( prefs )
 	{
 		prefs = prefs.getService();
 		if ( prefs )
-			prefs = prefs.QueryInterface(Components.interfaces.nsIPref);
+			prefs = prefs.QueryInterface(Components.interfaces.nsIPrefBranch);
 	}
 			
 	if ( prefs )
 	{
 		try {
 			cvPrefs.prefs = prefs;
-			cvPrefs.displayLastNameFirst = prefs.GetBoolPref("mail.addr_book.displayName.lastnamefirst");
-			cvPrefs.nameColumn = prefs.GetIntPref("mail.addr_book.lastnamefirst");
+			cvPrefs.displayLastNameFirst = prefs.getBoolPref("mail.addr_book.displayName.lastnamefirst");
+			cvPrefs.nameColumn = prefs.getIntPref("mail.addr_book.lastnamefirst");
 			cvPrefs.lastFirstSeparator = ", ";
 			cvPrefs.firstLastSeparator = " ";
 		}
@@ -154,7 +154,7 @@ function SetNameColumn(cmd)
 	}
 	
 	// set pref in file and locally
-	cvPrefs.prefs.SetIntPref("mail.addr_book.lastnamefirst", prefValue);
+	cvPrefs.prefs.setIntPref("mail.addr_book.lastnamefirst", prefValue);
 	cvPrefs.nameColumn = prefValue;
 	
 	var selectionArray = RememberResultsTreeSelection();

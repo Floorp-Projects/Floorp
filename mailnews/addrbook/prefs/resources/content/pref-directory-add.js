@@ -23,8 +23,8 @@ function Startup()
 function fillSettings()
 {
   try {
-    gPrefInt = Components.classes["@mozilla.org/preferences;1"];
-    gPrefInt = gPrefInt.getService(Components.interfaces.nsIPref);
+    gPrefInt = Components.classes["@mozilla.org/preferences-service;1"]
+                         .getService(Components.interfaces.nsIPrefBranch);
   }
   catch (ex) {
     dump("failed to get prefs service!\n");
@@ -40,7 +40,8 @@ function fillSettings()
     ldapUrl = null;
   }
   try{
-    var prefValue = gPrefInt.CopyUnicharPref(gCurrentDirectoryString +".description");
+    var prefValue = gPrefInt.getComplexValue(gCurrentDirectoryString +".description",
+                                             Components.interfaces.nsISupportsWString);
   }
   catch(ex){
     prefValue="";
@@ -50,7 +51,7 @@ function fillSettings()
   {
     document.getElementById("description").value = prefValue;
     try{
-      prefValue = gPrefInt.CopyCharPref(gCurrentDirectoryString +".uri");
+      prefValue = gPrefInt.getCharPref(gCurrentDirectoryString +".uri");
     }
     catch(ex){
       prefValue="";
@@ -85,7 +86,7 @@ function fillSettings()
       }
     }
     try {
-      prefValue = gPrefInt.GetIntPref(gCurrentDirectoryString+ ".maxHits");
+      prefValue = gPrefInt.getIntPref(gCurrentDirectoryString+ ".maxHits");
     }
     catch(ex) {
       prefValue = gMaxHits;
@@ -115,7 +116,7 @@ function createUniqueServername()
 
   if (!str) {
     try {
-      user_Id = gPrefInt.GetIntPref("ldap_2.user_id");
+      user_Id = gPrefInt.getIntPref("ldap_2.user_id");
     }
     catch(ex){ 
       user_Id = 0;
@@ -124,7 +125,7 @@ function createUniqueServername()
     temp = "user_directory_" + user_Id;
     str = temp;
     try {
-      gPrefInt.SetIntPref("ldap_2.user_id", user_Id);
+      gPrefInt.setIntPref("ldap_2.user_id", user_Id);
     }
     catch(ex) {}    
   }
@@ -141,7 +142,8 @@ function createUniqueServername()
   while (temp) {
     temp = "";
     try{ 
-      temp = gPrefInt.CopyUnicharPref(gPrefstring+gPref_string_desc+".description");
+      temp = gPrefInt.getComplexValue(gPrefstring+gPref_string_desc+".description",
+                                      Components.interfaces.nsISupportsWString);
     } catch(e){}
     if (temp)
       gPref_string_desc += str[0];
@@ -178,8 +180,8 @@ function onOK()
 
   if (!gPrefInt) {
     try {
-      gPrefInt = Components.classes["@mozilla.org/preferences;1"];
-      gPrefInt = gPrefInt.getService(Components.interfaces.nsIPref);
+      gPrefInt = Components.classes["@mozilla.org/preferences-service;1"]
+                           .getService(Components.interfaces.nsIPrefBranch);
     }
     catch (ex) {
       dump("failed to get prefs service!\n");
@@ -224,7 +226,10 @@ function onOK()
   }
 
   pref_string_title = gPref_string_desc +"." + "description";
-  gPrefInt.SetUnicharPref(pref_string_title, pref_string_content);
+  var str = Components.classes["@mozilla.org/supports-wstring;1"]
+                      .createInstance(Components.interfaces.nsISupportsWString);
+  str.data = pref_string_content;
+  gPrefInt.setComplexValue(pref_string_title, Components.interfaces.nsISupportsWString, str);
   
   ldapUrl.host = hostname;
   if(!gLdapService) {
@@ -259,22 +264,22 @@ function onOK()
       ldapUrl.scope = 2;
   }
   pref_string_title = gPref_string_desc + ".uri";
-  gPrefInt.SetCharPref(pref_string_title, ldapUrl.spec);
+  gPrefInt.setCharPref(pref_string_title, ldapUrl.spec);
   pref_string_content = results;
   pref_string_title = gPref_string_desc + ".maxHits";
   if (pref_string_content != gMaxHits) {
-    gPrefInt.SetIntPref(pref_string_title, pref_string_content);
+    gPrefInt.setIntPref(pref_string_title, pref_string_content);
   }
   else
   {
     try {
-      gPrefInt.ClearUserPref(pref_string_title);
+      gPrefInt.clearUserPref(pref_string_title);
     }
     catch(ex) {}
   }
   pref_string_title = gPref_string_desc + ".auth.enabled";
   try{
-    pref_string_content = gPrefInt.GetBoolPref(pref_string_title); 
+    pref_string_content = gPrefInt.getBoolPref(pref_string_title); 
   }
   catch(ex) {
     pref_string_content = false;

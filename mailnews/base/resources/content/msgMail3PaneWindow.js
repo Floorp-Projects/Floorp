@@ -435,7 +435,7 @@ function OnLoadMessenger()
 	var headerchoice = null;
 
 	try {
-		headerchoice = pref.GetIntPref("mail.show_headers");
+		headerchoice = pref.getIntPref("mail.show_headers");
 	}
 	catch (ex) {
 		dump("failed to get the header pref\n");
@@ -533,14 +533,14 @@ function loadStartFolder(initialUri)
 
             startFolderResource = rootMsgFolder.QueryInterface(Components.interfaces.nsIRDFResource);
 
-            enabledNewMailCheckOnce = pref.GetBoolPref(mailCheckOncePref);
+            enabledNewMailCheckOnce = pref.getBoolPref(mailCheckOncePref);
 
             // Enable checknew mail once by turning checkmail pref 'on' to bring 
             // all users to one plane. This allows all users to go to Inbox. User can 
             // always go to server settings panel and turn off "Check for new mail at startup"
             if (!enabledNewMailCheckOnce)
             {
-                pref.SetBoolPref(mailCheckOncePref, true);
+                pref.setBoolPref(mailCheckOncePref, true);
                 defaultServer.loginAtStartUp = true;
             }
 
@@ -666,14 +666,14 @@ function OnFolderUnreadColAttrModified(event)
 // "mail.ui.folderpane.version" pref.
 function UpgradeFolderPaneUI()
 {
-  var folderPaneUIVersion = pref.GetIntPref("mail.ui.folderpane.version");
+  var folderPaneUIVersion = pref.getIntPref("mail.ui.folderpane.version");
 
   if (folderPaneUIVersion == 1) {
     var folderUnreadCol = document.getElementById("folderUnreadCol");
     folderUnreadCol.setAttribute("hidden", "true");
     var folderTotalCol = document.getElementById("folderTotalCol");
     folderTotalCol.setAttribute("hidden", "true");
-    pref.SetIntPref("mail.ui.folderpane.version", 2);
+    pref.setIntPref("mail.ui.folderpane.version", 2);
   }
 }
 

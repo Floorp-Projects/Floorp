@@ -68,7 +68,7 @@
     doSetOKCancel(onOK, null);
 
     // get pref service
-    pref = Components.classes['@mozilla.org/preferences;1'];
+    pref = Components.classes['@mozilla.org/preferences-service;1'];
     pref = pref.getService();
     pref = pref.QueryInterface(Components.interfaces.nsIPrefBranch);
 

@@ -162,13 +162,13 @@ function InitEditCard()
   editCard = new Object;
 
   // get pointer to nsIPref object
-  var prefs = Components.classes["@mozilla.org/preferences;1"];
+  var prefs = Components.classes["@mozilla.org/preferences-service;1"];
   if ( prefs )
   {
     prefs = prefs.getService();
     if ( prefs )
     {
-      prefs = prefs.QueryInterface(Components.interfaces.nsIPref);
+      prefs = prefs.QueryInterface(Components.interfaces.nsIPrefBranch);
       editCard.prefs = prefs;
     }
   }
@@ -177,8 +177,8 @@ function InitEditCard()
   if ( prefs )
   {
     try {
-      editCard.displayLastNameFirst = prefs.GetBoolPref("mail.addr_book.displayName.lastnamefirst");
-      editCard.generateDisplayName = prefs.GetBoolPref("mail.addr_book.displayName.autoGeneration");
+      editCard.displayLastNameFirst = prefs.getBoolPref("mail.addr_book.displayName.lastnamefirst");
+      editCard.generateDisplayName = prefs.getBoolPref("mail.addr_book.displayName.autoGeneration");
       editCard.lastFirstSeparator = ", ";
       editCard.firstLastSeparator = " ";
     }

@@ -25,11 +25,9 @@ var appCore = null;
 var gPrefs = null;
 
 try {
-  var prefsService = Components.classes["@mozilla.org/preferences;1"];
-  if (prefsService)
-    prefsService = prefsService.getService();
-  if (prefsService)
-    gPrefs = prefsService.QueryInterface(Components.interfaces.nsIPref);
+  var prefsService = Components.classes["@mozilla.org/preferences-service;1"]
+                              .getService(Components.interfaces.nsIPrefService);
+  gPrefs = prefService.getBranch(null);
 } catch (ex) {
 }
 
@@ -80,9 +78,9 @@ function viewSource(url)
   getBrowser().webNavigation.loadURI(viewSrcUrl, loadFlags);
 
   //check the view_source.wrap_long_lines pref and set the menuitem's checked attribute accordingly
-  if (gPrefs){
+  if (gPrefs) {
     try {
-      var wraplonglinesPrefValue = gPrefs.GetBoolPref("view_source.wrap_long_lines");
+      var wraplonglinesPrefValue = gPrefs.getBoolPref("view_source.wrap_long_lines");
 
       if (wraplonglinesPrefValue)
         document.getElementById('menu_wrapLongLines').setAttribute("checked", "true");
@@ -123,11 +121,11 @@ function wrapLongLines()
   //pref value, we use myWrap.className  
   if (gPrefs){
     try {
-      if (myWrap.className == ''){
-        gPrefs.SetBoolPref("view_source.wrap_long_lines", false);
+      if (myWrap.className == '') {
+        gPrefs.setBoolPref("view_source.wrap_long_lines", false);
       }
       else {
-        gPrefs.SetBoolPref("view_source.wrap_long_lines", true);
+        gPrefs.setBoolPref("view_source.wrap_long_lines", true);
       }
     } catch (ex) {
     }

@@ -46,7 +46,7 @@
       function SetTurboPref() {
         var showDialog = document.getElementById("showAgain").checked;
         try {
-          var prefs = Components.classes["@mozilla.org/preferences;1"].getService(Components.interfaces.nsIPrefBranch);
+          var prefs = Components.classes["@mozilla.org/preferences-service;1"].getService(Components.interfaces.nsIPrefBranch);
           if (prefs)
             prefs.setBoolPref("browser.turbo.showDialog", !showDialog);
         }

@@ -234,11 +234,11 @@
           <![CDATA[
             var strings = new Array;
             var ids = this.valueIds;
-            var pref = Components.classes["@mozilla.org/preferences;1"].getService(Components.interfaces.nsIPref);
+            var pref = Components.classes["@mozilla.org/preferences-service;1"].getService(Components.interfaces.nsIPrefBranch);
             var hdrs;
             try
             {
-              hdrs = pref.GetCharPref("mailnews.customHeaders");
+              hdrs = pref.getCharPref("mailnews.customHeaders");
             }
             catch(ex)
             {

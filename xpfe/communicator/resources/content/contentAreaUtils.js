@@ -101,7 +101,7 @@
     if (window && (wintype == "navigator:browser")) {
 		  var browser=getBrowser();
 		  var t = browser.addTab(url); // open link in new tab
-      if (pref && !pref.GetBoolPref("browser.tabs.loadInBackground"))
+      if (pref && !pref.getBoolPref("browser.tabs.loadInBackground"))
         browser.selectedTab = t;
     }
 

@@ -36,7 +36,7 @@
       // remove either encrypt or obscure depending on pref setting
       var elementOn, elementOff;
       var pref;
-      pref = Components.classes['@mozilla.org/preferences;1'];
+      pref = Components.classes['@mozilla.org/preferences-service;1'];
       pref = pref.getService();
       pref = pref.QueryInterface(Components.interfaces.nsIPrefBranch);
       try {
@@ -70,7 +70,7 @@
       var strings = document.getElementById("personalManagers");
 
       var pref;
-      pref = Components.classes['@mozilla.org/preferences;1'];
+      pref = Components.classes['@mozilla.org/preferences-service;1'];
       pref = pref.getService();
       pref = pref.QueryInterface(Components.interfaces.nsIPrefBranch);
 

@@ -30,48 +30,54 @@ const NS_LDAPPREFSSERVICE_IID = Components.interfaces.nsILDAPPrefsService;
 
 /* interfaces used in this file */
 const nsISupports        = Components.interfaces.nsISupports;
-const nsIPref            = Components.interfaces.nsIPref;
+const nsIPrefBranch      = Components.interfaces.nsIPrefBranch;
 const nsILDAPURL         = Components.interfaces.nsILDAPURL;
 const nsILDAPService     = Components.interfaces.nsILDAPService;
 
 /* nsLDAPPrefs service */
 function nsLDAPPrefsService() {
-  var arrayOfDirectories = null;
+  var arrayOfDirectories;
   var j = 0;
   try {
-    gPrefInt = Components.classes["@mozilla.org/preferences;1"];
-    gPrefInt = gPrefInt.getService(nsIPref);
+    gPrefInt = Components.classes["@mozilla.org/preferences-service;1"];
+    gPrefInt = gPrefInt.getService(nsIPrefBranch);
   }
   catch (ex) {
     dump("failed to get prefs service!\n");
     return;
   }
   /* generate the list of directory servers from preferences */
-  var children = gPrefInt.CreateChildList("ldap_2.servers");
-  if(children) {
-    arrayOfDirectories = children.split(';');
+  var prefCount = {value:0};
+  try {
+    arrayOfDirectories = gPrefInt.getChildList("ldap_2.servers", prefCount);
+  }
+  catch (ex) {
+    arrayOfDirectories = null;
+  }
+  if (arrayOfDirectories) {
     this.availDirectories = new Array();
     var position;
     var description;
-    for (var i=0; i<arrayOfDirectories.length; i++)
+    for (var i = 0; i < prefCount.value; i++)
     {
       if ((arrayOfDirectories[i] != "ldap_2.servers.pab") && 
         (arrayOfDirectories[i] != "ldap_2.servers.history")) {
         try{
-          position = gPrefInt.GetIntPref(arrayOfDirectories[i]+".position");
+          position = gPrefInt.getIntPref(arrayOfDirectories[i]+".position");
         }
         catch(ex){
           position = 1;
         }
         try{
-          dirType = gPrefInt.GetIntPref(arrayOfDirectories[i]+".dirType");
+          dirType = gPrefInt.getIntPref(arrayOfDirectories[i]+".dirType");
         }
         catch(ex){
           dirType = 1;
         }
         if ((position != 0) && (dirType == 1)) {
           try{
-            description = gPrefInt.CopyUnicharPref(arrayOfDirectories[i]+".description");
+            description = gPrefInt.getComplexValue(arrayOfDirectories[i]+".description",
+                                                   Components.interfaces.nsISupportsWString);
           }
           catch(ex){
             description = null;
@@ -114,8 +120,8 @@ function () {
   var host;
   var dn;
   try {
-    gPrefInt = Components.classes["@mozilla.org/preferences;1"];
-    gPrefInt = gPrefInt.getService(Components.interfaces.nsIPref);
+    gPrefInt = Components.classes["@mozilla.org/preferences-service;1"];
+    gPrefInt = gPrefInt.getService(Components.interfaces.nsIPrefBranch);
   }
   catch (ex) {
     dump("failed to get prefs service!\n");
@@ -123,7 +129,7 @@ function () {
   }
   var migrated = false;
   try{
-    migrated = gPrefInt.GetBoolPref("ldap_2.prefs_migrated");
+    migrated = gPrefInt.getBoolPref("ldap_2.prefs_migrated");
   }
   catch(ex){}
   if (migrated){
@@ -131,7 +137,7 @@ function () {
     return;
   }
   try{
-    var useDirectory = gPrefInt.GetBoolPref("ldap_2.servers.useDirectory");
+    var useDirectory = gPrefInt.getBoolPref("ldap_2.servers.useDirectory");
   }
   catch(ex) {}
   try {
@@ -147,7 +153,7 @@ function () {
   for (var i=0; i < this.availDirectories.length; i++) {
     pref_string = this.availDirectories[i][0];
     try{
-      host = gPrefInt.CopyCharPref(pref_string + ".serverName");
+      host = gPrefInt.getCharPref(pref_string + ".serverName");
     }
     catch (ex) {
       host = null;
@@ -163,7 +169,8 @@ function () {
       }
       ldapUrl.host = host;
       try{
-        dn = gPrefInt.CopyUnicharPref(pref_string + ".searchBase");
+        dn = gPrefInt.getComplexValue(pref_string + ".searchBase",
+                                      Components.interfaces.nsISupportsWString);
       }
       catch (ex) {
         dn = null;
@@ -171,32 +178,34 @@ function () {
       if (dn && ldapService)
         ldapUrl.dn = ldapService.UCS2toUTF8(dn);
       try {
-        var port = gPrefInt.GetIntPref(pref_string + ".port");
+        var port = gPrefInt.getIntPref(pref_string + ".port");
       }
       catch(ex) {
         port = 389;
       }
       ldapUrl.port = port;
       ldapUrl.scope = 2;
-      gPrefInt.SetCharPref(pref_string + ".uri", ldapUrl.spec);
+      gPrefInt.setCharPref(pref_string + ".uri", ldapUrl.spec);
       /* is this server selected for autocompletion? 
          if yes, convert the preference to mozilla format.
          Atmost one server is selected for autocompletion. 
        */
       if (useDirectory && !enable){
         try {
-         enable = gPrefInt.GetBoolPref(pref_string + ".autocomplete.enabled");
+         enable = gPrefInt.getBoolPref(pref_string + ".autocomplete.enabled");
         } 
         catch(ex) {}
         if (enable) {
-          gPrefInt.SetCharPref("ldap_2.servers.directoryServer", pref_string);
+          gPrefInt.setCharPref("ldap_2.servers.directoryServer", pref_string);
         }
       }
     }
   }
   try {
-    gPrefInt.SetBoolPref("ldap_2.prefs_migrated", true);
-    gPrefInt.savePrefFile(null);
+    gPrefInt.setBoolPref("ldap_2.prefs_migrated", true);
+    var svc = Components.classes["@mozilla.org/preferences-service;1"]
+                        .getService(Components.interfaces.nsIPrefService);
+    svc.savePrefFile(null);
   }
   catch (ex) {dump ("ERROR:" + ex + "\n");}
     

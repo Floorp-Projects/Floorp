@@ -66,8 +66,8 @@
 
 function readIRCPrefs (rootNode)
 {
-    var pref =
-        Components.classes["@mozilla.org/preferences;1"].createInstance();
+    pref = Components.classes["@mozilla.org/preferences-service;1"]
+                     .getService(Components.interfaces.nsIPrefBranch);
     if(!pref)
         throw ("Can't find pref component.");
 
@@ -77,8 +77,6 @@ function readIRCPrefs (rootNode)
     if (!rootNode.match(/\.$/))
         rootNode += ".";
     
-    pref = pref.QueryInterface(Components.interfaces.nsIPref);
-
     CIRCNetwork.prototype.INITIAL_NICK =
         getCharPref (pref, rootNode + "nickname",
                      CIRCNetwork.prototype.INITIAL_NICK);
@@ -144,8 +142,8 @@ function readIRCPrefs (rootNode)
 
 function writeIRCPrefs (rootNode)
 {
-    var pref =
-        Components.classes["@mozilla.org/preferences;1"].createInstance();
+    pref = Components.classes["@mozilla.org/preferences-service;1"]
+                     .getService(Components.interfaces.nsIPrefBranch);
     if(!pref)
         throw ("Can't find pref component.");
 
@@ -155,26 +153,24 @@ function writeIRCPrefs (rootNode)
     if (!rootNode.match(/\.$/))
         rootNode += ".";
     
-    pref = pref.QueryInterface(Components.interfaces.nsIPref);
-
-    pref.SetCharPref (rootNode + "nickname",
+    pref.setCharPref (rootNode + "nickname",
                       CIRCNetwork.prototype.INITIAL_NICK);
-    pref.SetCharPref (rootNode + "username",
+    pref.setCharPref (rootNode + "username",
                       CIRCNetwork.prototype.INITIAL_NAME);
-    pref.SetCharPref (rootNode + "desc", CIRCNetwork.prototype.INITIAL_DESC);
-    pref.SetCharPref (rootNode + "nickCompleteStr", client.ADDRESSED_NICK_SEP);
-    pref.SetCharPref (rootNode + "style.default", client.DEFAULT_STYLE);
-    pref.SetCharPref (rootNode + "stalkWords",
+    pref.setCharPref (rootNode + "desc", CIRCNetwork.prototype.INITIAL_DESC);
+    pref.setCharPref (rootNode + "nickCompleteStr", client.ADDRESSED_NICK_SEP);
+    pref.setCharPref (rootNode + "style.default", client.DEFAULT_STYLE);
+    pref.setCharPref (rootNode + "stalkWords",
                       client.stalkingVictims.join ("; "));
-    pref.SetBoolPref (rootNode + "munger", client.munger.enabled);
-    pref.SetBoolPref (rootNode + "munger.smileyText", client.smileyText);
+    pref.setBoolPref (rootNode + "munger", client.munger.enabled);
+    pref.setBoolPref (rootNode + "munger.smileyText", client.smileyText);
     for (var entry in client.munger.entries)
-        pref.SetBoolPref (rootNode + "munger." + entry,
+        pref.setBoolPref (rootNode + "munger." + entry,
                           client.munger.entries[entry].enabled);
-    pref.SetBoolPref (rootNode + "notify.aggressive", client.FLASH_WINDOW);
+    pref.setBoolPref (rootNode + "notify.aggressive", client.FLASH_WINDOW);
     
     var h = client.eventPump.getHook ("event-tracer");
-    pref.SetBoolPref (rootNode + "debug.tracer", h.enabled);
+    pref.setBoolPref (rootNode + "debug.tracer", h.enabled);
     
 }
 
@@ -184,7 +180,7 @@ function getCharPref (prefObj, prefName, defaultValue)
     
     try
     {
-        rv = prefObj.CopyCharPref (prefName);
+        rv = prefObj.getCharPref (prefName);
     }
     catch (e)
     {
@@ -202,7 +198,7 @@ function getIntPref (prefObj, prefName, defaultValue)
 
     try
     {
-        return prefObj.GetIntPref (prefName);
+        return prefObj.getIntPref (prefName);
     }
     catch (e)
     {
@@ -217,7 +213,7 @@ function getBoolPref (prefObj, prefName, defaultValue)
 
     try
     {
-        return prefObj.GetBoolPref (prefName);
+        return prefObj.getBoolPref (prefName);
     }
     catch (e)
     {

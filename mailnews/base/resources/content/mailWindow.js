@@ -29,7 +29,7 @@ var mailSessionContractID      = "@mozilla.org/messenger/services/session;1";
 var secureUIContractID         = "@mozilla.org/secure_browser_ui;1";
 
 
-var prefContractID             = "@mozilla.org/preferences;1";
+var prefContractID             = "@mozilla.org/preferences-service;1";
 var msgWindowContractID      = "@mozilla.org/messenger/msgwindow;1";
 
 var messenger;
@@ -111,7 +111,7 @@ function CreateMailWindowGlobals()
   messenger = Components.classes[messengerContractID].createInstance();
   messenger = messenger.QueryInterface(Components.interfaces.nsIMessenger);
 
-  pref = Components.classes[prefContractID].getService(Components.interfaces.nsIPref);
+  pref = Components.classes[prefContractID].getService(Components.interfaces.nsIPrefBranch);
 
   //Create windows status feedback
   // set the JS implementation of status feedback before creating the c++ one..
@@ -170,7 +170,7 @@ function CreateMailWindowGlobals()
   messagesBox       = document.getElementById("messagesBox");
   accountCentralBox = document.getElementById("accountCentralBox");
   gSearchBox = document.getElementById("searchBox");
-  gPaneConfig = pref.GetIntPref("mail.pane_config");
+  gPaneConfig = pref.getIntPref("mail.pane_config");
 }
 
 function InitMsgWindow()
@@ -430,10 +430,11 @@ function StopUrls()
 
 function loadStartPage() {
     try {
-    var startpageenabled= pref.GetBoolPref("mailnews.start_page.enabled");
+        var startpageenabled = pref.getBoolPref("mailnews.start_page.enabled");
 
-    if (startpageenabled) {
-      var startpage = pref.getLocalizedUnicharPref("mailnews.start_page.url");
+        if (startpageenabled) {
+            var startpage = pref.getComplexValue("mailnews.start_page.url",
+                                                 Components.interfaces.nsIPrefLocalizedString);
             if (startpage != "") {
                 // first, clear out the charset setting.
                 messenger.setDisplayCharset("");
@@ -443,7 +444,7 @@ function loadStartPage() {
                 ClearMessageSelection();
             }
         }
-  }
+    }
     catch (ex) {
         dump("Error loading start page.\n");
         return;
@@ -458,7 +459,8 @@ function ShowAccountCentral()
 {
     try
     {
-        var acctCentralPage = pref.getLocalizedUnicharPref("mailnews.account_central_page.url");
+        var acctCentralPage = pref.getComplexValue("mailnews.account_central_page.url",
+                                                   Components.interfaces.nsIPrefLocalizedString);
         switch (gPaneConfig)
         {
             case 0:

@@ -42,11 +42,11 @@ function OnLoad()
     }
   	   		
     doSetOKCancel(syncOkButton, syncCancelButton);
-    var prefs = Components.classes["@mozilla.org/preferences;1"].getService(Components.interfaces.nsIPref);
-    gSyncMail = prefs.GetBoolPref("mailnews.offline_sync_mail");
-    gSyncNews = prefs.GetBoolPref("mailnews.offline_sync_news");
-    gSendMessage = prefs.GetBoolPref("mailnews.offline_sync_send_unsent");
-    gWorkOffline = prefs.GetBoolPref("mailnews.offline_sync_work_offline");
+    var prefs = Components.classes["@mozilla.org/preferences-service;1"].getService(Components.interfaces.nsIPrefBranch);
+    gSyncMail = prefs.getBoolPref("mailnews.offline_sync_mail");
+    gSyncNews = prefs.getBoolPref("mailnews.offline_sync_news");
+    gSendMessage = prefs.getBoolPref("mailnews.offline_sync_send_unsent");
+    gWorkOffline = prefs.getBoolPref("mailnews.offline_sync_work_offline");
     document.getElementById("syncMail").checked = gSyncMail;
     document.getElementById("syncNews").checked = gSyncNews;
     document.getElementById("sendMessage").checked = gSendMessage;
@@ -63,11 +63,11 @@ function syncOkButton()
     gSendMessage = document.getElementById("sendMessage").checked;
     gWorkOffline = document.getElementById("workOffline").checked;
 
-    var prefs = Components.classes["@mozilla.org/preferences;1"].getService(Components.interfaces.nsIPref);
-    prefs.SetBoolPref("mailnews.offline_sync_mail", gSyncMail);
-    prefs.SetBoolPref("mailnews.offline_sync_news", gSyncNews);
-    prefs.SetBoolPref("mailnews.offline_sync_send_unsent", gSendMessage);
-    prefs.SetBoolPref("mailnews.offline_sync_work_offline", gWorkOffline);
+    var prefs = Components.classes["@mozilla.org/preferences-service;1"].getService(Components.interfaces.nsIPrefBranch);
+    prefs.setBoolPref("mailnews.offline_sync_mail", gSyncMail);
+    prefs.setBoolPref("mailnews.offline_sync_news", gSyncNews);
+    prefs.setBoolPref("mailnews.offline_sync_send_unsent", gSendMessage);
+    prefs.setBoolPref("mailnews.offline_sync_work_offline", gWorkOffline);
     
     if( gSyncMail || gSyncNews || gSendMessage || gWorkOffline) {
 

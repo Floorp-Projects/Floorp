@@ -187,7 +187,7 @@
              */
             try {
               if (gIsEncrypted == -1)
-                gIsEncrypted = this.pref.GetBoolPref("wallet.crypto");
+                gIsEncrypted = this.pref.getBoolPref("wallet.crypto");
               if (gIsEncrypted) {
                 // database is encrypted, see if it is still locked
 //              if (locked) { -- there's currently no way to make such a test

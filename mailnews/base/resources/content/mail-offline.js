@@ -40,11 +40,11 @@ function GetPrefsService()
 {
   // Store the prefs object
   try {
-    var prefsService = Components.classes["@mozilla.org/preferences;1"];
+    var prefsService = Components.classes["@mozilla.org/preferences-service;1"];
     if (prefsService)
     prefsService = prefsService.getService();
     if (prefsService)
-    gPrefs = prefsService.QueryInterface(Components.interfaces.nsIPref);
+    gPrefs = prefsService.QueryInterface(Components.interfaces.nsIPrefBranch);
 
     if (!gPrefs)
     dump("failed to get prefs service!\n");
@@ -113,9 +113,9 @@ function PromptSendMessages()
     if(buttonPressed) {
       if(buttonPressed.value == 0) {
         if(checkValue.value) 
-          gPrefs.SetIntPref("offline.send.unsent_messages", 0);
+          gPrefs.setIntPref("offline.send.unsent_messages", 0);
         else 
-          gPrefs.SetIntPref("offline.send.unsent_messages", 1);
+          gPrefs.setIntPref("offline.send.unsent_messages", 1);
 
         gOfflineManager.goOnline(true /* sendUnsentMessages */, 
                                  true /* playbackOfflineImapOperations */, 
@@ -127,9 +127,9 @@ function PromptSendMessages()
       }
       else if(buttonPressed.value == 2) {
         if(checkValue.value) 
-          gPrefs.SetIntPref("offline.send.unsent_messages", 0);
+          gPrefs.setIntPref("offline.send.unsent_messages", 0);
         else 
-          gPrefs.SetIntPref("offline.send.unsent_messages", 2);
+          gPrefs.setIntPref("offline.send.unsent_messages", 2);
         gOfflineManager.goOnline(false /* sendUnsentMessages */, 
                                  true /* playbackOfflineImapOperations */, 
                                  msgWindow);
@@ -162,9 +162,9 @@ function PromptDownloadMessages()
     if(buttonPressed) {
       if(buttonPressed.value == 0) {
         if(checkValue.value) 
-          gPrefs.SetIntPref("offline.download.download_messages", 0);
+          gPrefs.setIntPref("offline.download.download_messages", 0);
         else 
-          gPrefs.SetIntPref("offline.download.download_messages", 1);
+          gPrefs.setIntPref("offline.download.download_messages", 1);
         // download news, download mail, send unsent messages, go offline when done, msg window
         gOfflineManager.synchronizeForOffline(false, true, false, true, msgWindow);
         return true;
@@ -174,9 +174,9 @@ function PromptDownloadMessages()
       }
       else if(buttonPressed.value == 2) {
         if(checkValue.value) 
-          gPrefs.SetIntPref("offline.download.download_messages", 0);
+          gPrefs.setIntPref("offline.download.download_messages", 0);
         else 
-          gPrefs.SetIntPref("offline.download.download_messages", 2);
+          gPrefs.setIntPref("offline.download.download_messages", 2);
         // download news, download mail, send unsent messages, go offline when done, msg window
         gOfflineManager.synchronizeForOffline(false, false, false, true, msgWindow);
         return true;
@@ -225,8 +225,8 @@ function MailCheckBeforeOfflineChange()
 
   InitServices();
 
-  var prefSendUnsentMessages = gPrefs.GetIntPref("offline.send.unsent_messages");
-  var prefDownloadMessages   = gPrefs.GetIntPref("offline.download.download_messages");
+  var prefSendUnsentMessages = gPrefs.getIntPref("offline.send.unsent_messages");
+  var prefDownloadMessages   = gPrefs.getIntPref("offline.download.download_messages");
 
   if(goingOnline) {
     switch(prefSendUnsentMessages) { 

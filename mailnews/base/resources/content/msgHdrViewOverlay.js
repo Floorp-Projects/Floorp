@@ -189,10 +189,10 @@ function OnLoadMsgHeaderPane()
   
   // load any preferences that at are global with regards to 
   // displaying a message...
-  gNumAddressesToShow = pref.GetIntPref("mailnews.max_header_display_length");
-  gCollectIncoming = pref.GetBoolPref("mail.collect_email_address_incoming");
-  gCollectNewsgroup = pref.GetBoolPref("mail.collect_email_address_newsgroup");
-  gShowUserAgent = pref.GetBoolPref("mailnews.headers.showUserAgent");
+  gNumAddressesToShow = pref.getIntPref("mailnews.max_header_display_length");
+  gCollectIncoming = pref.getBoolPref("mail.collect_email_address_incoming");
+  gCollectNewsgroup = pref.getBoolPref("mail.collect_email_address_newsgroup");
+  gShowUserAgent = pref.getBoolPref("mailnews.headers.showUserAgent");
   initializeHeaderViewTables();
 
   var toggleHeaderView = document.getElementById("msgHeaderView");
@@ -208,7 +208,7 @@ var messageHeaderSink = {
     onStartHeaders: function()
     {
       // every time we start to redisplay a message, check the view all headers pref....
-      var showAllHeadersPref = pref.GetIntPref("mail.show_headers");
+      var showAllHeadersPref = pref.getIntPref("mail.show_headers");
       if (showAllHeadersPref == 2)
       {
         gViewAllHeaders = true;

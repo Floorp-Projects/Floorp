@@ -476,22 +476,15 @@ function BrowseMorePanels()
 {
   var url = '';
   var browser_url = "chrome://navigator/content/navigator.xul";
-  var prefs = Components.classes['@mozilla.org/preferences;1'];
-  if (prefs) {
-    prefs = prefs.getService();
-  }
-  if (prefs) {
-    prefs = prefs.QueryInterface(Components.interfaces.nsIPref);
-  }
-  if (prefs) {
-    var locale;
-    try {
-      url = prefs.CopyCharPref("sidebar.customize.more_panels.url");
-      var temp = prefs.CopyCharPref("browser.chromeURL");
-      if (temp) browser_url = temp;
-    } catch(ex) {
-      debug("Unable to get prefs: "+ex);
-    }
+  var locale;
+  try {
+    var prefs = Components.classes["@mozilla.org/preferences-service;1"]
+                          .getService(Components.interfaces.nsIPrefBranch);
+    url = prefs.getCharPref("sidebar.customize.more_panels.url");
+    var temp = prefs.getCharPref("browser.chromeURL");
+    if (temp) browser_url = temp;
+  } catch(ex) {
+    debug("Unable to get prefs: "+ex);
   }
   window.openDialog(browser_url, "_blank", "chrome,all,dialog=no", url);
 }
