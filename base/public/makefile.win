@@ -29,6 +29,7 @@ EXPORTS =                       \
         nsFileSpec.h            \
         nsFileStream.h          \
         nsIFileStream.h         \
+        nsIString.h             \
         nsIStringStream.h       \
         nsSpecialSystemDirectory.h \
         $(NULL)

@@ -6,6 +6,7 @@ nsAutoLock.h
 nsISizeOfHandler.h
 nsFileStream.h
 nsIFileStream.h
+nsIString.h
 nsIStringStream.h
 nsFileSpec.h
 nsRepeater.h

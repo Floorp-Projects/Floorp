@@ -28,6 +28,7 @@ EXPORTS =		\
     nsAutoLock.h	\
     nsIProperties.h	\
     nsISizeOfHandler.h	\
+    nsIString.h		\
     nsCaretProperties.h \
     nsEscape.h          \
     nsFileSpec.h        \
