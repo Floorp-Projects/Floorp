@@ -967,9 +967,16 @@ nsImageWin :: PatBltTile(nsIRenderingContext &aContext, nsDrawingSurface aSurfac
 
 
   if (PR_TRUE != gIsWinNT) {
-    if((mBHead->biWidth<8)||(mBHead->biHeight<8)){
-      return PR_FALSE;    // this does not seem to work on win 98
-    }
+    // Windows 98 can not have a brush smaller than 8x8.  There is also a know bug 
+    // that crashes windows 98 
+    // (http://support.microsoft.com/default.aspx?scid=kb;EN-US;q235618) 
+    // if you have the wrong driver installed.. and the patBlt
+    // for some reason.. really hits this problem.. 
+    // Windows 95 seems to have other requirements that may have to do with a power 
+    // of 2 size requirement based on some comments in other bugs.   
+    // I will have 98 and 95 fail this test because of all the problems those OS's cause 
+    // Win 2k, NT and XP all tested and seem to work fine with PatBlt.
+      return PR_FALSE;    
   }
 
   if (PR_FALSE==mCanOptimize) {
