@@ -363,6 +363,7 @@ const PRUnichar kNullCh           = '\0';
 #define kXHTMLApplicationContentType "application/xhtml+xml"
 #define kXULTextContentType   "application/vnd.mozilla.xul+xml"
 #define kRDFTextContentType   "text/rdf"
+#define kRDFApplicationContentType "application/rdf+xml"
 #define kXIFTextContentType   "text/xif"
 #define kPlainTextContentType "text/plain"
 #define kViewSourceCommand    "view-source"

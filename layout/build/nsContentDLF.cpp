@@ -114,6 +114,7 @@ static char* gSVGTypes[] = {
 #endif
 
 static const char* const gRDFTypes[] = {
+  "application/rdf+xml",
   "text/rdf",
   "application/vnd.mozilla.xul+xml",
   "mozilla.application/cached-xul",
