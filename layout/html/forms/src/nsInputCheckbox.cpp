@@ -82,8 +82,14 @@ nsInputCheckboxFrame::GetDesiredSize(nsIPresContext* aPresContext,
                                      nsSize& aDesiredWidgetSize)
 {
   float p2t = aPresContext->GetPixelsToTwips();
+#ifdef XP_PC
   aDesiredWidgetSize.width  = (int)(12 * p2t);
   aDesiredWidgetSize.height = (int)(12 * p2t);
+#endif
+#ifdef XP_PC
+  aDesiredWidgetSize.width  = (int)(20 * p2t);
+  aDesiredWidgetSize.height = (int)(20 * p2t);
+#endif
   aDesiredLayoutSize.width  = aDesiredWidgetSize.width;
   aDesiredLayoutSize.height = aDesiredWidgetSize.height;
   aDesiredLayoutSize.ascent = aDesiredLayoutSize.height;
