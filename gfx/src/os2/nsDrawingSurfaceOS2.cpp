@@ -66,29 +66,26 @@ void nsDrawingSurfaceOS2::DisposeFonts()
 // Key for the hashtable
 typedef nsVoidKey FontHandleKey;
 
-void nsDrawingSurfaceOS2::SelectFont( nsIFontMetrics *metrics)
+void nsDrawingSurfaceOS2::SelectFont(nsFontOS2* aFont)
 {
-   nsFontHandle fh = nsnull;
-   metrics->GetFontHandle( fh);
+   FontHandleKey key((void*)aFont->mHashMe);
 
-   nsFontOS2 *pHandle = (nsFontOS2 *) fh;
-   FontHandleKey    key((void*)pHandle->mHashMe);
-
-   if( !mHTFonts->Get( &key))
-   {
-      if( mNextID == 255)
+   if (!mHTFonts->Get( &key)) {
+      if (mNextID == 255) {
          // ids used up, need to empty table and start again.
          FlushFontCache();
+      }
 
-      GFX (::GpiCreateLogFont (mPS, 0, mNextID, &pHandle->mFattrs), GPI_ERROR);
-      mHTFonts->Put( &key, (void *) mNextID);
+      GFX (::GpiCreateLogFont(mPS, 0, mNextID, &aFont->mFattrs), GPI_ERROR);
+      mHTFonts->Put(&key, (void *) mNextID);
       mNextID++;
-      if( mTopID < 254)
+      if (mTopID < 254) {
          mTopID++;
+      }
    }
 
-   long lcid = (long) mHTFonts->Get( &key);
-   pHandle->SelectIntoPS( mPS, lcid);
+   long lcid = (long) mHTFonts->Get(&key);
+   aFont->SelectIntoPS(mPS, lcid);
 }
 
 void nsDrawingSurfaceOS2::FlushFontCache()

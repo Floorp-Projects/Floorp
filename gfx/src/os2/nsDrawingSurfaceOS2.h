@@ -35,6 +35,7 @@
 
 class nsHashtable;
 class nsIWidget;
+class nsFontOS2;
 
 // These were called `drawables' in os2fe.
 //
@@ -55,8 +56,7 @@ class nsDrawingSurfaceOS2 : public nsIDrawingSurface
    long           mNextID;  // next lcid to allocate
    long           mTopID;   // highest used lcid
 
-
- protected:
+protected:
    HPS            mPS;      // presentation space for this surface
    PRBool         mOwnPS;   // did we instantiate PS or was it passed in?
    PRInt32        mWidth;   // dimensions of drawing surface
@@ -75,10 +75,10 @@ class nsDrawingSurfaceOS2 : public nsIDrawingSurface
    NS_IMETHOD GetDimensions( PRUint32 *aWidth, PRUint32 *aHeight);
 
    // os/2 methods
-   HPS  GetPS () { return mPS; }
-   void SelectFont (nsIFontMetrics *metrics);
-   void FlushFontCache ();
-   virtual PRUint32 GetHeight () { return mHeight; }
+   HPS  GetPS() { return mPS; }
+   void SelectFont(nsFontOS2* aFont);
+   void FlushFontCache();
+   virtual PRUint32 GetHeight() { return mHeight; }
 
    // Convertion between XP and OS/2 coordinate space.
    void NS2PM_ININ (const nsRect &in, RECTL &rcl);

@@ -64,27 +64,9 @@
 #define FM_DEFN_UGL1105         0x3FF0   /* Chars in bitmap fonts        */
 #endif
 
-
-// An nsFontHandle is actually a pointer to one of these.
-// It knows how to select itself into a ps.
-class nsFontOS2
-{
- public:
-            nsFontOS2(void);
-  void      SelectIntoPS( HPS hps, long lcid );
-  PRInt32   GetWidth( HPS aPS, const PRUnichar* aString,
-                      PRUint32 aLength );
-  void      DrawString( HPS aPS, nsDrawingSurfaceOS2* aSurface,
-                        PRInt32 aX, PRInt32 aY,
-                        const PRUnichar* aString, PRUint32 aLength );
-
-  FATTRS    mFattrs;
-  SIZEF     mCharbox;
-  ULONG     mHashMe;
-  nscoord   mMaxAscent;
-  nscoord   mMaxDescent;
-  int       mConvertCodePage;
-};
+// Debug defines
+//#define DEBUG_FONT_SELECTION
+//#define DEBUG_FONT_STRUCT_ALLOCS
 
 struct nsMiniFontMetrics
 {
@@ -109,6 +91,37 @@ class nsGlobalFont
   PRUint32            len;
 };
 
+
+// An nsFontHandle is actually a pointer to one of these.
+// It knows how to select itself into a ps.
+class nsFontOS2
+{
+public:
+  NS_DECL_AND_IMPL_ZEROING_OPERATOR_NEW
+
+  nsFontOS2(void);
+  virtual ~nsFontOS2(void);
+
+  inline void SelectIntoPS(HPS hps, long lcid);
+  virtual PRInt32 GetWidth(HPS aPS, const char* aString, PRUint32 aLength);
+  virtual PRInt32 GetWidth(HPS aPS, const PRUnichar* aString, PRUint32 aLength);
+  virtual void DrawString(HPS aPS, nsDrawingSurfaceOS2* aSurface,
+                          PRInt32 aX, PRInt32 aY,
+                          const char* aString, PRUint32 aLength, INT* aDx0);
+  virtual void DrawString(HPS aPS, nsDrawingSurfaceOS2* aSurface,
+                          PRInt32 aX, PRInt32 aY,
+                          const PRUnichar* aString, PRUint32 aLength);
+
+  FATTRS    mFattrs;
+  SIZEF     mCharbox;
+  ULONG     mHashMe;
+  nscoord   mMaxAscent;
+  nscoord   mMaxDescent;
+  int       mConvertCodePage;  /* XXX do we need this, or is it just a copy of mFattrs.usCodePage */
+#ifdef DEBUG_FONT_STRUCT_ALLOCS
+  static unsigned long mRefCount;
+#endif
+};
 
 /**
  * nsFontSwitchCallback
@@ -190,38 +203,47 @@ class nsFontMetricsOS2 : public nsIFontMetrics
                    void*                aData);
 
   nsFontOS2*          FindFont( HPS aPS );
-  nsFontOS2*          FindGlobalFont( HPS aPS );
+  nsFontOS2*          FindUserDefinedFont( HPS aPS );
+  nsFontOS2*          FindLocalFont( HPS aPS );
   nsFontOS2*          FindGenericFont( HPS aPS );
   nsFontOS2*          FindPrefFont( HPS aPS );
-  nsFontOS2*          FindLocalFont( HPS aPS );
-  nsFontOS2*          FindUserDefinedFont( HPS aPS );
-  nsFontOS2*          LoadFont (HPS aPS, nsString* aName );
+  nsFontOS2*          FindGlobalFont( HPS aPS );
+
+  nsFontOS2*          LoadFont(HPS aPS, const nsString& aName);
+  nsFontOS2*          LoadGenericFont(HPS aPS, const nsString& aName);
+  nsFontOS2*          LoadUnicodeFont(HPS aPS, const nsString& aName);
   static nsresult     InitializeGlobalFonts();
 
   static nsVoidArray*  gGlobalFonts;
   static PLHashTable*  gFamilyNames;
   static nsICollation* gCollation;
-  
+  static PRBool        gSubstituteVectorFonts;
+
+  nsCOMPtr<nsIAtom>   mLangGroup;
   nsStringArray       mFonts;
   PRUint16            mFontsIndex;
-  nsVoidArray         mFontIsGeneric;
+  nsVoidArray         mLoadedFonts;
+  nsFontOS2*          mUnicodeFont;
+  nsFontOS2*          mWesternFont;
 
+  PRUint16            mGenericIndex;
   nsString            mGeneric;
-  nsCOMPtr<nsIAtom>   mLangGroup;
+
   nsAutoString        mUserDefined;
 
-  PRUint8             mTriedAllGenerics;
-  PRUint8             mIsUserDefined;
+  PRBool              mTriedAllGenerics;
+  PRBool              mTriedAllPref;
+  PRBool              mIsUserDefined;
 
   int                 mConvertCodePage;
 
-
  protected:
   nsresult      RealizeFont(void);
-  PRBool        GetVectorSubstitute( HPS aPS, const char* aFacename, char* alias );
-  PRBool        GetVectorSubstitute( HPS aPS, nsString* aFacename, char* alias );
-  nsFontOS2*    GetUnicodeFont( HPS aPS );
-  void          SetFontHandle( HPS aPS, nsFontOS2* aFH );
+  PRBool        GetVectorSubstitute(HPS aPS, const char* aFacename, char* alias);
+  PRBool        GetVectorSubstitute(HPS aPS, const nsString& aFacename, char* alias);
+  void          FindUnicodeFont(HPS aPS);
+  void          FindWesternFont();
+  void          SetFontHandle(HPS aPS, nsFontOS2* aFont);
   PLHashTable*  InitializeFamilyNames(void);
 
 
@@ -248,8 +270,10 @@ class nsFontMetricsOS2 : public nsIFontMetrics
   nsFontOS2          *mFontHandle;
   nsDeviceContextOS2 *mDeviceContext;
 
-  static PRBool       gSubstituteVectorFonts;
   static int          gCachedIndex;
+#ifdef DEBUG_FONT_STRUCT_ALLOCS
+  static unsigned long mRefCount;
+#endif
 };
 
 class nsFontEnumeratorOS2 : public nsIFontEnumerator
