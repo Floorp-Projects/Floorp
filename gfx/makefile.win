@@ -17,6 +17,6 @@
 
 DEPTH=..
 
-DIRS= public src tests
+DIRS= public src tests idl
 
 include <$(DEPTH)\config\rules.mak>
