@@ -853,7 +853,7 @@ void nsWebShellWindow::LoadSubMenu(
         menuitemElement->GetNodeName(menuitemNodeType);
 
 #ifdef DEBUG_saari
-        printf("Type [%s] %d\n", menuitemNodeType.ToNewCString(), menuitemNodeType.Equals("separator"));
+        printf("Type [%s] %d\n", menuitemNodeType.ToNewCString(), menuitemNodeType.Equals("menuseparator"));
 #endif
 
         if (menuitemNodeType.Equals("menuitem")) {
