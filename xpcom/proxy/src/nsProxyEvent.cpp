@@ -218,7 +218,7 @@ nsProxyObject::PostAndWait(nsProxyObjectCallInfo *proxyInfo)
         return rv;
 
     nsCOMPtr<nsIEventQueue> eventQ;
-    rv = eventQService->GetThreadEventQueue(PR_CurrentThread(), getter_AddRefs(eventQ));
+    rv = eventQService->GetThreadEventQueue(NS_CURRENT_THREAD, getter_AddRefs(eventQ));
     if (NS_FAILED(rv))
     {
         rv = eventQService->CreateThreadEventQueue();
@@ -226,7 +226,7 @@ nsProxyObject::PostAndWait(nsProxyObjectCallInfo *proxyInfo)
         if (NS_FAILED(rv))
             return rv;
         
-        rv = eventQService->GetThreadEventQueue(PR_CurrentThread(), getter_AddRefs(eventQ));
+        rv = eventQService->GetThreadEventQueue(NS_CURRENT_THREAD, getter_AddRefs(eventQ));
     }
     else
     {
@@ -564,7 +564,7 @@ AutoProxyParameterList(PRUint32 methodIndex, nsXPTMethodInfo *methodInfo, nsXPTC
                             if ( NS_FAILED( rv ) )  
                                 return rv;
 
-                            rv = eventQService->GetThreadEventQueue(PR_CurrentThread(), &eventQ);
+                            rv = eventQService->GetThreadEventQueue(NS_CURRENT_THREAD, &eventQ);
                             if ( NS_FAILED( rv ) )
                             {
                                 // the caller does not have an eventQ of their own.  bad.

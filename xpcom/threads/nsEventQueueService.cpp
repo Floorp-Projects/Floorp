@@ -476,32 +476,66 @@ nsEventQueueServiceImpl::GetThreadEventQueue(PRThread* aThread, nsIEventQueue** 
 {
   nsresult rv = NS_OK;
   EventQueueEntry* evQueueEntry;
-  ThreadKey key(aThread);
+
+  /* Parameter validation... */
+  if (NULL == aResult) return NS_ERROR_NULL_POINTER;
+  
+  PRThread* keyThread = aThread;
+
+  if (keyThread == NS_CURRENT_THREAD) 
+  {
+     keyThread = PR_GetCurrentThread();
+  }
+  else if (keyThread == NS_UI_THREAD) 
+  {
+    nsCOMPtr<nsIThread>  mainIThread;
+    
+    // Get the primordial thread
+    rv = nsIThread::GetMainThread(getter_AddRefs(mainIThread));
+    if (NS_FAILED(rv)) return rv;
+
+    rv = mainIThread->GetPRThread(&keyThread);
+    if (NS_FAILED(rv)) return rv;
+  }
+
+  ThreadKey key(keyThread);
 
   /* Enter the lock which protects the EventQ hashtable... */
   PR_EnterMonitor(mEventQMonitor);
 
-  /* Parameter validation... */
-  if ((NULL == aThread) || (NULL == aResult)) {
-    rv = NS_ERROR_NULL_POINTER;
-    goto done;
-  }
-
   evQueueEntry = (EventQueueEntry*)mEventQTable->Get(&key);
+  
+  PR_ExitMonitor(mEventQMonitor);
+
   if (NULL != evQueueEntry) {
     *aResult = evQueueEntry->GetEventQueue(); // Queue addrefing is done by this call.
   } else {
     // XXX: Need error code for requesting an event queue when none exists...
     *aResult = NULL;
     rv = NS_ERROR_FAILURE;
-    goto done;
   }
 
-done:
-  // Release the EventQ lock...
-  PR_ExitMonitor(mEventQMonitor);
   return rv;
 }
+
+
+NS_IMETHODIMP
+nsEventQueueServiceImpl::ResolveEventQueue(nsIEventQueue* queueOrConstant, nsIEventQueue* *resultQueue)
+{
+    if (queueOrConstant == NS_CURRENT_EVENTQ)
+    {
+        return GetThreadEventQueue(NS_CURRENT_THREAD, resultQueue);
+    }
+    else if (queueOrConstant == NS_UI_THREAD_EVENTQ)
+    {
+        return GetThreadEventQueue(NS_UI_THREAD, resultQueue);
+    }
+
+    *resultQueue = queueOrConstant;
+    NS_ADDREF(*resultQueue);
+    return NS_OK;
+}
+
 
 #ifdef XP_MAC
 // MAC specific. Will go away someday

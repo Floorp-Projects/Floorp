@@ -278,7 +278,7 @@ nsJSProtocolHandler::NewChannel(const char* verb,
     if (eval == nsnull)
         return NS_ERROR_OUT_OF_MEMORY;
 
-    rv = proxyObjectManager->GetProxyObject(nsnull,
+    rv = proxyObjectManager->GetProxyObject(NS_UI_THREAD_EVENTQ,
                                             nsCOMTypeInfo<nsIEvaluateStringProxy>::GetIID(),
                                             NS_STATIC_CAST(nsISupports*, eval),
                                             PROXY_SYNC | PROXY_ALWAYS,

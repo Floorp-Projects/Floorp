@@ -27,6 +27,7 @@
 #include "nsISupports.h"
 #include "nsIFactory.h"
 #include "nsIEventQueue.h"
+#include "nsIEventQueueService.h"
 
 #include "nsHashtable.h"
 

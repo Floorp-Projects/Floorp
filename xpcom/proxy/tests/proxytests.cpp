@@ -298,13 +298,13 @@ void TestCase_NestedLoop(void *arg)
         NS_WITH_SERVICE(nsIEventQueueService, eventQService, kEventQueueServiceCID, &rv);
         if (NS_SUCCEEDED(rv)) 
         {
-            rv = eventQService->GetThreadEventQueue(PR_CurrentThread(), &eventQ);
+            rv = eventQService->GetThreadEventQueue(NS_CURRENT_THREAD, &eventQ);
             if (NS_FAILED(rv))
                 rv = eventQService->CreateThreadEventQueue();
             if (NS_FAILED(rv))
                 return;
             else
-                rv = eventQService->GetThreadEventQueue(PR_CurrentThread(), &eventQ);
+                rv = eventQService->GetThreadEventQueue(NS_CURRENT_THREAD, &eventQ);
         
             printf("Thread (%d) Prior to calling proxyObject->Test.\n", threadNumber);
             rv = proxyObject->Test((PRInt32)eventQ, 0, &retval);   
@@ -416,13 +416,13 @@ static void PR_CALLBACK EventLoop( void *arg )
     nsIEventQueue* eventQ;
     NS_WITH_SERVICE(nsIEventQueueService, eventQService, kEventQueueServiceCID, &rv);
     if (NS_SUCCEEDED(rv)) {
-      rv = eventQService->GetThreadEventQueue(PR_CurrentThread(), &eventQ);
+      rv = eventQService->GetThreadEventQueue(NS_CURRENT_THREAD, &eventQ);
       if (NS_FAILED(rv))
           rv = eventQService->CreateThreadEventQueue();
       if (NS_FAILED(rv))
           return;
       else
-          rv = eventQService->GetThreadEventQueue(PR_CurrentThread(), &eventQ);
+          rv = eventQService->GetThreadEventQueue(NS_CURRENT_THREAD, &eventQ);
     }
     if (NS_FAILED(rv)) return;
 
