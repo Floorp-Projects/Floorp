@@ -30,13 +30,17 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= string
 
+SDK_HEADERS =  \
+		nsAString.h			\
+		nsBufferHandle.h		\
+		nsStringFragment.h		\
+		$(NULL)
+
 EXPORTS		=				\
 		nsAFlatString.h			\
 		nsAlgorithm.h			\
 		nsASingleFragmentString.h	\
-		nsAString.h			\
 		nsAStringGenerator.h		\
-		nsBufferHandle.h		\
 		nsBufferHandleUtils.h		\
 		nsCharTraits.h			\
 		nsDependentConcatenation.h	\
@@ -51,7 +55,6 @@ EXPORTS		=				\
 		nsSharedBufferList.h		\
 		nsSlidingString.h		\
 		nsStringDefines.h		\
-		nsStringFragment.h		\
 		nsStringFwd.h			\
 		nsStringIterator.h		\
 		nsStringIteratorUtils.h		\

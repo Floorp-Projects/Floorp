@@ -51,6 +51,7 @@
 #include "nsIFile.h"
 #include "nsDirectoryServiceDefs.h"
 #include "nsDirectoryService.h"
+#include "nsEmbedString.h"
 #endif
 
 nsGenericFactory::nsGenericFactory(const nsModuleComponentInfo *info)
@@ -297,7 +298,7 @@ nsGenericModule::Initialize(nsIComponentManager *compMgr)
     if (NS_FAILED(rv))
         return rv;
 
-    nsCAutoString path;
+    nsEmbedCString path;
     xpcomDll->GetNativePath(path);
     rv = XPCOMGlueStartup(path.get());
 

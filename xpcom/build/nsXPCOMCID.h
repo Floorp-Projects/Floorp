@@ -50,6 +50,18 @@
 #define NS_DIRECTORY_SERVICE_CONTRACTID "@mozilla.org/file/directory_service;1"
 
 /**
+ * XPCOM File
+ *   The file abstraction provides ways to obtain and access files and 
+ *   directories located on the local system. 
+ *
+ *   This contract supports the nsIFile interface and the nsILocalFile interface.
+ *   This contract may also support platform specific interfaces such as 
+ *   nsILocalFileMac on platforms where additional interfaces are required.
+ *
+ */
+#define NS_LOCAL_FILE_CONTRACTID "@mozilla.org/file/local;1"
+
+/**
  * XPCOM Category Manager Contract ID
  *   The contract supports the nsICategoryManager interface. The 
  *   category manager is a singleton.

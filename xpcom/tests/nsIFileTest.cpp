@@ -268,7 +268,7 @@ DeletionTest(const char* creationPath, const char* appendPath, PRBool recursive)
 {
     nsCOMPtr<nsILocalFile> file;
     nsresult rv = 
-      nsComponentManager::CreateInstance(NS_FILE_CONTRACTID, NULL,
+      nsComponentManager::CreateInstance(NS_LOCAL_FILE_CONTRACTID, NULL,
 					 NS_GET_IID(nsILocalFile),
 					 (void**)getter_AddRefs(file));
     
