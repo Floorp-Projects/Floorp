@@ -209,7 +209,7 @@ enum nsCursor {   ///(normal cursor,       usually rendered as an arrow)
 enum nsContentType {
   eContentTypeInherit = -1,
   eContentTypeUI = 0,         // eContentTypeUI must equal 0
-  eContentTypeContent = 1     // eContentTypeUI must equal 1
+  eContentTypeContent = 1     // eContentTypeContent must equal 1
 };
 
 enum nsTopLevelWidgetZPlacement { // for PlaceBehind()
