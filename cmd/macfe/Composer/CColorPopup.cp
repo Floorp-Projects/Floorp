@@ -376,17 +376,30 @@ colorPopupMDEFProc(short message, MenuHandle theMenu,
 			numRows = 10;
 			numCols = 10;
 #endif
+#if TARGET_CARBON
+			// why are the width and height backwards?  If they are switched, the menu is wrong shape
+			::SetMenuHeight( theMenu, (numRows * CColorPopup::COLOR_BOX_HEIGHT) + (2 * CColorPopup::COLOR_FRAME_BORDER) );
+			::SetMenuWidth( theMenu, (numCols * CColorPopup::COLOR_BOX_WIDTH) + CColorPopup::COLOR_FRAME_BORDER );
+#else
 			// why are the width and height backwards?  If they are switched, the menu is wrong shape
 			(**theMenu).menuHeight = (numRows * CColorPopup::COLOR_BOX_HEIGHT) + (2 * CColorPopup::COLOR_FRAME_BORDER);
 			(**theMenu).menuWidth = (numCols * CColorPopup::COLOR_BOX_WIDTH) + CColorPopup::COLOR_FRAME_BORDER;
+#endif  // TARGET_CARBON
+			
 	#if COLOR_DISPLAY_TEXT
 			(**theMenu).menuWidth += CColorPopup::COLOR_HEX_DISPLAY_SIZE;
 	#endif
 			break;
 
 		case mPopUpMsg:
+#if TARGET_CARBON
+			::SetRect( menuRect, hitPt.v, hitPt.h, 
+						hitPt.v + ::GetMenuWidth(theMenu), hitPt.h + ::GetMenuHeight(theMenu) );
+#else
 			::SetRect( menuRect, hitPt.v, hitPt.h, 
 						hitPt.v + (**theMenu).menuWidth, hitPt.h + (**theMenu).menuHeight );
+#endif // TARGET_CARBON
+
 			break;
 /*
 		case	mDrawItemMsg:
