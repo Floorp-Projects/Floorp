@@ -125,6 +125,11 @@ function addCommands(commandObject)
          "<script>",
          "Evaluates <script> as JavaScript code.  Not for the faint of heart.");
 
+    add ("ctcp", "onInputCTCP",
+         "<target> <code> [<params>]",
+         "Sends the CTCP code <code> to the target (user or channel) " +
+         "<target>.  If <params> are specified they are sent along as well.");
+    
     add ("join", "onInputJoin",
          "[#|&]<channel-name>",
          "Joins a the global (name starts with #) or local (name starts " +

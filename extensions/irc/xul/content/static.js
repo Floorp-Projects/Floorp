@@ -10,15 +10,12 @@
  * implied. See the License for the specific language governing
  * rights and limitations under the License.
  *
- * The Original Code is JSIRC Test Client #3
+ * The Original Code is ChatZilla
  *
  * The Initial Developer of the Original Code is New Dimensions Consulting,
  * Inc. Portions created by New Dimensions Consulting, Inc. are
  * Copyright (C) 1999 New Dimenstions Consulting, Inc. All
  * Rights Reserved.
- *
- * Contributor(s): 
- *
  *
  * Contributor(s):
  *  Robert Ginda, rginda@ndcico.com, original author
@@ -30,16 +27,19 @@ client.defaultNick = "IRCMonkey";
 
 client.IMAGEDIR = "chrome://chatzilla/skin/images/";
 client.CSSDIR = "chrome://chatzilla/skin/";
-//client.IMAGEDIR = "resource:///chrome/chatzilla/skin/default/images/";
-//client.CSSDIR = "resource:///chrome/chatzilla/skin/default/";
 
 client.COMMAND_CHAR = "/";
 client.STEP_TIMEOUT = 500;
-client.UPDATE_DELAY = 500;
+//client.UPDATE_DELAY = 500;
 client.EXPAND_HEIGHT = "200px";
 client.COLLAPSE_HEIGHT = "25px";
 client.MAX_MESSAGES = 200;
 client.MAX_HISTORY = 50;
+/* longest nick to show in display before abbreviating */
+client.MAX_NICK_DISPLAY = 14;
+/* longest word to show in display before abbreviating, currently
+ * only for urls and hostnames onJoin */
+client.MAX_WORD_DISPLAY = 46;
 client.TYPE = "IRCClient";
 client.PRINT_DIRECTION = 1; /*1 => new messages at bottom, -1 => at top */
 client.ADDRESSED_NICK_SEP = ", ";
@@ -121,7 +121,8 @@ function initStatic()
         setMenuCheck ("menu-view-info", isVisible("user-list"));
     client.uiState["status"] =
         setMenuCheck ("menu-view-status", isVisible("status-bar-tbox"));
-    
+
+    onSortCol ("usercol-nick");
 }
 
 function setMenuCheck (id, state)
@@ -239,6 +240,8 @@ function insertLink (matchText, containerTag)
     var anchor = document.createElement ("html:a");
     anchor.setAttribute ("href", href);
     anchor.setAttribute ("target", "other_window");
+    if (matchText.length >= client.MAX_WORD_DISPLAY)
+        matchText = abbreviateWord (matchText, client.MAX_WORD_DISPLAY);
     anchor.appendChild (document.createTextNode (matchText));
     containerTag.appendChild (anchor);
     
@@ -391,7 +394,7 @@ function setClientOutput(doc)
     client.output = doc.getElementById("output");
     /* continue processing now: */
     initStatic();
-    if (0 && client.STARTUP_NETWORK)
+    if (client.STARTUP_NETWORK)
         client.onInputAttach ({inputData: client.STARTUP_NETWORK});
 
 }
@@ -477,43 +480,52 @@ function updateTitle (obj)
     getObjectDetails (client.currentObject, o);
 
     var net = o.network ? o.network.name : "";
-    var serv = "", nick = "";
 
-    if (o.server)
+    switch (client.currentObject.TYPE)
     {
-        serv  = o.server.connection.host;
-        if (o.server.me)
+        case "IRCServer":
+        case "IRCNetwork":
+            var serv = "", nick = "";
+            serv  = o.server.connection.host;
+
             nick = o.server.me.properNick;
-    }
-
-    if (o.channel)
-    {
-        var chan = "(none)", mode = "", topic = "";
-
-        chan = o.channel.name;
-        mode = o.channel.mode.getModeStr();
-        if (client.uiState["toolbar"])
-            topic = o.channel.topic ? " " + o.channel.topic : " --no topic--";
-
-        if (!mode)
-            mode = "no mode";
-        tstring = chan + " (" + mode + ") " + topic;
-    }
-    else
-    {
-        if (nick)
-            tstring += "user '" + nick + "' ";
-        
-        if (net)
-            if (serv)
-                tstring += "attached to '" + net + "' via " + serv;
+            if (nick) /* user might be disconnected, nick would be undefined */
+                tstring += "user '" + nick + "' ";
+            
+            if (net)
+                if (serv)
+                    tstring += "attached to '" + net + "' via " + serv;
+                else
+                    tstring += "attaching to '" + net + "'";
+            
+            if (tstring)
+                tstring = "ChatZilla: " + tstring;
             else
-                tstring += "attaching to '" + net + "'";
-        
-        if (tstring)
-            tstring = "ChatZilla: " + tstring;
-        else
+                tstring = "ChatZilla!!";
+            break;
+            
+        case "IRCChannel":
+            var chan = "(none)", mode = "", topic = "";
+
+            chan = o.channel.name;
+            mode = o.channel.mode.getModeStr();
+            if (client.uiState["toolbar"])
+                topic = o.channel.topic ? " " + o.channel.topic :
+                    " --no topic--";
+
+            if (!mode)
+                mode = "no mode";
+            tstring = "ChatZilla: " + chan + " (" + mode + ") " + topic;
+            break;
+
+        case "IRCUser":
+            tstring = "ChatZilla: Conversation with " +
+                client.currentObject.properNick;
+            break;
+
+        default:
             tstring = "ChatZilla!";
+            break;
     }
 
     if (!client.uiState["toolbar"])
@@ -762,19 +774,20 @@ function getTBForObject (source, create)
     for (var i in client.viewsArray)
     {
         if (client.viewsArray[i].source == source)
+        {
             tb = client.viewsArray[i].tb;
+            break;
+        }
         else
-            if (client.viewsArray[i].tb.id == id)
+            if (client.viewsArray[i].tb.getAttribute("id") == id)
                 id = "tb[" + name + "<" + (++matches) + ">]";
     }
 
     if (!tb && create) /* not found, create one */
     {
         var views = document.getElementById ("views-tbar-inner");
-        //var tbi = document.createElement ("toolbaritem");
-        //tbi.setAttribute ("onclick", "onTBIClick('" + id + "')");
         tb = document.createElement ("menubutton");
-	tb.addEventListener("click", onTBIClickTempHandler, false);
+        tb.addEventListener("click", onTBIClickTempHandler, false);
         
         var aclass = (client.ICONS_IN_TOOLBAR) ?
             "activity-button-image" : "activity-button-text";
@@ -790,7 +803,6 @@ function getTBForObject (source, create)
         else
             tb.setAttribute ("value", name);
 
-        //tbi.appendChild (tb);
         views.appendChild (tb);
     }
 
@@ -822,11 +834,10 @@ function deleteToolbutton (tb)
         if (!client.viewsArray[key].source.isPermanent)
         {
             /* re-index higher toolbuttons */
-            for (i = key + 1; i < client.viewsArray.length; i--)
+            for (i = key + 1; i < client.viewsArray.length; i++)
             {
-                tb.setAttribute ("viewKey", Number(key) - 1);
+                client.viewsArray[i].tb.setAttribute ("viewKey", i - 1);
             }
-
             arrayRemoveAt(client.viewsArray, key);
             var tbinner = document.getElementById("views-tbar-inner");
             tbinner.removeChild(tb);
@@ -834,7 +845,7 @@ function deleteToolbutton (tb)
         else
         {
             window.alert ("Current view cannot be deleted.");
-            return false;
+            return -1;
         }
             
     }
@@ -842,7 +853,7 @@ function deleteToolbutton (tb)
         dd  ("*** INVALID OBJECT passed to deleteToolButton (" + tb + ") " +
              "no viewKey attribute. (" + key + ")");
 
-    return true;
+    return key;
 
 }
 
@@ -972,22 +983,24 @@ function user_display(message, msgtype, sourceNick)
         var nickText;
         var realNick = (!sourceNick || sourceNick != "!ME") ? this.properNick :
             this.parent.me.properNick;
+
+        var displayNick = abbreviateWord (realNick, client.MAX_NICK_DISPLAY);
         
         switch (msgtype)
         {                
                 
             case "ACTION":
-                nickText = newInlineText ("*" + realNick + "* ",
+                nickText = newInlineText ("*" + displayNick + "* ",
                                           "msg-user", "html:td");
                 break;
                 
             case "NOTICE":
-                nickText = newInlineText ("[" + realNick + "] ",
+                nickText = newInlineText ("[" + displayNick + "] ",
                                           "msg-user", "html:td");
                 break;
 
             case "PRIVMSG":
-                nickText = newInlineText (/*"<" +*/ realNick /*+ ">"*/,
+                nickText = newInlineText (/*"<" +*/ displayNick /*+ ">"*/,
                                           "msg-user", "html:td");
                 break;
                 
@@ -1049,9 +1062,7 @@ function user_display(message, msgtype, sourceNick)
 
     }
     else
-    {
         this.parent.display (message, msgtype, this.nick);
-    }
 
 }
 
@@ -1119,21 +1130,23 @@ function chan_display (message, msgtype, nick)
         else    
             realNick = nick + "?";
         
+        var displayNick = abbreviateWord (realNick, client.MAX_NICK_DISPLAY);
+
         switch (msgtype)
         {                
                 
             case "ACTION":
-                nickText = newInlineText ("*" + realNick + "* ",
+                nickText = newInlineText ("*" + displayNick + "* ",
                                           "msg-user", "html:td");
                 break;
                 
             case "NOTICE":
-                nickText = newInlineText ("[" + realNick + "] ",
+                nickText = newInlineText ("[" + displayNick + "] ",
                                           "msg-user", "html:td");
                 break;
 
             case "PRIVMSG":
-                nickText = newInlineText (/*"<" + */ realNick /*+ "> "*/,
+                nickText = newInlineText (/*"<" + */ displayNick /*+ "> "*/,
                                           "msg-user", "html:td");
                 break;
                 

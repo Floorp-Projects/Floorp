@@ -337,7 +337,7 @@ function serv_messto (code, target, msg, ctcpCode)
     }
 
     for (i in lines)
-        if (lines[i] != "") sendable++;
+        if ((lines[i] != "") || ctcpCode) sendable++;
 
     for (i in lines)
     {
@@ -351,17 +351,17 @@ function serv_messto (code, target, msg, ctcpCode)
             return true;
         }
             
-        if (lines[i] != "")
+        if ((lines[i] != "") || ctcpCode)
         {
             this.sendsThisRound++;
-            this.sendData (code + " " + target + " :" + pfx + lines[i] +
-                           sfx + "\n");
+            var line = code + " " + target + " :" + pfx + lines[i] + sfx;
+            //dd ("-*- irc sending '" +  line + "'");
+            this.sendData (line + "\n");
         }
         
     }
 
-    return true;
-        
+    return true;        
 }
 
 CIRCServer.prototype.sayTo = 
@@ -387,6 +387,21 @@ function serv_actto (target, msg)
     this.messageTo ("PRIVMSG", target, msg, "ACTION");
 
 }
+
+CIRCServer.prototype.ctcpTo = 
+function serv_ctcpto (target, code, msg, method)
+{
+    if (typeof msg == "undefined")
+        msg = "";
+
+    if (typeof method == "undefined")
+        method = "PRIVMSG";
+    
+     
+    this.messageTo (method, target, msg, code);
+
+}
+
 /**
  * Abstracts the whois command.
  *
@@ -1175,8 +1190,9 @@ function serv_ctcp (e)
         return false;
 
     e.CTCPData = ary[2] ? ary[2] : "";
-    
-    e.type = "ctcp-" + ary[1].toLowerCase();
+
+    e.CTCPCode = ary[1].toLowerCase();
+    e.type = "ctcp-" + e.CTCPCode;
     e.destMethod = "onCTCP" + ary[1][0].toUpperCase() +
         ary[1].substr (1, ary[1].length).toLowerCase();
 
@@ -1184,6 +1200,12 @@ function serv_ctcp (e)
     { /* if there's no place to land the event here, try to forward it */
         e.destObject = e.replyTo;
         e.set = (e.replyTo == e.user) ? "user" : "channel";
+        
+        if (typeof e.replyTo[e.destMethod] != "function")
+        { /* if there's no place to forward it, send it to unknownCTCP */
+            e.type = "unk-ctcp";
+            e.destMethod = "onUnknownCTCP";
+        }
     }
     else
         e.destObject = this;
@@ -1380,6 +1402,20 @@ function chan_notice (msg)
 
     this.parent.noticeTo (this.name, msg);
     
+}
+
+CIRCChannel.prototype.ctcp = 
+function chan_ctcpto (code, msg, type)
+{
+    if (typeof msg == "undefined")
+        msg = "";
+
+    if (typeof type == "undefined")
+        type = "PRIVMSG";
+    
+     
+    this.parent.messageTo (type, this.name, msg, code);
+
 }
 
 CIRCChannel.prototype.join = 
@@ -1666,6 +1702,20 @@ function usr_act (msg)
 
     this.parent.actTo (this.nick, msg);
     
+}
+
+CIRCUser.prototype.ctcp = 
+function usr_ctcp (code, msg, type)
+{
+    if (typeof msg == "undefined")
+        msg = "";
+
+    if (typeof type == "undefined")
+        type = "PRIVMSG";
+    
+     
+    this.parent.messageTo (type, this.name, msg, code);
+
 }
 
 CIRCUser.prototype.whois =

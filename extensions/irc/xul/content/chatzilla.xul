@@ -139,7 +139,7 @@
 
 <box id="outer-box" align="vertical" flex="1">
   <box id="inner-box" align="horizontal" flex="1">
-    <box id="user-list-box" flex="40%">
+    <box id="user-list-box" flex="30%">
     <tree id="user-list" container="true" datasources="rdf:null" flex="1"
      containment="http://home.netscape.com/NC-irc#chanuser">
 

@@ -176,8 +176,10 @@ function rdf_inittree (n1, a, recurse)
             }
             catch (e)
             {
+                /*
                 dd ("** Caught " + e + " while recursivley clearing " +
                     n2.Value + " **");
+                */
             }
         }
         
@@ -201,4 +203,12 @@ function rdf_settroot (id, root)
     if (typeof root == "object")
         root = root.Value;
     tree.setAttribute ("ref", root);
+}
+
+RDFHelper.prototype.getTreeRoot =
+function rdf_gettroot (id, root)
+{
+    var tree = document.getElementById (id);
+
+    return tree.getAttribute ("ref");
 }

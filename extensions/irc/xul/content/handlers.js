@@ -156,6 +156,8 @@ function onToggleVisibility(thing)
         elem.setAttribute ("collapsed", newState);
     }
 
+    updateTitle();
+
 }
 
 function onDoStyleChange (newStyle)
@@ -178,21 +180,17 @@ function onHideCurrentView()
     var tb = getTBForObject(client.currentObject);
     
     if (tb)
-        if (deleteToolbutton (tb))
-            setCurrentObject (client);
-    
-}
-
-function onClearCurrentView()
-{
-
-    if (client.output.firstChild)
-        client.output.removeChild (client.output.firstChild);
-    delete client.currentObject.messages;
-
-    client.currentObject.display ("Messages Cleared.", "INFO");
-
-    client.output.appendChild (client.currentObject.messages);
+    {
+        var i = deleteToolbutton (tb);
+        if (i != -1)
+        {
+            if (i >= client.viewsArray.length)
+                i = client.viewsArray.length - 1;
+            
+            setCurrentObject (client.viewsArray[i].source);
+        }
+        
+    }
     
 }
 
@@ -202,20 +200,37 @@ function onDeleteCurrentView()
     
     if (tb)
     {
-        if (deleteToolbutton (tb))
+        var i = deleteToolbutton (tb);
+        if (i != -1)
         {
             delete client.currentObject.messages;
-            setCurrentObject (client);
+
+            if (i >= client.viewsArray.length)
+                i = client.viewsArray.length - 1;            
+            setCurrentObject (client.viewsArray[i].source);
         }
         
     }
     
 }
 
+function onClearCurrentView()
+{
+
+    if (client.output.firstChild)
+        client.output.removeChild (client.output.firstChild);
+
+    client.currentObject.messages = (void 0);
+    delete client.currentObject.messages;
+
+    client.currentObject.display ("Messages Cleared.", "INFO");
+
+    client.output.appendChild (client.currentObject.messages);
+    
+}
+
 function onSortCol(sortColName)
 {
-    dd ("in sortcol");
-    
     const nsIXULSortService = Components.interfaces.nsIXULSortService;
     const isupports_uri = "component://netscape/rdf/xul-sort-service";
     
@@ -978,7 +993,9 @@ function cli_ieval (e)
     
     try
     {
-        rv = String(eval (e.inputData));
+        client.currentObject.doEval = function (s) { return eval(s); }
+        
+        rv = String(client.currentObject.doEval (e.inputData));
         if (rv.indexOf ("\n") == -1)
             client.currentObject.display ("{" + e.inputData + "} " + rv,
                                           "EVAL");
@@ -994,7 +1011,31 @@ function cli_ieval (e)
     return true;
     
 }
+
+client.onInputCTCP =
+function cli_ictcp (e)
+{
+    if (!e.inputData)
+        return false;
+
+    if (!e.server)
+    {
+        client.currentObject.display ("You must be connected to a server to " +
+                                      "use CTCP.", "ERROR");
+        return false;
+    }
+
+    var ary = e.inputData.match(/^(\S+) (\S+)$/);
+    if (ary == null)
+        return false;
     
+    e.server.ctcpTo (ary[1], ary[2]);
+    
+    return true;
+    
+}
+
+
 client.onInputJoin =
 function cli_ijoin (e)
 {
@@ -1649,6 +1690,10 @@ CIRCChannel.prototype.on366 =
 function my_366 (e)
 {
 
+    if (client.currentObject == this)    
+        /* hide the tree while we add (possibly tons) of nodes */
+        client.rdf.setTreeRoot("user-list", client.rdf.resNullChan);
+    
     client.rdf.clearTargets(this.getGraphResource(), client.rdf.resChanUser);
 
     for (var u in this.users)
@@ -1656,6 +1701,11 @@ function my_366 (e)
         this.users[u].updateGraphResource();
         this._addUserToGraph (this.users[u]);
     }
+
+    
+    if (client.currentObject == this)
+        /* redisplay the tree */
+        client.rdf.setTreeRoot("user-list", this.getGraphResource());
     
 }    
 
@@ -1690,6 +1740,15 @@ function my_caction (e)
 
 }
 
+CIRCChannel.prototype.onUnknownCTCP =
+function my_unkctcp (e)
+{
+
+    this.display ("Unknown CTCP " + e.CTCPCode + "(" + e.CTCPData +
+                  ") from " + e.user.properNick, "BAD-CTCP");
+    
+}   
+
 CIRCChannel.prototype.onJoin =
 function my_cjoin (e)
 {
@@ -1701,8 +1760,8 @@ function my_cjoin (e)
     }
     else
         this.display(e.user.properNick + " (" + e.user.name + "@" +
-                     e.user.host + ") has joined " + e.channel.name,
-                     "JOIN", e.user.nick);
+                     abbreviateWord(e.user.host, client.MAX_WORD_DISPLAY) +
+                     ") has joined " + e.channel.name, "JOIN", e.user.nick);
 
     this._addUserToGraph (e.user);
     
@@ -1719,8 +1778,16 @@ function my_cpart (e)
     if (userIsMe (e.user))
     {
         this.display ("YOU have left " + e.channel.name, "PART", "!ME");
+        if (client.currentObject == this)    
+            /* hide the tree while we remove (possibly tons) of nodes */
+            client.rdf.setTreeRoot("user-list", client.rdf.resNullChan);
+        
         client.rdf.clearTargets(this.getGraphResource(),
                                 client.rdf.resChanUser, true);
+
+        if (client.currentObject == this)
+            /* redisplay the tree */
+            client.rdf.setTreeRoot("user-list", this.getGraphResource());
     }
     else
         this.display (e.user.properNick + " has left " + e.channel.name,
@@ -1758,7 +1825,7 @@ function my_ckick (e)
                       e.reason + ")", "KICK", enforcerNick);
     }
     
-    this._removeUserFromGraph(e.user);
+    this._removeUserFromGraph(e.lamer);
 
     updateChannel (e.channel);
     
@@ -1851,3 +1918,12 @@ function my_notice (e)
     
 }
 
+CIRCUser.prototype.onUnknownCTCP =
+function my_unkctcp (e)
+{
+
+    this.parent.parent.display ("Unknown CTCP " + e.CTCPCode + "(" +
+                                e.CTCPData + ") from " + e.user.properNick,
+                                "BAD-CTCP");
+    
+}

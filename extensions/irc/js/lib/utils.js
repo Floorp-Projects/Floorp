@@ -384,6 +384,18 @@ function arrayRemoveAt (ary, i)
 
 }
 
+/* length should be an even number >= 6 */
+function abbreviateWord (str, length)
+{
+    if (str.length <= length || length < 6)
+        return str;
+
+    var left = str.substr (0, (length / 2) - 1);
+    var right = str.substr (str.length - (length / 2) + 1);
+
+    return left + "..." + right;
+}
+
 function getRandomElement (ary)
 {
     var i = parseInt (Math.random() * ary.length)
