@@ -398,6 +398,7 @@ sub BuildClientDist()
 	#CAPS
 	_InstallFromManifest(":mozilla:caps:public:MANIFEST",							"$distdirectory:caps:");
 	_InstallFromManifest(":mozilla:caps:include:MANIFEST",							"$distdirectory:caps:");
+	_InstallFromManifest(":mozilla:caps:idl:MANIFEST",							"$distdirectory:idl:");
 
 	#SECURITY_freenav
     _InstallFromManifest(":mozilla:modules:security:freenav:MANIFEST",				"$distdirectory:security:");
