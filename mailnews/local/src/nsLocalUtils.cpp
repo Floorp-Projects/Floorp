@@ -120,6 +120,9 @@ nsLocalURI2Path(const char* rootURI, const char* uriStr,
     length = PL_strlen(curPos) + 1;
 
   char* hostname = new char[length];
+  if(!hostname)
+	  return NS_ERROR_OUT_OF_MEMORY;
+
   PL_strncpyz(hostname, curPos, length);
 
   // begin pathResult with the mailbox root
@@ -224,4 +227,40 @@ nsresult nsBuildLocalMessageURI(const char *baseURI, PRUint32 key, char** uri)
 	*uri = PR_smprintf("%s%s#%d", kMailboxMessageRootURI, tail, key);
 	delete[] tail;
 	return NS_OK;
+}
+
+nsresult nsGetMailboxHostName(const char *rootURI, const char *uriStr, char **hostName)
+{
+
+  if(!hostName)
+	  return NS_ERROR_NULL_POINTER;
+
+  nsAutoString uri = uriStr;
+  if (uri.Find(rootURI) != 0)     // if doesn't start with rootURI
+    return NS_ERROR_FAILURE;
+
+  // start parsing the uriStr
+  const char* curPos = uriStr;
+  
+  // skip past schema 
+  while (*curPos != ':') curPos++;
+  curPos++;
+  while (*curPos == '/') curPos++;
+
+  char *slashPos = PL_strchr(curPos, '/');
+  int length;
+
+  // if there are no more /'s then we just copy the rest of the string
+  if (slashPos)
+    length = (slashPos - curPos) + 1;
+  else
+    length = PL_strlen(curPos) + 1;
+
+  *hostName = new char[length];
+  if(!*hostName)
+	  return NS_ERROR_OUT_OF_MEMORY;
+
+  PL_strncpyz(*hostName, curPos, length);
+
+  return NS_OK;
 }

@@ -929,17 +929,19 @@ NS_IMETHODIMP nsMsgLocalMailFolder::GetUsersName(char** userName)
 
 NS_IMETHODIMP nsMsgLocalMailFolder::GetHostName(char** hostName)
 {
-#ifdef HAVE_PORT
-  PRBool serverIsIMAP = m_master->GetPrefs()->GetMailServerIsIMAP4();
-  if (serverIsIMAP)
-  {
-    MSG_IMAPHost *defaultIMAPHost = m_master->GetIMAPHostTable()->GetDefaultHost();
-    return (defaultIMAPHost) ? defaultIMAPHost->GetHostName() : 0;
-  }
-  else
-    return m_master->GetPrefs()->GetPopHost();
-#endif
-  return NS_OK;
+	nsresult rv;
+	char *host;
+	rv = nsGetMailboxHostName(kMailboxRootURI, mURI, &host);
+	//I'm recopying it because otherwise we'll have a free mismatched memory.
+	//We should really be using allocators to do all of this.
+	if(NS_SUCCEEDED(rv) && host)
+	{
+        *hostName = PL_strdup(host);
+		delete[] host;
+		if(!*hostName)
+			return NS_ERROR_OUT_OF_MEMORY;
+	}
+	return rv;
 }
 
 NS_IMETHODIMP nsMsgLocalMailFolder::UserNeedsToAuthenticateForFolder(PRBool displayOnly, PRBool *authenticate)
@@ -1112,16 +1114,12 @@ nsMsgLocalMailFolder::CreateMessageFromMsgDBHdr(nsIMsgDBHdr *msgDBHdr,
 NS_IMETHODIMP nsMsgLocalMailFolder::GetNewMessages()
 {
     nsresult rv;
-    NS_WITH_SERVICE(nsIMsgMailSession, mailSession, kMsgMailSessionCID, &rv);
-    if (NS_FAILED(rv)) return rv;
     
     NS_WITH_SERVICE(nsIPop3Service, pop3Service, kCPop3ServiceCID, &rv);
     if (NS_FAILED(rv)) return rv;
 
-	//Are we assured this is the server for this folder?
-    nsCOMPtr<nsIMsgIncomingServer> server;
-    rv = mailSession->GetCurrentServer(getter_AddRefs(server));
-    if (NS_FAILED(rv)) return rv;
+	nsCOMPtr<nsIMsgIncomingServer> server;
+	rv = GetServer(getter_AddRefs(server));
 
     nsCOMPtr<nsIPop3IncomingServer> popServer;
     rv = server->QueryInterface(nsIPop3IncomingServer::GetIID(),

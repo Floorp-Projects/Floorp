@@ -39,4 +39,6 @@ nsParseLocalMessageURI(const char* uri, nsString& folderURI, PRUint32 *key);
 
 nsresult nsBuildLocalMessageURI(const char* baseURI, PRUint32 key, char** uri);
 
+nsresult nsGetMailboxHostName(const char *rootURI, const char *uriStr, char **hostName);
+
 #endif //NS_LOCALUTILS_H
