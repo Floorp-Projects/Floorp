@@ -93,7 +93,6 @@ protected:
 public:
 protected:
   nsIFontMetrics *mFontMetrics;
-  PRBool      mIgnoreResize;
   PRBool      mVisible;
   PRBool      mDisplayed;
 
