@@ -183,6 +183,36 @@ nsPop3IncomingServer::GetRootMsgFolder(nsIMsgFolder **aRootMsgFolder)
   return rv;
 }
 
+nsresult nsPop3IncomingServer::GetInbox(nsIMsgWindow *msgWindow, nsIMsgFolder **inbox)
+{
+  nsCOMPtr<nsIMsgFolder> rootFolder;
+  nsresult rv = GetRootMsgFolder(getter_AddRefs(rootFolder));
+  if(NS_SUCCEEDED(rv) && rootFolder)
+  {
+    PRUint32 numFolders;
+    rv = rootFolder->GetFoldersWithFlag(MSG_FOLDER_FLAG_INBOX, 1, &numFolders, inbox);
+    if (!*inbox)
+      return NS_ERROR_NULL_POINTER;
+  }
+  nsCOMPtr<nsIMsgLocalMailFolder> localInbox = do_QueryInterface(*inbox, &rv);
+  if (NS_SUCCEEDED(rv) && localInbox)
+  {
+    PRBool valid = PR_FALSE;
+    nsCOMPtr <nsIMsgDatabase> db;
+    rv = (*inbox)->GetMsgDatabase(msgWindow, getter_AddRefs(db));
+    if (NS_SUCCEEDED(rv) && db)
+    {
+      rv = db->GetSummaryValid(&valid);
+      if (!valid)
+      {
+        (void) localInbox->SetCheckForNewMessagesAfterParsing(PR_TRUE);
+        return NS_MSG_ERROR_FOLDER_SUMMARY_OUT_OF_DATE;
+      }
+    }
+  }
+  return rv;
+}
+
 NS_IMETHODIMP nsPop3IncomingServer::PerformBiff(nsIMsgWindow *aMsgWindow)
 {
   nsresult rv;
@@ -299,14 +329,13 @@ nsPop3IncomingServer::GetCanFileMessagesOnServer(PRBool *aCanFileMessagesOnServe
 }
 
 
-NS_IMETHODIMP nsPop3IncomingServer::GetNewMail(nsIMsgWindow *aMsgWindow, nsIUrlListener *aUrlListener, nsIMsgFolder *inbox, nsIURI **aResult)
+NS_IMETHODIMP nsPop3IncomingServer::GetNewMail(nsIMsgWindow *aMsgWindow, nsIUrlListener *aUrlListener, nsIMsgFolder *aInbox, nsIURI **aResult)
 {
   nsresult rv;
 
   nsCOMPtr<nsIPop3Service> pop3Service = do_GetService(kCPop3ServiceCID, &rv);
   NS_ENSURE_SUCCESS(rv,rv);
-
-  return pop3Service->GetNewMail(aMsgWindow, aUrlListener, inbox, this, aResult);
+  return pop3Service->GetNewMail(aMsgWindow, aUrlListener, aInbox, this, aResult);
 }
 
 NS_IMETHODIMP
@@ -318,7 +347,10 @@ nsPop3IncomingServer::GetNewMessages(nsIMsgFolder *aFolder, nsIMsgWindow *aMsgWi
   nsCOMPtr<nsIPop3Service> pop3Service = do_GetService(kCPop3ServiceCID, &rv);
   NS_ENSURE_SUCCESS(rv,rv);
 
-  return pop3Service->GetNewMail(aMsgWindow, aUrlListener, aFolder, this, nsnull);
+  nsCOMPtr <nsIMsgFolder> inbox;
+  rv = GetInbox(aMsgWindow, getter_AddRefs(inbox));
+  NS_ENSURE_SUCCESS(rv, rv);
+  return pop3Service->GetNewMail(aMsgWindow, aUrlListener, inbox, this, nsnull);
 }
 
 NS_IMETHODIMP

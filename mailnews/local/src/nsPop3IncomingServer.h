@@ -68,6 +68,10 @@ public:
     NS_IMETHOD GetCanFileMessagesOnServer(PRBool *aCanFileMessagesOnServer);
     NS_IMETHOD GetNewMessages(nsIMsgFolder *aFolder, nsIMsgWindow *aMsgWindow, 
                       nsIUrlListener *aUrlListener);
+
+protected:
+    nsresult GetInbox(nsIMsgWindow *msgWindow, nsIMsgFolder **inbox);
+
 private:    
     PRUint32 m_capabilityFlags;
     PRBool m_authenticated;
