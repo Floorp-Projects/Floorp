@@ -522,7 +522,7 @@ FontMatchesGenericType(font_family family, uint32 flags, const char* aGeneric,
 
   if (strstr(aGeneric, "fantasy") 
   // Let's use all possible fonts as decorative
-#ifdef 0
+#if 0
     && (strstr(family, "Baskerville") || 
         strstr(family, "Chicago") ||
         strstr(family, "Copprpl") ||
