@@ -22,8 +22,12 @@
 
 #include "nsIDOMRange.h"
 #include "nsIDOMNode.h"
+#include "nsIContent.h"
+#include "nsVoidArray.h"
 
+static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIRangeIID, NS_IDOMRANGE_IID);
+static NS_DEFINE_IID(kIContentIID, NS_ICONTENT_IID);
 
 class nsRange : public nsIDOMRange
 {
@@ -87,8 +91,17 @@ private:
   nsIDOMNode* mEndParent;
   PRInt32 mEndOffset;
 
-  PRBool IsIncreasing(nsIDOMNode* sParent, PRInt32 sOffset,
+  PRBool        IsIncreasing(nsIDOMNode* sParent, PRInt32 sOffset,
                        nsIDOMNode* eParent, PRInt32 eOffset);
+                       
+  PRBool        IsPointInRange(nsIDOMNode* pParent, PRInt32 pOffset);
+  
+  PRInt32       IndexOf(nsIDOMNode* aNode);
+  
+  PRInt32       FillArrayWithAncestors(nsVoidArray* aArray,nsIDOMNode* aNode);
+  
+  nsIDOMNode*   CommonParent(nsIDOMNode* aNode1, nsIDOMNode* aNode2);
+
 };
 
 nsresult
@@ -98,22 +111,10 @@ NS_NewRange(nsIDOMRange** aInstancePtrResult)
   return range->QueryInterface(kIRangeIID, (void**) aInstancePtrResult);
 }
 
-nsresult nsRange::QueryInterface(const nsIID& aIID,
-                                     void** aInstancePtrResult)
-{
-  NS_PRECONDITION(nsnull != aInstancePtrResult, "null pointer");
-  if (nsnull == aInstancePtrResult) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  if (aIID.Equals(kIRangeIID)) {
-    nsIDOMRange* tmp = this;
-    *aInstancePtrResult = (void*) tmp;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  return !NS_OK;
-}
-
+/******************************************************
+ * constructor/destructor
+ ******************************************************/
+ 
 nsRange::nsRange() {
   NS_INIT_REFCNT();
 
@@ -127,15 +128,206 @@ nsRange::nsRange() {
 nsRange::~nsRange() {
 } 
 
+/******************************************************
+ * XPCOM cruft
+ ******************************************************/
+ 
 NS_IMPL_ADDREF(nsRange)
 NS_IMPL_RELEASE(nsRange)
 
+nsresult nsRange::QueryInterface(const nsIID& aIID,
+                                     void** aInstancePtrResult)
+{
+  NS_PRECONDITION(nsnull != aInstancePtrResult, "null pointer");
+  if (nsnull == aInstancePtrResult) {
+    return NS_ERROR_NULL_POINTER;
+  }
+  if (aIID.Equals(kISupportsIID)) {
+    *aInstancePtrResult = (void*)(nsISupports*)this;
+    NS_ADDREF_THIS();
+    return NS_OK;
+  }
+  if (aIID.Equals(kIRangeIID)) {
+    *aInstancePtrResult = (void*)(nsIDOMRange*)this;
+    NS_ADDREF_THIS();
+    return NS_OK;
+  }
+  return !NS_OK;
+}
+
+
+/******************************************************
+ * Private helper routines
+ ******************************************************/
+ 
 PRBool nsRange::IsIncreasing(nsIDOMNode* sParent, PRInt32 sOffset,
                               nsIDOMNode* eParent, PRInt32 eOffset)
 {
   // XXX NEED IMPLEMENTATION!
   return PR_TRUE;
 }
+
+PRBool nsRange::IsPointInRange(nsIDOMNode* pParent, PRInt32 pOffset)
+{
+  // XXX NEED IMPLEMENTATION!
+  return PR_TRUE;
+}
+  
+PRInt32 nsRange::IndexOf(nsIDOMNode* aChildNode)
+{
+  nsIDOMNode *parentNode;
+  nsIContent *contentChild;
+  nsIContent *contentParent;
+  PRInt32    theIndex = NULL;
+  
+  // lots of error checking for now
+  if (!aChildNode)
+  {
+    NS_NOTREACHED("nsRange::IndexOf");
+    return 0;
+  }
+
+  // get the parent node
+  nsresult res = aChildNode->GetParentNode(&parentNode);
+  if (!NS_SUCCEEDED(res))
+  {
+    NS_NOTREACHED("nsRange::IndexOf");
+    return 0;
+  }
+  
+  // convert node and parent to nsIContent, so that we can find the child index
+  res = parentNode->QueryInterface(kIContentIID, (void**)&contentParent);
+  if (!NS_SUCCEEDED(res)) 
+  {
+    NS_NOTREACHED("nsRange::IndexOf");
+    return 0;
+  }
+  res = aChildNode->QueryInterface(kIContentIID, (void**)&contentChild);
+  if (!NS_SUCCEEDED(res)) 
+  {
+    NS_NOTREACHED("nsRange::IndexOf");
+    return 0;
+  }
+  
+  // finally we get the index
+  res = contentParent->IndexOf(contentChild,theIndex);  // why is theIndex passed by reference?  why hide that theIndex is changing?
+  if (!NS_SUCCEEDED(res)) 
+  {
+    NS_NOTREACHED("nsRange::IndexOf");
+    return 0;
+  }
+  return theIndex;
+}
+
+PRInt32 nsRange::FillArrayWithAncestors(nsVoidArray* aArray,nsIDOMNode* aNode)
+{
+  PRInt32    i=0;
+  nsresult   res;
+  nsIDOMNode *node = aNode;
+  
+  // callers responsibility to make sure args are non-null and proper type
+  
+  // insert node itself
+  aArray->InsertElementAt((void*)node,i);
+  
+  // insert all the ancestors
+  // not doing all the inserts at location 0, that would make for lots of memcopys in the voidArray::InsertElementAt implementation
+  while(1)
+  {
+    ++i;
+    res = node->GetParentNode(&node);
+  	// should be able to remove this error check later
+    if (!NS_SUCCEEDED(res))
+    {
+      NS_NOTREACHED("nsRange::FillArrayWithAncestors");
+      return -1;  // poor man's error code
+    }
+    if (!node) break;
+  }
+  
+  return i;
+}
+
+nsIDOMNode* nsRange::CommonParent(nsIDOMNode* aNode1, nsIDOMNode* aNode2)
+{
+  nsIDOMNode  *theParent = nsnull;
+  
+  // no null nodes please
+  if (!aNode1 || !aNode2)
+  {
+    NS_NOTREACHED("nsRange::CommonParent");
+    return nsnull;
+  }
+  
+  // shortcut for common case - both nodes are the same
+  if (aNode1 == aNode2)
+  {
+  	// should be able to remove this error check later
+    nsresult res = aNode1->GetParentNode(&theParent);
+    if (!NS_SUCCEEDED(res))
+    {
+      NS_NOTREACHED("nsRange::CommonParent");
+      goto errorLabel;
+    }
+    return theParent;
+  }
+
+  // otherwise traverse the tree for the common ancestor
+  // For now, a pretty dumb hack on computing this
+  nsVoidArray *array1 = new nsVoidArray();
+  nsVoidArray *array2 = new nsVoidArray();
+  PRInt32     i=0, j=0;
+  
+  // out of mem? out of luck!
+  if (!array1 || !array2)
+  {
+    NS_NOTREACHED("nsRange::CommonParent");
+      goto errorLabel;
+  }
+  
+  // get ancestors of each node
+  i = FillArrayWithAncestors(array1,aNode1);
+  j = FillArrayWithAncestors(array2,aNode2);
+  
+  // sanity test (for now) - FillArrayWithAncestors succeeded
+  if ((i==-1) || (j==-1))
+  {
+    NS_NOTREACHED("nsRange::CommonParent");
+      goto errorLabel;
+  }
+  
+  // sanity test (for now) - the end of each array
+  // should match and be the root
+  if (array1->ElementAt(i) != array2->ElementAt(j))
+  {
+    NS_NOTREACHED("nsRange::CommonParent");
+      goto errorLabel;
+  }
+  
+  // back through the ancestors, starting from the root, until
+  // first different ancestor found.  
+  while (array1->ElementAt(i) != array2->ElementAt(j))
+  {
+    --i;
+    --j;
+  }
+  // now back up one and that's the last common ancestor from the root,
+  // or the first common ancestor from the leaf perspective
+  i++;
+  theParent = (nsIDOMNode*)array1->ElementAt(i);
+  
+  return theParent;  
+  
+errorLabel:
+  delete array1;
+  delete array2;
+  return nsnull;
+}
+
+
+/******************************************************
+ * public functionality
+ ******************************************************/
 
 nsresult nsRange::GetIsPositioned(PRBool* aIsPositioned)
 {
@@ -252,7 +444,10 @@ nsresult nsRange::GetIsCollapsed(PRBool* aIsCollapsed)
 }
 
 nsresult nsRange::GetCommonParent(nsIDOMNode** aCommonParent)
-{ return NS_ERROR_NOT_IMPLEMENTED; }
+{ 
+  *aCommonParent = CommonParent(mStartParent,mEndParent);
+  return NS_OK;
+}
 
 nsresult nsRange::SetStart(nsIDOMNode* aParent, PRInt32 aOffset)
 {
