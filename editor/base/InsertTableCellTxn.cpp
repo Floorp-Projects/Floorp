@@ -63,9 +63,9 @@ NS_IMETHODIMP InsertTableCellTxn::Do(void)
   nsresult res = NS_ERROR_FAILURE;
 
   nsCOMPtr<nsIDOMSelection> selection;
-  res = mPresShell->GetSelection(getter_AddRefs(selection));
+  res = mPresShell->GetSelection(SELECTION_NORMAL, getter_AddRefs(selection));
   if (NS_SUCCEEDED(res)) {
-    res = selection->Collapse(mElement, mOffset+1 /*+mStringToInsert.Length()*/, SELECTION_NORMAL);
+    res = selection->Collapse(mElement, mOffset+1 /*+mStringToInsert.Length()*/);
   }
   return res;
 }
@@ -79,9 +79,9 @@ NS_IMETHODIMP InsertTableCellTxn::Undo(void)
   if (NS_SUCCEEDED(result))
   { // set the selection to the insertion point where the string was removed
     nsCOMPtr<nsIDOMSelection> selection;
-    result = mPresShell->GetSelection(getter_AddRefs(selection));
+    result = mPresShell->GetSelection(SELECTION_NORMAL, getter_AddRefs(selection));
     if (NS_SUCCEEDED(result)) {
-      result = selection->Collapse(mElement, mOffset, SELECTION_NORMAL);
+      result = selection->Collapse(mElement, mOffset);
     }
   }
 #endif

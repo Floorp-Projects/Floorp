@@ -123,6 +123,12 @@ public:
    */
   NS_IMETHOD GetMouseDownState(PRBool *aState)=0;
 
+  /** GetSelection
+   * no query interface for selection. must use this method now.
+   * @param aSelectionType enum value defined in nsIDOMSelection for the domseleciton you want.
+   */
+  NS_IMETHOD GetSelection(SelectionType aSelectionType, nsIDOMSelection **aDomSelection)=0;
+
 };
 
 

@@ -568,7 +568,7 @@ nsTextServicesDocument::FirstSelectedBlock(TSDBlockSelectionStatus *aSelStatus, 
   nsCOMPtr<nsIDOMSelection> selection;
   PRBool isCollapsed = PR_FALSE;
 
-  result = mPresShell->GetSelection(getter_AddRefs(selection));
+  result = mPresShell->GetSelection(SELECTION_NORMAL, getter_AddRefs(selection));
 
   if (NS_FAILED(result))
   {
@@ -576,7 +576,7 @@ nsTextServicesDocument::FirstSelectedBlock(TSDBlockSelectionStatus *aSelStatus, 
     return result;
   }
 
-  result = selection->GetIsCollapsed(SELECTION_NORMAL, &isCollapsed);
+  result = selection->GetIsCollapsed( &isCollapsed);
 
   if (NS_FAILED(result))
   {
@@ -597,7 +597,7 @@ nsTextServicesDocument::FirstSelectedBlock(TSDBlockSelectionStatus *aSelStatus, 
     // If the caret isn't in a text node, search backwards in
     // the document, till we find a text node.
 
-    result = selection->GetRangeAt(0, SELECTION_NORMAL, getter_AddRefs(range));
+    result = selection->GetRangeAt(0, getter_AddRefs(range));
 
     if (NS_FAILED(result))
     {
@@ -792,7 +792,7 @@ nsTextServicesDocument::FirstSelectedBlock(TSDBlockSelectionStatus *aSelStatus, 
   // beginning of it's text block, and make it the current
   // block.
 
-  result = selection->GetRangeCount(SELECTION_NORMAL, &rangeCount);
+  result = selection->GetRangeCount(&rangeCount);
 
   if (NS_FAILED(result))
   {
@@ -815,7 +815,7 @@ nsTextServicesDocument::FirstSelectedBlock(TSDBlockSelectionStatus *aSelStatus, 
   {
     // Get the i'th range from the selection.
 
-    result = selection->GetRangeAt(i, SELECTION_NORMAL, getter_AddRefs(range));
+    result = selection->GetRangeAt(i, getter_AddRefs(range));
 
     if (NS_FAILED(result))
     {
@@ -902,7 +902,7 @@ nsTextServicesDocument::FirstSelectedBlock(TSDBlockSelectionStatus *aSelStatus, 
   // to the beginning of the document, then iterate backwards through
   // it till you find a text node!
 
-  result = selection->GetRangeAt(0, SELECTION_NORMAL, getter_AddRefs(range));
+  result = selection->GetRangeAt(0, getter_AddRefs(range));
 
   if (NS_FAILED(result))
   {
@@ -1050,7 +1050,7 @@ nsTextServicesDocument::LastSelectedBlock(TSDBlockSelectionStatus *aSelStatus, P
   nsCOMPtr<nsIDOMSelection> selection;
   PRBool isCollapsed = PR_FALSE;
 
-  result = mPresShell->GetSelection(getter_AddRefs(selection));
+  result = mPresShell->GetSelection(SELECTION_NORMAL, getter_AddRefs(selection));
 
   if (NS_FAILED(result))
   {
@@ -1058,7 +1058,7 @@ nsTextServicesDocument::LastSelectedBlock(TSDBlockSelectionStatus *aSelStatus, P
     return result;
   }
 
-  result = selection->GetIsCollapsed(SELECTION_NORMAL, &isCollapsed);
+  result = selection->GetIsCollapsed(&isCollapsed);
 
   if (NS_FAILED(result))
   {
@@ -1079,7 +1079,7 @@ nsTextServicesDocument::LastSelectedBlock(TSDBlockSelectionStatus *aSelStatus, P
     // If the caret isn't in a text node, search forwards in
     // the document, till we find a text node.
 
-    result = selection->GetRangeAt(0, SELECTION_NORMAL, getter_AddRefs(range));
+    result = selection->GetRangeAt(0, getter_AddRefs(range));
 
     if (NS_FAILED(result))
     {
@@ -1273,7 +1273,7 @@ nsTextServicesDocument::LastSelectedBlock(TSDBlockSelectionStatus *aSelStatus, P
   // beginning of it's text block, and make it the current
   // block.
 
-  result = selection->GetRangeCount(SELECTION_NORMAL, &rangeCount);
+  result = selection->GetRangeCount(&rangeCount);
 
   if (NS_FAILED(result))
   {
@@ -1296,7 +1296,7 @@ nsTextServicesDocument::LastSelectedBlock(TSDBlockSelectionStatus *aSelStatus, P
   {
     // Get the i'th range from the selection.
 
-    result = selection->GetRangeAt(i, SELECTION_NORMAL, getter_AddRefs(range));
+    result = selection->GetRangeAt(i, getter_AddRefs(range));
 
     if (NS_FAILED(result))
     {
@@ -1383,7 +1383,7 @@ nsTextServicesDocument::LastSelectedBlock(TSDBlockSelectionStatus *aSelStatus, P
   // to the end of the document, then iterate forwards through
   // it till you find a text node!
 
-  result = selection->GetRangeAt(rangeCount - 1, SELECTION_NORMAL, getter_AddRefs(range));
+  result = selection->GetRangeAt(rangeCount - 1, getter_AddRefs(range));
 
   if (NS_FAILED(result))
   {
@@ -2072,7 +2072,7 @@ nsTextServicesDocument::InsertText(const nsString *aText)
 
       mSelStartIndex = mSelEndIndex = i;
           
-      result = mPresShell->GetSelection(getter_AddRefs(selection));
+      result = mPresShell->GetSelection(SELECTION_NORMAL, getter_AddRefs(selection));
 
       if (NS_FAILED(result))
       {
@@ -2081,7 +2081,7 @@ nsTextServicesDocument::InsertText(const nsString *aText)
         return result;
       }
 
-      result = selection->Collapse(itEntry->mNode, itEntry->mNodeOffset + itEntry->mLength, SELECTION_NORMAL);
+      result = selection->Collapse(itEntry->mNode, itEntry->mNodeOffset + itEntry->mLength);
         
       if (NS_FAILED(result))
       {
@@ -2946,12 +2946,12 @@ nsTextServicesDocument::SetSelectionInternal(PRInt32 aOffset, PRInt32 aLength, P
 
   if (aDoUpdate)
   {
-    result = mPresShell->GetSelection(getter_AddRefs(selection));
+    result = mPresShell->GetSelection(SELECTION_NORMAL, getter_AddRefs(selection));
 
     if (NS_FAILED(result))
       return result;
 
-    result = selection->Collapse(sNode, sOffset, SELECTION_NORMAL);
+    result = selection->Collapse(sNode, sOffset);
 
     if (NS_FAILED(result))
       return result;
@@ -3008,7 +3008,7 @@ nsTextServicesDocument::SetSelectionInternal(PRInt32 aOffset, PRInt32 aLength, P
 
   if (aDoUpdate && eNode)
   {
-    result = selection->Extend(eNode, eOffset, SELECTION_NORMAL);
+    result = selection->Extend(eNode, eOffset);
 
     if (NS_FAILED(result))
       return result;
@@ -3042,7 +3042,7 @@ nsTextServicesDocument::GetSelection(nsITextServicesDocument::TSDBlockSelectionS
   nsCOMPtr<nsIDOMSelection> selection;
   PRBool isCollapsed;
 
-  result = mPresShell->GetSelection(getter_AddRefs(selection));
+  result = mPresShell->GetSelection(SELECTION_NORMAL, getter_AddRefs(selection));
 
   if (NS_FAILED(result))
     return result;
@@ -3050,7 +3050,7 @@ nsTextServicesDocument::GetSelection(nsITextServicesDocument::TSDBlockSelectionS
   if (!selection)
     return NS_ERROR_FAILURE;
 
-  result = selection->GetIsCollapsed(SELECTION_NORMAL, &isCollapsed);
+  result = selection->GetIsCollapsed(&isCollapsed);
 
   if (NS_FAILED(result))
     return result;
@@ -3076,7 +3076,7 @@ nsTextServicesDocument::GetCollapsedSelection(nsITextServicesDocument::TSDBlockS
   nsresult result;
   nsCOMPtr<nsIDOMSelection> selection;
 
-  result = mPresShell->GetSelection(getter_AddRefs(selection));
+  result = mPresShell->GetSelection(SELECTION_NORMAL, getter_AddRefs(selection));
 
   if (NS_FAILED(result))
     return result;
@@ -3119,7 +3119,7 @@ nsTextServicesDocument::GetCollapsedSelection(nsITextServicesDocument::TSDBlockS
   eStartOffset = eStart->mNodeOffset;
   eEndOffset   = eEnd->mNodeOffset + eEnd->mLength;
 
-  result = selection->GetRangeAt(0, SELECTION_NORMAL, getter_AddRefs(range));
+  result = selection->GetRangeAt(0, getter_AddRefs(range));
 
   if (NS_FAILED(result))
     return result;
@@ -3401,7 +3401,7 @@ nsTextServicesDocument::GetUncollapsedSelection(nsITextServicesDocument::TSDBloc
   nsCOMPtr<nsIDOMRange> range;
   OffsetEntry *entry;
 
-  result = mPresShell->GetSelection(getter_AddRefs(selection));
+  result = mPresShell->GetSelection(SELECTION_NORMAL, getter_AddRefs(selection));
 
   if (NS_FAILED(result))
     return result;
@@ -3436,7 +3436,7 @@ nsTextServicesDocument::GetUncollapsedSelection(nsITextServicesDocument::TSDBloc
   eStartOffset = eStart->mNodeOffset;
   eEndOffset   = eEnd->mNodeOffset + eEnd->mLength;
 
-  result = selection->GetRangeCount(SELECTION_NORMAL, &rangeCount);
+  result = selection->GetRangeCount(&rangeCount);
 
   if (NS_FAILED(result))
     return result;
@@ -3446,7 +3446,7 @@ nsTextServicesDocument::GetUncollapsedSelection(nsITextServicesDocument::TSDBloc
 
   for (i = 0; i < rangeCount; i++)
   {
-    result = selection->GetRangeAt(i, SELECTION_NORMAL, getter_AddRefs(range));
+    result = selection->GetRangeAt(i, getter_AddRefs(range));
 
     if (NS_FAILED(result))
       return result;

@@ -47,6 +47,7 @@
 #include "nsIHTMLElementFactory.h"
 #include "nsIDocumentEncoder.h"
 #include "nsCOMPtr.h"
+#include "nsIFrameSelection.h"
 
 #include "nsCSSKeywords.h"  // to addref/release table
 #include "nsCSSProps.h"  // to addref/release table
@@ -68,7 +69,7 @@ static NS_DEFINE_IID(kHTMLImageElementCID, NS_HTMLIMAGEELEMENT_CID);
 static NS_DEFINE_IID(kHTMLOptionElementCID, NS_HTMLOPTIONELEMENT_CID);
 
 static NS_DEFINE_CID(kSelectionCID, NS_SELECTION_CID);
-static NS_DEFINE_IID(kRangeListCID, NS_RANGELIST_CID);
+static NS_DEFINE_IID(kFrameSelectionCID, NS_FRAMESELECTION_CID);
 static NS_DEFINE_IID(kRangeCID,     NS_RANGE_CID);
 static NS_DEFINE_IID(kContentIteratorCID, NS_CONTENTITERATOR_CID);
 static NS_DEFINE_IID(kSubtreeIteratorCID, NS_SUBTREEITERATOR_CID);
@@ -85,7 +86,7 @@ static NS_DEFINE_CID(kLayoutDebuggerCID, NS_LAYOUT_DEBUGGER_CID);
 static NS_DEFINE_CID(kHTMLElementFactoryCID, NS_HTML_ELEMENT_FACTORY_CID);
 static NS_DEFINE_CID(kTextEncoderCID, NS_TEXT_ENCODER_CID);
 
-extern nsresult NS_NewRangeList(nsIDOMSelection** aResult);
+extern nsresult NS_NewRangeList(nsIFrameSelection** aResult);
 extern nsresult NS_NewRange(nsIDOMRange** aResult);
 extern nsresult NS_NewContentIterator(nsIContentIterator** aResult);
 extern nsresult NS_NewContentSubtreeIterator(nsIContentIterator** aResult);
@@ -264,8 +265,8 @@ nsLayoutFactory::CreateInstance(nsISupports *aOuter,
     refCounted = PR_TRUE;
   }
 #endif
-  else if (mClassID.Equals(kRangeListCID)) {
-    res = NS_NewRangeList((nsIDOMSelection**)&inst);
+  else if (mClassID.Equals(kFrameSelectionCID)) {
+    res = NS_NewRangeList((nsIFrameSelection**)&inst);
     if (NS_FAILED(res)) {
       LOG_NEW_FAILURE("NS_NewRangeList", res);
       return res;
@@ -671,10 +672,10 @@ NSRegisterSelf(nsISupports* aServMgr , const char* aPath)
       LOG_REGISTER_FAILURE("kRangeCID", rv);
       break;
     }
-    rv = cm->RegisterComponent(kRangeListCID, NULL, NULL, aPath,
+    rv = cm->RegisterComponent(kFrameSelectionCID, NULL, NULL, aPath,
                                PR_TRUE, PR_TRUE);
     if (NS_FAILED(rv)) {
-      LOG_REGISTER_FAILURE("kRangeListCID", rv);
+      LOG_REGISTER_FAILURE("kFrameSelection", rv);
       break;
     }
     rv = cm->RegisterComponent(kContentIteratorCID, NULL, NULL, aPath,
@@ -780,7 +781,7 @@ NSUnregisterSelf(nsISupports* aServMgr, const char* aPath)
   rv = cm->UnregisterComponent(kTextNodeCID, aPath);
   rv = cm->UnregisterComponent(kSelectionCID, aPath);
   rv = cm->UnregisterComponent(kRangeCID, aPath);
-  rv = cm->UnregisterComponent(kRangeListCID, aPath);
+  rv = cm->UnregisterComponent(kFrameSelectionCID, aPath);
   rv = cm->UnregisterComponent(kContentIteratorCID, aPath);
   rv = cm->UnregisterComponent(kSubtreeIteratorCID, aPath);
   rv = cm->UnregisterComponent(kFrameUtilCID, aPath);

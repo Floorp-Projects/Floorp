@@ -216,7 +216,7 @@ FrameHashTable::Dump(FILE* fp)
 
 // Class IID's
 static NS_DEFINE_IID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
-static NS_DEFINE_IID(kRangeListCID, NS_RANGELIST_CID);
+static NS_DEFINE_IID(kFrameSelectionCID, NS_FRAMESELECTION_CID);
 static NS_DEFINE_IID(kCRangeCID, NS_RANGE_CID);
 
 // IID's
@@ -267,7 +267,9 @@ public:
   NS_IMETHOD GetActiveAlternateStyleSheet(nsString& aSheetTitle);
   NS_IMETHOD SelectAlternateStyleSheet(const nsString& aSheetTitle);
   NS_IMETHOD ListAlternateStyleSheets(nsStringArray& aTitleList);
-  NS_IMETHOD GetSelection(nsIDOMSelection** aSelection);
+  NS_IMETHOD GetSelection(SelectionType aType, nsIDOMSelection** aSelection);
+  NS_IMETHOD GetFrameSelection(nsIFrameSelection** aSelection);
+
   NS_IMETHOD EnterReflowLock();
   NS_IMETHOD ExitReflowLock();
   NS_IMETHOD BeginObservingDocument();
@@ -649,18 +651,15 @@ PresShell::Init(nsIDocument* aDocument,
 
   mStyleSet = dont_QueryInterface(aStyleSet);
 
-  nsCOMPtr<nsIDOMSelection>domselection;
-  nsresult result = nsComponentManager::CreateInstance(kRangeListCID, nsnull,
-                                                 kIDOMSelectionIID,
-                                                 getter_AddRefs(domselection));
+  nsresult result = nsComponentManager::CreateInstance(kFrameSelectionCID, nsnull,
+                                                 nsIFrameSelection::GetIID(),
+                                                 getter_AddRefs(mSelection));
   if (!NS_SUCCEEDED(result))
     return result;
 
-  result = domselection->QueryInterface(kIFrameSelectionIID,
-                                       getter_AddRefs(mSelection));
-  if (!NS_SUCCEEDED(result))
-    return result;
-  domselection->AddSelectionListener(this);//possible circular reference
+  nsCOMPtr<nsIDOMSelection> domSelection;
+  mSelection->GetSelection(SELECTION_NORMAL, getter_AddRefs(domSelection));
+  domSelection->AddSelectionListener(this);//possible circular reference
   
   result = mSelection->Init((nsIFocusTracker *) this);
   if (!NS_SUCCEEDED(result))
@@ -876,13 +875,22 @@ PresShell::ListAlternateStyleSheets(nsStringArray& aTitleList)
 }
 
 NS_IMETHODIMP
-PresShell::GetSelection(nsIDOMSelection **aSelection)
+PresShell::GetSelection(SelectionType aType, nsIDOMSelection **aSelection)
 {
   if (!aSelection || !mSelection)
     return NS_ERROR_NULL_POINTER;
-  return mSelection->QueryInterface(kIDOMSelectionIID,(void **)aSelection);
+  return mSelection->GetSelection(aType, aSelection);
 }
 
+NS_IMETHODIMP
+PresShell::GetFrameSelection(nsIFrameSelection** aSelection)
+{
+  if (!aSelection || !mSelection)
+    return NS_ERROR_NULL_POINTER;
+  *aSelection = mSelection;
+  (*aSelection)->AddRef();
+  return NS_OK;
+}
 
 
 // Make shell be a document observer
@@ -1702,7 +1710,7 @@ PresShell::DoCopy()
     nsString buffer;
     
     nsIDOMSelection* sel = nsnull;
-    GetSelection(&sel);
+    GetSelection(SELECTION_NORMAL, &sel);
       
     if (sel != nsnull)
       doc->CreateXIF(buffer,sel);

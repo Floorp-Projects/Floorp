@@ -952,12 +952,12 @@ nsJSEditorLog::PrintSelection()
   if (NS_FAILED(result))
     return result;
 
-  result = presShell->GetSelection(getter_AddRefs(selection));
+  result = presShell->GetSelection(SELECTION_NORMAL, getter_AddRefs(selection));
 
   if (NS_FAILED(result))
     return result;
 
-  result = selection->GetRangeCount(SELECTION_NORMAL, &rangeCount);
+  result = selection->GetRangeCount(&rangeCount);
 
   if (NS_FAILED(result))
     return result;
@@ -972,7 +972,7 @@ nsJSEditorLog::PrintSelection()
 
   for (i = 0; i < rangeCount; i++)
   {
-    result = selection->GetRangeAt(i, SELECTION_NORMAL, getter_AddRefs(range));
+    result = selection->GetRangeAt(i, getter_AddRefs(range));
 
     if (NS_FAILED(result))
       return result;

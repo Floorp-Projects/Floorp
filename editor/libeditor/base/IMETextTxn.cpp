@@ -73,7 +73,7 @@ NS_IMETHODIMP IMETextTxn::Do(void)
 
 	// advance caret: This requires the presentation shell to get the selection.
 	nsCOMPtr<nsIDOMSelection> selection;
-	nsresult result = mPresShell->GetSelection(getter_AddRefs(selection));
+	nsresult result = mPresShell->GetSelection(SELECTION_NORMAL, getter_AddRefs(selection));
 	NS_ASSERTION(selection,"Could not get selection in IMEtextTxn::Do\n");
 	if (NS_SUCCEEDED(result) && selection) {
 		if (mReplaceLength==0) {
@@ -101,9 +101,9 @@ NS_IMETHODIMP IMETextTxn::Undo(void)
   if (NS_SUCCEEDED(result))
   { // set the selection to the insertion point where the string was removed
     nsCOMPtr<nsIDOMSelection> selection;
-    result = mPresShell->GetSelection(getter_AddRefs(selection));
+    result = mPresShell->GetSelection(SELECTION_NORMAL, getter_AddRefs(selection));
     if (NS_SUCCEEDED(result) && selection) {
-      result = selection->Collapse(mElement, mOffset, SELECTION_NORMAL);
+      result = selection->Collapse(mElement, mOffset);
       NS_ASSERTION((NS_SUCCEEDED(result)), "selection could not be collapsed after undo of IME insert.");
     }
   }
@@ -277,16 +277,16 @@ NS_IMETHODIMP IMETextTxn::CollapseTextSelection(void)
 		}
 
 		nsCOMPtr<nsIDOMSelection> selection;
-		result = mPresShell->GetSelection(getter_AddRefs(selection));
+		result = mPresShell->GetSelection(SELECTION_NORMAL, getter_AddRefs(selection));
 		if (NS_SUCCEEDED(result) && selection){
 			if (haveSelectedRange) {
-				result = selection->Collapse(mElement,mOffset+selectionStart, SELECTION_NORMAL);
-				result = selection->Extend(mElement,mOffset+selectionEnd, SELECTION_NORMAL);
+				result = selection->Collapse(mElement,mOffset+selectionStart);
+				result = selection->Extend(mElement,mOffset+selectionEnd);
 			} else {
 				if (haveCaretPosition)
-					result = selection->Collapse(mElement,mOffset+caretPosition, SELECTION_NORMAL);
+					result = selection->Collapse(mElement,mOffset+caretPosition);
 				else
-					result = selection->Collapse(mElement,mOffset+mStringToInsert.Length(), SELECTION_NORMAL);
+					result = selection->Collapse(mElement,mOffset+mStringToInsert.Length());
 			}
 		}
 
@@ -296,9 +296,9 @@ NS_IMETHODIMP IMETextTxn::CollapseTextSelection(void)
 NS_IMETHODIMP IMETextTxn::CollapseTextSelectionOnCommit(void)
 {
 	nsCOMPtr<nsIDOMSelection> selection;
-	nsresult result = mPresShell->GetSelection(getter_AddRefs(selection));
+	nsresult result = mPresShell->GetSelection(SELECTION_NORMAL, getter_AddRefs(selection));
 	if (NS_SUCCEEDED(result) && selection){
-			result = selection->Collapse(mElement,mOffset+mStringToInsert.Length(), SELECTION_NORMAL);
+			result = selection->Collapse(mElement,mOffset+mStringToInsert.Length());
 	}
 
 	return result;

@@ -98,7 +98,7 @@ NS_IMETHODIMP InsertElementTxn::Do(void)
     result = mEditor->GetSelection(getter_AddRefs(selection));
     if ((NS_SUCCEEDED(result)) && selection)
     { // place the selection just after the inserted element
-      selection->Collapse(mParent, mOffset+1, SELECTION_NORMAL);
+      selection->Collapse(mParent, mOffset+1);
       //selection->Extend(mParent, mOffset+1);
     }    
   }
