@@ -24,6 +24,7 @@
 #define nsImageBeOS_h___
 
 #include "nsIImage.h"
+#include "nsPoint.h"
 
 #include <Bitmap.h>
 
