@@ -461,9 +461,9 @@ public:
    * all of the visible, non-disabled radio buttons in the group are 
    * in the tab order. On the other hand, all of the visible, non-disabled 
    * radio buttons are always focusable via clicking or script.
-   * Also, depending on the pref accessibility.tabfocus some widgets may be 
-   * focusable but removed from the tab order. This is the default on
-   * Mac OS X, where fewer items are focusable.
+   * Also, depending on either the accessibility.tabfocus pref or
+   * a system setting (nowadays: Full keyboard access, mac only)
+   * some widgets may be focusable but removed from the tab order.
    * @param  [inout, optional] aTabIndex the computed tab index
    *         In: default tabindex for element (-1 nonfocusable, == 0 focusable)
    *         Out: computed tabindex

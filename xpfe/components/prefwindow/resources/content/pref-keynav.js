@@ -20,6 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s): Aaron Leventhal
+ *                 Asaf Romano
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -40,23 +41,23 @@ const kTabToForms = 2;
 parent.hPrefWindow.registerOKCallbackFunc(saveKeyNavPrefs);
 var gData;
 
-function initPrefs()
+function Startup()
 {
   gData = parent.hPrefWindow.wsm.dataManager.pageData["chrome://communicator/content/pref/pref-keynav.xul"];
 
-  if (!("tabNavPref" in gData)) {
-    // Textboxes are always part of the tab order
-    gData.tabNavPref = parent.hPrefWindow.getPref('int', 'accessibility.tabfocus') | 1;
-    gData.linksOnlyPref = parent.hPrefWindow.getPref('bool', 'accessibility.typeaheadfind.linksonly')? 1: 0;
+  if (!/Mac/.test(navigator.platform)) {
+    if (!("tabNavPref" in gData)) {
+      // Textboxes are always part of the tab order
+      gData.tabNavPref = parent.hPrefWindow.getPref('int', 'accessibility.tabfocus') | 1;
+    }
+    document.getElementById('tabNavigationLinks').setChecked((gData.tabNavPref & kTabToLinks) != 0);
+    document.getElementById('tabNavigationForms').setChecked((gData.tabNavPref & kTabToForms) != 0);
   }
+  else
+    document.getElementById('tabNavigationPrefs').setAttribute("hidden", true);
 
-  document.getElementById('tabNavigationLinks').setChecked((gData.tabNavPref & kTabToLinks) != 0);
-  document.getElementById('tabNavigationForms').setChecked((gData.tabNavPref & kTabToForms) != 0);
-
-  // XXX todo: On the mac, only the links checkbox should be exposed.
-  //           Whether the other form controls are tabbable is a system setting
-  //           that we should adhere to.
-
+  if (!("linksOnlyPref" in gData))
+    gData.linksOnlyPref = parent.hPrefWindow.getPref('bool', 'accessibility.typeaheadfind.linksonly')? 1: 0;
 
   var radioGroup = document.getElementById('findAsYouTypeAutoWhat');
   radioGroup.selectedIndex = gData.linksOnlyPref;
@@ -75,6 +76,7 @@ function setLinksOnlyDisabled()
 function saveKeyNavPrefs()
 {
   var data = parent.hPrefWindow.wsm.dataManager.pageData["chrome://communicator/content/pref/pref-keynav.xul"];
-  parent.hPrefWindow.setPref("int", "accessibility.tabfocus", data.tabNavPref);
+  if (!/Mac/.test(navigator.platform))
+    parent.hPrefWindow.setPref("int", "accessibility.tabfocus", data.tabNavPref);
   parent.hPrefWindow.setPref("bool", "accessibility.typeaheadfind.linksonly", data.linksOnlyPref == 1);
 }

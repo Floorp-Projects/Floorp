@@ -99,10 +99,16 @@ pref("browser.chrome.toolbar_style",        2);
 
 pref("accessibility.browsewithcaret", false);
 pref("accessibility.warn_on_browsewithcaret", true);
+
+#ifndef XP_MACOSX
 // Tab focus model bit field:
 // 1 focuses text controls, 2 focuses other form elements, 4 adds links.
 // Most users will want 1, 3, or 7.
+// On OS X, we use Full Keyboard Access system preference,
+// unless accessibility.tabfocus is set by the user.
 pref("accessibility.tabfocus", 7);
+#endif
+
 pref("accessibility.usetexttospeech", "");
 pref("accessibility.usebrailledisplay", "");
 pref("accessibility.accesskeycausesactivation", true);
@@ -1223,10 +1229,6 @@ pref("font.size.variable.zh-HK", 15);
 pref("font.size.fixed.zh-HK", 16);
 
 pref("browser.urlbar.clickAtEndSelects", false);
-
-// Tab focus model bit field:
-// 1 focuses text controls, 2 focuses other form elements, 4 adds links.
-pref("accessibility.tabfocus", 1);
 
 pref("accessibility.typeaheadfind.soundURL", "beep");
 
