@@ -27,7 +27,7 @@
     <html:table width="100%">
     <html:tr>
       <html:td>&name.label;</html:td>
-      <html:td align="right"><html:input value="arg" name="identity.fullName" type="text" size="30"/></html:td>
+      <html:td align="right"><html:input name="identity.fullName" type="text" size="30"/></html:td>
     </html:tr>
     <html:tr>
       <html:td>&email.label;</html:td>
