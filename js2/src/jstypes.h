@@ -134,6 +134,7 @@ namespace JSTypes {
         bool& operator=(bool boolean)                   { return (tag = boolean_tag, this->boolean = boolean); }
         JSType*& operator=(JSType* type)                { return (tag = type_tag, this->type = type); }
         
+        bool isPrimitive() const                        { return (tag == i32_tag) || (tag == u32_tag) || (tag == f64_tag) || (tag == boolean_tag) || (tag == string_tag); }
         bool isFunction() const                         { return (tag == function_tag); }
         bool isArray() const                            { return (tag == array_tag); }
         bool isObject() const                           { return ((tag == object_tag) || (tag == function_tag) || (tag == array_tag) || (tag == type_tag)); }
@@ -155,23 +156,23 @@ namespace JSTypes {
         bool isPositiveZero() const;
         bool isType() const                             { return (tag == type_tag); }
 
-        JSValue toString() const                        { return (isString() ? *this : valueToString(*this)); }
+        JSValue toString(Context *cx) const             { return (isString() ? *this : valueToString(cx, *this)); }
         JSValue toNumber() const                        { return (isNumber() ? *this : valueToNumber(*this)); }
         JSValue toInt32() const                         { return ((tag == i32_tag) ? *this : valueToInt32(*this)); }
         JSValue toUInt32() const                        { return ((tag == u32_tag) ? *this : valueToUInt32(*this)); }
-        JSValue toBoolean() const                       { return ((tag == boolean_tag) ? *this : valueToBoolean(*this)); }
+        JSValue toBoolean(Context *cx) const            { return ((tag == boolean_tag) ? *this : valueToBoolean(cx, *this)); }
 
-        JSValue toPrimitive(ECMA_type hint = NoHint) const;
+        JSValue toPrimitive(Context *cx, ECMA_type hint = NoHint) const;
 
-        JSValue convert(JSType *toType);
+        JSValue convert(Context *cx, JSType *toType);
 
         
-        static JSValue valueToString(const JSValue& value);
+        static JSValue valueToString(Context *cx, const JSValue& value);
         static JSValue valueToNumber(const JSValue& value);
         static JSValue valueToInteger(const JSValue& value);
         static JSValue valueToInt32(const JSValue& value);
         static JSValue valueToUInt32(const JSValue& value);
-        static JSValue valueToBoolean(const JSValue& value);
+        static JSValue valueToBoolean(Context *cx, const JSValue& value);
 
 
         const JSType *getType() const;                  // map from tag type to JS2 type
@@ -556,7 +557,8 @@ namespace JSTypes {
         }
         virtual ~JSFunction();
 
-        virtual JSValue getThis()  { return kNullValue; }
+        virtual JSValue getThis()       { return kNullValue; }
+        virtual JSFunction *getFunky()  { return this; }
     
         void* operator new(size_t) { return allocator::allocate(1); }
 
@@ -568,10 +570,14 @@ namespace JSTypes {
    	    typedef JavaScript::gc_traits_finalizable<JSBoundThis> traits;
 	    typedef gc_allocator<JSBoundThis, traits> allocator;
     public:
-        JSBoundThis(JSValue aThis, JSFunction *aFunc) : JSFunction(*aFunc) { mBoundThis  = aThis; }
+        JSBoundThis(JSValue aThis, JSFunction *aFunc) : mBoundThis(aThis), mFunction(aFunc) { }
         JSValue mBoundThis;
-        virtual ~JSBoundThis()     { mICode = NULL; }
-        virtual JSValue getThis()  { return mBoundThis; }
+        JSFunction *mFunction;
+
+        virtual ~JSBoundThis()              { mICode = NULL; }
+        virtual JSValue getThis()           { return mBoundThis; }
+        virtual JSFunction *getFunky()      { return mFunction; }  
+
         void* operator new(size_t) { return allocator::allocate(1); }
     };
 
@@ -590,7 +596,7 @@ namespace JSTypes {
    	    typedef JavaScript::gc_traits_finalizable<JSUnaryOperator> traits;
 	    typedef gc_allocator<JSUnaryOperator, traits> allocator;
     public:
-        typedef JSValue (*JSUnaryCode)(const JSValue& arg1);
+        typedef JSValue (*JSUnaryCode)(Context *cx, const JSValue& arg1);
         JSUnaryCode mCode;
         JSUnaryOperator(JSUnaryCode code) : mCode(code) {}
         virtual bool isNative()    { return true; }
@@ -601,7 +607,7 @@ namespace JSTypes {
    	    typedef JavaScript::gc_traits_finalizable<JSBinaryOperator> traits;
 	    typedef gc_allocator<JSBinaryOperator, traits> allocator;
     public:
-        typedef JSValue (*JSBinaryCode)(const JSValue& arg1, const JSValue& arg2);
+        typedef JSValue (*JSBinaryCode)(Context *cx, const JSValue& arg1, const JSValue& arg2);
         JSBinaryCode mCode;
         JSBinaryOperator(JSBinaryCode code) : mCode(code) {}
         virtual bool isNative()    { return true; }

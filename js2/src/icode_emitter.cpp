@@ -97,7 +97,8 @@ static bool hasAttribute(const IdentifierList* identifiers, StringAtom &name)
 
 /************************************************************************/
 
-
+// Returns whether the tree at p will have inherently produced a
+// boolean result. If it didn't we need to emit a 'Test' instruction.
 static bool generatedBoolean(ExprNode *p)
 {
     switch (p->getKind()) {
@@ -272,14 +273,15 @@ Reference ICodeGenerator::genReference(ExprNode *p)
     case ExprNode::dot:
         {
             BinaryExprNode *b = static_cast<BinaryExprNode *>(p);
+            TypedRegister lhs = genExpr(b->op1);    // generate code for leftside of dot
             if (b->op2->getKind() != ExprNode::identifier) {
                 Reference result(mContext->getWorld().identifiers["irritating damn stringatom concept"]);
                 result.mKind = Field;
+                result.mBase = lhs;
                 result.mField = genExpr(b->op2);
             }
             else {
                 // we have <lhs>.<fieldname>
-                TypedRegister lhs = genExpr(b->op1);    // generate code for leftside of dot
                 const StringAtom &fieldName = static_cast<IdentifierExprNode *>(b->op2)->name;
                 Reference result(fieldName);
 

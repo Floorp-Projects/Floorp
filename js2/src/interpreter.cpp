@@ -137,9 +137,12 @@ JSValue Context::readEvalFile(FILE* in, const String& fileName)
         // list of zero or more statements
         ICodeModule* icm = genCode(parsedStatements, fileName);
         if (icm) {
+/*
             Context cx(getWorld(), getGlobalObject());
             for (ListenerIterator i = mListeners.begin(), e = mListeners.end(); i != e; ++i)
                 cx.addListener(*i);
+*/
+            Context cx(this);
             result = cx.interpret(icm, emptyArgs);
             delete icm;
         }
@@ -204,114 +207,125 @@ struct Linkage : public Context::Frame, public gc_base {
     }
 };
 
-static JSValue shiftLeft_Default(const JSValue& r1, const JSValue& r2)
+static JSValue shiftLeft_Default(Context *cx, const JSValue& r1, const JSValue& r2)
 {
     JSValue num1(r1.toInt32());
     JSValue num2(r2.toUInt32());
     return JSValue(num1.i32 << (num2.u32 & 0x1F));
 }
-static JSValue shiftRight_Default(const JSValue& r1, const JSValue& r2)
+static JSValue shiftRight_Default(Context *cx, const JSValue& r1, const JSValue& r2)
 {
     JSValue num1(r1.toInt32());
     JSValue num2(r2.toUInt32());
     return JSValue(num1.i32 >> (num2.u32 & 0x1F));
 }
-static JSValue UshiftRight_Default(const JSValue& r1, const JSValue& r2)
+static JSValue UshiftRight_Default(Context *cx, const JSValue& r1, const JSValue& r2)
 {
     JSValue num1(r1.toUInt32());
     JSValue num2(r2.toUInt32());
     return JSValue(num1.u32 >> (num2.u32 & 0x1F));
 }
-static JSValue and_Default(const JSValue& r1, const JSValue& r2)
+static JSValue and_Default(Context *cx, const JSValue& r1, const JSValue& r2)
 {
     JSValue num1(r1.toInt32());
     JSValue num2(r2.toInt32());
     return JSValue(num1.i32 & num2.i32);
 }
-static JSValue or_Default(const JSValue& r1, const JSValue& r2)
+static JSValue or_Default(Context *cx, const JSValue& r1, const JSValue& r2)
 {
     JSValue num1(r1.toInt32());
     JSValue num2(r2.toInt32());
     return JSValue(num1.i32 | num2.i32);
 }
-static JSValue xor_Default(const JSValue& r1, const JSValue& r2)
+static JSValue xor_Default(Context *cx, const JSValue& r1, const JSValue& r2)
 {
     JSValue num1(r1.toInt32());
     JSValue num2(r2.toInt32());
     return JSValue(num1.i32 ^ num2.i32);
 }
-static JSValue add_Default(const JSValue& r1, const JSValue& r2)
+static JSValue add_Default(Context *cx, const JSValue& r1, const JSValue& r2)
 {
-    //
-    // could also handle these as separate entries in the override table for add
-    // by specifying add(String, Any), add(Any, String), add(String, String)
-    //
-    if (r1.isString() || r2.isString()) {
-        JSString& str1 = *r1.toString().string;
-        JSString& str2 = *r2.toString().string;
-        return JSValue(new JSString(str1 + str2));
+    if (r1.isNumber() && r2.isNumber())
+        return JSValue(r1.toNumber().f64 + r2.toNumber().f64);
+
+    if (r1.isString()) {
+        if (r2.isString())
+            return JSValue(new JSString(*r1.string + *r2.string));
+        else
+            return JSValue(new JSString(*r1.string + *r2.toString(cx).string));
     }
     else {
-        JSValue num1(r1.toNumber());
-        JSValue num2(r2.toNumber());
-        return JSValue(num1.f64 + num2.f64);
+        if (r2.isString()) 
+            return JSValue(new JSString(*r1.toString(cx).string + *r2.string));
+        else {
+            JSValue r1p = r1.toPrimitive(cx);
+            JSValue r2p = r2.toPrimitive(cx);
+            if (r1p.isString() || r2p.isString()) {
+                return add_Default(cx, r1p, r2p);
+            }
+            else {
+                JSValue num1(r1.toNumber());
+                JSValue num2(r2.toNumber());
+                return JSValue(num1.f64 + num2.f64);
+            }
+        }
     }
 }
 
-static JSValue subtract_Default(const JSValue& r1, const JSValue& r2)
+static JSValue subtract_Default(Context *cx, const JSValue& r1, const JSValue& r2)
 {
     JSValue num1(r1.toNumber());
     JSValue num2(r2.toNumber());
     return JSValue(num1.f64 - num2.f64);
 }
-static JSValue multiply_Default(const JSValue& r1, const JSValue& r2)
+static JSValue multiply_Default(Context *cx, const JSValue& r1, const JSValue& r2)
 {
     JSValue num1(r1.toNumber());
     JSValue num2(r2.toNumber());
     return JSValue(num1.f64 * num2.f64);
 }
-static JSValue divide_Default(const JSValue& r1, const JSValue& r2)
+static JSValue divide_Default(Context *cx, const JSValue& r1, const JSValue& r2)
 {
     JSValue num1(r1.toNumber());
     JSValue num2(r2.toNumber());
     return JSValue(num1.f64 / num2.f64);
 }
-static JSValue remainder_Default(const JSValue& r1, const JSValue& r2)
+static JSValue remainder_Default(Context *cx, const JSValue& r1, const JSValue& r2)
 {
     JSValue num1(r1.toNumber());
     JSValue num2(r2.toNumber());
     return JSValue(fmod(num1.f64, num2.f64));
 }
-static JSValue predecrement_Default(const JSValue& r)
+static JSValue predecrement_Default(Context *cx, const JSValue& r)
 {
     JSValue num(r.toNumber());
     return JSValue(num.f64 - 1.0);
 }
-static JSValue preincrement_Default(const JSValue& r)
+static JSValue preincrement_Default(Context *cx, const JSValue& r)
 {
     JSValue num(r.toNumber());
     return JSValue(num.f64 + 1.0);
 }
-static JSValue plus_Default(const JSValue& r)
+static JSValue plus_Default(Context *cx, const JSValue& r)
 {
     return JSValue(r.toNumber());
 }
-static JSValue minus_Default(const JSValue& r)
+static JSValue minus_Default(Context *cx, const JSValue& r)
 {
     JSValue num(r.toNumber());
     return JSValue(-num.f64);
 }
-static JSValue complement_Default(const JSValue& r)
+static JSValue complement_Default(Context *cx, const JSValue& r)
 {
     JSValue num(r.toInt32());
     return JSValue(~num.i32);
 }
 
 
-static JSValue less_Default(const JSValue& r1, const JSValue& r2)
+static JSValue less_Default(Context *cx, const JSValue& r1, const JSValue& r2)
 {
-    JSValue lv = r1.toPrimitive(JSValue::Number);
-    JSValue rv = r2.toPrimitive(JSValue::Number);
+    JSValue lv = r1.toPrimitive(cx, JSValue::Number);
+    JSValue rv = r2.toPrimitive(cx, JSValue::Number);
     if (lv.isString() && rv.isString()) {
         return JSValue(bool(lv.string->compare(*rv.string) < 0));
     }
@@ -324,10 +338,10 @@ static JSValue less_Default(const JSValue& r1, const JSValue& r2)
             return JSValue(lv.f64 < rv.f64);
     }
 }
-static JSValue lessOrEqual_Default(const JSValue& r1, const JSValue& r2)
+static JSValue lessOrEqual_Default(Context *cx, const JSValue& r1, const JSValue& r2)
 {
-    JSValue lv = r1.toPrimitive(JSValue::Number);
-    JSValue rv = r2.toPrimitive(JSValue::Number);
+    JSValue lv = r1.toPrimitive(cx, JSValue::Number);
+    JSValue rv = r2.toPrimitive(cx, JSValue::Number);
     if (lv.isString() && rv.isString()) {
         return JSValue(bool(lv.string->compare(*rv.string) <= 0));
     }
@@ -340,7 +354,7 @@ static JSValue lessOrEqual_Default(const JSValue& r1, const JSValue& r2)
             return JSValue(lv.f64 <= rv.f64);
     }
 }
-static JSValue equal_Default(const JSValue& r1, const JSValue& r2)
+static JSValue equal_Default(Context *cx, const JSValue& r1, const JSValue& r2)
 {
     if (r1.isSameType(r2)) {
         if (r1.isUndefined()) return kTrueValue;
@@ -364,21 +378,21 @@ static JSValue equal_Default(const JSValue& r1, const JSValue& r2)
         if (r1.isNull() && r2.isUndefined()) return kTrueValue;
         if (r2.isNull() && r1.isUndefined()) return kTrueValue;
         if (r1.isNumber() && r2.isString())
-            return equal_Default(r1, r2.toNumber());
+            return equal_Default(cx, r1, r2.toNumber());
         if (r2.isNumber() && r1.isString())
-            return equal_Default(r1.toNumber(), r2);
+            return equal_Default(cx, r1.toNumber(), r2);
         if (r1.isBoolean())
-            return equal_Default(r1.toNumber(), r2);
+            return equal_Default(cx, r1.toNumber(), r2);
         if (r2.isBoolean())
-            return equal_Default(r1, r2.toNumber());
+            return equal_Default(cx, r1, r2.toNumber());
         if ((r1.isString() || r1.isNumber()) && r2.isObject())
-            return equal_Default(r1, r2.toPrimitive());
+            return equal_Default(cx, r1, r2.toPrimitive(cx));
         if ((r2.isString() || r2.isNumber()) && r1.isObject())
-            return equal_Default(r1.toPrimitive(), r2);
+            return equal_Default(cx, r1.toPrimitive(cx), r2);
     }
     return kFalseValue;
 }
-static JSValue identical_Default(const JSValue& r1, const JSValue& r2)
+static JSValue identical_Default(Context *cx, const JSValue& r1, const JSValue& r2)
 {
     if (r1.getType() != r2.getType())
         return kFalseValue;
@@ -549,8 +563,9 @@ bool Context::hasNamedArguments(ArgumentList &args)
 }
 
 // XXX Huge time sink here !!!
-bool Context::invokeFunction(JSFunction *target, JSValues* &registers, TypedRegister resultReg, JSValue thisArg, ArgumentList *args)
+bool Context::invokeFunction(JSFunction *targetF, JSValues* &registers, TypedRegister resultReg, JSValue thisArg, ArgumentList *args)
 {
+    JSFunction *target = targetF->getFunky();
     if (target->isNative()) {
         JSValues argv(args->size() + 1);
         argv[0] = thisArg;
@@ -709,7 +724,7 @@ JSValue Context::interpret(ICodeModule* iCode, const JSValues& args)
                     Cast* c = static_cast<Cast*>(instruction);
                     JSValue toTypeValue = (*registers)[op3(c).first];
                     ASSERT(toTypeValue.isType());
-                    (*registers)[dst(c).first] = (*registers)[src1(c).first].convert(toTypeValue.type);
+                    (*registers)[dst(c).first] = (*registers)[src1(c).first].convert(this, toTypeValue.type);
                 }
                 break;
             case LOAD_TYPE:
@@ -807,7 +822,8 @@ JSValue Context::interpret(ICodeModule* iCode, const JSValues& args)
                     BindThis* bt = static_cast<BindThis*>(instruction);
                     JSValue base = (*registers)[src1(bt).first];
                     JSValue target = (*registers)[src2(bt).first];
-                    ASSERT(target.isFunction());        // XXX runtime error
+                    if (!target.isFunction())
+                        throw new JSException("Binding to non function");
                     (*registers)[dst(bt).first] = new JSBoundThis(base, target.function);
                 }
                 break;
@@ -828,6 +844,7 @@ JSValue Context::interpret(ICodeModule* iCode, const JSValues& args)
                                 endPC = mICode->its_iCode->end();
                                 continue;
                             }
+                            break;
                         }
                     }
                     if (v.isFunction())
@@ -892,36 +909,7 @@ JSValue Context::interpret(ICodeModule* iCode, const JSValues& args)
                     (*registers)[dst(gc).first] = cl->getActivation();
                 }
                 break;
-/*
-            case DIRECT_CALL:
-                {
-                    DirectCall* call = static_cast<DirectCall*>(instruction);
-                    JSFunction *target = op2(call);
-                    if (target->isNative()) {
-                        ArgumentList *params = op3(call);
-                        JSValues argv(params->size() + 1);
-                        JSValues::size_type i = 1;
-                        for (ArgumentList::const_iterator src = params->begin(), end = params->end();
-                                        src != end; ++src, ++i) {
-                            argv[i] = (*registers)[src->first.first];
-                        }
-                        JSValue result = static_cast<JSNativeFunction*>(target)->mCode(this, argv);
-                        if (op1(call).first != NotARegister)
-                            (*registers)[op1(call).first] = result;
-                        break;
-                    }
-                    else {
-                        mLinkage = new Linkage(mLinkage, ++mPC,
-                                               mActivation, mGlobal, op1(call), mICode, mCurrentClosure);
-                        mICode = target->getICode();
-                        mActivation = new Activation(mICode->itsMaxRegister, mActivation, kNullValue, op3(call));
-                        registers = &mActivation->mRegisters;
-                        mPC = mICode->its_iCode->begin();
-                        endPC = mICode->its_iCode->end();
-                        continue;
-                    }
-                }
-*/
+
             case RETURN_VOID:
                 {
                     Linkage *linkage = mLinkage;
@@ -1402,7 +1390,7 @@ using JSString throughout.
                     if (target->isNative()) {
                         JSValues argv(1);
                         argv[0] = r1;
-                        dest = static_cast<JSUnaryOperator*>(target)->mCode(r1);
+                        dest = static_cast<JSUnaryOperator*>(target)->mCode(this, r1);
                         break;
                     }
                     else {
@@ -1427,7 +1415,7 @@ using JSString throughout.
                     if (target->isNative()) {
                         JSValues argv(1);
                         argv[0] = r1;
-                        dest = static_cast<JSUnaryOperator*>(target)->mCode(r1);
+                        dest = static_cast<JSUnaryOperator*>(target)->mCode(this, r1);
                         break;
                     }
                     else {
@@ -1451,10 +1439,7 @@ using JSString throughout.
                     const JSValue ovr = findBinaryOverride(r1, r2, val2(gbo));
                     JSFunction *target = ovr.function;
                     if (target->isNative()) {
-                        JSValues argv(2);
-                        argv[0] = r1;
-                        argv[1] = r2;
-                        dest = static_cast<JSBinaryOperator*>(target)->mCode(r1, r2);
+                        dest = static_cast<JSBinaryOperator*>(target)->mCode(this, r1, r2);
                         break;
                     }
                     else {
@@ -1711,7 +1696,7 @@ using JSString throughout.
             case TEST:
                 {
                     Test* tst = static_cast<Test*>(instruction);
-                    (*registers)[dst(tst).first] = (*registers)[src1(tst).first].toBoolean();
+                    (*registers)[dst(tst).first] = (*registers)[src1(tst).first].toBoolean(this);
                 }
                 break;
             case NEGATE_DOUBLE:

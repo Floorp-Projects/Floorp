@@ -42,6 +42,14 @@ namespace Interpreter {
         explicit Context(World& world, JSScope* aGlobal)
             : mWorld(world), mGlobal(aGlobal), mLinkage(0), mActivation(0), mCurrentClosure(0) { initContext(); }
 
+        Context(Context *cx) : mWorld(cx->getWorld()), mGlobal(cx->getGlobalObject()), 
+                                mLinkage(0), mActivation(0), mCurrentClosure(0) 
+        { 
+            initContext();
+            for (ListenerIterator i = cx->mListeners.begin(), e = cx->mListeners.end(); i != e; ++i)
+                addListener(*i);
+        }
+
         World& getWorld()           { return mWorld; }
         JSScope* getGlobalObject()  { return mGlobal; }
         InstructionIterator getPC() { return mPC; }

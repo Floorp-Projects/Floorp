@@ -121,11 +121,11 @@ static JSValue function_constructor(Context *cx, const JSValues& argv)
         uint32 parameterCount = argv.size() - 2;
         JSString source("function (");
         for (uint32 i = 0; i < parameterCount; i++) {
-            source.append((JSValue::valueToString(argv[i + 1]).string));
+            source.append((JSValue::valueToString(cx, argv[i + 1]).string));
             if (i < (parameterCount - 1)) source.append(",");
         }
         source.append(") {");
-        source.append(JSValue::valueToString(argv[argv.size() - 1]).string);
+        source.append(JSValue::valueToString(cx, argv[argv.size() - 1]).string);
         source.append("}");
         
         JSFunction *f = new JSFunction(cx->compileFunction(source));
@@ -187,11 +187,11 @@ void JSFunction::initFunctionObject(JSScope *g)
 
 JSString* JSBoolean::BooleanString = new JSString("Boolean");
 
-static JSValue boolean_constructor(Context *, const JSValues& argv)
+static JSValue boolean_constructor(Context *cx, const JSValues& argv)
 {
     // argv[0] will be NULL
     if (argv.size() > 1)
-        return JSValue(new JSBoolean(JSValue::valueToBoolean(argv[1]).boolean));
+        return JSValue(new JSBoolean(JSValue::valueToBoolean(cx, argv[1]).boolean));
     else
         return JSValue(new JSBoolean(false));
 }
@@ -605,7 +605,7 @@ Formatter& operator<<(Formatter& f, const JSValue& value)
     return f;
 }
 
-JSValue JSValue::toPrimitive(ECMA_type /*hint*/) const
+JSValue JSValue::toPrimitive(Context *cx, ECMA_type hint) const
 {
     JSObject *obj;
     switch (tag) {
@@ -633,26 +633,79 @@ JSValue JSValue::toPrimitive(ECMA_type /*hint*/) const
         return kUndefinedValue;
     }
 
-    const JSValue &toString = obj->getProperty(widenCString("toString"));
-    if (toString.isObject()) {
-        if (toString.isFunction()) {
-        }
-        else    // right? The spec doesn't say
-            throw new JSException("Runtime error from toPrimitive");    // XXX
-    }
+    JSFunction *target = NULL;
+    JSValue result;
+    JSValues argv(1);
+    argv[0] = *this;
 
-    const JSValue &valueOf = obj->getProperty(widenCString("valueOf"));
-    if (!valueOf.isObject())
-        throw new JSException("Runtime error from toPrimitive");    // XXX
-    
+    // The following is [[DefaultValue]]
+    //
+    if ((hint == Number) || (hint == NoHint)) {
+        const JSValue &valueOf = obj->getProperty(widenCString("valueOf"));
+        if (valueOf.isFunction()) {
+            target = valueOf.function;
+            if (target->isNative()) {
+                result = static_cast<JSNativeFunction*>(target)->mCode(cx, argv);
+            }
+            else {
+                Context new_cx(cx);
+                result = new_cx.interpret(target->getICode(), argv);
+            }
+            if (result.isPrimitive())
+                return result;
+        }
+        const JSValue &toString = obj->getProperty(widenCString("toString"));
+        if (toString.isFunction()) {
+            target = toString.function;
+            if (target->isNative()) {
+                result = static_cast<JSNativeFunction*>(target)->mCode(cx, argv);
+            }
+            else {
+                Context new_cx(cx);
+                result = new_cx.interpret(target->getICode(), argv);
+            }
+            if (result.isPrimitive())
+                return result;
+        }
+    }
+    else {
+        const JSValue &toString = obj->getProperty(widenCString("toString"));
+        if (toString.isFunction()) {
+            target = toString.function;
+            if (target->isNative()) {
+                result = static_cast<JSNativeFunction*>(target)->mCode(cx, argv);
+            }
+            else {
+                Context new_cx(cx);
+                result = new_cx.interpret(target->getICode(), argv);
+            }
+            if (result.isPrimitive())
+                return result;
+        }
+        const JSValue &valueOf = obj->getProperty(widenCString("valueOf"));
+        if (valueOf.isFunction()) {
+            target = valueOf.function;
+            if (target->isNative()) {
+                result = static_cast<JSNativeFunction*>(target)->mCode(cx, argv);
+            }
+            else {
+                Context new_cx(cx);
+                result = new_cx.interpret(target->getICode(), argv);
+            }
+            if (result.isPrimitive())
+                return result;
+        }
+    }
+    throw new JSException("Runtime error from toPrimitive");    // XXX
     return kUndefinedValue;
     
 }
 
 
-JSValue JSValue::valueToString(const JSValue& value) // can assume value is not a string
+JSValue JSValue::valueToString(Context *cx, const JSValue& value) // can assume value is not a string
 {
-    const char* chrp;
+    const char* chrp = NULL;
+    JSObject *obj = NULL;
     char buf[dtosStandardBufferSize];
     switch (value.tag) {
     case i32_tag:
@@ -666,13 +719,13 @@ JSValue JSValue::valueToString(const JSValue& value) // can assume value is not 
         chrp = doubleToStr(buf, dtosStandardBufferSize, value.f64, dtosStandard, 0);
         break;
     case object_tag:
-        chrp = "object";
+        obj = value.object;
         break;
     case array_tag:
-        chrp = "array";
+        obj = value.array;
         break;
     case function_tag:
-        chrp = "function";
+        obj = value.function;
         break;
     case string_tag:
         return value;
@@ -685,7 +738,32 @@ JSValue JSValue::valueToString(const JSValue& value) // can assume value is not 
     default:
         NOT_REACHED("Bad tag");
     }
-    return JSValue(new JSString(chrp));
+    if (obj) {
+        JSFunction *target = NULL;
+        const JSValue &toString = obj->getProperty(widenCString("toString"));
+        if (toString.isFunction()) {
+            target = toString.function;
+        }
+        else {    
+            const JSValue &valueOf = obj->getProperty(widenCString("valueOf"));
+            if (valueOf.isFunction())
+                target = valueOf.function;
+        }
+        if (target) {
+            if (target->isNative()) {
+                JSValues argv(1);
+                argv[0] = value;
+                return static_cast<JSNativeFunction*>(target)->mCode(cx, argv);
+            }
+            else {
+                Context new_cx(cx);
+                return new_cx.interpret(target->getICode(), JSValues());
+            }
+        }
+        throw new JSException("Runtime error from toString");    // XXX
+    }
+    else
+        return JSValue(new JSString(chrp));
 }
 
 JSValue JSValue::valueToNumber(const JSValue& value) // can assume value is not a number
@@ -733,8 +811,9 @@ JSValue JSValue::valueToInteger(const JSValue& value)
 }
 
 
-JSValue JSValue::valueToBoolean(const JSValue& value)
+JSValue JSValue::valueToBoolean(Context *cx, const JSValue& value)
 {
+    JSObject *obj = NULL;
     switch (value.tag) {
     case i32_tag:
         return JSValue(value.i32 != 0);
@@ -748,15 +827,37 @@ JSValue JSValue::valueToBoolean(const JSValue& value)
     case boolean_tag:
         return value;
     case object_tag:
+        obj = value.object;
+        break;
     case array_tag:
+        obj = value.array;
+        break;
     case function_tag:
-        return kTrueValue;
+        obj = value.function;
+        break;
     case undefined_tag:
         return kFalseValue;
     default:
         NOT_REACHED("Bad tag");
         return kUndefinedValue;
     }
+    ASSERT(obj);
+    JSType *t = obj->getType();
+    JSClass *clazz = dynamic_cast<JSClass *>(t);
+    uint32 index;
+    if (clazz && clazz->hasMethod(widenCString("toBoolean"), index)) {
+        JSFunction *target = clazz->getMethod(index);
+        JSValues argv(1);
+        argv[0] = value;
+        if (target->isNative()) {
+            return static_cast<JSNativeFunction*>(target)->mCode(cx, argv);
+        }
+        else {
+            Context new_cx(cx);
+            return new_cx.interpret(target->getICode(), argv);
+        }
+    }
+    return kTrueValue;
 }
 
 
@@ -845,7 +946,7 @@ JSValue JSValue::valueToUInt32(const JSValue& value)
 }
 
 
-JSValue JSValue::convert(JSType *toType)
+JSValue JSValue::convert(Context *cx, JSType *toType)
 {
     if (toType == &Object_Type)    // yuck, something wrong with this
                                 // maybe the base types should be 
@@ -855,7 +956,7 @@ JSValue JSValue::convert(JSType *toType)
     else if (toType == &Integer_Type)
         return valueToInteger(*this);
     else if (toType == &String_Type)
-        return valueToString(*this);
+        return valueToString(cx, *this);
     else if (toType == &Function_Type)
     {
         if (tag == function_tag)
