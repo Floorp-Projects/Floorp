@@ -38,8 +38,58 @@ var lc = '';
 var rc = '';
 
 
-// here's a string to test the regexps on -
-var str = ''; 
+// the regexps are built in pieces  - 
+var NameStrt = "[A-Za-z_:]|[^\\x00-\\x7F]";
+var NameChar = "[A-Za-z0-9_:.-]|[^\\x00-\\x7F]";
+var Name = "(" + NameStrt + ")(" + NameChar + ")*";
+var TextSE = "[^<]+";
+var UntilHyphen = "[^-]*-";
+var Until2Hyphens = UntilHyphen + "([^-]" + UntilHyphen + ")*-";
+var CommentCE = Until2Hyphens + ">?";
+var UntilRSBs = "[^]]*]([^]]+])*]+";
+var CDATA_CE = UntilRSBs + "([^]>]" + UntilRSBs + ")*>";
+var S = "[ \\n\\t\\r]+";
+var QuoteSE = '"[^"]' + "*" + '"' + "|'[^']*'";
+var DT_IdentSE = S + Name + "(" + S + "(" + Name + "|" + QuoteSE + "))*";
+var MarkupDeclCE = "([^]\"'><]+|" + QuoteSE + ")*>";
+var S1 = "[\\n\\r\\t ]";
+var UntilQMs = "[^?]*\\?+";
+var PI_Tail = "\\?>|" + S1 + UntilQMs + "([^>?]" + UntilQMs + ")*>";
+var DT_ItemSE = "<(!(--" + Until2Hyphens + ">|[^-]" + MarkupDeclCE + ")|\\?" + Name + "(" + PI_Tail + "))|%" + Name + ";|" + S;
+var DocTypeCE = DT_IdentSE + "(" + S + ")?(\\[(" + DT_ItemSE + ")*](" + S + ")?)?>?";
+var DeclCE = "--(" + CommentCE + ")?|\\[CDATA\\[(" + CDATA_CE + ")?|DOCTYPE(" + DocTypeCE + ")?";
+var PI_CE = Name + "(" + PI_Tail + ")?";
+var EndTagCE = Name + "(" + S + ")?>?";
+var AttValSE = '"[^<"]' + "*" + '"' + "|'[^<']*'";
+var ElemTagCE = Name + "(" + S + Name + "(" + S + ")?=(" + S + ")?(" + AttValSE + "))*(" + S + ")?/?>?";
+var MarkupSPE = "<(!(" + DeclCE + ")?|\\?(" + PI_CE + ")?|/(" + EndTagCE + ")?|(" + ElemTagCE + ")?)";
+var XML_SPE = TextSE + "|" + MarkupSPE;
+var CommentRE = "<!--" + Until2Hyphens + ">";
+var CommentSPE = "<!--(" + CommentCE + ")?";
+var PI_RE = "<\\?" + Name + "(" + PI_Tail + ")";
+var Erroneous_PI_SE = "<\\?[^?]*(\\?[^>]+)*\\?>";
+var PI_SPE = "<\\?(" + PI_CE + ")?";
+var CDATA_RE = "<!\\[CDATA\\[" + CDATA_CE;
+var CDATA_SPE = "<!\\[CDATA\\[(" + CDATA_CE + ")?";
+var ElemTagSE = "<(" + NameStrt + ")([^<>\"']+|" + AttValSE + ")*>";
+var ElemTagRE = "<" + Name + "(" + S + Name + "(" + S + ")?=(" + S + ")?(" + AttValSE + "))*(" + S + ")?/?>";
+var ElemTagSPE = "<" + ElemTagCE;
+var EndTagRE = "</" + Name + "(" + S + ")?>";
+var EndTagSPE = "</(" + EndTagCE + ")?";
+var DocTypeSPE = "<!DOCTYPE(" + DocTypeCE + ")?";
+var PERef_APE = "%(" + Name + ";?)?";
+var HexPart = "x([0-9a-fA-F]+;?)?";
+var NumPart = "#([0-9]+;?|" + HexPart + ")?";
+var CGRef_APE = "&(" + Name + ";?|" + NumPart + ")?";
+var Text_PE = CGRef_APE + "|[^&]+";
+var EntityValue_PE = CGRef_APE + "|" + PERef_APE + "|[^%&]+";
+
+
+var rePatterns = new Array(AttValSE, CDATA_CE, CDATA_RE, CDATA_SPE, CGRef_APE, CommentCE, CommentRE, CommentSPE, DT_IdentSE, DT_ItemSE, DeclCE, DocTypeCE, DocTypeSPE, ElemTagCE, ElemTagRE, ElemTagSE, ElemTagSPE, EndTagCE, EndTagRE, EndTagSPE, EntityValue_PE, Erroneous_PI_SE, HexPart, MarkupDeclCE, MarkupSPE, Name, NameChar, NameStrt, NumPart, PERef_APE, PI_CE, PI_RE, PI_SPE, PI_Tail, QuoteSE, S, S1, TextSE, Text_PE, Until2Hyphens, UntilHyphen, UntilQMs, UntilRSBs, XML_SPE);
+
+
+// here's a big string to test the regexps on -
+var str = '';
 str += '<html xmlns="http://www.w3.org/1999/xhtml"' + '\n';
 str += '      xmlns:xlink="http://www.w3.org/XML/XLink/0.9">' + '\n';
 str += '  <head><title>Three Namespaces</title></head>' + '\n';
@@ -62,55 +112,6 @@ str += '  </body>' + '\n';
 str += '</html>';
 
 
-// the regexps are built in pieces  - 
-NameStrt = "[A-Za-z_:]|[^\\x00-\\x7F]";
-NameChar = "[A-Za-z0-9_:.-]|[^\\x00-\\x7F]";
-Name = "(" + NameStrt + ")(" + NameChar + ")*";
-TextSE = "[^<]+";
-UntilHyphen = "[^-]*-";
-Until2Hyphens = UntilHyphen + "([^-]" + UntilHyphen + ")*-";
-CommentCE = Until2Hyphens + ">?";
-UntilRSBs = "[^]]*]([^]]+])*]+";
-CDATA_CE = UntilRSBs + "([^]>]" + UntilRSBs + ")*>";
-S = "[ \\n\\t\\r]+";
-QuoteSE = '"[^"]' + "*" + '"' + "|'[^']*'";
-DT_IdentSE = S + Name + "(" + S + "(" + Name + "|" + QuoteSE + "))*";
-MarkupDeclCE = "([^]\"'><]+|" + QuoteSE + ")*>";
-S1 = "[\\n\\r\\t ]";
-UntilQMs = "[^?]*\\?+";
-PI_Tail = "\\?>|" + S1 + UntilQMs + "([^>?]" + UntilQMs + ")*>";
-DT_ItemSE = "<(!(--" + Until2Hyphens + ">|[^-]" + MarkupDeclCE + ")|\\?" + Name + "(" + PI_Tail + "))|%" + Name + ";|" + S;
-DocTypeCE = DT_IdentSE + "(" + S + ")?(\\[(" + DT_ItemSE + ")*](" + S + ")?)?>?";
-DeclCE = "--(" + CommentCE + ")?|\\[CDATA\\[(" + CDATA_CE + ")?|DOCTYPE(" + DocTypeCE + ")?";
-PI_CE = Name + "(" + PI_Tail + ")?";
-EndTagCE = Name + "(" + S + ")?>?";
-AttValSE = '"[^<"]' + "*" + '"' + "|'[^<']*'";
-ElemTagCE = Name + "(" + S + Name + "(" + S + ")?=(" + S + ")?(" + AttValSE + "))*(" + S + ")?/?>?";
-MarkupSPE = "<(!(" + DeclCE + ")?|\\?(" + PI_CE + ")?|/(" + EndTagCE + ")?|(" + ElemTagCE + ")?)";
-XML_SPE = TextSE + "|" + MarkupSPE;
-CommentRE = "<!--" + Until2Hyphens + ">";
-CommentSPE = "<!--(" + CommentCE + ")?";
-PI_RE = "<\\?" + Name + "(" + PI_Tail + ")";
-Erroneous_PI_SE = "<\\?[^?]*(\\?[^>]+)*\\?>";
-PI_SPE = "<\\?(" + PI_CE + ")?";
-CDATA_RE = "<!\\[CDATA\\[" + CDATA_CE;
-CDATA_SPE = "<!\\[CDATA\\[(" + CDATA_CE + ")?";
-ElemTagSE = "<(" + NameStrt + ")([^<>\"']+|" + AttValSE + ")*>";
-ElemTagRE = "<" + Name + "(" + S + Name + "(" + S + ")?=(" + S + ")?(" + AttValSE + "))*(" + S + ")?/?>";
-ElemTagSPE = "<" + ElemTagCE;
-EndTagRE = "</" + Name + "(" + S + ")?>";
-EndTagSPE = "</(" + EndTagCE + ")?";
-DocTypeSPE = "<!DOCTYPE(" + DocTypeCE + ")?";
-PERef_APE = "%(" + Name + ";?)?";
-HexPart = "x([0-9a-fA-F]+;?)?";
-NumPart = "#([0-9]+;?|" + HexPart + ")?";
-CGRef_APE = "&(" + Name + ";?|" + NumPart + ")?";
-Text_PE = CGRef_APE + "|[^&]+";
-EntityValue_PE = CGRef_APE + "|" + PERef_APE + "|[^%&]+";
-REstrings = new Array(AttValSE, CDATA_CE, CDATA_RE, CDATA_SPE, CGRef_APE, CommentCE, CommentRE, CommentSPE, DT_IdentSE, DT_ItemSE, DeclCE, DocTypeCE, DocTypeSPE, ElemTagCE, ElemTagRE, ElemTagSE, ElemTagSPE, EndTagCE, EndTagRE, EndTagSPE, EntityValue_PE, Erroneous_PI_SE, HexPart, MarkupDeclCE, MarkupSPE, Name, NameChar, NameStrt, NumPart, PERef_APE, PI_CE, PI_RE, PI_SPE, PI_Tail, QuoteSE, S, S1, TextSE, Text_PE, Until2Hyphens, UntilHyphen, UntilQMs, UntilRSBs, XML_SPE);
-REnames = new Array('AttValSE', 'CDATA_CE', 'CDATA_RE', 'CDATA_SPE', 'CGRef_APE', 'CommentCE', 'CommentRE', 'CommentSPE', 'DT_IdentSE', 'DT_ItemSE', 'DeclCE', 'DocTypeCE', 'DocTypeSPE', 'ElemTagCE', 'ElemTagRE', 'ElemTagSE', 'ElemTagSPE', 'EndTagCE', 'EndTagRE', 'EndTagSPE', 'EntityValue_PE', 'Erroneous_PI_SE', 'HexPart', 'MarkupDeclCE', 'MarkupSPE', 'Name', 'NameChar', 'NameStrt', 'NumPart', 'PERef_APE', 'PI_CE', 'PI_RE', 'PI_SPE', 'PI_Tail', 'QuoteSE', 'S', 'S1', 'TextSE', 'Text_PE', 'Until2Hyphens', 'UntilHyphen', 'UntilQMs', 'UntilRSBs', 'XML_SPE');
-
-
 
 //-----------------------------------------------------------------------------
 test();
@@ -124,20 +125,20 @@ function test()
   printBugNumber (bug);
   printStatus (summary);
 
-  /*
-   * Testing that we don't crash on any of these -
-   */
-  for (var i=0; i<REstrings.length; i++)
+  for (var i=0; i<rePatterns.length; i++)
   {
     status = inSection(i);
-    re = new RegExp(REstrings[i]);
-    
+    re = new RegExp(rePatterns[i]);
+
+    // Test that we don't crash on any of these -
     re.exec(str);
     getResults();
 
+    // Just for the heck of it, test the current leftContext
     re.exec(lc);
     getResults();
 
+    // Test the current rightContext
     re.exec(rc);
     getResults();
   }
