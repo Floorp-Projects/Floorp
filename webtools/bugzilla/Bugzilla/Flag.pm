@@ -318,9 +318,9 @@ sub create {
                         $timestamp)");
     
     # Send an email notifying the relevant parties about the flag creation.
-    if ($flag->{'requestee'} 
-        && ($flag->{'requestee'}->email_prefs->{'FlagRequestee'} 
-            || $flag->{'type'}->{'cc_list'}))
+    if (($flag->{'requestee'} 
+         && $flag->{'requestee'}->email_prefs->{'FlagRequestee'})
+         || $flag->{'type'}->{'cc_list'})
     {
         notify($flag, "request/email.txt.tmpl");
     }
