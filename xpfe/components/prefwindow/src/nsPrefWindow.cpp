@@ -209,9 +209,19 @@ NS_IMETHODIMP nsPrefWindow::ShowWindow(
     nsIXULWindowCallbacks *cb = nsnull;
     nsCOMPtr<nsIWebShellWindow> parent;
     DOMWindowToWebShellWindow(currentFrontWin, &parent);
+
+
+#if defined(MODELESS_PREF_DIALOG)||defined(DEBUG_mcafee)||defined(DEBUG_akkana)
+    // testing modeless pref window.  -mcafee
+    nsIWebShellWindow *foo = nsnull;
+    rv = appShell->CreateTopLevelWindow(parent, urlObj, PR_TRUE, PR_TRUE,
+                               NS_CHROME_ALL_CHROME | NS_CHROME_OPEN_AS_DIALOG,
+                               cb, 504, 436, &foo);
+#else
     rv = appShell->RunModalDialog(nsnull, parent, urlObj,
                                NS_CHROME_ALL_CHROME | NS_CHROME_OPEN_AS_DIALOG,
                                cb, 504, 436);
+#endif
     return rv;
 } // nsPrefWindow::ShowWindow()
 
