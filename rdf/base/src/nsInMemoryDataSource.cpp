@@ -720,7 +720,7 @@ InMemoryDataSource::LogOperation(const char* aOperation,
         PR_LOG(gLog, PR_LOG_ALWAYS,
            ("  -->(\"%s\")\n", valueCStr));
 
-        delete[] valueCStr;
+        nsCRT::free(valueCStr);
     }
     else {
         PR_LOG(gLog, PR_LOG_ALWAYS,

@@ -543,7 +543,7 @@ RDFContentSinkImpl::CloseContainer(const nsIParserNode& aNode)
                    ("rdfxml: extra close tag '%s' at line %d",
                     tagCStr, aNode.GetSourceLineNumber()));
 
-            delete[] tagCStr;
+            nsCRT::free(tagCStr);
         }
 #endif
 
@@ -906,7 +906,7 @@ RDFContentSinkImpl::GetNameSpaceID(nsIAtom* aPrefix, PRInt32& aNameSpaceID)
                    ("rdfxml: undeclared namespace prefix '%s'",
                     prefixCStr));
 
-            delete[] prefixCStr;
+            nsCRT::free(prefixCStr);
         }
 #endif
     }
