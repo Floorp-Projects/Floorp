@@ -495,7 +495,7 @@ XULSortServiceImpl::SortTreeChildren(nsIContent *container, PRInt32 colIndex, PR
 	unsigned long numElements = childArray->Count();
 	if (numElements > 1)
 	{
-		nsIContent ** flatArray = (nsIContent **)malloc(numElements * sizeof(void *));
+		nsIContent ** flatArray = new nsIContent*[numElements];
 		if (flatArray)
 		{
 			_sortStruct		sortInfo;
@@ -554,7 +554,7 @@ XULSortServiceImpl::PrintTreeChildren(nsIContent *container, PRInt32 colIndex, P
 
 			PRInt32		attribIndex, numAttribs;
 			child->GetAttributeCount(numAttribs);
-			for (PRInt32 attribIndex = 0; attribIndex < numAttribs; attribIndex++)
+			for (attribIndex = 0; attribIndex < numAttribs; attribIndex++)
 			{
 				PRInt32			attribNameSpaceID;
 				nsCOMPtr<nsIAtom> 	attribAtom;
@@ -613,7 +613,7 @@ XULSortServiceImpl::DoSort(nsIDOMNode* node, const nsString& sortResource)
 	nsIContent	*child, *contentNode, *treeNode, *treeBody, *treeParent;
 	nsresult	rv;
 
-	if (NS_FAILED(rv = node->QueryInterface(kIContentIID, &contentNode)))	return(rv);
+	if (NS_FAILED(rv = node->QueryInterface(kIContentIID, (void**)&contentNode)))	return(rv);
 	printf("Success converting dom node to content node.\n");
 
 	if (NS_FAILED(rv = FindTreeElement(contentNode, &treeNode)))	return(rv);
