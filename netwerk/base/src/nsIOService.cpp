@@ -544,7 +544,7 @@ nsIOService::ExtractUrlPart(const char *urlString, PRInt16 flag, PRUint32 *start
     if (NS_FAILED(rv)) return rv;
     
     PRInt32 port;
-    nsXPIDLCString dummyScheme, username, password, host, path, o_path;
+    nsXPIDLCString dummyScheme, username, password, host, path;
 
     rv = parser->ParseAtScheme(urlString, 
                                getter_Copies(dummyScheme), 
@@ -577,7 +577,7 @@ nsIOService::ExtractUrlPart(const char *urlString, PRInt16 flag, PRUint32 *start
         return NS_OK;
     }
 
-    if (flag == url_Directory) {
+    if (flag == url_Path) {
         CalculateStartEndPos(urlString, path, startPos, endPos);
         if (urlPart)
             *urlPart = nsCRT::strdup(path.get());
@@ -585,10 +585,10 @@ nsIOService::ExtractUrlPart(const char *urlString, PRInt16 flag, PRUint32 *start
     }
 
 
-    nsXPIDLCString fileBaseName, fileExtension, param, query, ref;
+    nsXPIDLCString directory, fileBaseName, fileExtension, param, query, ref;
 
     rv = parser->ParseAtDirectory(path, 
-                                  getter_Copies(o_path), 
+                                  getter_Copies(directory), 
                                   getter_Copies(fileBaseName),
                                   getter_Copies(fileExtension),
                                   getter_Copies(param), 
@@ -598,6 +598,13 @@ nsIOService::ExtractUrlPart(const char *urlString, PRInt16 flag, PRUint32 *start
     if (NS_FAILED(rv)) return rv;
     
     
+    if (flag == url_Directory) {
+        CalculateStartEndPos(urlString, directory, startPos, endPos);
+        if (urlPart)
+            *urlPart = nsCRT::strdup(directory.get());
+        return NS_OK;
+    }
+
     if (flag == url_FileBaseName) {
         CalculateStartEndPos(urlString, fileBaseName, startPos, endPos);
         if (urlPart)
@@ -606,28 +613,28 @@ nsIOService::ExtractUrlPart(const char *urlString, PRInt16 flag, PRUint32 *start
     }
     
     if (flag == url_FileExtension) {
-        CalculateStartEndPos(urlString, fileBaseName, startPos, endPos);
+        CalculateStartEndPos(urlString, fileExtension, startPos, endPos);
         if (urlPart)
             *urlPart = nsCRT::strdup(fileExtension.get());
         return NS_OK;
     }
     
     if (flag == url_Param) {
-        CalculateStartEndPos(urlString, fileBaseName, startPos, endPos);
+        CalculateStartEndPos(urlString, param, startPos, endPos);
         if (urlPart)
             *urlPart = nsCRT::strdup(param.get());
         return NS_OK;
     }
     
     if (flag == url_Query) {
-        CalculateStartEndPos(urlString, fileBaseName, startPos, endPos);
+        CalculateStartEndPos(urlString, query, startPos, endPos);
         if (urlPart)
             *urlPart = nsCRT::strdup(query.get());
         return NS_OK;
     }
 
     if (flag == url_Ref) {
-        CalculateStartEndPos(urlString, fileBaseName, startPos, endPos);
+        CalculateStartEndPos(urlString, ref, startPos, endPos);
         if (urlPart)
             *urlPart = nsCRT::strdup(ref.get());
         return NS_OK;
