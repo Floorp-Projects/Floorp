@@ -101,3 +101,7 @@ statusbarpanel,
 .progressmeter-statusbar {
   border: none !important;
 }
+
+#statusContainerBox {
+  margin-right: 4px;
+}

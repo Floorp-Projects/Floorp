@@ -95,3 +95,9 @@ treechildren::-moz-tree-image(nameColumn2, nntp) {
 .subscribeMenuItem[ServerType="nntp"][IsSecure="true"] {
   list-style-image: url("chrome://messenger/skin/icons/server-news-lock.gif");
 }
+
+/* ::::: statusbar adjustments :::::: */
+
+#statusContainerBox {
+  margin: 0px 4px;
+}
