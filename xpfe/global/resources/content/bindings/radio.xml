@@ -75,16 +75,16 @@
         </getter>
         <setter>
         <![CDATA[
-          var alreadySelected = val.getAttribute("selected") == "true";
-          var focused = false;
-          if (this.getAttribute("focused") == "true") {
-            val.setAttribute("focused", "true");
-            focused = true;
+          var focused = this.getAttribute("focused") == "true";
+          var alreadySelected = false;
+
+          if (val) {
+            alreadySelected = val.getAttribute("selected") == "true";
+            val.setAttribute("focused", focused);
+            val.setAttribute("selected", "true");
+            this.value = val.value;
           }
 
-          val.setAttribute("selected", "true");
-          this.value = val.value;
-          
           // uncheck all other group nodes
           var children = this._getRadioChildren();
           for (var i = 0; i < children.length; ++i) {
