@@ -27,6 +27,7 @@
 #include "prlink.h"
 #include "nsIMalloc.h"
 #include "nsIFileUtilities.h"
+#include "nsPluginsDir.h"
 
 class ns4xPlugin;
 class nsNativeFileSpec;
@@ -57,7 +58,7 @@ public:
 
 class nsPluginHostImpl : public nsIPluginManager2,
                          public nsIPluginHost,
-						                   public nsIFileUtilities
+                         public nsIFileUtilities
 {
 public:
   nsPluginHostImpl(nsIServiceManager *serviceMgr);
@@ -223,7 +224,7 @@ private:
   nsPluginTag *mPlugins;
   nsIMalloc   *mMalloc;
   PRBool      mPluginsLoaded;
-  nsIServiceManager *mserviceMgr;
+  nsIServiceManager *mServiceMgr;
 };
 
 #endif
