@@ -543,6 +543,9 @@ nsGenericHTMLElement::GetOffsetRect(nsRect& aRect,
     nsCOMPtr<nsIPresShell> presShell = getter_AddRefs(mDocument->GetShellAt(0));
 
     if(presShell) {
+      // Flush all pending notifications so that our frames are uptodate
+      presShell->FlushPendingNotifications();
+
       // Get the Frame for our content
       nsIFrame* frame = nsnull;
       presShell->GetPrimaryFrameFor(mContent, &frame);
