@@ -340,7 +340,7 @@ sub BuildClientDist()
 	_InstallFromManifest(":mozilla:intl:lwbrk:public:MANIFEST",						"$distdirectory:lwbrk:");
 
 	#STRRES
-	_InstallFromManifest(":mozilla:intl:strres:public:MANIFEST",						"$distdirectory:strres:");
+	_InstallFromManifest(":mozilla:intl:strres:public:MANIFEST_IDL",				"$distdirectory:idl:");
 
 	#JPEG
     _InstallFromManifest(":mozilla:jpeg:MANIFEST",									"$distdirectory:jpeg:");
@@ -790,6 +790,7 @@ sub BuildIDLProjects()
 	BuildIDLProject(":mozilla:caps:macbuild:CapsIDL.mcp",							"caps");
 
 	BuildIDLProject(":mozilla:intl:locale:macbuild:nsLocaleIDL.mcp",					"nsLocale");
+	BuildIDLProject(":mozilla:intl:strres:macbuild:strresIDL.mcp",					"nsIStringBundle");
 
 	print("--- IDL projects complete ----\n")
 }
