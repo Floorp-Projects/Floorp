@@ -217,6 +217,7 @@ protected:
   PRUint8           *mGammaTable;
   COLORREF          mCurrTextColor;
   nsLineStyle       mCurrLineStyle;
+  PRBool            mGetNearestColor;
 
 #ifdef NS_DEBUG
   PRBool            mInitialized;

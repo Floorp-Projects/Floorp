@@ -366,6 +366,7 @@ nsRenderingContextWin :: nsRenderingContextWin()
 #endif
   mSurface = nsnull;
   mMainSurface = nsnull;
+  mGetNearestColor = PR_FALSE;
 
   mStateCache = new nsVoidArray();
 
@@ -659,6 +660,13 @@ nsresult nsRenderingContextWin :: CommonInit(void)
   mContext->GetAppUnitsToDevUnits(app2dev);
 	mTMatrix->AddScale(app2dev, app2dev);
   mContext->GetDevUnitsToAppUnits(mP2T);
+
+  PRUint32 depth;
+
+  mContext->GetDepth(depth);
+
+  if (16 == depth)
+    mGetNearestColor = PR_TRUE;
 
 #ifdef NS_DEBUG
   mInitialized = PR_TRUE;
@@ -1784,9 +1792,12 @@ HBRUSH nsRenderingContextWin :: SetupSolidBrush(void)
 {
   if ((mCurrentColor != mCurrBrushColor) || (NULL == mCurrBrush))
   {
-    // XXX In 16-bit mode we need to use GetNearestColor() to get a solid
-    // color; otherwise, we'll end up with a dithered brush...
-    HBRUSH  tbrush = ::CreateSolidBrush(PALETTERGB_COLORREF(mColor));
+    HBRUSH tbrush;
+
+    if (PR_TRUE == mGetNearestColor)
+      tbrush = ::CreateSolidBrush(PALETTERGB_COLORREF(::GetNearestColor(mDC, mColor)));
+    else
+      tbrush = ::CreateSolidBrush(PALETTERGB_COLORREF(mColor));
 
     ::SelectObject(mDC, tbrush);
 
@@ -1859,7 +1870,12 @@ HPEN nsRenderingContextWin :: SetupSolidPen(void)
 {
   if ((mCurrentColor != mCurrPenColor) || (NULL == mCurrPen) || (mCurrPen != mStates->mSolidPen))
   {
-    HPEN  tpen = ::CreatePen(PS_SOLID, 0, PALETTERGB_COLORREF(mColor));
+    HPEN  tpen;
+
+    if (PR_TRUE == mGetNearestColor)
+      tpen = ::CreatePen(PS_SOLID, 0, PALETTERGB_COLORREF(::GetNearestColor(mDC, mColor)));
+    else
+      tpen = ::CreatePen(PS_SOLID, 0, PALETTERGB_COLORREF(mColor));
 
     ::SelectObject(mDC, tpen);
 
@@ -1878,7 +1894,12 @@ HPEN nsRenderingContextWin :: SetupDashedPen(void)
 {
   if ((mCurrentColor != mCurrPenColor) || (NULL == mCurrPen) || (mCurrPen != mStates->mDashedPen))
   {
-    HPEN  tpen = ::CreatePen(PS_DASH, 0, PALETTERGB_COLORREF(mColor));
+    HPEN  tpen;
+
+    if (PR_TRUE == mGetNearestColor)
+      tpen = ::CreatePen(PS_DASH, 0, PALETTERGB_COLORREF(::GetNearestColor(mDC, mColor)));
+    else
+      tpen = ::CreatePen(PS_DASH, 0, PALETTERGB_COLORREF(mColor));
 
     ::SelectObject(mDC, tpen);
 
@@ -1897,7 +1918,12 @@ HPEN nsRenderingContextWin :: SetupDottedPen(void)
 {
   if ((mCurrentColor != mCurrPenColor) || (NULL == mCurrPen) || (mCurrPen != mStates->mDottedPen))
   {
-    HPEN  tpen = ::CreatePen(PS_DOT, 0, PALETTERGB_COLORREF(mColor));
+    HPEN  tpen;
+
+    if (PR_TRUE == mGetNearestColor)
+      tpen = ::CreatePen(PS_DOT, 0, PALETTERGB_COLORREF(::GetNearestColor(mDC, mColor)));
+    else
+      tpen = ::CreatePen(PS_DOT, 0, PALETTERGB_COLORREF(mColor));
 
     ::SelectObject(mDC, tpen);
 
