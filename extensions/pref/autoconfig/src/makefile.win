@@ -85,7 +85,9 @@ OBJS =  .\$(OBJDIR)\nsConfigFactory.obj \
         .\$(OBJDIR)\nsAutoConfig.obj \
         .\$(OBJDIR)\nsReadConfig.obj \
         .\$(OBJDIR)\nsJSConfigTriggers.obj \
+!if !defined(DISABLE_LDAP)
         .\$(OBJDIR)\nsLDAPSyncQuery.obj \
+!endif
         $(NULL)
 
 #//------------------------------------------------------------------------
