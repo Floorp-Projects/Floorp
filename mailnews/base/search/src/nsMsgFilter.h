@@ -92,7 +92,7 @@ protected:
 
 	nsMsgFilterList *m_filterList;	/* owning filter list */
     nsMsgSearchTermArray m_termList;       /* linked list of criteria terms */
-    nsIMsgSearchScopeTerm       *m_scope;         /* default for mail rules is inbox, but news rules could
+    nsCOMPtr<nsIMsgSearchScopeTerm> m_scope;         /* default for mail rules is inbox, but news rules could
 have a newsgroup - LDAP would be invalid */
 
 };

@@ -31,7 +31,7 @@ interface nsIMsgSearchValidityManager : nsISupports {
 
     // eventually it would be nice to use atoms or something
     const long onlineMail = 0;
-    const long offlineMailFilter = 1;
+    const long onlineMailFilter = 1;
     const long offlineMail = 2;
     const long localNews = 3;
     const long news = 4;

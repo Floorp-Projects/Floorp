@@ -189,10 +189,10 @@ NS_IMETHODIMP nsMsgFilter::SetScope(nsIMsgSearchScopeTerm *aResult)
 
 NS_IMETHODIMP nsMsgFilter::GetScope(nsIMsgSearchScopeTerm **aResult)
 {
-	if (aResult == NULL)  
-        return NS_ERROR_NULL_POINTER;  
+    NS_ENSURE_ARG_POINTER(aResult);
 
 	*aResult = m_scope;
+    NS_IF_ADDREF(*aResult);
 	return NS_OK;
 }
 

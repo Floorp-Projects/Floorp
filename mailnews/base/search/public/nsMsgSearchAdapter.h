@@ -187,15 +187,6 @@ public:
   
 	nsresult PostProcessValidityTable (nsINNTPHost*);
 
-	enum {
-	  onlineMail,
-	  onlineMailFilter,
-	  offlineMail,
-	  localNews,
-	  news,
-	  newsEx
-	};
-
 protected:
 
 	// There's one global validity manager that everyone uses. You *could* do 
