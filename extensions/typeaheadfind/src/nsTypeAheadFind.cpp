@@ -2189,10 +2189,6 @@ nsTypeAheadFind::SetSelectionLook(nsIPresShell *aPresShell,
     caret->SetVisibilityDuringSelection(PR_TRUE);
     caret->SetCaretVisible(PR_TRUE);
     mFocusedDocSelCon->SetCaretEnabled(PR_TRUE);
-    PRInt32 pixelWidth = 1;
-    lookNFeel->GetMetric(nsILookAndFeel::eMetric_MultiLineCaretWidth,
-                         pixelWidth);
-    caret->SetCaretWidth(pixelWidth);
   }
   else {
     PRInt32 isCaretVisibleDuringSelection = 0;

@@ -271,11 +271,8 @@ NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricID aID, PRInt32 & aMetric)
     case eMetric_CaretBlinkTime:
         aMetric = (PRInt32)::GetCaretBlinkTime();
         break;
-    case eMetric_SingleLineCaretWidth:
+    case eMetric_CaretWidth:
         aMetric = 1;
-        break;
-    case eMetric_MultiLineCaretWidth:
-        aMetric = 2;
         break;
     case eMetric_ShowCaretDuringSelection:
         aMetric = 0;

@@ -4793,14 +4793,6 @@ nsEventStateManager::SetCaretEnabled(nsIPresShell *aPresShell, PRBool aEnabled)
   selCon->SetCaretEnabled(aEnabled);
   caret->SetCaretVisible(aEnabled);
 
-  if (aEnabled) {
-    PRInt32 pixelWidth = 1;
-    nsCOMPtr<nsILookAndFeel> lookNFeel(do_GetService(kLookAndFeelCID));
-    if (lookNFeel)
-      lookNFeel->GetMetric(nsILookAndFeel::eMetric_MultiLineCaretWidth, pixelWidth);
-    caret->SetCaretWidth(pixelWidth);
-  }
-
   return NS_OK;
 }
 

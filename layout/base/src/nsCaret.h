@@ -77,7 +77,6 @@ class nsCaret : public nsICaret,
     NS_IMETHOD    ClearFrameRefs(nsIFrame* aFrame);
     NS_IMETHOD    EraseCaret();
 
-    NS_IMETHOD    SetCaretWidth(nscoord aPixels);
     NS_IMETHOD    SetVisibilityDuringSelection(PRBool aVisibility);
     NS_IMETHOD    DrawAtPosition(nsIDOMNode* aNode, PRInt32 aOffset);
 
@@ -112,8 +111,9 @@ protected:
     PRUint32              mBlinkRate;         // time for one cyle (off then on), in milliseconds
 
     nscoord               mCaretTwipsWidth;   // caret width in twips. this gets calculated laziiy
-    nscoord               mCaretPixelsWidth;  // caret width in pixels
-    
+    nscoord               mBidiIndicatorTwipsSize;   // width and height of bidi indicator
+    static const kMinBidiIndicatorPixels = 2;
+
     PRPackedBool          mVisible;           // is the caret blinking
     PRPackedBool          mDrawn;             // this should be mutable
     PRPackedBool          mReadOnly;          // it the caret in readonly state (draws differently)      

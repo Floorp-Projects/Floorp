@@ -45,10 +45,10 @@
 struct nsSize;
 
 
-// {21B51DE1-21A3-11d2-B6E0-00805F8A2676}
+// {ED0B4802-9F50-4f69-9509-6949C69999E4}
 #define NS_ILOOKANDFEEL_IID \
-{ 0x21b51de1, 0x21a3, 0x11d2, \
-    { 0xb6, 0xe0, 0x0, 0x80, 0x5f, 0x8a, 0x26, 0x76 } }
+{ 0xed0b4802, 0x9f50, 0x4f69, \
+    { 0x95, 0x9, 0x69, 0x49, 0xc6, 0x99, 0x99, 0xe4 } }
 
 class nsILookAndFeel: public nsISupports {
 public:
@@ -161,8 +161,7 @@ public:
     eMetric_ListVerticalInsidePadding,                    // needed only because of GTK
 
     eMetric_CaretBlinkTime,                               // default, may be overriden by OS
-    eMetric_SingleLineCaretWidth,                         // pixel width of caret in a single line field
-    eMetric_MultiLineCaretWidth,                          // pixel width of caret in a multi-line field
+    eMetric_CaretWidth,                                   // pixel width of caret
     eMetric_ShowCaretDuringSelection,                       // show the caret when text is selected?
     eMetric_SelectTextfieldsOnKeyFocus,                   // select textfields when focused via tab/accesskey?
     eMetric_SubmenuDelay,                                 // delay before submenus open

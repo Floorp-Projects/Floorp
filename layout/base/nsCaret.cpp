@@ -85,8 +85,6 @@
 nsCaret::nsCaret()
 : mPresShell(nsnull)
 , mBlinkRate(500)
-, mCaretTwipsWidth(-1)
-, mCaretPixelsWidth(1)
 , mVisible(PR_FALSE)
 , mDrawn(PR_FALSE)
 , mReadOnly(PR_FALSE)
@@ -119,16 +117,25 @@ NS_IMETHODIMP nsCaret::Init(nsIPresShell *inPresShell)
   nsILookAndFeel *lookAndFeel = nsnull;
   nsPresContext *presContext = inPresShell->GetPresContext();
   
+  PRInt32 caretPixelsWidth = 1;
   if (presContext && (lookAndFeel = presContext->LookAndFeel())) {
     PRInt32 tempInt;
-    if (NS_SUCCEEDED(lookAndFeel->GetMetric(nsILookAndFeel::eMetric_SingleLineCaretWidth, tempInt)))
-      mCaretPixelsWidth = (nscoord)tempInt;
+    if (NS_SUCCEEDED(lookAndFeel->GetMetric(nsILookAndFeel::eMetric_CaretWidth, tempInt)))
+      caretPixelsWidth = (nscoord)tempInt;
     if (NS_SUCCEEDED(lookAndFeel->GetMetric(nsILookAndFeel::eMetric_CaretBlinkTime, tempInt)))
       mBlinkRate = (PRUint32)tempInt;
     if (NS_SUCCEEDED(lookAndFeel->GetMetric(nsILookAndFeel::eMetric_ShowCaretDuringSelection, tempInt)))
       mShowDuringSelection = tempInt ? PR_TRUE : PR_FALSE;
   }
   
+  float tDevUnitsToTwips;
+  tDevUnitsToTwips = presContext->DeviceContext()->DevUnitsToTwips();
+  mCaretTwipsWidth = (nscoord)(tDevUnitsToTwips * (float)caretPixelsWidth);
+  mBidiIndicatorTwipsSize = (nscoord)(tDevUnitsToTwips * (float)kMinBidiIndicatorPixels);
+  if (mBidiIndicatorTwipsSize < mCaretTwipsWidth) {
+    mBidiIndicatorTwipsSize = mCaretTwipsWidth;
+  }
+
   // get the selection from the pres shell, and set ourselves up as a selection
   // listener
 
@@ -384,19 +391,6 @@ NS_IMETHODIMP nsCaret::EraseCaret()
 {
   if (mDrawn)
     DrawCaret();
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsCaret::SetCaretWidth(nscoord aPixels)
-{
-  if (aPixels <= 0)
-    return NS_ERROR_FAILURE;
-
-  // no need to optimize this, but if it gets too slow, we can check for
-  // case aPixels==mCaretPixelsWidth
-  mCaretPixelsWidth = aPixels;
-  mCaretTwipsWidth = -1;
-
   return NS_OK;
 }
 
@@ -987,12 +981,6 @@ void nsCaret::GetCaretRectAndInvert()
 
     caretRect += framePos;
 
-    if (mCaretTwipsWidth < 0)    // need to re-compute the pixel width
-    {
-      float tDevUnitsToTwips;
-      tDevUnitsToTwips = presContext->DeviceContext()->DevUnitsToTwips();
-      mCaretTwipsWidth  = (nscoord)(tDevUnitsToTwips * (float)mCaretPixelsWidth);
-    }
     caretRect.width = mCaretTwipsWidth;
 
     // Avoid view redraw problems by making sure the
@@ -1074,9 +1062,8 @@ void nsCaret::GetCaretRectAndInvert()
       }
       // If keyboard language is RTL, draw the hook on the left; if LTR, to the right
       hookRect.SetRect(caretRect.x + caretRect.width * ((bidiLevel) ? -1 : 1), 
-                       caretRect.y + caretRect.width,
-                       caretRect.width,
-                       caretRect.width);
+                       caretRect.y + mBidiIndicatorTwipsSize,
+                       mBidiIndicatorTwipsSize, mBidiIndicatorTwipsSize);
       mHookRect.IntersectRect(clipRect, hookRect);
     }
 #endif //IBMBIDI
