@@ -78,6 +78,7 @@ all:: export libs install
 install:: moz_import install_roots
 
 depend::
+	$(GMAKE) -C lib $(GMAKE_FLAGS) clean
 
 export libs install clobber clobber_all clean::
 !if "$(MOZ_BITS)" == "16"
