@@ -38,10 +38,6 @@
 static char THIS_FILE[] = __FILE__;
 #endif
 
-#ifdef XP_WIN16
-#define SIZE_T_MAX 0xFF80		// a little less than 64K, the max alloc size on win16.
-#define MAX_ARR_ELEMS SIZE_T_MAX/sizeof(void*)
-#endif
 /////////////////////////////////////////////////////////////////////////////
 
 XPPtrArray::XPPtrArray()
