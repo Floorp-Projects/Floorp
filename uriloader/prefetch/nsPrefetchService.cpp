@@ -139,29 +139,35 @@ NS_IMETHODIMP
 nsPrefetchListener::OnStartRequest(nsIRequest *aRequest,
                                    nsISupports *aContext)
 {
-    nsCOMPtr<nsICachingChannel> cachingChannel(do_QueryInterface(aRequest));
-    if (cachingChannel) {
-        // no need to prefetch a document that is already in the cache
-        PRBool fromCache;
-        if (NS_SUCCEEDED(cachingChannel->IsFromCache(&fromCache)) && fromCache) {
-            LOG(("document is already in the cache; canceling prefetch\n"));
+    nsresult rv;
+
+    nsCOMPtr<nsICachingChannel> cachingChannel(do_QueryInterface(aRequest, &rv));
+    if (NS_FAILED(rv)) return rv;
+
+    // no need to prefetch a document that is already in the cache
+    PRBool fromCache;
+    if (NS_SUCCEEDED(cachingChannel->IsFromCache(&fromCache)) && fromCache) {
+        LOG(("document is already in the cache; canceling prefetch\n"));
+        return NS_BINDING_ABORTED;
+    }
+
+    //
+    // no need to prefetch a document that must be requested fresh each
+    // and every time.
+    //
+    nsCOMPtr<nsISupports> cacheToken;
+    cachingChannel->GetCacheToken(getter_AddRefs(cacheToken));
+    if (!cacheToken)
+        return NS_ERROR_ABORT; // bail, no cache entry
+
+    nsCOMPtr<nsICacheEntryInfo> entryInfo(do_QueryInterface(cacheToken, &rv));
+    if (NS_FAILED(rv)) return rv;
+
+    PRUint32 expTime;
+    if (NS_SUCCEEDED(entryInfo->GetExpirationTime(&expTime))) {
+        if (NowInSeconds() >= expTime) {
+            LOG(("document cannot be reused from cache; canceling prefetch\n"));
             return NS_BINDING_ABORTED;
-        }
-        // no need to prefetch a document that must be requested fresh each
-        // and every time.
-        nsCOMPtr<nsISupports> cacheToken;
-        cachingChannel->GetCacheToken(getter_AddRefs(cacheToken));
-        if (cacheToken) {
-            nsCOMPtr<nsICacheEntryInfo> entryInfo(do_QueryInterface(cacheToken));
-            if (entryInfo) {
-                PRUint32 expTime;
-                if (NS_SUCCEEDED(entryInfo->GetExpirationTime(&expTime))) {
-                    if (NowInSeconds() >= expTime) {
-                        LOG(("document cannot be reused from cache; canceling prefetch\n"));
-                        return NS_BINDING_ABORTED;
-                    }
-                }
-            }
         }
     }
     return NS_OK;
@@ -256,7 +262,7 @@ void
 nsPrefetchService::ProcessNextURI()
 {
     nsresult rv;
-    nsCOMPtr<nsIURI> uri;
+    nsCOMPtr<nsIURI> uri, referrer;
 
     mCurrentChannel = nsnull;
 
@@ -264,7 +270,7 @@ nsPrefetchService::ProcessNextURI()
     if (!listener) return;
 
     do {
-        rv = DequeueURI(getter_AddRefs(uri));
+        rv = DequeueURI(getter_AddRefs(uri), getter_AddRefs(referrer));
         if (NS_FAILED(rv)) break;
 
 #if defined(PR_LOGGING)
@@ -282,6 +288,14 @@ nsPrefetchService::ProcessNextURI()
                            nsnull, nsIRequest::LOAD_BACKGROUND);
         if (NS_FAILED(rv)) continue;
 
+        // configure HTTP specific stuff
+        nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(mCurrentChannel));
+        if (httpChannel) {
+            httpChannel->SetReferrer(referrer);
+            httpChannel->SetRequestHeader(NS_LITERAL_CSTRING("X-Moz"),
+                                          NS_LITERAL_CSTRING("prefetch"));
+        }
+
         rv = mCurrentChannel->AsyncOpen(listener, nsnull);
     }
     while (NS_FAILED(rv));
@@ -292,9 +306,9 @@ nsPrefetchService::ProcessNextURI()
 //-----------------------------------------------------------------------------
 
 nsresult
-nsPrefetchService::EnqueueURI(nsIURI *aURI)
+nsPrefetchService::EnqueueURI(nsIURI *aURI, nsIURI *aReferrerURI)
 {
-    nsPrefetchNode *node = new nsPrefetchNode(aURI);
+    nsPrefetchNode *node = new nsPrefetchNode(aURI, aReferrerURI);
     if (!node)
         return NS_ERROR_OUT_OF_MEMORY;
 
@@ -311,13 +325,14 @@ nsPrefetchService::EnqueueURI(nsIURI *aURI)
 }
 
 nsresult
-nsPrefetchService::DequeueURI(nsIURI **aURI)
+nsPrefetchService::DequeueURI(nsIURI **aURI, nsIURI **aReferrerURI)
 {
     if (!mQueueHead)
         return NS_ERROR_NOT_AVAILABLE;
 
     // remove from the head
     NS_ADDREF(*aURI = mQueueHead->mURI);
+    NS_ADDREF(*aReferrerURI = mQueueHead->mReferrerURI);
 
     nsPrefetchNode *node = mQueueHead;
     mQueueHead = mQueueHead->mNext;
@@ -333,10 +348,11 @@ void
 nsPrefetchService::EmptyQueue()
 {
     nsresult rv;
-    nsCOMPtr<nsIURI> uri;
+    nsCOMPtr<nsIURI> uri, referrer;
 
     do {
-        rv = DequeueURI(getter_AddRefs(uri));
+        rv = DequeueURI(getter_AddRefs(uri),
+                        getter_AddRefs(referrer));
     }
     while (NS_SUCCEEDED(rv));
 }
@@ -392,9 +408,12 @@ NS_IMPL_ISUPPORTS4(nsPrefetchService,
 //-----------------------------------------------------------------------------
 
 NS_IMETHODIMP
-nsPrefetchService::PrefetchURI(nsIURI *aURI)
+nsPrefetchService::PrefetchURI(nsIURI *aURI, nsIURI *aReferrerURI)
 {
     nsresult rv;
+
+    NS_ENSURE_ARG_POINTER(aURI);
+    NS_ENSURE_ARG_POINTER(aReferrerURI);
 
 #if defined(PR_LOGGING)
     if (LOG_ENABLED()) {
@@ -420,10 +439,19 @@ nsPrefetchService::PrefetchURI(nsIURI *aURI)
     // or possibly nsIRequest::loadFlags to determine if this URI should be
     // prefetched.
     //
-    PRBool isHttp;
-    rv = aURI->SchemeIs("http", &isHttp); 
-    if (NS_FAILED(rv) || !isHttp) {
+    PRBool match;
+    rv = aURI->SchemeIs("http", &match); 
+    if (NS_FAILED(rv) || !match) {
         LOG(("rejected: URL is not of type http\n"));
+        return NS_ERROR_ABORT;
+    }
+
+    // 
+    // the referrer URI must be http:
+    //
+    rv = aReferrerURI->SchemeIs("http", &match);
+    if (NS_FAILED(rv) || !match) {
+        LOG(("rejected: referrer URL is not of type http\n"));
         return NS_ERROR_ABORT;
     }
 
@@ -469,7 +497,7 @@ nsPrefetchService::PrefetchURI(nsIURI *aURI)
         }
     }
 
-    return EnqueueURI(aURI);
+    return EnqueueURI(aURI, aReferrerURI);
 }
 
 //-----------------------------------------------------------------------------

@@ -44,8 +44,11 @@ interface nsIPrefetchService : nsISupports
 {
     /**
      * Enqueue a request to prefetch the specified URI.
+     *
+     * @param aURI the URI of the document to prefetch
+     * @param aReferrerURI the URI of the referring page
      */
-    void prefetchURI(in nsIURI aURI);
+    void prefetchURI(in nsIURI aURI, in nsIURI aReferrerURI);
 
     // XXX do we need a way to cancel prefetch requests?
 };
