@@ -23,3 +23,5 @@
 <!ENTITY folderPickerPrefix.label "Run selected filter(s) on:">
 <!ENTITY folderPickerPrefix.accesskey "i">
 <!ENTITY choosethis.label "choose this folder">
+<!ENTITY helpButton.label "Help">
+<!ENTITY helpButton.accesskey "H">

@@ -162,6 +162,8 @@ Contributor(s):  Hkan Waara <hwaara@chello.se>
                   oncommand="onEditFilter();"/>
           <button id="deleteButton" label="&deleteButton.label;" accesskey="&deleteButton.accesskey;" 
                   oncommand="onDeleteFilter();"/>
+          <button label="&helpButton.label;" accesskey="&helpButton.accesskey;" 
+                  oncommand="openHelp('mail-filters');"/>
           <spacer flex="1"/>
           <button id="reorderUpButton" label="&reorderUpButton.label;" accesskey="&reorderUpButton.accesskey;" 
                   oncommand="onUp(event);"/>
