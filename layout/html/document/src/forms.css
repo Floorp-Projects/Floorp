@@ -222,6 +222,10 @@ input[type="image"][disabled] {
   cursor: default;
 }
 
+input[type="image"]:focus {
+  -moz-outline: 1px dotted WindowText;
+}
+
 /* file selector */
 input[type="file"] {
   white-space: nowrap;
