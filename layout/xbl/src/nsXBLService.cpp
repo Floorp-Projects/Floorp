@@ -19,13 +19,16 @@
  *
  * Original Author: David W. Hyatt (hyatt@netscape.com)
  *
- * Contributor(s): Brendan Eich (brendan@mozilla.org)
+ * Contributor(s): 
+ *  - Brendan Eich (brendan@mozilla.org)
+ *  - Mike Pinkerton (pinkerton@netscape.com)
  */
 
 #include "nsCOMPtr.h"
 #include "nsXBLService.h"
 #include "nsIXBLPrototypeHandler.h"
 #include "nsXBLWindowKeyHandler.h"
+#include "nsXBLWindowDragHandler.h"
 #include "nsIInputStream.h"
 #include "nsINameSpace.h"
 #include "nsINameSpaceManager.h"
@@ -807,31 +810,40 @@ nsXBLService::GetXBLDocumentInfo(const nsCString& aURLStr, nsIContent* aBoundEle
   return NS_OK;
 }
 
+
+//
+// AttachGlobalKeyHandler
+//
+// Creates a new key handler and prepares to listen to key events on the given
+// event receiver (either a document or an content node). If the receiver is content,
+// then extra work needs to be done to hook it up to the document (XXX WHY??)
+//
 NS_IMETHODIMP
 nsXBLService::AttachGlobalKeyHandler(nsIDOMEventReceiver* aReceiver)
 {
-  // Create the key handler
+  // check if the receiver is a content node (not a document), and hook
+  // it to the document if that is the case.
   nsCOMPtr<nsIDOMEventReceiver> rec = aReceiver;
-  nsCOMPtr<nsIContent> element(do_QueryInterface(aReceiver));
-
-  if (element) {
+  nsCOMPtr<nsIContent> contentNode(do_QueryInterface(aReceiver));
+  if (contentNode) {
     nsCOMPtr<nsIDocument> doc;
-    element->GetDocument(*getter_AddRefs(doc));  
+    contentNode->GetDocument(*getter_AddRefs(doc));  
     if (doc)
       rec = do_QueryInterface(doc); // We're a XUL keyset. Attach to our document.
   }
-  
+    
   if (!rec)
     return NS_ERROR_FAILURE;
+    
+  nsCOMPtr<nsIDOMElement> elt(do_QueryInterface(contentNode));
 
-  nsCOMPtr<nsIDOMElement> elt(do_QueryInterface(element));
-
+  // Create the key handler
   nsXBLWindowKeyHandler* handler;
-  NS_NewXBLWindowKeyHandler(elt, rec, &handler); // THis call addrefs us.
-
+  NS_NewXBLWindowKeyHandler(elt, rec, &handler); // This addRef's
   if (!handler)
     return NS_ERROR_FAILURE;
 
+  // listen to these events
   rec->AddEventListener(NS_LITERAL_STRING("keydown"), handler, PR_FALSE);
   rec->AddEventListener(NS_LITERAL_STRING("keyup"), handler, PR_FALSE);
   rec->AddEventListener(NS_LITERAL_STRING("keypress"), handler, PR_FALSE);
@@ -841,6 +853,37 @@ nsXBLService::AttachGlobalKeyHandler(nsIDOMEventReceiver* aReceiver)
 
   return NS_OK;
 }
+
+
+//
+// AttachGlobalDragDropHandler
+//
+// Creates a new drag handler and prepares to listen to dragNdrop events on the given
+// event receiver.
+//
+NS_IMETHODIMP
+nsXBLService::AttachGlobalDragHandler(nsIDOMEventReceiver* aReceiver)
+{
+  // Create the DnD handler
+  nsXBLWindowDragHandler* handler;
+  NS_NewXBLWindowDragHandler(aReceiver, &handler);
+  if (!handler)
+    return NS_ERROR_FAILURE;
+
+  // listen to these events
+  aReceiver->AddEventListener(NS_LITERAL_STRING("draggesture"), handler, PR_FALSE);
+  aReceiver->AddEventListener(NS_LITERAL_STRING("dragenter"), handler, PR_FALSE);
+  aReceiver->AddEventListener(NS_LITERAL_STRING("dragexit"), handler, PR_FALSE);
+  aReceiver->AddEventListener(NS_LITERAL_STRING("dragover"), handler, PR_FALSE);
+  aReceiver->AddEventListener(NS_LITERAL_STRING("dragdrop"), handler, PR_FALSE);
+
+  // Release.  Do this so that only the event receiver holds onto the handler.
+  NS_RELEASE(handler);
+
+  return NS_OK;
+
+} // AttachGlobalDragDropHandler
+
 
 NS_IMETHODIMP
 nsXBLService::Observe(nsISupports* aSubject, const PRUnichar* aTopic, const PRUnichar* aSomeData)
@@ -1352,6 +1395,8 @@ nsXBLService::BuildHandlerChain(nsIContent* aContent, nsIXBLPrototypeHandler** a
 }
 
 // Creation Routine ///////////////////////////////////////////////////////////////////////
+
+nsresult NS_NewXBLService(nsIXBLService** aResult);
 
 nsresult
 NS_NewXBLService(nsIXBLService** aResult)

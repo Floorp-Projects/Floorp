@@ -429,7 +429,7 @@ input {
   vertical-align: bottom;
   -moz-box-sizing: border-box;
   -moz-user-focus: normal;
-  -moz-binding: url("chrome://global/content/platformHTMLBindings.xml#inputFields");
+  -moz-binding: url("resource:///res/builtin/platformHTMLBindings.xml#inputFields");
 }
 
 textarea {
@@ -442,7 +442,7 @@ textarea {
   vertical-align: bottom;
   -moz-box-sizing: border-box;
   -moz-user-focus: normal;
-  -moz-binding: url("chrome://global/content/platformHTMLBindings.xml#textAreas");
+  -moz-binding: url("resource:///res/builtin/platformHTMLBindings.xml#textAreas");
 }
 
 :-moz-singleline-textcontrol-frame {

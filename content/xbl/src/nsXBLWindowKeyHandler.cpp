@@ -19,53 +19,37 @@
  *
  * Original Author: David W. Hyatt (hyatt@netscape.com)
  *
+ * Contributor(s):
+ *  - Mike Pinkerton (pinkerton@netscape.com)
  */
 
 #include "nsCOMPtr.h"
 #include "nsIXBLPrototypeHandler.h"
 #include "nsXBLWindowKeyHandler.h"
-#include "nsIXBLPrototypeBinding.h"
 #include "nsIContent.h"
 #include "nsIAtom.h"
 #include "nsIDOMNSUIEvent.h"
 #include "nsIDOMKeyEvent.h"
 #include "nsIDOMEventReceiver.h"
-#include "nsIPrivateDOMEvent.h"
 #include "nsXBLService.h"
 #include "nsIServiceManager.h"
 #include "nsHTMLAtoms.h"
 #include "nsINameSpaceManager.h"
 #include "nsIXBLDocumentInfo.h"
 #include "nsIScriptGlobalObject.h"
-#include "nsIDOMWindowInternal.h"
-#include "nsPIDOMWindow.h"
-#include "nsIFocusController.h"
-#include "nsIDocShell.h"
-#include "nsIPresShell.h"
-#include "nsIDOMDocument.h"
-#include "nsIDocument.h"
 #include "nsIDOMElement.h"
-#include "nsPIWindowRoot.h"
 
 PRUint32 nsXBLWindowKeyHandler::gRefCnt = 0;
 nsIAtom* nsXBLWindowKeyHandler::kKeyDownAtom = nsnull;
 nsIAtom* nsXBLWindowKeyHandler::kKeyUpAtom = nsnull;
 nsIAtom* nsXBLWindowKeyHandler::kKeyPressAtom = nsnull;
 
-struct nsXBLSpecialDocInfo {
-  nsCOMPtr<nsIXBLDocumentInfo> mHTMLBindings;
-  nsCOMPtr<nsIXBLDocumentInfo> mPlatformHTMLBindings;
-  PRBool mFilesPresent;
-
-  nsXBLSpecialDocInfo() :mFilesPresent(PR_TRUE) {};
-};
 
 nsXBLWindowKeyHandler::nsXBLWindowKeyHandler(nsIDOMElement* aElement, nsIDOMEventReceiver* aReceiver)
+  : nsXBLWindowHandler(aElement, aReceiver)
 {
   NS_INIT_ISUPPORTS();
-  mElement = aElement;
-  mReceiver = aReceiver;
-  mXBLSpecialDocInfo = nsnull;
+
   gRefCnt++;
   if (gRefCnt == 1) {
     kKeyUpAtom = NS_NewAtom("keyup");
@@ -76,8 +60,6 @@ nsXBLWindowKeyHandler::nsXBLWindowKeyHandler(nsIDOMElement* aElement, nsIDOMEven
 
 nsXBLWindowKeyHandler::~nsXBLWindowKeyHandler()
 {
-  delete mXBLSpecialDocInfo;
-
   gRefCnt--;
   if (gRefCnt == 0) {
     NS_RELEASE(kKeyUpAtom);
@@ -88,185 +70,31 @@ nsXBLWindowKeyHandler::~nsXBLWindowKeyHandler()
 
 NS_IMPL_ISUPPORTS1(nsXBLWindowKeyHandler, nsIDOMKeyListener)
 
-PRBool
-nsXBLWindowKeyHandler::IsEditor()
-{
-  nsCOMPtr<nsPIWindowRoot> windowRoot(do_QueryInterface(mReceiver));
-  nsCOMPtr<nsIFocusController> focusController;
-  windowRoot->GetFocusController(getter_AddRefs(focusController));
-  if (!focusController) {
-    NS_WARNING("********* Something went wrong! No focus controller on the root!!!\n");
-    return PR_FALSE;
-  }
 
-  nsCOMPtr<nsIDOMWindowInternal> focusedWindow;
-  focusController->GetFocusedWindow(getter_AddRefs(focusedWindow));
-  if (!focusedWindow)
-    return PR_FALSE;
-  
-  nsCOMPtr<nsIScriptGlobalObject> obj(do_QueryInterface(focusedWindow));
-  nsCOMPtr<nsIDocShell> docShell;
-  obj->GetDocShell(getter_AddRefs(docShell));
-  nsCOMPtr<nsIPresShell> presShell;
-  if (docShell)
-    docShell->GetPresShell(getter_AddRefs(presShell));
-
-  if (presShell) {
-    PRBool isEditor;
-    presShell->GetDisplayNonTextSelection(&isEditor);
-    return isEditor;
-  }
-
-  return PR_FALSE;
-}
-
-static void GetHandlers(nsIXBLDocumentInfo* aInfo, const nsCString& aDocURI, 
-                        const nsCString& aRef, nsIXBLPrototypeHandler** aResult)
-{
-  nsCOMPtr<nsIXBLPrototypeBinding> binding;
-  aInfo->GetPrototypeBinding(aRef, getter_AddRefs(binding));
-  if (!binding) {
-    nsCOMPtr<nsIDocument> doc;
-    aInfo->GetDocument(getter_AddRefs(doc));
-    nsCOMPtr<nsIContent> root = getter_AddRefs(doc->GetRootContent());
-    PRInt32 childCount;
-    root->ChildCount(childCount);
-    for (PRInt32 i = 0; i < childCount; i++) {
-      nsCOMPtr<nsIContent> child;
-      root->ChildAt(i, *getter_AddRefs(child));
-      nsAutoString id;
-      child->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::id, id);
-      if (id.EqualsWithConversion(aRef)) {
-        NS_NewXBLPrototypeBinding(aRef, child, aInfo, getter_AddRefs(binding));
-        aInfo->SetPrototypeBinding(aRef, binding);
-        break;
-      }
-    }
-  }
-
-  nsCOMPtr<nsIXBLPrototypeHandler> dummy;
-  binding->GetPrototypeHandlers(aResult, getter_AddRefs(dummy)); // Addref happens here.
-}
-
+//
+// EnsureHandlers
+//    
+// Lazily load the XBL handlers. Overridden to handle being attached
+// to a particular element rather than the document
+//
 NS_IMETHODIMP
 nsXBLWindowKeyHandler::EnsureHandlers()
 {
+  nsresult rv = NS_ERROR_FAILURE;
+  
   if (mElement) {
     if (mHandler)
       return NS_OK;
-    // Call into the XBL service.
     nsCOMPtr<nsIContent> content(do_QueryInterface(mElement));
     nsCOMPtr<nsIXBLPrototypeHandler> dummy;
-    nsXBLService::BuildHandlerChain(content, getter_AddRefs(mHandler), getter_AddRefs(dummy));
+    rv = nsXBLService::BuildHandlerChain(content, getter_AddRefs(mHandler), getter_AddRefs(dummy));
   }
-  else {
-    if (!mXBLSpecialDocInfo)
-      mXBLSpecialDocInfo = new nsXBLSpecialDocInfo();
-      
-    if (!mXBLSpecialDocInfo)
-      return NS_ERROR_OUT_OF_MEMORY;
-
-    if (!mXBLSpecialDocInfo->mFilesPresent)
-      return NS_OK;
-
-    if (!mXBLSpecialDocInfo->mHTMLBindings || !mXBLSpecialDocInfo->mPlatformHTMLBindings) {
-      nsresult rv;
-      NS_WITH_SERVICE(nsIXBLService, xblService, "@mozilla.org/xbl;1", &rv);
-      if (xblService) {
-        // Obtain the two doc infos we need.
-        xblService->LoadBindingDocumentInfo(nsnull, nsnull, 
-                                            nsCAutoString("chrome://global/content/htmlBindings.xml"),
-                                            nsCAutoString(""), PR_TRUE, 
-                                            getter_AddRefs(mXBLSpecialDocInfo->mHTMLBindings));
-        xblService->LoadBindingDocumentInfo(nsnull, nsnull, 
-                                            nsCAutoString("chrome://global/content/platformHTMLBindings.xml"),
-                                            nsCAutoString(""), PR_TRUE, 
-                                            getter_AddRefs(mXBLSpecialDocInfo->mPlatformHTMLBindings));
-
-        if (!mXBLSpecialDocInfo->mHTMLBindings || !mXBLSpecialDocInfo->mPlatformHTMLBindings) {
-          mXBLSpecialDocInfo->mFilesPresent = PR_FALSE;
-          return NS_OK;
-        }
-      }
-    }
-
-    // Now determine which handlers we should be using.
-    if (IsEditor()) {
-      GetHandlers(mXBLSpecialDocInfo->mPlatformHTMLBindings, 
-                  nsCAutoString("chrome://global/content/platformHTMLBindings.xml"),
-                  nsCAutoString("editor"), 
-                  getter_AddRefs(mPlatformHandler));
-      GetHandlers(mXBLSpecialDocInfo->mHTMLBindings, 
-                  nsCAutoString("chrome://global/content/htmlBindings.xml"),
-                  nsCAutoString("editorBase"), 
-                  getter_AddRefs(mHandler));
-    }
-    else {
-      GetHandlers(mXBLSpecialDocInfo->mPlatformHTMLBindings, 
-                  nsCAutoString("chrome://global/content/platformHTMLBindings.xml"),
-                  nsCAutoString("browser"), 
-                  getter_AddRefs(mPlatformHandler));
-      GetHandlers(mXBLSpecialDocInfo->mHTMLBindings, 
-                  nsCAutoString("chrome://global/content/htmlBindings.xml"),
-                  nsCAutoString("browserBase"), 
-                  getter_AddRefs(mHandler));
-    }
-  }
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXBLWindowKeyHandler::WalkHandlersInternal(nsIDOMKeyEvent* aKeyEvent, nsIAtom* aEventType, 
-                                            nsIXBLPrototypeHandler* aHandler)
-{
-  nsresult rv;
-  nsCOMPtr<nsIXBLPrototypeHandler> currHandler = aHandler;
-  while (currHandler) {
-
-    PRBool stopped;
-    nsCOMPtr<nsIPrivateDOMEvent> privateEvent(do_QueryInterface(aKeyEvent));
-    privateEvent->IsDispatchStopped(&stopped);
-    if (stopped)
-      return NS_OK;
- 
-    PRBool matched = PR_FALSE;
-    currHandler->KeyEventMatched(aEventType, aKeyEvent, &matched);
+  else
+    nsXBLWindowHandler::EnsureHandlers();
   
-    if (matched) {
-      // Make sure it's not disabled.
-      nsAutoString disabled;
-      
-      nsCOMPtr<nsIContent> elt;
-      currHandler->GetHandlerElement(getter_AddRefs(elt));
-
-      /*nsAutoString id;
-      elt->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::id, id);
-      nsCAutoString idc; idc.AssignWithConversion(id);
-   
-      if (!idc.IsEmpty())
-        printf("Key matched with id of: %s\n", (const char*)idc);
-*/
-
-      elt->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::disabled, disabled);
-      if (!disabled.Equals(NS_LITERAL_STRING("true"))) {
-        nsCOMPtr<nsIDOMEventReceiver> rec = mReceiver;
-        if (mElement)
-          rec = do_QueryInterface(elt);
-        rv = currHandler->ExecuteHandler(rec, aKeyEvent);
-        if (NS_SUCCEEDED(rv)) {
-          return NS_OK;
-        }
-      }
-    }
-
-    nsCOMPtr<nsIXBLPrototypeHandler> nextHandler;
-    currHandler->GetNextHandler(getter_AddRefs(nextHandler));
-    currHandler = nextHandler;
-  }
-
-  return NS_OK;
+  return rv;
 }
+
 
 NS_IMETHODIMP
 nsXBLWindowKeyHandler::WalkHandlers(nsIDOMEvent* aKeyEvent, nsIAtom* aEventType)
@@ -277,6 +105,7 @@ nsXBLWindowKeyHandler::WalkHandlers(nsIDOMEvent* aKeyEvent, nsIAtom* aEventType)
   if (prevent)
     return NS_OK;
 
+  // Make sure our event is really a key event
   nsCOMPtr<nsIDOMKeyEvent> keyEvent(do_QueryInterface(aKeyEvent));
   if (!keyEvent)
     return NS_OK;
@@ -284,13 +113,13 @@ nsXBLWindowKeyHandler::WalkHandlers(nsIDOMEvent* aKeyEvent, nsIAtom* aEventType)
   EnsureHandlers();
   
   if (!mElement) {
-    WalkHandlersInternal(keyEvent, aEventType, mPlatformHandler);
+    WalkHandlersInternal(aKeyEvent, aEventType, mPlatformHandler);
     evt->GetPreventDefault(&prevent);
     if (prevent)
       return NS_OK; // Handled by the platform. Our work here is done.
   }
 
-  WalkHandlersInternal(keyEvent, aEventType, mHandler);
+  WalkHandlersInternal(aKeyEvent, aEventType, mHandler);
   
   return NS_OK;
 }
@@ -309,6 +138,25 @@ nsresult nsXBLWindowKeyHandler::KeyPress(nsIDOMEvent* aKeyEvent)
 {
   return WalkHandlers(aKeyEvent, kKeyPressAtom);
 }
+
+
+//
+// EventMatched
+//
+// See if the given handler cares about this particular key event
+//
+PRBool
+nsXBLWindowKeyHandler :: EventMatched ( nsIXBLPrototypeHandler* inHandler, nsIAtom* inEventType, nsIDOMEvent* inEvent )
+{
+  PRBool matched = PR_FALSE;
+  
+  nsCOMPtr<nsIDOMKeyEvent> keyEvent ( do_QueryInterface(inEvent) );
+  if ( keyEvent )
+    inHandler->KeyEventMatched(inEventType, keyEvent, &matched);
+  
+  return matched;
+}
+
  
 ///////////////////////////////////////////////////////////////////////////////////
 

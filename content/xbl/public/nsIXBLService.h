@@ -79,7 +79,9 @@ public:
                                      const nsCString& aURI, const nsCString& aRef,
                                      PRBool aForceSyncLoad, nsIXBLDocumentInfo** aResult) = 0;
 
+  // Hooks up the global key and DragDrop event handlers to the document root.
   NS_IMETHOD AttachGlobalKeyHandler(nsIDOMEventReceiver* aElement)=0;
+  NS_IMETHOD AttachGlobalDragHandler(nsIDOMEventReceiver* aElement)=0;
 };
 
 #endif // nsIXBLService_h__

@@ -83,8 +83,8 @@ public:
 
   NS_IMETHOD GetDocumentURI(nsCString& aDocURI) { aDocURI = mDocURI; return NS_OK; };
 
-  NS_IMETHOD GetPrototypeBinding(const nsCString& aRef, nsIXBLPrototypeBinding** aResult);
-  NS_IMETHOD SetPrototypeBinding(const nsCString& aRef, nsIXBLPrototypeBinding* aBinding);
+  NS_IMETHOD GetPrototypeBinding(const nsAReadableCString& aRef, nsIXBLPrototypeBinding** aResult);
+  NS_IMETHOD SetPrototypeBinding(const nsAReadableCString& aRef, nsIXBLPrototypeBinding* aBinding);
 
 private:
   nsCOMPtr<nsIDocument> mDocument;
@@ -150,25 +150,27 @@ nsXBLDocumentInfo::GetRuleProcessors(nsISupportsArray** aResult)
 }
 
 NS_IMETHODIMP
-nsXBLDocumentInfo::GetPrototypeBinding(const nsCString& aRef, nsIXBLPrototypeBinding** aResult)
+nsXBLDocumentInfo::GetPrototypeBinding(const nsAReadableCString& aRef, nsIXBLPrototypeBinding** aResult)
 {
   *aResult = nsnull;
   if (!mBindingTable)
     return NS_OK;
 
-  nsCStringKey key(aRef);
+  const char* str = nsPromiseFlatCString(aRef);
+  nsCStringKey key(str);
   *aResult = NS_STATIC_CAST(nsIXBLPrototypeBinding*, mBindingTable->Get(&key)); // Addref happens here.
 
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsXBLDocumentInfo::SetPrototypeBinding(const nsCString& aRef, nsIXBLPrototypeBinding* aBinding)
+nsXBLDocumentInfo::SetPrototypeBinding(const nsAReadableCString& aRef, nsIXBLPrototypeBinding* aBinding)
 {
   if (!mBindingTable)
     mBindingTable = new nsSupportsHashtable();
 
-  nsCStringKey key(aRef);
+  const char* str = nsPromiseFlatCString(aRef);
+  nsCStringKey key(str);
   mBindingTable->Put(&key, aBinding);
 
   return NS_OK;

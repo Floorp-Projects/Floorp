@@ -87,7 +87,7 @@ public:
 };
 
 extern nsresult
-NS_NewXBLPrototypeBinding(const nsCString& aRef, 
+NS_NewXBLPrototypeBinding(const nsAReadableCString& aRef, 
                           nsIContent* aElement, nsIXBLDocumentInfo* aInfo, 
                           nsIXBLPrototypeBinding** aResult);
 
