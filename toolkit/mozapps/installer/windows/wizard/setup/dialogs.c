@@ -1649,6 +1649,7 @@ BOOL InstallFiles(HWND hDlg)
   else
     err = WIZ_OK;
 
+  //XXXben TODO: shift this until after the FINISH step in DlgProcInstallSuccess
   if (err == WIZ_OK || err == 999){
     if (sgProduct.bInstallFiles)
       UpdateJSProxyInfo();
