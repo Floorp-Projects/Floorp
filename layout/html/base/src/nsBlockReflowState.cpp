@@ -148,6 +148,7 @@ nsBlockReflowState::Initialize(nsIPresContext* aPresContext,
 
   mPrevPosBottomMargin = 0;
   mPrevNegBottomMargin = 0;
+  mPrevMarginSynthetic = PR_FALSE;
 
   mNextListOrdinal = -1;
 
@@ -672,21 +673,27 @@ nsBlockFrame::PlaceLine(nsBlockReflowState& aState,
   // optimization cannot be done because this may be a nested block
   // that will be pushed to a new page by the containing block and the
   // nested block can't know that during its reflow.
+  // XXX and actually, this only always works for the block which is a
+  // child of the body.
   if (!aState.mPresContext->IsPaginated()) {
-    nsIFrame* child = aLine->mFirstChild;
-    for (PRInt32 i = aLine->mChildCount; --i >= 0; ) {
-      nsFrameState state;
-      child->GetFrameState(state);
-      if (NS_FRAME_IN_REFLOW & state) {
-        child->DidReflow(*aState.mPresContext, NS_FRAME_REFLOW_FINISHED);
+    nsIAtom* tag = mContent->GetTag();
+    if (nsHTMLAtoms::body == tag) {
+      nsIFrame* child = aLine->mFirstChild;
+      for (PRInt32 i = aLine->mChildCount; --i >= 0; ) {
+        nsFrameState state;
+        child->GetFrameState(state);
+        if (NS_FRAME_IN_REFLOW & state) {
+          child->DidReflow(*aState.mPresContext, NS_FRAME_REFLOW_FINISHED);
+        }
+        child->GetNextSibling(child);
       }
-      child->GetNextSibling(child);
-    }
 
-    // Paint this portion of ourselves
-    if (!aLine->mBounds.IsEmpty()) {
-      Invalidate(aLine->mBounds);
+      // Paint this portion of ourselves
+      if (!aLine->mBounds.IsEmpty()) {
+        Invalidate(aLine->mBounds);
+      }
     }
+    NS_IF_RELEASE(tag);
   }
 
   // Consume space and advance running values
@@ -1435,7 +1442,9 @@ nsBlockFrame::Reflow(nsIPresContext*      aPresContext,
     PostReflowCheck(aStatus);
   }
 #endif
-  NS_FRAME_TRACE_REFLOW_OUT("exit nsBlockFrame::Reflow", aStatus);
+  NS_FRAME_TRACE_MSG(
+    ("exit nsBlockFrame::Reflow: status=%d width=%d height=%d",
+     aStatus, aDesiredRect.width, aDesiredRect.height));
   return rv;
 }
 
@@ -1490,42 +1499,52 @@ void nsBlockFrame::ComputeDesiredRect(nsBlockReflowState& aState,
 {
   aDesiredRect.x = 0;
   aDesiredRect.y = 0;
-  aDesiredRect.width = aState.mKidXMost + aState.mBorderPadding.right;
-  if (!aState.mUnconstrainedWidth) {
-    // Make sure we're at least as wide as the max size we were given
-    nscoord maxWidth = aState.mAvailSize.width + aState.mBorderPadding.left +
-      aState.mBorderPadding.right;
-    if (aDesiredRect.width < maxWidth) {
-      aDesiredRect.width = maxWidth;
-    }
+
+  // Special check for zero sized content: If our content is zero
+  // sized then we collapse into nothingness.
+  if ((0 == aState.mKidXMost - aState.mBorderPadding.left) &&
+      (0 == aState.mY - aState.mBorderPadding.top)) {
+    aDesiredRect.width = 0;
+    aDesiredRect.height = 0;
   }
-  aState.mY += aState.mBorderPadding.bottom;
-  nscoord lastBottomMargin = aState.mPrevPosBottomMargin -
-    aState.mPrevNegBottomMargin;
-  if (!aState.mUnconstrainedHeight && (lastBottomMargin > 0)) {
-    // It's possible that we don't have room for the last bottom
-    // margin (the last bottom margin is the margin following a block
-    // element that we contain; it isn't applied immediately because
-    // of the margin collapsing logic). This can happen when we are
-    // reflowed in a limited amount of space because we don't know in
-    // advance what the last bottom margin will be.
-    nscoord maxY = aMaxSize.height;
-    if (aState.mY + lastBottomMargin > maxY) {
-      lastBottomMargin = maxY - aState.mY;
-      if (lastBottomMargin < 0) {
-        lastBottomMargin = 0;
+  else {
+    aDesiredRect.width = aState.mKidXMost + aState.mBorderPadding.right;
+    if (!aState.mUnconstrainedWidth) {
+      // Make sure we're at least as wide as the max size we were given
+      nscoord maxWidth = aState.mAvailSize.width + aState.mBorderPadding.left +
+        aState.mBorderPadding.right;
+      if (aDesiredRect.width < maxWidth) {
+        aDesiredRect.width = maxWidth;
       }
     }
-  }
-  aState.mY += lastBottomMargin;
-  aDesiredRect.height = aState.mY;
+    aState.mY += aState.mBorderPadding.bottom;
+    nscoord lastBottomMargin = aState.mPrevPosBottomMargin -
+      aState.mPrevNegBottomMargin;
+    if (!aState.mUnconstrainedHeight && (lastBottomMargin > 0)) {
+      // It's possible that we don't have room for the last bottom
+      // margin (the last bottom margin is the margin following a block
+      // element that we contain; it isn't applied immediately because
+      // of the margin collapsing logic). This can happen when we are
+      // reflowed in a limited amount of space because we don't know in
+      // advance what the last bottom margin will be.
+      nscoord maxY = aMaxSize.height;
+      if (aState.mY + lastBottomMargin > maxY) {
+        lastBottomMargin = maxY - aState.mY;
+        if (lastBottomMargin < 0) {
+          lastBottomMargin = 0;
+        }
+      }
+    }
+    aState.mY += lastBottomMargin;
+    aDesiredRect.height = aState.mY;
 
-  if (!aState.mBlockIsPseudo) {
-    // Clamp the desired rect height when style height applies
-    PRIntn ss = aState.mStyleSizeFlags;
-    if (0 != (ss & NS_SIZE_HAS_HEIGHT)) {
-      aDesiredRect.height = aState.mBorderPadding.top +
-        aState.mStyleSize.height + aState.mBorderPadding.bottom;
+    if (!aState.mBlockIsPseudo) {
+      // Clamp the desired rect height when style height applies
+      PRIntn ss = aState.mStyleSizeFlags;
+      if (0 != (ss & NS_SIZE_HAS_HEIGHT)) {
+        aDesiredRect.height = aState.mBorderPadding.top +
+          aState.mStyleSize.height + aState.mBorderPadding.bottom;
+      }
     }
   }
 }
