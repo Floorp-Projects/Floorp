@@ -56,11 +56,10 @@
 #include "nsIDTD.h"
 #include "nsITokenizer.h"
 #include "nsString.h"
-#include "nsIElementObserver.h"
 #include "nsIParserNode.h"
 #include "nsFixedSizeAllocator.h"
 #include "nsVoidArray.h"
-#include "nsIObserverService.h"
+#include "nsIParserService.h"
 
 #define IF_HOLD(_ptr) \
  PR_BEGIN_MACRO       \
@@ -533,53 +532,23 @@ struct CRCStruct {
   registering tags.
  **************************************************************/
 
-class nsObserverTopic {
+class nsObserverEntry : public nsIObserverEntry {
 public:
-            nsObserverTopic(const nsString& aTopic);
-            ~nsObserverTopic();
-  PRBool    Matches(const nsString& aTopic);
-  void      RegisterObserverForTag(nsIElementObserver *anObserver,eHTMLTags aTag);
-  nsDeque*  GetObserversForTag(eHTMLTags aTag);
-  nsresult  Notify(eHTMLTags aTag,nsIParserNode& aNode,void* aUniqueID,nsIParser* aParser);
+  NS_DECL_ISUPPORTS
+            nsObserverEntry(const nsAString& aTopic);
+  virtual   ~nsObserverEntry();
 
-  nsString  mTopic;
-  nsString  mCharsetKey;
-  nsString  mSourceKey;
-  nsString  mDTDKey;
-  nsDeque*  mObservers[NS_HTML_TAG_MAX + 1];
-};
+  NS_IMETHOD Notify(nsIParserNode* aNode,
+                    nsIParser* aParser,
+                    nsISupports* aWebShell);
 
-/******************************************************************************
-  This class is used to store ref's to token observers during the parse phase.
-  Note that for simplicity, this is a singleton that is constructed in the
-  CNavDTD and shared for the duration of the application session. Later on it
-  might be nice to use a more dynamic approach that would permit observers to
-  come and go on a document basis.
- ******************************************************************************/
-class CObserverService {
-public:
-  CObserverService();
-  ~CObserverService();
-
-  nsDeque*  GetObserversForTagInTopic(eHTMLTags aTag,const nsString& aTopic);
-  nsresult  Notify( eHTMLTags aTag,
-                    nsIParserNode& aNode,
-                    void* aUniqueID, 
-                    const nsString& aTopic,
-                    nsIParser* aParser);
-  nsObserverTopic* GetTopic(const nsString& aTopic);
-  nsObserverTopic* CreateTopic(const nsString& aTopic);
-
-  // Do allocation and release of gObserverService
-  // These are called from the module init and shutdown
-  static nsresult InitGlobals();
-  static void ReleaseGlobals();
+  nsresult   AddObserver(nsIElementObserver* aObserver,eHTMLTags aTag);
+  void       RemoveObserver(nsIElementObserver* aObserver);
+  PRBool     Matches(const nsAString& aTopic);
 
 protected:
-  void      RegisterObservers(const nsString& aTopic);
-  void      UnregisterObservers(const nsString& aTopic);
-  nsDeque   mTopics;  //each topic holds a list of observers per tag.
-  static nsIObserverService *gObserverService;
+  nsString     mTopic;
+  nsVoidArray* mObservers[NS_HTML_TAG_MAX + 1];
 };
 
 /*********************************************************************************************/

@@ -582,22 +582,6 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
   NS_PRECONDITION(nsnull != aContainer, "No content viewer container");
   nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(aContainer));
 
-  if(mParser) {
-    nsCOMPtr<nsISupportsParserBundle> parserBundle;
-    nsresult result;
-    
-    parserBundle = do_QueryInterface(mParser, &result);
-    
-    if(NS_SUCCEEDED(result)) {
-      // We do this to help consumers who don't have access to the webshell.
-      nsAutoString theDocShell,theChannel;
-      theDocShell.AssignWithConversion("docshell");
-      theChannel.AssignWithConversion("channel");
-      parserBundle->SetDataIntoBundle(theDocShell,docShell);
-      parserBundle->SetDataIntoBundle(theChannel,aChannel);
-    }
-  }
-
   nsCOMPtr<nsIDocumentCharsetInfo> dcInfo;
   docShell->GetDocumentCharsetInfo(getter_AddRefs(dcInfo));  
 #ifdef IBMBIDI

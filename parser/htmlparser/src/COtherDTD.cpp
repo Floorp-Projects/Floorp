@@ -57,7 +57,6 @@
 #include "nsTagHandler.h" 
 #include "nsHTMLTokenizer.h"
 #include "nsTime.h"
-#include "nsIElementObserver.h"
 #include "nsViewSourceHTML.h" 
 #include "nsParserNode.h"
 #include "nsHTMLEntities.h"
@@ -70,7 +69,7 @@ static NS_DEFINE_IID(kIHTMLContentSinkIID, NS_IHTML_CONTENT_SINK_IID);
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);                 
 static NS_DEFINE_IID(kIDTDIID,      NS_IDTD_IID);
 static NS_DEFINE_IID(kClassIID,     NS_IOTHERHTML_DTD_IID); 
-  
+  static NS_DEFINE_IID(kParserServiceCID, NS_PARSERSERVICE_CID);
 static char*        kVerificationDir = "c:/temp";
  
 
@@ -640,12 +639,7 @@ nsresult COtherDTD::WillHandleStartTag(CToken* aToken,eHTMLTags aTag,nsIParserNo
       default:
         break; 
     }
-
-    CObserverService* theService=mParser->GetObserverService();
-    if(theService) {
-      const nsISupportsParserBundle*  bundle=mParser->GetParserBundle();
-      result=theService->Notify(aTag,aNode,(void*)bundle, NS_ConvertASCIItoUCS2(kHTMLTextContentType), mParser);
-    }
+    mSink->NotifyTagObservers(&aNode);
   }
 
   MOZ_TIMER_DEBUGLOG(("Start: Parse Time: COtherDTD::WillHandleStartTag(), this=%p\n", this));

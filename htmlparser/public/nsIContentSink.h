@@ -179,6 +179,14 @@ public:
   NS_IMETHOD NotifyError(const nsParserError* aError)=0;
 
   /**
+   * This gets called by the parser to notify observers of
+   * the tag
+   *
+   * @param aErrorResult the error code
+   */
+  NS_IMETHOD NotifyTagObservers(nsIParserNode* aNode)=0;
+
+  /**
    * Flush all pending notifications so that the content model
    * is in sync with the state of the sink.
    */

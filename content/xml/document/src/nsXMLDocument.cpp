@@ -459,16 +459,6 @@ nsXMLDocument::StartDocumentLoad(const char* aCommand,
     docShell = do_QueryInterface(aContainer, &rv);
     if(NS_FAILED(rv) || !(docShell))  return rv; 
 
-    nsCOMPtr<nsISupportsParserBundle> parserBundle;
-    nsresult result;
-    parserBundle = do_QueryInterface(mParser, &result);
-    if(NS_SUCCEEDED(result)) {
-        // We do this to help consumers who don't have access to the webshell.
-        nsAutoString theID;
-        theID.AssignWithConversion("docshell");
-        parserBundle->SetDataIntoBundle(theID,docShell);
-    }
-
     nsCOMPtr<nsIContentViewer> cv;
     docShell->GetContentViewer(getter_AddRefs(cv));
     if (cv) {

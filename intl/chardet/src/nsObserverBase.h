@@ -62,7 +62,8 @@ public:
    */
 protected:
 
-  NS_IMETHOD NotifyWebShell(nsISupports* aDocumentID, 
+  NS_IMETHOD NotifyWebShell(nsISupports* aWebShell,
+                            nsISupports* aChannel,
                             const char* charset, 
                             nsCharsetSource source);
 

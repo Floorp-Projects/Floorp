@@ -31,7 +31,6 @@ OBJS =					\
 
 
 LLIBS=					\
- $(DIST)\lib\gkparser.lib		\
  $(DIST)\lib\xpcom.lib	        \
  $(LIBNSPR)				\
  $(NULL)

@@ -68,6 +68,7 @@ CPPSRCS = \
 		nsHTMLTokens.cpp    \
 		nsParser.cpp        \
 		CParserContext.cpp  \
+		nsParserService.cpp \
 		nsParserModule.cpp  \
 		nsParserNode.cpp    \
 		nsScanner.cpp       \

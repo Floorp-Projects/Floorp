@@ -116,6 +116,7 @@ public:
   NS_IMETHOD DidProcessTokens(void) { return NS_OK; }
   NS_IMETHOD WillProcessAToken(void) { return NS_OK; }
   NS_IMETHOD DidProcessAToken(void) { return NS_OK; }
+  NS_IMETHOD NotifyTagObservers(nsIParserNode* aNode) { return NS_OK; }
 
   NS_IMETHOD DoFragment(PRBool aFlag);
 

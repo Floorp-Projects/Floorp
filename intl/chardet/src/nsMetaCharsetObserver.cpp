@@ -51,8 +51,17 @@
 #include "nsIServiceManager.h"
 #include "nsObserverBase.h"
 #include "nsWeakReference.h"
+#include "nsIParserService.h"
+#include "nsParserCIID.h"
+#include "nsMetaCharsetCID.h"
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
+static NS_DEFINE_IID(kParserServiceCID, NS_PARSERSERVICE_CID);
+ 
+static eHTMLTags gWatchTags[] = 
+{ eHTMLTag_meta,
+  eHTMLTag_unknown
+};
 
 //-------------------------------------------------------------------------
 nsMetaCharsetObserver::nsMetaCharsetObserver()
@@ -86,16 +95,6 @@ NS_IMPL_QUERY_INTERFACE4(nsMetaCharsetObserver,
                          nsIObserver, 
                          nsIMetaCharsetService, 
                          nsISupportsWeakReference);
-
-//-------------------------------------------------------------------------
-NS_IMETHODIMP_(const char*) nsMetaCharsetObserver::GetTagNameAt(PRUint32 aTagIndex)
-{
-  if (aTagIndex == 0) {
-    return "META";
-  }else {
-    return nsnull;
-  }
-}
 
 //-------------------------------------------------------------------------
 NS_IMETHODIMP nsMetaCharsetObserver::Notify(
@@ -141,21 +140,24 @@ NS_IMETHODIMP nsMetaCharsetObserver::Notify(
    return NS_OK;//Notify((nsISupports*)aDocumentID, &keys, &values);
 }
 NS_IMETHODIMP nsMetaCharsetObserver::Notify(
-                     nsISupports* aDocumentID, 
+                     nsISupports* aWebShell,
+                     nsISupports* aChannel,
                      const PRUnichar* aTag, 
                      const nsStringArray* keys, const nsStringArray* values)
 {
     if(0 != nsCRT::strcasecmp(aTag, NS_LITERAL_STRING("META").get())) 
         return NS_ERROR_ILLEGAL_VALUE;
     else
-        return Notify(aDocumentID, keys, values);
+        return Notify(aWebShell, aChannel, keys, values);
 }
 
 #define IS_SPACE_CHARS(ch)  (ch == ' ' || ch == '\b' || ch == '\r' || ch == '\n')
 
 NS_IMETHODIMP nsMetaCharsetObserver::Notify(
-                    nsISupports* aDocumentID, 
-                    const nsStringArray* keys, const nsStringArray* values)
+                    nsISupports* aWebShell,
+                    nsISupports* aChannel,
+                    const nsStringArray* keys, 
+                    const nsStringArray* values)
 {
     NS_PRECONDITION(keys!=nsnull && values!=nsnull,"Need key-value pair");
 
@@ -289,7 +291,8 @@ NS_IMETHODIMP nsMetaCharsetObserver::Notify(
                             !preferred.Equals(NS_LITERAL_STRING("UTF-32LE"))) {
                           // Propagate the error message so that the parser can
                           // shutdown correctly. - Ref. Bug 96440
-                          res = NotifyWebShell(aDocumentID,
+                          res = NotifyWebShell(aWebShell,
+                                               aChannel,
                                                NS_ConvertUCS2toUTF8(preferred).get(),
                                                kCharsetFromMetaTag);
                         }
@@ -305,7 +308,8 @@ NS_IMETHODIMP nsMetaCharsetObserver::Notify(
       if (NS_SUCCEEDED(GetCharsetFromCompatibilityTag(keys, values, compatCharset)))
       {
         if (!compatCharset.IsEmpty()) {
-          res = NotifyWebShell(aDocumentID, 
+          res = NotifyWebShell(aWebShell,
+                               aChannel,
                                NS_ConvertUCS2toUTF8(compatCharset).get(), 
                                kCharsetFromMetaTag);
         }
@@ -391,15 +395,15 @@ NS_IMETHODIMP nsMetaCharsetObserver::Start()
   if (bMetaCharsetObserverStarted == PR_FALSE)  {
     bMetaCharsetObserverStarted = PR_TRUE;
 
-    // get the observer service
-    nsCOMPtr<nsIObserverService> anObserverService = 
-             do_GetService(NS_OBSERVERSERVICE_CONTRACTID, &res);
-    if (NS_FAILED(res)) return res;
-
-    nsAutoString htmlTopic; htmlTopic.AssignWithConversion(kHTMLTextContentType);
+    nsCOMPtr<nsIParserService> parserService(do_GetService(kParserServiceCID));
     
-    // add self to ObserverService
-    res = anObserverService->AddObserver(this, htmlTopic.get());
+    if (!parserService) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+
+    res = parserService->RegisterObserver(this,
+                                          NS_LITERAL_STRING("text/html"),
+                                          gWatchTags);
   }
 
   return res;
@@ -411,12 +415,14 @@ NS_IMETHODIMP nsMetaCharsetObserver::End()
   if (bMetaCharsetObserverStarted == PR_TRUE)  {
     bMetaCharsetObserverStarted = PR_FALSE;
 
-    nsCOMPtr<nsIObserverService> anObserverService = 
-             do_GetService(NS_OBSERVERSERVICE_CONTRACTID, &res);
-    if (NS_FAILED(res)) return res;
-     
-    nsAutoString htmlTopic; htmlTopic.AssignWithConversion(kHTMLTextContentType);
-    res = anObserverService->RemoveObserver(this, htmlTopic.get());
+    nsCOMPtr<nsIParserService> parserService(do_GetService(kParserServiceCID));
+
+    if (!parserService) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+    
+    res = parserService->UnregisterObserver(this,
+                                            NS_LITERAL_STRING("text/html"));
   }
   return res;
 }

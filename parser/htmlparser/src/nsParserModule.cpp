@@ -53,114 +53,12 @@
 #include "nsHTMLTokenizer.h"
 //#include "nsTextTokenizer.h"
 #include "nsExpatTokenizer.h"
-#include "nsIParserService.h"
 #include "nsElementTable.h"
+#include "nsParserService.h"
 
 #ifdef NS_DEBUG
 #include "nsLoggingSink.h"
 #endif
-
-class nsParserService : public nsIParserService {
-public:
-  nsParserService();
-  virtual ~nsParserService();
-
-  NS_DECL_ISUPPORTS
-
-  NS_IMETHOD HTMLAtomTagToId(nsIAtom* aAtom, PRInt32* aId) const;
-
-  NS_IMETHOD HTMLStringTagToId(const nsString &aTag, PRInt32* aId) const;
-
-  NS_IMETHOD HTMLIdToStringTag(PRInt32 aId, nsString& aTag) const;
-  
-  NS_IMETHOD HTMLConvertEntityToUnicode(const nsString& aEntity, 
-                                        PRInt32* aUnicode) const;
-  NS_IMETHOD HTMLConvertUnicodeToEntity(PRInt32 aUnicode,
-                                        nsCString& aEntity) const;
-  NS_IMETHOD IsContainer(PRInt32 aId, PRBool& aIsContainer) const;
-  NS_IMETHOD IsBlock(PRInt32 aId, PRBool& aIsBlock) const;
-};
-
-nsParserService::nsParserService()
-{
-  NS_INIT_ISUPPORTS();
-}
-
-nsParserService::~nsParserService()
-{
-}
-
-NS_IMPL_ISUPPORTS1(nsParserService, nsIParserService)
-  
-  
-NS_IMETHODIMP 
-nsParserService::HTMLAtomTagToId(nsIAtom* aAtom, PRInt32* aId) const
-{
-  NS_ENSURE_ARG_POINTER(aAtom);
-    
-  nsAutoString tagName;
-  aAtom->ToString(tagName);
-  *aId = nsHTMLTags::LookupTag(tagName);
- 
-  return NS_OK;
-}
- 
-NS_IMETHODIMP 
-nsParserService::HTMLStringTagToId(const nsString &aTag, PRInt32* aId) const
-{
-  *aId = nsHTMLTags::LookupTag(aTag);
-  return NS_OK;
-}
-
-NS_IMETHODIMP 
-nsParserService::HTMLIdToStringTag(PRInt32 aId, nsString& aTag) const
-{
-  aTag.AssignWithConversion( nsHTMLTags::GetStringValue((nsHTMLTag)aId) );
-  return NS_OK;
-}
-  
-NS_IMETHODIMP 
-nsParserService::HTMLConvertEntityToUnicode(const nsString& aEntity, 
-                                            PRInt32* aUnicode) const
-{
-  *aUnicode = nsHTMLEntities::EntityToUnicode(aEntity);
-  return NS_OK;
-}
-
-NS_IMETHODIMP 
-nsParserService::HTMLConvertUnicodeToEntity(PRInt32 aUnicode,
-                                            nsCString& aEntity) const
-{
-  const char* str = nsHTMLEntities::UnicodeToEntity(aUnicode);
-  if (str) {
-    aEntity.Assign(str);
-  }
-  return NS_OK;
-}
-
-NS_IMETHODIMP 
-nsParserService::IsContainer(PRInt32 aId, PRBool& aIsContainer) const
-{
-  aIsContainer = nsHTMLElement::IsContainer((eHTMLTags)aId);
-  return NS_OK;
-}
-
-NS_IMETHODIMP 
-nsParserService::IsBlock(PRInt32 aId, PRBool& aIsBlock) const
-{
-  if((aId>eHTMLTag_unknown) && (aId<eHTMLTag_userdefined)) {
-    aIsBlock=((gHTMLElements[aId].IsMemberOf(kBlock))       || 
-              (gHTMLElements[aId].IsMemberOf(kBlockEntity)) || 
-              (gHTMLElements[aId].IsMemberOf(kHeading))     || 
-              (gHTMLElements[aId].IsMemberOf(kPreformatted))|| 
-              (gHTMLElements[aId].IsMemberOf(kList))); 
-  }
-  else {
-    aIsBlock = PR_FALSE;
-  }
-
-  return NS_OK;
-}
 
 //----------------------------------------------------------------------
 
@@ -203,7 +101,6 @@ Initialize(nsIModule* aSelf)
     nsHTMLEntities::AddRefTable();
     InitializeElementTable();
     CNewlineToken::AllocNewline();
-    CObserverService::InitGlobals();
     gInitialized = PR_TRUE;
   }
   return NS_OK;
@@ -219,7 +116,6 @@ Shutdown(nsIModule* aSelf)
     nsParser::FreeSharedObjects();
     DeleteElementTable();
     CNewlineToken::FreeNewline();
-    CObserverService::ReleaseGlobals();
     gInitialized = PR_FALSE;
   }
 }

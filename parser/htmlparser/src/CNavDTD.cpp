@@ -59,7 +59,6 @@
 #include "nsTagHandler.h"
 #include "nsHTMLTokenizer.h"
 #include "nsTime.h"
-#include "nsIElementObserver.h"
 #include "nsViewSourceHTML.h"
 #include "nsParserNode.h"
 #include "nsHTMLEntities.h"
@@ -189,7 +188,7 @@ CNavDTD::CNavDTD() : nsIDTD(),
     mLineNumber(1)
 {
   NS_INIT_REFCNT(); 
- 
+
   mBodyContext=new nsDTDContext();
 
 #ifdef  RICKG_DEBUG
@@ -198,7 +197,6 @@ CNavDTD::CNavDTD() : nsIDTD(),
   nsHTMLElement::DebugDumpMembership("c:/temp/membership.out");
   nsHTMLElement::DebugDumpContainType("c:/temp/ctnrules.out");
 #endif
-
 }
 
 /**
@@ -1377,13 +1375,8 @@ nsresult CNavDTD::WillHandleStartTag(CToken* aToken,eHTMLTags aTag,nsIParserNode
   STOP_TIMER()
   MOZ_TIMER_DEBUGLOG(("Stop: Parse Time: CNavDTD::WillHandleStartTag(), this=%p\n", this));
 
-  if(mParser) {
-
-    CObserverService* theService=mParser->GetObserverService();
-    if(theService) {
-      const nsISupportsParserBundle*  bundle=mParser->GetParserBundle();
-      result=theService->Notify(aTag,aNode,(void*)bundle, mMimeType, mParser);
-    }
+  if (aTag <= NS_HTML_TAG_MAX) {
+    result = mSink->NotifyTagObservers(&aNode);
   }
 
   MOZ_TIMER_DEBUGLOG(("Start: Parse Time: CNavDTD::WillHandleStartTag(), this=%p\n", this));

@@ -158,6 +158,7 @@ const PRBool kBlockByDefault=PR_TRUE;
 
 
 static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CID);
+static NS_DEFINE_IID(kParserServiceCID, NS_PARSERSERVICE_CID);
 
 //----------------------------------------------------------------------
 
@@ -239,6 +240,7 @@ public:
   NS_IMETHOD DidProcessTokens(void);
   NS_IMETHOD WillProcessAToken(void);
   NS_IMETHOD DidProcessAToken(void);
+  NS_IMETHOD NotifyTagObservers(nsIParserNode* aNode);
 
 
   // nsIHTMLContentSink
@@ -415,6 +417,8 @@ public:
   PRInt32             mMaxTokenProcessingTime;  // Interrupt parsing during token procesing after # of microseconds
   PRInt32             mDynamicIntervalSwitchThreshold;   // Switch between intervals when time is exceeded
   PRInt32             mBeginLoadTime;
+
+  nsCOMPtr<nsIObserverEntry> mObservers;
 
   void StartLayout();
 
@@ -906,8 +910,6 @@ HTMLContentSink::CreateContentObject(const nsIParserNode& aNode,
 
   return rv;
 }
-
-static NS_DEFINE_CID(kParserServiceCID, NS_PARSERSERVICE_CID);
 
 nsresult
 NS_CreateHTMLElement(nsIHTMLContent** aResult, nsINodeInfo *aNodeInfo, PRBool aCaseSensitive)
@@ -2498,6 +2500,17 @@ HTMLContentSink::Init(nsIDocument* aDoc,
   mWebShell = aContainer;
   NS_ADDREF(aContainer);
 
+  mObservers = nsnull;
+
+  nsCOMPtr<nsIParserService> service(do_GetService(kParserServiceCID));
+
+  if (!service) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+  
+  service->GetTopicObservers(NS_LITERAL_STRING("text/html"),
+                             getter_AddRefs(mObservers));
+
   nsCOMPtr<nsIScriptLoader> loader;
   rv = mDocument->GetScriptLoader(getter_AddRefs(loader));
   NS_ENSURE_SUCCESS(rv, rv);
@@ -3833,6 +3846,13 @@ PRInt32 newMaxTokenProcessingTime = GetMaxTokenProcessingTime();
   return NS_OK;
 }
 
+#include "nsIElementObserver.h"
+
+NS_IMETHODIMP
+HTMLContentSink::NotifyTagObservers(nsIParserNode* aNode)
+{
+  return mObservers? mObservers->Notify(aNode,mParser,mWebShell) : NS_OK;
+}
 
 void
 HTMLContentSink::StartLayout()
