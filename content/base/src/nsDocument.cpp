@@ -915,6 +915,15 @@ nsDocument::GetContentType(nsAString& aContentType)
   return NS_OK;
 }
 
+NS_IMETHODIMP 
+nsDocument::SetContentType(const nsAString& aContentType)
+{
+  NS_ASSERTION(mContentType.IsEmpty() || mContentType.Equals(aContentType),
+               "Do you really want to change the content-type?");
+  mContentType = aContentType;
+  return NS_OK;
+}
+
 NS_IMETHODIMP
 nsDocument::GetContentLanguage(nsAString& aContentLanguage) const
 {
