@@ -91,7 +91,7 @@ PR_STATIC_CALLBACK(PLDHashNumber)
   hashUnicodeValue(PLDHashTable*, const void* key)
 {
   // key is actually the unicode value
-  return PLDHashNumber(key);
+  return PLDHashNumber(NS_PTR_TO_INT32(key));
   }
 
 
