@@ -49,13 +49,14 @@ Contributor(s):
   <stringbundle id="findBundle" src="chrome://global/locale/finddialog.properties"/>
   <keyset>
     <key keycode="VK_ESCAPE" oncommand="close();"/>
+    <key keycode="VK_ENTER" oncommand="onAccept();"/>
   </keyset>
 
   <hbox flex="1">
     <vbox flex="1">
       <hbox flex="1">
         <label value="&findField.label;" accesskey="&findField.accesskey;" control="dialog.findKey"/>
-        <textbox id="dialog.findKey" flex="1" oninput="doEnabling();" onkeypress="if (event.keyCode == 13) onAccept();"/>
+        <textbox id="dialog.findKey" flex="1" oninput="doEnabling();"/>
       </hbox>
       <hbox flex="1">
         <vbox pack="center" flex="1" align="start">
