@@ -454,7 +454,9 @@ ErrorHandler(int aErr, const char* aErrMsg)
     gtk_container_add(GTK_CONTAINER(GTK_DIALOG(sErrDlg)->action_area), 
                       okButton);
     gtk_signal_connect(GTK_OBJECT(okButton), "clicked",
-                       GTK_SIGNAL_FUNC(ErrDlgOK), (void*)aErr);
+                       GTK_SIGNAL_FUNC(ErrDlgOK), NULL);
+    gtk_signal_connect(GTK_OBJECT(sErrDlg), "delete_event",
+                       GTK_SIGNAL_FUNC(ErrDlgOK), NULL);
 
     gtk_container_add(GTK_CONTAINER(GTK_DIALOG(sErrDlg)->vbox), label);
     
@@ -464,24 +466,19 @@ ErrorHandler(int aErr, const char* aErrMsg)
 
     gtk_main();
 
+    if (IsErrFatal(aErr))
+        exit(aErr);
+
     return aErr;
 }
 
 void
 ErrDlgOK(GtkWidget *aWidget, gpointer aData)
 {
-    int err = NS_PTR_TO_INT32(aData);
-    
-    if (sErrDlg)
-    {
-        gtk_widget_destroy(sErrDlg);
-        sErrDlg = NULL;
-    }
+    gtk_widget_destroy(sErrDlg);
+    sErrDlg = NULL;
 
     gtk_main_quit();
-
-    if (IsErrFatal(err))
-        exit(err);
 }
 
 int
