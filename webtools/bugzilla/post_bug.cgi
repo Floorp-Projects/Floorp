@@ -137,7 +137,7 @@ if ($::FORM{'assigned_to'} eq "") {
 my @bug_fields = ("version", "rep_platform",
                   "bug_severity", "priority", "op_sys", "assigned_to",
                   "bug_status", "bug_file_loc", "short_desc",
-                  "target_milestone");
+                  "target_milestone", "status_whiteboard");
 
 if (Param("useqacontact")) {
     SendSQL("SELECT initialqacontact FROM components " .
