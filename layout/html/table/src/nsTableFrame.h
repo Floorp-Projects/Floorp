@@ -122,14 +122,7 @@ public:
   // on stronger criteria, like an inner table frame atom
   static NS_METHOD GetTableFrame(nsIFrame *aSourceFrame, nsTableFrame *& aTableFrame);
 
-  /** helper method for getting the width of the table's containing block */
-  static nscoord GetTableContainerWidth(const nsHTMLReflowState& aReflowState);
-
-  /** helper method for determining the width specification for a table frame
-    * within a specific reflow context.
-    *
-    * @param aTableFrame   the table frame we're inspecting
-    * @param aTableStyle   the style context for aTableFrame
+  /**
     * @param aReflowState  the context within which we're to determine the table width info
     * @param aSpecifiedTableWidth [OUT] if the table is not auto-width,
     *                                   aSpecifiedTableWidth iw set to the resolved width.
@@ -137,10 +130,8 @@ public:
     *         PR_FALSE if the table is not auto-width, 
     *         and aSpecifiedTableWidth is set to the resolved width in twips.
     */
-  static PRBool TableIsAutoWidth(nsTableFrame *           aTableFrame,
-                                 nsIStyleContext *        aTableStyle,
-                                 const nsHTMLReflowState& aReflowState,
-                                 nscoord&                 aSpecifiedTableWidth);
+  PRBool IsAutoWidth(const nsHTMLReflowState& aReflowState,
+                     nscoord&                 aSpecifiedTableWidth);
   
   /** @return PR_TRUE if aDisplayType represents a rowgroup of any sort
     * (header, footer, or body)
