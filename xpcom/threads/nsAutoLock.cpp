@@ -66,17 +66,19 @@ static PRBool WellOrdered(const void* addr1, const void* addr2,
     PLHashTable* table = OrderTable;
     if (!table) return PR_TRUE;
 
+    PRUint32 i, n;
+
     // Check whether we've already asserted (addr1 < addr2).
     nsNamedVector* vec1 = GetVector(table, addr1);
     if (!vec1) return PR_TRUE;
-    for (PRUint32 i = 0, n = vec1->GetSize(); i < n; i++)
+    for (i = 0, n = vec1->GetSize(); i < n; i++)
         if (vec1->Get(i) == addr2)
             return PR_TRUE;
 
     // Now check for (addr2 < addr1) and return false if so.
     nsNamedVector* vec2 = GetVector(table, addr2);
     if (!vec2) return PR_TRUE;
-    for (PRUint32 i = 0, n = vec2->GetSize(); i < n; i++)
+    for (i = 0, n = vec2->GetSize(); i < n; i++)
         if (vec2->Get(i) == addr1) {
             *vec1p = vec1;
             *vec2p = vec2;
