@@ -34,6 +34,7 @@
 
 #include "BrowserView.h"
 #include "IBrowserFrameGlue.h"
+#include "MostRecentUrls.h"
 
 // A simple UrlBar class...
 class CUrlBar : public CComboBoxEx
@@ -48,12 +49,25 @@ public:
 	inline SetCurrentURL(LPCTSTR pUrl) {
 		SetWindowText(pUrl);
 	}
-	inline AddURLToList(CString& url) {
+	inline AddURLToList(CString& url, bool bAddToMRUList = true) {
 		COMBOBOXEXITEM ci;
-		ci.mask = CBEIF_TEXT; 	ci.iItem = -1;
+		ci.mask = CBEIF_TEXT; ci.iItem = -1;
 		ci.pszText = (LPTSTR)(LPCTSTR)url;
 		InsertItem(&ci);
+
+        if(bAddToMRUList)
+            m_MRUList.AddURL((LPTSTR)(LPCTSTR)url);
 	}
+    inline LoadMRUList() {
+        for (int i=0;i<m_MRUList.GetNumURLs();i++) 
+        {
+            CString urlStr(_T(m_MRUList.GetURL(i)));
+            AddURLToList(urlStr, false); 
+        }
+    }
+
+protected:
+      CMostRecentUrls m_MRUList;
 };
 
 class CBrowserFrame : public CFrameWnd
