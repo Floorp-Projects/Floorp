@@ -23,6 +23,7 @@
  *   emk <VYV03354@nifty.ne.jp>
  *   Daniel Glazman <glazman@netscape.com>
  *   L. David Baron <dbaron@dbaron.org>
+ *   Boris Zbarsky <bzbarsky@mit.edu>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
