@@ -132,6 +132,7 @@ function initCommands()
          ["network-pref",      cmdPref,             CMD_NEED_NET | CMD_CONSOLE],
          ["networks",          cmdNetworks,                        CMD_CONSOLE],
          ["nick",              cmdNick,                            CMD_CONSOLE],
+         ["notice",            cmdNotice,           CMD_NEED_SRV | CMD_CONSOLE],
          ["notify",            cmdNotify,           CMD_NEED_SRV | CMD_CONSOLE],
          ["open-at-startup",   cmdOpenAtStartup,                   CMD_CONSOLE],
          ["pass",              cmdPass,             CMD_NEED_NET | CMD_CONSOLE],
@@ -1812,7 +1813,7 @@ function cmdQuery(e)
     {
         e.message = filterOutput(e.message, "PRIVMSG", "ME!");
         user.display(e.message, "PRIVMSG", "ME!", user);
-        user.say(e.message, e.sourceObject);
+        user.say(e.message);
     }
 
     return user;
@@ -1828,7 +1829,7 @@ function cmdSay(e)
 
     var msg = filterOutput(e.message, "PRIVMSG", "ME!");
     e.sourceObject.display(msg, "PRIVMSG", "ME!", e.sourceObject);
-    e.sourceObject.say(msg, e.sourceObject);
+    e.sourceObject.say(msg);
 }
 
 function cmdMsg(e)
@@ -1837,7 +1838,7 @@ function cmdMsg(e)
 
     var msg = filterOutput(e.message, "PRIVMSG", "ME!");
     e.sourceObject.display(msg, "PRIVMSG", "ME!", target);
-    target.say(msg, target);
+    target.say(msg);
 }
 
 function cmdNick(e)
@@ -1849,6 +1850,15 @@ function cmdNick(e)
         e.network.prefs["nickname"] = e.nickname;
     else
         client.prefs["nickname"] = e.nickname;
+}
+
+function cmdNotice(e)
+{
+    var target = e.server.addTarget(e.nickname);
+
+    var msg = filterOutput(e.message, "NOTICE", "ME!");
+    e.sourceObject.display(msg, "NOTICE", "ME!", target);
+    target.notice(msg);
 }
 
 function cmdQuote(e)
