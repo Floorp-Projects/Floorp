@@ -55,6 +55,7 @@ CPPSRCS		= \
 		nsISO885913ToUnicode.cpp \
 		nsISO885914ToUnicode.cpp \
 		nsISO885915ToUnicode.cpp \
+		nsISO885916ToUnicode.cpp \
 		nsISOIR111ToUnicode.cpp \
 		nsCP1250ToUnicode.cpp \
 		nsCP1251ToUnicode.cpp \
@@ -114,6 +115,7 @@ CPPSRCS		= \
 		nsUnicodeToISO885913.cpp \
 		nsUnicodeToISO885914.cpp \
 		nsUnicodeToISO885915.cpp \
+		nsUnicodeToISO885916.cpp \
 		nsUnicodeToISOIR111.cpp \
 		nsUnicodeToCP1250.cpp \
 		nsUnicodeToCP1251.cpp \
