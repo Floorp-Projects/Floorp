@@ -133,10 +133,8 @@ insert into components (value, program, initialowner, initialqacontact) values (
 insert into components (value, program, initialowner, initialqacontact) values ("Content Model", "NGLayout", "kipp@netscape.com", "");
 insert into components (value, program, initialowner, initialqacontact) values ("Cookies", "NGLayout", "scullin@netscape.com", "");
 insert into components (value, program, initialowner, initialqacontact) values ("DOM", "NGLayout", "vidur@netscape.com", "");
-insert into components (value, program, initialowner, initialqacontact) values ("DOM", "NGLayout", "vidur@netscape.com", "");
 insert into components (value, program, initialowner, initialqacontact) values ("Editor", "NGLayout", "kostello@netscape.com", "");
 insert into components (value, program, initialowner, initialqacontact) values ("Embedding APIs", "NGLayout", "jevering@netscape.com", "");
-insert into components (value, program, initialowner, initialqacontact) values ("Event Handling", "NGLayout", "joki@netscape.com", "");
 insert into components (value, program, initialowner, initialqacontact) values ("Event Handling", "NGLayout", "joki@netscape.com", "");
 insert into components (value, program, initialowner, initialqacontact) values ("Form Submission", "NGLayout", "pollmann@netscape.com", "");
 insert into components (value, program, initialowner, initialqacontact) values ("HTMLFrames", "NGLayout", "karnaze@netscape.com", "");
