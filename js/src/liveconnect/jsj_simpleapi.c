@@ -58,7 +58,12 @@ default_map_js_context_to_jsj_thread(JSContext *cx, char **errp)
 
 /* Trivial implementation of callback function */
 static JSContext *
-default_map_jsj_thread_to_js_context(JSJavaThreadState *jsj_env, JNIEnv *jEnv, char **errp)
+default_map_jsj_thread_to_js_context(JSJavaThreadState *jsj_env,
+#ifdef OJI
+                                     void *java_applet_obj,
+#endif
+                                     JNIEnv *jEnv,
+                                     char **errp)
 {
     return the_cx;
 }
