@@ -408,7 +408,7 @@ NS_IMETHODIMP nsAbMDBDirectory::GetChildNodes(nsIEnumerator* *result)
 	return mSubDirectories->Enumerate(result);
 }
 
-static PRBool enumerateSearchCache(nsHashKey *aKey, void *aData, void* closure)
+PR_STATIC_CALLBACK(PRBool) enumerateSearchCache(nsHashKey *aKey, void *aData, void* closure)
 {
         nsISupportsArray* array = (nsISupportsArray* )closure;
 	nsIAbCard* card = (nsIAbCard* )aData;
