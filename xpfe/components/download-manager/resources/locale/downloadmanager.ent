@@ -5,11 +5,10 @@
 <!ENTITY view.header.transferred.label    "Transferred">
 <!ENTITY view.header.transferrate.label   "Speed">
 <!ENTITY view.header.timeelapsed.label    "Time Elapsed">
-<!ENTITY view.header.progresstext.label   "%">
+<!ENTITY view.header.progresstext.label   "&#37;">
 <!ENTITY view.header.source.label         "Source">
 
 <!ENTITY downloadManager.title            "Download Manager">
-
 
 <!ENTITY cmd.properties.label             "Properties">
 <!ENTITY cmd.properties.accesskey         "i">
@@ -22,4 +21,8 @@
 <!ENTITY cmd.cancel.accesskey             "c">
 <!ENTITY cmd.openfile.label               "Open File">
 <!ENTITY cmd.openfile.accesskey           "o">
+
+<!ENTITY confirmCancel "Are you sure you want to cancel the saving of this file?">
+<!ENTITY progressMsgNoRate "#1KB of #2KB">
+<!ENTITY rateMsg "#1KB/sec">
 
