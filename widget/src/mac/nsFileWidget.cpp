@@ -263,6 +263,7 @@ nsFileWidget :: PutFile ( Str255 & inTitle, Str255 & inDefaultName, FSSpec* outS
 		dialogOptions.dialogOptionFlags |= kNavDontAddTranslateItems;
 		dialogOptions.dialogOptionFlags ^= kNavAllowMultipleFiles;
 		::BlockMoveData(inTitle, dialogOptions.message, *inTitle + 1);
+		::BlockMoveData(inDefaultName, dialogOptions.savedFileName, *inDefaultName + 1);
 		
 		// Display the get file dialog
 		anErr = ::NavPutFile(
