@@ -30,7 +30,7 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= string
 LIBRARY_NAME	= string_obsolete_s
 
-REQUIRES	= unicharutil \
+REQUIRES	=  \
 		  xpcom \
 		  $(NULL)
 

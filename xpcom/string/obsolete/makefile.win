@@ -24,7 +24,7 @@
 DEPTH=..\..
 
 MODULE=string
-REQUIRES	= unicharutil \
+REQUIRES	=  \
 		  xpcom \
 		  $(NULL)
 
