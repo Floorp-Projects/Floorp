@@ -17,7 +17,7 @@
  */
   
 /**
- * MODULE NOTES:
+ * MODULE NOTES: 
  * @update  jevering 06/18/98
  * 
  * This file contains the parser debugger object which aids in

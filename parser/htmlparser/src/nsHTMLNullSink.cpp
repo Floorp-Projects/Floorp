@@ -18,7 +18,7 @@
  */
 #include "nsIHTMLContentSink.h"
 #include "nsHTMLTokens.h"
-#include "nsParserTypes.h"
+#include "nsIParser.h"
 #include "prtypes.h" 
 #include <iostream.h>  
 

@@ -49,6 +49,7 @@ class nsCParserNode;
 class CTokenHandler;
 class nsIDTDDebug;
 class nsIHTMLContentSink;
+class nsITokenizer;
 
 //*** This enum is used to define the known universe of XIF tags.
 //*** The use of this table doesn't preclude of from using non-standard
@@ -117,6 +118,8 @@ class nsXIFDTD : public nsIDTD {
      */
     nsXIFDTD();
 
+    virtual const nsIID&  GetMostDerivedIID(void) const;
+
     /**
      *  
      *  
@@ -164,12 +167,22 @@ class nsXIFDTD : public nsIDTD {
     NS_IMETHOD WillBuildModel(nsString& aFileName,PRBool aNotifySink,nsIParser* aParser);
 
     /**
+      * The parser uses a code sandwich to wrap the parsing process. Before
+      * the process begins, WillBuildModel() is called. Afterwards the parser
+      * calls DidBuildModel(). 
+      * @update	gess5/18/98
+      * @param	aFilename is the name of the file being parsed.
+      * @return	error code (almost always 0)
+      */
+    NS_IMETHOD BuildModel(nsIParser* aParser);
+
+    /**
      *  
      * @update	gess 7/24/98
      * @param 
      * @return
      */
-    NS_IMETHOD DidBuildModel(PRInt32 aQualityLevel,PRBool aNotifySink,nsIParser* aParser);
+    NS_IMETHOD DidBuildModel(nsresult aQualityLevel,PRBool aNotifySink,nsIParser* aParser);
 
     /**
      *  
@@ -196,16 +209,6 @@ class nsXIFDTD : public nsIDTD {
 	   *  @return	 error code (usually 0)
      */
     NS_IMETHOD ReleaseTokenPump(nsITagHandler* aHandler);
-
-    /**
-     *  Cause the tokenizer to consume the next token, and 
-     *  return an error result.
-     *  
-     *  @update  gpk 06/18/98
-     *  @param   anError -- ref to error code
-     *  @return  new token or null
-     */
-    NS_IMETHOD ConsumeToken(CToken*& aToken,nsIParser* aParser);
 
 
     /**
@@ -269,18 +272,6 @@ class nsXIFDTD : public nsIDTD {
      */
     virtual void SetVerification(PRBool aEnable);
 
-
-    /**
-     *  This method is called to determine whether or not a tag
-     *  of one type can contain a tag of another type.
-     *  
-     *  @update  gpk 06/18/98
-     *  @param   aParent -- tag enum of parent container
-     *  @param   aChild -- tag enum of child container
-     *  @return  PR_TRUE if parent can contain child
-     */
-    virtual PRBool CanContainIndirect(eXIFTags aParent,eXIFTags aChild) const;
-
     /**
      *  This method gets called to determine whether a given 
      *  tag can contain newlines. Most do not.
@@ -343,7 +334,7 @@ class nsXIFDTD : public nsIDTD {
      * @param 
      * @return
      */
-    virtual PRInt32 DidOpenContainer(eXIFTags aTag,PRBool anExplicitOpen);    
+    virtual nsresult DidOpenContainer(eXIFTags aTag,PRBool anExplicitOpen);    
 
     /**
      * Ask parser if a given container is open ANYWHERE on stack
@@ -375,7 +366,7 @@ class nsXIFDTD : public nsIDTD {
      * @param 
      * @return
      */
-    virtual PRInt32 DidCloseContainer(eXIFTags aTag,PRBool anExplicitClosure);
+    virtual nsresult DidCloseContainer(eXIFTags aTag,PRBool anExplicitClosure);
 
     /**
      * This method gets called when a start token has been consumed and needs 
@@ -384,7 +375,7 @@ class nsXIFDTD : public nsIDTD {
      * @param   aToken is the start token to be handled
      * @return  TRUE if the token was handled.
      */
-    PRInt32 HandleStartToken(CToken* aToken);
+    nsresult HandleStartToken(CToken* aToken);
 
     /**
      * This method gets called when an end token has been consumed and needs 
@@ -393,7 +384,7 @@ class nsXIFDTD : public nsIDTD {
      * @param   aToken is the end token to be handled
      * @return  TRUE if the token was handled.
      */
-    PRInt32 HandleEndToken(CToken* aToken);
+    nsresult HandleEndToken(CToken* aToken);
 
     /**
      * This method gets called when an entity token has been consumed and needs 
@@ -402,7 +393,7 @@ class nsXIFDTD : public nsIDTD {
      * @param   aToken is the entity token to be handled
      * @return  TRUE if the token was handled.
      */
-    PRInt32 HandleEntityToken(CToken* aToken);
+    nsresult HandleEntityToken(CToken* aToken);
 
     /**
      * This method gets called when a comment token has been consumed and needs 
@@ -411,7 +402,7 @@ class nsXIFDTD : public nsIDTD {
      * @param   aToken is the comment token to be handled
      * @return  TRUE if the token was handled.
      */
-    PRInt32 HandleCommentToken(CToken* aToken);
+    nsresult HandleCommentToken(CToken* aToken);
 
     /**
      * This method gets called when an attribute token has been consumed and needs 
@@ -420,11 +411,11 @@ class nsXIFDTD : public nsIDTD {
      * @param   aToken is the attribute token to be handled
      * @return  TRUE if the token was handled.
      */
-    PRInt32 HandleAttributeToken(CToken* aToken);
+    nsresult HandleAttributeToken(CToken* aToken);
 
 
-    PRInt32 HandleWhiteSpaceToken(CToken* aToken);
-    PRInt32 HandleTextToken(CToken* aToken);
+    nsresult HandleWhiteSpaceToken(CToken* aToken);
+    nsresult HandleTextToken(CToken* aToken);
 
 
 private:
@@ -455,9 +446,6 @@ private:
      */
     void DeleteTokenHandlers(void);
 
-
-
-
     /**
      * This cover method opens the given node as a generic container in 
      * content sink.
@@ -465,7 +453,7 @@ private:
      * @param   generic container (node) to be opened in content sink.
      * @return  TRUE if all went well.
      */
-    PRInt32 OpenContainer(const nsIParserNode& aNode);
+    nsresult OpenContainer(const nsIParserNode& aNode);
 
     /**
      * This cover method causes a generic containre in the content-sink to be closed
@@ -473,7 +461,7 @@ private:
      * @param   aNode is the node to be closed in sink (usually ignored)
      * @return  TRUE if all went well.
      */
-    PRInt32 CloseContainer(const nsIParserNode& aNode);
+    nsresult CloseContainer(const nsIParserNode& aNode);
 
     /**
      * Causes leaf to be added to sink at current vector pos.
@@ -481,7 +469,7 @@ private:
      * @param   aNode is leaf node to be added.
      * @return  TRUE if all went well -- FALSE otherwise.
      */
-    PRInt32 AddLeaf(const nsIParserNode& aNode);
+    nsresult AddLeaf(const nsIParserNode& aNode);
 
      /**
      * Attempt forward and/or backward propagation for the given
@@ -490,103 +478,22 @@ private:
      * @param   type of child to be propagated.
      * @return  TRUE if succeeds, otherwise FALSE
      */
-    PRInt32 CreateContextStackFor(eXIFTags aChildTag);
-
-
-    /****************************************************
-        These methods interface with the parser to do
-        the tokenization phase.
-     ****************************************************/
-
+    nsresult CreateContextStackFor(eXIFTags aChildTag);
 
     /**
-     * Retrieve the next TAG from the given scanner.
-     * @update	gpk 06/18/98
-     * @param   aScanner is the input source
-     * @param   aToken is the next token (or null)
-     * @return  error code
+     * 
+     * @update	gess12/28/98
+     * @param 
+     * @return
      */
-    PRInt32     ConsumeTag(PRUnichar aChar,CScanner& aScanner,CToken*& aToken);
-    
-    /**
-     * Retrieve next START tag from given scanner.
-     * @update	gpk 06/18/98
-     * @param   aScanner is the input source
-     * @param   aToken is the next token (or null)
-     * @return  error code
-     */
-    PRInt32     ConsumeStartTag(PRUnichar aChar,CScanner& aScanner,CToken*& aToken);
-    
-    /**
-     * Retrieve collection of HTML/XML attributes from given scanner
-     * @update	gpk 06/18/98
-     * @param   aScanner is the input source
-     * @param   aToken is the next token (or null)
-     * @return  error code
-     */
-    PRInt32     ConsumeAttributes(PRUnichar aChar,CScanner& aScanner,CStartToken* aToken);
-    
-    /**
-     * Retrieve a sequence of text from given scanner.
-     * @update	gpk 06/18/98
-     * @param   aString will contain retrieved text.
-     * @param   aScanner is the input source
-     * @param   aToken is the next token (or null)
-     * @return  error code
-     */
-    PRInt32     ConsumeText(const nsString& aString,CScanner& aScanner,CToken*& aToken);
-    
-    /**
-     * Retrieve an entity from given scanner
-     * @update	gpk 06/18/98
-     * @param   aChar last char read from scanner
-     * @param   aScanner is the input source
-     * @param   aToken is the next token (or null)
-     * @return  error code
-     */
-    PRInt32     ConsumeEntity(PRUnichar aChar,CScanner& aScanner,CToken*& aToken);
-    
-    /**
-     * Retrieve a whitespace sequence from the given scanner
-     * @update	gpk 06/18/98
-     * @param   aChar last char read from scanner
-     * @param   aScanner is the input source
-     * @param   aToken is the next token (or null)
-     * @return  error code
-     */
-    PRInt32     ConsumeWhitespace(PRUnichar aChar,CScanner& aScanner,CToken*& aToken);
-    
-    /**
-     * Retrieve a comment from the given scanner
-     * @update	gpk 06/18/98
-     * @param   aChar last char read from scanner
-     * @param   aScanner is the input source
-     * @param   aToken is the next token (or null)
-     * @return  error code
-     */
-    PRInt32     ConsumeComment(PRUnichar aChar,CScanner& aScanner,CToken*& aToken);
+    nsITokenizer* GetTokenizer(void);
 
     /**
-     * Retrieve newlines from given scanner
-     * @update	gpk 06/18/98
-     * @param   aChar last char read from scanner
-     * @param   aScanner is the input source
-     * @param   aToken is the next token (or null)
-     * @return  error code
+     * Retrieve a ptr to the global token recycler...
+     * @update	gess8/4/98
+     * @return  ptr to recycler (or null)
      */
-    PRInt32     ConsumeNewline(PRUnichar aChar,CScanner& aScanner,CToken*& aToken);
-
-    /**
-     * Causes content to be skipped up to sequence contained in aString.
-     * @update	gpk 06/18/98
-     * @param   aString ????
-     * @param   aChar last char read from scanner
-     * @param   aScanner is the input source
-     * @param   aToken is the next token (or null)
-     * @return  error code
-     */
-    virtual PRInt32 ConsumeContentToEndTag(const nsString& aString,PRUnichar aChar,CScanner& aScanner,CToken*& aToken);
-
+    virtual nsITokenRecycler* GetTokenRecycler(void);
 
 private:
     void BeginCSSStyleSheet(const nsIParserNode& aNode);
@@ -619,18 +526,11 @@ private:
     void            PopAndDelete();
 
 
-    /**
-     * Retrieve a ptr to the global token recycler...
-     * @update	gess8/4/98
-     * @return  ptr to recycler (or null)
-     */
-    virtual nsITokenRecycler* GetTokenRecycler(void);
-
 protected:
 
     PRBool			CanContainFormElement(eXIFTags aParent,eXIFTags aChild) const;
-		PRInt32			CollectAttributes(nsCParserNode& aNode,PRInt32 aCount);
-		PRInt32			CollectSkippedContent(nsCParserNode& aNode,PRInt32& aCount);
+		nsresult		CollectAttributes(nsCParserNode& aNode,PRInt32 aCount);
+		nsresult		CollectSkippedContent(nsCParserNode& aNode,PRInt32& aCount);
     
     nsParser*             mParser;
     nsIHTMLContentSink*   mSink;
@@ -661,6 +561,7 @@ protected:
     PRInt32               mCSSSelectorCount;
     PRBool                mLowerCaseTags;
     PRBool                mLowerCaseAttributes;
+    nsITokenizer*         mTokenizer;
 };
 
 

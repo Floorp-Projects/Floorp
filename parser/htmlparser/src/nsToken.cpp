@@ -100,7 +100,7 @@ void CToken::Reinitialize(PRInt32 aTag, const nsString& aString){
  *  @param  aScanner -- object to retrieve data from
  *  @return int error code
  */
-nsresult CToken::Consume(PRUnichar aChar,CScanner& aScanner) {
+nsresult CToken::Consume(PRUnichar aChar,nsScanner& aScanner) {
   nsresult result=NS_OK;
   return result;
 }

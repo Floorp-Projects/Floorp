@@ -86,7 +86,6 @@
 #include "nsVoidArray.h"
 #include "nsDeque.h"
 
-
 #define NS_INAVHTML_DTD_IID      \
   {0x5c5cce40, 0xcfd6,  0x11d1,  \
   {0xaa, 0xda, 0x00,    0x80, 0x5f, 0x8a, 0x3e, 0x14}}
@@ -100,7 +99,7 @@ class CITokenHandler;
 class nsParser;
 class nsDTDContext;
 class nsTagStack;
-
+class nsITokenizer;
 
 /***************************************************************
   Now the main event: CNavDTD.
@@ -134,6 +133,8 @@ CLASS_EXPORT_HTMLPARS CNavDTD : public nsIDTD {
      *  @update  gess 7/9/98
      */
     virtual ~CNavDTD();
+
+    virtual const nsIID&  GetMostDerivedIID(void) const;
 
     /**
      * Call this method if you want the DTD to construct a clone of itself.
@@ -191,6 +192,16 @@ CLASS_EXPORT_HTMLPARS CNavDTD : public nsIDTD {
       */
     NS_IMETHOD WillBuildModel(nsString& aFilename,PRBool aNotifySink,nsIParser* aParser);
 
+    /**
+      * The parser uses a code sandwich to wrap the parsing process. Before
+      * the process begins, WillBuildModel() is called. Afterwards the parser
+      * calls DidBuildModel(). 
+      * @update	gess5/18/98
+      * @param	aFilename is the name of the file being parsed.
+      * @return	error code (almost always 0)
+      */
+    NS_IMETHOD BuildModel(nsIParser* aParser);
+
    /**
      * The parser uses a code sandwich to wrap the parsing process. Before
      * the process begins, WillBuildModel() is called. Afterwards the parser
@@ -199,7 +210,7 @@ CLASS_EXPORT_HTMLPARS CNavDTD : public nsIDTD {
      * @param	anErrorCode contans the last error that occured
      * @return	error code
      */
-    NS_IMETHOD DidBuildModel(PRInt32 anErrorCode,PRBool aNotifySink,nsIParser* aParser);
+    NS_IMETHOD DidBuildModel(nsresult anErrorCode,PRBool aNotifySink,nsIParser* aParser);
 
     /**
      *  This method is called by the parser, once for each token
@@ -229,21 +240,27 @@ CLASS_EXPORT_HTMLPARS CNavDTD : public nsIDTD {
     NS_IMETHOD ReleaseTokenPump(nsITagHandler* aHandler);
 
     /**
-     *  Cause the tokenizer to consume the next token, and 
-     *  return an error result.
-     *  
-     *  @update  gess 3/25/98
-     *  @param   anError -- ref to error code
-     *  @return  new token or null
+     * 
+     * @update	gess12/28/98
+     * @param 
+     * @return
      */
-    NS_IMETHOD ConsumeToken(CToken*& aToken,nsIParser* aParser);
+    nsITokenizer* GetTokenizer(void);
 
+    
+    /**
+     * 
+     * @update	gess12/28/98
+     * @param 
+     * @return
+     */
+    virtual  nsITokenRecycler* GetTokenRecycler(void);
 
     /**
      * If the parse process gets interrupted, this method gets called
 	   * prior to the process resuming.
      * @update	gess5/18/98
-     * @return	error code -- usually kNoError (0)
+     * @return	error code -- usually NS_OK (0)
      */
     NS_IMETHOD WillResumeParse(void);
 
@@ -251,7 +268,7 @@ CLASS_EXPORT_HTMLPARS CNavDTD : public nsIDTD {
      * If the parse process is about to be interrupted, this method
 	   * will be called just prior.
      * @update	gess5/18/98
-     * @return	error code  -- usually kNoError (0)
+     * @return	error code  -- usually NS_OK (0)
      */
     NS_IMETHOD WillInterruptParse(void);
 
@@ -275,29 +292,7 @@ CLASS_EXPORT_HTMLPARS CNavDTD : public nsIDTD {
      *  @param   aChild -- int tag of child container
      *  @return  PR_TRUE if parent can contain child
      */
-    virtual PRBool CanContainEx(PRInt32 aParent,PRInt32 aChild) const;
-
-    /**
-     *  This method is called to determine whether or not a tag
-     *  of one type can contain a tag of another type.
-     *  
-     *  @update  gess 3/25/98
-     *  @param   aParent -- int tag of parent container
-     *  @param   aChild -- int tag of child container
-     *  @return  PR_TRUE if parent can contain child
-     */
     virtual PRBool CanPropagate(eHTMLTags aParent,eHTMLTags aChild) const;
-
-    /**
-     *  This method is called to determine whether a tag
-     *  of one of its children can contain a given child tag.
-     *  
-     *  @update  gess 3/25/98
-     *  @param   aParent -- tag enum of parent container
-     *  @param   aChild -- tag enum of child container
-     *  @return  PR_TRUE if parent can contain child
-     */
-    virtual PRBool CanContainIndirect(eHTMLTags aParent,eHTMLTags aChild) const;
 
     /**
      *  This method gets called to determine whether a given 
@@ -330,17 +325,6 @@ CLASS_EXPORT_HTMLPARS CNavDTD : public nsIDTD {
      *  @return  PR_TRUE if given tag can contain other tags
      */
     virtual PRBool IsContainer(PRInt32 aTag) const;
-
-    /**
-     * Call this if you want the DTD to give you a default
-	   * Parent tag for given child tag. This is needed in cases
-	   * such as propagation.
-	   *
-     * @update  gess 7/6/98
-     * @param   aTag --  child to determine dflt parent tag for
-     * @return  enum of parent tag -- potentially eHTMLTag_unknown
-     */
-    virtual eHTMLTags GetDefaultParentTagFor(eHTMLTags aTag) const;
 
     /**
      * This method tries to design a context map (without actually
@@ -382,17 +366,6 @@ CLASS_EXPORT_HTMLPARS CNavDTD : public nsIDTD {
     virtual PRBool HasOpenContainer(const eHTMLTags aTagSet[],PRInt32 aCount) const;
 
     /**
-     * This method is used to determine the index on the stack of the
-     * nearest container tag that can constrain autoclosure. It is possible
-	   * that no tag on the stack will gate autoclosure.
-	   *
-     * @update	gess 7/15/98
-     * @param   id of tag you want to test for
-     * @return  index of gating tag on context stack. kNotFound otherwise
-     */
-    virtual PRBool IsGatedFromClosing(eHTMLTags aChild) const;
-
-    /**
      * Accessor that retrieves the tag type of the topmost item on context 
 	   * vector stack.
 	   *
@@ -418,9 +391,7 @@ CLASS_EXPORT_HTMLPARS CNavDTD : public nsIDTD {
     virtual PRInt32 GetTopmostIndexOf(eHTMLTags aTagSet[],PRInt32 aCount) const;
 
 
-    virtual  nsITokenRecycler* GetTokenRecycler(void);
-
-    /**
+    /** 
      * The following methods are use to create and manage
      * the dynamic set of token handlers.
      * @update	gess5/11/98
@@ -538,52 +509,13 @@ CLASS_EXPORT_HTMLPARS CNavDTD : public nsIDTD {
     nsresult  UpdateStyleStackForOpenTag(eHTMLTags aTag,eHTMLTags aActualTag);
     nsresult  UpdateStyleStackForCloseTag(eHTMLTags aTag,eHTMLTags aActualTag);
     PRBool    CanContainStyles(eHTMLTags aTag) const;
-    PRBool    RequiresAutomaticClosure(eHTMLTags aParentTag,eHTMLTags aChildTag) const;
-
-    /****************************************************
-        These methods interface with the parser to do
-        the tokenization phase.
-     ****************************************************/
-
-
-    /**
-     * The following methods consume a particular type
-     * of HTML token.
-     *
-     * @update	gess 5/11/98
-     * @param   aScanner is the input source
-     * @param   aToken is the next token (or null)
-     * @return  error code
-     */
-    nsresult     ConsumeTag(PRUnichar aChar,CScanner& aScanner,CToken*& aToken);
-    nsresult     ConsumeStartTag(PRUnichar aChar,CScanner& aScanner,CToken*& aToken);
-    nsresult     ConsumeAttributes(PRUnichar aChar,CScanner& aScanner,CStartToken* aToken);
-    nsresult     ConsumeEntity(PRUnichar aChar,CScanner& aScanner,CToken*& aToken);
-    nsresult     ConsumeWhitespace(PRUnichar aChar,CScanner& aScanner,CToken*& aToken);
-    nsresult     ConsumeComment(PRUnichar aChar,CScanner& aScanner,CToken*& aToken);
-    nsresult     ConsumeNewline(PRUnichar aChar,CScanner& aScanner,CToken*& aToken);
-    nsresult     ConsumeText(const nsString& aString,CScanner& aScanner,CToken*& aToken);
-
-    /**
-     * Causes content to be skipped up to sequence contained in aString.
-     * @update	gess 5/11/98
-     * @param   aString ????
-     * @param   aChar last char read from scanner
-     * @param   aScanner is the input source
-     * @param   aToken is the next token (or null)
-     * @return  error code
-     */
-    virtual nsresult ConsumeContentToEndTag(PRUnichar aChar,
-																						eHTMLTags aChildTag,
-																						CScanner& aScanner,
-																						CToken*& aToken);
 
 
 protected:
 
-		PRInt32			CollectAttributes(nsCParserNode& aNode,PRInt32 aCount);
-		PRInt32			CollectSkippedContent(nsCParserNode& aNode,PRInt32& aCount);
-    PRInt32     DidHandleStartTag(CToken* aToken,eHTMLTags aChildTag);    
+		nsresult    CollectAttributes(nsCParserNode& aNode,PRInt32 aCount);
+		nsresult    CollectSkippedContent(nsCParserNode& aNode,PRInt32& aCount);
+    nsresult    DidHandleStartTag(CToken* aToken,eHTMLTags aChildTag);    
 
 
     nsIHTMLContentSink* mSink;
@@ -599,11 +531,12 @@ protected:
     PRBool              mHasOpenMap;
     PRBool              mHasOpenHead;
     PRBool              mHasOpenBody;
-    nsDeque             mTokenDeque;
+    PRBool              mHadBodyOrFrameset;
     nsString            mFilename;
     nsIDTDDebug*		    mDTDDebug;
     PRInt32             mLineNumber;
     nsParser*           mParser;
+    nsITokenizer*       mTokenizer;
 };
 
 extern NS_HTMLPARS nsresult NS_NewNavHTMLDTD(nsIDTD** aInstancePtrResult);

@@ -25,6 +25,8 @@ REQUIRES=xpcom raptor netlib
 
 CPPSRCS=					\
 	nsDTDUtils.cpp				\
+	nsHTMLTokenizer.cpp \
+	nsXMLTokenizer.cpp \
 	CNavDTD.cpp				\
 	COtherDTD.cpp				\
 	CRtfDTD.cpp				\
@@ -51,6 +53,8 @@ CPPSRCS=					\
 
 CPP_OBJS=					\
 	.\$(OBJDIR)\nsDTDUtils.obj			\
+	.\$(OBJDIR)\nsHTMLTokenizer.obj \
+	.\$(OBJDIR)\nsXMLTokenizer.obj \
 	.\$(OBJDIR)\CNavDTD.obj			\
 	.\$(OBJDIR)\COtherDTD.obj		\
 	.\$(OBJDIR)\CRtfDTD.obj			\
@@ -77,6 +81,7 @@ CPP_OBJS=					\
 
 EXPORTS=					\
 	nshtmlpars.h				\
+	nsITokenizer.h \
 	nsIContentSink.h			\
 	nsIHTMLContentSink.h			\
 	nsILoggingSink.h			\

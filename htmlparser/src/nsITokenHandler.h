@@ -27,6 +27,7 @@
 #define ITOKENHANDLER__
 
 #include "prtypes.h"
+#include "nsError.h"
 
 class CToken;
 class nsIDTD;
@@ -34,7 +35,7 @@ class nsIDTD;
 class CITokenHandler {
 public:
                           
-  virtual PRInt32 operator()(CToken* aToken,nsIDTD* aDTD)=0;
+  virtual nsresult operator()(CToken* aToken,nsIDTD* aDTD)=0;
   virtual PRInt32 GetTokenType(void)=0;
 
 };

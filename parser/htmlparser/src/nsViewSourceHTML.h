@@ -44,7 +44,7 @@ class nsIDTDDebug;
 class nsIParserNode;
 class CITokenHandler;
 class nsParser;
-
+class nsITokenizer;
 
 
 class CViewSourceHTML: public nsIDTD {
@@ -62,6 +62,8 @@ class CViewSourceHTML: public nsIDTD {
      *  @return  
      */
     CViewSourceHTML();
+
+    virtual const nsIID&  GetMostDerivedIID(void) const;
 
     /**
      *  
@@ -111,6 +113,16 @@ class CViewSourceHTML: public nsIDTD {
       */
     NS_IMETHOD WillBuildModel(nsString& aFilename,PRBool aNotifySink,nsIParser* aParser);
 
+    /**
+      * The parser uses a code sandwich to wrap the parsing process. Before
+      * the process begins, WillBuildModel() is called. Afterwards the parser
+      * calls DidBuildModel(). 
+      * @update	gess5/18/98
+      * @param	aFilename is the name of the file being parsed.
+      * @return	error code (almost always 0)
+      */
+    NS_IMETHOD BuildModel(nsIParser* aParser);
+
    /**
      * The parser uses a code sandwich to wrap the parsing process. Before
      * the process begins, WillBuildModel() is called. Afterwards the parser
@@ -119,7 +131,7 @@ class CViewSourceHTML: public nsIDTD {
      * @param	anErrorCode contans the last error that occured
      * @return	error code
      */
-    NS_IMETHOD DidBuildModel(PRInt32 anErrorCode,PRBool aNotifySink,nsIParser* aParser);
+    NS_IMETHOD DidBuildModel(nsresult anErrorCode,PRBool aNotifySink,nsIParser* aParser);
 
     /**
      *  
@@ -130,14 +142,21 @@ class CViewSourceHTML: public nsIDTD {
     NS_IMETHOD HandleToken(CToken* aToken,nsIParser* aParser);
 
     /**
-     *  Cause the tokenizer to consume the next token, and 
-     *  return an error result.
-     *  
-     *  @update  gess 3/25/98
-     *  @param   anError -- ref to error code
-     *  @return  new token or null
+     * 
+     * @update	gess12/28/98
+     * @param 
+     * @return
      */
-    NS_IMETHOD ConsumeToken(CToken*& aToken,nsIParser* aParser);
+    nsITokenizer* GetTokenizer(void);
+
+    
+    /**
+     * 
+     * @update	gess12/28/98
+     * @param 
+     * @return
+     */
+    virtual  nsITokenRecycler* GetTokenRecycler(void);
 
     /**
      *  This method causes all tokens to be dispatched to the given tag handler.
@@ -213,25 +232,10 @@ class CViewSourceHTML: public nsIDTD {
      */
     virtual PRBool IsContainer(PRInt32 aTag) const;
 
-    /**
-     * Retrieve a ptr to the global token recycler...
-     * @update	gess8/4/98
-     * @return  ptr to recycler (or null)
-     */
-    virtual nsITokenRecycler* GetTokenRecycler(void);
 
     static nsresult WriteText(nsString& aTextString,nsIContentSink& aSink,PRBool aPreserveText);
     
 protected:
-
-    NS_IMETHODIMP ConsumeTag(PRUnichar aChar,CScanner& aScanner,CToken*& aToken);
-    NS_IMETHODIMP ConsumeStartTag(PRUnichar aChar,CScanner& aScanner,CToken*& aToken);
-    NS_IMETHODIMP ConsumeText(const nsString& aString,CScanner& aScanner,CToken*& aToken);
-    NS_IMETHODIMP ConsumeNewline(PRUnichar aChar,CScanner& aScanner,CToken*& aToken);
-    NS_IMETHODIMP ConsumeWhitespace(PRUnichar aChar,CScanner& aScanner,CToken*& aToken);
-    NS_IMETHODIMP ConsumeComment(PRUnichar aChar,CScanner& aScanner,CToken*& aToken);
-    NS_IMETHODIMP ConsumeEntity(PRUnichar aChar,CScanner& aScanner,CToken*& aToken);
-    NS_IMETHODIMP ConsumeAttributes(PRUnichar aChar,CScanner& aScanner,CStartToken* aToken);
 
     nsParser*           mParser;
     nsIHTMLContentSink* mSink;
@@ -239,6 +243,7 @@ protected:
     PRInt32             mLineNumber;
     nsDeque             mTokenDeque;
     PRBool              mIsHTML;
+    nsITokenizer*       mTokenizer;
 };
 
 extern NS_HTMLPARS nsresult NS_NewViewSourceHTML(nsIDTD** aInstancePtrResult);

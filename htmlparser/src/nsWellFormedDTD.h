@@ -72,6 +72,7 @@ class CWellFormedDTD : public nsIDTD {
      */
     virtual ~CWellFormedDTD();
 
+    virtual const nsIID&  GetMostDerivedIID(void) const;
 
     /**
      * Call this method if you want the DTD to construct a clone of itself.
@@ -110,6 +111,16 @@ class CWellFormedDTD : public nsIDTD {
       */
     NS_IMETHOD WillBuildModel(nsString& aFilename,PRBool aNotifySink,nsIParser* aParser);
 
+    /**
+      * The parser uses a code sandwich to wrap the parsing process. Before
+      * the process begins, WillBuildModel() is called. Afterwards the parser
+      * calls DidBuildModel(). 
+      * @update	gess5/18/98
+      * @param	aFilename is the name of the file being parsed.
+      * @return	error code (almost always 0)
+      */
+    NS_IMETHOD BuildModel(nsIParser* aParser);
+
    /**
      * The parser uses a code sandwich to wrap the parsing process. Before
      * the process begins, WillBuildModel() is called. Afterwards the parser
@@ -118,7 +129,7 @@ class CWellFormedDTD : public nsIDTD {
      * @param	anErrorCode contans the last error that occured
      * @return	error code
      */
-    NS_IMETHOD DidBuildModel(PRInt32 anErrorCode,PRBool aNotifySink,nsIParser* aParser);
+    NS_IMETHOD DidBuildModel(nsresult anErrorCode,PRBool aNotifySink,nsIParser* aParser);
 
     /**
      *  
@@ -147,15 +158,12 @@ class CWellFormedDTD : public nsIDTD {
     NS_IMETHOD ReleaseTokenPump(nsITagHandler* aHandler);
 
     /**
-     *  Cause the tokenizer to consume the next token, and 
-     *  return an error result.
-     *  
-     *  @update  gess 3/25/98
-     *  @param   anError -- ref to error code
-     *  @return  new token or null
+     * 
+     * @update	gess12/28/98
+     * @param 
+     * @return
      */
-    NS_IMETHOD ConsumeToken(CToken*& aToken,nsIParser* aParser);
-
+    nsITokenizer* GetTokenizer(void);
 
     /**
      * 
@@ -220,22 +228,23 @@ class CWellFormedDTD : public nsIDTD {
     virtual nsITokenRecycler* GetTokenRecycler(void);
     
 protected:
-
-    NS_IMETHODIMP ConsumeTag(PRUnichar aChar,CScanner& aScanner,CToken*& aToken);
-    NS_IMETHODIMP ConsumeStartTag(PRUnichar aChar,CScanner& aScanner,CToken*& aToken);
-    NS_IMETHODIMP ConsumeText(const nsString& aString,CScanner& aScanner,CToken*& aToken);
-    NS_IMETHODIMP ConsumeNewline(PRUnichar aChar,CScanner& aScanner,CToken*& aToken);
-    NS_IMETHODIMP ConsumeWhitespace(PRUnichar aChar,CScanner& aScanner,CToken*& aToken);
-    NS_IMETHODIMP ConsumeEscapedContent(PRUnichar aChar,CScanner& aScanner,CToken*& aToken);
-    NS_IMETHODIMP ConsumeComment(PRUnichar aChar,CScanner& aScanner,CToken*& aToken);
-    NS_IMETHODIMP ConsumeEntity(PRUnichar aChar,CScanner& aScanner,CToken*& aToken);
-    NS_IMETHODIMP ConsumeAttributes(PRUnichar aChar,CScanner& aScanner,CStartToken* aToken);
-
+/*
+    NS_IMETHODIMP ConsumeTag(PRUnichar aChar,nsScanner& aScanner,CToken*& aToken);
+    NS_IMETHODIMP ConsumeStartTag(PRUnichar aChar,nsScanner& aScanner,CToken*& aToken);
+    NS_IMETHODIMP ConsumeText(const nsString& aString,nsScanner& aScanner,CToken*& aToken);
+    NS_IMETHODIMP ConsumeNewline(PRUnichar aChar,nsScanner& aScanner,CToken*& aToken);
+    NS_IMETHODIMP ConsumeWhitespace(PRUnichar aChar,nsScanner& aScanner,CToken*& aToken);
+    NS_IMETHODIMP ConsumeEscapedContent(PRUnichar aChar,nsScanner& aScanner,CToken*& aToken);
+    NS_IMETHODIMP ConsumeComment(PRUnichar aChar,nsScanner& aScanner,CToken*& aToken);
+    NS_IMETHODIMP ConsumeEntity(PRUnichar aChar,nsScanner& aScanner,CToken*& aToken);
+    NS_IMETHODIMP ConsumeAttributes(PRUnichar aChar,nsScanner& aScanner,CStartToken* aToken);
+*/
     nsParser*           mParser;
     nsIContentSink*     mSink;
     nsString            mFilename;
     PRInt32             mLineNumber;
     nsDeque             mTokenDeque;
+    nsITokenizer*       mTokenizer;
 };
 
 extern NS_HTMLPARS nsresult NS_NewWellFormed_DTD(nsIDTD** aInstancePtrResult);

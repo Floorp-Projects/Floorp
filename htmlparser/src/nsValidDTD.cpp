@@ -36,7 +36,7 @@
 #include "nsCRT.h"
 #include "nsParser.h"
 #include "nsScanner.h"
-#include "nsParserTypes.h"
+#include "nsIParser.h"
 #include "nsTokenHandler.h"
 
 #include "prenv.h"  //this is here for debug reasons...
@@ -133,6 +133,7 @@ CValidDTD::CValidDTD() : nsIDTD() {
   NS_INIT_REFCNT();
   mParser=0;
   mFilename=0;
+  mTokenizer=0;
 }
 
 /**
@@ -143,6 +144,17 @@ CValidDTD::CValidDTD() : nsIDTD() {
  *  @return  
  */
 CValidDTD::~CValidDTD(){
+}
+
+
+/**
+ * 
+ * @update	gess1/8/99
+ * @param 
+ * @return
+ */
+const nsIID& CValidDTD::GetMostDerivedIID(void) const{
+  return kClassIID;
 }
 
 /**
@@ -207,12 +219,25 @@ NS_IMETHODIMP CValidDTD::WillBuildModel(nsString& aFilename,PRBool aNotifySink,n
 }
 
 /**
+  * The parser uses a code sandwich to wrap the parsing process. Before
+  * the process begins, WillBuildModel() is called. Afterwards the parser
+  * calls DidBuildModel(). 
+  * @update	gess5/18/98
+  * @param	aFilename is the name of the file being parsed.
+  * @return	error code (almost always 0)
+  */
+NS_IMETHODIMP CValidDTD::BuildModel(nsIParser* aParser) {
+  nsresult result=NS_OK;
+  return result;
+}
+
+/**
  * 
  * @update	gess5/18/98
  * @param 
  * @return
  */
-NS_IMETHODIMP CValidDTD::DidBuildModel(PRInt32 anErrorCode,PRBool aNotifySink,nsIParser* aParser){
+NS_IMETHODIMP CValidDTD::DidBuildModel(nsresult anErrorCode,PRBool aNotifySink,nsIParser* aParser){
   nsresult result=NS_OK;
 
   return result;
@@ -226,45 +251,13 @@ NS_IMETHODIMP CValidDTD::DidBuildModel(PRInt32 anErrorCode,PRBool aNotifySink,ns
  *******************************************************************/
 
 /**
- *  This method repeatedly called by the tokenizer. 
- *  Each time, we determine the kind of token were about to 
- *  read, and then we call the appropriate method to handle
- *  that token type.
- *  
- *  @update gess 3/25/98
- *  @param  aChar: last char read
- *  @param  aScanner: see nsScanner.h
- *  @param  anErrorCode: arg that will hold error condition
- *  @return new token or null 
+ * 
+ * @update	gess12/28/98
+ * @param 
+ * @return
  */
-NS_IMETHODIMP CValidDTD::ConsumeToken(CToken*& aToken,nsIParser* aParser){
-
-  mParser=(nsParser*)aParser;
-  CScanner* theScanner=mParser->GetScanner();
-
-  PRUnichar aChar;
-  nsresult   result=theScanner->GetChar(aChar);
-
-  switch(result) {
-    case kEOF:
-      break;
-
-    case kInterrupted:
-      theScanner->RewindToMark();
-      break; 
-
-    case NS_OK:
-    default:
-      switch(aChar) {
-        case kLessThan:
-        default:
-          break;
-      } //switch
-      break; 
-  } //switch
-  if(NS_OK==result)
-    result=theScanner->Eof();
-  return result;
+nsITokenizer* CValidDTD::GetTokenizer(void){
+  return 0;
 }
 
 /**

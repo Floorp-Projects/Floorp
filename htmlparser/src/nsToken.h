@@ -39,7 +39,7 @@
 #include "nsString.h"
 #include <iostream.h>
 
-class CScanner;
+class nsScanner;
 
 
 /**
@@ -147,7 +147,7 @@ class CToken {
      * @param   aScanner -- input source where token should get data
      * @return  error code (0 means ok)
      */
-    virtual nsresult Consume(PRUnichar aChar,CScanner& aScanner);
+    virtual nsresult Consume(PRUnichar aChar,nsScanner& aScanner);
 
     /**
      * Causes token to dump itself in debug form to given output stream

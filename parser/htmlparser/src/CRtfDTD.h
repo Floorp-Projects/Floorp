@@ -40,7 +40,7 @@
 
 class nsIParserNode;
 class nsParser;
-
+class nsITokenizer;
 
 enum eRTFTokenTypes {
   eRTFToken_unknown=0,
@@ -102,7 +102,7 @@ class CRTFControlWord : public CToken {
 public:
                   CRTFControlWord(char* aKey);
   virtual PRInt32 GetTokenType();
-  virtual PRInt32 Consume(CScanner& aScanner);
+  virtual PRInt32 Consume(nsScanner& aScanner);
 protected:
   nsString  mArgument;
 };
@@ -120,7 +120,7 @@ public:
   virtual PRInt32 GetTokenType();
   virtual void    SetGroupStart(PRBool aFlag);
   virtual PRBool  IsGroupStart();
-  virtual PRInt32 Consume(CScanner& aScanner);
+  virtual PRInt32 Consume(nsScanner& aScanner);
 protected:
           PRBool  mStart;
 };
@@ -136,7 +136,7 @@ class CRTFContent: public CToken {
 public:
                   CRTFContent(PRUnichar* aValue);
   virtual PRInt32 GetTokenType();
-  virtual PRInt32 Consume(CScanner& aScanner);
+  virtual PRInt32 Consume(nsScanner& aScanner);
 };
 
 
@@ -164,6 +164,8 @@ class CRtfDTD : public nsIDTD {
      *  @return  
      */
     virtual ~CRtfDTD();
+
+    virtual const nsIID&  GetMostDerivedIID(void) const;
 
     /**
      * Call this method if you want the DTD to construct a clone of itself.
@@ -202,6 +204,16 @@ class CRtfDTD : public nsIDTD {
       */
     NS_IMETHOD WillBuildModel(nsString& aFilename,PRInt32 aLevel,nsIParser* aParser);
 
+    /**
+      * The parser uses a code sandwich to wrap the parsing process. Before
+      * the process begins, WillBuildModel() is called. Afterwards the parser
+      * calls DidBuildModel(). 
+      * @update	gess5/18/98
+      * @param	aFilename is the name of the file being parsed.
+      * @return	error code (almost always 0)
+      */
+    NS_IMETHOD BuildModel(nsIParser* aParser);
+
    /**
      * The parser uses a code sandwich to wrap the parsing process. Before
      * the process begins, WillBuildModel() is called. Afterwards the parser
@@ -210,7 +222,7 @@ class CRtfDTD : public nsIDTD {
      * @param	anErrorCode contans the last error that occured
      * @return	error code
      */
-    NS_IMETHOD DidBuildModel(PRInt32 anErrorCode,PRInt32 aLevel,nsIParser* aParser);
+    NS_IMETHOD DidBuildModel(nsresult anErrorCode,PRInt32 aLevel,nsIParser* aParser);
 
     /**
      *  
@@ -218,7 +230,7 @@ class CRtfDTD : public nsIDTD {
      *  @param   aToken -- token object to be put into content model
      *  @return  0 if all is well; non-zero is an error
      */
-    virtual PRInt32 HandleGroup(CToken* aToken);
+    NS_IMETHOD HandleGroup(CToken* aToken);
 
     /**
      *  
@@ -226,7 +238,7 @@ class CRtfDTD : public nsIDTD {
      *  @param   aToken -- token object to be put into content model
      *  @return  0 if all is well; non-zero is an error
      */
-    virtual PRInt32 HandleControlWord(CToken* aToken);
+    NS_IMETHOD HandleControlWord(CToken* aToken);
 
     /**
      *  
@@ -234,7 +246,7 @@ class CRtfDTD : public nsIDTD {
      *  @param   aToken -- token object to be put into content model
      *  @return  0 if all is well; non-zero is an error
      */
-    virtual PRInt32 HandleContent(CToken* aToken);
+    NS_IMETHOD HandleContent(CToken* aToken);
 
     /**
      *  
@@ -262,47 +274,14 @@ class CRtfDTD : public nsIDTD {
      */
     NS_IMETHOD ReleaseTokenPump(nsITagHandler* aHandler);
 
-   
+  
     /**
-     *  Cause the tokenizer to consume the next token, and 
-     *  return an error result.
-     *  
-     *  @update  gess 3/25/98
-     *  @param   anError -- ref to error code
-     *  @return  new token or null
+     * 
+     * @update	gess12/28/98
+     * @param 
+     * @return
      */
-    virtual PRInt32 ConsumeControlWord(CToken*& aToken);
-
-    /**
-     *  Cause the tokenizer to consume the next token, and 
-     *  return an error result.
-     *  
-     *  @update  gess 3/25/98
-     *  @param   anError -- ref to error code
-     *  @return  new token or null
-     */
-    virtual PRInt32 ConsumeGroupTag(CToken*& aToken,PRBool aStartTag);
-
-    /**
-     *  Cause the tokenizer to consume the next token, and 
-     *  return an error result.
-     *  
-     *  @update  gess 3/25/98
-     *  @param   anError -- ref to error code
-     *  @return  new token or null
-     */
-    virtual PRInt32 ConsumeContent(PRUnichar aChar,CToken*& aToken);
-
-    /**
-     *  Cause the tokenizer to consume the next token, and 
-     *  return an error result.
-     *  
-     *  @update  gess 3/25/98
-     *  @param   anError -- ref to error code
-     *  @return  new token or null
-     */
-    NS_IMETHOD ConsumeToken(CToken*& aToken,nsIParser* aParser);
-
+    nsITokenizer* GetTokenizer(void);
 
     /**
      * 
@@ -371,6 +350,7 @@ protected:
     
     nsParser*           mParser;
     char*               mFilename;
+    nsITokenizer*       mTokenizer;
 };
 
 extern NS_HTMLPARS nsresult NS_NewRTF_DTD(nsIDTD** aInstancePtrResult);

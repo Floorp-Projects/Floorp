@@ -58,7 +58,6 @@
 #include "nsIParser.h"
 #include "nsDeque.h"
 #include "nsParserNode.h"
-#include "nsParserTypes.h"
 #include "nsIURL.h"
 #include "CParserContext.h"
 #include "nsParserCIID.h"
@@ -66,7 +65,7 @@
 class IContentSink;
 class nsIHTMLContentSink;
 class nsIDTD;
-class CScanner;
+class nsScanner;
 class nsIParserFilter;
 #include <fstream.h>
 
@@ -136,7 +135,7 @@ friend class CTokenHandler;
      *  @update  gess 6/9/98
      *  @return  ptr to scanner
      */
-    virtual CScanner* GetScanner(void);
+    virtual nsScanner* GetScanner(void);
 
     /**
      * Cause parser to parse input from given URL 
@@ -145,7 +144,7 @@ friend class CTokenHandler;
      * @param   aListener is a listener to forward notifications to
      * @return  TRUE if all went well -- FALSE otherwise
      */
-    virtual PRInt32 Parse(nsIURL* aURL,nsIStreamObserver* aListener,PRBool aEnableVerify=PR_FALSE);
+    virtual nsresult Parse(nsIURL* aURL,nsIStreamObserver* aListener,PRBool aEnableVerify=PR_FALSE);
 
     /**
      * Cause parser to parse input from given stream 
@@ -153,7 +152,7 @@ friend class CTokenHandler;
      * @param   aStream is the i/o source
      * @return  TRUE if all went well -- FALSE otherwise
      */
-    virtual PRInt32 Parse(fstream& aStream,PRBool aEnableVerify=PR_FALSE);
+    virtual nsresult Parse(fstream& aStream,PRBool aEnableVerify=PR_FALSE);
 
     /**
      * @update	gess5/11/98
@@ -161,7 +160,7 @@ friend class CTokenHandler;
      * @param   appendTokens tells us whether we should insert tokens inline, or append them.
      * @return  TRUE if all went well -- FALSE otherwise
      */
-    virtual PRInt32 Parse(nsString& aSourceBuffer,PRBool anHTMLString,PRBool aEnableVerify=PR_FALSE);
+    virtual nsresult Parse(nsString& aSourceBuffer,PRBool anHTMLString,PRBool aEnableVerify=PR_FALSE);
 
 
     /**
@@ -180,11 +179,7 @@ friend class CTokenHandler;
      * @update	gess5/11/98
      * @return  TRUE if all went well, otherwise FALSE
      */
-    virtual PRInt32 ResumeParse();
-
-		virtual CToken* PushToken(CToken* theToken);
-		virtual CToken* PopToken();
-		virtual CToken* PeekToken();
+    virtual nsresult ResumeParse(nsIDTD* mDefaultDTD=0);
 
     /**
      *  This debug routine is used to cause the tokenizer to
@@ -217,7 +212,7 @@ protected:
      * @param 
      * @return
      */
-    PRInt32 WillBuildModel(nsString& aFilename,nsIDTD* mDefaultDTD=0);
+    nsresult WillBuildModel(nsString& aFilename,nsIDTD* mDefaultDTD=0);
 
     /**
      * 
@@ -225,7 +220,7 @@ protected:
      * @param 
      * @return
      */
-    PRInt32 DidBuildModel(PRInt32 anErrorCode);
+    nsresult DidBuildModel(nsresult anErrorCode);
 
     /**
      * This method gets called when the tokens have been consumed, and it's time
@@ -233,7 +228,7 @@ protected:
      * @update	gess5/11/98
      * @return  YES if model building went well -- NO otherwise.
      */
-    virtual PRInt32 BuildModel(void);
+    virtual nsresult BuildModel(void);
     
 private:
 
@@ -261,7 +256,7 @@ private:
      *  @update  gess 3/25/98
      *  @return  error code 
      */
-    PRInt32 Tokenize();
+    nsresult Tokenize();
 
     /**
      *  This is the tail-end of the code sandwich for the
@@ -320,6 +315,7 @@ protected:
     nsString            mCommand;
     eStreamState        mStreamListenerState; //this is really only here for debug purposes.
     PRInt32             mStreamStatus;
+    PRBool              mIncremental;
 };
 
 

@@ -36,8 +36,9 @@
 #include "nsCRT.h"
 #include "nsParser.h"
 #include "nsScanner.h"
-#include "nsParserTypes.h"
+#include "nsIParser.h"
 #include "nsTokenHandler.h"
+#include "nsITokenizer.h"
 
 #include "prenv.h"  //this is here for debug reasons...
 #include "prtypes.h"  //this is here for debug reasons...
@@ -198,6 +199,7 @@ CRtfDTD::CRtfDTD() : nsIDTD() {
   NS_INIT_REFCNT();
   mParser=0;
   mFilename=0;
+  mTokenizer=0;
 }
 
 /**
@@ -208,6 +210,16 @@ CRtfDTD::CRtfDTD() : nsIDTD() {
  *  @return  
  */
 CRtfDTD::~CRtfDTD(){
+}
+
+/**
+ * 
+ * @update	gess1/8/99
+ * @param 
+ * @return
+ */
+const nsIID& CRtfDTD::GetMostDerivedIID(void) const{
+  return kClassIID;
 }
 
 /**
@@ -262,140 +274,38 @@ NS_IMETHODIMP CRtfDTD::WillBuildModel(nsString& aFilename,PRInt32 aLevel,nsIPars
 }
 
 /**
+  * The parser uses a code sandwich to wrap the parsing process. Before
+  * the process begins, WillBuildModel() is called. Afterwards the parser
+  * calls DidBuildModel(). 
+  * @update	gess5/18/98
+  * @param	aFilename is the name of the file being parsed.
+  * @return	error code (almost always 0)
+  */
+NS_IMETHODIMP CRtfDTD::BuildModel(nsIParser* aParser) {
+  nsresult result=NS_OK;
+  return result;
+}
+
+/**
  * 
  * @update	gess5/18/98
  * @param 
  * @return
  */
-NS_IMETHODIMP CRtfDTD::DidBuildModel(PRInt32 anErrorCode,PRInt32 aLevel,nsIParser* aParser){
+NS_IMETHODIMP CRtfDTD::DidBuildModel(nsresult anErrorCode,PRInt32 aLevel,nsIParser* aParser){
   nsresult result=NS_OK;
 
   return result;
 }
 
-
-
-/*******************************************************************
-  These methods use to be hidden in the tokenizer-delegate. 
-  That file merged with the DTD, since the separation wasn't really
-  buying us anything.
- *******************************************************************/
-
 /**
- *  This gets called when we've just read a '\' char. 
- *  It means we need to read an RTF control word.
- *  
- *  @update gess 3/25/98
- *  @param  aToken ptr-ref to new token we create
- *  @return error code -- preferably kNoError
+ * 
+ * @update	gess12/28/98
+ * @param 
+ * @return
  */
-PRInt32 CRtfDTD::ConsumeControlWord(CToken*& aToken){
-  PRInt32 result=kNoError;
-  CRTFControlWord* cw=new CRTFControlWord("");
-  if(cw){
-    CScanner* theScanner=mParser->GetScanner();
-    cw->Consume(*theScanner);
-    aToken=cw;
-  }
-  return result;
-}
-
-/**
- *  This gets called when we've just read a '{' or '}' group char. 
- *  It means we have just started or ended an RTF group.
- *  
- *  @update gess 3/25/98
- *  @param  aToken ptr-ref to new token we create
- *  @return error code -- preferably kNoError
- */
-static char* keys[] = {"}","{"};
-
-PRInt32 CRtfDTD::ConsumeGroupTag(CToken*& aToken,PRBool aStartGroup){
-  PRInt32 result=kNoError;
-  CRTFGroup* cw=new CRTFGroup(keys[PR_TRUE==aStartGroup],aStartGroup);
-  if(cw){
-    CScanner* theScanner=mParser->GetScanner();
-    cw->Consume(*theScanner);
-    aToken=cw;
-  }
-  return result;
-}
-
-/**
- *  This gets called when we've just read plain text char.
- *  It means we need to read RTF content.
- *  
- *  @update gess 3/25/98
- *  @param  aToken ptr-ref to new token we create
- *  @return error code -- preferably kNoError
- */
-PRInt32 CRtfDTD::ConsumeContent(PRUnichar aChar,CToken*& aToken){
-  PRInt32 result=kNoError;
-  PRUnichar buffer[2] = {0,0};
-  buffer[0]=aChar;
-  CRTFContent * cw=new CRTFContent(buffer);
-  if(cw){
-    CScanner* theScanner=mParser->GetScanner();
-    cw->Consume(*theScanner);
-    aToken=cw;
-  }
-  return result;
-}
-
-/**
- *  This method repeatedly called by the tokenizer. 
- *  Each time, we determine the kind of token were about to 
- *  read, and then we call the appropriate method to handle
- *  that token type.
- *  
- *  @update gess 3/25/98
- *  @param  aChar: last char read
- *  @param  aScanner: see nsScanner.h
- *  @param  anErrorCode: arg that will hold error condition
- *  @return new token or null 
- */
-nsresult CRtfDTD::ConsumeToken(CToken*& aToken,nsIParser* aParser){
-
-  mParser=(nsParser*)aParser;
-  CScanner* theScanner=mParser->GetScanner();
-
-  PRUnichar aChar;
-  nsresult   result=theScanner->GetChar(aChar);
-
-  switch(result) {
-    case kEOF:
-      break;
-
-    case kInterrupted:
-      theScanner->RewindToMark();
-      break; 
-
-    case NS_OK:
-    default:
-      switch(aChar) {
-        case kLeftBrace:
-          result=ConsumeGroupTag(aToken,PR_TRUE); break;
-
-        case kRightBrace:
-          result=ConsumeGroupTag(aToken,PR_FALSE); break;
-
-        case kBackSlash:
-          result=ConsumeControlWord(aToken); break;
-
-        case kCR:
-        case kSpace:
-        case kTab:
-        case kLF:
-          break;
-
-        default:
-          result=ConsumeContent(aChar,aToken); break;
-      } //switch
-      break; 
-  } //switch
-  if(NS_OK==result)
-    result=theScanner->Eof();
-  return result;
+nsITokenizer* CRtfDTD::GetTokenizer(void){
+  return 0;
 }
 
 /**
@@ -474,8 +384,8 @@ PRBool CRtfDTD::CanContain(PRInt32 aParent,PRInt32 aChild) const{
  *  @param   aToken -- token object to be put into content model
  *  @return  0 if all is well; non-zero is an error
  */
-PRInt32 CRtfDTD::HandleGroup(CToken* aToken){
-  PRInt32 result=kNoError;
+nsresult CRtfDTD::HandleGroup(CToken* aToken){
+  nsresult result=NS_OK;
   return result;
 }
 
@@ -485,8 +395,8 @@ PRInt32 CRtfDTD::HandleGroup(CToken* aToken){
  *  @param   aToken -- token object to be put into content model
  *  @return  0 if all is well; non-zero is an error
  */
-PRInt32 CRtfDTD::HandleControlWord(CToken* aToken){
-  PRInt32 result=kNoError;
+nsresult CRtfDTD::HandleControlWord(CToken* aToken){
+  nsresult result=NS_OK;
   return result;
 }
 
@@ -496,8 +406,8 @@ PRInt32 CRtfDTD::HandleControlWord(CToken* aToken){
  *  @param   aToken -- token object to be put into content model
  *  @return  0 if all is well; non-zero is an error
  */
-PRInt32 CRtfDTD::HandleContent(CToken* aToken){
-  PRInt32 result=kNoError;
+nsresult CRtfDTD::HandleContent(CToken* aToken){
+  nsresult result=NS_OK;
   return result;
 }
 
@@ -582,9 +492,9 @@ PRInt32 CRTFControlWord::GetTokenType() {
 }
 
 
-PRInt32 CRTFControlWord::Consume(CScanner& aScanner){
+PRInt32 CRTFControlWord::Consume(nsScanner& aScanner){
   PRInt32 result=aScanner.ReadWhile(mTextValue,gAlphaChars,PR_TRUE,PR_FALSE);
-  if(kNoError==result) {
+  if(NS_OK==result) {
     //ok, now look for an option parameter...
     PRUnichar ch;
     result=aScanner.Peek(ch);
@@ -601,7 +511,7 @@ PRInt32 CRTFControlWord::Consume(CScanner& aScanner){
         break;
     }
   }
-  if(kNoError==result)
+  if(NS_OK==result)
     result=aScanner.SkipWhitespace();
   return result;
 }
@@ -614,7 +524,7 @@ PRInt32 CRTFControlWord::Consume(CScanner& aScanner){
 CRTFGroup::CRTFGroup(char* aKey,PRBool aStartGroup) : CToken(aKey) {
   mStart=aStartGroup;
 }
-
+ 
 
 PRInt32 CRTFGroup::GetTokenType() {
   return eRTFToken_group;
@@ -628,8 +538,8 @@ PRBool CRTFGroup::IsGroupStart(){
   return mStart;
 }
 
-PRInt32 CRTFGroup::Consume(CScanner& aScanner){
-  PRInt32 result=kNoError;
+PRInt32 CRTFGroup::Consume(nsScanner& aScanner){
+  PRInt32 result=NS_OK;
   if(PR_FALSE==mStart)
     result=aScanner.SkipWhitespace();
   return result;
@@ -658,7 +568,7 @@ PRInt32 CRTFContent::GetTokenType() {
  * @return
  */
 static nsString textTerminators("\\{}");
-PRInt32 CRTFContent::Consume(CScanner& aScanner){
+PRInt32 CRTFContent::Consume(nsScanner& aScanner){
   PRInt32 result=aScanner.ReadUntil(mTextValue,textTerminators,PR_FALSE,PR_FALSE);
   return result;
 }
