@@ -22,26 +22,131 @@
 
 #include "nsISupports.idl"
 
+/**
+ * nsIControllerCommand
+ *
+ * A generic command interface. You can register an nsIControllerCommand
+ * with the nsIControllerCommandManager.
+ */
 
-[uuid(0eae9a46-1dd2-11b2-aca0-9176f05fe9db)]
+[scriptable, uuid(0eae9a46-1dd2-11b2-aca0-9176f05fe9db)]
 interface nsIControllerCommand : nsISupports
 {
 
-  boolean isCommandEnabled(in wstring aCommand, in nsISupports refCon);
-  void    doCommand(in wstring aCommand, in nsISupports refCon);
+  /**
+   * Returns true if the command is currently enabled. An nsIControllerCommand
+   * can implement more than one commands; say, a group of related commands
+   * (e.g. delete left/delete right). Because of this, the command name is
+   * passed to each method.
+   *
+   * @param aCommandName  the name of the command for which we want the enabled
+   *                      state.
+   * @param aCommandRefCon    a cookie held by the nsIControllerCommandManager,
+   *                  allowing the command to get some context information.
+   *                  The contents of this cookie are implementation-defined.
+   */
+  boolean isCommandEnabled(in wstring aCommandName, in nsISupports aCommandRefCon);
+
+  /**
+   * Execute the name command.
+   *
+   * @param aCommandName  the name of the command to execute.
+   * 
+   * @param aCommandRefCon    a cookie held by the nsIControllerCommandManager,
+   *                  allowing the command to get some context information.
+   *                  The contents of this cookie are implementation-defined.
+   */
+  void    doCommand(in wstring aCommandName, in nsISupports aCommandRefCon);
   
 };
 
 
-[uuid(65a2f51a-1dd2-11b2-889f-d886b255ffe7)]
+/**
+ * nsIStatefulControllerCommand
+ *
+ * An extension of the basic nsIControllerCommand interface, for commands
+ * that have to update state (e.g. "bold" in an editor). Note that the 
+ * implementation of the command *must* be stateless (since a given command
+ * can be shared between clients of the controller command manager). State
+ * must be stored/update via the refCon.
+ */
+
+[scriptable, uuid(78ad2381-1ae6-11d4-9f7e-a6d3f6dffffc)]
+interface nsIStateUpdatingControllerCommand : nsISupports
+{
+
+  /**
+   * Update the state of the named command.
+   *
+   * @param aCommandName     the name of the command for which we want to update state.
+   * 
+   * @param aCommandRefCon    a cookie held by the nsIControllerCommandManager,
+   *                  allowing the command to get some context information.
+   *                  The contents of this cookie are implementation-defined.
+   */
+  void    updateCommandState(in wstring aCommandName, in nsISupports aCommandRefCon);
+};
+
+
+
+
+/**
+ * nsIControllerCommandManager
+ * 
+ * An interface via which a controller can maintain a series of commands,
+ * and efficiently dispatch commands to their respective handlers.
+ *
+ * Controllers that use an nsIControllerCommandManager should support
+ * nsIInterfaceRequestor, and be able to return an interface to their
+ * controller command manager via getInterface().
+ * 
+ */
+
+[scriptable, uuid(65a2f51a-1dd2-11b2-889f-d886b255ffe7)]
 interface nsIControllerCommandManager : nsISupports
 {
+  /**
+   * Register and unregister commands with the command manager.
+   *
+   * @param aCommandName  the name of the command under which to register or
+   *                      unregister the given command handler.
+   *
+   * @param aCommand      the handler for this command.
+   */
+  void    registerCommand(in wstring aCommandName, in nsIControllerCommand aCommand);
+  void    unregisterCommand(in wstring aCommandName, in nsIControllerCommand aCommand);
   
-  void    registerCommand(in wstring commandName, in nsIControllerCommand aCommand);
-  void    unregisterCommand(in wstring commandName, in nsIControllerCommand aCommand);
-  
+  /**
+   * Find the command handler which has been registered to handle the named command.
+   *
+   * @param aCommandName  the name of the command to find the handler for.
+   */
   nsIControllerCommand findCommandHandler(in wstring aCommandName);
-  
+
+  /**
+   * Get whether the named command is enabled.
+   *
+   * @param aCommandName    the name of the command to test
+   * @param aCommandRefCon  the command context data
+   */
+	boolean isCommandEnabled(in wstring aCommandName, in nsISupports aCommandRefCon);
+
+  /**
+   * Get whether the named command is supported.
+   *
+   * @param aCommandName    the name of the command to test
+   * @param aCommandRefCon  the command context data
+   */
+	boolean supportsCommand(in wstring aCommandName, in nsISupports aCommandRefCon);
+
+  /**
+   * Execute the named command.
+   *
+   * @param aCommandName    the name of the command to execute
+   * @param aCommandRefCon  the command context data
+   */
+	void    doCommand(in wstring aCommandName, in nsISupports aCommandRefCon);
+
 };
 
 %{C++
