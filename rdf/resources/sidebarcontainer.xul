@@ -1,0 +1,74 @@
+<?xml version="1.0"?> 
+<?xml-stylesheet href="resource:/res/samples/xul.css" type="text/css"?>
+<?xml-stylesheet href="sidebar.css" type="text/css"?>
+
+ 
+
+<window xmlns:html="http://www.w3.org/TR/REC-html40"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        > 
+<html:script>
+   
+function sidebarwdth (hght,tabid)  {
+     dump(document.getElementById(tabid).style.height);
+	 dump(document.getElementById(tabid).id);
+
+	 if (document.getElementById(tabid).style.height == "0pt")  { 
+	    document.getElementById(tabid).style.height = 150;
+		dump("\n + 150")
+		}  
+		   else {
+        document.getElementById(tabid).style.height = hght;
+		dump(document.getElementById(tabid).style.height + "\n + 0" + hght);
+		}
+    
+}
+
+</html:script>
+
+
+
+<html:style>
+
+iframe {
+ // width: 100;
+  height: 100;
+  border: 0;
+}
+
+
+</html:style>
+
+<box align="vertical">
+<html:div>
+  <toolbox>
+    <toolbar id="sidebarbar">
+        <titledbutton align="left" src="" value="reload" onclick="window.location.reload()"/>
+        <titledbutton align="left" src="" value="Customize" />
+    </toolbar>
+  </toolbox>
+</html:div>
+
+
+
+    <toolbar id="tab" class="tabheader" onclick="sidebarwdth(0,'tab1')">
+        <titledbutton id="bookmarks" align="left" value="Bookmarks" />
+        <titledbutton id="cust1" align="right" src="" value="customize"  />
+    </toolbar>xul" id="tab1"  />
+  <html:iframe src="resource:/res/rdf/flash.xul" id="tab1"   />
+
+ 
+
+
+    <toolbar id="tabbar2" class="tabheader" onclick="sidebarwdth(0,'tab2')">
+        <titledbutton align="left" src="" value="Other"  />
+        <titledbutton align="left" src="" value="customize" />
+    </toolbar>
+
+  <html:iframe src="resource:/res/rdf/sidebar.xul" id="tab2"   />
+
+
+
+</box>
+
+</window>
