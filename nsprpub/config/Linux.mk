@@ -115,6 +115,8 @@ endif
 MKSHLIB			= $(LD) $(DSO_LDOPTS) -soname $(notdir $@)
 ifdef BUILD_OPT
 OPTIMIZER		= -O2
+#   invoke 'strip' on *.so files in optimized builds
+STRIP = strip
 endif
 
 ######################################################################

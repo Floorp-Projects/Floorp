@@ -285,6 +285,9 @@ else
 	$(CC) -o $@ $(CFLAGS) $(OBJS) $(LDFLAGS)
 endif
 endif
+ifdef BUILD_OPT
+	$(STRIP) $@
+endif
 
 $(LIBRARY): $(OBJS)
 	@$(MAKE_OBJDIR)
@@ -297,6 +300,9 @@ ifdef USE_AUTOCONF
 else
 	$(AR) $(OBJS) $(AR_EXTRA_ARGS)
 endif # USE_AUTOCONF
+endif
+ifdef BUILD_OPT
+	$(STRIP) $@
 endif
 	$(RANLIB) $@
 
@@ -371,6 +377,9 @@ endif   # OS2
 endif	# WINNT
 endif	# AIX 4.1
 endif   # USE_AUTOCONF
+ifdef BUILD_OPT
+	$(STRIP) $@
+endif
 
 
 ifeq (,$(filter-out WINNT OS2,$(OS_ARCH)))
