@@ -2206,7 +2206,7 @@ nsHTMLEditor::InsertElement(nsIDOMElement* aElement, PRBool aDeleteSelection)
     nsCOMPtr<nsIDOMNode> newNode = do_QueryInterface(aElement);
     PRBool isInline;
     res = IsNodeInline(newNode, isInline);
-    if( NS_SUCCEEDED(res) && isInline)
+    if( NS_SUCCEEDED(res) /*&& isInline*/)
     {
       // The simple case of an inline node
       res = InsertNode(aElement, parentSelectedNode, offsetOfNewNode);
@@ -2414,7 +2414,7 @@ nsHTMLEditor::SetCaretAfterElement(nsIDOMElement* aElement)
         if (NS_SUCCEEDED(res))
         {
           // Collapse selection to just after desired element,
-          selection->Collapse(parent, offsetInParent+1);
+          selection->Collapse(parent, offsetInParent);
         }
       }
     }
