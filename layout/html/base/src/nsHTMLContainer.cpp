@@ -767,7 +767,6 @@ nsresult nsHTMLContainer::HasChildNodes()
 
 nsresult nsHTMLContainer::GetFirstChild(nsIDOMNode **aNode)
 {
-  nsIDOMNode* node = nsnull;
   nsIContent *child = (nsIContent*) mChildren.ElementAt(0);
   if (nsnull != child) {
     nsresult res = child->QueryInterface(kIDOMNodeIID, (void**)aNode);
@@ -792,7 +791,7 @@ nsresult nsHTMLContainer::InsertBefore(nsIDOMNode *newChild, nsIDOMNode *refChil
     if (nsnull == refChild) {
       // Append the new child to the end
       if (PR_FALSE == AppendChild(newContent)) {
-        res == NS_ERROR_FAILURE;
+        res = NS_ERROR_FAILURE;
       }
     } else {
       nsIContent* content = nsnull;
@@ -844,7 +843,6 @@ nsresult nsHTMLContainer::ReplaceChild(nsIDOMNode *newChild,
 
 nsresult nsHTMLContainer::RemoveChild(nsIDOMNode *oldChild)
 {
-  nsIDOMNode* oldNode = nsnull;
   nsIContent* content = nsnull;
   nsresult res = oldChild->QueryInterface(kIContentIID, (void**)&content);
   NS_ASSERTION(NS_OK == res, "Must be an nsIContent");
