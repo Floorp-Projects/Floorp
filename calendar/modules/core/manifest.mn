@@ -7,8 +7,9 @@
 # The copyright notice(s) in this Source Code does not indicate actual or
 # intended publication of this Source Code.
 #
-GDEPTH = ../..
-DEPTH  = ../..
+GDEPTH = ../../..
+DEPTH  = ../../..
 
-DIRS = util network parser core ui shell test
+DIRS_EXPORT = public inc 
+DIRS_LIBS = src
 

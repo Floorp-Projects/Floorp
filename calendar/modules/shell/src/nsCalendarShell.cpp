@@ -48,6 +48,9 @@
 #include "capi.h"
 #include "nsICapi.h"
 
+#include "nsCoreCIID.h"
+#include "nsLayer.h"
+
 /* for CAPI to work in general form */
 #include "nsCapiCallbackReader.h"
 #include "nsCalStreamReader.h"
@@ -78,12 +81,16 @@ static NS_DEFINE_IID(kCXPFCObserverManagerCID, NS_XPFC_OBSERVERMANAGER_CID);
 // hardcode names of dll's
 #ifdef NS_WIN32
   #define CAPI_DLL    "calcapi10.dll"
+  #define CORE_DLL    "calcore10.dll"
 #else
   #define CAPI_DLL   "libcalcapi10.so"
+  #define CORE_DLL   "libcalcore10.so"
 #endif
 
-static NS_DEFINE_IID(kCCapiLocalCID, NS_CAPI_LOCAL_CID);
-static NS_DEFINE_IID(kCCapiCSTCID,   NS_CAPI_CST_CID);
+static NS_DEFINE_IID(kCCapiLocalCID,            NS_CAPI_LOCAL_CID);
+static NS_DEFINE_IID(kCCapiCSTCID,              NS_CAPI_CST_CID);
+static NS_DEFINE_IID(kCLayerCID,                NS_LAYER_CID);
+static NS_DEFINE_IID(kCLayerCollectionCID,      NS_LAYER_COLLECTION_CID);
 
 // All Application Must implement this function
 nsresult NS_RegisterApplicationShellFactory()
@@ -952,6 +959,9 @@ nsresult nsCalendarShell::RegisterFactories()
   nsRepository::RegisterFactory(kCCapiLocalCID, CAPI_DLL, PR_FALSE, PR_FALSE);
   nsRepository::RegisterFactory(kCCapiCSTCID,   CAPI_DLL, PR_FALSE, PR_FALSE);
 
+  // Register the Core Implementations
+  nsRepository::RegisterFactory(kCLayerCID, CORE_DLL, PR_FALSE, PR_FALSE);
+  nsRepository::RegisterFactory(kCLayerCollectionCID, CORE_DLL, PR_FALSE, PR_FALSE);
 
   return NS_OK;
 }

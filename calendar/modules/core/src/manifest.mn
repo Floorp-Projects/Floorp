@@ -7,8 +7,22 @@
 # The copyright notice(s) in this Source Code does not indicate actual or
 # intended publication of this Source Code.
 #
-GDEPTH = ../..
-DEPTH  = ../..
+GDEPTH = ../../../..
 
-DIRS = util network parser core ui shell test
+EXPORTS = \
+	$(NULL)
+
+PRIVATE_EXPORTS = \
+	$(NULL)
+
+MODULE = trex
+
+CPPSRCS = \
+	nsLayer.cpp \
+	nsLayerCollection.cpp \
+    nsCoreFactory.cpp \
+	$(NULL)
+
+
+REQUIRES = xpcom raptor shell trex julian nls netlib pref js xpfc
 

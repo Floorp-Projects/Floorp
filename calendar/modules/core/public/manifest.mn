@@ -7,8 +7,17 @@
 # The copyright notice(s) in this Source Code does not indicate actual or
 # intended publication of this Source Code.
 #
-GDEPTH = ../..
-DEPTH  = ../..
+GDEPTH = ../../../..
+DEPTH = ../../../..
 
-DIRS = util network parser core ui shell test
+EXPORTS = \
+	nsILayer.h \
+	nsILayerCollection.h \
+	$(NULL)
 
+PRIVATE_EXPORTS = \
+	$(NULL)
+
+MODULE = trex
+
+REQUIRES = raptor shell
