@@ -52,6 +52,7 @@ CPPSRCS = \
     nsTopProgressNotifier.cpp   \
     nsLoggingProgressNotifier   \
     ScheduledTasks.cpp          \
+    nsInstallFileOpItem.cpp     \
     $(NULL)
 
 INCLUDES += -I$(srcdir)/../public
