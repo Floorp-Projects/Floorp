@@ -1,0 +1,48 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="dom-test-1.css" type="text/css"?>
+
+<xul:window
+  xmlns:html="http://www.w3.org/TR/REC-html40"
+  xmlns:rdf="http://www.w3.org/TR/WD-rdf-syntax#"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+<html:script>
+function RenamePersonalToolbar()
+{
+  var db = document.getElementById("tree").database;
+
+  var personalToolbarFolder =
+        document.rdf.GetResource("NC:PersonalToolbarFolder");
+
+  var NC_name =
+        document.rdf.GetResource("http://home.netscape.com/NC-rdf#Name");
+
+  var oldNameLiteral = db.GetTarget(personalToolbarFolder, NC_name, true);
+
+  dump("old name was " + oldNameLiteral + "\n");
+  
+  var newName = 
+        document.rdf.GetLiteral("Hello, goof ball");
+  
+  db.Assert(personalToolbarFolder, NC_name, newName, true);
+}
+
+</html:script>
+
+<html:button onclick="RenamePersonalToolbar();">Remove Personal Toolbar</html:button>
+
+<tree id="tree" datasources="rdf:bookmarks" onclick="return OpenURL(event,event.target.parentNode);">
+  <treecol rdf:resource="http://home.netscape.com/NC-rdf#Name"/>
+  <treecol rdf:resource="http://home.netscape.com/NC-rdf#URL"/>
+  <treehead>
+    <treeitem>
+      <treecell>Name</treecell>
+      <treecell>URL</treecell>
+    </treeitem>
+  </treehead>
+
+  <treebody id="NC:BookmarksRoot">
+  </treebody>
+</tree>
+
+</window>
