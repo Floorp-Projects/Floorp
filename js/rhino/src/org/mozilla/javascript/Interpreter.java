@@ -2008,15 +2008,20 @@ public class Interpreter extends LabelTable {
                         break;
                     case TokenStream.THROW :
                         cx.interpreterSecurityDomain = null;
-                        throw new JavaScriptException(stack[stackTop--]);
+                        result = stack[stackTop];
+                        if (result == DBL_MRK) 
+                            result = doubleWrap(sDbl[stackTop]);
+                        --stackTop;
+                        throw new JavaScriptException(result);
                     case TokenStream.JTHROW :
                         cx.interpreterSecurityDomain = null;
-                        lhs = stack[stackTop];
+                        result = stack[stackTop];
+                        // No need to check for DBL_MRK: result is Exception
                         --stackTop;
-                        if (lhs instanceof JavaScriptException)
-                            throw (JavaScriptException)lhs;
+                        if (result instanceof JavaScriptException)
+                            throw (JavaScriptException)result;
                         else
-                            throw (RuntimeException)lhs;
+                            throw (RuntimeException)result;
                     case TokenStream.ENTERWITH :
                         lhs = stack[stackTop];    
                         if (lhs == DBL_MRK) lhs = doubleWrap(sDbl[stackTop]);
