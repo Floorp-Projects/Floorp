@@ -70,6 +70,7 @@ protected:
     PRInt32             mIOFlags;
     PRInt32             mPerm;
     nsresult            mStatus;
+    nsCString           mContentType;
 #ifdef PR_LOGGING
     char*               mSpec;
 #endif

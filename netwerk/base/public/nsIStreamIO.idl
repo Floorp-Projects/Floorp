@@ -51,11 +51,10 @@ interface nsIFile;
 interface nsIStreamIO : nsISupports
 {
     /**
-     * Logically opens a stream I/O object, returning its content type
-     * and length. If either of these are unknown, the value -1 is returned.
+     * Logically opens a stream I/O object, returning its content length
+     * If this is unknown, the value -1 is returned.
      */
-    void open(out string contentType,
-              out long contentLength);
+    void open(out long contentLength);
 
     /**
      * Logically closes a stream I/O object. A status value is passed in
@@ -74,10 +73,15 @@ interface nsIStreamIO : nsISupports
     readonly attribute nsIOutputStream outputStream;
 
     /**
-     * Returns the 'name' of a stream I/O object. This name is often
+     * The 'name' of a stream I/O object. This name is often
      * used for display purposes.
      */
     readonly attribute string name;
+
+    /**
+     * Associated content type, if any.
+     **/
+    readonly attribute string contentType; 
 };
 
 ////////////////////////////////////////////////////////////////////////////////

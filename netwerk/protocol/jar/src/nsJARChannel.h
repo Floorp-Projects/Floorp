@@ -84,8 +84,15 @@ public:
     NS_DECL_NSIJARCHANNEL
     NS_DECL_NSIREQUESTOBSERVER
     NS_DECL_NSISTREAMLISTENER
-    NS_DECL_NSISTREAMIO
     NS_DECL_NSIDOWNLOADOBSERVER
+
+    // NS_DECL_NSISTREAMIO and nsIChannel both define (attribute string contentType)
+
+    NS_IMETHOD Open(PRInt32 *contentLength);
+    NS_IMETHOD Close(nsresult status); 
+    NS_IMETHOD GetInputStream(nsIInputStream * *aInputStream);
+    NS_IMETHOD GetOutputStream(nsIOutputStream * *aOutputStream); 
+    NS_IMETHOD GetName(char * *aName); 
 
     nsJARChannel();
     virtual ~nsJARChannel();
