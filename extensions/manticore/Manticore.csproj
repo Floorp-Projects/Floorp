@@ -9,7 +9,7 @@
             <Settings
                 ApplicationIcon = ""
                 AssemblyKeyContainerName = ""
-                AssemblyName = "Project"
+                AssemblyName = "Manticore"
                 AssemblyOriginatorKeyFile = ""
                 DefaultClientScript = "JScript"
                 DefaultHTMLPageLayout = "Grid"
@@ -17,7 +17,7 @@
                 DelaySign = "false"
                 NoStandardLibraries = "true"
                 OutputType = "WinExe"
-                RootNamespace = "Project"
+                RootNamespace = "Silverstone.Manticore"
                 StartupObject = ""
             >
                 <Config
@@ -32,7 +32,7 @@
                     FileAlignment = "4096"
                     IncrementalBuild = "true"
                     Optimize = "false"
-                    OutputPath = "bin\"
+                    OutputPath = ".\"
                     RegisterForComInterop = "false"
                     RemoveIntegerChecks = "false"
                     TreatWarningsAsErrors = "false"
@@ -94,6 +94,10 @@
                     Name = "System.XML"
                     AssemblyName = "System.Xml"
                 />
+                <Reference
+                    Name = "mscorlib"
+                    AssemblyName = "mscorlib"
+                />
             </References>
         </Build>
         <Files>
@@ -115,6 +119,31 @@
                     RelPath = "bookmarks\bookmarks.cs"
                     SubType = "Code"
                     BuildAction = "Compile"
+                />
+                <File
+                    RelPath = "bookmarks\BookmarksTreeView.cs"
+                    SubType = "Component"
+                    BuildAction = "Compile"
+                />
+                <File
+                    RelPath = "bookmarks\BookmarksWindow.cs"
+                    SubType = "Form"
+                    BuildAction = "Compile"
+                />
+                <File
+                    RelPath = "bookmarks\BookmarksWindow.resx"
+                    DependentUpon = "BookmarksWindow.cs"
+                    BuildAction = "EmbeddedResource"
+                />
+                <File
+                    RelPath = "bookmarks\FileBookmark.cs"
+                    SubType = "Form"
+                    BuildAction = "Compile"
+                />
+                <File
+                    RelPath = "bookmarks\FileBookmark.resx"
+                    DependentUpon = "FileBookmark.cs"
+                    BuildAction = "EmbeddedResource"
                 />
                 <File
                     RelPath = "browser\aboutdialog.cs"
@@ -194,14 +223,53 @@
                     BuildAction = "EmbeddedResource"
                 />
                 <File
+                    RelPath = "core\DataStore.cs"
+                    SubType = "Code"
+                    BuildAction = "Compile"
+                />
+                <File
+                    RelPath = "core\FileLocator.cs"
+                    SubType = "Code"
+                    BuildAction = "Compile"
+                />
+                <File
                     RelPath = "core\preferences.cs"
                     SubType = "Code"
                     BuildAction = "Compile"
                 />
                 <File
-                    RelPath = "layout\layoutabstraction.cs"
-                    SubType = "Component"
+                    RelPath = "core\ServiceManager.cs"
+                    SubType = "Code"
                     BuildAction = "Compile"
+                />
+                <File
+                    RelPath = "defaults\bookmarks.xml"
+                    BuildAction = "Content"
+                />
+                <File
+                    RelPath = "defaults\default-prefs.xml"
+                    BuildAction = "Content"
+                />
+                <File
+                    RelPath = "defaults\user-prefs.xml"
+                    BuildAction = "Content"
+                />
+                <File
+                    RelPath = "layout\layoutabstraction.cs"
+                    SubType = "UserControl"
+                    BuildAction = "Compile"
+                />
+                <File
+                    RelPath = "resources\bookmark.png"
+                    BuildAction = "Content"
+                />
+                <File
+                    RelPath = "resources\bookmark-folder-closed.png"
+                    BuildAction = "Content"
+                />
+                <File
+                    RelPath = "resources\bookmark-folder-open.png"
+                    BuildAction = "Content"
                 />
                 <File
                     RelPath = "resources\manticore.png"
@@ -212,8 +280,28 @@
                     BuildAction = "None"
                 />
                 <File
+                    RelPath = "toolkit\CommandUpdater.cs"
+                    SubType = "Code"
+                    BuildAction = "Compile"
+                />
+                <File
+                    RelPath = "toolkit\ContentBuilder.cs"
+                    SubType = "Code"
+                    BuildAction = "Compile"
+                />
+                <File
                     RelPath = "toolkit\ManticoreDialog.cs"
                     SubType = "Form"
+                    BuildAction = "Compile"
+                />
+                <File
+                    RelPath = "toolkit\ManticoreWindow.cs"
+                    SubType = "Form"
+                    BuildAction = "Compile"
+                />
+                <File
+                    RelPath = "toolkit\MenuBuilder.cs"
+                    SubType = "Code"
                     BuildAction = "Compile"
                 />
                 <File
@@ -234,6 +322,16 @@
                 <File
                     RelPath = "toolkit\toolkit.toolbars.cs"
                     SubType = "Component"
+                    BuildAction = "Compile"
+                />
+                <File
+                    RelPath = "toolkit\toolkit.toolbars.resx"
+                    DependentUpon = "toolkit.toolbars.cs"
+                    BuildAction = "EmbeddedResource"
+                />
+                <File
+                    RelPath = "toolkit\TreeBuilder.cs"
+                    SubType = "Code"
                     BuildAction = "Compile"
                 />
             </Include>

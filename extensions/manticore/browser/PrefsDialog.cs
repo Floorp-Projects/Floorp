@@ -79,7 +79,7 @@ namespace Silverstone.Manticore.Browser
       mPanels = new Hashtable();
 
       BrowserWindow window = mOpener as BrowserWindow;
-      mPrefs = window.mApplication.Prefs;
+      mPrefs = ServiceManager.Preferences;
 
       //
       // Initialize all the preference panels.

@@ -49,6 +49,7 @@ namespace Silverstone.Manticore.Layout
   using AxMOZILLACONTROLLib;
   using MOZILLACONTROLLib;
 
+  using Silverstone.Manticore.Core;
   using Silverstone.Manticore.Browser;
 
   public class WebBrowser : UserControl
@@ -110,8 +111,9 @@ namespace Silverstone.Manticore.Layout
 
     public void RealizeLayoutEngine()
     {
-      if (gecko == null && trident == null) {
-        String layoutEngine = mBrowserWindow.mApplication.Prefs.GetStringPref("browser.layoutengine");
+      if (gecko == null && trident == null) 
+      {
+        String layoutEngine = ServiceManager.Preferences.GetStringPref("browser.layoutengine");
         if (layoutEngine == "") 
           layoutEngine = "gecko";
         SwitchLayoutEngine(layoutEngine);
@@ -162,7 +164,7 @@ namespace Silverstone.Manticore.Layout
       // Add appropriate content area listeners
       AddListeners();
 
-      mBrowserWindow.mApplication.Prefs.SetStringPref("browser.layoutengine", id);
+      ServiceManager.Preferences.SetStringPref("browser.layoutengine", id);
 
       LoadURL(url, false);
     }
@@ -252,7 +254,7 @@ namespace Silverstone.Manticore.Layout
     public void GoHome()
     {
       // XXX - need to implement "Home" preference
-      String homepageURL = mBrowserWindow.mApplication.Prefs.GetStringPref("browser.homepage");
+      String homepageURL = ServiceManager.Preferences.GetStringPref("browser.homepage");
       LoadURL(homepageURL, false);
     }
 
@@ -357,7 +359,25 @@ namespace Silverstone.Manticore.Layout
       if (webBrowser != null)
         e.ppDisp = webBrowser;
     }
-
+    
+    private bool mFileDownloadGecko = false;
+    private bool mFileDownloadTrident = false;
+    private void AddFileDownloadListener()
+    {
+      if (gecko != null && !mFileDownloadGecko) 
+      {
+        mFileDownloadGecko = true;
+      }
+      else if (trident != null && !mFileDownloadTrident) 
+      {
+        trident.FileDownload += new AxSHDocVw.DWebBrowserEvents2_FileDownloadEventHandler(OnFileDownloadTrident);
+        mFileDownloadTrident = true;
+      }
+    }
+    public void OnFileDownloadTrident(Object sender, AxSHDocVw.DWebBrowserEvents2_FileDownloadEvent e)
+    {
+      e.cancel = false;
+    }
   }
 }
 

@@ -289,14 +289,16 @@ namespace Silverstone.Manticore.Core
 
     public Object Current
     {
-      get {
+      get 
+      {
         return Preferences.ResolvePref(mCurrent) as Object; 
       }
     }
 
     public bool MoveNext()
     {
-      if (mCurrent != null) {
+      if (mCurrent != null) 
+      {
         if (mCurrent.NextSibling != null) 
           mCurrent = mCurrent.NextSibling as XmlElement;
         else 

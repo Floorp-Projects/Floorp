@@ -42,41 +42,29 @@ namespace Silverstone.Manticore.App
 
   using Silverstone.Manticore.Browser;
   using Silverstone.Manticore.Core;
-  using Silverstone.Manticore.Bookmarks;
-
+  
   public class ManticoreApp
   {
     // XXX Need to do something here more similar
     //     to what mozilla does here for parameterized
     //     window types.
     private Hashtable mBrowserWindows;
-    private Preferences mPreferences;
-    private Bookmarks mBookmarks;
-
-    public Preferences Prefs {
-      get {
-        return mPreferences;
+    private static BrowserWindow mMostRecentBrowserWindow = null;
+    public static BrowserWindow MostRecentBrowserWindow
+    {
+      get 
+      {
+        return mMostRecentBrowserWindow;
+      }
+      set 
+      {
+        mMostRecentBrowserWindow = value;
       }
     }
-
-    public Bookmarks BM {
-      get {
-        return mBookmarks;
-      }
-    }
-
+        
     public ManticoreApp()
     {
       mBrowserWindows = new Hashtable();
-
-      // Initialize default and user preferences
-      mPreferences = new Preferences();
-      mPreferences.InitializeDefaults();
-      mPreferences.LoadUserPreferences();
-
-      // Initialize bookmarks
-      mBookmarks = new Bookmarks(this);
-      mBookmarks.LoadBookmarks();
 
       if (!RestoreSession()) 
         OpenBrowser();
@@ -90,7 +78,7 @@ namespace Silverstone.Manticore.App
       SaveSession();
       
       // Flush preferences to disk.
-      mPreferences.FlushUserPreferences();
+      ServiceManager.Preferences.FlushUserPreferences();
       
       Application.Exit();
     }
@@ -101,8 +89,8 @@ namespace Silverstone.Manticore.App
     /// </summary>
     private void SaveSession()
     {
-      if (mPreferences.GetIntPref("browser.homepage.mode") == 2) {
-        bool isLastPageOnly = mPreferences.GetIntPref("browser.session.windowmode") == 0;
+      if (ServiceManager.Preferences.GetIntPref("browser.homepage.mode") == 2) {
+        bool isLastPageOnly = ServiceManager.Preferences.GetIntPref("browser.session.windowmode") == 0;
         // XXX need to get all windows of type browser.
         IEnumerator browsers = mBrowserWindows.Values.GetEnumerator();
         int count = 0;
@@ -115,11 +103,11 @@ namespace Silverstone.Manticore.App
           BrowserWindow currWindow = browsers.Current as BrowserWindow;
           String pref = "browser.session.windows.";
           pref += currWindow.Type + count++;
-          mPreferences.SetStringPref(pref, currWindow.URL);
-          mPreferences.SetIntPref(pref + ".left", currWindow.Left);
-          mPreferences.SetIntPref(pref + ".top", currWindow.Top);
-          mPreferences.SetIntPref(pref + ".width", currWindow.Width);
-          mPreferences.SetIntPref(pref + ".height", currWindow.Height);
+          ServiceManager.Preferences.SetStringPref(pref, currWindow.URL);
+          ServiceManager.Preferences.SetIntPref(pref + ".left", currWindow.Left);
+          ServiceManager.Preferences.SetIntPref(pref + ".top", currWindow.Top);
+          ServiceManager.Preferences.SetIntPref(pref + ".width", currWindow.Width);
+          ServiceManager.Preferences.SetIntPref(pref + ".height", currWindow.Height);
         }
         // XXX need to save session histories. 
       }
@@ -131,15 +119,15 @@ namespace Silverstone.Manticore.App
     /// <returns>Whether or not a session was restored.</returns>
     private bool RestoreSession()
     {
-      if (mPreferences.GetIntPref("browser.homepage.mode") == 2) {
-        IEnumerator branch = mPreferences.GetBranch("browser.session.windows");
+      if (ServiceManager.Preferences.GetIntPref("browser.homepage.mode") == 2) {
+        IEnumerator branch = ServiceManager.Preferences.GetBranch("browser.session.windows");
         while (branch.MoveNext()) {
           String pref = branch.Current as String;
-          String url = mPreferences.GetStringPref(pref);
-          int x = mPreferences.GetIntPref(pref + ".left");
-          int y = mPreferences.GetIntPref(pref + ".top");
-          int width = mPreferences.GetIntPref(pref + ".width");
-          int height = mPreferences.GetIntPref(pref + ".height");
+          String url = ServiceManager.Preferences.GetStringPref(pref);
+          int x = ServiceManager.Preferences.GetIntPref(pref + ".left");
+          int y = ServiceManager.Preferences.GetIntPref(pref + ".top");
+          int width = ServiceManager.Preferences.GetIntPref(pref + ".width");
+          int height = ServiceManager.Preferences.GetIntPref(pref + ".height");
        
           // Create a new browser with the applicable url at the applicable
           // location. 
@@ -148,7 +136,7 @@ namespace Silverstone.Manticore.App
           window.Size = new Size(width, height);
         }
         // XXX need to reinit session histories. 
-        mPreferences.RemoveBranch("browser.session.windows");
+        ServiceManager.Preferences.RemoveBranch("browser.session.windows");
         return true;
       }
       return false;

@@ -54,9 +54,9 @@ namespace Silverstone.Manticore.Toolkit
     public Hashtable mItems;
    
     public ToolbarBuilder(String file, Form form)
-  	{
+    {
       mToolbarFile = file;
-	    mForm = form;
+      mForm = form;
       mItems = new Hashtable();
     }
 
@@ -67,62 +67,64 @@ namespace Silverstone.Manticore.Toolkit
       reader.WhitespaceHandling = WhitespaceHandling.None;
       reader.MoveToContent();
 
-      while (reader.Read()) {
-        if (reader.NodeType == XmlNodeType.Element) {
-			switch (reader.LocalName) 
-			{
-				case "toolstrip":
-					// The next <toolbar/> we encounter should be created on a new row. 
-					break;
-				case "toolbar":
-					// 
-					String[] tbvalues = new String[4] {"", "", "",  ""};
-					String[] tbnames = new String[4] {"id", "label", "description", "visible"};
-					for (int i = 0; i < tbnames.Length; ++i) 
-					{
-						if (reader.MoveToAttribute(tbnames[i]) &&
-							reader.ReadAttributeValue())
-							tbvalues[i] = reader.Value; // XXX need to handle entities
-						reader.MoveToElement();
-					}
+      while (reader.Read()) 
+      {
+        if (reader.NodeType == XmlNodeType.Element) 
+        {
+          switch (reader.LocalName) 
+          {
+            case "toolstrip":
+              // The next <toolbar/> we encounter should be created on a new row. 
+              break;
+            case "toolbar":
+              // 
+              String[] tbvalues = new String[4] {"", "", "",  ""};
+              String[] tbnames = new String[4] {"id", "label", "description", "visible"};
+              for (int i = 0; i < tbnames.Length; ++i) 
+              {
+                if (reader.MoveToAttribute(tbnames[i]) &&
+                  reader.ReadAttributeValue())
+                  tbvalues[i] = reader.Value; // XXX need to handle entities
+                reader.MoveToElement();
+              }
 
-					String key = tbvalues[0];
-					String label = tbvalues[1];
-					String visible = tbvalues[3];
+              String key = tbvalues[0];
+              String label = tbvalues[1];
+              String visible = tbvalues[3];
       
-					// Create and add a new toolbar.
-					mCurrentToolbar = new ToolBar();
-					mCurrentToolbar.Dock = DockStyle.Top;
-					mCurrentToolbar.Appearance = ToolBarAppearance.Flat;
-					mForm.Controls.Add(mCurrentToolbar);
+              // Create and add a new toolbar.
+              mCurrentToolbar = new ToolBar();
+              mCurrentToolbar.Dock = DockStyle.Top;
+              mCurrentToolbar.Appearance = ToolBarAppearance.Flat;
+              mForm.Controls.Add(mCurrentToolbar);
 
-          mCurrentToolbar.ButtonClick += new ToolBarButtonClickEventHandler(this.OnCommand);
-					break;
-				case "toolbarseparator": 
-				{
-					ToolBarButton button = new ToolBarButton();
-					button.Style = ToolBarButtonStyle.Separator;
-					mCurrentToolbar.Buttons.Add(button);
-					break;
-				}
-				case "toolbarbutton":
-				{
-					String[] tbbvalues = new String[2] {"", ""};
-					String[] tbbnames = new String[2] {"label", "command"};
-					for (int i = 0; i < tbbnames.Length; ++i) 
-					{
-						if (reader.MoveToAttribute(tbbnames[i]) &&
-							reader.ReadAttributeValue())
-							tbbvalues[i] = reader.Value; // XXX need to handle entities
-						reader.MoveToElement();
-					}
+              mCurrentToolbar.ButtonClick += new ToolBarButtonClickEventHandler(this.OnCommand);
+              break;
+            case "toolbarseparator": 
+            {
+              ToolBarButton button = new ToolBarButton();
+              button.Style = ToolBarButtonStyle.Separator;
+              mCurrentToolbar.Buttons.Add(button);
+              break;
+            }
+            case "toolbarbutton":
+            {
+              String[] tbbvalues = new String[2] {"", ""};
+              String[] tbbnames = new String[2] {"label", "command"};
+              for (int i = 0; i < tbbnames.Length; ++i) 
+              {
+                if (reader.MoveToAttribute(tbbnames[i]) &&
+                  reader.ReadAttributeValue())
+                  tbbvalues[i] = reader.Value; // XXX need to handle entities
+                reader.MoveToElement();
+              }
        
-					ToolBarButton button = new CommandButtonItem(tbbvalues[1]);
-					button.Text = tbbvalues[0];
-					mCurrentToolbar.Buttons.Add(button);
-					break;
-				}
-			}
+              ToolBarButton button = new CommandButtonItem(tbbvalues[1]);
+              button.Text = tbbvalues[0];
+              mCurrentToolbar.Buttons.Add(button);
+              break;
+            }
+          }
         }
       }
     }
@@ -147,4 +149,3 @@ namespace Silverstone.Manticore.Toolkit
     }
   }
 }
-

@@ -39,15 +39,17 @@ namespace Silverstone.Manticore.Browser
   using System.Drawing;
   using System.Windows.Forms;
 
+  using Silverstone.Manticore.Core;
   using Silverstone.Manticore.App;
   using Silverstone.Manticore.Toolkit;
   using Silverstone.Manticore.Layout;
+  using Silverstone.Manticore.Bookmarks;
 
-  public class BrowserWindow : ManticoreWindow 
+  public class BrowserWindow : ManticoreWindow, IController
   {
     private System.ComponentModel.Container components;
 
-    private BrowserMenuBuilder mMenuBuilder;
+    private MenuBuilder mMenuBuilder;
     private BrowserToolbarBuilder mToolbarBuilder;
 
     private WebBrowser mWebBrowser;
@@ -55,9 +57,14 @@ namespace Silverstone.Manticore.Browser
     private StatusBar mStatusBar;
     private StatusBarPanel mProgressMeter;
     private StatusBarPanel mStatusPanel;
-    protected internal ManticoreApp mApplication;
+    private ManticoreApp mApplication;
 
     private String mSessionURL = "";
+
+    /// <summary>
+    /// Webpage Title
+    /// </summary>
+    private String mTitle = "";
 
     public BrowserWindow(ManticoreApp aApp)
     {
@@ -79,11 +86,17 @@ namespace Silverstone.Manticore.Browser
       InitializeComponent();
 
       this.Closed += new EventHandler(OnFormClosed);
+      this.GotFocus += new EventHandler(OnSetFocus);
     }
 
     public void OnFormClosed(Object sender, EventArgs e) 
     {
       mApplication.WindowClosed(this);
+    }
+
+    public void OnSetFocus(Object sender, EventArgs e)
+    {
+      ManticoreApp.MostRecentBrowserWindow = this;
     }
 
     public override void Dispose()
@@ -102,8 +115,9 @@ namespace Silverstone.Manticore.Browser
       
       this.Text = "Manticore"; // XXX localize
 
-      mMenuBuilder = new BrowserMenuBuilder("browser\\browser-menu.xml", this);
+      mMenuBuilder = new MenuBuilder("browser\\browser-menu.xml", this);
       mMenuBuilder.Build();
+      mMenuBuilder.OnCommand += new EventHandler(OnMenuCommand);
 
       // Show the resize handle
       this.SizeGripStyle = SizeGripStyle.Auto;
@@ -146,9 +160,14 @@ namespace Silverstone.Manticore.Browser
       }
     }
 
+    public void LoadURL(String aURL)
+    {
+      mWebBrowser.LoadURL(aURL, false);
+    }
+    
     private void LoadStartPage(object sender, EventArgs e)
     {
-      int startMode = mApplication.Prefs.GetIntPref("browser.homepage.mode");
+      int startMode = ServiceManager.Preferences.GetIntPref("browser.homepage.mode");
       switch (startMode) {
       case 0:
         // Don't initialize jack.
@@ -163,6 +182,7 @@ namespace Silverstone.Manticore.Browser
         break;
       }
     }
+
 
     ///////////////////////////////////////////////////////////////////////////
     // Menu Command Handlers
@@ -202,6 +222,7 @@ namespace Silverstone.Manticore.Browser
 
     public void OnTitleChange(String aTitle)
     {
+      mTitle = aTitle;
       this.Text = (aTitle == "about:blank") ? "Manticore" : aTitle + " - Manticore";
     }
 
@@ -216,10 +237,30 @@ namespace Silverstone.Manticore.Browser
       // return window.currentLayoutEngine;
       return new Object();
     }
-  
-    public void DoCommand(String s) 
+
+    /// <summary>
+    /// Fired when a |MenuItem| built by the |MenuBuilder| is selected.
+    /// </summary>
+    /// <param name="sender"></param>
+    /// <param name="e"></param>
+    public void OnMenuCommand(Object sender, EventArgs e)
     {
-      switch (s) 
+      ManticoreMenuItem item = sender as ManticoreMenuItem;
+      DoCommand(item.Command, item.Data);
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+    // IController Implementation
+
+    public void DoCommand(String aCommand)
+    {
+      DoCommand(aCommand, null);
+    }
+
+    public void DoCommand(String aCommand, Object aData) 
+    {
+      Console.WriteLine(aCommand);
+      switch (aCommand) 
       {
         case "file-new-window":
           OpenNewBrowser();
@@ -251,6 +292,25 @@ namespace Silverstone.Manticore.Browser
         case "view-layout-ie":
           mWebBrowser.SwitchLayoutEngine("trident");
           break;
+        case "bookmarks-manage":
+          BookmarksWindow bm = new BookmarksWindow();
+          bm.Show();
+          break;
+        case "bookmarks-item":
+          String url = ServiceManager.Bookmarks.GetBookmarkAttribute(aData as String, "url");
+          LoadURL(url);
+          break;
+        case "bookmarks-add":
+          // XXX need to allow user to customize this. 
+          Bookmarks bmks = ServiceManager.Bookmarks;
+          String bookmarkID = bmks.CreateBookmark(mTitle, "Bookmarks", -1);
+          bmks.SetBookmarkAttribute(bookmarkID, "url", URL);
+          break;
+        case "bookmarks-file":
+          // XXX work on this
+          FileBookmark fpWindow = new FileBookmark(URL, mTitle);
+          fpWindow.ShowDialog();
+          break;
         case "help-about":
           AboutDialog aboutDialog = new AboutDialog(this);
           aboutDialog.ShowDialog();
@@ -261,18 +321,17 @@ namespace Silverstone.Manticore.Browser
           break;
       }
     }
-  }
 
-  public class BrowserMenuBuilder : MenuBuilder
-  {
-    public BrowserMenuBuilder(String aFile, Form aForm) : base(aFile, aForm)
+    public bool SupportsCommand(String aCommand)
     {
+      // XXX implement me
+      return true;
     }
 
-    public override void OnCommand(Object sender, EventArgs e)
+    public bool IsCommandEnabled(String aCommand)
     {
-      CommandMenuItem item = sender as CommandMenuItem;
-      (mForm as BrowserWindow).DoCommand(item.Command);
+      // XXX implement me
+      return true;
     }
   }
 

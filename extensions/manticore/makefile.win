@@ -41,17 +41,22 @@ CLEANUP = *.exe *.pdb
 
 DEBUG=FALSE
 
-_CS_WINFORMS_IMPORTS=/R:System.DLL /R:System.Windows.Forms.DLL \
-	/R:System.Drawing.DLL
+_CS_BASE_IMPORTS=/R:System.DLL
+_CS_WINFORMS_IMPORTS=/R:System.Windows.Forms.DLL /R:System.Drawing.DLL
 _CS_XML_IMPORTS=/R:System.Data.DLL /R:System.XML.DLL
 _CS_LAYOUT_IMPORTS=/R:AxSHDocVw.DLL /R:MSHTML.DLL /R:AxMOZILLACONTROLLib.DLL /R:MOZILLACONTROLLib.dll
-_CS_SHELL_IMPORTS=
 
-_IMPORTS=$(_CS_WINFORMS_IMPORTS) $(_CS_XMLIMPORTS) $(_CS_LAYOUT_IMPORTS) $(_CS_SHELL_IMPORTS)
+_IMPORTS=$(_CS_BASE_IMPORTS) $(_CS_WINFORMS_IMPORTS) $(_CS_XMLIMPORTS) $(_CS_LAYOUT_IMPORTS)
 
 _DEBUG_FLAGS=/optimize+
 !if defined(MOZ_DEBUG)
 _DEBUG_FLAGS=/debug+
+!endif
+
+!if defined(WINDIR)
+_WINDIR=$(WINDIR)
+!else
+_WINDIR=C:\WINNT
 !endif
 
 _OUT_FILE=manticore.exe
@@ -69,12 +74,18 @@ FILES =	app.cs \
 	layout\layoutabstraction.cs \
 	toolkit\toolkit.menus.cs \
 	toolkit\toolkit.toolbars.cs \
+	toolkit\ContentBuilder.cs \
+	toolkit\MenuBuilder.cs \
+	toolkit\TreeBuilder.cs \
 	toolkit\ManticoreDialog.cs \
 	toolkit\ManticoreWindow.cs \
 	toolkit\ProgressMeter.cs \
+	core\DataStore.cs \
 	core\preferences.cs \
 	core\FileLocator.cs \
-	bookmarks\bookmarks.cs
+	bookmarks\bookmarks.cs \
+	bookmarks\BookmarksWindow.cs \
+	$(NULL)
 
 SUBDIR = WIN32_O.OBJ
 !if defined(MOZ_DEBUG)
@@ -86,11 +97,9 @@ app:
 
 # this stuff sucks. need to make paths less hard coded
 bindings:
-	aximp c:\WINNT\system32\shdocvw.dll 
-	tlbimp mshtml.tlb 
-	tlbimp $(MOZ_SRC)\system32\shell32.dll
+	echo $(_WINDIR)\system32\shdocvw.dll 
+	aximp $(_WINDIR)\system32\shdocvw.dll 
 	aximp $(MOZ_SRC)\mozilla\dist\$(SUBDIR)\bin\mozctl.dll 
-	tlbimp $(MOZ_SRC)\mozilla\dist\$(SUBDIR)\bin\mozctl.dll
 
 # XXX fix me
 clean:

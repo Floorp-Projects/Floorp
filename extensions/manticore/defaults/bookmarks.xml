@@ -1,0 +1,14 @@
+﻿<?xml version="1.0" ?>
+<!DOCTYPE item [
+<!ELEMENT item  ANY                       >
+<!ATTLIST item  label     CDATA #REQUIRED >
+<!ATTLIST item  url       CDATA #IMPLIED  >
+<!ATTLIST item  container CDATA #IMPLIED  >
+<!ATTLIST item  open      CDATA #IMPLIED  >
+<!ATTLIST item  id        ID    #REQUIRED >
+]>
+<item xmlns="http://www.silverstone.net.nz/2001/manticore/uidl" id="BookmarksRoot">
+  <item container="true" open="true" label="Bookmarks" id="Bookmarks" icon="resources/bookmarks-folder-closed.png">
+    <item label="mantic0re.com" url="http://www.mantic0re.com/" />
+  </item>
+</item>

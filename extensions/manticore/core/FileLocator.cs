@@ -37,6 +37,7 @@ namespace Silverstone.Manticore.Core
   using System;
   using System.Runtime.InteropServices;
   using System.Text;
+  using System.Windows.Forms;
 
   /// <summary>
   /// Locate special folders
@@ -100,14 +101,26 @@ namespace Silverstone.Manticore.Core
     public static String GetManticorePath(String aPath)
     {
       String path = "";
-      switch (aPath) {
+      String appData = "";
+      switch (aPath) 
+      {
         case "AppData":
           path = FileLocator.GetFolderPath(FileLocator.SpecialFolders.ssfAPPDATA);
           path += @"\Manticore\";
           break;
         case "UserPrefs":
-          String appData = FileLocator.GetManticorePath("AppData");
+          appData = FileLocator.GetManticorePath("AppData");
           path += appData + @"user-prefs.xml";
+          break;
+        case "LocalBookmarks":
+          appData = FileLocator.GetManticorePath("AppData");
+          if (appData != "")
+            path += appData + @"bookmarks.xml";
+          break;
+        case "Application":
+          path = Application.ExecutablePath;
+          int lastSlash = path.LastIndexOf(@"\");
+          path = path.Substring(0, lastSlash + 1);
           break;
       }
       return path;
