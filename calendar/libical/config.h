@@ -50,7 +50,7 @@
 
 /* Define to 1 if you have the <unistd.h> header file. */
 #ifdef XP_WIN32
-#define NO_YY_UNISTD_H 1
+#define YY_NO_UNISTD_H 1
 #else
 #define HAVE_UNISTD_H 1
 #endif
