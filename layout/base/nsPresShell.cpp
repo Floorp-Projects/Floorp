@@ -52,9 +52,15 @@
 #include "nsIEventQueueService.h"
 #include "nsXPComCIID.h"
 #include "nsIServiceManager.h"
+#include "nsICaret.h"
+#include "nsCaretProperties.h"
 
 static PRBool gsNoisyRefs = PR_FALSE;
 #undef NOISY
+
+
+// comment out to hide caret
+//#define SHOW_CARET
 
 static PLHashNumber
 HashKey(nsIFrame* key)
@@ -166,7 +172,7 @@ static NS_DEFINE_IID(kIDOMRangeIID, NS_IDOMRANGE_IID);
 static NS_DEFINE_IID(kIDOMDocumentIID, NS_IDOMDOCUMENT_IID);
 static NS_DEFINE_IID(kIFocusTrackerIID, NS_IFOCUSTRACKER_IID);
 static NS_DEFINE_IID(kIEventQueueServiceIID,  NS_IEVENTQUEUESERVICE_IID);
-
+static NS_DEFINE_IID(kICaretID,  NS_ICARET_IID);
 
 class PresShell : public nsIPresShell, public nsIViewObserver,
                   private nsIDocumentObserver, public nsIFocusTracker
@@ -310,8 +316,11 @@ protected:
   nsIFrame* mCurrentEventFrame;
   nsIFrame* mFocusEventFrame; //keeps track of which frame has focus. 
   nsIFrame* mAnchorEventFrame; //keeps track of which frame has focus. 
-  nsCOMPtr <nsIFrameSelection>mSelection;
-  FrameHashTable* mPlaceholderMap;
+  
+  nsCOMPtr<nsIFrameSelection>   mSelection;
+  nsCOMPtr<nsICaret>            mCaret;
+  
+  FrameHashTable*               mPlaceholderMap;
 };
 
 #ifdef NS_DEBUG
@@ -524,7 +533,24 @@ PresShell::Init(nsIDocument* aDocument,
       }
     }
   }
+ 
 #endif
+
+  mSelection = selection;
+
+  // Important: this has to happen after the selection has been set up
+#ifdef SHOW_CARET
+  nsCaretProperties  *caretProperties = NewCaretProperties();
+  
+  // make the caret
+  nsresult  err = NS_NewCaret(getter_AddRefs(mCaret));
+  if (NS_SUCCEEDED(err))
+    mCaret->Init(this, caretProperties);
+  
+  delete caretProperties;
+  caretProperties = nsnull;
+#endif  
+
   return NS_OK;
 }
 
