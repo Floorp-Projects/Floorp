@@ -45,7 +45,7 @@ extern void COOKIE_RegisterPrefCallbacks(void);
 extern void COOKIE_RemoveAll(void);
 extern void COOKIE_DeletePersistentUserData(void);
 extern PRInt32 COOKIE_Count();
-extern void COOKIE_Enumerate
+extern nsresult COOKIE_Enumerate
     (PRInt32 count,
      char **name,
      char **value,

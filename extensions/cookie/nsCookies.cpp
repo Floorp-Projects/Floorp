@@ -1149,10 +1149,15 @@ COOKIE_Write() {
     return NS_OK;
   }
 
-  strm.write("# HTTP Cookie File\n", 19);
-  strm.write("# http://www.netscape.com/newsref/std/cookie_spec.html\n", 55);
-  strm.write("# This is a generated file!  Do not edit.\n", 42);
-  strm.write("# To delete cookies, use the Cookie Manager.\n\n", 46);
+#define COOKIEFILE_LINE1 "# HTTP Cookie File\n"
+#define COOKIEFILE_LINE2 "# http://www.netscape.com/newsref/std/cookie_spec.html\n"
+#define COOKIEFILE_LINE3 "# This is a generated file!  Do not edit.\n"
+#define COOKIEFILE_LINE4 "# To delete cookies, use the Cookie Manager.\n\n"
+
+  strm.write(COOKIEFILE_LINE1, PL_strlen(COOKIEFILE_LINE1));
+  strm.write(COOKIEFILE_LINE2, PL_strlen(COOKIEFILE_LINE2));
+  strm.write(COOKIEFILE_LINE3, PL_strlen(COOKIEFILE_LINE3));
+  strm.write(COOKIEFILE_LINE4, PL_strlen(COOKIEFILE_LINE4));
 
   /* format shall be:
    *
@@ -1389,10 +1394,15 @@ COOKIE_Count() {
   if (!cookie_list) {
     return 0;
   }
+  /* Get rid of any expired cookies now so user doesn't
+   * think/see that we're keeping cookies in memory.
+   */
+  cookie_RemoveExpiredCookies();
+
   return cookie_list->Count();
 }
 
-PUBLIC void
+PUBLIC nsresult
 COOKIE_Enumerate
     (PRInt32 count,
      char **name,
@@ -1402,11 +1412,8 @@ COOKIE_Enumerate
      char ** path,
      PRBool * isSecure,
      PRUint64 * expires) {
-  if (count == 0) {
-    /* Get rid of any expired cookies now so user doesn't
-     * think/see that we're keeping cookies in memory.
-     */
-    cookie_RemoveExpiredCookies();
+  if (count > COOKIE_Count()) {
+    return NS_ERROR_FAILURE;
   }
   cookie_CookieStruct *cookie;
   cookie = NS_STATIC_CAST(cookie_CookieStruct*, cookie_list->ElementAt(count));
@@ -1430,6 +1437,7 @@ COOKIE_Enumerate
   }
   // *expires = expiresTime; -- no good no mac, using next line instead
   LL_UI2L(*expires, expiresTime);
+  return NS_OK;
 }
 
 PUBLIC void
