@@ -50,5 +50,6 @@ interface nsIAddressBook : nsISupports {
   void getAbDatabaseFromURI(in string URI, out nsIAddrDatabase db);
 	boolean mailListNameExistsInDB(in wstring name, in string URI);
 	boolean mailListNameExists(in wstring name);
+	unsigned long getTotalCards(in string URI);
 };
 

@@ -408,7 +408,18 @@ NS_IMETHODIMP nsAddressBook::MailListNameExists(const PRUnichar *name, PRBool *e
     return NS_OK;
 }
 
+NS_IMETHODIMP nsAddressBook::GetTotalCards(const char *URI, PRUint32 *count)
+{
+  NS_ENSURE_ARG_POINTER(count);
+  *count = 0;
 
+  nsCOMPtr<nsIAddrDatabase> database;
+  nsresult rv = GetAbDatabaseFromURI(URI, getter_AddRefs(database));
+  NS_ENSURE_SUCCESS(rv,rv);
+  rv = database->GetCardCount(count);
+  NS_ENSURE_SUCCESS(rv,rv);
+  return rv;
+}
 
 typedef enum
 {

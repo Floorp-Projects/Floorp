@@ -255,6 +255,7 @@ function ChangeDirectoryByDOMNode(dirNode)
       WaitUntilDocumentIsLoaded();
       SortToPreviousSettings();
       SelectFirstCard();
+      UpdateStatusCardCounts(uri);
     }
   }
 }

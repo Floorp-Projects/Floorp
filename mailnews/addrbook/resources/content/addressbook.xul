@@ -43,6 +43,7 @@ Rights Reserved.
     windowtype="mail:addressbook"
     persist="width height screenX screenY sizemode"
     onload="OnLoadAddressBook()">
+    onunload="OnUnloadAddressBook()">
 
   <stringbundleset id="stringbundleset">
     <stringbundle id="bundle_addressBook" src="chrome://messenger/locale/addressbook/addressBook.properties"/>

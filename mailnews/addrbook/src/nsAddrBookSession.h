@@ -38,7 +38,7 @@ public:
   
 protected:
 
-	nsVoidArray *mListeners; 
+	nsCOMPtr<nsISupportsArray> mListeners; 
 
 };
 

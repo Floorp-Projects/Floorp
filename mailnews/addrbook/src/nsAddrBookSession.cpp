@@ -36,15 +36,11 @@ NS_IMPL_THREADSAFE_ISUPPORTS1(nsAddrBookSession, nsIAddrBookSession)
 nsAddrBookSession::nsAddrBookSession():
   mRefCnt(0)
 {
-	NS_INIT_REFCNT();
-
-	mListeners = new nsVoidArray();
+  NS_INIT_REFCNT();
 }
 
 nsAddrBookSession::~nsAddrBookSession()
 {
-	if (mListeners) 
-		delete mListeners;
 }
 
 
@@ -52,84 +48,99 @@ nsAddrBookSession::~nsAddrBookSession()
 
 NS_IMETHODIMP nsAddrBookSession::AddAddressBookListener(nsIAbListener * listener)
 {
-    NS_ENSURE_TRUE(mListeners, NS_ERROR_NULL_POINTER);
-	mListeners->AppendElement(listener);
-	return NS_OK;
+  if (!mListeners)
+    NS_NewISupportsArray(getter_AddRefs(mListeners));
+
+  NS_ENSURE_TRUE(mListeners, NS_ERROR_NULL_POINTER);
+  mListeners->AppendElement(listener);
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsAddrBookSession::RemoveAddressBookListener(nsIAbListener * listener)
 {
-    NS_ENSURE_TRUE(mListeners, NS_ERROR_NULL_POINTER);
-	mListeners->RemoveElement(listener);
-	return NS_OK;
+  NS_ENSURE_TRUE(mListeners, NS_ERROR_NULL_POINTER);
+  mListeners->RemoveElement(listener);
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsAddrBookSession::NotifyItemPropertyChanged
 (nsISupports *item, const char *property, const PRUnichar* oldValue, const PRUnichar* newValue)
 {
-    NS_ENSURE_TRUE(mListeners, NS_ERROR_NULL_POINTER);
+  NS_ENSURE_TRUE(mListeners, NS_ERROR_NULL_POINTER);
 
-	PRInt32 i;
-	PRInt32 count = mListeners->Count();
-	for(i = 0; i < count; i++)
-	{
-		nsIAbListener* listener =(nsIAbListener*)mListeners->ElementAt(i);
-		listener->OnItemPropertyChanged(item, property, oldValue, newValue);
-	}
+  PRUint32 count = 0;
+  PRUint32 i;
+  nsresult rv = mListeners->Count(&count);
+  NS_ENSURE_SUCCESS(rv, rv);
+  for(i = 0; i < count; i++)
+  {
+    nsCOMPtr<nsIAbListener> listener = getter_AddRefs((nsIAbListener*)mListeners->ElementAt(i));
+    NS_ASSERTION(listener, "listener is null");
+    if (listener)
+      listener->OnItemPropertyChanged(item, property, oldValue, newValue);
+  }
 
-	return NS_OK;
+  return NS_OK;
 
 }
 
 NS_IMETHODIMP nsAddrBookSession::NotifyDirectoryItemAdded(nsIAbDirectory *directory, nsISupports *item)
 {
-    NS_ENSURE_TRUE(mListeners, NS_ERROR_NULL_POINTER);
+  NS_ENSURE_TRUE(mListeners, NS_ERROR_NULL_POINTER);
 
-	PRInt32 i;
-	PRInt32 count = mListeners->Count();
-	for(i = 0; i < count; i++)
-	{
-		nsIAbListener *listener = (nsIAbListener*)mListeners->ElementAt(i);
-		listener->OnItemAdded(directory, item);
-	}
+  PRUint32 count = 0;
+  PRUint32 i;
+  nsresult rv = mListeners->Count(&count);
+  NS_ENSURE_SUCCESS(rv, rv);
+  for(i = 0; i < count; i++)
+  {
+    nsCOMPtr<nsIAbListener> listener = getter_AddRefs((nsIAbListener*)mListeners->ElementAt(i));
+    NS_ASSERTION(listener, "listener is null");
+    if (listener)
+      listener->OnItemAdded(directory, item);
+  }
 
-	return NS_OK;
+  return NS_OK;
 
 }
 
 NS_IMETHODIMP nsAddrBookSession::NotifyDirectoryItemDeleted(nsIAbDirectory *directory, nsISupports *item)
 {
-    NS_ENSURE_TRUE(mListeners, NS_ERROR_NULL_POINTER);
+  NS_ENSURE_TRUE(mListeners, NS_ERROR_NULL_POINTER);
 
-	PRInt32 i;
-	PRInt32 count = mListeners->Count();
-	for(i = 0; i < count; i++)
-	{
-		nsIAbListener *listener = (nsIAbListener*)mListeners->ElementAt(i);
-		listener->OnItemRemoved(directory, item);
-	}
-	return NS_OK;
+  PRUint32 count = 0;
+  PRUint32 i;
+  nsresult rv = mListeners->Count(&count);
+  NS_ENSURE_SUCCESS(rv, rv);
+  for(i = 0; i < count; i++)
+  {
+    nsCOMPtr<nsIAbListener> listener = getter_AddRefs((nsIAbListener*)mListeners->ElementAt(i));
+    NS_ASSERTION(listener, "listener is null");
+    if (listener)
+      listener->OnItemRemoved(directory, item);
+  }
+  return NS_OK;
 
 }
 
 NS_IMETHODIMP nsAddrBookSession::GetUserProfileDirectory(nsFileSpec * *userDir)
 {
-    NS_ENSURE_ARG_POINTER(userDir);
-    *userDir = nsnull;
+  NS_ENSURE_ARG_POINTER(userDir);
+  *userDir = nsnull;
 
-	nsresult rv;		
-	nsCOMPtr<nsIFile> profileDir;
-	nsXPIDLCString pathBuf;
-	
-	rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR, getter_AddRefs(profileDir));
-	NS_ENSURE_SUCCESS(rv, rv);
-	rv = profileDir->GetPath(getter_Copies(pathBuf));
-	NS_ENSURE_SUCCESS(rv, rv);
-	
-	*userDir = new nsFileSpec(pathBuf);
-	NS_ENSURE_TRUE(*userDir, NS_ERROR_OUT_OF_MEMORY);
+  nsresult rv;		
+  nsCOMPtr<nsIFile> profileDir;
+  nsXPIDLCString pathBuf;
 
-	return rv;
+  rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR, getter_AddRefs(profileDir));
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = profileDir->GetPath(getter_Copies(pathBuf));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  *userDir = new nsFileSpec(pathBuf);
+  NS_ENSURE_TRUE(*userDir, NS_ERROR_OUT_OF_MEMORY);
+
+  return rv;
 }
 
 // used to live in the msg view navigation service
