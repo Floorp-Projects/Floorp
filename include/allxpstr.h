@@ -7915,6 +7915,7 @@ ResDef(RDF_CMD_34, RDF_CMD_BASE+34,  "Export All...")
 ResDef(RDF_CMD_35, RDF_CMD_BASE+35,  "Undo")
 ResDef(RDF_CMD_36, RDF_CMD_BASE+36,  "New Workspace...")
 ResDef(RDF_CMD_37, RDF_CMD_BASE+37,  "Rename")
+ResDef(RDF_CMD_38, RDF_CMD_BASE+38,  "Find...")
 
 ResDef(RDF_MAIN_TITLE, RDF_MSG_BASE+100,  "Information")
 ResDef(RDF_COLOR_TITLE, RDF_MSG_BASE+101,  "Color Information")
@@ -7925,6 +7926,7 @@ ResDef(RDF_COLUMN_COLORS_TITLE, RDF_MSG_BASE+105,  "Column Colors")
 ResDef(RDF_TITLEBAR_COLORS_TITLE, RDF_MSG_BASE+106,  "Title Bar Colors")
 ResDef(RDF_APPLETALK_TOP_NAME, RDF_MSG_BASE+107,  "Appletalk Zones and File Servers")
 ResDef(RDF_PERSONAL_TOOLBAR_NAME, RDF_MSG_BASE+108,  "Personal Toolbar")
+ResDef(RDF_FIND_TITLE, RDF_MSG_BASE+109,  "Find")
 
 ResDef(RDF_HTML_STR_NUMBER, RDF_MSG_BASE+110,  "\
 <TR><TD ALIGN=RIGHT><B>%s:</B></TD><TD><INPUT TYPE=TEXT NAME='%s' WIDTH=6 SIZE=6 VALUE='%s'></TD></TR>\n")
@@ -8002,6 +8004,40 @@ WIDTH=18 HEIGHT=18 TOP=0 LEFT=0 VISIBILITY=HIDE><BODY></BODY></LAYER>")
 ResDef(RDF_HTMLCOLOR_STR, RDF_MSG_BASE+164,  "\
 %0%<CENTER><TABLE ALIGN=center WIDTH=470 BORDER=0>%1%</TABLE></CENTER><P>%2%")
 
+
+ResDef(RDF_SELECT_START, RDF_MSG_BASE+170, "<SELECT NAME='%s'>\n")
+ResDef(RDF_SELECT_END, RDF_MSG_BASE+171, "</SELECT>\n")
+ResDef(RDF_SELECT_OPTION, RDF_MSG_BASE+172, "<OPTION VALUE='%s'>%s\n")
+
+ResDef(RDF_FIND_STR1, RDF_MSG_BASE+180, "Find items in ")
+ResDef(RDF_FIND_STR2, RDF_MSG_BASE+181, " whose<P>")
+ResDef(RDF_FIND_INPUT_STR, RDF_MSG_BASE+182, "<INPUT TYPE='text' NAME='%s' VALUE='%s' WIDTH=20>")
+
+ResDef(RDF_LOCAL_LOCATION_STR, RDF_MSG_BASE+190, "local workspaces")
+ResDef(RDF_REMOTE_LOCATION_STR, RDF_MSG_BASE+191, "remote workspaces")
+ResDef(RDF_ALL_LOCATION_STR, RDF_MSG_BASE+192, "all workspaces")
+
+ResDef(RDF_CONTAINS_STR, RDF_MSG_BASE+193, "contains")
+ResDef(RDF_IS_STR, RDF_MSG_BASE+194, "is")
+ResDef(RDF_IS_NOT_STR, RDF_MSG_BASE+195, "is not")
+ResDef(RDF_STARTS_WITH_STR, RDF_MSG_BASE+196, "starts with")
+ResDef(RDF_ENDS_WITH_STR, RDF_MSG_BASE+197, "ends with")
+ResDef(RDF_FIND_FULLNAME_STR, RDF_MSG_BASE+198, "Find: %s %s '%s'")
+ResDef(RDF_SHORTCUT_CONFLICT_STR, RDF_MSG_BASE+199, "'%s' is assigned as a shortcut for '%s'. Reassign it?")
+
+ResDef(RDF_AFP_CLIENT_37_STR, RDF_MSG_BASE+200, "Please install AppleShare Client version 3.7 or later.")
+ResDef(RDF_AFP_AUTH_FAILED_STR, RDF_MSG_BASE+201, "User authentication failed.")
+ResDef(RDF_AFP_PW_EXPIRED_STR, RDF_MSG_BASE+202, "Password expired.")
+ResDef(RDF_AFP_ALREADY_MOUNTED_STR, RDF_MSG_BASE+203, "Volume already mounted.")
+ResDef(RDF_AFP_MAX_SERVERS_STR, RDF_MSG_BASE+204, "Maximum number of volumes has been mounted.")
+ResDef(RDF_AFP_NOT_RESPONDING_STR, RDF_MSG_BASE+205, "Server is not responding.")
+ResDef(RDF_AFP_SAME_NODE_STR, RDF_MSG_BASE+206, "Failed to log on to a server running on this machine.")
+ResDef(RDF_AFP_ERROR_NUM_STR, RDF_MSG_BASE+207, "\rError %d")
+
+ResDef(RDF_VOLUME_DESC_STR, RDF_MSG_BASE+210, "Volume")
+ResDef(RDF_DIRECTORY_DESC_STR, RDF_MSG_BASE+211, "Directory")
+ResDef(RDF_FILE_DESC_STR, RDF_MSG_BASE+212, "File")
+ResDef(RDF_FTP_NAME_STR, RDF_MSG_BASE+213, "FTP Locations")
 
 END_STR(mcom_include_xp_msg_i_strings)
 
