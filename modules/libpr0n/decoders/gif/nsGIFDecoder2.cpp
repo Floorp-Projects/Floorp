@@ -21,6 +21,8 @@
  *  Chris Saari <saari@netscape.com>
  */
 
+#include "prmem.h"
+
 #include "nsGIFDecoder2.h"
 #include "nsIInputStream.h"
 #include "nsIComponentManager.h"
@@ -351,7 +353,7 @@ int nsGIFDecoder2::EndImageFrame(
   }
 
   decoder->mImageFrame = nsnull;
-  decoder->mGIFStruct->local_colormap = nsnull;
+  PR_FREEIF(decoder->mGIFStruct->local_colormap);
   decoder->mGIFStruct->is_transparent = PR_FALSE;
   return 0;
 }
