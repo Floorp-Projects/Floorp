@@ -254,7 +254,6 @@ public:
 
   PRBool GetURL(nsIContent* aContent, nsString& aResult);
   PRBool GetName(nsIContent* aContent, nsString& aResult);
-  PRInt32 GetScrolling(nsIContent* aContent);
   nsFrameborder GetFrameBorder();
   PRInt32 GetMarginWidth(nsIContent* aContent);
   PRInt32 GetMarginHeight(nsIContent* aContent);
@@ -783,48 +782,6 @@ PRBool nsHTMLFrameInnerFrame::GetName(nsIContent* aContent, nsString& aResult)
   return PR_FALSE;
 }
 
-PRInt32 nsHTMLFrameInnerFrame::GetScrolling(nsIContent* aContent)
-{
-  PRInt32 returnValue = -1;
-  nsresult rv = NS_OK;
-  nsCOMPtr<nsIHTMLContent> content = do_QueryInterface(mContent, &rv);
-
-  if (NS_SUCCEEDED(rv) && content) {
-    nsHTMLValue value;
-    // XXXldb This code belongs in the attribute mapping code for the
-    // content node -- otherwise it doesn't follow the CSS cascading
-    // rules correctly.
-    if (NS_CONTENT_ATTR_HAS_VALUE == content->GetHTMLAttribute(nsHTMLAtoms::scrolling, value)) {
-      if (eHTMLUnit_Enumerated == value.GetUnit()) {
-        switch (value.GetIntValue()) {
-          case NS_STYLE_FRAME_ON:
-          case NS_STYLE_FRAME_SCROLL:
-          case NS_STYLE_FRAME_YES:
-            returnValue = NS_STYLE_OVERFLOW_SCROLL;
-            break;
-
-          case NS_STYLE_FRAME_OFF:
-          case NS_STYLE_FRAME_NOSCROLL:
-          case NS_STYLE_FRAME_NO:
-            returnValue = NS_STYLE_OVERFLOW_HIDDEN;
-            break;
-        
-          case NS_STYLE_FRAME_AUTO:
-          default:
-            returnValue = NS_STYLE_OVERFLOW_AUTO;
-            break;
-        }
-      }
-    }
-
-    // Check style for overflow
-    const nsStyleDisplay* display = GetStyleDisplay();
-    if (display->mOverflow)
-      returnValue = display->mOverflow;
-  }
-  return returnValue;
-}
-
 nsFrameborder nsHTMLFrameInnerFrame::GetFrameBorder()
 {
   nsFrameborder rv = eFrameborder_Notset;
@@ -1062,12 +1019,33 @@ nsHTMLFrameInnerFrame::ShowDocShell(nsIPresContext* aPresContext)
   nsCOMPtr<nsIScrollable> sc(do_QueryInterface(docShell));
 
   if (sc) {
-    PRInt32 scrolling = GetScrolling(content);
+    PRInt32 scrolling = GetStyleDisplay()->mOverflow;
+    PRInt32 scrollX, scrollY;
+    switch (scrolling) {
+      case NS_STYLE_OVERFLOW_SCROLLBARS_NONE:
+        scrollX = NS_STYLE_OVERFLOW_HIDDEN;
+        scrollY = NS_STYLE_OVERFLOW_HIDDEN;
+        break;
+      case NS_STYLE_OVERFLOW_SCROLLBARS_HORIZONTAL:
+        scrollX = NS_STYLE_OVERFLOW_SCROLL;
+        scrollY = NS_STYLE_OVERFLOW_HIDDEN;
+        break;
+      case NS_STYLE_OVERFLOW_SCROLLBARS_VERTICAL:
+        scrollX = NS_STYLE_OVERFLOW_HIDDEN;
+        scrollY = NS_STYLE_OVERFLOW_SCROLL;
+        break;
+      case NS_STYLE_OVERFLOW_VISIBLE:
+        scrollX = scrollY = NS_STYLE_OVERFLOW_AUTO;
+        break;
+      default:
+        scrollX = scrollY = scrolling;
+        break;
+    }
 
     sc->SetDefaultScrollbarPreferences(nsIScrollable::ScrollOrientation_Y,
-                                       scrolling);
+                                       scrollX);
     sc->SetDefaultScrollbarPreferences(nsIScrollable::ScrollOrientation_X,
-                                       scrolling);
+                                       scrollY);
   }
 
   nsCOMPtr<nsIWidget> widget;
