@@ -170,7 +170,7 @@ interface oeIICalObserver : nsISupports
     void onAddItem( in oeIICalEvent e);
     void onModifyItem( in oeIICalEvent e, in oeIICalEvent olde );
     void onDeleteItem( in oeIICalEvent e);
-    void onAlarm( in oeIICalEvent e);
+    void onAlarm( in oeIICalEventDisplay e);
 };
 
 [scriptable, uuid(7a4fd625-69a8-4008-932e-cccc227b402c)]

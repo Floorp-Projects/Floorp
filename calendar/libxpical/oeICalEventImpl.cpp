@@ -1070,6 +1070,18 @@ icaltimetype oeICalEventImpl::CalculateAlarmTime( icaltimetype date ) {
     return result;
 }
 
+icaltimetype oeICalEventImpl::CalculateEventTime( icaltimetype alarmtime ) {
+    icaltimetype result = alarmtime;
+    if( strcasecmp( m_alarmunits, "days" ) == 0 )
+        icaltime_adjust( &result, (signed long)m_alarmlength, 0, 0, 0 );
+    else if( strcasecmp( m_alarmunits, "hours" ) == 0 )
+        icaltime_adjust( &result, 0, (signed long)m_alarmlength, 0, 0 );
+    else
+        icaltime_adjust( &result, 0, 0, (signed long)m_alarmlength, 0 );
+
+    return result;
+}
+
 NS_IMETHODIMP oeICalEventImpl::GetStart(oeIDateTime * *start)
 {
     *start = m_start;

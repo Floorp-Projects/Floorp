@@ -1636,19 +1636,29 @@ void oeICalImpl::SetupAlarmManager() {
                 if( icaltime_is_null_time( alarmtime ) )
                     break;
                 if( icaltime_compare( alarmtime, now ) <= 0 ) {
-#ifdef ICAL_DEBUG
+                    #ifdef ICAL_DEBUG
                     printf( "ALARM WENT OFF: %s\n", icaltime_as_ical_string( alarmtime ) );
-#endif
+                    #endif
                     
+                    nsresult rv;
+                    oeIICalEventDisplay* eventDisplay;
+                    rv = NS_NewICalEventDisplay( event, &eventDisplay );
+                    #ifdef ICAL_DEBUG
+                    if( NS_FAILED( rv ) ) {
+                        printf( "oeICalImpl::SetupAlarmManager() : WARNING Cannot create oeIICalEventDisplay instance: %x\n", rv );
+                    }
+                    #endif
+                    icaltimetype eventtime = event->CalculateEventTime( alarmtime );
+                    eventDisplay->SetDisplayDate( ConvertToPrtime( eventtime ) );
                     for( unsigned int i=0; i<m_observerlist.size(); i++ ) {
-                        nsresult rv;
-                        rv = m_observerlist[i]->OnAlarm( event );
+                        rv = m_observerlist[i]->OnAlarm( eventDisplay );
                         #ifdef ICAL_DEBUG
                         if( NS_FAILED( rv ) ) {
                             printf( "oeICalImpl::SetupAlarmManager() : WARNING Call to observer's onAlarm() unsuccessful: %x\n", rv );
                         }
                         #endif
                     }
+                    NS_RELEASE( eventDisplay );
                 }
                 else {
                     if( icaltime_is_null_time( nextalarm ) )
@@ -1668,9 +1678,9 @@ void oeICalImpl::SetupAlarmManager() {
         m_alarmtimer = nsnull;
     }
     if( !icaltime_is_null_time( nextalarm ) ) {
-#ifdef ICAL_DEBUG
+        #ifdef ICAL_DEBUG
         printf( "NEXT ALARM IS: %s\n", icaltime_as_ical_string( nextalarm ) );
-#endif
+        #endif
         time_t timediff = icaltime_as_timet( nextalarm ) - icaltime_as_timet( now );
         
         nsresult rv;

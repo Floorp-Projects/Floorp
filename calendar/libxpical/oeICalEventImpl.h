@@ -115,6 +115,7 @@ public:
     icaltimetype GetNextRecurrence( icaltimetype begin );
     icaltimetype GetPreviousOccurrence( icaltimetype beforethis );
     NS_IMETHODIMP SetParent( oeIICal *parent );
+    icaltimetype CalculateEventTime( icaltimetype alarmtime );
 private:
     char *m_id;
     char *m_syncid;
