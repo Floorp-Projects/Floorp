@@ -90,6 +90,8 @@
 
 #include "nsITextToSubURI.h"
 
+#include "prlog.h"
+
 // this is going away - see
 // http://bugzilla.mozilla.org/show_bug.cgi?id=71482
 #include "nsIBrowserHistory.h"
@@ -129,6 +131,9 @@ static NS_METHOD AHTC_WriteFunc(nsIInputStream * in,
                                 PRUint32 toOffset,
                                 PRUint32 count, PRUint32 * writeCount);
 
+#ifdef PR_LOGGING
+static PRLogModuleInfo* gDocShellLog;
+#endif
 
 //*****************************************************************************
 //***    nsDocShell: Object Management
@@ -158,6 +163,10 @@ nsDocShell::nsDocShell():
     mChromeEventHandler(nsnull)
 {
     NS_INIT_REFCNT();
+#ifdef PR_LOGGING
+    if (! gDocShellLog)
+        gDocShellLog = PR_NewLogModule("nsDocShell");
+#endif
 }
 
 nsDocShell::~nsDocShell()
@@ -446,6 +455,16 @@ nsDocShell::LoadURI(nsIURI * aURI, nsIDocShellLoadInfo * aLoadInfo,
         aLoadInfo->GetTarget(getter_Copies(target));
     }
 
+#ifdef PR_LOGGING
+    if (PR_LOG_TEST(gDocShellLog, PR_LOG_DEBUG)) {
+        nsXPIDLCString uristr;
+        aURI->GetSpec(getter_Copies(uristr));
+        PR_LOG(gDocShellLog, PR_LOG_DEBUG,
+               ("nsDocShell[%p]: loading %s with flags 0x%08x",
+                this, uristr.get(), aLoadFlags));
+    }
+#endif
+
     if (!shEntry && loadType != LOAD_NORMAL_REPLACE && mCurrentURI == nsnull) {
         /* Check if we are in the middle of loading a subframe whose parent
          * was originally loaded thro' Session History. ie., you were in a frameset
@@ -477,6 +496,8 @@ nsDocShell::LoadURI(nsIURI * aURI, nsIDocShellLoadInfo * aLoadInfo,
     }
     if (shEntry) {
         // Load is from SH. SH does normal load only
+        PR_LOG(gDocShellLog, PR_LOG_DEBUG,
+               ("nsDocShell[%p]: loading from session history", this));
 
         rv = LoadHistoryEntry(shEntry, loadType);
     }
