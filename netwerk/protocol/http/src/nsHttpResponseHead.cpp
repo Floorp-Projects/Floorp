@@ -266,6 +266,12 @@ nsHttpResponseHead::ComputeFreshnessLifetime(PRUint32 *result)
         }
     }
 
+    // These responses can be cached indefinitely.
+    if ((mStatus == 300) || (mStatus == 301)) {
+        *result = PRUint32(-1);
+        return NS_OK;
+    }
+
     LOG(("nsHttpResponseHead::ComputeFreshnessLifetime [this = %x] "
          "Insufficient information to compute a non-zero freshness "
          "lifetime!\n", this));
