@@ -247,6 +247,8 @@ my $head_date = '';
 
 if( !$show_raw ) {
 
+    $::FORM{"sortby"} ||= "";
+
     if( $::FORM{"sortby"} eq "Who" ){
         $result = [sort {
                    $a->[$::CI_WHO] cmp $b->[$::CI_WHO]
