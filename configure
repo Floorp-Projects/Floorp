@@ -141,7 +141,7 @@ ac_help="$ac_help
 ac_help="$ac_help
   --enable-crypto         Enable crypto (Personal Security Manager)"
 ac_help="$ac_help
-  --enable-jsd            Enable JavaScript debug library"
+  --disable-jsd            Disable JavaScript debug library"
 ac_help="$ac_help
   --with-extensions       Enable extensions (dirs in extensions/)"
 ac_help="$ac_help
@@ -11047,13 +11047,13 @@ fi
 
 
 
-MOZ_JSDEBUGGER=
+MOZ_JSDEBUGGER=1
 
 # Check whether --enable-jsd or --disable-jsd was given.
 if test "${enable_jsd+set}" = set; then
   enableval="$enable_jsd"
   if test "$enableval" = "yes"; then
-    MOZ_JSDEBUGGER=1
+    MOZ_JSDEBUGGER=
   elif test "$enableval" = "no"; then
     :
   else
@@ -11063,8 +11063,8 @@ fi
 
 
 
-MOZ_EXTENSIONS_DEFAULT="cookie wallet content-packs xml-rpc xmlextras help transformiix"
-MOZ_EXTENSIONS_ALL="$MOZ_EXTENSIONS_DEFAULT irc xmlterm inspector access-builtin venkman ctl" 
+MOZ_EXTENSIONS_DEFAULT="cookie wallet content-packs xml-rpc xmlextras help transformiix venkman"
+MOZ_EXTENSIONS_ALL="$MOZ_EXTENSIONS_DEFAULT irc xmlterm inspector access-builtin ctl" 
 
 if test -n "$SUNCTL"; then
   MOZ_EXTENSIONS_DEFAULT="$MOZ_EXTENSIONS_DEFAULT ctl"
