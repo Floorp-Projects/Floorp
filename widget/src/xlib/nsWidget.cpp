@@ -1178,3 +1178,18 @@ NS_METHOD nsWidget::GetRequestedBounds(nsRect &aRect)
   aRect = mRequestedSize;
   return NS_OK;
 }
+
+NS_IMETHODIMP
+nsWidget::SetTitle(const nsString& title)
+{
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsWidget::CaptureRollupEvents(nsIRollupListener * aListener, PRBool aDoCapture)
+{
+
+
+  return NS_OK;
+}
