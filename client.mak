@@ -336,7 +336,7 @@ install:
 
 export:
 	@cd $(MOZ_SRC)\$(MOZ_TOP)\nsprpub
-	nmake -f makefile.win export	
+	gmake -f gmakefile.win MOZ_SRC_FLIPPED=$(MOZ_SRC_FLIPPED)
 	@cd $(MOZ_SRC)\$(MOZ_TOP)\security
 	nmake -f makefile.win export
 	@cd $(MOZ_SRC)\$(MOZ_TOP)\.
