@@ -54,6 +54,7 @@
 #include "nsGtkUtils.h" // for nsGtkUtils::gdk_window_flash()
 
 #undef DEBUG_DND_XLATE
+#define MODAL_TIMERS_BROKEN
 
 #define CAPS_LOCK_IS_ON \
 (nsGtkUtils::gdk_keyboard_get_modifiers() & GDK_LOCK_MASK)
@@ -2094,8 +2095,7 @@ NS_IMETHODIMP_(void) nsWindow::Notify(nsITimer* aTimer)
   
   if (event.rect->width == 0 || event.rect->height == 0)
   {
-    //    printf("********\n****** got an expose for 0x0 window?? - ignoring paint for 0x0\n");
-    NS_RELEASE(aTimer);
+    NS_IF_RELEASE(aTimer);
     mExposeTimer = nsnull;
     delete event.rect;
     return;
@@ -2148,7 +2148,7 @@ NS_IMETHODIMP_(void) nsWindow::Notify(nsITimer* aTimer)
   }
 #endif // NS_DEBUG
 
-  NS_RELEASE(aTimer);
+  NS_IF_RELEASE(aTimer);
   mExposeTimer = nsnull;
 
   delete event.rect;
@@ -2173,10 +2173,14 @@ PRBool nsWindow::OnExpose(nsPaintEvent &event)
     // expose.. we didn't get an Invalidate, so we should up the count here
     mUpdateArea->Union(event.rect->x, event.rect->y, event.rect->width, event.rect->height);
 
+#ifdef MODAL_TIMERS_BROKEN
+    Notify(nsnull);
+#else
     if (!mExposeTimer) {
       if (NS_NewTimer(&mExposeTimer) == NS_OK)
         mExposeTimer->Init(this, 15);
     }
+#endif
   }
 
   return result;
@@ -2675,10 +2679,14 @@ nsWindow::HandleXlibExposeEvent(XEvent *event)
                        event->xexpose.width, event->xexpose.height);
 
     //    printf("%p nsWindow::HandleXlibExposeEvent: mExposeTimer = %p\n", this, mExposeTimer);
+#ifdef MODAL_TIMERS_BROKEN
+    Notify(nsnull);
+#else
     if (!mExposeTimer) {
       if (NS_NewTimer(&mExposeTimer) == NS_OK)
         mExposeTimer->Init(this, 15);
     }
+#endif
   }
 
 
