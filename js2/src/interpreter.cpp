@@ -189,9 +189,7 @@ static JSValue add_Default(const JSValue& r1, const JSValue& r2)
     if (r1.isString() || r2.isString()) {
         JSString& str1 = *r1.toString().string;
         JSString& str2 = *r2.toString().string;
-        JSString* sum = new JSString(str1);
-        *sum += str2;
-        return JSValue(sum);
+        return JSValue(new JSString(str1 + str2));
     }
     else {
         JSValue num1(r1.toNumber());
