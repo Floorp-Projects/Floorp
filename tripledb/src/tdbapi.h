@@ -19,6 +19,9 @@
  * Contributor(s): Terry Weissman <terry@mozilla.org>
  */
 
+#ifndef _TDBapi_h_
+#define _TDBapi_h_ 1
+
 /* All things are prefixed with TDB, which stands for "Triples
    DataBase".  Suggestions for better names are always welcome. */
 
@@ -237,3 +240,5 @@ PR_EXTERN(void) TDBFreeNode(TDBNodePtr node);
 
 
 PR_END_EXTERN_C
+
+#endif /* _TDBapi_h_ */
