@@ -23,10 +23,23 @@
 
 #include "ImageCache.h"
 
+#ifdef USE_CACHE
+
+#include "prlog.h"
+
+#if defined(PR_LOGGING)
+extern PRLogModuleInfo *gImgLog;
+#else
+#define gImgLog
+#endif
+
+
 #include "nsXPIDLString.h"
 #include "nsCOMPtr.h"
 
 #include "nsHashtable.h"
+
+nsSupportsHashtable mCache;
 
 class nsIURIKey : public nsHashKey {
 protected:
@@ -53,16 +66,10 @@ public:
   }
 };
 
-
-#define USE_CACHE 1
-
 ImageCache::ImageCache()
 {
   /* member initializers and constructor code */
 }
-
-nsSupportsHashtable mCache;
-
 
 ImageCache::~ImageCache()
 {
@@ -71,17 +78,18 @@ ImageCache::~ImageCache()
 
 PRBool ImageCache::Put(nsIURI *aKey, imgRequest *request)
 {
-#ifdef USE_CACHE
+  PR_LOG(gImgLog, PR_LOG_DEBUG,
+         ("ImageCache::Put\n"));
+
   nsIURIKey key(aKey);
   return mCache.Put(&key, NS_STATIC_CAST(imgIRequest*, request));
-#else
-  return PR_FALSE;
-#endif
 }
 
 PRBool ImageCache::Get(nsIURI *aKey, imgRequest **request)
 {
-#ifdef USE_CACHE
+  PR_LOG(gImgLog, PR_LOG_DEBUG,
+         ("ImageCache::Get\n"));
+
   nsIURIKey key(aKey);
   imgRequest *sup = NS_REINTERPRET_CAST(imgRequest*, NS_STATIC_CAST(imgIRequest*, mCache.Get(&key))); // this addrefs
   
@@ -91,17 +99,15 @@ PRBool ImageCache::Get(nsIURI *aKey, imgRequest **request)
   } else {
     return PR_FALSE;
   }
-#else
-  return PR_FALSE;
-#endif
 }
 
 PRBool ImageCache::Remove(nsIURI *aKey)
 {
-#ifdef USE_CACHE
+  PR_LOG(gImgLog, PR_LOG_DEBUG,
+         ("ImageCache::Remove\n"));
+
   nsIURIKey key(aKey);
   return mCache.Remove(&key);
-#else
-  return PR_FALSE;
-#endif
 }
+
+#endif /* USE_CACHE */

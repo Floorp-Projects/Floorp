@@ -40,6 +40,14 @@
 
 #include "nspr.h"
 
+#include "prlog.h"
+
+#if defined(PR_LOGGING)
+extern PRLogModuleInfo *gImgLog;
+#else
+#define gImgLog
+#endif
+
 NS_IMPL_ISUPPORTS3(imgRequestProxy, imgIRequest, imgIDecoderObserver, gfxIImageContainerObserver)
 
 imgRequestProxy::imgRequestProxy() :
@@ -61,6 +69,10 @@ nsresult imgRequestProxy::Init(imgRequest *request, imgIDecoderObserver *aObserv
 {
   PR_ASSERT(request);
 
+  PR_LOG(gImgLog, PR_LOG_DEBUG,
+         ("[this=%p] imgRequestProxy::Init (request=%p) {ENTER}\n",
+          this, request));
+
   mOwner = NS_STATIC_CAST(imgIRequest*, request);
 
   mObserver = aObserver;
@@ -69,6 +81,10 @@ nsresult imgRequestProxy::Init(imgRequest *request, imgIDecoderObserver *aObserv
   mContext = cx;
 
   request->AddObserver(this);
+
+  PR_LOG(gImgLog, PR_LOG_DEBUG,
+         ("[this=%p] imgRequestProxy::Init {EXIT}\n",
+          this));
 
   return NS_OK;
 }
@@ -80,8 +96,16 @@ NS_IMETHODIMP imgRequestProxy::Cancel(nsresult status)
   if (mCanceled)
     return NS_ERROR_FAILURE;
 
+  PR_LOG(gImgLog, PR_LOG_DEBUG,
+         ("[this=%p] imgRequestProxy::Cancel {ENTER}\n", this));
+
   mCanceled = PR_TRUE;
-  return NS_REINTERPRET_CAST(imgRequest*, mOwner.get())->RemoveObserver(this, status);
+  nsresult rv = NS_REINTERPRET_CAST(imgRequest*, mOwner.get())->RemoveObserver(this, status);
+
+  PR_LOG(gImgLog, PR_LOG_DEBUG,
+         ("[this=%p] imgRequestProxy::Cancel {EXIT}\n", this));
+
+  return rv;
 }
 
 /* readonly attribute gfxIImageContainer image; */
@@ -107,6 +131,9 @@ NS_IMETHODIMP imgRequestProxy::GetURI(nsIURI **aURI)
 /* [noscript] void frameChanged (in gfxIImageContainer container, in nsISupports cx, in gfxIImageFrame newframe, in nsRect dirtyRect); */
 NS_IMETHODIMP imgRequestProxy::FrameChanged(gfxIImageContainer *container, nsISupports *cx, gfxIImageFrame *newframe, nsRect * dirtyRect)
 {
+  PR_LOG(gImgLog, PR_LOG_DEBUG,
+         ("[this=%p] imgRequestProxy::FrameChanged\n", this));
+
   if (mObserver)
     mObserver->FrameChanged(container, mContext, newframe, dirtyRect);
 
@@ -118,6 +145,9 @@ NS_IMETHODIMP imgRequestProxy::FrameChanged(gfxIImageContainer *container, nsISu
 /* void onStartDecode (in imgIRequest request, in nsISupports cx); */
 NS_IMETHODIMP imgRequestProxy::OnStartDecode(imgIRequest *request, nsISupports *cx)
 {
+  PR_LOG(gImgLog, PR_LOG_DEBUG,
+         ("[this=%p] imgRequestProxy::OnStartDecode\n", this));
+
   if (mObserver)
     mObserver->OnStartDecode(this, mContext);
 
@@ -127,6 +157,9 @@ NS_IMETHODIMP imgRequestProxy::OnStartDecode(imgIRequest *request, nsISupports *
 /* void onStartContainer (in imgIRequest request, in nsISupports cx, in gfxIImageContainer image); */
 NS_IMETHODIMP imgRequestProxy::OnStartContainer(imgIRequest *request, nsISupports *cx, gfxIImageContainer *image)
 {
+  PR_LOG(gImgLog, PR_LOG_DEBUG,
+         ("[this=%p] imgRequestProxy::OnStartContainer\n", this));
+
   if (mObserver)
     mObserver->OnStartContainer(this, mContext, image);
 
@@ -136,6 +169,9 @@ NS_IMETHODIMP imgRequestProxy::OnStartContainer(imgIRequest *request, nsISupport
 /* void onStartFrame (in imgIRequest request, in nsISupports cx, in gfxIImageFrame frame); */
 NS_IMETHODIMP imgRequestProxy::OnStartFrame(imgIRequest *request, nsISupports *cx, gfxIImageFrame *frame)
 {
+  PR_LOG(gImgLog, PR_LOG_DEBUG,
+         ("[this=%p] imgRequestProxy::OnStartFrame\n", this));
+
   if (mObserver)
     mObserver->OnStartFrame(this, mContext, frame);
 
@@ -145,6 +181,9 @@ NS_IMETHODIMP imgRequestProxy::OnStartFrame(imgIRequest *request, nsISupports *c
 /* [noscript] void onDataAvailable (in imgIRequest request, in nsISupports cx, in gfxIImageFrame frame, [const] in nsRect rect); */
 NS_IMETHODIMP imgRequestProxy::OnDataAvailable(imgIRequest *request, nsISupports *cx, gfxIImageFrame *frame, const nsRect * rect)
 {
+  PR_LOG(gImgLog, PR_LOG_DEBUG,
+         ("[this=%p] imgRequestProxy::OnDataAvailable\n", this));
+
   if (mObserver)
     mObserver->OnDataAvailable(this, mContext, frame, rect);
 
@@ -154,6 +193,9 @@ NS_IMETHODIMP imgRequestProxy::OnDataAvailable(imgIRequest *request, nsISupports
 /* void onStopFrame (in imgIRequest request, in nsISupports cx, in gfxIImageFrame frame); */
 NS_IMETHODIMP imgRequestProxy::OnStopFrame(imgIRequest *request, nsISupports *cx, gfxIImageFrame *frame)
 {
+  PR_LOG(gImgLog, PR_LOG_DEBUG,
+         ("[this=%p] imgRequestProxy::OnStopFrame\n", this));
+
   if (mObserver)
     mObserver->OnStopFrame(this, mContext, frame);
 
@@ -163,6 +205,9 @@ NS_IMETHODIMP imgRequestProxy::OnStopFrame(imgIRequest *request, nsISupports *cx
 /* void onStopContainer (in imgIRequest request, in nsISupports cx, in gfxIImageContainer image); */
 NS_IMETHODIMP imgRequestProxy::OnStopContainer(imgIRequest *request, nsISupports *cx, gfxIImageContainer *image)
 {
+  PR_LOG(gImgLog, PR_LOG_DEBUG,
+         ("[this=%p] imgRequestProxy::OnStopContainer\n", this));
+
   if (mObserver)
     mObserver->OnStopContainer(this, mContext, image);
 
@@ -172,6 +217,9 @@ NS_IMETHODIMP imgRequestProxy::OnStopContainer(imgIRequest *request, nsISupports
 /* void onStopDecode (in imgIRequest request, in nsISupports cx, in nsresult status, in wstring statusArg); */
 NS_IMETHODIMP imgRequestProxy::OnStopDecode(imgIRequest *request, nsISupports *cx, nsresult status, const PRUnichar *statusArg)
 {
+  PR_LOG(gImgLog, PR_LOG_DEBUG,
+         ("[this=%p] imgRequestProxy::OnStopDecode\n", this));
+
   if (mObserver)
     mObserver->OnStopDecode(this, mContext, status, statusArg);
 
