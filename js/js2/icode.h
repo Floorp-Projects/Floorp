@@ -41,6 +41,7 @@
         LOAD_NULL, /* dest */
         LOAD_STRING, /* dest, immediate value (string) */
         LOAD_TRUE, /* dest */
+        LOAD_TYPE, /* dest, type */
         MOVE, /* dest, source */
         MULTIPLY, /* dest, source1, source2 */
         NAME_XCR, /* dest, name, value */
@@ -191,18 +192,18 @@
         }
     };
 
-    class Cast : public Instruction_3<TypedRegister, TypedRegister, JSType*> {
+    class Cast : public Instruction_3<TypedRegister, TypedRegister, TypedRegister> {
     public:
         /* dest, rvalue, toType */
-        Cast (TypedRegister aOp1, TypedRegister aOp2, JSType* aOp3) :
-            Instruction_3<TypedRegister, TypedRegister, JSType*>
+        Cast (TypedRegister aOp1, TypedRegister aOp2, TypedRegister aOp3) :
+            Instruction_3<TypedRegister, TypedRegister, TypedRegister>
             (CAST, aOp1, aOp2, aOp3) {};
         virtual Formatter& print(Formatter& f) {
-            f << opcodeNames[CAST] << "\t" << mOp1 << ", " << mOp2 << ", " << "'" << mOp3->getName() << "'";
+            f << opcodeNames[CAST] << "\t" << mOp1 << ", " << mOp2 << ", " << mOp3;
             return f;
         }
         virtual Formatter& printOperands(Formatter& f, const JSValues& registers) {
-            f << getRegisterValue(registers, mOp1.first) << ", " << getRegisterValue(registers, mOp2.first);
+            f << getRegisterValue(registers, mOp1.first) << ", " << getRegisterValue(registers, mOp2.first) << ", " << getRegisterValue(registers, mOp3.first);
             return f;
         }
     };
@@ -638,6 +639,22 @@
             (LOAD_TRUE, aOp1) {};
         virtual Formatter& print(Formatter& f) {
             f << opcodeNames[LOAD_TRUE] << "\t" << mOp1;
+            return f;
+        }
+        virtual Formatter& printOperands(Formatter& f, const JSValues& registers) {
+            f << getRegisterValue(registers, mOp1.first);
+            return f;
+        }
+    };
+
+    class LoadType : public Instruction_2<TypedRegister, JSType*> {
+    public:
+        /* dest, type */
+        LoadType (TypedRegister aOp1, JSType* aOp2) :
+            Instruction_2<TypedRegister, JSType*>
+            (LOAD_TYPE, aOp1, aOp2) {};
+        virtual Formatter& print(Formatter& f) {
+            f << opcodeNames[LOAD_TYPE] << "\t" << mOp1 << ", " << "'" << mOp2->getName() << "'";
             return f;
         }
         virtual Formatter& printOperands(Formatter& f, const JSValues& registers) {
@@ -1265,6 +1282,7 @@
         "LOAD_NULL         ",
         "LOAD_STRING       ",
         "LOAD_TRUE         ",
+        "LOAD_TYPE         ",
         "MOVE              ",
         "MULTIPLY          ",
         "NAME_XCR          ",

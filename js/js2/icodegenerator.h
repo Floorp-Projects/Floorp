@@ -378,6 +378,8 @@ namespace ICG {
         TypedRegister loadImmediate(double value);
         TypedRegister loadString(const String &value);
         TypedRegister loadString(const StringAtom &name);
+        TypedRegister loadNull();
+        TypedRegister loadType(JSType *toType);
                 
         TypedRegister newObject(TypedRegister constructor);
         TypedRegister newArray();
