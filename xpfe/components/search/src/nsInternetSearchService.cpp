@@ -111,7 +111,6 @@ static NS_DEFINE_CID(kRDFContainerCID,             NS_RDFCONTAINER_CID);
 static NS_DEFINE_CID(kRDFContainerUtilsCID,        NS_RDFCONTAINERUTILS_CID);
 static NS_DEFINE_CID(kRDFInMemoryDataSourceCID,    NS_RDFINMEMORYDATASOURCE_CID);
 static NS_DEFINE_CID(kRDFXMLDataSourceCID,         NS_RDFXMLDATASOURCE_CID);
-static NS_DEFINE_CID(kCharsetConverterManagerCID,  NS_ICHARSETCONVERTERMANAGER_CID);
 static NS_DEFINE_CID(kTextToSubURICID,             NS_TEXTTOSUBURI_CID);
 static NS_DEFINE_CID(kPrefCID,                     NS_PREF_CID);
 
@@ -3759,12 +3758,17 @@ InternetSearchDataSource::DoSearch(nsIRDFResource *source, nsIRDFResource *engin
 	// "interpret/resultTranslationFont" since we always convert results to Unicode
 	if (resultEncodingStr.Length() > 0)
 	{
-		nsCOMPtr<nsICharsetConverterManager> charsetConv = 
-		         do_GetService(kCharsetConverterManagerCID, &rv);
-		if (NS_SUCCEEDED(rv) && (charsetConv))
+		nsCOMPtr <nsICharsetConverterManager2> charsetConv = do_GetService(NS_CHARSETCONVERTERMANAGER_CONTRACTID, &rv);
+		if (NS_SUCCEEDED(rv))
 		{
-			rv = charsetConv->GetUnicodeDecoder(&resultEncodingStr,
-				getter_AddRefs(unicodeDecoder));
+			nsCOMPtr <nsIAtom> charsetAtom;
+			rv = charsetConv->GetCharsetAtom(resultEncodingStr.get(), getter_AddRefs(charsetAtom));
+
+			if (NS_SUCCEEDED(rv))
+			{
+				rv = charsetConv->GetUnicodeDecoder(charsetAtom,
+					getter_AddRefs(unicodeDecoder));
+			}
 		}
 	}
 
