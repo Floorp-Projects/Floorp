@@ -19,6 +19,7 @@
 #include "nsFileSpec.h"
 #include "nsFileStream.h"
 #include "nsSpecialSystemDirectory.h"
+#include "prprf.h"
 
 //#include "string.h"
 //void* operator new(size_t n) { return malloc(n); }
@@ -611,7 +612,9 @@ int FilesTest::DiskSpace()
 
     PRInt64 bytes = systemDir.GetDiskSpaceAvailable();
     
-    printf("OS Drive has %lld bytes free\n", bytes);
+    char buf[100];
+    PR_snprintf(buf, sizeof(buf), "OS Drive has %lld bytes free", bytes);
+    printf("%s\n", buf);
 
     return Inspect();
 }
