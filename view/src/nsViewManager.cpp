@@ -203,9 +203,14 @@ nsrefcnt nsViewManager::AddRef(void)
 
 nsrefcnt nsViewManager::Release(void)
 {
-  mRefCnt--;
-
-  if (mRefCnt == 0)
+  /* Note funny ordering of use of mRefCnt. We were seeing a problem
+     during the deletion of a view hierarchy where child views,
+     while being destroyed, referenced this view manager and caused
+     the Destroy part of this method to be re-entered. Waiting until
+     the destruction has finished to decrement the refcount
+     prevents that.
+  */
+  if (mRefCnt == 1)
   {
     if (nsnull != mRootView) {
       // Destroy any remaining views
@@ -215,6 +220,7 @@ nsrefcnt nsViewManager::Release(void)
     delete this;
     return 0;
   }
+  mRefCnt--;
   return mRefCnt;
 }
 
