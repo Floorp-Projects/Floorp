@@ -153,8 +153,13 @@ class nsFontMetricsOS2 : public nsIFontMetrics
   NS_IMETHOD  GetUnderline( nscoord &aOffset, nscoord &aSize);
 
   NS_IMETHOD  GetHeight( nscoord &aHeight);
+#ifdef FONT_LEADING_APIS_V2
+  NS_IMETHOD  GetInternalLeading(nscoord &aLeading);
+  NS_IMETHOD  GetExternalLeading(nscoord &aLeading);
+#else
+  NS_IMETHOD  GetLeading(nscoord &aLeading);
   NS_IMETHOD  GetNormalLineHeight(nscoord &aHeight);
-  NS_IMETHOD  GetLeading( nscoord &aLeading);
+#endif //FONT_LEADING_APIS_V2
   NS_IMETHOD  GetEmHeight(nscoord &aHeight);
   NS_IMETHOD  GetEmAscent(nscoord &aAscent);
   NS_IMETHOD  GetEmDescent(nscoord &aDescent);
@@ -227,7 +232,8 @@ class nsFontMetricsOS2 : public nsIFontMetrics
   nscoord  mStrikeoutSize;
   nscoord  mUnderlinePosition;
   nscoord  mUnderlineSize;
-  nscoord  mLeading;
+  nscoord  mExternalLeading;
+  nscoord  mInternalLeading;
   nscoord  mEmHeight;
   nscoord  mEmAscent;
   nscoord  mEmDescent;
