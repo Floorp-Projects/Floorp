@@ -70,9 +70,13 @@ Rights Reserved.
         <box/>
         <box/>
       </row>
-      <row>
-        <box orient="vertical">
+      <row >
           <html>&filterHeader.label;</html>
+      </row>
+      
+      
+      <row  flex="1">
+        <box orient="vertical" flex="1">
           <tree id="filterTree" class="inset" flex="1"
                 onselect="onFilterSelect(event);"
                 ondblclick="onFilterDoubleClick(event);"
@@ -114,16 +118,15 @@ Rights Reserved.
             
           </tree>
         </box>
-        <box orient="vertical">
-          <spring flex="1"/>
-          <button id="reorderUpButton" class="reorder-up" oncommand="onUp(event);"/>
-          <button id="reorderDownButton" class="reorder-down" oncommand="onDown(event);"/>
-          <spring flex="1"/>
-        </box>
-        <box orient="vertical">
+
+        <box orient="vertical" align="top">
+
           <button id="newButton" label="&newButton.label;" oncommand="onNewFilter();"/>
           <button id="editButton" label="&editButton.label;" oncommand="onEditFilter();"/>
           <button id="deleteButton" label="&deleteButton.label;" oncommand="onDeleteFilter();"/>
+          <spring flex="1"/>
+          <button id="reorderUpButton" class="reorder-up" label="&reorderUpButton.label;" oncommand="onUp(event);"/>
+          <button id="reorderDownButton" class="reorder-down" label="&reorderDownButton.label;" oncommand="onDown(event);"/>
           <spring flex="1"/>
           <!-- take out for PR2
             <button label="&runFiltersNow.label;" width="0em"/>

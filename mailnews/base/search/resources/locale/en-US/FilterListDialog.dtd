@@ -5,6 +5,8 @@
 <!ENTITY newButton.label "New...">
 <!ENTITY editButton.label "Edit...">
 <!ENTITY deleteButton.label "Delete">
+<!ENTITY reorderUpButton.label "Move Up">
+<!ENTITY reorderDownButton.label "Move Down">
 <!ENTITY logFilterUseCheckbox.label "Log Filter Use">
 <!ENTITY viewLogButton.label "View Log">
 <!ENTITY description.label "Description">
