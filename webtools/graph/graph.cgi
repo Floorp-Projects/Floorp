@@ -10,6 +10,7 @@ my $TESTNAME  = lc($req->param('testname'));
 my $UNITS     = lc($req->param('units'));
 my $TBOX      = lc($req->param('tbox'));
 my $AUTOSCALE = lc($req->param('autoscale'));
+my $SIZE      = lc($req->param('size'));
 my $DAYS      = lc($req->param('days'));
 my $LTYPE     = lc($req->param('ltype'));
 my $POINTS    = lc($req->param('points'));
@@ -129,6 +130,14 @@ sub show_graph {
   }
 
 
+  # Set graph size.  Default is (1.0, 1.0).
+  my $graph_size;
+  if($SIZE) {
+    $graph_size = "set size $SIZE, $SIZE";
+  } else {
+    $graph_size = "";
+  }
+
   # Set units.  Assume ms unless otherwise specified.
   unless($UNITS) {
 	$UNITS = "ms";
@@ -154,6 +163,7 @@ sub show_graph {
   # ls 2 = larger blue points
   my $cmds = qq{
 				reset
+                $graph_size
 				set term png color
 				set output "$PNGFILE"
 				set title  "$TBOX $TESTNAME"
