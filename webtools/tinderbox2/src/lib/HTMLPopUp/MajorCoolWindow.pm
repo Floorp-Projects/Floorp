@@ -5,8 +5,8 @@
 # application MajorCool.
 
 
-# $Revision: 1.12 $ 
-# $Date: 2002/12/10 19:45:03 $ 
+# $Revision: 1.13 $ 
+# $Date: 2003/04/13 20:47:26 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/HTMLPopUp/MajorCoolWindow.pm,v $ 
 # $Name:  $ 
@@ -367,7 +367,7 @@ sub Link {
       $args{'windowtxt'} =~ s/[\n\t]+/ /g;
       $args{'windowtxt'} =~ s/\s+/ /g;
 
-#    push @POPUPTXT, $args{'windowtxt'};
+      push @POPUPTXT, $args{'windowtxt'};
 
     }
 
@@ -384,35 +384,20 @@ sub Link {
 
     #
 
-    $popup .= "onMouseOver=\" ";
+    $popup .= "onClick=\" ";
     ($args{'statuslinetxt'}) &&
       ($popup .= "msg(\'$args{'statuslinetxt'}\'); ");
     ($args{'windowtxt'}) &&
       ($popup .= "tip(".(
                        "\'TOP\',".
                        "\'$args{'windowtitle'}\',".
-                       "\'$args{'windowtxt'}\',".
+                       "popuptxt[$#POPUPTXT],".
                        "$args{'windowheight'},".
                        "$args{'windowwidth'},".
                        "1".
                       "").
        "); ");
-    $popup .= "return true\" ";
-
-    $popup .= "onMouseOut=\" ";
-    ($args{'statuslinetxt'}) &&
-      ($popup .= "msg(''); ");
-    ($args{'windowtxt'}) &&
-      ($popup .= "tip('TOP','','',0,0,0); ");
-    $popup .= "return true\" ";
-
-    $popup .= "onClick=\" ";
-    ($args{'statuslinetxt'}) &&
-      ($popup .= "msg(''); ");
-    ($args{'windowtxt'}) &&
-      ($popup .= "tip('TOP','','',0,0,0); ");
-    $popup .= "return true\"";
-
+    $popup .= "return true;\" ";
   }
 
   my $name = '';
@@ -455,7 +440,20 @@ sub test_define_structures {
 }
 
 sub define_structures {
-  return '';
+  my $self = shift @_;
+  my (@out) =();
+
+  push @out, "<script language=\"JavaScript\">\n";
+  push @out, "// Separate out the popup window string table\n";
+  push @out, "// in order to make the structure of the HTML easier to read.\n";
+  push @out, "popuptxt = new Array();\n";
+  foreach $i (0 .. $#POPUPTXT) {
+      push @out, "popuptxt[$i] = \"$POPUPTXT[$i]\"\;\n";
+  }
+  push @out, "\n";
+  push @out, "</script>\n";
+
+  return @out;
 }
 
 1;
