@@ -288,7 +288,7 @@ int nsPlatformToDOMKeyCode(GdkEventKey *aGEK)
     return keysym - GDK_F1 + NS_VK_F1;
 
 #if defined(DEBUG_akkana) || defined(DEBUG_ftang)
-  printf("No match in nsPlatformToDOMKeyCode: keysym is 0x%x, string is %s\n", keysym, aGEK->string);
+  printf("No match in nsPlatformToDOMKeyCode: keysym is 0x%x, string is '%s', keyval = %d\n", keysym, aGEK->string, aGEK->keyval);
 #endif
 
   return((int)0);
@@ -298,33 +298,21 @@ int nsPlatformToDOMKeyCode(GdkEventKey *aGEK)
 
 PRUint32 nsConvertCharCodeToUnicode(GdkEventKey* aGEK)
 {
-  if (aGEK->state & GDK_CONTROL_MASK)
+  // For control key events, aGEK->string is fairly random,
+  // and for alt key it loses capitalization info,
+  // but keyval is reliable for both control and alt.
+  // XXX We need to get meta, too, when/if gtk adds supports for it.
+  if ((aGEK->state & GDK_CONTROL_MASK) || (aGEK->state & GDK_MOD1_MASK))
   {
-    if (isprint(aGEK->string[0]) && !isalpha(aGEK->string[0]))
-      return aGEK->string[0];
-
-    // For alphabetic control chars, GDK sets string to be the
-    // actual ascii value; it doesn't do this for numeric or
-    // other printable characters.
-    // So we have to map back to the actual character.
-    if (aGEK->state & GDK_SHIFT_MASK)
-      return aGEK->string[0] + 'A' - 1;
-    else
-      return aGEK->string[0] + 'a' - 1;
+    if (!isprint(aGEK->keyval))
+      return 0;
+    return (PRUint32)aGEK->keyval;
   }
 
-  // For now (obviously this will need to change for IME),
+  // For now (will this need to change for IME?),
   // only set a char code if the result is printable:
   if (!isprint(aGEK->string[0]))
     return 0;
-
-  // ALT keys in gdk give the upper case character in string,
-  // but we want the lower case char in char code
-  // unless shift was also pressed.
-  if (((aGEK->state & GDK_MOD1_MASK))
-      && !(aGEK->state & GDK_SHIFT_MASK)
-      && isupper(aGEK->string[0]))
-    return tolower(aGEK->string[0]);
 
   //
   // placeholder for something a little more interesting and correct
@@ -350,7 +338,7 @@ void InitKeyEvent(GdkEventKey *aGEK,
     anEvent.isShift = (aGEK->state & GDK_SHIFT_MASK) ? PR_TRUE : PR_FALSE;
     anEvent.isControl = (aGEK->state & GDK_CONTROL_MASK) ? PR_TRUE : PR_FALSE;
     anEvent.isAlt = (aGEK->state & GDK_MOD1_MASK) ? PR_TRUE : PR_FALSE;
-    // XXX
+    // XXX For meta key, state is 0, and so are keyval and string.  Sigh!
     anEvent.isMeta = PR_FALSE; //(aGEK->state & GDK_MOD2_MASK) ? PR_TRUE : PR_FALSE;
     anEvent.point.x = 0;
     anEvent.point.y = 0;
@@ -376,10 +364,9 @@ void InitKeyPressEvent(GdkEventKey *aGEK,
     // XXX
     anEvent.isMeta = PR_FALSE; //(aGEK->state & GDK_MOD2_MASK) ? PR_TRUE : PR_FALSE;
 
-    if(aGEK->length) {
-       anEvent.charCode = nsConvertCharCodeToUnicode(aGEK);
-    } else  {
-       anEvent.charCode = 0;
+    anEvent.charCode = nsConvertCharCodeToUnicode(aGEK);
+    if (anEvent.charCode == 0)
+    {
        // now, let's handle some keysym which XmbLookupString didn't handle
        // because they are not part of the locale encoding
        if( (aGEK->keyval >= 0xa0 && (aGEK->keyval <= 0xf000) ||
@@ -404,8 +391,10 @@ void InitKeyPressEvent(GdkEventKey *aGEK,
       anEvent.keyCode = nsPlatformToDOMKeyCode(aGEK);
 
 #if defined(DEBUG_akkana_not) || defined (DEBUG_ftang)
-    printf("Key Press event: gtk string = '%s', keyCode = 0x%x, char code = '%c'",
-           aGEK->string, anEvent.keyCode, anEvent.charCode);
+    printf("Key Press event: gtk string = '%s', keyval = '%c',\n",
+           aGEK->string, aGEK->keyval);
+    printf("    --> keyCode = 0x%x, char code = '%c'",
+           anEvent.keyCode, anEvent.charCode);
     if (anEvent.isShift)
       printf(" [shift]");
     if (anEvent.isControl)
@@ -614,7 +603,7 @@ gint handle_key_press_event(GtkObject *w, GdkEventKey* event, gpointer p)
       if (event->state & GDK_MOD1_MASK)
         return PR_FALSE;
 
-  // Don't pass shift, control and alt as key press events
+  // Don't pass shift and control as key press events
   if (event->keyval == GDK_Shift_L
       || event->keyval == GDK_Shift_R
       || event->keyval == GDK_Control_L
