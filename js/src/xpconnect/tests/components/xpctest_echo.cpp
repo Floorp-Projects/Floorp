@@ -96,6 +96,9 @@ public:
     /* nsIJSStackFrameLocation GetStack (); */
     NS_IMETHOD GetStack(nsIJSStackFrameLocation **_retval);
 
+    /* void SetReceiverReturnOldReceiver (inout nsIEcho aReceiver); */
+    NS_IMETHOD SetReceiverReturnOldReceiver(nsIEcho **aReceiver);
+
     xpctestEcho();
 private:
     nsIEcho* mReceiver;
@@ -313,6 +316,23 @@ xpctestEcho::GetStack(nsIJSStackFrameLocation **_retval)
         return NS_OK;
     }
     return NS_ERROR_FAILURE;
+}
+
+/* void SetReceiverReturnOldReceiver (inout nsIEcho aReceiver); */
+NS_IMETHODIMP
+xpctestEcho::SetReceiverReturnOldReceiver(nsIEcho **aReceiver)
+{
+    if(!aReceiver)
+        return NS_ERROR_NULL_POINTER;
+
+    nsIEcho* oldReceiver = mReceiver;
+    mReceiver = *aReceiver;
+    if(mReceiver)
+        NS_ADDREF(mReceiver);
+
+    /* don't release the reference, that is the caller's problem */
+    *aReceiver = oldReceiver;
+    return NS_OK;
 }
 
 /***************************************************************************/
