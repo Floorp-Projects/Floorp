@@ -44,8 +44,8 @@
  */
 #ifdef ROUND_EXCLUSIVE_CONST_FLOAT
 #undef ROUND_EXCLUSIVE_CONST_FLOAT
-#define ROUND_EXCLUSIVE_CONST_FLOAT   0.499999999f
 #endif
+#define ROUND_EXCLUSIVE_CONST_FLOAT   0.499999999f
 
 /**
  * ROUND_CONST_FLOAT
@@ -53,8 +53,8 @@
  */
 #ifdef ROUND_CONST_FLOAT
 #undef ROUND_CONST_FLOAT
-#define ROUND_CONST_FLOAT             0.5f
 #endif
+#define ROUND_CONST_FLOAT             0.5f
 
 /**
  * CEIL_CONST_FLOAT
@@ -63,8 +63,8 @@
  */
 #ifdef CEIL_CONST_FLOAT
 #undef CEIL_CONST_FLOAT
-#define CEIL_CONST_FLOAT              0.99999999f
 #endif
+#define CEIL_CONST_FLOAT              0.99999999f
 
 /**
  * gfx_coord rounding, floor, ceil functions
