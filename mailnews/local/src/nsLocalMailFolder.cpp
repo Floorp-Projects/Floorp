@@ -151,18 +151,23 @@ nsresult
 nsMsgLocalMailFolder::CreateSubFolders(nsFileSpec &path)
 {
 	nsresult rv = NS_OK;
-	nsAutoString currentFolderName;
+	nsAutoString currentFolderNameStr;
 	nsIMsgFolder *child;
-
+	char *folderName;
 	for (nsDirectoryIterator dir(path); dir.Exists(); dir++) {
 		nsFileSpec currentFolderPath = (nsFileSpec&)dir;
 
-		currentFolderName = currentFolderPath.GetLeafName();
-		if (nsShouldIgnoreFile(currentFolderName))
+		folderName = currentFolderPath.GetLeafName();
+		currentFolderNameStr = folderName;
+		if (nsShouldIgnoreFile(currentFolderNameStr))
+		{
+			PL_strfree(folderName);
 			continue;
+		}
 
-		AddSubfolder(currentFolderName, &child);
+		AddSubfolder(currentFolderNameStr, &child);
 		NS_IF_RELEASE(child);
+		PL_strfree(folderName);
     }
 	return rv;
 }
