@@ -50,6 +50,7 @@ extern void IL_SetCacheSize(uint32 new_size);
 #include "plstr.h"
 #include "shist.h"
 #include "secnav.h"
+#include "timing.h"
 
 /* exported error ints */
 extern int MK_OUT_OF_MEMORY;
@@ -1242,6 +1243,7 @@ NET_FindURLInMemCache(URL_Struct * URL_s, MWContext *ctxt)
 		XP_ListAddObject(net_MemoryCacheList, found_cache_obj);
 		net_cache_adding_object--; /* semaphore */
 
+        TIMING_MESSAGE(("cache,%s,in memory", URL_s->address));
 		TRACEMSG(("Cached copy is valid. returning method"));
 
 		return(MEMORY_CACHE_TYPE_URL);

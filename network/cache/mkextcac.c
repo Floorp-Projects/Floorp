@@ -35,6 +35,7 @@
 #include "mkextcac.h"
 #include "prmem.h"
 #include "plstr.h"
+#include "timing.h"
 
 /* For 197 java hookup */
 #include "jri.h"
@@ -1267,6 +1268,7 @@ CACHE_FindURLInCache(URL_Struct *URL_s, MWContext *ctxt)
 	URL_s->security_on             = found_cache_obj->security_on;
     URL_s->sec_info = SECNAV_CopySSLSocketStatus(found_cache_obj->sec_info);
 
+    TIMING_MESSAGE(("cache,%s,on disk", URL_s->address));
 	TRACEMSG(("Cached copy is valid. returning method"));
 
 	TRACEMSG(("Using Disk Copy"));

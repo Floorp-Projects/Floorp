@@ -1,4 +1,4 @@
-/* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+/* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  *
  * The contents of this file are subject to the Netscape Public License
  * Version 1.0 (the "NPL"); you may not use this file except in
@@ -2046,10 +2046,6 @@ NET_GetURL (URL_Struct *URL_s,
    TRACEMSG(("with method: %d, and post headers: %s", URL_s->method,
             URL_s->post_headers ? URL_s->post_headers : "none"));
 
-    TIMING_MSG(("netlib: NET_GetURL: URL=\"%s\" FO=%d method=%d post_headers=\"%s\"",
-                 URL_s->address, output_format, URL_s->method,
-                 URL_s->post_headers ? URL_s->post_headers : ""));
-
 	/* if this URL is for prefetching, put it on the wait queue until
 	 * everything else is done
 	 */
@@ -2471,6 +2467,8 @@ NET_GetURL (URL_Struct *URL_s,
 
 	if (!cache_method)
 	  {
+        TIMING_MESSAGE(("cache,%s,not found", URL_s->address));
+
 		/* cache testing stuff */
 		if(NET_IsCacheTraceOn())
 		  {
@@ -2537,10 +2535,12 @@ NET_GetURL (URL_Struct *URL_s,
 	    URL_s->memory_copy = 0;
 	    cache_method = 0;
 	    TRACEMSG(("Getting the rest of a partial cache file"));
+        TIMING_MESSAGE(("cache,%s,partial", URL_s->address));
 		  }
 	else if (URL_s->force_reload != NET_DONT_RELOAD)
 	  {
 	    TRACEMSG(("Force reload flag set.  Checking server to see if modified"));
+        TIMING_MESSAGE(("cache,%s,forced reload", URL_s->address));
 	    /* cache testing stuff */
 	    if(NET_IsCacheTraceOn())
 	      {
@@ -2573,6 +2573,8 @@ NET_GetURL (URL_Struct *URL_s,
 		URL_s->memory_copy = 0;
 		URL_s->expires = 0;  /* remove cache reference */
 		cache_method = 0;
+
+        TIMING_MESSAGE(("cache,%s,expired", URL_s->address));
 
 		/* cache testing stuff */
 		if(NET_IsCacheTraceOn())

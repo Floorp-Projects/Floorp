@@ -19,8 +19,10 @@
 #include "mktrace.h"
 #include "timing.h"
 #include "prprf.h"
+#include "plstr.h"
 #include "prlog.h"
 #include "prtime.h"
+#include "plhash.h"
 
 /* If you want to trace netlib, set this to 1, or use CTRL-ALT-T
  * stroke (preferred method) to toggle it on and off */
@@ -185,3 +187,209 @@ TimingIsEnabled(void)
     return (gTimingLog->level == PR_LOG_NONE) ? PR_FALSE : PR_TRUE;
 }
 
+
+
+/*************************************************************************
+ *
+ * Clocking functions
+ *
+ */
+
+/*
+ * Allocation routines
+ */
+
+static PR_CALLBACK void*
+_timingClockAllocTable(void* pool, PRSize size)
+{
+    return PR_MALLOC(size);
+}
+
+static PR_CALLBACK void
+_timingClockFreeTable(void* pool, void* item)
+{
+    PR_DELETE(item);
+}
+
+static PR_CALLBACK PLHashEntry*
+_timingClockAllocEntry(void* pool, const void* key)
+{
+    return PR_NEW(PLHashEntry);
+}
+
+static PR_CALLBACK void
+_timingClockFreeEntry(void* pool, PLHashEntry* he, PRUintn flag)
+{
+    if (flag == HT_FREE_VALUE) {
+        if (he->value)
+            PR_DELETE(he->value);
+    }
+    else if (flag == HT_FREE_ENTRY) {
+        if (he->key)
+            PL_strfree((char*) he->key);
+        if (he->value)
+            PR_DELETE(he->value);
+        PR_DELETE(he);
+    }
+}
+
+
+static PLHashAllocOps _timingClockAllocOps = {
+    _timingClockAllocTable,
+    _timingClockFreeTable,
+    _timingClockAllocEntry,
+    _timingClockFreeEntry
+};
+
+
+/**
+ * The initial size of the clock table
+ */
+#define CLOCK_TABLE_INIT_SIZE 13
+
+
+/**
+ * The clock table.
+ */
+static PLHashTable *_timingClockTable = NULL;
+
+
+/**
+ * Ensure that the clock table exists and is initialized.
+ */
+PRIVATE PRBool
+EnsureTimingTable()
+{
+    if (! _timingClockTable) {
+        _timingClockTable =
+            PL_NewHashTable(CLOCK_TABLE_INIT_SIZE,
+                            PL_HashString,
+                            PL_CompareStrings,
+                            PL_CompareValues,
+                            &_timingClockAllocOps,
+                            NULL);
+    }
+
+    return (_timingClockTable != NULL);
+}
+
+
+/**
+ * Start a clock
+ */
+PUBLIC void
+TimingStartClock(const char* clock)
+{
+    char* key = NULL;
+    PRTime* value = NULL;
+
+    if (! TimingIsEnabled())
+        return;
+
+    if (! EnsureTimingTable())
+        return;
+
+    if (PL_HashTableLookup(_timingClockTable, clock) != NULL)
+        /* The clock is already running... */
+        return;
+
+    if ((key = PL_strdup(clock)) == NULL)
+        goto error;
+
+    if ((value = PR_NEW(PRTime)) == NULL)
+        goto error;
+
+    *value = PR_Now();
+    PL_HashTableAdd(_timingClockTable, key, value);
+    return;
+
+error:
+    if (key)
+        PL_strfree(key);
+    PR_DELETE(value);
+}
+
+
+PUBLIC PRBool
+TimingStopClock(PRTime* result, const char* clock)
+{
+    PRTime* start;
+    PRTime  stop = PR_Now();
+
+    if (! TimingIsEnabled())
+        return PR_FALSE;
+
+    if (! EnsureTimingTable())
+        return PR_FALSE;
+
+    if ((start = PL_HashTableLookup(_timingClockTable, clock)) != NULL) {
+        if (result != NULL)
+            LL_SUB(*result, stop, *start);
+        PL_HashTableRemove(_timingClockTable, clock);
+        return PR_TRUE;
+    } else {
+        *result = LL_ZERO;
+        return PR_FALSE;
+    }
+}
+
+
+PUBLIC PRBool
+TimingIsClockRunning(const char* clock)
+{
+     if (! TimingIsEnabled())
+        return PR_FALSE;
+
+    if (! EnsureTimingTable())
+        return PR_FALSE;
+
+    if (PL_HashTableLookup(_timingClockTable, clock) != NULL) {
+        return PR_TRUE;
+    } else {
+        return PR_FALSE;
+    }
+}
+
+
+PUBLIC char*
+TimingElapsedTimeToString(PRTime time, char* buffer, PRUint32 size)
+{
+    PRTime tmUSec;
+    PRTime tmSec;
+    PRTime tmMin;
+
+    {
+        PRTime n;
+        LL_UI2L(n, 1000000L);
+        LL_MOD(tmUSec, time, n);
+        LL_DIV(time, time, n);
+    }
+
+    {
+        PRTime n;
+        LL_UI2L(n, 60L);
+        LL_MOD(tmSec, time, n);
+        LL_DIV(time, time, n);
+
+        LL_MOD(tmMin, time, n);
+        LL_DIV(time, time, n);
+    }
+
+    {
+        PRUint32 nHours;
+        PRUint32 nMin;
+        PRUint32 nSec;
+        PRUint32 nUSec;
+
+        LL_L2UI(nHours, time);
+        LL_L2UI(nMin,   tmMin);
+        LL_L2UI(nSec,   tmSec);
+        LL_L2UI(nUSec,  tmUSec);
+
+        /* Print out "HHMMSS.UUUUUU" */
+        PR_snprintf(buffer, size, "%02d%02d%02d.%06d",
+                    nHours, nMin, nSec, nUSec);
+    }
+
+    return buffer;
+}
