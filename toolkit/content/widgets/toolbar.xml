@@ -94,5 +94,6 @@
 
   <binding id="toolbarseparator" extends="chrome://global/content/widgets/toolbar.xml#toolbar-base"/>
 
+  <binding id="toolbarpaletteitem" extends="xul:button"/>
 </bindings>          
 
