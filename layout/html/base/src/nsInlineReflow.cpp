@@ -736,15 +736,35 @@ nsInlineReflow::VerticalAlignFrames(nsRect& aLineBox,
         yTop = -fontParam - pfd->mAscent;
         break;
       case NS_STYLE_VERTICAL_ALIGN_TOP:
-        if (height > maxTopHeight) {
-          maxTopHeight = height;
+        if (mOuterIsBlock) {
+          if (height > maxTopHeight) {
+            maxTopHeight = height;
+          }
+          continue;
         }
-        continue;
+        else {
+          // When parent is not the block, baseline align top/bottom
+          // frames initially. The block will do a post-process after
+          // the line-height is determined to place these frames.
+          yTop = -pfd->mAscent;
+          mLineLayout.RecordPass2VAlignFrame();
+        }
+        break;
       case NS_STYLE_VERTICAL_ALIGN_BOTTOM:
-        if (height > maxBottomHeight) {
-          maxBottomHeight = height;
+        if (mOuterIsBlock) {
+          if (height > maxBottomHeight) {
+            maxBottomHeight = height;
+          }
+          continue;
         }
-        continue;
+        else {
+          // When parent is not the block, baseline align top/bottom
+          // frames initially. The block will do a post-process after
+          // the line-height is determined to place these frames.
+          yTop = -pfd->mAscent;
+          mLineLayout.RecordPass2VAlignFrame();
+        }
+        break;
       case NS_STYLE_VERTICAL_ALIGN_MIDDLE:
         // Align the midpoint of the frame with 1/2 the parents x-height
         fm->GetXHeight(fontParam);
@@ -873,9 +893,11 @@ nsInlineReflow::VerticalAlignFrames(nsRect& aLineBox,
         // XXX negative top margins on these will do weird things, maybe?
         pfd->mBounds.y = mTopEdge + pfd->mMargin.top;
         break;
+
       case NS_STYLE_VERTICAL_ALIGN_BOTTOM:
         pfd->mBounds.y = mTopEdge + lineHeight - pfd->mBounds.height;
         break;
+
       default:
         pfd->mBounds.y = topEdge + maxAscent + pfd->mBounds.y +
           pfd->mMargin.top;
@@ -887,6 +909,18 @@ nsInlineReflow::VerticalAlignFrames(nsRect& aLineBox,
         pfd->mMargin.top;
     }
     frame->SetRect(pfd->mBounds);
+
+    if (mOuterIsBlock && mLineLayout.NeedPass2VAlign()) {
+      // Perform pass2 vertical alignment for top/bottom aligned
+      // frames that are not our direct descendants.
+      nsIHTMLReflow* ihr;
+      nsresult rv = frame->QueryInterface(kIHTMLReflowIID, (void**)&ihr);
+      if (NS_SUCCEEDED(rv)) {
+        nscoord distanceFromTopEdge =
+          (pfd->mBounds.y - pfd->mMargin.top) - mTopEdge;
+        ihr->VerticalAlignFrames(lineHeight, distanceFromTopEdge);
+      }
+    }
   }
   aMaxAscent = maxAscent;
   aMaxDescent = lineHeight - maxAscent;
