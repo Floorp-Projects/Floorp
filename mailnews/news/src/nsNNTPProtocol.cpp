@@ -678,13 +678,16 @@ nsresult nsNNTPProtocol::LoadUrl(nsIURI * aURL, nsISupports * aConsumer)
       NS_WITH_SERVICE(nsIMsgAccountManager, accountManager, NS_MSGACCOUNTMANAGER_PROGID, &rv);
       if (NS_FAILED(rv)) goto FAIL;
 
-      // find the news host
+      // find the incoming server
       nsCOMPtr<nsIMsgIncomingServer> server;
       rv = accountManager->FindServer(m_userName,
                                     m_hostName,
                                     "nntp",
                                     getter_AddRefs(server));
-      if (NS_FAILED(rv)) goto FAIL;
+      if (NS_FAILED(rv) || !server) goto FAIL;
+
+	  m_nntpServer = do_QueryInterface(server, &rv);
+	  if (NS_FAILED(rv) || !m_nntpServer) goto FAIL;
 
       PRBool isSecure = PR_FALSE;
       rv = server->GetIsSecure(&isSecure);
@@ -800,17 +803,19 @@ nsresult nsNNTPProtocol::LoadUrl(nsIURI * aURL, nsISupports * aConsumer)
 		 news://HOST/GROUP
 	   */
 
-      nsXPIDLCString newsgroupURI;
-      rv = aURL->GetSpec(getter_Copies(newsgroupURI));
-      if (NS_FAILED(rv)) return(rv);
-    
-      rv = InitializeNewsFolderFromUri((const char *)newsgroupURI);
-      if (NS_FAILED(rv)) return(rv);
-   
-	  if (PL_strchr (group, '*'))
+	  if (PL_strchr (group, '*')) {
 		m_typeWanted = LIST_WANTED;
-	  else
+	  }
+	  else {
+		nsXPIDLCString newsgroupURI;
+		rv = aURL->GetSpec(getter_Copies(newsgroupURI));
+		if (NS_FAILED(rv)) return(rv);
+    
+		rv = InitializeNewsFolderFromUri((const char *)newsgroupURI);
+		if (NS_FAILED(rv)) return(rv);
+
 		m_typeWanted = GROUP_WANTED;
+	  }
 	}
   else
 	{
@@ -2824,6 +2829,8 @@ PRInt32 nsNNTPProtocol::BeginReadNewsList()
 	PRInt32 status = 0;
 #ifdef UNREADY_CODE
 	NET_Progress(ce->window_id, XP_GetString(XP_PROGRESS_RECEIVE_NEWSGROUP));
+#else
+	printf("progress, receiving list of newsgroups...\n");
 #endif
 	 
     return(status);
@@ -2835,6 +2842,7 @@ PRInt32 nsNNTPProtocol::BeginReadNewsList()
 
 PRInt32 nsNNTPProtocol::ReadNewsList(nsIInputStream * inputStream, PRUint32 length)
 {
+	nsresult rv;
     char * line;
     char * description;
     int i=0;
@@ -2895,10 +2903,21 @@ PRInt32 nsNNTPProtocol::ReadNewsList(nsIInputStream * inputStream, PRUint32 leng
 
     line[i] = 0; /* terminate group name */
 
-	/* store all the group names 
-	 */
+	/* store all the group names */
+#if 0
     m_newsHost->AddNewNewsgroup(line, 0, 0, "", PR_FALSE);
+#else
+	NS_ASSERTION(m_nntpServer, "no nntp incoming server");
+	if (m_nntpServer) {
+		rv = m_nntpServer->AddNewNewsgroup(line, "false", "0");
+	}
+	else {
+		rv = NS_ERROR_FAILURE;
+	}
+#endif
 	PR_FREEIF(line);
+
+	if (NS_FAILED(rv)) status = -1;
     return(status);
 }
 

@@ -33,6 +33,7 @@
 #include "nsIMsgWindow.h"
 #include "nsINntpUrl.h"
 #include "nsICmdLineHandler.h"
+#include "nsCOMPtr.h"
 
 class nsIURI;
 class nsIUrlListener;

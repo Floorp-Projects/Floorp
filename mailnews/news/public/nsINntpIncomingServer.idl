@@ -46,4 +46,8 @@ interface nsINntpIncomingServer : nsISupports {
     void writeNewsrcFile();
 
     attribute boolean newsrcHasChanged;
+
+	/* used when populating the subscribe dialog */
+	void addNewNewsgroup(in string name, in string state, in string count);
+	void addSubscribedNewsgroups();
 };

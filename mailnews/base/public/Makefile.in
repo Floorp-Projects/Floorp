@@ -75,8 +75,6 @@ XPIDLSRCS	= \
 		nsIMsgStringService.idl		\
 		nsIMsgViewNavigationService.idl \
 		nsIMsgPrintEngine.idl \
-		nsISubscribeDialogListener.idl \
-		nsISubscribeDialogMaster.idl \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk

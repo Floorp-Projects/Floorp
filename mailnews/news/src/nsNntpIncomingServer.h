@@ -34,37 +34,21 @@
 #include "plstr.h"
 #include "prprf.h"
 
-#if defined(XP_WIN)
-#define HAVE_REAL_SUBSCRIBE 1
-#endif
-
-#ifdef HAVE_REAL_SUBSCRIBE
-#include "nsISubscribeDialogMaster.h"
-#include "nsISubscribeDialogListener.h"
-#endif
-
 /* get some implementation from nsMsgIncomingServer */
-#ifdef HAVE_REAL_SUBSCRIBE
-class nsNntpIncomingServer : public nsMsgIncomingServer,
-                             public nsINntpIncomingServer,
-							 public nsISubscribeDialogMaster
-#else
 class nsNntpIncomingServer : public nsMsgIncomingServer,
                              public nsINntpIncomingServer
-#endif
-                             
+							 
 {
 public:
     NS_DECL_ISUPPORTS_INHERITED
     NS_DECL_NSINNTPINCOMINGSERVER
-#ifdef HAVE_REAL_SUBSCRIBE
-	NS_DECL_NSISUBSCRIBEDIALOGMASTER
-#endif
+
     nsNntpIncomingServer();
     virtual ~nsNntpIncomingServer();
     
     NS_IMETHOD GetLocalStoreType(char * *type);
     NS_IMETHOD CloseCachedConnections();
+	
 
 private:
     PRBool mNewsrcHasChanged;

@@ -68,7 +68,6 @@ static NS_DEFINE_CID(kCNetSupportDialogCID, NS_NETSUPPORTDIALOG_CID);
 static NS_DEFINE_CID(kCPrefServiceCID, NS_PREF_CID); 
 static NS_DEFINE_CID(kFileLocatorCID,       NS_FILELOCATOR_CID);
 static NS_DEFINE_CID(kMsgAccountManagerCID, NS_MSGACCOUNTMANAGER_CID);
-
 static NS_DEFINE_IID(kIFileLocatorIID,      NS_IFILELOCATOR_IID);
                     
 nsNntpService::nsNntpService()
@@ -79,7 +78,7 @@ nsNntpService::nsNntpService()
 
 nsNntpService::~nsNntpService()
 {
-  // do nothing
+	// do nothing
 }
 
 NS_IMPL_THREADSAFE_ADDREF(nsNntpService);
@@ -90,7 +89,7 @@ NS_IMPL_QUERY_INTERFACE5(nsNntpService,
                          nsIMsgMessageService,
                          nsIProtocolHandler,
                          nsIMsgProtocolInfo,
-                         nsICmdLineHandler) 
+                         nsICmdLineHandler)
 
 ////////////////////////////////////////////////////////////////////////////////////////
 // nsIMsgMessageService support
@@ -138,7 +137,7 @@ nsNntpService::SaveMessageToDisk(const char *aMessageURI,
             msgUrl->SetCanonicalLineEnding(canonicalLineEnding);
         }   
     
-        RunNewsUrl(myuri, nsnull, nsnull);
+        rv = RunNewsUrl(myuri, nsnull, nsnull);
     }
 
     if (aURL)
@@ -811,7 +810,7 @@ nsresult nsNntpService::ConstructNntpUrl(const char * urlString, const char * ne
   
   nsCOMPtr <nsIMsgMailNewsUrl> mailnewsurl = do_QueryInterface(nntpUrl);
   // don't worry this cast is really okay...there'a bug in XPIDL compiler that is preventing
-  // a "cont char *" in paramemter for uri SetSpec...
+  // a "const char *" in paramemter for uri SetSpec...
   mailnewsurl->SetSpec((char *) urlString);
 
   if (newsgroupName != "") {
@@ -863,9 +862,7 @@ nsNntpService::RunNewsUrl(nsIURI * aUri, nsIMsgWindow *aMsgWindow, nsISupports *
 
 NS_IMETHODIMP nsNntpService::GetNewNews(nsINntpIncomingServer *nntpServer, const char *uri, nsIUrlListener * aUrlListener, nsIMsgWindow *aMsgWindow, nsIURI **_retval)
 {
-  if (!uri) {
-	return NS_ERROR_NULL_POINTER;
-  }
+  if (!uri) return NS_ERROR_NULL_POINTER;
 
 #ifdef DEBUG_NEWS
   printf("nsNntpService::GetNewNews(%s)\n", uri);
@@ -1166,6 +1163,42 @@ nsresult nsNntpService::DisplayMessageForPrinting(const char* aMessageURI, nsISu
   nsresult rv = DisplayMessage(aMessageURI, aDisplayConsumer, aMsgWindow, aUrlListener, aURL);
   mPrintingOperation = PR_FALSE;
   return rv;
+}
+
+NS_IMETHODIMP 
+nsNntpService::BuildSubscribeDatasource(nsINntpIncomingServer *aNntpServer)
+{
+	nsresult rv;
+#ifdef DEBUG_sspitzer
+	printf("in BuildSubscribeDatasource()\n");
+#endif
+	if (!aNntpServer) return NS_ERROR_NULL_POINTER;
+
+	nsCOMPtr<nsIURI> aUrl;
+	nsCAutoString uriStr;
+	uriStr = "news://";
+	nsCOMPtr <nsIMsgIncomingServer> server = do_QueryInterface(aNntpServer);
+	if (!server) return NS_ERROR_FAILURE;
+
+	nsXPIDLCString hostname;
+	rv = server->GetHostName(getter_Copies(hostname));
+	if (NS_FAILED(rv)) return rv;
+
+	uriStr += (const char *)hostname;
+	uriStr += "/*";
+		
+	rv = ConstructNntpUrl((const char *)uriStr, "", nsMsgKey_None, nsnull, getter_AddRefs(aUrl));
+	if (NS_FAILED(rv)) return rv;
+
+	// first add the newsgroups we are subscribed to.
+	rv = aNntpServer->AddSubscribedNewsgroups();
+	if (NS_FAILED(rv)) return rv;
+
+	// now add the rest
+    rv = RunNewsUrl(aUrl, nsnull, nsnull);  
+	if (NS_FAILED(rv)) return rv;
+
+	return NS_OK;
 }
 
 CMDLINEHANDLER_IMPL(nsNntpService,"-news","general.startup.news","chrome://messenger/content/","Start with news.",NS_NEWSSTARTUPHANDLER_PROGID,"News Cmd Line Handler", PR_FALSE,"", PR_TRUE)

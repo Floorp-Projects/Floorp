@@ -30,7 +30,11 @@
 #include "nsIFolder.h"
 #include "nsIFileSpec.h"
 #include "nsFileStream.h"
+#include "nsCOMPtr.h"
+#include "nsINntpService.h"
 
+#include "nsIRDFService.h"
+#include "nsRDFCID.h"
 
 #ifdef DEBUG_seth
 #define DO_HASHING_OF_HOSTNAME 1
@@ -50,20 +54,13 @@
 #endif /* XP_UNIX || XP_BEOS */
 
 static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);                            
-static NS_DEFINE_IID(kIFileLocatorIID,      NS_IFILELOCATOR_IID);
-static NS_DEFINE_CID(kFileLocatorCID,       NS_FILELOCATOR_CID);
+static NS_DEFINE_IID(kIFileLocatorIID, NS_IFILELOCATOR_IID);
+static NS_DEFINE_CID(kFileLocatorCID, NS_FILELOCATOR_CID);
+static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
 
-#ifdef HAVE_REAL_SUBSCRIBE
-NS_IMPL_ISUPPORTS_INHERITED2(nsNntpIncomingServer,
-                            nsMsgIncomingServer,
-                            nsINntpIncomingServer,
-							nsISubscribeDialogMaster);
-#else
 NS_IMPL_ISUPPORTS_INHERITED(nsNntpIncomingServer,
                             nsMsgIncomingServer,
                             nsINntpIncomingServer);
-#endif
-
 
 nsNntpIncomingServer::nsNntpIncomingServer()
 {    
@@ -72,9 +69,13 @@ nsNntpIncomingServer::nsNntpIncomingServer()
     mNewsrcHasChanged = PR_FALSE;
 }
 
+
+
 nsNntpIncomingServer::~nsNntpIncomingServer()
 {
-    CloseCachedConnections();
+	nsresult rv;
+    rv = CloseCachedConnections();
+	NS_ASSERTION(NS_SUCCEEDED(rv), "CloseCachedConnections failed");
 }
 
 NS_IMPL_SERVERPREF_BOOL(nsNntpIncomingServer, NotifyOn, "notify.on");
@@ -304,23 +305,124 @@ nsNntpIncomingServer::CloseCachedConnections()
     return WriteNewsrcFile();
 }
 
-#ifdef HAVE_REAL_SUBSCRIBE
 NS_IMETHODIMP
-nsNntpIncomingServer::PopulateSubscribeDialog(nsISubscribeDialogListener *listener)
+nsNntpIncomingServer::AddSubscribedNewsgroups()
 {
 	nsresult rv;
-	PRInt32 i;
-	if (!listener) return NS_ERROR_FAILURE;
+    nsCOMPtr<nsIEnumerator> subFolders;
+    nsCOMPtr<nsIFolder> rootFolder;
+    nsCOMPtr<nsIFolder> currFolder;
+ 
+    rv = GetRootFolder(getter_AddRefs(rootFolder));
+    if (NS_FAILED(rv)) return rv;
 
-	nsAutoString name;
+	rv = rootFolder->GetSubFolders(getter_AddRefs(subFolders));
+    if (NS_FAILED(rv)) return rv;
 
-	// simple test code for now.
-	for (i=0;i<1000;i++) {
-		name = "";
-		name.Append(i);
-		rv = listener->AddItem(name.GetUnicode(),PR_FALSE,i+2);
-		if (NS_FAILED(rv)) return rv;
-	}
+    nsAdapterEnumerator *simpleEnumerator = new nsAdapterEnumerator(subFolders);
+    if (simpleEnumerator == nsnull) return NS_ERROR_OUT_OF_MEMORY;
+
+    PRBool moreFolders;
+        
+    while (NS_SUCCEEDED(simpleEnumerator->HasMoreElements(&moreFolders)) && moreFolders) {
+        nsCOMPtr<nsISupports> child;
+        rv = simpleEnumerator->GetNext(getter_AddRefs(child));
+        if (NS_SUCCEEDED(rv) && child) {
+            currFolder = do_QueryInterface(child, &rv);
+            if (NS_SUCCEEDED(rv) && currFolder) {
+				nsXPIDLString name;
+				rv = currFolder->GetName(getter_Copies(name));
+				if (NS_SUCCEEDED(rv) && name) {
+					nsCAutoString asciiName(name);
+					rv = AddNewNewsgroup((const char *)asciiName,"true","0");
+				}
+            }
+        }
+    }
+
+    delete simpleEnumerator;
 	return NS_OK;
 }
-#endif 
+
+NS_IMETHODIMP
+nsNntpIncomingServer::AddNewNewsgroup(const char *aName, const char *aState, const char *aCount)
+{
+	nsresult rv;
+
+	NS_ASSERTION(aName,"attempting to add newsgroup with no name");
+	if (!aName) return NS_ERROR_FAILURE;
+
+#ifdef DEBUG_sspitzer
+	printf("AddNewNewsgroup(%s)\n",aName);
+#endif
+	nsXPIDLCString hostname;
+
+	rv = GetHostName(getter_Copies(hostname));
+	if (NS_FAILED(rv)) return rv;
+
+	nsCAutoString serverUri;
+	nsCAutoString groupUri;
+
+	serverUri = "news://";
+	serverUri += (const char *)hostname;
+
+	groupUri = serverUri;
+	groupUri += "/";
+	groupUri += aName;
+
+	nsCOMPtr <nsIRDFService> rdfService = do_GetService(kRDFServiceCID, &rv);
+	if (NS_FAILED(rv)) return rv;
+	if (!rdfService) return NS_ERROR_FAILURE;
+
+	nsCOMPtr<nsIRDFResource> newsgroupResource;
+	rv = rdfService->GetResource((const char *) groupUri, getter_AddRefs(newsgroupResource));
+	
+	nsCOMPtr<nsIRDFLiteral> nameLiteral;
+	nsAutoString nameString(aName);
+	rv = rdfService->GetLiteral(nameString.GetUnicode(), getter_AddRefs(nameLiteral));
+	if(NS_FAILED(rv)) return rv;
+	nsCOMPtr<nsIRDFResource> kNC_Name;
+	rv = rdfService->GetResource("http://home.netscape.com/NC-rdf#Name", getter_AddRefs(kNC_Name));
+	if(NS_FAILED(rv)) return rv;
+
+	nsCOMPtr<nsIRDFLiteral> subscribedLiteral;
+	nsAutoString subscribedString(aState);
+	rv = rdfService->GetLiteral(subscribedString.GetUnicode(), getter_AddRefs(subscribedLiteral));
+	if(NS_FAILED(rv)) return rv;
+	nsCOMPtr<nsIRDFResource> kNC_Subscribed;
+	rv = rdfService->GetResource("http://home.netscape.com/NC-rdf#Subscribed", getter_AddRefs(kNC_Subscribed));
+	if(NS_FAILED(rv)) return rv;
+
+	nsCOMPtr<nsIRDFLiteral> countLiteral;
+	nsAutoString countString(aCount);
+	rv = rdfService->GetLiteral(countString.GetUnicode(), getter_AddRefs(countLiteral));
+	if(NS_FAILED(rv)) return rv;
+	nsCOMPtr<nsIRDFResource> kNC_Count;
+	rv = rdfService->GetResource("http://home.netscape.com/NC-rdf#Count", getter_AddRefs(kNC_Count));
+	if(NS_FAILED(rv)) return rv;
+
+	nsCOMPtr<nsIRDFDataSource> ds;
+	rv = rdfService->GetDataSource("rdf:subscribe",getter_AddRefs(ds));
+	if(NS_FAILED(rv)) return rv;
+	if (!ds) return NS_ERROR_FAILURE;
+
+	rv = ds->Assert(newsgroupResource, kNC_Name, nameLiteral, PR_TRUE);
+	if(NS_FAILED(rv)) return rv;
+	rv = ds->Assert(newsgroupResource, kNC_Subscribed, subscribedLiteral, PR_TRUE);
+	if(NS_FAILED(rv)) return rv;
+	rv = ds->Assert(newsgroupResource, kNC_Count, countLiteral, PR_TRUE);
+	if(NS_FAILED(rv)) return rv;
+
+	nsCOMPtr<nsIRDFResource> kNC_Child;
+	rv = rdfService->GetResource("http://home.netscape.com/NC-rdf#child", getter_AddRefs(kNC_Child));
+	if(NS_FAILED(rv)) return rv;
+
+	nsCOMPtr<nsIRDFResource> kServer;
+	rv = rdfService->GetResource((const char *)serverUri, getter_AddRefs(kServer));
+	if(NS_FAILED(rv)) return rv;
+	
+	rv = ds->Assert(kServer, kNC_Child, newsgroupResource, PR_TRUE);
+	if(NS_FAILED(rv)) return rv;
+
+	return NS_OK;
+}

@@ -73,6 +73,7 @@
 #include "nsMsgViewNavigationService.h"
 
 #include "nsMsgServiceProvider.h"
+#include "nsSubscribeDataSource.h"
 
 #include "nsMsgPrintEngine.h"
 
@@ -134,6 +135,9 @@ static NS_DEFINE_CID(kMsgViewNavigationServiceCID, NS_MSGVIEWNAVIGATIONSERVICE_C
 //MsgServiceProviderService
 static NS_DEFINE_CID(kMsgServiceProviderServiceCID, NS_MSGSERVICEPROVIDERSERVICE_CID);
 
+//SubscribeDataSource
+static NS_DEFINE_CID(kSubscribeDataSourceCID, NS_SUBSCRIBEDATASOURCE_CID);
+
 // Print Engine
 static NS_DEFINE_CID(kMsgPrintEngineCID, NS_MSG_PRINTENGINE_CID);
 
@@ -161,6 +165,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsMessageView,Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsMsgWindow,Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsMsgViewNavigationService,Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsMsgServiceProviderService, Init);
+NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsSubscribeDataSource, Init);
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsMsgPrintEngine, Init)
 // Module implementation for the sample library
 class nsMsgBaseModule : public nsIModule
@@ -202,6 +207,7 @@ protected:
     nsCOMPtr<nsIGenericFactory> mMsgWindowFactory;
     nsCOMPtr<nsIGenericFactory> mMsgViewNavigationServiceFactory;
     nsCOMPtr<nsIGenericFactory> mMsgServiceProviderServiceFactory;
+    nsCOMPtr<nsIGenericFactory> mSubscribeDataSourceFactory;
     nsCOMPtr<nsIGenericFactory> mMsgPrintEngineFactory;
 };
 
@@ -254,6 +260,7 @@ void nsMsgBaseModule::Shutdown()
     mMsgWindowFactory = null_nsCOMPtr();
     mMsgViewNavigationServiceFactory = null_nsCOMPtr();
     mMsgServiceProviderServiceFactory = null_nsCOMPtr();
+    mSubscribeDataSourceFactory = null_nsCOMPtr();
 }
 
 // Create a factory object for creating instances of aClass.
@@ -415,6 +422,12 @@ NS_IMETHODIMP nsMsgBaseModule::GetClassObject(nsIComponentManager *aCompMgr,
             rv = NS_NewGenericFactory(getter_AddRefs(mMsgServiceProviderServiceFactory), &nsMsgServiceProviderServiceConstructor);
         fact = mMsgServiceProviderServiceFactory;
     }
+    else if (aClass.Equals(kSubscribeDataSourceCID))
+    {
+        if (!mSubscribeDataSourceFactory)
+            rv = NS_NewGenericFactory(getter_AddRefs(mSubscribeDataSourceFactory), &nsSubscribeDataSourceConstructor);
+        fact = mSubscribeDataSourceFactory;
+    }
     else if (aClass.Equals(kMsgPrintEngineCID))
     {
         if (!mMsgPrintEngineFactory)
@@ -488,7 +501,9 @@ static Components gComponents[] = {
     { "Mail/News Print Engine", &kMsgPrintEngineCID,
       NS_MSGPRINTENGINE_PROGID},
     { "Mail/News Service Provider Service", &kMsgServiceProviderServiceCID,
-      NS_MSGSERVICEPROVIDERSERVICE_PROGID}
+      NS_MSGSERVICEPROVIDERSERVICE_PROGID},
+    { "Mail/News Subscribe Data Source", &kSubscribeDataSourceCID,
+      NS_SUBSCRIBEDATASOURCE_PROGID}
 
 };
 
