@@ -34,11 +34,8 @@ XPIDLSRCS= \
 		nsINNTPNewsgroupList.idl \
 		nsINntpIncomingServer.idl \
 		nsINntpService.idl \
-		$(NULL)
-
-EXPORTS= \
-		nsINNTPNewsgroupPost.h	\
-		nsINntpUrl.h	\
+		nsINNTPNewsgroupPost.idl \
+		nsINntpUrl.idl	\
 		$(NULL)
 
 include $(topsrcdir)/config/config.mk
