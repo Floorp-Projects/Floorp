@@ -161,9 +161,11 @@ lds(class nsLDAPChannel *chan, const char *url)
 	switch (returnCode) {
 	case -1: // something went wrong
 	    (void)myConnection->GetErrorString(&errString);
+#ifdef DEBUG
 	    PR_fprintf(PR_STDERR,
 		    "\nmyOperation->Result() [URLSearch]: %s: errno=%d\n",
 		    errString, errno);
+#endif
 	    ldap_memfree(errString); 
 	    return NS_ERROR_FAILURE;
 	case 0: // nothing's been returned yet
@@ -192,7 +194,9 @@ lds(class nsLDAPChannel *chan, const char *url)
 		 rv = myMessage->NextAttribute(&attr)) {
 
 		if ( NS_FAILED(rv) ) {
+#ifdef DEBUG
 		    PR_fprintf(PR_STDERR, "failure getting attribute\n");
+#endif		    
 		    return rv;
 		}
 
@@ -206,8 +210,10 @@ lds(class nsLDAPChannel *chan, const char *url)
 		rv = myMessage->GetValues(attr, &attrCount, &vals);
 		if (NS_FAILED(rv)) {
 		    (void)myConnection->GetErrorString(&errString);
+#ifdef DEBUG
 		    PR_fprintf(PR_STDERR, "myMessage->GetValues: %s\n", 
 			       errString); 
+#endif
 		    return rv;;
 		}
 
@@ -227,10 +233,12 @@ lds(class nsLDAPChannel *chan, const char *url)
 	    (void)myConnection->GetLdErrno(NULL, NULL, &lden);
 	    if ( lden != LDAP_SUCCESS ) {
 
+#ifdef DEBUG
 		(void)myConnection->GetErrorString(&errString);
 		PR_fprintf(PR_STDERR, 
 			   "myMessage: error getting attribute: %s\n", 
 			   errString);
+#endif
 		return NS_ERROR_FAILURE;
 	    }
 
