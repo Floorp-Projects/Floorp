@@ -18,8 +18,8 @@
 
 #include "nsMacMessagePump.h"
 #include "nsWindow.h"
+#include <LPeriodical.h>
 #include "net.h"	//¥¥¥TEMPORARY
-
 
 #define IsUserWindow(wp) (wp && ((((WindowPeek)wp)->windowKind) >= userKind))
 
@@ -138,7 +138,7 @@ unsigned char	evtype;
 				}
 			}
 		else
-			{
+		    {
 			switch(theevent.what)
 				{
 				case nullEvent:
@@ -153,8 +153,10 @@ unsigned char	evtype;
 				}		
 			}
 			
-		if(mMessenger)
+		  if(mMessenger)
 			stillrunning = mMessenger->IsRunning();
+
+	      LPeriodical::DevoteTimeToRepeaters(theevent);
 		}
 
     //if (mDispatchListener)
