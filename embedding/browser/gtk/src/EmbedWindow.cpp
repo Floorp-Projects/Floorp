@@ -26,6 +26,8 @@
 #include "EmbedWindow.h"
 #include "EmbedPrivate.h"
 
+GtkWidget *EmbedWindow::sTipWindow = nsnull;
+
 EmbedWindow::EmbedWindow(void)
 {
   NS_INIT_REFCNT();
@@ -314,13 +316,67 @@ NS_IMETHODIMP
 EmbedWindow::OnShowTooltip(PRInt32 aXCoords, PRInt32 aYCoords,
 			   const PRUnichar *aTipText)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  
+  nsAutoString tipText ( aTipText );
+  const char* tipString = tipText.ToNewCString();
+
+  if (sTipWindow)
+    gtk_widget_destroy(sTipWindow);
+  
+  // get the root origin for this content window
+  nsCOMPtr<nsIWidget> mainWidget;
+  mBaseWindow->GetMainWidget(getter_AddRefs(mainWidget));
+  GdkWindow *window;
+  window = NS_STATIC_CAST(GdkWindow *,
+			  mainWidget->GetNativeData(NS_NATIVE_WINDOW));
+  gint root_x, root_y;
+  gdk_window_get_origin(window, &root_x, &root_y);
+
+  // XXX work around until I can get pink to figure out why
+  // tooltips vanish if they show up right at the origin of the
+  // cursor.
+  root_y += 10;
+  
+  sTipWindow = gtk_window_new(GTK_WINDOW_POPUP);
+  
+  // set up the popup window as a transient of the widget.
+  GtkWidget *toplevel_window;
+  toplevel_window = gtk_widget_get_toplevel(GTK_WIDGET(mOwner->mOwningWidget));
+  if (!GTK_WINDOW(toplevel_window)) {
+    NS_ERROR("no gtk window in hierarchy!\n");
+    return NS_ERROR_FAILURE;
+  }
+  gtk_window_set_transient_for(GTK_WINDOW(sTipWindow),
+			       GTK_WINDOW(toplevel_window));
+  
+  // realize the widget
+  gtk_widget_realize(sTipWindow);
+
+  // set up the label for the tooltip
+  GtkWidget *label = gtk_label_new(tipString);
+  // wrap automatically
+  gtk_label_set_line_wrap(GTK_LABEL(label), TRUE);
+  gtk_container_add(GTK_CONTAINER(sTipWindow), label);
+  // set the coords for the widget
+  gtk_widget_set_uposition(sTipWindow, aXCoords + root_x,
+			   aYCoords + root_y);
+
+  // and show it.
+  gtk_widget_show_all(sTipWindow);
+  gtk_widget_popup(sTipWindow, aXCoords + root_x, aYCoords + root_y);
+  
+  nsMemory::Free( (void*)tipString );
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 EmbedWindow::OnHideTooltip(void)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  if (sTipWindow)
+    gtk_widget_destroy(sTipWindow);
+  sTipWindow = NULL;
+  return NS_OK;
 }
 
 // nsIPrompt
