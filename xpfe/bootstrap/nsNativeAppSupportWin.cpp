@@ -94,11 +94,7 @@ NS_IMETHODIMP
 nsSplashScreenWin::Show() {
     // Spawn new thread to display splash screen.
     DWORD threadID = 0;
-#ifdef DEBUG_law
-    ThreadProc( this );
-#else
     CreateThread( 0, 0, (LPTHREAD_START_ROUTINE)ThreadProc, this, 0, &threadID );
-#endif
     return NS_OK;
 }
 
@@ -138,20 +134,11 @@ nsSplashScreenWin *nsSplashScreenWin::GetPointer( HWND dlg ) {
 }
 
 DWORD WINAPI nsSplashScreenWin::ThreadProc( LPVOID splashScreen ) {
-#ifdef DEBUG_law
-    HWND dlg = CreateDialogParam( GetModuleHandle( 0 ),
-                    MAKEINTRESOURCE( IDD_SPLASH ),
-                    HWND_DESKTOP,
-                    (DLGPROC)DialogProc,
-                    (LPARAM)splashScreen );
-    ShowWindow( dlg, SW_SHOW );
-#else
     DialogBoxParam( GetModuleHandle( 0 ),
                     MAKEINTRESOURCE( IDD_SPLASH ),
                     HWND_DESKTOP,
                     (DLGPROC)DialogProc,
                     (LPARAM)splashScreen );
-#endif
     return 0;
 }
 
