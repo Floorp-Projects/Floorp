@@ -183,18 +183,18 @@ nsCookieService::GetCookieStringFromHttp(nsIURI *aURL, nsIURI *aFirstURL, char *
 }
 
 NS_IMETHODIMP
-nsCookieService::SetCookieString(nsIURI *aURL, nsIPrompt* aPrompt, const char * aCookie) {
+nsCookieService::SetCookieString(nsIURI *aURL, nsIPrompt* aPrompt, const char * aCookie, nsIHttpChannel* aHttpChannel) {
   char *spec = NULL;
   nsresult result = aURL->GetSpec(&spec);
   NS_ASSERTION(result == NS_OK, "deal with this");
 
-  COOKIE_SetCookieString(spec, aPrompt, aCookie, mIOService);
+  COOKIE_SetCookieString(spec, aPrompt, aCookie, mIOService, aHttpChannel);
   nsCRT::free(spec);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsCookieService::SetCookieStringFromHttp(nsIURI *aURL, nsIURI *aFirstURL, nsIPrompt *aPrompter, const char *aCookie, const char *aExpires) 
+nsCookieService::SetCookieStringFromHttp(nsIURI *aURL, nsIURI *aFirstURL, nsIPrompt *aPrompter, const char *aCookie, const char *aExpires, nsIHttpChannel* aHttpChannel) 
 {
   char *spec = NULL;
   nsresult rv = aURL->GetSpec(&spec);
@@ -204,7 +204,7 @@ nsCookieService::SetCookieStringFromHttp(nsIURI *aURL, nsIURI *aFirstURL, nsIPro
     char *firstSpec = NULL;
     rv = aFirstURL->GetSpec(&firstSpec);
     if (NS_FAILED(rv)) return rv;
-    COOKIE_SetCookieStringFromHttp(spec, firstSpec, aPrompter, aCookie, (char *)aExpires, mIOService);
+    COOKIE_SetCookieStringFromHttp(spec, firstSpec, aPrompter, aCookie, (char *)aExpires, mIOService, aHttpChannel);
     nsCRT::free(firstSpec);
   }
   nsCRT::free(spec);

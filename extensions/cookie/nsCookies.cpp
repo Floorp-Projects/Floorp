@@ -51,6 +51,7 @@
 #include "nsIPref.h"
 #include "nsTextFormatter.h"
 #include "nsAppDirectoryServiceDefs.h"
+//!!!!!#include "nsIP3PService.h"
 
 #define MAX_NUMBER_OF_COOKIES 300
 #define MAX_COOKIES_PER_SERVER 20
@@ -386,6 +387,13 @@ cookie_BehaviorPrefChanged(const char * newpref, void * data) {
   if (!prefs || NS_FAILED(prefs->GetIntPref(cookie_behaviorPref, &n))) {
     n = PERMISSION_Accept;
   }
+    
+  if (n == PERMISSION_P3P) {
+    // load p3p dll
+//!!!!!    nsCOMPtr<nsIP3PService> p3p(do_GetService(NS_P3PSERVICE_CONTRACTID));
+//!!!!!    if (!p3p) return 0;
+  }
+
   cookie_SetBehaviorPref((PERMISSION_BehaviorEnum)n);
   return 0;
 }
@@ -491,6 +499,13 @@ COOKIE_RegisterPrefCallbacks(void) {
   if (NS_FAILED(prefs->GetIntPref(cookie_behaviorPref, &n))) {
     n = PERMISSION_Accept;
   }
+
+  if (n == PERMISSION_P3P) {
+    // load p3p dll
+//!!!!!    nsCOMPtr<nsIP3PService> p3p(do_GetService(NS_P3PSERVICE_CONTRACTID));
+//!!!!!    if (!p3p) return;
+  }
+
   cookie_SetBehaviorPref((PERMISSION_BehaviorEnum)n);
   prefs->RegisterCallback(cookie_behaviorPref, cookie_BehaviorPrefChanged, nsnull);
 
@@ -788,9 +803,13 @@ cookie_isForeign (char * curURL, char * firstURL, nsIIOService* ioService) {
  * P3P_ExplicitConsent, or P3P_NoIdentInfo based on site
  */
 int
-P3P_SitePolicy(char * curURL) {
-  // to be replaced with harishd's routine when available
-  return P3P_ImplicitConsent;
+P3P_SitePolicy(char * curURL, nsIHttpChannel* aHttpChannel) {
+  int consent = P3P_NoPolicy;
+//!!!!!  nsCOMPtr<nsIP3PService> p3p(do_GetService(NS_P3PSERVICE_CONTRACTID));
+//!!!!!  if (p3p) {
+//!!!!!    p3p->GetConsent(curURL,aHttpChannel,&consent);
+//!!!!!  }
+  return consent;
 }
 
 /*
@@ -820,8 +839,8 @@ cookie_P3PUserPref(PRInt32 policy, PRBool foreign) {
  * returns P3P_Accept, P3P_Downgrade, or P3P_Reject based on user's preferences
  */
 int
-cookie_P3PDecision (char * curURL, char * firstURL, nsIIOService* ioService) {
-  return cookie_P3PUserPref(P3P_SitePolicy(curURL), 
+cookie_P3PDecision (char * curURL, char * firstURL, nsIIOService* ioService, nsIHttpChannel* aHttpChannel) {
+  return cookie_P3PUserPref(P3P_SitePolicy(curURL, aHttpChannel), 
                             cookie_isForeign(curURL, firstURL, ioService));
 }
 
@@ -834,11 +853,6 @@ cookie_P3PDecision (char * curURL, char * firstURL, nsIIOService* ioService) {
 PUBLIC char *
 COOKIE_GetCookieFromHttp(char * address, char * firstAddress, 
                          nsIIOService* ioService) {
-
-  if ((cookie_GetBehaviorPref() == PERMISSION_P3P) &&
-      (cookie_P3PDecision(address, firstAddress, ioService) == P3P_Reject)) {
-    return nsnull;
-  }
 
   if ((cookie_GetBehaviorPref() == PERMISSION_DontAcceptForeign) &&
       (!firstAddress || cookie_isForeign(address, firstAddress, ioService))) {
@@ -902,7 +916,7 @@ cookie_Count(char * host) {
  * this via COOKIE_SetCookieStringFromHttp.
  */
 PRIVATE void
-cookie_SetCookieString(char * curURL, nsIPrompt *aPrompter, const char * setCookieHeader, time_t timeToExpire, nsIIOService* ioService) {
+cookie_SetCookieString(char * curURL, nsIPrompt *aPrompter, const char * setCookieHeader, time_t timeToExpire, nsIIOService* ioService, nsIHttpChannel* aHttpChannel) {
   cookie_CookieStruct * prev_cookie;
   char *path_from_header=nsnull, *host_from_header=nsnull;
   char *name_from_header=nsnull, *cookie_from_header=nsnull;
@@ -1273,8 +1287,8 @@ cookie_SetCookieString(char * curURL, nsIPrompt *aPrompter, const char * setCook
 }
 
 PUBLIC void
-COOKIE_SetCookieString(char * curURL, nsIPrompt *aPrompter, const char * setCookieHeader, nsIIOService* ioService) {
-  COOKIE_SetCookieStringFromHttp(curURL, nsnull, aPrompter, setCookieHeader, 0, ioService);
+COOKIE_SetCookieString(char * curURL, nsIPrompt *aPrompter, const char * setCookieHeader, nsIIOService* ioService, nsIHttpChannel* aHttpChannel) {
+  COOKIE_SetCookieStringFromHttp(curURL, nsnull, aPrompter, setCookieHeader, 0, ioService, aHttpChannel);
 }
 
 /* This function wrapper wraps COOKIE_SetCookieString for the purposes of 
@@ -1286,15 +1300,15 @@ COOKIE_SetCookieString(char * curURL, nsIPrompt *aPrompter, const char * setCook
 */
 
 PUBLIC void
-COOKIE_SetCookieStringFromHttp(char * curURL, char * firstURL, nsIPrompt *aPrompter, const char * setCookieHeader, char * server_date, nsIIOService* ioService) {
+COOKIE_SetCookieStringFromHttp(char * curURL, char * firstURL, nsIPrompt *aPrompter, const char * setCookieHeader, char * server_date, nsIIOService* ioService, nsIHttpChannel* aHttpChannel) {
 
   /* allow for multiple cookies separated by newlines */
    char *newline = PL_strchr(setCookieHeader, '\n');
    if(newline) {
      *newline = '\0';
-     COOKIE_SetCookieStringFromHttp(curURL, firstURL, aPrompter, setCookieHeader, server_date, ioService);
+     COOKIE_SetCookieStringFromHttp(curURL, firstURL, aPrompter, setCookieHeader, server_date, ioService, aHttpChannel);
      *newline = '\n';
-     COOKIE_SetCookieStringFromHttp(curURL, firstURL, aPrompter, newline+1, server_date, ioService);
+     COOKIE_SetCookieStringFromHttp(curURL, firstURL, aPrompter, newline+1, server_date, ioService, aHttpChannel);
      return;
    }
 
@@ -1311,7 +1325,7 @@ COOKIE_SetCookieStringFromHttp(char * curURL, char * firstURL, nsIPrompt *aPromp
 
   /* check to see if P3P pref is satisfied */
   if (cookie_GetBehaviorPref() == PERMISSION_P3P) {
-    PRInt32 decision = cookie_P3PDecision(curURL, firstURL, ioService);
+    PRInt32 decision = cookie_P3PDecision(curURL, firstURL, ioService, aHttpChannel);
     if (decision == P3P_Reject) {
       return;
     }
@@ -1374,7 +1388,7 @@ COOKIE_SetCookieStringFromHttp(char * curURL, char * firstURL, nsIPrompt *aPromp
     gmtCookieExpires = get_current_time() + atoi(ptr);
   }
 
-  cookie_SetCookieString(curURL, aPrompter, setCookieHeader, gmtCookieExpires, ioService);
+  cookie_SetCookieString(curURL, aPrompter, setCookieHeader, gmtCookieExpires, ioService, aHttpChannel);
 }
 
 /* saves out the HTTP cookies to disk */

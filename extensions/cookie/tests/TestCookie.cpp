@@ -57,7 +57,7 @@ void SetACookie(nsICookieService *cookieService, const char* aSpec, const char* 
     NS_ASSERTION(uri, "malformed uri");   
     
     printf("setting cookie for \"%s\" : ", aSpec);
-    nsresult rv = cookieService->SetCookieString(uri, nsnull, (char *)aCookieString);
+    nsresult rv = cookieService->SetCookieString(uri, nsnull, (char *)aCookieString,0);
     if (NS_FAILED(rv)) {
         printf("NOT-SET\n");
     } else {

@@ -2006,7 +2006,7 @@ nsHTMLDocument::SetCookie(const nsAReadableString& aCookie)
     result = NS_ERROR_OUT_OF_MEMORY;
     char* cookie = ToNewCString(aCookie);
     if (cookie) {
-      result = service->SetCookieString(mDocumentURL, prompt, cookie);
+      result = service->SetCookieString(mDocumentURL, prompt, cookie, 0);
       nsCRT::free(cookie);
     }
   }

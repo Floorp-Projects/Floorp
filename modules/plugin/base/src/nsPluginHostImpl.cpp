@@ -5728,7 +5728,7 @@ NS_IMETHODIMP nsPluginHostImpl::SetCookie(const char* inCookieURL, const void* i
   char * cookie = (char *)inCookieBuffer;
   char c = cookie[inCookieSize];
   cookie[inCookieSize] = '\0';
-  rv = cookieService->SetCookieString(uriIn, nsnull, cookie); // needs an nsIPrompt parameter
+  rv = cookieService->SetCookieString(uriIn, nsnull, cookie,0); // needs an nsIPrompt parameter
   cookie[inCookieSize] = c;
   
   return rv;
