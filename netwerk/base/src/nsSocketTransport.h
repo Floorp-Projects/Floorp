@@ -23,6 +23,7 @@
 #include "prio.h"
 #include "prnetdb.h"
 
+#include "nsCOMPtr.h"
 #include "nsIChannel.h"
 #include "nsIBuffer.h"
 #include "nsIInputStream.h"
@@ -48,12 +49,10 @@ enum nsSocketState {
   eSocketState_WaitConnect    = 3,
   eSocketState_Connected      = 4,
   eSocketState_WaitReadWrite  = 5,
-  eSocketState_DoneRead       = 6,
-  eSocketState_DoneWrite      = 7,
-  eSocketState_Done           = 8,
-  eSocketState_Timeout        = 9,
-  eSocketState_Error          = 10,
-  eSocketState_Max            = 11
+  eSocketState_Done           = 6,
+  eSocketState_Timeout        = 7,
+  eSocketState_Error          = 8,
+  eSocketState_Max            = 9
 };
 
 enum nsSocketOperation {
@@ -63,6 +62,40 @@ enum nsSocketOperation {
   eSocketOperation_Max        = 3
 };
 
+//
+// The following emun provides information about the currently
+// active read and/or write requests...
+//
+// +-------------------------------+
+// | 7 | 6 | 5 | 4 | 3 | 2 | 1 | 0 |
+// +-------------------------------+
+// <-----flag bits----><-type bits->
+//         
+//  Bits:
+//      0-3:  Type (ie. None, Async, Sync)
+//        4:  Done flag.
+//        5:  Wait flag.
+//      6-7:  Unused flags...
+//
+//
+//   
+enum nsSocketReadWriteInfo {
+  eSocketRead_None            = 0x0000,
+  eSocketRead_Async           = 0x0001,
+  eSocketRead_Sync            = 0x0002,
+  eSocketRead_Done            = 0x0010,
+  eSocketRead_Wait            = 0x0020,
+  eSocketRead_Type_Mask       = 0x000F,
+  eSocketRead_Flag_Mask       = 0x00F0,
+
+  eSocketWrite_None           = 0x0000,
+  eSocketWrite_Async          = 0x0100,
+  eSocketWrite_Sync           = 0x0200,
+  eSocketWrite_Done           = 0x1000,
+  eSocketWrite_Wait           = 0x2000,
+  eSocketWrite_Type_Mask      = 0x0F00,
+  eSocketWrite_Flag_Mask      = 0xF000,
+};
 
 // Forward declarations...
 class nsSocketTransportService;
@@ -96,8 +129,9 @@ public:
   NS_IMETHOD GetContentType(char * *aContentType);
 
   // nsIBufferObserver methods:
-  NS_IMETHOD OnFull(nsIBuffer* buffer);
-  NS_IMETHOD OnEmpty(nsIBuffer* buffer);
+  NS_IMETHOD OnFull (nsIBuffer* aBuffer);
+  NS_IMETHOD OnWrite(nsIBuffer* aBuffer, PRUint32 aCount);
+  NS_IMETHOD OnEmpty(nsIBuffer* aBuffer);
 
   // nsSocketTransport methods:
   nsSocketTransport();
@@ -123,6 +157,34 @@ protected:
   nsresult doRead(PRInt16 aSelectFlags);
   nsresult doWrite(PRInt16 aSelectFlags);
 
+  nsresult doWriteFromBuffer(PRUint32 *aCount);
+  nsresult doWriteFromStream(PRUint32 *aCount);
+
+private:
+  // Access methods for manipulating the ReadWriteInfo...
+  inline void SetReadType(nsSocketReadWriteInfo aType) {
+    mReadWriteState = (mReadWriteState & ~eSocketRead_Type_Mask) | aType; 
+  }
+  inline PRUint32 GetReadType(void) {
+    return mReadWriteState & eSocketRead_Type_Mask;
+  }
+  inline void SetWriteType(nsSocketReadWriteInfo aType) {
+    mReadWriteState = (mReadWriteState & ~eSocketWrite_Type_Mask) | aType; 
+  }
+  inline PRUint32 GetWriteType(void) {
+    return mReadWriteState & eSocketWrite_Type_Mask;
+  }
+  inline void SetFlag(nsSocketReadWriteInfo aFlag) { 
+    mReadWriteState |= aFlag;
+  }
+  inline PRUint32 GetFlag(nsSocketReadWriteInfo aFlag) {
+    return mReadWriteState & aFlag;
+  }
+
+  inline void ClearFlag(nsSocketReadWriteInfo aFlag) {
+    mReadWriteState &= ~aFlag;
+  } 
+
 protected:
   PRCList           mListLink;
 
@@ -130,7 +192,8 @@ protected:
   nsSocketState     mCurrentState;
   nsSocketOperation mOperation;
 
-  PRBool            mIsWaitingForRead;
+  PRUint32          mReadWriteState;
+
   PRInt32           mSuspendCount;
 
   PRFileDesc*   mSocketFD;
@@ -140,15 +203,16 @@ protected:
   char*         mHostName;
   PRInt32       mPort;
 
-  nsISupports*              mReadContext;
-  nsIStreamListener*        mReadListener;
-  nsIBufferInputStream*     mReadStream;
-  nsIBuffer*                mReadBuffer;
+  nsCOMPtr<nsISupports>       mReadContext;
+  nsCOMPtr<nsIStreamListener> mReadListener;
+  nsCOMPtr<nsIInputStream>    mReadStream;
+  nsCOMPtr<nsIBuffer>         mReadBuffer;
 
-  PRInt32                   mWriteCount;
-  nsISupports*              mWriteContext;
-  nsIStreamObserver*        mWriteObserver;
-  nsIInputStream*           mWriteStream;
+  PRInt32                     mWriteCount;
+  nsCOMPtr<nsISupports>       mWriteContext;
+  nsCOMPtr<nsIStreamObserver> mWriteObserver;
+  nsCOMPtr<nsIInputStream>    mWriteStream;
+  nsCOMPtr<nsIBuffer>         mWriteBuffer;
   
   PRUint32 mSourceOffset;
 
