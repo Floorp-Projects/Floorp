@@ -23,6 +23,13 @@
 #include "nsScanner.h"
 #include "nsIURL.h"
 
+static void TokenFreeProc(void * pToken)
+{
+   if (pToken!=NULL) {
+      CToken * pCToken = (CToken*)pToken;
+      delete pCToken;
+   }
+}
 
 /**
  *  Default constructor
@@ -33,7 +40,7 @@
  *  @return 
  */
 CTokenizer::CTokenizer(nsIURL* aURL,ITokenizerDelegate* aDelegate,eParseMode aMode) :
-  mTokenDeque() {
+  mTokenDeque(PR_TRUE,TokenFreeProc) {
   mDelegate=aDelegate;
   mScanner=new CScanner(aURL,aMode);
   mParseMode=aMode;
@@ -48,7 +55,7 @@ CTokenizer::CTokenizer(nsIURL* aURL,ITokenizerDelegate* aDelegate,eParseMode aMo
  *  @return 
  */
 CTokenizer::CTokenizer(const char* aFilename,ITokenizerDelegate* aDelegate,eParseMode aMode) :
-  mTokenDeque() {
+  mTokenDeque(PR_TRUE,TokenFreeProc) {
   mDelegate=aDelegate;
   mScanner=new CScanner(aFilename,aMode);
   mParseMode=aMode;
@@ -63,7 +70,7 @@ CTokenizer::CTokenizer(const char* aFilename,ITokenizerDelegate* aDelegate,ePars
  *  @return 
  */
 CTokenizer::CTokenizer(ITokenizerDelegate* aDelegate,eParseMode aMode) :
-  mTokenDeque() {
+  mTokenDeque(PR_TRUE,TokenFreeProc) {
   mDelegate=aDelegate;
   mScanner=new CScanner(aMode);
   mParseMode=aMode;

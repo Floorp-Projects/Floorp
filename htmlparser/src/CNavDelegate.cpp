@@ -31,6 +31,13 @@
 
 static char gIdentChars[] = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_";
 
+static void TokenFreeProc(void * pToken)
+{
+   if (pToken!=NULL) {
+      CToken * pCToken = (CToken*)pToken;
+      delete pCToken;
+   }
+}
 
 /**
  *  Default constructor
@@ -40,7 +47,7 @@ static char gIdentChars[] = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXY
  *  @return  
  */
 CNavDelegate::CNavDelegate() :
-  ITokenizerDelegate(), mTokenDeque() {
+  ITokenizerDelegate(), mTokenDeque(PR_TRUE,TokenFreeProc) {
 }
 
 /**

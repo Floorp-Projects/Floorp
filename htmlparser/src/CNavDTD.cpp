@@ -842,8 +842,12 @@ PRInt32 CNavDTD::GetDefaultParentTagFor(PRInt32 aTag) const{
 PRBool CNavDTD::VerifyContextVector(PRInt32* aVector,PRInt32 aCount) const {
   PRBool result=PR_TRUE;
 
-  if(aCount>0) {
-
+  if(aCount>1) {
+     for (int i = 0; i < aCount-1; i++)
+        if (!CanContain(aVector[i],aVector[i+1])) {
+           result = PR_FALSE;
+           break;
+        }
   }
   return result;
 }
