@@ -62,6 +62,10 @@ ifdef USE_64
 	DEFINES += -DNSS_USE_64
 endif
 
+ifdef USE_HYBRID
+	DEFINES += -DNSS_USE_HYBRID
+endif
+
 # des.c wants _X86_ defined for intel CPUs.  
 # coreconf does this for windows, but not for Linux, FreeBSD, etc.
 ifeq ($(CPU_ARCH),x86)
