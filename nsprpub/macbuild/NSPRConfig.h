@@ -16,9 +16,11 @@
  * Reserved.
  */
 
-#include "DefinesMac.h"
-#include "DefinesMozilla.h"
+#define OLDROUTINELOCATIONS 0
 
+#define XP_MAC 1
 #define _PR_NO_PREEMPT 1
 #define _NO_FAST_STRING_INLINES_ 1
 #define FORCE_PR_LOG 1
+#define NSPR20 1
+
