@@ -96,7 +96,7 @@ private:
   nsCOMPtr<nsIRDFContainerUtils> mRDFContainerUtils;
   nsCOMPtr<nsIStringBundle> mBundle;
   PRInt32 mBatches;
-  nsHashtable* mCurrDownloads;
+  nsHashtable mCurrDownloads;
 
   friend class nsDownload;
 };

@@ -87,8 +87,7 @@ nsIRDFService* gRDFService;
 
 NS_IMPL_ISUPPORTS3(nsDownloadManager, nsIDownloadManager, nsIDOMEventListener, nsIObserver)
 
-nsDownloadManager::nsDownloadManager() : mBatches(0),
-                                         mCurrDownloads(nsnull)
+nsDownloadManager::nsDownloadManager() : mBatches(0)
 {
   NS_INIT_ISUPPORTS();
 }
@@ -110,8 +109,6 @@ nsDownloadManager::~nsDownloadManager()
   nsServiceManager::ReleaseService(kRDFServiceCID, gRDFService);                
   gRDFService = nsnull;                                                         
 
-  delete mCurrDownloads;
-  mCurrDownloads = nsnull;
 }
 
 nsresult
@@ -160,7 +157,7 @@ nsresult
 nsDownloadManager::DownloadStarted(const char* aPath)
 {
   nsCStringKey key(aPath);
-  if (mCurrDownloads->Exists(&key))
+  if (mCurrDownloads.Exists(&key))
     AssertProgressInfoFor(aPath);
 
   return NS_OK;
@@ -170,9 +167,9 @@ nsresult
 nsDownloadManager::DownloadEnded(const char* aPath, const PRUnichar* aMessage)
 {
   nsCStringKey key(aPath);
-  if (mCurrDownloads->Exists(&key)) {
+  if (mCurrDownloads.Exists(&key)) {
     AssertProgressInfoFor(aPath);
-    mCurrDownloads->Remove(&key);
+    mCurrDownloads.Remove(&key);
   }
 
   return NS_OK;
@@ -238,9 +235,6 @@ nsDownloadManager::GetDataSource(nsIRDFDataSource** aDataSource)
 nsresult
 nsDownloadManager::AssertProgressInfo()
 {
-  if (!mCurrDownloads)
-    mCurrDownloads = new nsHashtable();
-
   nsCOMPtr<nsISupports> supports;
   nsCOMPtr<nsIRDFResource> res;
   const char* uri;
@@ -268,10 +262,10 @@ nsresult
 nsDownloadManager::AssertProgressInfoFor(const char* aPath)
 {
   nsCStringKey key(aPath);
-  if (!mCurrDownloads->Exists(&key))
+  if (!mCurrDownloads.Exists(&key))
     return NS_ERROR_FAILURE;
  
-  nsDownload* internalDownload = NS_STATIC_CAST(nsDownload*, mCurrDownloads->Get(&key));
+  nsDownload* internalDownload = NS_STATIC_CAST(nsDownload*, mCurrDownloads.Get(&key));
   nsCOMPtr<nsIDownload> download;
   internalDownload->QueryInterface(NS_GET_IID(nsIDownload), (void**) getter_AddRefs(download));
   if (!download)
@@ -524,15 +518,11 @@ nsDownloadManager::AddDownload(nsIURI* aSource,
     aPersist->SetProgressListener(listener);
   }
 
-  // we use this table to manage ongoing downloads internally
-  if (!mCurrDownloads)
-    mCurrDownloads = new nsHashtable();
-  
   nsCStringKey key(path);
-  if (mCurrDownloads->Exists(&key))
-    mCurrDownloads->Remove(&key);
+  if (mCurrDownloads.Exists(&key))
+    mCurrDownloads.Remove(&key);
 
-  mCurrDownloads->Put(&key, *aDownload);
+  mCurrDownloads.Put(&key, *aDownload);
 
   return rv;
 }
@@ -546,8 +536,8 @@ nsDownloadManager::GetDownload(const char* aPath, nsIDownload** aDownloadItem)
   // XXX otherwise we should look for it in the datasource and
   //     create a new nsIDownload with the resource's properties
   nsCStringKey key(aPath);
-  if (mCurrDownloads->Exists(&key)) {
-    *aDownloadItem = NS_STATIC_CAST(nsIDownload*, mCurrDownloads->Get(&key));
+  if (mCurrDownloads.Exists(&key)) {
+    *aDownloadItem = NS_STATIC_CAST(nsIDownload*, mCurrDownloads.Get(&key));
     NS_ADDREF(*aDownloadItem);
     return NS_OK;
   }
@@ -561,11 +551,11 @@ nsDownloadManager::CancelDownload(const char* aPath)
 {
   nsresult rv = NS_OK;
   nsCStringKey key(aPath);
-  if (!mCurrDownloads->Exists(&key))
+  if (!mCurrDownloads.Exists(&key))
     return NS_ERROR_FAILURE;
   
   nsCOMPtr<nsIDownload> download;
-  nsDownload* internalDownload = NS_STATIC_CAST(nsDownload*, mCurrDownloads->Get(&key));
+  nsDownload* internalDownload = NS_STATIC_CAST(nsDownload*, mCurrDownloads.Get(&key));
   internalDownload->QueryInterface(NS_GET_IID(nsIDownload), (void**) getter_AddRefs(download));
   if (!download)
     return NS_ERROR_FAILURE;
@@ -612,7 +602,7 @@ nsDownloadManager::RemoveDownload(const char* aPath)
   
   // RemoveDownload is for downloads not currently in progress. Having it
   // cancel in-progress downloads would make things complicated, so just return.
-  PRBool inProgress = mCurrDownloads->Exists(&key);
+  PRBool inProgress = mCurrDownloads.Exists(&key);
   NS_ASSERTION(!inProgress, "Can't call RemoveDownload on a download in progress!");
   if (inProgress)
     return NS_ERROR_FAILURE;
@@ -756,11 +746,11 @@ nsDownloadManager::OpenProgressDialogFor(const char* aPath, nsIDOMWindow* aParen
 {
   nsresult rv;
   nsCStringKey key(aPath);
-  if (!mCurrDownloads->Exists(&key))
+  if (!mCurrDownloads.Exists(&key))
     return NS_ERROR_FAILURE;
 
   nsCOMPtr<nsIDownload> download;
-  nsDownload* internalDownload = NS_STATIC_CAST(nsDownload*, mCurrDownloads->Get(&key));
+  nsDownload* internalDownload = NS_STATIC_CAST(nsDownload*, mCurrDownloads.Get(&key));
   internalDownload->QueryInterface(NS_GET_IID(nsIDownload), (void**) getter_AddRefs(download));
   if (!download)
     return NS_ERROR_FAILURE;
@@ -863,9 +853,9 @@ nsDownloadManager::Observe(nsISupports* aSubject, const char* aTopic, const PRUn
     if (NS_FAILED(rv)) return rv;
     
     nsCStringKey key(path);
-    if (mCurrDownloads->Exists(&key)) {
+    if (mCurrDownloads.Exists(&key)) {
       // unset dialog since it's closing
-      nsDownload* download = NS_STATIC_CAST(nsDownload*, mCurrDownloads->Get(&key));
+      nsDownload* download = NS_STATIC_CAST(nsDownload*, mCurrDownloads.Get(&key));
       download->SetDialog(nsnull);
       
       return CancelDownload(path.get());  
