@@ -821,8 +821,8 @@ js_strtod(JSContext *cx, const jschar *s, const jschar **ep, jsdouble *dp)
 #endif
     }
 
-    free(cstr);
     i = estr - cstr;
+    free(cstr);
     *ep = i ? s1 + i : s;
     *dp = d;
     return JS_TRUE;
