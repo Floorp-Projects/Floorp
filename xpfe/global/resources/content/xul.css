@@ -421,6 +421,11 @@ outlinercol.outliner-columnpicker {
   -moz-binding: url("chrome://global/content/bindings/outliner.xml#columnpicker");
 }
 
+outlinercol[hidden="true"] {
+  visibility: collapse;
+  display: -moz-xul-box;
+}
+
 /********** deck & stack *********/
 
 deck {

@@ -11,10 +11,3 @@ outlinercol {
   min-width: 16px;
 }
 
-outlinercol[hidden="true"] {
-  visibility: collapse;
-  display: -moz-xul-box;
-}
-
-
-
