@@ -16,7 +16,7 @@
  * Reserved.
  */
 
-/* mimemult.h --- definition of the MimeMultipart class (see mimei.h)
+/* mimemult.c --- definition of the MimeMultipart class (see mimei.h)
    Created: Jamie Zawinski <jwz@netscape.com>, 15-May-96.
  */
 

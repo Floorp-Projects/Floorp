@@ -16,7 +16,7 @@
  * Reserved.
  */
 
-/* mimemult.h --- definition of the MimeMultipart class (see mimei.h)
+/* mimesun.c --- MimeSunAttachment, for X-Sun-Attachment message contents
    Created: Jamie Zawinski <jwz@netscape.com>, 15-May-96.
  */
 

@@ -16,6 +16,9 @@
  * Reserved.
  */
 
+/* mimevcrd.h --- definition of the MimeInlineTextVCard class (see mimei.h)
+ */
+
 #ifndef _MIMEVCRD_H_
 #define _MIMEVCRD_H_
 

@@ -16,6 +16,8 @@
  * Reserved.
  */
 
+/* mimecont.c --- definition of the MimeContainer class (see mimei.h)
+ */
 
 #include "mimecont.h"
 

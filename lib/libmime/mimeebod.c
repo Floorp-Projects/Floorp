@@ -16,7 +16,7 @@
  * Reserved.
  */
 
-/* mimeext.c --- definition of the MimeExternalBody class (see mimei.h)
+/* mimeebod.c --- definition of the MimeExternalBody class (see mimei.h)
    Created: Jamie Zawinski <jwz@netscape.com>, 15-May-96.
  */
 

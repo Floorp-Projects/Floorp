@@ -19,7 +19,7 @@
 #ifndef __mimedisp_h
 #define __mimedisp_h
 
-/* Interface between netlib and the top-level message/rfc822 parser:
+/* mimedisp.h: Interface between netlib and the toplevel message/rfc822 parser:
    MIME_MessageConverter()
  */
 

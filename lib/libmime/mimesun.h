@@ -16,7 +16,7 @@
  * Reserved.
  */
 
-/* mimesun.h --- definition of the MimeSunpedText class (see mimei.h)
+/* mimesun.h --- MimeSunAttachment, for X-Sun-Attachment message contents
    Created: Jamie Zawinski <jwz@netscape.com>, 15-May-96.
  */
 

@@ -16,7 +16,7 @@
  * Reserved.
  */
 
-/* mimeunty.h --- definition of the MimeUntypedText class (see mimei.h)
+/* mimeunty.c --- definition of the MimeUntypedText class (see mimei.h)
    Created: Jamie Zawinski <jwz@netscape.com>, 15-May-96.
  */
 
