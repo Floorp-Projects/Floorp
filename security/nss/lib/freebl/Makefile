@@ -233,12 +233,14 @@ endif
 endif
 
 ifdef USE_PURE_32 
+vpath %.h $(FREEBL_PARENT)/mpi:$(FREEBL_PARENT)
 vpath %.c $(FREEBL_PARENT)/mpi:$(FREEBL_PARENT)
 vpath %.S $(FREEBL_PARENT)/mpi:$(FREEBL_PARENT)
 vpath %.s $(FREEBL_PARENT)/mpi:$(FREEBL_PARENT)
 vpath %.asm $(FREEBL_PARENT)/mpi:$(FREEBL_PARENT)
 INCLUDES += -I$(FREEBL_PARENT) -I$(FREEBL_PARENT)/mpi
 else
+vpath %.h mpi
 vpath %.c mpi
 vpath %.S mpi
 vpath %.s mpi
@@ -253,21 +255,23 @@ DEFINES += -DMP_API_COMPATIBLE
 MPI_OBJS = $(addprefix $(OBJDIR)/$(PROG_PREFIX), $(MPI_SRCS:.c=$(OBJ_SUFFIX)))
 MPI_OBJS += $(addprefix $(OBJDIR)/$(PROG_PREFIX), $(MPI_USERS:.c=$(OBJ_SUFFIX)))
 
-ifeq ($(SYSV_SPARC),1)
-SPARCFIX = $(OBJDIR)/sparcfix
+$(MPI_OBJS): $(MPI_HDRS)
 
-$(SPARCFIX): sparcfix.c
-	@$(MAKE_OBJDIR)
-	$(CC) -o $@ -O sparcfix.c -lelf
+$(OBJDIR)/$(PROG_PREFIX)mpprime$(OBJ_SUFFIX): primes.c
+
+$(OBJDIR)/ldvector$(OBJ_SUFFIX) $(OBJDIR)/loader$(OBJ_SUFFIX) : loader.h   
+
+ifeq ($(SYSV_SPARC),1)
 
 $(OBJDIR)/mpv_sparcv8.o $(OBJDIR)/montmulfv8.o : $(OBJDIR)/%.o : %.s 
 	@$(MAKE_OBJDIR)
 	$(SOLARIS_AS) -o $@ $(SOLARIS_AS_FLAGS) $<
-#	$(SPARCFIX) $@
 
 $(OBJDIR)/mpv_sparcv9.o $(OBJDIR)/montmulfv9.o : $(OBJDIR)/%.o : %.s
 	@$(MAKE_OBJDIR)
 	$(SOLARIS_AS) -o $@ $(SOLARIS_AS_FLAGS) $<
+
+$(OBJDIR)/mpmontg.o: mpmontg.c montmulf.h
 
 endif
 
