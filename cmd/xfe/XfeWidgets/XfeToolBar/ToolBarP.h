@@ -29,6 +29,7 @@
 
 #include <Xfe/ToolBar.h>
 #include <Xfe/OrientedP.h>
+#include <Xfe/ButtonP.h>
 
 XFE_BEGIN_CPLUSPLUS_PROTECTION
 
@@ -38,7 +39,6 @@ XFE_BEGIN_CPLUSPLUS_PROTECTION
 /*																		*/
 /*----------------------------------------------------------------------*/
 #define XfeInheritLayoutIndicator			((XtWidgetProc)			_XtInherit)
-#define XfeInheritDrawRaiseBorder			((XfeExposeProc)		_XtInherit)
 
 /*----------------------------------------------------------------------*/
 /*																		*/
@@ -47,7 +47,7 @@ XFE_BEGIN_CPLUSPLUS_PROTECTION
 /*----------------------------------------------------------------------*/
 typedef struct
 {
-    XfeExposeProc			draw_raise_border;	/* draw_raise_border	*/
+    XfeExposeProc			draw_accent_border;	/* draw_accent_border	*/
     XtWidgetProc			layout_indicator;	/* layout_indicator		*/
 	XtPointer				extension;			/* Extension			*/ 
 } XfeToolBarClassPart;
@@ -92,7 +92,7 @@ typedef struct _XfeToolBarPart
 	int					separator_thickness;	/* Separator thickness	*/
 
 	/* Raised resources */
-	Dimension			raise_border_thickness;	/* Raise border thickness*/
+	Dimension			accent_border_thickness;/* Accent border thickness*/
     Boolean				raised;					/* Raised ?				*/
 
 	/* Radio resources */
@@ -187,7 +187,7 @@ typedef struct _XfeToolBarConstraintRec
 /*																		*/
 /*----------------------------------------------------------------------*/
 extern void
-_XfeToolBarDrawRaiseBorder		(Widget			w,
+_XfeToolBarDrawAccentBorder		(Widget			w,
 								 XEvent *		event,
 								 Region			region,
 								 XRectangle *	clip_rect);
