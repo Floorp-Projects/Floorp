@@ -1220,6 +1220,9 @@ make_text_array(MWContext *cx, LO_FormElementStruct *form)
         break;
     
 	case FORM_TYPE_TEXTAREA:
+#ifdef ENDER
+    case FORM_TYPE_HTMLAREA:
+#endif /*ENDER*/
 		{
 			char *string = (char *)form->element_data->ele_textarea.current_text;
 			int columns = form->element_data->ele_textarea.cols;
@@ -1345,6 +1348,9 @@ PSFE_GetFormElementInfo(MWContext *cx, LO_FormElementStruct *form)
     case FORM_TYPE_SUBMIT:
     case FORM_TYPE_RESET:
     case FORM_TYPE_BUTTON:
+#ifdef ENDER
+    case FORM_TYPE_HTMLAREA:
+#endif /*ENDER*/
     {
         int i, width, height;
         LO_TextInfo text_info;
@@ -1364,7 +1370,11 @@ PSFE_GetFormElementInfo(MWContext *cx, LO_FormElementStruct *form)
 
 			if ((form->element_data->type == FORM_TYPE_TEXT) ||
 				(form->element_data->type == FORM_TYPE_PASSWORD) ||
-				(form->element_data->type == FORM_TYPE_TEXTAREA)) {
+				(form->element_data->type == FORM_TYPE_TEXTAREA)
+#ifdef ENDER
+                || (form->element_data->type == FORM_TYPE_HTMLAREA)
+#endif /*ENDER*/
+                ) {
 
 				/* For empty text fields, we should calculate width using 
 				 * form->element_data->ele_text.size
@@ -1387,7 +1397,11 @@ PSFE_GetFormElementInfo(MWContext *cx, LO_FormElementStruct *form)
 				temp_text_array->text[0] = text;
 
 				PSFE_GetTextInfo(cx, temp_text_array->text[0], &temp_info);				
-				if (form->element_data->type == FORM_TYPE_TEXTAREA) {
+				if ((form->element_data->type == FORM_TYPE_TEXTAREA)
+#ifdef ENDER
+                    || (form->element_data->type == FORM_TYPE_HTMLAREA
+#endif /*ENDER*/
+                    ) {
 					lo_FormElementTextareaData *data = &form->element_data->ele_textarea;
 					columns = ((win_csid & MULTIBYTE) ? (data->cols + 1) / 2 : data->cols);
 					text_info.max_width =
@@ -1411,7 +1425,11 @@ PSFE_GetFormElementInfo(MWContext *cx, LO_FormElementStruct *form)
 
 		/* adjust height */
 
-		if (form->element_data->type == FORM_TYPE_TEXTAREA)
+		if ((form->element_data->type == FORM_TYPE_TEXTAREA)
+#ifdef ENDER
+                || (form->element_data->type == FORM_TYPE_HTMLAREA)
+#endif /*ENDER*/
+                )
 			height *= form->element_data->ele_textarea.rows;
 		else
 			height *= text_array->size;
@@ -1436,7 +1454,12 @@ PSFE_GetFormElementInfo(MWContext *cx, LO_FormElementStruct *form)
 			(form->element_data->type == FORM_TYPE_TEXT) ||
 			(form->element_data->type == FORM_TYPE_TEXTAREA) ||
 			(form->element_data->type == FORM_TYPE_PASSWORD) ||
-			(form->element_data->type == FORM_TYPE_SELECT_MULT)) {
+			(form->element_data->type == FORM_TYPE_SELECT_MULT) 
+#ifdef ENDER
+                || (form->element_data->type == FORM_TYPE_HTMLAREA)
+#endif /*ENDER*/
+                )
+        {
 			/* leave space for bonding box */
 			width = width + 2 * FORM_BOX_THICKNESS + 
 				FORM_BOX_LEFT_MARGIN + FORM_BOX_RIGHT_MARGIN;
@@ -1502,6 +1525,9 @@ PSFE_DisplayFormElement(MWContext *cx, int loc, LO_FormElementStruct *form)
     case FORM_TYPE_SUBMIT:
     case FORM_TYPE_RESET:
     case FORM_TYPE_BUTTON:
+#ifdef ENDER
+    case FORM_TYPE_HTMLAREA:
+#endif /*ENDER*/
     {
         int i, x, y, text_width, text_height, delta_height;
         TextArray *text_array;
@@ -1578,7 +1604,11 @@ PSFE_DisplayFormElement(MWContext *cx, int loc, LO_FormElementStruct *form)
 			(form->element_data->type == FORM_TYPE_TEXT) ||
 			(form->element_data->type == FORM_TYPE_TEXTAREA) ||
 			(form->element_data->type == FORM_TYPE_PASSWORD) ||
-			(form->element_data->type == FORM_TYPE_SELECT_MULT)) {
+			(form->element_data->type == FORM_TYPE_SELECT_MULT)
+#ifdef ENDER
+            || (form->element_data->type == FORM_TYPE_HTMLAREA)
+#endif /*ENDER*/
+            ){
 
 			XP_Bool stick_out = FALSE;
 			if ((form->element_data->type == FORM_TYPE_SUBMIT) ||
