@@ -23,6 +23,9 @@
 #include "prlog.h"
 #include "plstr.h"
 #include <stdlib.h>
+#include "nsCOMPtr.h"
+#include "nsIOutputStream.h"
+#include "nsIFileStream.h"
 
 #if defined(_WIN32)
 #include <windows.h>
@@ -168,7 +171,8 @@ public:
   static PRIntn DumpNewEntry(PLHashEntry *he, PRIntn i, void *arg) {
     BloatEntry* entry = (BloatEntry*)he->value;
     if (entry) {
-      entry->Dump(i, (FILE*)arg, &entry->mNewStats);
+      nsresult rv = entry->Dump(i, (nsIOutputStream*)arg, &entry->mNewStats);
+      NS_ASSERTION(NS_SUCCEEDED(rv), "Dump failed");
       entry->Accumulate();
     }
     return HT_ENUMERATE_NEXT;
@@ -178,7 +182,8 @@ public:
     BloatEntry* entry = (BloatEntry*)he->value;
     if (entry) {
       entry->Accumulate();
-      entry->Dump(i, (FILE*)arg, &entry->mAllStats);
+      nsresult rv = entry->Dump(i, (nsIOutputStream*)arg, &entry->mAllStats);
+      NS_ASSERTION(NS_SUCCEEDED(rv), "Dump failed");
     }
     return HT_ENUMERATE_NEXT;
   }
@@ -210,15 +215,31 @@ public:
             (mNewStats.mCreates != mNewStats.mDestroys));
   }
 
-  static void PrintDumpHeader(FILE* out, const char* msg) {
-    fprintf(out, "                                 %s -- Bloaty: Refcounting and Memory Bloat Statistics\n", msg);
-    fprintf(out, "     |<------class------>|<--------------References-------------->|<----------------Objects---------------->|<------Size----->|\n");
-    fprintf(out, "                               Rem    Total      Mean       StdDev       Rem    Total      Mean       StdDev Per-Class      Rem\n");
+  static nsresult PrintDumpHeader(nsIOutputStream* out, const char* msg) {
+    nsresult rv;
+    char buf[256];
+    PRUint32 cnt, writeCnt;
+    cnt = PR_snprintf(buf, 256, 
+        "                                 %s -- Bloaty: Refcounting and Memory Bloat Statistics\n", msg);
+    rv = out->Write(buf, cnt, &writeCnt);
+    if (NS_FAILED(rv)) return rv;
+    NS_ASSERTION(cnt == writeCnt, "failed to write all data");
+    cnt = PR_snprintf(buf, 256, 
+        "     |<------class------>|<--------------References-------------->|<----------------Objects---------------->|<------Size----->|\n");
+    rv = out->Write(buf, cnt, &writeCnt);
+    if (NS_FAILED(rv)) return rv;
+    NS_ASSERTION(cnt == writeCnt, "failed to write all data");
+    cnt = PR_snprintf(buf, 256, 
+        "                               Rem    Total      Mean       StdDev       Rem    Total      Mean       StdDev Per-Class      Rem\n");
+    rv = out->Write(buf, cnt, &writeCnt);
+    if (NS_FAILED(rv)) return rv;
+    NS_ASSERTION(cnt == writeCnt, "failed to write all data");
+    return NS_OK;
   }
 
-  void Dump(PRIntn i, FILE* fp, nsTraceRefcntStats* stats) {
+  nsresult Dump(PRIntn i, nsIOutputStream* out, nsTraceRefcntStats* stats) {
     if (gDumpLeaksOnly && !HaveLeaks()) {
-      return;
+      return NS_OK;
     }
     double nRefs = stats->mAddRefs + stats->mReleases;
     double meanRefs = nRefs != 0.0 ? stats->mRefsOutstandingTotal / nRefs : 0.0;
@@ -241,19 +262,25 @@ public:
         stats->mCreates != 0 ||
         meanObjs != 0 ||
         stddevObjs != 0) {
-      fprintf(fp, "%4d %-20.20s %8d %8d (%8.2f +/- %8.2f) %8d %8d (%8.2f +/- %8.2f) %8d %8d\n",
-              i, mClassName, 
-              (stats->mAddRefs - stats->mReleases),
-              stats->mAddRefs,
-              meanRefs,
-              stddevRefs,
-              (stats->mCreates - stats->mDestroys),
-              stats->mCreates,
-              meanObjs,
-              stddevObjs,
-              mClassSize,
-              (stats->mCreates - stats->mDestroys) * mClassSize);
+      char buf[256];
+      PRUint32 cnt, writeCnt;
+      cnt = PR_snprintf(buf, 256, "%4d %-20.20s %8d %8d (%8.2f +/- %8.2f) %8d %8d (%8.2f +/- %8.2f) %8d %8d\n",
+                        i, mClassName, 
+                        (stats->mAddRefs - stats->mReleases),
+                        stats->mAddRefs,
+                        meanRefs,
+                        stddevRefs,
+                        (stats->mCreates - stats->mDestroys),
+                        stats->mCreates,
+                        meanObjs,
+                        stddevObjs,
+                        mClassSize,
+                        (stats->mCreates - stats->mDestroys) * mClassSize);
+      nsresult rv = out->Write(buf, cnt, &writeCnt);
+      if (NS_FAILED(rv)) return rv;
+      NS_ASSERTION(cnt == writeCnt, "failed to write all data");
     }
+    return NS_OK;
   }
 
 protected:
@@ -296,12 +323,13 @@ GetBloatEntry(const char* aTypeName, PRUint32 aInstanceSize)
 
 #endif /* NS_BUILD_REFCNT_LOGGING */
 
-void
-nsTraceRefcnt::DumpNewStatistics(FILE* out)
+nsresult
+nsTraceRefcnt::DumpStatistics(StatisticsType type,
+                              nsIOutputStream* out)
 {
 #ifdef NS_BUILD_REFCNT_LOGGING
   if (!gTrackBloat || !gBloatView) {
-    return;
+    return NS_OK;
   }
 
   LOCK_TRACELOG();
@@ -309,30 +337,37 @@ nsTraceRefcnt::DumpNewStatistics(FILE* out)
     printf("Bloaty: Only dumping data about objects that leaked\n");
   }
 
-  BloatEntry::PrintDumpHeader(out, "NEW RESULTS");
-  PL_HashTableDump(gBloatView, BloatEntry::DumpNewEntry, out);
-
-  UNLOCK_TRACELOG();
-#endif
-}
-
-void
-nsTraceRefcnt::DumpAllStatistics(FILE* out)
-{
-#ifdef NS_BUILD_REFCNT_LOGGING
-  if (!gTrackBloat || !gBloatView) {
-    return;
+  PRBool wasLogging = gLogging;
+  gLogging = PR_FALSE;  // turn off logging for this method
+  
+  nsresult rv;
+  nsCOMPtr<nsIOutputStream> outStr = dont_QueryInterface(out);
+  if (out == nsnull) {
+    nsCOMPtr<nsISupports> outSupports;
+    rv = NS_NewOutputConsoleStream(getter_AddRefs(outSupports));
+    if (NS_FAILED(rv)) goto done;
+    outStr = do_QueryInterface(outSupports, &rv);
+    if (NS_FAILED(rv)) goto done;
   }
 
-  LOCK_TRACELOG();
-  if (gDumpLeaksOnly) {
-    printf("Bloaty: Only dumping data about objects that leaked\n");
+  PRIntn (*dump)(PLHashEntry *he, PRIntn i, void *arg);
+  const char* msg;
+  if (type == NEW_STATS) {
+    dump = BloatEntry::DumpNewEntry;
+    msg = "NEW RESULTS";
   }
+  else {
+    dump = BloatEntry::DumpAllEntry;
+    msg = "ALL RESULTS";
+  }
+  rv = BloatEntry::PrintDumpHeader(outStr, msg);
+  if (NS_FAILED(rv)) goto done;
+  PL_HashTableEnumerateEntries(gBloatView, dump, outStr);
 
-  BloatEntry::PrintDumpHeader(out, "ALL RESULTS");
-  PL_HashTableDump(gBloatView, BloatEntry::DumpAllEntry, out);
-
+done:
+  gLogging = wasLogging;
   UNLOCK_TRACELOG();
+  return rv;
 #endif
 }
 
