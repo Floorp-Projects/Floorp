@@ -55,14 +55,12 @@ PR_BEGIN_EXTERN_C
 ** Inputs: 
 **   var -- The name of the environment variable
 ** 
-** Outputs: see Returns.
-** 
 ** Returns:
 **   The value of the environment variable 'var' or NULL if
 ** the variable is undefined.
 ** 
 ** Restrictions:
-**   You'd think that a POSIX setenv(), putenv() would be
+**   You'd think that a POSIX getenv(), putenv() would be
 **   consistently implemented everywhere. Surprise! It is not. On
 **   some platforms, a putenv() where the argument is of
 **   the form "name"  causes the named environment variable to
@@ -74,10 +72,10 @@ PR_BEGIN_EXTERN_C
 **   other platforms, a subsequent call to getenv() returns a
 **   pointer to a null-string (a byte of zero).
 ** 
-**   NSPR's PR_SetEnv(), PR_PutEnv() provide a consistent
-**   behavior across all supported platforms. There are,
-**   however, some restrictions and some practices you must use
-**   to achieve consistent results everywhere.
+**   PR_GetEnv(), PR_PutEnv() provide a consistent behavior 
+**   across all supported platforms. There are, however, some
+**   restrictions and some practices you must use to achieve
+**   consistent results everywhere.
 ** 
 **   When manipulating the environment there is no way to un-set
 **   an environment variable across all platforms. We suggest
@@ -96,8 +94,8 @@ PR_BEGIN_EXTERN_C
 **   fragment:
 ** 
 **      char *val = PR_GetEnv("foo");
-**      if ((NULL == val) || (0x00 == *val)) {
-**         /* interpret this as un-set ... 
+**      if ((NULL == val) || ('\0' == *val)) { 
+**          /* interpret this as un-set ... 
 **      }
 ** 
 **   The caller must ensure that the string passed
@@ -133,8 +131,6 @@ NSPR_API(char*) PR_GetEnv(const char *var);
 **   name is the name of the environment variable to be set or
 **   changed; value is the value assigned to the variable.
 **
-** Outputs: The environment variable is set or changed.
-** 
 ** Returns: 
 **   PRStatus.
 ** 
