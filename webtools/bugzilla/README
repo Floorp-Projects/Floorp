@@ -101,12 +101,14 @@ real tendency to bog down, so please use mirrors.  The current location
 at the time of this writing (02/17/99) can be found in Appendix A.
 
   Quality, general Perl module installation instructions can be found on
-the CPAN website, but the easy thing to do is to just use the CPAN shell which does all the hard work for you
+the CPAN website, but the easy thing to do is to just use the CPAN shell
+which does all the hard work for you
 
 To use the CPAN shell to install DBI:
 
                1. Type perl -MCPAN -e 'install "DBI"'
-(replace DBI with the name of the module you wish to install, Data::Dumper, etc...)
+(replace DBI with the name of the module you wish to install, Data::Dumper,
+etc...)
 
 To do it the hard way:
 
@@ -215,6 +217,10 @@ file the line:
 
 is in the stanza that covers the directories you intend to put the
 bugzilla .html and .cgi files into.
+
+If you are using a newer version of Apache, both of the above lines will be
+(or will need to be) in the httpd.conf file, rather than srm.conf or
+access.conf.
 
 2. Installing the Bugzilla Files
 
@@ -344,7 +350,9 @@ if there's exactly one user in the database, and if so, add that person
 to every group.
 
     If you want to add someone to every group by hand, you can do it by
-typing the appropriate MySQL commands.  Run mysql, and type:
+typing the appropriate MySQL commands.  Run 'mysql bugs' (you may need
+extra parameters, depending on your security settings according to
+section 3, above), and type:
 
         update profiles set groupset=0x7fffffffffffffff
         where login_name = 'XXX';
