@@ -68,6 +68,9 @@ nsIFontCatalogService* nsFT2FontNode::sFcs = nsnull;
 void
 nsFT2FontNode::FreeGlobals()
 {
+  nsServiceManager::ReleaseService("@mozilla.org/gfx/xfontcatalogservice;1", 
+                                   sFcs);
+
   if (mFreeTypeNodes) {
     mFreeTypeNodes->Reset(FreeNode, nsnull);
     delete mFreeTypeNodes;

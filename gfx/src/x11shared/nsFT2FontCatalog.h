@@ -150,6 +150,8 @@ protected:
   static PRBool FreeFceHashEntry(nsHashKey* aKey, void* aData, void* aClosure);
   void   FreeFontCatalog(nsFontCatalog *fc);
   static void   FreeFontCatalogEntry(nsFontCatalogEntry *);
+  void   FreeDirCatalog(nsDirCatalog *dc);
+  void   FreeDirCatalogEntry(nsDirCatalogEntry *);
   static void GetDirsPrefEnumCallback(const char* aName, void* aClosure);
   int    GetFontCatalog(FT_LibraryRec_*, nsFontCatalog *, nsDirCatalog *);
   PRBool GetFontSummaryName(const nsACString &, const nsACString &,
