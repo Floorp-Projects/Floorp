@@ -184,42 +184,22 @@ il_flush_image_data(il_container *ic)
      * it to the server.)
      */
     for (;row < (end_row - row_interval); row += row_interval) {
-#ifdef STANDALONE_IMAGE_LIB
         img_cx->img_cb->UpdatePixmap(img_cx->dpy_cx, image, 0, row,
                                      img_header->width, row_interval);
-#else
-        IMGCBIF_UpdatePixmap(img_cx->img_cb, img_cx->dpy_cx, image, 0, row,
-                           img_header->width, row_interval);
-#endif
         if (mask) {
-#ifdef STANDALONE_IMAGE_LIB
             img_cx->img_cb->UpdatePixmap(img_cx->dpy_cx, mask, 0, row,
                                          mask_header->width, row_interval);
-#else
-            IMGCBIF_UpdatePixmap(img_cx->img_cb, img_cx->dpy_cx, mask, 0, row,
-                               mask_header->width, row_interval);
-#endif /* STANDALONE_IMAGE_LIB */
 		}
     }
 #endif /* XP_UNIX */
    
     /* Draw whatever is leftover after sending the chunks */
-#ifdef STANDALONE_IMAGE_LIB
     img_cx->img_cb->UpdatePixmap(img_cx->dpy_cx, image, 
                                  0, row, img_header->width, end_row - row + 1);
-#else
-    IMGCBIF_UpdatePixmap(img_cx->img_cb, img_cx->dpy_cx, image, 0, row,
-                       img_header->width, end_row - row + 1);
-#endif /* STANDALONE_IMAGE_LIB */
 
     if (mask) {
-#ifdef STANDALONE_IMAGE_LIB
         img_cx->img_cb->UpdatePixmap(img_cx->dpy_cx, mask, 0, row,
                                      mask_header->width, end_row - row + 1);
-#else
-        IMGCBIF_UpdatePixmap(img_cx->img_cb, img_cx->dpy_cx, mask, 0, row,
-                           mask_header->width, end_row - row + 1);
-#endif /* STANDALONE_IMAGE_LIB */
     }
 
     /* Update the displayable area of the pixmap. */
