@@ -107,6 +107,7 @@
 #include "nsIDOMMutationEvent.h"
 #include "nsChildIterator.h"
 #include "nsCSSRendering.h"
+#include "nsISelectElement.h"
 
 static NS_DEFINE_CID(kTextNodeCID,   NS_TEXTNODE_CID);
 static NS_DEFINE_CID(kHTMLElementFactoryCID,   NS_HTML_ELEMENT_FACTORY_CID);
@@ -7788,9 +7789,22 @@ nsCSSFrameConstructor::ContentAppended(nsIPresContext* aPresContext,
     // Just ignore outliner tags, anyway we don't create any frames for them.
     if (tag == nsXULAtoms::outlinerchildren ||
         tag == nsXULAtoms::outlineritem ||
-        tag == nsXULAtoms::outlinerrow ||
-        (UseXBLForms() && tag == nsHTMLAtoms::select))
+        tag == nsXULAtoms::outlinerrow)
       return NS_OK;
+
+    // Ignore option elements inside a select (size > 1), if we are using XBL forms
+    if (UseXBLForms()) {
+      nsCOMPtr<nsISelectElement> selectElement = do_QueryInterface(aContainer);
+      if (selectElement) {
+        nsAutoString selSize;
+        aContainer->GetAttr(kNameSpaceID_None, nsHTMLAtoms::size, selSize);
+        if (!selSize.IsEmpty()) {
+          PRInt32 err;
+          if (selSize.ToInteger(&err) > 1)
+            return NS_OK;
+        }
+      }
+    }
 
     PRBool treeChildren = tag.get() == nsXULAtoms::treechildren;
     PRBool treeItem = tag.get() == nsXULAtoms::treeitem;
@@ -8398,9 +8412,22 @@ nsCSSFrameConstructor::ContentInserted(nsIPresContext*        aPresContext,
     // Just ignore outliner tags, anyway we don't create any frames for them.
     if (tag == nsXULAtoms::outlinerchildren ||
         tag == nsXULAtoms::outlineritem ||
-        tag == nsXULAtoms::outlinerrow ||
-        (UseXBLForms() && tag == nsHTMLAtoms::select))
+        tag == nsXULAtoms::outlinerrow)
       return NS_OK;
+
+    // Ignore option elements inside a select (size > 1), if we are using XBL forms
+    if (UseXBLForms()) {
+      nsCOMPtr<nsISelectElement> selectElement = do_QueryInterface(aContainer);
+      if (selectElement) {
+        nsAutoString selSize;
+        aContainer->GetAttr(kNameSpaceID_None, nsHTMLAtoms::size, selSize);
+        if (!selSize.IsEmpty()) {
+          PRInt32 err;
+          if (selSize.ToInteger(&err) > 1)
+            return NS_OK;
+        }
+      }
+    }
 
     PRBool treeChildren = tag && tag.get() == nsXULAtoms::treechildren;
     PRBool treeItem = tag && tag.get() == nsXULAtoms::treeitem;
@@ -9300,9 +9327,22 @@ nsCSSFrameConstructor::ContentRemoved(nsIPresContext* aPresContext,
     // Just ignore outliner tags, anyway we don't create any frames for them.
     if (tag == nsXULAtoms::outlinerchildren ||
         tag == nsXULAtoms::outlineritem ||
-        tag == nsXULAtoms::outlinerrow ||
-        (UseXBLForms() && tag == nsHTMLAtoms::select))
+        tag == nsXULAtoms::outlinerrow)
       return NS_OK;
+
+    // Ignore option elements inside a select (size > 1), if we are using XBL forms
+    if (UseXBLForms()) {
+      nsCOMPtr<nsISelectElement> selectElement = do_QueryInterface(aContainer);
+      if (selectElement) {
+        nsAutoString selSize;
+        aContainer->GetAttr(kNameSpaceID_None, nsHTMLAtoms::size, selSize);
+        if (!selSize.IsEmpty()) {
+          PRInt32 err;
+          if (selSize.ToInteger(&err) > 1)
+            return NS_OK;
+        }
+      }
+    }
 
     PRBool treeChildren = tag && tag.get() == nsXULAtoms::treechildren;
     PRBool treeItem = tag && tag.get() == nsXULAtoms::treeitem;
