@@ -336,7 +336,6 @@ nsComboboxControlFrame::SetFocus(PRBool aOn, PRBool aRepaint)
 // if it is (or part of it is already) in view.
 PRBool nsComboboxControlFrame::ShouldScrollFrameIntoView(nsIPresShell * aShell, nsIPresContext * aPresContext, nsIFrame *aFrame)
 {
-  nsresult rv = NS_OK;
   if (!aFrame) {
     return NS_ERROR_NULL_POINTER;
   }
@@ -381,8 +380,8 @@ PRBool nsComboboxControlFrame::ShouldScrollFrameIntoView(nsIPresShell * aShell, 
       clipView->GetDimensions(&visibleRect.width, &visibleRect.height);
 
       // The actual scroll offsets
-      nscoord scrollOffsetX = visibleRect.x;
-      nscoord scrollOffsetY = visibleRect.y;
+      //nscoord scrollOffsetX = visibleRect.x;
+      //nscoord scrollOffsetY = visibleRect.y;
 
       // The frame's bounds in the coordinate space of the scrolled frame
       nsRect  frameBounds;
