@@ -482,7 +482,7 @@ nsInstallFileOpItem::NativeFileOpDirCreatePrepare()
   mTarget->Exists(&flagExists);
   if (!flagExists)
   {
-      mTarget->Create(1, 0644);
+      mTarget->Create(1, 0755);
       mAction = nsInstallFileOpItem::ACTION_SUCCESS;
       ret     = nsInstall::SUCCESS;
   }
