@@ -617,6 +617,7 @@ case "$target" in
     ;;
 
 *-beos*)
+    AC_DEFINE(NO_X11)
     MKSHLIB='$(CXX) $(CXXFLAGS) $(DSO_LDOPTS) -o $@'
     DSO_LDOPTS='-nostart -Wl,-h -Wl,$@'
     TK_LIBS='-lbe -lroot'
