@@ -1639,6 +1639,8 @@ if ( CountIndexes('cc') != 3 ) {
     DropIndexes('cc');
     $dbh->do("ALTER TABLE cc ADD UNIQUE (bug_id,who)");
     $dbh->do("ALTER TABLE cc ADD INDEX (who)");
+
+    $regenerateshadow=1; # cc fields no longer have spaces in them
 }    
 
 if ( CountIndexes('keywords') != 3 ) {
@@ -1649,6 +1651,7 @@ if ( CountIndexes('keywords') != 3 ) {
     DropIndexes('keywords');
     $dbh->do("ALTER TABLE keywords ADD INDEX (keywordid)");
     $dbh->do("ALTER TABLE keywords ADD UNIQUE (bug_id,keywordid)");
+
 }    
 
 #
@@ -1670,3 +1673,4 @@ if ($regenerateshadow) {
 
 unlink "data/versioncache";
 print "Reminder: Bugzilla now requires version 3.22.5 or later of MySQL.\n";
+print "Reminder: Bugzilla now requires version 8.7 or later of sendmail.\n";
