@@ -40,6 +40,18 @@ static NS_DEFINE_CID(kCImapResource, NS_IMAPRESOURCE_CID);
 static NS_DEFINE_CID(kCImapMessageResource, NS_IMAPMESSAGERESOURCE_CID);
 static NS_DEFINE_CID(kCImapMockChannel, NS_IMAPMOCKCHANNEL_CID);
 
+// private factory declarations for each component we know how to produce
+
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsImapUrl)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsImapProtocol)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsIMAPHostSessionList)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsImapIncomingServer)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsImapService)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsImapMailFolder)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsImapMockChannel)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsImapMessage)
+
+
 // Module implementation for the sample library
 class nsMsgImapModule : public nsIModule
 {
@@ -57,7 +69,14 @@ protected:
     void Shutdown();
 
     PRBool mInitialized;
-    nsCOMPtr<nsIGenericFactory> mFactory;
+    nsCOMPtr<nsIGenericFactory> mImapUrlFactory;
+    nsCOMPtr<nsIGenericFactory> mImapProtocolFactory;
+    nsCOMPtr<nsIGenericFactory> mImapHostSessionFactory;
+    nsCOMPtr<nsIGenericFactory> mImapIncomingServerFactory;
+    nsCOMPtr<nsIGenericFactory> mImapServiceFactory;
+    nsCOMPtr<nsIGenericFactory> mImapMailFolderFactory;
+    nsCOMPtr<nsIGenericFactory> mImapMockChannelFactory;
+    nsCOMPtr<nsIGenericFactory> mImapMessageFactory;
 };
 
 
@@ -88,7 +107,14 @@ nsresult nsMsgImapModule::Initialize()
 void nsMsgImapModule::Shutdown()
 {
     // Release the factory object
-    mFactory = null_nsCOMPtr();
+    mImapUrlFactory = null_nsCOMPtr();
+    mImapProtocolFactory = null_nsCOMPtr();
+    mImapHostSessionFactory = null_nsCOMPtr();
+    mImapIncomingServerFactory = null_nsCOMPtr();
+    mImapServiceFactory = null_nsCOMPtr();
+    mImapMailFolderFactory = null_nsCOMPtr();
+    mImapMockChannelFactory = null_nsCOMPtr();
+    mImapMessageFactory = null_nsCOMPtr();
 }
 
 // Create a factory object for creating instances of aClass.
@@ -118,21 +144,53 @@ NS_IMETHODIMP nsMsgImapModule::GetClassObject(nsIComponentManager *aCompMgr,
     nsCOMPtr<nsIGenericFactory> fact;
 
     if (aClass.Equals(kCImapUrl))
-        rv = NS_NewGenericFactory(getter_AddRefs(fact), &NS_NewImapUrl);
+    {
+        if (!mImapUrlFactory)
+            rv = NS_NewGenericFactory(getter_AddRefs(mImapUrlFactory), &nsImapUrlConstructor);
+        fact = mImapUrlFactory;
+    }
     else if (aClass.Equals(kCImapProtocol))
-        rv = NS_NewGenericFactory(getter_AddRefs(fact), NS_NewImapProtocol);
+    {
+        if (!mImapProtocolFactory)
+            rv = NS_NewGenericFactory(getter_AddRefs(mImapProtocolFactory), &nsImapProtocolConstructor);
+        fact = mImapProtocolFactory;
+    }
     else if (aClass.Equals(kCImapHostSessionList))
-        rv = NS_NewGenericFactory(getter_AddRefs(fact), NS_NewImapHostSessionList);
+    {
+        if (!mImapHostSessionFactory)
+            rv = NS_NewGenericFactory(getter_AddRefs(mImapHostSessionFactory), &nsIMAPHostSessionListConstructor);
+        fact = mImapHostSessionFactory;
+    }
     else if (aClass.Equals(kCImapIncomingServer))
-        rv = NS_NewGenericFactory(getter_AddRefs(fact), NS_NewImapIncomingServer);
+    {
+        if (!mImapIncomingServerFactory)
+            rv = NS_NewGenericFactory(getter_AddRefs(mImapIncomingServerFactory), &nsImapIncomingServerConstructor);
+        fact = mImapIncomingServerFactory;
+    }
     else if (aClass.Equals(kCImapService))
-        rv = NS_NewGenericFactory(getter_AddRefs(fact), NS_NewImapService);
+    {
+        if (!mImapServiceFactory)
+            rv = NS_NewGenericFactory(getter_AddRefs(mImapServiceFactory), &nsImapServiceConstructor);
+        fact = mImapServiceFactory;
+    }
     else if (aClass.Equals(kCImapResource))
-        rv = NS_NewGenericFactory(getter_AddRefs(fact), NS_NewImapMailFolder);
+    {
+        if (!mImapMailFolderFactory)
+            rv = NS_NewGenericFactory(getter_AddRefs(mImapMailFolderFactory), &nsImapMailFolderConstructor);
+        fact = mImapMailFolderFactory;
+    }
     else if (aClass.Equals(kCImapMockChannel))
-        rv = NS_NewGenericFactory(getter_AddRefs(fact), NS_NewImapMockChannel);
+    {
+        if (!mImapMockChannelFactory)
+            rv = NS_NewGenericFactory(getter_AddRefs(mImapMockChannelFactory), &nsImapMockChannelConstructor);
+        fact = mImapMockChannelFactory;
+    }
     else if (aClass.Equals(kCImapMessageResource)) 
-        rv = NS_NewGenericFactory(getter_AddRefs(fact), NS_NewImapMessage);
+    {
+        if (!mImapMessageFactory)
+            rv = NS_NewGenericFactory(getter_AddRefs(mImapMessageFactory), &nsImapMessageConstructor);
+        fact = mImapMessageFactory;
+    }
     
     
     if (fact)
