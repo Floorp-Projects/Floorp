@@ -102,8 +102,8 @@ public:
                              void **aInstancePtr);
 
   // From nsGenericElement
-  virtual nsresult CopyInnerTo(nsIContent* aSrcContent,
-                               nsGenericHTMLElement* aDest, PRBool aDeep);
+  nsresult CopyInnerTo(nsIContent* aSrcContent, nsGenericHTMLElement* aDest,
+                       PRBool aDeep);
 
   // Implementation for nsIDOMNode
   NS_METHOD GetNodeName(nsAString& aNodeName);
@@ -777,9 +777,8 @@ public:
   nsGenericHTMLLeafElement();
   virtual ~nsGenericHTMLLeafElement();
 
-  NS_METHOD CopyInnerTo(nsIContent* aSrcContent,
-                        nsGenericHTMLLeafElement* aDest,
-                        PRBool aDeep);
+  nsresult CopyInnerTo(nsIContent* aSrcContent,
+                       nsGenericHTMLLeafElement* aDest, PRBool aDeep);
 
   // Remainder of nsIDOMHTMLElement (and nsIDOMNode)
   NS_METHOD GetChildNodes(nsIDOMNodeList** aChildNodes);
@@ -854,9 +853,8 @@ public:
   nsGenericHTMLContainerElement();
   virtual ~nsGenericHTMLContainerElement();
 
-  NS_METHOD CopyInnerTo(nsIContent* aSrcContent,
-                       nsGenericHTMLContainerElement* aDest,
-                       PRBool aDeep);
+  nsresult CopyInnerTo(nsIContent* aSrcContent,
+                       nsGenericHTMLContainerElement* aDest, PRBool aDeep);
 
   // Remainder of nsIDOMHTMLElement (and nsIDOMNode)
   NS_METHOD GetChildNodes(nsIDOMNodeList** aChildNodes);
