@@ -27,7 +27,7 @@ MODULE		= util
 XPIDL_MODULE = util
 
 XPIDLSRCS =                   \
-	nsIFileLocator.idl        \
+	nsITimeRecorder.idl        \
 	$(NULL)
 
 EXPORTS		= $(srcdir)/xp_obs.h $(srcdir)/stopwatch.h
