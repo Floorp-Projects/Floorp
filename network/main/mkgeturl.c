@@ -302,8 +302,6 @@ HG52422
 PRIVATE void net_FreeURLAllHeaders(URL_Struct * URL_s);
 PRIVATE void NET_InitAboutProtocol(void);
 
-extern MODULE_PRIVATE int PR_CALLBACK NET_AboutColonAccessPrefChanged(const char *pref, void *data);
-
 PRIVATE NET_TimeBombActive = FALSE;
 
 typedef struct _WaitingURLStruct {
@@ -764,10 +762,6 @@ NET_FinishInitNetLib()
 	/* inits the proxy autodiscovery vars and registers their callbacks. */
 	NET_RegisterPadPrefCallbacks();
 	PREF_RegisterCallback("mail.allow_at_sign_in_user_name", NET_PrefChangedFunc, NULL);
-
-    PREF_RegisterCallback("network.dnsAttempt", NET_AboutColonAccessPrefChanged, NULL);
-
-    NET_AboutColonAccessPrefChanged(NULL, NULL);
 
 #ifdef XP_UNIX
 	{
