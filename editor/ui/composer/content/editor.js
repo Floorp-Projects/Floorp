@@ -80,6 +80,7 @@ var gDefaultTextColor = "";
 var gDefaultBackgroundColor = "";
 var gCSSPrefListener;
 var gPrefs;
+var gLocalFonts = null;
 
 var gLastFocusNode = null;
 var gLastFocusNodeWasSelected = false;
@@ -996,6 +997,8 @@ function EditorSetFontSize(size)
 
 function initFontFaceMenu(menuPopup)
 {
+  initLocalFontFaceMenu(menuPopup);
+
   if (menuPopup)
   {
     var children = menuPopup.childNodes;
@@ -1023,10 +1026,18 @@ function initFontFaceMenu(menuPopup)
       {
         EditorGetTextProperty("font", "face", faceType, firstHas, anyHas, allHas);
 
-        // Check the item only if all of selection has the face...
-        menuItem.setAttribute("checked", allHas.value);
-        // ...but remember if ANY part of the selection has it
+        // Remember if ANY part of the selection has the face
         fontWasFound |= anyHas.value;
+
+        // Check the menuitem only if all of selection has the face
+        if (allHas.value)
+        {
+          menuItem.setAttribute("checked", "true");
+          break;
+        }
+
+        // in case none match, make sure we've cleared the checkmark
+        menuItem.removeAttribute("checked");
       }
     }
     // Check the default item if no other item was checked
@@ -1034,6 +1045,36 @@ function initFontFaceMenu(menuPopup)
     children[0].setAttribute("checked", !fontWasFound);
   }
 }
+
+function initLocalFontFaceMenu(menuPopup)
+{
+  if (!gLocalFonts)
+  {
+    // Build list of all local fonts once per editor
+    try 
+    {
+      var enumerator = Components.classes["@mozilla.org/gfx/fontenumerator;1"]
+                                 .getService(Components.interfaces.nsIFontEnumerator);
+      var localFontCount = { value: 0 }
+      gLocalFonts = enumerator.EnumerateAllFonts(localFontCount);
+      for (var i = 0; i < gLocalFonts.length; ++i)
+      {
+        if (gLocalFonts[i] != "")
+        {
+          var itemNode = document.createElementNS(XUL_NS, "menuitem");
+          itemNode.setAttribute("label", gLocalFonts[i]);
+          itemNode.setAttribute("value", gLocalFonts[i]);
+          itemNode.setAttribute("type", "radio");
+          itemNode.setAttribute("name", "2");
+          itemNode.setAttribute("observes", "cmd_renderedHTMLEnabler");
+          menuPopup.appendChild(itemNode);
+        }
+      }
+    }
+    catch(e) { }
+  }
+}
+ 
 
 function initFontSizeMenu(menuPopup)
 {
