@@ -37,7 +37,7 @@
 
 <ol>
 	<li>Open the Edit menu and choose Preferences.
-	<li>Under the Privacy &amp; Security category, choose SSL. (If no subcategories are visible, double-click the category to expand the list.)
+	<li>Under the Privacy &amp; Security category, choose SSL. (If no subcategories are visible, double-click Privacy &amp; Security to expand the list.)
 </ol>
 
 
@@ -99,18 +99,41 @@ information that isn't encrypted. </b>If you send unencrypted information over t
 
 <ol>
 	<li>Open the Edit menu and choose Preferences.
-	<li>Under the Privacy &amp; Security category, choose SSL. (If no subcategories are visible, double-click the category to expand the list.)
+	<li>Under the Privacy &amp; Security category, choose SSL. (If no subcategories are visible, double-click Privacy &amp; Security to expand the list.)
 	<li>Click the Edit Ciphers button.
 </ol>
 
-<p>The Edit Ciphers dialog box allows you to select or deselect individual ciphers, or <a href="glossary.html#cryptographic_algorithm">cryptographic algorithms</a>. Consult your system administrator before changing any of these settings.
+<p>The Edit Ciphers dialog box allows you to select or deselect ciphers, or <a href="glossary.html#cryptographic_algorithm">cryptographic algorithms</a>. Consult your system administrator before changing any of these settings.
 
-<p>
-[&nbsp;<A HREF="#ssl_first">Return to beginning of SSL section</A>&nbsp;]
-</p>
+<p>Each checkbox corresponds to a cipher suite, or set of cryptographic algorithms. To view info information about a cipher suite, select its name. 
+
+<p>The following information is displayed for the selected cipher suite:
+
+<ul>
+	<li><b>Encryption algorithm:</b> Used for bulk encryption and decryption.
+	<li><b>Authentication Algorithm:</b> Used to determine the server or client's identity. 
+	<li><b>Key Algorithm:</b>  Governs the way in which the server and client determine the symmetric keys they will both use during an SSL session.
+	 <li><b>Key Size:</b> The size of the keys used with this cipher suite. (Encryption strength depends on both encryption algorithm and key size.)
+	<li><b>MAC Algorithm:</b> Used for tamper detection and data verification; sometimes called message digest or hash algorithm.
+	<li><b>Other Attributes.</b> These can include the following:</li>
+	<ul>
+		<li><b>FIPS.</b> Complies with Federal Information Processing Standards Publications (FIPS PUBS) 140-1. Many products sold to the US government must comply with one or more FIPS standards.
+		<li><b>IsExportable</b>. Cipher suite was legally exportable under regulations published by the U.S. Department of Commerce that previously limited the encryption strength of exported products. Those regulations have since been loosened.
+</ul>
+</ul>
+
+<p>For more information about ciphers and encryption, see the following on-line documents:
+
+<ul>
+	<li><a href="http://developer.netscape.com/docs/manuals/security/pkin/index.htm" target="_blank">Introduction to Public-Key Cryptography</a>
+	<li><a href="http://developer.netscape.com/docs/manuals/security/sslin/index.htm" target="_blank">Introduction to SSL</a>
+	<li><a href="http://www.mozilla.org/projects/security/pki/nss/algorithms.html" target="_blank">Encryption Technologies</a>.
+</ul>
+
+<p>&nbsp;
 
 <hr>
-<p><i>2 April 2002</i></body>
+<p><i>12 April 2002</i></body>
 <p>Copyright &copy; 1994-2002 Netscape Communications Corporation.</p>
 
 </body>
