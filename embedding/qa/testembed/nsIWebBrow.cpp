@@ -40,7 +40,7 @@
 // test cases for nsIWebBrowser and nsIWebBrowserSetup
 //
 
-#include "stdafx.h"
+#include "Stdafx.h"
 #include "TestEmbed.h"
 #include "BrowserImpl.h"
 #include "BrowserFrm.h"

@@ -20,6 +20,7 @@ public:
 	//{{AFX_DATA(CUrlDialog)
 	enum { IDD = IDD_URLDIALOG };
 	CString	m_urlfield;
+	int m_urlflag;
 	//}}AFX_DATA
 
 
@@ -36,6 +37,7 @@ protected:
 	// Generated message map functions
 	//{{AFX_MSG(CUrlDialog)
 	afx_msg void OnChangeUrlfield();
+	afx_msg int OnEditchangeCombo1();
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 };

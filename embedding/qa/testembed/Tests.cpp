@@ -63,7 +63,7 @@
 #include "nsIObserServ.h"
 #include "nsIFile.h"
 #include "nsIWebBrow.h"
-
+#include "nsIWebProg.h"
 #include "QaUtils.h"
 #include <stdio.h>
 
@@ -224,6 +224,11 @@ BEGIN_MESSAGE_MAP(CTests, CWnd)
 	ON_COMMAND(ID_INTERFACES_NSIWEBBROWSER_GETCONTENTDOMWINDOW, OnInterfacesNsiwebbrowser)
 	ON_COMMAND(ID_INTERFACES_NSIWEBBROWSER_NSIWBSETUPSETPROPERTY, OnInterfacesNsiwebbrowser)
 
+	ON_COMMAND(ID_INTERFACES_NSIWEBPROGRESS_RUNALLTESTS, OnInterfacesNsiwebprogress)
+	ON_COMMAND(ID_INTERFACES_NSIWEBPROGRESS_ADDPROGRESSLISTENER, OnInterfacesNsiwebprogress)
+	ON_COMMAND(ID_INTERFACES_NSIWEBPROGRESS_REMOVEPROGRESSLISTENER, OnInterfacesNsiwebprogress)
+	ON_COMMAND(ID_INTERFACES_NSIWEBPROGRESS_GETDOMWINDOW, OnInterfacesNsiwebprogress)
+
 	//}}AFX_MSG_MAP
 
 END_MESSAGE_MAP()
@@ -254,8 +259,8 @@ void CTests::OnTestsChangeUrl()
 {
 	char *theUrl = "http://www.aol.com/";
 	CUrlDialog myDialog;
-	//nsresult rv;
 
+	//nsresult rv;
 
 	if (!qaWebNav)
 	{
@@ -268,37 +273,12 @@ void CTests::OnTestsChangeUrl()
 		QAOutput("Begin Change URL test.", 1);
 		strcpy(theUrl, myDialog.m_urlfield);
 		rv = qaWebNav->LoadURI(NS_ConvertASCIItoUCS2(theUrl).get(),
-						nsIWebNavigation::LOAD_FLAGS_BYPASS_HISTORY,
-            nsnull,
+						nsIWebNavigation::LOAD_FLAGS_NONE,
+			nsnull,
             nsnull,
             nsnull);
 	    RvTestResult(rv, "rv LoadURI() test", 1);
 		FormatAndPrintOutput("The url = ", theUrl, 2);
-
-/*
-		nsCAutoString uriString;
-		nsCOMPtr<nsIURI> pURI;
-		// GetcurrentURI() declared in nsIP3PUI.idl
-		// used with webNav obj in nsP3PObserverHTML.cpp, line 239
-		// this will be used as an indep routine to verify the URI load
-		rv = qaWebNav->GetCurrentURI( getter_AddRefs( pURI ) );
-		if(NS_FAILED(rv) || !pURI)
-			AfxMessageBox("Bad result for GetCurrentURI().");
-
-		rv = pURI->GetSpec(uriString);
-		if (NS_FAILED(rv))
-			AfxMessageBox("Bad result for GetSpec().");
-
-		AfxMessageBox("Start URL validation test().");
-		if (strcmp(uriString, theUrl) == 0)
-		{
-			QAOutput("Url loaded successfully. Test Passed.", 2);
-		}
-		else
-		{
-			QAOutput("Url didn't load successfully. Test Failed.", 2);
-		}
-*/
 		QAOutput("End Change URL test.", 1);
 	}
 	else
@@ -317,9 +297,6 @@ void CTests::OnTestsGlobalHistory()
 	CUrlDialog myDialog;
 
 	PRBool theRetVal = PR_FALSE;
-
-	//nsresult rv;
-
 
 	nsCOMPtr<nsIGlobalHistory> myHistory(do_GetService(NS_GLOBALHISTORY_CONTRACTID));
 
@@ -439,22 +416,6 @@ void CTests::OnTestsAddWebProgListener()
     rv = qaWebBrowser->AddWebBrowserListener(weakling, NS_GET_IID(nsIWebProgressListener));
 
 	RvTestResult(rv, "AddWebBrowserListener(). Add Web Prog Lstnr test", 2);
-
-/*
-	nsCOMPtr<nsIInterfaceRequestor> qaIReq(do_QueryInterface(qaWebBrowser));
-	nsCOMPtr<nsIWebProgress> qaWebProgress(do_GetInterface(qaIReq));
-	if (!qaWebProgress)
-		QAOutput("Didn't get web progress object.", 2);
-
-	nsCOMPtr<nsISupports> aListener(do_QueryInterface(qaWebBrowser));
-	if (!aListener)
-		QAOutput("We didn't get nsISupports object.", 2);
-	nsCOMPtr<nsIWebProgressListener> listener = do_QueryInterface(aListener, &rv);
-
-	nsCOMPtr<nsIWebProgressListener> listener(NS_STATIC_CAST(nsIWebProgressListener*, qaBrowserImpl));
-	rv = qaWebProgress->AddProgressListener(listener);
-	RvTestResult(rv, "nsIWebProgress::AddProgressListener() test", 2);
-*/
 }
 
 // *********************************************************
@@ -499,8 +460,6 @@ void CTests::OnToolsRemoveGHPage()
 		QAOutput("Could not get the history object.", 2);
 		return;
 	}
-//	nsCOMPtr<nsIBrowserHistory> myHistory(do_GetInterface(myGHistory));
-
 
 	if (myDialog.DoModal() == IDOK)
 	{
@@ -526,8 +485,6 @@ void CTests::OnToolsRemoveGHPage()
 void CTests::OnToolsRemoveAllGH()
 {
 
-	//nsresult rv;
-
 	nsCOMPtr<nsIGlobalHistory> myGHistory(do_GetService(NS_GLOBALHISTORY_CONTRACTID));
 	if (!myGHistory)
 	{
@@ -546,8 +503,6 @@ void CTests::OnToolsRemoveAllGH()
 	RvTestResult(rv, "removeAllPages(). Test .", 2);
 
 	QAOutput("End removal of all pages from the GH file.", 2);
-
-	// removeAllPages()
 
 }
 
@@ -704,33 +659,6 @@ void CTests::OnToolsTestYourMethod2()
 {
 	// place your test code here
 
-		// nsIWebProgress test cases
-
-		// get webProg object
-	nsCOMPtr<nsIInterfaceRequestor> qaIReq(do_QueryInterface(qaWebBrowser));
-	nsCOMPtr<nsIWebProgress> qaWebProgress(do_GetInterface(qaIReq));
-	if (!qaWebProgress)
-		QAOutput("Didn't get web progress object.", 2);
-	else
-		QAOutput("We got web progress object.", 2);
-
-		// addWebProgListener
-	nsCOMPtr<nsIWebProgressListener> listener(NS_STATIC_CAST(nsIWebProgressListener*, qaBrowserImpl));
-	rv = qaWebProgress->AddProgressListener(listener, nsIWebProgress::NOTIFY_ALL);
-	RvTestResult(rv, "nsIWebProgress::AddProgressListener() test", 2);
-
-		// removeWebProgListener
-	rv = qaWebProgress->RemoveProgressListener(listener);
-	RvTestResult(rv, "nsIWebProgress::RemoveProgressListener() test", 2);
-
-		// getTheDOMWindow
-	nsCOMPtr<nsIDOMWindow> qaDOMWindow;
-	rv = qaWebProgress->GetDOMWindow(getter_AddRefs(qaDOMWindow));
-	if (!qaWebProgress)
-		QAOutput("Didn't get DOM Window object.", 2);
-	else
-		RvTestResult(rv, "nsIWebProgress::GetDOMWindow() test", 2);
-
 }
 
 // ***********************************************************************
@@ -845,4 +773,10 @@ void CTests::OnInterfacesNsiwebbrowser()
 {
 	CNsIWebBrowser oWebBrowser(qaWebBrowser, qaBrowserImpl);
 	oWebBrowser.OnStartTests(nCommandID);
+}
+
+void CTests::OnInterfacesNsiwebprogress()
+{
+	CnsiWebProg oWebProgress(qaWebBrowser, qaBrowserImpl);
+	oWebProgress.OnStartTests(nCommandID);
 }

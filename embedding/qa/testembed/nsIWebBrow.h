@@ -68,8 +68,6 @@ public:
 	// Mozilla interfaces
 	//
 	nsCOMPtr<nsIWebBrowser> qaWebBrowser;
-	nsCOMPtr<nsIWebBrowserChrome> qaWebBrowserChrome;
-	nsCOMPtr<nsIURIContentListener> qaURIContentListener;
 	CBrowserImpl	*qaBrowserImpl;
 
 	// local test methods for nsIWebBrowser
@@ -96,13 +94,13 @@ public:
 
 private:
 	// Individual interface Objects
-
+	nsCOMPtr<nsIWebBrowserChrome> qaWebBrowserChrome;
+	nsCOMPtr<nsIURIContentListener> qaURIContentListener;
 	// Generated message map functions
 protected:
 	//{{AFX_MSG(CTests)
 
 	//}}AFX_MSG
-
 };
 
 #endif //_NSIWEBBROW_H
