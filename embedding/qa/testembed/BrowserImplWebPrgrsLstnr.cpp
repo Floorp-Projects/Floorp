@@ -69,6 +69,7 @@ NS_IMETHODIMP CBrowserImpl::OnProgressChange(nsIWebProgress *progress, nsIReques
                                                   PRInt32 curSelfProgress, PRInt32 maxSelfProgress,
                                                   PRInt32 curTotalProgress, PRInt32 maxTotalProgress)
 {
+	// nsCString
 	nsCString stringMsg;
 
 	if(! m_pBrowserFrameGlue)
@@ -118,7 +119,6 @@ NS_IMETHODIMP CBrowserImpl::OnStateChange(nsIWebProgress *progress, nsIRequest *
 	char theStateType[100];
 	int displayMode = 1;
 	nsCString stringMsg;
-	nsCString totalMsg;
 
 	if(! m_pBrowserFrameGlue)
 		return NS_ERROR_FAILURE;

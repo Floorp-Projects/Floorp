@@ -56,11 +56,10 @@ class CBrowserImpl :
 	 public nsIWebProgressListener,
 	 public nsIContextMenuListener,
 	 public nsSupportsWeakReference,
-	 public nsISHistoryListener,		// de: added this in 5/11   					 
-	 public nsIStreamListener,			// de: added this in 6/29
-	 public nsITooltipListener   		// de: added this in 7/25
-//	 public nsITooltipTextProvider		// de: added this in 7/25
-//	 public nsIURIContentListener
+	 public nsISHistoryListener,		// de: added this in 5/11/01   					 
+	 public nsIStreamListener,			// de: added this in 6/29/01
+	 public nsITooltipListener,   		// de: added this in 7/25/01
+	 public nsIURIContentListener
 {
 public:
     CBrowserImpl();
@@ -80,8 +79,9 @@ public:
 	NS_DECL_NSISTREAMLISTENER  		 // de: added this in 6/29
 	NS_DECL_NSIREQUESTOBSERVER		 // de: added this in 6/29
 	NS_DECL_NSITOOLTIPLISTENER		 // de: added this in 7/25
-	//NS_DECL_NSITOOLTIPTEXTPROVIDER   // de: added this in 7/25
-	//NS_DECL_NSIURICONTENTLISTENER
+	NS_DECL_NSIURICONTENTLISTENER
+//	NS_DECL_NSITOOLTIPTEXTPROVIDER   // de: added this in 7/25
+
 protected:
 
     PBROWSERFRAMEGLUE  m_pBrowserFrameGlue;

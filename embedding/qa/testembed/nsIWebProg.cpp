@@ -79,6 +79,7 @@ nsIWebProgress * CnsiWebProg::GetWebProgObject()
 {
 	nsCOMPtr<nsIInterfaceRequestor> qaIReq(do_QueryInterface(qaWebBrowser));
 	nsCOMPtr<nsIWebProgress> qaWebProgress(do_GetInterface(qaIReq));
+
 	if (!qaWebProgress) {
 		QAOutput("Didn't get web progress object.", 2);
 		return NULL;
@@ -101,8 +102,9 @@ void CnsiWebProg::AddWebProgLstnr(PRUint32 theFlag)
 	nsCOMPtr<nsIWebProgressListener> listener(NS_STATIC_CAST(nsIWebProgressListener*, qaBrowserImpl));
 	rv = qaWebProgress->AddProgressListener(listener, theFlag);
 //	StoreWebProgFlag(theFlag);
-	RvTestResult(rv, "nsIWebProgress::AddProgressListener() test", 2);
-	FormatAndPrintOutput("WebProgressListener flag = ", flagName, 2);
+	RvTestResult(rv, "nsIWebProgress::AddProgressListener() test", 1);
+	RvTestResultDlg(rv, "nsIWebProgress::AddProgressListener() test", true);
+	FormatAndPrintOutput("WebProgressListener flag = ", flagName, 1);
 }
 
 void CnsiWebProg::RemoveWebProgLstnr()
@@ -112,7 +114,8 @@ void CnsiWebProg::RemoveWebProgLstnr()
 	qaWebProgress = GetWebProgObject();
 	nsCOMPtr<nsIWebProgressListener> listener(NS_STATIC_CAST(nsIWebProgressListener*, qaBrowserImpl));
 	rv = qaWebProgress->RemoveProgressListener(listener);
-	RvTestResult(rv, "nsIWebProgress::RemoveProgressListener() test", 2);
+	RvTestResult(rv, "nsIWebProgress::RemoveProgressListener() test", 1);
+	RvTestResultDlg(rv, "nsIWebProgress::RemoveProgressListener() test");
 }
 
 void CnsiWebProg::GetTheDOMWindow()
@@ -122,10 +125,10 @@ void CnsiWebProg::GetTheDOMWindow()
 	qaWebProgress = GetWebProgObject();
 	nsCOMPtr<nsIDOMWindow> qaDOMWindow;
 	rv = qaWebProgress->GetDOMWindow(getter_AddRefs(qaDOMWindow));
-	if (!qaWebProgress)
+	RvTestResult(rv, "nsIWebProgress::GetDOMWindow() test", 1);
+	RvTestResultDlg(rv, "nsIWebProgress::GetDOMWindow() test");
+	if (!qaDOMWindow)
 		QAOutput("Didn't get DOM Window object.", 2);
-	else
-		RvTestResult(rv, "nsIWebProgress::GetDOMWindow() test", 2);
 }
 
 void CnsiWebProg::ConvertWPFlagToString(PRUint32 theFlag,
@@ -201,9 +204,7 @@ void CnsiWebProg::OnStartTests(UINT nMenuID)
 			break ;
 		case ID_INTERFACES_NSIWEBPROGRESS_ADDPROGRESSLISTENER :
 			if (myDialog.DoModal() == IDOK)
-			{
 				AddWebProgLstnr(myDialog.m_wpFlagValue);
-			}
 			break ;
 		case ID_INTERFACES_NSIWEBPROGRESS_REMOVEPROGRESSLISTENER :
 			RemoveWebProgLstnr();

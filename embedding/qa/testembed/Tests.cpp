@@ -275,8 +275,6 @@ void CTests::OnTestsChangeUrl()
 {
 	CUrlDialog myDialog;
 
-	//nsresult rv;
-
 	if (!qaWebNav)
 	{
 		QAOutput("Web navigation object not found. Change URL test not performed.", 2);
@@ -288,6 +286,7 @@ void CTests::OnTestsChangeUrl()
 		QAOutput("Begin Change URL test.", 1);
 		rv = qaWebNav->LoadURI(NS_ConvertASCIItoUCS2(myDialog.m_urlfield).get(),
 								myDialog.m_flagvalue, nsnull,nsnull, nsnull);
+
 	    RvTestResult(rv, "rv LoadURI() test", 1);
 		FormatAndPrintOutput("The url = ", myDialog.m_urlfield, 2);
 		FormatAndPrintOutput("The flag = ", myDialog.m_flagvalue, 1);
@@ -305,7 +304,6 @@ void CTests::OnTestsGlobalHistory()
 	// create instance of myHistory object. Call's XPCOM
 	// service manager to pass the contract ID.
 
-	char *theUrl = "http://www.bogussite.com/";
 	CUrlDialog myDialog;
 
 	PRBool theRetVal = PR_FALSE;
@@ -321,13 +319,10 @@ void CTests::OnTestsGlobalHistory()
 	if (myDialog.DoModal() == IDOK)
 	{
 		QAOutput("Begin IsVisited() and AddPage() tests.", 2);
-
-		strcpy(theUrl, myDialog.m_urlfield);
-
-		FormatAndPrintOutput("The history url = ", theUrl, 1);
+		FormatAndPrintOutput("The history url = ", myDialog.m_urlfield, 1);
 
 		// see if url is already in the GH file (pre-AddPage() test)
-		rv = myHistory->IsVisited(theUrl, &theRetVal);
+		rv = myHistory->IsVisited(myDialog.m_urlfield, &theRetVal);
 	    RvTestResult(rv, "rv IsVisited() test", 1);
 		FormatAndPrintOutput("The IsVisited() boolean return value = ", theRetVal, 1);
 
@@ -338,7 +333,7 @@ void CTests::OnTestsGlobalHistory()
 			QAOutput("URL hasn't been visited. Will execute AddPage().", 2);
 
 			// adds a url to the global history file
-			rv = myHistory->AddPage(theUrl);
+			rv = myHistory->AddPage(myDialog.m_urlfield);
 
 			// prints addPage() results to output file
 			if (NS_FAILED(rv))
@@ -350,7 +345,7 @@ void CTests::OnTestsGlobalHistory()
 				QAOutput("Valid results for AddPage(). Url added. Test passed.", 1);
 
 			// checks if url was visited (post-AddPage() test)
- 			myHistory->IsVisited(theUrl, &theRetVal);
+ 			myHistory->IsVisited(myDialog.m_urlfield, &theRetVal);
 
 			if (theRetVal)
 				QAOutput("URL is visited; post-AddPage() test. IsVisited() test passed.", 1);
@@ -457,7 +452,6 @@ void CTests::OnTestsRemovehistorylistener()
 
 void CTests::OnToolsRemoveGHPage()
 {
-	char *theUrl = "http://www.bogussite.com/";
 	CUrlDialog myDialog;
 	PRBool theRetVal = PR_FALSE;
 	//nsresult rv;
@@ -476,12 +470,11 @@ void CTests::OnToolsRemoveGHPage()
 	if (myDialog.DoModal() == IDOK)
 	{
 		QAOutput("Begin URL removal from the GH file.", 2);
-		strcpy(theUrl, myDialog.m_urlfield);
 
-		myGHistory->IsVisited(theUrl, &theRetVal);
+		myGHistory->IsVisited(myDialog.m_urlfield, &theRetVal);
 		if (theRetVal)
 		{
-			rv = myHistory->RemovePage(theUrl);
+			rv = myHistory->RemovePage(myDialog.m_urlfield);
 			RvTestResult(rv, "RemovePage() test (url removal from GH file)", 2);
 		}
 		else
@@ -522,187 +515,18 @@ void CTests::OnToolsRemoveAllGH()
 void CTests::OnToolsTestYourMethod()
 {
 	// place your test code here
+    nsWeakPtr weakling(
+        dont_AddRef(NS_GetWeakReference(NS_STATIC_CAST(nsIURIContentListener*, qaBrowserImpl))));
+    rv = qaWebBrowser->AddWebBrowserListener(weakling, NS_GET_IID(nsIURIContentListener));
 
-	// nsIWebBrowserFind methods
-	nsCOMPtr<nsIWebBrowserFind> qaWBFind(do_GetInterface(qaWebBrowser, &rv));
-	if (!qaWBFind)
-		QAOutput("Didn't get WebBrowserFind object.", 2);
-	else
-		RvTestResult(rv, "nsIWebBrowserFind object test", 2);
+	RvTestResult(rv, "AddWebBrowserListener(). nsIURIContentListener test", 2);
 
-	CUrlDialog myDialog;
-
-	nsString searchString;
-	PRBool didFind = PR_FALSE;
-	PRBool didFindBackwards = PR_FALSE;
-	PRBool didWrapFind = PR_FALSE;
-	PRBool didEntireWord = PR_FALSE;
-	PRBool didMatchCase = PR_FALSE;
-	PRBool didSearchFrames = PR_FALSE;
-	if (myDialog.DoModal() == IDOK) {
-
-		// SetSearchString()
-		searchString.AssignWithConversion(myDialog.m_urlfield);
-		rv = qaWBFind->SetSearchString(searchString.get());
-		RvTestResult(rv, "nsIWebBrowserFind::SetSearchString() test", 2);
-	}
-		// GetSearchString()
-		nsXPIDLString stringBuf;
-		CString csSearchStr;
-		rv = qaWBFind->GetSearchString(getter_Copies(stringBuf));
-		RvTestResult(rv, "nsIWebBrowserFind::GetSearchString() test", 2);
-		csSearchStr = stringBuf.get();
-		FormatAndPrintOutput("The searched string value = ", csSearchStr, 2);
-
-	// FindNext()
-	didFind = PR_TRUE;
-	rv = qaWBFind->FindNext(&didFind);
-	RvTestResult(rv, "nsIWebBrowserFind::FindNext(PR_TRUE) object test", 2);
-	FormatAndPrintOutput("returned didFind = ", didFind, 2);
-
-	didFind = PR_FALSE;
-	rv = qaWBFind->FindNext(&didFind);
-	RvTestResult(rv, "nsIWebBrowserFind::FindNext(PR_FALSE) object test", 2);
-	FormatAndPrintOutput("returned didFind = ", didFind, 2);
-
-	// SetFindBackwards()
-	didFindBackwards = PR_TRUE;
-	rv = qaWBFind->SetFindBackwards(didFindBackwards);
-	RvTestResult(rv, "nsIWebBrowserFind::SetFindBackwards(PR_TRUE) object test", 2);
-
-	didFindBackwards = PR_FALSE;
-	rv = qaWBFind->SetFindBackwards(didFindBackwards);
-	RvTestResult(rv, "nsIWebBrowserFind::SetFindBackwards(PR_FALSE) object test", 2);
-
-	// GetFindBackwards()
-	didFindBackwards = PR_TRUE;
-	rv = qaWBFind->GetFindBackwards(&didFindBackwards);
-	RvTestResult(rv, "nsIWebBrowserFind::GetFindBackwards(PR_TRUE) object test", 2);
-	FormatAndPrintOutput("returned didFindBackwards = ", didFindBackwards, 2);
-
-	didFindBackwards = PR_FALSE;
-	rv = qaWBFind->GetFindBackwards(&didFindBackwards);
-	RvTestResult(rv, "nsIWebBrowserFind::GetFindBackwards(PR_FALSE) object test", 2);
-	FormatAndPrintOutput("returned didFindBackwards = ", didFindBackwards, 2);
-
-	// SetWrapFind()
-	didWrapFind = PR_TRUE;
-	rv = qaWBFind->SetWrapFind(didWrapFind);
-	RvTestResult(rv, "nsIWebBrowserFind::SetWrapFind(PR_TRUE) object test", 2);
-
-	didWrapFind = PR_FALSE;
-	rv = qaWBFind->SetWrapFind(didWrapFind);
-	RvTestResult(rv, "nsIWebBrowserFind::SetWrapFind(PR_FALSE) object test", 2);
-
-	// GetWrapFind()
-	didWrapFind = PR_TRUE;
-	rv = qaWBFind->GetWrapFind(&didWrapFind);
-	RvTestResult(rv, "nsIWebBrowserFind::GetWrapFind(PR_TRUE) object test", 2);
-	FormatAndPrintOutput("returned didWrapFind = ", didWrapFind, 2);
-
-	didWrapFind = PR_FALSE;
-	rv = qaWBFind->GetWrapFind(&didWrapFind);
-	RvTestResult(rv, "nsIWebBrowserFind::GetWrapFind(PR_FALSE) object test", 2);
-	FormatAndPrintOutput("returned didWrapFind = ", didWrapFind, 2);
-
-	// SetEntireWord()
-	didEntireWord = PR_TRUE;
-	rv = qaWBFind->SetEntireWord(didEntireWord);
-	RvTestResult(rv, "nsIWebBrowserFind::SetEntireWord(PR_TRUE) object test", 2);
-
-	didEntireWord = PR_FALSE;
-	rv = qaWBFind->SetEntireWord(didEntireWord);
-	RvTestResult(rv, "nsIWebBrowserFind::SetEntireWord(PR_FALSE) object test", 2);
-
-	// GetEntireWord()
-	didEntireWord = PR_TRUE;
-	rv = qaWBFind->GetEntireWord(&didEntireWord);
-	RvTestResult(rv, "nsIWebBrowserFind::GetEntireWord(PR_TRUE) object test", 2);
-	FormatAndPrintOutput("returned didEntireWord = ", didEntireWord, 2);
-
-	didEntireWord = PR_FALSE;
-	rv = qaWBFind->GetEntireWord(&didEntireWord);
-	RvTestResult(rv, "nsIWebBrowserFind::GetEntireWord(PR_FALSE) object test", 2);
-	FormatAndPrintOutput("returned didEntireWord = ", didEntireWord, 2);
-
-	// SetMatchCase()
-	didMatchCase = PR_TRUE;
-	rv = qaWBFind->SetMatchCase(didMatchCase);
-	RvTestResult(rv, "nsIWebBrowserFind::SetMatchCase(PR_TRUE) object test", 2);
-
-	didMatchCase = PR_FALSE;
-	rv = qaWBFind->SetMatchCase(didMatchCase);
-	RvTestResult(rv, "nsIWebBrowserFind::SetMatchCase(PR_FALSE) object test", 2);
-
-	// GetMatchCase()
-	didMatchCase = PR_TRUE;
-	rv = qaWBFind->GetMatchCase(&didMatchCase);
-	RvTestResult(rv, "nsIWebBrowserFind::GetMatchCase(PR_TRUE) object test", 2);
-	FormatAndPrintOutput("returned didMatchCase = ", didMatchCase, 2);
-
-	didMatchCase = PR_FALSE;
-	rv = qaWBFind->GetMatchCase(&didMatchCase);
-	RvTestResult(rv, "nsIWebBrowserFind::GetMatchCase(PR_FALSE) object test", 2);
-	FormatAndPrintOutput("returned didMatchCase = ", didMatchCase, 2);
-
-	// SetSearchFrames()
-	didSearchFrames = PR_TRUE;
-	rv = qaWBFind->SetSearchFrames(didSearchFrames);
-	RvTestResult(rv, "nsIWebBrowserFind::SetSearchFrames(PR_TRUE) object test", 2);
-
-	didSearchFrames = PR_FALSE;
-	rv = qaWBFind->SetSearchFrames(didSearchFrames);
-	RvTestResult(rv, "nsIWebBrowserFind::SetSearchFrames(PR_FALSE) object test", 2);
-
-	// GetSearchFrames()
-	didSearchFrames = PR_TRUE;
-	rv = qaWBFind->GetSearchFrames(&didSearchFrames);
-	RvTestResult(rv, "nsIWebBrowserFind::GetSearchFrames(PR_TRUE) object test", 2);
-	FormatAndPrintOutput("returned didSearchFrames = ", didSearchFrames, 2);
-
-	didSearchFrames = PR_FALSE;
-	rv = qaWBFind->GetSearchFrames(&didSearchFrames);
-	RvTestResult(rv, "nsIWebBrowserFind::GetSearchFrames(PR_FALSE) object test", 2);
-	FormatAndPrintOutput("returned didSearchFrames = ", didSearchFrames, 2);
 }
 
 // ***********************************************************************
 void CTests::OnToolsTestYourMethod2()
 {
 	// place your test code here
-
-	nsCAutoString theSpec;
-	nsCOMPtr<nsIURI> theURI;
-	nsCOMPtr<nsIChannel> theChannel;
-	nsCOMPtr<nsILoadGroup> theLoadGroup(do_CreateInstance(NS_LOADGROUP_CONTRACTID));
-
-	theSpec = "javascript:document.write('TEST')";
-	FormatAndPrintOutput("the uri spec = ", theSpec, 2);
-
-	rv = NS_NewURI(getter_AddRefs(theURI), theSpec);
-	RvTestResult(rv, "NS_NewURI", 2);
-
-	rv = NS_NewChannel(getter_AddRefs(theChannel), theURI, nsnull, theLoadGroup);
-	RvTestResult(rv, "NS_OpenURI", 2);
-
-	nsCOMPtr<nsIStreamListener> listener(NS_STATIC_CAST(nsIStreamListener*, qaBrowserImpl));
-	nsCOMPtr<nsIWeakReference> thisListener(dont_AddRef(NS_GetWeakReference(listener)));
-	qaWebBrowser->AddWebBrowserListener(thisListener, NS_GET_IID(nsIStreamListener));
-
-	// this calls nsIStreamListener::OnDataAvailable()
-	rv = theChannel->AsyncOpen(listener, nsnull);
-	RvTestResult(rv, "AsyncOpen()", 2);
-
-	nsCOMPtr<nsIRequest> theRequest = do_QueryInterface(theChannel);
-
-	CNsIRequest::IsPendingReqTest(theRequest);
-	CNsIRequest::GetStatusReqTest(theRequest);
-	CNsIRequest::SuspendReqTest(theRequest);	
-	CNsIRequest::ResumeReqTest(theRequest);	
-	CNsIRequest::CancelReqTest(theRequest);	
-	CNsIRequest::SetLoadGroupTest(theRequest, theLoadGroup);	
-	CNsIRequest::GetLoadGroupTest(theRequest);
-
 }
 
 // ***********************************************************************
@@ -725,6 +549,22 @@ nsCOMPtr<nsIHelperAppLauncher>
 	rv = myHALD->show(myHal, nsnull);
 */
 }
+
+void CTests::OnVerifybugs90195()
+{
+    nsWeakPtr weakling(
+        dont_AddRef(NS_GetWeakReference(NS_STATIC_CAST(nsITooltipListener*, qaBrowserImpl))));
+    rv = qaWebBrowser->AddWebBrowserListener(weakling, NS_GET_IID(nsITooltipListener));
+
+	RvTestResult(rv, "AddWebBrowserListener(). Add Tool Tip Lstnr test", 2);
+
+/*	nsCOMPtr<nsITooltipTextProvider> oTooltipTextProvider = do_GetService(NS_TOOLTIPTEXTPROVIDER_CONTRACTID) ;
+	if (!oTooltipTextProvider)
+		AfxMEssageBox("Asdfadf");
+*/
+}
+
+// ***********************************************************************
 
 BOOL CTests::OnCmdMsg(UINT nID, int nCode, void* pExtra, AFX_CMDHANDLERINFO* pHandlerInfo)
 {
@@ -757,20 +597,6 @@ void CTests::OnInterfacesNsiselection()
 {
 	CSelection oSelection(qaWebBrowser);
 	oSelection.OnStartTests(nCommandID);
-}
-
-void CTests::OnVerifybugs90195()
-{
-    nsWeakPtr weakling(
-        dont_AddRef(NS_GetWeakReference(NS_STATIC_CAST(nsITooltipListener*, qaBrowserImpl))));
-    rv = qaWebBrowser->AddWebBrowserListener(weakling, NS_GET_IID(nsITooltipListener));
-
-	RvTestResult(rv, "AddWebBrowserListener(). Add Tool Tip Lstnr test", 2);
-
-/*	nsCOMPtr<nsITooltipTextProvider> oTooltipTextProvider = do_GetService(NS_TOOLTIPTEXTPROVIDER_CONTRACTID) ;
-	if (!oTooltipTextProvider)
-		AfxMEssageBox("Asdfadf");
-*/
 }
 
 void CTests::OnInterfacesNsiprofile()

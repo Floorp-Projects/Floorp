@@ -135,8 +135,8 @@ NS_INTERFACE_MAP_BEGIN(CBrowserImpl)
    NS_INTERFACE_MAP_ENTRY(nsIStreamListener) // de: added 6/29
    NS_INTERFACE_MAP_ENTRY(nsIRequestObserver) // de: added 6/29
    NS_INTERFACE_MAP_ENTRY(nsITooltipListener) // de: added 7/25
+   NS_INTERFACE_MAP_ENTRY(nsIURIContentListener) 
 //   NS_INTERFACE_MAP_ENTRY(nsITooltipTextProvider) // de: added 7/26
-//   NS_INTERFACE_MAP_ENTRY(nsIURIContentListener) 
 NS_INTERFACE_MAP_END
 
 //*****************************************************************************
@@ -458,29 +458,93 @@ NS_IMETHODIMP CBrowserImpl::OnStopRequest(nsIRequest *request,
 NS_IMETHODIMP CBrowserImpl::OnShowTooltip(PRInt32 aXCoords, PRInt32 aYCoords,
 										  const PRUnichar *aTipText)
 {
-	QAOutput("Tool Tip Listened",1);
+	QAOutput("nsITooltipListener->OnShowTooltip()",1);
+	FormatAndPrintOutput("OnShowTooltip() aXCoords = ", aXCoords, 1);
+	FormatAndPrintOutput("OnShowTooltip() aYCoords = ", aYCoords, 1);
+	FormatAndPrintOutput("OnShowTooltip() aTipText = ", *aTipText, 1);	
 	return NS_OK;
 }
 
 NS_IMETHODIMP CBrowserImpl::OnHideTooltip() 
 {
-	QAOutput("Tool Tip Listened",1);
+	QAOutput("nsITooltipListener->OnHideTooltip()",1);
 	return NS_OK;
 }
 
 
+//*****************************************************************************   
+//  UriContentListener
 
-/*NS_IMETHODIMP CBrowserImpl::GetNodeText(nsIDOMNode *aNode, const PRUnichar *aTipText)
-{    
-	QAOutput("Tool Tip Listened",1);
-	return NS_OK;
-}
-
-
-NS_IMETHODIMP CBrowserImpl::GetParentURIContentListener(nsIURIContentListener *myURIContentListener)
+NS_IMETHODIMP CBrowserImpl:: OnStartURIOpen(nsIURI *aURI, PRBool *_retval)
 {
-	QAOutput("GetParentURIContentListener", 2);
+	QAOutput("nsIURIContentListener->OnStartURIOpen()",1);
+
+	GetTheUri(aURI, 1);
+	*_retval = PR_TRUE;
 
 	return NS_OK;
 }
-*/
+
+NS_IMETHODIMP CBrowserImpl:: DoContent(const char *aContentType, PRBool aIsContentPreferred, nsIRequest *aRequest, nsIStreamListener **aContentHandler, PRBool *_retval)
+{
+	nsCString stringMsg;
+
+	QAOutput("nsIURIContentListener->DoContent()",1);
+
+	FormatAndPrintOutput("DoContent() content type = ", *aContentType, 1);
+	FormatAndPrintOutput("DoContent() aIsContentPreferred = ", aIsContentPreferred, 1);
+	RequestName(aRequest, stringMsg);	// nsIRequest::GetName() test
+	// set nsIStreamListener
+
+	*_retval = PR_TRUE;
+	return NS_OK;
+}
+NS_IMETHODIMP CBrowserImpl:: IsPreferred(const char *aContentType, char **aDesiredContentType, PRBool *_retval)
+{
+	QAOutput("nsIURIContentListener->IsPreferred()",1);
+
+	FormatAndPrintOutput("IsPreferred() content type = ", *aContentType, 1);
+	FormatAndPrintOutput("IsPreferred() desired content type = ", **aDesiredContentType, 1);
+	*_retval = PR_TRUE;
+	return NS_OK;
+}
+
+NS_IMETHODIMP CBrowserImpl:: CanHandleContent(const char *aContentType, PRBool aIsContentPreferred, char **aDesiredContentType, PRBool *_retval)
+{
+	QAOutput("nsIURIContentListener->CanHandleContent()",1);
+
+	FormatAndPrintOutput("CanHandleContent() content type = ", *aContentType, 1);
+	FormatAndPrintOutput("CanHandleContent() preferred content type = ", aIsContentPreferred, 1);
+	FormatAndPrintOutput("CanHandleContent() desired content type = ", **aDesiredContentType, 1);
+	*_retval = PR_TRUE;
+	return NS_OK;
+}
+
+NS_IMETHODIMP CBrowserImpl:: GetLoadCookie(nsISupports * *aLoadCookie)
+{
+	QAOutput("nsIURIContentListener->GetLoadCookie()",1);
+
+	return NS_OK;
+}
+
+NS_IMETHODIMP CBrowserImpl:: SetLoadCookie(nsISupports * aLoadCookie)
+{
+	QAOutput("nsIURIContentListener->SetLoadCookie()",1);
+
+	return NS_OK;
+}
+
+NS_IMETHODIMP CBrowserImpl:: GetParentContentListener(nsIURIContentListener * *aParentContentListener)
+{
+	QAOutput("nsIURIContentListener->GetParentContentListener()",1);
+
+	return NS_OK;
+}
+
+NS_IMETHODIMP CBrowserImpl:: SetParentContentListener(nsIURIContentListener * aParentContentListener)
+{
+	QAOutput("nsIURIContentListener->SetParentContentListener()",1);
+
+	return NS_OK;	
+}
+

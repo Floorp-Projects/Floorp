@@ -218,7 +218,7 @@ void CnsIObserServ::EnumerateObserversTest()
 			simpleEnum->GetNext(getter_AddRefs(observer));
 
 			rv = observer->Observe(observer, ObserverTable[i].theTopic, 0);
-			RvTestResult(rv, "nsIObserver() test", 2);	
+			RvTestResult(rv, "nsIObserver() test", 1);	
 			
 			// compare 'this' with observer object
 	//		if (this ==(CnsIObserServ *)observer)
