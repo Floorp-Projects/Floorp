@@ -30,6 +30,7 @@
 #include "prtypes.h"
 #include "prprintf.h"
 #include "prassert.h"
+#include "prosdep.h"
 
 #include "jsj_private.h"        /* LiveConnect internals */
 #include "jsjava.h"             /* External LiveConnect API */
