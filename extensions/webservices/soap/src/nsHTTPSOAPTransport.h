@@ -48,21 +48,26 @@
 #include "nsISOAPResponseListener.h"
 #include "nsCOMPtr.h"
 
-class nsHTTPSOAPTransport:public nsISOAPTransport {
+class nsHTTPSOAPTransport : public nsISOAPTransport {
 public:
   nsHTTPSOAPTransport();
-  virtual ~ nsHTTPSOAPTransport();
+  virtual ~nsHTTPSOAPTransport();
 
   NS_DECL_ISUPPORTS
-      // nsISOAPTransport
-NS_DECL_NSISOAPTRANSPORT};
+  NS_DECL_NSISOAPTRANSPORT
 
-class nsHTTPSSOAPTransport:public nsHTTPSOAPTransport {
+private:
+  static nsresult SetupRequest(nsISOAPCall* call, PRBool async,
+                               nsIXMLHttpRequest** ret);
+};
+
+class nsHTTPSSOAPTransport : public nsHTTPSOAPTransport {
 public:
   nsHTTPSSOAPTransport();
-  virtual ~ nsHTTPSSOAPTransport();
+  virtual ~nsHTTPSSOAPTransport();
 
-NS_DECL_ISUPPORTS};
+  NS_DECL_ISUPPORTS
+};
 
 class nsHTTPSOAPTransportCompletion : public nsIDOMEventListener,
                                       public nsISOAPCallCompletion
@@ -73,10 +78,12 @@ public:
                                 nsISOAPResponse * response,
                                 nsIXMLHttpRequest * request,
                                 nsISOAPResponseListener * listener);
-  virtual ~ nsHTTPSOAPTransportCompletion();
+  virtual ~nsHTTPSOAPTransportCompletion();
 
-  NS_DECL_ISUPPORTS NS_DECL_NSISOAPCALLCOMPLETION
-      // nsIDOMEventListener
+  NS_DECL_ISUPPORTS 
+  NS_DECL_NSISOAPCALLCOMPLETION
+ 
+  // nsIDOMEventListener
   NS_IMETHOD HandleEvent(nsIDOMEvent * aEvent);
 
 protected:

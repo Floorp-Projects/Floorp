@@ -309,20 +309,14 @@ static nsresult GetTransportURI(nsISOAPCall * aCall, nsAString & aURI)
   return NS_OK;
 }
 
-/* void syncCall (in nsISOAPCall aCall, in nsISOAPResponse aResponse); */
-NS_IMETHODIMP nsHTTPSOAPTransport::SyncCall(nsISOAPCall * aCall, nsISOAPResponse * aResponse)
+nsresult // static
+nsHTTPSOAPTransport::SetupRequest(nsISOAPCall* aCall, PRBool async,
+                                  nsIXMLHttpRequest** ret)
 {
-  NS_ENSURE_ARG(aCall);
-
   nsresult rv;
-  nsCOMPtr<nsIXMLHttpRequest> request;
-
-  nsCOMPtr<nsIDOMDocument> messageDocument;
-  rv = aCall->GetMessage(getter_AddRefs(messageDocument));
+  nsCOMPtr<nsIXMLHttpRequest> request = do_CreateInstance(NS_XMLHTTPREQUEST_CONTRACTID, &rv);
   if (NS_FAILED(rv))
     return rv;
-  if (!messageDocument)
-    return SOAP_EXCEPTION(NS_ERROR_NOT_INITIALIZED,"SOAP_MESSAGE_DOCUMENT", "No message document is present.");
 
   nsAutoString uri;
   rv = GetTransportURI(aCall, uri);
@@ -331,25 +325,30 @@ NS_IMETHODIMP nsHTTPSOAPTransport::SyncCall(nsISOAPCall * aCall, nsISOAPResponse
   if (AStringIsNull(uri))
     return SOAP_EXCEPTION(NS_ERROR_NOT_INITIALIZED,"SOAP_TRANSPORT_URI", "No transport URI was specified.");
 
-  DEBUG_DUMP_DOCUMENT("Synchronous Request", messageDocument)
-
-  request = do_CreateInstance(NS_XMLHTTPREQUEST_CONTRACTID, &rv);
-  if (NS_FAILED(rv))
-    return rv;
-
   rv = request->OverrideMimeType(NS_LITERAL_CSTRING("text/xml"));
   if (NS_FAILED(rv))
     return rv;
 
   const nsAString& empty = EmptyString();
   rv = request->OpenRequest(NS_LITERAL_CSTRING("POST"),
-                            NS_ConvertUTF16toUTF8(uri), PR_FALSE, empty,
-                            empty);
+                            NS_ConvertUTF16toUTF8(uri), async, empty, empty);
   if (NS_FAILED(rv))
     return rv;
 
   nsAutoString action;
   rv = aCall->GetActionURI(action);
+  if (NS_FAILED(rv))
+    return rv;
+
+  // nsXMLHttpRequest sends nsIDOMDocument payloads encoded as UTF-8,
+  // but it doesn't say so in the Content-Type header. For SOAP
+  // requests, we prefer to make this explicit. Some implementations
+  // rely on this.
+
+  // XXX : Use application/soap+xml for SOAP 1.2 once it gets
+  // registered by IANA.
+  rv = request->SetRequestHeader(NS_LITERAL_CSTRING("Content-Type"),
+                                 NS_LITERAL_CSTRING("text/xml; charset=UTF-8"));
   if (NS_FAILED(rv))
     return rv;
 
@@ -366,6 +365,31 @@ NS_IMETHODIMP nsHTTPSOAPTransport::SyncCall(nsISOAPCall * aCall, nsISOAPResponse
     if (NS_FAILED(rv))
       return rv;
   }
+
+
+  NS_ADDREF(*ret = request);
+
+  return NS_OK;
+}
+
+/* void syncCall (in nsISOAPCall aCall, in nsISOAPResponse aResponse); */
+NS_IMETHODIMP 
+nsHTTPSOAPTransport::SyncCall(nsISOAPCall * aCall, nsISOAPResponse * aResponse)
+{
+  NS_ENSURE_ARG(aCall);
+
+  nsCOMPtr<nsIDOMDocument> messageDocument;
+  nsresult rv = aCall->GetMessage(getter_AddRefs(messageDocument));
+  if (NS_FAILED(rv))
+    return rv;
+  if (!messageDocument)
+    return SOAP_EXCEPTION(NS_ERROR_NOT_INITIALIZED,"SOAP_MESSAGE_DOCUMENT", "No message document is present.");
+  DEBUG_DUMP_DOCUMENT("Synchronous Request", messageDocument)
+
+  nsCOMPtr<nsIXMLHttpRequest> request;
+  rv = SetupRequest(aCall, PR_FALSE, getter_AddRefs(request));
+  if (NS_FAILED(rv))
+    return rv;
 
   nsCOMPtr<nsIWritableVariant> variant =
       do_CreateInstance(NS_VARIANT_CONTRACTID, &rv);
@@ -513,70 +537,32 @@ NS_IMETHODIMP
 
 /* void asyncCall (in nsISOAPCall aCall, in nsISOAPResponseListener aListener, in nsISOAPResponse aResponse); */
 NS_IMETHODIMP
-    nsHTTPSOAPTransport::AsyncCall(nsISOAPCall * aCall,
-                                   nsISOAPResponseListener * aListener,
-                                   nsISOAPResponse * aResponse,
-                                   nsISOAPCallCompletion ** aCompletion)
+nsHTTPSOAPTransport::AsyncCall(nsISOAPCall * aCall,
+                               nsISOAPResponseListener * aListener,
+                               nsISOAPResponse * aResponse,
+                               nsISOAPCallCompletion ** aCompletion)
 {
   NS_ENSURE_ARG(aCall);
   NS_ENSURE_ARG(aCompletion);
 
-  nsresult rv;
-  nsCOMPtr<nsIXMLHttpRequest> request;
 
   nsCOMPtr<nsIDOMDocument> messageDocument;
-  rv = aCall->GetMessage(getter_AddRefs(messageDocument));
+  nsresult rv = aCall->GetMessage(getter_AddRefs(messageDocument));
   if (NS_FAILED(rv))
     return rv;
   if (!messageDocument)
     return SOAP_EXCEPTION(NS_ERROR_NOT_INITIALIZED,"SOAP_MESSAGE_DOCUMENT", "No message document is present.");
-
-  request = do_CreateInstance(NS_XMLHTTPREQUEST_CONTRACTID, &rv);
-  if (NS_FAILED(rv))
-    return rv;
-
-  nsCOMPtr<nsIDOMEventTarget> eventTarget =
-      do_QueryInterface(request, &rv);
-  if (NS_FAILED(rv))
-    return rv;
-
-  nsAutoString uri;
-  rv = GetTransportURI(aCall, uri);
-  if (NS_FAILED(rv))
-    return rv;
-  if (AStringIsNull(uri))
-    return SOAP_EXCEPTION(NS_ERROR_NOT_INITIALIZED,"SOAP_TRANSPORT_URI", "No transport URI was specified.");
-
   DEBUG_DUMP_DOCUMENT("Asynchronous Request", messageDocument)
-  rv = request->OverrideMimeType(NS_LITERAL_CSTRING("text/xml"));
+
+  nsCOMPtr<nsIXMLHttpRequest> request;
+  rv = SetupRequest(aCall, PR_TRUE, getter_AddRefs(request));
   if (NS_FAILED(rv))
     return rv;
 
-  const nsAString& empty = EmptyString();
-  rv = request->OpenRequest(NS_LITERAL_CSTRING("POST"),
-                            NS_ConvertUTF16toUTF8(uri), PR_TRUE, empty, empty);
+  nsCOMPtr<nsIDOMEventTarget> eventTarget = 
+    do_QueryInterface(request, &rv);
   if (NS_FAILED(rv))
     return rv;
-
-  nsAutoString action;
-  rv = aCall->GetActionURI(action);
-  if (NS_FAILED(rv))
-    return rv;
-
-  // Apache Axis web services WSDL files say to set soapAction to "" and require it to be sent.  
-  // So only check if its not void instead of using AStringIsNull.
-
-  if (!action.IsVoid()) {
-
-    //XXXdoron necko doesn't allow empty header values, so set it to " "
-    if (action.IsEmpty())
-      action = NS_LITERAL_STRING(" ");
-
-    rv = request->SetRequestHeader(NS_LITERAL_CSTRING("SOAPAction"),
-                                   NS_ConvertUTF16toUTF8(action));
-    if (NS_FAILED(rv))
-      return rv;
-  }
 
   nsCOMPtr<nsIWritableVariant> variant =
       do_CreateInstance(NS_VARIANT_CONTRACTID, &rv);
