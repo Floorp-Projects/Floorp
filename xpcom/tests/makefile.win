@@ -40,7 +40,6 @@ PROG7 = .\$(OBJDIR)\TestAtoms.exe
 PROG8 = .\$(OBJDIR)\nsIFileTest.exe
 PROG9 = .\$(OBJDIR)\TestCRT.exe
 PROG10 = .\$(OBJDIR)\FilesTest.exe
-PROG11 = .\$(OBJDIR)\PropertiesTest.exe
 PROG12 = .\$(OBJDIR)\TestAutoLock.exe
 PROG13 = .\$(OBJDIR)\TestThreads.exe
 PROG14 = .\$(OBJDIR)\TestObserverService.exe
@@ -64,7 +63,6 @@ PROGRAMS = $(PROG1) \
            $(PROG8) \
            $(PROG9) \
            $(PROG10) \
-           $(PROG11) \
            $(PROG12) \
            $(PROG13) \
            $(PROG14) \
@@ -107,7 +105,6 @@ $(PROG7): $(OBJDIR) TestAtoms.cpp
 $(PROG8): $(OBJDIR) nsIFileTest.cpp
 $(PROG9): $(OBJDIR) TestCRT.cpp
 $(PROG10): $(OBJDIR) FilesTest.cpp
-$(PROG11): $(OBJDIR) PropertiesTest.cpp
 $(PROG12): $(OBJDIR) TestAutoLock.cpp
 $(PROG13): $(OBJDIR) TestThreads.cpp
 $(PROG14): $(OBJDIR) TestObserverService.cpp
