@@ -1790,10 +1790,14 @@ CSSLoaderImpl::SheetComplete(SheetLoadData* aLoadData, PRBool aSucceeded)
                  data->mParentData->mPendingChildren != 0,
                  "Broken pending child count on our parent");
 
+    // If we have a parent, our parent is no longer being parsed, and
+    // we are the last pending child, then our load completion
+    // completes the parent too.  Note that the parent _can_ still be
+    // being parsed (eg if the child (us) failed to open the channel
+    // or some such).
     if (data->mParentData &&
         --(data->mParentData->mPendingChildren) == 0 &&
-        !data->mSyncLoad) {
-      // We finished the parent too
+        mParsingDatas.IndexOf(data->mParentData) == -1) {
       SheetComplete(data->mParentData, aSucceeded);
     }
     
