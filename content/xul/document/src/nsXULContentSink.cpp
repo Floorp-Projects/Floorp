@@ -228,6 +228,8 @@ protected:
 
         nsresult GetTopNode(nsXULPrototypeNode** aNode);
         nsresult GetTopChildren(nsVoidArray** aChildren);
+
+        PRBool IsInsideXULTemplate();
     };
 
     friend class ContextStack;
@@ -325,6 +327,31 @@ XULContentSinkImpl::ContextStack::GetTopChildren(nsVoidArray** aChildren)
 
     *aChildren = &(mTop->mChildren);
     return NS_OK;
+}
+
+
+PRBool
+XULContentSinkImpl::ContextStack::IsInsideXULTemplate()
+{
+    if (mDepth) {
+        Entry* entry = mTop;
+        while (entry) {
+            nsXULPrototypeNode* node = entry->mNode;
+
+            if (node->mType == nsXULPrototypeNode::eType_Element) {
+                nsXULPrototypeElement* element =
+                    NS_REINTERPRET_CAST(nsXULPrototypeElement*, node);
+
+                if (element->mNodeInfo->Equals(kTemplateAtom,
+                                               kNameSpaceID_XUL)) {
+                    return PR_TRUE;
+                }
+            }
+
+            entry = entry->mNext;
+        }
+    }
+    return PR_FALSE;
 }
 
 
@@ -1197,16 +1224,50 @@ XULContentSinkImpl::AddAttributes(const nsIParserNode& aNode, nsXULPrototypeElem
     nsresult rv;
     PRInt32 count = aNode.GetAttributeCount();
 
+    PRBool generateIDAttr = PR_FALSE;
+    if (mContextStack.IsInsideXULTemplate()) {
+        // Check for an 'id' attribute.  If we're inside a XUL
+        // template, then _everything_ needs to have an ID for the
+        // 'template' attribute hookup.
+        generateIDAttr = PR_TRUE;
+
+        for (PRInt32 i = 0; i < count; i++) {
+            if (aNode.GetKeyAt(i).Equals(NS_LITERAL_STRING("id"))) {
+                generateIDAttr = PR_FALSE;
+                break;
+            }
+        }
+    }
+
     // Create storage for the attributes
+    PRInt32 numattrs = count;
+    if (generateIDAttr)
+        ++numattrs;
+
     nsXULPrototypeAttribute* attrs = nsnull;
-    if (count > 0) {
-      attrs = new nsXULPrototypeAttribute[count];
+    if (numattrs > 0) {
+      attrs = new nsXULPrototypeAttribute[numattrs];
       if (! attrs)
         return NS_ERROR_OUT_OF_MEMORY;
     }
 
     aElement->mAttributes    = attrs;
-    aElement->mNumAttributes = count;
+    aElement->mNumAttributes = numattrs;
+
+    if (generateIDAttr) {
+        // Deal with generating an ID attribute for stuff inside a XUL
+        // template
+        nsAutoString id; id.AssignWithConversion("$");
+        id.AppendInt(PRInt32(aElement), 16);
+
+        mNodeInfoManager->GetNodeInfo(kIdAtom, nsnull, kNameSpaceID_None,
+                                      *getter_AddRefs(attrs->mNodeInfo));
+        NS_ENSURE_TRUE(attrs->mNodeInfo, NS_ERROR_FAILURE);
+
+        attrs->mValue.SetValue( id );
+
+        ++attrs;
+    }
 
     // Copy the attributes into the prototype
     for (PRInt32 i = 0; i < count; i++) {

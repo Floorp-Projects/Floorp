@@ -348,8 +348,6 @@ public:
   NS_IMETHOD GetAnonymousNodesFor(nsIContent* aContent, nsIDOMNodeList** aResult);
   NS_IMETHOD SetAnonymousNodesFor(nsIContent* aContent, nsISupportsArray* aList);
 
-  NS_IMETHOD GetXBLChildNodesFor(nsIContent* aContent, nsIDOMNodeList** aResult);
-
   NS_IMETHOD GetInsertionPoint(nsIContent* aParent, nsIContent* aChild, nsIContent** aResult, PRUint32* aIndex);
   NS_IMETHOD GetSingleInsertionPoint(nsIContent* aParent, nsIContent** aResult, PRUint32* aIndex,  
                                      PRBool* aMultipleInsertionPoints);
@@ -778,28 +776,6 @@ nsBindingManager::SetAnonymousNodesFor(nsIContent* aContent, nsISupportsArray* a
   }
   else
     mAnonymousNodesTable->Remove(&key);
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsBindingManager::GetXBLChildNodesFor(nsIContent* aContent, nsIDOMNodeList** aResult)
-{
-  PRUint32 length;
-
-  // Retrieve the anonymous content that we should build.
-  GetAnonymousNodesFor(aContent, aResult);
-  if (*aResult) {
-    (*aResult)->GetLength(&length);
-    if (length == 0)
-      *aResult = nsnull;
-  }
-    
-  // We may have an altered list of children from XBL insertion points.
-  // If we don't have any anonymous kids, we next check to see if we have 
-  // insertion points.
-  if (! *aResult)
-    GetContentListFor(aContent, aResult);
 
   return NS_OK;
 }
