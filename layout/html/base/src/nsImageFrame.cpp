@@ -165,7 +165,7 @@ nsImageFrame::Init(nsIPresContext*  aPresContext,
     }
   }
 
-  if (NS_SUCCEEDED(lowSrcResult)) {
+if (NS_CONTENT_ATTR_HAS_VALUE == lowSrcResult && lowSrc.Length() > 0) {
     mLowSrcImageLoader = new nsHTMLImageLoader;
     if (mLowSrcImageLoader != nsnull) {
       mLowSrcImageLoader->Init(this, UpdateImageFrame, (void*)mLowSrcImageLoader, baseURL, lowSrc);
@@ -212,7 +212,7 @@ nsImageFrame::UpdateImage(nsIPresContext* aPresContext, PRUint32 aStatus, void* 
       if (aClosure == mLowSrcImageLoader) {
         // The lowsrc failed to load, but only set the bool to true
         // true if the src image failed.
-        imageFailedToLoad = mImageLoader.GetLoadStatus() & NS_IMAGE_LOAD_STATUS_ERROR;
+        imageFailedToLoad = mImageLoader.GetImage() == nsnull || (mImageLoader.GetLoadStatus() & NS_IMAGE_LOAD_STATUS_ERROR);
       } else { 
         // src failed to load, 
         // see if the lowsrc is here so we can paint it instead
