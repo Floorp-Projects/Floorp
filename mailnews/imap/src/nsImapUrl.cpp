@@ -1247,13 +1247,14 @@ NS_IMETHODIMP nsImapUrl::SetMsgLoadingFromCache(PRBool loadingFromCache)
   if (loadingFromCache)
   {
     nsCOMPtr<nsIMsgFolder> folder;
-	  nsMsgKey key;
+    nsMsgKey key;
 
-     nsresult rv = NS_OK;
     nsCAutoString folderURI;
     rv = nsParseImapMessageURI(mURI.get(), folderURI, &key, nsnull);
     NS_ENSURE_SUCCESS(rv, rv);
 
+    if (m_imapAction != nsImapMsgFetch) // only do this on msg fetch, i.e., if user is reading msg.
+      return rv;
     rv = GetMsgFolder(getter_AddRefs(folder));
 
     nsCOMPtr <nsIMsgDatabase> database;
