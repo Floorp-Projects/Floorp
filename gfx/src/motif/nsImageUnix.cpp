@@ -29,8 +29,8 @@ static NS_DEFINE_IID(kIImageIID, NS_IIMAGE_IID);
 
 nsImageUnix :: nsImageUnix()
 {
+  printf("[[[[[[[[[[[[[[[[[[[[ New Image Created ]]]]]]]]]]]]]]]]]]]]]]\n");
   NS_INIT_REFCNT();
-  printf("==========================\nnsImageUnix :: nsImageUnix()\n");
   mImage = nsnull ;
   mImageBits = nsnull;
   mWidth = 0;
@@ -52,6 +52,8 @@ nsImageUnix :: ~nsImageUnix()
     delete[] (PRUint8*)mImageBits;
     mImageBits = nsnull;
     }
+  if(nsnull!= mColorMap)
+    delete mColorMap;
 }
 
 NS_IMPL_ISUPPORTS(nsImageUnix, kIImageIID);
@@ -60,6 +62,16 @@ NS_IMPL_ISUPPORTS(nsImageUnix, kIImageIID);
 
 nsresult nsImageUnix :: Init(PRInt32 aWidth, PRInt32 aHeight, PRInt32 aDepth,nsMaskRequirements aMaskRequirements)
 {
+  if(nsnull != mImageBits)
+    delete[] (PRUint8*)mImageBits;
+
+  if(nsnull != mColorMap)
+    delete[] mColorMap;
+
+  if (nsnull != mImage) {
+    XDestroyImage(mImage);
+    mImage = nsnull;
+  }
   mWidth = aWidth;
   mHeight = aHeight;
   mDepth = aDepth;
@@ -71,26 +83,16 @@ nsresult nsImageUnix :: Init(PRInt32 aWidth, PRInt32 aHeight, PRInt32 aDepth,nsM
 
 printf("******************\nWidth %d  Height %d  Depth %d mSizeImage %d\n", 
                   mWidth, mHeight, mDepth, mSizeImage);
-  mImageBits = (PRUint8*) new PRUint8[mSizeImage];
-  //char * buf =  (char*) malloc(mSizeImage+1);
-  //printf("Buf address %x\n", buf);
-  //mImageBits = buf;
-  if (mImageBits == nsnull) {
-    printf("Bits are null!\n");
-  }
+    mImageBits = (PRUint8*) new PRUint8[mSizeImage];
 
     mColorMap = new nsColorMap;
 
     if (mColorMap != nsnull)
-    {
+      {
       mColorMap->NumColors = mNumPalleteColors;
       mColorMap->Index = new PRUint8[3 * mNumPalleteColors];
-
-      // XXX Note: I added this because purify claims that we make a
-      // copy of the memory (which we do!). I'm not sure if this
-      // matters or not, but this shutup purify.
       memset(mColorMap->Index, 0, sizeof(PRUint8) * (3 * mNumPalleteColors));
-    }
+      }
 
   return NS_OK;
 }
@@ -104,26 +106,27 @@ void nsImageUnix::ComputMetrics()
   mSizeImage = mRowBytes * mHeight;
 
 }
+
+//------------------------------------------------------------
+
 // figure out how big our palette needs to be
 void nsImageUnix :: ComputePaletteSize(PRIntn nBitCount)
 {
-        switch (nBitCount)
-  {
-                case 8:
-                        mNumPalleteColors = 256;
+  switch (nBitCount)
+    {
+    case 8:
+      mNumPalleteColors = 256;
       mNumBytesPixel = 1;
       break;
-
-                case 24:
-                        mNumPalleteColors = 0;
+    case 24:
+      mNumPalleteColors = 0;
       mNumBytesPixel = 3;
       break;
-
-                default:
-                        mNumPalleteColors = -1;
+    default:
+      mNumPalleteColors = -1;
       mNumBytesPixel = 0;
       break;
-  }
+    }
 }
 
 //------------------------------------------------------------
@@ -134,11 +137,9 @@ PRInt32 spanbytes;
 
   spanbytes = (aWidth * mDepth) >> 5;
 
-	if (((PRUint32)aWidth * mDepth) & 0x1F) 
-		spanbytes++;
-
-	spanbytes <<= 2;
-printf("scanbytes: %d\n", spanbytes);
+  if (((PRUint32)aWidth * mDepth) & 0x1F) 
+    spanbytes++;
+  spanbytes <<= 2;
   return(spanbytes);
 }
 
@@ -151,9 +152,7 @@ void nsImageUnix :: ImageUpdated(nsIDeviceContext *aContext, PRUint8 aFlags, nsR
   if (nsnull == mImage)
     return;
 
-
   if (IsFlagSet(nsImageUpdateFlags_kBitsChanged, aFlags)){
-
   }
 
 }
@@ -180,21 +179,25 @@ nsDrawingSurfaceUnix	*unixdrawing =(nsDrawingSurfaceUnix*) aSurface;
 //------------------------------------------------------------
 
 // Draw the bitmap, this draw just has destination coordinates
-PRBool nsImageUnix :: Draw(nsIRenderingContext &aContext, nsDrawingSurface aSurface,
-                          PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight)
+PRBool nsImageUnix :: Draw(nsIRenderingContext &aContext, 
+                       nsDrawingSurface aSurface,
+                       PRInt32 aX, PRInt32 aY, 
+                       PRInt32 aWidth, PRInt32 aHeight)
 {
 nsDrawingSurfaceUnix	*unixdrawing =(nsDrawingSurfaceUnix*) aSurface;
+
+  if(nsnull == mImage) {
+    printf("NOT OPTIMIZED YET OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO\n");
+    Optimize(aSurface);
+  }
  
   if (nsnull == mImage)
     return PR_FALSE;
-printf("Draw::XPutImage2 %d %d %d %d %d %d\n",  aX,aY,aX,aY,aWidth,aHeight);
+printf("Draw::XPutImage2 %d %d %d %d\n", aX,aY,aWidth,aHeight);
   XPutImage(unixdrawing->display,unixdrawing->drawable,unixdrawing->gc,mImage,
                     0,0,aX,aY,aWidth,aHeight);  
 
-printf("DrawImage 0x%x 0x%x 0x%x \n", unixdrawing->display,
-                unixdrawing->drawable,
-                unixdrawing->gc);
-
+printf("Out Draw::XPutImage2 %d %d %d %d\n", aX,aY,aWidth,aHeight);
   return PR_TRUE;
 }
 
@@ -215,11 +218,83 @@ PRBool nsImageUnix::SetAlphaMask(nsIImage *aTheMask)
 
 //------------------------------------------------------------
 
+void nsImageUnix::ConvertImage(nsDrawingSurface aDrawingSurface)
+{
+nsDrawingSurfaceUnix	*unixdrawing =(nsDrawingSurfaceUnix*) aDrawingSurface;
+PRUint8			*tempbuffer,*cursrc,*curdest;
+PRInt32			oldrowbytes,x,y;
+  
+  if((unixdrawing->depth==24) &&  (mDepth==8))
+    {
+    printf("Converting the image NOWWWWWWWWWWWWWW\n");
+
+    // convert this nsImage to a 24 bit image
+    oldrowbytes = mRowBytes;
+    mDepth = 24;
+
+    ComputePaletteSize(mDepth);
+
+    // create the memory for the image
+    ComputMetrics();
+
+    tempbuffer = (PRUint8*) new PRUint8[mSizeImage];
+
+    for(y=0;y<mHeight;y++)
+      {
+      cursrc = mImageBits+(y*oldrowbytes);
+      curdest =tempbuffer+(y*mRowBytes);
+      for(x=0;x<oldrowbytes;x++)
+        {
+        *curdest = mColorMap->Index[(3*(*cursrc))+2];  // red
+        curdest++;
+        *curdest = mColorMap->Index[(3*(*cursrc))+1];  // green
+        curdest++;
+        *curdest = mColorMap->Index[(3*(*cursrc))];  // blue
+        curdest++;
+        cursrc++;
+        } 
+      }
+   
+    // assign the new buffer to this nsImage
+    delete[] (PRUint8*)mImageBits;
+    mImageBits = tempbuffer; 
+   
+    // after we are finished converting the image, build a new color map   
+    mColorMap = new nsColorMap;
+
+    if (mColorMap != nsnull)
+      {
+      mColorMap->NumColors = mNumPalleteColors;
+      mColorMap->Index = new PRUint8[3 * mNumPalleteColors];
+      memset(mColorMap->Index, 0, sizeof(PRUint8) * (3 * mNumPalleteColors));
+      }
+    }
+}
+
+//------------------------------------------------------------
+
 nsresult nsImageUnix::Optimize(nsDrawingSurface aDrawingSurface)
 {
-  if (nsnull == mImage) {
+PRInt16 i;
+printf("Optimize.................................\n");
+  if (nsnull == mImage)
+    {
+#ifdef NOTNOW  
+  if(mColorMap->NumColors>0)
+      {
+      for(i=0;i<mColorMap->NumColors;i++)
+        {
+        printf("Red = %d\n",mColorMap->Index[(3*i)+2]);
+        printf("Green = %d\n",mColorMap->Index[(3*i)+1]);
+        printf("Blue = %d\n",mColorMap->Index[(3*i)]);
+        }
+      }
+#endif
+    ConvertImage(aDrawingSurface);
     CreateImage(aDrawingSurface);
-  }
+    delete[] (PRUint8*)mImageBits;
+    mImageBits = nsnull;
+    }
 }
 
 //------------------------------------------------------------
@@ -230,20 +305,23 @@ void nsImageUnix::CreateImage(nsDrawingSurface aSurface)
   Visual * visual ;
   PRUint32 format ;
   nsDrawingSurfaceUnix	*unixdrawing =(nsDrawingSurfaceUnix*) aSurface;
-  //char * data = (char *) PR_Malloc(sizeof(char) * mWidth * mHeight * mDepth);
   
   if(mImageBits) {
     /* Need to support monochrome too */
     if (unixdrawing->visual->c_class == TrueColor || 
-        unixdrawing->visual->c_class == DirectColor) {
+        unixdrawing->visual->c_class == DirectColor) 
+      {
       format = ZPixmap;
       printf("%s\n", (unixdrawing->visual->c_class == TrueColor?"True Color":"DirectColor"));
-    } else {
+      } 
+    else 
+      {
       format = XYPixmap;
       printf("Not True Color\n");
-    }
-printf("Width %d  Height %d Visual Depth %d  Image Depth %d\n", mWidth, mHeight,  
-            unixdrawing->depth, mDepth);
+      }
+printf("Width %d  Height %d Visual Depth %d  Image Depth %d\n", 
+                  mWidth, mHeight,  
+                  unixdrawing->depth, mDepth);
 
     mImage = ::XCreateImage(unixdrawing->display,
 			    unixdrawing->visual,
