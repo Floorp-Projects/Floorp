@@ -749,7 +749,7 @@ nsNativeComponentLoader::AutoRegisterComponent(PRInt32 when,
         // on Mac, Mozilla shared libraries are of type 'shlb'
         // Note: we don't check the creator (which for Mozilla is 'MOZZ')
         // so that 3rd party shared libraries will be noticed!
-        validExtension = (type == 'shlb');
+        validExtension = ((type == 'shlb') || (type == 'NSPL'));
       }
     }
 
