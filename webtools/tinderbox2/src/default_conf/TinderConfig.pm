@@ -5,8 +5,8 @@
 # customizable settings.
 
 
-# $Revision: 1.38 $ 
-# $Date: 2002/05/03 04:12:02 $ 
+# $Revision: 1.39 $ 
+# $Date: 2002/05/03 04:16:40 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/default_conf/TinderConfig.pm,v $ 
 # $Name:  $ 
@@ -158,7 +158,6 @@ $EMPTY_TABLE_CELL = "";
 # bonsai or are using CVS raw.
 
 @DBImpl = (
-	   'TinderDB::BT_Generic',
 #	   'TinderDB::BT_Req',
 	   'TinderDB::Time',
 	   'TinderDB::Notice',
@@ -166,6 +165,7 @@ $EMPTY_TABLE_CELL = "";
 	   'TinderDB::VC_Bonsai',
 #          'TinderDB::VC_Perforce',
 	   'TinderDB::Build',
+	   'TinderDB::BT_Generic',
 	  );
 
 # What border should the status legends use?  new browsers allow us to
