@@ -151,6 +151,8 @@ void CreateViewerMenus(Widget aParent, MenuCallbackProc aCallback)
     {"Show Style Size",   "y", VIEWER_SHOW_STYLE_SIZE},
     {"separator", NULL, 0},
     {"Debug Robot",   "R", VIEWER_DEBUGROBOT},
+    {"separator", NULL, 0},
+    {"Show Content Quality",   ".", VIEWER_SHOW_CONTENT_QUALITY},
     {NULL, NULL, 0}
   };
 
@@ -174,6 +176,7 @@ void CreateViewerMenus(Widget aParent, MenuCallbackProc aCallback)
   CreateMenuItem(menu, "demo #6", VIEWER_DEMO6, aCallback);
   CreateMenuItem(menu, "demo #7", VIEWER_DEMO7, aCallback);
   CreateMenuItem(menu, "demo #8", VIEWER_DEMO8, aCallback);
+  CreateMenuItem(menu, "demo #9", VIEWER_DEMO9, aCallback);
 
   menu = CreatePulldownMenu(fileMenu, "Print Preview", 'P');
   CreateMenuItem(menu, "One Column", VIEWER_ONE_COLUMN, aCallback);

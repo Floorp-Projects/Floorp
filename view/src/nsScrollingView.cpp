@@ -82,6 +82,153 @@ void ScrollBarView :: SetDimensions(nscoord width, nscoord height)
   }
 }
 
+class CornerView : public nsView
+{
+public:
+  CornerView();
+  ~CornerView();
+  void ShowQuality(PRBool aShow);
+  void SetQuality(nsContentQuality aQuality);
+  void Show(PRBool aShow);
+  PRBool Paint(nsIRenderingContext& rc, const nsRect& rect,
+               PRUint32 aPaintFlags, nsIView *aBackstop = nsnull);
+
+  PRBool            mShowQuality;
+  nsContentQuality  mQuality;
+  PRBool            mShow;
+};
+
+CornerView :: CornerView()
+{
+  mShowQuality = PR_FALSE;
+  mQuality = nsContentQuality_kGood;
+  mShow = PR_FALSE;
+}
+
+CornerView :: ~CornerView()
+{
+}
+
+void CornerView :: ShowQuality(PRBool aShow)
+{
+  if (mShowQuality != aShow)
+  {
+    mShowQuality = aShow;
+
+    if (mShow == PR_FALSE)
+    {
+      if (mVis == nsViewVisibility_kShow)
+        mViewManager->SetViewVisibility(this, nsViewVisibility_kHide);
+      else
+        mViewManager->SetViewVisibility(this, nsViewVisibility_kShow);
+
+      nscoord dimx, dimy;
+
+      //this will force the scrolling view to recalc the scrollbar sizes... MMP
+
+      mParent->GetDimensions(&dimx, &dimy);
+      mParent->SetDimensions(dimx, dimy);
+    }
+
+    mViewManager->UpdateView(this, nsnull, NS_VMREFRESH_IMMEDIATE);
+  }
+}
+
+void CornerView :: SetQuality(nsContentQuality aQuality)
+{
+  if (mQuality != aQuality)
+  {
+    mQuality = aQuality;
+
+    if (mVis == nsViewVisibility_kShow)
+      mViewManager->UpdateView(this, nsnull, NS_VMREFRESH_IMMEDIATE);
+  }
+}
+
+void CornerView :: Show(PRBool aShow)
+{
+  if (mShow != aShow)
+  {
+    mShow = aShow;
+
+    if (mShow == PR_TRUE)
+      mViewManager->SetViewVisibility(this, nsViewVisibility_kShow);
+    else if (mShowQuality == PR_FALSE)
+      mViewManager->SetViewVisibility(this, nsViewVisibility_kHide);
+
+    nscoord dimx, dimy;
+
+    //this will force the scrolling view to recalc the scrollbar sizes... MMP
+
+    mParent->GetDimensions(&dimx, &dimy);
+    mParent->SetDimensions(dimx, dimy);
+  }
+}
+
+PRBool CornerView :: Paint(nsIRenderingContext& rc, const nsRect& rect,
+                           PRUint32 aPaintFlags, nsIView *aBackstop)
+{
+  PRBool  clipres = PR_FALSE;
+
+  if (mVis == nsViewVisibility_kShow)
+  {
+    nscoord xoff, yoff;
+
+    rc.PushState();
+
+    GetScrollOffset(&xoff, &yoff);
+    rc.Translate(xoff, yoff);
+
+    clipres = rc.SetClipRect(mBounds, nsClipCombine_kIntersect);
+
+    if (clipres == PR_FALSE)
+    {
+      rc.SetColor(NS_RGB(192, 192, 192));
+      rc.FillRect(mBounds);
+
+      if (PR_TRUE == mShowQuality)
+      {
+        //display quality indicator
+
+        rc.Translate(mBounds.x, mBounds.y);
+
+        rc.SetColor(NS_RGB(0, 0, 0));
+
+        rc.FillEllipse(nscoord(mBounds.width * 0.15f),
+                       nscoord(mBounds.height * 0.15f),
+                       NS_TO_INT_ROUND(mBounds.width * 0.7f),
+                       NS_TO_INT_ROUND(mBounds.height * 0.7f));
+
+        if (mQuality == nsContentQuality_kGood)
+          rc.SetColor(NS_RGB(0, 255, 0));
+        else if (mQuality == nsContentQuality_kFair)
+          rc.SetColor(NS_RGB(255, 176, 0));
+        else
+          rc.SetColor(NS_RGB(255, 0, 0));
+
+        rc.FillEllipse(NS_TO_INT_ROUND(mBounds.width * 0.23f),
+                       NS_TO_INT_ROUND(mBounds.height * 0.23f),
+                       nscoord(mBounds.width * 0.46f),
+                       nscoord(mBounds.height * 0.46f));
+      }
+    }
+
+    clipres = rc.PopState();
+
+    if (clipres == PR_FALSE)
+    {
+      nsRect  xrect = mBounds;
+
+      xrect.x += xoff;
+      xrect.y += yoff;
+
+      clipres = rc.SetClipRect(xrect, nsClipCombine_kSubtract);
+    }
+  }
+
+  return clipres;
+}
+
 static NS_DEFINE_IID(kIViewIID, NS_IVIEW_IID);
 
 nsScrollingView :: nsScrollingView()
@@ -90,6 +237,7 @@ nsScrollingView :: nsScrollingView()
   mOffsetX = mOffsetY = 0;
   mVScrollBarView = nsnull;
   mHScrollBarView = nsnull;
+  mCornerView = nsnull;
 }
 
 nsScrollingView :: ~nsScrollingView()
@@ -104,6 +252,12 @@ nsScrollingView :: ~nsScrollingView()
   {
     NS_RELEASE(mHScrollBarView);
     mHScrollBarView = nsnull;
+  }
+
+  if (nsnull != mCornerView)
+  {
+    NS_RELEASE(mCornerView);
+    mCornerView = nsnull;
   }
 }
 
@@ -154,7 +308,27 @@ nsresult nsScrollingView :: Init(nsIViewManager* aManager,
     nsIPresContext    *cx = mViewManager->GetPresContext();
     nsIDeviceContext  *dx = cx->GetDeviceContext();
 
-    // Create a view
+    // Create a view for a corner cover
+
+    mCornerView = new CornerView();
+
+    if (nsnull != mCornerView)
+    {
+      NS_ADDREF(mCornerView);
+
+      nsRect trect;
+
+      trect.width = NS_TO_INT_ROUND(dx->GetScrollBarWidth());
+      trect.x = aBounds.XMost() - trect.width;
+      trect.height = NS_TO_INT_ROUND(dx->GetScrollBarHeight());
+      trect.y = aBounds.YMost() - trect.height;
+
+      rv = mCornerView->Init(mViewManager, trect, this, nsnull, nsnull, nsnull, -1, nsnull, 1.0f, nsViewVisibility_kHide);
+
+      mViewManager->InsertChild(this, mCornerView, -1);
+    }
+
+    // Create a view for a vertical scrollbar
 
     mVScrollBarView = new ScrollBarView();
 
@@ -170,12 +344,12 @@ nsresult nsScrollingView :: Init(nsIViewManager* aManager,
 
       static NS_DEFINE_IID(kCScrollbarIID, NS_VERTSCROLLBAR_CID);
 
-      rv = mVScrollBarView->Init(mViewManager, trect, this, &kCScrollbarIID);
+      rv = mVScrollBarView->Init(mViewManager, trect, this, &kCScrollbarIID, nsnull, nsnull, -2);
 
-      mViewManager->InsertChild(this, mVScrollBarView, 0);
+      mViewManager->InsertChild(this, mVScrollBarView, -2);
     }
 
-    // Create a view
+    // Create a view for a horizontal scrollbar
 
     mHScrollBarView = new ScrollBarView();
 
@@ -191,9 +365,9 @@ nsresult nsScrollingView :: Init(nsIViewManager* aManager,
 
       static NS_DEFINE_IID(kCHScrollbarIID, NS_HORZSCROLLBAR_CID);
 
-      rv = mHScrollBarView->Init(mViewManager, trect, this, &kCHScrollbarIID);
+      rv = mHScrollBarView->Init(mViewManager, trect, this, &kCHScrollbarIID, nsnull, nsnull, -2);
 
-      mViewManager->InsertChild(this, mHScrollBarView, 0);
+      mViewManager->InsertChild(this, mHScrollBarView, -2);
     }
 
     NS_RELEASE(dx);
@@ -209,6 +383,16 @@ void nsScrollingView :: SetDimensions(nscoord width, nscoord height)
   nsIPresContext    *cx = mViewManager->GetPresContext();
   nsIDeviceContext  *dx = cx->GetDeviceContext();
 
+  if (nsnull != mCornerView)
+  {
+    mCornerView->GetDimensions(&trect.width, &trect.height);
+
+    trect.y = height - NS_TO_INT_ROUND(dx->GetScrollBarHeight());
+    trect.x = width - NS_TO_INT_ROUND(dx->GetScrollBarWidth());
+
+    mCornerView->SetBounds(trect);
+  }
+
   nsView :: SetDimensions(width, height);
 
   if (nsnull != mVScrollBarView)
@@ -217,7 +401,8 @@ void nsScrollingView :: SetDimensions(nscoord width, nscoord height)
 
     trect.height = height;
 
-    if (mHScrollBarView && (mHScrollBarView->GetVisibility() == nsViewVisibility_kShow))
+    if ((mHScrollBarView && (mHScrollBarView->GetVisibility() == nsViewVisibility_kShow)) ||
+        (mCornerView && (mCornerView->GetVisibility() == nsViewVisibility_kShow)))
       trect.height -= NS_TO_INT_ROUND(dx->GetScrollBarHeight());
 
     trect.x = width - NS_TO_INT_ROUND(dx->GetScrollBarWidth());
@@ -232,10 +417,11 @@ void nsScrollingView :: SetDimensions(nscoord width, nscoord height)
 
     trect.width = width;
 
-    if (mVScrollBarView && (mVScrollBarView->GetVisibility() == nsViewVisibility_kShow))
-      trect.width -= NS_TO_INT_ROUND(dx->GetScrollBarHeight());
+    if ((mVScrollBarView && (mVScrollBarView->GetVisibility() == nsViewVisibility_kShow)) ||
+        (mCornerView && (mCornerView->GetVisibility() == nsViewVisibility_kShow)))
+      trect.width -= NS_TO_INT_ROUND(dx->GetScrollBarWidth());
 
-    trect.y = height - NS_TO_INT_ROUND(dx->GetScrollBarWidth());
+    trect.y = height - NS_TO_INT_ROUND(dx->GetScrollBarHeight());
     trect.x = 0;
 
     mHScrollBarView->SetBounds(trect);
@@ -485,7 +671,7 @@ void nsScrollingView :: ComputeContainerSize()
   {
     nscoord         dx = 0, dy = 0;
     nsIPresContext  *px = mViewManager->GetPresContext();
-    nscoord         width, height;
+    nscoord         hwidth, hheight;
     nscoord         vwidth, vheight;
     PRUint32        oldsizey = mSizeY, oldsizex = mSizeX;
     nsRect          area(0, 0, 0, 0);
@@ -496,6 +682,22 @@ void nsScrollingView :: ComputeContainerSize()
 
     mSizeY = area.YMost();
     mSizeX = area.XMost();
+
+    if (nsnull != mHScrollBarView)
+    {
+      mHScrollBarView->GetDimensions(&hwidth, &hheight);
+      win = mHScrollBarView->GetWidget();
+
+      if (NS_OK == win->QueryInterface(kscroller, (void **)&scrollh))
+      {
+        if (mSizeX > mBounds.width)
+          scrollh->Release(); //DO NOT USE NS_RELEASE()! MMP
+        else
+          NS_RELEASE(scrollh); //MUST USE NS_RELEASE()! MMP
+      }
+
+      NS_RELEASE(win);
+    }
 
     if (nsnull != mVScrollBarView)
     {
@@ -520,17 +722,20 @@ void nsScrollingView :: ComputeContainerSize()
 
           dy = NS_TO_INT_ROUND(scale * (offy - mOffsetY));
 
-          scrollv->SetParameters(mSizeY, mBounds.height, mOffsetY, NS_POINTS_TO_TWIPS_INT(12));
+          scrollv->SetParameters(mSizeY, mBounds.height - ((nsnull != scrollh) ? hheight : 0),
+                                 mOffsetY, NS_POINTS_TO_TWIPS_INT(12));
         }
         else
         {
           mOffsetY = 0;
           dy = NS_TO_INT_ROUND(scale * offy);
           mVScrollBarView->SetVisibility(nsViewVisibility_kHide);
+          NS_RELEASE(scrollv);
         }
 
         //don't release the vertical scroller here because if we need to
-        //create a horizontal one, it will need to tweak the vertical one
+        //create a horizontal one, it will need to know that there is a vertical one
+//        //create a horizontal one, it will need to tweak the vertical one
       }
 
       NS_RELEASE(win);
@@ -538,7 +743,6 @@ void nsScrollingView :: ComputeContainerSize()
 
     if (nsnull != mHScrollBarView)
     {
-      mHScrollBarView->GetDimensions(&width, &height);
       offx = mOffsetX;
 
       win = mHScrollBarView->GetWidget();
@@ -562,10 +766,10 @@ void nsScrollingView :: ComputeContainerSize()
           scrollh->SetParameters(mSizeX, mBounds.width - ((nsnull != scrollv) ? vwidth : 0),
                                  mOffsetX, NS_POINTS_TO_TWIPS_INT(12));
 
-          //now make the vertical scroll region account for this scrollbar
-
-          if (nsnull != scrollv)
-            scrollv->SetParameters(mSizeY, mBounds.height - height, mOffsetY, NS_POINTS_TO_TWIPS_INT(12));
+//          //now make the vertical scroll region account for this scrollbar
+//
+//          if (nsnull != scrollv)
+//            scrollv->SetParameters(mSizeY, mBounds.height - hheight, mOffsetY, NS_POINTS_TO_TWIPS_INT(12));
         }
         else
         {
@@ -580,7 +784,16 @@ void nsScrollingView :: ComputeContainerSize()
       NS_RELEASE(win);
     }
 
-    // now we can release the vertical srcoller if there was one...
+    if (mCornerView)
+    {
+      if ((mHScrollBarView && (mHScrollBarView->GetVisibility() == nsViewVisibility_kShow)) &&
+          (mVScrollBarView && (mVScrollBarView->GetVisibility() == nsViewVisibility_kShow)))
+        ((CornerView *)mCornerView)->Show(PR_TRUE);
+      else
+        ((CornerView *)mCornerView)->Show(PR_FALSE);
+    }
+
+    // now we can release the vertical scroller if there was one...
 
     NS_IF_RELEASE(scrollv);
 
@@ -622,6 +835,9 @@ void nsScrollingView :: ComputeContainerSize()
       NS_RELEASE(win);
     }
 
+    if (nsnull != mCornerView)
+      ((CornerView *)mCornerView)->Show(PR_FALSE);
+
     mOffsetX = mOffsetY = 0;
     mSizeX = mSizeY = 0;
   }
@@ -643,6 +859,21 @@ void nsScrollingView :: GetVisibleOffset(nscoord *aOffsetX, nscoord *aOffsetY)
 {
   *aOffsetX = mOffsetX;
   *aOffsetY = mOffsetY;
+}
+
+void nsScrollingView :: ShowQuality(PRBool aShow)
+{
+  ((CornerView *)mCornerView)->ShowQuality(aShow);
+}
+
+PRBool nsScrollingView :: GetShowQuality(void)
+{
+  return ((CornerView *)mCornerView)->mShowQuality;
+}
+
+void nsScrollingView :: SetQuality(nsContentQuality aQuality)
+{
+  ((CornerView *)mCornerView)->SetQuality(aQuality);
 }
 
 void nsScrollingView :: AdjustChildWidgets(nsScrollingView *aScrolling, nsIView *aView, nscoord aDx, nscoord aDy, float scale)
@@ -746,7 +977,9 @@ nsIView * nsScrollingView :: GetScrolledView(void)
   {
     retview = GetChild(cnt);
 
-    if ((retview != mVScrollBarView) && (retview != mHScrollBarView))
+    if ((retview != mVScrollBarView) &&
+        (retview != mHScrollBarView) &&
+        (retview != mCornerView))
       break;
     else
       retview = nsnull;
