@@ -39,7 +39,16 @@ interface nsIComponentManager : nsISupports
     [noscript] voidStar   createInstanceByProgID(in string aProgID,
                                                  in nsISupports aDelegate,
                                                  in nsIIDRef IID);
+    /**
+     * Produce a rel: or abs: registry location for a given spec.
+     */
+    string     registryLocationForSpec(in nsIFileSpec aSpec);
 
+    /**
+     * Create a full FileSpec for the rel:/abs: location provided.
+     */
+    nsIFileSpec specForRegistryLocation(in string aLocation);
+    
     void       registerFactory(in nsCIDRef aClass, in string aClassName,
                                in string aProgID, in nsIFactory aFactory,
                                in boolean aReplace);
@@ -52,6 +61,7 @@ interface nsIComponentManager : nsISupports
                                          in string aClassName,
                                          in string aProgID,
                                          in nsIFileSpec aSpec,
+                                         in string aLocation,
                                          in boolean aReplace,
                                          in boolean aPersist,
                                          in string aType);

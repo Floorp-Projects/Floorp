@@ -18,11 +18,11 @@
 
 #include "nsISupports.idl"
 
-[object, uuid(00000001-0000-0000-c000-000000000046)]
+[scriptable, object, uuid(00000001-0000-0000-c000-000000000046)]
 interface nsIFactory :  nsISupports {
 
-  voidStar CreateInstance(in nsISupports aOuter,
-                          in nsIIDRef iid);
+  void CreateInstance(in nsISupports aOuter, in nsIIDRef iid,
+                      [retval, iid_is(iid)] out nsQIResult result);
 
   void LockFactory(in PRBool lock);
 };

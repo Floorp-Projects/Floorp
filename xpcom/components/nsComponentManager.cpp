@@ -74,6 +74,10 @@ const char inprocServerValueName[]="InprocServer";
 const char componentTypeValueName[]="ComponentType";
 const char nativeComponentType[]="application/x-mozilla-native";
 
+const static char XPCOM_ABSCOMPONENT_PREFIX[] = "abs:";
+const static char XPCOM_RELCOMPONENT_PREFIX[] = "rel:";
+const char XPCOM_LIB_PREFIX[]          = "lib:";
+
 // We define a CID that is used to indicate the non-existence of a
 // progid in the hash table.
 #define NS_NO_CID { 0x0, 0x0, 0x0, { 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0 } }
@@ -374,6 +378,12 @@ nsComponentManagerImpl::PlatformInit(void)
 
     rv = mRegistry->AddSubtree(nsIRegistry::Common, classIDKeyName, &mCLSIDKey);
     if (NS_FAILED(rv)) return rv;
+
+    mComponentsDir =
+        new nsSpecialSystemDirectory(nsSpecialSystemDirectory::XPCOM_CurrentProcessComponentDirectory);
+    if (!mComponentsDir)
+        return NS_ERROR_OUT_OF_MEMORY;
+    mComponentsDirLen = strlen(mComponentsDir->GetNativePathCString());
 
     if (mNativeComponentLoader) {
         /* now that we have the registry, Init the native loader */
@@ -1204,15 +1214,13 @@ nsComponentManagerImpl::CreateInstance(const nsCID &aClass,
 }
 
 /**
- * CreateInstance()
+ * CreateInstanceByProgID()
  *
- * An overload of CreateInstance() that creates an instance of the object that
+ * A variant of CreateInstance() that creates an instance of the object that
  * implements the interface aIID and whose implementation has a progID aProgID.
  *
  * This is only a convenience routine that turns around can calls the
  * CreateInstance() with classid and iid.
- *
- * XXX This is a function overload. We need to remove it.
  */
 nsresult
 nsComponentManagerImpl::CreateInstanceByProgID(const char *aProgID,
@@ -1226,6 +1234,115 @@ nsComponentManagerImpl::CreateInstanceByProgID(const char *aProgID,
     return CreateInstance(clsid, aDelegate, aIID, aResult);
 }
 
+/*
+ * I want an efficient way to allocate a buffer to the right size
+ * and stick the prefix and dllName in, then be able to hand that buffer
+ * off to the FactoryEntry.  Is that so wrong?
+ *
+ * *regName is allocated on success.
+ *
+ * This should live in nsNativeComponentLoader.cpp, I think.
+ */
+static nsresult
+MakeRegistryName(const char *aDllName, const char *prefix, char **regName)
+{
+    char *registryName;
+
+    PRUint32 len = nsCRT::strlen(prefix);
+
+    PRUint32 registryNameLen = nsCRT::strlen(aDllName) + len;
+    registryName = (char *)nsAllocator::Alloc(registryNameLen + 1);
+    
+    // from here on it, we want len sans terminating NUL
+
+    if (!registryName)
+        return NS_ERROR_OUT_OF_MEMORY;
+    
+    nsCRT::memcpy(registryName, prefix, len);
+    strcpy(registryName + len, aDllName); // no nsCRT::strcpy? for shame!
+    registryName[registryNameLen] = '\0';
+    *regName = registryName;
+
+#ifdef DEBUG_shaver_off
+    fprintf(stderr, "MakeRegistryName(%s, %s, &[%s])\n",
+            aDllName, prefix, *regName);
+#endif
+
+    return NS_OK;
+}
+
+nsresult
+nsComponentManagerImpl::RegistryNameForLib(const char *aLibName,
+                                           char **aRegistryName)
+{
+    return MakeRegistryName(aLibName, XPCOM_LIB_PREFIX, aRegistryName);
+}
+
+nsresult
+nsComponentManagerImpl::RegistryLocationForSpec(nsIFileSpec *aSpec,
+                                                char **aRegistryName)
+{
+    nsresult rv;
+    nsFileSpec spec;
+    if (NS_FAILED(rv = aSpec->GetFileSpec(&spec)))
+        return rv;
+
+    if (spec.IsChildOf(*mComponentsDir)){
+        /*
+         * According to sfraser, this sort of string magic is ``Mac-safe''.
+         * Who knew?
+         */
+        const char *nativePath;
+        nativePath = spec.GetNativePathCString();
+        nativePath += mComponentsDirLen;
+#ifdef XP_MAC                   // XXX move relativize-fragment logic to nsFileSpec?
+        if (nativePath[0] != ':')
+            nativePath--;
+#else
+        char sep = PR_GetDirectorySeparator();
+        if (nativePath[0] == sep)
+            nativePath++;
+#endif
+        rv = MakeRegistryName(nativePath, XPCOM_RELCOMPONENT_PREFIX, 
+                              aRegistryName);
+    } else {
+        /* absolute names include volume info on Mac, so persistent descriptor */
+        char *persistentDescriptor;
+        rv = aSpec->GetPersistentDescriptorString(&persistentDescriptor);
+        if (NS_FAILED(rv))
+            return rv;
+        rv = MakeRegistryName(persistentDescriptor, XPCOM_ABSCOMPONENT_PREFIX,
+                              aRegistryName);
+        nsAllocator::Free(persistentDescriptor);
+    }
+        
+    return rv;
+
+}
+
+nsresult
+nsComponentManagerImpl::SpecForRegistryLocation(const char *aLocation,
+                                                nsIFileSpec **aSpec)
+{
+    nsresult rv;
+    if (!aLocation || !aSpec)
+        return NS_ERROR_NULL_POINTER;
+
+    /* abs:/full/path/to/libcomponent.so */
+    if (!nsCRT::strncmp(aLocation, XPCOM_ABSCOMPONENT_PREFIX, 4)) {
+        if (NS_FAILED(rv = NS_NewFileSpec(aSpec)))
+            return rv;
+        return (*aSpec)->SetPersistentDescriptorString((char *)aLocation + 4);
+    }
+
+    if (!nsCRT::strncmp(aLocation, XPCOM_RELCOMPONENT_PREFIX, 4)) {
+        nsFileSpec compSpec = (*mComponentsDir);
+        compSpec += (aLocation + 4);
+        return NS_NewFileSpecWithSpec(compSpec, aSpec);
+    }
+    *aSpec = nsnull;
+    return NS_ERROR_INVALID_ARG;
+}
 
 /**
  * RegisterFactory()
@@ -1314,18 +1431,13 @@ nsComponentManagerImpl::RegisterComponentWithType(const nsCID &aClass,
                                                   const char *aClassName,
                                                   const char *aProgID,
                                                   nsIFileSpec *aSpec,
+                                                  const char *aLocation,
                                                   PRBool aReplace,
                                                   PRBool aPersist,
                                                   const char *aType)
 {
-    nsresult rv = NS_OK;
-    char *registryName;
-
-    rv = mNativeComponentLoader->RegistryNameForSpec(aSpec, &registryName);
-    if (NS_FAILED(rv))
-        return rv;
-
-    return RegisterComponentCommon(aClass, aClassName, aProgID, registryName,
+    return RegisterComponentCommon(aClass, aClassName, aProgID, 
+                                   nsCRT::strdup(aLocation),
                                    aReplace, aPersist,
                                    aType);
 }
@@ -1341,9 +1453,17 @@ nsComponentManagerImpl::RegisterComponentSpec(const nsCID &aClass,
                                               PRBool aReplace,
                                               PRBool aPersist)
 {
-    return RegisterComponentWithType(aClass, aClassName, aProgID, aLibrarySpec,
-                                     aReplace, aPersist,
-                                     nativeComponentType);
+    char *registryName;
+    nsresult rv = RegistryLocationForSpec(aLibrarySpec, &registryName);
+    if (NS_FAILED(rv))
+        return rv;
+
+    rv = RegisterComponentWithType(aClass, aClassName, aProgID, aLibrarySpec,
+                                   registryName,
+                                   aReplace, aPersist,
+                                   nativeComponentType);
+    nsAllocator::Free(registryName);
+    return rv;
 }
 
 /*
@@ -1362,8 +1482,7 @@ nsComponentManagerImpl::RegisterComponentLib(const nsCID &aClass,
                                              PRBool aPersist)
 {
     char *registryName;
-    nsresult rv = mNativeComponentLoader->RegistryNameForLib(aDllName,
-                                                             &registryName);
+    nsresult rv = RegistryNameForLib(aDllName, &registryName);
     if (NS_FAILED(rv))
         return rv;
     return RegisterComponentCommon(aClass, aClassName, aProgID, registryName,

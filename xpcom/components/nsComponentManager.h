@@ -44,6 +44,7 @@ extern const char xpcomBaseName[];
 extern const char xpcomKeyName[];
 extern const char lastModValueName[];
 extern const char fileSizeValueName[];
+extern const char XPCOM_LIB_PREFIX[];
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -61,6 +62,7 @@ public:
     nsresult PlatformPrePopulateRegistry();
 
 protected:
+    nsresult RegistryNameForLib(const char *aLibName, char **aRegistryName);
     nsresult RegisterComponentCommon(const nsCID &aClass,
                                      const char *aClassName,
                                      const char *aProgID, char *aRegistryName,
@@ -104,6 +106,8 @@ protected:
     PRBool              mPrePopulationDone;
     nsIRegistry::Key    mLoadersKey;
     nsNativeComponentLoader *mNativeComponentLoader;
+    nsSpecialSystemDirectory *mComponentsDir;
+    PRUint32 mComponentsDirLen;
 };
 
 #define NS_MAX_FILENAME_LEN	1024
