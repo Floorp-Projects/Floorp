@@ -96,6 +96,13 @@ protected:
     nsInlineFrame* mNextInFlow;
     PRBool mSetParentPointer;  // when reflowing child frame first set its
                                // parent frame pointer
+
+    InlineReflowState()  {
+      mNextRCFrame = nsnull;
+      mPrevFrame = nsnull;
+      mNextInFlow = nsnull;
+      mSetParentPointer = PR_TRUE;
+    };
   };
 
   nsInlineFrame();
