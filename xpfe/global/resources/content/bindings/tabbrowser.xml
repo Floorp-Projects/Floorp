@@ -213,10 +213,10 @@
                 }
                 else if (this.mTabBrowser.shouldLoadFavIcon(location))
                   this.mTabBrowser.loadFavIcon(location, "image", this.mTab); 
-				          
+
                 if (this.mTab.label == this.mTabBrowser.mStringBundle.getString("tabs.loading"))
-                  this.mTab.label = this.mTabBrowser.mStringBundle.getString("tabs.untitled")
-              
+                  this.mTabBrowser.setTabTitle(this.mTab);
+
                 if (this.mTabBrowser.mCurrentTab == this.mTab)
                   this.mTabBrowser.mIsBusy = false;
               }
@@ -529,12 +529,35 @@
             var tabBrowser = this.parentNode.parentNode.parentNode;
             var tab = tabBrowser.mTabContainer.childNodes[i];
 
-            if (this.contentDocument.title)
-              tab.setAttribute("label", this.contentDocument.title);
+            tabBrowser.setTabTitle(tab);
 
             if (tab == tabBrowser.mCurrentTab)
-              this.parentNode.parentNode.parentNode.updateTitlebar();
+              tabBrowser.updateTitlebar();
           ]]> 
+        </body>
+      </method>
+
+      <method name="setTabTitle">
+        <parameter name="aTab"/>
+        <body>
+          <![CDATA[
+            var browser = this.getBrowserForTab(aTab);
+            var crop = "end";
+            var titleViaGetter = browser.contentDocument.__proto__.__lookupGetter__('title').call(browser.contentDocument);
+            var title;
+
+            if (titleViaGetter)
+              title = titleViaGetter
+            else if (browser.currentURI.spec && browser.currentURI.spec != "about:blank") {
+              title = browser.currentURI.spec;
+              crop  = "center";
+            }
+            else
+              title = this.mStringBundle.getString("tabs.untitled");
+
+            aTab.label = title;
+            aTab.setAttribute("crop", crop);
+          ]]>
         </body>
       </method>
 
@@ -573,8 +596,7 @@
             // Get the first tab all hooked up with a title listener.
             this.mCurrentBrowser.addEventListener("DOMTitleChanged", this.onTitleChanged, false);
 
-            if (this.mCurrentBrowser.contentDocument.title != "")
-              this.mCurrentTab.label = this.mCurrentBrowser.contentDocument.title;
+            this.setTabTitle(this.mCurrentTab);
 
             // Hook up our favicon.
             var uri = this.mCurrentBrowser.currentURI;
