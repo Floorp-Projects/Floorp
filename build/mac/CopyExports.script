@@ -36,35 +36,43 @@ if {verbose}
 	echo "Scripts directory is ¶"{ScriptsDir}¶""
 end if
 
-#delete -i temp2
+# for each line in the source file, remove it if it starts with #, otherwise quote it
 
-#Strip all comment lines, and quote each line
-#streamedit "{sourceList}" -e '/#Å/ Delete; /¥/ Replace /(Å)¨1/ "¶""¨1"¶""' > temp2
-
-#set debugEcho ""
-#set debugEcho "echo"
-
-for curLine in `streamedit "{sourceList}" -e '/#Å/ Delete; /¥/ Replace /(Å)¨1/ "¶""¨1"¶""'`
+for curLine in `streamedit "{sourceList}" -e '/¥#Å/ Delete; /¥/ Replace /(Å)¨1/ "¶""¨1"¶""'`
 	
-	if `evaluate "{curLine}" =~ /([Â ¶t]+)¨1[ ¶t]+[:]*(Å)¨2/`
+	echo "{curLine}"
 	
-		if {verbose}
-			echo "Cur line is {curLine}"
-		end if
-	
-		set exportFile "{¨1}"
-		set theTarget "{¨2}"
+	# ignore empty lines
+	if `evaluate "{{curLine}}" != ""`
 		
-		if {verbose}
-			echo "Export file name is {exportFile}"
-			echo "Target directory is {theTarget}"
+		echo "{curLine}"
+		
+		# strip out trailing comments
+		if `evaluate "{curLine}" =~ /(Å)¨1[ ¶t]+(#Å)¨2/`
+			set sourceLine "{¨1}"
+			# echo "Discarding comment {¨2}"
+		else
+			set sourceLine "{curLine}"
 		end if
 		
-		"{ScriptsDir}CopyList.script" "{exportFile}" "{theTarget}"
+		if `evaluate "{sourceLine}" =~ /([Â ¶t]+)¨1[ ¶t]+[:]*(Å)¨2/`
+		
+			if {verbose}
+				echo "Cur line is {sourceLine}"
+			end if
+		
+			set exportFile "{¨1}"
+			set theTarget "{¨2}"
+			
+			if {verbose}
+				echo "Export file name is {exportFile}"
+				echo "Target directory is {theTarget}"
+			end if
+			
+			"{ScriptsDir}CopyList.script" "{exportFile}" "{theTarget}"
+		
+		end if
 	
 	end if
-	
+
 end for
-
-
-#delete -i temp2

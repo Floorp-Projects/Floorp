@@ -62,17 +62,35 @@ if {verbose}
 	echo "Target directory is ¶"{targetDir}¶""
 end if
 
-#delete -i temp1
+# Strip all comment lines, pipe the stripped lines into the "for" loop.
+# We quote each whole line here so that we deal with a line at a time in the
+# for loop. Don't ya just love MPW quoting rulesÉ
 
-#Strip all comment lines
-#streamedit "{sourceList}" -e '/#Å/ Delete' > temp1
-
-#Strip all comment lines, pipe the stripped lines into this "for" loop:
-for f in `streamedit "{sourceList}" -e '/#Å/ Delete'`
-	if `Newer "{sourceDir}{f}" "{targetDir}:{f}"` #|| !`Exists "{targetDir}:{f}"`
-		if {verbose} ; echo "{sourceDir}{f} is newer than {targetDir}:{f}" ; end if
-		{debugEcho} duplicate -y "{sourceDir}{f}" "{targetDir}"
+for f in `streamedit "{sourceList}" -e '/¥#Å/ Delete; /¥/ Replace /(Å)¨1/ "¶""¨1"¶""'`
+	
+	if `evaluate "{{f}}" != ""`
+	
+		# strip out trailing comments (in fact, anything following whitespace)
+		if `evaluate "{f}" =~ /([Â ¶t]+)¨1[ ¶t]+([#]*Å)¨2/`
+			set sourceFile "{¨1}"
+			# echo "Discarding comment {¨2}"
+		else
+			set sourceFile "{f}"
+		end if
+		
+		# sourceFile can be a relative path, so need to get the file name for date comparisons
+		if `evaluate "{sourceFile}" =~ /Å:([Â:]+)¨1/`
+			set filename "{¨1}"
+		else
+			set filename {sourceFile}
+		end if
+		
+		# now copy the file if newer
+		if `Newer "{sourceDir}{sourceFile}" "{targetDir}:{filename}"` #|| !`Exists "{targetDir}:{filename}"`
+			if {verbose} ; echo "{sourceDir}{sourceFile} is newer than {targetDir}:{filename}" ; end if
+			{debugEcho} duplicate -y "{sourceDir}{sourceFile}" "{targetDir}"
+		end if
+		
 	end if
+	
 end for
-
-#delete -i temp1
