@@ -132,13 +132,3 @@ interface nsIX509Cert : nsISupports {
 
   boolean isSameCert(in nsIX509Cert other);
 };
-
-%{C++
-
-#define NS_X509CERT_CID { 0xf0980f60, 0xee3d, 0x11d4, \
-                         { 0x99, 0x8b, 0x00, 0xb0, 0xd0, 0x23, 0x54, 0xa0 } }
-
-#define NS_X509CERT_CONTRACTID "@mozilla.org/security/x509cert;1"
-
-%}
-
