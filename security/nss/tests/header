@@ -29,6 +29,8 @@
 #       as would have been produced with -cron
 #   -m <mailinglist> - send filename to mailinglist (csl) only useful
 #       with -f
+#   -ml <mailinglist> - send link to filename to mailinglist (csl) 
+#       only useful with -f
 #   -cron equivalient to -y -s -d -f $RESULTDIR/$HOST.<scriptname>
 #   -t  run on a tinderbox build that means: local, from the startlocation
 #   -l <mozroot directory>  run on a local build mozroot
@@ -68,7 +70,9 @@ fi
 export QASCRIPT_DIR
 
 O_HWACC=OFF
-O_ALWAYS_YES=OFF    # turned on by -y answer all questions with y 
+if [ -z "$O_ALWAYS_YES" ] ; then
+    O_ALWAYS_YES=OFF    # turned on by -y answer all questions with y 
+fi
 
 if [ -z "$O_INIT" ] # header is global, some including scripts may not
 then                # want the init to run, the others don't need to bother
@@ -78,18 +82,21 @@ if [ -z "$O_PARAM" ] # header is global, some including scripts may not
 then                 # require parameters, the others don't need to bother
     O_PARAM=ON
 fi
-if [ -z "$O_OPTIONS" ]    # header is global, some including scripts may not
+if [ -z "$O_OPTIONS" ] # header is global, some including scripts may not
 then                # permit options, they don't need to bother
     O_OPTIONS=OFF
 fi
 O_SILENT=OFF        # turned on by -s silent (only usefull with -y)
-O_DEBUG=OFF         # turned on by -d - calls to Debug produce output when ON
+if  [ -z "$O_DEBUG" ] ; then
+    O_DEBUG=OFF     # turned on by -d - calls to Debug produce output when ON
+fi
 O_FILE=OFF          # turned on by -f echo all output to a file $FILENAME
 O_CRON=OFF          # turned on by -cron cron use only
 O_CRONFILE=OFF      # turned on by -cron cron and -fcron
 O_LOCAL=OFF         # turned on by -l* run on a local build in $LOCAL_MOZROOT
 O_LN=OFF            # turned on by -ln and -lt, test a networkbuild locally
 O_MAIL=OFF          # turned on by -m - sends email
+O_MAIL_LINK=OFF     # turned on by -ml - sends email
 O_TBX=OFF           # turned on by -t run on a tinderbox build
                     # that means: local, from the startlocation
 
@@ -176,12 +183,9 @@ fi
 if [ -z "$BC_MASTER" ]    # master directory for backwardscompatibility testing
 then                      # a linux compiler bug prevents us from doing the 
                           # testing against a rtm - so we rebuild the branch
-    BC_MASTER=nss322/builds/20010820.1/y2sun2_Solaris8
-    #if [ "`uname -sp`" != "SunOS i386" ] ; then
-        #BC_MASTER="nss32/builds/20010510.1-nss-3.2-ref"
-    #else
-        #BC_MASTER="nss32/builds/20010530.1.nss321_rtm_solaris"
-    #fi
+    BC_UX_MASTER=nss322/builds/20010820.1/y2sun2_Solaris8
+    BC_NT_MASTER=nss322/builds/20010820.1/blowfish_NT4.0_Win95
+    BC_MASTER=$BC_UX_MASTER
 fi
 BC_RELEASE=3.2
 export BC_RELEASE
@@ -208,6 +212,7 @@ glob_init()
         win_set_tmp
         write_to_tmpfile
         MASTERBUILD=$NT_MASTERBUILD
+        BC_MASTER=$BC_NT_MASTER
     fi
     umask 0    
     init_dirs
@@ -722,7 +727,17 @@ eval_opts()
             O_DEBUG=ON
             #set -x
             ;;
-        -m*|-M*)
+        -ml|-ML)
+            O_MAIL_LINK=ON
+            shift
+            MAILINGLIST=$1
+            if [ -z "$MAILINGLIST" ]
+            then
+                glob_usage "Error: -m requires a mailinglist to follow, for example sonmi,wtc,nelsonb "
+            fi
+            Debug "Sending link to result to $MAILINGLIST"
+            ;;
+        -m|-M)
             O_MAIL=ON
             shift
             MAILINGLIST=$1
@@ -878,6 +893,10 @@ set_host()
 }
 init_host()
 {
+    if [ `basename $0` != nssqa ] ; then
+        return
+    fi
+
     init_host_done=0
 
     if [ $DS_WAS_SET = FALSE ] #give chance to overwrite, espec. for NT
@@ -1185,7 +1204,23 @@ Exit()
     then
         kill_by_name selfserv
     fi
-    if [ $O_MAIL = "ON" -a $O_FILE = "ON" ]
+    if [ $O_MAIL_LINK = "ON" -a $O_FILE = "ON" ]
+    then
+        if [ $EARLY_EXIT = TRUE ]    #before the report file has been created
+        then
+            early_exit "$1"
+        else
+            head -3  $FILENAME >$ML_FILE
+            echo "Content-Type: text/plain; charset=us-ascii; format=flowed
+    Content-Transfer-Encoding: 7bit
+
+" >>$ML_FILE
+            echo $HREF_TMP_HTML_FILE >>$ML_FILE
+            cat $ML_FILE | $RMAIL $MAILINGLIST
+        fi
+
+#FIXME - early exit etc
+    elif [ $O_MAIL = "ON" -a $O_FILE = "ON" ]
     then
         if [ $EARLY_EXIT = TRUE ]    #before the report file has been created
         then
@@ -1427,6 +1462,8 @@ opt_usage()
     Echo "        as would have been produced with -cron"
     Echo "    -m <mailinglist> - send filename to mailinglist (csl "
     Echo "         example sonmi,nelsonb,wtc) only useful with -f"
+    Echo "    -ml <mailinglist> - send link to filename to mailinglist "
+    Echo "         (csl example sonmi,nelsonb,wtc) only useful with -f"
     Echo "    -cron equivalient to -y -s -d -f \$RESULTDIR/\$HOST.nssqa"
     Echo "    -t run on a tinderbox build (included -cron)"
     if [ `basename $0` = nssqa ] ; then

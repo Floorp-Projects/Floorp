@@ -189,10 +189,11 @@ qa_stat_init()
     BCMISSINGLIST=${RFILE}.BCM
     BCERRORLIST=${RFILE}.BCE
     TMPFILE=${RFILE}.T
+    ML_FILE=${RFILE}.ML
 
     TMPFILES="$TMPFILES $TMPFILE"
     TMPFILES="$TMPFILES $ERRORLIST $PLATFORMLIST $PERFLIST $WARNINGLIST \
-       $BCMISSINGLIST $BCERRORLIST" #FIXME uncomment
+       $BCMISSINGLIST $BCERRORLIST $ML_FILE" #FIXME uncomment
 
     FILENAME=$RFILE        #we might want to mail it...later switch to html file
     O_FILE="ON"
@@ -231,6 +232,15 @@ etscape]">
 <body>
 <br>
 &nbsp;
+<br>&nbsp;
+<h2>
+<a href="http://tinderbox.mozilla.org/showbuilds.cgi?tree=NSS">Tinderbox</a
+><br>
+<a href="http://cindercone.red.iplanet.com/share/builds/mccrel/nss/nsstip/t
+inderbox/tests_results/security/">Tinderbox
+QA&nbsp;result</a></h2>
+&nbsp;
+
 &nbsp;
 <br>&nbsp;
 <center>
@@ -633,6 +643,93 @@ qa_stat_cleanup()
 # compatibility tests
 ########################################################################
 bc_test()
+{
+CURRENT_TABLE="BC"   #so html_line can determine which fields to write
+  
+  qa_stat_table "Backward Compatibility Test"
+  echo '<td NOSAVE><b><font size=+1>Build-OS and version</font></b></td>'
+  echo '<td><b><font size=+1>QA-OS</font></b></td>'
+  echo '<td><b><font size=+1>Systemname</font></b></td>'
+  echo '<td><b><font size=+1>P/F</font></b></td>'
+  #echo '<td><b><font size=+1>All Current</font></b></td>'
+  #echo '<td><b><font size=+1>backward comp. test</font></b></td>'
+  echo '<td><b><font size=+1>result</font></b></td>'
+  echo '<td><b><font size=+1>output</font></b></td>'
+  echo '<td><b><font size=+1>QA time / #</font></b></td>'
+  echo '</tr>'
+
+  for w in `ls */results.html`
+  do
+      TMP_RESULT="`dirname $w`/results.tmp"
+      TMP_BC_RESULT="`dirname bct/$w`/results.tmp"
+      rm $TMP_RESULT $TMP_BC_RESULT 2>/dev/null
+      cat $w | sed -e 's/<[^>]*>//g'  -e 's/ /_/g' \
+                   -e 's/signtool_-[vw]/signtool_-vw/' |
+               grep '_[PF]a[si][sl]ed' >$TMP_RESULT
+      cat bct/$w   | sed -e 's/<[^>]*>//g'  -e 's/ /_/g' \
+                         -e 's/signtool_-[vw]/signtool_-vw/' |
+                     grep '_[PF]a[si][sl]ed' >$TMP_BC_RESULT
+      diff $TMP_RESULT $TMP_BC_RESULT    2>>$BCMISSINGLIST |
+           grep -v "Create_objsign_cert_.signtool_-G.*Passed" |
+           grep -v "porting_Alice.s_email_cert" |
+           grep -v "^[0-9,cad]*$" | grep -v "^---$" | grep -v "^---.$" |
+           grep -v "Can.t_run_pk12util_tests_for_NSS_3.2"  >/dev/null && (
+                echo "$w differs" >> $BCMISSINGLIST
+                echo "========================================="
+                echo "diff $w bct/$w"
+                echo "========================================="
+                diff $TMP_RESULT $TMP_BC_RESULT 2>&1 |
+                     grep -v "Create_objsign_cert_.signtool_-G.*Passed" |
+                     grep -v "porting_Alice.s_email_cert" |
+                     grep -v "Can.t_run_pk12util_tests_for_NSS_3.2"  
+           )  2>&1 >>$BCERRORLIST
+
+      #diff -b $w bct/$w  2>>$BCMISSINGLIST | 
+           #grep -v "Create objsign cert .signtool -G.*Passed" |
+           #grep -v "Listing signed files in jar .signtool -v.*Passed" |
+           #grep -v "Listing signed files in jar .signtool -w.*Passed" |
+           #grep -v "backward compatibility" |
+           #grep -v "Can.t run pk12util tests for NSS 3.2" |
+           #grep -v "porting Alice.s email cert " |
+           #grep -v "^---$" | grep -v "^[<> ] $" | 
+           #grep -v "^---.$" | grep -v "^[<> ] .$" | 
+           #grep -v '< </BODY></HTML>' |
+           #grep -v "^[0-9,cad]*$" 2>>$BCMISSINGLIST >/dev/null &&  (
+                #echo "$w differs" >> $BCMISSINGLIST
+                #echo "========================================="
+                #echo "diff $w bct/$w"
+                #echo "========================================="
+                #diff -b $w bct/$w 2>&1 | 
+                     #grep -v "Listing signed files in jar .signtool -v.*Passed" |
+                     #grep -v "Listing signed files in jar .signtool -w.*Passed" |
+                     #grep -v "backward compatibility" |
+                     #grep -v "Can.t run pk12util tests for NSS 3.2" |
+                     #grep -v "porting Alice.s email cert " |
+                     #grep -v "^---$" | grep -v "^[<> ] $" | 
+                     #grep -v "^---.$" | grep -v "^[<> ] .$" | 
+                     #grep -v '< </BODY></HTML>' |
+                     #grep -v "^[0-9,cad]*$" \
+           #)  2>&1 >>$BCERRORLIST
+      rm $TMP_RESULT $TMP_BC_RESULT 2>/dev/null
+  done
+  rm $ERRORLIST
+  cat $BCMISSINGLIST | sed -e "s/^diff: bc_...s.//" \
+                    -e "s/.results.html.*/\/results.html/" | 
+                sort -u > $ERRORLIST
+
+  platformlist  
+  echo '</table>' >>$TMP_HTML_FILE
+
+  head -200 $BCERRORLIST | sed -e 's/<[^>]*>//g' -e "s/^/<br>/" 
+}
+
+
+############################### bc_test ########################
+# local shell function, evaluates the results of the backward u
+# compatibility tests
+# move the whole function to old to tests a new solution
+########################################################################
+bc_test_old()
 {
 CURRENT_TABLE="BC"   #so html_line can determine which fields to write
   
