@@ -75,7 +75,7 @@ function renderMachineReadable()
     //resultDocument.appendChild(result);
     transferToDocument(result, resultDocument);
 
-    window.title = resultDocument.getElementById("topic").firstChild.nodeValue;
+    document.title = resultDocument.getElementById("topic").firstChild.nodeValue;
   }
   catch (ex) {
     alertMessage(getBundle().GetStringFromName("InternalError"));
@@ -152,7 +152,7 @@ function p3pSummarySavePage()
     fp.init(window, getBundle().GetStringFromName("savePolicy.title"), 
       kIFilePicker.modeSave);
     fp.appendFilters(kIFilePicker.filterAll | kIFilePicker.filterHTML);
-    fp.defaultString = window.title;
+    fp.defaultString = document.title;
     fp.defaultExtension = "html";
 
     var rv = fp.show();
