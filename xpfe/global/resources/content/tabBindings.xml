@@ -11,9 +11,12 @@
       <property name="selectedTab">
         <setter>
         <![CDATA[
+          if (!val)
+            throw Components.results.NS_ERROR_NULL_POINTER;
           var tabbox = this.getElementsByTagName("tabbox");
           tabbox = tabbox.length ? tabbox[0] : null;
-          if (tabbox) tabbox.selectedTab = val;
+          if (tabbox)
+            tabbox.selectedTab = val;
           return val;
         ]]>
         </setter>
@@ -33,34 +36,33 @@
       <property name="selectedTab">
         <getter>
         <![CDATA[
-          for (var i = 0; i < this.childNodes.length; i++)
-            {
-              if (this.childNodes[i].selected || 
-                  this.childNodes[i].getAttribute("selected") == "true")
-                return this.childNodes[i];
-            }
+          for (var i = 0; i < this.childNodes.length; i++) {
+            if (this.childNodes[i].selected)
+              return this.childNodes[i];
+          }
+          // throw an exception when no tab is selected (we shouldn't get here)
+          throw Components.results.NS_ERROR_FAILURE;
         ]]>
         </getter>
         <setter>
         <![CDATA[
-          if (!val.selected) val.selected = true;
+          if (!val)
+            throw Components.results.NS_ERROR_NULL_POINTER;
+          if (!val.selected)
+            val.selected = true;
           var selectedIndex = 0;
-          for (var i = 0; i < this.childNodes.length; i++)
-            {
-              if (this.childNodes[i].selected)
-                {
-                  if (this.childNodes[i] != val)
-                    {
-                      this.childNodes[i].selected = false;
-                      this.childNodes[i].removeAttribute("selected");
-                    }
-                  else 
-                    selectedIndex = i;
-                }
+          for (var i = 0; i < this.childNodes.length; i++) {
+            if (this.childNodes[i].selected) {
+              if (this.childNodes[i] != val)
+                this.childNodes[i].selected = false;
+              else 
+                selectedIndex = i;
             }
+          }
           var tabpanel = this.parentNode.getElementsByTagName("tabpanel");
           tabpanel = tabpanel.length ? tabpanel[0] : null;
-          if (tabpanel) tabpanel.index = selectedIndex;
+          if (tabpanel)
+            tabpanel.index = selectedIndex;
           return val;
         ]]>
         </setter>
@@ -95,7 +97,8 @@
         }
         this.selectedTab = tabs[0];
         var o = this.getAttribute("orient");
-        if (!o || o == "") this.setAttribute("orient", "horizontal");
+        if (!o)
+          this.setAttribute("orient", "horizontal");
       ]]>
       </handler>
     </handlers>
@@ -150,7 +153,8 @@
       <![CDATA[
         var tabbox = this.parentNode;
         do {
-          if (tabbox.localName == "tabbox") break;
+          if (tabbox.localName == "tabbox")
+            break;
           tabbox = tabbox.parentNode;
         } while(tabbox.localName != "tabcontrol");
         tabbox.selectedTab = this;
