@@ -2,13 +2,13 @@
 # Copyright 2002 Sun Microsystems, Inc.  All rights reserved.
 # Use is subject to license terms.
 #
-#ident	"$Id: Makefile,v 1.2 2004/05/13 07:12:59 christophe.ravel.bugs%sun.com Exp $"
+#ident	"$Id: Makefile,v 1.3 2004/06/24 01:18:12 christophe.ravel.bugs%sun.com Exp $"
 #
 
 CORE_DEPTH = ../../..
 
 NAME        = sun-jss
-RELEASE     = 1
+RELEASE     = 2
 VERSION     = `grep JSS_VERSION $(CORE_DEPTH)/jss/org/mozilla/jss/util/jssver.h \
 		| sed -e 's/"$$//' -e 's/.*"//' -e 's/ .*//'`
 PWD         = `pwd`
