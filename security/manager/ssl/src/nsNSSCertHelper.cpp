@@ -301,7 +301,7 @@ ProcessRawBytes(SECItem *data, nsString &text)
   char buffer[5];
   for (i=0; i<data->len; i++) {
     PR_snprintf(buffer, 5, "%02x ", data->data[i]);
-    text.Append(NS_ConvertASCIItoUCS2(buffer).get());
+    AppendASCIItoUTF16(buffer, text);
     if ((i+1)%16 == 0) {
       text.Append(NS_LITERAL_STRING(SEPARATOR).get());
     }

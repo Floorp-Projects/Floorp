@@ -120,8 +120,8 @@ nsEntityConverter::LoadEntityBundle(PRUint32 version)
   if (NULL == versionName) return NULL;
 
   // all property file names are ASCII, like "html40Latin1" so this is safe
-  url.Append(NS_LossyConvertUCS2toASCII(versionName) +
-             NS_LITERAL_CSTRING(".properties"));
+  LossyAppendUTF16toASCII(versionName, url);
+  url.Append(".properties");
 
   nsIStringBundle* bundle;
   rv = bundleService->CreateBundle(url.get(), &bundle);

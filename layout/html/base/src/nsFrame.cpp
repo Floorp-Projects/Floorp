@@ -43,6 +43,7 @@
 #include "nsIContent.h"
 #include "nsIAtom.h"
 #include "nsString.h"
+#include "nsReadableUtils.h"
 #include "nsStyleContext.h"
 #include "nsIView.h"
 #include "nsIViewManager.h"
@@ -2717,7 +2718,7 @@ nsFrame::MakeFrameName(const nsAString& aType, nsAString& aResult) const
   }
   char buf[40];
   PR_snprintf(buf, sizeof(buf), "(%d)", ContentIndexInContainer(this));
-  aResult.Append(NS_ConvertASCIItoUCS2(buf));
+  AppendASCIItoUTF16(buf, aResult);
   return NS_OK;
 }
 #endif

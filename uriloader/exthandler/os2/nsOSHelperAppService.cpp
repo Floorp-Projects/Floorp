@@ -157,7 +157,7 @@ NS_IMETHODIMP nsOSHelperAppService::LaunchAppWithTempFile(nsIMIMEInfo * aMIMEInf
             {
               saltedTempLeafName.Append(table[(rand()%TABLE_SIZE)]);
             }
-            saltedTempLeafName.Append(NS_ConvertASCIItoUCS2(suffix));
+            AppendASCIItoUTF16(suffix, saltedTempLeafName);
             nsresult rv = aTempFile->MoveTo(nsnull, saltedTempLeafName);
         } while (NS_FAILED(rv));
         helperAppService->DeleteTemporaryFileOnExit(aTempFile);

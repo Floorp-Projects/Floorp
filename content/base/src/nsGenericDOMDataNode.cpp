@@ -595,7 +595,7 @@ nsGenericDOMDataNode::ToCString(nsAString& aBuf, PRInt32 aOffset,
       } else if ((ch < ' ') || (ch >= 127)) {
         char buf[10];
         PR_snprintf(buf, sizeof(buf), "\\u%04x", ch);
-        aBuf.Append(NS_ConvertASCIItoUCS2(buf));
+        AppendASCIItoUTF16(buf, aBuf);
       } else {
         aBuf.Append(ch);
       }
@@ -615,7 +615,7 @@ nsGenericDOMDataNode::ToCString(nsAString& aBuf, PRInt32 aOffset,
       } else if ((ch < ' ') || (ch >= 127)) {
         char buf[10];
         PR_snprintf(buf, sizeof(buf), "\\u%04x", ch);
-        aBuf.Append(NS_ConvertASCIItoUCS2(buf));
+        AppendASCIItoUTF16(buf, aBuf);
       } else {
         aBuf.Append(ch);
       }
@@ -1343,8 +1343,7 @@ nsGenericDOMDataNode::AppendTextTo(nsAString& aResult)
   if (mText.Is2b()) {
     aResult.Append(mText.Get2b(), mText.GetLength());
   } else {
-    // XXX we would like to have a AppendASCIItoUTF16 here
-    AppendUTF8toUTF16(mText.Get1b(), aResult);
+    AppendASCIItoUTF16(mText.Get1b(), aResult);
   }
 
   return NS_OK;

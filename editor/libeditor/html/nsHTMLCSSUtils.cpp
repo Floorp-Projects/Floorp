@@ -103,11 +103,11 @@ void ProcessExtendedValue(const nsAString * aInputString, nsAString & aOutputStr
   aOutputString.Truncate();
   if (aInputString) {
     if (aPrependString) {
-      aOutputString.Append(NS_ConvertASCIItoUCS2(aPrependString));
+      AppendASCIItoUTF16(aPrependString, aOutputString);
     }
     aOutputString.Append(*aInputString);
     if (aAppendString) {
-      aOutputString.Append(NS_ConvertASCIItoUCS2(aAppendString));
+      AppendASCIItoUTF16(aAppendString, aOutputString);
     }
   }
 }
