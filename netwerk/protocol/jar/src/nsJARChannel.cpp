@@ -157,6 +157,9 @@ nsJARChannel::nsJARChannel()
 
 nsJARChannel::~nsJARChannel()
 {
+    // with the exception of certain error cases mJarInput will already be null.
+    NS_IF_RELEASE(mJarInput);
+
     // release owning reference to the jar handler
     nsJARProtocolHandler *handler = gJarHandler;
     NS_RELEASE(handler); // NULL parameter
