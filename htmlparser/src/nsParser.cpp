@@ -2516,7 +2516,7 @@ nsParser::DetectMetaTag(const char* aBytes,
                     (contentTokenizer.GetLength() >= kCharsetStrLen) &&
                     (nsCRT::strncasecmp(contentStart+offset,
                                         kCharsetStr, kCharsetStrLen) == 0)) {
-                  // The next word is the charset
+                  // The next word is the charset. PR_TRUE => That we should skip quotes - Bug 88746
                   if ((offset = contentTokenizer.GetNextWord(PR_TRUE)) != kNotFound) {
                     aCharset.Assign(NS_ConvertASCIItoUCS2(contentStart+offset, 
                                                           contentTokenizer.GetLength()));
