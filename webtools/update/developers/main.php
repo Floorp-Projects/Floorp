@@ -23,7 +23,7 @@ WHERE `approved` = '?' GROUP BY `URI` ORDER BY TV.DateUpdated ASC";
   $num_result = mysql_num_rows($sql_result);
 ?>
 <P>
-<SPAN STYLE="font-weight:bold">Approval Queue Status: <A HREF="approval.php?function=approvalqueue"><?php echo"$num_result"; ?> Pending Approval</A></SPAN>
+<SPAN STYLE="font-weight:bold">Approval Queue Status: <A HREF="approval.php"><?php echo"$num_result"; ?> Pending Approval</A></SPAN>
 </P>
 <?php } ?>
 

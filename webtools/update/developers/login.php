@@ -37,13 +37,13 @@ $_SESSION["logoncheck"] = "$logoncheck";
 
 $return_path="developers/main.php";
 
-header("Location: https://$_SERVER[SERVER_NAME]/$return_path");
+header("Location: http://$_SERVER[SERVER_NAME]/$return_path");
 exit;
 
 
 } else {
 $return_path ="developers/index.php?login=failed";
-header("Location: https://$_SERVER[SERVER_NAME]/$return_path");
+header("Location: http://$_SERVER[SERVER_NAME]/$return_path");
 exit;
 }
 ?>

@@ -63,7 +63,7 @@ $filename = escape_string($_POST["filename"]);
 $filesize = escape_string($_POST["filesize"]);
 $uploadedfile="$websitepath/files/temp/$filename";
 }
-$zip = zip_open("$uploadedfile");
+$zip = @zip_open("$uploadedfile");
 if ($zip) {
 
    while ($zip_entry = zip_read($zip)) {
@@ -156,7 +156,7 @@ $sql = "SELECT ID, GUID from `main` WHERE `GUID` = '".escape_string($manifestdat
     $mode = "update";
     $row = mysql_fetch_array($sql_result);
     $item_id = $row["ID"];
-if ($_POST["legacy"]=="TRUE") {$item_id = $_POST["existingitems"]; }
+if ($_POST["legacy"]=="TRUE") {$item_id = escape_string($_POST["existingitems"]); }
     $sql = "SELECT `UserID` from `authorxref` WHERE `ID`='$item_id' AND `UserID` = '$_SESSION[uid]' LIMIT 1";
       $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
       if (mysql_num_rows($sql_result)=="1" or ($_SESSION["level"]="admin" or $_SESSION["level"]="editor")) {
@@ -228,7 +228,7 @@ $sql = "SELECT  TM.ID, TM.Name FROM  `main`  TM
 LEFT JOIN authorxref TAX ON TM.ID = TAX.ID
 INNER JOIN userprofiles TU ON TAX.UserID = TU.UserID
 WHERE TM.Type = '$type'";
-if ($_GET["admin"] =="true" AND $_SESSION[level] =="admin") {} else{ $sql .= "AND TU.UserEmail = '$_SESSION[email]'"; }
+if ($_SESSION["level"] =="editor" OR $_SESSION["level"] =="admin") {} else { $sql .= "AND TU.UserEmail = '$_SESSION[email]'"; }
 $sql .="GROUP BY `name` ORDER  BY  `Name`  ASC ";
  $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
    while ($row = mysql_fetch_array($sql_result)) {
@@ -611,7 +611,7 @@ $uri = ""; //we don't have all the parts to set a uri, leave blank and fix when 
 $notes = escape_string($_POST["notes"]);
 
 //If a record for this item's exact version, OS, and app already exists, find it and delete it, before inserting
-  $sql3 = "SELECT `vID` from `version` TV INNER JOIN `applications` TA ON TA.AppID=TV.AppID WHERE `OSID`='$osid' AND `AppName` = '$appname' AND TV.Version='$version' ORDER BY `vID` ASC";
+  $sql3 = "SELECT `vID` from `version` TV INNER JOIN `applications` TA ON TA.AppID=TV.AppID WHERE TV.ID = `$id` AND `OSID`='$osid' AND `AppName` = '$appname' AND TV.Version='$version' ORDER BY `vID` ASC";
     $sql_result3 = mysql_query($sql3, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
       while ($row = mysql_fetch_array($sql_result3)) {
         $sql = "DELETE FROM `version` WHERE `vID`='$row[vID]' LIMIT 1";

@@ -136,22 +136,9 @@ WHERE `approved` = '?' GROUP BY TV.URI ORDER BY TV.DateUpdated ASC";
       $row2 = mysql_fetch_array($sql_result2);
         if ($row2[date]) {$date = $row2[date]; } else { $date = $row[DateUpdated]; } 
         $date = date("l, F d, Y, g:i:sa", strtotime("$date"));
-  echo"<TR><TD COLSPAN=4><h3><a href=\"listmanager.php?function=editversion&id=$row[ID]&vid=$row[vID]\">$row[Name] $row[Version]</a> by $authors</h3></TD></TR>\n";
+  echo"<TR><TD COLSPAN=4><h2><a href=\"listmanager.php?function=editversion&id=$row[ID]&vid=$row[vID]\">$row[Name] $row[Version]</a> by $authors</h2></TD></TR>\n";
 
-    if ($type=="T") {
-        $installink = "javascript:void(InstallTrigger.installChrome(InstallTrigger.SKIN,'$row[URI]','$row[Name] $row[Version]'))";
-    } else if ($type=="E") {
-          $installink = "javascript:void(InstallTrigger.install({'$row[Name] $row[Version]':'$row[URI]'}))";
-    }
-
-  echo"<TR><TD COLSPAN=4 style=\"font-size: 8pt;\"><a href=\"$installink\">( Install Now )</a> $row[Description] ($categories)</TD></TR>\n";
-  echo"<TR>\n";
-  if ($row2[UserName]) {
-    echo"<TD COLSPAN=2 style=\"font-size: 8pt;\"><strong>Requested by:</strong> <a href=\"mailto:$row2[UserEmail]\">$row2[UserName]</a> on $date</TD>\n";
-  } else {
-    echo"<TD COLSPAN=2></TD>\n";
-  }
-  echo"</TR>\n<TR>";
+  echo"<TR>";
   echo"<TD style=\"font-size: 8pt;\"><strong>Works with: </strong>";
   $sql3 = "SELECT `shortname`, `MinAppVer`, `MaxAppVer` FROM `version` TV INNER JOIN `applications` TA ON TV.AppID = TA.AppID WHERE `URI`='$row[URI]' ORDER BY `AppName` ASC";
     $sql_result3 = mysql_query($sql3, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
@@ -159,10 +146,38 @@ WHERE `approved` = '?' GROUP BY TV.URI ORDER BY TV.DateUpdated ASC";
   echo"".ucwords($row3[shortname])." $row3[MinAppVer]-$row3[MaxAppVer] \n";
     }
   if($row[OSName] != "ALL") { echo" ($row[OSName])"; }
+
+    if ($type=="T") {
+        $installink = "javascript:void(InstallTrigger.installChrome(InstallTrigger.SKIN,'$row[URI]','$row[Name] $row[Version]'))";
+    } else if ($type=="E") {
+          $installink = "javascript:void(InstallTrigger.install({'$row[Name] $row[Version]':'$row[URI]'}))";
+    }
+  echo"<SPAN><a href=\"$installink\">( Install Now )</a></span>\n";
   echo"</TD>\n";
+  echo"</TR>\n";
+
+  echo"<TR><TD style=\"font-size: 8pt;\">".nl2br($row[Description])." ($categories)</TD></TR>\n";
+
+  echo"<TR>\n";
+  if ($row2[UserName]) {
+    echo"<TD COLSPAN=2 style=\"font-size: 8pt;\"><strong>Requested by:</strong> <a href=\"mailto:$row2[UserEmail]\">$row2[UserName]</a> on $date</TD>\n";
+  } else {
+    echo"<TD COLSPAN=2></TD>\n";
+  }
   echo"</TR>\n";
  
 //Approval Form for this Extension Item
+  echo"<TR><TD COLSPAN=4><h3 style=\"margin-top: 0px\">Tested On:</h3></TD></TR>\n";
+
+  echo"<TR><TD COLSPAN=4 style=\"font-size: 8pt\">\n";
+  echo"<input name=\"type_$i\" type=\"hidden\" value=\"$type\">\n";
+  echo"<input name=\"file_$i\" type=\"hidden\" value=\"$uri\">\n";
+  echo"<input name=\"name_$i\" type=\"hidden\" value=\"$row[Name]\">\n";
+  echo"<input name=\"version_$i\" type=\"hidden\" value=\"$row[Version]\">\n";
+  echo"OSes: <input name=\"testos_$i\" type=\"text\" size=10 title=\"What OS(es) did you test in? Windows, Linux, MacOSX, etc\">\n";
+  echo"Apps: <input name=\"testbuild_$i\" type=\"text\" size=10 title=\"What app(s) version(s)/buildid(s)? (Ex. Firefox 1.0RC1 or 0.10+ 20041010)\">\n";
+  echo"Comments: <input name=\"comments_$i\" type=\"text\" size=\"35\" title=\"Comments to Author (Will Be E-Mailed w/ Notice of your Action)\">"; 
+  echo"</TD></TR>\n";
   echo"<TR><TD COLSPAN=4 style=\"font-size: 8pt\">\n";
   echo"<input name=\"installation_$i\" type=\"checkbox\" value=\"YES\" TITLE=\"Installs OK?\">Install?\n";
   echo"<input name=\"uninstallation_$i\" type=\"checkbox\" value=\"YES\" TITLE=\"Uninstalls OK?\">Uninstall?\n";
@@ -176,20 +191,11 @@ if ($type=="E") {
   echo"<input name=\"allelementsthemed_$i\" type=\"checkbox\" value=\"YES\" TITLE=\"All Components Themed? (Including No Missing Icons?)\">Theme Complete?\n";
 }
   echo"</TD></TR>\n";
-  echo"<TR><TD COLSPAN=4 style=\"font-size: 8pt\">\n";
-  echo"<input name=\"type_$i\" type=\"hidden\" value=\"$type\">\n";
-  echo"<input name=\"file_$i\" type=\"hidden\" value=\"$uri\">\n";
-  echo"<input name=\"name_$i\" type=\"hidden\" value=\"$row[Name]\">\n";
-  echo"<input name=\"version_$i\" type=\"hidden\" value=\"$row[Version]\">\n";
-  echo"Tested On: OSes: <input name=\"testos_$i\" type=\"text\" size=10 title=\"What OS(es) did you test in? Windows, Linux, MacOSX, etc\">\n";
-  echo"Apps: <input name=\"testbuild_$i\" type=\"text\" size=10 title=\"What app(s) version(s)/buildid(s)? (Ex. Firefox 1.0RC1 or 0.10+ 20041010)\">\n";
-  echo"Comments: <input name=\"comments_$i\" type=\"text\" size=\"35\" title=\"Comments to Author (Will Be E-Mailed w/ Notice of your Action)\">"; 
-  echo"</TD></TR>\n";
 
-  echo"<TR><TD COLSPAN=4 style=\"font-size: 8pt\">\n";
+  echo"<TR><TD COLSPAN=4 style=\"font-size: 8pt\"><strong>Action:</strong> \n";
   echo"<input name=\"approval_$i\" type=\"radio\" value=\"YES\">Approve&nbsp;&nbsp;";
   echo"<input name=\"approval_$i\" type=\"radio\" value=\"NO\">Deny&nbsp;&nbsp;";
-  echo"<input name=\"approval_$i\" type=\"radio\" checked=\"checked\" VALUE=\"noaction\">No Action?\n";
+  echo"<input name=\"approval_$i\" type=\"radio\" checked=\"checked\" VALUE=\"noaction\">No Action\n";
   echo"</TD></TR>\n";
  }
 
