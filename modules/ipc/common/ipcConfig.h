@@ -39,6 +39,10 @@
 #define ipcProto_h__
 
 #if defined(XP_WIN)
+//
+// use WM_COPYDATA messages
+//
+#include "prprf.h"
 
 #define IPC_WINDOW_CLASS              "Mozilla:IPCWindowClass"
 #define IPC_WINDOW_NAME               "Mozilla:IPCWindow"
@@ -47,30 +51,15 @@
 #define IPC_DAEMON_APP_NAME           "mozipcd.exe"
 #define IPC_PATH_SEP_CHAR             '\\'
 
-#if 0
-//
-// XXX since win9x/me doesn't support named pipes, we resort to using a
-// localhost TCP/IP socket (for now).  this is not a great solution for
-// several reasons:
-//   (1) we have to agree on a port number.
-//   (2) opens up a big security hole that needs to be plugged somehow.
-//
-// we should probably use WM_COPYDATA instead.
-//
-#define IPC_USE_INET            1
-#define IPC_PORT                14400
-#define IPC_SOCKET_TYPE         nsnull
-#define IPC_DEFAULT_SOCKET_PATH ""
+#define IPC_CLIENT_WINDOW_NAME_MAXLEN (sizeof(IPC_CLIENT_WINDOW_NAME_PREFIX) + 20)
 
-#ifdef XP_UNIX
-#define IPC_DAEMON_APP_NAME     "mozipcd"
-#define IPC_PATH_SEP_CHAR       '/'
-#else
-#define IPC_DAEMON_APP_NAME     "mozipcd.exe"
-#define IPC_PATH_SEP_CHAR       '\\'
-#endif
-
-#endif
+// writes client name into buf.  buf must be at least
+// IPC_CLIENT_WINDOW_NAME_MAXLEN bytes in length.
+inline void IPC_GetClientWindowName(PRUint32 pid, char *buf)
+{
+    PR_snprintf(buf, IPC_CLIENT_WINDOW_NAME_MAXLEN, "%s%u",
+                IPC_CLIENT_WINDOW_NAME_PREFIX, pid);
+}
 
 #else
 //

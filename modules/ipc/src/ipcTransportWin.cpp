@@ -151,11 +151,13 @@ ipcThreadWindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
     if (uMsg == IPC_WM_SEND_MESSAGE) {
         ipcMessage *msg = (ipcMessage *) lParam;
         if (msg) {
+            LOG(("  sending message...\n"));
             COPYDATASTRUCT cd;
             cd.dwData = GetCurrentProcessId();
             cd.cbData = (DWORD) msg->MsgLen();
             cd.lpData = (PVOID) msg->MsgBuf();
             SendMessageA(ipcDaemonHwnd, WM_COPYDATA, (WPARAM) hWnd, (LPARAM) &cd);
+            LOG(("  done.\n"));
             delete msg;
         }
         return 0;
@@ -331,7 +333,10 @@ ipcTransport::SendMsg_Internal(ipcMessage *msg)
     NS_ENSURE_TRUE(ipcDaemonHwnd, NS_ERROR_NOT_INITIALIZED);
     NS_ENSURE_TRUE(ipcHwnd, NS_ERROR_NOT_INITIALIZED);
 
-    PostMessage(ipcHwnd, IPC_WM_SEND_MESSAGE, 0, (LPARAM) msg);
+    if (!PostMessage(ipcHwnd, IPC_WM_SEND_MESSAGE, 0, (LPARAM) msg)) {
+        LOG(("  PostMessage failed w/ error = %u\n", GetLastError()));
+        return NS_ERROR_FAILURE;
+    }
     return NS_OK;
 }
 

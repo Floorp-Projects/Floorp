@@ -37,8 +37,6 @@
 
 #include <windows.h>
 
-#include "prprf.h"
-
 #include "ipcConfig.h"
 #include "ipcLog.h"
 #include "ipcMessage.h"
@@ -65,7 +63,7 @@ static HWND ipcHwnd;
 static void
 RemoveClient(ipcClient *client)
 {
-    LOG(("RemoveClient [num-clients=%u]\n", ipcClientCount - 1));
+    LOG(("RemoveClient\n"));
 
     int clientIndex = client - ipcClientArray;
 
@@ -82,30 +80,29 @@ RemoveClient(ipcClient *client)
     memset(&ipcClientArray[fromIndex], 0, sizeof(ipcClient));
 
     --ipcClientCount;
+    LOG(("  num clients = %u\n", ipcClientCount));
 }
 
 static void
-PurgeDeadClients()
+PurgeStaleClients()
 {
-    LOG(("PurgeDeadClients\n"));
+    LOG(("PurgeStaleClients [num-clients=%u]\n", ipcClientCount));
     //
     // walk the list of supposedly active clients, and verify the existance of
     // their respective message windows.
     //
-    char wName[sizeof(IPC_CLIENT_WINDOW_NAME_PREFIX) + 20];
-    for (int i=ipcClientCount-1; i>=0; ++i) {
+    char wName[IPC_CLIENT_WINDOW_NAME_MAXLEN];
+    for (int i=ipcClientCount-1; i>=0; --i) {
         ipcClient *client = &ipcClientArray[i];
 
         LOG(("  checking client at index %u [client-id=%u pid=%u]\n", 
             i, client->ID(), client->PID()));
 
-        // construct window name
-        PR_snprintf(wName, sizeof(wName), "%s%u",
-                    IPC_CLIENT_WINDOW_NAME_PREFIX, client->PID());
+        IPC_GetClientWindowName(client->PID(), wName);
 
         HWND hwnd = FindWindow(IPC_CLIENT_WINDOW_CLASS, wName);
         if (!hwnd) {
-            LOG(("  window not found; removing client!\n"));
+            LOG(("  client window not found; removing client!\n"));
             RemoveClient(client);
         }
     }
@@ -114,15 +111,17 @@ PurgeDeadClients()
 static ipcClient *
 AddClient(HWND hwnd, PRUint32 pid)
 {
-    LOG(("AddClient [num-clients=%u]\n", ipcClientCount + 1));
+    LOG(("AddClient\n"));
 
-/*
+    //
+    // before adding a new client, verify that all existing clients are
+    // still up and running.  remove any stale clients.
+    //
     if (ipcClientCount > 0)
-        PurgeDeadClients();
-*/
+        PurgeStaleClients();
 
     if (ipcClientCount == IPC_MAX_CLIENTS) {
-        LOG(("reached maximum client count!\n"));
+        LOG(("  reached maximum client count!\n"));
         return NULL;
     }
 
@@ -132,6 +131,7 @@ AddClient(HWND hwnd, PRUint32 pid)
     client->SetPID(pid);
 
     ++ipcClientCount;
+    LOG(("  num clients = %u\n", ipcClientCount));
     return client;
 }
 
