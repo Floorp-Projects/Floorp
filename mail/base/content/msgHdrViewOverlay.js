@@ -42,6 +42,8 @@ var gNumAddressesToShow = 3;
 var gShowOrganization = false;
 var gShowLargeAttachmentView = false;
 var gShowUserAgent = false;
+var gMinNumberOfHeaders = 0;
+var gDummyHeaderIdIndex = 0;
 var gCollectIncoming = false;
 var gCollectOutgoing = false;
 var gCollectNewsgroup = false;
@@ -211,6 +213,7 @@ function OnLoadMsgHeaderPane()
   gCollectNewsgroup = pref.getBoolPref("mail.collect_email_address_newsgroup");
   gCollectOutgoing = pref.getBoolPref("mail.collect_email_address_outgoing");
   gShowUserAgent = pref.getBoolPref("mailnews.headers.showUserAgent");
+  gMinNumberOfHeaders = pref.getIntPref("mailnews.headers.minNumHeaders");
   gShowOrganization = pref.getBoolPref("mailnews.headers.showOrganization");
   gShowLargeAttachmentView = pref.getBoolPref("mailnews.attachments.display.largeView");
   initializeHeaderViewTables();
@@ -462,6 +465,49 @@ function showHeaderView(headerTable)
   }
 }
 
+// enumerate through the list of headers and find the number that are visible
+// add empty entries if we don't have the minimum number of rows
+function EnsureMinimumNumberOfHeaders (headerTable)
+{ 
+  if (!gMinNumberOfHeaders) // 0 means we don't have a minimum..do nothing special
+    return;
+
+  var numVisibleHeaders = 0;
+  for (index in headerTable)
+  {
+    if (headerTable[index].valid)
+      numVisibleHeaders ++;
+  } 
+
+  if (numVisibleHeaders < gMinNumberOfHeaders)
+  { 
+    // how many empty headers do we need to add?
+    var numEmptyHeaders = gMinNumberOfHeaders - numVisibleHeaders;
+
+    // we may have already dynamically created our empty rows and we just need to make them visible
+    for (index in headerTable)
+    { 
+      if (index.indexOf("Dummy-Header") == 0 && numEmptyHeaders)
+      {
+        headerTable[index].valid = true;
+        numEmptyHeaders--;
+      }
+    }
+
+    // ok, now if we have any extra dummy headers we need to add, create a new header widget for them
+    while (numEmptyHeaders)
+    {
+      var dummyHeaderId = "Dummy-Header" + gDummyHeaderIdIndex;
+      gExpandedHeaderView[dummyHeaderId] = new createNewHeaderView(dummyHeaderId);
+      gExpandedHeaderView[dummyHeaderId].valid = true;
+
+      gDummyHeaderIdIndex++;
+      numEmptyHeaders--;
+    }
+
+  }
+}
+
 // make sure the appropriate fields within the currently displayed view header mode
 // are collapsed or visible...
 function updateHeaderViews()
@@ -469,7 +515,11 @@ function updateHeaderViews()
   if (gCollapsedHeaderViewMode)
     showHeaderView(gCollapsedHeaderView);
   else
+  {
+    if (gMinNumberOfHeaders)
+      EnsureMinimumNumberOfHeaders(gExpandedHeaderView);
     showHeaderView(gExpandedHeaderView);
+  }
 
   displayAttachmentsForExpandedView();
 }
@@ -527,9 +577,18 @@ function createNewHeaderView(headerName)
   var idName = 'expanded' + headerName + 'Box';
   var newHeader = document.createElement("mail-headerfield");
   newHeader.setAttribute('id', idName);
+
+  if (headerName.indexOf("Dummy-Header") == 0) // -1 means not found, 0 means starts at the beginning
+  {
+    newHeader.setAttribute('label', "");
+  } 
+  else
+  {
   newHeader.setAttribute('label', currentHeaderData[headerName].headerName + ':');
   // all mail-headerfield elements are keyword related
   newHeader.setAttribute('keywordrelated','true');
+  }
+  
   newHeader.collapsed = true;
 
   // this new element needs to be inserted into the view...
@@ -537,7 +596,7 @@ function createNewHeaderView(headerName)
 
   topViewNode.appendChild(newHeader);
   
-  this.enclosingBox = newHeader
+  this.enclosingBox = newHeader;
   this.isValid = false;
   this.useToggle = false;
   this.useShortView = false;
