@@ -86,6 +86,7 @@ static NS_DEFINE_IID(kCChildCID, NS_CHILD_CID);
 static NS_DEFINE_IID(kCAppShellCID, NS_APPSHELL_CID);
 static NS_DEFINE_IID(kCToolkitCID, NS_TOOLKIT_CID);
 static NS_DEFINE_IID(kClipboardCID,            NS_CLIPBOARD_CID);
+static NS_DEFINE_CID(kClipboardHelperCID, NS_CLIPBOARDHELPER_CID);
 static NS_DEFINE_CID(kCTransferableCID,        NS_TRANSFERABLE_CID);
 static NS_DEFINE_IID(kDataFlavorCID,           NS_DATAFLAVOR_CID);
 static NS_DEFINE_IID(kCHTMLFormatConverterCID, NS_HTMLFORMATCONVERTER_CID);
@@ -168,6 +169,7 @@ NS_SetupRegistry()
   nsComponentManager::RegisterComponentLib(kCAppShellCID, NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
   nsComponentManager::RegisterComponentLib(kCToolkitCID, NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
   nsComponentManager::RegisterComponentLib(kClipboardCID,            "Clipboard", "@mozilla.org/widget/clipboard;1", WIDGET_DLL, PR_FALSE, PR_FALSE);
+  nsComponentManager::RegisterComponentLib(kClipboardHelperCID, "Clipboard Helper", "@mozilla.org/widget/clipboardhelper;1", WIDGET_DLL, PR_FALSE, PR_FALSE);
   nsComponentManager::RegisterComponentLib(kCTransferableCID,        "Transferable", "@mozilla.org/widget/transferable;1", WIDGET_DLL, PR_FALSE, PR_FALSE);
   nsComponentManager::RegisterComponentLib(kDataFlavorCID,           NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
   nsComponentManager::RegisterComponentLib(kCHTMLFormatConverterCID,  NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
