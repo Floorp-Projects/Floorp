@@ -118,6 +118,7 @@ class nsXBLBinding: public nsIXBLBinding
 
   NS_IMETHOD GenerateAnonymousContent(nsIContent* aBoundElement);
   NS_IMETHOD InstallEventHandlers(nsIContent* aBoundElement);
+  NS_IMETHOD InstallProperties(nsIContent* aBoundElement);
 
   NS_IMETHOD GetBaseTag(nsIAtom** aResult);
 
@@ -141,8 +142,16 @@ public:
   static nsIAtom* kCapturerAtom;
   static nsIAtom* kExtendsAtom;
   static nsIAtom* kChildrenAtom;
+  static nsIAtom* kMethodAtom;
+  static nsIAtom* kArgumentAtom;
+  static nsIAtom* kBodyAtom;
+  static nsIAtom* kPropertyAtom;
+  static nsIAtom* kOnSetAtom;
+  static nsIAtom* kOnGetAtom;
   static nsIAtom* kHTMLAtom;
   static nsIAtom* kValueAtom;
+  static nsIAtom* kNameAtom;
+  static nsIAtom* kReadOnlyAtom;
 
   // Used to easily obtain the correct IID for an event.
   struct EventHandlerMapEntry {
@@ -193,6 +202,14 @@ nsIAtom* nsXBLBinding::kExtendsAtom = nsnull;
 nsIAtom* nsXBLBinding::kChildrenAtom = nsnull;
 nsIAtom* nsXBLBinding::kValueAtom = nsnull;
 nsIAtom* nsXBLBinding::kHTMLAtom = nsnull;
+nsIAtom* nsXBLBinding::kMethodAtom = nsnull;
+nsIAtom* nsXBLBinding::kArgumentAtom = nsnull;
+nsIAtom* nsXBLBinding::kBodyAtom = nsnull;
+nsIAtom* nsXBLBinding::kPropertyAtom = nsnull;
+nsIAtom* nsXBLBinding::kOnSetAtom = nsnull;
+nsIAtom* nsXBLBinding::kOnGetAtom = nsnull;
+nsIAtom* nsXBLBinding::kNameAtom = nsnull;
+nsIAtom* nsXBLBinding::kReadOnlyAtom = nsnull;
 
 nsXBLBinding::EventHandlerMapEntry
 nsXBLBinding::kEventHandlerMap[] = {
@@ -264,6 +281,14 @@ nsXBLBinding::nsXBLBinding(void)
     kChildrenAtom = NS_NewAtom("children");
     kHTMLAtom = NS_NewAtom("html");
     kValueAtom = NS_NewAtom("value");
+    kMethodAtom = NS_NewAtom("method");
+    kArgumentAtom = NS_NewAtom("argument");
+    kBodyAtom = NS_NewAtom("body");
+    kPropertyAtom = NS_NewAtom("property");
+    kOnSetAtom = NS_NewAtom("onset");
+    kOnGetAtom = NS_NewAtom("onget");
+    kNameAtom = NS_NewAtom("name");
+    kReadOnlyAtom = NS_NewAtom("readonly");
 
     EventHandlerMapEntry* entry = kEventHandlerMap;
     while (entry->mAttributeName) {
@@ -290,6 +315,14 @@ nsXBLBinding::~nsXBLBinding(void)
     NS_RELEASE(kChildrenAtom);
     NS_RELEASE(kHTMLAtom);
     NS_RELEASE(kValueAtom);
+    NS_RELEASE(kMethodAtom);
+    NS_RELEASE(kArgumentAtom);
+    NS_RELEASE(kBodyAtom);
+    NS_RELEASE(kPropertyAtom); 
+    NS_RELEASE(kOnSetAtom);
+    NS_RELEASE(kOnGetAtom);
+    NS_RELEASE(kNameAtom);
+    NS_RELEASE(kReadOnlyAtom);
 
     EventHandlerMapEntry* entry = kEventHandlerMap;
     while (entry->mAttributeName) {
@@ -552,6 +585,217 @@ nsXBLBinding::InstallEventHandlers(nsIContent* aBoundElement)
 
   if (mNextBinding)
     mNextBinding->InstallEventHandlers(aBoundElement);
+
+  return NS_OK;
+}
+
+const char* gPropertyArg[] = { "val" };
+
+NS_IMETHODIMP
+nsXBLBinding::InstallProperties(nsIContent* aBoundElement)
+{
+  // Always install the base class properties first, so that
+  // derived classes can reference the base class properties.
+  if (mNextBinding)
+    mNextBinding->InstallProperties(aBoundElement);
+
+   // Fetch the handlers element for this binding.
+  nsCOMPtr<nsIContent> interfaceElement;
+  GetImmediateChild(kInterfaceAtom, getter_AddRefs(interfaceElement));
+
+  if (interfaceElement) {
+    // Get our bound element's script context.
+    nsresult rv;
+    nsCOMPtr<nsIDocument> document;
+    mBoundElement->GetDocument(*getter_AddRefs(document));
+    if (!document)
+      return NS_OK;
+
+    nsCOMPtr<nsIScriptGlobalObject> global;
+    document->GetScriptGlobalObject(getter_AddRefs(global));
+
+    if (!global)
+      return NS_OK;
+
+    nsCOMPtr<nsIScriptContext> context;
+    rv = global->GetContext(getter_AddRefs(context));
+    if (NS_FAILED(rv)) return rv;
+
+    JSContext* cx = (JSContext*)context->GetNativeContext();
+
+    nsCOMPtr<nsIScriptObjectOwner> owner(do_QueryInterface(mBoundElement));
+    if (!owner)
+      return NS_ERROR_UNEXPECTED;
+
+    void* scopeObject;
+    rv = owner->GetScriptObject(context, (void**) &scopeObject);
+    if (NS_FAILED(rv)) return rv;
+
+    // Do a walk.
+    PRInt32 childCount;
+    interfaceElement->ChildCount(childCount);
+    for (PRInt32 i = 0; i < childCount; i++) {
+      nsCOMPtr<nsIContent> child;
+      interfaceElement->ChildAt(i, *getter_AddRefs(child));
+
+      // See if we're a property or a method.
+      nsCOMPtr<nsIAtom> tagName;
+      child->GetTag(*getter_AddRefs(tagName));
+
+      if (tagName.get() == kMethodAtom) {
+        // Obtain our name attribute.
+        nsAutoString name, body;
+        child->GetAttribute(kNameSpaceID_None, kNameAtom, name);
+
+        // Now walk all of our args.
+        // XXX I'm lame. 32 max args allowed.
+        char* args[32];
+        PRUint32 argCount = 0;
+        PRInt32 kidCount;
+        child->ChildCount(kidCount);
+        for (PRInt32 j = 0; j < kidCount; i++)
+        {
+          nsCOMPtr<nsIContent> arg;
+          child->ChildAt(j, *getter_AddRefs(arg));
+          nsCOMPtr<nsIAtom> kidTagName;
+          arg->GetTag(*getter_AddRefs(kidTagName));
+          if (kidTagName.get() == kArgumentAtom) {
+            // Get the argname and add it to the array.
+            nsAutoString argName;
+            arg->GetAttribute(kNameSpaceID_None, kNameAtom, argName);
+            char* argStr = argName.ToNewCString();
+            args[argCount] = argStr;
+            argCount++;
+          }
+          else if (kidTagName.get() == kBodyAtom) {
+            PRInt32 textCount;
+            arg->ChildCount(textCount);
+            
+            for (PRInt32 k = 0; k < textCount; k++) {
+              // Get the child.
+              nsCOMPtr<nsIContent> textChild;
+              arg->ChildAt(k, *getter_AddRefs(textChild));
+              nsCOMPtr<nsIDOMText> text(do_QueryInterface(textChild));
+              if (text) {
+                nsAutoString data;
+                text->GetData(data);
+                body += data;
+              }
+            }
+          }
+        }
+
+        // Now that we have a body and args, compile the function
+        // and then define it as a property.
+        if (!body.IsEmpty()) {
+          void* myFunc;
+          rv = context->CompileFunction(scopeObject,
+                                        name,
+                                        argCount,
+                                        (const char**)args,
+                                        body, 
+                                        nsnull,
+                                        0,
+                                        PR_FALSE,
+                                        &myFunc);
+        }
+      }
+      else if (tagName.get() == kPropertyAtom) {
+        // Obtain our name attribute.
+        nsAutoString name;
+        child->GetAttribute(kNameSpaceID_None, kNameAtom, name);
+
+        if (!name.IsEmpty()) {
+          // We have a property.
+          nsAutoString getter, setter, readOnly;
+          child->GetAttribute(kNameSpaceID_None, kOnGetAtom, getter);
+          child->GetAttribute(kNameSpaceID_None, kOnSetAtom, setter);
+          child->GetAttribute(kNameSpaceID_None, kReadOnlyAtom, readOnly);
+
+          void* getFunc = nsnull;
+          void* setFunc = nsnull;
+          uintN attrs = 0;
+
+          if (readOnly.Equals("true"))
+            attrs |= JSPROP_READONLY;
+
+          if (!getter.IsEmpty()) {
+            rv = context->CompileFunction(scopeObject,
+                                          "onget",
+                                          0,
+                                          nsnull,
+                                          getter, 
+                                          nsnull,
+                                          0,
+                                          PR_FALSE,
+                                          &getFunc);
+            if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
+            attrs |= JSPROP_GETTER;
+          }
+
+          if (!setter.IsEmpty()) {
+            rv = context->CompileFunction(scopeObject,
+                                          "onset",
+                                          1,
+                                          gPropertyArg,
+                                          setter, 
+                                          nsnull,
+                                          0,
+                                          PR_FALSE,
+                                          &setFunc);
+            if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
+            attrs |= JSPROP_SETTER;
+          }
+
+          if (getFunc || setFunc) {
+            // Having either a getter or setter results in the
+            // destruction of any initial value that might be set.
+            // This means we only have to worry about defining the getter
+            // or setter.
+            rv = ::JS_DefineUCProperty(cx, (JSObject*)scopeObject, name.GetUnicode(), 
+                                       name.Length(), JSVAL_VOID,
+                                       (JSPropertyOp) getFunc, 
+                                       (JSPropertyOp) setFunc, 
+                                       attrs); 
+          } else {
+            // Look for a normal value and just define that.
+            nsCOMPtr<nsIContent> textChild;
+            PRInt32 textCount;
+            child->ChildCount(textCount);
+            nsAutoString answer;
+            for (PRInt32 j = 0; j < textCount; j++) {
+              // Get the child.
+              child->ChildAt(j, *getter_AddRefs(textChild));
+              nsCOMPtr<nsIDOMText> text(do_QueryInterface(textChild));
+              if (text) {
+                nsAutoString data;
+                text->GetData(data);
+                answer += data;
+              }
+            }
+
+            if (!answer.IsEmpty()) {
+              // Evaluate our script and obtain a value.
+              jsval* result;
+              PRBool undefined;
+              rv = context->EvaluateStringWithValue(answer, 
+                                           scopeObject,
+                                           nsnull, nsnull, 0, nsnull,
+                                           (void*)result, &undefined);
+              
+              if (!undefined) {
+                // Define that value as a property
+                rv = ::JS_DefineUCProperty(cx, (JSObject*)scopeObject, name.GetUnicode(), 
+                                           name.Length(), *result,
+                                           nsnull, nsnull,
+                                           attrs); 
+              }
+            }
+          }
+        }
+      }
+    }
+  }
 
   return NS_OK;
 }

@@ -279,7 +279,9 @@ nsXBLService::LoadBindings(nsIContent* aContent, const nsString& aURL)
   // Tell the binding to install event handlers
   binding->InstallEventHandlers(aContent);
 
-  // XXX Methods and properties. How?
+  // Set up our properties
+  binding->InstallProperties(aContent);
+
   return NS_OK; 
 }
 
