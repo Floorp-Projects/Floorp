@@ -290,47 +290,8 @@ pref("imap.io.mac.logging", false);
 
 pref("browser.editor.disabled", false);
 
-pref("netcaster.containers.count", "2");
-pref("netcaster.containers.container1", "-3;'Channel_Finder';'http://netcaster.netscape.com/finder/container/index.html';1440;0");
-pref("netcaster.containers.container2", "1,2;'Channels';");
-pref("netcaster.channel.count", "0");
-pref("netcaster.castanet.count", "0");
-pref("netcaster.castanet.acceptCookies", false);
-pref("netcaster.castanet.loggingEnabled", true);
-pref("netcaster.castanet.profileEnabled", true);
-pref("netcaster.admin.startTime", "9");
-pref("netcaster.admin.endTime", "17");
-pref("netcaster.admin.times", "0");
-pref("netcaster.defaultChannel", "netscape_channel");
-
 pref("SpellChecker.DefaultLanguage", 0);
 pref("SpellChecker.DefaultDialect", 0);
-
-pref("li.enabled", false);
-pref("li.protocol","ldap");
-
-pref("li.client.bookmarks", true);
-pref("li.client.cookies", true);
-pref("li.client.filters", true);
-pref("li.client.addressbook", true);
-pref("li.client.globalhistory", true);
-pref("li.client.navcntr", true);
-pref("li.client.liprefs", true);
-pref("li.client.security", true);
-pref("li.client.javasecurity", true);
-
-pref("li.client.news", true);
-pref("li.client.mail", true);
-
-pref("li.login.name", "");
-pref("li.login.password", "");
-
-pref("li.server.http.baseURL", "");
-pref("li.server.ldap.url", "");
-pref("li.server.ldap.userbase", "");
-
-pref("li.sync.enabled", false);
-pref("li.sync.time", 30);
 
 pref("mime.table.allow_add", true);
 pref("mime.table.allow_edit", true);
