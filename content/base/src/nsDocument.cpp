@@ -338,7 +338,10 @@ void nsDocument::AddStyleSheet(nsIStyleSheet* aSheet)
 // that it has a live reference to the document.
 void nsDocument::AddObserver(nsIDocumentObserver* aObserver)
 {
-  mObservers.AppendElement(aObserver);
+  // XXX Make sure the observer isn't already in the list
+  if (mObservers.IndexOf(aObserver) == -1) {
+    mObservers.AppendElement(aObserver);
+  }
 }
 
 PRBool nsDocument::RemoveObserver(nsIDocumentObserver* aObserver)
