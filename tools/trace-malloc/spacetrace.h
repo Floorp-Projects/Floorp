@@ -69,6 +69,8 @@
 */
 #define REPORT_ERROR(code, function) \
         PR_fprintf(PR_STDERR, "error(%d):\t%s\n", code, #function)
+#define REPORT_ERROR_MSG(code, msg) \
+        PR_fprintf(PR_STDERR, "error(%d):\t%s\n", code, msg)
 #define REPORT_INFO(msg) \
         PR_fprintf(PR_STDOUT, "%s: %s\n", globals.mProgramName, (msg))
 

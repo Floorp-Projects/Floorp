@@ -169,7 +169,7 @@ ST_ALL_OPTION_UINT32(OrderBy,
 ST_ALL_OPTION_STRING_ARRAY(RestrictText,
                            ST_SUBSTRING_MATCH_MAX,
                            "Exclude allocations which do not have this text in their backtrace.\n"
-                           "Multiple restrictions are allowed as a logical AND operation.\n")
+                           "Multiple restrictions are treated as a logical AND operation.\n")
 
 ST_ALL_OPTION_UINT32(SizeMin,
                      0,
@@ -276,7 +276,7 @@ ST_CMD_OPTION_STRING(OutputDir,
                      "The directory must exist and must not use a trailing slash.\n")
 
 ST_CMD_OPTION_STRING_PTR_ARRAY(BatchRequest,
-                               "Execute in batch mode, multiple requests allowed.\n"
+                               "This implicitly turns on batch mode.\n"
                                "Save each requested file into the output dir, then exit.\n")
 
 ST_CMD_OPTION_BOOL(Help,
