@@ -3,11 +3,14 @@
 <?xml-stylesheet href="chrome://communicator/skin/"?>
 <?xml-stylesheet href="chrome://communicator/content/bookmarks/oTest.css"?>
 
-<window id="bookmarksOutlinerTest"
+<?xul-overlay href="chrome://global/content/globalOverlay.xul"?>
+
+<window id="bookmarksOutlinerTest" width="640" height="480"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
         orient="vertical"
         onload="Startup();">
+
 
   <script>
   <![CDATA[
@@ -30,7 +33,7 @@
 
       isEditable: function (aIndex, aColID) {
         dump("*** isEditable(" + aIndex + ", " + aColID + ");\n");
-        return false;
+        return aColID == "NameColumn";
       },
 
       onSetCellText: function (aIndex, aColID, aValue) {
@@ -70,11 +73,15 @@
       var y = { };
       var w = { };
       var h = { };
-      obo.getCoordsForCellItem(row.value, col.value, elt.value, x, y, w, h);
+      var crp = { };
+      obo.getCoordsForCellItem(row.value, col.value, elt.value, x, y, w, h, crp);
       dump("*** (x,y) = (" + x.value + "," + y.value + "); (w,h) = (" + w.value + "," + h.value + ");\n");
     }
   ]]>
   </script>
+
+  <!-- tooltips -->
+  <popupset id="aTooltipSet"/>
 
   <toolbox>
     <toolbar>
@@ -82,7 +89,14 @@
     </toolbar>
   </toolbox>
 
-  <outliner flex="1" flags="dont-test-empty" id="outliner-proper">
+  <stack>
+    <button label="Foopy Noopy" flex="1"/>
+    <bulletinboard flex="1">
+      <textbox value="NerpNerp" left="10" top="50" onblur="this.setAttribute('hidden','true');"/>
+    </bulletinboard>  
+  </stack>
+
+  <outliner flex="1" flags="dont-test-empty" id="outliner-proper"  titletiptext="Foopy Noopy!">
     <outlinercol id="NameColumn"
                  class="outlinercol-header outlinercol-inset-header sortDirectionIndicator"
                  flex="1"
@@ -116,3 +130,4 @@
   </outliner>
 
 </window>
+

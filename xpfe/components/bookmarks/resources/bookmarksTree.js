@@ -55,8 +55,7 @@ BookmarksTree.prototype = {
     const kXULNS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
     var xulElement = document.createElementNS(kXULNS, "menuitem");
     xulElement.setAttribute("cmd", aCommandName);
-    xulElement.setAttribute("observes", "cmd_" + aCommandName.substring(NC_NS_CMD.length));
-    var node = xulElement.getAttribute('observes');
+    xulElement.setAttribute("command", "cmd_" + aCommandName.substring(NC_NS_CMD.length));
 
     switch (aCommandName) {
     case NC_NS_CMD + "open":
@@ -156,10 +155,14 @@ BookmarksTree.prototype = {
       var relativeNode = aParams[1];
       var parentNode = gBookmarksShell.findRDFNode(relativeNode, false);
 
-      if (!shell.validateNameAndTopic(name, aTopic, relativeNode, dummyItem))
-        return;
-
       dummyItem.parentNode.removeChild(dummyItem);
+
+      if (!shell.validateNameAndTopic(name, aTopic, relativeNode, dummyItem)) {
+        gBookmarksShell.tree.selectItem(relativeNode);
+        gBookmarksShell.tree.focus();
+        return;
+      }
+
 
       // If we're attempting to create a folder as a subfolder of an open folder,
       // we need to set the parentFolder to be relativeNode, which will be the
@@ -183,6 +186,9 @@ BookmarksTree.prototype = {
       var newFolderItem = document.getElementById(newFolderRDFObserver._newFolderURI);
       gBookmarksShell.tree.focus();
       gBookmarksShell.tree.selectItem(newFolderItem);
+      // Can't use newFolderItem because it may not have been created yet. Hack, huh?
+      var index = gBookmarksShell.tree.getIndexOfItem(relativeNode);
+      gBookmarksShell.tree.ensureIndexIsVisible(index+1);
       gSelectionTracker.clickCount = 0;
     },
 
@@ -220,11 +226,19 @@ BookmarksTree.prototype = {
       for (var i = 0; i < dummyItem.firstChild.childNodes.length; ++i)
         dummyItem.firstChild.childNodes[i].removeAttribute("label");
       var editCell = dummyItem.firstChild.firstChild;
-      editCell.setAttribute("value",
+      editCell.setAttribute("label",
                             gBookmarksShell.getLocaleString(aMode == "folder" ? "ile_newfolder" :
                                                                                 "ile_newbookmark"));
       editCell.setAttribute("type", NC_NS + (aMode == "folder" ? "Folder" : "Bookmark"));
+      // By default, create adjacent to the selected item
       var relativeNode = aSelectedItem;
+      if (relativeNode.getAttribute("container") == "true" && 
+          relativeNode.getAttribute("open") == "true") {
+        // But if it's an open container, the relative node should be the last child. 
+        var treechildren = ContentUtils.childByLocalName(relativeNode, "treechildren");
+        if (treechildren && treechildren.hasChildNodes()) 
+          relativeNode = treechildren.lastChild;
+      }
       if (dummyItem.getAttribute("container") == "true") {
         for (i = 0; i < dummyItem.childNodes.length; ++i) {
           if (dummyItem.childNodes[i].localName == "treechildren")
@@ -271,7 +285,7 @@ BookmarksTree.prototype = {
   // others on a single click (sidebar panels).
   isValidOpenEvent: function (aEvent)
   {
-    return !(aEvent.type == "click" &&
+    return !(aEvent.type == "click" && 
              (aEvent.button != 0 || aEvent.detail != this.openClickCount))
   },
 
@@ -310,7 +324,10 @@ BookmarksTree.prototype = {
   // popupNode is selected and the new selection returned.
   getSelection: function ()
   {
-    return this.tree.selectedItems;
+    // Note that we don't just the selectedItems NodeList here because that
+    // is a reference to a LIVE DOM NODE LIST. We want to maintain control
+    // over what is in the selection array ourselves.
+    return [].concat(this.tree.selectedItems);
   },
 
   getBestItem: function ()
@@ -448,7 +465,7 @@ BookmarksTree.prototype = {
   {
     if (this.tree.selectedItems.length > 1) return;
     if (aEvent.keyCode == 113 && aEvent.shiftKey) {
-      const kNodeID = NODE_ID(this.tree.currentItem);
+      const kNodeId = NODE_ID(this.tree.currentItem);
       if (this.resolveType(kNodeId) == NC_NS + "Bookmark")
         gBookmarksShell.commands.editCell (this.tree.currentItem, 1);
     }
@@ -484,11 +501,11 @@ BookmarksTree.prototype = {
       case "cmd_undo":
       case "cmd_redo":
         return false;
-      case "cmd_cut":
-      case "cmd_copy":
-      case "cmd_paste":
-      case "cmd_delete":
-      case "cmd_selectAll":
+      case "cmd_bm_cut":
+      case "cmd_bm_copy":
+      case "cmd_bm_paste":
+      case "cmd_bm_delete":
+      case "cmd_bm_selectAll":
         return true;
       case "cmd_open":
       case "cmd_openfolder":
@@ -499,7 +516,6 @@ BookmarksTree.prototype = {
       case "cmd_find":
       case "cmd_properties":
       case "cmd_rename":
-      case "cmd_delete":
       case "cmd_setnewbookmarkfolder":
       case "cmd_setpersonaltoolbarfolder":
       case "cmd_setnewsearchfolder":
@@ -518,13 +534,13 @@ BookmarksTree.prototype = {
       case "cmd_undo":
       case "cmd_redo":
         return false;
-      case "cmd_paste":
+      case "cmd_bm_paste":
         return gBookmarksShell.canPaste();
-      case "cmd_cut":
-      case "cmd_copy":
-      case "cmd_delete":
+      case "cmd_bm_cut":
+      case "cmd_bm_copy":
+      case "cmd_bm_delete":
         return numSelectedItems >= 1;
-      case "cmd_selectAll":
+      case "cmd_bm_selectAll":
         return true;
       case "cmd_open":
         var seln = gBookmarksShell.tree.selectedItems;
@@ -569,10 +585,10 @@ BookmarksTree.prototype = {
       case "cmd_undo":
       case "cmd_redo":
         break;
-      case "cmd_paste":
-      case "cmd_copy":
-      case "cmd_cut":
-      case "cmd_delete":
+      case "cmd_bm_paste":
+      case "cmd_bm_copy":
+      case "cmd_bm_cut":
+      case "cmd_bm_delete":
       case "cmd_newbookmark":
       case "cmd_newfolder":
       case "cmd_newseparator":
@@ -589,7 +605,7 @@ BookmarksTree.prototype = {
       case "cmd_export":
         gBookmarksShell.execCommand(aCommand.substring("cmd_".length));
         break;
-      case "cmd_selectAll":
+      case "cmd_bm_selectAll":
         gBookmarksShell.tree.selectAll();
         break;
       }
@@ -606,8 +622,8 @@ BookmarksTree.prototype = {
 
     onCommandUpdate: function ()
     {
-      var commands = ["cmd_properties", "cmd_rename", "cmd_copy",
-                      "cmd_paste", "cmd_cut", "cmd_delete",
+      var commands = ["cmd_properties", "cmd_rename", "cmd_bm_copy",
+                      "cmd_bm_paste", "cmd_bm_cut", "cmd_bm_delete",
                       "cmd_setpersonaltoolbarfolder", "cmd_setnewbookmarkfolder",
                       "cmd_setnewsearchfolder"];
       for (var i = 0; i < commands.length; ++i)
@@ -637,18 +653,4 @@ var newFolderRDFObserver = {
   beginUpdateBatch: function (aDS) { },
   endUpdateBatch: function (aDS) { }
 };
-
-var ContentUtils = {
-  childByLocalName: function (aSelectedItem, aLocalName)
-  {
-    var temp = aSelectedItem.firstChild;
-    while (temp) {
-      if (temp.localName == aLocalName)
-        return temp;
-      temp = temp.nextSibling;
-    }
-    return null;
-  }
-};
-
 

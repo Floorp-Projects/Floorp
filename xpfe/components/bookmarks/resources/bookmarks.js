@@ -47,57 +47,16 @@ function Startup()
     windowNode.setAttribute("title", titleString.replace(/%folder_name%/gi, rName));
   }
   else {
-    // There's a better way of doing this, but for the initial revision just
-    // using the root folder in the bookmarks window will do.
-    // For the next milestone I'd like to move this either into the bookmarks
-    // service or some other higher level datasource so that it can be accessed
-    // from everywhere.
-    const kRDF = gBookmarksShell.RDF;
-    const krNavCenter = kRDF.GetResource("NC:NavCenter");
-    const kRDFCUtilsContractID = "@mozilla.org/rdf/container-utils;1";
-    const kRDFCUtilsIID = Components.interfaces.nsIRDFContainerUtils;
-    const kRDFCUtils = Components.classes[kRDFCUtilsContractID].getService(kRDFCUtilsIID);
-    const kNC_NavCenter = kRDFCUtils.MakeSeq(gBookmarksShell.db, krNavCenter);
-    const krBookmarksRoot = kRDF.GetResource("NC:BookmarksRoot");
-    const krName = kRDF.GetResource(NC_NS + "Name");
     var rootfoldername = gBookmarksShell.getLocaleString("bookmarks_root");
     const kProfileContractID = "@mozilla.org/profile/manager;1";
     const kProfileIID = Components.interfaces.nsIProfile;
     const kProfile = Components.classes[kProfileContractID].getService(kProfileIID);
     rootfoldername = rootfoldername.replace(/%user_name%/, kProfile.currentProfile);
-    const klBookmarksRootName = kRDF.GetLiteral(rootfoldername);
-    const kBMDS = kRDF.GetDataSource("rdf:bookmarks");
-    kBMDS.Assert(krBookmarksRoot, krName, klBookmarksRootName, true);
-    kNC_NavCenter.AppendElement(krBookmarksRoot);
     windowNode.setAttribute("title", rootfoldername);
-
-    /* Blue Sky
-    const krHistoryRoot = kRDF.GetResource("NC:HistoryRoot");
-    const klHistoryRootName = kRDF.GetLiteral("Browsing History");
-    const kHistory = kRDF.GetDataSource("rdf:history");
-    kHistory.Assert(krHistoryRoot, krName, klHistoryRootName, true);
-    kNC_NavCenter.AppendElement(krHistoryRoot);
-    */
-
-    const krType = kRDF.GetResource(RDF_NS + "type");
-    const krFolderType = kRDF.GetResource(NC_NS + "Folder");
-    gBookmarksShell.db.Assert(krNavCenter, krType, krFolderType, true);
   }
 
   // Update to the last sort.
   RefreshSort();
-
-  // Initialize the tree widget.
-  var children = document.getElementById("treechildren-bookmarks");
-  if (children.firstChild) {
-    bookmarksTree.selectItem(children.firstChild);
-    children.firstChild.setAttribute("open", "true");
-  }
-
-  // XXX templates suck ASS
-  var node = document.getElementById("NC:BookmarksRoot");
-  if (node.localName == "menubutton")
-    node.removeAttribute("open");
 
   bookmarksTree.focus();
 }
