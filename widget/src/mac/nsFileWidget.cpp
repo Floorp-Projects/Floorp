@@ -19,6 +19,7 @@
 #include "nsFileWidget.h"
 #include "nsStringUtil.h"
 #include <StandardFile.h>
+#include <ICAPI.h>
 #include "nsMacControl.h"
 
 #include "nsFileSpec.h"
@@ -39,8 +40,35 @@ nsFileWidget::nsFileWidget()
   NS_INIT_REFCNT();
   mIOwnEventLoop = PR_FALSE;
   mNumberOfFilters = 0;
+  
+  // Zero out the type lists
+  for (int i = 0; i < kMaxTypeListCount; i++)
+  {
+  	mTypeLists[i] = 0L;
+  }
 }
 
+
+//-------------------------------------------------------------------------
+//
+// nsFileWidget destructor
+//
+//-------------------------------------------------------------------------
+nsFileWidget::~nsFileWidget()
+{
+	// Destroy any filters we have built
+	if (mNumberOfFilters)
+	{
+	  for (int i = 0; i < kMaxTypeListCount; i++)
+	  {
+	  	if (mTypeLists[i])
+	  		DisposePtr((Ptr)mTypeLists[i]);
+	  }
+	}
+}
+
+//-------------------------------------------------------------------------
+//-------------------------------------------------------------------------
 NS_IMETHODIMP nsFileWidget::Create(nsIWidget        *aParent,
                           const nsRect     &aRect,
                           EVENT_CALLBACK   aHandleEventFunction,
@@ -55,6 +83,7 @@ NS_IMETHODIMP nsFileWidget::Create(nsIWidget        *aParent,
 }
 
 
+//-------------------------------------------------------------------------
 //-------------------------------------------------------------------------
 NS_IMETHODIMP   nsFileWidget:: Create(nsIWidget  *aParent,
                              const nsString&   aTitle,
@@ -178,12 +207,14 @@ PRBool nsFileWidget::Show()
 }
 
 
+//-------------------------------------------------------------------------
 //
 // myProc
 //
 // An event filter proc for NavServices so the dialogs will be movable-modals. However,
 // this doesn't seem to work as of yet...I'll play around with it some more.
 //
+//-------------------------------------------------------------------------
 pascal void myProc ( NavEventCallbackMessage msg, NavCBRecPtr cbRec, NavCallBackUserData data ) ;
 pascal void myProc ( NavEventCallbackMessage msg, NavCBRecPtr cbRec, NavCallBackUserData data )
 {
@@ -201,12 +232,14 @@ pascal void myProc ( NavEventCallbackMessage msg, NavCBRecPtr cbRec, NavCallBack
 }
 
 
+//-------------------------------------------------------------------------
 //
 // PutFile
 //
 // Use NavServices to do a PutFile. Returns PR_TRUE if the user presses OK in the dialog. If
 // they do so, the location to put the file and the name, etc is in the FSSpec.
 //
+//-------------------------------------------------------------------------
 PRBool
 nsFileWidget :: PutFile ( Str255 & inTitle, Str255 & inDefaultName, FSSpec* outSpec )
 {
@@ -279,12 +312,14 @@ nsFileWidget :: PutFile ( Str255 & inTitle, Str255 & inDefaultName, FSSpec* outS
 
 
 
+//-------------------------------------------------------------------------
 //
 // GetFile
 //
 // Use NavServices to do a GetFile. Returns PR_TRUE if the user presses OK in the dialog. If
 // they do so, the selected file is in the FSSpec.
 //
+//-------------------------------------------------------------------------
 PRBool
 nsFileWidget :: GetFile ( Str255 & inTitle, /* filter list here later */ FSSpec* outSpec )
 {
@@ -350,12 +385,14 @@ nsFileWidget :: GetFile ( Str255 & inTitle, /* filter list here later */ FSSpec*
 } // GetFile
 
 
+//-------------------------------------------------------------------------
 //
 // GetFolder
 //
 // Use NavServices to do a PutFile. Returns PR_TRUE if the user presses OK in the dialog. If
 // they do so, the folder location is in the FSSpec.
 //
+//-------------------------------------------------------------------------
 PRBool
 nsFileWidget :: GetFolder ( Str255 & inTitle, FSSpec* outSpec  )
 {
@@ -445,14 +482,121 @@ void nsFileWidget::GetFilterListArray(nsString& aFilterList)
 //
 // Set the list of filters
 //
+// Note - Since the XP representation of filters is based on the Win32
+//			file dialog mechanism of supplying a .ext list of files to
+//			display we need to do some massaging to convert this into
+//			something useful on the Mac.  Luckily Internet Config provides
+//			a mechanism to get a file's Mac type based on the .ext so
+//			we'll utilize that.
+//
 //-------------------------------------------------------------------------
 
 NS_IMETHODIMP nsFileWidget::SetFilterList(PRUint32 aNumberOfFilters,const nsString aTitles[],const nsString aFilters[])
 {
-  mNumberOfFilters  = aNumberOfFilters;
-  mTitles           = aTitles;
-  mFilters          = aFilters;
-  return NS_OK;
+	unsigned char	typeTemp[256];
+	unsigned char	tempChar;
+	OSType			tempOSType;
+	ICInstance		icInstance;
+	ICError			icErr;
+	Handle			mappings = NewHandleClear(4);
+	ICAttr			attr;
+	ICMapEntry		icEntry;
+	
+	mNumberOfFilters  = aNumberOfFilters;
+	mTitles           = aTitles;
+	mFilters          = aFilters;
+	
+#if 0  // FOR NOW JUST BYPASS ALL THIS CODE
+	icErr = ICStart(&icInstance, 'MOZZ');
+	if (icErr == noErr)
+	{
+		icErr = ICFindConfigFile(icInstance, 0, nil);
+		if (icErr == noErr)
+		{
+			icErr = ICFindPrefHandle(icInstance, kICMapping, &attr, mappings);
+			if (icErr != noErr)
+				goto bail_w_IC;
+		}
+		else
+			goto bail_w_IC;
+	}
+	else
+		goto bail_wo_IC;
+	
+	if (aNumberOfFilters)
+	{
+		// First we allocate the memory for the Mac type lists
+		for (PRUint32 loop1 = 0; loop1 < mNumberOfFilters; loop1++)
+		{
+			mTypeLists[loop1] =
+				(NavTypeListPtr)NewPtrClear(sizeof(NavTypeList) + kMaxTypesPerFilter * sizeof(OSType));
+			
+			if (mTypeLists[loop1] == nil)
+				goto bail_w_IC;
+		}
+		
+		// Now loop through each of the filter strings
+	  	for (PRUint32 loop1 = 0; loop1 < mNumberOfFilters; loop1++)
+	  	{
+	  		const nsString& filter = mFilters[loop1];
+		  	PRUint32 filterIndex = 0;			// Index into the filter string
+
+	  		if (filter[filterIndex])
+	  		{
+		  		PRUint32 typeTempIndex = 1;			// Index into the temp string for a single filter type
+		  		PRUint32 typesInThisFilter = 0;		// Count for # of types in this filter
+				bool finishedThisFilter = false;	// Flag so we know when we're finsihed with the filter
+	  			do	// Loop throught the characters of filter string
+		  		{
+		  			if ((tempChar == ';') || (tempChar == 0))
+		  			{ // End of filter type reached
+		  				typeTemp[typeTempIndex] = 0;
+		  				typeTemp[0] = typeTempIndex - 1;
+		  				
+		  				icErr = ICMapEntriesFilename(icInstance, mappings, typeTemp, &icEntry);
+		  				if (icErr != icPrefNotFoundErr)
+		  				{
+		  					bool addToList = true;
+		  					tempOSType = icEntry.file_type;
+		  					for (PRUint32 typeIndex = 0; typeIndex < typesInThisFilter; typeIndex++)
+		  					{
+		  						if (mTypeLists[loop1]->osType[typeIndex] == tempOSType)
+		  						{
+		  							addToList = false;
+		  							break;
+		  						}
+		  					}
+		  					if (addToList)
+		  						mTypeLists[loop1]->osType[typesInThisFilter++] = tempOSType;
+		  				}
+		  				
+		  				typeTempIndex = 0;			// Reset the temp string for the type
+		  				typeTemp[0] = 0;
+		  				if (tempChar == 0)
+		  					finishedThisFilter = true;
+		  			}
+		  			else
+		  			{
+		  				typeTemp[typeTempIndex++] = tempChar;
+		  			}
+		  			
+		  			filterIndex++;
+		  		} while (!finishedThisFilter);
+		  		
+		  		// Set hoe many OSTypes we actually found
+		  		mTypeLists[loop1]->osTypeCount = typesInThisFilter;
+	  		}
+		}
+	}
+
+bail_w_IC:
+	ICStop(icInstance);
+
+bail_wo_IC:
+
+#endif	// FOR NOW JUST BYPASS ALL THIS CODE
+
+	return NS_OK;
 }
 
 //-------------------------------------------------------------------------
@@ -503,6 +647,8 @@ NS_METHOD  nsFileWidget::GetDisplayDirectory(nsFileSpec& aDirectory)
 }
 
 
+//-------------------------------------------------------------------------
+//-------------------------------------------------------------------------
 nsFileDlgResults  nsFileWidget::GetFile(
 	    nsIWidget        * aParent,
 	    const nsString   & promptString,
@@ -518,6 +664,8 @@ nsFileDlgResults  nsFileWidget::GetFile(
 	return nsFileDlgResults_Cancel;
 }
 	    
+//-------------------------------------------------------------------------
+//-------------------------------------------------------------------------
 nsFileDlgResults  nsFileWidget::GetFolder(
 	    nsIWidget        * aParent,
 	    const nsString   & promptString,
@@ -533,6 +681,8 @@ nsFileDlgResults  nsFileWidget::GetFolder(
 	return nsFileDlgResults_Cancel;
 }
 	    
+//-------------------------------------------------------------------------
+//-------------------------------------------------------------------------
 nsFileDlgResults  nsFileWidget::PutFile(
 	    nsIWidget        * aParent,
 	    const nsString         & promptString,
@@ -547,13 +697,3 @@ nsFileDlgResults  nsFileWidget::PutFile(
 	
 	return nsFileDlgResults_Cancel;
 }
-
-//-------------------------------------------------------------------------
-//
-// nsFileWidget destructor
-//
-//-------------------------------------------------------------------------
-nsFileWidget::~nsFileWidget()
-{
-}
-
