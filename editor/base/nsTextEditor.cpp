@@ -442,28 +442,17 @@ NS_IMETHODIMP nsTextEditor::GetTextProperty(nsIAtom *aProperty, PRBool &aAny, PR
             text = do_QueryInterface(content);
             if (text)
             {
-              nsCOMPtr<nsIPresShell>presShell;
-              nsEditor::GetPresShell(getter_AddRefs(presShell));
-              NS_ASSERTION(presShell, "bad state, null pres shell");
-              if (presShell)
+              nsCOMPtr<nsIDOMNode>node;
+              node = do_QueryInterface(content);
+              if (node)
               {
-                nsIFrame *frame;
-                result = presShell->GetPrimaryFrameFor(content, &frame);
-                if ((NS_SUCCEEDED(result)) && frame)
-                {
-                  nsCOMPtr<nsIStyleContext> sc;
-                  result = presShell->GetStyleContextFor(frame, getter_AddRefs(sc));
-                  if ((NS_SUCCEEDED(result)) && sc)
-                  {
-                    PRBool isSet;
-                    IsTextStyleSet(sc, aProperty, isSet);
-                    if (PR_TRUE==isSet) {
-                      aAny = PR_TRUE;
-                    }
-                    else {
-                      aAll = PR_FALSE;
-                    }
-                  }
+                PRBool isSet;
+                IsTextPropertySetByContent(node, aProperty, isSet);
+                if (PR_TRUE==isSet) {
+                  aAny = PR_TRUE;
+                }
+                else {
+                  aAll = PR_FALSE;
                 }
               }
             }
