@@ -233,8 +233,9 @@ nsPermissionManager::Add(nsIURI     *aURI,
                          const char *aType,
                          PRUint32    aPermission)
 {
-  NS_ASSERTION(aURI, "could not get uri");
+  NS_ENSURE_ARG_POINTER(aURI);
   NS_ENSURE_ARG_POINTER(aType);
+
   nsresult rv;
 
   nsCAutoString host;
@@ -251,6 +252,7 @@ nsPermissionManager::Add(nsIURI     *aURI,
 
   mChangedList = PR_TRUE;
   LazyWrite();
+
   return NS_OK;
 }
 
@@ -366,8 +368,7 @@ nsPermissionManager::TestPermission(nsIURI     *aURI,
                                     const char *aType,
                                     PRUint32   *aPermission)
 {
-  NS_ASSERTION(aURI, "could not get uri");
-  NS_ASSERTION(aPermission, "no permission pointer");
+  NS_ENSURE_ARG_POINTER(aURI);
   NS_ENSURE_ARG_POINTER(aType);
 
   // set the default
@@ -954,8 +955,6 @@ nsPermissionManager::Write()
 nsresult
 nsPermissionManager::GetHost(nsIURI *aURI, nsACString &aResult)
 {
-  NS_ASSERTION(aURI, "could not get uri");
-
   aURI->GetHost(aResult);
 
   // If there is no host, use the scheme, and prepend "scheme:",
@@ -968,5 +967,6 @@ nsPermissionManager::GetHost(nsIURI *aURI, nsACString &aResult)
     }
     aResult = NS_LITERAL_CSTRING("scheme:") + aResult;
   }
+
   return NS_OK;
 }
