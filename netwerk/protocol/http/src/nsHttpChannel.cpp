@@ -1375,8 +1375,7 @@ nsHttpChannel::GetCredentials(const char *challenges,
     nsHttpAuthEntry *entry = nsnull;
     authCache->GetAuthEntryForDomain(host, port, realm.get(), &entry);
     if (entry) {
-        if (!nsCRT::strcmp(user->get(), entry->User()) && 
-            !nsCRT::strcmp(pass->get(), entry->Pass())) {
+        if (user->Equals(entry->User()) && pass->Equals(entry->Pass())) {
             LOG(("clearing bad credentials from the auth cache\n"));
             // ok, we've already tried this user:pass combo, so clear the
             // corresponding entry from the auth cache.
