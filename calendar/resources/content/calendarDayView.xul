@@ -22,6 +22,7 @@
    -
    - Contributor(s): Garth Smedley <garths@oeone.com> 
    -                 Mike Potter <mikep@oeone.com>
+   -                 Colin Phillips <colinp@oeone.com> 
    -
    - Alternatively, the contents of this file may be used under the terms of
    - either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -60,20 +61,41 @@
    
         <!-- Day View: Controls-->
            
-      <hbox id="day-controls-box">
-   
-         <box flex="1">   
-            <image id="day-previous-button" onclick="gCalendarWindow.goToPrevious()"/>
+      <hbox id="day-controls-box"> <!-- DO NOT SET FLEX, breaks resizing -->
+         <box class="day-previous-button-box">
+            <image id="day-previous-button" class="prevnextbuttons" onclick="gCalendarWindow.goToPrevious()"/>
          </box>
-    
-         <label id="day-title-text" value="" />
-               
-         <box flex="1" id="day-next-button-box">
-            <image id="day-next-button" onclick="gCalendarWindow.goToNext()"/>
+         
+         <vbox id="day-title-container" flex="1">
+            <hbox id="day-title-box" flex="1">
+               <vbox class="day-title-label-box" flex="1">
+                  <label id="-2-day-title" onclick="gCalendarWindow.goToPrevious( 2 )" value="" />
+               </vbox>
+               <vbox class="day-title-label-box" flex="1">
+                  <label id="-1-day-title" onclick="gCalendarWindow.goToPrevious( 1 )" value="" />
+               </vbox>
+               <vbox class="day-title-label-box" flex="1">
+                  <label id="0-day-title"  value="" />
+               </vbox>
+               <vbox class="day-title-label-box" flex="1">
+                  <label id="1-day-title" onclick="gCalendarWindow.goToNext( 1 )" value="" />
+               </vbox>
+               <vbox class="day-title-label-box" flex="1">
+                  <label id="2-day-title" onclick="gCalendarWindow.goToNext( 2 )" value="" />
+               </vbox>
+            </hbox>
+            <hbox id="day-specific-title-box" flex="1">
+               <vbox class="day-title-label-box" flex="1">
+                  <label id="0-day-specific-title" value="" />
+               </vbox>
+            </hbox>
+         </vbox>
+         
+         <box id="day-next-button-box">
+            <image id="day-next-button" class="prevnextbuttons" onclick="gCalendarWindow.goToNext()"/>
          </box>
-    
-      </hbox>        
-        
+      </hbox>
+      
       <!-- Day View:  -->
             
       <box id="all-day-content-box" align="center" collapsed="true" flex="1">

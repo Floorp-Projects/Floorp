@@ -20,6 +20,7 @@
  *
  * Contributor(s): Garth Smedley <garths@oeone.com>
  *                 Mike Potter <mikep@oeone.com>
+ *                 Colin Phillips <colinp@oeone.com> 
  *                 Chris Charabaruk <coldacid@meldstar.com>
  *
  * Alternatively, the contents of this file may be used under the terms of

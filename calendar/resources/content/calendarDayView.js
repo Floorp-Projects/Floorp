@@ -20,6 +20,7 @@
  *
  * Contributor(s): Garth Smedley <garths@oeone.com>
  *                 Mike Potter <mikep@oeone.com>
+ *                 Colin Phillips <colinp@oeone.com> 
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -395,14 +396,59 @@ DayView.prototype.switchTo = function( )
 DayView.prototype.refreshDisplay = function( )
 {
    // update the title
-   
    var dayName = this.calendarWindow.dateFormater.getDayName( this.calendarWindow.getSelectedDate().getDay() );
+	if (this.calendarWindow.getSelectedDate().getDay() < 2)
+	{
+		if (this.calendarWindow.getSelectedDate().getDay() == 0)
+		{
+			var dayNamePrev1 = this.calendarWindow.dateFormater.getDayName( this.calendarWindow.getSelectedDate().getDay() + 6 );
+			var dayNamePrev2 = this.calendarWindow.dateFormater.getDayName( this.calendarWindow.getSelectedDate().getDay() + 5 );
+		}
+		else
+		{
+			var dayNamePrev1 = this.calendarWindow.dateFormater.getDayName( this.calendarWindow.getSelectedDate().getDay() - 1 );
+			var dayNamePrev2 = this.calendarWindow.dateFormater.getDayName( this.calendarWindow.getSelectedDate().getDay() + 5 );
+		}
+	}
+	else
+	{
+		var dayNamePrev1 = this.calendarWindow.dateFormater.getDayName( this.calendarWindow.getSelectedDate().getDay() - 1 );
+		var dayNamePrev2 = this.calendarWindow.dateFormater.getDayName( this.calendarWindow.getSelectedDate().getDay() - 2 );
+	}
+	if (this.calendarWindow.getSelectedDate().getDay() > 4)
+	{
+		if (this.calendarWindow.getSelectedDate().getDay() == 6)
+		{
+			var dayNameNext1 = this.calendarWindow.dateFormater.getDayName( this.calendarWindow.getSelectedDate().getDay() - 6);
+			var dayNameNext2 = this.calendarWindow.dateFormater.getDayName( this.calendarWindow.getSelectedDate().getDay() - 5);
+		}
+		else
+		{
+			var dayNameNext1 = this.calendarWindow.dateFormater.getDayName( this.calendarWindow.getSelectedDate().getDay() + 1);
+			var dayNameNext2 = this.calendarWindow.dateFormater.getDayName( this.calendarWindow.getSelectedDate().getDay() - 5);
+		}
+	}
+	else
+	{
+		var dayNameNext1 = this.calendarWindow.dateFormater.getDayName( this.calendarWindow.getSelectedDate().getDay() + 1);
+		var dayNameNext2 = this.calendarWindow.dateFormater.getDayName( this.calendarWindow.getSelectedDate().getDay() + 2);
+	}
    var monthName = this.calendarWindow.dateFormater.getMonthName( this.calendarWindow.getSelectedDate().getMonth() );
    
-   var dateString = dayName + ", " + monthName + " " + this.calendarWindow.getSelectedDate().getDate() + " " + this.calendarWindow.getSelectedDate().getFullYear();
+   var dateString = monthName + " " + this.calendarWindow.getSelectedDate().getDate() + " " + this.calendarWindow.getSelectedDate().getFullYear();
    
-   var dayTextItem = document.getElementById( "day-title-text" );
-   dayTextItem.setAttribute( "value" , dateString );  
+   var dayTextItemPrev2 = document.getElementById( "-2-day-title" );
+   var dayTextItemPrev1 = document.getElementById( "-1-day-title" );
+   var dayTextItem = document.getElementById( "0-day-title" );
+   var dayTextItemNext1 = document.getElementById( "1-day-title" );
+   var dayTextItemNext2 = document.getElementById( "2-day-title" );
+	var daySpecificTextItem = document.getElementById( "0-day-specific-title" );
+   dayTextItemPrev2.setAttribute( "value" , dayNamePrev2 );
+   dayTextItemPrev1.setAttribute( "value" , dayNamePrev1 );
+   dayTextItem.setAttribute( "value" , dayName );
+   dayTextItemNext1.setAttribute( "value" , dayNameNext1 );
+   dayTextItemNext2.setAttribute( "value" , dayNameNext2 );
+	daySpecificTextItem.setAttribute( "value" , dateString );
 }
 
 
@@ -475,11 +521,18 @@ DayView.prototype.getNewEventDate = function( )
 *   Go to the next day.
 */
 
-DayView.prototype.goToNext = function()
+DayView.prototype.goToNext = function(goDays)
 {
-   var nextDay = new Date(  this.calendarWindow.selectedDate.getFullYear(),  this.calendarWindow.selectedDate.getMonth(),  this.calendarWindow.selectedDate.getDate() + 1 );
-   
-   this.goToDay( nextDay );
+   if (goDays)
+	{
+		var nextDay = new Date(  this.calendarWindow.selectedDate.getFullYear(),  this.calendarWindow.selectedDate.getMonth(), this.calendarWindow.selectedDate.getDate() + goDays );
+      this.goToDay( nextDay );
+   }
+	else
+	{
+      var nextDay = new Date(  this.calendarWindow.selectedDate.getFullYear(),  this.calendarWindow.selectedDate.getMonth(), this.calendarWindow.selectedDate.getDate() + 1 );
+      this.goToDay( nextDay );
+   }
 }
 
 
@@ -488,11 +541,18 @@ DayView.prototype.goToNext = function()
 *   Go to the previous day.
 */
 
-DayView.prototype.goToPrevious = function()
+DayView.prototype.goToPrevious = function( goDays )
 {
-   var prevDay = new Date(  this.calendarWindow.selectedDate.getFullYear(),  this.calendarWindow.selectedDate.getMonth(),  this.calendarWindow.selectedDate.getDate() - 1 );
-   
-   this.goToDay( prevDay );
+   if (goDays)
+	{
+      var prevDay = new Date(  this.calendarWindow.selectedDate.getFullYear(),  this.calendarWindow.selectedDate.getMonth(), this.calendarWindow.selectedDate.getDate() - goDays );
+      this.goToDay( prevDay );
+   }
+	else
+	{
+      var prevDay = new Date(  this.calendarWindow.selectedDate.getFullYear(),  this.calendarWindow.selectedDate.getMonth(), this.calendarWindow.selectedDate.getDate() - 1 );
+      this.goToDay( prevDay );
+   }
 }
 
 

@@ -21,6 +21,7 @@
    -
    - Contributor(s): Garth Smedley <garths@oeone.com> 
    -                 Mike Potter <mikep@oeone.com>
+   -                 Colin Phillips <colinp@oeone.com> 
    -
    - Alternatively, the contents of this file may be used under the terms of
    - either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -56,19 +57,25 @@
   
       <!-- Week View: Controls-->
           
-      <hbox id="week-controls-box">
-  
-         <box flex="1">
-            <image id="week-previous-button" onclick="gCalendarWindow.goToPrevious()"/>            
+      <hbox id="week-controls-box"> <!-- DO NOT SET FLEX, breaks resizing -->
+         <box class="week-previous-button-box">
+            <image id="week-previous-button" class="prevnextbuttons" onclick="gCalendarWindow.goToPrevious()"/>
          </box>
          
-         <label id="week-title-text" value="" />
-                  
-         <box flex="1" id="week-next-button-box" >
-            <image id="week-next-button" onclick="gCalendarWindow.goToNext()"/>            
-         </box>  
-    
-     </hbox>
+         <hbox id="week-title-container" flex="1">
+            <vbox class="week-title-label-box" flex="1">
+               <label id="week-title-text"  value="" />
+            </vbox>
+         </hbox>
+         
+         
+         <box id="week-next-button-box">
+            <image id="week-next-button" class="prevnextbuttons" onclick="gCalendarWindow.goToNext()"/>            
+         </box>
+      
+      </hbox>
+   
+   
 
      <!-- Week View: All Day Boxes -->
            

@@ -21,6 +21,7 @@
  * Contributor(s): Garth Smedley <garths@oeone.com>
  *                 Mike Potter <mikep@oeone.com>
  *                 Karl Guertin <grayrest@grayrest.com> 
+ *                 Colin Phillips <colinp@oeone.com> 
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -396,18 +397,7 @@ MonthView.prototype.refreshDisplay = function( ShowEvent )
 	 alert(errorObj);
       }
    }
-   for (var i = -1; i < 2; i++){
-      titleYearArray[i] = newYear + i;
-      try{
-	 var idName = i + "-year-title";
-	 document.getElementById( idName ).setAttribute( "value" , titleYearArray[i] );
-      }catch(errorObj){
-	 alert(errorObj);
-      }
-	 
-   }
-   
-   
+	document.getElementById( "0-year-title" ).setAttribute( "value" , newYear );
    
    // Write in all the day numbers and create the dayBoxItemByDateArray, see notes above
    

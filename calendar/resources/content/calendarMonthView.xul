@@ -22,6 +22,7 @@
    - Contributor(s): Garth Smedley <garths@oeone.com> 
    -                 Mike Potter <mikep@oeone.com>
    -                 Karl Guertin <grayrest@grayrest.com> 
+   -                 Colin Phillips <colinp@oeone.com> 
    -
    - Alternatively, the contents of this file may be used under the terms of
    - either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -82,13 +83,7 @@
 	        </hbox>
 		<hbox id="year-title-box" flex="1">
 		    <vbox class="month-title-label-box" flex="1">
-			<label id="-1-year-title" onclick="gCalendarWindow.goToPrevious( 12 )" value="" />
-		    </vbox>
-		    <vbox class="month-title-label-box" flex="1">
-			<label id="0-year-title" value="" />
-		    </vbox>
-		    <vbox class="month-title-label-box" flex="1">
-			<label id="1-year-title" onclick="gCalendarWindow.goToNext( 12 )" value="" />
+   			<label id="0-year-title" value="" />
 		    </vbox>
 		</hbox>
 	    </vbox>

@@ -21,6 +21,7 @@
  * Contributor(s): Garth Smedley <garths@oeone.com>
  *                 Mike Potter <mikep@oeone.com>
  *                 Karl Guertin <grayrest@grayrest.com> 
+ *                 Colin Phillips <colinp@oeone.com> 
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -266,7 +267,7 @@ button.calendar-management-button:hover:active
 #month-controls-box{
     -moz-box-align:center;
     -moz-box-pack:center;
-    margin:0px 15px 0px 15px;
+    margin:0px 15px;
 }
 #month-view-box{
     -moz-box-align: center;
@@ -277,31 +278,39 @@ button.calendar-management-button:hover:active
 
 
 /* Month title Stuff */
-#month-title-container{
+#month-title-container
+{
     -moz-box-align: center;
     -mox-box-pack: center;
     margin: 0px 15px 0px 15px;
 }
-#2-month-title, #-2-month-title{
+
+#2-month-title, #-2-month-title
+{
     font-size:1.2em;
     color: #9FBEC8;
     margin:0px;
     padding:0px;
     cursor:pointer;
 }
-#1-month-title, #-1-month-title, #1-year-title, #-1-year-title{
+#1-month-title, #-1-month-title
+{
     font-size:1.5em;
     color: #9FBEC8;
     cursor:pointer;
 }
-#0-month-title, #0-year-title{
+
+#0-month-title, #0-year-title
+{
     font-size:2.0em;
     color: #3f7d91;
     font-weight:bold;
     margin:0px;
     padding:0px;
 }
-.month-title-label-box{
+
+.month-title-label-box
+{
     width: 10em !important;
     -moz-box-align: center;
     -moz-box-pack: end;
@@ -525,6 +534,7 @@ button.calendar-management-button:hover:active
 
 #day-view-box
 {
+	background-color			: white;
    padding-top             :10px;
 }
 
@@ -535,73 +545,99 @@ button.calendar-management-button:hover:active
 
 #day-controls-box
 {
-   -moz-box-pack        : center;
-   -moz-box-align       : center;
-	margin-bottom			: 10px;
+    -moz-box-align:center;
+    -moz-box-pack:center;
+    margin:0px 15px;
 }
 
-/*--------------------------------------------------------------------
- * Box for title: make it big enough for the largest string
- *                in any of the views for two reasons:
- *                1. Next, Prev buttons appear in the same place
- *                2. Redraw problems when replacing a longer string
- *                   with a shorter one.
- *-------------------------------------------------------------------*/
-
-#day-title-box
+#day-specific-title-box
 {
-   width               : 400px;
-}
-
-
-/*--------------------------------------------------------------------
- * Day title text. 
- *-------------------------------------------------------------------*/
-
-#day-title-text
-{
-   font-size            : 18pt;
-   font-family          : Arial, Helvetica;
-   color                : #3f7d91;
+    -moz-box-align:center;
+    -moz-box-pack:center;
 }
 
 /*--------------------------------------------------------------------
  * Next and Previous buttons.
  *-------------------------------------------------------------------*/
 
-#day-previous-button
-{
-   list-style-image        : url("chrome://calendar/skin/arrow_left.png");
-}
-
-#day-previous-button:hover
-{
-   list-style-image     : url("chrome://calendar/skin/arrow_left_hover.png");
-}
-
-#day-previous-button:hover:active
-{
-   list-style-image     : url("chrome://calendar/skin/arrow_left_down.png");
-}
-
 #day-next-button
 {
-   list-style-image        : url("chrome://calendar/skin/arrow_right.png");
+    -moz-box-align:right;
+    -moz-image-region: rect(33px 20px 66px 0);
+    cursor:pointer;
 }
 
 #day-next-button:hover
 {
-   list-style-image     : url("chrome://calendar/skin/arrow_right_hover.png");
+    -moz-image-region: rect(33px 40px 66px 20px);
 }
 
 #day-next-button:hover:active
 {
-   list-style-image     : url("chrome://calendar/skin/arrow_right_down.png");
+    -moz-image-region: rect(33px 60px 66px 40px);
 }
 
-#day-next-button-box
+#day-previous-button
 {
-   -moz-box-pack           : end;
+    -moz-box-align:left;
+    -moz-image-region: rect(0 20px 33px 0);
+    cursor:pointer;
+}
+
+#day-previous-button:hover
+{
+    -moz-image-region: rect(0 40px 33px 20px);
+}
+
+#day-previous-button:hover:active
+{
+    -moz-image-region: rect(0 60px 33px 40px);
+}
+
+/* Day title Stuff */
+#day-title-container
+{
+    -moz-box-align: center;
+    -mox-box-pack: center;
+    margin: 0px 15px 0px 15px;
+}
+
+#2-day-title, #-2-day-title, #1-day-specific-title, #-1-day-specific-title
+{
+    font-size:1.2em;
+    color: #9FBEC8;
+    margin:0px;
+    padding:0px;
+    cursor:pointer;
+}
+
+#1-day-title, #-1-day-title
+{
+    font-size:1.5em;
+    color: #9FBEC8;
+    cursor:pointer;
+}
+
+#0-day-specific-title
+{
+    font-size:1.2em;
+    color: #3f7d91;
+}
+
+#0-day-title
+{
+    font-size:2.0em;
+    color: #3f7d91;
+    font-weight:bold;
+    margin:0px;
+    padding:0px;
+}
+
+.day-title-label-box
+{
+    width: 10em !important;
+    -moz-box-align: center;
+    -moz-box-pack: end;
 }
 
 /*--------------------------------------------------------------------
@@ -718,6 +754,7 @@ button.calendar-management-button:hover:active
 
 #week-view-box
 {
+	background-color			: white;
    padding-top             :10px;
 }
 
@@ -734,47 +771,43 @@ button.calendar-management-button:hover:active
 
 #week-controls-box
 {
-   -moz-box-align          : center;
-   -moz-box-pack           : center;
-	margin-bottom				: 10px;
-}
-
-#week-title-text
-{
-   font-size            : 18pt;
-   font-family          : Arial, Helvetica;
-   color                : #3f7d91;
-}
-
-
-#week-previous-button
-{
-   list-style-image        : url("chrome://calendar/skin/arrow_left.png");
-}
-
-#week-previous-button:hover
-{
-   list-style-image     : url("chrome://calendar/skin/arrow_left_hover.png");
-}
-
-#week-previous-button:hover:active
-{
-   list-style-image     : url("chrome://calendar/skin/arrow_left_down.png");
+    -moz-box-align:center;
+    -moz-box-pack:center;
+    margin:0px 15px;
 }
 
 #week-next-button
 {
-   list-style-image        : url("chrome://calendar/skin/arrow_right.png");
+    -moz-box-align:right;
+    -moz-image-region: rect(33px 20px 66px 0);
+    cursor:pointer;
 }
 
 #week-next-button:hover
 {
-   list-style-image     : url("chrome://calendar/skin/arrow_right_hover.png");
+    -moz-image-region: rect(33px 40px 66px 20px);
 }
 
 #week-next-button:hover:active
 {
-   list-style-image     : url("chrome://calendar/skin/arrow_right_down.png");
+    -moz-image-region: rect(33px 60px 66px 40px);
+}
+
+#week-previous-button
+{
+    -moz-box-align:left;
+    -moz-image-region: rect(0 20px 33px 0);
+    cursor:pointer;
+}
+
+#week-previous-button:hover
+{
+    -moz-image-region: rect(0 40px 33px 20px);
+}
+
+#week-previous-button:hover:active
+{
+    -moz-image-region: rect(0 60px 33px 40px);
 }
 
 #week-next-button-box
@@ -782,6 +815,27 @@ button.calendar-management-button:hover:active
    -moz-box-pack           : end;
 }
 
+/* Week title Stuff */
+#week-title-container
+{
+    -moz-box-align: center;
+    -mox-box-pack: center;
+    margin: 0px 15px;
+}
+
+#week-title-text
+{
+    font-size:2.0em;
+    color: #3f7d91;
+    font-weight:bold;
+    margin:0px;
+    padding:0px;
+}
+
+.week-title-label-box
+{
+    -moz-box-align: center;
+}
 
 /* Week View: Day name header */
 
