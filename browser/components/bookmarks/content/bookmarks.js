@@ -190,6 +190,11 @@ var BookmarksCommand = {
   // selection.
   createContextMenu: function (aEvent, aSelection)
   {
+    if (aSelection == undefined) {
+      aEvent.preventDefault();
+      return;
+    }
+
     var popup = aEvent.target;
     // clear out the old context menu contents (if any)
     while (popup.hasChildNodes()) 
