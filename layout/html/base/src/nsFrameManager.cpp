@@ -260,7 +260,7 @@ struct CantRenderReplacedElementEvent : public PLEvent {
   nsWeakPtr mPresShell;                     // for removing load group request later
 };
 
-struct nsFrameManager::PropertyList {
+struct nsFrameManagerBase::PropertyList {
   nsCOMPtr<nsIAtom>       mName;          // property name
   PLDHashTable            mFrameValueMap; // map of frame/value pairs
   NSFramePropertyDtorFunc mDtorFunc;      // property specific value dtor function
