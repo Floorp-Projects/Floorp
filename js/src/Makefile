@@ -120,19 +120,23 @@ JSJAVA_STUBHEADERS = -I$(DEPTH)/sun-java/include/_gen \
 else
 JSJAVA_STUBHEADERS = -I$(JRI_GEN_DIR) -I$(JDK_GEN_DIR)
 endif
-LDFLAGS		= $(DIST)/lib/libnspr.$(LIB_SUFFIX) -lm 
 
 JSJAVA_CFLAGS	= -I$(DEPTH)/sun-java/md-include \
 		  -I$(DEPTH)/sun-java/include \
 		  $(JSJAVA_STUBHEADERS)
 
-LDFLAGS		= $(DIST)/lib/libnspr.$(LIB_SUFFIX) -lm
+# LIBNSPR includes unneeded libmsgc21.a, but abstracts nspr version,
+# etc. nicely.
+LDFLAGS 	= $(LIBNSPR) -lm
 
 ifeq ($(OS_ARCH), OSF1)
 LDFLAGS += -lc_r
 endif
 ifeq ($(OS_ARCH), SunOS)
 LDFLAGS += -lposix4 -ldl -lnsl -lsocket
+endif
+ifeq ($(OS_ARCH), Linux)
+LDFLAGS += -ldl
 endif
 
 # this requires clobbering and recompiling with XCFLAGS=-DJSFILE
