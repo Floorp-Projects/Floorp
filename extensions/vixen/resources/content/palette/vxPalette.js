@@ -34,7 +34,7 @@ var vxPalette =
     var nElements = this.incrementElementCount("button");
     var attributes = ["value", "id"];
     var values = ["Button " + nElements, "button_" + nElements];
-    this.insertSingleElement("button", attributes, values);    
+    this.insertSingleElement("button", attributes, values, "Insert Button");    
   },
 
   insertTextFieldElement: function (aType)
@@ -42,7 +42,7 @@ var vxPalette =
     var nElements = this.incrementElementCount("textfield");
     var attributes = ["value", "id"];
     var values = ["Textfield " + nElements, "textfield_" + nElements];
-    this.insertSingleElement("textfield", attributes, values);
+    this.insertSingleElement("textfield", attributes, values, "Insert Textfield");
   },
 
   insertRadioGroup: function ()
@@ -85,6 +85,7 @@ var vxPalette =
     var txns = [radiogroupTxn, radiogroupAttrTxn, radioTxn, radioAttrTxn];
     var aggregateTxn = new vxAggregateTxn(txns);
     aggregateTxn.init();
+    aggregateTxn.description = "Insert Radiogroup";
     
     var txmgr = focusedWindow.vxVFD.mTxMgrShell;
     txmgr.doTransaction(aggregateTxn);
@@ -98,7 +99,7 @@ var vxPalette =
     return ++this.mElementCount[aNodeName];
   },
   
-  insertSingleElement: function (aNodeName, aAttributes, aValues)
+  insertSingleElement: function (aNodeName, aAttributes, aValues, aDescription)
   {
     var vixenMain = vxUtils.getWindow("vixen:main");
     var focusedWindow = vixenMain.vxShell.mFocusedWindow;
@@ -117,6 +118,7 @@ var vxPalette =
     // batch the transactions
     var aggregateTxn = new vxAggregateTxn([elementTxn, elementAttrTxn]);
     aggregateTxn.init();
+    aggregateTxn.description = aDescription;
     
     var txmgr = focusedWindow.vxVFD.mTxMgrShell;
     txmgr.doTransaction(aggregateTxn);

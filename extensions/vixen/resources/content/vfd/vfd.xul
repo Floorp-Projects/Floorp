@@ -2,12 +2,15 @@
 
 <?xml-stylesheet href="chrome://communicator/skin/"?>
 
+<?xul-overlay href="chrome://vixen/content/vxKeysetOverlay.xul"?>
+
 <window id="vxVFD" orient="vertical"
+        windowtype="vixen:formdesigner"
         title="Visual Form Designer [Form1]"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         onload="vxVFD.startup();"
         onfocus="vxVFD.focusVFD();">
-
+        
   <!-- utility functions -->
   <script src="chrome://global/content/nsJSComponentManager.js"></script>
   <script src="chrome://vixen/content/vxUtils.js"></script>
@@ -17,10 +20,14 @@
   
   <!-- transaction manager -->
   <script src="chrome://vixen/content/vfd/vxVFDTransactionManager.js"></script>
+  <script src="chrome://vixen/content/txmgr/vxTransactionDataSource.js"></script>
+  
   <!-- selection manager -->
   <script src="chrome://vixen/content/vfd/vxVFDSelectionManager.js"></script>
   
-  <iframe id="vfdDocument" name="vfdDocument" flex="1"/>
+  <keyset id="keyset"/>
   
+  <iframe id="vfdDocument" name="vfdDocument" src="about:blank" style="width:0px;" flex="1"/>
+
 </window>      
   

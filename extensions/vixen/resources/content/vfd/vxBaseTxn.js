@@ -29,6 +29,8 @@ vxBaseTxn.prototype = {
   mID: null,
 
   mListeners: [],
+  
+  description: "",
 
   notifyListeners: function (aEvent, aTransaction, aIRQ) 
   {

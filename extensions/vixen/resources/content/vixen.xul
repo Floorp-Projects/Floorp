@@ -25,6 +25,8 @@
 
 <?xml-stylesheet href="chrome://communicator/skin/"?>
 
+<?xul-overlay href="chrome://vixen/content/vxKeysetOverlay.xul"?>
+
 <!--<!DOCTYPE window [
 <!ENTITY % brandDTD SYSTEM "chrome://global/locale/brand.dtd" >
 %brandDTD;
@@ -32,7 +34,7 @@
 %xuleditDTD;
 ]>-->
 
-<window id="xulEditMainWindow" class="color-dialog" orient="vertical"
+<window id="vixenMain" class="color-dialog" orient="vertical"
         title="ViXEn" windowtype="vixen:main"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         onload="vxShell.startup();" onunload="vxShell.shutdown();">
@@ -40,20 +42,23 @@
   <script language="JavaScript" src="chrome://global/content/nsJSComponentManager.js"></script>
   <script language="JavaScript" src="chrome://global/content/globalOverlay.js"></script>
 
+  <script language="JavaScript" src="chrome://vixen/content/vxKeysetOverlay.js"></script>
   <script language="JavaScript" src="chrome://vixen/content/vixen.js"></script>
   <script language="JavaScript" src="chrome://vixen/content/vxUtils.js"></script>
 
-  <keyset id="vxKeyset">
-    <key id="undo" key="z"    oncommand="vxShell.undo();" modifiers="accel"/>
-    <key id="redo" key="z"    oncommand="vxShell.redo();" modifiers="accel, shift"/>
-  </keyset>
+  <keyset id="keyset"/>
   
   <toolbox id="xuledit-toolbox" flex="1">
     <menubar id="xuledit-menubar">
       <menu id="menu_File" value="File" accesskey="f">
         <menupopup>
-          <menuitem value="Open..." accesskey="o" oncommand="vxShell.loadDocumentWithUI();"/>
-          <menuitem value="Exit" accesskey="x"/>
+          <menuitem value="New..." accesskey="n" oncommand="vxShell.newDocument();"/>
+          <menuseparator/>
+          <menuitem value="Open..." accesskey="o" oncommand="vxShell.loadFormDesignerWithUI();"/>
+          <menuseparator/>
+          <menuitem value="Save As..." accesskey="a" oncommand="vxShell.saveDocument();"/>
+          <menuseparator/>
+          <menuitem value="Exit" accesskey="x" key="quitKey"/>
         </menupopup>
       </menu>
       <menu id="menu_Edit" value="Edit" accesskey="e">
