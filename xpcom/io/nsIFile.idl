@@ -20,6 +20,7 @@
  *
  * Contributor(s): 
  *     Doug Turner <dougt@netscape.com>
+ *     Christopher Blizzard <blizzard@mozilla.org>
  */
 
 
@@ -150,7 +151,7 @@ interface nsIFile : nsISupports
      *  execution.  'args' will be passed through on the command line
      *  if the OS supports that.
      */
-    void spawn([const] in string args);
+    void spawn([array, size_is(count)] in string args, in unsigned long count);
     
     /**
      *  This will try to delete this file.  The 'recursive' flag

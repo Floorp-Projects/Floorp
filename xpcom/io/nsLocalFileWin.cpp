@@ -1077,7 +1077,7 @@ nsLocalFile::MoveTo(nsIFile *newParentDir, const char *newName)
 }
 
 NS_IMETHODIMP  
-nsLocalFile::Spawn(const char *args)
+nsLocalFile::Spawn(const char **args, PRUint32 count)
 {
     PRBool isFile;
     nsresult rv = IsFile(&isFile);
@@ -1085,19 +1085,35 @@ nsLocalFile::Spawn(const char *args)
     if (NS_FAILED(rv))
         return rv;
 
-    nsCString fileNameWithArgs(mResolvedPath);
-
-    if(args)
-    {
-        fileNameWithArgs.Append(" ");
-        fileNameWithArgs.Append(args);
+    // make sure that when we allocate we have 1 greater than the
+    // count since we need to null terminate the list for the argv to
+    // pass into PR_CreateProcessDetached
+    char **my_argv = NULL;
+    
+    my_argv = (char **)malloc(sizeof(char *) * (count + 2) );
+    if (!my_argv) {
+        return NS_ERROR_OUT_OF_MEMORY;
     }
 
-    int execResult = WinExec( fileNameWithArgs, SW_NORMAL );     
-    if (execResult > 31)
-        return NS_OK;
+    // copy the args
+    PRUint32 i;
+    for (i=0; i < count; i++) {
+        my_argv[i+1] = (char *)args[i];
+    }
+    // we need to set argv[0] to the program name.
+    my_argv[0] = mResolvedPath;
+    
+    // null terminate the array
+    my_argv[count+1] = NULL;
+    rv = PR_CreateProcessDetached(mResolvedPath, my_argv, NULL, NULL);
 
-    return NS_ERROR_FILE_EXECUTION_FAILED;
+     // free up our argv
+     nsAllocator::Free(my_argv);
+
+     if (PR_SUCCESS == rv)
+         return NS_OK;
+     else
+         return NS_ERROR_FILE_EXECUTION_FAILED;
 }
 
 NS_IMETHODIMP  

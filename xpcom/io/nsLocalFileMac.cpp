@@ -1026,7 +1026,7 @@ nsLocalFile::MoveTo(nsIFile *newParentDir, const char *newName)
 }
 
 NS_IMETHODIMP  
-nsLocalFile::Spawn(const char *args)
+nsLocalFile::Spawn(const char **args, PRUint32 count)
 {
 	PRBool isFile;
 	nsresult rv = IsFile(&isFile);
