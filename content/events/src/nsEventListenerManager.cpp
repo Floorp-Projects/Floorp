@@ -330,9 +330,8 @@ nsresult nsEventListenerManager::RemoveEventListener(nsIDOMEventListener *aListe
   for (int i=0; i<(*listeners)->Count(); i++) {
     ls = (nsListenerStruct*)(*listeners)->ElementAt(i);
     if (ls->mListener == aListener && ls->mFlags == aFlags) {
-      ls->mFlags &= ~aFlags;
       ls->mSubType &= ~aSubType;
-      if (ls->mFlags == NS_EVENT_FLAG_NONE && ls->mSubType == NS_EVENT_BITS_NONE) {
+      if (ls->mSubType == NS_EVENT_BITS_NONE) {
         NS_RELEASE(ls->mListener);
         (*listeners)->RemoveElement((void*)ls);
         PR_DELETE(ls);
