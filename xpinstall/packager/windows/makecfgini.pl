@@ -126,14 +126,21 @@ while($line = <fpInIt>)
       $componentName    = $colonSplit[1];
       chop($componentName);
 
-      $installSize      = OutputInstallSize("$inStagePath\\$componentName");
-
-      # special oji consideration here.  Since it's an installer that 
-      # seamonkey installer will be calling, the disk space allocation
-      # needs to be adjusted by an expansion factor of 3.62.
-      if($componentName =~ /oji/i)
+      if($componentName =~ /\$UninstallFile\$/i)
       {
-        $installSize = int($installSize * 3.62);
+        $installSize = OutputInstallSizeArchive("$inXpiPath\\$fileUninstall");
+      }
+      else
+      {
+        $installSize = OutputInstallSize("$inStagePath\\$componentName");
+
+        # special oji consideration here.  Since it's an installer that 
+        # seamonkey installer will be calling, the disk space allocation
+        # needs to be adjusted by an expansion factor of 3.62.
+        if($componentName =~ /oji/i)
+        {
+          $installSize = int($installSize * 3.62);
+        }
       }
     }
 

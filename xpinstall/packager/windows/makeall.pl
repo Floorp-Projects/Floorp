@@ -80,19 +80,6 @@ else
   mkdir ("$inDistPath\\xpi",0775);
 }
 
-# Make .js files
-MakeJsFile("xpcom");
-MakeJsFile("browser");
-MakeJsFile("mail");
-
-# Make .xpi files
-MakeXpiFile("xpcom");
-MakeXpiFile("browser");
-MakeXpiFile("mail");
-
-MakeConfigFile();
-MakeUninstallIniFile();
-
 if(-e "$inDistPath\\uninstall")
 {
   unlink <$inDistPath\\uninstall\\*>;
@@ -111,22 +98,24 @@ else
   mkdir ("$inDistPath\\setup",0775);
 }
 
-# Copy the uninstall files to the dist uninstall directory.
-system("copy uninstall.ini              $inDistPath");
-system("copy uninstall.ini              $inDistPath\\uninstall");
-system("copy $inDistPath\\uninstall.exe $inDistPath\\uninstall");
+# Make .js files
+MakeJsFile("xpcom");
+MakeJsFile("browser");
+MakeJsFile("mail");
+
+# Make .xpi files
+MakeXpiFile("xpcom");
+MakeXpiFile("browser");
+MakeXpiFile("mail");
+
+MakeUninstall();
+MakeConfigFile();
 
 # Copy the setup files to the dist setup directory.
 system("copy config.ini                 $inDistPath");
 system("copy config.ini                 $inDistPath\\setup");
 system("copy $inDistPath\\setup.exe     $inDistPath\\setup");
 system("copy $inDistPath\\setuprsc.dll  $inDistPath\\setup");
-
-# build the self-extracting .exe (uninstaller) file.
-print "\nbuilding self-extracting uninstaller ($seuFileNameSpecific)...\n";
-system("copy $inDistPath\\$seiFileNameGeneric $inDistPath\\$seuFileNameSpecific");
-system("$inDistPath\\nszip.exe $inDistPath\\$seuFileNameSpecific $inDistPath\\uninstall\\*.*");
-system("copy $inDistPath\\$seuFileNameSpecific $inDistPath\\xpi");
 
 # build the self-extracting .exe (installer) file.
 print "\nbuilding self-extracting installer ($seiFileNameSpecific)...\n";
@@ -145,6 +134,22 @@ sub MakeConfigFile
   {
     exit(1);
   }
+}
+
+sub MakeUninstall
+{
+  MakeUninstallIniFile();
+
+  # Copy the uninstall files to the dist uninstall directory.
+  system("copy uninstall.ini              $inDistPath");
+  system("copy uninstall.ini              $inDistPath\\uninstall");
+  system("copy $inDistPath\\uninstall.exe $inDistPath\\uninstall");
+
+  # build the self-extracting .exe (uninstaller) file.
+  print "\nbuilding self-extracting uninstaller ($seuFileNameSpecific)...\n";
+  system("copy $inDistPath\\$seiFileNameGeneric $inDistPath\\$seuFileNameSpecific");
+  system("$inDistPath\\nszip.exe $inDistPath\\$seuFileNameSpecific $inDistPath\\uninstall\\*.*");
+  system("copy $inDistPath\\$seuFileNameSpecific $inDistPath\\xpi");
 }
 
 sub MakeUninstallIniFile
