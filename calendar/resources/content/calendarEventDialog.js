@@ -291,6 +291,8 @@ function loadCalendarEventDialog()
          document.getElementById( "server-field" ).appendItem(serverList[i].name, serverList[i].path);
       }
       setFieldValue( "server-field", gEvent.parent.server );
+
+      setFieldValue( "server-field", "true", "disabled" );
    }
    
    //the next line seems to crash Mozilla
