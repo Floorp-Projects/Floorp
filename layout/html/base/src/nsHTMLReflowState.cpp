@@ -1388,16 +1388,10 @@ GetVerticalMarginBorderPadding(const nsHTMLReflowState* aReflowState)
  * until it finds the canvas frame, or it encounters a frame that is not a block,
  * area, or scroll frame. This handles compatibility with IE (see bug 85016 and bug 219693)
  *
- *  When the argument aRestrictToFirstLevel is TRUE, we stop looking after the second parent 
- *  block, area, or scroll frame. When FALSE, we look all the way up the frame tree, through nested 
- *  block, area, and scroll frames, and always find a real height. This is needed for percentage-height
- *  images in unconstrained blocks, like DIVs (see bugzilla bug 85016).
- *
  *  When we encounter scrolledContent area frames, we skip over them, since they are guaranteed to not be useful for computing the containing block.
  */
 nscoord
-CalcQuirkContainingBlockHeight(const nsHTMLReflowState& aReflowState,
-                               PRBool aRestrictToFirstLevel)
+CalcQuirkContainingBlockHeight(const nsHTMLReflowState& aReflowState)
 {
   nsHTMLReflowState* firstAncestorRS = nsnull; // a candidate for html frame
   nsHTMLReflowState* secondAncestorRS = nsnull; // a candidate for body frame
@@ -1425,10 +1419,6 @@ CalcQuirkContainingBlockHeight(const nsHTMLReflowState& aReflowState,
         }
       }
 
-      if (aRestrictToFirstLevel && firstAncestorRS && secondAncestorRS) {
-        break;
-      }
-      
       secondAncestorRS = firstAncestorRS;
       firstAncestorRS = (nsHTMLReflowState*)rs;
 
@@ -1602,13 +1592,7 @@ nsHTMLReflowState::ComputeContainingBlockRectangle(nsIPresContext*          aPre
       aPresContext->GetCompatibilityMode(&mode);
       if (eCompatibility_NavQuirks == mode &&
           mStylePosition->mHeight.GetUnit() == eStyleUnit_Percent) {
-        aContainingBlockHeight = CalcQuirkContainingBlockHeight(*aContainingBlockRS, PR_TRUE);
-        // NOTE: passing PR_TRUE for the aRestrictToFirstLevel argument, to restrict the search
-        //       for the containing block height to only the immediate parent block or area
-        //       frame. In the case that we need to go further, we would need to pass PR_TRUE
-        //       and take the performance hit. This is generally only needed if the frame being reflowed
-        //       has percentage height and is in a shrink-wrapping container 
-        //       (see the special-case call in InitConstraints)
+        aContainingBlockHeight = CalcQuirkContainingBlockHeight(*aContainingBlockRS);
       }
     }
   }
@@ -1822,7 +1806,7 @@ nsHTMLReflowState::InitConstraints(nsIPresContext* aPresContext,
           // in quirks mode, get the cb height using the special quirk method
           if (eCompatibility_NavQuirks == mode) {
             if (!IS_TABLE_CELL(fType)) {
-              aContainingBlockHeight = CalcQuirkContainingBlockHeight(*cbrs, PR_FALSE);
+              aContainingBlockHeight = CalcQuirkContainingBlockHeight(*cbrs);
             }
             else {
               heightUnit = eStyleUnit_Auto;
