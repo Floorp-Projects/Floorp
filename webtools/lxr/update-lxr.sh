@@ -82,6 +82,14 @@ case "$1" in
 'seamonkey')
     time cvs -Q -d $CVSROOT checkout -P SeaMonkeyAll
     ;;
+'gnome')
+    CVSROOT=/cvs/gnome
+    export CVSROOT
+    cd $src_dir
+    time cvs -Q -d $CVSROOT checkout -P glib
+    time cvs -Q -d $CVSROOT checkout -P gtk+
+    cd ..
+    ;;
 esac
 
 
