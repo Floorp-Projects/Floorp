@@ -636,7 +636,7 @@ nsMsgIdentity::setFolderPref(const char *prefname, const char *value)
   if (nsCRT::strcmp(prefname, "fcc_folder") == 0)
   {
     // Clear the temporary return receipt filter so that the new filter
-    // rule can be recreated (by ConfigureTemporaryReturnReceiptsFilter()).
+    // rule can be recreated (by ConfigureTemporaryFilters()).
     nsCOMPtr<nsIMsgAccountManager> accountManager = 
       do_GetService(NS_MSGACCOUNTMANAGER_CONTRACTID, &rv);
     NS_ENSURE_SUCCESS(rv,rv);

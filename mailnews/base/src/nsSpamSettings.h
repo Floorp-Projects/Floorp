@@ -22,6 +22,7 @@
  * Contributor(s):
  *  Seth Spitzer <sspitzer@netscape.com>
  *  Dan Mosedale <dmose@netscape.com>
+ *  David Bienvenu <bienvenu@mozilla.org>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or 
@@ -76,7 +77,10 @@ private:
   nsCString mActionTargetFolder;
   nsCString mWhiteListAbURI;
   nsCString mLogURL;
-  
+
+  nsCString mServerFilterName;
+  PRInt32  mServerFilterTrustFlags;
+
   nsresult GetLogFileSpec(nsIFileSpec **aFileSpec);
   nsresult TruncateLog();
 };

@@ -952,10 +952,12 @@ nsMsgFilterList::RemoveFilter(nsIMsgFilter *aFilter)
     return m_filters->RemoveElement(NS_STATIC_CAST(nsISupports*, aFilter));
 }
 
-nsresult nsMsgFilterList::InsertFilterAt(PRUint32 filterIndex, nsIMsgFilter *filter)
+nsresult nsMsgFilterList::InsertFilterAt(PRUint32 filterIndex, nsIMsgFilter *aFilter)
 {
-	m_filters->InsertElementAt(filter, filterIndex);
-	return NS_OK;
+  nsMsgFilter *filter = NS_STATIC_CAST(nsMsgFilter *, aFilter);
+  filter->SetFilterList(this);
+  m_filters->InsertElementAt(aFilter, filterIndex);
+  return NS_OK;
 }
 
 // Attempt to move the filter at index filterIndex in the specified direction.

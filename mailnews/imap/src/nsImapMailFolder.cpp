@@ -648,7 +648,7 @@ nsImapMailFolder::UpdateFolder(nsIMsgWindow *msgWindow)
     // can't file to the sent folder, so we don't add the filter for those servers
     if (canFileMessagesOnServer) 
     {
-      rv = server->ConfigureTemporaryReturnReceiptsFilter(m_filterList);
+      rv = server->ConfigureTemporaryFilters(m_filterList);
       NS_ASSERTION(NS_SUCCEEDED(rv), "failed to add MDN filter");
     }
   }

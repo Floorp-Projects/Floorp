@@ -359,16 +359,16 @@ interface nsIMsgIncomingServer : nsISupports {
   readonly attribute boolean passwordPromptRequired;
 
   /**
+   * This configures both the MDN filter, and the server-side
+   * spam filter filters, if needed.
+   *
    * If we have set up to filter return receipts into
    * our Sent folder, this utility method creates
    * a filter to do that, and adds it to our filterList
    * if it doesn't exist.  If it does, it will enable it.
    *
-   * If the user changes their prefs, to leave the 
-   * return receipt in the inbox, this will disable 
-   * the existing return receipts filter, if it exists.
    */
-  void configureTemporaryReturnReceiptsFilter(in nsIMsgFilterList filterList);
+  void configureTemporaryFilters(in nsIMsgFilterList filterList);
 
   /**
    * If Sent folder pref is changed we need to clear the temporary 

@@ -11,6 +11,7 @@ mailnews/base/build/Makefile
 mailnews/base/search/Makefile
 mailnews/base/search/public/Makefile
 mailnews/base/search/src/Makefile
+mailnews/base/search/resources/content/Makefile
 mailnews/base/resources/Makefile
 mailnews/base/resources/content/Makefile
 mailnews/base/resources/content/unix/Makefile

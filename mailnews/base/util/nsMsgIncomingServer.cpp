@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *   Pierre Phaneuf <pp@ludusdesign.com>
+ *   David Bienvenu <bienvenu@nventure.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or 
@@ -58,7 +59,7 @@
 #include "nsIMsgWindow.h"
 #include "nsIMsgFilterService.h"
 #include "nsIMsgProtocolInfo.h"
-
+#include "nsIMsgMailSession.h"
 #include "nsIPrefService.h"
 #include "nsIDocShell.h"
 #include "nsIWebShell.h"
@@ -79,6 +80,7 @@
 #include "nsIMsgMdnGenerator.h"
 #include "nsMsgFolderFlags.h"
 #include "nsMsgUtils.h"
+#include "nsAppDirectoryServiceDefs.h"
 
 #define PORT_NOT_SET -1
 
@@ -1815,10 +1817,111 @@ nsMsgIncomingServer::GetPasswordPromptRequired(PRBool *aPasswordIsRequired)
   return rv;
 }
 
-NS_IMETHODIMP
+NS_IMETHODIMP nsMsgIncomingServer::ConfigureTemporaryFilters(nsIMsgFilterList *aFilterList)
+{
+  nsresult rv = ConfigureTemporaryReturnReceiptsFilter(aFilterList);
+  NS_ENSURE_SUCCESS(rv, rv);
+  return ConfigureTemporaryServerSpamFilters(aFilterList);
+}
+
+nsresult
+nsMsgIncomingServer::ConfigureTemporaryServerSpamFilters(nsIMsgFilterList *filterList)
+{
+  nsCOMPtr<nsISpamSettings> spamSettings;
+  nsresult rv = GetSpamSettings(getter_AddRefs(spamSettings));
+  NS_ENSURE_SUCCESS(rv, rv);
+  // For performance reasons, we'll handle clearing of filters if the user turns
+  // off the server-side filters from the junk mail controls, in the junk mail controls.
+  nsCAutoString serverFilterName;
+  spamSettings->GetServerFilterName(serverFilterName);
+  if (serverFilterName.IsEmpty())
+    return NS_OK;
+  PRInt32 serverFilterTrustFlags = 0;
+  (void) spamSettings->GetServerFilterTrustFlags(&serverFilterTrustFlags);
+  if (!serverFilterTrustFlags)
+    return NS_OK;
+  // check if filters have been setup already.
+  nsAutoString yesFilterName, noFilterName;
+  yesFilterName.AppendWithConversion(serverFilterName);
+  yesFilterName.AppendWithConversion("Yes");
+
+  noFilterName.AppendWithConversion(serverFilterName);
+  noFilterName.AppendWithConversion("No");
+
+  nsCOMPtr<nsIMsgFilter> newFilter;
+  (void) filterList->GetFilterNamed(yesFilterName.get(),
+                                  getter_AddRefs(newFilter));
+
+  if (!newFilter)
+    (void) filterList->GetFilterNamed(noFilterName.get(),
+                                  getter_AddRefs(newFilter));
+  if (newFilter)
+    return NS_OK;
+
+  nsCAutoString serverFilterFileName(serverFilterName);
+  serverFilterFileName.Append(".sfd");
+  nsCOMPtr<nsIFile> file;
+  rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR, getter_AddRefs(file));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = file->AppendNative(serverFilterFileName);
+
+  // if the file doesn't exist, we should try to get it from the defaults directory and copy it over
+  PRBool exists = PR_FALSE;
+  file->Exists(&exists);
+  if (!exists)
+  {
+      nsCOMPtr<nsIMsgMailSession> mailSession = do_GetService(NS_MSGMAILSESSION_CONTRACTID, &rv);
+      NS_ENSURE_SUCCESS(rv, rv);
+      nsCOMPtr<nsIFile> defaultServerFilterFile;
+      rv = mailSession->GetDataFilesDir("messenger", getter_AddRefs(defaultServerFilterFile));
+      rv = defaultServerFilterFile->AppendNative(serverFilterFileName);
+
+      nsCOMPtr<nsIFileSpec> defaultServerFilterSpec;
+      rv = NS_NewFileSpecFromIFile(defaultServerFilterFile, getter_AddRefs(defaultServerFilterSpec));
+      
+      // get the profile directory
+      rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR, getter_AddRefs(defaultServerFilterFile));
+      
+      // convert to spec
+      nsCOMPtr<nsIFileSpec> profileDirSpec;
+      rv = NS_NewFileSpecFromIFile(defaultServerFilterFile, getter_AddRefs(profileDirSpec));
+      // now copy the file over to the profile directory
+      defaultServerFilterSpec->CopyToDir(profileDirSpec);
+  }
+
+  nsCOMPtr<nsIFileSpec> serverFilterSpec;
+  rv = NS_NewFileSpecFromIFile(file, getter_AddRefs(serverFilterSpec));
+  if (NS_FAILED(rv)) return rv;
+
+  nsCOMPtr<nsIMsgFilterService> filterService = do_GetService(NS_MSGFILTERSERVICE_CONTRACTID, &rv);
+  nsCOMPtr<nsIMsgFilterList> serverFilterList;
+    
+  rv = filterService->OpenFilterList(serverFilterSpec, NULL, NULL, getter_AddRefs(serverFilterList));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = serverFilterList->GetFilterNamed(yesFilterName.get(),
+                                  getter_AddRefs(newFilter));
+  if (newFilter && serverFilterTrustFlags & nsISpamSettings::TRUST_POSITIVES)
+  {
+    newFilter->SetTemporary(PR_TRUE);
+    filterList->InsertFilterAt(0, newFilter);
+  }
+
+  rv = serverFilterList->GetFilterNamed(noFilterName.get(),
+                                  getter_AddRefs(newFilter));
+  if (newFilter && serverFilterTrustFlags & nsISpamSettings::TRUST_NEGATIVES)
+  {
+    newFilter->SetTemporary(PR_TRUE);
+    filterList->InsertFilterAt(0, newFilter);
+  }
+
+  return rv;
+}
+
+nsresult
 nsMsgIncomingServer::ConfigureTemporaryReturnReceiptsFilter(nsIMsgFilterList *filterList)
 {
-  NS_ENSURE_ARG_POINTER(filterList);
   nsresult rv;
 
   nsCOMPtr<nsIMsgAccountManager> accountMgr = do_GetService(NS_MSGACCOUNTMANAGER_CONTRACTID, &rv);
@@ -2062,6 +2165,14 @@ nsMsgIncomingServer::SetSpamSettings(nsISpamSettings *aSpamSettings)
   rv = SetIntValue("purgeSpamInterval", purgeSpamInterval);
   NS_ENSURE_SUCCESS(rv,rv);
 
+  nsCAutoString serverFilterName;
+  mSpamSettings->GetServerFilterName(serverFilterName);
+  SetCharValue("serverFilterName", serverFilterName.get());
+
+  PRInt32 serverFilterTrustFlags;
+  mSpamSettings->GetServerFilterTrustFlags(&serverFilterTrustFlags);
+  SetIntValue("serverFilterTrustFlags", serverFilterTrustFlags);
+
   PRInt32 loggingEnabled;
   rv = mSpamSettings->GetLoggingEnabled(&loggingEnabled);
   NS_ENSURE_SUCCESS(rv,rv);
@@ -2151,7 +2262,15 @@ nsMsgIncomingServer::GetSpamSettings(nsISpamSettings **aSpamSettings)
     NS_ENSURE_SUCCESS(rv,rv);
     rv = mSpamSettings->SetPurgeInterval(purgeSpamInterval);
     NS_ENSURE_SUCCESS(rv,rv);
-    
+
+    nsXPIDLCString serverFilterName;
+    rv = GetCharValue("serverFilterName", getter_Copies(serverFilterName));
+    if (NS_SUCCEEDED(rv))
+      mSpamSettings->SetServerFilterName(serverFilterName);
+    PRInt32 serverFilterTrustFlags = 0;
+    rv = GetIntValue("serverFilterTrustFlags", &serverFilterTrustFlags);
+    mSpamSettings->SetServerFilterTrustFlags(serverFilterTrustFlags);
+
     PRInt32 loggingEnabled;
     rv = GetBoolValue("spamLoggingEnabled", &loggingEnabled);
     NS_ENSURE_SUCCESS(rv,rv);
@@ -2174,9 +2293,8 @@ nsMsgIncomingServer::GetSpamFilterPlugin(nsIMsgFilterPlugin **aFilterPlugin)
     // get the plugin service
     mFilterPlugin = do_GetService("@mozilla.org/messenger/filter-plugin;1?name=bayesianfilter", &rv);
 
-    if (NS_FAILED(rv)) {
+    if (NS_FAILED(rv)) 
         return rv;
-    }
   }
 
   NS_IF_ADDREF(*aFilterPlugin = mFilterPlugin);

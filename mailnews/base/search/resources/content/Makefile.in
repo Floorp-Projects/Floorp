@@ -26,5 +26,29 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
+PACKAGE_FILE = searchContent.pkg
+
+EXPORT_DIR	= $(DIST)/bin/defaults/messenger
+EXPORT_L10N_DIR	= $(EXPORT_DIR)/US
+
+EXPORT_RESOURCE_FILES	= \
+			Habeas.sfd \
+      SpamAssassin.sfd \
+      SpamCatcher.sfd \
+      SpamPal.sfd \
+			$(NULL)
+
 include $(topsrcdir)/config/rules.mk
 
+GARBAGE		+= $(addprefix $(EXPORT_DIR)/, $(EXPORT_RESOURCE_FILES)) \
+		$(addprefix $(EXPORT_L10N_DIR)/, $(EXPORT_RESOURCE_FILES))
+
+libs:: $(EXPORT_RESOURCE_FILES)
+	$(INSTALL) $^ $(EXPORT_DIR)
+	$(INSTALL) $^ $(EXPORT_L10N_DIR)
+
+
+
+install:: $(EXPORT_RESOURCE_FILES)
+	$(SYSINSTALL) $(IFLAGS1) $^ $(DESTDIR)$(mozappdir)/defaults/messenger
+	$(SYSINSTALL) $(IFLAGS1) $^ $(DESTDIR)$(mozappdir)/defaults/messenger/US

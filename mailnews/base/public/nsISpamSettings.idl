@@ -89,6 +89,14 @@ interface nsISpamSettings: nsISupports {
   const long MANUAL_MARK_MODE_MOVE = 0;
   const long MANUAL_MARK_MODE_DELETE = 1;
 
+  /**
+   * integrate with server-side spam detection programs
+   */
+  attribute ACString serverFilterName;
+  const long TRUST_POSITIVES = 1;
+  const long TRUST_NEGATIVES = 2;
+  attribute long serverFilterTrustFlags;
+
   // for logging
   attribute boolean loggingEnabled;
   attribute nsIOutputStream logStream;

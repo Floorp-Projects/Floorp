@@ -1461,7 +1461,7 @@ nsParseNewMailState::Init(nsIMsgFolder *rootFolder, nsIMsgFolder *downloadFolder
     rv = server->GetFilterList(aMsgWindow, getter_AddRefs(m_filterList));
   
   if (m_filterList)
-    rv = server->ConfigureTemporaryReturnReceiptsFilter(m_filterList);
+    rv = server->ConfigureTemporaryFilters(m_filterList);
   
   m_disableFilters = PR_FALSE;
   return NS_OK; 

@@ -79,6 +79,9 @@ protected:
   void getPrefName(const char *serverKey, const char *pref, nsCString& fullPrefName);
   void getDefaultPrefName(const char *pref, nsCString& fullPrefName);
 
+  nsresult ConfigureTemporaryReturnReceiptsFilter(nsIMsgFilterList *filterList);
+  nsresult ConfigureTemporaryServerSpamFilters(nsIMsgFilterList *filterList);
+
   // these are private pref getters and setters for the password
   // field. Callers should be using Get/Set Password
   NS_IMETHOD GetPrefPassword(char * *aPassword);

@@ -22,6 +22,7 @@
  * Contributor(s):
  *  Seth Spitzer <sspitzer@netscape.com>
  *  Dan Mosedale <dmose@netscape.com>
+ *  David Bienvenu <bienvenu@mozilla.org>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or 
@@ -60,6 +61,9 @@ nsSpamSettings::nsSpamSettings()
   mMoveTargetMode = nsISpamSettings::MOVE_TARGET_MODE_ACCOUNT;
   mPurge = PR_FALSE;
   mPurgeInterval = 14; // 14 days
+
+  mServerFilterTrustFlags = 0;
+
   mUseWhiteList = PR_FALSE;
   mLoggingEnabled = PR_FALSE;
   mManualMark = PR_FALSE;
@@ -373,10 +377,11 @@ NS_IMETHODIMP nsSpamSettings::Clone(nsISpamSettings *aSpamSettings)
   NS_ENSURE_SUCCESS(rv,rv);
   mWhiteListAbURI = whiteListAbURI;
   
-  PRBool loggingEnabled;
-  rv = aSpamSettings->GetLoggingEnabled(&loggingEnabled);
-  NS_ENSURE_SUCCESS(rv,rv);
-  mLoggingEnabled = loggingEnabled;
+  rv = aSpamSettings->GetLoggingEnabled(&mLoggingEnabled);
+
+  aSpamSettings->GetServerFilterName(mServerFilterName);
+  aSpamSettings->GetServerFilterTrustFlags(&mServerFilterTrustFlags);
+
   return rv;
 }
 
@@ -438,6 +443,19 @@ NS_IMETHODIMP nsSpamSettings::GetSpamFolderURI(char **aSpamFolderURI)
     return rv;
 }
 
+NS_IMETHODIMP nsSpamSettings::GetServerFilterName(nsACString &aFilterName)
+{
+  aFilterName = mServerFilterName;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsSpamSettings::SetServerFilterName(const nsACString &aFilterName)
+{
+  mServerFilterName = aFilterName;
+  return NS_OK;
+}
+
+NS_IMPL_GETSET(nsSpamSettings, ServerFilterTrustFlags, PRBool, mServerFilterTrustFlags);
 
 #define LOG_ENTRY_START_TAG "<p>\n"
 #define LOG_ENTRY_START_TAG_LEN (strlen(LOG_ENTRY_START_TAG))
