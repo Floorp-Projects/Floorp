@@ -1,0 +1,27 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="sidebar.css" type="text/css"?>
+
+<xul:window
+  xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+  xmlns:html="http://www.w3.org/TR/REC-html40"
+  xmlns:rdf="http://www.w3.org/TR/WD-rdf-syntax#">
+
+<xul:tree xul:datasources="rdf:mailnewsfolder">
+  <xul:treecol rdf:resource="http://home.netscape.com/NC-rdf#Name"/>
+  <xul:treehead>
+    <xul:treeitem>
+      <xul:treecell>Name</xul:treecell>
+    </xul:treeitem>
+  </xul:treehead>
+
+  <xul:treebody>
+    <xul:treeitem xul:id="mailbox:MSGFolderRoot">
+      <xul:treecell>Local Folders</xul:treecell>
+      <xul:treecell></xul:treecell>
+      <xul:treecell></xul:treecell>
+    </xul:treeitem>
+
+  </xul:treebody>
+</xul:tree>
+
+</xul:window>
