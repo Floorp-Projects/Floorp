@@ -306,6 +306,9 @@ static nsresult InitializeBeOSApp(void)
 #include <gtk/gtk.h>
 #endif //MOZ_WIDGET_GTK || MOZ_WIDGET_GTK2
 
+#if defined(MOZ_WIDGET_QT)
+#include <qapplication.h>
+#endif
 
 static PRBool
 strimatch(const char* lowerstr, const char* mixedstr)
@@ -1871,6 +1874,14 @@ int xre_main(int argc, char* argv[], const nsXREAppData* aAppData)
   gtk_widget_set_default_visual(gdk_rgb_get_visual());
   gtk_widget_set_default_colormap(gdk_rgb_get_cmap());
 #endif /* MOZ_WIDGET_GTK || MOZ_WIDGET_GTK2 */
+
+#if defined(MOZ_WIDGET_QT)
+  QAppliction qapp(argc, argv);
+#endif
+
+// #if defined(MOZ_WIDGET_XLIB)
+// XXXtimeless fix me! How do we get a Display from here to nsAppShell.cpp ?
+// #endif
     
   // Call the code to install our handler
 #ifdef MOZ_JPROF

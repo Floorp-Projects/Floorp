@@ -43,6 +43,7 @@
 
 #include "nsIAppShellService.h"
 #include "nsICloseAllWindows.h"
+#include "nsICmdLineService.h"
 #include "nsIDOMWindowInternal.h"
 #include "nsIEventQueue.h"
 #include "nsIEventQueueService.h"
@@ -101,13 +102,9 @@ NS_IMPL_ISUPPORTS5(nsAppStartup,
 //
 
 NS_IMETHODIMP
-nsAppStartup::Initialize(nsICmdLineService *aCmdLineService,
-                         nsISupports *aNativeAppSupportOrSplashScreen)
+nsAppStartup::Initialize(nsISupports *aNativeAppSupportOrSplashScreen)
 {
   nsresult rv;
-
-  // Remember cmd line service.
-  mCmdLineService = aCmdLineService;
 
   // Remember where the native app support lives.
   mNativeAppSupport = do_QueryInterface(aNativeAppSupportOrSplashScreen);
@@ -120,12 +117,7 @@ nsAppStartup::Initialize(nsICmdLineService *aCmdLineService,
   mAppShell = do_CreateInstance(kAppShellCID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  PRInt32 argc = 0;
-  char** argv = nsnull;
-  aCmdLineService->GetArgc(&argc);
-  aCmdLineService->GetArgv(&argv);
-
-  rv = mAppShell->Create(&argc, argv);
+  rv = mAppShell->Create(nsnull, nsnull);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // listen to EventQueues' comings and goings. do this after the appshell

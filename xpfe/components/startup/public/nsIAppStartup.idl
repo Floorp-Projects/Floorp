@@ -41,22 +41,17 @@
 interface nsICmdLineService;
 interface nsINativeAppSupport;
 
-[scriptable, uuid(413e5d30-1b92-416a-acca-1c8ee4f66d08)]
+[scriptable, uuid(0f4ae035-4643-44c5-a596-ff81b8c29f08)]
 interface nsIAppStartup : nsISupports
 {
     /**
      * Required initialization routine.
-     * @param aCmdLineService
-     *        This is stored and passed to appshell components as they are
-     *        initialized.
      * @param aNativeAppSupportOrSplashScreen
      *        This is an object that can be QI'd to either an
      *        nsINativeAppSupport or nsISplashScreen; this object will be
      *        used to implement HideSplashScreen.
      */
-    void initialize(in nsICmdLineService aCmdLineService,
-                    in nsISupports nativeAppSupportOrSplashScreen);
-    
+    void initialize(in nsISupports nativeAppSupportOrSplashScreen);
 
     /**
      * Create the hidden window. Only bootstrap code (nsAppRunner.cpp) should call

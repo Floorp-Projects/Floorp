@@ -55,7 +55,6 @@
 #include "glib.h"
 #include "nsVoidArray.h"
 
-static PRBool sInitialized = PR_FALSE;
 static PLHashTable *sQueueHashTable = nsnull;
 static PLHashTable *sCountHashTable = nsnull;
 static nsVoidArray *sEventQueueList = nsnull;
@@ -196,14 +195,6 @@ static void event_processor_callback(gpointer data,
 
 NS_IMETHODIMP nsAppShell::Create(int *bac, char **bav)
 {
-#ifdef DEBUG_APPSHELL
-  printf("nsAppShell::Create()\n");
-#endif
-  if (sInitialized)
-    return NS_OK;
-
-  sInitialized = PR_TRUE;
-
   return NS_OK;
 }
 

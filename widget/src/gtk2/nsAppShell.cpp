@@ -119,9 +119,6 @@ nsAppShell::Create(int *argc, char **argv)
 
     sInitialized = PR_TRUE;
 
-    // XXX add all of the command line handling
-
-
     if (PR_GetEnv("MOZ_DEBUG_PAINTS")) {
         gdk_window_set_debug_updates(TRUE);
     }

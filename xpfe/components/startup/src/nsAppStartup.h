@@ -45,7 +45,6 @@
 #include "nsIObserver.h"
 #include "nsWeakReference.h"
 
-#include "nsICmdLineService.h"
 #include "nsISplashScreen.h"
 #include "nsINativeAppSupport.h"
 #include "nsIAppShell.h"
@@ -91,7 +90,6 @@ private:
   nsresult OpenBrowserWindow(PRInt32 height, PRInt32 width);
 
   nsCOMPtr<nsIAppShell> mAppShell;
-  nsCOMPtr<nsICmdLineService> mCmdLineService;
   nsCOMPtr<nsISplashScreen> mSplashScreen;
   nsCOMPtr<nsINativeAppSupport> mNativeAppSupport;
 

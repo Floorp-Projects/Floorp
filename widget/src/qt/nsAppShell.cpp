@@ -63,24 +63,6 @@ NS_IMPL_ISUPPORTS1(nsAppShell, nsIAppShell)
 NS_IMETHODIMP
 nsAppShell::Create(int *argc, char **argv)
 {
-    qDebug("Qt: nsAppShell::create");
-
-    /**
-     * If !qApp then it means we're not embedding
-     * but running a full application.
-     */
-    if (!qApp) {
-        //oh, this is fun. yes, argc can be null here
-        int argcSafe = 0;
-        if (argc)
-            argcSafe = *argc;
-
-        new QApplication(argcSafe, argv);
-
-        if (argc)
-            *argc = argcSafe;
-    }
-
     return NS_OK;
 }
 
