@@ -16,6 +16,10 @@
  * Reserved.
  */
 
+#ifdef NGLAYOUT_DDRAW
+#define INITGUID
+#endif
+
 #include "nsRenderingContextWin.h"
 #include "nsRegionWin.h"
 #include <math.h>

@@ -72,11 +72,6 @@ LLIBS=				\
 !if defined(NGLAYOUT_DDRAW)
  ole32.lib \
  $(NGLAYOUT_DDRAW)\lib\ddraw.lib \
-!if "$(MOZ_VCVER)" == "50"
- $(NGLAYOUT_DDRAW)\lib\uuid.lib \
-!else
- $(NGLAYOUT_DDRAW)\lib\dxguid.lib \
-!endif
 !endif
  $(LIBNSPR)  
 
