@@ -156,8 +156,9 @@ nsXIEngine::Download(int aCustom, nsComponentList *aComps)
                 currURL = currComp->GetURL(i);
                 if (!currURL) break;
                 
-                nsInstallDlg::SetDownloadComp(currComp, i, 
-                    currCompNum, numToDL);
+                if (gCtx->opt->mMode != nsXIOptions::MODE_SILENT)
+                    nsInstallDlg::SetDownloadComp(currComp, i, 
+                        currCompNum, numToDL);
 
                 // restore resume position
                 resPos = currComp->GetResumePos();
@@ -202,8 +203,11 @@ nsXIEngine::Download(int aCustom, nsComponentList *aComps)
                     {
                         sprintf(localPath, "%s/%s", XPI_DIR,
                             currComp->GetArchive());
-                        err = conn->Get(nsInstallDlg::DownloadCB, localPath,
-                                        resPos);
+                        if (gCtx->opt->mMode == nsXIOptions::MODE_SILENT)
+                          err = conn->Get(NULL, localPath, resPos);
+                        else
+                          err = conn->Get(nsInstallDlg::DownloadCB, localPath,
+                                          resPos);
                         conn->Close();
                     }
                     
@@ -237,8 +241,11 @@ nsXIEngine::Download(int aCustom, nsComponentList *aComps)
                     {
                         sprintf(localPath, "%s/%s", XPI_DIR,
                             currComp->GetArchive());
-                        err = conn->Get(nsInstallDlg::DownloadCB, localPath,
-                                        resPos);
+                        if (gCtx->opt->mMode == nsXIOptions::MODE_SILENT)
+                          err = conn->Get(NULL, localPath, resPos);
+                        else
+                          err = conn->Get(nsInstallDlg::DownloadCB, localPath,
+                                          resPos);
                         conn->Close();
                     }
 
@@ -291,8 +298,12 @@ nsXIEngine::Download(int aCustom, nsComponentList *aComps)
                     {
                         sprintf(localPath, "%s/%s", XPI_DIR,
                             currComp->GetArchive());
-                        err = conn->Get(srvPath, localPath, nsFTPConn::BINARY, 
-                            resPos, 1, nsInstallDlg::DownloadCB);
+                        if (gCtx->opt->mMode == nsXIOptions::MODE_SILENT)
+                          err = conn->Get(srvPath, localPath, nsFTPConn::BINARY, 
+                              resPos, 1, NULL);
+                        else
+                          err = conn->Get(srvPath, localPath, nsFTPConn::BINARY, 
+                              resPos, 1, nsInstallDlg::DownloadCB);
                         passCount++;
                     }
 
@@ -339,7 +350,8 @@ nsXIEngine::Download(int aCustom, nsComponentList *aComps)
                     }
                 }
 
-                nsInstallDlg::ClearRateLabel(); // clean after ourselves
+                if (gCtx->opt->mMode != nsXIOptions::MODE_SILENT)
+                    nsInstallDlg::ClearRateLabel(); // clean after ourselves
 
                 if (err == OK) 
                 {
@@ -368,7 +380,8 @@ nsXIEngine::Download(int aCustom, nsComponentList *aComps)
           currCompNum = 1;
         }
         currCompSave = currComp;
-        gCtx->idlg->ReInitUI(); 
+        if (gCtx->opt->mMode != nsXIOptions::MODE_SILENT)
+          gCtx->idlg->ReInitUI(); 
         gCtx->idlg->ShowCRCDlg(); 
         numToDL = TotalToDownload(aCustom, aComps);
       }
@@ -515,8 +528,9 @@ nsXIEngine::Install(int aCustom, nsComponentList *aComps, char *aDestination)
 #endif
                 if (!currComp->IsDownloadOnly())
                 {
-                    nsInstallDlg::MajorProgressCB(currComp->GetDescShort(),
-                        compNum, mTotalComps, nsInstallDlg::ACT_INSTALL);
+                    if (gCtx->opt->mMode != nsXIOptions::MODE_SILENT)
+                        nsInstallDlg::MajorProgressCB(currComp->GetDescShort(),
+                            compNum, mTotalComps, nsInstallDlg::ACT_INSTALL);
                     err = InstallXPI(currComp, &stub);
                     if (err != OK)
                     if (err == E_INSTALL)
@@ -1032,7 +1046,8 @@ nsXIEngine::CRCCheckDownloadedArchives(char *dlPath, short dlPathlen,
     buf[ dlPathlen ] = '\0';
     strcat( buf, "/" );
     strcat( buf, currComp->GetArchive() );
-    nsInstallDlg::MajorProgressCB(buf, i, count, nsInstallDlg::ACT_INSTALL);
+    if (gCtx->opt->mMode != nsXIOptions::MODE_SILENT)
+        nsInstallDlg::MajorProgressCB(buf, i, count, nsInstallDlg::ACT_INSTALL);
     if (((aCustom == TRUE && currComp->IsSelected()) || 
         (aCustom == FALSE)) && IsArchiveFile(buf) == PR_TRUE && 
         VerifyArchive( buf ) != ZIP_OK) {

@@ -131,61 +131,64 @@ nsInstallDlg::Next(GtkWidget *aWidget, gpointer aData)
     else
         bDownload = TRUE;
 
-    gtk_progress_set_activity_mode(GTK_PROGRESS(sMajorProgBar), FALSE);
-    gtk_progress_bar_update(GTK_PROGRESS_BAR(sMajorProgBar), (gfloat) 0);
-    gtk_label_set_text(GTK_LABEL(sMajorLabel), "");
+    if (gCtx->opt->mMode != nsXIOptions::MODE_SILENT) {
+        gtk_progress_set_activity_mode(GTK_PROGRESS(sMajorProgBar), FALSE);
+        gtk_progress_bar_update(GTK_PROGRESS_BAR(sMajorProgBar), (gfloat) 0);
+        gtk_label_set_text(GTK_LABEL(sMajorLabel), "");
 
-    if (bDownload)
-    {
-        InitDLProgress( TRUE );
+        if (bDownload)
+        {
+            InitDLProgress( TRUE );
 
-        pauseLabel = gtk_label_new(gCtx->Res("PAUSE"));
-        resumeLabel = gtk_label_new(gCtx->Res("RESUME"));
-        gtk_container_remove(GTK_CONTAINER(gCtx->back), gCtx->backLabel); 
-        gtk_container_remove(GTK_CONTAINER(gCtx->next), gCtx->installLabel); 
-        gtk_container_add(GTK_CONTAINER(gCtx->back), pauseLabel);
-        gtk_container_add(GTK_CONTAINER(gCtx->next), resumeLabel);
-        gtk_widget_show(pauseLabel);
-        gtk_widget_show(resumeLabel);
+            pauseLabel = gtk_label_new(gCtx->Res("PAUSE"));
+            resumeLabel = gtk_label_new(gCtx->Res("RESUME"));
+            gtk_container_remove(GTK_CONTAINER(gCtx->back), gCtx->backLabel); 
+            gtk_container_remove(GTK_CONTAINER(gCtx->next), gCtx->installLabel); 
+            gtk_container_add(GTK_CONTAINER(gCtx->back), pauseLabel);
+            gtk_container_add(GTK_CONTAINER(gCtx->next), resumeLabel);
+            gtk_widget_show(pauseLabel);
+            gtk_widget_show(resumeLabel);
 
-        gtk_signal_disconnect(GTK_OBJECT(gCtx->back), gCtx->backID);
-        gtk_signal_disconnect(GTK_OBJECT(gCtx->next), gCtx->nextID);
-        gtk_signal_disconnect(GTK_OBJECT(gCtx->cancel), gCtx->cancelID);
+            gtk_signal_disconnect(GTK_OBJECT(gCtx->back), gCtx->backID);
+            gtk_signal_disconnect(GTK_OBJECT(gCtx->next), gCtx->nextID);
+            gtk_signal_disconnect(GTK_OBJECT(gCtx->cancel), gCtx->cancelID);
 
-        // disable resume button
-        gtk_widget_set_sensitive(gCtx->next, FALSE);
+            // disable resume button
+            gtk_widget_set_sensitive(gCtx->next, FALSE);
 
+            XI_GTK_UPDATE_UI();
+
+            // hook up buttons with callbacks
+            gCtx->backID = gtk_signal_connect(GTK_OBJECT(gCtx->back), "clicked",
+                GTK_SIGNAL_FUNC(DLPause), NULL);
+            gCtx->nextID = gtk_signal_connect(GTK_OBJECT(gCtx->next), "clicked",
+                GTK_SIGNAL_FUNC(DLResume), NULL);
+            gCtx->cancelID = gtk_signal_connect(GTK_OBJECT(gCtx->cancel), "clicked",
+                GTK_SIGNAL_FUNC(DLCancel), NULL);
+        }
+        else
+        {
+            gtk_widget_show(sMajorLabel);
+            gtk_widget_show(sMajorProgBar);
+
+            gtk_widget_hide(gCtx->back);
+            gtk_widget_hide(gCtx->next);
+            gtk_widget_hide(gCtx->cancel);
+        }
+
+        gtk_widget_hide(sMsg0Label);
+        if (bDownload && sDLTable)
+            gtk_widget_hide(sDLTable);
         XI_GTK_UPDATE_UI();
 
-        // hook up buttons with callbacks
-        gCtx->backID = gtk_signal_connect(GTK_OBJECT(gCtx->back), "clicked",
-            GTK_SIGNAL_FUNC(DLPause), NULL);
-        gCtx->nextID = gtk_signal_connect(GTK_OBJECT(gCtx->next), "clicked",
-            GTK_SIGNAL_FUNC(DLResume), NULL);
-        gCtx->cancelID = gtk_signal_connect(GTK_OBJECT(gCtx->cancel), "clicked",
-            GTK_SIGNAL_FUNC(DLCancel), NULL);
-    }
-    else
-    {
-        gtk_widget_show(sMajorLabel);
-        gtk_widget_show(sMajorProgBar);
-
-        gtk_widget_hide(gCtx->back);
-        gtk_widget_hide(gCtx->next);
-        gtk_widget_hide(gCtx->cancel);
+        bInstallClicked = TRUE;
     }
 
-    gtk_widget_hide(sMsg0Label);
-    if (bDownload && sDLTable)
-        gtk_widget_hide(sDLTable);
-    XI_GTK_UPDATE_UI();
-
-    bInstallClicked = TRUE;
     PerformInstall();
     if (bDLCancel) // set only when download was cancelled
     {
         // mode auto has no call to gtk_main()
-        if (gCtx->opt->mMode != nsXIOptions::MODE_AUTO)
+        if (gCtx->opt->mMode == nsXIOptions::MODE_DEFAULT)
             gtk_main_quit();
     }
     
@@ -559,7 +562,8 @@ nsInstallDlg::PerformInstall()
     err = engine->Download(bCus, comps);
     if (err == E_DL_DROP_CXN)
     {
-        DLPause(NULL, NULL);
+        if (gCtx->opt->mMode != nsXIOptions::MODE_SILENT)
+            DLPause(NULL, NULL);
         ShowCxnDroppedDlg();
         return err;
     }
@@ -581,8 +585,11 @@ nsInstallDlg::PerformInstall()
     }
 
     // prepare install UI
-    InitInstallProgress();
-    HideNavButtons();
+    if (gCtx->opt->mMode != nsXIOptions::MODE_SILENT)
+    {
+        InitInstallProgress();
+        HideNavButtons();
+    }
 
     // 2> extract engine
     XI_ERR_BAIL(engine->Extract(xpiengine));
@@ -596,7 +603,10 @@ nsInstallDlg::PerformInstall()
         engine->DeleteXPIs(bCus, comps);
     }
 
-    ShowCompleteDlg();
+    if (gCtx->opt->mMode != nsXIOptions::MODE_SILENT)
+    {
+        ShowCompleteDlg();
+    }
 
     // run all specified applications after installation
     if (sRunAppList)
@@ -615,6 +625,8 @@ BAIL:
 void
 nsInstallDlg::XPIProgressCB(const char *aMsg, int aVal, int aMax)
 {
+    if (gCtx->opt->mMode == nsXIOptions::MODE_SILENT)
+       return;
     // DUMP("XPIProgressCB");
 
     if (!aMsg)
@@ -681,7 +693,7 @@ nsInstallDlg::MajorProgressCB(char *aName, int aNum, int aTotal, int aActivity)
     char msg[256];
 
     if (!aName)
-        return;
+       return;
 
 #ifdef DEBUG
     printf("%s %d: Name = %s\tNum = %d\tTotal = %d\tAct = %d\n", 
@@ -745,7 +757,7 @@ nsInstallDlg::SetDownloadComp(nsComponent *aComp, int aURLIndex,
     char localPath[MAXPATHLEN];
     
     if (!aComp)
-        return;
+       return;
 
     if (!bHaveXPIDir)
     {
@@ -1153,6 +1165,11 @@ nsInstallDlg::ShowCRCDlg()
 {
     GtkWidget *label, *okButton, *packer;
 
+    if (gCtx->opt->mMode == nsXIOptions::MODE_SILENT) {
+       ErrorHandler(E_CRC_FAILED);
+       return;
+    }
+
     if ( crcDlg == (GtkWidget *) NULL ) {
        // throw up dialog informing user to press resume
        // or to cancel out
@@ -1187,6 +1204,11 @@ nsInstallDlg::ShowCRCFailedDlg()
 
     // throw up dialog informing user to press resume
     // or to cancel out
+    if (gCtx->opt->mMode == nsXIOptions::MODE_SILENT) {
+       ErrorHandler(E_CRC_FAILED);
+       return OK;
+    }
+
     crcFailedDlg = gtk_dialog_new();
     label = gtk_label_new(gCtx->Res("CRC_FAILED"));
     okButton = gtk_button_new_with_label(gCtx->Res("OK_LABEL"));
@@ -1220,6 +1242,11 @@ nsInstallDlg::ShowCxnDroppedDlg()
 
     // throw up dialog informing user to press resume
     // or to cancel out
+    if (gCtx->opt->mMode == nsXIOptions::MODE_SILENT) {
+       ErrorHandler(E_NO_DOWNLOAD);
+       return OK;
+    }
+    
     cxnDroppedDlg = gtk_dialog_new();
     label = gtk_label_new(gCtx->Res("CXN_DROPPED"));
     okButton = gtk_button_new_with_label(gCtx->Res("OK_LABEL"));
