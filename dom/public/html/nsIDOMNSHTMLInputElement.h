@@ -39,16 +39,38 @@ public:
   static const nsIID& GetIID() { static nsIID iid = NS_IDOMNSHTMLINPUTELEMENT_IID; return iid; }
 
   NS_IMETHOD    GetControllers(nsIControllers** aControllers)=0;
+
+  NS_IMETHOD    GetTextLength(PRInt32* aTextLength)=0;
+
+  NS_IMETHOD    GetSelectionStart(PRInt32* aSelectionStart)=0;
+  NS_IMETHOD    SetSelectionStart(PRInt32 aSelectionStart)=0;
+
+  NS_IMETHOD    GetSelectionEnd(PRInt32* aSelectionEnd)=0;
+  NS_IMETHOD    SetSelectionEnd(PRInt32 aSelectionEnd)=0;
+
+  NS_IMETHOD    SetSelectionRange(PRInt32 aSelectionStart, PRInt32 aSelectionEnd)=0;
 };
 
 
 #define NS_DECL_IDOMNSHTMLINPUTELEMENT   \
   NS_IMETHOD    GetControllers(nsIControllers** aControllers);  \
+  NS_IMETHOD    GetTextLength(PRInt32* aTextLength);  \
+  NS_IMETHOD    GetSelectionStart(PRInt32* aSelectionStart);  \
+  NS_IMETHOD    SetSelectionStart(PRInt32 aSelectionStart);  \
+  NS_IMETHOD    GetSelectionEnd(PRInt32* aSelectionEnd);  \
+  NS_IMETHOD    SetSelectionEnd(PRInt32 aSelectionEnd);  \
+  NS_IMETHOD    SetSelectionRange(PRInt32 aSelectionStart, PRInt32 aSelectionEnd);  \
 
 
 
 #define NS_FORWARD_IDOMNSHTMLINPUTELEMENT(_to)  \
   NS_IMETHOD    GetControllers(nsIControllers** aControllers) { return _to GetControllers(aControllers); } \
+  NS_IMETHOD    GetTextLength(PRInt32* aTextLength) { return _to GetTextLength(aTextLength); } \
+  NS_IMETHOD    GetSelectionStart(PRInt32* aSelectionStart) { return _to GetSelectionStart(aSelectionStart); } \
+  NS_IMETHOD    SetSelectionStart(PRInt32 aSelectionStart) { return _to SetSelectionStart(aSelectionStart); } \
+  NS_IMETHOD    GetSelectionEnd(PRInt32* aSelectionEnd) { return _to GetSelectionEnd(aSelectionEnd); } \
+  NS_IMETHOD    SetSelectionEnd(PRInt32 aSelectionEnd) { return _to SetSelectionEnd(aSelectionEnd); } \
+  NS_IMETHOD    SetSelectionRange(PRInt32 aSelectionStart, PRInt32 aSelectionEnd) { return _to SetSelectionRange(aSelectionStart, aSelectionEnd); }  \
 
 
 #endif // nsIDOMNSHTMLInputElement_h__
