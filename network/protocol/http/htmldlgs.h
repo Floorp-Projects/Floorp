@@ -12,7 +12,7 @@
 #include <string.h>
 
 #include "xp_file.h"
-#include "plarenas.h"
+//#include "plarenas.h"
 #include "jsotypes.h"
 #include "plstr.h"
 #include "seccomon.h"
