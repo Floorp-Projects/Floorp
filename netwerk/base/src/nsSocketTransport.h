@@ -93,8 +93,8 @@ public:
                         nsIStreamObserver *observer);
 
   // nsIBufferObserver methods:
-  NS_IMETHOD OnFull();
-  NS_IMETHOD OnEmpty();
+  NS_IMETHOD OnFull(nsIBuffer* buffer);
+  NS_IMETHOD OnEmpty(nsIBuffer* buffer);
 
   // nsSocketTransport methods:
   nsSocketTransport();

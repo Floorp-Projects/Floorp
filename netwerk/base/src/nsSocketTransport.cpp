@@ -712,6 +712,7 @@ nsresult nsSocketTransport::doRead(PRInt16 aSelectFlags)
       rv = NS_OK;
     } 
     else if (NS_SUCCEEDED(rv)) {
+      // continue to return WOULD_BLOCK until we've completely finished this read
       rv = NS_BASE_STREAM_WOULD_BLOCK;
     }
 
@@ -978,7 +979,7 @@ nsSocketTransport::Resume(void)
 // --------------------------------------------------------------------------
 //
 NS_IMETHODIMP
-nsSocketTransport::OnFull(void)
+nsSocketTransport::OnFull(nsIBuffer* buffer)
 {
   PR_LOG(gSocketLog, PR_LOG_DEBUG, 
          ("nsSocketTransport::OnFull() [this=%x].\n", this));
@@ -998,7 +999,7 @@ nsSocketTransport::OnFull(void)
 
 
 NS_IMETHODIMP 
-nsSocketTransport::OnEmpty(void)
+nsSocketTransport::OnEmpty(nsIBuffer* buffer)
 {
   nsresult rv = NS_OK;
 
