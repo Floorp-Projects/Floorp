@@ -191,6 +191,10 @@ public:
   
   NS_IMETHOD Paste();
 
+  NS_IMETHOD PasteAsQuotation();
+
+  NS_IMETHOD InsertAsQuotation(const nsString& aQuotedText);
+
   NS_IMETHOD AddEditActionListener(nsIEditActionListener *aListener);
 
   NS_IMETHOD RemoveEditActionListener(nsIEditActionListener *aListener);

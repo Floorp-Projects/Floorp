@@ -353,6 +353,23 @@ public:
     */
   NS_IMETHOD Paste()=0;
 
+  /** paste the text in the OS clipboard at the cursor position,
+    * replacing the selected text (if any).
+    * Method of quotation will depend on what type of editor we are,
+    * and also on preference settings.
+    * @param aCitation    The "mid" URL of the source message
+    */
+  NS_IMETHOD PasteAsQuotation()=0;
+
+  /** insert a string as quoted text,
+    * replacing the selected text (if any).
+    * Method of quotation will depend on what type of editor we are,
+    * and also on preference settings.
+    * @param aQuotedText  The actual text to be quoted
+    * @param aCitation    The "mid" URL of the source message
+    */
+  NS_IMETHOD InsertAsQuotation(const nsString& aQuotedText)=0;
+
   /** add an EditActionListener to the editors list of listeners. */
   NS_IMETHOD AddEditActionListener(nsIEditActionListener *aListener)=0;
 

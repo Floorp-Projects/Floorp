@@ -377,7 +377,12 @@ nsTextEditorKeyListener::ProcessShortCutKeys(nsIDOMEvent* aKeyEvent, PRBool& aPr
           printf("control-v\n");
           aProcessed=PR_TRUE;
           if (mEditor)
-            mEditor->Paste();
+          {
+            if (altKey)
+              mEditor->PasteAsQuotation();
+            else
+              mEditor->Paste();
+          }
         }
         break;
 
@@ -432,9 +437,9 @@ nsTextEditorKeyListener::ProcessShortCutKeys(nsIDOMEvent* aKeyEvent, PRBool& aPr
           if (htmlEditor)
           {
             nsString nsstr ("<b>This is bold <em>and emphasized</em></b>");
-            nsresult res = htmlEditor->Insert(nsstr);
+            nsresult res = htmlEditor->InsertHTML(nsstr);
             if (!NS_SUCCEEDED(res))
-              printf("nsTextEditor::Insert(string) failed\n");
+              printf("nsTextEditor::InsertHTML(string) failed\n");
           }
         }
         break;
@@ -851,24 +856,23 @@ nsTextEditorMouseListener::MouseDown(nsIDOMEvent* aMouseEvent)
   // the mouse, but not to get the offset within the node.
 #ifdef PASTE_TO_MOUSE_POSITION
   nsCOMPtr<nsIDOMNode> target;
-  if (NS_SUCCEEDED(aMouseEvent->GetTarget(getter_AddRefs(target))))
-  {
-    nsCOMPtr<nsIDOMSelection> selection;
-    if (NS_SUCCEEDED(editor->GetSelection(getter_AddRefs(selection))))
-    {
-      if (NS_SUCCEEDED(selection->Collapse(target, 0)))
-      {
-        editor->Paste();
-      }
-    }
-  }
-#else /* PASTE_TO_MOUSE_POSITION */
-  // Until we can get node AND offset,
-  // it's better to paste to the current selection position:
-  editor->Paste();
+  if (!NS_SUCCEEDED(aMouseEvent->GetTarget(getter_AddRefs(target))))
+    return NS_ERROR_BASE; // NS_ERROR_BASE means "We did process the event".
+
+  nsCOMPtr<nsIDOMSelection> selection;
+  if (NS_SUCCEEDED(editor->GetSelection(getter_AddRefs(selection))))
+    (void)selection->Collapse(target, 0);
 #endif /* PASTE_TO_MOUSE_POSITION */
 
-  return NS_ERROR_BASE; // NS_ERROR_BASE means "We did process the event".
+  // If the ctrl key is pressed, we'll do paste as quotation.
+  // Would've used the alt key, but the kde wmgr treats alt-middle specially. 
+  PRBool ctrlKey = PR_FALSE;
+  uiEvent->GetCtrlKey(&ctrlKey);
+
+  if (ctrlKey)
+    return editor->PasteAsQuotation();
+
+  return editor->Paste();
 }
 
 

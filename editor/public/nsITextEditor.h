@@ -260,6 +260,21 @@ public:
    */
   NS_IMETHOD Paste()=0;
   
+  /** paste the text in the OS clipboard at the cursor position
+    * as a quotation (whose representation is dependant on the editor type),
+    * replacing the selected text (if any)
+    * @param aCitation  The "mid" URL of the source message
+    */
+  NS_IMETHOD PasteAsQuotation()=0;
+
+  /** insert a string as quoted text,
+    * as a quotation (whose representation is dependant on the editor type),
+    * replacing the selected text (if any)
+    * @param aQuotedText  The actual text to be quoted
+    * @param aCitation    The "mid" URL of the source message
+    */
+  NS_IMETHOD InsertAsQuotation(const nsString& aQuotedText)=0;
+
   /** scroll the viewport up (towards the beginning of the document.)
     * @param aIncrement  the amount to scroll
     *                    legal values are nsIEditor::Line, nsIEditor::Page
@@ -279,9 +294,6 @@ public:
   NS_IMETHOD ScrollIntoView(PRBool aScrollToBegin)=0;
 
 // Input/Output
-  // nsString will be a stream, as soon as I can figure out what kind of stream we should be using
-  NS_IMETHOD Insert(nsString& aInputString)=0;
-
   NS_IMETHOD OutputText(nsString& aOutputString)=0;
   NS_IMETHOD OutputHTML(nsString& aOutputString)=0;
   

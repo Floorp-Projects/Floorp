@@ -56,6 +56,8 @@ CPPSRCS =				\
       DeleteTableColumnTxn.cpp  \
       DeleteTableRowTxn.cpp     \
       JoinTableCellsTxn.cpp     \
+      nsInternetCiter.cpp     \
+      nsAOLCiter.cpp          \
 	$(NULL)
 
 CPP_OBJS =					\
@@ -94,6 +96,8 @@ CPP_OBJS =					\
   .\$(OBJDIR)\DeleteTableColumnTxn.obj  \
   .\$(OBJDIR)\DeleteTableRowTxn.obj     \
   .\$(OBJDIR)\JoinTableCellsTxn.obj     \
+  .\$(OBJDIR)\nsInternetCiter.obj     \
+  .\$(OBJDIR)\nsAOLCiter.obj          \
 	$(NULL)
 
 MODULE=editor 
