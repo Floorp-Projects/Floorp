@@ -156,7 +156,7 @@ ALREADY_RUNNING=`check_running`
 
 # If there is no command line argument at all then try to open a new
 # window in an already running instance.
-if [ "${ALREADY_RUNNING}" == "1" ] && [ -z "$1" ]; then
+if [ "${ALREADY_RUNNING}" -eq "1" ] && [ -z "$1" ]; then
   exec $MOZ_PROGRAM -remote "xfeDoCommand(openBrowser)" 2>/dev/null >/dev/null
 fi
 
