@@ -3,6 +3,7 @@
 
 <!DOCTYPE window>
 
+<html:div flex="100%">
 
 <window
   xmlns:html="http://www.w3.org/TR/REC-html40"
