@@ -128,6 +128,6 @@ protected:
   bool            mConstructed;
 };
 
-char* GetACPString(nsString&);
+char* GetACPString(const nsString&);
 
 #endif // nsMenu_h__

@@ -845,7 +845,7 @@ NS_METHOD nsMenu::SetWebShell(nsIWebShell * aWebShell)
 }
 
 
-char* GetACPString(nsString& aStr)
+char* GetACPString(const nsString& aStr)
 {
    int acplen = aStr.Length() * 2 + 1;
    char * acp = new char[acplen];
@@ -854,7 +854,7 @@ char* GetACPString(nsString& aStr)
       int outlen = ::WideCharToMultiByte( CP_ACP, 0, 
                       aStr.GetUnicode(), aStr.Length(),
                       acp, acplen, NULL, NULL);
-      if ( outlen > 0)
+      if (outlen >= 0)
          acp[outlen] = '\0';  // null terminate
    }
    return acp;
