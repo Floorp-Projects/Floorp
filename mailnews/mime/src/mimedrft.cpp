@@ -1308,8 +1308,10 @@ mime_parse_stream_complete (nsMIMESession *stream)
 #ifdef NS_DEBUG
         printf("Time to create the composition window WITH a body!!!!\n");
 #endif
-		MSG_ComposeType type = mdd->forwardInline ? nsIMsgCompType::ForwardInline : nsIMsgCompType::Draft;
-        CreateTheComposeWindow(fields, newAttachData, type, composeFormat, mdd->identity);
+		if (mdd->forwardInline)
+        	CreateTheComposeWindow(fields, newAttachData, nsIMsgCompType::ForwardInline, composeFormat, mdd->identity);
+        else
+        	CreateTheComposeWindow(fields, newAttachData, nsIMsgCompType::Draft, composeFormat, mdd->identity);
       }
       
       PR_FREEIF(body);
@@ -1331,8 +1333,10 @@ mime_parse_stream_complete (nsMIMESession *stream)
 #ifdef NS_DEBUG
         printf("Time to create the composition window WITHOUT a body!!!!\n");
 #endif
-		MSG_ComposeType type = mdd->forwardInline ? nsIMsgCompType::ForwardInline : nsIMsgCompType::Draft;
-        CreateTheComposeWindow(fields, newAttachData, type, nsIMsgCompFormat::Default, mdd->identity);
+		if (mdd->forwardInline)
+	        CreateTheComposeWindow(fields, newAttachData, nsIMsgCompType::ForwardInline, nsIMsgCompFormat::Default, mdd->identity);
+	    else
+	        CreateTheComposeWindow(fields, newAttachData, nsIMsgCompType::Draft, nsIMsgCompFormat::Default, mdd->identity);
       }
     }    
   }
