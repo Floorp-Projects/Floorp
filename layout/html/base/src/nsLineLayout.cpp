@@ -241,11 +241,13 @@ nsLineLayout::BeginLineReflow(nscoord aX, nscoord aY,
   NS_ASSERTION(nsnull == mRootSpan, "bad linelayout user");
 #ifdef DEBUG
   if ((aWidth != NS_UNCONSTRAINEDSIZE) && CRAZY_WIDTH(aWidth)) {
+    NS_NOTREACHED("bad width");
     nsFrame::ListTag(stdout, mBlockReflowState->frame);
     printf(": Init: bad caller: width WAS %d(0x%x)\n",
            aWidth, aWidth);
   }
   if ((aHeight != NS_UNCONSTRAINEDSIZE) && CRAZY_HEIGHT(aHeight)) {
+    NS_NOTREACHED("bad height");
     nsFrame::ListTag(stdout, mBlockReflowState->frame);
     printf(": Init: bad caller: height WAS %d(0x%x)\n",
            aHeight, aHeight);
@@ -3163,36 +3165,32 @@ nsLineLayout::HorizontalAlignFrames(nsRect& aLineBounds,
         bulletPfd->mFrame->SetRect(mPresContext, bulletPfd->mBounds);
       }
     }
-    if ( (0 != dx) || (visualRTL) ) {
+    if ( (0 != dx) || (visualRTL) )
 #else
-    if (0 != dx) {
+    if (0 != dx)
 #endif // IBMBIDI
+    {
       // If we need to move the frames but we're shrink wrapping, then
       // we need to wait until the final width is known
       if (aShrinkWrapWidth) {
         return PR_FALSE;
       }
 
-      PerFrameData* pfd = psd->mFirstFrame;
+      for (PerFrameData* pfd = psd->mFirstFrame; pfd
 #ifdef IBMBIDI
-      while ( (nsnull != pfd) && (bulletPfd != pfd) ) {
-#else
-      while (nsnull != pfd) {
-#endif // IBMBIDI
+           && bulletPfd != pfd
+#endif
+           ; pfd = pfd->mNext) {
         pfd->mBounds.x += dx;
 #ifdef IBMBIDI
         if (visualRTL) {
+          // XXXldb Ugh.  Could we handle this earlier so we don't get here?
           maxX = pfd->mBounds.x = maxX - (pfd->mMargin.left + pfd->mBounds.width + pfd->mMargin.right);
         }
 #endif // IBMBIDI
         pfd->mFrame->SetRect(mPresContext, pfd->mBounds);
-        pfd = pfd->mNext;
       }
-#ifdef IBMBIDI
       aLineBounds.x += dx;
-#else
-      aLineBounds.width += dx;
-#endif
     }
 #ifndef IBMBIDI
     if ((NS_STYLE_DIRECTION_RTL == psd->mDirection) &&
@@ -3293,8 +3291,6 @@ nsLineLayout::RelativePositionFrames(PerSpanData* psd, nsRect& aCombinedArea)
     // element will cause the floaters margin to be relevant, which we
     // don't want to happen.
     if (r->width && r->height) {
-#else
-    if(PR_TRUE) {
 #endif
       nscoord xl = x + r->x;
       nscoord xr = x + r->XMost();
@@ -3313,7 +3309,9 @@ nsLineLayout::RelativePositionFrames(PerSpanData* psd, nsRect& aCombinedArea)
         maxY = yb;
       }
       updatedCombinedArea = PR_TRUE;
+#if 0
     }
+#endif
     pfd = pfd->mNext;
   }
 

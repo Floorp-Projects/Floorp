@@ -4305,28 +4305,15 @@ nsBlockFrame::PlaceLine(nsBlockReflowState& aState,
   // there is no extra horizontal space).
   const nsStyleText* styleText = (const nsStyleText*)
     mStyleContext->GetStyleData(eStyleStruct_Text);
-  PRBool allowJustify = NS_STYLE_TEXT_ALIGN_JUSTIFY == styleText->mTextAlign
-    && !aLineLayout.GetLineEndsInBR() && ShouldJustifyLine(aState, aLine);
-#ifdef IBMBIDI
-  nsRect bounds(aLine->mBounds);
-
-  if (mRect.x) {
-    const nsStyleVisibility* vis;
-    GetStyleData(eStyleStruct_Visibility, (const nsStyleStruct*&)vis);
-
-    if (NS_STYLE_DIRECTION_RTL == vis->mDirection) {
-      bounds.x += mRect.x;
-    }
-  }
-  PRBool successful = aLineLayout.HorizontalAlignFrames(bounds, allowJustify,
-    aState.GetFlag(BRS_SHRINKWRAPWIDTH));
-  // XXX: not only bidi: right alignment can be broken after RelativePositionFrames!!!
+  PRBool allowJustify = NS_STYLE_TEXT_ALIGN_JUSTIFY == styleText->mTextAlign &&
+                        !aLineLayout.GetLineEndsInBR() &&
+                        ShouldJustifyLine(aState, aLine);
+  PRBool successful = aLineLayout.HorizontalAlignFrames(aLine->mBounds,
+                            allowJustify, aState.GetFlag(BRS_SHRINKWRAPWIDTH));
+  // XXX: not only bidi: right alignment can be broken after
+  // RelativePositionFrames!!!
   // XXXldb Is something here considering relatively positioned frames at
   // other than their original positions?
-#else
-  PRBool successful = aLineLayout.HorizontalAlignFrames(aLine->mBounds, allowJustify,
-                                                 aState.GetFlag(BRS_SHRINKWRAPWIDTH));
-#endif // IBMBIDI
   if (!successful) {
     // Mark the line dirty and then later once we've determined the width
     // we can do the horizontal alignment
