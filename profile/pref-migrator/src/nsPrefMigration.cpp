@@ -1706,6 +1706,9 @@ Fix4xCookies(nsIFileSpec * profilePath) {
   nsFileSpec oldCookies(profileDirectory);
   oldCookies += COOKIES_FILE_NAME_IN_4x;
   
+  /* it is possible that the 4.x cookies file does not exist.  just return normally.  see #55444 */
+  if (!oldCookies.Exists()) return NS_OK;
+  
   nsInputFileStream inStream(oldCookies);
   if (!inStream.is_open()) {
     return NS_ERROR_FAILURE;
@@ -2053,6 +2056,12 @@ nsPrefMigration::SetPremigratedFilePref(const char *pref_name, nsIFileSpec *path
   nsCOMPtr<nsILocalFile> pathFile;
   rv = NS_FileSpecToIFile(&pathSpec, getter_AddRefs(pathFile));
   if (NS_FAILED(rv)) return rv;
+  
+  PRBool exists = PR_FALSE;
+  pathFile->Exists(&exists);
+  
+  NS_ASSERTION(exists, "the path does not exist.  see bug #55444");
+  if (!exists) return NS_OK;
   
 	rv = m_prefs->SetFileXPref((const char *)premigration_pref, pathFile);
 	return rv;
