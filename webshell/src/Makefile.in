@@ -27,12 +27,6 @@ LIBRARY_NAME = raptorwebwidget
 
 MODULE=raptor
 
-REQUIRES=xpcom raptor dom js plugin java netlib pref jsurl editor
-
-ifneq ($(OS_TARGET),Rhapsody)
-EXTRA_DSO_LDOPTS += -lm
-endif
-
 INCLUDES += -I$(srcdir)/../public  -I$(PUBLIC)/xpcom -I$(PUBLIC)/dom -I$(PUBLIC)/js -I$(PUBLIC)/netlib -I$(PUBLIC)/java -I$(PUBLIC)/jsurl
 
 DEFINES += -D_IMPL_NS_WEB
