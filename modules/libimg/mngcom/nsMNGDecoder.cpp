@@ -55,7 +55,6 @@ typedef struct imng_str {
   il_container *ic = (il_container *)mng_get_userdata(handle); \
   imng_structp imng_p = (imng_structp)ic->ds
 
-#define DEBUG_tor
 #ifdef DEBUG_tor
 #define dprintf(x) fprintf x
 #else
