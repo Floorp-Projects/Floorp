@@ -63,6 +63,11 @@ function filterEditorOnLoad()
 function onOk()
 {
     saveFilter();
+
+    // parent should refresh filter list..
+    // this should REALLY only happen when some criteria changes that
+    // are displayed in the filter dialog, like the filter name
+    window.arguments[0].refresh = true;
     window.close();
 }
 

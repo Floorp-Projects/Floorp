@@ -113,6 +113,9 @@ function EditFilter() {
     var args = {filter: selectedFilter};
     
     window.openDialog("chrome://messenger/content/FilterEditor.xul", "FilterEditor", "chrome,modal", args);
+
+    if (args.refresh)
+        refreshFilterList();
 }
 
 function NewFilter()
@@ -122,9 +125,16 @@ function NewFilter()
     
   window.openDialog("chrome://messenger/content/FilterEditor.xul", "FilterEditor", "chrome,modal", args);
 
+  if (args.refresh) refreshFilterList();
+  
 }
 
+function refreshFilterList() {
+    var tree = document.getElementById("filterTree");
+    if (!tree) return;
 
+    tree.setAttribute("ref", tree.getAttribute("ref"));
+}
 
 function updateButtons()
 {
