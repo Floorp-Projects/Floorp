@@ -141,7 +141,6 @@ static int readEvalPrint(FILE *in)
 
                 metadata.setCurrentParser(&p);
                 MetaData::Context cxt;
-                cxt.strict = true;
 
                 metadata.ValidateStmtList(&cxt, &env, parsedStatements);
                 metadata.EvalStmtList(&env, MetaData::JS2Metadata::RunPhase, parsedStatements);

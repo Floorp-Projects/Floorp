@@ -60,9 +60,10 @@ class JS2Object {
 // a number, a string, a namespace, a compound attribute, a class, a method closure, 
 // a prototype instance, a class instance, a package object, or the global object.
 public:
+    void *operator new(size_t s);
 };
 
-class Attribute {
+class Attribute : public JS2Object {
 public:
     enum AttributeKind { TrueKind, FalseKind, NamespaceKind, CompoundKind } kind;
     enum MemberModifier { NoModifier, Static, Constructor, Operator, Abstract, Virtual, Final};
@@ -96,6 +97,10 @@ public:
     Namespace *nameSpace;    // The namespace qualifier
     const StringAtom &id;          // The name
 };
+
+// MULTINAME is the semantic domain of sets of qualified names. Multinames are used internally in property lookup.
+typedef std::vector<QualifiedName *> Multiname;
+typedef Multiname::iterator MultinameIterator;
 
 
 class Object_Uninit_Future {
@@ -297,27 +302,24 @@ public:
     DynamicPropertyMap dynamicProperties; // A set of this instance's dynamic properties
 };
 
-// MULTINAME is the semantic domain of sets of qualified names. Multinames are used internally in property lookup.
-class Multiname {
-public:
-};
-
-class LexicalReference {
+class LexicalReference : public JS2Object {
 // A LEXICALREFERENCE tuple has the fields below and represents an lvalue that refers to a variable with one
 // of a given set of qualified names. LEXICALREFERENCE tuples arise from evaluating identifiers a and qualified identifiers
 // q::a.
 public:
+    LexicalReference(Multiname *vm, Environment *env, bool strict) : variableMultiname(vm), env(env), strict(strict) { }
+    Multiname *variableMultiname;   // A nonempty set of qualified names to which this reference can refer
     Environment *env;               // The environment in which the reference was created.
-    Multiname variableMultiname;    // A nonempty set of qualified names to which this reference can refer
-    Context *cxt;                   // The context in effect at the point where the reference was created
+    bool strict;                    // The strict setting from the context in effect at the point where the reference was created
+    
 };
 
-class DotReference {
+class DotReference : public JS2Object {
 // A DOTREFERENCE tuple has the fields below and represents an lvalue that refers to a property of the base
 // object with one of a given set of qualified names. DOTREFERENCE tuples arise from evaluating subexpressions such as a.b or
 // a.q::b.
 public:
-    JS2Object *base;                // The object whose property was referenced (a in the examples above). The
+    jsval base;                     // The object whose property was referenced (a in the examples above). The
                                     // object may be a LIMITEDINSTANCE if a is a super expression, in which case
                                     // the property lookup will be restricted to members defined in proper ancestors
                                     // of base.limit.
@@ -341,12 +343,12 @@ public:
 };
 
 
-class BracketReference {
+class BracketReference : public JS2Object {
 // A BRACKETREFERENCE tuple has the fields below and represents an lvalue that refers to the result of
 // applying the [] operator to the base object with the given arguments. BRACKETREFERENCE tuples arise from evaluating
 // subexpressions such as a[x] or a[x,y].
 public:
-    JS2Object *base;                // The object whose property was referenced (a in the examples above). The object may be a
+    jsval base;                     // The object whose property was referenced (a in the examples above). The object may be a
                                     // LIMITEDINSTANCE if a is a super expression, in which case the property lookup will be
                                     // restricted to definitions of the [] operator defined in proper ancestors of base.limit.
     ArgumentList args;              // The list of arguments between the brackets (x or x,y in the examples above)
@@ -381,6 +383,7 @@ class Environment {
 public:
     Environment(SystemFrame *systemFrame, Frame *nextToLast) : firstFrame(nextToLast) { nextToLast->nextFrame = systemFrame; }
 
+    JS2Class *getEnclosingClass();
     Frame *getRegionalFrame();
     Frame *getTopFrame()            { return firstFrame; }
 private:
@@ -393,8 +396,10 @@ typedef NamespaceList::iterator NamespaceListIterator;
 // A CONTEXT carries static information about a particular point in the source program.
 class Context {
 public:
+    Context() : strict(true) { }
+    Context(Context *cxt);
     bool strict;                    // true if strict mode is in effect
-    Namespace *openNamespaces;      // The set of namespaces that are open at this point. 
+    NamespaceList openNamespaces;   // The set of namespaces that are open at this point. 
                                     // The public namespace is always a member of this set.
 };
 
@@ -441,6 +446,7 @@ public:
     void ValidateStmt(Context *cxt, Environment *env, StmtNode *p);
     void defineHoistedVar(Environment *env, const StringAtom &id, StmtNode *p);
     void ValidateExpression(Context *cxt, Environment *env, ExprNode *p);
+    void ValidateAttributeExpression(Context *cxt, Environment *env, ExprNode *p);
 
     jsval EvalExpression(Environment *env, Phase phase, ExprNode *p);
     Attribute *EvalAttributeExpression(Environment *env, Phase phase, ExprNode *p);
@@ -456,7 +462,7 @@ public:
 
 
     // The one and only 'public' namespace
-    Namespace publicNamespace;      // XXX is this the right place for this ???
+    Namespace *publicNamespace;      // XXX is this the right place for this ???
 
     
     Parser *mParser;                // used for error reporting

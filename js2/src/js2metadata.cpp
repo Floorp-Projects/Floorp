@@ -50,6 +50,12 @@
 namespace JavaScript {
 namespace MetaData {
 
+/************************************************************************************
+ *
+ *  Statements and statement lists
+ *
+ ************************************************************************************/
+
 
     /*
      * Validate the linked list of statement nodes beginning at 'p'
@@ -82,10 +88,12 @@ namespace MetaData {
         case StmtNode::Var:
         case StmtNode::Const:
             {
+                Attribute *attr = NULL;
                 VariableStmtNode *vs = checked_cast<VariableStmtNode *>(p);
 
-                ValidateExpression(cxt, env, vs->attributes);
-                EvalAttributeExpression(env, CompilePhase, vs->attributes);
+                ValidateAttributeExpression(cxt, env, vs->attributes);
+                if (vs->attributes)
+                    attr = EvalAttributeExpression(env, CompilePhase, vs->attributes);
                 
                 
                 VariableBinding *v = vs->bindings;
@@ -105,6 +113,8 @@ namespace MetaData {
 
                     v = v->next;
                 }
+                if (attr)
+                    delete attr;
             }
             break;
         case StmtNode::expression:
@@ -116,15 +126,127 @@ namespace MetaData {
         }   // switch (p->getKind())
     }
 
-    void JS2Metadata::ValidateExpression(Context *cxt, Environment *env, ExprNode *p)
+    /*
+     * Evaluate the linked list of statement nodes beginning at 'p'
+     */
+    jsval JS2Metadata::EvalStmtList(Environment *env, Phase phase, StmtNode *p) {
+        jsval retval = JSVAL_VOID;
+        while (p) {
+            retval = EvalStmt(env, phase, p);
+            p = p->next;
+        }
+        return retval;
+    }
+
+    /*
+     * Evaluate an individual statement 'p', including it's children
+     */
+    jsval JS2Metadata::EvalStmt(Environment *env, Phase phase, StmtNode *p) 
+    {
+        jsval retval = JSVAL_VOID;
+        switch (p->getKind()) {
+        case StmtNode::block:
+        case StmtNode::group:
+            {
+                BlockStmtNode *b = checked_cast<BlockStmtNode *>(p);
+                retval = EvalStmtList(env, phase, b->statements);
+            }
+            break;
+        case StmtNode::label:
+            {
+                LabelStmtNode *l = checked_cast<LabelStmtNode *>(p);
+                retval = EvalStmt(env, phase, l->stmt);
+            }
+            break;
+        case StmtNode::Var:
+        case StmtNode::Const:
+            {
+                VariableStmtNode *vs = checked_cast<VariableStmtNode *>(p);
+                
+                VariableBinding *v = vs->bindings;
+                while (v)  {
+
+                    v = v->next;
+                }
+            }
+            break;
+        case StmtNode::expression:
+            {
+                ExprStmtNode *e = checked_cast<ExprStmtNode *>(p);
+                retval = EvalExpression(env, phase, e->expr);
+                if (JSVAL_IS_OBJECT(retval)) {
+                    JSObject *obj = JSVAL_TO_OBJECT(retval);
+                    if (obj
+                }
+
+            }
+            break;
+        default:
+            NOT_REACHED("Not Yet Implemented");
+        }   // switch (p->getKind())
+        return retval;
+    }
+
+
+/************************************************************************************
+ *
+ *  Attributes
+ *
+ ************************************************************************************/
+
+    //
+    // Validate the Attribute expression at p
+    // An attribute expression can only be a list of 'juxtaposed' attribute elements
+    //
+    // Note : "AttributeExpression" here is a different beast than in the spec. - here it
+    // describes the entire attribute part of a directive, not just the qualified identifier
+    // and other references encountered in an attribute.
+    //
+    void JS2Metadata::ValidateAttributeExpression(Context *cxt, Environment *env, ExprNode *p)
     {
         switch (p->getKind()) {
-        case ExprNode::juxtapose:
+        case ExprNode::boolean:
             break;
+        case ExprNode::juxtapose:
+            {
+                BinaryExprNode *j = checked_cast<BinaryExprNode *>(p);
+                ValidateAttributeExpression(cxt, env, j->op1);
+                ValidateAttributeExpression(cxt, env, j->op2);
+            }
+            break;
+        case ExprNode::identifier:
+            {
+                const StringAtom &name = checked_cast<IdentifierExprNode *>(p)->name;
+                CompoundAttribute *ca = NULL;
+                switch (name.tokenKind) {
+                case Token::Public:
+                    return;
+                case Token::Abstract:
+                    return;
+                case Token::Final:
+                    return;
+                case Token::Private:
+                    {
+                        JS2Class *c = env->getEnclosingClass();
+                        if (!c)
+                            reportError(Exception::syntaxError, "Private can only be used inside a class definition", p->pos);
+                    }
+                    return;
+                case Token::Static:
+                    return;
+                }
+                // fall thru to handle as generic expression element...
+            }            
+        default:
+            {
+                ValidateExpression(cxt, env, p);
+            }
+            break;
+
         } // switch (p->getKind())
     }
 
-    // Evaluate the attribute expression rooted at p.
+    // Evaluate the Attribute expression rooted at p.
     // An attribute expression can only be a list of 'juxtaposed' attribute elements
     Attribute *JS2Metadata::EvalAttributeExpression(Environment *env, Phase phase, ExprNode *p)
     {
@@ -138,7 +260,7 @@ namespace MetaData {
             {
                 BinaryExprNode *j = checked_cast<BinaryExprNode *>(p);
                 Attribute *a = EvalAttributeExpression(env, phase, j->op1);
-                if (a && (a->kind == FalseKind))
+                if (a && (a->kind == Attribute::FalseKind))
                     return a;
                 Attribute *b = EvalAttributeExpression(env, phase, j->op2);
                 try {
@@ -150,13 +272,42 @@ namespace MetaData {
             }
             break;
 
+        case ExprNode::identifier:
+            {
+                const StringAtom &name = checked_cast<IdentifierExprNode *>(p)->name;
+                CompoundAttribute *ca = NULL;
+                switch (name.tokenKind) {
+                case Token::Public:
+                    return publicNamespace;
+                case Token::Abstract:
+                    ca = new CompoundAttribute();
+                    ca->memberMod = Attribute::Abstract;
+                    return ca;
+                case Token::Final:
+                    ca = new CompoundAttribute();
+                    ca->memberMod = Attribute::Final;
+                    return ca;
+                case Token::Private:
+                    {
+                        JS2Class *c = env->getEnclosingClass();
+                        return c->privateNamespace;
+                    }
+                case Token::Static:
+                    ca = new CompoundAttribute();
+                    ca->memberMod = Attribute::Static;
+                    return ca;
+                }
+            }            
+            // fall thru to execute a readReference on the identifier...
         default:
             {
                 // anything else (just references of one kind or another) must
                 // be compile-time constant values that resolve to namespaces
                 jsval av = EvalExpression(env, CompilePhase, p);
-                if (!JSVAL_IS_OBJECT(av))
+                if (JSVAL_IS_NULL(av) || JSVAL_IS_VOID(av) || !JSVAL_IS_OBJECT(av))
                     reportError(Exception::badValueError, "Namespace expected in attribute", p->pos);
+                JSObject *obj = JSVAL_TO_OBJECT(av);
+
             }
             break;
 
@@ -164,6 +315,7 @@ namespace MetaData {
         return NULL;
     }
 
+    // Combine attributes a & b, reporting errors for incompatibilities
     // a is not false
     Attribute *Attribute::combineAttributes(Attribute *a, Attribute *b)
     {
@@ -235,80 +387,85 @@ namespace MetaData {
         namespaces->push_back(n);
     }
 
+    CompoundAttribute::CompoundAttribute() : Attribute(CompoundKind),
+            namespaces(NULL), xplicit(false), dynamic(false), memberMod(NoModifier), 
+            overrideMod(NoOverride), prototype(false), unused(false) 
+    { 
+    }
 
-    jsval JS2Metadata::EvalStmt(Environment *env, Phase phase, StmtNode *p) 
+
+
+/************************************************************************************
+ *
+ *  Expressions
+ *
+ ************************************************************************************/
+
+    // Validate the entire expression rooted at p
+    void JS2Metadata::ValidateExpression(Context *cxt, Environment *env, ExprNode *p)
     {
-        jsval retval = JSVAL_VOID;
         switch (p->getKind()) {
-        case StmtNode::block:
-        case StmtNode::group:
+        case ExprNode::identifier:
             {
-                BlockStmtNode *b = checked_cast<BlockStmtNode *>(p);
-                retval = EvalStmtList(env, phase, b->statements);
+                IdentifierExprNode *i = checked_cast<IdentifierExprNode *>(p);
+                // Just cloning the context here, rather than constructing a multiname
+                // since this way is cheaper. 
+                // XXX - Additionally we can reuse pointers to duplicate
+                // contexts rather than having to have many of them.
+                i->cxt = new Context(cxt);
             }
             break;
-        case StmtNode::label:
-            {
-                LabelStmtNode *l = checked_cast<LabelStmtNode *>(p);
-                retval = EvalStmt(env, phase, l->stmt);
-            }
-            break;
-        case StmtNode::Var:
-        case StmtNode::Const:
-            {
-                VariableStmtNode *vs = checked_cast<VariableStmtNode *>(p);
-                
-                VariableBinding *v = vs->bindings;
-                while (v)  {
-
-                    v = v->next;
-                }
-            }
-            break;
-        case StmtNode::expression:
-            {
-                ExprStmtNode *e = checked_cast<ExprStmtNode *>(p);
-                retval = EvalExpression(env, phase, e->expr);
-            }
-            break;
-        default:
-            NOT_REACHED("Not Yet Implemented");
-        }   // switch (p->getKind())
-        return retval;
+        } // switch (p->getKind())
     }
 
     // Evaluate the expression rooted at p.
     jsval JS2Metadata::EvalExpression(Environment *env, Phase phase, ExprNode *p)
     {
-        String str;
         switch (p->getKind()) {
+        case ExprNode::index:
+            {
+            }
+            break;
+        case ExprNode::identifier:
+            {
+                IdentifierExprNode *i = checked_cast<IdentifierExprNode *>(p);
+                Multiname *mn = new Multiname();
+                for (NamespaceListIterator nli = i->cxt->openNamespaces.begin(), end = i->cxt->openNamespaces.end();
+                            (nli != end); nli++)
+                    mn->push_back(new QualifiedName(*nli, i->name));
+                return OBJECT_TO_JSVAL(new LexicalReference(mn, env, i->cxt->strict));
+            }
+            break;
         case ExprNode::boolean:
             if (checked_cast<BooleanExprNode *>(p)->value) 
-                str += "true" ;
+                return JSVAL_TRUE;
             else 
-                str += "false";
-            break;
+                return JSVAL_FALSE;
+        default:
+            NOT_REACHED("Not Yet Implemented");
         }
-        return execute(&str);
+        return JSVAL_VOID;
     }
-
-    /*
-     * Evaluate the linked list of statement nodes beginning at 'p'
-     */
-    jsval JS2Metadata::EvalStmtList(Environment *env, Phase phase, StmtNode *p) {
-        jsval retval = JSVAL_VOID;
-        while (p) {
-            retval = EvalStmt(env, phase, p);
-            p = p->next;
-        }
-        return retval;
-    }
-
 
     void JS2Metadata::ValidateTypeExpression(ExprNode *e)
     {
     }
 
+/************************************************************************************
+ *
+ *  Environment
+ *
+ ************************************************************************************/
+
+    // If env is from within a class's body, getEnclosingClass(env) returns the 
+    // innermost such class; otherwise, it returns none.
+    JS2Class *Environment::getEnclosingClass()
+    {
+        Frame *pf = firstFrame;
+        while (pf && (pf->kind != Frame::Class))
+            pf = pf->nextFrame;
+        return checked_cast<JS2Class *>(pf);
+    }
 
     // returns the most specific regional frame.
     Frame *Environment::getRegionalFrame()
@@ -324,10 +481,27 @@ namespace MetaData {
         return pf;
     }
 
+/************************************************************************************
+ *
+ *  Context
+ *
+ ************************************************************************************/
+
+    Context::Context(Context *cxt) : strict(cxt->strict), openNamespaces(cxt->openNamespaces)
+    {
+    }
+
+
+/************************************************************************************
+ *
+ *  JS2Metadata
+ *
+ ************************************************************************************/
+
     // Define a hoisted var in the current frame (either Global or a Function)
     void JS2Metadata::defineHoistedVar(Environment *env, const StringAtom &id, StmtNode *p)
     {
-        QualifiedName qName(&publicNamespace, id);
+        QualifiedName qName(publicNamespace, id);
         Frame *regionalFrame = env->getRegionalFrame();
         ASSERT((env->getTopFrame()->kind == Frame::GlobalObject) || (env->getTopFrame()->kind == Frame::Function));
     
@@ -376,7 +550,7 @@ namespace MetaData {
     }
 
     JS2Metadata::JS2Metadata(World &world) :
-        publicNamespace(world.identifiers["public"])
+        publicNamespace(new Namespace(world.identifiers["public"]))
     {
         initializeMonkey();
     }
@@ -406,6 +580,7 @@ namespace MetaData {
     }
 
     inline char narrow(char16 ch) { return char(ch); }
+    // Accepts a String as the error argument and converts to char *
     void JS2Metadata::reportError(Exception::Kind kind, char *message, size_t pos, const String& name)
     {
         std::string str(name.length(), char());
@@ -413,14 +588,16 @@ namespace MetaData {
         reportError(kind, message, pos, str.c_str());
     }
 
-    CompoundAttribute::CompoundAttribute() : Attribute(CompoundKind),
-            namespaces(NULL), xplicit(false), dynamic(false), 
-                memberMod(NoModifier), overrideMod(NoOverride), prototype(false), 
-                unused(false) 
-    { 
+/************************************************************************************
+ *
+ *  JS2Object
+ *
+ ************************************************************************************/
+
+    void *JS2Object::operator new(size_t s)
+    {
+
     }
-
-
 
 }; // namespace MetaData
 }; // namespace Javascript
