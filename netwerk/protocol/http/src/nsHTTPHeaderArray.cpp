@@ -30,7 +30,7 @@ nsHeaderEntry::nsHeaderEntry(nsIAtom* aHeaderAtom, const char* aValue)
 {
   NS_INIT_REFCNT();
 
-  mValue.AssignWithConversion(aValue);
+  mValue = aValue;
 }
 
 
@@ -173,7 +173,7 @@ nsresult nsHTTPHeaderArray::SetHeader(nsIAtom* aHeader,
   // Replace the existing string with the new value
   //
   else {
-    entry->mValue.AssignWithConversion(aValue);
+      entry->mValue = aValue;
   }
 
   NS_RELEASE(entry);
