@@ -1,59 +1,47 @@
-/*
- * The contents of this file are subject to the Mozilla Public License
- * Version 1.1 (the "License"); you may not use this file except in
- * compliance with the License. You may obtain a copy of the License at
- * http://www.mozilla.org/MPL/
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
  *
- * Software distributed under the License is distributed on an "AS IS"
- * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
- * License for the specific language governing rights and limitations
- * under the License.
+ * The contents of this file are subject to the Netscape Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/NPL/
  *
- * The Original Code is the Mozilla OS/2 libraries.
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
  *
- * The Initial Developer of the Original Code is John Fairhurst,
- * <john_fairhurst@iname.com>.  Portions created by John Fairhurst are
- * Copyright (C) 1999 John Fairhurst. All Rights Reserved.
+ * The Original Code is mozilla.org code.
+ *
+ * The Initial Developer of the Original Code is Netscape
+ * Communications Corporation.  Portions created by Netscape are
+ * Copyright (C) 1998 Netscape Communications Corporation. All
+ * Rights Reserved.
  *
  * Contributor(s): 
- * This Original Code has been modified by IBM Corporation.
- * Modifications made by IBM described herein are
- * Copyright (c) International Business Machines
- * Corporation, 2000
- *
- * Modifications to Mozilla code or documentation
- * identified per MPL Section 3.3
- *
- * Date           Modified by     Description of modification
- * 03/28/2000   IBM Corp.        Changes to make os2.h file similar to windows.h file
+ *   John Fairhurst <john_fairhurst@iname.com>
+ *   IBM Corp.
  */
 
-// This class is part of the strange printing `architecture'.
-// The `CreateDeviceContextSpec' method basically selects a print queue,
-//   known here as an `nsIDeviceContextSpec'.  This is given to a method
-//   in nsIDeviceContext which creates a fresh device context for that
-//   printer.
-
-#ifndef _nsDeviceContextSpecFactoryOS2_h
-#define _nsDeviceContextSpecFactoryOS2_h
+#ifndef nsDeviceContextSpecFactoryO_h___
+#define nsDeviceContextSpecFactoryO_h___
 
 #include "nsIDeviceContextSpecFactory.h"
 #include "nsIDeviceContextSpec.h"
 
 class nsDeviceContextSpecFactoryOS2 : public nsIDeviceContextSpecFactory
 {
- public:
-   nsDeviceContextSpecFactoryOS2();
+public:
+  nsDeviceContextSpecFactoryOS2();
 
-   NS_DECL_ISUPPORTS
+  NS_DECL_ISUPPORTS
 
-   NS_IMETHOD Init(void);
-   NS_IMETHOD CreateDeviceContextSpec( nsIDeviceContextSpec *aOldSpec,
-                                       nsIDeviceContextSpec *&aNewSpec,
-                                       PRBool aQuiet);
+  NS_IMETHOD Init(void);
+  NS_IMETHOD CreateDeviceContextSpec(nsIDeviceContextSpec *aOldSpec,
+                                     nsIDeviceContextSpec *&aNewSpec,
+                                     PRBool aQuiet);
 
- protected:
-   virtual ~nsDeviceContextSpecFactoryOS2() {}
+protected:
+  ~nsDeviceContextSpecFactoryOS2();
 };
 
 #endif
