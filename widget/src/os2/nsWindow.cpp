@@ -140,6 +140,11 @@ extern "C" {
                                         ULONG Address);
 }
 
+// The last user input event time in milliseconds. If there are any pending
+// native toolkit input events it returns the current time. The value is
+// compatible with PR_IntervalToMicroseconds(PR_IntervalNow()).
+static PRUint32 gLastInputEventTime = 0;
+
 #ifdef DEBUG_FOCUS
 static int currentWindowIdentifier = 0;
 #endif
@@ -3325,6 +3330,21 @@ NS_METHOD nsWindow::SetPreferredSize(PRInt32 aWidth, PRInt32 aHeight)
   mPreferredWidth = aWidth;
   mPreferredHeight = aHeight;
   return NS_OK;
+}
+
+NS_IMETHODIMP
+nsWindow::GetLastInputEventTime(PRUint32& aTime)
+{
+   ULONG ulStatus = WinQueryQueueStatus(HWND_DESKTOP);
+
+   // If there is pending input then return the current time.
+   if (ulStatus && (QS_KEY | QS_MOUSE | QS_MOUSEBUTTON | QS_MOUSEMOVE)) {
+     gLastInputEventTime = PR_IntervalToMicroseconds(PR_IntervalNow());
+   } 
+
+   aTime = gLastInputEventTime;
+
+   return NS_OK;
 }
 
 // --------------------------------------------------------------------------
