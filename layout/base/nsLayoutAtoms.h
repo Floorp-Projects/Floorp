@@ -54,6 +54,7 @@ public:
   static nsIAtom* absoluteList;
   static nsIAtom* bulletList;
   static nsIAtom* colGroupList;
+  static nsIAtom* fixedList;
   static nsIAtom* floaterList;
 
   // Alphabetical list of pseudo tag names for non-element content

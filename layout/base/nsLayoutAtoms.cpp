@@ -40,6 +40,7 @@ nsIAtom* nsLayoutAtoms::xmlnsNameSpace;
 nsIAtom* nsLayoutAtoms::absoluteList;
 nsIAtom* nsLayoutAtoms::bulletList;
 nsIAtom* nsLayoutAtoms::colGroupList;
+nsIAtom* nsLayoutAtoms::fixedList;
 nsIAtom* nsLayoutAtoms::floaterList;
 
 nsIAtom* nsLayoutAtoms::textTagName;
@@ -68,6 +69,7 @@ void nsLayoutAtoms::AddrefAtoms()
     absoluteList = NS_NewAtom("Absolute-list");
     bulletList = NS_NewAtom("Bullet-list");
     colGroupList = NS_NewAtom("ColGroup-list");
+    fixedList = NS_NewAtom("Fixed-list");
     floaterList = NS_NewAtom("Floater-list");
 
     textTagName = NS_NewAtom("__moz_text");
@@ -98,6 +100,7 @@ void nsLayoutAtoms::ReleaseAtoms()
     NS_RELEASE(absoluteList);
     NS_RELEASE(bulletList);
     NS_RELEASE(colGroupList);
+    NS_RELEASE(fixedList);
     NS_RELEASE(floaterList);
 
     NS_RELEASE(textTagName);
