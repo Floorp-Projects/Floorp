@@ -141,7 +141,7 @@ function Startup()
         folderItem = bookmarkView.rdf.GetResource(window.arguments[2]);
       if (folderItem) {
         ind = bookmarkView.treeBuilder.getIndexOfResource(folderItem);
-        bookmarkView.view.selection.select(ind);
+        bookmarkView.tree.view.selection.select(ind);
       }
       break;
     case "newBookmark":
@@ -169,14 +169,14 @@ function Startup()
         folderItem = bookmarkView.rdf.GetResource(gCreateInFolder);
         if (folderItem) {
           ind = bookmarkView.treeBuilder.getIndexOfResource(folderItem);
-          bookmarkView.view.selection.select(ind);
+          bookmarkView.tree.view.selection.select(ind);
         }
       }
     }
   }
 
   if ((arg != "newBookmark") && (bookmarkView.currentIndex == -1))
-    bookmarkView.view.selection.select(0);
+    bookmarkView.tree.view.selection.select(0);
 
   if (shouldSetOKButton)
     onFieldInput();
