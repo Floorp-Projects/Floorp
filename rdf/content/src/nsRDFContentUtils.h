@@ -59,6 +59,9 @@ public:
     GetElementResource(nsIContent* aElement, nsIRDFResource** aResult);
 
     static nsresult
+    GetElementRefResource(nsIContent* aElement, nsIRDFResource** aResult);
+
+    static nsresult
     GetTextForNode(nsIRDFNode* aNode, nsString& aResult);
 
     static nsresult
