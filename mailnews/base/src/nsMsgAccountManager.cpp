@@ -1833,11 +1833,14 @@ nsMsgAccountManager::FindServerByURI(nsIURI *aURI, PRBool aRealFlag,
     // we use "nntp" in the server list so translate it here.
     else if (type.EqualsLiteral("news"))
       type.AssignLiteral("nntp");
+    // we use "any" as the wildcard type.
+    else if (type.EqualsLiteral("any"))
+      type.Truncate();
   }
 
   PRInt32 port = 0;
-  // check the port of the scheme is not 'none'
-  if (!type.EqualsLiteral("none"))
+  // check the port of the scheme is not 'none' or blank
+  if (!(type.EqualsLiteral("none") || type.IsEmpty()))
   {
     rv = aURI->GetPort(&port);
     // Set the port to zero if we got a -1 (use default)
@@ -1974,7 +1977,12 @@ nsMsgAccountManager::FindRealServer(const char* username,
 
   aUrl->SetSpec(spec);
 
-  aUrl->SetScheme(nsDependentCString(type));
+  if (!*type) 
+    // empty type -- use 'any' as the magic scheme value
+    aUrl->SetScheme(NS_LITERAL_CSTRING("any"));
+  else
+    aUrl->SetScheme(nsDependentCString(type));
+
   aUrl->SetHost(nsDependentCString(hostname));
   aUrl->SetUserPass(nsDependentCString(username));
   aUrl->SetPort(port);
@@ -1995,18 +2003,21 @@ nsMsgAccountManager::findAccountByServerKey(nsISupports *element,
   findAccountByKeyEntry *entry = (findAccountByKeyEntry*)aData;
   nsCOMPtr<nsIMsgAccount> account =
     do_QueryInterface(element, &rv);
-  if (NS_FAILED(rv)) return PR_TRUE;
+  if (NS_FAILED(rv)) 
+    return PR_TRUE;
 
   nsCOMPtr<nsIMsgIncomingServer> server;
   rv = account->GetIncomingServer(getter_AddRefs(server));
-  if (!server || NS_FAILED(rv)) return PR_TRUE;
+  if (!server || NS_FAILED(rv)) 
+    return PR_TRUE;
 
   nsXPIDLCString key;
   rv = server->GetKey(getter_Copies(key));
   if (NS_FAILED(rv)) return PR_TRUE;
 
   // if the keys are equal, the servers are equal
-  if (PL_strcmp(key, entry->key)==0) {
+  if (PL_strcmp(key, entry->key)==0) 
+  {
     entry->account = account;
     return PR_FALSE;            // stop on first found account
   }
@@ -2020,7 +2031,8 @@ nsMsgAccountManager::FindAccountForServer(nsIMsgIncomingServer *server,
 {
   NS_ENSURE_ARG_POINTER(aResult);
   
-  if (!server) {
+  if (!server) 
+  {
     (*aResult) = nsnull;
     return NS_OK;
   }
@@ -2037,9 +2049,9 @@ nsMsgAccountManager::FindAccountForServer(nsIMsgIncomingServer *server,
 
   m_accounts->EnumerateForwards(findAccountByServerKey, (void *)&entry);
 
-  if (entry.account) {
+  if (entry.account) 
     NS_ADDREF(*aResult = entry.account);
-  }
+
   return NS_OK;
 }
 
@@ -2074,7 +2086,8 @@ nsMsgAccountManager::findServerUrl(nsISupports *aElement, void *data)
  
   PRInt32 thisPort = -1; // use the default port identifier
   // Don't try and get a port for the 'none' scheme 
-  if (!thisType.EqualsLiteral("none")) {
+  if (!thisType.EqualsLiteral("none")) 
+  {
     rv = server->GetPort(&thisPort);
     NS_ENSURE_TRUE(NS_SUCCEEDED(rv), PR_TRUE);
   }
@@ -2156,7 +2169,8 @@ nsMsgAccountManager::GetFirstIdentityForServer(nsIMsgIncomingServer *aServer, ns
   rv = identities->Count(&numIdentities);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  if (numIdentities > 0) {
+  if (numIdentities > 0) 
+  {
     nsCOMPtr<nsIMsgIdentity> identity;
     rv = identities->QueryElementAt(0, NS_GET_IID(nsIMsgIdentity),
                                   (void **)getter_AddRefs(identity));
@@ -2213,12 +2227,14 @@ nsMsgAccountManager::findIdentitiesForServer(nsISupports* element, void *aData)
   NS_ASSERTION(entry, "entry is null");
   NS_ASSERTION(entry->server, "entry->server is null");
   // if this happens, bail.
-  if (!thisServer || !entry || !(entry->server)) return PR_TRUE;
+  if (!thisServer || !entry || !(entry->server)) 
+    return PR_TRUE;
 
   entry->server->GetKey(getter_Copies(serverKey));
   nsXPIDLCString thisServerKey;
   thisServer->GetKey(getter_Copies(thisServerKey));
-  if (PL_strcmp(serverKey, thisServerKey)==0) {
+  if (PL_strcmp(serverKey, thisServerKey)==0) 
+  {
     // add all these elements to the nsISupports array
     nsCOMPtr<nsISupportsArray> theseIdentities;
     rv = account->GetIdentities(getter_AddRefs(theseIdentities));
@@ -2274,7 +2290,8 @@ nsMsgAccountManager::findServersForIdentity(nsISupports *element, void *aData)
   rv = entry->identity->GetKey(getter_Copies(identityKey));
 
   
-  for (id=0; id<idCount; id++) {
+  for (id=0; id<idCount; id++) 
+  {
 
     // convert supports->Identity
     nsCOMPtr<nsISupports> thisSupports;
@@ -2284,20 +2301,22 @@ nsMsgAccountManager::findServersForIdentity(nsISupports *element, void *aData)
     nsCOMPtr<nsIMsgIdentity>
       thisIdentity = do_QueryInterface(thisSupports, &rv);
 
-    if (NS_SUCCEEDED(rv)) {
+    if (NS_SUCCEEDED(rv)) 
+    {
 
       nsXPIDLCString thisIdentityKey;
       rv = thisIdentity->GetKey(getter_Copies(thisIdentityKey));
 
-      if (NS_SUCCEEDED(rv) && PL_strcmp(identityKey, thisIdentityKey) == 0) {
+      if (NS_SUCCEEDED(rv) && PL_strcmp(identityKey, thisIdentityKey) == 0) 
+      {
         nsCOMPtr<nsIMsgIncomingServer> thisServer;
         rv = account->GetIncomingServer(getter_AddRefs(thisServer));
         
-        if (thisServer && NS_SUCCEEDED(rv)) {
+        if (thisServer && NS_SUCCEEDED(rv)) 
+        {
           entry->servers->AppendElement(thisServer);
           break;
         }
-        
       }
     }
   }
@@ -2385,40 +2404,43 @@ NS_IMETHODIMP nsMsgAccountManager::SetLocalFoldersServer(nsIMsgIncomingServer *a
 
 NS_IMETHODIMP nsMsgAccountManager::GetLocalFoldersServer(nsIMsgIncomingServer **aServer)
 {
-    nsXPIDLCString serverKey;
-    nsresult rv;
+  nsXPIDLCString serverKey;
+  nsresult rv;
 
-    if (!aServer) return NS_ERROR_NULL_POINTER;
+  if (!aServer) return NS_ERROR_NULL_POINTER;
 
-  if (!m_prefs) {
+  if (!m_prefs) 
+  {
     rv = getPrefService();
     NS_ENSURE_SUCCESS(rv,rv);
   }
-    rv = m_prefs->GetCharPref(PREF_MAIL_ACCOUNTMANAGER_LOCALFOLDERSSERVER, getter_Copies(serverKey));
+  rv = m_prefs->GetCharPref(PREF_MAIL_ACCOUNTMANAGER_LOCALFOLDERSSERVER, getter_Copies(serverKey));
 
-    if (NS_SUCCEEDED(rv) && ((const char *)serverKey)) {
-        rv = GetIncomingServer(serverKey, aServer);
-        if (!*aServer) return NS_ERROR_FAILURE;
-        return rv;
-    }
+  if (NS_SUCCEEDED(rv) && ((const char *)serverKey)) 
+  {
+      rv = GetIncomingServer(serverKey, aServer);
+      if (!*aServer) return NS_ERROR_FAILURE;
+      return rv;
+  }
 
-    // try ("nobody","Local Folders","none"), and work down to any "none" server.
-    rv = FindServer("nobody","Local Folders","none",aServer);
-    if (NS_FAILED(rv) || !*aServer) {
-        rv = FindServer("nobody",nsnull,"none",aServer);
-        if (NS_FAILED(rv) || !*aServer) {
-            rv = FindServer(nsnull,"Local Folders","none",aServer); 
-            if (NS_FAILED(rv) || !*aServer) {
-                rv = FindServer(nsnull,nsnull,"none",aServer);
-            }
-        }
-    }
+  // try ("nobody","Local Folders","none"), and work down to any "none" server.
+  rv = FindServer("nobody","Local Folders","none",aServer);
+  if (NS_FAILED(rv) || !*aServer) 
+  {
+      rv = FindServer("nobody",nsnull,"none",aServer);
+      if (NS_FAILED(rv) || !*aServer) 
+      {
+          rv = FindServer(nsnull,"Local Folders","none",aServer); 
+          if (NS_FAILED(rv) || !*aServer) 
+              rv = FindServer(nsnull,nsnull,"none",aServer);
+      }
+  }
 
-    if (NS_FAILED(rv)) return rv;
-    if (!*aServer) return NS_ERROR_FAILURE;
-    
-    rv = SetLocalFoldersServer(*aServer);
-    return rv;
+  if (NS_FAILED(rv)) return rv;
+  if (!*aServer) return NS_ERROR_FAILURE;
+  
+  rv = SetLocalFoldersServer(*aServer);
+  return rv;
 }
   // nsIUrlListener methods
 
