@@ -380,7 +380,7 @@ sub print_ci {
 #         print "   $ci->[$::CI_DIR]/$ci->[$::CI_FILE]<a>\n";
 #     }
     my $d = "$ci->[$::CI_DIR]/$ci->[$::CI_FILE]";
-    if ($::query_module eq 'allrepositories') {
+    if (defined $::query_module && $::query_module eq 'allrepositories') {
         $d = "$ci->[$::CI_REPOSITORY]/$d";
     }
     $d =~ s:/:/ :g;             # Insert a whitespace after any slash, so that
