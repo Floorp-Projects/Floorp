@@ -79,7 +79,7 @@
 #     add more MySQL-related checks                    --MYSQL--
 #     change table definitions                         --TABLE--
 #     add more groups                                  --GROUPS--
-#     create initial administrator account            --ADMIN--
+#     create initial administrator account             --ADMIN--
 #
 # Note: sometimes those special comments occur more then once. For
 # example, --LOCAL-- is at least 3 times in this code!  --TABLE--
@@ -1488,6 +1488,23 @@ if ($sth->rows == 0) {
   my $pass2 = "*";
   my $admin_ok = 0;
   my $admin_create = 1;
+  my $mailcheckexp = "";
+  my $mailcheck    = ""; 
+
+  # Here we look to see what the emailregexp is set to so we can 
+  # check the email addy they enter. Bug 96675. If they have no 
+  # params (likely but not always the case), we use the default.
+  if (-e "data/params") { 
+    require "data/params"; # if they have a params file, use that
+  }
+  if ($::params{emailregexp}) {
+    $mailcheckexp = $::params{emailregexp};
+    $mailcheck    = $::params{emailregexpdesc};
+  } else {
+    $mailcheckexp = '^[^@]+@[^@]+\\.[^@]+$';
+    $mailcheck    = 'A legal address must contain exactly one \'@\', 
+      and at least one \'.\' after the @.';
+  }
 
   print "\nLooks like we don't have an administrator set up yet.  Either this is your\n";
   print "first time using Bugzilla, or your administrator's privs might have accidently\n";
@@ -1499,6 +1516,11 @@ if ($sth->rows == 0) {
       chomp $login;
       if(! $login ) {
         print "\nYou DO want an administrator, don't you?\n";
+      }
+      unless ($login =~ /$mailcheckexp/) {
+        print "\nThe login address is invalid:\n";
+        print "$mailcheck\n";
+        die "Please try again\n";
       }
     }
     $login = $dbh->quote($login);
