@@ -242,9 +242,6 @@
 <!ENTITY textZoomReduceCmd.accesskey    "D">
 <!ENTITY textZoomReduceCmd.commandkey   "-">
 
-<!ENTITY openLocationCmd.label          "Open Location">
-<!ENTITY openLocationCmd.accesskey      "L">
-
 <!ENTITY downloadsButton.label          "Downloads">
 <!ENTITY downloadsButton.tooltip        "Displays the progress of ongoing downloads">
 
@@ -265,16 +262,14 @@
 
 #ifdef XP_WIN
 <!ENTITY quitApplicationCmd.label       "Exit"> 
-<!ENTITY quitApplicationCmd.key         "Q"> 
 <!ENTITY quitApplicationCmd.accesskey   "x">
 #elifdef XP_UNIX
 <!ENTITY goBackCmd.commandKey "[">
 <!ENTITY goForwardCmd.commandKey "]">
 <!ENTITY quitApplicationCmd.label       "Quit"> 
-<!ENTITY quitApplicationCmd.key         "Q"> 
-<!ENTITY quitApplicationCmd.accesskey   "q">
+<!ENTITY quitApplicationCmd.accesskey   "Q">
 #endif
 
 <!ENTITY closeCmd.label                 "Close">  
 <!ENTITY closeCmd.key                   "W">  
-<!ENTITY closeCmd.accesskey             "c">
+<!ENTITY closeCmd.accesskey             "C">
