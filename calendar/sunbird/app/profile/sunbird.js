@@ -169,7 +169,6 @@ pref("privacy.popups.policy",               1);
 pref("privacy.popups.usecustom",            true);
 pref("privacy.popups.firstTime",            true);
 
-pref("network.protocols.useSystemDefaults", false); // set to true if user links should use system default handlers
 pref("network.cookie.cookieBehavior",       0); // cookies enabled
 pref("network.cookie.enableForCurrentSessionOnly", false);
 
@@ -221,12 +220,17 @@ pref("signon.SignonFileName", "signons.txt");
 pref("network.protocol-handler.external.mailto", true); // for mail
 pref("network.protocol-handler.external.news" , true); // for news 
 
-// By default, all protocol handlers are exposed.  This means that
-// the browser will respond to openURL commands for all URL types.
-// It will also try to open link clicks inside the browser before
-// failing over to the system handlers.
-pref("network.protocol-handler.expose-all", true);
-pref("network.protocol-handler.expose.mailto", false);
+// OK to load mail and browser schemes without warning dialogs
+pref("network.protocol-handler.warn-external.http", false);
+pref("network.protocol-handler.warn-external.https", false);
+pref("network.protocol-handler.warn-external.ftp", false);
+pref("network.protocol-handler.warn-external.mailto", false);
+pref("network.protocol-handler.warn-external.news", false);
+pref("network.protocol-handler.warn-external.snews", false);
+pref("network.protocol-handler.warn-external.nntp", false);
+
+pref("network.protocol-handler.expose-all", false);
+//pref("network.protocol-handler.expose.webcal", true);
 
 // Default security warning dialogs to show once.
 pref("security.warn_entering_secure.show_once", true);
