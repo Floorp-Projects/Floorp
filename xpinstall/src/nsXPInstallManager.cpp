@@ -272,7 +272,6 @@ nsXPInstallManager::ConfirmInstall(nsIDOMWindow *aParent, const PRUnichar **aPac
     if ( NS_SUCCEEDED(rv) && parentWindow && params)
     {
         nsCOMPtr<nsIDOMWindow> newWindow;
-        nsCOMPtr<nsISupportsArray> array;
 
         nsCOMPtr<nsISupportsInterfacePointer> ifptr =
             do_CreateInstance(NS_SUPPORTS_INTERFACE_POINTER_CONTRACTID, &rv);
