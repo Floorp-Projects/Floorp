@@ -26,6 +26,39 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
+MODULE		= msgmdn
+LIBRARY_NAME	= msgmdn_s
+META_COMPONENT = mail
+REQUIRES	= xpcom \
+		  string \
+		  editor \
+		  dom \
+		  msgbase \
+		  mailnews \
+		  necko \
+		  mime \
+		  pref \
+		  intl \
+		  locale \
+		  msgbaseutil \
+		  msgdb \
+		  msgimap \
+		  msgnews \
+		  mimetype \
+		  msgcompose \
+		  $(NULL)
+
+CPPSRCS		= \
+                nsMsgMdnGenerator.cpp \
+		$(NULL)
+
+EXPORTS		= \
+		nsMsgMdnGenerator.h \
+		$(NULL)
+
+# we don't want the shared lib, but we want to force the creation of a static lib.
+FORCE_STATIC_LIB = 1
+
 include $(topsrcdir)/config/rules.mk
 
 libs:: ./mdn-service.js
