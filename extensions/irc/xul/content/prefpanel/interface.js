@@ -36,7 +36,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 function Init() {
-    parent.initPanel("chrome://chatzilla/content/pref-irc-interface.xul");
+    parent.initPanel("chrome://chatzilla/content/prefpanel/interface.xul");
     initPMTabsPref();
 }
 

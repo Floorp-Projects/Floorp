@@ -32,13 +32,13 @@
    - ***** END LICENSE BLOCK ***** -->
 
 <?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?>
-<!DOCTYPE window SYSTEM "chrome://chatzilla/locale/pref-irc-interface.dtd">
+<!DOCTYPE window SYSTEM "chrome://chatzilla/locale/pref-irc.dtd">
 
 <page xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
     onload="Init();"
     headertitle="&window.title;">
 
-  <script src="chrome://chatzilla/content/pref-irc-interface.js"/>
+  <script src="chrome://chatzilla/content/prefpanel/interface.js"/>
   <script type="application/x-javascript">
   <![CDATA[
     var _elementIDs = ["czPMTabLimit", "czFocusPMs", "czConL",

@@ -43,31 +43,31 @@
       <treechildren id="chatzillaChildren">
         <treeitem>
           <treerow>
-            <treecell url="chrome://chatzilla/content/pref-irc-startup.xul" 
+            <treecell url="chrome://chatzilla/content/prefpanel/startup.xul" 
                 label="Startup"/>
           </treerow>
         </treeitem>
         <treeitem>
           <treerow>
-            <treecell url="chrome://chatzilla/content/pref-irc-interface.xul" 
+            <treecell url="chrome://chatzilla/content/prefpanel/interface.xul" 
                 label="Interface"/>
           </treerow>
         </treeitem>
         <treeitem>
           <treerow>
-            <treecell url="chrome://chatzilla/content/pref-irc-appearance.xul" 
+            <treecell url="chrome://chatzilla/content/prefpanel/appearance.xul" 
                 label="Appearance"/>
           </treerow>
         </treeitem>
         <treeitem>
           <treerow>
-            <treecell url="chrome://chatzilla/content/pref-irc-stalk.xul" 
+            <treecell url="chrome://chatzilla/content/prefpanel/stalk.xul" 
                 label="Stalking"/>
           </treerow>
         </treeitem>
         <treeitem>
           <treerow>
-            <treecell url="chrome://chatzilla/content/pref-irc-sound.xul" 
+            <treecell url="chrome://chatzilla/content/prefpanel/sound.xul" 
                 label="Sound"/>
           </treerow>
         </treeitem>

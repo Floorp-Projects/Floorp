@@ -31,10 +31,10 @@
    -->
 
 <?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?>
-<!DOCTYPE window SYSTEM "chrome://chatzilla/locale/pref-irc-text.dtd">
+<!DOCTYPE window SYSTEM "chrome://chatzilla/locale/pref-irc.dtd">
 
 <page xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-    onload="parent.initPanel('chrome://chatzilla/content/pref-irc-text.xul');"
+    onload="parent.initPanel('chrome://chatzilla/content/prefpanel/text.xul');"
     headertitle="&window.title;">
 
   <script type="application/x-javascript">

@@ -32,54 +32,22 @@
    - ***** END LICENSE BLOCK ***** -->
 
 <?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?>
-<!DOCTYPE window SYSTEM "chrome://chatzilla/locale/pref-irc-startup-newURL.dtd">
+<!DOCTYPE window SYSTEM "chrome://chatzilla/locale/pref-irc.dtd">
 
 <?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
 
-<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-    xmlns:xbl="http://www.mozilla.org/xbl"
-    onload="Init();"
-    class="dialog" style=" width: 25em; "
+<dialog xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+    onload="Init();" buttons="accept" style=" width: 50em; height: 40em; "
     title="&window.title;">
 
-  <script src="chrome://chatzilla/content/pref-irc-startup-newURL.js"/>
+  <script src="chrome://chatzilla/content/prefpanel/appearance-previewCSS.js"/>
   
   <keyset id="dialogKeys"/>
   
-  <radiogroup id="czURLType" onselect="updateType();">
-    <radio value="normal" label="&normal.label;"/>
-    <vbox class="indent">
-      <vbox style=" x-width: 22em; ">
-        <label>&normal.server;</label>
-        <textbox id="czServer" size="5"/>
-        <checkbox id="czServerNeedPass" label="&normal.needpass.label;"/>
-      </vbox>
-      <groupbox>
-        <caption><checkbox id="czServerAlso" label="&normal.channel.label;"
-            oncommand="updateType();"/></caption>
-        
-        <radiogroup id="czChannelIsNick" orient="horizontal" 
-            onselect="updateType();" align="center">
-          <spacer flex="1"/>
-          <radio value="channel" label="&normal.ischan.label;"/>
-          <spacer flex="1"/>
-          <label value="&normal.isor.label;"/>
-          <spacer flex="1"/>
-          <radio value="nickname" label="&normal.isnick.label;" flex="1"/>
-          <spacer flex="1"/>
-        </radiogroup>
-        <textbox id="czChannel"/>
-        <checkbox id="czChannelNeedKey" label="&normal.needkey.label;"/>
-      </groupbox>
-    </vbox>
-    <radio value="client" label="&client.label;"/>
-    <vbox class="indent">
-      <label>&client.desc;</label>
-    </vbox>
-  </radiogroup>
+  <hbox flex="1">
+    <iframe id="czPreviewPage" flex="1" src="about:blank"/>
+  </hbox>
   
   <separator/>
   
-  <hbox id="okCancelButtonsRight"/>
-  
-</window>
+</dialog>

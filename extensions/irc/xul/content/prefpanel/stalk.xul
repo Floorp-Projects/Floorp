@@ -32,15 +32,15 @@
    - ***** END LICENSE BLOCK ***** -->
 
 <?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?>
-<!DOCTYPE window SYSTEM "chrome://chatzilla/locale/pref-irc-stalk.dtd">
+<!DOCTYPE window SYSTEM "chrome://chatzilla/locale/pref-irc.dtd">
 
 <page xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
     onload="Init();"
       headertitle="&window.title;">
 
   <script src="chrome://global/content/strres.js"/>
-  <script src="chrome://chatzilla/content/pref-irc.js"/>
-  <script src="chrome://chatzilla/content/pref-irc-stalk.js"/>
+  <script src="chrome://chatzilla/content/prefpanel/pref-irc.js"/>
+  <script src="chrome://chatzilla/content/prefpanel/stalk.js"/>
   <script type="application/x-javascript">
   <![CDATA[
     var _elementIDs = ["czStalkWords"];

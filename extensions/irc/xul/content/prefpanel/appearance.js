@@ -37,37 +37,40 @@
 
 const nsIFilePicker = Components.interfaces.nsIFilePicker;
 
+const czStyleDefault = "chrome://chatzilla/skin/output-default.css";
+const czStyleLight = "chrome://chatzilla/skin/output-light.css";
+const czStyleDark = "chrome://chatzilla/skin/output-dark.css";
+const czStyleFacesDefault = "http://www.hacksrus.com/~ginda/chatzilla/motifs/output-default-faces.css";
+const czStyleFacesLight = "http://www.hacksrus.com/~ginda/chatzilla/motifs/output-light-faces.css";
+const czStyleFacesDark = "http://www.hacksrus.com/~ginda/chatzilla/motifs/output-dark-faces.css";
+
 function Init()
 {
-    parent.initPanel("chrome://chatzilla/content/pref-irc-sound.xul");
+    parent.initPanel("chrome://chatzilla/content/prefpanel/appearance.xul");
     
-    var edit = document.getElementById("czSound1");
-    selectSound(1, edit.getAttribute("prefvalue"));
-    edit = document.getElementById("czSound2");
-    selectSound(2, edit.getAttribute("prefvalue"));
-    edit = document.getElementById("czSound3");
-    selectSound(3, edit.getAttribute("prefvalue"));
+    var edit = document.getElementById("czStyleCSS");
+    selectStyle(edit.getAttribute("prefvalue"));
 }
 
-function onChooseFile(index)
+function onChooseFile()
 {
     try
     {
-        var edit = document.getElementById("czSound" + index);
-        var oldValue = edit.getAttribute("prefvalue");
+        var edit = document.getElementById("czStyleCSS");
+        var oldStyle = edit.getAttribute("prefvalue");
         
         var fpClass = Components.classes["@mozilla.org/filepicker;1"];
         var fp = fpClass.createInstance(nsIFilePicker);
-        fp.init(window, getMsg("file_browse_Wave"), nsIFilePicker.modeOpen);
+        fp.init(window, getMsg("file_browse_CSS"), nsIFilePicker.modeOpen);
         
-        fp.appendFilter(getMsg("file_browse_Wave_spec"), "*.wav");
+        fp.appendFilter(getMsg("file_browse_CSS_spec"), "*.css");
         fp.appendFilters(nsIFilePicker.filterAll);
         
-        if ((fp.show() == nsIFilePicker.returnOK) && fp.fileURL.spec
+        if (fp.show() == nsIFilePicker.returnOK && fp.fileURL.spec
                 && fp.fileURL.spec.length > 0)
-            selectSound(index, fp.fileURL.spec);
+            selectStyle(fp.fileURL.spec);
         else
-            selectSound(index, oldValue);
+            selectStyle(oldStyle);
     }
     catch(ex)
     {
@@ -75,27 +78,38 @@ function onChooseFile(index)
     }
 }
 
-function selectSound(index, value)
+function selectStyle(file)
 {
-    var edit = document.getElementById("czSound" + index);
-    var custom = document.getElementById("czSound" + index + "Custom");
+    var edit = document.getElementById("czStyleCSS");
+    var option = document.getElementById("czStyleCustomCSS");
     
-    edit.setAttribute("prefvalue", value);
+    edit.setAttribute("prefvalue", file);
     
     var opts = edit.childNodes[0].childNodes;
     for (var i = 0; i < opts.length; i++)
     {
-        if (opts[i].getAttribute("url") == value)
+        if (opts[i].getAttribute("url") == file)
         {
             edit.selectedIndex = i;
             return true;
         }
     }
     
-    custom.hidden = false;
-    custom.label = value;
-    custom.setAttribute("url", value);
-    edit.selectedIndex = 4;
+    option.hidden = false;
+    option.label = file;
+    option.setAttribute("url", file);
+    edit.selectedIndex = 7;
     
     return true;
+}
+
+function previewStyle()
+{
+    var edit = document.getElementById("czStyleCSS");
+    var gData = new Object();
+    
+    gData.style = edit.getAttribute("prefvalue");
+    
+    window.openDialog("chrome://chatzilla/content/prefpanel/appearance-previewCSS.xul", 
+            "czPreviewCSS", "chrome,modal,resizable=yes", gData);
 }

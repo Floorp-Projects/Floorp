@@ -39,7 +39,7 @@ const nsIFilePicker = Components.interfaces.nsIFilePicker;
 
 function Init()
 {
-    parent.initPanel("chrome://chatzilla/content/pref-irc-startup.xul");
+    parent.initPanel("chrome://chatzilla/content/prefpanel/startup.xul");
     loadList("Scripts");
     loadList("URLs");
 }
@@ -118,7 +118,7 @@ function addURL()
 {
     var gData = new Object();
     
-    window.openDialog("chrome://chatzilla/content/pref-irc-startup-newURL.xul", 
+    window.openDialog("chrome://chatzilla/content/prefpanel/startup-newURL.xul", 
             "czAddURL", "chrome,modal,resizable=no", gData);
     
     if (gData.ok)
@@ -137,7 +137,7 @@ function editURL()
     
     gData.url = selected.getAttribute("url");
     
-    window.openDialog("chrome://chatzilla/content/pref-irc-startup-newURL.xul", 
+    window.openDialog("chrome://chatzilla/content/prefpanel/startup-newURL.xul", 
             "czEditURL", "chrome,modal,resizable=no", gData);
     
     if (gData.ok)

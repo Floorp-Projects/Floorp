@@ -1,7 +1,6 @@
 <?xml version="1.0"?> 
 
-<!-- ***** BEGIN LICENSE BLOCK *****
-   - Version: MPL 1.1/GPL 2.0/LGPL 2.1
+<!--
    -
    - The contents of this file are subject to the Mozilla Public License
    - Version 1.1 (the "License"); you may not use this file except in
@@ -29,25 +28,33 @@
    - Contributor(s):
    -  James Ross, <twpol@aol.com>, original author
    -
-   - ***** END LICENSE BLOCK ***** -->
+   -->
 
 <?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?>
-<!DOCTYPE window SYSTEM "chrome://chatzilla/locale/pref-irc-appearance-previewCSS.dtd">
+<!DOCTYPE window SYSTEM "chrome://chatzilla/locale/pref-irc.dtd">
 
 <?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
 
-<dialog xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-    onload="Init();" buttons="accept" style=" width: 50em; height: 40em; "
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+    onload="Init();"
+    class="dialog" style="width: 40em;"
     title="&window.title;">
 
-  <script src="chrome://chatzilla/content/pref-irc-appearance-previewCSS.js"/>
+  <script type="application/x-javascript" 
+      src="chrome://chatzilla/content/prefpanel/startup-newScript.js"/>
   
   <keyset id="dialogKeys"/>
   
-  <hbox flex="1">
-    <iframe id="czPreviewPage" flex="1" src="about:blank"/>
+  <label value="&text.desc;"/>
+  <hbox align="center">
+    <textbox id="czFileBox" type="autocomplete" searchSessions="history" 
+        timeout="50" maxrows="6"
+        disablehistory="true" flex="1"/>
+    <button label="Choose File.." onclick="onChooseFile();"/>
   </hbox>
   
   <separator/>
   
-</dialog>
+  <hbox id="okCancelButtonsRight"/>
+  
+</window>

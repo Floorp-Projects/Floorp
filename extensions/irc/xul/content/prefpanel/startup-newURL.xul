@@ -1,6 +1,7 @@
 <?xml version="1.0"?> 
 
-<!--
+<!-- ***** BEGIN LICENSE BLOCK *****
+   - Version: MPL 1.1/GPL 2.0/LGPL 2.1
    -
    - The contents of this file are subject to the Mozilla Public License
    - Version 1.1 (the "License"); you may not use this file except in
@@ -28,30 +29,54 @@
    - Contributor(s):
    -  James Ross, <twpol@aol.com>, original author
    -
-   -->
+   - ***** END LICENSE BLOCK ***** -->
 
 <?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?>
-<!DOCTYPE window SYSTEM "chrome://chatzilla/locale/pref-irc-startup-newScript.dtd">
+<!DOCTYPE window SYSTEM "chrome://chatzilla/locale/pref-irc.dtd">
 
 <?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
 
 <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+    xmlns:xbl="http://www.mozilla.org/xbl"
     onload="Init();"
-    class="dialog" style="width: 40em;"
+    class="dialog" style=" width: 25em; "
     title="&window.title;">
 
-  <script type="application/x-javascript" 
-      src="chrome://chatzilla/content/pref-irc-startup-newScript.js"/>
+  <script src="chrome://chatzilla/content/prefpanel/startup-newURL.js"/>
   
   <keyset id="dialogKeys"/>
   
-  <label value="&text.desc;"/>
-  <hbox align="center">
-    <textbox id="czFileBox" type="autocomplete" searchSessions="history" 
-        timeout="50" maxrows="6"
-        disablehistory="true" flex="1"/>
-    <button label="Choose File.." onclick="onChooseFile();"/>
-  </hbox>
+  <radiogroup id="czURLType" onselect="updateType();">
+    <radio value="normal" label="&normal.label;"/>
+    <vbox class="indent">
+      <vbox style=" x-width: 22em; ">
+        <label>&normal.server;</label>
+        <textbox id="czServer" size="5"/>
+        <checkbox id="czServerNeedPass" label="&normal.needpass.label;"/>
+      </vbox>
+      <groupbox>
+        <caption><checkbox id="czServerAlso" label="&normal.channel.label;"
+            oncommand="updateType();"/></caption>
+        
+        <radiogroup id="czChannelIsNick" orient="horizontal" 
+            onselect="updateType();" align="center">
+          <spacer flex="1"/>
+          <radio value="channel" label="&normal.ischan.label;"/>
+          <spacer flex="1"/>
+          <label value="&normal.isor.label;"/>
+          <spacer flex="1"/>
+          <radio value="nickname" label="&normal.isnick.label;" flex="1"/>
+          <spacer flex="1"/>
+        </radiogroup>
+        <textbox id="czChannel"/>
+        <checkbox id="czChannelNeedKey" label="&normal.needkey.label;"/>
+      </groupbox>
+    </vbox>
+    <radio value="client" label="&client.label;"/>
+    <vbox class="indent">
+      <label>&client.desc;</label>
+    </vbox>
+  </radiogroup>
   
   <separator/>
   

@@ -49,6 +49,6 @@ function Init()
         gData = new Object();
     
     gPage.contentDocument.location.href = 
-            "chrome://chatzilla/content/pref-irc-appearance-previewCSS.html" 
+            "chrome://chatzilla/content/prefpanel/appearance-previewCSS.html" 
             + (gData.style ? "?" + gData.style : '');
 }

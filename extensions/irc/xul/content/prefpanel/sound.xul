@@ -32,14 +32,14 @@
    - ***** END LICENSE BLOCK ***** -->
 
 <?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?>
-<!DOCTYPE window SYSTEM "chrome://chatzilla/locale/pref-irc-sound.dtd">
+<!DOCTYPE window SYSTEM "chrome://chatzilla/locale/pref-irc.dtd">
 
 <page xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
       headertitle="&window.title;" onload="Init();">
 
   <script src="chrome://global/content/strres.js"/>
-  <script src="chrome://chatzilla/content/pref-irc.js"/>
-  <script src="chrome://chatzilla/content/pref-irc-sound.js"/>
+  <script src="chrome://chatzilla/content/prefpanel/pref-irc.js"/>
+  <script src="chrome://chatzilla/content/prefpanel/sound.js"/>
   <script type="application/x-javascript">
   <![CDATA[
     var _elementIDs = ["czSound1", "czSound2", "czSound3"];

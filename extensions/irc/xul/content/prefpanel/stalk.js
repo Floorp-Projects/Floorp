@@ -37,7 +37,7 @@
 
 function Init()
 {
-    parent.initPanel("chrome://chatzilla/content/pref-irc-stalk.xul");
+    parent.initPanel("chrome://chatzilla/content/prefpanel/stalk.xul");
     loadList("StalkWords");
 }
 
