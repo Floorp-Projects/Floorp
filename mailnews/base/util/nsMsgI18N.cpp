@@ -24,6 +24,7 @@
 #define NS_IMPL_IDS
 #include "nsICharsetConverterManager.h"
 #include "nsICharsetAlias.h"
+#include "nsIPlatformCharset.h"
 #undef NS_IMPL_IDS
 #include "nsIServiceManager.h"
 
@@ -207,6 +208,26 @@ const char *msgCompHeaderInternalCharset()
   // UTF-8 is a super set of us-ascii. 
   // We can use the same string manipulation methods as us-ascii without breaking non us-ascii characters. 
   return "UTF-8";
+}
+
+// Charset used by the file system.
+const nsString& msgCompFileSystemCharset()
+{
+	/* Get a charset used for the file. */
+	static nsString aPlatformCharset;
+
+	if (aPlatformCharset.Length() < 1) 
+	{
+		nsCOMPtr <nsIPlatformCharset> platformCharset;
+		nsresult rv = nsComponentManager::CreateInstance(NS_PLATFORMCHARSET_PROGID, nsnull, 
+	                             NS_GET_IID(nsIPlatformCharset), getter_AddRefs(platformCharset));
+		if (NS_SUCCEEDED(rv)) 
+			rv = platformCharset->GetCharset(kPlatformCharsetSel_FileName, aPlatformCharset);
+
+		if (NS_FAILED(rv)) 
+			aPlatformCharset.SetString("ISO-8859-1");
+	}
+	return aPlatformCharset;
 }
 
 // MIME encoder, output string should be freed by PR_FREE
