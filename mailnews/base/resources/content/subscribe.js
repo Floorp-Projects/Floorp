@@ -129,7 +129,7 @@ function SetUpTree(forceToServer)
           EnableSearchUI();
 
           // clear out the text field when switching server
-          gNameField.setAttribute('value',"");
+          gNameField.value = "";
 
           // since there is no text, switch to the non-search view...
           SwitchToNormalView();
@@ -452,8 +452,10 @@ function SubscribeOnClick(event)
 
 function Refresh()
 {
-	// force it to talk to the server
-	SetUpTree(true);
+        // clear out the textfield's entry on call of Refresh()
+        gNameField.value = "";
+        // force it to talk to the server
+        SetUpTree(true);
 }
 
 function InvalidateSearchOutlinerRow(row)
