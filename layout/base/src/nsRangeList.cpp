@@ -394,6 +394,7 @@ void printRange(nsIDOMRange *aDomRange)
 NS_IMETHODIMP
 nsRangeList::HandleKeyEvent(nsGUIEvent *aGuiEvent, nsIFrame *aFrame)
 {
+  nsKeyEvent *keyEvent = (nsKeyEvent *)aGuiEvent;
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -430,7 +431,7 @@ compareFrames(nsIFrame *aBegin, nsIFrame *aEnd)
   if (aBegin == aEnd)
     return 0;
   nsCOMPtr<nsIContent> beginContent;
-  if (NS_SUCCEEDED(aBegin->GetContent(*getter_AddRefs(beginContent)))){
+  if (NS_SUCCEEDED(aBegin->GetContent(*getter_AddRefs(beginContent))) && beginContent){
     nsCOMPtr<nsIDOMNode>beginNode (beginContent);
     nsCOMPtr<nsIContent> endContent;
     if (NS_SUCCEEDED(aEnd->GetContent(*getter_AddRefs(endContent)))){
@@ -494,20 +495,22 @@ nsRangeList::TakeFocus(nsIFocusTracker *aTracker, nsIFrame *aFrame, PRInt32 aOff
   if (!aTracker || !aFrame)
     return NS_ERROR_NULL_POINTER;
   //HACKHACKHACK
-  nsIFrame *parent = aFrame;
-  for (int i=0; i <3; i++){
-    if (NS_FAILED(parent->GetParent(parent)) || !parent)
-      return NS_ERROR_NULL_POINTER;
-  }
-  //END HACK
-  Clear(); //change this later 
-  nsIFrame *frame;
-  nsIFrame *anchor;
   nsCOMPtr<nsIContent> content;
   nsCOMPtr<nsIDOMNode> domNode;
-  PRBool direction(PR_TRUE);//true == left to right
   if (NS_SUCCEEDED(aFrame->GetContent(*getter_AddRefs(content)))){
     domNode = content;
+    nsCOMPtr<nsIDOMNode> parent;
+    nsCOMPtr<nsIDOMNode> parent2;
+    if (NS_FAILED(domNode->GetParentNode(getter_AddRefs(parent))) || !parent)
+      return NS_ERROR_FAILURE;
+    if (NS_FAILED(parent->GetParentNode(getter_AddRefs(parent2))) || !parent2)
+      return NS_ERROR_FAILURE;
+    parent = nsnull;//just force a release now even though we dont have to.
+    parent2 = nsnull;
+    Clear(); //change this later 
+    nsIFrame *frame;
+    nsIFrame *anchor;
+    PRBool direction(PR_TRUE);//true == left to right
     if (domNode && NS_SUCCEEDED(aTracker->GetFocus(&frame, &anchor))){
       //traverse through document and unselect crap here
       if (!aContinueSelection){ //single click? setting cursor down
@@ -683,6 +686,8 @@ a  2  1 deselect from 2 to 1
       }
     }
   }
+  else
+    return NS_ERROR_FAILURE;
   return NS_OK;
 }
 
