@@ -24,7 +24,7 @@ use Config;         # for $Config{sig_name} and $Config{sig_num}
 use File::Find ();
 use File::Copy;
 
-$::UtilsVersion = '$Revision: 1.293 $ ';
+$::UtilsVersion = '$Revision: 1.294 $ ';
 
 package TinderUtils;
 
@@ -358,6 +358,9 @@ sub SetupEnv {
 
     my $topsrcdir = "$Settings::BaseDir/$Settings::DirName/mozilla";
     $objdir = "$topsrcdir/${Settings::ObjDir}";
+
+    $Settings::TopsrcdirFull = $topsrcdir;
+    $Settings::TopsrcdirLast = $topsrcdir . ".last";
 
     if ($Settings::ReleaseBuild) {
         $ENV{BUILD_OFFICIAL}   = 1;
@@ -1014,6 +1017,9 @@ sub BuildIt {
             ($build_status, $binary_url) = PostMozilla::main($build_dir);
         }
 
+	# run_shell_command "rsync -av --delete $Settings::TopsrcdirFull/ $Settings::TopsrcdirLast";
+	# print_log "rsync -av --delete $Settings::TopsrcdirFull/ $Settings::TopsrcdirLast\n";
+
         # Increment failure count if we failed.
         if ($build_status eq 'busted') {
             $build_failure_count++;
@@ -1633,6 +1639,7 @@ sub run_all_tests {
         if (not $cp_result->{timed_out}) {
           $test_result = "success";
         } else {
+		print_log "cp_result failed\n";
           $test_result = "testfailed";
           print_log "Error: create profile failed.\n";
         }
@@ -1652,6 +1659,7 @@ sub run_all_tests {
 
       #XXX this is ugly and hacky 
       $test_result = 'testfailed' unless $pref_file;;
+      if (!$pref_file) { print_log "no pref file found\n"; }
 
     } elsif($Settings::BinaryName eq "TestGtkEmbed") {
       print_log "Using TestGtkEmbed profile\n";
@@ -1952,7 +1960,7 @@ sub run_all_tests {
       # Win32 needs to do some url magic for file: urls.
       my $startup_build_dir = $build_dir;
       if ($Settings::OS =~ /^WIN/) {
-        $startup_build_dir = $win32_build_dir;
+        $startup_build_dir = "/".$win32_build_dir;
       }
 
       my $app_args;
@@ -1964,9 +1972,9 @@ sub run_all_tests {
 
       $test_result = StartupPerformanceTest("StartupPerformanceTest",
                                             $binary,
-                                            $startup_build_dir,
+                                            $build_dir,
                                             $app_args,
-                                            "file:$startup_build_dir/../startup-test.html");
+                                            "file://$startup_build_dir/../startup-test.html");
     }
     return $test_result;
 }
@@ -2268,7 +2276,11 @@ sub CodesizeTest {
     $zee = "mZ";
     $graphName = "codesize_embed";
   } else {
-    $testNameString = "SeaMonkey"; 
+    if ($Settings::ProductName eq 'Mozilla') {
+      $testNameString = "SeaMonkey";
+    } else {
+      $testNameString = $Settings::ProductName;
+    }
     $type = "auto";  # SeaMonkey test.
     $zee = "Z";
     $graphName = "codesize";
@@ -2287,6 +2299,9 @@ sub CodesizeTest {
   unlink("$build_dir/$test_log");
   
   my $bash_cmd = "$topsrcdir/tools/codesighs/";
+  if ($Settings::CodesizeManifest ne '') {
+    $type = '';
+  }
   if ($Settings::OS =~ /^WIN/ && $Settings::Compiler ne "gcc") {
     $bash_cmd .= $type . "summary.win.bash";
   } else {
@@ -2296,6 +2311,9 @@ sub CodesizeTest {
  
   my $cmd = ["bash", $bash_cmd];
   push(@{$cmd}, "-o", "$objdir") if ($Settings::ObjDir ne "");
+  if ($Settings::CodesizeManifest ne '') {
+    push(@{$cmd}, "mozilla/$Settings::CodesizeManifest");
+  }
   push(@{$cmd}, $new_log, $old_log, $diff_log);
  
   my $test_result =
