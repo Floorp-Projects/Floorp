@@ -79,7 +79,7 @@
 #ifndef __PRUNICHAR__
 #define __PRUNICHAR__
 typedef PRUint16 PRUnichar;
-#endif __PRUNICHAR__
+#endif /* __PRUNICHAR__ */
 
 ////////////////////////////////////////////////////////////////////////
 // nsXPIDLString
