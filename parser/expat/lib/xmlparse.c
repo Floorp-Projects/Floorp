@@ -677,13 +677,15 @@ struct XML_ParserStruct {
 #endif /* XML_DTD */
 
 /* BEGIN MOZILLA CHANGE (unused API) */
-#if 0
+#ifdef TX_EXE
 XML_Parser XMLCALL
 XML_ParserCreate(const XML_Char *encodingName)
 {
   return XML_ParserCreate_MM(encodingName, NULL, NULL);
 }
+#endif
 
+#if 0
 XML_Parser XMLCALL
 XML_ParserCreateNS(const XML_Char *encodingName, XML_Char nsSep)
 {
@@ -1762,7 +1764,9 @@ XML_DefaultCurrent(XML_Parser parser)
       reportDefault(parser, encoding, eventPtr, eventEndPtr);
   }
 }
+#endif
 
+#ifdef TX_EXE
 const XML_LChar * XMLCALL
 XML_ErrorString(enum XML_Error code)
 {
@@ -1800,7 +1804,9 @@ XML_ErrorString(enum XML_Error code)
     return message[code];
   return NULL;
 }
+#endif
 
+#if 0
 const XML_LChar * XMLCALL
 XML_ExpatVersion(void) {
 

@@ -46,7 +46,8 @@
 #include "nsISyncLoadDOMService.h"
 #include "nsNetUtil.h"
 #else
-#include "xmlparse.h"
+#include "expat_config.h"
+#include "expat.h"
 #endif
 
 #ifdef TX_EXE
@@ -220,8 +221,8 @@ externalEntityRefHandler(XML_Parser aParser,
     // aParser is aUserData is the txXMLParser,
     // we set that in txXMLParser::parse
     NS_ENSURE_TRUE(aParser, XML_ERROR_NONE);
-    return TX_XMLPARSER(aParser)->ExternalEntityRef(aContext, aBase,
-                                                    aSystemId, aPublicId);
+    return ((txXMLParser*)aParser)->ExternalEntityRef(aContext, aBase,
+                                                      aSystemId, aPublicId);
 }
 
 
