@@ -74,10 +74,12 @@ nsContentList::nsContentList(nsIDocument *aDocument,
     mData = new nsString(*aData);
     // If this fails, fail silently
   }
+  else {
+    mData = nsnull;
+  }
   mMatchAtom = nsnull;
   mRootContent = aRootContent;
   mMatchAll = PR_FALSE;
-  mData = nsnull;
   Init(aDocument);
 }
 
