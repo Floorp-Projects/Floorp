@@ -45,9 +45,7 @@ class nsIPref;
  * 
  */
 class nsXPBaseWindow : public nsIXPBaseWindow,
-                       public nsIStreamObserver,
-#ifdef NECKO
-#else
+#ifndef NECKO
                        public nsINetSupport,
 #endif
                        public nsIWebShellContainer,
@@ -88,16 +86,6 @@ public:
   //NS_IMETHOD HandleEvent(nsGUIEvent * anEvent);
 
   NS_IMETHOD LoadURL(const nsString &aURL);
-
-#ifdef NECKO
-  NS_DECL_NSISTREAMOBSERVER
-#else
-  // nsIStreamObserver
-  NS_IMETHOD OnStartRequest(nsIURI* aURL, const char *aContentType);
-  NS_IMETHOD OnProgress(nsIURI* aURL, PRUint32 aProgress, PRUint32 aProgressMax);
-  NS_IMETHOD OnStatus(nsIURI* aURL, const PRUnichar* aMsg);
-  NS_IMETHOD OnStopRequest(nsIURI* aURL, nsresult status, const PRUnichar* aMsg);
-#endif
 
   // nsIWebShellContainer
   NS_IMETHOD WillLoadURL(nsIWebShell* aShell, const PRUnichar* aURL, nsLoadType aReason);

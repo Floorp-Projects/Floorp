@@ -23,7 +23,7 @@
 #include "nsCWeakReference.h"
 #include "nsFormControlFrame.h"
 #include "nsTextControlFrame.h"
-#include "nsIStreamObserver.h"
+#include "nsIDocumentLoaderObserver.h"
 #include "nsIEditor.h"
 #include "nsIDocumentObserver.h"
 #include "nsIDOMKeyListener.h"
@@ -50,7 +50,7 @@ class nsGfxTextControlFrame;
 /*******************************************************************************
  * EnderTempObserver XXX temporary until doc manager/loader is in place
  ******************************************************************************/
-class EnderTempObserver : public nsIStreamObserver
+class EnderTempObserver : public nsIDocumentLoaderObserver
 {
 public:
   EnderTempObserver() 
@@ -66,21 +66,33 @@ public:
   // nsISupports
   NS_DECL_ISUPPORTS
 
-#ifdef NECKO
-  NS_DECL_NSISTREAMOBSERVER
-#else
-  // nsIStreamObserver
-  NS_IMETHOD OnStartRequest(nsIURI* aURL, const char *aContentType);
-  NS_IMETHOD OnProgress(nsIURI* aURL, PRUint32 aProgress, PRUint32 aProgressMax);
-  NS_IMETHOD OnStatus(nsIURI* aURL, const PRUnichar* aMsg);
-  NS_IMETHOD OnStopRequest(nsIURI* aURL, nsresult status, const PRUnichar* aMsg);
-#endif
+  // nsIDocumentLoaderObserver
+  NS_IMETHOD OnStartDocumentLoad(nsIDocumentLoader* loader, 
+                                 nsIURI* aURL, 
+                                 const char* aCommand);
+  NS_IMETHOD OnEndDocumentLoad(nsIDocumentLoader* loader,
+                               nsIChannel* channel,
+                               nsresult aStatus,
+							   nsIDocumentLoaderObserver * aObserver);
+  NS_IMETHOD OnStartURLLoad(nsIDocumentLoader* loader,
+                            nsIChannel* channel, 
+                            nsIContentViewer* aViewer);
+  NS_IMETHOD OnProgressURLLoad(nsIDocumentLoader* loader,
+                               nsIChannel* channel,
+                               PRUint32 aProgress, 
+                               PRUint32 aProgressMax);
+  NS_IMETHOD OnStatusURLLoad(nsIDocumentLoader* loader,
+                             nsIChannel* channel,
+                             nsString& aMsg);
+  NS_IMETHOD OnEndURLLoad(nsIDocumentLoader* loader,
+                          nsIChannel* channel,
+                          nsresult aStatus);
+  NS_IMETHOD HandleUnknownContentType( nsIDocumentLoader* loader,
+                                       nsIChannel* channel,
+                                       const char *aContentType,
+                                       const char *aCommand );
 
 protected:
-
-  nsString mURL;
-  nsString mOverURL;
-  nsString mOverTarget;
   nsGfxTextControlFrame *mFrame; // not ref counted
   PRBool mFirstCall;
 };

@@ -76,7 +76,6 @@ static NS_DEFINE_IID(kWindowCID, NS_WINDOW_CID);
 
 
 static NS_DEFINE_IID(kIXPBaseWindowIID, NS_IXPBASE_WINDOW_IID);
-static NS_DEFINE_IID(kIStreamObserverIID, NS_ISTREAMOBSERVER_IID);
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIDOMDocumentIID, NS_IDOMDOCUMENT_IID);
 static NS_DEFINE_IID(kIFactoryIID, NS_IFACTORY_IID);
@@ -130,11 +129,6 @@ nsresult nsXPBaseWindow::QueryInterface(const nsIID& aIID,
 
   if (aIID.Equals(kIXPBaseWindowIID)) {
     *aInstancePtrResult = (void*) ((nsIXPBaseWindow*)this);
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  if (aIID.Equals(kIStreamObserverIID)) {
-    *aInstancePtrResult = (void*) ((nsIStreamObserver*)this);
     NS_ADDREF_THIS();
     return NS_OK;
   }
@@ -254,7 +248,6 @@ nsresult nsXPBaseWindow::Init(nsXPBaseWindowType aType,
                        nsScrollPreference_kNeverScroll, //nsScrollPreference_kAuto, 
                        aAllowPlugins, PR_FALSE);
   mWebShell->SetContainer((nsIWebShellContainer*) this);
-  mWebShell->SetObserver((nsIStreamObserver*)this);
   mWebShell->SetPrefs(aPrefs);
   mWebShell->Show();
 
@@ -582,45 +575,6 @@ nsXPBaseWindow::CreatePopup(nsIDOMElement* aElement, nsIDOMElement* aPopupConten
   return NS_OK;
 }
 
-//----------------------------------------
-
-// Stream observer implementation
-#ifndef NECKO
-NS_IMETHODIMP
-nsXPBaseWindow::OnProgress(nsIURI* aURL,
-                           PRUint32 aProgress,
-                           PRUint32 aProgressMax)
-{
-  return NS_OK;
-}
-
-//----------------------------------------
-NS_IMETHODIMP nsXPBaseWindow::OnStatus(nsIURI* aURL, const PRUnichar* aMsg)
-{
-  return NS_OK;
-}
-#endif
-
-//----------------------------------------
-#ifdef NECKO
-NS_IMETHODIMP nsXPBaseWindow::OnStartRequest(nsIChannel* channel, nsISupports *ctxt)
-#else
-NS_IMETHODIMP nsXPBaseWindow::OnStartRequest(nsIURI* aURL, const char *aContentType)
-#endif
-{
-  return NS_OK;
-}
-
-//----------------------------------------
-#ifdef NECKO
-NS_IMETHODIMP nsXPBaseWindow::OnStopRequest(nsIChannel* channel, nsISupports *ctxt,
-                                            nsresult status, const PRUnichar *errorMsg)
-#else
-NS_IMETHODIMP nsXPBaseWindow::OnStopRequest(nsIURI* aURL, nsresult status, const PRUnichar* aMsg)
-#endif
-{
-  return NS_OK;
-}
 
 #ifndef NECKO
 //----------------------------------------

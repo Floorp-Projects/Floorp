@@ -58,6 +58,7 @@
 #include "nsIDocument.h"
 #include "nsILayoutDebugger.h"
 #include "nsThrobber.h"
+#include "nsIDocumentLoader.h"
 
 #include "nsXIFDTD.h"
 #include "nsIParser.h"
@@ -165,7 +166,6 @@ static NS_DEFINE_IID(kIButtonIID, NS_IBUTTON_IID);
 static NS_DEFINE_IID(kIDOMDocumentIID, NS_IDOMDOCUMENT_IID);
 static NS_DEFINE_IID(kIFactoryIID, NS_IFACTORY_IID);
 static NS_DEFINE_IID(kIFileWidgetIID, NS_IFILEWIDGET_IID);
-static NS_DEFINE_IID(kIStreamObserverIID, NS_ISTREAMOBSERVER_IID);
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kITextWidgetIID, NS_ITEXTWIDGET_IID);
 static NS_DEFINE_IID(kIWebShellIID, NS_IWEB_SHELL_IID);
@@ -183,6 +183,8 @@ static NS_DEFINE_CID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
 
 static NS_DEFINE_IID(kILayoutDebuggerIID, NS_ILAYOUT_DEBUGGER_IID);
 static NS_DEFINE_CID(kLayoutDebuggerCID, NS_LAYOUT_DEBUGGER_CID);
+
+static NS_DEFINE_IID(kIDocumentLoaderObserverIID, NS_IDOCUMENT_LOADER_OBSERVER_IID);
 
 #define FILE_PROTOCOL "file://"
 
@@ -1136,8 +1138,8 @@ nsBrowserWindow::QueryInterface(const nsIID& aIID,
     NS_ADDREF_THIS();
     return NS_OK;
   }
-  if (aIID.Equals(kIStreamObserverIID)) {
-    *aInstancePtrResult = (void*) ((nsIStreamObserver*)this);
+  if (aIID.Equals(kIDocumentLoaderObserverIID)) {
+    *aInstancePtrResult = (void*) ((nsIDocumentLoaderObserver*)this);
     NS_ADDREF_THIS();
     return NS_OK;
   }
@@ -1201,12 +1203,17 @@ nsBrowserWindow::Init(nsIAppShell* aAppShell,
   if (NS_OK != rv) {
     return rv;
   }
+  nsCOMPtr<nsIDocumentLoader> docLoader;
   r.x = r.y = 0;
   rv = mWebShell->Init(mWindow->GetNativeData(NS_NATIVE_WIDGET), 
                        r.x, r.y, r.width, r.height,
                        nsScrollPreference_kAuto, aAllowPlugins, PR_TRUE);
   mWebShell->SetContainer((nsIWebShellContainer*) this);
-  mWebShell->SetObserver((nsIStreamObserver*)this);
+
+  mWebShell->GetDocumentLoader(*getter_AddRefs(docLoader));
+  if (docLoader) {
+    docLoader->AddObserver(this);
+  }
   mWebShell->SetPrefs(aPrefs);
   mWebShell->Show();
 
@@ -1277,13 +1284,17 @@ nsBrowserWindow::Init(nsIAppShell* aAppShell,
   if (NS_OK != rv) {
     return rv;
   }
+  nsCOMPtr<nsIDocumentLoader> docLoader;
   r.x = r.y = 0;
   //nsRect ws = r;
   rv = mWebShell->Init(mWindow->GetNativeData(NS_NATIVE_WIDGET), 
                        r.x, r.y, r.width, r.height,
                        nsScrollPreference_kAuto, aAllowPlugins);
   mWebShell->SetContainer((nsIWebShellContainer*) this);
-  mWebShell->SetObserver((nsIStreamObserver*)this);
+  mWebShell->GetDocumentLoader(*getter_AddRefs(docLoader));
+  if (docLoader) {
+    docLoader->AddObserver(this);
+  }
   mWebShell->SetPrefs(aPrefs);
 
   if (NS_CHROME_MENU_BAR_ON & aChromeMask) {
@@ -1988,7 +1999,102 @@ nsBrowserWindow::FocusAvailable(nsIWebShell* aFocusedWebShell, PRBool& aFocusTak
 
 //----------------------------------------
 
-// Stream observer implementation
+// document loader observer implementation
+NS_IMETHODIMP
+nsBrowserWindow::OnStartDocumentLoad(nsIDocumentLoader* loader, 
+                                     nsIURI* aURL, 
+                                     const char* aCommand)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsBrowserWindow::OnEndDocumentLoad(nsIDocumentLoader* loader,
+                                   nsIChannel* channel,
+                                   nsresult aStatus,
+  						           nsIDocumentLoaderObserver * aObserver)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsBrowserWindow::OnStartURLLoad(nsIDocumentLoader* loader,
+                                nsIChannel* channel, 
+                                nsIContentViewer* aViewer)
+{
+  nsresult rv;
+
+  nsCOMPtr<nsIURI> aURL;
+  rv = channel->GetURI(getter_AddRefs(aURL));
+  if (NS_FAILED(rv)) return rv;
+  
+  if (mStatus) {
+    nsAutoString url;
+    if (nsnull != aURL) {
+      char* str;
+      aURL->GetSpec(&str);
+      url = str;
+      nsCRT::free(str);
+    }
+    url.Append(": start");
+    PRUint32 size;
+    mStatus->SetText(url,size);
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsBrowserWindow::OnProgressURLLoad(nsIDocumentLoader* loader,
+                                   nsIChannel* channel,
+                                   PRUint32 aProgress, 
+                                   PRUint32 aProgressMax)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsBrowserWindow::OnStatusURLLoad(nsIDocumentLoader* loader,
+                                 nsIChannel* channel,
+                                 nsString& aMsg)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsBrowserWindow::OnEndURLLoad(nsIDocumentLoader* loader,
+                              nsIChannel* channel,
+                              nsresult aStatus)
+{
+  nsresult rv;
+
+  nsCOMPtr<nsIURI> aURL;
+  rv = channel->GetURI(getter_AddRefs(aURL));
+  if (NS_FAILED(rv)) return rv;
+  
+  if (mStatus) {
+    nsAutoString url;
+    if (nsnull != aURL) {
+      char* str;
+      aURL->GetSpec(&str);
+      url = str;
+      nsCRT::free(str);
+    }
+    url.Append(": stop");
+    PRUint32 size;
+    mStatus->SetText(url,size);
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsBrowserWindow::HandleUnknownContentType(nsIDocumentLoader* loader,
+                                          nsIChannel* channel,
+                                          const char *aContentType,
+                                          const char *aCommand)
+{
+  return NS_OK;
+}
+
 
 NS_IMETHODIMP
 #ifdef NECKO
@@ -2048,87 +2154,6 @@ nsBrowserWindow::OnStatus(nsIURI* aURL, const PRUnichar* aMsg)
   if (mStatus) {
     PRUint32 size;
     mStatus->SetText(aMsg,size);
-  }
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-#ifdef NECKO
-nsBrowserWindow::OnStartRequest(nsIChannel* channel, nsISupports *ctxt)
-#else
-nsBrowserWindow::OnStartRequest(nsIURI* aURL, const char *aContentType)
-#endif
-{
-  nsresult rv;
-
-#ifdef NECKO
-  nsCOMPtr<nsIURI> aURL;
-  rv = channel->GetURI(getter_AddRefs(aURL));
-  if (NS_FAILED(rv)) return rv;
-#endif
-  
-  if (mStatus) {
-    nsAutoString url;
-    if (nsnull != aURL) {
-#ifdef NECKO
-      char* str;
-      aURL->GetSpec(&str);
-#else
-      PRUnichar* str;
-      aURL->ToString(&str);
-#endif
-      url = str;
-#ifdef NECKO
-      nsCRT::free(str);
-#else
-      delete[] str;
-#endif
-    }
-    url.Append(": start");
-    PRUint32 size;
-    mStatus->SetText(url,size);
-  }
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-#ifdef NECKO
-nsBrowserWindow::OnStopRequest(nsIChannel* channel, nsISupports *ctxt,
-                               nsresult status, const PRUnichar *errorMsg)
-#else
-nsBrowserWindow::OnStopRequest(nsIURI* aURL,
-                               nsresult status,
-                               const PRUnichar* aMsg)
-#endif
-{
-  nsresult rv;
-
-#ifdef NECKO
-  nsCOMPtr<nsIURI> aURL;
-  rv = channel->GetURI(getter_AddRefs(aURL));
-  if (NS_FAILED(rv)) return rv;
-#endif
-  
-  if (mStatus) {
-    nsAutoString url;
-    if (nsnull != aURL) {
-#ifdef NECKO
-      char* str;
-      aURL->GetSpec(&str);
-#else
-      PRUnichar* str;
-      aURL->ToString(&str);
-#endif
-      url = str;
-#ifdef NECKO
-      nsCRT::free(str);
-#else
-      delete[] str;
-#endif
-    }
-    url.Append(": stop");
-    PRUint32 size;
-    mStatus->SetText(url,size);
   }
   return NS_OK;
 }

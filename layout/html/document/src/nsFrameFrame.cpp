@@ -60,36 +60,6 @@ static NS_DEFINE_IID(kIDOMHTMLFrameElementIID, NS_IDOMHTMLFRAMEELEMENT_IID);
 static NS_DEFINE_IID(kIDOMHTMLIFrameElementIID, NS_IDOMHTMLIFRAMEELEMENT_IID);
 
 /*******************************************************************************
- * TempObserver XXX temporary until doc manager/loader is in place
- ******************************************************************************/
-class TempObserver : public nsIStreamObserver
-{
-public:
-  TempObserver() { NS_INIT_REFCNT(); }
-
-  virtual ~TempObserver() {}
-
-  // nsISupports
-  NS_DECL_ISUPPORTS
-
-#ifdef NECKO
-  NS_DECL_NSISTREAMOBSERVER
-#else
-  // nsIStreamObserver
-  NS_IMETHOD OnStartRequest(nsIURI* aURL, const char *aContentType);
-  NS_IMETHOD OnProgress(nsIURI* aURL, PRUint32 aProgress, PRUint32 aProgressMax);
-  NS_IMETHOD OnStatus(nsIURI* aURL, const PRUnichar* aMsg);
-  NS_IMETHOD OnStopRequest(nsIURI* aURL, nsresult status, const PRUnichar* aMsg);
-#endif
-
-protected:
-
-  nsString mURL;
-  nsString mOverURL;
-  nsString mOverTarget;
-};
-
-/*******************************************************************************
  * FrameLoadingInfo 
  ******************************************************************************/
 class FrameLoadingInfo : public nsISupports
@@ -211,9 +181,6 @@ protected:
 
   nsIWebShell* mWebShell;
   PRBool mCreatingViewer;
-
-  // XXX fix these
-  TempObserver* mTempObserver;
 };
 
 
@@ -460,8 +427,6 @@ nsHTMLFrameInnerFrame::nsHTMLFrameInnerFrame()
 {
   mWebShell       = nsnull;
   mCreatingViewer = PR_FALSE;
-  mTempObserver   = new TempObserver();
-  NS_ADDREF(mTempObserver);
 }
 
 nsHTMLFrameInnerFrame::~nsHTMLFrameInnerFrame()
@@ -471,7 +436,6 @@ nsHTMLFrameInnerFrame::~nsHTMLFrameInnerFrame()
     mWebShell->Destroy();    
     NS_RELEASE(mWebShell);
   }
-  NS_RELEASE(mTempObserver);
 }
 
 PRBool nsHTMLFrameInnerFrame::GetURL(nsIContent* aContent, nsString& aResult)
@@ -894,7 +858,6 @@ nsHTMLFrameInnerFrame::CreateWebShell(nsIPresContext& aPresContext,
   NS_RELEASE(content);
   NS_RELEASE(widget);
 
-  mWebShell->SetObserver(mTempObserver);
   mWebShell->Show();
 
   return NS_OK;
@@ -1040,91 +1003,4 @@ FrameLoadingInfo::FrameLoadingInfo(const nsSize& aSize)
  * Implementation of ISupports methods...
  */
 NS_IMPL_ISUPPORTS(FrameLoadingInfo,kISupportsIID);
-
-// XXX temp implementation
-
-NS_IMPL_ADDREF(TempObserver);
-NS_IMPL_RELEASE(TempObserver);
-
-/*******************************************************************************
- * TempObserver
- ******************************************************************************/
-nsresult
-TempObserver::QueryInterface(const nsIID& aIID,
-                            void** aInstancePtrResult)
-{
-  NS_PRECONDITION(nsnull != aInstancePtrResult, "null pointer");
-  if (nsnull == aInstancePtrResult) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  if (aIID.Equals(kIStreamObserverIID)) {
-    *aInstancePtrResult = (void*) ((nsIStreamObserver*)this);
-    AddRef();
-    return NS_OK;
-  }
-  if (aIID.Equals(kISupportsIID)) {
-    *aInstancePtrResult = (void*) ((nsISupports*)((nsIDocumentObserver*)this));
-    AddRef();
-    return NS_OK;
-  }
-  return NS_NOINTERFACE;
-}
-
-#ifndef NECKO
-NS_IMETHODIMP
-TempObserver::OnProgress(nsIURI* aURL, PRUint32 aProgress, PRUint32 aProgressMax)
-{
-#if 0
-  fputs("[progress ", stdout);
-  fputs(mURL, stdout);
-  printf(" %d %d ", aProgress, aProgressMax);
-  fputs("]\n", stdout);
-#endif
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-TempObserver::OnStatus(nsIURI* aURL, const PRUnichar* aMsg)
-{
-#if 0
-  fputs("[status ", stdout);
-  fputs(mURL, stdout);
-  fputs(aMsg, stdout);
-  fputs("]\n", stdout);
-#endif
-  return NS_OK;
-}
-#endif
-
-NS_IMETHODIMP
-#ifdef NECKO
-TempObserver::OnStartRequest(nsIChannel* channel, nsISupports *ctxt)
-#else
-TempObserver::OnStartRequest(nsIURI* aURL, const char *aContentType)
-#endif
-{
-#if 0
-  fputs("Loading ", stdout);
-  fputs(mURL, stdout);
-  fputs("\n", stdout);
-#endif
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-#ifdef NECKO
-TempObserver::OnStopRequest(nsIChannel* channel, nsISupports *ctxt,
-                            nsresult status, const PRUnichar *errorMsg)
-#else
-TempObserver::OnStopRequest(nsIURI* aURL, nsresult status, const PRUnichar* aMsg)
-#endif
-{
-#if 0
-  fputs("Done loading ", stdout);
-  fputs(mURL, stdout);
-  fputs("\n", stdout);
-#endif
-  return NS_OK;
-}
-
 

@@ -332,7 +332,6 @@ nsresult nsWebShellWindow::Initialize(nsIWebShellWindow* aParent,
                                       nsIAppShell* aShell, nsIURI* aUrl, 
                                       PRBool aCreatedVisible,
                                       PRBool aLoadDefaultPage,
-                                      nsIStreamObserver* anObserver,
                                       nsIXULWindowCallbacks *aCallbacks,
                                       PRInt32 aInitialWidth, PRInt32 aInitialHeight,
                                       nsWidgetInitData& widgetInitData)
@@ -396,7 +395,6 @@ nsresult nsWebShellWindow::Initialize(nsIWebShellWindow* aParent,
                        PR_TRUE,                     // Allow Plugins 
                        PR_TRUE);
   mWebShell->SetContainer(this);
-  mWebShell->SetObserver((nsIStreamObserver*)anObserver);
   mWebShell->SetDocLoaderObserver(this);
 
   // The outermost web shell is always considered to be chrome.
@@ -2619,7 +2617,7 @@ NS_IMETHODIMP nsWebShellWindow::Init(nsIAppShell* aAppShell,
    widgetInitData.mBorderStyle = eBorderStyle_default;
 
    rv = Initialize(nsnull, aAppShell, urlObj, PR_TRUE, PR_TRUE,
-       nsnull, nsnull, aBounds.width, aBounds.height, widgetInitData);
+       nsnull, aBounds.width, aBounds.height, widgetInitData);
    mChromeMask = aChromeMask;
    if (NS_SUCCEEDED(rv))
      MoveTo(aBounds.x, aBounds.y);

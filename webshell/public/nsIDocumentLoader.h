@@ -107,7 +107,6 @@ public:
                             nsIContentViewerContainer* aContainer,
                             nsIInputStream* aPostDataStream = nsnull,
                             nsISupports* aExtraInfo = nsnull,
-                            nsIStreamObserver* anObserver = nsnull,
                             nsLoadFlags aType = nsIChannel::LOAD_NORMAL,
                             const PRUint32 aLocalIP = 0,
                             const PRUnichar* aReferrer = nsnull) = 0;

@@ -595,7 +595,7 @@ nsAppShellService::JustCreateTopWindow(nsIWebShellWindow *aParent,
     }
 
     rv = window->Initialize(aParent, mAppShell, aUrl,
-                            aShowWindow, aLoadDefaultPage, nsnull, aCallbacks,
+                            aShowWindow, aLoadDefaultPage, aCallbacks,
                             aInitialWidth, aInitialHeight, widgetInitData);
       
     if (NS_SUCCEEDED(rv)) {
