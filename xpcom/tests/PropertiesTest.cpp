@@ -36,7 +36,7 @@
 #ifdef XP_MAC
 #define NETLIB_DLL "NETLIB_DLL"
 #else
-#define NETLIB_DLL "libnetlib.so"
+#define NETLIB_DLL "libnetlib"MOZ_DLL_SUFFIX
 #endif
 #endif
 static NS_DEFINE_IID(kEventQueueCID, NS_EVENTQUEUE_CID);

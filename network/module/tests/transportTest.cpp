@@ -63,7 +63,7 @@ PRBool bLoadAsync;
 #ifdef XP_MAC
 #include "nsMacRepository.h"
 #else
-#define NETLIB_DLL "libnetlib.so"
+#define NETLIB_DLL "libnetlib"MOZ_DLL_SUFFIX
 #endif
 #endif
 

@@ -372,7 +372,7 @@ PRBool TestWordBreaker()
 #define LWBRK_DLL "LWBRK_DLL"
 #else
 #endif
-#define LWBRK_DLL "liblwbrk.so"
+#define LWBRK_DLL "liblwbrk"MOZ_DLL_SUFFIX
 #endif
 
 extern "C" void NS_SetupRegistry()

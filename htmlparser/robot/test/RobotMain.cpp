@@ -8,7 +8,7 @@
 #ifdef XP_PC
 #define PARSER_DLL "raptorhtmlpars.dll"
 #else
-#define PARSER_DLL "libraptorhtmlpars.so"
+#define PARSER_DLL "libraptorhtmlpars"MOZ_DLL_SUFFIX
 #endif
 
 extern "C" NS_EXPORT int DebugRobot(nsVoidArray * workList, nsIWebShell * ww);

@@ -100,12 +100,12 @@ char * gFailedMsg = NULL;
 #endif
 
 #ifdef XP_UNIX
-#define XPCOM_DLL "libxpcom.so"
+#define XPCOM_DLL "libxpcom"MOZ_DLL_SUFFIX
 #ifndef WIDGET_DLL
-#define WIDGET_DLL "libwidgetgtk.so"
+#define WIDGET_DLL "libwidgetgtk"MOZ_DLL_SUFFIX
 #endif
 #ifndef GFX_DLL
-#define GFX_DLL "libgfxgtk.so"
+#define GFX_DLL "libgfxgtk"MOZ_DLL_SUFFIX
 #endif
 #define TEXT_HEIGHT 30
 #endif

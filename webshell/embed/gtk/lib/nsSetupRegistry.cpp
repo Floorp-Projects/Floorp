@@ -104,35 +104,35 @@
     #define STRRES_DLL   "STRRES_DLL"
     #define UNICHARUTIL_DLL   "UNICHARUTIL_DLL"
 #else
-    #define XPCOM_DLL  "libxpcom.so"
+    #define XPCOM_DLL  "libxpcom"MOZ_DLL_SUFFIX
     /** Currently CFLAGS  defines WIDGET_DLL and GFXWIN_DLL. If, for some 
       * reason, the cflags value doesn't get defined, use gtk, 
       * since that is the default.
      **/
     #ifndef WIDGET_DLL
-    #define WIDGET_DLL "libwidgetgtk.so"
+    #define WIDGET_DLL "libwidgetgtk"MOZ_DLL_SUFFIX
     #endif
     #ifndef GFXWIN_DLL
-    #define GFXWIN_DLL "libgfxgtk.so"
+    #define GFXWIN_DLL "libgfxgtk"MOZ_DLL_SUFFIX
     #endif
-    #define VIEW_DLL   "libraptorview.so"
-    #define WEB_DLL    "libraptorwebwidget.so"
-    #define PLUGIN_DLL "libraptorplugin.so"
-    #define CAPS_DLL   "libcaps.so"
-    #define LIVECONNECT_DLL "libliveconnect.so"
-    #define OJI_DLL    "liboji.so"
-    #define PREF_DLL   "libpref.so"
-    #define PARSER_DLL "libraptorhtmlpars.so"
-    #define DOM_DLL    "libjsdom.so"
-    #define NETLIB_DLL "libnetlib.so"
-    #define EDITOR_DLL "libender.so"
-    #define RDF_DLL    "librdf.so"
-    #define UCONV_DLL    "libuconv.so"
-    #define UCVLATIN_DLL "libucvlatin.so"
-    #define UCVJA_DLL    "libucvja.so"
-    #define UCVJA2_DLL   "libucvja2.so"
-    #define STRRES_DLL   "libstrres.so"
-    #define UNICHARUTIL_DLL   "libunicharutil.so"
+    #define VIEW_DLL   "libraptorview"MOZ_DLL_SUFFIX
+    #define WEB_DLL    "libraptorwebwidget"MOZ_DLL_SUFFIX
+    #define PLUGIN_DLL "libraptorplugin"MOZ_DLL_SUFFIX
+    #define CAPS_DLL   "libcaps"MOZ_DLL_SUFFIX
+    #define LIVECONNECT_DLL "libliveconnect"MOZ_DLL_SUFFIX
+    #define OJI_DLL    "liboji"MOZ_DLL_SUFFIX
+    #define PREF_DLL   "libpref"MOZ_DLL_SUFFIX
+    #define PARSER_DLL "libraptorhtmlpars"MOZ_DLL_SUFFIX
+    #define DOM_DLL    "libjsdom"MOZ_DLL_SUFFIX
+    #define NETLIB_DLL "libnetlib"MOZ_DLL_SUFFIX
+    #define EDITOR_DLL "libender"MOZ_DLL_SUFFIX
+    #define RDF_DLL    "librdf"MOZ_DLL_SUFFIX
+    #define UCONV_DLL    "libuconv"MOZ_DLL_SUFFIX
+    #define UCVLATIN_DLL "libucvlatin"MOZ_DLL_SUFFIX
+    #define UCVJA_DLL    "libucvja"MOZ_DLL_SUFFIX
+    #define UCVJA2_DLL   "libucvja2"MOZ_DLL_SUFFIX
+    #define STRRES_DLL   "libstrres"MOZ_DLL_SUFFIX
+    #define UNICHARUTIL_DLL   "libunicharutil"MOZ_DLL_SUFFIX
 #endif
 
 // Class ID's

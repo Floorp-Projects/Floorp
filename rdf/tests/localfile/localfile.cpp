@@ -68,12 +68,12 @@
 #define RDF_DLL    "rdf.dll"
 #define XPCOM_DLL  "xpcom32.dll"
 #elif defined(XP_UNIX)
-#define DOM_DLL    "libjsdom.so"
-#define LAYOUT_DLL "libraptorhtml.so"
-#define NETLIB_DLL "libnetlib.so"
-#define PARSER_DLL "libraptorhtmlpars.so"
-#define RDF_DLL    "librdf.so"
-#define XPCOM_DLL  "libxpcom.so"
+#define DOM_DLL    "libjsdom"MOZ_DLL_SUFFIX
+#define LAYOUT_DLL "libraptorhtml"MOZ_DLL_SUFFIX
+#define NETLIB_DLL "libnetlib"MOZ_DLL_SUFFIX
+#define PARSER_DLL "libraptorhtmlpars"MOZ_DLL_SUFFIX
+#define RDF_DLL    "librdf"MOZ_DLL_SUFFIX
+#define XPCOM_DLL  "libxpcom"MOZ_DLL_SUFFIX
 #elif defined(XP_MAC)
 #define DOM_DLL    "DOM_DLL"
 #define LAYOUT_DLL "LAYOUT_DLL"

@@ -71,7 +71,7 @@ static nsIImageRequest  *gImageReq = nsnull;
 #endif
 
 #ifdef XP_UNIX
-#define XPCOM_DLL "libxpcom.so"
+#define XPCOM_DLL "libxpcom"MOZ_DLL_SUFFIX
 #define TEXT_HEIGHT 30
 #define FILE_URL_PREFIX "file://"
 #endif
