@@ -5269,6 +5269,8 @@ nsCSSFrameConstructor::ConstructMathMLFrame(nsIPresShell*            aPresShell,
      rv = NS_NewMathMLmpaddedFrame(aPresShell, &newFrame);
   else if (aTag == nsMathMLAtoms::mspace_)
      rv = NS_NewMathMLmspaceFrame(aPresShell, &newFrame);
+  else if (aTag == nsMathMLAtoms::ms_)
+     rv = NS_NewMathMLmsFrame(aPresShell, &newFrame);
   else if (aTag == nsMathMLAtoms::mfenced_)
      rv = NS_NewMathMLmfencedFrame(aPresShell, &newFrame);
   else if (aTag == nsMathMLAtoms::mmultiscripts_)
@@ -5282,7 +5284,6 @@ nsCSSFrameConstructor::ConstructMathMLFrame(nsIPresShell*            aPresShell,
   else if (aTag == nsMathMLAtoms::mrow_   ||
            aTag == nsMathMLAtoms::mtext_  ||
            aTag == nsMathMLAtoms::merror_ ||
-           aTag == nsMathMLAtoms::ms_     ||
            aTag == nsMathMLAtoms::none_   ||
            aTag == nsMathMLAtoms::mprescripts_ )
      rv = NS_NewMathMLmrowFrame(aPresShell, &newFrame);
