@@ -5,9 +5,26 @@
 # $MOZ_SRC/mozilla/js/tests/$suite/shell.js, $
 # MOZ_SRC/mozilla/js/tests/$suite/browser.js,
 # and the test.js file.
+#
+#
 
 $moz_src = $ENV{"MOZ_SRC"} ||
     die ("You need to set your MOZ_SRC environment variable.\n");
+
+$test_home = $moz_src ."/js/tests/";
+
+opendir (TEST_HOME, $test_home);
+@__suites = readdir (TEST_HOME);
+closedir TEST_HOME;
+
+foreach (@__suites ) {
+    if ( -d $_ && $_ !~ /\./ && $_ !~ 'CVS' ) {
+        $suites[$#suites+1] = $_;
+    }
+}
+if ( ! $ARGV[0]  ) {
+    die ( "Specify a directory: ". join(" ", @suites) ."\n" );
+}
 
 $js_test_dir = $moz_src .  "/js/tests/" . $ARGV[0] ."/";
 
