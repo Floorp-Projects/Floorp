@@ -74,8 +74,7 @@ use Date::Parse;               # For str2time().
 use RelationSet;
 
 # Some environment variables are not taint safe
-delete $ENV{PATH};
-delete $ENV{BASH_ENV};
+delete $ENV{qw(PATH IFS CDPATH ENV BASH_ENV)};
 
 # Contains the version string for the current running Bugzilla.
 $::param{'version'} = '2.15';
