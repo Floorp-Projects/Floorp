@@ -36,6 +36,8 @@
 #include "nsIImageMap.h"
 #include "nsILinkHandler.h"
 #include "nsIURL.h"
+#include "nsIView.h"
+#include "nsIViewManager.h"
 #include "nsCSSLayout.h"
 #include "nsHTMLBase.h"
 #include "prprf.h"
