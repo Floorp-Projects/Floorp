@@ -2323,7 +2323,7 @@ nsIntRect nsIFrame::GetScreenRect() const
 
     if (widget) {
       nsRect ourRect = mRect;
-      ourRect += toViewOffset + toWidgetOffset;
+      ourRect.MoveTo(toViewOffset + toWidgetOffset);
       ourRect.ScaleRoundOut(GetPresContext()->TwipsToPixels());
       // Is it safe to pass the same rect for both args of WidgetToScreen?
       // It's not clear, so let's not...
