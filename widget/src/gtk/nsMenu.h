@@ -61,6 +61,8 @@ public:
   NS_IMETHOD RemoveItem(const PRUint32 aPos);
   NS_IMETHOD RemoveAll();
   NS_IMETHOD GetNativeData(void*& aData);
+  NS_IMETHOD AddMenuListener(nsIMenuListener * aMenuListener);
+  NS_IMETHOD RemoveMenuListener(nsIMenuListener * aMenuListener);
 
 protected:
   void       Create(GtkWidget *aParent, const nsString &aLabel);
