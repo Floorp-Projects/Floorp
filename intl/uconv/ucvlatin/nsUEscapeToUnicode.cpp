@@ -105,17 +105,8 @@ NS_IMETHODIMP nsUEscapeToUnicode::Convert(
              mState++;
              mData=0;
           } else {
-             if((destPtr+2) >= destEnd) {
-                   // notice the data in mBuffer is stored in reversed order
-                   mBufferLen = 2;
-                   mBuffer[1] = (PRUnichar) '\\';
-                   mBuffer[0] = (PRUnichar)*srcPtr;
-                   mState=0;
-                   goto error;
-             }
-             *destPtr++ = (PRUnichar) '\\';
+             mState =0;
              *destPtr++ = (PRUnichar)*srcPtr;
-             mState=0;
           }
           break;
         case 2:  // got \u
