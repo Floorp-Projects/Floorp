@@ -32,7 +32,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: ssl3con.c,v 1.17 2001/03/16 23:25:59 nelsonb%netscape.com Exp $
+ * $Id: ssl3con.c,v 1.18 2001/03/31 02:49:59 nelsonb%netscape.com Exp $
  */
 
 #include "nssrenam.h"
@@ -3898,8 +3898,8 @@ loser:
 static SECStatus
 ssl3_HandleServerKeyExchange(sslSocket *ss, SSL3Opaque *b, PRUint32 length)
 {
-    PRArenaPool *    arena;
-    SECKEYPublicKey *peerKey;
+    PRArenaPool *    arena     = NULL;
+    SECKEYPublicKey *peerKey   = NULL;
     PRBool           isTLS;
     SECStatus        rv;
     int              errCode   = SSL_ERROR_RX_MALFORMED_SERVER_KEY_EXCH;
@@ -3981,8 +3981,9 @@ ssl3_HandleServerKeyExchange(sslSocket *ss, SSL3Opaque *b, PRUint32 length)
 	    goto no_memory;
 	}
 
-    	ss->sec->peerKey = peerKey = PORT_ArenaZNew(arena, SECKEYPublicKey);
+    	peerKey = PORT_ArenaZNew(arena, SECKEYPublicKey);
     	if (peerKey == NULL) {
+            PORT_FreeArena(arena, PR_FALSE);
 	    goto no_memory;
 	}
 
@@ -3990,26 +3991,16 @@ ssl3_HandleServerKeyExchange(sslSocket *ss, SSL3Opaque *b, PRUint32 length)
 	peerKey->keyType            = rsaKey;
 	peerKey->pkcs11Slot         = NULL;
 	peerKey->pkcs11ID           = CK_INVALID_KEY;
-    	peerKey->u.rsa.modulus.data =
-	    (unsigned char*)PORT_ArenaAlloc(arena, modulus.len);
-	if (peerKey->u.rsa.modulus.data == NULL)
+	if (SECITEM_CopyItem(arena, &peerKey->u.rsa.modulus,        &modulus) ||
+	    SECITEM_CopyItem(arena, &peerKey->u.rsa.publicExponent, &exponent))
+	{
+            PORT_FreeArena(arena, PR_FALSE);
 	    goto no_memory;
-
-    	PORT_Memcpy(peerKey->u.rsa.modulus.data, modulus.data, modulus.len);
-    	peerKey->u.rsa.modulus.len = modulus.len;
-
-    	peerKey->u.rsa.publicExponent.data =
-	    (unsigned char*)PORT_ArenaAlloc(arena, exponent.len);
-        if (peerKey->u.rsa.publicExponent.data == NULL)
-	    goto no_memory;
-
-    	PORT_Memcpy(peerKey->u.rsa.publicExponent.data,
-		    exponent.data, exponent.len);
-    	peerKey->u.rsa.publicExponent.len = exponent.len;
-
-    	PORT_Free(modulus.data);
-    	PORT_Free(exponent.data);
-	PORT_Free(signature.data);
+        }
+    	ss->sec->peerKey = peerKey;
+	SECITEM_FreeItem(&modulus,   PR_FALSE);
+	SECITEM_FreeItem(&exponent,  PR_FALSE);
+	SECITEM_FreeItem(&signature, PR_FALSE);
     	ss->ssl3->hs.ws = wait_cert_request;
     	return SECSuccess;
 
