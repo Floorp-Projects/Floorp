@@ -254,7 +254,7 @@ function loadPermissions() {
   var enumerator = permissionmanager.enumerator;
   var count = 0;
   var contentStr;
-  var dialogType = 2; // Popups
+  var dialogType = "popup"; // Popups
   
   while (enumerator.hasMoreElements()) {
     var nextPermission = enumerator.getNext();
