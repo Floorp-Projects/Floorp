@@ -1425,7 +1425,7 @@ void CMailComposeWindow::SetDefaultCSID(Int16 defaultcsid)
 		}
 
 		// Set The Subject Font
-		if(CTSMEditField* subjectField = dynamic_cast<CTSMEditField*>(FindPaneByID('Subj')))
+		if(LEditField* subjectField = dynamic_cast<LEditField*>(FindPaneByID('Subj')))
 		{
 			subjectField->SetTextTraitsID(textTraitID);
 			subjectField->Refresh();
@@ -1501,7 +1501,7 @@ Boolean CMailComposeWindow::PrepareMessage( Boolean isDraft)
 #if 1 // This is a temporary hack till we really fix bug #42878.
 		else if( !isDraft )
 		{
-			CTSMEditField* subjectField = dynamic_cast<CTSMEditField*>(FindPaneByID('Subj'));	// use CTSMEditField to support Asian Inline input
+			LEditField* subjectField = dynamic_cast<LEditField*>(FindPaneByID('Subj'));	// use CTSMEditField to support Asian Inline input
 			SysBeep(1);
 			SwitchTarget(subjectField);
 			CStr255 errorSubject(XP_GetString(MK_MIME_NO_SUBJECT));
@@ -1924,7 +1924,7 @@ Boolean CMailComposeWindow::NeedToSave()
 	
 	// Subject
 	CStr255  subject( mComposeSession->GetSubject() );
-	CTSMEditField* subjectField = dynamic_cast<CTSMEditField*>(FindPaneByID('Subj'));
+	LEditField* subjectField = dynamic_cast<LEditField*>(FindPaneByID('Subj'));
 	CStr255  currentText;
 	if (subjectField)
 		subjectField->GetDescriptor(currentText);
@@ -2011,7 +2011,7 @@ void CMailComposeWindow::SpendTime(const EventRecord &/*inMacEvent*/)
 //----------------------------------------------------------------------------------------
 {
 	// Update the window title to match the subject
-	CTSMEditField* subjectField = dynamic_cast<CTSMEditField*>(FindPaneByID('Subj'));
+	LEditField* subjectField = dynamic_cast<LEditField*>(FindPaneByID('Subj'));
 	CStr255 currentSubject;
 	if (subjectField)
 	{
