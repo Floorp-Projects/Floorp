@@ -924,6 +924,7 @@ NS_IMETHODIMP
 nsLocalFile::GetFileSize(PRInt64 *aFileSize)
 {
     NS_ENSURE_ARG_POINTER(aFileSize);
+    *aFileSize = LL_ZERO;
     VALIDATE_STAT_CACHE();
 
 #if defined(VMS)
@@ -935,9 +936,7 @@ nsLocalFile::GetFileSize(PRInt64 *aFileSize)
 #endif
 
     /* XXX autoconf for and use stat64 if available */
-    if (S_ISDIR(mCachedStat.st_mode)) {
-        *aFileSize = LL_ZERO;
-    } else {
+    if (!S_ISDIR(mCachedStat.st_mode)) {
         LL_UI2L(*aFileSize, (PRUint32)mCachedStat.st_size);
     }
     return NS_OK;
