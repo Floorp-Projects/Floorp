@@ -32,13 +32,11 @@
 	-Gagan Saksena  08/17/1999
 */
 
-#include "nsISupports.h"
 #include "nsIURI.h"
 #include "nsCOMPtr.h"
 
-class nsAuth : public nsISupports
+class nsAuth
 {
-
 public:
 	// Constructor and Destructor
     // TODO add stuff for realm and user/pass as well!!
@@ -48,8 +46,6 @@ public:
             const char* password = 0,
             const char* realm = 0);
 	virtual ~nsAuth();
-
-    NS_DECL_ISUPPORTS
 
 	char* 		encodedString;
 	char* 		password; 

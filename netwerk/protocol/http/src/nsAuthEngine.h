@@ -24,7 +24,7 @@
 #define _nsAuthEngine_h_
 
 #include "nsCOMPtr.h"
-#include "nsISupportsArray.h"
+#include "nsVoidArray.h"
 #include "nsIIOService.h"
 // Forward Decl
 class nsIURI;
@@ -85,9 +85,9 @@ protected:
                         const char* i_Realm = nsnull,
                         PRBool bProxyAuth = PR_FALSE);
 
-    nsCOMPtr<nsISupportsArray>  mAuthList; 
+    nsVoidArray                 mAuthList; 
     // this needs to be a list becuz pac can produce more ...
-    nsCOMPtr<nsISupportsArray>  mProxyAuthList; 
+    nsVoidArray                 mProxyAuthList; 
 
     // optimization
     nsCOMPtr<nsIIOService>      mIOService;

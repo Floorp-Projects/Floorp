@@ -238,6 +238,7 @@ nsHTTPHandler::NewChannel(nsIURI* i_URL, nsIChannel **o_Instance)
                 // or NS_DUPLICATE_REQUEST something like that.
                 return NS_OK; 
             }
+            NS_RELEASE(pChannel);
         }
 
         // Create one

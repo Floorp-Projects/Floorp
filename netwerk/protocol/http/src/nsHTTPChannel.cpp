@@ -840,13 +840,10 @@ nsHTTPChannel::SetAuthTriedWithPrehost(PRBool iTried)
 NS_IMETHODIMP
 nsHTTPChannel::GetAuthTriedWithPrehost(PRBool* oTried)
 {
-    if (oTried)
-    {
-        *oTried = mAuthTriedWithPrehost;
-        return NS_OK;
-    }
-    else
+    if (!oTried)
         return NS_ERROR_NULL_POINTER;
+    *oTried = mAuthTriedWithPrehost;
+    return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -861,13 +858,10 @@ nsHTTPChannel::SetAuthRealm(const char* aAuthRealm)
 NS_IMETHODIMP
 nsHTTPChannel::GetAuthRealm(char** aAuthRealm)
 {
-    if (aAuthRealm)
-    {
-        *aAuthRealm = nsCRT::strdup(mAuthRealm);
-        return (*aAuthRealm) ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
-    }
-    else
+    if (!aAuthRealm)
         return NS_ERROR_NULL_POINTER;
+    *aAuthRealm = nsCRT::strdup(mAuthRealm);
+    return (*aAuthRealm) ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
 
 // nsIInterfaceRequestor method
@@ -2214,7 +2208,7 @@ nsHTTPChannel::Authenticate(const char *iChallenge, PRBool iProxyAuth)
             if (NS_SUCCEEDED(mURI->GetHost(getter_Copies(hostname))))
             {
                 // TODO localize
-                message.AppendWithConversion(" at ");
+                message.Append(NS_LITERAL_STRING(" at "));
                 message.AppendWithConversion(hostname);
             }
 
@@ -2286,7 +2280,7 @@ nsHTTPChannel::Authenticate(const char *iChallenge, PRBool iProxyAuth)
     httpChannel->SetAuthTriedWithPrehost(PR_TRUE);
 
     // Let it know that we are trying to access a realm
-    if (authRealm.GetBuffer())
+    if (!authRealm.IsEmpty())
         httpChannel->SetAuthRealm(authRealm);
 
     if (mResponseDataListener)
@@ -2367,51 +2361,49 @@ nsHTTPChannel::ProcessStatusCode(void)
                 pEngine->SetProxyAuthString(
                         mProxy, mProxyPort, authString);
             }
-
-			if (mAuthTriedWithPrehost) 
-			{
-				if (statusCode != 401)
-				{
-					rv = GetRequestHeader(nsHTTPAtoms::Authorization,
-							getter_Copies(authString));
+            if (mAuthTriedWithPrehost) 
+            {
+                if (statusCode != 401)
+                {
+                    rv = GetRequestHeader(nsHTTPAtoms::Authorization,
+                            getter_Copies(authString));
 #ifdef DEBUG_darin
                     fprintf(stderr, "\n>>>>> Auth Accepted!! [realm=%s, auth=%s]\n\n", mAuthRealm, (const char*) authString);
 #endif
-					if (mAuthRealm)
-						pEngine->SetAuthStringForRealm(mURI, mAuthRealm, authString);
+                    if (mAuthRealm)
+                        pEngine->SetAuthStringForRealm(mURI, mAuthRealm, authString);
                     else
-						pEngine->SetAuthString(mURI, authString);
-				}
-				else // clear out entry from single signon and our cache. 
-				{
+                        pEngine->SetAuthString(mURI, authString);
+                }
+                else // clear out entry from single signon and our cache. 
+                {
 #ifdef DEBUG_darin
-					rv = GetRequestHeader(nsHTTPAtoms::Authorization,
-							getter_Copies(authString));
+                    rv = GetRequestHeader(nsHTTPAtoms::Authorization,
+                            getter_Copies(authString));
                     fprintf(stderr, "\n>>>>> Auth Rejected!! [realm=%s, auth=%s]\n\n", mAuthRealm, (const char*) authString);
 #endif
-					pEngine->SetAuthString(mURI, 0);
+                    pEngine->SetAuthString(mURI, 0);
 
-					NS_WITH_SERVICE(nsIWalletService, walletService, 
-						kWalletServiceCID, &rv);
+                    NS_WITH_SERVICE(nsIWalletService, walletService, 
+                    kWalletServiceCID, &rv);
 
-					if (NS_SUCCEEDED(rv))
-					{
-						NS_WITH_SERVICE(nsIProxyObjectManager, pom, 
-							kProxyObjectManagerCID, &rv);
- 
-						nsCOMPtr<nsIWalletService> pWalletService;
-						if (NS_SUCCEEDED(pom->GetProxyForObject(NS_UI_THREAD_EVENTQ, 
-								 NS_GET_IID(nsIWalletService), walletService, 
-								 PROXY_SYNC, getter_AddRefs(pWalletService))))
-						{
-							nsXPIDLCString uri;
-							if (NS_SUCCEEDED(mURI->GetSpec(getter_Copies(uri))))
-								pWalletService->SI_RemoveUser(uri, nsnull);
-						}
-					}
+                    if (NS_SUCCEEDED(rv))
+                    {
+                        NS_WITH_SERVICE(nsIProxyObjectManager, pom, 
+                        kProxyObjectManagerCID, &rv);
 
-				}
-			}
+                        nsCOMPtr<nsIWalletService> pWalletService;
+                        if (NS_SUCCEEDED(pom->GetProxyForObject(NS_UI_THREAD_EVENTQ, 
+                                NS_GET_IID(nsIWalletService), walletService, 
+                                PROXY_SYNC, getter_AddRefs(pWalletService))))
+                        {
+                            nsXPIDLCString uri;
+                            if (NS_SUCCEEDED(mURI->GetSpec(getter_Copies(uri))))
+                                pWalletService->SI_RemoveUser(uri, nsnull);
+                        }
+                    }
+                }
+            }
         }
     }
 
