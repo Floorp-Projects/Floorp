@@ -101,7 +101,7 @@ NSS_3_4=1
 ifdef NSS_3_4
 DEFINES += -DNSS_3_4
 
-ifeq ($(OS_ARCH),OS2)
+ifneq (,$(filter OS2 WINNT,$(OS_ARCH)))
 # Link with import libs on OS/2
 NSS3_LIB = nss3.$(LIB_SUFFIX)
 SMIME3_LIB = smime3.$(LIB_SUFFIX)
