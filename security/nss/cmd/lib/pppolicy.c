@@ -37,7 +37,7 @@
 /*
  * Support for various policy related extensions
  *
- * $Id: pppolicy.c,v 1.2 2004/04/25 15:02:46 gerv%gerv.net Exp $
+ * $Id: pppolicy.c,v 1.3 2005/02/22 20:02:22 wtchang%redhat.com Exp $
  */
 
 #include "seccomon.h"
@@ -192,6 +192,7 @@ secu_PrintUserNoticeQualifier(FILE *out, SECItem * qualifierValue,
 	    SECU_PrintString(out,&userNotice->displayText,
 			     "Display Text", level+1);
 	}
+	CERT_DestroyUserNotice(userNotice);
 	return SECSuccess;
     }
     return SECFailure;	/* caller will print this value */
