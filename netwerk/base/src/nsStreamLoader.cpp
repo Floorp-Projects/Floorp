@@ -111,9 +111,9 @@ nsStreamLoader::GetNumBytesRead(PRUint32* aNumBytes)
 
 /* readonly attribute nsIRequest request; */
 NS_IMETHODIMP 
-nsStreamLoader::GetRequest(nsIRequest * *aRequest)
+nsStreamLoader::GetRequest(nsIRequest **aRequest)
 {
-    NS_IF_ADDREF(*aRequest=mRequest);
+    NS_IF_ADDREF(*aRequest = mRequest);
     return NS_OK;
 }
 
@@ -128,14 +128,19 @@ NS_IMETHODIMP
 nsStreamLoader::OnStopRequest(nsIRequest* request, nsISupports *ctxt,
                               nsresult aStatus)
 {
-  nsresult rv;
-  mRequest = request;
-  if (mObserver) {
-    rv = mObserver->OnStreamComplete(this, mContext, aStatus, 
-                                     mData.Length(),
-                                     mData.get());
+  // if the request has been redirected, then we'll get another pair
+  // of OnStartRequest/OnStopRequest from the new request.
+  if ((aStatus != NS_BINDING_REDIRECTED) && mObserver) {
+    // provide nsIStreamLoader::request during call to OnStreamComplete
+    mRequest = request;
+    mObserver->OnStreamComplete(this, mContext, aStatus, 
+                                mData.Length(), mData.get());
+    // done.. cleanup
+    mRequest = 0;
+    mObserver = 0;
+    mContext = 0;
   }
-  return rv;
+  return NS_OK;
 }
 
 #define BUF_SIZE 1024

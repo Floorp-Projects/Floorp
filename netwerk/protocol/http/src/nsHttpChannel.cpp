@@ -116,8 +116,6 @@ nsHttpChannel::Init(nsIURI *uri,
     mOriginalURI = uri;
     mCapabilities = caps;
 
-    LOG(("uri=%s\n", mSpec.get()));
-
     //
     // Construct connection info object
     //
@@ -154,6 +152,8 @@ nsHttpChannel::Init(nsIURI *uri,
     }
     rv = mURI->GetSpec(getter_Copies(mSpec));
     if (NS_FAILED(rv)) return rv;
+
+    LOG(("uri=%s\n", mSpec.get()));
 
     mConnectionInfo = new nsHttpConnectionInfo(host, port,
                                                proxyInfo, usingSSL);
@@ -1231,12 +1231,11 @@ nsHttpChannel::ProcessRedirection(PRUint32 redirectType)
 
     // close down this transaction (null if processing a cached redirect)
     if (mTransaction) {
+        mStatus = NS_BINDING_REDIRECTED;
         mTransaction->Cancel(NS_BINDING_REDIRECTED);
-
-        // disconnect from our listener
-        mListener = 0;
-        mListenerContext = 0;
+        mListener->OnStartRequest(this, mListenerContext);
     }
+
     return NS_OK;
 }
 
@@ -1692,7 +1691,7 @@ NS_IMETHODIMP
 nsHttpChannel::GetName(PRUnichar **aName)
 {
     NS_ENSURE_ARG_POINTER(aName);
-    *aName = ToNewUnicode(NS_ConvertASCIItoUCS2(mSpec));
+    *aName = ToNewUnicode(mSpec);
     return NS_OK;
 }
 

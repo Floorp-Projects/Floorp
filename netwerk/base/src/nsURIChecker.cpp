@@ -177,9 +177,13 @@ NS_IMETHODIMP nsURIChecker::SetLoadFlags(nsLoadFlags aLoadFlags)
 NS_IMETHODIMP
 nsURIChecker::OnStartRequest(nsIRequest *aRequest, nsISupports *aCtxt)
 {
-    // DNS errors and other obvious problems will return failure status
     nsresult status;
     nsresult rv = aRequest->GetStatus(&status);
+    // if the request has been redirected, then we'll get another pair
+    // of OnStartRequest/OnStopRequest from the new request.
+    if (status == NS_BINDING_REDIRECTED)
+        return NS_OK;
+    // DNS errors and other obvious problems will return failure status
     if (NS_FAILED(rv) || NS_FAILED(status)) {
         SetStatusAndCallBack(NS_BINDING_FAILED);
         return NS_OK;
