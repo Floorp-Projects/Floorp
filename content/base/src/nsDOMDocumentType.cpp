@@ -181,6 +181,20 @@ nsDOMDocumentType::GetNodeName(nsAString& aNodeName)
 }
 
 NS_IMETHODIMP
+nsDOMDocumentType::GetNodeValue(nsAString& aNodeValue)
+{
+  SetDOMStringToNull(aNodeValue);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDOMDocumentType::SetNodeValue(const nsAString& aNodeValue)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsDOMDocumentType::GetNodeType(PRUint16* aNodeType)
 {
   *aNodeType = nsIDOMNode::DOCUMENT_TYPE_NODE;

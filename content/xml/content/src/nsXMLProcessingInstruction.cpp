@@ -134,6 +134,18 @@ nsXMLProcessingInstruction::GetNodeName(nsAString& aNodeName)
 }
 
 NS_IMETHODIMP
+nsXMLProcessingInstruction::GetNodeValue(nsAString& aNodeValue)
+{
+  return nsGenericDOMDataNode::GetNodeValue(aNodeValue);
+}
+
+NS_IMETHODIMP
+nsXMLProcessingInstruction::SetNodeValue(const nsAString& aNodeValue)
+{
+  return nsGenericDOMDataNode::SetNodeValue(aNodeValue);
+}
+
+NS_IMETHODIMP
 nsXMLProcessingInstruction::GetNodeType(PRUint16* aNodeType)
 {
   *aNodeType = (PRUint16)nsIDOMNode::PROCESSING_INSTRUCTION_NODE;

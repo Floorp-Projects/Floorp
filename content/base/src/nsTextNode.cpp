@@ -121,6 +121,18 @@ nsTextNode::GetNodeName(nsAString& aNodeName)
 }
 
 NS_IMETHODIMP
+nsTextNode::GetNodeValue(nsAString& aNodeValue)
+{
+  return nsGenericDOMDataNode::GetNodeValue(aNodeValue);
+}
+
+NS_IMETHODIMP
+nsTextNode::SetNodeValue(const nsAString& aNodeValue)
+{
+  return nsGenericDOMDataNode::SetNodeValue(aNodeValue);
+}
+
+NS_IMETHODIMP
 nsTextNode::GetNodeType(PRUint16* aNodeType)
 {
   *aNodeType = (PRUint16)nsIDOMNode::TEXT_NODE;

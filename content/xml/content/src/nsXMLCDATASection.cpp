@@ -135,6 +135,18 @@ nsXMLCDATASection::GetNodeName(nsAString& aNodeName)
 }
 
 NS_IMETHODIMP
+nsXMLCDATASection::GetNodeValue(nsAString& aNodeValue)
+{
+  return nsGenericDOMDataNode::GetNodeValue(aNodeValue);
+}
+
+NS_IMETHODIMP
+nsXMLCDATASection::SetNodeValue(const nsAString& aNodeValue)
+{
+  return nsGenericDOMDataNode::SetNodeValue(aNodeValue);
+}
+
+NS_IMETHODIMP
 nsXMLCDATASection::GetNodeType(PRUint16* aNodeType)
 {
   *aNodeType = (PRUint16)nsIDOMNode::CDATA_SECTION_NODE;
