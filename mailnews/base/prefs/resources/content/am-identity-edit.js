@@ -338,6 +338,10 @@ function fillSmtpServers(smtpServerList, servers, defaultServer)
   if (!smtpServerList || !servers) 
     return;
 
+  var smtpPopup = document.getElementById('smtpPopup');
+  while (smtpPopup.lastChild.nodeName != "menuseparator")
+    smtpPopup.removeChild(smtpPopup.lastChild);
+
   var serverCount = servers.Count();
   for (var i = 0; i < serverCount; i++) 
   {
