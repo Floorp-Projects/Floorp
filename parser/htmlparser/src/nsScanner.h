@@ -39,7 +39,8 @@
 #include <fstream.h>
 
 class nsIURL;
-class ifstream;
+//class ifstream; XXX mac didn't like this, but this doesn't seem to be needed
+// for the pc either...
 
 class CScanner {
   public:
