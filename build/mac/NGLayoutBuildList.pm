@@ -411,9 +411,6 @@ sub BuildClientDist()
 	_InstallFromManifest(":mozilla:caps:include:MANIFEST",							"$distdirectory:caps:");
 	_InstallFromManifest(":mozilla:caps:idl:MANIFEST",							"$distdirectory:idl:");
 
-	#SECURITY_freenav
-    _InstallFromManifest(":mozilla:modules:security:freenav:MANIFEST",				"$distdirectory:security:");
-
 	#LIBPREF
     _InstallFromManifest(":mozilla:modules:libpref:public:MANIFEST",					"$distdirectory:libpref:");
     _InstallFromManifest(":mozilla:modules:libpref:public:MANIFEST_IDL",				"$distdirectory:idl:");
