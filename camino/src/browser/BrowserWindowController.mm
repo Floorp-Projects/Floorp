@@ -318,7 +318,6 @@ static NSArray* sToolbarDefaults = nil;
     [mToolbarItem setMaxSize:s];
   }
   [[self image] setSize:s];
-  [[self cell] setControlSize:size];
 }
 
 //
@@ -977,7 +976,7 @@ static NSArray* sToolbarDefaults = nil;
   willBeInsertedIntoToolbar:(BOOL)willBeInserted
 {
   NSToolbarItem *toolbarItem = [[[NSToolbarItem alloc] initWithItemIdentifier:itemIdent] autorelease];
-  if ( [itemIdent isEqual:BackToolbarItemIdentifier] )
+  if ( [itemIdent isEqual:BackToolbarItemIdentifier] && willBeInserted )
   {
     // create a new toolbar item that knows how to do validation
     toolbarItem = [[[ToolbarViewItem alloc] initWithItemIdentifier:itemIdent] autorelease];
@@ -1009,7 +1008,14 @@ static NSArray* sToolbarDefaults = nil;
 
     [toolbarItem setMenuFormRepresentation:menuFormRep];
   }
-  else if ( [itemIdent isEqual:ForwardToolbarItemIdentifier] )
+  else if ([itemIdent isEqual:BackToolbarItemIdentifier]) {
+    // not going onto the toolbar, don't need to go through the gynmastics above
+    // and create a separate view
+    [toolbarItem setLabel:NSLocalizedString(@"Back", @"Back")];
+    [toolbarItem setPaletteLabel:NSLocalizedString(@"Go Back", @"Go Back")];
+    [toolbarItem setImage:[NSImage imageNamed:@"back"]];
+  }
+  else if ( [itemIdent isEqual:ForwardToolbarItemIdentifier] && willBeInserted )
   {
     // create a new toolbar item that knows how to do validation
     toolbarItem = [[[ToolbarViewItem alloc] initWithItemIdentifier:itemIdent] autorelease];
@@ -1040,6 +1046,13 @@ static NSArray* sToolbarDefaults = nil;
     [menuFormRep setTitle:[toolbarItem label]];
 
     [toolbarItem setMenuFormRepresentation:menuFormRep];
+  }
+  else if ( [itemIdent isEqual:ForwardToolbarItemIdentifier] ) {
+    // not going onto the toolbar, don't need to go through the gynmastics above
+    // and create a separate view
+    [toolbarItem setLabel:NSLocalizedString(@"Forward", @"Forward")];
+    [toolbarItem setPaletteLabel:NSLocalizedString(@"Go Forward", @"Go Forward")];
+    [toolbarItem setImage:[NSImage imageNamed:@"forward"]];
   }
   else if ( [itemIdent isEqual:ReloadToolbarItemIdentifier] )
   {
