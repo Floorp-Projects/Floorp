@@ -19,6 +19,7 @@
 #include "nsJVMPluginTagInfo.h"
 #include "nsIPluginTagInfo2.h"
 #include "plstr.h"
+#include "nsCRT.h"      // mixing metaphors with plstr.h!
 #ifdef XP_UNIX
 #undef Bool
 #endif
@@ -130,7 +131,7 @@ nsJVMPluginTagInfo::GetCodeBase(const char* *result)
     }
 
     // Okay, we'll need to simulate it from the layout tag's base URL.
-    const char* docBase;
+    char* docBase;
     err = fPluginTagInfo->GetDocumentBase(&docBase);
     if (err != NS_OK) return err;
     PA_LOCK(codebase, const char*, docBase);
@@ -145,6 +146,7 @@ nsJVMPluginTagInfo::GetCodeBase(const char* *result)
     }
     
     PA_UNLOCK(docBase);
+    nsCRT::free(docBase);
     *result = fSimulatedCodebase;
     return NS_OK;
 }

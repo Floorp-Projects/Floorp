@@ -21,18 +21,17 @@
 #include "nsICSSStyleSheet.h"
 #include "nsICSSLoader.h"
 #include "nsIUnicharInputStream.h"
-#include "nsIUnicharStreamLoader.h"
 #include "nsIHTMLContent.h"
 #include "nsIHTMLContentContainer.h"
 #include "nsIURL.h"
 #ifdef NECKO
-#include "nsIIOService.h"
-#include "nsIURL.h"
-#include "nsIServiceManager.h"
-static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
-#endif // NECKO
+#include "nsNeckoUtil.h"
+class nsIUnicharStreamLoader : public nsISupports {};    // XXX what?
+#else
+#include "nsIUnicharStreamLoader.h"
 #include "nsIURLGroup.h"
 #include "nsIHttpURL.h"
+#endif // NECKO
 #include "nsIPresShell.h"
 #include "nsIPresContext.h"
 #include "nsIViewManager.h"
@@ -90,7 +89,9 @@ static NS_DEFINE_IID(kIDOMHTMLTextAreaElementIID, NS_IDOMHTMLTEXTAREAELEMENT_IID
 static NS_DEFINE_IID(kIDOMHTMLOptionElementIID, NS_IDOMHTMLOPTIONELEMENT_IID);
 static NS_DEFINE_IID(kIFormControlIID, NS_IFORMCONTROL_IID);
 static NS_DEFINE_IID(kIHTMLContentSinkIID, NS_IHTML_CONTENT_SINK_IID);
+#ifndef NECKO
 static NS_DEFINE_IID(kIHTTPURLIID, NS_IHTTPURL_IID);
+#endif
 static NS_DEFINE_IID(kIScrollableViewIID, NS_ISCROLLABLEVIEW_IID);
 static NS_DEFINE_IID(kIHTMLDocumentIID, NS_IHTMLDOCUMENT_IID);
 static NS_DEFINE_IID(kIHTMLContentContainerIID, NS_IHTMLCONTENTCONTAINER_IID);
@@ -1503,12 +1504,18 @@ HTMLContentSink::Init(nsIDocument* aDoc,
   mCurrentContext->Begin(eHTMLTag_html, mRoot);
   mContextStack.AppendElement(mCurrentContext);
 
+#ifdef NECKO
+  char* spec;
+#else
   const char* spec;
+#endif
   (void)aURL->GetSpec(&spec);
   SINK_TRACE(SINK_TRACE_CALLS,
              ("HTMLContentSink::Init: this=%p url='%s'",
               this, spec));
-
+#ifdef NECKO
+  nsCRT::free(spec);
+#endif
   return NS_OK;
 }
 
@@ -2032,10 +2039,23 @@ HTMLContentSink::StartLayout()
 
   // If the document we are loading has a reference or it is a 
   // frameset document, disable the scroll bars on the views.
+#ifdef NECKO
+  char* ref;
+  nsIURL* url;
+  nsresult rv = mDocumentURL->QueryInterface(nsIURL::GetIID(), (void**)&url);
+  if (NS_SUCCEEDED(rv)) {
+    rv = url->GetRef(&ref);
+    NS_RELEASE(url);
+  }
+#else
   const char* ref;
   nsresult rv = mDocumentURL->GetRef(&ref);
+#endif
   if (rv == NS_OK) {
     mRef = new nsString(ref);
+#ifdef NECKO
+    nsCRT::free(ref);
+#endif
   }
 
   if ((nsnull != ref) || mFrameset) {
@@ -2469,31 +2489,20 @@ HTMLContentSink::ProcessStyleLink(nsIHTMLContent* aElement,
 
     if ((0 == mimeType.Length()) || mimeType.EqualsIgnoreCase("text/css")) {
       nsIURI* url = nsnull;
+#ifndef NECKO
       nsIURLGroup* urlGroup = nsnull;
       mDocumentBaseURL->GetURLGroup(&urlGroup);
       if (urlGroup) {
         result = urlGroup->CreateURL(&url, mDocumentBaseURL, aHref, nsnull);
         NS_RELEASE(urlGroup);
       }
-      else {
+      else
+#endif
+      {
 #ifndef NECKO
         result = NS_NewURL(&url, aHref, mDocumentBaseURL);
 #else
-        NS_WITH_SERVICE(nsIIOService, service, kIOServiceCID, &result);
-        if (NS_FAILED(result)) return result;
-
-        nsIURI *uri = nsnull, *baseUri = nsnull;
-
-        result = mDocumentBaseURL->QueryInterface(nsIURI::GetIID(), (void**)&baseUri);
-        if (NS_FAILED(result)) return result;
-
-        const char *uriStr = aHref.GetBuffer();
-        result = service->NewURI(uriStr, baseUri, &uri);
-        NS_RELEASE(baseUri);
-        if (NS_FAILED(result)) return result;
-
-        result = uri->QueryInterface(nsIURI::GetIID(), (void**)&url);
-        NS_RELEASE(uri);
+        result = NS_NewURI(&url, aHref, mDocumentBaseURL);
 #endif // NECKO
       }
       if (NS_OK != result) {
@@ -2658,10 +2667,12 @@ HTMLContentSink::ProcessMETATag(const nsIParserNode& aNode)
       }
       mHead->AppendChildTo(it, PR_FALSE);
 
+#ifndef NECKO
       // If we are processing an HTTP url, handle meta http-equiv cases
       nsIHttpURL* httpUrl = nsnull;
       rv = mDocumentURL->QueryInterface(kIHTTPURLIID, (void **)&httpUrl);
- 
+#endif
+
       // set any HTTP-EQUIV data into document's header data as well as url
       nsAutoString header;
       it->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::httpEquiv, header);
@@ -2669,6 +2680,9 @@ HTMLContentSink::ProcessMETATag(const nsIParserNode& aNode)
         nsAutoString result;
         it->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::content, result);
         if (result.Length() > 0) {
+#ifdef NECKO
+          NS_ASSERTION(0, "how does necko add mime headers?");
+#else
           if (nsnull != httpUrl) {
             char* value = result.ToNewCString(), *csHeader;
             if (!value) {
@@ -2685,6 +2699,7 @@ HTMLContentSink::ProcessMETATag(const nsIParserNode& aNode)
             delete[] csHeader;
             delete[] value;
           }
+#endif
 
           header.ToLowerCase();
           nsIAtom* fieldAtom = NS_NewAtom(header);
@@ -2706,7 +2721,9 @@ HTMLContentSink::ProcessMETATag(const nsIParserNode& aNode)
           NS_IF_RELEASE(fieldAtom);
         }
       }
+#ifndef NECKO
       NS_IF_RELEASE(httpUrl);
+#endif
 
       NS_RELEASE(it);
     }
@@ -2822,7 +2839,11 @@ HTMLContentSink::EvaluateScript(nsString& aScript,
       
       nsAutoString ret;
       nsIURI* docURL = mDocument->GetDocumentURL();
+#ifdef NECKO
+      char* url;
+#else
       const char* url;
+#endif
       if (docURL) {
         (void)docURL->GetSpec(&url);
       }
@@ -2911,31 +2932,20 @@ HTMLContentSink::ProcessSCRIPTTag(const nsIParserNode& aNode)
     if (src.Length() > 0) {
       // Use the SRC attribute value to load the URL
       nsIURI* url = nsnull;
+#ifndef NECKO
       nsIURLGroup* urlGroup = nsnull;
       mDocumentBaseURL->GetURLGroup(&urlGroup);
       if (urlGroup) {
         rv = urlGroup->CreateURL(&url, mDocumentBaseURL, src, nsnull);
         NS_RELEASE(urlGroup);
       }
-      else {
+      else
+#endif
+      {
 #ifndef NECKO
         rv = NS_NewURL(&url, src, mDocumentBaseURL);
 #else
-        NS_WITH_SERVICE(nsIIOService, service, kIOServiceCID, &rv);
-        if (NS_FAILED(rv)) return rv;
-
-        nsIURI *uri = nsnull, *baseUri = nsnull;
-
-        rv = mDocumentBaseURL->QueryInterface(nsIURI::GetIID(), (void**)&baseUri);
-        if (NS_FAILED(rv)) return rv;
-
-        const char *uriStr = src.GetBuffer();
-        rv = service->NewURI(uriStr, baseUri, &uri);
-        NS_RELEASE(baseUri);
-        if (NS_FAILED(rv)) return rv;
-
-        rv = uri->QueryInterface(nsIURI::GetIID(), (void**)&url);
-        NS_RELEASE(uri);
+        rv = NS_NewURI(&url, src, mDocumentBaseURL);
 #endif // NECKO
       }
       if (NS_OK != rv) {
@@ -2946,11 +2956,15 @@ HTMLContentSink::ProcessSCRIPTTag(const nsIParserNode& aNode)
       // onto it as opaque data.
       NS_ADDREF(this);
 
+#ifdef NECKO
+      NS_ASSERTION(0, "fix me");
+#else
       nsIUnicharStreamLoader* loader;
       rv = NS_NewUnicharStreamLoader(&loader,
                                      url, 
                                      (nsStreamCompleteFunc)nsDoneLoadingScript, 
                                      (void *)this);
+#endif
       NS_RELEASE(url);
       if (NS_OK == rv) {
         rv = NS_ERROR_HTMLPARSER_BLOCK;
@@ -3079,31 +3093,20 @@ HTMLContentSink::ProcessSTYLETag(const nsIParserNode& aNode)
       // XXX what does nav do?
       // Use the SRC attribute value to load the URL
       nsIURI* url = nsnull;
+#ifndef NECKO
       nsIURLGroup* urlGroup = nsnull;
       mDocumentBaseURL->GetURLGroup(&urlGroup);
       if (urlGroup) {
         rv = urlGroup->CreateURL(&url, mDocumentBaseURL, src, nsnull);
         NS_RELEASE(urlGroup);
       }
-      else {
+      else
+#endif
+      {
 #ifndef NECKO
         rv = NS_NewURL(&url, src, mDocumentBaseURL);
 #else
-        NS_WITH_SERVICE(nsIIOService, service, kIOServiceCID, &rv);
-        if (NS_FAILED(rv)) return rv;
-
-        nsIURI *uri = nsnull, *baseUri = nsnull;
-
-        rv = mDocumentBaseURL->QueryInterface(nsIURI::GetIID(), (void**)&baseUri);
-        if (NS_FAILED(rv)) return rv;
-
-        const char *uriStr = src.GetBuffer();
-        rv = service->NewURI(uriStr, baseUri, &uri);
-        NS_RELEASE(baseUri);
-        if (NS_FAILED(rv)) return rv;
-
-        rv = uri->QueryInterface(nsIURI::GetIID(), (void**)&url);
-        NS_RELEASE(uri);
+        rv = NS_NewURI(&url, src, mDocumentBaseURL);
 #endif // NECKO
       }
       if (NS_OK != rv) {

@@ -1503,10 +1503,10 @@ nsPluginTagInfo::GetParameter(const char* name, const char* *result)
 }
 
 NS_METHOD
-nsPluginTagInfo::GetDocumentBase(const char* *result)
+nsPluginTagInfo::GetDocumentBase(char* *result)
 {
-    *result = (const char*)GetLayoutElement()->base_url;
-    return NS_OK;
+    *result = nsCRT::strdup(GetLayoutElement()->base_url);
+    return *result ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
 
 NS_METHOD

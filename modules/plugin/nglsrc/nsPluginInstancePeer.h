@@ -109,7 +109,7 @@ public:
   GetParameter(const char* name, const char* *result);
   
   NS_IMETHOD
-  GetDocumentBase(const char* *result);
+  GetDocumentBase(char* *result);
   
   NS_IMETHOD
   GetDocumentEncoding(const char* *result);
