@@ -2187,6 +2187,13 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
             mIsControlDown = IS_VK_DOWN(NS_VK_CONTROL);
             mIsAltDown     = IS_VK_DOWN(NS_VK_ALT);
 
+            // Process non-standard Control Keys
+            // I am unclear whether I should process these like this (rods)
+            if (mIsControlDown && !mIsAltDown &&
+                (wParam >= 0x01 && wParam <= 0x1A)) {  // a-z
+              wParam += 0x40;
+            }
+
 			      if (!mIMEIsComposing)
               result = OnChar(wParam);
 			      else
