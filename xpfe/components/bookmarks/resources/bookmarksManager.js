@@ -28,8 +28,8 @@ function Startup()
 {
   const windowNode = document.getElementById("bookmark-window");
   const bookmarksView = document.getElementById("bookmarks-view");
-  bookmarksView.treeBoxObject.selection.select(0);
 
+  var rowIndex = 0;
   var titleString;
 
   // If we've been opened with a parameter, root the tree on it.
@@ -54,7 +54,12 @@ function Startup()
     // always open the bookmark top root folder
     if (!bookmarksView.treeBoxObject.view.isContainerOpen(0))
       bookmarksView.treeBoxObject.view.toggleOpenState(0);
+    if (!bookmarksView.treeBoxObject.view.isContainerEmpty(0))
+      rowIndex = 1;
   }
+
+  bookmarksView.treeBoxObject.scrollToRow(rowIndex);
+  bookmarksView.treeBoxObject.selection.select(rowIndex);
 
   windowNode.setAttribute("title", titleString);
 
