@@ -1491,7 +1491,7 @@ nsMathMLChar::Stretch(nsIPresContext*      aPresContext,
     targetSize = aContainerSize.width;
   }
   // if we are not a largeop in display mode, return if size fits
-  if (!largeop && IsSizeOK(charSize, targetSize, aStretchHint)) {
+  if (targetSize <= 0 || (!largeop && IsSizeOK(charSize, targetSize, aStretchHint))) {
     // ensure that the char later behaves like a normal char
     // (will be reset back to its intrinsic value in case of dynamic updates)
     mDirection = NS_STRETCH_DIRECTION_UNSUPPORTED;
