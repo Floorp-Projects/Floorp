@@ -17,7 +17,7 @@
  */
 #include <iostream.h>
 #include "nsISupports.h"
-#include "nsRepository.h"
+#include "nsIServiceManager.h"
 #include "nsICaseConversion.h"
 #include "nsUnicharUtilCIID.h"
 
@@ -241,25 +241,23 @@ void TestCaseConversion()
    cout << "==============================\n";
    nsICaseConversion *t = NULL;
    nsresult res;
-   res = nsRepository::CreateInstance(kUnicharUtilCID,
-                                NULL,
+   res = nsServiceManager::GetService(kUnicharUtilCID,
                                 kCaseConversionIID,
-                                (void**) &t);
+                                (nsISupports**) &t);
            
-   cout << "Test 1 - CreateInstance():\n";
+   cout << "Test 1 - GetService():\n";
    if(NS_FAILED(res) || ( t == NULL ) ) {
-     cout << "\t1st CreateInstance failed\n";
+     cout << "\t1st GetService failed\n";
    } else {
-     t->Release();
+     res = nsServiceManager::ReleaseService(kUnicharUtilCID, t);
    }
 
-   res = nsRepository::CreateInstance(kUnicharUtilCID,
-                                NULL,
+   res = nsServiceManager::GetService(kUnicharUtilCID,
                                 kCaseConversionIID,
-                                (void**) &t);
+                                (nsISupports**) &t);
            
    if(NS_FAILED(res) || ( t == NULL ) ) {
-     cout << "\t2nd CreateInstance failed\n";
+     cout << "\t2nd GetService failed\n";
    } else {
      int i;
      PRUnichar ch;
@@ -338,7 +336,7 @@ void TestCaseConversion()
      cout << "Test 7 - ToTitle(PRUnichar*, PRUnichar*, PRUint32):\n";
      cout << "!!! To Be Implemented !!!\n";
 
-     t->Release();
+   res = nsServiceManager::ReleaseService(kUnicharUtilCID, t);
    }
    cout << "==============================\n";
    cout << "Finish nsICaseConversion Test \n";
