@@ -943,25 +943,51 @@ if ($dotweak) {
     pnl "<FORM NAME=changeform METHOD=POST ACTION=\"process_bug.cgi\">";
 }
 
+
+my @th;
+foreach my $c (@collist) {
+    if (exists $::needquote{$c}) {
+        my $h = "";
+        if ($::needquote{$c}) {
+            $h .= "<TH WIDTH=100%>";
+        } else {
+            $h .= "<TH>";
+        }
+        if (defined $::sortkey{$c}) {
+            $h .= "<A HREF=\"buglist.cgi?$fields&order=" . url_quote($::sortkey{$c}) . "$oldorder\">$::title{$c}</A>";
+        } else {
+            $h .= $::title{$c};
+        }
+        $h .= "</TH>";
+        push(@th, $h);
+    }
+}
+
 my $tablestart = "<TABLE CELLSPACING=0 CELLPADDING=4 WIDTH=100%>
 <TR ALIGN=LEFT><TH>
 <A HREF=\"buglist.cgi?$fields&order=bugs.bug_id\">ID</A>";
 
+my $splitheader = 0;
+if ($::COOKIE{'SPLITHEADER'}) {
+    $splitheader = 1;
+}
 
-foreach my $c (@collist) {
-    if (exists $::needquote{$c}) {
-        if ($::needquote{$c}) {
-            $tablestart .= "<TH WIDTH=100% valign=left>";
-        } else {
-            $tablestart .= "<TH valign=left>";
+if ($splitheader) {
+    $tablestart =~ s/<TH/<TH COLSPAN="2"/;
+    for (my $pass=0 ; $pass<2 ; $pass++) {
+        if ($pass == 1) {
+            $tablestart .= "</TR>\n<TR><TD></TD>";
         }
-        if (defined $::sortkey{$c}) {
-            $tablestart .= "<A HREF=\"buglist.cgi?$fields&order=" . url_quote($::sortkey{$c}) . "$oldorder\">$::title{$c}</A>";
-        } else {
-            $tablestart .= $::title{$c};
+        for (my $i=1-$pass ; $i<@th ; $i += 2) {
+            my $h = @th[$i];
+            $h =~ s/TH/TH COLSPAN="2" ALIGN="left"/;
+            $tablestart .= $h;
         }
     }
+} else {
+    $tablestart .= join("", @th);
 }
+
 
 $tablestart .= "\n";
 

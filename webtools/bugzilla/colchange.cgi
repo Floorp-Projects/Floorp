@@ -56,6 +56,7 @@ push(@masterlist, ("summary", "summaryfull"));
 
 my @collist;
 if (defined $::FORM{'rememberedquery'}) {
+    my $splitheader = 0;
     if (defined $::FORM{'resetit'}) {
         @collist = @::default_column_list;
     } else {
@@ -64,9 +65,13 @@ if (defined $::FORM{'rememberedquery'}) {
                 push @collist, $i;
             }
         }
+        if (exists $::FORM{'splitheader'}) {
+            $splitheader = $::FORM{'splitheader'};
+        }
     }
     my $list = join(" ", @collist);
     print "Set-Cookie: COLUMNLIST=$list ; path=/ ; expires=Sun, 30-Jun-2029 00:00:00 GMT\n";
+    print "Set-Cookie: SPLITHEADER=$::FORM{'splitheader'} ; path=/ ; expires=Sun, 30-Jun-2029 00:00:00 GMT\n";
     print "Refresh: 0; URL=buglist.cgi?$::FORM{'rememberedquery'}\n";
     print "\n";
     print "<TITLE>What a hack.</TITLE>\n";
@@ -79,6 +84,11 @@ if (defined $::COOKIE{'COLUMNLIST'}) {
     @collist = split(/ /, $::COOKIE{'COLUMNLIST'});
 } else {
     @collist = @::default_column_list;
+}
+
+my $splitheader = 0;
+if ($::COOKIE{'SPLITHEADER'}) {
+    $splitheader = 1;
 }
 
 
@@ -109,6 +119,12 @@ foreach my $i (@masterlist) {
     print "<INPUT TYPE=checkbox NAME=column_$i $c>$desc{$i}<br>\n";
 }
 print "<P>\n";
+print BuildPulldown("splitheader",
+                    [["0", "Normal headers (prettier)"],
+                     ["1", "Stagger headers (often makes list more compact)"]],
+                    $splitheader);
+print "<P>\n";
+
 print "<INPUT TYPE=\"submit\" VALUE=\"Submit\">\n";
 print "</FORM>\n";
 print "<FORM ACTION=colchange.cgi>\n";
