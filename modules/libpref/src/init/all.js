@@ -927,19 +927,22 @@ pref("font.name-list.serif.zh-CN", "MS Song, 宋体, SimSun");
 pref("font.name-list.sans-serif.zh-CN", "MS Song, 宋体, SimSun");
 pref("font.name-list.monospace.zh-CN", "MS Song, 宋体, SimSun");
 
-pref("font.name.serif.zh-TW", "細明體"); // "MingLiU" 
-pref("font.name.sans-serif.zh-TW", "細明體"); // "MingLiU" 
-pref("font.name.monospace.zh-TW", "細明體"); // "MingLiU" 
-pref("font.name-list.serif.zh-TW", "MingLiU, 細明體"); 
-pref("font.name-list.sans-serif.zh-TW", "MingLiU, 細明體");
-pref("font.name-list.monospace.zh-TW", "MingLiU, 細明體");
+// Per Taiwanese users' demand. They don't want to use TC fonts for
+// rendering Latin letters. (bug 88579)
+pref("font.name.serif.zh-TW", "Times New Roman"); 
+pref("font.name.sans-serif.zh-TW", "Arial"); 
+pref("font.name.monospace.zh-TW", "細明體");  // MingLiU
+pref("font.name-list.serif.zh-TW", "新細明體,PMingLiu,細明體,MingLiU"); 
+pref("font.name-list.sans-serif.zh-TW", "新細明體,PMingLiU,細明體,MingLiU");
+pref("font.name-list.monospace.zh-TW", "MingLiU,細明體");
 
-// hkscsm3u.ttf (HKSCS-2001) :  http://www.microsoft.com/hk/hkscs
-pref("font.name.serif.zh-HK", "細明體_HKSCS"); 
-pref("font.name.sans-serif.zh-HK", "細明體_HKSCS"); 
+// hkscsm3u.ttf (HKSCS-2001) :  http://www.microsoft.com/hk/hkscs 
+// Hong Kong users have the same demand about glyphs for Latin letters (bug 88579) 
+pref("font.name.serif.zh-HK", "Times New Roman"); 
+pref("font.name.sans-serif.zh-HK", "Arial"); 
 pref("font.name.monospace.zh-HK", "細明體_HKSCS"); 
-pref("font.name-list.serif.zh-HK", "MingLiu_HKSCS, 細明體_HKSCS, Ming(for ISO10646), MingLiU, 細明體"); 
-pref("font.name-list.sans-serif.zh-HK", "MingLiU_HKSCS, 細明體_HKSCS, Ming(for ISO10646), MingLiU, 細明體");  
+pref("font.name-list.serif.zh-HK", "細明體_HKSCS, MingLiu_HKSCS, Ming(for ISO10646), MingLiU, 細明體"); 
+pref("font.name-list.sans-serif.zh-HK", "細明體_HKSCS, MingLiU_HKSCS, Ming(for ISO10646), MingLiU, 細明體");  
 pref("font.name-list.monospace.zh-HK", "MingLiU_HKSCS,  細明體_HKSCS, Ming(for ISO10646), MingLiU, 細明體");
 
 pref("font.name.serif.x-devanagari", "Mangal");
