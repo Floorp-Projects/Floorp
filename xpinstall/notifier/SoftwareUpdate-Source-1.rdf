@@ -3,27 +3,19 @@
 
   <RDF:Bag about="NC:SoftwareUpdateRoot">
     <RDF:li>
-       <RDF:Bag about="NC:SoftwarePackages" NC:title="New Software">
+       <RDF:Bag about="NC:SoftwarePackages" NC:title="Netscape Updates" NC:url="http://home.netscape.com">
 
             <RDF:li>
                 <RDF:Description ID="AimUpdate344">
-                 <NC:type resource="http://home.netscape.com/NC-rdf#SoftwarePackage" />
-                 <NC:title>AOL AIM</NC:title>
-                 <NC:description>An Instant Message Client</NC:description>
                  <NC:version>3.4.1.12</NC:version>
                  <NC:registryKey>/AOL/AIM/</NC:registryKey>
-                 <NC:url>http://home.netscape.com/index.html</NC:url>
                </RDF:Description>
             </RDF:li>
     
             <RDF:li>
                <RDF:Description ID="PGPPlugin345">
-                 <NC:type resource="http://home.netscape.com/NC-rdf#SoftwarePackage" />
-                 <NC:title>PGP Plugin For Mozilla</NC:title>
-                 <NC:description>A high grade encryption plugin</NC:description>
                  <NC:version>1.1.2.0</NC:version>
                  <NC:registryKey>/PGP/ROCKS/</NC:registryKey>
-                 <NC:url>http://home.netscape.com/index.html</NC:url>
                </RDF:Description>
             </RDF:li>
 

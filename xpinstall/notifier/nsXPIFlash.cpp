@@ -27,6 +27,7 @@
 #include "nsISupports.h"
 #include "nsRDFCID.h"
 
+#include "VerReg.h"
 
 #define NC_XPIFLASH_SOURCES     "NC:SoftwareUpdateDataSources"
 #define NC_XPIFLASH_PACKAGES    "NC:SoftwarePackages"
@@ -65,7 +66,10 @@ private:
     nsresult Init();
     nsresult SynchronouslyOpenRemoteDataSource(const char* aURL, nsIRDFDataSource** aResult);
     nsresult AddNewSoftwareFromDistributor(nsIRDFResource *inDistributor);
-
+    PRBool IsNewerOrUninstalled(const char* regKey, const char* versionString);
+    PRInt32 CompareVersions(VERSION *oldversion, VERSION *newVersion);
+    void   StringToVersionNumbers(const nsString& version, int32 *aMajor, int32 *aMinor, int32 *aRelease, int32 *aBuild);
+    
     nsCOMPtr<nsIRDFDataSource> mInner;
     nsIRDFService* mRDF;
 
@@ -220,7 +224,7 @@ nsXPINotifierImpl::Init()
 
                     rv = AddNewSoftwareFromDistributor(aDistributor);
                     if (NS_FAILED(rv)) break;
-
+                    
                     distributorEnumerator->HasMoreElements(&moreElements);
                 }
             }
@@ -268,58 +272,70 @@ nsXPINotifierImpl::AddNewSoftwareFromDistributor(nsIRDFResource *inDistributor)
 
                     nsCOMPtr<nsIRDFResource> aPackage(do_QueryInterface(i, &rv));
                     if (NS_FAILED(rv)) break;
-
-                    // do whatever here
-        
-                    nsCOMPtr<nsIRDFNode> nameNode;
+    
+                    
+                    // Get the version information
+                    nsCOMPtr<nsIRDFNode> versionNode;
                     distributorDataSource->GetTarget(aPackage, 
-                                                     kXPI_NotifierPackage_Title, 
+                                                     kXPI_NotifierPackage_Version, 
                                                      PR_TRUE, 
-                                                     getter_AddRefs(nameNode));
+                                                     getter_AddRefs(versionNode));
 
-                    nsCOMPtr<nsIRDFLiteral> title(do_QueryInterface(nameNode, &rv));
+                    nsCOMPtr<nsIRDFLiteral> version(do_QueryInterface(versionNode, &rv));
                     if (NS_FAILED(rv)) break;
-                   
-                    // lets asert now..
-                    
-                    nsCOMPtr<nsIRDFLiteral> source;
-                    nsString sourceString = "Software Notification";
-        
-                    rv = mRDF->GetLiteral(sourceString.GetUnicode(), getter_AddRefs(source));
-                    mInner->Assert(aPackage, kNC_Type, kXPI_Notifier_Type, PR_TRUE);
-                    mInner->Assert(aPackage, kNC_Source, source, PR_TRUE);
-                    mInner->Assert(aPackage, kNC_Description, title, PR_TRUE);
-                    
 
-                    //Supposedly rdf will convert this into a localized time string.
-                    nsCOMPtr<nsIRDFLiteral> timeStamp;
-                    nsString timeStampString;
-
-	                PRExplodedTime explode;
-	                PR_ExplodeTime( PR_Now(), PR_LocalTimeParameters, &explode);
-	                char buffer[128];
-	                PR_FormatTime(buffer, sizeof(buffer), "%m/%d/%Y %I:%M %p", &explode);
-	                timeStampString = buffer;
-	
-	                rv = mRDF->GetLiteral(timeStampString.GetUnicode(), getter_AddRefs(timeStamp));
-	                if(NS_SUCCEEDED(rv))
-	                {
-		                mInner->Assert(aPackage, kNC_TimeStamp, timeStamp, PR_TRUE);
-	                }
-
-	                nsCOMPtr<nsIRDFNode> urlNode;
+                    // Get the regkey information
+                    nsCOMPtr<nsIRDFNode> regkeyNode;
                     distributorDataSource->GetTarget(aPackage, 
-                                                     kXPI_NotifierPackage_URL, 
+                                                     kXPI_NotifierPackage_RegKey, 
                                                      PR_TRUE, 
-                                                     getter_AddRefs(urlNode));
+                                                     getter_AddRefs(regkeyNode));
 
-                    nsCOMPtr<nsIRDFLiteral> url(do_QueryInterface(urlNode, &rv));
+                    nsCOMPtr<nsIRDFLiteral> regkey(do_QueryInterface(regkeyNode, &rv));
                     if (NS_FAILED(rv)) break;
+
+                    // convert them into workable nsAutoStrings
+                    PRUnichar* regkeyCString;
+                    regkey->GetValue(&regkeyCString);
+                    nsString regKeyString(regkeyCString);
                     
-                    mInner->Assert(aPackage, kNC_URL, url, PR_TRUE);
-	                
-                    mInner->Assert(kNC_FlashRoot, kNC_Child, aPackage, PR_TRUE);
-                
+                    PRUnichar* versionCString;
+                    version->GetValue(&versionCString);
+                    nsString versionString(versionCString);
+                    
+
+                    // check to see if this software title should be "flashed"
+                    if (IsNewerOrUninstalled(nsAutoCString(regKeyString), nsAutoCString(versionString)))
+                    {
+                        //assert into flash
+                        
+                        nsCOMPtr<nsIRDFNode> urlNode;
+                        distributorDataSource->GetTarget(kXPI_NotifierPackages, 
+                                                         kXPI_NotifierPackage_URL, 
+                                                         PR_TRUE, 
+                                                         getter_AddRefs(urlNode));
+
+                        nsCOMPtr<nsIRDFLiteral> url(do_QueryInterface(urlNode, &rv));
+                        if (NS_FAILED(rv)) break;
+
+
+                        nsCOMPtr<nsIRDFNode> titleNode;
+                        distributorDataSource->GetTarget(kXPI_NotifierPackages, 
+                                                         kXPI_NotifierPackage_Title, 
+                                                         PR_TRUE, 
+                                                         getter_AddRefs(titleNode));
+
+                        nsCOMPtr<nsIRDFLiteral> title(do_QueryInterface(titleNode, &rv));
+                        if (NS_FAILED(rv)) break;
+
+                        mInner->Assert(aPackage, kNC_Type, kXPI_Notifier_Type, PR_TRUE);
+                        mInner->Assert(aPackage, kNC_Source, title, PR_TRUE);
+                        mInner->Assert(aPackage, kNC_URL, url, PR_TRUE);
+
+                        mInner->Assert(kNC_FlashRoot, kNC_Child, aPackage, PR_TRUE);
+                        break;
+
+                    }
                 }
             }
         }
@@ -328,6 +344,136 @@ nsXPINotifierImpl::AddNewSoftwareFromDistributor(nsIRDFResource *inDistributor)
     return NS_OK;
 }
 
+PRBool 
+nsXPINotifierImpl::IsNewerOrUninstalled(const char* regKey, const char* versionString)
+{
+    PRBool needJar = PR_FALSE;
+
+    REGERR status = VR_ValidateComponent( (char*) regKey );
+
+    if ( status == REGERR_NOFIND || status == REGERR_NOFILE )
+    {
+        // either component is not in the registry or it's a file
+        // node and the physical file is missing
+        needJar = PR_TRUE;
+    }
+    else
+    {
+        VERSION oldVersion;
+
+        status = VR_GetVersion( (char*)regKey, &oldVersion );
+        
+        if ( status != REGERR_OK )
+        {
+            needJar = PR_TRUE;
+        }
+        else 
+        {
+            VERSION newVersion;
+
+            StringToVersionNumbers(versionString, &(newVersion).major, &(newVersion).minor, &(newVersion).release, &(newVersion).build);
+            
+            if ( CompareVersions(&oldVersion, &newVersion) < 0 )
+                needJar = PR_TRUE;
+        }
+    }
+    return needJar;
+}
+
+
+PRInt32
+nsXPINotifierImpl::CompareVersions(VERSION *oldversion, VERSION *newVersion)
+{
+    PRInt32 diff;
+    
+    if ( oldversion->major == newVersion->major ) 
+    {
+        if ( oldversion->minor == newVersion->minor ) 
+        {
+            if ( oldversion->release == newVersion->release ) 
+            {
+                if ( oldversion->build == newVersion->build )
+                    diff = 0;
+                else if ( oldversion->build > newVersion->build )
+                    diff = 1;
+                else
+                    diff = -1;
+            }
+            else if ( oldversion->release > newVersion->release )
+                diff = 1;
+            else
+                diff = -1;
+        }
+        else if (  oldversion->minor > newVersion->minor )
+            diff = 1;
+        else
+            diff = -1;
+    }
+    else if ( oldversion->major > newVersion->major )
+        diff = 1;
+    else
+        diff = -1;
+
+    return diff;
+}
+
+
+void
+nsXPINotifierImpl::StringToVersionNumbers(const nsString& version, int32 *aMajor, int32 *aMinor, int32 *aRelease, int32 *aBuild)    
+{
+    PRInt32 errorCode;
+
+    int dot = version.FindChar('.', PR_FALSE,0);
+    
+    if ( dot == -1 ) 
+    {
+        *aMajor = version.ToInteger(&errorCode);
+    }
+    else  
+    {
+        nsString majorStr;
+        version.Mid(majorStr, 0, dot);
+        *aMajor  = majorStr.ToInteger(&errorCode);
+
+        int prev = dot+1;
+        dot = version.FindChar('.',PR_FALSE,prev);
+        if ( dot == -1 ) 
+        {
+            nsString minorStr;
+            version.Mid(minorStr, prev, version.Length() - prev);
+            *aMinor = minorStr.ToInteger(&errorCode);
+        }
+        else 
+        {
+            nsString minorStr;
+            version.Mid(minorStr, prev, dot - prev);
+            *aMinor = minorStr.ToInteger(&errorCode);
+
+            prev = dot+1;
+            dot = version.FindChar('.',PR_FALSE,prev);
+            if ( dot == -1 ) 
+            {
+                nsString releaseStr;
+                version.Mid(releaseStr, prev, version.Length() - prev);
+                *aRelease = releaseStr.ToInteger(&errorCode);
+            }
+            else 
+            {
+                nsString releaseStr;
+                version.Mid(releaseStr, prev, dot - prev);
+                *aRelease = releaseStr.ToInteger(&errorCode);
+    
+                prev = dot+1;
+                if ( version.Length() > dot ) 
+                {
+                    nsString buildStr;
+                    version.Mid(buildStr, prev, version.Length() - prev);
+                    *aBuild = buildStr.ToInteger(&errorCode);
+               }
+            }
+        }
+    }
+}
 
 nsresult
 nsXPINotifierImpl::SynchronouslyOpenRemoteDataSource(const char* aURL,
