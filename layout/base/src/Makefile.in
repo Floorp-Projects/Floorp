@@ -26,38 +26,42 @@ LIBRARY_NAME = raptorlayout_s
 
 MODULE=layout
 
-CPPSRCS = \
+# Alphabetical list of source files
+CPPSRCS =				\
 	nsCaret.cpp			\
 	nsCommentNode.cpp		\
-	nsGenericElement.cpp	\
-	nsGenericDOMDataNode.cpp	\
-	nsGenericDOMNodeList.cpp	\
+	nsContentIterator.cpp		\
 	nsContentList.cpp		\
 	nsDocument.cpp			\
-	nsDocumentFragment.cpp	\
+	nsDocumentFragment.cpp		\
+	nsDocumentViewer.cpp		\
 	nsDOMAttribute.cpp		\
-	nsDOMAttributeMap.cpp	\
-	nsFrameImageLoader.cpp	\
-	nsFrameList.cpp	\
-	nsFrameTraversal.cpp	\
+	nsDOMAttributeMap.cpp		\
+	nsFrameImageLoader.cpp		\
+	nsFrameList.cpp			\
+	nsFrameTraversal.cpp		\
 	nsFrameUtil.cpp			\
 	nsGalleyContext.cpp		\
-	nsNameSpaceManager.cpp	\
+	nsGenericDOMDataNode.cpp	\
+	nsGenericDOMNodeList.cpp	\
+	nsGenericElement.cpp		\
+	nsLayoutAtoms.cpp		\
+	nsLayoutDebugger.cpp		\
+	nsNameSpaceManager.cpp		\
+	nsPluginViewer.cpp		\
 	nsPresContext.cpp		\
 	nsPrintContext.cpp		\
 	nsPrintPreviewContext.cpp	\
+	nsRange.cpp			\
+	nsRangeList.cpp			\
 	nsSpaceManager.cpp		\
 	nsStyleChangeList.cpp		\
 	nsStyleCoord.cpp		\
 	nsStyleContext.cpp		\
 	nsStyleSet.cpp			\
 	nsTextFragment.cpp		\
-	nsXIFConverter.cpp		\
-	nsRange.cpp				\
-	nsRangeList.cpp			\
-	nsContentIterator.cpp	\
-	nsLayoutAtoms.cpp		\
 	nsTextNode.cpp			\
+	nsXIFConverter.cpp		\
 	$(NULL)
 
 EXPORTS = \
