@@ -786,7 +786,7 @@ public class Optimizer {
                   if(lChild.getDatum() instanceof Double ||
                     rChild.getDatum() instanceof Double){
                       parent.replaceChild(n, new Node(TokenStream.NUMBER,
-                          new Double(lChild.getDouble() + rChild.getDouble())));
+                          lChild.getDouble() + rChild.getDouble()));
                   }else{
                       long longval = lChild.getLong() + rChild.getLong();
 
@@ -821,8 +821,7 @@ public class Optimizer {
               if(lt == TokenStream.NUMBER && rt == TokenStream.NUMBER){
                   if(lChild.getDatum() instanceof Double || rChild.getDatum() instanceof Double){
                       parent.replaceChild(n, new Node(TokenStream.NUMBER,
-                      new Double(lChild.getDouble() -
-                              rChild.getDouble())));
+                          lChild.getDouble() -rChild.getDouble()));
                   }else{
                       long longval = lChild.getLong() - rChild.getLong();
                       parent.replaceChild(n, new Node(TokenStream.NUMBER,
@@ -832,7 +831,7 @@ public class Optimizer {
               /* first 0: 0-x -> -x */
               if(lt == TokenStream.NUMBER && lChild.getDouble() == 0){
                   parent.replaceChild(n, new Node(TokenStream.UNARYOP, rChild, 
-                                            new Integer(TokenStream.SUB)));
+                                            TokenStream.SUB));
               }else
               /* second 0: x-0 -> x */
               if(rt == TokenStream.NUMBER && rChild.getDouble() == 0){
@@ -847,8 +846,7 @@ public class Optimizer {
                   
                   if(lChild.getDatum() instanceof Double || rChild.getDatum() instanceof Double){
                       parent.replaceChild(n, new Node(TokenStream.NUMBER,
-                        new Double(lChild.getDouble() *
-                              rChild.getDouble())));
+                        lChild.getDouble() * rChild.getDouble()));
                   }else{
                       long longval =
                               lChild.getLong() *
@@ -861,14 +859,14 @@ public class Optimizer {
               /* can't do zero, since zero * infinity has to become a NaN */
               }else{
                   if(lt == TokenStream.NUMBER){
-                      double ld = ((Number)lChild.getDatum()).doubleValue();
+                      double ld = lChild.getDouble();
 
                       if(ld == 1){
                           parent.replaceChild(n, rChild);
                       }
                   }else
                   if(rt == TokenStream.NUMBER){
-                      double rd = ((Number)rChild.getDatum()).doubleValue();
+                      double rd = rChild.getDouble();
 
                       if(rd == 1){
                           parent.replaceChild(n, lChild);
@@ -887,7 +885,7 @@ public class Optimizer {
                           return;                         // division by zero
                       else
                           parent.replaceChild(n, new Node(TokenStream.NUMBER,
-                                new Double(lChild.getDouble() / d)));
+                                lChild.getDouble() / d));
                   }else{
                       int d = rChild.getInt();
 
@@ -917,7 +915,7 @@ public class Optimizer {
                   (lt == TokenStream.PRIMARY && lChild.getInt() == TokenStream.UNDEFINED)) &&
                   !IRFactory.hasSideEffects(rChild)
               ){
-                  parent.replaceChild(n, new Node(TokenStream.PRIMARY, new Integer(TokenStream.FALSE)));
+                  parent.replaceChild(n, new Node(TokenStream.PRIMARY, TokenStream.FALSE));
               }else
               /* if the second one is false, replace with FALSE */
               if(
@@ -925,19 +923,19 @@ public class Optimizer {
                   (rt==TokenStream.PRIMARY && rChild.getInt()==TokenStream.UNDEFINED)) &&
                   !IRFactory.hasSideEffects(lChild)
               ){
-                  parent.replaceChild(n, new Node(TokenStream.PRIMARY, new Integer(TokenStream.FALSE)));
+                  parent.replaceChild(n, new Node(TokenStream.PRIMARY, TokenStream.FALSE));
               }else
               /* if first is true, set to second */
               if(
-                  (lt == TokenStream.PRIMARY && ((Integer)lChild.getDatum()).intValue() == TokenStream.TRUE) ||
-                  (lt == TokenStream.NUMBER  && ((Number)lChild.getDatum()).doubleValue() != 0)
+                  (lt == TokenStream.PRIMARY && lChild.getInt() == TokenStream.TRUE) ||
+                  (lt == TokenStream.NUMBER  && lChild.getDouble() != 0)
               ){
                   parent.replaceChild(n, rChild);
               }else
               /* if second is true, set to first */
               if(
-                  (rt == TokenStream.PRIMARY && ((Integer)rChild.getDatum()).intValue() == TokenStream.TRUE) ||
-                  (rt == TokenStream.NUMBER  && ((Number)rChild.getDatum()).doubleValue() != 0)
+                  (rt == TokenStream.PRIMARY && rChild.getInt() == TokenStream.TRUE) ||
+                  (rt == TokenStream.NUMBER  && rChild.getDouble() != 0)
               ){
                   parent.replaceChild(n, lChild);
               }
@@ -948,7 +946,7 @@ public class Optimizer {
                   (lt == TokenStream.PRIMARY && lChild.getInt() == TokenStream.NULL) ||
                   (lt == TokenStream.PRIMARY && lChild.getInt() == TokenStream.UNDEFINED) ||
                   (lt == TokenStream.PRIMARY && lChild.getInt() == TokenStream.FALSE) ||
-                  (lt == TokenStream.NUMBER  && ((Number)lChild.getDatum()).doubleValue() == 0)
+                  (lt == TokenStream.NUMBER  && lChild.getDouble() == 0)
               ){
                   parent.replaceChild(n, rChild);
               }else
@@ -957,25 +955,25 @@ public class Optimizer {
                   (rt == TokenStream.PRIMARY && rChild.getInt() == TokenStream.NULL) ||
                   (rt == TokenStream.PRIMARY && rChild.getInt() == TokenStream.UNDEFINED) ||
                   (rt == TokenStream.PRIMARY && rChild.getInt() == TokenStream.FALSE) ||
-                  (rt == TokenStream.NUMBER  && ((Number)rChild.getDatum()).doubleValue() == 0)
+                  (rt == TokenStream.NUMBER  && rChild.getDouble() == 0)
               ){
                   parent.replaceChild(n, lChild);
               }else
               /* if first one is true, replace with TRUE */
               if(
-                  ((lt == TokenStream.PRIMARY && ((Integer)lChild.getDatum()).intValue() == TokenStream.TRUE) ||
-                  (lt == TokenStream.NUMBER  && ((Number)lChild.getDatum()).doubleValue() != 0)) &&
+                  ((lt == TokenStream.PRIMARY && lChild.getInt() == TokenStream.TRUE) ||
+                  (lt == TokenStream.NUMBER  && lChild.getDouble() != 0)) &&
                   !IRFactory.hasSideEffects(rChild)
               ){
-                  parent.replaceChild(n, new Node(TokenStream.PRIMARY, new Integer(TokenStream.TRUE)));
+                  parent.replaceChild(n, new Node(TokenStream.PRIMARY, TokenStream.TRUE));
               }else
         /* if second one is true, replace with TRUE */
               if(
-                  ((rt == TokenStream.PRIMARY && ((Integer)rChild.getDatum()).intValue() == TokenStream.TRUE) ||
-                  (rt == TokenStream.NUMBER  && ((Number)rChild.getDatum()).doubleValue() != 0)) &&
+                  ((rt == TokenStream.PRIMARY && rChild.getInt() == TokenStream.TRUE) ||
+                  (rt == TokenStream.NUMBER  && rChild.getDouble() != 0)) &&
                   !IRFactory.hasSideEffects(lChild)
               ){
-                  parent.replaceChild(n, new Node(TokenStream.PRIMARY, new Integer(TokenStream.TRUE)));
+                  parent.replaceChild(n, new Node(TokenStream.PRIMARY, TokenStream.TRUE));
               }
               break;
           case TokenStream.BLOCK:
@@ -1000,7 +998,7 @@ public class Optimizer {
                   /* if(true)  ->  replace by the then clause if it exists */
                   }else
                   if((condition.getType() == TokenStream.PRIMARY && condition.getInt() == TokenStream.TRUE) ||
-                    (condition.getType() == TokenStream.NUMBER  && ((Number)condition.getDatum()).doubleValue() != 0))
+                    (condition.getType() == TokenStream.NUMBER  && condition.getDouble() != 0))
                   {
                       if(rChild.getType() == TokenStream.BLOCK){
                           parent.replaceChild(n, rChild.getFirstChild());

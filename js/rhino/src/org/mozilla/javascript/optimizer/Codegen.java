@@ -159,7 +159,7 @@ public class Codegen extends Interpreter {
             while (i.hasMoreElements()) {
                 Node n = i.nextNode();
                 if (n.getType() == TokenStream.FUNCTION) 
-                    obj.put((String) n.getDatum(), obj, 
+                    obj.put(n.getString(), obj, 
                             n.getProp(Node.FUNCTION_PROP));
             }
             try {
@@ -991,7 +991,7 @@ public class Codegen extends Interpreter {
 
               default:
                 throw new RuntimeException("Unexpected node type " +
-					      TokenStream.tokenToName(type));
+                          TokenStream.tokenToName(type));
         }
 
     }
@@ -1251,7 +1251,7 @@ public class Codegen extends Interpreter {
             finishMethod(cx, null);
         }
     }
-	
+    
     private void generateRegExpLiterals(Vector regexps, boolean inCtor) {
         for (int i=0; i < regexps.size(); i++) {
             Node regexp = (Node) regexps.elementAt(i);
@@ -1453,8 +1453,8 @@ public class Codegen extends Interpreter {
                 aload(argsLocal);
                 push(parmCount);
                 addScriptRuntimeInvoke("padArguments",
-                    	      "([Ljava/lang/Object;I)",
-                    	      "[Ljava/lang/Object;");
+                              "([Ljava/lang/Object;I)",
+                              "[Ljava/lang/Object;");
                 astore(argsLocal);
                 markLabel(label);
             }
@@ -2901,7 +2901,7 @@ public class Codegen extends Interpreter {
             if (toType == ScriptRuntime.ObjectClass) {
                 Node convertChild = node.getFirstChild();
                 if (convertChild.getType() == TokenStream.NUMBER)
-                    return (Number)convertChild.getDatum();
+                    return convertChild.getNumber();
             }
         }
         return null;
@@ -3082,7 +3082,7 @@ public class Codegen extends Interpreter {
             // just load the string constant
             push(node.getString());
         } else {
-       	    Number num = (Number) node.getDatum();
+            Number num = node.getNumber();
             if (node.getIntProp(Node.ISNUMBER_PROP, -1) != -1) {
                 push(num.doubleValue());
             }
@@ -3095,52 +3095,52 @@ public class Codegen extends Interpreter {
                      * push <number>
                      * invokestatic java/lang/<WrapperType>/<init>(D)V
                      */
-        	    String wrapperType = "";
-        	    String signature = "";
-        	    boolean isInteger = false;
+                String wrapperType = "";
+                String signature = "";
+                boolean isInteger = false;
 
-        	    if (num instanceof Float)
-        	      num = new Double(num.floatValue());
+                if (num instanceof Float)
+                  num = new Double(num.floatValue());
 
-        	    // OPT: cache getClass() and compare == Type.class
-        	    if (num instanceof Integer) {
-            		wrapperType = "Integer";
-            		signature = "I";
-            		isInteger = true;
-            		/*
-            	    } else if (num instanceof Float) {
-            		wrapperType = "Float";
-            		signature = "F";
-            		*/
-        	    } else if (num instanceof Double) {
-            		wrapperType = "Double";
-            		signature = "D";
-        	    } else if (num instanceof Byte) {
-            		wrapperType = "Byte";
-            		signature = "B";
-            		isInteger = true;
-        	    } else if (num instanceof Short) {
-            		wrapperType = "Short";
-            		signature = "S";
-            		isInteger = true;
-        	    } else {
-            		throw Context.reportRuntimeError(
-    		            "NumberNode contains unsupported Number type: " +
+                // OPT: cache getClass() and compare == Type.class
+                if (num instanceof Integer) {
+                    wrapperType = "Integer";
+                    signature = "I";
+                    isInteger = true;
+                    /*
+                    } else if (num instanceof Float) {
+                    wrapperType = "Float";
+                    signature = "F";
+                    */
+                } else if (num instanceof Double) {
+                    wrapperType = "Double";
+                    signature = "D";
+                } else if (num instanceof Byte) {
+                    wrapperType = "Byte";
+                    signature = "B";
+                    isInteger = true;
+                } else if (num instanceof Short) {
+                    wrapperType = "Short";
+                    signature = "S";
+                    isInteger = true;
+                } else {
+                    throw Context.reportRuntimeError(
+                        "NumberNode contains unsupported Number type: " +
                         num.getClass().getName());
-        	    }
-        	    /*
-        	        There appears to be a limit in the JVM on either the number of
-        	        static fields in a class or the size of the class initializer.
-        	        Either way, we can't have any more than 2000 statically init'd
-        	        constants.    	    
-        	    */
-        	    if (itsConstantList.itsTop >= 2000) {
+                }
+                /*
+                    There appears to be a limit in the JVM on either the number of
+                    static fields in a class or the size of the class initializer.
+                    Either way, we can't have any more than 2000 statically init'd
+                    constants.            
+                */
+                if (itsConstantList.itsTop >= 2000) {
                     addByteCode(ByteCode.NEW, "java/lang/" + wrapperType);
                     addByteCode(ByteCode.DUP);
                     if (isInteger)
-                	    push(num.longValue());
+                        push(num.longValue());
                     else
-                		push(num.doubleValue());
+                        push(num.doubleValue());
                     addSpecialInvoke("java/lang/"
                                     + wrapperType,
                                     "<init>", 
@@ -3148,8 +3148,8 @@ public class Codegen extends Interpreter {
                                         signature
                                     + ")",
                                     "V");
-        	    }
-        	    else {
+                }
+                else {
                     classFile.add(ByteCode.GETSTATIC,
                             classFile.fullyQualifiedForm(this.name),
                             "jsK_" 
@@ -3175,9 +3175,9 @@ public class Codegen extends Interpreter {
                                + itsConstantList.itsList[i].itsWrapperType);
             addByteCode(ByteCode.DUP);
             if (itsConstantList.itsList[i].itsIsInteger)
-        	    push(itsConstantList.itsList[i].itsLValue);
+                push(itsConstantList.itsList[i].itsLValue);
             else
-        		push(itsConstantList.itsList[i].itsDValue);
+                push(itsConstantList.itsList[i].itsDValue);
             addSpecialInvoke("java/lang/"
                             + itsConstantList.itsList[i].itsWrapperType,
                             "<init>",
@@ -3244,9 +3244,9 @@ public class Codegen extends Interpreter {
     }
 
     private void visitName(Node node) {
-    	aload(variableObjectLocal);             // get variable object
+        aload(variableObjectLocal);             // get variable object
         push(node.getString());                 // push name
-    	addScriptRuntimeInvoke("name",
+        addScriptRuntimeInvoke("name",
             "(Lorg/mozilla/javascript/Scriptable;Ljava/lang/String;)",
             "Ljava/lang/Object;");
     }
@@ -3327,7 +3327,7 @@ public class Codegen extends Interpreter {
             }
             return;
         } 
-    	
+        
         aload(variableObjectLocal);
         push(name);
         aload(variableObjectLocal);
@@ -3711,9 +3711,9 @@ public class Codegen extends Interpreter {
             addByteCode(ByteCode.BIPUSH, (byte) l);
         } else if (Short.MIN_VALUE <= l && l <= Short.MAX_VALUE) {
             addByteCode(ByteCode.SIPUSH, (short) l);
-    	} else if (Integer.MIN_VALUE <= l && l <= Integer.MAX_VALUE) {
-    	    classFile.addLoadConstant((int)l);
-    	} else {
+        } else if (Integer.MIN_VALUE <= l && l <= Integer.MAX_VALUE) {
+            classFile.addLoadConstant((int)l);
+        } else {
             classFile.addLoadConstant((long)l);
         }
     }
@@ -3723,11 +3723,11 @@ public class Codegen extends Interpreter {
             addByteCode(ByteCode.DCONST_0);
         } else if (d == 1.0) {
             addByteCode(ByteCode.DCONST_1);
-	    /* XXX this breaks all sorts of simple math.
+        /* XXX this breaks all sorts of simple math.
         } else if (Float.MIN_VALUE <= d && d <= Float.MAX_VALUE) {
-	    loadWordConstant(classFile.addFloatConstant((float) d));
-	    */
-    	} else {
+        loadWordConstant(classFile.addFloatConstant((float) d));
+        */
+        } else {
             classFile.addLoadConstant((double)d);
         }
     }

@@ -447,7 +447,7 @@ public class NodeTransformer {
                     } else {
                         // Local variables are by definition permanent
                         Node n = new Node(TokenStream.PRIMARY,
-                                          new Integer(TokenStream.FALSE));
+                                          TokenStream.FALSE);
                         iterator.replaceCurrent(n);
                     }
                 }
@@ -526,7 +526,7 @@ public class NodeTransformer {
                     vars.addLocal(n.getString());
             }
         }
-        String name = (String) tree.getDatum();
+        String name = tree.getString();
         if (inFunction && ((FunctionNode) tree).getFunctionType() ==
                           FunctionNode.FUNCTION_EXPRESSION &&
             name != null && name.length() > 0 &&
@@ -543,7 +543,7 @@ public class NodeTransformer {
                             new Node(TokenStream.SETVAR,
                                 new Node(TokenStream.STRING, name),
                                 new Node(TokenStream.PRIMARY,
-                                    new Integer(TokenStream.THISFN))));
+                                         TokenStream.THISFN)));
             block.addChildrenToFront(setFn);
         }
     }

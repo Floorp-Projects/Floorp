@@ -73,9 +73,24 @@ public class Node implements Cloneable {
         right.next = null;
     }
 
+    public Node(int nodeType, int value) {
+        type = nodeType;
+        this.datum = new Integer(value);
+    }
+
+    public Node(int nodeType, double value) {
+        type = nodeType;
+        this.datum = new Double(value);
+    }
+
     public Node(int nodeType, Object datum) {
         type = nodeType;
         this.datum = datum;
+    }
+
+    public Node(int nodeType, Node child, int value) {
+        this(nodeType, child);
+        this.datum = new Integer(value);
     }
 
     public Node(int nodeType, Node child, Object datum) {
@@ -371,6 +386,10 @@ public class Node implements Cloneable {
 
     public void setDatum(Object datum) {
         this.datum = datum;
+    }
+
+    public Number getNumber() {
+        return (Number)datum;
     }
 
     public int getInt() {
