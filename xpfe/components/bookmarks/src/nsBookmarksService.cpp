@@ -352,7 +352,7 @@ public:
 	BookmarkParser();
 	~BookmarkParser();
 
-	nsresult Init(nsFileSpec *fileSpec, nsIRDFDataSource *aDataSource);
+	nsresult Init(nsFileSpec *fileSpec, nsIRDFDataSource *aDataSource, const nsString &defaultPersonalToolbarName);
 	nsresult DecodeBuffer(nsString &line, char *buf, PRUint32 aLength);
 	nsresult ProcessLine(nsIRDFContainer *aContainer, nsIRDFResource *nodeType,
 			nsIRDFResource **bookmarkNode, nsString &line,
@@ -392,33 +392,14 @@ BookmarkParser::BookmarkParser()
 
 
 nsresult
-BookmarkParser::Init(nsFileSpec *fileSpec, nsIRDFDataSource *aDataSource)
+BookmarkParser::Init(nsFileSpec *fileSpec, nsIRDFDataSource *aDataSource, const nsString &defaultPersonalToolbarName)
 {
 	mDataSource = aDataSource;
 	mIEFavoritesRoot = nsnull;
 	mFoundIEFavoritesRoot = PR_FALSE;
+	mPersonalToolbarName = defaultPersonalToolbarName;
 
 	nsresult		rv;
-
-	// determine what the name of the Personal Toolbar Folder is...
-	NS_WITH_SERVICE(nsIPref, prefServ, kPrefCID, &rv);
-	if (NS_SUCCEEDED(rv) && (prefServ))
-	{
-		char	*prefVal = nsnull;
-		if (NS_SUCCEEDED(rv = prefServ->CopyCharPref("custtoolbar.personal_toolbar_folder",
-			&prefVal)) && (prefVal))
-		{
-			mPersonalToolbarName = prefVal;
-			nsCRT::free(prefVal);
-			prefVal = nsnull;
-		}
-
-		if (mPersonalToolbarName.Length() == 0)
-		{
-			// no preference, so fallback to a well-known name
-			mPersonalToolbarName = kDefaultPersonalToolbarFolder;
-		}
-	}
 
 	// determine default platform charset...
 	NS_WITH_SERVICE(nsIPlatformCharset, platformCharset, kPlatformCharsetCID, &rv);
@@ -1520,6 +1501,7 @@ protected:
 	PRUint32			htmlSize;
 	nsCOMPtr<nsISupportsArray>      mObservers;
 	nsCOMPtr<nsIStringBundle>	mBundle;
+	nsString			mPersonalToolbarName;
 
 #ifdef	XP_MAC
 	PRBool				mIEFavoritesAvailable;
@@ -1756,6 +1738,42 @@ nsBookmarksService::Init()
 					spec = nsnull;
 				}
 			}
+		}
+	}
+
+	// determine what the name of the Personal Toolbar Folder is...
+	// first from user preference, then string bundle, then hard-coded default
+	NS_WITH_SERVICE(nsIPref, prefServ, kPrefCID, &rv);
+	if (NS_SUCCEEDED(rv) && (prefServ))
+	{
+		char	*prefVal = nsnull;
+		if (NS_SUCCEEDED(rv = prefServ->CopyCharPref("custtoolbar.personal_toolbar_folder",
+			&prefVal)) && (prefVal))
+		{
+			mPersonalToolbarName = prefVal;
+#ifdef	DEBUG
+			printf("Obtained name of Personal Toolbar from user preferences.\n");
+#endif
+			nsCRT::free(prefVal);
+			prefVal = nsnull;
+		}
+
+		if (mPersonalToolbarName.Length() == 0)
+		{
+			// rjc note: always try to get the string bundle (see above) before trying this
+			getLocaleString("DefaultPersonalToolbarFolder", mPersonalToolbarName);
+#ifdef	DEBUG
+			printf("Obtained name of Personal Toolbar from bookmarks string bundle.\n");
+#endif
+		}
+
+		if (mPersonalToolbarName.Length() == 0)
+		{
+			// no preference, so fallback to a well-known name
+			mPersonalToolbarName = kDefaultPersonalToolbarFolder;
+#ifdef	DEBUG
+			printf("Obtained name of Personal Toolbar from fallback hard-coded string.\n");
+#endif
 		}
 	}
 
@@ -2637,7 +2655,7 @@ nsBookmarksService::AddBookmark(const char *aURI, const PRUnichar *aOptionalTitl
 	// gross. We need to factor AddBookmark() into its own little
 	// routine or something.
 	BookmarkParser parser;
-	parser.Init(nsnull, mInner);
+	parser.Init(nsnull, mInner, mPersonalToolbarName);
 
 	nsresult rv;
 
@@ -3571,7 +3589,7 @@ nsBookmarksService::ReadFavorites()
 	if (NS_SUCCEEDED(rv = gRDFC->MakeSeq(mInner, kNC_IEFavoritesRoot, nsnull)))
 	{
 		BookmarkParser parser;
-		parser.Init(&ieFavoritesFile, mInner);
+		parser.Init(&ieFavoritesFile, mInner, nsAutoString(""));
 		parser.Parse(kNC_IEFavoritesRoot, kNC_IEFavorite);
 			
 		nsCOMPtr<nsIRDFLiteral>	ieTitleLiteral;
@@ -3647,7 +3665,7 @@ nsBookmarksService::ReadBookmarks()
 
 	{ // <-- scope the stream to get the open/close automatically.
 		BookmarkParser parser;
-		parser.Init(&bookmarksFile, mInner);
+		parser.Init(&bookmarksFile, mInner, mPersonalToolbarName);
 
 #ifdef	XP_MAC
 		parser.SetIEFavoritesRoot(kURINC_IEFavoritesRoot);
