@@ -28,6 +28,7 @@
 #define IDS_HIST_URL                    118
 #define IDR_MAINFRAME                   128
 #define IDD_BROWSER                     130
+#define IDD_BROWSER_NC                  131
 #define IDD_CHOOSEPROFILE               132
 #define MOZ_EDIT_URI                    1001
 #define IDC_GO                          1003
