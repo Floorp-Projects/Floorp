@@ -23,6 +23,7 @@
 #include "nsIUnicharInputStream.h"
 #include "nsGUIEvent.h"
 
+class nsIAtom;
 class nsIArena;
 class nsIContent;
 class nsIDocumentContainer;
@@ -160,28 +161,23 @@ public:
   // notifications to document observers.
   NS_IMETHOD BeginLoad() = 0;
   NS_IMETHOD EndLoad() = 0;
-  virtual void ContentChanged(nsIContent* aContent,
-                              nsISupports* aSubContent) = 0;
+  NS_IMETHOD ContentChanged(nsIContent* aContent,
+                            nsISupports* aSubContent) = 0;
+  NS_IMETHOD AttributeChanged(nsIContent* aChild,
+                              nsIAtom* aAttribute) = 0;
+  NS_IMETHOD ContentAppended(nsIContent* aContainer,
+                             PRInt32 aNewIndexInContainer) = 0;
+  NS_IMETHOD ContentInserted(nsIContent* aContainer,
+                             nsIContent* aChild,
+                             PRInt32 aIndexInContainer) = 0;
+  NS_IMETHOD ContentReplaced(nsIContent* aContainer,
+                             nsIContent* aOldChild,
+                             nsIContent* aNewChild,
+                             PRInt32 aIndexInContainer) = 0;
+  NS_IMETHOD ContentRemoved(nsIContent* aContainer,
+                            nsIContent* aChild,
+                            PRInt32 aIndexInContainer) = 0;
 
-  virtual void ContentAppended(nsIContent* aContainer,
-                               PRInt32     aNewIndexInContainer) = 0;
-
-  virtual void ContentInserted(nsIContent* aContainer,
-                               nsIContent* aChild,
-                               PRInt32 aIndexInContainer) = 0;
-
-  virtual void ContentReplaced(nsIContent* aContainer,
-                               nsIContent* aOldChild,
-                               nsIContent* aNewChild,
-                               PRInt32 aIndexInContainer) = 0;
-
-  virtual void ContentWillBeRemoved(nsIContent* aContainer,
-                                    nsIContent* aChild,
-                                    PRInt32 aIndexInContainer) = 0;
-
-  virtual void ContentHasBeenRemoved(nsIContent* aContainer,
-                                     nsIContent* aChild,
-                                     PRInt32 aIndexInContainer) = 0;
   /**
     * Returns the Selection Object
    */
