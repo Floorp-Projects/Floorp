@@ -3239,12 +3239,10 @@ DocumentViewerImpl::ReflowPrintObject(PrintObject * aPO, PRBool aDoCalcShrink)
     return rv;
   }
 
-  aPO->mPresContext->SetTurnOffScaledTwips(PR_FALSE);
   rv = document->CreateShell(aPO->mPresContext, aPO->mViewManager, aPO->mStyleSet, getter_AddRefs(aPO->mPresShell));
   if (NS_FAILED(rv)) {
     return rv;
   }
-  aPO->mPresContext->SetTurnOffScaledTwips(PR_TRUE);
 
   PRInt32 pageWidth, pageHeight;
   mPrt->mPrintDocDC->GetDeviceSurfaceDimensions(pageWidth, pageHeight);
