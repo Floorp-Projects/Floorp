@@ -61,7 +61,17 @@ interface nsIOutlinerView : nsISupports
   boolean isContainer(in long index);
   boolean isContainerOpen(in long index);
   boolean isContainerEmpty(in long index);
-  
+ 
+  // Methods used by the outliner to draw vertical lines in the tree.
+  // GetParentIndex is used to obtain the index of a parent row.
+  long getParentIndex(in long rowIndex);
+
+  // HasNextSibling is used to determine if the row at rowIndex has a nextSibling
+  // that occurs *after* the index specified by afterIndex.  Code that is forced
+  // to march down the view looking at levels can optimize the march by starting
+  // at afterIndex+1.
+  boolean hasNextSibling(in long rowIndex, in long afterIndex);
+
   // The level is an integer value that represents
   // the level of indentation.  It is multiplied by the width specified in the 
   // :moz-outliner-indentation pseudoelement to compute the exact indendation.

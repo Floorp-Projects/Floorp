@@ -452,27 +452,6 @@ nsSplitterFrame::DoLayout(nsBoxLayoutState& aState)
   return nsBoxFrame::DoLayout(aState);
 }
 
-
-PRBool
-nsSplitterFrame::GetInitialOrientation(PRBool& aIsHorizontal)
-{
- // find the box we are in
-  nsIFrame* box = nsnull;
-  nsScrollbarButtonFrame::GetParentWithTag(nsXULAtoms::box, this, box);
-
-  // if no box get the window because it is a box.
-  if (box == nsnull)
-      nsScrollbarButtonFrame::GetParentWithTag(nsXULAtoms::window, this, box);
-
-  // see if the box is horizontal or vertical we are the opposite
-  if (box) {
-     aIsHorizontal = !((nsBoxFrame*)box)->IsHorizontal();
-     return PR_TRUE;
-  }
-
-  return PR_FALSE;
-}
-
 NS_IMETHODIMP
 nsSplitterFrame::HandlePress(nsIPresContext* aPresContext,
                          nsGUIEvent *    aEvent,

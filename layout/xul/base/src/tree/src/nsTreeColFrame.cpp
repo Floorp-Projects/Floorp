@@ -25,9 +25,14 @@
 #include "nsCOMPtr.h"
 #include "nsOutlinerColFrame.h"
 #include "nsXULAtoms.h"
+#include "nsHTMLAtoms.h"
 #include "nsIContent.h"
 #include "nsIStyleContext.h"
 #include "nsINameSpaceManager.h" 
+#include "nsIDOMNSDocument.h"
+#include "nsIDocument.h"
+#include "nsIBoxObject.h"
+#include "nsIDOMElement.h"
 
 //
 // NS_NewOutlinerColFrame
@@ -36,13 +41,13 @@
 //
 nsresult
 NS_NewOutlinerColFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame, PRBool aIsRoot, 
-                        nsIBoxLayout* aLayoutManager, PRBool aIsHorizontal)
+                        nsIBoxLayout* aLayoutManager)
 {
   NS_PRECONDITION(aNewFrame, "null OUT ptr");
   if (nsnull == aNewFrame) {
     return NS_ERROR_NULL_POINTER;
   }
-  nsOutlinerColFrame* it = new (aPresShell) nsOutlinerColFrame(aPresShell, aIsRoot, aLayoutManager, aIsHorizontal);
+  nsOutlinerColFrame* it = new (aPresShell) nsOutlinerColFrame(aPresShell, aIsRoot, aLayoutManager);
   if (!it)
     return NS_ERROR_OUT_OF_MEMORY;
 
@@ -70,8 +75,8 @@ NS_INTERFACE_MAP_BEGIN(nsOutlinerColFrame)
   NS_INTERFACE_MAP_ENTRY(nsIOutlinerColFrame)
 NS_INTERFACE_MAP_END_INHERITING(nsBoxFrame)
 // Constructor
-nsOutlinerColFrame::nsOutlinerColFrame(nsIPresShell* aPresShell, PRBool aIsRoot, nsIBoxLayout* aLayoutManager, PRBool aIsHorizontal)
-:nsBoxFrame(aPresShell, aIsRoot, aLayoutManager, aIsHorizontal) 
+nsOutlinerColFrame::nsOutlinerColFrame(nsIPresShell* aPresShell, PRBool aIsRoot, nsIBoxLayout* aLayoutManager)
+:nsBoxFrame(aPresShell, aIsRoot, aLayoutManager) 
 {}
 
 // Destructor
@@ -144,3 +149,36 @@ nsOutlinerColFrame::GetFrameForPoint(nsIPresContext* aPresContext,
   return NS_ERROR_FAILURE;
 }
 
+NS_IMETHODIMP
+nsOutlinerColFrame::AttributeChanged(nsIPresContext* aPresContext,
+                                     nsIContent* aChild,
+                                     PRInt32 aNameSpaceID,
+                                     nsIAtom* aAttribute,
+                                     PRInt32 aHint)
+{
+  nsresult rv = nsBoxFrame::AttributeChanged(aPresContext, aChild,
+                                               aNameSpaceID, aAttribute, aHint);
+
+  if (aAttribute == nsHTMLAtoms::width || aAttribute == nsHTMLAtoms::hidden) {
+    // Invalidate the outliner.
+    if (!mOutliner) {
+      // Get our parent node.
+      nsCOMPtr<nsIContent> parent;
+      mContent->GetParent(*getter_AddRefs(parent));
+      nsCOMPtr<nsIDocument> doc;
+      mContent->GetDocument(*getter_AddRefs(doc));
+      nsCOMPtr<nsIDOMNSDocument> nsDoc(do_QueryInterface(doc));
+      nsCOMPtr<nsIDOMElement> elt(do_QueryInterface(parent));
+  
+      nsCOMPtr<nsIBoxObject> boxObject;
+      nsDoc->GetBoxObjectFor(elt, getter_AddRefs(boxObject));
+
+      mOutliner = do_QueryInterface(boxObject);
+    }
+
+    if (mOutliner)
+      mOutliner->Invalidate();
+  }
+
+  return rv;
+}

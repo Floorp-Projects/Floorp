@@ -144,11 +144,19 @@ NS_IMETHODIMP nsOutlinerBoxObject::GetSelection(nsIOutlinerSelection * *aSelecti
   return NS_OK;
 }
 
-NS_IMETHODIMP nsOutlinerBoxObject::GetIndexOfVisibleRow(PRInt32 *_retval)
+NS_IMETHODIMP nsOutlinerBoxObject::GetFirstVisibleRow(PRInt32 *_retval)
 {
   nsIOutlinerBoxObject* body = GetOutlinerBody();
   if (body)
-    return body->GetIndexOfVisibleRow(_retval);
+    return body->GetFirstVisibleRow(_retval);
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsOutlinerBoxObject::GetLastVisibleRow(PRInt32 *_retval)
+{
+  nsIOutlinerBoxObject* body = GetOutlinerBody();
+  if (body)
+    return body->GetLastVisibleRow(_retval);
   return NS_OK;
 }
 
@@ -161,6 +169,15 @@ NS_IMETHODIMP nsOutlinerBoxObject::GetPageCount(PRInt32 *_retval)
 }
 
 NS_IMETHODIMP
+nsOutlinerBoxObject::EnsureRowIsVisible(PRInt32 aRow)
+{
+  nsIOutlinerBoxObject* body = GetOutlinerBody();
+  if (body)
+    return body->EnsureRowIsVisible(aRow);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsOutlinerBoxObject::ScrollToRow(PRInt32 aRow)
 {
   nsIOutlinerBoxObject* body = GetOutlinerBody();
@@ -168,6 +185,25 @@ nsOutlinerBoxObject::ScrollToRow(PRInt32 aRow)
     return body->ScrollToRow(aRow);
   return NS_OK;
 }
+
+NS_IMETHODIMP
+nsOutlinerBoxObject::ScrollByLines(PRInt32 aNumLines)
+{
+  nsIOutlinerBoxObject* body = GetOutlinerBody();
+  if (body)
+    return body->ScrollByLines(aNumLines);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsOutlinerBoxObject::ScrollByPages(PRInt32 aNumPages)
+{
+  nsIOutlinerBoxObject* body = GetOutlinerBody();
+  if (body)
+    return body->ScrollByPages(aNumPages);
+  return NS_OK;
+}
+
 
 NS_IMETHODIMP nsOutlinerBoxObject::Invalidate()
 {
@@ -217,27 +253,11 @@ NS_IMETHODIMP nsOutlinerBoxObject::GetCellAt(PRInt32 x, PRInt32 y, PRInt32 *row,
   return NS_OK;
 }
 
-NS_IMETHODIMP nsOutlinerBoxObject::RowsAppended(PRInt32 count)
+NS_IMETHODIMP nsOutlinerBoxObject::RowCountChanged(PRInt32 aIndex, PRInt32 aDelta)
 {
   nsIOutlinerBoxObject* body = GetOutlinerBody();
   if (body)
-    return body->RowsAppended(count);
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsOutlinerBoxObject::RowsInserted(PRInt32 index, PRInt32 count)
-{
-  nsIOutlinerBoxObject* body = GetOutlinerBody();
-  if (body)
-    return body->RowsInserted(index, count);
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsOutlinerBoxObject::RowsRemoved(PRInt32 index, PRInt32 count)
-{
-  nsIOutlinerBoxObject* body = GetOutlinerBody();
-  if (body)
-    return body->RowsRemoved(index, count);
+    return body->RowCountChanged(aIndex, aDelta);
   return NS_OK;
 }
 

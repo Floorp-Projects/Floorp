@@ -5271,7 +5271,7 @@ nsCSSFrameConstructor::ConstructXULFrame(nsIPresShell*            aPresShell,
 
       // create a box. Its not root, its layout manager is default (nsnull) which is "sprocket" and
       // its default orientation is horizontal for hbox and vertical for vbox
-      rv = NS_NewBoxFrame(aPresShell, &newFrame, PR_FALSE, nsnull, aTag != nsXULAtoms::vbox);
+      rv = NS_NewBoxFrame(aPresShell, &newFrame, PR_FALSE, nsnull);
 
       // Boxes can scroll.
       if (IsScrollable(aPresContext, display)) {
@@ -5502,9 +5502,7 @@ nsCSSFrameConstructor::ConstructXULFrame(nsIPresShell*            aPresShell,
       ) {
       processChildren = PR_TRUE;
       isReplaced = PR_TRUE;
-      PRBool isHorizontal = (aTag == nsXULAtoms::columns)
-        || (aTag == nsXULAtoms::treecolgroup) || (aTag == nsXULAtoms::treecols) 
-        ;
+
       nsCOMPtr<nsIBoxLayout> layout;
       
       PRBool treeScrollPort = PR_FALSE;
@@ -5515,12 +5513,12 @@ nsCSSFrameConstructor::ConstructXULFrame(nsIPresShell*            aPresShell,
         nsAutoString outer;
         rv = aContent->GetAttribute(kNameSpaceID_None, nsXULAtoms::outer, outer); 
         if (outer.EqualsIgnoreCase("true")) {
-          rv = NS_NewXULTreeOuterGroupFrame(aPresShell, &newFrame, PR_FALSE, layout,  PR_FALSE);
+          rv = NS_NewXULTreeOuterGroupFrame(aPresShell, &newFrame, PR_FALSE, layout);
           ((nsXULTreeGroupFrame*)newFrame)->InitGroup(this, aPresContext, (nsXULTreeOuterGroupFrame*) newFrame);
           treeScrollPort = PR_TRUE;
         }
         else {
-          rv = NS_NewXULTreeGroupFrame(aPresShell, &newFrame, PR_FALSE, layout,  PR_FALSE);
+          rv = NS_NewXULTreeGroupFrame(aPresShell, &newFrame, PR_FALSE, layout);
           ((nsXULTreeGroupFrame*)newFrame)->InitGroup(this, aPresContext, ((nsXULTreeGroupFrame*)aParentFrame)->GetOuterFrame());
         }
 
@@ -5529,7 +5527,7 @@ nsCSSFrameConstructor::ConstructXULFrame(nsIPresShell*            aPresShell,
       else
       {
         NS_NewTempleLayout(aPresShell, layout);
-        rv = NS_NewBoxFrame(aPresShell, &newFrame, PR_FALSE, layout,  isHorizontal);
+        rv = NS_NewBoxFrame(aPresShell, &newFrame, PR_FALSE, layout);
       }
 
       const nsStyleDisplay* display = (const nsStyleDisplay*)
@@ -5563,14 +5561,14 @@ nsCSSFrameConstructor::ConstructXULFrame(nsIPresShell*            aPresShell,
       ) {
       processChildren = PR_TRUE;
       isReplaced = PR_TRUE;
-      PRBool isHorizontal = (aTag == nsXULAtoms::row) || (aTag == nsXULAtoms::treerow);
+      
       nsCOMPtr<nsIBoxLayout> layout;
       NS_NewObeliskLayout(aPresShell, layout);
 
       if (aTag == nsXULAtoms::treerow)
-        rv = NS_NewXULTreeSliceFrame(aPresShell, &newFrame, PR_FALSE, layout, isHorizontal);
+        rv = NS_NewXULTreeSliceFrame(aPresShell, &newFrame, PR_FALSE, layout);
       else
-        rv = NS_NewBoxFrame(aPresShell, &newFrame, PR_FALSE, layout, isHorizontal);
+        rv = NS_NewBoxFrame(aPresShell, &newFrame, PR_FALSE, layout);
 
       const nsStyleDisplay* display = (const nsStyleDisplay*)
            aStyleContext->GetStyleData(eStyleStruct_Display);

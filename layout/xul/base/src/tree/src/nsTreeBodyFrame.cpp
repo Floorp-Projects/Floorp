@@ -53,6 +53,8 @@
 #include "nsWidgetsCID.h"
 #include "nsBoxFrame.h"
 
+#define ELLIPSIS "..."
+
 // The style context cache impl
 nsresult 
 nsOutlinerStyleCache::GetStyleContext(nsICSSPseudoComparator* aComparator,
@@ -132,9 +134,9 @@ nsOutlinerColumn::nsOutlinerColumn(nsIContent* aColElement, nsIFrame* aFrame)
   mCropStyle = 0;
   nsAutoString crop;
   mColElement->GetAttribute(kNameSpaceID_None, nsXULAtoms::crop, crop);
-  if (crop.EqualsIgnoreCase("middle"))
+  if (crop.EqualsIgnoreCase("center"))
     mCropStyle = 1;
-  else if (crop.EqualsIgnoreCase("right"))
+  else if (crop.EqualsIgnoreCase("left"))
     mCropStyle = 2;
 
   // Cache our text alignment policy.
@@ -198,7 +200,7 @@ NS_NewOutlinerBodyFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame)
 // Constructor
 nsOutlinerBodyFrame::nsOutlinerBodyFrame(nsIPresShell* aPresShell)
 :nsLeafBoxFrame(aPresShell), mPresContext(nsnull),
- mTopRowIndex(0), mColumns(nsnull), mScrollbar(nsnull)
+ mTopRowIndex(0), mRowHeight(0), mIndentation(0), mColumns(nsnull), mScrollbar(nsnull)
 {
   NS_NewISupportsArray(getter_AddRefs(mScratchArray));
 }
@@ -267,10 +269,34 @@ nsOutlinerBodyFrame::Destroy(nsIPresContext* aPresContext)
   mColumns = nsnull;
 
   // Drop our ref to the view.
-  mView->SetOutliner(nsnull);
+  if (mView)
+    mView->SetOutliner(nsnull);
   mView = nsnull;
 
   return nsLeafBoxFrame::Destroy(aPresContext);
+}
+
+NS_IMETHODIMP nsOutlinerBodyFrame::Reflow(nsIPresContext* aPresContext,
+                                          nsHTMLReflowMetrics& aReflowMetrics,
+                                          const nsHTMLReflowState& aReflowState,
+                                          nsReflowStatus& aStatus)
+{
+  if ( mView && mRowHeight && aReflowState.reason == eReflowReason_Resize) {
+    mInnerBox = GetInnerBox();
+    mPageCount = mInnerBox.height / mRowHeight;
+
+    PRInt32 rowCount;
+    mView->GetRowCount(&rowCount);
+    PRInt32 lastPageTopRow = rowCount - mPageCount;
+    if (mTopRowIndex >= lastPageTopRow)
+      ScrollToRow(lastPageTopRow);
+
+    InvalidateScrollbar();
+  }
+
+//  nsLeafBoxFrame::Reflow(aPresContext, aReflowMetrics, aReflowState, aStatus);
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsOutlinerBodyFrame::GetView(nsIOutlinerView * *aView)
@@ -284,7 +310,14 @@ NS_IMETHODIMP nsOutlinerBodyFrame::SetView(nsIOutlinerView * aView)
 {
   // Outliner, meet the view.
   mView = aView;
-  
+ 
+  // Changing the view causes us to refetch our data.  This will
+  // necessarily entail a full invalidation of the outliner.
+  mTopRowIndex = 0;
+  delete mColumns;
+  mColumns = nsnull;
+  Invalidate();
+ 
   if (mView) {
     // View, meet the outliner.
     mView->SetOutliner(this);
@@ -294,15 +327,11 @@ NS_IMETHODIMP nsOutlinerBodyFrame::SetView(nsIOutlinerView * aView)
     NS_NewOutlinerSelection(this, getter_AddRefs(sel));
 
     mView->SetSelection(sel);
+
+    // The scrollbar will need to be updated.
+    InvalidateScrollbar();
   }
-  
-  // Changing the view causes us to refetch our data.  This will
-  // necessarily entail a full invalidation of the outliner.
-  mTopRowIndex = 0;
-  delete mColumns;
-  mColumns = nsnull;
-  Invalidate();
-  
+ 
   return NS_OK;
 }
 
@@ -321,9 +350,15 @@ NS_IMETHODIMP nsOutlinerBodyFrame::GetSelection(nsIOutlinerSelection** aSelectio
   return NS_OK;
 }
 
-NS_IMETHODIMP nsOutlinerBodyFrame::GetIndexOfVisibleRow(PRInt32 *_retval)
+NS_IMETHODIMP nsOutlinerBodyFrame::GetFirstVisibleRow(PRInt32 *_retval)
 {
   *_retval = mTopRowIndex;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsOutlinerBodyFrame::GetLastVisibleRow(PRInt32 *_retval)
+{
+  *_retval = mTopRowIndex + mPageCount + 1;
   return NS_OK;
 }
 
@@ -360,8 +395,9 @@ NS_IMETHODIMP nsOutlinerBodyFrame::InvalidateRange(PRInt32 aStart, PRInt32 aEnd)
   if (aStart == aEnd)
     return InvalidateRow(aStart);
 
-  
-  if (aEnd < mTopRowIndex || aStart > mTopRowIndex + mPageCount + 1)
+  PRInt32 last;
+  GetLastVisibleRow(&last);
+  if (aEnd < mTopRowIndex || aStart > last)
     return NS_OK;
 
   if (aStart < mTopRowIndex)
@@ -374,6 +410,21 @@ NS_IMETHODIMP nsOutlinerBodyFrame::InvalidateRange(PRInt32 aStart, PRInt32 aEnd)
   nsLeafBoxFrame::Invalidate(mPresContext, rangeRect, PR_FALSE);
 
   return NS_OK;
+}
+
+void
+nsOutlinerBodyFrame::UpdateScrollbar()
+{
+  // Update the scrollbar.
+  nsCOMPtr<nsIContent> scrollbarContent;
+  mScrollbar->GetContent(getter_AddRefs(scrollbarContent));
+  float t2p;
+  mPresContext->GetTwipsToPixels(&t2p);
+  nscoord rowHeightAsPixels = NSToCoordRound((float)mRowHeight*t2p);
+
+  nsAutoString curPos;
+  curPos.AppendInt(mTopRowIndex*rowHeightAsPixels);
+  scrollbarContent->SetAttribute(kNameSpaceID_None, nsXULAtoms::curpos, curPos, PR_TRUE);
 }
 
 NS_IMETHODIMP nsOutlinerBodyFrame::InvalidateScrollbar()
@@ -397,7 +448,7 @@ NS_IMETHODIMP nsOutlinerBodyFrame::InvalidateScrollbar()
   mPresContext->GetTwipsToPixels(&t2p);
   nscoord rowHeightAsPixels = NSToCoordRound((float)mRowHeight*t2p);
 
-  PRInt32 size = rowHeightAsPixels*(rowCount-mPageCount+1);
+  PRInt32 size = rowHeightAsPixels*(rowCount-mPageCount);
   maxposStr.AppendInt(size);
   scrollbar->SetAttribute(kNameSpaceID_None, nsXULAtoms::maxpos, maxposStr, PR_TRUE);
 
@@ -450,22 +501,70 @@ NS_IMETHODIMP nsOutlinerBodyFrame::GetCellAt(PRInt32 aX, PRInt32 aY, PRInt32* aR
   // Now just mod by our total inner box height and add to our top row index.
   *aRow = (y/mRowHeight)+mTopRowIndex;
 
-  // XXX Determine the column hit!
+  // Determine the column hit.
+  nscoord currX = mInnerBox.x;
+  for (nsOutlinerColumn* currCol = mColumns; currCol && currX < mInnerBox.x+mInnerBox.width; 
+       currCol = currCol->GetNext()) {
+    nsRect colRect(currX, mInnerBox.y, currCol->GetWidth(), mInnerBox.height);
+    PRInt32 overflow = colRect.x+colRect.width-(mInnerBox.x+mInnerBox.width);
+    if (overflow > 0)
+      colRect.width -= overflow;
+
+    if (x >= colRect.x && x < colRect.x + colRect.width)
+      *aColID = nsXPIDLString::Copy(currCol->GetID());
+
+    currX += colRect.width;
+  }
   return NS_OK;
 }
 
-NS_IMETHODIMP nsOutlinerBodyFrame::RowsAppended(PRInt32 count)
+NS_IMETHODIMP nsOutlinerBodyFrame::RowCountChanged(PRInt32 aIndex, PRInt32 aCount)
 {
-  return NS_OK;
-}
+  if (aCount == 0)
+    return NS_OK; // Nothing to do.
 
-NS_IMETHODIMP nsOutlinerBodyFrame::RowsInserted(PRInt32 index, PRInt32 count)
-{
-  return NS_OK;
-}
+  PRInt32 count = aCount > 0 ? aCount : -aCount;
 
-NS_IMETHODIMP nsOutlinerBodyFrame::RowsRemoved(PRInt32 index, PRInt32 count)
-{
+  // Adjust our selection.
+  nsCOMPtr<nsIOutlinerSelection> sel;
+  mView->GetSelection(getter_AddRefs(sel));
+  sel->AdjustSelection(aIndex, aCount);
+
+  PRInt32 last;
+  GetLastVisibleRow(&last);
+  if (aIndex >= mTopRowIndex && aIndex <= last)
+    InvalidateRange(aIndex, last);
+
+  if (mTopRowIndex == 0) {    
+    // Just update the scrollbar and return.
+    InvalidateScrollbar();
+    return NS_OK;
+  }
+
+  // Adjust our top row index.
+  if (aCount > 0) {
+    if (mTopRowIndex > aIndex) {
+      // Rows came in above us.  Augment the top row index.
+      mTopRowIndex += aCount;
+      UpdateScrollbar();
+    }
+  }
+  else if (aCount < 0) {
+    if (mTopRowIndex > aIndex+count-1) {
+      // No need to invalidate. The remove happened
+      // completely offscreen.
+      mTopRowIndex -= count;
+      UpdateScrollbar();
+    }
+    else if (mTopRowIndex > aIndex) {
+      // This is a full-blown invalidate.
+      mTopRowIndex = aIndex+count-1;
+      UpdateScrollbar();
+      Invalidate();
+    }
+  }
+
+  InvalidateScrollbar();
   return NS_OK;
 }
 
@@ -521,6 +620,23 @@ PRInt32 nsOutlinerBodyFrame::GetRowHeight()
   return 19*15; // As good a default as any.
 }
 
+PRInt32 nsOutlinerBodyFrame::GetIndentation()
+{
+  // Look up the correct indentation.  It is equal to the specified indentation width.
+  nsCOMPtr<nsIStyleContext> indentContext;
+  mScratchArray->Clear();
+  GetPseudoStyleContext(mPresContext, nsXULAtoms::mozoutlinerindentation, getter_AddRefs(indentContext));
+  if (indentContext) {
+    const nsStylePosition* myPosition = (const nsStylePosition*)
+          indentContext->GetStyleData(eStyleStruct_Position);
+    if (myPosition->mWidth.GetUnit() == eStyleUnit_Coord)  {
+      PRInt32 val = myPosition->mWidth.GetCoordValue();
+      return val;
+    }
+  }
+  return 16*15; // As good a default as any.
+}
+
 nsRect nsOutlinerBodyFrame::GetInnerBox()
 {
   nsRect r(0,0,mRect.width, mRect.height);
@@ -530,6 +646,16 @@ nsRect nsOutlinerBodyFrame::GetInnerBox()
   bPad.GetBorderPadding(m);
   r.Deflate(m);
   return r;
+}
+
+static void 
+AdjustForBorderPadding(nsIStyleContext* aContext, nsRect& aRect)
+{
+  nsMargin m(0,0,0,0);
+  nsStyleBorderPadding  bPad;
+  aContext->GetStyle(eStyleStruct_BorderPaddingShortcut, (nsStyleStruct&)bPad);
+  bPad.GetBorderPadding(m);
+  aRect.Deflate(m);
 }
 
 // Painting routines
@@ -556,13 +682,11 @@ NS_IMETHODIMP nsOutlinerBodyFrame::Paint(nsIPresContext*      aPresContext,
     return NS_OK;
 
   PRBool clipState = PR_FALSE;
-  nsRect clipRect(mRect);
-  aRenderingContext.PushState();
-  aRenderingContext.SetClipRect(clipRect, nsClipCombine_kReplace, clipState);
-
+  
   // Update our page count, our available height and our row height.
   PRInt32 oldRowHeight = mRowHeight;
   mRowHeight = GetRowHeight();
+  mIndentation = GetIndentation();
   mInnerBox = GetInnerBox();
   mPageCount = mInnerBox.height/mRowHeight;
 
@@ -580,8 +704,12 @@ NS_IMETHODIMP nsOutlinerBodyFrame::Paint(nsIPresContext*      aPresContext,
   // is contained in the rows.
   if (NS_FRAME_PAINT_LAYER_BACKGROUND == aWhichLayer) {
     nscoord currX = mInnerBox.x;
-    for (nsOutlinerColumn* currCol = mColumns; currCol; currCol = currCol->GetNext()) {
+    for (nsOutlinerColumn* currCol = mColumns; currCol && currX < mInnerBox.x+mInnerBox.width; 
+         currCol = currCol->GetNext()) {
       nsRect colRect(currX, mInnerBox.y, currCol->GetWidth(), mInnerBox.height);
+      PRInt32 overflow = colRect.x+colRect.width-(mInnerBox.x+mInnerBox.width);
+      if (overflow > 0)
+        colRect.width -= overflow;
       nsRect dirtyRect;
       if (dirtyRect.IntersectRect(aDirtyRect, colRect)) {
         PaintColumn(currCol, colRect, aPresContext, aRenderingContext, aDirtyRect, aWhichLayer); 
@@ -594,12 +722,24 @@ NS_IMETHODIMP nsOutlinerBodyFrame::Paint(nsIPresContext*      aPresContext,
   for (PRInt32 i = mTopRowIndex; i < rowCount && i < mTopRowIndex+mPageCount+1; i++) {
     nsRect rowRect(mInnerBox.x, mInnerBox.y+mRowHeight*(i-mTopRowIndex), mInnerBox.width, mRowHeight);
     nsRect dirtyRect;
-    if (dirtyRect.IntersectRect(aDirtyRect, rowRect)) {
+    if (dirtyRect.IntersectRect(aDirtyRect, rowRect) && rowRect.y < (mInnerBox.y+mInnerBox.height)) {
+      PRBool clip = (rowRect.y + rowRect.height > mInnerBox.y + mInnerBox.height);
+      if (clip) {
+        // We need to clip the last row, since it extends outside our inner box.  Push
+        // a clip rect down.
+        PRInt32 overflow = (rowRect.y+rowRect.height) - (mInnerBox.y+mInnerBox.height);
+        nsRect clipRect(rowRect.x, rowRect.y, mInnerBox.width, mRowHeight-overflow);
+        aRenderingContext.PushState();
+        aRenderingContext.SetClipRect(clipRect, nsClipCombine_kReplace, clipState);
+      }
+
       PaintRow(i, rowRect, aPresContext, aRenderingContext, aDirtyRect, aWhichLayer);
+
+      if (clip)
+        aRenderingContext.PopState(clipState);
     }
   }
 
-  aRenderingContext.PopState(clipState);
   return NS_OK;
 }
 
@@ -610,6 +750,9 @@ NS_IMETHODIMP nsOutlinerBodyFrame::PaintColumn(nsOutlinerColumn*    aColumn,
                                                const nsRect&        aDirtyRect,
                                                nsFramePaintLayer    aWhichLayer)
 {
+  if (aColRect.width == 0)
+    return NS_OK; // Don't paint hidden columns.
+
   // Now obtain the properties for our cell.
   // XXX Automatically fill in the following props: open, container, selected, focused, and the col ID.
   PrefillPropertyArray(-1, aColumn->GetID());
@@ -670,10 +813,17 @@ NS_IMETHODIMP nsOutlinerBodyFrame::PaintRow(int aRowIndex, const nsRect& aRowRec
   if (NS_FRAME_PAINT_LAYER_BACKGROUND == aWhichLayer)
     PaintBackgroundLayer(rowContext, aPresContext, aRenderingContext, rowRect, aDirtyRect);
 
+  // Adjust the rect for its border and padding.
+  AdjustForBorderPadding(rowContext, rowRect);
+
   // Now loop over our cells. Only paint a cell if it intersects with our dirty rect.
   nscoord currX = rowRect.x;
-  for (nsOutlinerColumn* currCol = mColumns; currCol; currCol = currCol->GetNext()) {
+  for (nsOutlinerColumn* currCol = mColumns; currCol && currX < mInnerBox.x+mInnerBox.width; 
+       currCol = currCol->GetNext()) {
     nsRect cellRect(currX, rowRect.y, currCol->GetWidth(), rowRect.height);
+    PRInt32 overflow = cellRect.x+cellRect.width-(mInnerBox.x+mInnerBox.width);
+    if (overflow > 0)
+      cellRect.width -= overflow;
     nsRect dirtyRect;
     if (dirtyRect.IntersectRect(aDirtyRect, cellRect)) {
       PaintCell(aRowIndex, currCol, cellRect, aPresContext, aRenderingContext, aDirtyRect, aWhichLayer); 
@@ -683,7 +833,7 @@ NS_IMETHODIMP nsOutlinerBodyFrame::PaintRow(int aRowIndex, const nsRect& aRowRec
 
   return NS_OK;
 }
-  
+
 NS_IMETHODIMP nsOutlinerBodyFrame::PaintCell(int aRowIndex, 
                                              nsOutlinerColumn*    aColumn,
                                              const nsRect& aCellRect,
@@ -692,6 +842,9 @@ NS_IMETHODIMP nsOutlinerBodyFrame::PaintCell(int aRowIndex,
                                              const nsRect&        aDirtyRect,
                                              nsFramePaintLayer    aWhichLayer)
 {
+  if (aCellRect.width == 0)
+    return NS_OK; // Don't paint cells in hidden columns.
+
   // Now obtain the properties for our cell.
   // XXX Automatically fill in the following props: open, container, selected, focused, and the col ID.
   PrefillPropertyArray(aRowIndex, NS_LITERAL_STRING(""));
@@ -715,6 +868,9 @@ NS_IMETHODIMP nsOutlinerBodyFrame::PaintCell(int aRowIndex,
   if (NS_FRAME_PAINT_LAYER_BACKGROUND == aWhichLayer)
     PaintBackgroundLayer(cellContext, aPresContext, aRenderingContext, cellRect, aDirtyRect);
 
+  // Adjust the rect for its border and padding.
+  AdjustForBorderPadding(cellContext, cellRect);
+
   nscoord currX = cellRect.x;
   nscoord remainingWidth = cellRect.width;
 
@@ -724,15 +880,77 @@ NS_IMETHODIMP nsOutlinerBodyFrame::PaintCell(int aRowIndex,
   // RIGHT means paint from right to left.
   // XXX Implement RIGHT alignment!
 
-  // XXX If we're the primary column, we need to indent and paint the twisty.
+  if (aColumn->IsPrimary()) {
+    // If we're the primary column, we need to indent and paint the twisty.
+    // First we indent
+    PRInt32 level;
+    mView->GetLevel(aRowIndex, &level);
 
+    currX += mIndentation*level;
+    remainingWidth -= mIndentation*level;
+
+    // Resolve style for line.
+    nsCOMPtr<nsIStyleContext> lineContext;
+    GetPseudoStyleContext(aPresContext, nsXULAtoms::mozoutlinerline, getter_AddRefs(lineContext));
+    const nsStyleDisplay* displayStyle = (const nsStyleDisplay*)lineContext->GetStyleData(eStyleStruct_Display);
+    
+    if (displayStyle->IsVisibleOrCollapsed() && level) {
+      // Paint lines to show a connections between rows
+      aRenderingContext.PushState();
+
+      const nsStyleBorder* borderStyle = (const nsStyleBorder*)lineContext->GetStyleData(eStyleStruct_Border);
+      nscolor color;
+      borderStyle->GetBorderColor(NS_SIDE_LEFT, color);
+      aRenderingContext.SetColor(color);
+      PRUint8 style;
+      style = borderStyle->GetBorderStyle(NS_SIDE_LEFT);
+      if (style == NS_STYLE_BORDER_STYLE_DOTTED)
+        aRenderingContext.SetLineStyle(nsLineStyle_kDotted);
+      else if (style == NS_STYLE_BORDER_STYLE_DASHED)
+        aRenderingContext.SetLineStyle(nsLineStyle_kDashed);
+      else
+        aRenderingContext.SetLineStyle(nsLineStyle_kSolid);
+
+      PRInt32 y = (aRowIndex - mTopRowIndex) * mRowHeight;
+
+      PRInt32 i;
+      PRInt32 currentParent = aRowIndex;
+      for (i = level; i > 0; i--) {
+        PRBool hasNextSibling;
+        mView->HasNextSibling(currentParent, aRowIndex, &hasNextSibling);
+        if (hasNextSibling)
+          aRenderingContext.DrawLine(aCellRect.x + (i - 1) * mIndentation, y, aCellRect.x + (i - 1) * mIndentation, y + mRowHeight);
+        else if (i == level)
+          aRenderingContext.DrawLine(aCellRect.x + (i - 1) * mIndentation, y, aCellRect.x + (i - 1) * mIndentation, y + mRowHeight / 2);
+        PRInt32 parent;
+        mView->GetParentIndex(currentParent, &parent);
+	if (parent == -1)
+	  break;
+	currentParent = parent;
+      }
+
+      aRenderingContext.DrawLine(aCellRect.x + (level - 1) * mIndentation, y + mRowHeight / 2, aCellRect.x + level * mIndentation, aCellRect.y + mRowHeight /2);
+
+      PRBool clipState;
+      aRenderingContext.PopState(clipState);
+    }
+
+    // XXX Paint the twisty.
+  
+  }
+  
   // XXX Now paint the various images.
 
-  // Now paint our text.
-  nsRect textRect(currX, cellRect.y, remainingWidth, cellRect.height);
-  nsRect dirtyRect;
-  if (dirtyRect.IntersectRect(aDirtyRect, textRect))
-    PaintText(aRowIndex, aColumn, textRect, aPresContext, aRenderingContext, aDirtyRect, aWhichLayer);
+  // Now paint our text, but only if we aren't a cycler column.
+  // XXX until we have the ability to load images, allow the view to 
+  // insert text into cycler columns...
+//  if (!aColumn->IsCycler()) {
+    nsRect textRect(currX, cellRect.y, remainingWidth, cellRect.height);
+    nsRect dirtyRect;
+    if (dirtyRect.IntersectRect(aDirtyRect, textRect))
+      PaintText(aRowIndex, aColumn, textRect, aPresContext, aRenderingContext, aDirtyRect, aWhichLayer);
+  //}
+
   return NS_OK;
 }
 
@@ -749,6 +967,9 @@ NS_IMETHODIMP nsOutlinerBodyFrame::PaintText(int aRowIndex,
   mView->GetCellText(aRowIndex, aColumn->GetID(), getter_Copies(text));
 
   nsAutoString realText(text);
+
+  if (realText.Length() == 0)
+    return NS_OK; // Don't paint an empty string. XXX What about background/borders? Still paint?
 
   // Resolve style for the text.  It contains all the info we need to lay ourselves
   // out and to paint.
@@ -769,6 +990,8 @@ NS_IMETHODIMP nsOutlinerBodyFrame::PaintText(int aRowIndex,
     PaintBackgroundLayer(textContext, aPresContext, aRenderingContext, textRect, aDirtyRect);
   else {
     // Time to paint our text. 
+    // Adjust the rect for its border and padding.
+    AdjustForBorderPadding(textContext, textRect);
     
     // Compute our text size.
     const nsStyleFont* fontStyle = (const nsStyleFont*)textContext->GetStyleData(eStyleStruct_Font);
@@ -787,12 +1010,83 @@ NS_IMETHODIMP nsOutlinerBodyFrame::PaintText(int aRowIndex,
       textRect.height = height;
     }
 
-    // XXX Crop if the width is too big!
+    // Set our font.
+    aRenderingContext.SetFont(fontMet);
+
     nscoord width;
     aRenderingContext.GetWidth(realText, width);
 
-    // Set our font.
-    aRenderingContext.SetFont(fontMet);
+    if (width > textRect.width) {
+      // See if the width is even smaller than the ellipsis
+      // If so, clear the text completely.
+      nscoord ellipsisWidth;
+      aRenderingContext.GetWidth(ELLIPSIS, ellipsisWidth);
+
+      nsAutoString ellipsis; ellipsis.AssignWithConversion(ELLIPSIS);
+
+      nscoord width = textRect.width;
+      if (ellipsisWidth > width)
+        realText.SetLength(0);
+      else if (ellipsisWidth == width)
+        realText = ellipsis;
+      else {
+        // We will be drawing an ellipsis, thank you very much.
+        // Subtract out the required width of the ellipsis.
+        // This is the total remaining width we have to play with.
+        width -= ellipsisWidth;
+
+        // Now we crop.
+        switch (aColumn->GetCropStyle()) {
+          default:
+          case 0: {
+            // Crop right. 
+            nscoord cwidth;
+            nscoord twidth = 0;
+            int length = realText.Length();
+            int i;
+            for (i = 0; i < length; ++i) {
+              PRUnichar ch = realText.CharAt(i);
+              aRenderingContext.GetWidth(ch,cwidth);
+              if (twidth + cwidth > width)
+                break;
+              twidth += cwidth;
+            }
+
+            realText.Truncate(i);
+            realText += ellipsis;
+          }
+          break;
+
+          case 2: {
+            // Crop left.
+            nscoord cwidth;
+            nscoord twidth = 0;
+            int length = realText.Length();
+            int i;
+            for (i=length-1; i >= 0; --i) {
+              PRUnichar ch = realText.CharAt(i);
+              aRenderingContext.GetWidth(ch,cwidth);
+              if (twidth + cwidth > width)
+                  break;
+
+              twidth += cwidth;
+            }
+
+            nsAutoString copy;
+            realText.Right(copy, length-1-i);
+            realText = ellipsis;
+            realText += copy;
+          }
+          break;
+
+          case 1:
+          {
+            // XXX Not yet implemented.
+          }
+          break;
+        }
+      }
+    }
 
     // Set our color.
     const nsStyleColor* colorStyle = (const nsStyleColor*)textContext->GetStyleData(eStyleStruct_Color);
@@ -832,7 +1126,75 @@ nsOutlinerBodyFrame::PaintBackgroundLayer(nsIStyleContext* aStyleContext, nsIPre
 }
 
 // Scrolling
+NS_IMETHODIMP nsOutlinerBodyFrame::EnsureRowIsVisible(PRInt32 aRow)
+{
+  if (!mView)
+    return NS_OK;
+
+  if (mTopRowIndex <= aRow && mTopRowIndex+mPageCount > aRow)
+    return NS_OK;
+
+  if (aRow < mTopRowIndex)
+    ScrollToRow(aRow);
+  else {
+    // Bring it just on-screen.
+    PRInt32 distance = aRow - (mTopRowIndex+mPageCount)+1;
+    ScrollToRow(mTopRowIndex+distance);
+  }
+
+  return NS_OK;
+}
+
 NS_IMETHODIMP nsOutlinerBodyFrame::ScrollToRow(PRInt32 aRow)
+{
+  ScrollInternal(aRow);
+  UpdateScrollbar();
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsOutlinerBodyFrame::ScrollByLines(PRInt32 aNumLines)
+{
+  if (!mView)
+    return NS_OK;
+
+  PRInt32 newIndex = mTopRowIndex + aNumLines;
+  if (newIndex < 0)
+    newIndex = 0;
+  else {
+    PRInt32 rowCount;
+    mView->GetRowCount(&rowCount);
+    PRInt32 lastPageTopRow = rowCount - mPageCount;
+    if (newIndex > lastPageTopRow)
+      newIndex = lastPageTopRow;
+  }
+  ScrollToRow(newIndex);
+    
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsOutlinerBodyFrame::ScrollByPages(PRInt32 aNumPages)
+{
+  if (!mView)
+    return NS_OK;
+
+  PRInt32 newIndex = mTopRowIndex + aNumPages * mPageCount;
+  if (newIndex < 0)
+    newIndex = 0;
+  else {
+    PRInt32 rowCount;
+    mView->GetRowCount(&rowCount);
+    PRInt32 lastPageTopRow = rowCount - mPageCount;
+    if (newIndex > lastPageTopRow)
+      newIndex = lastPageTopRow;
+  }
+  ScrollToRow(newIndex);
+    
+  return NS_OK;
+}
+
+nsresult
+nsOutlinerBodyFrame::ScrollInternal(PRInt32 aRow)
 {
   if (!mView)
     return NS_OK;
@@ -857,11 +1219,16 @@ NS_IMETHODIMP nsOutlinerBodyFrame::ScrollToRow(PRInt32 aRow)
   mPresContext->GetTwipsToPixels(&t2p);
   nscoord rowHeightAsPixels = NSToCoordRound((float)mRowHeight*t2p);
 
+  // See if we have a background image.  If we do, then we cannot blit.
+  const nsStyleColor* myColor = (const nsStyleColor*)
+      mStyleContext->GetStyleData(eStyleStruct_Color);
+  PRBool hasBackground = myColor->mBackgroundImage.Length() > 0;
+
   PRInt32 absDelta = delta > 0 ? delta : -delta;
-  if (absDelta*mRowHeight >= mRect.height)
+  if (hasBackground || absDelta*mRowHeight >= mRect.height)
     Invalidate();
   else if (mOutlinerWidget)
-    mOutlinerWidget->Scroll(0, delta > 0 ? -delta*rowHeightAsPixels : delta*rowHeightAsPixels, nsnull);
+    mOutlinerWidget->Scroll(0, -delta*rowHeightAsPixels, nsnull);
  
   return NS_OK;
 }
@@ -871,19 +1238,8 @@ nsOutlinerBodyFrame::ScrollbarButtonPressed(PRInt32 aOldIndex, PRInt32 aNewIndex
 {
   if (aNewIndex > aOldIndex)
     ScrollToRow(mTopRowIndex+1);
-  else ScrollToRow(mTopRowIndex-1);
-
-  // Update the scrollbar.
-  nsCOMPtr<nsIContent> scrollbarContent;
-  mScrollbar->GetContent(getter_AddRefs(scrollbarContent));
-  float t2p;
-  mPresContext->GetTwipsToPixels(&t2p);
-  nscoord rowHeightAsPixels = NSToCoordRound((float)mRowHeight*t2p);
-
-  nsAutoString curPos;
-  curPos.AppendInt(mTopRowIndex*rowHeightAsPixels);
-  scrollbarContent->SetAttribute(kNameSpaceID_None, nsXULAtoms::curpos, curPos, PR_TRUE);
-
+  else if (aNewIndex < aOldIndex)
+    ScrollToRow(mTopRowIndex-1);
   return NS_OK;
 }
   
@@ -898,7 +1254,7 @@ nsOutlinerBodyFrame::PositionChanged(PRInt32 aOldIndex, PRInt32& aNewIndex)
   nscoord newrow = aNewIndex/rh;
 
   if (oldrow != newrow)
-    ScrollToRow(newrow);
+    ScrollInternal(newrow);
 
   // Go exactly where we're supposed to
   // Update the scrollbar.
@@ -992,3 +1348,4 @@ NS_INTERFACE_MAP_BEGIN(nsOutlinerBodyFrame)
   NS_INTERFACE_MAP_ENTRY(nsICSSPseudoComparator)
   NS_INTERFACE_MAP_ENTRY(nsIScrollbarMediator)
 NS_INTERFACE_MAP_END_INHERITING(nsLeafFrame)
+

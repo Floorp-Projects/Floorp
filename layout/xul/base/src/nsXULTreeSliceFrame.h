@@ -33,8 +33,7 @@ public:
   friend nsresult NS_NewXULTreeSliceFrame(nsIPresShell* aPresShell, 
                                           nsIFrame** aNewFrame, 
                                           PRBool aIsRoot = PR_FALSE,
-                                          nsIBoxLayout* aLayoutManager = nsnull,
-                                          PRBool aDefaultHorizontal = PR_TRUE);
+                                          nsIBoxLayout* aLayoutManager = nsnull);
 
   // nsIXULTreeSlice
   NS_IMETHOD IsOutermostFrame(PRBool* aResult) { *aResult = PR_FALSE; return NS_OK; };
@@ -46,7 +45,7 @@ public:
   NS_IMETHOD GetPrefSize(nsBoxLayoutState& aState, nsSize& aSize);
   
 protected:
-  nsXULTreeSliceFrame(nsIPresShell* aPresShell, PRBool aIsRoot = nsnull, nsIBoxLayout* aLayoutManager = nsnull, PRBool aDefaultHorizontal = PR_TRUE);
+  nsXULTreeSliceFrame(nsIPresShell* aPresShell, PRBool aIsRoot = nsnull, nsIBoxLayout* aLayoutManager = nsnull);
   virtual ~nsXULTreeSliceFrame();
 
 protected: // Data Members

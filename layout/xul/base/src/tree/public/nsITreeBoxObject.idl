@@ -43,13 +43,30 @@ interface nsIOutlinerBoxObject : nsISupports
   readonly attribute nsIOutlinerSelection selection;
 
   // Get the index of the first visible row.
-  long getIndexOfVisibleRow();
+  long getFirstVisibleRow();
+
+  // Get the index of the last visible row.
+  long getLastVisibleRow();
 
   // Gets the number of possible visible rows.
   long getPageCount();
 
   // Ensures that a row at a given index is visible.
+  void ensureRowIsVisible(in long index);
+
+  // Scrolls such that the row at index is at the top of the visible view.
   void scrollToRow(in long index);
+
+  // Scroll the outliner up or down by numLines lines. Positive
+  // values move down in the outliner. Prevents scrolling off the
+  // end of the outliner. 
+  void scrollByLines(in long numLines);
+
+  // Scroll the outliner up or down by numPages pages. A page
+  // is considered to be the amount displayed by the outliner.
+  // Positive values move down in the outliner. Prevents scrolling
+  // off the end of the outliner.
+  void scrollByPages(in long numPages);
   
   // Invalidation methods for fine-grained painting control.
   void invalidate();
@@ -62,12 +79,10 @@ interface nsIOutlinerBoxObject : nsISupports
   void getCellAt(in long x, in long y, out long row, out wstring colID);
 
   // The view is responsible for calling these notification methods when
-  // nodes are added or removed.  Index is the position at which the new
-  // rows start.  Count is the number of new contiguous rows added.  For
-  // non-contiguous additions, these methods should be called multiple times.
-  void rowsAppended(in long count);
-  void rowsInserted(in long index, in long count);
-  void rowsRemoved(in long index, in long count);
+  // rows are added or removed.  Index is the position at which the new
+  // rows were added or at which rows were removed.  For
+  // non-contiguous additions/removals, this method should be called multiple times.
+  void rowCountChanged(in long index, in long count);
 };
 
 %{C++

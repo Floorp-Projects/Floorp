@@ -670,6 +670,19 @@ struct nsStylePrint: public nsStyleStruct {
   nsStyleCoord  mSizeHeight;			// [reset] length, enum: see nsStyleConsts.h NS_STYLE_PAGE_SIZE_*
 };
 
+#ifdef INCLUDE_XUL
+struct nsStyleXUL : public nsStyleStruct {
+  nsStyleXUL();
+  ~nsStyleXUL();
+
+  // There will be seven more properties coming,
+  // which is why we warrant our own struct.
+  // box-align, box-direction, box-flex, box-flex-group, box-pack,
+  // stack-stretch, stack-policy
+  PRUint8       mBoxOrient;             // [reset] see nsStyleConsts.h
+};
+#endif
+
 #define BORDER_PRECEDENT_EQUAL  0
 #define BORDER_PRECEDENT_LOWER  1
 #define BORDER_PRECEDENT_HIGHER 2

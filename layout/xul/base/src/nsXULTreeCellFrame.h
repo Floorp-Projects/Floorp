@@ -30,8 +30,7 @@ public:
   friend nsresult NS_NewXULTreeCellFrame(nsIPresShell* aPresShell, 
                                           nsIFrame** aNewFrame, 
                                           PRBool aIsRoot = PR_FALSE,
-                                          nsIBoxLayout* aLayoutManager = nsnull,
-                                          PRBool aDefaultHorizontal = PR_TRUE);
+                                          nsIBoxLayout* aLayoutManager = nsnull);
 
   NS_IMETHOD GetFrameForPoint(nsIPresContext* aPresContext,
                               const nsPoint& aPoint, // Overridden to capture events
@@ -39,7 +38,7 @@ public:
                               nsIFrame**     aFrame);
 
 protected:
-  nsXULTreeCellFrame(nsIPresShell* aPresShell, PRBool aIsRoot = nsnull, nsIBoxLayout* aLayoutManager = nsnull, PRBool aDefaultHorizontal = PR_TRUE);
+  nsXULTreeCellFrame(nsIPresShell* aPresShell, PRBool aIsRoot = nsnull, nsIBoxLayout* aLayoutManager = nsnull);
   virtual ~nsXULTreeCellFrame();
 
 protected: // Data Members

@@ -143,6 +143,11 @@ public:
 
   nscoord GetWidth();
   const PRUnichar* GetID() { return mID.GetUnicode(); };
+
+  PRBool IsPrimary() { return mIsPrimaryCol; };
+  PRBool IsCycler() { return mIsCyclerCol; };
+
+  PRInt32 GetCropStyle() { return mCropStyle; };
 };
 
 // The actual frame that paints the cells and rows.
@@ -165,6 +170,11 @@ public:
   NS_IMETHOD Init(nsIPresContext* aPresContext, nsIContent* aContent,
                   nsIFrame* aParent, nsIStyleContext* aContext, nsIFrame* aPrevInFlow);
   NS_IMETHOD Destroy(nsIPresContext* aPresContext);
+  NS_IMETHOD Reflow(nsIPresContext* aPresContext,
+                    nsHTMLReflowMetrics& aReflowMetrics,
+                    const nsHTMLReflowState& aReflowState,
+                    nsReflowStatus& aStatus);
+
 
   // Painting methods.
   // Paint is the generic nsIFrame paint method.  We override this method
@@ -223,6 +233,9 @@ protected:
   // Returns the height of rows in the tree.
   PRInt32 GetRowHeight();
 
+  // Returns our indentation width.
+  PRInt32 GetIndentation();
+
   // Returns our width/height once border and padding have been removed.
   nsRect GetInnerBox();
 
@@ -233,9 +246,15 @@ protected:
   // Builds our cache of column info.
   void EnsureColumns();
 
+  // Update the curpos of the scrollbar.
+  void UpdateScrollbar();
+
   // Use to auto-fill some of the common properties without the view having to do it.
   // Examples include container, open, selected, and focused.
   void PrefillPropertyArray(PRInt32 aRowIndex, const PRUnichar* aColID);
+
+  // Our internal scroll method, used by all the public scroll methods.
+  nsresult ScrollInternal(PRInt32 aRow);
 
 protected: // Data Members
   // Our cached pres context.
@@ -266,9 +285,10 @@ protected: // Data Members
   PRInt32 mTopRowIndex;
   PRInt32 mPageCount;
 
-  // Cached heights.and info.
+  // Cached heights.and indent info.
   nsRect mInnerBox;
   PRInt32 mRowHeight;
+  PRInt32 mIndentation;
 
   // A scratch array used when looking up cached style contexts.
   nsCOMPtr<nsISupportsArray> mScratchArray;

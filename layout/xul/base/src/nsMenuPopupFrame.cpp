@@ -191,14 +191,6 @@ nsMenuPopupFrame::GetLayoutFlags(PRUint32& aFlags)
   aFlags = NS_FRAME_NO_SIZE_VIEW | NS_FRAME_NO_MOVE_VIEW | NS_FRAME_NO_VISIBILITY;
 }
 
-PRBool
-nsMenuPopupFrame::GetInitialOrientation(PRBool& aIsHorizontal)
-{
-    // by default we are vertical
-    aIsHorizontal = PR_FALSE;
-    return nsBoxFrame::GetInitialOrientation(aIsHorizontal);
-}
-
 void
 nsMenuPopupFrame::GetViewOffset(nsIViewManager* aManager, nsIView* aView, 
   nsPoint& aPoint)

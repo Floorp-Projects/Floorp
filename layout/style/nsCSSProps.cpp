@@ -677,6 +677,17 @@ const PRInt32 nsCSSProps::kWhitespaceKTable[] = {
   -1,-1
 };
 
+#ifdef INCLUDE_XUL
+// Specific keyword tables for XUL.properties
+const PRInt32 nsCSSProps::kBoxOrientKTable[] = {
+  eCSSKeyword_horizontal,  NS_STYLE_BOX_ORIENT_HORIZONTAL,
+  eCSSKeyword_vertical,   NS_STYLE_BOX_ORIENT_VERTICAL,
+  eCSSKeyword_inline_axis, NS_STYLE_BOX_ORIENT_HORIZONTAL,
+  eCSSKeyword_block_axis, NS_STYLE_BOX_ORIENT_VERTICAL, 
+  -1,-1
+};
+#endif
+
 PRInt32 
 nsCSSProps::SearchKeywordTableInt(PRInt32 aValue, const PRInt32 aTable[])
 {
@@ -762,6 +773,11 @@ static const PRInt32 kBackgroundYPositionKTable[] = {
 
   case eCSSProperty_border_collapse:
     return SearchKeywordTable(aValue, kBorderCollapseKTable);
+
+#ifdef INCLUDE_XUL
+  case eCSSProperty_box_orient:
+    return SearchKeywordTable(aValue, kBoxOrientKTable);
+#endif
 
   case eCSSProperty_box_sizing:
     return SearchKeywordTable(aValue, kBoxSizingKTable);

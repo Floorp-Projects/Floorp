@@ -54,13 +54,13 @@ static void LocateIndentationFrame ( nsIPresContext* aPresContext, nsIFrame* aPa
 //
 nsresult
 NS_NewXULTreeGroupFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame, PRBool aIsRoot, 
-                        nsIBoxLayout* aLayoutManager, PRBool aIsHorizontal)
+                        nsIBoxLayout* aLayoutManager)
 {
   NS_PRECONDITION(aNewFrame, "null OUT ptr");
   if (nsnull == aNewFrame) {
     return NS_ERROR_NULL_POINTER;
   }
-  nsXULTreeGroupFrame* it = new (aPresShell) nsXULTreeGroupFrame(aPresShell, aIsRoot, aLayoutManager, aIsHorizontal);
+  nsXULTreeGroupFrame* it = new (aPresShell) nsXULTreeGroupFrame(aPresShell, aIsRoot, aLayoutManager);
   if (!it)
     return NS_ERROR_OUT_OF_MEMORY;
 
@@ -89,8 +89,8 @@ NS_INTERFACE_MAP_BEGIN(nsXULTreeGroupFrame)
 NS_INTERFACE_MAP_END_INHERITING(nsBoxFrame)
 
 // Constructor
-nsXULTreeGroupFrame::nsXULTreeGroupFrame(nsIPresShell* aPresShell, PRBool aIsRoot, nsIBoxLayout* aLayoutManager, PRBool aIsHorizontal)
-:nsBoxFrame(aPresShell, aIsRoot, aLayoutManager, aIsHorizontal), mFrameConstructor(nsnull), mPresContext(nsnull),
+nsXULTreeGroupFrame::nsXULTreeGroupFrame(nsIPresShell* aPresShell, PRBool aIsRoot, nsIBoxLayout* aLayoutManager)
+:nsBoxFrame(aPresShell, aIsRoot, aLayoutManager), mFrameConstructor(nsnull), mPresContext(nsnull),
  mOuterFrame(nsnull), mAvailableHeight(10000), mTopFrame(nsnull), mBottomFrame(nsnull), mLinkupFrame(nsnull),
  mContentChain(nsnull), mYDropLoc(nsTreeItemDragCapturer::kNoDropLoc), mDropOnContainer(PR_FALSE),
  mOnScreenRowCount(-1)

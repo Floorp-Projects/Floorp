@@ -76,6 +76,9 @@ public:
   static const PRInt32 kBorderColorKTable[];
   static const PRInt32 kBorderStyleKTable[];
   static const PRInt32 kBorderWidthKTable[];
+#ifdef INCLUDE_XUL
+  static const PRInt32 kBoxOrientKTable[];
+#endif
   static const PRInt32 kBoxSizingKTable[];
   static const PRInt32 kCaptionSideKTable[];
   static const PRInt32 kClearKTable[];

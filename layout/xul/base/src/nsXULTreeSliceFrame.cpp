@@ -32,13 +32,13 @@
 //
 nsresult
 NS_NewXULTreeSliceFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame, PRBool aIsRoot, 
-                        nsIBoxLayout* aLayoutManager, PRBool aIsHorizontal)
+                        nsIBoxLayout* aLayoutManager)
 {
   NS_PRECONDITION(aNewFrame, "null OUT ptr");
   if (nsnull == aNewFrame) {
     return NS_ERROR_NULL_POINTER;
   }
-  nsXULTreeSliceFrame* it = new (aPresShell) nsXULTreeSliceFrame(aPresShell, aIsRoot, aLayoutManager, aIsHorizontal);
+  nsXULTreeSliceFrame* it = new (aPresShell) nsXULTreeSliceFrame(aPresShell, aIsRoot, aLayoutManager);
   if (!it)
     return NS_ERROR_OUT_OF_MEMORY;
 
@@ -68,8 +68,8 @@ NS_INTERFACE_MAP_BEGIN(nsXULTreeSliceFrame)
 NS_INTERFACE_MAP_END_INHERITING(nsBoxFrame)
 
 // Constructor
-nsXULTreeSliceFrame::nsXULTreeSliceFrame(nsIPresShell* aPresShell, PRBool aIsRoot, nsIBoxLayout* aLayoutManager, PRBool aIsHorizontal)
-:nsBoxFrame(aPresShell, aIsRoot, aLayoutManager, aIsHorizontal) 
+nsXULTreeSliceFrame::nsXULTreeSliceFrame(nsIPresShell* aPresShell, PRBool aIsRoot, nsIBoxLayout* aLayoutManager)
+:nsBoxFrame(aPresShell, aIsRoot, aLayoutManager) 
 {}
 
 // Destructor
