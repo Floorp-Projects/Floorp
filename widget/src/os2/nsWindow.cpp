@@ -2104,6 +2104,17 @@ PRBool nsWindow::OnKey( MPARAM mp1, MPARAM mp2)
       (usVKey == VK_SHIFT || usVKey == VK_CTRL ||
        usVKey == VK_ALTGRAF)) return PR_FALSE;
 
+   // My gosh this is ugly
+   // Workaround bug where using Alt+Esc let an Alt key creep through
+   // Only handle alt by itself if the LONEKEY bit is set
+   if ((fsFlags & KC_VIRTUALKEY) &&
+       (usVKey == VK_ALT) &&
+       !usChar && 
+       ((fsFlags & KC_LONEKEY) == 0) &&
+       (fsFlags & KC_KEYUP)) {
+         return PR_FALSE;
+       }
+
    // Now check if it's a dead-key
    if( fsFlags & KC_DEADKEY)
    {
@@ -2331,7 +2342,7 @@ PRBool nsWindow::ProcessMessage( ULONG msg, MPARAM mp1, MPARAM mp2, MRESULT &rc)
               {
                 LONG mp1 = (LONG)pQmsg->mp1;
                 LONG mp2 = (LONG)pQmsg->mp2;
-       
+
                 // If we have a shift+enter combination, return false
                 // immediately.  OS/2 considers the shift+enter
                 // combination an accelerator and will translate it into
@@ -2340,6 +2351,11 @@ PRBool nsWindow::ProcessMessage( ULONG msg, MPARAM mp1, MPARAM mp2, MRESULT &rc)
                 // shift is also pressed and OnKeyDown will not be called.
                 if (((SHORT1FROMMP(mp1) & (KC_VIRTUALKEY | KC_SHIFT)) &&
                      (SHORT2FROMMP(mp2) == VK_ENTER)) ||
+                // Let Mozilla handle standalone F10, not the OS
+                    ((SHORT1FROMMP(mp1) & KC_VIRTUALKEY) &&    
+                     ((SHORT1FROMMP(mp1) & (KC_SHIFT | KC_ALT | KC_CTRL)) == 0) &&
+                     (SHORT2FROMMP(mp2) == VK_F10)) ||
+                // Let Mozilla handle standalone Alt, not the OS
                     ((SHORT1FROMMP(mp1) & KC_KEYUP) && (SHORT1FROMMP(mp1) & KC_LONEKEY) &&
                      (SHORT2FROMMP(mp2) == VK_ALT)) 
                    )
