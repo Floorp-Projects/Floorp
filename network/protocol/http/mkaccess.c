@@ -2941,8 +2941,8 @@ NET_SaveCookies(char * filename)
 }
 
 /* This isn't needed any more */
-PUBLIC int
-NET_ReadCookies(char * filename)
+PUBLIC void
+NET_InitRDFCookieResources (void) {
 {
 }
 
