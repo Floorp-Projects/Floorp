@@ -129,7 +129,9 @@ static NS_DEFINE_CID(kSaveAsCharsetCID, NS_SAVEASCHARSET_CID);
 
 
 
+#define IN_ARABIC_PRESENTATION_A(a) ((0xfb50 <= (a)) && ((a) <= 0xfdff))
 #define IN_ARABIC_PRESENTATION_B(a) ((0xfe70 <= (a)) && ((a) <= 0xfeff))
+#define IN_ARABIC_PRESENTATION_A_OR_B(a) (IN_ARABIC_PRESENTATION_A(a) || IN_ARABIC_PRESENTATION_B(a))
 
 //------------------------------------------------------------------------
 static UnicodeToTextInfo gConverters[32] = { 
@@ -328,10 +330,21 @@ static PRUnichar gSymbolReplacement[]={0xf8ee,0xf8f9,0xf8f0,0xf8fb,0x3008,0x3009
 
 //------------------------------------------------------------------------
 
-static nsresult FormBIsolated(PRUnichar aChar, nsMacUnicodeFontInfo& aInfo, PRUnichar* aOutChar)
+static nsresult FormAorBIsolated(PRUnichar aChar, nsMacUnicodeFontInfo& aInfo, PRUnichar* aOutChar)
 {
   static const PRUnichar arabicisolated[]=
   {
+    // start of form a
+    0xFB50, 0x0671,  0xFB52, 0x067B,  0xFB56, 0x067E,  0xFB5A, 0x0680,  0xFB5E, 0x067A,
+    0xFB62, 0x067F,  0xFB66, 0x0679,  0xFB6A, 0x06A4,  0xFB6E, 0x06A6,  0xFB72, 0x0684,
+    0xFB76, 0x0683,  0xFB7A, 0x0686,  0xFB7E, 0x0687,  0xFB82, 0x068D,  0xFB84, 0x068C,
+    0xFB86, 0x068E,  0xFB88, 0x0688,  0xFB8A, 0x0698,  0xFB8C, 0x0691,  0xFB8E, 0x06A9,
+    0xFB92, 0x06AF,  0xFB96, 0x06B3,  0xFB9A, 0x06B1,  0xFB9E, 0x06BA,  0xFBA0, 0x06BB,
+    0xFBA4, 0x06C0,  0xFBA6, 0x06C1,  0xFBAA, 0x06BE,  0xFBAE, 0x06D2,  0xFBB0, 0x06D3,
+    0xFBD3, 0x06AD,  0xFBD7, 0x06C7,  0xFBD9, 0x06C6,  0xFBDB, 0x06C8,  0xFBDD, 0x0677,
+    0xFBDE, 0x06CB,  0xFBE0, 0x06C5,  0xFBE2, 0x06C9,  0xFBE4, 0x06D0,  0xFBFC, 0x06CC,
+
+    // start of form b
     0xFE70, 0x064B,  0xFE72, 0x064C,  0xFE74, 0x064D,  0xFE76, 0x064E,  0xFE78, 0x064F,
     0xFE7A, 0x0650,  0xFE7C, 0x0651,  0xFE7E, 0x0652,  0xFE80, 0x0621,  0xFE81, 0x0622,
     0xFE83, 0x0623,  0xFE85, 0x0624,  0xFE87, 0x0625,  0xFE89, 0x0626,  0xFE8D, 0x0627,
@@ -395,10 +408,10 @@ nsUnicodeRenderingToolkit::ATSUIFallbackGetDimensions(
       return PR_TRUE;
     }
   }
-  if (IN_ARABIC_PRESENTATION_B(*aCharPt))
+  if (IN_ARABIC_PRESENTATION_A_OR_B(*aCharPt))
   {      
     PRUnichar isolated;
-    if (NS_SUCCEEDED( FormBIsolated(*aCharPt, info, &isolated))) 
+    if (NS_SUCCEEDED( FormAorBIsolated(*aCharPt, info, &isolated))) 
     {
       if(NS_SUCCEEDED(ATSUIFallbackGetDimensions(&isolated, oDim, origFontNum, 
                                                  aSize, aBold, aItalic, aColor))) 
@@ -464,10 +477,10 @@ PRBool nsUnicodeRenderingToolkit :: ATSUIFallbackDrawChar(
     if (NS_SUCCEEDED(res))
       return PR_TRUE;
   }
-  if (IN_ARABIC_PRESENTATION_B(*aCharPt))
+  if (IN_ARABIC_PRESENTATION_A_OR_B(*aCharPt))
   {      
     PRUnichar isolated;
-    if (NS_SUCCEEDED( FormBIsolated(*aCharPt, info, &isolated))) {
+    if (NS_SUCCEEDED( FormAorBIsolated(*aCharPt, info, &isolated))) {
       if (NS_SUCCEEDED(ATSUIFallbackDrawChar(&isolated, x, y, oWidth, origFontNum, 
                                              aSize, aBold, aItalic, aColor))) 
       {
