@@ -1,0 +1,43 @@
+<html>
+<head>
+<title>XPConnect Example</title>
+</head>
+
+<body>
+<script>
+var profile = Components.classes["component://netscape/profile/profile-services"].createInstance();
+profile = profile.QueryInterface(Components.interfaces.nsIProfileServices);
+dump("profile = " + profile + "\n");
+
+function TestMe()
+{
+  var field = document.getElementById('Value');
+  //profile.CreateNewProfile("Test Succeeded!!");
+  
+  var currentProfile = profile.GetCurrentProfile(); // GetCurrentProfile works
+  
+  field.value = currentProfile;
+  
+  //profile.RenameProfile(currentProfile, "NetscapeProfile"); // Rename works
+  
+  var profileList = profile.GetProfileList();  // GetProfileList works
+  dump("Profile List : " + profileList + "\n");
+
+  //profile.DeleteProfile(currentProfile); // Delete works
+
+  //profile.StartCommunicator("mozProfile44"); // StartCommunicator works
+
+  //profile.CreateNewProfile("ProfileName=hello%ProfileDir="); // CreateNewProfile works
+
+  //profile.MigrateProfile("test"); // Migration works
+
+}
+
+</script>
+
+<form name="form">
+<input type="button" value="Test" onclick="TestMe();">
+<input type="text" id="Value">
+<form>
+</body>
+</html>
