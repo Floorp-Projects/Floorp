@@ -100,13 +100,14 @@ protected:
   nsresult AliasFont(const nsString& aFont, 
                      const nsString& aAlias, const nsString& aAltAlias,
                      PRBool aForceAlias);
+  void GetLocaleLangGroup(void);
 
   float             mTwipsToPixels;
   float             mPixelsToTwips;
   float             mAppUnitsToDevUnits;
   float             mDevUnitsToAppUnits;
   nsFontCache       *mFontCache;
-  nsCOMPtr<nsIAtom> mWestern; // XXX temporary fix for performance bug - erik
+  nsCOMPtr<nsIAtom> mLocaleLangGroup; // XXX temp fix for performance bug - erik
   float             mZoom;
   float             mTextZoom;
   float             mGammaValue;

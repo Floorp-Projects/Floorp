@@ -37,6 +37,8 @@
 #include "nsVoidArray.h"
 #include "nsIFontMetrics.h"
 #include "nsHashtable.h"
+#include "nsILanguageAtomService.h"
+#include "nsIServiceManager.h"
 
 class nsFontCache
 {
@@ -236,6 +238,21 @@ nsresult DeviceContextImpl::CreateFontCache()
   return NS_OK;
 }
 
+void
+DeviceContextImpl::GetLocaleLangGroup(void)
+{
+  if (!mLocaleLangGroup) {
+    nsCOMPtr<nsILanguageAtomService> langService;
+    langService = do_GetService(NS_LANGUAGEATOMSERVICE_PROGID);
+    if (langService) {
+      langService->GetLocaleLanguageGroup(getter_AddRefs(mLocaleLangGroup));
+    }
+    if (!mLocaleLangGroup) {
+      mLocaleLangGroup = getter_AddRefs(NS_NewAtom("x-western"));
+    }
+  }
+}
+
 NS_IMETHODIMP DeviceContextImpl::GetMetricsFor(const nsFont& aFont,
   nsIAtom* aLangGroup, nsIFontMetrics*& aMetrics)
 {
@@ -246,12 +263,12 @@ NS_IMETHODIMP DeviceContextImpl::GetMetricsFor(const nsFont& aFont,
       return rv;
     }
     // XXX temporary fix for performance problem -- erik
-    mWestern = getter_AddRefs(NS_NewAtom("x-western"));
+    GetLocaleLangGroup();
   }
 
   // XXX figure out why aLangGroup is NULL sometimes
   if (!aLangGroup) {
-    aLangGroup = mWestern;
+    aLangGroup = mLocaleLangGroup;
   }
 
   return mFontCache->GetMetricsFor(aFont, aLangGroup, aMetrics);
@@ -266,9 +283,9 @@ NS_IMETHODIMP DeviceContextImpl::GetMetricsFor(const nsFont& aFont, nsIFontMetri
       return rv;
     }
     // XXX temporary fix for performance problem -- erik
-    mWestern = getter_AddRefs(NS_NewAtom("x-western"));
+    GetLocaleLangGroup();
   }
-  return mFontCache->GetMetricsFor(aFont, mWestern, aMetrics);
+  return mFontCache->GetMetricsFor(aFont, mLocaleLangGroup, aMetrics);
 }
 
 NS_IMETHODIMP DeviceContextImpl :: SetZoom(float aZoom)
