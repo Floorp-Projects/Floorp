@@ -915,9 +915,7 @@ mime_generate_attachment_headers (const char *type, const char *encoding,
 		char *period = PL_strrchr(real_name, '.');
 		PRInt32 pref_content_disposition = 0;
 
-    NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &rv); 
-    if (NS_SUCCEEDED(rv) && prefs) 
-  	  prefs->GetIntPref("mail.content_disposition_type", &pref_content_disposition);
+    prefs->GetIntPref("mail.content_disposition_type", &pref_content_disposition);
 		PUSH_STRING ("Content-Disposition: ");
 
 		if (pref_content_disposition == 1)
@@ -1613,12 +1611,12 @@ nsMsgMIMEGenerateMailtoFormPostHeaders (const char *old_post_url,
 			  if (ok)
 				{
 				  PRBool upper_p = PR_FALSE;
-				  char *s;
-				  for (s = token; *s; s++)
+				  char *s2;
+				  for (s2 = token; *s2; s2++)
 					{
-					  if (*s >= 'A' && *s <= 'Z')
+					  if (*s2 >= 'A' && *s2 <= 'Z')
 						upper_p = PR_TRUE;
-					  else if (*s <= ' ' || *s >= '~' || *s == ':')
+					  else if (*s2 <= ' ' || *s2 >= '~' || *s2 == ':')
 						goto NOT_OK;  /* bad character in header! */
 					}
 				  if (!upper_p && *token >= 'a' && *token <= 'z')
