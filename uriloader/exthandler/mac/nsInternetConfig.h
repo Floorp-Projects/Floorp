@@ -39,7 +39,7 @@
 #define __NS_INTERNETCONFIG_H__
 
 #include <InternetConfig.h>
-#include "PRTypes.h"
+#include "prtypes.h"
 #include "nsError.h"
 
 class nsInternetConfig
