@@ -80,7 +80,9 @@ ifndef MOZ_MAIL_COMPOSE
 DEFINES += -DMOZILLA_30
 endif
 
-DEFINES += -DNO_SECURITY
+ifdef MOZ_SECURITY
+DEFINES += -DMOZ_SECURITY
+endif
 
 #
 # Building the "mimefilt" executable, which reads a message from stdin and
