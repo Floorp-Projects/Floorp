@@ -24,3 +24,4 @@ infutil.h
 zconf.h
 zlib.h
 zutil.h
+.deps_S

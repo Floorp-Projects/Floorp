@@ -9,3 +9,6 @@ TestFileInput2
 TestRes
 TestSyncHTTP
 urltest
+TestFileTransport
+TestOverlappedIO
+TestDBMAccess
