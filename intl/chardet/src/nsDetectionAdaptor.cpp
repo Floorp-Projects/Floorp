@@ -35,7 +35,58 @@ static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 
 class CToken;
 
-class nsDetectionAdaptor : public nsICharsetDetectionObserver,
+//--------------------------------------------------------------
+class nsMyObserver : public nsICharsetDetectionObserver
+{
+ public:
+   NS_DECL_ISUPPORTS
+
+ public:
+   nsMyObserver( void )
+   {
+     NS_INIT_REFCNT();
+     PR_AtomicIncrement(& g_InstanceCount);
+     mWebShellSvc = nsnull;
+   }
+   virtual  ~nsMyObserver( void )
+   {
+     NS_IF_RELEASE(mWebShellSvc);
+     PR_AtomicDecrement(& g_InstanceCount);
+   }
+
+
+   // Methods to support nsICharsetDetectionAdaptor
+   NS_IMETHOD Init(nsIWebShellServices* aWebShellSvc);
+
+   // Methods to support nsICharsetDetectionObserver
+   NS_IMETHOD Notify(const char* aCharset, nsDetectionConfident aConf);
+ private:
+     nsIWebShellServices* mWebShellSvc;
+
+};
+//--------------------------------------------------------------
+NS_IMETHODIMP nsMyObserver::Notify(
+    const char* aCharset, nsDetectionConfident aConf)
+{
+    nsresult rv = NS_OK;
+    rv = mWebShellSvc->ReloadDocument( aCharset, kCharsetFromAutoDetection);
+    return NS_OK;
+}
+//--------------------------------------------------------------
+NS_IMETHODIMP nsMyObserver::Init( nsIWebShellServices* aWebShellSvc)
+{
+    if(nsnull != aWebShellSvc)
+    {
+        NS_IF_ADDREF(aWebShellSvc);
+        mWebShellSvc = aWebShellSvc;
+    }
+    return NS_ERROR_ILLEGAL_VALUE;
+}
+//--------------------------------------------------------------
+NS_IMPL_ISUPPORTS ( nsMyObserver ,nsICharsetDetectionObserver::GetIID());
+//--------------------------------------------------------------
+
+class nsDetectionAdaptor : 
 #ifdef IMPL_NS_IPARSERFILTER
                            public nsIParserFilter,
 #endif /* IMPL_NS_IPARSERFILTER */
@@ -47,10 +98,6 @@ class nsDetectionAdaptor : public nsICharsetDetectionObserver,
  public:
    nsDetectionAdaptor( void );
    virtual  ~nsDetectionAdaptor( void );
-
-
-   // Methods to support nsICharsetDetectionObserver
-   NS_IMETHOD Notify(const char* aCharset, nsDetectionConfident aConf);
 
    // Methods to support nsICharsetDetectionAdaptor
    NS_IMETHOD Init(nsIWebShellServices* aWebShellSvc, nsICharsetDetector *aDetector);
@@ -66,7 +113,6 @@ class nsDetectionAdaptor : public nsICharsetDetectionObserver,
 
   private:
      nsICharsetDetector* mDetector;
-     nsIWebShellServices* mWebShellSvc;
      PRBool mDontFeedToDetector;
 };
 //--------------------------------------------------------------
@@ -75,20 +121,17 @@ nsDetectionAdaptor::nsDetectionAdaptor( void )
      NS_INIT_REFCNT();
      PR_AtomicIncrement(& g_InstanceCount);
      mDetector = nsnull;
-     mWebShellSvc = nsnull;
      mDontFeedToDetector = PR_TRUE;
 }
 //--------------------------------------------------------------
 nsDetectionAdaptor::~nsDetectionAdaptor()
 {
      NS_IF_RELEASE(mDetector);
-     NS_IF_RELEASE(mWebShellSvc);
      PR_AtomicDecrement(& g_InstanceCount);
 }
 //--------------------------------------------------------------
 NS_IMPL_ADDREF ( nsDetectionAdaptor );
 NS_IMPL_RELEASE ( nsDetectionAdaptor );
-//--------------------------------------------------------------
 //----------------------------------------------------------------------
 NS_IMETHODIMP nsDetectionAdaptor::QueryInterface(REFNSIID aIID, void**aInstancePtr)
 {
@@ -98,11 +141,6 @@ NS_IMETHODIMP nsDetectionAdaptor::QueryInterface(REFNSIID aIID, void**aInstanceP
   }
   *aInstancePtr = NULL;
 
-  if( aIID.Equals ( nsICharsetDetectionObserver::GetIID() )) {
-    *aInstancePtr = (void*) ((nsICharsetDetectionObserver*) this);
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
   if( aIID.Equals ( nsICharsetDetectionAdaptor::GetIID() )) {
     *aInstancePtr = (void*) ((nsICharsetDetectionAdaptor*) this);
     NS_ADDREF_THIS();
@@ -125,14 +163,6 @@ NS_IMETHODIMP nsDetectionAdaptor::QueryInterface(REFNSIID aIID, void**aInstanceP
 }
 
 //--------------------------------------------------------------
-NS_IMETHODIMP nsDetectionAdaptor::Notify(
-    const char* aCharset, nsDetectionConfident aConf)
-{
-    nsresult rv = NS_OK;
-    rv = mWebShellSvc->ReloadDocument( aCharset, kCharsetFromAutoDetection);
-    return NS_OK;
-}
-//--------------------------------------------------------------
 NS_IMETHODIMP nsDetectionAdaptor::Init(
     nsIWebShellServices* aWebShellSvc, nsICharsetDetector *aDetector)
 {
@@ -140,20 +170,29 @@ NS_IMETHODIMP nsDetectionAdaptor::Init(
     {
          nsICharsetDetectionObserver* aObserver = nsnull;
          nsresult rv = NS_OK;
+         nsMyObserver* mobs = new nsMyObserver();
+         if(nsnull == mobs)
+            return NS_ERROR_OUT_OF_MEMORY;
+
          rv = this->QueryInterface(nsICharsetDetectionObserver::GetIID(),
                                   (void**) &aObserver);
         
          if(NS_SUCCEEDED(rv)) {
-            aDetector->Init(aObserver);
+            rv = mobs->Init(aWebShellSvc);
+            if(NS_SUCCEEDED(rv)) {
+               rv = aDetector->Init(aObserver);
+            }
 
-            NS_IF_ADDREF(aWebShellSvc);
-            mWebShellSvc = aWebShellSvc;
+            NS_IF_RELEASE(aObserver);
+
+            if(NS_FAILED(rv))
+                 return rv;
 
             NS_IF_ADDREF(aDetector);
             mDetector = aDetector;
 
             mDontFeedToDetector = PR_FALSE;
-            NS_IF_RELEASE(aObserver);
+            return NS_OK;
          }
     }
     return NS_ERROR_ILLEGAL_VALUE;
@@ -162,7 +201,7 @@ NS_IMETHODIMP nsDetectionAdaptor::Init(
 NS_IMETHODIMP nsDetectionAdaptor::RawBuffer
     (char * buffer, PRUint32 * buffer_length) 
 {
-    if((mDontFeedToDetector) || (nsnull == mWebShellSvc) || (nsnull == mDetector))
+    if((mDontFeedToDetector) || (nsnull == mDetector))
        return NS_OK;
     nsresult rv = NS_OK;
     rv = mDetector->DoIt((const char*)buffer, *buffer_length, &mDontFeedToDetector);
@@ -171,12 +210,11 @@ NS_IMETHODIMP nsDetectionAdaptor::RawBuffer
 //--------------------------------------------------------------
 NS_IMETHODIMP nsDetectionAdaptor::Finish()
 {
-    if((mDontFeedToDetector) || (nsnull == mWebShellSvc) || (nsnull == mDetector))
+    if((mDontFeedToDetector) || (nsnull == mDetector))
        return NS_OK;
     nsresult rv = NS_OK;
     rv = mDetector->Done();
 
-    NS_IF_RELEASE(mWebShellSvc);
     NS_IF_RELEASE(mDetector); // need this line so no cycle reference
 
     return NS_OK;
