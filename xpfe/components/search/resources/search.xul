@@ -31,12 +31,11 @@
 	<html:script src="chrome://communicator/content/search/search.js" />
 
 	<tabcontrol align="vertical"> 
-		<tabbox align="horizontal"> 
-			<tab id="findTab" onclick="loadPage('find', null);" value="&find.title.label;"/>
-			<tab id="internetTab" onclick="loadPage('internet', null);" value="&internet.title.label;"/>
-			<tab id="mailnewsTab" onclick="loadPage('mail', null);" value="&mailnews.title.label;"/>
-			<tab id="addressbookTab" onclick="loadPage('addressbook', null);" value="&addressbook.title.label;"/>
-			<spring flex="1"/>
+		<tabbox> 
+			<tab id="findTab" oncommand="loadPage('find', null);" value="&find.title.label;"/>
+			<tab id="internetTab" oncommand="loadPage('internet', null);" value="&internet.title.label;"/>
+			<tab id="mailnewsTab" oncommand="loadPage('mail', null);" value="&mailnews.title.label;"/>
+			<tab id="addressbookTab" oncommand="loadPage('addressbook', null);" value="&addressbook.title.label;"/>
 		</tabbox> 
                     
 		<tabpanel />
