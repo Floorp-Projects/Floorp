@@ -370,7 +370,6 @@ private:
   float             mPixelsToTwips;
   nsIViewObserver   *mObserver;
   nsIWidget         *mRootWindow;
-  PRIntervalTime    mLastRefresh;
   PRInt32           mTransCnt;
   PRBool            mRefreshEnabled;
   PRBool            mPainting;
