@@ -138,7 +138,7 @@ jsd_NewThreadState(JSDContext* jsdc, JSContext *cx )
 
             frame = _addNewFrame( jsdc, jsdthreadstate, script, pc, fp );
 
-            if (jsdthreadstate->stackDepth == 0 && !frame) ||
+            if ((jsdthreadstate->stackDepth == 0 && !frame) ||
                 (jsdthreadstate->stackDepth == 1 && frame &&
                  !JSD_IS_DEBUG_ENABLED(jsdc, frame->jsdscript)))
             {
