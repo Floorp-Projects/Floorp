@@ -1,12 +1,24 @@
 toolbar {
-    background-color: rgb(192,192,192);
+    background-color: #CCCCCC;
     border-bottom: solid darkGray 1px;
     border-top: solid white 1px;
     border-left: solid white 1px;
     border-right: solid darkGray 1px;
     font: 10pt sans-serif;
-    min-height: 20px;
+    min-height: 16px;
 }
+
+toolbar#taskbar {
+    background-color: #666699;
+    border-bottom: solid #333366 1px;
+    border-top: solid #9999AA 1px;
+    border-left: solid #9999AA 1px;
+    border-right: solid #333366 1px;
+    font: 10pt sans-serif;
+    min-height: 16px;
+    color: white;
+}
+
 toolbar[collapsed="true"] {
 	display:none;
 }
@@ -19,7 +31,9 @@ toolbox {
 }
 
 :toolbox-normal {
-	background-color: rgb(192,192,192);
+	background-color: #CCCCCC;
+	background-image: url("resource:/res/toolbar/TB_Tab.gif");
+	background-repeat: no-repeat;
 	color: lightgray;
 	border-bottom: solid darkGray 1px;
 	border-top: solid white 0px;
@@ -27,7 +41,9 @@ toolbox {
 	border-right: solid darkGray 1px;
 }
 :toolbox-rollover {
-	background-color: purple;
+	background-color: #666699;
+	background-image: url("resource:/res/toolbar/TB_Tab_mo.gif");
+	background-repeat: no-repeat;
 	color: green;
 	border-bottom: solid darkGray 1px;
 	border-top: solid white 0px;
@@ -36,7 +52,7 @@ toolbox {
 }
 
 window { 
-  background-color:rgb(192,192,192);
+  background-color:#CCCCCC;
   display: block; 
 }
 
@@ -75,31 +91,41 @@ menuitem {
 }
 
 progressmeter {
-        display:block;
-        border: black thin groove;
-        color : #086975;         
+        display:inline;
+        border: 1px #666699;
+        color : #9999CC;         
 }
 
 :progressmeter-stripe {
-	color: gray;
+	color: #BBBBCC;
 }
+
 
 titledbutton {
   display: inline;
-
   color:black; 
 
   padding: 2px;
   margin: 2px;
 
-
-  font: 8pt sans-serif;
+  font: 2.5mm sans-serif;
 }
 
+toolbar#taskbar titledbutton{
+  color:#CCCCFF; 
+}
 
 titledbutton[pseudoclass~="hover"] {
   border: 1px outset white;
+	color:blue;
+	//text-decoration:underline;
+  padding: 1px;
+}
 
+toolbar#taskbar titledbutton[pseudoclass~="hover"] {
+  border: 1px outset #666699;
+	color:white;
+	//text-decoration:underline;
   padding: 1px;
 }
  
@@ -109,7 +135,19 @@ titledbutton[pseudoclass~="hover"]:-moz-outline {
  
 titledbutton[pseudoclass~="active"] {
 
-  border: 1px inset white;
+	text-decoration:none;
+  border: 1px inset;
+
+  padding-left: 2px;
+  padding-right: 0px;
+  padding-top: 2px;
+  padding-bottom: 0px;
+}
+
+toolbar#taskbar titledbutton[pseudoclass~="active"] {
+
+	text-decoration:none;
+  border: 1px inset;
 
   padding-left: 2px;
   padding-right: 0px;
@@ -137,5 +175,6 @@ titledbutton[pseudoclass~="focus"]:-moz-focus-outer {
 }
 
 titledbutton[pseudoclass~="disabled"] {
+	opacity: 0.5;
 }
  
