@@ -2911,7 +2911,7 @@ DocumentViewerImpl::ReflowPrintObject(PrintObject * aPO)
   aPO->mPresShell->EndObservingDocument();
   // EndObserving document no longer does a reflow.. which history needs.. or we 
   // get a blank page for text fields.  this will reflow.. fixes bug 84017.
-  aPO->mPresShell->StyleChangeReflow();
+  aPO->mPresShell->ResizeReflow(width,height);
 
   return rv;
 }
