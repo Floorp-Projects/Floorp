@@ -60,8 +60,14 @@ OS_CFLAGS		= $(PLATFORM_FLAGS) $(DSO_FLAGS) $(PORT_FLAGS) $(MOVEMAIL_FLAGS)
 # Overrides for defaults in config.mk (or wherever)
 ######################################################################
 
+ifeq ($(OS_RELEASE),5.0)
 CC			= /bin/cc
 CCC			= /bin/cc++
+else
+CC			= /usr/bin/cc
+CCC			= /usr/bin/c++
+endif
+
 EMACS			= /usr/bin/true
 PERL			= /usr/bin/true
 AR              = /bin/libtool -static -o $@
