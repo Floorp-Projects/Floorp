@@ -85,7 +85,8 @@ protected:
 
     void        MoveFocusToCaret(nsIDOMWindow *aWindow);
 
-    nsresult    SearchInFrame(nsIDOMWindow* aWindow, PRBool* didFind);
+    nsresult    SearchInFrame(nsIDOMWindow* aWindow, PRBool aWrapping,
+                              PRBool* didFind);
 
     nsresult    OnStartSearchFrame(nsIDOMWindow *aWindow);
     nsresult    OnEndSearchFrame(nsIDOMWindow *aWindow);
