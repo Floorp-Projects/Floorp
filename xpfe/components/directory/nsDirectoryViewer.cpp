@@ -682,7 +682,13 @@ nsHTTPIndexParser::ParseData(const char* aDataStr, nsISupports *context)
   rv = NS_OK;
   nsCOMPtr<nsIRDFResource> entry;
 
-	nsCAutoString	filename, filetype;
+    nsCAutoString	filename, filetype;
+    nsXPIDLCString  encodingStr;
+
+	if (mHTTPIndex)
+	{
+	    mHTTPIndex->GetEncoding(getter_Copies(encodingStr));
+	}
 
   for (PRInt32 i = 0; i < mFormat.Count(); ++i) {
     // If we've exhausted the data before we run out of fields, just
@@ -732,12 +738,15 @@ nsHTTPIndexParser::ParseData(const char* aDataStr, nsISupports *context)
         if (textToSubURI)
         {
             PRUnichar	*result = nsnull;
-            if (NS_SUCCEEDED(rv = textToSubURI->UnEscapeAndConvert("EUC-JP", filename,
-                &result)) && (result) && (nsCRT::strlen(result) > 0))
+            if (NS_SUCCEEDED(rv = textToSubURI->UnEscapeAndConvert(encodingStr, filename,
+                &result)) && (result))
             {
-                values[i].Append(result);
+                if (nsCRT::strlen(result) > 0)
+                {
+                    values[i].Append(result);
+                    success = PR_TRUE;
+                }
                 Recycle(result);
-                success = PR_TRUE;
             }
             else
             {
@@ -747,7 +756,8 @@ nsHTTPIndexParser::ParseData(const char* aDataStr, nsISupports *context)
 
         if (success == PR_FALSE)
         {
-            // unescape the nsStr (in place)
+            // if unsuccessfully at charset conversion, then
+            // just fallback to unescape'ing the nsStr (in place)
             value.mLength = nsUnescapeCount(value.mStr);
             values[i].AppendWithConversion(value);
         }
@@ -769,7 +779,6 @@ nsHTTPIndexParser::ParseData(const char* aDataStr, nsISupports *context)
       // we found the filename; construct a resource for its entry
 
         nsAutoString    entryuri;
-        nsXPIDLCString  encodingStr;
 
         rv = NS_MakeAbsoluteURI(entryuri, NS_ConvertASCIItoUCS2(filename), realbase);
         NS_ASSERTION(NS_SUCCEEDED(rv), "unable make absolute URI");
