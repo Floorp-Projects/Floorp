@@ -29,31 +29,24 @@
 #include "nsMenuItem.h"
 #include "nsIMenu.h"
 #include "nsIMenuBar.h"
-#include "nsIPopUpMenu.h"
 #include "nsIWidget.h"
 #include "nsIMenuListener.h"
 
 #include "nsStringUtil.h"
 
-//-------------------------------------------------------------------------
-NS_IMPL_ISUPPORTS2(nsMenuItem, nsIMenuItem, nsIMenuListener)
+NS_IMPL_ISUPPORTS3(nsMenuItem, nsIMenuItem, nsIMenuListener, nsIChangeObserver)
 
-//-------------------------------------------------------------------------
+
 //
 // nsMenuItem constructor
 //
-//-------------------------------------------------------------------------
-nsMenuItem::nsMenuItem() : nsIMenuItem()
+nsMenuItem::nsMenuItem()
 {
   NS_INIT_REFCNT();
-  //mMenu        = nsnull;
   mMenuParent         = nsnull;
-  mPopUpParent        = nsnull;
   mTarget             = nsnull;
-  mXULCommandListener = nsnull;
   mIsSeparator        = PR_FALSE;
   mWebShell           = nsnull;
-  mDOMElement         = nsnull;
   mDOMNode            = nsnull;
   mKeyEquivalent.AssignWithConversion(" ");
   mEnabled            = PR_TRUE;
@@ -61,96 +54,70 @@ nsMenuItem::nsMenuItem() : nsIMenuItem()
   mMenuType           = eRegular;
 }
 
-//-------------------------------------------------------------------------
 //
 // nsMenuItem destructor
 //
-//-------------------------------------------------------------------------
 nsMenuItem::~nsMenuItem()
 {
   //printf("nsMenuItem::~nsMenuItem() called \n");
   NS_IF_RELEASE(mTarget);
-  NS_IF_RELEASE(mXULCommandListener);
+  
+  // if we're a radio menu, we've been registered to get AttributeChanged, so
+  // make sure we unregister when we go away.
+  if ( mMenuType == eRadio ) {
+    nsCOMPtr<nsIContent> content ( do_QueryInterface(mDOMNode) );
+    mManager->Unregister ( content );
+  }
 }
 
 
-//-------------------------------------------------------------------------
-NS_METHOD nsMenuItem::Create(nsISupports    *aParent, 
-                             const nsString &aLabel, 
-                             PRBool         aIsSeparator)
-                            
+NS_METHOD nsMenuItem::Create ( nsIMenu* aParent, const nsString & aLabel, PRBool aIsSeparator,
+                                EMenuItemType aItemType, PRBool aEnabled, 
+                                nsIChangeManager* aManager, nsIWebShell* aShell, nsIDOMNode* aNode )
 {
-  mIsSeparator = aIsSeparator;
-  SetLabel(NS_CONST_CAST(nsString&, aLabel));
-  return NS_OK;
-}
-
-//-------------------------------------------------------------------------
-NS_METHOD nsMenuItem::Create(nsIPopUpMenu   *aParent, 
-                             const nsString &aLabel,  
-                             PRUint32        aCommand)
-{
-  mPopUpParent = aParent;
-  if ( mPopUpParent ) {
-
-    nsIWidget * widget = nsnull;
-
-    mPopUpParent->AddItem(this);
+  mDOMNode = aNode;
+  mDOMElement = do_QueryInterface ( aNode );
+  mMenuParent = aParent;
+  mWebShell = aShell;
+  
+  mEnabled = aEnabled;
+  mMenuType = aItemType;
+  
+  // if we're a radio menu, register for AttributeChanged messages
+  mManager = aManager;
+  if ( aItemType == eRadio ) {
+    nsCOMPtr<nsIContent> content ( do_QueryInterface(mDOMNode) );
+    nsCOMPtr<nsIChangeObserver> obs ( do_QueryInterface(NS_STATIC_CAST(nsIChangeObserver*,this)) );
+    mManager->Register ( content, obs );
   }
   
+  mIsSeparator = aIsSeparator;
+  mLabel = aLabel;
   return NS_OK;
 }
 
-//-------------------------------------------------------------------------
-NS_METHOD nsMenuItem::Create(nsIMenu * aParent)
-{
-  mIsSeparator = PR_TRUE;
-  return NS_OK;
-}
-
-//-------------------------------------------------------------------------
-NS_METHOD nsMenuItem::Create(nsIPopUpMenu * aParent)
-{
-  mIsSeparator = PR_TRUE;
-  return NS_OK;
-}
-
-//-------------------------------------------------------------------------
-NS_METHOD nsMenuItem::GetLabel(nsString &aText)
+NS_METHOD
+nsMenuItem::GetLabel(nsString &aText)
 {
   aText = mLabel;
   return NS_OK;
 }
 
-//-------------------------------------------------------------------------
-NS_METHOD nsMenuItem::SetLabel(nsString &aText)
-{
-  mLabel = aText;
-  return NS_OK;
-}
 
-//-------------------------------------------------------------------------
-NS_METHOD nsMenuItem::SetEnabled(PRBool aIsEnabled)
-{
-  mEnabled = aIsEnabled;
-  return NS_OK;
-}
-
-//-------------------------------------------------------------------------
-NS_METHOD nsMenuItem::GetEnabled(PRBool *aIsEnabled)
+NS_METHOD 
+nsMenuItem::GetEnabled(PRBool *aIsEnabled)
 {
   *aIsEnabled = mEnabled;
   return NS_OK;
 }
 
-//-------------------------------------------------------------------------
+
 NS_METHOD nsMenuItem::SetChecked(PRBool aIsEnabled)
 {
   mIsChecked = aIsEnabled;
-  if(mIsChecked)
-    mDOMElement->SetAttribute(NS_ConvertASCIItoUCS2("checked"), NS_ConvertASCIItoUCS2("true"));
-  else
-    mDOMElement->SetAttribute(NS_ConvertASCIItoUCS2("checked"), NS_ConvertASCIItoUCS2("false"));
+  if ( mMenuType == eRadio && aIsEnabled )
+    UncheckRadioSiblings ( mDOMElement );
+
   return NS_OK;
 }
 
@@ -161,12 +128,6 @@ NS_METHOD nsMenuItem::GetChecked(PRBool *aIsEnabled)
   return NS_OK;
 }
 
-//-------------------------------------------------------------------------
-NS_METHOD nsMenuItem::SetMenuItemType(EMenuItemType aType)
-{
-  mMenuType = aType;
-  return NS_OK;
-}
 
 //-------------------------------------------------------------------------
 NS_METHOD nsMenuItem::GetMenuItemType(EMenuItemType *aType)
@@ -175,12 +136,6 @@ NS_METHOD nsMenuItem::GetMenuItemType(EMenuItemType *aType)
   return NS_OK;
 }
 
-//-------------------------------------------------------------------------
-NS_METHOD nsMenuItem::GetCommand(PRUint32 & aCommand)
-{
-  aCommand = mCommand;
-  return NS_OK;
-}
 
 //-------------------------------------------------------------------------
 NS_METHOD nsMenuItem::GetTarget(nsIWidget *& aTarget)
@@ -199,8 +154,6 @@ NS_METHOD nsMenuItem::GetNativeData(void *& aData)
 //-------------------------------------------------------------------------
 NS_METHOD nsMenuItem::AddMenuListener(nsIMenuListener * aMenuListener)
 {
-    NS_IF_RELEASE(mXULCommandListener);
-    NS_IF_ADDREF(aMenuListener);
 	mXULCommandListener = aMenuListener;
 	return NS_OK;
 }
@@ -218,6 +171,7 @@ NS_METHOD nsMenuItem::IsSeparator(PRBool & aIsSep)
   return NS_OK;
 }
 
+
 //-------------------------------------------------------------------------
 // nsIMenuListener interface
 //-------------------------------------------------------------------------
@@ -231,43 +185,11 @@ nsEventStatus nsMenuItem::MenuItemSelected(const nsMenuEvent & aMenuEvent)
     case eRadio:
     {
       // we only want to muck with things if we were selected and we're not
-      // already checked.
+      // already checked. 
       if ( mIsChecked )
         break;       
       SetChecked(PR_TRUE);
-      
-      // walk the sibling list looking for nodes with the same name and
-      // uncheck them all.
-      
-      nsAutoString myGroupName;
-      mDOMElement->GetAttribute(NS_ConvertASCIItoUCS2("name"), myGroupName);
-      
-      nsCOMPtr<nsIDOMNode> parent;
-      mDOMNode->GetParentNode(getter_AddRefs(parent));
-      if ( !parent )
-        break;
-      nsCOMPtr<nsIDOMNode> currSibling;
-      parent->GetFirstChild(getter_AddRefs(currSibling));
-      while ( currSibling ) {
-        // skip this node
-        if ( currSibling.get() != mDOMNode ) {        
-          nsCOMPtr<nsIDOMElement> currElement = do_QueryInterface(currSibling);
-          if ( !currElement )
-            break;
-          
-          // if the current sibling is in the same group, clear it
-          nsAutoString currGroupName;
-          currElement->GetAttribute(NS_ConvertASCIItoUCS2("name"), currGroupName);
-          if ( currGroupName == myGroupName )
-            currElement->SetAttribute(NS_ConvertASCIItoUCS2("checked"), NS_ConvertASCIItoUCS2("false"));
-        }
-        
-        // advance to the next node
-        nsIDOMNode* next;
-        currSibling->GetNextSibling(&next);
-        currSibling = dont_AddRef(next);
-        
-      } // for each sibling
+      UncheckRadioSiblings(mDOMElement);
       break;
     }
       
@@ -314,16 +236,6 @@ nsEventStatus nsMenuItem::MenuDestruct(const nsMenuEvent & aMenuEvent)
   	return nsEventStatus_eIgnore;
 }
 
-//-------------------------------------------------------------------------
-/**
-* Sets the JavaScript Command to be invoked when a "gui" event occurs on a source widget
-* @param aStrCmd the JS command to be cached for later execution
-* @return NS_OK 
-*/
-NS_METHOD nsMenuItem::SetCommand(const nsString & aStrCmd)
-{
-	return NS_OK;
-}
 
 //-------------------------------------------------------------------------
 /**
@@ -360,41 +272,7 @@ NS_METHOD nsMenuItem::DoCommand()
   return nsEventStatus_eConsumeNoDefault;
 
 }
-
-//-------------------------------------------------------------------------
-NS_METHOD nsMenuItem::SetDOMNode(nsIDOMNode * aDOMNode)
-{
-    mDOMNode = aDOMNode;
-    NS_ADDREF(mDOMNode);
-	return NS_OK;
-}
     
-//-------------------------------------------------------------------------
-NS_METHOD nsMenuItem::GetDOMNode(nsIDOMNode ** aDOMNode)
-{
-    *aDOMNode = mDOMNode;
-	return NS_OK;
-}
-
-//-------------------------------------------------------------------------
-NS_METHOD nsMenuItem::SetDOMElement(nsIDOMElement * aDOMElement)
-{
-    mDOMElement = aDOMElement;
-	return NS_OK;
-}
-    
-//-------------------------------------------------------------------------
-NS_METHOD nsMenuItem::GetDOMElement(nsIDOMElement ** aDOMElement)
-{
-	return NS_OK;
-}
-    
-//-------------------------------------------------------------------------
-NS_METHOD nsMenuItem::SetWebShell(nsIWebShell * aWebShell)
-{
-    mWebShell = aWebShell;
-	return NS_OK;
-}
    
    //-------------------------------------------------------------------------
 NS_METHOD nsMenuItem::GetModifiers(PRUint8 * aModifiers) 
@@ -428,3 +306,77 @@ NS_METHOD nsMenuItem::GetShortcutChar(nsString &aText)
     aText = mKeyEquivalent;
     return res;
 } 
+
+//
+// UncheckRadioSiblings
+//
+// walk the sibling list looking for nodes with the same name and
+// uncheck them all.
+//
+void
+nsMenuItem :: UncheckRadioSiblings ( nsIDOMElement* inCheckedElement )
+{
+  nsCOMPtr<nsIDOMNode> checkedNode ( do_QueryInterface(inCheckedElement) );
+
+  nsAutoString myGroupName;
+  inCheckedElement->GetAttribute(NS_ConvertASCIItoUCS2("name"), myGroupName);
+  
+  nsCOMPtr<nsIDOMNode> parent;
+  checkedNode->GetParentNode(getter_AddRefs(parent));
+  if ( !parent )
+    return;
+  nsCOMPtr<nsIDOMNode> currSibling;
+  parent->GetFirstChild(getter_AddRefs(currSibling));
+  while ( currSibling ) {
+    // skip this node
+    if ( currSibling.get() != checkedNode ) {        
+      nsCOMPtr<nsIDOMElement> currElement = do_QueryInterface(currSibling);
+      if ( !currElement )
+        break;
+      
+      // if the current sibling is in the same group, clear it
+      nsAutoString currGroupName;
+      currElement->GetAttribute(NS_ConvertASCIItoUCS2("name"), currGroupName);
+      if ( currGroupName == myGroupName )
+        currElement->SetAttribute(NS_ConvertASCIItoUCS2("checked"), NS_ConvertASCIItoUCS2("false"));
+    }
+    
+    // advance to the next node
+    nsIDOMNode* next;
+    currSibling->GetNextSibling(&next);
+    currSibling = dont_AddRef(next);
+    
+  } // for each sibling
+
+} // UncheckRadioSiblings
+
+#pragma mark -
+
+//
+// nsIChangeObserver
+//
+
+
+NS_IMETHODIMP
+nsMenuItem :: AttributeChanged ( nsIDocument *aDocument, PRInt32 aNameSpaceID, nsIAtom *aAttribute,
+                                    PRInt32 aHint)
+{
+  nsCOMPtr<nsIAtom> checkedAtom = NS_NewAtom("checked");
+  nsAutoString checked;
+  if ( aAttribute == checkedAtom.get() ) {
+    mDOMElement->GetAttribute(NS_ConvertASCIItoUCS2("checked"), checked);
+    if ( checked.EqualsWithConversion("true") )
+      UncheckRadioSiblings ( mDOMElement );
+  }
+  return NS_OK;
+    
+} // AttributeChanged
+
+
+NS_IMETHODIMP
+nsMenuItem :: ContentRemoved(nsIDocument *aDocument, nsIContent *aChild, PRInt32 aIndexInContainer)
+{
+  return NS_OK;
+  
+} // ContentRemoved
+

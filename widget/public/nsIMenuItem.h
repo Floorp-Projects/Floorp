@@ -30,6 +30,7 @@
 #include "nsIWebShell.h"
 #include "nsIDOMElement.h"
 
+
 // {7F045771-4BEB-11d2-8DBB-00609703C14E}
 #define NS_IMENUITEM_IID      \
 { 0x7f045771, 0x4beb, 0x11d2, \
@@ -39,6 +40,7 @@ class nsIMenu;
 class nsIPopUpMenu;
 class nsIWidget;
 class nsIMenuListener;
+class nsIChangeManager;
 
 enum {
   knsMenuItemNoModifier      = 0,
@@ -62,21 +64,15 @@ class nsIMenuItem : public nsISupports {
     * Creates the MenuItem
     *
     */
-    NS_IMETHOD Create(nsISupports    * aParent, 
-                      const nsString & aLabel, 
-                      PRBool           isSeparator) = 0;
+    NS_IMETHOD Create ( nsIMenu* aParent, const nsString & aLabel, PRBool isSeparator, 
+                          EMenuItemType aItemType, PRBool aEnabled, 
+                          nsIChangeManager* aManager, nsIWebShell* aShell, nsIDOMNode* aNode ) = 0;
     
    /**
     * Get the MenuItem label
     *
     */
     NS_IMETHOD GetLabel(nsString &aText) = 0;
-
-   /**
-    * Get the MenuItem label
-    *
-    */
-    NS_IMETHOD SetLabel(nsString &aText) = 0;
 
    /**
     * Set the Menu shortcut char
@@ -89,11 +85,6 @@ class nsIMenuItem : public nsISupports {
     *
     */
     NS_IMETHOD GetShortcutChar(nsString &aText) = 0;
-   /**
-    * Sets whether the item is enabled or disabled
-    *
-    */
-    NS_IMETHOD SetEnabled(PRBool aIsEnabled) = 0;
 
    /**
     * Gets whether the item is enabled or disabled
@@ -114,23 +105,11 @@ class nsIMenuItem : public nsISupports {
     NS_IMETHOD GetChecked(PRBool *aIsEnabled) = 0;
 
    /**
-    * Sets whether the item is a checkbox or radio
-    *
-    */
-    NS_IMETHOD SetMenuItemType(EMenuItemType aType) = 0;
-
-   /**
     * Gets whether the item is a checkbox or radio
     *
     */
     NS_IMETHOD GetMenuItemType(EMenuItemType *aType) = 0;
     
-   /**
-    * Gets the MenuItem Command identifier
-    *
-    */
-    NS_IMETHOD GetCommand(PRUint32 & aCommand) = 0;
-
    /**
     * Gets the target for MenuItem
     *
@@ -162,24 +141,11 @@ class nsIMenuItem : public nsISupports {
     NS_IMETHOD IsSeparator(PRBool & aIsSep) = 0;
 
    /**
-    * Sets the JavaScript Command to be invoked when a "gui" event occurs on a source widget
-    * @param aStrCmd the JS command to be cached for later execution
-    * @return NS_OK 
-    */
-    NS_IMETHOD SetCommand(const nsString & aStrCmd) = 0;
-
-   /**
     * Executes the "cached" JavaScript Command 
     * @return NS_OK if the command was executed properly, otherwise an error code
     */
     NS_IMETHOD DoCommand() = 0;
 
-    NS_IMETHOD SetDOMNode(nsIDOMNode * aDOMNode) = 0;
-    NS_IMETHOD GetDOMNode(nsIDOMNode ** aDOMNode) = 0;
-    NS_IMETHOD SetDOMElement(nsIDOMElement * aDOMElement) = 0;
-    NS_IMETHOD GetDOMElement(nsIDOMElement ** aDOMElement) = 0;
-    NS_IMETHOD SetWebShell(nsIWebShell * aWebShell) = 0;
-    
     /**
     *
     */
