@@ -16,6 +16,10 @@
  * Reserved.
  */
 
+/*
+* 'View' for interactive viewing of call stack
+*/
+
 // when     who     what
 // 06/27/97 jband   added this header to my code
 //
@@ -60,7 +64,7 @@ public class StackView extends InternalWindow
         sg.setAutoResizeSubviews(true);
         sg.contentView().setLayoutManager( new MarginLayout() );
         sg.setBackgroundColor(_emperor.getBackgroundColor());
-        
+
         setCloseable( false );
         setResizable( true );
         setTitle( "Call Stack" );
@@ -82,8 +86,8 @@ public class StackView extends InternalWindow
 
         _refresh();
 
-        layoutView(1,1);            
-        layoutView(-1,-1);            
+        layoutView(1,1);
+        layoutView(-1,-1);
 
 //        show();
 
@@ -92,13 +96,13 @@ public class StackView extends InternalWindow
     private synchronized void _refresh()
     {
         // refill all
-        
+
         _listview.removeAllItems();
 
         if( ControlTyrant.STOPPED != _controlTyrant.getState() )
         {
             _listview.draw();
-            return;        
+            return;
         }
 
         StackFrameInfo[] array = _stackTyrant.getFrameArray();
@@ -113,7 +117,7 @@ public class StackView extends InternalWindow
                 ListItem newlistitem = new StackViewListItem(drawer);
 
                 StackFrameInfo frame = array[i];
-                
+
                 String text;
 
                 if( frame instanceof JSStackFrameInfo )
@@ -161,12 +165,12 @@ public class StackView extends InternalWindow
                     newlistitem.setData( null );
 
                 maxwidth = Math.max( maxwidth, newlistitem.minWidth() );
-                _listview.addItem( newlistitem );            
+                _listview.addItem( newlistitem );
             }
             _listview.selectItemAt( _stackTyrant.getCurrentFrameIndex() );
             _listview.setBounds(0,0,maxwidth,0);
             _listview.sizeToMinSize();
-            layoutView(0,0);            
+            layoutView(0,0);
         }
         _listview.draw();
     }
@@ -203,9 +207,9 @@ public class StackView extends InternalWindow
 
     private ListView        _listview;
 
-    
+
 }
-        
+
 class StackViewListItem extends ListItem
 {
     public StackViewListItem(StackViewItemDrawer drawer)
@@ -232,8 +236,8 @@ class StackViewListItem extends ListItem
 
     private StackViewItemDrawer _drawer;
 
-    
-}    
+
+}
 
 class StackViewItemDrawer
 {
@@ -261,8 +265,8 @@ class StackViewItemDrawer
         _ptText = new Point( _width, 0 );
     }
 
-    public void draw( Graphics g, 
-                      Rect boundsRect, 
+    public void draw( Graphics g,
+                      Rect boundsRect,
                       StackViewListItem item,
                       boolean isExecPoint )
     {
@@ -280,7 +284,7 @@ class StackViewItemDrawer
                          boundsRect.width - _ptText.x,
                          boundsRect.height - _ptText.y );
 
-            item.drawStringInRect(g,text,_font,r,Graphics.LEFT_JUSTIFIED); 
+            item.drawStringInRect(g,text,_font,r,Graphics.LEFT_JUSTIFIED);
         }
         if( isExecPoint )
         {
@@ -306,4 +310,4 @@ class StackViewItemDrawer
     private int _height;
     private Polygon _polyExecPoint;
     private Point   _ptText;
-}    
+}

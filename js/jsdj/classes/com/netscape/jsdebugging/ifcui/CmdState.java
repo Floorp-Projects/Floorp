@@ -16,6 +16,10 @@
  * Reserved.
  */
 
+/*
+* Maintain state for a command (used to update menus and toolbars)
+*/
+
 // when     who     what
 // 06/27/97 jband   added this header to my code
 //
@@ -38,5 +42,5 @@ class CmdState
     public String   name;
     public boolean  enabled;
     public boolean  checked;
-}    
+}
 

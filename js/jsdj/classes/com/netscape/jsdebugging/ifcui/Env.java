@@ -16,6 +16,10 @@
  * Reserved.
  */
 
+/*
+* Platform specific support for detecting platform and locating prefs files
+*/
+
 // when     who     what
 // 12/06/97 jband   added this file
 //
@@ -77,7 +81,7 @@ public class Env
                 _coursePlatformType = ENV_MAC;
             else
                 _coursePlatformType = ENV_UNIX;
-        } 
+        }
         catch(Exception e)
         {
             System.out.println(e);
@@ -103,7 +107,7 @@ public class Env
         if(null != loadDir)
             _codebaseDir = loadDir.replace('/', File.separatorChar);
 
-        // unescape the path            
+        // unescape the path
         StringBuffer sb = new StringBuffer();
         int len = _codebaseDir.length();
         for(int i = 0; i < len; i++ )
@@ -120,7 +124,7 @@ public class Env
                     i += 2;
                 }
             }
-            sb.append(c);                
+            sb.append(c);
         }
         _codebaseDir = sb.toString();
 
@@ -136,9 +140,9 @@ public class Env
         }
 
         // hack to lose the leading slash in Mac filenames
-        // 
+        //
         //  REMOVED! Mac Java in Nav wants leading slash!
-        // 
+        //
         // if( ENV_MAC == _coursePlatformType  &&
         //     _codebaseDir.length() >= 2      &&
         //     _codebaseDir.charAt(0) == File.separatorChar )
@@ -157,7 +161,7 @@ public class Env
         }
 
         // hack to get a 'normal' filename on Windows
-        if( ENV_WIN == _coursePlatformType && _codebaseDir.charAt(1) == '|' ) 
+        if( ENV_WIN == _coursePlatformType && _codebaseDir.charAt(1) == '|' )
             _codebaseDir = _codebaseDir.charAt(0)+":"+ _codebaseDir.substring(2);
     }
 
@@ -188,17 +192,17 @@ public class Env
             int sep = _codebaseDir.indexOf(File.separatorChar,1);
             if(-1 != sep)
             {
-                _prefsDir = _codebaseDir.substring(0,sep+1) + 
+                _prefsDir = _codebaseDir.substring(0,sep+1) +
                             "System Folder"                 +
                             File.separatorChar              +
                             "Preferences"                   +
                             File.separatorChar;
             }
         }
-    }        
+    }
 
 
     private static int      _coursePlatformType = 0;
     private static String   _codebaseDir        = null;
     private static String   _prefsDir           = null;
-}    
+}

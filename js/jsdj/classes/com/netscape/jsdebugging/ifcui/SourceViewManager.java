@@ -16,6 +16,10 @@
  * Reserved.
  */
 
+/*
+* 'Model' to manage all the source views
+*/
+
 // when     who     what
 // 06/27/97 jband   added this header to my code
 //
@@ -88,7 +92,7 @@ public class SourceViewManager
                 if(null == loc )
                     return;
 
-                SourceTextItem sti = 
+                SourceTextItem sti =
                     _sourceTyrant.findSourceItem( loc.getURL() );
                 if(AS.S)ER.T(null!=sti,"could not find SourceTextItem for " + loc.getURL(),this);
                 if(null == sti)
@@ -202,7 +206,7 @@ public class SourceViewManager
     }
 
     public void selectionInSourceViewChanged( SourceView sv, String s, int lineno)
-    {   
+    {
         if( _mainSourceView != sv )
             return;
 
@@ -258,14 +262,14 @@ public class SourceViewManager
                                       "com.netscape.jsdebugging.ifcui.SourceViewSaver" );
         if( -1 != id )
         {
-            SourceViewSaver svs = (SourceViewSaver) 
+            SourceViewSaver svs = (SourceViewSaver)
                                     unarchiver.unarchiveIdentifier(id);
             svs.sendToManager(this);
         }
     }
 
-    // data...    
-    
+    // data...
+
     private Emperor         _emperor;
     private ControlTyrant   _controlTyrant;
     private SourceTyrant    _sourceTyrant;
@@ -280,7 +284,7 @@ public class SourceViewManager
     private String          _selectedTextInMainSourceView = null;
 
     private static final String UPDATE_MARKS = "UPDATE_MARKS";
-}    
+}
 
 
-  
+

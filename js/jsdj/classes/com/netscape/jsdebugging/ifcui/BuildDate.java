@@ -5,9 +5,9 @@ package com.netscape.jsdebugging.ifcui;
 
 class BuildDate
 {
-    // Wednesday, September 16, 1998 at 11:58 AM
+    // Friday, September 18, 1998 at 12:54 PM
 
-    public static final long buildDate = 905972322000L;
+    public static final long buildDate = 906148451000L;
 
     public static final java.util.Date date()
     {

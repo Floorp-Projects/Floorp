@@ -16,6 +16,10 @@
  * Reserved.
  */
 
+/*
+* Persistence support for data Watches
+*/
+
 // when     who     what
 // 09/25/97 jband   created this file
 //

@@ -16,10 +16,14 @@
  * Reserved.
  */
 
+/*
+* 'Model' to manage inspector info about a singe value
+*/
+
 // when     who     what
 // 10/30/97 jband   added this file
 //
-    
+
 package com.netscape.jsdebugging.ifcui;
 
 import netscape.application.*;
@@ -28,9 +32,9 @@ import com.netscape.jsdebugging.ifcui.palomar.util.*;
 
 public class InspectorNodeModel
 {
-    public InspectorNodeModel( String name, 
+    public InspectorNodeModel( String name,
                                int depth,
-                               InspectorNodeModel parent, 
+                               InspectorNodeModel parent,
                                InspectorTyrant tyrant )
     {
         _name = name.trim();
@@ -82,7 +86,7 @@ public class InspectorNodeModel
                 prev = cur;
             }
         }
-        return childCount;        
+        return childCount;
     }
 
     public synchronized void clearLinks()
@@ -149,4 +153,4 @@ public class InspectorNodeModel
     private boolean             _hasProperties;
     private String              _type;
     private boolean             _isValid;
-}    
+}

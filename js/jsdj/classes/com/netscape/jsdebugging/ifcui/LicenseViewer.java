@@ -16,6 +16,10 @@
  * Reserved.
  */
 
+/*
+* Simple html viewer to show licence and get acceptance
+*/
+
 // when     who     what
 // 11/10/97 jband   added this file
 //
@@ -44,17 +48,17 @@ class LicenseViewer
         setTitle(title);
         setCloseable(true);
         setResizable(false);
-        
+
         int contentDX = _editDX + _spacerDX * 2;
         int contentDY = _editDY + _buttonDY + _spacerDY * 3;
         int labelY    = _spacerDY;
         int editY     = _spacerDY * 1;
-        int buttonY   = _editDY + _spacerDY * 2;        
+        int buttonY   = _editDY + _spacerDY * 2;
         int editX     = _spacerDX;
 
         int buttonX2  = contentDX - _spacerDX - _buttonDX;
         int buttonX1  = buttonX2 - _spacerDX - _buttonDX;
-        
+
         Size size = windowSizeForContentSize(contentDX, contentDY);
         setBounds(0,0,size.width,size.height);
 
@@ -89,7 +93,7 @@ class LicenseViewer
         _HtmlLoadedSuccesfully = true;
 
         Button button;
-        
+
         button = new Button(buttonX1,buttonY,_buttonDX,_buttonDY);
         button.setTitle("I Accept");
         button.setTarget(this);
@@ -117,7 +121,7 @@ class LicenseViewer
         {
             hide();
         }
-    }        
+    }
 
     public void showModally()
     {
@@ -127,12 +131,12 @@ class LicenseViewer
 
     public boolean  userPressedAccept()     {return _userPressedAccept;}
     public boolean  HtmlLoadedSuccesfully() {return _HtmlLoadedSuccesfully;}
-    
+
     private boolean   _userPressedAccept     = false;
     private boolean   _HtmlLoadedSuccesfully = false;
     private TextView  _textView;
 
     private static final String CANCEL_CMD  = "CANCEL_CMD";
     private static final String ACCEPT_CMD  = "ACCEPT_CMD";
-}    
+}
 

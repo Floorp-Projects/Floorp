@@ -16,6 +16,10 @@
  * Reserved.
  */
 
+/*
+* 'View' for console
+*/
+
 // when     who     what
 // 06/27/97 jband   added this header to my code
 //
@@ -125,7 +129,7 @@ public class ConsoleView
         if ( o == _controlTyrant )
             _setTextFieldEnabledState();
     }
-    
+
     private void _setTextFieldEnabledState()
     {
         if( ControlTyrant.STOPPED == _controlTyrant.getState() )
@@ -139,7 +143,7 @@ public class ConsoleView
             _textfield.setEditable(false);
         }
     }
-    
+
 
     // implement ConsolePrinter interface
     public synchronized void print(String stringToPrint, boolean isOutput)

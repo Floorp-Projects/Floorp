@@ -16,6 +16,10 @@
  * Reserved.
  */
 
+/*
+* Interface to support sending strings to consloe
+*/
+
 // when     who     what
 // 06/27/97 jband   added this header to my code
 //
@@ -25,5 +29,5 @@ package com.netscape.jsdebugging.ifcui;
 interface ConsolePrinter
 {
     public void print(String stringToPrint, boolean isOutput);
-}    
+}
 

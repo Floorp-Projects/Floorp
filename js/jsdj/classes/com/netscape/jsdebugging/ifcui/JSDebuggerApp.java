@@ -16,6 +16,10 @@
  * Reserved.
  */
 
+/*
+* Core Application class for debugger (used both when app or applet)
+*/
+
 // when     who     what
 // 06/27/97 jband   added this header to my code
 //
@@ -90,7 +94,7 @@ public class JSDebuggerApp
             PrivilegeManager.enablePrivilege("Debugger");
             PrivilegeManager.enablePrivilege("UniversalFileRead");
 
-            // It doesn't really matter that much if the user says no to 
+            // It doesn't really matter that much if the user says no to
             // these (at this point)
             try
             {
@@ -124,7 +128,7 @@ public class JSDebuggerApp
         {
             int platform = Env.getCoursePlatformType();
 
-            System.out.println("JSD platform is " + 
+            System.out.println("JSD platform is " +
                                (platform == Env.ENV_WIN ?
                                  "Windows" :
                                 platform == Env.ENV_MAC ?
@@ -249,8 +253,8 @@ public class JSDebuggerApp
         if( Emperor.REMOTE_SERVER == _mode && null == _host )
         {
             String hostname = _readHostName();
-            HostNameDialog dlg = new 
-                    HostNameDialog("Choose Server", 
+            HostNameDialog dlg = new
+                    HostNameDialog("Choose Server",
                                    "Enter Hostname or ip address of Server",
                                    hostname);
             while(true)
@@ -270,10 +274,10 @@ public class JSDebuggerApp
                         break;
 
                     setWaitCursor(false);
-                    if( Alert.DEFAULT_OPTION == 
+                    if( Alert.DEFAULT_OPTION ==
                         Alert.runAlertInternally( Alert.warningImage(),
                             "Error",
-                            "JavaScript Debugger support was not found in "+ _host+"\n" 
+                            "JavaScript Debugger support was not found in "+ _host+"\n"
                             + "\n"
                             + "Try a different Server?",
                             "Yes", "No", null ) )
@@ -330,7 +334,7 @@ public class JSDebuggerApp
             setWaitCursor(false);
             Alert.runAlertInternally( Alert.warningImage(),
                 "Error",
-                  core_msg 
+                  core_msg
                 + "\n\n"
                 + suggestion
                 + "Please see the Debugger release notes for troubleshooting information\n"
@@ -349,7 +353,7 @@ public class JSDebuggerApp
         MenuItem fileMenu = mainMenu.addItemWithSubmenu("File");
         MenuItem item;
 
-        _emperor = new Emperor( this, _mainWindow, mainMenu, fileMenu, 
+        _emperor = new Emperor( this, _mainWindow, mainMenu, fileMenu,
                                 menuView, _mode, _host, statusWindow );
 
         addSeparator(fileMenu);
@@ -429,7 +433,7 @@ public class JSDebuggerApp
 
         String licenseHtmlFilename = baseDir+"license.html";
 
-        LicenseViewer v = 
+        LicenseViewer v =
             new LicenseViewer("Netscape JavaScript Debugger License", licenseHtmlFilename);
 
         if( ! v.HtmlLoadedSuccesfully() )
@@ -478,7 +482,7 @@ public class JSDebuggerApp
     {
         String title = "About";
         String msg;
-        
+
         msg  = "Netscape JavaScript Debugger\n";
         msg += "Version "+MAJOR_VERSION+"."+MINOR_VERSION;
         if( PREVIEW_VERSION != 0 )
@@ -663,7 +667,7 @@ public class JSDebuggerApp
 
         if(AS.S)ER.T(_waitCount >= 0,"_waitCount went negative", this );
         if(AS.S)ER.T(Thread.currentThread()==_uiThreadForAssertCheck,"setWaitCursor() called on non-UI thread",this);
-                
+
         if( (1 == _waitCount && set) || (0 == _waitCount && !set) )
         {
             Vector windows = externalWindows();
@@ -672,13 +676,13 @@ public class JSDebuggerApp
             {
                 ExternalWindow window = (ExternalWindow)windows.elementAt(i);
                 FoundationPanel panel = window.panel();
-            
+
                 if (set)
                     panel.setCursor(View.WAIT_CURSOR);
                 else
                     panel.setCursor(View.ARROW_CURSOR);
             }
-        }            
+        }
     }
 
 

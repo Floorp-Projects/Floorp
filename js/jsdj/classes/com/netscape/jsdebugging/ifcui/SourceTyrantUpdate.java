@@ -16,6 +16,10 @@
  * Reserved.
  */
 
+/*
+* Info sent with SourceTyrant update events
+*/
+
 // when     who     what
 // 06/27/97 jband   added this header to my code
 //
@@ -23,7 +27,7 @@
 package com.netscape.jsdebugging.ifcui;
 
 import com.netscape.jsdebugging.api.*;
-  
+
 class SourceTyrantUpdate
 {
     public static final int SELECT_CHANGED            = 0;
@@ -38,6 +42,6 @@ class SourceTyrantUpdate
     }
     public int              type;
     public SourceTextItem   item;
-}    
+}
 
 

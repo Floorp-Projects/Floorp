@@ -16,6 +16,10 @@
  * Reserved.
  */
 
+/*
+* Dialog UI for editing single breakpoint and its condition
+*/
+
 // when     who     what
 // 10/14/97 jband   created class
 //
@@ -40,22 +44,22 @@ class BreakpointEditorDialog
     private static final int _spacerDX  = 5;
     private static final int _spacerDY  = 5;
 
-    public BreakpointEditorDialog(String title, 
-                                  int line, 
-                                  String url, 
-                                  String condition, 
+    public BreakpointEditorDialog(String title,
+                                  int line,
+                                  String url,
+                                  String condition,
                                   Font font,
                                   boolean isNew )
     {
         super();
-        
+
         setTitle(title);
         setCloseable( false );
         setResizable( false );
-        
+
         int contentDX = _labelDX + _editDX + _spacerDX * 3;
         int contentDY = _editDY * 3 + _spacerDY * 5 + _buttonDY;
-        int buttonY   = _editDY * 3 + _spacerDY * 4;        
+        int buttonY   = _editDY * 3 + _spacerDY * 4;
         int buttonX2  = contentDX - _spacerDX - _buttonDX;
         int buttonX1  = buttonX2 - _spacerDX - _buttonDX;
         int labelX    = _spacerDX;
@@ -64,7 +68,7 @@ class BreakpointEditorDialog
         int Y1 = _spacerDY;
         int Y2 = Y1 + _editDY + _spacerDY;
         int Y3 = Y2 + _editDY + _spacerDY;
-        
+
         Size size = windowSizeForContentSize(contentDX, contentDY);
         setBounds(0,0,size.width,size.height);
 
@@ -86,22 +90,22 @@ class BreakpointEditorDialog
         _textFieldCondition.setStringValue(new String(condition));
         _textFieldCondition.setFont(font);
         addSubview(_textFieldCondition);
-        
+
         Button button;
-        
+
         button = new Button(buttonX1,buttonY,_buttonDX,_buttonDY);
         button.setTitle("OK");
         button.setTarget(this);
         button.setCommand(OK_CMD);
         addSubview(button);
-        
+
         button = new Button(buttonX2,buttonY,_buttonDX,_buttonDY);
         button.setTitle("Cancel");
         button.setTarget(this);
         button.setCommand(CANCEL_CMD);
         addSubview(button);
 
-        if( isNew )        
+        if( isNew )
             setFocusedView( _textFieldLine );
         else
             setFocusedView( _textFieldCondition );
@@ -119,7 +123,7 @@ class BreakpointEditorDialog
         label.setBorder(null);
         return label;
     }
-    
+
     // implement target interface
     public void performCommand(String cmd, Object data)
     {
@@ -131,13 +135,13 @@ class BreakpointEditorDialog
             if( null == _URL || 0 == _URL.trim().length() )
             {
                 Alert.runAlertInternally( Alert.notificationImage(),
-                                          "invalid entry", 
+                                          "invalid entry",
                                           "you must enter a valid url",
-                                          "OK", null,null ); 
+                                          "OK", null,null );
                 setFocusedView( _textFieldURL );
                 return;
             }
-    
+
             _condition = _textFieldCondition.stringValue();
             if( null == _condition || 0 == _condition.trim().length() )
             {
@@ -158,9 +162,9 @@ class BreakpointEditorDialog
             if( _line <= 0 )
             {
                 Alert.runAlertInternally( Alert.notificationImage(),
-                                          "invalid entry", 
+                                          "invalid entry",
                                           "line number must be >= 1",
-                                          "OK", null,null ); 
+                                          "OK", null,null );
                 setFocusedView( _textFieldLine );
                 return;
             }
@@ -172,14 +176,14 @@ class BreakpointEditorDialog
         {
             hide();
         }
-    }        
-    
+    }
+
     public boolean okPressed()      {return _ok;}
     public String getURL()          {return _URL;}
     public String getCondition()    {return _condition;}
     public int getLine()            {return _line;}
 
-    
+
     private TextField _textFieldLine;
     private TextField _textFieldURL;
     private TextField _textFieldCondition;
@@ -189,6 +193,6 @@ class BreakpointEditorDialog
     private boolean   _ok = false;
     private static final String OK_CMD     = "OK_CMD";
     private static final String CANCEL_CMD = "CANCEL_CMD";
-}    
+}
 
 

@@ -16,10 +16,14 @@
  * Reserved.
  */
 
+/*
+* 'Model' to do tree of data inspection
+*/
+
 // when     who     what
 // 10/30/97 jband   added this file
 //
-    
+
 package com.netscape.jsdebugging.ifcui;
 
 import java.util.Observable;
@@ -32,7 +36,7 @@ import netscape.security.ForbiddenTargetException;
 import com.netscape.jsdebugging.api.*;
 
 public class InspectorTyrant
-    extends Observable 
+    extends Observable
     implements Observer, Target, JSErrorReporter // , SimulatorPrinter // XXX Sim Hack
 {
     public InspectorTyrant(Emperor emperor)
@@ -71,11 +75,11 @@ public class InspectorTyrant
 
     // It is important that our function name not conflict with anything
     // in the user's namespace. I think this should be safe :)
-    private static final String _propEnumeratorFunctionName = 
+    private static final String _propEnumeratorFunctionName =
         "__John_Bandhauer_Says_This_Is_A_Unique_Identifier__";
 
     // Rhino currently does not like this form
-//    private static final String _propEnumeratorFunction = 
+//    private static final String _propEnumeratorFunction =
 //        "function "+_propEnumeratorFunctionName+"(ob)\n"+
 //        "{\n"+
 //        "    var retval = \"\";\n"+
@@ -85,7 +89,7 @@ public class InspectorTyrant
 //        "    return retval;\n"+
 //        "}\n";
 
-    private static final String _propEnumeratorFunction = 
+    private static final String _propEnumeratorFunction =
         _propEnumeratorFunctionName+" = new Function(\"ob\",\""+
         "    var retval = new String();"+
         "    var prop;"+
@@ -123,7 +127,7 @@ public class InspectorTyrant
 
             // we build both a string and a number vector so that we can
             // seperately sort them before concating them. NOTE that numVec
-            // actually holds strings representing numbers, rather than the 
+            // actually holds strings representing numbers, rather than the
             // numbers themselves - we don't want rounding & conversions errors
             Vector stringVec = new Vector();
             Vector numVec = new Vector();
@@ -164,9 +168,9 @@ public class InspectorTyrant
                         }
                         else
                         {
-                            // the below deals with cases where the property 
-                            // name is not a number, but is not a valid 
-                            // identifier either. 
+                            // the below deals with cases where the property
+                            // name is not a number, but is not a valid
+                            // identifier either.
                             // e.g. window["foo/bar"]
                             // the navigator.mimeTypes array has such properties
                             String nameToAdd = null;
@@ -185,7 +189,7 @@ public class InspectorTyrant
                             stringVec.addElement(nameToAdd);
                         }
                     }
-                    start = i+1;    
+                    start = i+1;
                 }
             }
 
@@ -207,7 +211,7 @@ public class InspectorTyrant
             }
 
         }
-        return retval;        
+        return retval;
     }
 
     public String eval(String input)
@@ -230,14 +234,14 @@ public class InspectorTyrant
             return null;
 
         String filename;
-        if( _emperor.isPre40b6() || 
+        if( _emperor.isPre40b6() ||
             Emperor.REMOTE_SERVER == _emperor.getHostMode() )
             filename = "inspector";
         else
             filename = loc.getURL();
 
         PrivilegeManager.enablePrivilege("Debugger");
-        
+
         String result = "";
         _errorString = null;
 
@@ -249,7 +253,7 @@ public class InspectorTyrant
         DebugController dc = _emperor.getDebugController();
         if( null != dc && null != frame )
         {
-            ExecResult fullresult = 
+            ExecResult fullresult =
                 dc.executeScriptInStackFrame(frame,eval,filename,1);
             result = fullresult.getResult();
 
@@ -273,10 +277,10 @@ public class InspectorTyrant
     }
 
     /*
-    * NOTE: this ErrorReporter may be called on a thread other than 
-    * the IFC UI thread    
+    * NOTE: this ErrorReporter may be called on a thread other than
+    * the IFC UI thread
     */
-    
+
     // implement JSErrorReporter interface
     public int reportError( String msg,
                             String filename,
@@ -286,7 +290,7 @@ public class InspectorTyrant
     {
         _errorString = msg;
         return JSErrorReporter.RETURN;
-    }        
+    }
 
     // implement observer interface
     public void update(Observable o, Object arg)
@@ -320,4 +324,4 @@ public class InspectorTyrant
     private StackTyrant         _stackTyrant;
     private String              _errorString;
     private InspectorNodeModel  _rootNode;
-}    
+}

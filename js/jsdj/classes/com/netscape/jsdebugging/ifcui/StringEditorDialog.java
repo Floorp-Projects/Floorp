@@ -16,6 +16,10 @@
  * Reserved.
  */
 
+/*
+* Dialog to edit one string
+*/
+
 // when     who     what
 // 06/27/97 jband   added this header to my code
 //
@@ -41,42 +45,42 @@ class StringEditorDialog
     public StringEditorDialog(String title, String s, Font font)
     {
         super();
-        
+
         setTitle(title);
         setCloseable( false );
         setResizable( false );
-        
+
         int contentDX = _editDX + _spacerDX * 2;
         int contentDY = _editDY + _spacerDY * 3 + _buttonDY;
-        int buttonY   = _editDY + _spacerDY * 2;        
+        int buttonY   = _editDY + _spacerDY * 2;
         int buttonX2  = (_editDX + _spacerDX) - _buttonDX;
         int buttonX1  = buttonX2 - _spacerDX - _buttonDX;
-        
+
         Size size = windowSizeForContentSize(contentDX, contentDY);
         setBounds(0,0,size.width,size.height);
         _textfield = new TextField(_spacerDX,_spacerDY,_editDX,_editDY);
         _textfield.setStringValue(new String(s));
         _textfield.setFont(font);
         addSubview(_textfield);
-        
+
         Button button;
-        
+
         button = new Button(buttonX1,buttonY,_buttonDX,_buttonDY);
         button.setTitle("OK");
         button.setTarget(this);
         button.setCommand(OK_CMD);
         addSubview(button);
-        
+
         button = new Button(buttonX2,buttonY,_buttonDX,_buttonDY);
         button.setTitle("Cancel");
         button.setTarget(this);
         button.setCommand(CANCEL_CMD);
         addSubview(button);
-        
+
         setFocusedView( _textfield );
         center();
     }
-    
+
     // implement target interface
     public void performCommand(String cmd, Object data)
     {
@@ -89,17 +93,17 @@ class StringEditorDialog
         {
             hide();
         }
-    }        
-    
+    }
+
     public boolean okPressed() {return _ok;}
-    
-    public String getString() 
+
+    public String getString()
     {
         return null != _textfield ? _textfield.stringValue() : null;
     }
-    
+
     private TextField _textfield;
     private boolean   _ok = false;
     private static final String OK_CMD     = "OK_CMD";
     private static final String CANCEL_CMD = "CANCEL_CMD";
-}    
+}

@@ -16,6 +16,10 @@
  * Reserved.
  */
 
+/*
+* Interface to handle client-side stepping
+*/
+
 // when     who     what
 // 06/27/97 jband   added this header to my code
 //
@@ -30,8 +34,8 @@ interface StepHandler
     public static final int CONTINUE_SEND_INTERRUPT = 1;
     public static final int CONTINUE_DONE           = 2;
 
-    public int step( JSThreadState threadState, 
-                     JSPC pc, 
+    public int step( JSThreadState threadState,
+                     JSPC pc,
                      JSSourceLocation sourceLocation,
                      Hook hook );
-}    
+}

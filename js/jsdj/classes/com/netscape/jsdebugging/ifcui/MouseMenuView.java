@@ -16,6 +16,10 @@
  * Reserved.
  */
 
+/*
+* Popup (floating) menu support
+*/
+
 // By Jennifer Lateiner
 
 
@@ -45,7 +49,7 @@ import netscape.application.*;
  *
  * Also note: getTitle on a menu displayed by MouseMenuView
  * will have 4 leading spaces.
- * 
+ *
  *  <pre>
  *  History:
  *  07/30/97:  Created by Jenni
@@ -75,7 +79,7 @@ public class MouseMenuView extends MenuView {
     }
 
     /** Constructs a MouseMenuView with bounds (<b>x</b>, <b>y</b>, <b>width</b>,
-      * </b>height</b>). 
+      * </b>height</b>).
       */
     public MouseMenuView(int x, int y, int width, int height) {
         this(x, y, width, height, null, null);
@@ -109,7 +113,7 @@ public class MouseMenuView extends MenuView {
       * we can track it.
       */
     protected InternalWindow createMenuWindow() {
-        
+
         _window = new InternalWindow(0, 0, 0, 0);
         _window.setType(InternalWindow.BLANK_TYPE);
         _window.setLayer(InternalWindow.IGNORE_WINDOW_CLIPVIEW_LAYER+11);
@@ -160,7 +164,7 @@ public class MouseMenuView extends MenuView {
                 }
             }
             return;
-        } 
+        }
 
         super.mouseUp(event);
      } catch (java.lang.NullPointerException e) {
@@ -185,7 +189,7 @@ public class MouseMenuView extends MenuView {
     }
 
 
-    /** Displays the menu in its own InternalWindow 
+    /** Displays the menu in its own InternalWindow
       */
     public void show(RootView rootView, MouseEvent event) {
         boolean canRightFlip=true;
@@ -220,12 +224,12 @@ public class MouseMenuView extends MenuView {
 
         }
 
-        sizeToMinSize(); 
+        sizeToMinSize();
 
         super.show(rootView, event);
 
         /* Move the menu over and to the left a little from the
-         * mouse event (which is the standard IFC 
+         * mouse event (which is the standard IFC
         if(owner() == null) {
             _window.setBounds(_window.bounds.x-5, _window.bounds.y-5,
                             _window.bounds.width,
@@ -250,7 +254,7 @@ public class MouseMenuView extends MenuView {
                     _window.bounds.height);
 
                 canRightFlip = false;
-                    
+
             }
         }
 
@@ -269,7 +273,7 @@ public class MouseMenuView extends MenuView {
                     _window.bounds.height);
             }
         }
-        
+
         if(_window.bounds.y + _window.bounds.height >
                     rootView.bounds.height) {
                 _window.setBounds(_window.bounds.x,

@@ -16,6 +16,10 @@
  * Reserved.
  */
 
+/*
+* 'Model' to hold info on one line of text in source viewer
+*/
+
 // when     who     what
 // 06/27/97 jband   added this header to my code
 //
@@ -37,5 +41,5 @@ class SourceLineItemModel
     public Breakpoint   bp;
     public boolean      executing;  // is this line currently executing?
     public String       adjustmentChar;
-}    
+}
 

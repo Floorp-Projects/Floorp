@@ -16,6 +16,10 @@
  * Reserved.
  */
 
+/*
+* 'View' of list of sources
+*/
+
 // when     who     what
 // 06/27/97 jband   added this header to my code
 //
@@ -30,7 +34,7 @@ import com.netscape.jsdebugging.ifcui.palomar.util.*;
 import com.netscape.jsdebugging.ifcui.palomar.widget.layout.*;
 import com.netscape.jsdebugging.api.*;
 
-public class PageListView 
+public class PageListView
     extends InternalWindow
     implements Observer, Target
 {
@@ -80,8 +84,8 @@ public class PageListView
         sg.setAutoResizeSubviews(true);
         sg.contentView().setLayoutManager( new MarginLayout() );
         sg.setBackgroundColor(_emperor.getBackgroundColor());
-        
-        setCloseable( false ); 
+
+        setCloseable( false );
         setResizable( false );
         setTitle( "Open" );
         addSubview(sg);
@@ -104,8 +108,8 @@ public class PageListView
 
         _refresh();
 
-        layoutView(1,1);            
-        layoutView(-1,-1);            
+        layoutView(1,1);
+        layoutView(-1,-1);
 
 //        show();
     }
@@ -129,7 +133,7 @@ public class PageListView
         {
             // XXX update list on stop
         }
-        
+
     }
 
     // implement target interface
@@ -153,7 +157,7 @@ public class PageListView
         boolean sort = _emperor.getHostMode() != Emperor.LOCAL;
 
         _listview.removeAllItems();
-        
+
         SourceTextItem[] array = _sourceTyrant.getSourceTextItemArray();
 
         Font linefont = Font.defaultFont();
@@ -183,7 +187,7 @@ public class PageListView
                 {
                     SourceTextItem src = array[i];
                     ListItem item = new ListItem();
-    
+
                     String text = src.getURL();
                     maxlinelen = Math.max( maxlinelen, text.length() );
                     item.setTitle( text );
@@ -222,7 +226,7 @@ public class PageListView
         _listview.setBounds( 0, 0, (maxlinelen+1) * fm.charWidth('X'),0 );
         _listview.sizeToMinSize();
 
-        layoutView(0,0);            
+        layoutView(0,0);
         _listview.draw();
     }
 
@@ -240,7 +244,7 @@ public class PageListView
 
     private static final String CLOSE_CMD = "CLOSE_CMD";
     private static final String OPEN_CMD  = "OPEN_CMD";
-}    
+}
 
 
-     
+

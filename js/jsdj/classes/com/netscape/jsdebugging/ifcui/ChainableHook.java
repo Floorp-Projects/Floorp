@@ -16,6 +16,10 @@
  * Reserved.
  */
 
+/*
+* Base class for hooks to support chaining
+*/
+
 // when     who     what
 // 06/27/97 jband   added this header to my code
 //
@@ -28,5 +32,5 @@ interface ChainableHook
 {
     public void setTyrant( Object tyrant);
     public void setNextHook(Hook nextHook);
-}    
+}
 

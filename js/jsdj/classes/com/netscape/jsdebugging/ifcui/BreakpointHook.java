@@ -16,6 +16,10 @@
  * Reserved.
  */
 
+/*
+* Hook (with conditional support) for breakpoints
+*/
+
 // when     who     what
 // 06/27/97 jband   added this header to my code
 //
@@ -25,7 +29,7 @@ package com.netscape.jsdebugging.ifcui;
 import netscape.security.PrivilegeManager;
 import com.netscape.jsdebugging.api.*;
 
-class BreakpointHook 
+class BreakpointHook
     extends InstructionHook
     implements ChainableHook, JSErrorReporter
 {
@@ -35,7 +39,7 @@ class BreakpointHook
         _emperor = emperor;
         setTyrant(tyrant);
         setBreakpoint(bp);
-    }    
+    }
 
     public void aboutToExecute(ThreadStateBase debug)
     {
@@ -61,37 +65,37 @@ class BreakpointHook
     public void setTyrant(Object tyrant) {_ctrlTyrant = (ControlTyrant) tyrant;}
     public void setNextHook(Hook nextHook) {_nextHook = (InstructionHook) nextHook;}
     public InstructionHook getNextHook() {return _nextHook;}
-    
-    
+
+
     private boolean _shouldStop(JSThreadState threadState)
     {
 //        System.out.println( "1) in _shouldStop" );
         if( null == _ctrlTyrant || null == _bp )
             return false;
-        
+
 //        System.out.println( "2) in _shouldStop" );
         // currently don't stopping when already stopped
         if( ControlTyrant.STOPPED == _ctrlTyrant.getState() )
             return false;
-            
+
         String breakCondition = _bp.getBreakCondition();
         if( null == breakCondition )
             return true;
-        
+
 //        System.out.println( "3) in _shouldStop" );
         JSErrorReporter oldER = null;
         try
         {
             PrivilegeManager.enablePrivilege("Debugger");
             DebugController dc = _emperor.getDebugController();
-            
+
             String filename;
-            if( _ctrlTyrant.getEmperor().isPre40b6() || 
+            if( _ctrlTyrant.getEmperor().isPre40b6() ||
                 Emperor.REMOTE_SERVER == _ctrlTyrant.getEmperor().getHostMode() )
                 filename = "HiddenBreakpointEval";
             else
                 filename = _bp.getURL();
-                
+
             JSStackFrameInfo frame = (JSStackFrameInfo) threadState.getCurrentFrame();
 
             _errorString = null;
@@ -101,8 +105,8 @@ class BreakpointHook
             }
 
 //            System.out.println( "4) in _shouldStop, condition = " + breakCondition);
-            
-            ExecResult fullresult = 
+
+            ExecResult fullresult =
                 dc.executeScriptInStackFrame(frame,breakCondition,filename,1);
 
             String result = fullresult.getResult();
@@ -112,11 +116,11 @@ class BreakpointHook
                 _ctrlTyrant.setErrorReporter(oldER);
                 oldER = null;
             }
-            
+
 //            System.out.println( "5) in _shouldStop");
             if( null != _errorString )
                 return false;
-            
+
 //            System.out.println( "6) in _shouldStop, result = " + result );
             if( null == result || ! result.equals("true") )
                 return false;
@@ -133,7 +137,7 @@ class BreakpointHook
 //            System.out.println( "9) in _shouldStop");
         return true;
     }
-    
+
     // implement JSErrorReporter interface
     public synchronized int reportError( String msg,
                                          String filename,
@@ -143,7 +147,7 @@ class BreakpointHook
     {
         _errorString = msg;
         return JSErrorReporter.RETURN;
-    }        
+    }
 
     private Emperor         _emperor;
     private ControlTyrant   _ctrlTyrant;

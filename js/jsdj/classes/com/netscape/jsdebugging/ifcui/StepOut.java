@@ -16,6 +16,10 @@
  * Reserved.
  */
 
+/*
+* Handle stepping out of functions
+*/
+
 // when     who     what
 // 06/27/97 jband   added this header to my code
 //
@@ -35,8 +39,8 @@ class StepOut implements StepHandler
     }
 
     // implement StepHandler
-    public int step( JSThreadState threadState, 
-                     JSPC pc, 
+    public int step( JSThreadState threadState,
+                     JSPC pc,
                      JSSourceLocation sourceLocation,
                      Hook hook )
     {
@@ -58,4 +62,4 @@ class StepOut implements StepHandler
 
     private CallChain           _callChain;
     private JSPC                _startPC;
-}    
+}

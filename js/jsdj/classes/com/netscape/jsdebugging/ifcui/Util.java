@@ -16,6 +16,10 @@
  * Reserved.
  */
 
+/*
+* Static util functions...
+*/
+
 // when     who     what
 // 06/27/97 jband   added this header to my code
 //
@@ -25,11 +29,6 @@ package com.netscape.jsdebugging.ifcui;
 import java.io.*;
 import netscape.application.*;
 import netscape.util.*;
-
-
-/**
-* Static util functions...
-*/
 
 public class Util
 {

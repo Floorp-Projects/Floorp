@@ -16,6 +16,10 @@
  * Reserved.
  */
 
+/*
+* ListView that supports letting ListItems handle their own events
+*/
+
 // when     who     what
 // 10/31/97 jband   added this file
 //
@@ -72,6 +76,6 @@ public class SmartItemListView extends BackgroundHackListView
     {
         return (SmartListItem) itemForPoint(me.x, me.y);
     }
-}    
+}
 
 

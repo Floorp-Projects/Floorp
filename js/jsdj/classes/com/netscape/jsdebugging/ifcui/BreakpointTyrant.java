@@ -16,6 +16,10 @@
  * Reserved.
  */
 
+/*
+* 'Model' that manages breakpoints
+*/
+
 // when     who     what
 // 06/27/97 jband   added this header to my code
 //
@@ -33,7 +37,7 @@ import netscape.security.PrivilegeManager;
 // scripts stored in a Vector with newest scripts at the high end
 
 public class BreakpointTyrant
-    extends Observable 
+    extends Observable
     implements Observer, PrefsSupport
 {
     public BreakpointTyrant(Emperor emperor)
@@ -170,7 +174,7 @@ public class BreakpointTyrant
         // we reverse the list so that newest scripts are first
 
         for( int i = count-1; i >= 0; i-- )
-            a[count-(i+1)] = _scripts.elementAt(i); 
+            a[count-(i+1)] = _scripts.elementAt(i);
         return a;
     }
 
@@ -183,7 +187,7 @@ public class BreakpointTyrant
         int count = _scripts.count();
         for( int i = count-1; i >= 0; i-- )
         {
-            Script script = (Script) _scripts.elementAt(i); 
+            Script script = (Script) _scripts.elementAt(i);
             if( url.equals(script.getURL()) )
                 vret.addElement(script);
         }
@@ -194,12 +198,12 @@ public class BreakpointTyrant
     {
         return getScriptsVectorForURL(url).elementArray();
     }
-    
+
     public void modifiedBreakpoint( Breakpoint bp )
     {
         _notifyObservers(BreakpointTyrantUpdate.MODIFIED_ONE, bp);
     }
-    
+
     /*******************************/
 
     private boolean _isNonShadowedLocationInScript(Location loc, Script script)
@@ -259,7 +263,7 @@ public class BreakpointTyrant
         int count = _scripts.count();
         for( int i = count-1; i >= 0; i-- )
         {
-            Script script = (Script) _scripts.elementAt(i); 
+            Script script = (Script) _scripts.elementAt(i);
             if( _isLocationInScript(loc, script) )
             {
                 if( null != script.getFunction() )
@@ -305,7 +309,7 @@ public class BreakpointTyrant
         int count = _scripts.count();
         for( int i = 0; i < count; i++ )
         {
-            Script script = (Script) _scripts.elementAt(i); 
+            Script script = (Script) _scripts.elementAt(i);
             if( ! _isNonShadowedLocationInScript(loc, script) )
                 continue;
 
@@ -416,7 +420,7 @@ public class BreakpointTyrant
 
         // this is called on native thread, can not do notify!!!
 //            _notifyObservers(BreakpointTyrantUpdate.DEACTIVATED_ONE, bp);
-        }        
+        }
     }
 
     // implement observer interface
@@ -482,15 +486,15 @@ public class BreakpointTyrant
                                       "com.netscape.jsdebugging.ifcui.BreakpointSaver" );
         if( -1 != id )
         {
-            BreakpointSaver bs = (BreakpointSaver) 
+            BreakpointSaver bs = (BreakpointSaver)
                                     unarchiver.unarchiveIdentifier(id);
             bs.sendToTyrant(this);
         }
     }
 
 
-    // data...    
-    
+    // data...
+
     private Emperor             _emperor;
     private ControlTyrant       _controlTyrant;
     private DebugController     _dc;
@@ -501,10 +505,10 @@ public class BreakpointTyrant
     private BPTyrantScriptHook  _scriptHook;
     private boolean             _enabled = false;
     private Thread              _uiThreadForAssertCheck = null;
-}    
+}
 
 // used here only...
-class BPTyrantScriptHook 
+class BPTyrantScriptHook
     extends ScriptHook
     implements ChainableHook
 {

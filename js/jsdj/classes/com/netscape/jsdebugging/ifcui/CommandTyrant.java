@@ -16,6 +16,10 @@
  * Reserved.
  */
 
+/*
+* Manages validating and routing user commands
+*/
+
 // when     who     what
 // 06/27/97 jband   added this header to my code
 //
@@ -32,12 +36,12 @@ import com.netscape.jsdebugging.ifcui.palomar.widget.PopupButton;
 import com.netscape.jsdebugging.api.*;
 
 public class CommandTyrant
-    extends Observable 
+    extends Observable
     implements Observer, Target
 {
     // this list of ids must start with 0 and be contiguous and have count set
     // ............................................
-    public static final int RUN                     = 0;    
+    public static final int RUN                     = 0;
     public static final int ABORT                   = 1;
     public static final int STEP_OVER               = 2;
     public static final int STEP_INTO               = 3;
@@ -66,7 +70,7 @@ public class CommandTyrant
     public static final int COPY_STRING             = 26;
     public static final int CUT                     = 27;
     public static final int TEST                    = 28;
-    // XXX add the rest... 
+    // XXX add the rest...
     public static final int CMD_COUNT               = 29; // just a count of the above
     // ............................................
 
@@ -77,19 +81,19 @@ public class CommandTyrant
         _cmdStatesArray = new CmdState[CMD_COUNT];
         for( i = 0; i < CMD_COUNT; i++ )
             _cmdStatesArray[i] = new CmdState(i,null,true,false);
-        
-        // add the names    
+
+        // add the names
         // these must match the full list above
         // ............................................
-        _cmdStatesArray[RUN                     ].name = "RUN";        
-        _cmdStatesArray[ABORT                   ].name = "ABORT";        
-        _cmdStatesArray[STEP_OVER               ].name = "STEP_OVER";        
-        _cmdStatesArray[STEP_INTO               ].name = "STEP_INTO";        
-        _cmdStatesArray[STEP_OUT                ].name = "STEP_OUT";        
-        _cmdStatesArray[INTERRUPT               ].name = "INTERRUPT";        
-        _cmdStatesArray[PAGELIST_CLICK          ].name = "PAGELIST_CLICK";        
-        _cmdStatesArray[PAGELIST_DBLCLICK       ].name = "PAGELIST_DBLCLICK";        
-        _cmdStatesArray[PAGELIST_SHOW_HIDE      ].name = "PAGELIST_SHOW_HIDE";        
+        _cmdStatesArray[RUN                     ].name = "RUN";
+        _cmdStatesArray[ABORT                   ].name = "ABORT";
+        _cmdStatesArray[STEP_OVER               ].name = "STEP_OVER";
+        _cmdStatesArray[STEP_INTO               ].name = "STEP_INTO";
+        _cmdStatesArray[STEP_OUT                ].name = "STEP_OUT";
+        _cmdStatesArray[INTERRUPT               ].name = "INTERRUPT";
+        _cmdStatesArray[PAGELIST_CLICK          ].name = "PAGELIST_CLICK";
+        _cmdStatesArray[PAGELIST_DBLCLICK       ].name = "PAGELIST_DBLCLICK";
+        _cmdStatesArray[PAGELIST_SHOW_HIDE      ].name = "PAGELIST_SHOW_HIDE";
         _cmdStatesArray[REFRESH_ALL             ].name = "REFRESH_ALL";
         _cmdStatesArray[STACKVIEW_CLICK         ].name = "STACKVIEW_CLICK";
         _cmdStatesArray[STACKVIEW_DBLCLICK      ].name = "STACKVIEW_DBLCLICK";
@@ -110,8 +114,8 @@ public class CommandTyrant
         _cmdStatesArray[COPY_STRING             ].name = "COPY_STRING";
         _cmdStatesArray[CUT                     ].name = "CUT";
         _cmdStatesArray[TEST                    ].name = "TEST";
-        
-//        _cmdStatesArray[].name = "";        
+
+//        _cmdStatesArray[].name = "";
         // XXX add the rest...
         // ............................................
 
@@ -184,7 +188,7 @@ public class CommandTyrant
             _cmdStatesArray[PAGELIST_SHOW_HIDE  ].checked = false;
         else
             _cmdStatesArray[PAGELIST_SHOW_HIDE  ].checked = true;
-        
+
         if( null == _watchView || ! _watchView.isVisible() )
             _cmdStatesArray[WATCHES_SHOW_HIDE   ].checked = false;
         else
@@ -194,12 +198,12 @@ public class CommandTyrant
             _cmdStatesArray[BREAKPOINTS_SHOW_HIDE   ].checked = false;
         else
             _cmdStatesArray[BREAKPOINTS_SHOW_HIDE   ].checked = true;
-            
+
         if( null == _inspectorView || ! _inspectorView.isVisible() )
             _cmdStatesArray[INSPECTOR_SHOW_HIDE   ].checked = false;
         else
             _cmdStatesArray[INSPECTOR_SHOW_HIDE   ].checked = true;
-            
+
         if( null == _sourceViewManager || ! _sourceViewManager.getShowLineNumbers() )
             _cmdStatesArray[SHOW_LINE_NUMBERS  ].checked = false;
         else
@@ -235,7 +239,7 @@ public class CommandTyrant
             }
         }
 
-        if( null == _consoleView    || 
+        if( null == _consoleView    ||
             null == _inspectorView  ||
             null == _sourceTyrant )
         {
@@ -246,7 +250,7 @@ public class CommandTyrant
         }
         else
         {
-            if( null != _sourceTyrant.getSelectedText() || 
+            if( null != _sourceTyrant.getSelectedText() ||
                 _inspectorView.canCopy()                ||
                 _consoleView.canCopy() )
             {
@@ -290,7 +294,7 @@ public class CommandTyrant
             Class.forName("java.awt.datatransfer.Clipboard");
             Class.forName("netscape.application.jdk11compatibility.JDKClipboard");
 //            if(AS.DEBUG)System.out.println( "using native clipboard");
-        } 
+        }
         catch(Exception e)
         {
             _usingLocalClipboard = true;
@@ -353,22 +357,22 @@ public class CommandTyrant
         }
         switch(cmdState.id)
         {
-            case RUN:  
+            case RUN:
                 _controlTyrant.runit();
                 break;
-            case ABORT:  
+            case ABORT:
                 _controlTyrant.abort();
                 break;
-            case STEP_OVER:  
+            case STEP_OVER:
                 _controlTyrant.stepOver();
                 break;
-            case STEP_INTO:  
+            case STEP_INTO:
                 _controlTyrant.stepInto();
                 break;
-            case STEP_OUT :  
+            case STEP_OUT :
                 _controlTyrant.stepOut();
                 break;
-            case INTERRUPT:  
+            case INTERRUPT:
                 if( null != _controlTyrant )
                     _controlTyrant.interrupt(! _controlTyrant.getInterrupt());
                 refreshCmdStatesAndNotifyObservers();
@@ -376,7 +380,7 @@ public class CommandTyrant
             case PAGELIST_CLICK:
                 _updateSelectedPageListItem( (ListView)data );
                 break;
-            case PAGELIST_DBLCLICK:  
+            case PAGELIST_DBLCLICK:
                 _updateSelectedPageListItem( (ListView)data );
                 SourceTextItem sti = _sourceTyrant.getSelectedSourceItem();
                 if( null != sti && null != _sourceViewManager )
@@ -483,7 +487,7 @@ public class CommandTyrant
                     _watchView.show();
                 }
                 refreshCmdStatesAndNotifyObservers();
-                break;                
+                break;
             case COPY_TO_WATCH:
                 String str = _getCopyText();
                 if( null != str )
@@ -493,7 +497,7 @@ public class CommandTyrant
 
                     if( null != _watchView )
                         _watchView.refresh();
-                    
+
                     refreshCmdStatesAndNotifyObservers();
                 }
                 break;
@@ -515,7 +519,7 @@ public class CommandTyrant
                 if( null != bp )
                     _breakpointView.editBreakpoint(bp);
                 // redraw done on notification from BreakpointTyrant...
-                break;                
+                break;
             case BREAKPOINTS_SHOW_HIDE:
                 if( null == _breakpointView )
                     break;
@@ -527,7 +531,7 @@ public class CommandTyrant
                     _breakpointView.show();
                 }
                 refreshCmdStatesAndNotifyObservers();
-                break;                
+                break;
             case INSPECTOR_SHOW_HIDE:
                 if( null == _inspectorView )
                     break;
@@ -539,7 +543,7 @@ public class CommandTyrant
                     _inspectorView.show();
                 }
                 refreshCmdStatesAndNotifyObservers();
-                break;                
+                break;
             case INSPECT_SEL_STRING:
                 if( null != _sourceTyrant && null != _sourceTyrant.getSelectedText())
                 {
@@ -565,7 +569,7 @@ public class CommandTyrant
 
                     if( null != _watchView )
                         _watchView.refresh();
-                    
+
                     refreshCmdStatesAndNotifyObservers();
                 }
                 break;
@@ -593,7 +597,7 @@ public class CommandTyrant
                 break;
             default:
                 if(AS.S)ER.T( false, "cmdState id not handled: " + cmdState.id, this);
-                break;                
+                break;
         }
     }
 
@@ -633,11 +637,11 @@ public class CommandTyrant
         }
         return _localClipboard;
     }
-    
+
     private String _getCopyText()
     {
         String s = null;
-            
+
         if( null != _sourceTyrant )
             s = _sourceTyrant.getSelectedText();
         if( null == s )
@@ -649,11 +653,11 @@ public class CommandTyrant
         }
         return s;
     }
-    
+
     private String _getCutText()
     {
         String s = null;
-            
+
         if( null != _inspectorView && _inspectorView.canCopy() )
             s = _inspectorView.cut();
         else if( null != _consoleView && _consoleView.canCopy() )
@@ -695,7 +699,7 @@ public class CommandTyrant
         if( null == _inspectorView )
             _inspectorView = _emperor.getInspectorView();
 
-        _haveAllViews = 
+        _haveAllViews =
             null != _pageListView       &&
             null != _sourceViewManager  &&
             null != _commandView        &&
@@ -705,10 +709,10 @@ public class CommandTyrant
             null != _breakpointView     &&
             null != _inspectorView      ;
     }
-    
-    // data...    
-    
-    private Application      _app;    
+
+    // data...
+
+    private Application      _app;
     private Emperor          _emperor;
     private ControlTyrant    _controlTyrant   ;
     private BreakpointTyrant _breakpointTyrant;
@@ -735,7 +739,7 @@ public class CommandTyrant
 
     private CmdState[]       _cmdStatesArray;
     private Hashtable        _cmdStatesHashtable;
-}    
+}
 
 
-  
+

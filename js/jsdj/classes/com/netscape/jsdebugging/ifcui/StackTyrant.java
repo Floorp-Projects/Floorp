@@ -16,6 +16,10 @@
  * Reserved.
  */
 
+/*
+* 'Model' of stack information of stopped thread
+*/
+
 // when     who     what
 // 06/27/97 jband   added this header to my code
 //
@@ -30,7 +34,7 @@ import com.netscape.jsdebugging.ifcui.palomar.util.*;
 import com.netscape.jsdebugging.api.*;
 
 public class StackTyrant
-    extends Observable 
+    extends Observable
     implements Observer
 {
     public StackTyrant(Emperor emperor)
@@ -148,15 +152,15 @@ public class StackTyrant
         notifyObservers(new StackTyrantUpdate(StackTyrantUpdate.ARRAY_CHANGED,_currentFrameIndex));
     }
 
-    
-    // data...    
-    
+
+    // data...
+
     private Emperor          _emperor;
     private ControlTyrant    _controlTyrant;
 
     private int              _currentFrameIndex;
     private StackFrameInfo[] _frameArray;
-}    
+}
 
 class StackTyrantUpdate
 {
@@ -170,6 +174,6 @@ class StackTyrantUpdate
     }
     public int  type;
     public int  sel;
-}    
+}
 
-  
+

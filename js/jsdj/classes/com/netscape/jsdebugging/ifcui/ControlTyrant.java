@@ -16,6 +16,10 @@
  * Reserved.
  */
 
+/*
+* 'Model' that manages most interaction with debug API
+*/
+
 // when     who     what
 // 06/27/97 jband   added this header to my code
 //
@@ -31,8 +35,8 @@ import netscape.security.PrivilegeManager;
 import netscape.security.ForbiddenTargetException;
 import com.netscape.jsdebugging.api.*;
 
-public class ControlTyrant 
-    extends Observable 
+public class ControlTyrant
+    extends Observable
     implements Observer, Target, JSErrorReporter
 {
     public static final int RUNNING = 0;
@@ -79,7 +83,7 @@ public class ControlTyrant
     }
 
     // accessors
-    
+
     public int      getState()      {return _state;}
     public boolean  getInterrupt()  {return _interrupt;}
     public boolean  getEnabled()    {return _enabled;}
@@ -110,7 +114,7 @@ public class ControlTyrant
     }
 
     // command handlers
-    
+
     public synchronized void interrupt(boolean b)
     {
         PrivilegeManager.enablePrivilege("Debugger");
@@ -321,7 +325,7 @@ public class ControlTyrant
             _semaphore.release();
             return;
         }
-        
+
         // save arguments
 
         _threadState = debug;
@@ -329,7 +333,7 @@ public class ControlTyrant
         if(AS.DEBUG)Log.trace("ControlTyrant.aboutToExecute", "6)  about to call _pc.getSourceLocation()");
         _sourceLocation = (JSSourceLocation) _pc.getSourceLocation();
         if(AS.DEBUG)Log.trace("ControlTyrant.aboutToExecute", "7)  _pc.getSourceLocation() returned");
-        
+
         if(false)
         {
             String leadin = "interrupted at:";
@@ -430,13 +434,13 @@ public class ControlTyrant
             Sound.soundNamed("droplet.au").play();
 //            AWTCompatibility.awtToolkit().beep();
 
-            ErrorReporterDialog erd = 
+            ErrorReporterDialog erd =
                         new ErrorReporterDialog(_emperor, (ErrorReport) data);
-                        
+
             _emperor.enableAppClose(false);
-            erd.showModally();                        
+            erd.showModally();
             _emperor.enableAppClose(true);
-            
+
             _debugBreakResponse = erd.getAnswer();
             notify();
         }
@@ -450,19 +454,19 @@ public class ControlTyrant
     // implement observer interface
     public void update(Observable o, Object arg)
     {
-        
+
     }
 
     /*
-    * NOTE: this ErrorReporter may be called on a thread other than 
-    * the IFC UI thread    
+    * NOTE: this ErrorReporter may be called on a thread other than
+    * the IFC UI thread
     */
     public synchronized JSErrorReporter setErrorReporter(JSErrorReporter er)
     {
         JSErrorReporter old = _errorReporter;
-        _errorReporter = er;        
+        _errorReporter = er;
         return old;
-        
+
     }
     public JSErrorReporter getErrorReporter()
     {
@@ -478,7 +482,7 @@ public class ControlTyrant
     {
         if( ! _enabled )
             return JSErrorReporter.PASS_ALONG;
-        
+
         if( null != _errorReporter && this != _errorReporter )
             return _errorReporter.reportError(msg,filename,lineno,linebuf,tokenOffset);
 
@@ -492,7 +496,7 @@ public class ControlTyrant
 
             while( -1 == _debugBreakResponse && _enabled )
             {
-                try 
+                try
                 {
                     wait();
                 }
@@ -524,8 +528,8 @@ public class ControlTyrant
     }
 
 
-    // data...    
-    private Application         _app;    
+    // data...
+    private Application         _app;
     private int                 _state;
     private boolean             _interrupt;
     private Emperor             _emperor;
@@ -553,11 +557,11 @@ public class ControlTyrant
 
     private final String HIT_EXEC_HOOK      = "HIT_EXEC_HOOK";
     private final String HIT_ERROR_REPORTER = "HIT_ERROR_REPORTER";
-    
+
 }
 
 /***************************************************************************/
-// used internally only...    
+// used internally only...
 class CtrlSemaphore
 {
     public boolean              available() {return _available;}
@@ -569,12 +573,12 @@ class CtrlSemaphore
         _available = false;
         return true;
     }
-    
+
     private boolean _available = true;
 }
 
-// used internally only...    
-class CtrlInterruptHook 
+// used internally only...
+class CtrlInterruptHook
     extends InterruptHook
     implements ChainableHook
 {
@@ -606,11 +610,11 @@ class CtrlInterruptHook
 
     private ControlTyrant _ctrlTyrant;
     private InterruptHook _nextHook;
-    
-}    
 
-// used internally only...    
-class CtrlDebugBreakHook 
+}
+
+// used internally only...
+class CtrlDebugBreakHook
     extends DebugBreakHook
     implements ChainableHook
 {
@@ -640,5 +644,5 @@ class CtrlDebugBreakHook
 
     private ControlTyrant _ctrlTyrant;
     private DebugBreakHook _nextHook;
-}    
+}
 

@@ -16,6 +16,10 @@
  * Reserved.
  */
 
+/*
+* 'View' to manage all breakpoints
+*/
+
 // when     who     what
 // 06/27/97 jband   added this header to my code
 //
@@ -29,7 +33,7 @@ import netscape.util.*;
 import com.netscape.jsdebugging.ifcui.palomar.util.*;
 import com.netscape.jsdebugging.ifcui.palomar.widget.layout.*;
 
-public class BreakpointView 
+public class BreakpointView
     extends InternalWindow
     implements Observer, Target
 {
@@ -37,10 +41,10 @@ public class BreakpointView
     private static final int _buttonHeight = 24;
     private static final int _buttonYSpace = 5;
     private static final int _buttonXSpace = 5;
-    
+
     private int _nextButtonX;
     private int _nextButtonY;
-        
+
     public BreakpointView( Emperor emperor, Rect rect )
     {
         super(rect);
@@ -59,16 +63,16 @@ public class BreakpointView
         Size size = contentSize();
         int listwidth    = size.width - (_buttonWidth + (_buttonXSpace * 2));
         Rect rectSG = new Rect(0, 0, listwidth, size.height);
-        
+
         _nextButtonX = listwidth + _buttonXSpace;
-        _nextButtonY = _buttonYSpace;        
-        
+        _nextButtonY = _buttonYSpace;
+
         _addButton( "New",       NEW_CMD );
         _addButton( "Edit",      EDIT_CMD);
         _addButton( "Delete",    DEL_CMD );
         _nextButtonY += _buttonYSpace * 2;
         _addButton( "Done",      DONE_CMD);
-        
+
         ScrollGroup sg = new ScrollGroup(rectSG);
         sg.setHorizScrollBarDisplay( ScrollGroup.AS_NEEDED_DISPLAY );
         sg.setVertScrollBarDisplay(  ScrollGroup.AS_NEEDED_DISPLAY );
@@ -76,8 +80,8 @@ public class BreakpointView
         sg.setAutoResizeSubviews(true);
         sg.contentView().setLayoutManager( new MarginLayout() );
         sg.setBackgroundColor(_emperor.getBackgroundColor());
-        
-        setCloseable( false ); 
+
+        setCloseable( false );
         setResizable( false );
         setTitle( "Breakpoints" );
         addSubview(sg);
@@ -96,10 +100,10 @@ public class BreakpointView
 
         refresh();
 
-        layoutView(1,1);            
-        layoutView(-1,-1);            
+        layoutView(1,1);
+        layoutView(-1,-1);
     }
-    
+
     private Button _addButton( String title, String cmd )
     {
         Button button = new Button(_nextButtonX,_nextButtonY,
@@ -129,7 +133,7 @@ public class BreakpointView
         if( cmd.equals(NEW_CMD ) )
         {
             newBreakpoint();
-        }             
+        }
         else if( cmd.equals(EDIT_CMD) )
         {
             int index = _listview.selectedIndex();
@@ -141,7 +145,7 @@ public class BreakpointView
                 return;
 
             editBreakpoint(bp);
-        }             
+        }
         else if( cmd.equals(DEL_CMD ) )
         {
             int index = _listview.selectedIndex();
@@ -152,7 +156,7 @@ public class BreakpointView
 
             _breakpointTyrant.removeBreakpoint(bp);
             // will be refreshed upon notification from _breakpointTyrant
-        }             
+        }
         else if( cmd.equals(DONE_CMD) )
         {
             Application.application().performCommandLater(
@@ -172,7 +176,7 @@ public class BreakpointView
             selBP = (Breakpoint) selItem.data();
 
         _listview.removeAllItems();
-        
+
         Font linefont = _emperor.getFixedFont();
         int maxlinelen = 0;
 
@@ -192,7 +196,7 @@ public class BreakpointView
         // find the max lengths for later formating of each item
 
         int maxLineno = 0;
-        int maxFilenameChars = 0;        
+        int maxFilenameChars = 0;
 
         for( i = 0; i < itemCount; i++ )
         {
@@ -208,11 +212,11 @@ public class BreakpointView
         for( i = 0; i < itemCount; i++ )
         {
             Breakpoint bp = (Breakpoint) breakpoints.elementAt(i);
-            
+
             // format text...
 
             buf.setLength(0);
-    
+
             // padded line number
             int lineno = bp.getLine();
             buf.append(lineno);
@@ -246,10 +250,10 @@ public class BreakpointView
             item.setFont( linefont );
             item.setSelectedColor(_emperor.getSelectionColor());
             _listview.addItem( item );
-            
+
             if( 0 == i )
                 _listview.selectItemAt(i);  // make sure SOMETHING selected
-                
+
             if( null != selBP && selBP == bp )
             {
                 _listview.selectItemAt(i);
@@ -261,7 +265,7 @@ public class BreakpointView
         _listview.setBounds( 0, 0, (maxlinelen+1) * fm.charWidth('X'),0 );
         _listview.sizeToMinSize();
 
-        layoutView(0,0);            
+        layoutView(0,0);
         _listview.draw();
     }
 
@@ -269,9 +273,9 @@ public class BreakpointView
 
     public boolean newBreakpoint()
     {
-        BreakpointEditorDialog bed = 
+        BreakpointEditorDialog bed =
                 new BreakpointEditorDialog( "New Breakpoint",
-                                            1, "", "true", 
+                                            1, "", "true",
                                             _emperor.getFixedFont(),
                                             true );
         bed.showModally();
@@ -293,7 +297,7 @@ public class BreakpointView
 
             bp.setBreakCondition(condition);
 
-            _breakpointTyrant.modifiedBreakpoint(bp);    
+            _breakpointTyrant.modifiedBreakpoint(bp);
 
             // select the new item
             int i = _indexOfListItemWithBP(bp);
@@ -302,7 +306,7 @@ public class BreakpointView
             return true;
         }
         return false;
-        
+
     }
 
     public boolean editBreakpoint( Breakpoint bp )
@@ -313,7 +317,7 @@ public class BreakpointView
         if( null == condition )
             condition = "true";
 
-        BreakpointEditorDialog bed = 
+        BreakpointEditorDialog bed =
                 new BreakpointEditorDialog( "Edit Breakpoint",
                                             bp.getLine(),
                                             bp.getURL(),
@@ -335,13 +339,13 @@ public class BreakpointView
                 bed.getLine() != bp.getLine() )
             {
                 // we need to construct a new breakpoint!
-                _breakpointTyrant.removeBreakpoint(bp);    
+                _breakpointTyrant.removeBreakpoint(bp);
                 Location loc = new Location( bed.getURL(), bed.getLine() );
                 bp = _breakpointTyrant.addBreakpoint(loc);
             }
 
             bp.setBreakCondition(condition);
-            _breakpointTyrant.modifiedBreakpoint(bp);    
+            _breakpointTyrant.modifiedBreakpoint(bp);
 
             // select the new item
             int i = _indexOfListItemWithBP(bp);
@@ -360,7 +364,7 @@ public class BreakpointView
                 return i;
         }
         // failed to find it...
-        return -1;        
+        return -1;
     }
 
 
@@ -373,6 +377,6 @@ public class BreakpointView
     private static final String EDIT_CMD  = "EDIT_CMD";
     private static final String DEL_CMD   = "DEL_CMD";
     private static final String DONE_CMD  = "DONE_CMD";
-}    
+}
 
 

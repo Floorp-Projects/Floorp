@@ -16,6 +16,10 @@
  * Reserved.
  */
 
+/*
+* Windows style Cut/Copy/Paste hotkey support
+*/
+
 // when     who     what
 // 11/19/97 jband   added this class
 //
@@ -25,7 +29,7 @@ package com.netscape.jsdebugging.ifcui;
 import netscape.application.*;
 import netscape.util.*;
 
-public class EditKeyTextFilter 
+public class EditKeyTextFilter
     implements TextFilter
 {
     public EditKeyTextFilter(CommandTyrant commandTyrant)
@@ -42,27 +46,27 @@ public class EditKeyTextFilter
             {
             case 'c':
                 Application.application().performCommandLater(
-                    _commandTyrant, 
-                    _commandTyrant.cmdString(CommandTyrant.COPY), 
+                    _commandTyrant,
+                    _commandTyrant.cmdString(CommandTyrant.COPY),
                     null);
                 return false;
             case 'v':
                 Application.application().performCommandLater(
-                    _commandTyrant, 
-                    _commandTyrant.cmdString(CommandTyrant.PASTE), 
+                    _commandTyrant,
+                    _commandTyrant.cmdString(CommandTyrant.PASTE),
                     null);
                 return false;
             case 'x':
                 Application.application().performCommandLater(
-                    _commandTyrant, 
-                    _commandTyrant.cmdString(CommandTyrant.CUT), 
+                    _commandTyrant,
+                    _commandTyrant.cmdString(CommandTyrant.CUT),
                     null);
                 return false;
             default:
                 break;
             }
         }
-        return true;        
+        return true;
     }
 
     private CommandTyrant       _commandTyrant;

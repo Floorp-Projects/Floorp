@@ -16,6 +16,10 @@
  * Reserved.
  */
 
+/*
+* Persistence support for source viewer options
+*/
+
 // when     who     what
 // 08/01/97 jband   created this file
 //

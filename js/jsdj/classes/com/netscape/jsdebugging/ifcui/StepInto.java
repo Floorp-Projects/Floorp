@@ -16,6 +16,10 @@
  * Reserved.
  */
 
+/*
+* Handle stepping into funtions
+*/
+
 // when     who     what
 // 06/27/97 jband   added this header to my code
 //
@@ -34,8 +38,8 @@ class StepInto implements StepHandler
     }
 
     // implement StepHandler
-    public int step( JSThreadState threadState, 
-                     JSPC pc, 
+    public int step( JSThreadState threadState,
+                     JSPC pc,
                      JSSourceLocation sourceLocation,
                      Hook hook )
     {
@@ -44,7 +48,7 @@ class StepInto implements StepHandler
             return STOP;
 
         //
-        // NOTE: This little dance is necessary because line numbers for PCs 
+        // NOTE: This little dance is necessary because line numbers for PCs
         // are not always acending. e,g, in:
         //
         //  for(i=0;i<count;i++)
@@ -71,4 +75,4 @@ class StepInto implements StepHandler
 
     private JSSourceLocation    _startSourceLocation;
     private JSPC                _startPC;
-}    
+}

@@ -16,6 +16,10 @@
  * Reserved.
  */
 
+/*
+* Information to describe a breakpoint update event
+*/
+
 // when     who     what
 // 06/27/97 jband   added this header to my code
 //
@@ -43,5 +47,5 @@ class BreakpointTyrantUpdate
 
     public int          type;
     public Breakpoint   bp;
-}    
+}
 

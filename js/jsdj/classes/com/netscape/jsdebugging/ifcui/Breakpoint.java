@@ -16,6 +16,10 @@
  * Reserved.
  */
 
+/*
+* Breakpoint with support for break on condition
+*/
+
 // when     who     what
 // 06/27/97 jband   added this header to my code
 //
@@ -27,7 +31,7 @@ import netscape.application.*;
 import netscape.util.*;
 import com.netscape.jsdebugging.api.*;
 
-public class Breakpoint 
+public class Breakpoint
     implements Comparable, Codable
 {
 
@@ -61,7 +65,7 @@ public class Breakpoint
     public Location getLocation()   {return _loc;}
     public String   getURL()        {return _loc.getURL(); }
     public int      getLine()       {return _loc.getLine();}
-    
+
     public String   getBreakCondition()          {return _breakCondition;}
     public void     setBreakCondition(String bc) {_breakCondition=bc;}
 

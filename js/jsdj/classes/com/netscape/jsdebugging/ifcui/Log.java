@@ -16,6 +16,10 @@
  * Reserved.
  */
 
+/*
+* Flexible Logging support
+*/
+
 // when     who     what
 // 09/30/97 jband   created file
 //
@@ -78,7 +82,7 @@ public final class Log
         if( _logToConsole )
             System.out.println(buf);
     }
-    
+
     public static boolean getEnabled()
     {
         return _enabled;
@@ -98,7 +102,7 @@ public final class Log
     {
         _typeEnabled[type] = enabled;
     }
-    
+
     public static boolean getShowDate()
     {
         return _showDate;
@@ -108,7 +112,7 @@ public final class Log
     {
         _showDate = b;
     }
-    
+
     public static boolean getShowThreadName()
     {
         return _showThreadName;
@@ -189,7 +193,7 @@ public final class Log
 
         return null != _out;
     }
-    
+
     private static void _finish()
     {
         if( null != _out )
@@ -236,5 +240,5 @@ public final class Log
     private static boolean          _useCodebase    = false;
     private static String           _fullFilename   = null;
     private static String           _baseFilename   = "jsdlog.log";
-}    
+}
 

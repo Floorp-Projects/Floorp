@@ -16,6 +16,10 @@
  * Reserved.
  */
 
+/*
+* ListItems that can handle their own events
+*/
+
 // when     who     what
 // 10/31/97 jband   added this file
 //
@@ -58,7 +62,7 @@ public class SmartListItem extends ListItem
         if(AS.S)ER.T(lv!=null,"ListItem with no parent called myRect()",this);
         return lv.rectForItem(this);
     }
-    
-}    
+
+}
 
 

@@ -16,6 +16,10 @@
  * Reserved.
  */
 
+/*
+* 'Model' to manage sources
+*/
+
 // when     who     what
 // 06/27/97 jband   added this header to my code
 //
@@ -32,7 +36,7 @@ import netscape.security.ForbiddenTargetException;
 import com.netscape.jsdebugging.api.*;
 
 public class SourceTyrant
-    extends Observable 
+    extends Observable
     implements Observer
 {
     public SourceTyrant(Emperor emperor)  throws ForbiddenTargetException
@@ -88,13 +92,13 @@ public class SourceTyrant
         return sti;
     }
 
-    public SourceTextItem[] getSourceTextItemArray() 
+    public SourceTextItem[] getSourceTextItemArray()
     {
         PrivilegeManager.enablePrivilege("Debugger");
         return _sourceTextProvider.getItems();
     }
     public SourceTextItem   getSelectedSourceItem()   {return _selectedSourceTextItem;}
-    public void             setSelectedSourceItem(SourceTextItem s) 
+    public void             setSelectedSourceItem(SourceTextItem s)
     {
         if( _selectedSourceTextItem == s )
             return;
@@ -158,7 +162,7 @@ public class SourceTyrant
     /* jband - 06/04/97 - new scheme for user souce line adjustment */
 
     public synchronized void clearAllAdjustmentsForItem( SourceTextItem sti )
-    
+
     {
         if( null == _adjustments )
             return;
@@ -326,8 +330,8 @@ public class SourceTyrant
 
     //////////////////////////////////////////////////////////////////
 
-    
-    // data...    
+
+    // data...
 
     private Emperor             _emperor;
     private ControlTyrant       _controlTyrant;
@@ -339,7 +343,7 @@ public class SourceTyrant
     private String              _selectedText             = null;
 
     private Hashtable           _adjustments = null;
-}    
+}
 
 class AdjustmentItem
 {
@@ -351,4 +355,4 @@ class AdjustmentItem
     public int line;
     public int offset;
     public int cummulative_offset;
-}    
+}

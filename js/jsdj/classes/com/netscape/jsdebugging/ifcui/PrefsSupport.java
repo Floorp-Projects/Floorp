@@ -16,6 +16,10 @@
  * Reserved.
  */
 
+/*
+* Interface to support persistence
+*/
+
 // when     who     what
 // 08/01/97 jband   created this file
 //
@@ -30,4 +34,4 @@ public interface PrefsSupport
 {
     public void prefsWrite(Archiver archiver)    throws CodingException;
     public void prefsRead(Unarchiver unarchiver) throws CodingException;
-}    
+}

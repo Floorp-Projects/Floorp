@@ -16,6 +16,10 @@
  * Reserved.
  */
 
+/*
+* Window used to give startup status to users (lest they think we're dead)
+*/
+
 // when     who     what
 // 11/10/97 jband   added this file
 //
@@ -37,16 +41,16 @@ class StatusWindow
     public StatusWindow()
     {
         super();
-        
+
         setBorder(LineBorder.blackLine());
         setCloseable( false );
         setResizable( false );
-        
+
         int contentDX = _labelDX + _spacerDX * 2;
         int contentDY = _labelDY + _spacerDY * 2;
         int labelY    = _spacerDY;
         int labelX    = _spacerDX;
-        
+
         Size size = windowSizeForContentSize(contentDX, contentDY);
         setBounds(0,0,size.width,size.height);
 
@@ -73,8 +77,8 @@ class StatusWindow
         label.setBorder(null);
         return label;
     }
-    
+
     private TextField _label;
-}    
+}
 
 

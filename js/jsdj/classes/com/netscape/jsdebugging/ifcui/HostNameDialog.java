@@ -16,6 +16,10 @@
  * Reserved.
  */
 
+/*
+* Dialog used in remote debugging to choose server
+*/
+
 // when     who     what
 // 11/10/97 jband   added this file
 //
@@ -42,16 +46,16 @@ class HostNameDialog
     public HostNameDialog(String title, String label, String hostname)
     {
         super();
-        
+
         setTitle(title);
         setCloseable( false );
         setResizable( false );
-        
+
         int contentDX = _editDX + _spacerDX * 2;
         int contentDY = _labelDY + _editDY + _buttonDY + _spacerDY * 4;
         int labelY    = _spacerDY;
         int editY     = _labelDY + _spacerDY * 2;
-        int buttonY   = _labelDY + _editDY + _spacerDY * 3;        
+        int buttonY   = _labelDY + _editDY + _spacerDY * 3;
 
         int labelX    = _spacerDX;
         int editX     = _spacerDX;
@@ -59,7 +63,7 @@ class HostNameDialog
         int buttonX3  = contentDX - _spacerDX - _buttonDX;
         int buttonX2  = buttonX3 - _spacerDX - _buttonDX;
         int buttonX1  = buttonX2 - _spacerDX - _buttonDX;
-        
+
         Size size = windowSizeForContentSize(contentDX, contentDY);
         setBounds(0,0,size.width,size.height);
 
@@ -73,13 +77,13 @@ class HostNameDialog
         addSubview(_textField);
 
         Button button;
-        
+
         button = new Button(buttonX1,buttonY,_buttonDX,_buttonDY);
         button.setTitle("OK");
         button.setTarget(this);
         button.setCommand(OK_CMD);
         addSubview(button);
-        
+
         button = new Button(buttonX2,buttonY,_buttonDX,_buttonDY);
         button.setTitle("Localhost");
         button.setTarget(this);
@@ -106,7 +110,7 @@ class HostNameDialog
         label.setBorder(null);
         return label;
     }
-    
+
     // implement target interface
     public void performCommand(String cmd, Object data)
     {
@@ -120,11 +124,11 @@ class HostNameDialog
             if( null == _hostName || 0 == _hostName.length() )
             {
                 _hostName = _hostName.trim();
-                Alert.runAlertInternally( 
+                Alert.runAlertInternally(
                             Alert.notificationImage(),
-                            "invalid entry", 
+                            "invalid entry",
                             "you must enter a valid hostname or ip address",
-                            "OK", null,null ); 
+                            "OK", null,null );
                 setFocusedView( _textField );
                 return;
             }
@@ -142,7 +146,7 @@ class HostNameDialog
             _keyPressed = CANCEL;
             hide();
         }
-    }        
+    }
 
     // implement TextFilter interface
     public boolean acceptsEvent(Object o, KeyEvent ke , Vector vec)
@@ -152,7 +156,7 @@ class HostNameDialog
             Application.application().performCommandLater(this, OK_CMD, null);
             return false;
         }
-        return true;        
+        return true;
     }
 
     public void showModally()
@@ -176,7 +180,7 @@ class HostNameDialog
 
     public String   getHostName()   {return _hostName;}
     public int      getKeyPressed() {return _keyPressed;}
-    
+
     private TextField _textField;
     private int       _keyPressed;
     private String    _hostName;
@@ -184,6 +188,6 @@ class HostNameDialog
     private static final String CANCEL_CMD    = "CANCEL_CMD";
     private static final String LOCALHOST_CMD = "LOCALHOST_CMD";
     private static final String OK_CMD        = "OK_CMD";
-}    
+}
 
 

@@ -16,6 +16,10 @@
  * Reserved.
  */
 
+/*
+* Test code (while developing) - currently for new Value/Props stuff
+*/
+
 package com.netscape.jsdebugging.ifcui;
 
 import com.netscape.jsdebugging.api.*;

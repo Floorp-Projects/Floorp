@@ -16,6 +16,10 @@
  * Reserved.
  */
 
+/*
+* Information sent with update events from CommandTyrant
+*/
+
 // when     who     what
 // 06/27/97 jband   added this header to my code
 //
@@ -34,5 +38,5 @@ class ControlTyrantUpdate
     }
     public int  type;
     public int  state;
-}    
+}
 

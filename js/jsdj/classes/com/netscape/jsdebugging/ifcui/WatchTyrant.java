@@ -16,6 +16,10 @@
  * Reserved.
  */
 
+/*
+* 'Model' that does data watches
+*/
+
 // when     who     what
 // 06/27/97 jband   added this header to my code
 //
@@ -29,7 +33,7 @@ import netscape.util.*;
 import com.netscape.jsdebugging.ifcui.palomar.util.*;
 
 public class WatchTyrant
-    extends Observable 
+    extends Observable
     implements Observer, PrefsSupport
 {
     public WatchTyrant(Emperor emperor)
@@ -43,15 +47,15 @@ public class WatchTyrant
         if(AS.S)ER.T(null!=_controlTyrant,"emperor init order problem", this);
         if(AS.S)ER.T(null!=_consoleTyrant,"emperor init order problem", this);
         if(AS.S)ER.T(null!=_stackTyrant,"emperor init order problem", this);
-        
+
         _evalStrings = new Vector();
 
-        // test....        
+        // test....
 //        _evalStrings.addElement( new String( "local" ) );
 //        _evalStrings.addElement( new String( "ob" ) );
 //        _evalStrings.addElement( new String( "prop" ) );
 //        _evalStrings.addElement( new String( "ob[prop]" ) );
-        
+
         _stackTyrant.addObserver(this);
     }
 
@@ -62,22 +66,22 @@ public class WatchTyrant
             evalList();
     }
 
-    public Vector getWatchList() 
+    public Vector getWatchList()
     {
         return _evalStrings;
-    }    
-    
-    public void addWatchString(String s) 
+    }
+
+    public void addWatchString(String s)
     {
         _evalStrings.addElement(s);
     }
-    
+
     public void evalList()
     {
         if( null != _stackTyrant.getCurrentFrame() )
             _evalOurList();
     }
-    
+
     private void _evalOurList()
     {
         int count = _evalStrings.count();
@@ -88,7 +92,7 @@ public class WatchTyrant
                 _consoleTyrant.eval(s);
         }
     }
-    
+
     // implement PrefsSupport interface
     public void prefsWrite(Archiver archiver)    throws CodingException
     {
@@ -102,20 +106,20 @@ public class WatchTyrant
                                       "com.netscape.jsdebugging.ifcui.WatchSaver" );
         if( -1 != id )
         {
-            WatchSaver ws = (WatchSaver) 
+            WatchSaver ws = (WatchSaver)
                                     unarchiver.unarchiveIdentifier(id);
             ws.sendToTyrant(this);
         }
     }
-    
-    // data...    
-    
+
+    // data...
+
     private Emperor         _emperor;
     private ControlTyrant   _controlTyrant;
     private ConsoleTyrant   _consoleTyrant;
     private StackTyrant     _stackTyrant;
     private Vector          _evalStrings;
-}    
+}
 
 
-  
+

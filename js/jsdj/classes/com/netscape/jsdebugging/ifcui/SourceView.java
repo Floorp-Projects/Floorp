@@ -16,6 +16,10 @@
  * Reserved.
  */
 
+/*
+* 'View' for interactive viewing of source code
+*/
+
 // when     who     what
 // 06/27/97 jband   added this header to my code
 //
@@ -59,8 +63,8 @@ public class SourceView extends InternalWindow
         if(AS.S)ER.T(null!=_sourceViewManager,"emperor init order problem", this);
         if(AS.S)ER.T(null!=_stackTyrant,"emperor init order problem", this);
 
-        _sourceLineVectorModel = 
-            new SourceLineVectorModel(this, _controlTyrant, _stackTyrant, 
+        _sourceLineVectorModel =
+            new SourceLineVectorModel(this, _controlTyrant, _stackTyrant,
                                       _sourceTyrant, item);
         _listview = new SourceTextListView(this);
 
@@ -73,7 +77,7 @@ public class SourceView extends InternalWindow
         sg.setAutoResizeSubviews(true);
         sg.contentView().setLayoutManager( new MarginLayout() );
         sg.setBackgroundColor(_emperor.getBackgroundColor());
-        
+
         setCloseable( true );
         setResizable( true );
 //        setTitle( "Source for: " + item.getURL() );
@@ -93,8 +97,8 @@ public class SourceView extends InternalWindow
 
         _refresh(true);
 
-        layoutView(1,1);            
-        layoutView(-1,-1);            
+        layoutView(1,1);
+        layoutView(-1,-1);
 
         show();
     }
@@ -163,7 +167,7 @@ public class SourceView extends InternalWindow
                 _refresh(false);
             updateMarks();
         }
-        
+
     }
 
     public void forceRefresh()
@@ -202,7 +206,7 @@ public class SourceView extends InternalWindow
         {
             _emperor.setWaitCursor(true);
 
-//            System.out.println(" _refreshing: " + _item.getURL() + 
+//            System.out.println(" _refreshing: " + _item.getURL() +
 //                               " _item.getDirty() returned: " +
 //                               (_item.getDirty() ? "true" : "false") +
 //                               "_item.getAlterCount() returned: " +
@@ -221,7 +225,7 @@ public class SourceView extends InternalWindow
 
             boolean showNumbers = _sourceViewManager.getShowLineNumbers();
             SourceTextItemDrawer drawer = new SourceTextItemDrawer();
-            
+
             _listview.setItemDrawer(drawer);
 
             int maxwidth = 0;
@@ -238,7 +242,7 @@ public class SourceView extends InternalWindow
                 newlistitem.setSelectedColor(_emperor.getSelectionColor());
 
                 _listview.addItem( newlistitem );
-                
+
                 if( 0 == i )
                 {
                     itemHeight = _listview.rectForItem(newlistitem).height;
@@ -246,11 +250,11 @@ public class SourceView extends InternalWindow
                 }
                 maxwidth = Math.max( maxwidth, newlistitem.minWidth() );
             }
-            
+
             _listview.setBounds(0,0,maxwidth,0);
             _listview.sizeToMinSize();
 
-            layoutView(0,0);            
+            layoutView(0,0);
             _listview.draw();
 
             _item.setDirty(false);
@@ -294,8 +298,8 @@ public class SourceView extends InternalWindow
     private String                  _selectedText = null;
     private int                     _selectedLineNumber = 0;
 
-    
-}    
+
+}
 
 /***************************************************************************/
 
@@ -308,7 +312,7 @@ final class SourceTextListView extends SmartItemListView
     }
 
 
-    public boolean mouseDown(MouseEvent me) 
+    public boolean mouseDown(MouseEvent me)
     {
         _dragOrigin = -1;
 
@@ -422,8 +426,8 @@ final class SourceTextListView extends SmartItemListView
         // calc marks rect for item and call draw()
         Rect rItem = rectForItemAt(i);
         Rect r = new Rect( rItem.x,
-                           rItem.y, 
-                           _drawer.marksRect().width, 
+                           rItem.y,
+                           _drawer.marksRect().width,
                            rItem.height );
 //        System.out.println( "draw marks rect for single item: " + r );
         draw(r);
@@ -459,16 +463,16 @@ final class SourceTextListView extends SmartItemListView
     private int                  _dragOrigin = -1;
     private int                  _dragLast;
     private int                  _dragAdjLineOrigin;
-    
-}    
+
+}
 
 /***************************************************************************/
 
 final class SourceTextItemDrawer
 {
     public SourceTextItemDrawer() {}
-    
-    public void init( Font font, boolean showLineNumbers, 
+
+    public void init( Font font, boolean showLineNumbers,
                       int lineCount, int itemHeight )
     {
         _font = font;
@@ -479,7 +483,7 @@ final class SourceTextItemDrawer
         _height = itemHeight;
         _charWidth = font.fontMetrics().charWidth('0');
 
-        _rectBP       = new Rect( 0, 0, 
+        _rectBP       = new Rect( 0, 0,
                                   _height, _height);
         Rect rectExec = new Rect( _rectBP.x + _rectBP.width, 0,
                                   _height/2, _height);
@@ -514,8 +518,8 @@ final class SourceTextItemDrawer
         _ptText = new Point( _width, 0 );
     }
 
-    public void draw( Graphics g, 
-                      Rect boundsRect, 
+    public void draw( Graphics g,
+                      Rect boundsRect,
                       SourceTextListItem item,
                       int lineNumber,
                       boolean hasBreakpoint,
@@ -539,7 +543,7 @@ final class SourceTextItemDrawer
                          boundsRect.height - _ptText.y );
 
             if( r.intersects( g.clipRect() ) )
-                item.drawStringInRect(g,text,_font,r,Graphics.LEFT_JUSTIFIED); 
+                item.drawStringInRect(g,text,_font,r,Graphics.LEFT_JUSTIFIED);
         }
 
         if( hasBreakpoint )
@@ -553,7 +557,7 @@ final class SourceTextItemDrawer
             {
                 if( hasConditionalBreakpoint )
                     g.setColor( Color.orange );
-                else    
+                else
                     g.setColor( Color.red );
                 g.fillOval( r );
             }
@@ -606,7 +610,7 @@ final class SourceTextItemDrawer
 
             g.setColor( Color.blue );
             g.fillPolygon( x,y,count);
-            
+
         }
         if( _showLineNumbers )
         {
@@ -663,8 +667,8 @@ final class SourceTextItemDrawer
     private boolean _showLineNumbers;
     private int     _charWidth;
 
-    
-}    
+
+}
 
 final class SourceTextListItem extends SmartListItem
 {
@@ -675,7 +679,7 @@ final class SourceTextListItem extends SmartListItem
         _charCount = charCount;
     }
 
-    public boolean mouseDown(MouseEvent me) 
+    public boolean mouseDown(MouseEvent me)
     {
 /*
         System.out.println(".......................");
@@ -791,7 +795,7 @@ final class SourceTextListItem extends SmartListItem
                     _dragOrigin = start;
 
                 v.setSelRange(start, end);
-            
+
                 if( null != oldItem )
                     v.drawItemAt( v.indexOfItem(oldItem) );
                 v.draw( rectOfRangeInRect(start, end, rectText) );
@@ -928,7 +932,7 @@ final class SourceTextListItem extends SmartListItem
         drawBackground(g, boundsRect);
 
         SourceLineItemModel model = (SourceLineItemModel) data();
-        _drawer.draw( g, boundsRect, this, 
+        _drawer.draw( g, boundsRect, this,
                       model.lineNumber,
                       model.bp != null,
                       model.bp != null?model.bp.getBreakCondition()!=null:false,
@@ -980,13 +984,13 @@ final class SourceTextListItem extends SmartListItem
     private int                  _dragOrigin = -1;
     private int                  _charCount;
     private SourceTextItemDrawer _drawer;
-}    
+}
 
 /***************************************************************************/
 
 final class SourceLineVectorModel
 {
-    public SourceLineVectorModel( SourceView sourceView, 
+    public SourceLineVectorModel( SourceView sourceView,
                                   ControlTyrant controlTyrant,
                                   StackTyrant   stackTyrant,
                                   SourceTyrant  sourceTyrant,
@@ -1013,16 +1017,16 @@ final class SourceLineVectorModel
                 String linetext;
                 int lineNumber = 1;
                 while( null != (linetext = s.readLine()) )
-                {   
+                {
                     SourceLineItemModel item = new SourceLineItemModel();
-                    
+
                     item.lineNumber       = lineNumber;
                     item.text             = Util.expandTabs(linetext,8);
                     item.type             = SourceLineItemModel.NO_SCRIPT;
                     item.bp               = null;   // XXX
                     item.executing        = false;
                     item.adjustmentChar   = null;
-                
+
                     vec.addElement( item );
                     lineNumber++ ;
                 }
@@ -1030,11 +1034,11 @@ final class SourceLineVectorModel
             }
         }
         catch( Exception e ) {}
-                    
+
         _sourceLineItemVector = vec;
         updateLineItemVector();
     }
-    
+
     public synchronized void updateLineItemVector()
     {
 /*
@@ -1043,11 +1047,11 @@ final class SourceLineVectorModel
         if( null == sp )
             return;
 */
-        
+
         int i;
         int count;
-        
-        // clear all line 
+
+        // clear all line
 
         int maxLineItemIndex = _sourceLineItemVector.size() - 1;
 
@@ -1056,14 +1060,14 @@ final class SourceLineVectorModel
             return;
         for( i = 0; i < count; i++ )
         {
-            SourceLineItemModel item = 
+            SourceLineItemModel item =
                         (SourceLineItemModel) _sourceLineItemVector.elementAt(i);
             item.type       = SourceLineItemModel.NO_SCRIPT;
             item.bp         = null;
             item.executing  = false;
             item.adjustmentChar = null;
         }
-        
+
         // walk through the scripts and mark lines with scripts
 
         String url = _sourceTextItem.getURL();
@@ -1085,7 +1089,7 @@ final class SourceLineVectorModel
             {
                 int base   = sections[n].getBaseLineNumber();
                 int extent = sections[n].getLineExtent();
-                
+
                 for( int k = base; k < (base+extent); k++ )
                 {
                     if( k > maxLineItemIndex+1 )
@@ -1093,11 +1097,11 @@ final class SourceLineVectorModel
                     int j = _sourceTyrant.systemLine2UserLine(_sourceTextItem,k);
                     if( j > maxLineItemIndex+1 )
                         continue;
-                    SourceLineItemModel item = 
+                    SourceLineItemModel item =
                             (SourceLineItemModel) _sourceLineItemVector.elementAt(j-1);
-                
+
                     // don't overwrite function with top level script
-                            
+
                     if( fun )
                         item.type = SourceLineItemModel.FUNCTION_BODY;
                     else if( item.type != SourceLineItemModel.FUNCTION_BODY )
@@ -1119,7 +1123,7 @@ final class SourceLineVectorModel
             if( line > maxLineItemIndex+1 )
                 continue;
 
-            SourceLineItemModel item = (SourceLineItemModel) 
+            SourceLineItemModel item = (SourceLineItemModel)
                             _sourceLineItemVector.elementAt(line-1);
             item.bp = bp;
         }
@@ -1139,7 +1143,7 @@ final class SourceLineVectorModel
                 if( index < 1 )
                     index = 1;
 
-                SourceLineItemModel item = (SourceLineItemModel) 
+                SourceLineItemModel item = (SourceLineItemModel)
                                _sourceLineItemVector.elementAt(index-1);
                 item.executing  = true;
             }
@@ -1161,7 +1165,7 @@ final class SourceLineVectorModel
                 }
                 else
                     adjChar = "+";
-                SourceLineItemModel item = (SourceLineItemModel) 
+                SourceLineItemModel item = (SourceLineItemModel)
                                _sourceLineItemVector.elementAt(line-1);
                 item.adjustmentChar = adjChar;
             }
@@ -1171,25 +1175,25 @@ final class SourceLineVectorModel
 
     // This is out of date. If anyone wants to reserect it then they
     // had better update this to do the right things!
-/*    
+/*
     public synchronized void updateSingleLineItem( int lineNumber )
     {
         BreakpointTyrant bpt = _sourceView.getBreakpointTyrant();
-        Breakpoint bp = bpt.findBreakpoint( 
+        Breakpoint bp = bpt.findBreakpoint(
                             new Location(_sourceTextItem.getURL(),lineNumber));
 
         int maxLineItemIndex = _sourceLineItemVector.size() - 1;
         if( lineNumber > maxLineItemIndex+1 )
             lineNumber = maxLineItemIndex+1;
 
-        SourceLineItemModel item = (SourceLineItemModel) 
+        SourceLineItemModel item = (SourceLineItemModel)
                         _sourceLineItemVector.elementAt(lineNumber-1);
         item.bp = bp;
     }
-*/    
-    
+*/
+
     public Vector            getLineItemVector()    {return _sourceLineItemVector;}
-    public SourceTextItem    getSourceTextItem()    {return _sourceTextItem;} 
+    public SourceTextItem    getSourceTextItem()    {return _sourceTextItem;}
 
     private SourceView      _sourceView;
     private SourceTyrant    _sourceTyrant;
@@ -1197,7 +1201,7 @@ final class SourceLineVectorModel
     private StackTyrant     _stackTyrant;
     private SourceTextItem  _sourceTextItem;    // has url, text, and fullness status
     private Vector          _sourceLineItemVector;
-}    
+}
 
 
 

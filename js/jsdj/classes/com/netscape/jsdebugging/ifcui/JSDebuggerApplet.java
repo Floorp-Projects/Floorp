@@ -16,6 +16,10 @@
  * Reserved.
  */
 
+/*
+* IFC FoundationApplet startup support class
+*/
+
 package com.netscape.jsdebugging.ifcui;
 
 import netscape.application.*;

@@ -16,6 +16,10 @@
  * Reserved.
  */
 
+/*
+* Dialog to display error info and get user's response
+*/
+
 // when     who     what
 // 06/30/97 jband   added this class
 //
@@ -54,16 +58,16 @@ class ErrorReporterDialog
         Size sz = icon.minSize();
         icon.sizeTo(sz.width,sz.height);
         addSubview(icon);
-        
+
         int boxTop = _spacerDY + sz.height + _spacerDY;
-        
+
         int contentDX = _boxDX + _spacerDX * 2;
         int contentDY = boxTop + _boxDY + _spacerDY * 3 + _buttonDY;
-        int buttonY   = boxTop + _boxDY + _spacerDY * 2;        
+        int buttonY   = boxTop + _boxDY + _spacerDY * 2;
         int buttonX3  = _boxDX + _spacerDX - _buttonDX;
         int buttonX2  = buttonX3 - _spacerDX - _buttonDX;
         int buttonX1  = buttonX2 - _spacerDX - _buttonDX;
-        
+
         Size size = windowSizeForContentSize(contentDX, contentDY);
         setBounds(0,0,size.width,size.height);
 
@@ -77,35 +81,35 @@ class ErrorReporterDialog
         title.setBackgroundColor(Color.lightGray);
         title.setEditable(false);
         addSubview(title);
-        
+
         ERDListView lv = new ERDListView( emperor.getFixedFont() );
-        
+
         lv.setAllowsEmptySelection(true);
         lv.setAllowsMultipleSelection(false);
         lv.setBackgroundColor(Color.lightGray);
-        
+
         if( null != er.filename )
         {
             lv.addLine( "IN "+ er.filename );
             lv.addLine( "LINE "+ er.lineno );
             lv.addLine( "" );
         }
-        
+
         lv.addLine( er.msg );
-        
+
         if( null != er.linebuf )
         {
             StringBuffer sb = new StringBuffer(er.tokenOffset+2);
             for(int i = 0; i < er.tokenOffset; i++ )
                 sb.append('.');
             sb.append('^');
-            
+
             lv.addLine( "" );
             lv.addLine( er.linebuf );
             lv.addLine( sb.toString() );
         }
         lv.sizeToContent();
-        
+
         ScrollGroup sg1 = new ScrollGroup(_spacerDX,boxTop,_boxDX,_boxDY);
         sg1.setHorizScrollBarDisplay( ScrollGroup.AS_NEEDED_DISPLAY );
         sg1.setVertScrollBarDisplay(  ScrollGroup.AS_NEEDED_DISPLAY );
@@ -114,15 +118,15 @@ class ErrorReporterDialog
         sg1.contentView().setLayoutManager( new MarginLayout() );
         sg1.setBackgroundColor(Color.lightGray);
         addSubview(sg1);
-        
+
         Button button;
-        
+
         button = new Button(buttonX1,buttonY,_buttonDX,_buttonDY);
         button.setTitle("OK");
         button.setTarget(this);
         button.setCommand(OK_CMD);
         addSubview(button);
-        
+
         button = new Button(buttonX2,buttonY,_buttonDX,_buttonDY);
         button.setTitle("Debug");
         button.setTarget(this);
@@ -130,16 +134,16 @@ class ErrorReporterDialog
         if( "syntax error".equals(er.msg) )
             button.setEnabled(false);
         addSubview(button);
-        
+
         button = new Button(buttonX3,buttonY,_buttonDX,_buttonDY);
         button.setTitle("Pass On");
         button.setTarget(this);
         button.setCommand(PASS_ON_CMD);
         addSubview(button);
-        
+
         center();
     }
-    
+
     // implement target interface
     public void performCommand(String cmd, Object data)
     {
@@ -152,25 +156,25 @@ class ErrorReporterDialog
         else
             return;
         hide();
-    }        
-    
+    }
+
     public int  getAnswer() {return _answer;}
-    
+
     private int       _answer = JSErrorReporter.RETURN;
-    
+
     private static final String OK_CMD      = "OK_CMD";
     private static final String DEBUG_CMD   = "DEBUG_CMD";
     private static final String PASS_ON_CMD = "PASS_ON_CMD";
-}    
+}
 
 class ERDListView extends BackgroundHackListView
 {
     public ERDListView( Font font )
     {
-        super(); 
+        super();
         _linefont        = font;
     }
-    
+
     public void addLine( String text )
     {
         ListItem item = new ListItem();
@@ -180,19 +184,19 @@ class ERDListView extends BackgroundHackListView
 
         _maxlinelen = Math.max( _maxlinelen, text.length() );
     }
-    
+
     public void sizeToContent()
     {
         FontMetrics fm = _linefont.fontMetrics();
         setBounds( 0, 0, (_maxlinelen+1) * fm.charWidth('X'),0 );
         sizeToMinSize();
     }
-    
+
     // don't allow selection...
     public boolean mouseDown(MouseEvent me) {return false;}
     public void mouseDragged(MouseEvent me) {}
     public void mouseUp(MouseEvent me)      {}
-    
+
     private Font    _linefont = null;
     private int     _maxlinelen = 0;
 }

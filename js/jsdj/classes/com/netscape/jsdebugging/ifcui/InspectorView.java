@@ -16,10 +16,14 @@
  * Reserved.
  */
 
+/*
+* 'View' to interactively do inspection of a tree of data
+*/
+
 // when     who     what
 // 10/30/97 jband   added this file
 //
-    
+
 package com.netscape.jsdebugging.ifcui;
 
 import java.util.Observable;
@@ -29,7 +33,7 @@ import netscape.util.*;
 import com.netscape.jsdebugging.ifcui.palomar.util.*;
 import com.netscape.jsdebugging.ifcui.palomar.widget.layout.*;
 
-public class InspectorView 
+public class InspectorView
     extends InternalWindow
     implements Observer, Target, TextFilter
 {
@@ -38,10 +42,10 @@ public class InspectorView
     private static final int _buttonHeight = 24;
     private static final int _spacerDY     = 5;
     private static final int _spacerDX     = 5;
-    
+
     private int _nextButtonX;
     private int _nextButtonY;
-        
+
     public InspectorView( Emperor emperor, Rect rect )
     {
         super(rect);
@@ -68,10 +72,10 @@ public class InspectorView
 
         Rect rectEdit = new Rect(_spacerDX, _spacerDY, listwidth, _editDY);
         Rect rectSG   = new Rect(_spacerDX, listtop, listwidth, _listheight);
-        
+
         _nextButtonX = listwidth + (_spacerDX * 2);
-        _nextButtonY = _spacerDY;        
-        
+        _nextButtonY = _spacerDY;
+
         _inspectButton = _addButton( "Inspect",    INSPECT_CMD );
         _nextButtonY +=              _spacerDY * 2;
         _evalButton = _addButton(    "Eval",       EVAL_CMD );
@@ -86,7 +90,7 @@ public class InspectorView
         _textfield.setFont(_emperor.getFixedFont());
         _textfield.setFilter(this); // to catch return key and edit cmds
         addSubview(_textfield);
-        
+
         ScrollGroup sg = new ScrollGroup(rectSG);
         sg.setHorizScrollBarDisplay( ScrollGroup.AS_NEEDED_DISPLAY );
         sg.setVertScrollBarDisplay(  ScrollGroup.AS_NEEDED_DISPLAY );
@@ -94,8 +98,8 @@ public class InspectorView
         sg.setAutoResizeSubviews(true);
         sg.contentView().setLayoutManager( new MarginLayout() );
         sg.setBackgroundColor(_emperor.getBackgroundColor());
-        
-        setCloseable( false ); 
+
+        setCloseable( false );
         setResizable( false );
         setTitle( "Inspector" );
         addSubview(sg);
@@ -123,10 +127,10 @@ public class InspectorView
 
         refresh();
 
-        layoutView(1,1);            
-        layoutView(-1,-1);            
+        layoutView(1,1);
+        layoutView(-1,-1);
     }
-    
+
     private Button _addButton( String title, String cmd )
     {
         Button button = new Button(_nextButtonX,_nextButtonY,
@@ -191,7 +195,7 @@ public class InspectorView
                     _inspectorTyrant.setNewRootNode(s);
             }
             // update done on notification...
-        }             
+        }
         else if( cmd.equals(EVAL_CMD) )
         {
             if( ControlTyrant.STOPPED != _controlTyrant.getState() )
@@ -209,7 +213,7 @@ public class InspectorView
                             s );
                 }
             }
-        }             
+        }
         else if( cmd.equals(ADD_WATCH_CMD) )
         {
             String s = _textfield.stringValue();
@@ -280,7 +284,7 @@ public class InspectorView
         _textfield.setFocusedView();
 
         if( _fixupSizes() )
-            layoutView(0,0);            
+            layoutView(0,0);
         _listview.draw();
 
         _emperor.setWaitCursor(false);
@@ -333,7 +337,7 @@ public class InspectorView
             newitem.setSelectedColor(_emperor.getSelectionColor());
             child = child.getNextSib();
         }
-        
+
         if( draw && anyChildren )
         {
             if( _fixupSizes() )
@@ -361,11 +365,11 @@ public class InspectorView
                 break;
             _listview.removeItemAt(index+1);
         }
-        
+
         if( draw )
         {
             if( _fixupSizes() )
-                layoutView(0,0);            
+                layoutView(0,0);
             _listview.scrollItemAtToVisible(index);
             _listview.draw();
         }
@@ -455,8 +459,8 @@ public class InspectorView
     private static final String COPY_VALUE_CMD = "COPY_VALUE_CMD";
     private static final String DONE_CMD       = "DONE_CMD";
 
-    
-}    
+
+}
 
 /***************************************************************************/
 
@@ -474,7 +478,7 @@ final class InspectorListView extends SmartItemListView
     private InspectorView     _iv;
     private InspectorListItem _mousedItem;
 
-    
+
 }
 
 /***************************************************************************/
@@ -597,8 +601,8 @@ final class InspectorListItem extends SmartListItem
     private InspectorItemDrawer _drawer;
     private InspectorNodeModel  _model;
 
-    
-}    
+
+}
 
 /***************************************************************************/
 
@@ -628,8 +632,8 @@ final class InspectorItemDrawer
 
     }
 
-    public void draw( Graphics g, 
-                      Rect boundsRect, 
+    public void draw( Graphics g,
+                      Rect boundsRect,
                       InspectorListItem item,
                       InspectorNodeModel model )
     {
@@ -726,7 +730,7 @@ final class InspectorItemDrawer
             if( r.intersects( g.clipRect() ) )
             {
                 item.setTextColor(_leftTextColor);
-                item.drawStringInRect(g,name,_font,r,Graphics.LEFT_JUSTIFIED); 
+                item.drawStringInRect(g,name,_font,r,Graphics.LEFT_JUSTIFIED);
             }
         }
 
@@ -747,7 +751,7 @@ final class InspectorItemDrawer
                     item.setTextColor(_rightTextFunctionColor);
                 else
                     item.setTextColor(_rightTextColor);
-                item.drawStringInRect(g,value,_font,r,Graphics.LEFT_JUSTIFIED); 
+                item.drawStringInRect(g,value,_font,r,Graphics.LEFT_JUSTIFIED);
             }
         }
 
@@ -801,4 +805,4 @@ final class InspectorItemDrawer
     private static final int    _spacerDY = 3;
 
     private static final int    _boxDim = 11;
-}    
+}

@@ -16,6 +16,10 @@
  * Reserved.
  */
 
+/*
+* Source location (file,line) with persistence support
+*/
+
 // when     who     what
 // 06/27/97 jband   added this header to my code
 //
@@ -32,7 +36,7 @@ import com.netscape.jsdebugging.ifcui.palomar.util.*;
 
 import netscape.util.*;
 
-public class Location 
+public class Location
     implements Comparable, Codable
 {
 
@@ -48,9 +52,9 @@ public class Location
         if(AS.S)ER.T(null!=url,"null url in Location ctor",this);
         if(AS.S)ER.T(line >=0,"negative line in Location ctor",this);
 
-        _url    = url; 
+        _url    = url;
         _line   = line;
-        _stringRep = new String( _url + "#" + _line ); 
+        _stringRep = new String( _url + "#" + _line );
     }
 
     // for Codable
@@ -114,10 +118,10 @@ public class Location
     }
     public void finishDecoding() throws CodingException
     {
-        _stringRep = new String( _url + "#" + _line ); 
+        _stringRep = new String( _url + "#" + _line );
     }
 
-    private String  _url; 
+    private String  _url;
     private int     _line;
     private String  _stringRep;
 }

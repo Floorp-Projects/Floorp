@@ -16,6 +16,10 @@
  * Reserved.
  */
 
+/*
+* Holds error state information
+*/
+
 // when     who     what
 // 06/30/97 jband   added this simple dumb data class
 //

@@ -16,6 +16,10 @@
  * Reserved.
  */
 
+/*
+* Hacked ListView to workaround old Java bug on Unix
+*/
+
 // when     who     what
 // 06/27/97 jband   added this class to implement Unix hack
 //
@@ -41,7 +45,7 @@ class BackgroundHackListView extends ListView
         super(x,y,dx,dy);
     }
 
-    public void drawViewBackground(Graphics g, int x, int y, int width,int height) 
+    public void drawViewBackground(Graphics g, int x, int y, int width,int height)
     {
         if(!isTransparent())
         {
@@ -50,8 +54,8 @@ class BackgroundHackListView extends ListView
             {
                 g.setColor(bc);
 
-                // XXX: hackage to deal with Unix problem 
-                // (see bugsplat bug #78027) 
+                // XXX: hackage to deal with Unix problem
+                // (see bugsplat bug #78027)
                 java.awt.Graphics awtg = AWTCompatibility.awtGraphicsForGraphics(g);
                 awtg.setColor(java.awt.Color.white);
                 awtg.setColor(AWTCompatibility.awtColorForColor(bc));
@@ -60,4 +64,4 @@ class BackgroundHackListView extends ListView
             }
         }
     }
-}    
+}

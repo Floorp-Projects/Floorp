@@ -16,6 +16,10 @@
  * Reserved.
  */
 
+/*
+* Persistence support for breakpoints
+*/
+
 // when     who     what
 // 07/31/97 jband   created this file
 //

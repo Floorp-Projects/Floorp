@@ -16,6 +16,10 @@
  * Reserved.
  */
 
+/*
+* Handle stepping over function calls
+*/
+
 // when     who     what
 // 06/27/97 jband   added this header to my code
 //
@@ -28,7 +32,7 @@ import com.netscape.jsdebugging.api.*;
 class StepOver implements StepHandler
 {
     public StepOver( JSThreadState startThreadState,
-                     JSSourceLocation startSourceLocation, 
+                     JSSourceLocation startSourceLocation,
                      JSPC startPC )
     {
         _callChain = new CallChain(startThreadState);
@@ -37,8 +41,8 @@ class StepOver implements StepHandler
     }
 
     // implement StepHandler
-    public int step( JSThreadState threadState, 
-                     JSPC pc, 
+    public int step( JSThreadState threadState,
+                     JSPC pc,
                      JSSourceLocation sourceLocation,
                      Hook hook )
     {
@@ -72,4 +76,4 @@ class StepOver implements StepHandler
     private CallChain           _callChain;
     private JSSourceLocation    _startSourceLocation;
     private JSPC                _startPC;
-}    
+}

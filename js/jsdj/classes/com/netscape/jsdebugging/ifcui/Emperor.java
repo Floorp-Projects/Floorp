@@ -16,6 +16,10 @@
  * Reserved.
  */
 
+/*
+* Central 'Model' that creates and coordinates all models and views
+*/
+
 // when     who     what
 // 06/27/97 jband   added this header to my code
 //
@@ -44,7 +48,7 @@ public class Emperor
                     Menu                  mainMenu,
                     MenuItem              fileMenu,
                     MenuView              menuView,
-                    int                   hostMode, 
+                    int                   hostMode,
                     String                host,
                     StatusWindow          statusWindow )
 
@@ -62,7 +66,7 @@ public class Emperor
         _mainWindow.setHidesWhenPaused(false);
 
         _fixedFont = new Font( "Courier", Font.PLAIN, 13 );
-        
+
         _debuggerIsActive = true;
 
         if(AS.DEBUG)
@@ -96,11 +100,11 @@ public class Emperor
     public static final int REMOTE_SERVER   = 1;
     public static final int RHINO           = 2;
 
-    public static final String LOCAL_LOADER_NAME = 
+    public static final String LOCAL_LOADER_NAME =
                             "com.netscape.jsdebugging.api.local.AdapterLoaderLocal";
-    public static final String SERVER_LOADER_NAME = 
+    public static final String SERVER_LOADER_NAME =
                             "com.netscape.jsdebugging.api.corba.AdapterLoaderCorba";
-    public static final String RHINO_LOADER_NAME = 
+    public static final String RHINO_LOADER_NAME =
                             "com.netscape.jsdebugging.api.rhino.AdapterLoaderRhino";
 
     public static boolean isDebuggingSupported(int which, String host)
@@ -118,7 +122,7 @@ public class Emperor
             loaderName = RHINO_LOADER_NAME;
             break;
         default:
-            return false;                    
+            return false;
         }
 
         try
@@ -151,7 +155,7 @@ public class Emperor
             loaderName = RHINO_LOADER_NAME;
             break;
         default:
-            return false;                    
+            return false;
         }
 
         try
@@ -192,8 +196,8 @@ public class Emperor
     {
         if( null != _menuView )
             _menuViewHeight = _menuView.itemHeight();
-            
-        _commandView = new CommandView( this, _mainMenu, fileMenu, _menuViewHeight ); 
+
+        _commandView = new CommandView( this, _mainMenu, fileMenu, _menuViewHeight );
 
         Rect rectCanvas = getClientRect();
         // hack for space for native menu
@@ -211,11 +215,11 @@ public class Emperor
         Rect rectWatchView =  new Rect(rectCanvas.x+20,rectCanvas.y+20,popupDX,popupDY);
         Rect rectBreakpointView =  new Rect(rectCanvas.x+40,rectCanvas.y+40,popupDX,popupDY);
         Rect rectInspectorView =  new Rect(rectCanvas.x+60,rectCanvas.y+60,popupDX,popupDY);
-        Rect rectStackView = new Rect( 0, lowerWindowY, 
-                                       stackViewWidth, 
+        Rect rectStackView = new Rect( 0, lowerWindowY,
+                                       stackViewWidth,
                                        _lowerWindowDY );
         Rect rectConsole = new Rect( stackViewWidth, lowerWindowY,
-                                     rectCanvas.width-stackViewWidth, 
+                                     rectCanvas.width-stackViewWidth,
                                      _lowerWindowDY);
 
         // hack for "unsigned window" subwindow
@@ -226,7 +230,7 @@ public class Emperor
         _pageListView      = new PageListView( this, rectPageList );
         _sourceViewManager = new SourceViewManager(this);
         _sourceViewManager.setPreferedNewViewRect( rectSrc );
-        _stackView         = new StackView( this, rectStackView ); 
+        _stackView         = new StackView( this, rectStackView );
         _consoleView       = new ConsoleView(this, rectConsole );
         _watchView        = new WatchView(this, rectWatchView);
         _breakpointView   = new BreakpointView(this, rectBreakpointView);
@@ -282,10 +286,10 @@ public class Emperor
 
             if( null != _sourceViewManager )
                 _sourceViewManager.prefsRead( unarchiver );
-                
+
             if( null != _watchTyrant )
                 _watchTyrant.prefsRead( unarchiver );
-                
+
 
             // add the rest...
 
@@ -298,7 +302,7 @@ public class Emperor
             // print and eat
             System.out.println(e);
         }
-        
+
 
     }
 
@@ -338,7 +342,7 @@ public class Emperor
             System.out.println(e);
         }
 
-        
+
     }
 
     private void _debuggerIsClosing()
@@ -373,7 +377,7 @@ public class Emperor
             return false;
         return true;
     }
-    public void windowDidHide(Window aWindow)       
+    public void windowDidHide(Window aWindow)
     {
         if( null == _mainWindow || _mainWindow != aWindow || _ignoreHide )
             return;
@@ -441,7 +445,7 @@ public class Emperor
             {
                 String linetext;
                 while( null != (linetext = s.readLine()) )
-                {   
+                {
                     String url;
                     String condition;
                     int sep1;
@@ -532,7 +536,7 @@ public class Emperor
         return new Rect(0,_toolbarHeight+_menuViewHeight,
                         s.width,s.height-_toolbarHeight-_menuViewHeight);
     }
-    
+
     private Rect getPreferedNewSourceViewRect()
     {
         Rect rect = getClientRect();
@@ -621,7 +625,7 @@ public class Emperor
     private int                     _toolbarHeight;
     private RootView                _rootView;
     private boolean                 _appCanClose = true;
-    
+
     private ControlTyrant    _controlTyrant   ;
     private BreakpointTyrant _breakpointTyrant;
     private SourceTyrant     _sourceTyrant    ;
@@ -645,10 +649,10 @@ public class Emperor
 
     private int              _lowerWindowDY;
 
-    private static final Color  _backgroundColor         = Color.white;    
-    private static final Color  _disabledBackgroundColor = Color.lightGray;    
+    private static final Color  _backgroundColor         = Color.white;
+    private static final Color  _disabledBackgroundColor = Color.lightGray;
     private static final Color  _selectionColor          = Color.lightGray;
-//    private static final Color  _backgroundColor = Color.lightGray;    
+//    private static final Color  _backgroundColor = Color.lightGray;
 //    private static final Color  _selectionColor  = Color.white;
 
     private static final String _prefsFilenameClient = "jsdcpref.txt";

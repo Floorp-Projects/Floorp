@@ -16,6 +16,10 @@
  * Reserved.
  */
 
+/*
+* Manages menus and toolbar
+*/
+
 // when     who     what
 // 06/27/97 jband   added this header to my code
 //
@@ -47,12 +51,12 @@ class CmdViewItem
     public boolean     checked;
     public String      checkedText;
     public String      uncheckedText;
-}    
+}
 
 public class CommandView
     implements Observer
 {
-    public CommandView( Emperor  emperor, 
+    public CommandView( Emperor  emperor,
                         Menu     mainMenu,
                         MenuItem fileMenu,
                         int      originY )
@@ -126,7 +130,7 @@ public class CommandView
         RootView rv = _emperor.getRootView();
         minSize = _toolBarWindow.windowSizeForContentSize(rv.width(), minSize.height);
         _toolBarWindow.sizeTo(minSize.width, minSize.height);
-        
+
         _emperor.setToolbarHeight(minSize.height);
         _emperor.setToolBarWindow(_toolBarWindow);
 
@@ -228,21 +232,21 @@ public class CommandView
 
     private Bitmap _loadBitmap(String name, boolean fromJar)
     {
-        java.awt.Image image = null; 
+        java.awt.Image image = null;
         Bitmap bitmap = null;
 
         if(!fromJar)
             return Bitmap.bitmapNamed(name);
 
         try
-        { 
+        {
             java.io.InputStream in = null;
             String fullname = "images/"+name;
             ClassLoader loader = getClass().getClassLoader();
             if(null != loader)
             {
 //                if(AS.DEBUG)System.out.println("using loader.getResourceAsStream()");
-                in = loader.getResourceAsStream(fullname); 
+                in = loader.getResourceAsStream(fullname);
             }
             else
             {
@@ -252,26 +256,26 @@ public class CommandView
 
             if(null != in)
             {
-//                System.err.println("good stream"); 
-                byte[] buf = new byte[in.available()]; 
-                in.read(buf); 
-                image = java.awt.Toolkit.getDefaultToolkit().createImage(buf); 
+//                System.err.println("good stream");
+                byte[] buf = new byte[in.available()];
+                in.read(buf);
+                image = java.awt.Toolkit.getDefaultToolkit().createImage(buf);
             }
 //            else
-//                System.err.println("bad stream"); 
-        } 
+//                System.err.println("bad stream");
+        }
         catch (java.io.IOException e)
-        { 
-//            System.err.println("Unable to read image."); 
-//            e.printStackTrace(); 
-        } 
+        {
+//            System.err.println("Unable to read image.");
+//            e.printStackTrace();
+        }
         if(null != image)
         {
             int width;
             int height;
 
             // XXX pretty iffy!
-            while(-1 == (width = image.getWidth(null)) || 
+            while(-1 == (width = image.getWidth(null)) ||
                   -1 == (height = image.getHeight(null)))
                 Thread.currentThread().yield();
 
@@ -280,8 +284,8 @@ public class CommandView
 
             int[] pix = new int[width*height];
 
-            java.awt.image.PixelGrabber grabber = 
-                    new java.awt.image.PixelGrabber(image, 0, 0, width, height, 
+            java.awt.image.PixelGrabber grabber =
+                    new java.awt.image.PixelGrabber(image, 0, 0, width, height,
                                                     pix, 0, width);
 
             try
@@ -291,8 +295,8 @@ public class CommandView
             }
             catch(InterruptedException ie)
             {
-//                System.err.println("grabber interrupted"); 
-//                ie.printStackTrace(); 
+//                System.err.println("grabber interrupted");
+//                ie.printStackTrace();
             }
         }
         if(null == bitmap)
@@ -300,7 +304,7 @@ public class CommandView
             if(AS.DEBUG)System.err.println("loading bitmap from jar failed, trying Bitmap.bitmapNamed()");
             bitmap = Bitmap.bitmapNamed(name);
         }
-        
+
         return bitmap;
     }
 
@@ -312,7 +316,7 @@ public class CommandView
 
         if( null != item.button )
         {
-            if( force || 
+            if( force ||
                 item.enabled != state.enabled ||
                 item.checked != state.checked )
             {
@@ -328,9 +332,9 @@ public class CommandView
             if( force || item.checked != state.checked )
             {
                 if( state.checked && null != item.checkedText )
-                    item.menuItem.setTitle( item.checkedText ); 
+                    item.menuItem.setTitle( item.checkedText );
                 else if( ! state.checked && null != item.uncheckedText )
-                    item.menuItem.setTitle( item.uncheckedText ); 
+                    item.menuItem.setTitle( item.uncheckedText );
             }
         }
         item.enabled = state.enabled;

@@ -16,6 +16,10 @@
  * Reserved.
  */
 
+/*
+* Store and compare call chains (for stepping)
+*/
+
 // when     who     what
 // 06/27/97 jband   added this header to my code
 //
@@ -83,4 +87,4 @@ class CallChain
     }
 
     private Script[] _chain;
-}    
+}

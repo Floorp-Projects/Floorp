@@ -16,6 +16,10 @@
  * Reserved.
  */
 
+/*
+* 'Model' for Console
+*/
+
 // when     who     what
 // 06/27/97 jband   added this header to my code
 //
@@ -32,7 +36,7 @@ import netscape.security.ForbiddenTargetException;
 import com.netscape.jsdebugging.api.*;
 
 public class ConsoleTyrant
-    extends Observable 
+    extends Observable
     implements Observer, Target, JSErrorReporter // , SimulatorPrinter // XXX Sim Hack
 {
     public ConsoleTyrant(Emperor emperor)
@@ -51,17 +55,17 @@ public class ConsoleTyrant
     }
 
 
-    public void setPrinter(ConsolePrinter printer) 
+    public void setPrinter(ConsolePrinter printer)
     {
         _printer = printer;
         // XXX need to plant this hook (or our own pass through) into JSD
     }
-    
+
     /*
-    * NOTE: this ErrorReporter may be called on a thread other than 
-    * the IFC UI thread    
+    * NOTE: this ErrorReporter may be called on a thread other than
+    * the IFC UI thread
     */
-    
+
     // implement JSErrorReporter interface
     public int reportError( String msg,
                             String filename,
@@ -71,7 +75,7 @@ public class ConsoleTyrant
     {
         _errorString = msg;
         return JSErrorReporter.RETURN;
-    }        
+    }
 
     public void eval(String input)
     {
@@ -83,7 +87,7 @@ public class ConsoleTyrant
 
         /*
         * In order to allow the user to enter functions on multiple lines,
-        * this hack accumulates line which go to the console printer, but 
+        * this hack accumulates line which go to the console printer, but
         * are not sent to JSD until the end is reached.
         * The rule is that when not accumulating if a line ends with '{'
         * then it is assumed to be the end of a function definition line and
@@ -140,7 +144,7 @@ public class ConsoleTyrant
         _emperor.setWaitCursor(true);
 
         PrivilegeManager.enablePrivilege("Debugger");
-        
+
         String result = "";
         _errorString = null;
 
@@ -152,7 +156,7 @@ public class ConsoleTyrant
         DebugController dc = _emperor.getDebugController();
         if( null != dc && null != frame )
         {
-            ExecResult fullresult = 
+            ExecResult fullresult =
                 dc.executeScriptInStackFrame(frame,eval,filename,evalLine);
             result = fullresult.getResult();
 
@@ -192,7 +196,7 @@ public class ConsoleTyrant
     {
     }
 
-/*    
+/*
     // implement SimulatorPrinter interface
     public void print(String stringToPrint)
     {
@@ -227,9 +231,9 @@ public class ConsoleTyrant
     private Emperor         _emperor;
     private ControlTyrant   _controlTyrant;
     private StackTyrant     _stackTyrant;
-    private int             _lineno;    
+    private int             _lineno;
     private String          _accumulator = null;
     private int             _accumulatorLine;
     private ConsolePrinter  _printer;
     private String          _errorString;
-}    
+}

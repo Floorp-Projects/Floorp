@@ -16,6 +16,10 @@
  * Reserved.
  */
 
+/*
+* Interface to help decouple Emperor from debugger embedding windows
+*/
+
 // when     who     what
 // 11/10/97 jband   added file
 //
@@ -25,4 +29,4 @@ package com.netscape.jsdebugging.ifcui;
 public interface EmperorOwner
 {
     public void setWaitCursor(boolean set);
-}    
+}
