@@ -243,7 +243,6 @@ nsDocShell::nsDocShell():
     mIsBeingDestroyed(PR_FALSE),
     mIsExecutingOnLoadHandler(PR_FALSE),
     mEditorData(nsnull),
-    mTransferableHookData(nsnull),
     mParent(nsnull),
     mTreeOwner(nsnull),
     mChromeEventHandler(nsnull),
@@ -431,16 +430,9 @@ NS_IMETHODIMP nsDocShell::GetInterface(const nsIID & aIID, void **aSink)
     }
     else if (aIID.Equals(NS_GET_IID(nsIClipboardDragDropHookList)) 
             && NS_SUCCEEDED(EnsureTransferableHookData())) {
-        nsCOMPtr<nsIClipboardDragDropHookList> hook =
-               NS_STATIC_CAST(nsIClipboardDragDropHookList *, mTransferableHookData);
-        if (hook)
-        {
-            *aSink = hook;
-            NS_ADDREF((nsISupports *)*aSink);
-            return NS_OK;
-        }
-
-      return NS_NOINTERFACE;   
+      *aSink = mTransferableHookData;
+      NS_ADDREF((nsISupports *)*aSink);
+      return NS_OK;
     }
     else if (aIID.Equals(NS_GET_IID(nsISelectionDisplay))) {
       nsCOMPtr<nsIPresShell> shell;
@@ -2991,9 +2983,6 @@ nsDocShell::Destroy()
     delete mEditorData;
     mEditorData = 0;
 
-    nsIClipboardDragDropHookList *list = NS_STATIC_CAST(nsIClipboardDragDropHookList *, mTransferableHookData);
-    NS_IF_RELEASE(list);
-    delete mTransferableHookData;
     mTransferableHookData = nsnull;
 
     // Save the state of the current document, before destroying the window.
@@ -6741,13 +6730,12 @@ nsDocShell::EnsureEditorData()
 nsresult
 nsDocShell::EnsureTransferableHookData()
 {
-    if (!mTransferableHookData) {
-        mTransferableHookData = new nsTransferableHookData();
-        if (!mTransferableHookData) return NS_ERROR_OUT_OF_MEMORY;
-        NS_ADDREF(NS_STATIC_CAST(nsIClipboardDragDropHookList *, mTransferableHookData));
-    }
+  if (!mTransferableHookData) {
+    mTransferableHookData = new nsTransferableHookData();   // owning addref
+    if (!mTransferableHookData) return NS_ERROR_OUT_OF_MEMORY;
+  }
 
-    return NS_OK;
+  return NS_OK;
 }
 
 
