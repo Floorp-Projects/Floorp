@@ -623,7 +623,7 @@ nsNetDiskCache::CreateDir(nsIFile* dir_spec)
   		return rv;
   }
   
-  rv = dir_spec->Create( nsIFile::DIRECTORY_TYPE, PR_IRUSR | PR_IWUSR) ;  
+  rv = dir_spec->Create( nsIFile::DIRECTORY_TYPE, PR_IRWXU) ;  
   return rv ;
 }
 
