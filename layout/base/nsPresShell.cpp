@@ -1448,7 +1448,7 @@ PresShell::GoToAnchor(const nsString& aAnchorName) const
 
     // Find the element with the specified id
     rv = htmlDoc->GetElementById(aAnchorName, getter_AddRefs(element));
-    if (NS_SUCCEEDED(rv)) {
+    if (NS_SUCCEEDED(rv) && element) {
       // Get the nsIContent interface, because that's what we need to
       // get the primary frame
       rv = element->QueryInterface(kIContentIID, getter_AddRefs(content));
@@ -1459,7 +1459,7 @@ PresShell::GoToAnchor(const nsString& aAnchorName) const
     rv = xmlDoc->GetContentById(aAnchorName,  getter_AddRefs(content));
   }
 
-  if (NS_SUCCEEDED(rv)) {
+  if (NS_SUCCEEDED(rv) && content) {
     nsIFrame* frame;
     
     // Get the primary frame
