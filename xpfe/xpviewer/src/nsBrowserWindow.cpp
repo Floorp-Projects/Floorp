@@ -3174,6 +3174,7 @@ typedef struct _menuBtns {
 
 
 //-----------------------------------------------------
+// XXX This will be moved to nsWidgetSupport
 nsIMenu * CreateMenu(nsIMenu * aMenu, const nsString &  aName, char aMneu)
 {
   nsIMenu * menu;
@@ -3181,26 +3182,15 @@ nsIMenu * CreateMenu(nsIMenu * aMenu, const nsString &  aName, char aMneu)
                                              nsnull,
                                              kIMenuIID,
                                              (void**)&menu);
-  if (NS_OK == rv) {
-    nsRect rect;
-	  nsIWidget* 	widget;
-	  if (NS_OK == menu->QueryInterface(kIWidgetIID,(void**)&widget)) {
-      widget->Create((nsIWidget *)nsnull, rect, nsnull, nsnull, nsnull, nsnull, nsnull);
-      NS_RELEASE(widget);
-    } else {
-      return nsnull;
-    }
-  } else {
-    return nsnull;
+  if (nsnull == menu) {
+    menu->Create(aMenu, aName);
   }
-
-  menu->SetLabel(aName);
-  aMenu->AddMenu(menu);
 
   return menu;
 }
 
 //-----------------------------------------------------
+// XXX This will be moved to nsWidgetSupport
 nsIMenu * CreateMenu(nsIMenuBar * aMenuBar, const nsString &  aName, char aMneu)
 {
   nsIMenu * menu;
@@ -3209,25 +3199,14 @@ nsIMenu * CreateMenu(nsIMenuBar * aMenuBar, const nsString &  aName, char aMneu)
                                              kIMenuIID,
                                              (void**)&menu);
   if (NS_OK == rv) {
-    nsRect rect;
-	  nsIWidget* 	widget;
-	  if (NS_OK == menu->QueryInterface(kIWidgetIID,(void**)&widget)) {
-      widget->Create((nsIWidget *)nsnull, rect, nsnull, nsnull, nsnull, nsnull, nsnull);
-      NS_RELEASE(widget);
-    } else {
-      return nsnull;
-    }
-  } else {
-    return nsnull;
+    menu->Create(aMenuBar, aName);
   }
-
-  menu->SetLabel(aName);
-  aMenuBar->AddMenu(menu);
 
   return menu;
 }
 
 //-----------------------------------------------------
+// XXX This will be moved to nsWidgetSupport
 nsIMenuItem * CreateMenuItem(nsIMenu * aMenu, const nsString & aName, PRUint32 aCommand)
 {
   nsIMenuItem * menuItem = nsnull;
@@ -3237,13 +3216,9 @@ nsIMenuItem * CreateMenuItem(nsIMenu * aMenu, const nsString & aName, PRUint32 a
                                                nsnull,
                                                kIMenuItemIID,
                                                (void**)&menuItem);
-    if (NS_OK != rv) {
-      return nsnull;
+    if (NS_OK == rv) {
+      menuItem->Create(aMenu, aName, aCommand);
     }
-
-    menuItem->SetLabel(aName);
-    menuItem->SetCommand(aCommand);
-    aMenu->AddItem(menuItem);
   } else {
     aMenu->AddSeparator();
   }
@@ -3353,17 +3328,9 @@ nsBrowserWindow::CreateMenuBar(PRInt32 aWidth)
                                              kIMenuBarIID,
                                              (void**)&menuBar);
 
-  if (NS_OK == rv) {
-    nsRect rect;
-	  nsIWidget* 	widget;
-	  if (NS_OK == menuBar->QueryInterface(kIWidgetIID,(void**)&widget)) {
-      widget->Create((nsIWidget *)nsnull, rect, nsnull, nsnull, mAppShell, nsnull, nsnull);
-
-      CreateBrowserMenus(menuBar);
-      mWindow->SetMenuBar(menuBar);
-		  NS_RELEASE(widget);
-	  }
-
+  if (nsnull != menuBar) {
+    menuBar->Create(mWindow);
+    CreateBrowserMenus(menuBar);
   }
 
   return NS_OK;
