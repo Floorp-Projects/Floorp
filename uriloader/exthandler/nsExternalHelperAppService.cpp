@@ -1068,7 +1068,19 @@ nsresult nsExternalAppHandler::ExecuteDesiredAction()
     if (action == nsIMIMEInfo::saveToDisk)
       rv = MoveFile(mFinalFileDestination);
     else
-      rv = OpenWithApplication(nsnull);
+    {
+      // Make sure the suggested name is unique since in this case we don't
+      // have a file name that was guaranteed to be unique by going through
+      // the File Save dialog
+      rv = mFinalFileDestination->CreateUnique(nsIFile::NORMAL_FILE_TYPE, 0644);
+      if (NS_SUCCEEDED(rv))
+      {
+        // Source and dest dirs should be == so this should just do a rename
+        rv = MoveFile(mFinalFileDestination);
+        if (NS_SUCCEEDED(rv))
+          rv = OpenWithApplication(nsnull);
+      }
+    }
   }
   
   return rv;
@@ -1244,10 +1256,9 @@ nsresult nsExternalAppHandler::OpenWithApplication(nsIFile * aApplication)
     nsCOMPtr<nsPIExternalAppLauncher> helperAppService (do_GetService(NS_EXTERNALHELPERAPPSERVICE_CONTRACTID));
     if (helperAppService)
     {
-      rv = helperAppService->LaunchAppWithTempFile(mMimeInfo, mTempFile);
-
-      // be sure to add this temporary file to our list of files which need deleted on exit...
-      helperAppService->DeleteTemporaryFileOnExit(mTempFile);
+      rv = helperAppService->LaunchAppWithTempFile(mMimeInfo, mFinalFileDestination);
+      // Note that it is considered a bad idea to delete a file after passing it
+      // off to a helper app so we no longer call DeleteTemporaryFileOnExit()
     }
   }
 
@@ -1278,7 +1289,28 @@ NS_IMETHODIMP nsExternalAppHandler::LaunchWithApplication(nsIFile * aApplication
   if (mMimeInfo && aApplication)
     mMimeInfo->SetPreferredApplicationHandler(aApplication);
 
- return NS_OK;
+  // Now that the user has elected to launch the downloaded file with a helper app, we're justified in
+  // removing the 'salted' name.  We'll rename to what was specified in mSuggestedFileName after the
+  // download is done prior to launching the helper app.  So that any existing file of that name won't
+  // be overwritten we call CreateUnique() before calling MoveFile().  Also note that we use the same
+  // directory as originally downloaded to so that MoveFile() just does an in place rename.
+   
+  nsCOMPtr<nsIFile> fileToUse;
+  
+  // The directories specified here must match those specified in SetUpTempFile().  This avoids
+  // having to do a copy of the file when it finishes downloading and the potential for errors
+  // that would introduce
+#ifdef XP_MAC
+  NS_GetSpecialDirectory(NS_MAC_DEFAULT_DOWNLOAD_DIR, getter_AddRefs(fileToUse));
+#else
+  NS_GetSpecialDirectory(NS_OS_TEMP_DIR, getter_AddRefs(fileToUse));
+#endif
+  fileToUse->AppendUnicode(mSuggestedFileName.get());
+  // We'll make sure this results in a unique name later
+
+  mFinalFileDestination = do_QueryInterface(fileToUse);
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsExternalAppHandler::Cancel()
