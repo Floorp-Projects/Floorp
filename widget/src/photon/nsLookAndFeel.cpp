@@ -128,7 +128,7 @@ NS_IMETHODIMP nsLookAndFeel::GetColor(const nsColorID aID, nscolor &aColor)
 		aColor = PH_TO_NS_RGB(Pg_DGREY);
 		break;
 	  case eColor_infobackground:
-		aColor = PH_TO_NS_RGB(0xfeffb1);
+		aColor = PH_TO_NS_RGB(0xfeffb1); // popup yellow
 		break;
 	  case eColor_infotext:
 		aColor = PH_TO_NS_RGB(Pg_BLACK);
@@ -171,7 +171,7 @@ NS_IMETHODIMP nsLookAndFeel::GetColor(const nsColorID aID, nscolor &aColor)
 
 	  case eColor_window:
 	  case eColor_windowframe:
-		aColor = PH_TO_NS_RGB(Pg_BLUE);
+		aColor = PH_TO_NS_RGB(Pg_GREY);
 		break;
 
 	  case eColor_windowtext:
@@ -186,7 +186,7 @@ NS_IMETHODIMP nsLookAndFeel::GetColor(const nsColorID aID, nscolor &aColor)
 		break;
   default:
     /* default color is BLACK */
-    aColor = 0;
+    aColor = PH_TO_NS_RGB(Pg_BLACK);;
     res    = NS_ERROR_FAILURE;
     break;
   }
@@ -213,9 +213,11 @@ NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricID aID, PRInt32 & aMetric)
     break;
   case eMetric_WindowBorderWidth:
     //    aMetric = mStyle->klass->xthickness;
+    aMetric = 1;
     break;
   case eMetric_WindowBorderHeight:
     //    aMetric = mStyle->klass->ythickness;
+    aMetric = 1;
     break;
   case eMetric_Widget3DBorder:
     //    aMetric = 4;
@@ -224,7 +226,7 @@ NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricID aID, PRInt32 & aMetric)
   	aMetric = 20;
     break;
   case eMetric_TextFieldBorder:
-    aMetric = 0;
+    aMetric = 1;
     break;
   case eMetric_TextVerticalInsidePadding:
     aMetric = 0;
@@ -245,10 +247,10 @@ NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricID aID, PRInt32 & aMetric)
     aMetric = 0;
     break;
   case eMetric_CheckboxSize:
-    aMetric = 0;
+    aMetric = 10;
     break;
   case eMetric_RadioboxSize:
-    aMetric = 0;
+    aMetric = 10;
     break;
   case eMetric_ListShouldUseHorizontalInsideMinimumPadding:
     aMetric = 0;
