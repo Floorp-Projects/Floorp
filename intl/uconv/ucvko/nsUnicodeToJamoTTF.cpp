@@ -502,7 +502,7 @@ const static PRUint8 gUnParkVo2TcMap[95] = {
 NS_IMETHODIMP 
 nsUnicodeToJamoTTF::composeHangul(char* aResult)
 {
-  PRInt32 length = mJamoCount;
+  PRInt32 length = mJamoCount, i;
   nsresult rv = NS_OK;
 
   if (!length)
@@ -605,7 +605,7 @@ nsUnicodeToJamoTTF::composeHangul(char* aResult)
       text[1] = text[2]; 
   }
 
-  for (PRInt32 i = 0 ; i < length; i++)
+  for (i = 0 ; i < length; i++)
   {
     aResult[mByteOff++] = PRUint8(text[i] >> 8);
     aResult[mByteOff++] = PRUint8(text[i] & 0xff);
@@ -625,7 +625,7 @@ nsUnicodeToJamoTTF::composeHangul(char* aResult)
    */
 
 fallback: 
-  for (PRInt32 i = 0; i < length; i++)
+  for (i = 0; i < length; i++)
   {
     PRUnichar wc=0, wc2=0;
     /* skip Lfill and Vfill if they're not the sole char. in a cluster */
