@@ -244,7 +244,8 @@ nsresult nsMailtoUrl::ParseMailtoUrl(char * searchPart)
     {
       if (NS_SUCCEEDED(mimeConverter->DecodeMimeHeader(m_bodyPart.get(),
                                                        getter_Copies(decodedString),
-                                                       "UTF-8", PR_FALSE))
+                                                       "UTF-8", PR_FALSE,
+                                                       PR_FALSE))
                                                        && decodedString)
         m_bodyPart = decodedString;
     }
