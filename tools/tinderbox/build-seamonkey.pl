@@ -1,7 +1,7 @@
 #!/usr/bin/perl -w
 
 require 5.005;
---------------------------------------------------------------------------------
+
 # This script has split some functions off into a util
 # script so they can be re-used by other scripts.
 require "build-seamonkey-util.pl";
@@ -11,7 +11,7 @@ use POSIX qw(sys_wait_h strftime);
 use Cwd;
 use File::Basename; # for basename();
 use Config; # for $Config{sig_name} and $Config{sig_num}
-$::Version = '$Revision: 1.87 $ ';
+$::Version = '$Revision: 1.88 $ ';
 
 # "use strict" complains if we do not define these.
 # They are not initialized here. The default values are after "__END__".
