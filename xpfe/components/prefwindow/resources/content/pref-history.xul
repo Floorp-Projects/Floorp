@@ -54,14 +54,18 @@
   { 
     var urlbarHistButton = document.getElementById("ClearUrlBarHistoryButton");
     try {
-      var urlBarHist = Components.classes["@mozilla.org/browser/urlbarhistory;1"]
-                                 .getService(Components.interfaces.nsIUrlbarHistory);
+      var RDF = Components.classes["@mozilla.org/rdf/rdf-service;1"]
+                          .getService(Components.interfaces.nsIRDFService);
+      var localStore = RDF.GetDataSource("rdf:local-store");
+      var RDFC = Components.classes["@mozilla.org/rdf/container-utils;1"]
+                           .getService(Components.interfaces.nsIRDFContainerUtils);
+      var urlBarHist = RDFC.MakeSeq(localStore, RDF.GetResource("nc:urlbar-history"));
       var isBtnLocked = parent.hPrefWindow.getPrefIsLocked(urlbarHistButton.getAttribute("prefstring"));
       var pref = Components.classes["@mozilla.org/preferences-service;1"]
                            .getService(Components.interfaces.nsIPrefBranch);
       var lastUrl = pref.getComplexValue("general.open_location.last_url",
                                          Components.interfaces.nsISupportsString).data;
-      urlbarHistButton.disabled = ( urlBarHist.count == 0 && !lastUrl ) || isBtnLocked ;
+      urlbarHistButton.disabled = ( urlBarHist.GetCount() == 0 && !lastUrl ) || isBtnLocked ;
     }
     catch(ex) {
     }
@@ -83,18 +87,17 @@
 
   function prefClearUrlbarHistory()
   {
-    var button = document.getElementById("ClearUrlBarHistoryButton");
-    var urlBarHistory = Components.classes["@mozilla.org/browser/urlbarhistory;1"]
-                                  .getService(Components.interfaces.nsIUrlbarHistory);
-    urlBarHistory.clearHistory();
     var pref = Components.classes["@mozilla.org/preferences-service;1"]
                          .getService(Components.interfaces.nsIPrefBranch);
-    var str = Components.classes["@mozilla.org/supports-string;1"]
-                         .createInstance(Components.interfaces.nsISupportsString);
-    str.data = "";
-    pref.setComplexValue("general.open_location.last_url",
-                         Components.interfaces.nsISupportsString,
-                         str);
+    pref.setCharPref("general.open_location.last_url", "");
+    var RDF = Components.classes["@mozilla.org/rdf/rdf-service;1"]
+                        .getService(Components.interfaces.nsIRDFService);
+    var localStore = RDF.GetDataSource("rdf:local-store");
+    var RDFC = Components.classes["@mozilla.org/rdf/container-utils;1"]
+                         .getService(Components.interfaces.nsIRDFContainerUtils);
+    var urlBarHist = RDFC.MakeSeq(localStore, RDF.GetResource("nc:urlbar-history"));
+    for (var i = urlBarHist.GetCount(); i > 0; --i)
+      urlBarHist.RemoveElementAt(i, true);
   }
   ]]>
   </script>
