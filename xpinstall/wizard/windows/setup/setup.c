@@ -60,6 +60,8 @@ LPSTR           szSiteSelectorDescription;
 
 DWORD           dwWizardState;
 DWORD           dwSetupType;
+DWORD           dwScreenX;
+DWORD           dwScreenY;
 
 DWORD           dwTempSetupType;
 DWORD           gdwUpgradeValue;
@@ -82,7 +84,6 @@ BOOL            gbForceInstall = FALSE;
  * GRE is appropriately versioned.  See bug 180383
  */
 BOOL            gbForceInstallGre = TRUE;
-BOOL            gShowBannerImage = TRUE;
 
 setupGen        sgProduct;
 diS             diSetup;
@@ -136,7 +137,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmd
   {
     if(InitSetupGeneral())
       PostQuitMessage(1);
-    else if(ParseForStartupOptions(lpszCmdLine))
+    else if(ParseCommandLine(lpszCmdLine))
       PostQuitMessage(1);
     else if((hwndFW = FindWindow(CLASS_NAME_SETUP_DLG, NULL)) != NULL && !gbAllowMultipleInstalls)
     {
