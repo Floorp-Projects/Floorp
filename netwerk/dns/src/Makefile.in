@@ -31,11 +31,15 @@ LIBRARY_NAME	= neckodns_s
 REQUIRES	= xpcom \
 		  string \
 		  pref \
+		  unicharutil \
 		  $(NULL)
 
 CPPSRCS   = nsDnsService.cpp \
             nsIDNService.cpp
 
+CSRCS     = race.c  \
+            nameprep.c \
+            punycode.c
 
 # we don't want the shared lib, but we want to force the creation of a
 # static lib.
