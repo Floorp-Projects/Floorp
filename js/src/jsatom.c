@@ -370,7 +370,7 @@ js_AtomizeHashedKey(JSContext *cx, jsval key, JSHashNumber keyHash, uintN flags)
     JSAtom *atom;
 
     state = &cx->runtime->atomState;
-    JS_LOCK(&state->lock, cx);
+    JS_LOCK(&state->lock,cx);
     table = state->table;
     hep = JS_HashTableRawLookup(table, keyHash, (void *)key);
     if ((he = *hep) == NULL) {
@@ -444,7 +444,7 @@ js_AtomizeDouble(JSContext *cx, jsdouble d, uintN flags)
     keyHash = HASH_DOUBLE(dp);
     key = DOUBLE_TO_JSVAL(dp);
     state = &cx->runtime->atomState;
-    JS_LOCK(&state->lock, cx);
+    JS_LOCK(&state->lock,cx);
     table = state->table;
     hep = JS_HashTableRawLookup(table, keyHash, (void *)key);
     if ((he = *hep) == NULL) {
@@ -454,7 +454,7 @@ js_AtomizeDouble(JSContext *cx, jsdouble d, uintN flags)
 	JS_UNLOCK(&state->lock,cx);
 	if (!js_NewDoubleValue(cx, d, &key))
 	    return NULL;
-	JS_LOCK(&state->lock, cx);
+	JS_LOCK(&state->lock,cx);
 #ifdef JS_THREADSAFE
 	if (state->tablegen != gen) {
 	    hep = JS_HashTableRawLookup(table, keyHash, (void *)key);
@@ -492,7 +492,7 @@ js_AtomizeString(JSContext *cx, JSString *str, uintN flags)
     keyHash = js_HashString(str);
     key = STRING_TO_JSVAL(str);
     state = &cx->runtime->atomState;
-    JS_LOCK(&state->lock, cx);
+    JS_LOCK(&state->lock,cx);
     table = state->table;
     hep = JS_HashTableRawLookup(table, keyHash, (void *)key);
     if ((he = *hep) == NULL) {
@@ -500,13 +500,16 @@ js_AtomizeString(JSContext *cx, JSString *str, uintN flags)
 #ifdef JS_THREADSAFE
 	    uint32 gen = state->tablegen;
 #endif
-	    JS_UNLOCK(&state->lock, cx);
-            str = (JSString*)(((flags & ATOM_NOCOPY) ? js_NewString : js_NewStringCopyN)
-                   (cx, str->chars, str->length, 0));
+	    JS_UNLOCK(&state->lock,cx);
+	    if (flags & ATOM_NOCOPY) {
+		str = js_NewString(cx, str->chars, str->length, 0);
+	    } else {
+		str = js_NewStringCopyN(cx, str->chars, str->length, 0);
+	    }
 	    if (!str)
 		return NULL;
 	    key = STRING_TO_JSVAL(str);
-	    JS_LOCK(&state->lock, cx);
+	    JS_LOCK(&state->lock,cx);
 #ifdef JS_THREADSAFE
 	    if (state->tablegen != gen) {
 		hep = JS_HashTableRawLookup(table, keyHash, (void *)key);
@@ -545,7 +548,7 @@ js_Atomize(JSContext *cx, const char *bytes, size_t length, uintN flags)
     /*
      * Avoiding the malloc in js_InflateString on shorter strings saves us
      * over 20,000 malloc calls on mozilla browser startup. This compares to
-     * only 131 calls where the string is longer than a 31 char (net) buffer.
+     * only 131 calls where the string is longer than a 32 char buffer.
      * The vast majority of atomized strings are already in the hashtable. So
      * js_AtomizeString rarely has to copy the temp string we make.
      */
