@@ -1,6 +1,10 @@
 #!/bin/sh
 if [ ${3} = "YES" ]; then
-    PATH=${PATH}\;${1}/bin\;${1}/lib
+    if test `echo "${PATH}" | grep -c \;` != 0; then
+        PATH=${PATH}\;${1}/bin\;${1}/lib
+    else
+        PATH=${PATH}:${1}/bin:${1}/lib
+    fi
     export PATH
 else
     LIBPATH=${1}/lib
