@@ -1,11 +1,29 @@
 class StackValue {
     
-    StackValue(double d)
+    StackValue(double v)
     {
-        dbl = d;
+        d = v;
     }
     
-    double dbl;
+    StackValue(int v)
+    {
+        i = v;
+    }
+    
+    StackValue(String v)
+    {
+        s = v;
+    }
+    
+    StackValue(PostorderNodeIterator v)
+    {
+        p = v;
+    }
+    
+    double d;
+    PostorderNodeIterator p;
+    String s;
+    int i;
 
 
 }

@@ -13,13 +13,29 @@ class PostorderNodeIterator {
         start = n;
     }
 
+    Node peekParent()
+    {
+        if (stack.isEmpty())
+            return null;
+        else
+            return (Node)stack.peek();
+    }
+    
+    void pop()
+    {
+        if (stack.isEmpty())
+            current = null;
+        else
+            current = (Node)stack.pop();
+    }
+
     Node nextNode()
     {
         if (current == null)
             return current = start;
         
         if (stack.isEmpty())
-            return null;
+            return current = null;
         else {
             current = current.next;
             if (current != null) {
