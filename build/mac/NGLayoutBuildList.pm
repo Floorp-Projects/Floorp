@@ -13,6 +13,7 @@ use Mac::Processes;
 use Mac::Events;
 use Cwd;
 use File::Path;
+use File::Copy;
 
 # homegrown
 use Moz;
@@ -716,8 +717,11 @@ sub MakeResourceAliases()
 		BuildFolderResourceAliases(":mozilla:mailnews:ui:preference:resources:",			"$msgpref_dir");
 	}	
 
-	MakeAlias(":mozilla:rdf:chrome:build:registry.rdf",										"$chrome_dir");
-	
+	# copy the chrome registry. We want an actual copy so that changes for custom UI's
+	# don't accidentally get checked into the tree. (pinkerton, bug#5296).
+	copy ( ":mozilla:rdf:chrome:build:registry.rdf", "$chrome_dir" . "registry.rdf" );
+	print ( "copying mozilla:rdf:chrime:build:registry.rdf to $chrome_dir\n" );
+		
 	# Install XPFE component resources
 	InstallResources(":mozilla:xpfe:components:find:resources:MANIFEST",					"$samples_dir");
 
