@@ -31,20 +31,20 @@
   #%]
 [% abbrev = 
   {
-    "severity"          => { size => 3 , title => "Sev" } , 
-    "priority"          => { size => 3 , title => "Pri" } , 
-    "platform"          => { size => 3 , title => "Plt" } , 
-    "status"            => { size => 4 } , 
-    "reporter"          => { size => 45 , ellipsis => "..." } , 
-    "owner"             => { size => 45 , ellipsis => "..." } , 
-    "qa_contact"        => { size => 45 , ellipsis => "..." , title => "QAContact" } , 
-    "resolution"        => { size => 4 } , 
-    "summary"           => { size => 60 , ellipsis => "..." } , 
+    "severity"          => { maxlength => 3 , title => "Sev" } , 
+    "priority"          => { maxlength => 3 , title => "Pri" } , 
+    "platform"          => { maxlength => 3 , title => "Plt" } , 
+    "status"            => { maxlength => 4 } , 
+    "reporter"          => { maxlength => 45 , ellipsis => "..." } , 
+    "owner"             => { maxlength => 45 , ellipsis => "..." } , 
+    "qa_contact"        => { maxlength => 45 , ellipsis => "..." , title => "QAContact" } , 
+    "resolution"        => { maxlength => 4 } , 
+    "summary"           => { maxlength => 60 , ellipsis => "..." } , 
     "status_whiteboard" => { title => "StatusSummary" } , 
-    "component"         => { size => 8 , title => "Comp" } , 
-    "product"           => { size => 8 } , 
-    "version"           => { size => 5 , title => "Vers" } , 
-    "os"                => { size => 4 } , 
+    "component"         => { maxlength => 8 , title => "Comp" } , 
+    "product"           => { maxlength => 8 } , 
+    "version"           => { maxlength => 5 , title => "Vers" } , 
+    "os"                => { maxlength => 4 } , 
     "target_milestone"  => { title => "TargetM" } , 
   }
 %]
@@ -128,7 +128,7 @@
 
     [% FOREACH column = displaycolumns %]
     <td>
-      [%+ bug.$column.truncate(abbrev.$column.size, abbrev.$column.ellipsis) FILTER html %]
+      [%+ bug.$column.truncate(abbrev.$column.maxlength, abbrev.$column.ellipsis) FILTER html %]
     </td>
     [% END %]
 
