@@ -101,6 +101,10 @@
 #include "nsIDOMXPathEvaluator.h"
 #include "nsNodeInfoManager.h"
 
+#ifdef	MOZ_SVG
+PRBool NS_SVG_TestFeature(const nsAString &fstr);
+#endif /* MOZ_SVG */
+
 #ifdef DEBUG_waterson
 
 /**
@@ -1182,6 +1186,17 @@ nsGenericElement::InternalIsSupported(const nsAString& aFeature,
 
     *aReturn = gHaveXPathDOM;
   }
+
+#ifdef	MOZ_SVG
+  // Check for SVG Features
+  else if (NS_SVG_TestFeature(aFeature)) {
+    // Should we test the version also?  The SVG Test
+    // Suite (struct-dom-02-b.svg) uses version 2.0 in the
+    // domImpl.hasFeature call. This makes no sense to me,
+    // so I'm going to skip testing the version here for now....
+    *aReturn = PR_TRUE;
+  }
+#endif /* MOZ_SVG */
 
   return NS_OK;
 }

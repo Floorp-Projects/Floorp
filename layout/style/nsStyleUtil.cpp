@@ -501,3 +501,31 @@ PRBool nsStyleUtil::IsSimpleXlink(nsIContent *aContent, nsPresContext *aPresCont
   }
   return rv;
 }
+
+// Compare two language strings
+PRBool nsStyleUtil::DashMatchCompare(const nsAString& aAttributeValue,
+                                     const nsAString& aSelectorValue,
+                                     const nsStringComparator& aComparator)
+{
+  PRBool result;
+  PRUint32 selectorLen = aSelectorValue.Length();
+  PRUint32 attributeLen = aAttributeValue.Length();
+  if (selectorLen > attributeLen) {
+    result = PR_FALSE;
+  }
+  else {
+    nsAString::const_iterator iter;
+    if (selectorLen != attributeLen &&
+        *aAttributeValue.BeginReading(iter).advance(selectorLen) !=
+            PRUnichar('-')) {
+      // to match, the aAttributeValue must have a dash after the end of
+      // the aSelectorValue's text (unless the aSelectorValue and the
+      // aAttributeValue have the same text)
+      result = PR_FALSE;
+    }
+    else {
+      result = StringBeginsWith(aAttributeValue, aSelectorValue, aComparator);
+    }
+  }
+  return result;
+}

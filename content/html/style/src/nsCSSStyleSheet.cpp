@@ -3026,34 +3026,6 @@ static PRBool IsSignificantChild(nsIContent* aChild, PRBool aAcceptNonWhitespace
   return PR_FALSE;
 }
 
-static PRBool
-DashMatchCompare(const nsAString& aAttributeValue,
-                 const nsAString& aSelectorValue,
-                 const nsStringComparator& aComparator)
-{
-  PRBool result;
-  PRUint32 selectorLen = aSelectorValue.Length();
-  PRUint32 attributeLen = aAttributeValue.Length();
-  if (selectorLen > attributeLen) {
-    result = PR_FALSE;
-  }
-  else {
-    nsAString::const_iterator iter;
-    if (selectorLen != attributeLen &&
-        *aAttributeValue.BeginReading(iter).advance(selectorLen) !=
-            PRUnichar('-')) {
-      // to match, the aAttributeValue must have a dash after the end of
-      // the aSelectorValue's text (unless the aSelectorValue and the
-      // aAttributeValue have the same text)
-      result = PR_FALSE;
-    }
-    else {
-      result = StringBeginsWith(aAttributeValue, aSelectorValue, aComparator);
-    }
-  }
-  return result;
-}
-
 // This function is to be called once we have fetched a value for an attribute
 // whose namespace and name match those of aAttrSelector.  This function
 // performs comparisons on the value only, based on aAttrSelector->mFunction.
@@ -3072,7 +3044,7 @@ static PRBool AttrMatchesValue(const nsAttrSelector* aAttrSelector,
     case NS_ATTR_FUNC_INCLUDES: 
       return ValueIncludes(aValue, aAttrSelector->mValue, comparator);
     case NS_ATTR_FUNC_DASHMATCH: 
-      return DashMatchCompare(aValue, aAttrSelector->mValue, comparator);
+      return nsStyleUtil::DashMatchCompare(aValue, aAttrSelector->mValue, comparator);
     case NS_ATTR_FUNC_ENDSMATCH:
       return StringEndsWith(aValue, aAttrSelector->mValue, comparator);
     case NS_ATTR_FUNC_BEGINSMATCH:
@@ -3219,8 +3191,8 @@ static PRBool SelectorMatches(RuleProcessorData &data,
         // nodes.  The language itself is encoded in the LANG attribute.
         const nsString* lang = data.GetLang();
         if (lang && !lang->IsEmpty()) { // null check for out-of-memory
-          result = localTrue == DashMatchCompare(*lang,
-                                    nsDependentString(pseudoClass->mString),
+          result = localTrue == nsStyleUtil::DashMatchCompare(*lang,
+                                    nsDependentString(pseudoClass->mString), 
                                     nsCaseInsensitiveStringComparator());
         }
         else {
@@ -3242,7 +3214,7 @@ static PRBool SelectorMatches(RuleProcessorData &data,
               if (end == kNotFound) {
                 end = len;
               }
-              if (DashMatchCompare(Substring(language, begin, end-begin),
+              if (nsStyleUtil::DashMatchCompare(Substring(language, begin, end-begin),
                                    langString,
                                    nsCaseInsensitiveStringComparator())) {
                 result = localTrue;
