@@ -228,7 +228,7 @@ public class KeyManager {
     private native SymmetricKey lookupKeyNative(CryptoToken token,
         EncryptionAlgorithm alg, byte[] keyid) throws TokenException;
 
-    private boolean uniqueNamedKeyExists(String nickname)
+    public boolean uniqueNamedKeyExists(String nickname)
         throws TokenException
     {
         return (lookupUniqueNamedKey(Encryptor.DEFAULT_ENCRYPTION_ALG,
