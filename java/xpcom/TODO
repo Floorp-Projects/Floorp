@@ -9,6 +9,7 @@ Configuration
 -- *GET XPCTest WORKING*.  For some reason, the JDK 1.2 JVM on Solaris 
 won't load libxpcom.so correctly, even if it's on LD_LIBRARY_PATH.  I
 have yet to confirm whether this is a problem on Linux or NT.
+[Done 13 Aug 1999]
 
 -- Make Java compilation work correctly on Unix/Linux.
 
@@ -24,7 +25,7 @@ have yet to confirm whether this is a problem on Linux or NT.
 Registration and Activation
 ---------------------------
 
--- Insure JNI libraries load an unload, even within JNI plugin
+-- Insure JNI libraries load and unload, even within JNI plugin
 
 -- Derive proxy class from IID, and vice-versa
 

@@ -5,7 +5,7 @@ This directory contains the beginnings of the Java Bridge to XPCOM.
 For now it is disconnected from the main Mozilla build, because as yet 
 it is good for no more than a few demo and test programs, and because
 Java compilation on Unix and Linux doesn't work quite right (as of 
-Aug 10, 1999).
+Aug 13, 1999).
 
 The source is divided into four directories
 
@@ -127,7 +127,7 @@ XPCTest.main()
 
 	Sample invocation:
 
-		java XPCTest AddTwoInts -i 1 -i 1 -r
+		java -native XPCTest AddTwoInts -i 1 -i 1 -r
 
 	Output:
 
@@ -136,3 +136,16 @@ XPCTest.main()
 		Getting InterfaceInfoManager
 		Command: AddTwoInts, arguments: [1, 1, null]
 		Results: [1, 1, 2]
+
+	Notes:
+
+	1. You must run native threads; Mozilla loads the native 
+	   thread library, and the JVM will panic if it has to 
+	   load both native and green threads.
+
+	2. Because of the way the JDK links shared libraries, 
+	   you must have a valid mozilla/dist/bin/component.reg;
+	   otherwise, XPCOM will not bootstrap correctly.
+	   Note that "apprunner" and "xptest" will create one.
+	   Future versions will fix this limitation.
+
