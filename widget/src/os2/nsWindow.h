@@ -159,9 +159,15 @@ class nsWindow : public nsBaseWidget,
    void   NS2PM( RECTL &rcl);
 //   void   SetContextMenu( nsContextMenu *aMenu);
 
- protected:
+protected:
+    static  BOOL            DealWithPopups ( ULONG inMsg, MRESULT* outResult ) ;
+
+    static  PRBool          EventIsInsideWindow(nsWindow* aWindow); 
+
+    static  nsWindow *      GetNSWindowPtr(HWND aWnd);
+    static  BOOL            SetNSWindowPtr(HWND aWnd, nsWindow * ptr);
+
    static  nsWindow*   gCurrentWindow;
-   static  PRBool      EventIsInsideWindow(nsWindow* aWindow); 
    // nsWindow methods subclasses must provide for creation to work
    virtual PCSZ  WindowClass() = 0;
    virtual ULONG WindowStyle() = 0;
@@ -209,7 +215,7 @@ class nsWindow : public nsBaseWidget,
 
    // PM data members
    HWND      mWnd;            // window handle
-   PFNWP     mFnWP;           // previous window procedure
+   PFNWP     mPrevWndProc;    // previous window procedure
    nsWindow *mParent;         // parent widget
    ULONG     mNextID;         // next child window id
    USHORT    mNextCmdID;      // next WM_COMMAND id for menus
@@ -226,7 +232,7 @@ class nsWindow : public nsBaseWidget,
 
    HWND      GetParentHWND() const;
    HWND      GetHWND() const   { return mWnd; }
-   PFNWP     GetPrevWP() const { return mFnWP; }
+   PFNWP     GetPrevWP() const { return mPrevWndProc; }
 
    // nglayout data members
    PRInt32        mPreferredHeight;
@@ -260,7 +266,7 @@ class nsWindow : public nsBaseWidget,
                               nsWidgetInitData *aInitData,
                               HWND hwndOwner = 0);
 
-   virtual void SubclassWindow( PRBool bState);
+   virtual void SubclassWindow(BOOL bState);
 
    PRBool  ConvertStatus( nsEventStatus aStatus);
    void    InitEvent( nsGUIEvent &event, PRUint32 aEventType, nsPoint *pt = 0);

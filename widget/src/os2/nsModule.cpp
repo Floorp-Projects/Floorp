@@ -53,8 +53,6 @@
 #define KBD_CTRL KBD_CONTROL
 #endif
 
-#define WARPZILLA_PRESPARAM "PP_WARPZILLA"
-
 static void GetKeyboardName( char *buff);
 
 nsWidgetModuleData::nsWidgetModuleData()
@@ -97,8 +95,6 @@ void nsWidgetModuleData::Init( nsIAppShell *aPrimaevalAppShell)
    COUNTRYCODE cc = { 0 };
    DosQueryDBCSEnv( CCHMAXPATH, &cc, buffer);
    bIsDBCS = buffer[0] || buffer[1];
-
-   ppMozilla = GetAtom( WARPZILLA_PRESPARAM);
 
    fontService = nsnull;
 
