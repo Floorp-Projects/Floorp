@@ -99,9 +99,9 @@ morkRowSpace::morkRowSpace(morkEnv* ev,
   const morkUsage& inUsage, mork_scope inScope, morkStore* ioStore,
   nsIMdbHeap* ioHeap, nsIMdbHeap* ioSlotHeap)
 : morkSpace(ev, inUsage, inScope, ioStore, ioHeap, ioSlotHeap)
-, mRowSpace_Tables(ev, morkUsage::kMember, (nsIMdbHeap*) 0, ioSlotHeap)
 , mRowSpace_Rows(ev, morkUsage::kMember, (nsIMdbHeap*) 0, ioSlotHeap,
   morkRowSpace_kStartRowMapSlotCount)
+, mRowSpace_Tables(ev, morkUsage::kMember, (nsIMdbHeap*) 0, ioSlotHeap)
 , mRowSpace_NextTableId( 1 )
 , mRowSpace_NextRowId( 1 )
 {
