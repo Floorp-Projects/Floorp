@@ -35,7 +35,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: prelib.c,v 1.1 2000/03/31 19:32:58 relyea%netscape.com Exp $
+ * $Id: prelib.c,v 1.2 2001/02/09 02:11:30 nelsonb%netscape.com Exp $
  */
 
 #include "cert.h"
@@ -73,7 +73,6 @@ PEHeader *SSL_PreencryptedStreamToFile(PRFileDesc *fd, PEHeader *inHeader,
     
     ss = ssl_FindSocket(fd);
     if (ss == NULL) {
-        /* XXX set an error */
         return NULL;
     }
     
@@ -201,7 +200,6 @@ PEHeader *SSL_PreencryptedFileToStream(PRFileDesc *fd, PEHeader *header,
     
     ss = ssl_FindSocket(fd);
     if (ss == NULL) {
-        /* XXX set an error */
         return NULL;
     }
     

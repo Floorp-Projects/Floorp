@@ -32,7 +32,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: sslsecur.c,v 1.6 2001/02/09 00:32:04 nelsonb%netscape.com Exp $
+ * $Id: sslsecur.c,v 1.7 2001/02/09 02:11:30 nelsonb%netscape.com Exp $
  */
 #include "cert.h"
 #include "secitem.h"
@@ -264,7 +264,6 @@ SSL_ReHandshake(PRFileDesc *fd, PRBool flushCache)
     ss = ssl_FindSocket(fd);
     if (!ss) {
 	SSL_DBG(("%d: SSL[%d]: bad socket in RedoHandshake", SSL_GETPID(), fd));
-	PORT_SetError(PR_BAD_DESCRIPTOR_ERROR);
 	return SECFailure;
     }
 
@@ -307,7 +306,6 @@ SSL_HandshakeCallback(PRFileDesc *fd, SSLHandshakeCallback cb,
     if (!ss) {
 	SSL_DBG(("%d: SSL[%d]: bad socket in HandshakeCallback",
 		 SSL_GETPID(), fd));
-	PORT_SetError(PR_BAD_DESCRIPTOR_ERROR);
 	return SECFailure;
     }
 
@@ -608,14 +606,17 @@ SECStatus
 SSL_ConfigSecureServer(PRFileDesc *fd, CERTCertificate *cert,
 		       SECKEYPrivateKey *key, SSL3KEAType kea)
 {
-    int rv;
+    SECStatus rv;
     sslSocket *ss;
     sslSecurityInfo *sec;
 
     ss = ssl_FindSocket(fd);
+    if (!ss) {
+	return SECFailure;
+    }
 
-    if ((rv = ssl_CreateSecurityInfo(ss)) != 0) {
-	return((SECStatus)rv);
+    if ((rv = ssl_CreateSecurityInfo(ss)) != SECSuccess) {
+	return rv;
     }
 
     sec = ss->sec;
@@ -1186,17 +1187,18 @@ SSL_InvalidateSession(PRFileDesc *fd)
     sslSocket *   ss = ssl_FindSocket(fd);
     SECStatus     rv = SECFailure;
 
-    ssl_Get1stHandshakeLock(ss);
-    ssl_GetSSL3HandshakeLock(ss);
+    if (ss) {
+	ssl_Get1stHandshakeLock(ss);
+	ssl_GetSSL3HandshakeLock(ss);
 
-    if (ss && ss->sec && ss->sec->ci.sid) {
-	ss->sec->uncache(ss->sec->ci.sid);
-	rv = SECSuccess;
+	if (ss->sec && ss->sec->ci.sid) {
+	    ss->sec->uncache(ss->sec->ci.sid);
+	    rv = SECSuccess;
+	}
+
+	ssl_ReleaseSSL3HandshakeLock(ss);
+	ssl_Release1stHandshakeLock(ss);
     }
-
-    ssl_ReleaseSSL3HandshakeLock(ss);
-    ssl_Release1stHandshakeLock(ss);
-
     return rv;
 }
 
@@ -1208,27 +1210,27 @@ SSL_GetSessionID(PRFileDesc *fd)
     sslSessionID * sid;
 
     ss = ssl_FindSocket(fd);
+    if (ss) {
+	ssl_Get1stHandshakeLock(ss);
+	ssl_GetSSL3HandshakeLock(ss);
 
-    ssl_Get1stHandshakeLock(ss);
-    ssl_GetSSL3HandshakeLock(ss);
+	if (ss->useSecurity && ss->connected && ss->sec && ss->sec->ci.sid) {
+	    sid = ss->sec->ci.sid;
+	    item = (SECItem *)PORT_Alloc(sizeof(SECItem));
+	    if (sid->version < SSL_LIBRARY_VERSION_3_0) {
+		item->len = SSL_SESSIONID_BYTES;
+		item->data = (unsigned char*)PORT_Alloc(item->len);
+		PORT_Memcpy(item->data, sid->u.ssl2.sessionID, item->len);
+	    } else {
+		item->len = sid->u.ssl3.sessionIDLength;
+		item->data = (unsigned char*)PORT_Alloc(item->len);
+		PORT_Memcpy(item->data, sid->u.ssl3.sessionID, item->len);
+	    }
+	}
 
-    if (ss && ss->useSecurity && ss->connected && ss->sec && ss->sec->ci.sid) {
-        sid = ss->sec->ci.sid;
-        item = (SECItem *)PORT_Alloc(sizeof(SECItem));
-        if (sid->version < SSL_LIBRARY_VERSION_3_0) {
-            item->len = SSL_SESSIONID_BYTES;
-            item->data = (unsigned char*)PORT_Alloc(item->len);
-            PORT_Memcpy(item->data, sid->u.ssl2.sessionID, item->len);
-        } else {
-            item->len = sid->u.ssl3.sessionIDLength;
-            item->data = (unsigned char*)PORT_Alloc(item->len);
-            PORT_Memcpy(item->data, sid->u.ssl3.sessionID, item->len);
-        }
+	ssl_ReleaseSSL3HandshakeLock(ss);
+	ssl_Release1stHandshakeLock(ss);
     }
-
-    ssl_ReleaseSSL3HandshakeLock(ss);
-    ssl_Release1stHandshakeLock(ss);
-
     return item;
 }
 
