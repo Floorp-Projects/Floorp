@@ -4,6 +4,10 @@
 	width: 4em;
 }
 
+#mouseWheelMode {
+      width: 9em;
+}
+
 /******* SmartBrowsing **********/
 
 #disabledDomains {
