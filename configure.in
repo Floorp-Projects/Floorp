@@ -1879,6 +1879,11 @@ fi
 dnl Check for short-wchar
 dnl ========================================================
 
+TEST_SHORT_WCHAR=1
+MOZ_ARG_DISABLE_BOOL(short-wchar,
+[  --disable-short-wchar   Disable compiler short-wchar option],
+  TEST_SHORT_WCHAR= )
+
 AC_CACHE_CHECK(for size of wchar_t == 2,
     ac_cv_have_short_wchar_t,
     [AC_TRY_RUN([#include <wchar.h>
@@ -1891,6 +1896,8 @@ if test "$ac_cv_have_short_wchar_t" = "yes"; then
     HAVE_CPP_2BYTE_WCHAR_T=1
 else
 dnl This is really gcc-only
+
+  if test "$TEST_SHORT_WCHAR"; then
     _SAVE_CFLAGS=$CFLAGS
     CFLAGS="$CFLAGS -fshort-wchar"
 
@@ -1910,6 +1917,7 @@ dnl Is it OK to assume CXX and CC take the same arguments?
     else    
         CFLAGS=$_SAVE_CFLAGS
     fi
+  fi
 fi
 
 dnl Checks for header files.
