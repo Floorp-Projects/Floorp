@@ -183,6 +183,19 @@ public:
             PRBool forceJSEnabled = PR_FALSE,
             PRUint32 postHeadersLength = 0, 
             const char* postHeaders = NULL);
+            
+    NS_IMETHOD
+    RegisterPlugin(REFNSIID aCID,
+                   const char* aPluginName,
+                   const char* aDescription,
+                   const char** aMimeTypes,
+                   const char** aMimeDescriptions,
+                   const char** aFileExtensions,
+                   PRInt32 aCount);
+
+    NS_IMETHOD
+    UnregisterPlugin(REFNSIID aCID);
+    
 
     ////////////////////////////////////////////////////////////////////////////
     // from nsIPluginManager2:
@@ -1579,6 +1592,28 @@ CPluginManager::PostURL(nsISupports* pluginInst,
     inst->Release();
     return fromNPError[err];
 }
+
+NS_IMETHODIMP
+CPluginManager::RegisterPlugin(REFNSIID aCID,
+                               const char* aPluginName,
+                               const char* aDescription,
+                               const char** aMimeTypes,
+                               const char** aMimeDescriptions,
+                               const char** aFileExtensions,
+                               PRInt32 aCount)
+{
+    // XXXwaterson I don't think we need to do anything here.
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+CPluginManager::UnregisterPlugin(REFNSIID aCID)
+{
+    // XXXwaterson I don't think we need to do anything here.
+    return NS_OK;
+}
+
+
 
 //////////////////////////////
 // nsIPluginManager2 methods.
