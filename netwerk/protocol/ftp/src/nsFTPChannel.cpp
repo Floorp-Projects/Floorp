@@ -336,7 +336,37 @@ nsFTPChannel::AsyncWrite(nsIInputStream *fromStream,
                          nsISupports *ctxt,
                          nsIStreamObserver *observer)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+    nsresult rv = NS_OK;
+
+    NS_ASSERTION(writeCount > 0, "FTP requires stream len info");
+    if (writeCount < 1) return NS_ERROR_NOT_INITIALIZED;
+
+    NS_NEWXPCOM(mConnThread, nsFtpConnectionThread);
+    if (!mConnThread) return NS_ERROR_OUT_OF_MEMORY;
+    NS_ADDREF(mConnThread);
+
+    rv = mConnThread->Init(mHandler, this, mBufferSegmentSize, mBufferMaxSize);
+    mHandler = 0;
+    if (NS_FAILED(rv)) {
+        NS_RELEASE(mConnThread);
+        return rv;
+    }
+
+    rv = mConnThread->SetWriteStream(fromStream, writeCount);
+    if (NS_FAILED(rv)) {
+        NS_RELEASE(mConnThread);
+        return rv;
+    }
+
+    rv = mConnThread->SetStreamObserver(observer, ctxt);
+    if (NS_FAILED(rv))
+        NS_RELEASE(mConnThread);
+
+    rv = mPool->DispatchRequest((nsIRunnable*)mConnThread);
+
+    mConnected = PR_TRUE;
+
+    return rv;
 }
 
 NS_IMETHODIMP
