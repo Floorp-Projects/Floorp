@@ -64,7 +64,7 @@ int main(int argc, char* argv[])
      temparg[i+1]=argv[i];
   }
   //we still might lose some args. a check would be handy with big neon letters yelling at the user.
-  temparg[i+1]=nsnull;
+  temparg[i+1]=0;
   return xre_main(argc+1, temparg, &kAppData);
 }
 
