@@ -32,14 +32,34 @@ NGLAYOUT_PLUGINS = 1
 # Command macro defines
 #
 
+#//------------------------------------------------------------------------
+#// Figure out how to do the pull.
+#//------------------------------------------------------------------------
+!if "$(MOZ_BRANCH)" != ""
+CVS_BRANCH=-r $(MOZ_BRANCH)
+HAVE_BRANCH=1
+!else
+HAVE_BRANCH=0
+!endif
+
+!if "$(MOZ_DATE)" != ""
+CVS_BRANCH=-D "$(MOZ_DATE)"
+HAVE_DATE=1
+!else
+HAVE_DATE=0
+!endif
+
+!if $(HAVE_DATE) && $(HAVE_BRANCH)
+ERR_MESSAGE=$(ERR_MESSAGE)^
+Cannot specify both MOZ_BRANCH and MOZ_DATE
+!endif
+
 # let's be explicit about CVSROOT... some windows cvs clients
 # are too stupid to correctly work without the -d option 
-!if defined(MOZ_DATE)
-CVSCO = cvs -q co -P -D "$(MOZ_DATE)"
-!elseif defined(CVSROOT)
-CVSCO = cvs -d $(CVSROOT) -q co -P
+!if defined(CVSROOT)
+CVSCO = cvs -d $(CVSROOT) -q co $(CVS_BRANCH) -P
 !else
-CVSCO = cvs -q co -P
+CVSCO = cvs -q co $(CVS_BRANCH) -P
 !endif
 
 CVSCO_TAG = cvs -q co -P
@@ -110,3 +130,75 @@ build_all:
 build_layout:
 	@cd $(MOZ_SRC)\mozilla\.
 	nmake -f makefile.win all
+
+#//------------------------------------------------------------------------
+#// Utility stuff...
+#//------------------------------------------------------------------------
+
+#//------------------------------------------------------------------------
+# Verify that MOZ_SRC is set correctly
+#//------------------------------------------------------------------------
+
+# Check to see if it is set at all
+!if "$(MOZ_SRC)"!=""
+
+#
+# create a temp file at the root and make sure it is visible from MOZ_SRC
+#
+!if [copy $(MAKEDIR)\client.mak $(MAKEDIR)\xyzzy.tmp > NUL] == 0
+!endif
+
+!if !EXIST( $(MOZ_SRC)\mozilla\xyzzy.tmp )
+ERR_MESSAGE=$(ERR_MESSAGE)^
+MOZ_SRC isn't set correctly: [$(MOZ_SRC)\mozilla]!=[$(MAKEDIR)]
+!endif
+
+!if [del $(MAKEDIR)\xyzzy.tmp]
+!endif
+
+!else
+# MOZ_SRC isn't set at all
+ERR_MESSAGE=$(ERR_MESSAGE)^
+Environment variable MOZ_SRC isn't set.
+!endif
+
+#//------------------------------------------------------------------------
+# Verify that MOZ_BITS is set
+#//------------------------------------------------------------------------
+!if !defined(MOZ_BITS)
+ERR_MESSAGE=$(ERR_MESSAGE)^
+Environment variable MOZ_BITS isn't set.
+!endif
+
+!if !defined(MOZ_TOOLS)
+ERR_MESSAGE=$(ERR_MESSAGE)^
+Environment variable MOZ_TOOLS isn't set.
+!endif
+
+
+#//------------------------------------------------------------------------
+#// Display error 
+#//------------------------------------------------------------------------
+
+!if "$(ERR_MESSAGE)" != ""
+ERR_MESSAGE = ^
+client.mak:  ^
+$(ERR_MESSAGE) ^
+^
+client.mak: usage^
+^
+nmake -f client.mak [MOZ_BRANCH=<cvs_branch_name>] ^
+		    [MOZ_DATE=<cvs_date>]^
+		    [pull_and_build_all]^
+		    [pull_all]^
+		    [build_all]^
+^
+Environment variables:^
+^
+MOZ_BITS    set to 32^
+MOZ_SRC     set to the directory above mozilla or "$(MAKEDIR)\.."^
+MOZ_TOOLS   set to the directory containing the needed tools ^
+
+!ERROR $(ERR_MESSAGE)
+
+!endif
