@@ -50,6 +50,11 @@ interface nsITreeSelection : nsISupports
   attribute nsITreeBoxObject tree;
 
   /**
+   * This attribute is a boolean indicating single selection.
+   */
+  readonly attribute boolean single;
+
+  /**
    * The number of rows currently selected in this tree.
    */
   readonly attribute long count;
