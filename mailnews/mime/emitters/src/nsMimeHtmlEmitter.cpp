@@ -229,8 +229,8 @@ NS_IMETHODIMP nsMimeHtmlDisplayEmitter::WriteHTMLHeaders()
     }
 
     headerSink->ProcessHeaders(headerNames, (const PRUnichar **) headerValues, numHeadersAdded, bFromNewsgroups);
-    for (i = 0; i < numHeadersAdded; i++)
-      nsCRT::free(headerValues[i]);
+    for (PRUint32 index = 0; index < numHeadersAdded; index++)
+      nsCRT::free(headerValues[index]);
 
     PR_FREEIF(headerNames);
     PR_FREEIF(headerValues);
