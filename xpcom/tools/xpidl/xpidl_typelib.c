@@ -496,7 +496,7 @@ fill_td_from_type(TreeState *state, XPTTypeDescriptor *td, IDL_tree type)
             break;
           case IDLN_TYPE_STRING:
             /* XXXshaver string-type? */
-            td->prefix.flags = TD_PBSTR | XPT_TDP_POINTER;
+            td->prefix.flags = TD_PSTRING | XPT_TDP_POINTER;
             break;
           case IDLN_TYPE_WIDE_STRING:
             td->prefix.flags = TD_PWSTRING | XPT_TDP_POINTER;
