@@ -1610,18 +1610,18 @@ void nsCalMonthContextController::SetDefaults()
 // CMiniCalPlatform message handlers
 
 
-nsEventStatus nsCalMonthContextController::OnPaint(nsGUIEvent *aEvent) 
+nsEventStatus nsCalMonthContextController :: OnPaint(nsIRenderingContext& aRenderingContext,
+                                                     const nsRect& aDirtyRect)
 {
-    nsIRenderingContext * rndctx = ((nsPaintEvent*)aEvent)->renderingContext;
-    mRenderingContext = rndctx;
+    mRenderingContext = &aRenderingContext;
 
-    PushState(mRenderingContext);
+    PushState(aRenderingContext);
 
-    PaintBackground(aEvent);
+    PaintBackground(aRenderingContext,aDirtyRect);
 
-    DrawMiniCal((void *)rndctx);
+    DrawMiniCal((void *)mRenderingContext);
 
-    PopState(mRenderingContext);
+    PopState(aRenderingContext);
 
     mRenderingContext = nsnull;
 

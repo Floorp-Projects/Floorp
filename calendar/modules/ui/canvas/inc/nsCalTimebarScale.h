@@ -30,19 +30,21 @@ public:
   NS_DECL_ISUPPORTS
 
   NS_IMETHOD Init();
-  NS_IMETHOD_(nsEventStatus) PaintBorder(nsGUIEvent *aEvent);
+  NS_IMETHOD_(nsEventStatus) PaintBorder(nsIRenderingContext& aRenderingContext,
+                                         const nsRect& aDirtyRect);
   NS_IMETHOD SetParameter(nsString& aKey, nsString& aValue) ;
   NS_IMETHOD GetClassPreferredSize(nsSize& aSize);
 
 protected:
 
-  NS_IMETHOD PaintInterval(nsGUIEvent *aEvent,
+  NS_IMETHOD PaintInterval(nsIRenderingContext& aRenderingContext,
+                           const nsRect& aDirtyRect,
                            PRUint32 aIndex,
                            PRUint32 aStart,
                            PRUint32 aSpace,
                            PRUint32 aMinorInterval);
 
-  NS_IMETHOD DrawTime(nsIRenderingContext * aContext,
+  NS_IMETHOD DrawTime(nsIRenderingContext& aContext,
                       nsRect& aRect,
                       PRUint32 aIndex);
 

@@ -33,6 +33,7 @@ static NS_DEFINE_IID(kCalCommandCanvasCID, NS_CAL_COMMANDCANVAS_CID);
 static NS_DEFINE_IID(kITextWidgetIID, NS_ITEXTWIDGET_IID);
 static NS_DEFINE_IID(kCTextFieldCID, NS_TEXTFIELD_CID);
 static NS_DEFINE_IID(kIWidgetIID, NS_IWIDGET_IID);
+static NS_DEFINE_IID(kIXPFCCanvasIID, NS_IXPFC_CANVAS_IID);
 
 #define kNotFound -1
 
@@ -124,7 +125,6 @@ nsresult nsCalCommandCanvas :: Init()
 
   nsIWidget * widget = nsnull;
   nsresult res = mStaticTextField->QueryInterface(kIWidgetIID,(void**)&widget);
-  gXPFCToolkit->GetCanvasManager()->Register(this, widget);
   NS_RELEASE(widget);
 
   mStaticTextField->Create(GetWidget(), 
@@ -152,7 +152,6 @@ nsresult nsCalCommandCanvas :: Init()
 
   widget = nsnull;
   res = mTextField->QueryInterface(kIWidgetIID,(void**)&widget);
-  gXPFCToolkit->GetCanvasManager()->Register(this, widget);
   NS_RELEASE(widget);
   
   mTextField->Create(GetWidget(), 
@@ -178,7 +177,12 @@ nsEventStatus PR_CALLBACK HandleEventTextField(nsGUIEvent *aEvent)
   if (gXPFCToolkit == nsnull)
     return nsEventStatus_eIgnore;
 
-  nsIXPFCCanvas * canvas = gXPFCToolkit->GetCanvasManager()->CanvasFromWidget(aEvent->widget);
+  nsIXPFCCanvas * canvas = nsnull ;
+  
+  nsresult res = aEvent->widget->QueryInterface(kIXPFCCanvasIID,(void**)&canvas);
+
+  if (NS_OK != res)
+    return nsEventStatus_eIgnore;
 
   if (canvas)
     return (canvas->HandleEvent(aEvent));
@@ -239,7 +243,8 @@ nsresult nsCalCommandCanvas :: SetBounds(const nsRect &aBounds)
 }
 
 
-nsEventStatus nsCalCommandCanvas :: OnPaint(nsGUIEvent *aEvent)
+nsEventStatus nsCalCommandCanvas :: OnPaint(nsIRenderingContext& aRenderingContext,
+                                            const nsRect& aDirtyRect)
 {
   mTextField->Invalidate(PR_FALSE);
   mStaticTextField->Invalidate(PR_FALSE);

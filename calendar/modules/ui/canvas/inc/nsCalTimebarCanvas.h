@@ -39,13 +39,15 @@ public:
   NS_IMETHOD_(PRUint32) GetVisibleMajorIntervals();
   NS_IMETHOD_(PRUint32) GetVisibleMinorIntervals();
 
-  NS_IMETHOD_(nsEventStatus) PaintBackground(nsGUIEvent *aEvent);
+  NS_IMETHOD_(nsEventStatus) PaintBackground(nsIRenderingContext& aRenderingContext,
+                                             const nsRect& aDirtyRect);
   NS_IMETHOD SetParameter(nsString& aKey, nsString& aValue) ;
 
 
 protected:
 
-  NS_IMETHOD PaintInterval(nsGUIEvent *aEvent,
+  NS_IMETHOD PaintInterval(nsIRenderingContext& aRenderingContext,
+                           const nsRect& aDirtyRect,
                            PRUint32 aIndex,
                            PRUint32 aStart,
                            PRUint32 aSpace,

@@ -30,22 +30,26 @@
 #include "nsBoxLayout.h"
 #include "nsViewsCID.h"
 #include "nsIViewManager.h"
+#include "nsXPFCToolkit.h"
 
 // XXX: This code should use XML for defining the Root UI. We need to
 //      implement the stream manager first to do this, then lots of
 //      this specific code should be removed (it would load trex.ui)
 
-static NS_DEFINE_IID(kICalContainerIID, NS_ICALENDAR_CONTAINER_IID);
+static NS_DEFINE_IID(kICalContainerIID,       NS_ICALENDAR_CONTAINER_IID);
 
-static NS_DEFINE_IID(kFileWidgetCID, NS_FILEWIDGET_CID);
-static NS_DEFINE_IID(kIFileWidgetIID, NS_IFILEWIDGET_IID);
-static NS_DEFINE_IID(kCXPFCDTD,    NS_IXPFCXML_DTD_IID);
-static NS_DEFINE_IID(kCXPFCContentSink, NS_XPFCXMLCONTENTSINK_IID);
-static NS_DEFINE_IID(kCXPFCCommandServerCID, NS_XPFC_COMMAND_SERVER_CID);
-static NS_DEFINE_IID(kCXPFCHTMLCanvasCID, NS_XPFC_HTML_CANVAS_CID);
+static NS_DEFINE_IID(kFileWidgetCID,          NS_FILEWIDGET_CID);
+static NS_DEFINE_IID(kIFileWidgetIID,         NS_IFILEWIDGET_IID);
+static NS_DEFINE_IID(kCXPFCDTD,               NS_IXPFCXML_DTD_IID);
+static NS_DEFINE_IID(kCXPFCContentSink,       NS_XPFCXMLCONTENTSINK_IID);
+static NS_DEFINE_IID(kCXPFCCommandServerCID,  NS_XPFC_COMMAND_SERVER_CID);
+static NS_DEFINE_IID(kCXPFCHTMLCanvasCID,     NS_XPFC_HTML_CANVAS_CID);
 
-static NS_DEFINE_IID(kViewManagerCID,       NS_VIEW_MANAGER_CID);
-static NS_DEFINE_IID(kIViewManagerIID,      NS_IVIEWMANAGER_IID);
+static NS_DEFINE_IID(kViewManagerCID,         NS_VIEW_MANAGER_CID);
+static NS_DEFINE_IID(kIViewManagerIID,        NS_IVIEWMANAGER_IID);
+static NS_DEFINE_IID(kIViewIID,               NS_IVIEW_IID);
+static NS_DEFINE_IID(kViewCID,                NS_VIEW_CID);
+static NS_DEFINE_IID(kWidgetCID,              NS_CHILD_CID);
 
 // hardcode names of dll's
 #ifdef NS_WIN32
@@ -140,6 +144,8 @@ nsresult nsCalendarContainer::Init(nsIWidget * aParent,
 
   mViewManager->Init(aParent->GetDeviceContext());
 
+  mViewManager->SetFrameRate(25);
+
   /*
    * Create the Root UI
    */
@@ -174,7 +180,31 @@ nsresult nsCalendarContainer::Init(nsIWidget * aParent,
     mRootUI->SetVisibility(PR_FALSE);
     ((nsBoxLayout *)(mRootUI->GetLayout()))->SetLayoutAlignment(eLayoutAlignment_vertical);
 
+    nsIView * view = nsnull ;
+
+    res = nsRepository::CreateInstance(kViewCID, 
+                                       nsnull, 
+                                       kIViewIID, 
+                                       (void **)&(view));
+
+    if (res != NS_OK)
+      return res;
+
+    view->Init(mViewManager, 
+               aBounds, 
+               nsnull,
+               nsnull,
+               nsnull,
+               widget_parent->GetNativeData(NS_NATIVE_WIDGET));
+
+    mViewManager->SetRootView(view);
+
+    mViewManager->DisableRefresh();
+    mViewManager->SetWindowDimensions(aBounds.width, aBounds.height);
+
+    gXPFCToolkit->GetCanvasManager()->Register(mRootUI,view);
   }
+
 
   /*
    * Embed the Calendar Widget

@@ -30,14 +30,17 @@ public:
   NS_DECL_ISUPPORTS
 
   NS_IMETHOD Init();
-  NS_IMETHOD_(nsEventStatus) PaintForeground(nsGUIEvent *aEvent);
-  NS_IMETHOD_(nsEventStatus) PaintBorder(nsGUIEvent *aEvent);
+  NS_IMETHOD_(nsEventStatus) PaintForeground(nsIRenderingContext& aRenderingContext,
+                                             const nsRect& aDirtyRect);
+  NS_IMETHOD_(nsEventStatus) PaintBorder(nsIRenderingContext& aRenderingContext,
+                                         const nsRect& aDirtyRect);
 
 
 protected:
   ~nsCalDayViewCanvas();
 
-  NS_IMETHOD PaintInterval(nsGUIEvent *aEvent,
+  NS_IMETHOD PaintInterval(nsIRenderingContext& aRenderingContext,
+                           const nsRect& aDirtyRect,
                            PRUint32 aIndex,
                            PRUint32 aStart,
                            PRUint32 aSpace,

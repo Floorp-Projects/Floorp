@@ -22,7 +22,7 @@
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kCalTimebarCanvasCID, NS_CAL_TIMEBARCANVAS_CID);
 
-#define INSET 1
+#define LOCAL_INSET 1
 
 nsCalTimebarCanvas :: nsCalTimebarCanvas(nsISupports* outer) : nsXPFCCanvas(outer)
 {
@@ -148,14 +148,15 @@ nsICalTimeContext * nsCalTimebarCanvas :: GetTimeContext()
 }
 
 
-nsEventStatus nsCalTimebarCanvas :: PaintBackground(nsGUIEvent *aEvent)
+nsEventStatus nsCalTimebarCanvas :: PaintBackground(nsIRenderingContext& aRenderingContext,
+                                                    const nsRect& aDirtyRect)
 {
   /*
    * Let the Base Canvas paint it's default background
    */
 
   nsRect rect;
-  nsXPFCCanvas::PaintBackground(aEvent);
+  nsXPFCCanvas::PaintBackground(aRenderingContext,aDirtyRect);
 
   /*
    * Now paint the TimeContext over the base canvas background
@@ -180,15 +181,15 @@ nsEventStatus nsCalTimebarCanvas :: PaintBackground(nsGUIEvent *aEvent)
     space_per_interval = (rect.width) / major_intervals; 
     start = rect.x;
   } else {
-    space_per_interval = ((rect.height-(2*INSET)) - ((rect.height-(2*INSET)) % major_intervals)) / major_intervals;
-    start = rect.y+INSET;
+    space_per_interval = ((rect.height-(2*LOCAL_INSET)) - ((rect.height-(2*LOCAL_INSET)) % major_intervals)) / major_intervals;
+    start = rect.y+LOCAL_INSET;
   }
 
   PRUint32 i = 0;
 
   for (i=0; i<=major_intervals; i++) {
 
-    PaintInterval(aEvent, i,start,space_per_interval, minor_intervals);
+    PaintInterval(aRenderingContext, aDirtyRect, i,start,space_per_interval, minor_intervals);
 
     start += space_per_interval;
     
@@ -197,7 +198,8 @@ nsEventStatus nsCalTimebarCanvas :: PaintBackground(nsGUIEvent *aEvent)
   return nsEventStatus_eConsumeNoDefault;  
 }
 
-nsresult nsCalTimebarCanvas::PaintInterval(nsGUIEvent *aEvent,
+nsresult nsCalTimebarCanvas::PaintInterval(nsIRenderingContext& aRenderingContext,
+                                           const nsRect& aDirtyRect,
                                            PRUint32 aIndex,
                                            PRUint32 aStart,
                                            PRUint32 aSpace,
@@ -211,9 +213,7 @@ nsresult nsCalTimebarCanvas::PaintInterval(nsGUIEvent *aEvent,
 
   GetBounds(rect);
 
-  nsIRenderingContext * rndctx = ((nsPaintEvent*)aEvent)->renderingContext;
-
-  rndctx->SetColor(GetForegroundColor());
+  aRenderingContext.SetColor(GetForegroundColor());
 
   if (GetTimeContext()->GetHorizontal() == PR_TRUE) {
     rect.x = aStart;
@@ -223,7 +223,7 @@ nsresult nsCalTimebarCanvas::PaintInterval(nsGUIEvent *aEvent,
     rect.height = aSpace;
   }
 
-  rndctx->DrawLine(rect.x+INSET, rect.y, rect.x+rect.width-INSET, rect.y);
+  aRenderingContext.DrawLine(rect.x+LOCAL_INSET, rect.y, rect.x+rect.width-LOCAL_INSET, rect.y);
 
   return NS_OK ;
 }

@@ -114,9 +114,10 @@ nsresult nsCalMultiDayViewCanvas :: Init()
  * Since our Day View's will do the painting, just ignore
  */
 
-nsEventStatus nsCalMultiDayViewCanvas :: PaintBackground(nsGUIEvent *aEvent)
+nsEventStatus nsCalMultiDayViewCanvas :: PaintBackground(nsIRenderingContext& aRenderingContext,
+                                                         const nsRect& aDirtyRect)
 {
-  return (nsXPFCCanvas :: PaintBackground(aEvent));  
+  return (nsXPFCCanvas :: PaintBackground(aRenderingContext,aDirtyRect));  
 }
 
 nsresult nsCalMultiDayViewCanvas :: SetNumberViewableDays(PRUint32 aNumberViewableDays)

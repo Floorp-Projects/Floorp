@@ -68,71 +68,70 @@ nsresult nsCalTimebarContextController::QueryInterface(REFNSIID aIID, void** aIn
 NS_IMPL_ADDREF(nsCalTimebarContextController)
 NS_IMPL_RELEASE(nsCalTimebarContextController)
 
-nsEventStatus nsCalTimebarContextController :: PaintForeground(nsGUIEvent *aEvent)
+nsEventStatus nsCalTimebarContextController :: PaintForeground(nsIRenderingContext& aRenderingContext,
+                                                               const nsRect& aDirtyRect)
 {
 
   nsPoint pts[3];
 
-  nsIRenderingContext * rndctx = ((nsPaintEvent*)aEvent)->renderingContext;
-
-  rndctx->SetColor(GetForegroundColor());
+  aRenderingContext.SetColor(GetForegroundColor());
 
   GetTrianglePoints(pts);
 
-  RenderController(rndctx, pts,3);
+  RenderController(aRenderingContext, pts,3);
 
   return nsEventStatus_eConsumeNoDefault;  
 }
 
 
-nsresult nsCalTimebarContextController :: RenderController(nsIRenderingContext * aCtx,
+nsresult nsCalTimebarContextController :: RenderController(nsIRenderingContext& aCtx,
                                                            nsPoint * aPoints,
                                                            PRUint32 aNumPoints)
 {
-  aCtx->FillPolygon(aPoints,aNumPoints);
+  aCtx.FillPolygon(aPoints,aNumPoints);
 
   switch(GetOrientation())
   {
     case nsContextControllerOrientation_east:
 
-      aCtx->SetColor(Highlight(GetForegroundColor()));
-      aCtx->DrawLine(aPoints[0].x,aPoints[0].y,aPoints[1].x,aPoints[1].y);
-      aCtx->DrawLine(aPoints[2].x,aPoints[2].y,aPoints[0].x,aPoints[0].y);
+      aCtx.SetColor(Highlight(GetForegroundColor()));
+      aCtx.DrawLine(aPoints[0].x,aPoints[0].y,aPoints[1].x,aPoints[1].y);
+      aCtx.DrawLine(aPoints[2].x,aPoints[2].y,aPoints[0].x,aPoints[0].y);
 
-      aCtx->SetColor(Dim(GetForegroundColor()));
-      aCtx->DrawLine(aPoints[1].x,aPoints[1].y,aPoints[2].x,aPoints[2].y);
+      aCtx.SetColor(Dim(GetForegroundColor()));
+      aCtx.DrawLine(aPoints[1].x,aPoints[1].y,aPoints[2].x,aPoints[2].y);
 
       break;
 
     case nsContextControllerOrientation_west:
 
-      aCtx->SetColor(Highlight(Highlight(GetForegroundColor())));
-      aCtx->DrawLine(aPoints[0].x,aPoints[0].y,aPoints[1].x,aPoints[1].y);
+      aCtx.SetColor(Highlight(Highlight(GetForegroundColor())));
+      aCtx.DrawLine(aPoints[0].x,aPoints[0].y,aPoints[1].x,aPoints[1].y);
 
-      aCtx->SetColor(Dim(GetForegroundColor()));
-      aCtx->DrawLine(aPoints[1].x,aPoints[1].y,aPoints[2].x,aPoints[2].y);
-      aCtx->DrawLine(aPoints[2].x,aPoints[2].y,aPoints[0].x,aPoints[0].y);
+      aCtx.SetColor(Dim(GetForegroundColor()));
+      aCtx.DrawLine(aPoints[1].x,aPoints[1].y,aPoints[2].x,aPoints[2].y);
+      aCtx.DrawLine(aPoints[2].x,aPoints[2].y,aPoints[0].x,aPoints[0].y);
       break;
 
     case nsContextControllerOrientation_north:
 
-      aCtx->SetColor(Highlight(Highlight(GetForegroundColor())));
-      aCtx->DrawLine(aPoints[0].x,aPoints[0].y,aPoints[1].x,aPoints[1].y);
+      aCtx.SetColor(Highlight(Highlight(GetForegroundColor())));
+      aCtx.DrawLine(aPoints[0].x,aPoints[0].y,aPoints[1].x,aPoints[1].y);
 
-      aCtx->SetColor(Highlight(GetForegroundColor()));
-      aCtx->DrawLine(aPoints[1].x,aPoints[1].y,aPoints[2].x,aPoints[2].y);
+      aCtx.SetColor(Highlight(GetForegroundColor()));
+      aCtx.DrawLine(aPoints[1].x,aPoints[1].y,aPoints[2].x,aPoints[2].y);
 
-      aCtx->SetColor(Dim(GetForegroundColor()));
-      aCtx->DrawLine(aPoints[2].x,aPoints[2].y,aPoints[0].x,aPoints[0].y);
+      aCtx.SetColor(Dim(GetForegroundColor()));
+      aCtx.DrawLine(aPoints[2].x,aPoints[2].y,aPoints[0].x,aPoints[0].y);
       break;
 
     case nsContextControllerOrientation_south:
-      aCtx->SetColor(Dim(GetForegroundColor()));
-      aCtx->DrawLine(aPoints[0].x,aPoints[0].y,aPoints[1].x,aPoints[1].y);
-      aCtx->DrawLine(aPoints[1].x,aPoints[1].y,aPoints[2].x,aPoints[2].y);
+      aCtx.SetColor(Dim(GetForegroundColor()));
+      aCtx.DrawLine(aPoints[0].x,aPoints[0].y,aPoints[1].x,aPoints[1].y);
+      aCtx.DrawLine(aPoints[1].x,aPoints[1].y,aPoints[2].x,aPoints[2].y);
 
-      aCtx->SetColor(Highlight(GetForegroundColor()));
-      aCtx->DrawLine(aPoints[2].x,aPoints[2].y,aPoints[0].x,aPoints[0].y);
+      aCtx.SetColor(Highlight(GetForegroundColor()));
+      aCtx.DrawLine(aPoints[2].x,aPoints[2].y,aPoints[0].x,aPoints[0].y);
       break;
 
   }

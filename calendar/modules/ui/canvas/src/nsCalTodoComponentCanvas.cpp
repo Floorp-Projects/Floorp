@@ -145,7 +145,8 @@ void nsCalTodoComponentCanvas :: SetBackgroundColor(const nscolor &aColor)
   nsXPFCCanvas::SetBackgroundColor(aColor);
 }
 
-nsEventStatus nsCalTodoComponentCanvas :: OnPaint(nsGUIEvent *aEvent)
+nsEventStatus nsCalTodoComponentCanvas :: OnPaint(nsIRenderingContext& aRenderingContext,
+                                                  const nsRect& aDirtyRect)
 {
   mWidget->Invalidate(PR_FALSE);
   return (nsEventStatus_eConsumeNoDefault);

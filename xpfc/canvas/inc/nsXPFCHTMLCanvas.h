@@ -38,7 +38,9 @@ public:
   NS_IMETHOD SetParameter(nsString& aKey, nsString& aValue) ;
 
   NS_IMETHOD_(nsEventStatus) HandleEvent(nsGUIEvent *aEvent);
-  NS_IMETHOD_(nsEventStatus) OnPaint(nsGUIEvent *aEvent);
+  NS_IMETHOD_(nsEventStatus) OnPaint(nsIRenderingContext& aRenderingContext,
+                                     const nsRect& aDirtyRect);
+
   NS_IMETHOD_(nsEventStatus) OnResize(nsGUIEvent *aEvent);
   NS_IMETHOD GetClassPreferredSize(nsSize& aSize);
 

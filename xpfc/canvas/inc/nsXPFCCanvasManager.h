@@ -27,10 +27,12 @@
 #include "nsCom.h"
 #include "nsIVector.h"
 #include "nsIIterator.h"
-
 #include "nsIXPFCCanvasManager.h"
+#include "nsIView.h"
+#include "nsIViewObserver.h"
 
-class nsXPFCCanvasManager : public nsIXPFCCanvasManager
+class nsXPFCCanvasManager : public nsIXPFCCanvasManager,
+                            public nsIViewObserver
 {
 public:
   nsXPFCCanvasManager();
@@ -38,13 +40,24 @@ public:
   NS_DECL_ISUPPORTS
 
   NS_IMETHOD Init() ;
-  NS_IMETHOD_(nsIXPFCCanvas *) CanvasFromWidget(nsIWidget * aWidget);
+  NS_IMETHOD_(nsIXPFCCanvas *) CanvasFromView(nsIView * aView);
   NS_IMETHOD GetRootCanvas(nsIXPFCCanvas ** aCanvas);
   NS_IMETHOD SetRootCanvas(nsIXPFCCanvas * aCanvas);
-  NS_IMETHOD Register(nsIXPFCCanvas * aCanvas, nsIWidget * aWidget);
+  NS_IMETHOD Register(nsIXPFCCanvas * aCanvas, nsIView * aView);
   NS_IMETHOD Unregister(nsIXPFCCanvas * aCanvas);
   NS_IMETHOD_(nsIXPFCCanvas *) GetFocusedCanvas();
   NS_IMETHOD SetFocusedCanvas(nsIXPFCCanvas * aCanvas);
+
+  // nsIViewObserver Interfaces
+  NS_IMETHOD Paint(nsIView *            aView,
+                   nsIRenderingContext& aRenderingContext,
+                   const nsRect&        aDirtyRect);
+  NS_IMETHOD HandleEvent(nsIView *       aView,
+                         nsGUIEvent*     aEvent,
+                         nsEventStatus&  aEventStatus);
+  NS_IMETHOD Scrolled(nsIView * aView);
+  NS_IMETHOD ResizeReflow(nsIView * aView, nscoord aWidth, nscoord aHeight);
+
 
 protected:
   ~nsXPFCCanvasManager();

@@ -93,7 +93,8 @@ nsresult nsCalTimebarScale :: Init()
  * ourselves.  Get the data from it
  */
 
-nsresult nsCalTimebarScale::PaintInterval(nsGUIEvent *aEvent,
+nsresult nsCalTimebarScale::PaintInterval(nsIRenderingContext& aRenderingContext,
+                                          const nsRect& aDirtyRect,
                                           PRUint32 aIndex,
                                           PRUint32 aStart,
                                           PRUint32 aSpace,
@@ -104,12 +105,11 @@ nsresult nsCalTimebarScale::PaintInterval(nsGUIEvent *aEvent,
   /*
    * Paint this interval in it's entirety
    */
-  nsCalTimebarCanvas::PaintInterval(aEvent, aIndex, aStart, aSpace, aMinorInterval);
+  nsCalTimebarCanvas::PaintInterval(aRenderingContext, aDirtyRect, aIndex, aStart, aSpace, aMinorInterval);
   nsRect rect;
   GetBounds(rect);
 
-  nsIRenderingContext * rndctx = ((nsPaintEvent*)aEvent)->renderingContext;
-  rndctx->SetColor(GetForegroundColor());
+  aRenderingContext.SetColor(GetForegroundColor());
 
   aMinorInterval = 4;   // XXX: this is a hack, we should specify this in the XML -sman
 
@@ -127,7 +127,7 @@ nsresult nsCalTimebarScale::PaintInterval(nsGUIEvent *aEvent,
     PRUint32 iX = rect.x + iXSpace;
     for (i = 0; i < (PRUint32) aMinorInterval; i++)
     {
-      rndctx->DrawLine(iX,iYStart, iX,iYStop);
+      aRenderingContext.DrawLine(iX,iYStart, iX,iYStop);
       iX += iXSpace;
     }
   }
@@ -148,17 +148,17 @@ nsresult nsCalTimebarScale::PaintInterval(nsGUIEvent *aEvent,
     PRUint32 iY      = rect.y + INSET + iYSpace;
     for (i = 1; i < (PRUint32) aMinorInterval; i++)
     {
-      rndctx->DrawLine(iXStart,iY, iXStop,iY);
+      aRenderingContext.DrawLine(iXStart,iY, iXStop,iY);
       iY += iYSpace;
     }
   }
 
-  DrawTime(rndctx, rect, aIndex);
+  DrawTime(aRenderingContext, rect, aIndex);
 
   return NS_OK ;
 }
 
-nsresult nsCalTimebarScale :: DrawTime(nsIRenderingContext * aContext,
+nsresult nsCalTimebarScale :: DrawTime(nsIRenderingContext& aContext,
                                        nsRect& aRect,
                                        PRUint32 aIndex)
 {
@@ -195,8 +195,8 @@ nsresult nsCalTimebarScale :: DrawTime(nsIRenderingContext * aContext,
    * compute the Metrics for the string
    */
   
-  aContext->GetFontMetrics()->GetHeight(height);
-  aContext->GetFontMetrics()->GetWidth(text,width);
+  aContext.GetFontMetrics()->GetHeight(height);
+  aContext.GetFontMetrics()->GetWidth(text,width);
 
   /*
    * center the text in our rect and draw it
@@ -208,21 +208,21 @@ nsresult nsCalTimebarScale :: DrawTime(nsIRenderingContext * aContext,
   x = aRect.x + (INSET << 1);
   y = aRect.y + (INSET << 1);
 
-  aContext->DrawString(text,nsCRT::strlen(text),x,y,0);
+  aContext.DrawString(text,nsCRT::strlen(text),x,y,0);
 
   return (NS_OK);
 }
 
-nsEventStatus nsCalTimebarScale :: PaintBorder(nsGUIEvent *aEvent)
+nsEventStatus nsCalTimebarScale :: PaintBorder(nsIRenderingContext& aRenderingContext,
+                                               const nsRect& aDirtyRect)
 {
   nsRect rect;
 
-  nsIRenderingContext * rndctx = ((nsPaintEvent*)aEvent)->renderingContext;
   GetBounds(rect);
 
   rect.x++; rect.y++; rect.width-=2; rect.height-=2;
-  rndctx->SetColor(GetForegroundColor());
-  rndctx->DrawRect(rect);
+  aRenderingContext.SetColor(GetForegroundColor());
+  aRenderingContext.DrawRect(rect);
 
   return nsEventStatus_eConsumeNoDefault;  
 }

@@ -70,7 +70,8 @@ nsresult nsCalTimebarTimeHeading :: Init()
   return NS_OK ;
 }
 
-nsEventStatus nsCalTimebarTimeHeading :: PaintForeground(nsGUIEvent *aEvent)
+nsEventStatus nsCalTimebarTimeHeading :: PaintForeground(nsIRenderingContext& aRenderingContext,
+                                                         const nsRect& aDirtyRect)
 {
 
   if (GetTimeContext() == nsnull)
@@ -79,7 +80,6 @@ nsEventStatus nsCalTimebarTimeHeading :: PaintForeground(nsGUIEvent *aEvent)
   nscoord width, height, x, y;
 
   nsRect rect;
-  nsIRenderingContext * rndctx = ((nsPaintEvent*)aEvent)->renderingContext;
 
   GetBounds(rect);
 
@@ -92,8 +92,8 @@ nsEventStatus nsCalTimebarTimeHeading :: PaintForeground(nsGUIEvent *aEvent)
    * compute the Metrics for the string
    */
   
-  rndctx->GetFontMetrics()->GetHeight(height);
-  rndctx->GetFontMetrics()->GetWidth(*string,width);
+  aRenderingContext.GetFontMetrics()->GetHeight(height);
+  aRenderingContext.GetFontMetrics()->GetWidth(*string,width);
 
   /*
    * XXX: If we are too big, remove the Day of the week.  Need a better algorithm
@@ -104,7 +104,7 @@ nsEventStatus nsCalTimebarTimeHeading :: PaintForeground(nsGUIEvent *aEvent)
    {
      pattern = "MMM dd\n";
      GetTimeContext()->GetDTFirstVisible()->strftime(pattern, &string);
-     rndctx->GetFontMetrics()->GetWidth(*string,width);
+     aRenderingContext.GetFontMetrics()->GetWidth(*string,width);
    }
 
   /*
@@ -114,19 +114,20 @@ nsEventStatus nsCalTimebarTimeHeading :: PaintForeground(nsGUIEvent *aEvent)
   x = ((rect.width - width)>>1)+rect.x;
   y = ((rect.height - height)>>1)+rect.y;
 
-  rndctx->SetColor(GetForegroundColor());
-  rndctx->DrawString(*string,nsCRT::strlen(*string),x,y,0);
+  aRenderingContext.SetColor(GetForegroundColor());
+  aRenderingContext.DrawString(*string,nsCRT::strlen(*string),x,y,0);
 
   return nsEventStatus_eConsumeNoDefault;  
 }
 
-nsEventStatus nsCalTimebarTimeHeading :: PaintBackground(nsGUIEvent *aEvent)
+nsEventStatus nsCalTimebarTimeHeading :: PaintBackground(nsIRenderingContext& aRenderingContext,
+                                                         const nsRect& aDirtyRect)
 {
   /*
    * Let the Base Canvas paint it's default background
    */
 
-  nsXPFCCanvas::PaintBackground(aEvent);
+  nsXPFCCanvas::PaintBackground(aRenderingContext,aDirtyRect);
 
   return nsEventStatus_eConsumeNoDefault;  
 }

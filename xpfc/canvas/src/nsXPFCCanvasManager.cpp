@@ -18,22 +18,23 @@
 
 #include "nsXPFCCanvasManager.h"
 #include "nsIXPFCCanvas.h"
-#include "nsIWidget.h"
+#include "nsIView.h"
 #include "nsxpfcCIID.h"
+#include "nsIViewObserver.h"
 
-static NS_DEFINE_IID(kISupportsIID,  NS_ISUPPORTS_IID);
+static NS_DEFINE_IID(kISupportsIID,         NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kXPFCCanvasManagerIID, NS_IXPFC_CANVAS_MANAGER_IID);
-
-static NS_DEFINE_IID(kCXPFCCanvasIID, NS_IXPFC_CANVAS_IID);
+static NS_DEFINE_IID(kCXPFCCanvasIID,       NS_IXPFC_CANVAS_IID);
+static NS_DEFINE_IID(kIViewObserverIID,     NS_IVIEWOBSERVER_IID);
 
 class ListEntry {
 public:
-  nsIWidget * widget;
+  nsIView * view;
   nsIXPFCCanvas * canvas;
 
-  ListEntry(nsIWidget * aWidget, 
+  ListEntry(nsIView * aView, 
             nsIXPFCCanvas * aCanvas) { 
-    widget = aWidget;
+    view = aView;
     canvas = aCanvas;
   }
   ~ListEntry() {
@@ -59,7 +60,33 @@ nsXPFCCanvasManager :: ~nsXPFCCanvasManager()
 
 NS_IMPL_ADDREF(nsXPFCCanvasManager)
 NS_IMPL_RELEASE(nsXPFCCanvasManager)
-NS_IMPL_QUERY_INTERFACE(nsXPFCCanvasManager, kXPFCCanvasManagerIID)
+
+nsresult nsXPFCCanvasManager::QueryInterface(REFNSIID aIID, void** aInstancePtr)      
+{                                                                        
+  if (NULL == aInstancePtr) {                                            
+    return NS_ERROR_NULL_POINTER;                                        
+  }                                                                      
+  static NS_DEFINE_IID(kISupportsIID,  NS_ISUPPORTS_IID);                 
+  static NS_DEFINE_IID(kClassIID, kXPFCCanvasManagerIID);
+  if (aIID.Equals(kClassIID)) {                                          
+    *aInstancePtr = (void*) (nsXPFCCanvasManager *)this;                                        
+    AddRef();                                                            
+    return NS_OK;                                                        
+  }                                                                      
+  if (aIID.Equals(kISupportsIID)) {                                      
+    *aInstancePtr = (void*) (this);                        
+    AddRef();                                                            
+    return NS_OK;                                                        
+  }                                                                      
+  if (aIID.Equals(kIViewObserverIID)) {
+      *aInstancePtr = (void*)((nsIViewObserver*)this);
+      AddRef();
+      return NS_OK;
+  }
+  return (NS_ERROR_NO_INTERFACE);
+}
+
+
 
 nsresult nsXPFCCanvasManager::Init()
 {
@@ -86,7 +113,7 @@ nsresult nsXPFCCanvasManager::Init()
   return NS_OK;
 }
 
-nsIXPFCCanvas * nsXPFCCanvasManager::CanvasFromWidget(nsIWidget * aWidget)
+nsIXPFCCanvas * nsXPFCCanvasManager::CanvasFromView(nsIView * aView)
 {
   nsIXPFCCanvas * canvas = nsnull;
 
@@ -104,7 +131,7 @@ nsIXPFCCanvas * nsXPFCCanvasManager::CanvasFromWidget(nsIWidget * aWidget)
   {
     item = (ListEntry *) iterator->CurrentItem();
 
-    if (item->widget == aWidget)
+    if (item->view == aView)
     {
       canvas = item->canvas;
       break;
@@ -120,11 +147,11 @@ nsIXPFCCanvas * nsXPFCCanvasManager::CanvasFromWidget(nsIWidget * aWidget)
   return (canvas);
 }
 
-nsresult nsXPFCCanvasManager::Register(nsIXPFCCanvas * aCanvas, nsIWidget * aWidget)
+nsresult nsXPFCCanvasManager::Register(nsIXPFCCanvas * aCanvas, nsIView * aView)
 {
   PR_EnterMonitor(monitor);
 
-  mList->Append(new ListEntry(aWidget, aCanvas));
+  mList->Append(new ListEntry(aView, aCanvas));
 
   PR_ExitMonitor(monitor);
 
@@ -195,3 +222,52 @@ nsIXPFCCanvas * nsXPFCCanvasManager::GetFocusedCanvas()
 {
   return(mFocusedCanvas);
 }
+
+nsresult nsXPFCCanvasManager::Paint(nsIView * aView,
+                                    nsIRenderingContext& aRenderingContext,
+                                    const nsRect& aDirtyRect)
+{
+  nsIXPFCCanvas * canvas = CanvasFromView(aView);
+
+  if (canvas == nsnull)
+    return NS_OK;
+
+  canvas->OnPaint(aRenderingContext, aDirtyRect);
+  
+  return NS_OK;
+}
+
+nsresult nsXPFCCanvasManager::HandleEvent(nsIView * aView,
+                                          nsGUIEvent*     aEvent,
+                                          nsEventStatus&  aEventStatus)
+{
+  nsIXPFCCanvas * canvas = CanvasFromView(aView);
+
+  if (canvas == nsnull)
+    return NS_OK;
+
+  return NS_OK;
+}
+
+nsresult nsXPFCCanvasManager::Scrolled(nsIView * aView)
+{
+  nsIXPFCCanvas * canvas = CanvasFromView(aView);
+
+  if (canvas == nsnull)
+    return NS_OK;
+
+  return NS_OK;
+}
+
+nsresult nsXPFCCanvasManager::ResizeReflow(nsIView * aView, 
+                                           nscoord aWidth, 
+                                           nscoord aHeight)
+{
+  nsIXPFCCanvas * canvas = CanvasFromView(aView);
+
+  if (canvas == nsnull)
+    return NS_OK;
+
+  return NS_OK;
+}
+

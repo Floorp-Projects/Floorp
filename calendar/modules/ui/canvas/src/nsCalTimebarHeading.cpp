@@ -75,13 +75,14 @@ nsresult nsCalTimebarHeading :: Init()
   return NS_OK ;
 }
 
-nsEventStatus nsCalTimebarHeading :: PaintBackground(nsGUIEvent *aEvent)
+nsEventStatus nsCalTimebarHeading :: PaintBackground(nsIRenderingContext& aRenderingContext,
+                                                     const nsRect& aDirtyRect)
 {
   /*
    * Let the Base Canvas paint it's default background
    */
 
-  nsXPFCCanvas::PaintBackground(aEvent);
+  nsXPFCCanvas::PaintBackground(aRenderingContext,aDirtyRect);
 
   return nsEventStatus_eConsumeNoDefault;  
 }

@@ -75,21 +75,20 @@ nsresult nsCalTimebarUserHeading :: Init()
   return NS_OK ;
 }
 
-nsEventStatus nsCalTimebarUserHeading :: PaintForeground(nsGUIEvent *aEvent)
+nsEventStatus nsCalTimebarUserHeading :: PaintForeground(nsIRenderingContext& aRenderingContext,
+                                                         const nsRect& aDirtyRect)
 {
   nscoord width, height, x, y;
 
   nsRect rect;
-  nsIRenderingContext * rndctx = ((nsPaintEvent*)aEvent)->renderingContext;
-
   GetBounds(rect);
 
   /*
    * compute the Metrics for the string
    */
   
-  rndctx->GetFontMetrics()->GetHeight(height);
-  rndctx->GetFontMetrics()->GetWidth(mUserName,width);
+  aRenderingContext.GetFontMetrics()->GetHeight(height);
+  aRenderingContext.GetFontMetrics()->GetWidth(mUserName,width);
 
   /*
    * center the text in our rect and draw it
@@ -98,8 +97,8 @@ nsEventStatus nsCalTimebarUserHeading :: PaintForeground(nsGUIEvent *aEvent)
   x = ((rect.width - width)>>1)+rect.x;
   y = ((rect.height - height)>>1)+rect.y;
 
-  rndctx->SetColor(GetForegroundColor());
-  rndctx->DrawString(mUserName,mUserName.Length(),x,y,0);
+  aRenderingContext.SetColor(GetForegroundColor());
+  aRenderingContext.DrawString(mUserName,mUserName.Length(),x,y,0);
 
   return nsEventStatus_eConsumeNoDefault;  
 }

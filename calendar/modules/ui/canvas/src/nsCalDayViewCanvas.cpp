@@ -108,7 +108,8 @@ static nscolor nsDarker(nscolor c)
  * @param aMinorInterval   how many minor ticks 
  * @return NX_OK on success
  */
-nsresult nsCalDayViewCanvas::PaintInterval(nsGUIEvent *aEvent,
+nsresult nsCalDayViewCanvas::PaintInterval(nsIRenderingContext& aRenderingContext,
+                                          const nsRect& aDirtyRect,
                                           PRUint32 aIndex,
                                           PRUint32 aStart,
                                           PRUint32 aSpace,
@@ -119,12 +120,11 @@ nsresult nsCalDayViewCanvas::PaintInterval(nsGUIEvent *aEvent,
   /*
    * Paint this interval in it's entirety
    */
-  nsCalTimebarCanvas::PaintInterval(aEvent, aIndex, aStart, aSpace, aMinorInterval);
+  nsCalTimebarCanvas::PaintInterval(aRenderingContext, aDirtyRect, aIndex, aStart, aSpace, aMinorInterval);
   nsRect rect;
   GetBounds(rect);
 
-  nsIRenderingContext * rndctx = ((nsPaintEvent*)aEvent)->renderingContext;
-  rndctx->SetColor(nsLighter(nsLighter(nsDarker(GetBackgroundColor()))));
+  aRenderingContext.SetColor(nsLighter(nsLighter(nsDarker(GetBackgroundColor()))));
 
   aMinorInterval = 4;   // XXX: this is a hack, we should specify this in the XML -sman
 
@@ -142,7 +142,7 @@ nsresult nsCalDayViewCanvas::PaintInterval(nsGUIEvent *aEvent,
     PRUint32 iX = rect.x + iXSpace;
     for (i = 1; i < (PRUint32) aMinorInterval; i++)
     {
-      rndctx->DrawLine(iX,iYStart, iX,iYStop);
+      aRenderingContext.DrawLine(iX,iYStart, iX,iYStop);
       iX += iXSpace;
     }
   }
@@ -163,7 +163,7 @@ nsresult nsCalDayViewCanvas::PaintInterval(nsGUIEvent *aEvent,
     PRUint32 iY      = rect.y + INSET + iYSpace;
     for (i = 1; i < (PRUint32) aMinorInterval; i++)
     {
-      rndctx->DrawLine(iXStart,iY, iXStop,iY);
+      aRenderingContext.DrawLine(iXStart,iY, iXStop,iY);
       iY += iYSpace;
     }
   }
@@ -173,16 +173,16 @@ nsresult nsCalDayViewCanvas::PaintInterval(nsGUIEvent *aEvent,
   return NS_OK ;
 }
 
-nsEventStatus nsCalDayViewCanvas :: PaintBorder(nsGUIEvent *aEvent)
+nsEventStatus nsCalDayViewCanvas :: PaintBorder(nsIRenderingContext& aRenderingContext,
+                                                const nsRect& aDirtyRect)
 {
   nsRect rect;
 
-  nsIRenderingContext * rndctx = ((nsPaintEvent*)aEvent)->renderingContext;
   GetBounds(rect);
 
   rect.x++; rect.y++; rect.width-=2; rect.height-=2;
-  rndctx->SetColor(GetForegroundColor());
-  rndctx->DrawRect(rect);
+  aRenderingContext.SetColor(GetForegroundColor());
+  aRenderingContext.DrawRect(rect);
 
   return nsEventStatus_eConsumeNoDefault;  
 }
@@ -195,11 +195,11 @@ nsEventStatus nsCalDayViewCanvas :: PaintBorder(nsGUIEvent *aEvent)
  *     event. There should probably be a separate mechanism that
  *     connects it to VEVENTS.
  */
-nsEventStatus nsCalDayViewCanvas :: PaintForeground(nsGUIEvent *aEvent)
+nsEventStatus nsCalDayViewCanvas :: PaintForeground(nsIRenderingContext& aRenderingContext,
+                                                    const nsRect& aDirtyRect)
 {
   JulianPtrArray * evtVctr = 0;
   VEvent *pEvent = 0;
-  nsIRenderingContext * rndctx = ((nsPaintEvent*)aEvent)->renderingContext;
   nsRect rect;
   char *psBuf;
   char sBuf[256];
@@ -260,7 +260,7 @@ nsEventStatus nsCalDayViewCanvas :: PaintForeground(nsGUIEvent *aEvent)
       rect.y += (int)(rect.height * sratio);
       rect.height = (int)((rect.height * eratio) - (rect.y - bounds.y));
 
-      rndctx->SetColor(mComponentColor);
+      aRenderingContext.SetColor(mComponentColor);
 
       rect.x = rect.x + 2 * INSET ; 
       rect.width = rect.width - 4*INSET ;
@@ -274,24 +274,24 @@ nsEventStatus nsCalDayViewCanvas :: PaintForeground(nsGUIEvent *aEvent)
       if ((rect.y+rect.height) > (bounds.y+bounds.height))
         rect.height = (bounds.y+bounds.height)-1;
 
-      rndctx->FillRect(rect);
+      aRenderingContext.FillRect(rect);
 
       /*
       * Render the highlights
       */
-      rndctx->SetColor(nsLighter(mComponentColor));
-      rndctx->DrawLine(rect.x,rect.y,rect.x+rect.width,rect.y);
-      rndctx->DrawLine(rect.x,rect.y,rect.x,rect.y+rect.height);
-      rndctx->SetColor(nsDarker(mComponentColor));
-      rndctx->DrawLine(rect.x+rect.width,rect.y,rect.x+rect.width,rect.y+rect.height);
-      rndctx->DrawLine(rect.x,rect.y+rect.height,rect.x+rect.width,rect.y+rect.height);
+      aRenderingContext.SetColor(nsLighter(mComponentColor));
+      aRenderingContext.DrawLine(rect.x,rect.y,rect.x+rect.width,rect.y);
+      aRenderingContext.DrawLine(rect.x,rect.y,rect.x,rect.y+rect.height);
+      aRenderingContext.SetColor(nsDarker(mComponentColor));
+      aRenderingContext.DrawLine(rect.x+rect.width,rect.y,rect.x+rect.width,rect.y+rect.height);
+      aRenderingContext.DrawLine(rect.x,rect.y+rect.height,rect.x+rect.width,rect.y+rect.height);
 
-      rndctx->GetFontMetrics()->GetHeight(fm_height);
+      aRenderingContext.GetFontMetrics()->GetHeight(fm_height);
 
       if (rect.height > fm_height)
       {
         // rndctx->SetColor(GetForegroundColor());
-        rndctx->SetColor(NS_RGB(255,255,255));          /* XXX: This color should come from someplace else... */
+        aRenderingContext.SetColor(NS_RGB(255,255,255));          /* XXX: This color should come from someplace else... */
 
         /*
          * XXX. we need to handle '\n' in a format string...
@@ -299,13 +299,13 @@ nsEventStatus nsCalDayViewCanvas :: PaintForeground(nsGUIEvent *aEvent)
          * we need to generalize this.
          */
         psBuf = pEvent->toStringFmt(usFmt).toCString("");
-        rndctx->DrawString(psBuf,nsCRT::strlen(psBuf),rect.x+1,rect.y,0);
+        aRenderingContext.DrawString(psBuf,nsCRT::strlen(psBuf),rect.x+1,rect.y,0);
         delete psBuf;
 
         if (rect.height > (2 * fm_height))
         {
           psBuf = pEvent->getSummary().toCString("");
-          rndctx->DrawString(psBuf,nsCRT::strlen(psBuf),rect.x+1,rect.y+fm_height,0);
+          aRenderingContext.DrawString(psBuf,nsCRT::strlen(psBuf),rect.x+1,rect.y+fm_height,0);
           delete psBuf;
         }
       }

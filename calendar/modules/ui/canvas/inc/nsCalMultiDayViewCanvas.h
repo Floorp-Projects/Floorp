@@ -32,7 +32,8 @@ public:
   NS_DECL_ISUPPORTS
 
   NS_IMETHOD Init();
-  NS_IMETHOD_(nsEventStatus) PaintBackground(nsGUIEvent *aEvent);
+  NS_IMETHOD_(nsEventStatus) PaintBackground(nsIRenderingContext& aRenderingContext,
+                                             const nsRect& aDirtyRect);
 
   NS_IMETHOD AddDayViewCanvas();
   NS_IMETHOD_(PRUint32) GetNumberViewableDays();

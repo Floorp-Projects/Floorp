@@ -31,7 +31,8 @@ public:
   NS_IMETHOD Init();
 
   // Subclass Canvas functions
-  NS_IMETHOD_(nsEventStatus) PaintForeground(nsGUIEvent *aEvent);
+  NS_IMETHOD_(nsEventStatus) PaintForeground(nsIRenderingContext& aRenderingContext,
+                                             const nsRect& aDirtyRect);
   NS_IMETHOD_(nsEventStatus) OnLeftButtonDown(nsGUIEvent *aEvent);
 
 
@@ -46,7 +47,7 @@ protected:
 private:
   NS_METHOD GetTrianglePoints(nsPoint * pts);
   NS_METHOD_(PRBool) IsPointInTriangle(nsPoint aPoint, nsPoint * aTriangle);
-  NS_METHOD RenderController(nsIRenderingContext * aCtx,
+  NS_METHOD RenderController(nsIRenderingContext& aCtx,
                              nsPoint* aPoints,
                              PRUint32 aNumPoints);
 

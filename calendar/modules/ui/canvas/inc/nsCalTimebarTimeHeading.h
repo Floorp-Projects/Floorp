@@ -30,8 +30,10 @@ public:
   NS_DECL_ISUPPORTS
 
   NS_IMETHOD Init();
-  NS_IMETHOD_(nsEventStatus) PaintForeground(nsGUIEvent *aEvent);
-  NS_IMETHOD_(nsEventStatus) PaintBackground(nsGUIEvent *aEvent);
+  NS_IMETHOD_(nsEventStatus) PaintForeground(nsIRenderingContext& aRenderingContext,
+                                             const nsRect& aDirtyRect);
+  NS_IMETHOD_(nsEventStatus) PaintBackground(nsIRenderingContext& aRenderingContext,
+                                             const nsRect& aDirtyRect);
   NS_IMETHOD SetParameter(nsString& aKey, nsString& aValue) ;
 
 protected:

@@ -39,7 +39,6 @@
 #include "nsXPFCMethodInvokerCommand.h"
 
 #include "nsXPFCToolkit.h"
-#include "nsIViewObserver.h"
 
 #include "nsIButton.h"
 #include "nsITabWidget.h"
@@ -110,6 +109,8 @@ nsXPFCCanvas :: nsXPFCCanvas(nsISupports* outer) :
   mImageGroup = nsnull;
   mImageRequest = nsnull;
 
+  mView = nsnull;
+
 }
 
 nsXPFCCanvas :: ~nsXPFCCanvas()
@@ -132,6 +133,7 @@ nsXPFCCanvas :: ~nsXPFCCanvas()
     NS_RELEASE(mImageGroup);
   }
 
+
 }
 
 NS_IMPL_AGGREGATED(nsXPFCCanvas)
@@ -145,7 +147,6 @@ nsresult nsXPFCCanvas::AggregatedQueryInterface(const nsIID &aIID,
 
   static NS_DEFINE_IID(kCXPFCCanvasIID,   NS_XPFC_CANVAS_CID);
   static NS_DEFINE_IID(kIXPFCCanvasIID,   NS_IXPFC_CANVAS_IID);
-  static NS_DEFINE_IID(kIViewObserverIID, NS_IVIEWOBSERVER_IID);
   static NS_DEFINE_IID(kISupportsIID,     NS_ISUPPORTS_IID);
   static NS_DEFINE_IID(kClassIID,         kIXPFCCanvasIID);
 
@@ -166,11 +167,6 @@ nsresult nsXPFCCanvas::AggregatedQueryInterface(const nsIID &aIID,
     }
     if (aIID.Equals(kIXMLParserObjectIID)) {
         *aInstancePtr = (void*)((nsIXMLParserObject*)this);
-        AddRef();
-        return NS_OK;
-    }
-    if (aIID.Equals(kIViewObserverIID)) {
-        *aInstancePtr = (void*)((nsIViewObserver*)this);
         AddRef();
         return NS_OK;
     }
@@ -815,27 +811,26 @@ nsEventStatus nsXPFCCanvas :: DefaultProcessing(nsGUIEvent *aEvent)
   return (nsEventStatus_eIgnore);
 }
 
-nsEventStatus nsXPFCCanvas :: OnPaint(nsGUIEvent *aEvent)
+nsEventStatus nsXPFCCanvas :: OnPaint(nsIRenderingContext& aRenderingContext,
+                                      const nsRect& aDirtyRect)
 {
 
   if (mVisibility == PR_TRUE)
   {
-    nsIRenderingContext * ctx = ((nsPaintEvent*)aEvent)->renderingContext;
+    PushState(aRenderingContext);
 
-    PushState(ctx);
+    PaintBackground(aRenderingContext, aDirtyRect);
+    PaintBorder(aRenderingContext, aDirtyRect);
+    PaintForeground(aRenderingContext, aDirtyRect);
 
-    PaintBackground(aEvent);
-    PaintBorder(aEvent);
-    PaintForeground(aEvent);
-
-    PopState(ctx);
+    PopState(aRenderingContext);
   }
 
 
-  PaintChildWidgets(aEvent);
+  PaintChildWidgets(aRenderingContext, aDirtyRect);
 
 
-  return (DefaultProcessing(aEvent));
+  return (DefaultProcessing(nsnull));
 
 }
 
@@ -1125,55 +1120,57 @@ nscolor nsXPFCCanvas :: Dim(const nscolor &aColor)
 }
 
 
-nsEventStatus nsXPFCCanvas :: PaintBackground(nsGUIEvent *aEvent)
+nsEventStatus nsXPFCCanvas :: PaintBackground(nsIRenderingContext& aRenderingContext,
+                                              const nsRect& aDirtyRect)
 {
 
   nsRect rect;
 
   // Paint The Background
-  nsIRenderingContext * rndctx = ((nsPaintEvent*)aEvent)->renderingContext;
   GetBounds(rect);
   nsIImage *img;
 
   if ((nsnull == mImageRequest) || (nsnull == (img = mImageRequest->GetImage())))
   {
-    rndctx->SetColor(GetBackgroundColor());
-    rndctx->FillRect(rect);
+    aRenderingContext.SetColor(GetBackgroundColor());
+    aRenderingContext.FillRect(rect);
   } else 
   {
-    rndctx->DrawImage(img, mBounds.x, mBounds.y);
+    aRenderingContext.DrawImage(img, mBounds.x, mBounds.y);
     NS_RELEASE(img);
   }
 
   return nsEventStatus_eConsumeNoDefault;  
 }
 
-nsEventStatus nsXPFCCanvas :: PaintBorder(nsGUIEvent *aEvent)
+nsEventStatus nsXPFCCanvas :: PaintBorder(nsIRenderingContext& aRenderingContext,
+                                          const nsRect& aDirtyRect)
 {
   nsRect rect;
 
-  nsIRenderingContext * rndctx = ((nsPaintEvent*)aEvent)->renderingContext;
   GetBounds(rect);
 
   rect.x++; rect.y++; rect.width-=2; rect.height-=2;
 
-  rndctx->SetColor(Highlight(GetBorderColor()));
-  rndctx->DrawLine(rect.x,rect.y,rect.x+rect.width,rect.y);
-  rndctx->DrawLine(rect.x,rect.y,rect.x,rect.y+rect.height);
+  aRenderingContext.SetColor(Highlight(GetBorderColor()));
+  aRenderingContext.DrawLine(rect.x,rect.y,rect.x+rect.width,rect.y);
+  aRenderingContext.DrawLine(rect.x,rect.y,rect.x,rect.y+rect.height);
 
-  rndctx->SetColor(Dim(GetBorderColor()));
-  rndctx->DrawLine(rect.x+rect.width,rect.y,rect.x+rect.width,rect.y+rect.height);
-  rndctx->DrawLine(rect.x,rect.y+rect.height,rect.x+rect.width,rect.y+rect.height);
+  aRenderingContext.SetColor(Dim(GetBorderColor()));
+  aRenderingContext.DrawLine(rect.x+rect.width,rect.y,rect.x+rect.width,rect.y+rect.height);
+  aRenderingContext.DrawLine(rect.x,rect.y+rect.height,rect.x+rect.width,rect.y+rect.height);
 
   return nsEventStatus_eConsumeNoDefault;  
 }
 
-nsEventStatus nsXPFCCanvas :: PaintForeground(nsGUIEvent *aEvent)
+nsEventStatus nsXPFCCanvas :: PaintForeground(nsIRenderingContext& aRenderingContext,
+                                              const nsRect& aDirtyRect)
 {
   return nsEventStatus_eConsumeNoDefault;  
 }
 
-nsEventStatus nsXPFCCanvas :: PaintChildWidgets(nsGUIEvent *aEvent)
+nsEventStatus nsXPFCCanvas :: PaintChildWidgets(nsIRenderingContext& aRenderingContext,
+                                                const nsRect& aDirtyRect)
 {
   nsresult res ;
   nsIIterator * iterator ;
@@ -1197,7 +1194,7 @@ nsEventStatus nsXPFCCanvas :: PaintChildWidgets(nsGUIEvent *aEvent)
     if (rect.width != 0 && rect.height != 0)
     {
       if (((nsXPFCCanvas *)widget)->mWidget == nsnull) {
-        widget->OnPaint(aEvent);
+        widget->OnPaint(aRenderingContext,aDirtyRect);
       } else {
         ((nsXPFCCanvas *)widget)->mWidget->Invalidate(PR_FALSE);
       }
@@ -1269,7 +1266,7 @@ nsEventStatus nsXPFCCanvas :: HandleEvent(nsGUIEvent *aEvent)
           ds = ctx->CreateDrawingSurface(&rect);
           ctx->SelectOffScreenDrawingSurface(ds);
 
-          es = OnPaint(aEvent);
+          es = OnPaint((*((nsPaintEvent*)aEvent)->renderingContext),(*((nsPaintEvent*)aEvent)->rect));
 
           ctx->CopyOffScreenBits(rect);
           ctx->DestroyDrawingSurface(ds);
@@ -2002,18 +1999,18 @@ nsresult nsXPFCCanvas::GetFontMetrics(nsIFontMetrics ** aFontMetrics)
   return NS_OK;
 }
 
-nsresult nsXPFCCanvas::PushState(nsIRenderingContext * aRenderingContext)
+nsresult nsXPFCCanvas::PushState(nsIRenderingContext& aRenderingContext)
 {
-  aRenderingContext->PushState();
+  aRenderingContext.PushState();
 
-  aRenderingContext->SetFont(mFont);
+  aRenderingContext.SetFont(mFont);
 
   return NS_OK;
 }
 
-PRBool nsXPFCCanvas::PopState(nsIRenderingContext * aRenderingContext)
+PRBool nsXPFCCanvas::PopState(nsIRenderingContext& aRenderingContext)
 {
-  return (aRenderingContext->PopState());
+  return (aRenderingContext.PopState());
 }
 
 void nsXPFCCanvas::Notify(nsIImageRequest *aImageRequest,
@@ -2032,28 +2029,4 @@ void nsXPFCCanvas::NotifyError(nsIImageRequest *aImageRequest,
 }
 
 
-
-nsresult nsXPFCCanvas::Paint(nsIView * aView,
-                             nsIRenderingContext& aRenderingContext,
-                             const nsRect& aDirtyRect)
-{
-  return NS_OK;
-}
-
-nsresult nsXPFCCanvas::HandleEvent(nsIView * aView,
-                                   nsGUIEvent*     aEvent,
-                                   nsEventStatus&  aEventStatus)
-{
-  return NS_OK;
-}
-
-nsresult nsXPFCCanvas::Scrolled(nsIView * aView)
-{
-  return NS_OK;
-}
-
-nsresult nsXPFCCanvas::ResizeReflow(nsIView * aView, nscoord aWidth, nscoord aHeight)
-{
-  return NS_OK;
-}
 
