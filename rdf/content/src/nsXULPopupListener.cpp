@@ -445,19 +445,27 @@ XULPopupListenerImpl::MouseMove(nsIDOMEvent* aMouseEvent)
     return NS_OK;
   
   // stash the coordinates of the event so that we can still get back to it from within the 
-  // timer scallback. Also stash the node that started this so we can put it into the
-  // document later on (if the timer ever fires).
-  mouseEvent->GetClientX(&mMouseClientX);
-  mouseEvent->GetClientY(&mMouseClientY);
-
-  //XXX recognize when a popup is already up and immediately show the
-  //XXX tooltip for the new item if the dom element is different than
-  //XXX the element for which we are currently displaying the tip.
-  //XXX
-  //XXX for now, just be stupid to get things working.
-  if (mPopupContent || mTooltipTimer)
+  // timer callback. On win32, we'll get a MouseMove event even when a popup goes away --
+  // even when the mouse doesn't change position! To get around this, we make sure the
+  // mouse has really moved before proceeding.
+  PRInt32 newMouseX, newMouseY;
+  mouseEvent->GetClientX(&newMouseX);
+  mouseEvent->GetClientY(&newMouseY);
+  if ( mMouseClientX == newMouseX && mMouseClientY == newMouseY )
     return NS_OK;
-  
+  mMouseClientX = newMouseX; mMouseClientY = newMouseY;
+
+  // We want to close the tip if it is being displayed and the mouse moves. Recall 
+  // that |mPopupContent| is set when the popup is showing. Furthermore, as the mouse
+  // moves, we want to make sure we reset the timer to show it, so that the delay
+  // is from when the mouse stops moving, not when it enters the element.
+  if ( mPopupContent ) {
+    ClosePopup();
+    return NS_OK;
+  }
+  if ( mTooltipTimer )
+    mTooltipTimer->Cancel();
+
   mTooltipTimer = do_CreateInstance("@mozilla.org/timer;1");
   if ( mTooltipTimer ) {
     nsCOMPtr<nsIDOMEventTarget> eventTarget;
