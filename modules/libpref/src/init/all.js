@@ -42,7 +42,7 @@ pref("general.open_location.last_window_choice", 0);
 
 // 0 = blank, 1 = home (browser.startup.homepage), 2 = last
 pref("browser.startup.page",                1);
-pref("browser.startup.homepage",	   "chrome://navigator/locale/navigator.properties");
+pref("browser.startup.homepage",	   "chrome://navigator-region/locale/region.properties");
 // "browser.startup.homepage_override" was for 4.x
 pref("browser.startup.homepage_override.1", true);
 pref("browser.startup.autoload_homepage",   true);
@@ -91,7 +91,7 @@ pref("browser.show_about_as_stupid_modal_window", false);
 pref("browser.download.progressDnldDialog.keepAlive", false); // keep the dnload progress dialog up after dnload is complete
 
 // various default search settings
-pref("browser.search.defaulturl", "chrome://navigator/locale/navigator.properties");
+pref("browser.search.defaulturl", "chrome://navigator-region/locale/region.properties");
 pref("browser.search.opensidebarsearchpanel", true);
 pref("browser.search.last_search_category", "NC:SearchCategory?category=urn:search:category:1");
 pref("browser.search.mode", 0);
