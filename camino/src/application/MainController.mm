@@ -1070,7 +1070,6 @@ const int kReuseWindowOnAE = 2;
         action == @selector(pageSetup:) ||
         action == @selector(findInPage:) ||
         action == @selector(doReload:) ||
-        action == @selector(viewSource:) ||
         action == @selector(savePage:))
   {
     return (browserController != nil);
@@ -1129,6 +1128,10 @@ const int kReuseWindowOnAE = 2;
             ![[browserController getBrowserWrapper] isEmpty] &&
             [[[browserController getBrowserWrapper] getBrowserView] canMakeTextSmaller]);
   
+  if (action == @selector(viewSource:))
+    return (browserController &&
+            ![browserController bookmarkManagerIsVisible]);
+
   if (action == @selector(doStop:))
     return (browserController && [[browserController getBrowserWrapper] isBusy]);
 

@@ -1277,6 +1277,8 @@ enum BWCOpenDest {
     NSString* curURL = [[self getBrowserWrapper] getCurrentURLSpec];
     return ![MainController isBlankURL:curURL];
   }
+  else if (action == @selector(viewSource:))
+    return ![mContentView isBookmarkManagerVisible];
   else
     return YES;
 }
