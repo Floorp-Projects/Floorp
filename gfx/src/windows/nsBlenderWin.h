@@ -20,7 +20,8 @@
 #define nsBlenderWin_h___
 
 #include "nsIBlender.h"
-
+#include "nsPoint.h"
+#include "nsRect.h"
 
 //----------------------------------------------------------------------
 
@@ -43,6 +44,18 @@ public:
   virtual void Blend(nsDrawingSurface aSrc,
                      PRInt32 aSX, PRInt32 aSY, PRInt32 aWidth, PRInt32 aHeight,
                      nsDrawingSurface aDest, PRInt32 aDX, PRInt32 aDY, float aSrcOpacity);
+
+  PRBool CalcAlphaMetrics(BITMAP *aSrcInfo,BITMAP *aDestInfo,nsPoint *ASrcUL,
+                              BITMAP  *aMapInfo,nsPoint *aMaskUL,
+                              PRInt32 *aNumlines,
+                              PRInt32 *aNumbytes,PRUint8 **aSImage,PRUint8 **aDImage,
+                              PRUint8 **aMImage,PRInt32 *aSLSpan,PRInt32 *aDLSpan,PRInt32 *aMLSpan);
+
+  PRInt32  CalcBytesSpan(PRUint32  aWidth,PRUint32  aBitsPixel);
+
+private:
+  nsresult BuildDIB(LPBITMAPINFOHEADER  *aBHead,unsigned char **aBits,PRInt32 aWidth, PRInt32 aHeight, PRInt32 aDepth);
+
 };
 
 #endif

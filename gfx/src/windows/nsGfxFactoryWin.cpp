@@ -25,10 +25,12 @@
 #include "nsImageWin.h"
 #include "nsDeviceContextWin.h"
 #include "nsRegionWin.h"
+#include "nsBlenderWin.h"
 
 static NS_DEFINE_IID(kCFontMetrics, NS_FONT_METRICS_CID);
 static NS_DEFINE_IID(kCRenderingContext, NS_RENDERING_CONTEXT_CID);
 static NS_DEFINE_IID(kCImage, NS_IMAGE_CID);
+static NS_DEFINE_IID(kCBlender, NS_BLENDER_CID);
 static NS_DEFINE_IID(kCDeviceContext, NS_DEVICE_CONTEXT_CID);
 static NS_DEFINE_IID(kCRegion, NS_REGION_CID);
 
@@ -134,6 +136,9 @@ nsresult nsGfxFactoryWin::CreateInstance(nsISupports *aOuter,
   }
   else if (mClassID.Equals(kCRegion)) {
     inst = (nsISupports *)new nsRegionWin();
+  }
+  else if (mClassID.Equals(kCBlender)) {
+    inst = (nsISupports *)new nsBlenderWin();
   }
 
   if (inst == NULL) {  
