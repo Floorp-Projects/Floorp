@@ -558,9 +558,6 @@ MimeInlineTextPlainFlowed_parse_line (char *line, PRInt32 length, MimeObject *ob
       
     }
     if(3 == dashdashspace) {
-#ifdef DEBUG_BenB
-printf("SIGNATURE\n");
-#endif
       // "-- " is a fixed line. 
       *outlinep='<'; outlinep++;
       *outlinep='b'; outlinep++;

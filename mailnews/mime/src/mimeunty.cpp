@@ -155,6 +155,13 @@ MimeUntypedText_parse_line (char *line, PRInt32 length, MimeObject *obj)
    */
   if (!uty->open_subpart)
 	{
+    // rhp: If we get here and we are being fed a line ending, we should
+    // just eat it and continue and if we really get more data, we'll open
+    // up the subpart then.
+    //
+    if (line[0] == CR) return 0;
+    if (line[0] == LF) return 0;
+
 	  PR_ASSERT(!begin_line_p);
 	  status = MimeUntypedText_open_subpart (obj,
 											 MimeUntypedTextSubpartTypeText,
