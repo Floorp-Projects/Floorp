@@ -25,5 +25,4 @@ packages/core.jar:
 	communicator/content/bookmarks/bm-props.js
 	communicator/content/bookmarks/bm-props.xul
 	communicator/content/bookmarks/bookmarks.js
-	communicator/content/bookmarks/bookmarksDD.js
 	communicator/content/bookmarks/bookmarks.xul

@@ -71,7 +71,6 @@
   <!-- Bookmarks Window Drag & Drop -->
   <script type="application/x-javascript" src="chrome://global/content/nsDragAndDrop.js"/>
   <script type="application/x-javascript" src="chrome://global/content/nsTransferable.js"/>
-  <script type="application/x-javascript" src="chrome://communicator/content/bookmarks/bookmarksDD.js"/>
 
   <popupset id="bookmarksPopupset"/>
 
