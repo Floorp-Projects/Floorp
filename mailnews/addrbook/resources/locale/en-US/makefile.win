@@ -33,4 +33,11 @@ install::
 	$(MAKE_INSTALL) abSelectAddressesDialog.dtd $(DISTBROWSER)
 
 clobber::
-  rm -f $(DIST)\bin\chrome\global\locale\en-US\*.*
+  rm -f $(DIST)\bin\chrome\addressbook\locale\en-US\abAddressBookNameDialog.dtd
+  rm -f $(DIST)\bin\chrome\addressbook\locale\en-US\abCardOverlay.dtd
+  rm -f $(DIST)\bin\chrome\addressbook\locale\en-US\abCardViewOverlay.dtd
+  rm -f $(DIST)\bin\chrome\addressbook\locale\en-US\abDirTreeOverlay.dtd
+  rm -f $(DIST)\bin\chrome\addressbook\locale\en-US\abMainWindow.dtd
+  rm -f $(DIST)\bin\chrome\addressbook\locale\en-US\abNewCardDialog.dtd
+  rm -f $(DIST)\bin\chrome\addressbook\locale\en-US\abResultsTreeOverlay.dtd
+  rm -f $(DIST)\bin\chrome\addressbook\locale\en-US\abSelectAddressesDialog.dtd
