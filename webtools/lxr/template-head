@@ -89,7 +89,7 @@ function js_file_menu(file,d) {
      </TD>
      <TD NOWRAP ID="string">
       <FORM METHOD=GET ACTION="/webtools/lxr/search">
-       <A HREF="/webtools/lxr/search">Glimpse</A>:
+       <A HREF="/webtools/lxr/search">Text</A>:
        <INPUT TYPE=TEXT NAME="string" VALUE="" SIZE=6>
        <INPUT TYPE=SUBMIT VALUE="Find">
       </FORM>
