@@ -4,7 +4,8 @@ JavaScript.  The semantics can be executed directly or printed into either
 HTML or Microsoft Word RTF formats.
 
 This code is written in standard Common Lisp.  It's been used under Macintosh
-Common Lisp 4.0, but should also work under other Common Lisp implementations.
+Common Lisp 4.0, and Allegro Common Lisp 5.0.1 for Windows, but should also work
+under other Common Lisp implementations.
 
 Contact Waldemar Horwat (waldemar@netscape.com or waldemar@acm.org) for
 more information.
