@@ -140,7 +140,7 @@ ns4xPluginStreamListener::OnStartBinding(nsIPluginStreamInfo* pluginInfo)
                                           &mNPStream,
                                           seekable,
                                           &streamType), lib);
-	if(error != NPERR_NO_ERROR)
+  if(error != NPERR_NO_ERROR)
 		return NS_ERROR_FAILURE;
 #endif
 	// translate the old 4x style stream type to the new one
@@ -164,87 +164,90 @@ ns4xPluginStreamListener::OnStartBinding(nsIPluginStreamInfo* pluginInfo)
 
 NS_IMETHODIMP
 ns4xPluginStreamListener::OnDataAvailable(nsIPluginStreamInfo* pluginInfo,
-										  nsIInputStream* input,
+                                          nsIInputStream* input,
                                           PRUint32 length)
 {
 	const NPPluginFuncs *callbacks;
-    NPP                 npp;
-	PRUint32			numtowrite = 0;
-	PRUint32			amountRead = 0;
-	PRInt32				writeCount = 0;
+  NPP       npp;
+  PRUint32  numtowrite = 0;
+  PRUint32  amountRead = 0;
+  PRInt32   writeCount = 0;
 
-    pluginInfo->GetURL(&mNPStream.url);
-    pluginInfo->GetLastModified((PRUint32*)&(mNPStream.lastmodified));
+  pluginInfo->GetURL(&mNPStream.url);
+  pluginInfo->GetLastModified((PRUint32*)&(mNPStream.lastmodified));
 
-    mInst->GetCallbacks(&callbacks);
-    mInst->GetNPP(&npp);
+  mInst->GetCallbacks(&callbacks);
+  mInst->GetNPP(&npp);
 
-    if (callbacks->write == NULL || length == 0)
-        return NS_OK; // XXX ?
+  if (callbacks->write == NULL || length == 0)
+    return NS_OK; // XXX ?
 
 	// Get the data from the input stream
-	char* buffer = (char*) PR_Malloc(length);
-    if (buffer) 
-        input->Read(buffer, length, &amountRead);
+  char* buffer = (char*) PR_Malloc(length);
+  if (buffer) 
+    input->Read(buffer, length, &amountRead);
 
-	// amountRead tells us how many bytes were put in the buffer
-	// WriteReady returns to us how many bytes the plugin is 
-	// ready to handle  - we have to keep calling WriteReady and
-	// Write until the buffer is empty
-    while (amountRead > 0)
+  // amountRead tells us how many bytes were put in the buffer
+  // WriteReady returns to us how many bytes the plugin is 
+  // ready to handle  - we have to keep calling WriteReady and
+  // Write until the buffer is empty
+  while (amountRead > 0)
+  {
+    if (callbacks->writeready != NULL)
     {
-      if (callbacks->writeready != NULL)
-      {
 #if !TARGET_CARBON
-        // pinkerton
-        // relies on routine descriptors, not present in carbon. 
-        // We need to fix this.
+      // pinkerton
+      // relies on routine descriptors, not present in carbon. 
+      // We need to fix this.
 
-        PRLibrary* lib = nsnull;
-        if(mInst)
-          lib = mInst->fLibrary;
+      PRLibrary* lib = nsnull;
+      if(mInst)
+        lib = mInst->fLibrary;
 
-        NS_TRY_SAFE_CALL_RETURN(numtowrite, CallNPP_WriteReadyProc(callbacks->writeready,
-                                                npp,
-                                                &mNPStream), lib);
+      NS_TRY_SAFE_CALL_RETURN(numtowrite, CallNPP_WriteReadyProc(callbacks->writeready,
+                                              npp,
+                                              &mNPStream), lib);
 #endif
 		    
-		    if (numtowrite > amountRead)
-			    numtowrite = amountRead;
-		  }
-      else 
-        // if WriteReady is not supported by the plugin, 
-        // just write the whole buffer
-        numtowrite = length;
-
       // if WriteReady returned 0, the plugin is not ready to handle 
-      // the data, so just skip the Write until WriteReady returns a >0 value
-      if(numtowrite > 0)
-        {
-#if !TARGET_CARBON
-          // pinkerton
-          // relies on routine descriptors, not present in carbon. 
-          // We need to fix this.
+      // the data, return FAILURE for now
+      if(numtowrite <= 0)
+        return NS_ERROR_FAILURE;
 
-          PRLibrary* lib = nsnull;
-          if(mInst)
-            lib = mInst->fLibrary;
-
-          NS_TRY_SAFE_CALL_RETURN(writeCount, CallNPP_WriteProc(callbacks->write,
-                                         npp,
-                                         &mNPStream, 
-                                         mPosition,
-                                         numtowrite,
-                                         (void *)buffer), lib);
-          if(writeCount < 0)
-            return NS_ERROR_FAILURE;
-#endif
-          amountRead -= numtowrite;
-          mPosition += numtowrite;
-        }
+      if (numtowrite > amountRead)
+        numtowrite = amountRead;
     }
-    
-    return NS_OK;
+    else 
+      // if WriteReady is not supported by the plugin, 
+      // just write the whole buffer
+      numtowrite = length;
+
+    if(numtowrite > 0)
+    {
+#if !TARGET_CARBON
+      // pinkerton
+      // relies on routine descriptors, not present in carbon. 
+      // We need to fix this.
+
+      PRLibrary* lib = nsnull;
+      if(mInst)
+        lib = mInst->fLibrary;
+
+      NS_TRY_SAFE_CALL_RETURN(writeCount, CallNPP_WriteProc(callbacks->write,
+                              npp,
+                              &mNPStream, 
+                              mPosition,
+                              numtowrite,
+                              (void *)buffer), lib);
+      if(writeCount < 0)
+        return NS_ERROR_FAILURE;
+#endif
+      amountRead -= numtowrite;
+      mPosition += numtowrite;
+    }
+  }
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -441,6 +444,7 @@ NS_IMETHODIMP ns4xPluginInstance::Stop(void)
   // relies on routine descriptors, not present in carbon. 
   // We need to fix this.
   NS_TRY_SAFE_CALL_RETURN(error, CallNPP_DestroyProc(fCallbacks->destroy, &fNPP, &sdata), fLibrary);
+
 #endif
 
   mStarted = PR_FALSE;
@@ -616,6 +620,7 @@ NS_IMETHODIMP ns4xPluginInstance::SetWindow(nsPluginWindow* window)
     NS_TRY_SAFE_CALL_RETURN(error, CallNPP_SetWindowProc(fCallbacks->setwindow,
                                   &fNPP,
                                   (NPWindow*) window), fLibrary);
+
 #endif
       
     // XXX In the old code, we'd just ignore any errors coming
