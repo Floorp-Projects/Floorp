@@ -285,6 +285,7 @@ BOOL CBrowserView::PreCreateWindow(CREATESTRUCT& cs)
 
 	cs.dwExStyle |= WS_EX_CLIENTEDGE;
 	cs.style &= ~WS_BORDER;
+	cs.style |= WS_CLIPCHILDREN;
 	cs.lpszClass = AfxRegisterWndClass(CS_DBLCLKS, 
 		::LoadCursor(NULL, IDC_ARROW), HBRUSH(COLOR_WINDOW+1), NULL);
 
