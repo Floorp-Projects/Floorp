@@ -27,9 +27,14 @@
 class nsIWebShell;
 class nsIWidget;
 
+// Interface ID for nsIWebShellWindow
+#define NS_IWEBSHELL_WINDOW_IID \
+ { 0x28dce479, 0xbf73, 0x11d2, { 0x96, 0xc8, 0x0, 0x60, 0xb0, 0xfb, 0x99, 0x56}}
+
 class nsIWebShellWindow : public nsISupports
 {
 public:
+  static const nsIID& IID() { static nsIID iid = NS_IWEBSHELL_WINDOW_IID; return iid; }
 
   NS_IMETHOD Show(PRBool aShow) = 0;
   NS_IMETHOD GetWebShell(nsIWebShell *& aWebShell) = 0;
@@ -37,8 +42,5 @@ public:
 
 };
 
-// Interface ID for nsIWebShellWindow
-#define NS_IWEBSHELL_WINDOW_IID \
- { 0x28dce479, 0xbf73, 0x11d2, { 0x96, 0xc8, 0x0, 0x60, 0xb0, 0xfb, 0x99, 0x56}}
 
 #endif /* nsIWebShellWindow_h__ */
