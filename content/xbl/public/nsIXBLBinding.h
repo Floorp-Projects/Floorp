@@ -68,6 +68,8 @@ public:
   NS_IMETHOD AttributeChanged(nsIAtom* aAttribute, PRInt32 aNameSpaceID, PRBool aRemoveFlag) = 0;
 
   NS_IMETHOD RemoveScriptReferences(nsIScriptContext* aContext) = 0;
+
+  NS_IMETHOD GetBindingURI(nsString& aResult) = 0;
 };
 
 extern nsresult

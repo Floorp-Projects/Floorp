@@ -155,6 +155,8 @@ class nsXBLBinding: public nsIXBLBinding, public nsIScriptObjectOwner
 
   NS_IMETHOD RemoveScriptReferences(nsIScriptContext* aContext);
 
+  NS_IMETHOD GetBindingURI(nsString& aResult);
+
   // nsIScriptObjectOwner
   NS_IMETHOD GetScriptObject(nsIScriptContext* aContext, void** aScriptObject);
   NS_IMETHOD SetScriptObject(void *aScriptObject);
@@ -187,6 +189,7 @@ public:
   static nsIAtom* kValueAtom;
   static nsIAtom* kNameAtom;
   static nsIAtom* kReadOnlyAtom;
+  static nsIAtom* kURIAtom;
 
   // Used to easily obtain the correct IID for an event.
   struct EventHandlerMapEntry {
@@ -248,6 +251,7 @@ nsIAtom* nsXBLBinding::kOnSetAtom = nsnull;
 nsIAtom* nsXBLBinding::kOnGetAtom = nsnull;
 nsIAtom* nsXBLBinding::kNameAtom = nsnull;
 nsIAtom* nsXBLBinding::kReadOnlyAtom = nsnull;
+nsIAtom* nsXBLBinding::kURIAtom = nsnull;
 
 nsXBLBinding::EventHandlerMapEntry
 nsXBLBinding::kEventHandlerMap[] = {
@@ -327,6 +331,7 @@ nsXBLBinding::nsXBLBinding(void)
     kOnGetAtom = NS_NewAtom("onget");
     kNameAtom = NS_NewAtom("name");
     kReadOnlyAtom = NS_NewAtom("readonly");
+    kURIAtom = NS_NewAtom("uri");
 
     EventHandlerMapEntry* entry = kEventHandlerMap;
     while (entry->mAttributeName) {
@@ -386,6 +391,7 @@ nsXBLBinding::~nsXBLBinding(void)
     NS_RELEASE(kOnGetAtom);
     NS_RELEASE(kNameAtom);
     NS_RELEASE(kReadOnlyAtom);
+    NS_RELEASE(kURIAtom);
 
     EventHandlerMapEntry* entry = kEventHandlerMap;
     while (entry->mAttributeName) {
@@ -987,6 +993,13 @@ nsXBLBinding::RemoveScriptReferences(nsIScriptContext* aContext)
 
   return NS_OK;
 }
+
+NS_IMETHODIMP 
+nsXBLBinding::GetBindingURI(nsString& aResult)
+{
+  return mBinding->GetAttribute(kNameSpaceID_None, kURIAtom, aResult);
+}
+
 
 // nsIScriptObjectOwner methods ///////////////////////////////////////////////////////////
 
