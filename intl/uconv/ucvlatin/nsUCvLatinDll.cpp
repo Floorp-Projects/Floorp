@@ -30,6 +30,7 @@
 #include "nsLatin1ToUnicode.h"
 #include "nsISO88597ToUnicode.h"
 #include "nsCP1253ToUnicode.h"
+#include "nsUTF8ToUnicode.h"
 #include "nsUnicodeToLatin1.h"
 
 // just for NS_IMPL_IDS; this is a good, central place to implement GUIDs
@@ -77,6 +78,12 @@ FactoryData g_FactoryData[] =
     &kCP1253ToUnicodeCID,
     nsCP1253ToUnicode::CreateInstance,
     "windows-1253",
+    "Unicode"
+  },
+  {
+    &kUTF8ToUnicodeCID,
+    nsUTF8ToUnicode::CreateInstance,
+    "UTF-8",
     "Unicode"
   },
   {

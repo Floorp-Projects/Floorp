@@ -37,6 +37,11 @@ NS_DECLARE_ID(kISO88597ToUnicodeCID,
 NS_DECLARE_ID(kCP1253ToUnicodeCID, 
   0xaf7a9952, 0xaa48, 0x11d2, 0xb3, 0xae, 0x0, 0x80, 0x5f, 0x8a, 0x66, 0x70);
 
+// Class ID for our UTF8ToUnicode charset converter
+// {5534DDC0-DD96-11d2-8AAC-00600811A836}
+NS_DECLARE_ID(kUTF8ToUnicodeCID, 
+  0x5534ddc0, 0xdd96, 0x11d2, 0x8a, 0xac, 0x0, 0x60, 0x8, 0x11, 0xa8, 0x36);
+
 // Class ID for our UnicodeToLatin1 charset converter
 // {920307B0-C6E8-11d2-8AA8-00600811A836}
 NS_DECLARE_ID(kUnicodeToLatin1CID, 
