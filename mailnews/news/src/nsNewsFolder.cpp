@@ -902,10 +902,19 @@ NS_IMETHODIMP nsMsgNewsFolder::CreateMessageFromMsgDBHdr(nsIMsgDBHdr *msgDBHdr, 
 nsresult 
 nsMsgNewsFolder::LoadNewsrcFileAndCreateNewsgroups()
 {
+  nsresult rv = NS_OK;
   if (!mNewsrcFilePath) return NS_ERROR_FAILURE;
 
+  PRBool exists = PR_FALSE;
+
+  rv = mNewsrcFilePath->Exists(&exists);
+  if (NS_FAILED(rv)) return rv;
+
+  // it is ok for the newsrc file to not exist yet
+  if (!exists) return NS_OK;
+
   nsInputFileStream newsrcStream(mNewsrcFilePath); 
-  nsresult rv = NS_OK;
+
   PRInt32 numread = 0;
 
   if (NS_FAILED(m_inputStream.GrowBuffer(NEWSRC_FILE_BUFFER_SIZE))) {
