@@ -130,7 +130,7 @@ PRBool BasicTableLayoutStrategy::Initialize(nsIPresContext*          aPresContex
 
   mTableFrame->SetHasPctCol(PR_FALSE);
 
-  nscoord boxWidth = mTableFrame->CalcBorderBoxWidth(aReflowState);
+  nscoord boxWidth = mTableFrame->CalcBorderBoxWidth(aPresContext, aReflowState);
   PRBool hasPctCol = AssignNonPctColumnWidths(aPresContext, boxWidth, aReflowState, p2t);
 
   mTableFrame->SetHasPctCol(hasPctCol);
@@ -224,7 +224,7 @@ BasicTableLayoutStrategy::BalanceColumnWidths(nsIPresContext*          aPresCont
                              aReflowState.mComputedBorderPadding.right;
 
   // determine if the table is auto/fixed and get the fixed width if available
-  nscoord maxWidth = mTableFrame->CalcBorderBoxWidth(aReflowState);
+  nscoord maxWidth = mTableFrame->CalcBorderBoxWidth(aPresContext, aReflowState);
   if (NS_UNCONSTRAINEDSIZE == maxWidth) {
     maxWidth = PR_MIN(maxWidth, aReflowState.availableWidth);
     if (NS_UNCONSTRAINEDSIZE == maxWidth) {
@@ -488,7 +488,8 @@ void BasicTableLayoutStrategy::AllocateUnconstrained(PRInt32  aAllocAmount,
         : ((float)oldWidth) / ((float)divisor);
       nscoord addition = nsTableFrame::RoundToPixel(NSToCoordRound(((float)aAllocAmount) * percent), aPixelToTwips);
       if (addition > (aAllocAmount - totalAllocated)) {
-        mTableFrame->SetColumnWidth(colX, oldWidth + (aAllocAmount - totalAllocated));
+        addition = nsTableFrame::RoundToPixel(aAllocAmount - totalAllocated, aPixelToTwips);
+        mTableFrame->SetColumnWidth(colX, oldWidth + addition);
         break;
       }
       mTableFrame->SetColumnWidth(colX, oldWidth + addition);
@@ -1416,7 +1417,7 @@ BasicTableLayoutStrategy::AssignPctColumnWidths(const nsHTMLReflowState& aReflow
 
   // if the percent total went over 100%, adjustments need to be made to right most cols
   if (colPctTotal > 100) {
-    ReduceOverSpecifiedPctCols(NSToCoordRound(((float)(colPctTotal - 100)) * 0.01f * (float)basis));
+    ReduceOverSpecifiedPctCols(nsTableFrame::RoundToPixel(NSToCoordRound(((float)(colPctTotal - 100)) * 0.01f * (float)basis), aPixelToTwips));
     colPctTotal = 100;
   }
 
@@ -1592,7 +1593,7 @@ BasicTableLayoutStrategy::AssignPctColumnWidths(const nsHTMLReflowState& aReflow
   delete [] rowIndices;
   // if the percent total went over 100%, adjustments need to be made to right most cols
   if (colPctTotal > 100) {
-    ReduceOverSpecifiedPctCols(NSToCoordRound(((float)(colPctTotal - 100)) * 0.01f * (float)basis));
+    ReduceOverSpecifiedPctCols(nsTableFrame::RoundToPixel(NSToCoordRound(((float)(colPctTotal - 100)) * 0.01f * (float)basis), aPixelToTwips));
   }
 
   // adjust the basis to include table border, padding and cell spacing

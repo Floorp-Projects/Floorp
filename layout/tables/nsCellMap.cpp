@@ -1149,9 +1149,26 @@ PRInt32 nsCellMap::GetEffectiveColSpan(nsTableCellMap& aMap,
   if (row) {
     PRInt32 colX;
     CellData* data;
-    for (colX = aColIndex + 1; colX < numColsInTable; colX++) {
+    PRInt32 maxCols = numColsInTable;
+    PRBool hitOverlap = PR_FALSE;
+    for (colX = aColIndex + 1; colX < maxCols; colX++) {
       data = GetMapCellAt(aMap, aRowIndex, colX, PR_TRUE);
       if (data) {
+        // for an overlapping situation get the colspan from the originating cell and
+        // use that as the max number of cols to iterate. Since this is rare, only 
+        // pay the price of looking up the cell's colspan here.
+        if (!hitOverlap && data->IsOverlap()) {
+          CellData* origData = GetMapCellAt(aMap, aRowIndex, aColIndex, PR_TRUE);
+          if (origData->IsOrig()) {
+            nsTableCellFrame* cellFrame = origData->GetCellFrame();
+            if (cellFrame) {
+              // possible change the number of colums to iterate
+              maxCols = PR_MIN(aColIndex + cellFrame->GetColSpan(), maxCols);
+              if (colX >= maxCols) 
+                break;
+            }
+          }
+        }
         if (data->IsColSpan()) {
           colSpan++;
           if (data->IsZeroColSpan()) {

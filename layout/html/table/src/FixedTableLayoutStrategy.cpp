@@ -219,6 +219,7 @@ FixedTableLayoutStrategy::AssignNonPctColumnWidths(nsIPresContext*          aPre
     // if there was too much allocated due to rounding, remove it from the last col
     if ((colX == lastColAllocated) && (overAllocation != 0)) {
       colWidths[colX] -= overAllocation;
+      colWidths[colX] = nsTableFrame::RoundToPixel(colWidths[colX], aPixelToTwips);
       totalColWidth -= colWidths[colX] - PR_MAX(0, colWidths[colX]);
       colWidths[colX] = PR_MAX(0, colWidths[colX]);
     }
