@@ -45,7 +45,7 @@
 #include "nsISupportsArray.h"
 #include "nsCRT.h"
 #include "nsAuthEngine.h"
-#include "nsIProxy.h"
+#include "nsIPref.h"
 #include "prtime.h"
 #include "nsString.h"
 
@@ -89,25 +89,36 @@ public:
     virtual nsresult ReleaseTransport(nsIChannel* i_pTrans);
     virtual nsresult CancelPendingChannel(nsHTTPChannel* aChannel);
     PRTime GetSessionStartTime() { return mSessionStartTime; }
+
+    void    PrefsChanged(const char* pref = 0);
+
     nsresult FollowRedirects(PRBool bFollow=PR_TRUE);
+
+    nsresult SetDontUseProxyFor(const char* i_hostlist);
+
 protected:
     virtual ~nsHTTPHandler();
+
+    // Determine if this host/port can connect thru proxy
+    PRBool CanUseProxy(nsIURI* i_Uri);
 
     // This is the array of connections that the handler thread 
     // maintains to verify unique requests. 
     nsCOMPtr<nsISupportsArray> mConnections;
     nsCOMPtr<nsISupportsArray> mPendingChannelList;
-    nsAuthEngine    mAuthEngine;
     nsCOMPtr<nsISupportsArray> mTransportList;
     // Transports that are idle (ready to be used again)
     nsCOMPtr<nsISupportsArray> mIdleTransports;
 
-    char*           mAcceptLanguages;
-    PRBool          mDoKeepAlive;
-    char*           mProxy;
-    PRInt32         mProxyPort;
-    PRTime          mSessionStartTime;
-    PRBool          mUseProxy; 
+    char*               mAcceptLanguages;
+    nsAuthEngine        mAuthEngine;
+    PRBool              mDoKeepAlive;
+    char*               mNoProxyFor;
+    nsCOMPtr<nsIPref>   mPrefs;
+    char*               mProxy;
+    PRInt32             mProxyPort;
+    PRTime              mSessionStartTime;
+    PRBool              mUseProxy; 
 
     nsresult BuildUserAgent();
     nsCAutoString mAppName;

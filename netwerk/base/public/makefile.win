@@ -27,6 +27,7 @@ include <$(DEPTH)/config/config.mak>
 EXPORTS =                           \
         netCore.h                   \
         nsNetUtil.h                 \
+        nsUnixColorPrintf.h         \
         $(NULL)
 
 XPIDLSRCS =                             \

@@ -50,6 +50,7 @@
 #include "nsINetDataCacheManager.h"
 #include "nsINetDataCache.h"
 #include "nsIScriptSecurityManager.h"
+#include "nsIProxy.h"
 #include "nsMimeTypes.h"
 
 #ifdef DEBUG_gagan
@@ -105,6 +106,8 @@ nsHTTPChannel::nsHTTPChannel(nsIURI* i_URL,
     mFiredOpenOnStartRequest(PR_FALSE),
     mAuthTriedWithPrehost(PR_FALSE),
     mUsingProxy(PR_FALSE),
+    mProxy(0),
+    mProxyPort(-1),
     mBufferSegmentSize(bufferSegmentSize),
     mBufferMaxSize(bufferMaxSize)
 {
@@ -130,6 +133,7 @@ nsHTTPChannel::~nsHTTPChannel()
     mEventSink       = null_nsCOMPtr();
     mResponseContext = null_nsCOMPtr();
     mLoadGroup       = null_nsCOMPtr();
+    CRTFREEIF(mProxy);
 }
 
 NS_IMPL_ISUPPORTS4(nsHTTPChannel, nsIHTTPChannel, nsIChannel, nsIInterfaceRequestor, nsIProgressEventSink);
@@ -614,7 +618,8 @@ nsHTTPChannel::OnStatus(nsIChannel *aChannel,
     nsresult rv = NS_OK;
     if (mCallbacks) {
         nsCOMPtr<nsIProgressEventSink> progressProxy;
-        rv = mCallbacks->GetInterface(NS_GET_IID(nsIProgressEventSink), getter_AddRefs(progressProxy));
+        rv = mCallbacks->GetInterface(NS_GET_IID(nsIProgressEventSink), 
+                getter_AddRefs(progressProxy));
         if (NS_FAILED(rv)) return rv;
         rv = progressProxy->OnStatus(this, aContext, aMsg);
     }
@@ -1250,7 +1255,7 @@ nsresult nsHTTPChannel::Redirect(const char *aNewLocation,
   newURLSpec = nsnull;
   log_rv = newURI->GetSpec(&newURLSpec);
   if (NS_FAILED(log_rv))
-  	newURLSpec = nsCRT::strdup("?");
+    newURLSpec = nsCRT::strdup("?");
   PR_LOG(gHTTPLog, PR_LOG_ALWAYS, 
          ("ProcessRedirect [this=%x].\tRedirecting to: %s.\n",
           this, newURLSpec));
@@ -1435,16 +1440,13 @@ nsresult nsHTTPChannel::OnHeadersAvailable()
 
 
 nsresult 
-nsHTTPChannel::Authenticate(const char *iChallenge, 
-        nsIChannel **oChannel, PRBool iProxyAuth)
+nsHTTPChannel::Authenticate(const char *iChallenge, PRBool iProxyAuth)
 {
     nsresult rv = NS_ERROR_FAILURE;
-    nsCOMPtr <nsIChannel> channel;
-    if (!oChannel || !iChallenge)
+    nsIChannel* channel;
+    if (!iChallenge)
         return NS_ERROR_NULL_POINTER;
     
-    *oChannel = nsnull; // Initialize...
-
     // Determine the new username password combination to use 
     char* newUserPass = nsnull;
     if (!mAuthTriedWithPrehost && !iProxyAuth) // Proxy auth's never in prehost
@@ -1526,11 +1528,9 @@ nsHTTPChannel::Authenticate(const char *iChallenge,
             }
             CRTFREEIF(newUserPass);
             newUserPass = temp.ToNewCString();
-#ifdef DEBUG_gagan
-    PRINTF_BLUE;
-    printf("UserPassword- %s",newUserPass);
-#endif
         }
+        else 
+            return rv;
     }
 
     // Construct the auth string request header based on info provided. 
@@ -1557,8 +1557,10 @@ nsHTTPChannel::Authenticate(const char *iChallenge,
                                 mCallbacks, 
                                 mLoadAttributes, mOriginalURI, 
                                 mBufferSegmentSize, mBufferMaxSize, 
-                                getter_AddRefs(channel));
+                                &channel);// delibrately...
     if (NS_FAILED(rv)) return rv; 
+    if (!channel)
+        return NS_ERROR_OUT_OF_MEMORY;
 
     nsCOMPtr<nsIHTTPChannel> httpChannel = do_QueryInterface(channel);
     NS_ASSERTION(httpChannel, "Something terrible happened..!");
@@ -1575,16 +1577,13 @@ nsHTTPChannel::Authenticate(const char *iChallenge,
 
     // Fire the new request...
     rv = channel->AsyncRead(0, -1, mResponseContext, mResponseDataListener);
-    *oChannel = channel;
-    NS_ADDREF(*oChannel);
-    return rv;
-}
 
-nsresult
-nsHTTPChannel::SetUsingProxy(PRBool i_UsingProxy)
-{
-    mUsingProxy = i_UsingProxy;
-    return NS_OK;
+    // Abort the current response...  This will disconnect the consumer from
+    // the response listener...  Thus allowing the entity that follows to
+    // be discarded without notifying the consumer...
+    Abort();
+
+    return rv;
 }
 
 nsresult 
@@ -1622,9 +1621,7 @@ nsHTTPChannel::FinishedResponseHeaders(void)
     // If a redirect (ie. 30x) occurs, the mResponseDataListener is
     // released and a new request is issued...
     //
-    rv = ProcessStatusCode();
-
-    return rv;
+    return ProcessStatusCode();
 }
 
 nsresult
@@ -1636,18 +1633,32 @@ nsHTTPChannel::ProcessStatusCode(void)
     statusCode = 0;
     mResponse->GetStatus(&statusCode);
 
-    if ( statusCode != 401 && mAuthTriedWithPrehost) {
-        // We know this auth challenge response was successful. Cache any
-        // authentication so that future accesses can make use of it,
-        // particularly other URLs loaded from the body of this response.
-        nsAuthEngine* pEngine;
-        NS_ASSERTION(mHandler, "HTTP handler went away");
-        if (NS_SUCCEEDED(mHandler->GetAuthEngine(&pEngine))) {
-            nsXPIDLCString authString;
-            rv = GetRequestHeader(nsHTTPAtoms::Authorization, getter_Copies(authString));
-            if (NS_FAILED(rv)) return rv;
-            
-            pEngine->SetAuthString(mURI, authString);
+    NS_ASSERTION(mHandler, "HTTP handler went away");
+    nsAuthEngine* pEngine;
+    // We know this auth challenge response was successful. Cache any
+    // authentication so that future accesses can make use of it,
+    // particularly other URLs loaded from the body of this response.
+    if (NS_SUCCEEDED(mHandler->GetAuthEngine(&pEngine))) 
+    {
+        nsXPIDLCString authString;
+        if (statusCode != 407)
+        {
+            if (mUsingProxy)
+            {
+                rv = GetRequestHeader(nsHTTPAtoms::Proxy_Authorization,
+                                getter_Copies(authString));
+                if (NS_FAILED(rv)) return rv;
+
+                pEngine->SetProxyAuthString(
+                        mProxy, mProxyPort, authString);
+            }
+
+            if (statusCode != 401 && mAuthTriedWithPrehost) 
+            {
+                rv = GetRequestHeader(nsHTTPAtoms::Authorization,
+                                getter_Copies(authString));
+                pEngine->SetAuthString(mURI, authString);
+            }
         }
     }
 
@@ -1835,16 +1846,98 @@ nsHTTPChannel::ProcessAuthentication(PRInt32 aStatusCode)
     if (NS_FAILED(rv) || !challenge || !*challenge)
         return rv;
 
-    nsCOMPtr<nsIChannel> channel;
-    if (NS_FAILED(rv = Authenticate(challenge, 
-                    getter_AddRefs(channel), 
-                    (407 == aStatusCode))))
-        return rv;
+    return Authenticate(challenge, (407 == aStatusCode));
+}
 
-    // Abort the current response...  This will disconnect the consumer from
-    // the response listener...  Thus allowing the entity that follows to
-    // be discarded without notifying the consumer...
-    Abort();
+// nsIProxy methods- but not. since we cant multi in idl. 
+NS_IMETHODIMP
+nsHTTPChannel::GetProxyHost(char* *o_ProxyHost)
+{
+    if (!o_ProxyHost)
+        return NS_ERROR_NULL_POINTER;
+    if (mProxy)
+    {
+        *o_ProxyHost = nsCRT::strdup(mProxy);
+        return (*o_ProxyHost == nsnull) ? NS_ERROR_OUT_OF_MEMORY : NS_OK;
+    }
+    else
+    {
+        *o_ProxyHost = nsnull;
+        return NS_OK;
+    }
+}
 
+NS_IMETHODIMP
+nsHTTPChannel::SetProxyHost(const char* i_ProxyHost) 
+{
+    CRTFREEIF(mProxy);
+    if (i_ProxyHost)
+    {
+        mProxy = nsCRT::strdup(i_ProxyHost);
+        return (mProxy == nsnull) ? NS_ERROR_OUT_OF_MEMORY : NS_OK;
+    }
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHTTPChannel::GetProxyPort(PRInt32 *aPort)
+{
+    *aPort = mProxyPort;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHTTPChannel::SetProxyPort(PRInt32 i_ProxyPort) 
+{
+    mProxyPort = i_ProxyPort;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHTTPChannel::SetUsingProxy(PRBool i_UsingProxy)
+{
+    mUsingProxy = i_UsingProxy;
+    nsresult rv = NS_OK;
+    // Check for proxy associated header if needed-
+    if (mUsingProxy)
+    {
+        nsAuthEngine* pAuthEngine = nsnull; 
+        NS_ASSERTION(mHandler, "Handler went away!");
+        if (!mHandler) return rv;
+        rv = mHandler->GetAuthEngine(&pAuthEngine);
+        if (NS_SUCCEEDED(rv) && pAuthEngine)
+        {
+            nsXPIDLCString authStr;
+            nsXPIDLCString proxyHost;
+            PRInt32 proxyPort;
+            // When we switch on proxy auto config this will change...
+            mHandler->GetProxyHost(getter_Copies(proxyHost));
+            mHandler->GetProxyPort(&proxyPort);
+
+            if (NS_SUCCEEDED(pAuthEngine->GetProxyAuthString(proxyHost, 
+                            proxyPort,
+                            getter_Copies(authStr))))
+            {
+                if (authStr && *authStr)
+                    mRequest->SetHeader(nsHTTPAtoms::Proxy_Authorization, 
+                            authStr);
+            }
+            // check for auth as well...
+            if (NS_SUCCEEDED(pAuthEngine->GetAuthString(mURI,
+                            getter_Copies(authStr))))
+            {
+                if (authStr && *authStr)
+                    mRequest->SetHeader(nsHTTPAtoms::Authorization, 
+                            authStr);
+            }
+        }
+    }
     return rv;
+}
+
+NS_IMETHODIMP
+nsHTTPChannel::GetUsingProxy(PRBool* o_UsingProxy)
+{
+    *o_UsingProxy = mUsingProxy;
+    return NS_OK;
 }

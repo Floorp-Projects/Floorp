@@ -70,10 +70,12 @@
 // the file nspr.log
 //
 PRLogModuleInfo* gHTTPLog = nsnull;
-
 #endif /* PR_LOGGING */
 
 #define MAX_NUMBER_OF_OPEN_TRANSPORTS 8
+
+static PRInt32 PR_CALLBACK ProxyPrefsCallback(const char* pref, void* instance);
+static const char PROXY_PREFS[] = "network.proxy";
 
 static NS_DEFINE_CID(kStandardUrlCID, NS_STANDARDURL_CID);
 static NS_DEFINE_CID(kAuthUrlParserCID, NS_AUTHORITYURLPARSER_CID);
@@ -114,6 +116,7 @@ static nsresult
 CategoryCreateService( const char *category )
 {
     nsresult rv = NS_OK;
+
     int nFailed = 0; 
     nsCOMPtr<nsICategoryManager> categoryManager = do_GetService("mozilla.categorymanager.1", &rv);
     if (!categoryManager) return rv;
@@ -265,14 +268,27 @@ nsHTTPHandler::NewChannel(const char* verb, nsIURI* i_URL,
             rv = pChannel->SetNotificationCallbacks(notificationCallbacks);
             if (NS_FAILED(rv)) goto done;
 
+            PRBool useProxy = mUseProxy && CanUseProxy(i_URL);
+            if (useProxy)
+            {
+               rv = pChannel->SetProxyHost(mProxy);
+               if (NS_FAILED(rv)) goto done;
+               rv = pChannel->SetProxyPort(mProxyPort);
+               if (NS_FAILED(rv)) goto done;
+            }
+            rv = pChannel->SetUsingProxy(useProxy);
+
            if (originalURI) 
            {
               // Referer - misspelled, but per the HTTP spec
               nsCOMPtr<nsIAtom> key = NS_NewAtom("referer");
               nsXPIDLCString spec;
               originalURI->GetSpec(getter_Copies(spec));
-              if (spec)
+              if (spec && (0 == PL_strncasecmp((const char*)spec, 
+                                           "http",4)))
+              {
                 pChannel->SetRequestHeader(key, spec);
+              }
             }
             rv = pChannel->QueryInterface(NS_GET_IID(nsIChannel), 
                                           (void**)o_Instance);
@@ -552,7 +568,8 @@ nsHTTPHandler::SetProxyPort(PRInt32 i_ProxyPort)
 nsHTTPHandler::nsHTTPHandler():
     mAcceptLanguages(nsnull),
     mDoKeepAlive(PR_FALSE),
-    mProxy(nsnull),
+    mNoProxyFor(0),
+    mProxy(0),
     mUseProxy(PR_FALSE)
 {
     NS_INIT_REFCNT();
@@ -563,8 +580,13 @@ nsHTTPHandler::Init()
 {
     nsresult rv = NS_OK;
 
-    NS_WITH_SERVICE(nsIPref, prefs, kPrefServiceCID, &rv);
-    if (NS_FAILED(rv)) return rv;
+    mPrefs = do_GetService(kPrefServiceCID, &rv);
+    if (!mPrefs)
+        return NS_ERROR_OUT_OF_MEMORY;
+
+    mPrefs->RegisterCallback(PROXY_PREFS, 
+                ProxyPrefsCallback, (void*)this);
+    PrefsChanged();
 
     // initialize the version and app components
     mAppName = "Mozilla";
@@ -572,14 +594,14 @@ nsHTTPHandler::Init()
     mAppSecurity = "N";
 
     nsXPIDLCString locale;
-    rv = prefs->CopyCharPref("general.useragent.locale", 
+    rv = mPrefs->CopyCharPref("general.useragent.locale", 
         getter_Copies(locale));
     if (NS_SUCCEEDED(rv)) {
         mAppLanguage = locale;
     }
 
     nsXPIDLCString milestone;
-    rv = prefs->CopyCharPref("general.milestone",
+    rv = mPrefs->CopyCharPref("general.milestone",
         getter_Copies(milestone));
     if (NS_SUCCEEDED(rv)) {
         mAppVersion += milestone;
@@ -662,49 +684,7 @@ nsHTTPHandler::Init()
     rv = NS_NewISupportsArray(getter_AddRefs(mIdleTransports));
     if (NS_FAILED(rv)) return rv;
 
-#if 1   // only for keep alive
-    // This stuff only till Keep-Alive is not switched on by default
-    PRInt32 keepalive = -1;
-    rv = prefs->GetIntPref("network.http.keep-alive", &keepalive);
-    mDoKeepAlive = (keepalive == 1);
-#ifdef DEBUG_gagan
-    printf("Keep-alive switched ");
-    printf(mDoKeepAlive ? STARTYELLOW "on\n" ENDCOLOR : 
-            STARTRED "off\n" ENDCOLOR);
-#endif //DEBUG_gagan
-#endif  // remove till here
 
-    nsXPIDLCString proxyServer;
-    nsXPIDLCString acceptLanguages;
-    PRInt32 proxyPort = -1;
-    PRInt32 type = -1;
-    rv = prefs->GetIntPref("network.proxy.type", &type);
-    //WARN for type==2
-    mUseProxy = (type == 1); //type == 2 is autoconfig stuff. 
-    if (NS_FAILED(rv)) return rv;
-
-    rv = prefs->CopyCharPref("network.proxy.http", 
-        getter_Copies(proxyServer));
-    if (NS_FAILED(rv)) return rv;
-
-    rv = prefs->GetIntPref("network.proxy.http_port",&proxyPort);
-    if (NS_FAILED(rv)) return rv;
-
-    if (NS_SUCCEEDED(rv) && (proxyPort>0)) // currently a bug in IntPref
-    {
-        rv = SetProxyHost(proxyServer);
-        if (NS_FAILED(rv)) return rv;
-
-        rv = SetProxyPort(proxyPort);
-        if (NS_FAILED(rv)) return rv;
-    }
-    rv = prefs->CopyCharPref("intl.accept_languages", 
-            getter_Copies(acceptLanguages));
-    if (NS_FAILED(rv)) return rv;
-
-    rv = SetAcceptLanguages(acceptLanguages);
-    if (NS_FAILED(rv)) return rv;
-   
     // Startup the http category
     // Bring alive the objects in the http-protocol-startup category
     CategoryCreateService(NS_HTTP_STARTUP_CATEGORY);
@@ -726,9 +706,13 @@ nsHTTPHandler::~nsHTTPHandler()
     // Release the Atoms used by the HTTP protocol...
     nsHTTPAtoms::ReleaseAtoms();
 
-    CRTFREEIF(mAcceptLanguages);
-    CRTFREEIF(mProxy);
+    if (mPrefs)
+        mPrefs->UnregisterCallback(PROXY_PREFS, 
+                ProxyPrefsCallback, (void*)this);
 
+    CRTFREEIF(mAcceptLanguages);
+    CRTFREEIF(mNoProxyFor);
+    CRTFREEIF(mProxy);
 }
 
 nsresult nsHTTPHandler::RequestTransport(nsIURI* i_Uri, 
@@ -825,24 +809,50 @@ nsresult nsHTTPHandler::RequestTransport(nsIURI* i_Uri,
     // if we didn't find any from the keep-alive idlelist
     if (*o_pTrans == nsnull)
     {
-        // Create a new one...
-        if (!mProxy || !mUseProxy)
+        // Ask the channel for proxy info... since that overrides
+        PRBool usingProxy;
+
+        i_Channel->GetUsingProxy(&usingProxy);
+        if (usingProxy)
         {
-            rv = CreateTransport(host, port, host,
-                                 bufferSegmentSize, bufferMaxSize, &trans);
+            nsXPIDLCString proxy;
+            PRInt32 proxyPort = -1;
+
+            rv = i_Channel->GetProxyHost(getter_Copies(proxy));
+            if (NS_FAILED(rv)) return rv;
+
+            rv = i_Channel->GetProxyPort(&proxyPort);
+            if (NS_FAILED(rv)) return rv;
+
+            rv = CreateTransport(proxy, proxyPort, host,
+                     bufferSegmentSize, bufferMaxSize, &trans);
         }
         else
         {
-            rv = CreateTransport(mProxy, mProxyPort, host, 
-                                 bufferSegmentSize, bufferMaxSize, &trans);
+            // Create a new one...
+            if (!mProxy || !mUseProxy || !CanUseProxy(i_Uri))
+            {
+                rv = CreateTransport(host, port, host,
+                             bufferSegmentSize, bufferMaxSize, &trans);
+                // Update the proxy information on the channel
+                i_Channel->SetProxyHost(mProxy);
+                i_Channel->SetProxyPort(mProxyPort);
+                i_Channel->SetUsingProxy(PR_TRUE);
+            }
+            else
+            {
+                rv = CreateTransport(mProxy, mProxyPort, host, 
+                             bufferSegmentSize, bufferMaxSize, &trans);
+                i_Channel->SetUsingProxy(PR_FALSE);
+            }
         }
         if (NS_FAILED(rv)) return rv;
     }
-    i_Channel->SetUsingProxy(mUseProxy);
 
     // Put it in the table...
     // XXX this method incorrectly returns a bool
-    rv = mTransportList->AppendElement(trans) ? NS_OK : NS_ERROR_FAILURE;  
+    rv = mTransportList->AppendElement(trans) ? 
+        NS_OK : NS_ERROR_FAILURE;  
     if (NS_FAILED(rv)) return rv;
 
     *o_pTrans = trans;
@@ -1015,3 +1025,156 @@ nsHTTPHandler::BuildUserAgent() {
     return NS_OK;
 }
 
+void
+nsHTTPHandler::PrefsChanged(const char* pref)
+{
+    PRBool bChangedAll = (pref) ? PR_FALSE : PR_TRUE;
+    NS_ASSERTION(mPrefs, "No preference service available!");
+    if (!mPrefs)
+        return;
+
+    nsresult rv = NS_OK;
+
+#if 1   // only for keep alive TODO
+        // This stuff only till Keep-Alive is not switched on by default
+        PRInt32 keepalive = -1;
+        rv = mPrefs->GetIntPref("network.http.keep-alive", &keepalive);
+        mDoKeepAlive = (keepalive == 1);
+#endif  // remove till here
+
+    if (bChangedAll || !PL_strcmp(pref, "network.proxy.type"))
+    {
+        PRInt32 type = -1;
+        rv = mPrefs->GetIntPref("network.proxy.type",&type);
+        if (NS_SUCCEEDED(rv))
+            mUseProxy = (type == 1); // type == 2 is autoconfig stuff
+    }
+
+    if (bChangedAll || !PL_strcmp(pref, "network.proxy.http"))
+    {
+        nsXPIDLCString proxyServer;
+        rv = mPrefs->CopyCharPref("network.proxy.http", 
+                getter_Copies(proxyServer));
+        if (NS_SUCCEEDED(rv)) 
+            SetProxyHost(proxyServer);
+    }
+
+    if (bChangedAll || !PL_strcmp(pref, "network.proxy.http_port"))
+    {
+        PRInt32 proxyPort = -1;
+        rv = mPrefs->GetIntPref("network.proxy.http_port",&proxyPort);
+        if (NS_SUCCEEDED(rv) && proxyPort>0) 
+            SetProxyPort(proxyPort);
+    }
+
+    if (bChangedAll || !PL_strcmp(pref, "network.proxy.no_proxies_on"))
+    {
+        nsXPIDLCString noProxy;
+        rv = mPrefs->CopyCharPref("network.proxy.no_proxies_on",
+                getter_Copies(noProxy));
+        if (NS_SUCCEEDED(rv))
+            SetDontUseProxyFor(noProxy);
+    }
+
+    // Things read only during initialization...
+    if (bChangedAll) // intl.accept_languages
+    {
+        nsXPIDLCString acceptLanguages;
+        rv = mPrefs->CopyCharPref("intl.accept_languages", 
+                getter_Copies(acceptLanguages));
+        if (NS_SUCCEEDED(rv))
+            SetAcceptLanguages(acceptLanguages);
+    }
+}
+
+PRInt32 PR_CALLBACK ProxyPrefsCallback(const char* pref, void* instance)
+{
+    nsHTTPHandler* pHandler = (nsHTTPHandler*) instance;
+    NS_ASSERTION(nsnull != pHandler, "bad instance data");
+    if (nsnull != pHandler)
+        pHandler->PrefsChanged(pref);
+    return 0;
+}
+
+nsresult
+nsHTTPHandler::SetDontUseProxyFor(const char* i_hostlist)
+{
+    CRTFREEIF(mNoProxyFor);
+    if (i_hostlist)
+    {
+        mNoProxyFor = nsCRT::strdup(i_hostlist);
+        return (mNoProxyFor == nsnull) ? NS_ERROR_OUT_OF_MEMORY : NS_OK;
+    }
+    return NS_OK;
+}
+
+PRBool
+nsHTTPHandler::CanUseProxy(nsIURI* i_Uri)
+{
+
+    NS_ASSERTION(mProxy, 
+            "This shouldn't even get called if mProxy is null");
+
+    PRBool rv = PR_TRUE;
+    if (!mNoProxyFor || !*mNoProxyFor)
+        return rv;
+
+    PRInt32 port;
+    char* host;
+
+    rv = i_Uri->GetHost(&host);
+    if (NS_FAILED(rv)) return rv;
+
+    rv = i_Uri->GetPort(&port);
+    if (NS_FAILED(rv)) 
+    {
+        nsCRT::free(host);
+        return rv;
+    }
+
+    if (!host)
+        return rv;
+
+    // mNoProxyFor is of type "foo bar:8080, baz.com ..."
+    char* brk = PL_strpbrk(mNoProxyFor, " ,:");
+    char* noProxy = mNoProxyFor;
+    PRInt32 noProxyPort = -1;
+    int hostLen = PL_strlen(host);
+    char* end = (char*)host+hostLen;
+    char* nextbrk = end;
+    int matchLen = 0;
+    do 
+    {
+        if (brk)
+        {
+            if (*brk == ':')
+            {
+                noProxyPort = atoi(brk+1);
+                nextbrk = PL_strpbrk(brk+1, " ,");
+                if (!nextbrk)
+                    nextbrk = end;
+            }
+            matchLen = brk-noProxy;
+        }
+        else
+            matchLen = end-noProxy;
+
+        if (matchLen <= hostLen) // match is smaller than host
+        {
+            if (((noProxyPort == -1) || (noProxyPort == port)) &&
+                (0 == PL_strncasecmp(host+hostLen-matchLen, 
+                             noProxy, matchLen)))
+                {
+                    nsCRT::free(host);
+                    return PR_FALSE;
+                }
+        }
+
+        noProxy = nextbrk;
+        brk = PL_strpbrk(noProxy, " ,:");
+    }
+    while (brk);
+
+    CRTFREEIF(host);
+    return rv;
+}

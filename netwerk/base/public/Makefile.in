@@ -59,6 +59,7 @@ XPIDLSRCS	= \
 EXPORTS		= \
 		netCore.h \
 		nsNetUtil.h \
+        nsUnixColorPrintf.h \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk

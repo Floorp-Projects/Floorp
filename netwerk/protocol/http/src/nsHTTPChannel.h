@@ -81,7 +81,6 @@ public:
 
     // nsHTTPChannel methods:
     nsresult            Authenticate(const char *iChallenge,
-                                     nsIChannel **oChannel,
                                      PRBool bProxyAuth = PR_FALSE);
     nsresult            Init(nsILoadGroup *aGroup);
     nsresult            Open();
@@ -99,9 +98,6 @@ public:
                                               nsIStreamListener* *aResult);
 
     nsresult            OnHeadersAvailable();
-
-    // Set if this channel is using proxy to connect
-    nsresult            SetUsingProxy(PRBool i_UsingProxy);
 
     nsresult            FinishedResponseHeaders();
 
@@ -163,7 +159,10 @@ protected:
        And so we need to throw a dialog box!
     */
     PRBool                              mAuthTriedWithPrehost;
+
     PRBool                              mUsingProxy;
+    char*                               mProxy;
+    PRInt32                             mProxyPort;
 
     PRUint32                            mBufferSegmentSize;
     PRUint32                            mBufferMaxSize;

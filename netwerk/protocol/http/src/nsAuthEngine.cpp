@@ -26,22 +26,33 @@
 #include "nsCRT.h"
 #include "plstr.h"
 #include "nsXPIDLString.h"
+#include "nsString.h"
+#include "nsIIOService.h"
+#include "nsUnixColorPrintf.h"
+#include "nsIServiceManager.h"
+
+static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 
 nsAuthEngine::nsAuthEngine()
 {
     if (NS_FAILED(NS_NewISupportsArray(getter_AddRefs(mAuthList))))
+        NS_ERROR("unable to create new auth list");
+    if (NS_FAILED(NS_NewISupportsArray(getter_AddRefs(mProxyAuthList))))
         NS_ERROR("unable to create new auth list");
 }
 
 nsAuthEngine::~nsAuthEngine()
 {
     mAuthList->Clear();
+    mProxyAuthList->Clear();
 }
 
 nsresult
 nsAuthEngine::Logout()
 {
-    return mAuthList->Clear();
+    return NS_SUCCEEDED(mAuthList->Clear()) &&
+                NS_SUCCEEDED(mProxyAuthList->Clear()) ? 
+                    NS_OK : NS_ERROR_FAILURE;
 }
     
 nsresult
@@ -52,7 +63,6 @@ nsAuthEngine::GetAuthString(nsIURI* i_URI, char** o_AuthString)
         return NS_ERROR_NULL_POINTER;
     *o_AuthString = nsnull;
     NS_ASSERTION(mAuthList, "No auth list!");
-    // or should we try and make this
     if (!mAuthList) return NS_ERROR_FAILURE;
 
     nsXPIDLCString host;
@@ -82,8 +92,7 @@ nsAuthEngine::GetAuthString(nsIURI* i_URI, char** o_AuthString)
         if (auth->uri.get() == i_URI)
         {
             *o_AuthString = nsCRT::strdup(auth->encodedString);
-            if (!*o_AuthString) return NS_ERROR_OUT_OF_MEMORY;
-            return NS_OK;
+            return (!*o_AuthString) ? NS_ERROR_OUT_OF_MEMORY : NS_OK;
         }
 
         /*
@@ -124,26 +133,93 @@ nsAuthEngine::GetAuthString(nsIURI* i_URI, char** o_AuthString)
                         PL_strlen(authDir)))) 
         {
             *o_AuthString = nsCRT::strdup(auth->encodedString);
-            if (!*o_AuthString) return NS_ERROR_OUT_OF_MEMORY;
-            return NS_OK;
+            return (!*o_AuthString) ? NS_ERROR_OUT_OF_MEMORY : NS_OK;
         }
     }
     return rv;
 }
 
 nsresult
-nsAuthEngine::SetAuthString(nsIURI* i_URI, const char* i_AuthString)
+nsAuthEngine::SetAuth(nsIURI* i_URI, 
+        const char* i_AuthString, 
+        PRBool bProxyAuth)
 {
     if (!i_URI || !i_AuthString)
         return NS_ERROR_NULL_POINTER;
 
-    NS_ASSERTION(mAuthList, "No authentication list");
+    NS_ASSERTION(bProxyAuth ? mProxyAuthList : mAuthList, 
+            "No authentication list");
+    if ((bProxyAuth && !mProxyAuthList) || (!bProxyAuth && !mAuthList))
+        return NS_ERROR_FAILURE;
 
     // TODO Extract user/pass info if available
     nsAuth* auth = new nsAuth(i_URI, i_AuthString);
     if (!auth)
         return NS_ERROR_OUT_OF_MEMORY;
     
-    nsresult rv = mAuthList->AppendElement(auth) ? NS_OK : NS_ERROR_FAILURE;
+    // We have to replace elements with earliar matching...TODO
+    return
+        bProxyAuth ? 
+        (mProxyAuthList->AppendElement(auth) ? NS_OK : NS_ERROR_FAILURE):
+        (mAuthList->AppendElement(auth) ? NS_OK : NS_ERROR_FAILURE);
+}
+
+
+nsresult
+nsAuthEngine::GetProxyAuthString(const char* i_Host, 
+        PRInt32 i_Port, 
+        char* *o_AuthString) 
+{
+    nsresult rv = NS_OK;
+    if (!o_AuthString)
+        return NS_ERROR_NULL_POINTER;
+    *o_AuthString = nsnull;
+    NS_ASSERTION(mProxyAuthList, "No proxy auth list!");
+    if (!mProxyAuthList)
+        return NS_ERROR_FAILURE;
+
+    PRUint32 count=0;
+    (void)mProxyAuthList->Count(&count);
+    if (count <=0)
+        return NS_OK; // not found...
+
+    nsXPIDLCString authHost;
+    PRInt32 authPort;
+    for (PRInt32 i = count-1; i>=0; --i)
+    {
+        nsAuth* auth = (nsAuth*)mProxyAuthList->ElementAt(i);
+        (void) auth->uri->GetHost(getter_Copies(authHost));
+        (void)auth->uri->GetPort(&authPort);
+        if ((0 == PL_strncasecmp(authHost, i_Host, 
+                        PL_strlen(authHost))) &&
+            (i_Port == authPort))
+        {
+            *o_AuthString = nsCRT::strdup(auth->encodedString);
+            return (!*o_AuthString) ? NS_ERROR_OUT_OF_MEMORY : NS_OK;
+        }
+    }
     return rv;
+}
+
+   
+nsresult
+nsAuthEngine::SetProxyAuthString(const char* host,
+        PRInt32 port,
+        const char* i_AuthString)
+{
+    nsresult rv;
+    nsCAutoString spec("http://");
+    nsCOMPtr<nsIURI> uri;
+
+    spec.Append(host);
+    spec.Append(':');
+    spec.Append(port);
+
+    NS_WITH_SERVICE(nsIIOService, serv, kIOServiceCID, &rv);
+    if (NS_FAILED(rv)) return rv;
+
+    rv = serv->NewURI(spec.GetBuffer(), nsnull, getter_AddRefs(uri));
+    if (NS_FAILED(rv)) return rv;
+
+    return SetAuth(uri, i_AuthString, PR_TRUE);
 }

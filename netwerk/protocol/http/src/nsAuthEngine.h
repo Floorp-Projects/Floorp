@@ -31,6 +31,9 @@ class nsIURI;
     The nsAuthEngine class is the central class for handling
     authentication lists, checks etc. 
 
+    There should be a class nsProxyAuthEngine that shares all this...
+    I will move it that way... someday... 
+
     -Gagan Saksena 11/12/99
 */
 class nsAuthEngine
@@ -40,26 +43,44 @@ public:
 
     nsAuthEngine(void);
     virtual ~nsAuthEngine();
-    /*
-       enum authType { Basic, Digest }
-    */
-
-    // Set an auth string
-    NS_IMETHOD      SetAuthString(nsIURI* i_URI, 
-                        const char* i_AuthString /*, int* type */);
 
     // Get an auth string
-    NS_IMETHOD      GetAuthString(nsIURI* i_URI, 
-                        char** o_AuthString /*, int* type */);
+    NS_IMETHOD      GetAuthString(nsIURI* i_URI, char** o_AuthString);
+
+    // Set an auth string
+    NS_IMETHOD      SetAuthString(nsIURI* i_URI, const char* i_AuthString);
+
+    // Get a proxy auth string with host/port
+    NS_IMETHOD      GetProxyAuthString(const char* host, 
+                        PRInt32 port, 
+                        char** o_AuthString);
+
+    // Set a proxy auth string
+    NS_IMETHOD      SetProxyAuthString(const char* host,
+                        PRInt32 port,
+                        const char* i_AuthString);
+
     /*
-       Expire all existing auth list entries.
+       Expire all existing auth list entries including proxy auths. 
     */
     NS_IMETHOD      Logout(void);
 
 protected:
 
+    NS_IMETHOD      SetAuth(nsIURI* i_URI, 
+                        const char* i_AuthString, 
+                        PRBool bProxyAuth = PR_FALSE);
+
     nsCOMPtr<nsISupportsArray>  mAuthList; 
+    // this needs to be a list becuz pac can produce more ...
+    nsCOMPtr<nsISupportsArray>  mProxyAuthList; 
 
 };
+
+inline nsresult
+nsAuthEngine::SetAuthString(nsIURI* i_URI, const char* i_AuthString)
+{
+    return SetAuth(i_URI, i_AuthString);
+}
 
 #endif /* _nsAuthEngine_h_ */
