@@ -282,11 +282,14 @@ xpmenuchildren {
   background-color: #CCCCDD;
   color: inherit;
   border: 1px white outset;
-  width: 150px;
 }
 
 xpmenuchildren[menuactive="true"] {
   visibility: visible;
+}
+
+xpmenuchildren xpmenu {
+  width: 150px;
 }
 
 progressmeter {
@@ -579,10 +582,14 @@ xpmenubar xpmenu {
   padding: 4px;
 }
 
-xpmenu[menuactive="true"] {
+xpmenubar > xpmenu[menuactive="true"] {
   border: 1px outset white;
   color:#333366;
-  text-decoration: none;
+}
+
+xpmenuchildren > xpmenu[menuactive="true"] {
+  background-color: #666699;
+  color: white;
 }
 
 /* tree related stuff */
