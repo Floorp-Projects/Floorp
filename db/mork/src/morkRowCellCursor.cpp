@@ -139,6 +139,12 @@ morkRowCellCursor::CloseRowCellCursor(morkEnv* ev)
 // ````` ````` ````` ````` ````` 
 
 /*static*/ void
+morkRowCellCursor::NilRowObjectError(morkEnv* ev)
+{
+  ev->NewError("nil mRowCellCursor_RowObject");
+}
+
+/*static*/ void
 morkRowCellCursor::NonRowCellCursorTypeError(morkEnv* ev)
 {
   ev->NewError("non morkRowCellCursor");
