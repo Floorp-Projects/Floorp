@@ -1719,20 +1719,23 @@ nsHTMLDocument::GetBody(nsIDOMHTMLElement** aBody)
 
     nsCOMPtr<nsIDOMNodeList> nodeList;
 
-    // XXX: This is not quite right, and we should deal with XHTML
-    // here too.
-    nsresult rv = GetElementsByTagName(NS_LITERAL_STRING("frameset"),
-                                       getter_AddRefs(nodeList));
-    if (NS_FAILED(rv))
-      return rv;
+    nsresult rv;
+    if (IsXHTML()) {
+      rv = GetElementsByTagNameNS(NS_LITERAL_STRING(NS_HTML_NAMESPACE),
+                                  NS_LITERAL_STRING("frameset"),
+                                  getter_AddRefs(nodeList));
+    } else {
+      rv = GetElementsByTagName(NS_LITERAL_STRING("frameset"),
+                                getter_AddRefs(nodeList));
+    }
 
     if (nodeList) {
-      rv = nodeList->Item(0, getter_AddRefs(node));
-      if (NS_FAILED(rv))
-        return rv;
+      rv |= nodeList->Item(0, getter_AddRefs(node));
 
       element = node;
     }
+
+    NS_ENSURE_SUCCESS(rv, rv);
   }
 
   return element ? CallQueryInterface(element, aBody) : NS_OK;
@@ -2175,7 +2178,7 @@ nsHTMLDocument::Open(PRBool aReplace, nsIDOMDocument** aReturn)
   return CallQueryInterface(this, aReturn);
 }
 
-#define NS_GENERATE_PARSER_KEY() (void*)((mIsWriting << 31) | (mWriteLevel & 0x7fffffff))
+#define NS_GENERATE_PARSER_KEY() NS_INT32_TO_PTR((mIsWriting << 31) | (mWriteLevel & 0x7fffffff))
 
 NS_IMETHODIMP
 nsHTMLDocument::Clear()
