@@ -626,7 +626,7 @@ nsXFormsSubmissionElement::GetSelectedInstanceData(nsIDOMNode **result)
   nsCOMPtr<nsIDOMNode> model;
   nsCOMPtr<nsIDOMElement> bind;
   nsCOMPtr<nsIDOMXPathResult> xpRes =
-    nsXFormsUtils::EvaluateNodeBinding(mElement,
+    nsXFormsUtils::EvaluateNodeBinding(mElement, 0,
                                        nsIDOMXPathResult::FIRST_ORDERED_NODE_TYPE,
                                        getter_AddRefs(model),
                                        getter_AddRefs(bind));

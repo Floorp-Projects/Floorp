@@ -51,7 +51,35 @@
 #include "nsIXFormsModelElement.h"
 
 /* static */ nsIDOMNode*
+nsXFormsUtils::GetParentModel(nsIDOMElement *aElement)
+{
+  nsCOMPtr<nsIDOMNode> modelWrapper;
+
+  // Walk up the tree looking for the containing model.
+  aElement->GetParentNode(getter_AddRefs(modelWrapper));
+
+  nsAutoString localName, namespaceURI;
+  nsCOMPtr<nsIDOMNode> temp;
+
+  while (modelWrapper) {
+    modelWrapper->GetLocalName(localName);
+    if (localName.EqualsLiteral("model")) {
+      modelWrapper->GetNamespaceURI(namespaceURI);
+      if (namespaceURI.EqualsLiteral(NS_NAMESPACE_XFORMS))
+        break;
+    }
+
+    temp.swap(modelWrapper);
+    temp->GetParentNode(getter_AddRefs(modelWrapper));
+  }
+
+  // We're releasing this reference, but the node is owned by the DOM.
+  return modelWrapper;
+}
+
+/* static */ nsIDOMNode*
 nsXFormsUtils::GetModelAndBind(nsIDOMElement  *aElement,
+                               PRUint32        aElementFlags,
                                nsIDOMElement **aBindElement)
 {
   *aBindElement = nsnull;
@@ -65,35 +93,20 @@ nsXFormsUtils::GetModelAndBind(nsIDOMElement  *aElement,
   nsAutoString bindId;
   aElement->GetAttribute(NS_LITERAL_STRING("bind"), bindId);
 
-  nsCOMPtr<nsIDOMNode> modelWrapper;
-
   if (!bindId.IsEmpty()) {
     // Get the bind element with the given id.
     domDoc->GetElementById(bindId, aBindElement);
 
-    if (*aBindElement) {
-      // Walk up the tree looking for the containing model.
-      (*aBindElement)->GetParentNode(getter_AddRefs(modelWrapper));
+    if (*aBindElement)
+      return GetParentModel(*aBindElement);
+  }
 
-      nsAutoString localName, namespaceURI;
-      nsCOMPtr<nsIDOMNode> temp;
-
-      while (modelWrapper) {
-        modelWrapper->GetLocalName(localName);
-        if (localName.EqualsLiteral("model")) {
-          modelWrapper->GetNamespaceURI(namespaceURI);
-          if (namespaceURI.EqualsLiteral(NS_NAMESPACE_XFORMS))
-            break;
-        }
-
-        temp.swap(modelWrapper);
-        temp->GetParentNode(getter_AddRefs(modelWrapper));
-      }
-    }
-  } else {
+  if (aElementFlags & ELEMENT_WITH_MODEL_ATTR) {
     // If no bind was given, we use model.
     nsAutoString modelId;
     aElement->GetAttribute(NS_LITERAL_STRING("model"), modelId);
+
+    nsCOMPtr<nsIDOMNode> modelWrapper;
 
     if (modelId.IsEmpty()) {
       // No model given, so use the first one in the document.
@@ -111,10 +124,14 @@ nsXFormsUtils::GetModelAndBind(nsIDOMElement  *aElement,
       domDoc->GetElementById(modelId, getter_AddRefs(wrapperElement));
       modelWrapper = wrapperElement;
     }
+
+    // We're releasing this reference, but the node is owned by the DOM.
+    return modelWrapper;
   }
 
-  // We're releasing this reference, but the node is owned by the DOM.
-  return modelWrapper;
+  // If no bind was given, we assume the given element is a child
+  // of the model.
+  return GetParentModel(aElement);
 }
 
 /* static */ already_AddRefed<nsIDOMXPathResult>
@@ -233,6 +250,7 @@ nsXFormsUtils::EvaluateNodeset(nsIDOMElement *aElement, PRUint16 aResultType)
 
 /* static */ already_AddRefed<nsIDOMXPathResult>
 nsXFormsUtils::EvaluateNodeBinding(nsIDOMElement  *aElement,
+                                   PRUint32        aElementFlags,
                                    PRUint16        aResultType,
                                    nsIDOMNode    **aModel,
                                    nsIDOMElement **aBind)
@@ -244,7 +262,7 @@ nsXFormsUtils::EvaluateNodeBinding(nsIDOMElement  *aElement,
 
   *aBind = nsnull;
 
-  NS_IF_ADDREF(*aModel = GetModelAndBind(aElement, aBind));
+  NS_IF_ADDREF(*aModel = GetModelAndBind(aElement, aElementFlags, aBind));
   if (!*aModel)
     return nsnull;
 

@@ -58,14 +58,34 @@ class nsIXFormsModelElement;
 class nsXFormsUtils
 {
 public:
+
+  /**
+   * Possible values for any |aElementFlags| parameters.  These may be
+   * bitwise OR'd together.
+   */
+  enum {
+    /**
+     * The element has a "model" attribute.
+     */
+    ELEMENT_WITH_MODEL_ATTR = 1 << 0
+  };
+
+  /**
+   * Locate the model that is a parent of |aElement|.  This method walks up the
+   * content tree looking for the containing model.
+   */
+  static NS_HIDDEN_(nsIDOMNode*)
+    GetParentModel(nsIDOMElement *aElement);
+
   /**
    * Locate the model that |aElement| is bound to, and if applicable, the
    * <bind> element that it uses.  The model is returned and the
    * bind element is returned (addrefed) in |aBindElement|.
    */
-
   static NS_HIDDEN_(nsIDOMNode*)
-    GetModelAndBind(nsIDOMElement *aElement, nsIDOMElement **aBindElement);
+    GetModelAndBind(nsIDOMElement  *aElement,
+                    PRUint32        aElementFlags,
+                    nsIDOMElement **aBindElement);
 
   /**
    * Evaluate a 'bind' or 'ref' attribute on |aElement|.  |aResultType| is
@@ -78,6 +98,7 @@ public:
    */
   static NS_HIDDEN_(already_AddRefed<nsIDOMXPathResult>)
     EvaluateNodeBinding(nsIDOMElement  *aElement,
+                        PRUint32        aElementFlags,
                         PRUint16        aResultType,
                         nsIDOMNode     **aModel,
                         nsIDOMElement  **aBind);

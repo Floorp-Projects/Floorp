@@ -278,7 +278,10 @@ nsXFormsInputElement::WillSetAttribute(nsIAtom *aName, const nsAString &aValue)
     nsCOMPtr<nsIDOMElement> bindElement;
     nsCOMPtr<nsIModelElementPrivate> model;
 
-    model = do_QueryInterface(nsXFormsUtils::GetModelAndBind(mElement, getter_AddRefs(bindElement)));
+    model = do_QueryInterface(
+        nsXFormsUtils::GetModelAndBind(mElement,
+                                       nsXFormsUtils::ELEMENT_WITH_MODEL_ATTR,
+                                       getter_AddRefs(bindElement)));
     if (model)
       model->RemoveFormControl(this);
   }
@@ -345,6 +348,7 @@ nsXFormsInputElement::Blur(nsIDOMEvent *aEvent)
   nsCOMPtr<nsIDOMElement> bindElement;
   nsCOMPtr<nsIDOMXPathResult> result =
     nsXFormsUtils::EvaluateNodeBinding(mElement,
+                                       nsXFormsUtils::ELEMENT_WITH_MODEL_ATTR,
                                        nsIDOMXPathResult::FIRST_ORDERED_NODE_TYPE,
                                        getter_AddRefs(modelNode),
                                        getter_AddRefs(bindElement));
@@ -401,6 +405,7 @@ nsXFormsInputElement::Refresh()
   nsCOMPtr<nsIDOMElement> bindElement;
   nsCOMPtr<nsIDOMXPathResult> result =
     nsXFormsUtils::EvaluateNodeBinding(mElement,
+                                       nsXFormsUtils::ELEMENT_WITH_MODEL_ATTR,
                                        nsIDOMXPathResult::FIRST_ORDERED_NODE_TYPE,
                                        getter_AddRefs(modelNode),
                                        getter_AddRefs(bindElement));
