@@ -20,8 +20,24 @@
 # Contributor(s):
 # Chris Waterson <waterson@netscape.com>
 # 
-# $Id: make-data.pl,v 1.4 1999/11/17 22:26:50 waterson%netscape.com Exp $
+# $Id: make-data.pl,v 1.5 1999/11/17 23:02:53 waterson%netscape.com Exp $
 #
+
+#
+# This script runs the apecified application until it's blue in the
+# face. First, it runs it to generate a top level ``master bloat''
+# log, containing a map of all the objects leaked. For each class that
+# it detects has leaked, it re-runs the app to collect the serial
+# numbers of the objects leaked. Then for each object, it re-runs the
+# app to collect a stack trace.
+#
+# It creates a ``.zip'' file that is meant to be used with
+# ``logs.cgi'' and the rest of the Leak-o-Matic CGIs. If the
+# ``--email'' option is specified, it will mail the ``.zip'' file,
+# uuencoded, to the specified address. See ``handle-mail.pl'' for a
+# server-side mail handler.
+#
+
 use 5.004;
 use strict;
 use Getopt::Long;
@@ -29,8 +45,9 @@ use POSIX "sys_wait_h";
 
 $::opt_dir = ".";
 $::opt_app = "mozilla-bin -f bloaturls.txt";
+$::opt_timeout = 600;
 
-GetOptions("dir=s", "app=s", "email=s");
+GetOptions("dir=s", "app=s", "email=s", "timeout=i");
 
 sub ForkAndWait($$$) {
     my ($dir, $app, $timeout) = @_;
@@ -96,7 +113,8 @@ my @leakyclasses;
     }
 }
 
-# Iterate through each class that leaked, and find out what objects leaked
+# Iterate through each class that leaked, and find out what objects
+# have leaked.
 
 my $BloatLogFile = "/tmp/leak-report-bloat.log";
 $ENV{"XPCOM_MEM_BLOAT_LOG"} = $BloatLogFile;
@@ -126,6 +144,9 @@ foreach $class (@leakyclasses) {
         $leakedobjects[++$#leakedobjects] = $_;
     }
 
+    # ...and for each object that leaked, generate reference count
+    # stack traces.
+
     my $object;
     foreach $object (@leakedobjects) {
         my $refcntlogfile = $ENV{"PWD"} . "/refcnt-" . $class . "-" . $object . ".log";
@@ -135,7 +156,7 @@ foreach $class (@leakyclasses) {
         $ENV{"XPCOM_MEM_REFCNT_LOG"} = $refcntlogfile;
         $ENV{"XPCOM_MEM_LOG_OBJECTS"} = $object;
 
-        if (ForkAndWait($::opt_dir, $::opt_app, 600) < 0) {
+        if (ForkAndWait($::opt_dir, $::opt_app, $::opt_timeout) < 0) {
             print "  * Timed out; discarding.\n";
             unlink $refcntlogfile;
         }
