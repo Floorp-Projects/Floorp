@@ -830,7 +830,7 @@ PRInt16 JamoSrchReplace (const JamoNormMap* aClusters,
                          PRUint16 aClustersSize, PRUnichar* aIn, 
                          PRInt32* aLength, PRUint16 aOffset)
 {
-  PRInt32 aLength0 = *aLength; 
+  PRInt32 origLen = *aLength; 
 
   // non-zero third element => clusternLen = 3. otherwise, it's 2.
   PRUint16 clusterLen = aClusters[0].seq[2] ? 3 : 2; 
@@ -838,10 +838,13 @@ PRInt16 JamoSrchReplace (const JamoNormMap* aClusters,
   PRInt32 start = 0, end;
 
   // identify the substring of aIn with values in [aOffset, aOffset + 0x100).
-  while ((aIn[start] & 0xff00) != aOffset) 
+  while (start < origLen && (aIn[start] & 0xff00) != aOffset)
     ++start;
-  for (end=start; end < *aLength && (aIn[end] & 0xff00) == aOffset; ++end);
+  for (end=start; end < origLen && (aIn[end] & 0xff00) == aOffset; ++end);
 
+  // now process the substring aIn[start] .. aIn[end] 
+  // we don't need a separate range check here because the one in 
+  // for-loop is sufficient.
   for (PRInt32 i = start; i <= end - clusterLen; i++)
   {
     const JamoNormMap *match;
@@ -868,7 +871,7 @@ PRInt16 JamoSrchReplace (const JamoNormMap* aClusters,
     }
   }
 
-  return *aLength - aLength0;
+  return *aLength - origLen;
 }
 
 /* static */
