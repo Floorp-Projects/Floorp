@@ -20,6 +20,7 @@
  * Contributor(s): 
  *   Stuart Parmenter <pavlov@netscape.com>
  *   Chris Saari <saari@netscape.com>
+ *   Asko Tontti <atontti@cc.hut.fi>
  */
 
 #include "imgContainer.h"
@@ -45,6 +46,7 @@ imgContainer::imgContainer() :
   mAnimating = PR_FALSE;
   mAnimationMode = 0;
   mObserver = nsnull;
+  mLoopCount = -1;
 }
 
 //******************************************************************************
@@ -338,13 +340,21 @@ NS_IMETHODIMP imgContainer::StopAnimation()
 /* attribute long loopCount; */
 NS_IMETHODIMP imgContainer::GetLoopCount(PRInt32 *aLoopCount)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-NS_IMETHODIMP imgContainer::SetLoopCount(PRInt32 aLoopCount)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
+  NS_ASSERTION(aLoopCount, "ptr is null");
+  *aLoopCount = mLoopCount;
+  return NS_OK;
 }
 
+NS_IMETHODIMP imgContainer::SetLoopCount(PRInt32 aLoopCount)
+{
+  // -1  infinite
+  //  0  no looping, one iteration
+  //  1  one loop, two iterations
+  //  ...
+  mLoopCount = aLoopCount;
+
+  return NS_OK;
+}
 
 
 NS_IMETHODIMP_(void) imgContainer::Notify(nsITimer *timer)
@@ -388,7 +398,7 @@ NS_IMETHODIMP_(void) imgContainer::Notify(nsITimer *timer)
   } else if (mDoneDecoding){
     if ((numFrames-1) == mCurrentAnimationFrameIndex) {
       // If animation mode is "loop once", it's time to stop animating
-      if (mAnimationMode == 2) {
+      if (mAnimationMode == 2 || mLoopCount == 0) {
         this->StopAnimation();
         return;
       }
@@ -399,6 +409,8 @@ NS_IMETHODIMP_(void) imgContainer::Notify(nsITimer *timer)
       
       mCurrentAnimationFrameIndex = 0;
       nextFrame->GetTimeout(&timeout);
+      if(mLoopCount > 0) 
+        mLoopCount--;
     } else {
       mCurrentAnimationFrameIndex++;
       GetFrameAt(mCurrentAnimationFrameIndex, getter_AddRefs(nextFrame));
@@ -415,8 +427,7 @@ NS_IMETHODIMP_(void) imgContainer::Notify(nsITimer *timer)
     mTimer->SetDelay(timeout);
   else
     this->StopAnimation();
-    
-    
+
   nsRect dirtyRect;
 
   // update the composited frame
