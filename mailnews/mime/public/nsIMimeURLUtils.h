@@ -53,6 +53,8 @@ public:
   NS_IMETHOD    MakeAbsoluteURL(char * absolute_url, char * relative_url, char **retURL) = 0;
 
   NS_IMETHOD    ScanHTMLForURLs(const char* input, char **retBuf) = 0;
+
+  NS_IMETHOD    ParseURL(const char *url, int parts_requested, char **returnVal) = 0;
 }; 
 
 #endif /* _nsIMimeURLUtils_h__ */
