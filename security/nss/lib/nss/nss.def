@@ -693,6 +693,7 @@ CERT_DestroyOCSPRequest;
 CERT_EncodeOCSPRequest;
 CERT_GetOCSPResponseStatus;
 CERT_GetOCSPStatusForCertID;
+CERT_RemoveCertListNode;
 CERT_VerifyCACertForUsage;
 CERT_VerifyCertificate;
 CERT_VerifyCertificateNow;
