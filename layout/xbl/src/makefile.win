@@ -46,6 +46,8 @@ LINCS=-I$(PUBLIC)\xpcom -I$(PUBLIC)\raptor -I$(PUBLIC)\js \
    -I..\..\html\forms\src \
   -I$(PUBLIC)\netlib -I..\..\..\base\src -I$(PUBLIC)\pref \
   -I..\..\xml\content\src \
+  -I..\..\xml\document\src \
+  -I..\..\base\src \
   -I..\public
 
 LCFLAGS = \
