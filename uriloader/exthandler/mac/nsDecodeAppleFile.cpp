@@ -26,15 +26,15 @@
 #include "nsCRT.h"
 
 
-NS_IMPL_THREADSAFE_ADDREF(nsAppleFileDecoder)
-NS_IMPL_THREADSAFE_RELEASE(nsAppleFileDecoder)
+NS_IMPL_THREADSAFE_ADDREF(nsDecodeAppleFile)
+NS_IMPL_THREADSAFE_RELEASE(nsDecodeAppleFile)
 
-NS_INTERFACE_MAP_BEGIN(nsAppleFileDecoder)
+NS_INTERFACE_MAP_BEGIN(nsDecodeAppleFile)
    NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIOutputStream)
    NS_INTERFACE_MAP_ENTRY(nsIOutputStream)
 NS_INTERFACE_MAP_END_THREADSAFE
 
-nsAppleFileDecoder::nsAppleFileDecoder()
+nsDecodeAppleFile::nsDecodeAppleFile()
 {
   NS_INIT_ISUPPORTS();
 
@@ -53,7 +53,7 @@ nsAppleFileDecoder::nsAppleFileDecoder()
   nsCRT::zero(&m_finderExtraInfo, sizeof(m_dates));
 }
 
-nsAppleFileDecoder::~nsAppleFileDecoder()
+nsDecodeAppleFile::~nsDecodeAppleFile()
 {
   
   PR_FREEIF(m_dataBuffer);
@@ -61,7 +61,7 @@ nsAppleFileDecoder::~nsAppleFileDecoder()
     delete [] m_entries;
 }
 
-NS_IMETHODIMP nsAppleFileDecoder::Initialize(nsIOutputStream *output, nsIFile *file)
+NS_IMETHODIMP nsDecodeAppleFile::Initialize(nsIOutputStream *output, nsIFile *file)
 {
   m_output = output;
   
@@ -74,7 +74,7 @@ NS_IMETHODIMP nsAppleFileDecoder::Initialize(nsIOutputStream *output, nsIFile *f
   return NS_OK;
 }
 
-NS_IMETHODIMP nsAppleFileDecoder::Close(void)
+NS_IMETHODIMP nsDecodeAppleFile::Close(void)
 {
   nsresult rv;
   rv = m_output->Close();
@@ -163,42 +163,42 @@ NS_IMETHODIMP nsAppleFileDecoder::Close(void)
   return rv;
 }
 
-NS_IMETHODIMP nsAppleFileDecoder::Flush(void)
+NS_IMETHODIMP nsDecodeAppleFile::Flush(void)
 {
   return m_output->Flush();
 } 
 
-NS_IMETHODIMP nsAppleFileDecoder::WriteFrom(nsIInputStream *inStr, PRUint32 count, PRUint32 *_retval)
+NS_IMETHODIMP nsDecodeAppleFile::WriteFrom(nsIInputStream *inStr, PRUint32 count, PRUint32 *_retval)
 {
   return m_output->WriteFrom(inStr, count, _retval);
 }
 
-NS_IMETHODIMP nsAppleFileDecoder::WriteSegments(nsReadSegmentFun reader, void * closure, PRUint32 count, PRUint32 *_retval)
+NS_IMETHODIMP nsDecodeAppleFile::WriteSegments(nsReadSegmentFun reader, void * closure, PRUint32 count, PRUint32 *_retval)
 {
   return m_output->WriteSegments(reader, closure, count, _retval);
 }
 
-NS_IMETHODIMP nsAppleFileDecoder::GetNonBlocking(PRBool *aNonBlocking)
+NS_IMETHODIMP nsDecodeAppleFile::GetNonBlocking(PRBool *aNonBlocking)
 {
   return m_output->GetNonBlocking(aNonBlocking);
 }
 
-NS_IMETHODIMP nsAppleFileDecoder::SetNonBlocking(PRBool aNonBlocking)
+NS_IMETHODIMP nsDecodeAppleFile::SetNonBlocking(PRBool aNonBlocking)
 {
   return m_output->SetNonBlocking(aNonBlocking);
 }
 
-NS_IMETHODIMP nsAppleFileDecoder::GetObserver(nsIOutputStreamObserver * *aObserver)
+NS_IMETHODIMP nsDecodeAppleFile::GetObserver(nsIOutputStreamObserver * *aObserver)
 {
   return m_output->GetObserver(aObserver);
 }
 
-NS_IMETHODIMP nsAppleFileDecoder::SetObserver(nsIOutputStreamObserver * aObserver)
+NS_IMETHODIMP nsDecodeAppleFile::SetObserver(nsIOutputStreamObserver * aObserver)
 {
   return m_output->SetObserver(aObserver);
 }
 
-NS_IMETHODIMP nsAppleFileDecoder::Write(const char *buffer, PRUint32 bufferSize, PRUint32* writeCount)
+NS_IMETHODIMP nsDecodeAppleFile::Write(const char *buffer, PRUint32 bufferSize, PRUint32* writeCount)
 {
   /* WARNING: to simplify my life, I presume that I should get all appledouble headers in the first block,
               else I would have to implement a buffer */
