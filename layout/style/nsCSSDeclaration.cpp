@@ -417,6 +417,16 @@ void nsCSSDisplay::List(FILE* out, PRInt32 aIndent) const
 
 // --- nsCSSMargin -----------------
 
+inline void nsCSSMargin::EnsureBorderColors()
+{
+  if (!mBorderColors) {
+    PRInt32 i;
+    mBorderColors = new nsCSSValueList*[4];
+    for (i = 0; i < 4; i++)
+      mBorderColors[i] = nsnull;
+  }
+}
+
 nsCSSMargin::nsCSSMargin(void)
   : mMargin(nsnull), mPadding(nsnull), 
     mBorderWidth(nsnull), mBorderColor(nsnull), mBorderColors(nsnull),
@@ -534,16 +544,6 @@ void nsCSSMargin::List(FILE* out, PRInt32 aIndent) const
   }
   mFloatEdge.AppendToString(buffer, eCSSProperty_float_edge);
   fputs(NS_LossyConvertUCS2toASCII(buffer).get(), out);
-}
-
-inline void nsCSSMargin::EnsureBorderColors()
-{
-  if (!mBorderColors) {
-    PRInt32 i;
-    mBorderColors = new nsCSSValueList*[4];
-    for (i = 0; i < 4; i++)
-      mBorderColors[i] = nsnull;
-  }
 }
 
 // --- nsCSSPosition -----------------
