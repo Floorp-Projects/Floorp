@@ -2413,22 +2413,25 @@ nsresult nsImapIncomingServer::RequestOverrideInfo(nsIMsgWindow *aMsgWindow)
 
       GetRealUsername(getter_Copies(userName));
       m_logonRedirector->RequiresPassword(userName, &requiresPassword);
+      
       if (requiresPassword)
       {
-  			GetPassword(getter_Copies(password));
+        GetPassword(getter_Copies(password));
 
-			  if (!((const char *) password) || nsCRT::strlen((const char *) password) == 0)
+			  if (password.IsEmpty())
 				  PromptForPassword(getter_Copies(password), aMsgWindow);
 
-        // if we still don't have a password then the user must have hit cancel so just
-        // fall out...
-        if (!((const char *) password) || nsCRT::strlen((const char *) password) == 0)
+        if (password.IsEmpty())  // if still empty then the user canceld out of the password dialog
         {
           // be sure to clear the waiting for connection info flag because we aren't waiting
           // anymore for a connection...
           m_waitingForConnectionInfo = PR_FALSE;
           return NS_OK;
         }
+      }
+      else
+      {
+        SetUserAuthenticated(PR_TRUE);  // we are already authenicated
       }
 
       nsCOMPtr<nsIPrompt> dialogPrompter;
