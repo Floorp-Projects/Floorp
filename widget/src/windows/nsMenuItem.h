@@ -49,7 +49,7 @@ public:
 
   NS_IMETHOD Create(nsISupports * aParent, const nsString &aLabel, PRBool aIsSeparator);
 
-  // nsIMenuBar Methods
+  // nsIMenuItem Methods
   NS_IMETHOD SetDOMElement(nsIDOMElement * aDOMElement);
   NS_IMETHOD GetDOMElement(nsIDOMElement ** aDOMElement);
   NS_IMETHOD SetWebShell(nsIWebShell * aWebShell);
@@ -69,6 +69,11 @@ public:
   NS_IMETHOD RemoveMenuListener(nsIMenuListener * aMenuListener);
   NS_IMETHOD IsSeparator(PRBool & aIsSep);
 
+  NS_IMETHOD SetShortcutChar(const nsString &aText);
+  NS_IMETHOD GetShortcutChar(nsString &aText);
+  NS_IMETHOD SetModifiers(PRUint8 aModifiers);
+  NS_IMETHOD GetModifiers(PRUint8 * aModifiers);
+  
   // nsIMenuListener interface
   nsEventStatus MenuItemSelected(const nsMenuEvent & aMenuEvent);
   nsEventStatus MenuSelected(const nsMenuEvent & aMenuEvent);
@@ -92,6 +97,8 @@ protected:
   nsIWidget * GetMenuBarParent(nsISupports * aParent);
 
   nsString          mLabel;
+  nsString          mKeyEquivalent;
+  PRUint8           mModifiers;
   PRUint32          mCommand;
   nsIWidget       * mTarget;
   nsIMenu         * mMenu;

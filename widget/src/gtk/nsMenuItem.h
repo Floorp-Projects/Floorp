@@ -43,7 +43,7 @@ public:
   // nsISupports
   NS_DECL_ISUPPORTS
 
-  // nsIMenuBar Methods
+  // nsIMenuItem Methods
   NS_IMETHOD Create(nsISupports    *aParent, 
                     const nsString &aLabel,  
                     PRBool          aIsSeparator);
@@ -66,6 +66,11 @@ public:
   NS_IMETHOD GetDOMElement(nsIDOMElement ** aDOMElement);
   NS_IMETHOD SetWebShell(nsIWebShell * aWebShell);
   
+  NS_IMETHOD SetShortcutChar(const nsString &aText);
+  NS_IMETHOD GetShortcutChar(nsString &aText);
+  NS_IMETHOD SetModifiers(PRUint8 aModifiers);
+  NS_IMETHOD GetModifiers(PRUint8 * aModifiers);
+  
   // nsIMenuListener interface
   nsEventStatus MenuItemSelected(const nsMenuEvent & aMenuEvent);
   nsEventStatus MenuSelected(const nsMenuEvent & aMenuEvent);
@@ -84,6 +89,8 @@ protected:
 
   nsIMenuListener	*mXULCommandListener;
   nsString     mLabel;
+  nsString     mKeyEquivalent;
+  PRUint8      mModifiers;
   PRUint32     mCommand;
   nsIMenu      *mMenuParent;
   nsIPopUpMenu *mPopUpParent;
