@@ -18,6 +18,7 @@
 #include "nsCOMPtr.h"
 #include "nsHTMLDocument.h"
 #include "nsIParser.h"
+#include "nsIParserFilter.h"
 #include "nsIHTMLContentSink.h"
 #include "nsHTMLParts.h"
 #include "nsIHTMLStyleSheet.h"
@@ -46,6 +47,7 @@
 #endif // NECKO
 #include "nsIContentViewerContainer.h"
 #include "nsIWebShell.h"
+#include "nsIWebShellServices.h"
 #include "nsIDocumentLoader.h"
 #include "CNavDTD.h"
 #include "nsIScriptGlobalObject.h"
@@ -68,6 +70,15 @@
 #include "nsGenericHTMLElement.h"
 #include "nsGenericDOMNodeList.h"
 #include "nsICSSLoader.h"
+
+
+#include "nsICharsetDetector.h"
+#include "nsICharsetDetectionAdaptor.h"
+#include "nsCharsetDetectionAdaptorCID.h"
+#include "nsIPref.h"
+static char g_detector_progid[128];
+static PRBool gInitDetector = PR_FALSE;
+static PRBool gPlugDetector = PR_FALSE;
 
 #ifdef PCB_USE_PROTOCOL_CONNECTION
 // beard: how else would we get the referrer to a URL?
@@ -107,6 +118,7 @@ static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 static NS_DEFINE_IID(kIHTMLContentContainerIID, NS_IHTMLCONTENTCONTAINER_IID);
 static NS_DEFINE_IID(kIDOMHTMLBodyElementIID, NS_IDOMHTMLBODYELEMENT_IID);
 
+static NS_DEFINE_IID(kIParserFilterIID, NS_IPARSERFILTER_IID);
 // ==================================================================
 // =
 // ==================================================================
@@ -347,6 +359,7 @@ nsHTMLDocument::StartDocumentLoad(nsIURI *aURL,
     const PRUnichar* requestCharset = nsnull;
     nsCharsetSource requestCharsetSource = kCharsetUninitialized;
     
+    nsIParserFilter *cdetflt = nsnull;
 
 #ifdef rickgdebug
     nsString outString;   // added out. Redirect to stdout if desired -- gpk 04/01/99
@@ -379,6 +392,72 @@ nsHTMLDocument::StartDocumentLoad(nsIURI *aURL,
             //TODO: we should define appropriate constant for force charset
             charsetSource = kCharsetFromPreviousLoading;  
        }
+
+       nsresult rv_detect = NS_OK;
+       if(! gInitDetector)
+       {
+           nsIPref* pref = nsnull;
+           if(NS_SUCCEEDED(webShell->GetPrefs(pref)))
+           {
+      
+             char* detector_name = nsnull;
+             if(NS_SUCCEEDED(
+                 rv_detect = pref->CopyCharPref("intl.charset.detector",
+                                     &detector_name)))
+             {
+                PL_strcpy(g_detector_progid, NS_CHARSET_DETECTOR_PROGID_BASE);
+                PL_strcat(g_detector_progid, detector_name);
+                gPlugDetector = PR_TRUE;
+                PR_FREEIF(detector_name);
+             }
+             // XXX we should also register callback here
+           }
+           NS_IF_RELEASE(pref);
+           gInitDetector = PR_TRUE;
+       }
+   
+       if((charsetSource < kCharsetFromAutoDetection)  && gPlugDetector)
+       {
+           // we could do charset detection
+           
+           nsICharsetDetector *cdet = nsnull;
+           nsIWebShellServices *wss = nsnull;
+           nsICharsetDetectionAdaptor *adp = nsnull;
+
+           if(NS_SUCCEEDED( rv_detect = 
+                nsComponentManager::CreateInstance(g_detector_progid, nsnull,
+                               nsICharsetDetector::GetIID(), (void**)&cdet)))
+           {
+              
+              if(NS_SUCCEEDED( rv_detect = 
+                nsComponentManager::CreateInstance(
+                               NS_CHARSET_DETECTION_ADAPTOR_PROGID, nsnull,
+                               kIParserFilterIID, (void**)&cdetflt)))
+              {
+                 if(cdetflt && 
+                    NS_SUCCEEDED( rv_detect=
+                         cdetflt->QueryInterface(
+                            nsICharsetDetectionAdaptor::GetIID(),(void**) &adp)))
+                 {
+                   if( NS_SUCCEEDED( rv_detect=
+                         webShell->QueryInterface(
+                            nsIWebShellServices::GetIID(),(void**) &wss)))
+                   {
+                     rv_detect = adp->Init(wss, cdet);
+                   }
+                 }
+              }
+           } else {
+              // IF we cannot create the detector, don't bother to 
+              // create one next time.
+
+              gPlugDetector = PR_FALSE;
+           }
+           NS_IF_RELEASE(wss);
+           NS_IF_RELEASE(cdet);
+           NS_IF_RELEASE(adp);
+           // NO NS_IF_RELEASE(cdetflt); here, do it after mParser->SetParserFilter
+       }
     }
     NS_IF_RELEASE(webShell);
 #endif
@@ -406,6 +485,13 @@ nsHTMLDocument::StartDocumentLoad(nsIURI *aURL,
 //        nsIDTD* theDTD=0;
 //        NS_NewNavHTMLDTD(&theDTD);
 //        mParser->RegisterDTD(theDTD);
+
+        nsIParserFilter *oldFilter = nsnull;
+        if(cdetflt)
+           oldFilter = mParser->SetParserFilter(cdetflt);
+        NS_IF_RELEASE(oldFilter);
+        NS_IF_RELEASE(cdetflt);
+
         mParser->SetDocumentCharset( charset, charsetSource);
         mParser->SetCommand(aCommand);
         mParser->SetContentSink(sink); 
