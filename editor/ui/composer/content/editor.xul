@@ -236,7 +236,8 @@
            which breaks deck frame-hiding mechanism 
        -->
       <stack>
-        <editor type="content-primary" id="content-frame" src="about:blank" context="editorContentContext" flex="1"/>
+        <editor type="content-primary" id="content-frame" src="about:blank" context="editorContentContext" flex="1"
+          onclick="EditorClick(event);" ondblclick="EditorDblClick(event);"/>
       </stack>
       <vbox>
         <label id="doctype-text" crop="right"/>

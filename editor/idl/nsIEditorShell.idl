@@ -193,12 +193,6 @@ interface nsIEditorShell : nsISupports
   
   /** Element insert and property editing */
 
-  /** Let editor handle clicking on a non-text element
-    *  to do selection, property editing, etc.
-    * @return true if we "consumed" the event
-    */
-  boolean HandleMouseClickOnElement(in nsIDOMElement element, in PRInt32 clickCount, in PRInt32 x, in PRInt32 y);
-
   /** Return an element only if it is the only node selected,
     *    such as an image, horizontal rule, etc.
     * The exception is a link, which is more like a text attribute:

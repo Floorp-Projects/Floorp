@@ -46,6 +46,7 @@ CPP_OBJS =                                    \
            .\$(OBJDIR)\nsHTMLDataTransfer.obj \
            .\$(OBJDIR)\nsHTMLEditRules.obj    \
            .\$(OBJDIR)\nsHTMLEditUtils.obj    \
+           .\$(OBJDIR)\nsHTMLEditorMouseListener.obj  \
            .\$(OBJDIR)\nsHTMLEditor.obj       \
            .\$(OBJDIR)\nsHTMLEditorStyle.obj  \
            .\$(OBJDIR)\nsHTMLURIRefObject.obj \

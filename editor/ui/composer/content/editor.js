@@ -1246,6 +1246,38 @@ function GetParentTableCell(element)
   return node;
 }
 
+function EditorDblClick(event)
+{
+  goDoCommand("cmd_objectProperties");  
+}
+
+function EditorClick(event)
+{
+  // In Show All Tags Mode,
+  // single click selects entire element,
+  //  except for body and table elements
+  if (event && event.target && gEditorDisplayMode == DisplayModeAllTags)
+  {
+    try {
+      var element = event.target.QueryInterface( Components.interfaces.nsIDOMElement);
+      if (element)
+      {
+        var name = element.localName.toLowerCase();
+        if (name != "body" && name != "table" &&
+            name != "td" && name != "th" && name != "caption" && name != "tr")
+        {          
+          var htmlEditor = editorShell.editor.QueryInterface(Components.interfaces.nsIHTMLEditor);
+          if (htmlEditor && event.target)
+          {
+            htmlEditor.selectElement(event.target);
+            event.preventDefault();
+          }
+        }
+      }
+    } catch (e) {}
+  }
+}
+
 /*TODO: We need an oncreate hook to do enabling/disabling for the
         Format menu. There should be code like this for the
         object-specific "Properties" item
@@ -1641,8 +1673,9 @@ function BuildRecentMenu(savePrefs)
     if (!url)
       continue;
 
-    // Skip over current URL
-    if (url != curUrl)
+    var scheme = GetScheme(url);
+    // Skip over current and "data:" URL
+    if (url != curUrl && scheme && scheme != "data")
     {
       // Build the menu
       AppendRecentMenuitem(popup, title, url, menuIndex);
@@ -2630,23 +2663,4 @@ function SwitchInsertCharToAnotherEditorOrClose()
     // Didn't find another editor - close the dialog
     window.InsertCharWindow.close();
   }
-}
-
-function GetHTMLOrCSSStyleValue(element, attrName, cssPropertyName)
-{
-  var prefs = GetPrefs();
-  var IsCSSPrefChecked = prefs.getBoolPref("editor.use_css");
-  var value;
-  if (IsCSSPrefChecked && editorShell.editorType == "html")
-  {
-    value = element.style.getPropertyValue(cssPropertyName);
-    if (value == "") {
-      value = element.getAttribute(attrName);
-    }
-  }
-  else
-  {
-    value = element.getAttribute(attrName);
-  }
-  return value;
 }

@@ -55,6 +55,7 @@ CPPSRCS  = \
            nsHTMLEditorStyle.cpp          \
            nsHTMLEditRules.cpp            \
            nsHTMLEditUtils.cpp            \
+           nsHTMLEditorMouseListener.cpp  \
 	     nsHTMLURIRefObject.cpp         \
            nsTableEditor.cpp              \
            nsWSRunObject.cpp              \

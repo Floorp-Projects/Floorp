@@ -64,7 +64,6 @@ REQUIRES        = xpcom \
 
 CPPSRCS  = \
            nsEditorShell.cpp              \
-           nsEditorShellMouseListener.cpp \
            nsEditorParserObserver.cpp     \
            nsInterfaceState.cpp           \
            nsComposerController.cpp       \

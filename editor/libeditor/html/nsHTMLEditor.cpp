@@ -48,6 +48,7 @@
 #include "nsHTMLEditUtils.h"
 
 #include "nsEditorEventListeners.h"
+#include "nsHTMLEditorMouseListener.h"
 #include "TypeInState.h"
 
 #include "nsHTMLURIRefObject.h"
@@ -346,7 +347,7 @@ nsHTMLEditor::InstallEventListeners()
   }
   
   // get a mouse listener
-  result = NS_NewEditorMouseListener(getter_AddRefs(mMouseListenerP), this);
+  result = NS_NewHTMLEditorMouseListener(getter_AddRefs(mMouseListenerP), this);
   if (NS_FAILED(result)) {
     HandleEventListenerError();
     return result;
