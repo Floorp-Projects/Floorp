@@ -413,14 +413,14 @@ public:
 
   // Justification helper method that is used to remove trailing
   // whitespace before justification.
-  NS_IMETHOD TrimTrailingWhiteSpace(nsIPresContext& aPresContext,
+  NS_IMETHOD TrimTrailingWhiteSpace(nsIPresContext* aPresContext,
                                     nsIRenderingContext& aRC,
                                     nscoord& aDeltaWidth) = 0;
 
   // Any objects in the frame that impact the spacemanager (e.g. a
   // floater) are to be moved in the spacemanager by the given delta
   // values.
-  NS_IMETHOD MoveInSpaceManager(nsIPresContext& aPresContext,
+  NS_IMETHOD MoveInSpaceManager(nsIPresContext* aPresContext,
                                 nsISpaceManager* aSpaceManager,
                                 nscoord aDeltaX, nscoord aDeltaY) = 0;
 };
