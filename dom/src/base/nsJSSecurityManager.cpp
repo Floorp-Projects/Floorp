@@ -1159,7 +1159,7 @@ nsJSSecurityManager::GetOriginFromSourceURL(nsString* aSourceURL, nsString **res
   }
 
   *result = new nsString(ParseURL(chS, GET_PROTOCOL_PART|GET_HOST_PART|GET_PATH_PART));
-  delete chS;
+  delete [] chS;
   return *result ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
 
