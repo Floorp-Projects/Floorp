@@ -73,7 +73,7 @@ interface nsIEditorIMESupport : nsISupports
    * EndComposition() Handles the end of inline input composition.
    */
 
-  [noscript] void  EndComposition();
+  void  EndComposition();
 
   /**
    * QueryComposition()  Get the composition position
@@ -83,8 +83,9 @@ interface nsIEditorIMESupport : nsISupports
   /**
    * ForceCompositionEnd() force the composition end
    */
-  [noscript] void  ForceCompositionEnd();
-  
+
+  void  ForceCompositionEnd();
+
   /**
    * GetReconvertionString()  Get the reconvertion string
    */
