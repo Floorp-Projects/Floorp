@@ -35,7 +35,7 @@
  * Support for DEcoding ASN.1 data based on BER/DER (Basic/Distinguished
  * Encoding Rules).
  *
- * $Id: secasn1d.c,v 1.28 2003/10/16 23:49:15 relyea%netscape.com Exp $
+ * $Id: secasn1d.c,v 1.29 2003/10/17 17:56:56 relyea%netscape.com Exp $
  */
 
 /* #define DEBUG_ASN1D_STATES 1 */
@@ -2849,9 +2849,6 @@ void
 SEC_ASN1DecoderAbort(SEC_ASN1DecoderContext *cx, int error)
 {
     PORT_Assert(cx);
-    if (!cx) {
-	return;
-    }
     PORT_SetError(error);
     cx->status = decodeError;
 }
