@@ -26,15 +26,16 @@ MODULE		= uriloader
 LIBRARY_NAME	= uriloaderbase_s
 
 CPPSRCS = 									\
-				nsURIDispatcher.cpp 		\
+				nsURILoader.cpp 			\
 				$(NULL)
 XPIDLSRCS = 								\
 				nsIContentHandler.idl 		\
 				nsIURIContentListener.idl 	\
-				nsIURIDispatcher.idl 		\
+				nsIURILoader.idl	 		\
+				nsCURILoader.idl			\
 				$(NULL)
 EXPORTS = 									\
-				nsURIDispatcher.h 			\
+				nsURILoader.h	 			\
 				$(NULL)
 
 # we don't want the shared lib, but we want to force the creation of a static lib.
