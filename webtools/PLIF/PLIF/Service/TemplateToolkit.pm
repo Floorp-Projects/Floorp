@@ -78,7 +78,7 @@ sub expand {
             $CACHE{$args->{'name'}} = $document;
         } else { # $type eq 'TemplateToolkit'
             # what we have is a raw string
-            $document = \{$args->{'string'}};
+            $document = \$args->{'string'};
         }
     }
     # $self->{template}->context()->{'__PLIF__output'} = $args->{'output'}; # unused (it's a handle to the dataSource.strings service but we look one up instead of using it directly)
