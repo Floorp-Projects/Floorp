@@ -43,7 +43,7 @@ LLIBS=$(LLIBS) $(LIBNSPR) $(DIST)\lib\xpcom.lib
 include <$(DEPTH)\config\rules.mak>
 
 COMPONENT=bcBlackConnectInit
-CLASSES=bcIBlackConnectInit.class
+CLASSES=bcIBlackConnectInit.class bcBlackConnectInit.class
 
 $(COMPONENT).jar.comp: manifest $(CLASSES)
 	$(JDKHOME)\bin\jar cvfm $(COMPONENT).jar.comp  manifest *.class
@@ -60,7 +60,7 @@ install-component: $(COMPONENT).jar.comp $(COMPONENT).jar.info $(DLL)
 clobber-java:
 	-del *.class *.jar.comp
 clobber:: clobber-java
-	rm $(DIST)\bin\components\$(DLLNAME).dll
-	rm $(DIST)\bin\components\$(COMPONENT).jar.*
+	rm -f "$(DIST)\bin\components\$(DLLNAME).dll"
+	rm -f "$(DIST)\bin\components\$(COMPONENT).jar.*"
 clobber_all:: clobber-java
 install:: install-component

@@ -57,7 +57,7 @@ install-component: bcJavaSample.jar.comp bcJavaSample.jar.info $(DLL)
 clobber-java:
 	-del *.class *.jar.comp
 clobber:: clobber-java
-	rm $(DIST)\bin\components\$(DLLNAME).dll
-	rm $(DIST)\bin\components\bcJavaSample.jar.*
+	rm -f "$(DIST)\bin\components\$(DLLNAME).dll"
+	rm -f "$(DIST)\bin\components\bcJavaSample.jar.*"
 clobber_all:: clobber-java
 install:: install-component

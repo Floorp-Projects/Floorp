@@ -63,6 +63,6 @@ export:: $(PROGRAM)
 	$(MAKE_INSTALL) $(PROGRAM) $(DIST)\bin
 
 clobber::
-	rm -f $(DIST)\bin\xpidl.exe
+	rm -f "$(DIST)\bin\xpidl.exe"
 
 $(PROGRAM):: $(OBJS) $(MYLIBS)
