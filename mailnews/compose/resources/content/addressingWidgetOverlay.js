@@ -146,7 +146,7 @@ function CompFields2Recipients(msgCompFields, msgType)
 function awSetInputAndPopupValue(inputElem, inputValue, popupElem, popupValue, rowNumber)
 {
 	// remove leading spaces
-	while (inputValue[0] == " " )
+	while (inputValue && inputValue[0] == " " )
 		inputValue = inputValue.substring(1, inputValue.length);
 	
   inputElem.setAttribute("value", inputValue);
@@ -348,15 +348,24 @@ function awClickEmptySpace(targ, setFocus)
 function awReturnHit(inputElement)
 {
 	var row = awGetRowByInputElement(inputElement);
-	
-	if ( inputElement.value )
-	{
-		var nextInput = awGetInputElement(row+1);
-		if ( !nextInput )
+	var nextInput = awGetInputElement(row+1);
+
+	if ( !nextInput )
+  {
+    if ( inputElement.value )
 			awAppendNewRow(true);
-		else
-			awSetFocus(row+1, nextInput);
-	}
+    else // No adress entered, switch to Subject field
+    {
+		  var subjectField = document.getElementById( 'msgSubject' );
+			subjectField.select();
+		  subjectField.focus();
+    }
+  }
+	else
+  {
+    nextInput.select();
+		awSetFocus(row+1, nextInput);
+  }
 }
 
 function awDeleteHit(inputElement)
