@@ -414,10 +414,12 @@ nsXULKeyListenerImpl::Init(
   // Set the default for the xul key modifier
 #ifdef XP_MAC
   mXULKeyModifier = xulKeyMeta;
-#elif XP_PC
+#else 
+  // Based off current UI newsgroup discussions, it looks like CTRL is
+  // the preferred default for UNIX. This will of course be configurable
+  // so that ALT can be chosen by those who favor it, but CTRL will be
+  // the default.
   mXULKeyModifier = xulKeyControl;
-#else
-  mXULKeyModifier = xulKeyAlt;
 #endif
   return NS_OK;
 }
@@ -500,28 +502,7 @@ nsresult nsXULKeyListenerImpl::DoKey(nsIDOMEvent* aKeyEvent, eEventType aEventTy
   piWindow = do_QueryInterface(domWindow);
 
   nsCAutoString keyFile, platformKeyFile;
-  if (focusedElement) {
-    // See if it's a textarea or input field.
-    // XXX Check to see if the "key-bindings" CSS property points us to a file.
-    // Hopefully we can get Pierre to add this. ;)
-
-    nsAutoString tagName;
-    focusedElement->GetTagName(tagName);
-    if (tagName.EqualsIgnoreCase("input")) {
-      nsAutoString type;
-      focusedElement->GetAttribute(nsAutoString("type"), type);
-      if (type == "" || type.EqualsIgnoreCase("text") ||
-          type.EqualsIgnoreCase("password")) {
-        keyFile = "chrome://global/content/inputBindings.xul";
-        platformKeyFile = "chrome://global/content/platformInputBindings.xul";
-      }
-    }
-    else if (tagName.EqualsIgnoreCase("textarea")) {
-      keyFile = "chrome://global/content/textAreaBindings.xul";
-      platformKeyFile = "chrome://global/content/platformTextAreaBindings.xul";
-    }
-  }
-
+ 
   nsCOMPtr<nsIDOMXULDocument> document;
   GetKeyBindingDocument(platformKeyFile, getter_AddRefs(document));
 
@@ -1575,8 +1556,8 @@ nsXULKeyListenerImpl::HandleEventUsingKeyset(nsIDOMElement* aKeysetElement, nsID
 
               masterContext->BindCompiledEventHandler(scriptObject, eventName, nsnull);
 
-              aKeyEvent->PreventBubble();
-              aKeyEvent->PreventCapture();
+              //aKeyEvent->PreventBubble();
+              //aKeyEvent->PreventCapture();
               return NS_OK;
             }
           }
