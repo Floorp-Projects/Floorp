@@ -27,18 +27,22 @@
 #
 # Usage:
 #
-#   histogram-pretty.sh [-c <count>] <file>
+#   histogram-pretty.sh [-c <count>] [-w <width>] <file>
 #
 # Pretty-print the histogram in file <file>, displaying at most
 # <count> rows.
 
 # How many rows are we gonna show?
 COUNT=20
+WIDTH=22
 
 # Read arguments
 while [ $# -gt 0 ]; do
     case "$1" in
     -c) COUNT=$2
+        shift 2
+        ;;
+    -w) WIDTH=$2
         shift 2
         ;;
     *)  break
@@ -57,19 +61,22 @@ sort -nr +2 ${FILE} >> /tmp/$$.sorted
 # Pretty-print, including percentages
 cat <<EOF > /tmp/$$.awk
 BEGIN {
-  print "Type                    Count    Bytes %Total";
+  printf "%-${WIDTH}s  Count    Bytes %Total   %Cov\n", "Type";
   }
 \$1 == "TOTAL" {
   tbytes = \$3;
   }
 NR <= $COUNT {
-  printf "%-22s %6d %8d %6.2lf\n", \$1, \$2, \$3, 100.0 * \$3 / tbytes;
+  if (\$1 != "TOTAL") {
+    covered += \$3;
+  }
+  printf "%-${WIDTH}s %6d %8d %6.2lf %6.2lf\n", \$1, \$2, \$3, 100.0 * \$3 / tbytes, 100.0 * covered / tbytes;
   }
 NR > $COUNT {
-  oobjs += \$2;  obytes += \$3;
+  oobjs += \$2;  obytes += \$3; covered += \$3;
   }
 END {
-  printf "%-22s %6d %8d %6.2lf\n", "OTHER", oobjs, obytes, obytes * 100.0 / tbytes;
+  printf "%-${WIDTH}s %6d %8d %6.2lf %6.2lf\n", "OTHER", oobjs, obytes, obytes * 100.0 / tbytes, covered * 100.0 / tbytes;
   }
 EOF
 
