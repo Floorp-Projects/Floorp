@@ -2263,7 +2263,6 @@ void CBrowserWindow::HandleOpenURLEvent(const AppleEvent	&inAppleEvent,
 	//			are not declared with correspondingly volatile parameters.
 	//		(b) do not appear to need to be volatile in the sense given (If they were
 	//			declared as volatile char*, that would be another thing...
-	CAutoPtrXP<char> /*volatile*/ url;
 	char * /*volatile*/ formData = NULL;	// Do not free this
 	char * /*volatile*/ formHeader = NULL;	// form headers (MIME type)
 	ProcessSerialNumber psn;
@@ -2277,8 +2276,10 @@ void CBrowserWindow::HandleOpenURLEvent(const AppleEvent	&inAppleEvent,
 	DescType realType;
 	
 	// Get the url
-	MoreExtractFromAEDesc::GetCString(inAppleEvent, keyDirectObject, url.get());
-
+	char* foo;
+	MoreExtractFromAEDesc::GetCString(inAppleEvent, keyDirectObject, foo);
+	CAutoPtrXP<char> url(foo);
+	
 	{	// See if we are doing load-to-disk
 		err = ::AEGetParamPtr(&inAppleEvent, AE_spy_openURL_into,
 					    	typeFSS, &realType,
