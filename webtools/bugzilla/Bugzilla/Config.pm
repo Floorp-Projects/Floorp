@@ -45,10 +45,10 @@ use Bugzilla::Util;
 # .pms elsewhere.
 # $webdotdir must be in the webtree somewhere. Even if you use a local dot,
 # we output images to there. Also, if $webdot dir is not relative to the
-# bugzilla root directory, you'll need to change showdependancygraph.cgi to
+# bugzilla root directory, you'll need to change showdependencygraph.cgi to
 # set image_url to the correct location.
 # The script should really generate these graphs directly...
-# Note that if $libpath is changed, some stuff will break, notably dependancy
+# Note that if $libpath is changed, some stuff will break, notably dependency
 # graphs (since the path will be wrong in the HTML). This will be fixed at
 # some point.
 

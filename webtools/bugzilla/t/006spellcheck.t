@@ -30,11 +30,14 @@ use Support::Files;
 BEGIN { # yes the indenting is off, deal with it
 #add the words to check here:
 @evilwords = qw(
-databasa
+anyways
 arbitary
-paramater
+databasa
+dependan
 existance
 existant
+paramater
+varsion
 );
 
 $testcount = scalar(@Support::Files::testitems);

@@ -36,12 +36,12 @@
 # Only adding new parameters is done here.  Once the parameter exists, you
 # must use %baseurl%/editparams.cgi from the web to edit the settings.
 
-# This file is included via |do|, mainly because of circular dependancy issues
+# This file is included via |do|, mainly because of circular dependency issues
 # (such as globals.pl -> Bugzilla::Config -> this -> Bugzilla::Config)
 # which preclude compile time loading.
 
 # Those issues may go away at some point, and the contents of this file
-# moved somewhere else. Please try to avoid more dependancies from here
+# moved somewhere else. Please try to avoid more dependencies from here
 # to other code
 
 # (Note that these aren't just added directly to Bugzilla::Config, because
@@ -186,7 +186,7 @@ sub check_user_verify_class {
     # doeditparams traverses the list of params, and for each one it checks,
     # then updates. This means that if one param checker wants to look at 
     # other params, it must be below that other one. So you can't have two 
-    # params mutually dependant on each other.
+    # params mutually dependent on each other.
     # This means that if someone clears the LDAP config params after setting
     # the login method as LDAP, we won't notice, but all logins will fail.
     # So don't do that.

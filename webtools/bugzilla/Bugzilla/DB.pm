@@ -44,10 +44,10 @@ use Bugzilla::Config qw(:DEFAULT :db);
 use Bugzilla::Util;
 
 # All this code is backwards compat fu. As such, its a bit ugly. Note the
-# circular dependancies on Bugzilla.pm
+# circular dependencies on Bugzilla.pm
 # This is old cruft which will be removed, so theres not much use in
 # having a separate package for it, or otherwise trying to avoid the circular
-# dependancy
+# dependency
 
 # XXX - mod_perl
 # These use |our| instead of |my| because they need to be cleared from
