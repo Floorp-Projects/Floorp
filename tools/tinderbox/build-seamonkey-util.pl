@@ -23,7 +23,7 @@ use Config;         # for $Config{sig_name} and $Config{sig_num}
 use File::Find ();
 use File::Copy;
 
-$::UtilsVersion = '$Revision: 1.252 $ ';
+$::UtilsVersion = '$Revision: 1.253 $ ';
 
 package TinderUtils;
 
@@ -63,6 +63,7 @@ sub Setup {
     GetSystemInfo();
     SetupEnv();
     SetupPath();
+    ValidateSettings(); # Perform some basic validation on settings
 }
 
 
@@ -144,6 +145,41 @@ sub ApplyArgs {
     my ($variable_name, $value);
     while (($variable_name, $value) = each %{$args}) {
         eval "\$Settings::$variable_name = \"$value\";";
+    }
+}
+
+sub ValidateSettings {
+    # Lowercase the LogCompression and LogEncoding variables for convenience.
+    $Settings::LogCompression = lc $Settings::LogCompression;
+    $Settings::LogEncoding = lc $Settings::LogEncoding;
+
+    # Make sure LogCompression and LogEncoding are set to valid values.
+    if ($Settings::LogCompression !~ /^(bzip2|gzip)?$/) {
+        warn "Invalid value for LogCompression: $Settings::LogCompression.\n";
+        exit;
+    }
+    if ($Settings::LogEncoding !~ /^(base64|uuencode)?$/) {
+        warn "Invalid value for LogEncoding: $Settings::LogEncoding.\n";
+        exit;
+    }
+
+    # If LogEncoding is set to 'base64', ensure we have the MIME::Base64
+    # module before we go through the entire build.
+    if ($Settings::LogEncoding eq 'base64') {
+        eval "use MIME::Base64 ();";
+        if ($@) {
+            warn "LogEncoding set to base64 but the MIME::Base64 module could not be loaded.\n";
+            warn "The error message was:\n\n";
+            warn $@;
+            exit;
+        }
+    }
+
+    # If LogCompression is set, make sure LogEncoding is set or else the log
+    # will not be transferred properly.
+    if ($Settings::LogCompression ne '' && $Settings::LogEncoding eq '') {
+        warn "LogEncoding must be set if LogCompression is set.\n";
+        exit;
     }
 }
 
@@ -610,6 +646,44 @@ sub mail_build_started_message {
     unlink "$msg_log";
 }
 
+sub encode_log {
+    my $input_file = shift;
+    my $output_file = shift;
+    my $buf;
+    if($Settings::LogEncoding eq 'base64') {
+        eval "use MIME::Base64 ();";
+        while(read($input_file, $buf, 60*57)) {
+            print $output_file MIME::Base64::encode($buf);
+        }
+    }
+    elsif($Settings::LogEncoding eq 'uuencode') {
+        while(read($input_file, $buf, 45)) {
+            print $output_file pack("u*", $buf);
+        }
+    }
+    else {
+        # Make sendmail happy.
+        # Split lines longer than 1000 charaters into 1000 character lines.
+        # If any line is a dot on a line by itself, replace it with a blank
+        # line. This prevents cases where a <cr>.<cr> occurs in the log file.
+        # Sendmail interprets that as the end of the mail, and truncates the
+        # log before it gets to Tinderbox.  (terry weismann, chris yeh)
+        
+        while (<$input_file>) {
+            my $length = length($_);
+            my $offset;
+            for ($offset = 0; $offset < $length ; $offset += 1000) {
+                my $chars_left = $length - $offset;
+                my $output_length = $chars_left < 1000 ? $chars_left : 1000;
+                my $output = substr $_, $offset, $output_length;
+                $output =~ s/^\.$//g;
+                $output =~ s/\n//g;
+                print $output_file "$output\n";
+            }
+        }
+    }
+}
+
 sub mail_build_finished_message {
     my ($start_time, $build_status, $binary_url, $logfile) = @_;
 
@@ -630,30 +704,26 @@ sub mail_build_finished_message {
     print OUTLOG "tinderbox: buildfamily: $platform\n";
     print OUTLOG "tinderbox: version: $::Version\n";
     print OUTLOG "tinderbox: utilsversion: $::UtilsVersion\n";
+    print OUTLOG "tinderbox: logcompression: $Settings::LogCompression\n";
+    print OUTLOG "tinderbox: logencoding: $Settings::LogEncoding\n";
     print OUTLOG "tinderbox: END\n";
 
-    # Make sendmail happy.
-    # Split lines longer than 1000 charaters into 1000 character lines.
-    # If any line is a dot on a line by itself, replace it with a blank
-    # line. This prevents cases where a <cr>.<cr> occurs in the log file.
-    # Sendmail interprets that as the end of the mail, and truncates the
-    # log before it gets to Tinderbox.  (terry weismann, chris yeh)
-
-    open LOG, "$logfile" or die "Couldn't open logfile, $logfile: $!";
-    while (<LOG>) {
-        my $length = length($_);
-        my $offset;
-        for ($offset = 0; $offset < $length ; $offset += 1000) {
-            my $chars_left = $length - $offset;
-            my $output_length = $chars_left < 1000 ? $chars_left : 1000;
-            my $output = substr $_, $offset, $output_length;
-            $output =~ s/^\.$//g;
-            $output =~ s/\n//g;
-            print OUTLOG "$output\n";
-        }
+    if ($Settings::LogCompression eq 'gzip') {
+        open GZIPLOG, "gzip -c $logfile |" or die "Couldn't open gzip'd logfile: $!\n";
+        encode_log(\*GZIPLOG, \*OUTLOG);
+        close GZIPLOG;
     }
+    elsif ($Settings::LogCompression eq 'bzip2') {
+        open BZ2LOG, "bzip2 -c $logfile |" or die "Couldn't open bzip2'd logfile: $!\n";
+        encode_log(\*BZ2LOG, \*OUTLOG);
+        close BZ2LOG;
+    }
+    else {
+        open LOG, "$logfile" or die "Couldn't open logfile, $logfile: $!";
+        encode_log(\*LOG, \*OUTLOG);
+        close LOG;
+    }    
     close OUTLOG;
-    close LOG;
     unlink($logfile);
 
     # If on Windows, make sure the log mail has unix lineendings, or

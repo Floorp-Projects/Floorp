@@ -179,6 +179,17 @@ sub check_required_variables {
     $err_string .= "Variable 'tinderbox:status' must be 'success', 'busted', 'testfailed', or 'building'\n";
   }
 
+  # Log compression
+  #
+  if ($tbx->{logcompression} !~ /^(bzip2|gzip)?$/) {
+    $err_string .= "Variable 'tinderbox:logcompression' must be '', 'bzip2' or 'gzip'\n";
+  }
+
+  # Log encoding
+  if ($tbx->{logencoding} !~ /^(base64|uuencode)?$/) {
+    $err_string .= "Variable 'tinderbox:logencoding' must be '', 'base64' or 'uuencode'\n";
+  }
+
   # Report errors
   #
   die $err_string unless $err_string eq '';
@@ -208,16 +219,65 @@ sub compress_log_file {
 
   open ZIPLOG, "| $gzip -c > $tbx->{tree}/$tbx->{logfile}"
     or die "can't open $! for writing";
-  my $inBinary = 0;
-  while (<LOG2>) {
-    unless ($inBinary) {
+
+  # If this log is compressed, we need to decode it and decompress
+  # it before storing its contents into ZIPLOG.
+  if($tbx->{logcompression} ne '') {
+
+    # tinderbox variables are not compressed
+    # write them directly to the gzip'd log
+    while(<LOG2>) {
       print ZIPLOG $_;
-      if ($hasBinary) {
-        $inBinary = (/^begin [0-7][0-7][0-7] /);
-      }
+      last if(m/^tinderbox: END/);
     }
-    elsif (/^end\n/) {
-      $inBinary = 0;
+
+    # Decode the log using the logencoding variable to determine
+    # the type of encoding.
+    my $decoded = "$tbx->{tree}/$tbx->{logfile}.uncomp";
+    if ($tbx->{logencoding} eq 'base64') {
+      eval "use MIME::Base64 ();";
+      open DECODED, ">$decoded"
+        or die "Can't open $decoded for writing: $!";
+      while (<LOG2>) {
+        print DECODED MIME::Base64::decode($_);
+      }
+      close DECODED;
+    }
+    elsif ($tbx->{logencoding} eq 'uuencode') {
+      open DECODED, ">$decoded"
+        or die "Can't open $decoded for writing: $!";
+      while (<LOG2>) {
+        print DECODED unpack("u*", $_);
+      }
+      close DECODED;
+    }
+
+    # Decompress the log using the logcompression variable to determine
+    # the type of compression used.
+    my $cmd = undef;
+    if ($tbx->{logcompression} eq 'gzip') {
+      $cmd = $gzip;
+    }
+    elsif ($tbx->{logcompression} eq 'bzip2') {
+      $cmd = $bzip2;
+    }
+    if (defined $cmd) {
+      open UNCOMP, "$cmd -dc $decoded |"
+        or die "Can't open $! for reading";
+      while (<UNCOMP>) {
+        print ZIPLOG $_;
+      }
+      close UNCOMP;
+    }
+
+    # Remove our temporary decoded file
+    unlink($decoded) if -f $decoded;
+  }
+  # This log is not compressed/encoded so we can simply write out
+  # it's contents to the gzip'd log file.
+  else {
+    while (<LOG2>) {
+      print ZIPLOG $_;
     }
   }
   close ZIPLOG;

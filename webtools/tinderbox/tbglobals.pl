@@ -49,7 +49,8 @@ $build_table = [];
 $who_list = [];
 @note_array = ();
 
-$gzip = '/usr/local/bin/gzip';
+$gzip = '/usr/bin/gzip';
+$bzip2 = '/usr/bin/bzip2';
 
 $data_dir='data';
 

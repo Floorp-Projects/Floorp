@@ -152,3 +152,15 @@ $Timezone = '';
 # as an exercise to the reader. 
 $RebootSystem = 0;
 
+# LogCompression specifies the type of compression used on the log file.
+# Valid options are 'gzip', and 'bzip2'. Please make sure the binaries
+# for 'gzip' or 'bzip2' are in the user's path before setting this
+# option.
+$LogCompression = '';
+
+# LogEncoding specifies the encoding format used for the logs. Valid
+# options are 'base64', and 'uuencode'. If $LogCompression is set above,
+# this needs to be set to 'base64' or 'uuencode' to ensure that the
+# binary data is transferred properly.
+$LogEncoding = '';
+
