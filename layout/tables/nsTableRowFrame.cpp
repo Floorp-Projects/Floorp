@@ -893,7 +893,6 @@ nsTableRowFrame::ReflowChildren(nsIPresContext*          aPresContext,
                                 PRBool                   aDirtyOnly)
 {
   aStatus = NS_FRAME_COMPLETE;
-  if (!mFrames.FirstChild()) return NS_OK;
 
   GET_PIXELS_TO_TWIPS(aPresContext, p2t);
   PRBool borderCollapse = (((nsTableFrame*)aTableFrame.GetFirstInFlow())->IsBorderCollapse());
@@ -1137,7 +1136,10 @@ nsTableRowFrame::ReflowChildren(nsIPresContext*          aPresContext,
   // just set our width to what was available. The table will calculate the width and not use our value.
   aDesiredSize.width = aReflowState.availableWidth;
 
-  if (NS_UNCONSTRAINEDSIZE == aReflowState.availableHeight) {
+  if (aReflowState.mFlags.mSpecialHeightReflow) {
+    aDesiredSize.height = mRect.height;
+  }
+  else if (NS_UNCONSTRAINEDSIZE == aReflowState.availableHeight) {
     aDesiredSize.height = CalcHeight(aReflowState);
     if (mPrevInFlow) {
       nscoord height = CalcHeightFromUnpaginatedHeight(aPresContext, *this);
