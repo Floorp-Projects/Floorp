@@ -49,7 +49,7 @@
 #define IPC_CLIENT_WINDOW_CLASS       "Mozilla:IPCAppWindowClass"
 #define IPC_CLIENT_WINDOW_NAME_PREFIX "Mozilla:IPCAppWindow:"
 #define IPC_SYNC_EVENT_NAME           "Local\\MozillaIPCSyncEvent"
-#define IPC_DAEMON_APP_NAME           "mozipcd.exe"
+#define IPC_DAEMON_APP_NAME           "mozilla-ipcd.exe"
 #define IPC_PATH_SEP_CHAR             '\\'
 #define IPC_MODULES_DIR               "ipc\\modules"
 
@@ -70,7 +70,7 @@ inline void IPC_GetClientWindowName(PRUint32 pid, char *buf)
 //
 #define IPC_PORT                0
 #define IPC_SOCKET_TYPE         "ipc"
-#define IPC_DAEMON_APP_NAME     "mozipcd"
+#define IPC_DAEMON_APP_NAME     "mozilla-ipcd"
 #ifdef XP_OS2
 #define IPC_PATH_SEP_CHAR       '\\'
 #define IPC_MODULES_DIR         "ipc\\modules"

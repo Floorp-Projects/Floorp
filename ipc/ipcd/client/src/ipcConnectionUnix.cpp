@@ -528,7 +528,7 @@ void IPC_OnMessageAvailable(ipcMessage *msg)
 int main()
 {
   IPC_InitLog(">>>");
-  IPC_Connect("/builds/moz-trunk/seamonkey-debug-build/dist/bin/mozipcd");
+  IPC_Connect("/builds/moz-trunk/seamonkey-debug-build/dist/bin/mozilla-ipcd");
   IPC_Disconnect();
   return 0;
 }
