@@ -38,6 +38,8 @@ var gMailAccounts = false;
 var gMAILDEBUG = 1;  // 0 - no output, 1 dump to terminal, > 1 use alerts
 var gMailIdentity;
 
+var emailStringBundle;
+      
 /**** checkForMailNews
  *
  * PURPOSE: if mailnews is installed return true, else false
@@ -46,7 +48,9 @@ var gMailIdentity;
  
 function checkForMailNews()
 {
-	var AccountManagerComponent;
+	emailStringBundle = srGetStrBundle("chrome://calendar/locale/email.properties");
+   
+   var AccountManagerComponent;
 	var AccountManagerService;
 	var AccountManager;
 	var DefaultAccount;
@@ -190,7 +194,7 @@ function sendEvent()
 			saveCalendarObject(CalendarDataFilePath, Event.getIcalString());
 			nsIMsgAttachmentComponent = Components.classes["@mozilla.org/messengercompose/attachment;1"];
 			nsIMsgAttachment = nsIMsgAttachmentComponent.createInstance(Components.interfaces.nsIMsgAttachment);
-			nsIMsgAttachment.name = "iCal Event"
+			nsIMsgAttachment.name = emailStringBundle.GetStringFromName( "AttachmentName" );
 			nsIMsgAttachment.contentType = "text/calendar;"
 			nsIMsgAttachment.temporary = true;
 			nsIMsgAttachment.url = "file://" + CalendarDataFilePath;
@@ -203,7 +207,7 @@ function sendEvent()
 			nsIMsgCompFields.replyTo = gMailIdentity.replyTo;
 			nsIMsgCompFields.subject = Event.title;
 			nsIMsgCompFields.organization = gMailIdentity.organization;
-			nsIMsgCompFields.body = "When: " + Event.start + "-" + Event.end + "\nWhere: " + Event.location + "\nOrganizer: " + gMailIdentity.fullName + " <" + gMailIdentity.email + ">" + "\nSummary:" + Event.description;
+			nsIMsgCompFields.body = emailStringBundle.GetStringFromName( "When" )+" " + Event.start + "-" + Event.end + "\n"+emailStringBundle.GetStringFromName( "Where" )+" " + Event.location + "\n"+emailStringBundle.GetStringFromName( "Organizer" )+" " + gMailIdentity.fullName + " <" + gMailIdentity.email + ">" + "\n"+emailStringBundle.GetStringFromName( "Summary" )+":" + Event.description;
 			nsIMsgCompFields.addAttachment(nsIMsgAttachment);
 			/* later on we may be able to add:
 			 * returnReceipt, attachVCard
