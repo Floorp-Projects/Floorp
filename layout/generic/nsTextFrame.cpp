@@ -2047,7 +2047,7 @@ nsresult nsTextFrame::GetTextInfoForPainting(nsIPresContext*          aPresConte
     aDisplayingSelection = PR_FALSE;
 
   // Transform text from content into renderable form
-  // XXX If the text fragment is already Unicode and text text wasn't
+  // XXX If the text fragment is already Unicode and the text wasn't
   // transformed when we formatted it, then there's no need to do all
   // this and we should just render the text fragment directly. See
   // PaintAsciiText()...
@@ -2097,7 +2097,7 @@ nsTextFrame::IsTextInSelection(nsIPresContext* aPresContext,
   TextStyle ts(aPresContext, aRenderingContext, mStyleContext);
 
   // Transform text from content into renderable form
-  // XXX If the text fragment is already Unicode and text text wasn't
+  // XXX If the text fragment is already Unicode and the text wasn't
   // transformed when we formatted it, then there's no need to do all
   // this and we should just render the text fragment directly. See
   // PaintAsciiText()...
@@ -2246,7 +2246,7 @@ nsTextFrame::PaintUnicodeText(nsIPresContext* aPresContext,
   nscoord width = mRect.width;
 
   // Transform text from content into renderable form
-  // XXX If the text fragment is already Unicode and text text wasn't
+  // XXX If the text fragment is already Unicode and the text wasn't
   // transformed when we formatted it, then there's no need to do all
   // this and we should just render the text fragment directly. See
   // PaintAsciiText()...
