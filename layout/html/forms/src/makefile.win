@@ -28,6 +28,7 @@ MODULE=raptor
 REQUIRES=xpcom raptor js
 
 CPPSRCS= \
+#  nsGfxListControlFrame.cpp \
   nsFormControlHelper.cpp \
 	nsComboboxControlFrame.cpp \
   nsListControlFrame.cpp \
@@ -58,6 +59,7 @@ CPPSRCS= \
   nsRadioControlGroup.cpp
 
 CPP_OBJS= \
+#  .\$(OBJDIR)\nsGfxListControlFrame.obj \
   .\$(OBJDIR)\nsFormControlHelper.obj \
   .\$(OBJDIR)\nsComboboxControlFrame.obj \
   .\$(OBJDIR)\nsListControlFrame.obj \
@@ -100,6 +102,7 @@ LINCS= -I$(PUBLIC)\xpcom  \
        -I..\..\base\src   \
        -I..\..\style\src	\
        -I..\..\..\base\src \
+       -I..\..\..\xul\base\src \
        -I..\..\content\src \
        -I$(PUBLIC)\uconv
 
