@@ -65,6 +65,25 @@ NS_METHOD  nsCheckButton::CreateNative(GtkWidget *parentWindow)
   return NS_OK;
 }
 
+void nsCheckButton::InitCallbacks(char * aName)
+{
+  InstallButtonPressSignal(mCheckButton);
+  InstallButtonReleaseSignal(mCheckButton);
+
+  // These are needed so that the events will go to us and not our parent.
+  AddToEventMask(mCheckButton,
+                 GDK_BUTTON_PRESS_MASK |
+                 GDK_BUTTON_RELEASE_MASK |
+                 GDK_ENTER_NOTIFY_MASK |
+                 GDK_EXPOSURE_MASK |
+                 GDK_FOCUS_CHANGE_MASK |
+                 GDK_KEY_PRESS_MASK |
+                 GDK_KEY_RELEASE_MASK |
+                 GDK_LEAVE_NOTIFY_MASK |
+                 GDK_POINTER_MOTION_MASK);
+}
+
+
 /**
  * Implement the standard QueryInterface for NS_IWIDGET_IID and NS_ISUPPORTS_IID
  * @modify gpk 8/4/98
@@ -95,6 +114,7 @@ nsresult nsCheckButton::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 //-------------------------------------------------------------------------
 NS_METHOD nsCheckButton::SetState(const PRBool aState)
 {
+  //  printf("nsCheckButton::SetState(%p,%d)\n",this,aState);
   gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(mCheckButton), aState);
   return NS_OK;
 }

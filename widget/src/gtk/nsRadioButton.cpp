@@ -55,7 +55,6 @@ nsRadioButton::~nsRadioButton()
 #endif
 }
 
-
 //-------------------------------------------------------------------------
 //
 // Query interface implementation
@@ -89,10 +88,31 @@ NS_METHOD  nsRadioButton::CreateNative(GtkWidget *parentWindow)
 
   gtk_widget_show(mRadioButton);
 
+  SetState(PR_FALSE);
+
   gtk_widget_set_name(mRadioButton, "nsRadioButton");
 
   return NS_OK;
 }
+
+void nsRadioButton::InitCallbacks(char * aName)
+{
+  InstallButtonPressSignal(mRadioButton);
+  InstallButtonReleaseSignal(mRadioButton);
+
+  // These are needed so that the events will go to us and not our parent.
+  AddToEventMask(mRadioButton,
+                 GDK_BUTTON_PRESS_MASK |
+                 GDK_BUTTON_RELEASE_MASK |
+                 GDK_ENTER_NOTIFY_MASK |
+                 GDK_EXPOSURE_MASK |
+                 GDK_FOCUS_CHANGE_MASK |
+                 GDK_KEY_PRESS_MASK |
+                 GDK_KEY_RELEASE_MASK |
+                 GDK_LEAVE_NOTIFY_MASK |
+                 GDK_POINTER_MOTION_MASK);
+}
+
 
 //-------------------------------------------------------------------------
 //
@@ -101,6 +121,7 @@ NS_METHOD  nsRadioButton::CreateNative(GtkWidget *parentWindow)
 //-------------------------------------------------------------------------
 NS_METHOD nsRadioButton::SetState(const PRBool aState)
 {
+  //  printf("nsRadioButton::SetState(%p,%d)\n",this,aState);
   gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(mRadioButton), aState);
   return NS_OK;
 }
