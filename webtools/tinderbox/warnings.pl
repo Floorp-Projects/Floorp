@@ -1,4 +1,23 @@
 #! /usr/bonsaitools/bin/perl
+# -*- Mode: perl; indent-tabs-mode: nil -*-
+#
+# The contents of this file are subject to the Mozilla Public License
+# Version 1.1 (the "License"); you may not use this file except in
+# compliance with the License. You may obtain a copy of the License at
+# http://www.mozilla.org/MPL/
+#
+# Software distributed under the License is distributed on an "AS IS"
+# basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+# License for the specific language governing rights and limitations
+# under the License.
+#
+# The Original Code is Tinderbox
+#
+# The Initial Developer of the Original Code is Netscape Communications
+# Corporation. Portions created by Netscape are Copyright (C) 1999
+# Netscape Communications Corporation. All Rights Reserved.
+#
+# Contributor(s): Stephen Lamm <slamm@mozilla.org>
 
 use FileHandle;
 
@@ -26,9 +45,17 @@ for $br (last_successful_builds($tree)) {
 
   $fh = new FileHandle "gunzip -c $tree/$log_file |";
   &gcc_parser($fh, $cvsroot, $tree, $log_file, \%file_names);
+  $fh->close;
 
   &build_blame;
-  &print_warnings_as_html($br->{buildname}, $br->{buildtime});
+
+  my $warn_file = "$tree/warn$log_file";
+  $warn_file =~ s/.gz$/.html/;
+
+  $fh->open(">$warn_file") or die "Unable to open $warn_file: $!\n";
+  &print_warnings_as_html($fh, $br->{buildname}, $br->{buildtime});
+  $fh->close;
+
   last;
 }
 
@@ -178,9 +205,12 @@ sub build_blame {
 }
 
 sub print_warnings_as_html {
-  my ($buildname, $buildtime) = @_;
+  my ($fh, $buildname, $buildtime) = @_;
 
   my $time_str = print_time( $buildtime );
+
+  # Change the default destination for print to $fh
+  my $old_fh = select($fh);
 
   print <<"__END_HEADER";
   <html>
@@ -269,6 +299,9 @@ __END_HEADER
     &lt;<a href="mailto:slamm\@netscape.com?subject=About the Blamed Build Warnings">slamm\@netcape.com</a>&gt;.
    </body></html>
 __END_FOOTER
+
+  # Change default destination back.
+  select($old_fh);
 }
 
 sub build_url {
