@@ -114,10 +114,9 @@ EXTRA_DSO_LDOPTS = \
 		$(DIST)/lib/libexpat_s.$(LIB_SUFFIX) \
 		$(DIST)/lib/libxmltok_s.$(LIB_SUFFIX) \
 		$(NULL)
-ifdef MOZ_PERF
-EXTRA_DSO_LDOPTS += \
-		$(DIST)/lib/libmozutil_s.$(LIB_SUFFIX) \
-		$(NULL)
+
+ifdef MOZ_PERF_METRICS
+SHARED_LIBRARY_LIBS += $(DIST)/lib/libmozutil_s.$(LIB_SUFFIX)
 endif
 
 EXTRA_DSO_LDOPTS += $(MOZ_COMPONENT_LIBS)

@@ -2973,7 +2973,7 @@ MOZ_ARG_ENABLE_BOOL(gprof,
 dnl Enable performance metrics.
 MOZ_ARG_ENABLE_BOOL(perf-metrics,
 [  --enable-perf-metrics   Enable performance metrics],
-  MOZ_PERF=1
+  MOZ_PERF_METRICS=1
   AC_DEFINE(MOZ_PERF_METRICS))
 
 MOZ_ARG_ENABLE_BOOL(insure,
