@@ -35,7 +35,6 @@ public:
                       const nsINNTPNewsgroup* newsgroup);
                                   /* , MSG_Pane *pane); */
     virtual ~nsNNTPArticleList();
-    static void operator delete(void *);
     NS_DECL_ISUPPORTS
   
     // nsINNTPArticleKeysState
@@ -107,7 +106,6 @@ nsNNTPArticleList::Init(const nsINNTPHost * newsHost,
     return NS_MSG_SUCCESS;
 }
 
-#if 0
 nsNNTPArticleList::~nsNNTPArticleList()
 {
 #ifdef HAVE_NEWSDB
@@ -115,11 +113,17 @@ nsNNTPArticleList::~nsNNTPArticleList()
 		m_newsDB->Close();
 #endif
 }
-#endif
 
 nsresult
 nsNNTPArticleList::AddArticleKey(PRInt32 key)
 {
+#ifdef DEBUG_mscott
+	char * groupname = nsnull;
+	if (m_newsgroup)
+		m_newsgroup->GetName(&groupname);
+	printf("Adding article key %d for group %s.\n", key, groupname ? groupname : "unspecified");
+	PR_FREEIF(groupname);
+#endif
 	m_idsOnServer.set->Add(key);
 #ifdef HAVE_IDARRAY
 	if (m_dbIndex < m_idsInDB.GetSize())
@@ -158,6 +162,8 @@ nsNNTPArticleList::FinishAddingArticleKeys()
 	return 0;
 }
 
+extern "C" {
+
 nsresult
 NS_NewArticleList(nsINNTPArticleList **articleList,
                   const nsINNTPHost* newsHost,
@@ -167,4 +173,6 @@ NS_NewArticleList(nsINNTPArticleList **articleList,
         new nsNNTPArticleList(newsHost, newsgroup);
     return aArticleList->QueryInterface(nsINNTPArticleList::IID(),
                                         (void **)articleList);
+}
+
 }
