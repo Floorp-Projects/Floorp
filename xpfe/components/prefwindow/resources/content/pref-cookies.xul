@@ -1,0 +1,110 @@
+<?xml version="1.0"?> 
+
+<!--
+   The contents of this file are subject to the Netscape Public
+   License Version 1.1 (the "License"); you may not use this file
+   except in compliance with the License. You may obtain a copy of
+   the License at http://www.mozilla.org/NPL/
+    
+   implied. See the License for the specific language governing
+   rights and limitations under the License.
+    
+   The Original Code is Mozilla Communicator client code, released
+   March 31, 1998.
+   
+   The Initial Developer of the Original Code is Netscape
+   Communications Corporation. Portions created by Netscape are
+   Copyright (C) 1998-1999 Netscape Communications Corporation. All
+   Rights Reserved.
+   
+   Contributor(s): 
+  -->
+<?xml-stylesheet href="chrome://pref/skin/" type="text/css"?>
+
+<!DOCTYPE window SYSTEM "chrome://pref/locale/pref-cookies.dtd" >
+
+<window xmlns:html="http://www.w3.org/TR/REC-html40"
+	    	xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        class="dialog"
+        align="vertical" title="&window.title;"
+  		  onload="if( parent.handle ) parent.handle.onpageload( 'pref-cookies' ); else parent.queuedTag = 'pref-cookies';">
+
+  <html:script language="JavaScript">
+    function viewCookies() 
+    {
+      window.openDialog("chrome://wallet/content/CookieViewer.xul","","chrome, resizable=no");
+    }
+  </html:script>
+        
+	<box class="header" align="horizontal">  
+    <titledbutton class="left-header-text" value="&lHeader;"/>
+	  <spring class="header-spring" flex="1"/>
+	  <titledbutton class="right-header-text" value="&rHeader;"/>
+	</box>
+
+ 	<html:fieldset>
+  	<html:legend align="left">
+  		 <html:div>&cookies;</html:div> 
+  	</html:legend>  
+    <html:table width="100%" cellpadding="0" cellspacing="0">
+      <html:tr>
+        <html:td colspan="2">
+          <html:div>
+            &cookieDetails;
+          </html:div>
+          <html:br/>
+        </html:td>
+      </html:tr>
+      <html:tr>
+        <html:td>
+          <html:input name="cookies" type="radio" id="networkCookieBehaviour0"
+                      pref="true" preftype="int" prefindex="0" prefstring="network.cookie.cookieBehaviour"/>
+        </html:td>
+        <html:td>
+      		<html:label for="networkCookieBehaviour0" accesskey="a" tabindex="0">
+   	        <html:div>&accAllCookiesRadio.label;</html:div>
+        	</html:label>
+        </html:td>
+      </html:tr>
+      <html:tr>
+        <html:td>
+          <html:input type="radio" name="cookies" id="networkCookieBehaviour1"
+                      pref="true" preftype="int" prefindex="1" prefstring="network.cookie.cookieBehaviour"/>
+        </html:td>
+        <html:td>
+      		<html:label for="networkCookieBehaviour1" accesskey="o" tabindex="0">
+            <html:div>&accpOrgCookiesRadio.label;</html:div>
+      		</html:label>
+        </html:td>
+      </html:tr>
+      <html:tr>
+        <html:td>
+      		<html:input type="radio" name="cookies" id="networkCookieBehaviour2"
+                      pref="true" preftype="int" prefindex="2" prefstring="network.cookie.cookieBehaviour"/>
+        </html:td>
+        <html:td>
+      		<html:label for="networkCookieBehaviour2" accesskey="d" tabindex="0">	
+  	    		<html:div>&disCookRadio.label;</html:div>
+      		</html:label>
+        </html:td>
+      </html:tr>
+      <html:tr>
+        <html:td/>
+        <html:td>
+      		<html:input type="checkbox" id="networkCookieWarnAboutCookies"
+                      pref="true" preftype="bool" prefstring="network.cookie.warnAboutCookies"/>
+      		<html:label for="networkCookieWarnAboutCookies" accesskey="w" tabindex="0">
+  	    		<html:div>&warnCookCheck.label;</html:div>
+      		</html:label>
+        </html:td>
+      </html:tr>
+    </html:table>
+    <box align="horizontal" flex="100%" style="width: 100%">
+      <spring flex="100%"/>
+      <titledbutton value="&viewCookies.label;" class="dialog push" onclick="viewCookies();"/>
+    </box>
+    <spring style="height: 40px;"/>
+	</html:fieldset> 
+  
+  
+</window>

@@ -1,63 +1,51 @@
 <?xml version="1.0"?> 
-<?xml-stylesheet href="chrome://pref/skin/" type="text/css"?>
+<?xml-stylesheet href="chrome://pref/skin/" type="text/css"?> 
 
 <!DOCTYPE window SYSTEM "chrome://pref/locale/pref-smartupdate.dtd" >
  
 <window xmlns:html="http://www.w3.org/TR/REC-html40"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-        onload="return StartUp('smartupdate');"
         class="dialog"
         align="vertical" 
-        title="&title.label;">
+        title="&title.label;"
+  		  onload="if( parent.handle ) parent.handle.onpageload( 'pref-smartupdate' ); else parent.queuedTag = 'pref-smartupdate';">
 
-    <html:script language="JavaScript" src="chrome://pref/content/PrefsWindow.js">
-    </html:script>
-
-    <box align="vertical">
-      <box id="header" align="horizontal">  
-          <spring style="width:20px"/>
-          <html:div style="vertical-align: middle;">
-              <html:B>&header;</html:B>
-          </html:div>
-          <spring flex="100%"/><spring style="width:60px"/>
-          <html:div ></html:div><spring style="width:5px"/>
-    </box>
+	<box class="header" align="horizontal">  
+    <titledbutton class="left-header-text" value="&lHeader;"/>
+	  <spring class="header-spring" flex="1"/>
+	  <titledbutton class="right-header-text" value="&rHeader;"/>
+	</box>
     
-    <box align="vertical">
-      <html:fieldset style="width: 100%;">
-          <html:div>
-            <html:input type="checkbox" id="pref:0:bool:xpinstall.enabled" />
-            <html:label for="pref:0:bool:xpinstall.enabled">
-                &enableSU.label;
-            </html:label>
-          </html:div>
-            
-          <html:div>
-            <html:input type="checkbox" id="pref:0:bool:xpinstall.notifications.enabled" />
-            <html:label for="pref:0:bool:xpinstall.notifications.enabled">
-                &enableNotification.label;
-            </html:label>
-          </html:div>
+  <html:fieldset style="width: 100%;">
+    <html:div>
+      <html:input type="checkbox" id="XPInstallEnabled"
+                  pref="true" preftype="bool" prefstring="xpinstall.enabled" />
+      <html:label for="XPInstallEnabled">&enableSU.label;</html:label>
+    </html:div>
+    <html:div>
+      <html:input type="checkbox" id="XPInstallNotificationsEnabled"
+                  pref="true" preftype="bool" prefstring="xpinstall.notifications.enabled"/>
+      <html:label for="XPInstallNotificationsEnabled">&enableNotification.label;</html:label>
+    </html:div>
+    <html:div>
+      <html:input type="checkbox" id="XPInstallManualConfirm"
+                  pref="true" preftype="bool" prefstring="xpinstall.manual_confirm"/>
+      <html:label for="XPInstallManualConfirm">&requireConfirmation.label;</html:label>
+    </html:div>
+  </html:fieldset>
 
-          <html:div>
-            <html:input type="checkbox" id="pref:0:bool:xpinstall.manual_confirm" />
-            <html:label for="pref:0:bool:xpinstall.manual_confirm">
-                &requireConfirmation.label;
-            </html:label>
-          </html:div>
-      </html:fieldset>
-      
-      <html:fieldset style="width: 100%;">
-        <box align="horizontal">
-            &selectUninstall.label;
-            <html:textarea name="textstyle" ROWS="40" COLS="30" id="pref:string:browser.related.disabledForDomains">
-            </html:textarea>
-            <spring flex="15%"/>
-            <titledbutton class="dialog push" id="pref:0:bool:smartupdate" value="&uninstallButton.label;" flex="1" style="max-height:13px;"/>
-        </box>
-      </html:fieldset>
-    </box>
-
-  </box>
+  <html:fieldset style="width: 100%;">
+      <html:div>&selectUninstall.label;</html:div>
+      <spring style="height: 10px;"/>
+      <html:select id="smartUpdatePackages" style="width: 100%; height: 100%" flex="100%" size="4">
+        <html:option/>
+      </html:select>
+      <spring flex="15%"/>
+      <box align="horizontal" style="width: 100%">
+        <spring flex="100%"/>
+        <titledbutton class="dialog push" id="pref:0:bool:smartupdate" value="&uninstallButton.label;"/>
+      </box>
+      <spring style="height: 18px;"/>
+  </html:fieldset>
 </window>
 

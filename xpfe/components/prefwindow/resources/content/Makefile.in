@@ -28,28 +28,37 @@ include $(DEPTH)/config/autoconf.mk
 
 EXPORT_RESOURCE_CONTENT = \
 		$(srcdir)/PrefsWindow.js \
+		$(srcdir)/pref.js \
 		$(srcdir)/pref.xul \
 		$(srcdir)/pref-advanced.xul \
 		$(srcdir)/pref-appearance.xul \
 		$(srcdir)/pref-applications.xul \
 		$(srcdir)/pref-cache.xul \
+		$(srcdir)/pref-cache.js \
 		$(srcdir)/pref-colors.xul \
+		$(srcdir)/pref-colors.js \
 		$(srcdir)/pref-themes.xul \
 		$(srcdir)/pref-composer.xul \
+		$(srcdir)/pref-composer.js \
 		$(srcdir)/pref-debug.xul \
 		$(srcdir)/pref-download.xul \
 		$(srcdir)/pref-fonts.xul \
 		$(srcdir)/pref-languages.xul \
 		$(srcdir)/pref-navigator.xul \
+		$(srcdir)/pref-navigator.js \
 		$(srcdir)/pref-offline.xul \
+		$(srcdir)/pref-proxies.js \
 		$(srcdir)/pref-proxies.xul \
 		$(srcdir)/pref-proxy-manual.xul \
 		$(srcdir)/pref-publish.xul \
 		$(srcdir)/pref-mousewheel.xul \
+		$(srcdir)/pref-cookies.xul \
+		$(srcdir)/pref-wallet.xul \
 		$(srcdir)/pref-search.js \
 		$(srcdir)/pref-search.xul \
 		$(srcdir)/pref-smart_browsing.xul \
 		$(srcdir)/pref-smartupdate.xul \
+		$(srcdir)/prefutilities.js \
 		$(srcdir)/fontScalingOverlay.xul \
 		$(srcdir)/preftree.xul \
 		$(NULL)

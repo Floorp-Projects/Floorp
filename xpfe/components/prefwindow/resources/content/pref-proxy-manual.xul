@@ -21,15 +21,14 @@
    Contributor(s): 
   -->
 <?xml-stylesheet href="chrome://pref/skin/" type="text/css"?>
-
 <?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
 
 <!DOCTYPE window SYSTEM "chrome://pref/locale/pref-proxy-manual.dtd" >
 <window xmlns:html="http://www.w3.org/TR/REC-html40"
-                xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-		title="&window.title;"
-		class="dialog"
-                align="vertical">
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+    		title="&window.title;"
+		    class="dialog" align="vertical"
+  		  onload="if( parent.handle ) parent.handle.onpageload( 'pref-proxy-manual' ); else parent.queuedTag = 'pref-proxy-manual';">
 
 <keyset id="keyset"/>
 
@@ -44,45 +43,53 @@
 		<html:div>
 		&ftp.label;
 		</html:div>
-		<html:input name="ftpproxy" type="text" id="pref:string:string:network.proxy.http" size="30" />
+		<html:input name="ftpproxy" type="text" id="networkProxyHTTP"
+                pref="true" preftype="string" prefstring="network.proxy.http" size="30"/>
 		<spring flex="100%"/>
 		<html:div>
 		&port.label;
 		</html:div>
-		<html:input name="ftpproxyport" type="text" id="pref:string:string:network.proxy.http_port" size="5" />
+		<html:input name="ftpproxyport" type="text" id="networkProxyHTTPPort"
+                pref="true" preftype="string" prefstring="network.proxy.http_port" size="5"/>
 	</box>
 	<box align="horizontal">
 		<html:div>
 		&gopher.label;
 		</html:div>
-		<html:input name="gopherproxy" type="text" id="pref:string:string:network.proxy.gopher" size="30" />
+		<html:input name="gopherproxy" type="text" id="networkProxyGopher"
+                pref="true" preftype="string" prefstring="network.proxy.gopher" size="30"/>
 		<spring flex="100%"/>
 		<html:div>
 		&port.label;
 		</html:div>
-		<html:input name="gopherproxyport" type="text" id="pref:string:string:network.proxy.gopher_port" size="5" />
+		<html:input name="gopherproxyport" type="text" id="networkProxyGopherPort"
+                pref="true" preftype="string" prefstring="network.proxy.gopher_port" size="5"/>
 	</box>
 	<box align="horizontal">
 		<html:div>
 		&http.label;
 		</html:div>
-		<html:input name="httpproxy" type="text" id="pref:string:string:network.proxy.http" size="30" />
+		<html:input name="httpproxy" type="text" id="networkProxyHTTP"
+                pref="true" preftype="string" prefstring="network.proxy.http" size="30"/>
 		<spring flex="100%"/>
 		<html:div>
 		&port.label;
 		</html:div>
-		<html:input name="httpproxyport" type="text" id="pref:string:string:network.proxy.http_port" size="5" />
+		<html:input name="httpproxyport" type="text" id="networkProxyHTTPPort"
+                pref="true" preftype="string" prefstring="network.proxy.http_port" size="5"/>
 	</box>
 	<box align="horizontal">
 		<html:div>
 		&wais.label;
 		</html:div>
-		<html:input name="waisproxy" type="text" id="pref:string:string:network.proxy.wais" size="30" />
+		<html:input name="waisproxy" type="text" id="networkProxyWAIS"
+                pref="true" preftype="string" prefstring="network.proxy.wais" size="30"/>
 		<spring flex="100%"/>
 		<html:div>
 		&port.label;
 		</html:div>
-		<html:input name="waisproxyport" type="text" id="pref:string:string:network.proxy.wais_port" size="5" />
+		<html:input name="waisproxyport" type="text" id="networkProxyWAISPort"
+                pref="true" preftype="string" prefstring="network.proxy.wais_port" size="5"/>
 	</box>
 	<box align="horizontal">
 		<html:div>
@@ -93,18 +100,21 @@
 		<html:div>
 		&noproxy.label;
 		</html:div>
-		<html:input name="noproxy" type="text" id="pref:string:string:network.proxy.none" size="60" />
+		<html:input name="noproxy" type="text" id="networProxyNone"
+                pref="true" preftype="string" prefstring="network.proxy.none" size="60"/>
 	</box>
 	<box align="horizontal">
 		<html:div>
 		&sockhost.label;
 		</html:div>
-		<html:input name="sockshost" type="text" id="pref:string:string:network.socks.host" size="30" />
+		<html:input name="sockshost" type="text" id="networkSocksHost"
+                pref="true" preftype="string" prefstring="network.socks.host" size="30"/>
 		<spring flex="100%"/>
 		<html:div>
 		&port.label;
 		</html:div>
-		<html:input name="socksport" type="text" id="pref:string:string:network.socks.port" size="5" />
+		<html:input name="socksport" type="text" id="networkSocksPort"
+                pref="true" preftype="string" prefstring="network.socks.port" size="5"/>
 	</box>
 	<box id="okCancelButtons"/>
 </box>
