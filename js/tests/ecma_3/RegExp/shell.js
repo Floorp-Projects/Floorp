@@ -128,11 +128,11 @@ function getState(status, pattern, string)
    * We don't have to worry about this in |pattern|; such escaping is
    * done automatically by pattern.toString(), invoked implicitly below.
    *
-   * One would like to simply do: string = string.replace(/\s/g, '\$1').
+   * One would like to simply do: string = string.replace(/(\s)/g, '\$1').
    * However, the backreference $1 is not a literal string value, 
    * so this method doesn't work.
    *
-   * Also tried string = string.replace(/\s/g, escape('$1'));
+   * Also tried string = string.replace(/(\s)/g, escape('$1'));
    * but such a presentation is in hexadecimal form...
    */
   string = string.replace(/\n/g, '\\n');
