@@ -1807,9 +1807,20 @@ PRInt32 nsString::RFindCharInSet(const PRUnichar* aStringSet,PRInt32 anOffset) c
  * @param   aCount tells us how many chars to test; -1 implies full length
  * @return  -1,0,1
  */
-PRInt32 nsString::Compare(const nsString& aString,PRBool aIgnoreCase,PRInt32 aCount) const {
-  PRInt32 result=nsStr::Compare(*this,aString,aCount,aIgnoreCase);
-  return result;
+PRInt32 nsString::CompareWithConversion(const char *aCString,PRBool aIgnoreCase,PRInt32 aCount) const {
+  NS_ASSERTION(0!=aCString,kNullPointerError);
+
+  if(aCString) {
+    nsStr temp;
+    nsStr::Initialize(temp,eOneByte);
+
+    temp.mLength= (0<aCount) ? aCount : nsCRT::strlen(aCString);
+
+    temp.mStr=(char*)aCString;
+    return nsStr::StrCompare(*this,temp,aCount,aIgnoreCase);
+  }
+
+  return 0;
 }
 
 /**
@@ -1820,20 +1831,9 @@ PRInt32 nsString::Compare(const nsString& aString,PRBool aIgnoreCase,PRInt32 aCo
  * @param   aCount tells us how many chars to test; -1 implies full length
  * @return  -1,0,1
  */
-PRInt32 nsString::Compare(const char *aCString,PRBool aIgnoreCase,PRInt32 aCount) const {
-  NS_ASSERTION(0!=aCString,kNullPointerError);
-
-  if(aCString) {
-    nsStr temp;
-    nsStr::Initialize(temp,eOneByte);
-
-    temp.mLength= (0<aCount) ? aCount : nsCRT::strlen(aCString);
-
-    temp.mStr=(char*)aCString;
-    return nsStr::Compare(*this,temp,aCount,aIgnoreCase);
-  }
-
-  return 0;
+PRInt32 nsString::CompareWithConversion(const nsString& aString,PRBool aIgnoreCase,PRInt32 aCount) const {
+  PRInt32 result=nsStr::StrCompare(*this,aString,aCount,aIgnoreCase);
+  return result;
 }
 
 /**
@@ -1844,7 +1844,7 @@ PRInt32 nsString::Compare(const char *aCString,PRBool aIgnoreCase,PRInt32 aCount
  * @param   aCount tells us how many chars to test; -1 implies full length
  * @return  -1,0,1
  */
-PRInt32 nsString::Compare(const PRUnichar* aString,PRBool aIgnoreCase,PRInt32 aCount) const {
+PRInt32 nsString::CompareWithConversion(const PRUnichar* aString,PRBool aIgnoreCase,PRInt32 aCount) const {
   NS_ASSERTION(0!=aString,kNullPointerError);
 
   if(aString) {
@@ -1852,12 +1852,13 @@ PRInt32 nsString::Compare(const PRUnichar* aString,PRBool aIgnoreCase,PRInt32 aC
     nsStr::Initialize(temp,eTwoByte);
     temp.mLength=nsCRT::strlen(aString);
     temp.mUStr=(PRUnichar*)aString;
-    return nsStr::Compare(*this,temp,aCount,aIgnoreCase);
+    return nsStr::StrCompare(*this,temp,aCount,aIgnoreCase);
   }
 
    return 0;
 }
 
+#ifndef NEW_STRING_APIS
 /**
  * Compare given nsStr with this cstring.
  * 
@@ -1867,9 +1868,9 @@ PRInt32 nsString::Compare(const PRUnichar* aString,PRBool aIgnoreCase,PRInt32 aC
  * @return  -1,0,1
  */
 PRInt32 nsString::Compare(const nsStr& aString,PRBool aIgnoreCase,PRInt32 aCount) const {
-  return nsStr::Compare(*this,aString,aCount,aIgnoreCase);
+  return nsStr::StrCompare(*this,aString,aCount,aIgnoreCase);
 }
-
+#endif
 
 #ifndef NEW_STRING_APIS
 /**
@@ -1908,13 +1909,14 @@ PRBool nsString::operator>=(const PRUnichar* s) const {return PRBool(Compare(s)>
 #endif // !defined(NEW_STRING_APIS)
 
 PRBool nsString::EqualsIgnoreCase(const nsString& aString) const {
-  return Equals(aString,PR_TRUE);
+  return EqualsWithConversion(aString,PR_TRUE);
 }
 
 PRBool nsString::EqualsIgnoreCase(const char* aString,PRInt32 aLength) const {
-  return Equals(aString,PR_TRUE,aLength);
+  return EqualsWithConversion(aString,PR_TRUE,aLength);
 }
 
+#ifndef NEW_STRING_APIS
 PRBool nsString::EqualsIgnoreCase(/*FIX: const */nsIAtom *aAtom) const {
   return Equals(aAtom,PR_TRUE);
 }
@@ -1922,22 +1924,7 @@ PRBool nsString::EqualsIgnoreCase(/*FIX: const */nsIAtom *aAtom) const {
 PRBool nsString::EqualsIgnoreCase(const PRUnichar* s1, const PRUnichar* s2) const {
   return Equals(s1,s2,PR_TRUE);
 }
-
-
-/**
- * Compare this to given string; note that we compare full strings here.
- * 
- * @update gess 01/04/99
- * @param  aString is the other nsString to be compared to
- * @param   aCount tells us how many chars to test; -1 implies full length
- * @return TRUE if equal
- */
-PRBool nsString::Equals(const nsString& aString,PRBool aIgnoreCase,PRInt32 aCount) const {
-  PRInt32 theAnswer=nsStr::Compare(*this,aString,aCount,aIgnoreCase);
-  PRBool  result=PRBool(0==theAnswer);
-  return result;
-
-}
+#endif
 
 /**
  * Compare this to given string; note that we compare full strings here.
@@ -1947,10 +1934,11 @@ PRBool nsString::Equals(const nsString& aString,PRBool aIgnoreCase,PRInt32 aCoun
  * @param   aCount tells us how many chars to test; -1 implies full length
  * @return TRUE if equal
  */
-PRBool nsString::Equals(const nsStr& aString,PRBool aIgnoreCase,PRInt32 aCount) const {
-  PRInt32 theAnswer=nsStr::Compare(*this,aString,aCount,aIgnoreCase);
+PRBool nsString::EqualsWithConversion(const nsString& aString,PRBool aIgnoreCase,PRInt32 aCount) const {
+  PRInt32 theAnswer=nsStr::StrCompare(*this,aString,aCount,aIgnoreCase);
   PRBool  result=PRBool(0==theAnswer);
   return result;
+
 }
 
 /**
@@ -1961,8 +1949,8 @@ PRBool nsString::Equals(const nsStr& aString,PRBool aIgnoreCase,PRInt32 aCount) 
  * @param   aCount tells us how many chars to test; -1 implies full length
  * @return TRUE if equal
  */
-PRBool nsString::Equals(const char* aString,PRBool aIgnoreCase,PRInt32 aCount) const {
-  PRInt32 theAnswer=Compare(aString,aIgnoreCase,aCount);
+PRBool nsString::EqualsWithConversion(const char* aString,PRBool aIgnoreCase,PRInt32 aCount) const {
+  PRInt32 theAnswer=CompareWithConversion(aString,aIgnoreCase,aCount);
   PRBool  result=PRBool(0==theAnswer);
   return result;
 }
@@ -1975,8 +1963,23 @@ PRBool nsString::Equals(const char* aString,PRBool aIgnoreCase,PRInt32 aCount) c
  * @param   aCount tells us how many chars to test; -1 implies full length
  * @return TRUE if equal
  */
-PRBool nsString::Equals(const PRUnichar* aString,PRBool aIgnoreCase,PRInt32 aCount) const {
-  PRInt32 theAnswer=Compare(aString,aIgnoreCase,aCount);
+PRBool nsString::EqualsWithConversion(const PRUnichar* aString,PRBool aIgnoreCase,PRInt32 aCount) const {
+  PRInt32 theAnswer=CompareWithConversion(aString,aIgnoreCase,aCount);
+  PRBool  result=PRBool(0==theAnswer);
+  return result;
+}
+
+#ifndef NEW_STRING_APIS
+/**
+ * Compare this to given string; note that we compare full strings here.
+ * 
+ * @update gess 01/04/99
+ * @param  aString is the other nsString to be compared to
+ * @param   aCount tells us how many chars to test; -1 implies full length
+ * @return TRUE if equal
+ */
+PRBool nsString::Equals(const nsStr& aString,PRBool aIgnoreCase,PRInt32 aCount) const {
+  PRInt32 theAnswer=nsStr::StrCompare(*this,aString,aCount,aIgnoreCase);
   PRBool  result=PRBool(0==theAnswer);
   return result;
 }
@@ -2028,6 +2031,7 @@ PRBool nsString::Equals(const PRUnichar* s1, const PRUnichar* s2,PRBool aIgnoreC
 
    return result;
 }
+#endif
 
 /**
  *  Determine if given char in valid alpha range
