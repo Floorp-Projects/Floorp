@@ -1,28 +1,25 @@
 /* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
- *
- * The contents of this file are subject to the Netscape Public
- * License Version 1.1 (the "License"); you may not use this file
- * except in compliance with the License. You may obtain a copy of
- * the License at http://www.mozilla.org/NPL/
- *
- * Software distributed under the License is distributed on an "AS
- * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
- * implied. See the License for the specific language governing
- * rights and limitations under the License.
- *
- * The Original Code is mozilla.org code.
- *
- * The Initial Developer of the Original Code is Netscape
- * Communications Corporation.  Portions created by Netscape are
- * Copyright (C) 1998 Netscape Communications Corporation. All
- * Rights Reserved.
- *
- * Contributor(s): 
- */
-/*========================================================
+*
+* The contents of this file are subject to the Netscape Public License
+* Version 1.0 (the "NPL"); you may not use this file except in
+* compliance with the NPL.  You may obtain a copy of the NPL at
+* http://www.mozilla.org/NPL/
+*
+* Software distributed under the NPL is distributed on an "AS IS" basis, 
+* WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL 
+* for the specific language governing rights and limitations under the 
+* NPL. 
+*
+* The Initial Developer of this code under the NPL is Netscape
+* Communications Corporation.  Portions created by Netscape are
+* Copyright (C) 2001 Netscape Communications Corporation.  All Rights
+* Reserved.
+*/
+ /*========================================================
   This is a Generated file. Please don't edit it.
 
-  The tool which used to generate this file is called fromu.
+  The tool which used to generate this file is called umaptable.
+  You can find this tool under mozilla/intl/uconv/tools/umaptable.c.
   If you have any problem of this file. Please contact 
   Netscape Client International Team or 
   ftang@netscape <Frank Tang> 
@@ -30,1988 +27,2178 @@
               Table in Debug form 
 Begin of Item 0000
  Format 0
-  srcBegin = 2170
-  srcEnd = 2179
-  destBegin = 7C71
+  srcBegin = 2160
+  srcEnd = 2169
+  destBegin = 2D35
 End of Item 0000 
 
 Begin of Item 0001
- Format 2
-  srcBegin = 4E28
-  destBegin = 792D
+ Format 0
+  srcBegin = 2170
+  srcEnd = 2179
+  destBegin = 7C71
 End of Item 0001 
 
 Begin of Item 0002
- Format 2
-  srcBegin = 4EE1
-  destBegin = 792E
+ Format 0
+  srcBegin = 2460
+  srcEnd = 2473
+  destBegin = 2D21
 End of Item 0002 
 
 Begin of Item 0003
  Format 1
-  srcBegin = 4EFC
-  srcEnd = 4F03
+  srcBegin = 2116
+  srcEnd = 2121
   mappingOffset = 0000
  Mapping  = 
-  792F FFFD FFFD FFFD 7930 FFFD FFFD 7931 
+  2D62 FFFD FFFD FFFD FFFD FFFD FFFD FFFD 
+  FFFD FFFD FFFD 2D64 
 End of Item 0003 
 
 Begin of Item 0004
- Format 2
-  srcBegin = 4F39
-  destBegin = 7932
+ Format 1
+  srcBegin = 2211
+  srcEnd = 2235
+  mappingOffset = 000C
+ Mapping  = 
+  2D74 FFFD FFFD FFFD FFFD FFFD FFFD FFFD 
+  FFFD 2D75 FFFD FFFD FFFD FFFD 2D78 2D77 
+  FFFD FFFD FFFD FFFD FFFD FFFD FFFD FFFD 
+  2D7B 2D7C 2D72 FFFD FFFD 2D73 FFFD FFFD 
+  FFFD FFFD FFFD FFFD 2D7A 
 End of Item 0004 
 
 Begin of Item 0005
  Format 2
-  srcBegin = 4F56
-  destBegin = 7933
+  srcBegin = 2252
+  destBegin = 2D70
 End of Item 0005 
 
 Begin of Item 0006
- Format 1
-  srcBegin = 4F8A
-  srcEnd = 4F9A
-  mappingOffset = 0008
- Mapping  = 
-  7935 FFFD FFFD FFFD FFFD FFFD FFFD FFFD 
-  7934 FFFD 7937 FFFD FFFD FFFD FFFD FFFD 
-  7936 
+ Format 2
+  srcBegin = 2261
+  destBegin = 2D71
 End of Item 0006 
 
 Begin of Item 0007
- Format 1
-  srcBegin = 4FC9
-  srcEnd = 4FCD
-  mappingOffset = 0019
- Mapping  = 
-  7926 FFFD FFFD FFFD 7938 
+ Format 2
+  srcBegin = 22A5
+  destBegin = 2D76
 End of Item 0007 
 
 Begin of Item 0008
  Format 2
-  srcBegin = 4FFF
-  destBegin = 793B
+  srcBegin = 22BF
+  destBegin = 2D79
 End of Item 0008 
 
 Begin of Item 0009
  Format 1
-  srcBegin = 501E
-  srcEnd = 5022
-  mappingOffset = 001E
+  srcBegin = 301D
+  srcEnd = 301F
+  mappingOffset = 0031
  Mapping  = 
-  793C FFFD FFFD FFFD 793A 
+  2D60 FFFD 2D61 
 End of Item 0009 
 
 Begin of Item 000A
  Format 1
-  srcBegin = 5040
-  srcEnd = 5046
-  mappingOffset = 0023
+  srcBegin = 3231
+  srcEnd = 3239
+  mappingOffset = 0034
  Mapping  = 
-  7939 FFFD 793F FFFD FFFD FFFD 793D 
+  2D6A 2D6B FFFD FFFD FFFD FFFD FFFD FFFD 
+  2D6C 
 End of Item 000A 
 
 Begin of Item 000B
- Format 2
-  srcBegin = 5070
-  destBegin = 793E
+ Format 1
+  srcBegin = 32A4
+  srcEnd = 32A8
+  mappingOffset = 003D
+ Mapping  = 
+  2D65 2D66 2D67 2D68 2D69 
 End of Item 000B 
 
 Begin of Item 000C
- Format 2
-  srcBegin = 5094
-  destBegin = 7940
+ Format 1
+  srcBegin = 3303
+  srcEnd = 333B
+  mappingOffset = 0042
+ Mapping  = 
+  2D46 FFFD FFFD FFFD FFFD FFFD FFFD FFFD 
+  FFFD FFFD 2D4A FFFD FFFD FFFD FFFD FFFD 
+  FFFD 2D41 FFFD FFFD FFFD 2D44 FFFD FFFD 
+  FFFD FFFD FFFD FFFD FFFD FFFD FFFD 2D42 
+  2D4C FFFD FFFD 2D4B 2D45 FFFD FFFD FFFD 
+  2D4D FFFD FFFD FFFD FFFD FFFD FFFD FFFD 
+  FFFD FFFD FFFD 2D47 FFFD FFFD FFFD FFFD 
+  2D4F 
 End of Item 000C 
 
 Begin of Item 000D
- Format 2
-  srcBegin = 50D8
-  destBegin = 7942
+ Format 1
+  srcBegin = 3349
+  srcEnd = 3357
+  mappingOffset = 007B
+ Mapping  = 
+  2D40 2D4E FFFD FFFD 2D43 FFFD FFFD FFFD 
+  2D48 FFFD FFFD FFFD FFFD FFFD 2D49 
 End of Item 000D 
 
 Begin of Item 000E
- Format 2
-  srcBegin = 50F4
-  destBegin = 7941
+ Format 1
+  srcBegin = 337B
+  srcEnd = 337E
+  mappingOffset = 008A
+ Mapping  = 
+  2D5F 2D6F 2D6E 2D6D 
 End of Item 000E 
 
 Begin of Item 000F
- Format 2
-  srcBegin = 514A
-  destBegin = 7943
+ Format 1
+  srcBegin = 338E
+  srcEnd = 338F
+  mappingOffset = 008E
+ Mapping  = 
+  2D53 2D54 
 End of Item 000F 
 
 Begin of Item 0010
- Format 2
-  srcBegin = 5164
-  destBegin = 7944
+ Format 1
+  srcBegin = 339C
+  srcEnd = 33A1
+  mappingOffset = 0090
+ Mapping  = 
+  2D50 2D51 2D52 FFFD FFFD 2D56 
 End of Item 0010 
 
 Begin of Item 0011
- Format 2
-  srcBegin = 519D
-  destBegin = 7945
+ Format 1
+  srcBegin = 33C4
+  srcEnd = 33CD
+  mappingOffset = 0096
+ Mapping  = 
+  2D55 FFFD FFFD FFFD FFFD FFFD FFFD FFFD 
+  FFFD 2D63 
 End of Item 0011 
 
 Begin of Item 0012
  Format 2
-  srcBegin = 51BE
-  destBegin = 7946
+  srcBegin = 4E28
+  destBegin = 792D
 End of Item 0012 
 
 Begin of Item 0013
  Format 2
-  srcBegin = 51EC
-  destBegin = 7947
+  srcBegin = 4EE1
+  destBegin = 792E
 End of Item 0013 
 
 Begin of Item 0014
- Format 2
-  srcBegin = 5215
-  destBegin = 7948
+ Format 1
+  srcBegin = 4EFC
+  srcEnd = 4F03
+  mappingOffset = 00A0
+ Mapping  = 
+  792F FFFD FFFD FFFD 7930 FFFD FFFD 7931 
 End of Item 0014 
 
 Begin of Item 0015
- Format 1
-  srcBegin = 529C
-  srcEnd = 52AF
-  mappingOffset = 002A
- Mapping  = 
-  7949 FFFD FFFD FFFD FFFD FFFD FFFD FFFD 
-  FFFD FFFD 794A FFFD FFFD FFFD FFFD FFFD 
-  FFFD FFFD FFFD 7B3C 
+ Format 2
+  srcBegin = 4F39
+  destBegin = 7932
 End of Item 0015 
 
 Begin of Item 0016
  Format 2
-  srcBegin = 52C0
-  destBegin = 794B
+  srcBegin = 4F56
+  destBegin = 7933
 End of Item 0016 
 
 Begin of Item 0017
- Format 2
-  srcBegin = 52DB
-  destBegin = 794C
+ Format 1
+  srcBegin = 4F8A
+  srcEnd = 4F9A
+  mappingOffset = 00A8
+ Mapping  = 
+  7935 FFFD FFFD FFFD FFFD FFFD FFFD FFFD 
+  7934 FFFD 7937 FFFD FFFD FFFD FFFD FFFD 
+  7936 
 End of Item 0017 
 
 Begin of Item 0018
  Format 1
-  srcBegin = 5300
-  srcEnd = 5307
-  mappingOffset = 003E
+  srcBegin = 4FC9
+  srcEnd = 4FCD
+  mappingOffset = 00B9
  Mapping  = 
-  794D FFFD FFFD FFFD FFFD FFFD FFFD 794E 
+  7926 FFFD FFFD FFFD 7938 
 End of Item 0018 
 
 Begin of Item 0019
  Format 2
-  srcBegin = 5324
-  destBegin = 794F
+  srcBegin = 4FFF
+  destBegin = 793B
 End of Item 0019 
 
 Begin of Item 001A
- Format 2
-  srcBegin = 5372
-  destBegin = 7950
+ Format 1
+  srcBegin = 501E
+  srcEnd = 5022
+  mappingOffset = 00BE
+ Mapping  = 
+  793C FFFD FFFD FFFD 793A 
 End of Item 001A 
 
 Begin of Item 001B
- Format 2
-  srcBegin = 5393
-  destBegin = 7951
+ Format 1
+  srcBegin = 5040
+  srcEnd = 5046
+  mappingOffset = 00C3
+ Mapping  = 
+  7939 FFFD 793F FFFD FFFD FFFD 793D 
 End of Item 001B 
 
 Begin of Item 001C
  Format 2
-  srcBegin = 53B2
-  destBegin = 7952
+  srcBegin = 5070
+  destBegin = 793E
 End of Item 001C 
 
 Begin of Item 001D
  Format 2
-  srcBegin = 53DD
-  destBegin = 7953
+  srcBegin = 5094
+  destBegin = 7940
 End of Item 001D 
 
 Begin of Item 001E
  Format 2
-  srcBegin = 548A
-  destBegin = 7956
+  srcBegin = 50D8
+  destBegin = 7942
 End of Item 001E 
 
 Begin of Item 001F
  Format 2
-  srcBegin = 549C
-  destBegin = 7955
+  srcBegin = 50F4
+  destBegin = 7941
 End of Item 001F 
 
 Begin of Item 0020
  Format 2
-  srcBegin = 54A9
-  destBegin = 7957
+  srcBegin = 514A
+  destBegin = 7943
 End of Item 0020 
 
 Begin of Item 0021
  Format 2
-  srcBegin = 54FF
-  destBegin = 7958
+  srcBegin = 5164
+  destBegin = 7944
 End of Item 0021 
 
 Begin of Item 0022
  Format 2
-  srcBegin = 5586
-  destBegin = 7959
+  srcBegin = 519D
+  destBegin = 7945
 End of Item 0022 
 
 Begin of Item 0023
  Format 2
-  srcBegin = 5759
-  destBegin = 795A
+  srcBegin = 51BE
+  destBegin = 7946
 End of Item 0023 
 
 Begin of Item 0024
  Format 2
-  srcBegin = 5765
-  destBegin = 795B
+  srcBegin = 51EC
+  destBegin = 7947
 End of Item 0024 
 
 Begin of Item 0025
  Format 2
-  srcBegin = 57AC
-  destBegin = 795C
+  srcBegin = 5215
+  destBegin = 7948
 End of Item 0025 
 
 Begin of Item 0026
  Format 1
-  srcBegin = 57C7
-  srcEnd = 57C8
-  mappingOffset = 0046
+  srcBegin = 529C
+  srcEnd = 52AF
+  mappingOffset = 00CA
  Mapping  = 
-  795E 795D 
+  7949 FFFD FFFD FFFD FFFD FFFD FFFD FFFD 
+  FFFD FFFD 794A FFFD FFFD FFFD FFFD FFFD 
+  FFFD FFFD FFFD 7B3C 
 End of Item 0026 
 
 Begin of Item 0027
  Format 2
-  srcBegin = 589E
-  destBegin = 7961
+  srcBegin = 52C0
+  destBegin = 794B
 End of Item 0027 
 
 Begin of Item 0028
  Format 2
-  srcBegin = 58B2
-  destBegin = 7962
+  srcBegin = 52DB
+  destBegin = 794C
 End of Item 0028 
 
 Begin of Item 0029
- Format 2
-  srcBegin = 590B
-  destBegin = 7963
+ Format 1
+  srcBegin = 5300
+  srcEnd = 5307
+  mappingOffset = 00DE
+ Mapping  = 
+  794D FFFD FFFD FFFD FFFD FFFD FFFD 794E 
 End of Item 0029 
 
 Begin of Item 002A
- Format 1
-  srcBegin = 5953
-  srcEnd = 5963
-  mappingOffset = 0048
- Mapping  = 
-  7964 FFFD FFFD FFFD FFFD FFFD FFFD FFFD 
-  7965 FFFD 7966 FFFD FFFD FFFD FFFD FFFD 
-  7967 
+ Format 2
+  srcBegin = 5324
+  destBegin = 794F
 End of Item 002A 
 
 Begin of Item 002B
  Format 2
-  srcBegin = 59A4
-  destBegin = 7968
+  srcBegin = 5372
+  destBegin = 7950
 End of Item 002B 
 
 Begin of Item 002C
  Format 2
-  srcBegin = 59BA
-  destBegin = 7969
+  srcBegin = 5393
+  destBegin = 7951
 End of Item 002C 
 
 Begin of Item 002D
  Format 2
-  srcBegin = 5B56
-  destBegin = 796A
+  srcBegin = 53B2
+  destBegin = 7952
 End of Item 002D 
 
 Begin of Item 002E
  Format 2
-  srcBegin = 5BC0
-  destBegin = 796B
+  srcBegin = 53DD
+  destBegin = 7953
 End of Item 002E 
 
 Begin of Item 002F
  Format 2
-  srcBegin = 5BD8
-  destBegin = 796D
+  srcBegin = 548A
+  destBegin = 7956
 End of Item 002F 
 
 Begin of Item 0030
  Format 2
-  srcBegin = 5BEC
-  destBegin = 796E
+  srcBegin = 549C
+  destBegin = 7955
 End of Item 0030 
 
 Begin of Item 0031
  Format 2
-  srcBegin = 5C1E
-  destBegin = 796F
+  srcBegin = 54A9
+  destBegin = 7957
 End of Item 0031 
 
 Begin of Item 0032
  Format 2
-  srcBegin = 5CA6
-  destBegin = 7970
+  srcBegin = 54FF
+  destBegin = 7958
 End of Item 0032 
 
 Begin of Item 0033
  Format 2
-  srcBegin = 5CBA
-  destBegin = 7971
+  srcBegin = 5586
+  destBegin = 7959
 End of Item 0033 
 
 Begin of Item 0034
  Format 2
-  srcBegin = 5CF5
-  destBegin = 7972
+  srcBegin = 5759
+  destBegin = 795A
 End of Item 0034 
 
 Begin of Item 0035
  Format 2
-  srcBegin = 5D27
-  destBegin = 7973
+  srcBegin = 5765
+  destBegin = 795B
 End of Item 0035 
 
 Begin of Item 0036
  Format 2
-  srcBegin = 5D42
-  destBegin = 7976
+  srcBegin = 57AC
+  destBegin = 795C
 End of Item 0036 
 
 Begin of Item 0037
- Format 2
-  srcBegin = 5D53
-  destBegin = 7974
+ Format 1
+  srcBegin = 57C7
+  srcEnd = 57C8
+  mappingOffset = 00E6
+ Mapping  = 
+  795E 795D 
 End of Item 0037 
 
 Begin of Item 0038
  Format 2
-  srcBegin = 5D6D
-  destBegin = 7977
+  srcBegin = 589E
+  destBegin = 7961
 End of Item 0038 
 
 Begin of Item 0039
- Format 1
-  srcBegin = 5DB8
-  srcEnd = 5DB9
-  mappingOffset = 0059
- Mapping  = 
-  7978 7979 
+ Format 2
+  srcBegin = 58B2
+  destBegin = 7962
 End of Item 0039 
 
 Begin of Item 003A
  Format 2
-  srcBegin = 5DD0
-  destBegin = 797A
+  srcBegin = 590B
+  destBegin = 7963
 End of Item 003A 
 
 Begin of Item 003B
- Format 2
-  srcBegin = 5F21
-  destBegin = 797B
+ Format 1
+  srcBegin = 5953
+  srcEnd = 5963
+  mappingOffset = 00E8
+ Mapping  = 
+  7964 FFFD FFFD FFFD FFFD FFFD FFFD FFFD 
+  7965 FFFD 7966 FFFD FFFD FFFD FFFD FFFD 
+  7967 
 End of Item 003B 
 
 Begin of Item 003C
  Format 2
-  srcBegin = 5F34
-  destBegin = 797C
+  srcBegin = 59A4
+  destBegin = 7968
 End of Item 003C 
 
 Begin of Item 003D
  Format 2
-  srcBegin = 5F45
-  destBegin = 792C
+  srcBegin = 59BA
+  destBegin = 7969
 End of Item 003D 
 
 Begin of Item 003E
  Format 2
-  srcBegin = 5F67
-  destBegin = 797D
+  srcBegin = 5B56
+  destBegin = 796A
 End of Item 003E 
 
 Begin of Item 003F
  Format 2
-  srcBegin = 5FB7
-  destBegin = 797E
+  srcBegin = 5BC0
+  destBegin = 796B
 End of Item 003F 
 
 Begin of Item 0040
  Format 2
-  srcBegin = 5FDE
-  destBegin = 7A21
+  srcBegin = 5BD8
+  destBegin = 796D
 End of Item 0040 
 
 Begin of Item 0041
  Format 2
-  srcBegin = 605D
-  destBegin = 7A22
+  srcBegin = 5BEC
+  destBegin = 796E
 End of Item 0041 
 
 Begin of Item 0042
- Format 1
-  srcBegin = 6085
-  srcEnd = 608A
-  mappingOffset = 005B
- Mapping  = 
-  7A23 FFFD FFFD FFFD FFFD 7A24 
+ Format 2
+  srcBegin = 5C1E
+  destBegin = 796F
 End of Item 0042 
 
 Begin of Item 0043
- Format 1
-  srcBegin = 60D5
-  srcEnd = 60DE
-  mappingOffset = 0061
- Mapping  = 
-  7A26 FFFD FFFD FFFD FFFD FFFD FFFD FFFD 
-  FFFD 7A25 
+ Format 2
+  srcBegin = 5CA6
+  destBegin = 7970
 End of Item 0043 
 
 Begin of Item 0044
  Format 2
-  srcBegin = 60F2
-  destBegin = 7A28
+  srcBegin = 5CBA
+  destBegin = 7971
 End of Item 0044 
 
 Begin of Item 0045
  Format 2
-  srcBegin = 6111
-  destBegin = 7A29
+  srcBegin = 5CF5
+  destBegin = 7972
 End of Item 0045 
 
 Begin of Item 0046
  Format 2
-  srcBegin = 6120
-  destBegin = 7A27
+  srcBegin = 5D27
+  destBegin = 7973
 End of Item 0046 
 
 Begin of Item 0047
- Format 1
-  srcBegin = 6130
-  srcEnd = 6137
-  mappingOffset = 006B
- Mapping  = 
-  7A2B FFFD FFFD FFFD FFFD FFFD FFFD 7A2A 
+ Format 2
+  srcBegin = 5D42
+  destBegin = 7976
 End of Item 0047 
 
 Begin of Item 0048
  Format 2
-  srcBegin = 6198
-  destBegin = 7A2C
+  srcBegin = 5D53
+  destBegin = 7974
 End of Item 0048 
 
 Begin of Item 0049
  Format 2
-  srcBegin = 6213
-  destBegin = 7A2D
+  srcBegin = 5D6D
+  destBegin = 7977
 End of Item 0049 
 
 Begin of Item 004A
- Format 2
-  srcBegin = 62A6
-  destBegin = 7A2E
+ Format 1
+  srcBegin = 5DB8
+  srcEnd = 5DB9
+  mappingOffset = 00F9
+ Mapping  = 
+  7978 7979 
 End of Item 004A 
 
 Begin of Item 004B
  Format 2
-  srcBegin = 63F5
-  destBegin = 7A2F
+  srcBegin = 5DD0
+  destBegin = 797A
 End of Item 004B 
 
 Begin of Item 004C
  Format 2
-  srcBegin = 6460
-  destBegin = 7A30
+  srcBegin = 5F21
+  destBegin = 797B
 End of Item 004C 
 
 Begin of Item 004D
  Format 2
-  srcBegin = 649D
-  destBegin = 7A31
+  srcBegin = 5F34
+  destBegin = 797C
 End of Item 004D 
 
 Begin of Item 004E
  Format 2
-  srcBegin = 64CE
-  destBegin = 7A32
+  srcBegin = 5F45
+  destBegin = 792C
 End of Item 004E 
 
 Begin of Item 004F
  Format 2
-  srcBegin = 654E
-  destBegin = 7A33
+  srcBegin = 5F67
+  destBegin = 797D
 End of Item 004F 
 
 Begin of Item 0050
- Format 1
-  srcBegin = 6600
-  srcEnd = 6609
-  mappingOffset = 0073
- Mapping  = 
-  7A34 FFFD FFFD FFFD FFFD FFFD FFFD FFFD 
-  FFFD 7A37 
+ Format 2
+  srcBegin = 5FB7
+  destBegin = 797E
 End of Item 0050 
 
 Begin of Item 0051
+ Format 2
+  srcBegin = 5FDE
+  destBegin = 7A21
+End of Item 0051 
+
+Begin of Item 0052
+ Format 2
+  srcBegin = 605D
+  destBegin = 7A22
+End of Item 0052 
+
+Begin of Item 0053
+ Format 1
+  srcBegin = 6085
+  srcEnd = 608A
+  mappingOffset = 00FB
+ Mapping  = 
+  7A23 FFFD FFFD FFFD FFFD 7A24 
+End of Item 0053 
+
+Begin of Item 0054
+ Format 1
+  srcBegin = 60D5
+  srcEnd = 60DE
+  mappingOffset = 0101
+ Mapping  = 
+  7A26 FFFD FFFD FFFD FFFD FFFD FFFD FFFD 
+  FFFD 7A25 
+End of Item 0054 
+
+Begin of Item 0055
+ Format 2
+  srcBegin = 60F2
+  destBegin = 7A28
+End of Item 0055 
+
+Begin of Item 0056
+ Format 2
+  srcBegin = 6111
+  destBegin = 7A29
+End of Item 0056 
+
+Begin of Item 0057
+ Format 2
+  srcBegin = 6120
+  destBegin = 7A27
+End of Item 0057 
+
+Begin of Item 0058
+ Format 1
+  srcBegin = 6130
+  srcEnd = 6137
+  mappingOffset = 010B
+ Mapping  = 
+  7A2B FFFD FFFD FFFD FFFD FFFD FFFD 7A2A 
+End of Item 0058 
+
+Begin of Item 0059
+ Format 2
+  srcBegin = 6198
+  destBegin = 7A2C
+End of Item 0059 
+
+Begin of Item 005A
+ Format 2
+  srcBegin = 6213
+  destBegin = 7A2D
+End of Item 005A 
+
+Begin of Item 005B
+ Format 2
+  srcBegin = 62A6
+  destBegin = 7A2E
+End of Item 005B 
+
+Begin of Item 005C
+ Format 2
+  srcBegin = 63F5
+  destBegin = 7A2F
+End of Item 005C 
+
+Begin of Item 005D
+ Format 2
+  srcBegin = 6460
+  destBegin = 7A30
+End of Item 005D 
+
+Begin of Item 005E
+ Format 2
+  srcBegin = 649D
+  destBegin = 7A31
+End of Item 005E 
+
+Begin of Item 005F
+ Format 2
+  srcBegin = 64CE
+  destBegin = 7A32
+End of Item 005F 
+
+Begin of Item 0060
+ Format 2
+  srcBegin = 654E
+  destBegin = 7A33
+End of Item 0060 
+
+Begin of Item 0061
+ Format 1
+  srcBegin = 6600
+  srcEnd = 6609
+  mappingOffset = 0113
+ Mapping  = 
+  7A34 FFFD FFFD FFFD FFFD FFFD FFFD FFFD 
+  FFFD 7A37 
+End of Item 0061 
+
+Begin of Item 0062
  Format 1
   srcBegin = 6615
   srcEnd = 663B
-  mappingOffset = 007D
+  mappingOffset = 011D
  Mapping  = 
   7A35 FFFD FFFD FFFD FFFD FFFD FFFD FFFD 
   FFFD 7A39 FFFD FFFD FFFD FFFD FFFD 7A3A 
   FFFD FFFD FFFD FFFD FFFD FFFD FFFD FFFD 
   FFFD 7A38 FFFD FFFD 7928 FFFD FFFD FFFD 
   FFFD FFFD FFFD FFFD FFFD FFFD 7A36 
-End of Item 0051 
-
-Begin of Item 0052
- Format 1
-  srcBegin = 6657
-  srcEnd = 6659
-  mappingOffset = 00A4
- Mapping  = 
-  7A3C FFFD 7A3D 
-End of Item 0052 
-
-Begin of Item 0053
- Format 2
-  srcBegin = 6665
-  destBegin = 7A3B
-End of Item 0053 
-
-Begin of Item 0054
- Format 2
-  srcBegin = 6673
-  destBegin = 7A3F
-End of Item 0054 
-
-Begin of Item 0055
- Format 1
-  srcBegin = 6699
-  srcEnd = 66A0
-  mappingOffset = 00A7
- Mapping  = 
-  7A40 FFFD FFFD FFFD FFFD FFFD FFFD 7A41 
-End of Item 0055 
-
-Begin of Item 0056
- Format 2
-  srcBegin = 66B2
-  destBegin = 7A42
-End of Item 0056 
-
-Begin of Item 0057
- Format 2
-  srcBegin = 66BF
-  destBegin = 7A43
-End of Item 0057 
-
-Begin of Item 0058
- Format 1
-  srcBegin = 66FA
-  srcEnd = 66FB
-  mappingOffset = 00AF
- Mapping  = 
-  7A44 792B 
-End of Item 0058 
-
-Begin of Item 0059
- Format 2
-  srcBegin = 670E
-  destBegin = 7A45
-End of Item 0059 
-
-Begin of Item 005A
- Format 2
-  srcBegin = 6766
-  destBegin = 7A47
-End of Item 005A 
-
-Begin of Item 005B
- Format 1
-  srcBegin = 67BB
-  srcEnd = 67C0
-  mappingOffset = 00B1
- Mapping  = 
-  7A48 FFFD FFFD FFFD FFFD 7A4A 
-End of Item 005B 
-
-Begin of Item 005C
- Format 2
-  srcBegin = 6801
-  destBegin = 7A4B
-End of Item 005C 
-
-Begin of Item 005D
- Format 2
-  srcBegin = 6844
-  destBegin = 7A4C
-End of Item 005D 
-
-Begin of Item 005E
- Format 2
-  srcBegin = 6852
-  destBegin = 7A49
-End of Item 005E 
-
-Begin of Item 005F
- Format 1
-  srcBegin = 68C8
-  srcEnd = 68CF
-  mappingOffset = 00B7
- Mapping  = 
-  7929 FFFD FFFD FFFD FFFD FFFD FFFD 7A4D 
-End of Item 005F 
-
-Begin of Item 0060
- Format 2
-  srcBegin = 6968
-  destBegin = 7A4F
-End of Item 0060 
-
-Begin of Item 0061
- Format 2
-  srcBegin = 6998
-  destBegin = 7A51
-End of Item 0061 
-
-Begin of Item 0062
- Format 2
-  srcBegin = 69E2
-  destBegin = 7A52
 End of Item 0062 
 
 Begin of Item 0063
- Format 2
-  srcBegin = 6A30
-  destBegin = 7A53
+ Format 1
+  srcBegin = 6657
+  srcEnd = 6659
+  mappingOffset = 0144
+ Mapping  = 
+  7A3C FFFD 7A3D 
 End of Item 0063 
 
 Begin of Item 0064
  Format 2
-  srcBegin = 6A46
-  destBegin = 7A55
+  srcBegin = 6665
+  destBegin = 7A3B
 End of Item 0064 
 
 Begin of Item 0065
- Format 1
-  srcBegin = 6A6B
-  srcEnd = 6A7E
-  mappingOffset = 00BF
- Mapping  = 
-  7A54 FFFD FFFD FFFD FFFD FFFD FFFD FFFD 
-  7A56 FFFD FFFD FFFD FFFD FFFD FFFD FFFD 
-  FFFD FFFD FFFD 7A57 
+ Format 2
+  srcBegin = 6673
+  destBegin = 7A3F
 End of Item 0065 
 
 Begin of Item 0066
  Format 1
-  srcBegin = 6AE2
-  srcEnd = 6AE4
-  mappingOffset = 00D3
+  srcBegin = 6699
+  srcEnd = 66A0
+  mappingOffset = 0147
  Mapping  = 
-  7A58 FFFD 7A59 
+  7A40 FFFD FFFD FFFD FFFD FFFD FFFD 7A41 
 End of Item 0066 
 
 Begin of Item 0067
  Format 2
-  srcBegin = 6BD6
-  destBegin = 7A5A
+  srcBegin = 66B2
+  destBegin = 7A42
 End of Item 0067 
 
 Begin of Item 0068
  Format 2
-  srcBegin = 6C3F
-  destBegin = 7A5B
+  srcBegin = 66BF
+  destBegin = 7A43
 End of Item 0068 
 
 Begin of Item 0069
- Format 2
-  srcBegin = 6C5C
-  destBegin = 7A5C
+ Format 1
+  srcBegin = 66FA
+  srcEnd = 66FB
+  mappingOffset = 014F
+ Mapping  = 
+  7A44 792B 
 End of Item 0069 
 
 Begin of Item 006A
  Format 2
-  srcBegin = 6C6F
-  destBegin = 7A5E
+  srcBegin = 670E
+  destBegin = 7A45
 End of Item 006A 
 
 Begin of Item 006B
  Format 2
-  srcBegin = 6C86
-  destBegin = 7A5D
+  srcBegin = 6766
+  destBegin = 7A47
 End of Item 006B 
 
 Begin of Item 006C
- Format 2
-  srcBegin = 6CDA
-  destBegin = 7A5F
+ Format 1
+  srcBegin = 67BB
+  srcEnd = 67C0
+  mappingOffset = 0151
+ Mapping  = 
+  7A48 FFFD FFFD FFFD FFFD 7A4A 
 End of Item 006C 
 
 Begin of Item 006D
  Format 2
-  srcBegin = 6D04
-  destBegin = 7A60
+  srcBegin = 6801
+  destBegin = 7A4B
 End of Item 006D 
 
 Begin of Item 006E
  Format 2
-  srcBegin = 6D6F
-  destBegin = 7A62
+  srcBegin = 6844
+  destBegin = 7A4C
 End of Item 006E 
 
 Begin of Item 006F
  Format 2
-  srcBegin = 6D87
-  destBegin = 7A61
+  srcBegin = 6852
+  destBegin = 7A49
 End of Item 006F 
 
 Begin of Item 0070
- Format 2
-  srcBegin = 6D96
-  destBegin = 7A63
+ Format 1
+  srcBegin = 68C8
+  srcEnd = 68CF
+  mappingOffset = 0157
+ Mapping  = 
+  7929 FFFD FFFD FFFD FFFD FFFD FFFD 7A4D 
 End of Item 0070 
 
 Begin of Item 0071
  Format 2
-  srcBegin = 6DAC
-  destBegin = 7A64
+  srcBegin = 6968
+  destBegin = 7A4F
 End of Item 0071 
 
 Begin of Item 0072
  Format 2
-  srcBegin = 6DCF
-  destBegin = 7A65
+  srcBegin = 6998
+  destBegin = 7A51
 End of Item 0072 
 
 Begin of Item 0073
- Format 1
-  srcBegin = 6DF2
-  srcEnd = 6DFC
-  mappingOffset = 00D6
- Mapping  = 
-  7A67 FFFD FFFD FFFD FFFD FFFD 7A66 FFFD 
-  FFFD FFFD 7A68 
+ Format 2
+  srcBegin = 69E2
+  destBegin = 7A52
 End of Item 0073 
 
 Begin of Item 0074
  Format 2
-  srcBegin = 6E27
-  destBegin = 7A6B
+  srcBegin = 6A30
+  destBegin = 7A53
 End of Item 0074 
 
 Begin of Item 0075
- Format 1
-  srcBegin = 6E39
-  srcEnd = 6E3C
-  mappingOffset = 00E1
- Mapping  = 
-  7A69 FFFD FFFD 7A6C 
+ Format 2
+  srcBegin = 6A46
+  destBegin = 7A55
 End of Item 0075 
 
 Begin of Item 0076
- Format 2
-  srcBegin = 6E5C
-  destBegin = 7A6A
+ Format 1
+  srcBegin = 6A6B
+  srcEnd = 6A7E
+  mappingOffset = 015F
+ Mapping  = 
+  7A54 FFFD FFFD FFFD FFFD FFFD FFFD FFFD 
+  7A56 FFFD FFFD FFFD FFFD FFFD FFFD FFFD 
+  FFFD FFFD FFFD 7A57 
 End of Item 0076 
 
 Begin of Item 0077
- Format 2
-  srcBegin = 6EBF
-  destBegin = 7A6D
+ Format 1
+  srcBegin = 6AE2
+  srcEnd = 6AE4
+  mappingOffset = 0173
+ Mapping  = 
+  7A58 FFFD 7A59 
 End of Item 0077 
 
 Begin of Item 0078
  Format 2
-  srcBegin = 6F88
-  destBegin = 7A6E
+  srcBegin = 6BD6
+  destBegin = 7A5A
 End of Item 0078 
 
 Begin of Item 0079
  Format 2
-  srcBegin = 6FB5
-  destBegin = 7A6F
+  srcBegin = 6C3F
+  destBegin = 7A5B
 End of Item 0079 
 
 Begin of Item 007A
  Format 2
-  srcBegin = 6FF5
-  destBegin = 7A70
+  srcBegin = 6C5C
+  destBegin = 7A5C
 End of Item 007A 
 
 Begin of Item 007B
- Format 1
-  srcBegin = 7005
-  srcEnd = 7007
-  mappingOffset = 00E5
- Mapping  = 
-  7A71 FFFD 7A72 
+ Format 2
+  srcBegin = 6C6F
+  destBegin = 7A5E
 End of Item 007B 
 
 Begin of Item 007C
  Format 2
-  srcBegin = 7028
-  destBegin = 7A73
+  srcBegin = 6C86
+  destBegin = 7A5D
 End of Item 007C 
 
 Begin of Item 007D
  Format 2
-  srcBegin = 7085
-  destBegin = 7A74
+  srcBegin = 6CDA
+  destBegin = 7A5F
 End of Item 007D 
 
 Begin of Item 007E
  Format 2
-  srcBegin = 70AB
-  destBegin = 7A75
+  srcBegin = 6D04
+  destBegin = 7A60
 End of Item 007E 
 
 Begin of Item 007F
  Format 2
-  srcBegin = 70BB
-  destBegin = 7927
+  srcBegin = 6D6F
+  destBegin = 7A62
 End of Item 007F 
 
 Begin of Item 0080
- Format 1
-  srcBegin = 7104
-  srcEnd = 710F
-  mappingOffset = 00E8
- Mapping  = 
-  7A77 FFFD FFFD FFFD FFFD FFFD FFFD FFFD 
-  FFFD FFFD FFFD 7A76 
+ Format 2
+  srcBegin = 6D87
+  destBegin = 7A61
 End of Item 0080 
 
 Begin of Item 0081
- Format 1
-  srcBegin = 7146
-  srcEnd = 7147
-  mappingOffset = 00F4
- Mapping  = 
-  7A79 7A7A 
+ Format 2
+  srcBegin = 6D96
+  destBegin = 7A63
 End of Item 0081 
 
 Begin of Item 0082
  Format 2
-  srcBegin = 715C
-  destBegin = 7A78
+  srcBegin = 6DAC
+  destBegin = 7A64
 End of Item 0082 
 
 Begin of Item 0083
  Format 2
-  srcBegin = 71C1
-  destBegin = 7A7C
+  srcBegin = 6DCF
+  destBegin = 7A65
 End of Item 0083 
 
 Begin of Item 0084
- Format 2
-  srcBegin = 71FE
-  destBegin = 7A7D
+ Format 1
+  srcBegin = 6DF2
+  srcEnd = 6DFC
+  mappingOffset = 0176
+ Mapping  = 
+  7A67 FFFD FFFD FFFD FFFD FFFD 7A66 FFFD 
+  FFFD FFFD 7A68 
 End of Item 0084 
 
 Begin of Item 0085
  Format 2
-  srcBegin = 72B1
-  destBegin = 7A7E
+  srcBegin = 6E27
+  destBegin = 7A6B
 End of Item 0085 
 
 Begin of Item 0086
- Format 2
-  srcBegin = 72BE
-  destBegin = 7B21
+ Format 1
+  srcBegin = 6E39
+  srcEnd = 6E3C
+  mappingOffset = 0181
+ Mapping  = 
+  7A69 FFFD FFFD 7A6C 
 End of Item 0086 
 
 Begin of Item 0087
  Format 2
-  srcBegin = 7324
-  destBegin = 7B22
+  srcBegin = 6E5C
+  destBegin = 7A6A
 End of Item 0087 
 
 Begin of Item 0088
  Format 2
-  srcBegin = 7377
-  destBegin = 7B24
+  srcBegin = 6EBF
+  destBegin = 7A6D
 End of Item 0088 
 
 Begin of Item 0089
  Format 2
-  srcBegin = 73BD
-  destBegin = 7B25
+  srcBegin = 6F88
+  destBegin = 7A6E
 End of Item 0089 
 
 Begin of Item 008A
- Format 1
-  srcBegin = 73C9
-  srcEnd = 73D6
-  mappingOffset = 00F6
- Mapping  = 
-  7B26 FFFD FFFD FFFD FFFD FFFD FFFD FFFD 
-  FFFD 7B29 FFFD FFFD FFFD 7B27 
+ Format 2
+  srcBegin = 6FB5
+  destBegin = 7A6F
 End of Item 008A 
 
 Begin of Item 008B
  Format 2
-  srcBegin = 73E3
-  destBegin = 7B28
+  srcBegin = 6FF5
+  destBegin = 7A70
 End of Item 008B 
 
 Begin of Item 008C
- Format 2
-  srcBegin = 73F5
-  destBegin = 7B2B
+ Format 1
+  srcBegin = 7005
+  srcEnd = 7007
+  mappingOffset = 0185
+ Mapping  = 
+  7A71 FFFD 7A72 
 End of Item 008C 
 
 Begin of Item 008D
  Format 2
-  srcBegin = 7407
-  destBegin = 7B2A
+  srcBegin = 7028
+  destBegin = 7A73
 End of Item 008D 
 
 Begin of Item 008E
- Format 1
-  srcBegin = 7426
-  srcEnd = 742E
-  mappingOffset = 0104
- Mapping  = 
-  7B2C FFFD FFFD 7B2E 7B2D FFFD FFFD FFFD 
-  7B2F 
+ Format 2
+  srcBegin = 7085
+  destBegin = 7A74
 End of Item 008E 
 
 Begin of Item 008F
  Format 2
-  srcBegin = 7462
-  destBegin = 7B30
+  srcBegin = 70AB
+  destBegin = 7A75
 End of Item 008F 
 
 Begin of Item 0090
  Format 2
-  srcBegin = 7489
-  destBegin = 7B31
+  srcBegin = 70BB
+  destBegin = 7927
 End of Item 0090 
 
 Begin of Item 0091
- Format 2
-  srcBegin = 749F
-  destBegin = 7B32
+ Format 1
+  srcBegin = 7104
+  srcEnd = 710F
+  mappingOffset = 0188
+ Mapping  = 
+  7A77 FFFD FFFD FFFD FFFD FFFD FFFD FFFD 
+  FFFD FFFD FFFD 7A76 
 End of Item 0091 
 
 Begin of Item 0092
- Format 2
-  srcBegin = 7501
-  destBegin = 7B33
+ Format 1
+  srcBegin = 7146
+  srcEnd = 7147
+  mappingOffset = 0194
+ Mapping  = 
+  7A79 7A7A 
 End of Item 0092 
 
 Begin of Item 0093
  Format 2
-  srcBegin = 752F
-  destBegin = 796C
+  srcBegin = 715C
+  destBegin = 7A78
 End of Item 0093 
 
 Begin of Item 0094
  Format 2
-  srcBegin = 756F
-  destBegin = 7B34
+  srcBegin = 71C1
+  destBegin = 7A7C
 End of Item 0094 
 
 Begin of Item 0095
  Format 2
-  srcBegin = 7682
-  destBegin = 7B35
+  srcBegin = 71FE
+  destBegin = 7A7D
 End of Item 0095 
 
 Begin of Item 0096
- Format 1
-  srcBegin = 769B
-  srcEnd = 76A6
-  mappingOffset = 010D
- Mapping  = 
-  7B38 7B36 FFFD 7B37 FFFD FFFD FFFD FFFD 
-  FFFD FFFD FFFD 7B39 
+ Format 2
+  srcBegin = 72B1
+  destBegin = 7A7E
 End of Item 0096 
 
 Begin of Item 0097
  Format 2
-  srcBegin = 7746
-  destBegin = 7B3B
+  srcBegin = 72BE
+  destBegin = 7B21
 End of Item 0097 
 
 Begin of Item 0098
  Format 2
-  srcBegin = 7821
-  destBegin = 7B3D
+  srcBegin = 7324
+  destBegin = 7B22
 End of Item 0098 
 
 Begin of Item 0099
  Format 2
-  srcBegin = 784E
-  destBegin = 7B3E
+  srcBegin = 7377
+  destBegin = 7B24
 End of Item 0099 
 
 Begin of Item 009A
  Format 2
-  srcBegin = 7864
-  destBegin = 7B3F
+  srcBegin = 73BD
+  destBegin = 7B25
 End of Item 009A 
 
 Begin of Item 009B
- Format 2
-  srcBegin = 787A
-  destBegin = 7B40
+ Format 1
+  srcBegin = 73C9
+  srcEnd = 73D6
+  mappingOffset = 0196
+ Mapping  = 
+  7B26 FFFD FFFD FFFD FFFD FFFD FFFD FFFD 
+  FFFD 7B29 FFFD FFFD FFFD 7B27 
 End of Item 009B 
 
 Begin of Item 009C
  Format 2
-  srcBegin = 7930
-  destBegin = 7B41
+  srcBegin = 73E3
+  destBegin = 7B28
 End of Item 009C 
 
 Begin of Item 009D
- Format 1
-  srcBegin = 7994
-  srcEnd = 799B
-  mappingOffset = 0119
- Mapping  = 
-  7B45 FFFD FFFD FFFD FFFD FFFD FFFD 7B47 
+ Format 2
+  srcBegin = 73F5
+  destBegin = 7B2B
 End of Item 009D 
 
 Begin of Item 009E
  Format 2
-  srcBegin = 7AD1
-  destBegin = 7B48
+  srcBegin = 7407
+  destBegin = 7B2A
 End of Item 009E 
 
 Begin of Item 009F
  Format 1
-  srcBegin = 7AE7
-  srcEnd = 7AEB
-  mappingOffset = 0121
+  srcBegin = 7426
+  srcEnd = 742E
+  mappingOffset = 01A4
  Mapping  = 
-  7B49 FFFD FFFD FFFD 7B4B 
+  7B2C FFFD FFFD 7B2E 7B2D FFFD FFFD FFFD 
+  7B2F 
 End of Item 009F 
 
 Begin of Item 00A0
  Format 2
-  srcBegin = 7B9E
-  destBegin = 7B4C
+  srcBegin = 7462
+  destBegin = 7B30
 End of Item 00A0 
 
 Begin of Item 00A1
  Format 2
-  srcBegin = 7D48
-  destBegin = 7B4E
+  srcBegin = 7489
+  destBegin = 7B31
 End of Item 00A1 
 
 Begin of Item 00A2
  Format 2
-  srcBegin = 7D5C
-  destBegin = 7B4F
+  srcBegin = 749F
+  destBegin = 7B32
 End of Item 00A2 
 
 Begin of Item 00A3
  Format 2
-  srcBegin = 7DA0
-  destBegin = 7B51
+  srcBegin = 7501
+  destBegin = 7B33
 End of Item 00A3 
 
 Begin of Item 00A4
  Format 2
-  srcBegin = 7DB7
-  destBegin = 7B50
+  srcBegin = 752F
+  destBegin = 796C
 End of Item 00A4 
 
 Begin of Item 00A5
  Format 2
-  srcBegin = 7DD6
-  destBegin = 7B52
+  srcBegin = 756F
+  destBegin = 7B34
 End of Item 00A5 
 
 Begin of Item 00A6
  Format 2
-  srcBegin = 7E52
-  destBegin = 7B53
+  srcBegin = 7682
+  destBegin = 7B35
 End of Item 00A6 
 
 Begin of Item 00A7
- Format 2
-  srcBegin = 7E8A
-  destBegin = 7921
+ Format 1
+  srcBegin = 769B
+  srcEnd = 76A6
+  mappingOffset = 01AD
+ Mapping  = 
+  7B38 7B36 FFFD 7B37 FFFD FFFD FFFD FFFD 
+  FFFD FFFD FFFD 7B39 
 End of Item 00A7 
 
 Begin of Item 00A8
  Format 2
-  srcBegin = 7F47
-  destBegin = 7B54
+  srcBegin = 7746
+  destBegin = 7B3B
 End of Item 00A8 
 
 Begin of Item 00A9
  Format 2
-  srcBegin = 7FA1
-  destBegin = 7B55
+  srcBegin = 7821
+  destBegin = 7B3D
 End of Item 00A9 
 
 Begin of Item 00AA
  Format 2
-  srcBegin = 8301
-  destBegin = 7B57
+  srcBegin = 784E
+  destBegin = 7B3E
 End of Item 00AA 
 
 Begin of Item 00AB
  Format 2
-  srcBegin = 8362
-  destBegin = 7B58
+  srcBegin = 7864
+  destBegin = 7B3F
 End of Item 00AB 
 
 Begin of Item 00AC
  Format 2
-  srcBegin = 837F
-  destBegin = 7B59
+  srcBegin = 787A
+  destBegin = 7B40
 End of Item 00AC 
 
 Begin of Item 00AD
  Format 2
-  srcBegin = 83C7
-  destBegin = 7B5A
+  srcBegin = 7930
+  destBegin = 7B41
 End of Item 00AD 
 
 Begin of Item 00AE
- Format 2
-  srcBegin = 83F6
-  destBegin = 7B5B
+ Format 1
+  srcBegin = 7994
+  srcEnd = 799B
+  mappingOffset = 01B9
+ Mapping  = 
+  7B45 FFFD FFFD FFFD FFFD FFFD FFFD 7B47 
 End of Item 00AE 
 
 Begin of Item 00AF
  Format 2
-  srcBegin = 8448
-  destBegin = 7B5C
+  srcBegin = 7AD1
+  destBegin = 7B48
 End of Item 00AF 
 
 Begin of Item 00B0
- Format 2
-  srcBegin = 84B4
-  destBegin = 7B5D
+ Format 1
+  srcBegin = 7AE7
+  srcEnd = 7AEB
+  mappingOffset = 01C1
+ Mapping  = 
+  7B49 FFFD FFFD FFFD 7B4B 
 End of Item 00B0 
 
 Begin of Item 00B1
  Format 2
-  srcBegin = 84DC
-  destBegin = 7925
+  srcBegin = 7B9E
+  destBegin = 7B4C
 End of Item 00B1 
 
 Begin of Item 00B2
- Format 1
-  srcBegin = 8553
-  srcEnd = 8559
-  mappingOffset = 0126
- Mapping  = 
-  7B5E FFFD FFFD FFFD FFFD FFFD 7B5F 
+ Format 2
+  srcBegin = 7D48
+  destBegin = 7B4E
 End of Item 00B2 
 
 Begin of Item 00B3
  Format 2
-  srcBegin = 856B
-  destBegin = 7B60
+  srcBegin = 7D5C
+  destBegin = 7B4F
 End of Item 00B3 
 
 Begin of Item 00B4
  Format 2
-  srcBegin = 85B0
-  destBegin = 7B62
+  srcBegin = 7DA0
+  destBegin = 7B51
 End of Item 00B4 
 
 Begin of Item 00B5
  Format 2
-  srcBegin = 8807
-  destBegin = 7B65
+  srcBegin = 7DB7
+  destBegin = 7B50
 End of Item 00B5 
 
 Begin of Item 00B6
  Format 2
-  srcBegin = 88F5
-  destBegin = 7B66
+  srcBegin = 7DD6
+  destBegin = 7B52
 End of Item 00B6 
 
 Begin of Item 00B7
  Format 2
-  srcBegin = 891C
-  destBegin = 7922
+  srcBegin = 7E52
+  destBegin = 7B53
 End of Item 00B7 
 
 Begin of Item 00B8
  Format 2
-  srcBegin = 8A12
-  destBegin = 7B67
+  srcBegin = 7E8A
+  destBegin = 7921
 End of Item 00B8 
 
 Begin of Item 00B9
  Format 2
-  srcBegin = 8A37
-  destBegin = 7B68
+  srcBegin = 7F47
+  destBegin = 7B54
 End of Item 00B9 
 
 Begin of Item 00BA
  Format 2
-  srcBegin = 8A79
-  destBegin = 7B69
+  srcBegin = 7FA1
+  destBegin = 7B55
 End of Item 00BA 
 
 Begin of Item 00BB
  Format 2
-  srcBegin = 8AA7
-  destBegin = 7B6A
+  srcBegin = 8301
+  destBegin = 7B57
 End of Item 00BB 
 
 Begin of Item 00BC
  Format 2
-  srcBegin = 8ABE
-  destBegin = 7B6B
+  srcBegin = 8362
+  destBegin = 7B58
 End of Item 00BC 
 
 Begin of Item 00BD
  Format 2
-  srcBegin = 8ADF
-  destBegin = 7B6C
+  srcBegin = 837F
+  destBegin = 7B59
 End of Item 00BD 
 
 Begin of Item 00BE
  Format 2
-  srcBegin = 8AF6
-  destBegin = 7B6E
+  srcBegin = 83C7
+  destBegin = 7B5A
 End of Item 00BE 
 
 Begin of Item 00BF
  Format 2
-  srcBegin = 8B53
-  destBegin = 7B6F
+  srcBegin = 83F6
+  destBegin = 7B5B
 End of Item 00BF 
 
 Begin of Item 00C0
  Format 2
-  srcBegin = 8B7F
-  destBegin = 7B70
+  srcBegin = 8448
+  destBegin = 7B5C
 End of Item 00C0 
 
 Begin of Item 00C1
- Format 1
-  srcBegin = 8CF0
-  srcEnd = 8CF4
-  mappingOffset = 012D
- Mapping  = 
-  7B71 FFFD FFFD FFFD 7B72 
+ Format 2
+  srcBegin = 84B4
+  destBegin = 7B5D
 End of Item 00C1 
 
 Begin of Item 00C2
  Format 2
-  srcBegin = 8D12
-  destBegin = 7B73
+  srcBegin = 84DC
+  destBegin = 7925
 End of Item 00C2 
 
 Begin of Item 00C3
- Format 2
-  srcBegin = 8D76
-  destBegin = 7B74
+ Format 1
+  srcBegin = 8553
+  srcEnd = 8559
+  mappingOffset = 01C6
+ Mapping  = 
+  7B5E FFFD FFFD FFFD FFFD FFFD 7B5F 
 End of Item 00C3 
 
 Begin of Item 00C4
  Format 2
-  srcBegin = 8ECF
-  destBegin = 7B76
+  srcBegin = 856B
+  destBegin = 7B60
 End of Item 00C4 
 
 Begin of Item 00C5
  Format 2
-  srcBegin = 9067
-  destBegin = 7B79
+  srcBegin = 85B0
+  destBegin = 7B62
 End of Item 00C5 
 
 Begin of Item 00C6
  Format 2
-  srcBegin = 90DE
-  destBegin = 7B7A
+  srcBegin = 8807
+  destBegin = 7B65
 End of Item 00C6 
 
 Begin of Item 00C7
  Format 2
-  srcBegin = 9115
-  destBegin = 7B7C
+  srcBegin = 88F5
+  destBegin = 7B66
 End of Item 00C7 
 
 Begin of Item 00C8
  Format 2
-  srcBegin = 9127
-  destBegin = 7B7D
+  srcBegin = 891C
+  destBegin = 7922
 End of Item 00C8 
 
 Begin of Item 00C9
- Format 1
-  srcBegin = 91D7
-  srcEnd = 91EE
-  mappingOffset = 0132
- Mapping  = 
-  7C21 FFFD FFFD 7B7E FFFD FFFD FFFD 7C22 
-  FFFD FFFD FFFD FFFD FFFD 7C25 7C26 FFFD 
-  FFFD FFFD FFFD FFFD FFFD FFFD 7C23 7C24 
+ Format 2
+  srcBegin = 8A12
+  destBegin = 7B67
 End of Item 00C9 
 
 Begin of Item 00CA
- Format 1
-  srcBegin = 9206
-  srcEnd = 9210
-  mappingOffset = 014A
- Mapping  = 
-  7C27 FFFD FFFD FFFD 7C29 FFFD FFFD FFFD 
-  FFFD FFFD 7C28 
+ Format 2
+  srcBegin = 8A37
+  destBegin = 7B68
 End of Item 00CA 
 
 Begin of Item 00CB
- Format 1
-  srcBegin = 9239
-  srcEnd = 9240
-  mappingOffset = 0155
- Mapping  = 
-  7C30 7C2A FFFD 7C2C FFFD FFFD FFFD 7C2B 
+ Format 2
+  srcBegin = 8A79
+  destBegin = 7B69
 End of Item 00CB 
 
 Begin of Item 00CC
- Format 1
-  srcBegin = 924E
-  srcEnd = 9259
-  mappingOffset = 015D
- Mapping  = 
-  7C2D FFFD FFFD 7C2F FFFD FFFD FFFD FFFD 
-  FFFD FFFD FFFD 7C2E 
+ Format 2
+  srcBegin = 8AA7
+  destBegin = 7B6A
 End of Item 00CC 
 
 Begin of Item 00CD
  Format 2
-  srcBegin = 9267
-  destBegin = 7C31
+  srcBegin = 8ABE
+  destBegin = 7B6B
 End of Item 00CD 
 
 Begin of Item 00CE
- Format 1
-  srcBegin = 9277
-  srcEnd = 9278
-  mappingOffset = 0169
- Mapping  = 
-  7C33 7C34 
+ Format 2
+  srcBegin = 8ADF
+  destBegin = 7B6C
 End of Item 00CE 
 
 Begin of Item 00CF
  Format 2
-  srcBegin = 9288
-  destBegin = 7924
+  srcBegin = 8AF6
+  destBegin = 7B6E
 End of Item 00CF 
 
 Begin of Item 00D0
  Format 2
-  srcBegin = 92A7
-  destBegin = 7C32
+  srcBegin = 8B53
+  destBegin = 7B6F
 End of Item 00D0 
 
 Begin of Item 00D1
- Format 1
-  srcBegin = 92D0
-  srcEnd = 92E7
-  mappingOffset = 016B
- Mapping  = 
-  7C38 FFFD FFFD 7C3C FFFD 7C3A FFFD 7C36 
-  FFFD 7C37 FFFD FFFD FFFD FFFD FFFD FFFD 
-  7C3B FFFD FFFD FFFD FFFD FFFD FFFD 7C35 
+ Format 2
+  srcBegin = 8B7F
+  destBegin = 7B70
 End of Item 00D1 
 
 Begin of Item 00D2
  Format 1
-  srcBegin = 92F9
-  srcEnd = 9302
-  mappingOffset = 0183
+  srcBegin = 8CF0
+  srcEnd = 8CF4
+  mappingOffset = 01CD
  Mapping  = 
-  792A FFFD 7C3F FFFD FFFD FFFD 7C42 FFFD 
-  FFFD 7C44 
+  7B71 FFFD FFFD FFFD 7B72 
 End of Item 00D2 
 
 Begin of Item 00D3
- Format 1
-  srcBegin = 931D
-  srcEnd = 9325
-  mappingOffset = 018D
- Mapping  = 
-  7C43 7C41 FFFD FFFD 7C3E FFFD FFFD FFFD 
-  7C3D 
+ Format 2
+  srcBegin = 8D12
+  destBegin = 7B73
 End of Item 00D3 
 
 Begin of Item 00D4
  Format 2
-  srcBegin = 9348
-  destBegin = 7923
+  srcBegin = 8D76
+  destBegin = 7B74
 End of Item 00D4 
 
 Begin of Item 00D5
  Format 2
-  srcBegin = 9357
-  destBegin = 7C46
+  srcBegin = 8ECF
+  destBegin = 7B76
 End of Item 00D5 
 
 Begin of Item 00D6
  Format 2
-  srcBegin = 9370
-  destBegin = 7C45
+  srcBegin = 9067
+  destBegin = 7B79
 End of Item 00D6 
 
 Begin of Item 00D7
  Format 2
-  srcBegin = 93A4
-  destBegin = 7C47
+  srcBegin = 90DE
+  destBegin = 7B7A
 End of Item 00D7 
 
 Begin of Item 00D8
  Format 2
-  srcBegin = 93C6
-  destBegin = 7C48
+  srcBegin = 9115
+  destBegin = 7B7C
 End of Item 00D8 
 
 Begin of Item 00D9
  Format 2
-  srcBegin = 93DE
-  destBegin = 7C49
+  srcBegin = 9127
+  destBegin = 7B7D
 End of Item 00D9 
 
 Begin of Item 00DA
- Format 2
-  srcBegin = 93F8
-  destBegin = 7C4A
+ Format 1
+  srcBegin = 91D7
+  srcEnd = 91EE
+  mappingOffset = 01D2
+ Mapping  = 
+  7C21 FFFD FFFD 7B7E FFFD FFFD FFFD 7C22 
+  FFFD FFFD FFFD FFFD FFFD 7C25 7C26 FFFD 
+  FFFD FFFD FFFD FFFD FFFD FFFD 7C23 7C24 
 End of Item 00DA 
 
 Begin of Item 00DB
- Format 2
-  srcBegin = 9431
-  destBegin = 7C4B
+ Format 1
+  srcBegin = 9206
+  srcEnd = 9210
+  mappingOffset = 01EA
+ Mapping  = 
+  7C27 FFFD FFFD FFFD 7C29 FFFD FFFD FFFD 
+  FFFD FFFD 7C28 
 End of Item 00DB 
 
 Begin of Item 00DC
  Format 1
-  srcBegin = 9445
-  srcEnd = 9448
-  mappingOffset = 0196
+  srcBegin = 9239
+  srcEnd = 9240
+  mappingOffset = 01F5
  Mapping  = 
-  7C4C FFFD FFFD 7C4D 
+  7C30 7C2A FFFD 7C2C FFFD FFFD FFFD 7C2B 
 End of Item 00DC 
 
 Begin of Item 00DD
- Format 2
-  srcBegin = 9592
-  destBegin = 7C4E
+ Format 1
+  srcBegin = 924E
+  srcEnd = 9259
+  mappingOffset = 01FD
+ Mapping  = 
+  7C2D FFFD FFFD 7C2F FFFD FFFD FFFD FFFD 
+  FFFD FFFD FFFD 7C2E 
 End of Item 00DD 
 
 Begin of Item 00DE
  Format 2
-  srcBegin = 969D
-  destBegin = 7C51
+  srcBegin = 9267
+  destBegin = 7C31
 End of Item 00DE 
 
 Begin of Item 00DF
- Format 2
-  srcBegin = 96AF
-  destBegin = 7C52
+ Format 1
+  srcBegin = 9277
+  srcEnd = 9278
+  mappingOffset = 0209
+ Mapping  = 
+  7C33 7C34 
 End of Item 00DF 
 
 Begin of Item 00E0
+ Format 2
+  srcBegin = 9288
+  destBegin = 7924
+End of Item 00E0 
+
+Begin of Item 00E1
+ Format 2
+  srcBegin = 92A7
+  destBegin = 7C32
+End of Item 00E1 
+
+Begin of Item 00E2
+ Format 1
+  srcBegin = 92D0
+  srcEnd = 92E7
+  mappingOffset = 020B
+ Mapping  = 
+  7C38 FFFD FFFD 7C3C FFFD 7C3A FFFD 7C36 
+  FFFD 7C37 FFFD FFFD FFFD FFFD FFFD FFFD 
+  7C3B FFFD FFFD FFFD FFFD FFFD FFFD 7C35 
+End of Item 00E2 
+
+Begin of Item 00E3
+ Format 1
+  srcBegin = 92F9
+  srcEnd = 9302
+  mappingOffset = 0223
+ Mapping  = 
+  792A FFFD 7C3F FFFD FFFD FFFD 7C42 FFFD 
+  FFFD 7C44 
+End of Item 00E3 
+
+Begin of Item 00E4
+ Format 1
+  srcBegin = 931D
+  srcEnd = 9325
+  mappingOffset = 022D
+ Mapping  = 
+  7C43 7C41 FFFD FFFD 7C3E FFFD FFFD FFFD 
+  7C3D 
+End of Item 00E4 
+
+Begin of Item 00E5
+ Format 2
+  srcBegin = 9348
+  destBegin = 7923
+End of Item 00E5 
+
+Begin of Item 00E6
+ Format 2
+  srcBegin = 9357
+  destBegin = 7C46
+End of Item 00E6 
+
+Begin of Item 00E7
+ Format 2
+  srcBegin = 9370
+  destBegin = 7C45
+End of Item 00E7 
+
+Begin of Item 00E8
+ Format 2
+  srcBegin = 93A4
+  destBegin = 7C47
+End of Item 00E8 
+
+Begin of Item 00E9
+ Format 2
+  srcBegin = 93C6
+  destBegin = 7C48
+End of Item 00E9 
+
+Begin of Item 00EA
+ Format 2
+  srcBegin = 93DE
+  destBegin = 7C49
+End of Item 00EA 
+
+Begin of Item 00EB
+ Format 2
+  srcBegin = 93F8
+  destBegin = 7C4A
+End of Item 00EB 
+
+Begin of Item 00EC
+ Format 2
+  srcBegin = 9431
+  destBegin = 7C4B
+End of Item 00EC 
+
+Begin of Item 00ED
+ Format 1
+  srcBegin = 9445
+  srcEnd = 9448
+  mappingOffset = 0236
+ Mapping  = 
+  7C4C FFFD FFFD 7C4D 
+End of Item 00ED 
+
+Begin of Item 00EE
+ Format 2
+  srcBegin = 9592
+  destBegin = 7C4E
+End of Item 00EE 
+
+Begin of Item 00EF
+ Format 2
+  srcBegin = 969D
+  destBegin = 7C51
+End of Item 00EF 
+
+Begin of Item 00F0
+ Format 2
+  srcBegin = 96AF
+  destBegin = 7C52
+End of Item 00F0 
+
+Begin of Item 00F1
  Format 1
   srcBegin = 9733
   srcEnd = 9755
-  mappingOffset = 019A
+  mappingOffset = 023A
  Mapping  = 
   7C53 FFFD FFFD FFFD FFFD FFFD FFFD FFFD 
   7C54 FFFD FFFD FFFD FFFD FFFD FFFD FFFD 
   7C55 FFFD FFFD FFFD FFFD FFFD FFFD FFFD 
   FFFD FFFD 7C56 FFFD 7C57 FFFD 7C58 FFFD 
   FFFD FFFD 7C59 
-End of Item 00E0 
+End of Item 00F1 
 
-Begin of Item 00E1
+Begin of Item 00F2
  Format 2
   srcBegin = 9857
   destBegin = 7C5A
-End of Item 00E1 
+End of Item 00F2 
 
-Begin of Item 00E2
+Begin of Item 00F3
  Format 2
   srcBegin = 9865
   destBegin = 7C5B
-End of Item 00E2 
+End of Item 00F3 
 
-Begin of Item 00E3
+Begin of Item 00F4
  Format 2
   srcBegin = 9927
   destBegin = 7C5E
-End of Item 00E3 
+End of Item 00F4 
 
-Begin of Item 00E4
+Begin of Item 00F5
  Format 2
   srcBegin = 999E
   destBegin = 7C60
-End of Item 00E4 
+End of Item 00F5 
 
-Begin of Item 00E5
+Begin of Item 00F6
  Format 2
   srcBegin = 9A4E
   destBegin = 7C61
-End of Item 00E5 
+End of Item 00F6 
 
-Begin of Item 00E6
+Begin of Item 00F7
  Format 1
   srcBegin = 9AD9
   srcEnd = 9ADC
-  mappingOffset = 01BD
+  mappingOffset = 025D
  Mapping  = 
   7C62 FFFD FFFD 7C63 
-End of Item 00E6 
+End of Item 00F7 
 
-Begin of Item 00E7
+Begin of Item 00F8
  Format 1
   srcBegin = 9B72
   srcEnd = 9B75
-  mappingOffset = 01C1
+  mappingOffset = 0261
  Mapping  = 
   7C65 FFFD FFFD 7C64 
-End of Item 00E7 
+End of Item 00F8 
 
-Begin of Item 00E8
+Begin of Item 00F9
  Format 2
   srcBegin = 9B8F
   destBegin = 7C66
-End of Item 00E8 
+End of Item 00F9 
 
-Begin of Item 00E9
+Begin of Item 00FA
  Format 1
   srcBegin = 9BB1
   srcEnd = 9BBB
-  mappingOffset = 01C5
+  mappingOffset = 0265
  Mapping  = 
   7C67 FFFD FFFD FFFD FFFD FFFD FFFD FFFD 
   FFFD FFFD 7C68 
-End of Item 00E9 
+End of Item 00FA 
 
-Begin of Item 00EA
+Begin of Item 00FB
  Format 2
   srcBegin = 9C00
   destBegin = 7C69
-End of Item 00EA 
+End of Item 00FB 
 
-Begin of Item 00EB
+Begin of Item 00FC
  Format 1
   srcBegin = 9D6B
   srcEnd = 9D70
-  mappingOffset = 01D0
+  mappingOffset = 0270
  Mapping  = 
   7C6B FFFD FFFD FFFD FFFD 7C6A 
-End of Item 00EB 
+End of Item 00FC 
 
-Begin of Item 00EC
+Begin of Item 00FD
  Format 2
   srcBegin = 9E19
   destBegin = 7C6D
-End of Item 00EC 
+End of Item 00FD 
 
-Begin of Item 00ED
+Begin of Item 00FE
  Format 2
   srcBegin = 9ED1
   destBegin = 7C6E
-End of Item 00ED 
+End of Item 00FE 
 
-Begin of Item 00EE
+Begin of Item 00FF
  Format 2
   srcBegin = F929
   destBegin = 7A46
-End of Item 00EE 
+End of Item 00FF 
 
-Begin of Item 00EF
+Begin of Item 0100
  Format 2
   srcBegin = F9DC
   destBegin = 7C4F
-End of Item 00EF 
+End of Item 0100 
 
-Begin of Item 00F0
+Begin of Item 0101
  Format 1
   srcBegin = FA0E
   srcEnd = FA2D
-  mappingOffset = 01D6
+  mappingOffset = 0276
  Mapping  = 
   7954 795F 7960 7975 7A3E 7A4E 7A50 7A7B 
   7B23 7B3A 7B42 7B43 7B44 7B46 7B4A 7B4D 
   7B56 7B61 7B63 7B64 7B6D 7B75 7B77 7B78 
   7B7B 7C39 7C40 7C50 7C5C 7C5D 7C5F 7C6C 
-End of Item 00F0 
+End of Item 0101 
 
-Begin of Item 00F1
+Begin of Item 0102
  Format 1
   srcBegin = FF02
   srcEnd = FF07
-  mappingOffset = 01F6
+  mappingOffset = 0296
  Mapping  = 
   7C7E FFFD FFFD FFFD FFFD 7C7D 
-End of Item 00F1 
+End of Item 0102 
 
-Begin of Item 00F2
+Begin of Item 0103
  Format 1
   srcBegin = FFE2
   srcEnd = FFE4
-  mappingOffset = 01FC
+  mappingOffset = 029C
  Mapping  = 
   7C7B FFFD 7C7C 
-End of Item 00F2 
+End of Item 0103 
 
 ========================================================*/
 /* Offset=0x0000  ItemOfList */
-  0x00F3,
+  0x0104,
 /*-------------------------------------------------------*/
 /* Offset=0x0001  offsetToFormatArray */
   0x0004,
 /*-------------------------------------------------------*/
 /* Offset=0x0002  offsetToMapCellArray */ 
-  0x0041,
+  0x0046,
 /*-------------------------------------------------------*/
 /* Offset=0x0003  offsetToMappingTable */ 
-  0x031A,
+  0x0352,
 /*-------------------------------------------------------*/
 /*       Offset=0x0004   Start of Format Array */ 
-/*	Total of Format 0 : 0x0001			 */
-/*	Total of Format 1 : 0x0033			 */
-/*	Total of Format 2 : 0x00BF			 */
+/*	Total of Format 0 : 0x0003			 */
+/*	Total of Format 1 : 0x003E			 */
+/*	Total of Format 2 : 0x00C3			 */
 /*	Total of Format 3 : 0x0000			 */
 
-0x1220, 0x1122, 0x2112, 0x2222, 0x2222, 0x2212, 0x2221, 0x2222, 
-0x2222, 0x2122, 0x2122, 0x2222, 0x2222, 0x2222, 0x2212, 0x2222, 
-0x1122, 0x1222, 0x2222, 0x2222, 0x2111, 0x2212, 0x1221, 0x1222, 
-0x2222, 0x2112, 0x2222, 0x2222, 0x1222, 0x2212, 0x1222, 0x2222, 
-0x2211, 0x2222, 0x2122, 0x2122, 0x2222, 0x2122, 0x2222, 0x1212, 
-0x2222, 0x2222, 0x2222, 0x2222, 0x2122, 0x2222, 0x2222, 0x2222, 
-0x2212, 0x2222, 0x1112, 0x2121, 0x1112, 0x2222, 0x2222, 0x2221, 
-0x2221, 0x1122, 0x1212, 0x2222, 0x0111, 
+0x1000, 0x2221, 0x1112, 0x1111, 0x2211, 0x1221, 0x1121, 0x2222, 
+0x2222, 0x2122, 0x2212, 0x2222, 0x2222, 0x1222, 0x1222, 0x2222, 
+0x2222, 0x2222, 0x2122, 0x2222, 0x1222, 0x2221, 0x2221, 0x2222, 
+0x1112, 0x2122, 0x2212, 0x2221, 0x2221, 0x1122, 0x2222, 0x2222, 
+0x2222, 0x2121, 0x2222, 0x2221, 0x2112, 0x2222, 0x1222, 0x1222, 
+0x2222, 0x1222, 0x2222, 0x2122, 0x2221, 0x2222, 0x2222, 0x2222, 
+0x1222, 0x2222, 0x2222, 0x2222, 0x2122, 0x2222, 0x1122, 0x1211, 
+0x1122, 0x2221, 0x2222, 0x2212, 0x2212, 0x1222, 0x2121, 0x2221, 
+0x1112, 0x0000, 
 /*-------------------------------------------------------*/
-/*       Offset=0x0041   Start of MapCell Array */ 
-/* 0000 */    0x2170, 0x2179, 0x7C71, 
-/* 0001 */    0x4E28, 0x0000, 0x792D, 
-/* 0002 */    0x4EE1, 0x0000, 0x792E, 
-/* 0003 */    0x4EFC, 0x4F03, 0x0000, 
-/* 0004 */    0x4F39, 0x0000, 0x7932, 
-/* 0005 */    0x4F56, 0x0000, 0x7933, 
-/* 0006 */    0x4F8A, 0x4F9A, 0x0008, 
-/* 0007 */    0x4FC9, 0x4FCD, 0x0019, 
-/* 0008 */    0x4FFF, 0x0000, 0x793B, 
-/* 0009 */    0x501E, 0x5022, 0x001E, 
-/* 000A */    0x5040, 0x5046, 0x0023, 
-/* 000B */    0x5070, 0x0000, 0x793E, 
-/* 000C */    0x5094, 0x0000, 0x7940, 
-/* 000D */    0x50D8, 0x0000, 0x7942, 
-/* 000E */    0x50F4, 0x0000, 0x7941, 
-/* 000F */    0x514A, 0x0000, 0x7943, 
-/* 0010 */    0x5164, 0x0000, 0x7944, 
-/* 0011 */    0x519D, 0x0000, 0x7945, 
-/* 0012 */    0x51BE, 0x0000, 0x7946, 
-/* 0013 */    0x51EC, 0x0000, 0x7947, 
-/* 0014 */    0x5215, 0x0000, 0x7948, 
-/* 0015 */    0x529C, 0x52AF, 0x002A, 
-/* 0016 */    0x52C0, 0x0000, 0x794B, 
-/* 0017 */    0x52DB, 0x0000, 0x794C, 
-/* 0018 */    0x5300, 0x5307, 0x003E, 
-/* 0019 */    0x5324, 0x0000, 0x794F, 
-/* 001A */    0x5372, 0x0000, 0x7950, 
-/* 001B */    0x5393, 0x0000, 0x7951, 
-/* 001C */    0x53B2, 0x0000, 0x7952, 
-/* 001D */    0x53DD, 0x0000, 0x7953, 
-/* 001E */    0x548A, 0x0000, 0x7956, 
-/* 001F */    0x549C, 0x0000, 0x7955, 
-/* 0020 */    0x54A9, 0x0000, 0x7957, 
-/* 0021 */    0x54FF, 0x0000, 0x7958, 
-/* 0022 */    0x5586, 0x0000, 0x7959, 
-/* 0023 */    0x5759, 0x0000, 0x795A, 
-/* 0024 */    0x5765, 0x0000, 0x795B, 
-/* 0025 */    0x57AC, 0x0000, 0x795C, 
-/* 0026 */    0x57C7, 0x57C8, 0x0046, 
-/* 0027 */    0x589E, 0x0000, 0x7961, 
-/* 0028 */    0x58B2, 0x0000, 0x7962, 
-/* 0029 */    0x590B, 0x0000, 0x7963, 
-/* 002A */    0x5953, 0x5963, 0x0048, 
-/* 002B */    0x59A4, 0x0000, 0x7968, 
-/* 002C */    0x59BA, 0x0000, 0x7969, 
-/* 002D */    0x5B56, 0x0000, 0x796A, 
-/* 002E */    0x5BC0, 0x0000, 0x796B, 
-/* 002F */    0x5BD8, 0x0000, 0x796D, 
-/* 0030 */    0x5BEC, 0x0000, 0x796E, 
-/* 0031 */    0x5C1E, 0x0000, 0x796F, 
-/* 0032 */    0x5CA6, 0x0000, 0x7970, 
-/* 0033 */    0x5CBA, 0x0000, 0x7971, 
-/* 0034 */    0x5CF5, 0x0000, 0x7972, 
-/* 0035 */    0x5D27, 0x0000, 0x7973, 
-/* 0036 */    0x5D42, 0x0000, 0x7976, 
-/* 0037 */    0x5D53, 0x0000, 0x7974, 
-/* 0038 */    0x5D6D, 0x0000, 0x7977, 
-/* 0039 */    0x5DB8, 0x5DB9, 0x0059, 
-/* 003A */    0x5DD0, 0x0000, 0x797A, 
-/* 003B */    0x5F21, 0x0000, 0x797B, 
-/* 003C */    0x5F34, 0x0000, 0x797C, 
-/* 003D */    0x5F45, 0x0000, 0x792C, 
-/* 003E */    0x5F67, 0x0000, 0x797D, 
-/* 003F */    0x5FB7, 0x0000, 0x797E, 
-/* 0040 */    0x5FDE, 0x0000, 0x7A21, 
-/* 0041 */    0x605D, 0x0000, 0x7A22, 
-/* 0042 */    0x6085, 0x608A, 0x005B, 
-/* 0043 */    0x60D5, 0x60DE, 0x0061, 
-/* 0044 */    0x60F2, 0x0000, 0x7A28, 
-/* 0045 */    0x6111, 0x0000, 0x7A29, 
-/* 0046 */    0x6120, 0x0000, 0x7A27, 
-/* 0047 */    0x6130, 0x6137, 0x006B, 
-/* 0048 */    0x6198, 0x0000, 0x7A2C, 
-/* 0049 */    0x6213, 0x0000, 0x7A2D, 
-/* 004A */    0x62A6, 0x0000, 0x7A2E, 
-/* 004B */    0x63F5, 0x0000, 0x7A2F, 
-/* 004C */    0x6460, 0x0000, 0x7A30, 
-/* 004D */    0x649D, 0x0000, 0x7A31, 
-/* 004E */    0x64CE, 0x0000, 0x7A32, 
-/* 004F */    0x654E, 0x0000, 0x7A33, 
-/* 0050 */    0x6600, 0x6609, 0x0073, 
-/* 0051 */    0x6615, 0x663B, 0x007D, 
-/* 0052 */    0x6657, 0x6659, 0x00A4, 
-/* 0053 */    0x6665, 0x0000, 0x7A3B, 
-/* 0054 */    0x6673, 0x0000, 0x7A3F, 
-/* 0055 */    0x6699, 0x66A0, 0x00A7, 
-/* 0056 */    0x66B2, 0x0000, 0x7A42, 
-/* 0057 */    0x66BF, 0x0000, 0x7A43, 
-/* 0058 */    0x66FA, 0x66FB, 0x00AF, 
-/* 0059 */    0x670E, 0x0000, 0x7A45, 
-/* 005A */    0x6766, 0x0000, 0x7A47, 
-/* 005B */    0x67BB, 0x67C0, 0x00B1, 
-/* 005C */    0x6801, 0x0000, 0x7A4B, 
-/* 005D */    0x6844, 0x0000, 0x7A4C, 
-/* 005E */    0x6852, 0x0000, 0x7A49, 
-/* 005F */    0x68C8, 0x68CF, 0x00B7, 
-/* 0060 */    0x6968, 0x0000, 0x7A4F, 
-/* 0061 */    0x6998, 0x0000, 0x7A51, 
-/* 0062 */    0x69E2, 0x0000, 0x7A52, 
-/* 0063 */    0x6A30, 0x0000, 0x7A53, 
-/* 0064 */    0x6A46, 0x0000, 0x7A55, 
-/* 0065 */    0x6A6B, 0x6A7E, 0x00BF, 
-/* 0066 */    0x6AE2, 0x6AE4, 0x00D3, 
-/* 0067 */    0x6BD6, 0x0000, 0x7A5A, 
-/* 0068 */    0x6C3F, 0x0000, 0x7A5B, 
-/* 0069 */    0x6C5C, 0x0000, 0x7A5C, 
-/* 006A */    0x6C6F, 0x0000, 0x7A5E, 
-/* 006B */    0x6C86, 0x0000, 0x7A5D, 
-/* 006C */    0x6CDA, 0x0000, 0x7A5F, 
-/* 006D */    0x6D04, 0x0000, 0x7A60, 
-/* 006E */    0x6D6F, 0x0000, 0x7A62, 
-/* 006F */    0x6D87, 0x0000, 0x7A61, 
-/* 0070 */    0x6D96, 0x0000, 0x7A63, 
-/* 0071 */    0x6DAC, 0x0000, 0x7A64, 
-/* 0072 */    0x6DCF, 0x0000, 0x7A65, 
-/* 0073 */    0x6DF2, 0x6DFC, 0x00D6, 
-/* 0074 */    0x6E27, 0x0000, 0x7A6B, 
-/* 0075 */    0x6E39, 0x6E3C, 0x00E1, 
-/* 0076 */    0x6E5C, 0x0000, 0x7A6A, 
-/* 0077 */    0x6EBF, 0x0000, 0x7A6D, 
-/* 0078 */    0x6F88, 0x0000, 0x7A6E, 
-/* 0079 */    0x6FB5, 0x0000, 0x7A6F, 
-/* 007A */    0x6FF5, 0x0000, 0x7A70, 
-/* 007B */    0x7005, 0x7007, 0x00E5, 
-/* 007C */    0x7028, 0x0000, 0x7A73, 
-/* 007D */    0x7085, 0x0000, 0x7A74, 
-/* 007E */    0x70AB, 0x0000, 0x7A75, 
-/* 007F */    0x70BB, 0x0000, 0x7927, 
-/* 0080 */    0x7104, 0x710F, 0x00E8, 
-/* 0081 */    0x7146, 0x7147, 0x00F4, 
-/* 0082 */    0x715C, 0x0000, 0x7A78, 
-/* 0083 */    0x71C1, 0x0000, 0x7A7C, 
-/* 0084 */    0x71FE, 0x0000, 0x7A7D, 
-/* 0085 */    0x72B1, 0x0000, 0x7A7E, 
-/* 0086 */    0x72BE, 0x0000, 0x7B21, 
-/* 0087 */    0x7324, 0x0000, 0x7B22, 
-/* 0088 */    0x7377, 0x0000, 0x7B24, 
-/* 0089 */    0x73BD, 0x0000, 0x7B25, 
-/* 008A */    0x73C9, 0x73D6, 0x00F6, 
-/* 008B */    0x73E3, 0x0000, 0x7B28, 
-/* 008C */    0x73F5, 0x0000, 0x7B2B, 
-/* 008D */    0x7407, 0x0000, 0x7B2A, 
-/* 008E */    0x7426, 0x742E, 0x0104, 
-/* 008F */    0x7462, 0x0000, 0x7B30, 
-/* 0090 */    0x7489, 0x0000, 0x7B31, 
-/* 0091 */    0x749F, 0x0000, 0x7B32, 
-/* 0092 */    0x7501, 0x0000, 0x7B33, 
-/* 0093 */    0x752F, 0x0000, 0x796C, 
-/* 0094 */    0x756F, 0x0000, 0x7B34, 
-/* 0095 */    0x7682, 0x0000, 0x7B35, 
-/* 0096 */    0x769B, 0x76A6, 0x010D, 
-/* 0097 */    0x7746, 0x0000, 0x7B3B, 
-/* 0098 */    0x7821, 0x0000, 0x7B3D, 
-/* 0099 */    0x784E, 0x0000, 0x7B3E, 
-/* 009A */    0x7864, 0x0000, 0x7B3F, 
-/* 009B */    0x787A, 0x0000, 0x7B40, 
-/* 009C */    0x7930, 0x0000, 0x7B41, 
-/* 009D */    0x7994, 0x799B, 0x0119, 
-/* 009E */    0x7AD1, 0x0000, 0x7B48, 
-/* 009F */    0x7AE7, 0x7AEB, 0x0121, 
-/* 00A0 */    0x7B9E, 0x0000, 0x7B4C, 
-/* 00A1 */    0x7D48, 0x0000, 0x7B4E, 
-/* 00A2 */    0x7D5C, 0x0000, 0x7B4F, 
-/* 00A3 */    0x7DA0, 0x0000, 0x7B51, 
-/* 00A4 */    0x7DB7, 0x0000, 0x7B50, 
-/* 00A5 */    0x7DD6, 0x0000, 0x7B52, 
-/* 00A6 */    0x7E52, 0x0000, 0x7B53, 
-/* 00A7 */    0x7E8A, 0x0000, 0x7921, 
-/* 00A8 */    0x7F47, 0x0000, 0x7B54, 
-/* 00A9 */    0x7FA1, 0x0000, 0x7B55, 
-/* 00AA */    0x8301, 0x0000, 0x7B57, 
-/* 00AB */    0x8362, 0x0000, 0x7B58, 
-/* 00AC */    0x837F, 0x0000, 0x7B59, 
-/* 00AD */    0x83C7, 0x0000, 0x7B5A, 
-/* 00AE */    0x83F6, 0x0000, 0x7B5B, 
-/* 00AF */    0x8448, 0x0000, 0x7B5C, 
-/* 00B0 */    0x84B4, 0x0000, 0x7B5D, 
-/* 00B1 */    0x84DC, 0x0000, 0x7925, 
-/* 00B2 */    0x8553, 0x8559, 0x0126, 
-/* 00B3 */    0x856B, 0x0000, 0x7B60, 
-/* 00B4 */    0x85B0, 0x0000, 0x7B62, 
-/* 00B5 */    0x8807, 0x0000, 0x7B65, 
-/* 00B6 */    0x88F5, 0x0000, 0x7B66, 
-/* 00B7 */    0x891C, 0x0000, 0x7922, 
-/* 00B8 */    0x8A12, 0x0000, 0x7B67, 
-/* 00B9 */    0x8A37, 0x0000, 0x7B68, 
-/* 00BA */    0x8A79, 0x0000, 0x7B69, 
-/* 00BB */    0x8AA7, 0x0000, 0x7B6A, 
-/* 00BC */    0x8ABE, 0x0000, 0x7B6B, 
-/* 00BD */    0x8ADF, 0x0000, 0x7B6C, 
-/* 00BE */    0x8AF6, 0x0000, 0x7B6E, 
-/* 00BF */    0x8B53, 0x0000, 0x7B6F, 
-/* 00C0 */    0x8B7F, 0x0000, 0x7B70, 
-/* 00C1 */    0x8CF0, 0x8CF4, 0x012D, 
-/* 00C2 */    0x8D12, 0x0000, 0x7B73, 
-/* 00C3 */    0x8D76, 0x0000, 0x7B74, 
-/* 00C4 */    0x8ECF, 0x0000, 0x7B76, 
-/* 00C5 */    0x9067, 0x0000, 0x7B79, 
-/* 00C6 */    0x90DE, 0x0000, 0x7B7A, 
-/* 00C7 */    0x9115, 0x0000, 0x7B7C, 
-/* 00C8 */    0x9127, 0x0000, 0x7B7D, 
-/* 00C9 */    0x91D7, 0x91EE, 0x0132, 
-/* 00CA */    0x9206, 0x9210, 0x014A, 
-/* 00CB */    0x9239, 0x9240, 0x0155, 
-/* 00CC */    0x924E, 0x9259, 0x015D, 
-/* 00CD */    0x9267, 0x0000, 0x7C31, 
-/* 00CE */    0x9277, 0x9278, 0x0169, 
-/* 00CF */    0x9288, 0x0000, 0x7924, 
-/* 00D0 */    0x92A7, 0x0000, 0x7C32, 
-/* 00D1 */    0x92D0, 0x92E7, 0x016B, 
-/* 00D2 */    0x92F9, 0x9302, 0x0183, 
-/* 00D3 */    0x931D, 0x9325, 0x018D, 
-/* 00D4 */    0x9348, 0x0000, 0x7923, 
-/* 00D5 */    0x9357, 0x0000, 0x7C46, 
-/* 00D6 */    0x9370, 0x0000, 0x7C45, 
-/* 00D7 */    0x93A4, 0x0000, 0x7C47, 
-/* 00D8 */    0x93C6, 0x0000, 0x7C48, 
-/* 00D9 */    0x93DE, 0x0000, 0x7C49, 
-/* 00DA */    0x93F8, 0x0000, 0x7C4A, 
-/* 00DB */    0x9431, 0x0000, 0x7C4B, 
-/* 00DC */    0x9445, 0x9448, 0x0196, 
-/* 00DD */    0x9592, 0x0000, 0x7C4E, 
-/* 00DE */    0x969D, 0x0000, 0x7C51, 
-/* 00DF */    0x96AF, 0x0000, 0x7C52, 
-/* 00E0 */    0x9733, 0x9755, 0x019A, 
-/* 00E1 */    0x9857, 0x0000, 0x7C5A, 
-/* 00E2 */    0x9865, 0x0000, 0x7C5B, 
-/* 00E3 */    0x9927, 0x0000, 0x7C5E, 
-/* 00E4 */    0x999E, 0x0000, 0x7C60, 
-/* 00E5 */    0x9A4E, 0x0000, 0x7C61, 
-/* 00E6 */    0x9AD9, 0x9ADC, 0x01BD, 
-/* 00E7 */    0x9B72, 0x9B75, 0x01C1, 
-/* 00E8 */    0x9B8F, 0x0000, 0x7C66, 
-/* 00E9 */    0x9BB1, 0x9BBB, 0x01C5, 
-/* 00EA */    0x9C00, 0x0000, 0x7C69, 
-/* 00EB */    0x9D6B, 0x9D70, 0x01D0, 
-/* 00EC */    0x9E19, 0x0000, 0x7C6D, 
-/* 00ED */    0x9ED1, 0x0000, 0x7C6E, 
-/* 00EE */    0xF929, 0x0000, 0x7A46, 
-/* 00EF */    0xF9DC, 0x0000, 0x7C4F, 
-/* 00F0 */    0xFA0E, 0xFA2D, 0x01D6, 
-/* 00F1 */    0xFF02, 0xFF07, 0x01F6, 
-/* 00F2 */    0xFFE2, 0xFFE4, 0x01FC, 
+/*       Offset=0x0046   Start of MapCell Array */ 
+/* 0000 */    0x2160, 0x2169, 0x2D35, 
+/* 0001 */    0x2170, 0x2179, 0x7C71, 
+/* 0002 */    0x2460, 0x2473, 0x2D21, 
+/* 0003 */    0x2116, 0x2121, 0x0000, 
+/* 0004 */    0x2211, 0x2235, 0x000C, 
+/* 0005 */    0x2252, 0x0000, 0x2D70, 
+/* 0006 */    0x2261, 0x0000, 0x2D71, 
+/* 0007 */    0x22A5, 0x0000, 0x2D76, 
+/* 0008 */    0x22BF, 0x0000, 0x2D79, 
+/* 0009 */    0x301D, 0x301F, 0x0031, 
+/* 000A */    0x3231, 0x3239, 0x0034, 
+/* 000B */    0x32A4, 0x32A8, 0x003D, 
+/* 000C */    0x3303, 0x333B, 0x0042, 
+/* 000D */    0x3349, 0x3357, 0x007B, 
+/* 000E */    0x337B, 0x337E, 0x008A, 
+/* 000F */    0x338E, 0x338F, 0x008E, 
+/* 0010 */    0x339C, 0x33A1, 0x0090, 
+/* 0011 */    0x33C4, 0x33CD, 0x0096, 
+/* 0012 */    0x4E28, 0x0000, 0x792D, 
+/* 0013 */    0x4EE1, 0x0000, 0x792E, 
+/* 0014 */    0x4EFC, 0x4F03, 0x00A0, 
+/* 0015 */    0x4F39, 0x0000, 0x7932, 
+/* 0016 */    0x4F56, 0x0000, 0x7933, 
+/* 0017 */    0x4F8A, 0x4F9A, 0x00A8, 
+/* 0018 */    0x4FC9, 0x4FCD, 0x00B9, 
+/* 0019 */    0x4FFF, 0x0000, 0x793B, 
+/* 001A */    0x501E, 0x5022, 0x00BE, 
+/* 001B */    0x5040, 0x5046, 0x00C3, 
+/* 001C */    0x5070, 0x0000, 0x793E, 
+/* 001D */    0x5094, 0x0000, 0x7940, 
+/* 001E */    0x50D8, 0x0000, 0x7942, 
+/* 001F */    0x50F4, 0x0000, 0x7941, 
+/* 0020 */    0x514A, 0x0000, 0x7943, 
+/* 0021 */    0x5164, 0x0000, 0x7944, 
+/* 0022 */    0x519D, 0x0000, 0x7945, 
+/* 0023 */    0x51BE, 0x0000, 0x7946, 
+/* 0024 */    0x51EC, 0x0000, 0x7947, 
+/* 0025 */    0x5215, 0x0000, 0x7948, 
+/* 0026 */    0x529C, 0x52AF, 0x00CA, 
+/* 0027 */    0x52C0, 0x0000, 0x794B, 
+/* 0028 */    0x52DB, 0x0000, 0x794C, 
+/* 0029 */    0x5300, 0x5307, 0x00DE, 
+/* 002A */    0x5324, 0x0000, 0x794F, 
+/* 002B */    0x5372, 0x0000, 0x7950, 
+/* 002C */    0x5393, 0x0000, 0x7951, 
+/* 002D */    0x53B2, 0x0000, 0x7952, 
+/* 002E */    0x53DD, 0x0000, 0x7953, 
+/* 002F */    0x548A, 0x0000, 0x7956, 
+/* 0030 */    0x549C, 0x0000, 0x7955, 
+/* 0031 */    0x54A9, 0x0000, 0x7957, 
+/* 0032 */    0x54FF, 0x0000, 0x7958, 
+/* 0033 */    0x5586, 0x0000, 0x7959, 
+/* 0034 */    0x5759, 0x0000, 0x795A, 
+/* 0035 */    0x5765, 0x0000, 0x795B, 
+/* 0036 */    0x57AC, 0x0000, 0x795C, 
+/* 0037 */    0x57C7, 0x57C8, 0x00E6, 
+/* 0038 */    0x589E, 0x0000, 0x7961, 
+/* 0039 */    0x58B2, 0x0000, 0x7962, 
+/* 003A */    0x590B, 0x0000, 0x7963, 
+/* 003B */    0x5953, 0x5963, 0x00E8, 
+/* 003C */    0x59A4, 0x0000, 0x7968, 
+/* 003D */    0x59BA, 0x0000, 0x7969, 
+/* 003E */    0x5B56, 0x0000, 0x796A, 
+/* 003F */    0x5BC0, 0x0000, 0x796B, 
+/* 0040 */    0x5BD8, 0x0000, 0x796D, 
+/* 0041 */    0x5BEC, 0x0000, 0x796E, 
+/* 0042 */    0x5C1E, 0x0000, 0x796F, 
+/* 0043 */    0x5CA6, 0x0000, 0x7970, 
+/* 0044 */    0x5CBA, 0x0000, 0x7971, 
+/* 0045 */    0x5CF5, 0x0000, 0x7972, 
+/* 0046 */    0x5D27, 0x0000, 0x7973, 
+/* 0047 */    0x5D42, 0x0000, 0x7976, 
+/* 0048 */    0x5D53, 0x0000, 0x7974, 
+/* 0049 */    0x5D6D, 0x0000, 0x7977, 
+/* 004A */    0x5DB8, 0x5DB9, 0x00F9, 
+/* 004B */    0x5DD0, 0x0000, 0x797A, 
+/* 004C */    0x5F21, 0x0000, 0x797B, 
+/* 004D */    0x5F34, 0x0000, 0x797C, 
+/* 004E */    0x5F45, 0x0000, 0x792C, 
+/* 004F */    0x5F67, 0x0000, 0x797D, 
+/* 0050 */    0x5FB7, 0x0000, 0x797E, 
+/* 0051 */    0x5FDE, 0x0000, 0x7A21, 
+/* 0052 */    0x605D, 0x0000, 0x7A22, 
+/* 0053 */    0x6085, 0x608A, 0x00FB, 
+/* 0054 */    0x60D5, 0x60DE, 0x0101, 
+/* 0055 */    0x60F2, 0x0000, 0x7A28, 
+/* 0056 */    0x6111, 0x0000, 0x7A29, 
+/* 0057 */    0x6120, 0x0000, 0x7A27, 
+/* 0058 */    0x6130, 0x6137, 0x010B, 
+/* 0059 */    0x6198, 0x0000, 0x7A2C, 
+/* 005A */    0x6213, 0x0000, 0x7A2D, 
+/* 005B */    0x62A6, 0x0000, 0x7A2E, 
+/* 005C */    0x63F5, 0x0000, 0x7A2F, 
+/* 005D */    0x6460, 0x0000, 0x7A30, 
+/* 005E */    0x649D, 0x0000, 0x7A31, 
+/* 005F */    0x64CE, 0x0000, 0x7A32, 
+/* 0060 */    0x654E, 0x0000, 0x7A33, 
+/* 0061 */    0x6600, 0x6609, 0x0113, 
+/* 0062 */    0x6615, 0x663B, 0x011D, 
+/* 0063 */    0x6657, 0x6659, 0x0144, 
+/* 0064 */    0x6665, 0x0000, 0x7A3B, 
+/* 0065 */    0x6673, 0x0000, 0x7A3F, 
+/* 0066 */    0x6699, 0x66A0, 0x0147, 
+/* 0067 */    0x66B2, 0x0000, 0x7A42, 
+/* 0068 */    0x66BF, 0x0000, 0x7A43, 
+/* 0069 */    0x66FA, 0x66FB, 0x014F, 
+/* 006A */    0x670E, 0x0000, 0x7A45, 
+/* 006B */    0x6766, 0x0000, 0x7A47, 
+/* 006C */    0x67BB, 0x67C0, 0x0151, 
+/* 006D */    0x6801, 0x0000, 0x7A4B, 
+/* 006E */    0x6844, 0x0000, 0x7A4C, 
+/* 006F */    0x6852, 0x0000, 0x7A49, 
+/* 0070 */    0x68C8, 0x68CF, 0x0157, 
+/* 0071 */    0x6968, 0x0000, 0x7A4F, 
+/* 0072 */    0x6998, 0x0000, 0x7A51, 
+/* 0073 */    0x69E2, 0x0000, 0x7A52, 
+/* 0074 */    0x6A30, 0x0000, 0x7A53, 
+/* 0075 */    0x6A46, 0x0000, 0x7A55, 
+/* 0076 */    0x6A6B, 0x6A7E, 0x015F, 
+/* 0077 */    0x6AE2, 0x6AE4, 0x0173, 
+/* 0078 */    0x6BD6, 0x0000, 0x7A5A, 
+/* 0079 */    0x6C3F, 0x0000, 0x7A5B, 
+/* 007A */    0x6C5C, 0x0000, 0x7A5C, 
+/* 007B */    0x6C6F, 0x0000, 0x7A5E, 
+/* 007C */    0x6C86, 0x0000, 0x7A5D, 
+/* 007D */    0x6CDA, 0x0000, 0x7A5F, 
+/* 007E */    0x6D04, 0x0000, 0x7A60, 
+/* 007F */    0x6D6F, 0x0000, 0x7A62, 
+/* 0080 */    0x6D87, 0x0000, 0x7A61, 
+/* 0081 */    0x6D96, 0x0000, 0x7A63, 
+/* 0082 */    0x6DAC, 0x0000, 0x7A64, 
+/* 0083 */    0x6DCF, 0x0000, 0x7A65, 
+/* 0084 */    0x6DF2, 0x6DFC, 0x0176, 
+/* 0085 */    0x6E27, 0x0000, 0x7A6B, 
+/* 0086 */    0x6E39, 0x6E3C, 0x0181, 
+/* 0087 */    0x6E5C, 0x0000, 0x7A6A, 
+/* 0088 */    0x6EBF, 0x0000, 0x7A6D, 
+/* 0089 */    0x6F88, 0x0000, 0x7A6E, 
+/* 008A */    0x6FB5, 0x0000, 0x7A6F, 
+/* 008B */    0x6FF5, 0x0000, 0x7A70, 
+/* 008C */    0x7005, 0x7007, 0x0185, 
+/* 008D */    0x7028, 0x0000, 0x7A73, 
+/* 008E */    0x7085, 0x0000, 0x7A74, 
+/* 008F */    0x70AB, 0x0000, 0x7A75, 
+/* 0090 */    0x70BB, 0x0000, 0x7927, 
+/* 0091 */    0x7104, 0x710F, 0x0188, 
+/* 0092 */    0x7146, 0x7147, 0x0194, 
+/* 0093 */    0x715C, 0x0000, 0x7A78, 
+/* 0094 */    0x71C1, 0x0000, 0x7A7C, 
+/* 0095 */    0x71FE, 0x0000, 0x7A7D, 
+/* 0096 */    0x72B1, 0x0000, 0x7A7E, 
+/* 0097 */    0x72BE, 0x0000, 0x7B21, 
+/* 0098 */    0x7324, 0x0000, 0x7B22, 
+/* 0099 */    0x7377, 0x0000, 0x7B24, 
+/* 009A */    0x73BD, 0x0000, 0x7B25, 
+/* 009B */    0x73C9, 0x73D6, 0x0196, 
+/* 009C */    0x73E3, 0x0000, 0x7B28, 
+/* 009D */    0x73F5, 0x0000, 0x7B2B, 
+/* 009E */    0x7407, 0x0000, 0x7B2A, 
+/* 009F */    0x7426, 0x742E, 0x01A4, 
+/* 00A0 */    0x7462, 0x0000, 0x7B30, 
+/* 00A1 */    0x7489, 0x0000, 0x7B31, 
+/* 00A2 */    0x749F, 0x0000, 0x7B32, 
+/* 00A3 */    0x7501, 0x0000, 0x7B33, 
+/* 00A4 */    0x752F, 0x0000, 0x796C, 
+/* 00A5 */    0x756F, 0x0000, 0x7B34, 
+/* 00A6 */    0x7682, 0x0000, 0x7B35, 
+/* 00A7 */    0x769B, 0x76A6, 0x01AD, 
+/* 00A8 */    0x7746, 0x0000, 0x7B3B, 
+/* 00A9 */    0x7821, 0x0000, 0x7B3D, 
+/* 00AA */    0x784E, 0x0000, 0x7B3E, 
+/* 00AB */    0x7864, 0x0000, 0x7B3F, 
+/* 00AC */    0x787A, 0x0000, 0x7B40, 
+/* 00AD */    0x7930, 0x0000, 0x7B41, 
+/* 00AE */    0x7994, 0x799B, 0x01B9, 
+/* 00AF */    0x7AD1, 0x0000, 0x7B48, 
+/* 00B0 */    0x7AE7, 0x7AEB, 0x01C1, 
+/* 00B1 */    0x7B9E, 0x0000, 0x7B4C, 
+/* 00B2 */    0x7D48, 0x0000, 0x7B4E, 
+/* 00B3 */    0x7D5C, 0x0000, 0x7B4F, 
+/* 00B4 */    0x7DA0, 0x0000, 0x7B51, 
+/* 00B5 */    0x7DB7, 0x0000, 0x7B50, 
+/* 00B6 */    0x7DD6, 0x0000, 0x7B52, 
+/* 00B7 */    0x7E52, 0x0000, 0x7B53, 
+/* 00B8 */    0x7E8A, 0x0000, 0x7921, 
+/* 00B9 */    0x7F47, 0x0000, 0x7B54, 
+/* 00BA */    0x7FA1, 0x0000, 0x7B55, 
+/* 00BB */    0x8301, 0x0000, 0x7B57, 
+/* 00BC */    0x8362, 0x0000, 0x7B58, 
+/* 00BD */    0x837F, 0x0000, 0x7B59, 
+/* 00BE */    0x83C7, 0x0000, 0x7B5A, 
+/* 00BF */    0x83F6, 0x0000, 0x7B5B, 
+/* 00C0 */    0x8448, 0x0000, 0x7B5C, 
+/* 00C1 */    0x84B4, 0x0000, 0x7B5D, 
+/* 00C2 */    0x84DC, 0x0000, 0x7925, 
+/* 00C3 */    0x8553, 0x8559, 0x01C6, 
+/* 00C4 */    0x856B, 0x0000, 0x7B60, 
+/* 00C5 */    0x85B0, 0x0000, 0x7B62, 
+/* 00C6 */    0x8807, 0x0000, 0x7B65, 
+/* 00C7 */    0x88F5, 0x0000, 0x7B66, 
+/* 00C8 */    0x891C, 0x0000, 0x7922, 
+/* 00C9 */    0x8A12, 0x0000, 0x7B67, 
+/* 00CA */    0x8A37, 0x0000, 0x7B68, 
+/* 00CB */    0x8A79, 0x0000, 0x7B69, 
+/* 00CC */    0x8AA7, 0x0000, 0x7B6A, 
+/* 00CD */    0x8ABE, 0x0000, 0x7B6B, 
+/* 00CE */    0x8ADF, 0x0000, 0x7B6C, 
+/* 00CF */    0x8AF6, 0x0000, 0x7B6E, 
+/* 00D0 */    0x8B53, 0x0000, 0x7B6F, 
+/* 00D1 */    0x8B7F, 0x0000, 0x7B70, 
+/* 00D2 */    0x8CF0, 0x8CF4, 0x01CD, 
+/* 00D3 */    0x8D12, 0x0000, 0x7B73, 
+/* 00D4 */    0x8D76, 0x0000, 0x7B74, 
+/* 00D5 */    0x8ECF, 0x0000, 0x7B76, 
+/* 00D6 */    0x9067, 0x0000, 0x7B79, 
+/* 00D7 */    0x90DE, 0x0000, 0x7B7A, 
+/* 00D8 */    0x9115, 0x0000, 0x7B7C, 
+/* 00D9 */    0x9127, 0x0000, 0x7B7D, 
+/* 00DA */    0x91D7, 0x91EE, 0x01D2, 
+/* 00DB */    0x9206, 0x9210, 0x01EA, 
+/* 00DC */    0x9239, 0x9240, 0x01F5, 
+/* 00DD */    0x924E, 0x9259, 0x01FD, 
+/* 00DE */    0x9267, 0x0000, 0x7C31, 
+/* 00DF */    0x9277, 0x9278, 0x0209, 
+/* 00E0 */    0x9288, 0x0000, 0x7924, 
+/* 00E1 */    0x92A7, 0x0000, 0x7C32, 
+/* 00E2 */    0x92D0, 0x92E7, 0x020B, 
+/* 00E3 */    0x92F9, 0x9302, 0x0223, 
+/* 00E4 */    0x931D, 0x9325, 0x022D, 
+/* 00E5 */    0x9348, 0x0000, 0x7923, 
+/* 00E6 */    0x9357, 0x0000, 0x7C46, 
+/* 00E7 */    0x9370, 0x0000, 0x7C45, 
+/* 00E8 */    0x93A4, 0x0000, 0x7C47, 
+/* 00E9 */    0x93C6, 0x0000, 0x7C48, 
+/* 00EA */    0x93DE, 0x0000, 0x7C49, 
+/* 00EB */    0x93F8, 0x0000, 0x7C4A, 
+/* 00EC */    0x9431, 0x0000, 0x7C4B, 
+/* 00ED */    0x9445, 0x9448, 0x0236, 
+/* 00EE */    0x9592, 0x0000, 0x7C4E, 
+/* 00EF */    0x969D, 0x0000, 0x7C51, 
+/* 00F0 */    0x96AF, 0x0000, 0x7C52, 
+/* 00F1 */    0x9733, 0x9755, 0x023A, 
+/* 00F2 */    0x9857, 0x0000, 0x7C5A, 
+/* 00F3 */    0x9865, 0x0000, 0x7C5B, 
+/* 00F4 */    0x9927, 0x0000, 0x7C5E, 
+/* 00F5 */    0x999E, 0x0000, 0x7C60, 
+/* 00F6 */    0x9A4E, 0x0000, 0x7C61, 
+/* 00F7 */    0x9AD9, 0x9ADC, 0x025D, 
+/* 00F8 */    0x9B72, 0x9B75, 0x0261, 
+/* 00F9 */    0x9B8F, 0x0000, 0x7C66, 
+/* 00FA */    0x9BB1, 0x9BBB, 0x0265, 
+/* 00FB */    0x9C00, 0x0000, 0x7C69, 
+/* 00FC */    0x9D6B, 0x9D70, 0x0270, 
+/* 00FD */    0x9E19, 0x0000, 0x7C6D, 
+/* 00FE */    0x9ED1, 0x0000, 0x7C6E, 
+/* 00FF */    0xF929, 0x0000, 0x7A46, 
+/* 0100 */    0xF9DC, 0x0000, 0x7C4F, 
+/* 0101 */    0xFA0E, 0xFA2D, 0x0276, 
+/* 0102 */    0xFF02, 0xFF07, 0x0296, 
+/* 0103 */    0xFFE2, 0xFFE4, 0x029C, 
 /*-------------------------------------------------------*/
-/*       Offset=0x031A   Start of MappingTable */ 
+/*       Offset=0x0352   Start of MappingTable */ 
 
-/* 0000 */    0x792F, 0xFFFD, 0xFFFD, 0xFFFD, 0x7930, 0xFFFD, 0xFFFD, 0x7931, 
-/* 0008 */    0x7935, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 
-/* 0010 */    0x7934, 0xFFFD, 0x7937, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 
-/* 0018 */    0x7936, 0x7926, 0xFFFD, 0xFFFD, 0xFFFD, 0x7938, 0x793C, 0xFFFD, 
-/* 0020 */    0xFFFD, 0xFFFD, 0x793A, 0x7939, 0xFFFD, 0x793F, 0xFFFD, 0xFFFD, 
-/* 0028 */    0xFFFD, 0x793D, 0x7949, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 
-/* 0030 */    0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0x794A, 0xFFFD, 0xFFFD, 0xFFFD, 
-/* 0038 */    0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0x7B3C, 0x794D, 0xFFFD, 
-/* 0040 */    0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0x794E, 0x795E, 0x795D, 
-/* 0048 */    0x7964, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 
-/* 0050 */    0x7965, 0xFFFD, 0x7966, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 
-/* 0058 */    0x7967, 0x7978, 0x7979, 0x7A23, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 
-/* 0060 */    0x7A24, 0x7A26, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 
-/* 0068 */    0xFFFD, 0xFFFD, 0x7A25, 0x7A2B, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 
-/* 0070 */    0xFFFD, 0xFFFD, 0x7A2A, 0x7A34, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 
-/* 0078 */    0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0x7A37, 0x7A35, 0xFFFD, 0xFFFD, 
-/* 0080 */    0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0x7A39, 0xFFFD, 
-/* 0088 */    0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0x7A3A, 0xFFFD, 0xFFFD, 0xFFFD, 
-/* 0090 */    0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0x7A38, 0xFFFD, 
-/* 0098 */    0xFFFD, 0x7928, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 
-/* 00A0 */    0xFFFD, 0xFFFD, 0xFFFD, 0x7A36, 0x7A3C, 0xFFFD, 0x7A3D, 0x7A40, 
-/* 00A8 */    0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0x7A41, 0x7A44, 
-/* 00B0 */    0x792B, 0x7A48, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0x7A4A, 0x7929, 
-/* 00B8 */    0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0x7A4D, 0x7A54, 
-/* 00C0 */    0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0x7A56, 
-/* 00C8 */    0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 
-/* 00D0 */    0xFFFD, 0xFFFD, 0x7A57, 0x7A58, 0xFFFD, 0x7A59, 0x7A67, 0xFFFD, 
-/* 00D8 */    0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0x7A66, 0xFFFD, 0xFFFD, 0xFFFD, 
-/* 00E0 */    0x7A68, 0x7A69, 0xFFFD, 0xFFFD, 0x7A6C, 0x7A71, 0xFFFD, 0x7A72, 
-/* 00E8 */    0x7A77, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 
-/* 00F0 */    0xFFFD, 0xFFFD, 0xFFFD, 0x7A76, 0x7A79, 0x7A7A, 0x7B26, 0xFFFD, 
-/* 00F8 */    0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0x7B29, 
-/* 0100 */    0xFFFD, 0xFFFD, 0xFFFD, 0x7B27, 0x7B2C, 0xFFFD, 0xFFFD, 0x7B2E, 
-/* 0108 */    0x7B2D, 0xFFFD, 0xFFFD, 0xFFFD, 0x7B2F, 0x7B38, 0x7B36, 0xFFFD, 
-/* 0110 */    0x7B37, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 
-/* 0118 */    0x7B39, 0x7B45, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 
-/* 0120 */    0x7B47, 0x7B49, 0xFFFD, 0xFFFD, 0xFFFD, 0x7B4B, 0x7B5E, 0xFFFD, 
-/* 0128 */    0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0x7B5F, 0x7B71, 0xFFFD, 0xFFFD, 
-/* 0130 */    0xFFFD, 0x7B72, 0x7C21, 0xFFFD, 0xFFFD, 0x7B7E, 0xFFFD, 0xFFFD, 
-/* 0138 */    0xFFFD, 0x7C22, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0x7C25, 
-/* 0140 */    0x7C26, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 
-/* 0148 */    0x7C23, 0x7C24, 0x7C27, 0xFFFD, 0xFFFD, 0xFFFD, 0x7C29, 0xFFFD, 
-/* 0150 */    0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0x7C28, 0x7C30, 0x7C2A, 0xFFFD, 
-/* 0158 */    0x7C2C, 0xFFFD, 0xFFFD, 0xFFFD, 0x7C2B, 0x7C2D, 0xFFFD, 0xFFFD, 
-/* 0160 */    0x7C2F, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 
-/* 0168 */    0x7C2E, 0x7C33, 0x7C34, 0x7C38, 0xFFFD, 0xFFFD, 0x7C3C, 0xFFFD, 
-/* 0170 */    0x7C3A, 0xFFFD, 0x7C36, 0xFFFD, 0x7C37, 0xFFFD, 0xFFFD, 0xFFFD, 
-/* 0178 */    0xFFFD, 0xFFFD, 0xFFFD, 0x7C3B, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 
-/* 0180 */    0xFFFD, 0xFFFD, 0x7C35, 0x792A, 0xFFFD, 0x7C3F, 0xFFFD, 0xFFFD, 
-/* 0188 */    0xFFFD, 0x7C42, 0xFFFD, 0xFFFD, 0x7C44, 0x7C43, 0x7C41, 0xFFFD, 
-/* 0190 */    0xFFFD, 0x7C3E, 0xFFFD, 0xFFFD, 0xFFFD, 0x7C3D, 0x7C4C, 0xFFFD, 
-/* 0198 */    0xFFFD, 0x7C4D, 0x7C53, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 
-/* 01A0 */    0xFFFD, 0xFFFD, 0x7C54, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 
-/* 01A8 */    0xFFFD, 0xFFFD, 0x7C55, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 
-/* 01B0 */    0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0x7C56, 0xFFFD, 0x7C57, 0xFFFD, 
-/* 01B8 */    0x7C58, 0xFFFD, 0xFFFD, 0xFFFD, 0x7C59, 0x7C62, 0xFFFD, 0xFFFD, 
-/* 01C0 */    0x7C63, 0x7C65, 0xFFFD, 0xFFFD, 0x7C64, 0x7C67, 0xFFFD, 0xFFFD, 
-/* 01C8 */    0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0x7C68, 
-/* 01D0 */    0x7C6B, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0x7C6A, 0x7954, 0x795F, 
-/* 01D8 */    0x7960, 0x7975, 0x7A3E, 0x7A4E, 0x7A50, 0x7A7B, 0x7B23, 0x7B3A, 
-/* 01E0 */    0x7B42, 0x7B43, 0x7B44, 0x7B46, 0x7B4A, 0x7B4D, 0x7B56, 0x7B61, 
-/* 01E8 */    0x7B63, 0x7B64, 0x7B6D, 0x7B75, 0x7B77, 0x7B78, 0x7B7B, 0x7C39, 
-/* 01F0 */    0x7C40, 0x7C50, 0x7C5C, 0x7C5D, 0x7C5F, 0x7C6C, 0x7C7E, 0xFFFD, 
-/* 01F8 */    0xFFFD, 0xFFFD, 0xFFFD, 0x7C7D, 0x7C7B, 0xFFFD, 0x7C7C, 
-/*	End of table Total Length = 0x0519 * 2 */
+/* 0000 */    0x2D62, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 
+/* 0008 */    0xFFFD, 0xFFFD, 0xFFFD, 0x2D64, 0x2D74, 0xFFFD, 0xFFFD, 0xFFFD, 
+/* 0010 */    0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0x2D75, 0xFFFD, 0xFFFD, 
+/* 0018 */    0xFFFD, 0xFFFD, 0x2D78, 0x2D77, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 
+/* 0020 */    0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0x2D7B, 0x2D7C, 0x2D72, 0xFFFD, 
+/* 0028 */    0xFFFD, 0x2D73, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 
+/* 0030 */    0x2D7A, 0x2D60, 0xFFFD, 0x2D61, 0x2D6A, 0x2D6B, 0xFFFD, 0xFFFD, 
+/* 0038 */    0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0x2D6C, 0x2D65, 0x2D66, 0x2D67, 
+/* 0040 */    0x2D68, 0x2D69, 0x2D46, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 
+/* 0048 */    0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0x2D4A, 0xFFFD, 0xFFFD, 0xFFFD, 
+/* 0050 */    0xFFFD, 0xFFFD, 0xFFFD, 0x2D41, 0xFFFD, 0xFFFD, 0xFFFD, 0x2D44, 
+/* 0058 */    0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 
+/* 0060 */    0xFFFD, 0x2D42, 0x2D4C, 0xFFFD, 0xFFFD, 0x2D4B, 0x2D45, 0xFFFD, 
+/* 0068 */    0xFFFD, 0xFFFD, 0x2D4D, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 
+/* 0070 */    0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0x2D47, 0xFFFD, 0xFFFD, 
+/* 0078 */    0xFFFD, 0xFFFD, 0x2D4F, 0x2D40, 0x2D4E, 0xFFFD, 0xFFFD, 0x2D43, 
+/* 0080 */    0xFFFD, 0xFFFD, 0xFFFD, 0x2D48, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 
+/* 0088 */    0xFFFD, 0x2D49, 0x2D5F, 0x2D6F, 0x2D6E, 0x2D6D, 0x2D53, 0x2D54, 
+/* 0090 */    0x2D50, 0x2D51, 0x2D52, 0xFFFD, 0xFFFD, 0x2D56, 0x2D55, 0xFFFD, 
+/* 0098 */    0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0x2D63, 
+/* 00A0 */    0x792F, 0xFFFD, 0xFFFD, 0xFFFD, 0x7930, 0xFFFD, 0xFFFD, 0x7931, 
+/* 00A8 */    0x7935, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 
+/* 00B0 */    0x7934, 0xFFFD, 0x7937, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 
+/* 00B8 */    0x7936, 0x7926, 0xFFFD, 0xFFFD, 0xFFFD, 0x7938, 0x793C, 0xFFFD, 
+/* 00C0 */    0xFFFD, 0xFFFD, 0x793A, 0x7939, 0xFFFD, 0x793F, 0xFFFD, 0xFFFD, 
+/* 00C8 */    0xFFFD, 0x793D, 0x7949, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 
+/* 00D0 */    0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0x794A, 0xFFFD, 0xFFFD, 0xFFFD, 
+/* 00D8 */    0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0x7B3C, 0x794D, 0xFFFD, 
+/* 00E0 */    0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0x794E, 0x795E, 0x795D, 
+/* 00E8 */    0x7964, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 
+/* 00F0 */    0x7965, 0xFFFD, 0x7966, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 
+/* 00F8 */    0x7967, 0x7978, 0x7979, 0x7A23, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 
+/* 0100 */    0x7A24, 0x7A26, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 
+/* 0108 */    0xFFFD, 0xFFFD, 0x7A25, 0x7A2B, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 
+/* 0110 */    0xFFFD, 0xFFFD, 0x7A2A, 0x7A34, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 
+/* 0118 */    0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0x7A37, 0x7A35, 0xFFFD, 0xFFFD, 
+/* 0120 */    0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0x7A39, 0xFFFD, 
+/* 0128 */    0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0x7A3A, 0xFFFD, 0xFFFD, 0xFFFD, 
+/* 0130 */    0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0x7A38, 0xFFFD, 
+/* 0138 */    0xFFFD, 0x7928, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 
+/* 0140 */    0xFFFD, 0xFFFD, 0xFFFD, 0x7A36, 0x7A3C, 0xFFFD, 0x7A3D, 0x7A40, 
+/* 0148 */    0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0x7A41, 0x7A44, 
+/* 0150 */    0x792B, 0x7A48, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0x7A4A, 0x7929, 
+/* 0158 */    0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0x7A4D, 0x7A54, 
+/* 0160 */    0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0x7A56, 
+/* 0168 */    0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 
+/* 0170 */    0xFFFD, 0xFFFD, 0x7A57, 0x7A58, 0xFFFD, 0x7A59, 0x7A67, 0xFFFD, 
+/* 0178 */    0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0x7A66, 0xFFFD, 0xFFFD, 0xFFFD, 
+/* 0180 */    0x7A68, 0x7A69, 0xFFFD, 0xFFFD, 0x7A6C, 0x7A71, 0xFFFD, 0x7A72, 
+/* 0188 */    0x7A77, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 
+/* 0190 */    0xFFFD, 0xFFFD, 0xFFFD, 0x7A76, 0x7A79, 0x7A7A, 0x7B26, 0xFFFD, 
+/* 0198 */    0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0x7B29, 
+/* 01A0 */    0xFFFD, 0xFFFD, 0xFFFD, 0x7B27, 0x7B2C, 0xFFFD, 0xFFFD, 0x7B2E, 
+/* 01A8 */    0x7B2D, 0xFFFD, 0xFFFD, 0xFFFD, 0x7B2F, 0x7B38, 0x7B36, 0xFFFD, 
+/* 01B0 */    0x7B37, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 
+/* 01B8 */    0x7B39, 0x7B45, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 
+/* 01C0 */    0x7B47, 0x7B49, 0xFFFD, 0xFFFD, 0xFFFD, 0x7B4B, 0x7B5E, 0xFFFD, 
+/* 01C8 */    0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0x7B5F, 0x7B71, 0xFFFD, 0xFFFD, 
+/* 01D0 */    0xFFFD, 0x7B72, 0x7C21, 0xFFFD, 0xFFFD, 0x7B7E, 0xFFFD, 0xFFFD, 
+/* 01D8 */    0xFFFD, 0x7C22, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0x7C25, 
+/* 01E0 */    0x7C26, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 
+/* 01E8 */    0x7C23, 0x7C24, 0x7C27, 0xFFFD, 0xFFFD, 0xFFFD, 0x7C29, 0xFFFD, 
+/* 01F0 */    0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0x7C28, 0x7C30, 0x7C2A, 0xFFFD, 
+/* 01F8 */    0x7C2C, 0xFFFD, 0xFFFD, 0xFFFD, 0x7C2B, 0x7C2D, 0xFFFD, 0xFFFD, 
+/* 0200 */    0x7C2F, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 
+/* 0208 */    0x7C2E, 0x7C33, 0x7C34, 0x7C38, 0xFFFD, 0xFFFD, 0x7C3C, 0xFFFD, 
+/* 0210 */    0x7C3A, 0xFFFD, 0x7C36, 0xFFFD, 0x7C37, 0xFFFD, 0xFFFD, 0xFFFD, 
+/* 0218 */    0xFFFD, 0xFFFD, 0xFFFD, 0x7C3B, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 
+/* 0220 */    0xFFFD, 0xFFFD, 0x7C35, 0x792A, 0xFFFD, 0x7C3F, 0xFFFD, 0xFFFD, 
+/* 0228 */    0xFFFD, 0x7C42, 0xFFFD, 0xFFFD, 0x7C44, 0x7C43, 0x7C41, 0xFFFD, 
+/* 0230 */    0xFFFD, 0x7C3E, 0xFFFD, 0xFFFD, 0xFFFD, 0x7C3D, 0x7C4C, 0xFFFD, 
+/* 0238 */    0xFFFD, 0x7C4D, 0x7C53, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 
+/* 0240 */    0xFFFD, 0xFFFD, 0x7C54, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 
+/* 0248 */    0xFFFD, 0xFFFD, 0x7C55, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 
+/* 0250 */    0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0x7C56, 0xFFFD, 0x7C57, 0xFFFD, 
+/* 0258 */    0x7C58, 0xFFFD, 0xFFFD, 0xFFFD, 0x7C59, 0x7C62, 0xFFFD, 0xFFFD, 
+/* 0260 */    0x7C63, 0x7C65, 0xFFFD, 0xFFFD, 0x7C64, 0x7C67, 0xFFFD, 0xFFFD, 
+/* 0268 */    0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0x7C68, 
+/* 0270 */    0x7C6B, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0x7C6A, 0x7954, 0x795F, 
+/* 0278 */    0x7960, 0x7975, 0x7A3E, 0x7A4E, 0x7A50, 0x7A7B, 0x7B23, 0x7B3A, 
+/* 0280 */    0x7B42, 0x7B43, 0x7B44, 0x7B46, 0x7B4A, 0x7B4D, 0x7B56, 0x7B61, 
+/* 0288 */    0x7B63, 0x7B64, 0x7B6D, 0x7B75, 0x7B77, 0x7B78, 0x7B7B, 0x7C39, 
+/* 0290 */    0x7C40, 0x7C50, 0x7C5C, 0x7C5D, 0x7C5F, 0x7C6C, 0x7C7E, 0xFFFD, 
+/* 0298 */    0xFFFD, 0xFFFD, 0xFFFD, 0x7C7D, 0x7C7B, 0xFFFD, 0x7C7C, 
+/*	End of table Total Length = 0x05F1 * 2 */
