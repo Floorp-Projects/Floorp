@@ -184,7 +184,7 @@ function UpdateJSEAttributes()
   {
     name = JSERAttrs[i];
     if (gElement.getAttribute(name))
-      gElement.removeAttribute(name);
+      doRemoveAttribute(gElement, name);
   }
 
   // Add events
@@ -193,7 +193,7 @@ function UpdateJSEAttributes()
     var item = JSEAList.childNodes[i];
 
     // set the event handler
-    gElement.setAttribute( GetTreeItemAttributeStr(item), GetTreeItemValueStr(item) );
+    doSetAttribute( GetTreeItemAttributeStr(item), GetTreeItemValueStr(item) );
   }
 }
 

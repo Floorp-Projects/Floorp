@@ -139,13 +139,14 @@ function UpdateCSSAttributes()
     else
       styleString += name + ": " + value + "; ";
   }
-  if (styleString.length > 0)
+  if (styleString)
   {
-    gElement.removeAttribute("style");
-    gElement.setAttribute("style",styleString);  // NOTE BUG 18894!!!
+    // Use editor transactions if modifying the element directly in the document
+    doRemoveAttribute("style");
+    doSetAttribute("style", styleString);  // NOTE BUG 18894!!!
   } 
   else if (gElement.getAttribute("style"))
-    gElement.removeAttribute("style");
+    doRemoveAttribute("style");
 }
 
 function RemoveCSSAttribute()

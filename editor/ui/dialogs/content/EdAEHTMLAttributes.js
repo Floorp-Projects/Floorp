@@ -161,6 +161,7 @@ function ClearHTMLInputWidgets()
 
 function onSelectHTMLTreeItem()
 {
+dump(" ** Calling onSelectHTMLTreeItem gDoOnSelectTree="+gDoOnSelectTree+"\n");
   if (!gDoOnSelectTree)
     return;
 
@@ -187,6 +188,7 @@ function onSelectHTMLTreeItem()
 
 function onInputHTMLAttributeName()
 {
+dump(" ** Calling onInputHTMLAttributeName\n");
   var attName = TrimString(dialog.AddHTMLAttributeNameInput.value).toLowerCase();
 
   // Clear value widget, but prevent triggering update in tree
@@ -289,6 +291,9 @@ function onInputHTMLAttributeValue()
     // (Do not use "LimitStringLength()" and "forceInteger()"
     //  to avoid multiple reseting of input's value and flickering)
     var selectedItem = dialog.AddHTMLAttributeNameInput.selectedItem;
+
+dump("*** onInputHTMLAttributeValue: selectedItem="+selectedItem+"\n");
+
     if (selectedItem)
     {
       if ( selectedItem.getAttribute("forceOneChar") == "true" &&
@@ -356,14 +361,14 @@ function UpdateHTMLAttributes()
     //  exists for attributes that don't require a value
     // This gets the attribute NODE from the attributes NamedNodeMap
     if (gElement.attributes.getNamedItem(name))
-      gElement.removeAttribute(name);
+      doRemoveAttribute(name);
   }
 
   // Set added or changed attributes
   for( i = 0; i < HTMLAList.childNodes.length; i++)
   {
     var item = HTMLAList.childNodes[i];
-    gElement.setAttribute( GetTreeItemAttributeStr(item), GetTreeItemValueStr(item) );
+    doSetAttribute( GetTreeItemAttributeStr(item), GetTreeItemValueStr(item));
   }
 }
 

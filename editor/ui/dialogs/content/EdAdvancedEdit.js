@@ -123,15 +123,40 @@ function Startup()
  **/
 function onOK()
 {
-  // Update our gElement attributes
-  UpdateHTMLAttributes();
-  UpdateCSSAttributes();
-  UpdateJSEAttributes();
+  editorShell.BeginBatchChanges();
+  try {
+    // Update our gElement attributes
+    UpdateHTMLAttributes();
+    UpdateCSSAttributes();
+    UpdateJSEAttributes();
+  } catch(ex) {
+    dump(ex);
+  }
+  editorShell.EndBatchChanges();
 
   window.opener.AdvancedEditOK = true;
   SaveWindowLocation();
 
   return true; // do close the window
+}
+
+// Helpers for removing and setting attributes
+// Use editor transactions if modifying the element already in the document
+// (Temporary element from a property dialog won't have a parent node)
+function doRemoveAttribute(attrib)
+{
+  if (gElement.parentNode)
+    editorShell.RemoveAttribute(gElement, attrib);
+  else
+    gElement.removeAttribute(attrib);
+}
+
+function doSetAttribute(attrib, value)
+{
+  if (gElement.parentNode)
+    editorShell.SetAttribute(gElement, attrib, value);
+  else
+    gElement.setAttribute(attrib, value);
 }
 
 /**
