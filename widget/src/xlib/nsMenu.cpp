@@ -210,3 +210,15 @@ NS_METHOD nsMenu::SetWebShell(nsIWebShell * aWebShell)
 {
   return NS_OK;
 }
+
+//-------------------------------------------------------------------------
+NS_METHOD nsMenu::GetAccessKey(nsString &aText)
+{
+  return NS_OK;
+}
+
+//-------------------------------------------------------------------------
+NS_METHOD nsMenu::SetAccessKey(const nsString &aText)
+{
+  return NS_OK;
+}
