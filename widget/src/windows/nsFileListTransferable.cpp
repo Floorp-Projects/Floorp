@@ -56,8 +56,7 @@ nsFileListTransferable::nsFileListTransferable()
                                                    nsIDataFlavor::GetIID(), 
                                                    (void**) getter_AddRefs(mIDListDataFlavor));
   if (NS_OK == rv) {
-    mIDListDataFlavor->Init(kDropFilesMime, "ID List");
-    
+    mIDListDataFlavor->Init(kDropFilesMime, "ID List");  
   }
 
 }
@@ -199,27 +198,20 @@ void nsFileListTransferable::ClearFileList()
   */
 NS_IMETHODIMP nsFileListTransferable::SetTransferData(nsIDataFlavor * aDataFlavor, void * aData, PRUint32 aDataLen)
 {
-  if (aData == nsnull) {
-    return NS_ERROR_FAILURE;
-  }
+  // Make the we have some incoming data and then that the adata flavor matches
+  if (aData != nsnull && aDataFlavor.Equals(mIDListDataFlavor)) {
 
-  ClearFileList();
+    // Clear the existing list of nsFileSpecs, then delete the array
+    ClearFileList();
+    delete mFileList;
 
-  LPDROPFILES dropFiles = (LPDROPFILES)aData;
+    // assign it to us, we now "own" the list
+    mFileList = (nsVoidArray *)aData;
 
-  char fileName[1024];
-  UINT numFiles = DragQueryFile(dropFiles, 0xFFFFFFFF, NULL, 0);
-  for (UINT i=0;i<numFiles;i++) {
-    UINT bytesCopied = ::DragQueryFile(dropFiles, i, fileName, 1024);
-    //nsAutoString name((char *)fileName, bytesCopied-1);
-    nsString name = fileName;
-    printf("name [%s]\n", name.ToNewCString());
-    nsFilePath filePath(name);
-    nsFileSpec * fileSpec = new nsFileSpec(filePath);
-    mFileList->AppendElement(fileSpec);
-  }
+    return NS_OK;
+  } 
 
-  return NS_OK;
+  return NS_ERROR_FAILURE;
 }
 
 /**
@@ -228,6 +220,7 @@ NS_IMETHODIMP nsFileListTransferable::SetTransferData(nsIDataFlavor * aDataFlavo
   */
 NS_IMETHODIMP_(PRBool) nsFileListTransferable::IsLargeDataSet()
 {
+  // The list files of files shouldn't be so long that we ned to stream it.
   return PR_FALSE;
 }
 
@@ -237,6 +230,13 @@ NS_IMETHODIMP_(PRBool) nsFileListTransferable::IsLargeDataSet()
   */
 NS_IMETHODIMP nsFileListTransferable::SetFileList(nsVoidArray * aFileList)
 {
+
+  ClearFileList();
+
+  delete mFileList;
+
+  mFileList = aFileList;
+
   return NS_OK;
 }
 
@@ -246,6 +246,7 @@ NS_IMETHODIMP nsFileListTransferable::SetFileList(nsVoidArray * aFileList)
   */
 NS_IMETHODIMP nsFileListTransferable::GetFileList(nsVoidArray ** aFileList)
 {
+  *aFileList = mFileList;
   return NS_OK;
 }
 
@@ -289,9 +290,9 @@ nsFileListTransferable :: FlavorsTransferableCanExport ( nsISupportsArray** aOut
   */
 NS_IMETHODIMP nsFileListTransferable::AddDataFlavor(nsIDataFlavor * aDataFlavor)
 {
-
-  return NS_OK;
+  return NS_ERROR_FAILURE;
 }
+
 /**
   * 
   *
