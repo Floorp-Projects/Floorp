@@ -214,6 +214,9 @@ sub match_field {
     $vars->{'form'}  = \%::FORM;
     $vars->{'mform'} = \%::MFORM;
 
+    # What does a "--do_not_change--" field look like (if any)?
+    my $dontchange = $vars->{'form'}->{'dontchange'};
+
     # Skip all of this if the option has been turned off
     return 1 if (&::Param('usermatchmode') eq 'off');
 
@@ -228,6 +231,9 @@ sub match_field {
         # quietly ignored rather than raising a code error.
 
         next if !defined($vars->{'mform'}->{$field});
+
+        # Skip it if this is a --do_not_change-- field
+        next if $dontchange eq $vars->{'form'}->{$field};
 
         # We need to move the query to $raw_field, where it will be split up,
         # modified by the search, and put back into $::FORM and $::MFORM
