@@ -52,8 +52,9 @@
 #include "nsIServiceManager.h"
 #include "nsIClipboard.h"
 #include "nsWidgetsCID.h"
-static NS_DEFINE_IID(kIClipboardIID,    NS_ICLIPBOARD_IID);
-static NS_DEFINE_CID(kCClipboardCID,    NS_CLIPBOARD_CID);
+
+static NS_DEFINE_CID(kCClipboardCID,       NS_CLIPBOARD_CID);
+static NS_DEFINE_IID(kRenderingContextCID, NS_RENDERING_CONTEXT_CID);
 
 
 BOOL nsWindow::sIsRegistered = FALSE;
@@ -65,11 +66,6 @@ nsWindow* nsWindow::gCurrentWindow = nsnull;
 // Global variable 
 //     g_hinst - handle of the application instance 
 extern HINSTANCE g_hinst; 
-
-static NS_DEFINE_IID(kIWidgetIID,       NS_IWIDGET_IID);
-static NS_DEFINE_IID(kIMenuIID,         NS_IMENU_IID);
-static NS_DEFINE_IID(kIMenuItemIID,     NS_IMENUITEM_IID);
-//static NS_DEFINE_IID(kIMenuListenerIID, NS_IMENULISTENER_IID);
 
 //-------------------------------------------------------------------------
 //
@@ -1488,12 +1484,12 @@ nsIMenuItem * nsWindow::FindMenuItem(nsIMenu * aMenu, PRUint32 aId)
     nsIMenu     * menu;
 
     aMenu->GetItemAt(i, item);
-    if (NS_OK == item->QueryInterface(kIMenuItemIID, (void **)&menuItem)) {
+    if (NS_OK == item->QueryInterface(nsCOMTypeInfo<nsIMenuItem>::GetIID(), (void **)&menuItem)) {
       if (((nsMenuItem *)menuItem)->GetCmdId() == (PRInt32)aId) {
         NS_RELEASE(item);
         return menuItem;
       }
-    } else if (NS_OK == item->QueryInterface(kIMenuIID, (void **)&menu)) {
+    } else if (NS_OK == item->QueryInterface(nsCOMTypeInfo<nsIMenu>::GetIID(), (void **)&menu)) {
       nsIMenuItem * fndItem = FindMenuItem(menu, aId);
       NS_RELEASE(menu);
       if (nsnull != fndItem) {
@@ -1515,7 +1511,7 @@ static nsIMenuItem * FindMenuChild(nsIMenu * aMenu, PRInt32 aId)
     nsISupports * item;
     aMenu->GetItemAt(i, item);
     nsIMenuItem * menuItem;
-    if (NS_OK == item->QueryInterface(kIMenuItemIID, (void **)&menuItem)) {
+    if (NS_OK == item->QueryInterface(nsCOMTypeInfo<nsIMenuItem>::GetIID(), (void **)&menuItem)) {
       if (((nsMenuItem *)menuItem)->GetCmdId() == (PRInt32)aId) {
         NS_RELEASE(item);
         return menuItem;
@@ -1542,7 +1538,7 @@ nsIMenu * nsWindow::FindMenu(nsIMenu * aMenu, HMENU aNativeMenu, PRInt32 &aDepth
     nsISupports * item;
     aMenu->GetItemAt(i, item);
     nsIMenu * menu;
-    if (NS_OK == item->QueryInterface(kIMenuIID, (void **)&menu)) {
+    if (NS_OK == item->QueryInterface(nsCOMTypeInfo<nsIMenu>::GetIID(), (void **)&menu)) {
       HMENU nativeMenu = ((nsMenu *)menu)->GetNativeMenu();
       if (nativeMenu == aNativeMenu) {
 		aDepth++;
@@ -1568,14 +1564,14 @@ static void AdjustMenus(nsIMenu * aCurrentMenu, nsIMenu * aNewMenu, nsMenuEvent 
 {
   if (nsnull != aCurrentMenu) {
     nsIMenuListener * listener;
-    if (NS_OK == aCurrentMenu->QueryInterface(kIMenuListenerIID, (void **)&listener)) {
+    if (NS_OK == aCurrentMenu->QueryInterface(nsCOMTypeInfo<nsIMenuListener>::GetIID(), (void **)&listener)) {
       //listener->MenuDeselected(aEvent);
       NS_RELEASE(listener);
     }
   }
   if (nsnull != aNewMenu)  {
     nsIMenuListener * listener;
-    if (NS_OK == aNewMenu->QueryInterface(kIMenuListenerIID, (void **)&listener)) {
+    if (NS_OK == aNewMenu->QueryInterface(nsCOMTypeInfo<nsIMenuListener>::GetIID(), (void **)&listener)) {
 		NS_ASSERTION(false, "get debugger");
       //listener->MenuSelected(aEvent);
       NS_RELEASE(listener);
@@ -1630,14 +1626,14 @@ nsresult nsWindow::MenuHasBeenSelected(
 	{
       if (nsnull != mHitMenu) {
         nsIMenuListener * listener;
-        if (NS_OK == mHitMenu->QueryInterface(kIMenuListenerIID, (void **)&listener)) {
+        if (NS_OK == mHitMenu->QueryInterface(nsCOMTypeInfo<nsIMenuListener>::GetIID(), (void **)&listener)) {
           listener->MenuDeselected(aEvent);
           NS_RELEASE(listener);
 		}
 	  }
       if (nsnull != aNewMenu)  {
         nsIMenuListener * listener;
-        if (NS_OK == aNewMenu->QueryInterface(kIMenuListenerIID, (void **)&listener)) {
+        if (NS_OK == aNewMenu->QueryInterface(nsCOMTypeInfo<nsIMenuListener>::GetIID(), (void **)&listener)) {
           listener->MenuSelected(aEvent);
           NS_RELEASE(listener);
 		}
@@ -1656,14 +1652,14 @@ nsresult nsWindow::MenuHasBeenSelected(
 	  {
         if (nsnull != aCurrentMenu) {
           nsIMenuListener * listener;
-          if (NS_OK == aCurrentMenu->QueryInterface(kIMenuListenerIID, (void **)&listener)) {
+          if (NS_OK == aCurrentMenu->QueryInterface(nsCOMTypeInfo<nsIMenuListener>::GetIID(), (void **)&listener)) {
             listener->MenuDeselected(event);
             NS_RELEASE(listener);
 		  }
 		}
         if (nsnull != aNewMenu)  {
           nsIMenuListener * listener;
-          if (NS_OK == aNewMenu->QueryInterface(kIMenuListenerIID, (void **)&listener)) {
+          if (NS_OK == aNewMenu->QueryInterface(nsCOMTypeInfo<nsIMenuListener>::GetIID(), (void **)&listener)) {
             listener->MenuSelected(event);
             NS_RELEASE(listener);
 		  }
@@ -1692,14 +1688,14 @@ nsresult nsWindow::MenuHasBeenSelected(
 		{
           if (nsnull != mHitMenu) {
             nsIMenuListener * listener;
-            if (NS_OK == mHitMenu->QueryInterface(kIMenuListenerIID, (void **)&listener)) {
+            if (NS_OK == mHitMenu->QueryInterface(nsCOMTypeInfo<nsIMenuListener>::GetIID(), (void **)&listener)) {
               listener->MenuDeselected(aEvent);
               NS_RELEASE(listener);
 			}
 		  }
           if (nsnull != hitMenu)  {
             nsIMenuListener * listener;
-            if (NS_OK == hitMenu->QueryInterface(kIMenuListenerIID, (void **)&listener)) {
+            if (NS_OK == hitMenu->QueryInterface(nsCOMTypeInfo<nsIMenuListener>::GetIID(), (void **)&listener)) {
               listener->MenuSelected(aEvent);
               NS_RELEASE(listener);
 			}
@@ -1747,7 +1743,7 @@ nsresult nsWindow::MenuHasBeenSelected(
           //printf("Getting submenu by position %d from parentMenu\n", aItemNum);
           nsISupports * item;
           parentMenu->GetItemAt((PRUint32)aItemNum, item);
-          if (NS_OK != item->QueryInterface(kIMenuIID, (void **)&newMenu)) {
+          if (NS_OK != item->QueryInterface(nsCOMTypeInfo<nsIMenu>::GetIID(), (void **)&newMenu)) {
             //printf("Item was not a menu! What are we doing here? Return early....\n");
             NS_RELEASE(event.widget);
             return NS_ERROR_FAILURE;
@@ -1812,14 +1808,14 @@ nsresult nsWindow::MenuHasBeenSelected(
 		  {
             if (nsnull != aCurrentMenu) {
               nsIMenuListener * listener;
-              if (NS_OK == aCurrentMenu->QueryInterface(kIMenuListenerIID, (void **)&listener)) {
+              if (NS_OK == aCurrentMenu->QueryInterface(nsCOMTypeInfo<nsIMenuListener>::GetIID(), (void **)&listener)) {
                 listener->MenuDeselected(aEvent);
                 NS_RELEASE(listener);
 			  }
 			}
             if (nsnull != aNewMenu)  {
               nsIMenuListener * listener;
-              if (NS_OK == aNewMenu->QueryInterface(kIMenuListenerIID, (void **)&listener)) {
+              if (NS_OK == aNewMenu->QueryInterface(nsCOMTypeInfo<nsIMenuListener>::GetIID(), (void **)&listener)) {
 		        NS_ASSERTION(false, "get debugger");
                 listener->MenuSelected(aEvent);
 				NS_RELEASE(listener);
@@ -1854,14 +1850,14 @@ nsresult nsWindow::MenuHasBeenSelected(
 		  {
             if (nsnull != aCurrentMenu) {
               nsIMenuListener * listener;
-              if (NS_OK == aCurrentMenu->QueryInterface(kIMenuListenerIID, (void **)&listener)) {
+              if (NS_OK == aCurrentMenu->QueryInterface(nsCOMTypeInfo<nsIMenuListener>::GetIID(), (void **)&listener)) {
                 listener->MenuDeselected(aEvent);
                 NS_RELEASE(listener);
 			  }
 			}
             if (nsnull != aNewMenu)  {
               nsIMenuListener * listener;
-              if (NS_OK == aNewMenu->QueryInterface(kIMenuListenerIID, (void **)&listener)) {
+              if (NS_OK == aNewMenu->QueryInterface(nsCOMTypeInfo<nsIMenuListener>::GetIID(), (void **)&listener)) {
                 listener->MenuSelected(aEvent);
                 NS_RELEASE(listener);
 			  }
@@ -2111,10 +2107,10 @@ BOOL nsWindow::OnKeyDown( UINT aVirtualKeyCode, UINT aScanCode)
   WORD asciiKey;
 
   asciiKey = 0;
-  DispatchKeyEvent(NS_KEY_DOWN, asciiKey, aVirtualKeyCode);
+  return DispatchKeyEvent(NS_KEY_DOWN, asciiKey, aVirtualKeyCode);
 
   // always let the def proc process a WM_KEYDOWN
-  return FALSE;
+  //return FALSE;
 }
 #else
 BOOL nsWindow::OnKeyDown( UINT aVirtualKeyCode, UINT aScanCode)
@@ -2214,9 +2210,9 @@ BOOL nsWindow::OnChar( UINT mbcsCharCode, UINT virtualKeyCode, bool isMultiByte 
   ::MultiByteToWideChar(CP_ACP,MB_PRECOMPOSED,charToConvert,length,
 	  &uniChar,sizeof(uniChar));
 
-  DispatchKeyEvent(NS_KEY_PRESS, uniChar, virtualKeyCode);
+  return DispatchKeyEvent(NS_KEY_PRESS, uniChar, virtualKeyCode);
 
-  return FALSE;
+  //return FALSE;
 }
 
 #else
@@ -2230,9 +2226,9 @@ BOOL nsWindow::OnChar( UINT aVirtualKeyCode )
 	//}
   //printf("OnChar (KeyDown) %d\n", aVirtualKeyCode);
 
-  DispatchKeyEvent(NS_KEY_DOWN, aVirtualKeyCode, aVirtualKeyCode);
+  return DispatchKeyEvent(NS_KEY_DOWN, aVirtualKeyCode, aVirtualKeyCode);
 
-  return FALSE;
+  //return FALSE;
 }
 #endif
 
@@ -2281,11 +2277,11 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
                 nsIMenuItem * menuItem = FindMenuItem(menu, event.mCommand);
                 if (menuItem) {
                   nsIMenuListener * listener;
-                  if (NS_OK == menuItem->QueryInterface(kIMenuListenerIID, (void **)&listener)) {
+                  if (NS_OK == menuItem->QueryInterface(nsCOMTypeInfo<nsIMenuListener>::GetIID(), (void **)&listener)) {
                     listener->MenuItemSelected(event);
                     NS_RELEASE(listener);
 
-					menu->QueryInterface(kIMenuListenerIID, (void **)&listener);
+					menu->QueryInterface(nsCOMTypeInfo<nsIMenuListener>::GetIID(), (void **)&listener);
 					if(listener){
 					  //listener->MenuDestruct(event);
 					  NS_RELEASE(listener);
@@ -2843,13 +2839,15 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
       case WM_DESTROYCLIPBOARD: {
         nsIClipboard* clipboard;
         nsresult rv = nsServiceManager::GetService(kCClipboardCID,
-                                                   kIClipboardIID,
+                                                   nsCOMTypeInfo<nsIClipboard>::GetIID(),
                                                    (nsISupports **)&clipboard);
         clipboard->EmptyClipboard();
         nsServiceManager::ReleaseService(kCClipboardCID, clipboard);
       } break;
 
     }
+
+    *aRetValue = result;
 
     return result;
 }
@@ -3046,15 +3044,15 @@ for (x = 0; x < 10000000; x++);
             event.rect = &rect;
             event.eventStructType = NS_PAINT_EVENT;
 
-            static NS_DEFINE_IID(kRenderingContextCID, NS_RENDERING_CONTEXT_CID);
-            static NS_DEFINE_IID(kRenderingContextIID, NS_IRENDERING_CONTEXT_IID);
-            static NS_DEFINE_IID(kRenderingContextWinIID, NS_IRENDERING_CONTEXT_WIN_IID);
 
-            if (NS_OK == nsComponentManager::CreateInstance(kRenderingContextCID, nsnull, kRenderingContextIID, (void **)&event.renderingContext))
+            if (NS_OK == nsComponentManager::CreateInstance(kRenderingContextCID, 
+                                                            nsnull, 
+                                                            nsCOMTypeInfo<nsIRenderingContext>::GetIID(), 
+                                                            (void **)&event.renderingContext))
             {
               nsIRenderingContextWin *winrc;
 
-              if (NS_OK == event.renderingContext->QueryInterface(kRenderingContextWinIID, (void **)&winrc))
+              if (NS_OK == event.renderingContext->QueryInterface(nsCOMTypeInfo<nsIRenderingContextWin>::GetIID(), (void **)&winrc))
               {
                 nsDrawingSurface surf;
 
@@ -3452,7 +3450,7 @@ nsWindow::HandleTextEvent()
   unicharSize = ::MultiByteToWideChar(CP_ACP,MB_PRECOMPOSED,mIMECompositionString,mIMECompositionStringLength,
 	  mIMECompositionUniString,0);
 
-  if (mIMECompositionUniStringSize < unicharSize) {
+  if (mIMECompositionUniStringSize < (PRInt32)unicharSize) {
 	if (mIMECompositionUniString!=NULL) delete [] mIMECompositionUniString;
 		mIMECompositionUniString = new PRUnichar[unicharSize+32];
 		mIMECompositionUniStringSize = unicharSize+32;
@@ -3516,7 +3514,7 @@ nsWindow::HandleEndComposition(void)
 void 
 nsWindow::MapDBCSAtrributeArrayToUnicodeOffsets(PRUint32* textRangeListLengthResult,nsTextRangeArray* textRangeListResult)
 {
-	int			i,rangePointer;
+	PRUint32	i,rangePointer;
 	size_t		lastUnicodeOffset, substringLength, lastMBCSOffset;
 	
 	//
@@ -3533,7 +3531,7 @@ nsWindow::MapDBCSAtrributeArrayToUnicodeOffsets(PRUint32* textRangeListLengthRes
 	} else {
 		
 		*textRangeListLengthResult = 0;
-		for(i=0;i<mIMECompClauseStringLength;i++) {
+		for(i=0;i<(PRUint32)mIMECompClauseStringLength;i++) {
 			if (mIMECompClauseString[i]!=0x00) 
 				(*textRangeListLengthResult)++;
 		}
@@ -3548,7 +3546,7 @@ nsWindow::MapDBCSAtrributeArrayToUnicodeOffsets(PRUint32* textRangeListLengthRes
 		lastUnicodeOffset = 0;
 		lastMBCSOffset = 0;
 		rangePointer = 0;
-		for(i=0;i<mIMECompClauseStringLength;i++) {
+		for(i=0;i<(PRUint32)mIMECompClauseStringLength;i++) {
 			if (mIMECompClauseString[i]!=0) {
 				(*textRangeListResult)[rangePointer].mStartOffset = lastUnicodeOffset;
 				substringLength = ::MultiByteToWideChar(CP_ACP,MB_PRECOMPOSED,mIMECompositionString+lastMBCSOffset,
