@@ -58,6 +58,7 @@ CPP_OBJS=					\
 CPP_OBJS = $(CPP_OBJS)				\
 	.\$(OBJDIR)\txHTMLOutput.obj	\
 	.\$(OBJDIR)\txTextOutput.obj	\
+	.\$(OBJDIR)\txUnknownHandler.obj	\
 	.\$(OBJDIR)\txXMLOutput.obj		\
 	$(NULL)
 !else

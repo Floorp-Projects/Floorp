@@ -106,6 +106,7 @@ OBJS =../base/ArrayList.$(OBJ_SUFFIX) \
   ../xslt/txRtfHandler.$(OBJ_SUFFIX) \
   ../xslt/txTextHandler.$(OBJ_SUFFIX) \
   ../xslt/txTextOutput.$(OBJ_SUFFIX) \
+  ../xslt/txUnknownHandler.$(OBJ_SUFFIX) \
   ../xslt/txXMLOutput.$(OBJ_SUFFIX) \
   ../xslt/txXSLTPatterns.$(OBJ_SUFFIX) \
   ../xslt/txPatternParser.$(OBJ_SUFFIX) \
