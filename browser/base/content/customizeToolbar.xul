@@ -43,6 +43,10 @@
 <script type="application/x-javascript" src="chrome://global/content/nsDragAndDrop.js"/>
 <script type="application/x-javascript" src="chrome://global/content/nsTransferable.js"/>
 
+<description>
+&removeinstructions.description;
+</description>
+
 <toolbox id="cloned-bar-container"
          ondragover="nsDragAndDrop.dragOver(event, dropObserver)"
          ondragdrop="nsDragAndDrop.drop(event, dropObserver);"
