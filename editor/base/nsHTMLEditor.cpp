@@ -5123,6 +5123,26 @@ NS_IMETHODIMP nsHTMLEditor::OutputToString(nsString& aOutputString,
   {
     nsCOMPtr<nsIDOMSelection> selection;
 
+    // Set the wrap column.  If our wrap column is 0,
+    // i.e. wrap to body width, then don't set it, let the
+    // document encoder use its own default.
+    PRInt32 wrapColumn;
+    PRUint32 wc =0;
+    if (NS_SUCCEEDED(GetBodyWrapWidth(&wrapColumn)))
+    {
+      if (wrapColumn != 0)
+      {
+        if (wrapColumn < 0)
+          wc = 0;
+        else
+          wc = (PRUint32)wrapColumn;
+      }
+    }
+
+    nsCOMPtr<nsIDOMElement> rootElement;
+    GetRootElement(getter_AddRefs(rootElement));
+    NS_ENSURE_TRUE(rootElement, NS_ERROR_FAILURE);
+    //is this a body?? do we want to output the whole doc?
     // Set the selection, if appropriate:
     if (aFlags & nsIDocumentEncoder::OutputSelectionOnly)
     {
@@ -5130,7 +5150,39 @@ NS_IMETHODIMP nsHTMLEditor::OutputToString(nsString& aOutputString,
       if (NS_FAILED(rv))
         return rv;
     }
-    else
+    else if (nsHTMLEditUtils::IsBody(rootElement))
+    {
+      nsresult rv = NS_OK;
+
+      nsCOMPtr<nsIDocumentEncoder> encoder;
+      nsCAutoString formatType = NS_DOC_ENCODER_PROGID_BASE;
+      formatType.AppendWithConversion(aFormatType);
+      rv = nsComponentManager::CreateInstance(formatType,
+                                              nsnull,
+                                              NS_GET_IID(nsIDocumentEncoder),
+                                              getter_AddRefs(encoder));
+      NS_ENSURE_SUCCESS(rv, rv);
+      if (!mPresShellWeak) 
+        return NS_ERROR_NOT_INITIALIZED;
+      nsCOMPtr<nsIPresShell> ps = do_QueryReferent(mPresShellWeak);
+
+      if (!ps)
+        return NS_ERROR_FAILURE;
+
+      nsCOMPtr<nsIDocument> doc;
+      rv = ps->GetDocument(getter_AddRefs(doc));
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      rv = encoder->Init(doc, aFormatType, aFlags);
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      if (wc != 0)
+        encoder->SetWrapColumn(wc);
+
+      return encoder->EncodeToString(aOutputString);
+
+    }
+    if (!selection)
     {
       nsCOMPtr<nsIDOMRange> range;
       rv = nsComponentManager::CreateInstance(kCRangeCID,
@@ -5153,9 +5205,6 @@ NS_IMETHODIMP nsHTMLEditor::OutputToString(nsString& aOutputString,
           if (NS_SUCCEEDED(GetPresShell(getter_AddRefs(presShell))) && presShell)
             indSel->SetPresShell(presShell);
         }
-        nsCOMPtr<nsIDOMElement> rootElement;
-        GetRootElement(getter_AddRefs(rootElement));
-        NS_ENSURE_TRUE(rootElement, NS_ERROR_FAILURE);
         nsCOMPtr<nsIContent> content(do_QueryInterface(rootElement));
         if (content)
         {
@@ -5170,27 +5219,8 @@ NS_IMETHODIMP nsHTMLEditor::OutputToString(nsString& aOutputString,
         }
       }
     }
-    // Set the wrap column.  If our wrap column is 0,
-    // i.e. wrap to body width, then don't set it, let the
-    // document encoder use its own default.
-    PRInt32 wrapColumn;
-    PRUint32 wc =0;
-    if (NS_SUCCEEDED(GetBodyWrapWidth(&wrapColumn)))
-    {
-      if (wrapColumn != 0)
-      {
-        if (wrapColumn < 0)
-          wc = 0;
-        else
-          wc = (PRUint32)wrapColumn;
-      }
-    }
-#ifdef DEBUG_mjudge
-    printf("Editor: getting output with wrapcol = %d (GetBodyWrapWidth returned %d\n", wc, wrapColumn);
-#endif
     return selection->ToString(aFormatType, aFlags, wc, aOutputString);
   }
-
 #if 0
 
   PRBool cancel, handled;
