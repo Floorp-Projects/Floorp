@@ -35,7 +35,6 @@ var cnEmptyString = '';
 var str = 'abc';
 var strA = cnEmptyString;
 var strB = 'Z';
-var strC = 'ZaZbZc'; // the result we expect for 'abc'.replace('', 'Z');
 
 
 //-----------------------------------------------------------------------------
@@ -45,7 +44,7 @@ test();
 
 /*
  * In this test, it's important to reportCompare() each other case
- * before the last two cases are attempted. Don't store all results
+ * BEFORE the last two cases are attempted. Don't store all results
  * in an array and reportCompare() them at the end, as we usually do.
  *
  * When this bug was filed, str.replace(strA, strB) would return no value
@@ -81,10 +80,17 @@ function test()
   expect = str.replace(new RegExp(strA), strB);
   reportCompare(expect, actual, status);
 
+ /*
+  * Note: 'Zabc' is the result we expect for 'abc'.replace('', 'Z').
+  *
+  * The string '' is supposed to be equivalent to new RegExp('') = //.
+  * The RegExp // means we should match the "empty string" conceived of
+  * at the beginning boundary of the word, before the first character.
+  */
   status = 'Section E of test';
   strA = cnEmptyString;
   actual = str.replace(strA, strB);
-  expect = strC; // see above
+  expect = 'Zabc';
   reportCompare(expect, actual, status);
 
   status = 'Section F of test';
