@@ -520,12 +520,12 @@ int DownloadViaProxy(char *szUrl, char *szProxyServer, char *szProxyPort, char *
 {
   int  rv;
   char proxyURL[kProxySrvrLen];
-  char *host = NULL;
-  char *path = NULL;
   char *file = NULL;
-  int  port;
 
-  rv = nsHTTPConn::ParseURL(kHTTP, szUrl, &host, &port, &path);
+  if((!szUrl) || (*szUrl == '\0'))
+    return nsHTTPConn::E_PARAM;
+
+  rv = nsHTTPConn::OK;
   memset(proxyURL, 0, kProxySrvrLen);
   wsprintf(proxyURL, "http://%s:%s", szProxyServer, szProxyPort);
 
@@ -549,8 +549,8 @@ int DownloadViaProxy(char *szUrl, char *szProxyServer, char *szProxyPort, char *
   if((rv = conn->Open()) != WIZ_OK)
     return(rv);
 
-  if(strrchr(path, '/') != (path + strlen(path)))
-    file = strrchr(path, '/') + 1; // set to leaf name
+  if(strrchr(szUrl, '/') != (szUrl + strlen(szUrl)))
+    file = strrchr(szUrl, '/') + 1; // set to leaf name
 
   rv = conn->Get(ProgressCB, file); // use leaf from URL
   conn->Close();
@@ -564,12 +564,12 @@ int DownloadViaProxy(char *szUrl, char *szProxyServer, char *szProxyPort, char *
 int DownloadViaHTTP(char *szUrl)
 {
   int  rv;
-  char *host = NULL;
-  char *path = NULL;
   char *file = NULL;
-  int  port;
 
-  rv = nsHTTPConn::ParseURL(kHTTP, szUrl, &host, &port, &path);
+  if((!szUrl) || (*szUrl == '\0'))
+    return nsHTTPConn::E_PARAM;
+
+  rv = nsHTTPConn::OK;
   nsHTTPConn *conn = new nsHTTPConn(szUrl, ProcessWndMsgCB);
   if(conn == NULL)
   {
@@ -584,8 +584,8 @@ int DownloadViaHTTP(char *szUrl)
   if((rv = conn->Open()) != WIZ_OK)
     return(rv);
 
-  if(strrchr(path, '/') != (path + strlen(path)))
-    file = strrchr(path, '/') + 1; // set to leaf name
+  if(strrchr(szUrl, '/') != (szUrl + strlen(szUrl)))
+    file = strrchr(szUrl, '/') + 1; // set to leaf name
 
   rv = conn->Get(ProgressCB, file);
   conn->Close();
@@ -601,6 +601,9 @@ int DownloadViaFTP(char *szUrl)
   char *host = 0, *path = 0, *file = (char*) kLoclFile;
   int port = 21;
   int rv;
+
+  if((!szUrl) || (*szUrl == '\0'))
+    return nsFTPConn::E_PARAM;
 
   rv = nsHTTPConn::ParseURL(kFTP, szUrl, &host, &port, &path);
 
