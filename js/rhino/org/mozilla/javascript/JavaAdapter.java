@@ -57,8 +57,8 @@ public class JavaAdapter extends ScriptableObject {
         Class adapterClass = createAdapterClass(cx, obj, adapterName, 
                                                 superClass, interfaces, 
                                                 null, null);
-        Class[] ctorParms = { FlattenedObject.class };
-        Object[] ctorArgs = { new FlattenedObject(obj) };
+        Class[] ctorParms = { Scriptable.class };
+        Object[] ctorArgs = { obj };
         Object v = adapterClass.getConstructor(ctorParms).newInstance(ctorArgs);
         return cx.toObject(v, ScriptableObject.getTopLevelScope(ctorObj));                           
     }
@@ -73,8 +73,6 @@ public class JavaAdapter extends ScriptableObject {
         ClassFileWriter cfw = new ClassFileWriter(adapterName, 
                                                   superClass.getName(), 
                                                   "<adapter>");
-        cfw.addField("o", "Lorg/mozilla/javascript/FlattenedObject;",
-                     ClassFileWriter.ACC_PRIVATE);
         cfw.addField("self", "Lorg/mozilla/javascript/Scriptable;",
                      (short) (ClassFileWriter.ACC_PUBLIC | 
                               ClassFileWriter.ACC_FINAL));
@@ -152,11 +150,11 @@ public class JavaAdapter extends ScriptableObject {
                 continue;
             Object f = jsObj.get(id, jsObj);
             int length;
-            if (f instanceof FlattenedObject) {
-                Object p = ((FlattenedObject) f).getObject();
+            if (f instanceof Scriptable) {
+                Scriptable p = (Scriptable) f;
                 if (!(p instanceof Function))
                     continue;
-                length = (int) Context.toNumber(((FlattenedObject) f).getProperty("length"));
+                length = (int) Context.toNumber(p.get("length", p));
             } else if (f instanceof FunctionNode) {
                 length = ((FunctionNode) f).getVariableTable().getParameterCount();
             } else {
@@ -210,29 +208,27 @@ public class JavaAdapter extends ScriptableObject {
      * Utility method, which dynamically binds a Context to the current thread, 
      * if none already exists.
      */
-    public static Object callMethod(FlattenedObject object, Object methodId, 
+    public static Object callMethod(Scriptable object, String methodId,
                                     Object[] args) 
     {
-        Context cx = Context.enter();
-        try {
-            if (object.hasProperty(methodId))
-                return object.callMethod(methodId, args);
-        } catch (PropertyException ex) {
-            // shouldn't occur
-        } catch (NotAFunctionException ex) {
-              // TODO: could occur
-        } catch (JavaScriptException ex) {
-              // TODO: could occur
-            /*
-        } catch (Exception ex) {
-            // TODO: wouldn't it be better to let the exception propagate
-            // up so that it could be dealt with by the calling code?
-            ex.printStackTrace(System.err);
-            throw new Error(ex.getMessage());
-            */
-        } finally {	
-            Context.exit();
-        }
+    	if (object.has(methodId, object)) {
+	        try {
+		        Context cx = Context.enter();
+		        Object fun = object.get(methodId, object);
+		        return ScriptRuntime.call(cx, fun, object, args);
+	        } catch (JavaScriptException ex) {
+	              // TODO: could occur
+	            /*
+	        } catch (Exception ex) {
+	            // TODO: wouldn't it be better to let the exception propagate
+	            // up so that it could be dealt with by the calling code?
+	            ex.printStackTrace(System.err);
+	            throw new Error(ex.getMessage());
+	            */
+	        } finally {	
+	            Context.exit();
+	        }
+	    }
         return Context.getUndefinedValue();
     }
     
@@ -240,7 +236,7 @@ public class JavaAdapter extends ScriptableObject {
                                      Class superClass) 
     {
         cfw.startMethod("<init>", 
-                        "(Lorg/mozilla/javascript/FlattenedObject;)V",
+                        "(Lorg/mozilla/javascript/Scriptable;)V",
                         ClassFileWriter.ACC_PUBLIC);
         
         // Invoke base class constructor
@@ -249,6 +245,12 @@ public class JavaAdapter extends ScriptableObject {
                 superClass.getName().replace('.', '/'), 
                 "<init>", "()", "V");
         
+        // Save parameter in instance variable "self"
+        cfw.add(ByteCode.ALOAD_0);  // this
+        cfw.add(ByteCode.ALOAD_1);  // first arg
+        cfw.add(ByteCode.PUTFIELD, adapterName, "self", 
+                "Lorg/mozilla/javascript/Scriptable;");
+
         // Set the prototype of the js object to be a LiveConnect 
         // wapper of the generated class's object
         cfw.add(ByteCode.ALOAD_1);  // first arg
@@ -256,26 +258,9 @@ public class JavaAdapter extends ScriptableObject {
         cfw.add(ByteCode.INVOKESTATIC,
                 "org/mozilla/javascript/ScriptRuntime",
                 "setAdapterProto",
-                "(Lorg/mozilla/javascript/FlattenedObject;" +
+                "(Lorg/mozilla/javascript/Scriptable;" +
                  "Ljava/lang/Object;)",
                 "V");
-        
-        // Save parameter in instance variable
-        cfw.add(ByteCode.ALOAD_0);  // this
-        cfw.add(ByteCode.ALOAD_1);  // first arg
-        cfw.add(ByteCode.PUTFIELD, adapterName, "o", 
-                "Lorg/mozilla/javascript/FlattenedObject;");
-
-        // Store Scriptable object in "self", a public instance variable, 
-        //  so scripts can read it.
-        cfw.add(ByteCode.ALOAD_0);  // this
-        cfw.add(ByteCode.ALOAD_1);  // first arg
-        cfw.add(ByteCode.INVOKEVIRTUAL,
-                "org/mozilla/javascript/FlattenedObject",
-                "getObject", "()",
-                "Lorg/mozilla/javascript/Scriptable;");
-        cfw.add(ByteCode.PUTFIELD, adapterName, "self",
-                "Lorg/mozilla/javascript/Scriptable;");		
         
         cfw.add(ByteCode.RETURN);
         cfw.stopMethod((short)20, null); // TODO: magic number "20"
@@ -303,34 +288,23 @@ public class JavaAdapter extends ScriptableObject {
                 "org/mozilla/javascript/ScriptRuntime",
                 "runScript",
                 "(Lorg/mozilla/javascript/Script;)",
-                "Lorg/mozilla/javascript/FlattenedObject;");
+                "Lorg/mozilla/javascript/Scriptable;");
         cfw.add(ByteCode.ASTORE_1);
                 
-        // Save the FlattenedObject in instance variable
+        // Save the Scriptable in instance variable "self"
         cfw.add(ByteCode.ALOAD_0);  // this
-        cfw.add(ByteCode.ALOAD_1);  // the FlattenedObject
-        cfw.add(ByteCode.PUTFIELD, adapterName, "o", 
-                "Lorg/mozilla/javascript/FlattenedObject;");
-
-        // Store Scriptable object in "self", a public instance variable, 
-        //  so scripts can read it.
-        cfw.add(ByteCode.ALOAD_0);  // this
-        cfw.add(ByteCode.ALOAD_1);  // the FlattenedObject
-        cfw.add(ByteCode.INVOKEVIRTUAL,
-                "org/mozilla/javascript/FlattenedObject",
-                "getObject", "()",
+        cfw.add(ByteCode.ALOAD_1);  // the Scriptable
+        cfw.add(ByteCode.PUTFIELD, adapterName, "self", 
                 "Lorg/mozilla/javascript/Scriptable;");
-        cfw.add(ByteCode.PUTFIELD, adapterName, "self",
-                "Lorg/mozilla/javascript/Scriptable;");		
-        
+
         // Set the prototype of the js object to be a LiveConnect 
         // wapper of the generated class's object
-        cfw.add(ByteCode.ALOAD_1);  // the FlattenedObject
+        cfw.add(ByteCode.ALOAD_1);  // the Scriptable
         cfw.add(ByteCode.ALOAD_0);  // this
         cfw.add(ByteCode.INVOKESTATIC,
                 "org/mozilla/javascript/ScriptRuntime",
                 "setAdapterProto",
-                "(Lorg/mozilla/javascript/FlattenedObject;" +
+                "(Lorg/mozilla/javascript/Scriptable;" +
                  "Ljava/lang/Object;)",
                 "V");
 
@@ -570,8 +544,8 @@ public class JavaAdapter extends ScriptableObject {
         }
         
         cfw.add(ByteCode.ALOAD_0);  // this
-        cfw.add(ByteCode.GETFIELD, genName, "o", 
-                "Lorg/mozilla/javascript/FlattenedObject;");
+        cfw.add(ByteCode.GETFIELD, genName, "self", 
+                "Lorg/mozilla/javascript/Scriptable;");
         
         cfw.addLoadConstant(methodName);
         cfw.add(ByteCode.ALOAD, arrayLocal);
@@ -581,8 +555,8 @@ public class JavaAdapter extends ScriptableObject {
         cfw.add(ByteCode.INVOKESTATIC,
                 "org/mozilla/javascript/JavaAdapter",
                 "callMethod",
-                "(Lorg/mozilla/javascript/FlattenedObject;" +
-                 "Ljava/lang/Object;[Ljava/lang/Object;)",
+                "(Lorg/mozilla/javascript/Scriptable;" +
+                 "Ljava/lang/String;[Ljava/lang/Object;)",
                 "Ljava/lang/Object;");
 
         Class retType = returnType;
