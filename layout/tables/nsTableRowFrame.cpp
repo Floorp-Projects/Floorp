@@ -562,7 +562,6 @@ NS_METHOD nsTableRowFrame::Paint(nsIPresContext*      aPresContext,
   PRUint8 overflow = GetStyleDisplay()->mOverflow;
   PRBool clip = overflow == NS_STYLE_OVERFLOW_HIDDEN ||
                 overflow == NS_STYLE_OVERFLOW_SCROLLBARS_NONE;
-  const nsStyleDisplay* disp = GetStyleDisplay();
   if (clip) {
     aRenderingContext.PushState();
     SetOverflowClipRect(aRenderingContext);
