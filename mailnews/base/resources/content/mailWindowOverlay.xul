@@ -43,6 +43,7 @@
 <?xul-overlay href="chrome://communicator/content/contentAreaContextOverlay.xul"?>
 <?xul-overlay href="chrome://communicator/content/viewZoomOverlay.xul"?>
 <?xul-overlay href="chrome://messenger/content/mailWindowExtrasOverlay.xul"?>
+<?xul-overlay href="chrome://messenger/content/platformMailnewsOverlay.xul"?>
 
 <!DOCTYPE overlay [
 <!ENTITY % messengerDTD SYSTEM "chrome://messenger/locale/messenger.dtd" >

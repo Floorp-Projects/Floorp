@@ -43,14 +43,10 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MODULE		= msgbase
-DIRS		= public src util search ispdata
+DIRS		= public src util search ispdata resources
 
 ifndef MOZ_STATIC_MAIL_BUILD
 DIRS += build
-endif
-
-ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
-DIRS		+= resources/content/mac
 endif
 
 include $(topsrcdir)/config/rules.mk

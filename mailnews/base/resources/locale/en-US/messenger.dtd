@@ -285,7 +285,7 @@
 
 <!ENTITY searchMailCmd.label "Search Messages...">
 <!ENTITY searchMailCmd.accesskey "M">
-<!ENTITY searchMailCmd.key "f">
+<!ENTITY searchMailCmd.key "s">
 
 <!-- Go Menu -->
 
@@ -411,7 +411,7 @@
 <!ENTITY markReadByDateCmd.key "c">
 <!ENTITY markAllReadCmd.label "All Read">
 <!ENTITY markAllReadCmd.accesskey "A">
-<!ENTITY markAllReadCmd.key "c">
+<!ENTITY markAllReadCmd.key "m">
 <!ENTITY markFlaggedCmd.label "Flag">
 <!ENTITY markFlaggedCmd.accesskey "F">
 <!ENTITY markAsJunkCmd.label "As Junk">

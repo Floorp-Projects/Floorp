@@ -39,7 +39,6 @@
 
 <?xul-overlay href="chrome://global/content/globalOverlay.xul"?>
 <?xul-overlay href="chrome://communicator/content/utilityOverlay.xul"?>
-<?xul-overlay href="chrome://messenger/content/platformMailnewsOverlay.xul"?>
 <?xul-overlay href="chrome://messenger/content/threadPane.xul"?>
 <?xul-overlay href="chrome://messenger/content/folderPane.xul"?>
 <?xul-overlay href="chrome://messenger/content/msgHdrViewOverlay.xul"?>

@@ -26,7 +26,10 @@
     <key id="key_fullScreen" keycode="VK_F11" command="View:FullScreen"/>
     <key id="key_newTabWithTarget" keycode="VK_INSERT" command="cmd_newTabWithTarget"/>
     <key id="key_newTabWithTarget" keycode="VK_INSERT" modifiers="shift" command="cmd_newTabWithTarget"/>
-  </keyset>  
+
+    <!-- Support Accel+Shift for Add Bookmark -->
+    <key id="addBookmarkKb" key="&addCurPageCmd.commandkey;" command="Browser:AddBookmark" modifiers="accel,shift"/>
+  </keyset>
 
   <menuitem id="menuitem_fullScreen" hidden="false"/>
 </overlay>

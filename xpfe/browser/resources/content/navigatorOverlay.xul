@@ -107,8 +107,7 @@
     <!-- Go Menu -->
 
     <!-- Bookmarks Menu -->
-    <key id="addBookmarkKb" key="&addCurPageCmd.commandkey;" command="Browser:AddBookmark" modifiers="accel"/>
-    <key id="addBookmarkAsKb" key="&addCurPageCmd.commandkey;" command="Browser:AddBookmarkAs" modifiers="accel,shift"/>
+    <key id="addBookmarkAsKb" key="&addCurPageAsCmd.commandkey;" command="Browser:AddBookmarkAs" modifiers="accel"/>
     <key id="manBookmarkKb" key="&manBookmarksCmd.commandkey;" command="Browser:ManageBookmark" modifiers="accel"/>
 
     <!-- Tools Menu -->
