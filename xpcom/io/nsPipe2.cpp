@@ -395,13 +395,11 @@ nsPipe::nsPipeInputStream::ReadSegments(nsWriteSegmentFun writer,
             pipe->mReadCursor = nsnull;
             pipe->mReadLimit = nsnull;
             PRBool empty = pipe->mBuffer.DeleteFirstSegment();
-#if 0
-            if (empty && pipe->mObserver && *readCount == 0) {
+            if (empty && pipe->mObserver) {
                 rv = pipe->mObserver->OnEmpty(pipe);
                 if (NS_FAILED(rv))
                     goto done;
             }
-#endif
         }
     }
   done:
@@ -472,9 +470,6 @@ nsPipe::nsPipeInputStream::Search(const char *forString,
                                   PRUint32 *offsetSearchedTo)
 {
     nsPipe* pipe = GET_INPUTSTREAM_PIPE(this);
-    if (NS_FAILED(pipe->mCondition)) {
-        return pipe->mCondition;
-    }
 
     nsresult rv;
     const char* bufSeg1;
@@ -508,9 +503,9 @@ nsPipe::nsPipeInputStream::Search(const char *forString,
         if (NS_FAILED(rv) || bufSegLen2 == 0) {
             *found = PR_FALSE;
             if (pipe->mCondition != NS_OK)    // XXX NS_FAILED?
-                *offsetSearchedTo = segmentPos - bufSegLen1;
+                *offsetSearchedTo = segmentPos;
             else
-                *offsetSearchedTo = segmentPos - bufSegLen1 - strLen + 1;
+                *offsetSearchedTo = segmentPos - strLen + 1;
             return NS_OK;
         }
 
