@@ -28,9 +28,10 @@ struct nsSize;
 #define NS_IDRAGSERVICE_IID      \
 { 0x8b5314bb, 0xdb01, 0x11d2, { 0x96, 0xce, 0x0, 0x60, 0xb0, 0xfb, 0x99, 0x56 } }
 
-#define DRAGDROP_ACTION_COPY 1
-#define DRAGDROP_ACTION_MOVE 2
-#define DRAGDROP_ACTION_LINK 4
+#define DRAGDROP_ACTION_NONE 0x0000
+#define DRAGDROP_ACTION_COPY 0x0001
+#define DRAGDROP_ACTION_MOVE 0x0002
+#define DRAGDROP_ACTION_LINK 0x0004
 
 class nsIDragService : public nsISupports {
 
@@ -52,6 +53,20 @@ class nsIDragService : public nsISupports {
     * @param  aCanDrop indicates whether it can be dropped here
     */
     NS_IMETHOD GetCanDrop (PRBool * aCanDrop) = 0; 
+
+  /**
+    * Sets the action (copy, move, link, et.c) for the current drag 
+    *
+    * @param  anAction the current action
+    */
+    NS_IMETHOD SetDragAction (PRUint32 anAction) = 0; 
+
+   /**
+    * Gets the action (copy, move, link, et.c) for the current drag 
+    *
+    * @param  anAction the current action
+    */
+    NS_IMETHOD GetDragAction (PRUint32 * anAction) = 0; 
 
   /**
     * Sets the current width and height if the drag target area. 
