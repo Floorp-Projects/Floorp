@@ -170,7 +170,7 @@
       [% IF Param("usetargetmilestone") && bug.target_milestone %]
         <td align="right">
           <b>
-            <a href="[% bug.milestoneurl filter uri %]">Target Milestone</a>:
+            <a href="[% bug.milestoneurl FILTER uri %]">Target Milestone</a>:
           </b>
         </td>
         [% PROCESS select selname = "target_milestone" %]
