@@ -100,8 +100,10 @@ nsMimeMapperMac :: MapMimeTypeToMacOSType ( const char* aMimeStr, PRBool inAddIf
       format = kScrapFlavorTypeText;
     else if ( PL_strcmp(aMimeStr, kFileMime) == 0 )
       format = kDragFlavorTypeHFS;
+#ifdef BRANCH_CHANGES_NEED_MERGED
     else if ( PL_strcmp(aMimeStr, kFilePromiseMime) == 0 )
       format = kDragFlavorTypePromiseHFS;
+#endif
     else if ( PL_strcmp(aMimeStr, kPNGImageMime) == 0 )
       format = kScrapFlavorTypePicture;
     else if ( PL_strcmp(aMimeStr, kJPEGImageMime) == 0 )
@@ -152,8 +154,10 @@ nsMimeMapperMac :: MapMacOSTypeToMimeType ( ResType inMacType, nsCAutoString & o
     case kScrapFlavorTypeUnicode:   outMimeStr = kUnicodeMime;      break;
     case kScrapFlavorTypePicture:   outMimeStr = kNativeImageMime;  break;
     case kDragFlavorTypeHFS:        outMimeStr = kFileMime;         break;
+#ifdef BRANCH_CHANGES_NEED_MERGED
     case kDragFlavorTypePromiseHFS: outMimeStr = kFilePromiseMime;  break;
     case kDragPromisedFlavor:       outMimeStr = kFilePromiseMime;  break;
+#endif
     
     // This flavor is the old 4.x Composer flavor for HTML. The actual data is a binary
     // data structure which we do NOT want to deal with in any way shape or form. I am
