@@ -1,2 +1,3 @@
 Makefile
 viewer
+moc_nsQTMenu.cpp
