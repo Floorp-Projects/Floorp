@@ -24,4 +24,4 @@ JAVA_SOURCEPATH=$(DEPTH)\modules\edtplug\classes
 DEPTH=..\..\..\..\..\..\.. 
 JSRCS=Plugin1.java Plugin2.java Plugin3.java 
 
-include <$(MOZ_SRC)\ns\config\rules.mak>
+include <$(DEPTH)\config\rules.mak>

@@ -19,5 +19,5 @@ MODULE=winprefs
 DEPTH=..\..\..\..\.. 
 EXPORTS=brprefid.h intlfont.h ibrprefs.h 
 
-!include "$(MOZ_SRC)\ns\config\rules.mak"
+!include "$(DEPTH)\config\rules.mak"
 

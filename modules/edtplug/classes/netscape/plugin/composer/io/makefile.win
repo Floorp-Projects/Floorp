@@ -32,6 +32,6 @@ JSRCS=Comment.java Entity.java \
 # into the product builds
 #JSRCS=$(JSRCS) FooStringBuffer.java 
 
-CLASSROOT=y:\ns\modules\edtplug\classes 
+CLASSROOT=$(DEPTH)\modules\edtplug\classes 
 
-include <$(MOZ_SRC)\ns\config\rules.mak>
+include <$(DEPTH)\config\rules.mak>

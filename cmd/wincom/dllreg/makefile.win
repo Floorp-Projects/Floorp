@@ -30,7 +30,7 @@ DEPTH=..\..\..
 CSRCS=dllreg.c 
 C_OBJS=.\$(OBJDIR)\dllreg.obj 
 
-!include "$(MOZ_SRC)\ns\config\rules.mak"
+!include "$(DEPTH)\config\rules.mak"
 
 libs:: $(PROGRAM)
        $(MAKE_INSTALL) .\$(OBJDIR)\$(EXENAME).exe $(DIST)\bin

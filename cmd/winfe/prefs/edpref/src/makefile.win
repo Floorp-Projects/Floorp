@@ -17,7 +17,7 @@ IGNORE_MANIFEST=1
 
 DEPTH  	= ../../../../..
  
-!include "$(MOZ_SRC)\ns\config\config.mak"
+!include "$(DEPTH)\config\config.mak"
 
 !if "$(MOZ_BITS)" == "16"
 DLL_CFLAGS=/GA /GEd /GEf /D_WINDLL
@@ -65,7 +65,7 @@ LINCS=-I$(XPDIST)\public\dllcom -I$(XPDIST)\public\winprefs \
     -I$(XPDIST)\public\nspr -I$(XPDIST)\public\js 
 !endif
 
-!include "$(MOZ_SRC)\ns\config\rules.mak"
+!include "$(DEPTH)\config\rules.mak"
 
 libs:: $(DLL)
        $(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).dll $(DIST)\bin

@@ -28,7 +28,7 @@ CPP_OBJS=.\$(OBJDIR)\guids.obj
 LINCS=-I$(XPDIST)\public\winprefs 
 !endif
 
-!include "$(MOZ_SRC)\ns\config\rules.mak"
+!include "$(DEPTH)\config\rules.mak"
 
 libs:: $(LIBRARY)
        $(MAKE_INSTALL) .\$(OBJDIR)\$(LIBNAME).lib $(DIST)\lib

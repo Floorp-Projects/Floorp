@@ -31,6 +31,6 @@ JSRCS=BoundingBoxStar.java MWCntxStar.java MWContextStar.java \
     nfFontObserverCallback.java nfdlm.java nfdoer.java nff.java \
     nffbc.java nffbp.java nffbu.java nffmi.java nffp.java nfrc.java \
     nfrf.java nfstrm.java 
-CLASSROOT=y:\ns\modules\libfont\classes 
+CLASSROOT=$(DEPTH)\modules\libfont\classes 
 
-!include $(MOZ_SRC)\ns\config\rules.mak
+!include $(DEPTH)\config\rules.mak

@@ -27,7 +27,7 @@ REQUIRES=dbm
 !if "$(MOZ_BITS)" != "16"
 LINCS=-I$(XPDIST)\public\dbm 
 !endif
-CLASSROOT=y:\ns\modules\libfont\producers\win\classes 
+CLASSROOT=$(DEPTH)\modules\libfont\producers\win\classes 
 
 JAVA_SOURCEPATH=$(DEPTH)\modules\libfont\producers\win\classes
-!include $(MOZ_SRC)\ns\config\rules.mak
+!include $(DEPT)\config\rules.mak

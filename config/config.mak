@@ -104,9 +104,9 @@ DIST=$(XPDIST)\$(DIST_PREFIX)$(MOZ_BITS)_D.OBJ
 CFGFILE=$(OBJDIR)\cmd.cfg
 
 !if "$(MOZ_BITS)" == "16"
-INCS=-I$(XPDIST)\public\win16 $(INCS) -I$(MOZ_SRC)\ns\include -I$(DIST)\include -I..\include
+INCS=-I$(XPDIST)\public\win16 $(INCS) -I$(DEPTH)\include -I$(DIST)\include -I..\include
 !else
-INCS=$(INCS) -I$(MOZ_SRC)\ns\include -I$(DIST)\include \
+INCS=$(INCS) -I$(DEPTH)\include -I$(DIST)\include \
              -I$(XPDIST)\public\img -I$(XPDIST)\public\util \
              -I$(XPDIST)\public\coreincl
 !endif # 16
@@ -165,7 +165,7 @@ PERL= $(MOZ_TOOLS)\perl5\perl.exe
 MASM = $(MOZ_TOOLS)\bin\ml.exe
 
 !if "$(WINOS)" == "WIN95"
-MKDIR = $(MOZ_SRC)\ns\config\w95mkdir
+MKDIR = $(DEPTH)\config\w95mkdir
 QUIET =
 !else
 MKDIR = mkdir
@@ -242,16 +242,16 @@ PATH_SEPARATOR = ;
 
 # where the bytecode will go
 !if "$(AWT_11)" == "1"
-JAVA_DESTPATH = $(MOZ_SRC)\ns\dist\classes11
+JAVA_DESTPATH = $(DEPTH)\dist\classes11
 !else
-JAVA_DESTPATH = $(MOZ_SRC)\ns\dist\classes
+JAVA_DESTPATH = $(DEPTH)\dist\classes
 !endif
 
 # where the source are
-DEFAULT_JAVA_SOURCEPATH = $(MOZ_SRC)\ns\sun-java\classsrc
+DEFAULT_JAVA_SOURCEPATH = $(DEPTH)\sun-java\classsrc
 !ifndef JAVA_SOURCEPATH
 !if "$(AWT_11)" == "1"
-JAVA_SOURCEPATH = $(MOZ_SRC)\ns\sun-java\classsrc11;$(DEFAULT_JAVA_SOURCEPATH)
+JAVA_SOURCEPATH = $(DEPTH)\sun-java\classsrc11;$(DEFAULT_JAVA_SOURCEPATH)
 !else
 JAVA_SOURCEPATH = $(DEFAULT_JAVA_SOURCEPATH)
 !endif

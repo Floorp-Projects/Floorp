@@ -30,13 +30,13 @@ PRIVDIR=$(DEPTH)\..\ns_priv\dialup\win\rsa
 # included ns\lib\plugin to get npupp.h; npupp.h should really be in ns\include...
 INCS= \
 	-I. -I..\include \
-	-I$(MOZ_SRC)\ns\dist\public\java \
-	-I$(MOZ_SRC)\ns\dist\public\nspr \
+	-I$(DEPTH)\dist\public\java \
+	-I$(DEPTH)\dist\public\nspr \
 !ifdef MOZ_PRIV
 	-I$(PRIVDIR) \
 	-I$(PRIVDIR)\..\..\shiva \
 !endif
-	-I$(MOZ_SRC)\ns\lib\plugin \
+	-I$(DEPTH)\lib\plugin \
 	$(INCS)
 
 # Do NOT define these, they're not necessary

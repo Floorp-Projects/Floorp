@@ -19,5 +19,5 @@ MODULE=winprefs
 DEPTH=..\..\..\..\.. 
 EXPORTS=cstring.h cdialog.h cppageex.h colorbtn.h bitmpbtn.h 
 
-!include "$(MOZ_SRC)\ns\config\rules.mak"
+!include "$(DEPTH)\config\rules.mak"
 

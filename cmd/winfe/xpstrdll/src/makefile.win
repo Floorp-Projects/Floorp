@@ -27,8 +27,8 @@ DEPTH=..\..\..\..
 
 OBJS = $(OBJS) .\$(OBJDIR)\xpstrdll.obj
 RCFLAGS=\
-	/I$(MOZ_SRC)\ns\include \
-	/I$(MOZ_SRC)\ns\dist\public\security \
+	/I$(DEPTH)\include \
+	/I$(DEPTH)\dist\public\security \
 !if "$(MOZ_BITS)" == "32"
 	/DWIN32 \
 	/DXP_PC \
@@ -67,7 +67,7 @@ include <$(DEPTH)/config/liteness.mak>
 # MOZ_LITENESS_FLAGS uses the -D options, not /D
 RCFLAGS=$(RCFLAGS) $(MOZ_LITENESS_FLAGS)
 
-!include "$(MOZ_SRC)\ns\config\rules.mak"
+!include "$(DEPTH)\config\rules.mak"
 
 libs:: $(DLL)
        $(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).dll $(DIST)\bin

@@ -61,7 +61,7 @@ LINCS=-I$(XPDIST)\public\dllcom -I$(XPDIST)\public\winprefs \
     -I$(XPDIST)\public\nspr -I$(XPDIST)\public\js 
 !endif
 
-!include "$(MOZ_SRC)\ns\config\rules.mak"
+!include "$(DEPTH)\config\rules.mak"
 
 libs:: $(DLL)
        $(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).dll $(DIST)\bin

@@ -22,4 +22,4 @@ MODULE=coreincl
 DEPTH=..\.. 
 EXPORTS=coremem.h platform.h 
 
-!include $(MOZ_SRC)\ns\config\rules.mak
+!include $(DEPTH)\config\rules.mak

@@ -19,13 +19,13 @@ JAVA_SOURCEPATH=$(MOZ_OUT)\x86Dbg\java\classes\java40.jar
 
 JSRCS=  \
 !ifdef MOZ_PRIV
-	$(MOZ_SRC)\ns_priv\dialup\java\AMDProgressBar.java \
+	$(DEPTH)\dialup\java\AMDProgressBar.java \
 !endif
 	ProgressApplet.java \
 	CPGeneratorProgress.java \
 	$(NULL)
 
-JAVA_DESTPATH=$(MOZ_SRC)\ns\dist\classes
+JAVA_DESTPATH=$(DEPTH)\dist\classes
 PACKAGE=netscape\asw
 
 !include <$(DEPTH)\config\rules.mak>

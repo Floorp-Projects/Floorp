@@ -23,7 +23,7 @@ LOCAL_JMC_SUBDIR =  ..\jmcgen\include
 
 
 DEPTH=..\..\.. 
-!include $(MOZ_SRC)\ns\config\config.mak
+!include $(DEPTH)\config\config.mak
 
 
 JMC_GEN=Mnfdoer Mnff Mnffbc Mnffbp Mnffbu Mnffmi Mnffp Mnfrc Mnfrf \
@@ -53,7 +53,7 @@ JMC_OBJS=.\$(OBJDIR)\Mnfdoer.obj .\$(OBJDIR)\Mnff.obj \
     .\$(OBJDIR)\Mnffmi.obj .\$(OBJDIR)\Mnffp.obj .\$(OBJDIR)\Mnfrc.obj \
     .\$(OBJDIR)\Mnfrf.obj .\$(OBJDIR)\Mnfstrm.obj .\$(OBJDIR)\Mnfdlm.obj 
 
-!include $(MOZ_SRC)\ns\config\rules.mak
+!include $(DEPTH)\config\rules.mak
 
 
 $(JMC_GEN_DIR)\Mnfdoer.h: $(JMCSRCDIR)\nfdoer.class

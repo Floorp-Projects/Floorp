@@ -17,5 +17,5 @@ MODULE=edtrcdll
 DEPTH=..\..\..\.. 
 EXPORTS=edtdlgs.h edtiface.h
 
-!include "$(MOZ_SRC)\ns\config\rules.mak"
+!include "$(DEPTH)\config\rules.mak"
 

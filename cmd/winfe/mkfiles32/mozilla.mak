@@ -75,7 +75,7 @@ MOZ_USERDEBUG=/DDEBUG_$(MOZ_USERNAME)
 
 SPELLCHK_DLL = sp$(MOZ_BITS)$(VERSION_NUMBER).dll
 # Location of spell checker dictionary files
-SPELLCHK_DATA = $(MOZ_SRC)\ns\modules\spellchk\data
+SPELLCHK_DATA = $(DEPTH)\modules\spellchk\data
 
 !if !defined(MOZ_PURIFY)
 MOZ_PURIFY=C:\Pure\Purify
@@ -117,7 +117,7 @@ RSC= \
     rc
 !endif
 TXT2RC=txt2rc
-BIN2RC=$(MOZ_SRC)\ns\config\bin2rc.exe
+BIN2RC=$(DEPTH)\config\bin2rc.exe
 
 #
 # Add different product values here, like dec alpha, mips etc, win16...
@@ -252,9 +252,9 @@ CFLAGS_DEFAULT=\
 POLICY  = moz40p3
 
 
-NEOFLAGS=/DqNeoThreads /DqNeoStandAlone /I$(MOZ_SRC)\ns\lib\libneo ^
-    /I$(MOZ_SRC)\ns\lib\libneo\ibmpc ^
-    /I$(MOZ_SRC)\ns\lib\libneo\ibmpc\alone 
+NEOFLAGS=/DqNeoThreads /DqNeoStandAlone /I$(DEPTH)\lib\libneo ^
+    /I$(DEPTH)\lib\libneo\ibmpc ^
+    /I$(DEPTH)\lib\libneo\ibmpc\alone 
 
 
 #
@@ -263,9 +263,9 @@ NEOFLAGS=/DqNeoThreads /DqNeoStandAlone /I$(MOZ_SRC)\ns\lib\libneo ^
 CFLAGS_LIBMSG_C=        $(CFLAGS_DEFAULT) /Fp"$(OUTDIR)/msgc.pch" /YX"msg.h"
 CFLAGS_LIBMIME_C=       $(CFLAGS_DEFAULT)
 CFLAGS_LIBI18N_C=       $(CFLAGS_DEFAULT) /Fp"$(OUTDIR)/intlpriv.pch" /YX"intlpriv.h"
-CFLAGS_LIBIMG_C=        $(CFLAGS_DEFAULT) /I$(MOZ_SRC)\ns\jpeg /Fp"$(OUTDIR)/xp.pch" /YX"xp.h"
+CFLAGS_LIBIMG_C=        $(CFLAGS_DEFAULT) /I$(DEPTH)\jpeg /Fp"$(OUTDIR)/xp.pch" /YX"xp.h"
 CFLAGS_JTOOLS_C=        $(CFLAGS_DEFAULT)  
-CFLAGS_LIBCNV_C=        $(CFLAGS_DEFAULT) /I$(MOZ_SRC)\ns\jpeg /Fp"$(OUTDIR)/xp.pch" /YX"xp.h"
+CFLAGS_LIBCNV_C=        $(CFLAGS_DEFAULT) /I$(DEPTH)\jpeg /Fp"$(OUTDIR)/xp.pch" /YX"xp.h"
 CFLAGS_JPEG_C=          $(CFLAGS_DEFAULT) 
 CFLAGS_LAYOUT_C=        $(CFLAGS_DEFAULT) /Fp"$(OUTDIR)/layoutc.pch" /YX"xp.h"
 CFLAGS_LIBSTYLE_C=      $(CFLAGS_DEFAULT) /Fp"$(OUTDIR)/stylec.pch" /YX"xp.h"
@@ -289,20 +289,20 @@ CFLAGS_LIBADDR_CPP=     $(CFLAGS_DEFAULT) $(NEOFLAGS) /Fp"$(OUTDIR)/addr.pch" /Y
 CFLAGS_LIBADDR_C=       $(CFLAGS_DEFAULT) $(NEOFLAGS)
 CFLAGS_LIBNEO_CPP=      $(CFLAGS_DEFAULT) $(NEOFLAGS) 
 CFLAGS_LAYOUT_CPP=      $(CFLAGS_DEFAULT) /Fp"$(OUTDIR)/editor.pch" /YX"editor.h"
-CFLAGS_PLUGIN_CPP=      $(CFLAGS_DEBUG) /I$(MOZ_SRC)\ns\cmd\winfe /Fp"$(OUTDIR)/stdafx.pch" /YX"stdafx.h"
+CFLAGS_PLUGIN_CPP=      $(CFLAGS_DEBUG) /I$(DEPTH)\cmd\winfe /Fp"$(OUTDIR)/stdafx.pch" /YX"stdafx.h"
 CFLAGS_LIBPREF_C=                 $(CFLAGS_DEBUG)
 CFLAGS_WINFE_C=                 $(CFLAGS_DEBUG)
 !if "$(MOZ_BITS)"=="32"
 !if "$(MOZ_BCPRO)" == ""
-CFLAGS_WINFE_CPP=       $(CFLAGS_DEBUG) /I$(MOZ_SRC)\ns\jpeg /Fp"$(OUTDIR)/stdafx.pch" /YX"stdafx.h"
+CFLAGS_WINFE_CPP=       $(CFLAGS_DEBUG) /I$(DEPTH)\jpeg /Fp"$(OUTDIR)/stdafx.pch" /YX"stdafx.h"
 !else
-CFLAGS_WINFE_CPP=       $(CFLAGS_DEBUG) /I$(MOZ_SRC)\ns\jpeg
+CFLAGS_WINFE_CPP=       $(CFLAGS_DEBUG) /I$(DEPTH)\jpeg
 !endif
 !else
 CFLAGS_WINFE_CPP=       $(CFLAGS_DEBUG)
 !endif
 !if "$(MOZ_BITS)"=="16"
-CFLAGS_WINDOWS_C=		$(CFLAGS_DEFAULT) /I$(MOZ_SRC)\ns\dist\public\win16\private
+CFLAGS_WINDOWS_C=		$(CFLAGS_DEFAULT) /I$(DEPTH)\dist\public\win16\private
 !endif
 
 OUTDIR=$(MOZ_OUT)\$(PROD)$(VERSTR)
@@ -496,40 +496,40 @@ RCFLAGS_GENERAL= \
     /r
 !endif
 
-#EXPORTINC=$(MOZ_SRC)\ns\exportinc
-EXPORTINC=$(MOZ_SRC)\ns\dist\public\win16
+#EXPORTINC=$(DEPTH)\exportinc
+EXPORTINC=$(DEPTH)\dist\public\win16
 
 # if you add something to CINCLUDES, you must also add it to the exports target
 # at the end of the file.
 
 CINCLUDES= \
-    /I$(MOZ_SRC)\ns\include \
+    /I$(DEPTH)\include \
 !if "$(MOZ_BITS)" == "32"
-    /I$(MOZ_SRC)\ns\lib\layout \
-    /I$(MOZ_SRC)\ns\lib\libstyle \
-    /I$(MOZ_SRC)\ns\lib\liblayer\include \
+    /I$(DEPTH)\lib\layout \
+    /I$(DEPTH)\lib\libstyle \
+    /I$(DEPTH)\lib\liblayer\include \
 !ifndef NO_SECURITY
-    /I$(MOZ_SRC)\ns\lib\libjar \
+    /I$(DEPTH)\lib\libjar \
 !endif
-    /I$(MOZ_SRC)\ns\lib\libnet \
-    /I$(MOZ_SRC)\ns\lib\libcnv \
-    /I$(MOZ_SRC)\ns\lib\libi18n \
-    /I$(MOZ_SRC)\ns\lib\libparse \
-    /I$(MOZ_SRC)\ns\lib\plugin \
+    /I$(DEPTH)\lib\libnet \
+    /I$(DEPTH)\lib\libcnv \
+    /I$(DEPTH)\lib\libi18n \
+    /I$(DEPTH)\lib\libparse \
+    /I$(DEPTH)\lib\plugin \
 !ifdef MOZ_MAIL_NEWS
-    /I$(MOZ_SRC)\ns\lib\libmsg \
-    /I$(MOZ_SRC)\ns\lib\libaddr \
-    /I$(MOZ_SRC)\ns\lib\libneo \
+    /I$(DEPTH)\lib\libmsg \
+    /I$(DEPTH)\lib\libaddr \
+    /I$(DEPTH)\lib\libneo \
 !endif
 !else
     /I$(EXPORTINC)
 !endif
 
-RCINCLUDES=$(MOZ_SRC)\ns\cmd\winfe;$(MOZ_SRC)\ns\include
+RCINCLUDES=$(DEPTH)\cmd\winfe;$(DEPTH)\include
 
 CDEPENDINCLUDES= \
-    /I$(MOZ_SRC)\ns\cmd\winfe \
-    /I$(MOZ_SRC)\ns\jpeg
+    /I$(DEPTH)\cmd\winfe \
+    /I$(DEPTH)\jpeg
 
 # if you add something to CDISTINCLUDES, you must also add it to the exports target
 # at the end of the file.
@@ -645,757 +645,757 @@ RCFILEFLAGS=$(RCFLAGS_GENERAL)\
 
 !IFDEF DEPEND
 
-all: "$(OUTDIR)" $(MOZ_SRC)\ns\cmd\winfe\mkfiles32\makedep.exe $(OUTDIR)\mozilla.dep
+all: "$(OUTDIR)" $(DEPTH)\cmd\winfe\mkfiles32\makedep.exe $(OUTDIR)\mozilla.dep
 
-$(OUTDIR)\mozilla.dep: $(MOZ_SRC)\ns\cmd\winfe\mkfiles32\mozilla.mak
+$(OUTDIR)\mozilla.dep: $(DEPTH)\cmd\winfe\mkfiles32\mozilla.mak
     @rem <<$(PROD)$(VERSTR).dep
 	$(CINCLUDES) $(CDISTINCLUDES) $(CDEPENDINCLUDES) -O $(OUTDIR)\mozilla.dep
 !IF "$(MOZ_BITS)"=="16"
     -16
 !ENDIF
 <<
-    $(MOZ_SRC)\ns\cmd\winfe\mkfiles32\makedep.exe @$(PROD)$(VERSTR).dep -F <<
-	$(MOZ_SRC)\ns\lib\liblayer\src\cl_comp.c
-	$(MOZ_SRC)\ns\lib\liblayer\src\cl_drwbl.c
-	$(MOZ_SRC)\ns\lib\liblayer\src\cl_layer.c
-	$(MOZ_SRC)\ns\lib\liblayer\src\cl_group.c
-	$(MOZ_SRC)\ns\lib\liblayer\src\cl_util.c
-	$(MOZ_SRC)\ns\lib\liblayer\src\xp_rect.c
+    $(DEPTH)\cmd\winfe\mkfiles32\makedep.exe @$(PROD)$(VERSTR).dep -F <<
+	$(DEPTH)\lib\liblayer\src\cl_comp.c
+	$(DEPTH)\lib\liblayer\src\cl_drwbl.c
+	$(DEPTH)\lib\liblayer\src\cl_layer.c
+	$(DEPTH)\lib\liblayer\src\cl_group.c
+	$(DEPTH)\lib\liblayer\src\cl_util.c
+	$(DEPTH)\lib\liblayer\src\xp_rect.c
 
-	$(MOZ_SRC)\ns\lib\layout\bullet.c  
-	$(MOZ_SRC)\ns\lib\layout\clipline.c
+	$(DEPTH)\lib\layout\bullet.c  
+	$(DEPTH)\lib\layout\clipline.c
 !ifdef EDITOR
-	$(MOZ_SRC)\ns\lib\layout\editor.cpp   
-	$(MOZ_SRC)\ns\lib\layout\edtbuf.cpp   
-	$(MOZ_SRC)\ns\lib\layout\edtcmd.cpp   
-	$(MOZ_SRC)\ns\lib\layout\edtele.cpp   
-	$(MOZ_SRC)\ns\lib\layout\edtjava.cpp   
-	$(MOZ_SRC)\ns\lib\layout\edtsave.cpp   
-	$(MOZ_SRC)\ns\lib\layout\edtutil.cpp   
+	$(DEPTH)\lib\layout\editor.cpp   
+	$(DEPTH)\lib\layout\edtbuf.cpp   
+	$(DEPTH)\lib\layout\edtcmd.cpp   
+	$(DEPTH)\lib\layout\edtele.cpp   
+	$(DEPTH)\lib\layout\edtjava.cpp   
+	$(DEPTH)\lib\layout\edtsave.cpp   
+	$(DEPTH)\lib\layout\edtutil.cpp   
 !endif
-	$(MOZ_SRC)\ns\lib\layout\layedit.c 
-	$(MOZ_SRC)\ns\lib\layout\fsfile.cpp   
-	$(MOZ_SRC)\ns\lib\layout\streams.cpp   
-	$(MOZ_SRC)\ns\lib\layout\layarena.c
-	$(MOZ_SRC)\ns\lib\layout\layblock.c 
-	$(MOZ_SRC)\ns\lib\layout\laycell.c 
-	$(MOZ_SRC)\ns\lib\layout\laycols.c 
-	$(MOZ_SRC)\ns\lib\layout\laydisp.c 
-	$(MOZ_SRC)\ns\lib\layout\layembed.c
-	$(MOZ_SRC)\ns\lib\layout\layfind.c 
-	$(MOZ_SRC)\ns\lib\layout\layform.c 
-	$(MOZ_SRC)\ns\lib\layout\layfree.c 
-	$(MOZ_SRC)\ns\lib\layout\laygrid.c 
-	$(MOZ_SRC)\ns\lib\layout\layhrule.c
-	$(MOZ_SRC)\ns\lib\layout\layimage.c
-	$(MOZ_SRC)\ns\lib\layout\layinfo.c 
+	$(DEPTH)\lib\layout\layedit.c 
+	$(DEPTH)\lib\layout\fsfile.cpp   
+	$(DEPTH)\lib\layout\streams.cpp   
+	$(DEPTH)\lib\layout\layarena.c
+	$(DEPTH)\lib\layout\layblock.c 
+	$(DEPTH)\lib\layout\laycell.c 
+	$(DEPTH)\lib\layout\laycols.c 
+	$(DEPTH)\lib\layout\laydisp.c 
+	$(DEPTH)\lib\layout\layembed.c
+	$(DEPTH)\lib\layout\layfind.c 
+	$(DEPTH)\lib\layout\layform.c 
+	$(DEPTH)\lib\layout\layfree.c 
+	$(DEPTH)\lib\layout\laygrid.c 
+	$(DEPTH)\lib\layout\layhrule.c
+	$(DEPTH)\lib\layout\layimage.c
+	$(DEPTH)\lib\layout\layinfo.c 
 !if defined(MOZ_JAVA)
-	$(MOZ_SRC)\ns\lib\layout\layjava.c 
+	$(DEPTH)\lib\layout\layjava.c 
 !endif
-	$(MOZ_SRC)\ns\lib\layout\laylayer.c 
-	$(MOZ_SRC)\ns\lib\layout\laylist.c 
-	$(MOZ_SRC)\ns\lib\layout\laymap.c  
-	$(MOZ_SRC)\ns\lib\layout\laymocha.c
-	$(MOZ_SRC)\ns\lib\layout\layobj.c
-	$(MOZ_SRC)\ns\lib\layout\layout.c  
-	$(MOZ_SRC)\ns\lib\layout\layscrip.c
-	$(MOZ_SRC)\ns\lib\layout\laystyle.c
-	$(MOZ_SRC)\ns\lib\layout\laysel.c  
-	$(MOZ_SRC)\ns\lib\layout\layspace.c  
-	$(MOZ_SRC)\ns\lib\layout\laysub.c  
-	$(MOZ_SRC)\ns\lib\layout\laytable.c
-	$(MOZ_SRC)\ns\lib\layout\laytags.c 
-	$(MOZ_SRC)\ns\lib\layout\laytext.c 
-	$(MOZ_SRC)\ns\lib\layout\layutil.c 
-	$(MOZ_SRC)\ns\lib\layout\ptinpoly.c
-	$(MOZ_SRC)\ns\lib\layout\layrelay.c 
-	$(MOZ_SRC)\ns\lib\layout\laytrav.c 
+	$(DEPTH)\lib\layout\laylayer.c 
+	$(DEPTH)\lib\layout\laylist.c 
+	$(DEPTH)\lib\layout\laymap.c  
+	$(DEPTH)\lib\layout\laymocha.c
+	$(DEPTH)\lib\layout\layobj.c
+	$(DEPTH)\lib\layout\layout.c  
+	$(DEPTH)\lib\layout\layscrip.c
+	$(DEPTH)\lib\layout\laystyle.c
+	$(DEPTH)\lib\layout\laysel.c  
+	$(DEPTH)\lib\layout\layspace.c  
+	$(DEPTH)\lib\layout\laysub.c  
+	$(DEPTH)\lib\layout\laytable.c
+	$(DEPTH)\lib\layout\laytags.c 
+	$(DEPTH)\lib\layout\laytext.c 
+	$(DEPTH)\lib\layout\layutil.c 
+	$(DEPTH)\lib\layout\ptinpoly.c
+	$(DEPTH)\lib\layout\layrelay.c 
+	$(DEPTH)\lib\layout\laytrav.c 
 
 !ifdef MOZ_MAIL_NEWS
-	$(MOZ_SRC)\ns\lib\libaddr\line64.c
-	$(MOZ_SRC)\ns\lib\libaddr\vobject.c
-	$(MOZ_SRC)\ns\lib\libaddr\vcc.c
-	$(MOZ_SRC)\ns\lib\libaddr\ab.cpp  
-	$(MOZ_SRC)\ns\lib\libaddr\abcntxt.cpp  
-	$(MOZ_SRC)\ns\lib\libaddr\abentry.cpp  
-	$(MOZ_SRC)\ns\lib\libaddr\abinfo.cpp  
-	$(MOZ_SRC)\ns\lib\libaddr\ablist.cpp  
-	$(MOZ_SRC)\ns\lib\libaddr\addbook.cpp  
-	$(MOZ_SRC)\ns\lib\libaddr\abpane.cpp  
-	$(MOZ_SRC)\ns\lib\libaddr\nickindx.cpp  
-	$(MOZ_SRC)\ns\lib\libaddr\tyindex.cpp  
-	$(MOZ_SRC)\ns\lib\libaddr\import.cpp
-	$(MOZ_SRC)\ns\lib\libaddr\export.cpp
-	$(MOZ_SRC)\ns\lib\libaddr\abundoac.cpp
-	$(MOZ_SRC)\ns\lib\libaddr\abglue.cpp
-	$(MOZ_SRC)\ns\lib\libaddr\abcinfo.cpp
-	$(MOZ_SRC)\ns\lib\libaddr\abcpane.cpp
-	$(MOZ_SRC)\ns\lib\libaddr\abpane2.cpp
-	$(MOZ_SRC)\ns\lib\libaddr\abntfy.cpp
+	$(DEPTH)\lib\libaddr\line64.c
+	$(DEPTH)\lib\libaddr\vobject.c
+	$(DEPTH)\lib\libaddr\vcc.c
+	$(DEPTH)\lib\libaddr\ab.cpp  
+	$(DEPTH)\lib\libaddr\abcntxt.cpp  
+	$(DEPTH)\lib\libaddr\abentry.cpp  
+	$(DEPTH)\lib\libaddr\abinfo.cpp  
+	$(DEPTH)\lib\libaddr\ablist.cpp  
+	$(DEPTH)\lib\libaddr\addbook.cpp  
+	$(DEPTH)\lib\libaddr\abpane.cpp  
+	$(DEPTH)\lib\libaddr\nickindx.cpp  
+	$(DEPTH)\lib\libaddr\tyindex.cpp  
+	$(DEPTH)\lib\libaddr\import.cpp
+	$(DEPTH)\lib\libaddr\export.cpp
+	$(DEPTH)\lib\libaddr\abundoac.cpp
+	$(DEPTH)\lib\libaddr\abglue.cpp
+	$(DEPTH)\lib\libaddr\abcinfo.cpp
+	$(DEPTH)\lib\libaddr\abcpane.cpp
+	$(DEPTH)\lib\libaddr\abpane2.cpp
+	$(DEPTH)\lib\libaddr\abntfy.cpp
 !endif
 
-	$(MOZ_SRC)\ns\lib\libi18n\detectu2.c
-	$(MOZ_SRC)\ns\lib\libi18n\metatag.c
-	$(MOZ_SRC)\ns\lib\libi18n\autokr.c
-	$(MOZ_SRC)\ns\lib\libi18n\autocvt.c
-	$(MOZ_SRC)\ns\lib\libi18n\b52cns.c 
-	$(MOZ_SRC)\ns\lib\libi18n\cns2b5.c 
-	$(MOZ_SRC)\ns\lib\libi18n\cvchcode.c   
-	$(MOZ_SRC)\ns\lib\libi18n\euc2jis.c
-	$(MOZ_SRC)\ns\lib\libi18n\euc2sjis.c   
-	$(MOZ_SRC)\ns\lib\libi18n\euckr2is.c   
-	$(MOZ_SRC)\ns\lib\libi18n\fe_ccc.c 
-	$(MOZ_SRC)\ns\lib\libi18n\doc_ccc.c 
-	$(MOZ_SRC)\ns\lib\libi18n\intl_csi.c 
-	$(MOZ_SRC)\ns\lib\libi18n\is2euckr.c   
-	$(MOZ_SRC)\ns\lib\libi18n\intl_csi.c   
-	$(MOZ_SRC)\ns\lib\libi18n\jis2oth.c
-	$(MOZ_SRC)\ns\lib\libi18n\nscstr.c
-	$(MOZ_SRC)\ns\lib\libi18n\sjis2euc.c   
-	$(MOZ_SRC)\ns\lib\libi18n\sjis2jis.c   
-	$(MOZ_SRC)\ns\lib\libi18n\ucs2.c   
-	$(MOZ_SRC)\ns\lib\libi18n\ugen.c   
-	$(MOZ_SRC)\ns\lib\libi18n\ugendata.c   
-	$(MOZ_SRC)\ns\lib\libi18n\umap.c   
-	$(MOZ_SRC)\ns\lib\libi18n\uscan.c   
+	$(DEPTH)\lib\libi18n\detectu2.c
+	$(DEPTH)\lib\libi18n\metatag.c
+	$(DEPTH)\lib\libi18n\autokr.c
+	$(DEPTH)\lib\libi18n\autocvt.c
+	$(DEPTH)\lib\libi18n\b52cns.c 
+	$(DEPTH)\lib\libi18n\cns2b5.c 
+	$(DEPTH)\lib\libi18n\cvchcode.c   
+	$(DEPTH)\lib\libi18n\euc2jis.c
+	$(DEPTH)\lib\libi18n\euc2sjis.c   
+	$(DEPTH)\lib\libi18n\euckr2is.c   
+	$(DEPTH)\lib\libi18n\fe_ccc.c 
+	$(DEPTH)\lib\libi18n\doc_ccc.c 
+	$(DEPTH)\lib\libi18n\intl_csi.c 
+	$(DEPTH)\lib\libi18n\is2euckr.c   
+	$(DEPTH)\lib\libi18n\intl_csi.c   
+	$(DEPTH)\lib\libi18n\jis2oth.c
+	$(DEPTH)\lib\libi18n\nscstr.c
+	$(DEPTH)\lib\libi18n\sjis2euc.c   
+	$(DEPTH)\lib\libi18n\sjis2jis.c   
+	$(DEPTH)\lib\libi18n\ucs2.c   
+	$(DEPTH)\lib\libi18n\ugen.c   
+	$(DEPTH)\lib\libi18n\ugendata.c   
+	$(DEPTH)\lib\libi18n\umap.c   
+	$(DEPTH)\lib\libi18n\uscan.c   
 !IF "$(MOZ_BITS)"=="16"
-	$(MOZ_SRC)\ns\lib\libi18n\unicvt.c
+	$(DEPTH)\lib\libi18n\unicvt.c
 !ENDIF
-	$(MOZ_SRC)\ns\lib\libi18n\fontencd.c
-	$(MOZ_SRC)\ns\lib\libi18n\csnamefn.c
-	$(MOZ_SRC)\ns\lib\libi18n\csnametb.c
-	$(MOZ_SRC)\ns\lib\libi18n\mime2fun.c
-	$(MOZ_SRC)\ns\lib\libi18n\sbconvtb.c
-	$(MOZ_SRC)\ns\lib\libi18n\acptlang.c
-	$(MOZ_SRC)\ns\lib\libi18n\csstrlen.c
-	$(MOZ_SRC)\ns\lib\libi18n\sblower.c
-	$(MOZ_SRC)\ns\lib\libi18n\intlcomp.c
-	$(MOZ_SRC)\ns\lib\libi18n\dblower.c
-	$(MOZ_SRC)\ns\lib\libi18n\kinsokud.c
-	$(MOZ_SRC)\ns\lib\libi18n\kinsokuf.c
-	$(MOZ_SRC)\ns\lib\libi18n\net_junk.c 
-	$(MOZ_SRC)\ns\lib\libi18n\katakana.c 
+	$(DEPTH)\lib\libi18n\fontencd.c
+	$(DEPTH)\lib\libi18n\csnamefn.c
+	$(DEPTH)\lib\libi18n\csnametb.c
+	$(DEPTH)\lib\libi18n\mime2fun.c
+	$(DEPTH)\lib\libi18n\sbconvtb.c
+	$(DEPTH)\lib\libi18n\acptlang.c
+	$(DEPTH)\lib\libi18n\csstrlen.c
+	$(DEPTH)\lib\libi18n\sblower.c
+	$(DEPTH)\lib\libi18n\intlcomp.c
+	$(DEPTH)\lib\libi18n\dblower.c
+	$(DEPTH)\lib\libi18n\kinsokud.c
+	$(DEPTH)\lib\libi18n\kinsokuf.c
+	$(DEPTH)\lib\libi18n\net_junk.c 
+	$(DEPTH)\lib\libi18n\katakana.c 
 !ifndef NO_SECURITY
-	$(MOZ_SRC)\ns\lib\libjar\zig.c
-	$(MOZ_SRC)\ns\lib\libjar\zigsign.c
-	$(MOZ_SRC)\ns\lib\libjar\zigver.c
-	$(MOZ_SRC)\ns\lib\libjar\zig-ds.c
-	$(MOZ_SRC)\ns\lib\libjar\zigevil.c
+	$(DEPTH)\lib\libjar\zig.c
+	$(DEPTH)\lib\libjar\zigsign.c
+	$(DEPTH)\lib\libjar\zigver.c
+	$(DEPTH)\lib\libjar\zig-ds.c
+	$(DEPTH)\lib\libjar\zigevil.c
 !endif
-	$(MOZ_SRC)\ns\lib\libcnv\libcnv.c 
-	$(MOZ_SRC)\ns\lib\libcnv\writejpg.c 
-	$(MOZ_SRC)\ns\lib\libcnv\colorqnt.c 
-	$(MOZ_SRC)\ns\lib\libcnv\readbmp.c 
-	$(MOZ_SRC)\ns\lib\libcnv\libppm3.c 
+	$(DEPTH)\lib\libcnv\libcnv.c 
+	$(DEPTH)\lib\libcnv\writejpg.c 
+	$(DEPTH)\lib\libcnv\colorqnt.c 
+	$(DEPTH)\lib\libcnv\readbmp.c 
+	$(DEPTH)\lib\libcnv\libppm3.c 
 
 !ifdef MOZ_MAIL_NEWS
-	$(MOZ_SRC)\ns\lib\libmime\mimecont.c
-	$(MOZ_SRC)\ns\lib\libmime\mimecryp.c
-	$(MOZ_SRC)\ns\lib\libmime\mimeebod.c
-	$(MOZ_SRC)\ns\lib\libmime\mimeenc.c
-	$(MOZ_SRC)\ns\lib\libmime\mimeeobj.c
-	$(MOZ_SRC)\ns\lib\libmime\mimehdrs.c
-	$(MOZ_SRC)\ns\lib\libmime\mimei.c
-	$(MOZ_SRC)\ns\lib\libmime\mimeiimg.c
-	$(MOZ_SRC)\ns\lib\libmime\mimeleaf.c
-	$(MOZ_SRC)\ns\lib\libmime\mimemalt.c
-	$(MOZ_SRC)\ns\lib\libmime\mimemapl.c
-	$(MOZ_SRC)\ns\lib\libmime\mimemdig.c
-	$(MOZ_SRC)\ns\lib\libmime\mimemmix.c
-	$(MOZ_SRC)\ns\lib\libmime\mimemoz.c
-	$(MOZ_SRC)\ns\lib\libmime\mimempar.c
+	$(DEPTH)\lib\libmime\mimecont.c
+	$(DEPTH)\lib\libmime\mimecryp.c
+	$(DEPTH)\lib\libmime\mimeebod.c
+	$(DEPTH)\lib\libmime\mimeenc.c
+	$(DEPTH)\lib\libmime\mimeeobj.c
+	$(DEPTH)\lib\libmime\mimehdrs.c
+	$(DEPTH)\lib\libmime\mimei.c
+	$(DEPTH)\lib\libmime\mimeiimg.c
+	$(DEPTH)\lib\libmime\mimeleaf.c
+	$(DEPTH)\lib\libmime\mimemalt.c
+	$(DEPTH)\lib\libmime\mimemapl.c
+	$(DEPTH)\lib\libmime\mimemdig.c
+	$(DEPTH)\lib\libmime\mimemmix.c
+	$(DEPTH)\lib\libmime\mimemoz.c
+	$(DEPTH)\lib\libmime\mimempar.c
 !ifndef NO_SECURITY
-	$(MOZ_SRC)\ns\lib\libmime\mimempkc.c
+	$(DEPTH)\lib\libmime\mimempkc.c
 !endif
-	$(MOZ_SRC)\ns\lib\libmime\mimemrel.c
-	$(MOZ_SRC)\ns\lib\libmime\mimemsg.c
-	$(MOZ_SRC)\ns\lib\libmime\mimemsig.c
-	$(MOZ_SRC)\ns\lib\libmime\mimemult.c
-	$(MOZ_SRC)\ns\lib\libmime\mimeobj.c
-	$(MOZ_SRC)\ns\lib\libmime\mimepbuf.c
+	$(DEPTH)\lib\libmime\mimemrel.c
+	$(DEPTH)\lib\libmime\mimemsg.c
+	$(DEPTH)\lib\libmime\mimemsig.c
+	$(DEPTH)\lib\libmime\mimemult.c
+	$(DEPTH)\lib\libmime\mimeobj.c
+	$(DEPTH)\lib\libmime\mimepbuf.c
 !ifndef NO_SECURITY
-	$(MOZ_SRC)\ns\lib\libmime\mimepkcs.c
+	$(DEPTH)\lib\libmime\mimepkcs.c
 !endif
-	$(MOZ_SRC)\ns\lib\libmime\mimesun.c
-	$(MOZ_SRC)\ns\lib\libmime\mimetenr.c
-	$(MOZ_SRC)\ns\lib\libmime\mimetext.c
-	$(MOZ_SRC)\ns\lib\libmime\mimethtm.c
-	$(MOZ_SRC)\ns\lib\libmime\mimetpla.c
-	$(MOZ_SRC)\ns\lib\libmime\mimetric.c
-	$(MOZ_SRC)\ns\lib\libmime\mimeunty.c
-	$(MOZ_SRC)\ns\lib\libmime\mimevcrd.c
-	$(MOZ_SRC)\ns\lib\libmime\mimedrft.c
-	$(MOZ_SRC)\ns\lib\libmisc\mime.c   
-	$(MOZ_SRC)\ns\lib\libmisc\dirprefs.c
+	$(DEPTH)\lib\libmime\mimesun.c
+	$(DEPTH)\lib\libmime\mimetenr.c
+	$(DEPTH)\lib\libmime\mimetext.c
+	$(DEPTH)\lib\libmime\mimethtm.c
+	$(DEPTH)\lib\libmime\mimetpla.c
+	$(DEPTH)\lib\libmime\mimetric.c
+	$(DEPTH)\lib\libmime\mimeunty.c
+	$(DEPTH)\lib\libmime\mimevcrd.c
+	$(DEPTH)\lib\libmime\mimedrft.c
+	$(DEPTH)\lib\libmisc\mime.c   
+	$(DEPTH)\lib\libmisc\dirprefs.c
 !endif
  
-	$(MOZ_SRC)\ns\lib\libmisc\glhist.c 
-	$(MOZ_SRC)\ns\lib\libmisc\hotlist.c
-	$(MOZ_SRC)\ns\lib\libmisc\shist.c  
-	$(MOZ_SRC)\ns\lib\libmisc\undo.c   
+	$(DEPTH)\lib\libmisc\glhist.c 
+	$(DEPTH)\lib\libmisc\hotlist.c
+	$(DEPTH)\lib\libmisc\shist.c  
+	$(DEPTH)\lib\libmisc\undo.c   
 
-	$(MOZ_SRC)\ns\lib\libmocha\et_mocha.c
-	$(MOZ_SRC)\ns\lib\libmocha\et_moz.c
-	$(MOZ_SRC)\ns\lib\libmocha\lm_applt.c
-	$(MOZ_SRC)\ns\lib\libmocha\lm_bars.c
-	$(MOZ_SRC)\ns\lib\libmocha\lm_cmpnt.c
+	$(DEPTH)\lib\libmocha\et_mocha.c
+	$(DEPTH)\lib\libmocha\et_moz.c
+	$(DEPTH)\lib\libmocha\lm_applt.c
+	$(DEPTH)\lib\libmocha\lm_bars.c
+	$(DEPTH)\lib\libmocha\lm_cmpnt.c
 !ifndef NO_SECURITY
-	$(MOZ_SRC)\ns\lib\libmocha\lm_crypt.c
+	$(DEPTH)\lib\libmocha\lm_crypt.c
 !endif
-	$(MOZ_SRC)\ns\lib\libmocha\lm_doc.c
-	$(MOZ_SRC)\ns\lib\libmocha\lm_embed.c
-	$(MOZ_SRC)\ns\lib\libmocha\lm_event.c
-	$(MOZ_SRC)\ns\lib\libmocha\lm_form.c   
-	$(MOZ_SRC)\ns\lib\libmocha\lm_hardw.c   
-	$(MOZ_SRC)\ns\lib\libmocha\lm_hist.c   
-	$(MOZ_SRC)\ns\lib\libmocha\lm_href.c   
-	$(MOZ_SRC)\ns\lib\libmocha\lm_img.c
-	$(MOZ_SRC)\ns\lib\libmocha\lm_init.c   
-	$(MOZ_SRC)\ns\lib\libmocha\lm_input.c  
-	$(MOZ_SRC)\ns\lib\libmocha\lm_layer.c  
-	$(MOZ_SRC)\ns\lib\libmocha\lm_nav.c
-	$(MOZ_SRC)\ns\lib\libmocha\lm_plgin.c  
-	$(MOZ_SRC)\ns\lib\libmocha\lm_screen.c  
-	$(MOZ_SRC)\ns\lib\libmocha\lm_supdt.c  
-	$(MOZ_SRC)\ns\lib\libmocha\lm_taint.c  
-	$(MOZ_SRC)\ns\lib\libmocha\lm_trggr.c  
-	$(MOZ_SRC)\ns\lib\libmocha\lm_url.c
-	$(MOZ_SRC)\ns\lib\libmocha\lm_win.c
+	$(DEPTH)\lib\libmocha\lm_doc.c
+	$(DEPTH)\lib\libmocha\lm_embed.c
+	$(DEPTH)\lib\libmocha\lm_event.c
+	$(DEPTH)\lib\libmocha\lm_form.c   
+	$(DEPTH)\lib\libmocha\lm_hardw.c   
+	$(DEPTH)\lib\libmocha\lm_hist.c   
+	$(DEPTH)\lib\libmocha\lm_href.c   
+	$(DEPTH)\lib\libmocha\lm_img.c
+	$(DEPTH)\lib\libmocha\lm_init.c   
+	$(DEPTH)\lib\libmocha\lm_input.c  
+	$(DEPTH)\lib\libmocha\lm_layer.c  
+	$(DEPTH)\lib\libmocha\lm_nav.c
+	$(DEPTH)\lib\libmocha\lm_plgin.c  
+	$(DEPTH)\lib\libmocha\lm_screen.c  
+	$(DEPTH)\lib\libmocha\lm_supdt.c  
+	$(DEPTH)\lib\libmocha\lm_taint.c  
+	$(DEPTH)\lib\libmocha\lm_trggr.c  
+	$(DEPTH)\lib\libmocha\lm_url.c
+	$(DEPTH)\lib\libmocha\lm_win.c
 !ifndef NO_SECURITY
-	$(MOZ_SRC)\ns\lib\libmocha\lm_pk11.c
+	$(DEPTH)\lib\libmocha\lm_pk11.c
 !endif
 !if "$(MOZ_BITS)" == "32"
 !ifdef MOZ_JAVA
-	$(MOZ_SRC)\ns\lib\libmocha\lm_jsd.c
+	$(DEPTH)\lib\libmocha\lm_jsd.c
 !endif
 !endif
 
 !ifdef MOZ_MAIL_NEWS
-	$(MOZ_SRC)\ns\lib\libmsg\ad_strm.c 
-	$(MOZ_SRC)\ns\lib\libmsg\msgppane.cpp 
-	$(MOZ_SRC)\ns\lib\libmsg\addr.c
-	$(MOZ_SRC)\ns\lib\libmsg\ap_decod.c
-	$(MOZ_SRC)\ns\lib\libmsg\ap_encod.c
-	$(MOZ_SRC)\ns\lib\libmsg\appledbl.c
-	$(MOZ_SRC)\ns\lib\libmsg\bh_strm.c 
-	$(MOZ_SRC)\ns\lib\libmsg\bytearr.cpp
-	$(MOZ_SRC)\ns\lib\libmsg\chngntfy.cpp
+	$(DEPTH)\lib\libmsg\ad_strm.c 
+	$(DEPTH)\lib\libmsg\msgppane.cpp 
+	$(DEPTH)\lib\libmsg\addr.c
+	$(DEPTH)\lib\libmsg\ap_decod.c
+	$(DEPTH)\lib\libmsg\ap_encod.c
+	$(DEPTH)\lib\libmsg\appledbl.c
+	$(DEPTH)\lib\libmsg\bh_strm.c 
+	$(DEPTH)\lib\libmsg\bytearr.cpp
+	$(DEPTH)\lib\libmsg\chngntfy.cpp
 !ifndef NO_SECURITY
-	$(MOZ_SRC)\ns\lib\libmsg\composec.c
+	$(DEPTH)\lib\libmsg\composec.c
 !endif
-	$(MOZ_SRC)\ns\lib\libmsg\dwordarr.cpp
-	$(MOZ_SRC)\ns\lib\libmsg\eneoidar.cpp
-	$(MOZ_SRC)\ns\lib\libmsg\filters.cpp
-	$(MOZ_SRC)\ns\lib\libmsg\grec.cpp
-	$(MOZ_SRC)\ns\lib\libmsg\grpinfo.cpp
-	$(MOZ_SRC)\ns\lib\libmsg\hashtbl.cpp
-	$(MOZ_SRC)\ns\lib\libmsg\hosttbl.cpp
-	$(MOZ_SRC)\ns\lib\libmsg\idarray.cpp
-	$(MOZ_SRC)\ns\lib\libmsg\imaphost.cpp
-	$(MOZ_SRC)\ns\lib\libmsg\jsmsg.cpp
-	$(MOZ_SRC)\ns\lib\libmsg\listngst.cpp
-	$(MOZ_SRC)\ns\lib\libmsg\m_binhex.c
-	$(MOZ_SRC)\ns\lib\libmsg\maildb.cpp
-	$(MOZ_SRC)\ns\lib\libmsg\mailhdr.cpp
-	$(MOZ_SRC)\ns\lib\libmsg\mhtmlstm.cpp
-	$(MOZ_SRC)\ns\lib\libmsg\msgbg.cpp
-	$(MOZ_SRC)\ns\lib\libmsg\msgbgcln.cpp
-	$(MOZ_SRC)\ns\lib\libmsg\msgbiff.c
-	$(MOZ_SRC)\ns\lib\libmsg\msgcpane.cpp
-	$(MOZ_SRC)\ns\lib\libmsg\msgccach.cpp
-	$(MOZ_SRC)\ns\lib\libmsg\msgcflds.cpp
-	$(MOZ_SRC)\ns\lib\libmsg\msgcmfld.cpp 
-	$(MOZ_SRC)\ns\lib\libmsg\msgdb.cpp
-	$(MOZ_SRC)\ns\lib\libmsg\msgdbini.cpp
-	$(MOZ_SRC)\ns\lib\libmsg\msgdbvw.cpp
-	$(MOZ_SRC)\ns\lib\libmsg\msgdoc.cpp
-	$(MOZ_SRC)\ns\lib\libmsg\msgdwnof.cpp
-	$(MOZ_SRC)\ns\lib\libmsg\msgdlqml.cpp
-	$(MOZ_SRC)\ns\lib\libmsg\msgfcach.cpp
-	$(MOZ_SRC)\ns\lib\libmsg\msgfinfo.cpp
-	$(MOZ_SRC)\ns\lib\libmsg\imapoff.cpp
-	$(MOZ_SRC)\ns\lib\libmsg\msgimap.cpp
-	$(MOZ_SRC)\ns\lib\libmsg\msgfpane.cpp
-	$(MOZ_SRC)\ns\lib\libmsg\msgglue.cpp
-	$(MOZ_SRC)\ns\lib\libmsg\msghdr.cpp
-	$(MOZ_SRC)\ns\lib\libmsg\msglpane.cpp
-	$(MOZ_SRC)\ns\lib\libmsg\msglsrch.cpp
-	$(MOZ_SRC)\ns\lib\libmsg\msgmast.cpp
-	$(MOZ_SRC)\ns\lib\libmsg\msgmapi.cpp
-	$(MOZ_SRC)\ns\lib\libmsg\msgmpane.cpp
-	$(MOZ_SRC)\ns\lib\libmsg\msgmsrch.cpp
-	$(MOZ_SRC)\ns\lib\libmsg\msgnsrch.cpp
-	$(MOZ_SRC)\ns\lib\libmsg\msgoffnw.cpp
-	$(MOZ_SRC)\ns\lib\libmsg\msgpane.cpp
-	$(MOZ_SRC)\ns\lib\libmsg\msgppane.cpp
-	$(MOZ_SRC)\ns\lib\libmsg\msgprefs.cpp
-	$(MOZ_SRC)\ns\lib\libmsg\msgpurge.cpp
-	$(MOZ_SRC)\ns\lib\libmsg\msgrulet.cpp
-	$(MOZ_SRC)\ns\lib\libmsg\msgsec.cpp
-	$(MOZ_SRC)\ns\lib\libmsg\msgsend.cpp
-	$(MOZ_SRC)\ns\lib\libmsg\msgsendp.cpp
-	$(MOZ_SRC)\ns\lib\libmsg\msgspane.cpp
-	$(MOZ_SRC)\ns\lib\libmsg\msgtpane.cpp
-	$(MOZ_SRC)\ns\lib\libmsg\msgundmg.cpp
-	$(MOZ_SRC)\ns\lib\libmsg\msgundac.cpp
-	$(MOZ_SRC)\ns\lib\libmsg\msgurlq.cpp
-	$(MOZ_SRC)\ns\lib\libmsg\msgutils.c
-	$(MOZ_SRC)\ns\lib\libmsg\msgzap.cpp
-	$(MOZ_SRC)\ns\lib\libmsg\msgmdn.cpp
-	$(MOZ_SRC)\ns\lib\libmsg\newsdb.cpp
-	$(MOZ_SRC)\ns\lib\libmsg\newshdr.cpp 
-	$(MOZ_SRC)\ns\lib\libmsg\newshost.cpp 
-	$(MOZ_SRC)\ns\lib\libmsg\newspane.cpp 
-	$(MOZ_SRC)\ns\lib\libmsg\newsset.cpp 
-	$(MOZ_SRC)\ns\lib\libmsg\nwsartst.cpp 
-	$(MOZ_SRC)\ns\lib\libmsg\prsembst.cpp 
-	$(MOZ_SRC)\ns\lib\libmsg\ptrarray.cpp
-	$(MOZ_SRC)\ns\lib\libmsg\search.cpp
-	$(MOZ_SRC)\ns\lib\libmsg\subline.cpp
-	$(MOZ_SRC)\ns\lib\libmsg\subpane.cpp
-	$(MOZ_SRC)\ns\lib\libmsg\thrdbvw.cpp
-	$(MOZ_SRC)\ns\lib\libmsg\thrhead.cpp
-	$(MOZ_SRC)\ns\lib\libmsg\thrlstst.cpp
-	$(MOZ_SRC)\ns\lib\libmsg\thrnewvw.cpp
-	$(MOZ_SRC)\ns\lib\libmsg\mozdb.cpp
+	$(DEPTH)\lib\libmsg\dwordarr.cpp
+	$(DEPTH)\lib\libmsg\eneoidar.cpp
+	$(DEPTH)\lib\libmsg\filters.cpp
+	$(DEPTH)\lib\libmsg\grec.cpp
+	$(DEPTH)\lib\libmsg\grpinfo.cpp
+	$(DEPTH)\lib\libmsg\hashtbl.cpp
+	$(DEPTH)\lib\libmsg\hosttbl.cpp
+	$(DEPTH)\lib\libmsg\idarray.cpp
+	$(DEPTH)\lib\libmsg\imaphost.cpp
+	$(DEPTH)\lib\libmsg\jsmsg.cpp
+	$(DEPTH)\lib\libmsg\listngst.cpp
+	$(DEPTH)\lib\libmsg\m_binhex.c
+	$(DEPTH)\lib\libmsg\maildb.cpp
+	$(DEPTH)\lib\libmsg\mailhdr.cpp
+	$(DEPTH)\lib\libmsg\mhtmlstm.cpp
+	$(DEPTH)\lib\libmsg\msgbg.cpp
+	$(DEPTH)\lib\libmsg\msgbgcln.cpp
+	$(DEPTH)\lib\libmsg\msgbiff.c
+	$(DEPTH)\lib\libmsg\msgcpane.cpp
+	$(DEPTH)\lib\libmsg\msgccach.cpp
+	$(DEPTH)\lib\libmsg\msgcflds.cpp
+	$(DEPTH)\lib\libmsg\msgcmfld.cpp 
+	$(DEPTH)\lib\libmsg\msgdb.cpp
+	$(DEPTH)\lib\libmsg\msgdbini.cpp
+	$(DEPTH)\lib\libmsg\msgdbvw.cpp
+	$(DEPTH)\lib\libmsg\msgdoc.cpp
+	$(DEPTH)\lib\libmsg\msgdwnof.cpp
+	$(DEPTH)\lib\libmsg\msgdlqml.cpp
+	$(DEPTH)\lib\libmsg\msgfcach.cpp
+	$(DEPTH)\lib\libmsg\msgfinfo.cpp
+	$(DEPTH)\lib\libmsg\imapoff.cpp
+	$(DEPTH)\lib\libmsg\msgimap.cpp
+	$(DEPTH)\lib\libmsg\msgfpane.cpp
+	$(DEPTH)\lib\libmsg\msgglue.cpp
+	$(DEPTH)\lib\libmsg\msghdr.cpp
+	$(DEPTH)\lib\libmsg\msglpane.cpp
+	$(DEPTH)\lib\libmsg\msglsrch.cpp
+	$(DEPTH)\lib\libmsg\msgmast.cpp
+	$(DEPTH)\lib\libmsg\msgmapi.cpp
+	$(DEPTH)\lib\libmsg\msgmpane.cpp
+	$(DEPTH)\lib\libmsg\msgmsrch.cpp
+	$(DEPTH)\lib\libmsg\msgnsrch.cpp
+	$(DEPTH)\lib\libmsg\msgoffnw.cpp
+	$(DEPTH)\lib\libmsg\msgpane.cpp
+	$(DEPTH)\lib\libmsg\msgppane.cpp
+	$(DEPTH)\lib\libmsg\msgprefs.cpp
+	$(DEPTH)\lib\libmsg\msgpurge.cpp
+	$(DEPTH)\lib\libmsg\msgrulet.cpp
+	$(DEPTH)\lib\libmsg\msgsec.cpp
+	$(DEPTH)\lib\libmsg\msgsend.cpp
+	$(DEPTH)\lib\libmsg\msgsendp.cpp
+	$(DEPTH)\lib\libmsg\msgspane.cpp
+	$(DEPTH)\lib\libmsg\msgtpane.cpp
+	$(DEPTH)\lib\libmsg\msgundmg.cpp
+	$(DEPTH)\lib\libmsg\msgundac.cpp
+	$(DEPTH)\lib\libmsg\msgurlq.cpp
+	$(DEPTH)\lib\libmsg\msgutils.c
+	$(DEPTH)\lib\libmsg\msgzap.cpp
+	$(DEPTH)\lib\libmsg\msgmdn.cpp
+	$(DEPTH)\lib\libmsg\newsdb.cpp
+	$(DEPTH)\lib\libmsg\newshdr.cpp 
+	$(DEPTH)\lib\libmsg\newshost.cpp 
+	$(DEPTH)\lib\libmsg\newspane.cpp 
+	$(DEPTH)\lib\libmsg\newsset.cpp 
+	$(DEPTH)\lib\libmsg\nwsartst.cpp 
+	$(DEPTH)\lib\libmsg\prsembst.cpp 
+	$(DEPTH)\lib\libmsg\ptrarray.cpp
+	$(DEPTH)\lib\libmsg\search.cpp
+	$(DEPTH)\lib\libmsg\subline.cpp
+	$(DEPTH)\lib\libmsg\subpane.cpp
+	$(DEPTH)\lib\libmsg\thrdbvw.cpp
+	$(DEPTH)\lib\libmsg\thrhead.cpp
+	$(DEPTH)\lib\libmsg\thrlstst.cpp
+	$(DEPTH)\lib\libmsg\thrnewvw.cpp
+	$(DEPTH)\lib\libmsg\mozdb.cpp
 
-	$(MOZ_SRC)\ns\lib\libneo\enstring.cpp
-	$(MOZ_SRC)\ns\lib\libneo\enswizz.cpp
-	$(MOZ_SRC)\ns\lib\libneo\nappl.cpp
-	$(MOZ_SRC)\ns\lib\libneo\nappsa.cpp
-	$(MOZ_SRC)\ns\lib\libneo\narray.cpp
-	$(MOZ_SRC)\ns\lib\libneo\nblob.cpp
-	$(MOZ_SRC)\ns\lib\libneo\nclass.cpp
-	$(MOZ_SRC)\ns\lib\libneo\ncstream.cpp
-	$(MOZ_SRC)\ns\lib\libneo\ndata.cpp
-	$(MOZ_SRC)\ns\lib\libneo\ndblndx.cpp
-	$(MOZ_SRC)\ns\lib\libneo\ndoc.cpp
-	$(MOZ_SRC)\ns\lib\libneo\nfltndx.cpp
-	$(MOZ_SRC)\ns\lib\libneo\nformat.cpp
-	$(MOZ_SRC)\ns\lib\libneo\nfree.cpp
-	$(MOZ_SRC)\ns\lib\libneo\nfstream.cpp
-	$(MOZ_SRC)\ns\lib\libneo\nidindex.cpp
-	$(MOZ_SRC)\ns\lib\libneo\nidlist.cpp
-	$(MOZ_SRC)\ns\lib\libneo\nindexit.cpp
-	$(MOZ_SRC)\ns\lib\libneo\ninode.cpp
-	$(MOZ_SRC)\ns\lib\libneo\nioblock.cpp
-	$(MOZ_SRC)\ns\lib\libneo\niter.cpp
-	$(MOZ_SRC)\ns\lib\libneo\nlaundry.cpp
-	$(MOZ_SRC)\ns\lib\libneo\nlongndx.cpp
-	$(MOZ_SRC)\ns\lib\libneo\nmeta.cpp
-	$(MOZ_SRC)\ns\lib\libneo\nmrswsem.cpp
-	$(MOZ_SRC)\ns\lib\libneo\nmsem.cpp
-	$(MOZ_SRC)\ns\lib\libneo\nnode.cpp
-	$(MOZ_SRC)\ns\lib\libneo\nnstrndx.cpp
-	$(MOZ_SRC)\ns\lib\libneo\noffsprn.cpp
-	$(MOZ_SRC)\ns\lib\libneo\npartmgr.cpp
-	$(MOZ_SRC)\ns\lib\libneo\npersist.cpp
-	$(MOZ_SRC)\ns\lib\libneo\npliter.cpp
-	$(MOZ_SRC)\ns\lib\libneo\nquery.cpp
-	$(MOZ_SRC)\ns\lib\libneo\nselect.cpp
-	$(MOZ_SRC)\ns\lib\libneo\nsselect.cpp
-	$(MOZ_SRC)\ns\lib\libneo\nstream.cpp
-	$(MOZ_SRC)\ns\lib\libneo\nstrndx.cpp
-	$(MOZ_SRC)\ns\lib\libneo\nsub.cpp
-	$(MOZ_SRC)\ns\lib\libneo\nthread.cpp
-	$(MOZ_SRC)\ns\lib\libneo\ntrans.cpp
-	$(MOZ_SRC)\ns\lib\libneo\nulngndx.cpp
-	$(MOZ_SRC)\ns\lib\libneo\nutils.cpp
-	$(MOZ_SRC)\ns\lib\libneo\nwselect.cpp
-	$(MOZ_SRC)\ns\lib\libneo\semnspr.cpp
-	$(MOZ_SRC)\ns\lib\libneo\thrnspr.cpp
-	$(MOZ_SRC)\ns\lib\libnet\mkabook.cpp
+	$(DEPTH)\lib\libneo\enstring.cpp
+	$(DEPTH)\lib\libneo\enswizz.cpp
+	$(DEPTH)\lib\libneo\nappl.cpp
+	$(DEPTH)\lib\libneo\nappsa.cpp
+	$(DEPTH)\lib\libneo\narray.cpp
+	$(DEPTH)\lib\libneo\nblob.cpp
+	$(DEPTH)\lib\libneo\nclass.cpp
+	$(DEPTH)\lib\libneo\ncstream.cpp
+	$(DEPTH)\lib\libneo\ndata.cpp
+	$(DEPTH)\lib\libneo\ndblndx.cpp
+	$(DEPTH)\lib\libneo\ndoc.cpp
+	$(DEPTH)\lib\libneo\nfltndx.cpp
+	$(DEPTH)\lib\libneo\nformat.cpp
+	$(DEPTH)\lib\libneo\nfree.cpp
+	$(DEPTH)\lib\libneo\nfstream.cpp
+	$(DEPTH)\lib\libneo\nidindex.cpp
+	$(DEPTH)\lib\libneo\nidlist.cpp
+	$(DEPTH)\lib\libneo\nindexit.cpp
+	$(DEPTH)\lib\libneo\ninode.cpp
+	$(DEPTH)\lib\libneo\nioblock.cpp
+	$(DEPTH)\lib\libneo\niter.cpp
+	$(DEPTH)\lib\libneo\nlaundry.cpp
+	$(DEPTH)\lib\libneo\nlongndx.cpp
+	$(DEPTH)\lib\libneo\nmeta.cpp
+	$(DEPTH)\lib\libneo\nmrswsem.cpp
+	$(DEPTH)\lib\libneo\nmsem.cpp
+	$(DEPTH)\lib\libneo\nnode.cpp
+	$(DEPTH)\lib\libneo\nnstrndx.cpp
+	$(DEPTH)\lib\libneo\noffsprn.cpp
+	$(DEPTH)\lib\libneo\npartmgr.cpp
+	$(DEPTH)\lib\libneo\npersist.cpp
+	$(DEPTH)\lib\libneo\npliter.cpp
+	$(DEPTH)\lib\libneo\nquery.cpp
+	$(DEPTH)\lib\libneo\nselect.cpp
+	$(DEPTH)\lib\libneo\nsselect.cpp
+	$(DEPTH)\lib\libneo\nstream.cpp
+	$(DEPTH)\lib\libneo\nstrndx.cpp
+	$(DEPTH)\lib\libneo\nsub.cpp
+	$(DEPTH)\lib\libneo\nthread.cpp
+	$(DEPTH)\lib\libneo\ntrans.cpp
+	$(DEPTH)\lib\libneo\nulngndx.cpp
+	$(DEPTH)\lib\libneo\nutils.cpp
+	$(DEPTH)\lib\libneo\nwselect.cpp
+	$(DEPTH)\lib\libneo\semnspr.cpp
+	$(DEPTH)\lib\libneo\thrnspr.cpp
+	$(DEPTH)\lib\libnet\mkabook.cpp
 !endif
 
-	$(MOZ_SRC)\ns\lib\libnet\cvactive.c
-	$(MOZ_SRC)\ns\lib\libnet\cvcolor.c 
-	$(MOZ_SRC)\ns\lib\libnet\cvdisk.c  
-	$(MOZ_SRC)\ns\lib\libnet\cvproxy.c 
-	$(MOZ_SRC)\ns\lib\libnet\cvunzip.c 
-	$(MOZ_SRC)\ns\lib\libnet\cvchunk.c 
-	$(MOZ_SRC)\ns\lib\libnet\extcache.c
-	$(MOZ_SRC)\ns\lib\libnet\mkaccess.c
-	$(MOZ_SRC)\ns\lib\libnet\mkautocf.c
-	$(MOZ_SRC)\ns\lib\libnet\mkcache.c 
-	$(MOZ_SRC)\ns\lib\libnet\mkconect.c
-	$(MOZ_SRC)\ns\lib\libnet\mkdaturl.c
-	$(MOZ_SRC)\ns\lib\libnet\mkextcac.c
-	$(MOZ_SRC)\ns\lib\libnet\mkfile.c  
-	$(MOZ_SRC)\ns\lib\libnet\mkformat.c
-	$(MOZ_SRC)\ns\lib\libnet\mkfsort.c 
-	$(MOZ_SRC)\ns\lib\libnet\mkftp.c   
-	$(MOZ_SRC)\ns\lib\libnet\mkgeturl.c
-	$(MOZ_SRC)\ns\lib\libnet\mkgopher.c
-	$(MOZ_SRC)\ns\lib\libnet\mkhelp.c  
-	$(MOZ_SRC)\ns\lib\libnet\mkhttp.c  
-	$(MOZ_SRC)\ns\lib\libnet\mkinit.c  
-	$(MOZ_SRC)\ns\lib\libnet\mktrace.c
-	$(MOZ_SRC)\ns\lib\libnet\cvmime.c 
-	$(MOZ_SRC)\ns\lib\libnet\mkpadpac.c
-	$(MOZ_SRC)\ns\lib\libnet\jscookie.c 
-	$(MOZ_SRC)\ns\lib\libnet\prefetch.c 
-	$(MOZ_SRC)\ns\lib\libnet\mkjscfg.c
-	$(MOZ_SRC)\ns\lib\libnet\cvsimple.c
+	$(DEPTH)\lib\libnet\cvactive.c
+	$(DEPTH)\lib\libnet\cvcolor.c 
+	$(DEPTH)\lib\libnet\cvdisk.c  
+	$(DEPTH)\lib\libnet\cvproxy.c 
+	$(DEPTH)\lib\libnet\cvunzip.c 
+	$(DEPTH)\lib\libnet\cvchunk.c 
+	$(DEPTH)\lib\libnet\extcache.c
+	$(DEPTH)\lib\libnet\mkaccess.c
+	$(DEPTH)\lib\libnet\mkautocf.c
+	$(DEPTH)\lib\libnet\mkcache.c 
+	$(DEPTH)\lib\libnet\mkconect.c
+	$(DEPTH)\lib\libnet\mkdaturl.c
+	$(DEPTH)\lib\libnet\mkextcac.c
+	$(DEPTH)\lib\libnet\mkfile.c  
+	$(DEPTH)\lib\libnet\mkformat.c
+	$(DEPTH)\lib\libnet\mkfsort.c 
+	$(DEPTH)\lib\libnet\mkftp.c   
+	$(DEPTH)\lib\libnet\mkgeturl.c
+	$(DEPTH)\lib\libnet\mkgopher.c
+	$(DEPTH)\lib\libnet\mkhelp.c  
+	$(DEPTH)\lib\libnet\mkhttp.c  
+	$(DEPTH)\lib\libnet\mkinit.c  
+	$(DEPTH)\lib\libnet\mktrace.c
+	$(DEPTH)\lib\libnet\cvmime.c 
+	$(DEPTH)\lib\libnet\mkpadpac.c
+	$(DEPTH)\lib\libnet\jscookie.c 
+	$(DEPTH)\lib\libnet\prefetch.c 
+	$(DEPTH)\lib\libnet\mkjscfg.c
+	$(DEPTH)\lib\libnet\cvsimple.c
 !ifdef MOZ_MAIL_NEWS
-	$(MOZ_SRC)\ns\lib\libnet\mkcertld.c
-	$(MOZ_SRC)\ns\lib\libnet\imap4url.c
-	$(MOZ_SRC)\ns\lib\libnet\imapearl.cpp
-	$(MOZ_SRC)\ns\lib\libnet\imaphier.cpp
-	$(MOZ_SRC)\ns\lib\libnet\imappars.cpp
-	$(MOZ_SRC)\ns\lib\libnet\imapbody.cpp
-	$(MOZ_SRC)\ns\lib\libnet\mkimap4.cpp 
-	$(MOZ_SRC)\ns\lib\libnet\mkldap.cpp  
-	$(MOZ_SRC)\ns\lib\libnet\mkmailbx.c
-	$(MOZ_SRC)\ns\lib\libnet\mknews.c  
-	$(MOZ_SRC)\ns\lib\libnet\mknewsgr.c
-	$(MOZ_SRC)\ns\lib\libnet\mkpop3.c  
-	$(MOZ_SRC)\ns\lib\libnet\mksmtp.c  
+	$(DEPTH)\lib\libnet\mkcertld.c
+	$(DEPTH)\lib\libnet\imap4url.c
+	$(DEPTH)\lib\libnet\imapearl.cpp
+	$(DEPTH)\lib\libnet\imaphier.cpp
+	$(DEPTH)\lib\libnet\imappars.cpp
+	$(DEPTH)\lib\libnet\imapbody.cpp
+	$(DEPTH)\lib\libnet\mkimap4.cpp 
+	$(DEPTH)\lib\libnet\mkldap.cpp  
+	$(DEPTH)\lib\libnet\mkmailbx.c
+	$(DEPTH)\lib\libnet\mknews.c  
+	$(DEPTH)\lib\libnet\mknewsgr.c
+	$(DEPTH)\lib\libnet\mkpop3.c  
+	$(DEPTH)\lib\libnet\mksmtp.c  
 !endif
 !if defined(MOZ_JAVA)
-	$(MOZ_SRC)\ns\lib\libnet\mkmarimb.cpp
+	$(DEPTH)\lib\libnet\mkmarimb.cpp
 !endif
-	$(MOZ_SRC)\ns\lib\libnet\mkmessag.c
-	$(MOZ_SRC)\ns\lib\libnet\mkmemcac.c
-	$(MOZ_SRC)\ns\lib\libnet\mkmocha.c 
-	$(MOZ_SRC)\ns\lib\libnet\mkparse.c 
-	$(MOZ_SRC)\ns\lib\libnet\mkremote.c
-	$(MOZ_SRC)\ns\lib\libnet\mkselect.c
-	$(MOZ_SRC)\ns\lib\libnet\mksockrw.c
-	$(MOZ_SRC)\ns\lib\libnet\mksort.c  
-	$(MOZ_SRC)\ns\lib\libnet\mkstream.c
-	$(MOZ_SRC)\ns\lib\libnet\mkutils.c 
-	$(MOZ_SRC)\ns\lib\libnet\jsautocf.c
-	$(MOZ_SRC)\ns\lib\libnet\txview.c 
+	$(DEPTH)\lib\libnet\mkmessag.c
+	$(DEPTH)\lib\libnet\mkmemcac.c
+	$(DEPTH)\lib\libnet\mkmocha.c 
+	$(DEPTH)\lib\libnet\mkparse.c 
+	$(DEPTH)\lib\libnet\mkremote.c
+	$(DEPTH)\lib\libnet\mkselect.c
+	$(DEPTH)\lib\libnet\mksockrw.c
+	$(DEPTH)\lib\libnet\mksort.c  
+	$(DEPTH)\lib\libnet\mkstream.c
+	$(DEPTH)\lib\libnet\mkutils.c 
+	$(DEPTH)\lib\libnet\jsautocf.c
+	$(DEPTH)\lib\libnet\txview.c 
 
-	$(MOZ_SRC)\ns\lib\libparse\pa_amp.c
-	$(MOZ_SRC)\ns\lib\libparse\pa_hash.c   
-	$(MOZ_SRC)\ns\lib\libparse\pa_hook.c   
-	$(MOZ_SRC)\ns\lib\libparse\pa_mdl.c
-	$(MOZ_SRC)\ns\lib\libparse\pa_parse.c  
+	$(DEPTH)\lib\libparse\pa_amp.c
+	$(DEPTH)\lib\libparse\pa_hash.c   
+	$(DEPTH)\lib\libparse\pa_hook.c   
+	$(DEPTH)\lib\libparse\pa_mdl.c
+	$(DEPTH)\lib\libparse\pa_parse.c  
 
-	$(MOZ_SRC)\ns\lib\libstyle\libstyle.c
-	$(MOZ_SRC)\ns\lib\libstyle\csslex.c
-	$(MOZ_SRC)\ns\lib\libstyle\csstab.c
-	$(MOZ_SRC)\ns\lib\libstyle\csstojs.c
-	$(MOZ_SRC)\ns\lib\libstyle\jssrules.c
-	$(MOZ_SRC)\ns\lib\libstyle\stystack.c
-	$(MOZ_SRC)\ns\lib\libstyle\stystruc.c
+	$(DEPTH)\lib\libstyle\libstyle.c
+	$(DEPTH)\lib\libstyle\csslex.c
+	$(DEPTH)\lib\libstyle\csstab.c
+	$(DEPTH)\lib\libstyle\csstojs.c
+	$(DEPTH)\lib\libstyle\jssrules.c
+	$(DEPTH)\lib\libstyle\stystack.c
+	$(DEPTH)\lib\libstyle\stystruc.c
 
-	$(MOZ_SRC)\ns\modules\libutil\src\obs.c
+	$(DEPTH)\modules\libutil\src\obs.c
 !if "$(MOZ_BITS)"=="16"
-	$(MOZ_SRC)\ns\modules\libimg\src\color.c
-	$(MOZ_SRC)\ns\modules\libimg\src\colormap.c
-	$(MOZ_SRC)\ns\modules\libimg\src\dither.c
-	$(MOZ_SRC)\ns\modules\libimg\src\dummy_nc.c
-	$(MOZ_SRC)\ns\modules\libimg\src\external.c
-	$(MOZ_SRC)\ns\modules\libimg\src\gif.c
-	$(MOZ_SRC)\ns\modules\libimg\src\if.c
-	$(MOZ_SRC)\ns\modules\libimg\src\ilclient.c
-	$(MOZ_SRC)\ns\modules\libimg\src\il_util.c
-	$(MOZ_SRC)\ns\modules\libimg\src\jpeg.c
-	$(MOZ_SRC)\ns\modules\libimg\src\MIMGCB.c
-	$(MOZ_SRC)\ns\modules\libimg\src\scale.c
-	$(MOZ_SRC)\ns\modules\libimg\src\xbm.c
-	$(MOZ_SRC)\ns\modules\libimg\src\ipng.c
-	$(MOZ_SRC)\ns\modules\libimg\src\png_png.c
+	$(DEPTH)\modules\libimg\src\color.c
+	$(DEPTH)\modules\libimg\src\colormap.c
+	$(DEPTH)\modules\libimg\src\dither.c
+	$(DEPTH)\modules\libimg\src\dummy_nc.c
+	$(DEPTH)\modules\libimg\src\external.c
+	$(DEPTH)\modules\libimg\src\gif.c
+	$(DEPTH)\modules\libimg\src\if.c
+	$(DEPTH)\modules\libimg\src\ilclient.c
+	$(DEPTH)\modules\libimg\src\il_util.c
+	$(DEPTH)\modules\libimg\src\jpeg.c
+	$(DEPTH)\modules\libimg\src\MIMGCB.c
+	$(DEPTH)\modules\libimg\src\scale.c
+	$(DEPTH)\modules\libimg\src\xbm.c
+	$(DEPTH)\modules\libimg\src\ipng.c
+	$(DEPTH)\modules\libimg\src\png_png.c
 !if defined(MOZ_JAVA)
-	$(MOZ_SRC)\ns\sun-java\jtools\src\jmc.c
+	$(DEPTH)\sun-java\jtools\src\jmc.c
 !endif
 !endif
 
-	$(MOZ_SRC)\ns\lib\plugin\npassoc.c 
-	$(MOZ_SRC)\ns\lib\plugin\npglue.cpp
-	$(MOZ_SRC)\ns\lib\plugin\npwplat.cpp 
-	$(MOZ_SRC)\ns\lib\plugin\nsplugin.cpp 
+	$(DEPTH)\lib\plugin\npassoc.c 
+	$(DEPTH)\lib\plugin\npglue.cpp
+	$(DEPTH)\lib\plugin\npwplat.cpp 
+	$(DEPTH)\lib\plugin\nsplugin.cpp 
 
-	$(MOZ_SRC)\ns\lib\xlate\isotab.c   
-	$(MOZ_SRC)\ns\lib\xlate\stubs.c
-	$(MOZ_SRC)\ns\lib\xlate\tblprint.c 
-	$(MOZ_SRC)\ns\lib\xlate\text.c 
+	$(DEPTH)\lib\xlate\isotab.c   
+	$(DEPTH)\lib\xlate\stubs.c
+	$(DEPTH)\lib\xlate\tblprint.c 
+	$(DEPTH)\lib\xlate\text.c 
 
-	$(MOZ_SRC)\ns\lib\xp\allxpstr.c
-	$(MOZ_SRC)\ns\lib\xp\xp_alloc.c
-	$(MOZ_SRC)\ns\lib\xp\xp_cntxt.c
-	$(MOZ_SRC)\ns\lib\xp\xp_core.c 
-	$(MOZ_SRC)\ns\lib\xp\xp_error.c
-	$(MOZ_SRC)\ns\lib\xp\xp_file.c 
-	$(MOZ_SRC)\ns\lib\xp\xp_hash.c
-	$(MOZ_SRC)\ns\lib\xp\xp_md5.c  
-	$(MOZ_SRC)\ns\lib\xp\xp_mesg.c 
-	$(MOZ_SRC)\ns\lib\xp\xp_ncent.c
-	$(MOZ_SRC)\ns\lib\xp\xp_reg.c  
-	$(MOZ_SRC)\ns\lib\xp\xp_rgb.c  
-	$(MOZ_SRC)\ns\lib\xp\xp_sec.c  
-	$(MOZ_SRC)\ns\lib\xp\xp_str.c  
-	$(MOZ_SRC)\ns\lib\xp\xp_thrmo.c
-	$(MOZ_SRC)\ns\lib\xp\xp_time.c 
-	$(MOZ_SRC)\ns\lib\xp\xp_trace.c
-	$(MOZ_SRC)\ns\lib\xp\xp_wrap.c 
-	$(MOZ_SRC)\ns\lib\xp\xpassert.c
-	$(MOZ_SRC)\ns\lib\xp\xp_list.c
-	$(MOZ_SRC)\ns\lib\xp\xplocale.c
+	$(DEPTH)\lib\xp\allxpstr.c
+	$(DEPTH)\lib\xp\xp_alloc.c
+	$(DEPTH)\lib\xp\xp_cntxt.c
+	$(DEPTH)\lib\xp\xp_core.c 
+	$(DEPTH)\lib\xp\xp_error.c
+	$(DEPTH)\lib\xp\xp_file.c 
+	$(DEPTH)\lib\xp\xp_hash.c
+	$(DEPTH)\lib\xp\xp_md5.c  
+	$(DEPTH)\lib\xp\xp_mesg.c 
+	$(DEPTH)\lib\xp\xp_ncent.c
+	$(DEPTH)\lib\xp\xp_reg.c  
+	$(DEPTH)\lib\xp\xp_rgb.c  
+	$(DEPTH)\lib\xp\xp_sec.c  
+	$(DEPTH)\lib\xp\xp_str.c  
+	$(DEPTH)\lib\xp\xp_thrmo.c
+	$(DEPTH)\lib\xp\xp_time.c 
+	$(DEPTH)\lib\xp\xp_trace.c
+	$(DEPTH)\lib\xp\xp_wrap.c 
+	$(DEPTH)\lib\xp\xpassert.c
+	$(DEPTH)\lib\xp\xp_list.c
+	$(DEPTH)\lib\xp\xplocale.c
 
-	$(MOZ_SRC)\ns\lib\libpwcac\pwcacapi.c
+	$(DEPTH)\lib\libpwcac\pwcacapi.c
 
-	$(MOZ_SRC)\ns\lib\libpics\cslabel.c
-	$(MOZ_SRC)\ns\lib\libpics\csparse.c
-	$(MOZ_SRC)\ns\lib\libpics\htchunk.c
-	$(MOZ_SRC)\ns\lib\libpics\htstring.c
-	$(MOZ_SRC)\ns\lib\libpics\htlist.c
-	$(MOZ_SRC)\ns\lib\libpics\lablpars.c
-	$(MOZ_SRC)\ns\lib\libpics\picsapi.c
+	$(DEPTH)\lib\libpics\cslabel.c
+	$(DEPTH)\lib\libpics\csparse.c
+	$(DEPTH)\lib\libpics\htchunk.c
+	$(DEPTH)\lib\libpics\htstring.c
+	$(DEPTH)\lib\libpics\htlist.c
+	$(DEPTH)\lib\libpics\lablpars.c
+	$(DEPTH)\lib\libpics\picsapi.c
 !if "$(MOZ_BITS)" == "16"
-	$(MOZ_SRC)\ns\nspr20\pr\src\md\windows\w16stdio.c
+	$(DEPTH)\nspr20\pr\src\md\windows\w16stdio.c
 !endif
 !ifndef MOZ_MAIL_NEWS
-	$(MOZ_SRC)\ns\cmd\winfe\compmapi.cpp
+	$(DEPTH)\cmd\winfe\compmapi.cpp
 !endif
 !ifdef MOZ_MAIL_NEWS
-	$(MOZ_SRC)\ns\cmd\winfe\addrfrm.cpp   
-	$(MOZ_SRC)\ns\cmd\winfe\addrdlg.cpp   
-	$(MOZ_SRC)\ns\cmd\winfe\abmldlg.cpp   
-	$(MOZ_SRC)\ns\cmd\winfe\advopdlg.cpp
-	$(MOZ_SRC)\ns\cmd\winfe\compbar.cpp
-	$(MOZ_SRC)\ns\cmd\winfe\compfe.cpp
-	$(MOZ_SRC)\ns\cmd\winfe\compfile.cpp
-	$(MOZ_SRC)\ns\cmd\winfe\compfrm.cpp
-	$(MOZ_SRC)\ns\cmd\winfe\compfrm2.cpp
-	$(MOZ_SRC)\ns\cmd\winfe\compmisc.cpp
+	$(DEPTH)\cmd\winfe\addrfrm.cpp   
+	$(DEPTH)\cmd\winfe\addrdlg.cpp   
+	$(DEPTH)\cmd\winfe\abmldlg.cpp   
+	$(DEPTH)\cmd\winfe\advopdlg.cpp
+	$(DEPTH)\cmd\winfe\compbar.cpp
+	$(DEPTH)\cmd\winfe\compfe.cpp
+	$(DEPTH)\cmd\winfe\compfile.cpp
+	$(DEPTH)\cmd\winfe\compfrm.cpp
+	$(DEPTH)\cmd\winfe\compfrm2.cpp
+	$(DEPTH)\cmd\winfe\compmisc.cpp
 !endif
 !ifdef EDITOR
-	$(MOZ_SRC)\ns\cmd\winfe\edframe.cpp
-	$(MOZ_SRC)\ns\cmd\winfe\edprops.cpp
-	$(MOZ_SRC)\ns\cmd\winfe\edtable.cpp
-	$(MOZ_SRC)\ns\cmd\winfe\edview.cpp 
-	$(MOZ_SRC)\ns\cmd\winfe\edview2.cpp 
-	$(MOZ_SRC)\ns\cmd\winfe\eddialog.cpp
-	$(MOZ_SRC)\ns\cmd\winfe\edlayout.cpp   
+	$(DEPTH)\cmd\winfe\edframe.cpp
+	$(DEPTH)\cmd\winfe\edprops.cpp
+	$(DEPTH)\cmd\winfe\edtable.cpp
+	$(DEPTH)\cmd\winfe\edview.cpp 
+	$(DEPTH)\cmd\winfe\edview2.cpp 
+	$(DEPTH)\cmd\winfe\eddialog.cpp
+	$(DEPTH)\cmd\winfe\edlayout.cpp   
 !endif
 !ifdef MOZ_MAIL_NEWS
-	$(MOZ_SRC)\ns\cmd\winfe\filter.cpp 
-	$(MOZ_SRC)\ns\cmd\winfe\edhdrdlg.cpp
-	$(MOZ_SRC)\ns\cmd\winfe\mailfrm.cpp
-	$(MOZ_SRC)\ns\cmd\winfe\mailfrm2.cpp
-	$(MOZ_SRC)\ns\cmd\winfe\mailmisc.cpp
-	$(MOZ_SRC)\ns\cmd\winfe\mailpriv.cpp
-	$(MOZ_SRC)\ns\cmd\winfe\mailqf.cpp
-	$(MOZ_SRC)\ns\cmd\winfe\mapihook.cpp
-	$(MOZ_SRC)\ns\cmd\winfe\mapismem.cpp
-	$(MOZ_SRC)\ns\cmd\winfe\mapimail.cpp
-	$(MOZ_SRC)\ns\cmd\winfe\nsstrseq.cpp
-	$(MOZ_SRC)\ns\cmd\winfe\mnprefs.cpp  
-	$(MOZ_SRC)\ns\cmd\winfe\mnwizard.cpp  
-	$(MOZ_SRC)\ns\cmd\winfe\msgfrm.cpp
-	$(MOZ_SRC)\ns\cmd\winfe\msgtmpl.cpp
-	$(MOZ_SRC)\ns\cmd\winfe\msgview.cpp
-	$(MOZ_SRC)\ns\cmd\winfe\namcomp.cpp
-	$(MOZ_SRC)\ns\cmd\winfe\numedit.cpp
-	$(MOZ_SRC)\ns\cmd\winfe\srchfrm.cpp 
-	$(MOZ_SRC)\ns\cmd\winfe\subnews.cpp 
-	$(MOZ_SRC)\ns\cmd\winfe\taskbar.cpp 
-	$(MOZ_SRC)\ns\cmd\winfe\thrdfrm.cpp
+	$(DEPTH)\cmd\winfe\filter.cpp 
+	$(DEPTH)\cmd\winfe\edhdrdlg.cpp
+	$(DEPTH)\cmd\winfe\mailfrm.cpp
+	$(DEPTH)\cmd\winfe\mailfrm2.cpp
+	$(DEPTH)\cmd\winfe\mailmisc.cpp
+	$(DEPTH)\cmd\winfe\mailpriv.cpp
+	$(DEPTH)\cmd\winfe\mailqf.cpp
+	$(DEPTH)\cmd\winfe\mapihook.cpp
+	$(DEPTH)\cmd\winfe\mapismem.cpp
+	$(DEPTH)\cmd\winfe\mapimail.cpp
+	$(DEPTH)\cmd\winfe\nsstrseq.cpp
+	$(DEPTH)\cmd\winfe\mnprefs.cpp  
+	$(DEPTH)\cmd\winfe\mnwizard.cpp  
+	$(DEPTH)\cmd\winfe\msgfrm.cpp
+	$(DEPTH)\cmd\winfe\msgtmpl.cpp
+	$(DEPTH)\cmd\winfe\msgview.cpp
+	$(DEPTH)\cmd\winfe\namcomp.cpp
+	$(DEPTH)\cmd\winfe\numedit.cpp
+	$(DEPTH)\cmd\winfe\srchfrm.cpp 
+	$(DEPTH)\cmd\winfe\subnews.cpp 
+	$(DEPTH)\cmd\winfe\taskbar.cpp 
+	$(DEPTH)\cmd\winfe\thrdfrm.cpp
 !endif
 !ifdef EDITOR
-	$(MOZ_SRC)\ns\cmd\winfe\edtrccln.cpp
-	$(MOZ_SRC)\ns\cmd\winfe\edtclass.cpp
-	$(MOZ_SRC)\ns\cmd\winfe\spellcli.cpp
+	$(DEPTH)\cmd\winfe\edtrccln.cpp
+	$(DEPTH)\cmd\winfe\edtclass.cpp
+	$(DEPTH)\cmd\winfe\spellcli.cpp
 !endif
 !ifdef MOZ_MAIL_NEWS
-	$(MOZ_SRC)\ns\cmd\winfe\dlgdwnld.cpp
-	$(MOZ_SRC)\ns\cmd\winfe\dlghtmmq.cpp
-	$(MOZ_SRC)\ns\cmd\winfe\dlghtmrp.cpp
-	$(MOZ_SRC)\ns\cmd\winfe\dlgseldg.cpp
-   $(MOZ_SRC)\ns\cmd\winfe\nsadrlst.cpp
-   $(MOZ_SRC)\ns\cmd\winfe\nsadrnam.cpp
-   $(MOZ_SRC)\ns\cmd\winfe\nsadrtyp.cpp
-	$(MOZ_SRC)\ns\cmd\winfe\fldrfrm.cpp        
-   $(MOZ_SRC)\ns\cmd\winfe\dspppage.cpp
-	$(MOZ_SRC)\ns\cmd\winfe\srchdlg.cpp
-	$(MOZ_SRC)\ns\cmd\winfe\srchobj.cpp
-	$(MOZ_SRC)\ns\cmd\winfe\mnrccln.cpp
+	$(DEPTH)\cmd\winfe\dlgdwnld.cpp
+	$(DEPTH)\cmd\winfe\dlghtmmq.cpp
+	$(DEPTH)\cmd\winfe\dlghtmrp.cpp
+	$(DEPTH)\cmd\winfe\dlgseldg.cpp
+   $(DEPTH)\cmd\winfe\nsadrlst.cpp
+   $(DEPTH)\cmd\winfe\nsadrnam.cpp
+   $(DEPTH)\cmd\winfe\nsadrtyp.cpp
+	$(DEPTH)\cmd\winfe\fldrfrm.cpp        
+   $(DEPTH)\cmd\winfe\dspppage.cpp
+	$(DEPTH)\cmd\winfe\srchdlg.cpp
+	$(DEPTH)\cmd\winfe\srchobj.cpp
+	$(DEPTH)\cmd\winfe\mnrccln.cpp
 !endif
-	$(MOZ_SRC)\ns\cmd\winfe\setupwiz.cpp  
-	$(MOZ_SRC)\ns\cmd\winfe\ngdwtrst.cpp
-	$(MOZ_SRC)\ns\cmd\winfe\animbar.cpp   
-	$(MOZ_SRC)\ns\cmd\winfe\animbar2.cpp   
-	$(MOZ_SRC)\ns\cmd\winfe\apiapi.cpp 
-	$(MOZ_SRC)\ns\cmd\winfe\askmedlg.cpp 
-	$(MOZ_SRC)\ns\cmd\winfe\authdll.cpp
-	$(MOZ_SRC)\ns\cmd\winfe\button.cpp 
-	$(MOZ_SRC)\ns\cmd\winfe\cfe.cpp
-	$(MOZ_SRC)\ns\cmd\winfe\cmdparse.cpp
-	$(MOZ_SRC)\ns\cmd\winfe\cntritem.cpp   
-	$(MOZ_SRC)\ns\cmd\winfe\confhook.cpp
-	$(MOZ_SRC)\ns\cmd\winfe\csttlbr2.cpp
-	$(MOZ_SRC)\ns\cmd\winfe\custom.cpp 
-	$(MOZ_SRC)\ns\cmd\winfe\cuvfm.cpp
-	$(MOZ_SRC)\ns\cmd\winfe\cuvfs.cpp
-	$(MOZ_SRC)\ns\cmd\winfe\cvffc.cpp
-	$(MOZ_SRC)\ns\cmd\winfe\cxabstra.cpp   
-	$(MOZ_SRC)\ns\cmd\winfe\cxdc.cpp   
-	$(MOZ_SRC)\ns\cmd\winfe\cxdc1.cpp   
-	$(MOZ_SRC)\ns\cmd\winfe\cxicon.cpp
-	$(MOZ_SRC)\ns\cmd\winfe\cxinit.cpp
-	$(MOZ_SRC)\ns\cmd\winfe\cxmeta.cpp 
-	$(MOZ_SRC)\ns\cmd\winfe\cxnet1.cpp 
-	$(MOZ_SRC)\ns\cmd\winfe\cxpane.cpp
-	$(MOZ_SRC)\ns\cmd\winfe\cxprint.cpp
-	$(MOZ_SRC)\ns\cmd\winfe\cxprndlg.cpp   
-	$(MOZ_SRC)\ns\cmd\winfe\cxsave.cpp 
-	$(MOZ_SRC)\ns\cmd\winfe\cxstubs.cpp
-	$(MOZ_SRC)\ns\cmd\winfe\cxwin.cpp
-	$(MOZ_SRC)\ns\cmd\winfe\cxwin1.cpp
-	$(MOZ_SRC)\ns\cmd\winfe\dateedit.cpp
-	$(MOZ_SRC)\ns\cmd\winfe\dde.cpp
-	$(MOZ_SRC)\ns\cmd\winfe\ddecmd.cpp
-	$(MOZ_SRC)\ns\cmd\winfe\ddectc.cpp 
-	$(MOZ_SRC)\ns\cmd\winfe\dialog.cpp 
-	$(MOZ_SRC)\ns\cmd\winfe\display.cpp
-	$(MOZ_SRC)\ns\cmd\winfe\dragbar.cpp   
-	$(MOZ_SRC)\ns\cmd\winfe\drawable.cpp   
-	$(MOZ_SRC)\ns\cmd\winfe\dropmenu.cpp   
-	$(MOZ_SRC)\ns\cmd\winfe\edcombtb.cpp   
-	$(MOZ_SRC)\ns\cmd\winfe\extgen.cpp
-	$(MOZ_SRC)\ns\cmd\winfe\extview.cpp
-	$(MOZ_SRC)\ns\cmd\winfe\feembed.cpp
-	$(MOZ_SRC)\ns\cmd\winfe\fegrid.cpp 
-	$(MOZ_SRC)\ns\cmd\winfe\fegui.cpp  
-	$(MOZ_SRC)\ns\cmd\winfe\feimage.cpp   
-	$(MOZ_SRC)\ns\cmd\winfe\feimages.cpp   
-	$(MOZ_SRC)\ns\cmd\winfe\feorphan.cpp 
-	$(MOZ_SRC)\ns\cmd\winfe\feorphn2.cpp 
-	$(MOZ_SRC)\ns\cmd\winfe\femess.cpp 
-	$(MOZ_SRC)\ns\cmd\winfe\fenet.cpp  
-	$(MOZ_SRC)\ns\cmd\winfe\feselect.cpp 
-	$(MOZ_SRC)\ns\cmd\winfe\feutil.cpp 
-	$(MOZ_SRC)\ns\cmd\winfe\findrepl.cpp   
-	$(MOZ_SRC)\ns\cmd\winfe\fmabstra.cpp   
-	$(MOZ_SRC)\ns\cmd\winfe\fmbutton.cpp   
-	$(MOZ_SRC)\ns\cmd\winfe\fmfile.cpp 
-	$(MOZ_SRC)\ns\cmd\winfe\fmradio.cpp
-	$(MOZ_SRC)\ns\cmd\winfe\fmrdonly.cpp   
-	$(MOZ_SRC)\ns\cmd\winfe\fmselmul.cpp   
-	$(MOZ_SRC)\ns\cmd\winfe\fmselone.cpp   
-	$(MOZ_SRC)\ns\cmd\winfe\fmtext.cpp 
-	$(MOZ_SRC)\ns\cmd\winfe\fmtxarea.cpp
-	$(MOZ_SRC)\ns\cmd\winfe\frameglu.cpp   
-	$(MOZ_SRC)\ns\cmd\winfe\framinit.cpp   
-	$(MOZ_SRC)\ns\cmd\winfe\genchrom.cpp   
-	$(MOZ_SRC)\ns\cmd\winfe\gendoc.cpp 
-	$(MOZ_SRC)\ns\cmd\winfe\genedit.cpp
-	$(MOZ_SRC)\ns\cmd\winfe\genframe.cpp   
-	$(MOZ_SRC)\ns\cmd\winfe\genfram2.cpp   
-	$(MOZ_SRC)\ns\cmd\winfe\prefs.cpp   
-	$(MOZ_SRC)\ns\cmd\winfe\genview.cpp
-	$(MOZ_SRC)\ns\cmd\winfe\gridedge.cpp   
-	$(MOZ_SRC)\ns\cmd\winfe\helpers.cpp
-	$(MOZ_SRC)\ns\cmd\winfe\hiddenfr.cpp   
-	$(MOZ_SRC)\ns\cmd\winfe\histbld.cpp   
-	$(MOZ_SRC)\ns\cmd\winfe\imagemap.cpp
+	$(DEPTH)\cmd\winfe\setupwiz.cpp  
+	$(DEPTH)\cmd\winfe\ngdwtrst.cpp
+	$(DEPTH)\cmd\winfe\animbar.cpp   
+	$(DEPTH)\cmd\winfe\animbar2.cpp   
+	$(DEPTH)\cmd\winfe\apiapi.cpp 
+	$(DEPTH)\cmd\winfe\askmedlg.cpp 
+	$(DEPTH)\cmd\winfe\authdll.cpp
+	$(DEPTH)\cmd\winfe\button.cpp 
+	$(DEPTH)\cmd\winfe\cfe.cpp
+	$(DEPTH)\cmd\winfe\cmdparse.cpp
+	$(DEPTH)\cmd\winfe\cntritem.cpp   
+	$(DEPTH)\cmd\winfe\confhook.cpp
+	$(DEPTH)\cmd\winfe\csttlbr2.cpp
+	$(DEPTH)\cmd\winfe\custom.cpp 
+	$(DEPTH)\cmd\winfe\cuvfm.cpp
+	$(DEPTH)\cmd\winfe\cuvfs.cpp
+	$(DEPTH)\cmd\winfe\cvffc.cpp
+	$(DEPTH)\cmd\winfe\cxabstra.cpp   
+	$(DEPTH)\cmd\winfe\cxdc.cpp   
+	$(DEPTH)\cmd\winfe\cxdc1.cpp   
+	$(DEPTH)\cmd\winfe\cxicon.cpp
+	$(DEPTH)\cmd\winfe\cxinit.cpp
+	$(DEPTH)\cmd\winfe\cxmeta.cpp 
+	$(DEPTH)\cmd\winfe\cxnet1.cpp 
+	$(DEPTH)\cmd\winfe\cxpane.cpp
+	$(DEPTH)\cmd\winfe\cxprint.cpp
+	$(DEPTH)\cmd\winfe\cxprndlg.cpp   
+	$(DEPTH)\cmd\winfe\cxsave.cpp 
+	$(DEPTH)\cmd\winfe\cxstubs.cpp
+	$(DEPTH)\cmd\winfe\cxwin.cpp
+	$(DEPTH)\cmd\winfe\cxwin1.cpp
+	$(DEPTH)\cmd\winfe\dateedit.cpp
+	$(DEPTH)\cmd\winfe\dde.cpp
+	$(DEPTH)\cmd\winfe\ddecmd.cpp
+	$(DEPTH)\cmd\winfe\ddectc.cpp 
+	$(DEPTH)\cmd\winfe\dialog.cpp 
+	$(DEPTH)\cmd\winfe\display.cpp
+	$(DEPTH)\cmd\winfe\dragbar.cpp   
+	$(DEPTH)\cmd\winfe\drawable.cpp   
+	$(DEPTH)\cmd\winfe\dropmenu.cpp   
+	$(DEPTH)\cmd\winfe\edcombtb.cpp   
+	$(DEPTH)\cmd\winfe\extgen.cpp
+	$(DEPTH)\cmd\winfe\extview.cpp
+	$(DEPTH)\cmd\winfe\feembed.cpp
+	$(DEPTH)\cmd\winfe\fegrid.cpp 
+	$(DEPTH)\cmd\winfe\fegui.cpp  
+	$(DEPTH)\cmd\winfe\feimage.cpp   
+	$(DEPTH)\cmd\winfe\feimages.cpp   
+	$(DEPTH)\cmd\winfe\feorphan.cpp 
+	$(DEPTH)\cmd\winfe\feorphn2.cpp 
+	$(DEPTH)\cmd\winfe\femess.cpp 
+	$(DEPTH)\cmd\winfe\fenet.cpp  
+	$(DEPTH)\cmd\winfe\feselect.cpp 
+	$(DEPTH)\cmd\winfe\feutil.cpp 
+	$(DEPTH)\cmd\winfe\findrepl.cpp   
+	$(DEPTH)\cmd\winfe\fmabstra.cpp   
+	$(DEPTH)\cmd\winfe\fmbutton.cpp   
+	$(DEPTH)\cmd\winfe\fmfile.cpp 
+	$(DEPTH)\cmd\winfe\fmradio.cpp
+	$(DEPTH)\cmd\winfe\fmrdonly.cpp   
+	$(DEPTH)\cmd\winfe\fmselmul.cpp   
+	$(DEPTH)\cmd\winfe\fmselone.cpp   
+	$(DEPTH)\cmd\winfe\fmtext.cpp 
+	$(DEPTH)\cmd\winfe\fmtxarea.cpp
+	$(DEPTH)\cmd\winfe\frameglu.cpp   
+	$(DEPTH)\cmd\winfe\framinit.cpp   
+	$(DEPTH)\cmd\winfe\genchrom.cpp   
+	$(DEPTH)\cmd\winfe\gendoc.cpp 
+	$(DEPTH)\cmd\winfe\genedit.cpp
+	$(DEPTH)\cmd\winfe\genframe.cpp   
+	$(DEPTH)\cmd\winfe\genfram2.cpp   
+	$(DEPTH)\cmd\winfe\prefs.cpp   
+	$(DEPTH)\cmd\winfe\genview.cpp
+	$(DEPTH)\cmd\winfe\gridedge.cpp   
+	$(DEPTH)\cmd\winfe\helpers.cpp
+	$(DEPTH)\cmd\winfe\hiddenfr.cpp   
+	$(DEPTH)\cmd\winfe\histbld.cpp   
+	$(DEPTH)\cmd\winfe\imagemap.cpp
 !if "$(MOZ_BITS)"  == "32"
-	$(MOZ_SRC)\ns\cmd\winfe\intelli.cpp
+	$(DEPTH)\cmd\winfe\intelli.cpp
 !endif
-	$(MOZ_SRC)\ns\cmd\winfe\intlwin.cpp
-	$(MOZ_SRC)\ns\cmd\winfe\ipframe.cpp
-	$(MOZ_SRC)\ns\cmd\winfe\lastacti.cpp
-	$(MOZ_SRC)\ns\cmd\winfe\logindg.cpp   
-	$(MOZ_SRC)\ns\cmd\winfe\mainfrm.cpp
-	$(MOZ_SRC)\ns\cmd\winfe\medit.cpp  
-	$(MOZ_SRC)\ns\cmd\winfe\mozock.cpp 
-	$(MOZ_SRC)\ns\cmd\winfe\mucwiz.cpp  
-	$(MOZ_SRC)\ns\cmd\winfe\mucproc.cpp 
-	$(MOZ_SRC)\ns\cmd\winfe\navbar.cpp 
-	$(MOZ_SRC)\ns\cmd\winfe\navcntr.cpp  
-	$(MOZ_SRC)\ns\cmd\winfe\navcontv.cpp  
-	$(MOZ_SRC)\ns\cmd\winfe\navfram.cpp  
-	$(MOZ_SRC)\ns\cmd\winfe\navigate.cpp   
-	$(MOZ_SRC)\ns\cmd\winfe\ncapiurl.cpp 
-	$(MOZ_SRC)\ns\cmd\winfe\nethelp.cpp  
-	$(MOZ_SRC)\ns\cmd\winfe\mozilla.cpp   
-	$(MOZ_SRC)\ns\cmd\winfe\nsapp.cpp   
-	$(MOZ_SRC)\ns\cmd\winfe\netsdoc.cpp
-	$(MOZ_SRC)\ns\cmd\winfe\nsfont.cpp
-	$(MOZ_SRC)\ns\cmd\winfe\netsprnt.cpp   
-	$(MOZ_SRC)\ns\cmd\winfe\netsvw.cpp 
-	$(MOZ_SRC)\ns\cmd\winfe\nsshell.cpp
-	$(MOZ_SRC)\ns\cmd\winfe\odctrl.cpp
-	$(MOZ_SRC)\ns\cmd\winfe\olectc.cpp 
-	$(MOZ_SRC)\ns\cmd\winfe\olehelp.cpp 
-	$(MOZ_SRC)\ns\cmd\winfe\oleprot1.cpp   
-	$(MOZ_SRC)\ns\cmd\winfe\oleregis.cpp   
-	$(MOZ_SRC)\ns\cmd\winfe\olestart.cpp   
-	$(MOZ_SRC)\ns\cmd\winfe\oleshut.cpp   
-	$(MOZ_SRC)\ns\cmd\winfe\oleview.cpp   
-	$(MOZ_SRC)\ns\cmd\winfe\oleview1.cpp   
-	$(MOZ_SRC)\ns\cmd\winfe\outliner.cpp 
-	$(MOZ_SRC)\ns\cmd\winfe\ownedlst.cpp  
-	$(MOZ_SRC)\ns\cmd\winfe\pain.cpp
-	$(MOZ_SRC)\ns\cmd\winfe\plginvw.cpp
-	$(MOZ_SRC)\ns\cmd\winfe\popup.cpp  
-	$(MOZ_SRC)\ns\cmd\winfe\prefinfo.cpp   
-	$(MOZ_SRC)\ns\cmd\winfe\presentm.cpp   
-	$(MOZ_SRC)\ns\cmd\winfe\printpag.cpp   
-	$(MOZ_SRC)\ns\cmd\winfe\profile.cpp   
-	$(MOZ_SRC)\ns\cmd\winfe\qahook.cpp  
-	$(MOZ_SRC)\ns\cmd\winfe\quickfil.cpp 
-	$(MOZ_SRC)\ns\cmd\winfe\rdfliner.cpp   
-	$(MOZ_SRC)\ns\cmd\winfe\region.cpp   
-	$(MOZ_SRC)\ns\cmd\winfe\regproto.cpp 
-	$(MOZ_SRC)\ns\cmd\winfe\shcut.cpp  
-	$(MOZ_SRC)\ns\cmd\winfe\shcutdlg.cpp   
-	$(MOZ_SRC)\ns\cmd\winfe\slavewnd.cpp 
-	$(MOZ_SRC)\ns\cmd\winfe\splash.cpp 
-	$(MOZ_SRC)\ns\cmd\winfe\spiwrap.c 
-	$(MOZ_SRC)\ns\cmd\winfe\srvritem.cpp   
-	$(MOZ_SRC)\ns\cmd\winfe\statbar.cpp 
-	$(MOZ_SRC)\ns\cmd\winfe\stshfont.cpp 
+	$(DEPTH)\cmd\winfe\intlwin.cpp
+	$(DEPTH)\cmd\winfe\ipframe.cpp
+	$(DEPTH)\cmd\winfe\lastacti.cpp
+	$(DEPTH)\cmd\winfe\logindg.cpp   
+	$(DEPTH)\cmd\winfe\mainfrm.cpp
+	$(DEPTH)\cmd\winfe\medit.cpp  
+	$(DEPTH)\cmd\winfe\mozock.cpp 
+	$(DEPTH)\cmd\winfe\mucwiz.cpp  
+	$(DEPTH)\cmd\winfe\mucproc.cpp 
+	$(DEPTH)\cmd\winfe\navbar.cpp 
+	$(DEPTH)\cmd\winfe\navcntr.cpp  
+	$(DEPTH)\cmd\winfe\navcontv.cpp  
+	$(DEPTH)\cmd\winfe\navfram.cpp  
+	$(DEPTH)\cmd\winfe\navigate.cpp   
+	$(DEPTH)\cmd\winfe\ncapiurl.cpp 
+	$(DEPTH)\cmd\winfe\nethelp.cpp  
+	$(DEPTH)\cmd\winfe\mozilla.cpp   
+	$(DEPTH)\cmd\winfe\nsapp.cpp   
+	$(DEPTH)\cmd\winfe\netsdoc.cpp
+	$(DEPTH)\cmd\winfe\nsfont.cpp
+	$(DEPTH)\cmd\winfe\netsprnt.cpp   
+	$(DEPTH)\cmd\winfe\netsvw.cpp 
+	$(DEPTH)\cmd\winfe\nsshell.cpp
+	$(DEPTH)\cmd\winfe\odctrl.cpp
+	$(DEPTH)\cmd\winfe\olectc.cpp 
+	$(DEPTH)\cmd\winfe\olehelp.cpp 
+	$(DEPTH)\cmd\winfe\oleprot1.cpp   
+	$(DEPTH)\cmd\winfe\oleregis.cpp   
+	$(DEPTH)\cmd\winfe\olestart.cpp   
+	$(DEPTH)\cmd\winfe\oleshut.cpp   
+	$(DEPTH)\cmd\winfe\oleview.cpp   
+	$(DEPTH)\cmd\winfe\oleview1.cpp   
+	$(DEPTH)\cmd\winfe\outliner.cpp 
+	$(DEPTH)\cmd\winfe\ownedlst.cpp  
+	$(DEPTH)\cmd\winfe\pain.cpp
+	$(DEPTH)\cmd\winfe\plginvw.cpp
+	$(DEPTH)\cmd\winfe\popup.cpp  
+	$(DEPTH)\cmd\winfe\prefinfo.cpp   
+	$(DEPTH)\cmd\winfe\presentm.cpp   
+	$(DEPTH)\cmd\winfe\printpag.cpp   
+	$(DEPTH)\cmd\winfe\profile.cpp   
+	$(DEPTH)\cmd\winfe\qahook.cpp  
+	$(DEPTH)\cmd\winfe\quickfil.cpp 
+	$(DEPTH)\cmd\winfe\rdfliner.cpp   
+	$(DEPTH)\cmd\winfe\region.cpp   
+	$(DEPTH)\cmd\winfe\regproto.cpp 
+	$(DEPTH)\cmd\winfe\shcut.cpp  
+	$(DEPTH)\cmd\winfe\shcutdlg.cpp   
+	$(DEPTH)\cmd\winfe\slavewnd.cpp 
+	$(DEPTH)\cmd\winfe\splash.cpp 
+	$(DEPTH)\cmd\winfe\spiwrap.c 
+	$(DEPTH)\cmd\winfe\srvritem.cpp   
+	$(DEPTH)\cmd\winfe\statbar.cpp 
+	$(DEPTH)\cmd\winfe\stshfont.cpp 
 !ifdef MOZ_LOC_INDEP
-	$(MOZ_SRC)\ns\cmd\winfe\stshli.cpp 
+	$(DEPTH)\cmd\winfe\stshli.cpp 
 !endif
-	$(MOZ_SRC)\ns\cmd\winfe\stshplug.cpp 
-	$(MOZ_SRC)\ns\cmd\winfe\styles.cpp 
-	$(MOZ_SRC)\ns\cmd\winfe\sysinfo.cpp
-	$(MOZ_SRC)\ns\cmd\winfe\template.cpp
+	$(DEPTH)\cmd\winfe\stshplug.cpp 
+	$(DEPTH)\cmd\winfe\styles.cpp 
+	$(DEPTH)\cmd\winfe\sysinfo.cpp
+	$(DEPTH)\cmd\winfe\template.cpp
 !if "$(MOZ_USERNAME)" == "WHITEBOX"
-    $(MOZ_SRC)\ns\cmd\winfe\qadelmsg.cpp
-    $(MOZ_SRC)\ns\cmd\winfe\qaoutput.cpp
-	$(MOZ_SRC)\ns\cmd\winfe\qatrace.cpp
-	$(MOZ_SRC)\ns\cmd\winfe\qaui.cpp
-    $(MOZ_SRC)\ns\cmd\winfe\testcase.cpp
-    $(MOZ_SRC)\ns\cmd\winfe\testcasemanager.cpp
-    $(MOZ_SRC)\ns\cmd\winfe\tclist.cpp
-    $(MOZ_SRC)\ns\cmd\winfe\testcasedlg.cpp
+    $(DEPTH)\cmd\winfe\qadelmsg.cpp
+    $(DEPTH)\cmd\winfe\qaoutput.cpp
+	$(DEPTH)\cmd\winfe\qatrace.cpp
+	$(DEPTH)\cmd\winfe\qaui.cpp
+    $(DEPTH)\cmd\winfe\testcase.cpp
+    $(DEPTH)\cmd\winfe\testcasemanager.cpp
+    $(DEPTH)\cmd\winfe\tclist.cpp
+    $(DEPTH)\cmd\winfe\testcasedlg.cpp
 !endif 
-	$(MOZ_SRC)\ns\cmd\winfe\timer.cpp  
-	$(MOZ_SRC)\ns\cmd\winfe\tip.cpp 
-	$(MOZ_SRC)\ns\cmd\winfe\tlbutton.cpp   
-	$(MOZ_SRC)\ns\cmd\winfe\toolbar2.cpp 
-	$(MOZ_SRC)\ns\cmd\winfe\tooltip.cpp  
-	$(MOZ_SRC)\ns\cmd\winfe\urlbar.cpp 
-	$(MOZ_SRC)\ns\cmd\winfe\urlecho.cpp
-	$(MOZ_SRC)\ns\cmd\winfe\usertlbr.cpp
-	$(MOZ_SRC)\ns\cmd\winfe\viewerse.cpp    
-	$(MOZ_SRC)\ns\cmd\winfe\winclose.cpp   
-	$(MOZ_SRC)\ns\cmd\winfe\winpref.c
+	$(DEPTH)\cmd\winfe\timer.cpp  
+	$(DEPTH)\cmd\winfe\tip.cpp 
+	$(DEPTH)\cmd\winfe\tlbutton.cpp   
+	$(DEPTH)\cmd\winfe\toolbar2.cpp 
+	$(DEPTH)\cmd\winfe\tooltip.cpp  
+	$(DEPTH)\cmd\winfe\urlbar.cpp 
+	$(DEPTH)\cmd\winfe\urlecho.cpp
+	$(DEPTH)\cmd\winfe\usertlbr.cpp
+	$(DEPTH)\cmd\winfe\viewerse.cpp    
+	$(DEPTH)\cmd\winfe\winclose.cpp   
+	$(DEPTH)\cmd\winfe\winpref.c
 !ifdef MOZ_LOC_INDEP
-	$(MOZ_SRC)\ns\cmd\winfe\winli.cpp
+	$(DEPTH)\cmd\winfe\winli.cpp
 !endif
-	$(MOZ_SRC)\ns\cmd\winfe\resdll\resdll.c
+	$(DEPTH)\cmd\winfe\resdll\resdll.c
 !if "$(MOZ_BITS)"=="32"
-	$(MOZ_SRC)\ns\cmd\winfe\talk.cpp
+	$(DEPTH)\cmd\winfe\talk.cpp
 !endif
-	$(MOZ_SRC)\ns\cmd\winfe\nsguids.cpp
+	$(DEPTH)\cmd\winfe\nsguids.cpp
 !if "$(MOZ_BITS)" == "16"
-	$(MOZ_SRC)\ns\cmd\winfe\except.cpp
+	$(DEPTH)\cmd\winfe\except.cpp
 !endif
-	$(MOZ_SRC)\ns\cmd\winfe\xpstrsw.cpp
-	$(MOZ_SRC)\ns\cmd\winfe\widgetry.cpp
-	$(MOZ_SRC)\ns\cmd\winfe\woohoo.cpp
+	$(DEPTH)\cmd\winfe\xpstrsw.cpp
+	$(DEPTH)\cmd\winfe\widgetry.cpp
+	$(DEPTH)\cmd\winfe\woohoo.cpp
 <<
 
-$(MOZ_SRC)\ns\cmd\winfe\mkfiles32\makedep.exe: $(MOZ_SRC)\ns\cmd\winfe\mkfiles32\makedep.cpp
+$(DEPTH)\cmd\winfe\mkfiles32\makedep.exe: $(DEPTH)\cmd\winfe\mkfiles32\makedep.cpp
 !if "$(MOZ_BITS)"=="32"
-    @cl -MT -Fo"$(OUTDIR)/" -Fe"$(MOZ_SRC)\ns\cmd\winfe\mkfiles32\makedep.exe" $(MOZ_SRC)\ns\cmd\winfe\mkfiles32\makedep.cpp
+    @cl -MT -Fo"$(OUTDIR)/" -Fe"$(DEPTH)\cmd\winfe\mkfiles32\makedep.exe" $(DEPTH)\cmd\winfe\mkfiles32\makedep.cpp
 !else
     @echo Can't build makedep under 16 bits, must be built.
 	!error
@@ -1439,29 +1439,29 @@ NavCenterImages: $(GENDIR) $(GENDIR)\personal.rc $(GENDIR)\history.rc \
 	$(GENDIR)\channels.rc $(GENDIR)\sitemap.rc $(GENDIR)\search.rc \
 	$(GENDIR)\guide.rc $(GENDIR)\file.rc $(GENDIR)\ldap.rc
 
-$(GENDIR)\personal.rc: $(MOZ_SRC)\ns\modules\rdf\images\personal.gif
-	$(BIN2RC) $(MOZ_SRC)\ns\modules\rdf\images\personal.gif image/gif > $(GENDIR)\personal.rc
+$(GENDIR)\personal.rc: $(DEPTH)\modules\rdf\images\personal.gif
+	$(BIN2RC) $(DEPTH)\modules\rdf\images\personal.gif image/gif > $(GENDIR)\personal.rc
 
-$(GENDIR)\history.rc: $(MOZ_SRC)\ns\modules\rdf\images\history.gif
-	$(BIN2RC) $(MOZ_SRC)\ns\modules\rdf\images\history.gif image/gif > $(GENDIR)\history.rc
+$(GENDIR)\history.rc: $(DEPTH)\modules\rdf\images\history.gif
+	$(BIN2RC) $(DEPTH)\modules\rdf\images\history.gif image/gif > $(GENDIR)\history.rc
 
-$(GENDIR)\channels.rc: $(MOZ_SRC)\ns\modules\rdf\images\channels.gif
-	$(BIN2RC) $(MOZ_SRC)\ns\modules\rdf\images\channels.gif image/gif > $(GENDIR)\channels.rc
+$(GENDIR)\channels.rc: $(DEPTH)\modules\rdf\images\channels.gif
+	$(BIN2RC) $(DEPTH)\modules\rdf\images\channels.gif image/gif > $(GENDIR)\channels.rc
 
-$(GENDIR)\sitemap.rc: $(MOZ_SRC)\ns\modules\rdf\images\sitemap.gif
-	$(BIN2RC) $(MOZ_SRC)\ns\modules\rdf\images\sitemap.gif image/gif > $(GENDIR)\sitemap.rc
+$(GENDIR)\sitemap.rc: $(DEPTH)\modules\rdf\images\sitemap.gif
+	$(BIN2RC) $(DEPTH)\modules\rdf\images\sitemap.gif image/gif > $(GENDIR)\sitemap.rc
 
-$(GENDIR)\search.rc: $(MOZ_SRC)\ns\modules\rdf\images\search.gif
-	$(BIN2RC) $(MOZ_SRC)\ns\modules\rdf\images\search.gif image/gif > $(GENDIR)\search.rc
+$(GENDIR)\search.rc: $(DEPTH)\modules\rdf\images\search.gif
+	$(BIN2RC) $(DEPTH)\modules\rdf\images\search.gif image/gif > $(GENDIR)\search.rc
 
-$(GENDIR)\guide.rc: $(MOZ_SRC)\ns\modules\rdf\images\guide.gif
-	$(BIN2RC) $(MOZ_SRC)\ns\modules\rdf\images\guide.gif image/gif > $(GENDIR)\guide.rc
+$(GENDIR)\guide.rc: $(DEPTH)\modules\rdf\images\guide.gif
+	$(BIN2RC) $(DEPTH)\modules\rdf\images\guide.gif image/gif > $(GENDIR)\guide.rc
 
-$(GENDIR)\file.rc: $(MOZ_SRC)\ns\modules\rdf\images\file.gif
-	$(BIN2RC) $(MOZ_SRC)\ns\modules\rdf\images\file.gif image/gif > $(GENDIR)\file.rc
+$(GENDIR)\file.rc: $(DEPTH)\modules\rdf\images\file.gif
+	$(BIN2RC) $(DEPTH)\modules\rdf\images\file.gif image/gif > $(GENDIR)\file.rc
 
-$(GENDIR)\ldap.rc: $(MOZ_SRC)\ns\modules\rdf\images\ldap.gif
-	$(BIN2RC) $(MOZ_SRC)\ns\modules\rdf\images\ldap.gif image/gif > $(GENDIR)\ldap.rc
+$(GENDIR)\ldap.rc: $(DEPTH)\modules\rdf\images\ldap.gif
+	$(BIN2RC) $(DEPTH)\modules\rdf\images\ldap.gif image/gif > $(GENDIR)\ldap.rc
 
 #
 #	Misc images in the about pages.
@@ -1489,54 +1489,54 @@ AboutImages: $(GENDIR) \
 	$(GENDIR)\tdlogo.rc
 
 !ifdef MOZ_JAVA
-$(GENDIR)\javalogo.rc: $(MOZ_SRC)\ns\lib\xp\javalogo.gif
-	$(BIN2RC) $(MOZ_SRC)\ns\lib\xp\javalogo.gif image/gif > $(GENDIR)\javalogo.rc
+$(GENDIR)\javalogo.rc: $(DEPTH)\lib\xp\javalogo.gif
+	$(BIN2RC) $(DEPTH)\lib\xp\javalogo.gif image/gif > $(GENDIR)\javalogo.rc
 !endif
 
 !ifdef FORTEZZA
-$(GENDIR)\litronic.rc: $(MOZ_SRC)\ns\lib\xp\litronic.gif
-	$(BIN2RC) $(MOZ_SRC)\ns\lib\xp\litronic.gif image/gif > $(GENDIR)\litronic.rc
+$(GENDIR)\litronic.rc: $(DEPTH)\lib\xp\litronic.gif
+	$(BIN2RC) $(DEPTH)\lib\xp\litronic.gif image/gif > $(GENDIR)\litronic.rc
 !endif
 
-$(GENDIR)\biglogo.rc: $(MOZ_SRC)\ns\lib\xp\biglogo.gif
-	$(BIN2RC) $(MOZ_SRC)\ns\lib\xp\biglogo.gif image/gif > $(GENDIR)\biglogo.rc
+$(GENDIR)\biglogo.rc: $(DEPTH)\lib\xp\biglogo.gif
+	$(BIN2RC) $(DEPTH)\lib\xp\biglogo.gif image/gif > $(GENDIR)\biglogo.rc
 
-$(GENDIR)\rsalogo.rc: $(MOZ_SRC)\ns\lib\xp\rsalogo.gif
-	$(BIN2RC) $(MOZ_SRC)\ns\lib\xp\rsalogo.gif image/gif > $(GENDIR)\rsalogo.rc
+$(GENDIR)\rsalogo.rc: $(DEPTH)\lib\xp\rsalogo.gif
+	$(BIN2RC) $(DEPTH)\lib\xp\rsalogo.gif image/gif > $(GENDIR)\rsalogo.rc
 
-$(GENDIR)\qt_logo.rc: $(MOZ_SRC)\ns\lib\xp\qt_logo.gif
-	$(BIN2RC) $(MOZ_SRC)\ns\lib\xp\qt_logo.gif image/gif > $(GENDIR)\qt_logo.rc
+$(GENDIR)\qt_logo.rc: $(DEPTH)\lib\xp\qt_logo.gif
+	$(BIN2RC) $(DEPTH)\lib\xp\qt_logo.gif image/gif > $(GENDIR)\qt_logo.rc
 
-$(GENDIR)\visilogo.rc: $(MOZ_SRC)\ns\lib\xp\visilogo.gif
-	$(BIN2RC) $(MOZ_SRC)\ns\lib\xp\visilogo.gif image/gif > $(GENDIR)\visilogo.rc
+$(GENDIR)\visilogo.rc: $(DEPTH)\lib\xp\visilogo.gif
+	$(BIN2RC) $(DEPTH)\lib\xp\visilogo.gif image/gif > $(GENDIR)\visilogo.rc
 
-$(GENDIR)\coslogo.rc: $(MOZ_SRC)\ns\lib\xp\coslogo.jpg
-	$(BIN2RC) $(MOZ_SRC)\ns\lib\xp\coslogo.jpg image/jpeg > $(GENDIR)\coslogo.rc
+$(GENDIR)\coslogo.rc: $(DEPTH)\lib\xp\coslogo.jpg
+	$(BIN2RC) $(DEPTH)\lib\xp\coslogo.jpg image/jpeg > $(GENDIR)\coslogo.rc
 
-$(GENDIR)\insologo.rc: $(MOZ_SRC)\ns\lib\xp\insologo.gif
-	$(BIN2RC) $(MOZ_SRC)\ns\lib\xp\insologo.gif image/gif > $(GENDIR)\insologo.rc
+$(GENDIR)\insologo.rc: $(DEPTH)\lib\xp\insologo.gif
+	$(BIN2RC) $(DEPTH)\lib\xp\insologo.gif image/gif > $(GENDIR)\insologo.rc
 
-$(GENDIR)\mclogo.rc: $(MOZ_SRC)\ns\lib\xp\mclogo.gif
-	$(BIN2RC) $(MOZ_SRC)\ns\lib\xp\mclogo.gif image/gif > $(GENDIR)\mclogo.rc
+$(GENDIR)\mclogo.rc: $(DEPTH)\lib\xp\mclogo.gif
+	$(BIN2RC) $(DEPTH)\lib\xp\mclogo.gif image/gif > $(GENDIR)\mclogo.rc
 
-$(GENDIR)\ncclogo.rc: $(MOZ_SRC)\ns\lib\xp\ncclogo.gif
-	$(BIN2RC) $(MOZ_SRC)\ns\lib\xp\ncclogo.gif image/gif > $(GENDIR)\ncclogo.rc
+$(GENDIR)\ncclogo.rc: $(DEPTH)\lib\xp\ncclogo.gif
+	$(BIN2RC) $(DEPTH)\lib\xp\ncclogo.gif image/gif > $(GENDIR)\ncclogo.rc
 
-$(GENDIR)\odilogo.rc: $(MOZ_SRC)\ns\lib\xp\odilogo.gif
-	$(BIN2RC) $(MOZ_SRC)\ns\lib\xp\odilogo.gif image/gif > $(GENDIR)\odilogo.rc
+$(GENDIR)\odilogo.rc: $(DEPTH)\lib\xp\odilogo.gif
+	$(BIN2RC) $(DEPTH)\lib\xp\odilogo.gif image/gif > $(GENDIR)\odilogo.rc
 
-$(GENDIR)\symlogo.rc: $(MOZ_SRC)\ns\lib\xp\symlogo.gif
-	$(BIN2RC) $(MOZ_SRC)\ns\lib\xp\symlogo.gif image/gif > $(GENDIR)\symlogo.rc
+$(GENDIR)\symlogo.rc: $(DEPTH)\lib\xp\symlogo.gif
+	$(BIN2RC) $(DEPTH)\lib\xp\symlogo.gif image/gif > $(GENDIR)\symlogo.rc
 
-$(GENDIR)\tdlogo.rc: $(MOZ_SRC)\ns\lib\xp\tdlogo.gif
-	$(BIN2RC) $(MOZ_SRC)\ns\lib\xp\tdlogo.gif image/gif > $(GENDIR)\tdlogo.rc
+$(GENDIR)\tdlogo.rc: $(DEPTH)\lib\xp\tdlogo.gif
+	$(BIN2RC) $(DEPTH)\lib\xp\tdlogo.gif image/gif > $(GENDIR)\tdlogo.rc
 !else
 
 AboutImages: $(GENDIR) \
 	$(GENDIR)\flamer.rc
 	
-$(GENDIR)\flamer.rc: $(MOZ_SRC)\ns\lib\xp\flamer.gif
-	$(BIN2RC) $(MOZ_SRC)\ns\lib\xp\flamer.gif image/gif > $(GENDIR)\flamer.rc
+$(GENDIR)\flamer.rc: $(DEPTH)\lib\xp\flamer.gif
+	$(BIN2RC) $(DEPTH)\lib\xp\flamer.gif image/gif > $(GENDIR)\flamer.rc
 !endif
 
 
@@ -1549,38 +1549,38 @@ prebuild: $(GENDIR) $(GENDIR)\initpref.rc $(GENDIR)\allpref.rc \
 	$(GENDIR)\winpref.rc $(GENDIR)\config.rc NavCenterImages \
 	AboutImages
 	
-$(GENDIR)\initpref.rc: $(MOZ_SRC)\ns\modules\libpref\src\initpref.js
-	$(TXT2RC) init_prefs $(MOZ_SRC)\ns\modules\libpref\src\initpref.js \
+$(GENDIR)\initpref.rc: $(DEPTH)\modules\libpref\src\initpref.js
+	$(TXT2RC) init_prefs $(DEPTH)\modules\libpref\src\initpref.js \
 		$(GENDIR)\initpref.rc
 
-$(GENDIR)\allpref.rc: $(MOZ_SRC)\ns\modules\libpref\src\init\all.js
-	$(TXT2RC) all_prefs $(MOZ_SRC)\ns\modules\libpref\src\init\all.js \
+$(GENDIR)\allpref.rc: $(DEPTH)\modules\libpref\src\init\all.js
+	$(TXT2RC) all_prefs $(DEPTH)\modules\libpref\src\init\all.js \
 		$(GENDIR)\allpref.rc
 
-$(GENDIR)\allpref2.rc: $(MOZ_SRC)\ns\modules\libpref\src\init\mailnews.js
-	$(TXT2RC) mailnews_prefs $(MOZ_SRC)\ns\modules\libpref\src\init\mailnews.js \
+$(GENDIR)\allpref2.rc: $(DEPTH)\modules\libpref\src\init\mailnews.js
+	$(TXT2RC) mailnews_prefs $(DEPTH)\modules\libpref\src\init\mailnews.js \
 		$(GENDIR)\allpref2.rc
 
-$(GENDIR)\allpref3.rc: $(MOZ_SRC)\ns\modules\libpref\src\init\editor.js
-	$(TXT2RC) editor_prefs $(MOZ_SRC)\ns\modules\libpref\src\init\editor.js \
+$(GENDIR)\allpref3.rc: $(DEPTH)\modules\libpref\src\init\editor.js
+	$(TXT2RC) editor_prefs $(DEPTH)\modules\libpref\src\init\editor.js \
 		$(GENDIR)\allpref3.rc
 
-$(GENDIR)\allpref4.rc: $(MOZ_SRC)\ns\modules\libpref\src\init\security.js
-	$(TXT2RC) security_prefs $(MOZ_SRC)\ns\modules\libpref\src\init\security.js \
+$(GENDIR)\allpref4.rc: $(DEPTH)\modules\libpref\src\init\security.js
+	$(TXT2RC) security_prefs $(DEPTH)\modules\libpref\src\init\security.js \
 		$(GENDIR)\allpref4.rc
 
-$(GENDIR)\winpref.rc: $(MOZ_SRC)\ns\modules\libpref\src\win\winpref.js
-	$(TXT2RC) win_prefs $(MOZ_SRC)\ns\modules\libpref\src\win\winpref.js \
+$(GENDIR)\winpref.rc: $(DEPTH)\modules\libpref\src\win\winpref.js
+	$(TXT2RC) win_prefs $(DEPTH)\modules\libpref\src\win\winpref.js \
 	    $(GENDIR)\winpref.rc
 
 # May need a new one for MOZ_MEDIUM.
 !ifndef MOZ_COMMUNICATOR_CONFIG_JS
-$(GENDIR)\config.rc:  $(MOZ_SRC)\ns\modules\libpref\src\init\configr.js
-	$(TXT2RC) config_prefs $(MOZ_SRC)\ns\modules\libpref\src\init\configr.js \
+$(GENDIR)\config.rc:  $(DEPTH)\modules\libpref\src\init\configr.js
+	$(TXT2RC) config_prefs $(DEPTH)\modules\libpref\src\init\configr.js \
 		$(GENDIR)\config.rc
 !else
-$(GENDIR)\config.rc:  $(MOZ_SRC)\ns\modules\libpref\src\init\config.js
-	$(TXT2RC) config_prefs $(MOZ_SRC)\ns\modules\libpref\src\init\config.js \
+$(GENDIR)\config.rc:  $(DEPTH)\modules\libpref\src\init\config.js
+	$(TXT2RC) config_prefs $(DEPTH)\modules\libpref\src\init\config.js \
 		$(GENDIR)\config.rc
 !endif
 
@@ -1694,7 +1694,7 @@ install:    \
 !IF EXIST($(DIST)\bin\zpw32$(VERSION_NUMBER).dll)
 	    $(OUTDIR)\java\bin\zpw32$(VERSION_NUMBER).dll    \
 !ENDIF
-!IF EXIST($(MOZ_SRC)\ns\cmd\winfe\nstdfp32.dll)
+!IF EXIST($(DEPTH)\cmd\winfe\nstdfp32.dll)
 	    $(OUTDIR)\dynfonts\nstdfp32.dll    \
 !ENDIF
 !ifdef MOZ_LDAP
@@ -1770,7 +1770,7 @@ install:    \
 !IF EXIST($(DIST)\bin\uni1600.dll)
 	    $(OUTDIR)\uni1600.dll    \
 !ENDIF
-!IF EXIST($(MOZ_SRC)\ns\cmd\winfe\nstdfp16.dll)
+!IF EXIST($(DEPTH)\cmd\winfe\nstdfp16.dll)
 	    $(OUTDIR)\dynfonts\nstdfp16.dll    \
 !ENDIF
 !ifdef MOZ_LDAP
@@ -1924,9 +1924,9 @@ $(OUTDIR)\jrt32$(VERSION_NUMBER).dll:   $(DIST)\bin\jrt32$(VERSION_NUMBER).dll
 $(OUTDIR)\unicvt32.dll:   $(DIST)\bin\unicvt32.dll
     @IF EXIST $(DIST)\bin\unicvt32.dll copy $(DIST)\bin\unicvt32.dll $(OUTDIR)\unicvt32.dll
 
-$(OUTDIR)\dynfonts\nstdfp32.dll:   $(MOZ_SRC)\ns\cmd\winfe\nstdfp32.dll
+$(OUTDIR)\dynfonts\nstdfp32.dll:   $(DEPTH)\cmd\winfe\nstdfp32.dll
     @IF NOT EXIST "$(OUTDIR)\dynfonts/$(NULL)" mkdir "$(OUTDIR)\dynfonts"
-    @IF EXIST $(MOZ_SRC)\ns\cmd\winfe\nstdfp32.dll copy $(MOZ_SRC)\ns\cmd\winfe\nstdfp32.dll $(OUTDIR)\dynfonts\nstdfp32.dll
+    @IF EXIST $(DEPTH)\cmd\winfe\nstdfp32.dll copy $(DEPTH)\cmd\winfe\nstdfp32.dll $(OUTDIR)\dynfonts\nstdfp32.dll
 
 !if !defined(MOZ_NO_LDAP)
 $(OUTDIR)\nsldap32.dll:   $(DIST)\bin\nsldap32.dll
@@ -1993,9 +1993,9 @@ $(OUTDIR)\sched16.dll:   $(DIST)\bin\sched16.dll
 $(OUTDIR)\uni1600.dll:   $(DIST)\bin\uni1600.dll
     @IF EXIST $(DIST)\bin\uni1600.dll copy $(DIST)\bin\uni1600.dll $(OUTDIR)\uni1600.dll
 
-$(OUTDIR)\dynfonts\nstdfp16.dll:   $(MOZ_SRC)\ns\cmd\winfe\nstdfp16.dll
+$(OUTDIR)\dynfonts\nstdfp16.dll:   $(DEPTH)\cmd\winfe\nstdfp16.dll
     @IF NOT EXIST "$(OUTDIR)\dynfonts/$(NULL)" mkdir "$(OUTDIR)\dynfonts"
-    @IF EXIST $(MOZ_SRC)\ns\cmd\winfe\nstdfp16.dll copy $(MOZ_SRC)\ns\cmd\winfe\nstdfp16.dll $(OUTDIR)\dynfonts\nstdfp16.dll
+    @IF EXIST $(DEPTH)\cmd\winfe\nstdfp16.dll copy $(DEPTH)\cmd\winfe\nstdfp16.dll $(OUTDIR)\dynfonts\nstdfp16.dll
 
 !if !defined(MOZ_NO_LDAP)
 $(OUTDIR)\nsldap.dll:   $(DIST)\bin\nsldap.dll
@@ -2186,7 +2186,7 @@ SPAWN_BATCH1:
 
 WAIT_OBJECTS:
     echo Waiting for Batch Build 1 to complete
-    $(MOZ_SRC)\ns\cmd\winfe\mkfiles32\waitfor $(TMP)\bb1.sem
+    $(DEPTH)\cmd\winfe\mkfiles32\waitfor $(TMP)\bb1.sem
 !if 0
     move $(OUTDIR)\bb1\$(PROD)$(VERSTR)\*.obj $(OUTDIR)
 !endif
@@ -2299,7 +2299,7 @@ BUILD_SOURCE: $(OBJ_FILES)
     $(DIST)\lib\jpeg$(MOZ_BITS)$(VERSION_NUMBER).lib +
     $(DIST)\lib\dbm$(MOZ_BITS).lib +
     $(BINREL_DIST)\lib\watcomfx.lib
-    $(MOZ_SRC)\ns\cmd\winfe\mozilla.def;
+    $(DEPTH)\cmd\winfe\mozilla.def;
 !endif
 
 <<KEEP
@@ -2329,9 +2329,9 @@ $(OUTDIR)\netsc_fr.exe : "$(OUTDIR)" $(PATCHER) $(XPDIST)\xpdist\france.txt $(OU
 <<
 
 RES_FILES =\
-	$(MOZ_SRC)\ns\cmd\winfe\mozilla.rc\
-	$(MOZ_SRC)\ns\cmd\winfe\editor.rc\
-	$(MOZ_SRC)\ns\cmd\winfe\edres2.h\
+	$(DEPTH)\cmd\winfe\mozilla.rc\
+	$(DEPTH)\cmd\winfe\editor.rc\
+	$(DEPTH)\cmd\winfe\edres2.h\
 	$(GENDIR)\allpref.rc\
 	$(GENDIR)\allpref2.rc\
 	$(GENDIR)\allpref3.rc\
@@ -2339,144 +2339,144 @@ RES_FILES =\
 	$(GENDIR)\initpref.rc\
 	$(GENDIR)\winpref.rc\
 	$(GENDIR)\config.rc\
-	$(MOZ_SRC)\ns\cmd\winfe\res\convtbls.rc\
-	$(MOZ_SRC)\ns\cmd\winfe\res\editor.rc2\
-	$(MOZ_SRC)\ns\cmd\winfe\res\license.rc\
-	$(MOZ_SRC)\ns\cmd\winfe\res\mail.rc\
-	$(MOZ_SRC)\ns\cmd\winfe\res\mozilla.rc2\
-	$(MOZ_SRC)\ns\cmd\winfe\res\mozilla.rc3\
+	$(DEPTH)\cmd\winfe\res\convtbls.rc\
+	$(DEPTH)\cmd\winfe\res\editor.rc2\
+	$(DEPTH)\cmd\winfe\res\license.rc\
+	$(DEPTH)\cmd\winfe\res\mail.rc\
+	$(DEPTH)\cmd\winfe\res\mozilla.rc2\
+	$(DEPTH)\cmd\winfe\res\mozilla.rc3\
 	\
-	$(MOZ_SRC)\ns\cmd\winfe\res\address.bmp\
-	$(MOZ_SRC)\ns\cmd\winfe\res\addrnew.bmp\
-	$(MOZ_SRC)\ns\cmd\winfe\res\arrow1.bmp\
-	$(MOZ_SRC)\ns\cmd\winfe\res\arrow2.bmp\
-	$(MOZ_SRC)\ns\cmd\winfe\res\BITMAP3.bmp\
-	$(MOZ_SRC)\ns\cmd\winfe\res\bkfdopen.bmp\
-	$(MOZ_SRC)\ns\cmd\winfe\res\bkmkfld2.bmp\
-	$(MOZ_SRC)\ns\cmd\winfe\res\bm_qf.bmp\
-	$(MOZ_SRC)\ns\cmd\winfe\res\BMKITEM.bmp\
-	$(MOZ_SRC)\ns\cmd\winfe\res\BMP00001.bmp\
-	$(MOZ_SRC)\ns\cmd\winfe\res\BMP00002.bmp\
-	$(MOZ_SRC)\ns\cmd\winfe\res\bookmark.bmp\
-	$(MOZ_SRC)\ns\cmd\winfe\res\collect.bmp\
-	$(MOZ_SRC)\ns\cmd\winfe\res\column.bmp\
-	$(MOZ_SRC)\ns\cmd\winfe\res\compbar.bmp\
-	$(MOZ_SRC)\ns\cmd\winfe\res\comptabs.bmp\
-	$(MOZ_SRC)\ns\cmd\winfe\res\DOWND.bmp\
-	$(MOZ_SRC)\ns\cmd\winfe\res\DOWNF.bmp\
-	$(MOZ_SRC)\ns\cmd\winfe\res\DOWNU.bmp\
-	$(MOZ_SRC)\ns\cmd\winfe\res\DOWNX.bmp\
-	$(MOZ_SRC)\ns\cmd\winfe\res\EDAL_A_U.bmp\
-	$(MOZ_SRC)\ns\cmd\winfe\res\EDAL_B_U.bmp\
-	$(MOZ_SRC)\ns\cmd\winfe\res\EDAL_C_U.bmp\
-	$(MOZ_SRC)\ns\cmd\winfe\res\EDAL_L_U.bmp\
-	$(MOZ_SRC)\ns\cmd\winfe\res\EDAL_R_U.bmp\
-	$(MOZ_SRC)\ns\cmd\winfe\res\EDAL_T_U.bmp\
-	$(MOZ_SRC)\ns\cmd\winfe\res\EDALCB_U.bmp\
-	$(MOZ_SRC)\ns\cmd\winfe\res\edalignc.bmp\
-	$(MOZ_SRC)\ns\cmd\winfe\res\edalignl.bmp\
-	$(MOZ_SRC)\ns\cmd\winfe\res\edalignr.bmp\
-	$(MOZ_SRC)\ns\cmd\winfe\res\edanch.bmp\
-	$(MOZ_SRC)\ns\cmd\winfe\res\edanchm.bmp\
-	$(MOZ_SRC)\ns\cmd\winfe\res\edcombo.bmp\
-	$(MOZ_SRC)\ns\cmd\winfe\res\edform.bmp\
-	$(MOZ_SRC)\ns\cmd\winfe\res\edformm.bmp\
-	$(MOZ_SRC)\ns\cmd\winfe\res\edhrule.bmp\
-	$(MOZ_SRC)\ns\cmd\winfe\res\edimage.bmp\
-	$(MOZ_SRC)\ns\cmd\winfe\res\edlink.bmp\
-	$(MOZ_SRC)\ns\cmd\winfe\res\edtable.bmp\
-	$(MOZ_SRC)\ns\cmd\winfe\res\edtag.bmp\
-	$(MOZ_SRC)\ns\cmd\winfe\res\edtage.bmp\
-	$(MOZ_SRC)\ns\cmd\winfe\res\edtagem.bmp\
-	$(MOZ_SRC)\ns\cmd\winfe\res\edtagm.bmp\
-	$(MOZ_SRC)\ns\cmd\winfe\res\edtarg.bmp\
-	$(MOZ_SRC)\ns\cmd\winfe\res\EDTARGET.bmp\
-	$(MOZ_SRC)\ns\cmd\winfe\res\FILE.bmp\
-	$(MOZ_SRC)\ns\cmd\winfe\res\GAUDIO.bmp\
-	$(MOZ_SRC)\ns\cmd\winfe\res\GBINARY.bmp\
-	$(MOZ_SRC)\ns\cmd\winfe\res\GFIND.bmp\
-	$(MOZ_SRC)\ns\cmd\winfe\res\GFOLDER.bmp\
-	$(MOZ_SRC)\ns\cmd\winfe\res\GGENERIC.bmp\
-	$(MOZ_SRC)\ns\cmd\winfe\res\GIMAGE.bmp\
-	$(MOZ_SRC)\ns\cmd\winfe\res\GMOVIE.bmp\
-	$(MOZ_SRC)\ns\cmd\winfe\res\GOPHER_F.bmp\
-	$(MOZ_SRC)\ns\cmd\winfe\res\GTELNET.bmp\
-	$(MOZ_SRC)\ns\cmd\winfe\res\GTEXT.bmp\
-	$(MOZ_SRC)\ns\cmd\winfe\res\IBAD.bmp\
-	$(MOZ_SRC)\ns\cmd\winfe\res\IMAGE_BA.bmp\
-	$(MOZ_SRC)\ns\cmd\winfe\res\IMAGE_MA.bmp\
-	$(MOZ_SRC)\ns\cmd\winfe\res\IREPLACE.bmp\
-	$(MOZ_SRC)\ns\cmd\winfe\res\IUNKNOWN.bmp\
-	$(MOZ_SRC)\ns\cmd\winfe\res\mailcol.bmp\
-	$(MOZ_SRC)\ns\cmd\winfe\res\mailingl.bmp\
-	$(MOZ_SRC)\ns\cmd\winfe\res\mailthrd.bmp\
-	$(MOZ_SRC)\ns\cmd\winfe\res\msgback.bmp\
-	$(MOZ_SRC)\ns\cmd\winfe\res\N.bmp\
-	$(MOZ_SRC)\ns\cmd\winfe\res\newsart.bmp\
-	$(MOZ_SRC)\ns\cmd\winfe\res\newsthrd.bmp\
-	$(MOZ_SRC)\ns\cmd\winfe\res\outliner.bmp\
-	$(MOZ_SRC)\ns\cmd\winfe\res\outlmail.bmp\
-	$(MOZ_SRC)\ns\cmd\winfe\res\person.bmp\
-	$(MOZ_SRC)\ns\cmd\winfe\res\PICTURES.bmp\
-	$(MOZ_SRC)\ns\cmd\winfe\res\PICTURES.bmp\
-	$(MOZ_SRC)\ns\cmd\winfe\res\smidelay.bmp\
-	$(MOZ_SRC)\ns\cmd\winfe\res\smmask.bmp\
-	$(MOZ_SRC)\ns\cmd\winfe\res\SREPLACE.bmp\
-	$(MOZ_SRC)\ns\cmd\winfe\res\SSECURE.bmp\
-	$(MOZ_SRC)\ns\cmd\winfe\res\submenu.bmp\
-	$(MOZ_SRC)\ns\cmd\winfe\res\submenu2.bmp\
-	$(MOZ_SRC)\ns\cmd\winfe\res\taskbarl.bmp\
-	$(MOZ_SRC)\ns\cmd\winfe\res\taskbars.bmp\
-	$(MOZ_SRC)\ns\cmd\winfe\res\tb_dock.bmp\
-	$(MOZ_SRC)\ns\cmd\winfe\res\UPD.bmp\
-	$(MOZ_SRC)\ns\cmd\winfe\res\UPF.bmp\
-	$(MOZ_SRC)\ns\cmd\winfe\res\UPU.bmp\
-	$(MOZ_SRC)\ns\cmd\winfe\res\UPX.bmp\
-	$(MOZ_SRC)\ns\cmd\winfe\res\vflippy.bmp\
+	$(DEPTH)\cmd\winfe\res\address.bmp\
+	$(DEPTH)\cmd\winfe\res\addrnew.bmp\
+	$(DEPTH)\cmd\winfe\res\arrow1.bmp\
+	$(DEPTH)\cmd\winfe\res\arrow2.bmp\
+	$(DEPTH)\cmd\winfe\res\BITMAP3.bmp\
+	$(DEPTH)\cmd\winfe\res\bkfdopen.bmp\
+	$(DEPTH)\cmd\winfe\res\bkmkfld2.bmp\
+	$(DEPTH)\cmd\winfe\res\bm_qf.bmp\
+	$(DEPTH)\cmd\winfe\res\BMKITEM.bmp\
+	$(DEPTH)\cmd\winfe\res\BMP00001.bmp\
+	$(DEPTH)\cmd\winfe\res\BMP00002.bmp\
+	$(DEPTH)\cmd\winfe\res\bookmark.bmp\
+	$(DEPTH)\cmd\winfe\res\collect.bmp\
+	$(DEPTH)\cmd\winfe\res\column.bmp\
+	$(DEPTH)\cmd\winfe\res\compbar.bmp\
+	$(DEPTH)\cmd\winfe\res\comptabs.bmp\
+	$(DEPTH)\cmd\winfe\res\DOWND.bmp\
+	$(DEPTH)\cmd\winfe\res\DOWNF.bmp\
+	$(DEPTH)\cmd\winfe\res\DOWNU.bmp\
+	$(DEPTH)\cmd\winfe\res\DOWNX.bmp\
+	$(DEPTH)\cmd\winfe\res\EDAL_A_U.bmp\
+	$(DEPTH)\cmd\winfe\res\EDAL_B_U.bmp\
+	$(DEPTH)\cmd\winfe\res\EDAL_C_U.bmp\
+	$(DEPTH)\cmd\winfe\res\EDAL_L_U.bmp\
+	$(DEPTH)\cmd\winfe\res\EDAL_R_U.bmp\
+	$(DEPTH)\cmd\winfe\res\EDAL_T_U.bmp\
+	$(DEPTH)\cmd\winfe\res\EDALCB_U.bmp\
+	$(DEPTH)\cmd\winfe\res\edalignc.bmp\
+	$(DEPTH)\cmd\winfe\res\edalignl.bmp\
+	$(DEPTH)\cmd\winfe\res\edalignr.bmp\
+	$(DEPTH)\cmd\winfe\res\edanch.bmp\
+	$(DEPTH)\cmd\winfe\res\edanchm.bmp\
+	$(DEPTH)\cmd\winfe\res\edcombo.bmp\
+	$(DEPTH)\cmd\winfe\res\edform.bmp\
+	$(DEPTH)\cmd\winfe\res\edformm.bmp\
+	$(DEPTH)\cmd\winfe\res\edhrule.bmp\
+	$(DEPTH)\cmd\winfe\res\edimage.bmp\
+	$(DEPTH)\cmd\winfe\res\edlink.bmp\
+	$(DEPTH)\cmd\winfe\res\edtable.bmp\
+	$(DEPTH)\cmd\winfe\res\edtag.bmp\
+	$(DEPTH)\cmd\winfe\res\edtage.bmp\
+	$(DEPTH)\cmd\winfe\res\edtagem.bmp\
+	$(DEPTH)\cmd\winfe\res\edtagm.bmp\
+	$(DEPTH)\cmd\winfe\res\edtarg.bmp\
+	$(DEPTH)\cmd\winfe\res\EDTARGET.bmp\
+	$(DEPTH)\cmd\winfe\res\FILE.bmp\
+	$(DEPTH)\cmd\winfe\res\GAUDIO.bmp\
+	$(DEPTH)\cmd\winfe\res\GBINARY.bmp\
+	$(DEPTH)\cmd\winfe\res\GFIND.bmp\
+	$(DEPTH)\cmd\winfe\res\GFOLDER.bmp\
+	$(DEPTH)\cmd\winfe\res\GGENERIC.bmp\
+	$(DEPTH)\cmd\winfe\res\GIMAGE.bmp\
+	$(DEPTH)\cmd\winfe\res\GMOVIE.bmp\
+	$(DEPTH)\cmd\winfe\res\GOPHER_F.bmp\
+	$(DEPTH)\cmd\winfe\res\GTELNET.bmp\
+	$(DEPTH)\cmd\winfe\res\GTEXT.bmp\
+	$(DEPTH)\cmd\winfe\res\IBAD.bmp\
+	$(DEPTH)\cmd\winfe\res\IMAGE_BA.bmp\
+	$(DEPTH)\cmd\winfe\res\IMAGE_MA.bmp\
+	$(DEPTH)\cmd\winfe\res\IREPLACE.bmp\
+	$(DEPTH)\cmd\winfe\res\IUNKNOWN.bmp\
+	$(DEPTH)\cmd\winfe\res\mailcol.bmp\
+	$(DEPTH)\cmd\winfe\res\mailingl.bmp\
+	$(DEPTH)\cmd\winfe\res\mailthrd.bmp\
+	$(DEPTH)\cmd\winfe\res\msgback.bmp\
+	$(DEPTH)\cmd\winfe\res\N.bmp\
+	$(DEPTH)\cmd\winfe\res\newsart.bmp\
+	$(DEPTH)\cmd\winfe\res\newsthrd.bmp\
+	$(DEPTH)\cmd\winfe\res\outliner.bmp\
+	$(DEPTH)\cmd\winfe\res\outlmail.bmp\
+	$(DEPTH)\cmd\winfe\res\person.bmp\
+	$(DEPTH)\cmd\winfe\res\PICTURES.bmp\
+	$(DEPTH)\cmd\winfe\res\PICTURES.bmp\
+	$(DEPTH)\cmd\winfe\res\smidelay.bmp\
+	$(DEPTH)\cmd\winfe\res\smmask.bmp\
+	$(DEPTH)\cmd\winfe\res\SREPLACE.bmp\
+	$(DEPTH)\cmd\winfe\res\SSECURE.bmp\
+	$(DEPTH)\cmd\winfe\res\submenu.bmp\
+	$(DEPTH)\cmd\winfe\res\submenu2.bmp\
+	$(DEPTH)\cmd\winfe\res\taskbarl.bmp\
+	$(DEPTH)\cmd\winfe\res\taskbars.bmp\
+	$(DEPTH)\cmd\winfe\res\tb_dock.bmp\
+	$(DEPTH)\cmd\winfe\res\UPD.bmp\
+	$(DEPTH)\cmd\winfe\res\UPF.bmp\
+	$(DEPTH)\cmd\winfe\res\UPU.bmp\
+	$(DEPTH)\cmd\winfe\res\UPX.bmp\
+	$(DEPTH)\cmd\winfe\res\vflippy.bmp\
 	\
-	$(MOZ_SRC)\ns\cmd\winfe\res\ADRESSWD.ico\
-	$(MOZ_SRC)\ns\cmd\winfe\res\BOOKMKWD.ico\
-	$(MOZ_SRC)\ns\cmd\winfe\res\COMPOSWD.ico\
-	$(MOZ_SRC)\ns\cmd\winfe\res\COMPOSWD.ico\
-	$(MOZ_SRC)\ns\cmd\winfe\res\idelay.ico\
-	$(MOZ_SRC)\ns\cmd\winfe\res\IDR_DOC.ico\
-	$(MOZ_SRC)\ns\cmd\winfe\res\IDR_DOC.ico\
-	$(MOZ_SRC)\ns\cmd\winfe\res\mail.ico\
-	$(MOZ_SRC)\ns\cmd\winfe\res\MAILWD.ico\
-	$(MOZ_SRC)\ns\cmd\winfe\res\MAILWD.ico\
-	$(MOZ_SRC)\ns\cmd\winfe\res\MAILWD.ico\
-	$(MOZ_SRC)\ns\cmd\winfe\res\NEWSWD.ico\
-	$(MOZ_SRC)\ns\cmd\winfe\res\NEWSWD.ico\
-	$(MOZ_SRC)\ns\cmd\winfe\res\NEWSWD.ico\
-	$(MOZ_SRC)\ns\cmd\winfe\res\SILVER.ico\
-	$(MOZ_SRC)\ns\cmd\winfe\res\SRCHWD.ico\
+	$(DEPTH)\cmd\winfe\res\ADRESSWD.ico\
+	$(DEPTH)\cmd\winfe\res\BOOKMKWD.ico\
+	$(DEPTH)\cmd\winfe\res\COMPOSWD.ico\
+	$(DEPTH)\cmd\winfe\res\COMPOSWD.ico\
+	$(DEPTH)\cmd\winfe\res\idelay.ico\
+	$(DEPTH)\cmd\winfe\res\IDR_DOC.ico\
+	$(DEPTH)\cmd\winfe\res\IDR_DOC.ico\
+	$(DEPTH)\cmd\winfe\res\mail.ico\
+	$(DEPTH)\cmd\winfe\res\MAILWD.ico\
+	$(DEPTH)\cmd\winfe\res\MAILWD.ico\
+	$(DEPTH)\cmd\winfe\res\MAILWD.ico\
+	$(DEPTH)\cmd\winfe\res\NEWSWD.ico\
+	$(DEPTH)\cmd\winfe\res\NEWSWD.ico\
+	$(DEPTH)\cmd\winfe\res\NEWSWD.ico\
+	$(DEPTH)\cmd\winfe\res\SILVER.ico\
+	$(DEPTH)\cmd\winfe\res\SRCHWD.ico\
 	\
-	$(MOZ_SRC)\ns\cmd\winfe\res\actembed.cur\
-	$(MOZ_SRC)\ns\cmd\winfe\res\edhtmlcp.cur\
-	$(MOZ_SRC)\ns\cmd\winfe\res\edhtmlmv.cur\
-	$(MOZ_SRC)\ns\cmd\winfe\res\edimgcp.cur\
-	$(MOZ_SRC)\ns\cmd\winfe\res\edimgmv.cur\
-	$(MOZ_SRC)\ns\cmd\winfe\res\edlinkcp.cur\
-	$(MOZ_SRC)\ns\cmd\winfe\res\edlinkmv.cur\
-	$(MOZ_SRC)\ns\cmd\winfe\res\edtbeaml.cur\
-	$(MOZ_SRC)\ns\cmd\winfe\res\edtbeams.cur\
-	$(MOZ_SRC)\ns\cmd\winfe\res\edtextcp.cur\
-	$(MOZ_SRC)\ns\cmd\winfe\res\edtextmv.cur\
+	$(DEPTH)\cmd\winfe\res\actembed.cur\
+	$(DEPTH)\cmd\winfe\res\edhtmlcp.cur\
+	$(DEPTH)\cmd\winfe\res\edhtmlmv.cur\
+	$(DEPTH)\cmd\winfe\res\edimgcp.cur\
+	$(DEPTH)\cmd\winfe\res\edimgmv.cur\
+	$(DEPTH)\cmd\winfe\res\edlinkcp.cur\
+	$(DEPTH)\cmd\winfe\res\edlinkmv.cur\
+	$(DEPTH)\cmd\winfe\res\edtbeaml.cur\
+	$(DEPTH)\cmd\winfe\res\edtbeams.cur\
+	$(DEPTH)\cmd\winfe\res\edtextcp.cur\
+	$(DEPTH)\cmd\winfe\res\edtextmv.cur\
 
 
 $(OUTDIR)\mozilla.res : $(RES_FILES) "$(OUTDIR)"
     @SET SAVEINCLUDE=%%INCLUDE%%
     @SET INCLUDE=$(RCINCLUDES);$(RCDISTINCLUDES);%%SAVEINCLUDE%%
-    $(RSC) /Fo$(PROD)$(VERSTR).res $(RCFILEFLAGS) $(RCFLAGS) $(MOZ_SRC)\ns\cmd\winfe\mozilla.rc
+    $(RSC) /Fo$(PROD)$(VERSTR).res $(RCFILEFLAGS) $(RCFLAGS) $(DEPTH)\cmd\winfe\mozilla.rc
     @IF EXIST $(PROD)$(VERSTR).res copy $(PROD)$(VERSTR).res $(OUTDIR)\mozilla.res 
     @IF EXIST $(PROD)$(VERSTR).res del $(PROD)$(VERSTR).res
     @SET INCLUDE=%%SAVEINCLUDE%%
     @SET SAVEINCLUDE=
 
-$(OUTDIR)\appicon.res : $(MOZ_SRC)\ns\cmd\winfe\res\silver.ico "$(OUTDIR)"
+$(OUTDIR)\appicon.res : $(DEPTH)\cmd\winfe\res\silver.ico "$(OUTDIR)"
     @SET SAVEINCLUDE=%%INCLUDE%%
-    @SET INCLUDE=$(MOZ_SRC)\ns\cmd\winfe\res;%%SAVEINCLUDE%%
-    $(RSC) /Fo$(PROD)$(VERSTR).res $(RCFILEFLAGS) $(RCFLAGS) $(MOZ_SRC)\ns\cmd\winfe\res\appicon.rc
+    @SET INCLUDE=$(DEPTH)\cmd\winfe\res;%%SAVEINCLUDE%%
+    $(RSC) /Fo$(PROD)$(VERSTR).res $(RCFILEFLAGS) $(RCFLAGS) $(DEPTH)\cmd\winfe\res\appicon.rc
     @IF EXIST $(PROD)$(VERSTR).res copy $(PROD)$(VERSTR).res $(OUTDIR)\appicon.res 
     @IF EXIST $(PROD)$(VERSTR).res del $(PROD)$(VERSTR).res
     @SET INCLUDE=%%SAVEINCLUDE%%
@@ -2508,16 +2508,16 @@ $(OUTDIR)\mozilla.res;
 
 ODL= \
 !IF "$(MOZ_BITS)"=="32"
-    $(MOZ_SRC)\ns\cmd\winfe\mozilla.odl
+    $(DEPTH)\cmd\winfe\mozilla.odl
 !ELSE
-    $(MOZ_SRC)\ns\cmd\winfe\nscape16.odl
+    $(DEPTH)\cmd\winfe\nscape16.odl
 !ENDIF
 
 PRECOMPILED_TLB= \
 !IF "$(MOZ_BITS)"=="32"
-    $(MOZ_SRC)\ns\cmd\winfe\mozilla.tlb
+    $(DEPTH)\cmd\winfe\mozilla.tlb
 !ELSE
-    $(MOZ_SRC)\ns\cmd\winfe\nscape16.tlb
+    $(DEPTH)\cmd\winfe\nscape16.tlb
 !ENDIF
 
 CPF=
@@ -2582,40 +2582,40 @@ XCF=$(XCF) /Y
 !endif
 
 exports:
-    -xcopy $(MOZ_SRC)\ns\lib\layout\*.h $(EXPORTINC) $(XCF)
-    -xcopy $(MOZ_SRC)\ns\lib\libstyle\*.h $(EXPORTINC) $(XCF)
-    -xcopy $(MOZ_SRC)\ns\lib\liblayer\include\*.h $(EXPORTINC) $(XCF)
-    -xcopy $(MOZ_SRC)\ns\lib\libi18n\*.h $(EXPORTINC) $(XCF)
-    -xcopy $(MOZ_SRC)\ns\lib\libjar\*.h $(EXPORTINC) $(XCF)
-    -xcopy $(MOZ_SRC)\ns\lib\libparse\*.h $(EXPORTINC) $(XCF)
-    -xcopy $(MOZ_SRC)\ns\lib\libnet\*.h $(EXPORTINC) $(XCF)
+    -xcopy $(DEPTH)\lib\layout\*.h $(EXPORTINC) $(XCF)
+    -xcopy $(DEPTH)\lib\libstyle\*.h $(EXPORTINC) $(XCF)
+    -xcopy $(DEPTH)\lib\liblayer\include\*.h $(EXPORTINC) $(XCF)
+    -xcopy $(DEPTH)\lib\libi18n\*.h $(EXPORTINC) $(XCF)
+    -xcopy $(DEPTH)\lib\libjar\*.h $(EXPORTINC) $(XCF)
+    -xcopy $(DEPTH)\lib\libparse\*.h $(EXPORTINC) $(XCF)
+    -xcopy $(DEPTH)\lib\libnet\*.h $(EXPORTINC) $(XCF)
 !ifdef MOZ_MAIL_NEWS
-    -xcopy $(MOZ_SRC)\ns\lib\libaddr\*.h $(EXPORTINC) $(XCF)
-    -xcopy $(MOZ_SRC)\ns\lib\libmsg\*.h $(EXPORTINC) $(XCF)
-    -xcopy $(MOZ_SRC)\ns\lib\libneo\*.h $(EXPORTINC) $(XCF)
+    -xcopy $(DEPTH)\lib\libaddr\*.h $(EXPORTINC) $(XCF)
+    -xcopy $(DEPTH)\lib\libmsg\*.h $(EXPORTINC) $(XCF)
+    -xcopy $(DEPTH)\lib\libneo\*.h $(EXPORTINC) $(XCF)
 !endif
 !ifdef MOZ_LDAP
-    -xcopy $(MOZ_SRC)\ns\netsite\ldap\include\*.h $(EXPORTINC) $(XCF)
+    -xcopy $(DEPTH)\netsite\ldap\include\*.h $(EXPORTINC) $(XCF)
     -xcopy $(XPDIST)\public\ldap\*.h $(EXPORTINC) $(XCF)
 !endif
 !ifdef EDITOR
 !ifdef MOZ_JAVA
-    -xcopy $(MOZ_SRC)\ns\modules\edtplug\include\*.h $(EXPORTINC) $(XCF)
+    -xcopy $(DEPTH)\modules\edtplug\include\*.h $(EXPORTINC) $(XCF)
 !endif
 !endif
-    -xcopy $(MOZ_SRC)\ns\lib\plugin\*.h $(EXPORTINC) $(XCF)
+    -xcopy $(DEPTH)\lib\plugin\*.h $(EXPORTINC) $(XCF)
 !if defined(MOZ_JAVA)
-    -xcopy $(MOZ_SRC)\ns\modules\applet\include\*.h $(EXPORTINC) $(XCF)
-    -xcopy $(MOZ_SRC)\ns\modules\libreg\include\*.h $(EXPORTINC) $(XCF)
+    -xcopy $(DEPTH)\modules\applet\include\*.h $(EXPORTINC) $(XCF)
+    -xcopy $(DEPTH)\modules\libreg\include\*.h $(EXPORTINC) $(XCF)
 !endif
-    -xcopy $(MOZ_SRC)\ns\modules\libutil\public\xp_obs.h $(EXPORTINC) $(XCF)
-    -xcopy $(MOZ_SRC)\ns\modules\libimg\public\*.h $(EXPORTINC) $(XCF)
-    -xcopy $(MOZ_SRC)\ns\modules\libpref\public\*.h $(EXPORTINC) $(XCF)
-    -xcopy $(MOZ_SRC)\ns\modules\coreincl\*.h $(EXPORTINC) $(XCF)
+    -xcopy $(DEPTH)\modules\libutil\public\xp_obs.h $(EXPORTINC) $(XCF)
+    -xcopy $(DEPTH)\modules\libimg\public\*.h $(EXPORTINC) $(XCF)
+    -xcopy $(DEPTH)\modules\libpref\public\*.h $(EXPORTINC) $(XCF)
+    -xcopy $(DEPTH)\modules\coreincl\*.h $(EXPORTINC) $(XCF)
 !if defined(MOZ_JAVA)
-    -xcopy $(MOZ_SRC)\ns\sun-java\jtools\include\*.h $(EXPORTINC) $(XCF)
-    -xcopy $(MOZ_SRC)\ns\sun-java\include\*.h $(EXPORTINC) $(XCF)
-    -xcopy $(MOZ_SRC)\ns\sun-java\md-include\*.h $(EXPORTINC) $(XCF)
+    -xcopy $(DEPTH)\sun-java\jtools\include\*.h $(EXPORTINC) $(XCF)
+    -xcopy $(DEPTH)\sun-java\include\*.h $(EXPORTINC) $(XCF)
+    -xcopy $(DEPTH)\sun-java\md-include\*.h $(EXPORTINC) $(XCF)
 !endif
     -xcopy $(DIST)\include\*.h $(EXPORTINC) $(XCF)
     -xcopy $(XPDIST)\public\dbm\*.h $(EXPORTINC) $(XCF)
@@ -2641,15 +2641,15 @@ exports:
 !endif
     -xcopy $(XPDIST)\public\schedulr\*.h $(EXPORTINC) $(XCF)
     -xcopy $(XPDIST)\public\libfont\*.h $(EXPORTINC) $(XCF)
-    -xcopy $(MOZ_SRC)\ns\dist\public\winfont\*.h $(EXPORTINC) $(XCF)
-    -xcopy $(MOZ_SRC)\ns\dist\public\spellchk\*.h $(EXPORTINC) $(XCF)
-    -xcopy $(MOZ_SRC)\ns\jpeg\*.h $(EXPORTINC) $(XCF)
-    -xcopy $(MOZ_SRC)\ns\lib\libcnv\*.h $(EXPORTINC) $(XCF)
+    -xcopy $(DEPTH)\dist\public\winfont\*.h $(EXPORTINC) $(XCF)
+    -xcopy $(DEPTH)\dist\public\spellchk\*.h $(EXPORTINC) $(XCF)
+    -xcopy $(DEPTH)\jpeg\*.h $(EXPORTINC) $(XCF)
+    -xcopy $(DEPTH)\lib\libcnv\*.h $(EXPORTINC) $(XCF)
 
 pure:
 	$(MOZ_PURIFY)\purify /Run=no /ErrorCallStackLength=20 /AllocCallStackLength=20 \
-	/CacheDir="$(MOZ_SRC)\ns\cmd\winfe\mkfiles32\$(PROD)$(VERSTR)\PurifyCache" \
-	/Out "$(MOZ_SRC)\ns\cmd\winfe\mkfiles32\$(PROD)$(VERSTR)\mozilla.exe"
+	/CacheDir="$(DEPTH)\cmd\winfe\mkfiles32\$(PROD)$(VERSTR)\PurifyCache" \
+	/Out "$(DEPTH)\cmd\winfe\mkfiles32\$(PROD)$(VERSTR)\mozilla.exe"
 
 # for debugging this makefile
 symbols:

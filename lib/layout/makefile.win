@@ -15,5 +15,5 @@
 # Copyright (C) 1998 Netscape Communications Corporation.  All Rights
 # Reserved.
 
-!include $(MOZ_SRC)\ns\config\rules.mak
+!include $(DEPTH)\config\rules.mak
 # 

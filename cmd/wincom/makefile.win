@@ -19,4 +19,4 @@ DEPTH=..\..
 DIRS=\
     dllreg dllcom
 
-!include "$(MOZ_SRC)\ns\config\rules.mak"
+!include "$(DEPTH)\config\rules.mak"

@@ -28,6 +28,6 @@ PACKAGE=netscape\plugin\composer
 JSRCS=Composer.java ComposerDocument.java Document.java Factory.java \
     ImageEncoder.java ImageEncoderFactory.java MozillaCallback.java \
     Plugin.java PluginManager.java SortedStringTable.java 
-CLASSROOT=y:\ns\modules\edtplug\classes 
+CLASSROOT=$(DEPTH)\modules\edtplug\classes 
 
-include <$(MOZ_SRC)\ns\config\rules.mak>
+include <$(DEPTH)\config\rules.mak>

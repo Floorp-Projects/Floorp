@@ -49,7 +49,7 @@ LOCAL_JMC_SUBDIR =  ..\..\..\jmcgen\include
 LOCAL_JMC_SRC_SUBDIR =  ..\..\..\jmcgen\src
 !endif
 
-!include $(MOZ_SRC)\ns\config\rules.mak
+!include $(DEPTH)\config\rules.mak
 
 !if !defined (MOZ_JAVA)
 export:: 
@@ -69,8 +69,8 @@ $(JMC_GEN_DIR)\Mwinrf.c: $(JMCSRCDIR)\winrf.class
 #
 # JMC doesn't include . and .\_jmc automatically. Hack that.
 #
-# 16 bit needs $(MOZ_SRC)\ns\dist\public\jtools to access jmc.h
-CFLAGS = $(CFLAGS) -I. -I$(JMC_GEN_DIR) -I$(MOZ_SRC)\ns\dist\public\jtools
+# 16 bit needs $(DEPTH)\dist\public\jtools to access jmc.h
+CFLAGS = $(CFLAGS) -I. -I$(JMC_GEN_DIR) -I$(DEPTH)\dist\public\jtools
 
 #
 # JMC doesn't install the module library that we make on windows

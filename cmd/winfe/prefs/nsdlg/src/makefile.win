@@ -64,7 +64,7 @@ CPP_OBJS=.\$(OBJDIR)\cstring.obj .\$(OBJDIR)\cdialog.obj \
 LINCS=-I$(XPDIST)\public\winprefs 
 !endif
 
-!include "$(MOZ_SRC)\ns\config\rules.mak"
+!include "$(DEPTH)\config\rules.mak"
 
 libs:: $(DLL)
        $(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).dll $(DIST)\bin

@@ -19,4 +19,4 @@
 
 DIST_HEADERS = *.ut
 
-!include <$(MOZ_SRC)\ns\config\rules.mak>
+!include <$(DEPTH)\config\rules.mak>

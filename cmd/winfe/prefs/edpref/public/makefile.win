@@ -19,5 +19,5 @@ MODULE=winprefs
 DEPTH=..\..\..\..\.. 
 EXPORTS=edprefid.h 
 
-!include "$(MOZ_SRC)\ns\config\rules.mak"
+!include "$(DEPTH)\config\rules.mak"
 

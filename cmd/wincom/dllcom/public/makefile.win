@@ -20,4 +20,4 @@ DEPTH=..\..\..\..
 EXPORTS=dllcom.h dlldbg.h dllmem.h dllobj.h dllref.h dlltask.h \
     dlltypes.h dllutil.h dlliface.h 
 
-!include "$(MOZ_SRC)\ns\config\rules.mak"
+!include "$(DEPTH)\config\rules.mak"

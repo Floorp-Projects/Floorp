@@ -15,7 +15,7 @@
 #
 DEPTH=..\..\..\..\..
 
-JAVA_DESTPATH=$(MOZ_SRC)\ns\dist\classes
+JAVA_DESTPATH=$(DEPTH)\dist\classes
 PACKAGE=netscape\asw
 
 !include <$(DEPTH)\config\rules.mak>
