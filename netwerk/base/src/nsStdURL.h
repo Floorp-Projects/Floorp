@@ -63,7 +63,9 @@ public:
     NS_DECL_NSIFILEURL
 
 protected:
-    enum Format { ESCAPED, UNESCAPED };
+    enum Format { ESCAPED, // Normal URL escaping
+                  UNESCAPED, // No escaping
+                  HOSTESCAPED }; // Host name escaping
     nsresult Parse(const char* i_Spec);
     nsresult AppendString(nsCString& buffer, char* fromUnescapedStr, 
                           Format toFormat, PRInt16 mask);
