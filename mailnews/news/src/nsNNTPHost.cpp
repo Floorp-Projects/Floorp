@@ -78,6 +78,7 @@ public:
     
     NS_IMPL_CLASS_GETSET(PostingAllowed, PRBool, m_postingAllowed);
     NS_IMPL_CLASS_GETTER(PushAuth, PRBool, m_pushAuth);
+    NS_IMETHOD IsPushAuth(PRBool pushAuth);
     
     NS_IMPL_CLASS_GETSET(LastUpdateTime, PRInt64, m_lastGroupUpdate);
 
@@ -155,6 +156,11 @@ public:
     
 private:
 
+    // simplify the QueryInterface calls
+    static nsIMsgFolder *getFolderFor(nsINNTPNewsgroup *group);
+    static nsIMsgFolder *getFolderFor(nsINNTPCategory *category);
+    static nsIMsgFolder *getFolderFor(nsINNTPCategoryContainer *catContainer);
+    
     NS_METHOD CleanUp();
     virtual PRBool IsNews () { return PR_TRUE; }
 	virtual nsINNTPHost *GetNewsHost() { return this; }
@@ -696,13 +702,15 @@ nsNNTPHost::ProcessLine(char* line, PRUint32 line_size)
 
             rv = FindGroup(fullname, &info);
 
-			if (NS_SUCCEEDED(rv) &&
-                !info) {	// autosubscribe, if we haven't seen this one.
-				char* groupLine = PR_smprintf("%s:", fullname);
-				if (groupLine) {
-					ProcessLine(groupLine, PL_strlen(groupLine));
-					PR_Free(groupLine);
-				}
+			if (NS_FAILED(rv)) {
+                // autosubscribe, if we haven't seen this one.
+                char* groupLine = PR_smprintf("%s:", fullname);
+                if (groupLine) {
+                    ProcessLine(groupLine, PL_strlen(groupLine));
+                    PR_Free(groupLine);
+                }
+            } else {
+                    NS_RELEASE(info);
 			}
 			delete [] fullname;
 		}
@@ -723,8 +731,13 @@ nsNNTPHost::ProcessLine(char* line, PRUint32 line_size)
     
 	if (NS_SUCCEEDED(info->QueryInterface(nsINNTPCategory::IID(),
                                           (void **)&category))) {
-		XPPtrArray* infolist = (XPPtrArray*) m_hostinfo->GetSubFolders();
-		infolist->Add(info);
+        
+        nsIMsgFolder *folder = getFolderFor(info);
+        if (folder) {
+            m_hostinfo->AddSubfolder(folder);
+            NS_RELEASE(folder);
+        }
+        
         NS_RELEASE(category);
 	}
 
@@ -799,13 +812,17 @@ nsresult nsNNTPHost::LoadNewsrc(/* nsIMsgFolder* hostinfo*/)
 	// build up the category tree for each category container so that roll-up 
 	// of counts will work before category containers are opened.
 	for (PRInt32 i = 0; i < m_groups->GetSize(); i++) {
-		nsINNTPNewsgroup *info = (nsINNTPNewsgroup *) m_groups->GetAt(i);
+        nsresult rv;
+        
+		nsINNTPNewsgroup *newsgroup = (nsINNTPNewsgroup *) m_groups->GetAt(i);
+        
         nsINNTPCategoryContainer *catContainer;
-		if (NS_SUCCEEDED(info->QueryInterface(nsINNTPCategoryContainer::IID(),
-                                              (void **)&catContainer))) {
+        rv = newsgroup->QueryInterface(nsINNTPCategoryContainer::IID(),
+                                       (void **)&catContainer);
+		if (NS_SUCCEEDED(rv)) {
               
 			char* groupname;
-            nsresult rv = info->GetName(&groupname);
+            nsresult rv = newsgroup->GetName(&groupname);
             
 			nsMsgGroupRecord* group =
                 m_groupTree->FindDescendant(groupname);
@@ -813,8 +830,10 @@ nsresult nsNNTPHost::LoadNewsrc(/* nsIMsgFolder* hostinfo*/)
 			PR_ASSERT(NS_SUCCEEDED(rv) && group);
             
 			if (NS_SUCCEEDED(rv) && group) {
-
-				info->SetFlag(MSG_FOLDER_FLAG_ELIDED | MSG_FOLDER_FLAG_DIRECTORY);
+                nsIMsgFolder *folder = getFolderFor(newsgroup);
+				folder->SetFlag(MSG_FOLDER_FLAG_ELIDED |
+                                MSG_FOLDER_FLAG_DIRECTORY);
+                NS_RELEASE(folder);
 #ifdef HAVE_MASTER
 				catContainer->BuildCategoryTree(catContainer, groupname, group,
 					2, m_master);
@@ -887,10 +906,10 @@ nsNNTPHost::WriteNewsrc()
 	int n = m_groups->GetSize();
 	for (int i=0 ; i<n && status >= 0 ; i++) {
         nsresult rv;
-		nsINNTPNewsgroup* info = (nsINNTPNewsgroup*) ((*m_groups)[i]);
+		nsINNTPNewsgroup* newsgroup = (nsINNTPNewsgroup*) ((*m_groups)[i]);
 		// GetNewsFolderInfo will get root category for cat container.
 #ifdef HAVE_FOLDERINFO
-		char* str = info->GetNewsFolderInfo()->GetSet()->Output();
+		char* str = newsgroup->GetNewsFolderInfo()->GetSet()->Output();
 #else
         char *str = NULL;
 #endif
@@ -900,10 +919,10 @@ nsNNTPHost::WriteNewsrc()
 		}
         char *newsgroupName=NULL;
         char *line;
-        rv = info->GetName(&newsgroupName);
+        rv = newsgroup->GetName(&newsgroupName);
         
         PRBool isSubscribed=PR_FALSE;
-        rv = info->IsSubscribed(&isSubscribed);
+        rv = newsgroup->IsSubscribed(&isSubscribed);
         line = PR_smprintf("%s%s %s" LINEBREAK,
                                  newsgroupName, 
 								 isSubscribed ? ":" : "!", str);
@@ -1591,18 +1610,23 @@ nsNNTPHost::AddGroup(const char *groupName,
         
         nsresult rv = FindGroup(containerName, &newsInfo);
         
-		if (NS_SUCCEEDED(rv))
-            categoryContainer = (nsINNTPCategoryContainer *) newsInfo;
-		// if we're not subscribed to container, do that instead.
-
-        if (NS_SUCCEEDED(rv))
-            rv = newsInfo->IsSubscribed(&isSubscribed);
-        
-		if (NS_FAILED(rv) || !isSubscribed)
-		{
-			groupName = containerName;
-			group = FindOrCreateGroup(groupName);
-		}
+		if (NS_SUCCEEDED(rv)) {
+            rv = newsInfo->QueryInterface(nsINNTPCategoryContainer::IID(),
+                                          (void **)&categoryContainer);
+            
+            // if we're not subscribed to container, do that instead.
+            if (NS_SUCCEEDED(rv))
+                rv = newsInfo->IsSubscribed(&isSubscribed);
+            
+            if (NS_FAILED(rv) || !isSubscribed)
+                {
+                    groupName = containerName;
+                    group = FindOrCreateGroup(groupName);
+                }
+            NS_RELEASE(newsInfo);
+            // categoryContainer released at the end of this function
+            // (yuck)
+        }
 	}
 
 	// no need to diddle folder pane for new categories.
@@ -1615,10 +1639,14 @@ nsNNTPHost::AddGroup(const char *groupName,
         rv = newsInfo->IsSubscribed(&subscribed);
 		if (NS_SUCCEEDED(rv) && !subscribed) {
 			newsInfo->SetSubscribed(PR_TRUE);
+            nsIMsgFolder *newsFolder = getFolderFor(newsInfo);
+            m_hostinfo->AddSubfolderIfUnique(newsFolder);
+            /*
 			XPPtrArray* infolist = (XPPtrArray*) m_hostinfo->GetSubFolders();
 			// don't add it if it's already in the list!
 			if (infolist->FindIndex(0, newsInfo) == -1)
 				infolist->Add(newsInfo);
+            */
 		} else {
 			goto DONE;
 		}
@@ -1681,6 +1709,8 @@ nsNNTPHost::AddGroup(const char *groupName,
 		}
 
         // XXX ACK. This is hairy code. Fix this.
+        // solution: SwitchNewsToCategoryContainer should
+        // return an nsresult
         nsINNTPCategoryContainer *catContainer;
         nsresult rv =
             newsInfo->QueryInterface(nsINNTPCategoryContainer::IID(),
@@ -1688,11 +1718,14 @@ nsNNTPHost::AddGroup(const char *groupName,
 		if (NS_FAILED(rv))
 		{
 			catContainer = SwitchNewsToCategoryContainer(newsInfo);
+            if (catContainer) rv = NS_OK;
 		}
-		PR_ASSERT(catContainer);
-		if (catContainer) {
+		PR_ASSERT(NS_SUCCEEDED(rv));
+		if (NS_SUCCEEDED(rv)) {
             // XXX should this call be on catContainer or newsInfo?
-			newsInfo->SetFlag(MSG_FOLDER_FLAG_ELIDED);
+            nsIMsgFolder *folder = getFolderFor(newsInfo);
+			folder->SetFlag(MSG_FOLDER_FLAG_ELIDED);
+            NS_IF_RELEASE(folder);
 #ifdef HAVE_MASTER
 			catContainer->BuildCategoryTree(catContainer, groupName, group,
 											);
@@ -1716,6 +1749,8 @@ nsNNTPHost::AddGroup(const char *groupName,
 
 DONE:
 
+    NS_IF_RELEASE(categoryContainer);
+
 	if (containerName) delete [] containerName;
     *retval = newsInfo;
 }
@@ -1723,18 +1758,39 @@ DONE:
 nsINNTPCategoryContainer *
 nsNNTPHost::SwitchNewsToCategoryContainer(nsINNTPNewsgroup *newsInfo)
 {
+    nsresult rv;
 	int groupIndex = m_groups->FindIndex(0, newsInfo);
 	if (groupIndex != -1)
 	{
-		nsINNTPCategoryContainer *newCatCont =
-            newsInfo->CloneIntoCategoryContainer();
+        // create a category container to hold this newsgroup
+		nsINNTPCategoryContainer *newCatCont;
+        // formerly newsInfo->CloneIntoCategoryContainer();
+        NS_NewCategoryContainerFromNewsgroup(&newCatCont, newsInfo);
+
+        
 		// slip the category container where the newsInfo was.
 		m_groups->SetAt(groupIndex, newCatCont);
+
+        nsIMsgFolder *newsFolder = getFolderFor(newsInfo);
+
+        rv = newsInfo->QueryInterface(nsIMsgFolder::IID(),
+                                      (void **)&newsFolder);
+        if (newsFolder) {
+            nsIMsgFolder *catContFolder = getFolderFor(newCatCont);
+            if (catContFolder) {
+                m_hostinfo->ReplaceSubfolder(newsFolder, catContFolder);
+                NS_RELEASE(catContFolder);
+            }
+            NS_RELEASE(newsFolder);
+        }
+        
+        /*
 		XPPtrArray* infoList = (XPPtrArray*) m_hostinfo->GetSubFolders();
 		// replace in folder pane server list as well.
 		groupIndex = infoList->FindIndex(0, newsInfo);
 		if (groupIndex != -1)
 			infoList->SetAt(groupIndex, newCatCont);
+        */
         return newCatCont;
 	}
     // we used to just return newsInfo if groupIndex == -1
@@ -1742,21 +1798,36 @@ nsNNTPHost::SwitchNewsToCategoryContainer(nsINNTPNewsgroup *newsInfo)
     return NULL;
 }
 
-nsINNTPNewsgroup *nsNNTPHost::SwitchCategoryContainerToNews(nsINNTPCategoryContainer *catContainerInfo)
+nsINNTPNewsgroup *
+nsNNTPHost::SwitchCategoryContainerToNews(nsINNTPCategoryContainer*
+                                          catContainerInfo)
 {
 	nsINNTPNewsgroup *retInfo = NULL;
 
 	int groupIndex = m_groups->FindIndex(0, catContainerInfo);
 	if (groupIndex != -1)
 	{
-		nsINNTPNewsgroup *rootCategory = catContainerInfo->GetRootCategory();
+		nsINNTPNewsgroup *rootCategory;
+        catContainerInfo->GetRootCategory(&rootCategory);
 		// slip the root category container where the category container was.
 		m_groups->SetAt(groupIndex, rootCategory);
+
+        nsIMsgFolder *catContFolder = getFolderFor(catContainerInfo);
+        if (catContFolder) {
+            nsIMsgFolder *rootFolder = getFolderFor(rootCategory);
+            if (rootFolder) {
+                m_hostinfo->ReplaceSubfolder(catContFolder, rootFolder);
+                NS_RELEASE(rootFolder);
+            }
+            NS_RELEASE(catContFolder);
+        }
+        /*
 		XPPtrArray* infoList = (XPPtrArray*) m_hostinfo->GetSubFolders();
 		// replace in folder pane server list as well.
 		groupIndex = infoList->FindIndex(0, catContainerInfo);
 		if (groupIndex != -1)
 			infoList->SetAt(groupIndex, rootCategory);
+        */
 		retInfo = rootCategory;
 		// this effectively leaks the category container, but I don't think that's a problem
 	}
@@ -1775,8 +1846,15 @@ nsNNTPHost::RemoveGroup (nsINNTPNewsgroup *newsInfo)
 #ifdef HAVE_MASTER
 		m_master->BroadcastFolderDeleted (newsInfo);
 #endif
+        nsIMsgFolder* newsFolder = getFolderFor(newsInfo);
+        if (newsFolder) {
+            m_hostinfo->RemoveSubfolder(newsFolder);
+            NS_RELEASE(newsFolder);
+        }
+        /*
 		XPPtrArray* infolist = (XPPtrArray*) m_hostinfo->GetSubFolders();
 		infolist->Remove(newsInfo);
+        */
 	}
 }
 
@@ -2038,7 +2116,9 @@ nsNNTPHost::QuerySearchableGroupCharsets(const char *group)
 nsresult
 nsNNTPHost::AddSearchableHeader (const char *header)
 {
-	if (!QuerySearchableHeader(header))
+    PRBool searchable;
+    nsresult rv = QuerySearchableHeader(header, &searchable);
+	if (NS_SUCCEEDED(rv) && searchable)
 	{
 		char *ourHeader = PL_strdup(header);
 		if (ourHeader)
@@ -2081,7 +2161,7 @@ nsNNTPHost::QueryPropertyForGet (const char *property, char **retval)
     *retval=NULL;
 	for (int i = 0; i < m_propertiesForGet.GetSize(); i++)
 		if (!PL_strcasecmp(property, (const char *) m_propertiesForGet.GetAt(i))) {
-            *retval = m_valuesForGet.GetAt(i);
+            *retval = (char *)m_valuesForGet.GetAt(i);
 			return NS_OK;
         }
     
@@ -2090,7 +2170,7 @@ nsNNTPHost::QueryPropertyForGet (const char *property, char **retval)
 
 
 nsresult
-nsNNTPHost::SetPushAuth(PRBool value)
+nsNNTPHost::IsPushAuth(PRBool value)
 {
 	if (m_pushAuth != value) 
 	{
@@ -2138,12 +2218,11 @@ int nsNNTPHost::RemoveHost()
 	m_master->BroadcastBeginDeletingHost (m_hostinfo);
 	nsIMsgFolder *tree = m_master->GetFolderTree();
     rv = tree->PropagateDelete(&m_hostinfo, PR_TRUE /*deleteStorage*/);
-#endif
 
 	// Here's a little hack to work around the fact that the FE may be holding
 	// a newsgroup open, and part of the delete might have failed. The WinFE does 
 	// this when you delete a news server from the prefs
-	if (NS_SUCCEEDED(err) && m_hostinfo)
+	if (NS_SUCCEEDED(rv) && m_hostinfo)
 	{
 		m_master->BroadcastFolderDeleted (m_hostinfo);
 		tree->RemoveSubFolder (m_hostinfo);
@@ -2151,9 +2230,13 @@ int nsNNTPHost::RemoveHost()
 	m_master->BroadcastEndDeletingHost (m_hostinfo);
 
 	m_master->GetHostTable()->RemoveEntry(this);
+#endif
     // XXX And what are we supposed to be doing here? Do we keep
     // a reference to ourselves?
+    // maybe NS_RELEASE(this); ?
+#if 0
 	delete this;
+#endif
 
 	return 0;
 }
@@ -2178,21 +2261,26 @@ nsNNTPHost::GetPrettyName(const char* groupname)
 }
 
 
-int
+nsresult
 nsNNTPHost::SetPrettyName(const char* groupname, const char* prettyname)
 {
 	nsMsgGroupRecord* group = FindOrCreateGroup(groupname);
 	if (!group) return MK_OUT_OF_MEMORY;
-	int status = group->SetPrettyName(prettyname);
-	if (status > 0)
+	nsresult rv = group->SetPrettyName(prettyname);
+	if (NS_FAILED(rv))
 	{
-		nsINNTPNewsgroup *newsFolder = FindGroup(groupname);
+		nsINNTPNewsgroup *newsFolder;
+        rv = FindGroup(groupname, &newsFolder);
 		// make news folder forget prettyname so it will query again
-		if (newsFolder)	
-			newsFolder->ClearPrettyName();
+		if (NS_SUCCEEDED(rv) && newsFolder)	
+			newsFolder->SetPrettyName(NULL);
 	}
-	m_groupTreeDirty |= status;
-	return status;
+
+    // this used to say
+    // m_groupTreeDirty |= status;
+    // where status came from the previous SetPrettyName
+	if (NS_SUCCEEDED(rv)) m_groupTreeDirty |= 1;
+	return rv;
 }
 
 
@@ -2234,47 +2322,69 @@ nsNNTPHost::IsCategoryContainer(const char* groupname)
 int
 nsNNTPHost::SetIsCategoryContainer(const char* groupname, PRBool value, nsMsgGroupRecord *inGroupRecord)
 {
+    nsresult rv;
 	nsMsgGroupRecord* group = (inGroupRecord) ? inGroupRecord : FindOrCreateGroup(groupname);
 	if (!group) return MK_OUT_OF_MEMORY;
 	int status = group->SetIsCategoryContainer(value);
 	m_groupTreeDirty |= status;
 	if (status > 0)
 	{
-		nsINNTPNewsgroup *newsFolder = FindGroup(groupname);
+		nsINNTPNewsgroup *newsgroup;
+        rv = FindGroup(groupname, &newsgroup);
+        
+        nsIMsgFolder *newsFolder = getFolderFor(newsgroup);
+
 		// make news folder have correct category container flag
-		if (newsFolder)	
+		if (NS_SUCCEEDED(rv) && newsgroup)	
 		{
 			if (value)
 			{
+                // change newsgroup into a category container
 				newsFolder->SetFlag(MSG_FOLDER_FLAG_CAT_CONTAINER);
-				SwitchNewsToCategoryContainer(newsFolder);
+				SwitchNewsToCategoryContainer(newsgroup);
 			}
 			else
 			{
-				if (newsFolder->GetType() == FOLDER_CATEGORYCONTAINER)
+                // change category container into a newsgroup
+                nsINNTPCategoryContainer *catCont;
+                rv = newsgroup->QueryInterface(nsINNTPCategoryContainer::IID(),
+                                               (void **)&catCont);
+
+				if (NS_SUCCEEDED(rv))
 				{
-					nsINNTPCategoryContainer *catCont = (nsINNTPCategoryContainer *) newsFolder;
-					newsFolder = SwitchCategoryContainerToNews(catCont);
+                    // release the old newsgroup/newsfolder and get
+                    // the converted one instead 
+                    NS_IF_RELEASE(newsgroup);
+					newsgroup = SwitchCategoryContainerToNews(catCont);
+                    NS_RELEASE(catCont);
+
+                    // make sure newsFolder is in sync with newsgroup
+                    NS_IF_RELEASE(newsFolder);
+                    newsFolder = getFolderFor(newsgroup);
+                    
 				}
+                
 				if (newsFolder)
 				{
 					newsFolder->ClearFlag(MSG_FOLDER_FLAG_CAT_CONTAINER);
 					newsFolder->ClearFlag(MSG_FOLDER_FLAG_CATEGORY);
 				}
 			}
+            NS_RELEASE(newsFolder);
+            NS_RELEASE(newsgroup);
 		}
 	}
 	return status;
 }
 
-int 
+nsresult
 nsNNTPHost::SetGroupNeedsExtraInfo(const char *groupname, PRBool value)
 {
 	nsMsgGroupRecord* group = FindOrCreateGroup(groupname);
 	if (!group) return MK_OUT_OF_MEMORY;
-	int status = group->SetNeedsExtraInfo(value);
-	m_groupTreeDirty |= status;
-	return status;
+	nsresult rv = group->SetNeedsExtraInfo(value);
+	if (NS_SUCCEEDED(rv)) m_groupTreeDirty |= 1;
+	return rv;
 }
 
 
@@ -2292,39 +2402,48 @@ nsNNTPHost::GetCategoryContainer(const char* groupname, nsMsgGroupRecord *inGrou
 nsINNTPNewsgroup *
 nsNNTPHost::GetCategoryContainerFolderInfo(const char *groupname)
 {
-	nsINNTPNewsgroup	*ret = NULL;
+    nsINNTPNewsgroup *newsgroup=NULL;
+    nsresult rv;
 	// because GetCategoryContainer returns NULL for a category container...
 	nsMsgGroupRecord *group = FindOrCreateGroup(groupname);
-	if (group->IsCategoryContainer())
-		return FindGroup(groupname);
+	if (group->IsCategoryContainer()) {
+        rv = FindGroup(groupname, &newsgroup);
+        if (NS_SUCCEEDED(rv)) return newsgroup;
+        else return NULL;
+    }
 
 	char *categoryContainerName = GetCategoryContainer(groupname);
 	if (categoryContainerName)
 	{
-		ret = FindGroup(categoryContainerName);
+		rv = FindGroup(categoryContainerName, &newsgroup);
 		delete [] categoryContainerName;
 	}
-	return ret;
+	return newsgroup;
 }
 
 
-PRBool
-nsNNTPHost::IsProfile(const char* groupname)
+nsresult
+nsNNTPHost::GetIsVirtualGroup(const char* groupname, PRBool *retval)
 {
 	nsMsgGroupRecord* group = FindOrCreateGroup(groupname);
-	if (!group) return PR_FALSE;
-	return group->IsProfile();
+	if (!group) *retval = PR_FALSE;
+	else return group->IsVirtual(retval);
 }
 
 
-int
-nsNNTPHost::SetIsProfile(const char* groupname, PRBool value, nsMsgGroupRecord *inGroupRecord)
+nsresult
+nsNNTPHost::SetIsVirtualGroup(const char* groupname, PRBool value)
 {
+#if 0
 	nsMsgGroupRecord* group = (inGroupRecord) ? inGroupRecord : FindOrCreateGroup(groupname);
-	if (!group) return MK_OUT_OF_MEMORY;
-	int status = group->SetIsProfile(value);
-	m_groupTreeDirty |= status;
-	return status;
+#endif
+    // this used to come from the parameters. is it ok to discard?
+    nsMsgGroupRecord* group = FindOrCreateGroup(groupname);
+	if (!group) return NS_ERROR_OUT_OF_MEMORY;
+
+	nsresult rv = group->SetIsVirtual(value);
+	if (NS_SUCCEEDED(rv)) m_groupTreeDirty |= 1;
+	return rv;
 }
 
 
@@ -2680,17 +2799,26 @@ nsNNTPHost::AssureAllDescendentsLoaded(nsMsgGroupRecord* group)
 	return status;
 }
 
-void nsNNTPHost::GroupNotFound(const char *groupName, PRBool opening)
+nsresult
+nsNNTPHost::GroupNotFound(const char *groupName, PRBool opening)
 {
 	// if no group command has succeeded, don't blow away categories.
 	// The server might be wedged...
 	if (!opening && !m_groupSucceeded)
-		return;
+		return NS_ERROR_NOT_INITIALIZED;
 
+    nsresult rv;
 	nsMsgGroupRecord* group = FindOrCreateGroup(groupName);
 	if (group && (group->IsCategory() || opening))
 	{
-		nsINNTPNewsgroup *newsInfo = FindGroup(groupName);
+		nsINNTPNewsgroup *newsInfo = NULL;
+        nsIMsgFolder *newsFolder = NULL;
+
+        // get the group and corresponding folder
+        rv = FindGroup(groupName, &newsInfo);
+        if (NS_SUCCEEDED(rv))
+            newsFolder = getFolderFor(newsInfo);
+        
 		group->SetDoesNotExistOnServer(PR_TRUE);
 		m_groupTreeDirty |= 2;	// deleting a group has to force a rewrite anyway
 		if (group->IsCategory())
@@ -2698,15 +2826,15 @@ void nsNNTPHost::GroupNotFound(const char *groupName, PRBool opening)
 			nsINNTPNewsgroup *catCont = GetCategoryContainerFolderInfo(groupName);
 			if (catCont)
 			{
-                nsIMsgFolder *catFolder;
-                nsIMsgFolder *parentCategory;
-                nsresult rv;
-                rv = catCont->QueryInterface(nsIMsgFolder::IID(),
-                                             (void **)&catFolder);
-                if (NS_SUCCEEDED(rv)) {
-                    rv = catFolder->FindParentOf(newsInfo,&parentCategory);
-                    if (NS_SUCCEEDED(rv))
-                        parentCategory->RemoveSubFolder(newsInfo);
+                nsIMsgFolder *catFolder = getFolderFor(catCont);
+                if (catFolder) {
+
+                    nsIMsgFolder* parentCategory;
+                    rv = catFolder->FindParentOf(newsFolder,&parentCategory);
+                    if (NS_SUCCEEDED(rv)) {
+                        parentCategory->RemoveSubfolder(newsFolder);
+                        NS_RELEASE(parentCategory);
+                    }
                     NS_RELEASE(catFolder);
                 }
 			}
@@ -2720,13 +2848,18 @@ void nsNNTPHost::GroupNotFound(const char *groupName, PRBool opening)
 
 		if (newsInfo)
 		{
+            m_hostinfo->RemoveSubfolder(newsFolder);
+            /*
 			XPPtrArray* infolist = (XPPtrArray*) m_hostinfo->GetSubFolders();
 			infolist->Remove(newsInfo);
+            */
 			m_groups->Remove(newsInfo);
 			m_dirty = PR_TRUE;
             NS_RELEASE(newsInfo);
+            NS_IF_RELEASE(newsFolder);
 		}
 	}
+    return NS_OK;
 }
 
 
@@ -2736,10 +2869,12 @@ int nsNNTPHost::ReorderGroup (nsINNTPNewsgroup *groupToMove, nsINNTPNewsgroup *g
 	// so does the FolderInfo which represents the host in the hierarchy tree
 
 	int err = MK_MSG_CANT_MOVE_FOLDER;
-	XPPtrArray *infoList = m_hostinfo->GetSubFolders();
+    nsISupportsArray *infoList=NULL;
+	nsresult rv = m_hostinfo->GetSubFolders(&infoList);
 
-	if (groupToMove && groupToMoveBefore && infoList)
+	if (NS_SUCCEEDED(rv) && groupToMove && groupToMoveBefore && infoList)
 	{
+        nsIMsgFolder *folderToMoveBefore = getFolderFor(groupToMoveBefore);
 		if (m_groups->Remove (groupToMove)) 
 		{
 			// Not necessary to remove from infoList here because the folderPane does that (urk)
@@ -2753,27 +2888,42 @@ int nsNNTPHost::ReorderGroup (nsINNTPNewsgroup *groupToMove, nsINNTPNewsgroup *g
 			for (idxInData = 0, idxInView = -1; idxInData < m_groups->GetSize(); idxInData++)
 			{
 				group = m_groups->GetAt (idxInData);
-				nsIMsgFolder *groupInHostInfo = (nsIMsgFolder *) infoList->GetAt(idxInHostInfo);
+                nsISupports *hostInfoSupports =
+                    infoList->ElementAt(idxInHostInfo);
+                
+				nsIMsgFolder *groupInHostInfo=NULL;
+                rv = hostInfoSupports->QueryInterface(nsISupports::IID(),
+                                                      (void **)&groupInHostInfo);
+#ifdef HAVE_PANE
 				if (group->CanBeInFolderPane())
 					idxInView++;
-				if (group == groupToMoveBefore)
+#endif
+                /* XXX - pointer comparisons are bad in COM! */
+				if (group == folderToMoveBefore)
 					break;
-				if (groupInHostInfo == groupToMoveBefore)
+				if (groupInHostInfo == folderToMoveBefore)
 					foundIdxInHostInfo = PR_TRUE;
 				else if (!foundIdxInHostInfo)
 					idxInHostInfo++;
+                NS_RELEASE(groupInHostInfo);
+                NS_RELEASE(hostInfoSupports);
 
 			} 
 
 			if (idxInView != -1) 
 			{
 				m_groups->InsertAt (idxInData, groupToMove); // the index has to be the same, right?
-				infoList->InsertAt (idxInHostInfo, groupToMove);
+                nsISupports* groupSupports;
+                groupToMove->QueryInterface(nsISupports::IID(),
+                                            (void **)&groupSupports);
+				infoList->InsertElementAt (groupSupports, idxInHostInfo);
+                NS_RELEASE(groupSupports);
 
 				MarkDirty (); // Make sure the newsrc gets written out in the new order
 				*newIdx = idxInView; // Tell the folder pane where the new item belongs
 
 				err = 0;
+                NS_RELEASE(groupSupports);
 			}
 		}
 	}
