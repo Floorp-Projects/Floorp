@@ -45,7 +45,7 @@
     {
       var contentTree = document.getElementById( "contentPackTree" );
       var regionName = contentTree.getAttribute("prefvalue");
-      var regionElements = contentTree.getElementsByAttribute("value", regionName;
+      var regionElements = contentTree.getElementsByAttribute("value", regionName);
 
       if (regionElements.length) {
         contentTree.selectItem(regionElements[0].parentNode.parentNode);
