@@ -31,7 +31,6 @@
 #include "glue.h"
 #include "remstore.h"
 #include "rdfparse.h"
-#include "xmlglue.h"
 #include "es2mcf.h"
 #include "mcff2mcf.h"
 #include "nlcstore.h"
