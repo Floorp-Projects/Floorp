@@ -89,7 +89,7 @@ DefFonts gSubstituteFonts[] =
   {"Helvetica","Helvetica",400,0,&HelveticaAFM,AFMHelveticaChars,-1},
   {"Helvetica-Bold","Helvetica",700,0,&Helvetica_BoldAFM,AFMHelvetica_BoldChars,-1},
   {"Helvetica-BoldOblique","Helvetica",700,2,&Helvetica_BoldObliqueAFM,AFMHelvetica_BoldObliqueChars,-1},
-  {"Helvetica_Oblique","Helvetica",400,2,&Helvetica_ObliqueAFM,AFMHelvetica_ObliqueChars,-1},
+  {"Helvetica-Oblique","Helvetica",400,2,&Helvetica_ObliqueAFM,AFMHelvetica_ObliqueChars,-1},
   {"Courier","Courier",400,0,&CourierAFM,AFMCourierChars,-1},
   {"Courier-Bold","Courier",700,0,&Courier_BoldAFM,AFMCourier_BoldChars,-1},
   {"Courier-BoldOblique","Courier",700,2,&Courier_BoldObliqueAFM,AFMCourier_BoldObliqueChars,-1},
