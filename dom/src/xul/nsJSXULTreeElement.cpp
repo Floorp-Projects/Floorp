@@ -28,15 +28,25 @@
 #include "nsIPtr.h"
 #include "nsString.h"
 #include "nsIDOMXULTreeElement.h"
+#include "nsIDOMNodeList.h"
 
 
 static NS_DEFINE_IID(kIScriptObjectOwnerIID, NS_ISCRIPTOBJECTOWNER_IID);
 static NS_DEFINE_IID(kIJSScriptObjectIID, NS_IJSSCRIPTOBJECT_IID);
 static NS_DEFINE_IID(kIScriptGlobalObjectIID, NS_ISCRIPTGLOBALOBJECT_IID);
 static NS_DEFINE_IID(kIXULTreeElementIID, NS_IDOMXULTREEELEMENT_IID);
+static NS_DEFINE_IID(kINodeListIID, NS_IDOMNODELIST_IID);
 
 NS_DEF_PTR(nsIDOMXULTreeElement);
+NS_DEF_PTR(nsIDOMNodeList);
 
+//
+// XULTreeElement property ids
+//
+enum XULTreeElement_slots {
+  XULTREEELEMENT_SELECTEDITEMS = -1,
+  XULTREEELEMENT_SELECTEDCELLS = -2
+};
 
 /***********************************************************************/
 //
@@ -60,7 +70,40 @@ GetXULTreeElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       return JS_FALSE;
     }
     switch(JSVAL_TO_INT(id)) {
-      case 0:
+      case XULTREEELEMENT_SELECTEDITEMS:
+      {
+        secMan->CheckScriptAccess(scriptCX, obj, "xultreeelement.selecteditems", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
+        nsIDOMNodeList* prop;
+        if (NS_SUCCEEDED(a->GetSelectedItems(&prop))) {
+          // get the js object
+          nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, vp);
+        }
+        else {
+          return JS_FALSE;
+        }
+        break;
+      }
+      case XULTREEELEMENT_SELECTEDCELLS:
+      {
+        secMan->CheckScriptAccess(scriptCX, obj, "xultreeelement.selectedcells", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
+        nsIDOMNodeList* prop;
+        if (NS_SUCCEEDED(a->GetSelectedCells(&prop))) {
+          // get the js object
+          nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, vp);
+        }
+        else {
+          return JS_FALSE;
+        }
+        break;
+      }
       default:
         return nsJSUtils::nsCallJSScriptObjectGetProperty(a, cx, id, vp);
     }
@@ -162,6 +205,8 @@ JSClass XULTreeElementClass = {
 //
 static JSPropertySpec XULTreeElementProperties[] =
 {
+  {"selectedItems",    XULTREEELEMENT_SELECTEDITEMS,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"selectedCells",    XULTREEELEMENT_SELECTEDCELLS,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {0}
 };
 

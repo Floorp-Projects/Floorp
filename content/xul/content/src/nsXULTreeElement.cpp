@@ -29,3 +29,44 @@
 
 NS_IMPL_ISUPPORTS_INHERITED(nsXULTreeElement, nsXULElement, nsIDOMXULTreeElement);
 
+nsXULTreeElement::nsXULTreeElement(nsIDOMXULElement* aOuter)
+:nsXULElement(aOuter)
+{
+  nsresult rv;
+
+  nsRDFDOMNodeList* children;
+  rv = nsRDFDOMNodeList::Create(&children);
+  NS_ASSERTION(NS_SUCCEEDED(rv), "unable to create DOM node list");
+  if (NS_FAILED(rv)) return;
+
+  mSelectedItems = children;
+
+  children = nsnull;
+  rv = nsRDFDOMNodeList::Create(&children);
+  NS_ASSERTION(NS_SUCCEEDED(rv), "unable to create DOM node list");
+  if (NS_FAILED(rv)) return;
+
+  mSelectedCells = children;
+}
+
+nsXULTreeElement::~nsXULTreeElement()
+{
+  NS_IF_RELEASE(mSelectedItems);
+  NS_IF_RELEASE(mSelectedCells);
+}
+
+NS_IMETHODIMP
+nsXULTreeElement::GetSelectedItems(nsIDOMNodeList** aSelectedItems)
+{
+  NS_IF_ADDREF(mSelectedItems);
+  *aSelectedItems = mSelectedItems;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXULTreeElement::GetSelectedCells(nsIDOMNodeList** aSelectedCells)
+{
+  NS_IF_ADDREF(mSelectedCells);
+  *aSelectedCells = mSelectedCells;
+  return NS_OK;
+}

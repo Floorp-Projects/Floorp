@@ -28,15 +28,14 @@
 
 #include "nsXULElement.h"
 #include "nsIDOMXULTreeElement.h"
+#include "nsRDFDOMNodeList.h"
 
 class nsXULTreeElement : public nsXULElement,
                          public nsIDOMXULTreeElement
 {
 public:
-    nsXULTreeElement(nsIDOMXULElement* aOuter)
-        : nsXULElement(aOuter)
-    {
-    }
+    nsXULTreeElement(nsIDOMXULElement* aOuter);
+    ~nsXULTreeElement();
 
     NS_DECL_ISUPPORTS_INHERITED
 
@@ -51,6 +50,10 @@ public:
 
     // nsIDOMXULTreeElement interface
     NS_DECL_IDOMXULTREEELEMENT
+
+protected:
+    nsIDOMNodeList* mSelectedItems;
+    nsIDOMNodeList* mSelectedCells;
 };
 
 

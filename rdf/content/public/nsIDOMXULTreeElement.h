@@ -25,6 +25,7 @@
 #include "nsIScriptContext.h"
 #include "nsIDOMXULElement.h"
 
+class nsIDOMNodeList;
 
 #define NS_IDOMXULTREEELEMENT_IID \
  { 0xa6cf90ec, 0x15b3, 0x11d2, \
@@ -33,14 +34,22 @@
 class nsIDOMXULTreeElement : public nsIDOMXULElement {
 public:
   static const nsIID& GetIID() { static nsIID iid = NS_IDOMXULTREEELEMENT_IID; return iid; }
+
+  NS_IMETHOD    GetSelectedItems(nsIDOMNodeList** aSelectedItems)=0;
+
+  NS_IMETHOD    GetSelectedCells(nsIDOMNodeList** aSelectedCells)=0;
 };
 
 
 #define NS_DECL_IDOMXULTREEELEMENT   \
+  NS_IMETHOD    GetSelectedItems(nsIDOMNodeList** aSelectedItems);  \
+  NS_IMETHOD    GetSelectedCells(nsIDOMNodeList** aSelectedCells);  \
 
 
 
 #define NS_FORWARD_IDOMXULTREEELEMENT(_to)  \
+  NS_IMETHOD    GetSelectedItems(nsIDOMNodeList** aSelectedItems) { return _to GetSelectedItems(aSelectedItems); } \
+  NS_IMETHOD    GetSelectedCells(nsIDOMNodeList** aSelectedCells) { return _to GetSelectedCells(aSelectedCells); } \
 
 
 extern "C" NS_DOM nsresult NS_InitXULTreeElementClass(nsIScriptContext *aContext, void **aPrototype);
