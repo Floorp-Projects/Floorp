@@ -1044,6 +1044,11 @@ public:
         rv = mAppCore->LoadUrl(url.GetUnicode());
       }
     }
+    else {
+      char* dataStr = data.ToNewCString();
+      printf("########## PageCycler possible failure for: %s\n", dataStr);
+      nsCRT::free(dataStr);
+    }
     return rv;
   }
   
@@ -1455,7 +1460,7 @@ nsBrowserAppCore::OnEndDocumentLoad(nsIDocumentLoader* aLoader, nsIChannel* chan
   nsresult rv;
 
   nsCOMPtr<nsIURI> aUrl;
-  rv = channel->GetURI(getter_AddRefs(aUrl));
+  rv = channel->GetOriginalURI(getter_AddRefs(aUrl));
   if (NS_FAILED(rv)) return rv;
 
   nsXPIDLCString url;
