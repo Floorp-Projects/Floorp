@@ -590,10 +590,10 @@ DumpContext(nsIFrame* aFrame, nsIStyleContext* aContext)
     nsAutoString  name;
     aFrame->GetFrameName(name);
     fputs(name, stdout);
-    fprintf(stdout, " (%08x)", aFrame);
+    fprintf(stdout, " (%p)", aFrame);
   }
   if (aContext) {
-    fprintf(stdout, " style: %08x ", aContext);
+    fprintf(stdout, " style: %p ", aContext);
 
     nsIAtom* pseudoTag;
     aContext->GetPseudoType(pseudoTag);
@@ -893,7 +893,9 @@ FrameManager::ReResolveStyleContext(nsIPresContext& aPresContext,
     if (newContext) {
       if (newContext != oldContext) {
         aMinChange = CaptureChange(oldContext, newContext, aFrame, aChangeList, aMinChange);
-        aFrame->SetStyleContext(&aPresContext, newContext);
+        if (aMinChange < NS_STYLE_HINT_FRAMECHANGE) { // if frame gets regenerated, let it keep old context
+          aFrame->SetStyleContext(&aPresContext, newContext);
+        }
       }
       NS_RELEASE(oldContext);
     }
@@ -919,7 +921,9 @@ FrameManager::ReResolveStyleContext(nsIPresContext& aPresContext,
             if (oldExtraContext != newExtraContext) {
               aMinChange = CaptureChange(oldExtraContext, newExtraContext, aFrame, 
                                          aChangeList, aMinChange);
-              aFrame->SetAdditionalStyleContext(contextIndex, newExtraContext);
+              if (aMinChange < NS_STYLE_HINT_FRAMECHANGE) {
+                aFrame->SetAdditionalStyleContext(contextIndex, newExtraContext);
+              }
             }
             NS_RELEASE(newExtraContext);
           }
