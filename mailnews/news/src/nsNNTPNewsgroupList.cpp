@@ -98,6 +98,17 @@
 static NS_DEFINE_CID(kCNewsDB, NS_NEWSDB_CID);
 
 nsNNTPNewsgroupList::nsNNTPNewsgroupList()
+  : m_finishingXover(PR_FALSE),
+    m_getOldMessages(PR_FALSE),
+    m_promptedAlready(PR_FALSE),
+    m_downloadAll(PR_FALSE),
+    m_maxArticles(0),
+    m_lastPercent(-1),
+    m_lastProcessedNumber(0),
+    m_lastMsgNumber(0),
+    m_firstMsgToDownload(0),
+    m_lastMsgToDownload(0),
+    m_set(nsnull)
 {
 }
 
@@ -111,24 +122,9 @@ NS_IMPL_ISUPPORTS2(nsNNTPNewsgroupList, nsINNTPNewsgroupList, nsIMsgFilterHitNot
 nsresult
 nsNNTPNewsgroupList::Initialize(nsINntpUrl *runningURL, nsIMsgNewsFolder *newsFolder)
 {
-  m_newsDB = nsnull;
-  m_lastProcessedNumber = 0;
-  m_lastMsgNumber = 0;
-  m_set = nsnull;
-  m_finishingXover = PR_FALSE;
-  memset(&m_knownArts, 0, sizeof(m_knownArts));
   m_newsFolder = newsFolder;
-  m_knownArts.set = nsMsgKeySet::Create();
-  m_getOldMessages = PR_FALSE;
-  m_promptedAlready = PR_FALSE;
-  m_downloadAll = PR_FALSE;
-  m_maxArticles = 0;
-  m_firstMsgToDownload = 0;
-  m_lastMsgToDownload = 0;
   m_runningURL = runningURL;
-  m_lastPercent = -1;
-
-  LL_I2L(m_lastStatusUpdate, 0);
+  m_knownArts.set = nsMsgKeySet::Create();
 
   return NS_OK;
 }
