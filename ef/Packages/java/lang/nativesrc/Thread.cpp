@@ -217,5 +217,16 @@ Netscape_Java_java_lang_Thread_interrupt0(Java_java_lang_Thread *t)
 }
 
 
+/*
+ * Class : java/lang/Thread
+ * Method : registerNatives
+ * Signature : ()V
+ */
+NS_EXPORT NS_NATIVECALL(void)
+Netscape_Java_java_lang_Thread_registerNatives()
+{
+    PR_fprintf(PR_STDERR, "Netscape_Java_java_lang_Thread_registerNatives not implemented\n");
+}
+
 } /* extern "C" */
 
