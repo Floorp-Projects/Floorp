@@ -317,14 +317,14 @@
     <menu id="viewToolbar" value="&viewToolbarsMenu.label;" accesskey="&viewToolbarsMenu.accesskey;">
       <menupopup> 
 
-  		<menuitem value="&compositionToolbarCmd.label;" accesskey="&compositiontb.accesskey;" observes="cmd_viewCompToolbar"  />
-  		<menuitem value="&formattingToolbarCmd.label;"  accesskey="&formattingtb.accesskey;"  observes="cmd_viewFormatToolbar" />
-      <menuitem value="&editmodeToolbarCmd.label;"    accesskey="&editmodetb.accesskey;"    observes="cmd_viewEditModeToolbar" />
-  		<menuitem value="&taskbarCmd.label;"            accesskey="&taskbarCmd.accesskey;"    observes="cmd_viewtaskbar" />
+  		<menuitem value="&compositionToolbarCmd.label;" type="checkbox" accesskey="&compositiontb.accesskey;" observes="cmd_viewCompToolbar"  />
+  		<menuitem value="&formattingToolbarCmd.label;"  type="checkbox" accesskey="&formattingtb.accesskey;"  observes="cmd_viewFormatToolbar" />
+      <menuitem value="&editmodeToolbarCmd.label;"    type="checkbox" accesskey="&editmodetb.accesskey;"    observes="cmd_viewEditModeToolbar" />
+  		<menuitem value="&taskbarCmd.label;"            type="checkbox" accesskey="&taskbarCmd.accesskey;"    observes="cmd_viewtaskbar" />
       </menupopup>
     </menu>
     <menuitem id="viewSourceMenuitem" accesskey="&HTMLsource.accesskey;" observes="cmd_editHTML"/>
-    <menuitem id="viewParagraphMarks" value="&viewParagraphMarks.label;" accesskey="&viewparagraphmarks.accesskey;" oncommand="EditorToggleParagraphMarks();" persist="checked"/>
+    <menuitem id="viewParagraphMarks" type="checkbox" value="&viewParagraphMarks.label;" accesskey="&viewparagraphmarks.accesskey;" oncommand="EditorToggleParagraphMarks();"/>
 
     <menu  id="charsetMenu" value="&dcharMenu.label;" accesskey="&viewcharsetmenu.accesskey;">
       <menupopup>
@@ -563,13 +563,13 @@
           accesskey="&formatheadingmenu.accesskey;"
           position="10">
       <menupopup oncommand="EditorSetParagraphFormat('cmd_paragraphState', event.target.getAttribute('data'))">
-        <menuitem value="&normalCmd.label;"   accesskey="&normal.accesskey;"   data=""/>
-        <menuitem value="&heading1Cmd.label;" accesskey="&heading1.accesskey;" data="H1"/>
-        <menuitem value="&heading2Cmd.label;" accesskey="&heading2.accesskey;" data="H2"/>
-        <menuitem value="&heading3Cmd.label;" accesskey="&heading3.accesskey;" data="H3"/>
-        <menuitem value="&heading4Cmd.label;" accesskey="&heading4.accesskey;" data="H4"/>
-        <menuitem value="&heading5Cmd.label;" accesskey="&heading5.accesskey;" data="H5"/>
-        <menuitem value="&heading6Cmd.label;" accesskey="&heading6.accesskey;" data="H6"/>
+        <menuitem type="checkbox" value="&normalCmd.label;"   accesskey="&normal.accesskey;"   data=""/>
+        <menuitem type="checkbox" value="&heading1Cmd.label;" accesskey="&heading1.accesskey;" data="H1"/>
+        <menuitem type="checkbox" value="&heading2Cmd.label;" accesskey="&heading2.accesskey;" data="H2"/>
+        <menuitem type="checkbox" value="&heading3Cmd.label;" accesskey="&heading3.accesskey;" data="H3"/>
+        <menuitem type="checkbox" value="&heading4Cmd.label;" accesskey="&heading4.accesskey;" data="H4"/>
+        <menuitem type="checkbox" value="&heading5Cmd.label;" accesskey="&heading5.accesskey;" data="H5"/>
+        <menuitem type="checkbox" value="&heading6Cmd.label;" accesskey="&heading6.accesskey;" data="H6"/>
       </menupopup>
     </menu>
 
@@ -578,11 +578,11 @@
           accesskey="&formatparagraphmenu.accesskey;"
           position="11">
       <menupopup oncommand="EditorSetParagraphFormat('cmd_paragraphState', event.target.getAttribute('data'))">
-        <menuitem value="&normalCmd.label;"               accesskey="&normal.accesskey;"              data=""/>
-        <menuitem value="&paragraphParagraphCmd.label;"   accesskey="&paragraphparagraph.accesskey;"  data="P"/>
-        <menuitem value="&paragraphBlockquoteCmd.label;"  accesskey="&paragraphblockquote.accesskey;" data="BLOCKQUOTE"/>
-        <menuitem value="&paragraphAddressCmd.label;"     accesskey="&paragraphaddress.accesskey;"    data="ADDRESS"/>   
-        <menuitem value="&paragraphPreformatCmd.label;"   accesskey="&paragraphpreformat.accesskey;"  data="PRE"/>       
+        <menuitem type="checkbox" value="&normalCmd.label;"               accesskey="&normal.accesskey;"              data=""/>
+        <menuitem type="checkbox" value="&paragraphParagraphCmd.label;"   accesskey="&paragraphparagraph.accesskey;"  data="P"/>
+        <menuitem type="checkbox" value="&paragraphBlockquoteCmd.label;"  accesskey="&paragraphblockquote.accesskey;" data="BLOCKQUOTE"/>
+        <menuitem type="checkbox" value="&paragraphAddressCmd.label;"     accesskey="&paragraphaddress.accesskey;"    data="ADDRESS"/>   
+        <menuitem type="checkbox" value="&paragraphPreformatCmd.label;"   accesskey="&paragraphpreformat.accesskey;"  data="PRE"/>       
       </menupopup>
     </menu>
 
@@ -591,11 +591,11 @@
           accesskey="&formatlistmenu.accesskey;"
           position="12" oncreate="InitListMenu()">
       <menupopup>
-        <menuitem id="menu_ul" value="&listBulletCmd.label;"      accesskey="&listbullet.accesskey;"     observes="cmd_ul"/>
-        <menuitem id="menu_ol" value="&listNumberedCmd.label;"    accesskey="&listnumbered.accesskey;"   observes="cmd_ol"/>
+        <menuitem id="menu_ul" type="checkbox" value="&listBulletCmd.label;"      accesskey="&listbullet.accesskey;"     observes="cmd_ul"/>
+        <menuitem id="menu_ol" type="checkbox" value="&listNumberedCmd.label;"    accesskey="&listnumbered.accesskey;"   observes="cmd_ol"/>
         <menuseparator/>
-        <menuitem id="menu_dt" value="&listTermCmd.label;"        accesskey="&listterm.accesskey;"       observes="cmd_dt"/>
-        <menuitem id="menu_dd" value="&listDefinitionCmd.label;"  accesskey="&listdefinition.accesskey;" observes="cmd_dd"/>
+        <menuitem id="menu_dt" type="checkbox" value="&listTermCmd.label;"        accesskey="&listterm.accesskey;"       observes="cmd_dt"/>
+        <menuitem id="menu_dd" type="checkbox" value="&listDefinitionCmd.label;"  accesskey="&listdefinition.accesskey;" observes="cmd_dd"/>
         <menuseparator/>
         <menuitem id="listProps" value="&listProps.label;"        accesskey="&listprops.accesskey;"      observes="cmd_listProperties"/>
       </menupopup>
