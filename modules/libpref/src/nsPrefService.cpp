@@ -40,6 +40,7 @@
 #include "jsapi.h"
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsDirectoryServiceDefs.h"
+#include "nsIFileStreams.h"
 #include "nsIObserverService.h"
 #include "nsPrefBranch.h"
 #include "nsXPIDLString.h"
@@ -72,8 +73,6 @@ class nsIFileSpec;	// needed for prefapi_private_data.h inclusion
 static nsresult nsIFileToFileSpec(nsIFile* inFile, nsIFileSpec **aFileSpec);
 static nsresult openPrefFile(nsIFile* aFile, PRBool aIsErrorFatal, PRBool aVerifyHash,
                         PRBool aIsGlobalContext, PRBool aSkipFirstLine);
-static nsresult openPrefFileSpec(nsIFileSpec* aFilespec, PRBool aIsErrorFatal, PRBool aVerifyHash,
-                                     PRBool aIsGlobalContext, PRBool aSkipFirstLine);
 static nsresult savePrefFile(nsIFile* aFile);
 
 
@@ -424,76 +423,60 @@ nsresult nsPrefService::useUserPrefFile()
 static nsresult openPrefFile(nsIFile* aFile, PRBool aIsErrorFatal, PRBool aVerifyHash,
                                      PRBool aIsGlobalContext, PRBool aSkipFirstLine)
 {
-  nsCOMPtr<nsIFileSpec> fileSpec;
+  nsCOMPtr<nsIInputStream> inStr;
+  char *readBuf;
+  PRInt64 llFileSize;
+  PRUint32 fileSize;
   nsresult rv;
-
-  rv = nsIFileToFileSpec(aFile, getter_AddRefs(fileSpec));
-  if (NS_SUCCEEDED(rv)) {
-    JS_BeginRequest(gMochaContext);
-    rv = openPrefFileSpec(fileSpec, aIsErrorFatal, aVerifyHash, aIsGlobalContext, aSkipFirstLine);
-    JS_EndRequest(gMochaContext);
-  }
-  return rv;        
-}
-
-static nsresult openPrefFileSpec(nsIFileSpec* aFilespec, PRBool aIsErrorFatal, PRBool aVerifyHash,
-                                     PRBool aIsGlobalContext, PRBool aSkipFirstLine)
-{
-  nsresult rv;
-  char* readBuf;
 
 #if MOZ_TIMELINE
-  nsXPIDLCString str;
-  aFilespec->GetNativePath(getter_Copies(str));
-  NS_TIMELINE_MARK_FUNCTION1("load pref file", str.get());
+  {
+    nsXPIDLCString str;
+    aFile->GetPath(getter_Copies(str));
+    NS_TIMELINE_MARK_FUNCTION1("load pref file", str.get());
+  }
 #endif
 
-  // TODO: Validate this entire function, I seriously doubt it does what it is 
-  //       supposed to. Note for instance that gErrorOpeningUserPrefs will only
-  //       be set if the evaluation of the config script fails AND aIsErrorFatal
-  //       is set to PR_TRUE... the readBuf test is irrelavent because it will
-  //       bail at the GetFileContents call if it fails.
-
-  // TODO: Convert the rest of this code to nsIFile and avoid this conversion to nsIFileSpec
-  rv = aFilespec->ResolveSymlink();
+  rv = aFile->GetFileSize(&llFileSize);
   if (NS_FAILED(rv))
-    return rv;
+    return rv;        
+  LL_L2UI(fileSize, llFileSize); // Converting 64 bit structure to unsigned int
 
-  if (!Exists(aFilespec))
-    return NS_ERROR_FILE_NOT_FOUND;
+  rv = NS_NewLocalFileInputStream(getter_AddRefs(inStr), aFile);
+  if (NS_FAILED(rv)) 
+    return rv;        
 
-  rv = aFilespec->GetFileContents(&readBuf);
-  if (NS_FAILED(rv))
-    return rv;
+  readBuf = (char *)PR_Malloc(fileSize);
+  if (!readBuf) 
+    return NS_ERROR_OUT_OF_MEMORY;
 
-  long fileLength = PL_strlen(readBuf);
-  if (aVerifyHash) {
-    const int obscure_value = 13;
-    // Unobscure file by subtracting some value from every char - old value was 7
-    long i;
-    for (i = 0; i < fileLength; i++)
-      readBuf[i] -= obscure_value;
-  }
+  JS_BeginRequest(gMochaContext);
 
+  PRUint32 amtRead = 0;
+  rv = inStr->Read(readBuf, fileSize, &amtRead);
+  NS_ASSERTION((amtRead == fileSize), "failed to read the entire prefs file!!");
   if (NS_SUCCEEDED(rv)) {
-    if (!PREF_EvaluateConfigScript(readBuf, fileLength, nsnull, aIsGlobalContext, PR_TRUE,
+    if (aVerifyHash) {
+      // Unobscure file by subtracting some value from every char - old value was 7
+      const int obscure_value = 13;
+      for (PRUint32 i = 0; i < amtRead; i++)
+        readBuf[i] -= obscure_value;
+    }
+
+    if (!PREF_EvaluateConfigScript(readBuf, amtRead, nsnull, aIsGlobalContext, PR_TRUE,
                                    aSkipFirstLine))
     {
       rv = NS_ERROR_FAILURE;
-      if (aVerifyHash) {
-        PR_Free(readBuf);
-        return rv;
-      }
+      if (aIsErrorFatal)
+        // If the user prefs file exists but generates an error,
+        // don't clobber the file when we try to save it
+        gErrorOpeningUserPrefs = PR_TRUE;
     }
   }
   PR_Free(readBuf);
+  JS_EndRequest(gMochaContext);
 
-  // If the user prefs file exists but generates an error,
-  // don't clobber the file when we try to save it
-  if ((!readBuf || rv != NS_OK) && aIsErrorFatal)
-    gErrorOpeningUserPrefs = PR_TRUE;
-
-  return rv;
+  return rv;        
 }
 
 static nsresult savePrefFile(nsIFile* aFile)
@@ -575,8 +558,8 @@ inplaceSortCallback(const void *data1, const void *data2, void *privateData)
 {
   char *name1 = nsnull;
   char *name2 = nsnull;
-  nsIFileSpec *file1= *(nsIFileSpec **)data1;
-  nsIFileSpec *file2= *(nsIFileSpec **)data2;
+  nsIFile *file1= *(nsIFile **)data1;
+  nsIFile *file2= *(nsIFile **)data2;
   nsresult rv;
   int sortResult = 0;
 
@@ -606,18 +589,11 @@ extern "C" JSBool pref_InitInitialObjects()
 // appropriate TEXT resources
 //----------------------------------------------------------------------------------------
 {
-  nsresult rv;
-  PRBool exists;
   nsCOMPtr<nsIFile> aFile;
-  nsCOMPtr <nsIFileSpec> defaultPrefDir;
+  nsCOMPtr<nsIFile> defaultPrefDir;
+  nsresult          rv;
+  PRBool            hasMoreElements;
         
-  rv = NS_GetSpecialDirectory(NS_APP_PREF_DEFAULTS_50_DIR, getter_AddRefs(aFile));
-  if (NS_FAILED(rv))
-    return JS_FALSE;
-  rv = nsIFileToFileSpec(aFile, getter_AddRefs(defaultPrefDir));
-  if (NS_FAILED(rv))
-    return JS_FALSE;
-
   static const char* specialFiles[] = {
         "initpref.js"
 #ifdef NS_DEBUG
@@ -640,138 +616,97 @@ extern "C" JSBool pref_InitInitialObjects()
 #endif
   };
 
-  int k=0;
-  nsIFileSpec **defaultPrefFiles = (nsIFileSpec **)nsMemory::Alloc(INITIAL_MAX_DEFAULT_PREF_FILES * sizeof(nsIFileSpec *));
+  rv = NS_GetSpecialDirectory(NS_APP_PREF_DEFAULTS_50_DIR, getter_AddRefs(defaultPrefDir));
+  if (NS_FAILED(rv))
+    return JS_FALSE;
+
+  nsIFile **defaultPrefFiles = (nsIFile **)nsMemory::Alloc(INITIAL_MAX_DEFAULT_PREF_FILES * sizeof(nsIFile *));
   int maxDefaultPrefFiles = INITIAL_MAX_DEFAULT_PREF_FILES;
   int numFiles = 0;
 
   // Parse all the random files that happen to be in the components directory.
-  nsCOMPtr<nsIDirectoryIterator> dirIterator;
-  rv = nsComponentManager::CreateInstance(
-        (const char*)NS_DIRECTORYITERATOR_CONTRACTID,
-        (nsISupports*)nsnull,
-        (const nsID&)NS_GET_IID(nsIDirectoryIterator),
-        getter_AddRefs(dirIterator));
-  NS_ASSERTION(NS_SUCCEEDED(rv), "ERROR: Could not make a directory iterator.");
-  if (!dirIterator || NS_FAILED(dirIterator->Init(defaultPrefDir, PR_TRUE)))
-    return JS_FALSE;
-
-  // Get any old child of the components directory. Warning: aliases get resolved, so
-  // SetLeafName will not work here.
-  nsCOMPtr<nsIFile> aFile2;
-
-  rv = NS_GetSpecialDirectory(NS_APP_PREF_DEFAULTS_50_DIR, getter_AddRefs(aFile2));
-  if (NS_FAILED(rv))
-    	return JS_TRUE;
-
-  rv = aFile2->Append((char *)specialFiles[0]);
-  if (NS_FAILED(rv))
-    return JS_TRUE;
-
-  if (NS_FAILED(aFile2->Exists(&exists)))
-  {
+  nsCOMPtr<nsISimpleEnumerator> dirIterator;
+  rv = defaultPrefDir->GetDirectoryEntries(getter_AddRefs(dirIterator));
+  if (!dirIterator) {
+    NS_ASSERTION(NS_SUCCEEDED(rv), "ERROR: Could not make a directory iterator.");
     return JS_FALSE;
   }
 
-  if (exists)
-  {
-    rv = openPrefFile(aFile2, PR_FALSE, PR_FALSE, PR_FALSE, PR_FALSE);
-    NS_ASSERTION(NS_SUCCEEDED(rv), "initpref.js not parsed successfully");
+  dirIterator->HasMoreElements(&hasMoreElements);
+  if (!hasMoreElements) {
+    NS_ASSERTION(NS_SUCCEEDED(rv), "ERROR: Prefs directory is empty.");
+    return JS_FALSE;
   }
+
+  // Read in initpref.js.
+  // Warning: aliases get resolved, so SetLeafName will not work here.
+  rv = defaultPrefDir->Clone(getter_AddRefs(aFile));
+  if (NS_FAILED(rv))
+    return JS_FALSE;
+
+  rv = aFile->Append((char *)specialFiles[0]);
+  if (NS_FAILED(rv))
+    return JS_FALSE;
+
+  rv = openPrefFile(aFile, PR_FALSE, PR_FALSE, PR_FALSE, PR_FALSE);
+  NS_ASSERTION(NS_SUCCEEDED(rv), "initpref.js not parsed successfully");
+
   // Keep this child
 
-#ifdef DEBUG_prefs
-  printf("Parsing default JS files.\n");
-#endif /* DEBUG_prefs */
-  for (; Exists(dirIterator); dirIterator->Next())
-  {
-    nsCOMPtr<nsIFileSpec> child;
+  while (hasMoreElements) {
     PRBool shouldParse = PR_TRUE;
-    if NS_FAILED(dirIterator->GetCurrentSpec(getter_AddRefs(child)))
-      continue;
     char* leafName;
-    rv = child->GetLeafName(&leafName);
-    if (NS_SUCCEEDED(rv))
-    {
+
+    dirIterator->GetNext(getter_AddRefs(aFile));
+    dirIterator->HasMoreElements(&hasMoreElements);
+
+    rv = aFile->GetLeafName(&leafName);
+    if (NS_SUCCEEDED(rv)) {
       // Skip non-js files
       if (PL_strstr(leafName, ".js") + PL_strlen(".js") != leafName + PL_strlen(leafName))
         shouldParse = PR_FALSE;
       // Skip files in the special list.
-      if (shouldParse)
-      {
-        for (int j = 0; j < (int) (sizeof(specialFiles) / sizeof(char*)); j++)
-          if (PL_strcmp(leafName, specialFiles[j]) == 0)
+      if (shouldParse) {
+        for (int j = 0; j < (int) (sizeof(specialFiles) / sizeof(char *)); j++)
+          if (!PL_strcmp(leafName, specialFiles[j]))
             shouldParse = PR_FALSE;
       }
-      if (shouldParse)
-      {
-#ifdef DEBUG_prefs
-        printf("Adding %s to the list to be sorted\n", leafName);
-#endif /* DEBUG_prefs */
-        rv = NS_NewFileSpec(&(defaultPrefFiles[numFiles]));
-        NS_ASSERTION(NS_SUCCEEDED(rv), "failed to create a file spec");
-        if (NS_SUCCEEDED(rv) && defaultPrefFiles[numFiles]) {
-          rv = defaultPrefFiles[numFiles]->FromFileSpec(child);
-          NS_ASSERTION(NS_SUCCEEDED(rv),"failed to set the spec");
-          if (NS_SUCCEEDED(rv)) {
-            numFiles++;
-          }
+      if (shouldParse) {
+        rv = aFile->Clone(&(defaultPrefFiles[numFiles]));
+        if NS_SUCCEEDED(rv) {
+          ++numFiles;
           if (numFiles == maxDefaultPrefFiles) {
             // double the size of the array
             maxDefaultPrefFiles *= 2;
-            defaultPrefFiles = (nsIFileSpec **)nsMemory::Realloc(defaultPrefFiles, maxDefaultPrefFiles * sizeof(nsIFileSpec *));
+            defaultPrefFiles = (nsIFile **)nsMemory::Realloc(defaultPrefFiles, maxDefaultPrefFiles * sizeof(nsIFile *));
           }
         }
       }
-      if (leafName) nsCRT::free((char*)leafName);
+      if (leafName)
+        nsCRT::free((char*)leafName);
     }
-  }
-#ifdef DEBUG_prefs
-  printf("Sort defaultPrefFiles.  we need them sorted so all-ns.js will override all.js (where override == parsed later)\n");
-#endif /* DEBUG_prefs */
-  NS_QuickSort((void *)defaultPrefFiles, numFiles,sizeof(nsIFileSpec *), inplaceSortCallback, nsnull);
+  };
 
-  for (k=0;k<numFiles;k++) {
-    char* currentLeafName = nsnull;
-    if (defaultPrefFiles[k]) {
-      rv = defaultPrefFiles[k]->GetLeafName(&currentLeafName);
-#ifdef DEBUG_prefs
-      printf("Parsing %s\n", currentLeafName);
-#endif /* DEBUG_prefs */
-      if (currentLeafName) nsCRT::free((char*)currentLeafName);
+  NS_QuickSort((void *)defaultPrefFiles, numFiles, sizeof(nsIFile *), inplaceSortCallback, nsnull);
 
-      if (NS_SUCCEEDED(rv)) {
-        rv = openPrefFileSpec(defaultPrefFiles[k], PR_FALSE, PR_FALSE, PR_FALSE, PR_FALSE);
-        NS_ASSERTION(NS_SUCCEEDED(rv), "Config file not parsed successfully");
-      }
-    }
-  }
-  for (k=0;k<numFiles;k++) {
-    NS_IF_RELEASE(defaultPrefFiles[k]);
+  int k;
+  for (k = 0; k < numFiles; k++) {
+    rv = openPrefFile(defaultPrefFiles[k], PR_FALSE, PR_FALSE, PR_FALSE, PR_FALSE);
+    NS_ASSERTION(NS_SUCCEEDED(rv), "Config file not parsed successfully");
+    NS_RELEASE(defaultPrefFiles[k]);
   }
   nsMemory::Free(defaultPrefFiles);
-  defaultPrefFiles = nsnull;
-
-#ifdef DEBUG_prefs
-  printf("Parsing platform-specific JS files.\n");
-#endif /* DEBUG_prefs */
-  nsCOMPtr<nsIFile> aFile3;
 
   // Finally, parse any other special files (platform-specific ones).
-  for (k = 1; k < (int) (sizeof(specialFiles) / sizeof(char*)); k++) {
+  for (k = 1; k < (int) (sizeof(specialFiles) / sizeof(char *)); k++) {
     // we must get the directory every time so we can append the child
     // because SetLeafName will not work here.
-    rv = NS_GetSpecialDirectory(NS_APP_PREF_DEFAULTS_50_DIR, getter_AddRefs(aFile3));
+    rv = defaultPrefDir->Clone(getter_AddRefs(aFile));
     if (NS_SUCCEEDED(rv)) {
-      rv = aFile3->Append((char*)specialFiles[k]);
+      rv = aFile->Append((char*)specialFiles[k]);
       if (NS_SUCCEEDED(rv)) {
-#ifdef DEBUG_prefs
-        printf("Parsing %s\n", specialFiles[k]);
-#endif /* DEBUG_prefs */
-        if (NS_SUCCEEDED(aFile3->Exists(&exists)) && exists) {
-          rv = openPrefFile(aFile3, PR_FALSE, PR_FALSE, PR_FALSE, PR_FALSE);
-          NS_ASSERTION(NS_SUCCEEDED(rv), "<platform>.js was not parsed successfully");
-        }
+        rv = openPrefFile(aFile, PR_FALSE, PR_FALSE, PR_FALSE, PR_FALSE);
+        NS_ASSERTION(NS_SUCCEEDED(rv), "<platform>.js was not parsed successfully");
       }
     }
   }
