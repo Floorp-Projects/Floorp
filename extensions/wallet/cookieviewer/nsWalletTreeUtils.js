@@ -123,7 +123,25 @@ function SortTree(tree, view, table, column, lastSortColumn, lastSortAscending) 
   var ascending = (column == lastSortColumn) ? !lastSortAscending : true;
 
   // do the sort
-  BubbleSort(column, ascending, table);
+  var compareFunc;
+  if (ascending) {
+    compareFunc = function compare(first, second) {
+      if (first[column] < second[column])
+        return 1;
+      if (first[column] > second[column])
+        return -1;
+      return 0;
+    }
+  } else {
+    compareFunc = function compare(first, second) {
+      if (first[column] < second[column])
+        return -1;
+      if (first[column] > second[column])
+        return 1;
+      return 0;
+    }
+  }
+  table.sort(compareFunc);
 
   // restore the selection
   var selectedRow = -1;
@@ -147,25 +165,4 @@ function SortTree(tree, view, table, column, lastSortColumn, lastSortAscending) 
   }
 
   return ascending;
-}
-
-function BubbleSort(columnName, ascending, table) {
-  var len = table.length, len_1 = len - 1;
-
-  for (var i = 0; i < len_1; i++) {
-    var key = table[i][columnName];
-    var winner = -1;
-    for (var j = i + 1; j < len; j++) {
-      var nextKey = table[j][columnName];
-      if (ascending ? key > nextKey : key < nextKey) {
-        key = nextKey;
-        winner = j;
-      }
-    }
-    if (winner != -1){
-      var temp = table[i];
-      table[i] = table[winner];
-      table[winner] = temp;
-    }
-  }
 }
