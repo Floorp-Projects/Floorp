@@ -81,6 +81,7 @@ XPIDLSRCS	= \
 		nsIClipboard.idl \
 		nsIClipboardOwner.idl \
 		nsIRollupListener.idl \
+		nsIBaseWindow.idl \
 		$(NULL)
 
 EXPORTS		:= $(addprefix $(srcdir)/, $(EXPORTS))
