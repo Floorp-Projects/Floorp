@@ -68,14 +68,6 @@ mAccessNodeCache(nsnull)
   mAccessNodeCache->Init(kDefaultTreeCacheSize);
 }
 
-nsXULTreeAccessible::~nsXULTreeAccessible()
-{
-  if (mAccessNodeCache) {
-    ClearCache(*mAccessNodeCache);
-    mAccessNodeCache = nsnull;
-  }
-}
-
 NS_IMPL_ISUPPORTS_INHERITED1(nsXULTreeAccessible, nsXULSelectableAccessible, nsIAccessibleTreeCache)
                                                                                                        
 
@@ -157,6 +149,18 @@ NS_IMETHODIMP nsXULTreeAccessible::GetValue(nsAString& _retval)
     return mTreeView->GetCellText(currentIndex, keyCol, _retval);
   }
 
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsXULTreeAccessible::Shutdown()
+{
+  nsXULSelectableAccessible::Shutdown();
+
+  if (mAccessNodeCache) {
+    ClearCache(*mAccessNodeCache);
+    delete mAccessNodeCache;
+    mAccessNodeCache = nsnull;
+  }
   return NS_OK;
 }
 
