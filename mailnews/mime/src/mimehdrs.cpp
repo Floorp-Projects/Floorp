@@ -882,11 +882,18 @@ extern PRInt16 INTL_DefaultMailToWinCharSetID(PRInt16 csid);
 /* Given text purporting to be a qtext header value, strip backslashes that
 	may be escaping other chars in the string. */
 char *
-mime_decode_filename(char *name)
+mime_decode_filename(char *name, const char *charset)
 {
 	char *s = name, *d = name;
 	char *cvt, *returnVal = NULL;
   
+	// If charset parameter is used, this is RFC2231 encoding.
+	if (charset)
+	{
+		MIME_ConvertString(charset, "UTF-8", name, &returnVal);
+		return returnVal;
+	}
+
 	while (*s)
 	{
 		/* Remove backslashes when they are used to escape special characters. */
@@ -918,11 +925,12 @@ char *
 MimeHeaders_get_name(MimeHeaders *hdrs)
 {
   char *s = 0, *name = 0, *cvt = 0;
+  char *charset = nsnull; // for RFC2231 support
 
   s = MimeHeaders_get(hdrs, HEADER_CONTENT_DISPOSITION, PR_FALSE, PR_FALSE);
   if (s)
 	{
-	  name = MimeHeaders_get_parameter(s, HEADER_PARM_FILENAME, NULL, NULL);
+	  name = MimeHeaders_get_parameter(s, HEADER_PARM_FILENAME, &charset, NULL);
 	  PR_Free(s);
 	}
 
@@ -931,7 +939,9 @@ MimeHeaders_get_name(MimeHeaders *hdrs)
 	  s = MimeHeaders_get(hdrs, HEADER_CONTENT_TYPE, PR_FALSE, PR_FALSE);
 	  if (s)
 	  {
-		  name = MimeHeaders_get_parameter(s, HEADER_PARM_NAME, NULL, NULL);
+		  PR_FREEIF(charset);
+
+		  name = MimeHeaders_get_parameter(s, HEADER_PARM_NAME, &charset, NULL);
 		  PR_Free(s);
 	  }
   }
@@ -954,7 +964,9 @@ MimeHeaders_get_name(MimeHeaders *hdrs)
 		/*	Argh. What we should do if we want to be robust is to decode qtext
 			in all appropriate headers. Unfortunately, that would be too scary
 			at this juncture. So just decode qtext/mime2 here. */
-	   	cvt = mime_decode_filename(name);
+		cvt = mime_decode_filename(name, charset);
+		PR_FREEIF(charset);
+
 	   	if (cvt && cvt != name)
 	   	{
 	   		PR_Free(name);

@@ -98,6 +98,7 @@ ProcessBodyAsAttachment(MimeObject *obj, nsMsgAttachmentData **data)
   nsMsgAttachmentData   *tmp;
   PRInt32               n;
   char                  *disp = nsnull;
+  char                  *charset = nsnull;
 
   // Ok, this is the special case when somebody sends an "attachment" as the body
   // of an RFC822 message...I really don't think this is the way this should be done.
@@ -116,11 +117,12 @@ ProcessBodyAsAttachment(MimeObject *obj, nsMsgAttachmentData **data)
   tmp->real_type = child->content_type ? nsCRT::strdup(child->content_type) : NULL;
   tmp->real_encoding = child->encoding ? nsCRT::strdup(child->encoding) : NULL;
   disp = MimeHeaders_get(child->headers, HEADER_CONTENT_DISPOSITION, PR_FALSE, PR_FALSE);
-  tmp->real_name = MimeHeaders_get_parameter(disp, "name", NULL, NULL);
+  tmp->real_name = MimeHeaders_get_parameter(disp, "name", &charset, NULL);
   if (tmp->real_name)
   {
     char *fname = NULL;
-    fname = mime_decode_filename(tmp->real_name);
+    fname = mime_decode_filename(tmp->real_name, charset);
+    PR_FREEIF(charset);
     if (fname && fname != tmp->real_name)
     {
       PR_Free(tmp->real_name);
@@ -276,6 +278,7 @@ BuildAttachmentList(MimeObject *aChild, nsMsgAttachmentData *aAttachData,
   nsMsgAttachmentData   *tmp = nsnull;
   PRBool                isAlternativeOrRelated;
   PRBool                isIMAPPart = PR_FALSE;
+  char                  *charset = nsnull;
 
   if ( (!aChild) || (!cobj->children) || 
        (mime_typep(aChild, (MimeObjectClass *)&mimeExternalBodyClass)))
@@ -339,19 +342,28 @@ BuildAttachmentList(MimeObject *aChild, nsMsgAttachmentData *aAttachData,
 
     if (disp) 
     {
-      tmp->real_name = MimeHeaders_get_parameter(disp, "filename", NULL, NULL);
+      tmp->real_name = MimeHeaders_get_parameter(disp, "filename", &charset, NULL);
       if (isAnAppleDoublePart)
         for (j = 0; j < 2 && !tmp->real_name; j ++)
         {
           PR_FREEIF(disp);
+          PR_FREEIF(charset);
           disp = MimeHeaders_get(((MimeContainer *)child)->children[j]->headers, HEADER_CONTENT_DISPOSITION, PR_FALSE, PR_FALSE);
-          tmp->real_name = MimeHeaders_get_parameter(disp, "filename", NULL, NULL);
+          tmp->real_name = MimeHeaders_get_parameter(disp, "filename", &charset, NULL);
         }
 
       if (tmp->real_name)
       {
+        // check encoded type
+        //
+        // The parameter of Content-Disposition must use RFC 2231.
+        // But old Netscape 4.x and Outlook Express etc. use RFC2047.
+        // So we should parse both types.
+
         char *fname = NULL;
-        fname = mime_decode_filename(tmp->real_name);
+        fname = mime_decode_filename(tmp->real_name, charset);
+        PR_FREEIF(charset);
+
         if (fname && fname != tmp->real_name)
         {
           PR_FREEIF(tmp->real_name);
@@ -371,19 +383,28 @@ BuildAttachmentList(MimeObject *aChild, nsMsgAttachmentData *aAttachData,
       if (!tmp->real_name || *tmp->real_name == 0)
       {
         PR_FREEIF(tmp->real_name);
-        tmp->real_name = MimeHeaders_get_parameter(disp, "name", NULL, NULL);
+        tmp->real_name = MimeHeaders_get_parameter(disp, "name", &charset, NULL);
         if (isAnAppleDoublePart)
           for (j = 0; j < 2 && !tmp->real_name; j ++)
           {
             PR_FREEIF(disp);
+            PR_FREEIF(charset);
             disp = MimeHeaders_get(((MimeContainer *)child)->children[j]->headers, HEADER_CONTENT_TYPE, PR_FALSE, PR_FALSE);
-            tmp->real_name = MimeHeaders_get_parameter(disp, "name", NULL, NULL);
+            tmp->real_name = MimeHeaders_get_parameter(disp, "name", &charset, NULL);
           }
         
         if (tmp->real_name)
         {
+          // check encoded type
+          //
+          // The parameter of Content-Disposition must use RFC 2231.
+          // But old Netscape 4.x and Outlook Express etc. use RFC2047.
+          // So we should parse both types.
+
           char *fname = NULL;
-          fname = mime_decode_filename(tmp->real_name);
+          fname = mime_decode_filename(tmp->real_name, charset);
+          PR_FREEIF(charset);
+
           if (fname && fname != tmp->real_name)
           {
             PR_Free(tmp->real_name);

@@ -77,6 +77,6 @@ HG77761
  */
 extern char *MimeHeaders_get_name(MimeHeaders *hdrs);
 
-extern char *mime_decode_filename(char *name);
+extern char *mime_decode_filename(char *name, const char* charset);
 
 #endif /* _MIMEHDRS_H_ */
