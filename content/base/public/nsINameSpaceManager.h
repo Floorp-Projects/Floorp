@@ -88,8 +88,11 @@ public:
                                nsIElementFactory **aElementFactory) = 0;
 };
 
-extern NS_LAYOUT nsresult
+nsresult
   NS_NewNameSpaceManager(nsINameSpaceManager** aInstancePtrResult);
+
+void
+  NS_NameSpaceManagerShutdown();
 
 
 #endif // nsINameSpaceManager_h___
