@@ -56,6 +56,7 @@ protected:
   };
   
   nsresult      SetNodeAttribute(const char* nodeID, const char* attributeName, const nsString& newValue);
+  nsresult      UnsetNodeAttribute(const char* nodeID, const char* attributeName);
 
   nsresult      UpdateParagraphState(const char* observerName, const char* attributeName, nsString& ioParaFormat);
   nsresult      UpdateListState(const char* observerName);

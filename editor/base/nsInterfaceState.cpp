@@ -29,6 +29,7 @@
 #include "nsIDiskDocument.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMSelection.h"
+#include "nsIDOMAttr.h"
 
 #include "nsIEditor.h"
 #include "nsIHTMLEditor.h"
@@ -129,11 +130,11 @@ nsInterfaceState::NotifySelectionChanged()
   // we don't really care if any of these fail.
   
   // update bold
-  rv = UpdateTextState("b", "Editor:Style:IsBold", "bold", mBoldState);
+  rv = UpdateTextState("b", "Editor:Bold", "bold", mBoldState);
   // update italic
-  rv = UpdateTextState("i", "Editor:Style:IsItalic", "italic", mItalicState);
+  rv = UpdateTextState("i", "Editor:Italic", "italic", mItalicState);
   // update underline
-  rv = UpdateTextState("u", "Editor:Style:IsUnderline", "underline", mUnderlineState);
+  rv = UpdateTextState("u", "Editor:Underline", "underline", mUnderlineState);
   
   // udpate the font face
   rv = UpdateFontFace("Editor:Font:Face", "font", mFontString);
@@ -263,8 +264,11 @@ nsInterfaceState::UpdateDirtyState(PRBool aNowDirty)
 {
   if (mDirtyState != aNowDirty)
   {
-    nsresult rv = SetNodeAttribute("Editor:Document:Dirty", "dirty", aNowDirty ? "true" : "false");
+    nsresult rv;	// = SetNodeAttribute("Editor:Save", "disabled", aNowDirty ? "true" : "false");
+
+    rv = SetNodeAttribute("Editor:Save", "disabled", aNowDirty ? "false" : "true");
 	  if (NS_FAILED(rv)) return rv;
+
     mDirtyState = aNowDirty;
   }
   
@@ -299,6 +303,36 @@ nsInterfaceState::SetNodeAttribute(const char* nodeID, const char* attributeName
   if (NS_FAILED(rv) || !elem) return rv;
   
   return elem->SetAttribute(attributeName, newValue);
+}
+
+
+nsresult
+nsInterfaceState::UnsetNodeAttribute(const char* nodeID, const char* attributeName)
+{
+    nsresult rv = NS_OK;
+
+  if (!mWebShell)
+    return NS_ERROR_NOT_INITIALIZED;
+
+  nsCOMPtr<nsIContentViewer> cv;
+  rv = mWebShell->GetContentViewer(getter_AddRefs(cv));
+  if (NS_FAILED(rv)) return rv;
+    
+  nsCOMPtr<nsIDocumentViewer> docViewer = do_QueryInterface(cv, &rv);
+  if (NS_FAILED(rv)) return rv;
+
+  nsCOMPtr<nsIDocument> chromeDoc;
+  rv = docViewer->GetDocument(*getter_AddRefs(chromeDoc));
+  if (NS_FAILED(rv)) return rv;
+ 
+  nsCOMPtr<nsIDOMXULDocument> xulDoc = do_QueryInterface(chromeDoc, &rv);
+  if (NS_FAILED(rv)) return rv;
+  
+  nsCOMPtr<nsIDOMElement> elem;
+  rv = xulDoc->GetElementById( nodeID, getter_AddRefs(elem) );
+  if (NS_FAILED(rv) || !elem) return rv;
+  
+  return elem->RemoveAttribute(attributeName);
 }
 
 
