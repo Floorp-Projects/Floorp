@@ -291,8 +291,9 @@ sub EnsureFileInDir
         copy($file, $destPath) || die "copy($file, $destPath) failed: $!";
 
         # fix the mod date so we don't jar everything (is this faster than just jarring everything?)
-        my $atime = stat($file)->atime || die $!;
         my $mtime = stat($file)->mtime || die $!;
+        my $atime = stat($file)->atime;
+        $atime = $mtime if !defined($atime);
         utime($atime, $mtime, $destPath);
 
         return 1;
