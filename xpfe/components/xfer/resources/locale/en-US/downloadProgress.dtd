@@ -12,6 +12,7 @@
 <!ENTITY dialogCancel.label "Cancel"> 
 <!ENTITY pauseButtonText  "Pause">
 <!ENTITY resumeButtonText "Resume">
+<!ENTITY close "Close">
 
 
 <!ENTITY confirmCancel "Are you sure you want to cancel the saving of this file?">

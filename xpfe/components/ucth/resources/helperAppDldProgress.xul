@@ -50,6 +50,7 @@ Contributor(s):
     -->
   
     <data id="dialog.strings.confirmCancel">&confirmCancel;</data>
+    <data id="dialog.strings.close">&close;</data>
     <data id="dialog.strings.progressMsg">&progressMsg;</data>
     <data id="dialog.strings.completeMsg">&completeMsg;</data>
     <data id="dialog.strings.percentMsg">&percentMsg;</data>
