@@ -281,19 +281,21 @@ nsAppShellService::RegisterTopLevelWindow(nsIWidget* aWindow)
   if (data == nsnull)
     rv = NS_ERROR_NULL_POINTER;
   else {
+#if 0
     nsWebShellWindow* window = (nsWebShellWindow *) data;
     nsIWebShellWindow * webShellWin;
     rv = window->QueryInterface(kIWebShellWindowIID, (void **) &webShellWin);
     if (NS_SUCCEEDED(rv)) {
       mWindowList->AppendElement(webShellWin);
     }
-      
+#else      
+    nsWebShellWindow* window = (nsWebShellWindow *) data;
 //    nsCOMPtr<nsIWebShellContainer> wsc(window); DRaM
-    /*nsIWebShellContainer* wsc;
+    nsIWebShellContainer* wsc;
     rv = window->QueryInterface(kIWebShellContainerIID, (void **) &wsc);
     if (NS_SUCCEEDED(rv))
       mWindowList->AppendElement(wsc);
-      */
+#endif
   }
   return rv;
 }
