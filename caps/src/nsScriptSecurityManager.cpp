@@ -1584,7 +1584,7 @@ nsScriptSecurityManager::IsCapabilityEnabled(const char *capability,
     return NS_OK;
 }
 
-#define PROPERTIES_URL "chrome://communicator/locale/security/security.properties"
+#define PROPERTIES_URL "chrome://communicator/locale/security/caps.properties"
 
 nsresult
 Localize(const char *genericString, nsString &result)
