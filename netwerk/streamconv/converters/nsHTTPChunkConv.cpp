@@ -33,7 +33,7 @@
 #include <ctype.h>
 
 // nsISupports implementation
-NS_IMPL_ISUPPORTS2 (nsHTTPChunkConv, nsIStreamConverter, nsIStreamListener);
+NS_IMPL_THREADSAFE_ISUPPORTS2 (nsHTTPChunkConv, nsIStreamConverter, nsIStreamListener);
 
 // nsFTPDirListingConv methods
 nsHTTPChunkConv::nsHTTPChunkConv()
