@@ -7913,7 +7913,7 @@ ResDef(PRVCY_HAS_SET_COOKIES, XP_MSG_BASE + 1456,
 on your computer.\n")
 
 ResDef(PRVCY_POLICY_FILE_NAME, XP_MSG_BASE + 1457,
-"/privacy_policy.html")
+"privacy_policy.html")
 
 /* Related Links XP Strings */
 
