@@ -236,7 +236,7 @@ protected:
 
     enum Direction {
         eDirection_Descending = -1,
-        eDirection_None       =  0,
+        eDirection_Natural    =  0,
         eDirection_Ascending  = +1
     };
 
@@ -282,7 +282,7 @@ NS_IMPL_ISUPPORTS_INHERITED2(nsXULOutlinerBuilder, nsXULTemplateBuilder,
 
 nsXULOutlinerBuilder::nsXULOutlinerBuilder()
     : mSortVariable(0),
-      mSortDirection(eDirection_None)
+      mSortDirection(eDirection_Natural)
 {
 }
 
@@ -611,7 +611,7 @@ nsXULOutlinerBuilder::CycleHeader(const PRUnichar* aColID, nsIDOMElement* aEleme
         }
         else if (dir == NS_LITERAL_STRING("descending")) {
             dir = NS_LITERAL_STRING("natural");
-            mSortDirection = eDirection_None;
+            mSortDirection = eDirection_Natural;
         }
         else {
             dir = NS_LITERAL_STRING("ascending");
@@ -796,7 +796,7 @@ nsXULOutlinerBuilder::ReplaceMatch(nsIRDFResource* aMember,
             // By default, place the new element at the end of the container
             PRInt32 index = parent->Count();
 
-            if (mSortVariable && mSortDirection != eDirection_None) {
+            if (mSortVariable) {
                 // Figure out where to put the new element by doing an
                 // insertion sort.
                 PRInt32 left = 0;
@@ -892,7 +892,7 @@ nsXULOutlinerBuilder::GetSortVariables(VariableSet& aVariables)
             child->GetAttribute(kNameSpaceID_None, nsXULAtoms::sortDirection, dir);
 
             if (dir == NS_LITERAL_STRING("none"))
-                mSortDirection = eDirection_None;
+                mSortDirection = eDirection_Natural;
             else if (dir == NS_LITERAL_STRING("descending"))
                 mSortDirection = eDirection_Descending;
             else
@@ -1241,7 +1241,7 @@ nsXULOutlinerBuilder::OpenSubtreeOf(nsOutlinerRows::Subtree* aSubtree,
     }
 
     // Sort the container.
-    if (mSortVariable && mSortDirection != eDirection_None) {
+    if (mSortVariable) {
         NS_QuickSort(mRows.GetRowsFor(aSubtree),
                      aSubtree->Count(),
                      sizeof(nsOutlinerRows::Row),
@@ -1350,6 +1350,60 @@ nsXULOutlinerBuilder::CompareMatches(nsTemplateMatch* aLeft, nsTemplateMatch* aR
 {
     PRInt32 result = 0;
 
+    if (mSortDirection == eDirection_Natural) {
+        // If the sort order is ``natural'', then see if the container
+        // is an RDF sequence. If so, we'll try to use the ordinal
+        // properties to determine order.
+        //
+        // XXX the problem with this is, it doesn't always get the
+        // *real* container; e.g.,
+        //
+        //  <outlinerrow uri="?uri" />
+        //
+        //  <triple subject="?uri"
+        //          predicate="http://home.netscape.com/NC-rdf#subheadings"
+        //          object="?subheadings" />
+        //
+        //  <member container="?subheadings" child="?subheading" />
+        //
+        // In this case mContainerVar is bound to ?uri, not
+        // ?subheadings. (The ``container'' in the template sense !=
+        // container in the RDF sense.)
+        Value val;
+        aLeft->GetAssignmentFor(mConflictSet, mContainerVar, &val);
+
+        nsIRDFResource* container = VALUE_TO_IRDFRESOURCE(val);
+
+        PRBool isSequence = PR_FALSE;
+        gRDFContainerUtils->IsSeq(mDB, container, &isSequence);
+        if (! isSequence)
+            // If it's not an RDF container, then there's no natural
+            // order.
+            return 0;
+
+        // Determine the indices of the left and right elements in the
+        // container.
+        Value left;
+        aLeft->GetAssignmentFor(mConflictSet, mMemberVar, &left);
+
+        PRInt32 lindex;
+        gRDFContainerUtils->IndexOf(mDB, container, VALUE_TO_IRDFNODE(left), &lindex);
+        if (lindex < 0)
+            return 0;
+
+        Value right;
+        aRight->GetAssignmentFor(mConflictSet, mMemberVar, &right);
+
+        PRInt32 rindex;
+        gRDFContainerUtils->IndexOf(mDB, container, VALUE_TO_IRDFNODE(right), &rindex);
+        if (rindex < 0)
+            return 0;
+
+        return rindex - lindex;
+    }
+
+    // If we get here, then an ascending or descending sort order is
+    // imposed.
     Value leftValue;
     aLeft->GetAssignmentFor(mConflictSet, mSortVariable, &leftValue);
     nsIRDFNode* leftNode = VALUE_TO_IRDFNODE(leftValue);

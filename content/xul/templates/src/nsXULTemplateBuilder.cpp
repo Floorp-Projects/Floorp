@@ -125,6 +125,7 @@ nsrefcnt                  nsXULTemplateBuilder::gRefCnt = 0;
 PRInt32                   nsXULTemplateBuilder::kNameSpaceID_RDF;
 PRInt32                   nsXULTemplateBuilder::kNameSpaceID_XUL;
 nsIRDFService*            nsXULTemplateBuilder::gRDFService;
+nsIRDFContainerUtils*     nsXULTemplateBuilder::gRDFContainerUtils;
 nsINameSpaceManager*      nsXULTemplateBuilder::gNameSpaceManager;
 nsIScriptSecurityManager* nsXULTemplateBuilder::gScriptSecurityManager;
 nsIPrincipal*             nsXULTemplateBuilder::gSystemPrincipal;
@@ -132,9 +133,6 @@ nsIPrincipal*             nsXULTemplateBuilder::gSystemPrincipal;
 #ifdef PR_LOGGING
 PRLogModuleInfo* gXULTemplateLog;
 #endif
-
-static nsIRDFContainerUtils*  gRDFContainerUtils;
-
 
 //----------------------------------------------------------------------
 //

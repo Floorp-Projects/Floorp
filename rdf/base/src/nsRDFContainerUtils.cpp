@@ -170,7 +170,7 @@ RDFContainerUtilsImpl::OrdinalResourceToIndex(nsIRDFResource *aOrdinal, PRInt32 
 
     const char	*ordinalStr;
     if (NS_FAILED(aOrdinal->GetValueConst( &ordinalStr )))
-        return PR_FALSE;
+        return NS_ERROR_FAILURE;
 
     const char* s = ordinalStr;
     if (PL_strncmp(s, kRDFNameSpaceURI, sizeof(kRDFNameSpaceURI) - 1) != 0) {
@@ -468,4 +468,68 @@ RDFContainerUtilsImpl::IsA(nsIRDFDataSource* aDataSource, nsIRDFResource* aResou
     if (NS_FAILED(rv)) return PR_FALSE;
 
     return result;
+}
+
+NS_IMETHODIMP
+RDFContainerUtilsImpl::IndexOf(nsIRDFDataSource* aDataSource, nsIRDFResource* aContainer, nsIRDFNode* aElement, PRInt32* aIndex)
+{
+    // Assume we can't find it.
+    *aIndex = -1;
+
+    // We'll assume that fan-out is much higher than fan-in, so grovel
+    // through the inbound arcs, look for an ordinal resource, and
+    // decode it.
+    nsCOMPtr<nsISimpleEnumerator> arcsIn;
+    aDataSource->ArcLabelsIn(aElement, getter_AddRefs(arcsIn));
+    if (! arcsIn)
+        return NS_OK;
+
+    while (1) {
+        PRBool hasMoreArcs = PR_FALSE;
+        arcsIn->HasMoreElements(&hasMoreArcs);
+        if (! hasMoreArcs)
+            break;
+
+        nsCOMPtr<nsISupports> isupports;
+        arcsIn->GetNext(getter_AddRefs(isupports));
+        if (! isupports)
+            break;
+
+        nsCOMPtr<nsIRDFResource> property =
+            do_QueryInterface(isupports);
+
+        if (! property)
+            continue;
+
+        PRBool isOrdinal;
+        IsOrdinalProperty(property, &isOrdinal);
+        if (! isOrdinal)
+            continue;
+
+        nsCOMPtr<nsISimpleEnumerator> sources;
+        aDataSource->GetSources(property, aElement, PR_TRUE, getter_AddRefs(sources));
+        if (! sources)
+            continue;
+
+        while (1) {
+            PRBool hasMoreSources = PR_FALSE;
+            sources->HasMoreElements(&hasMoreSources);
+            if (! hasMoreSources)
+                continue;
+
+            nsCOMPtr<nsISupports> isupports2;
+            sources->GetNext(getter_AddRefs(isupports2));
+            if (! isupports2)
+                break;
+
+            nsCOMPtr<nsIRDFResource> source =
+                do_QueryInterface(isupports2);
+
+            if (source == aContainer)
+                // Found it.
+                return OrdinalResourceToIndex(property, aIndex);
+        }
+    }
+
+    return NS_OK;
 }

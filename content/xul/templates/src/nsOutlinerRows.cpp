@@ -345,8 +345,10 @@ nsOutlinerRows::iterator::Next()
         // If there are no unfinished subtrees in the stack, then this
         // iterator is exhausted. Leave it in the same state that
         // Last() does.
-        if (unfinished < 0)
+        if (unfinished < 0) {
+            top.mChildIndex++;
             return;
+        }
 
         // Otherwise, we ran off the end of one of the inner
         // subtrees. Pop up to the next unfinished level in the stack.
