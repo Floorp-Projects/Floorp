@@ -1,0 +1,142 @@
+/* -*- Mode: C; c-basic-offset: 2 -*-
+ *
+ * The contents of this file are subject to the Netscape Public License
+ * Version 1.0 (the "NPL"); you may not use this file except in
+ * compliance with the NPL.  You may obtain a copy of the NPL at
+ * http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the NPL is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
+ * for the specific language governing rights and limitations under the
+ * NPL.
+ *
+ * The Initial Developer of this code under the NPL is Netscape
+ * Communications Corporation.  Portions created by Netscape are
+ * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
+ * Reserved.
+ */
+
+/*
+
+   Style rules specific to the Sidebar.
+
+*/
+
+iframe
+{
+  height: 125px;
+  border: 0px;
+}
+
+treecell
+{ 
+ font-family: Verdana, Sans-Serif;
+ font-size: 8pt;
+} 
+
+treecell[sortActive="true"][sortDirection="ascending"]
+{
+ background-color: green;
+}
+ 
+treecell[sortActive="true"][sortDirection="descending"]
+{
+ background-color: red;
+}
+ 
+treecol[sortActive="true"]
+{
+  background-color: lightgreen;
+}
+
+treehead > treerow > treecell
+{ 
+ background-color: #c0c0c0; 
+ border: outset 1px;
+ border-color: white #707070 #707070 white;
+ vertical-align: middle;
+}
+
+treeitem[container="true"][open="true"][loading="true"] > treerow > treecell > titledbutton
+{
+ list-style-image: url("resource:/res/rdf/loading.gif") ! important ;
+}
+
+treeitem[type="http://home.netscape.com/NC-rdf#FileSystemObject"][container="true"][open="true"] > treerow > treecell > titledbutton
+{
+ list-style-image: url("resource:/res/rdf/folder-open.gif");
+}
+
+treeitem[type="http://home.netscape.com/NC-rdf#FileSystemObject"][container="true"] > treerow > treecell > titledbutton
+{
+ list-style-image: url("resource:/resrdf/folder-closed.gif");
+}
+
+treeitem[type="http://home.netscape.com/NC-rdf#FileSystemObject"] > treerow > treecell > titledbutton
+{
+ list-style-image: url("resource:/res/rdf/article.gif");
+}
+
+treeitem[container="true"][open="true"] > treerow > treecell > titledbutton
+{
+ list-style-image: url("resource:/res/rdf/folder-open.gif");
+}
+
+treeitem[container="true"] > treerow > treecell > titledbutton
+{
+ list-style-image: url("resource:/res/rdf/folder-closed.gif");
+}
+
+treeitem > treerow > treecell > titledbutton
+{
+ height: 16px;
+ width: 16px;
+ color: inherit;
+ border: none;
+ padding: 0px;
+ margin: 0px;
+ font: inherit;
+}
+
+/*
+ *  Sidebar and Panel title buttons
+ */
+box#sidebox
+{
+  width: 100%;
+  height: 100%;
+}
+
+box.sidebartitle
+{
+  background-color: #505888;
+  font: 10pt sans-serif;
+}
+
+box.panelbar
+{
+  background-color: #006870;
+  font: 10pt sans-serif;
+}
+
+div.sidebartitlelabel
+{
+  color: white;
+  padding: 5px;
+  font: 3mm tahoma,arial,helvetica,sans-serif;
+}
+
+titledbutton.paneltitle
+{ 
+  margin: 1px;
+  padding: 1px;
+  color: white;
+  font: 3mm tahoma,arial,helvetica,sans-serif;
+}
+
+treecell titledbutton
+{
+  color: inherit;
+}
+
+

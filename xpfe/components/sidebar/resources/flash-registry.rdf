@@ -1,0 +1,30 @@
+<?xml version="1.0"?> <!-- -*- Mode: SGML; -*- -->
+<RDF:RDF xmlns:RDF="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+         xmlns:NC="http://home.netscape.com/NC-rdf#">
+
+  <RDF:Bag about="NC:FlashDataSources">
+    <RDF:li>
+      <!-- The Tinderbox Flash -->
+      <RDF:Description about="http://cvs-mirror.mozilla.org/webtools/tinderbox/SeaMonkey/flash.rdf">
+        <NC:poll-interval>300</NC:poll-interval>
+      </RDF:Description>
+    </RDF:li>
+    <RDF:li>
+	  <!-- Messenger Flashes -->	 
+      <RDF:Description about="rdf:msgnotifications" />
+    </RDF:li>
+
+    <!-- for testing purposes only -->
+    <!--
+    <RDF:li>
+      <RDF:Description about="chrome://sidebar/content/dummy-flash.rdf">
+        <NC:poll-interval>15</NC:poll-interval>
+      </RDF:Description>
+    </RDF:li>
+    -->
+  </RDF:Bag>
+
+  <RDF:Bag about="NC:FlashStyleSheets">
+  </RDF:Bag>
+</RDF:RDF>
+

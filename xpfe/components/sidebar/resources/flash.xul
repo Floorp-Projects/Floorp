@@ -1,0 +1,74 @@
+<?xml version="1.0"?> <!-- -*- Mode: SGML -*- -->
+<!--
+
+  The contents of this file are subject to the Netscape Public License
+  Version 1.0 (the "NPL"); you may not use this file except in
+  compliance with the NPL.  You may obtain a copy of the NPL at
+  http://www.mozilla.org/NPL/
+
+  Software distributed under the NPL is distributed on an "AS IS" basis,
+  WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
+  for the specific language governing rights and limitations under the
+  NPL.
+
+  The Initial Developer of this code under the NPL is Netscape
+  Communications Corporation.  Portions created by Netscape are
+  Copyright (C) 1998 Netscape Communications Corporation.  All Rights
+  Reserved.
+
+-->
+
+<?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
+<?xml-stylesheet href="chrome://sidebar/skin/" type="text/css"?>
+<?xml-stylesheet href="chrome://sidebar/skin/flash.css" type="text/css"?>
+
+<!DOCTYPE window SYSTEM "chrome://sidebar/locale/flash.dtd" >
+<window
+  xmlns:html="http://www.w3.org/TR/REC-html40"
+  xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+  align="vertical">
+
+  <html:script src="flash.js" />
+
+  <tree id="tree"
+        ref="NC:FlashRoot"
+        flex="100%"
+        style="height: 100%"
+        datasources="rdf:null"
+        rdf:containment="http://home.netscape.com/NC-rdf#child" 
+        onclick="OpenURL(event.target.parentNode.parentNode);">
+
+    <template>
+      <treechildren>
+        <treeitem uri="..." type="rdf:http://home.netscape.com/NC-rdf#type">
+          <treerow>
+            <treecell>
+              <treeindentation />
+              <titledbutton value="rdf:http://home.netscape.com/NC-rdf#source" align="left" />
+            </treecell>
+
+            <treecell>
+              <titledbutton value="rdf:http://home.netscape.com/NC-rdf#description" align="left"
+                            style="list-style-image: none;" />
+            </treecell>
+
+            <treecell>
+              <titledbutton value="rdf:http://home.netscape.com/NC-rdf#timestamp" align="left"
+                            style="list-style-image: none;" />
+            </treecell>
+          </treerow>
+        </treeitem>
+      </treechildren>
+    </template>
+
+    <!-- remove the TREEHEAD when bug 9923 is fixed. -->
+    <treehead>
+      <treerow>
+        <treecell/>
+        <treecell/>
+        <treecell/>
+      </treerow>
+    </treehead>
+  </tree>
+</window>

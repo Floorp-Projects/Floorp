@@ -1,0 +1,25 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
+<?xml-stylesheet href="chrome://sidebar/skin/" type="text/css"?>
+
+<!DOCTYPE window SYSTEM "chrome://sidebar/locale/sidebar-browser.dtd" >
+<window
+  xmlns:html="http://www.w3.org/TR/REC-html40"
+  xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+  onload="Init('chrome://sidebar/content/sidebar-browser.rdf',
+               'NC:BrowserSidebarRoot');" align="vertical">
+
+<html:script src="chrome://sidebar/content/sidebar.js" />
+<box id="sidebox" align="vertical" flex="100%">
+ <box class="sidebartitle">
+  <spring flex="100%"/>
+  <titledbutton class="borderless paneltitle" 
+                value="&sidebar.reload.label;"
+                onclick="window.location.reload()" />
+  <titledbutton class="borderless paneltitle" 
+                value="&sidebar.customize.label;" 
+				onclick="dialogWindow=customize();" />
+ </box>
+</box>
+</window>
