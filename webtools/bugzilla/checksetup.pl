@@ -2782,7 +2782,8 @@ if (!($sth->fetchrow_arrayref()->[0])) {
 
         foreach $key (keys(%dupes))
         {
-                $dupes{$key} =~ s/.*\*\*\* This bug has been marked as a duplicate of (\d{1,5}) \*\*\*.*?/$1/sm;
+                $dupes{$key} =~ /^.*\*\*\* This bug has been marked as a duplicate of (\d+) \*\*\*$/ms;
+                $dupes{$key} = $1;
                 $dbh->do("INSERT INTO duplicates VALUES('$dupes{$key}', '$key')");
                 #                                        BugItsADupeOf   Dupe
         }
