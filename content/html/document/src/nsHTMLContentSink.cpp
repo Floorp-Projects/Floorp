@@ -4402,7 +4402,7 @@ HTMLContentSink::OnStreamComplete(nsIStreamLoader* aLoader,
   if (stringLen) {
 
     PRUnichar *unicodeString = nsnull;
-    PRInt32 unicodeLength;
+    PRInt32 unicodeLength = 0;
     nsAutoString characterSet;
     nsICharsetConverterManager  *charsetConv = nsnull;
     nsCOMPtr<nsIUnicodeDecoder> unicodeDecoder;
@@ -4433,15 +4433,16 @@ HTMLContentSink::OnStreamComplete(nsIStreamLoader* aLoader,
           if (NS_SUCCEEDED(rv)) {
             mUnicodeXferBuf.SetLength(unicodeLength);
           } else {
-            mUnicodeXferBuf.SetLength(0); 
+            mUnicodeXferBuf.SetLength(0);
           }
       }
     }
 
     NS_ASSERTION(NS_SUCCEEDED(rv), "Could not convert Script input to Unicode!");
-    nsAutoString jsUnicodeBuffer(CBufDescriptor(unicodeString, PR_TRUE, unicodeLength+1, unicodeLength));
 
-    if (NS_OK == aStatus) {
+    if ((NS_OK == aStatus) && (NS_SUCCEEDED(rv))) {
+
+      nsAutoString jsUnicodeBuffer(CBufDescriptor(unicodeString, PR_TRUE, unicodeLength+1, unicodeLength));
       PRBool bodyPresent = PreEvaluateScript();
 
       //-- Merge the principal of the script file with that of the document
