@@ -397,6 +397,8 @@ ViewportFrame::Reflow(nsIPresContext&          aPresContext,
     }
   }
 
+  nsRect kidRect(0,0,aReflowState.availableWidth,aReflowState.availableHeight);
+
   if (!isHandled) {
     if ((eReflowReason_Incremental == aReflowState.reason) &&
         (mFixedFrames.ContainsFrame(nextFrame))) {
@@ -437,6 +439,7 @@ ViewportFrame::Reflow(nsIPresContext&          aPresContext,
 
           nsRect  rect(0, 0, kidDesiredSize.width, kidDesiredSize.height);
           kidFrame->SetRect(rect);
+          kidRect = rect;
 
           // XXX We should resolve the details of who/when DidReflow()
           // notifications are sent...
@@ -452,11 +455,23 @@ ViewportFrame::Reflow(nsIPresContext&          aPresContext,
     }
   }
 
-  // Return the max size as our desired size
-  aDesiredSize.width = aReflowState.availableWidth;
-  aDesiredSize.height = aReflowState.availableHeight;
-  aDesiredSize.ascent = aReflowState.availableHeight;
-  aDesiredSize.descent = 0;
+  // If we were flowed initially at both an unconstrained width and height, 
+  // this is a hint that we should return our child's intrinsic size.
+  if (eReflowReason_Initial == aReflowState.reason &&
+      aReflowState.availableWidth == NS_UNCONSTRAINEDSIZE &&
+      aReflowState.availableHeight == NS_UNCONSTRAINEDSIZE) {
+    aDesiredSize.width = kidRect.width;
+    aDesiredSize.height = kidRect.height;
+    aDesiredSize.ascent = kidRect.height;
+    aDesiredSize.descent = 0;
+  }
+  else {
+    // Return the max size as our desired size
+    aDesiredSize.width = aReflowState.availableWidth;
+    aDesiredSize.height = aReflowState.availableHeight;
+    aDesiredSize.ascent = aReflowState.availableHeight;
+    aDesiredSize.descent = 0;
+  }
 
   NS_FRAME_TRACE_REFLOW_OUT("ViewportFrame::Reflow", aStatus);
   return NS_OK;

@@ -276,8 +276,8 @@ nsMessenger::Open3PaneWindow()
                                    getter_AddRefs(newWindow),   // result widget
                                    nsnull,      // observer
                                    nsnull,      // callbacks
-                                   200,         // width
-                                   200);        // height
+                                   NS_SIZETOCONTENT,         // width
+                                   NS_SIZETOCONTENT);        // height
 	done:
 	NS_IF_RELEASE(url);
 	return NS_OK;

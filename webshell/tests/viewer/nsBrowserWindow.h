@@ -87,8 +87,9 @@ public:
   
   // nsIBrowserWindow
   NS_IMETHOD MoveTo(PRInt32 aX, PRInt32 aY);
-  NS_IMETHOD SizeTo(PRInt32 aWidth, PRInt32 aHeight);
-  NS_IMETHOD GetBounds(nsRect& aBounds);
+  NS_IMETHOD SizeContentTo(PRInt32 aWidth, PRInt32 aHeight);
+  NS_IMETHOD SizeWindowTo(PRInt32 aWidth, PRInt32 aHeight);
+  NS_IMETHOD GetContentBounds(nsRect& aBounds);
   NS_IMETHOD GetWindowBounds(nsRect& aBounds);
   NS_IMETHOD Show();
   NS_IMETHOD Hide();

@@ -1009,7 +1009,7 @@ nsIWebShellWindow* FindWebShellWindow(nsIXULWindowCallbacks* inCallbacks)
     	&aWindow,
         nsnull,
         inCallbacks, // callbacks
-        windowWidth, windowHeight);
+        NS_SIZETOCONTENT, NS_SIZETOCONTENT);
 	if (NS_FAILED(rv))
 		return nsnull;
 	return aWindow;

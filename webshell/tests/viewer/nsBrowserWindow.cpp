@@ -1526,7 +1526,7 @@ nsBrowserWindow::MoveTo(PRInt32 aX, PRInt32 aY)
 }
 
 NS_IMETHODIMP
-nsBrowserWindow::SizeTo(PRInt32 aWidth, PRInt32 aHeight)
+nsBrowserWindow::SizeContentTo(PRInt32 aWidth, PRInt32 aHeight)
 {
   NS_PRECONDITION(nsnull != mWindow, "null window");
 
@@ -1538,7 +1538,13 @@ nsBrowserWindow::SizeTo(PRInt32 aWidth, PRInt32 aHeight)
 }
 
 NS_IMETHODIMP
-nsBrowserWindow::GetBounds(nsRect& aBounds)
+nsBrowserWindow::SizeWindowTo(PRInt32 aWidth, PRInt32 aHeight)
+{
+  return SizeContentTo(aWidth, aHeight);
+}
+
+NS_IMETHODIMP
+nsBrowserWindow::GetContentBounds(nsRect& aBounds)
 {
   mWindow->GetClientBounds(aBounds);
   return NS_OK;
@@ -1769,7 +1775,7 @@ nsBrowserWindow::NewWebShell(PRUint32 aChromeMask,
   if (nsnull != browser)
   {
     nsRect  bounds;
-    GetBounds(bounds);
+    GetContentBounds(bounds);
 
     browser->SetApp(mApp);
 

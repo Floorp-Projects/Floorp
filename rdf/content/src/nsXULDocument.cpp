@@ -107,6 +107,7 @@
 #include "rdfutil.h"
 #include "rdf.h"
 
+#include "nsIFrameReflow.h"
 #include "nsIDOMXULFocusTracker.h"
 #include "nsIXULFocusTracker.h"
 #include "nsIDOMEventCapturer.h"
@@ -3951,43 +3952,49 @@ XULDocumentImpl::StartLayout(void)
 
     PRInt32 count = GetNumberOfShells();
     for (PRInt32 i = 0; i < count; i++) {
-        nsIPresShell* shell = GetShellAt(i);
-        if (nsnull == shell)
-            continue;
+      nsIPresShell* shell = GetShellAt(i);
+      if (nsnull == shell)
+          continue;
 
-        // Resize-reflow this time
-        nsCOMPtr<nsIPresContext> cx;
-        shell->GetPresContext(getter_AddRefs(cx));
+      // Resize-reflow this time
+      nsCOMPtr<nsIPresContext> cx;
+      shell->GetPresContext(getter_AddRefs(cx));
 
-		if (cx) {
-			nsCOMPtr<nsISupports> container;
-			cx->GetContainer(getter_AddRefs(container));
-			if (container) {
-			  nsCOMPtr<nsIWebShell> webShell;
-			  webShell = do_QueryInterface(container);
-			  if (webShell) {
-					webShell->SetScrolling(NS_STYLE_OVERFLOW_HIDDEN);
+		  if (cx) {
+			  nsCOMPtr<nsISupports> container;
+			  cx->GetContainer(getter_AddRefs(container));
+			  if (container) {
+			    nsCOMPtr<nsIWebShell> webShell;
+			    webShell = do_QueryInterface(container);
+			    if (webShell) {
+					  webShell->SetScrolling(NS_STYLE_OVERFLOW_HIDDEN);
+			    }
 			  }
-			}
-		}
+		  }
         
-		nsRect r;
-        cx->GetVisibleArea(r);
-        shell->InitialReflow(r.width, r.height);
+		  nsRect r;
+      cx->GetVisibleArea(r);
+      if (r.width == 0 || r.height == 0) {
+        // Flow at an unconstrained width and height
+        r.width = NS_UNCONSTRAINEDSIZE;
+        r.height = NS_UNCONSTRAINEDSIZE;
+      }
 
-        // Now trigger a refresh
-        nsCOMPtr<nsIViewManager> vm;
-        shell->GetViewManager(getter_AddRefs(vm));
-        if (vm) {
-            vm->EnableRefresh();
-        }
+      shell->InitialReflow(r.width, r.height);
 
-        // Start observing the document _after_ we do the initial
-        // reflow. Otherwise, we'll get into an trouble trying to
-        // create kids before the root frame is established.
-        shell->BeginObservingDocument();
+      // Now trigger a refresh
+      nsCOMPtr<nsIViewManager> vm;
+      shell->GetViewManager(getter_AddRefs(vm));
+      if (vm) {
+          vm->EnableRefresh();
+      }
 
-        NS_RELEASE(shell);
+      // Start observing the document _after_ we do the initial
+      // reflow. Otherwise, we'll get into an trouble trying to
+      // create kids before the root frame is established.
+      shell->BeginObservingDocument();
+
+      NS_RELEASE(shell);
     }
     return NS_OK;
 }

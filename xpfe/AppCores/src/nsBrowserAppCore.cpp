@@ -434,7 +434,7 @@ newWind(char* urlName)
 
   nsCOMPtr<nsIWebShellWindow> newWindow;
   appShell->CreateTopLevelWindow(nsnull, url, PR_TRUE, getter_AddRefs(newWindow),
-              nsnull, nsnull, 615, 480);
+              nsnull, nsnull, NS_SIZETOCONTENT, NS_SIZETOCONTENT);
 
   NS_RELEASE(url);
   
@@ -1537,7 +1537,7 @@ nsBrowserAppCore::NewWindow()
 
   nsCOMPtr<nsIWebShellWindow> newWindow;
   appShell->CreateTopLevelWindow(nsnull, url, PR_TRUE, getter_AddRefs(newWindow),
-              nsnull, nsnull, 615, 480);
+              nsnull, nsnull, NS_SIZETOCONTENT, NS_SIZETOCONTENT);
   NS_RELEASE(url);
   
   return NS_OK;

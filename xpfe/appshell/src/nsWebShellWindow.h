@@ -125,6 +125,8 @@ public:
                       nsWidgetInitData& widgetInitData);
   nsIWidget* GetWidget(void) { return mWindow; }
 
+  void SetIntrinsicallySized(PRBool isIntrinsicallySized) { mIntrinsicallySized = isIntrinsicallySized; };
+
   void DoContextMenu(
 	  nsMenuEvent * aMenuEvent,
 	  nsIDOMNode  * aMenuNode, 
@@ -224,8 +226,9 @@ public:
                   PRUint32 aChromeMask,
                   PRBool aAllowPlugins = PR_TRUE);
   NS_IMETHOD MoveTo(PRInt32 aX, PRInt32 aY);
-  NS_IMETHOD SizeTo(PRInt32 aWidth, PRInt32 aHeight);
-  NS_IMETHOD GetBounds(nsRect& aResult);
+  NS_IMETHOD SizeContentTo(PRInt32 aWidth, PRInt32 aHeight);
+  NS_IMETHOD SizeWindowTo(PRInt32 aWidth, PRInt32 aHeight);
+  NS_IMETHOD GetContentBounds(nsRect& aResult);
   NS_IMETHOD GetWindowBounds(nsRect& aResult);
   NS_IMETHOD Show() { Show(PR_TRUE); return NS_OK; }
   NS_IMETHOD Hide() { Show(PR_FALSE); return NS_OK; }
@@ -285,6 +288,9 @@ protected:
   nsIDOMNode * contextMenuTest;
 
   nsString mStatus;
+
+  PRBool mIntrinsicallySized; // Whether or not this window gets sized to its content.
+
 private:
 
   static void * HandleModalDialogEvent(PLEvent *aEvent);

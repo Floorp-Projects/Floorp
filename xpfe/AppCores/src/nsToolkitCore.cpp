@@ -214,7 +214,7 @@ nsToolkitCore::ShowWindow(const nsString& aUrl, nsIDOMWindow* aParent) {
   DOMWindowToWebShellWindow(aParent, &parent);
   nsCOMPtr<nsIWebShellWindow> window;
   appShell->CreateTopLevelWindow(parent, urlObj, PR_TRUE, getter_AddRefs(window),
-                               nsnull, nsnull, 615, 480);
+                               nsnull, nsnull, NS_SIZETOCONTENT, NS_SIZETOCONTENT);
 
   if (window)
     window->Show(PR_TRUE);
@@ -339,7 +339,7 @@ nsToolkitCore::ShowWindowWithArgs(const nsString& aUrl,
 
   nsCOMPtr<nsIWebShellWindow>  window;
   appShell->CreateTopLevelWindow(parent, urlObj, PR_TRUE, getter_AddRefs(window),
-                               nsnull, cb, 615, 650);
+                               nsnull, cb, NS_SIZETOCONTENT, NS_SIZETOCONTENT);
 
   if (window)
     window->Show(PR_TRUE);
