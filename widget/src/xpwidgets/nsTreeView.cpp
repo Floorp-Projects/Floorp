@@ -646,7 +646,7 @@ void nsTreeView::PaintTreeRows(nsIRenderingContext* drawCtx,
 	if (yPosition < rect.y + rect.height)
 	{
 		// Fill the remaining area. TODO: Account for sort highlighting
-		nsRect remainderRect(0, yPosition, rect.width, rect.height - yPosition);
+		nsRect remainderRect(0, yPosition, rect.width, rect.height);
 		nscolor viewBGColor = NS_RGB(240,240,240);
 		drawCtx->SetColor(viewBGColor);
 		drawCtx->FillRect(remainderRect);
