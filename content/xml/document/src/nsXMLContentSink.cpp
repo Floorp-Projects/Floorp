@@ -1363,6 +1363,10 @@ nsXMLContentSink::ReportError(const PRUnichar* aErrorText,
 
   mState = eXMLContentSinkState_InProlog;
 
+  // Since we're blowing away all the content we've created up to now,
+  // blow away our namespace stack too.
+  mNameSpaceStack.Clear();
+
   // Clear the current content and
   // prepare to set <parsererror> as the document root
   nsCOMPtr<nsIDOMNode> node(do_QueryInterface(mDocument));
