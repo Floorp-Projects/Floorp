@@ -52,17 +52,13 @@
 #include "imgILoader.h"
 #include "imgIContainer.h"
 #include "imgIDecoderObserver.h"
-#include "nsIURL.h"
 #include "nsIPresShell.h"
 #include "nsIPresContext.h"
 #include "nsStyleContext.h"
-#include "nsIStringBundle.h"
 #include "nsIPrefService.h"
-#include "nsITextToSubURI.h"
 #include "nsAutoPtr.h"
 #include "nsMediaDocument.h"
 
-#define NSIMAGEDOCUMENT_PROPERTIES_URI "chrome://communicator/locale/layout/ImageDocument.properties"
 #define AUTOMATIC_IMAGE_RESIZING_PREF "browser.enable_automatic_image_resizing"
 
 class nsImageDocument;
@@ -89,8 +85,7 @@ public:
 
   NS_DECL_ISUPPORTS
 
-  // nsIHTMLDocument
-  nsresult Init();
+  virtual nsresult Init();
 
   NS_IMETHOD StartDocumentLoad(const char*         aCommand,
                                nsIChannel*         aChannel,
@@ -117,15 +112,14 @@ protected:
 
   nsresult CheckOverflowing();
 
-  nsresult UpdateTitle();
+  void UpdateTitleAndCharset();
 
-  nsCOMPtr<nsIStringBundle>     mStringBundle;
   nsCOMPtr<nsIDOMElement>       mImageElement;
 
-  nscoord                       mVisibleWidth;
-  nscoord                       mVisibleHeight;
-  nscoord                       mImageWidth;
-  nscoord                       mImageHeight;
+  PRInt32                       mVisibleWidth;
+  PRInt32                       mVisibleHeight;
+  PRInt32                       mImageWidth;
+  PRInt32                       mImageHeight;
 
   PRPackedBool                  mImageResizingEnabled;
   PRPackedBool                  mImageIsOverflowing;
@@ -174,7 +168,7 @@ ImageListener::OnStopRequest(nsIRequest* request, nsISupports *ctxt,
 {
   NS_ENSURE_TRUE(mDocument, NS_ERROR_FAILURE);
   nsImageDocument *imgDoc = (nsImageDocument*)mDocument.get();
-  imgDoc->UpdateTitle();
+  imgDoc->UpdateTitleAndCharset();
   
   nsCOMPtr<nsIImageLoadingContent> imageLoader = do_QueryInterface(imgDoc->mImageElement);
   NS_ENSURE_TRUE(imageLoader, NS_ERROR_UNEXPECTED);
@@ -215,7 +209,7 @@ NS_INTERFACE_MAP_END_INHERITING(nsMediaDocument)
 nsresult
 nsImageDocument::Init()
 {
-  nsresult rv = nsHTMLDocument::Init();
+  nsresult rv = nsMediaDocument::Init();
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIPrefBranch> prefBranch(do_GetService(NS_PREFSERVICE_CONTRACTID));
@@ -225,13 +219,6 @@ nsImageDocument::Init()
     mImageResizingEnabled = temp;
   }
 
-  // Create a bundle for the localization
-  nsCOMPtr<nsIStringBundleService> stringService(
-    do_GetService(NS_STRINGBUNDLE_CONTRACTID));
-  if (stringService) {
-    stringService->CreateBundle(NSIMAGEDOCUMENT_PROPERTIES_URI,
-                                getter_AddRefs(mStringBundle));
-  }
 
   return NS_OK;
 }
@@ -574,127 +561,55 @@ nsImageDocument::CheckOverflowing()
   return NS_OK;
 }
 
-nsresult
-nsImageDocument::UpdateTitle()
+void 
+nsImageDocument::UpdateTitleAndCharset()
 {
-  if (mStringBundle) {
-    nsXPIDLString fileStr;
-    nsAutoString widthStr;
-    nsAutoString heightStr;
-    nsAutoString typeStr;
-    nsXPIDLString valUni;
-
-    nsCOMPtr<nsIURL> url = do_QueryInterface(mDocumentURL);
-    if (url) {
-      nsresult rv;
-      nsCAutoString fileName;
-      url->GetFileName(fileName);
-      nsCOMPtr<nsITextToSubURI> textToSubURI =
-        do_GetService(NS_ITEXTTOSUBURI_CONTRACTID, &rv);
-      if (NS_SUCCEEDED(rv))
-      {
-        nsCAutoString originCharset;
-        rv = url->GetOriginCharset(originCharset);
-        if (NS_SUCCEEDED(rv))
-          rv = textToSubURI->UnEscapeURIForUI(originCharset, fileName, fileStr);
-      }
-      if (NS_FAILED(rv))
-        fileStr.Assign(NS_ConvertUTF8toUCS2(fileName));
-    }
-
-    widthStr.AppendInt(mImageWidth);
-    heightStr.AppendInt(mImageHeight);
-
-    nsCOMPtr<imgIRequest> imageRequest;
-    nsCOMPtr<nsIImageLoadingContent> imageLoader = do_QueryInterface(mImageElement);
-    if (imageLoader) {
-      imageLoader->GetRequest(nsIImageLoadingContent::CURRENT_REQUEST,
-                              getter_AddRefs(imageRequest));
-    }
+  nsCAutoString typeStr;
+  nsCOMPtr<imgIRequest> imageRequest;
+  nsCOMPtr<nsIImageLoadingContent> imageLoader = do_QueryInterface(mImageElement);
+  if (imageLoader) {
+    imageLoader->GetRequest(nsIImageLoadingContent::CURRENT_REQUEST,
+                            getter_AddRefs(imageRequest));
+  }
     
-    if (imageRequest) {
-      nsXPIDLCString mimeType;
-      imageRequest->GetMimeType(getter_Copies(mimeType));
-      ToUpperCase(mimeType);
-      nsXPIDLCString::const_iterator start, end;
-      mimeType.BeginReading(start);
-      mimeType.EndReading(end);
-      nsXPIDLCString::const_iterator iter = end;
-      if (FindInReadable(NS_LITERAL_CSTRING("IMAGE/"), start, iter) &&
-          iter != end) {
-        // strip out "X-" if any
-        if (*iter == 'X') {
+  if (imageRequest) {
+    nsXPIDLCString mimeType;
+    imageRequest->GetMimeType(getter_Copies(mimeType));
+    ToUpperCase(mimeType);
+    nsXPIDLCString::const_iterator start, end;
+    mimeType.BeginReading(start);
+    mimeType.EndReading(end);
+    nsXPIDLCString::const_iterator iter = end;
+    if (FindInReadable(NS_LITERAL_CSTRING("IMAGE/"), start, iter) && 
+        iter != end) {
+      // strip out "X-" if any
+      if (*iter == 'X') {
+        ++iter;
+        if (iter != end && *iter == '-') {
           ++iter;
-          if (iter != end && *iter == '-') {
-            ++iter;
-            if (iter == end) {
-              // looks like "IMAGE/X-" is the type??  Bail out of here.
-              mimeType.BeginReading(iter);
-            }
-          } else {
-            --iter;
+          if (iter == end) {
+            // looks like "IMAGE/X-" is the type??  Bail out of here.
+            mimeType.BeginReading(iter);
           }
+        } else {
+          --iter;
         }
-        CopyASCIItoUCS2(Substring(iter, end), typeStr);
-      } else {
-        CopyASCIItoUCS2(mimeType, typeStr);
       }
-    }
-
-    // If we got a filename, display it
-    if (!fileStr.IsEmpty()) {
-      // if we got a valid size (sometimes we do not) then display it
-      if (mImageWidth != 0 && mImageHeight != 0){
-        const PRUnichar *formatStrings[4] =
-          {
-            fileStr.get(),
-            typeStr.get(),
-            widthStr.get(),
-            heightStr.get()
-          };
-        NS_NAMED_LITERAL_STRING(str, "ImageTitleWithDimensionsAndFile");
-        mStringBundle->FormatStringFromName(str.get(), formatStrings, 4,
-                                            getter_Copies(valUni));
-      } else {
-        const PRUnichar *formatStrings[2] =
-          {
-            fileStr.get(),
-            typeStr.get()
-          };
-        NS_NAMED_LITERAL_STRING(str, "ImageTitleWithoutDimensions");
-        mStringBundle->FormatStringFromName(str.get(), formatStrings, 2,
-                                            getter_Copies(valUni));
-      }
+      typeStr = Substring(iter, end);
     } else {
-      // if we got a valid size (sometimes we do not) then display it
-      if (mImageWidth != 0 && mImageHeight != 0){
-        const PRUnichar *formatStrings[3] =
-          {
-            typeStr.get(),
-            widthStr.get(),
-            heightStr.get()
-          };
-        NS_NAMED_LITERAL_STRING(str, "ImageTitleWithDimensions");
-        mStringBundle->FormatStringFromName(str.get(), formatStrings, 3,
-                                            getter_Copies(valUni));
-      } else {
-        const PRUnichar *formatStrings[1] =
-          {
-            typeStr.get()
-          };
-        NS_NAMED_LITERAL_STRING(str, "ImageTitleWithNeitherDimensionsNorFile");
-        mStringBundle->FormatStringFromName(str.get(), formatStrings, 1,
-                                            getter_Copies(valUni));
-      }
-    }
-
-    if (valUni) {
-      // set it on the document
-      SetTitle(valUni);
+      typeStr = mimeType;
     }
   }
+  static const char* const formatNames[4] = 
+  {
+    "ImageTitleWithNeitherDimensionsNorFile",
+    "ImageTitleWithoutDimensions",
+    "ImageTitleWithDimesions",
+    "ImageTitleWithDimensionsAndFile",
+  };
 
-  return NS_OK;
+  nsMediaDocument::UpdateTitleAndCharset(typeStr, formatNames, 
+                                         mImageWidth, mImageHeight);
 }
 
 

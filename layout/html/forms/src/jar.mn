@@ -1,5 +1,4 @@
 en-US.jar:
         locale/en-US/communicator/layout/HtmlForm.properties
-        locale/en-US/communicator/layout/ImageDocument.properties
 
 

@@ -64,10 +64,11 @@ public:
   NS_IMETHOD SetScriptGlobalObject(nsIScriptGlobalObject* aScriptGlobalObject);
 
 protected:
-  nsresult CreateSyntheticPluginDocument(nsACString &aMimeType);
+  nsresult CreateSyntheticPluginDocument();
 
   nsCOMPtr<nsIHTMLContent>                 mPluginContent;
   nsRefPtr<nsMediaDocumentStreamListener>  mStreamListener;
+  nsCString                                mMimeType;
 };
 
 
@@ -76,10 +77,6 @@ protected:
 
 nsPluginDocument::nsPluginDocument()
 {
-
-  // NOTE! nsDocument::operator new() zeroes out all members, so don't
-  // bother initializing members to 0.
-
 }
 
 nsPluginDocument::~nsPluginDocument()
@@ -121,14 +118,13 @@ nsPluginDocument::StartDocumentLoad(const char*         aCommand,
     return rv;
   }
 
-  nsCAutoString mimeType;
-  rv = aChannel->GetContentType(mimeType);
+  rv = aChannel->GetContentType(mMimeType);
   if (NS_FAILED(rv)) {
     return rv;
   }
 
   // Create synthetic document
-  rv = CreateSyntheticPluginDocument(mimeType);
+  rv = CreateSyntheticPluginDocument();
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -143,7 +139,7 @@ nsPluginDocument::StartDocumentLoad(const char*         aCommand,
 }
 
 nsresult
-nsPluginDocument::CreateSyntheticPluginDocument(nsACString &aMimeType)
+nsPluginDocument::CreateSyntheticPluginDocument()
 {
   // do not allow message panes to host full-page plugins
   // returning an error causes helper apps to take over
@@ -202,7 +198,7 @@ nsPluginDocument::CreateSyntheticPluginDocument(nsACString &aMimeType)
   mPluginContent->SetHTMLAttribute(nsHTMLAtoms::src, val, PR_FALSE);
 
   // set mime type
-  val.SetStringValue(NS_ConvertUTF8toUCS2(aMimeType));
+  val.SetStringValue(NS_ConvertUTF8toUCS2(mMimeType));
   mPluginContent->SetHTMLAttribute(nsHTMLAtoms::type, val, PR_FALSE);
 
   body->AppendChildTo(mPluginContent, PR_FALSE, PR_FALSE);
@@ -218,8 +214,7 @@ nsPluginDocument::SetStreamListener(nsIStreamListener *aListener)
   if (mStreamListener)
     mStreamListener->SetStreamListener(aListener);
 
-  nsAutoString title;
-  SetTitle(title);
+  nsMediaDocument::UpdateTitleAndCharset(mMimeType);
 
   return NS_OK;
 }
