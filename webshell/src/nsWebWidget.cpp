@@ -85,7 +85,8 @@ public:
 
   virtual void DumpContent(FILE* out);
   virtual void DumpFrames(FILE* out);
-  virtual void DumpStyle(FILE* out);
+  virtual void DumpStyleSheets(FILE* out = nsnull);
+  virtual void DumpStyleContexts(FILE* out = nsnull);
   virtual void DumpViews(FILE* out);
   virtual void ShowFrameBorders(PRBool aEnable);
   virtual PRBool GetShowFrameBorders();
@@ -548,7 +549,7 @@ void WebWidgetImpl::DumpFrames(FILE* out)
   }
 }
 
-void WebWidgetImpl::DumpStyle(FILE* out)
+void WebWidgetImpl::DumpStyleSheets(FILE* out)
 {
   if (nsnull == out) {
     out = stdout;
@@ -559,6 +560,24 @@ void WebWidgetImpl::DumpStyle(FILE* out)
       fputs("null style set\n", out);
     } else {
       styleSet->List(out);
+      NS_RELEASE(styleSet);
+    }
+  } else {
+    fputs("null pres shell\n", out);
+  }
+}
+
+void WebWidgetImpl::DumpStyleContexts(FILE* out)
+{
+  if (nsnull == out) {
+    out = stdout;
+  }
+  if (nsnull != mPresShell) {
+    nsIStyleSet* styleSet = mPresShell->GetStyleSet();
+    if (nsnull == styleSet) {
+      fputs("null style set\n", out);
+    } else {
+      styleSet->ListContexts(out);
       NS_RELEASE(styleSet);
     }
   } else {

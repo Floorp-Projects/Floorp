@@ -1,6 +1,20 @@
 <html>
 <head>
 <title>Example 0</title>
+<style>
+ a#id.foo:visited:first-line { color: red; }
+ a#id.foo:first-line { color: red; }
+ a#id.foo:visited { color: red; }
+ a#id:first-line { color: red; }
+ a#id:visited { color: red; }
+ a:first-line { color: red; }
+ a:visited { color: red; }
+ a:visited:first-line { color: red; }
+ a:visited:visited { color: red; }
+ a:first-line:visited { color: red; }
+ :active { color: blue; }
+ :first-letter { color: green; }
+</style>
 </head>
 
 <body bgcolor="#FFFFFF">

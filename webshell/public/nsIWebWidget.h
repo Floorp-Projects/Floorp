@@ -62,7 +62,9 @@ public:
 
   virtual void DumpFrames(FILE* out = nsnull) = 0;
 
-  virtual void DumpStyle(FILE* out = nsnull) = 0;
+  virtual void DumpStyleSheets(FILE* out = nsnull) = 0;
+
+  virtual void DumpStyleContexts(FILE* out = nsnull) = 0;
 
   virtual void DumpViews(FILE* out = nsnull) = 0;
 
