@@ -40,6 +40,7 @@ class nsIContent;
 class nsIFormControlFrame : public nsISupports {
 
 public:
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IFORMCONTROLFRAME_IID)
 
   NS_IMETHOD GetType(PRInt32* aType) const =  0;
 

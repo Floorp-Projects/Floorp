@@ -42,6 +42,7 @@ class nsVoidArray;
 class nsIComboboxControlFrame : public nsISupports {
 
 public:
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_ICOMBOBOXCONTROLFRAME_IID)
 
   /**
    * Sets the Drop Down List
