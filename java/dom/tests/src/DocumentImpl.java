@@ -89,4 +89,9 @@ public class DocumentImpl extends NodeImpl implements Document, DocumentEvent {
     public NodeList getElementsByTagNameNS(String namespaceURI, String localName) {
         throw new UnsupportedOperationException();
     }
+
+   public Element getElementById(String elementId) {
+        throw new UnsupportedOperationException();
+    };
+
 }
