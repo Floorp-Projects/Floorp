@@ -1369,13 +1369,13 @@ static JSFunctionSpec array_methods[] = {
     {"pop",                 array_pop,              0,0,0},
     {"shift",               array_shift,            0,0,0},
     {"unshift",             array_unshift,          1,0,0},
-    {"splice",              array_splice,           1,0,0},
+    {"splice",              array_splice,           2,0,0},
 #endif
 
     /* Python-esque sequence methods. */
 #if JS_HAS_SEQUENCE_OPS
-    {"concat",              array_concat,           0,0,0},
-    {"slice",               array_slice,            0,0,0},
+    {"concat",              array_concat,           1,0,0},
+    {"slice",               array_slice,            2,0,0},
 #endif
 
     {0,0,0,0,0}
