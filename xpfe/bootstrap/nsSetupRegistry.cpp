@@ -30,6 +30,7 @@
 #include "nsFileSpec.h"
 #include "nsFileLocations.h"
 #include "nsIFileLocator.h"
+#include "nsIFileSpec.h"
 
 #include "nsAppCoresCIDs.h"
 #include "nsIDOMAppCoresManager.h"
@@ -90,14 +91,14 @@ nsresult NS_AutoregisterComponents()
 {
   nsresult rv = NS_ERROR_FAILURE;
 
-  NS_WITH_SERVICE(nsIFileLocator, locator, kFileLocatorCID, &rv);
-
-  if (NS_FAILED(rv))
-    return rv;
+  nsIFileSpec* spec = NS_LocateFileOrDirectory(
+  							nsSpecialFileSpec::App_UserProfileDirectory50);
+  if (!spec)
+  	return NS_ERROR_FAILURE;
 
   nsFileSpec sysdir;
-  rv = locator->GetFileLocation(nsSpecialFileSpec::App_ComponentsDirectory, &sysdir);
-
+  rv = spec->GetFileSpec(&sysDir);
+  NS_RELEASE(spec);
   if (NS_FAILED(rv))
     return rv;
 
