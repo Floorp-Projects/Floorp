@@ -20,7 +20,25 @@
 	<!-- Help Menu -->
 	<menu id="helpMenu" value="&helpMenu.label;">
 	  <menupopup>
+		<menu value="&helpContentCmd.label;">
+			<menupopup>
+			  <menuitem value="&webBrowsingCmd.label;" oncommand="window.content.location.href='http://www.mozilla.org/projects/user-docs/local/browserhelp/navtop.html'"/>
+			  <menuitem value="&emailCmd.label;" oncommand="window.content.location.href='http://www.mozilla.org/projects/user-docs/local/mailhelp/mailtop.html'"/>
+			  <menuitem value="&internetShopCmd.label;" oncommand="window.content.location.href='http://www.mozilla.org/projects/user-docs/served/shophelp/shoptop.html'"/>
+			  <menuitem value="&customCmd.label;" oncommand="window.content.location.href='http://www.mozilla.org/projects/user-docs/served/custhelp/custtop.html'"/>
+			  <menuseparator/>
+			  <menuitem value="&softUpdatesCmd.label;" oncommand="window.content.location.href='http://www.mozilla.org/projects/user-docs/served/updatehelp/updatetop.html'"/>
+			  <menuitem value="&connProbCmd.label;" oncommand="window.content.location.href='http://www.mozilla.org/projects/user-docs/local/troubleshoot/troubletop.html'"/>
+			  <menuitem value="&secPrivCmd.label;" oncommand="window.content.location.href='http://home.netscape.com/security/basics/index.html'"/>
+			 </menupopup>
+		</menu>
 		<menuseparator/>
+		<menuitem value="&whatNewCmd.label;" oncommand="window.content.location.href='http://www.mozilla.org/projects/user-docs/served/whatsnew/newtop.html'"/>
+			  <menuitem value="&newTutorCmd.label;" oncommand="window.content.location.href='http://home.netscape.com/netcenter/newnet/index.html'"/>
+			  <menuitem value="&supportChannelCmd.label;" oncommand="window.content.location.href='http://home.netscape.com/support/index.html'"/>
+		<menuseparator/>
+			<menuitem value="&interUsersCmd.label;" oncommand="window.content.location.href='http://home.netscape.com/menu/intl/'"/>
+			  <menuitem value="&aboutCommCmd.label;" oncommand="window.content.location.href='about:'"/>
 			   
 
 

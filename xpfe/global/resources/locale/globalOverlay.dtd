@@ -18,3 +18,17 @@
 <!ENTITY aboutPluginsCmd.label				".About Plug-ins">  
 <!ENTITY aboutFontCmd.label					".About Font Displayers">  
 <!ENTITY aboutCmd.label						".About Communicator...">  
+
+
+<!ENTITY webBrowsingCmd.label			        "Web Browsing">  
+<!ENTITY emailCmd.label					"Email">  
+<!ENTITY internetShopCmd.label				"Internet Shopping">  
+<!ENTITY customCmd.label				"Customization">  
+<!ENTITY softUpdatesCmd.label				"Software Updates"> 
+<!ENTITY connProbCmd.label				"Connection Problems">  
+<!ENTITY secPrivCmd.label				"Security and Privacy">  
+<!ENTITY whatNewCmd.label				"What's New in 5.0">  
+<!ENTITY newTutorCmd.label				"New to Netscape Tutorial">  
+<!ENTITY supportChannelCmd.label			"Support Channel"> 
+<!ENTITY interUsersCmd.label				"International Users">  
+<!ENTITY aboutCommCmd.label				"About Communicator">
