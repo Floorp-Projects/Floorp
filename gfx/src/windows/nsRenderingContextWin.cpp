@@ -1426,8 +1426,17 @@ NS_IMETHODIMP nsRenderingContextWin :: GetWidth(const char* aString,
                                                 PRUint32 aLength,
                                                 nscoord& aWidth)
 {
+
   if (nsnull != mFontMetrics)
   {
+      // Check for the very common case of trying to get the width of a single
+      // space.
+    if ((1 == aLength) && (aString[0] == ' '))
+    {
+      nsFontMetricsWin* fontMetricsWin = (nsFontMetricsWin*)mFontMetrics;
+      return fontMetricsWin->GetSpaceWidth(aWidth);
+    }
+
     SIZE  size;
 
     SetupFontAndColor();

@@ -31,6 +31,7 @@ PLHashTable* nsFontMetricsWin::gFamilyNames = nsnull;
 nsFontMetricsWin :: nsFontMetricsWin()
 {
   NS_INIT_REFCNT();
+  mSpaceWidth = 0;
 }
   
 nsFontMetricsWin :: ~nsFontMetricsWin()
@@ -123,6 +124,12 @@ NS_IMETHODIMP
 nsFontMetricsWin :: Destroy()
 {
   mDeviceContext = nsnull;
+  return NS_OK;
+}
+
+nsresult nsFontMetricsWin :: GetSpaceWidth(nscoord &aSpaceWidth)
+{
+  aSpaceWidth = mSpaceWidth;
   return NS_OK;
 }
 
@@ -903,6 +910,11 @@ HDC   dc1 = NULL;
   mMaxAscent = NSToCoordRound(metrics.tmAscent * dev2app);
   mMaxDescent = NSToCoordRound(metrics.tmDescent * dev2app);
   mMaxAdvance = NSToCoordRound(metrics.tmMaxCharWidth * dev2app);
+
+   // Cache the width of a single space.
+  SIZE  size;
+  ::GetTextExtentPoint32(dc, " ", 1, &size);
+  mSpaceWidth = NSToCoordRound(size.cx * dev2app);
 
   ::SelectObject(dc, oldfont);
 

@@ -81,6 +81,7 @@ public:
   NS_IMETHOD  GetFont(const nsFont *&aFont);
   NS_IMETHOD  GetFontHandle(nsFontHandle &aHandle);
 
+  virtual nsresult   GetSpaceWidth(nscoord &aSpaceWidth);
   virtual nsFontWin* FindGlobalFont(HDC aDC, PRUnichar aChar);
   virtual nsFontWin* FindLocalFont(HDC aDC, PRUnichar aChar);
   nsFontWin*         FindFont(HDC aDC, PRUnichar aChar);
@@ -96,6 +97,7 @@ public:
   PRUint16            mFontsAlloc;
   PRUint16            mFontsCount;
   PRUint16            mFontsIndex;
+  nscoord						  mSpaceWidth;
 
   static nsGlobalFont* gGlobalFonts;
   static int gGlobalFontsCount;
