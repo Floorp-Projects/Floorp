@@ -136,6 +136,7 @@ public:
 
   nsHankakuToZenkaku() ;
   virtual ~nsHankakuToZenkaku() ;
+  NS_IMETHOD Change( const PRUnichar* aText, PRInt32 aTextLength, nsString& aResult);
   NS_IMETHOD Change( nsString& aText, nsString& aResult);
 
 };
@@ -148,6 +149,17 @@ nsHankakuToZenkaku::nsHankakuToZenkaku()
 }
 nsHankakuToZenkaku::~nsHankakuToZenkaku()
 {
+}
+
+NS_IMETHODIMP nsHankakuToZenkaku::Change( const PRUnichar* aText, PRInt32 aTextLength, nsString& aResult)
+{
+  PRInt32 ol;
+  aResult.SetCapacity(aTextLength);
+   
+  HankakuToZenkaku ( aText, aTextLength, (PRUnichar*) aResult.get(), aTextLength, &ol);
+  aResult.SetLength(ol);
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsHankakuToZenkaku::Change( nsString& aText, nsString& aResult)

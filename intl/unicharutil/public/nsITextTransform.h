@@ -56,6 +56,7 @@ public:
 
   NS_DEFINE_STATIC_IID_ACCESSOR(NS_ITEXTTRANSFORM_IID)
 
+  NS_IMETHOD Change( const PRUnichar* aText, PRInt32 aTextLength, nsString& aResult) = 0;
   NS_IMETHOD Change( nsString& aText, nsString& aResult) = 0;
 
 };
