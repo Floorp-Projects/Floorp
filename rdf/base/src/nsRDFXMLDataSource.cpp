@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 /*
@@ -437,7 +438,7 @@ RDFXMLDataSourceImpl::Init()
     nsresult rv;
     rv = nsComponentManager::CreateInstance(kRDFInMemoryDataSourceCID,
                                             nsnull,
-                                            nsIRDFDataSource::GetIID(),
+                                            NS_GET_IID(nsIRDFDataSource),
                                             (void**) &mInner);
     if (NS_FAILED(rv)) return rv;
 
@@ -454,7 +455,7 @@ RDFXMLDataSourceImpl::Init()
 
     if (gRefCnt++ == 0) {
         rv = nsServiceManager::GetService(kRDFServiceCID,
-                                          nsCOMTypeInfo<nsIRDFService>::GetIID(),
+                                          NS_GET_IID(nsIRDFService),
                                           NS_REINTERPRET_CAST(nsISupports**, &gRDFService));
 
         NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get RDF service");
@@ -467,7 +468,7 @@ RDFXMLDataSourceImpl::Init()
         rv = gRDFService->GetResource(RDF_NAMESPACE_URI "Alt",        &kRDF_Alt);
 
         rv = nsServiceManager::GetService(kRDFContainerUtilsCID,
-                                          nsIRDFContainerUtils::GetIID(),
+                                          NS_GET_IID(nsIRDFContainerUtils),
                                           (nsISupports**) &gRDFC);
 
         NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get container utils");
@@ -537,16 +538,16 @@ RDFXMLDataSourceImpl::QueryInterface(REFNSIID aIID, void** aResult)
         return NS_ERROR_NULL_POINTER;
 
     if (aIID.Equals(kISupportsIID) ||
-        aIID.Equals(nsIRDFDataSource::GetIID())) {
+        aIID.Equals(NS_GET_IID(nsIRDFDataSource))) {
         *aResult = NS_STATIC_CAST(nsIRDFDataSource*, this);
     }
-    else if (aIID.Equals(nsIRDFRemoteDataSource::GetIID())) {
+    else if (aIID.Equals(NS_GET_IID(nsIRDFRemoteDataSource))) {
         *aResult = NS_STATIC_CAST(nsIRDFRemoteDataSource*, this);
     }
-    else if (aIID.Equals(nsIRDFXMLSink::GetIID())) {
+    else if (aIID.Equals(NS_GET_IID(nsIRDFXMLSink))) {
         *aResult = NS_STATIC_CAST(nsIRDFXMLSink*, this);
     }
-    else if (aIID.Equals(nsIRDFXMLSource::GetIID())) {
+    else if (aIID.Equals(NS_GET_IID(nsIRDFXMLSource))) {
         *aResult = NS_STATIC_CAST(nsIRDFXMLSource*, this);
     }
     else {
@@ -872,7 +873,7 @@ RDFXMLDataSourceImpl::Refresh(PRBool aBlocking)
     nsCOMPtr<nsIRDFContentSink> sink;
     rv = nsComponentManager::CreateInstance(kRDFContentSinkCID,
                                             nsnull,
-                                            nsIRDFContentSink::GetIID(),
+                                            NS_GET_IID(nsIRDFContentSink),
                                             getter_AddRefs(sink));
     if (NS_FAILED(rv)) return rv;
 
@@ -1198,7 +1199,7 @@ RDFXMLDataSourceImpl::SerializeAssertion(nsIOutputStream* aStream,
     nsIRDFResource* resource;
     nsIRDFLiteral* literal;
 
-    if (NS_SUCCEEDED(aValue->QueryInterface(nsIRDFResource::GetIID(), (void**) &resource))) {
+    if (NS_SUCCEEDED(aValue->QueryInterface(NS_GET_IID(nsIRDFResource), (void**) &resource))) {
         nsXPIDLCString s;
         resource->GetValue(getter_Copies(s));
 
@@ -1216,7 +1217,7 @@ static const char kRDFResource2[] = "\"/>\n";
 
         NS_RELEASE(resource);
     }
-    else if (NS_SUCCEEDED(aValue->QueryInterface(nsIRDFLiteral::GetIID(), (void**) &literal))) {
+    else if (NS_SUCCEEDED(aValue->QueryInterface(NS_GET_IID(nsIRDFLiteral), (void**) &literal))) {
         nsXPIDLString value;
         literal->GetValue(getter_Copies(value));
         nsAutoString s((const PRUnichar*) value);
@@ -1349,7 +1350,7 @@ RDFXMLDataSourceImpl::SerializeMember(nsIOutputStream* aStream,
     nsIRDFResource* resource = nsnull;
     nsIRDFLiteral* literal = nsnull;
 
-    if (NS_SUCCEEDED(rv = aMember->QueryInterface(nsIRDFResource::GetIID(), (void**) &resource))) {
+    if (NS_SUCCEEDED(rv = aMember->QueryInterface(NS_GET_IID(nsIRDFResource), (void**) &resource))) {
         nsXPIDLCString s;
         if (NS_SUCCEEDED(rv = resource->GetValue( getter_Copies(s) ))) {
 static const char kRDFLIResource1[] = "    <RDF:li resource=\"";
@@ -1365,7 +1366,7 @@ static const char kRDFLIResource2[] = "\"/>\n";
         }
         NS_RELEASE(resource);
     }
-    else if (NS_SUCCEEDED(rv = aMember->QueryInterface(nsIRDFLiteral::GetIID(), (void**) &literal))) {
+    else if (NS_SUCCEEDED(rv = aMember->QueryInterface(NS_GET_IID(nsIRDFLiteral), (void**) &literal))) {
         nsXPIDLString value;
         if (NS_SUCCEEDED(rv = literal->GetValue( getter_Copies(value) ))) {
 static const char kRDFLILiteral1[] = "    <RDF:li>";

@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 #include "nsMenu.h"
@@ -44,7 +45,7 @@ nsresult nsMenu::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 
   *aInstancePtr = NULL;
 
-  if (aIID.Equals(nsIMenu::GetIID())) {
+  if (aIID.Equals(NS_GET_IID(nsIMenu))) {
     *aInstancePtr = (void*)(nsIMenu*) this;
     NS_ADDREF_THIS();
     return NS_OK;
@@ -54,7 +55,7 @@ nsresult nsMenu::QueryInterface(REFNSIID aIID, void** aInstancePtr)
     NS_ADDREF_THIS();
     return NS_OK;
   }
-  if (aIID.Equals(nsIMenuListener::GetIID())) {
+  if (aIID.Equals(NS_GET_IID(nsIMenuListener))) {
     *aInstancePtr = (void*)(nsIMenuListener*)this;
     NS_ADDREF_THIS();
     return NS_OK;
@@ -110,7 +111,7 @@ NS_METHOD nsMenu::Create(nsISupports *aParent, const nsString &aLabel)
   if(aParent)
   {
     nsIMenuBar * menubar = nsnull;
-    aParent->QueryInterface(nsIMenuBar::GetIID(), (void**) &menubar);
+    aParent->QueryInterface(NS_GET_IID(nsIMenuBar), (void**) &menubar);
     if(menubar)
     {
       mMenuBarParent = menubar;
@@ -119,7 +120,7 @@ NS_METHOD nsMenu::Create(nsISupports *aParent, const nsString &aLabel)
     else
     {
       nsIMenu * menu = nsnull;
-      aParent->QueryInterface(nsIMenu::GetIID(), (void**) &menu);
+      aParent->QueryInterface(NS_GET_IID(nsIMenu), (void**) &menu);
       if(menu)
       {
         mMenuParent = menu;
@@ -193,7 +194,7 @@ NS_METHOD nsMenu::AddItem(nsISupports * aItem)
   if(aItem)
   {
     nsIMenuItem * menuitem = nsnull;
-    aItem->QueryInterface(nsIMenuItem::GetIID(),
+    aItem->QueryInterface(NS_GET_IID(nsIMenuItem),
                           (void**)&menuitem);
     if(menuitem)
     {
@@ -203,7 +204,7 @@ NS_METHOD nsMenu::AddItem(nsISupports * aItem)
     else
     {
       nsIMenu * menu = nsnull;
-      aItem->QueryInterface(nsIMenu::GetIID(),
+      aItem->QueryInterface(NS_GET_IID(nsIMenu),
                             (void**)&menu);
       if(menu)
       {
@@ -222,7 +223,7 @@ NS_METHOD nsMenu::AddSeparator()
   // Create nsMenuItem
   nsIMenuItem * pnsMenuItem = nsnull;
   nsresult rv = nsComponentManager::CreateInstance(
-    kMenuItemCID, nsnull, nsIMenuItem::GetIID(), (void**)&pnsMenuItem);
+    kMenuItemCID, nsnull, NS_GET_IID(nsIMenuItem), (void**)&pnsMenuItem);
   if (NS_OK == rv) {
     nsString tmp = "menuseparator";
     nsISupports * supports = nsnull;
@@ -561,7 +562,7 @@ void nsMenu::LoadMenuItem(nsIMenu *       pParentMenu,
   nsIMenuItem * pnsMenuItem = nsnull;
   nsresult rv = nsComponentManager::CreateInstance(kMenuItemCID,
                                                    nsnull, 
-                                                   nsIMenuItem::GetIID(), 
+                                                   NS_GET_IID(nsIMenuItem), 
                                                    (void**)&pnsMenuItem);
   if (NS_OK == rv) {
     pnsMenuItem->Create(pParentMenu, menuitemName, PR_FALSE);
@@ -615,7 +616,7 @@ void nsMenu::LoadSubMenu(nsIMenu *       pParentMenu,
   nsIMenu * pnsMenu = nsnull;
   nsresult rv = nsComponentManager::CreateInstance(kMenuCID,
                                                    nsnull,
-                                                   nsIMenu::GetIID(),
+                                                   NS_GET_IID(nsIMenu),
                                                    (void**)&pnsMenu);
   if (NS_OK == rv) {
     // Call Create

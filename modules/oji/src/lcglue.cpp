@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 #include "prthread.h"
@@ -138,7 +139,7 @@ map_jsj_thread_to_js_context_impl(JSJavaThreadState *jsj_env, void* java_applet_
 		nsIPluginInstancePeer* pluginPeer = NULL;
 		if (pluginInstance->GetPeer(&pluginPeer) == NS_OK) {
 			nsIPluginInstancePeer2* pluginPeer2 = NULL;
-			if (pluginPeer->QueryInterface(nsIPluginInstancePeer2::GetIID(), (void**) &pluginPeer2) == NS_OK) {
+			if (pluginPeer->QueryInterface(NS_GET_IID(nsIPluginInstancePeer2), (void**) &pluginPeer2) == NS_OK) {
 				pluginPeer2->GetJSContext(&context);
 				NS_RELEASE(pluginPeer2);
 			}
@@ -232,7 +233,7 @@ map_java_object_to_js_object_impl(JNIEnv *env, void *pluginInstancePtr, char* *e
 	nsIPluginInstancePeer* pluginPeer;
 	if (pluginInstance->GetPeer(&pluginPeer) == NS_OK) {
 		nsIJVMPluginTagInfo* tagInfo;
-		if (pluginPeer->QueryInterface(nsIJVMPluginTagInfo::GetIID(), (void**) &tagInfo) == NS_OK) {
+		if (pluginPeer->QueryInterface(NS_GET_IID(nsIJVMPluginTagInfo), (void**) &tagInfo) == NS_OK) {
 			err = tagInfo->GetMayScript(&mayscript);
 			// PR_ASSERT(err != NS_OK ? mayscript == PR_FALSE : PR_TRUE);
 			NS_RELEASE(tagInfo);
@@ -241,7 +242,7 @@ map_java_object_to_js_object_impl(JNIEnv *env, void *pluginInstancePtr, char* *e
 			*errp = strdup("JSObject.getWindow() requires mayscript attribute on this Applet");
 		} else {
 			nsIPluginInstancePeer2* pluginPeer2 = nsnull;
-			if (pluginPeer->QueryInterface(nsIPluginInstancePeer2::GetIID(),
+			if (pluginPeer->QueryInterface(NS_GET_IID(nsIPluginInstancePeer2),
 			                              (void**) &pluginPeer2) == NS_OK) {
 				err = pluginPeer2->GetJSWindow(&window);
 				NS_RELEASE(pluginPeer2);

@@ -62,7 +62,7 @@ NS_IMETHODIMP nsCommonDialogs::Alert(nsIDOMWindow *inParent,  const PRUnichar *i
 	nsIDialogParamBlock* block = NULL;
 	rv = nsComponentManager::CreateInstance( kDialogParamBlockCID,
                                                       0,
-                                                      nsIDialogParamBlock::GetIID(),
+                                                      NS_GET_IID(nsIDialogParamBlock),
                                                       (void**)&block );
       
 	if ( NS_FAILED( rv ) )
@@ -94,7 +94,7 @@ NS_IMETHODIMP nsCommonDialogs::Confirm(nsIDOMWindow *inParent, const PRUnichar *
 	nsIDialogParamBlock* block = NULL;
 	rv = nsComponentManager::CreateInstance( kDialogParamBlockCID,
                                                       0,
-                                                      nsIDialogParamBlock::GetIID(),
+                                                      NS_GET_IID(nsIDialogParamBlock),
                                                       (void**)&block );
       
 	if ( NS_FAILED( rv ) )
@@ -128,7 +128,7 @@ NS_IMETHODIMP nsCommonDialogs::ConfirmCheck(nsIDOMWindow *inParent,  const PRUni
 	nsIDialogParamBlock* block = NULL;
 	rv = nsComponentManager::CreateInstance( kDialogParamBlockCID,
                                                       0,
-                                                      nsIDialogParamBlock::GetIID(),
+                                                      NS_GET_IID(nsIDialogParamBlock),
                                                       (void**)&block );
       
 	if ( NS_FAILED( rv ) )
@@ -276,7 +276,7 @@ NS_IMETHODIMP nsCommonDialogs::Prompt(nsIDOMWindow *inParent, const PRUnichar *i
 	nsIDialogParamBlock* block = NULL;
 	rv = nsComponentManager::CreateInstance( kDialogParamBlockCID,
                                                       0,
-                                                      nsIDialogParamBlock::GetIID(),
+                                                      NS_GET_IID(nsIDialogParamBlock),
                                                       (void**)&block );
       
 	if ( NS_FAILED( rv ) )
@@ -315,7 +315,7 @@ NS_IMETHODIMP nsCommonDialogs::PromptUsernameAndPassword(nsIDOMWindow *inParent,
 	nsIDialogParamBlock* block = NULL;
 	rv = nsComponentManager::CreateInstance( kDialogParamBlockCID,
                                                       0,
-                                                      nsIDialogParamBlock::GetIID(),
+                                                      NS_GET_IID(nsIDialogParamBlock),
                                                       (void**)&block );
       
 	if ( NS_FAILED( rv ) )
@@ -355,7 +355,7 @@ NS_IMETHODIMP nsCommonDialogs::PromptPassword(nsIDOMWindow *inParent,  const PRU
 	nsIDialogParamBlock* block = NULL;
 	rv = nsComponentManager::CreateInstance( kDialogParamBlockCID,
                                                       0,
-                                                      nsIDialogParamBlock::GetIID(),
+                                                      NS_GET_IID(nsIDialogParamBlock),
                                                       (void**)&block );
       
 	if ( NS_FAILED( rv ) )
@@ -394,7 +394,7 @@ nsresult nsCommonDialogs::Select(nsIDOMWindow *inParent, const PRUnichar *inDial
 	nsIDialogParamBlock* block = NULL;
 	rv = nsComponentManager::CreateInstance( kDialogParamBlockCID,
                                                       0,
-                                                      nsIDialogParamBlock::GetIID(),
+                                                      NS_GET_IID(nsIDialogParamBlock),
                                                       (void**)&block );
       
 	if ( NS_FAILED( rv ) )
@@ -457,7 +457,7 @@ nsresult nsCommonDialogs::Select(nsIDOMWindow *inParent, const PRUnichar *inDial
                                                     inChromeURL,
                                                     JSVAL_NULL,
                                                     "chrome,modal",
-                                                    (const nsIID*)(&nsIDialogParamBlock::GetIID()),
+                                                    (const nsIID*)(&NS_GET_IID(nsIDialogParamBlock)),
                                                     (nsISupports*)ioParamBlock
                                                   );
                     if ( argv ) {
@@ -503,11 +503,9 @@ nsresult nsCommonDialogs::Select(nsIDOMWindow *inParent, const PRUnichar *inDial
     return rv;
  }
  
- 
- static NS_DEFINE_IID(kICommonDialogs, nsICommonDialogs::GetIID() );
 NS_IMPL_ADDREF(nsCommonDialogs);
 NS_IMPL_RELEASE(nsCommonDialogs);
-NS_IMPL_QUERY_INTERFACE(nsCommonDialogs, kICommonDialogs);
+NS_IMPL_QUERY_INTERFACE(nsCommonDialogs, NS_GET_IID(nsICommonDialogs));
 
 // Entry point to create nsAppShellService factory instances...
 NS_DEF_FACTORY(CommonDialogs, nsCommonDialogs)

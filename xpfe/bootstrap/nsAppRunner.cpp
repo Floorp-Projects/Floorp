@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 #include "nsIServiceManager.h"
 #include "nsIComponentManager.h"
@@ -173,7 +174,7 @@ static PRBool CheckAndRunPrefs(nsICmdLineService* cmdLineArgs)
     rv = nsComponentManager::CreateInstance(
                                             NS_PREFWINDOW_PROGID,
                                             nsnull,
-                                            nsIPrefWindow::GetIID(),
+                                            NS_GET_IID(nsIPrefWindow),
                                             (void **)&prefWindow);
     if (NS_SUCCEEDED(rv))
       prefWindow->ShowWindow(nsString("Apprunner::main()").GetUnicode(), nsnull, nsnull);

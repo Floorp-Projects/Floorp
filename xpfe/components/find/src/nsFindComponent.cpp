@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 #include "nsIFindComponent.h"
@@ -118,7 +119,7 @@ nsFindComponent::Context::MakeTSDocument(nsIWebShell* aWebShell, nsITextServices
   nsCOMPtr<nsITextServicesDocument>  tempDoc;
   nsresult rv = nsComponentManager::CreateInstance(kCTextServicesDocumentCID,
                                                       nsnull,
-                                                      nsITextServicesDocument::GetIID(),
+                                                      NS_GET_IID(nsITextServicesDocument),
                                                       getter_AddRefs(tempDoc));
   if (NS_FAILED(rv) || !tempDoc)
     return rv;
@@ -799,7 +800,7 @@ static nsresult OpenDialogWithArg( nsIDOMWindow     *parent,
                                                     url,
                                                     "_blank",
                                                     "chrome,resizable=no,dependent=yes",
-                                                    (const nsIID*)(&nsISearchContext::GetIID()),
+                                                    (const nsIID*)(&NS_GET_IID(nsISearchContext)),
                                                     (nsISupports*)arg );
                     if ( argv ) {
                         nsIDOMWindow *newWindow;
@@ -939,6 +940,6 @@ nsFindComponent::ResetContext( nsISupports *aContext,
 }
 
 // nsFindComponent::Context implementation...
-NS_IMPL_ISUPPORTS( nsFindComponent::Context, nsCOMTypeInfo<nsISearchContext>::GetIID() )
+NS_IMPL_ISUPPORTS( nsFindComponent::Context, NS_GET_IID(nsISearchContext) )
 
 NS_IMPL_IAPPSHELLCOMPONENT( nsFindComponent, nsIFindComponent, NS_IFINDCOMPONENT_PROGID, 0 )

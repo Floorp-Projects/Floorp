@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 #include "nspr.h"
@@ -1481,7 +1482,7 @@ nsHTTPChannel::Authenticate(const char *iChallenge,
         return rv;
       nsINetPrompt* proxyprompter = NULL;
       rv = pIProxyObjectManager->GetProxyObject(NS_UI_THREAD_EVENTQ,
-              nsINetPrompt::GetIID(), 
+              NS_GET_IID(nsINetPrompt), 
               prompter, PROXY_SYNC,
               (void**)&proxyprompter);
 

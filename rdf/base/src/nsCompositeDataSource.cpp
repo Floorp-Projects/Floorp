@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 /*
@@ -182,7 +183,7 @@ CompositeEnumeratorImpl::QueryInterface(REFNSIID iid, void** result)
     if (! result)
         return NS_ERROR_NULL_POINTER;
 
-    if (iid.Equals(nsISimpleEnumerator::GetIID()) ||
+    if (iid.Equals(NS_GET_IID(nsISimpleEnumerator)) ||
         iid.Equals(kISupportsIID)) {
         *result = NS_STATIC_CAST(nsISimpleEnumerator*, this);
         NS_ADDREF(this);
@@ -242,7 +243,7 @@ CompositeEnumeratorImpl::HasMoreElements(PRBool* aResult)
             rv = mCurrent->GetNext(getter_AddRefs(result));
             if (NS_FAILED(rv)) return rv;
 
-            rv = result->QueryInterface(nsIRDFNode::GetIID(), (void**) &mResult);
+            rv = result->QueryInterface(NS_GET_IID(nsIRDFNode), (void**) &mResult);
             if (NS_FAILED(rv)) return rv;
 
 		if (mAllowNegativeAssertions == PR_TRUE)
@@ -583,14 +584,14 @@ CompositeDataSourceImpl::QueryInterface(REFNSIID iid, void** result)
     if (! result)
         return NS_ERROR_NULL_POINTER;
 
-    if (iid.Equals(nsIRDFCompositeDataSource::GetIID()) ||
-        iid.Equals(nsIRDFDataSource::GetIID()) ||
+    if (iid.Equals(NS_GET_IID(nsIRDFCompositeDataSource)) ||
+        iid.Equals(NS_GET_IID(nsIRDFDataSource)) ||
         iid.Equals(kISupportsIID)) {
         *result = NS_STATIC_CAST(nsIRDFCompositeDataSource*, this);
 		NS_ADDREF(this);
         return NS_OK;
     }
-    else if (iid.Equals(nsIRDFObserver::GetIID())) {
+    else if (iid.Equals(NS_GET_IID(nsIRDFObserver))) {
         *result = NS_STATIC_CAST(nsIRDFObserver*, this);
         NS_ADDREF(this);
         return NS_OK;

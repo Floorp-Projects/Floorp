@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 #include "nsRDFCID.h"
@@ -335,7 +336,7 @@ NSGetFactory(nsISupports* aServiceMgr,
 	nsCOMPtr<nsIGenericFactory> factory;
 	rv = compMgr->CreateInstance(kGenericFactoryCID,
 				     nsnull,
-				     nsIGenericFactory::GetIID(),
+				     NS_GET_IID(nsIGenericFactory),
 				     getter_AddRefs(factory));
 
 	if (NS_FAILED(rv)) return rv;

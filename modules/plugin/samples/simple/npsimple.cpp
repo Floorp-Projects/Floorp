@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 /*******************************************************************************
@@ -519,14 +520,14 @@ NSRegisterSelf(nsISupports *aServMgr, const char *path)
     // We can get the IID of an interface with the static GetIID() method as
     // well.
     
-    rv = aServMgr->QueryInterface(nsIServiceManager::GetIID(), (void **)&sm);
+    rv = aServMgr->QueryInterface(NS_GET_IID(nsIServiceManager), (void **)&sm);
 
     if (NS_FAILED(rv))
         return rv;
 
     nsIComponentManager *cm;
 
-    rv = sm->GetService(kComponentManagerCID, nsIComponentManager::GetIID(), (nsISupports **)&cm);
+    rv = sm->GetService(kComponentManagerCID, NS_GET_IID(nsIComponentManager), (nsISupports **)&cm);
 
     if (NS_FAILED(rv)) {
         NS_RELEASE(sm);
@@ -561,14 +562,14 @@ NSUnregisterSelf(nsISupports* aServMgr, const char *path)
 
 	nsIServiceManager *sm;
 
-	rv = aServMgr->QueryInterface(nsIServiceManager::GetIID(), (void **)&sm);
+	rv = aServMgr->QueryInterface(NS_GET_IID(nsIServiceManager), (void **)&sm);
 
 	if (NS_FAILED(rv))
 		return rv;
 
 	nsIComponentManager *cm;
 
-	rv = sm->GetService(kComponentManagerCID, nsIComponentManager::GetIID(), (nsISupports **)&cm);
+	rv = sm->GetService(kComponentManagerCID, NS_GET_IID(nsIComponentManager), (nsISupports **)&cm);
 
 	if (NS_FAILED(rv)) {
 		NS_RELEASE(sm);
@@ -728,7 +729,7 @@ SimplePluginInstance::Initialize(nsIPluginInstancePeer* peer)
     result = peer->GetMode(&fMode);
     if (NS_FAILED(result)) return result;
 
-   result = peer->QueryInterface(nsIPluginTagInfo::GetIID(), (void **)&taginfo);
+   result = peer->QueryInterface(NS_GET_IID(nsIPluginTagInfo), (void **)&taginfo);
 
     if (!NS_FAILED(result))
     {

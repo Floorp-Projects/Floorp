@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 #include "nsStreamXferOp.h"
 #include "nsIStreamTransfer.h"
@@ -88,7 +89,7 @@ nsStreamXferOp::OpenDialog( nsIDOMWindow *parent ) {
                                                 "chrome://global/content/downloadProgress.xul",
                                                 "_blank",
                                                 "chrome",
-                                                (const nsIID*)(&nsCOMTypeInfo<nsIStreamTransferOperation>::GetIID()),
+                                                (const nsIID*)(&NS_GET_IID(nsIStreamTransferOperation)),
                                                 (nsISupports*)(nsIStreamTransferOperation*)this );
                 if ( argv ) {
                     nsCOMPtr<nsIDOMWindow> newWindow;

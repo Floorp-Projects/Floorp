@@ -16,7 +16,7 @@
  * Copyright (C) 1999 John Fairhurst. All Rights Reserved.
  *
  * Contributor(s): 
- *
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 // ToDo: nothing
@@ -62,7 +62,7 @@ nsRegionOS2::~nsRegionOS2()
          PMERROR( "GpiDestroyRegion (nsR)");
 }
 
-NS_IMPL_ISUPPORTS(nsRegionOS2, nsIRegion::GetIID())
+NS_IMPL_ISUPPORTS(nsRegionOS2, NS_GET_IID(nsIRegion))
 
 // Create empty region
 nsresult nsRegionOS2::Init()

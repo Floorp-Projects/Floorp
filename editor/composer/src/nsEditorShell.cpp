@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 #include <stdio.h>
@@ -230,17 +231,17 @@ nsEditorShell::QueryInterface(REFNSIID aIID,void** aInstancePtr)
     AddRef();
     return NS_OK;
   }
-  else if ( aIID.Equals(nsIEditorShell::GetIID()) ) {
+  else if ( aIID.Equals(NS_GET_IID(nsIEditorShell)) ) {
     *aInstancePtr = (void*) ((nsIEditorShell*)this);
     AddRef();
     return NS_OK;
   }
-  else if ( aIID.Equals(nsIEditorSpellCheck::GetIID()) ) {
+  else if ( aIID.Equals(NS_GET_IID(nsIEditorSpellCheck)) ) {
     *aInstancePtr = (void*) ((nsIEditorSpellCheck*)this);
     AddRef();
     return NS_OK;
   }
-  else if (aIID.Equals(nsIDocumentLoaderObserver::GetIID())) {
+  else if (aIID.Equals(NS_GET_IID(nsIDocumentLoaderObserver))) {
     *aInstancePtr = (void*) ((nsIDocumentLoaderObserver*)this);
      AddRef();
     return NS_OK;
@@ -341,7 +342,7 @@ nsEditorShell::PrepareDocumentForEditing(nsIURI *aUrl)
   {
     nsCOMPtr<nsIController> controller;
     nsCOMPtr<nsIControllers> controllers;
-    rv = nsComponentManager::CreateInstance(kEditorControllerCID, nsnull, nsIController::GetIID(), getter_AddRefs(controller));
+    rv = nsComponentManager::CreateInstance(kEditorControllerCID, nsnull, NS_GET_IID(nsIController), getter_AddRefs(controller));
     if (NS_SUCCEEDED(rv) && controller)
     {
       rv = mContentWindow->GetControllers(getter_AddRefs(controllers));
@@ -498,7 +499,7 @@ nsEditorShell::GetPresShellFor(nsIWebShell* aWebShell)
     aWebShell->GetContentViewer(&cv);
     if (nsnull != cv) {
       nsIDocumentViewer* docv = nsnull;
-      cv->QueryInterface(nsIDocumentViewer::GetIID(), (void**) &docv);
+      cv->QueryInterface(NS_GET_IID(nsIDocumentViewer), (void**) &docv);
       if (nsnull != docv) {
         nsIPresContext* cx;
         docv->GetPresContext(cx);
@@ -552,7 +553,7 @@ nsEditorShell::InstantiateEditor(nsIDOMDocument *aDoc, nsIPresShell *aPresShell)
   nsresult err = NS_OK;
   
   nsCOMPtr<nsIEditor> editor;
-  err = nsComponentManager::CreateInstance(kHTMLEditorCID, nsnull, nsIEditor::GetIID(), getter_AddRefs(editor));
+  err = nsComponentManager::CreateInstance(kHTMLEditorCID, nsnull, NS_GET_IID(nsIEditor), getter_AddRefs(editor));
   if(!editor)
     err = NS_ERROR_OUT_OF_MEMORY;
     
@@ -610,7 +611,7 @@ nsEditorShell::DoEditorMode(nsIWebShell *aWebShell)
   if (NS_SUCCEEDED(err) && Doc)
   {
     nsCOMPtr<nsIDOMDocument>  DOMDoc;
-    if (NS_SUCCEEDED(Doc->QueryInterface(nsIDOMDocument::GetIID(), (void**)getter_AddRefs(DOMDoc))))
+    if (NS_SUCCEEDED(Doc->QueryInterface(NS_GET_IID(nsIDOMDocument), (void**)getter_AddRefs(DOMDoc))))
     {
       nsCOMPtr<nsIPresShell> presShell = dont_AddRef(GetPresShellFor(aWebShell));
       if( presShell )
@@ -1322,7 +1323,7 @@ nsEditorShell::SaveDocument(PRBool saveAs, PRBool saveCopy, PRBool *_retval)
             }
 
             nsCOMPtr<nsIFileWidget>  fileWidget;
-            res = nsComponentManager::CreateInstance(kCFileWidgetCID, nsnull, nsIFileWidget::GetIID(), getter_AddRefs(fileWidget));
+            res = nsComponentManager::CreateInstance(kCFileWidgetCID, nsnull, NS_GET_IID(nsIFileWidget), getter_AddRefs(fileWidget));
             if (NS_SUCCEEDED(res) && fileWidget)
             {
               nsAutoString  promptString = GetString("SaveDocumentAs");
@@ -1511,7 +1512,7 @@ nsEditorShell::GetLocalFileURL(nsIDOMWindow *parent, const PRUnichar *filterType
 
   nsresult res = nsComponentManager::CreateInstance(kCFileWidgetCID,
                                                     nsnull,
-                                                    nsIFileWidget::GetIID(),
+                                                    NS_GET_IID(nsIFileWidget),
                                                     (void**)&fileWidget);
   if (NS_SUCCEEDED(res))
   {
@@ -2319,7 +2320,7 @@ nsEditorShell::ConfirmWithCancel(const nsString& aTitle, const nsString& aQuesti
   
   nsIDialogParamBlock* block = NULL; 
   nsresult rv = nsComponentManager::CreateInstance(kDialogParamBlockCID, 0,
-                                          nsIDialogParamBlock::GetIID(), 
+                                          NS_GET_IID(nsIDialogParamBlock), 
                                           (void**)&block ); 
   if ( NS_SUCCEEDED(rv) )
   { 
@@ -3272,7 +3273,7 @@ nsEditorShell::StartSpellChecking(PRUnichar **aFirstMisspelledWord)
     result = nsComponentManager::CreateInstance(
                                  kCTextServicesDocumentCID,
                                  nsnull,
-                                 nsITextServicesDocument::GetIID(),
+                                 NS_GET_IID(nsITextServicesDocument),
                                  (void **)getter_AddRefs(tsDoc));
 
     if (NS_FAILED(result))
@@ -3293,7 +3294,7 @@ nsEditorShell::StartSpellChecking(PRUnichar **aFirstMisspelledWord)
 
     result = nsComponentManager::CreateInstance(kCSpellCheckerCID,
                                                 nsnull,
-                                                nsISpellChecker::GetIID(),
+                                                NS_GET_IID(nsISpellChecker),
                                                 (void **)getter_AddRefs(mSpellChecker));
 
     if (NS_FAILED(result))

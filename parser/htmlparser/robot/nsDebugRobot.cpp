@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 #include "nsIRobotSink.h"
 #include "nsIRobotSinkObserver.h"
@@ -286,7 +287,7 @@ extern "C" NS_EXPORT int DebugRobot(
     nsCRT::free(uriStr);
     if (NS_FAILED(rv)) return rv;
 
-    rv = uri->QueryInterface(nsIURI::GetIID(), (void**)&url);
+    rv = uri->QueryInterface(NS_GET_IID(nsIURI), (void**)&url);
     NS_RELEASE(uri);
     if (NS_OK != rv) {
       printf("invalid URL: '");

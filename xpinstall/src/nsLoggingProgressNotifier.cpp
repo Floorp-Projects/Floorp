@@ -20,6 +20,7 @@
  *
  * Contributor(s): 
  *     Douglas Turner <dougt@netscape.com>
+ *     Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 #include "nsIXPINotifier.h"
@@ -52,7 +53,7 @@ nsLoggingProgressNotifier::~nsLoggingProgressNotifier()
     }
 }
 
-NS_IMPL_ISUPPORTS(nsLoggingProgressNotifier, nsIXPINotifier::GetIID());
+NS_IMPL_ISUPPORTS(nsLoggingProgressNotifier, NS_GET_IID(nsIXPINotifier));
 
 NS_IMETHODIMP
 nsLoggingProgressNotifier::BeforeJavascriptEvaluation(const PRUnichar *URL)

@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 #include "nsPluginArray.h"
@@ -37,7 +38,7 @@ PluginArrayImpl::PluginArrayImpl(nsIDOMNavigator* navigator)
 	mScriptObject = nsnull;
 	mNavigator = navigator;		// don't ADDREF here, needed for parent of script object.
 
-	if (nsServiceManager::GetService(kPluginManagerCID, nsIPluginHost::GetIID(), (nsISupports**)&mPluginHost) != NS_OK)
+	if (nsServiceManager::GetService(kPluginManagerCID, NS_GET_IID(nsIPluginHost), (nsISupports**)&mPluginHost) != NS_OK)
 		mPluginHost = nsnull;
 	
 	mPluginCount = 0;
@@ -67,12 +68,12 @@ NS_IMETHODIMP PluginArrayImpl::QueryInterface(const nsIID& aIID,
   if (nsnull == aInstancePtrResult) {
     return NS_ERROR_NULL_POINTER;
   }
-  if (aIID.Equals(nsIScriptObjectOwner::GetIID())) {
+  if (aIID.Equals(NS_GET_IID(nsIScriptObjectOwner))) {
     *aInstancePtrResult = (void*) ((nsIScriptObjectOwner*)this);
     AddRef();
     return NS_OK;
   }
-  if (aIID.Equals(nsIDOMPluginArray::GetIID())) {
+  if (aIID.Equals(NS_GET_IID(nsIDOMPluginArray))) {
     *aInstancePtrResult = (void*) ((nsIDOMPluginArray*)this);
     AddRef();
     return NS_OK;
@@ -214,12 +215,12 @@ NS_IMETHODIMP PluginElementImpl::QueryInterface(const nsIID& aIID,
   if (nsnull == aInstancePtrResult) {
     return NS_ERROR_NULL_POINTER;
   }
-  if (aIID.Equals(nsIScriptObjectOwner::GetIID())) {
+  if (aIID.Equals(NS_GET_IID(nsIScriptObjectOwner))) {
     *aInstancePtrResult = (void*) ((nsIScriptObjectOwner*)this);
     AddRef();
     return NS_OK;
   }
-  if (aIID.Equals(nsIDOMPlugin::GetIID())) {
+  if (aIID.Equals(NS_GET_IID(nsIDOMPlugin))) {
     *aInstancePtrResult = (void*) ((nsIDOMPlugin*)this);
     AddRef();
     return NS_OK;

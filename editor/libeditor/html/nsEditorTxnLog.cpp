@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 #include <stdio.h>
@@ -79,7 +80,7 @@ nsEditorTxnLog::QueryInterface(REFNSIID aIID, void** aInstancePtr)
     NS_ADDREF_THIS();
     return NS_OK;
   }
-  if (aIID.Equals(nsITransactionListener::GetIID())) {
+  if (aIID.Equals(NS_GET_IID(nsITransactionListener))) {
     *aInstancePtr = (void*)(nsITransactionListener*)this;
     NS_ADDREF_THIS();
     return NS_OK;

@@ -19,6 +19,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  *
  * Alternatively, the contents of this file may be used under the
  * terms of the GNU Public License (the "GPL"), in which case the
@@ -82,8 +83,8 @@ xpctestNoisy::QueryInterface(REFNSIID iid, void** result)
     if (! result)
         return NS_ERROR_NULL_POINTER;
 
-    if (iid.Equals(nsIXPCTestNoisy::GetIID()) ||
-        iid.Equals(nsCOMTypeInfo<nsISupports>::GetIID())) {
+    if (iid.Equals(NS_GET_IID(nsIXPCTestNoisy)) ||
+        iid.Equals(NS_GET_IID(nsISupports))) {
         *result = NS_STATIC_CAST(nsIXPCTestNoisy*, this);
         printf("Noisy %d - QueryInterface called and succeeding\n", mID);
         NS_ADDREF(this);

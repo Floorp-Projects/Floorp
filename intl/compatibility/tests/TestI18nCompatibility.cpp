@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 #include <iostream.h>
 #include "nsIComponentManager.h"
@@ -54,7 +55,7 @@ int main(int argc, char** argv) {
 
   nsCOMPtr <nsII18nCompatibility> I18nCompatibility;
   rv = nsComponentManager::CreateInstance(kI18nCompatibilityCID, NULL, 
-                                          nsII18nCompatibility::GetIID(), getter_AddRefs(I18nCompatibility));
+                                          NS_GET_IID(nsII18nCompatibility), getter_AddRefs(I18nCompatibility));
   if (NS_SUCCEEDED(rv)) {
     PRUint16 csid = 0;
     PRUnichar *charsetUni = NULL;

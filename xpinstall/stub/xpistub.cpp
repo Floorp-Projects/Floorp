@@ -20,6 +20,7 @@
  *
  * Contributor(s): 
  *     Daniel Veditz <dveditz@netscape.com>
+ *     Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 #include "xpistub.h"
@@ -125,7 +126,7 @@ PR_PUBLIC_API(nsresult) XPI_Init(
     //--------------------------------------------------------------------
     rv = nsComponentManager::CreateInstance(kSoftwareUpdateCID, 
                                             nsnull,
-                                            nsISoftwareUpdate::GetIID(),
+                                            NS_GET_IID(nsISoftwareUpdate),
                                             (void**) &gXPI);
     if (!NS_SUCCEEDED(rv))
         return rv;
@@ -158,7 +159,7 @@ PR_PUBLIC_API(nsresult) XPI_Init(
     }
     else
     {
-        rv = stub->QueryInterface(nsIXPINotifier::GetIID(), (void**)&gNotifier);
+        rv = stub->QueryInterface(NS_GET_IID(nsIXPINotifier), (void**)&gNotifier);
     }
     return rv;
 }

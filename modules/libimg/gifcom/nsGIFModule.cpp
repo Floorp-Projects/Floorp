@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 #include "nsGIFModule.h"
@@ -67,7 +68,7 @@ extern "C" NS_EXPORT nsresult NSGetModule(nsIComponentManager *servMgr,
     gifModule = new nsGIFModule;
     if (gifModule == NULL) return NS_ERROR_OUT_OF_MEMORY;
 
-    rv = gifModule->QueryInterface(nsIModule::GetIID(), (void **)return_cobj);
+    rv = gifModule->QueryInterface(NS_GET_IID(nsIModule), (void **)return_cobj);
 
     if (NS_FAILED(rv))
     {
@@ -119,7 +120,7 @@ nsGIFDecoderCreateInstance(nsISupports *aOuter, REFNSIID aIID, void **aResult)
 //////////////////////////////////////////////////////////////////////
 // GIF Decoder Module Implementation
 
-NS_IMPL_ISUPPORTS(nsGIFModule, nsIModule::GetIID())
+NS_IMPL_ISUPPORTS(nsGIFModule, NS_GET_IID(nsIModule))
 
 nsGIFModule::nsGIFModule(void)
   : mObjCount(-1), mClassObject(NULL)

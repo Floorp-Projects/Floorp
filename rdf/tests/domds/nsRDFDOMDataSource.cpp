@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 #include "nsCOMPtr.h"
@@ -193,7 +194,7 @@ nsRDFDOMDataSource::createFrameTarget(nsIFrame *frame,
 #ifdef DEBUG
     nsIFrameDebug*  frameDebug;
 
-    if (NS_SUCCEEDED(frame->QueryInterface(nsIFrameDebug::GetIID(), (void**)&frameDebug))) {
+    if (NS_SUCCEEDED(frame->QueryInterface(NS_GET_IID(nsIFrameDebug), (void**)&frameDebug))) {
       frameDebug->GetFrameName(str);
     }
 #else
@@ -1142,7 +1143,7 @@ nsRDFDOMDataSource::getRDFService()
         nsresult rv;
         
         rv = nsServiceManager::GetService(kRDFServiceCID,
-                                          nsIRDFService::GetIID(),
+                                          NS_GET_IID(nsIRDFService),
                                           (nsISupports**) &mRDFService);
         if (NS_FAILED(rv)) return nsnull;
     }
@@ -1259,7 +1260,7 @@ nsRDFDOMDataSource::SetWindow(nsIDOMWindow *window) {
 #ifdef DEBUG
   nsIFrameDebug*  frameDebug;
 
-  if (NS_SUCCEEDED(mRootFrame->QueryInterface(nsIFrameDebug::GetIID(), (void**)&frameDebug))) {
+  if (NS_SUCCEEDED(mRootFrame->QueryInterface(NS_GET_IID(nsIFrameDebug), (void**)&frameDebug))) {
     frameDebug->GetFrameName(framename);
   }
 #endif

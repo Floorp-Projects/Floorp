@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 /*
@@ -52,7 +53,7 @@ int writeout(const char* i_pURL, PRBool bUseStd =PR_TRUE)
         {
             nsIURI* url;
             result = nsComponentManager::CreateInstance(kStdURLCID, nsnull, 
-                nsCOMTypeInfo<nsIURI>::GetIID(), (void**)&url);
+                NS_GET_IID(nsIURI), (void**)&url);
             if (NS_FAILED(result))
             {
                 cout << "CreateInstance failed" << endl;
@@ -188,7 +189,7 @@ int makeAbsTest(const char* i_BaseURI, const char* relativePortion)
     // build up the base URL
     nsCOMPtr<nsIURI> baseURL;
     nsresult status = nsComponentManager::CreateInstance(kStdURLCID, nsnull, 
-        nsCOMTypeInfo<nsIURI>::GetIID(), getter_AddRefs(baseURL));
+        NS_GET_IID(nsIURI), getter_AddRefs(baseURL));
     if (NS_FAILED(status))
     {
         cout << "CreateInstance failed" << endl;

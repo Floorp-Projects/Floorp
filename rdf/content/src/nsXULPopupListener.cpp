@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 /*
@@ -155,18 +156,18 @@ XULPopupListenerImpl::QueryInterface(REFNSIID iid, void** result)
         return NS_ERROR_NULL_POINTER;
 
     *result = nsnull;
-    if (iid.Equals(nsIXULPopupListener::GetIID()) ||
+    if (iid.Equals(NS_GET_IID(nsIXULPopupListener)) ||
         iid.Equals(kISupportsIID)) {
         *result = NS_STATIC_CAST(nsIXULPopupListener*, this);
         NS_ADDREF_THIS();
         return NS_OK;
     }
-    else if (iid.Equals(nsIDOMMouseListener::GetIID())) {
+    else if (iid.Equals(NS_GET_IID(nsIDOMMouseListener))) {
         *result = NS_STATIC_CAST(nsIDOMMouseListener*, this);
         NS_ADDREF_THIS();
         return NS_OK;
     }
-    else if (iid.Equals(nsIDOMMouseMotionListener::GetIID())) {
+    else if (iid.Equals(NS_GET_IID(nsIDOMMouseMotionListener))) {
         *result = NS_STATIC_CAST(nsIDOMMouseMotionListener*, this);
         NS_ADDREF_THIS();
         return NS_OK;

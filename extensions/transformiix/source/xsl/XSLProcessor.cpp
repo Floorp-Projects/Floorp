@@ -22,8 +22,10 @@
  *    -- original author.
  * Bob Miller, kbob@oblix.com
  *    -- plugged core leak.
+ * Pierre Phaneuf, pp@ludusdesign.com
+ *    -- fixed some XPCOM usage.
  *
- * $Id: XSLProcessor.cpp,v 1.5 1999/11/25 03:03:06 kvisco%ziplink.net Exp $
+ * $Id: XSLProcessor.cpp,v 1.6 2000/01/11 20:47:47 pp%ludusdesign.com Exp $
  */
 
 #include "XSLProcessor.h"
@@ -36,7 +38,7 @@
 /**
  * XSLProcessor is a class for Processing XSL styelsheets
  * @author <a href="mailto:kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.5 $ $Date: 1999/11/25 03:03:06 $
+ * @version $Revision: 1.6 $ $Date: 2000/01/11 20:47:47 $
 **/
 
 /**
@@ -126,7 +128,7 @@ XSLProcessor::Create(nsISupports* aOuter, const nsIID& aIID, void* *aResult)
     return rv;
 }
 
-NS_IMPL_ISUPPORTS(XSLProcessor, nsIDocumentTransformer::GetIID());
+NS_IMPL_ISUPPORTS(XSLProcessor, NS_GET_IID(nsIDocumentTransformer));
 #endif
 
 /**

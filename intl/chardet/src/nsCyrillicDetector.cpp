@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 #include "nscore.h"
 #include "nsCyrillicProb.h"
@@ -52,7 +53,7 @@ NS_IMETHODIMP _class::QueryInterface(REFNSIID aIID, void** aInstancePtr) \
     NS_ADDREF_THIS();                                                    \
     return NS_OK;                                                        \
   }                                                                      \
-  if (aIID.Equals(nsCOMTypeInfo<nsISupports>::GetIID())) {               \
+  if (aIID.Equals(NS_GET_IID(nsISupports))) {                            \
     *aInstancePtr = (void*) ((nsISupports*)this);                        \
     NS_ADDREF_THIS();                                                    \
     return NS_OK;                                                        \
@@ -172,7 +173,7 @@ nsCyrXPCOMDetector::~nsCyrXPCOMDetector()
     PR_AtomicDecrement(&g_InstanceCount);
 }
 //---------------------------------------------------------------------
-MY_NS_IMPL_ISUPPORTS(nsCyrXPCOMDetector, nsICharsetDetector::GetIID(), nsICharsetDetector)
+MY_NS_IMPL_ISUPPORTS(nsCyrXPCOMDetector, NS_GET_IID(nsICharsetDetector), nsICharsetDetector)
 //---------------------------------------------------------------------
 NS_IMETHODIMP nsCyrXPCOMDetector::Init(
   nsICharsetDetectionObserver* aObserver)
@@ -248,7 +249,7 @@ nsCyrXPCOMStringDetector::~nsCyrXPCOMStringDetector()
 }
 //---------------------------------------------------------------------
 MY_NS_IMPL_ISUPPORTS(nsCyrXPCOMStringDetector, 
-  nsIStringCharsetDetector::GetIID(), nsIStringCharsetDetector)
+  NS_GET_IID(nsIStringCharsetDetector), nsIStringCharsetDetector)
 //---------------------------------------------------------------------
 void nsCyrXPCOMStringDetector::Report(const char *aCharset) 
 {

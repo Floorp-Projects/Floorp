@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 #include "nsMimeTypeArray.h"
@@ -57,12 +58,12 @@ NS_IMETHODIMP MimeTypeArrayImpl::QueryInterface(const nsIID& aIID,
 	if (nsnull == aInstancePtrResult) {
 		return NS_ERROR_NULL_POINTER;
 	}
-	if (aIID.Equals(nsIScriptObjectOwner::GetIID())) {
+	if (aIID.Equals(NS_GET_IID(nsIScriptObjectOwner))) {
 		*aInstancePtrResult = (void*) ((nsIScriptObjectOwner*)this);
 		AddRef();
 		return NS_OK;
 	}
-	if (aIID.Equals(nsIDOMMimeTypeArray::GetIID())) {
+	if (aIID.Equals(NS_GET_IID(nsIDOMMimeTypeArray))) {
 		*aInstancePtrResult = (void*) ((nsIDOMMimeTypeArray*)this);
 		AddRef();
 		return NS_OK;
@@ -192,12 +193,12 @@ NS_IMETHODIMP MimeTypeElementImpl::QueryInterface(const nsIID& aIID,
 	if (nsnull == aInstancePtrResult) {
 		return NS_ERROR_NULL_POINTER;
 	}
-	if (aIID.Equals(nsIScriptObjectOwner::GetIID())) {
+	if (aIID.Equals(NS_GET_IID(nsIScriptObjectOwner))) {
 		*aInstancePtrResult = (void*) ((nsIScriptObjectOwner*)this);
 		AddRef();
 		return NS_OK;
 	}
-	if (aIID.Equals(nsIDOMMimeType::GetIID())) {
+	if (aIID.Equals(NS_GET_IID(nsIDOMMimeType))) {
 		*aInstancePtrResult = (void*) ((nsIDOMMimeType*)this);
 		AddRef();
 		return NS_OK;

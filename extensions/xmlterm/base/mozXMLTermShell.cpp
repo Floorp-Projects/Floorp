@@ -16,6 +16,7 @@
  * Copyright (C) 1999 Ramalingam Saravanan. All Rights Reserved.
  * 
  * Contributor(s):
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 // mozXMLTermShell.cpp: implementation of mozIXMLTermShell
@@ -118,7 +119,7 @@ mozXMLTermShell::QueryInterface(REFNSIID aIID,void** aInstancePtr)
     *aInstancePtr = NS_STATIC_CAST(nsISupports*,
                                    NS_STATIC_CAST(mozIXMLTermShell*,this));
 
-  } else if ( aIID.Equals(mozIXMLTermShell::GetIID()) ) {
+  } else if ( aIID.Equals(NS_GET_IID(mozIXMLTermShell)) ) {
     *aInstancePtr = NS_STATIC_CAST(mozIXMLTermShell*,this);
 
   } else {
@@ -288,7 +289,7 @@ mozXMLTermShell::NewXMLTermWindow(const PRUnichar* args)
   // Create the toolkit core instance...
   nsIDOMToolkitCore* toolkit = nsnull;
   result = nsServiceManager::GetService(kToolkitCoreCID,
-                                        nsIDOMToolkitCore::GetIID(),
+                                        NS_GET_IID(nsIDOMToolkitCore),
                                         (nsISupports**)&toolkit);
   if (NS_FAILED(result))
     return result;
@@ -316,7 +317,7 @@ mozXMLTermShell::Exit()
 
   // Create the Application Shell instance...
   nsresult result = nsServiceManager::GetService(kAppShellServiceCID,
-                                                 nsIAppShellService::GetIID(),
+                                                 NS_GET_IID(nsIAppShellService),
                                                  (nsISupports**)&appShell);
   if (NS_SUCCEEDED(result)) {
     appShell->Shutdown();

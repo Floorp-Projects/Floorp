@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 #include "PlaceholderTxn.h"
@@ -57,12 +58,12 @@ NS_IMETHODIMP PlaceholderTxn::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 {
   if (!aInstancePtr) return NS_ERROR_NULL_POINTER;
  
-  if (aIID.Equals(nsIAbsorbingTransaction::GetIID())) {
+  if (aIID.Equals(NS_GET_IID(nsIAbsorbingTransaction))) {
     *aInstancePtr = (nsISupports*)(nsIAbsorbingTransaction*)(this);
     NS_ADDREF_THIS();
     return NS_OK;
   }
-  if (aIID.Equals(nsCOMTypeInfo<nsISupportsWeakReference>::GetIID())) {
+  if (aIID.Equals(NS_GET_IID(nsISupportsWeakReference))) {
     *aInstancePtr = (nsISupports*)(nsISupportsWeakReference*) this;
     NS_ADDREF_THIS();
     return NS_OK;
@@ -157,7 +158,7 @@ NS_IMETHODIMP PlaceholderTxn::Merge(PRBool *aDidMerge, nsITransaction *aTransact
       nsCOMPtr<nsIAbsorbingTransaction> plcTxn;// = do_QueryInterface(editTxn);
       // cant do_QueryInterface() above due to our broken transaction interfaces.
       // instead have to brute it below. ugh. 
-      editTxn->QueryInterface(nsIAbsorbingTransaction::GetIID(), getter_AddRefs(plcTxn));
+      editTxn->QueryInterface(NS_GET_IID(nsIAbsorbingTransaction), getter_AddRefs(plcTxn));
       if (plcTxn)
       {
         nsCOMPtr<nsIAtom> atom;

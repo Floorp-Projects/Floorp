@@ -21,6 +21,7 @@
  * Contributor(s): 
  *     Daniel Veditz <dveditz@netscape.com>
  *     Douglas Turner <dougt@netscape.com>
+ *     Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 
@@ -165,7 +166,7 @@ nsInstall::nsInstall()
     mStringBundle = nsnull;
     nsIStringBundleService *service;
     rv = nsServiceManager::GetService( kStringBundleServiceCID, 
-                                       nsIStringBundleService::GetIID(),
+                                       NS_GET_IID(nsIStringBundleService),
                                        (nsISupports**) &service );
     if (NS_SUCCEEDED(rv) && service)
     {

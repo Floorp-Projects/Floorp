@@ -131,7 +131,7 @@ SampleFactoryImpl::~SampleFactoryImpl()
  * abbreviated QI) actually looks like. Because this QI only supports
  * nsISupports and nsIFactory, it, and the two NS_IMPL_* macros
  * that follow it could actually be replaced with the macro 
- * |NS_IMPL_ISUPPORTS(nsIFactory, nsIFactory::GetIID)| as nsSample does
+ * |NS_IMPL_ISUPPORTS(nsIFactory, NS_GET_IID(nsIFactory))| as nsSample does
  * in nsSample.cpp.
  * The XPCOM homepage (www.mozilla.org/projects/xpcom) has another reference
  * implementation of QueryInterface.

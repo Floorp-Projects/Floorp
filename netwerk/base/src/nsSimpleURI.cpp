@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 #include "nsSimpleURI.h"
@@ -59,7 +60,7 @@ nsSimpleURI::AggregatedQueryInterface(const nsIID& aIID, void** aInstancePtr)
      if (aIID.Equals(kISupportsIID))
          *aInstancePtr = GetInner();
     else if (aIID.Equals(kThisSimpleURIImplementationCID) ||        // used by Equals
-        aIID.Equals(nsIURI::GetIID()))
+        aIID.Equals(NS_GET_IID(nsIURI)))
         *aInstancePtr = NS_STATIC_CAST(nsIURI*, this);
      else {
          *aInstancePtr = nsnull;

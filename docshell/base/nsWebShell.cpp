@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 #include "nsDocShell.h"
 #include "nsIWebShell.h"
@@ -2805,7 +2806,7 @@ nsWebShell::GetLinkState(const PRUnichar* aURLSpec, nsLinkState& aState)
   // XXX: GlobalHistory is going to be moved out of the webshell into a more appropriate place.
   if ((nsnull == mHistoryService) && !mFailedToLoadHistoryService) {
     rv = nsServiceManager::GetService(kGlobalHistoryCID,
-                                      nsIGlobalHistory::GetIID(),
+                                      NS_GET_IID(nsIGlobalHistory),
                                       (nsISupports**) &mHistoryService);
 
     if (NS_FAILED(rv)) {
@@ -3477,7 +3478,7 @@ nsWebShell::SelectAll(void)
 
   nsCOMPtr<nsIDOMRange> range;
   rv = nsComponentManager::CreateInstance(kCDOMRangeCID, nsnull,
-                                          nsIDOMRange::GetIID(),
+                                          NS_GET_IID(nsIDOMRange),
                                           getter_AddRefs(range));
 
   rv = range->SelectNodeContents(bodyNode);
@@ -3929,7 +3930,7 @@ NS_IMETHODIMP nsWebShell::SetDocument(nsIDOMDocument *aDOMDoc,
   nsCOMPtr<nsIDocumentLoaderFactory> docFactory;
   static NS_DEFINE_CID(kLayoutDocumentLoaderFactoryCID, NS_LAYOUT_DOCUMENT_LOADER_FACTORY_CID);
   NS_ENSURE_SUCCESS(nsComponentManager::CreateInstance(kLayoutDocumentLoaderFactoryCID, nsnull, 
-                                                       nsIDocumentLoaderFactory::GetIID(),
+                                                       NS_GET_IID(nsIDocumentLoaderFactory),
                                                        (void**)getter_AddRefs(docFactory)),
                     NS_ERROR_FAILURE);
 

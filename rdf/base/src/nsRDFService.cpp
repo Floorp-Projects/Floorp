@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 /*
@@ -658,7 +659,7 @@ RDFServiceImpl::GetResource(const char* aURI, nsIRDFResource** aResource)
         }
     }
 
-    rv = factory->CreateInstance(nsnull, nsIRDFResource::GetIID(), (void**) &result);
+    rv = factory->CreateInstance(nsnull, NS_GET_IID(nsIRDFResource), (void**) &result);
     if (NS_FAILED(rv)) return rv;
 
     // Now initialize it with it's URI. At this point, the resource
@@ -1125,7 +1126,7 @@ RDFServiceImpl::GetDataSource(const char* aURI, nsIRDFDataSource** aDataSource)
         // Try to load this as an RDF/XML data source
         rv = nsComponentManager::CreateInstance(kRDFXMLDataSourceCID,
                                                 nsnull,
-                                                nsIRDFDataSource::GetIID(),
+                                                NS_GET_IID(nsIRDFDataSource),
                                                 (void**) &ds);
 
         if (NS_FAILED(rv)) return rv;

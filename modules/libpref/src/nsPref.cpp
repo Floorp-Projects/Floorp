@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 #include "nsIPref.h"
@@ -177,7 +178,7 @@ nsresult nsPref::useDefaultPrefFile()
         rv = nsComponentManager::CreateInstance(
         	(const char*)NS_FILESPEC_PROGID,
         	(nsISupports*)nsnull,
-        	(const nsID&)nsIFileSpec::GetIID(),
+        	(const nsID&)NS_GET_IID(nsIFileSpec),
         	(void**)&prefsFile);
         NS_ASSERTION(NS_SUCCEEDED(rv), "ERROR: Could not make a file spec.");
 	    if (!prefsFile)
@@ -769,7 +770,7 @@ NS_IMETHODIMP nsPref::GetFilePref(const char *pref_name, nsIFileSpec** value)
         nsresult rv = nsComponentManager::CreateInstance(
         	(const char*)NS_FILESPEC_PROGID,
         	(nsISupports*)nsnull,
-        	(const nsID&)nsIFileSpec::GetIID(),
+        	(const nsID&)NS_GET_IID(nsIFileSpec),
         	(void**)value);
         NS_ASSERTION(NS_SUCCEEDED(rv), "ERROR: Could not make a file spec.");
     if (!*value)
@@ -807,7 +808,7 @@ NS_IMETHODIMP nsPref::SetFilePref(const char *pref_name,
         rv = nsComponentManager::CreateInstance(
         	(const char*)NS_FILESPEC_PROGID,
         	(nsISupports*)nsnull,
-        	(const nsID&)nsIFileSpec::GetIID(),
+        	(const nsID&)NS_GET_IID(nsIFileSpec),
         	(void**)&tmp);
         NS_ASSERTION(NS_SUCCEEDED(rv), "ERROR: Could not make a file spec.");
 	    if (!tmp)
@@ -1123,7 +1124,7 @@ extern "C" JSBool pref_InitInitialObjects()
     rv = nsComponentManager::CreateInstance(
         	(const char*)NS_DIRECTORYITERATOR_PROGID,
         	(nsISupports*)nsnull,
-        	(const nsID&)nsIDirectoryIterator::GetIID(),
+        	(const nsID&)NS_GET_IID(nsIDirectoryIterator),
         	(void**)&i);
     NS_ASSERTION(NS_SUCCEEDED(rv), "ERROR: Could not make a directory iterator.");
     if (!i || NS_FAILED(i->Init(defaultPrefDir, PR_TRUE)))

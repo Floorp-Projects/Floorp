@@ -143,7 +143,7 @@ int main(int argc, char **argv)
   nsresult rv =
 	nsComponentManager::CreateInstance(kCUnixToolkitServiceCID,
 									   nsnull,
-									   nsIUnixToolkitService::GetIID(),
+									   NS_GET_IID(nsIUnixToolkitService),
 									   (void **) &unixToolkitService);
   
   NS_ASSERTION(NS_SUCCEEDED(rv),"Cannot obtain unix toolkit service.");

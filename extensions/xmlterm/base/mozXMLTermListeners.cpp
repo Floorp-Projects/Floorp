@@ -16,6 +16,7 @@
  * Copyright (C) 1999 Ramalingam Saravanan. All Rights Reserved.
  * 
  * Contributor(s):
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 // mozXMLTermListeners.cpp: implementation of classes in mozXMLTermListeners.h
@@ -46,7 +47,7 @@ NS_NewXMLTermKeyListener(nsIDOMEventListener ** aInstancePtrResult,
   // Save non-owning reference to embedding XMLTerminal object
   listener->SetXMLTerminal(aXMLTerminal);
 
-  return listener->QueryInterface(nsIDOMEventListener::GetIID(),
+  return listener->QueryInterface(NS_GET_IID(nsIDOMEventListener),
                                   (void **) aInstancePtrResult);
 }
 
@@ -62,7 +63,7 @@ NS_NewXMLTermTextListener(nsIDOMEventListener ** aInstancePtrResult,
   // Save non-owning reference to embedding XMLTerminal object
   listener->SetXMLTerminal(aXMLTerminal);
 
-  return listener->QueryInterface(nsIDOMEventListener::GetIID(),
+  return listener->QueryInterface(NS_GET_IID(nsIDOMEventListener),
                                   (void **) aInstancePtrResult);
 }
 
@@ -78,7 +79,7 @@ NS_NewXMLTermMouseListener(nsIDOMEventListener ** aInstancePtrResult,
   // Save non-owning reference to embedding XMLTerminal object
   listener->SetXMLTerminal(aXMLTerminal);
 
-  return listener->QueryInterface(nsIDOMEventListener::GetIID(),
+  return listener->QueryInterface(NS_GET_IID(nsIDOMEventListener),
                                   (void **) aInstancePtrResult);
 }
 
@@ -94,7 +95,7 @@ NS_NewXMLTermDragListener(nsIDOMEventListener ** aInstancePtrResult,
   // Save non-owning reference to embedding XMLTerminal object
   listener->SetXMLTerminal(aXMLTerminal);
 
-  return listener->QueryInterface(nsIDOMEventListener::GetIID(),
+  return listener->QueryInterface(NS_GET_IID(nsIDOMEventListener),
                                   (void **) aInstancePtrResult);
 }
 
@@ -128,14 +129,14 @@ mozXMLTermKeyListener::QueryInterface(REFNSIID aIID, void** aInstancePtr)
   // Always NULL result, in case of failure
   *aInstancePtr = NULL;
 
-  if (aIID.Equals(nsCOMTypeInfo<nsISupports>::GetIID())) {
+  if (aIID.Equals(NS_GET_IID(nsISupports))) {
     *aInstancePtr = NS_STATIC_CAST(nsISupports*,
                                    NS_STATIC_CAST(nsIDOMKeyListener*,this));
 
-  } else if (aIID.Equals(nsIDOMEventListener::GetIID())) {
+  } else if (aIID.Equals(NS_GET_IID(nsIDOMEventListener))) {
     *aInstancePtr = NS_STATIC_CAST(nsIDOMEventListener*,this);
 
-  } else if (aIID.Equals(nsIDOMKeyListener::GetIID())) {
+  } else if (aIID.Equals(NS_GET_IID(nsIDOMKeyListener))) {
     *aInstancePtr = NS_STATIC_CAST(nsIDOMKeyListener*,this);
 
   } else {
@@ -344,14 +345,14 @@ mozXMLTermTextListener::QueryInterface(REFNSIID aIID, void** aInstancePtr)
   // Always NULL result, in case of failure
   *aInstancePtr = NULL;
 
-  if (aIID.Equals(nsCOMTypeInfo<nsISupports>::GetIID())) {
+  if (aIID.Equals(NS_GET_IID(nsISupports))) {
     *aInstancePtr = NS_STATIC_CAST(nsISupports*,
                                    NS_STATIC_CAST(nsIDOMTextListener*,this));
 
-  } else if (aIID.Equals(nsIDOMEventListener::GetIID())) {
+  } else if (aIID.Equals(NS_GET_IID(nsIDOMEventListener))) {
     *aInstancePtr = NS_STATIC_CAST(nsIDOMEventListener*,this);
 
-  } else if (aIID.Equals(nsIDOMTextListener::GetIID())) {
+  } else if (aIID.Equals(NS_GET_IID(nsIDOMTextListener))) {
     *aInstancePtr = NS_STATIC_CAST(nsIDOMTextListener*,this);
 
   } else {
@@ -422,14 +423,14 @@ mozXMLTermMouseListener::QueryInterface(REFNSIID aIID, void** aInstancePtr)
   // Always NULL result, in case of failure
   *aInstancePtr = NULL;
 
-  if (aIID.Equals(nsCOMTypeInfo<nsISupports>::GetIID())) {
+  if (aIID.Equals(NS_GET_IID(nsISupports))) {
     *aInstancePtr = NS_STATIC_CAST(nsISupports*,
                                    NS_STATIC_CAST(nsIDOMMouseListener*,this));
 
-  } else if (aIID.Equals(nsIDOMEventListener::GetIID())) {
+  } else if (aIID.Equals(NS_GET_IID(nsIDOMEventListener))) {
     *aInstancePtr = NS_STATIC_CAST(nsIDOMEventListener*,this);
 
-  } else if (aIID.Equals(nsIDOMMouseListener::GetIID())) {
+  } else if (aIID.Equals(NS_GET_IID(nsIDOMMouseListener))) {
     *aInstancePtr = NS_STATIC_CAST(nsIDOMMouseListener*,this);
 
   } else {
@@ -542,14 +543,14 @@ mozXMLTermDragListener::QueryInterface(REFNSIID aIID, void** aInstancePtr)
   // Always NULL result, in case of failure
   *aInstancePtr = NULL;
 
-  if (aIID.Equals(nsCOMTypeInfo<nsISupports>::GetIID())) {
+  if (aIID.Equals(NS_GET_IID(nsISupports))) {
     *aInstancePtr = NS_STATIC_CAST(nsISupports*,
                                    NS_STATIC_CAST(nsIDOMDragListener*,this));
 
-  } else if (aIID.Equals(nsIDOMEventListener::GetIID())) {
+  } else if (aIID.Equals(NS_GET_IID(nsIDOMEventListener))) {
     *aInstancePtr = NS_STATIC_CAST(nsIDOMEventListener*,this);
 
-  } else if (aIID.Equals(nsIDOMDragListener::GetIID())) {
+  } else if (aIID.Equals(NS_GET_IID(nsIDOMDragListener))) {
     *aInstancePtr = NS_STATIC_CAST(nsIDOMDragListener*,this);
 
   } else {

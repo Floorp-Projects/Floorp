@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 #define NS_IMPL_IDS
@@ -145,7 +146,7 @@ nsStringBundle::GetStringFromName(const nsString& aName, nsString& aResult)
   return ret;
 }
 
-NS_IMPL_ISUPPORTS(nsStringBundle, nsIStringBundle::GetIID())
+NS_IMPL_ISUPPORTS(nsStringBundle, NS_GET_IID(nsIStringBundle))
 
 /* void GetStringFromID (in long aID, out wstring aResult); */
 NS_IMETHODIMP
@@ -525,7 +526,7 @@ nsStringBundleService::~nsStringBundleService()
 {
 }
 
-NS_IMPL_ISUPPORTS(nsStringBundleService, nsIStringBundleService::GetIID())
+NS_IMPL_ISUPPORTS(nsStringBundleService, NS_GET_IID(nsIStringBundleService))
 
 NS_IMETHODIMP
 nsStringBundleService::CreateBundle(const char* aURLSpec, nsILocale* aLocale,
@@ -680,7 +681,7 @@ extern "C" NS_EXPORT nsresult NSGetModule(nsIComponentManager * compMgr,
   }
 
   // Increase refcnt and store away nsIModule interface to m in return_cobj
-  rv = m->QueryInterface(nsIModule::GetIID(), (void**)return_cobj);
+  rv = m->QueryInterface(NS_GET_IID(nsIModule), (void**)return_cobj);
   if (NS_FAILED(rv)) {
     delete m;
     m = nsnull;
@@ -689,7 +690,7 @@ extern "C" NS_EXPORT nsresult NSGetModule(nsIComponentManager * compMgr,
   return rv;
 }
 
-NS_IMPL_ISUPPORTS(nsSBModule, nsIModule::GetIID())
+NS_IMPL_ISUPPORTS(nsSBModule, NS_GET_IID(nsIModule))
 
 nsSBModule::nsSBModule()
 : mInitialized(PR_FALSE)

@@ -21,6 +21,7 @@
  * Contributor(s): 
  *     Douglas Turner <dougt@netscape.com>
  *     Daniel Veditz <dveditz@netscape.com>
+ *     Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 #include "nsIXPINotifier.h"
@@ -50,7 +51,7 @@ nsTopProgressNotifier::~nsTopProgressNotifier()
 }
 
 
-NS_IMPL_ISUPPORTS(nsTopProgressNotifier, nsIXPINotifier::GetIID());
+NS_IMPL_ISUPPORTS(nsTopProgressNotifier, NS_GET_IID(nsIXPINotifier));
 
 
 long

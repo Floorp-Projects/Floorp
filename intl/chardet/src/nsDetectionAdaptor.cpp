@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 #define IMPL_NS_IPARSERFILTER
@@ -97,7 +98,7 @@ NS_IMETHODIMP nsMyObserver::Init( nsIWebShellServices* aWebShellSvc,
     return NS_ERROR_ILLEGAL_VALUE;
 }
 //--------------------------------------------------------------
-NS_IMPL_ISUPPORTS ( nsMyObserver ,nsICharsetDetectionObserver::GetIID());
+NS_IMPL_ISUPPORTS ( nsMyObserver ,NS_GET_IID(nsICharsetDetectionObserver));
 //--------------------------------------------------------------
 
 class nsDetectionAdaptor : 
@@ -156,7 +157,7 @@ NS_IMETHODIMP nsDetectionAdaptor::QueryInterface(REFNSIID aIID, void**aInstanceP
   }
   *aInstancePtr = NULL;
 
-  if( aIID.Equals ( nsICharsetDetectionAdaptor::GetIID() )) {
+  if( aIID.Equals ( NS_GET_IID(nsICharsetDetectionAdaptor) )) {
     *aInstancePtr = (void*) ((nsICharsetDetectionAdaptor*) this);
     NS_ADDREF_THIS();
     return NS_OK;
@@ -190,7 +191,7 @@ NS_IMETHODIMP nsDetectionAdaptor::Init(
          if(nsnull == mobs)
             return NS_ERROR_OUT_OF_MEMORY;
 
-         rv = mobs->QueryInterface(nsICharsetDetectionObserver::GetIID(),
+         rv = mobs->QueryInterface(NS_GET_IID(nsICharsetDetectionObserver),
                                   (void**) &aObserver);
         
          if(NS_SUCCEEDED(rv)) {

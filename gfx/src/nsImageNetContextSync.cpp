@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 #include "libimg.h"
@@ -191,7 +192,7 @@ ImageNetContextSyncImpl::GetURL(ilIURL*          aURL,
 
     nsIURI *uri = nsnull;
     nsresult rv;
-    rv = url->QueryInterface(nsIURI::GetIID(), (void**)&uri);
+    rv = url->QueryInterface(NS_GET_IID(nsIURI), (void**)&uri);
     if (NS_FAILED(rv)) return -1;
 
     // XXX NECKO what verb? what event sink getter

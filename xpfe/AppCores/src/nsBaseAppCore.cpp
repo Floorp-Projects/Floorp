@@ -1,4 +1,3 @@
-
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
  *
  * The contents of this file are subject to the Netscape Public
@@ -19,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 #include "nsBaseAppCore.h"
@@ -34,11 +34,7 @@
 #include "nsIServiceManager.h"
 
 // Globals
-static NS_DEFINE_IID(kISupportsIID,              NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIScriptObjectOwnerIID,     NS_ISCRIPTOBJECTOWNER_IID);
-static NS_DEFINE_IID(kIDOMBaseAppCoreIID,        nsIDOMBaseAppCore::GetIID());
-static NS_DEFINE_IID(kIDocumentIID,              nsIDocument::GetIID());
-
 static NS_DEFINE_IID(kIDOMAppCoresManagerIID,   NS_IDOMAPPCORESMANAGER_IID);
 static NS_DEFINE_IID(kAppCoresManagerCID,       NS_APPCORESMANAGER_CID);
 
@@ -92,12 +88,12 @@ nsBaseAppCore::QueryInterface(REFNSIID aIID,void** aInstancePtr)
       AddRef();
       return NS_OK;
   }
-  if ( aIID.Equals(kIDOMBaseAppCoreIID)) {
+  if ( aIID.Equals(NS_GET_IID(nsIDOMBaseAppCore))) {
       *aInstancePtr = (void*) ((nsIDOMBaseAppCore*)this);
       AddRef();
       return NS_OK;
   }
-  else if ( aIID.Equals(kISupportsIID) ) {
+  else if ( aIID.Equals(NS_GET_IID(nsISupports)) ) {
       *aInstancePtr = (void*)(nsISupports*)(nsIScriptObjectOwner*)this;
       AddRef();
       return NS_OK;

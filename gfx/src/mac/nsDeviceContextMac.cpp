@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 #include "nsDeviceContextMac.h"
@@ -695,7 +696,7 @@ nsFontEnumeratorMac::nsFontEnumeratorMac()
 }
 
 NS_IMPL_ISUPPORTS(nsFontEnumeratorMac,
-                  nsCOMTypeInfo<nsIFontEnumerator>::GetIID());
+                  NS_GET_IID(nsIFontEnumerator));
 typedef struct EnumerateFamilyInfo
 {
   PRUnichar** mArray;

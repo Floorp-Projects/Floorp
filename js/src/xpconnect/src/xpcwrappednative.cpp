@@ -19,6 +19,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  *
  * Alternatively, the contents of this file may be used under the
  * terms of the GNU Public License (the "GPL"), in which case the
@@ -314,7 +315,7 @@ nsXPCWrappedNative::nsXPCWrappedNative(XPCContext* xpcc,
     if(mRoot == this)
     {
         nsIXPCScriptable* ds;
-        if(NS_SUCCEEDED(mObj->QueryInterface(nsIXPCScriptable::GetIID(),
+        if(NS_SUCCEEDED(mObj->QueryInterface(NS_GET_IID(nsIXPCScriptable),
                                              (void**)&ds)))
         {
             mDynamicScriptable = ds;

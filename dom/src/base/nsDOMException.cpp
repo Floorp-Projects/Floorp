@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 #include "nsIDOMDOMException.h"
@@ -72,7 +73,7 @@ NS_NewDOMException(nsIDOMDOMException** aException,
     return NS_ERROR_OUT_OF_MEMORY;
   }
   
-  return it->QueryInterface(nsIDOMDOMException::GetIID(),
+  return it->QueryInterface(NS_GET_IID(nsIDOMDOMException),
                             (void**)aException);
 }
 
@@ -128,12 +129,12 @@ nsDOMException::QueryInterface(const nsIID& aIID,
   if (nsnull == aInstancePtrResult) {
     return NS_ERROR_NULL_POINTER;
   }
-  if (aIID.Equals(nsIScriptObjectOwner::GetIID())) {
+  if (aIID.Equals(NS_GET_IID(nsIScriptObjectOwner))) {
     *aInstancePtrResult = (void*) ((nsIScriptObjectOwner*)this);
     AddRef();
     return NS_OK;
   }
-  if (aIID.Equals(nsIDOMDOMException::GetIID())) {
+  if (aIID.Equals(NS_GET_IID(nsIDOMDOMException))) {
     *aInstancePtrResult = (void*) ((nsIDOMDOMException*)this);
     AddRef();
     return NS_OK;

@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 /*
@@ -342,7 +343,7 @@ InMemoryAssertionEnumeratorImpl::~InMemoryAssertionEnumeratorImpl()
     NS_IF_RELEASE(mValue);
 }
 
-NS_IMPL_ISUPPORTS(InMemoryAssertionEnumeratorImpl, nsISimpleEnumerator::GetIID());
+NS_IMPL_ISUPPORTS(InMemoryAssertionEnumeratorImpl, NS_GET_IID(nsISimpleEnumerator));
 
 NS_IMETHODIMP
 InMemoryAssertionEnumeratorImpl::HasMoreElements(PRBool* aResult)
@@ -476,7 +477,7 @@ InMemoryArcsEnumeratorImpl::~InMemoryArcsEnumeratorImpl()
     }
 }
 
-NS_IMPL_ISUPPORTS(InMemoryArcsEnumeratorImpl, nsISimpleEnumerator::GetIID());
+NS_IMPL_ISUPPORTS(InMemoryArcsEnumeratorImpl, NS_GET_IID(nsISimpleEnumerator));
 
 NS_IMETHODIMP
 InMemoryArcsEnumeratorImpl::HasMoreElements(PRBool* aResult)
@@ -552,7 +553,7 @@ NS_NewRDFInMemoryDataSource(nsISupports* aOuter, const nsIID& aIID, void** aResu
     if (! aResult)
         return NS_ERROR_NULL_POINTER;
 
-    if (aOuter && !aIID.Equals(nsCOMTypeInfo<nsISupports>::GetIID())) {
+    if (aOuter && !aIID.Equals(NS_GET_IID(nsISupports))) {
         NS_ERROR("aggregation requires nsISupports");
         return NS_ERROR_ILLEGAL_VALUE;
     }
@@ -683,13 +684,13 @@ InMemoryDataSource::AggregatedQueryInterface(REFNSIID aIID, void** aResult)
     if (! aResult)
         return NS_ERROR_NULL_POINTER;
 
-    if (aIID.Equals(nsCOMTypeInfo<nsISupports>::GetIID())) {
+    if (aIID.Equals(NS_GET_IID(nsISupports))) {
         *aResult = NS_STATIC_CAST(nsISupports*, &fAggregated);
     }
-    else if (aIID.Equals(nsCOMTypeInfo<nsIRDFDataSource>::GetIID())) {
+    else if (aIID.Equals(NS_GET_IID(nsIRDFDataSource))) {
         *aResult = NS_STATIC_CAST(nsIRDFDataSource*, this);
     }
-    else if (aIID.Equals(nsCOMTypeInfo<nsIRDFPurgeableDataSource>::GetIID())) {
+    else if (aIID.Equals(NS_GET_IID(nsIRDFPurgeableDataSource))) {
         *aResult = NS_STATIC_CAST(nsIRDFPurgeableDataSource*, this);
     }
     else {

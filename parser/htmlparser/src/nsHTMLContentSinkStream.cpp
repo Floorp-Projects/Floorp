@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 /**
@@ -353,7 +354,7 @@ nsHTMLContentSinkStream::InitEncoder()
   }
 
   res = nsComponentManager::CreateInstance(kSaveAsCharsetCID, NULL, 
-                                           nsISaveAsCharset::GetIID(),
+                                           NS_GET_IID(nsISaveAsCharset),
                                            getter_AddRefs(mUnicodeEncoder));
   if (NS_FAILED(res))
     return res;

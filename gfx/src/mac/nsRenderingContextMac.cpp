@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
  
@@ -141,7 +142,7 @@ nsRenderingContextMac::~nsRenderingContextMac()
 }
 
 
-NS_IMPL_QUERY_INTERFACE(nsRenderingContextMac, nsIRenderingContext::GetIID());
+NS_IMPL_QUERY_INTERFACE(nsRenderingContextMac, NS_GET_IID(nsIRenderingContext));
 NS_IMPL_ADDREF(nsRenderingContextMac);
 NS_IMPL_RELEASE(nsRenderingContextMac);
 

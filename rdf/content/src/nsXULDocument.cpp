@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 /*
@@ -256,7 +257,7 @@ public:
   }
 };
 
-NS_IMPL_ISUPPORTS(nsProxyLoadStream, nsIInputStream::GetIID());
+NS_IMPL_ISUPPORTS(nsProxyLoadStream, NS_GET_IID(nsIInputStream));
 
 //----------------------------------------------------------------------
 //
@@ -535,12 +536,12 @@ nsXULDocument::QueryInterface(REFNSIID iid, void** result)
              iid.Equals(NS_GET_IID(nsIXMLDocument))) {
         *result = NS_STATIC_CAST(nsIXULDocument*, this);
     }
-    else if (iid.Equals(nsIDOMXULDocument::GetIID()) ||
-             iid.Equals(nsIDOMDocument::GetIID()) ||
-             iid.Equals(nsIDOMNode::GetIID())) {
+    else if (iid.Equals(NS_GET_IID(nsIDOMXULDocument)) ||
+             iid.Equals(NS_GET_IID(nsIDOMDocument)) ||
+             iid.Equals(NS_GET_IID(nsIDOMNode))) {
         *result = NS_STATIC_CAST(nsIDOMXULDocument*, this);
     }
-    else if (iid.Equals(nsIDOMNSDocument::GetIID())) {
+    else if (iid.Equals(NS_GET_IID(nsIDOMNSDocument))) {
         *result = NS_STATIC_CAST(nsIDOMNSDocument*, this);
     }
     else if (iid.Equals(NS_GET_IID(nsIJSScriptObject))) {
@@ -2146,7 +2147,7 @@ nsXULDocument::GetDocumentElement(nsIDOMElement** aDocumentElement)
         return NS_ERROR_NULL_POINTER;
 
     if (mRootContent) {
-        return mRootContent->QueryInterface(nsIDOMElement::GetIID(), (void**)aDocumentElement);
+        return mRootContent->QueryInterface(NS_GET_IID(nsIDOMElement), (void**)aDocumentElement);
     }
     else {
         *aDocumentElement = nsnull;
@@ -2198,7 +2199,7 @@ nsXULDocument::CreateElement(const nsString& aTagName, nsIDOMElement** aReturn)
     if (NS_FAILED(rv)) return rv;
 
     // get the DOM interface
-    rv = result->QueryInterface(nsIDOMElement::GetIID(), (void**) aReturn);
+    rv = result->QueryInterface(NS_GET_IID(nsIDOMElement), (void**) aReturn);
     NS_ASSERTION(NS_SUCCEEDED(rv), "not a DOM element");
     if (NS_FAILED(rv)) return rv;
 
@@ -2224,13 +2225,13 @@ nsXULDocument::CreateTextNode(const nsString& aData, nsIDOMText** aReturn)
     nsresult rv;
 
     nsCOMPtr<nsITextContent> text;
-    rv = nsComponentManager::CreateInstance(kTextNodeCID, nsnull, nsITextContent::GetIID(), getter_AddRefs(text));
+    rv = nsComponentManager::CreateInstance(kTextNodeCID, nsnull, NS_GET_IID(nsITextContent), getter_AddRefs(text));
     if (NS_FAILED(rv)) return rv;
 
     rv = text->SetText(aData.GetUnicode(), aData.Length(), PR_FALSE);
     if (NS_FAILED(rv)) return rv;
 
-    rv = text->QueryInterface(nsIDOMText::GetIID(), (void**) aReturn);
+    rv = text->QueryInterface(NS_GET_IID(nsIDOMText), (void**) aReturn);
     NS_ASSERTION(NS_SUCCEEDED(rv), "not a DOMText");
     if (NS_FAILED(rv)) return rv;
 
@@ -2293,7 +2294,7 @@ nsXULDocument::GetElementsByTagName(const nsString& aTagName, nsIDOMNodeList** a
 
     if (root != nsnull) {
         nsIDOMNode* domRoot;
-        if (NS_SUCCEEDED(rv = root->QueryInterface(nsIDOMNode::GetIID(), (void**) &domRoot))) {
+        if (NS_SUCCEEDED(rv = root->QueryInterface(NS_GET_IID(nsIDOMNode), (void**) &domRoot))) {
             rv = GetElementsByTagName(domRoot, aTagName, elements);
             NS_RELEASE(domRoot);
         }
@@ -2320,7 +2321,7 @@ nsXULDocument::GetElementsByAttribute(const nsString& aAttribute, const nsString
 
     if (root != nsnull) {
         nsIDOMNode* domRoot;
-        if (NS_SUCCEEDED(rv = root->QueryInterface(nsIDOMNode::GetIID(), (void**) &domRoot))) {
+        if (NS_SUCCEEDED(rv = root->QueryInterface(NS_GET_IID(nsIDOMNode), (void**) &domRoot))) {
             rv = GetElementsByAttribute(domRoot, aAttribute, aValue, elements);
             NS_RELEASE(domRoot);
         }
@@ -2514,7 +2515,7 @@ nsXULDocument::CreateElementWithNameSpace(const nsString& aTagName,
     if (NS_FAILED(rv)) return rv;
 
     // get the DOM interface
-    rv = result->QueryInterface(nsIDOMElement::GetIID(), (void**) aResult);
+    rv = result->QueryInterface(NS_GET_IID(nsIDOMElement), (void**) aResult);
     NS_ASSERTION(NS_SUCCEEDED(rv), "not a DOM element");
     if (NS_FAILED(rv)) return rv;
 
@@ -2826,7 +2827,7 @@ nsXULDocument::GetChildNodes(nsIDOMNodeList** aChildNodes)
 
         if (NS_SUCCEEDED(rv)) {
             nsIDOMNode* domNode = nsnull;
-            rv = mRootContent->QueryInterface(nsIDOMNode::GetIID(), (void**)&domNode);
+            rv = mRootContent->QueryInterface(NS_GET_IID(nsIDOMNode), (void**)&domNode);
             NS_ASSERTION(NS_SUCCEEDED(rv), "root content is not a DOM node");
 
             if (NS_SUCCEEDED(rv)) {
@@ -2874,7 +2875,7 @@ nsXULDocument::GetFirstChild(nsIDOMNode** aFirstChild)
         return NS_ERROR_NULL_POINTER;
 
     if (mRootContent) {
-        return mRootContent->QueryInterface(nsIDOMNode::GetIID(), (void**) aFirstChild);
+        return mRootContent->QueryInterface(NS_GET_IID(nsIDOMNode), (void**) aFirstChild);
     }
     else {
         *aFirstChild = nsnull;
@@ -2891,7 +2892,7 @@ nsXULDocument::GetLastChild(nsIDOMNode** aLastChild)
         return NS_ERROR_NULL_POINTER;
 
     if (mRootContent) {
-        return mRootContent->QueryInterface(nsIDOMNode::GetIID(), (void**) aLastChild);
+        return mRootContent->QueryInterface(NS_GET_IID(nsIDOMNode), (void**) aLastChild);
     }
     else {
         *aLastChild = nsnull;

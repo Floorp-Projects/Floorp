@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 
@@ -82,7 +83,7 @@ AccountServicesImpl::AccountServicesImpl()
     NS_INIT_REFCNT();
 
 	nsresult rv = nsServiceManager::GetService(kAccountCID, 
-                                    nsIAccount::GetIID(), 
+                                    NS_GET_IID(nsIAccount), 
                                     (nsISupports **)&mAccount);
 }
 
@@ -93,7 +94,7 @@ AccountServicesImpl::~AccountServicesImpl()
 
 
 
-NS_IMPL_ISUPPORTS(AccountServicesImpl, nsIAccountServices::GetIID());
+NS_IMPL_ISUPPORTS(AccountServicesImpl, NS_GET_IID(nsIAccountServices));
 
 
 NS_IMETHODIMP

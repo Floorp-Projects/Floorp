@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 #define NS_IMPL_IDS
@@ -158,7 +159,7 @@ NS_IMETHODIMP nsPICSElementObserver::Notify(PRUint32 aDocumentID,
           rv = service->NewURI(uriStr, nsnull, &uri);
           if (NS_FAILED(rv)) return rv;
 
-          rv = uri->QueryInterface(nsIURI::GetIID(), (void**)&uaURL);
+          rv = uri->QueryInterface(NS_GET_IID(nsIURI), (void**)&uaURL);
           NS_RELEASE(uri);
           if (NS_FAILED(rv)) return rv;
         }

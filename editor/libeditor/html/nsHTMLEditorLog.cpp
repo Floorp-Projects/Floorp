@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 #include <stdio.h>
@@ -61,7 +62,7 @@ nsHTMLEditorLog::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 
   *aInstancePtr = nsnull;
 
-  if (aIID.Equals(nsIEditorLogging::GetIID())) {
+  if (aIID.Equals(NS_GET_IID(nsIEditorLogging))) {
     *aInstancePtr = (void*)(nsIEditorLogging*)this;
     NS_ADDREF_THIS();
     return NS_OK;

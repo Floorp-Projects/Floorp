@@ -1,4 +1,4 @@
-/* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /*
  * The contents of this file are subject to the Netscape Public
  * License Version 1.1 (the "License"); you may not use this file
@@ -22,6 +22,7 @@
  *     Daniel Veditz <dveditz@netscape.com>
  *     Samir Gehani <sgehani@netscape.com>
  *     Mitch Stoltz <mstoltz@netsape.com>
+ *     Pierre Phaneuf <pp@ludusdesign.com>
  */
 #include <string.h>
 
@@ -198,7 +199,7 @@ nsJAREnumerator::~nsJAREnumerator()
     mArchive->FindFree(mFind);
 }
 
-NS_IMPL_ISUPPORTS(nsJAREnumerator, nsISimpleEnumerator::GetIID());
+NS_IMPL_ISUPPORTS(nsJAREnumerator, NS_GET_IID(nsISimpleEnumerator));
 
 //----------------------------------------------
 // nsJAREnumerator::HasMoreElements

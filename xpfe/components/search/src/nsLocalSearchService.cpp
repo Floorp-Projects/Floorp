@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 /*
@@ -199,7 +200,7 @@ LocalSearchDataSource::LocalSearchDataSource(void)
 	if (gRefCnt++ == 0)
 	{
 		nsresult rv = nsServiceManager::GetService(kRDFServiceCID,
-		                           nsIRDFService::GetIID(),
+		                           NS_GET_IID(nsIRDFService),
 		                           (nsISupports**) &gRDFService);
 
 		PR_ASSERT(NS_SUCCEEDED(rv));
@@ -253,7 +254,7 @@ LocalSearchDataSource::Init()
 
 
 
-NS_IMPL_ISUPPORTS(LocalSearchDataSource, nsIRDFDataSource::GetIID());
+NS_IMPL_ISUPPORTS(LocalSearchDataSource, NS_GET_IID(nsIRDFDataSource));
 
 
 
@@ -514,7 +515,7 @@ LocalSearchDataSource::parseFindURL(nsIRDFResource *u, nsISupportsArray *array)
 					if (NS_SUCCEEDED(rv))
 					{
 						nsIRDFResource	*source = nsnull;
-						if (NS_SUCCEEDED(rv = isupports->QueryInterface(nsIRDFResource::GetIID(), (void **)&source)))
+						if (NS_SUCCEEDED(rv = isupports->QueryInterface(NS_GET_IID(nsIRDFResource), (void **)&source)))
 						{
 							const char	*uri = nsnull;
 							source->GetValueConst(&uri);
@@ -531,7 +532,7 @@ LocalSearchDataSource::parseFindURL(nsIRDFResource *u, nsISupportsArray *array)
 										(rv != NS_RDF_NO_VALUE) && (nsnull != value))
 									{
 										nsIRDFLiteral	*literal = nsnull;
-										if (NS_SUCCEEDED(rv = value->QueryInterface(nsIRDFLiteral::GetIID(), (void **)&literal)) &&
+										if (NS_SUCCEEDED(rv = value->QueryInterface(NS_GET_IID(nsIRDFLiteral), (void **)&literal)) &&
 											(rv != NS_RDF_NO_VALUE) && (nsnull != literal))
 										{
 											if (PR_TRUE == doMatch(literal, tokens[2].value, tokens[3].value))

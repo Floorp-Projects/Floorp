@@ -14,6 +14,9 @@
  * Communications Corporation.  Portions created by Netscape are
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
+ *
+ * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 #include "nsProfileAccess.h"
@@ -149,7 +152,7 @@ nsProfileAccess::OpenRegistry()
     if (!m_registry) {
         rv = nsComponentManager::CreateInstance(kRegistryCID,
                                                 nsnull,
-                                                nsIRegistry::GetIID(),
+                                                NS_GET_IID(nsIRegistry),
                                                 getter_AddRefs(m_registry));
         if (NS_FAILED(rv)) return rv;
         if (!m_registry) return NS_ERROR_FAILURE;
@@ -762,7 +765,7 @@ nsProfileAccess::Get4xProfileInfo(const char *registryName)
     nsCOMPtr <nsIRegistry> oldReg;
     rv = nsComponentManager::CreateInstance(kRegistryCID,
                                             nsnull,
-                                            nsIRegistry::GetIID(),
+                                            NS_GET_IID(nsIRegistry),
                                             getter_AddRefs(oldReg));
     if (NS_FAILED(rv)) return rv;
     

@@ -16,6 +16,7 @@
  * Copyright (C) 1999 Ramalingam Saravanan. All Rights Reserved.
  * 
  * Contributor(s):
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 // mozSimpleContainer.cpp: Implements mozISimpleContainer
@@ -125,10 +126,10 @@ mozSimpleContainer::QueryInterface(REFNSIID aIID,void** aInstancePtr)
     *aInstancePtr = NS_STATIC_CAST(nsISupports*,
                                    NS_STATIC_CAST(mozISimpleContainer*,this));
 
-  } else if ( aIID.Equals(mozISimpleContainer::GetIID()) ) {
+  } else if ( aIID.Equals(NS_GET_IID(mozISimpleContainer)) ) {
     *aInstancePtr = NS_STATIC_CAST(mozISimpleContainer*,this);
 
-  } else if ( aIID.Equals(nsIWebShellContainer::GetIID()) ) {
+  } else if ( aIID.Equals(NS_GET_IID(nsIWebShellContainer)) ) {
     *aInstancePtr = NS_STATIC_CAST(nsIWebShellContainer*,this);
 
   } else {

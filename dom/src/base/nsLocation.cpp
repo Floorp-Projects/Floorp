@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 #include "nsGlobalWindow.h"
@@ -182,7 +183,7 @@ LocationImpl::GetHash(nsString& aHash)
     if (NS_OK == result) {
       char *ref;
       nsIURL* url;
-      result = uri->QueryInterface(nsIURL::GetIID(), (void**)&url);
+      result = uri->QueryInterface(NS_GET_IID(nsIURL), (void**)&url);
       if (NS_SUCCEEDED(result)) {
         result = url->GetRef(&ref);
         NS_RELEASE(url);
@@ -214,7 +215,7 @@ LocationImpl::SetHash(const nsString& aHash)
     result = NS_NewURI(&uri, href);
     if (NS_FAILED(result)) return result;
     nsIURL* url;
-    result = uri->QueryInterface(nsIURI::GetIID(), (void**)&url);
+    result = uri->QueryInterface(NS_GET_IID(nsIURI), (void**)&url);
     NS_RELEASE(uri);
     if (NS_OK == result) {
       char *buf = aHash.ToNewCString();
@@ -558,7 +559,7 @@ LocationImpl::GetSearch(nsString& aSearch)
     if (NS_OK == result) {
       char *search;
       nsIURL* url;
-      result = uri->QueryInterface(nsIURL::GetIID(), (void**)&url);
+      result = uri->QueryInterface(NS_GET_IID(nsIURL), (void**)&url);
       if (NS_SUCCEEDED(result)) {
         result = url->GetQuery(&search);
         NS_RELEASE(url);
@@ -591,7 +592,7 @@ LocationImpl::SetSearch(const nsString& aSearch)
     if (NS_OK == result) {
       char *buf = aSearch.ToNewCString();
       nsIURL* url;
-      result = uri->QueryInterface(nsIURL::GetIID(), (void**)&url);
+      result = uri->QueryInterface(NS_GET_IID(nsIURL), (void**)&url);
       if (NS_SUCCEEDED(result)) {
         result = url->SetQuery(buf);
         NS_RELEASE(url);

@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 
@@ -187,14 +188,14 @@ nsXULAttribute::QueryInterface(REFNSIID aIID, void** aResult)
     if (! aResult)
         return NS_ERROR_NULL_POINTER;
 
-    if (aIID.Equals(nsIDOMAttr::GetIID()) ||
-        aIID.Equals(nsIDOMNode::GetIID()) ||
+    if (aIID.Equals(NS_GET_IID(nsIDOMAttr)) ||
+        aIID.Equals(NS_GET_IID(nsIDOMNode)) ||
         aIID.Equals(kISupportsIID)) {
         *aResult = NS_STATIC_CAST(nsIDOMAttr*, this);
         NS_ADDREF(this);
         return NS_OK;
     }
-    else if (aIID.Equals(nsIScriptObjectOwner::GetIID())) {
+    else if (aIID.Equals(NS_GET_IID(nsIScriptObjectOwner))) {
         *aResult = NS_STATIC_CAST(nsIScriptObjectOwner*, this);
         NS_ADDREF(this);
         return NS_OK;
@@ -384,7 +385,7 @@ nsXULAttribute::GetScriptObject(nsIScriptContext* aContext, void** aScriptObject
         nsIDOMScriptObjectFactory *factory;
     
         rv = nsServiceManager::GetService(kDOMScriptObjectFactoryCID,
-                                          nsIDOMScriptObjectFactory::GetIID(),
+                                          NS_GET_IID(nsIDOMScriptObjectFactory),
                                           (nsISupports **)&factory);
 
         if (NS_FAILED(rv))
@@ -525,13 +526,13 @@ nsXULAttributes::QueryInterface(REFNSIID aIID, void** aResult)
     if (! aResult)
         return NS_ERROR_NULL_POINTER;
 
-    if (aIID.Equals(nsIDOMNamedNodeMap::GetIID()) ||
+    if (aIID.Equals(NS_GET_IID(nsIDOMNamedNodeMap)) ||
         aIID.Equals(kISupportsIID)) {
         *aResult = NS_STATIC_CAST(nsIDOMNamedNodeMap*, this);
         NS_ADDREF(this);
         return NS_OK;
     }
-    else if (aIID.Equals(nsIScriptObjectOwner::GetIID())) {
+    else if (aIID.Equals(NS_GET_IID(nsIScriptObjectOwner))) {
         *aResult = NS_STATIC_CAST(nsIScriptObjectOwner*, this);
         NS_ADDREF(this);
         return NS_OK;
@@ -636,7 +637,7 @@ nsXULAttributes::GetScriptObject(nsIScriptContext* aContext, void** aScriptObjec
         nsIDOMScriptObjectFactory *factory;
     
         rv = nsServiceManager::GetService(kDOMScriptObjectFactoryCID,
-                                          nsIDOMScriptObjectFactory::GetIID(),
+                                          NS_GET_IID(nsIDOMScriptObjectFactory),
                                           (nsISupports **)&factory);
 
         if (NS_FAILED(rv))

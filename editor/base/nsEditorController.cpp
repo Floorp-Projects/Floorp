@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 #include "nsEditorController.h"
@@ -577,7 +578,7 @@ NS_IMETHODIMP nsEditorController::GetFrame(nsIGfxTextControlFrame **aFrame)
   if (!frame) { return NS_ERROR_FAILURE; }
 
   NS_ENSURE_SUCCESS(
-    frame->QueryInterface(nsIGfxTextControlFrame::GetIID(), (void**)aFrame), 
+    frame->QueryInterface(NS_GET_IID(nsIGfxTextControlFrame), (void**)aFrame), 
     NS_ERROR_FAILURE
   );
   */

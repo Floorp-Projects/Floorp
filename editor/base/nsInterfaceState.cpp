@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 
@@ -68,21 +69,21 @@ nsInterfaceState::QueryInterface(const nsIID& aIID, void** aInstancePtr)
   }
   
   *aInstancePtr = nsnull;
-  if (aIID.Equals(nsIDOMSelectionListener::GetIID()))
+  if (aIID.Equals(NS_GET_IID(nsIDOMSelectionListener)))
   {
     *aInstancePtr = (void*)(nsIDOMSelectionListener*)this;
     AddRef();
     return NS_OK;
   }
   
-  if (aIID.Equals(nsIDocumentStateListener::GetIID()))
+  if (aIID.Equals(NS_GET_IID(nsIDocumentStateListener)))
   {
     *aInstancePtr = (void*)(nsIDocumentStateListener*)this;
     AddRef();
     return NS_OK;
   }
   
-  if (aIID.Equals(nsCOMTypeInfo<nsISupports>::GetIID()))
+  if (aIID.Equals(NS_GET_IID(nsISupports)))
   {
     *aInstancePtr = (void*)(nsISupports *)(nsIDOMSelectionListener*)this;
     AddRef();
@@ -433,5 +434,5 @@ nsresult NS_NewInterfaceState(nsIHTMLEditor* aEditor, nsIWebShell* aWebShell, ns
     return rv;
   }
       
-  return newThang->QueryInterface(nsIDOMSelectionListener::GetIID(), (void **)aInstancePtrResult);
+  return newThang->QueryInterface(NS_GET_IID(nsIDOMSelectionListener), (void **)aInstancePtrResult);
 }

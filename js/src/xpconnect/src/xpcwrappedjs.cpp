@@ -19,6 +19,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  *
  * Alternatively, the contents of this file may be used under the
  * terms of the GNU Public License (the "GPL"), in which case the
@@ -47,7 +48,7 @@ nsXPCWrappedJS::QueryInterface(REFNSIID aIID, void** aInstancePtr)
         return NS_ERROR_NULL_POINTER;
     }
 
-    if(aIID.Equals(nsIXPConnectWrappedJSMethods::GetIID()))
+    if(aIID.Equals(NS_GET_IID(nsIXPConnectWrappedJSMethods)))
     {
         if(!mMethods && !(mMethods = new nsXPCWrappedJSMethods(this)))
         {

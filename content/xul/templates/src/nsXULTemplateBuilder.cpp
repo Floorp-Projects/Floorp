@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 /*
@@ -426,7 +427,7 @@ NS_NewXULTemplateBuilder(nsIRDFContentModelBuilder** aResult)
 
     rv = result->Init();
     if (NS_SUCCEEDED(rv)) {
-        rv = result->QueryInterface(nsCOMTypeInfo<nsIRDFContentModelBuilder>::GetIID(), (void**) aResult);
+        rv = result->QueryInterface(NS_GET_IID(nsIRDFContentModelBuilder), (void**) aResult);
     }
 
     NS_RELEASE(result);
@@ -551,7 +552,7 @@ RDFGenericBuilderImpl::Init()
         // the IDs if they've already been registered by someone else.
         rv = nsComponentManager::CreateInstance(kNameSpaceManagerCID,
                                                 nsnull,
-                                                nsCOMTypeInfo<nsINameSpaceManager>::GetIID(),
+                                                NS_GET_IID(nsINameSpaceManager),
                                                 (void**) &gNameSpaceManager);
         NS_ASSERTION(NS_SUCCEEDED(rv), "unable to create namespace manager");
         if (NS_FAILED(rv)) return rv;
@@ -588,12 +589,12 @@ RDFGenericBuilderImpl::Init()
         gRDFService->GetResource(XUL_NAMESPACE_URI "element",    &kXUL_element);
 
         rv = nsServiceManager::GetService(kRDFContainerUtilsCID,
-                                          nsIRDFContainerUtils::GetIID(),
+                                          NS_GET_IID(nsIRDFContainerUtils),
                                           (nsISupports**) &gRDFContainerUtils);
         if (NS_FAILED(rv)) return rv;
 
         rv = nsServiceManager::GetService(kXULSortServiceCID,
-                                          nsCOMTypeInfo<nsIXULSortService>::GetIID(),
+                                          NS_GET_IID(nsIXULSortService),
                                           (nsISupports**) &gXULSortService);
         if (NS_FAILED(rv)) return rv;
 
@@ -604,7 +605,7 @@ RDFGenericBuilderImpl::Init()
         if (NS_FAILED(rv)) return rv;
 
         rv = nsServiceManager::GetService(kXULContentUtilsCID,
-                                          nsCOMTypeInfo<nsIXULContentUtils>::GetIID(),
+                                          NS_GET_IID(nsIXULContentUtils),
                                           (nsISupports**) &gXULUtils);
         if (NS_FAILED(rv)) return rv;
     }
@@ -1950,7 +1951,7 @@ RDFGenericBuilderImpl::BuildContentFromTemplate(nsIContent *aTemplateNode,
                 nsCOMPtr<nsITextContent> content;
                 rv = nsComponentManager::CreateInstance(kTextNodeCID,
                                                         nsnull,
-                                                        nsITextContent::GetIID(),
+                                                        NS_GET_IID(nsITextContent),
                                                         getter_AddRefs(content));
                 if (NS_FAILED(rv)) return rv;
 

@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 #include "nsAOLCiter.h"
@@ -46,13 +47,13 @@ nsAOLCiter::QueryInterface(REFNSIID aIID, void** aInstancePtr)
   if (nsnull == aInstancePtr) {
     return NS_ERROR_NULL_POINTER;
   }
-  if (aIID.Equals(nsCOMTypeInfo<nsISupports>::GetIID()))
+  if (aIID.Equals(NS_GET_IID(nsISupports)))
   {
     *aInstancePtr = (void*)this;
     NS_ADDREF_THIS();
     return NS_OK;
   }
-  if (aIID.Equals(nsICiter::GetIID())) {
+  if (aIID.Equals(NS_GET_IID(nsICiter))) {
     *aInstancePtr = (void*)(nsICiter*)this;
     NS_ADDREF_THIS();
     return NS_OK;

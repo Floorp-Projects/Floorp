@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
   
 #define DEBUG_XMLENCODING
@@ -257,13 +258,13 @@ nsresult nsParser::QueryInterface(const nsIID& aIID, void** aInstancePtr)
   else if(aIID.Equals(kIParserIID)) {  //do IParser base class...
     *aInstancePtr = (nsIParser*)(this);                                        
   }
-  else if(aIID.Equals(nsIProgressEventSink::GetIID())) {
+  else if(aIID.Equals(NS_GET_IID(nsIProgressEventSink))) {
     *aInstancePtr = (nsIStreamListener*)(this);                                        
   }
-  else if(aIID.Equals(nsIStreamObserver::GetIID())) {
+  else if(aIID.Equals(NS_GET_IID(nsIStreamObserver))) {
     *aInstancePtr = (nsIStreamObserver*)(this);                                        
   }
-  else if(aIID.Equals(nsIStreamListener::GetIID())) {
+  else if(aIID.Equals(NS_GET_IID(nsIStreamListener))) {
     *aInstancePtr = (nsIStreamListener*)(this);                                        
   }
   else if(aIID.Equals(kClassIID)) {  //do this class...

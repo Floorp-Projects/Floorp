@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 #include "nsEditorEventListeners.h"
 #include "nsEditor.h"
@@ -95,17 +96,17 @@ nsTextEditorKeyListener::QueryInterface(REFNSIID aIID, void** aInstancePtr)
   if (nsnull == aInstancePtr) {
     return NS_ERROR_NULL_POINTER;
   }
-  if (aIID.Equals(nsCOMTypeInfo<nsISupports>::GetIID())) {
+  if (aIID.Equals(NS_GET_IID(nsISupports))) {
     *aInstancePtr = (void*)(nsISupports*)this;
     NS_ADDREF_THIS();
     return NS_OK;
   }
-  if (aIID.Equals(nsIDOMEventListener::GetIID())) {
+  if (aIID.Equals(NS_GET_IID(nsIDOMEventListener))) {
     *aInstancePtr = (void*)(nsIDOMEventListener*)this;
     NS_ADDREF_THIS();
     return NS_OK;
   }
-  if (aIID.Equals(nsIDOMKeyListener::GetIID())) {
+  if (aIID.Equals(NS_GET_IID(nsIDOMKeyListener))) {
     *aInstancePtr = (void*)(nsIDOMKeyListener*)this;
     NS_ADDREF_THIS();
     return NS_OK;
@@ -366,17 +367,17 @@ nsTextEditorMouseListener::QueryInterface(REFNSIID aIID, void** aInstancePtr)
     return NS_ERROR_NULL_POINTER;
   }
 
-  if (aIID.Equals(nsCOMTypeInfo<nsISupports>::GetIID())) {
+  if (aIID.Equals(NS_GET_IID(nsISupports))) {
     *aInstancePtr = (void*)(nsISupports*)this;
     NS_ADDREF_THIS();
     return NS_OK;
   }
-  if (aIID.Equals(nsIDOMEventListener::GetIID())) {
+  if (aIID.Equals(NS_GET_IID(nsIDOMEventListener))) {
     *aInstancePtr = (void*)(nsIDOMEventListener*)this;
     NS_ADDREF_THIS();
     return NS_OK;
   }
-  if (aIID.Equals(nsIDOMMouseListener::GetIID())) {
+  if (aIID.Equals(NS_GET_IID(nsIDOMMouseListener))) {
     *aInstancePtr = (void*)(nsIDOMMouseListener*)this;
     NS_ADDREF_THIS();
     return NS_OK;
@@ -404,7 +405,7 @@ IsNodeInSelection(nsIDOMNode *aInNode, nsIDOMSelection *aInSelection, PRBool &aO
 
   nsCOMPtr<nsIContentIterator>iter;
   nsresult result = nsComponentManager::CreateInstance(kContentIteratorCID, nsnull,
-                                                       nsIContentIterator::GetIID(), 
+                                                       NS_GET_IID(nsIContentIterator), 
                                                        getter_AddRefs(iter));
    if (NS_FAILED(result)) { return result; }
    if (!iter) { return NS_ERROR_OUT_OF_MEMORY; }
@@ -611,17 +612,17 @@ nsTextEditorTextListener::QueryInterface(REFNSIID aIID, void** aInstancePtr)
     return NS_ERROR_NULL_POINTER;
   }
 
-  if (aIID.Equals(nsCOMTypeInfo<nsISupports>::GetIID())) {
+  if (aIID.Equals(NS_GET_IID(nsISupports))) {
     *aInstancePtr = (void*)(nsISupports*)this;
     NS_ADDREF_THIS();
     return NS_OK;
   }
-  if (aIID.Equals(nsIDOMEventListener::GetIID())) {
+  if (aIID.Equals(NS_GET_IID(nsIDOMEventListener))) {
     *aInstancePtr = (void*)(nsIDOMEventListener*)this;
     NS_ADDREF_THIS();
     return NS_OK;
   }
-  if (aIID.Equals(nsIDOMTextListener::GetIID())) {
+  if (aIID.Equals(NS_GET_IID(nsIDOMTextListener))) {
     *aInstancePtr = (void*)(nsIDOMTextListener*)this;
     NS_ADDREF_THIS();
     return NS_OK;
@@ -693,17 +694,17 @@ nsTextEditorDragListener::QueryInterface(REFNSIID aIID, void** aInstancePtr)
     return NS_ERROR_NULL_POINTER;
   }
 
-  if (aIID.Equals(nsCOMTypeInfo<nsISupports>::GetIID())) {
+  if (aIID.Equals(NS_GET_IID(nsISupports))) {
     *aInstancePtr = (void*)(nsISupports*)this;
     NS_ADDREF_THIS();
     return NS_OK;
   }
-  if (aIID.Equals(nsIDOMEventListener::GetIID())) {
+  if (aIID.Equals(NS_GET_IID(nsIDOMEventListener))) {
     *aInstancePtr = (void*)(nsIDOMEventListener*)this;
     NS_ADDREF_THIS();
     return NS_OK;
   }
-  if (aIID.Equals(nsIDOMDragListener::GetIID())) {
+  if (aIID.Equals(NS_GET_IID(nsIDOMDragListener))) {
     *aInstancePtr = (void*)(nsIDOMDragListener*)this;
     NS_ADDREF_THIS();
     return NS_OK;
@@ -794,7 +795,7 @@ nsTextEditorDragListener::DragDrop(nsIDOMEvent* aMouseEvent)
     // Create transferable for getting the drag data
     nsCOMPtr<nsITransferable> trans;
     rv = nsComponentManager::CreateInstance("component://netscape/widget/transferable", nsnull, 
-                                            nsITransferable::GetIID(), 
+                                            NS_GET_IID(nsITransferable), 
                                             (void**) getter_AddRefs(trans));
     if ( NS_SUCCEEDED(rv) && trans ) {
       // Add the text Flavor to the transferable, 
@@ -861,17 +862,17 @@ nsTextEditorCompositionListener::QueryInterface(REFNSIID aIID, void** aInstanceP
   if (nsnull == aInstancePtr) {
     return NS_ERROR_NULL_POINTER;
   }
-  if (aIID.Equals(nsCOMTypeInfo<nsISupports>::GetIID())) {
+  if (aIID.Equals(NS_GET_IID(nsISupports))) {
     *aInstancePtr = (void*)(nsISupports*)this;
     NS_ADDREF_THIS();
     return NS_OK;
   }
-  if (aIID.Equals(nsIDOMEventListener::GetIID())) {
+  if (aIID.Equals(NS_GET_IID(nsIDOMEventListener))) {
     *aInstancePtr = (void*)(nsIDOMEventListener*)this;
     NS_ADDREF_THIS();
     return NS_OK;
   }
-  if (aIID.Equals(nsIDOMCompositionListener::GetIID())) {
+  if (aIID.Equals(NS_GET_IID(nsIDOMCompositionListener))) {
     *aInstancePtr = (void*)(nsIDOMCompositionListener*)this;
     NS_ADDREF_THIS();
     return NS_OK;
@@ -962,7 +963,7 @@ NS_NewEditorKeyListener(nsIDOMEventListener ** aInstancePtrResult,
 
   it->SetEditor(aEditor);
 
-  return it->QueryInterface(nsIDOMEventListener::GetIID(), (void **) aInstancePtrResult);   
+  return it->QueryInterface(NS_GET_IID(nsIDOMEventListener), (void **) aInstancePtrResult);   
 }
 
 
@@ -978,7 +979,7 @@ NS_NewEditorMouseListener(nsIDOMEventListener ** aInstancePtrResult,
 
   it->SetEditor(aEditor);
 
-  return it->QueryInterface(nsIDOMEventListener::GetIID(), (void **) aInstancePtrResult);   
+  return it->QueryInterface(NS_GET_IID(nsIDOMEventListener), (void **) aInstancePtrResult);   
 }
 
 
@@ -992,7 +993,7 @@ NS_NewEditorTextListener(nsIDOMEventListener** aInstancePtrResult, nsIEditor* aE
 
    it->SetEditor(aEditor);
 
-   return it->QueryInterface(nsIDOMEventListener::GetIID(), (void **) aInstancePtrResult);
+   return it->QueryInterface(NS_GET_IID(nsIDOMEventListener), (void **) aInstancePtrResult);
 }
 
 
@@ -1008,7 +1009,7 @@ NS_NewEditorDragListener(nsIDOMEventListener ** aInstancePtrResult,
 
   it->SetEditor(aEditor);
 
-  return it->QueryInterface(nsIDOMEventListener::GetIID(), (void **) aInstancePtrResult);   
+  return it->QueryInterface(NS_GET_IID(nsIDOMEventListener), (void **) aInstancePtrResult);   
 }
 
 nsresult
@@ -1019,7 +1020,7 @@ NS_NewEditorCompositionListener(nsIDOMEventListener** aInstancePtrResult, nsIEdi
       return NS_ERROR_OUT_OF_MEMORY;
    }
    it->SetEditor(aEditor);
-  return it->QueryInterface(nsIDOMEventListener::GetIID(), (void **) aInstancePtrResult);
+  return it->QueryInterface(NS_GET_IID(nsIDOMEventListener), (void **) aInstancePtrResult);
 }
 
 nsresult 
@@ -1031,7 +1032,7 @@ NS_NewEditorFocusListener(nsIDOMEventListener ** aInstancePtrResult,
     return NS_ERROR_OUT_OF_MEMORY;
   }
   it->SetEditor(aEditor);
-   return it->QueryInterface(nsIDOMEventListener::GetIID(), (void **) aInstancePtrResult);
+   return it->QueryInterface(NS_GET_IID(nsIDOMEventListener), (void **) aInstancePtrResult);
 }
 
 

@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 #include "IMETextTxn.h"
@@ -376,7 +377,7 @@ NS_IMETHODIMP IMETextTxn::CollapseTextSelection(void)
 
              result = nsComponentManager::CreateInstance(kRangeCID,
                                    nsnull,
-                                   nsIDOMRange::GetIID(),
+                                   NS_GET_IID(nsIDOMRange),
                                    getter_AddRefs(newRange));
              NS_ASSERTION(NS_SUCCEEDED(result), "Cannot create new nsIDOMRange");
              if(NS_FAILED(result))

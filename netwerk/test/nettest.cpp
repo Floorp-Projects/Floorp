@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 #include <stdio.h>
@@ -235,7 +236,7 @@ int main(int argc, char **argv)
         = service->NewURI(argv[i], nsnull, &uri);
         if (NS_FAILED(result)) return result;
 
-        result = uri->QueryInterface(nsCOMTypeInfo<nsIURL>::GetIID(), (void**)&pURL);
+        result = uri->QueryInterface(NS_GET_IID(nsIURL), (void**)&pURL);
         NS_RELEASE(uri);
         if (NS_FAILED(result)) return result;
         if (NS_OK != result) {

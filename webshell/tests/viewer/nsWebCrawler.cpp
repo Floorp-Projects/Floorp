@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 #include "nsCOMPtr.h"
 #include "nsWebCrawler.h"
@@ -308,7 +309,7 @@ nsWebCrawler::OnEndDocumentLoad(nsIDocumentLoader* loader,
           FILE *fp = GetOutputFile(aURL, regressionFileName);
           if (fp) {
             nsIFrameDebug* fdbg;
-            if (NS_SUCCEEDED(root->QueryInterface(nsIFrameDebug::GetIID(), (void**) &fdbg))) {
+            if (NS_SUCCEEDED(root->QueryInterface(NS_GET_IID(nsIFrameDebug), (void**) &fdbg))) {
               fdbg->DumpRegressionData(presContext, fp, 0);
             }
             fclose(fp);
@@ -329,7 +330,7 @@ nsWebCrawler::OnEndDocumentLoad(nsIDocumentLoader* loader,
         }
         else {
           nsIFrameDebug* fdbg;
-          if (NS_SUCCEEDED(root->QueryInterface(nsIFrameDebug::GetIID(), (void**) &fdbg))) {
+          if (NS_SUCCEEDED(root->QueryInterface(NS_GET_IID(nsIFrameDebug), (void**) &fdbg))) {
             fdbg->DumpRegressionData(presContext, stdout, 0);
           }
         }

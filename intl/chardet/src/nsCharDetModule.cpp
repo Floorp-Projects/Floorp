@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 #define NS_IMPL_IDS
 #include "nsICharsetAlias.h"
@@ -315,7 +316,7 @@ nsCharDetModule::RegisterSelf(nsIComponentManager *aCompMgr,
   nsRegistryKey key;
   nsIRegistry* registry;
   rv = nsServiceManager::GetService(NS_REGISTRY_PROGID,
-                                    nsIRegistry::GetIID(),
+                                    NS_GET_IID(nsIRegistry),
                                     (nsISupports**)&registry);
   if (NS_FAILED(rv)) {
     return rv;
@@ -446,7 +447,7 @@ extern "C" NS_EXPORT nsresult NSGetModule(nsIComponentManager *servMgr,
     }
 
     // Increase refcnt and store away nsIModule interface to m in return_cobj
-    rv = m->QueryInterface(nsIModule::GetIID(), (void**)return_cobj);
+    rv = m->QueryInterface(NS_GET_IID(nsIModule), (void**)return_cobj);
     if (NS_FAILED(rv)) {
         delete m;
         m = nsnull;

@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 
@@ -216,7 +217,7 @@ private:
   char mLanguage[32];
 };
 
-NS_IMPL_ISUPPORTS(nsClassicDetector, nsICharsetDetector::GetIID());
+NS_IMPL_ISUPPORTS(nsClassicDetector, NS_GET_IID(nsICharsetDetector));
 
 //----------------------------------------------------------
 nsClassicDetector::nsClassicDetector(const char* language)
@@ -290,7 +291,7 @@ protected:
   char mLanguage[32];
 };
 
-NS_IMPL_ISUPPORTS(nsClassicStringDetector, nsIStringCharsetDetector::GetIID());
+NS_IMPL_ISUPPORTS(nsClassicStringDetector, NS_GET_IID(nsIStringCharsetDetector));
 
 //----------------------------------------------------------
 nsClassicStringDetector::nsClassicStringDetector(const char* language)

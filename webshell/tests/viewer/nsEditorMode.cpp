@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
  
 #include "nsCOMPtr.h"
@@ -74,7 +75,7 @@ nsresult NS_InitEditorMode(nsIDOMDocument *aDOMDocument, nsIPresShell* aPresShel
 */
   result = nsComponentManager::CreateInstance(kHTMLEditorCID,
                                         nsnull,
-                                        nsIEditor::GetIID(), (void **)&gEditor);
+                                        NS_GET_IID(nsIEditor), (void **)&gEditor);
   if (NS_FAILED(result))
     return result;
   if (!gEditor) {

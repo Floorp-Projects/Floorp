@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 #include <math.h>
@@ -360,7 +361,7 @@ nsDeviceContextQT::GetDeviceContextFor(nsIDeviceContextSpec *aDevice,
   
     rv = nsComponentManager::CreateInstance(kCDeviceContextPS,
                                             nsnull,
-                                            nsIDeviceContextPS::GetIID(),
+                                            NS_GET_IID(nsIDeviceContextPS),
                                             (void **)&dcps);
 
     NS_ASSERTION(NS_SUCCEEDED(rv), "Couldn't create PS Device context");
@@ -369,7 +370,7 @@ nsDeviceContextQT::GetDeviceContextFor(nsIDeviceContextSpec *aDevice,
     dcps->InitDeviceContextPS((nsIDeviceContext*)aContext,
                               (nsIDeviceContext*)this);
 
-    rv = dcps->QueryInterface(nsIDeviceContext::GetIID(),
+    rv = dcps->QueryInterface(NS_GET_IID(nsIDeviceContext),
                               (void **)&aContext);
 
     NS_RELEASE(dcps);

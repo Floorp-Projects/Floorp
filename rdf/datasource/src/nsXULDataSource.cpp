@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 /*
@@ -375,7 +376,7 @@ static const char kResourceURIPrefix[] = "resource:";
     rv = service->NewURI(uri, nsnull, &uriPtr);
     if (NS_FAILED(rv)) return rv;
 
-    rv = uriPtr->QueryInterface(nsIURI::GetIID(), (void**)&url);
+    rv = uriPtr->QueryInterface(NS_GET_IID(nsIURI), (void**)&url);
     NS_RELEASE(uriPtr);
     if (NS_FAILED(rv))
         goto done;

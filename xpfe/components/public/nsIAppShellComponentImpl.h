@@ -127,7 +127,7 @@ public:
         if ( !mAppShell ) {
             nsCID cid = NS_APPSHELL_SERVICE_CID;
             nsServiceManager::GetService( cid,
-                                         nsIAppShellService::GetIID(),
+                                         NS_GET_IID(nsIAppShellService),
                                          (nsISupports**)&mAppShell );
         }
         return mAppShell;
@@ -202,13 +202,13 @@ className::QueryInterface( REFNSIID anIID, void **anInstancePtr ) { \
         *anInstancePtr = 0; \
         /* Check for IIDs we support and cast this appropriately. */\
         if ( 0 ) { \
-        } else if ( anIID.Equals( interfaceName::GetIID() ) ) { \
+        } else if ( anIID.Equals( NS_GET_IID(interfaceName) ) ) { \
             *anInstancePtr = (void*) this; \
             NS_ADDREF_THIS(); \
-        } else if ( anIID.Equals( nsIAppShellComponent::GetIID() ) ) { \
+        } else if ( anIID.Equals( NS_GET_IID(nsIAppShellComponent) ) ) { \
             *anInstancePtr = (void*) ( (nsIAppShellComponent*)this ); \
             NS_ADDREF_THIS(); \
-        } else if ( anIID.Equals( nsCOMTypeInfo<nsISupports>::GetIID() ) ) { \
+        } else if ( anIID.Equals( NS_GET_IID(nsISupports) ) ) { \
             *anInstancePtr = (void*) ( (nsISupports*)this ); \
             NS_ADDREF_THIS(); \
         } else { \
@@ -245,10 +245,10 @@ className##Factory::QueryInterface( const nsIID &anIID, void **aResult ) { \
     if ( aResult ) { \
         *aResult = 0; \
         if ( 0 ) { \
-        } else if ( anIID.Equals( nsIFactory::GetIID() ) ) { \
+        } else if ( anIID.Equals( NS_GET_IID(nsIFactory) ) ) { \
             *aResult = (void*) (nsIFactory*)this; \
             NS_ADDREF_THIS(); \
-        } else if ( anIID.Equals( nsCOMTypeInfo<nsISupports>::GetIID() ) ) { \
+        } else if ( anIID.Equals( NS_GET_IID(nsISupports) ) ) { \
             *aResult = (void*) (nsISupports*)this; \
             NS_ADDREF_THIS(); \
         } else { \
@@ -321,7 +321,7 @@ className##Module::RegisterSelf(nsIComponentManager *compMgr, \
             /* Add to appshell component list. */ \
             nsIRegistry *registry; \
             rv = nsServiceManager::GetService( NS_REGISTRY_PROGID, \
-                                      nsIRegistry::GetIID(), \
+                                      NS_GET_IID(nsIRegistry), \
                                       (nsISupports**)&registry ); \
             if ( NS_SUCCEEDED( rv ) ) { \
                 registry->OpenWellKnownRegistry(nsIRegistry::ApplicationComponentRegistry); \

@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 #include "nsIRobotSink.h"
 #include "nsIRobotSinkObserver.h"
@@ -344,7 +345,7 @@ void RobotSink::ProcessLink(const nsString& aLink)
 
     nsIURI *uri = nsnull, *baseUri = nsnull;
 
-    rv = mDocumentURL->QueryInterface(nsIURI::GetIID(), (void**)&baseUri);
+    rv = mDocumentURL->QueryInterface(NS_GET_IID(nsIURI), (void**)&baseUri);
     if (NS_FAILED(rv)) return;
 
     char *uriStr = aLink.ToNewCString();
@@ -354,7 +355,7 @@ void RobotSink::ProcessLink(const nsString& aLink)
     NS_RELEASE(baseUri);
     if (NS_FAILED(rv)) return;
 
-    rv = uri->QueryInterface(nsIURI::GetIID(), (void**)&absurl);
+    rv = uri->QueryInterface(NS_GET_IID(nsIURI), (void**)&absurl);
     NS_RELEASE(uri);
 
     if (NS_OK == rv) {

@@ -16,6 +16,7 @@
  * Copyright (C) 1999 John Fairhurst. All Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  *
  */
 
@@ -36,7 +37,7 @@ nsDeviceContextSpecOS2::~nsDeviceContextSpecOS2()
      PrnClosePrinter( mQueue);
 }
 
-NS_IMPL_ISUPPORTS(nsDeviceContextSpecOS2, nsIDeviceContextSpec::GetIID())
+NS_IMPL_ISUPPORTS(nsDeviceContextSpecOS2, NS_GET_IID(nsIDeviceContextSpec))
 
 nsresult nsDeviceContextSpecOS2::Init( PRTQUEUE *pq)
 {

@@ -19,6 +19,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  *
  * Alternatively, the contents of this file may be used under the
  * terms of the GNU Public License (the "GPL"), in which case the
@@ -729,35 +730,35 @@ nsXPConnect::DebugDumpObject(nsISupports *p, PRInt16 depth)
     nsIXPConnectWrappedNative* wn;
     nsIXPConnectWrappedJSMethods* wjsm;
 
-    if(NS_SUCCEEDED(p->QueryInterface(nsIXPConnect::GetIID(),
+    if(NS_SUCCEEDED(p->QueryInterface(NS_GET_IID(nsIXPConnect),
                         (void**)&xpc)))
     {
         XPC_LOG_ALWAYS(("Dumping a nsIXPConnect..."));
         xpc->DebugDump(depth);
         NS_RELEASE(xpc);
     }
-    else if(NS_SUCCEEDED(p->QueryInterface(nsIXPCWrappedNativeClass::GetIID(),
+    else if(NS_SUCCEEDED(p->QueryInterface(NS_GET_IID(nsIXPCWrappedNativeClass),
                         (void**)&wnc)))
     {
         XPC_LOG_ALWAYS(("Dumping a nsIXPCWrappedNativeClass..."));
         wnc->DebugDump(depth);
         NS_RELEASE(wnc);
     }
-    else if(NS_SUCCEEDED(p->QueryInterface(nsIXPCWrappedJSClass::GetIID(),
+    else if(NS_SUCCEEDED(p->QueryInterface(NS_GET_IID(nsIXPCWrappedJSClass),
                         (void**)&wjsc)))
     {
         XPC_LOG_ALWAYS(("Dumping a nsIXPCWrappedJSClass..."));
         wjsc->DebugDump(depth);
         NS_RELEASE(wjsc);
     }
-    else if(NS_SUCCEEDED(p->QueryInterface(nsIXPConnectWrappedNative::GetIID(),
+    else if(NS_SUCCEEDED(p->QueryInterface(NS_GET_IID(nsIXPConnectWrappedNative),
                         (void**)&wn)))
     {
         XPC_LOG_ALWAYS(("Dumping a nsIXPConnectWrappedNative..."));
         wn->DebugDump(depth);
         NS_RELEASE(wn);
     }
-    else if(NS_SUCCEEDED(p->QueryInterface(nsIXPConnectWrappedJSMethods::GetIID(),
+    else if(NS_SUCCEEDED(p->QueryInterface(NS_GET_IID(nsIXPConnectWrappedJSMethods),
                         (void**)&wjsm)))
     {
         XPC_LOG_ALWAYS(("Dumping a nsIXPConnectWrappedJSMethods..."));

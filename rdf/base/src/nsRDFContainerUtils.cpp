@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 /*
@@ -87,7 +88,7 @@ nsIRDFResource* RDFContainerUtilsImpl::kRDF_Alt;
 ////////////////////////////////////////////////////////////////////////
 // nsISupports interface
 
-NS_IMPL_ISUPPORTS(RDFContainerUtilsImpl, nsIRDFContainerUtils::GetIID());
+NS_IMPL_ISUPPORTS(RDFContainerUtilsImpl, NS_GET_IID(nsIRDFContainerUtils));
 
 ////////////////////////////////////////////////////////////////////////
 // nsIRDFContainerUtils interface
@@ -320,7 +321,7 @@ RDFContainerUtilsImpl::RDFContainerUtilsImpl()
         nsresult rv;
 
         rv = nsServiceManager::GetService(kRDFServiceCID,
-                                          nsIRDFService::GetIID(),
+                                          NS_GET_IID(nsIRDFService),
                                           (nsISupports**) &gRDFService);
 
         NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get RDF service");

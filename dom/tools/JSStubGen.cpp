@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 #ifndef XP_MAC
@@ -735,7 +736,7 @@ static const char kObjectGetCaseStr[] =
 
 static const char kXPIDLObjectGetCaseStr[] =
 "          // get the js object; n.b., this will do a release on 'prop'\n"
-"          nsJSUtils::nsConvertXPCObjectToJSVal(prop, %s::GetIID(), cx, obj, vp);\n";
+"          nsJSUtils::nsConvertXPCObjectToJSVal(prop, NS_GET_IID(%s), cx, obj, vp);\n";
 
 static const char kStringGetCaseStr[] = 
 "          nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);\n";
@@ -1239,7 +1240,7 @@ static const char kMethodObjectRetStr[] =
 
 static const char kMethodXPIDLObjectRetStr[] =
 "    // n.b., this will release nativeRet\n"
-"    nsJSUtils::nsConvertXPCObjectToJSVal(nativeRet, %s::GetIID(), cx, obj, rval);\n";
+"    nsJSUtils::nsConvertXPCObjectToJSVal(nativeRet, NS_GET_IID(%s), cx, obj, rval);\n";
 
 static const char kMethodStringRetStr[] = 
 "    nsJSUtils::nsConvertStringToJSVal(nativeRet, cx, rval);\n";

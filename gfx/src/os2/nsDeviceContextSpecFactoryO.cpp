@@ -16,6 +16,7 @@
  * Copyright (C) 1999 John Fairhurst. All Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  *
  */
 
@@ -38,7 +39,7 @@ nsDeviceContextSpecFactoryOS2::nsDeviceContextSpecFactoryOS2()
    NS_INIT_REFCNT();
 }
 
-NS_IMPL_ISUPPORTS(nsDeviceContextSpecFactoryOS2, nsIDeviceContextSpecFactory::GetIID())
+NS_IMPL_ISUPPORTS(nsDeviceContextSpecFactoryOS2, NS_GET_IID(nsIDeviceContextSpecFactory))
 
 NS_IMETHODIMP nsDeviceContextSpecFactoryOS2::Init()
 {

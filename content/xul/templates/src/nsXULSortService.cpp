@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 /*
@@ -300,7 +301,7 @@ XULSortServiceImpl::XULSortServiceImpl(void)
 		}
 
 		rv = nsServiceManager::GetService(kXULContentUtilsCID,
-						nsCOMTypeInfo<nsIXULContentUtils>::GetIID(),
+						NS_GET_IID(nsIXULContentUtils),
 						(nsISupports**) &gXULUtils);
 		NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get XUL content utils");
 
@@ -418,7 +419,7 @@ XULSortServiceImpl::~XULSortServiceImpl(void)
 
 
 
-NS_IMPL_ISUPPORTS(XULSortServiceImpl, nsIXULSortService::GetIID());
+NS_IMPL_ISUPPORTS(XULSortServiceImpl, NS_GET_IID(nsIXULSortService));
 
 
 
@@ -919,7 +920,7 @@ XULSortServiceImpl::GetCachedTarget(sortPtr sortInfo, nsIRDFResource* aSource,
 	{
 		// if we don't have a mInner, create one
 		rvTemp = nsComponentManager::CreateInstance(kRDFInMemoryDataSourceCID,
-			nsnull, nsIRDFDataSource::GetIID(), (void **)&(sortInfo->mInner));
+			nsnull, NS_GET_IID(nsIRDFDataSource), (void **)&(sortInfo->mInner));
 	}
 	if (sortInfo->mInner)
 	{

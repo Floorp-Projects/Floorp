@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 #include "nsCOMPtr.h"
 #include "nsIGenericFactory.h"
@@ -364,7 +365,7 @@ extern "C" NS_EXPORT nsresult NSGetModule(nsIComponentManager *servMgr,
   }
 
   // Increase refcnt and store away nsIModule interface to m in return_cobj
-  rv = m->QueryInterface(nsIModule::GetIID(), (void**)return_cobj);
+  rv = m->QueryInterface(NS_GET_IID(nsIModule), (void**)return_cobj);
   if (NS_FAILED(rv)) {
     delete m;
     m = nsnull;

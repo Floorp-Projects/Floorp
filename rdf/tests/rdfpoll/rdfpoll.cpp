@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 /*
@@ -165,7 +166,7 @@ Observer::Observer()
     NS_INIT_REFCNT();
 }
 
-NS_IMPL_ISUPPORTS(Observer, nsIRDFObserver::GetIID());
+NS_IMPL_ISUPPORTS(Observer, NS_GET_IID(nsIRDFObserver));
 
 static nsresult
 rdf_WriteOp(const char* aOp,
@@ -293,7 +294,7 @@ main(int argc, char** argv)
     nsCOMPtr<nsIRDFDataSource> ds;
     rv = nsComponentManager::CreateInstance(kRDFXMLDataSourceCID,
                                             nsnull,
-                                            nsIRDFDataSource::GetIID(),
+                                            NS_GET_IID(nsIRDFDataSource),
                                             getter_AddRefs(ds));
 
     NS_ASSERTION(NS_SUCCEEDED(rv), "unable to create RDF/XML data source");

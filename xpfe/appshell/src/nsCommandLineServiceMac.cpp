@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 // Special stuff for the Macintosh implementation of command-line service.
@@ -937,7 +938,7 @@ nsIWebShellWindow* FindWebShellWindow(nsIXULWindowCallbacks* inCallbacks)
     rv = service->NewURI(urlStr, nsnull, &uri);
     if (NS_FAILED(rv)) return nsnull;
 
-    rv = uri->QueryInterface(nsIURI::GetIID(), (void**)&urlObj);
+    rv = uri->QueryInterface(NS_GET_IID(nsIURI), (void**)&urlObj);
     NS_RELEASE(uri);
         if (NS_FAILED(rv))
                 return nsnull;

@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 #include "nsPluginHostImpl.h"
@@ -1031,42 +1032,42 @@ nsresult nsPluginHostImpl::QueryInterface(const nsIID& aIID,
   if (nsnull == aInstancePtrResult)
     return NS_ERROR_NULL_POINTER;
 
-  if (aIID.Equals(nsIPluginManager::GetIID()))
+  if (aIID.Equals(NS_GET_IID(nsIPluginManager)))
   {
     *aInstancePtrResult = (void *)((nsIPluginManager *)this);
     AddRef();
     return NS_OK;
   }
 
-  if (aIID.Equals(nsIPluginManager2::GetIID()))
+  if (aIID.Equals(NS_GET_IID(nsIPluginManager2)))
   {
     *aInstancePtrResult = (void *)((nsIPluginManager2 *)this);
     AddRef();
     return NS_OK;
   }
 
-  if (aIID.Equals(nsIPluginHost::GetIID()))
+  if (aIID.Equals(NS_GET_IID(nsIPluginHost)))
   {
     *aInstancePtrResult = (void *)((nsIPluginHost *)this);
     AddRef();
     return NS_OK;
   }
 
-  if (aIID.Equals(nsIFactory::GetIID()))
+  if (aIID.Equals(NS_GET_IID(nsIFactory)))
   {
     *aInstancePtrResult = (void *)((nsIFactory *)this);
     AddRef();
     return NS_OK;
   }
 
-  if (aIID.Equals(nsIFileUtilities::GetIID()))
+  if (aIID.Equals(NS_GET_IID(nsIFileUtilities)))
   {
     *aInstancePtrResult = (void*)(nsIFileUtilities*)this;
     AddRef();
     return NS_OK;
   }
 
-  if (aIID.Equals(nsICookieStorage::GetIID())) {
+  if (aIID.Equals(NS_GET_IID(nsICookieStorage))) {
     *aInstancePtrResult = (void*)(nsICookieStorage*)this;
     AddRef();
     return NS_OK;
@@ -1683,7 +1684,7 @@ NS_IMETHODIMP nsPluginHostImpl::SetUpPluginInstance(const char *aMimeType,
   
     result = nsComponentManager::CreateInstance(buf,
                                                 nsnull,
-                                                nsIPluginInstance::GetIID(),
+                                                NS_GET_IID(nsIPluginInstance),
                                                 (void**)&instance);
 
 
@@ -1872,7 +1873,7 @@ private:
 	nsString mType;
 };
 
-NS_IMPL_ISUPPORTS(DOMMimeTypeImpl, nsIDOMMimeType::GetIID());
+NS_IMPL_ISUPPORTS(DOMMimeTypeImpl, NS_GET_IID(nsIDOMMimeType));
 
 class DOMPluginImpl : public nsIDOMPlugin {
 public:
@@ -1931,7 +1932,7 @@ private:
 	nsPluginTag mPluginTag;
 };
 
-NS_IMPL_ISUPPORTS(DOMPluginImpl, nsIDOMPlugin::GetIID());
+NS_IMPL_ISUPPORTS(DOMPluginImpl, NS_GET_IID(nsIDOMPlugin));
 
 NS_IMETHODIMP
 nsPluginHostImpl::GetPluginCount(PRUint32* aPluginCount)

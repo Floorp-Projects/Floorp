@@ -22,6 +22,7 @@
  *     Akkana Peck <akkana@netscape.com>
  *     Daniel Brattell <bratell@lysator.liu.se>
  *     Ben Bucksch <mozilla@bucksch.org>
+ *     Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 /**
@@ -96,7 +97,7 @@ nsresult nsHTMLToTXTSinkStream::InitEncoder(const nsString& aCharset)
 
     nsICharsetConverterManager * ccm = nsnull;
     res = nsServiceManager::GetService(kCharsetConverterManagerCID, 
-                                       nsCOMTypeInfo<nsICharsetConverterManager>::GetIID(), 
+                                       NS_GET_IID(nsICharsetConverterManager), 
                                        (nsISupports**)&ccm);
     if(NS_SUCCEEDED(res) && (nsnull != ccm))
     {

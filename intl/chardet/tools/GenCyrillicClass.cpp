@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 #define NS_IMPL_IDS
 #include "nsICharsetConverterManager.h"
@@ -136,7 +137,7 @@ void genCyrillicClass(const char* name, const char* charset)
 
 int main(int argc, char** argv) {
    nsresult res = nsServiceManager::GetService(kCharsetConverterManagerCID, 
-                              nsICharsetConverterManager::GetIID(), 
+                              NS_GET_IID(nsICharsetConverterManager), 
                               (nsISupports**) & gCCM);
    if(NS_FAILED(res) && (nsnull != gCCM))
    {

@@ -74,7 +74,7 @@ void InitTest(char* creationPath, char* appendPath)
     nsILocalFile* file = nsnull;
     nsresult rv = nsComponentManager::CreateInstance(NS_LOCAL_FILE_PROGID, 
                                               nsnull, 
-                                              nsCOMTypeInfo<nsILocalFile>::GetIID(), 
+                                              NS_GET_IID(nsILocalFile), 
                                               (void**)&file);
     
     if (NS_FAILED(rv) || (!file)) 
@@ -127,7 +127,7 @@ void CreationTest(char* creationPath, char* appendPath,
     nsresult rv = 
     nsComponentManager::CreateInstance(NS_LOCAL_FILE_PROGID, 
                                               nsnull, 
-                                              nsCOMTypeInfo<nsILocalFile>::GetIID(), 
+                                              NS_GET_IID(nsILocalFile), 
                                               (void **)getter_AddRefs(file));
 
     if (NS_FAILED(rv) || (!file)) 

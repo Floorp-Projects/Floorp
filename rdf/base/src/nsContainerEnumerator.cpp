@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 /*
@@ -125,7 +126,7 @@ ContainerEnumeratorImpl::~ContainerEnumeratorImpl(void)
     }
 }
 
-NS_IMPL_ISUPPORTS(ContainerEnumeratorImpl, nsISimpleEnumerator::GetIID());
+NS_IMPL_ISUPPORTS(ContainerEnumeratorImpl, NS_GET_IID(nsISimpleEnumerator));
 
 
 NS_IMETHODIMP
@@ -197,7 +198,7 @@ ContainerEnumeratorImpl::HasMoreElements(PRBool* aResult)
             rv = mCurrent->GetNext(getter_AddRefs(result));
             if (NS_FAILED(rv)) return rv;
 
-            rv = result->QueryInterface(nsIRDFNode::GetIID(), (void**) &mResult);
+            rv = result->QueryInterface(NS_GET_IID(nsIRDFNode), (void**) &mResult);
             if (NS_FAILED(rv)) return rv;
 
             *aResult = PR_TRUE;

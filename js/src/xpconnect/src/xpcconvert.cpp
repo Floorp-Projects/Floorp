@@ -19,6 +19,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  *
  * Alternatively, the contents of this file may be used under the
  * terms of the GNU Public License (the "GPL"), in which case the
@@ -303,7 +304,7 @@ XPCConvert::NativeData2JS(JSContext* cx, jsval* d, const void* s,
                 {
                     nsIXPConnectWrappedJSMethods* methods;
                     if(NS_SUCCEEDED(iface->QueryInterface(
-                                nsIXPConnectWrappedJSMethods::GetIID(),
+                                NS_GET_IID(nsIXPConnectWrappedJSMethods),
                                 (void**)&methods)) &&
                        NS_SUCCEEDED(methods->GetJSObject(&aJSObj)))
                     {
@@ -313,7 +314,7 @@ XPCConvert::NativeData2JS(JSContext* cx, jsval* d, const void* s,
                 }
                 // is this a DOM wrapped native object?
                 else if(NS_SUCCEEDED(iface->QueryInterface(
-                            nsIScriptObjectOwner::GetIID(), (void**)&owner)))
+                            NS_GET_IID(nsIScriptObjectOwner), (void**)&owner)))
                 {
 
                     nsresult rv;
@@ -329,7 +330,7 @@ XPCConvert::NativeData2JS(JSContext* cx, jsval* d, const void* s,
                     {
                         nsIScriptGlobalObject* scriptObject;
                         if(NS_SUCCEEDED(domObject->QueryInterface(
-                                            nsIScriptGlobalObject::GetIID(),
+                                            NS_GET_IID(nsIScriptGlobalObject),
                                             (void**)&scriptObject)))
                         {
                             NS_ASSERTION(scriptObject,"QI succeeded but yielded NULL!");

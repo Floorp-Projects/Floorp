@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 #include "nsLayoutCID.h"
@@ -2463,7 +2464,7 @@ nsTextServicesDocument::CreateContentIterator(nsIDOMRange *aRange, nsIContentIte
   *aIterator = 0;
 
   result = nsComponentManager::CreateInstance(kCContentIteratorCID, nsnull,
-                                        nsIContentIterator::GetIID(), 
+                                        NS_GET_IID(nsIContentIterator), 
                                         (void **)aIterator);
 
   if (NS_FAILED(result))
@@ -2544,7 +2545,7 @@ nsTextServicesDocument::CreateBodyContentRange(nsIDOMRange **aRange)
     return NS_ERROR_NULL_POINTER;
 
   result = nsComponentManager::CreateInstance(kCDOMRangeCID, nsnull,
-                                              nsIDOMRange::GetIID(), 
+                                              NS_GET_IID(nsIDOMRange), 
                                               (void **)aRange);
 
   if (NS_FAILED(result))
@@ -2634,7 +2635,7 @@ nsTextServicesDocument::CreateBodyToNodeOffsetRange(nsIDOMNode *aParent, PRInt32
   }
 
   result = nsComponentManager::CreateInstance(kCDOMRangeCID, nsnull,
-                                              nsIDOMRange::GetIID(), 
+                                              NS_GET_IID(nsIDOMRange), 
                                               (void **)aRange);
 
   if (NS_FAILED(result))
@@ -3782,7 +3783,7 @@ nsTextServicesDocument::ComparePoints(nsIDOMNode* aParent1, PRInt32 aOffset1,
   nsCOMPtr<nsIDOMRange> range;
 
   result = nsComponentManager::CreateInstance(kCDOMRangeCID, nsnull,
-                                              nsIDOMRange::GetIID(), 
+                                              NS_GET_IID(nsIDOMRange), 
                                               getter_AddRefs(range));
 
   if (NS_FAILED(result))
@@ -3851,7 +3852,7 @@ nsTextServicesDocument::CreateRange(nsIDOMNode *aStartParent, PRInt32 aStartOffs
   nsresult result;
 
   result = nsComponentManager::CreateInstance(kCDOMRangeCID, nsnull,
-                                              nsIDOMRange::GetIID(), 
+                                              NS_GET_IID(nsIDOMRange), 
                                               (void **)aRange);
 
   if (NS_FAILED(result))

@@ -19,6 +19,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  *
  * Alternatively, the contents of this file may be used under the
  * terms of the GNU Public License (the "GPL"), in which case the
@@ -501,7 +502,7 @@ nsXPCClasses::CacheDynaProp(JSContext *cx, JSObject *obj, jsid id,
             {
                 if(NS_SUCCEEDED(xpc->WrapNative(cx, obj,
                                                 NS_STATIC_CAST(nsIJSID*,nsid),
-                                                nsIJSCID::GetIID(),
+                                                NS_GET_IID(nsIJSCID),
                                                 &nsid_wrapper)))
                 {
                     JSObject* idobj;
@@ -777,7 +778,7 @@ nsXPCClassesByID::CacheDynaProp(JSContext *cx, JSObject *obj, jsid id,
             {
                 if(NS_SUCCEEDED(xpc->WrapNative(cx, obj,
                                                 NS_STATIC_CAST(nsIJSID*,nsid),
-                                                nsIJSCID::GetIID(),
+                                                NS_GET_IID(nsIJSCID),
                                                 &nsid_wrapper)))
                 {
                     JSObject* idobj;

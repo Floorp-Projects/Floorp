@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 
@@ -166,11 +167,11 @@ nsSoftwareUpdate::QueryInterface( REFNSIID anIID, void **anInstancePtr )
     else
     {
         /* Check for IIDs we support and cast this appropriately. */
-        if ( anIID.Equals( nsISoftwareUpdate::GetIID() ) ) 
+        if ( anIID.Equals( NS_GET_IID(nsISoftwareUpdate) ) ) 
             *anInstancePtr = (void*) ( (nsISoftwareUpdate*)this );
-        else if ( anIID.Equals( nsIAppShellComponent::GetIID() ) ) 
+        else if ( anIID.Equals( NS_GET_IID(nsIAppShellComponent) ) ) 
             *anInstancePtr = (void*) ( (nsIAppShellComponent*)this );
-        else if (anIID.Equals( nsPIXPIStubHook::GetIID() ) )
+        else if (anIID.Equals( NS_GET_IID(nsPIXPIStubHook) ) )
             *anInstancePtr = (void*) ( (nsPIXPIStubHook*)this );
         else if ( anIID.Equals( kISupportsIID ) )
             *anInstancePtr = (void*) ( (nsISupports*) (nsISoftwareUpdate*) this );
@@ -675,7 +676,7 @@ nsSoftwareUpdateModule::RegisterSelf(nsIComponentManager *aCompMgr,
         // get the registry
         nsIRegistry* registry;
         rv = nsServiceManager::GetService(NS_REGISTRY_PROGID,
-                                          nsIRegistry::GetIID(),
+                                          NS_GET_IID(nsIRegistry),
                                           (nsISupports**)&registry);
         if ( NS_SUCCEEDED( rv ) ) 
         {

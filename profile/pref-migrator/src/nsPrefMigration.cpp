@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 #include "pratom.h"
@@ -265,7 +266,7 @@ nsPrefMigration::getPrefService()
     return rv;
   
   rv = pIProxyObjectManager->GetProxyObject(NS_UI_THREAD_EVENTQ, 
-                                            nsIPref::GetIID(), 
+                                            NS_GET_IID(nsIPref), 
                                             pIMyService, 
                                             PROXY_SYNC,
                                             (void**)&m_prefs);
@@ -353,7 +354,7 @@ extern "C" void ProfileMigrationController(void *data)
   nsCOMPtr<nsIPrefMigration> migratorInterface = do_QueryInterface(interfaceM);
 
   rv = pIProxyObjectManager->GetProxyObject(NS_UI_THREAD_EVENTQ, 
-                                            nsIPrefMigration::GetIID(), 
+                                            NS_GET_IID(nsIPrefMigration), 
                                             migratorInterface, 
                                             PROXY_SYNC,
                                             getter_AddRefs(prefProxy));
@@ -1849,7 +1850,7 @@ nsPrefMigration::ShowProgressDialog(const PRUnichar *inWindowTitle, const PRUnic
       nsCOMPtr< nsIDialogParamBlock> block;
 	    rv = nsComponentManager::CreateInstance( kDialogParamBlockCID,
                                                0,
-                                               nsIDialogParamBlock::GetIID(),
+                                               NS_GET_IID(nsIDialogParamBlock),
                                                (void**)&block );
       
 	    if ( NS_FAILED( rv ) )
@@ -1861,7 +1862,7 @@ nsPrefMigration::ShowProgressDialog(const PRUnichar *inWindowTitle, const PRUnic
       //nsCOMPtr<nsICommonDialogs> dialogService;
       //rv = nsComponentManager::CreateInstance( kCommonDialogsCID,
       //                                         0, 
-      //                                         nsICommonDialogs::GetIID(),
+      //                                         NS_GET_IID(nsICommonDialogs),
       //                                         (void**)&dialogService );
 
       //if( NS_SUCCEEDED ( rv ) )
@@ -1897,7 +1898,7 @@ nsPrefMigration::ShowPMDialogEngine(nsIDialogParamBlock *ioParamBlock, const cha
                                                     inChromeURL,
                                                     JSVAL_NULL,
                                                     "chrome",
-                                                    (const nsIID*)(&nsIDialogParamBlock::GetIID()),
+                                                    (const nsIID*)(&NS_GET_IID(nsIDialogParamBlock)),
                                                     (nsISupports*)ioParamBlock
                                                   );
                     if ( argv ) {
