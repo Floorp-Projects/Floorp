@@ -710,7 +710,8 @@ NewControl(const char *pluginType,
             if (argv[i])
             {
                 nsCOMPtr<nsIDOMElement> element;
-                NPN_GetValue(pData->pPluginInstance, NPNVDOMElement, (void *) &element);
+                NPN_GetValue(pData->pPluginInstance, NPNVDOMElement, 
+                             NS_STATIC_CAST(nsIDOMElement **, getter_AddRefs(element)));
                 if (element)
                 {
                     nsCOMPtr<nsIDOMNode> tagAsNode (do_QueryInterface(element));

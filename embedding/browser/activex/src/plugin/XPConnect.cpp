@@ -376,7 +376,8 @@ nsScriptablePeer::ConvertVariants(VARIANT *aIn, nsIVariant **aOut)
                 if (pManager)
                 {
                     rv = pManager->CreateInstanceByContractID("@mozilla.org/variant;1",
-                        nsnull, NS_GET_IID(nsIWritableVariant), (void **) &v);
+                        nsnull, NS_GET_IID(nsIWritableVariant),
+                        getter_AddRefs(v));
                     pManager->Release();
                 }
             }
@@ -740,10 +741,11 @@ nsEventSink::InternalInvoke(DISPID dispIdMember, REFIID riid, LCID lcid, WORD wF
     pFuncDesc = NULL;
 
     nsCOMPtr<nsIDOMElement> element;
-    NPN_GetValue(mPlugin->pPluginInstance, NPNVDOMElement, (void *) &element);
+    NPN_GetValue(mPlugin->pPluginInstance, NPNVDOMElement, 
+        NS_STATIC_CAST(nsIDOMElement **, getter_AddRefs(element)));
     if (!element)
     {
-        NS_ASSERTION(element, "can't get the object element");
+        NS_ERROR("can't get the object element");
         return S_OK;
     }
     nsAutoString id;
@@ -758,7 +760,8 @@ nsEventSink::InternalInvoke(DISPID dispIdMember, REFIID riid, LCID lcid, WORD wF
 
     // Fire the script event handler...
     nsCOMPtr<nsIDOMWindow> window;
-    NPN_GetValue(mPlugin->pPluginInstance, NPNVDOMWindow, (void *)&window);
+    NPN_GetValue(mPlugin->pPluginInstance, NPNVDOMWindow, 
+        NS_STATIC_CAST(nsIDOMWindow **, getter_AddRefs(window)));
     
     nsCOMPtr<nsIScriptEventManager> eventManager(do_GetInterface(window));
     if (!eventManager) return S_OK;
