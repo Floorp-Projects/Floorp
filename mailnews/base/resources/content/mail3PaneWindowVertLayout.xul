@@ -72,7 +72,7 @@ Rights Reserved.
 <script type="application/x-javascript" src="chrome://global/content/nsTransferable.js"/>
 <script type="application/x-javascript" src="chrome://global/content/nsDragAndDrop.js"/>
 
-<commandset id="tasksCommands">
+<commandset id="mailCommands">
   <commandset id="mailFileMenuItems"/>
   <commandset id="mailViewMenuItems"/>
   <commandset id="mailEditMenuItems"/>
@@ -88,13 +88,15 @@ Rights Reserved.
         commandupdater="true"
         events="focus"
         oncommandupdate="FocusRingUpdate_Mail()"/>
+  <commandset id="tasksCommands"/>
   <command id="toggleSidebar"/>
 </commandset>
 
 <broadcasterset id="mailBroadcasters"/>
 
-<keyset id="tasksKeys">
+<keyset id="mailKeys">
   <key id="showHideSidebar"/>
+  <keyset id="tasksKeys"/>
 </keyset>
 
 <popupset>

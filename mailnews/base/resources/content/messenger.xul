@@ -90,7 +90,7 @@ Rights Reserved.
         commandupdater="true"
         events="focus"
         oncommandupdate="FocusRingUpdate_Mail()"/>
-  <commandset id="tasksKeys"/>
+  <commandset id="tasksCommands"/>
   <command id="toggleSidebar"/>
 </commandset>
 
