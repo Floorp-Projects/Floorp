@@ -809,7 +809,7 @@ nsBaseWidget::GuiEventToString(nsGUIEvent & aEvent)
   nsString eventName = "UNKNOWN";
 
 #define _ASSIGN_eventName(_value,_name)\
-case _value: eventName = _name ; break;
+case _value: eventName = _name ; break
 
   switch(aEvent.message)
   {
