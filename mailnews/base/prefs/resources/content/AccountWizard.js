@@ -333,16 +333,14 @@ function copyObjectToInterface(dest, src) {
     }
 }
 
-// check if there already is a "none" account. (aka "Local Folders")
+// check if there already is a "Local Folders"
 // if not, create it.
 function verifyLocalFoldersAccount(account) {
     
-    dump("Looking for local mail..\n");
+    dump("Looking for Local Folders.....\n");
 	var localMailServer = null;
 	try {
-		// look for anything that is of type "none".
-		// "none" is the type for "Local Mail"
-		localMailServer = am.FindServer("","","none");
+		localMailServer = am.localFoldersServer;
 	}
 	catch (ex) {
         // dump("exception in findserver: " + ex + "\n");
@@ -364,7 +362,7 @@ function verifyLocalFoldersAccount(account) {
         	messengerMigrator = Components.classes["component://netscape/messenger/migrator"].getService(Components.interfaces.nsIMessengerMigrator);
 		messengerMigrator.createLocalMailAccount(false /* false, since we are not migrating */);
 		try {
-			localMailServer = am.FindServer("","","none");
+			localMailServer = am.localFoldersServer;
 		}
 		catch (ex) {
 			dump("error!  we should have found the local mail server after we created it.\n");

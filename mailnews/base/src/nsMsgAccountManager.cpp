@@ -1621,3 +1621,8 @@ nsMsgAccountManager::removeListener(nsHashKey *aKey, void *element, void *aData)
   return PR_TRUE;
 }
 
+NS_IMETHODIMP nsMsgAccountManager::GetLocalFoldersServer(nsIMsgIncomingServer **aServer)
+{
+	// right now, search for a server of type "none".  eventually, we'll do this differently.
+	return FindServer(nsnull,nsnull,"none",aServer);
+}

@@ -66,7 +66,6 @@ interface nsIMsgAccountManager : nsISupports {
    */
   nsIMsgIncomingServer getIncomingServer(in string key);
 
-  
   /* account list stuff */
 
   /* defaultAccount should always be set if there are any accounts
@@ -118,6 +117,10 @@ interface nsIMsgAccountManager : nsISupports {
    * returns an array of nsIMsgIncomingServer
    */
   nsISupportsArray GetServersForIdentity(in nsIMsgIdentity identity);
+
+  /* there is a special server "Local Folders" that is guaranteed to exist.
+   * this will allow you to get */
+  readonly attribute nsIMsgIncomingServer localFoldersServer;
 
   /* load accounts kicks off the creation of all accounts. You do not need
    * to call this and all accounts should be loaded lazily if you use any
