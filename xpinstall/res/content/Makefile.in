@@ -31,6 +31,8 @@ EXPORT_RESOURCE_XPINSTALL = \
 		$(srcdir)/progress.html \
 		$(srcdir)/xpistatus.xul \
 		$(srcdir)/xpistatus.js \
+		$(srcdir)/institems.xul \
+		$(srcdir)/institems.js \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk
