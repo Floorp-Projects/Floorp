@@ -580,6 +580,7 @@ nsBrowserWindow::DoFileOpen()
     // Ask the Web widget to load the file URL
     mWebShell->LoadURL(nsString(lpszFileURL));
     delete [] lpszFileURL;
+    Show();
   }
 }
 
