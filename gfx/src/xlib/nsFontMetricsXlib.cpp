@@ -4470,10 +4470,6 @@ GetFontNames(const char* aPattern, PRBool aAnyFoundry, PRBool aOnlyOutlineScaled
     points = atoi(pointSize);
 
     if (pixels) {
-      if (!NodeAddSize(stretch, pixels, points, 1.0f, resX, resY, name, familyName, weightName, 
-                  slant, setWidth, addStyle, spacing, charSetName, charSetInfo))
-        continue;
-
       if (gScaleBitmapFontsWithDevScale && (gDevScale > 1.0f)) {
         /* Add a font size which is exactly scaled as the scaling factor ... */
         if (!NodeAddSize(stretch, pixels, points, gDevScale, resX, resY, name, familyName, weightName, 
@@ -4495,6 +4491,12 @@ GetFontNames(const char* aPattern, PRBool aAnyFoundry, PRBool aOnlyOutlineScaled
         if (scaler <= maxScaler) {
           continue; /* |NodeAddSize| returned an error in the loop above... */
         }
+      }
+      else
+      {
+        if (!NodeAddSize(stretch, pixels, points, 1.0f, resX, resY, name, familyName, weightName, 
+                         slant, setWidth, addStyle, spacing, charSetName, charSetInfo))
+          continue;     
       }
     }
   }
