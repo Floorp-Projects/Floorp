@@ -2,8 +2,9 @@
 <!ENTITY pane.title   "Offline &amp; Disk Space">
 <!ENTITY rHeader  "Offline">
 
-<!ENTITY radioAskMode  "Ask me if I want online or offline mode">
-<!ENTITY radioUsePrev  "Use my previous online/offline state"> 
+<!ENTITY textStartUp   "When starting up:">
+<!ENTITY radioRememberPrevState "Remember previous online state">
+<!ENTITY radioAskMe "Ask me for online state at startup">
 <!ENTITY textGoingOnline   "When going online:">
 <!ENTITY radioAskUnsent  "Ask me if I want to send my unsent messages">
 <!ENTITY radioAskUnsent.accesskey	    "A">
