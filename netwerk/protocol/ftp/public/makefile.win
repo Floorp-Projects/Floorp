@@ -27,7 +27,7 @@ include <$(DEPTH)/config/config.mak>
 XPIDL_MODULE = necko_ftp
 
 XPIDLSRCS =                 \
-        .\nsIFTPChannel.idl \
+        .\nsPIFTPChannel.idl \
         .\nsIConnectionCache.idl  \
         $(NULL)
 

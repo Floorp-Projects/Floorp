@@ -55,31 +55,10 @@ nsFtpProtocolHandler::nsFtpProtocolHandler() {
 }
 
 nsFtpProtocolHandler::~nsFtpProtocolHandler() {
+    PR_LOG(gFTPLog, PR_LOG_ALWAYS, ("~nsFtpProtocolHandler() called"));
 }
 
-
-NS_IMETHODIMP_(nsrefcnt) nsFtpProtocolHandler::AddRef(void)
-{                                                            
-  NS_PRECONDITION(PRInt32(mRefCnt) >= 0, "illegal refcnt");  
-  ++mRefCnt;                                                 
-  NS_LOG_ADDREF(this, mRefCnt, "nsFtpProtocolHandler", sizeof(*this));      
-  return mRefCnt;                                            
-}
-                          
-NS_IMETHODIMP_(nsrefcnt) nsFtpProtocolHandler::Release(void)               
-{                                                            
-  NS_PRECONDITION(0 != mRefCnt, "dup release");              
-  --mRefCnt;                                                 
-  NS_LOG_RELEASE(this, mRefCnt, "nsFtpProtocolHandler");                    
-  if (mRefCnt == 0) {                                        
-    mRefCnt = 1; /* stabilize */                             
-    NS_DELETEXPCOM(this);                                    
-    return 0;                                                
-  }                                                          
-  return mRefCnt;                                            
-}
-
-NS_IMPL_QUERY_INTERFACE3(nsFtpProtocolHandler, nsIProtocolHandler, nsIConnectionCache, nsIObserver);
+NS_IMPL_ISUPPORTS3(nsFtpProtocolHandler, nsIProtocolHandler, nsIConnectionCache, nsIObserver);
 
 NS_METHOD
 nsFtpProtocolHandler::Create(nsISupports* aOuter, const nsIID& aIID, void* *aResult)
@@ -185,7 +164,7 @@ nsFtpProtocolHandler::NewChannel(const char* verb, nsIURI* url,
     nsresult rv;
     
     nsFTPChannel* channel;
-    rv = nsFTPChannel::Create(nsnull, NS_GET_IID(nsIFTPChannel), (void**)&channel);
+    rv = nsFTPChannel::Create(nsnull, NS_GET_IID(nsPIFTPChannel), (void**)&channel);
     if (NS_FAILED(rv)) return rv;
 
     rv = channel->Init(verb, url, aLoadGroup, notificationCallbacks, loadAttributes,

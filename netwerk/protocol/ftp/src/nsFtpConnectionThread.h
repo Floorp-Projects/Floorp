@@ -30,15 +30,12 @@
 #include "nsIInterfaceRequestor.h"
 #include "nsIServiceManager.h"
 #include "nsIStreamListener.h"
-#include "nsIInputStream.h"
-#include "nsIOutputStream.h"
 #include "nsIURI.h"
 #include "prtime.h"
 #include "nsString2.h"
 #include "nsIEventQueue.h"
 #include "nsHashtable.h"
-#include "nsIChannel.h"
-#include "nsIFTPChannel.h"
+#include "nsPIFTPChannel.h"
 #include "nsIConnectionCache.h"
 #include "nsConnectionCacheObj.h"
 #include "nsIProtocolHandler.h"
@@ -133,13 +130,21 @@ public:
     nsFtpConnectionThread();
     virtual ~nsFtpConnectionThread();
 
-    nsresult Init(nsIURI* aUrl,
-                  nsIEventQueue* aEventQ,
-                  nsIProtocolHandler* aHandler,
-                  nsIChannel* channel,
-                  nsISupports* ctxt,
+    nsresult Init(nsIProtocolHandler    *aHandler,
+                  nsIChannel            *aChannel,
+                  nsISupports           *aContext,
                   nsIInterfaceRequestor* notificationCallbacks);
+
     nsresult Process();
+
+    // use this to have data written to an output stream (OpenInputStream)
+    nsresult SetOutputStream(nsIBufferOutputStream *aOutputStream);
+
+    // use this to set an observer. (as in the asyncopen case)
+    nsresult SetStreamObserver(nsIStreamObserver *aObserver, nsISupports *aContext);
+    
+    // use this to set a listener to receive data related On*() notifications
+    nsresult SetStreamListener(nsIStreamListener *aListener);
 
     // user level setup
     nsresult SetAction(FTP_ACTION aAction);
@@ -195,8 +200,8 @@ private:
     // Private members
 
     nsCOMPtr<nsIEventQueue> mFTPEventQueue;     // the eventq for this thread.
-    nsCOMPtr<nsIEventQueue> mOutsideEventQueue; // the eventq for the using thread.
     nsCOMPtr<nsIURI>    mURL;
+    PRInt32             mPort;              // the port to connect to
 
     FTP_STATE           mState;             // the current state
     FTP_STATE           mNextState;         // the next state
@@ -241,6 +246,7 @@ private:
     PRBool              mRetryPass;         // retrying the password
     PRBool              mCachedConn;        // is this connection from the cache
     PRBool              mSentStart;         // have we sent an OnStartRequest() notification
+    PRUint8             mSuspendCount;
     nsresult            mInternalError;     // represents internal state errors
 
     nsCOMPtr<nsIStreamListener>     mListener;          // the listener we want to call
@@ -256,10 +262,14 @@ private:
     nsString2                       mContentType;       // the content type of the data we're dealing w/.
     nsXPIDLCString                  mURLSpec;
     nsCOMPtr<nsIInterfaceRequestor> mCallbacks;
-    nsCOMPtr<nsIFTPChannel>         mFTPChannel;
+    nsCOMPtr<nsPIFTPChannel>         mFTPChannel;
 
     nsCOMPtr<nsIBufferInputStream>  mBufInStream;
     nsCOMPtr<nsIBufferOutputStream> mBufOutStream;
+    nsCOMPtr<nsIBufferOutputStream> mCallerOutputStream;
+
+    nsCOMPtr<nsIStreamObserver>     mObserver;
+    nsCOMPtr<nsISupports>           mObserverContext;
 };
 
 #define NS_FTP_BUFFER_READ_SIZE             (8*1024)

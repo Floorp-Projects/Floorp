@@ -30,7 +30,7 @@ MODULE		= necko
 XPIDL_MODULE	= necko_ftp
 
 XPIDLSRCS	= \
-		nsIFTPChannel.idl \
+		nsPIFTPChannel.idl \
         nsIConnectionCache.idl  \
 		$(NULL)
 
