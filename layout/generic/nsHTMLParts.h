@@ -43,6 +43,10 @@ extern nsresult NS_NewHTMLContentSink(nsIHTMLContentSink** aInstancePtrResult,
 extern nsresult
   NS_NewRootPart(nsIHTMLContent** aInstancePtrResult,
                  nsIDocument* aDocument);
+extern nsresult
+  NS_NewHTMLComment(nsIHTMLContent** aInstancePtrResult,
+                    nsIAtom* aTag,
+                    const nsString& aComment);
 
 // Head parts
 extern nsresult
@@ -51,6 +55,10 @@ extern nsresult
 extern nsresult
   NS_NewHTMLMeta(nsIHTMLContent** aInstancePtrResult,
                  nsIAtom* aTag);
+extern nsresult
+  NS_NewHTMLTitle(nsIHTMLContent** aInstancePtrResult,
+                  nsIAtom* aTag,
+                  const nsString& aTitle);
 
 // Create an html body part
 extern nsresult
