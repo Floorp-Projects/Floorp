@@ -699,10 +699,6 @@
                     0000000000000000
                 </VALUE></PANELDATA>
             </SETTINGLIST>
-            <FILELIST>
-            </FILELIST>
-            <LINKORDER>
-            </LINKORDER>
         </TARGET>
         <TARGET>
             <NAME>headers</NAME>
