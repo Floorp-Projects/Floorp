@@ -268,11 +268,11 @@ div.pmBackground {
 	color: #CCCCCC;
 }
 
-broadcasterset {
+commands, commandset, command {
 	display: none;
 }
 
-broadcaster {
+broadcasterset, broadcaster {
 	display: none;
 }
 
