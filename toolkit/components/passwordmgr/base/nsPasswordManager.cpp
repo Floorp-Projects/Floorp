@@ -869,6 +869,8 @@ nsPasswordManager::Notify(nsIContent* aFormNode,
 
         AddSignonData(realm, entry);
         WriteSignonFile();
+      } else if (selection == 2) {
+        AddReject(realm);
       }
     }
     break;
