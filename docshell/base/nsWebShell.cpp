@@ -607,12 +607,12 @@ nsresult nsWebShell::DestroyPluginHost(void)
 
 //----------------------------------------------------------------------
 
-MOZ_DECL_CTOR(nsWebShell);
+MOZ_DECL_CTOR_COUNTER(nsWebShell);
 
 // Note: operator new zeros our memory
 nsWebShell::nsWebShell()
 {
-  MOZ_CTOR(nsWebShell);
+  MOZ_COUNT_CTOR(nsWebShell);
 #ifdef DETECT_WEBSHELL_LEAKS
   // We're counting the number of |nsWebShells| to help find leaks
   ++gNumberOfWebShells;
@@ -647,7 +647,7 @@ nsWebShell::nsWebShell()
 
 nsWebShell::~nsWebShell()
 {
-  MOZ_DTOR(nsWebShell);
+  MOZ_COUNT_DTOR(nsWebShell);
   if (nsnull != mHistoryService) {
     nsServiceManager::ReleaseService(kGlobalHistoryCID, mHistoryService);
     mHistoryService = nsnull;
