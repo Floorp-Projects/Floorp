@@ -107,7 +107,7 @@ typedef short JCOEF;
 
 /* Defines for MMX/SSE2 support. */
 
-#if defined(XP_WIN32) && defined(_M_IX86)
+#if defined(XP_WIN32) && defined(_M_IX86) && !defined(__GNUC__)
 #define HAVE_MMX_INTEL_MNEMONICS 
 #define HAVE_SSE2_INTEL_MNEMONICS 
 #endif
