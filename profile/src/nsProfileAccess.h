@@ -95,64 +95,49 @@ private:
     // unmigrated: if the profileinfo is migrated--i.e. -installer option is used
     nsVoidArray*  mProfiles;
 
-    // Represents the size of the mProfiles array
-    // This value keeps changing as profiles are created/deleted/migrated
-    PRInt32       mCount;
-
     nsString      mCurrentProfile;
     nsString      mHavePREGInfo;
-
-    // Represents the size of the m4xProfiles array
-    // This value gets set after the profile information is migrated
-    // and does not change subsequently.
-    PRInt32       m4xCount;
-
-
-    // It looks like mCount and m4xCount are not required.
-    // But retaining them for now to avoid some problems.
-    // Will re-evaluate them in future.
+    
+public:
+    PRBool        mProfileDataChanged;
+    PRBool        mForgetProfileCalled;
 
 public:
-    PRBool         mProfileDataChanged;
-    PRBool         mForgetProfileCalled;
-
-    // This is the num of 5.x profiles at any given time
-    PRInt32        mNumProfiles;
-
-    // This is the num of 4.x profiles at any given time
-    PRInt32        mNumOldProfiles;
-
-    nsVoidArray*   m4xProfiles;
 
     nsProfileAccess();
     virtual ~nsProfileAccess();
 
-    nsresult SetValue(ProfileStruct* aProfile);
-    nsresult FillProfileInfo(nsIFile* regName);
-
     void GetNumProfiles(PRInt32 *numProfiles);
     void GetNum4xProfiles(PRInt32 *numProfiles);
     void GetFirstProfile(PRUnichar **firstProfile);
+    nsresult GetProfileList(PRInt32 whichKind, PRUint32 *length, PRUnichar ***result);
+
+    nsresult Get4xProfileInfo(const char *registryName);
 
     void SetCurrentProfile(const PRUnichar *profileName);
     void GetCurrentProfile(PRUnichar **profileName);
-
+    
+    nsresult GetValue(const PRUnichar* profileName, ProfileStruct** aProfile);
+    nsresult SetValue(ProfileStruct* aProfile);
+    void CheckRegString(const PRUnichar *profileName, char** regString);
     void RemoveSubTree(const PRUnichar* profileName);
 
+    PRBool ProfileExists(const PRUnichar *profileName);
+
+    nsresult DetermineForceMigration(PRBool *forceMigration);
+    nsresult UpdateRegistry(nsIFile* regName);
+
+private:
+    nsresult FillProfileInfo(nsIFile* regName);
+
+
+
     nsresult HavePregInfo(char **info);
-    nsresult GetValue(const PRUnichar* profileName, ProfileStruct** aProfile);
     PRInt32	 FindProfileIndex(const PRUnichar* profileName);
 
-    nsresult UpdateRegistry(nsIFile* regName);
-    nsresult GetProfileList(PRInt32 whichKind, PRUint32 *length, PRUnichar ***result);
-    PRBool ProfileExists(const PRUnichar *profileName);
-    nsresult Get4xProfileInfo(const char *registryName);
-    nsresult UpdateProfileArray();
     void SetPREGInfo(const char* pregInfo);
-    void CheckRegString(const PRUnichar *profileName, char** regString);
-    void FreeProfileMembers(nsVoidArray *aProfile, PRInt32 numElems);
+    void FreeProfileMembers(nsVoidArray *aProfile);
     nsresult ResetProfileMembers();
-    nsresult DetermineForceMigration(PRBool *forceMigration);
 };
 
 #endif // __nsProfileAccess_h___
