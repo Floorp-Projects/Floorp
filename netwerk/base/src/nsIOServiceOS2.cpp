@@ -42,6 +42,11 @@
 #include "nsEscape.h"
 #include "nsPrintfCString.h"
 #include "nsILocalFile.h"
+
+#define INCL_DOS
+#define INCL_DOSERRORS
+#define INCL_WIN
+#define INCL_GPI
 #include <os2.h>
 
 static int isleadbyte(int c);
