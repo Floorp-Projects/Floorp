@@ -260,6 +260,10 @@ protected:
 	virtual void		InlineEditorTextChanged( ) { }
 	virtual void		InlineEditorDone( ) { }
 	virtual void		DoInlineEditing( const STableCell &inCell, Rect & inTextRect );
+	virtual void 		SetEditParam(int w, int h, char* str, SPoint32& ImagePoint);
+
+
+
 	virtual Boolean		CanDoInlineEditing( ) const { return true; }
 	
 	virtual void		DrawCell(

@@ -28,6 +28,19 @@
 #include "URDFUtilities.h"
 #include "CContextMenuAttachment.h"
 #include "CRDFCoordinator.h"
+#include "UGraphicGizmos.h"
+  
+CNavCenterCaption :: CNavCenterCaption ( LStream *inStream )
+	: CChameleonCaption(inStream)
+{
+}
+void CNavCenterCaption::DrawText(Rect frame, Int16 inJust)
+{
+ 	UGraphicGizmos::PlaceUTF8TextInRect((char*)&mText[1],
+ 										mText[0],
+ 										frame,
+ 										inJust);		
+}
 
 
 CNavCenterStrip :: CNavCenterStrip ( LStream *inStream )

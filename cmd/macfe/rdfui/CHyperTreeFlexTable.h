@@ -150,6 +150,7 @@ protected:
 	virtual void	DeleteSelection ( const EventRecord& inEvent );
 	virtual void	FindCommandStatus ( CommandT inCommand, Boolean &outEnabled,
 										Boolean &outUsesMark, Char16 &outMark, Str255 outName) ;
+	virtual void 		SetEditParam(int w, int h, char* str, SPoint32& ImagePoint);
 
 	HT_Resource		TopNode ( ) const { return HT_TopNode(GetHTView()); } 
 	

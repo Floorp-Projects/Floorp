@@ -335,6 +335,7 @@ void RegisterAllBrowserClasses(void)
 	RegisterClass_(CInlineEditField);
 
 	RegisterClass_(CChameleonCaption);
+	RegisterClass_(CNavCenterCaption);
 	RegisterClass_(CChameleonBroadcastCaption);
 	
 	RegisterClass_(CNavCenterWindow);

@@ -69,7 +69,13 @@ private:
 }; // class CNavCenterTitle
 
 
-
+class CNavCenterCaption : public CChameleonCaption {
+public:
+	enum { class_ID = 'ccp8' };
+	CNavCenterCaption(LStream *inStream);
+protected:
+	virtual void		DrawText(Rect frame, Int16 inJust);	
+};
 
 class CNavCenterTitle : public CNavCenterStrip
 {

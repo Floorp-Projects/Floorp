@@ -86,10 +86,16 @@ CChameleonCaption :: DrawSelf()
 		::RGBForeColor ( &textColor );
 		
 		// ¥ Now we can finally get the text drawn
-		UTextDrawing::DrawWithJustification ( (Ptr)&mText[1], mText[0], localFrame, just );	
+		this->DrawText(localFrame, just);
 	}	
 	
 } // DrawSelf
+void
+CChameleonCaption :: DrawText(Rect frame, Int16 inJust)
+{
+	UTextDrawing::DrawWithJustification ( (Ptr)&mText[1], mText[0], frame, inJust );	
+	
+}
 
 #pragma mark -
 

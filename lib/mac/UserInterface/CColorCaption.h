@@ -42,6 +42,7 @@ public:
 protected:
 
 	virtual void		DrawSelf();	
+	virtual void		DrawText(Rect frame, Int16 inJust);	
 
 	RGBColor			mTextColor;
 	RGBColor			mBackColor;

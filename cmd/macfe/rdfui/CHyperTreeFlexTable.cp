@@ -40,7 +40,7 @@
 #include "ufilemgr.h"
 #include "CInlineEditField.h"
 #include "CContextMenuAttachment.h"
-
+#include "libi18n.h"
 #include <vector.h>
 #include <algorithm>
 
@@ -170,8 +170,17 @@ CHyperTreeFlexTable :: GetMainRowText( TableIndexT inRow, char* outText, UInt16 
 		*outText = NULL;
 	
 } // GetMainRowText
+//----------------------------------------------------------------------------------------
+void CHyperTreeFlexTable::SetEditParam(int w, int h, char* utf8, SPoint32& ImagePoint)
 
-
+{
+	mNameEditor->ResizeFrameTo(w, h, true);
+	char* editText = (char*) INTL_ConvertLineWithoutAutoDetect(
+		CS_UTF8, INTL_GetCharSetID(INTL_DefaultTextWidgetCsidSel), 
+		(unsigned char*)utf8, strlen(utf8));	
+	mNameEditor->UpdateEdit(CStr255(editText), &ImagePoint, nil);
+	XP_FREEIF(editText);
+} // SetEditParam
 //
 // FindTitleColumnID
 //
@@ -1362,8 +1371,12 @@ CHyperTreeFlexTable :: InlineEditorDone ( )
 {
 	Str255 newName;
 	mNameEditor->GetDescriptor(newName);
-	cstring nameAsCString(newName);
-
+	// we need to convert to UTF8 here....
+	unsigned char* utfText = INTL_ConvertLineWithoutAutoDetect(
+		INTL_GetCharSetID(INTL_DefaultTextWidgetCsidSel), CS_UTF8, newName+1, newName[0]);
+	cstring nameAsCString( (char*) utfText);
+	XP_FREEIF(utfText);
+	
 	HT_Resource editedNode = HT_GetNthItem(GetHTView(), URDFUtilities::PPRowToHTRow(mRowBeingEdited) );	
 	HT_SetNodeName ( editedNode, nameAsCString );
 	

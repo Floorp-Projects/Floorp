@@ -1161,13 +1161,17 @@ void CStandardFlexTable::DoInlineEditing(const STableCell &inCell, Rect& inTextR
 	GetHiliteText(mRowBeingEdited, nameString, sizeof(nameString), false, &inTextRect);
 	InsetRect(&inTextRect, -2, -2);
 	inTextRect.bottom += 2;
-	mNameEditor->ResizeFrameTo(inTextRect.right - inTextRect.left,
-								inTextRect.bottom - inTextRect.top, true);
-	mNameEditor->UpdateEdit(CStr255(nameString), &imagePoint, nil);
-	
+	SetEditParam(inTextRect.right - inTextRect.left, inTextRect.bottom - inTextRect.top, nameString, imagePoint);
 	SelectionChanged();
 } // DoInlineEditing
 
+//----------------------------------------------------------------------------------------
+void CStandardFlexTable::SetEditParam(int w, int h, char* str, SPoint32& ImagePoint)
+
+{
+	mNameEditor->ResizeFrameTo(w, h, true);
+	mNameEditor->UpdateEdit(CStr255(str), &ImagePoint, nil);
+} // SetEditParam
 //----------------------------------------------------------------------------------------
 Boolean CStandardFlexTable::CellSelects(const STableCell& /*inCell*/) const
 // Determines if a cell is allowed to select the row.
