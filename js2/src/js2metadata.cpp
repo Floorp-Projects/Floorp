@@ -2977,7 +2977,7 @@ doUnary:
 
 #define MAKEBUILTINCLASS(c, super, dynamic, allowNull, final, name, defaultVal) c = new JS2Class(super, NULL, new Namespace(engine->private_StringAtom), dynamic, allowNull, final, name); c->complete = true; c->defaultValue = defaultVal;
 
-    JS2Metadata::JS2Metadata(World &world) :
+    JS2Metadata::JS2Metadata(World &world) : JS2Object(MetaDataKind),
         world(world),
         engine(new JS2Engine(world)),
         publicNamespace(new Namespace(engine->public_StringAtom)),
@@ -3963,7 +3963,7 @@ deleteClassProperty:
 
     // gc-mark all contained JS2Objects and their children 
     // and then invoke mark on all other structures that contain JS2Objects
-    void JS2Metadata::mark()
+    void JS2Metadata::markChildren()
     {        
         // XXX - maybe have a separate pool to allocate chunks
         // that are meant to be never collected?
@@ -4781,7 +4781,7 @@ deleteClassProperty:
     void *JS2Object::alloc(size_t s)
     {
         s += sizeof(PondScum);
-        // make sure that the thing is 16-byte aligned
+        // make sure that the thing is a multiple of 16 bytes
         if (s & 0xF) s += 16 - (s & 0xF);
         ASSERT(s <= 0x7FFFFFFF);
         void *p = pond.allocFromPond(s);
@@ -4848,34 +4848,37 @@ deleteClassProperty:
     // Allocate from this or the next Pond (make a new one if necessary)
     void *Pond::allocFromPond(size_t sz)
     {
-        // Try scannning the free list...
-        PondScum *p = freeHeader;
-        PondScum *pre = NULL;
-        while (p) {
-            ASSERT(p->getSize() > 0);
-            if (p->getSize() >= sz) {
-                if (pre)
-                    pre->owner = p->owner;
-                else
-                    freeHeader = (PondScum *)(p->owner);
-                p->owner = this;
-                p->resetMark();      // might have lingering mark from previous gc
-#ifdef DEBUG
-                memset((p + 1), 0xB7, p->getSize() - sizeof(PondScum));
-#endif
-                return (p + 1);
-            }
-            pre = p;
-            p = (PondScum *)(p->owner);
-        }
-
         // See if there's room left...
         if (sz > pondSize) {
-            if (nextPond == NULL)
+            // If not, try the free list...
+            PondScum *p = freeHeader;
+            PondScum *pre = NULL;
+            while (p) {
+                ASSERT(p->getSize() > 0);
+                if (p->getSize() >= sz) {
+                    if (pre)
+                        pre->owner = p->owner;
+                    else
+                        freeHeader = (PondScum *)(p->owner);
+                    p->owner = this;
+                    p->resetMark();      // might have lingering mark from previous gc
+#ifdef DEBUG
+                    memset((p + 1), 0xB7, p->getSize() - sizeof(PondScum));
+#endif
+                    return (p + 1);
+                }
+                pre = p;
+                p = (PondScum *)(p->owner);
+            }
+            // ok, then try the next Pond
+            if (nextPond == NULL) {
+                // there isn't one, so make it
                 nextPond = new Pond(sz, nextPond);
+            }
             return nextPond->allocFromPond(sz);
         }
-        p = (PondScum *)pondTop;
+        // there was room, so acquire it
+        PondScum *p = (PondScum *)pondTop;
         p->owner = this;
         p->setSize(sz);
         pondTop += sz;

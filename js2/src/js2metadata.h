@@ -106,7 +106,8 @@ enum ObjectKind {
     AlienInstanceKind,
     ForIteratorKind,
 
-    EnvironmentKind         // Not an available JS2 runtime kind
+    EnvironmentKind,         // Not an available JS2 runtime kind
+    MetaDataKind
 };
 
 enum Plurality { Singular, Plural };
@@ -128,7 +129,7 @@ private:
 };
 
 // A pond is a place to get chunks of PondScum from and to return them to
-#define POND_SIZE (8000)
+#define POND_SIZE (16000)
 #define POND_SANITY (0xFADE2BAD)
 class Pond {
 public:
@@ -1024,7 +1025,7 @@ public:
     BytecodeContainer *execution_bCon;
 };
 
-class JS2Metadata {
+class JS2Metadata : public JS2Object {
 public:
     
     JS2Metadata(World &world);
@@ -1178,7 +1179,7 @@ public:
 
     TargetList targetList;          // stack of potential break/continue targets
 
-    void mark();
+    virtual void markChildren();
 
     bool showTrees;                 // debug only, causes parse tree dump 
 

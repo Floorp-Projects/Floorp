@@ -891,7 +891,7 @@ namespace MetaData {
         return buildNameList();
     }
 
-    // XXX need help from spec. Here we iterate ove dynamic properties only
+    // XXX need help from spec. Here we iterate over dynamic properties only
     // unless the object is a Class, in which case we iterate the static
     // members.
     bool ForIteratorObject::buildNameList()
@@ -931,7 +931,7 @@ namespace MetaData {
     }
 
     //
-    // Set the iterator to the first property in that list that is not
+    // Set the iterator to the next property in that list that is not
     // shadowed by a property higher up the prototype chain. If we get 
     // to the end of the list, bump down to the next object on the chain.
     //
@@ -945,7 +945,11 @@ namespace MetaData {
             else {
                 if (originalObj != obj) {
                     while (it != length)
-                        if (engine->meta->lookupDynamicProperty(originalObj, nameList[it]) != obj) it++;
+                        if (engine->meta->lookupDynamicProperty(originalObj, nameList[it]) != obj)
+                            // shadowed by a property higher in the chain, so skip to next
+                            it++;
+                        else
+                            break;
                 }
                 if (it == length) {
                     if (obj->kind == PrototypeInstanceKind) {
