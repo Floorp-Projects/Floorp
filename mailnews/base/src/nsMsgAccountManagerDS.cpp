@@ -108,7 +108,9 @@ DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, Identity);
 nsMsgAccountManagerDataSource::nsMsgAccountManagerDataSource():
   mAccountManager(nsnull)
 {
+#ifdef DEBUG_alecf
   fprintf(stderr, "nsMsgAccountManagerDataSource() being created\n");
+#endif
 }
 
 nsMsgAccountManagerDataSource::~nsMsgAccountManagerDataSource()
@@ -124,8 +126,9 @@ nsMsgAccountManagerDataSource::Init(const char *uri)
 {
     nsMsgRDFDataSource::Init(uri);
     nsresult rv=NS_OK;
-
+#ifdef DEBUG_alecf
     fprintf(stderr, "nsMsgAccountManagerDataSource::Init(%s)\n", uri ? uri : "(null)");
+#endif
     
     if (!mAccountManager) {
         NS_WITH_SERVICE(nsIMsgMailSession, mailSession,
@@ -155,8 +158,16 @@ nsMsgAccountManagerDataSource::GetTarget(nsIRDFResource *source,
                                          nsIRDFNode **target)
 {
   nsresult rv = NS_RDF_NO_VALUE;
-  if (!aTruthValue) return NS_RDF_NO_VALUE;
-  return rv;
+#ifdef DEBUG_alecf
+  char *source_value=nsnull;
+  rv = source->GetValue(&source_value);
+  
+  char *property_value=nsnull;
+  rv = property->GetValue(&property_value);
+  printf("nsMsgAccountManagerDataSource::GetTarget(%s, %s, %s, ..)\n",
+         source_value, property_value, aTruthValue?"PR_TRUE":"PR_FALSE");
+#endif
+  return NS_RDF_NO_VALUE;
 }
 
 
@@ -167,10 +178,21 @@ nsMsgAccountManagerDataSource::GetTargets(nsIRDFResource *source,
                                    PRBool aTruthValue,
                                    nsISimpleEnumerator **_retval)
 {
-  printf("accountmanager::GetTargets()\n");
   nsresult rv = NS_RDF_NO_VALUE;
 
-  if (!aTruthValue) return NS_RDF_NO_VALUE;
+  // create array and enumerator
+  // even if we're not handling this we need to return something empty?
+  nsISupportsArray *nodes;
+  rv = NS_NewISupportsArray(&nodes);
+  if (NS_FAILED(rv)) return rv;
+  
+  nsISimpleEnumerator* enumerator =
+    new nsArrayEnumerator(nodes);
+  if (!enumerator) return NS_ERROR_OUT_OF_MEMORY;
+    
+  NS_ADDREF(enumerator);
+  *_retval = enumerator;
+
 
   // if the property is "account" or "child" then return the
   // list of accounts
@@ -180,38 +202,24 @@ nsMsgAccountManagerDataSource::GetTargets(nsIRDFResource *source,
   char *source_value=nsnull;
   rv = source->GetValue(&source_value);
 
-#ifdef DEBUG_alecf
-  char *property_value=nsnull;
-  rv = property->GetValue(&property_value);
-  printf("nsMsgAccountManagerDataSource::GetTargets(%s, %s, %s, ..)\n",
-         source_value, property_value, aTruthValue?"PR_TRUE":"PR_FALSE");
-#endif
-  
-  if (NS_FAILED(rv) ||
-      PL_strcmp(source_value, "msgaccounts:/")!=0)
-    return NS_RDF_NO_VALUE;
-
-  printf("GetTargets(): This is an account manager..\n");
-
-  nsISupportsArray *servers;
-  mAccountManager->GetAllServers(&servers);
-
-  nsISupportsArray *nodes;
-  NS_NewISupportsArray(&nodes);
-
-  // fill up the nodes array with the RDF Resources for the servers
-  serverCreationParams params = { nodes, getRDFService() };
-  servers->EnumerateForwards(createServerResources, (void*)&params);
-  
-  nsISimpleEnumerator* enumerator =
-    new nsArrayEnumerator(nodes);
-
-  if (!enumerator) return NS_ERROR_OUT_OF_MEMORY;
+  if (NS_SUCCEEDED(rv) &&
+      PL_strcmp(source_value, "msgaccounts:/")==0) {
     
-  NS_ADDREF(enumerator);
-  *_retval = enumerator;
-  return NS_OK;
+    nsISupportsArray *servers;
+    mAccountManager->GetAllServers(&servers);
+
+#ifdef DEBUG_alecf
+    char *property_value=nsnull;
+    rv = property->GetValue(&property_value);
+    printf("nsMsgAccountManagerDataSource::GetTargets(%s, %s, %s, ..)\n",
+           source_value, property_value, aTruthValue?"PR_TRUE":"PR_FALSE");
+#endif
+    // fill up the nodes array with the RDF Resources for the servers
+    serverCreationParams params = { nodes, getRDFService() };
+    servers->EnumerateForwards(createServerResources, (void*)&params);
+  }
   
+  return NS_OK;
 }
 
 // enumeration function to convert each server (element)
@@ -238,7 +246,10 @@ nsMsgAccountManagerDataSource::createServerResources(nsISupports *element,
   rv = server->GetServerURI(&serverUri);
   if (NS_FAILED(rv)) return PR_TRUE;
 
+#ifdef DEBUG_alecf
   printf("createServerResources: Adding %s\n", serverUri);
+#endif
+  
   // get the corresponding RDF resource
   // RDF will create the server resource if it doesn't already exist
   nsIRDFResource *serverResource;
@@ -279,8 +290,6 @@ nsMsgAccountManagerDataSource::ArcLabelsOut(nsIRDFResource *source,
   
   char *value=nsnull;
   source->GetValue(&value);
-  printf("accountmanager::ArcLabelsOut(%s)\n", value ? value : "(nsnull)");
-  
   if (PL_strcmp(value, "msgaccounts:/")==0) {
     arcs->AppendElement(kNC_Child);
     arcs->AppendElement(kNC_Name);
