@@ -93,14 +93,9 @@ static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CI
  */
 nsProfileAccess::nsProfileAccess()
 {
-    mCount               =  0;
-    mNumProfiles         =  0; 
-    mNumOldProfiles      =  0;
-    m4xCount             =  0;
     mProfileDataChanged	 =  PR_FALSE;
     mForgetProfileCalled =  PR_FALSE;
     mProfiles            =  new nsVoidArray();
-    m4xProfiles          =  new nsVoidArray();
 
     // Get the profile registry path
     NS_GetSpecialDirectory(NS_APP_APPLICATION_REGISTRY_FILE, getter_AddRefs(mNewRegFile));
@@ -115,8 +110,7 @@ nsProfileAccess::~nsProfileAccess()
 {
     // Release all resources.
     mNewRegFile = nsnull;
-    FreeProfileMembers(mProfiles, mCount);
-    FreeProfileMembers(m4xProfiles, m4xCount);
+    FreeProfileMembers(mProfiles);
 }
 
 // A wrapper function to call the interface to get a platform file charset.
@@ -179,11 +173,12 @@ ConvertStringToUnicode(nsAutoString& aCharset, const char* inString, nsAutoStrin
 
 // Free up the member profile structs
 void
-nsProfileAccess::FreeProfileMembers(nsVoidArray *profiles, PRInt32 numElems)
+nsProfileAccess::FreeProfileMembers(nsVoidArray *profiles)
 {
     NS_ASSERTION(profiles, "Invalid profiles");
 
     PRInt32 index = 0;
+    PRInt32 numElems = profiles->Count();
 
     ProfileStruct* aProfile;
     if (profiles) {
@@ -277,7 +272,6 @@ nsProfileAccess::SetValue(ProfileStruct* aProfile)
             mProfiles = new nsVoidArray();
 
         mProfiles->AppendElement((void*)profileItem);
-        mCount++;
     }
 
     return NS_OK;
@@ -379,9 +373,6 @@ nsProfileAccess::FillProfileInfo(nsIFile* regName)
     rv = enumKeys->First();
     if (NS_FAILED(rv)) return rv;
 
-    mCount = 0;
-    mNumProfiles = 0;
-    mNumOldProfiles = 0;
     PRBool currentProfileValid = mCurrentProfile.IsEmpty();
 
     while (NS_OK != enumKeys->IsDone()) 
@@ -466,12 +457,6 @@ nsProfileAccess::FillProfileInfo(nsIFile* regName)
         if (NCHavePregInfo)
             profileItem->NCHavePregInfo = NS_STATIC_CAST(const PRUnichar*, NCHavePregInfo);
 
-
-        if (isMigratedString.Equals(kRegistryYesString))
-            mNumProfiles++;
-        else if (isMigratedString.Equals(kRegistryNoString))
-            mNumOldProfiles++;
-
         if (!mProfiles) {
             mProfiles = new nsVoidArray();
 
@@ -482,7 +467,6 @@ nsProfileAccess::FillProfileInfo(nsIFile* regName)
         }
 
         mProfiles->AppendElement((void*)profileItem);			
-        mCount++;
         
         rv = enumKeys->Next();
         if (NS_FAILED(rv)) return rv;
@@ -495,29 +479,43 @@ nsProfileAccess::FillProfileInfo(nsIFile* regName)
 }
 
 // Return the number of 5x profiles.
-// A member variable mNumProfiles is used
-// to keep track of 5x profiles. 
 void
 nsProfileAccess::GetNumProfiles(PRInt32 *numProfiles)
 {
-    NS_ASSERTION(numProfiles, "Invalid numProfiles");
+    if (!numProfiles) {
+        NS_ASSERTION(PR_FALSE, "invalid argument");
+        return;
+    }
 
-    *numProfiles = mNumProfiles;
-}
-
-// Return the number of 4x (>=4.5 & < 5.0) profiles.
-// A member variable mNumOldProfiles is used
-// to keep track of 4x profiles. 
-void
-nsProfileAccess::GetNum4xProfiles(PRInt32 *numProfiles)
-{
-    NS_ASSERTION(numProfiles, "Invalid numProfiles");
-
-    PRInt32 index = 0;
+    PRInt32 index, numElems = mProfiles->Count();
 
     *numProfiles = 0;
 
-    for(index = 0; index < mCount; index++)
+    for(index = 0; index < numElems; index++)
+    {
+        ProfileStruct* profileItem = (ProfileStruct *) (mProfiles->ElementAt(index));
+
+        if (profileItem->isMigrated)
+        {
+            (*numProfiles)++;
+        }
+    }
+}
+
+// Return the number of 4x (>=4.5 & < 5.0) profiles.
+void
+nsProfileAccess::GetNum4xProfiles(PRInt32 *numProfiles)
+{
+    if (!numProfiles) {
+        NS_ASSERTION(PR_FALSE, "invalid argument");
+        return;
+    }
+
+    PRInt32 index, numElems = mProfiles->Count();
+
+    *numProfiles = 0;
+
+    for(index = 0; index < numElems; index++)
     {
         ProfileStruct* profileItem = (ProfileStruct *) (mProfiles->ElementAt(index));
 
@@ -526,23 +524,6 @@ nsProfileAccess::GetNum4xProfiles(PRInt32 *numProfiles)
             (*numProfiles)++;
         }
     }
-
-    // ******** This is a HACK -- to be changed later ********
-    // When we run mozilla -installer for the second time, mNumOldProfiles is set to 0
-    // This happens because MigrateProfileInfo realizes that the old profiles info 
-    // already exists in mozRegistry (from the first run of -installer)
-    // and does not fill m4xProfiles leaving it empty.
-
-    // A default profile is created if there are 0 number of 4x and 5x profiles.
-    // Setting mNumOldProfiles to 0 can result in this side effect if there are no
-    // 5x profiles, although there are >0 number of 4x profiles.
-    // This side effect would happen in nsProfile::ProcessArgs -- INSTALLER option.
-
-    // So we query the mProfiles array for the latest numOfOldProfiles 
-    // This returns the right value and we set mNumOldProfiles to this value
-    // This results in the correct behaviour.
-
-    mNumOldProfiles = *numProfiles;
 }
 
 // If the application can't find the current profile,
@@ -552,13 +533,16 @@ nsProfileAccess::GetNum4xProfiles(PRInt32 *numProfiles)
 void 
 nsProfileAccess::GetFirstProfile(PRUnichar **firstProfile)
 {
-    NS_ASSERTION(firstProfile, "Invalid firstProfile pointer");
+    if (!firstProfile) {
+        NS_ASSERTION(PR_FALSE, "Invalid firstProfile pointer");
+        return;
+    }
 
-    PRInt32 index = 0;
+    PRInt32 index, numElems = mProfiles->Count();
 
     *firstProfile = nsnull;
 
-    for(index = 0; index < mCount; index++)
+    for(index = 0; index < numElems; index++)
     {
         ProfileStruct* profileItem = (ProfileStruct *) (mProfiles->ElementAt(index));
 
@@ -599,10 +583,11 @@ nsProfileAccess::GetCurrentProfile(PRUnichar **profileName)
 
     // If there are profiles and profileName is not
     // set yet. Get the first one and set it as Current Profile.
-    if (mNumProfiles > 0 && (*profileName == nsnull))
+    if (*profileName == nsnull)
     {
-        GetFirstProfile(profileName);
-        SetCurrentProfile(*profileName);
+        GetFirstProfile(profileName); // We might not have any
+        if (*profileName)
+            SetCurrentProfile(*profileName);
     }
 }
 
@@ -613,30 +598,15 @@ nsProfileAccess::RemoveSubTree(const PRUnichar* profileName)
     NS_ASSERTION(profileName, "Invalid profile name");
 
     // delete this entry from the mProfiles array
-    // by moving the pointers with something like memmove
-    // decrement mCount if it works.
-    PRInt32	index = 0;
-    PRBool  isOldProfile = PR_FALSE;
-
-    index = FindProfileIndex(profileName);
+    PRInt32	index = FindProfileIndex(profileName);
 
     if (index >= 0)
     {
         ProfileStruct* profileItem = (ProfileStruct *) (mProfiles->ElementAt(index));
 
-        if (!profileItem->isMigrated)
-            isOldProfile = PR_TRUE;
-
         mProfiles->RemoveElementAt(index);
 
-        mCount--;
-
-        if (isOldProfile)
-            mNumOldProfiles--;
-        else
-            mNumProfiles--;
-
-        if (mCurrentProfile.EqualsWithConversion(profileName))
+        if (mCurrentProfile.Equals(profileName))
         {
             mCurrentProfile.SetLength(0);
         }
@@ -650,13 +620,13 @@ nsProfileAccess::FindProfileIndex(const PRUnichar* profileName)
     NS_ASSERTION(profileName, "Invalid profile name");
 
     PRInt32 retval = -1;
-    PRInt32 index = 0;
+    PRInt32 index, numElems = mProfiles->Count();
 
-    for (index=0; index < mCount; index++)
+    for (index=0; index < numElems; index++)
     {
         ProfileStruct* profileItem = (ProfileStruct *) (mProfiles->ElementAt(index));
 
-        if(profileItem->profileName.EqualsWithConversion(profileName))
+        if(profileItem->profileName.Equals(profileName))
         {
             retval = index;
             break;
@@ -812,7 +782,8 @@ nsProfileAccess::UpdateRegistry(nsIFile* regName)
     }
 
     // Take care of new nodes
-    for (int i = 0; i < mCount; i++)
+    PRInt32 numElems = mProfiles->Count();
+    for (int i = 0; i < numElems; i++)
     {
         ProfileStruct* profileItem = (ProfileStruct *) (mProfiles->ElementAt(i));
 
@@ -862,8 +833,6 @@ nsProfileAccess::UpdateRegistry(nsIFile* regName)
 }
 
 // Return the list of profiles, 4x, 5x, or both.
-// For 4x profiles text "- migrate" is appended
-// to inform the JavaScript about the migration status.
 nsresult
 nsProfileAccess::GetProfileList(PRInt32 whichKind, PRUint32 *length, PRUnichar ***result)
 {
@@ -875,17 +844,18 @@ nsProfileAccess::GetProfileList(PRInt32 whichKind, PRUint32 *length, PRUnichar *
     nsresult rv = NS_OK;    
     PRInt32 count, localLength = 0;
     PRUnichar **outArray, **next;
+    PRInt32 numElems = mProfiles->Count();
     
     switch (whichKind)
     {
         case nsIProfileInternal::LIST_ONLY_NEW:
-            count = mNumProfiles;
+            GetNumProfiles(&count);
             break;
         case nsIProfileInternal::LIST_ONLY_OLD:
             GetNum4xProfiles(&count);
             break;
         case nsIProfileInternal::LIST_ALL:
-            count = mCount;
+            count = numElems;
             break;
         default:
             NS_ASSERTION(PR_FALSE, "Bad parameter");
@@ -896,7 +866,7 @@ nsProfileAccess::GetProfileList(PRInt32 whichKind, PRUint32 *length, PRUnichar *
     if (!outArray)
         return NS_ERROR_OUT_OF_MEMORY;
         
-    for (PRInt32 index=0; index < mCount && localLength < count; index++)
+    for (PRInt32 index=0; index < numElems && localLength < count; index++)
     {
         ProfileStruct* profileItem = (ProfileStruct *) (mProfiles->ElementAt(index));
         
@@ -937,11 +907,12 @@ nsProfileAccess::ProfileExists(const PRUnichar *profileName)
     NS_ASSERTION(profileName, "Invalid profile name");
 
     PRBool exists = PR_FALSE;
+    PRInt32 numElems = mProfiles->Count();
 
-    for (PRInt32 index=0; index < mCount; index++)
+    for (PRInt32 index=0; index < numElems; index++)
     {
         ProfileStruct* profileItem = (ProfileStruct *) (mProfiles->ElementAt(index));
-        if (profileItem->profileName.EqualsWithConversion(profileName))
+        if (profileItem->profileName.Equals(profileName))
         {
             exists = PR_TRUE;
             break;
@@ -955,7 +926,6 @@ nsresult
 nsProfileAccess::Get4xProfileInfo(const char *registryName)
 {
     nsresult rv = NS_OK;
-    mNumOldProfiles = 0;
 
     nsAutoString charSet;
     rv = GetPlatformCharset(charSet);
@@ -1040,17 +1010,7 @@ nsProfileAccess::Get4xProfileInfo(const char *registryName)
         NS_ASSERTION(NS_SUCCEEDED(rv), "Could not get 4x profile location");
         profileItem->isMigrated = PR_FALSE;
 
-        if (!m4xProfiles) {
-            m4xProfiles = new nsVoidArray();
-            if (!m4xProfiles) {
-                delete profileItem;
-                return NS_ERROR_OUT_OF_MEMORY;
-            }
-        }
-
-        m4xProfiles->AppendElement((void*)profileItem);
-
-        mNumOldProfiles++;
+        SetValue(profileItem);
 
         rv = enumKeys->Next();
         if (NS_FAILED(rv)) return rv;
@@ -1114,18 +1074,7 @@ nsProfileAccess::Get4xProfileInfo(const char *registryName)
                 profileItem->SetResolvedProfileDir(localFile);
                 profileItem->isMigrated = PR_FALSE;
 
-                if (!m4xProfiles) {
-                    m4xProfiles = new nsVoidArray();
-                    if (!m4xProfiles) {
-                        delete profileItem;
-                        return NS_ERROR_OUT_OF_MEMORY;
-                    }
-                }
-
-                m4xProfiles->AppendElement((void*)profileItem);
-
-                mNumOldProfiles++;
-
+                SetValue(profileItem);
             }
             else {
 #ifdef DEBUG
@@ -1135,41 +1084,9 @@ nsProfileAccess::Get4xProfileInfo(const char *registryName)
         }
 #endif /* XP_UNIX */
 
-    m4xCount = mNumOldProfiles;
-
-    if (m4xCount > 0) {
-        UpdateProfileArray();
-    }
-
     return rv;
 }
 
-// Update the mozregistry with the 4x profile names
-// and thier locations. Entry REGISTRY_MIGRATED_STRING is set to REGISTRY_NO_STRING
-// to differentiate these profiles from 5x profiles.
-nsresult
-nsProfileAccess::UpdateProfileArray()
-{
-    nsresult rv = NS_OK;
-
-    for (PRInt32 idx = 0; idx < m4xCount; idx++)
-    {
-        ProfileStruct* profileItem = (ProfileStruct *) (m4xProfiles->ElementAt(idx));
-
-        PRBool exists;
-        exists = ProfileExists(profileItem->profileName.GetUnicode());
-
-        // That profile already exists...
-        // move on.....
-        if (exists) {
-            continue;
-        }
-        
-        SetValue(profileItem);
-    }
-    mProfileDataChanged = PR_TRUE;
-    return rv;
-}
 
 // Set the PREG flag to indicate if that info exists
 void
@@ -1216,9 +1133,8 @@ nsProfileAccess::CheckRegString(const PRUnichar *profileName, char **info)
 nsresult
 nsProfileAccess::ResetProfileMembers()
 {
-    FreeProfileMembers(mProfiles, mCount);
+    FreeProfileMembers(mProfiles);
     mProfiles = new nsVoidArray();
-    mCount = 0;
     return NS_OK;
 }
 
@@ -1226,11 +1142,13 @@ nsresult
 nsProfileAccess::DetermineForceMigration(PRBool *forceMigration)
 {
 	if (!forceMigration) return NS_ERROR_NULL_POINTER;
-
-	*forceMigration = PR_FALSE;
-
-	if (mNumProfiles > 0) {
+    
+    PRInt32 numProfiles;
+    GetNumProfiles(&numProfiles);
+    
+	if (numProfiles > 0) {
 		// we have some 6.0 profiles, don't force migration:
+	    *forceMigration = PR_FALSE;
 		return NS_OK;
 	}
 

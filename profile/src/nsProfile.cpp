@@ -1396,7 +1396,6 @@ nsProfile::CreateNewProfile(const PRUnichar* profileName,
         RecursiveCopy(profDefaultsDir, profileDir);
     }
 
-    gProfileDataAccess->mNumProfiles++;
     gProfileDataAccess->mProfileDataChanged = PR_TRUE;
     gProfileDataAccess->UpdateRegistry(nsnull);
     
@@ -1463,9 +1462,6 @@ nsProfile::RenameProfile(const PRUnichar* oldName, const PRUnichar* newName)
 	 * bad things would happen if we tried to rename the directory
 	 */
     
-    /* profile is just replaced. But Keep up the count */
-    gProfileDataAccess->mNumProfiles++;
-
     rv = ForgetCurrentProfile();
     if (NS_FAILED(rv)) return rv;
 
@@ -1521,7 +1517,7 @@ NS_IMETHODIMP nsProfile::DeleteProfile(const PRUnichar* profileName, PRBool canD
 {
     NS_ENSURE_ARG_POINTER(profileName);   
 
-    nsresult rv = NS_OK;
+    nsresult rv;
  
     nsXPIDLString currProfile;
     rv = GetCurrentProfile(getter_Copies(currProfile));
@@ -1529,6 +1525,7 @@ NS_IMETHODIMP nsProfile::DeleteProfile(const PRUnichar* profileName, PRBool canD
         rv = ForgetCurrentProfile();
         if (NS_FAILED(rv)) return rv;
     }
+    rv = NS_OK;
     
     // If user asks for it, delete profile directory
     if (canDeleteFiles) {
@@ -1904,9 +1901,6 @@ nsProfile::MigrateProfile(const PRUnichar* profileName, PRBool showProgressAsMod
     rv = SetProfileDir(profileName, newProfDir);
     if (NS_FAILED(rv)) return rv;
 
-    gProfileDataAccess->mNumProfiles++;
-    gProfileDataAccess->mNumOldProfiles--;
-
     gProfileDataAccess->mProfileDataChanged = PR_TRUE;
     gProfileDataAccess->UpdateRegistry(nsnull);
 
@@ -2059,16 +2053,18 @@ NS_IMETHODIMP nsProfile::Get4xProfileCount(PRInt32 *numProfiles)
 // Migrates all unmigrated profiles
 NS_IMETHODIMP nsProfile::MigrateAllProfiles()
 {
-    nsresult rv = NS_OK;
-    for (PRInt32 i=0; i < gProfileDataAccess->mNumOldProfiles; i++)
-    {
-        ProfileStruct* profileItem = (ProfileStruct *)
-                                     (gProfileDataAccess->m4xProfiles->ElementAt(i));
-        rv = MigrateProfile(profileItem->profileName.GetUnicode(), 
-                            PR_FALSE /* don't show progress as modal window */);
-        if (NS_FAILED(rv)) return rv;
-    }
+    nsresult rv;
 
+    PRUint32    numOldProfiles = 0;
+    PRUnichar   **nameArray = nsnull;
+    rv = GetProfileListX(nsIProfileInternal::LIST_ONLY_OLD, &numOldProfiles, &nameArray);
+    if (NS_FAILED(rv)) return rv;
+    for (PRUint32 i = 0; i < numOldProfiles; i++)
+    {
+        rv = MigrateProfile(nameArray[i], PR_FALSE /* don't show progress as modal window */);
+        if (NS_FAILED(rv)) break;
+    }
+    NS_FREE_XPCOM_ALLOCATED_POINTER_ARRAY(numOldProfiles, nameArray);
     return rv;
 }
 
@@ -2118,7 +2114,6 @@ NS_IMETHODIMP nsProfile::CloneProfile(const PRUnichar* newProfile)
     }
 #endif
 
-    gProfileDataAccess->mNumProfiles++;
     gProfileDataAccess->mProfileDataChanged = PR_TRUE;
 
     return rv;
