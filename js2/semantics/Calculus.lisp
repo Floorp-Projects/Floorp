@@ -1275,6 +1275,20 @@
                (if (eq element-coercion-code par)
                  code
                  `(mapcar #'(lambda (,par) ,element-coercion-code) code))))
+            (:->
+             (unless (eq kind :->)
+               (type-mismatch))
+             (let ((supertype-arguments (->-argument-types supertype))
+                   (type-arguments (->-argument-types type)))
+               (unless (= (length supertype-arguments) (length type-arguments))
+                 (type-mismatch))
+               (mapc #'(lambda (supertype-argument type-argument)
+                         (unless (eq (widening-coercion-code world type-argument supertype-argument 'test 'test) 'test)
+                           (error "Nontrivial type coercions of -> arguments are not supported yet")))
+                     supertype-arguments type-arguments)
+               (unless (eq (widening-coercion-code world (->-result-type supertype) (->-result-type type) 'test 'test) 'test)
+                 (error "Nontrivial type coercion of -> result is not supported yet")))
+             code)
             (t (type-mismatch))))))))
 
 
@@ -2429,7 +2443,7 @@
                            #'(lambda (condition)
                                (declare (ignore condition))
                                (format *error-output*
-                                       "~@<In ~S: ~_Function of type ~A called with arguments of types~:_~{ ~A~}~:>"
+                                       "~@<In ~S: ~_Function of type ~A called with arguments of types~:_~{ ~A~}~:>~%"
                                        value-expr
                                        (print-type-to-string function-type)
                                        (mapcar #'print-type-to-string arg-types)))))
@@ -3505,7 +3519,7 @@
       (let ((result-type (apply #'make-union-type world field-types)))
         (dolist (field-type field-types)
           (unless (eq (widening-coercion-code world result-type field-type 'test 'test) 'test)
-            (error "Type coercions in & are not implemented yet")))
+            (error "Nontrivial type coercions in & are not implemented yet")))
         (values
          (if (endp (cdr position-alist))
            (gen-nth-code (caar position-alist) record-code)
