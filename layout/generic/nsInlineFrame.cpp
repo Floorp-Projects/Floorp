@@ -45,6 +45,8 @@ protected:
   nsInlineFrame();
   ~nsInlineFrame();
 
+  virtual PRIntn GetSkipSides() const;
+
   struct AdjustData {
     nsIFrame* frame;
     PRBool splittable;
@@ -279,4 +281,17 @@ nsInlineFrame::CreateContinuingFrame(nsIPresContext& aPresContext,
   cf->AppendToFlow(this);
   aContinuingFrame = cf;
   return NS_OK;
+}
+
+PRIntn
+nsInlineFrame::GetSkipSides() const
+{
+  PRIntn skip = 0;
+  if (nsnull != mPrevInFlow) {
+    skip |= 1 << NS_SIDE_LEFT;
+  }
+  if (nsnull != mNextInFlow) {
+    skip |= 1 << NS_SIDE_RIGHT;
+  }
+  return skip;
 }
