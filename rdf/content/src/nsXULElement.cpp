@@ -2516,13 +2516,18 @@ nsXULElement::HandleDOMEvent(nsIPresContext& aPresContext,
         // In order for the event to have a proper target for events that don't go through
         // the presshell (onselect, oncommand, oncreate, ondestroy) we need to set our target
         // ourselves. Also, key sets and menus don't have frames and therefore need their
-        // targets explicitly specified.
+        // targets explicitly specified. 
+        // 
+        // We need this for drag&drop as well since the mouse may have moved into a different
+        // frame between the initial mouseDown and the generation of the drag gesture.
+        // Obviously, the target should be the content/frame where the mouse was depressed,
+        // not one computed by the current mouse location.
         nsAutoString tagName;
         GetTagName(tagName);
         if (aEvent->message == NS_MENU_ACTION || aEvent->message == NS_MENU_CREATE ||
             aEvent->message == NS_MENU_DESTROY || aEvent->message == NS_FORM_SELECTED ||
             aEvent->message == NS_XUL_BROADCAST || aEvent->message == NS_XUL_COMMAND_UPDATE ||
-            aEvent->message == NS_DRAGDROP_ENTER || aEvent->message == NS_DRAGDROP_EXIT ||
+            aEvent->message == NS_DRAGDROP_GESTURE ||
             tagName == "menu" || tagName == "menuitem" ||
             tagName == "menubar" || tagName == "key" || tagName == "keyset") {
             nsCOMPtr<nsIEventListenerManager> listenerManager;
