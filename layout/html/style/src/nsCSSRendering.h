@@ -192,7 +192,23 @@ public:
   QBCurve() {mAnc1.x=0;mAnc1.y=0;mCon=mAnc2=mAnc1;}
   void SetControls(nsPoint &aAnc1,nsPoint &aCon,nsPoint &aAnc2) { mAnc1 = aAnc1; mCon = aCon; mAnc2 = aAnc2;}
   void SetPoints(nscoord a1x,nscoord a1y,nscoord acx,nscoord acy,nscoord a2x,nscoord a2y) {mAnc1.MoveTo(a1x,a1y),mCon.MoveTo(acx,acy),mAnc2.MoveTo(a2x,a2y);}
+
+/** ---------------------------------------------------
+ *  Divide a Quadratic curve into line segments if it is not smaller than a certain size
+ *  else it is so small that it can be approximated by 2 lineto calls
+ *  @param aRenderingContext -- The RenderingContext to use to draw with
+ *  @param aPointArray[] -- A list of points we can put line calls into instead of drawing.  If null, lines are drawn
+ *  @param aCurInex -- a pointer to an Integer that tells were to put the points into the array, incremented when finished
+ *	@update 3/26/99 dwc
+ */
   void SubDivide(nsIRenderingContext *aRenderingContext,nsPoint  aPointArray[],PRInt32 *aCurIndex);
+
+/** ---------------------------------------------------
+ *  Divide a Quadratic Bezier curve at the mid-point
+ *	@update 3/26/99 dwc
+ *  @param aCurve1 -- Curve 1 as a result of the division
+ *  @param aCurve2 -- Curve 2 as a result of the division
+ */
   void MidPointDivide(QBCurve *A,QBCurve *B);
 };
 
@@ -217,12 +233,12 @@ public:
   PRInt16 mInnerTop;
   PRInt16 mInnerBottom;
 
-  //QBCurve mULCurve;
-  //QBCurve mURCurve;
-  //QBCurve mLLCurve;
-  //QBCurve mLRCurve;
-
+  /** 
+   *  Construct a rounded rectangle object
+   *  @update 4/19/99
+   */
   void  RoundRect() {mRoundness=0;}
+
   /**
    *  Set the curves boundaries and then break it up into the curve pieces for rendering
    *  @update 4/13/99 dwc
@@ -236,7 +252,7 @@ public:
 
 
   /**
-   *  CalculateInsetCurves
+   *  Calculate the inset of a curve based on a border
    *  @update 4/13/99 dwc
    *  @param aLeft -- Left side of bounding box
    *  @param aTop -- Top side of bounding box
