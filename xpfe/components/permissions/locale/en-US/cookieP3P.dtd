@@ -71,5 +71,5 @@
 <!ENTITY  p3pDialogClose.label       "Close">
 <!ENTITY  p3pDialogViewCookies.label "View Cookie Manager">
 <!ENTITY  p3pDialogViewLevels.label  "View Privacy Settings">
-<!ENTITY  p3pDialogMessage1.label    "A web site you have visited has set a cookie and triggered the cookie notification icon shown here, as required by your privacy settings.">
-<!ENTITY  p3pDialogMessage2.label    "A cookie is a small bit of information stored on your computer by some web sites.  Use the Cookie Manager to manage your cookies and view their privacy status.">
+<!ENTITY  p3pDialogMessage1.label    "A website you have visited has set a cookie and triggered the cookie notification icon shown here, as required by your privacy settings.">
+<!ENTITY  p3pDialogMessage2.label    "A cookie is a small bit of information stored on your computer by some websites.  Use the Cookie Manager to manage your cookies and view their privacy status.">

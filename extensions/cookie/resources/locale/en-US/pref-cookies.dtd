@@ -7,7 +7,7 @@
 <!ENTITY accAllCookiesRadio.label       "Allow all cookies">
 <!ENTITY accAllCookiesRadio.accesskey   "c">
 
-<!ENTITY accOrgCookiesRadio.label       "Allow cookies for the originating web site only">
+<!ENTITY accOrgCookiesRadio.label       "Allow cookies for the originating website only">
 <!ENTITY accOrgCookiesRadio.accesskey   "o">
 
 <!ENTITY accP3PCookiesRadio.label       "Allow cookies based on privacy settings">
