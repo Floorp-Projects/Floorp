@@ -20,7 +20,6 @@ IGNORE_MANIFEST=1
 
 EXPORTS =		\
     nsIEditor.h	\
-    nsEditorInterfaces.h	\
     $(NULL)
 
 MODULE = editor 
