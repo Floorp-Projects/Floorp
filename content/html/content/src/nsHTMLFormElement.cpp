@@ -84,6 +84,8 @@
 #include "nsIRadioVisitor.h"
 #include "nsIRadioGroupContainer.h"
 
+#include "nsLayoutUtils.h"
+
 static const int NS_FORM_CONTROL_LIST_HASHTABLE_SIZE = 16;
 
 class nsFormControlList;
@@ -1108,14 +1110,65 @@ nsHTMLFormElement::GetElementAt(PRInt32 aIndex,
   return NS_OK;
 }
 
+// Compares the position of control1 and control2 in the document
+//
+// returns < 0 if control1 is before control2,
+//         > 0 if control1 is after control2,
+//         0 otherwise
+static PRInt32 CompareFormControlPosition(nsIFormControl *control1, nsIFormControl *control2)
+{
+  nsCOMPtr<nsIContent> content1 = do_QueryInterface(control1);
+  nsCOMPtr<nsIContent> content2 = do_QueryInterface(control2);
+  if (content1 && content2)
+    return nsLayoutUtils::CompareTreePosition(content1, content2);
+
+  // This should not occur - we should be able to QI to nsIContent
+  return 0;
+}
+
 NS_IMETHODIMP
 nsHTMLFormElement::AddElement(nsIFormControl* aChild)
 {
   NS_ENSURE_TRUE(mControls, NS_ERROR_UNEXPECTED);
 
   if (ShouldBeInElements(aChild)) {
-    // WEAK - don't addref
-    mControls->mElements.AppendElement(aChild);
+    PRUint32 count;
+    GetElementCount(&count);
+
+    nsCOMPtr<nsIFormControl> element;
+
+    // Optimize most common case where we insert at the end.
+    PRInt32 position = -1;
+    if (count > 0) {
+      GetElementAt(count - 1, getter_AddRefs(element));
+      position = CompareFormControlPosition(aChild, element);
+    }
+
+    // If this item comes after the last element, or the elements array is
+    // empty, we append to the end. Otherwise, we do a binary search to
+    // determine where the element should go.    
+    if (position >= 0 || count == 0) {
+      // WEAK - don't addref
+      mControls->mElements.AppendElement(aChild);
+    }
+    else {
+      PRInt32 low = 0, mid, high;
+      high = count - 1;
+      
+      while (low <= high) {
+        mid = (low + high) / 2;
+        
+        GetElementAt(mid, getter_AddRefs(element));
+        position = CompareFormControlPosition(aChild, element);
+        if (position >= 0)
+          low = mid + 1;
+        else
+          high = mid - 1;
+      }
+      
+      // WEAK - don't addref
+      mControls->mElements.InsertElementAt(aChild, low);
+    }
   } else {
     // WEAK - don't addref
     mControls->mNotInElements.AppendElement(aChild);
