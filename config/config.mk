@@ -173,7 +173,6 @@ endif
 #
 # Default command macros; can be overridden in <arch>.mk.
 #
-BSDECHO		= echo
 ifdef USE_AUTOCONF
 CCC		= $(CXX)
 else
