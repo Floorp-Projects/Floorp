@@ -26,6 +26,23 @@ gint delete_window( GtkWidget *widget,
     return(FALSE);
 }
 
+void
+url_activate_cb( GtkEditable *widget, nsIWebBrowserChrome *browser)
+{
+  gchar *text = gtk_editable_get_chars(widget, 0, -1);
+  g_print("loading url %s\n", text);
+  if (browser)
+  {
+      nsCOMPtr<nsIWebBrowser> webBrowser;
+      browser->GetWebBrowser(getter_AddRefs(webBrowser));
+      nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(webBrowser));
+      if (webNav)
+	  webNav->LoadURI(NS_ConvertASCIItoUCS2(text).GetUnicode());
+
+  }       
+  g_free(text);
+}
+
 static void
 handle_event_queue(gpointer data, gint source, GdkInputCondition condition)
 {
@@ -51,8 +68,8 @@ nsresult OpenWebPage(char* url)
     
     baseWindow->SetPositionAndSize(0, 
                                    0, 
-                                   450, 
-                                   450,
+                                   430, 
+                                   430,
                                    PR_TRUE);
 
     baseWindow->SetVisibility(PR_TRUE);
@@ -76,28 +93,43 @@ nsresult OpenWebPage(char* url)
 nativeWindow CreateNativeWindow(nsIWebBrowserChrome* chrome)
 {
    GtkWidget *window = gtk_window_new (GTK_WINDOW_TOPLEVEL);
-         
-  if (!window)
-	return window;
+   GtkWidget *urlEntry = gtk_entry_new();
+   GtkWidget *box = gtk_vbox_new(FALSE, 0);
+   GtkWidget *view = gtk_event_box_new();
 
-  gtk_signal_connect (GTK_OBJECT (window), 
-                      "delete_event",
-                       GTK_SIGNAL_FUNC (delete_window), 
-                       NULL);
+   if (!window || !urlEntry || !box || !view)
+     return nsnull;
 
-  gtk_window_set_title (GTK_WINDOW (window), "Embedding is Fun!");
-  gtk_window_set_default_size (GTK_WINDOW(window), 450, 450);
+   /* Put the box into the main window. */
+   gtk_container_add (GTK_CONTAINER (window), box);
 
+   gtk_box_pack_start(GTK_BOX(box), urlEntry, FALSE, FALSE, 5);
+   gtk_box_pack_start(GTK_BOX(box), view,     FALSE, FALSE, 5);
 
-  gtk_container_set_border_width (GTK_CONTAINER (window), 10);
+   gtk_signal_connect (GTK_OBJECT (window), 
+                       "delete_event",
+                        GTK_SIGNAL_FUNC (delete_window), 
+                        chrome);
 
-  gtk_widget_realize (window);
+   gtk_signal_connect(GTK_OBJECT(urlEntry), "activate",
+		     GTK_SIGNAL_FUNC(url_activate_cb), 
+                     chrome);
 
+   gtk_widget_set_usize(view, 430, 430);
 
+   gtk_window_set_title (GTK_WINDOW (window), "Embedding is Fun!");
+   gtk_window_set_default_size (GTK_WINDOW(window), 450, 450);
 
+   gtk_container_set_border_width (GTK_CONTAINER (window), 10);
 
-  
-  return window;
+   gtk_widget_realize (window);
+
+   gtk_widget_show (urlEntry);
+   gtk_widget_show (box);
+   gtk_widget_show (view);
+   gtk_widget_show (window);
+
+  return view;
 }
 
 
@@ -146,6 +178,4 @@ int main( int   argc,
          
   return(0);
 }
-
-
 
