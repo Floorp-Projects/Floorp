@@ -739,10 +739,11 @@ nsHTMLFramesetFrame::ParseRowColSpec(nsString&       aSpec,
       // Translate value to an integer
       nsString token("");
       aSpec.Mid(token, start, numberEnd - start);
+      token.StripChars(" \n\r\t"); // Trim whitespace from spec (Bug 33699)
 
       // Treat * as 1*
       if ((eFramesetUnit_Relative == aSpecs[i].mUnit) &&
-        (numberEnd == start)) {
+        (0 == token.Length())) {
         aSpecs[i].mValue = 1;
       }
 
