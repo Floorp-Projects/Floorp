@@ -101,9 +101,6 @@ public:
     PRUint32 GetBytesRead() {
         return mBytesRead;
     }
-    void ZeroBytesRead() {
-        mBytesRead = 0;
-    }
 
 protected:
     // 
@@ -179,9 +176,6 @@ public:
     }
     PRUint32 GetBytesWritten() {
         return mBytesWritten;
-    }
-    void ZeroBytesWritten() {
-        mBytesWritten = 0;
     }
 
 protected:
@@ -679,8 +673,7 @@ nsFileTransport::Process(void)
         LOG(("nsFileTransport: READING [this=%x %s] transferAmt=%u mBufferMaxSize=%u\n",
             this, mStreamName.get(), transferAmt, mBufferMaxSize));
 
-        // Zero the number of bytes read on the source wrapper
-        mSourceWrapper->ZeroBytesRead();
+        PRUint32 offset = mSourceWrapper->GetBytesRead();
 
         //
         // Give the listener a chance to read at most transferAmt bytes from
@@ -715,13 +708,14 @@ nsFileTransport::Process(void)
             // 
             // get the number of bytes read
             //
-            PRUint32 total = mSourceWrapper->GetBytesRead();
+            PRUint32 total = mSourceWrapper->GetBytesRead() - offset;
+            offset += total;
             mOffset += total;
 
             if (mTransferAmount > 0)
                 mTransferAmount -= total;
 
-            if (0 == total || 0 == mTransferAmount) {
+            if (total == 0 || mTransferAmount == 0) {
                 LOG(("nsFileTransport: READING [this=%x %s] done reading file.\n",
                     this, mStreamName.get()));
                 mXferState = END_READ;
@@ -730,12 +724,9 @@ nsFileTransport::Process(void)
                 LOG(("nsFileTransport: READING [this=%x %s] read %u bytes [offset=%u]\n",
                     this, mStreamName.get(), total, mOffset));
 
-// what about check for background flags! dougt
-            if (mProgress && (mTransferAmount >= 0)) {
-                mProgress->OnProgress(this, mContext,
-                                      mTotalAmount - mTransferAmount,
-                                      mTotalAmount);
-            }
+            if (mProgress)
+                mProgress->OnProgress(this, mContext, offset,
+                                      PR_MAX(mTotalAmount, 0));
         }
         break;
       }
@@ -763,7 +754,6 @@ nsFileTransport::Process(void)
             mListener->OnStopRequest(this, mContext, mStatus, nsnull);
             mListener = 0;
         }
-// what about check for background flag! dougt
         if (mProgress) {
             nsAutoString fileName;
             fileName.AssignWithConversion(mStreamName);
@@ -856,8 +846,7 @@ nsFileTransport::Process(void)
         if (mTransferAmount >= 0)
             transferAmt = PR_MIN(transferAmt, (PRUint32)mTransferAmount);
 
-        // Zero the number of bytes written to the sink wrapper.
-        mSinkWrapper->ZeroBytesWritten();
+        PRUint32 offset = mSinkWrapper->GetBytesWritten();
 
         // 
         // Ask the provider for data
@@ -891,7 +880,8 @@ nsFileTransport::Process(void)
             //
             // Get the number of bytes written
             //
-            PRUint32 total = mSinkWrapper->GetBytesWritten();
+            PRUint32 total = mSinkWrapper->GetBytesWritten() - offset;
+            offset += total;
             mOffset += total;
 
             if (mTransferAmount > 0)
@@ -905,11 +895,10 @@ nsFileTransport::Process(void)
             else 
                 LOG(("nsFileTransport: WRITING [this=%x %s] wrote %u bytes [offset=%u]\n",
                     this, mStreamName.get(), total, mOffset));
-// what about check for background flag dougt!
-            if (mProgress && (mTransferAmount >= 0))
-                mProgress->OnProgress(this, mContext,
-                                      mTotalAmount - mTransferAmount,
-                                      mTotalAmount);
+
+            if (mProgress)
+                mProgress->OnProgress(this, mContext, offset,
+                                      PR_MAX(mTotalAmount, 0));
         }
         break;
       }
