@@ -136,6 +136,8 @@ interface nsIXULChromeRegistry : nsIChromeRegistry {
   ACString getSelectedLocale(in ACString packageName);
   ACString getSelectedSkin(in ACString packageName);
   
+  nsISimpleEnumerator getOverlays(in nsIURI aChromeURL);
+  
   /* Should be called when skins change. Reloads only stylesheets. */
   void refreshSkins();
 
@@ -145,6 +147,8 @@ interface nsIXULChromeRegistry : nsIChromeRegistry {
      You can use these APIs to effectively disable a chrome add-on without
 	 uninstalling it. */
   void setAllowOverlaysForPackage(in wstring packageName, in boolean allowOverlays);
+  boolean overlaysAllowedForPackage(in wstring packageName);
+  boolean isOverlayAllowed(in nsIURI aChromeURL);
 
   /* Installation APIs */
   void installSkin(in string baseURL,
