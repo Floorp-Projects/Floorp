@@ -59,7 +59,7 @@ Rights Reserved.
           <rows>
             <row>
               <hbox pack="end" align="center">
-                <label value="&server.label;" control="serverMenu"/>
+                <label value="&server.label;" accesskey="&server.accesskey;" control="serverMenu"/>
               </hbox>
               <menulist oncommand="onServerClick(event);" id="serverMenu"
                         datasources="rdf:msgaccountmanager rdf:mailnewsfolders"
@@ -75,8 +75,9 @@ Rights Reserved.
               </menulist>
             </row>
             <row align="center">
-          		<label value="&namefield.label;" id="namefieldlabel" control="namefield"/>
-          		<textbox id="namefield" flex="1" oninput="Search();"/>
+              <label value="&namefield.label;" accesskey="&namefield.accesskey;" 
+                     id="namefieldlabel" control="namefield"/>
+              <textbox id="namefield" flex="1" oninput="Search();"/>
             </row>
           </rows>
         </grid>
@@ -162,10 +163,14 @@ Rights Reserved.
      </hbox>
      </deck>
         <vbox>
-          <button id="subscribe" label="&subscribeButton.label;" oncommand="SetSubscribeState(true)"/>
-          <button id="unsubscribe" label="&unsubscribeButton.label;" oncommand="SetSubscribeState(false)"/>
-          <button id="refresh" label="&refreshButton.label;" oncommand="Refresh()"/>
-          <button id="stop" label="&stopButton.label;" oncommand="Stop()"/>
+          <button id="subscribe" label="&subscribeButton.label;" accesskey="&subscribeButton.accesskey;" 
+                  oncommand="SetSubscribeState(true)"/>
+          <button id="unsubscribe" label="&unsubscribeButton.label;" accesskey="&unsubscribeButton.accesskey;" 
+                  oncommand="SetSubscribeState(false)"/>
+          <button id="refresh" label="&refreshButton.label;" accesskey="&refreshButton.accesskey;" 
+                  oncommand="Refresh()"/>
+          <button id="stop" label="&stopButton.label;" accesskey="&stopButton.accesskey;" 
+                  oncommand="Stop()"/>
           <spacer flex="1"/>
         </vbox>
       </row>

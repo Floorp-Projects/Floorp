@@ -20,10 +20,16 @@ Rights Reserved.
 
 <!ENTITY subscribeDialog.title        "Subscribe">
 <!ENTITY subscribeButton.label        "Subscribe">
+<!ENTITY subscribeButton.accesskey    "S">
 <!ENTITY unsubscribeButton.label      "Unsubscribe">
+<!ENTITY unsubscribeButton.accesskey  "U">
 <!ENTITY refreshButton.label          "Refresh">
+<!ENTITY refreshButton.accesskey      "R">
 <!ENTITY stopButton.label             "Stop">
+<!ENTITY stopButton.accesskey         "T">
 <!ENTITY server.label                 "Account:">
+<!ENTITY server.accesskey             "A">
 <!ENTITY subscribedHeader.label       "Subscribe">
 <!ENTITY messagesHeader.label         "Messages">
 <!ENTITY namefield.label              "Show items that contain:">
+<!ENTITY namefield.accesskey          "O">
