@@ -763,7 +763,7 @@ txMozillaXSLTProcessor::notifyError()
     }
     document->Reset(channel, loadGroup);
     nsCOMPtr<nsIURI> baseURL;
-    sourceDoc->GetBaseURL(*getter_AddRefs(baseURL));
+    sourceDoc->GetBaseURL(getter_AddRefs(baseURL));
     document->SetBaseURL(baseURL);
 
     NS_NAMED_LITERAL_STRING(ns, "http://www.mozilla.org/newlayout/xml/parsererror.xml");

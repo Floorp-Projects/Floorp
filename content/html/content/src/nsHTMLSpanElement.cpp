@@ -146,7 +146,7 @@ nsresult
 nsHTMLSpanElement::GetInnerHTML(nsAString& aInnerHTML)
 {
   nsCOMPtr<nsIAtom> tag;
-  GetTag(*getter_AddRefs(tag));
+  GetTag(getter_AddRefs(tag));
   if (tag == nsHTMLAtoms::xmp || tag == nsHTMLAtoms::plaintext) {
     return GetContentsAsText(aInnerHTML);
   }
@@ -158,7 +158,7 @@ nsresult
 nsHTMLSpanElement::SetInnerHTML(const nsAString& aInnerHTML)
 {
   nsCOMPtr<nsIAtom> tag;
-  GetTag(*getter_AddRefs(tag));
+  GetTag(getter_AddRefs(tag));
   if (tag == nsHTMLAtoms::xmp || tag == nsHTMLAtoms::plaintext) {
     return ReplaceContentsWithText(aInnerHTML, PR_TRUE);
   }

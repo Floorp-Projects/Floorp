@@ -113,10 +113,10 @@ nsXMLProcessingInstruction::GetAttrValue(const nsAString& aAttr,
 }
 
 NS_IMETHODIMP
-nsXMLProcessingInstruction::GetTag(nsIAtom*& aResult) const
+nsXMLProcessingInstruction::GetTag(nsIAtom** aResult) const
 {
-  aResult = nsLayoutAtoms::processingInstructionTagName;
-  NS_ADDREF(aResult);
+  *aResult = nsLayoutAtoms::processingInstructionTagName;
+  NS_ADDREF(*aResult);
   return NS_OK;
 }
 

@@ -574,13 +574,11 @@ handleNode(nsIDOMNode* aNode, txStylesheetCompiler* aCompiler)
             nsCOMPtr<nsIContent> element = do_QueryInterface(aNode);
 
             nsCOMPtr<nsINodeInfo> ni;
-            element->GetNodeInfo(*getter_AddRefs(ni));
+            element->GetNodeInfo(getter_AddRefs(ni));
 
-            PRInt32 namespaceID;
-            nsCOMPtr<nsIAtom> prefix, localname;
-            ni->GetNamespaceID(namespaceID);
-            ni->GetNameAtom(*getter_AddRefs(localname));
-            ni->GetPrefixAtom(*getter_AddRefs(prefix));
+            PRInt32 namespaceID = ni->GetNamespaceID();
+            nsCOMPtr<nsIAtom> localname = ni->GetNameAtom();
+            nsCOMPtr<nsIAtom> prefix = ni->GetPrefixAtom();
 
             PRInt32 attsCount;
             element->GetAttrCount(attsCount);
@@ -592,9 +590,9 @@ handleNode(nsIDOMNode* aNode, txStylesheetCompiler* aCompiler)
                 PRInt32 counter;
                 for (counter = 0; counter < attsCount; ++counter) {
                     txStylesheetAttr& att = atts[counter];
-                    element->GetAttrNameAt(counter, att.mNamespaceID,
-                                           *getter_AddRefs(att.mLocalName),
-                                           *getter_AddRefs(att.mPrefix));
+                    element->GetAttrNameAt(counter, &att.mNamespaceID,
+                                           getter_AddRefs(att.mLocalName),
+                                           getter_AddRefs(att.mPrefix));
                     element->GetAttr(att.mNamespaceID, att.mLocalName, att.mValue);
                 }
             }
@@ -611,7 +609,7 @@ handleNode(nsIDOMNode* aNode, txStylesheetCompiler* aCompiler)
             if (childCount > 0) {
                 PRInt32 counter = 0;
                 nsCOMPtr<nsIContent> child;
-                while (NS_SUCCEEDED(element->ChildAt(counter++, *getter_AddRefs(child))) && child) {
+                while (NS_SUCCEEDED(element->ChildAt(counter++, getter_AddRefs(child))) && child) {
                     nsCOMPtr<nsIDOMNode> childNode = do_QueryInterface(child);
                     rv = handleNode(childNode, aCompiler);
                     NS_ENSURE_SUCCESS(rv, rv);
@@ -641,7 +639,7 @@ handleNode(nsIDOMNode* aNode, txStylesheetCompiler* aCompiler)
             if (childCount > 0) {
                 PRInt32 counter = 0;
                 nsCOMPtr<nsIContent> child;
-                while (NS_SUCCEEDED(document->ChildAt(counter++, *getter_AddRefs(child))) && child) {
+                while (NS_SUCCEEDED(document->ChildAt(counter++, getter_AddRefs(child))) && child) {
                     nsCOMPtr<nsIDOMNode> childNode = do_QueryInterface(child);
                     rv = handleNode(childNode, aCompiler);
                     NS_ENSURE_SUCCESS(rv, rv);
@@ -765,7 +763,7 @@ TX_CompileStylesheet(nsIDOMNode* aNode, txStylesheet** aStylesheet)
 
     nsCOMPtr<nsIDocument> doc = do_QueryInterface(document);
     nsCOMPtr<nsIURI> uri;
-    doc->GetBaseURL(*getter_AddRefs(uri));
+    doc->GetBaseURL(getter_AddRefs(uri));
     nsCAutoString baseURI;
     uri->GetSpec(baseURI);
 

@@ -264,7 +264,7 @@ nsXBLResourceLoader::NotifyBoundElements()
 
     if (ready) {
       nsCOMPtr<nsIDocument> doc;
-      content->GetDocument(*getter_AddRefs(doc));
+      content->GetDocument(getter_AddRefs(doc));
     
       if (doc) {
         // Flush first
@@ -272,7 +272,7 @@ nsXBLResourceLoader::NotifyBoundElements()
 
         // Notify
         nsCOMPtr<nsIContent> parent;
-        content->GetParent(*getter_AddRefs(parent));
+        content->GetParent(getter_AddRefs(parent));
         PRInt32 index = 0;
         if (parent)
           parent->IndexOf(content, index);

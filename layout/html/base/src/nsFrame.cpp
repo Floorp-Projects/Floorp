@@ -869,7 +869,7 @@ nsFrame::Paint(nsIPresContext*      aPresContext,
 
 
   nsCOMPtr<nsIContent> newContent;
-  result = mContent->GetParent(*getter_AddRefs(newContent));
+  result = mContent->GetParent(getter_AddRefs(newContent));
 
 //check to see if we are anonymouse content
   PRInt32 offset;
@@ -1115,7 +1115,7 @@ nsFrame::GetDataForTableSelection(nsIFrameSelection *aFrameSelection,
   if (!tableOrCellContent) return NS_ERROR_FAILURE;
 
   nsCOMPtr<nsIContent> parentContent;
-  result = tableOrCellContent->GetParent(*getter_AddRefs(parentContent));
+  result = tableOrCellContent->GetParent(getter_AddRefs(parentContent));
   if (NS_FAILED(result)) return result;
   if (!parentContent) return NS_ERROR_FAILURE;
 
@@ -1406,9 +1406,9 @@ nsFrame::HandlePress(nsIPresContext* aPresContext,
        }
   
        // now try the parent
-       nsIContent* parent;
-       content->GetParent(parent);
-       content = dont_AddRef(parent);
+       nsCOMPtr<nsIContent> parent;
+       content->GetParent(getter_AddRefs(parent));
+       content.swap(parent);
   
     } // if browser, not editor
   }
@@ -2042,7 +2042,7 @@ nsresult nsFrame::GetContentAndOffsetsFromPoint(nsIPresContext* aCX,
         if (NS_SUCCEEDED(result) && kidContent) {
           nsCOMPtr<nsIContent> content;
 
-          result = kidContent->GetParent(*getter_AddRefs(content));
+          result = kidContent->GetParent(getter_AddRefs(content));
 
           if (NS_SUCCEEDED(result) && content) {
             PRInt32 kidCount = 0;
@@ -2171,7 +2171,7 @@ nsresult nsFrame::GetContentAndOffsetsFromPoint(nsIPresContext* aCX,
   thisRect.x = offsetPoint.x;
   thisRect.y = offsetPoint.y;
 
-  result = mContent->GetParent(*aNewContent);
+  result = mContent->GetParent(aNewContent);
   if (*aNewContent){
     
     PRInt32 contentOffset(aContentOffset); //temp to hold old value in case of failure
@@ -2792,19 +2792,17 @@ NS_IMETHODIMP nsFrame::Scrolled(nsIView *aView)
 
 PRInt32 nsFrame::ContentIndexInContainer(const nsIFrame* aFrame)
 {
-  nsIContent* content;
   PRInt32     result = -1;
 
-  aFrame->GetContent(&content);
-  if (nsnull != content) {
-    nsIContent* parentContent;
+  nsCOMPtr<nsIContent> content;
+  aFrame->GetContent(getter_AddRefs(content));
+  if (content) {
+    nsCOMPtr<nsIContent> parentContent;
 
-    content->GetParent(parentContent);
-    if (nsnull != parentContent) {
+    content->GetParent(getter_AddRefs(parentContent));
+    if (parentContent) {
       parentContent->IndexOf(content, result);
-      NS_RELEASE(parentContent);
     }
-    NS_RELEASE(content);
   }
 
   return result;
@@ -2873,13 +2871,12 @@ nsFrame::MakeFrameName(const nsAString& aType, nsAString& aResult) const
 {
   aResult = aType;
   if (nsnull != mContent) {
-    nsIAtom* tag;
-    mContent->GetTag(tag);
-    if ((tag != nsnull) && (tag != nsLayoutAtoms::textTagName)) {
+    nsCOMPtr<nsIAtom> tag;
+    mContent->GetTag(getter_AddRefs(tag));
+    if (tag && tag != nsLayoutAtoms::textTagName) {
       nsAutoString buf;
       tag->ToString(buf);
       aResult.Append(NS_LITERAL_STRING("(") + buf + NS_LITERAL_STRING(")"));
-      NS_RELEASE(tag);
     }
   }
   char buf[40];
@@ -3269,7 +3266,7 @@ nsFrame::GetPointFromOffset(nsIPresContext* inPresContext, nsIRenderingContext* 
   {
     nsCOMPtr<nsIContent> newContent;
     PRInt32 newOffset;
-    nsresult result = mContent->GetParent(*getter_AddRefs(newContent));
+    nsresult result = mContent->GetParent(getter_AddRefs(newContent));
     if (newContent){
       result = newContent->IndexOf(mContent, newOffset);
       if (NS_FAILED(result)) 
@@ -3474,7 +3471,7 @@ nsFrame::GetNextPrevLineFromeBlockFrame(nsIPresContext* aPresContext,
                 nsCOMPtr<nsIContent> parent;
                 if (content)
                 {
-                  content->GetParent(*getter_AddRefs(parent));
+                  content->GetParent(getter_AddRefs(parent));
                   if (parent)
                   {
                     aPos->mResultContent = parent;
@@ -3837,7 +3834,7 @@ nsFrame::PeekOffset(nsIPresContext* aPresContext, nsPeekOffsetStruct *aPos)
       {
         nsCOMPtr<nsIContent> newContent;
         PRInt32 newOffset;
-        result = mContent->GetParent(*getter_AddRefs(newContent));
+        result = mContent->GetParent(getter_AddRefs(newContent));
         if (newContent){
           aPos->mResultContent = newContent;
           result = newContent->IndexOf(mContent, newOffset);
@@ -4950,14 +4947,13 @@ GetTagName(nsFrame* aFrame, nsIContent* aContent, PRIntn aResultSize,
 {
   char namebuf[40];
   namebuf[0] = 0;
-  if (nsnull != aContent) {
-    nsIAtom* tag;
-    aContent->GetTag(tag);
-    if (nsnull != tag) {
+  if (aContent) {
+    nsCOMPtr<nsIAtom> tag;
+    aContent->GetTag(getter_AddRefs(tag));
+    if (tag) {
       nsAutoString tmp;
       tag->ToString(tmp);
       tmp.ToCString(namebuf, sizeof(namebuf));
-      NS_RELEASE(tag);
     }
   }
   PR_snprintf(aResult, aResultSize, "%s@%p", namebuf, aFrame);

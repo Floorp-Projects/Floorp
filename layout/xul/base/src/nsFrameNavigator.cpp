@@ -56,7 +56,7 @@ nsFrameNavigator::GetTag(nsIBox* aBox, nsCOMPtr<nsIAtom>& aAtom)
    nsCOMPtr<nsIContent> content;
    frame->GetContent(getter_AddRefs(content));
    if (content) {
-     content->GetTag(*getter_AddRefs(aAtom));
+     content->GetTag(getter_AddRefs(aAtom));
      return; 
    }
 

@@ -162,18 +162,18 @@ nsXULContentUtils::FindChildByTag(nsIContent* aElement,
 
     for (PRInt32 i = 0; i < count; ++i) {
         nsCOMPtr<nsIContent> kid;
-        if (NS_FAILED(rv = aElement->ChildAt(i, *getter_AddRefs(kid))))
+        if (NS_FAILED(rv = aElement->ChildAt(i, getter_AddRefs(kid))))
             return rv; // XXX fatal
 
         PRInt32 nameSpaceID;
-        if (NS_FAILED(rv = kid->GetNameSpaceID(nameSpaceID)))
+        if (NS_FAILED(rv = kid->GetNameSpaceID(&nameSpaceID)))
             return rv; // XXX fatal
 
         if (nameSpaceID != aNameSpaceID)
             continue; // wrong namespace
 
         nsCOMPtr<nsIAtom> kidTag;
-        if (NS_FAILED(rv = kid->GetTag(*getter_AddRefs(kidTag))))
+        if (NS_FAILED(rv = kid->GetTag(getter_AddRefs(kidTag))))
             return rv; // XXX fatal
 
         if (kidTag.get() != aTag)
@@ -209,7 +209,7 @@ nsXULContentUtils::GetElementResource(nsIContent* aElement, nsIRDFResource** aRe
     // Since the element will store its ID attribute as a document-relative value,
     // we may need to qualify it first...
     nsCOMPtr<nsIDocument> doc;
-    rv = aElement->GetDocument(*getter_AddRefs(doc));
+    rv = aElement->GetDocument(getter_AddRefs(doc));
     if (NS_FAILED(rv)) return rv;
 
     NS_ASSERTION(doc != nsnull, "element is not in any document");
@@ -241,7 +241,7 @@ nsXULContentUtils::GetElementRefResource(nsIContent* aElement, nsIRDFResource** 
     if (rv == NS_CONTENT_ATTR_HAS_VALUE) {
         // We'll use rdf_MakeAbsolute() to translate this to a URL.
         nsCOMPtr<nsIDocument> doc;
-        rv = aElement->GetDocument(*getter_AddRefs(doc));
+        rv = aElement->GetDocument(getter_AddRefs(doc));
         if (NS_FAILED(rv)) return rv;
 
         nsCOMPtr<nsIURI> url;
@@ -350,7 +350,7 @@ nsXULContentUtils::MakeElementURI(nsIDocument* aDocument, const nsAString& aElem
         nsresult rv;
 
         nsCOMPtr<nsIURI> docURL;
-        rv = aDocument->GetBaseURL(*getter_AddRefs(docURL));
+        rv = aDocument->GetBaseURL(getter_AddRefs(docURL));
         if (NS_FAILED(rv)) return rv;
 
         // XXX Urgh. This is so broken; I'd really just like to use
@@ -409,7 +409,7 @@ nsXULContentUtils::MakeElementID(nsIDocument* aDocument, const nsAString& aURI, 
     nsresult rv;
 
     nsCOMPtr<nsIURI> docURL;
-    rv = aDocument->GetBaseURL(*getter_AddRefs(docURL));
+    rv = aDocument->GetBaseURL(getter_AddRefs(docURL));
     if (NS_FAILED(rv)) return rv;
 
     nsCAutoString spec;

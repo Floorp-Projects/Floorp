@@ -344,7 +344,7 @@ PRInt32 Node::lookupNamespaceID(nsIAtom* aPrefix)
         }
 
         nsCOMPtr<nsIContent> temp(elem);
-        rv = temp->GetParent(*getter_AddRefs(elem));
+        rv = temp->GetParent(getter_AddRefs(elem));
         NS_ENSURE_SUCCESS(rv, kNameSpaceID_Unknown);
     }
 
@@ -466,9 +466,9 @@ Node::OrderInfo* Node::getOrderInfo()
                 nsCOMPtr<nsIAtom> attPrefix;
                 PRInt32 attNS;
                 owner->GetAttrNameAt(i,
-                                     attNS,
-                                     *getter_AddRefs(attName),
-                                     *getter_AddRefs(attPrefix));
+                                     &attNS,
+                                     getter_AddRefs(attName),
+                                     getter_AddRefs(attPrefix));
 
                 if (attName == thisName && attNS == thisNS) {
                     mOrderInfo->mOrder[lastElem] = i + kTxAttrIndexOffset;

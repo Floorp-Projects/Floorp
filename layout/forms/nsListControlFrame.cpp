@@ -1469,16 +1469,19 @@ nsListControlFrame::IsOptionElement(nsIContent* aContent)
 nsIContent *
 nsListControlFrame::GetOptionFromContent(nsIContent *aContent) 
 {
-  nsIContent * content = aContent;
-  NS_IF_ADDREF(content);
-  while (nsnull != content) {
+  nsCOMPtr<nsIContent> content = aContent;
+  while (content) {
     if (IsOptionElement(content)) {
-      return content;
+      nsIContent *out = content;
+      NS_ADDREF(out);
+      return out;
     }
-    nsIContent * node = content;
-    node->GetParent(content); // this add refs
-    NS_RELEASE(node);
+
+    nsCOMPtr<nsIContent> parent;
+    content->GetParent(getter_AddRefs(parent));
+    parent.swap(content);
   }
+
   return nsnull;
 }
 
@@ -3152,7 +3155,7 @@ nsListControlFrame::ScrollToFrame(nsIContent* aOptElement)
         // XXX this assume only one level of nesting of optgroups
         //   which is all the spec specifies at the moment.
         nsCOMPtr<nsIContent> parentContent;
-        aOptElement->GetParent(*getter_AddRefs(parentContent));
+        aOptElement->GetParent(getter_AddRefs(parentContent));
         nsCOMPtr<nsIDOMHTMLOptGroupElement> optGroup(do_QueryInterface(parentContent));
         nsRect optRect(0,0,0,0);
         if (optGroup) {

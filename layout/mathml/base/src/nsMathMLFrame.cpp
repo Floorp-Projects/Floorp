@@ -174,7 +174,7 @@ nsMathMLFrame::GetPresentationDataFrom(nsIFrame*           aFrame,
     NS_ASSERTION(content, "dangling frame without a content node");
     if (!content)
       break;
-    content->GetTag(*getter_AddRefs(tag));
+    content->GetTag(getter_AddRefs(tag));
     if (tag.get() == nsMathMLAtoms::math) {
       const nsStyleDisplay* display = frame->GetStyleDisplay();
       if (display->mDisplay == NS_STYLE_DISPLAY_BLOCK) {
@@ -597,7 +597,9 @@ nsMathMLFrame::MapAttributesIntoCSS(nsIPresContext* aPresContext,
   nsCOMPtr<nsIAtom> attrAtom;
   PRInt32 ruleCount = 0;
   for (PRInt32 i = 0; i < attrCount; ++i) {
-    aContent->GetAttrNameAt(i, nameSpaceID, *getter_AddRefs(attrAtom), *getter_AddRefs(prefix));
+    aContent->GetAttrNameAt(i, &nameSpaceID,
+                            getter_AddRefs(attrAtom),
+                            getter_AddRefs(prefix));
 
     // lookup the equivalent CSS property
     const nsCSSMapping* map = kCSSMappingTable;
@@ -638,7 +640,7 @@ nsMathMLFrame::MapAttributesIntoCSS(nsIPresContext* aPresContext,
     if (!sheet) {
       // first time... we do this to defer the lookup up to the
       // point where we encounter attributes that actually matter
-      aContent->GetDocument(*getter_AddRefs(doc));
+      aContent->GetDocument(getter_AddRefs(doc));
       if (!doc) 
         return 0;
       GetMathMLAttributeStyleSheet(aPresContext, getter_AddRefs(sheet));

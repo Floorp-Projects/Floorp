@@ -89,7 +89,7 @@ nsContentSupportMap::Remove(nsIContent* aElement)
 
     for (PRInt32 i = 0; i < count; ++i) {
         nsCOMPtr<nsIContent> child;
-        aElement->ChildAt(i, *getter_AddRefs(child));
+        aElement->ChildAt(i, getter_AddRefs(child));
 
         Remove(child);
     }

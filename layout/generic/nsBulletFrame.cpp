@@ -144,7 +144,7 @@ nsBulletFrame::Init(nsIPresContext*  aPresContext,
     nsCOMPtr<nsIURI> documentURI;
     nsCOMPtr<nsIDocument> doc;
     if (mContent) {
-      (void) mContent->GetDocument(*getter_AddRefs(doc));
+      (void) mContent->GetDocument(getter_AddRefs(doc));
       if (doc) {
         doc->GetDocumentURL(getter_AddRefs(documentURI));
       }
@@ -1636,7 +1636,7 @@ nsBulletFrame::Reflow(nsIPresContext* aPresContext,
         nsCOMPtr<nsIURI> documentURI;
         nsCOMPtr<nsIDocument> doc;
         if (mContent) {
-          (void) mContent->GetDocument(*getter_AddRefs(doc));
+          (void) mContent->GetDocument(getter_AddRefs(doc));
           if (doc) {
             doc->GetDocumentURL(getter_AddRefs(documentURI));
           }
@@ -1813,13 +1813,13 @@ nsBulletFrame::GetBaseURI(nsIURI **aURI)
   nsCOMPtr<nsIURI> baseURI;
   nsCOMPtr<nsIHTMLContent> htmlContent(do_QueryInterface(mContent, &rv));
   if (NS_SUCCEEDED(rv)) {
-    htmlContent->GetBaseURL(*getter_AddRefs(baseURI));
+    htmlContent->GetBaseURL(getter_AddRefs(baseURI));
   }
   else {
     nsCOMPtr<nsIDocument> doc;
-    mContent->GetDocument(*getter_AddRefs(doc));
+    mContent->GetDocument(getter_AddRefs(doc));
     if (doc) {
-      doc->GetBaseURL(*getter_AddRefs(baseURI));
+      doc->GetBaseURL(getter_AddRefs(baseURI));
     }
   }
   *aURI = baseURI;

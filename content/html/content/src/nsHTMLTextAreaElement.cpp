@@ -324,7 +324,7 @@ nsHTMLTextAreaElement::RemoveFocus(nsIPresContext* aPresContext)
   if (esm) {
     nsCOMPtr<nsIDocument> doc;
 
-    GetDocument(*getter_AddRefs(doc));
+    GetDocument(getter_AddRefs(doc));
     if (!doc)
       return NS_ERROR_NULL_POINTER;
 

@@ -485,7 +485,7 @@ nsDOMParser::ParseFromStream(nsIInputStream *stream,
 
         nsCOMPtr<nsIDocument> doc = do_QueryInterface(domdoc);
         if (doc) {
-          doc->GetBaseURL(*getter_AddRefs(baseURI));
+          doc->GetBaseURL(getter_AddRefs(baseURI));
         }
       }
     }

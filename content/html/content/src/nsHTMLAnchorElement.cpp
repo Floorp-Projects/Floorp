@@ -310,7 +310,7 @@ nsHTMLAnchorElement::RemoveFocus(nsIPresContext* aPresContext)
 
   if (esm) {
     nsCOMPtr<nsIDocument> doc;
-    GetDocument(*getter_AddRefs(doc));
+    GetDocument(getter_AddRefs(doc));
     if (!doc)
       return NS_ERROR_NULL_POINTER;
 
@@ -404,7 +404,7 @@ nsHTMLAnchorElement::GetProtocol(nsAString& aProtocol)
     return rv;
 
   nsCOMPtr<nsIDocument> doc;
-  mNodeInfo->GetDocument(*getter_AddRefs(doc));
+  mNodeInfo->GetDocument(getter_AddRefs(doc));
 
   return GetProtocolFromHrefString(href, aProtocol, doc);
 }
@@ -673,7 +673,7 @@ nsHTMLAnchorElement::GetHrefCString(char* &aBuf)
 
     // Get base URL.
     nsCOMPtr<nsIURI> baseURL;
-    GetBaseURL(*getter_AddRefs(baseURL));
+    GetBaseURL(getter_AddRefs(baseURL));
 
     if (baseURL) {
       // Get absolute URL.

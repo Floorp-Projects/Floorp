@@ -758,7 +758,7 @@ void
 nsWebCrawler::FindURLsIn(nsIDocument* aDocument, nsIContent* aNode)
 {
   nsCOMPtr<nsIAtom> atom;
-  aNode->GetTag(*getter_AddRefs(atom));
+  aNode->GetTag(getter_AddRefs(atom));
   if ((atom == mLinkTag) || (atom == mFrameTag) || (atom == mIFrameTag)) {
     // Get absolute url that tag targets
     nsAutoString base, src, absURLSpec;
@@ -809,11 +809,10 @@ nsWebCrawler::FindURLsIn(nsIDocument* aDocument, nsIContent* aNode)
     PRInt32 i, n;
     aNode->ChildCount(n);
     for (i = 0; i < n; i++) {
-      nsIContent* kid;
-      aNode->ChildAt(i, kid);
+      nsCOMPtr<nsIContent> kid;
+      aNode->ChildAt(i, getter_AddRefs(kid));
       if (nsnull != kid) {
         FindURLsIn(aDocument, kid);
-        NS_RELEASE(kid);
       }
     }
   }
@@ -833,7 +832,7 @@ nsWebCrawler::FindMoreURLs()
       nsCOMPtr<nsIDocumentViewer> docv = do_QueryInterface(cv);
       if (docv) {
         nsCOMPtr<nsIDocument> doc;
-        docv->GetDocument(*getter_AddRefs(doc));
+        docv->GetDocument(getter_AddRefs(doc));
         if (doc) {
           nsCOMPtr<nsIContent> root;
           doc->GetRootContent(getter_AddRefs(root));
@@ -923,11 +922,10 @@ nsWebCrawler::GetPresShell(nsIWebShell* aWebShell)
       nsIDocumentViewer* docv = nsnull;
       cv->QueryInterface(NS_GET_IID(nsIDocumentViewer), (void**) &docv);
       if (nsnull != docv) {
-        nsIPresContext* cx;
-        docv->GetPresContext(cx);
+        nsCOMPtr<nsIPresContext> cx;
+        docv->GetPresContext(getter_AddRefs(cx));
         if (nsnull != cx) {
           cx->GetShell(&shell);
-          NS_RELEASE(cx);
         }
         NS_RELEASE(docv);
       }

@@ -320,7 +320,7 @@ Attr* Document::createAttribute(nsIDOMAttr* aAttr)
     if (!ns.IsEmpty()) {
         NS_ASSERTION(gTxNameSpaceManager, "No namespace manager");
         if (gTxNameSpaceManager) {
-            gTxNameSpaceManager->GetNameSpaceID(ns, namespaceID);
+            gTxNameSpaceManager->GetNameSpaceID(ns, &namespaceID);
         }
     }
 

@@ -170,7 +170,7 @@ nsXMLStylesheetPI::GetStyleSheetURL(PRBool* aIsInline,
 
   nsCOMPtr<nsIURI> url, baseURL;
   if (mDocument) {
-    mDocument->GetBaseURL(*getter_AddRefs(baseURL));
+    mDocument->GetBaseURL(getter_AddRefs(baseURL));
   }
   NS_MakeAbsoluteURI(aUrl, href, baseURL);
 }

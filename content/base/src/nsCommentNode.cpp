@@ -63,7 +63,7 @@ public:
   // Empty interface
 
   // nsIContent
-  NS_IMETHOD GetTag(nsIAtom*& aResult) const;
+  NS_IMETHOD GetTag(nsIAtom** aResult) const;
 
 #ifdef DEBUG
   NS_IMETHOD List(FILE* out, PRInt32 aIndent) const;
@@ -113,10 +113,10 @@ NS_IMPL_RELEASE_INHERITED(nsCommentNode, nsGenericDOMDataNode)
 
 
 NS_IMETHODIMP
-nsCommentNode::GetTag(nsIAtom*& aResult) const
+nsCommentNode::GetTag(nsIAtom** aResult) const
 {
-  aResult = nsLayoutAtoms::commentTagName;
-  NS_ADDREF(aResult);
+  NS_ADDREF(*aResult = nsLayoutAtoms::commentTagName);
+
   return NS_OK;
 }
 

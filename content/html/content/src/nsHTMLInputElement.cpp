@@ -1101,7 +1101,7 @@ nsHTMLInputElement::RemoveFocus(nsIPresContext* aPresContext)
   if (esm) {
     nsCOMPtr<nsIDocument> doc;
 
-    GetDocument(*getter_AddRefs(doc));
+    GetDocument(getter_AddRefs(doc));
 
     if (!doc)
       return NS_ERROR_NULL_POINTER;
@@ -1236,7 +1236,7 @@ nsHTMLInputElement::Click()
       mType == NS_FORM_INPUT_SUBMIT) {
 
     nsCOMPtr<nsIDocument> doc; // Strong
-    rv = GetDocument(*getter_AddRefs(doc));
+    rv = GetDocument(getter_AddRefs(doc));
 
     if (doc) {
       PRInt32 numShells = doc->GetNumberOfShells();

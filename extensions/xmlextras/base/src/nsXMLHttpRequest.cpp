@@ -636,7 +636,7 @@ nsXMLHttpRequest::GetBaseURI(nsIURI **aBaseURI)
     window->GetDocument(getter_AddRefs(domdoc));
     nsCOMPtr<nsIDocument> doc = do_QueryInterface(domdoc);
     if (doc) {
-      doc->GetBaseURL(*aBaseURI);
+      doc->GetBaseURL(aBaseURI);
     }
   }
 

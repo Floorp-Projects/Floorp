@@ -172,7 +172,7 @@ nsPluginDocument::CreateSyntheticPluginDocument()
   nsCOMPtr<nsINodeInfo> nodeInfo;
   rv = mNodeInfoManager->GetNodeInfo(nsHTMLAtoms::embed, nsnull,
                                      kNameSpaceID_None,
-                                    *getter_AddRefs(nodeInfo));
+                                    getter_AddRefs(nodeInfo));
   NS_ENSURE_SUCCESS(rv, rv);
   rv = NS_NewHTMLSharedLeafElement(getter_AddRefs(mPluginContent), nodeInfo);
   if (NS_FAILED(rv)) {

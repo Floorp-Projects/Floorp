@@ -170,12 +170,12 @@ NS_NewHTMLOptionElement(nsIHTMLContent** aInstancePtrResult,
     NS_ENSURE_TRUE(doc, NS_ERROR_UNEXPECTED);
 
     nsCOMPtr<nsINodeInfoManager> nodeInfoManager;
-    doc->GetNodeInfoManager(*getter_AddRefs(nodeInfoManager));
+    doc->GetNodeInfoManager(getter_AddRefs(nodeInfoManager));
     NS_ENSURE_TRUE(nodeInfoManager, NS_ERROR_UNEXPECTED);
 
     rv = nodeInfoManager->GetNodeInfo(nsHTMLAtoms::option, nsnull,
                                       kNameSpaceID_None,
-                                      *getter_AddRefs(nodeInfo));
+                                      getter_AddRefs(nodeInfo));
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
@@ -538,7 +538,7 @@ nsHTMLOptionElement::GetText(nsAString& aText)
   for (i = 0; i < numNodes; i++) {
     nsCOMPtr<nsIContent> node;
 
-    ChildAt(i, *getter_AddRefs(node));
+    ChildAt(i, getter_AddRefs(node));
 
     if (node) {
       nsCOMPtr<nsIDOMText> domText(do_QueryInterface(node));
@@ -578,7 +578,7 @@ nsHTMLOptionElement::SetText(const nsAString& aText)
   for (i = 0; i < numNodes; i++) {
     nsCOMPtr<nsIContent> node;
 
-    ChildAt(i, *getter_AddRefs(node));
+    ChildAt(i, getter_AddRefs(node));
 
     nsCOMPtr<nsIDOMText> domText(do_QueryInterface(node));
 
@@ -609,7 +609,7 @@ nsHTMLOptionElement::SetText(const nsAString& aText)
 
     nsCOMPtr<nsIDocument> doc;
 
-    GetDocument(*getter_AddRefs(doc));
+    GetDocument(getter_AddRefs(doc));
 
     if (doc) {
       rv = text->SetDocument(doc, PR_FALSE, PR_TRUE);
@@ -715,14 +715,14 @@ nsHTMLOptionElement::GetSelect(nsIDOMHTMLSelectElement **aSelectElement) const
   // Get the containing element (Either a select or an optGroup)
   nsCOMPtr<nsIContent> parent;
   nsCOMPtr<nsIContent> prevParent;
-  GetParent(*getter_AddRefs(parent));
+  GetParent(getter_AddRefs(parent));
   while (parent) {
     CallQueryInterface(parent, aSelectElement);
     if (*aSelectElement) {
       break;
     }
     prevParent = parent;
-    prevParent->GetParent(*getter_AddRefs(parent));
+    prevParent->GetParent(getter_AddRefs(parent));
   }
 }
 

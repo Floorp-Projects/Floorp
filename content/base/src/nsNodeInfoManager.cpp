@@ -185,7 +185,7 @@ nsNodeInfoManager::DropDocumentReference()
 
 NS_IMETHODIMP
 nsNodeInfoManager::GetNodeInfo(nsIAtom *aName, nsIAtom *aPrefix,
-                               PRInt32 aNamespaceID, nsINodeInfo*& aNodeInfo)
+                               PRInt32 aNamespaceID, nsINodeInfo** aNodeInfo)
 {
   NS_ENSURE_ARG_POINTER(aName);
 
@@ -194,9 +194,9 @@ nsNodeInfoManager::GetNodeInfo(nsIAtom *aName, nsIAtom *aPrefix,
   void *node = PL_HashTableLookup(mNodeInfoHash, &tmpKey);
 
   if (node) {
-    aNodeInfo = NS_STATIC_CAST(nsINodeInfo *, node);
+    *aNodeInfo = NS_STATIC_CAST(nsINodeInfo *, node);
 
-    NS_ADDREF(aNodeInfo);
+    NS_ADDREF(*aNodeInfo);
 
     return NS_OK;
   }
@@ -213,7 +213,7 @@ nsNodeInfoManager::GetNodeInfo(nsIAtom *aName, nsIAtom *aPrefix,
   he = PL_HashTableAdd(mNodeInfoHash, &newNodeInfo->mInner, newNodeInfo);
   NS_ENSURE_TRUE(he, NS_ERROR_OUT_OF_MEMORY);
 
-  aNodeInfo = newNodeInfo;
+  *aNodeInfo = newNodeInfo;
 
   return NS_OK;
 }
@@ -221,7 +221,7 @@ nsNodeInfoManager::GetNodeInfo(nsIAtom *aName, nsIAtom *aPrefix,
 
 NS_IMETHODIMP
 nsNodeInfoManager::GetNodeInfo(const nsAString& aName, nsIAtom *aPrefix,
-                               PRInt32 aNamespaceID, nsINodeInfo*& aNodeInfo)
+                               PRInt32 aNamespaceID, nsINodeInfo** aNodeInfo)
 {
   NS_ENSURE_ARG(!aName.IsEmpty());
 
@@ -235,7 +235,7 @@ nsNodeInfoManager::GetNodeInfo(const nsAString& aName, nsIAtom *aPrefix,
 NS_IMETHODIMP
 nsNodeInfoManager::GetNodeInfo(const nsAString& aName,
                                const nsAString& aPrefix, PRInt32 aNamespaceID,
-                               nsINodeInfo*& aNodeInfo)
+                               nsINodeInfo** aNodeInfo)
 {
   NS_ENSURE_ARG(!aName.IsEmpty());
 
@@ -257,7 +257,7 @@ NS_IMETHODIMP
 nsNodeInfoManager::GetNodeInfo(const nsAString& aName,
                                const nsAString& aPrefix,
                                const nsAString& aNamespaceURI,
-                               nsINodeInfo*& aNodeInfo)
+                               nsINodeInfo** aNodeInfo)
 {
   NS_ENSURE_ARG(!aName.IsEmpty());
 
@@ -282,7 +282,7 @@ nsNodeInfoManager::GetNodeInfo(const nsAString& aName,
 NS_IMETHODIMP
 nsNodeInfoManager::GetNodeInfo(const nsAString& aQualifiedName,
                                const nsAString& aNamespaceURI,
-                               nsINodeInfo*& aNodeInfo)
+                               nsINodeInfo** aNodeInfo)
 {
   NS_ENSURE_ARG(!aQualifiedName.IsEmpty());
 
@@ -315,11 +315,9 @@ nsNodeInfoManager::GetNodeInfo(const nsAString& aQualifiedName,
 }
 
 NS_IMETHODIMP
-nsNodeInfoManager::GetDocument(nsIDocument*& aDocument)
+nsNodeInfoManager::GetDocument(nsIDocument** aDocument)
 {
-  aDocument = mDocument;
-
-  NS_IF_ADDREF(aDocument);
+  NS_IF_ADDREF(*aDocument = mDocument);
 
   return NS_OK;
 }
@@ -407,7 +405,7 @@ nsNodeInfoManager::RemoveNodeInfo(nsNodeInfo *aNodeInfo)
 
 
 nsresult
-nsNodeInfoManager::GetAnonymousManager(nsINodeInfoManager*& aNodeInfoManager)
+nsNodeInfoManager::GetAnonymousManager(nsINodeInfoManager** aNodeInfoManager)
 {
   if (!gAnonymousNodeInfoManager) {
     gAnonymousNodeInfoManager = new nsNodeInfoManager;
@@ -418,7 +416,7 @@ nsNodeInfoManager::GetAnonymousManager(nsINodeInfoManager*& aNodeInfoManager)
     NS_ADDREF(gAnonymousNodeInfoManager);
   }
 
-  aNodeInfoManager = gAnonymousNodeInfoManager;
+  *aNodeInfoManager = gAnonymousNodeInfoManager;
 
   /*
    * If the only nodeinfo manager is the global one we don't hold a ref
@@ -426,7 +424,7 @@ nsNodeInfoManager::GetAnonymousManager(nsINodeInfoManager*& aNodeInfoManager)
    * even if it's the last one arround.
    */
   if (gNodeManagerCount > 1) {
-    NS_ADDREF(aNodeInfoManager);
+    NS_ADDREF(*aNodeInfoManager);
   }
 
   return NS_OK;

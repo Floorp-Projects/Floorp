@@ -1375,7 +1375,7 @@ nsHTMLDocument::ContentAppended(nsIContent* aContainer,
   PRInt32 i;
   nsCOMPtr<nsIContent> newChild;
   for (i = aNewIndexInContainer; i < count; ++i) {
-    aContainer->ChildAt(i, *getter_AddRefs(newChild));
+    aContainer->ChildAt(i, getter_AddRefs(newChild));
     if (newChild)
       RegisterNamedItems(newChild);
   }
@@ -1447,7 +1447,7 @@ nsHTMLDocument::AttributeWillChange(nsIContent* aContent, PRInt32 aNameSpaceID,
     nsCOMPtr<nsIAtom> tag;
     nsAutoString value;
 
-    aContent->GetTag(*getter_AddRefs(tag));
+    aContent->GetTag(getter_AddRefs(tag));
 
     if (IsNamedItem(aContent, tag, value)) {
       nsresult rv = RemoveFromNameTable(value, aContent);
@@ -1480,7 +1480,7 @@ nsHTMLDocument::AttributeChanged(nsIContent* aContent, PRInt32 aNameSpaceID,
     nsCOMPtr<nsIAtom> tag;
     nsAutoString value;
 
-    aContent->GetTag(*getter_AddRefs(tag));
+    aContent->GetTag(getter_AddRefs(tag));
 
     if (IsNamedItem(aContent, tag, value)) {
       nsresult rv = UpdateNameTableEntry(value, aContent);
@@ -1553,15 +1553,13 @@ nsHTMLDocument::CreateElementNS(const nsAString& aNamespaceURI,
                                 const nsAString& aQualifiedName,
                                 nsIDOMElement** aReturn)
 {
-  nsresult rv = NS_OK;
-
   nsCOMPtr<nsINodeInfo> nodeInfo;
-  rv = mNodeInfoManager->GetNodeInfo(aQualifiedName, aNamespaceURI,
-                                     *getter_AddRefs(nodeInfo));
+  nsresult rv = mNodeInfoManager->GetNodeInfo(aQualifiedName,
+                                              aNamespaceURI,
+                                              getter_AddRefs(nodeInfo));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  PRInt32 namespaceID;
-  nodeInfo->GetNamespaceID(namespaceID);
+  PRInt32 namespaceID = nodeInfo->GetNamespaceID();
 
   nsCOMPtr<nsIElementFactory> elementFactory;
   nsContentUtils::GetNSManagerWeakRef()->GetElementFactory(namespaceID,
@@ -1603,7 +1601,7 @@ nsHTMLDocument::CreateElement(const nsAString& aTagName,
   }
 
   nsresult rv = mNodeInfoManager->GetNodeInfo(tmp, nsnull, mDefaultNamespaceID,
-                                              *getter_AddRefs(nodeInfo));
+                                              getter_AddRefs(nodeInfo));
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIHTMLContent> content;
@@ -2184,7 +2182,7 @@ PRInt32
 GetHTMLDocumentNamespace(nsIContent *aContent)
 {
   nsCOMPtr<nsIDocument> doc;
-  aContent->GetDocument(*getter_AddRefs(doc));
+  aContent->GetDocument(getter_AddRefs(doc));
 
   NS_ASSERTION(doc, "This method should never be called on content nodes "
                "that are not in a document!");
@@ -2207,7 +2205,7 @@ PRBool
 nsHTMLDocument::MatchLinks(nsIContent *aContent, nsString* aData)
 {
   nsCOMPtr<nsINodeInfo> ni;
-  aContent->GetNodeInfo(*getter_AddRefs(ni));
+  aContent->GetNodeInfo(getter_AddRefs(ni));
 
   if (ni) {
     PRInt32 namespaceID = GetHTMLDocumentNamespace(aContent);
@@ -2241,7 +2239,7 @@ PRBool
 nsHTMLDocument::MatchAnchors(nsIContent *aContent, nsString* aData)
 {
   nsCOMPtr<nsINodeInfo> ni;
-  aContent->GetNodeInfo(*getter_AddRefs(ni));
+  aContent->GetNodeInfo(getter_AddRefs(ni));
 
   if (ni) {
     PRInt32 namespaceID = GetHTMLDocumentNamespace(aContent);
@@ -2481,8 +2479,8 @@ nsHTMLDocument::OpenCommon(nsIURI* aSourceURL)
       nsCOMPtr<nsIAtom> name, prefix;
       PRInt32 nsid;
 
-      root->GetAttrNameAt(count, nsid, *getter_AddRefs(name),
-                          *getter_AddRefs(prefix));
+      root->GetAttrNameAt(count, &nsid, getter_AddRefs(name),
+                          getter_AddRefs(prefix));
 
       root->UnsetAttr(nsid, name, PR_FALSE);
     }
@@ -3610,7 +3608,7 @@ nsHTMLDocument::UnregisterNamedItems(nsIContent *aContent)
 {
   nsCOMPtr<nsIAtom> tag;
 
-  aContent->GetTag(*getter_AddRefs(tag));
+  aContent->GetTag(getter_AddRefs(tag));
 
   if (tag == nsLayoutAtoms::textTagName) {
     // Text nodes are not named items nor can they have children.
@@ -3640,13 +3638,11 @@ nsHTMLDocument::UnregisterNamedItems(nsIContent *aContent)
   aContent->ChildCount(count);
 
   for (i = 0; i < count; i++) {
-    nsIContent *child;
+    nsCOMPtr<nsIContent> child;
 
-    aContent->ChildAt(i, child);
+    aContent->ChildAt(i, getter_AddRefs(child));
 
     UnregisterNamedItems(child);
-
-    NS_RELEASE(child);
   }
 
   return NS_OK;
@@ -3657,7 +3653,7 @@ nsHTMLDocument::RegisterNamedItems(nsIContent *aContent)
 {
   nsCOMPtr<nsIAtom> tag;
 
-  aContent->GetTag(*getter_AddRefs(tag));
+  aContent->GetTag(getter_AddRefs(tag));
 
   if (tag == nsLayoutAtoms::textTagName) {
     // Text nodes are not named items nor can they have children.
@@ -3686,13 +3682,11 @@ nsHTMLDocument::RegisterNamedItems(nsIContent *aContent)
   aContent->ChildCount(count);
 
   for (i = 0; i < count; i++) {
-    nsIContent *child;
+    nsCOMPtr<nsIContent> child;
 
-    aContent->ChildAt(i, child);
+    aContent->ChildAt(i, getter_AddRefs(child));
 
     RegisterNamedItems(child);
-
-    NS_RELEASE(child);
   }
 
   return NS_OK;
@@ -3706,7 +3700,7 @@ FindNamedItems(const nsAString& aName, nsIContent *aContent,
                "Entry w/o content list passed to FindNamedItems()!");
 
   nsCOMPtr<nsIAtom> tag;
-  aContent->GetTag(*getter_AddRefs(tag));
+  aContent->GetTag(getter_AddRefs(tag));
 
   if (tag == nsLayoutAtoms::textTagName) {
     // Text nodes are not named items nor can they have children.
@@ -3735,7 +3729,7 @@ FindNamedItems(const nsAString& aName, nsIContent *aContent,
   nsCOMPtr<nsIContent> child;
 
   for (i = 0; i < count; i++) {
-    aContent->ChildAt(i, *getter_AddRefs(child));
+    aContent->ChildAt(i, getter_AddRefs(child));
 
     FindNamedItems(aName, child, aEntry, aIsXHTML);
   }
@@ -3874,7 +3868,7 @@ nsHTMLDocument::ResolveName(const nsAString& aName,
 
   if (e && e != ID_NOT_IN_DOCUMENT) {
     nsCOMPtr<nsIAtom> tag;
-    e->GetTag(*getter_AddRefs(tag));
+    e->GetTag(getter_AddRefs(tag));
 
     if (tag == nsHTMLAtoms::embed  ||
         tag == nsHTMLAtoms::img    ||
@@ -3907,12 +3901,12 @@ nsHTMLDocument::GetBodyContent()
   for (i = 0; i < child_count; i++) {
     nsCOMPtr<nsIContent> child;
 
-    root->ChildAt(i, *getter_AddRefs(child));
+    root->ChildAt(i, getter_AddRefs(child));
     NS_ENSURE_TRUE(child, NS_ERROR_UNEXPECTED);
 
     if (child->IsContentOfType(nsIContent::eHTML)) {
       nsCOMPtr<nsINodeInfo> ni;
-      child->GetNodeInfo(*getter_AddRefs(ni));
+      child->GetNodeInfo(getter_AddRefs(ni));
 
       if (ni->Equals(nsHTMLAtoms::body, mDefaultNamespaceID)) {
         mBodyContent = do_QueryInterface(child);

@@ -140,7 +140,7 @@ nsXULTooltipListener::MouseOut(nsIDOMEvent* aMouseEvent)
 
     // which node is our tooltip on?
     nsCOMPtr<nsIDocument> doc;
-    mCurrentTooltip->GetDocument(*getter_AddRefs(doc));
+    mCurrentTooltip->GetDocument(getter_AddRefs(doc));
     nsCOMPtr<nsIDOMXULDocument> xulDoc(do_QueryInterface(doc));
     if (!doc)        // remotely possible someone could have 
       return NS_OK;  // removed tooltip from dom while it was open
@@ -290,7 +290,7 @@ nsXULTooltipListener::Init(nsIContent* aSourceNode, nsIRootBox* aRootBox)
   // if the target is an treechildren, we may have some special
   // case handling to do
   nsCOMPtr<nsIAtom> tag;
-  mSourceNode->GetTag(*getter_AddRefs(tag));
+  mSourceNode->GetTag(getter_AddRefs(tag));
   mIsSourceTree = tag == nsXULAtoms::treechildren;
 #endif
 
@@ -388,13 +388,13 @@ nsXULTooltipListener::ShowTooltip()
 
   // set the node in the document that triggered the tooltip and show it
   nsCOMPtr<nsIDocument> doc;
-  mCurrentTooltip->GetDocument(*getter_AddRefs(doc));
+  mCurrentTooltip->GetDocument(getter_AddRefs(doc));
   nsCOMPtr<nsIDOMXULDocument> xulDoc(do_QueryInterface(doc));
   if (xulDoc) {
     // Make sure the target node is still attached to some document. 
     // It might have been deleted.
     nsCOMPtr<nsIDocument> targetDoc;
-    mSourceNode->GetDocument(*getter_AddRefs(targetDoc));
+    mSourceNode->GetDocument(getter_AddRefs(targetDoc));
     if (targetDoc) {
 #ifdef MOZ_XUL
       if (!mIsSourceTree) {
@@ -427,7 +427,7 @@ nsXULTooltipListener::ShowTooltip()
 
       // listen for mousedown,keydown, and DOMMouseScroll events at document level
       nsCOMPtr<nsIDocument> doc;
-      mSourceNode->GetDocument(*getter_AddRefs(doc));
+      mSourceNode->GetDocument(getter_AddRefs(doc));
       if (doc) {
         evtTarget = do_QueryInterface(doc);
         evtTarget->AddEventListener(NS_LITERAL_STRING("DOMMouseScroll"), 
@@ -544,9 +544,9 @@ GetImmediateChild(nsIContent* aContent, nsIAtom *aTag, nsIContent** aResult)
   aContent->ChildCount(childCount);
   for (PRInt32 i = 0; i < childCount; i++) {
     nsCOMPtr<nsIContent> child;
-    aContent->ChildAt(i, *getter_AddRefs(child));
+    aContent->ChildAt(i, getter_AddRefs(child));
     nsCOMPtr<nsIAtom> tag;
-    child->GetTag(*getter_AddRefs(tag));
+    child->GetTag(getter_AddRefs(tag));
     if (aTag == tag.get()) {
       *aResult = child;
       return;
@@ -568,7 +568,7 @@ nsXULTooltipListener::GetTooltipFor(nsIContent* aTarget, nsIContent** aTooltip)
 
   // before we go on, make sure that target node still has a window
   nsCOMPtr<nsIDocument> document;
-  if (NS_FAILED(aTarget->GetDocument(*getter_AddRefs(document))) || !document) {
+  if (NS_FAILED(aTarget->GetDocument(getter_AddRefs(document))) || !document) {
     NS_ERROR("Unable to retrieve the tooltip node document.");
     return NS_ERROR_FAILURE;
   }
@@ -646,7 +646,7 @@ nsXULTooltipListener::DestroyTooltip()
   if (mCurrentTooltip) {
     // clear out the tooltip node on the document
     nsCOMPtr<nsIDocument> doc;
-    mCurrentTooltip->GetDocument(*getter_AddRefs(doc));
+    mCurrentTooltip->GetDocument(getter_AddRefs(doc));
     if (doc) {
       nsCOMPtr<nsIDOMXULDocument> xulDoc(do_QueryInterface(doc));
       if (xulDoc)
@@ -727,7 +727,7 @@ nsXULTooltipListener::GetSourceTreeBoxObject(nsITreeBoxObject** aBoxObject)
 
   if (mIsSourceTree && mSourceNode) {
     nsCOMPtr<nsIContent> treeParent;
-    mSourceNode->GetParent(*getter_AddRefs(treeParent));
+    mSourceNode->GetParent(getter_AddRefs(treeParent));
     nsCOMPtr<nsIDOMXULElement> xulEl(do_QueryInterface(treeParent));
     if (xulEl) {
       nsCOMPtr<nsIBoxObject> bx;

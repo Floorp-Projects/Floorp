@@ -424,7 +424,7 @@ nsDocumentEncoder::IsTag(nsIDOMNode* aNode, nsIAtom* aAtom)
     nsCOMPtr<nsIAtom> atom;
     nsCOMPtr<nsIContent> content = do_QueryInterface(aNode);
     if (content)
-      content->GetTag(*getter_AddRefs(atom));
+      content->GetTag(getter_AddRefs(atom));
     if (atom)
     {
       if (atom.get() == aAtom)
@@ -532,7 +532,7 @@ static nsresult ChildAt(nsIDOMNode* aNode, PRInt32 aIndex, nsIDOMNode*& aChild)
 
   NS_ENSURE_TRUE(node, NS_ERROR_FAILURE);
 
-  node->ChildAt(aIndex, *getter_AddRefs(child));
+  node->ChildAt(aIndex, getter_AddRefs(child));
 
   if (child)
     return CallQueryInterface(child, &aChild);
@@ -767,7 +767,7 @@ nsDocumentEncoder::SerializeRangeNodes(nsIDOMRange* aRange,
       // serialize the children of this node that are in the range
       for (j=startOffset; j<endOffset; j++)
       {
-        rv = content->ChildAt(j, *getter_AddRefs(child));
+        rv = content->ChildAt(j, getter_AddRefs(child));
         childAsNode = do_QueryInterface(child);
         NS_ENSURE_SUCCESS(rv, rv);
         if ((j==startOffset) || (j==endOffset-1))
@@ -1153,7 +1153,7 @@ nsHTMLCopyEncoder::SetSelection(nsISelection* aSelection)
   {
     // checking for selection inside a plaintext form widget
     nsCOMPtr<nsIAtom> atom;
-    selContent->GetTag(*getter_AddRefs(atom));
+    selContent->GetTag(getter_AddRefs(atom));
     if (atom.get() == nsHTMLAtoms::input ||
         atom.get() == nsHTMLAtoms::textarea)
     {
@@ -1174,7 +1174,7 @@ nsHTMLCopyEncoder::SetSelection(nsISelection* aSelection)
         break;
       }
     }
-    selContent->GetParent(*getter_AddRefs(tmp));
+    selContent->GetParent(getter_AddRefs(tmp));
     selContent = tmp;
   }
   
@@ -1303,7 +1303,7 @@ nsHTMLCopyEncoder::IncludeInContext(nsIDOMNode *aNode)
 
   nsCOMPtr<nsIAtom> tag;
 
-  content->GetTag(*getter_AddRefs(tag));
+  content->GetTag(getter_AddRefs(tag));
 
   if (tag.get() == nsHTMLAtoms::b        ||
       tag.get() == nsHTMLAtoms::i        ||
@@ -1498,7 +1498,7 @@ nsHTMLCopyEncoder::GetPromotedPoint(Endpoint aWhere, nsIDOMNode *aNode, PRInt32 
           {
             PRBool isBlock = PR_FALSE;
             PRInt32 id;
-            content->GetTag(*getter_AddRefs(atom));
+            content->GetTag(getter_AddRefs(atom));
             atom->ToString(tag);
             parserService->HTMLStringTagToId(tag, &id);
             parserService->IsBlock(id, isBlock);
@@ -1587,7 +1587,7 @@ nsHTMLCopyEncoder::GetPromotedPoint(Endpoint aWhere, nsIDOMNode *aNode, PRInt32 
           {
             PRBool isBlock = PR_FALSE;
             PRInt32 id;
-            content->GetTag(*getter_AddRefs(atom));
+            content->GetTag(getter_AddRefs(atom));
             atom->ToString(tag);
             parserService->HTMLStringTagToId(tag, &id);
             parserService->IsBlock(id, isBlock);
@@ -1639,7 +1639,7 @@ nsHTMLCopyEncoder::GetChildAt(nsIDOMNode *aParent, PRInt32 aOffset)
   nsCOMPtr<nsIContent> cChild;
   NS_PRECONDITION(content, "null content in nsHTMLCopyEncoder::GetChildAt");
   
-  if (NS_FAILED(content->ChildAt(aOffset, *getter_AddRefs(cChild))))
+  if (NS_FAILED(content->ChildAt(aOffset, getter_AddRefs(cChild))))
     return resultNode;
   
   resultNode = do_QueryInterface(cChild);

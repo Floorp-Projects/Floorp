@@ -887,7 +887,7 @@ nsMathMLContainerFrame::ReLayoutChildren(nsIPresContext* aPresContext,
     NS_ASSERTION(content, "dangling frame without a content node");
     if (!content)
       return NS_ERROR_FAILURE;
-    content->GetTag(*getter_AddRefs(tag));
+    content->GetTag(getter_AddRefs(tag));
     if (tag.get() == nsMathMLAtoms::math) {
       break;
     }
@@ -1332,7 +1332,7 @@ nsMathMLContainerFrame::Place(nsIPresContext*      aPresContext,
       // update to include the left correction
       // but leave <msqrt> alone because the sqrt glyph itself is there first
       nsCOMPtr<nsIAtom> tag;
-      mContent->GetTag(*getter_AddRefs(tag));
+      mContent->GetTag(getter_AddRefs(tag));
       if (tag.get() == nsMathMLAtoms::msqrt_)
         leftCorrection = 0;
       else
@@ -1390,7 +1390,7 @@ nsMathMLContainerFrame::Place(nsIPresContext*      aPresContext,
       if (0 == count) {
         // for <msqrt>, the sqrt glyph itself is there first
         nsCOMPtr<nsIAtom> tag;
-        mContent->GetTag(*getter_AddRefs(tag));
+        mContent->GetTag(getter_AddRefs(tag));
         if (tag.get() == nsMathMLAtoms::msqrt_)
           leftCorrection = 0;
       }
@@ -1461,7 +1461,7 @@ nsMathMLContainerFrame::FixInterFrameSpacing(nsIPresContext*      aPresContext,
   nsCOMPtr<nsIAtom> parentTag;
   nsCOMPtr<nsIContent> parentContent;
   mParent->GetContent(getter_AddRefs(parentContent));
-  parentContent->GetTag(*getter_AddRefs(parentTag));
+  parentContent->GetTag(getter_AddRefs(parentTag));
   if (parentTag == nsMathMLAtoms::math ||
       parentTag == nsMathMLAtoms::mtd_) {
     nscoord gap = GetInterFrameSpacingFor(aPresContext,

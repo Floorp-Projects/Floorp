@@ -218,14 +218,14 @@ nsHTMLOptGroupElement::GetSelect(nsISelectElement **aSelectElement)
   // Get the containing element (Either a select or an optGroup)
   nsCOMPtr<nsIContent> parent;
   nsCOMPtr<nsIContent> prevParent;
-  GetParent(*getter_AddRefs(parent));
+  GetParent(getter_AddRefs(parent));
   while (parent) {
     CallQueryInterface(parent, aSelectElement);
     if (*aSelectElement) {
       break;
     }
     prevParent = parent;
-    prevParent->GetParent(*getter_AddRefs(parent));
+    prevParent->GetParent(getter_AddRefs(parent));
   }
 }
 

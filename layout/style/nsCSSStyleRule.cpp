@@ -565,7 +565,7 @@ nsresult nsCSSSelector::ToString( nsAString& aString, nsICSSStyleSheet* aSheet, 
     aSheet->GetNameSpace(*getter_AddRefs(sheetNS));
     nsCOMPtr<nsIAtom> prefixAtom;
     // will return null if namespace was the default
-    sheetNS->FindNameSpacePrefix(mNameSpace, *getter_AddRefs(prefixAtom));
+    sheetNS->FindNameSpacePrefix(mNameSpace, getter_AddRefs(prefixAtom));
     if (prefixAtom) {
       nsAutoString prefix;
       prefixAtom->ToString(prefix);
@@ -627,7 +627,8 @@ nsresult nsCSSSelector::ToString( nsAString& aString, nsICSSStyleSheet* aSheet, 
         aSheet->GetNameSpace(*getter_AddRefs(sheetNS));
         nsCOMPtr<nsIAtom> prefixAtom;
         // will return null if namespace was the default
-        sheetNS->FindNameSpacePrefix(list->mNameSpace, *getter_AddRefs(prefixAtom));
+        sheetNS->FindNameSpacePrefix(list->mNameSpace,
+                                     getter_AddRefs(prefixAtom));
         if (prefixAtom) { 
           nsAutoString prefix;
           prefixAtom->ToString(prefix);

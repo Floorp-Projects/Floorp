@@ -285,7 +285,7 @@ nsHTMLButtonElement::Click()
 
   mHandlingClick = PR_TRUE;
   nsCOMPtr<nsIDocument> doc; 
-  GetDocument(*getter_AddRefs(doc));
+  GetDocument(getter_AddRefs(doc));
 
   if (doc) {
     PRInt32 numShells = doc->GetNumberOfShells();
@@ -361,7 +361,7 @@ nsHTMLButtonElement::RemoveFocus(nsIPresContext* aPresContext)
   if (NS_OK == aPresContext->GetEventStateManager(getter_AddRefs(esm))) {
 
     nsCOMPtr<nsIDocument> doc;
-    GetDocument(*getter_AddRefs(doc));
+    GetDocument(getter_AddRefs(doc));
     if (!doc)
       return NS_ERROR_NULL_POINTER;
 

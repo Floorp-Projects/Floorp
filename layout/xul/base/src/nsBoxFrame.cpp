@@ -2616,7 +2616,7 @@ nsBoxFrame::RegUnregAccessKey(nsIPresContext* aPresContext, PRBool aDoReg)
 
   // find out what type of element this is
   nsCOMPtr<nsIAtom> atom;
-  nsresult rv = mContent->GetTag(*getter_AddRefs(atom));
+  nsresult rv = mContent->GetTag(getter_AddRefs(atom));
   if (NS_FAILED(rv))
     return rv;
 

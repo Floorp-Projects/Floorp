@@ -133,12 +133,15 @@ public:
       }
       
       nsCOMPtr<nsINodeInfo> nodeInfo;
-      content->GetNodeInfo(*getter_AddRefs(nodeInfo));
+      content->GetNodeInfo(getter_AddRefs(nodeInfo));
       if (!nodeInfo) {
         return NS_ERROR_FAILURE;
       }
       
-      nodeInfo->GetNameAtom(*aElementName);
+      nsCOMPtr<nsIAtom> name = nodeInfo->GetNameAtom();
+      *aElementName = name;
+      NS_ADDREF(*aElementName);
+
       *aChildElement = childElement;
       NS_ADDREF(*aChildElement);
       break;

@@ -763,8 +763,8 @@ PRBool nsHTMLEditor::IsOnlyAttribute(nsIDOMNode *aNode,
   
   for (i=0; i<attrCount; i++)
   {
-    content->GetAttrNameAt(i, nameSpaceID, *getter_AddRefs(attrName),
-                           *getter_AddRefs(prefix));
+    content->GetAttrNameAt(i, &nameSpaceID, getter_AddRefs(attrName),
+                           getter_AddRefs(prefix));
     nsAutoString attrString, tmp;
     if (!attrName) continue;  // ooops
     attrName->ToString(attrString);

@@ -655,13 +655,13 @@ PRBool nsStyleUtil::IsSimpleXlink(nsIContent *aContent, nsIPresContext *aPresCon
           // XXX why do this? will nsIHTMLContent's
           // GetBaseURL() may return something different
           // than the URL of the document it lives in?
-          htmlContent->GetBaseURL(*getter_AddRefs(baseURI));
+          htmlContent->GetBaseURL(getter_AddRefs(baseURI));
         }
         else {
           nsCOMPtr<nsIDocument> doc;
-          aContent->GetDocument(*getter_AddRefs(doc));
+          aContent->GetDocument(getter_AddRefs(doc));
           if (doc) {
-            doc->GetBaseURL(*getter_AddRefs(baseURI));
+            doc->GetBaseURL(getter_AddRefs(baseURI));
           }
         }
 

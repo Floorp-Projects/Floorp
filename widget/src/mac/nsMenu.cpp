@@ -556,7 +556,7 @@ nsEventStatus nsMenu::MenuItemSelected(const nsMenuEvent & aMenuEvent)
 	    if (!mMenuContent)
       	return nsEventStatus_eConsumeNoDefault;
 	    nsCOMPtr<nsIDocument> doc; 
-	    mMenuContent->GetDocument(*getter_AddRefs(doc));
+	    mMenuContent->GetDocument(getter_AddRefs(doc));
 	    if (!doc)
       	return nsEventStatus_eConsumeNoDefault;
 	    nsCOMPtr<nsIDOMDocument> domDoc = do_QueryInterface(doc);
@@ -1065,7 +1065,7 @@ nsMenu::LoadMenuItem( nsIMenu* inParentMenu, nsIContent* inMenuItemContent )
 
     // Try to find the key node. Get the document so we can do |GetElementByID|
     nsCOMPtr<nsIDocument> document;
-    inMenuItemContent->GetDocument(*getter_AddRefs(document));
+    inMenuItemContent->GetDocument(getter_AddRefs(document));
     if ( !document ) 
       return;
     nsCOMPtr<nsIDOMDocument> domDocument = do_QueryInterface(document);
@@ -1213,7 +1213,7 @@ nsMenu::OnCreate()
   // be updated.
   if (popupContent) {
     nsCOMPtr<nsIDocument> doc;
-    popupContent->GetDocument(*getter_AddRefs(doc));
+    popupContent->GetDocument(getter_AddRefs(doc));
     nsCOMPtr<nsIDOMDocument> domDoc(do_QueryInterface(doc));
 
     PRInt32 count;
@@ -1222,7 +1222,7 @@ nsMenu::OnCreate()
       nsCOMPtr<nsIContent> grandChild;
       popupContent->ChildAt(i, *getter_AddRefs(grandChild));
       nsCOMPtr<nsIAtom> tag;
-      grandChild->GetTag(*getter_AddRefs(tag));
+      grandChild->GetTag(getter_AddRefs(tag));
       if (tag.get() == nsWidgetAtoms::menuitem) {
         // See if we have a command attribute.
         nsAutoString command;

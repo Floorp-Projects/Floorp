@@ -3109,7 +3109,7 @@ nsChromeRegistry::GetAgentSheets(nsIDocShell* aDocShell, nsISupportsArray **aRes
         while (token) {
           nsCOMPtr<nsIContent> content(do_QueryInterface(elt));
           nsCOMPtr<nsIDocument> doc;
-          content->GetDocument(*getter_AddRefs(doc));
+          content->GetDocument(getter_AddRefs(doc));
           nsCOMPtr<nsIURI> docURL;
           doc->GetDocumentURL(getter_AddRefs(docURL));
           nsCOMPtr<nsIURI> url;

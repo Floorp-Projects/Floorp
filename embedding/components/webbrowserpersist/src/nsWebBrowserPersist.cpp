@@ -1407,7 +1407,7 @@ nsresult nsWebBrowserPersist::SaveDocumentInternal(
     nsCOMPtr<nsIURI> oldBaseURI = mCurrentBaseURI;
 
     // Store the base URI
-    doc->GetBaseURL(*getter_AddRefs(mCurrentBaseURI));
+    doc->GetBaseURL(getter_AddRefs(mCurrentBaseURI));
 
     // Does the caller want to fixup the referenced URIs and save those too?
     if (aDataPath)

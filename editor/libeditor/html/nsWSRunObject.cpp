@@ -1261,7 +1261,7 @@ nsWSRunObject::GetPreviousWSNode(nsIDOMNode *aStartNode,
     }
   }
   
-  nsresult res = startContent->ChildAt(aOffset-1, *getter_AddRefs(priorContent));
+  nsresult res = startContent->ChildAt(aOffset - 1, getter_AddRefs(priorContent));
   NS_ENSURE_SUCCESS(res, res);
   if (!priorContent) 
     return NS_ERROR_NULL_POINTER;
@@ -1355,7 +1355,7 @@ nsWSRunObject::GetNextWSNode(nsIDOMNode *aStartNode,
     return GetNextWSNode(aStartNode, aBlockParent, aNextNode);
   
   nsCOMPtr<nsIContent> nextContent, startContent( do_QueryInterface(aStartNode) );
-  nsresult res = startContent->ChildAt(aOffset, *getter_AddRefs(nextContent));
+  nsresult res = startContent->ChildAt(aOffset, getter_AddRefs(nextContent));
   NS_ENSURE_SUCCESS(res, res);
   if (!nextContent)
   {

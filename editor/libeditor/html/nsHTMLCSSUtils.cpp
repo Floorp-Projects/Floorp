@@ -341,7 +341,7 @@ nsHTMLCSSUtils::IsCSSEditableProperty(nsIDOMNode * aNode,
   }
   nsCOMPtr<nsIContent> content = do_QueryInterface(node);
   nsCOMPtr<nsIAtom> tagName;
-  content->GetTag(*getter_AddRefs(tagName));
+  content->GetTag(getter_AddRefs(tagName));
 
   // html inline styles B I TT U STRIKE and COLOR/FACE on FONT
   if (nsEditProperty::b == aProperty
@@ -651,8 +651,8 @@ nsHTMLCSSUtils::RemoveCSSInlineStyle(nsIDOMNode *aNode, nsIAtom *aProperty, cons
       // incredible hack in case the only remaining attribute is a _moz_dirty...
       PRInt32 nameSpaceID;
       nsCOMPtr<nsIAtom> attrName, prefix;
-      res = content->GetAttrNameAt(0, nameSpaceID, *getter_AddRefs(attrName),
-                                   *getter_AddRefs(prefix));
+      res = content->GetAttrNameAt(0, &nameSpaceID, getter_AddRefs(attrName),
+                                   getter_AddRefs(prefix));
       if (NS_FAILED(res)) return res;
       nsAutoString attrString, tmp;
       attrName->ToString(attrString);
@@ -905,7 +905,7 @@ nsHTMLCSSUtils::GenerateCSSDeclarationsFromHTMLStyle(nsIDOMNode * aNode,
 
   nsCOMPtr<nsIContent> content = do_QueryInterface(node);
   nsCOMPtr<nsIAtom> tagName;
-  content->GetTag(*getter_AddRefs(tagName));
+  content->GetTag(getter_AddRefs(tagName));
 
   if (nsEditProperty::b == aHTMLProperty) {
     BuildCSSDeclarations(cssPropertyArray, cssValueArray, boldEquivTable, aValue, aGetOrRemoveRequest);

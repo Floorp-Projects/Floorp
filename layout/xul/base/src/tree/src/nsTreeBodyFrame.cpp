@@ -266,15 +266,15 @@ nsTreeColumn::nsTreeColumn(nsIContent* aColElement, nsIFrame* aFrame)
   // Cache our index.
   mColIndex = -1;
   nsCOMPtr<nsIContent> parent;
-  mColElement->GetParent(*getter_AddRefs(parent));
+  mColElement->GetParent(getter_AddRefs(parent));
   PRInt32 count;
   parent->ChildCount(count);
   PRInt32 j = 0;
   for (PRInt32 i = 0; i < count; i++) {
     nsCOMPtr<nsIContent> child;
-    parent->ChildAt(i, *getter_AddRefs(child));
+    parent->ChildAt(i, getter_AddRefs(child));
     nsCOMPtr<nsIAtom> tag;
-    child->GetTag(*getter_AddRefs(tag));
+    child->GetTag(getter_AddRefs(tag));
     if (tag == nsXULAtoms::treecol) {
       if (child == mColElement) {
         mColIndex = j;
@@ -426,7 +426,7 @@ nsTreeBodyFrame::GetMinSize(nsBoxLayoutState& aBoxLayoutState, nsSize& aSize)
   nsCOMPtr<nsIContent> baseElement;
   GetBaseElement(getter_AddRefs(baseElement));
   nsCOMPtr<nsIAtom> tag;
-  baseElement->GetTag(*getter_AddRefs(tag));
+  baseElement->GetTag(getter_AddRefs(tag));
 
   PRInt32 desiredRows;
   if (tag == nsHTMLAtoms::select) {
@@ -557,7 +557,7 @@ nsTreeBodyFrame::EnsureBoxObject()
 
     if (parent) {
       nsCOMPtr<nsIDocument> parentDoc;
-      parent->GetDocument(*getter_AddRefs(parentDoc));
+      parent->GetDocument(getter_AddRefs(parentDoc));
       if (!parentDoc) // there may be no document, if we're called from Destroy()
         return;
       
@@ -610,7 +610,7 @@ nsTreeBodyFrame::EnsureView()
       // look for a XULTreeBuilder or create a content view.
       
       nsCOMPtr<nsIContent> parent;
-      mContent->GetParent(*getter_AddRefs(parent));
+      mContent->GetParent(getter_AddRefs(parent));
       nsCOMPtr<nsIDOMXULElement> xulele = do_QueryInterface(parent);
       if (xulele) {
         nsCOMPtr<nsITreeView> view;
@@ -1115,7 +1115,7 @@ nsTreeBodyFrame::AdjustEventCoordsToBoxCoordSpace (PRInt32 aX, PRInt32 aY, PRInt
   
   // Get our box object.
   nsCOMPtr<nsIDocument> doc;
-  mContent->GetDocument(*getter_AddRefs(doc));
+  mContent->GetDocument(getter_AddRefs(doc));
   nsCOMPtr<nsIDOMNSDocument> nsDoc(do_QueryInterface(doc));
   nsCOMPtr<nsIDOMElement> elt(do_QueryInterface(mContent));
   
@@ -1663,7 +1663,7 @@ nsTreeBodyFrame::MarkDirtyIfSelect()
   nsCOMPtr<nsIContent> baseElement;
   GetBaseElement(getter_AddRefs(baseElement));
   nsCOMPtr<nsIAtom> tag;
-  baseElement->GetTag(*getter_AddRefs(tag));
+  baseElement->GetTag(getter_AddRefs(tag));
   if (tag == nsHTMLAtoms::select) {
     // If we are an intrinsically sized select widget, we may need to
     // resize, if the widest item was removed or a new item was added.
@@ -1955,11 +1955,11 @@ nsTreeBodyFrame::GetImage(PRInt32 aRowIndex, const PRUnichar* aColID, PRBool aUs
 
     nsCOMPtr<nsIURI> baseURI;
     nsCOMPtr<nsIDocument> doc;
-    mContent->GetDocument(*getter_AddRefs(doc));
+    mContent->GetDocument(getter_AddRefs(doc));
     if (!doc)
       // The page is currently being torn down.  Why bother.
       return NS_ERROR_FAILURE;
-    doc->GetBaseURL(*getter_AddRefs(baseURI));
+    doc->GetBaseURL(getter_AddRefs(baseURI));
 
     nsCOMPtr<nsIURI> srcURI;
     NS_NewURI(getter_AddRefs(srcURI), *imagePtr, nsnull, baseURI);
@@ -3464,7 +3464,7 @@ nsTreeBodyFrame::EnsureColumns()
     // Note: this is dependent on the anonymous content for select
     // defined in select.xml
     nsCOMPtr<nsIAtom> parentTag;
-    parent->GetTag(*getter_AddRefs(parentTag));
+    parent->GetTag(getter_AddRefs(parentTag));
     if (parentTag == nsHTMLAtoms::select) {
       // We can avoid crawling the content nodes in this case, since we know
       // that we have a single column, and we know where it's at.
@@ -3473,7 +3473,7 @@ nsTreeBodyFrame::EnsureColumns()
       ChildIterator::Init(parent, &iter, &last);
       nsCOMPtr<nsIContent> treeCols = *iter;
       nsCOMPtr<nsIContent> column;
-      treeCols->ChildAt(0, *getter_AddRefs(column));
+      treeCols->ChildAt(0, getter_AddRefs(column));
 
       nsIFrame* colFrame = nsnull;
       shell->GetPrimaryFrameFor(column, &colFrame);
@@ -3505,7 +3505,7 @@ nsTreeBodyFrame::EnsureColumns()
       nsCOMPtr<nsIContent> content;
       frame->GetContent(getter_AddRefs(content));
       nsCOMPtr<nsIAtom> tag;
-      content->GetTag(*getter_AddRefs(tag));
+      content->GetTag(getter_AddRefs(tag));
       if (tag == nsXULAtoms::treecol) {
         // Create a new column structure.
         nsTreeColumn* col = new nsTreeColumn(content, frame);
@@ -3534,10 +3534,10 @@ nsTreeBodyFrame::GetBaseElement(nsIContent** aContent)
   nsCOMPtr<nsIAtom> tag;
   nsCOMPtr<nsIContent> temp;
 
-  while (parent && NS_SUCCEEDED(parent->GetTag(*getter_AddRefs(tag)))
+  while (parent && NS_SUCCEEDED(parent->GetTag(getter_AddRefs(tag)))
          && tag != nsXULAtoms::tree && tag != nsHTMLAtoms::select) {
     temp = parent;
-    temp->GetParent(*getter_AddRefs(parent));
+    temp->GetParent(getter_AddRefs(parent));
   }
 
   *aContent = parent;

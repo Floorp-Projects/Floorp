@@ -631,7 +631,7 @@ nsWebShell::OnLinkClickSync(nsIContent *aContent,
 
   if (isJS || isData) {
     nsCOMPtr<nsIDocument> sourceDoc;
-    aContent->GetDocument(*getter_AddRefs(sourceDoc));
+    aContent->GetDocument(getter_AddRefs(sourceDoc));
 
     if (!sourceDoc) {
       // The source is in a 'zombie' document, or not part of a

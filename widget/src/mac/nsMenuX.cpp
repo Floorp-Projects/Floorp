@@ -878,7 +878,7 @@ void nsMenuX::LoadMenuItem( nsIMenu* inParentMenu, nsIContent* inMenuItemContent
 
     // Try to find the key node. Get the document so we can do |GetElementByID|
     nsCOMPtr<nsIDocument> document;
-    inMenuItemContent->GetDocument(*getter_AddRefs(document));
+    inMenuItemContent->GetDocument(getter_AddRefs(document));
     if ( !document ) 
       return;
     nsCOMPtr<nsIDOMDocument> domDocument = do_QueryInterface(document);
@@ -1027,7 +1027,7 @@ nsMenuX::OnCreate()
   // be updated.
   if (popupContent) {
     nsCOMPtr<nsIDocument> doc;
-    popupContent->GetDocument(*getter_AddRefs(doc));
+    popupContent->GetDocument(getter_AddRefs(doc));
     nsCOMPtr<nsIDOMDocument> domDoc(do_QueryInterface(doc));
 
     PRInt32 count;
@@ -1036,7 +1036,7 @@ nsMenuX::OnCreate()
       nsCOMPtr<nsIContent> grandChild;
       popupContent->ChildAt(i, *getter_AddRefs(grandChild));
       nsCOMPtr<nsIAtom> tag;
-      grandChild->GetTag(*getter_AddRefs(tag));
+      grandChild->GetTag(getter_AddRefs(tag));
       if (tag.get() == nsWidgetAtoms::menuitem) {
         // See if we have a command attribute.
         nsAutoString command;

@@ -338,7 +338,7 @@ nsHTMLFragmentContentSink::SetTitle(const nsString& aValue)
   nsCOMPtr<nsINodeInfo> nodeInfo;
   result = mNodeInfoManager->GetNodeInfo(nsHTMLAtoms::title, nsnull, 
                                          kNameSpaceID_None,
-                                         *getter_AddRefs(nodeInfo));
+                                         getter_AddRefs(nodeInfo));
   if(NS_SUCCEEDED(result)) {
     nsCOMPtr<nsIHTMLContent> content=nsnull;
     result = NS_NewHTMLTitleElement(getter_AddRefs(content), nodeInfo);
@@ -492,7 +492,7 @@ nsHTMLFragmentContentSink::OpenContainer(const nsIParserNode& aNode)
       result =
         mNodeInfoManager->GetNodeInfo(aNode.GetText(), nsnull,
                                       kNameSpaceID_None,
-                                      *getter_AddRefs(nodeInfo));
+                                      getter_AddRefs(nodeInfo));
     } else {
       nsIParserService* parserService =
         nsContentUtils::GetParserServiceWeakRef();
@@ -507,7 +507,7 @@ nsHTMLFragmentContentSink::OpenContainer(const nsIParserNode& aNode)
       result =
         mNodeInfoManager->GetNodeInfo(nsDependentString(name), nsnull,
                                       kNameSpaceID_None,
-                                      *getter_AddRefs(nodeInfo));
+                                      getter_AddRefs(nodeInfo));
     }
 
     NS_ENSURE_SUCCESS(result, result);
@@ -587,7 +587,7 @@ nsHTMLFragmentContentSink::AddLeaf(const nsIParserNode& aNode)
           result =
             mNodeInfoManager->GetNodeInfo(aNode.GetText(), nsnull,
                                           kNameSpaceID_None,
-                                          *getter_AddRefs(nodeInfo));
+                                          getter_AddRefs(nodeInfo));
         } else {
           const PRUnichar *name = nsnull;
           result = parserService->HTMLIdToStringTag(nodeType, &name);
@@ -596,7 +596,7 @@ nsHTMLFragmentContentSink::AddLeaf(const nsIParserNode& aNode)
           result =
             mNodeInfoManager->GetNodeInfo(nsDependentString(name), nsnull,
                                           kNameSpaceID_None,
-                                          *getter_AddRefs(nodeInfo));
+                                          getter_AddRefs(nodeInfo));
         }
 
         NS_ENSURE_SUCCESS(result, result);
@@ -728,7 +728,7 @@ NS_IMETHODIMP
 nsHTMLFragmentContentSink::SetTargetDocument(nsIDocument* aTargetDocument)
 {
   if (aTargetDocument) {
-    aTargetDocument->GetNodeInfoManager(*getter_AddRefs(mNodeInfoManager));
+    aTargetDocument->GetNodeInfoManager(getter_AddRefs(mNodeInfoManager));
   }
 
   if (mNodeInfoManager) {

@@ -125,25 +125,29 @@ nsDocElementBoxFrame::CreateAnonymousContent(nsIPresContext* aPresContext,
 
   nsCOMPtr<nsINodeInfoManager> nodeInfoManager;
   nsCOMPtr<nsIDocument> doc;
-  mContent->GetDocument(*getter_AddRefs(doc));
+  mContent->GetDocument(getter_AddRefs(doc));
   if (!doc)
     // The page is currently being torn down.  Why bother.
     return NS_ERROR_FAILURE;
-  doc->GetNodeInfoManager(*getter_AddRefs(nodeInfoManager));
+  doc->GetNodeInfoManager(getter_AddRefs(nodeInfoManager));
   NS_ENSURE_TRUE(nodeInfoManager, NS_ERROR_FAILURE);
 
   // create the top-secret popupgroup node. shhhhh!
   nsCOMPtr<nsINodeInfo> nodeInfo;
-  nodeInfoManager->GetNodeInfo(NS_LITERAL_STRING("popupgroup"), NS_LITERAL_STRING(""), NS_LITERAL_STRING("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"),
-    *getter_AddRefs(nodeInfo));
+  nodeInfoManager->GetNodeInfo(NS_LITERAL_STRING("popupgroup"),
+                               NS_LITERAL_STRING(""),
+                               NS_LITERAL_STRING("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"),
+                               getter_AddRefs(nodeInfo));
 
   nsCOMPtr<nsIContent> content;
   elementFactory->CreateInstanceByTag(nodeInfo, getter_AddRefs(content));
   aAnonymousItems.AppendElement(content);
 
   // create the top-secret default tooltip node. shhhhh!
-  nodeInfoManager->GetNodeInfo(NS_LITERAL_STRING("tooltip"), NS_LITERAL_STRING(""), NS_LITERAL_STRING("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"),
-    *getter_AddRefs(nodeInfo));
+  nodeInfoManager->GetNodeInfo(NS_LITERAL_STRING("tooltip"),
+                               NS_LITERAL_STRING(""),
+                               NS_LITERAL_STRING("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"),
+                               getter_AddRefs(nodeInfo));
   elementFactory->CreateInstanceByTag(nodeInfo, getter_AddRefs(content));
   content->SetAttr(nsnull, nsXULAtoms::defaultz, NS_LITERAL_STRING("true"), PR_FALSE);
   aAnonymousItems.AppendElement(content);

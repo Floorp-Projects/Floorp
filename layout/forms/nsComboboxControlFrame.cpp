@@ -392,7 +392,7 @@ nsComboboxControlFrame::Init(nsIPresContext*  aPresContext,
   //-------------------------------
   mGoodToGo = PR_FALSE;
   nsCOMPtr<nsIDocument> document;
-  nsresult rv = aContent->GetDocument(*getter_AddRefs(document));
+  nsresult rv = aContent->GetDocument(getter_AddRefs(document));
   if (NS_SUCCEEDED(rv) && document) {
 #ifdef MOZ_XUL
     nsCOMPtr<nsIXULDocument> xulDoc(do_QueryInterface(document));
@@ -2234,16 +2234,16 @@ nsComboboxControlFrame::CreateAnonymousContent(nsIPresContext* aPresContext,
     mDisplayContent->SetText(NS_LITERAL_STRING("X"), PR_TRUE);
 
     nsCOMPtr<nsIDocument> doc;
-    mContent->GetDocument(*getter_AddRefs(doc));
+    mContent->GetDocument(getter_AddRefs(doc));
     // mContent->AppendChildTo(labelContent, PR_FALSE, PR_FALSE);
 
     nsCOMPtr<nsINodeInfoManager> nimgr;
-    result = doc->GetNodeInfoManager(*getter_AddRefs(nimgr));
+    result = doc->GetNodeInfoManager(getter_AddRefs(nimgr));
     NS_ENSURE_SUCCESS(result, result);
 
     nsCOMPtr<nsINodeInfo> nodeInfo;
     nimgr->GetNodeInfo(nsHTMLAtoms::input, nsnull, kNameSpaceID_None,
-                       *getter_AddRefs(nodeInfo));
+                       getter_AddRefs(nodeInfo));
 
     aChildList.AppendElement(labelContent);
 

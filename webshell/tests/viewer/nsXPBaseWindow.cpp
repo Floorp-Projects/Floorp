@@ -584,12 +584,11 @@ NS_IMETHODIMP nsXPBaseWindow::GetPresShell(nsIPresShell*& aPresShell)
       nsIDocumentViewer* docv = nsnull;
       cv->QueryInterface(kIDocumentViewerIID, (void**) &docv);
       if (nsnull != docv) {
-        nsIPresContext* cx;
-        docv->GetPresContext(cx);
+        nsCOMPtr<nsIPresContext> cx;
+        docv->GetPresContext(getter_AddRefs(cx));
         if (nsnull != cx) {
           cx->GetShell(&shell); // does an add ref
           aPresShell = shell;
-          NS_RELEASE(cx);
         }
         NS_RELEASE(docv);
       }

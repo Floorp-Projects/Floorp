@@ -214,18 +214,18 @@ public:
   NS_METHOD SetAttributeFor(nsINodeInfo* aAttrName,
                             const nsAString& aValue);
   NS_METHOD GetAttribute(nsIAtom* aAttrName, PRInt32 aNamespaceID,
-                         nsIAtom*& aPrefix,
+                         nsIAtom** aPrefix,
                          const nsHTMLValue** aValue) const;
 
 
   NS_METHOD GetAttributeNameAt(PRInt32 aIndex,
-                               PRInt32& aNamespaceID,
-                               nsIAtom*& aName,
-                               nsIAtom*& aPrefix) const;
+                               PRInt32* aNamespaceID,
+                               nsIAtom** aName,
+                               nsIAtom** aPrefix) const;
 
   NS_METHOD GetAttributeCount(PRInt32& aCount) const;
 
-  NS_METHOD GetID(nsIAtom*& aResult) const;
+  NS_METHOD GetID(nsIAtom** aResult) const;
   NS_METHOD GetClasses(nsVoidArray& aArray) const;
   NS_METHOD_(PRBool) HasClass(nsIAtom* aClass, PRBool aCaseSensitive) const;
 

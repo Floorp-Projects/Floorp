@@ -421,7 +421,7 @@ nsXULPrototypeDocument::Read(nsIObjectInputStream* aStream)
         rv |= aStream->ReadString(qualifiedName);
 
         nsCOMPtr<nsINodeInfo> nodeInfo;
-        rv |= mNodeInfoManager->GetNodeInfo(qualifiedName, namespaceURI, *getter_AddRefs(nodeInfo));
+        rv |= mNodeInfoManager->GetNodeInfo(qualifiedName, namespaceURI, getter_AddRefs(nodeInfo));
         rv |= nodeInfos->AppendElement(nodeInfo);
     }
 

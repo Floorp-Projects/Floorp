@@ -61,7 +61,7 @@ public:
   // nsIDOMEntity
   NS_DECL_NSIDOMENTITY
 
-  NS_IMETHOD GetTag(nsIAtom*& aResult) const;
+  NS_IMETHOD GetTag(nsIAtom** aResult) const;
 
 #ifdef DEBUG
   NS_IMETHOD List(FILE* out, PRInt32 aIndent) const;
@@ -146,12 +146,12 @@ nsXMLEntity::GetNotationName(nsAString& aNotationName)
 }
 
 NS_IMETHODIMP 
-nsXMLEntity::GetTag(nsIAtom*& aResult) const
+nsXMLEntity::GetTag(nsIAtom** aResult) const
 {
-//  aResult = nsLayoutAtoms::EntityTagName;
-//  NS_ADDREF(aResult);
+//  *aResult = nsLayoutAtoms::EntityTagName;
+//  NS_ADDREF(*aResult);
 
-  aResult = nsnull;
+  *aResult = nsnull;
 
   return NS_OK;
 }

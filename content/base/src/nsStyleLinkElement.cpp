@@ -201,7 +201,7 @@ nsStyleLinkElement::UpdateStyleSheet(nsIDocument *aOldDocument,
   NS_ENSURE_TRUE(thisContent, NS_ERROR_FAILURE);
 
   nsCOMPtr<nsIDocument> doc;
-  thisContent->GetDocument(*getter_AddRefs(doc));
+  thisContent->GetDocument(getter_AddRefs(doc));
 
   if (!doc) {
     return NS_OK;
@@ -298,7 +298,7 @@ nsStyleLinkElement::UpdateStyleSheet(nsIDocument *aOldDocument,
     PRInt32 i;
     nsCOMPtr<nsIContent> node;
     for (i = 0; i < count; ++i) {
-      thisContent->ChildAt(i, *getter_AddRefs(node));
+      thisContent->ChildAt(i, getter_AddRefs(node));
       nsCOMPtr<nsIDOMText> tc = do_QueryInterface(node);
       // Ignore nodes that are not DOMText.
       if (!tc) {

@@ -152,7 +152,7 @@ nsAccessibilityService::GetInfo(nsISupports* aFrame, nsIFrame** aRealFrame, nsIW
   NS_IF_ADDREF(*aNode);
 
   nsCOMPtr<nsIDocument> document;
-  content->GetDocument(*getter_AddRefs(document));
+  content->GetDocument(getter_AddRefs(document));
   if (!document)
     return NS_ERROR_FAILURE;
 
@@ -1435,7 +1435,7 @@ NS_IMETHODIMP nsAccessibilityService::GetAccessibleFor(nsIDOMNode *aNode,
   nsCOMPtr<nsIContent> content(do_QueryInterface(aNode));
   nsCOMPtr<nsIDocument> doc;
   if (content) {
-    content->GetDocument(*getter_AddRefs(doc));
+    content->GetDocument(getter_AddRefs(doc));
   }
   else {// Could be document node
     doc = do_QueryInterface(aNode);

@@ -156,7 +156,7 @@ protected:
     nsresult PushNameSpacesFrom(const PRUnichar** aAttributes);
 
     // RDF-specific parsing
-    nsresult ParseTag(const PRUnichar* aText, nsINodeInfo*& aNodeInfo);
+    nsresult ParseTag(const PRUnichar* aText, nsINodeInfo** aNodeInfo);
     nsresult AddAttributes(const PRUnichar** aAttributes, 
                            const PRUint32 aAttrLen, 
                            nsXULPrototypeElement* aElement);
@@ -191,7 +191,7 @@ protected:
     
     
     nsresult NormalizeAttributeString(const nsAFlatString& aText,
-                                      nsINodeInfo*& aNodeInfo);
+                                      nsINodeInfo** aNodeInfo);
     nsresult CreateElement(nsINodeInfo *aNodeInfo, nsXULPrototypeElement** aResult);
 
     // Style sheets
@@ -367,7 +367,7 @@ XULContentSinkImpl::~XULContentSinkImpl()
                 nsCOMPtr<nsIAtom> prefixAtom;
 
                 nameSpace->GetNameSpaceURI(uri);
-                nameSpace->GetNameSpacePrefix(*getter_AddRefs(prefixAtom));
+                nameSpace->GetNameSpacePrefix(getter_AddRefs(prefixAtom));
 
                 nsAutoString prefix;
                 if (prefixAtom)
@@ -703,7 +703,7 @@ XULContentSinkImpl::FlushText(PRBool aCreateTextNode)
 
 nsresult
 XULContentSinkImpl::NormalizeAttributeString(const nsAFlatString& aText,
-                                             nsINodeInfo*& aNodeInfo)
+                                             nsINodeInfo** aNodeInfo)
 {
     PRInt32 nameSpaceID = kNameSpaceID_None;
 
@@ -724,7 +724,7 @@ XULContentSinkImpl::NormalizeAttributeString(const nsAFlatString& aText,
         GetTopNameSpace(address_of(ns));
 
         if (ns) {
-            ns->FindNameSpaceID(prefix, nameSpaceID);
+            ns->FindNameSpaceID(prefix, &nameSpaceID);
 
             if (nameSpaceID == kNameSpaceID_Unknown) {
                 NS_WARNING("Undeclared prefix used in attribute name.");
@@ -806,7 +806,7 @@ XULContentSinkImpl::HandleStartElement(const PRUnichar *aName,
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsINodeInfo> nodeInfo;
-  rv = ParseTag(aName, *getter_AddRefs(nodeInfo));
+  rv = ParseTag(aName, getter_AddRefs(nodeInfo));
   if (NS_FAILED(rv)) {
      return rv;
   }
@@ -1125,7 +1125,8 @@ XULContentSinkImpl::PushNameSpacesFrom(const PRUnichar** aAttributes)
         nameSpace =
             (nsINameSpace*)mNameSpaceStack.ElementAt(mNameSpaceStack.Count() - 1);
     } else {
-        nsContentUtils::GetNSManagerWeakRef()->CreateRootNameSpace(*getter_AddRefs(nameSpace));
+        nsContentUtils::GetNSManagerWeakRef()->
+            CreateRootNameSpace(getter_AddRefs(nameSpace));
         if (! nameSpace)
             return NS_ERROR_OUT_OF_MEMORY;
     }
@@ -1171,7 +1172,7 @@ XULContentSinkImpl::PushNameSpacesFrom(const PRUnichar** aAttributes)
             nsCOMPtr<nsINameSpace> child;
             nsresult rv =
                 nameSpace->CreateChildNameSpace(prefixAtom, value,
-                                                *getter_AddRefs(child));
+                                                getter_AddRefs(child));
             NS_ENSURE_SUCCESS(rv, rv);
 
             nameSpace = child;
@@ -1215,7 +1216,7 @@ XULContentSinkImpl::GetTopNameSpace(nsCOMPtr<nsINameSpace>* aNameSpace)
 
 nsresult
 XULContentSinkImpl::ParseTag(const PRUnichar* aText, 
-                             nsINodeInfo*& aNodeInfo)
+                             nsINodeInfo** aNodeInfo)
 {
     // Split the tag into prefix and tag substrings.
 
@@ -1243,7 +1244,7 @@ XULContentSinkImpl::ParseTag(const PRUnichar* aText,
     PRInt32 namespaceID = kNameSpaceID_None;
 
     if (ns) {
-        ns->FindNameSpaceID(prefix, namespaceID);
+        ns->FindNameSpaceID(prefix, &namespaceID);
 
         if (namespaceID == kNameSpaceID_Unknown) {
             NS_WARNING("Undeclared prefix used in tag name!");
@@ -1503,7 +1504,7 @@ XULContentSinkImpl::AddAttributes(const PRUnichar** aAttributes,
   // Copy the attributes into the prototype
   for (; *aAttributes; aAttributes += 2) {
       rv = NormalizeAttributeString(nsDependentString(aAttributes[0]),
-                                    *getter_AddRefs(attrs->mNodeInfo));
+                                    getter_AddRefs(attrs->mNodeInfo));
 
       if (NS_FAILED(rv)) {
 #ifdef PR_LOGGING

@@ -1557,7 +1557,7 @@ nsTypeAheadFind::RangeStartsInsideLink(nsIDOMRange *aRange,
 
   if (NS_SUCCEEDED(startContent->CanContainChildren(canContainChildren)) &&
       canContainChildren) {
-    startContent->ChildAt(startOffset, *getter_AddRefs(childContent));
+    startContent->ChildAt(startOffset, getter_AddRefs(childContent));
     if (childContent) {
       startContent = childContent;
     }
@@ -1616,9 +1616,9 @@ nsTypeAheadFind::RangeStartsInsideLink(nsIDOMRange *aRange,
 
     // Get the parent
     nsCOMPtr<nsIContent> parent, parentsFirstChild;
-    startContent->GetParent(*getter_AddRefs(parent));
+    startContent->GetParent(getter_AddRefs(parent));
     if (parent) {
-      parent->ChildAt(0, *getter_AddRefs(parentsFirstChild));
+      parent->ChildAt(0, getter_AddRefs(parentsFirstChild));
       nsCOMPtr<nsITextContent> textContent =
         do_QueryInterface(parentsFirstChild);
 
@@ -1627,7 +1627,7 @@ nsTypeAheadFind::RangeStartsInsideLink(nsIDOMRange *aRange,
         PRBool isOnlyWhitespace;
         textContent->IsOnlyWhitespace(&isOnlyWhitespace);
         if (isOnlyWhitespace)
-          parent->ChildAt(1, *getter_AddRefs(parentsFirstChild));
+          parent->ChildAt(1, getter_AddRefs(parentsFirstChild));
       }
 
       if (parentsFirstChild != startContent) {
@@ -2399,7 +2399,7 @@ nsTypeAheadFind::IsTargetContentOkay(nsIContent *aContent)
     // having a table of atoms just for it. Instead, we're paying for 1 extra 
     // string compare per keystroke, which isn't too bad.
     nsCOMPtr<nsIAtom> targetTagAtom;
-    aContent->GetTag(*getter_AddRefs(targetTagAtom));
+    aContent->GetTag(getter_AddRefs(targetTagAtom));
     nsAutoString targetTagString;
     targetTagAtom->ToString(targetTagString);
     if (targetTagString.Equals(NS_LITERAL_STRING("isindex"))) {
@@ -2447,7 +2447,7 @@ nsTypeAheadFind::GetTargetIfTypeAheadOkay(nsIDOMEvent *aEvent,
   // ---------- Is the keystroke in a new window? -------------------
 
   nsCOMPtr<nsIDocument> doc;
-  if (NS_FAILED(targetContent->GetDocument(*getter_AddRefs(doc))) || !doc) {
+  if (NS_FAILED(targetContent->GetDocument(getter_AddRefs(doc))) || !doc) {
     return NS_OK;
   }
 

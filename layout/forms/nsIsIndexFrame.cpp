@@ -228,9 +228,9 @@ nsIsIndexFrame::CreateAnonymousContent(nsIPresContext* aPresContext,
 
   // Get the node info manager (used to create hr's and input's)
   nsCOMPtr<nsIDocument> doc;
-  mContent->GetDocument(*getter_AddRefs(doc));
+  mContent->GetDocument(getter_AddRefs(doc));
   nsCOMPtr<nsINodeInfoManager> nimgr;
-  result = doc->GetNodeInfoManager(*getter_AddRefs(nimgr));
+  result = doc->GetNodeInfoManager(getter_AddRefs(nimgr));
   NS_ENSURE_SUCCESS(result, result);
 
   nsCOMPtr<nsIElementFactory> ef(do_GetService(kHTMLElementFactoryCID,&result));
@@ -239,7 +239,7 @@ nsIsIndexFrame::CreateAnonymousContent(nsIPresContext* aPresContext,
   // Create an hr
   nsCOMPtr<nsINodeInfo> hrInfo;
   nimgr->GetNodeInfo(nsHTMLAtoms::hr, nsnull, kNameSpaceID_None,
-                     *getter_AddRefs(hrInfo));
+                     getter_AddRefs(hrInfo));
   nsCOMPtr<nsIContent> content;
   result = ef->CreateInstanceByTag(hrInfo,getter_AddRefs(content));
   NS_ENSURE_SUCCESS(result, result);
@@ -265,7 +265,7 @@ nsIsIndexFrame::CreateAnonymousContent(nsIPresContext* aPresContext,
   // Create text input field
   nsCOMPtr<nsINodeInfo> inputInfo;
   nimgr->GetNodeInfo(nsHTMLAtoms::input, nsnull, kNameSpaceID_None,
-                     *getter_AddRefs(inputInfo));
+                     getter_AddRefs(inputInfo));
 
   result = ef->CreateInstanceByTag(inputInfo,getter_AddRefs(content));
   NS_ENSURE_SUCCESS(result, result);
@@ -419,12 +419,12 @@ nsIsIndexFrame::OnSubmit(nsIPresContext* aPresContext)
     // We'll need it now to form the URL we're submitting to.
     // We'll also need it later to get the DOM window when notifying form submit observers (bug 33203)
     nsCOMPtr<nsIDocument> document;
-    mContent->GetDocument(*getter_AddRefs(document));
+    mContent->GetDocument(getter_AddRefs(document));
     if (!document) return NS_OK; // No doc means don't submit, see Bug 28988
 
     // Resolve url to an absolute url
     nsCOMPtr<nsIURI> docURL;
-    document->GetBaseURL(*getter_AddRefs(docURL));
+    document->GetBaseURL(getter_AddRefs(docURL));
     NS_ASSERTION(docURL, "No Base URL found in Form Submit!\n");
     if (!docURL) return NS_OK; // No base URL -> exit early, see Bug 30721
 
@@ -502,21 +502,18 @@ nsIsIndexFrame::OnSubmit(nsIPresContext* aPresContext)
 void nsIsIndexFrame::GetSubmitCharset(nsCString& oCharset)
 {
   oCharset.Assign(NS_LITERAL_CSTRING("UTF-8")); // default to utf-8
-  nsresult rv;
   // XXX
   // We may want to get it from the HTML 4 Accept-Charset attribute first
   // see 17.3 The FORM element in HTML 4 for details
 
   // Get the charset from document
-  nsIDocument* doc = nsnull;
-  mContent->GetDocument(doc);
-  if( nsnull != doc ) {
+  nsCOMPtr<nsIDocument> doc;
+  mContent->GetDocument(getter_AddRefs(doc));
+  if (doc) {
     nsAutoString docCharset;
-    rv = doc->GetDocumentCharacterSet(docCharset);
+    doc->GetDocumentCharacterSet(docCharset);
     CopyUCS2toASCII(docCharset, oCharset);
-    NS_RELEASE(doc);
   }
-
 }
 
 NS_IMETHODIMP nsIsIndexFrame::GetEncoder(nsIUnicodeEncoder** encoder)

@@ -167,12 +167,12 @@ NS_NewHTMLImageElement(nsIHTMLContent** aInstancePtrResult,
     NS_ENSURE_TRUE(doc, NS_ERROR_UNEXPECTED);
 
     nsCOMPtr<nsINodeInfoManager> nodeInfoManager;
-    doc->GetNodeInfoManager(*getter_AddRefs(nodeInfoManager));
+    doc->GetNodeInfoManager(getter_AddRefs(nodeInfoManager));
     NS_ENSURE_TRUE(nodeInfoManager, NS_ERROR_UNEXPECTED);
 
     rv = nodeInfoManager->GetNodeInfo(nsHTMLAtoms::img, nsnull,
                                       kNameSpaceID_None,
-                                      *getter_AddRefs(nodeInfo));
+                                      getter_AddRefs(nodeInfo));
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
@@ -672,7 +672,7 @@ nsHTMLImageElement::GetSrc(nsAString& aSrc)
   nsCOMPtr<nsIURI> baseURL;
 
   // Get base URL.
-  GetBaseURL(*getter_AddRefs(baseURL));
+  GetBaseURL(getter_AddRefs(baseURL));
 
   // Get href= attribute (relative URL).
   nsGenericHTMLLeafElement::GetAttr(kNameSpaceID_None, nsHTMLAtoms::src,

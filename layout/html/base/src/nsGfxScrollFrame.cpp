@@ -391,14 +391,14 @@ nsGfxScrollFrame::CreateAnonymousContent(nsIPresContext* aPresContext,
 
   nsCOMPtr<nsINodeInfoManager> nodeInfoManager;
   if (document)
-    document->GetNodeInfoManager(*getter_AddRefs(nodeInfoManager));
+    document->GetNodeInfoManager(getter_AddRefs(nodeInfoManager));
   NS_ENSURE_TRUE(nodeInfoManager, NS_ERROR_FAILURE);
 
   nsCOMPtr<nsINodeInfo> nodeInfo;
   nodeInfoManager->GetNodeInfo(NS_LITERAL_STRING("scrollbar"),
                                NS_LITERAL_STRING(""),
                                NS_LITERAL_STRING("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"),
-                               *getter_AddRefs(nodeInfo));
+                               getter_AddRefs(nodeInfo));
 
   ScrollbarStyles styles = GetScrollbarStyles();
   if (styles.mHorizontal == NS_STYLE_OVERFLOW_AUTO

@@ -86,7 +86,7 @@ nsContentTagTestNode::FilterInstantiations(InstantiationSet& aInstantiations, vo
         }
 
         nsCOMPtr<nsIAtom> tag;
-        rv = VALUE_TO_ICONTENT(value)->GetTag(*getter_AddRefs(tag));
+        rv = VALUE_TO_ICONTENT(value)->GetTag(getter_AddRefs(tag));
         if (NS_FAILED(rv)) return rv;
 
         if (tag != mTag) {

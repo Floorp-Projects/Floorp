@@ -1029,7 +1029,7 @@ DrawSelectionIterator::DrawSelectionIterator(nsIContent *aContent,
 
     if (aContent) {
       nsCOMPtr<nsIContent> parentContent;
-      aContent->GetParent(*getter_AddRefs(parentContent));
+      aContent->GetParent(getter_AddRefs(parentContent));
       nsRefPtr<nsStyleContext> sc;
       sc = aPresContext->ProbePseudoStyleContextFor(parentContent,
 						    nsCSSPseudoElements::mozSelection,
@@ -1356,7 +1356,7 @@ nsTextFrame::GetDocument(nsIPresContext* aPresContext)
 {
   nsIDocument* result = nsnull;
   if (mContent) {
-    mContent->GetDocument(result);
+    mContent->GetDocument(&result);
   }
   if (!result && aPresContext) {
     nsIPresShell* shell;
@@ -3997,7 +3997,7 @@ nsTextFrame::PeekOffset(nsIPresContext* aPresContext, nsPeekOffsetStruct *aPos)
     {
       // Transform text from content into renderable form
       nsIDocument* doc;
-      result = mContent->GetDocument(doc);
+      result = mContent->GetDocument(&doc);
       if (NS_FAILED(result) || !doc) {
         return result;
       }
@@ -4029,7 +4029,7 @@ nsTextFrame::PeekOffset(nsIPresContext* aPresContext, nsPeekOffsetStruct *aPos)
     {
       // Transform text from content into renderable form
       nsIDocument* doc;
-      result = mContent->GetDocument(doc);
+      result = mContent->GetDocument(&doc);
       if (NS_FAILED(result) || !doc) {
         return result;
       }
@@ -4175,7 +4175,7 @@ nsTextFrame::PeekOffset(nsIPresContext* aPresContext, nsPeekOffsetStruct *aPos)
     {
       // Transform text from content into renderable form
       nsIDocument* doc;
-      result = mContent->GetDocument(doc);
+      result = mContent->GetDocument(&doc);
       if (NS_FAILED(result) || !doc) {
         return result;
       }
@@ -5367,7 +5367,7 @@ nsTextFrame::Reflow(nsIPresContext*          aPresContext,
 
   // Setup text transformer to transform this frames text content
   nsCOMPtr<nsIDocument> doc;
-  mContent->GetDocument(*getter_AddRefs(doc));
+  mContent->GetDocument(getter_AddRefs(doc));
   if (!doc) {
     NS_WARNING("Content has no document.");
     return NS_ERROR_FAILURE; 

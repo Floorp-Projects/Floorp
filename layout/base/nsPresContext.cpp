@@ -668,7 +668,7 @@ nsPresContext::SetShell(nsIPresShell* aShell)
     if (NS_SUCCEEDED(mShell->GetDocument(getter_AddRefs(doc)))) {
       NS_ASSERTION(doc, "expect document here");
       if (doc) {
-        doc->GetBaseURL(*getter_AddRefs(mBaseURL));
+        doc->GetBaseURL(getter_AddRefs(mBaseURL));
 
         if (mBaseURL) {
             PRBool isChrome = PR_FALSE;
@@ -829,7 +829,7 @@ void nsPresContext::SetImgAnimations(nsCOMPtr<nsIContent>& aParent, PRUint16 aMo
   aParent->ChildCount(count);
   for (PRInt32 i=0;i<count;i++) {
     nsCOMPtr<nsIContent> child;
-    aParent->ChildAt(i, *getter_AddRefs(child));
+    aParent->ChildAt(i, getter_AddRefs(child));
     if (child) {
       SetImgAnimations(child, aMode);
     }
@@ -1369,7 +1369,7 @@ nsPresContext::LoadImage(const nsString& aURL,
   if (NS_FAILED(rv)) return rv;
 
   nsCOMPtr<nsIURI> baseURI;
-  doc->GetBaseURL(*getter_AddRefs(baseURI));
+  doc->GetBaseURL(getter_AddRefs(baseURI));
 
   nsCOMPtr<nsIURI> uri;
   NS_NewURI(getter_AddRefs(uri), aURL, nsnull, baseURI);
@@ -1384,7 +1384,7 @@ nsPresContext::LoadImage(const nsString& aURL,
 
     if (content && element) {
       nsCOMPtr<nsIDocument> document;
-      rv = content->GetDocument(*getter_AddRefs(document));
+      rv = content->GetDocument(getter_AddRefs(document));
 
       // If there is no document, skip the policy check
       // XXXldb This really means the document is being destroyed, so

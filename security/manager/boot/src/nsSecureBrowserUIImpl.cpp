@@ -326,11 +326,11 @@ nsSecureBrowserUIImpl::Notify(nsIContent* formNode,
     return NS_OK;
   
   nsCOMPtr<nsIDocument> document;
-  formNode->GetDocument(*getter_AddRefs(document));
+  formNode->GetDocument(getter_AddRefs(document));
   if (!document) return NS_OK;
 
   nsCOMPtr<nsIURI> formURL;
-  document->GetBaseURL(*getter_AddRefs(formURL));
+  document->GetBaseURL(getter_AddRefs(formURL));
   
   nsCOMPtr<nsIScriptGlobalObject> globalObject;
   document->GetScriptGlobalObject(getter_AddRefs(globalObject));

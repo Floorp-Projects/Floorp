@@ -1901,7 +1901,7 @@ END_COM_MAP()
         if (doc)
         {
             nsCOMPtr<nsIURI> baseURI;
-            doc->GetBaseURL(*getter_AddRefs(baseURI));
+            doc->GetBaseURL(getter_AddRefs(baseURI));
             nsCAutoString spec;
             if (baseURI &&
                 NS_SUCCEEDED(baseURI->GetSpec(spec)))

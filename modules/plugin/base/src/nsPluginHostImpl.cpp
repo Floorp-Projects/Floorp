@@ -5614,7 +5614,7 @@ NS_IMETHODIMP nsPluginHostImpl::NewPluginURLStream(const nsString& aURL,
       if (NS_SUCCEEDED(rv) && doc)
       {
         nsCOMPtr<nsIURI> docURL;
-        doc->GetBaseURL(*getter_AddRefs(docURL));
+        doc->GetBaseURL(getter_AddRefs(docURL));
  
         // Create an absolute URL
         rv = NS_MakeAbsoluteURI(absUrl, aURL, docURL);
@@ -5748,7 +5748,7 @@ nsPluginHostImpl::DoURLLoadSecurityCheck(nsIPluginInstance *aInstance,
 
   // Create an absolute URL for the target in case the target is relative
   nsCOMPtr<nsIURI> docBaseURL;
-  doc->GetBaseURL(*getter_AddRefs(docBaseURL));
+  doc->GetBaseURL(getter_AddRefs(docBaseURL));
 
   nsCOMPtr<nsIURI> targetURL;
   rv = NS_NewURI(getter_AddRefs(targetURL), aURL, docBaseURL);
@@ -5920,7 +5920,7 @@ nsresult nsPluginHostImpl::NewEmbededPluginStream(nsIURI* aURL,
       nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(channel));
       if (httpChannel && doc) {
         nsCOMPtr<nsIURI> referrerURL;
-        if (NS_SUCCEEDED(doc->GetBaseURL(*getter_AddRefs(referrerURL))))
+        if (NS_SUCCEEDED(doc->GetBaseURL(getter_AddRefs(referrerURL))))
           httpChannel->SetReferrer(referrerURL);
       }
 

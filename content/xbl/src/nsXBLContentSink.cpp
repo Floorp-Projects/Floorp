@@ -815,7 +815,7 @@ nsXBLContentSink::AddAttributesToXULPrototype(const PRUnichar **aAtts,
     } 
 
     mNodeInfoManager->GetNodeInfo(nameAtom, nameSpacePrefix, nameSpaceID,
-                                  *getter_AddRefs(attrs->mNodeInfo));
+                                  getter_AddRefs(attrs->mNodeInfo));
     
     attrs->mValue.SetValue(nsDependentString(aAtts[1]));
     ++attrs;

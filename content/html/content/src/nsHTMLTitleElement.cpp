@@ -172,7 +172,7 @@ nsHTMLTitleElement::SetText(const nsAString& aTitle)
   nsCOMPtr<nsIDOMNode> child;
   nsCOMPtr<nsIDocument> document;
 
-  result = GetDocument(*getter_AddRefs(document));
+  result = GetDocument(getter_AddRefs(document));
 
   if (NS_OK == result) {
     nsCOMPtr<nsIDOMHTMLDocument> htmlDoc(do_QueryInterface(document));

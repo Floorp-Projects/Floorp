@@ -388,7 +388,7 @@ nsHTMLLinkElement::GetHrefCString(char* &aBuf)
 
     // Get base URL.
     nsCOMPtr<nsIURI> baseURL;
-    GetBaseURL(*getter_AddRefs(baseURL));
+    GetBaseURL(getter_AddRefs(baseURL));
 
     if (baseURL) {
       // Get absolute URL.

@@ -1161,7 +1161,7 @@ nsDocShell::GetEldestPresContext(nsIPresContext** aPresContext)
         else {
             nsCOMPtr<nsIDocumentViewer> docv(do_QueryInterface(viewer));
             if (docv)
-                rv = docv->GetPresContext(*aPresContext);
+                rv = docv->GetPresContext(aPresContext);
             break;
         }
     }
@@ -1181,7 +1181,7 @@ nsDocShell::GetPresContext(nsIPresContext ** aPresContext)
         nsCOMPtr<nsIDocumentViewer> docv(do_QueryInterface(mContentViewer));
 
         if (docv) {
-            rv = docv->GetPresContext(*aPresContext);
+            rv = docv->GetPresContext(aPresContext);
         }
     }
 
@@ -2078,7 +2078,7 @@ nsDocShell::AddChild(nsIDocShellTreeItem * aChild)
     if (!docv)
         return NS_OK;
     nsCOMPtr<nsIDocument> doc;
-    res = docv->GetDocument(*getter_AddRefs(doc));
+    res = docv->GetDocument(getter_AddRefs(doc));
     if (NS_FAILED(res) || (!doc))
         return NS_OK;
     nsAutoString parentCS;
@@ -3142,7 +3142,7 @@ nsDocShell::Repaint(PRBool aForce)
     NS_ENSURE_TRUE(docViewer, NS_ERROR_FAILURE);
 
     nsCOMPtr<nsIPresContext> context;
-    docViewer->GetPresContext(*getter_AddRefs(context));
+    docViewer->GetPresContext(getter_AddRefs(context));
     NS_ENSURE_TRUE(context, NS_ERROR_FAILURE);
 
     nsCOMPtr<nsIPresShell> shell;
@@ -4788,7 +4788,7 @@ nsDocShell::SetupNewViewer(nsIContentViewer * aNewViewer)
 
         if (docviewer) {
             nsCOMPtr<nsIPresShell> shell;
-            docviewer->GetPresShell(*getter_AddRefs(shell));
+            docviewer->GetPresShell(getter_AddRefs(shell));
 
             if (shell) {
                 nsCOMPtr<nsIViewManager> vm;
@@ -4866,7 +4866,7 @@ nsDocShell::SetupNewViewer(nsIContentViewer * aNewViewer)
 
         if (docviewer) {
             nsCOMPtr<nsIPresShell> shell;
-            docviewer->GetPresShell(*getter_AddRefs(shell));
+            docviewer->GetPresShell(getter_AddRefs(shell));
 
             if (shell) {
                 nsCOMPtr<nsIViewManager> vm;
@@ -5259,7 +5259,7 @@ nsDocShell::GetCurrentDocumentOwner(nsISupports ** aOwner)
             docViewer(do_QueryInterface(mContentViewer));
         if (!docViewer)
             return NS_ERROR_FAILURE;
-        rv = docViewer->GetDocument(*getter_AddRefs(document));
+        rv = docViewer->GetDocument(getter_AddRefs(document));
     }
     else //-- If there's no document loaded yet, look at the parent (frameset)
     {
@@ -5827,7 +5827,7 @@ nsDocShell::ScrollIfAnchor(nsIURI * aURI, PRBool * aWasAnchor,
                 docv(do_QueryInterface(mContentViewer));
             NS_ENSURE_TRUE(docv, NS_ERROR_FAILURE);
             nsCOMPtr<nsIDocument> doc;
-            rv = docv->GetDocument(*getter_AddRefs(doc));
+            rv = docv->GetDocument(getter_AddRefs(doc));
             NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
             nsAutoString aCharset;
             rv = doc->GetDocumentCharacterSet(aCharset);
@@ -7107,7 +7107,7 @@ nsDocShell::SetBaseUrlForWyciwyg(nsIContentViewer * aContentViewer)
     if (baseURI) {
         nsCOMPtr<nsIDocumentViewer> docViewer(do_QueryInterface(aContentViewer));
         if (docViewer) {
-            rv = docViewer->GetDocument(*getter_AddRefs(document));
+            rv = docViewer->GetDocument(getter_AddRefs(document));
             if (document)
                 rv = document->SetBaseURL(baseURI);
         }

@@ -284,7 +284,7 @@ nsHTMLFramesetFrame::Observe(nsISupports* aObject, const char* aAction,
   nsAutoString prefName(aPrefName);
   if (prefName.Equals(NS_LITERAL_STRING(kFrameResizePref))) {
     nsCOMPtr<nsIDocument> doc;
-    mContent->GetDocument(*getter_AddRefs(doc));
+    mContent->GetDocument(getter_AddRefs(doc));
     if (doc) {
       doc->BeginUpdate();
       doc->AttributeWillChange(mContent,
@@ -402,11 +402,11 @@ nsHTMLFramesetFrame::Init(nsIPresContext*  aPresContext,
       break;
     }
     nsCOMPtr<nsIContent> child;
-    mContent->ChildAt(childX, *getter_AddRefs(child));
+    mContent->ChildAt(childX, getter_AddRefs(child));
     if (!child->IsContentOfType(nsIContent::eHTML))
       continue;
     nsCOMPtr<nsIAtom> tag;
-    child->GetTag(*getter_AddRefs(tag));
+    child->GetTag(getter_AddRefs(tag));
     if (tag == nsHTMLAtoms::frameset || tag == nsHTMLAtoms::frame) {
       nsRefPtr<nsStyleContext> kidSC;
       nsresult result;
@@ -715,14 +715,14 @@ nsHTMLFramesetFrame* nsHTMLFramesetFrame::GetFramesetParent(nsIFrame* aChild)
 
   if (content) { 
     nsCOMPtr<nsIContent> contentParent;
-    content->GetParent(*getter_AddRefs(contentParent));
+    content->GetParent(getter_AddRefs(contentParent));
 
     nsCOMPtr<nsIHTMLContent> contentParent2 =
       do_QueryInterface(contentParent);
 
     if (contentParent2) {
       nsCOMPtr<nsIAtom> tag;
-      contentParent2->GetTag(*getter_AddRefs(tag));
+      contentParent2->GetTag(getter_AddRefs(tag));
 
       if (tag == nsHTMLAtoms::frameset) {
         nsIFrame* fptr;
@@ -1358,11 +1358,11 @@ nsHTMLFramesetFrame::RecalculateBorderResize()
   mContent->ChildCount(numChildren);
   for (childIndex = 0; childIndex < numChildren; childIndex++) {
     nsCOMPtr<nsIContent> childCon;
-    mContent->ChildAt(childIndex, *getter_AddRefs(childCon));
+    mContent->ChildAt(childIndex, getter_AddRefs(childCon));
     nsCOMPtr<nsIHTMLContent> child(do_QueryInterface(childCon));
     if (child) {
       nsCOMPtr<nsIAtom> tag;
-      child->GetTag(*getter_AddRefs(tag));
+      child->GetTag(getter_AddRefs(tag));
       if (tag == nsHTMLAtoms::frameset) {
         childTypes[frameOrFramesetChildIndex++] = FRAMESET;
       } else if (tag == nsHTMLAtoms::frame) {

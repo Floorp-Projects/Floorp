@@ -102,7 +102,7 @@ NS_IMETHODIMP nsOuterDocAccessible::Init()
   NS_ASSERTION(content, "No nsIContent for <browser>/<iframe>/<editor> dom node");
 
   nsCOMPtr<nsIDocument> outerDoc;
-  content->GetDocument(*getter_AddRefs(outerDoc));
+  content->GetDocument(getter_AddRefs(outerDoc));
   NS_ENSURE_TRUE(outerDoc, NS_ERROR_FAILURE);
 
   nsCOMPtr<nsIDocument> innerDoc;

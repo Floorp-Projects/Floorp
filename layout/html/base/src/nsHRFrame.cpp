@@ -391,7 +391,7 @@ HRuleFrame::GetContentAndOffsetsFromPoint(nsIPresContext* aPresContext,
   thisRect.x = offsetPoint.x;
   thisRect.y = offsetPoint.y;
 
-  rv = mContent->GetParent(*aNewContent);
+  rv = mContent->GetParent(aNewContent);
   if (!*aNewContent) return rv;
   
   rv = (*aNewContent)->IndexOf(mContent, aContentOffset);

@@ -503,7 +503,7 @@ nsXBLPrototypeBinding::AttributeChanged(nsIAtom* aAttribute,
       // set or unset on us.  We may also be a tag that is having
       // xbl:text set on us.
       nsCOMPtr<nsIAtom> tag;
-      realElement->GetTag(*getter_AddRefs(tag));
+      realElement->GetTag(getter_AddRefs(tag));
       if (dstAttr == nsXBLAtoms::xbltext || (tag == nsHTMLAtoms::html) && (dstAttr == nsHTMLAtoms::value)) {
         // Flush out all our kids.
         PRInt32 childCount;
@@ -518,7 +518,7 @@ nsXBLPrototypeBinding::AttributeChanged(nsIAtom* aAttribute,
           if (!value.IsEmpty()) {
             nsCOMPtr<nsIDOMText> textNode;
             nsCOMPtr<nsIDocument> doc;
-            aChangedElement->GetDocument(*getter_AddRefs(doc));
+            aChangedElement->GetDocument(getter_AddRefs(doc));
             nsCOMPtr<nsIDOMDocument> domDoc(do_QueryInterface(doc));
             domDoc->CreateTextNode(value, getter_AddRefs(textNode));
             nsCOMPtr<nsIDOMNode> dummy;
@@ -612,7 +612,7 @@ nsXBLPrototypeBinding::GetInsertionPoint(nsIContent* aBoundElement,
 {
   if (mInsertionPointTable) {
     nsCOMPtr<nsIAtom> tag;
-    aChild->GetTag(*getter_AddRefs(tag));
+    aChild->GetTag(getter_AddRefs(tag));
     nsISupportsKey key(tag);
     nsXBLInsertionPointEntry* entry = NS_STATIC_CAST(nsXBLInsertionPointEntry*, mInsertionPointTable->Get(&key));
     if (!entry) {
@@ -731,9 +731,9 @@ nsXBLPrototypeBinding::GetImmediateChild(nsIAtom* aTag)
   mBinding->ChildCount(childCount);
   for (PRInt32 i = 0; i < childCount; i++) {
     nsCOMPtr<nsIContent> child;
-    mBinding->ChildAt(i, *getter_AddRefs(child));
+    mBinding->ChildAt(i, getter_AddRefs(child));
     nsCOMPtr<nsIAtom> tag;
-    child->GetTag(*getter_AddRefs(tag));
+    child->GetTag(getter_AddRefs(tag));
     if (aTag == tag) {
       nsIContent* result = child;
       NS_ADDREF(result);
@@ -774,14 +774,14 @@ nsXBLPrototypeBinding::LocateInstance(nsIContent* aBoundElement,
   nsCOMPtr<nsIContent> templParent;
   nsCOMPtr<nsIContent> copyParent;
   nsCOMPtr<nsIContent> childPoint;
-  aTemplChild->GetParent(*getter_AddRefs(templParent));
+  aTemplChild->GetParent(getter_AddRefs(templParent));
   
   if (aBoundElement) {
     nsCOMPtr<nsIAtom> tag;
-    templParent->GetTag(*getter_AddRefs(tag));
+    templParent->GetTag(getter_AddRefs(tag));
     if (tag == nsXBLAtoms::children) {
       childPoint = templParent;
-      childPoint->GetParent(*getter_AddRefs(templParent));
+      childPoint->GetParent(getter_AddRefs(templParent));
     }
   }
 
@@ -799,7 +799,7 @@ nsXBLPrototypeBinding::LocateInstance(nsIContent* aBoundElement,
     // First we have to locate this insertion point and use its index and its
     // count to detemine our precise position within the template.
     nsCOMPtr<nsIDocument> doc;
-    aBoundElement->GetDocument(*getter_AddRefs(doc));
+    aBoundElement->GetDocument(getter_AddRefs(doc));
     nsCOMPtr<nsIBindingManager> bm;
     doc->GetBindingManager(getter_AddRefs(bm));
     nsCOMPtr<nsIXBLBinding> binding;
@@ -838,7 +838,7 @@ nsXBLPrototypeBinding::LocateInstance(nsIContent* aBoundElement,
           
           // Now we just have to find the corresponding elt underneath the cloned
           // default content.
-          defContent->ChildAt(index, result); // addrefs
+          defContent->ChildAt(index, &result); // addrefs
         } 
         break;
       }
@@ -848,7 +848,7 @@ nsXBLPrototypeBinding::LocateInstance(nsIContent* aBoundElement,
   {
     PRInt32 index;
     templParent->IndexOf(aTemplChild, index);
-    copyParent->ChildAt(index, result); // Addref happens here.
+    copyParent->ChildAt(index, &result); // Addref happens here.
   }
 
   return result;
@@ -908,12 +908,12 @@ PRBool PR_CALLBACK SetAttrs(nsHashKey* aKey, void* aData, void* aClosure)
       if (realElement) {
         realElement->SetAttr(kNameSpaceID_None, dst, value, PR_FALSE);
         nsCOMPtr<nsIAtom> tag;
-        realElement->GetTag(*getter_AddRefs(tag));
+        realElement->GetTag(getter_AddRefs(tag));
         if (dst == nsXBLAtoms::xbltext ||
             (tag == nsHTMLAtoms::html) && (dst == nsHTMLAtoms::value) && !value.IsEmpty()) {
           nsCOMPtr<nsIDOMText> textNode;
           nsCOMPtr<nsIDocument> doc;
-          changeData->mBoundElement->GetDocument(*getter_AddRefs(doc));
+          changeData->mBoundElement->GetDocument(getter_AddRefs(doc));
           nsCOMPtr<nsIDOMDocument> domDoc(do_QueryInterface(doc));
           domDoc->CreateTextNode(value, getter_AddRefs(textNode));
           nsCOMPtr<nsIDOMNode> dummy;
@@ -1062,7 +1062,7 @@ nsXBLPrototypeBinding::ConstructAttributeTable(nsIContent* aElement)
   aElement->ChildCount(childCount);
   for (PRInt32 i = 0; i < childCount; i++) {
     nsCOMPtr<nsIContent> child;
-    aElement->ChildAt(i, *getter_AddRefs(child));
+    aElement->ChildAt(i, getter_AddRefs(child));
     ConstructAttributeTable(child);
   }
 }
@@ -1098,7 +1098,7 @@ nsXBLPrototypeBinding::ConstructInsertionTable(nsIContent* aContent)
     nsCOMPtr<nsIContent> child(do_QueryInterface(supp));
     if (child) {
       nsCOMPtr<nsIContent> parent; 
-      child->GetParent(*getter_AddRefs(parent));
+      child->GetParent(getter_AddRefs(parent));
 
       // Create an XBL insertion point entry.
       nsXBLInsertionPointEntry* xblIns = nsXBLInsertionPointEntry::Create(parent);
@@ -1249,9 +1249,9 @@ nsXBLPrototypeBinding::GetNestedChildren(nsIAtom* aTag, nsIContent* aContent,
   aContent->ChildCount(childCount);
   for (PRInt32 i = 0; i < childCount; i++) {
     nsCOMPtr<nsIContent> child;
-    aContent->ChildAt(i, *getter_AddRefs(child));
+    aContent->ChildAt(i, getter_AddRefs(child));
     nsCOMPtr<nsIAtom> tag;
-    child->GetTag(*getter_AddRefs(tag));
+    child->GetTag(getter_AddRefs(tag));
     if (aTag == tag) {
       if (!*aList)
         NS_NewISupportsArray(aList); // Addref happens here.

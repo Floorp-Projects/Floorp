@@ -59,14 +59,14 @@ public:
 
   NS_IMETHOD SetUAStyleSheet(nsIStyleSheet* aUAStyleSheet) = 0;
   
-  NS_IMETHOD GetDocument(nsIDocument*& aResult) = 0;
+  NS_IMETHOD GetDocument(nsIDocument** aResult) = 0;
   
-  NS_IMETHOD GetPresShell(nsIPresShell*& aResult) = 0;
+  NS_IMETHOD GetPresShell(nsIPresShell** aResult) = 0;
   
-  NS_IMETHOD GetPresContext(nsIPresContext*& aResult) = 0;
+  NS_IMETHOD GetPresContext(nsIPresContext** aResult) = 0;
 
   NS_IMETHOD CreateDocumentViewerUsing(nsIPresContext* aPresContext,
-                                       nsIDocumentViewer*& aResult) = 0;
+                                       nsIDocumentViewer** aResult) = 0;
 };
 
 #endif /* nsIDocumentViewer_h___ */

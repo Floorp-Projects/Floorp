@@ -460,13 +460,13 @@ nsImageLoadingContent::ImageURIChanged(const nsACString& aNewURI)
   NS_ENSURE_TRUE(thisContent, rv);
 
   nsCOMPtr<nsIDocument> tempDoc;
-  thisContent->GetDocument(*getter_AddRefs(tempDoc));
+  thisContent->GetDocument(getter_AddRefs(tempDoc));
   if (!doc) {
     return NS_OK;
   }
 
   nsCOMPtr<nsIContent> parent;
-  thisContent->GetParent(*getter_AddRefs(parent));
+  thisContent->GetParent(getter_AddRefs(parent));
   if (!parent) {
     return NS_OK;
   }
@@ -562,12 +562,12 @@ nsImageLoadingContent::GetOurDocument(nsIDocument** aDocument)
   nsCOMPtr<nsIContent> thisContent = do_QueryInterface(this, &rv);
   NS_ENSURE_TRUE(thisContent, rv);
 
-  rv = thisContent->GetDocument(*aDocument);
+  rv = thisContent->GetDocument(aDocument);
   if (!*aDocument) {  // nodeinfo time
     nsCOMPtr<nsINodeInfo> nodeInfo;
-    rv = thisContent->GetNodeInfo(*getter_AddRefs(nodeInfo));
+    rv = thisContent->GetNodeInfo(getter_AddRefs(nodeInfo));
     if (nodeInfo) {
-      rv = nodeInfo->GetDocument(*aDocument);
+      rv = nodeInfo->GetDocument(aDocument);
     }
   }
 
@@ -588,9 +588,9 @@ nsImageLoadingContent::StringToURI(const nsACString& aSpec,
   nsCOMPtr<nsIURI> baseURL;
   nsCOMPtr<nsIHTMLContent> thisContent = do_QueryInterface(this);
   if (thisContent) {
-    rv = thisContent->GetBaseURL(*getter_AddRefs(baseURL));
+    rv = thisContent->GetBaseURL(getter_AddRefs(baseURL));
   } else {
-    rv = aDocument->GetBaseURL(*getter_AddRefs(baseURL));
+    rv = aDocument->GetBaseURL(getter_AddRefs(baseURL));
     if (!baseURL) {
       rv = aDocument->GetDocumentURL(getter_AddRefs(baseURL));
     }

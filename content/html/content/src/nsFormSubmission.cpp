@@ -1073,7 +1073,7 @@ SendJSWarning(nsIHTMLContent* aContent,
   nsCAutoString documentURLSpec;
   {
     nsCOMPtr<nsIDocument> document;
-    aContent->GetDocument(*getter_AddRefs(document));
+    aContent->GetDocument(getter_AddRefs(document));
     if (document) {
       nsCOMPtr<nsIURI> documentURL;
       document->GetDocumentURL(getter_AddRefs(documentURL));
@@ -1274,7 +1274,7 @@ nsFormSubmission::GetSubmitCharset(nsIHTMLContent* aForm,
   // if there are no accept-charset or all the charset are not supported
   // Get the charset from document
   nsCOMPtr<nsIDocument> doc;
-  aForm->GetDocument(*getter_AddRefs(doc));
+  aForm->GetDocument(getter_AddRefs(doc));
   if (doc) {
     nsAutoString docCharset;
     rv = doc->GetDocumentCharacterSet(docCharset);

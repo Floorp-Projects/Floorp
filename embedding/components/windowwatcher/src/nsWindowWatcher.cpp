@@ -696,7 +696,7 @@ nsWindowWatcher::OpenWindowJS(nsIDOMWindow *aParent,
       nsCOMPtr<nsIDocumentViewer> parentDocViewer(do_QueryInterface(parentContentViewer));
       if (parentDocViewer) {
         nsCOMPtr<nsIDocument> doc;
-        parentDocViewer->GetDocument(*getter_AddRefs(doc));
+        parentDocViewer->GetDocument(getter_AddRefs(doc));
         
         nsCOMPtr<nsIContentViewer> newContentViewer;
         newDocShell->GetContentViewer(getter_AddRefs(newContentViewer));
@@ -1140,7 +1140,7 @@ nsWindowWatcher::URIfromURL(const char *aURL,
       nsCOMPtr<nsIDocument> doc;
       doc = do_QueryInterface(domDoc);
       if (doc) {
-        doc->GetBaseURL(*getter_AddRefs(baseURI));
+        doc->GetBaseURL(getter_AddRefs(baseURI));
 
         if (!baseURI) {
           doc->GetDocumentURL(getter_AddRefs(baseURI));

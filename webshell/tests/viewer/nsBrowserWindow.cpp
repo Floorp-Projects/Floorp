@@ -479,11 +479,10 @@ GetPresShellFor(nsIDocShell* aDocShell)
       nsIDocumentViewer* docv = nsnull;
       cv->QueryInterface(kIDocumentViewerIID, (void**) &docv);
       if (nsnull != docv) {
-        nsIPresContext* cx;
-        docv->GetPresContext(cx);
+        nsCOMPtr<nsIPresContext> cx;
+        docv->GetPresContext(getter_AddRefs(cx));
         if (nsnull != cx) {
           cx->GetShell(&shell);
-          NS_RELEASE(cx);
         }
         NS_RELEASE(docv);
       }
@@ -1552,15 +1551,14 @@ nsnull, r.x, r.y, r.width, r.height);
 
 
   // Create a document viewer and bind it to the webshell
-  nsIDocumentViewer* docv;
-  aDocumentViewer->CreateDocumentViewerUsing(aPresContext, docv);
+  nsCOMPtr<nsIDocumentViewer> docv;
+  aDocumentViewer->CreateDocumentViewerUsing(aPresContext,
+                                             getter_AddRefs(docv));
   docv->SetContainer(mWebBrowser);
   nsCOMPtr<nsIContentViewerContainer> cvContainer = do_QueryInterface(mDocShell);
   cvContainer->Embed(docv, "duh", nsnull);
 
-
   webBrowserWin->SetVisibility(PR_TRUE);
-  NS_RELEASE(docv);
 
   return NS_OK;
 }
@@ -2241,12 +2239,10 @@ nsIDOMDocument* nsBrowserWindow::GetDOMDocument(nsIDocShell *aDocShell)
     if (nsnull != mCViewer) {
       nsIDocumentViewer* mDViewer;
       if (NS_OK == mCViewer->QueryInterface(kIDocumentViewerIID, (void**) &mDViewer)) {
-        nsIDocument* mDoc;
-        mDViewer->GetDocument(mDoc);
+        nsCOMPtr<nsIDocument> mDoc;
+        mDViewer->GetDocument(getter_AddRefs(mDoc));
         if (nsnull != mDoc) {
-          if (NS_OK == mDoc->QueryInterface(kIDOMDocumentIID, (void**) &domDoc)) {
-          }
-          NS_RELEASE(mDoc);
+          mDoc->QueryInterface(kIDOMDocumentIID, (void**) &domDoc);
         }
         NS_RELEASE(mDViewer);
       }
@@ -2347,8 +2343,8 @@ nsBrowserWindow::DoEditorMode(nsIDocShell *aDocShell)
       nsIDocumentViewer* mDViewer;
       if (NS_OK == mCViewer->QueryInterface(kIDocumentViewerIID, (void**) &mDViewer)) 
       {
-        nsIDocument* mDoc;
-        mDViewer->GetDocument(mDoc);
+        nsCOMPtr<nsIDocument> mDoc;
+        mDViewer->GetDocument(getter_AddRefs(mDoc));
         if (nsnull != mDoc) {
           nsIDOMDocument* mDOMDoc;
           if (NS_OK == mDoc->QueryInterface(kIDOMDocumentIID, (void**) &mDOMDoc)) 
@@ -2358,7 +2354,6 @@ nsBrowserWindow::DoEditorMode(nsIDocShell *aDocShell)
             NS_RELEASE(mDOMDoc);
             NS_IF_RELEASE(shell);
           }
-          NS_RELEASE(mDoc);
         }
         NS_RELEASE(mDViewer);
       }
@@ -2387,8 +2382,8 @@ nsBrowserWindow::DoEditorTest(nsIDocShell *aDocShell, PRInt32 aCommandID)
       nsIDocumentViewer* mDViewer;
       if (NS_OK == mCViewer->QueryInterface(kIDocumentViewerIID, (void**) &mDViewer)) 
       {
-        nsIDocument* mDoc;
-        mDViewer->GetDocument(mDoc);
+        nsCOMPtr<nsIDocument> mDoc;
+        mDViewer->GetDocument(getter_AddRefs(mDoc));
         if (nsnull != mDoc) {
           nsIDOMDocument* mDOMDoc;
           if (NS_OK == mDoc->QueryInterface(kIDOMDocumentIID, (void**) &mDOMDoc)) 
@@ -2396,7 +2391,6 @@ nsBrowserWindow::DoEditorTest(nsIDocShell *aDocShell, PRInt32 aCommandID)
             NS_DoEditorTest(aCommandID);
             NS_RELEASE(mDOMDoc);
           }
-          NS_RELEASE(mDoc);
         }
         NS_RELEASE(mDViewer);
       }

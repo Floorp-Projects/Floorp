@@ -44,9 +44,9 @@ Element::Element(nsIDOMElement* aElement, Document* aOwner) :
     nsCOMPtr<nsIContent> cont(do_QueryInterface(aElement));
     NS_ASSERTION(cont, "Element doesn't implement nsIContent");
     nsCOMPtr<nsINodeInfo> nodeInfo;
-    cont->GetNodeInfo(*getter_AddRefs(nodeInfo));
+    cont->GetNodeInfo(getter_AddRefs(nodeInfo));
     NS_ASSERTION(nodeInfo, "a element without nodeinfo");
-    nodeInfo->GetNamespaceID(mNamespaceID);
+    mNamespaceID = nodeInfo->GetNamespaceID();
 }
 
 /**
@@ -116,6 +116,6 @@ MBool Element::getLocalName(nsIAtom** aLocalName)
     if (!cont) {
         return MB_FALSE;
     }
-    cont->GetTag(*aLocalName);
+    cont->GetTag(aLocalName);
     return MB_TRUE;
 }

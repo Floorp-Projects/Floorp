@@ -849,9 +849,9 @@ nsXULDocument::SynchronizeBroadcastListener(nsIDOMElement   *aBroadcaster,
             PRInt32 nameSpaceID;
             nsCOMPtr<nsIAtom> name;
             nsCOMPtr<nsIAtom> prefix;
-            broadcaster->GetAttrNameAt(count, nameSpaceID,
-                                       *getter_AddRefs(name),
-                                       *getter_AddRefs(prefix));
+            broadcaster->GetAttrNameAt(count, &nameSpaceID,
+                                       getter_AddRefs(name),
+                                       getter_AddRefs(prefix));
 
             // _Don't_ push the |id|, |ref|, or |persist| attribute's value!
             if (! CanBroadcast(nameSpaceID, name))
@@ -1038,10 +1038,10 @@ nsXULDocument::ExecuteOnBroadcastHandlerFor(nsIContent* aBroadcaster,
         // aBroadcaster, and an |attribute| element that tells us what
         // attriubtes we're listening for.
         nsCOMPtr<nsIContent> child;
-        listener->ChildAt(i, *getter_AddRefs(child));
+        listener->ChildAt(i, getter_AddRefs(child));
 
         nsCOMPtr<nsIAtom> tag;
-        child->GetTag(*getter_AddRefs(tag));
+        child->GetTag(getter_AddRefs(tag));
         if (tag != nsXULAtoms::observes)
             continue;
 
@@ -1189,7 +1189,7 @@ nsXULDocument::ContentAppended(nsIContent* aContainer,
 
     for (PRInt32 i = aNewIndexInContainer; i < count; ++i) {
         nsCOMPtr<nsIContent> child;
-        rv = aContainer->ChildAt(i, *getter_AddRefs(child));
+        rv = aContainer->ChildAt(i, getter_AddRefs(child));
         if (NS_FAILED(rv)) return rv;
 
         rv = AddSubtreeToDocument(child);
@@ -1478,7 +1478,7 @@ nsXULDocument::CreateElement(const nsAString& aTagName,
 
     // CreateElement in the XUL document defaults to the XUL namespace.
     mNodeInfoManager->GetNodeInfo(name, prefix, kNameSpaceID_XUL,
-                                  *getter_AddRefs(ni));
+                                  getter_AddRefs(ni));
 
     nsCOMPtr<nsIContent> result;
     rv = CreateElement(ni, getter_AddRefs(result));
@@ -1547,14 +1547,12 @@ nsXULDocument::Persist(const nsAString& aID,
     if (! element)
         return NS_ERROR_UNEXPECTED;
 
-    PRInt32 nameSpaceID;
-    nsCOMPtr<nsIAtom> tag;
     nsCOMPtr<nsINodeInfo> ni;
-    rv = element->NormalizeAttrString(aAttr, *getter_AddRefs(ni));
+    rv = element->NormalizeAttrString(aAttr, getter_AddRefs(ni));
     if (NS_FAILED(rv)) return rv;
 
-    ni->GetNameAtom(*getter_AddRefs(tag));
-    ni->GetNamespaceID(nameSpaceID);
+    nsCOMPtr<nsIAtom> tag = ni->GetNameAtom();
+    PRInt32 nameSpaceID = ni->GetNamespaceID();
 
     rv = Persist(element, nameSpaceID, tag);
     if (NS_FAILED(rv)) return rv;
@@ -1912,7 +1910,7 @@ nsXULDocument::AddElementToDocumentPost(nsIContent* aElement)
 {
     // We need to pay special attention to the keyset tag to set up a listener
     nsCOMPtr<nsIAtom> tag;
-    aElement->GetTag(*getter_AddRefs(tag));
+    aElement->GetTag(getter_AddRefs(tag));
     if (tag == nsXULAtoms::keyset) {
         // Create our XUL key listener and hook it up.
         nsCOMPtr<nsIXBLService> xblService(do_GetService("@mozilla.org/xbl;1"));
@@ -1965,7 +1963,7 @@ nsXULDocument::AddSubtreeToDocument(nsIContent* aElement)
 
     while (--count >= 0) {
         nsCOMPtr<nsIContent> child;
-        rv = aElement->ChildAt(count, *getter_AddRefs(child));
+        rv = aElement->ChildAt(count, getter_AddRefs(child));
         if (NS_FAILED(rv)) return rv;
 
         rv = AddSubtreeToDocument(child);
@@ -1991,7 +1989,7 @@ nsXULDocument::RemoveSubtreeFromDocument(nsIContent* aElement)
 
     while (--count >= 0) {
         nsCOMPtr<nsIContent> child;
-        rv = aElement->ChildAt(count, *getter_AddRefs(child));
+        rv = aElement->ChildAt(count, getter_AddRefs(child));
         if (NS_FAILED(rv)) return rv;
 
         rv = RemoveSubtreeFromDocument(child);
@@ -2380,8 +2378,7 @@ nsXULDocument::CreateElement(nsINodeInfo *aNodeInfo, nsIContent** aResult)
         if (NS_FAILED(rv)) return rv;
     }
     else {
-        PRInt32 namespaceID;
-        aNodeInfo->GetNamespaceID(namespaceID);
+        PRInt32 namespaceID = aNodeInfo->GetNamespaceID();
 
         nsCOMPtr<nsIElementFactory> elementFactory;
         GetElementFactory(namespaceID, getter_AddRefs(elementFactory));
@@ -2704,17 +2701,17 @@ nsXULDocument::ContextStack::IsInsideXULTemplate()
         nsCOMPtr<nsIContent> element = dont_QueryInterface(mTop->mElement);
         while (element) {
             PRInt32 nameSpaceID;
-            element->GetNameSpaceID(nameSpaceID);
+            element->GetNameSpaceID(&nameSpaceID);
             if (nameSpaceID == kNameSpaceID_XUL) {
                 nsCOMPtr<nsIAtom> tag;
-                element->GetTag(*getter_AddRefs(tag));
+                element->GetTag(getter_AddRefs(tag));
                 if (tag.get() == nsXULAtoms::Template) {
                     return PR_TRUE;
                 }
             }
 
             nsCOMPtr<nsIContent> parent;
-            element->GetParent(*getter_AddRefs(parent));
+            element->GetParent(getter_AddRefs(parent));
             element = parent;
         }
     }
@@ -3520,8 +3517,7 @@ nsXULDocument::CreateElement(nsXULPrototypeElement* aPrototype, nsIContent** aRe
         // what. So we need to copy everything out of the prototype
         // into the element.
 
-        PRInt32 namespaceID;
-        aPrototype->mNodeInfo->GetNamespaceID(namespaceID);
+        PRInt32 namespaceID = aPrototype->mNodeInfo->GetNamespaceID();
 
         nsCOMPtr<nsIElementFactory> elementFactory;
         GetElementFactory(namespaceID,
@@ -3638,8 +3634,8 @@ nsXULDocument::CreateTemplateBuilder(nsIContent* aElement)
         xblService->ResolveTag(aElement, &nameSpaceID, getter_AddRefs(baseTag));
     }
     else {
-        aElement->GetNameSpaceID(nameSpaceID);
-        aElement->GetTag(*getter_AddRefs(baseTag));
+        aElement->GetNameSpaceID(&nameSpaceID);
+        aElement->GetTag(getter_AddRefs(baseTag));
     }
 
     if ((nameSpaceID == kNameSpaceID_XUL) && (baseTag == nsXULAtoms::tree)) {
@@ -3674,7 +3670,7 @@ nsXULDocument::CreateTemplateBuilder(nsIContent* aElement)
         if (! bodyContent) {
             // Get the document.
             nsCOMPtr<nsIDocument> doc;
-            aElement->GetDocument(*getter_AddRefs(doc));
+            aElement->GetDocument(getter_AddRefs(doc));
             NS_ASSERTION(doc, "no document");
             if (! doc)
                 return NS_ERROR_UNEXPECTED;
@@ -3854,7 +3850,9 @@ nsXULDocument::OverlayForwardReference::Merge(nsIContent* aTargetNode,
     for (i = 0; i < attrCount; ++i) {
         PRInt32 nameSpaceID;
         nsCOMPtr<nsIAtom> attr, prefix;
-        rv = aOverlayNode->GetAttrNameAt(i, nameSpaceID, *getter_AddRefs(attr), *getter_AddRefs(prefix));
+        rv = aOverlayNode->GetAttrNameAt(i, &nameSpaceID,
+                                         getter_AddRefs(attr),
+                                         getter_AddRefs(prefix));
         if (NS_FAILED(rv)) return rv;
 
         // We don't want to swap IDs, they should be the same.
@@ -3873,7 +3871,7 @@ nsXULDocument::OverlayForwardReference::Merge(nsIContent* aTargetNode,
         if (attr.get() == nsXULAtoms::removeelement &&
             value.EqualsIgnoreCase("true")) {
             nsCOMPtr<nsIContent> parent;
-            rv = aTargetNode->GetParent(*getter_AddRefs(parent));
+            rv = aTargetNode->GetParent(getter_AddRefs(parent));
             if (NS_FAILED(rv)) return rv;
 
             rv = RemoveElement(parent, aTargetNode);
@@ -3883,14 +3881,14 @@ nsXULDocument::OverlayForwardReference::Merge(nsIContent* aTargetNode,
         }
 
         nsCOMPtr<nsINodeInfo> ni;
-        aTargetNode->GetNodeInfo(*getter_AddRefs(ni));
+        aTargetNode->GetNodeInfo(getter_AddRefs(ni));
 
         if (ni) {
             nsCOMPtr<nsINodeInfoManager> nimgr;
-            ni->GetNodeInfoManager(*getter_AddRefs(nimgr));
+            ni->GetNodeInfoManager(getter_AddRefs(nimgr));
 
             nimgr->GetNodeInfo(attr, prefix, nameSpaceID,
-                               *getter_AddRefs(ni));
+                               getter_AddRefs(ni));
         }
 
         rv = aTargetNode->SetAttr(ni, value, PR_FALSE);
@@ -3911,7 +3909,7 @@ nsXULDocument::OverlayForwardReference::Merge(nsIContent* aTargetNode,
 
     for (i = 0; i < childCount; ++i) {
         nsCOMPtr<nsIContent> currContent;
-        rv = aOverlayNode->ChildAt(0, *getter_AddRefs(currContent));
+        rv = aOverlayNode->ChildAt(0, getter_AddRefs(currContent));
         if (NS_FAILED(rv)) return rv;
 
         nsAutoString id;
@@ -3921,7 +3919,7 @@ nsXULDocument::OverlayForwardReference::Merge(nsIContent* aTargetNode,
         nsCOMPtr<nsIDOMElement> nodeInDocument;
         if (rv == NS_CONTENT_ATTR_HAS_VALUE) {
             nsCOMPtr<nsIDocument> document;
-            rv = aTargetNode->GetDocument(*getter_AddRefs(document));
+            rv = aTargetNode->GetDocument(getter_AddRefs(document));
             if (NS_FAILED(rv)) return rv;
 
             nsCOMPtr<nsIDOMDocument> domDocument(do_QueryInterface(document));
@@ -4021,7 +4019,7 @@ nsXULDocument::BroadcasterHookup::~BroadcasterHookup()
         nsresult rv;
 
         nsCOMPtr<nsIAtom> tag;
-        rv = mObservesElement->GetTag(*getter_AddRefs(tag));
+        rv = mObservesElement->GetTag(getter_AddRefs(tag));
         if (NS_FAILED(rv)) return;
 
         nsAutoString broadcasterID;
@@ -4099,11 +4097,11 @@ nsXULDocument::CheckBroadcasterHookup(nsXULDocument* aDocument,
     *aDidResolve = PR_FALSE;
 
     PRInt32 nameSpaceID;
-    rv = aElement->GetNameSpaceID(nameSpaceID);
+    rv = aElement->GetNameSpaceID(&nameSpaceID);
     if (NS_FAILED(rv)) return rv;
 
     nsCOMPtr<nsIAtom> tag;
-    rv = aElement->GetTag(*getter_AddRefs(tag));
+    rv = aElement->GetTag(getter_AddRefs(tag));
     if (NS_FAILED(rv)) return rv;
 
     nsCOMPtr<nsIDOMElement> listener;
@@ -4117,11 +4115,11 @@ nsXULDocument::CheckBroadcasterHookup(nsXULDocument* aDocument,
         // broadcaster element, and an 'attribute' element, which
         // specifies the name of the attribute to observe.
         nsCOMPtr<nsIContent> parent;
-        rv = aElement->GetParent(*getter_AddRefs(parent));
+        rv = aElement->GetParent(getter_AddRefs(parent));
         if (NS_FAILED(rv)) return rv;
 
         nsCOMPtr<nsIAtom> parentTag;
-        rv = parent->GetTag(*getter_AddRefs(parentTag));
+        rv = parent->GetTag(getter_AddRefs(parentTag));
         if (NS_FAILED(rv)) return rv;
 
         // If we're still parented by an 'overlay' tag, then we haven't
@@ -4157,7 +4155,7 @@ nsXULDocument::CheckBroadcasterHookup(nsXULDocument* aDocument,
               // We've got something in the command attribute.  We only treat this as
               // a normal broadcaster if we are not a menuitem or a key.
 
-              aElement->GetTag(*getter_AddRefs(tag));
+              aElement->GetTag(getter_AddRefs(tag));
               if (tag.get() == nsXULAtoms::menuitem || tag.get() == nsXULAtoms::key) {
                 *aNeedsHookup = PR_FALSE;
                 return NS_OK;
@@ -4206,7 +4204,7 @@ nsXULDocument::CheckBroadcasterHookup(nsXULDocument* aDocument,
             return rv;
 
         nsCOMPtr<nsIAtom> tag2;
-        rv = content->GetTag(*getter_AddRefs(tag2));
+        rv = content->GetTag(getter_AddRefs(tag2));
         if (NS_FAILED(rv)) return rv;
 
         nsAutoString tagStr;
@@ -4254,7 +4252,7 @@ nsXULDocument::InsertElement(nsIContent* aParent, nsIContent* aChild)
 
     if (rv == NS_CONTENT_ATTR_HAS_VALUE) {
         nsCOMPtr<nsIDocument> document;
-        rv = aParent->GetDocument(*getter_AddRefs(document));
+        rv = aParent->GetDocument(getter_AddRefs(document));
         if (NS_FAILED(rv)) return rv;
 
         nsCOMPtr<nsIDOMDocument> domDocument(do_QueryInterface(document));

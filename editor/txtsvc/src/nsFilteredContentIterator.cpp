@@ -229,7 +229,7 @@ ContentToParentOffset(nsIContent *aContent, nsIDOMNode **aParent, PRInt32 *aOffs
     return;
 
   nsCOMPtr<nsIContent> parent;
-  nsresult rv = aContent->GetParent(*getter_AddRefs(parent));
+  nsresult rv = aContent->GetParent(getter_AddRefs(parent));
 
   if (NS_FAILED(rv) || !parent)
     return;

@@ -97,11 +97,11 @@ nsTableCellCollection::GetLength(PRUint32* aLength)
     nsCOMPtr<nsIContent> child;
     PRUint32 childIndex = 0;
 
-    mParent->ChildAt(childIndex, *getter_AddRefs(child));
+    mParent->ChildAt(childIndex, getter_AddRefs(child));
 
     while (child) {
       nsCOMPtr<nsIAtom> childTag;
-      child->GetTag(*getter_AddRefs(childTag));
+      child->GetTag(getter_AddRefs(childTag));
 
       if ((nsHTMLAtoms::td == childTag.get()) ||
           (nsHTMLAtoms::th == childTag.get())) {
@@ -109,7 +109,7 @@ nsTableCellCollection::GetLength(PRUint32* aLength)
       }
 
       childIndex++;
-      mParent->ChildAt(childIndex, *getter_AddRefs(child));
+      mParent->ChildAt(childIndex, getter_AddRefs(child));
     }
   }
 
@@ -128,12 +128,12 @@ nsTableCellCollection::Item(PRUint32     aIndex,
     nsCOMPtr<nsIContent> child;
     PRUint32 childIndex = 0;
 
-    mParent->ChildAt(childIndex, *getter_AddRefs(child));
+    mParent->ChildAt(childIndex, getter_AddRefs(child));
 
     while (child) {
       nsCOMPtr<nsIAtom> childTag;
 
-      child->GetTag(*getter_AddRefs(childTag));
+      child->GetTag(getter_AddRefs(childTag));
 
       if ((nsHTMLAtoms::td == childTag.get()) ||
           (nsHTMLAtoms::th == childTag.get())) {
@@ -147,7 +147,7 @@ nsTableCellCollection::Item(PRUint32     aIndex,
       }
 
       childIndex++;
-      mParent->ChildAt(childIndex, *getter_AddRefs(child));
+      mParent->ChildAt(childIndex, getter_AddRefs(child));
     }
   }
 
@@ -200,7 +200,7 @@ void DebugList(nsIDOMHTMLTableElement* aTable) {
   nsCOMPtr<nsIHTMLContent> content = do_QueryInterface(aTable);
   if (content) {
     nsCOMPtr<nsIDocument> doc;
-    result = content->GetDocument(*getter_AddRefs(doc));
+    result = content->GetDocument(getter_AddRefs(doc));
     if (doc) {
       nsCOMPtr<nsIContent> root;
       doc->GetRootContent(getter_AddRefs(root));
@@ -441,7 +441,7 @@ nsHTMLTableRowElement::InsertCell(PRInt32 aIndex, nsIDOMHTMLElement** aValue)
 
   // create the cell
   nsCOMPtr<nsINodeInfo> nodeInfo;
-  mNodeInfo->NameChanged(nsHTMLAtoms::td, *getter_AddRefs(nodeInfo));
+  mNodeInfo->NameChanged(nsHTMLAtoms::td, getter_AddRefs(nodeInfo));
 
   nsCOMPtr<nsIHTMLContent> cellContent;
   nsresult rv = NS_NewHTMLTableCellElement(getter_AddRefs(cellContent),

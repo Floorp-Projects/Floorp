@@ -111,10 +111,10 @@ nsGfxButtonControlFrame::IsFileBrowseButton(PRInt32 type)
     // Check to see if parent is a file input
     nsresult result;
     nsCOMPtr<nsIContent> parentContent;
-    result = mContent->GetParent(*getter_AddRefs(parentContent));
+    result = mContent->GetParent(getter_AddRefs(parentContent));
     if (NS_SUCCEEDED(result) && parentContent) {
       nsCOMPtr<nsIAtom> atom;
-      result = parentContent->GetTag(*getter_AddRefs(atom));
+      result = parentContent->GetTag(getter_AddRefs(atom));
       if (NS_SUCCEEDED(result) && atom) {
         if (atom.get() == nsHTMLAtoms::input) {
 

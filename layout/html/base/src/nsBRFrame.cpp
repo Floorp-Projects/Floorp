@@ -228,7 +228,7 @@ NS_IMETHODIMP BRFrame::GetContentAndOffsetsFromPoint(nsIPresContext* aCX,
 {
   if (!mContent)
     return NS_ERROR_NULL_POINTER;
-  nsresult result = mContent->GetParent(*aContent);
+  nsresult result = mContent->GetParent(aContent);
   if (NS_SUCCEEDED(result) && *aContent)
     result = (*aContent)->IndexOf(mContent, aOffsetBegin);
   aOffsetEnd = aOffsetBegin;
@@ -244,7 +244,7 @@ NS_IMETHODIMP BRFrame::PeekOffset(nsIPresContext* aPresContext, nsPeekOffsetStru
   nsCOMPtr<nsIContent> parentContent;
   PRInt32 offsetBegin; //offset of this content in its parents child list. base 0
 
-  nsresult result = mContent->GetParent(*getter_AddRefs(parentContent));
+  nsresult result = mContent->GetParent(getter_AddRefs(parentContent));
 
 
   if (NS_SUCCEEDED(result) && parentContent)

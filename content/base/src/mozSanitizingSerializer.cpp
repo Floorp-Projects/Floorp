@@ -213,7 +213,7 @@ mozSanitizingHTMLSerializer::GetIdForContent(nsIContent* aContent,
   }
 
   nsCOMPtr<nsIAtom> tagname;
-  mContent->GetTag(*getter_AddRefs(tagname));
+  mContent->GetTag(getter_AddRefs(tagname));
   if (!tagname)
     return NS_ERROR_FAILURE;
   

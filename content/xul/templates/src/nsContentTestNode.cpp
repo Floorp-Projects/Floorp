@@ -89,7 +89,7 @@ ElementToString(nsIContent *aContent, nsString &aResult)
     aResult.Truncate();
 
     nsCOMPtr<nsIAtom> tag;
-    aContent->GetTag(*getter_AddRefs(tag));
+    aContent->GetTag(getter_AddRefs(tag));
     tag->ToString(aResult);
 
     aResult.Append(PRUnichar('@'));
@@ -139,7 +139,7 @@ nsContentTestNode::FilterInstantiations(InstantiationSet& aInstantiations, void*
             if (mTag) {
                 // If we're supposed to be checking the tag, do it now.
                 nsCOMPtr<nsIAtom> tag;
-                content->GetTag(*getter_AddRefs(tag));
+                content->GetTag(getter_AddRefs(tag));
 
                 if (tag != mTag)
                     consistent = PR_FALSE;
@@ -179,7 +179,7 @@ nsContentTestNode::FilterInstantiations(InstantiationSet& aInstantiations, void*
             if (mTag) {
                 // If we're supposed to be checking the tag, do it now.
                 nsCOMPtr<nsIAtom> tag;
-                content->GetTag(*getter_AddRefs(tag));
+                content->GetTag(getter_AddRefs(tag));
 
                 if (tag != mTag) {
                     consistent = PR_FALSE;
@@ -250,7 +250,7 @@ nsContentTestNode::FilterInstantiations(InstantiationSet& aInstantiations, void*
                         // If we've got a tag, check it to ensure
                         // we're consistent.
                         nsCOMPtr<nsIAtom> tag;
-                        content->GetTag(*getter_AddRefs(tag));
+                        content->GetTag(getter_AddRefs(tag));
 
                         if (tag != mTag)
                             continue;

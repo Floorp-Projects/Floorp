@@ -140,14 +140,14 @@ nsFileControlFrame::CreateAnonymousContent(nsIPresContext* aPresContext,
 {
   // Get the NodeInfoManager and tag necessary to create input elements
   nsCOMPtr<nsIDocument> doc;
-  mContent->GetDocument(*getter_AddRefs(doc));
+  mContent->GetDocument(getter_AddRefs(doc));
   nsCOMPtr<nsINodeInfoManager> nimgr;
-  nsresult rv = doc->GetNodeInfoManager(*getter_AddRefs(nimgr));
+  nsresult rv = doc->GetNodeInfoManager(getter_AddRefs(nimgr));
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsINodeInfo> nodeInfo;
   nimgr->GetNodeInfo(nsHTMLAtoms::input, nsnull, kNameSpaceID_None,
-                     *getter_AddRefs(nodeInfo));
+                     getter_AddRefs(nodeInfo));
 
   nsCOMPtr<nsIElementFactory> ef(do_GetService(kHTMLElementFactoryCID,&rv));
   NS_ENSURE_SUCCESS(rv, rv);
@@ -272,7 +272,7 @@ nsFileControlFrame::MouseClick(nsIDOMEvent* aMouseEvent)
     return NS_FAILED(result) ? result : NS_ERROR_FAILURE;
 
   nsCOMPtr<nsIDocument> doc;
-  result = content->GetDocument(*getter_AddRefs(doc));
+  result = content->GetDocument(getter_AddRefs(doc));
   if (!doc)
     return NS_FAILED(result) ? result : NS_ERROR_FAILURE;
 
@@ -462,7 +462,7 @@ nsFileControlFrame::GetTextControlFrame(nsIPresContext* aPresContext, nsIFrame* 
     nsresult res = childFrame->GetContent(getter_AddRefs(content));
     if (NS_SUCCEEDED(res) && content) {
       nsCOMPtr<nsIAtom> atom;
-      res = content->GetTag(*getter_AddRefs(atom));
+      res = content->GetTag(getter_AddRefs(atom));
       if (NS_SUCCEEDED(res) && atom) {
         if (atom.get() == nsHTMLAtoms::input) {
 

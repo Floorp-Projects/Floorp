@@ -4100,7 +4100,7 @@ GlobalWindowImpl::GetPrivateParent(nsPIDOMWindow ** aParent)
       return NS_OK;             // This is ok, just means a null parent.
 
     nsCOMPtr<nsIDocument> doc;
-    chromeElement->GetDocument(*getter_AddRefs(doc));
+    chromeElement->GetDocument(getter_AddRefs(doc));
     if (!doc)
       return NS_OK;             // This is ok, just means a null parent.
 
@@ -4142,7 +4142,7 @@ GlobalWindowImpl::GetPrivateRoot(nsIDOMWindowInternal ** aParent)
   nsCOMPtr<nsIContent> chromeElement(do_QueryInterface(mChromeEventHandler));
   if (chromeElement) {
     nsCOMPtr<nsIDocument> doc;
-    chromeElement->GetDocument(*getter_AddRefs(doc));
+    chromeElement->GetDocument(getter_AddRefs(doc));
     if (doc) {
       nsCOMPtr<nsIScriptGlobalObject> globalObject;
       doc->GetScriptGlobalObject(getter_AddRefs(globalObject));

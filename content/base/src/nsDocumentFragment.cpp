@@ -152,18 +152,19 @@ public:
                      nsAString& aResult) const
     { return NS_CONTENT_ATTR_NOT_THERE; }
   NS_IMETHOD GetAttr(PRInt32 aNameSpaceID, nsIAtom* aName, 
-                     nsIAtom*& aPrefix, nsAString& aResult) const
+                     nsIAtom** aPrefix, nsAString& aResult) const
     { return NS_CONTENT_ATTR_NOT_THERE; }
   NS_IMETHOD UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute, 
                        PRBool aNotify)
     { return NS_OK; }
   NS_IMETHOD GetAttrNameAt(PRInt32 aIndex,
-                           PRInt32& aNameSpaceID, 
-                           nsIAtom*& aName,
-                           nsIAtom*& aPrefix) const
+                           PRInt32* aNameSpaceID,
+                           nsIAtom** aName,
+                           nsIAtom** aPrefix) const
     {
-      aName = nsnull;
-      aPrefix = nsnull;
+      *aNameSpaceID = kNameSpaceID_None;
+      *aName = nsnull;
+      *aPrefix = nsnull;
       return NS_ERROR_ILLEGAL_VALUE;
     }
   NS_IMETHOD HandleDOMEvent(nsIPresContext* aPresContext,
@@ -193,15 +194,15 @@ NS_NewDocumentFragment(nsIDOMDocumentFragment** aInstancePtrResult,
   nsresult rv;
 
   if (aOwnerDocument) {
-    rv = aOwnerDocument->GetNodeInfoManager(*getter_AddRefs(nimgr));
+    rv = aOwnerDocument->GetNodeInfoManager(getter_AddRefs(nimgr));
   } else {
-    rv = nsNodeInfoManager::GetAnonymousManager(*getter_AddRefs(nimgr));
+    rv = nsNodeInfoManager::GetAnonymousManager(getter_AddRefs(nimgr));
   }
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = nimgr->GetNodeInfo(NS_LITERAL_STRING("#document-fragment"),
                           nsnull, kNameSpaceID_None,
-                          *getter_AddRefs(nodeInfo));
+                          getter_AddRefs(nodeInfo));
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsDocumentFragment* it = new nsDocumentFragment(aOwnerDocument);
@@ -258,7 +259,7 @@ nsDocumentFragment::DisconnectChildren()
   ChildCount(count);
 
   for (i = 0; i < count; i++) {
-    ChildAt(i, *getter_AddRefs(child));
+    ChildAt(i, getter_AddRefs(child));
     NS_ASSERTION(child, "Bad content container");
 
     child->SetParent(nsnull);
@@ -276,10 +277,10 @@ nsDocumentFragment::ReconnectChildren()
   ChildCount(count);
 
   for (i = 0; i < count; i++) {
-    ChildAt(i, *getter_AddRefs(child));
+    ChildAt(i, getter_AddRefs(child));
     NS_ASSERTION(child, "Bad content container");
 
-    child->GetParent(*getter_AddRefs(parent));
+    child->GetParent(getter_AddRefs(parent));
 
     if (parent) {
       PRInt32 indx = -1;

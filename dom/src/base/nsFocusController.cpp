@@ -222,12 +222,12 @@ nsFocusController::MoveFocus(PRBool aForward, nsIDOMElement* aElt)
   nsCOMPtr<nsIContent> content;
   if (aElt) {
     content = do_QueryInterface(aElt);
-    content->GetDocument(*getter_AddRefs(doc));
+    content->GetDocument(getter_AddRefs(doc));
   }
   else {
     if (mCurrentElement) {
       content = do_QueryInterface(mCurrentElement);
-      content->GetDocument(*getter_AddRefs(doc));
+      content->GetDocument(getter_AddRefs(doc));
       content = nsnull;
     }
     else if (mCurrentWindow) {

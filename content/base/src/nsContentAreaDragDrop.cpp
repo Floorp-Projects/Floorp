@@ -623,7 +623,7 @@ nsContentAreaDragDrop::GetAnchorURL(nsIDOMNode* inNode, nsAString& outURL)
         // ... or just get the ID
         nsCOMPtr<nsIXMLContent> xml(do_QueryInterface(inNode));
         nsCOMPtr<nsIAtom> id;
-        if (xml && NS_SUCCEEDED(xml->GetID(*getter_AddRefs(id))) && id) {
+        if (xml && NS_SUCCEEDED(xml->GetID(getter_AddRefs(id))) && id) {
           id->ToString(outURL);
         }
       }
@@ -1228,7 +1228,7 @@ nsresult nsContentAreaDragDrop::GetDraggableSelectionData(nsISelection* inSelect
             {
               PRInt32 childOffset = (anchorOffset < focusOffset) ? anchorOffset : focusOffset;
               nsCOMPtr<nsIContent> childContent;
-              selStartContent->ChildAt(childOffset, *getter_AddRefs(childContent));
+              selStartContent->ChildAt(childOffset, getter_AddRefs(childContent));
               // if we find an image, we'll fall into the node-dragging code,
               // rather the the selection-dragging code
               nsCOMPtr<nsIDOMHTMLImageElement> selectedImage;
