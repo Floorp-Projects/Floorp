@@ -32,6 +32,7 @@
 #include "nsIWebShell.h"
 #include "nsLayoutCID.h"
 #include "nsRDFContentSink.h"
+#include "nsINameSpaceManager.h"
 
 ////////////////////////////////////////////////////////////////////////
 
@@ -98,20 +99,24 @@ nsRDFDocumentContentSink::Init(nsIDocument* aDoc,
                                nsIURL* aURL,
                                nsIWebShell* aContainer)
 {
-    nsresult rv;
-
-    if (NS_FAILED(rv = nsRDFContentSink::Init(aURL)))
-        return rv;
-
     NS_PRECONDITION(aDoc && aContainer, "null ptr");
     if (!aDoc || !aContainer)
         return NS_ERROR_NULL_POINTER;
 
-    mDocument = aDoc;
-    NS_ADDREF(aDoc);
+    nsINameSpaceManager* nameSpaceManager = nsnull;
+    nsresult rv = aDoc->GetNameSpaceManager(nameSpaceManager);
 
-    mWebShell = aContainer;
-    NS_ADDREF(aContainer);
+    if (NS_SUCCEEDED(rv)) {
+      rv = nsRDFContentSink::Init(aURL, nameSpaceManager);
+      if (NS_SUCCEEDED(rv)) {
+        mDocument = aDoc;
+        NS_ADDREF(aDoc);
+
+        mWebShell = aContainer;
+        NS_ADDREF(aContainer);
+      }
+      NS_RELEASE(nameSpaceManager);
+    }
 
     return rv;
 }
@@ -209,6 +214,7 @@ nsRDFDocumentContentSink::LoadStyleSheet(nsIURL* aURL,
         nsICSSStyleSheet* sheet = nsnull;
         // XXX note: we are ignoring rv until the error code stuff in the
         // input routines is converted to use nsresult's
+        parser->SetCaseSensative(PR_TRUE);
         parser->Parse(aUIN, aURL, sheet);
         if (nsnull != sheet) {
             mDocument->AddStyleSheet(sheet);

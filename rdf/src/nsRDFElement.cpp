@@ -64,6 +64,7 @@
 #include "nsISupportsArray.h"
 #include "nsRDFCID.h"
 #include "nsRDFElement.h"
+#include "nsINameSpaceManager.h"
 
 ////////////////////////////////////////////////////////////////////////
 
@@ -209,8 +210,8 @@ NS_NewRDFElement(nsIRDFContent** result)
 
 nsRDFElement::nsRDFElement(void)
     : mDocument(nsnull),
-      mNameSpace(nsnull),
-      mNameSpaceId(gNameSpaceId_Unknown),
+      mNameSpacePrefix(nsnull),
+      mNameSpaceID(kNameSpaceID_Unknown),
       mScriptObject(nsnull),
       mResource(nsnull),
       mChildren(nsnull),
@@ -243,7 +244,7 @@ nsRDFElement::~nsRDFElement()
     // mDocument is not refcounted
     //NS_IF_RELEASE(mScriptObject); XXX don't forget!
     NS_IF_RELEASE(mChildren);
-    NS_IF_RELEASE(mNameSpace);
+    NS_IF_RELEASE(mNameSpacePrefix);
     NS_IF_RELEASE(mResource);
 }
 
@@ -1180,33 +1181,33 @@ nsRDFElement::HandleDOMEvent(nsIPresContext& aPresContext,
 // nsIXMLContent
 
 NS_IMETHODIMP 
-nsRDFElement::SetNameSpace(nsIAtom* aNameSpace)
+nsRDFElement::SetNameSpacePrefix(nsIAtom* aNameSpacePrefix)
 {
-    NS_IF_RELEASE(mNameSpace);
-    mNameSpace = aNameSpace;
-    NS_IF_ADDREF(mNameSpace);
+    NS_IF_RELEASE(mNameSpacePrefix);
+    mNameSpacePrefix = aNameSpacePrefix;
+    NS_IF_ADDREF(mNameSpacePrefix);
     return NS_OK;
 }
 
 NS_IMETHODIMP 
-nsRDFElement::GetNameSpace(nsIAtom*& aNameSpace)
+nsRDFElement::GetNameSpacePrefix(nsIAtom*& aNameSpacePrefix) const
 {
-    aNameSpace = mNameSpace;
-    NS_IF_ADDREF(mNameSpace);
+    aNameSpacePrefix = mNameSpacePrefix;
+    NS_IF_ADDREF(mNameSpacePrefix);
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsRDFElement::SetNameSpaceIdentifier(PRInt32 aNameSpaceId)
+nsRDFElement::SetNameSpaceID(PRInt32 aNameSpaceID)
 {
-    mNameSpaceId = aNameSpaceId;
+    mNameSpaceID = aNameSpaceID;
     return NS_OK;
 }
 
 NS_IMETHODIMP 
-nsRDFElement::GetNameSpaceIdentifier(PRInt32& aNameSpaceId)
+nsRDFElement::GetNameSpaceID(PRInt32& aNameSpaceID) const
 {
-    aNameSpaceId = mNameSpaceId;
+    aNameSpaceID = mNameSpaceID;
     return NS_OK;
 }
 

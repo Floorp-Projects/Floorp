@@ -55,6 +55,8 @@
 #include "nsIURL.h"
 #include "nsRDFContentSink.h"
 #include "nsVoidArray.h"
+#include "nsINameSpaceManager.h"
+#include "nsINameSpace.h"
 #include "prlog.h"
 #include "prmem.h"
 
@@ -93,16 +95,6 @@ static NS_DEFINE_IID(kIRDFContentSinkIID,      NS_IRDFCONTENTSINK_IID);
 
 static NS_DEFINE_CID(kRDFResourceManagerCID,   NS_RDFRESOURCEMANAGER_CID);
 static NS_DEFINE_CID(kRDFMemoryDataSourceCID,  NS_RDFMEMORYDATASOURCE_CID);
-
-////////////////////////////////////////////////////////////////////////
-
-struct NameSpaceStruct {
-    nsIAtom* mPrefix;
-    nsIAtom* mURI;
-    PRInt32  mNestLevel;
-};
-
-
 
 ////////////////////////////////////////////////////////////////////////
 // Utility routines
@@ -249,8 +241,9 @@ nsRDFContentSink::nsRDFContentSink()
       mRDFResourceManager(nsnull),
       mDataSource(nsnull),
       mGenSym(0),
-      mNameSpaces(nsnull),
-      mNestLevel(0),
+      mNameSpaceManager(nsnull),
+      mNameSpaceStack(nsnull),
+      mRDFNameSpaceID(kNameSpaceID_Unknown),
       mContextStack(nsnull),
       mText(nsnull),
       mTextLength(0),
@@ -269,28 +262,27 @@ nsRDFContentSink::~nsRDFContentSink()
         nsServiceManager::ReleaseService(kRDFResourceManagerCID, mRDFResourceManager);
 
     NS_IF_RELEASE(mDataSource);
-    if (mNameSpaces) {
-        // There shouldn't be any here except in an error condition
-        PRInt32 i, count = mNameSpaces->Count();
-    
-        for (i=0; i < count; i++) {
-            NameSpaceStruct *ns = (NameSpaceStruct*)mNameSpaces->ElementAt(i);
-            if (! ns)
-                continue;
 
-            NS_IF_RELEASE(ns->mPrefix);
-            NS_IF_RELEASE(ns->mURI);
-            delete ns;
+    NS_IF_RELEASE(mNameSpaceManager);
+    if (mNameSpaceStack) {
+        NS_PRECONDITION(0 == mNameSpaceStack->Count(), "namespace stack not empty");
+        // There shouldn't be any here except in an error condition
+        PRInt32 index = mNameSpaceStack->Count();
+
+        while (0 < index--) {
+          nsINameSpace* nameSpace = (nsINameSpace*)mNameSpaceStack->ElementAt(index);
+          NS_RELEASE(nameSpace);
         }
-        delete mNameSpaces;
+        delete mNameSpaceStack;
     }
     if (mContextStack) {
-        NS_PRECONDITION(GetCurrentNestLevel() == 0, "content stack not empty");
+        NS_PRECONDITION(0 == mContextStack->Count(), "content stack not empty");
 
         // XXX we should never need to do this, but, we'll write the
         // code all the same. If someone left the content stack dirty,
         // pop all the elements off the stack and release them.
-        while (GetCurrentNestLevel() > 0) {
+        PRInt32 index = mContextStack->Count();
+        while (0 < index--) {
             nsIRDFNode* resource;
             RDFContentSinkState state;
             PopContext(resource, state);
@@ -305,14 +297,17 @@ nsRDFContentSink::~nsRDFContentSink()
 ////////////////////////////////////////////////////////////////////////
 
 nsresult
-nsRDFContentSink::Init(nsIURL* aURL)
+nsRDFContentSink::Init(nsIURL* aURL, nsINameSpaceManager* aNameSpaceManager)
 {
-    NS_PRECONDITION(aURL, "null ptr");
-    if (! aURL)
+    NS_PRECONDITION((nsnull != aURL) && (nsnull != aNameSpaceManager), "null ptr");
+    if ((! aURL) || (! aNameSpaceManager))
         return NS_ERROR_NULL_POINTER;
 
     mDocumentURL = aURL;
     NS_ADDREF(aURL);
+
+    mNameSpaceManager = aNameSpaceManager;
+    NS_ADDREF(mNameSpaceManager);
 
     nsresult rv;
     if (NS_FAILED(rv = nsServiceManager::GetService(kRDFResourceManagerCID,
@@ -390,7 +385,7 @@ nsRDFContentSink::OpenContainer(const nsIParserNode& aNode)
     // list of an element before creating the element. This is because
     // the namespace prefix for an element might be declared within
     // the attribute list.
-    FindNameSpaceAttributes(aNode);
+    PushNameSpacesFrom(aNode);
 
     nsresult rv;
 
@@ -441,11 +436,11 @@ nsRDFContentSink::CloseContainer(const nsIParserNode& aNode)
         return NS_ERROR_UNEXPECTED; // XXX
     }
 
-    PRInt32 nestLevel = GetCurrentNestLevel();
+    PRInt32 nestLevel = mContextStack->Count();
     if (nestLevel == 0)
         mState = eRDFContentSinkState_InEpilog;
 
-    CloseNameSpacesAtNestLevel(nestLevel);
+    PopNameSpaces();
       
     NS_IF_RELEASE(resource);
     return NS_OK;
@@ -662,19 +657,13 @@ nsRDFContentSink::FlushText(PRBool aCreateTextNode, PRBool* aDidFlush)
 
 void
 nsRDFContentSink::SplitQualifiedName(const nsString& aQualifiedName,
-                                     nsString& rNameSpaceURI,
+                                     PRInt32& rNameSpaceID,
                                      nsString& rProperty)
 {
     rProperty = aQualifiedName;
-
-    nsAutoString nameSpace;
-    PRInt32 nsoffset = rProperty.Find(kNameSpaceSeparator);
-    if (-1 != nsoffset) {
-        rProperty.Left(nameSpace, nsoffset);
-        rProperty.Cut(0, nsoffset+1);
-    }
-
-    GetNameSpaceURI(nameSpace, rNameSpaceURI);
+    nsIAtom* prefix = CutNameSpacePrefix(rProperty);
+    rNameSpaceID = GetNameSpaceID(prefix);
+    NS_IF_RELEASE(prefix);
 }
 
 
@@ -684,15 +673,16 @@ nsRDFContentSink::GetIdAboutAttribute(const nsIParserNode& aNode,
 {
     // This corresponds to the dirty work of production [6.5]
     nsAutoString k;
-    nsAutoString ns, attr;
+    nsAutoString attr;
+    PRInt32 nameSpaceID;
     PRInt32 ac = aNode.GetAttributeCount();
 
     for (PRInt32 i = 0; i < ac; i++) {
         // Get upper-cased key
         const nsString& key = aNode.GetKeyAt(i);
-        SplitQualifiedName(key, ns, attr);
+        SplitQualifiedName(key, nameSpaceID, attr);
 
-        if (! ns.Equals(kRDFNameSpaceURI))
+        if (nameSpaceID != mRDFNameSpaceID)
             continue;
 
         // XXX you can't specify both, but we'll just pick up the
@@ -733,15 +723,16 @@ nsRDFContentSink::GetResourceAttribute(const nsIParserNode& aNode,
                                        nsString& rResource)
 {
     nsAutoString k;
-    nsAutoString ns, attr;
+    nsAutoString attr;
+    PRInt32 nameSpaceID;
     PRInt32 ac = aNode.GetAttributeCount();
 
     for (PRInt32 i = 0; i < ac; i++) {
         // Get upper-cased key
         const nsString& key = aNode.GetKeyAt(i);
-        SplitQualifiedName(key, ns, attr);
+        SplitQualifiedName(key, nameSpaceID, attr);
 
-        if (! ns.Equals(kRDFNameSpaceURI))
+        if (nameSpaceID != mRDFNameSpaceID)
             continue;
 
         // XXX you can't specify both, but we'll just pick up the
@@ -763,18 +754,19 @@ nsRDFContentSink::AddProperties(const nsIParserNode& aNode,
 {
     // Add tag attributes to the content attributes
     nsAutoString k, v;
-    nsAutoString ns, attr;
+    nsAutoString attr;
+    PRInt32 nameSpaceID;
     PRInt32 ac = aNode.GetAttributeCount();
 
     for (PRInt32 i = 0; i < ac; i++) {
         // Get upper-cased key
         const nsString& key = aNode.GetKeyAt(i);
-        SplitQualifiedName(key, ns, attr);
+        SplitQualifiedName(key, nameSpaceID, attr);
 
         // skip rdf:about, rdf:ID, and rdf:resource attributes; these
         // are all "special" and should've been dealt with by the
         // caller.
-        if (ns.Equals(kRDFNameSpaceURI) &&
+        if ((nameSpaceID == mRDFNameSpaceID) &&
             (attr.Equals(kTagRDF_about) ||
              attr.Equals(kTagRDF_ID) ||
              attr.Equals(kTagRDF_resource)))
@@ -783,8 +775,7 @@ nsRDFContentSink::AddProperties(const nsIParserNode& aNode,
         v = aNode.GetValueAt(i);
         rdf_StripAndConvert(v);
 
-        k.Truncate();
-        k.Append(ns);
+        GetNameSpaceURI(nameSpaceID, k);
         k.Append(attr);
 
         // Add the attribute to RDF
@@ -803,11 +794,12 @@ nsRDFContentSink::OpenRDF(const nsIParserNode& aNode)
     // ensure that we're actually reading RDF by making sure that the
     // opening tag is <rdf:RDF>, where "rdf:" corresponds to whatever
     // they've declared the standard RDF namespace to be.
-    nsAutoString ns, tag;
+    nsAutoString tag;
+    PRInt32 nameSpaceID;
     
-    SplitQualifiedName(aNode.GetText(), ns, tag);
+    SplitQualifiedName(aNode.GetText(), nameSpaceID, tag);
 
-    if (! ns.Equals(kRDFNameSpaceURI))
+    if (nameSpaceID != mRDFNameSpaceID)
         return NS_ERROR_UNEXPECTED;
 
     if (! tag.Equals(kTagRDF_RDF))
@@ -829,9 +821,10 @@ nsRDFContentSink::OpenObject(const nsIParserNode& aNode)
     if (! mRDFResourceManager)
         return NS_ERROR_NOT_INITIALIZED;
 
-    nsAutoString ns, tag;
+    nsAutoString tag;
+    PRInt32 nameSpaceID;
 
-    SplitQualifiedName(aNode.GetText(), ns, tag);
+    SplitQualifiedName(aNode.GetText(), nameSpaceID, tag);
 
     // Figure out the URI of this object, and create an RDF node for it.
     nsresult rv;
@@ -866,7 +859,7 @@ nsRDFContentSink::OpenObject(const nsIParserNode& aNode)
     // description or a container.
     PRBool isaTypedNode = PR_TRUE;
 
-    if (ns.Equals(kRDFNameSpaceURI)) {
+    if (nameSpaceID == mRDFNameSpaceID) {
         isaTypedNode = PR_FALSE;
 
         if (tag.Equals(kTagRDF_Description)) {
@@ -897,8 +890,10 @@ nsRDFContentSink::OpenObject(const nsIParserNode& aNode)
     if (isaTypedNode) {
         // XXX destructively alter "ns" to contain the fully qualified
         // tag name. We can do this 'cause we don't need it anymore...
-        ns.Append(tag);
-        Assert(rdfResource, kURIRDF_instanceOf, ns);
+        nsAutoString nameSpace;
+        GetNameSpaceURI(nameSpaceID, nameSpace);  // XXX append ':' too?
+        nameSpace.Append(tag);
+        Assert(rdfResource, kURIRDF_instanceOf, nameSpace);
 
         mState = eRDFContentSinkState_InDescriptionElement;
     }
@@ -921,9 +916,13 @@ nsRDFContentSink::OpenProperty(const nsIParserNode& aNode)
     // an "object" non-terminal is either a "description", a "typed
     // node", or a "container", so this change the content sink's
     // state appropriately.
-    nsAutoString ns, tag;
+    nsAutoString tag;
+    PRInt32 nameSpaceID;
 
-    SplitQualifiedName(aNode.GetText(), ns, tag);
+    SplitQualifiedName(aNode.GetText(), nameSpaceID, tag);
+
+    nsAutoString  ns;
+    GetNameSpaceURI(nameSpaceID, ns);
 
     // destructively alter "ns" to contain the fully qualified tag
     // name. We can do this 'cause we don't need it anymore...
@@ -969,11 +968,12 @@ nsRDFContentSink::OpenMember(const nsIParserNode& aNode)
     // ensure that we're actually reading a member element by making
     // sure that the opening tag is <rdf:li>, where "rdf:" corresponds
     // to whatever they've declared the standard RDF namespace to be.
-    nsAutoString ns, tag;
+    nsAutoString tag;
+    PRInt32 nameSpaceID;
 
-    SplitQualifiedName(aNode.GetText(), ns, tag);
+    SplitQualifiedName(aNode.GetText(), nameSpaceID, tag);
 
-    if (! ns.Equals(kRDFNameSpaceURI))
+    if (nameSpaceID != mRDFNameSpaceID)
         return NS_ERROR_UNEXPECTED;
 
     if (! tag.Equals(kTagRDF_li))
@@ -1103,12 +1103,12 @@ nsIRDFNode*
 nsRDFContentSink::GetContextElement(PRInt32 ancestor /* = 0 */)
 {
     if ((nsnull == mContextStack) ||
-        (ancestor >= mNestLevel)) {
+        (ancestor >= mContextStack->Count())) {
         return nsnull;
     }
 
     RDFContextStackElement* e =
-        NS_STATIC_CAST(RDFContextStackElement*, mContextStack->ElementAt(mNestLevel-ancestor-1));
+        NS_STATIC_CAST(RDFContextStackElement*, mContextStack->ElementAt(mContextStack->Count()-ancestor-1));
 
     return e->mResource;
 }
@@ -1124,14 +1124,14 @@ nsRDFContentSink::PushContext(nsIRDFNode *aResource, RDFContentSinkState aState)
 
     RDFContextStackElement* e = new RDFContextStackElement;
     if (! e)
-        return mNestLevel;
+        return mContextStack->Count();
 
     NS_IF_ADDREF(aResource);
     e->mResource = aResource;
     e->mState    = aState;
   
     mContextStack->AppendElement(NS_STATIC_CAST(void*, e));
-    return ++mNestLevel;
+    return mContextStack->Count();
 }
  
 nsresult
@@ -1139,13 +1139,13 @@ nsRDFContentSink::PopContext(nsIRDFNode*& rResource, RDFContentSinkState& rState
 {
     RDFContextStackElement* e;
     if ((nsnull == mContextStack) ||
-        (0 == mNestLevel)) {
+        (0 == mContextStack->Count())) {
         return NS_ERROR_NULL_POINTER;
     }
-  
-    --mNestLevel;
-    e = NS_STATIC_CAST(RDFContextStackElement*, mContextStack->ElementAt(mNestLevel));
-    mContextStack->RemoveElementAt(mNestLevel);
+
+    PRInt32 index = mContextStack->Count() - 1;
+    e = NS_STATIC_CAST(RDFContextStackElement*, mContextStack->ElementAt(index));
+    mContextStack->RemoveElementAt(index);
 
     // don't bother Release()-ing: call it our implicit AddRef().
     rResource = e->mResource;
@@ -1155,123 +1155,111 @@ nsRDFContentSink::PopContext(nsIRDFNode*& rResource, RDFContentSinkState& rState
     return NS_OK;
 }
  
-PRInt32 
-nsRDFContentSink::GetCurrentNestLevel()
-{
-    return mNestLevel;
-}
-
 
 ////////////////////////////////////////////////////////////////////////
 // Namespace management
 
 void
-nsRDFContentSink::FindNameSpaceAttributes(const nsIParserNode& aNode)
+nsRDFContentSink::PushNameSpacesFrom(const nsIParserNode& aNode)
 {
     nsAutoString k, uri, prefix;
     PRInt32 ac = aNode.GetAttributeCount();
     PRInt32 offset;
     nsresult result = NS_OK;
+    nsINameSpace* nameSpace = nsnull;
 
-    for (PRInt32 i = 0; i < ac; i++) {
-        const nsString& key = aNode.GetKeyAt(i);
-        k.Truncate();
-        k.Append(key);
-        // Look for "xmlns" at the start of the attribute name
-        offset = k.Find(kNameSpaceDef);
-        if (0 == offset) {
-            prefix.Truncate();
+    if ((nsnull != mNameSpaceStack) && (0 < mNameSpaceStack->Count())) {
+      nameSpace = (nsINameSpace*)mNameSpaceStack->ElementAt(mNameSpaceStack->Count() - 1);
+      NS_ADDREF(nameSpace);
+    }
+    else {
+      mNameSpaceManager->RegisterNameSpace(kRDFNameSpaceURI, mRDFNameSpaceID);
+      mNameSpaceManager->CreateRootNameSpace(nameSpace);
+    }
 
-            PRUnichar next = k.CharAt(sizeof(kNameSpaceDef)-1);
-            // If the next character is a :, there is a namespace prefix
-            if (':' == next) {
-                k.Right(prefix, k.Length()-sizeof(kNameSpaceDef));
+    if (nsnull != nameSpace) {
+        for (PRInt32 i = 0; i < ac; i++) {
+            const nsString& key = aNode.GetKeyAt(i);
+            k.Truncate();
+            k.Append(key);
+            // Look for "xmlns" at the start of the attribute name
+            offset = k.Find(kNameSpaceDef);
+            if (0 == offset) {
+                PRUnichar next = k.CharAt(sizeof(kNameSpaceDef)-1);
+                // If the next character is a :, there is a namespace prefix
+                if (':' == next) {
+                    k.Right(prefix, k.Length()-sizeof(kNameSpaceDef));
+                }
+                else {
+                    prefix.Truncate();
+                }
+
+                // Get the attribute value (the URI for the namespace)
+                uri = aNode.GetValueAt(i);
+                rdf_StripAndConvert(uri);
+      
+                // Open a local namespace
+                nsIAtom* prefixAtom = ((0 < prefix.Length()) ? NS_NewAtom(prefix) : nsnull);
+                nsINameSpace* child = nsnull;
+                nameSpace->CreateChildNameSpace(prefixAtom, uri, child);
+                if (nsnull != child) {
+                    NS_RELEASE(nameSpace);
+                    nameSpace = child;
+                }
+                NS_IF_RELEASE(prefixAtom);
             }
-
-            // Get the attribute value (the URI for the namespace)
-            uri = aNode.GetValueAt(i);
-            rdf_StripAndConvert(uri);
-      
-            // Open a local namespace
-            OpenNameSpace(prefix, uri);
         }
+        if (nsnull == mNameSpaceStack) {
+            mNameSpaceStack = new nsVoidArray();
+        }
+        mNameSpaceStack->AppendElement(nameSpace);
     }
 }
 
-void
-nsRDFContentSink::OpenNameSpace(const nsString& aPrefix, const nsString& aURI)
+nsIAtom* 
+nsRDFContentSink::CutNameSpacePrefix(nsString& aString)
 {
-    nsIAtom *nameSpaceAtom = nsnull;
-    if (0 < aPrefix.Length())
-        nameSpaceAtom = NS_NewAtom(aPrefix);
+  nsAutoString  prefix;
+  PRInt32 nsoffset = aString.Find(kNameSpaceSeparator);
+  if (-1 != nsoffset) {
+    aString.Left(prefix, nsoffset);
+    aString.Cut(0, nsoffset+1);
+  }
+  if (0 < prefix.Length()) {
+    return NS_NewAtom(prefix);
+  }
+  return nsnull;
+}
+
+PRInt32 
+nsRDFContentSink::GetNameSpaceID(nsIAtom* aPrefix)
+{
+  PRInt32 id = kNameSpaceID_Unknown;
   
-    NameSpaceStruct *ns = new NameSpaceStruct;
-    if (ns) {
-        ns->mPrefix = nameSpaceAtom;
-        NS_IF_ADDREF(nameSpaceAtom);
+  if ((nsnull != mNameSpaceStack) && (0 < mNameSpaceStack->Count())) {
+    PRInt32 index = mNameSpaceStack->Count() - 1;
+    nsINameSpace* nameSpace = (nsINameSpace*)mNameSpaceStack->ElementAt(index);
+    nameSpace->FindNameSpaceID(aPrefix, id);
+  }
 
-        ns->mURI = NS_NewAtom(aURI);
-
-        //ns->mId = id;
-        ns->mNestLevel = GetCurrentNestLevel();
-      
-        if (nsnull == mNameSpaces)
-            mNameSpaces = new nsVoidArray();
-
-        // XXX Should check for duplication
-        mNameSpaces->AppendElement((void *)ns);
-    }
-
-    NS_IF_RELEASE(nameSpaceAtom);
+  NS_ASSERTION(kNameSpaceID_Unknown != mRDFNameSpaceID, "failed to register RDF nameSpace");
+  return id;
 }
 
 void
-nsRDFContentSink::GetNameSpaceURI(const nsString& aPrefix, nsString& rURI)
+nsRDFContentSink::GetNameSpaceURI(PRInt32 aID, nsString& aURI)
 {
-    rURI.Truncate();
-
-    if (!mNameSpaces)
-        return; // empty
-
-    nsIAtom* nameSpaceAtom = nsnull;
-    if (0 < aPrefix.Length())
-        nameSpaceAtom = NS_NewAtom(aPrefix);
-
-    PRInt32 count = mNameSpaces->Count();
-    for (PRInt32 i = 0; i < count; i++) {
-        NameSpaceStruct *ns = (NameSpaceStruct*)mNameSpaces->ElementAt(i);
-    
-        if ((ns) && (ns->mPrefix == nameSpaceAtom)) {
-            if (ns->mURI)
-                ns->mURI->ToString(rURI);
-
-            break;
-        }
-    }
-
-    NS_IF_RELEASE(nameSpaceAtom);
+  mNameSpaceManager->GetNameSpaceURI(aID, aURI);
 }
 
-void    
-nsRDFContentSink::CloseNameSpacesAtNestLevel(PRInt32 mNestLevel)
+void
+nsRDFContentSink::PopNameSpaces()
 {
-    PRInt32 nestLevel = GetCurrentNestLevel();
-
-    if (nsnull == mNameSpaces) {
-        return;
-    }
-
-    PRInt32 i, count;
-    count = mNameSpaces->Count();
-    // Go backwards so that we can delete as we go along
-    for (i = count; i >= 0; i--) {
-        NameSpaceStruct *ns = (NameSpaceStruct *)mNameSpaces->ElementAt(i);
-    
-        if ((nsnull != ns) && (ns->mNestLevel == nestLevel)) {
-            NS_IF_RELEASE(ns->mPrefix);
-            NS_IF_RELEASE(ns->mURI);
-            mNameSpaces->RemoveElementAt(i);
-            delete ns;
-        }
-    }
+  if ((nsnull != mNameSpaceStack) && (0 < mNameSpaceStack->Count())) {
+    PRInt32 index = mNameSpaceStack->Count() - 1;
+    nsINameSpace* nameSpace = (nsINameSpace*)mNameSpaceStack->ElementAt(index);
+    mNameSpaceStack->RemoveElementAt(index);
+    NS_RELEASE(nameSpace);
+  }
 }
+

@@ -32,6 +32,7 @@
 #include "nsIPresShell.h"
 #include "nsIScriptContextOwner.h"
 #include "nsIServiceManager.h"
+#include "nsINameSpaceManager.h"
 #include "nsISupportsArray.h"
 #if 1
 #include "nsICollection.h"
@@ -71,6 +72,7 @@ static NS_DEFINE_IID(kITextContentIID,    NS_ITEXT_CONTENT_IID); // XXX grr...
 static NS_DEFINE_IID(kIWebShellIID,       NS_IWEB_SHELL_IID);
 static NS_DEFINE_IID(kIXMLDocumentIID,    NS_IXMLDOCUMENT_IID);
 static NS_DEFINE_IID(kIDTDIID,            NS_IDTD_IID);
+static NS_DEFINE_IID(kINameSpaceManagerIID, NS_INAMESPACEMANAGER_IID);
 #if 1
 static NS_DEFINE_IID(kICollectionIID,     NS_ICOLLECTION_IID);
 #else
@@ -85,16 +87,12 @@ static NS_DEFINE_CID(kRDFSimpleDataBaseCID,   NS_RDFSIMPLEDATABASE_CID);
 static NS_DEFINE_CID(kRDFResourceManagerCID,  NS_RDFRESOURCEMANAGER_CID);
 static NS_DEFINE_CID(kTextNodeCID,            NS_TEXTNODE_CID);
 static NS_DEFINE_CID(kWellFormedDTDCID,       NS_WELLFORMEDDTD_CID);
+static NS_DEFINE_CID(kNameSpaceManagerCID,    NS_NAMESPACEMANAGER_CID);
 #if 1
 static NS_DEFINE_CID(kRangeListCID,           NS_RANGELIST_CID);
 #else
 static NS_DEFINE_CID(kSelectionCID,           NS_SELECTION_CID);
 #endif
-
-struct NameSpaceStruct {
-    nsIAtom* mPrefix;
-    nsString mURI;
-}; 
 
 ////////////////////////////////////////////////////////////////////////
 
@@ -107,6 +105,7 @@ nsRDFDocument::nsRDFDocument()
       mScriptContextOwner(nsnull),
       mSelection(nsnull),
       mDisplaySelection(PR_FALSE),
+      mNameSpaceManager(nsnull),
       mAttrStyleSheet(nsnull),
       mParser(nsnull),
       mDB(nsnull),
@@ -137,16 +136,6 @@ nsRDFDocument::nsRDFDocument()
 nsRDFDocument::~nsRDFDocument()
 {
     NS_IF_RELEASE(mParser);
-    for (PRInt32 i = 0; i < mNameSpaces.Count(); ++i) {
-        NameSpaceStruct* ns =
-            NS_STATIC_CAST(NameSpaceStruct*, mNameSpaces[i]);
-
-        if (! ns)
-            continue;
-
-        NS_IF_RELEASE(ns->mPrefix);
-        delete ns;
-    }
 
     if (mResourceMgr) {
         nsServiceManager::ReleaseService(kRDFResourceManagerCID, mResourceMgr);
@@ -163,6 +152,7 @@ nsRDFDocument::~nsRDFDocument()
     NS_IF_RELEASE(mDocumentURLGroup);
     NS_IF_RELEASE(mDocumentURL);
     NS_IF_RELEASE(mArena);
+    NS_IF_RELEASE(mNameSpaceManager);
 }
 
 NS_IMETHODIMP 
@@ -565,6 +555,15 @@ nsRDFDocument::SetScriptContextOwner(nsIScriptContextOwner *aScriptContextOwner)
     mScriptContextOwner = aScriptContextOwner;
     NS_IF_ADDREF(mScriptContextOwner);
 }
+
+NS_IMETHODIMP
+nsRDFDocument::GetNameSpaceManager(nsINameSpaceManager*& aManager)
+{
+  aManager = mNameSpaceManager;
+  NS_IF_ADDREF(aManager);
+  return NS_OK;
+}
+
 
 // Note: We don't hold a reference to the document observer; we assume
 // that it has a live reference to the document.
@@ -1006,59 +1005,6 @@ nsRDFDocument::HandleDOMEvent(nsIPresContext& aPresContext,
 // nsIXMLDocument interface
 
 NS_IMETHODIMP
-nsRDFDocument::RegisterNameSpace(nsIAtom* aPrefix, const nsString& aURI, 
-                                 PRInt32& aNameSpaceId)
-{
-    NameSpaceStruct* ns = new NameSpaceStruct;
-    if (! ns)
-        return NS_ERROR_OUT_OF_MEMORY;
-
-    NS_IF_ADDREF(aPrefix);
-    ns->mPrefix = aPrefix;
-    ns->mURI    = aURI;
-
-    aNameSpaceId = mNameSpaces.Count(); // just an index into the array
-    mNameSpaces.AppendElement(NS_STATIC_CAST(void*, ns));
-    return NS_OK;
-}
-
-
-NS_IMETHODIMP
-nsRDFDocument::GetNameSpaceURI(PRInt32 aNameSpaceId, nsString& aURI)
-{
-    if (aNameSpaceId < 0 || aNameSpaceId >= mNameSpaces.Count())
-        return NS_ERROR_INVALID_ARG;
-
-    NameSpaceStruct* ns =
-        NS_STATIC_CAST(NameSpaceStruct*, mNameSpaces[aNameSpaceId]);
-
-    if (! ns)
-        return NS_ERROR_NULL_POINTER;
-
-    aURI = ns->mURI;
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsRDFDocument::GetNameSpacePrefix(PRInt32 aNameSpaceId, nsIAtom*& aPrefix)
-{
-    if (aNameSpaceId < 0 || aNameSpaceId >= mNameSpaces.Count())
-        return NS_ERROR_INVALID_ARG;
-
-    NameSpaceStruct* ns =
-        NS_STATIC_CAST(NameSpaceStruct*, mNameSpaces[aNameSpaceId]);
-
-    if (! ns)
-        return NS_ERROR_NULL_POINTER;
-
-    aPrefix = ns->mPrefix;
-    NS_IF_ADDREF(aPrefix);
-
-    return NS_OK;
-}
-
-
-NS_IMETHODIMP
 nsRDFDocument::PrologElementAt(PRInt32 aOffset, nsIContent** aContent)
 {
     PR_ASSERT(0);
@@ -1109,6 +1055,13 @@ nsRDFDocument::Init(void)
 {
     nsresult rv;
     if (NS_FAILED(rv = NS_NewHeapArena(&mArena, nsnull)))
+        return rv;
+
+    rv = nsRepository::CreateInstance(kNameSpaceManagerCID,
+                                      nsnull,
+                                      kINameSpaceManagerIID,
+                                      (void**) &mNameSpaceManager);
+    if (NS_FAILED(rv))
         return rv;
 
     if (NS_FAILED(rv = nsRepository::CreateInstance(kRDFSimpleDataBaseCID,

@@ -21,6 +21,7 @@
 
 #include "nsIXMLContentSink.h"
 class nsIRDFDataSource;
+class nsINameSpaceManager;
 
 // {751843E2-8309-11d2-8EAC-00805F29F370}
 #define NS_IRDFCONTENTSINK_IID \
@@ -61,7 +62,8 @@ NS_NewRDFDocumentContentSink(nsIRDFContentSink** aResult,
  */
 nsresult
 NS_NewRDFSimpleContentSink(nsIRDFContentSink** aResult,
-                           nsIURL* aURL);
+                           nsIURL* aURL,
+                           nsINameSpaceManager* aNameSpaceManager);
 
 
 #endif // nsIRDFContentSink_h___

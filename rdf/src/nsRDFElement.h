@@ -98,10 +98,10 @@ public:
                               nsEventStatus& aEventStatus);
 
     // nsIXMLContent (from nsIRDFContent)
-    NS_IMETHOD SetNameSpace(nsIAtom* aNameSpace);
-    NS_IMETHOD GetNameSpace(nsIAtom*& aNameSpace);
-    NS_IMETHOD SetNameSpaceIdentifier(PRInt32 aNameSpaceId);
-    NS_IMETHOD GetNameSpaceIdentifier(PRInt32& aNameSpeceId);
+    NS_IMETHOD SetNameSpacePrefix(nsIAtom* aNameSpace);
+    NS_IMETHOD GetNameSpacePrefix(nsIAtom*& aNameSpace) const;
+    NS_IMETHOD SetNameSpaceID(PRInt32 aNameSpaceID);
+    NS_IMETHOD GetNameSpaceID(PRInt32& aNameSpeceID) const;
 
     // nsIRDFContent
     NS_IMETHOD Init(nsIRDFDocument* doc,
@@ -139,11 +139,11 @@ protected:
     /** The document in which the element lives. */
     nsIRDFDocument*   mDocument;
 
-    /** The tag's namespace */
-    nsIAtom*          mNameSpace;
+    /** The tag's namespace prefix */
+    nsIAtom*          mNameSpacePrefix;
 
     /** The tag's namespace ID */
-    PRInt32           mNameSpaceId;
+    PRInt32           mNameSpaceID;
 
     /** XXX */
     void*             mScriptObject;
