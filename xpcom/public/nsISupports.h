@@ -169,9 +169,11 @@ nsrefcnt _class::AddRef(void)                                \
  * @param _type The type of object to call "new" with.
  */
 #ifdef MOZ_TRACE_XPCOM_REFCNT
-#define NS_NEWXPCOM(_result,_type) \
-  _result = new _type(); \
-  nsTraceRefcnt::Create(_result, #_type, __FILE__, __LINE__)
+#define NS_NEWXPCOM(_result,_type)                              \
+  PR_BEGIN_MACRO                                                \
+    _result = new _type();                                      \
+    nsTraceRefcnt::Create(_result, #_type, __FILE__, __LINE__); \
+  PR_END_MACRO
 #else
 #define NS_NEWXPCOM(_result,_type) \
   _result = new _type()
@@ -183,12 +185,14 @@ nsrefcnt _class::AddRef(void)                                \
  * @param _ptr The object to delete.
  */
 #ifdef MOZ_TRACE_XPCOM_REFCNT
-#define NS_DELETEXPCOM(_ptr)                        \
-  nsTraceRefcnt::Destroy(_ptr, __FILE__, __LINE__); \
-  delete _ptr
+#define NS_DELETEXPCOM(_ptr)                            \
+  PR_BEGIN_MACRO                                        \
+    nsTraceRefcnt::Destroy((_ptr), __FILE__, __LINE__); \
+    delete (_ptr);                                      \
+  PR_END_MACRO
 #else
 #define NS_DELETEXPCOM(_ptr)    \
-  delete _ptr
+  delete (_ptr)
 #endif
 
 /**
@@ -244,13 +248,17 @@ nsrefcnt _class::AddRef(void)                                \
  * @param _ptr The interface pointer.
  */
 #ifdef MOZ_TRACE_XPCOM_REFCNT
-#define NS_RELEASE(_ptr)                                                \
- nsTraceRefcnt::Release((_ptr), (_ptr)->Release(), __FILE__, __LINE__); \
- (_ptr) = 0
+#define NS_RELEASE(_ptr)                                                   \
+  PR_BEGIN_MACRO                                                           \
+    nsTraceRefcnt::Release((_ptr), (_ptr)->Release(), __FILE__, __LINE__); \
+    (_ptr) = 0;                                                            \
+  PR_END_MACRO
 #else
-#define NS_RELEASE(_ptr) \
- (_ptr)->Release();      \
- (_ptr) = 0
+#define NS_RELEASE(_ptr)    \
+  PR_BEGIN_MACRO            \
+    (_ptr)->Release();      \
+    (_ptr) = 0;             \
+  PR_END_MACRO
 #endif
 
 /**
@@ -267,15 +275,18 @@ nsrefcnt _class::AddRef(void)                                \
  * @param _ptr The interface pointer.
  */
 #ifdef MOZ_TRACE_XPCOM_REFCNT
-#define NS_RELEASE2(_ptr, _result)                                       \
- _result = ((nsrefcnt) nsTraceRefcnt::Release((_ptr), (_ptr)->Release(), \
-                                              __FILE__, __LINE__));      \
- if (0 == (_result)) (_ptr) = 0
+#define NS_RELEASE2(_ptr, _result)                                          \
+  PR_BEGIN_MACRO                                                            \
+    _result = ((nsrefcnt) nsTraceRefcnt::Release((_ptr), (_ptr)->Release(), \
+                                                 __FILE__, __LINE__));      \
+    if (0 == (_result)) (_ptr) = 0;                                         \
+  PR_END_MACRO
 #else
-#define NS_RELEASE2(_ptr, _result) \
- _result = (_ptr)->Release();      \
- if (0 == (_result)) (_ptr) = 0
-
+#define NS_RELEASE2(_ptr, _result)  \
+  PR_BEGIN_MACRO                    \
+    _result = (_ptr)->Release();    \
+    if (0 == (_result)) (_ptr) = 0; \
+  PR_END_MACRO
 #endif
 
 /**
@@ -289,16 +300,20 @@ nsrefcnt _class::AddRef(void)                                \
  * @param _ptr The interface pointer.
  */
 #ifdef MOZ_TRACE_XPCOM_REFCNT
-#define NS_IF_RELEASE(_ptr)                                        \
-  ((0 != (_ptr))                                                   \
-   ? ((nsrefcnt) nsTraceRefcnt::Release((_ptr), (_ptr)->Release(), \
-                                        __FILE__, __LINE__))       \
-   : 0);                                                           \
-  (_ptr) = 0
+#define NS_IF_RELEASE(_ptr)                                         \
+  PR_BEGIN_MACRO                                                    \
+    ((0 != (_ptr))                                                  \
+    ? ((nsrefcnt) nsTraceRefcnt::Release((_ptr), (_ptr)->Release(), \
+                                          __FILE__, __LINE__))      \
+    : 0);                                                           \
+    (_ptr) = 0;                                                     \
+  PR_END_MACRO
 #else
-#define NS_IF_RELEASE(_ptr)                \
-  ((0 != (_ptr)) ? (_ptr)->Release() : 0); \
-  (_ptr) = 0
+#define NS_IF_RELEASE(_ptr)                   \
+  PR_BEGIN_MACRO                              \
+    ((0 != (_ptr)) ? (_ptr)->Release() : 0);  \
+    (_ptr) = 0;                               \
+  PR_END_MACRO
 #endif
 
 /**
