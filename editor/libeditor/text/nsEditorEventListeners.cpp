@@ -124,6 +124,28 @@ nsTextEditorKeyListener::HandleEvent(nsIDOMEvent* aEvent)
 nsresult
 nsTextEditorKeyListener::KeyDown(nsIDOMEvent* aKeyEvent)
 {
+  PRUint32 keyCode;
+  nsCOMPtr<nsIDOMUIEvent>uiEvent;
+  uiEvent = do_QueryInterface(aKeyEvent);
+  if (uiEvent) 
+  {
+    if (NS_SUCCEEDED(uiEvent->GetKeyCode(&keyCode)))
+    {
+      if (nsIDOMUIEvent::VK_TAB==keyCode)
+      {
+        nsCOMPtr<nsIHTMLEditor> htmlEditor = do_QueryInterface(mEditor);
+        PRUint32 flags=0;
+        mEditor->GetFlags(&flags);
+        if ((flags & nsIHTMLEditor::eEditorSingleLineMask))
+          return NS_OK; // let it be used for focus switching
+
+        // else we insert the tab straight through
+        htmlEditor->EditorKeyPress(uiEvent);
+        ScrollSelectionIntoView();
+        return NS_ERROR_BASE; // "I handled the event, don't do default processing"
+      }
+    }
+  }
   return NS_OK;
 }
 
