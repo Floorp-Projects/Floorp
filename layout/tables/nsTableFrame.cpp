@@ -6655,6 +6655,8 @@ nsTableFrame::PaintBCBorders(nsIPresContext*      aPresContext,
     x += size.width;
   }
 
+  if (!haveIntersect)
+    return;
   // iterate the cell map and build up border segments
   nsRect damageArea(startColIndex, startRowIndex, 1 + endColIndex - startColIndex, 
                     1 + endRowIndex - startRowIndex);
