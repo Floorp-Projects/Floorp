@@ -2091,3 +2091,26 @@ XfeToolBarXYToIndicatorLocation(Widget w,Widget item,int x,int y)
 	return result;
 }
 /*----------------------------------------------------------------------*/
+/* extern */ Widget
+XfeToolBarGetLastItem(Widget w)
+{
+    XfeToolBarPart *	tp = _XfeToolBarPart(w);
+	Widget *			wp;
+	
+	assert( XfeIsToolBar(w) );
+	assert( _XfeIsAlive(w) );
+
+	/* Look backwards at children until a layable one is found */
+	for(wp = _XfemChildren(w) + (_XfemNumChildren(w) - 1);
+		*wp != _XfeChildrenIndex(w,0);
+		wp--)
+	{
+		if (IsLayableChild(*wp))
+		{
+			return *wp;
+		}
+	}
+	
+	return NULL;
+}
+/*----------------------------------------------------------------------*/
