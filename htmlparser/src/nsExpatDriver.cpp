@@ -1171,9 +1171,4 @@ nsExpatDriver::IntTagToStringTag(PRInt32 aIntTag) const
   return 0;
 }
 
-NS_IMETHODIMP 
-nsExpatDriver::ConvertEntityToUnicode(const nsAString& aEntity, PRInt32* aUnicode) const
-{
-  return NS_OK;
-}
 /******************************************************************************/

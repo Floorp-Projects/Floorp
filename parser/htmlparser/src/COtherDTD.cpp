@@ -910,15 +910,6 @@ COtherDTD::IntTagToStringTag(PRInt32 aIntTag) const
   return str_ptr;
 }  
 
-NS_IMETHODIMP
-COtherDTD::ConvertEntityToUnicode(const nsAString& aEntity,
-                                  PRInt32* aUnicode) const
-{
-  *aUnicode = nsHTMLEntities::EntityToUnicode(aEntity);
-
-  return NS_OK;
-}
- 
 /**
  *  This method is called to determine whether or not
  *  the given childtag is a block element.
