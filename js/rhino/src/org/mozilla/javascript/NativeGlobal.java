@@ -526,7 +526,8 @@ public class NativeGlobal implements IdFunctionMaster {
 
             InterpretedScript is = (InterpretedScript) script;
             is.itsData.itsFromEvalCode = true;
-            Object result = is.call(cx, scope, (Scriptable) thisArg, null);
+            Object result = is.call(cx, scope, (Scriptable) thisArg,
+                                    ScriptRuntime.emptyArgs);
 
             return result;
         }
@@ -626,13 +627,15 @@ public class NativeGlobal implements IdFunctionMaster {
     *   'Encode' and 'Decode'.
     */
     private static String encode(Context cx, String str, boolean fullUri) {
-        byte[] utf8buf = new byte[6];
-        StringBuffer R = new StringBuffer();
+        byte[] utf8buf = null;
+        StringBuffer sb = null;
 
-        for (int k = 0; k != str.length(); ++k) {
+        for (int k = 0, length = str.length(); k != length; ++k) {
             char C = str.charAt(k);
             if (encodeUnescaped(C, fullUri)) {
-                R.append(C);
+                if (sb != null) {
+                    sb.append(C);
+                }
             } else {
                 if (0xDC00 <= C && C <= 0xDFFF) {
                     throw cx.reportRuntimeError0("msg.bad.uri");
@@ -642,7 +645,7 @@ public class NativeGlobal implements IdFunctionMaster {
                     V = C;
                 } else {
                     k++;
-                    if (k == str.length()) {
+                    if (k == length) {
                         throw cx.reportRuntimeError0("msg.bad.uri");
                     }
                     char C2 = str.charAt(k);
@@ -651,16 +654,22 @@ public class NativeGlobal implements IdFunctionMaster {
                     }
                     V = ((C - 0xD800) << 10) + (C2 - 0xDC00) + 0x10000;
                 }
+                if (utf8buf == null) {
+                    utf8buf = new byte[6];
+                    sb = new StringBuffer(length + 3);
+                    sb.append(str);
+                    sb.setLength(k);
+                }
                 int L = oneUcs4ToUtf8Char(utf8buf, V);
                 for (int j = 0; j < L; j++) {
                     int d = 0xff & utf8buf[j];
-                    R.append('%');
-                    R.append(toHexChar(d >>> 4));
-                    R.append(toHexChar(d & 0xf));
+                    sb.append('%');
+                    sb.append(toHexChar(d >>> 4));
+                    sb.append(toHexChar(d & 0xf));
                 }
             }
         }
-        return R.toString();
+        return (sb == null) ? str : sb.toString();
     }
 
     private static char toHexChar(int i) {
@@ -690,17 +699,26 @@ public class NativeGlobal implements IdFunctionMaster {
     }
 
     private static String decode(Context cx, String str, boolean fullUri) {
-        byte[] utf8buf = new byte[6];
-        StringBuffer R = new StringBuffer();
+        byte[] utf8buf = null;
+        char[] buf = null;
+        int bufTop = 0;
 
-        for (int k = 0; k != str.length();) {
+        for (int k = 0, length = str.length(); k != length;) {
             char C = str.charAt(k);
             if (C != '%') {
-                R.append(C);
+                if (buf != null) {
+                    buf[bufTop++] = C;
+                }
                 ++k;
             } else {
+                if (buf == null) {
+                    // decode always compress so result can not be bigger then
+                    // str.length()
+                    buf = new char[length];
+                    str.getChars(0, k, buf, 0);
+                }
                 int start = k;
-                if (k + 3 > str.length())
+                if (k + 3 > length)
                     throw cx.reportRuntimeError0("msg.bad.uri");
                 int B = unHex(str.charAt(k + 1), str.charAt(k + 2));
                 if (B < 0) throw cx.reportRuntimeError0("msg.bad.uri");
@@ -708,12 +726,13 @@ public class NativeGlobal implements IdFunctionMaster {
                 if ((B & 0x80) == 0) {
                     C = (char)B;
                 } else {
+                    if (utf8buf == null) { utf8buf = new byte[6]; }
                     int n = 1;
                     while ((B & (0x80 >>> n)) != 0) n++;
                     if ((n == 1) || (n > 6))
                         throw cx.reportRuntimeError0("msg.bad.uri");
                     utf8buf[0] = (byte)B;
-                    if ((k + 3 * (n - 1)) > str.length())
+                    if ((k + 3 * (n - 1)) > length)
                         throw cx.reportRuntimeError0("msg.bad.uri");
                     for (int j = 1; j < n; j++) {
                         if (str.charAt(k) != '%')
@@ -731,21 +750,21 @@ public class NativeGlobal implements IdFunctionMaster {
                             throw cx.reportRuntimeError0("msg.bad.uri");
                         char H = (char)((V >>> 10) + 0xD800);
                         C = (char)((V & 0x3FF) + 0xDC00);
-                        R.append(H);
+                        buf[bufTop++] = H;
                     } else {
                         C = (char)V;
                     }
                 }
                 if (fullUri && fullUriDecodeReserved(C)) {
                     for (int x = start; x != k; x++) {
-                        R.append(str.charAt(x));
+                        buf[bufTop++] = str.charAt(x);
                     }
                 } else {
-                    R.append(C);
+                    buf[bufTop++] = C;
                 }
             }
         }
-        return R.toString();
+        return (buf == null) ? str : new String(buf, 0, bufTop);
     }
 
     private static boolean encodeUnescaped(char c, boolean fullUri) {
