@@ -96,7 +96,7 @@ nsHelperAppDialog.prototype = {
                        .createInstance( nsIFilePicker );
         var bundle = Components.classes[ "@mozilla.org/intl/stringbundle;1" ]
                        .getService( Components.interfaces.nsIStringBundleService )
-                           .createBundle( "chrome://global/locale/helperAppLauncher.properties");
+                           .createBundle( "chrome://global/locale/nsHelperAppDlg.properties");
 
         var windowTitle = bundle.GetStringFromName( "saveDialogTitle" );
         
