@@ -1890,6 +1890,8 @@ void ForceDrawFrame(nsFrame * aFrame)//, PRBool)
   aFrame->GetRect(rect);
   rect.x = pnt.x;
   rect.y = pnt.y;
+  // XXX I sure hope t is code isn't actually used, because the ref counting is
+  // all screwed up...
   if (view != nsnull) {
     nsIViewManager * viewMgr = view->GetViewManager();
     if (viewMgr != nsnull) {
