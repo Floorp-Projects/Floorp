@@ -140,16 +140,6 @@ nsLeafAccessible(aDOMNode, aShell)
   }
 }
 
-/** click us! */
-NS_IMETHODIMP nsSelectOptionAccessible::GetAccActionName(PRUint8 index, nsAString& _retval)
-{
-  if (index == eAction_Click) {
-    nsAccessible::GetTranslatedString(NS_LITERAL_STRING("select"), _retval); 
-    return NS_OK;
-  }
-  return NS_ERROR_INVALID_ARG;
-}
-
 /** We are a ListItem */
 NS_IMETHODIMP nsSelectOptionAccessible::GetAccRole(PRUint32 *_retval)
 {

@@ -50,6 +50,7 @@
 #include "nsIDOMHTMLSelectElement.h"
 #include "nsIDOMHTMLOListElement.h"
 #include "nsIListControlFrame.h"
+#include "nsIComboboxControlFrame.h"
 #include "nsIServiceManager.h"
 #include "nsLayoutAtoms.h"
 #include "nsIDocument.h"
@@ -307,6 +308,82 @@ NS_IMETHODIMP nsHTMLSelectOptionAccessible::GetAccState(PRUint32 *_retval)
   return NS_OK;
 }
 
+/** select us! close combo box if necessary*/
+NS_IMETHODIMP nsHTMLSelectOptionAccessible::GetAccActionName(PRUint8 index, nsAString& _retval)
+{
+  if (index == eAction_Select) {
+    nsAccessible::GetTranslatedString(NS_LITERAL_STRING("select"), _retval); 
+    return NS_OK;
+  }
+  return NS_ERROR_INVALID_ARG;
+}
+
+NS_IMETHODIMP nsHTMLSelectOptionAccessible::GetAccNumActions(PRUint8 *_retval)
+{
+  *_retval = eSingle_Action;
+  return NS_OK;
+}
+
+
+NS_IMETHODIMP nsHTMLSelectOptionAccessible::AccDoAction(PRUint8 index)
+{
+  if (index == eAction_Select) {   // default action
+    nsCOMPtr<nsIDOMHTMLOptionElement> newHTMLOption(do_QueryInterface(mDOMNode));
+    if (!newHTMLOption) 
+      return NS_ERROR_FAILURE;
+    // Clear old selection
+    nsCOMPtr<nsIDOMNode> oldHTMLOptionNode, selectNode;
+    mParent->AccGetDOMNode(getter_AddRefs(selectNode));
+    nsHTMLSelectOptionAccessible::GetFocusedOptionNode(selectNode, oldHTMLOptionNode);
+    nsCOMPtr<nsIDOMHTMLOptionElement> oldHTMLOption(do_QueryInterface(oldHTMLOptionNode));
+    if (oldHTMLOption)
+      oldHTMLOption->SetSelected(PR_FALSE);
+    // Set new selection
+    newHTMLOption->SetSelected(PR_TRUE);
+
+    // If combo box, and open, close it
+    // First, get the <select> widgets list control frame
+    nsCOMPtr<nsIDOMNode> testSelectNode;
+    nsCOMPtr<nsIDOMNode> thisNode(do_QueryInterface(mDOMNode));
+    do {
+      thisNode->GetParentNode(getter_AddRefs(testSelectNode));
+      nsCOMPtr<nsIDOMHTMLSelectElement> selectControl(do_QueryInterface(testSelectNode));
+      if (selectControl)
+        break;
+      thisNode = testSelectNode;
+    } while (testSelectNode);
+
+    nsCOMPtr<nsIPresShell> presShell(do_QueryReferent(mPresShell));
+    nsCOMPtr<nsIContent> selectContent(do_QueryInterface(testSelectNode));
+    nsCOMPtr<nsIDOMHTMLOptionElement> option(do_QueryInterface(mDOMNode));
+
+    if (!testSelectNode || !selectContent || !presShell || !option) 
+      return NS_ERROR_FAILURE;
+
+    nsIFrame *selectFrame = nsnull;
+    presShell->GetPrimaryFrameFor(selectContent, &selectFrame);
+    nsCOMPtr<nsIComboboxControlFrame> comboBoxFrame(do_QueryInterface(selectFrame));
+    if (comboBoxFrame) {
+      nsIFrame *listFrame = nsnull;
+      comboBoxFrame->GetDropDown(&listFrame);
+      PRBool isDroppedDown;
+      comboBoxFrame->IsDroppedDown(&isDroppedDown);
+      if (isDroppedDown && listFrame) {
+        // use this list control frame to roll up the list
+        nsCOMPtr<nsIListControlFrame> listControlFrame(do_QueryInterface(listFrame));
+        if (listControlFrame) {
+          PRInt32 newIndex = 0;
+          option->GetIndex(&newIndex);
+          listControlFrame->ComboboxFinish(newIndex);
+        }
+      }
+    }
+    return NS_OK;
+  }
+
+  return NS_ERROR_INVALID_ARG;
+}
+
 /**
   * Helper method for getting the focused DOM Node from our parent(list) node. We
   *  need to use the frame to get the focused option because for some reason we
@@ -382,6 +459,23 @@ NS_IMETHODIMP nsHTMLSelectOptGroupAccessible::GetAccState(PRUint32 *_retval)
   
   return NS_OK;
 }
+
+NS_IMETHODIMP nsHTMLSelectOptGroupAccessible::AccDoAction(PRUint8 index)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP nsHTMLSelectOptGroupAccessible::GetAccActionName(PRUint8 index, nsAString& _retval)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP nsHTMLSelectOptGroupAccessible::GetAccNumActions(PRUint8 *_retval)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+
 
 /** ------------------------------------------------------ */
 /**  Secondly, the Listbox widget                          */
