@@ -16,6 +16,9 @@
  * Communications Corporation.  Portions created by Netscape are
  * Copyright (C) 1998 Netscape Communications Corporation. All
  * Rights Reserved.
+ * 
+ * Author:
+ *   Adam Lock <adamlock@netscape.com>
  *
  * Contributor(s): 
  */
@@ -27,8 +30,10 @@ NS_DEFINE_IID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 NS_DEFINE_IID(kHTMLEditorCID, NS_HTMLEDITOR_CID);
 NS_DEFINE_CID(kCookieServiceCID, NS_COOKIESERVICE_CID);
 NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
+NS_DEFINE_CID(kWindowCID, NS_WINDOW_CID);
 
 // Interface IDs
+NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 NS_DEFINE_IID(kIBaseWindowIID, NS_IBASEWINDOW_IID);
 NS_DEFINE_IID(kIEventQueueServiceIID, NS_IEVENTQUEUESERVICE_IID);
 NS_DEFINE_IID(kIDocumentViewerIID, NS_IDOCUMENT_VIEWER_IID);
@@ -37,5 +42,5 @@ NS_DEFINE_IID(kIDOMNodeIID, NS_IDOMNODE_IID);
 NS_DEFINE_IID(kIDOMElementIID, NS_IDOMELEMENT_IID);
 NS_DEFINE_IID(kIStreamObserverIID, NS_ISTREAMOBSERVER_IID);
 NS_DEFINE_IID(kIDocumentLoaderObserverIID, NS_IDOCUMENT_LOADER_OBSERVER_IID);
-NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
+NS_DEFINE_IID(kIWidgetIID, NS_IWIDGET_IID);
 
