@@ -40,8 +40,8 @@
 <!ENTITY app.author "mozilla.org">
 
 <!ENTITY MainWindow.title "JavaScript Debugger">
-<!ENTITY ReloadUI.label "Reload UI">
-<!ENTITY ReloadUI.aKey "R">
+<!ENTITY Reload.label "Reload">
+<!ENTITY Reload.aKey "R">
 <!ENTITY Debug.label "Debug">
 <!ENTITY Debug.aKey "D">
 <!ENTITY Cont.label "Continue">
