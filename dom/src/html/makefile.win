@@ -24,7 +24,7 @@ REQUIRES=xpcom raptor js netlib
 DEFINES=-D_IMPL_NS_DOM -DWIN32_LEAN_AND_MEAN
 
 CPPSRCS =			\
-	nsJSHMTMLIFrameElement.cpp \
+	nsJSHTMLIFrameElement.cpp \
 	nsJSHTMLAnchorElement.cpp \
 	nsJSHTMLAppletElement.cpp \
 	nsJSHTMLAreaElement.cpp \
@@ -86,7 +86,7 @@ CPPSRCS =			\
 	$(NULL)
 
 CPP_OBJS= \
-	.\$(OBJDIR)\nsJSHMTMLIFrameElement.obj \
+	.\$(OBJDIR)\nsJSHTMLIFrameElement.obj \
 	.\$(OBJDIR)\nsJSHTMLAnchorElement.obj \
 	.\$(OBJDIR)\nsJSHTMLAppletElement.obj \
 	.\$(OBJDIR)\nsJSHTMLAreaElement.obj \
