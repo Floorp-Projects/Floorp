@@ -45,8 +45,8 @@ public:
     nsresult GetInfo(nsInterfaceInfo **result);
 
     // makes allocator alloc'd copy.
-    nsresult GetIID(nsIID **iid);
-    nsresult GetName(char **name);
+    nsresult GetIID(nsIID **in_iid);
+    nsresult GetName(char **in_name);
 
     // so that nsInterfaceInfo destructor can null it out.
     nsInterfaceInfo *info;

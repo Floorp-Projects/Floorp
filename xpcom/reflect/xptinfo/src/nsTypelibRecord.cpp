@@ -22,10 +22,10 @@
 #include "nsInterfaceRecord.h"
 #include "xpt_struct.h"
 
-nsTypelibRecord::nsTypelibRecord(int size, nsTypelibRecord *next,
-                                 XPTHeader *header, nsIAllocator *allocator)
-    : next(next),
-      header(header)
+nsTypelibRecord::nsTypelibRecord(int size, nsTypelibRecord *in_next,
+                                 XPTHeader *in_header, nsIAllocator *allocator)
+    : next(in_next),
+      header(in_header)
 {
     this->interfaceRecords = (nsInterfaceRecord **)
         allocator->Alloc((size + 1) * (sizeof (nsInterfaceRecord *)));

@@ -34,7 +34,7 @@ class nsTypelibRecord {
 public:
     friend class nsInterfaceInfoManager;
 
-    nsTypelibRecord(int size, nsTypelibRecord *next, XPTHeader *header,
+    nsTypelibRecord(int size, nsTypelibRecord *in_next, XPTHeader *in_header,
                     nsIAllocator *allocator);
 
     // array of pointers to (potentially shared) interface records,
