@@ -120,6 +120,8 @@ var folderListener = {
     OnItemUnicharPropertyChanged: function(item, property, oldValue, newValue){},
 	OnItemPropertyFlagChanged: function(item, property, oldFlag, newFlag) {},
 
+    OnFolderEvent: function(item, event) {},
+
 	OnFolderLoaded: function (folder)
 	{
 		if(folder)
