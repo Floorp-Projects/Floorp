@@ -328,7 +328,7 @@ nsHTMLInputElement::GetValue(nsString& aValue)
 {
   PRInt32 type;
   GetType(&type);
-  if (NS_FORM_INPUT_TEXT == type || NS_FORM_INPUT_PASSWORD == type || NS_FORM_INPUT_FILE) {
+  if (NS_FORM_INPUT_TEXT == type || NS_FORM_INPUT_PASSWORD == type || NS_FORM_INPUT_FILE == type) {
     nsIFormControlFrame* formControlFrame = nsnull;
     if (NS_SUCCEEDED(nsGenericHTMLElement::GetPrimaryFrame(this, formControlFrame))) {
       if (nsnull != formControlFrame) {
@@ -338,6 +338,7 @@ nsHTMLInputElement::GetValue(nsString& aValue)
       return NS_OK;
     }
   }
+  // Treat value == defaultValue for other input elements
   return mInner.GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::value, aValue); 
 }
 
@@ -347,16 +348,18 @@ nsHTMLInputElement::SetValue(const nsString& aValue)
 {
   PRInt32 type;
   GetType(&type);
-  if (NS_FORM_INPUT_TEXT == type) {
+  if (NS_FORM_INPUT_TEXT == type || NS_FORM_INPUT_PASSWORD == type || NS_FORM_INPUT_FILE == type) {
     nsIFormControlFrame* formControlFrame = nsnull;
     if (NS_SUCCEEDED(nsGenericHTMLElement::GetPrimaryFrame(this, formControlFrame))) {
       if (nsnull != formControlFrame ) { 
         formControlFrame->SetProperty(nsHTMLAtoms::value, aValue);
         NS_RELEASE(formControlFrame);
       }
+      return NS_OK;
     }
-  }        
-  return NS_OK;
+  }
+  // Treat value == defaultValue for other input elements.
+  return mInner.SetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::value, aValue, PR_TRUE);
 }
 
 NS_IMETHODIMP 
