@@ -152,6 +152,10 @@ static void MapGenericFamilyToFont(const nsString& aGenericFamily, nsString& aFo
   {
     aFontFace = "Courier";
   }
+  else if (aGenericFamily.EqualsIgnoreCase("-moz-fixed"))
+  {
+    aFontFace = "Courier";
+  }
 }
 
 struct FontEnumData {

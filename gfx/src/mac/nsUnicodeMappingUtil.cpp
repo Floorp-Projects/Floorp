@@ -259,6 +259,8 @@ nsGenericFontNameType nsUnicodeMappingUtil::MapGenericFontNameType(const nsStrin
 	  return kSansSerif;
 	if (aGenericName.EqualsIgnoreCase("monospace"))
 	  return kMonospace;
+	if (aGenericName.EqualsIgnoreCase("-moz-fixed"))
+	  return kMonospace;
 	if (aGenericName.EqualsIgnoreCase("cursive"))
 	  return kCursive;
 	if (aGenericName.EqualsIgnoreCase("fantasy"))
