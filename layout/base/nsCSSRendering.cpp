@@ -2029,9 +2029,15 @@ void nsCSSRendering::PaintBorderEdges(nsIPresContext* aPresContext,
 //
 // i.e., they are either 0 or a negative number whose absolute value is
 // less than the tile size in that dimension
+//
+// aRelativeBounds is the box to which the tiling position should be relative,
+// aTilingBounds is the box in which the tiling will actually be done. They
+// should be identical except when painting on the canvas, in which case the
+// relative bounds should be the bounds of the root element's frame and the
+// tiling bounds should be the bounds of the canvas frame.
 static void
 ComputeBackgroundAnchorPoint(const nsStyleBackground& aColor,
-                             const nsRect& aBounds,
+                             const nsRect& aRelativeBounds, const nsRect& aTilingBounds,
                              nscoord aTileWidth, nscoord aTileHeight,
                              nsPoint& aResult)
 {
@@ -2043,9 +2049,10 @@ ComputeBackgroundAnchorPoint(const nsStyleBackground& aColor,
     nscoord t = aColor.mBackgroundXPosition;
     float pct = float(t) / 100.0f;
     nscoord tilePos = nscoord(pct * aTileWidth);
-    nscoord boxPos = nscoord(pct * aBounds.width);
+    nscoord boxPos = nscoord(pct * aRelativeBounds.width);
     x = boxPos - tilePos;
   }
+  x += aRelativeBounds.x - aTilingBounds.x;
   if (NS_STYLE_BG_REPEAT_X & aColor.mBackgroundRepeat) {
     // When we are tiling in the x direction the loop will run from
     // the left edge of the box to the right edge of the box. We need
@@ -2079,9 +2086,10 @@ ComputeBackgroundAnchorPoint(const nsStyleBackground& aColor,
     nscoord t = aColor.mBackgroundYPosition;
     float pct = float(t) / 100.0f;
     nscoord tilePos = nscoord(pct * aTileHeight);
-    nscoord boxPos = nscoord(pct * aBounds.height);
+    nscoord boxPos = nscoord(pct * aRelativeBounds.height);
     y = boxPos - tilePos;
   }
+  y += aRelativeBounds.y - aTilingBounds.y;
   if (NS_STYLE_BG_REPEAT_Y & aColor.mBackgroundRepeat) {
     // When we are tiling in the y direction the loop will run from
     // the top edge of the box to the bottom edge of the box. We need
@@ -2313,65 +2321,55 @@ nsCSSRendering::PaintBackground(nsIPresContext* aPresContext,
       }
     }
 
-    // If it's a fixed background attachment, then get the nearest scrolling
-    // ancestor
-    nsIView* viewportView = nsnull;
-    nsRect   viewportArea(0, 0, 0, 0);
-    nscoord  scroll_x, scroll_y;
 
+    // Compute the anchor point.
+    //
+    // When tiling, the anchor coordinate values will be negative offsets
+    // from the padding area
+
+    nsPoint anchor;
     if (NS_STYLE_BG_ATTACHMENT_FIXED == aColor.mBackgroundAttachment) {
-      nsIFrame* scrollFrame = GetNearestScrollFrame(aForFrame);
+      // If it's a fixed background attachment, then the image is placed 
+      // relative to the nearest scrolling ancestor, or the viewport if
+      // the frame doesn't have a scrolling ancestor
       nsIFrame* scrolledFrame = nsnull;
-      
-      // get the nsIScrollableFrame interface from the scrollframe
+      nsIView* viewportView = nsnull;
+      nsRect viewportArea;
+        
+      // get the nsIScrollableFrame interface from the scrollFrame
+      nsIFrame* scrollFrame = GetNearestScrollFrame(aForFrame);
       if (scrollFrame) {
-        nsCOMPtr<nsIScrollableFrame> scrollableFrame ( do_QueryInterface(scrollFrame) );
-        if ( scrollableFrame ) {
+        nsCOMPtr<nsIScrollableFrame> scrollableFrame(do_QueryInterface(scrollFrame));
+        if (scrollableFrame) {
           scrollableFrame->GetScrolledFrame(aPresContext, scrolledFrame);
           if (scrolledFrame) {
-            nsRect rect;
-            scrolledFrame->GetRect(rect);
-            viewportArea.width = rect.width;
-            viewportArea.height = rect.width;
+            scrolledFrame->GetRect(viewportArea);
             scrolledFrame->GetView(aPresContext, &viewportView);
           }
-          // get the current scroll position for determining the anchor point of the image
-          scrollableFrame->GetScrollPosition(aPresContext, scroll_x, scroll_y);
         }
       } 
       if (!scrolledFrame) {
         // The viewport isn't scrollable, so use the root frame's view
-        nsIPresShell*  presShell;
-        nsIFrame*      rootFrame;
-
-        aPresContext->GetShell(&presShell);
+        nsCOMPtr<nsIPresShell> presShell;
+        aPresContext->GetShell(getter_AddRefs(presShell));
+        NS_ASSERTION(presShell, "no pres shell");
+        
+        nsIFrame* rootFrame;
         presShell->GetRootFrame(&rootFrame);
-        NS_RELEASE(presShell);
-        rootFrame->GetView(aPresContext, (nsIView**)&viewportView);
+        NS_ASSERTION(rootFrame, "no root frame");
 
-	      NS_ASSERTION(viewportView, "no viewport view");
-	      viewportView->GetDimensions(&viewportArea.width, &viewportArea.height);
+        rootFrame->GetView(aPresContext, &viewportView);
+        NS_ASSERTION(viewportView, "no viewport view");
+        viewportArea.x = 0;
+        viewportArea.y = 0;
+        viewportView->GetDimensions(&viewportArea.width, &viewportArea.height);
       }
-    }
 
+      // Get the anchor point
+      ComputeBackgroundAnchorPoint(aColor, viewportArea, viewportArea, tileWidth, tileHeight, anchor);
 
-    // Compute the anchor point. If it's a fixed background attachment, then
-    // the image is placed relative to the viewport; otherwise, it's placed
-    // relative to the element's padding area.
-    //
-    // When tiling, the anchor coordinate values will be negative offsets
-    // from the padding area
-    nsPoint anchor;
-    ComputeBackgroundAnchorPoint(aColor, NS_STYLE_BG_ATTACHMENT_FIXED ==
-                                 aColor.mBackgroundAttachment ? viewportArea : paddingArea,
-                                 tileWidth, tileHeight, anchor);
-
-    // If it's a fixed background attachment, then convert the anchor point
-    // to aForFrame's coordinate space, and move the padding area so that
-    // we can use the same logic for both the fixed and scrolling cases.
-    if (NS_STYLE_BG_ATTACHMENT_FIXED == aColor.mBackgroundAttachment) {
+      // Convert the anchor point to aForFrame's coordinate space
       nsIView*  view;
-
       aForFrame->GetView(aPresContext, &view);
       if (!view) {
         nsPoint offset;
@@ -2381,17 +2379,50 @@ nsCSSRendering::PaintBackground(nsIPresContext* aPresContext,
       NS_ASSERTION(view, "expected a view");
       while (view && (view != viewportView)) {
         nscoord x, y;
-
+        
         view->GetPosition(&x, &y);
         anchor.x -= x;
         anchor.y -= y;
         
-        // Get the parent view
+        // Get the parent view until we reach the viewport view
         view->GetParent(view);
       }
+
+      // Move the padding area so that we can use the same logic for both the 
+      // fixed and scrolling cases
       paddingArea.x = 0;
       paddingArea.y = 0;
+    } else { 
+      nsCOMPtr<nsIAtom> frameType;
+      aForFrame->GetFrameType(getter_AddRefs(frameType));
+      if (frameType.get() == nsLayoutAtoms::canvasFrame) {
+        // If the frame is the canvas, the image is placed relative to
+        // the root element's (first) frame (see bug 46446)
+        nsRect firstRootElementFrameArea;
+        nsIFrame* firstRootElementFrame;
+        aForFrame->FirstChild(aPresContext, nsnull, &firstRootElementFrame);
+        NS_ASSERTION(firstRootElementFrame, "A canvas with a background "
+          "image had no child frame, which is impossible according to CSS. "
+          "Make sure there isn't a background image specified on the "
+          "|:viewport| pseudo-element in |html.css|.");
+        firstRootElementFrame->GetRect(firstRootElementFrameArea);
+
+        // Take the border out of the frame's rect
+        const nsStyleBorder* borderStyle;
+        firstRootElementFrame->GetStyleData(eStyleStruct_Border, (const nsStyleStruct*&)borderStyle);
+        nsMargin border;
+        borderStyle->GetBorder(border);
+        firstRootElementFrameArea.Deflate(border);
+
+        // Get the anchor point
+        ComputeBackgroundAnchorPoint(aColor, firstRootElementFrameArea, paddingArea, tileWidth, tileHeight, anchor);
+      } else {
+        // Otherwise, it is the normal case, and the background is
+        // simply placed relative to the frame's padding area
+        ComputeBackgroundAnchorPoint(aColor, paddingArea, paddingArea, tileWidth, tileHeight, anchor);
+      }
     }
+
 
 #if !defined(XP_UNIX) && !defined(XP_BEOS)
     // Setup clipping so that rendering doesn't leak out of the computed
