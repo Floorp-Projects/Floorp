@@ -45,8 +45,7 @@
 #include "nsIPref.h"
 static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
 
-#define PLUGIN_PATH 	"NS600_PLUGIN_PATH"	
-#define PLUGIN_DIR 	"/plugins"	
+#define PLUGIN_PATH 	"MOZ_PLUGIN_PATH"	
 #define MTYPE_END	'|'
 #define MTYPE_END_OLD	';'
 #define MTYPE_PART      ':'
