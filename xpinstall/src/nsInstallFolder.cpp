@@ -645,3 +645,4 @@ nsInstallFolder::ToString(nsAutoString* outString)
 
   return rv;
 }
+

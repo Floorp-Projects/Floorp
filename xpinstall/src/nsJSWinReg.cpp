@@ -727,3 +727,4 @@ InitWinRegPrototype(JSContext *jscontext, JSObject *global, JSObject **winRegPro
 
   return NS_OK;
 }
+

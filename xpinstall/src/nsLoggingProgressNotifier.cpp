@@ -328,3 +328,4 @@ Convert_nsIFile_To_nsFileSpec(nsIFile *aInIFile, nsFileSpec **aOutFileSpec)
 
     return rv;
 }
+

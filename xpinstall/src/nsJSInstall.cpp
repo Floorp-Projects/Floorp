@@ -1975,3 +1975,4 @@ JSObject * InitXPInstallObjects(JSContext *jscontext,
 
   return installObject;
 }
+

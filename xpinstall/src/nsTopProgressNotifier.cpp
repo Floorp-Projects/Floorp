@@ -205,3 +205,4 @@ nsTopProgressListener::OnLogComment(const PRUnichar* comment)
     }
    return NS_OK;
 }
+

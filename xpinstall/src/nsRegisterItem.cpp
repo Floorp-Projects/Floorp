@@ -468,3 +468,4 @@ nsRegisterItem::GetURLFromIFile(nsIFile* aFile, char** aOutURL)
 
     return rv;
 }
+

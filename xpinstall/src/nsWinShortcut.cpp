@@ -85,4 +85,5 @@ HRESULT CreateALink(LPCSTR lpszPathObj, LPCSTR lpszPathLink, LPCSTR lpszDesc, LP
     CoUninitialize();
 
     return hres;
-} 
+}
+

@@ -334,3 +334,4 @@ nsresult nsInstallProgressDialog::getDlgAttribute(  const char *id,
 
     return rv;
 }
+
