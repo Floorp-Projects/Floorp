@@ -16,7 +16,7 @@
 # knowing those details.  I may code a TreeData specific admin-CGI
 # script in the future but I do not have time now and the benefits are
 # not so clear.  For bonsai users it would be best if the DB stored
-# the tree data.  The tinderbox server could down load the data from a
+# the tree data.  The tinderbox server could download the data from a
 # central place when it first starts up, and this down load could
 # trigger a registration for email updates of changes to any trees
 # which this tinderbox server is monitoring. As long as the data is
@@ -29,9 +29,9 @@
 # issue to work out.
 
 
-# $Revision: 1.3 $ 
-# $Date: 2000/08/24 15:04:33 $ 
-# $Author: kestes%staff.mail.com $ 
+# $Revision: 1.4 $ 
+# $Date: 2000/08/28 18:39:40 $ 
+# $Author: mcafee%netscape.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/Attic/TreeData.pm,v $ 
 # $Name:  $ 
 
