@@ -81,7 +81,7 @@ public:
    * Returns Native Data
    */
 
-  virtual void* GetNativeData(PRUint32 aDataType);
+  virtual void* GetNativeData(PRUint32 aDataType) = 0;
 
 
 };
