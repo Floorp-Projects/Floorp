@@ -53,8 +53,8 @@ extern nsIWidget         * gRollupWidget;
 	#define botRight(r)	(((Point *) &(r))[1])
 #endif
 
-PRBool	nsMacEventHandler::mInBackground = PR_FALSE;
-PRBool	nsMacEventHandler::mMouseInWidgetHit = PR_FALSE;
+PRBool	nsMacEventHandler::sInBackground = PR_FALSE;
+PRBool	nsMacEventHandler::sMouseInWidgetHit = PR_FALSE;
 
 nsMacEventDispatchHandler	gEventDispatchHandler;
 
@@ -368,9 +368,9 @@ PRBool nsMacEventHandler::HandleOSEvent ( EventRecord& aOSEvent )
 			if (eventType == suspendResumeMessage)
 			{
 				if ((aOSEvent.message & 1) == resumeFlag) {
-					mInBackground = PR_FALSE;		// resume message
+					sInBackground = PR_FALSE;		// resume message
 				} else {
-					mInBackground = PR_TRUE;		// suspend message
+					sInBackground = PR_TRUE;		// suspend message
 					if (nsnull != gRollupListener && (nsnull != gRollupWidget) ) {
 						gRollupListener->Rollup();
 					}
@@ -379,14 +379,14 @@ PRBool nsMacEventHandler::HandleOSEvent ( EventRecord& aOSEvent )
 			}
 			else if (eventType == mouseMovedMessage)
 			{
-				if (! mInBackground)
+				if (! sInBackground)
 					retVal = HandleMouseMoveEvent(aOSEvent);
 			}
 		}
 		break;
 	
 		case nullEvent:
-			if (! mInBackground)
+			if (! sInBackground)
 				retVal = HandleMouseMoveEvent(aOSEvent);
 			break;
 	}
@@ -1009,7 +1009,7 @@ PRBool nsMacEventHandler::HandleActivateEvent(EventRecord& aOSEvent)
       break;
 
     case osEvt:
-      isActive = ! mInBackground;
+      isActive = ! sInBackground;
       break;
   }
 
@@ -1203,7 +1203,7 @@ PRBool nsMacEventHandler::HandleMouseDownEvent(EventRecord&	aOSEvent)
 			} 
 						
 			gEventDispatchHandler.SetWidgetHit(widgetHit);
-			mMouseInWidgetHit = PR_TRUE;
+			sMouseInWidgetHit = PR_TRUE;
 			break;
 		}
 
@@ -1281,9 +1281,9 @@ PRBool nsMacEventHandler::HandleMouseMoveEvent( EventRecord& aOSEvent )
 		Point macPoint = aOSEvent.where;
 		::GlobalToLocal(&macPoint);
 		PRBool inWidgetHit = lastWidgetHit->PointInWidget(macPoint);
-		if (mMouseInWidgetHit != inWidgetHit)
+		if (sMouseInWidgetHit != inWidgetHit)
 		{
-			mMouseInWidgetHit = inWidgetHit;
+			sMouseInWidgetHit = inWidgetHit;
 			mouseEvent.message = (inWidgetHit ? NS_MOUSE_ENTER : NS_MOUSE_EXIT);
 		}
 		retVal |= lastWidgetHit->DispatchMouseEvent(mouseEvent);

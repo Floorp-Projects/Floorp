@@ -124,8 +124,8 @@ protected:
 		virtual nsresult  HandleTextEvent(PRUint32 textRangeCount, nsTextRangeArray textRangeArray);
 
 protected:
-	static PRBool	mMouseInWidgetHit;
-  static PRBool	mInBackground;
+	static PRBool	sMouseInWidgetHit;
+  static PRBool	sInBackground;
 
 
 	nsMacWindow*	mTopLevelWidget;
