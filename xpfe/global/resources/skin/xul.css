@@ -1077,6 +1077,7 @@ grippy:hover {
 }
 
 
+/*
 window splitter grippy {
    list-style-image: url(resource:/res/toolbar/grippy-horizontal-before.gif);
 }
@@ -1092,7 +1093,7 @@ window[align="vertical"] splitter grippy {
 window[align="vertical"] splitter[collapse="after"] grippy {
    list-style-image: url(resource:/res/toolbar/grippy-vertical-after.gif);
 }
-
+*/
 box splitter grippy {
    list-style-image: url(resource:/res/toolbar/grippy-horizontal-before.gif);
 }
