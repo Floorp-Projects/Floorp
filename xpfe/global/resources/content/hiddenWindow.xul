@@ -45,7 +45,8 @@ Contributor(s): ______________________________________. -->
   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
   title="hidden"
   titlemodifier="&mainWindow.titlemodifier;" 
-  titlemenuseparator="&mainWindow.titlemodifiermenuseparator;">
+  titlemenuseparator="&mainWindow.titlemodifiermenuseparator;"
+  onload="hiddenWindowStartup();">
 
   <!-- JS from navigator.xul, to handle the menu commands -->
   <html:script language="javascript" src="chrome://navigator/content/navigator.js"/>
@@ -64,7 +65,7 @@ Contributor(s): ______________________________________. -->
   
   <broadcasterset id="broadcasterset">
 	<!-- Edit Menu -->
-	<broadcaster id="cmd_undo"/>
+	<broadcaster id="cmd_undo" />
 	<broadcaster id="cmd_redo"/>
 	<broadcaster id="cmd_cut"/>
 	<broadcaster id="cmd_copy"/>
@@ -87,7 +88,7 @@ Contributor(s): ______________________________________. -->
 			<menuitem id="menu_undo"/>
 			<menuitem id="menu_redo"/>
 			<menuseparator/>
-			<menuitem id="menu_cut"/>
+			<menuitem id="menu_cut" />
 			<menuitem id="menu_copy"/>
 			<menuitem id="menu_paste"/>
 			<menuseparator/>
@@ -97,9 +98,9 @@ Contributor(s): ______________________________________. -->
 			<menuseparator /> 
 			<menu value="&walletMenu.label;">
 			  <menupopup> 
-				<menuitem value="&walletSafeFillCmd.label;" oncommand="WalletSafeFillin();"/> 
-				<menuitem value="&walletQuickFillCmd.label;" oncommand="WalletQuickFillin();"/> 
-				<menuitem value="&walletRequestToCaptureCmd.label;" oncommand="WalletRequestToCapture();"/> 
+				<menuitem value="&walletSafeFillCmd.label;" oncommand="WalletSafeFillin();" disabled= "true"/> 
+				<menuitem value="&walletQuickFillCmd.label;" oncommand="WalletQuickFillin();" disabled= "true"/> 
+				<menuitem value="&walletRequestToCaptureCmd.label;" oncommand="WalletRequestToCapture();" disabled= "true"/> 
 				<menuseparator /> 
 				<menuitem value="&walletContentsCmd.label;" oncommand="WalletEditor();"/> 
 				<menuitem value="&walletDisplaySignonsCmd.label;" oncommand="SignonViewer();"/> 
@@ -116,32 +117,32 @@ Contributor(s): ______________________________________. -->
 
     <menu accesskey="v" value="&viewMenu.label;">
 	  <menupopup>
-		  <menuitem value="&toolbarsCmd.label;" oncommand="toolbar.visible=true"/>
-		  <menuitem value="&sidebarCmd.label;" oncommand="BrowserReload();"/>
+		  <menuitem value="&toolbarsCmd.label;" oncommand="toolbar.visible=true" disabled= "true"/>
+		  <menuitem value="&sidebarCmd.label;" oncommand="BrowserReload();" disabled= "true"/>
 		  <menuseparator />
-		  <menuitem value="&enlargeTextSizeCmd.label;" oncommand="BrowserReload();"/>
-		  <menuitem value="&reduceTextSizeCmd.label;" oncommand="BrowserReload();"/>
+		  <menuitem value="&enlargeTextSizeCmd.label;" oncommand="BrowserReload();" disabled= "true"/>
+		  <menuitem value="&reduceTextSizeCmd.label;" oncommand="BrowserReload();" disabled= "true"/>
 		  <menuseparator />
-		  <menu value="&useStyleSheetMenu.label;" oncommand="BrowserReload();">
+		  <menu value="&useStyleSheetMenu.label;" oncommand="BrowserReload();" disabled= "true">
 		    <menupopup>
-			  <menuitem value="&useStyleSheetDefaultCmd.label;" oncommand="BrowserReload();"/>
+			  <menuitem value="&useStyleSheetDefaultCmd.label;" oncommand="BrowserReload();" disabled= "true"/>
 			  <menuseparator />
-			  <menuitem value="&useStyleSheetEasyReadingCmd.label;" oncommand="BrowserReload();"/>
-			  <menuitem value="&useStyleSheetMaxInfoCmd.label;" oncommand="BrowserReload();"/>
-			  <menuitem value="&useStlyleSheetBizarreCmd.label;" oncommand="BrowserReload();"/>
+			  <menuitem value="&useStyleSheetEasyReadingCmd.label;" oncommand="BrowserReload();" disabled= "true"/>
+			  <menuitem value="&useStyleSheetMaxInfoCmd.label;" oncommand="BrowserReload();" disabled= "true"/>
+			  <menuitem value="&useStlyleSheetBizarreCmd.label;" oncommand="BrowserReload();" disabled= "true"/>
 			</menupopup>
 		  </menu>
 		  <menuseparator />
-		  <menuitem value="&reloadCmd.label;" id="menuitem-reload" oncommand="BrowserReallyReload(0);"/>
+		  <menuitem value="&reloadCmd.label;" id="menuitem-reload" oncommand="BrowserReallyReload(0);" disabled= "true"/>
        
-		  <menuitem value="&showImagesCmd.label;" oncommand="BrowserReload();"/>
-		  <menuitem value="&stopCmd.label;" id="menuitem-stop" oncommand="BrowserStop();"/>
+		  <menuitem value="&showImagesCmd.label;" oncommand="BrowserReload();" disabled= "true"/>
+		  <menuitem value="&stopCmd.label;" id="menuitem-stop" oncommand="BrowserStop();" disabled= "true"/>
         
 		  <menuseparator />
-		  <menuitem value="&pageSourceCmd.label;" oncommand="BrowserViewSource();"/>
-		  <menuitem value="&pageInfoCmd.label;" oncommand="BrowserReload();"/>
+		  <menuitem value="&pageSourceCmd.label;" oncommand="BrowserViewSource();" disabled= "true"/>
+		  <menuitem value="&pageInfoCmd.label;" oncommand="BrowserReload();" disabled= "true"/>
 		  <menuseparator />
-		  <menu value="&translateMenu.label;">
+		  <menu value="&translateMenu.label;" disabled= "true" >
 		    <menupopup>
 			  <menuitem value="&translateEngtoFrenCmd.label;" oncommand="Translate('en', 'fr', 'SSI');"/>
 			  <menuitem value="&translateEngtoGermCmd.label;" oncommand="Translate('en', 'de', 'SSI');"/>
@@ -170,7 +171,7 @@ Contributor(s): ______________________________________. -->
            </menupopup>
 		 </menu>
 
-		 <menu value="&dcharMenu.label;">
+		 <menu value="&dcharMenu.label;" disabled= "true">
 		     <menupopup>
 				 <menuitem value="&dcharIso1Cmd.label;" oncommand="BrowserSetDefaultCharacterSet('ISO-8859-1');"/>
 				 <menuitem value="&dcharIso2Cmd.label;" oncommand="BrowserSetDefaultCharacterSet('ISO-8859-2');"/>
@@ -238,8 +239,8 @@ Contributor(s): ______________________________________. -->
     </menu>
     <menu accesskey="s" value="&searchMenu.label;">
 	  <menupopup>
-		  <menuitem value="&findOnCmd.label;" oncommand="BrowserFind();"/>
-		  <menuitem value="&findAgainCmd.label;" oncommand="BrowserFindAgain();"/>
+		  <menuitem value="&findOnCmd.label;" oncommand="BrowserFind();" disabled= "true"/>
+		  <menuitem value="&findAgainCmd.label;" oncommand="BrowserFindAgain();" disabled= "true"/>
 		  <menuseparator />
 
 		  <menuitem value="&searchBookmarksHistoryCmd.label;" oncommand="OpenSearch('find', null);"/>
