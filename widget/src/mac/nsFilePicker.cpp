@@ -117,7 +117,7 @@ NS_IMETHODIMP nsFilePicker::Show(PRInt16 *retval)
   *retval = returnCancel;
   
   nsString filterList;
-  GetFilterListArray(filterList);
+  // GetFilterListArray(filterList);
   char *filterBuffer = filterList.ToNewCString();
 
   Str255 title;
