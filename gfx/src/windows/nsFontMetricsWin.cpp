@@ -182,7 +182,12 @@ void nsFontMetricsWin::RealizeFont(nsIDeviceContext *aContext)
 //  logFont.lfHeight = - NSToIntRound(rounded * app2dev);  // this is proper (windows) rounding
   logFont.lfHeight = - LONG(rounded * app2dev);  // this floor rounding is to make ours compatible with Nav 4.0
 
+#ifdef NS_DEBUG
+  // Make Purify happy
+  memset(logFont.lfFaceName, 0, sizeof(logFont.lfFaceName));
+#endif
   logFont.lfFaceName[0] = '\0';
+
   FontEnumData  data(aContext, logFont.lfFaceName);
   mFont->EnumerateFamilies(FontEnumCallback, &data); 
 
