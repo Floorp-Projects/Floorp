@@ -1,22 +1,29 @@
+var srDest = $SpaceRequired$;
+
 var err = initInstall("Chatzilla v0.5", "Chatzilla", "$Version$"); 
 logComment("initInstall: " + err);
 
-addFile("Chatzilla service",
-        "bin/components/chatzilla-service.js",
-        getFolder("Components"),
-        "");
+if (verifyDiskSpace(getFolder("Program"), srDest))
+{
+    addFile("Chatzilla service",
+            "$Version$",
+            "bin/components/chatzilla-service.js",
+            getFolder("Components"),
+            "chatzilla-service.js",
+            true);
 
-var fChat = getFolder("Chrome","packages/chatzilla");
-addDirectory("",
-             "bin/chrome/packages/chatzilla", // jar source folder 
-             fChat,                           // target folder
-             "");                             // target subdir 
+    var fChat = getFolder("Chrome","packages/chatzilla");
+    addDirectory("",
+                 "bin/chrome/packages/chatzilla", // jar source folder 
+                 fChat,                           // target folder
+                 "");                             // target subdir 
 
-registerChrome(PACKAGE | DELAYED_CHROME, fChat);
+    registerChrome(PACKAGE | DELAYED_CHROME, fChat);
 
-err = getLastError();
-if (err==SUCCESS)
-    performInstall(); 
+    if (err==SUCCESS)
+        performInstall(); 
+    else
+        cancelInstall(err);
+}
 else
-    cancelInstall(err);
-
+    cancelInstall(INSUFFICIENT_DISK_SPACE);

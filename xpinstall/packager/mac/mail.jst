@@ -1,31 +1,36 @@
+var srDest = $SpaceRequired$;
+
 var err = initInstall("Mozilla Mail", "Mail", "$Version$"); 
 logComment("initInstall: " + err);
 
 var fProgram = getFolder("Program");
 logComment("fProgram: " + fProgram);
 
-err = addDirectory("Program",
+if (verifyDiskSpace(fProgram, srDest))
+{
+    err = addDirectory("Program",
                    "$Version$",
                    "viewer",           // jar source folder 
                    fProgram,           // target folder
                    "",                 // target subdir 
                    true );             // force flag 
 
-logComment("addDirectory() returned: " + err);
+    logComment("addDirectory() returned: " + err);
 
-err = registerChrome(CONTENT | DELAYED_CHROME,
+    err = registerChrome(CONTENT | DELAYED_CHROME,
                      getFolder(fProgram,"chrome/packages/messenger"));
-logComment("registerChrome() returned: " + err);
+    logComment("registerChrome() returned: " + err);
 
-err = getLastError();
-if (err==SUCCESS)
-{
-	err = performInstall(); 
-	logComment("performInstall() returned: " + err);
+    if (err==SUCCESS)
+    {
+	    err = performInstall(); 
+    	logComment("performInstall() returned: " + err);
+    }
+    else
+    {
+	    cancelInstall(err);
+    	logComment("cancelInstall() due to error: " + err);
+    }
 }
 else
-{
-	cancelInstall(err);
-	logComment("cancelInstall() due to error: " + err);
-}
-
+    cancelInstall(INSUFFICIENT_DISK_SPACE);

@@ -59,9 +59,14 @@ $inStagePath      = $ARGV[2];
 @inJstFileSplit   = split(/\./,$inJstFile);
 $outJsFile        = $inJstFileSplit[0];
 $outJsFile       .= ".js";
+$outTempFile      = $inJstFileSplit[0];
+$outTempFile     .= ".template";
+
+system("cp ../common/share.t $outTempFile");
+system("cat $inJstFile >> $outTempFile");
 
 # Open the input template file
-open(fpInJst, "<$inJstFile") || die "\nCould not open $inJstFile: $!\n";
+open(fpInJst, "<$outTempFile") || die "\ncould not open $outTempFile: $!\n";
 
 # Open the output .js file
 open(fpOutJs, ">$outJsFile") || die "\nCould not open $outJsFile: $!\n";
@@ -100,6 +105,8 @@ while($line = <fpInJst>)
 
   print fpOutJs $line;
 }
+
+system("rm $outTempFile");
 
 ##
 # GetSpaceRequired

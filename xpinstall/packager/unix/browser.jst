@@ -1,37 +1,44 @@
+var srDest = $SpaceRequired$;
+
 var err = initInstall("Mozilla Seamonkey", "Seamonkey", "$Version$"); 
 logComment("initInstall: " + err);
 
 var communicatorFolder = getFolder("Program");
 logComment("communicatorFolder: " + communicatorFolder);
 
-err = addDirectory("Program",
-                   "$Version$",
-                   "bin",              // jar source folder
-                   communicatorFolder, // target folder
-                   "",                 // target subdir 
-                   true );             // force flag 
-
-logComment("addDirectory() returned: " + err);
-
-// create the plugins folder next to mozilla 
-var pluginsFolder = getFolder("Plugins");
-var ignoreErr = dirCreate(pluginsFolder);
-logComment("dirCreate() returned: " + ignoreErr);
-
-var ctype = (CONTENT | DELAYED_CHROME);
-var cf = getFolder("Chrome");
-registerChrome(ctype, getFolder(cf,"packages/core"));
-registerChrome(ctype, getFolder(cf,"packages/widget-toolkit"));
-registerChrome(SKIN|DELAYED_CHROME, getFolder(cf,"skins/modern"));
-registerChrome(SKIN|DELAYED_CHROME, getFolder(cf,"skins/classic"));
-
-if (err==SUCCESS)
+if (verifyDiskSpace(communicatorFolder, srDest))
 {
-	err = performInstall(); 
-	logComment("performInstall() returned: " + err);
+    err = addDirectory("Program",
+                       "$Version$",
+                       "bin",              // jar source folder
+                       communicatorFolder, // target folder
+                       "",                 // target subdir 
+                       true );             // force flag 
+
+    logComment("addDirectory() returned: " + err);
+
+    // create the plugins folder next to mozilla 
+    var pluginsFolder = getFolder("Plugins");
+    var ignoreErr = dirCreate(pluginsFolder);
+    logComment("dirCreate() returned: " + ignoreErr);
+
+    var ctype = (CONTENT | DELAYED_CHROME);
+    var cf = getFolder("Chrome");
+    registerChrome(ctype, getFolder(cf,"packages/core"));
+    registerChrome(ctype, getFolder(cf,"packages/widget-toolkit"));
+    registerChrome(SKIN|DELAYED_CHROME, getFolder(cf,"skins/modern"));
+    registerChrome(SKIN|DELAYED_CHROME, getFolder(cf,"skins/classic"));
+
+    if (err==SUCCESS)
+    {
+	    err = performInstall(); 
+	    logComment("performInstall() returned: " + err);
+    }
+    else
+    {
+	    cancelInstall(err);
+	    logComment("cancelInstall() due to error: " + err);
+    }
 }
 else
-{
-	cancelInstall(err);
-	logComment("cancelInstall() due to error: " + err);
-}
+    cancelInstall(INSUFFICIENT_DISK_SPACE);
