@@ -497,8 +497,8 @@ function Startup()
 
     // Check for window.arguments[0]. If present, use that for uriToLoad.
     if ("arguments" in window && window.arguments.length >= 1 && window.arguments[0]) {
-      var uriArray = window.arguments[0].split('\n');
-      uriToLoad = uriArray.splice(0, 1);
+      var uriArray = window.arguments[0].toString().split('\n'); // stringify and split
+      uriToLoad = uriArray.splice(0, 1)[0];
       if (uriArray.length > 0)
         window.setTimeout(function(arg) { for (var i in arg) gBrowser.addTab(arg[i]); }, 0, uriArray);
     }
