@@ -138,7 +138,6 @@ nsIContent * gLastFocusedContent = 0; // Strong reference
 nsIDocument * gLastFocusedDocument = 0; // Strong reference
 nsIPresContext* gLastFocusedPresContext = 0; // Weak reference
 
-PRInt32 nsEventStateManager::sTabFocusModel = eTabFocus_unset;
 PRInt8 nsEventStateManager::sTextfieldSelectModel = eTextfieldSelect_unset;
 
 PRUint32 nsEventStateManager::mInstanceCount = 0;
@@ -3400,17 +3399,14 @@ nsEventStateManager::GetNextTabbableContent(nsIContent* aRootContent, nsIFrame* 
       PRBool disabled = PR_TRUE;
       PRBool hidden = PR_FALSE;
 
-      // Tab focus mode is constant across all windows.
-      // It would be nicer if ESM had a prefs callback,
-      // so we could store this and change behavior when it changes.
-      // But until the pref is exposed, that doesn't matter.
-      if (sTabFocusModel == eTabFocus_unset) {
-        sTabFocusModel = (eTabFocus_textControlsMask
-                          | eTabFocus_formElementsMask
-                          | eTabFocus_linksMask);
-        nsresult rv = getPrefBranch();
-        if (NS_SUCCEEDED(rv))
-          mPrefBranch->GetIntPref("accessibility.tabfocus", &sTabFocusModel);
+      PRInt32 tabFocusModel = eTabFocus_any;
+      if (mPrefBranch) {
+        // This could be done via a pref observer, but because there are 
+        // no static pref callbacks we'd have to create a singleton object
+        // just to observe this pref. Since mPrefBranch is already cached, and
+        // GetIntPref() is fairly fast, that would probably be overkill.
+        // This only happens once per tab press.
+        mPrefBranch->GetIntPref("accessibility.tabfocus", &tabFocusModel);
       }
 
       child->GetTag(*getter_AddRefs(tag));
@@ -3427,8 +3423,7 @@ nsEventStateManager::GetNextTabbableContent(nsIContent* aRootContent, nsIFrame* 
                 || type.EqualsIgnoreCase("autocomplete")
                 || type.EqualsIgnoreCase("password")) {
               // It's a text field or password field
-              disabled =
-                disabled || !(sTabFocusModel & eTabFocus_textControlsMask);
+              disabled = PR_FALSE;
             }
             else if (type.EqualsIgnoreCase("hidden")) {
               hidden = PR_TRUE;
@@ -3439,13 +3434,13 @@ nsEventStateManager::GetNextTabbableContent(nsIContent* aRootContent, nsIFrame* 
             else {
               // it's some other type of form element
               disabled =
-                disabled || !(sTabFocusModel & eTabFocus_formElementsMask);
+                disabled || !(tabFocusModel & eTabFocus_formElementsMask);
             }
           }
         }
         else if (nsHTMLAtoms::select==tag) {
           // Select counts as form but not as text
-          disabled = !(sTabFocusModel & eTabFocus_formElementsMask);
+          disabled = !(tabFocusModel & eTabFocus_formElementsMask);
           if (!disabled) {
             nsCOMPtr<nsIDOMHTMLSelectElement> nextSelect(do_QueryInterface(child));
             if (nextSelect) {
@@ -3456,7 +3451,7 @@ nsEventStateManager::GetNextTabbableContent(nsIContent* aRootContent, nsIFrame* 
         }
         else if (nsHTMLAtoms::textarea==tag) {
           // it's a textarea
-          disabled = !(sTabFocusModel & eTabFocus_textControlsMask);
+          disabled = PR_FALSE;
           if (!disabled) {
             nsCOMPtr<nsIDOMHTMLTextAreaElement> nextTextArea(do_QueryInterface(child));
             if (nextTextArea) {
@@ -3467,7 +3462,7 @@ nsEventStateManager::GetNextTabbableContent(nsIContent* aRootContent, nsIFrame* 
         }
         else if (nsHTMLAtoms::a==tag) {
           // it's a link
-          disabled = !(sTabFocusModel & eTabFocus_linksMask);
+          disabled = !(tabFocusModel & eTabFocus_linksMask);
           nsCOMPtr<nsIDOMHTMLAnchorElement> nextAnchor(do_QueryInterface(child));
           if (!disabled) {
             if (nextAnchor)
@@ -3483,7 +3478,7 @@ nsEventStateManager::GetNextTabbableContent(nsIContent* aRootContent, nsIFrame* 
         }
         else if (nsHTMLAtoms::button==tag) {
           // Button counts as a form element but not as text
-          disabled = !(sTabFocusModel & eTabFocus_formElementsMask);
+          disabled = !(tabFocusModel & eTabFocus_formElementsMask);
           if (!disabled) {
             nsCOMPtr<nsIDOMHTMLButtonElement> nextButton(do_QueryInterface(child));
             if (nextButton) {
@@ -3495,7 +3490,7 @@ nsEventStateManager::GetNextTabbableContent(nsIContent* aRootContent, nsIFrame* 
         else if (nsHTMLAtoms::img==tag) {
           // Don't need to set disabled here, because if we
           // match an imagemap, we'll return from there.
-          if (sTabFocusModel & eTabFocus_linksMask) {
+          if (tabFocusModel & eTabFocus_linksMask) {
             nsCOMPtr<nsIDOMHTMLImageElement> nextImage(do_QueryInterface(child));
             nsAutoString usemap;
             if (nextImage) {
@@ -3550,7 +3545,7 @@ nsEventStateManager::GetNextTabbableContent(nsIContent* aRootContent, nsIFrame* 
         }
         else if (nsHTMLAtoms::object==tag) {
           // OBJECT is treated as a form element.
-          disabled = !(sTabFocusModel & eTabFocus_formElementsMask);
+          disabled = !(tabFocusModel & eTabFocus_formElementsMask);
           if (!disabled) {
             nsCOMPtr<nsIDOMHTMLObjectElement> nextObject(do_QueryInterface(child));
             if (nextObject) 
