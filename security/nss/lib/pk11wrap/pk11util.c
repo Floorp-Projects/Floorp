@@ -291,11 +291,11 @@ SECMOD_DeleteInternalModule(char *name) {
 	SECMODModule *newModule,*oldModule;
 
 	if (mlp->module->isFIPS) {
-    	    newModule = SECMOD_CreateModule(NULL,SECMOD_INT_NAME,NULL,
-			SECMOD_INT_FLAGS);
+    	    newModule = SECMOD_CreateModule(NULL, SECMOD_INT_NAME,
+				NULL, SECMOD_INT_FLAGS);
 	} else {
-    	    newModule = SECMOD_CreateModule(NULL,SECMOD_FIPS_NAME,NULL,
-			SECMOD_FIPS_FLAGS);
+    	    newModule = SECMOD_CreateModule(NULL, SECMOD_FIPS_NAME,
+				NULL, SECMOD_FIPS_FLAGS);
 	}
 	if (newModule == NULL) {
 	    SECMODModuleList *last = NULL,*mlp2;
@@ -316,13 +316,14 @@ SECMOD_DeleteInternalModule(char *name) {
 	   return SECFailure; 
 	}
 	newModule->libraryParams = 
-	     PORT_ArenaStrdup(mlp->module->arena,mlp->module->libraryParams);
+	     PORT_ArenaStrdup(newModule->arena,mlp->module->libraryParams);
 	oldModule = internalModule;
-	internalModule = SECMOD_ReferenceModule(newModule);
-	SECMOD_AddModule(internalModule);
+	internalModule = NULL;
 	SECMOD_DestroyModule(oldModule);
  	SECMOD_DeletePermDB(mlp->module);
 	SECMOD_DestroyModuleListElement(mlp);
+	internalModule = SECMOD_ReferenceModule(newModule);
+	SECMOD_AddModule(internalModule);
     }
     return rv;
 }
