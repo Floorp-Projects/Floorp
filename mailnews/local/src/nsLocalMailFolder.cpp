@@ -1203,15 +1203,26 @@ nsMsgLocalMailFolder::InitCopyState(nsISupports* aSupport,
 
   if (mCopyState) return NS_ERROR_FAILURE; // already has a  copy in progress
 
+	PRBool isLocked;
+
+	IsLocked(&isLocked);
+	if(!isLocked)
+		AcquireSemaphore(NS_STATIC_CAST(nsIMsgLocalMailFolder*, this));
+	else
+		return NS_MSG_FOLDER_BUSY;
+
 	rv = GetPath(getter_AddRefs(pathSpec));
-	if (NS_FAILED(rv)) return rv;
+	if (NS_FAILED(rv)) goto done;
 
 	rv = pathSpec->GetFileSpec(&path);
-  if (NS_FAILED(rv)) return rv;
+  if (NS_FAILED(rv)) goto done;
 
 	mCopyState = new nsLocalMailCopyState();
 	if(!mCopyState)
-    return NS_ERROR_OUT_OF_MEMORY;
+  {
+    rv =  NS_ERROR_OUT_OF_MEMORY;
+    goto done;
+  }
 
 	//Before we continue we should verify that there is enough diskspace.
 	//XXX How do we do this?
@@ -1235,13 +1246,25 @@ nsMsgLocalMailFolder::InitCopyState(nsISupports* aSupport,
 done:
 
   if (NS_FAILED(rv))
-  {
-    delete mCopyState;
-    mCopyState = nsnull;
-  }
+    ClearCopyState();
+
   return rv;
 }
-                                    
+
+void
+nsMsgLocalMailFolder::ClearCopyState()
+{
+    delete mCopyState;
+    mCopyState = nsnull;
+
+    PRBool haveSemaphore;
+    nsresult result;
+    result = TestSemaphore(NS_STATIC_CAST(nsIMsgLocalMailFolder*, this),
+                           &haveSemaphore);
+    if(NS_SUCCEEDED(result) && haveSemaphore)
+      ReleaseSemaphore(NS_STATIC_CAST(nsIMsgLocalMailFolder*, this));
+}
+                
 NS_IMETHODIMP
 nsMsgLocalMailFolder::CopyMessages(nsIMsgFolder* srcFolder, nsISupportsArray*
                                    messages, PRBool isMove,
@@ -1251,23 +1274,16 @@ nsMsgLocalMailFolder::CopyMessages(nsIMsgFolder* srcFolder, nsISupportsArray*
     return NS_ERROR_NULL_POINTER;
   if (txnMgr) SetTransactionManager(txnMgr);
 
-  nsLocalMoveCopyMsgTxn* msgTxn = nsnull;
-	PRBool isLocked;
-
-	IsLocked(&isLocked);
-	if(!isLocked)
-		AcquireSemaphore(NS_STATIC_CAST(nsIMsgLocalMailFolder*, this));
-	else
-		return NS_MSG_FOLDER_BUSY;
-
 	nsresult rv;
   nsCOMPtr<nsISupports> aSupport(do_QueryInterface(srcFolder, &rv));
-  if (NS_FAILED(rv)) goto done;
+  if (NS_FAILED(rv)) return rv;
 
   rv = InitCopyState(aSupport, messages, isMove);
-  if (NS_FAILED(rv)) goto done;
+  if (NS_FAILED(rv)) return rv;
 
   // undo stuff
+  nsLocalMoveCopyMsgTxn* msgTxn = nsnull;
+
   msgTxn = new nsLocalMoveCopyMsgTxn(srcFolder, this, isMove);
 
   if (msgTxn)
@@ -1275,20 +1291,9 @@ nsMsgLocalMailFolder::CopyMessages(nsIMsgFolder* srcFolder, nsISupportsArray*
   else
     rv = NS_ERROR_OUT_OF_MEMORY;
   
-done:
   if (NS_FAILED(rv))
   {
-    if (mCopyState)
-    {
-      delete mCopyState;
-      mCopyState = nsnull;
-    }
-    PRBool haveSemaphore;
-    nsresult result;
-    result = TestSemaphore(NS_STATIC_CAST(nsIMsgLocalMailFolder*, this),
-                           &haveSemaphore);
-    if(NS_SUCCEEDED(result) && haveSemaphore)
-      ReleaseSemaphore(NS_STATIC_CAST(nsIMsgLocalMailFolder*, this));
+    ClearCopyState();
   }
   else
   {
@@ -1300,6 +1305,8 @@ done:
       aMessage = do_QueryInterface(aSupport, &rv);
       if(NS_SUCCEEDED(rv))
         rv = CopyMessageTo(aMessage, this, isMove);
+      else
+        ClearCopyState();
     }
   }
   return rv;
@@ -1311,7 +1318,65 @@ nsMsgLocalMailFolder::CopyFileMessage(nsIFileSpec* fileSpec, nsIMessage*
                                       nsISupports* aSupport,
                                       nsITransactionManager* txnMgr)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+  nsresult rv = NS_ERROR_NULL_POINTER;
+  if (!fileSpec) return rv;
+
+  nsInputFileStream *inputFileStream = nsnull;
+  nsCOMPtr<nsIInputStream> inputStream;
+  PRUint32 fileSize = 0;
+  nsCOMPtr<nsISupports> fileSupport(do_QueryInterface(fileSpec, &rv));
+  if (NS_FAILED(rv)) return rv;
+
+  nsCOMPtr<nsISupportsArray> messages;
+  rv = NS_NewISupportsArray(getter_AddRefs(messages));
+  
+  if (msgToReplace)
+  {
+    nsCOMPtr<nsISupports> msgSupport(do_QueryInterface(msgToReplace, &rv));
+    if (NS_SUCCEEDED(rv))
+      messages->AppendElement(msgSupport);
+  }
+
+  rv = InitCopyState(fileSupport, messages, msgToReplace ? PR_TRUE:PR_FALSE);
+  if (NS_FAILED(rv)) goto done;
+
+  inputFileStream = new nsInputFileStream(fileSpec);
+  if (!inputFileStream)
+  {
+    rv = NS_ERROR_OUT_OF_MEMORY;
+    goto done;
+  }
+
+  inputStream = do_QueryInterface(inputFileStream->GetIStream());
+  if (NS_FAILED(rv)) goto done;
+
+  rv = inputStream->GetLength(&fileSize);
+  if (NS_FAILED(rv)) goto done;
+  rv = BeginCopy(nsnull);
+  if (NS_FAILED(rv)) goto done;
+  rv = CopyData(inputStream, (PRInt32) fileSize);
+  if (NS_FAILED(rv)) goto done;
+  rv = EndCopy(PR_TRUE);
+  if (NS_FAILED(rv)) goto done;
+
+  if (msgToReplace)
+  {
+    rv = DeleteMessage(msgToReplace, txnMgr, PR_TRUE);
+  }
+
+done:
+  if(NS_FAILED(rv))
+  {
+    ClearCopyState();
+  }
+
+  if (inputFileStream)
+  {
+    inputStream = null_nsCOMPtr();
+    inputFileStream->close();
+    delete inputFileStream;
+  }
+  return rv;
 }
 
 nsresult nsMsgLocalMailFolder::DeleteMessage(nsIMessage *message,
@@ -1422,7 +1487,8 @@ NS_IMETHODIMP nsMsgLocalMailFolder::BeginCopy(nsIMessage *message)
   if (!mCopyState) return NS_ERROR_NULL_POINTER;
   nsresult rv = NS_OK;
   mCopyState->curDstKey = mCopyState->fileStream->tell();
-  mCopyState->message = do_QueryInterface(message, &rv);
+  if (message)
+    mCopyState->message = do_QueryInterface(message, &rv);
   return rv;
 }
 
@@ -1512,15 +1578,7 @@ NS_IMETHODIMP nsMsgLocalMailFolder::EndCopy(PRBool copySucceeded)
     if (NS_SUCCEEDED(rv) && mCopyState->undoMsgTxn)
       mTxnMgr->Do(mCopyState->undoMsgTxn);
 
-    delete mCopyState;
-    mCopyState = nsnull;
-
-    //we finished the copy so someone else can write to us.
-    PRBool haveSemaphore;
-    rv = TestSemaphore(NS_STATIC_CAST(nsIMsgLocalMailFolder*, this),
-                       &haveSemaphore);
-    if(NS_SUCCEEDED(rv) && haveSemaphore)
-      ReleaseSemaphore(NS_STATIC_CAST(nsIMsgLocalMailFolder*, this));
+    ClearCopyState();
   }
 
 	return rv;

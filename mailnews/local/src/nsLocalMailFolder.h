@@ -160,6 +160,7 @@ protected:
   nsresult SetTransactionManager(nsITransactionManager* txnMgr);
   nsresult InitCopyState(nsISupports* aSupport, nsISupportsArray* messages,
                          PRBool isMove);
+  void ClearCopyState();
 
 protected:
 	nsNativeFileSpec *mPath;
