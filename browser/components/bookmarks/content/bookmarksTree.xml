@@ -1,4 +1,4 @@
-<?xml version="1.0"?>  
+g<?xml version="1.0"?>  
 
 #  -*- Mode: HTML; indent-tabs-mode: nil; -*-
 # The contents of this file are subject to the Netscape Public
@@ -676,14 +676,6 @@ dump("ONSELECTION CHANGED\n")
           }
         },
         
-        getImageSource: function(aItemIndex, aColumnID) {
-           if (aColumnID == "Name") {
-             var resource = this.mOuter.getRowResource(aItemIndex);
-             return BookmarksUtils.getProperty(resource, NC_NS+"Icon", this.mOuter.db);
-           }
-           return "";
-        },
-
         onCycleCell          : function (aItemIndex, aColumnID)          {},
         isEditable           : function (aItemIndex, aColumnID)          {},
         onSetCellText        : function (aItemIndex, aColumnID, aValue)  {},
