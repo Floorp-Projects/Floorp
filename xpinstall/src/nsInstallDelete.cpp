@@ -244,12 +244,12 @@ PRInt32 nsInstallDelete::ProcessInstallDelete()
         }
         else
         {
-            err = nsInstall::DESTINATION_IS_DIRECTORY;
+            err = nsInstall::IS_DIRECTORY;
         }
     }
     else
     {
-        err = nsInstall::DESTINATION_DOES_NOT_EXIST;
+        err = nsInstall::DOES_NOT_EXIST;
     }
 
     return err;
@@ -259,6 +259,7 @@ PRInt32 nsInstallDelete::ProcessInstallDelete()
 
 PRInt32 nsInstallDelete::NativeComplete()
 {
+    NS_WARN_IF_FALSE(mFinalFile->Exists(),"nsInstallDelete::Complete -- file should exist!");
     if (mFinalFile->Exists())
     {
         if (mFinalFile->IsFile())
@@ -267,10 +268,11 @@ PRInt32 nsInstallDelete::NativeComplete()
         }
         else
         {
-            return nsInstall::DESTINATION_IS_DIRECTORY;
+            NS_ASSERTION(0,"nsInstallDelete::Complete -- expected file was a directory!");
+            return nsInstall::IS_DIRECTORY;
         }
     }
     
-    return nsInstall::DESTINATION_DOES_NOT_EXIST;
+    return nsInstall::DOES_NOT_EXIST;
 }
 

@@ -101,10 +101,6 @@ nsSoftwareUpdate::GetInstance()
 
 nsSoftwareUpdate::nsSoftwareUpdate()
 {
-#ifdef NS_DEBUG
-    printf("XPInstall Component created\n");
-#endif
-
     NS_INIT_ISUPPORTS();
 
     mStubLockout = PR_FALSE;
@@ -167,17 +163,13 @@ nsSoftwareUpdate::nsSoftwareUpdate()
 
 nsSoftwareUpdate::~nsSoftwareUpdate()
 {
-#ifdef NS_DEBUG
-    printf("*** XPInstall Component destroyed\n");
-#endif
-
     PR_Lock(mLock);
     if (mJarInstallQueue != nsnull)
     {
-        PRInt32 i=0;
-        for (; i < mJarInstallQueue->Count(); i++) 
+        nsInstallInfo* element;
+        for (PRInt32 i=0; i < mJarInstallQueue->Count(); i++)
         {
-            nsInstallInfo* element = (nsInstallInfo*)mJarInstallQueue->ElementAt(i);
+            element = (nsInstallInfo*)mJarInstallQueue->ElementAt(i);
             //FIX:  need to add to registry....
             delete element;
         }
@@ -191,8 +183,7 @@ nsSoftwareUpdate::~nsSoftwareUpdate()
 
     NR_ShutdownRegistry();
 
-    if (mProgramDir)
-        mProgramDir->Release();
+    NS_IF_RELEASE( mProgramDir );
 }
 
 
