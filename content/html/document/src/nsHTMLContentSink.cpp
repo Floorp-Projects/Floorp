@@ -4346,7 +4346,7 @@ HTMLContentSink::ScrollToRef()
 
       // Check an empty string which might be caused by the UTF-8 conversion
       if (!ref.IsEmpty()) {
-        rv = shell->GoToAnchor(ref);
+        rv = shell->GoToAnchor(ref, PR_TRUE);
       } else {
         rv = NS_ERROR_FAILURE;
       }
@@ -4362,7 +4362,7 @@ HTMLContentSink::ScrollToRef()
           rv = CharsetConvRef(docCharset, unescapedRef, ref);
 
           if (NS_SUCCEEDED(rv) && !ref.IsEmpty())
-            rv = shell->GoToAnchor(ref);
+            rv = shell->GoToAnchor(ref, PR_TRUE);
         }
       }
 

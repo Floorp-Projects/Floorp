@@ -3554,11 +3554,12 @@ static PRBool ValueIncludes(const nsString& aValueList, const nsString& aValue, 
 
 inline PRBool IsEventPseudo(nsIAtom* aAtom)
 {
-  return PRBool ((nsCSSPseudoClasses::active == aAtom)   || 
-                 (nsCSSPseudoClasses::mozDragOver == aAtom) || 
-                 (nsCSSPseudoClasses::focus == aAtom)    || 
-                 (nsCSSPseudoClasses::hover == aAtom)); 
-                 // XXX selected, enabled, disabled, selection?
+  return nsCSSPseudoClasses::active == aAtom || 
+         nsCSSPseudoClasses::mozDragOver == aAtom || 
+         nsCSSPseudoClasses::focus == aAtom || 
+         nsCSSPseudoClasses::hover == aAtom ||
+         nsCSSPseudoClasses::target == aAtom; 
+         // XXX selected, enabled, disabled, selection?
 }
 
 inline PRBool IsLinkPseudo(nsIAtom* aAtom)
@@ -3843,6 +3844,10 @@ static PRBool SelectorMatches(RuleProcessorData &data,
           else if (nsCSSPseudoClasses::mozDragOver == pseudoClass->mAtom) {
             result = (aStateMask & NS_EVENT_STATE_DRAGOVER) ||
                      (localTrue == (0 != (data.mEventState & NS_EVENT_STATE_DRAGOVER)));
+          }
+          else if (nsCSSPseudoClasses::target == pseudoClass->mAtom) {
+            result = (aStateMask & NS_EVENT_STATE_URLTARGET) ||
+                     (localTrue == (0 != (data.mEventState & NS_EVENT_STATE_URLTARGET)));
           }
         } 
       }
@@ -4443,7 +4448,8 @@ PRBool IsStateSelector(nsCSSSelector& aSelector)
         (pseudoClass->mAtom == nsCSSPseudoClasses::checked) ||
         (pseudoClass->mAtom == nsCSSPseudoClasses::mozDragOver) || 
         (pseudoClass->mAtom == nsCSSPseudoClasses::focus) || 
-        (pseudoClass->mAtom == nsCSSPseudoClasses::hover)) {
+        (pseudoClass->mAtom == nsCSSPseudoClasses::hover) ||
+        (pseudoClass->mAtom == nsCSSPseudoClasses::target)) {
       return PR_TRUE;
     }
     pseudoClass = pseudoClass->mNext;

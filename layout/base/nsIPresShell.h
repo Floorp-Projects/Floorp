@@ -352,10 +352,14 @@ public:
 
 
   /**
-   * Scrolls the view of the document so that the anchor with the specified
-   * name is displayed at the top of the window
+   * Informs the pres shell that the document is now at the anchor with
+   * the given name.  If |aScroll| is true, scrolls the view of the
+   * document so that the anchor with the specified name is displayed at
+   * the top of the window.  If |aAnchorName| is empty, then this informs
+   * the pres shell that there is no current target, and |aScroll| must
+   * be false.
    */
-  NS_IMETHOD GoToAnchor(const nsAString& aAnchorName) = 0;
+  NS_IMETHOD GoToAnchor(const nsAString& aAnchorName, PRBool aScroll) = 0;
 
   /**
    * Scrolls the view of the document so that the frame is displayed at the 

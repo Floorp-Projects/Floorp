@@ -5649,16 +5649,19 @@ nsDocShell::ScrollIfAnchor(nsIURI * aURI, PRBool * aWasAnchor, PRUint32 aLoadTyp
     GetCurScrollPos(ScrollOrientation_X, cx);
     GetCurScrollPos(ScrollOrientation_Y, cy);
 
+    nsCOMPtr<nsIPresShell> shell;
+    rv = GetPresShell(getter_AddRefs(shell));
+    if (NS_FAILED(rv))
+        return rv;
+
     if (!sNewRef.IsEmpty()) {
-        nsCOMPtr<nsIPresShell> shell = nsnull;
-        rv = GetPresShell(getter_AddRefs(shell));
-        if (NS_SUCCEEDED(rv) && shell) {
+        if (shell) {
             *aWasAnchor = PR_TRUE;
 
             // anchor is there, but if it's a load from history,
             // we don't have any anchor jumping to do
-            if (aLoadType == LOAD_HISTORY || aLoadType == LOAD_RELOAD_NORMAL)
-              return rv;
+            PRBool scroll = aLoadType != LOAD_HISTORY &&
+                            aLoadType != LOAD_RELOAD_NORMAL;
 
             char *str = ToNewCString(sNewRef);
 
@@ -5670,7 +5673,7 @@ nsDocShell::ScrollIfAnchor(nsIURI * aURI, PRBool * aWasAnchor, PRUint32 aLoadTyp
 
             // We try the UTF-8 string first, and then try the
             // document's charset (see below).
-            rv = shell->GoToAnchor(NS_ConvertUTF8toUCS2(str));
+            rv = shell->GoToAnchor(NS_ConvertUTF8toUCS2(str), scroll);
             nsMemory::Free(str);
 
             // Above will fail if the anchor name is not UTF-8.
@@ -5703,12 +5706,15 @@ nsDocShell::ScrollIfAnchor(nsIURI * aURI, PRBool * aWasAnchor, PRUint32 aLoadTyp
                                                       getter_Copies(uStr));
                 NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
 
-                rv = shell->GoToAnchor(uStr);
+                rv = shell->GoToAnchor(uStr, scroll);
             }
         }
     }
     else {
         *aWasAnchor = PR_TRUE;
+
+        // Tell the shell it's at an anchor, without scrolling.
+        shell->GoToAnchor(NS_LITERAL_STRING(""), PR_FALSE);
         
         // An empty anchor was found, but if it's a load from history,
         // we don't have to jump to the top of the page. Scrollbar 
