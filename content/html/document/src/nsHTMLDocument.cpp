@@ -1037,7 +1037,7 @@ nsHTMLDocument::GetScriptObject(nsIScriptContext *aContext, void** aScriptObject
   nsIScriptGlobalObject *global = aContext->GetGlobalObject();
 
   if (nsnull == mScriptObject) {
-    res = NS_NewScriptHTMLDocument(aContext, this, (nsISupports *)global, (void**)&mScriptObject);
+    res = NS_NewScriptHTMLDocument(aContext, (nsISupports *)(nsIDOMHTMLDocument *)this, (nsISupports *)global, (void**)&mScriptObject);
   }
   *aScriptObject = mScriptObject;
 

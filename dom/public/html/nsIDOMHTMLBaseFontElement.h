@@ -65,6 +65,6 @@ public:
 
 extern nsresult NS_InitHTMLBaseFontElementClass(nsIScriptContext *aContext, void **aPrototype);
 
-extern "C" NS_DOM nsresult NS_NewScriptHTMLBaseFontElement(nsIScriptContext *aContext, nsIDOMHTMLBaseFontElement *aSupports, nsISupports *aParent, void **aReturn);
+extern "C" NS_DOM nsresult NS_NewScriptHTMLBaseFontElement(nsIScriptContext *aContext, nsISupports *aSupports, nsISupports *aParent, void **aReturn);
 
 #endif // nsIDOMHTMLBaseFontElement_h__

@@ -148,6 +148,6 @@ public:
 
 extern nsresult NS_InitWindowClass(nsIScriptContext *aContext, nsIScriptGlobalObject *aGlobal);
 
-extern "C" NS_DOM nsresult NS_NewScriptWindow(nsIScriptContext *aContext, nsIDOMWindow *aSupports, nsISupports *aParent, void **aReturn);
+extern "C" NS_DOM nsresult NS_NewScriptWindow(nsIScriptContext *aContext, nsISupports *aSupports, nsISupports *aParent, void **aReturn);
 
 #endif // nsIDOMWindow_h__

@@ -51,6 +51,6 @@ public:
 
 extern nsresult NS_InitHTMLPreElementClass(nsIScriptContext *aContext, void **aPrototype);
 
-extern "C" NS_DOM nsresult NS_NewScriptHTMLPreElement(nsIScriptContext *aContext, nsIDOMHTMLPreElement *aSupports, nsISupports *aParent, void **aReturn);
+extern "C" NS_DOM nsresult NS_NewScriptHTMLPreElement(nsIScriptContext *aContext, nsISupports *aSupports, nsISupports *aParent, void **aReturn);
 
 #endif // nsIDOMHTMLPreElement_h__

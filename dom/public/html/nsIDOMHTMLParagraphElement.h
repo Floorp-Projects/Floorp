@@ -51,6 +51,6 @@ public:
 
 extern nsresult NS_InitHTMLParagraphElementClass(nsIScriptContext *aContext, void **aPrototype);
 
-extern "C" NS_DOM nsresult NS_NewScriptHTMLParagraphElement(nsIScriptContext *aContext, nsIDOMHTMLParagraphElement *aSupports, nsISupports *aParent, void **aReturn);
+extern "C" NS_DOM nsresult NS_NewScriptHTMLParagraphElement(nsIScriptContext *aContext, nsISupports *aSupports, nsISupports *aParent, void **aReturn);
 
 #endif // nsIDOMHTMLParagraphElement_h__

@@ -787,7 +787,7 @@ nsInput::GetScriptObject(nsIScriptContext *aContext, void** aScriptObject)
 {
   nsresult res = NS_OK;
   if (nsnull == mScriptObject) {
-    res = NS_NewScriptHTMLInputElement(aContext, this, mParent, (void**)&mScriptObject);
+    res = NS_NewScriptHTMLInputElement(aContext, (nsISupports *)(nsIDOMHTMLInputElement *)this, mParent, (void**)&mScriptObject);
   }
   *aScriptObject = mScriptObject;
   return res;  

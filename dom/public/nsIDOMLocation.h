@@ -108,6 +108,6 @@ public:
 
 extern nsresult NS_InitLocationClass(nsIScriptContext *aContext, void **aPrototype);
 
-extern "C" NS_DOM nsresult NS_NewScriptLocation(nsIScriptContext *aContext, nsIDOMLocation *aSupports, nsISupports *aParent, void **aReturn);
+extern "C" NS_DOM nsresult NS_NewScriptLocation(nsIScriptContext *aContext, nsISupports *aSupports, nsISupports *aParent, void **aReturn);
 
 #endif // nsIDOMLocation_h__

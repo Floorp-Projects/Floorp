@@ -56,6 +56,6 @@ public:
 
 extern nsresult NS_InitWindowCollectionClass(nsIScriptContext *aContext, void **aPrototype);
 
-extern "C" NS_DOM nsresult NS_NewScriptWindowCollection(nsIScriptContext *aContext, nsIDOMWindowCollection *aSupports, nsISupports *aParent, void **aReturn);
+extern "C" NS_DOM nsresult NS_NewScriptWindowCollection(nsIScriptContext *aContext, nsISupports *aSupports, nsISupports *aParent, void **aReturn);
 
 #endif // nsIDOMWindowCollection_h__

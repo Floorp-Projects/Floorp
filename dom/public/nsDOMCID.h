@@ -15,35 +15,17 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
-/* AUTO-GENERATED. DO NOT EDIT!!! */
 
-#ifndef nsIDOMCDATASection_h__
-#define nsIDOMCDATASection_h__
+#ifndef nsDOMCID_h__
+#define nsDOMCID_h__
 
 #include "nsISupports.h"
-#include "nsString.h"
-#include "nsIScriptContext.h"
-#include "nsIDOMText.h"
+#include "nsIFactory.h"
+#include "nsRepository.h"
 
+#define NS_DOM_SCRIPT_OBJECT_FACTORY_CID \
+ { /* 9eb760f0-4380-11d2-b328-00805f8a3859 */       \
+  0x9eb760f0, 0x4380, 0x11d2,                       \
+ {0xb3, 0x28, 0x00, 0x80, 0x5f, 0x8a, 0x38, 0x59} }
 
-#define NS_IDOMCDATASECTION_IID \
-{ 0x6f7652e1,  0xee43, 0x11d1, \
- { 0x9b, 0xc3, 0x00, 0x60, 0x08, 0x8c, 0xa6, 0xb3 } } 
-
-class nsIDOMCDATASection : public nsIDOMText {
-public:
-};
-
-
-#define NS_DECL_IDOMCDATASECTION   \
-
-
-
-#define NS_FORWARD_IDOMCDATASECTION(_to)  \
-
-
-extern nsresult NS_InitCDATASectionClass(nsIScriptContext *aContext, void **aPrototype);
-
-extern "C" NS_DOM nsresult NS_NewScriptCDATASection(nsIScriptContext *aContext, nsISupports *aSupports, nsISupports *aParent, void **aReturn);
-
-#endif // nsIDOMCDATASection_h__
+#endif /* nsDOMCID_h__ */

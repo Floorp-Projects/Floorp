@@ -79,7 +79,7 @@ LocationImpl::GetScriptObject(nsIScriptContext *aContext, void** aScriptObject)
   nsresult res = NS_OK;
   if (nsnull == mScriptObject) {
     nsIScriptGlobalObject *global = aContext->GetGlobalObject();
-    res = NS_NewScriptLocation(aContext, this, global, &mScriptObject);
+    res = NS_NewScriptLocation(aContext, (nsISupports *)(nsIDOMLocation *)this, global, &mScriptObject);
     NS_IF_RELEASE(global);
   }
   

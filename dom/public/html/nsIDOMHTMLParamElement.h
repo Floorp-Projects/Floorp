@@ -72,6 +72,6 @@ public:
 
 extern nsresult NS_InitHTMLParamElementClass(nsIScriptContext *aContext, void **aPrototype);
 
-extern "C" NS_DOM nsresult NS_NewScriptHTMLParamElement(nsIScriptContext *aContext, nsIDOMHTMLParamElement *aSupports, nsISupports *aParent, void **aReturn);
+extern "C" NS_DOM nsresult NS_NewScriptHTMLParamElement(nsIScriptContext *aContext, nsISupports *aSupports, nsISupports *aParent, void **aReturn);
 
 #endif // nsIDOMHTMLParamElement_h__

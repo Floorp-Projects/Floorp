@@ -52,12 +52,20 @@ LINCS= \
 
 LCFLAGS = $(LCFLAGS) -GX
 
+TAGSNAME=nsHTMLTagsEnums
+TAGSDESTDIR=..\src\build
+
 include <$(DEPTH)\config\rules.mak>
 
 install:: $(PROGRAM)
   echo $(OS_CFLAGS)
 	$(MAKE_INSTALL) $(PROGRAM) $(DIST)\bin
 	$(MAKE_INSTALL) geniid.pl  $(DIST)\bin
+	@echo +++ make: generating nsHTMLTagEnums
+	$(PERL) gentags.pl $(TAGSNAME)
+	$(MAKE_INSTALL) $(TAGSNAME).h $(TAGSDESTDIR)
+	$(MAKE_INSTALL) $(TAGSNAME).cpp $(TAGSDESTDIR)
+
 
 clobber::
 	rm -f $(DIST)\bin\idlc.exe

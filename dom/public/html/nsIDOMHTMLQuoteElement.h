@@ -51,6 +51,6 @@ public:
 
 extern nsresult NS_InitHTMLQuoteElementClass(nsIScriptContext *aContext, void **aPrototype);
 
-extern "C" NS_DOM nsresult NS_NewScriptHTMLQuoteElement(nsIScriptContext *aContext, nsIDOMHTMLQuoteElement *aSupports, nsISupports *aParent, void **aReturn);
+extern "C" NS_DOM nsresult NS_NewScriptHTMLQuoteElement(nsIScriptContext *aContext, nsISupports *aSupports, nsISupports *aParent, void **aReturn);
 
 #endif // nsIDOMHTMLQuoteElement_h__

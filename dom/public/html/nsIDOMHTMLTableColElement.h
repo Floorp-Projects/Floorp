@@ -86,6 +86,6 @@ public:
 
 extern nsresult NS_InitHTMLTableColElementClass(nsIScriptContext *aContext, void **aPrototype);
 
-extern "C" NS_DOM nsresult NS_NewScriptHTMLTableColElement(nsIScriptContext *aContext, nsIDOMHTMLTableColElement *aSupports, nsISupports *aParent, void **aReturn);
+extern "C" NS_DOM nsresult NS_NewScriptHTMLTableColElement(nsIScriptContext *aContext, nsISupports *aSupports, nsISupports *aParent, void **aReturn);
 
 #endif // nsIDOMHTMLTableColElement_h__

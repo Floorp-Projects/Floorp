@@ -52,6 +52,6 @@ public:
 
 extern nsresult NS_InitDOMClass(nsIScriptContext *aContext, void **aPrototype);
 
-extern "C" NS_DOM nsresult NS_NewScriptDOM(nsIScriptContext *aContext, nsIDOMDOM *aSupports, nsISupports *aParent, void **aReturn);
+extern "C" NS_DOM nsresult NS_NewScriptDOM(nsIScriptContext *aContext, nsISupports *aSupports, nsISupports *aParent, void **aReturn);
 
 #endif // nsIDOMDOM_h__

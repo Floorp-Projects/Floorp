@@ -51,6 +51,6 @@ public:
 
 extern nsresult NS_InitHTMLTableCaptionElementClass(nsIScriptContext *aContext, void **aPrototype);
 
-extern "C" NS_DOM nsresult NS_NewScriptHTMLTableCaptionElement(nsIScriptContext *aContext, nsIDOMHTMLTableCaptionElement *aSupports, nsISupports *aParent, void **aReturn);
+extern "C" NS_DOM nsresult NS_NewScriptHTMLTableCaptionElement(nsIScriptContext *aContext, nsISupports *aSupports, nsISupports *aParent, void **aReturn);
 
 #endif // nsIDOMHTMLTableCaptionElement_h__

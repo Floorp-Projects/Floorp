@@ -1316,17 +1316,29 @@ static const char *kConstructorStr =
 "PR_STATIC_CALLBACK(JSBool)\n"
 "%s(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)\n"
 "{\n"
-"  return JS_TRUE;\n"
+"  nsIDOM%s *a = (nsIDOM%s*)JS_GetPrivate(cx, obj);\n"
+"  PRBool result = PR_TRUE;\n"
+"  \n"
+"  if (nsnull != a) {\n"
+"    // get the js object\n"
+"    nsIJSScriptObject *object;\n"
+"    if (NS_OK == a->QueryInterface(kIJSScriptObjectIID, (void**)&object)) {\n"
+"      result = object->Construct(cx, obj, argc, argv, rval);\n"
+"      NS_RELEASE(object);\n"
+"    }\n"
+"  }\n"
+"  return (result == PR_TRUE) ? JS_TRUE : JS_FALSE;\n"
 "}\n";
 
 void     
 JSStubGen::GenerateConstructor(IdlSpecification &aSpec)
 {
-  char buf[512];
+  char buf[1024];
   ofstream *file = GetFile();
   IdlInterface *primary_iface = aSpec.GetInterfaceAt(0);
 
   sprintf(buf, kConstructorStr, primary_iface->GetName(),
+          primary_iface->GetName(), primary_iface->GetName(),
           primary_iface->GetName());
   *file << buf;
 }
@@ -1481,7 +1493,7 @@ static const char *kNewGlobalJSObjectStr =
 "\n\n//\n"
 "// Method for creating a new %s JavaScript object\n"
 "//\n"
-"extern \"C\" NS_DOM nsresult NS_NewScript%s(nsIScriptContext *aContext, nsIDOM%s *aSupports, nsISupports *aParent, void **aReturn)\n"
+"extern \"C\" NS_DOM nsresult NS_NewScript%s(nsIScriptContext *aContext, nsISupports *aSupports, nsISupports *aParent, void **aReturn)\n"
 "{\n"
 "  NS_PRECONDITION(nsnull != aContext && nsnull != aSupports && nsnull != aReturn, \"null arg\");\n"
 "  JSContext *jscontext = (JSContext *)aContext->GetNativeContext();\n"
@@ -1512,20 +1524,22 @@ static const char *kNewGlobalJSObjectStr =
 "}\n";
 
 #define JSGEN_GENERATE_NEWGLOBALJSOBJECT(buffer, className)        \
-    sprintf(buffer, kNewGlobalJSObjectStr, className, className,   \
+    sprintf(buffer, kNewGlobalJSObjectStr, className,   \
             className, className, className, className)
 
 static const char *kNewJSObjectStr =
 "\n\n//\n"
 "// Method for creating a new %s JavaScript object\n"
 "//\n"
-"extern \"C\" NS_DOM nsresult NS_NewScript%s(nsIScriptContext *aContext, nsIDOM%s *aSupports, nsISupports *aParent, void **aReturn)\n"
+"extern \"C\" NS_DOM nsresult NS_NewScript%s(nsIScriptContext *aContext, nsISupports *aSupports, nsISupports *aParent, void **aReturn)\n"
 "{\n"
 "  NS_PRECONDITION(nsnull != aContext && nsnull != aSupports && nsnull != aReturn, \"null argument to NS_NewScript%s\");\n"
 "  JSObject *proto;\n"
 "  JSObject *parent;\n"
 "  nsIScriptObjectOwner *owner;\n"
 "  JSContext *jscontext = (JSContext *)aContext->GetNativeContext();\n"
+"  nsresult result = NS_OK;\n"
+"  nsIDOM%s *a%s;\n"
 "\n"
 "  if (nsnull == aParent) {\n"
 "    parent = nsnull;\n"
@@ -1545,14 +1559,19 @@ static const char *kNewJSObjectStr =
 "    return NS_ERROR_FAILURE;\n"
 "  }\n"
 "\n"
+"  result = aSupports->QueryInterface(kI%sIID, (void **)&a%s);\n"
+"  if (NS_OK != result) {\n"
+"    return result;\n"
+"  }\n"
+"\n"
 "  // create a js object for this class\n"
 "  *aReturn = JS_NewObject(jscontext, &%sClass, proto, parent);\n"
 "  if (nsnull != *aReturn) {\n"
 "    // connect the native object to the js object\n"
-"    JS_SetPrivate(jscontext, (JSObject *)*aReturn, aSupports);\n"
-"    NS_ADDREF(aSupports);\n"
+"    JS_SetPrivate(jscontext, (JSObject *)*aReturn, a%s);\n"
 "  }\n"
 "  else {\n"
+"    NS_RELEASE(a%s);\n"
 "    return NS_ERROR_FAILURE; \n"
 "  }\n"
 "\n"
@@ -1561,7 +1580,8 @@ static const char *kNewJSObjectStr =
 
 #define JSGEN_GENERATE_NEWJSOBJECT(buffer, className)      \
     sprintf(buffer, kNewJSObjectStr, className, className, \
-            className, className, className, className)
+            className, className, className, className,    \
+            className, className, className, className, className)
 
 void     
 JSStubGen::GenerateNew(IdlSpecification &aSpec)

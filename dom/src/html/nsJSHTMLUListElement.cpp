@@ -286,7 +286,18 @@ static JSFunctionSpec HTMLUListElementMethods[] =
 PR_STATIC_CALLBACK(JSBool)
 HTMLUListElement(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-  return JS_TRUE;
+  nsIDOMHTMLUListElement *a = (nsIDOMHTMLUListElement*)JS_GetPrivate(cx, obj);
+  PRBool result = PR_TRUE;
+  
+  if (nsnull != a) {
+    // get the js object
+    nsIJSScriptObject *object;
+    if (NS_OK == a->QueryInterface(kIJSScriptObjectIID, (void**)&object)) {
+      result = object->Construct(cx, obj, argc, argv, rval);
+      NS_RELEASE(object);
+    }
+  }
+  return (result == PR_TRUE) ? JS_TRUE : JS_FALSE;
 }
 
 
@@ -343,13 +354,15 @@ nsresult NS_InitHTMLUListElementClass(nsIScriptContext *aContext, void **aProtot
 //
 // Method for creating a new HTMLUListElement JavaScript object
 //
-extern "C" NS_DOM nsresult NS_NewScriptHTMLUListElement(nsIScriptContext *aContext, nsIDOMHTMLUListElement *aSupports, nsISupports *aParent, void **aReturn)
+extern "C" NS_DOM nsresult NS_NewScriptHTMLUListElement(nsIScriptContext *aContext, nsISupports *aSupports, nsISupports *aParent, void **aReturn)
 {
   NS_PRECONDITION(nsnull != aContext && nsnull != aSupports && nsnull != aReturn, "null argument to NS_NewScriptHTMLUListElement");
   JSObject *proto;
   JSObject *parent;
   nsIScriptObjectOwner *owner;
   JSContext *jscontext = (JSContext *)aContext->GetNativeContext();
+  nsresult result = NS_OK;
+  nsIDOMHTMLUListElement *aHTMLUListElement;
 
   if (nsnull == aParent) {
     parent = nsnull;
@@ -369,14 +382,19 @@ extern "C" NS_DOM nsresult NS_NewScriptHTMLUListElement(nsIScriptContext *aConte
     return NS_ERROR_FAILURE;
   }
 
+  result = aSupports->QueryInterface(kIHTMLUListElementIID, (void **)&aHTMLUListElement);
+  if (NS_OK != result) {
+    return result;
+  }
+
   // create a js object for this class
   *aReturn = JS_NewObject(jscontext, &HTMLUListElementClass, proto, parent);
   if (nsnull != *aReturn) {
     // connect the native object to the js object
-    JS_SetPrivate(jscontext, (JSObject *)*aReturn, aSupports);
-    NS_ADDREF(aSupports);
+    JS_SetPrivate(jscontext, (JSObject *)*aReturn, aHTMLUListElement);
   }
   else {
+    NS_RELEASE(aHTMLUListElement);
     return NS_ERROR_FAILURE; 
   }
 

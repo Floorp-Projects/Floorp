@@ -53,6 +53,9 @@
 #include "nsDOMEvent.h"
 #include "nsIPrivateDOMEvent.h"
 #include "nsBodyFrame.h"
+#include "nsDOMCID.h"
+#include "nsIServiceManager.h"
+#include "nsIDOMScriptObjectFactory.h"
 #include "prprf.h"
 
 // XXX todo: add in missing out-of-memory checks
@@ -260,7 +263,9 @@ DOMAttribute::GetScriptObject(nsIScriptContext *aContext,
 {
   nsresult res = NS_OK;
   if (nsnull == mScriptObject) {
-    res = NS_NewScriptAttribute(aContext, this, nsnull,
+    res = NS_NewScriptAttribute(aContext, 
+                                (nsISupports *)(nsIDOMAttribute *)this, 
+                                nsnull,
                                 (void **)&mScriptObject);
   }
   *aScriptObject = mScriptObject;
@@ -478,7 +483,9 @@ DOMAttributeMap::GetScriptObject(nsIScriptContext *aContext,
 {
   nsresult res = NS_OK;
   if (nsnull == mScriptObject) {
-    res = NS_NewScriptNamedNodeMap(aContext, this, nsnull,
+    res = NS_NewScriptNamedNodeMap(aContext, 
+                                   (nsISupports *)(nsIDOMNamedNodeMap *)this, 
+                                   nsnull,
                                    (void**)&mScriptObject);
   }
   *aScriptObject = mScriptObject;
@@ -612,6 +619,31 @@ static void ReleaseAttributes(nsIHTMLAttributes*& aAttributes)
   NS_RELEASE(aAttributes);
 }
 
+// XXX Currently, the script object factory is global. The way we
+// obtain it should, at least, be made thread-safe later. Ideally,
+// we'd find a better way.
+nsIDOMScriptObjectFactory* nsGenericHTMLElement::gScriptObjectFactory = nsnull;
+
+static NS_DEFINE_IID(kIDOMScriptObjectFactoryIID, NS_IDOM_SCRIPT_OBJECT_FACTORY_IID);
+static NS_DEFINE_IID(kDOMScriptObjectFactoryCID, NS_DOM_SCRIPT_OBJECT_FACTORY_CID);
+
+nsresult 
+nsGenericHTMLElement::GetScriptObjectFactory(nsIDOMScriptObjectFactory **aResult)
+{
+  nsresult result = NS_OK;
+
+  if (nsnull == gScriptObjectFactory) {
+    result = nsServiceManager::GetService(kDOMScriptObjectFactoryCID,
+                                          kIDOMScriptObjectFactoryIID,
+                                          (nsISupports **)&gScriptObjectFactory);
+    if (result != NS_OK) {
+      return result;
+    }
+  }
+
+  *aResult = gScriptObjectFactory;
+  return result;
+}
 
 nsGenericHTMLElement::nsGenericHTMLElement()
 {
@@ -1689,10 +1721,17 @@ nsGenericHTMLElement::GetScriptObject(nsIScriptContext* aContext,
 {
   nsresult res = NS_OK;
   if (nsnull == mScriptObject) {
-    nsIDOMElement* ele = nsnull;
-    mContent->QueryInterface(kIDOMElementIID, (void**) &ele);
-    res = NS_NewScriptElement(aContext, ele, mParent, (void**)&mScriptObject);
-    NS_RELEASE(ele);
+    nsIDOMScriptObjectFactory *factory;
+    
+    res = GetScriptObjectFactory(&factory);
+    if (NS_OK != res) {
+      return res;
+    }
+    
+    nsAutoString tag;
+    mTag->ToString(tag);
+    res = factory->NewScriptElement(tag, aContext, mContent,
+                                    mParent, (void**)&mScriptObject);
   }
   *aScriptObject = mScriptObject;
   return res;

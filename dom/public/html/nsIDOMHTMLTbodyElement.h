@@ -72,6 +72,6 @@ public:
 
 extern nsresult NS_InitHTMLTbodyElementClass(nsIScriptContext *aContext, void **aPrototype);
 
-extern "C" NS_DOM nsresult NS_NewScriptHTMLTbodyElement(nsIScriptContext *aContext, nsIDOMHTMLTbodyElement *aSupports, nsISupports *aParent, void **aReturn);
+extern "C" NS_DOM nsresult NS_NewScriptHTMLTbodyElement(nsIScriptContext *aContext, nsISupports *aSupports, nsISupports *aParent, void **aReturn);
 
 #endif // nsIDOMHTMLTbodyElement_h__

@@ -72,7 +72,7 @@ static const char *kReturnCallStr = "aReturn";
 static const char *kClassEpilogStr = "};\n\n";
 static const char *kGlobalInitClassStr = "extern nsresult NS_Init%sClass(nsIScriptContext *aContext, nsIScriptGlobalObject *aGlobal);\n\n";
 static const char *kInitClassStr = "extern nsresult NS_Init%sClass(nsIScriptContext *aContext, void **aPrototype);\n\n";
-static const char *kNewObjStr = "extern \"C\" NS_DOM nsresult NS_NewScript%s(nsIScriptContext *aContext, nsIDOM%s *aSupports, nsISupports *aParent, void **aReturn);\n\n";
+static const char *kNewObjStr = "extern \"C\" NS_DOM nsresult NS_NewScript%s(nsIScriptContext *aContext, nsISupports *aSupports, nsISupports *aParent, void **aReturn);\n\n";
 static const char *kMethodDeclMacroStr = "\n#define NS_DECL_IDOM%s   \\\n";
 static const char *kMethodForwardMacroStr = "\n#define NS_FORWARD_IDOM%s(_to)  \\\n";
 static const char *kEndifStr = "#endif // nsIDOM%s_h__\n";
@@ -527,7 +527,7 @@ XPCOMGen::GenerateEpilog(IdlInterface &aInterface, PRBool aIsPrimary)
     }
     *file << buf;
   
-    sprintf(buf, kNewObjStr, iface_name, iface_name);
+    sprintf(buf, kNewObjStr, iface_name);
     *file << buf;
   }
 

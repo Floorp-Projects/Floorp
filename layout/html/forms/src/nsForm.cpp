@@ -1221,7 +1221,7 @@ nsForm::GetScriptObject(nsIScriptContext *aContext, void** aScriptObject)
 {
   nsresult res = NS_OK;
   if (nsnull == mScriptObject) {
-    res = NS_NewScriptHTMLFormElement(aContext, this, nsnull, (void**)&mScriptObject);
+    res = NS_NewScriptHTMLFormElement(aContext, (nsISupports *)(nsIDOMHTMLFormElement *)this, nsnull, (void**)&mScriptObject);
   }
   *aScriptObject = mScriptObject;
   return res;
@@ -1458,7 +1458,7 @@ nsresult nsFormElementList::GetScriptObject(nsIScriptContext *aContext, void** a
 {
   nsresult res = NS_OK;
   if (nsnull == mScriptObject) {
-    res = NS_NewScriptHTMLCollection(aContext, this, nsnull, (void**)&mScriptObject);
+    res = NS_NewScriptHTMLCollection(aContext, (nsISupports *)(nsIDOMHTMLCollection *)this, nsnull, (void**)&mScriptObject);
   }
   *aScriptObject = mScriptObject;
   return res;

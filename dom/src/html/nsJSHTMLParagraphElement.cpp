@@ -257,7 +257,18 @@ static JSFunctionSpec HTMLParagraphElementMethods[] =
 PR_STATIC_CALLBACK(JSBool)
 HTMLParagraphElement(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-  return JS_TRUE;
+  nsIDOMHTMLParagraphElement *a = (nsIDOMHTMLParagraphElement*)JS_GetPrivate(cx, obj);
+  PRBool result = PR_TRUE;
+  
+  if (nsnull != a) {
+    // get the js object
+    nsIJSScriptObject *object;
+    if (NS_OK == a->QueryInterface(kIJSScriptObjectIID, (void**)&object)) {
+      result = object->Construct(cx, obj, argc, argv, rval);
+      NS_RELEASE(object);
+    }
+  }
+  return (result == PR_TRUE) ? JS_TRUE : JS_FALSE;
 }
 
 
@@ -314,13 +325,15 @@ nsresult NS_InitHTMLParagraphElementClass(nsIScriptContext *aContext, void **aPr
 //
 // Method for creating a new HTMLParagraphElement JavaScript object
 //
-extern "C" NS_DOM nsresult NS_NewScriptHTMLParagraphElement(nsIScriptContext *aContext, nsIDOMHTMLParagraphElement *aSupports, nsISupports *aParent, void **aReturn)
+extern "C" NS_DOM nsresult NS_NewScriptHTMLParagraphElement(nsIScriptContext *aContext, nsISupports *aSupports, nsISupports *aParent, void **aReturn)
 {
   NS_PRECONDITION(nsnull != aContext && nsnull != aSupports && nsnull != aReturn, "null argument to NS_NewScriptHTMLParagraphElement");
   JSObject *proto;
   JSObject *parent;
   nsIScriptObjectOwner *owner;
   JSContext *jscontext = (JSContext *)aContext->GetNativeContext();
+  nsresult result = NS_OK;
+  nsIDOMHTMLParagraphElement *aHTMLParagraphElement;
 
   if (nsnull == aParent) {
     parent = nsnull;
@@ -340,14 +353,19 @@ extern "C" NS_DOM nsresult NS_NewScriptHTMLParagraphElement(nsIScriptContext *aC
     return NS_ERROR_FAILURE;
   }
 
+  result = aSupports->QueryInterface(kIHTMLParagraphElementIID, (void **)&aHTMLParagraphElement);
+  if (NS_OK != result) {
+    return result;
+  }
+
   // create a js object for this class
   *aReturn = JS_NewObject(jscontext, &HTMLParagraphElementClass, proto, parent);
   if (nsnull != *aReturn) {
     // connect the native object to the js object
-    JS_SetPrivate(jscontext, (JSObject *)*aReturn, aSupports);
-    NS_ADDREF(aSupports);
+    JS_SetPrivate(jscontext, (JSObject *)*aReturn, aHTMLParagraphElement);
   }
   else {
+    NS_RELEASE(aHTMLParagraphElement);
     return NS_ERROR_FAILURE; 
   }
 

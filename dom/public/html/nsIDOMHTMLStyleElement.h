@@ -65,6 +65,6 @@ public:
 
 extern nsresult NS_InitHTMLStyleElementClass(nsIScriptContext *aContext, void **aPrototype);
 
-extern "C" NS_DOM nsresult NS_NewScriptHTMLStyleElement(nsIScriptContext *aContext, nsIDOMHTMLStyleElement *aSupports, nsISupports *aParent, void **aReturn);
+extern "C" NS_DOM nsresult NS_NewScriptHTMLStyleElement(nsIScriptContext *aContext, nsISupports *aSupports, nsISupports *aParent, void **aReturn);
 
 #endif // nsIDOMHTMLStyleElement_h__
