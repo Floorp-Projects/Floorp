@@ -532,24 +532,24 @@ NS_IMETHODIMP nsMsgLocalMailFolder::AddSubfolder(nsAutoString *name,
 	//Only set these is these are top level children.
 	if(NS_SUCCEEDED(rv) && isServer)
 	{
-		if(name->CompareWithConversion("Inbox", PR_TRUE) == 0)
+		if(name->EqualsIgnoreCase(kInboxName))
 		{
 			flags |= MSG_FOLDER_FLAG_INBOX;
 			mBiffState = nsMsgBiffState_Unknown;
 		}
-		else if(name->CompareWithConversion("Trash", PR_TRUE) == 0)
+		else if (name->EqualsIgnoreCase(kTrashName))
 			flags |= MSG_FOLDER_FLAG_TRASH;
-		else if(name->CompareWithConversion("Unsent Messages", PR_TRUE) == 0 
-			|| name->CompareWithConversion("Outbox", PR_TRUE) == 0)
+		else if (name->EqualsIgnoreCase(kUnsentName)
+             || name->CompareWithConversion("Outbox", PR_TRUE) == 0)
 			flags |= MSG_FOLDER_FLAG_QUEUE;
 #if 0
 		// the logic for this has been moved into 
 		// SetFlagsOnDefaultMailboxes()
-		else if(name->Compare("Sent", PR_TRUE) == 0)
+    else if(name->EqualsIgnoreCase(kSentName))
 			folder->SetFlag(MSG_FOLDER_FLAG_SENTMAIL);
-		else if(name->Compare("Drafts", PR_TRUE) == 0)
+		else if(name->EqualsIgnoreCase(kDraftsName))
 			folder->SetFlag(MSG_FOLDER_FLAG_DRAFTS);
-		else if(name->Compare("Templates", PR_TRUE) == 0)
+		else if(name->EqualsIgnoreCase(kTemplatesName))
 			folder->SetFlag(MSG_FOLDER_FLAG_TEMPLATES);
 #endif 
   }
@@ -844,7 +844,11 @@ NS_IMETHODIMP nsMsgLocalMailFolder::GetFolderURL(char **url)
 	if (NS_FAILED(rv)) return rv;
 
 	nsCAutoString tmpPath((nsFilePath)path);
-	*url = PR_smprintf("%s%s", urlScheme, (const char *) tmpPath);
+
+  nsCAutoString urlStr(urlScheme);
+  urlStr.Append(tmpPath);
+
+  *url = urlStr.ToNewCString();
 	return NS_OK;
 
 }
@@ -2723,14 +2727,8 @@ nsMsgLocalMailFolder::setSubfolderFlag(PRUnichar* aFolderName,
 
   nsresult rv;
 
-  // this is safe because nsSubsumeStr will not take ownership
-  PRUnichar *folderName = NS_CONST_CAST(PRUnichar *, aFolderName);
-  
-  // no-copy conversion to utf8 string
-  nsSubsumeCStr utf8Name(nsSubsumeStr(folderName, PR_FALSE).ToNewUTF8String(), PR_TRUE);
-  
   nsCOMPtr<nsIFolder> folder;
-	rv = FindSubFolder(utf8Name, getter_AddRefs(folder));
+	rv = FindSubFolder(NS_ConvertUCS2toUTF8(aFolderName), getter_AddRefs(folder));
   
 	if (NS_FAILED(rv)) return rv;
 	if (!folder) return NS_ERROR_FAILURE;
