@@ -1,5 +1,5 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-; Base Thunderbird Package File for Win32
+; Base Thunderbird Package File for OS/2
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 [thunderbird]
@@ -55,6 +55,7 @@ chrome\en-win.jar
 
 ; default pref files
 defaults\pref\*
+greprefs\*
 defaults\messenger\mailViews.dat
 defaults\profile\localstore.rdf
 defaults\profile\mimeTypes.rdf

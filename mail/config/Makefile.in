@@ -32,10 +32,17 @@ ifeq ($(OS_ARCH),WINNT)
 	INSPECTOR = inspector-win
 	_PLATFORM = dos
 else
+ifeq ($(OS_ARCH),OS2)
+	BASEMAIL = basemail-os2
+	PREF = pref-os2
+	INSPECTOR = inspector-os2
+	_PLATFORM = unix
+else
 	BASEMAIL = basemail-unix
 	PREF = pref-unix
 	INSPECTOR = inspector-unix
 	_PLATFORM = unix
+endif
 endif
 
 APP_NAME=thunderbird
