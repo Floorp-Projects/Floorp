@@ -366,9 +366,6 @@ enum LIMTYPE
   LT_ALPHA       // alpha char
 };
 
-// Deleteme: Do I leak here?
-/* Deleteme: I compared the times appearing on the console during
-   rendering/display. Is this correct? */
 /*
   This performs poorly. But I've made a test and didn't notice a performance
   decrease between this code and no struct phrase transformation at all.
@@ -567,12 +564,10 @@ IsThisAnAmbitiousLinkType(char *link, char *mailToTag, char **linkPrefix)
 nsresult
 nsMimeURLUtils::ScanForURLs(const char *input, PRInt32 input_size,
                             char *output, PRInt32 output_size, PRBool urls_only)
-     //Deleteme: output_size was int, why?
 {
   int col = 0;
   const char *end = input + input_size;
   char *output_ptr = output;
-  //Deleteme: 40 should be much too less with Glyphs, if this is the max. number of chars in output for one char in input. Please add better desc.
   char *end_of_buffer = output + output_size - 40; /* add safty zone :( */
   PRBool line_is_citation = PR_FALSE;
   const char *cite_open1, *cite_close1;
@@ -715,7 +710,6 @@ nsMimeURLUtils::ScanForURLs(const char *input, PRInt32 input_size,
    */
   for(const char* cp = input; cp < end && output_ptr < end_of_buffer; cp++)
 	{
-      //Deleteme: Move comment down, but place?
 	  /* if URLType returns true then it is most likely a URL
 		 But only match protocol names if at the very beginning of
 		 the string, or if the preceeding character was not alphanumeric;
@@ -797,7 +791,6 @@ nsMimeURLUtils::ScanForURLs(const char *input, PRInt32 input_size,
     } //if
 
     // Glyphs (Smilies etc.)
-    /*Deleteme - Should be more 64bit save */
     if ((do_glyph_substitution) && GlyphHit(cp, end - cp, &glyphHTML, &glyphTextLen))
     {
       PRInt32   size_available = output_size - (output_ptr-output);
