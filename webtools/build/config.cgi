@@ -258,9 +258,9 @@ sub print_configure_form {
     Unix Build Configurator
     </b></font>
     </td></tr><tr><td>
-    The mozilla Unix build system is designed to build without any user set
+    The mozilla Unix build system is designed to build free of any user set
     options. However, should you need to tweak an option, the
-    Configurator is here to help.
+    Configurator is here to help.<p>
     This form produces a script that you can use to configure your build. 
     The script saves you the trouble of setting environment 
     variables for <code><b>client.mk</b></code>
@@ -363,7 +363,7 @@ sub print_configure_form {
     }
   }
   header_option("Options not handled by Configurator"
-               ." (Add them to the script by hand)");
+               ." (Add them to the .mozconfig script by hand)");
   foreach $comment (@unhandled_options) {
     $comment =~ s/\\\$/\$/g;
     my ($dummy,$option,$help) = split /\s+/, $comment, 3;
