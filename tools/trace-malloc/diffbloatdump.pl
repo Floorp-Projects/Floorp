@@ -52,17 +52,23 @@ $::opt_help = 0;
 $::opt_depth = 6;
 $::opt_include_zero = 0;
 $::opt_allocation_count = 0;
+$::opt_use_address = 0;
 
 Getopt::Long::Configure("pass_through");
-Getopt::Long::GetOptions("help", "depth=i", "include-zero", "allocation-count");
+Getopt::Long::GetOptions("help", "allocation-count", "depth=i",
+                         "include-zero", "use-address");
 
 if ($::opt_help) {
     die "usage: diffbloatdump.pl [options] <dump1> <dump2>
   --help                 Display this message
-  --depth=<num>          Only display <num> frames at top of allocation stack.
-  --include-zero         Display subtrees totalling zero.
+
   --allocation-count     Use allocation count rather than size (i.e., treat
                            all sizes as 1).
+  --depth=<num>          Only display <num> frames at top of allocation stack.
+  --include-zero         Display subtrees totalling zero.
+  --use-address          Don't ignore the address part of the stack trace
+                           (can make comparison more accurate when comparing
+                           results from the same build)
 ";
 }
 
@@ -86,6 +92,10 @@ sub add_file($$) {
         # read the stack
         do {
             chomp($line);
+            if ( ! $::opt_use_address &&
+                 $line =~ /(.*)\[(.*)\]/) {
+                $line = $1;
+            }
             $stack[$#stack+1] = $line;
         } while ( ($line = <$infile>) && $line ne "\n" );
 
