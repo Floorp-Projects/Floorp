@@ -7,6 +7,7 @@
         readonly attribute  Window parent;
         readonly attribute  Window top;
 	readonly attribute  boolean closed;
+	readonly attribute  WindowCollection frames;
 	attribute  wstring status;
 	attribute  wstring defaultStatus;
 	attribute  wstring name;

@@ -30,6 +30,8 @@
                                             raises DOMException;
      Node                      removeChild(in Node oldChild)
                                            raises DOMException;
+     Node                      appendChild(in Node newChild)
+                                           raises DOMException;
      Node                      cloneNode();
      boolean                   equals(in Node node, 
                                       in boolean deep);

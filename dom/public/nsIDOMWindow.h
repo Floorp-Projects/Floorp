@@ -27,6 +27,7 @@
 
 class nsIDOMNavigator;
 class nsIDOMDocument;
+class nsIDOMWindowCollection;
 class nsIDOMWindow;
 
 #define NS_IDOMWINDOW_IID \
@@ -51,6 +52,8 @@ public:
   NS_IMETHOD    GetTop(nsIDOMWindow** aTop)=0;
 
   NS_IMETHOD    GetClosed(PRBool* aClosed)=0;
+
+  NS_IMETHOD    GetFrames(nsIDOMWindowCollection** aFrames)=0;
 
   NS_IMETHOD    GetStatus(nsString& aStatus)=0;
   NS_IMETHOD    SetStatus(const nsString& aStatus)=0;
@@ -86,6 +89,7 @@ public:
   NS_IMETHOD    GetParent(nsIDOMWindow** aParent);  \
   NS_IMETHOD    GetTop(nsIDOMWindow** aTop);  \
   NS_IMETHOD    GetClosed(PRBool* aClosed);  \
+  NS_IMETHOD    GetFrames(nsIDOMWindowCollection** aFrames);  \
   NS_IMETHOD    GetStatus(nsString& aStatus);  \
   NS_IMETHOD    SetStatus(const nsString& aStatus);  \
   NS_IMETHOD    GetDefaultStatus(nsString& aDefaultStatus);  \
@@ -111,6 +115,7 @@ public:
   NS_IMETHOD    GetParent(nsIDOMWindow** aParent) { return _to##GetParent(aParent); } \
   NS_IMETHOD    GetTop(nsIDOMWindow** aTop) { return _to##GetTop(aTop); } \
   NS_IMETHOD    GetClosed(PRBool* aClosed) { return _to##GetClosed(aClosed); } \
+  NS_IMETHOD    GetFrames(nsIDOMWindowCollection** aFrames) { return _to##GetFrames(aFrames); } \
   NS_IMETHOD    GetStatus(nsString& aStatus) { return _to##GetStatus(aStatus); } \
   NS_IMETHOD    SetStatus(const nsString& aStatus) { return _to##SetStatus(aStatus); } \
   NS_IMETHOD    GetDefaultStatus(nsString& aDefaultStatus) { return _to##GetDefaultStatus(aDefaultStatus); } \

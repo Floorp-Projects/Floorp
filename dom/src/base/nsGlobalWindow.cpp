@@ -77,6 +77,7 @@ GlobalWindowImpl::GlobalWindowImpl()
   mDocument = nsnull;
   mNavigator = nsnull;
   mLocation = nsnull;
+  mFrames = nsnull;
 
   mTimeouts = nsnull;
   mTimeoutInsertionPoint = nsnull;
@@ -102,6 +103,7 @@ GlobalWindowImpl::~GlobalWindowImpl()
   
   NS_IF_RELEASE(mNavigator);
   NS_IF_RELEASE(mLocation);
+  NS_IF_RELEASE(mFrames);
   NS_IF_RELEASE(mListenerManager);
 }
 
@@ -223,6 +225,9 @@ GlobalWindowImpl::SetWebShell(nsIWebShell *aWebShell)
   mWebShell = aWebShell;
   if (nsnull != mLocation) {
     mLocation->SetWebShell(aWebShell);
+  }
+  if (nsnull != mFrames) {
+    mFrames->SetWebShell(aWebShell);
   }
 }
 
@@ -352,6 +357,23 @@ GlobalWindowImpl::GetClosed(PRBool* aClosed)
   else {
     *aClosed = PR_FALSE;
   }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+GlobalWindowImpl::GetFrames(nsIDOMWindowCollection** aFrames)
+{
+  if (nsnull == mFrames) {
+    mFrames = new nsFrameList(mWebShell);
+    if (nsnull == mFrames) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+    NS_ADDREF(mFrames);
+  }
+
+  *aFrames = (nsIDOMWindowCollection *)mFrames;
+  NS_ADDREF(mFrames);
+
   return NS_OK;
 }
 

@@ -697,6 +697,74 @@ NodeRemoveChild(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rv
 
 
 //
+// Native method AppendChild
+//
+PR_STATIC_CALLBACK(JSBool)
+NodeAppendChild(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsIDOMNode *nativeThis = (nsIDOMNode*)JS_GetPrivate(cx, obj);
+  JSBool rBool = JS_FALSE;
+  nsIDOMNode* nativeRet;
+  nsIDOMNodePtr b0;
+
+  *rval = JSVAL_NULL;
+
+  // If there's no private data, this must be the prototype, so ignore
+  if (nsnull == nativeThis) {
+    return JS_TRUE;
+  }
+
+  if (argc >= 1) {
+
+    if (JSVAL_IS_NULL(argv[0])){
+      b0 = nsnull;
+    }
+    else if (JSVAL_IS_OBJECT(argv[0])) {
+      nsISupports *supports0 = (nsISupports *)JS_GetPrivate(cx, JSVAL_TO_OBJECT(argv[0]));
+      NS_ASSERTION(nsnull != supports0, "null pointer");
+
+      if ((nsnull == supports0) ||
+          (NS_OK != supports0->QueryInterface(kINodeIID, (void **)(b0.Query())))) {
+        JS_ReportError(cx, "Parameter must be of type Node");
+        return JS_FALSE;
+      }
+    }
+    else {
+      JS_ReportError(cx, "Parameter must be an object");
+      return JS_FALSE;
+    }
+
+    if (NS_OK != nativeThis->AppendChild(b0, &nativeRet)) {
+      return JS_FALSE;
+    }
+
+    if (nativeRet != nsnull) {
+      nsIScriptObjectOwner *owner = nsnull;
+      if (NS_OK == nativeRet->QueryInterface(kIScriptObjectOwnerIID, (void**)&owner)) {
+        JSObject *object = nsnull;
+        nsIScriptContext *script_cx = (nsIScriptContext *)JS_GetContextPrivate(cx);
+        if (NS_OK == owner->GetScriptObject(script_cx, (void**)&object)) {
+          // set the return value
+          *rval = OBJECT_TO_JSVAL(object);
+        }
+        NS_RELEASE(owner);
+      }
+      NS_RELEASE(nativeRet);
+    }
+    else {
+      *rval = JSVAL_NULL;
+    }
+  }
+  else {
+    JS_ReportError(cx, "Function appendChild requires 1 parameters");
+    return JS_FALSE;
+  }
+
+  return JS_TRUE;
+}
+
+
+//
 // Native method CloneNode
 //
 PR_STATIC_CALLBACK(JSBool)
@@ -850,6 +918,7 @@ static JSFunctionSpec NodeMethods[] =
   {"insertBefore",          NodeInsertBefore,     2},
   {"replaceChild",          NodeReplaceChild,     2},
   {"removeChild",          NodeRemoveChild,     1},
+  {"appendChild",          NodeAppendChild,     1},
   {"cloneNode",          NodeCloneNode,     0},
   {"equals",          NodeEquals,     2},
   {0}

@@ -76,6 +76,8 @@ public:
 
   NS_IMETHOD    RemoveChild(nsIDOMNode* aOldChild, nsIDOMNode** aReturn)=0;
 
+  NS_IMETHOD    AppendChild(nsIDOMNode* aNewChild, nsIDOMNode** aReturn)=0;
+
   NS_IMETHOD    CloneNode(nsIDOMNode** aReturn)=0;
 
   NS_IMETHOD    Equals(nsIDOMNode* aNode, PRBool aDeep, PRBool* aReturn)=0;
@@ -98,6 +100,7 @@ public:
   NS_IMETHOD    InsertBefore(nsIDOMNode* aNewChild, nsIDOMNode* aRefChild, nsIDOMNode** aReturn);  \
   NS_IMETHOD    ReplaceChild(nsIDOMNode* aNewChild, nsIDOMNode* aOldChild, nsIDOMNode** aReturn);  \
   NS_IMETHOD    RemoveChild(nsIDOMNode* aOldChild, nsIDOMNode** aReturn);  \
+  NS_IMETHOD    AppendChild(nsIDOMNode* aNewChild, nsIDOMNode** aReturn);  \
   NS_IMETHOD    CloneNode(nsIDOMNode** aReturn);  \
   NS_IMETHOD    Equals(nsIDOMNode* aNode, PRBool aDeep, PRBool* aReturn);  \
 
@@ -119,6 +122,7 @@ public:
   NS_IMETHOD    InsertBefore(nsIDOMNode* aNewChild, nsIDOMNode* aRefChild, nsIDOMNode** aReturn) { return _to##InsertBefore(aNewChild, aRefChild, aReturn); }  \
   NS_IMETHOD    ReplaceChild(nsIDOMNode* aNewChild, nsIDOMNode* aOldChild, nsIDOMNode** aReturn) { return _to##ReplaceChild(aNewChild, aOldChild, aReturn); }  \
   NS_IMETHOD    RemoveChild(nsIDOMNode* aOldChild, nsIDOMNode** aReturn) { return _to##RemoveChild(aOldChild, aReturn); }  \
+  NS_IMETHOD    AppendChild(nsIDOMNode* aNewChild, nsIDOMNode** aReturn) { return _to##AppendChild(aNewChild, aReturn); }  \
   NS_IMETHOD    CloneNode(nsIDOMNode** aReturn) { return _to##CloneNode(aReturn); }  \
   NS_IMETHOD    Equals(nsIDOMNode* aNode, PRBool aDeep, PRBool* aReturn) { return _to##Equals(aNode, aDeep, aReturn); }  \
 

@@ -25,13 +25,15 @@ REQUIRES = xpcom raptor dom js netlib
 
 LCFLAGS = -D_IMPL_NS_DOM
 
-CPPSRCS =			\
-	nsJSEnvironment.cpp	\
-	nsJSWindow.cpp          \
-	nsJSNavigator.cpp       \
-	nsJSLocation.cpp	\
-	nsGlobalWindow.cpp      \
-	nsLocation.cpp		\
+CPPSRCS =			 \
+	nsJSEnvironment.cpp	 \
+	nsJSWindow.cpp           \
+	nsJSNavigator.cpp        \
+	nsJSLocation.cpp	 \
+	nsJSWindowCollection.cpp \
+	nsGlobalWindow.cpp       \
+	nsLocation.cpp		 \
+	nsFrameList.cpp		 \
 	$(NULL)
 
 include $(DEPTH)/config/config.mk
