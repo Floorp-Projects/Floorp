@@ -637,13 +637,13 @@ CDockedRDFCoordinator :: FinishCreateSelf ( )
 	if ( closeCaption )
 		closeCaption->AddListener(this);
 
-	// init the embedded html area
+	// init the embedded html area. There is no point showing or hiding the adSpace here
+	// because it will be usurped by RestorePlace(). It is done at the browser window level.
 	mAdSpaceView = dynamic_cast<CBrowserView*>(FindPaneByID(adSpacePane_ID));
 	Assert_(mAdSpaceView != NULL);
 	if ( mAdSpaceView ) {
 		CBrowserContext* theContext = new CBrowserContext();
 		mAdSpaceView->SetContext ( theContext );
-		AdSpaceShelf().SetShelfState ( false );	// don't show HTML area by default.
 	}
 
 	// stash a pointer to the main HTML context for sitemaps
