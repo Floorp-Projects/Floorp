@@ -73,15 +73,9 @@ public:
 protected:
     // Helpers
     void ClearItemSelectionInternal();
-    void ClearCellSelectionInternal();
     void AddItemToSelectionInternal(nsIDOMXULElement* aTreeItem);
     void RemoveItemFromSelectionInternal(nsIDOMXULElement* aTreeItem);
-    void AddCellToSelectionInternal(nsIDOMXULElement* aTreeCell);
-    void RemoveCellFromSelectionInternal(nsIDOMXULElement* aTreeCell);
-    
-    void SetCurrentItem(nsIDOMXULElement* aElement);
-    void SetCurrentCell(nsIDOMXULElement* aCell);
-
+     
     static nsresult IndexOfContent(nsIContent *aRoot, nsIContent *aContent,
                                    PRBool aDescendIntoRows,
                                    PRBool aParentIsOpen,
