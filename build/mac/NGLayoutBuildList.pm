@@ -1,4 +1,4 @@
-#!perl -w
+`#!perl -w
 package			NGLayoutBuildList;
 
 require 5.004;
@@ -224,6 +224,9 @@ sub BuildDist()
 	#ZLIB
     InstallFromManifest(":mozilla:modules:zlib:src:MANIFEST",						"$distdirectory:zlib:");
 
+    #LIBJAR
+    InstallFromManifest(":mozilla:modules:libjar:MANIFEST",                         "$distdirectory:libjar:");
+
 	#LIBUTIL
     InstallFromManifest(":mozilla:modules:libutil:public:MANIFEST",					"$distdirectory:libutil:");
 
@@ -360,6 +363,9 @@ sub BuildDist()
     #SILENTDL
     InstallFromManifest(":mozilla:silentdl:MANIFEST",								"$distdirectory:silentdl:");
 
+    #XPINSTALL
+    InstallFromManifest(":mozilla:xpinstall:public:MANIFEST",                       "$distdirectory:xpinstall:");
+
    #FULL CIRCLE    
    if ($main::MOZ_FULLCIRCLE)
    {
@@ -493,6 +499,8 @@ sub BuildCommonProjects()
 
 	BuildOneProject(":mozilla:modules:zlib:macbuild:zlib.mcp",					"zlib$D.shlb", "zlib.toc", 1, $main::ALIAS_SYM_FILES, 0);
 	
+    BuildOneProject(":mozilla:modules:libjar:macbuild:libjar.mcp",              "libjar$D.shlb", "", 1, $main::ALIAS_SYM_FILES, 0);
+
 	BuildOneProject(":mozilla:caps:macbuild:Caps.mcp",						 	"Caps$D.shlb", "", 1, $main::ALIAS_SYM_FILES, 0);
 	
 	BuildOneProject(":mozilla:modules:oji:macbuild:oji.mcp",					"oji$D.shlb", "", 1, $main::ALIAS_SYM_FILES, 0);
@@ -542,6 +550,7 @@ sub BuildCommonProjects()
 
 #// XXX moved this TEMPORARILY to layout while we sort out a dependency
 #	BuildOneProject(":mozilla:rdf:macbuild:rdf.mcp",							"rdf$D.shlb", "rdf.toc", 1, $main::ALIAS_SYM_FILES, 0);
+    BuildOneProject(":mozilla:xpinstall:macbuild:xpinstall.mcp",                "xpinstall$D.shlb", "", 1, $main::ALIAS_SYM_FILES, 0);
 }
 
 
