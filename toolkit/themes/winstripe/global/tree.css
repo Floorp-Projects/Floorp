@@ -79,6 +79,10 @@ treechildren::-moz-tree-cell-text(selected, focus) {
   color: HighlightText;
 }
 
+treechildren::-moz-tree-cell-text(leaf, linkTree) {
+  text-decoration: underline;
+  color: blue;
+}
 
 /* ::::: lines connecting cells ::::: */
 

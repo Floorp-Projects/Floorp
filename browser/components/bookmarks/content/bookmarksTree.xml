@@ -906,7 +906,8 @@
               <treeitem uri="rdf:*">
                 <treerow properties="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type rdf:http://home.netscape.com/NC-rdf#loading rdf:http://home.netscape.com/WEB-rdf#status">
                   <treecell src="rdf:http://home.netscape.com/NC-rdf#Icon"
-                            label="rdf:http://home.netscape.com/NC-rdf#Name"/>
+                            label="rdf:http://home.netscape.com/NC-rdf#Name"
+                            properties="linkTree"/>
                 </treerow>
               </treeitem>
             </treechildren>
