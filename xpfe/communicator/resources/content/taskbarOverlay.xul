@@ -78,7 +78,7 @@
     </menubutton>
   
     <!-- spacer to accommodate mac resize box -->
-    <spring style="width: 20px;"/>
+    <spring id="resizer" style="width: 20px;"/>
   </box>
 
 </overlay>
