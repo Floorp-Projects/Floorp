@@ -572,7 +572,7 @@ intn CEditBuffer::ParseTag(pa_DocData *pData, PA_Tag* pTag, intn status){
     // 8/31/98: List types no longer supported
     // (they were always displayed the same as P_UNUM_LIST anyway)
     if( pTag->type == P_MENU || P_DIRECTORY )
-        pTag->type == P_UNUM_LIST;
+        pTag->type = P_UNUM_LIST;
 
     /* P_STRIKE is a synonym for P_STRIKEOUT. Since pre-3.0 versions of
      * Navigator don't recognize P_STRIKE ( "<S>" ), we switch it to
@@ -6305,7 +6305,7 @@ XP_Bool CEditBuffer::CheckCharset( EDT_MetaData *pData, int16 win_csid )
         PA_Tag *pTag = XP_NEW( PA_Tag );
         XP_BZERO( pTag, sizeof( PA_Tag ) );
     	pTag->data_len = iLen;
-        pTag->data_str = XP_STRDUP(pContent);
+        //pTag->data_str = XP_STRDUP(pContent);
 
         char *pCharset = edt_FetchParamString(pTag, PARAM_CHARSET, win_csid );
         PA_FREE(pTag);
