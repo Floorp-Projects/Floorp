@@ -86,35 +86,40 @@ static PRBool gsNoisyRefs = PR_FALSE;
 #define SHOW_CARET
 
 static PLHashNumber
-HashKey(nsIFrame* key)
+HashKey(void* key)
 {
-  return (PLHashNumber) key;
+  return (PLHashNumber)key;
 }
 
 static PRIntn
-CompareKeys(nsIFrame* key1, nsIFrame* key2)
+CompareKeys(void* key1, void* key2)
 {
   return key1 == key2;
 }
 
 class FrameHashTable {
 public:
-  FrameHashTable();
+  FrameHashTable(PRUint32 aNumBuckets = 16);
   ~FrameHashTable();
 
-  void* Get(nsIFrame* aKey);
-  void* Put(nsIFrame* aKey, void* aValue);
-  void* Remove(nsIFrame* aKey);
+  void* Get(void* aKey);
+  void* Put(void* aKey, void* aValue);
+  void* Remove(void* aKey);
+  void  Clear();  // remove all entries
+
+#ifdef NS_DEBUG
+  void  Dump(FILE* fp);
+#endif
 
 protected:
   PLHashTable* mTable;
 };
 
-FrameHashTable::FrameHashTable()
+FrameHashTable::FrameHashTable(PRUint32 aNumBuckets)
 {
-  mTable = PL_NewHashTable(8, (PLHashFunction) HashKey,
-                           (PLHashComparator) CompareKeys,
-                           (PLHashComparator) nsnull,
+  mTable = PL_NewHashTable(aNumBuckets, (PLHashFunction)HashKey,
+                           (PLHashComparator)CompareKeys,
+                           (PLHashComparator)nsnull,
                            nsnull, nsnull);
 }
 
@@ -127,7 +132,7 @@ FrameHashTable::~FrameHashTable()
  * Get the data associated with a frame.
  */
 void*
-FrameHashTable::Get(nsIFrame* aKey)
+FrameHashTable::Get(void* aKey)
 {
   PRInt32 hashCode = (PRInt32) aKey;
   PLHashEntry** hep = PL_HashTableRawLookup(mTable, hashCode, aKey);
@@ -139,12 +144,12 @@ FrameHashTable::Get(nsIFrame* aKey)
 }
 
 /**
- * Create an association between a frame and some data. This call
+ * Create an association between a key and some data. This call
  * returns an old association if there was one (or nsnull if there
  * wasn't).
  */
 void*
-FrameHashTable::Put(nsIFrame* aKey, void* aData)
+FrameHashTable::Put(void* aKey, void* aData)
 {
   PRInt32 hashCode = (PRInt32) aKey;
   PLHashEntry** hep = PL_HashTableRawLookup(mTable, hashCode, aKey);
@@ -159,11 +164,11 @@ FrameHashTable::Put(nsIFrame* aKey, void* aData)
 }
 
 /**
- * Remove an association between a frame and it's data. This returns
+ * Remove an association between a key and it's data. This returns
  * the old associated data.
  */
 void*
-FrameHashTable::Remove(nsIFrame* aKey)
+FrameHashTable::Remove(void* aKey)
 {
   PRInt32 hashCode = (PRInt32) aKey;
   PLHashEntry** hep = PL_HashTableRawLookup(mTable, hashCode, aKey);
@@ -175,6 +180,37 @@ FrameHashTable::Remove(nsIFrame* aKey)
   }
   return oldValue;
 }
+
+static PRIntn
+RemoveEntry(PLHashEntry* he, PRIntn i, void* arg)
+{
+  // Remove and free this entry and continue enumerating
+  return HT_ENUMERATE_REMOVE | HT_ENUMERATE_NEXT;
+}
+
+/**
+ * Remove all the entries in the hash table
+ */
+void
+FrameHashTable::Clear()
+{
+  PL_HashTableEnumerateEntries(mTable, RemoveEntry, 0);
+}
+
+#ifdef NS_DEBUG
+static PRIntn
+EnumEntries(PLHashEntry* he, PRIntn i, void* arg)
+{
+  // Continue enumerating
+  return HT_ENUMERATE_NEXT;
+}
+
+void
+FrameHashTable::Dump(FILE* fp)
+{
+  PL_HashTableDump(mTable, EnumEntries, fp);
+}
+#endif
 
 //----------------------------------------------------------------------
 
@@ -392,6 +428,7 @@ protected:
   nsCOMPtr<nsICaret>            mCaret;
   PRBool                        mDisplayNonTextSelection;
   PRBool                        mScrollingEnabled; //used to disable programmable scrolling from outside
+  FrameHashTable*               mPrimaryFrameMap;
   FrameHashTable*               mPlaceholderMap;
 private:
   //helper funcs for disabing autoscrolling
@@ -558,6 +595,7 @@ PresShell::~PresShell()
   if (mDocument)
     mDocument->DeleteShell(this);
   mRefCnt = 0;
+  delete mPrimaryFrameMap;
   delete mPlaceholderMap;
 }
 
@@ -1817,83 +1855,33 @@ PresShell::StyleRuleRemoved(nsIDocument *aDocument,
   return ReconstructFrames();
 }
 
-
 NS_IMETHODIMP
 PresShell::DocumentWillBeDestroyed(nsIDocument *aDocument)
 {
   return NS_OK;
 }
 
-static nsIFrame*
-FindFrameWithContent(nsIFrame* aFrame, nsIContent* aContent)
-{
-  nsIContent* frameContent;
-  PRBool      hasSameContent;
-
-  NS_ASSERTION(aFrame, "No frame to search!");
-  if (!aFrame) return nsnull;   
-
-  // See if the frame points to the same content object
-  aFrame->GetContent(&frameContent);
-  hasSameContent = (frameContent == aContent);
-  NS_IF_RELEASE(frameContent);
-
-  if (hasSameContent) {
-    nsIAtom*  frameType;
-    PRBool    isPlaceholder;
-
-    // See if it's a placeholder frame
-    aFrame->GetFrameType(&frameType);
-    isPlaceholder = (nsLayoutAtoms::placeholderFrame == frameType);
-    NS_IF_RELEASE(frameType);
-
-    if (isPlaceholder) {
-      // Ignore the placeholder and return the out-of-flow frame instead
-      return ((nsPlaceholderFrame*)aFrame)->GetOutOfFlowFrame();
-    }
-
-    // Also ignore frames associated with generated content
-    nsFrameState  frameState;
-    
-    aFrame->GetFrameState(&frameState);
-    if ((frameState & NS_FRAME_GENERATED_CONTENT) == 0) {
-      return aFrame;
-    }
-  }
-
-  // Search for the frame in each child list that aFrame supports
-  nsIAtom* listName = nsnull;
-  PRInt32 listIndex = 0;
-  do {
-    nsIFrame* kid;
-    aFrame->FirstChild(listName, &kid);
-    while (nsnull != kid) {
-      nsIFrame* result = FindFrameWithContent(kid, aContent);
-      if (nsnull != result) {
-        NS_IF_RELEASE(listName);
-        return result;
-      }
-      kid->GetNextSibling(&kid);
-    }
-    NS_IF_RELEASE(listName);
-    aFrame->GetAdditionalChildListName(listIndex++, &listName);
-  } while(nsnull != listName);
-
-  return nsnull;
-}
-
 NS_IMETHODIMP
 PresShell::GetPrimaryFrameFor(nsIContent* aContent,
-                              nsIFrame** aResult) const
+                              nsIFrame**  aResult) const
 {
   NS_PRECONDITION(nsnull != aResult, "null ptr");
+  NS_PRECONDITION(nsnull != aContent, "no content object");
   if (nsnull == aResult) {
     return NS_ERROR_NULL_POINTER;
   }
 
-  // For the time being do a brute force depth-first search of
-  // the frame tree
-  *aResult = ::FindFrameWithContent(mRootFrame, aContent);
+  if (nsnull == mPrimaryFrameMap) {
+    *aResult = nsnull;
+  } else {
+    *aResult = (nsIFrame*)mPrimaryFrameMap->Get(aContent);
+    if (!*aResult) {
+      // Give the frame construction code the opportunity to return the
+      // frame that maps the content object
+      mStyleSet->FindPrimaryFrameFor(mPresContext, aContent, aResult);
+    }
+  }
+  
   return NS_OK;
 }
 
@@ -1901,13 +1889,37 @@ NS_IMETHODIMP
 PresShell::SetPrimaryFrameFor(nsIContent* aContent,
                               nsIFrame*   aPrimaryFrame)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  NS_PRECONDITION(nsnull != aContent, "no content object");
+
+  if (nsnull == mPrimaryFrameMap) {
+    mPrimaryFrameMap = new FrameHashTable(128);
+    if (nsnull == mPrimaryFrameMap) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+  }
+
+  if (nsnull == aPrimaryFrame) {
+    mPrimaryFrameMap->Remove(aContent);
+  } else {
+    nsIFrame* oldPrimaryFrame;
+     
+    oldPrimaryFrame = (nsIFrame*)mPrimaryFrameMap->Put(aContent, (void*)aPrimaryFrame);
+#ifdef NS_DEBUG
+    if (oldPrimaryFrame && (oldPrimaryFrame != aPrimaryFrame)) {
+      NS_WARNING("overwriting current primary frame");
+    }
+#endif
+  }
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 PresShell::ClearPrimaryFrameMap()
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  if (mPrimaryFrameMap) {
+    mPrimaryFrameMap->Clear();
+  }
+  return NS_OK;
 }
 
 NS_IMETHODIMP 
@@ -1952,7 +1964,7 @@ PresShell::GetPlaceholderFrameFor(nsIFrame*  aFrame,
   if (nsnull == mPlaceholderMap) {
     *aResult = nsnull;
   } else {
-    *aResult = (nsIFrame*) mPlaceholderMap->Get(aFrame);
+    *aResult = (nsIFrame*)mPlaceholderMap->Get(aFrame);
   }
 
   return NS_OK;
@@ -1992,7 +2004,10 @@ PresShell::SetPlaceholderFrameFor(nsIFrame* aFrame,
 NS_IMETHODIMP
 PresShell::ClearPlaceholderFrameMap()
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  if (mPlaceholderMap) {
+    mPlaceholderMap->Clear();
+  }
+  return NS_OK;
 }
 
 //nsIViewObserver

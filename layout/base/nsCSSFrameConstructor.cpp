@@ -2590,9 +2590,8 @@ nsCSSFrameConstructor::ConstructFrameByTag(nsIPresContext*          aPresContext
 
   if (nsLayoutAtoms::textTagName == aTag) {
     rv = NS_NewTextFrame(&newFrame);
-    // Text frames never go in the content->frame hash table, because
-    // they're anonymous. This keeps the hash table smaller. See
-    // FindPrimaryFrameFor()
+    // Text frames don't go in the content->frame hash table, because
+    // they're anonymous. This keeps the hash table smaller
     addToHashTable = PR_FALSE;
     isReplaced = PR_TRUE;   // XXX kipp: temporary
   }
@@ -2631,6 +2630,10 @@ nsCSSFrameConstructor::ConstructFrameByTag(nsIPresContext*          aPresContext
       else if (nsHTMLAtoms::br == aTag) {
         rv = NS_NewBRFrame(&newFrame);
         isReplaced = PR_TRUE;
+        // BR frames don't go in the content->frame hash table: typically
+        // there are many BR content objects and this would increase the size
+        // of the hash table, and it's doubtful we need the mapping anyway
+        addToHashTable = PR_FALSE;
       }
       else if (nsHTMLAtoms::wbr == aTag) {
         rv = NS_NewWBRFrame(&newFrame);
@@ -3003,7 +3006,8 @@ nsCSSFrameConstructor::ConstructXULFrame(nsIPresContext*          aPresContext,
         // Add the table frame to the flow
         aFrameItems.AddChild(newFrame);
       }
-      return rv;
+      // Make sure we add a mapping in the content->frame hash table
+      goto addToHashTable;
     }
     else if (aTag == nsXULAtoms::treerow)
     {
@@ -3228,15 +3232,17 @@ nsCSSFrameConstructor::ConstructXULFrame(nsIPresContext*          aPresContext,
       // Add the placeholder frame to the flow
       aFrameItems.AddChild(placeholderFrame);
     }
+  }
 
+ addToHashTable:
+  if (newFrame) {
     // Add a mapping from content object to primary frame. Note that for
     // floated and positioned frames this is the out-of-flow frame and not
     // the placeholder frame
-    nsIPresShell* presShell;
+    nsCOMPtr<nsIPresShell> presShell;
 
-    aPresContext->GetShell(&presShell);
+    aPresContext->GetShell(getter_AddRefs(presShell));
     presShell->SetPrimaryFrameFor(aContent, newFrame);
-    NS_RELEASE(presShell);
   }
 
   return rv;
@@ -3345,6 +3351,7 @@ nsCSSFrameConstructor::ConstructFrameByDisplayType(nsIPresContext*          aPre
   PRBool    isBlock = aDisplay->IsBlockLevel();
   nsIFrame* newFrame = nsnull;  // the frame we construct
   nsTableCreator tableCreator; // Used to make table frames.
+  PRBool    addToHashTable = PR_TRUE;
   nsresult  rv = NS_OK;
 
   // Get the position syle info
@@ -3536,6 +3543,9 @@ nsCSSFrameConstructor::ConstructFrameByDisplayType(nsIPresContext*          aPre
       rv = NS_NewInlineFrame(&newFrame);
       processChildren = PR_TRUE;
       haveFirstLetterStyle = aHaveFirstLetterStyle;
+      // To keep the hash table small don't add inline frames (they're typically
+      // things like FONT and B), because we can quickly find them if we need to
+      addToHashTable = PR_FALSE;
       break;
   
     case NS_STYLE_DISPLAY_TABLE:
@@ -3690,7 +3700,7 @@ nsCSSFrameConstructor::ConstructFrameByDisplayType(nsIPresContext*          aPre
     aFrameItems.AddChild(newFrame);
   }
 
-  if (newFrame) {
+  if (newFrame && addToHashTable) {
     // Add a mapping from content object to primary frame. Note that for
     // floated and positioned frames this is the out-of-flow frame and not
     // the placeholder frame
@@ -5815,47 +5825,72 @@ nsCSSFrameConstructor::CreateContinuingFrame(nsIPresContext* aPresContext,
 }
 
 // Helper function that searches the immediate child frames for a frame that
-// maps the specified text content object
+// maps the specified content object
 static nsIFrame*
-FindFrameWithTextContent(nsIFrame* aFrame, nsIContent* aContent)
+FindFrameWithContent(nsIFrame*   aParentFrame,
+                     nsIContent* aParentContent,
+                     nsIContent* aContent)
 {
-  NS_ASSERTION(aFrame, "No frame to search!");
-  if (!aFrame) {
-    return nsnull;   
+  NS_PRECONDITION(aParentFrame, "No frame to search!");
+  if (!aParentFrame) {
+    return nsnull;
   }
 
-  // Get aFrame's content object
-  nsCOMPtr<nsIContent>  frameContent;
-  aFrame->GetContent(getter_AddRefs(frameContent));
+keepLooking:
+  // Search for the frame in each child list that aParentFrame supports
+  nsIAtom* listName = nsnull;
+  PRInt32 listIndex = 0;
+  do {
+    nsIFrame* kidFrame;
+    aParentFrame->FirstChild(listName, &kidFrame);
+    while (kidFrame) {
+      nsCOMPtr<nsIContent>  kidContent;
+      
+      // See if the child frame points to the content object we're
+      // looking for
+      kidFrame->GetContent(getter_AddRefs(kidContent));
+      if (kidContent.get() == aContent) {
+        nsCOMPtr<nsIAtom>  frameType;
 
-  // Because text is anonymous and can't be moved out of the flow,
-  // we only need to search the principal child list
-  nsIFrame* kidFrame;
-  aFrame->FirstChild(nsnull, &kidFrame);
-  while (kidFrame) {
-    nsCOMPtr<nsIContent>  kidContent;
-
-    // See if the frame points to the same content object
-    kidFrame->GetContent(getter_AddRefs(kidContent));
-    if (kidContent.get() == aContent) {
-      return kidFrame;
-    }
-
-    // Search the immediate children only, but if the child frame maps
-    // the same content as its parent then we need to search its child
-    // frames, too
-    if (kidContent == frameContent) {
-      nsIFrame* matchingFrame = FindFrameWithTextContent(kidFrame, aContent);
-
-      if (matchingFrame) {
-        return matchingFrame;
+        // We found a match. See if it's a placeholder frame
+        kidFrame->GetFrameType(getter_AddRefs(frameType));
+        if (nsLayoutAtoms::placeholderFrame == frameType.get()) {
+          // Ignore the placeholder and return the out-of-flow frame instead
+          return ((nsPlaceholderFrame*)kidFrame)->GetOutOfFlowFrame();
+        } else {
+          // Return the matching child frame
+          return kidFrame;
+        }
       }
+
+      // We search the immediate children only, but if the child frame has
+      // the same content pointer as its parent then we need to search its
+      // child frames, too
+      if (kidContent.get() == aParentContent) {
+        nsIFrame* matchingFrame = FindFrameWithContent(kidFrame, aParentContent,
+                                                       aContent);
+
+        if (matchingFrame) {
+          return matchingFrame;
+        }
+      }
+
+      // Get the next sibling frame
+      kidFrame->GetNextSibling(&kidFrame);
     }
 
-    // Get the next sibling frame
-    kidFrame->GetNextSibling(&kidFrame);
+    NS_IF_RELEASE(listName);
+    aParentFrame->GetAdditionalChildListName(listIndex++, &listName);
+  } while(listName);
+
+  // We didn't find a matching frame. If aFrame has a next-in-flow,
+  // then continue looking there
+  aParentFrame->GetNextInFlow(&aParentFrame);
+  if (aParentFrame) {
+    goto keepLooking;
   }
 
+  // No matching frame
   return nsnull;
 }
 
@@ -5867,36 +5902,42 @@ nsCSSFrameConstructor::FindPrimaryFrameFor(nsIPresContext* aPresContext,
                                            nsIContent*     aContent,
                                            nsIFrame**      aFrame)
 {
-  nsCOMPtr<nsIAtom> tag;
-  aContent->GetTag(*getter_AddRefs(tag));
+  *aFrame = nsnull;  // initialize OUT parameter 
 
-  // The only content objects that we don't add a mapping to the hash table
-  // for are text content objects, because they're anonymous
-  if (nsLayoutAtoms::textTagName == tag.get()) {
-    nsCOMPtr<nsIContent>   parentContent;
-    nsCOMPtr<nsIPresShell> presShell;
-    nsIFrame*              parentFrame;
+  // Get the pres shell
+  nsCOMPtr<nsIPresShell> presShell;
+  aPresContext->GetShell(getter_AddRefs(presShell));
 
-    // Get the frame that corresponds to the text node's parent content,
-    // and search its child frames
-    aContent->GetParent(*getter_AddRefs(parentContent));
-    aPresContext->GetShell(getter_AddRefs(presShell));
+  // We want to be able to quickly map from a content object to its frame,
+  // but we also want to keep the hash table small. Therefore, many frames
+  // are not added to the hash table when they're first created:
+  // - text frames
+  // - inline frames (often things like FONT and B)
+  // - BR frames
+  // - internal table frames (row-group, row, cell, col-group, col)
+  //
+  // That means we need to need to search for the frame
+  nsCOMPtr<nsIContent>   parentContent;
+  nsIFrame*              parentFrame;
+
+  // Get the frame that corresponds to the parent content object.
+  // Note that this may recurse indirectly, because the pres shell will
+  // call us back if there is no mapping in the hash table
+  aContent->GetParent(*getter_AddRefs(parentContent));
+  if (parentContent.get()) {
     presShell->GetPrimaryFrameFor(parentContent, &parentFrame);
-
     if (parentFrame) {
-      *aFrame = FindFrameWithTextContent(parentFrame, aContent);
-    } else {
-      *aFrame = nsnull;
+      // Search the child frames for a match
+      *aFrame = FindFrameWithContent(parentFrame, parentContent.get(), aContent);
+
+      // If we found a match, then add a mapping to the hash table so
+      // next time this will be quick
+      if (*aFrame) {
+        presShell->SetPrimaryFrameFor(aContent, *aFrame);
+      }
     }
-
-  } else {
-    // There is no frame that maps the given content object
-    *aFrame = nsnull;
   }
 
-  if (!*aFrame) {
-    NS_WARNING("no frame for content object");
-  }
   return NS_OK;
 }
 
