@@ -153,10 +153,10 @@ nsRange::nsRange()
 
 nsRange::~nsRange() 
 {
-	delete mStartAncestors;
-	delete mEndAncestors;
-	delete mStartAncestorOffsets;
-	delete mEndAncestorOffsets;
+  delete mStartAncestors;
+  delete mEndAncestors;
+  delete mStartAncestorOffsets;
+  delete mEndAncestorOffsets;
 } 
 
 /******************************************************
@@ -262,10 +262,10 @@ PRBool nsRange::IsIncreasing(nsIDOMNode* aStartN, PRInt32 aStartOffset,
   // lazy allocation of ancestor data
   if (!mStartAncestors)
   {
-  	mStartAncestors = new nsVoidArray();
-  	mStartAncestorOffsets = new nsVoidArray();
-  	mEndAncestors = new nsVoidArray();
-  	mEndAncestorOffsets = new nsVoidArray();
+    mStartAncestors = new nsVoidArray();
+    mStartAncestorOffsets = new nsVoidArray();
+    mEndAncestors = new nsVoidArray();
+    mEndAncestorOffsets = new nsVoidArray();
     if (!mStartAncestors || mStartAncestorOffsets || mEndAncestors || mEndAncestorOffsets)
     {
       NS_NOTREACHED("nsRange::IsIncreasing");
@@ -362,10 +362,10 @@ nsresult nsRange::ComparePointToRange(nsIDOMNode* aParent, PRInt32 aOffset, PRIn
   // lazy allocation of ancestor data
   if (!mStartAncestors)
   {
-  	mStartAncestors = new nsVoidArray();
-  	mStartAncestorOffsets = new nsVoidArray();
-  	mEndAncestors = new nsVoidArray();
-  	mEndAncestorOffsets = new nsVoidArray();
+    mStartAncestors = new nsVoidArray();
+    mStartAncestorOffsets = new nsVoidArray();
+    mEndAncestors = new nsVoidArray();
+    mEndAncestorOffsets = new nsVoidArray();
     if (!mStartAncestors || mStartAncestorOffsets || mEndAncestors || mEndAncestorOffsets)
     {
       // my kingdom for exceptions
@@ -430,7 +430,7 @@ nsresult nsRange::ComparePointToRange(nsIDOMNode* aParent, PRInt32 aOffset, PRIn
     }
   }
 
-  // clea up
+  // clean up
   delete pointAncestors;
   delete pointAncestorOffsets;
   
@@ -567,7 +567,7 @@ nsIDOMNode* nsRange::CommonParent(nsIDOMNode* aNode1, nsIDOMNode* aNode2)
   // shortcut for common case - both nodes are the same
   if (aNode1 == aNode2)
   {
-  	// should be able to remove this error check later
+    // should be able to remove this error check later
     nsresult res = aNode1->GetParentNode(&theParent);
     if (!NS_SUCCEEDED(res))
     {
@@ -818,7 +818,66 @@ nsresult nsRange::SelectNodeContents(nsIDOMNode* aN)
 }
 
 nsresult nsRange::DeleteContents()
-{ return NS_ERROR_NOT_IMPLEMENTED; }
+{ 
+  nsIContent *cStart;
+  nsIContent *cEnd;
+  
+  // get the content versions of our endpoints
+  nsresult res = mStartParent->QueryInterface(kIContentIID, (void**)&cStart);
+  if (!NS_SUCCEEDED(res)) 
+  {
+    NS_NOTREACHED("nsRange::DeleteContents");
+    return NS_ERROR_UNEXPECTED;
+  }
+  res = mEndParent->QueryInterface(kIContentIID, (void**)&cEnd);
+  if (!NS_SUCCEEDED(res)) 
+  {
+    NS_NOTREACHED("nsRange::DeleteContents");
+    NS_IF_RELEASE(cStart);
+    return NS_ERROR_UNEXPECTED;
+  }
+  
+  // effeciency hack for simple case
+  if (cStart == cEnd)
+  {
+    PRBool hasChildren;
+    res = cStart->CanContainChildren(hasChildren);
+    if (!NS_SUCCEEDED(res)) 
+    {
+      NS_NOTREACHED("nsRange::DeleteContents");
+      NS_IF_RELEASE(cStart);
+      NS_IF_RELEASE(cEnd);
+      return res;
+    }
+    
+    if (hasChildren)
+    {
+      PRInt32 i;  
+      for (i=mEndOffset; --i; i>=mStartOffset)
+      {
+        res = cStart->RemoveChildAt(i, PR_TRUE);
+        if (!NS_SUCCEEDED(res)) 
+        {
+          NS_NOTREACHED("nsRange::DeleteContents");
+          NS_IF_RELEASE(cStart);
+          NS_IF_RELEASE(cEnd);
+          return res;
+        }
+      }
+      NS_IF_RELEASE(cStart);
+      NS_IF_RELEASE(cEnd);
+      return NS_OK;
+    }
+    else // textnode, or somesuch.  offsets refer to data in node
+    {
+      // not done yet  
+    }
+  } 
+  
+  // complex case
+  // not done yet  
+  return NS_OK;
+}
 
 nsresult nsRange::ExtractContents(nsIDOMDocumentFragment** aReturn)
 { return NS_ERROR_NOT_IMPLEMENTED; }
