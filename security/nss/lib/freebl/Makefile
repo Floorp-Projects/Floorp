@@ -147,13 +147,13 @@ export:: private_export
 
 ifdef MOZILLA_BSAFE_BUILD
 ifeq ($(OS_ARCH),WINNT)
-libbsafe=bsafe41.lib
+libbsafe=bsafe$(BSAFEVER).lib
 else
 libbsafe=libbsafe.$(LIB_SUFFIX)
 endif
 
 private_export::
-	$(NSINSTALL) -m 777 $(libbsafe) $(DIST)/lib; \
+	$(NSINSTALL) -m 777 $(libbsafe) $(DIST)/lib;
 
 endif
 
