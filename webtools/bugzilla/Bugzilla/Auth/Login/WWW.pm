@@ -51,6 +51,7 @@ sub login {
     # (double cookies, odd compat code settings, etc)
     return $user if $user->id;
 
+    $type = LOGIN_REQUIRED if Bugzilla->cgi->param('GoAheadAndLogIn');
     $type = LOGIN_NORMAL unless defined $type;
 
     # Log in using whatever methods are defined in user_info_class.
