@@ -10,3 +10,4 @@ nsIParserNode.h
 nsIParser.h
 nsToken.h
 nsIDTDDebug.h
+CNavDTD.h
