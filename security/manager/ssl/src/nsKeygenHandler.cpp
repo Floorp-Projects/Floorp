@@ -41,6 +41,7 @@ extern "C" {
 #include "nsINSSDialogs.h"
 #include "nsKeygenThread.h"
 #include "nsReadableUtils.h"
+#include "nsUnicharUtils.h"
 
 //These defines are taken from the PKCS#11 spec
 #define CKM_RSA_PKCS_KEY_PAIR_GEN     0x00000000
