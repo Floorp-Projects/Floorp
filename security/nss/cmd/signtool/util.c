@@ -196,32 +196,34 @@ usage (void)
   PR_fprintf(outputFD, "%s %s - a signing tool for jar files\n", LONG_PROGRAM_NAME, VERSION);
   PR_fprintf(outputFD, "\n");
   PR_fprintf(outputFD, "Usage:  %s [options] directory-tree \n\n", PROGRAM_NAME);
-  PR_fprintf(outputFD, "    -b\"basename\"\t\tbasename of .sf, .rsa files for signing\n");
+  PR_fprintf(outputFD, "    -b \"basename\"\t\tbasename of .sf, .rsa files for signing\n");
   PR_fprintf(outputFD, "    -c#\t\t\t\tCompression level, 0-9, 0=none\n");
-  PR_fprintf(outputFD, "    -d\"certificate directory\"\tcontains cert*.db and key*.db\n");
-  PR_fprintf(outputFD, "    -e\".ext\"\t\t\tsign only files with this extension\n");
-  PR_fprintf(outputFD, "    -f\"filename\"\t\t\tread commands from file\n");
-  PR_fprintf(outputFD, "    -G\"nickname\"\t\tcreate object-signing cert with this nickname\n");
-  PR_fprintf(outputFD, "    -i\"installer script\"\tassign installer javascript\n");
-  PR_fprintf(outputFD, "    -j\"javascript directory\"\tsign javascript files in this subtree\n");
+  PR_fprintf(outputFD, "    -d \"certificate directory\"\tcontains cert*.db and key*.db\n");
+  PR_fprintf(outputFD, "    -e \".ext\"\t\t\tsign only files with this extension\n");
+  PR_fprintf(outputFD, "    -f \"filename\"\t\t\tread commands from file\n");
+  PR_fprintf(outputFD, "    -G \"nickname\"\t\tcreate object-signing cert with this nickname\n");
+  PR_fprintf(outputFD, "    -i \"installer script\"\tassign installer javascript\n");
+  PR_fprintf(outputFD, "    -j \"javascript directory\"\tsign javascript files in this subtree\n");
   PR_fprintf(outputFD, "    -J\t\t\t\tdirectory contains HTML files. Javascript will\n"
 			"\t\t\t\tbe extracted and signed.\n");
-  PR_fprintf(outputFD, "    -k\"cert nickname\"\t\tsign with this certificate\n");
+  PR_fprintf(outputFD, "    -k \"cert nickname\"\t\tsign with this certificate\n");
   PR_fprintf(outputFD, "    --leavearc\t\t\tdo not delete .arc directories created\n"
 			"\t\t\t\tby -J option\n");
-  PR_fprintf(outputFD, "    -m\"metafile\"\t\tinclude custom meta-information\n");
+  PR_fprintf(outputFD, "    -m \"metafile\"\t\tinclude custom meta-information\n");
   PR_fprintf(outputFD, "    --norecurse\t\t\tdo not operate on subdirectories\n");
   PR_fprintf(outputFD, "    -o\t\t\t\toptimize - omit optional headers\n");
   PR_fprintf(outputFD, "    -O\t\t\t\tenableOCSP - enable OCSP checking\n");
   PR_fprintf(outputFD, "    --outfile \"filename\"\tredirect output to file\n");
-  PR_fprintf(outputFD, "    -p\"password\"\t\tfor password on command line (insecure)\n");
+  PR_fprintf(outputFD, "    -p \"password\"\t\tfor password on command line (insecure)\n");
   PR_fprintf(outputFD, "    -s keysize\t\t\tkeysize in bits of generated cert\n");
   PR_fprintf(outputFD, "    -t token\t\t\tname of token on which to generate cert\n");
   PR_fprintf(outputFD, "    --verbosity #\t\tSet amount of debugging information to generate.\n"
 			"\t\t\t\tLower number means less output, 0 is default.\n");
-  PR_fprintf(outputFD, "    -x\"name\"\t\t\tdirectory or filename to exclude\n");
+  PR_fprintf(outputFD, "    -x \"name\"\t\t\tdirectory or filename to exclude\n");
+  PR_fprintf(outputFD, "    -X\t\t\t\tCreate XPI Compatible Archive\n"
+            "\t\t\t\t(used in conjunction with the -Z)\n");
   PR_fprintf(outputFD, "    -z\t\t\t\tomit signing time from signature\n");
-  PR_fprintf(outputFD, "    -Z\"jarfile\"\t\t\tcreate JAR file with the given name.\n"
+  PR_fprintf(outputFD, "    -Z \"jarfile\"\t\tcreate JAR file with the given name.\n"
 		  "\t\t\t\t(Default compression level is 6.)\n");
   PR_fprintf(outputFD, "\n");
   PR_fprintf(outputFD, "%s -l\n", PROGRAM_NAME);
@@ -239,6 +241,8 @@ usage (void)
   PR_fprintf(outputFD, "%s -w file.jar\n", PROGRAM_NAME);
   PR_fprintf(outputFD, "  if valid, tries to tell you who signed the jar file\n");
   PR_fprintf(outputFD, "\n");
+  PR_fprintf(outputFD, "%s -d \"certificate directory\" -K -k \"cert nickname\" -p \"password\" -X -Z \"file.xpi\" directory-tree\n", PROGRAM_NAME);
+  PR_fprintf(outputFD, "  Common syntax to create a XPInstall compatible signed archive\n\n");
   PR_fprintf(outputFD, "For more details, visit\n");
   PR_fprintf(outputFD, 
 "  http://developer.netscape.com/library/documentation/signedobj/signtool/\n");

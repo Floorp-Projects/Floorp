@@ -45,6 +45,8 @@ static int jar_find_key_type (CERTCertificate *cert);
 static int manifesto (char *dirname, char *install_script, PRBool recurse);
 static int manifesto_fn(char *relpath, char *basedir, char *reldir,
 	char *filename, void *arg);
+static int manifesto_xpi_fn(char *relpath, char *basedir, char *reldir,
+	char *filename, void *arg);
 static int sign_all_arc_fn(char *relpath, char *basedir, char *reldir,
 	char *filename, void *arg);
 static int add_meta (FILE *fp, char *name);
@@ -75,41 +77,70 @@ SignArchive(char *tree, char *keyName, char *zip_file, int javascript,
 
 	metafile = meta_file;
 	optimize = _optimize;
-
-	if(zip_file) {
-		zipfile = JzipOpen(zip_file, NULL /*no comment*/);
-	}
-
-  manifesto (tree, install_script, recurse);
-
-  if (keyName)
-    {
-    status = create_pk7 (tree, keyName, &keyType);
-    if (status < 0)
-      {
-      PR_fprintf(errorFD, "the tree \"%s\" was NOT SUCCESSFULLY SIGNED\n", tree);
-		errorCount++;
-      exit (ERRX);
-      }
+    
+    
+    /* To create XPI compatible Archive manifesto() must be run before 
+     * the zipfile is opened. This is so the signed files are not added
+     * the archive before the crucial rsa/dsa file*/
+     if (xpi_arc){
+	   manifesto (tree, install_script, recurse);
+     }
+     
+     
+     if(zip_file) {
+           zipfile = JzipOpen(zip_file, NULL /*no comment*/);
+     }
+     
+     /*Sign and add files to the archive normally with manifesto()*/
+     if (!xpi_arc){
+	   manifesto (tree, install_script, recurse);
+     }
+     
+     
+     if (keyName)
+     {
+        status = create_pk7 (tree, keyName, &keyType);
+        if (status < 0)
+        {
+          PR_fprintf(errorFD, "the tree \"%s\" was NOT SUCCESSFULLY SIGNED\n", tree);
+          errorCount++;
+          exit (ERRX);
+        }
+   	 }
+    	 
+    /* Add the rsa/dsa file as the first file in the archive. This is crucial
+     * for a XPInstall compatible archive */
+    if (xpi_arc) {
+        if(verbosity >= 0) {
+           PR_fprintf(outputFD, "%s \n", XPI_TEXT);
+		 }
+		 
+         /* rsa/dsa to zip */
+         sprintf (tempfn, "META-INF/%s.%s", base, (keyType==dsaKey ? "dsa" : "rsa"));
+         sprintf (fullfn, "%s/%s", tree, tempfn);
+         JzipAdd(fullfn, tempfn, zipfile, compression_level);
+         
+         /* Loop through all files & subdirectories, add to archive */
+         foreach (tree, "", manifesto_xpi_fn, recurse, PR_FALSE /*include dirs */,
+		(void*)NULL);
     }
+	     /* mf to zip */
+	     strcpy (tempfn, "META-INF/manifest.mf");
+	     sprintf (fullfn, "%s/%s", tree, tempfn);
+	     JzipAdd(fullfn, tempfn, zipfile, compression_level);
 
-  /* mf to zip */
-
-  strcpy (tempfn, "META-INF/manifest.mf");
-  sprintf (fullfn, "%s/%s", tree, tempfn);
-  JzipAdd(fullfn, tempfn, zipfile, compression_level);
-
-  /* sf to zip */
-
-  sprintf (tempfn, "META-INF/%s.sf", base);
-  sprintf (fullfn, "%s/%s", tree, tempfn);
-  JzipAdd(fullfn, tempfn, zipfile, compression_level);
-
-  /* rsa/dsa to zip */
-
-  sprintf (tempfn, "META-INF/%s.%s", base, (keyType==dsaKey ? "dsa" : "rsa"));
-  sprintf (fullfn, "%s/%s", tree, tempfn);
-  JzipAdd(fullfn, tempfn, zipfile, compression_level);
+	     /* sf to zip */
+	     sprintf (tempfn, "META-INF/%s.sf", base);
+	     sprintf (fullfn, "%s/%s", tree, tempfn);
+	     JzipAdd(fullfn, tempfn, zipfile, compression_level);
+       
+       /* Add the rsa/dsa file to the zip archive normally */
+       if (!xpi_arc){
+         /* rsa/dsa to zip */
+         sprintf (tempfn, "META-INF/%s.%s", base, (keyType==dsaKey ? "dsa" : "rsa"));
+         sprintf (fullfn, "%s/%s", tree, tempfn);
+         JzipAdd(fullfn, tempfn, zipfile, compression_level);
+        } 
 
   JzipClose(zipfile);
 
@@ -417,6 +448,38 @@ manifesto (char *dirname, char *install_script, PRBool recurse)
   generate_SF_file (metadir, sfname);
 
   return 0;
+}
+
+/*
+ *  m a n i f e s t o _xpi_ f n
+ *
+ *  Called by pointer from SignArchive(), once for
+ *  each file within the directory. This function
+ *  is only used for adding to XPI compatible archive
+ *
+ */
+static int manifesto_xpi_fn 
+     (char *relpath, char *basedir, char *reldir, char *filename, void *arg)
+{		
+    char fullname [FNSIZE];
+	
+	/* extension matching */
+	if(extensionsGiven) {
+	    char *ext;
+
+		ext = PL_strrchr(relpath, '.');
+		if(!ext) {
+			return 0;
+		} else {
+			if(!PL_HashTableLookup(extensions, ext)) {
+				return 0;
+			}
+		}
+	}
+	sprintf (fullname, "%s/%s", basedir, relpath);
+    JzipAdd(fullname, relpath, zipfile, compression_level);
+    
+    return 0;
 }
 
 /*

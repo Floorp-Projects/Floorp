@@ -83,6 +83,8 @@ int errorCount=0, warningCount=0;
 int compression_level=DEFAULT_COMPRESSION_LEVEL;
 PRBool compression_level_specified = PR_FALSE;
 
+int xpi_arc = 0;
+
 /* Command-line arguments */
 static char *genkey = NULL;
 static char *verify = NULL;
@@ -136,7 +138,8 @@ typedef enum {
 	LEAVE_ARC_OPT,
 	VERBOSITY_OPT,
     KEYSIZE_OPT,
-    TOKEN_OPT
+    TOKEN_OPT,
+    XPI_ARC_OPT
 } OPT_TYPE;
 
 typedef enum {
@@ -259,6 +262,8 @@ ProcessCommandFile()
             type = KEYSIZE_OPT;
         } else if(!PL_strcasecmp(buf, "token")) {
             type = TOKEN_OPT;
+		} else if(!PL_strcasecmp(buf, "xpi")) {
+            type = XPI_ARC_OPT;
 		} else {
 			PR_fprintf(errorFD,
 				"warning: unknown attribute \"%s\" in command file, line %d.\n",
@@ -392,6 +397,9 @@ parse_args(int argc, char *argv[])
 					break;
 				case 'x':
 					type = EXCLUDE_OPT;
+					break;
+				case 'X':
+					type = XPI_ARC_OPT;
 					break;
 				case 'z':
 					type = NO_TIME_OPT;
@@ -794,6 +802,9 @@ ProcessOneOpt(OPT_TYPE type, char *arg)
         token = PL_strdup(arg);
         ate = 1;
         break;
+    case XPI_ARC_OPT:
+		xpi_arc = 1;
+		break;
 	default:
 		PR_fprintf(errorFD, "warning: unknown option\n");
 		warningCount++;
@@ -886,6 +897,17 @@ main(int argc, char *argv[])
     PR_fprintf (errorFD, "%s: Can't use -J and -Z at the same time\n",
 		PROGRAM_NAME);
     PR_fprintf (errorFD, "%s: -J option will create the jar files for you\n",
+		PROGRAM_NAME);
+	errorCount++;
+	retval = -1;
+	goto cleanup;
+    }
+
+  /* -X needs -Z */
+
+  if (xpi_arc && !zipfile)
+    {
+    PR_fprintf (errorFD, "%s: option XPI (-X) requires option jarfile (-Z)\n",
 		PROGRAM_NAME);
 	errorCount++;
 	retval = -1;
