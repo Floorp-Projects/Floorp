@@ -62,7 +62,7 @@ REQUIRES	= gfx \
 		  intl \
 		  pref \
 		  plugin \
-		  webshell \
+		  docshell \
 		  webbrowserpersist \
 		  $(NULL)
 
