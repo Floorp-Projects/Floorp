@@ -34,7 +34,7 @@
 /*
  * Test program to mangle 1 bit in a binary
  *
- * $Id: mangle.c,v 1.1 2003/02/04 23:16:56 relyea%netscape.com Exp $
+ * $Id: mangle.c,v 1.2 2003/02/07 21:12:26 relyea%netscape.com Exp $
  */
 
 #include "nspr.h"
@@ -157,8 +157,11 @@ main (int argc, char **argv)
 	goto loser;
     }
 
+    printf("Changing byte 0x%08x (%d): from %02x (%d) to ", 
+					offset, offset, cbuf, cbuf);
     /* change it */
     cbuf ^= 1 << bitOffset;
+    printf("%02x (%d)\n", cbuf, cbuf);
 
     /* write it back out */
     pos = PR_Seek(fd, offset, PR_SEEK_SET);
