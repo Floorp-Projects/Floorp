@@ -91,7 +91,7 @@ nsAOLCiter::StripCites(const nsString& aInString, nsString& aOutString)
     PRInt32 i = 3;
     while (nsCRT::IsAsciiSpace(aInString[i]))
       ++i;
-    aOutString.Append(aInString, i);
+    aOutString.Append(aInString.GetUnicode(), i);
   }
   else
     aOutString = aInString;
@@ -108,7 +108,7 @@ nsAOLCiter::Rewrap(const nsString& aInString,
                    PRBool aRespectNewlines,
                    nsString& aOutString)
 {
-  nsString citeString ("");
+  nsString citeString;
   return nsWrapUtils::Rewrap(aInString, aWrapCol, aFirstLineOffset,
                              aRespectNewlines, citeString,
                              aOutString);

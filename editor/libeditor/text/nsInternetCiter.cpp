@@ -128,9 +128,9 @@ nsInternetCiter::StripCitesAndLinebreaks(const nsString& aInString,
       while (i < nextNewline)
         aOutString.Append(aInString[i++]);
       if (aLinebreaksToo)
-        aOutString.Append(' ');
+        aOutString.AppendWithConversion(' ');
       else
-        aOutString.Append('\n');    // DOM linebreaks, not NS_LINEBREAK
+        aOutString.AppendWithConversion('\n');    // DOM linebreaks, not NS_LINEBREAK
       // Skip over any more consecutive linebreak-like characters:
       while (aOutString[i] == '\r' || aOutString[i] == '\n')
         ++i;
@@ -169,7 +169,7 @@ nsInternetCiter::Rewrap(const nsString& aInString,
 
   nsAutoString citeString;
   for (i=0; i<citeLevel; ++i)
-    citeString += "> ";
+    citeString.AppendWithConversion("> ");
 
   return nsWrapUtils::Rewrap(inString, aWrapCol, aFirstLineOffset,
                              aRespectNewlines, citeString,
