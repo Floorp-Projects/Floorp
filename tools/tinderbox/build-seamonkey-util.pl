@@ -20,7 +20,7 @@ use File::Basename; # for basename();
 use Config; # for $Config{sig_name} and $Config{sig_num}
 
 
-$::UtilsVersion = '$Revision: 1.91 $ ';
+$::UtilsVersion = '$Revision: 1.92 $ ';
 
 package TinderUtils;
 
@@ -559,7 +559,7 @@ sub BuildIt {
 
 	my $build_failure_count = 0;  # Keep count of build failures.
 
-    # Bypass profile at startup.
+    # Bypass profile manager at startup.
     $ENV{MOZ_BYPASS_PROFILE_AT_STARTUP} = 1;
     
 	# Set up tag stuff.
@@ -718,6 +718,16 @@ sub BuildIt {
 }
 
 
+# Create a profile named $Settings::MozProfileName in the normal $build_dir place.
+sub create_profile {
+  my ($build_dir, $binary_dir, $binary) = @_;
+  my $result = run_cmd($build_dir, $binary_dir,
+					   $binary . " -CreateProfile $Settings::MozProfileName",
+					   "/dev/null", 30);
+  return $result;
+}
+
+
 #
 # Run all tests.  Had to pass in both binary and embed_binary.
 #
@@ -731,33 +741,79 @@ sub run_all_tests {
 
     my $test_result = 'success';
 
-    # The prefs file is used to check for a profile.
-    # The mailnews test also adds a couple preferences to it.
-    my $pref_file = "$build_dir/.mozilla/$Settings::MozProfileName/prefs.js";
-
     #
     # Before running tests, run regxpcom so that we don't crash when 
     # people change contractids on us (since we don't autoreg opt builds)
     #
-    unlink("$binary_dir/components.reg");
+    unlink("$binary_dir/component.reg");
     AliveTest("regxpcom", $build_dir, "$binary_dir/regxpcom", 0, 15);
 
-    # Create a new profile
-    #
-    if ($Settings::CleanProfile and $test_result eq 'success') {
+	#
+	# Make sure we have a profile to run tests.  This is assumed to be called
+	# $Settings::MozProfileName and will live in $build_dir/.mozilla.
+	# Also assuming only one profile here.
+	#
+	my $cp_result = 0;
+	unless (-d "$build_dir/.mozilla/$Settings::MozProfileName") {
+	  print_log "No profile found, creating profile.\n";
+	  $cp_result = create_profile($build_dir, $binary_dir, $binary);
+	} else {
+	  print_log "Found profile.\n";
+
+	  # Recreate profile if we have $Settings::CleanProfile set.
+	  if ($Settings::CleanProfile) {
         print_log "Creating clean profile ...\n";
-        system("rm -rf $build_dir/.mozilla");
-        my $result = run_cmd($build_dir, $binary_dir,
-                             $binary . " -CreateProfile $Settings::MozProfileName",
-                             "/dev/null", 30);
-
-        open PREFS, "find $build_dir/.mozilla -name prefs.js|"
-            or die "couldn't find prefs file\n";
-        $pref_file = $_ while <PREFS>;
-        chomp $pref_file;
-
-        $test_result = "success";
+        system("\\rm -rf $build_dir/.mozilla");
+		$cp_result = create_profile($build_dir, $binary_dir, $binary);
+	  }
     }
+
+	# Set status, in caes create profile failed.
+	if($cp_result) {
+	  if(not $cp_result->{timed_out} and $cp_result->{exit_value} != 0) {
+		$test_result = "success";
+	  } else {
+		$test_result = "testfailed";
+	  }
+	}
+
+
+	#
+	# Find the prefs file, remember we have that random string now
+	# e.g. <build-dir>/.mozilla/default/uldx6pyb.slt/prefs.js
+	# so find command should find the prefs.js file.
+	#
+	# If prefs.js is not found, this little perl blurb fails
+	# with an uninitialized variable error, this needs fixing. -mcafee
+	#
+	my $pref_file = "prefs.js";
+	open PREFS, "find $build_dir/.mozilla -name prefs.js|"
+	  or die "couldn't find prefs file\n";
+	$pref_file = $_ while <PREFS>;
+	chomp $pref_file;
+
+	print_log "pref_file = $pref_file\n";
+
+	#
+	# Some tests need browser.dom.window.dump.enabled set to true, so
+	# that JS dump() will work in optimized builds.
+	#
+	if($Settings::LayoutPerformanceTest  or
+	   $Settings::XULWindowOpenTest      or
+	   $Settings::StartupPerformanceTest or
+	   $Settings::MailBloatTest          or
+	   $Settings::BloatTest2             or
+	   $Settings::BloatTest) {
+	  if (system("\\grep -s browser.dom.window.dump.enabled $pref_file > /dev/null")) {
+		print_log "Setting browser.dom.window.dump.enabled\n";
+		open PREFS, ">>$pref_file" or die "can't open $pref_file ($?)\n";
+		print PREFS "user_pref(\"browser.dom.window.dump.enabled\", true);\n";
+		close PREFS;
+	  } else {
+		print_log "Already set browser.dom.window.dump.enabled\n";
+	  }
+	}
+	
 
     # Mozilla alive test
     #
@@ -767,7 +823,7 @@ sub run_all_tests {
     #
     if ($Settings::AliveTest and $test_result eq 'success') {
         $test_result = AliveTest("MozillaAliveTest", $build_dir,
-								 $binary, 0, 45);
+								 $binary, " -P $Settings::MozProfileName", 45);
     }
 
 	# Mozilla java test
@@ -818,7 +874,7 @@ sub run_all_tests {
         my $cmd = "$binary_basename $mail_url";
 
         # Stuff prefs in here.
-        if (system("grep -s signed.applets.codebase_principal_support $pref_file > /dev/null")) {
+        if (system("\\grep -s signed.applets.codebase_principal_support $pref_file > /dev/null")) {
           open PREFS, ">>$pref_file" or die "can't open $pref_file ($?)\n";
           print PREFS "user_pref(\"signed.applets.codebase_principal_support\", true);\n";
           print PREFS "user_pref(\"security.principal.X0\", \"[Codebase $mail_url] UniversalBrowserRead=4 UniversalXPConnect=4\");";
@@ -830,7 +886,15 @@ sub run_all_tests {
                                      "POP MAILNEWS TEST: Passed", 1, 
                                      1);  # Timeout is Ok.
     }
-    
+
+	# Mail bloat/leak test.
+	# Needs -DBUILD_MAIL_SMOKETEST set in mozconfig
+	#
+    if ($Settings::MailBloatTest and $test_result eq 'success') {
+	  print_log "MailBloatTest ... goes here\n";
+	}
+
+
     # DomToTextConversion test
     if (($Settings::EditorTest or $Settings::DomToTextConversionTest)
        and $test_result eq 'success') {
@@ -845,41 +909,35 @@ sub run_all_tests {
 	# bug to push this out to mozilla.org is:
     #   http://bugzilla.mozilla.org/show_bug.cgi?id=75073
     if ($Settings::LayoutPerformanceTest and $test_result eq 'success') {
-          # Enable the dump() command so we can get the output.
-          open PREFS, ">>$pref_file" or die "can't open $pref_file ($?)\n";
-          print PREFS "user_pref(\"browser.dom.window.dump.enabled\", true);\n";
-          close PREFS;
 
 	  # Settle OS.
 	  run_system_cmd("sync; sleep 10", 35);
 
-          # XXX we should use a variable to get the host for the page
-          # load tests instead of hard-coding to localhost.
-          $test_result =
-              FileBasedTest("LayoutPerformanceTest", $build_dir, $binary_dir,
-                            $binary . " -P $Settings::MozProfileName \"http://localhost/page-loader/loader.pl?delay=1000&nocache=0&maxcyc=4&timeout=30000\"",
-                            $Settings::LayoutPerformanceTestTimeout,
-                            "_x_x_mozilla_page_load", 1, 0);
+	  # XXX we should use a variable to get the host for the page
+	  # load tests instead of hard-coding to localhost.
+	  $test_result =
+		FileBasedTest("LayoutPerformanceTest", $build_dir, $binary_dir,
+					  $binary . " -P $Settings::MozProfileName \"http://localhost/page-loader/loader.pl?delay=1000&nocache=0&maxcyc=4&timeout=30000\"",
+					  $Settings::LayoutPerformanceTestTimeout,
+					  "_x_x_mozilla_page_load", 1, 0);
     }
 
 	# xul window open test.
-	# Use xul/js test from John Morrison
 	#
-	# Needs user_pref("browser.dom.window.dump.enabled", 1);
 	if ($Settings::XULWindowOpenTest and $test_result eq 'success') {
 		my $open_time;
 		# Settle OS.
 		run_system_cmd("sync; sleep 10", 35);
- 
+
 		my $url  = "-chrome \"file:$build_dir/mozilla/xpfe/test/winopen.xul\"";
 		if($test_result eq 'success') {
 			$open_time = AliveTestReturnToken("XULWindowOpenTest",
-												$build_dir,
-												$binary,
-												$url,
-												$Settings::XULOpenWindowTestTimeout,
-												"TinderboxPrint:Txul",
-												":");
+											  $build_dir,
+											  $binary,
+											  " -P $Settings::MozProfileName " . $url,
+											  $Settings::XULOpenWindowTestTimeout,
+											  "TinderboxPrint:Txul",
+											  ":");
 		}
 		if($open_time) {
 			$test_result = 'success';
@@ -924,13 +982,14 @@ sub run_all_tests {
 		# and compare it to the current time to compute startup time.
 		# Since we are iterating here, save off logs as StartupPerformanceTest-0,1,2...
 		if($test_result eq 'success') {
-		  $startuptime = AliveTestReturnToken("StartupPerformanceTest-$i", 
-											  $build_dir,
-											  $binary, 
-											  $url,
-											  $Settings::StartupPerformanceTestTimeout,
-											  "__startuptime",
-											  ",");
+		  $startuptime = 
+			AliveTestReturnToken("StartupPerformanceTest-$i", 
+								 $build_dir,
+								 $binary,
+								 "-P $Settings::MozProfileName " . $url,
+								 $Settings::StartupPerformanceTestTimeout,
+								 "__startuptime",
+								 ",");
 		}
 		
 		if($startuptime) {
@@ -1229,6 +1288,11 @@ sub wait_for_pid {
              dumped_core=>$dumped_core };
 }
 
+#
+# Note that fork_and_log() sets the HOME env variable to do
+# the command, this allows us to have a local profile in the 
+# shared cltbld user account.
+#
 sub run_cmd {
     my ($home_dir, $binary_dir, $cmd, $logfile, $timeout_secs) = @_;
     my $now = localtime();
@@ -1349,10 +1413,10 @@ sub AliveTest {
 	print_log "Timeout = $timeout_secs seconds.\n";
 
     my $result = run_cmd($build_dir, $binary_dir, $cmd,
-                          $binary_log, $timeout_secs);
+						 $binary_log, $timeout_secs);
 
     print_logfile($binary_log, "$test_name");
-    
+
     if ($result->{timed_out}) {
         print_log "$test_name: $binary_basename successfully stayed up"
                   ." for $timeout_secs seconds.\n";
@@ -1420,7 +1484,7 @@ sub FileBasedTest {
 	print_log "\n\nRunning $test_name ...\n";
 
     my $result = run_cmd($build_dir, $binary_dir, $test_command,
-                          $binary_log, $timeout_secs);
+						 $binary_log, $timeout_secs);
 
     print_logfile($binary_log, $test_name);
     
@@ -1472,9 +1536,16 @@ sub BloatTest {
     }
 
     $ENV{XPCOM_MEM_BLOAT_LOG} = 1; # Turn on ref counting to track leaks.
-    my $cmd = "$binary_basename -f bloaturls.txt";
+
+	# Build up binary command, look for profile.
+    my $cmd = "$binary_basename";
+	unless ($Settings::MozProfileName eq "") {
+	  $cmd .= " -P $Settings::MozProfileName";
+	}
+	$cmd .= " -f bloaturls.txt";
+
     my $result = run_cmd($build_dir, $binary_dir, $cmd, $binary_log,
-                          $timeout_secs);
+						 $timeout_secs);
     delete $ENV{XPCOM_MEM_BLOAT_LOG};
 
     print_logfile($binary_log, "bloat test");
@@ -1601,7 +1672,7 @@ sub BloatTest2 {
 
     my $cmd = "$binary_basename -f bloaturls.txt --trace-malloc $malloc_log --shutdown-leaks $sdleak_log";
     my $result = run_cmd($build_dir, $binary_dir, $cmd, $binary_log,
-                          $timeout_secs);
+						 $timeout_secs);
 
     print_logfile($binary_log, "bloat test");
     
