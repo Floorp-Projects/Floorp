@@ -619,7 +619,7 @@ var MessageWindowController =
 			case "button_delete":
 			case "cmd_shiftDelete":
         var loadedFolder = GetLoadedMsgFolder();
-        return gCurrentMessageUri && loadedFolder && loadedFolder.canDeleteMessages; 
+        return gCurrentMessageUri && loadedFolder && (loadedFolder.canDeleteMessages || isNewsURI(gCurrentFolderUri));
 			case "cmd_reply":
 			case "button_reply":
 			case "cmd_replySender":

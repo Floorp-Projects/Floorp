@@ -1918,7 +1918,9 @@ NS_IMETHODIMP nsMsgDBView::GetCommandStatus(nsMsgViewCommandTypeValue command, P
   case nsMsgViewCommandType::deleteNoTrash:
     {
       PRBool canDelete;
-      if (m_folder && NS_SUCCEEDED(m_folder->GetCanDeleteMessages(&canDelete)) && !canDelete)
+      // news folders can't delete (or move messages)
+      // but we use delete for cancel messages.
+      if (m_folder && !mIsNews && NS_SUCCEEDED(m_folder->GetCanDeleteMessages(&canDelete)) && !canDelete)
         *selectable_p = PR_FALSE;
       else
         *selectable_p = haveSelection;
