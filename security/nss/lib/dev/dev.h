@@ -41,7 +41,7 @@
  */
 
 #ifdef DEBUG
-static const char DEV_CVS_ID[] = "@(#) $RCSfile: dev.h,v $ $Revision: 1.27 $ $Date: 2002/05/07 20:38:49 $ $Name:  $";
+static const char DEV_CVS_ID[] = "@(#) $RCSfile: dev.h,v $ $Revision: 1.28 $ $Date: 2002/05/21 21:23:33 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef NSSCKT_H
@@ -948,7 +948,7 @@ nssToken_GetTrustOrder
 );
 
 NSS_EXTERN PRStatus
-nssToken_NofifyCertsNotVisible
+nssToken_NotifyCertsNotVisible
 (
   NSSToken *tok
 );
