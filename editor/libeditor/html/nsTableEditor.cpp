@@ -2061,7 +2061,7 @@ nsHTMLEditor::SwitchTableCellHeaderType(nsIDOMElement *aSourceCell, nsIDOMElemen
 
   // Set to the opposite of current type
   nsCOMPtr<nsIAtom> atom = nsEditor::GetTag(aSourceCell);
-  nsString newCellType( (atom == nsEditProperty::th) ? NS_LITERAL_STRING("th") : NS_LITERAL_STRING("td"));
+  nsString newCellType( (atom == nsEditProperty::td) ? NS_LITERAL_STRING("th") : NS_LITERAL_STRING("td"));
 
   // This creates new node, moves children, copies attributes (PR_TRUE)
   //   and manages the selection!

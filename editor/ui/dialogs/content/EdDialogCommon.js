@@ -122,7 +122,7 @@ function ValidateNumber(inputWidget, listWidget, minVal, maxVal, element, attNam
         element.setAttribute(attName, numString);
     }
   } else if (element) {
-    element.removeAttribute(attName);
+    GetCurrentEditor().removeAttributeOrEquivalent(element, attName, true)
   }
   return numString;
 }
