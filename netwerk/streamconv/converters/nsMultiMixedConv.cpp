@@ -243,7 +243,7 @@ nsMultiMixedConv::OnStartRequest(nsIChannel *channel, nsISupports *ctxt) {
 
     boundaryString.Trim(" \"");
 
-    mToken = boundaryString.ToNewCString();
+    mToken = boundaryString.GetBuffer();
     if (!mToken) return NS_ERROR_OUT_OF_MEMORY;
     mTokenLen = boundaryString.Length();
     return NS_OK;
@@ -524,7 +524,7 @@ nsMultiMixedConv::FindToken(char *aCursor, PRUint32 aLen) {
                         // we're playing w/ double dash tokens, adjust.
                         nsCString newToken("--");
                         newToken.Append(mToken);
-                        mToken = newToken.ToNewCString();
+                        mToken = newToken.GetBuffer();
                         mTokenLen += 2;
                     }
                 }
