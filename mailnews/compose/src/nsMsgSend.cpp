@@ -2443,7 +2443,7 @@ int nsMsgSendMimeDeliveryState::GatherMimeAttachments ()
 		// OK.  We have a plaintext version of the main body that we want to
 		// send instead of or with the text/html.  Shove it in.
 
-		plainpart = new nsMsgSendPart(this, 0/*should be m_fields->GetCharacterSet()*/);
+		plainpart = new nsMsgSendPart(this, m_fields->GetCharacterSet());
 		if (!plainpart)
 			goto FAILMEM;
 		status = plainpart->SetType(TEXT_PLAIN);
