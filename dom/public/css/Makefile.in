@@ -35,6 +35,7 @@ EXPORTS		= \
 		nsIDOMCSSMediaRule.h \
 		nsIDOMCSSPageRule.h \
 		nsIDOMCSSRule.h \
+		nsIDOMCSSRuleList.h \
 		nsIDOMCSSStyleDeclaration.h \
 		nsIDOMCSSStyleRule.h \
 		nsIDOMCSSStyleRuleCollection.h \
