@@ -104,30 +104,32 @@ ifeq ($(MOZ_WIDGET_TOOLKIT),gtk)
 GTK_GLUE		= -lgtksuperwin
 endif
 
-XP_DIST_LIBS		= \
-			-lgkgfx \
-			$(NULL)
+EXTRA_DSO_LIBS		= gkgfx
+
+ifdef NS_TRACE_MALLOC
+EXTRA_DSO_LIBS		+= tracemalloc
+endif
 
 ifeq ($(OS_ARCH),WINNT)
 RESFILE		= viewer.res
-XP_DIST_LIBS    += -lxpwidgets_s -ldbgrobot -lwidget_windows
+EXTRA_DSO_LIBS    += xpwidgets_s dbgrobot widget_windows
 endif
 
 ifeq ($(OS_ARCH),OS2)
 RESFILE		= vieweros2.res
 DEFINES       += -DUSE_LOCAL_WIDGETS 
-XP_DIST_LIBS  += $(DIST)/lib/components/wdgtos2.lib
+EXTRA_DSO_LIBS  += $(DIST)/lib/components/wdgtos2.lib
 endif
 
 ifdef MOZ_OJI
 ifeq ($(OS_ARCH),WINNT)
-XP_DIST_LIBS		+= -ljsj$(MOZ_BITS)$(VERSION_NUMBER)
+EXTRA_DSO_LIBS		+= jsj$(MOZ_BITS)$(VERSION_NUMBER)
 else
-XP_DIST_LIBS		+= -ljsj
+EXTRA_DSO_LIBS		+= jsj
 endif
 endif
 ifdef MOZ_PERF_METRICS
-XP_DIST_LIBS		+= -lmozutil_s
+EXTRA_DSO_LIBS		+= mozutil_s
 endif
 
 XP_DIST_LIBS		+= \

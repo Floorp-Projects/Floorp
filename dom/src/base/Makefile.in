@@ -60,6 +60,10 @@ REQUIRES	= xpcom \
 		  intl \
 		  $(NULL)
 
+ifdef NS_TRACE_MALLOC
+REQUIRES	+= tracemalloc
+endif
+
 CPPSRCS =			\
 	nsBarProps.cpp          \
 	nsDOMException.cpp 	\
@@ -84,7 +88,4 @@ include $(topsrcdir)/config/rules.mk
 
 CXXFLAGS        += -I$(srcdir) -I$(srcdir)/../build
 
-ifdef NS_TRACE_MALLOC
-DEFINES		+= -DNS_TRACE_MALLOC
-endif
 

@@ -996,7 +996,7 @@ fi
 
 # tools/trace-malloc
 if [ "$NS_TRACE_MALLOC" ]; then
-    MAKEFILES_tracemalloc="tools/trace-malloc/Makefile"
+    MAKEFILES_tracemalloc="tools/trace-malloc/Makefile tools/trace-malloc/lib/Makefile"
 fi
 
 # tools/codesighs

@@ -52,6 +52,10 @@ ifeq ($(OS_ARCH),WINNT)
 EXTRA_DSO_LIBS	= gkgfx
 endif
 
+ifdef NS_TRACE_MALLOC
+EXTRA_DSO_LIBS	+= tracemalloc
+endif
+
 CPPSRCS		= \
 		nsDOMFactory.cpp \
 		nsScriptNameSpaceManager.cpp \
@@ -63,6 +67,7 @@ SHARED_LIBRARY_LIBS = \
 		$(NULL)
 
 EXTRA_DSO_LDOPTS = \
+		$(LIBS_DIR) \
 		$(EXTRA_DSO_LIBS) \
 		$(MOZ_COMPONENT_LIBS) \
 		$(MOZ_JS_LIBS) \

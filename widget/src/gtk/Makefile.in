@@ -42,6 +42,9 @@ REQUIRES	= xpcom \
 		  util \
 		  unicharutil \
 		  $(NULL)
+ifdef NS_TRACE_MALLOC
+REQUIRES	+= tracemalloc
+endif
 
 CSRCS		= \
 		keysym2ucs.c
@@ -72,9 +75,16 @@ CPPSRCS		= \
 
 SHARED_LIBRARY_LIBS = $(DIST)/lib/libxpwidgets_s.a
 
+EXTRA_DSO_LIBS	= gkgfx
+
+ifdef NS_TRACE_MALLOC
+EXTRA_DSO_LIBS	+= tracemalloc
+endif
+
 EXTRA_DSO_LDOPTS = \
+		$(LIBS_DIR) \
+		$(EXTRA_DSO_LIBS) \
 		$(MOZ_COMPONENT_LIBS) \
-		-lgkgfx \
 		$(MOZ_JS_LIBS) \
 		$(NULL)
 

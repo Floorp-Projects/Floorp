@@ -226,25 +226,4 @@ private:
     static FARPROC WINAPI GetProcAddress(HMODULE aModule, PCSTR aFunctionName);
 };
 
-/***************************************************************************/
-// This supports the _CrtSetAllocHook based hooking.
-// This system sucks because you don't get to see the allocated pointer. I
-// don't think it appropriate for nsTraceMalloc, but is useful as a means to make
-// malloc fail for testing purposes.
-#if 0 //comment out this stuff. not necessary
-
-class DHWAllocationSizeDebugHook
-{
-public:
-    virtual PRBool AllocHook(size_t size) = 0;
-    virtual PRBool ReallocHook(size_t size, size_t sizeOld) = 0;
-    virtual PRBool FreeHook(size_t size) = 0;
-};
-
-extern PRBool dhwSetAllocationSizeDebugHook(DHWAllocationSizeDebugHook* hook);
-extern PRBool dhwClearAllocationSizeDebugHook();
-
-/***************************************************************************/
-#endif //0
-
 #endif /* __nsDebugHelpWin32_h__ */
