@@ -25,6 +25,10 @@
 #endif
 
 #include "xmlparse.h"
+#define MOZILLA_CLIENT 1
+#ifdef XP_MAC
+#define MOZILLA_CLIENT 1
+#endif
 
 #ifdef MOZILLA_CLIENT
 #include "jscompat.h"

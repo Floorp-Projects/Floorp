@@ -26,10 +26,11 @@
 
    If you have questions, send them to guha@netscape.com
 */
-
-#ifdef MOZILLA_CLIENT
-
 #include "xmlglue.h"
+
+#ifdef MOZILLA_CLIENT 
+
+ 
 #include "xmlparse.h"
 #include "xmlss.h"
 #include "layers.h"
