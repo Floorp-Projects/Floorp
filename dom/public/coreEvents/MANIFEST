@@ -25,5 +25,6 @@ nsIDOMTextListener.h
 nsIDOMCompositionListener.h
 nsIDOMMenuListener.h
 nsIDOMScrollListener.h
+nsIDOMContextMenuListener.h
 
 
