@@ -392,7 +392,7 @@ static js2val Date_makeTime(JS2Metadata *meta, const js2val thisValue, js2val *a
             *date = nan;
             return meta->engine->nanValue;
         }
-        args[i] = (float64)(JS2Engine::float64toInt32(f));
+        args[i] = JS2Engine::truncateFloat64(f);
     }
 
     if (local)
@@ -853,6 +853,18 @@ static js2val Date_format(JS2Metadata *meta, float64 date, formatspec format)
     return meta->engine->allocString(outf.getString());
 }
 
+js2val Date_Call(JS2Metadata *meta, const js2val /* thisValue */, js2val *argv, uint32 argc)
+{
+    int64 us, ms, us2ms;
+    float64 msec_time;
+
+    us = PRMJ_Now();
+    JSLL_UI2L(us2ms, PRMJ_USEC_PER_MSEC);
+    JSLL_DIV(ms, us, us2ms);
+    JSLL_L2D(msec_time, ms);
+    
+    return Date_format(meta, msec_time, FORMATSPEC_FULL);
+}
 
 #define MAXARGS        7
 js2val Date_Constructor(JS2Metadata *meta, const js2val /* thisValue */, js2val *argv, uint32 argc)
@@ -902,7 +914,7 @@ js2val Date_Constructor(JS2Metadata *meta, const js2val /* thisValue */, js2val 
                         JS2Object::removeRoot(ri);
                         return thatValue;
                     }
-                    array[loop] = meta->engine->allocNumber(JS2Engine::float64toInt32(double_arg));
+                    array[loop] = JS2Engine::float64toInt32(double_arg);
                 } else {
                     if (loop == 2) {
                         array[loop] = 1; /* Default the date argument to 1. */
@@ -1471,6 +1483,7 @@ void initDateObject(JS2Metadata *meta)
     LocalTZA = -(PRMJ_LocalGMTDifference() * msPerSecond);
 
     meta->dateClass->construct = Date_Constructor;
+    meta->dateClass->call = Date_Call;
 
     NamespaceList publicNamespaceList;
     publicNamespaceList.push_back(meta->publicNamespace);
@@ -1484,6 +1497,16 @@ void initDateObject(JS2Metadata *meta)
         meta->defineLocalMember(meta->env, meta->engine->prototype_StringAtom, &publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, v, 0);
         v = new Variable(meta->numberClass, INT_TO_JS2VAL(1), true);
         meta->defineLocalMember(meta->env, meta->engine->length_StringAtom, &publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, v, 0);
+
+        // "parse" & "UTC" as static members:
+        SimpleInstance *callInst = new SimpleInstance(meta->functionClass);
+        callInst->fWrap = new FunctionWrapper(true, new ParameterFrame(JS2VAL_INACCESSIBLE, true), Date_parse);
+        v = new Variable(meta->functionClass, OBJECT_TO_JS2VAL(callInst), true);
+        meta->defineLocalMember(meta->env, &meta->world.identifiers["parse"], &publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, v, 0);        
+        callInst = new SimpleInstance(meta->functionClass);
+        callInst->fWrap = new FunctionWrapper(true, new ParameterFrame(JS2VAL_INACCESSIBLE, true), Date_UTC);
+        v = new Variable(meta->functionClass, OBJECT_TO_JS2VAL(callInst), true);
+        meta->defineLocalMember(meta->env, &meta->world.identifiers["UTC"], &publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, v, 0);        
     meta->env->removeTopFrame();
     
     

@@ -1095,6 +1095,7 @@ public:
 
     js2val invokeFunction(const char *fname);
     bool invokeFunctionOnObject(js2val thisValue, const String *fnName, js2val &result);
+    js2val invokeFunction(JS2Object *fnObj, js2val thisValue, js2val *argv, uint32 argc);
 
     bool readProperty(js2val *container, Multiname *multiname, LookupKind *lookupKind, Phase phase, js2val *rval);
     bool readProperty(Frame *pf, Multiname *multiname, LookupKind *lookupKind, Phase phase, js2val *rval);

@@ -113,6 +113,7 @@
             pc += sizeof(uint16);
             a = top(argCount + 2);                  // 'this'
             b = top(argCount + 1);                  // target function
+            uint32 length = 0;
             if (JS2VAL_IS_PRIMITIVE(b))
                 meta->reportError(Exception::badValueError, "Can't call on primitive value", errorPos());
             JS2Object *fObj = JS2VAL_TO_OBJECT(b);
@@ -125,6 +126,7 @@
                 if ((fObj->kind == PrototypeInstanceKind)
                         && ((checked_cast<PrototypeInstance *>(fObj))->type == meta->functionClass)) {
                     fWrap = (checked_cast<FunctionInstance *>(fObj))->fWrap;
+                    length = getLength(meta, fObj);
                 }
             if (fWrap) {
                 if (fWrap->compileFrame->prototype) {
@@ -135,6 +137,10 @@
                     }
                 }
                 if (fWrap->code) {  // native code
+                    while (length > argCount) {
+                        push(JS2VAL_UNDEFINED);
+                        argCount++;
+                    }
                     a = fWrap->code(meta, a, base(argCount), argCount);
                     pop(argCount + 2);
                     push(a);
@@ -167,6 +173,7 @@
                     pFrame->instantiate(meta->env);
                     pFrame->thisObject = mc->thisObject;
 //                assignArguments(runtimeFrame, fWrap->compileFrame->signature);
+                    pFrame->assignArguments(meta, base(argCount), argCount);
                     jsr(phase, fWrap->bCon, base(argCount + 2) - execStack, JS2VAL_VOID);   // seems out of order, but we need to catch the current top frame 
                     meta->env->addFrame(meta->objectType(mc->thisObject));
                     meta->env->addFrame(pFrame);

@@ -37,7 +37,7 @@
 
     case eMinus:
         {
-	    a = pop();
+            a = pop();
             a = meta->toGeneralNumber(a);
             if (JS2VAL_IS_LONG(a)) {
                 int64 v = *JS2VAL_TO_LONG(a);
@@ -61,14 +61,14 @@
 
     case ePlus:
         {
-	    a = pop();
+            a = pop();
             push(meta->toGeneralNumber(a));
         }
         break;
 
     case eComplement:
         {
-	    a = pop();
+            a = pop();
             a = meta->toGeneralNumber(a);
             if (JS2VAL_IS_LONG(a)) {
                 int64 i = *JS2VAL_TO_LONG(a);
@@ -89,8 +89,8 @@
         break;    
     case eLeftShift:
         {
-	    b = pop();
-	    a = pop();
+            b = pop();
+            a = pop();
             a = meta->toGeneralNumber(a);
             int32 count = meta->toInteger(b);
             if (JS2VAL_IS_LONG(a)) {
@@ -110,8 +110,8 @@
         break;
     case eRightShift:
         {
-	    b = pop();
-	    a = pop();
+            b = pop();
+            a = pop();
             a = meta->toGeneralNumber(a);
             int32 count = meta->toInteger(b);
             if (JS2VAL_IS_LONG(a)) {
@@ -131,8 +131,8 @@
         break;
     case eLogicalRightShift:
         {
-	    b = pop();
-	    a = pop();
+            b = pop();
+            a = pop();
             a = meta->toGeneralNumber(a);
             int32 count = meta->toInteger(b);
             if (JS2VAL_IS_LONG(a)) {
@@ -152,8 +152,8 @@
         break;
     case eBitwiseAnd:
         {
-	    b = pop();
-	    a = pop();
+            b = pop();
+            a = pop();
             a = meta->toGeneralNumber(a);
             b = meta->toGeneralNumber(b);
             if (JS2VAL_IS_LONG(a)) {
@@ -210,8 +210,8 @@
         break;
     case eBitwiseXor:
         {
-	    b = pop();
-	    a = pop();
+            b = pop();
+            a = pop();
             a = meta->toGeneralNumber(a);
             b = meta->toGeneralNumber(b);
             if (JS2VAL_IS_LONG(a)) {
@@ -268,8 +268,8 @@
         break;
     case eBitwiseOr:
         {
-	    b = pop();
-	    a = pop();
+            b = pop();
+            a = pop();
             a = meta->toGeneralNumber(a);
             b = meta->toGeneralNumber(b);
             if (JS2VAL_IS_LONG(a)) {
@@ -327,18 +327,20 @@
 
     case eAdd: 
         {
-	    b = pop();
-	    a = pop();
-	    a = meta->toPrimitive(a, NumberHint);
-	    b = meta->toPrimitive(b, NumberHint);
-	    if (JS2VAL_IS_STRING(a) || JS2VAL_IS_STRING(b)) {
-            const String *astr = meta->toString(a);
-            const String *bstr = meta->toString(b);
-            String c = *astr;
-            c += *bstr;
-            push(STRING_TO_JS2VAL(allocStringPtr(&c)));
-	    }
-	    else {
+            b = pop();
+            a = pop();
+            a = meta->toPrimitive(a, NumberHint);
+            b = meta->toPrimitive(b, NumberHint);
+            if (JS2VAL_IS_STRING(a) || JS2VAL_IS_STRING(b)) {
+                const String *astr = meta->toString(a);
+                const String *bstr = meta->toString(b);
+
+                String c = *astr;
+
+                c += *bstr;
+                push(STRING_TO_JS2VAL(allocStringPtr(&c)));
+            }
+            else {
                 a = meta->toGeneralNumber(a);
                 b = meta->toGeneralNumber(b);
                 if (JS2VAL_IS_LONG(a)) {
@@ -470,8 +472,8 @@
 
     case eMultiply:
         {
-	    b = pop();
-	    a = pop();
+            b = pop();
+            a = pop();
             a = meta->toGeneralNumber(a);
             b = meta->toGeneralNumber(b);
             if (JS2VAL_IS_LONG(a)) {
@@ -536,8 +538,8 @@
 
     case eDivide:
         {
-	    b = pop();
-	    a = pop();
+            b = pop();
+            a = pop();
             a = meta->toGeneralNumber(a);
             b = meta->toGeneralNumber(b);
             if (JS2VAL_IS_LONG(a)) {
@@ -602,8 +604,8 @@
 
     case eModulo:
         {
-	    b = pop();
-	    a = pop();
+            b = pop();
+            a = pop();
             a = meta->toGeneralNumber(a);
             b = meta->toGeneralNumber(b);
             if (JS2VAL_IS_LONG(a)) {
@@ -675,23 +677,23 @@
 
     case eLogicalXor: 
         {
-	    b = pop();
-	    a = pop();
+            b = pop();
+            a = pop();
             push(BOOLEAN_TO_JS2VAL(meta->toBoolean(a) ^ meta->toBoolean(b)));
         }
         break;
 
     case eLogicalNot: 
         {
-	    a = pop();
+            a = pop();
             push(BOOLEAN_TO_JS2VAL(!meta->toBoolean(a)));
         }
         break;
 
     case eLess:
         {
-	    b = pop();
-	    a = pop();
+            b = pop();
+            a = pop();
             a = meta->toPrimitive(a, NumberHint);
             b = meta->toPrimitive(b, NumberHint);
             bool rval;
@@ -705,8 +707,8 @@
 
     case eLessEqual:
         {
-	    b = pop();
-	    a = pop();
+            b = pop();
+            a = pop();
             a = meta->toPrimitive(a, NumberHint);
             b = meta->toPrimitive(b, NumberHint);
             bool rval;
@@ -720,8 +722,8 @@
 
     case eGreater:
         {
-	    b = pop();
-	    a = pop();
+            b = pop();
+            a = pop();
             a = meta->toPrimitive(a, NumberHint);
             b = meta->toPrimitive(b, NumberHint);
             bool rval;
@@ -735,8 +737,8 @@
     
     case eGreaterEqual:
         {
-	    b = pop();
-	    a = pop();
+            b = pop();
+            a = pop();
             a = meta->toPrimitive(a, NumberHint);
             b = meta->toPrimitive(b, NumberHint);
             bool rval;
@@ -752,8 +754,8 @@
     case eEqual:
         {
             bool rval;
-	    b = pop();
-	    a = pop();
+            b = pop();
+            a = pop();
             if (JS2VAL_IS_NULL(a) || JS2VAL_IS_UNDEFINED(a))
                 rval = (JS2VAL_IS_NULL(b) || JS2VAL_IS_UNDEFINED(b));
             else
@@ -764,8 +766,11 @@
                     b = meta->toPrimitive(b, NumberHint);
                     if (JS2VAL_IS_NULL(b) || JS2VAL_IS_UNDEFINED(b))
                         rval = false;
-                    else
-                        rval = (meta->toFloat64(a) == meta->toFloat64(b));
+                    else {
+                        float64 x = meta->toFloat64(a);
+                        float64 y = meta->toFloat64(b);
+                        rval = (!JSDOUBLE_IS_NaN(x) && !JSDOUBLE_IS_NaN(y) && (x == y));
+                    }
                 }
             }
             else
@@ -773,8 +778,11 @@
                 b = meta->toPrimitive(b, NumberHint);
                 if (JS2VAL_IS_NULL(b) || JS2VAL_IS_UNDEFINED(b))
                     rval = false;
-                else
-                    rval = (meta->toFloat64(a) == meta->toFloat64(b));
+                else {
+                    float64 x = meta->toFloat64(a);
+                    float64 y = meta->toFloat64(b);
+                    rval = (!JSDOUBLE_IS_NaN(x) && !JSDOUBLE_IS_NaN(y) && (x == y));
+                }
             }
             else 
             if (JS2VAL_IS_STRING(a)) {
@@ -782,8 +790,11 @@
                 if (JS2VAL_IS_NULL(b) || JS2VAL_IS_UNDEFINED(b))
                     rval = false;
                 else
-                if (JS2VAL_IS_BOOLEAN(b) || JS2VAL_IS_NUMBER(b))
-                    rval = (meta->toFloat64(a) == meta->toFloat64(b));
+                if (JS2VAL_IS_BOOLEAN(b) || JS2VAL_IS_NUMBER(b)) {
+                    float64 x = meta->toFloat64(a);
+                    float64 y = meta->toFloat64(b);
+                    rval = (!JSDOUBLE_IS_NaN(x) && !JSDOUBLE_IS_NaN(y) && (x == y));
+                }
                 else
                     rval = (*JS2VAL_TO_STRING(a) == *JS2VAL_TO_STRING(b));
             }
@@ -798,16 +809,22 @@
                 else
                 if (JS2VAL_IS_BOOLEAN(a))
                     rval = (JS2VAL_TO_BOOLEAN(a) == JS2VAL_TO_BOOLEAN(b));
-                else
-                    rval = (meta->toFloat64(a) == meta->toFloat64(b));
+                else {
+                    float64 x = meta->toFloat64(a);
+                    float64 y = meta->toFloat64(b);
+                    rval = (!JSDOUBLE_IS_NaN(x) && !JSDOUBLE_IS_NaN(y) && (x == y));
+                }
             }
             else
             if (JS2VAL_IS_NUMBER(b)) {
                 a = meta->toPrimitive(a, NumberHint);
                 if (JS2VAL_IS_NULL(a) || JS2VAL_IS_UNDEFINED(a))
                     rval = false;
-                else
-                    rval = (meta->toFloat64(a) == meta->toFloat64(b));
+                else {
+                    float64 x = meta->toFloat64(a);
+                    float64 y = meta->toFloat64(b);
+                    rval = (!JSDOUBLE_IS_NaN(x) && !JSDOUBLE_IS_NaN(y) && (x == y));
+                }
             }
             else
             if (JS2VAL_IS_STRING(b)) {
@@ -815,8 +832,11 @@
                 if (JS2VAL_IS_NULL(a) || JS2VAL_IS_UNDEFINED(a))
                     rval = false;
                 else
-                if (JS2VAL_IS_BOOLEAN(a) || JS2VAL_IS_NUMBER(a))
-                    rval = (meta->toFloat64(a) == meta->toFloat64(b));
+                if (JS2VAL_IS_BOOLEAN(a) || JS2VAL_IS_NUMBER(a)) {
+                    float64 x = meta->toFloat64(a);
+                    float64 y = meta->toFloat64(b);
+                    rval = (!JSDOUBLE_IS_NaN(x) && !JSDOUBLE_IS_NaN(y) && (x == y));
+                }
                 else
                     rval = (*JS2VAL_TO_STRING(a) == *JS2VAL_TO_STRING(b));
             }
@@ -834,9 +854,8 @@
     case eNotIdentical:
         {
             bool rval;
-	    b = pop();
-	    a = pop();
-
+            b = pop();
+            a = pop();
             if (meta->objectType(a) != meta->objectType(b))
                 rval = false;
             else {

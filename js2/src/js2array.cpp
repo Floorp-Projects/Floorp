@@ -68,9 +68,20 @@ uint32 getLength(JS2Metadata *meta, JS2Object *obj)
     return length;
 }
 
-js2val setLength(JS2Metadata *meta, JS2Object *obj, uint32 length)
+js2val setLength(JS2Metadata *meta, JS2Object *obj, uint32 newLength)
 {
-    js2val result = meta->engine->allocNumber(length);
+    js2val result = meta->engine->allocNumber(newLength);
+
+    uint32 length = getLength(meta, obj);
+    if (newLength < length) {
+        // need to delete all the elements above the new length
+        LookupKind lookup(false, JS2VAL_NULL);
+        bool deleteResult;
+        for (uint32 i = newLength; i < length; i++) {
+            meta->mn1->name = meta->engine->numberToString(i);
+            meta->deleteProperty(OBJECT_TO_JS2VAL(obj), meta->mn1, &lookup, RunPhase, &deleteResult);
+        }
+    }
 
     if (obj->kind == PrototypeInstanceKind) {
         // Can't call 'writeDynamicProperty' as that'll just cycle back here for
@@ -81,14 +92,6 @@ js2val setLength(JS2Metadata *meta, JS2Object *obj, uint32 length)
             i->second.value = result;
             return result;
         }
-/*
-        for (DynamicPropertyIterator i = dMap->begin(), end = dMap->end(); (i != end); i++) {
-            if (i->first == *meta->engine->length_StringAtom) {
-                i->second.value = result;
-                return result;
-            }
-        }
-*/
         const DynamicPropertyMap::value_type e(*meta->engine->length_StringAtom, DynamicPropertyValue(result, DynamicPropertyValue::PERMANENT));
         checked_cast<PrototypeInstance *>(obj)->dynamicProperties.insert(e);
     }
@@ -540,7 +543,7 @@ static int32 sort_compare(js2val *a, js2val *b, CompareArgs *arg)
         js2val argv[2];
         argv[0] = av;
         argv[1] = bv;
-        js2val v = JS2VAL_UNDEFINED;// XXX = cx->invokeFunction(ca->target, kNullValue, argv, 2);
+        js2val v = meta->invokeFunction(ca->target, JS2VAL_NULL, argv, 2);
         float64 f = meta->toFloat64(v);
         if (JSDOUBLE_IS_NaN(f) || (f == 0))
             result = 0;
