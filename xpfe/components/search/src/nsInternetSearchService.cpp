@@ -2458,7 +2458,7 @@ InternetSearchDataSource::OnDataAvailable(nsIChannel* channel, nsISupports *ctxt
 			if(NS_FAILED(rv))
 			{
 				decoder->Reset();
-				char	smallBuf[2];
+				unsigned char	smallBuf[2];
 				smallBuf[0] = 0xFF;
 				smallBuf[1] = 0xFD;
 				context->AppendBytes( (const char *)&smallBuf, 2L);
