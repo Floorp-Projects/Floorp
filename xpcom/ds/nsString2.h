@@ -93,7 +93,11 @@ public:
    * This constructor takes a subsumestr
    * @param   reference to subsumestr
    */
+#ifdef AIX
+  nsString(const nsSubsumeStr& aSubsumeStr);   // AIX requires a const here
+#else
   nsString(nsSubsumeStr& aSubsumeStr);   
+#endif
 
   /**
    * Destructor
