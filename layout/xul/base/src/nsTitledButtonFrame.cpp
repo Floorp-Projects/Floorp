@@ -299,6 +299,12 @@ nsTitledButtonFrame::UpdateAttributes(nsIPresContext&  aPresContext)
 	mContent->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::value, value);
   mTitle = value;
 
+  UpdateImage(aPresContext);
+}
+
+void
+nsTitledButtonFrame::UpdateImage(nsIPresContext&  aPresContext)
+{
   // see if the source changed
   // get the old image src
   nsString oldSrc ="";
@@ -309,35 +315,43 @@ nsTitledButtonFrame::UpdateAttributes(nsIPresContext&  aPresContext)
   GetImageSource(src);
 
    // see if the images are different
-  if (PR_FALSE == oldSrc.Equals(src)) {
-    if (!src.Equals("")) {
-      if (mImageLoader.IsImageSizeKnown()) {
-        mImageLoader.UpdateURLSpec(&aPresContext, src);
-        PRUint32 loadStatus = mImageLoader.GetLoadStatus();
-        if (loadStatus & NS_IMAGE_LOAD_STATUS_IMAGE_READY) {
-          // Trigger a paint now because image-loader won't if the
-          // image is already loaded and ready to go.
-          Invalidate(nsRect(0, 0, mRect.width, mRect.height), PR_FALSE);
+  if (!oldSrc.Equals(src)) {      
+//   if (loadStatus & NS_IMAGE_LOAD_STATUS_IMAGE_READY) {
+
+        if (!src.Equals("")) {
+          mSizeFrozen = PR_FALSE;
+          mHasImage = PR_TRUE;
+        } else {
+          mSizeFrozen = PR_TRUE;
+          mHasImage = PR_FALSE;
         }
-      }
-      else {
-        // Force a reflow when the image size isn't already known
-        if (nsnull != mContent) {
-          nsIDocument* document = nsnull;
-          mContent->GetDocument(document);
-          if (nsnull != document) {
-            document->ContentChanged(mContent, nsnull);
-            NS_RELEASE(document);
+
+        mImageLoader.UpdateURLSpec(&aPresContext, src);
+        //PRUint32 loadStatus = mImageLoader.GetLoadStatus();
+
+        // if the image is the same size only redraw otherwise reflow
+        PRBool reflow = PR_TRUE;
+
+        if (mImageLoader.IsImageSizeKnown()) {
+          nsIImage* image = mImageLoader.GetImage();
+          if (image->GetWidth() == mImageRect.width && image->GetHeight() == mImageRect.height) {
+             reflow = PR_FALSE;
+             Invalidate(nsRect(0, 0, mRect.width, mRect.height), PR_FALSE);
+          }
+        } 
+
+        if (reflow) {
+          // Force a reflow when the image size isn't already known
+          if (nsnull != mContent) {
+            nsIDocument* document = nsnull;
+            mContent->GetDocument(document);
+            if (nsnull != document) {
+              document->ContentChanged(mContent, nsnull);
+              NS_RELEASE(document);
+            }
           }
         }
-      }
-      mSizeFrozen = PR_FALSE;
-      mHasImage = PR_TRUE;
-    }
-    else {
-      mSizeFrozen = PR_TRUE;
-      mHasImage = PR_FALSE;
-    }
+  
   }
 }
 
@@ -1089,6 +1103,9 @@ nsTitledButtonFrame :: ReResolveStyleContext ( nsIPresContext* aPresContext, nsI
     }
   }
   mRenderer.ReResolveStyles(*aPresContext, aParentChange, aChangeList, aLocalChange);
+
+  // if list-style-image change we want to change the image
+  UpdateImage(*aPresContext);
   
   return rv;
   
