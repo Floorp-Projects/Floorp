@@ -1760,6 +1760,8 @@ nsSelection::GetFrameForNodeOffset(nsIContent *aNode, PRInt32 aOffset, nsIFrame 
   if (NS_FAILED(result))
     return result;
 
+  nsCOMPtr<nsIContent> theNode = aNode;
+
   if (canContainChildren)
   {
     PRInt32 childIndex  = 0;
@@ -1774,7 +1776,7 @@ nsSelection::GetFrameForNodeOffset(nsIContent *aNode, PRInt32 aOffset, nsIFrame 
     }
     else // HINTRIGHT
     {
-      result = aNode->ChildCount(numChildren);
+      result = theNode->ChildCount(numChildren);
 
       if (NS_FAILED(result))
         return result;
@@ -1790,12 +1792,12 @@ nsSelection::GetFrameForNodeOffset(nsIContent *aNode, PRInt32 aOffset, nsIFrame 
         childIndex = aOffset;
     }
 
-    result = aNode->ChildAt(childIndex, aNode);
+    result = theNode->ChildAt(childIndex, *getter_AddRefs(theNode));
 
     if (NS_FAILED(result))
       return result;
 
-    if (!aNode)
+    if (!theNode)
       return NS_ERROR_FAILURE;
 
 #ifdef DONT_DO_THIS_YET
@@ -1805,7 +1807,7 @@ nsSelection::GetFrameForNodeOffset(nsIContent *aNode, PRInt32 aOffset, nsIFrame 
     // Now that we have the child node, check if it too
     // can contain children. If so, call this method again!
 
-    result = aNode->CanContainChildren(canContainChildren);
+    result = theNode->CanContainChildren(canContainChildren);
 
     if (NS_FAILED(result))
       return result;
@@ -1816,7 +1818,7 @@ nsSelection::GetFrameForNodeOffset(nsIContent *aNode, PRInt32 aOffset, nsIFrame 
 
       if (aOffset > childIndex)
       {
-        result = aNode->ChildCount(numChildren);
+        result = theNode->ChildCount(numChildren);
 
         if (NS_FAILED(result))
           return result;
@@ -1824,15 +1826,15 @@ nsSelection::GetFrameForNodeOffset(nsIContent *aNode, PRInt32 aOffset, nsIFrame 
         newOffset = numChildren;
       }
 
-      return GetFrameForNodeOffset(aNode, newOffset, aReturnFrame,aReturnOffset);
+      return GetFrameForNodeOffset(theNode, newOffset, aReturnFrame,aReturnOffset);
     }
     else
 #endif // DONT_DO_THIS_YET
     {
-      // Check to see if aNode is a text node. If it is, translate
+      // Check to see if theNode is a text node. If it is, translate
       // aOffset into an offset into the text node.
 
-      nsCOMPtr<nsIDOMText> textNode = do_QueryInterface(aNode);
+      nsCOMPtr<nsIDOMText> textNode = do_QueryInterface(theNode);
 
       if (textNode)
       {
@@ -1853,7 +1855,7 @@ nsSelection::GetFrameForNodeOffset(nsIContent *aNode, PRInt32 aOffset, nsIFrame 
     }
   }
   
-  result = mTracker->GetPrimaryFrameFor(aNode, aReturnFrame);
+  result = mTracker->GetPrimaryFrameFor(theNode, aReturnFrame);
   if (NS_FAILED(result))
     return result;
 	
@@ -4585,7 +4587,7 @@ nsDOMSelection::ContainsNode(nsIDOMNode* aNode, PRBool aRecursive, PRBool* aYes)
     return rv;
   for (PRUint32 i=0; i < cnt; ++i)
   {
-    nsISupports* element = mRangeArray->ElementAt(i);
+    nsCOMPtr<nsISupports> element = dont_AddRef(mRangeArray->ElementAt(i));
     nsCOMPtr<nsIDOMRange>	range = do_QueryInterface(element);
     if (!range)
       return NS_ERROR_UNEXPECTED;
