@@ -32,7 +32,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: sslsecur.c,v 1.3 2001/01/13 01:52:57 nelsonb%netscape.com Exp $
+ * $Id: sslsecur.c,v 1.4 2001/01/18 16:36:41 wtc%netscape.com Exp $
  */
 #include "cert.h"
 #include "secitem.h"
@@ -637,7 +637,7 @@ SSL_ConfigSecureServer(PRFileDesc *fd, CERTCertificate *cert,
     }
 
     /* make sure the key exchange is recognized */
-    if ((kea > kt_kea_size) || (kea < kt_null)) {
+    if ((kea >= kt_kea_size) || (kea < kt_null)) {
 	PORT_SetError(SEC_ERROR_UNSUPPORTED_KEYALG);
 	return SECFailure;
     }

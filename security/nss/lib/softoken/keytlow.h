@@ -36,12 +36,12 @@
 #include "blapit.h"
 
 typedef enum { 
-    nullKey, 
-    rsaKey, 
-    dsaKey, 
-    fortezzaKey,
-    dhKey, 
-    keaKey 
+    nullKey = 0, 
+    rsaKey = 1, 
+    dsaKey = 2, 
+    fortezzaKey = 3,
+    dhKey = 4, 
+    keaKey = 5
 } KeyType;
 
 struct FortezzaPublicKeyStr {

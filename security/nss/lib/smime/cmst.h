@@ -34,7 +34,7 @@
 /*
  * Header for CMS types.
  *
- * $Id: cmst.h,v 1.2 2000/06/13 21:56:32 chrisk%netscape.com Exp $
+ * $Id: cmst.h,v 1.3 2001/01/18 16:36:36 wtc%netscape.com Exp $
  */
 
 #ifndef _CMST_H_
@@ -205,20 +205,20 @@ struct NSSCMSSignedDataStr {
 
 typedef enum {
     NSSCMSVS_Unverified = 0,
-    NSSCMSVS_GoodSignature,
-    NSSCMSVS_BadSignature,
-    NSSCMSVS_DigestMismatch,
-    NSSCMSVS_SigningCertNotFound,
-    NSSCMSVS_SigningCertNotTrusted,
-    NSSCMSVS_SignatureAlgorithmUnknown,
-    NSSCMSVS_SignatureAlgorithmUnsupported,
-    NSSCMSVS_MalformedSignature,
-    NSSCMSVS_ProcessingError
+    NSSCMSVS_GoodSignature = 1,
+    NSSCMSVS_BadSignature = 2,
+    NSSCMSVS_DigestMismatch = 3,
+    NSSCMSVS_SigningCertNotFound = 4,
+    NSSCMSVS_SigningCertNotTrusted = 5,
+    NSSCMSVS_SignatureAlgorithmUnknown = 6,
+    NSSCMSVS_SignatureAlgorithmUnsupported = 7,
+    NSSCMSVS_MalformedSignature = 8,
+    NSSCMSVS_ProcessingError = 9
 } NSSCMSVerificationStatus;
 
 typedef enum {
-    NSSCMSSignerID_IssuerSN,
-    NSSCMSSignerID_SubjectKeyID
+    NSSCMSSignerID_IssuerSN = 0,
+    NSSCMSSignerID_SubjectKeyID = 1
 } NSSCMSSignerIDSelector;
 
 struct NSSCMSSignerIdentifierStr {
@@ -249,9 +249,9 @@ struct NSSCMSSignerInfoStr {
 
 typedef enum {
     NSSCMSCM_None = 0,
-    NSSCMSCM_CertOnly,
-    NSSCMSCM_CertChain,
-    NSSCMSCM_CertChainWithRoot
+    NSSCMSCM_CertOnly = 1,
+    NSSCMSCM_CertChain = 2,
+    NSSCMSCM_CertChainWithRoot = 3
 } NSSCMSCertChainMode;
 
 /* =============================================================================
@@ -280,8 +280,8 @@ struct NSSCMSOriginatorInfoStr {
  * key transport recipient info
  */
 typedef enum {
-    NSSCMSRecipientID_IssuerSN,
-    NSSCMSRecipientID_SubjectKeyID
+    NSSCMSRecipientID_IssuerSN = 0,
+    NSSCMSRecipientID_SubjectKeyID = 1
 } NSSCMSRecipientIDSelector;
 
 struct NSSCMSRecipientIdentifierStr {
@@ -314,9 +314,9 @@ struct NSSCMSOriginatorPublicKeyStr {
 typedef struct NSSCMSOriginatorPublicKeyStr NSSCMSOriginatorPublicKey;
 
 typedef enum {
-    NSSCMSOriginatorIDOrKey_IssuerSN,
-    NSSCMSOriginatorIDOrKey_SubjectKeyID,
-    NSSCMSOriginatorIDOrKey_OriginatorPublicKey
+    NSSCMSOriginatorIDOrKey_IssuerSN = 0,
+    NSSCMSOriginatorIDOrKey_SubjectKeyID = 1,
+    NSSCMSOriginatorIDOrKey_OriginatorPublicKey = 2
 } NSSCMSOriginatorIDOrKeySelector;
 
 struct NSSCMSOriginatorIdentifierOrKeyStr {
@@ -337,8 +337,8 @@ struct NSSCMSRecipientKeyIdentifierStr {
 typedef struct NSSCMSRecipientKeyIdentifierStr NSSCMSRecipientKeyIdentifier;
 
 typedef enum {
-    NSSCMSKeyAgreeRecipientID_IssuerSN,
-    NSSCMSKeyAgreeRecipientID_RKeyID
+    NSSCMSKeyAgreeRecipientID_IssuerSN = 0,
+    NSSCMSKeyAgreeRecipientID_RKeyID = 1
 } NSSCMSKeyAgreeRecipientIDSelector;
 
 struct NSSCMSKeyAgreeRecipientIdentifierStr {
@@ -392,9 +392,9 @@ typedef struct NSSCMSKEKRecipientInfoStr NSSCMSKEKRecipientInfo;
  */
 
 typedef enum {
-    NSSCMSRecipientInfoID_KeyTrans,
-    NSSCMSRecipientInfoID_KeyAgree,
-    NSSCMSRecipientInfoID_KEK
+    NSSCMSRecipientInfoID_KeyTrans = 0,
+    NSSCMSRecipientInfoID_KeyAgree = 1,
+    NSSCMSRecipientInfoID_KEK = 2
 } NSSCMSRecipientInfoIDSelector;
 
 struct NSSCMSRecipientInfoStr {
@@ -444,9 +444,9 @@ struct NSSCMSEncryptedDataStr {
 /* An enumerated type used to select templates based on the encryption
    scenario and data specifics. */
 typedef enum {
-    NSSCMSKEAUsesSkipjack,
-    NSSCMSKEAUsesNonSkipjack,
-    NSSCMSKEAUsesNonSkipjackWithPaddedEncKey
+    NSSCMSKEAUsesSkipjack = 0,
+    NSSCMSKEAUsesNonSkipjack = 1,
+    NSSCMSKEAUsesNonSkipjackWithPaddedEncKey = 2
 } NSSCMSKEATemplateSelector;
 
 /* ### mwelch - S/MIME KEA parameters. These don't really fit here,

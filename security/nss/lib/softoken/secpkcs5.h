@@ -44,7 +44,7 @@ typedef SECItem * (* SEC_PKCS5GetPBEPassword)(void *arg);
 
 /* used for V2 PKCS 12 Draft Spec */ 
 typedef enum {
-    pbeBitGenIDNull,
+    pbeBitGenIDNull = 0,
     pbeBitGenCipherKey = 0x01,
     pbeBitGenCipherIV = 0x02,
     pbeBitGenIntegrityKey = 0x03
