@@ -31,6 +31,9 @@ static const PRUint16 gJis0212map[] = {
 #include "jis0212.ump" 
 };
 
+#include "nsICharsetConverterManager.h"
+#include "nsIServiceManager.h"
+static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CID);
 
 
 NS_IMETHODIMP nsShiftJISToUnicode::Convert(
@@ -487,11 +490,11 @@ NS_IMETHODIMP nsISO2022JPToUnicodeV2::Convert(
      
        switch(mState)
        {
-          case 0:  // single byte mode
+          case mState_ASCII:
             if(0x1b == *src)
             {
               mLastLegalState = mState;
-              mState = 1;
+              mState = mState_ESC;
             } else if(*src & 0x80) {
               *dest++ = 0xFFFD;
               if(dest >= destEnd)
@@ -503,11 +506,15 @@ NS_IMETHODIMP nsISO2022JPToUnicodeV2::Convert(
             }
           break;
           
-          case 1: // ESC
+          case mState_ESC:
             if( '(' == *src) {
-              mState = 2;
+              mState = mState_ESC_28;
             } else if ('$' == *src)  {
-              mState = 3;
+              mState = mState_ESC_24;
+            } else if ('.' == *src)  { // for ISO-2022-JP-2
+              mState = mState_ESC_2e;
+            } else if ('N' == *src)  { // for ISO-2022-JP-2
+              mState = mState_ESC_4e;
             } else  {
               if((dest+2) >= destEnd)
                 goto error1;
@@ -517,13 +524,13 @@ NS_IMETHODIMP nsISO2022JPToUnicodeV2::Convert(
             }
           break;
 
-          case 2: // ESC (
+          case mState_ESC_28: // ESC (
             if( 'B' == *src) {
-              mState = 0;
+              mState = mState_ASCII;
             } else if ('J' == *src)  {
-              mState = 5; // JIS X 0201 1976
+              mState = mState_JISX0201_1976Roman;
             } else if ('I' == *src)  {
-              mState = 6; // JIS X 0201 1976 Kana
+              mState = mState_JISX0201_1976Kana;
             } else  {
               if((dest+3) >= destEnd)
                 goto error1;
@@ -534,13 +541,15 @@ NS_IMETHODIMP nsISO2022JPToUnicodeV2::Convert(
             }
           break;
 
-          case 3: // ESC $
+          case mState_ESC_24: // ESC $
             if( '@' == *src) {
-              mState = 7; // JIS X 0208 1978
+              mState = mState_JISX0208_1978;
+            } else if ('A' == *src)  {
+              mState = mState_GB2312_1980;
             } else if ('B' == *src)  {
-              mState = 8; // JIS X 0208 1983
+              mState = mState_JISX0208_1983;
             } else if ('(' == *src)  {
-              mState = 4;
+              mState = mState_ESC_24_28;
             } else  {
               if((dest+3) >= destEnd)
                 goto error1;
@@ -551,9 +560,11 @@ NS_IMETHODIMP nsISO2022JPToUnicodeV2::Convert(
             }
           break;
 
-          case 4: // ESC $ (
-            if( 'D' == *src) {
-              mState = 9; // JIS X 0212 1990
+          case mState_ESC_24_28: // ESC $ (
+            if( 'C' == *src) {
+              mState = mState_KSC5601_1987;
+            } else if ('D' == *src) {
+              mState = mState_JISX0212_1990;
             } else  {
               if((dest+4) >= destEnd)
                 goto error1;
@@ -564,10 +575,11 @@ NS_IMETHODIMP nsISO2022JPToUnicodeV2::Convert(
               mState = mLastLegalState;
             }
           break;
-          case 5: //  JIS X 0201 1976
+
+          case mState_JISX0201_1976Roman:
             if(0x1b == *src) {
               mLastLegalState = mState;
-              mState = 1;
+              mState = mState_ESC;
             } else if(*src & 0x80) {
               *dest++ = 0xFFFD;
               if(dest >= destEnd)
@@ -582,10 +594,10 @@ NS_IMETHODIMP nsISO2022JPToUnicodeV2::Convert(
             }
           break;
 
-          case 6: //  JIS X 0201 1976 Kana
+          case mState_JISX0201_1976Kana:
             if(0x1b == *src) {
               mLastLegalState = mState;
-              mState = 1;
+              mState = mState_ESC;
             } else {
               if((0x21 <= *src) && (*src <= 0x5F)) {
                 *dest++ = (0xFF61-0x0021) + *src;
@@ -597,23 +609,77 @@ NS_IMETHODIMP nsISO2022JPToUnicodeV2::Convert(
             }
           break;
 
-          case 7: //  JIS X 0208 1978
-          case 8: //  JIS X 0208 1983
-          case 9: //  JIS X 0212 1990
- 
+          case mState_JISX0208_1978:
             if(0x1b == *src) {
               mLastLegalState = mState;
-              mState = 1;
+              mState = mState_ESC;
             } else if(*src & 0x80) {
               mLastLegalState = mState;
-              mState = 13;
+              mState = mState_ERROR;
             } else {
               mData = fbIdx[*src & 0x7F];
-              mState = (0xFFFD == mData) ? 13 : (mState+3); // 10, 11, or 12
+              mState = (0xFFFD == mData) ? mState_ERROR
+                : mState_JISX0208_1978_2ndbyte;
             }
           break;
 
-          case 10: //  JIS X 0208 1978 - got one byte
+          case mState_GB2312_1980:
+            if(0x1b == *src) {
+              mLastLegalState = mState;
+              mState = mState_ESC;
+            } else if(*src & 0x80) {
+              mLastLegalState = mState;
+              mState = mState_ERROR;
+            } else {
+              mData = fbIdx[*src & 0x7F];
+              mState = (0xFFFD == mData) ? mState_ERROR
+                : mState_GB2312_1980_2ndbyte;
+            }
+          break;
+
+          case mState_JISX0208_1983:
+            if(0x1b == *src) {
+              mLastLegalState = mState;
+              mState = mState_ESC;
+            } else if(*src & 0x80) {
+              mLastLegalState = mState;
+              mState = mState_ERROR;
+            } else {
+              mData = fbIdx[*src & 0x7F];
+              mState = (0xFFFD == mData) ? mState_ERROR
+                : mState_JISX0208_1983_2ndbyte;
+            }
+          break;
+
+          case mState_KSC5601_1987:
+            if(0x1b == *src) {
+              mLastLegalState = mState;
+              mState = mState_ESC;
+            } else if(*src & 0x80) {
+              mLastLegalState = mState;
+              mState = mState_ERROR;
+            } else {
+              mData = fbIdx[*src & 0x7F];
+              mState = (0xFFFD == mData) ? mState_ERROR
+                : mState_KSC5601_1987_2ndbyte;
+            }
+          break;
+
+          case mState_JISX0212_1990:
+            if(0x1b == *src) {
+              mLastLegalState = mState;
+              mState = mState_ESC;
+            } else if(*src & 0x80) {
+              mLastLegalState = mState;
+              mState = mState_ERROR;
+            } else {
+              mData = fbIdx[*src & 0x7F];
+              mState = (0xFFFD == mData) ? mState_ERROR
+                : mState_JISX0212_1990_2ndbyte;
+            }
+          break;
+
+          case mState_JISX0208_1978_2ndbyte:
           {
             PRUint8 off = sbIdx[*src];
             if(0xFF == off) {
@@ -625,11 +691,51 @@ NS_IMETHODIMP nsISO2022JPToUnicodeV2::Convert(
             }
             if(dest >= destEnd)
               goto error1;
-            mState = 7;
+            mState = mState_JISX0208_1978;
           }
           break;
 
-          case 11: //  JIS X 0208 1983 - got one byte
+          case mState_GB2312_1980_2ndbyte:
+          {
+            PRUint8 off = sbIdx[*src];
+            if(0xFF == off) {
+               *dest++ = 0xFFFD;
+            } else {
+              if (!mGB2312Decoder) {
+                // creating a delegate converter (GB2312)
+                nsresult rv;
+                nsString tmpCharset;
+                NS_WITH_SERVICE(nsICharsetConverterManager, ccm,
+                                kCharsetConverterManagerCID, &rv);
+                if (!NS_FAILED(rv)) {
+                  tmpCharset.AssignWithConversion("GB2312");
+                  rv = ccm->GetUnicodeDecoder(&tmpCharset, &mGB2312Decoder);
+                }
+              }
+              if (!mGB2312Decoder) {// failed creating a delegate converter
+                *dest++ = 0xFFFD;
+              } else {
+                unsigned char gb[2];
+                PRUnichar uni;
+                PRInt32 gbLen = 2, uniLen = 1;
+                // ((mData/94)+0x21) is the original 1st byte.
+                // *src is the present 2nd byte.
+                // Put 2 bytes (one character) to gb[] with GB2312 encoding.
+                gb[0] = ((mData / 94) + 0x21) | 0x80;
+                gb[1] = *src | 0x80;
+                // Convert GB2312 to unicode.
+                mGB2312Decoder->Convert((const char *)gb, &gbLen,
+                                        &uni, &uniLen);
+                *dest++ = uni;
+              }
+            }
+            if(dest >= destEnd)
+              goto error1;
+            mState = mState_GB2312_1980;
+          }
+          break;
+
+          case mState_JISX0208_1983_2ndbyte:
           {
             PRUint8 off = sbIdx[*src];
             if(0xFF == off) {
@@ -639,11 +745,51 @@ NS_IMETHODIMP nsISO2022JPToUnicodeV2::Convert(
             }
             if(dest >= destEnd)
               goto error1;
-            mState = 8;
+            mState = mState_JISX0208_1983;
           }
           break;
 
-          case 12: //  JIS X 0212 1990 - got one byte
+          case mState_KSC5601_1987_2ndbyte:
+          {
+            PRUint8 off = sbIdx[*src];
+            if(0xFF == off) {
+               *dest++ = 0xFFFD;
+            } else {
+              if (!mEUCKRDecoder) {
+                // creating a delegate converter (EUC-KR)
+                nsresult rv;
+                nsString tmpCharset;
+                NS_WITH_SERVICE(nsICharsetConverterManager, ccm,
+                                kCharsetConverterManagerCID, &rv);
+                if (!NS_FAILED(rv)) {
+                  tmpCharset.AssignWithConversion("EUC-KR");
+                  rv = ccm->GetUnicodeDecoder(&tmpCharset, &mEUCKRDecoder);
+                }
+              }
+              if (!mEUCKRDecoder) {// failed creating a delegate converter
+                *dest++ = 0xFFFD;
+              } else {              
+                unsigned char ksc[2];
+                PRUnichar uni;
+                PRInt32 kscLen = 2, uniLen = 1;
+                // ((mData/94)+0x21) is the original 1st byte.
+                // *src is the present 2nd byte.
+                // Put 2 bytes (one character) to ksc[] with EUC-KR encoding.
+                ksc[0] = ((mData / 94) + 0x21) | 0x80;
+                ksc[1] = *src | 0x80;
+                // Convert EUC-KR to unicode.
+                mEUCKRDecoder->Convert((const char *)ksc, &kscLen,
+                                       &uni, &uniLen);
+                *dest++ = uni;
+              }
+            }
+            if(dest >= destEnd)
+              goto error1;
+            mState = mState_KSC5601_1987;
+          }
+          break;
+
+          case mState_JISX0212_1990_2ndbyte:
           {
             PRUint8 off = sbIdx[*src];
             if(0xFF == off) {
@@ -653,11 +799,73 @@ NS_IMETHODIMP nsISO2022JPToUnicodeV2::Convert(
             }
             if(dest >= destEnd)
               goto error1;
-            mState = 9;
+            mState = mState_JISX0212_1990;
           }
           break;
 
-          case 13: //  got one illegal byte, neet to ignroe one
+          case mState_ESC_2e: // ESC .
+            // "ESC ." will designate 96 character set to G2.
+            mState = mLastLegalState;
+            if( 'A' == *src) {
+              G2charset = G2_ISO88591;
+            } else if ('F' == *src) {
+              G2charset = G2_ISO88597;
+            } else  {
+              if((dest+3) >= destEnd)
+                goto error1;
+              *dest++ = (PRUnichar) 0x1b;
+              *dest++ = (PRUnichar) '.';
+              *dest++ = (0x80 & *src) ? 0xFFFD : (PRUnichar) *src;
+            }
+          break;
+
+          case mState_ESC_4e: // ESC N
+            // "ESC N" is the SS2 sequence, that invoke a G2 designated
+            // character set.  Since SS2 is effective only for next one
+            // character, mState should be returned to the last status.
+            mState = mLastLegalState;
+            if((0x20 <= *src) && (*src <= 0x7F)) {
+              if (G2_ISO88591 == G2charset) {
+                *dest++ = *src | 0x80;
+              } else if (G2_ISO88597 == G2charset) {
+                if (!mISO88597Decoder) {
+                  // creating a delegate converter (ISO-8859-7)
+                  nsresult rv;
+                  nsString tmpCharset;
+                  NS_WITH_SERVICE(nsICharsetConverterManager, ccm,
+                                  kCharsetConverterManagerCID, &rv);
+                  if (!NS_FAILED(rv)) {
+                    tmpCharset.AssignWithConversion("ISO-8859-7");
+                    rv = ccm->GetUnicodeDecoder(&tmpCharset, &mISO88597Decoder);
+                  }
+                }
+                if (!mISO88597Decoder) {// failed creating a delegate converter
+                  *dest++ = 0xFFFD;
+                } else {
+                  // Put one character with ISO-8859-7 encoding.
+                  unsigned char gr = *src | 0x80;
+                  PRUnichar uni;
+                  PRInt32 grLen = 1, uniLen = 1;
+                  // Convert ISO-8859-7 to unicode.
+                  mISO88597Decoder->Convert((const char *)&gr, &grLen,
+                                            &uni, &uniLen);
+                  *dest++ = uni;
+                }
+              } else {// G2charset is G2_unknown (not designated yet)
+                *dest++ = 0xFFFD;
+              }
+              if(dest >= destEnd)
+                goto error1;
+            } else {
+              if((dest+3) >= destEnd)
+                goto error1;
+              *dest++ = (PRUnichar) 0x1b;
+              *dest++ = (PRUnichar) 'N';
+              *dest++ = (0x80 & *src) ? 0xFFFD : (PRUnichar) *src;
+            }
+          break;
+
+          case mState_ERROR:
              mState = mLastLegalState;
              *dest++ = 0xFFFD;
              if(dest >= destEnd)
