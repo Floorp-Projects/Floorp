@@ -248,10 +248,6 @@ nsCSSInlineFrame::InlineReflow(nsCSSLineLayout&     aLineLayout,
   // that needs generating.
   if (eReflowReason_Initial == aReflowState.reason) {
     NS_ASSERTION(0 != (NS_FRAME_FIRST_REFLOW & mState), "bad mState");
-    nsresult rv = ProcessInitialReflow(aLineLayout.mPresContext);
-    if (NS_OK != rv) {
-      return rv;
-    }
   }
   else {
     NS_ASSERTION(0 == (NS_FRAME_FIRST_REFLOW & mState), "bad mState");
@@ -393,6 +389,11 @@ nsCSSInlineFrame::InitialReflow(nsCSSInlineReflowState& aState)
 {
   NS_PRECONDITION(nsnull == mNextInFlow, "bad frame-appended-reflow");
   NS_PRECONDITION(mLastContentIsComplete == PR_TRUE, "bad state");
+
+  nsresult rv = ProcessInitialReflow(aLineLayout.mPresContext);
+  if (NS_OK != rv) {
+    return rv;
+  }
 
 #if XXX
   // Create any frames that need creating; note that they should have
