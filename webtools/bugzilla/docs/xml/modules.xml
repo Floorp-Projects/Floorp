@@ -40,14 +40,14 @@
   <section id="modules-manual-download">
     <title>Download Locations</title>
     
-    <para>
-      <note>
+    <note>
+      <para>
         Running Bugzilla on Windows requires the use of ActiveState
         Perl 5.8.1 or higher. Some modules already exist in the core
         distribution of ActiveState Perl so no PPM link is given.
         (This is noted where it occurs.)
-      </note>
-    </para>
+      </para>
+    </note>
 
     <para>
       AppConfig:
@@ -70,7 +70,7 @@
     <para>
       Data-Dumper:
       <literallayout>
-        CPAN Download Page: <ulink url=http://search.cpan.org/src/ILYAM/Data-Dumper-2.121/Dumper.pm"/>
+        CPAN Download Page: <ulink url="http://search.cpan.org/src/ILYAM/Data-Dumper-2.121/Dumper.pm"/>
         PPM Download Page: Part of core distribution.
         Documentation: <ulink url="http://search.cpan.org/~ilyam/Data-Dumper-2.121/Dumper.pm"/>
       </literallayout>
@@ -147,7 +147,9 @@
         Documentation: <ulink url="http://stein.cshl.org/WWW/software/GD/"/>
       </literallayout>
     </para>
+  </section>
 
+  <section id="modules-manual-optional">
     <title>Optional Modules</title>
 
     <para>
