@@ -67,7 +67,7 @@ static PRInt32        gTableRefCount;
 static PropertyNode*  gPropertyArray;
 static nsAVLTree*     gPropertyTree;
 static PropertyComparitor*  gComparitor;
-static const nsCString* kNullStr;
+static nsCString* kNullStr;
 
 void
 nsCSSProps::AddRefTable(void) 

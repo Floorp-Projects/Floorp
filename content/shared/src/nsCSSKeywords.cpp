@@ -62,7 +62,7 @@ static PRInt32      gTableRefCount;
 static KeywordNode* gKeywordArray;
 static nsAVLTree*   gKeywordTree;
 static KeywordComparitor* gComparitor;
-static const nsCString* kNullStr;
+static nsCString* kNullStr;
 
 void
 nsCSSKeywords::AddRefTable(void) 
