@@ -314,9 +314,10 @@ nsMsgFilterDataSource::getFilterListTargets(nsIMsgFilterList *aFilterList,
         if (NS_FAILED(rv)) return rv;
 
         nsAutoString filterString(filterName);
-        
-        // XXX - convert to UTF8 :(
-        filterUri.AppendWithConversion(filterString);
+
+        char *utf8Name = filterString.ToNewUTF8String();
+        filterUri.Append(utf8Name);
+        Recycle(utf8Name);
         
         nsCOMPtr<nsIRDFResource> filterResource;
         rv = getRDFService()->GetResource(filterUri.GetBuffer(),

@@ -25,6 +25,7 @@
 
 #include "nsCOMPtr.h"
 #include "nsXPIDLString.h"
+#include "nsTextFormatter.h"
 
 #include "nsIRDFService.h"
 #include "nsIRDFResource.h"
@@ -35,6 +36,14 @@
 #include "nsIMsgFilterList.h"
 
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
+
+// unicode "%s" format string
+static const PRUnichar unicodeFormatter[] = {
+    (PRUnichar)'%',
+    (PRUnichar)'s',
+    (PRUnichar)0,
+};
+
 
 NS_IMPL_ISUPPORTS1(nsMsgFilterDelegateFactory, nsIRDFDelegateFactory)
 
@@ -140,7 +149,14 @@ nsMsgFilterDelegateFactory::getFilterDelegate(nsIRDFResource *aOuter,
 
     // XXX convert from UTF8
     nsAutoString filterString;
-    filterString.AssignWithConversion(filterName);
+    PRUnichar *unicodeString =
+        nsTextFormatter::smprintf(unicodeFormatter, filterName);
+    NS_ENSURE_TRUE(unicodeString, NS_ERROR_OUT_OF_MEMORY);
+    
+    filterString.Assign(unicodeString);
+
+    nsTextFormatter::smprintf_free(unicodeString);
+    
     nsCOMPtr<nsIMsgFilter> filter;
     rv = filterList->GetFilterNamed(filterString.GetUnicode(), getter_AddRefs(filter));
     if (NS_FAILED(rv)) return rv;
@@ -161,7 +177,6 @@ nsMsgFilterDelegateFactory::getFilterName(const char *filterTag)
     
     const char *filterNameStr = filterTag + MSGFILTER_TAG_LENGTH;
 
-    printf("GetFilterName(%s) -> %s\n", filterTag, filterNameStr);
     return filterNameStr;
 }
 
