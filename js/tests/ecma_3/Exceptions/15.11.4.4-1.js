@@ -113,7 +113,6 @@ try
 }
 catch(err5)
 {
- print(err5 + "\n");
  actual = examineThis(err5, '.*');
 }
 expect = EXPECTED_FORMAT;
