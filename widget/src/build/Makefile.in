@@ -32,6 +32,8 @@ REQUIRES=util img xpcom raptor netlib
 
 INCLUDES+= -I$(srcdir)/../xpwidgets -I$(srcdir)/../motif -I$(srcdir)/.
 
+INCLUDES += $(FE_X_CFLAGS)
+
 CPPSRCS=dlldeps.cpp nsWidgetSupport.cpp nsMotifWidgetFactory.cpp
 
 ifeq ($(OS_ARCH),IRIX)
@@ -48,13 +50,7 @@ EXTRA_DSO_LDOPTS+=\
 	$(DIST)/bin/libreg.so \
 	$(NSPR_LIBS)
 
-# This should really be done properly in 'config'
-ifeq ($(OS_ARCH),Linux)
-EXTRA_DSO_LDOPTS+=\
-	-L/usr/X11R6/lib -lX11 -lm
-else
-EXTRA_DSO_LDOPTS+= -lXm -lXt -lX11 -lm
-endif
+EXTRA_DSO_LDOPTS += $(FE_X_LIBS) $(XLDFLAGS) $(XLIBS)
 
 include $(topsrcdir)/config/rules.mk
 
