@@ -712,7 +712,17 @@ void nsDocLoaderImpl::doStopDocumentLoad(nsIChannel* aChannel,
   FireOnStateChange(this,
                     aChannel,
                     nsIWebProgressListener::STATE_STOP |
-                    nsIWebProgressListener::STATE_IS_DOCUMENT |
+                    nsIWebProgressListener::STATE_IS_DOCUMENT,
+                    aStatus);
+
+  //
+  // Fire a final OnStatusChange(...) notification indicating the the
+  // current document has finished loading...
+  //
+  FireOnStateChange(this,
+                    aChannel,
+                    nsIWebProgressListener::STATE_STOP |
+                    nsIWebProgressListener::STATE_IS_WINDOW |
                     nsIWebProgressListener::STATE_IS_NETWORK,
                     aStatus);
 }
