@@ -31,6 +31,12 @@
 
     <input type="text" ID="userField" value="userField"
      weightx="1" fill="horizontal" gridwidth="remainder" insets="[0,0,5,5]"/>
+
+    <label title="$passwordPrompt" align="right"
+     weightx="1" fill="horizontal" insets="[0,5,5,0]"/>
+
+    <input type="password" ID="passwordField" value="passwordField"
+     weightx="1" fill="horizontal" gridwidth="remainder" insets="[0,0,5,5]"/>
   </panel>
 </dialog>
 

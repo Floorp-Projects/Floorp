@@ -42,6 +42,7 @@ import javax.swing.JDialog;
 import javax.swing.ButtonGroup;
 import javax.swing.JCheckBox;
 import javax.swing.JPanel;
+import javax.swing.JPasswordField;
 import javax.swing.JButton;
 import javax.swing.RootPaneContainer;
 import javax.swing.JRadioButton;
@@ -316,21 +317,31 @@ public class XMLPageBuilder extends XMLWidgetBuilder {
     return item;
   }
 
-  protected JTextField buildTextField(Element current) {
-    JTextField item = null;
+  protected JPasswordField buildPasswordField(Element current) {
+    JPasswordField item = null;
+
+    item = new JPasswordField();
+    textFieldAdjustments(item, current);
+    return item;
+  }
+
+  private void textFieldAdjustments(JTextField item, Element current) {
     if (current.getAttribute("columns") != null) {
       String s = current.getAttribute("columns");
       s = s.trim();
       try {
 	int column = Integer.parseInt(s);
-	item = new JTextField(column);
+	item.setColumns(column);
       } catch (NumberFormatException nfe) {
       }
     }
+  }
 
-    if (item == null) {
-      item = new JTextField();
-    }
+  protected JTextField buildTextField(Element current) {
+    JTextField item = null;
+
+    item = new JTextField();
+    textFieldAdjustments(item, current);
 
     return item;
   }
@@ -370,20 +381,28 @@ public class XMLPageBuilder extends XMLWidgetBuilder {
       item = buildRadioButton(current);
     } else if (type.equals("text")) { // text type
       item = buildTextField(current);
+    } else if (type.equals("password")) {
+      item = buildPasswordField(current);
     } else if (type.equals("button")) { // buttons
-      JButton button = new JButton(getReferencedLabel(current, "title"));
-      button.addActionListener(model);
-      button.setActionCommand(getReferencedLabel(current, "command"));
-      item = button;
+      item = buildButton(current);
     } else if (type.equals("checkbox")) {
-      item = new JCheckBox(getReferencedLabel(current, "title"));
+      item = buildCheckBox(current);
     } else if (type.equals("jlist")) {
       item = buildList(current);
-    } else if (type.equals("custom")) {
-      item = new JButton("Custom");
     }
     
     return item;
+  }
+
+  protected JCheckBox buildCheckBox(Element current) {
+    return new JCheckBox(getReferencedLabel(current, "title"));
+  }
+
+  protected JButton buildButton(Element current) {
+    JButton button =  new JButton(getReferencedLabel(current, "title"));
+    button.addActionListener(model);
+    button.setActionCommand(getReferencedLabel(current, "command"));
+    return button;
   }
 
   protected JList buildList(Element current) {
