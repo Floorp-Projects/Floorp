@@ -2570,30 +2570,69 @@ nsGenericHTMLElement::ParseColor(const nsAReadableString& aString,
                                  nsIDocument* aDocument,
                                  nsHTMLValue& aResult)
 {
-  if (aString.Length() > 0) {
-    nsAutoString  colorStr (aString);
-    colorStr.CompressWhitespace();
-    nscolor color = 0;
-    if (NS_ColorNameToRGB(colorStr, &color)) {
-      aResult.SetStringValue(colorStr, eHTMLUnit_ColorName);
-      return PR_TRUE;
-    }
+  if (aString.IsEmpty()) {
+    return PR_FALSE;
+  }
 
-    if (!InNavQuirksMode(aDocument)) {
-      if (colorStr.CharAt(0) == '#') {
-        colorStr.Cut(0, 1);
-        if (NS_HexToRGB(colorStr, &color)) {
-          aResult.SetColorValue(color);
-          return PR_TRUE;
-        }
-      }
-    }
-    else {
-      nsAutoString str(aString);
-      if (NS_LooseHexToRGB(str, &color)) {  // no space compression
+  // All color strings are one single word so we just strip
+  // leading and trailing whitespace before checking.
+
+  // We need a string to remove cruft from
+  nsAString::const_iterator iter, end_iter;
+  aString.BeginReading(iter);
+  aString.EndReading(end_iter);
+  PRUnichar the_char;
+  // Skip whitespace in the beginning
+  while ((iter != end_iter) &&
+         (((the_char = *iter) == ' ') ||
+          (the_char == '\r') ||
+          (the_char == '\t') ||
+          (the_char == '\n') ||
+          (the_char == '\b')))
+    ++iter;
+  
+  if (iter == end_iter) {
+    // Nothing left
+    return PR_FALSE;
+  }
+
+  --end_iter; // So that it points on a character
+
+  // This will stop at a charater. At very least the same character
+  // that stopped the forward iterator.
+  while (((the_char = *end_iter)== ' ') ||
+         (the_char == '\r') ||
+         (the_char == '\t') ||
+         (the_char == '\n') ||
+         (the_char == '\b'))
+    --end_iter;
+
+  nsAutoString colorStr;
+  colorStr = Substring(iter, ++end_iter);
+
+  nscolor color;
+
+  // No color names begin with a '#', but numerical colors do so
+  // it is a very common first char
+  if ((colorStr.CharAt(0) != '#') &&
+      NS_ColorNameToRGB(colorStr, &color)) {
+    aResult.SetStringValue(colorStr, eHTMLUnit_ColorName);
+    return PR_TRUE;
+  }
+
+  if (!InNavQuirksMode(aDocument)) {
+    if (colorStr.CharAt(0) == '#') {
+      colorStr.Cut(0, 1);
+      if (NS_HexToRGB(colorStr, &color)) {
         aResult.SetColorValue(color);
         return PR_TRUE;
       }
+    }
+  }
+  else {
+    if (NS_LooseHexToRGB(colorStr, &color)) { 
+      aResult.SetColorValue(color);
+      return PR_TRUE;
     }
   }
 
