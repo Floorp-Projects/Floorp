@@ -35,7 +35,6 @@ protected:
   nsCollation   *mCollation;
   nsCString     mLocale;
   nsCString     mSavedLocale;
-  nsString      mCharset;
   PRBool        mUseCodePointOrder;
 
   void DoSetLocale();

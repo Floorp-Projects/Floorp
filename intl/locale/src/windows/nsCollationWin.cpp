@@ -86,9 +86,6 @@ nsresult nsCollationWin::Initialize(nsILocale* locale)
   else {
     mW_API = PR_FALSE;
   }
-
-  // default charset name
-  mCharset.Assign(NS_LITERAL_STRING("ISO-8859-1"));
   
   // default LCID (en-US)
   mLCID = 1033;
@@ -135,7 +132,7 @@ nsresult nsCollationWin::Initialize(nsILocale* locale)
       PRUnichar* mappedCharset = NULL;
       res = platformCharset->GetDefaultCharsetForLocale(aLocale.get(), &mappedCharset);
       if (NS_SUCCEEDED(res) && mappedCharset) {
-        mCharset.Assign(mappedCharset);
+        mCollation->SetCharset(mappedCharset);
         nsMemory::Free(mappedCharset);
       }
     }
@@ -161,7 +158,7 @@ nsresult nsCollationWin::GetSortKeyLen(const nsCollationStrength strength,
   }
   else {
     char *Cstr = nsnull;
-    res = mCollation->UnicodeToChar(stringIn, &Cstr, mCharset);
+    res = mCollation->UnicodeToChar(stringIn, &Cstr);
     if (NS_SUCCEEDED(res) && Cstr != nsnull) {
       *outLen = LCMapStringA(mLCID, dwMapFlags, Cstr, PL_strlen(Cstr), NULL, 0);
       PR_Free(Cstr);
@@ -187,7 +184,7 @@ nsresult nsCollationWin::CreateRawSortKey(const nsCollationStrength strength,
   }
   else {
     char *Cstr = nsnull;
-    res = mCollation->UnicodeToChar(stringIn, &Cstr, mCharset);
+    res = mCollation->UnicodeToChar(stringIn, &Cstr);
     if (NS_SUCCEEDED(res) && Cstr != nsnull) {
       byteLen = LCMapStringA(mLCID, dwMapFlags, Cstr, PL_strlen(Cstr), (char *) key, (int) *outLen);
       PR_Free(Cstr);
