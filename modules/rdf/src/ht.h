@@ -34,6 +34,9 @@
 #include "prefapi.h"
 #include "fe_proto.h"
 #include "intl_csi.h"
+#include "prinit.h"
+#include "prthread.h"
+#include "libevent.h"
 
 #ifdef	XP_MAC
 #include "stdlib.h"

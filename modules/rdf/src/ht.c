@@ -32,11 +32,7 @@
 #include "rdfparse.h"
 #include "remstore.h"
 #include "ht.h"
-/* BEGIN NEW_STRING_LIB*/
-#ifdef XP_MAC
 #include "allxpstr.h"
-#endif
-/* END NEW_STRING_LIB*/
 
 	/* globals */
 HT_Icon			urlList = NULL;
@@ -95,6 +91,10 @@ menus[] = {
 	/* extern declarations */
 extern RDFT		gRemoteStore;
 extern char		*gRLForbiddenDomains;
+
+/* pointer to the mocha thread */
+extern	PRThread	*mozilla_thread;
+
 
 void			FE_Print(const char *pUrl);	/* XXX this should be added to fe_proto.h */
 
@@ -2207,11 +2207,40 @@ HT_NewView (RDF_Resource topNode, HT_Pane pane, PRBool useColumns, void *feData,
 
 
 
+typedef	struct	{
+	ETEvent				ce;
+	HT_Notification		ns;
+	HT_Resource			node;
+	HT_Event			whatHappened;
+	RDF_Resource		s;
+	HT_ColumnType		type;
+} MozillaEvent_sendNotification;
+
+
+
+PR_STATIC_CALLBACK(void *)
+ht_HandleEvent_sendNotification(MozillaEvent_sendNotification *event)
+{
+	(*((event->ns)->notifyProc))(event->ns, event->node, event->whatHappened, event->s, event->type);
+	return(NULL);
+}
+
+
+
+PR_STATIC_CALLBACK(void)
+ht_DisposeEvent_sendNotification(MozillaEvent_sendNotification *event)
+{
+	XP_FREE(event);
+}
+
+
+
 void
 sendNotification (HT_Resource node, HT_Event whatHappened, RDF_Resource s, HT_ColumnType type)
 {
-	HT_Pane			pane;
-	HT_Notification		ns;
+	HT_Pane							pane;
+	HT_Notification					ns;
+	MozillaEvent_sendNotification	*event;
 
 	XP_ASSERT(node != NULL);
 	XP_ASSERT(node->view != NULL);
@@ -2224,7 +2253,32 @@ sendNotification (HT_Resource node, HT_Event whatHappened, RDF_Resource s, HT_Co
   
 	if (pane->mask & whatHappened) 
 	{
-		(*ns->notifyProc)(ns, node, whatHappened, s, type);
+		if (PR_CurrentThread() == mozilla_thread)
+		{
+			(*ns->notifyProc)(ns, node, whatHappened, s, type);
+		}
+		else
+		{
+			/* send event to Mozilla thread */
+			
+			if (mozilla_event_queue != NULL)
+			{
+				event = PR_NEW(MozillaEvent_sendNotification);
+				if (event != NULL)
+				{
+					PR_InitEvent(&(event->ce.event),
+						gRDFMWContext(*(node->view->pane->db->translators)),
+						(PRHandleEventProc)ht_HandleEvent_sendNotification,
+						(PRDestroyEventProc)ht_DisposeEvent_sendNotification);
+					event->ns = ns;
+					event->node = node;
+					event->whatHappened = whatHappened;
+					event->s = s;
+					event->type = type;
+					PR_PostEvent(mozilla_event_queue, &(event->ce.event));
+				}
+			}
+		}
 	}
 	pane->dirty = TRUE;
 }
@@ -3084,8 +3138,9 @@ fillContainer (HT_Resource node)
 void
 sendColumnNotification (HT_View view, void *token, uint32 tokenType, HT_Event whatHappened)
 {
-	HT_Pane			pane;
-	HT_Notification		ns;
+	HT_Pane							pane;
+	HT_Notification					ns;
+	MozillaEvent_sendNotification	*event;
 
 	XP_ASSERT(view != NULL);
 	XP_ASSERT(view->pane != NULL);
@@ -3097,7 +3152,32 @@ sendColumnNotification (HT_View view, void *token, uint32 tokenType, HT_Event wh
   
 	if (pane->mask & whatHappened) 
 	{
-		(*ns->notifyProc)(ns, HT_TopNode(view), whatHappened, token, tokenType);
+		if (PR_CurrentThread() == mozilla_thread)
+		{
+			(*ns->notifyProc)(ns, HT_TopNode(view), whatHappened, token, tokenType);
+		}
+		else
+		{
+			/* send event to Mozilla thread */
+			
+			if (mozilla_event_queue != NULL)
+			{
+				event = PR_NEW(MozillaEvent_sendNotification);
+				if (event != NULL)
+				{
+					PR_InitEvent(&(event->ce.event),
+						gRDFMWContext(*(view->pane->db->translators)),
+						(PRHandleEventProc)ht_HandleEvent_sendNotification,
+						(PRDestroyEventProc)ht_DisposeEvent_sendNotification);
+					event->ns = ns;
+					event->node = HT_TopNode(view);
+					event->whatHappened = whatHappened;
+					event->s = (RDF_Resource)token;
+					event->type = (HT_ColumnType)tokenType;
+					PR_PostEvent(mozilla_event_queue, &(event->ce.event));
+				}
+			}
+		}
 	}
 }
 
@@ -4779,7 +4859,7 @@ HT_DoMenuCmd(HT_Pane pane, HT_MenuCmd menuCmd)
 					NULL, HT_COLUMN_UNKNOWN);
 				break;
 
-			        case   HT_CMD_PRINT_FILE:
+				case   HT_CMD_PRINT_FILE:
 				if (node == NULL)	break;
 #ifdef WIN32
 				if ((resourceType(node->parent->node) == LFS_RT) &&
