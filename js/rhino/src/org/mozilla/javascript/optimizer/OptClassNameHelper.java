@@ -51,7 +51,7 @@ public class OptClassNameHelper implements ClassNameHelper {
         return generatingDirectory;
     }
     
-    public void reset() {
+    public synchronized void reset() {
         classNames = null;
     }
 

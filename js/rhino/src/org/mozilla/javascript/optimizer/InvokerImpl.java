@@ -56,11 +56,12 @@ public class InvokerImpl extends Invoker {
         Invoker result = (Invoker)invokersCache.get(method);
         if (result != null) { return result; }
         
+        int classNum = 0;
         synchronized (this) {
-            ++classNumber;
+            classNum = ++classNumber;
         }
         
-        String className = "inv" + classNumber;
+        String className = "inv" + classNum;
             
         ClassFileWriter cfw = new ClassFileWriter(className, 
                                 "org.mozilla.javascript.Invoker", "");
