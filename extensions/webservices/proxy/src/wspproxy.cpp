@@ -702,6 +702,12 @@ WSPProxy::XPTCMiniVariantToVariant(uint8 aTypeTag,
     case nsXPTType::T_WCHAR:
       var->SetAsWChar(aResult.val.wc);
       break;
+    case nsXPTType::T_CHAR_STR:
+      var->SetAsString(NS_STATIC_CAST(char*, aResult.val.p));
+      break;
+    case nsXPTType::T_WCHAR_STR:
+      var->SetAsWString(NS_STATIC_CAST(PRUnichar*, aResult.val.p));
+      break;
     case nsXPTType::T_DOMSTRING:
       var->SetAsAString(*((nsAString*)aResult.val.p));
       break;
@@ -755,33 +761,24 @@ WSPProxy::ArrayXPTCMiniVariantToVariant(uint8 aTypeTag,
     void* entries;
     const nsIID* iid = nsnull; 
 
-#define POPULATE(_t,_v)                                                  \
-  PR_BEGIN_MACRO                                                         \
-    _t* entries##_v = (_t*)nsMemory::Alloc(aLength * sizeof(_t));        \
-    if (!entries##_v) {                                                  \
-      return NS_ERROR_OUT_OF_MEMORY;                                     \
-    }                                                                    \
-    for(i = 0; i < aLength; i++)                                         \
-    {                                                                    \
-      entries##_v[i] = *((_t*)array + i);                                \
-    }                                                                    \
-    entries = (void*)entries##_v;                                        \
-  PR_END_MACRO
-
     switch (aTypeTag) {
-      case nsXPTType::T_I8:            POPULATE(PRInt8, i8);      break; 
-      case nsXPTType::T_I16:           POPULATE(PRInt16, i16);    break;
-      case nsXPTType::T_I32:           POPULATE(PRInt32, i32);    break;
-      case nsXPTType::T_I64:           POPULATE(PRInt64, i64);    break;
-      case nsXPTType::T_U8:            POPULATE(PRUint8, u8);     break; 
-      case nsXPTType::T_U16:           POPULATE(PRUint16, u16);   break;
-      case nsXPTType::T_U32:           POPULATE(PRUint32, u32);   break;
-      case nsXPTType::T_U64:           POPULATE(PRUint64, u64);   break;
-      case nsXPTType::T_FLOAT:         POPULATE(float, f);        break;
-      case nsXPTType::T_DOUBLE:        POPULATE(double, d);       break;
-      case nsXPTType::T_BOOL:          POPULATE(PRBool, b);       break;
-      case nsXPTType::T_CHAR:          POPULATE(char, c);         break;
-      case nsXPTType::T_WCHAR:         POPULATE(PRUnichar, wc);   break;
+      case nsXPTType::T_I8:
+      case nsXPTType::T_I16:
+      case nsXPTType::T_I32:
+      case nsXPTType::T_I64:
+      case nsXPTType::T_U8:
+      case nsXPTType::T_U16:
+      case nsXPTType::T_U32:
+      case nsXPTType::T_U64:
+      case nsXPTType::T_FLOAT:
+      case nsXPTType::T_DOUBLE:
+      case nsXPTType::T_BOOL:
+      case nsXPTType::T_CHAR:
+      case nsXPTType::T_WCHAR:
+      case nsXPTType::T_CHAR_STR:
+      case nsXPTType::T_WCHAR_STR:
+        entries = array;
+        break;
       case nsXPTType::T_INTERFACE:  
       {
         nsISupports** entriesSup = (nsISupports**)nsMemory::Alloc(aLength * 
@@ -817,17 +814,12 @@ WSPProxy::ArrayXPTCMiniVariantToVariant(uint8 aTypeTag,
         return NS_ERROR_FAILURE;
     }
 
-#undef POPULATE
-
     if (NS_SUCCEEDED(rv)) {
       rv = retvar->SetAsArray(aTypeTag, iid, aLength, entries);
     }
 
-    if (aTypeTag == nsXPTType::T_INTERFACE) {
+    if (aTypeTag == nsXPTType::T_INTERFACE_IS) {
       NS_FREE_XPCOM_ISUPPORTS_POINTER_ARRAY(i, (nsISupports**)entries);
-    }
-    else {
-      nsMemory::Free(entries);
     }
   }
   else {
@@ -1004,6 +996,12 @@ WSPProxy::VariantToValue(uint8 aTypeTag,
     case nsXPTType::T_WCHAR:
       rv = aProperty->GetAsWChar((PRUnichar*)aValue);
       break;
+    case nsXPTType::T_CHAR_STR:
+      rv = aProperty->GetAsString((char**)aValue);
+      break;
+    case nsXPTType::T_WCHAR_STR:
+      rv = aProperty->GetAsWString((PRUnichar**)aValue);
+      break;
     case nsXPTType::T_DOMSTRING:
       rv = aProperty->GetAsAString(*(nsAString*)aValue);
       break;
@@ -1076,6 +1074,8 @@ WSPProxy::VariantToArrayValue(uint8 aTypeTag,
     case nsXPTType::T_BOOL:
     case nsXPTType::T_CHAR:
     case nsXPTType::T_WCHAR:
+    case nsXPTType::T_CHAR_STR:
+    case nsXPTType::T_WCHAR_STR:
       *((void**)aResult[1].val.p) = array;
       break;
     case nsXPTType::T_INTERFACE:
