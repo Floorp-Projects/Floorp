@@ -15,8 +15,19 @@
 # Copyright (C) 1998 Netscape Communications Corporation.  All Rights
 # Reserved.
 
-DEPTH=..\..
+DEPTH=..\..\..
 
-DIRS=public src
+IGNORE_MANIFEST=1
+
+MODULE=appcores 
+
+EXPORTS=  \
+		nsIDOMAppCores.h		\
+		nsIDOMBaseAppCore.h		\
+		nsIDOMMailCore.h		\
+		nsIDOMToolbarCore.h		\
+		nsIDOMBrowserAppCore.h	\
+		nsAppCoresCIDs.h       
 
 include <$(DEPTH)\config\rules.mak>
+
