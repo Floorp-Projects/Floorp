@@ -79,7 +79,7 @@ nsMenuBarListener::KeyUp(nsIDOMEvent* aKeyEvent)
   PRUint32 theChar;
 	keyEvent->GetKeyCode(&theChar);
 
-#ifndef XP_UNIX
+#if !defined(XP_UNIX) || defined(NTO)
   if (theChar == NS_VK_ALT && mAltKeyDown) {
     // The ALT key was down and is now up.
     mAltKeyDown = PR_FALSE;
@@ -102,7 +102,7 @@ nsMenuBarListener::KeyUp(nsIDOMEvent* aKeyEvent)
 nsresult
 nsMenuBarListener::KeyPress(nsIDOMEvent* aKeyEvent)
 {
-#ifndef XP_UNIX
+#if !defined(XP_UNIX) || defined(NTO)
   nsCOMPtr<nsIDOMKeyEvent> keyEvent = do_QueryInterface(aKeyEvent);
   PRUint32 theChar;
 	keyEvent->GetKeyCode(&theChar);
@@ -134,7 +134,7 @@ nsMenuBarListener::KeyPress(nsIDOMEvent* aKeyEvent)
 nsresult
 nsMenuBarListener::KeyDown(nsIDOMEvent* aKeyEvent)
 {
-#ifndef XP_UNIX
+#if !defined(XP_UNIX) || defined(NTO)
   nsCOMPtr<nsIDOMKeyEvent> keyEvent = do_QueryInterface(aKeyEvent);
   PRUint32 theChar;
 	keyEvent->GetKeyCode(&theChar);
