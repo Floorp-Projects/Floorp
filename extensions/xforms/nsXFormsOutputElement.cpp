@@ -40,7 +40,7 @@
 //#define DEBUG_XF_OUTPUT
 #endif
 
-#include "nsIXTFXMLVisual.h"
+#include "nsXFormsStubElement.h"
 #include "nsIXTFXMLVisualWrapper.h"
 
 #include "nsAutoPtr.h"
@@ -61,25 +61,31 @@
 #include "nsXFormsAtoms.h"
 #include "nsXFormsUtils.h"
 
-static const nsIID sScriptingIIDs[] = {
-  NS_IDOMELEMENT_IID,
-  NS_IDOM3NODE_IID,
-  NS_IDOMEVENTTARGET_IID
-};
-
 /**
  * Implementation of the XForms \<output\> element.
  *
  * @see http://www.w3.org/TR/xforms/slice8.html#ui-output
  */
-class nsXFormsOutputElement : public nsIXTFXMLVisual,
+class nsXFormsOutputElement : public nsXFormsXMLVisualStub,
                               public nsIXFormsControl
 {
 public:
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSIXTFXMLVISUAL
-  NS_DECL_NSIXTFVISUAL
-  NS_DECL_NSIXTFELEMENT
+  NS_DECL_ISUPPORTS_INHERITED
+
+  // nsIXTFXMLVisual overrides
+  NS_IMETHOD OnCreated(nsIXTFXMLVisualWrapper *aWrapper);
+
+  // nsIXTFVisual overrides
+  NS_IMETHOD GetVisualContent(nsIDOMElement **aElement);
+  NS_IMETHOD GetInsertionPoint(nsIDOMElement **aElement);
+
+  // nsIXTFElement overrides
+  NS_IMETHOD OnDestroyed();
+  NS_IMETHOD ParentChanged(nsIDOMElement *aNewParent);
+  NS_IMETHOD WillSetAttribute(nsIAtom *aName, const nsAString &aValue);
+  NS_IMETHOD AttributeSet(nsIAtom *aName, const nsAString &aValue);
+
+  // nsIXFormsControl
   NS_DECL_NSIXFORMSCONTROL
 
   nsXFormsOutputElement() : mElement(nsnull) {}
@@ -89,15 +95,9 @@ private:
   nsIDOMElement *mElement;
 };
 
-NS_IMPL_ADDREF(nsXFormsOutputElement)
-NS_IMPL_RELEASE(nsXFormsOutputElement)
-
-NS_INTERFACE_MAP_BEGIN(nsXFormsOutputElement)
-  NS_INTERFACE_MAP_ENTRY(nsIXTFXMLVisual)
-  NS_INTERFACE_MAP_ENTRY(nsIXTFElement)
-  NS_INTERFACE_MAP_ENTRY(nsIXFormsControl)
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIXTFXMLVisual)
-NS_INTERFACE_MAP_END
+NS_IMPL_ISUPPORTS_INHERITED1(nsXFormsOutputElement,
+                             nsXFormsXMLVisualStub,
+                             nsIXFormsControl)
 
 // nsIXTFXMLVisual
 
@@ -153,19 +153,6 @@ nsXFormsOutputElement::GetInsertionPoint(nsIDOMElement **aElement)
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsXFormsOutputElement::GetApplyDocumentStyleSheets(PRBool *aApply)
-{
-  *aApply = PR_TRUE;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXFormsOutputElement::DidLayout()
-{
-  return NS_OK;
-}
-
 // nsIXTFElement
 
 NS_IMETHODIMP
@@ -178,46 +165,6 @@ nsXFormsOutputElement::OnDestroyed()
 }
 
 NS_IMETHODIMP
-nsXFormsOutputElement::GetElementType(PRUint32 *aType)
-{
-  *aType = ELEMENT_TYPE_XML_VISUAL;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXFormsOutputElement::GetIsAttributeHandler(PRBool *aIsHandler)
-{
-  *aIsHandler = PR_FALSE;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXFormsOutputElement::GetScriptingInterfaces(PRUint32 *aCount, nsIID ***aArray)
-{
-  return nsXFormsUtils::CloneScriptingInterfaces(sScriptingIIDs,
-                                                 NS_ARRAY_LENGTH(sScriptingIIDs),
-                                                 aCount, aArray);
-}
-
-NS_IMETHODIMP
-nsXFormsOutputElement::WillChangeDocument(nsIDOMDocument *aNewDocument)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXFormsOutputElement::DocumentChanged(nsIDOMDocument *aNewDocument)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXFormsOutputElement::WillChangeParent(nsIDOMElement *aNewParent)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsXFormsOutputElement::ParentChanged(nsIDOMElement *aNewParent)
 {
   // We need to re-evaluate our instance data binding when our parent
@@ -226,42 +173,6 @@ nsXFormsOutputElement::ParentChanged(nsIDOMElement *aNewParent)
     Refresh();
   }
   
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXFormsOutputElement::WillInsertChild(nsIDOMNode *aChild, PRUint32 aIndex)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXFormsOutputElement::ChildInserted(nsIDOMNode *aChild, PRUint32 aIndex)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXFormsOutputElement::WillAppendChild(nsIDOMNode *aChild)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXFormsOutputElement::ChildAppended(nsIDOMNode *aChild)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXFormsOutputElement::WillRemoveChild(PRUint32 aIndex)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXFormsOutputElement::ChildRemoved(PRUint32 aIndex)
-{
   return NS_OK;
 }
 
@@ -293,33 +204,7 @@ nsXFormsOutputElement::AttributeSet(nsIAtom *aName, const nsAString &aValue)
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsXFormsOutputElement::WillRemoveAttribute(nsIAtom *aName)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXFormsOutputElement::AttributeRemoved(nsIAtom *aName)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXFormsOutputElement::DoneAddingChildren()
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXFormsOutputElement::HandleDefault(nsIDOMEvent *aEvent, PRBool *aHandled)
-{
-  *aHandled = PR_FALSE;
-  return NS_OK;
-}
-
-
-// other methods
+// nsIXFormsControl
 
 NS_IMETHODIMP
 nsXFormsOutputElement::Refresh()

@@ -36,7 +36,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsIXTFXMLVisual.h"
+#include "nsXFormsStubElement.h"
 #include "nsIDOMEventTarget.h"
 #include "nsIDOM3Node.h"
 #include "nsIDOMElement.h"
@@ -57,24 +57,29 @@
 #include "nsIContent.h"
 #include "nsIDOMXPathExpression.h"
 
-static const nsIID sScriptingIIDs[] = {
-  NS_IDOMELEMENT_IID,
-  NS_IDOMEVENTTARGET_IID,
-  NS_IDOM3NODE_IID
-};
-
 /**
  * Implementation of the XForms \<input\> element.
  */
-class nsXFormsInputElement : public nsIXTFXMLVisual,
+class nsXFormsInputElement : public nsXFormsXMLVisualStub,
                              public nsIDOMFocusListener,
                              public nsIXFormsControl
 {
 public:
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSIXTFXMLVISUAL
-  NS_DECL_NSIXTFVISUAL
-  NS_DECL_NSIXTFELEMENT
+  NS_DECL_ISUPPORTS_INHERITED
+
+  // nsIXTFXMLVisual overrides
+  NS_IMETHOD OnCreated(nsIXTFXMLVisualWrapper *aWrapper);
+
+  // nsIXTFVisual overrides
+  NS_IMETHOD GetVisualContent(nsIDOMElement **aElement);
+
+  // nsIXTFElement overrides
+  NS_IMETHOD OnDestroyed();
+  NS_IMETHOD ParentChanged(nsIDOMElement *aNewParent);
+  NS_IMETHOD WillSetAttribute(nsIAtom *aName, const nsAString &aValue);
+  NS_IMETHOD AttributeSet(nsIAtom *aName, const nsAString &aValue);
+
+  // nsIXFormsControl
   NS_DECL_NSIXFORMSCONTROL
 
   // nsIDOMEventListener
@@ -91,17 +96,11 @@ private:
   nsIDOMElement *mElement;
 };
 
-NS_IMPL_ADDREF(nsXFormsInputElement)
-NS_IMPL_RELEASE(nsXFormsInputElement)
-
-NS_INTERFACE_MAP_BEGIN(nsXFormsInputElement)
-  NS_INTERFACE_MAP_ENTRY(nsIXTFXMLVisual)
-  NS_INTERFACE_MAP_ENTRY(nsIXTFElement)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMEventListener)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMFocusListener)
-  NS_INTERFACE_MAP_ENTRY(nsIXFormsControl)
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIXTFXMLVisual)
-NS_INTERFACE_MAP_END
+NS_IMPL_ISUPPORTS_INHERITED3(nsXFormsInputElement,
+                             nsXFormsXMLVisualStub,
+                             nsIXFormsControl,
+                             nsIDOMFocusListener,
+                             nsIDOMEventListener)
 
 // nsIXTFXMLVisual
 
@@ -156,26 +155,6 @@ nsXFormsInputElement::GetVisualContent(nsIDOMElement **aElement)
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsXFormsInputElement::GetInsertionPoint(nsIDOMElement **aElement)
-{
-  *aElement = nsnull;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXFormsInputElement::GetApplyDocumentStyleSheets(PRBool *aApply)
-{
-  *aApply = PR_TRUE;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXFormsInputElement::DidLayout()
-{
-  return NS_OK;
-}
-
 // nsIXTFElement
 
 NS_IMETHODIMP
@@ -190,46 +169,6 @@ nsXFormsInputElement::OnDestroyed()
 }
 
 NS_IMETHODIMP
-nsXFormsInputElement::GetElementType(PRUint32 *aType)
-{
-  *aType = ELEMENT_TYPE_XML_VISUAL;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXFormsInputElement::GetIsAttributeHandler(PRBool *aIsHandler)
-{
-  *aIsHandler = PR_FALSE;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXFormsInputElement::GetScriptingInterfaces(PRUint32 *aCount, nsIID ***aArray)
-{
-  return nsXFormsUtils::CloneScriptingInterfaces(sScriptingIIDs,
-                                                 NS_ARRAY_LENGTH(sScriptingIIDs),
-                                                 aCount, aArray);
-}
-
-NS_IMETHODIMP
-nsXFormsInputElement::WillChangeDocument(nsIDOMDocument *aNewDocument)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXFormsInputElement::DocumentChanged(nsIDOMDocument *aNewDocument)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXFormsInputElement::WillChangeParent(nsIDOMElement *aNewParent)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsXFormsInputElement::ParentChanged(nsIDOMElement *aNewParent)
 {
   // We need to re-evaluate our instance data binding when our parent
@@ -237,42 +176,6 @@ nsXFormsInputElement::ParentChanged(nsIDOMElement *aNewParent)
   if (aNewParent)
     Refresh();
 
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXFormsInputElement::WillInsertChild(nsIDOMNode *aChild, PRUint32 aIndex)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXFormsInputElement::ChildInserted(nsIDOMNode *aChild, PRUint32 aIndex)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXFormsInputElement::WillAppendChild(nsIDOMNode *aChild)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXFormsInputElement::ChildAppended(nsIDOMNode *aChild)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXFormsInputElement::WillRemoveChild(PRUint32 aIndex)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXFormsInputElement::ChildRemoved(PRUint32 aIndex)
-{
   return NS_OK;
 }
 
@@ -301,31 +204,6 @@ nsXFormsInputElement::AttributeSet(nsIAtom *aName, const nsAString &aValue)
     Refresh();
   }
 
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXFormsInputElement::WillRemoveAttribute(nsIAtom *aName)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXFormsInputElement::AttributeRemoved(nsIAtom *aName)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXFormsInputElement::DoneAddingChildren()
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXFormsInputElement::HandleDefault(nsIDOMEvent *aEvent, PRBool *aHandled)
-{
-  *aHandled = PR_FALSE;
   return NS_OK;
 }
 
@@ -383,7 +261,7 @@ nsXFormsInputElement::Blur(nsIDOMEvent *aEvent)
   return NS_OK;
 }
 
-// other methods
+// nsIXFormsControl
 
 NS_IMETHODIMP
 nsXFormsInputElement::Refresh()

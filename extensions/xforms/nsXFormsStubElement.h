@@ -40,12 +40,14 @@
 #define nsXFormsStubElement_h_
 
 #include "nsIXTFGenericElement.h"
+#include "nsIXTFXMLVisual.h"
 
 /**
  * An implementation of a generic non-UI XForms element.
  * 
- * This is used for e.g. bind so that the id attribute works correctly for
- * these nodes.
+ * This is the implementation for e.g. bind so that the id attribute works 
+ * correctly for these nodes.  It is also a base class for all XForms
+ * nsIXTFGenericElement implementations.
  */
 class nsXFormsStubElement : public nsIXTFGenericElement
 {
@@ -54,7 +56,27 @@ class nsXFormsStubElement : public nsIXTFGenericElement
   NS_DECL_NSIXTFGENERICELEMENT
 };
 
+/**
+ * An implementation of an XForms UI control.
+ *
+ * This is a base class for UI controls that use nsIXTFXMLVisual.
+ * Note: a pointer to the anonymous content root is _not_ provided as part
+ * of this base class because different implementations want to store
+ * different types of interface pointers.
+ */
+class nsXFormsXMLVisualStub : public nsIXTFXMLVisual
+{
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIXTFELEMENT
+  NS_DECL_NSIXTFVISUAL
+  NS_DECL_NSIXTFXMLVISUAL
+};
+
+/* Factory methods */
 NS_HIDDEN_(nsresult)
 NS_NewXFormsStubElement(nsIXTFElement **aResult);
+
+NS_HIDDEN_(nsresult)
+NS_NewXFormsXMLVisualStub(nsIXTFElement **aResult);
 
 #endif
