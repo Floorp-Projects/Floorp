@@ -732,16 +732,10 @@ static PLDHashTableOps MappedAttrTable_Ops = {
 class HTMLStyleSheetImpl : public nsIHTMLStyleSheet,
                            public nsIStyleRuleProcessor {
 public:
-  void* operator new(size_t size) CPP_THROW_NEW;
-  void* operator new(size_t size, nsIArena* aArena) CPP_THROW_NEW;
-  void operator delete(void* ptr);
-
   HTMLStyleSheetImpl(void);
   nsresult Init();
 
-  NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
-  NS_IMETHOD_(nsrefcnt) AddRef();
-  NS_IMETHOD_(nsrefcnt) Release();
+  NS_DECL_ISUPPORTS
 
   // nsIStyleSheet api
   NS_IMETHOD GetURL(nsIURI*& aURL) const;
@@ -808,10 +802,6 @@ protected:
   virtual ~HTMLStyleSheetImpl();
 
 protected:
-  PRUint32 mInHeap : 1;
-  PRUint32 mRefCnt : 31;
-  NS_DECL_OWNINGTHREAD // for thread-safety checking
-
   nsIURI*              mURL;
   nsIDocument*         mDocument;
   HTMLColorRule*       mLinkRule;
@@ -829,40 +819,6 @@ protected:
   PLDHashTable         mMappedAttrTable;
 };
 
-
-void* HTMLStyleSheetImpl::operator new(size_t size) CPP_THROW_NEW
-{
-  HTMLStyleSheetImpl* rv = (HTMLStyleSheetImpl*) ::operator new(size);
-#ifdef NS_DEBUG
-  if (nsnull != rv) {
-    memset(rv, 0xEE, size);
-  }
-#endif
-  rv->mInHeap = 1;
-  return (void*) rv;
-}
-
-void* HTMLStyleSheetImpl::operator new(size_t size, nsIArena* aArena) CPP_THROW_NEW
-{
-  HTMLStyleSheetImpl* rv = (HTMLStyleSheetImpl*) aArena->Alloc(PRInt32(size));
-#ifdef NS_DEBUG
-  if (nsnull != rv) {
-    memset(rv, 0xEE, size);
-  }
-#endif
-  rv->mInHeap = 0;
-  return (void*) rv;
-}
-
-void HTMLStyleSheetImpl::operator delete(void* ptr)
-{
-  HTMLStyleSheetImpl* sheet = (HTMLStyleSheetImpl*) ptr;
-  if (nsnull != sheet) {
-    if (sheet->mInHeap) {
-      ::operator delete(ptr);
-    }
-  }
-}
 
 HTMLStyleSheetImpl::HTMLStyleSheetImpl(void)
   : nsIHTMLStyleSheet(),

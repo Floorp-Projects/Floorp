@@ -49,16 +49,11 @@ class nsICSSGroupRule;
 
 class nsCSSRule {
 public:
-  void* operator new(size_t size) CPP_THROW_NEW;
-  void* operator new(size_t size, nsIArena* aArena) CPP_THROW_NEW;
-  void operator delete(void* ptr);
-
   nsCSSRule(void);
   nsCSSRule(const nsCSSRule& aCopy);
   virtual ~nsCSSRule(void);
 
-  NS_IMETHOD_(nsrefcnt) AddRef();
-  NS_IMETHOD_(nsrefcnt) Release();
+  NS_DECL_ISUPPORTS
 
   NS_IMETHOD GetStyleSheet(nsIStyleSheet*& aSheet) const;
   NS_IMETHOD SetStyleSheet(nsICSSStyleSheet* aSheet);
@@ -70,10 +65,6 @@ public:
   NS_IMETHOD MapRuleInfoInto(nsRuleData* aRuleData);
 
 protected:
-  PRUint32 mInHeap : 1;
-  PRUint32 mRefCnt : 31;
-  NS_DECL_OWNINGTHREAD // for thread-safety checking
-
   nsICSSStyleSheet*   mSheet;                         
   nsICSSGroupRule*    mParentRule;
 #ifdef DEBUG_REFS
