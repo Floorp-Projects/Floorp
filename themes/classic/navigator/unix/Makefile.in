@@ -19,8 +19,8 @@
 # Contributor(s): 
 #
 
-DEPTH		= ../../..
-THEME_ROOT_DEPTH = @srcdir@/..
+DEPTH		= ../../../..
+THEME_ROOT_DEPTH = @srcdir@/../..
 topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
@@ -32,39 +32,12 @@ SAMPLES_DIR	= $(DIST)/bin/chrome/skins/$(THEME)/navigator/skin
 
 EXPORT_RESOURCE_SAMPLES = \
 	NavSecurityOverlay.css \
-	alertl.gif \
-	back.gif \
-	back-disabled.gif \
-	back-hover.gif \
-	broken.gif \
-	errorl.gif \
-	forward.gif \
-	forward-hover.gif \
-	forward-disabled.gif \
-	home.gif \
-	location-hover.gif \
-	location.gif \
-	lock.gif \
-	messagel.gif \
-	mynetscape.gif \
-	n-box-persbar.gif \
-	navigator.css \
 	pageInfo.css \
-	print.gif \
-	questionl.gif \
-	reload.gif \
-	reload-disabled.gif \
-	reload-hover.gif \
-	search.gif \
-	stop.gif \
-	stop-disabled.gif \
-	stop-hover.gif \
-	unlock.gif \
-	$(NULL)
-
-DIRS		= unix
+	navigator.css \
+    $(NULL)
 
 include $(topsrcdir)/config/rules.mk
+
 
 GARBAGE		+= $(addprefix $(SAMPLES_DIR)/, $(EXPORT_RESOURCE_SAMPLES))
 

@@ -1,14 +1,15 @@
 #!dest navigator:skin
-NavSecurityOverlay.css
 alertl.gif
 back.gif
 back-disabled.gif
 back-hover.gif
+back-hover-active.gif
 broken.gif
 errorl.gif
 forward.gif
 forward-disabled.gif
 forward-hover.gif
+forward-hover-active.gif
 home.gif
 location-hover.gif
 location.gif
@@ -16,15 +17,16 @@ lock.gif
 messagel.gif
 mynetscape.gif
 n-box-persbar.gif
-navigator.css
 print.gif
 questionl.gif
 reload.gif
 reload-disabled.gif
 reload-hover.gif
+reload-hover-active.gif
 search.gif
 stop.gif
 stop-disabled.gif
 stop-hover.gif
+stop-hover-active.gif
 unlock.gif
-pageInfo.css
+
