@@ -62,7 +62,7 @@ ifdef XP_OS2_EMX
 
 CCC			= gcc
 LINK			= gcc
-AR                      = emxomfar -p256 r $@
+AR                      = emxomfar r $@
 # Keep AR_FLAGS blank so that we do not have to change rules.mk
 AR_FLAGS                = 
 RANLIB 			= @echo OS2 RANLIB
@@ -73,6 +73,8 @@ FILTER			= emxexp -o
 # GCC for OS/2 currently predefines these, but we don't want them
 DEFINES 		+= -Uunix -U__unix -U__unix__
 
+DEFINES			+= -DTCPV40HDRS
+
 ifndef NO_SHARED_LIB
 WRAP_MALLOC_LIB         = 
 WRAP_MALLOC_CFLAGS      = 
@@ -82,10 +84,7 @@ MKSHLIB                 = $(CXX) $(CXXFLAGS) $(DSO_LDOPTS) -o $@
 MKCSHLIB                = $(CC) $(CFLAGS) $(DSO_LDOPTS) -o $@
 MKSHLIB_FORCE_ALL       = 
 MKSHLIB_UNFORCE_ALL     = 
-DSO_LDOPTS              = -Zomf -Zdll -Zmt -Zcrtdll
-ifeq (,$(EMXOMFLD_LINKER))  # using LINK386.EXE
-  DSO_LDOPTS            += -Zlinker /NOO
-endif
+DSO_LDOPTS              = -Zomf -Zdll
 SHLIB_LDSTARTFILE	= 
 SHLIB_LDENDFILE		= 
 ifdef MAPFILE
@@ -98,11 +97,12 @@ PROCESS_MAP_FILE = \
 	echo DATA    PRELOAD MOVEABLE MULTIPLE NONSHARED >> $@; \
 	echo EXPORTS >> $@; \
 	grep -v ';+' $(LIBRARY_NAME).def | grep -v ';-' | \
-	sed -e 's; DATA ;;' -e 's,;;,,' -e 's,;.*,,' >> $@
+	sed -e 's; DATA ;;' -e 's,;;,,' -e 's,;.*,,' -e 's,\([\t ]*\),\1_,' | \
+	awk 'BEGIN {ord=1;} { print($$0 " @" ord " RESIDENTNAME"); ord++;}' >> $@
 
 endif   #NO_SHARED_LIB
 
-OS_CFLAGS          = -Wall -W -Wno-unused -Wpointer-arith -Wcast-align -Zmtd -Zomf -Zmt  -DDEBUG -DDEBUG_wintrinh -DTRACING -g
+OS_CFLAGS          = -Wall -W -Wno-unused -Wpointer-arith -Wcast-align -Zomf -DDEBUG -DTRACING -g
 
 # Where the libraries are
 MOZ_COMPONENT_NSPR_LIBS=-L$(DIST)/lib $(NSPR_LIBS)
