@@ -30,10 +30,12 @@ interface nsINntpIncomingServer : nsISupports {
 	/* ask the user before downloading more than maxArticles? */
 	attribute boolean notifyOn;
 
+	/* is this still used? */
+	attribute long notifySize;
+
 	/* the max articles to download */
 	attribute long maxArticles;
 
         /* when we don't download all, do we mark the rest read? */
 	attribute boolean markOldRead;
-
 };

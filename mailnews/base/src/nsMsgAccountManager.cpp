@@ -127,6 +127,10 @@ static NS_DEFINE_CID(kFileLocatorCID, NS_FILELOCATOR_CID);
 #define PREF_4X_NEWS_CC_SELF "news.cc_self"
 #define PREF_4X_MAIL_USE_FCC "mail.use_fcc"
 #define PREF_4X_NEWS_USE_FCC "news.use_fcc"
+#define PREF_4X_NEWS_MAX_ARTICLES "news.max_articles"
+#define PREF_4X_NEWS_NOTIFY_ON "news.notify.on"
+#define PREF_4X_NEWS_NOTIFY_SIZE "news.notify.size"
+#define PREF_4X_NEWS_MARK_OLD_READ "news.mark_old_read"
 
 #define CONVERT_4X_URI(IDENTITY,MACRO_GETTER,MACRO_SETTER) \
 { \
@@ -2146,6 +2150,7 @@ nsMsgAccountManager::MigrateNewsAccount(nsIMsgIdentity *identity, const char *ho
 	server->SetType("nntp");
     server->SetHostName((char *)hostname);
 
+
     // we only need to do this once
     if (!m_alreadySetNntpDefaultLocalPath) {
       nsCOMPtr <nsIFileSpec>nntpRootDir;
@@ -2172,7 +2177,7 @@ nsMsgAccountManager::MigrateNewsAccount(nsIMsgIdentity *identity, const char *ho
       if (NS_FAILED(rv)) return rv;
       rv = nntpServer->SetNewsrcRootPath(newsrcRootDir);
       if (NS_FAILED(rv)) return rv;
-            
+
       m_alreadySetNntpDefaultLocalPath = PR_TRUE;
     }
     
@@ -2232,6 +2237,12 @@ nsMsgAccountManager::MigrateOldNntpPrefs(nsIMsgIncomingServer *server, const cha
   nsCOMPtr<nsINntpIncomingServer> nntpServer;
   nntpServer = do_QueryInterface(server, &rv);
   if (NS_FAILED(rv)) return rv;
+
+  MIGRATE_SIMPLE_INT_PREF(PREF_4X_NEWS_NOTIFY_SIZE,nntpServer,SetNotifySize)
+  MIGRATE_SIMPLE_BOOL_PREF(PREF_4X_NEWS_NOTIFY_ON,nntpServer,SetNotifyOn)
+  MIGRATE_SIMPLE_BOOL_PREF(PREF_4X_NEWS_MARK_OLD_READ,nntpServer,SetMarkOldRead)
+  MIGRATE_SIMPLE_INT_PREF(PREF_4X_NEWS_MAX_ARTICLES,nntpServer,SetMaxArticles)
+            
     
 #ifdef SUPPORT_SNEWS
 #error THIS_CODE_ISNT_DONE_YET
