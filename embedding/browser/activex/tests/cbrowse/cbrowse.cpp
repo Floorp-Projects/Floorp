@@ -45,11 +45,6 @@ CBrowseApp theApp;
 
 BOOL CBrowseApp::InitInstance()
 {
-	// Initialize OLE libraries
-	if (!AfxOleInit())
-	{
-		return FALSE;
-	}
 	if (!InitATL())
 		return FALSE;
 
@@ -143,17 +138,24 @@ BOOL CBrowseApp::InitATL()
 {
 	m_bATLInited = TRUE;
 
-#if _WIN32_WINNT >= 0x0400
-	HRESULT hRes = CoInitializeEx(NULL, COINIT_MULTITHREADED);
-#else
-	HRESULT hRes = CoInitialize(NULL);
-#endif
+	HRESULT hRes;
 
-	if (FAILED(hRes))
+#if _WIN32_WINNT >= 0x0400
+	// hRes = CoInitializeEx(NULL, COINIT_MULTITHREADED);
+#else
+	// hRes = CoInitialize(NULL);
+#endif
+	if (!AfxOleInit())
 	{
-		m_bATLInited = FALSE;
 		return FALSE;
 	}
+
+
+	//if (FAILED(hRes))
+	//{
+	//	m_bATLInited = FALSE;
+	//	return FALSE;
+	//}
 
 	_Module.Init(ObjectMap, AfxGetInstanceHandle());
 	_Module.dwThreadID = GetCurrentThreadId();
