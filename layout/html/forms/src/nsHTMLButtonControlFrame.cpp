@@ -69,6 +69,8 @@
 #include "nsINameSpaceManager.h"
 #include "nsReflowPath.h"
 #include "nsIServiceManager.h"
+#include "nsIDOMHTMLButtonElement.h"
+#include "nsIDOMHTMLInputElement.h"
 #ifdef ACCESSIBILITY
 #include "nsIAccessibilityService.h"
 #endif
@@ -188,7 +190,14 @@ NS_IMETHODIMP nsHTMLButtonControlFrame::GetAccessible(nsIAccessible** aAccessibl
   nsCOMPtr<nsIAccessibilityService> accService = do_GetService("@mozilla.org/accessibilityService;1");
 
   if (accService) {
-    return accService->CreateHTML4ButtonAccessible(NS_STATIC_CAST(nsIFrame*, this), aAccessible);
+    nsCOMPtr<nsIContent> content;
+    GetContent(getter_AddRefs(content));
+    nsCOMPtr<nsIDOMHTMLButtonElement> buttonElement(do_QueryInterface(content));
+    if (buttonElement) //If turned XBL-base form control off, the frame contains HTML 4 button
+      return accService->CreateHTML4ButtonAccessible(NS_STATIC_CAST(nsIFrame*, this), aAccessible);
+    nsCOMPtr<nsIDOMHTMLInputElement> inputElement(do_QueryInterface(content));
+    if (inputElement) //If turned XBL-base form control on, the frame contains normal HTML button
+      return accService->CreateHTMLButtonAccessible(NS_STATIC_CAST(nsIFrame*, this), aAccessible);
   }
 
   return NS_ERROR_FAILURE;

@@ -464,6 +464,25 @@ nsAccessibilityService::CreateHTMLButtonAccessible(nsISupports *aFrame, nsIAcces
 }
 
 NS_IMETHODIMP
+nsAccessibilityService::CreateHTMLButtonAccessibleXBL(nsIDOMNode *aNode, nsIAccessible **_retval)
+{
+#ifdef MOZ_XUL
+  nsCOMPtr<nsIWeakReference> weakShell;
+  GetShellFromNode(aNode, getter_AddRefs(weakShell));
+
+  // reusing the HTML accessible widget and enhancing for XUL
+  *_retval = new nsHTML4ButtonAccessible(aNode, weakShell);
+  if (! *_retval) 
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  NS_ADDREF(*_retval);
+#else
+  *_retval = nsnull;
+#endif // MOZ_XUL
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsAccessibilityService::CreateHTMLCheckboxAccessible(nsISupports *aFrame, nsIAccessible **_retval)
 {
   nsIFrame* frame;

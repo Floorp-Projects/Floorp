@@ -44,6 +44,7 @@ interface nsIAccessibilityService : nsISupports
   nsIAccessible createHTMLAreaAccessible(in nsIWeakReference aPresShell, in nsIDOMNode aDOMNode, in nsIAccessible aAccParent);
   nsIAccessible createHTMLBlockAccessible(in nsIDOMNode aNode, in nsISupports aDocument);
   nsIAccessible createHTMLButtonAccessible(in nsISupports aFrame);
+  nsIAccessible createHTMLButtonAccessibleXBL(in nsIDOMNode aNode);
   nsIAccessible createHTMLCheckboxAccessible(in nsISupports aFrame);
   nsIAccessible createHTMLCheckboxAccessibleXBL(in nsIDOMNode aNode);
   nsIAccessible createHTMLComboboxAccessible(in nsIDOMNode aNode, in nsISupports aPresShell);
