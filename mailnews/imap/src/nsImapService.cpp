@@ -3230,7 +3230,7 @@ nsresult nsImapService::CreateSubscribeURI(nsIMsgIncomingServer *server, char *f
     {
         imapUrl->QueryInterface(NS_GET_IID(nsIURI), (void **) retURI);
         urlSpec.Append("/subscribe>");
-        urlSpec.AppendWithConversion(hierarchyDelimiter);
+        urlSpec.Append(char (hierarchyDelimiter));
         char *escapedFolderName = nsEscape(folderName, url_Path);
         urlSpec.Append(escapedFolderName);
         nsCRT::free(escapedFolderName);
