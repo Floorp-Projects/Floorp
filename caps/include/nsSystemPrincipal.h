@@ -60,11 +60,11 @@ public:
 
     NS_IMETHOD DisableCapability(const char *capability, void * *annotation);
 
-    NS_IMETHOD ToStreamableForm(char **result);
-    
-    nsSystemPrincipal();
+    NS_IMETHOD Save(nsSupportsHashtable* aPrincipals, nsIPref* aPrefs);
     
     NS_IMETHOD Init();
+
+    nsSystemPrincipal();
 
     virtual ~nsSystemPrincipal(void);
 };

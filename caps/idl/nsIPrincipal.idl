@@ -26,12 +26,14 @@
 #include "nsISupports.idl"
 
 %{C++
+class nsSupportsHashtable;
 struct JSPrincipals;
 %}
 
 interface nsIPref;
 
 [ptr] native JSPrincipals(JSPrincipals);
+[ptr] native nsSupportsHashtable(nsSupportsHashtable);
 
 [uuid(ff9313d0-25e1-11d2-8160-006008119d7a)]
 interface nsIPrincipal : nsISupports {
@@ -66,9 +68,7 @@ interface nsIPrincipal : nsISupports {
 
     void DisableCapability(in string capability, inout voidStar annotation);
 
-	string ToStreamableForm();
-
-	void WriteToPrefs(in nsIPref prefs);
+	void Save(in nsSupportsHashtable aPrincipals, in nsIPref prefs);
 };
 
 

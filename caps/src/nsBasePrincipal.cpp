@@ -17,9 +17,11 @@
  * 
  * Contributor(s):
  * Norris Boyd
+ * Mitch Stoltz
  */
 
 #include "nsBasePrincipal.h"
+#include "nsScriptSecurityManager.h"
 #include "nsString.h"
 #include "plstr.h"
 #include "nsIPref.h"
@@ -249,11 +251,24 @@ AppendCapability(nsHashKey *aKey, void *aData, void *aStr)
         
 
 NS_IMETHODIMP
-nsBasePrincipal::WriteToPrefs(nsIPref *aPref)
+nsBasePrincipal::Save(nsSupportsHashtable* aPrincipals, nsIPref *aPref)
 {
+    //-- Save in hashtable
+    nsIPrincipalKey key(this);
+    // This is a little sneaky. "supports" below is a void *, which won't 
+    // be refcounted, but is matched with a key that is the same object,
+    // which will be refcounted.
+    aPrincipals->Put(&key, this);
+
+    //-- Save to preferences
     char *streamableForm;
-    if (NS_FAILED(ToStreamableForm(&streamableForm))) 
+    if (NS_FAILED(ToString(&streamableForm)))
         return NS_ERROR_FAILURE;
+    if (mCapabilities) {
+        nsCAutoString result(streamableForm);
+        mCapabilities->Enumerate(AppendCapability, (void*)&result);
+        streamableForm = result.ToNewCString();
+    }
     if (!mPrefName) {
         nsCAutoString s("security.principal.X");
         s += mCapabilitiesOrdinal++;
@@ -263,19 +278,3 @@ nsBasePrincipal::WriteToPrefs(nsIPref *aPref)
     Recycle(streamableForm);
     return rv;
 }
-
-NS_IMETHODIMP
-nsBasePrincipal::ToStreamableForm(char **aResult)
-{
-    if (NS_FAILED(ToString(aResult)))
-        return NS_ERROR_FAILURE;
-    if (mCapabilities) {
-        nsCAutoString result(*aResult);
-        mCapabilities->Enumerate(AppendCapability, (void*)&result);
-        Recycle(*aResult);
-        *aResult = result.ToNewCString();
-    }
-    return *aResult ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
-}
-
-

@@ -19,6 +19,7 @@
  *
  * Contributor(s):
  * Norris Boyd
+ * Mitch Stoltz
  */
 
 /* describes principals for use with signed scripts */
@@ -29,11 +30,14 @@
 #include "nsICertificatePrincipal.h"
 #include "nsBasePrincipal.h"
 
+class nsIURI;
+
 #define NS_CERTIFICATEPRINCIPALMANAGER_CID \
 { 0x7ee2a4c0, 0x4b91, 0x11d3, \
 { 0xba, 0x18, 0x00, 0x60, 0xb0, 0xf1, 0x99, 0xa2 }}
 
-class nsCertificatePrincipal : public nsICertificatePrincipal, public nsBasePrincipal {
+class nsCertificatePrincipal : public nsICertificatePrincipal, public nsBasePrincipal 
+{
 public:
 
     NS_DEFINE_STATIC_CID_ACCESSOR(NS_CERTIFICATEPRINCIPALMANAGER_CID)
@@ -52,15 +56,17 @@ public:
 
     NS_IMETHOD InitFromPersistent(const char *name, const char* data);
 
-    NS_IMETHOD Init(const char* aIssuerName, const char* aSerialNumber);
+    NS_IMETHOD Init(const char* aIssuerName, const char* aSerialNumber,
+                    const char* aCompanyName);
 
     nsCertificatePrincipal();
 
 	virtual ~nsCertificatePrincipal(void);
 
 protected:
-    const char* mIssuerName;
-    const char* mSerialNumber;
+    char* mIssuerName;
+    char* mSerialNumber;
+    char* mCompanyName;
 };
 
 #endif // _NS_CERTIFICATE_PRINCIPAL_H_

@@ -62,15 +62,12 @@ public:
     InitFromPersistent(const char *name, const char *data);
 
     NS_IMETHOD
-    WriteToPrefs(nsIPref *prefs);
-
-    NS_IMETHOD 
-    ToStreamableForm(char **result);
+    Save(nsSupportsHashtable* aPrincipals, nsIPref *prefs);
 
 protected:
     enum AnnotationValue { AnnotationEnabled=1, AnnotationDisabled };
 
-    NS_IMETHOD 
+    NS_IMETHOD
     SetCapability(const char *capability, void **annotation, 
                   AnnotationValue value);
 

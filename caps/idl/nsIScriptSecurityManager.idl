@@ -56,9 +56,9 @@ interface nsIScriptSecurityManager : nsISupports
 	/**
 	 * Return a principal that can be QI'd to nsICertificatePrincipal.
 	 */
-    nsIPrincipal GetCertificatePrincipal(in string aIssuer, in string aSerialNumber);
+    nsIPrincipal GetCertificatePrincipal(in string aIssuer, in string aSerialNumber,
+                                         in string companyName);
 
-	
 	///////////////// Security Checks //////////////////
 
     /**

@@ -19,10 +19,12 @@
  *
  * Contributor(s): 
  * Norris Boyd
+ * Mitch Stoltz <mstoltz@netscape.com>
  */
 
 /*describes principals for use in signed scripts*/
 #include "nsCertificatePrincipal.h"
+#include "prmem.h"
 #include "nsCOMPtr.h"
 
 static NS_DEFINE_IID(kICertificatePrincipalIID, NS_ICERTIFICATEPRINCIPAL_IID);
@@ -32,6 +34,34 @@ NS_IMPL_QUERY_INTERFACE2(nsCertificatePrincipal, nsICertificatePrincipal, nsIPri
 NSBASEPRINCIPALS_ADDREF(nsCertificatePrincipal);
 NSBASEPRINCIPALS_RELEASE(nsCertificatePrincipal);
 
+//////////////////////////////////////////////////
+// Methods implementing nsICertificatePrincipal //
+//////////////////////////////////////////////////
+NS_IMETHODIMP
+nsCertificatePrincipal::GetIssuerName(char ** issuerName)
+{
+    *issuerName = nsCRT::strdup(mIssuerName);
+	return *issuerName ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
+}
+
+NS_IMETHODIMP
+nsCertificatePrincipal::GetSerialNumber(char ** serialNumber)
+{
+    *serialNumber = nsCRT::strdup(mSerialNumber);
+	return *serialNumber ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
+}
+
+NS_IMETHODIMP
+nsCertificatePrincipal::GetCompanyName(char ** companyName)
+{
+    *companyName = nsCRT::strdup(mCompanyName);
+	return * companyName ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
+}
+
+
+///////////////////////////////////////
+// Methods implementing nsIPrincipal //
+///////////////////////////////////////
 NS_IMETHODIMP 
 nsCertificatePrincipal::CanEnableCapability(const char *capability,
                                             PRInt16 *result)
@@ -41,20 +71,6 @@ nsCertificatePrincipal::CanEnableCapability(const char *capability,
     if (*result == nsIPrincipal::ENABLE_UNKNOWN)
         *result = ENABLE_WITH_USER_PERMISSION;
     return NS_OK;
-}
-
-NS_IMETHODIMP
-nsCertificatePrincipal::GetIssuerName(char ** issuerName)
-{
-    *issuerName = (char*)mIssuerName;
-	return NS_OK;
-}
-
-NS_IMETHODIMP
-nsCertificatePrincipal::GetSerialNumber(char ** serialNumber)
-{
-    *serialNumber = (char*)mSerialNumber;
-	return NS_OK;
 }
 
 NS_IMETHODIMP 
@@ -73,8 +89,7 @@ nsCertificatePrincipal::ToString(char **result)
 NS_IMETHODIMP 
 nsCertificatePrincipal::ToUserVisibleString(char **result)
 {
-    // XXX TODO: need company name rather than issuer and serial number here.
-    return ToString(result);
+    return GetCompanyName(result);
 }
 
 NS_IMETHODIMP
@@ -96,12 +111,16 @@ nsCertificatePrincipal::Equals(nsIPrincipal * other, PRBool * result)
         *result = PR_FALSE;
         return NS_OK;
     }
+    //-- Compare issuer name and serial number; 
+    //   these comprise the unique id of the cert
     char* otherIssuer;
     otherCertificate->GetIssuerName(&otherIssuer);
     char* otherSerial;
     otherCertificate->GetSerialNumber(&otherSerial);
     *result = ( (PL_strcmp(mIssuerName, otherIssuer) == 0) &&
                 (PL_strcmp(mSerialNumber, otherSerial) == 0) );
+    PR_FREEIF(otherIssuer);
+    PR_FREEIF(otherSerial);
     return NS_OK;
 }
 
@@ -115,6 +134,9 @@ nsCertificatePrincipal::HashValue(PRUint32 *result)
     return NS_OK;
 }
 
+/////////////////////////////////////////////
+// Constructor, Destructor, initialization //
+/////////////////////////////////////////////
 NS_IMETHODIMP
 nsCertificatePrincipal::InitFromPersistent(const char *name, const char* data)
 {
@@ -140,7 +162,7 @@ nsCertificatePrincipal::InitFromPersistent(const char *name, const char* data)
     *wordEnd = '\0';
     const char* serial = data;
 
-    if (NS_FAILED(Init(issuer, serial))) 
+    if (NS_FAILED(Init(issuer, serial, nsnull))) 
         return NS_ERROR_FAILURE;
 
     if (wordEnd[1] != '\0') {
@@ -151,23 +173,27 @@ nsCertificatePrincipal::InitFromPersistent(const char *name, const char* data)
 }
 
 NS_IMETHODIMP
-nsCertificatePrincipal::Init(const char* aIssuerName, const char* aSerialNumber)
+nsCertificatePrincipal::Init(const char* aIssuerName, const char* aSerialNumber,
+                             const char* aCompanyName)
 {
     mIssuerName = nsCRT::strdup(aIssuerName);
     mSerialNumber = nsCRT::strdup(aSerialNumber);
-    if (!mIssuerName || !mSerialNumber) return NS_ERROR_OUT_OF_MEMORY;
+    mCompanyName = nsCRT::strdup(aCompanyName);
+    if (!mIssuerName || !mSerialNumber ||
+        !mCompanyName) return NS_ERROR_OUT_OF_MEMORY;
     return NS_OK;
 }
 
-nsCertificatePrincipal::nsCertificatePrincipal()
+nsCertificatePrincipal::nsCertificatePrincipal() : mIssuerName(nsnull),
+                                                   mSerialNumber(nsnull),
+                                                   mCompanyName(nsnull)
 {
     NS_INIT_ISUPPORTS();
 }
 
-nsCertificatePrincipal::~nsCertificatePrincipal(void)
+nsCertificatePrincipal::~nsCertificatePrincipal()
 {
-    if (mIssuerName)
-        nsCRT::free((char*)mIssuerName);
-    if (mSerialNumber)
-        nsCRT::free((char*)mSerialNumber);
+    PR_FREEIF(mIssuerName);
+    PR_FREEIF(mSerialNumber);
+    PR_FREEIF(mCompanyName);
 }

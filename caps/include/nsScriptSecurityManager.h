@@ -34,6 +34,41 @@
 
 class nsIPref;
 
+/////////////////////
+// nsIPrincipalKey //
+/////////////////////
+
+class nsIPrincipalKey : public nsHashKey {
+public:
+    nsIPrincipalKey(nsIPrincipal* key) {
+        mKey = key;
+        NS_IF_ADDREF(mKey);
+    }
+    
+    ~nsIPrincipalKey(void) {
+        NS_IF_RELEASE(mKey);
+    }
+    
+    PRUint32 HashValue(void) const {
+        PRUint32 hash;
+        mKey->HashValue(&hash);
+        return hash;
+    }
+    
+    PRBool Equals(const nsHashKey *aKey) const {
+        PRBool eq;
+        mKey->Equals(((nsIPrincipalKey *) aKey)->mKey, &eq);
+        return eq;
+    }
+    
+    nsHashKey *Clone(void) const {
+        return new nsIPrincipalKey(mKey);
+    }
+
+protected:
+    nsIPrincipal* mKey;
+};
+
 #define NS_SCRIPTSECURITYMANAGER_CID \
 { 0x7ee2a4c0, 0x4b93, 0x17d3, \
 { 0xba, 0x18, 0x00, 0x60, 0xb0, 0xf1, 0x99, 0xa2 }}

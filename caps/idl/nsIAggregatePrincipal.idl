@@ -18,20 +18,22 @@
  * Rights Reserved.
  *
  * Contributor(s): 
- * Norris Boyd
+ * Mitch Stoltz <mstoltz@netscape.com>
  */
-/* Defines an interface for certificate principals. */
-#include "nsIPrincipal.idl"
+/* Defines an interface for aggregate principals. */
 
 %{C++
-#define NS_CERTIFICATEPRINCIPAL_PROGID "component://netscape/certificateprincipal"
-#define NS_CERTIFICATEPRINCIPAL_CLASSNAME "certificateprincipal"
+#define NS_AGGREGATEPRINCIPAL_PROGID "component://netscape/aggregateprincipal"
+#define NS_AGGREGATEPRINCIPAL_CLASSNAME "aggregateprincipal"
 %}
 
-[uuid(ebfefcd0-25e1-11d2-8160-006008119d7a)]
-interface nsICertificatePrincipal : nsISupports {
+#include "nsIPrincipal.idl"
 
-    readonly attribute string issuerName;
-    readonly attribute string serialNumber;
-    readonly attribute string companyName;
+[uuid(1c30a682-1dd2-11b2-ba9b-86a86f300cbc)]
+interface nsIAggregatePrincipal : nsISupports {
+
+    attribute nsIPrincipal certificate;
+    attribute nsIPrincipal codebase;
+
+    void intersect(in nsIPrincipal other);
 };
