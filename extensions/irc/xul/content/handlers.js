@@ -553,6 +553,7 @@ function onClearCurrentView()
         client.output.removeChild (client.output.firstChild);
 
     client.currentObject.messages = null;
+    client.currentObject.messageCount = 0;
 
     client.currentObject.display (getMsg("onClearCurrentViewMsg"), "INFO");
 
@@ -1250,7 +1251,8 @@ function cli_testdisplay (e)
         var me = o.server.me;
         var viewType = client.currentObject.TYPE;
         var sampleUser = {TYPE: "IRCUser", nick: "ircmonkey",
-                          name: "IRCMonkey", properNick: "IRCMonkey"};
+                          name: "IRCMonkey", properNick: "IRCMonkey",
+                          host: ""};
         var sampleChannel = {TYPE: "IRCChannel", name: "#mojo"};
 
         function test (from, to)
@@ -1620,7 +1622,7 @@ function cli_ime (e)
     e.inputData = filterOutput (e.inputData, "ACTION", "ME!");
     client.currentObject.display (e.inputData, "ACTION", "ME!",
                                   client.currentObject);
-    client.currentObject.act (e.inputData);
+    client.currentObject.act (fromUnicode(e.inputData));
     
     return true;
 }
@@ -1648,7 +1650,7 @@ function cli_iquery (e)
     {
         var msg = filterOutput(ary[2], "PRIVMSG", "ME!");
         tab.display (msg, "PRIVMSG", "ME!", tab);
-        tab.say (ary[2]);
+        tab.say (fromUnicode(ary[2]));
     }
     
     e.user = tab;
@@ -1674,7 +1676,7 @@ function cli_imsg (e)
 
     var msg = filterOutput(ary[2], "PRIVMSG", "ME!");
     client.currentObject.display (msg, "PRIVMSG", "ME!", usr);
-    usr.say (ary[2]);
+    usr.say (fromUnicode(ary[2]));
 
     return true;
 
@@ -1931,7 +1933,7 @@ function cli_itopic (e)
     }
     else
     {
-        if (!e.channel.setTopic(e.inputData))
+        if (!e.channel.setTopic(fromUnicode(e.inputData)))
             client.currentObject.display (getMsg("cli_itopicMsg2"), "ERROR");
     }
 
@@ -2881,7 +2883,7 @@ function my_cprivmsg (e)
         }
         catch (ex)
         {
-            this.say (e.user.nick + ": " + String(ex));
+            this.say (fromUnicode(e.user.nick + ": " + String(ex)));
             return false;
         }
         
@@ -2900,7 +2902,7 @@ function my_cprivmsg (e)
                 rsp += " ";
             
             this.display (rsp + v, "PRIVMSG", e.server.me, this);
-            this.say (rsp + v);
+            this.say (fromUnicode(rsp + v));
         }
     }
 

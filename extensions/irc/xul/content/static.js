@@ -36,7 +36,7 @@ const MSG_UNKNOWN   = getMsg ("unknown");
 
 client.defaultNick = getMsg( "defaultNick" );
 
-client.version = "0.8.5-rc2";
+client.version = "0.8.5-rc5";
 
 client.TYPE = "IRCClient";
 client.COMMAND_CHAR = "/";
@@ -129,16 +129,33 @@ function ()
 
 function ucConvertIncomingMessage (e)
 {
-    e.meat = client.ucConverter.ConvertToUnicode(e.meat);
+    e.meat = toUnicode(e.meat);
     return true;
 }
 
-function ucConvertOutgoingMessage (msg)
+function toUnicode (msg)
 {
-    if (client.ucConverter)
-        return client.ucConverter.ConvertFromUnicode(msg);
+    if (!("ucConverter" in client))
+        return msg;
+    
+    /* if we're in a stateful charset, return to ascii mode before starting */
+    if (client.CHARSET.search(/iso-2022/i) != -1)
+        client.ucConverter.ConvertToUnicode("\x1B(B");
 
-    return msg;
+    msg = client.ucConverter.ConvertToUnicode(msg);
+
+    /* if we're in a stateful charset, return to ascii mode at the end */
+    if (client.CHARSET.search(/iso-2022/i) != -1)
+        client.ucConverter.ConvertToUnicode("\x1B(B");
+    return msg
+}
+
+function fromUnicode (msg)
+{
+    if (!("ucConverter" in client))
+        return msg;
+    
+    return client.ucConverter.ConvertFromUnicode(msg);
 }
 
 function setCharset (charset)
@@ -149,25 +166,40 @@ function setCharset (charset)
     {
         delete client.ucConverter;
         client.eventPump.removeHookByName("uc-hook");
-        return;
+        return true;
     }
     
-    if (!("ucConverter" in client))
+    var ex;
+    
+    try
     {
-        const UC_CTRID = "@mozilla.org/intl/scriptableunicodeconverter";
-        const nsIUnicodeConverter = 
-            Components.interfaces.nsIScriptableUnicodeConverter;
-        client.ucConverter =
-            Components.classes[UC_CTRID].createInstance(nsIUnicodeConverter);
+        
+        if (!("ucConverter" in client))
+        {
+            const UC_CTRID = "@mozilla.org/intl/scriptableunicodeconverter";
+            const nsIUnicodeConverter = 
+                Components.interfaces.nsIScriptableUnicodeConverter;
+            client.ucConverter =
+                Components.classes[UC_CTRID].getService(nsIUnicodeConverter);
+        }
+        
+        client.ucConverter.charset = charset;
+        
+        if (!client.eventPump.getHook("uc-hook"))
+        {
+            client.eventPump.addHook ([{type: "parseddata", set: "server"}],
+                                      ucConvertIncomingMessage, "uc-hook");
+        }
+    }
+    catch (ex)
+    {
+        dd ("Caught exception setting charset to " + charset + "\n" + ex);
+        client.CHARSET = "";
+        client.eventPump.removeHookByName("uc-hook");
+        return false;
     }
 
-    client.ucConverter.charset = charset;
-
-    if (!client.eventPump.getHook("uc-hook"))
-    {
-        client.eventPump.addHook ([{type: "privmsg", set: "server"}],
-                                  ucConvertIncomingMessage, "uc-hook");
-    }
+    return true;
 }
 
 function initStatic()
@@ -750,7 +782,7 @@ function cycleView (amount)
 
 function playSounds (list)
 {
-    ary = list.split (" ");
+    var ary = list.split (" ");
     if (ary.length == 0)
         return;
     
@@ -1356,7 +1388,7 @@ function gotoIRCURL (url)
                 targetObject.display (msg, "PRIVMSG", "ME!",
                                       client.currentObject);
             }
-            targetObject.say (msg);
+            targetObject.say (fromUnicode(msg));
             setCurrentObject (targetObject);
         }
     }
@@ -1961,7 +1993,7 @@ function filterOutput (msg, msgtype)
         }
     }
 
-    return ucConvertOutgoingMessage(msg);
+    return msg;
 }
 
 client.connectToNetwork =
@@ -2039,7 +2071,7 @@ function cli_say(msg)
             msg = filterOutput (msg, "PRIVMSG");
             client.currentObject.display (msg, "PRIVMSG", "ME!",
                                           client.currentObject);
-            client.currentObject.say (msg);
+            client.currentObject.say (fromUnicode(msg));
             break;
 
         case "IRCClient":
