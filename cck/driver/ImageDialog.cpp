@@ -128,3 +128,12 @@ void CImageDialog::ReadImageFromIniFile()
 	image.hBitmap = (HBITMAP)LoadImage(NULL, image.name, IMAGE_BITMAP, 0, 0,
 											LR_LOADFROMFILE|LR_CREATEDIBSECTION);
 }
+
+void CImageDialog::OnHelp() 
+{
+		CWnd Mywnd;
+		Mywnd.MessageBox("hello","hello",MB_OK);
+
+	// TODO: Add your control notification handler code here
+	
+}

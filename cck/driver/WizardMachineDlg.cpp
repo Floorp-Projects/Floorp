@@ -21,7 +21,8 @@
 
 #include "stdafx.h"
 #include "WizardMachine.h"
-#include "ImageDialog.h"
+//#include "ImageDialog.h"
+#include "ImgDlg.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -139,6 +140,16 @@ BOOL CWizardMachineDlg::OnInitDialog()
 	SetIcon(m_hIcon, FALSE);		// Set small icon
 	
 	// TODO: Add extra initialization here
+        // Hide "Help" button
+//         CWnd* pWnd = GetDlgItem(IDHELP);
+//       ASSERT_VALID(pWnd);
+//		pWnd = GetDlgItem(IDHELP);
+//       ASSERT_VALID(pWnd);
+//        if (pWnd)
+//        {
+//               pWnd->ShowWindow(SW_HIDE);
+//        }
+
 
 	return TRUE;  // return TRUE  unless you set the focus to a control
 }
@@ -325,3 +336,4 @@ in the ChangeTextColor() function
 	
 	return hbr;
 }
+

@@ -32,7 +32,7 @@ class CWizardUI : public CPropertyPage
 public:
 	CWizardUI();
 	~CWizardUI();
-
+//	void SetModified(BOOL how =TRUE);
 
 // Dialog Data
 	//{{AFX_DATA(CWizardUI)
@@ -51,6 +51,7 @@ public:
 	virtual LRESULT OnWizardBack();
 	virtual LRESULT OnWizardNext();
 	virtual BOOL OnWizardFinish();
+	virtual BOOL OnApply();
 	protected:
 	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV support
 	virtual BOOL OnCommand(WPARAM wParam, LPARAM lParam);

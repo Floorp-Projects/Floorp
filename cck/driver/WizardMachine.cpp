@@ -26,6 +26,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <direct.h>
+#include "HelpDlg.h"
+#include "WizHelp.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -38,10 +40,10 @@ static char THIS_FILE[] = __FILE__;
 
 BEGIN_MESSAGE_MAP(CWizardMachineApp, CWinApp)
 	//{{AFX_MSG_MAP(CWizardMachineApp)
-		// NOTE - the ClassWizard will add and remove mapping macros here.
+		// NOTE - the Class\ard will add and remove mapping macros here.
 		//    DO NOT EDIT what you see in these blocks of generated code!
 	//}}AFX_MSG
-	ON_COMMAND(ID_HELP, CWinApp::OnHelp)
+	ON_COMMAND(ID_HELP, CWizardMachineApp::HelpWiz)
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -262,8 +264,11 @@ BOOL CWizardMachineApp::InitInstance()
 
 	if (PageReturnValue == IDCANCEL)
 	{
-		theApp.CreateNewCache();
+	//	theApp.CreateNewCache();
 
+//		CWnd Mywnd;
+//		Mywnd.MessageBox("hello","hello",MB_OK);
+		theApp.CreateNewCache();
 		/**
 		NODE* tmpNode = WizardTree->childNodes[0];
 		while (!tmpNode->numWidgets) {
@@ -273,7 +278,21 @@ BOOL CWizardMachineApp::InitInstance()
 		CurrentNode = tmpNode;
 		**/
 	}
+	if (PageReturnValue == ID_HELP)
+	{
+		
+		CWnd Mywnd;
+		Mywnd.MessageBox("hello","hello",MB_OK);
+		/**
+		NODE* tmpNode = WizardTree->childNodes[0];
+		while (!tmpNode->numWidgets) {
+			tmpNode = tmpNode->childNodes[0];
+		}
 
+		CurrentNode = tmpNode;
+		**/
+	}
+//
 
 	//CreateNewCache();
 
@@ -315,6 +334,7 @@ NODE* CWizardMachineApp::CreateNode(NODE *parentNode, CString iniFile)
 	CString imageSection = "Image";
 	CStringArray bufferArray;	
 	NODE* NewNode = (NODE *) GlobalAlloc(0,sizeof(NODE) * 1);
+
 
 	NewNode->parent = parentNode;
 
@@ -1255,6 +1275,101 @@ void CWizardMachineApp::BuildWidget(WIDGET* aWidget, CString iniSection, CString
 	}
 }
 
+/*
+void CWizardMachineApp::BuildHelpWidget(WIDGET* aWidget, CString iniSection, CString iniFile, int pageBaseIndex)
+{
+	static int idCounter = 0;
+	char buffer[MAX_SIZE] = {'\0'};
+	char largeBuffer[EXTD_MAX_SIZE] = {'\0'};
+	
+	idCounter++;
+
+	GetPrivateProfileString(iniSection, "Name", "", buffer, MAX_SIZE, iniFile);
+	aWidget->name = buffer;
+
+	GetPrivateProfileString(iniSection, "Type", "", buffer, MAX_SIZE, iniFile);
+	aWidget->type = buffer;
+
+	GetPrivateProfileString(iniSection, "Options", "", buffer, MAX_SIZE, iniFile);
+	aWidget->items = buffer;
+
+	GetPrivateProfileString(iniSection, "Value", "", largeBuffer, EXTD_MAX_SIZE, iniFile);
+	aWidget->value = largeBuffer;
+	aWidget->value.TrimRight();
+	
+	GetPrivateProfileString(iniSection, "Title", "", buffer, MAX_SIZE, iniFile);
+	aWidget->title = buffer;
+
+	GetPrivateProfileString(iniSection, "Group", "", buffer, MAX_SIZE, iniFile);
+	aWidget->group = buffer;
+			
+	GetPrivateProfileString(iniSection, "Target", "", buffer, MAX_SIZE, iniFile);
+	aWidget->target = buffer;
+
+	GetPrivateProfileString(iniSection, "Start_x", "", buffer, MAX_SIZE, iniFile);
+	aWidget->location.x = atoi(buffer);
+
+	GetPrivateProfileString(iniSection, "Start_y", "", buffer, MAX_SIZE, iniFile);
+	aWidget->location.y = atoi(buffer);
+			
+	//aWidget->size = new DIMENSION;
+	GetPrivateProfileString(iniSection, "Width", "", buffer, MAX_SIZE, iniFile);
+	aWidget->size.width = atoi(buffer);
+	GetPrivateProfileString(iniSection, "Height", "", buffer, MAX_SIZE, iniFile);
+	aWidget->size.height = atoi(buffer);
+
+	GetPrivateProfileString(iniSection, "dll", "", buffer, MAX_SIZE, iniFile);
+	aWidget->action.dll = buffer;
+	GetPrivateProfileString(iniSection, "function", "", buffer, MAX_SIZE, iniFile);
+	aWidget->action.function = buffer;
+	GetPrivateProfileString(iniSection, "parameters", "", buffer, MAX_SIZE, iniFile);
+	strcpy(aWidget->action.parameters, buffer);
+
+	/// Dynamic ID allocation
+	aWidget->widgetID = pageBaseIndex + idCounter;
+
+			
+	// As the number of entries in the subsection are not known, a generic loop
+	// has been created to read all existing name/value pairs in the subsection
+	// and store them in the options component of the control.
+	GetPrivateProfileString(iniSection, "subsection", "", buffer, MAX_SIZE, iniFile);
+	if (strcmp(buffer, "") != 0) {
+		char* subSection;
+		subSection = new char[sizeof(buffer)];
+		strcpy(subSection, buffer);
+
+		if (aWidget->action.function == "")
+		{
+			int counter = 0;
+			int i = 0;
+			char* ComponentKey;
+			char ComponentKeyBuffer[MAX_SIZE];
+			if (GetPrivateProfileString(subSection, NULL, "", buffer, MAX_SIZE, iniFile) > 0)
+			{
+				while (buffer[i] != 0)
+				{
+					ComponentKey = &buffer[i];
+					if (GetPrivateProfileString(subSection, ComponentKey, "", ComponentKeyBuffer, MAX_SIZE, iniFile) > 0)
+					{
+						aWidget->options.name[counter] = new char[sizeof(ComponentKey)];
+						strcpy(aWidget->options.name[counter],ComponentKey);
+						aWidget->options.value[counter] = new char[sizeof(ComponentKeyBuffer)];
+						strcpy(aWidget->options.value[counter],ComponentKeyBuffer);	
+						counter++;
+					}
+					while (buffer[i] != 0)
+						i++;
+					i++;
+				}
+			}
+			aWidget->numOfOptions = counter;
+		}	
+		else {
+			aWidget->numOfOptions = 0;
+		}
+	}
+}
+*/
 void CWizardMachineApp::GenerateList(CString action, WIDGET* targetWidget, CString parentDirPath)
 {
 	WIDGET* curWidget = targetWidget;
@@ -1318,4 +1433,10 @@ void CWizardMachineApp::GenerateList(CString action, WIDGET* targetWidget, CStri
 	fileList.Close();
 }
 
+void CWizardMachineApp::HelpWiz()
+{
 
+
+			CWizHelp hlpdlg;
+			hlpdlg.DoModal();
+}

@@ -63,6 +63,8 @@ public:
 	IMAGE image;
 
 	void ReadImageFromIniFile();
+	void OnHelp(); 
+
 protected:
 
 	// Generated message map functions

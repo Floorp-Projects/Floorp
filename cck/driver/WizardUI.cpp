@@ -23,7 +23,9 @@
 #include "stdafx.h"
 #include "WizardMachine.h"
 #include "fstream.h"
-#include "ImageDialog.h"
+//#include "ImageDialog.h"
+#include "ImgDlg.h"
+#include "SumDlg.h"
 #include "NavText.h"
 #include "NewDialog.h"
 #include "NewConfigDialog.h"
@@ -104,7 +106,8 @@ END_MESSAGE_MAP()
 
 BOOL CWizardUI::OnSetActive() 
 {
-	if (!(CurrentNode->isWidgetsSorted)) {
+
+		if (!(CurrentNode->isWidgetsSorted)) {
 		SortWidgetsForTabOrder();
 	}
 
@@ -135,6 +138,7 @@ BOOL CWizardUI::OnSetActive()
 	}
 
 	// TODO: Add your specialized code here and/or call the base class
+//	SetModified(1);
 	return CPropertyPage::OnSetActive();
 }
 
@@ -497,9 +501,19 @@ BOOL CWizardUI::OnCommand(WPARAM wParam, LPARAM lParam)
 				}
 				else if (curWidget->action.function == "DisplayImage") {
 					// This is to dsiplay an image in a separate dialog
-					CImageDialog imgDlg(curWidget->action.parameters);
+					CImgDlg imgDlg(curWidget->action.parameters);
 					int retVal = imgDlg.DoModal();
 				}
+				else if (curWidget->action.function == "ShowSum") {
+					// This is to see if this works 
+//							CWnd Mywnd;
+//							Mywnd.MessageBox("hello","hello",MB_OK);
+							CSumDlg sumdlg;
+							int retVal = sumdlg.DoModal();
+
+							
+				}
+
 				else if (curWidget->action.function == "BrowseFile") {
 					// This is to browse to a file
 					CFileDialog fileDlg(TRUE, NULL, NULL, OFN_OVERWRITEPROMPT, NULL, NULL);
@@ -1295,5 +1309,12 @@ BOOL CWizardUI::OnWizardFinish()
 	UpdateGlobals();
 
 	return CPropertyPage::OnWizardFinish();
+}
+
+BOOL CWizardUI::OnApply() 
+{
+	// TODO: Add your specialized code here and/or call the base class
+	
+	return CPropertyPage::OnApply();
 }
 
