@@ -1250,8 +1250,6 @@ function SetDisplayMode(mode)
         gFormatToolbar.setAttribute("hidden", "true");
       }
 
-      // update commands to disable stuff
-      window.updateCommands("mode_switch");
       gSourceContentWindow.focus();
     }
     else
@@ -1265,11 +1263,11 @@ function SetDisplayMode(mode)
         gFormatToolbar.setAttribute("hidden", gFormatToolbarHidden);
       }
 
-      // update commands to re-enable stuff
-      window.updateCommands("mode_switch");
-
       gContentWindow.focus();
     }
+
+    // update commands to disable or re-enable stuff
+    window.updateCommands("mode_switch");
 
     // We must set check on menu item since toolbar may have been used
     document.getElementById("viewPreviewMode").setAttribute("checked","false");
