@@ -2049,6 +2049,9 @@ lo_NewElement(MWContext *context, lo_DocState *state, intn type,
 		case LO_SPACER:
 			size = sizeof(LO_SpacerStruct);
 			break;
+		case LO_FLOAT:
+			size = sizeof(LO_FloatStruct);
+                        break;
 		default:
 			size = sizeof(LO_Any);
 			break;
