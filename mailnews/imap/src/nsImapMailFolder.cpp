@@ -1316,6 +1316,7 @@ NS_IMETHODIMP nsImapMailFolder::EmptyTrash(nsIMsgWindow *aMsgWindow,
               }
             }
           }
+        }
           if (aListener)
           {
               rv = imapService->DeleteAllMessages(m_eventQueue, trashFolder,
@@ -1332,7 +1333,6 @@ NS_IMETHODIMP nsImapMailFolder::EmptyTrash(nsIMsgWindow *aMsgWindow,
           // to know if this fails so that it doesn't block waiting for empty trash to finish.
                   if (NS_FAILED(rv))
             return rv;
-        }
         if (hasSubfolders)
         {
             nsCOMPtr<nsIEnumerator> aEnumerator;
