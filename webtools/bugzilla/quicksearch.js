@@ -46,6 +46,10 @@ function do_shift(l) {
 }
 
 function go_to (url) {
+    // XXX specifying "sidebar" here indicates you want to use a
+    // function to do the actual loading instead of using the specified
+    // url directly. bug 236025 covers clarifying this. Pages that specify
+    // sidebar=1 *must* specify a load_absolute_url function meanwhile.
     if ( typeof sidebar != "undefined" && sidebar == 1 ) {
         load_absolute_url(url);
     } else {
