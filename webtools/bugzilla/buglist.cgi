@@ -599,6 +599,7 @@ document.write(\" <input type=button value=\\\"Uncheck All\\\" onclick=\\\"SetCh
 </TR>";
 
     if (Param("usetargetmilestone")) {
+        push(@::legal_target_milestone, " ");
         my $tfm_popup = make_options(\@::legal_target_milestone,
                                      $::dontchange);
         print "
