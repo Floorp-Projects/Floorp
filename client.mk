@@ -236,7 +236,12 @@ endif
 ifdef NSPR_CO_TAG
   NSPR_CO_FLAGS := $(NSPR_CO_FLAGS) -r $(NSPR_CO_TAG)
 endif
+# Cannot pull static tags by date
+ifeq ($(NSPR_CO_TAG),NSPR_CLIENT_TAG)
+CVSCO_NSPR = $(CVS) $(CVS_FLAGS) co $(NSPR_CO_FLAGS) $(NSPR_CO_MODULE)
+else
 CVSCO_NSPR = $(CVS) $(CVS_FLAGS) co $(NSPR_CO_FLAGS) $(CVS_CO_DATE_FLAGS) $(NSPR_CO_MODULE)
+endif
 
 ####################################
 # CVS defines for the C LDAP SDK
