@@ -38,20 +38,9 @@
 #***** END LICENSE BLOCK ***** -->
 
 # LOCALIZATION NOTE  Charset Coding Preferences Dialog: Do NOT localize the term "Character Coding"
-<!ENTITY charset.customize.title.label			    "Customize Character Coding">
-<!ENTITY charset.customize.left.header			    "Character Coding">
-<!ENTITY charset.customize.right.header			    "Select Supported Charsets">
-<!ENTITY charset.customize.current.label        "Active Character Codings:">
-<!ENTITY charset.customize.reorder.label        "Reorder">
-<!ENTITY charset.customize.remove.label         "Remove">
-<!ENTITY charset.customize.additional.label     "Available Character Codings:">
-<!ENTITY charset.customize.add.label            "Add">
-<!ENTITY charset.customize.cancel.label		      "Cancel">
-<!ENTITY charset.customize.save.label           "Save">
-<!ENTITY charset.customize.save.popup           "Please restart the browser for changes to take effect...">
-<!ENTITY charset.customize.moveUp.label         "Move Up">
-<!ENTITY charset.customize.moveUp.accesskey     "U">
-<!ENTITY charset.customize.moveDown.label       "Move Down">
-<!ENTITY charset.customize.moveDown.accesskey   "D">
-
-
+<!ENTITY title.label      "Customize Character Coding">
+<!ENTITY left.header      "Character Coding">
+<!ENTITY current.label    "Active Character Codings:">
+<!ENTITY remove.label     "Remove">
+<!ENTITY additional.label "Available Character Codings:">
+<!ENTITY add.label        "Add">
