@@ -86,6 +86,7 @@ for my $k (@revs) {
     if (! -r $fullname || IsHidden($fullname)) {
         next;
     }
+    &ChrootFilename($cvsroot, $fullname);
     open( DIFF, "$rcsdiffcommand -r$prevrev -r$rev -u " . shell_escape($fullname) ." 2>&1|" ) || die "rcsdiff failed\n";
     while(<DIFF>){
 		if (($_ =~ /RCS file/) || ($_ =~ /rcsdiff/)) { 

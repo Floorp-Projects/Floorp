@@ -112,6 +112,8 @@ unless ($found_rcs_file) {
     exit;
 }
 
+&ChrootFilename($root, $rcs_filename);
+
 # Hack these variables up the way that the cvsgraph executable wants them
 my $full_rcs_filename = $rcs_filename;
 $rcs_filename =~ s:^$root/::;

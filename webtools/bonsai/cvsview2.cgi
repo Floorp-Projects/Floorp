@@ -204,6 +204,7 @@ foreach $root (@SRCROOTS) {
     $dir = "$root/$opt_subdir";
     if (-d $dir) {
         $found = 1;
+        &ChrootFilename($root, $dir);
         last;
     }
 }

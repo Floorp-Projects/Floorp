@@ -245,6 +245,8 @@ sub query_checkins {
             next;
         }
 
+        next if ($key =~ m@^CVSROOT/@);
+
         if( $have_mod_map &&
            !&in_module(\%mod_map, $ci->[$::CI_DIR], $ci->[$::CI_FILE] ) ){
             next;
