@@ -2020,7 +2020,7 @@ env_setProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
             return JS_FALSE;
         }
         rv = putenv(waste);
-#ifndef XP_WIN
+#ifdef XP_WIN
         /*
          * HPUX9 at least still has the bad old non-copying putenv.
          *
