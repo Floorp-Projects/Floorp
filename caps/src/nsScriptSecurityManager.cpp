@@ -65,6 +65,7 @@
 #include "nsIDocShellTreeItem.h"
 #include "nsIPrompt.h"
 #include "nsIWindowWatcher.h"
+#include "nsIConsoleService.h"
 
 static NS_DEFINE_IID(kIIOServiceIID, NS_IIOSERVICE_IID);
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
@@ -554,6 +555,8 @@ NS_IMETHODIMP
 nsScriptSecurityManager::CheckLoadURI(nsIURI *aSourceURI, nsIURI *aTargetURI,
                                       PRUint32 aFlags)
 {
+    //-- Get the source and target schemes
+    //-- jar URIs can be nested. This loop finds the innermost base URI.
     nsCOMPtr<nsIJARURI> jarURI;
     nsCOMPtr<nsIURI> sourceUri(aSourceURI);
     while((jarURI = do_QueryInterface(sourceUri)))
@@ -562,16 +565,7 @@ nsScriptSecurityManager::CheckLoadURI(nsIURI *aSourceURI, nsIURI *aTargetURI,
 
     nsXPIDLCString sourceScheme;
     if (NS_FAILED(sourceUri->GetScheme(getter_Copies(sourceScheme))))
-        return NS_ERROR_FAILURE;
-
-    // Some loads are not allowed from mail/news messages
-    if ((aFlags & nsIScriptSecurityManager::DISALLOW_FROM_MAIL) && 
-        (nsCRT::strcasecmp(sourceScheme, "mailbox")  == 0 ||
-         nsCRT::strcasecmp(sourceScheme, "imap")     == 0 ||
-         nsCRT::strcasecmp(sourceScheme, "news")     == 0))
-    {
-        return NS_ERROR_DOM_BAD_URI;
-    }
+        return NS_ERROR_OUT_OF_MEMORY;
 
     nsCOMPtr<nsIURI> targetUri(aTargetURI);
     while((jarURI = do_QueryInterface(targetUri)))
@@ -580,7 +574,16 @@ nsScriptSecurityManager::CheckLoadURI(nsIURI *aSourceURI, nsIURI *aTargetURI,
 
     nsXPIDLCString targetScheme;
     if (NS_FAILED(targetUri->GetScheme(getter_Copies(targetScheme))))
-        return NS_ERROR_FAILURE;
+        return NS_ERROR_OUT_OF_MEMORY;
+
+    // Some loads are not allowed from mail/news messages
+    if ((aFlags & nsIScriptSecurityManager::DISALLOW_FROM_MAIL) && 
+        (nsCRT::strcasecmp(sourceScheme, "mailbox")  == 0 ||
+         nsCRT::strcasecmp(sourceScheme, "imap")     == 0 ||
+         nsCRT::strcasecmp(sourceScheme, "news")     == 0))
+    {
+        return ReportErrorToConsole(aTargetURI);
+    }
     
     if (nsCRT::strcasecmp(targetScheme, sourceScheme) == 0)
     {
@@ -588,36 +591,37 @@ nsScriptSecurityManager::CheckLoadURI(nsIURI *aSourceURI, nsIURI *aTargetURI,
         return NS_OK;
     }
 
-    enum Action { AllowProtocol, DenyProtocol, PrefControlled, ChromeProtocol };
+    enum Action { AllowProtocol, DenyProtocol, PrefControlled, ChromeProtocol, AboutProtocol };
     static const struct { 
         const char *name;
         Action action;
     } protocolList[] = {
         //-- Keep the most commonly used protocols at the top of the list
         //   to increase performance
-        { "http",            AllowProtocol },
+        { "http",            AllowProtocol  },
         { "file",            PrefControlled },
-        { "https",           AllowProtocol },
+        { "https",           AllowProtocol  },
         { "chrome",          ChromeProtocol },
-        { "mailbox",         DenyProtocol  },
-        { "pop",             AllowProtocol },
-        { "imap",            DenyProtocol  },
-        { "pop3",            DenyProtocol  },
-        { "news",            AllowProtocol },
-        { "javascript",      AllowProtocol },
-        { "ftp",             AllowProtocol },
-        { "about",           AllowProtocol },
-        { "mailto",          AllowProtocol },
-		{ "aim",          AllowProtocol },
-        { "data",            AllowProtocol },
-        { "keyword",         DenyProtocol  },
-        { "resource",        DenyProtocol  },
-        { "gopher",          AllowProtocol },
-        { "datetime",        DenyProtocol  },
-        { "finger",          AllowProtocol },
-        { "res",             DenyProtocol  }
+        { "mailbox",         DenyProtocol   },
+        { "pop",             AllowProtocol  },
+        { "imap",            DenyProtocol   },
+        { "pop3",            DenyProtocol   },
+        { "news",            AllowProtocol  },
+        { "javascript",      AllowProtocol  },
+        { "ftp",             AllowProtocol  },
+        { "about",           AboutProtocol  },
+        { "mailto",          AllowProtocol  },
+        { "aim",             AllowProtocol  },
+        { "data",            AllowProtocol  },
+        { "keyword",         DenyProtocol   },
+        { "resource",        DenyProtocol   },
+        { "gopher",          AllowProtocol  },
+        { "datetime",        DenyProtocol   },
+        { "finger",          AllowProtocol  },
+        { "res",             DenyProtocol   }
     };
 
+    nsXPIDLCString targetSpec;
     for (unsigned i=0; i < sizeof(protocolList)/sizeof(protocolList[0]); i++) {
         if (nsCRT::strcasecmp(targetScheme, protocolList[i].name) == 0) {
             PRBool doCheck = PR_FALSE;
@@ -628,13 +632,21 @@ nsScriptSecurityManager::CheckLoadURI(nsIURI *aSourceURI, nsIURI *aTargetURI,
             case PrefControlled:
                 // Allow access if pref is false
                 mPrefs->GetBoolPref("security.checkloaduri", &doCheck);
-                return doCheck ? NS_ERROR_DOM_BAD_URI : NS_OK;
+                return doCheck ? ReportErrorToConsole(aTargetURI) : NS_OK;
             case ChromeProtocol:
                 return (aFlags & nsIScriptSecurityManager::ALLOW_CHROME) ?
-                    NS_OK : NS_ERROR_DOM_BAD_URI; 
+                    NS_OK : ReportErrorToConsole(aTargetURI);
+            case AboutProtocol:
+                // Allow loading about:blank, otherwise deny
+                if(NS_FAILED(targetUri->GetSpec(getter_Copies(targetSpec))))
+                    return NS_ERROR_FAILURE;
+                return (PL_strcmp(targetSpec, "about:blank") == 0) || 
+                       (PL_strcmp(targetSpec, "about:") == 0) ||
+                       (PL_strcmp(targetSpec, "about:mozilla") == 0) ?
+                    NS_OK : ReportErrorToConsole(aTargetURI);
             case DenyProtocol:
                 // Deny access
-                return NS_ERROR_DOM_BAD_URI;
+                return ReportErrorToConsole(aTargetURI);
             }
         }
     }
@@ -642,9 +654,58 @@ nsScriptSecurityManager::CheckLoadURI(nsIURI *aSourceURI, nsIURI *aTargetURI,
     // If we reach here, we have an unknown protocol. Warn, but allow.
     // This is risky from a security standpoint, but allows flexibility
     // in installing new protocol handlers after initial ship.
-    NS_WARN_IF_FALSE(PR_FALSE, "unknown protocol");
+    NS_WARN_IF_FALSE(PR_FALSE, "unknown protocol in nsScriptSecurityManager::CheckLoadURI");
 
     return NS_OK;
+}
+
+nsresult 
+nsScriptSecurityManager::ReportErrorToConsole(nsIURI* aTarget)
+{
+    nsXPIDLCString spec;
+    nsresult rv = aTarget->GetSpec(getter_Copies(spec));
+    if (NS_FAILED(rv)) return rv;
+
+    nsAutoString msg;
+    msg.AssignWithConversion("The link to ");
+    msg.AppendWithConversion(spec);
+    msg.AppendWithConversion(" was blocked by the security manager.\nRemote content may not link to local content.");
+    // Report error in JS console
+    nsCOMPtr<nsIConsoleService> console(do_GetService("@mozilla.org/consoleservice;1"));
+    if (console)
+    {
+      PRUnichar* messageUni = msg.ToNewUnicode();
+      if (!messageUni)
+          return NS_ERROR_FAILURE;
+      console->LogStringMessage(messageUni);
+      nsMemory::Free(messageUni);
+    }
+#ifndef DEBUG
+    else // If JS console reporting failed, print to stderr.
+#endif
+    {
+      char* messageCstr = msg.ToNewCString();
+      if (!messageCstr)
+          return NS_ERROR_FAILURE;
+      fprintf(stderr, "%s\n", messageCstr);
+      PR_Free(messageCstr);
+    }
+    //-- Always returns an error
+    return NS_ERROR_DOM_BAD_URI;
+}
+
+
+NS_IMETHODIMP
+nsScriptSecurityManager::CheckLoadURIStr(const char* aSourceURIStr, const char* aTargetURIStr,
+                                         PRUint32 aFlags)
+{
+    nsCOMPtr<nsIURI> source;
+    nsresult rv = NS_NewURI(getter_AddRefs(source), aSourceURIStr, nsnull);
+    NS_ENSURE_SUCCESS(rv, rv);
+    nsCOMPtr<nsIURI> target;
+    rv = NS_NewURI(getter_AddRefs(target), aTargetURIStr, nsnull);
+    NS_ENSURE_SUCCESS(rv, rv);
+    return CheckLoadURI(source, target, aFlags);
 }
 
 NS_IMETHODIMP
