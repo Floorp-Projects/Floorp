@@ -51,12 +51,12 @@ static nsIMdbFactory *gMDBFactory = nsnull;
 
 nsMsgFolderCache::~nsMsgFolderCache()
 {
+	NS_RELEASE(m_cacheElements);
 	if (m_mdbStore)
 		m_mdbStore->Release();
 	if (gMDBFactory)
 		gMDBFactory->CutStrongRef(GetEnv());
 	gMDBFactory = nsnull;
-	NS_RELEASE(m_cacheElements);
 	if (m_mdbEnv)
 		m_mdbEnv->CutStrongRef(m_mdbEnv); //??? is this right?
 }
@@ -427,7 +427,8 @@ nsMsgFolderCache::FindCacheElementByURI(nsISupports *aElement, void *data)
 	if (entry && entry->m_uri && !PL_strcmp(key, entry->m_uri ))
 	{
 		entry->m_cacheElement = cacheElement;
-		NS_ADDREF(entry->m_cacheElement);
+		// caller will addref!
+//		NS_ADDREF(entry->m_cacheElement);
 		return PR_FALSE;
 	}
 
