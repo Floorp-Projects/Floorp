@@ -49,8 +49,6 @@ static NS_DEFINE_IID(kIScriptContextOwnerIID,  NS_ISCRIPTCONTEXTOWNER_IID);
 
 //----------------------------------------------------------------------
 
-//----------------------------------------------------------------------
-// Note: operator new zeros our memory
 nsXULCommand::nsXULCommand()
 {
   NS_INIT_REFCNT();
@@ -153,6 +151,7 @@ NS_IMETHODIMP nsXULCommand::SetEnabled(PRBool aIsEnabled)
   for (i = 0; i < n; i++) {
     nsCOMPtr<nsIDOMNode> node = dont_AddRef(NS_STATIC_CAST(nsIDOMNode*,mSrcWidgets.ElementAt(i)));
     nsCOMPtr<nsIDOMHTMLInputElement> input ( node );
+    //*** rewrite this part to set an attribute on a nsIDOMElement
     if ( input ) {
       input->SetDisabled(aIsEnabled);
     } else {
@@ -160,6 +159,7 @@ NS_IMETHODIMP nsXULCommand::SetEnabled(PRBool aIsEnabled)
       if ( btn )
         btn->SetDisabled(!aIsEnabled);
     }
+    //***
   }
   
   return NS_OK;
@@ -168,6 +168,7 @@ NS_IMETHODIMP nsXULCommand::SetEnabled(PRBool aIsEnabled)
 //----------------------------------------------------------------------
 NS_IMETHODIMP nsXULCommand::GetEnabled(PRBool & aIsEnabled)
 {
+  //*** rewrite this part to get an attribute on a nsIDOMElement
   aIsEnabled = mIsEnabled;
   return NS_OK;
 }
