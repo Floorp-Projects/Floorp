@@ -95,7 +95,7 @@ protected:
   PRBool mSizeSet;
   nsSize mOverflow;
   PRBool mIncludeOverflow;
-  nsCOMPtr<nsIPresShell> mPresShell;
+  nsIPresShell* mPresShell;
 };
 
 #endif
