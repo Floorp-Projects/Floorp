@@ -40,6 +40,26 @@
 
 .toolbarbutton-1 {
   list-style-image: url("chrome://messenger/skin/icons/btn1.gif");
+  min-width: 47px;
+  -moz-box-orient: vertical;
+}
+
+.toolbarbutton-1[type="menu"] > .toolbarbutton-menu-dropmarker {
+  display: none;
+}
+
+toolbar[mode="icons"] .toolbarbutton-text {
+  display: none;
+}
+
+toolbar[mode="text"] .toolbarbutton-menubutton-dropmarker,
+toolbar[mode="text"] .toolbarbutton-icon {
+  display: none;
+}
+
+toolbar[mode="text"] .toolbarbutton-text {
+  padding: 0 !important;
+  margin: 3px 5px !important;
 }
 
 #button-newcard {
