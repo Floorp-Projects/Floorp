@@ -40,6 +40,12 @@
 #include <prsystem.h>
 #include <prproces.h>
 
+#ifdef XP_UNIX
+/* for chmod */
+#include <sys/types.h>
+#include <sys/stat.h>
+#endif
+
 /*extern "C" {*/
 #include <jar.h>
 /*}*/

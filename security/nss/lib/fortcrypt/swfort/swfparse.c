@@ -334,7 +334,7 @@ FORT_GetSWFile(SECItem *initBits)
 
     /* copy the DER into the arena, since Quick DER returns data that points
        into the DER input, which may get freed by the caller */
-    rv = SECITEM_CopyItem(arena, &newInitBits, &initBits);
+    rv = SECITEM_CopyItem(arena, &newInitBits, initBits);
     if ( rv != SECSuccess ) {
         goto fail;
     }

@@ -717,8 +717,6 @@ CERT_NameToAscii(CERTName *name)
     CERTAVA** avas;
     CERTAVA* ava;
     PRBool first = PR_TRUE;
-    char *buf = NULL;
-    unsigned buflen = 0;
     stringBuf strBuf = { NULL, 0, 0 };
     
     rdns = name->rdns;
@@ -836,7 +834,6 @@ char *
 CERT_GetCertificateEmailAddress(CERTCertificate *cert)
 {
     char *rawEmailAddr = NULL;
-    char *emailAddr = NULL;
     SECItem subAltName;
     SECStatus rv;
     CERTGeneralName *nameList = NULL;

@@ -30,7 +30,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: sslauth.c,v 1.8 2002/02/27 04:40:15 nelsonb%netscape.com Exp $
+ * $Id: sslauth.c,v 1.9 2002/09/06 00:27:52 wtc%netscape.com Exp $
  */
 #include "cert.h"
 #include "secitem.h"
@@ -172,7 +172,6 @@ SECStatus
 SSL_AuthCertificateHook(PRFileDesc *s, SSLAuthCertificate func, void *arg)
 {
     sslSocket *ss;
-    SECStatus rv;
 
     ss = ssl_FindSocket(s);
     if (!ss) {
@@ -193,7 +192,6 @@ SSL_GetClientAuthDataHook(PRFileDesc *s, SSLGetClientAuthData func,
 			      void *arg)
 {
     sslSocket *ss;
-    SECStatus rv;
 
     ss = ssl_FindSocket(s);
     if (!ss) {
@@ -212,7 +210,6 @@ SECStatus
 SSL_SetPKCS11PinArg(PRFileDesc *s, void *arg)
 {
     sslSocket *ss;
-    SECStatus rv;
 
     ss = ssl_FindSocket(s);
     if (!ss) {

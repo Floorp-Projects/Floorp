@@ -1504,7 +1504,6 @@ pk11_handleKeyParameterObject(PK11Session *session, PK11Object *object)
 {
     PK11Attribute *attribute;
     CK_KEY_TYPE key_type;
-    CK_BBOOL cktrue = CK_TRUE;
     CK_BBOOL ckfalse = CK_FALSE;
     CK_RV crv;
 

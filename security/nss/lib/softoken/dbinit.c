@@ -32,7 +32,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- # $Id: dbinit.c,v 1.15 2002/08/23 02:12:05 relyea%netscape.com Exp $
+ # $Id: dbinit.c,v 1.16 2002/09/06 00:27:48 wtc%netscape.com Exp $
  */
 
 #include <ctype.h>
@@ -273,7 +273,6 @@ pk11_DBShutdown(NSSLOWCERTCertDBHandle *certHandle,
 
 static int rdbmapflags(int flags);
 static rdbfunc pk11_rdbfunc;
-static void *pk11_tnx;
 
 /* NOTE: SHLIB_SUFFIX is defined on the command line */
 #define RDBLIB "rdb."SHLIB_SUFFIX

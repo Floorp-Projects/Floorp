@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: wrap.c,v $ $Revision: 1.6 $ $Date: 2002/03/23 16:10:07 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: wrap.c,v $ $Revision: 1.7 $ $Date: 2002/09/06 00:27:33 $ $Name:  $";
 #endif /* DEBUG */
 
 /*
@@ -2500,7 +2500,6 @@ NSSCKFWC_FindObjects
   NSSCKFWSession *fwSession;
   NSSCKFWFindObjects *fwFindObjects;
   CK_ULONG i;
-  NSSArena *arena;
 
   if( (NSSCKFWInstance *)NULL == fwInstance ) {
     error = CKR_CRYPTOKI_NOT_INITIALIZED;
@@ -2512,13 +2511,6 @@ NSSCKFWC_FindObjects
     error = CKR_SESSION_HANDLE_INVALID;
     goto loser;
   }
-
-#ifdef notdef
-  arena = nssCKFWSession_GetArena(fwSession, &error);
-  if( (NSSArena *)NULL == arena ) {
-    goto loser;
-  }
-#endif
 
   if( (CK_OBJECT_HANDLE_PTR)CK_NULL_PTR == phObject ) {
     error = CKR_ARGUMENTS_BAD;

@@ -845,7 +845,7 @@ CK_RV NSC_Encrypt (CK_SESSION_HANDLE hSession, CK_BYTE_PTR pData,
     unsigned int maxoutlen = *pulEncryptedDataLen;
     CK_RV crv;
     CK_RV crv2;
-    SECStatus rv;
+    SECStatus rv = SECSuccess;
 
     /* make sure we're legal */
     crv = pk11_GetContext(hSession,&context,PK11_ENCRYPT,PR_FALSE,&session);
@@ -1003,7 +1003,7 @@ CK_RV NSC_Decrypt(CK_SESSION_HANDLE hSession,
     unsigned int maxoutlen = *pulDataLen;
     CK_RV crv;
     CK_RV crv2;
-    SECStatus rv;
+    SECStatus rv = SECSuccess;
 
     /* make sure we're legal */
     crv = pk11_GetContext(hSession,&context,PK11_DECRYPT,PR_FALSE,&session);
@@ -2129,7 +2129,7 @@ CK_RV NSC_Sign(CK_SESSION_HANDLE hSession,
     unsigned int outlen;
     unsigned int maxoutlen = *pulSignatureLen;
     CK_RV crv,crv2;
-    SECStatus rv;
+    SECStatus rv = SECSuccess;
 
     /* make sure we're legal */
     crv = pk11_GetContext(hSession,&context,PK11_SIGN,PR_FALSE,&session);

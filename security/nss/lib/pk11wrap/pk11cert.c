@@ -792,6 +792,7 @@ typedef struct pk11DoCertCallbackStr {
 	void *callbackArg;
 } pk11DoCertCallback;
 
+#ifdef NSS_CLASSIC
 /*
  * callback to map object handles to certificate structures.
  */
@@ -823,6 +824,7 @@ pk11_DoCerts(PK11SlotInfo *slot, CK_OBJECT_HANDLE certID, void *arg)
 	    
     return SECSuccess;
 }
+#endif
 
 static SECStatus
 pk11_CollectCrls(PK11SlotInfo *slot, CK_OBJECT_HANDLE crlID, void *arg)
@@ -2264,8 +2266,6 @@ PK11_FindCertAndKeyByRecipientList(PK11SlotInfo **slotPtr,
 	SEC_PKCS7RecipientInfo **array, SEC_PKCS7RecipientInfo **rip,
 				SECKEYPrivateKey**privKey, void *wincx)
 {
-    CK_OBJECT_HANDLE certHandle = CK_INVALID_HANDLE;
-    CK_OBJECT_HANDLE keyHandle = CK_INVALID_HANDLE;
     CERTCertificate *cert = NULL;
     SECStatus rv;
 

@@ -34,7 +34,7 @@
 /*
  * Permanent Certificate database handling code 
  *
- * $Id: pcertdb.c,v 1.30 2002/08/28 21:51:09 relyea%netscape.com Exp $
+ * $Id: pcertdb.c,v 1.31 2002/09/06 00:27:49 wtc%netscape.com Exp $
  */
 #include "prtime.h"
 
@@ -1039,7 +1039,6 @@ CreateCertEntry(void)
 static certDBEntryCert *
 ReadDBCertEntry(NSSLOWCERTCertDBHandle *handle, SECItem *certKey)
 {
-    PRArenaPool *arena = NULL;
     certDBEntryCert *entry;
     SECItem dbkey;
     SECItem dbentry;
@@ -3749,8 +3748,6 @@ openNewCertDB(const char *appName, const char *prefix, const char *certdbname,
     certDBEntryVersion *versionEntry = NULL;
     DB *updatedb = NULL;
     char *tmpname;
-    PRBool updated = PR_FALSE;
-    PRBool forceUpdate = PR_FALSE;
 
     if (appName) {
 	handle->permCertDB=rdbopen( appName, prefix, "cert", NO_CREATE);
@@ -4359,7 +4356,6 @@ static NSSLOWCERTCertificate *
 FindCertByKey(NSSLOWCERTCertDBHandle *handle, SECItem *certKey, PRBool lockdb)
 {
     NSSLOWCERTCertificate *cert = NULL;
-    PRArenaPool *arena = NULL;
     certDBEntryCert *entry;
     PRBool locked = PR_FALSE;
     
@@ -4399,7 +4395,6 @@ static NSSLOWCERTTrust *
 FindTrustByKey(NSSLOWCERTCertDBHandle *handle, SECItem *certKey, PRBool lockdb)
 {
     NSSLOWCERTTrust *trust = NULL;
-    PRArenaPool *arena = NULL;
     certDBEntryCert *entry;
     PRBool locked = PR_FALSE;
     
@@ -4791,7 +4786,6 @@ nsslowcert_FindCrlByKey(NSSLOWCERTCertDBHandle *handle,
     SECItem keyitem;
     DBT key;
     SECStatus rv;
-    SECItem *crl = NULL;
     PRArenaPool *arena = NULL;
     certDBEntryRevocation *entry = NULL;
     certDBEntryType crlType = isKRL ? certDBEntryTypeKeyRevocation  

@@ -34,7 +34,7 @@
 /*
  * Test program for SDR (Secret Decoder Ring) functions.
  *
- * $Id: sdrtest.c,v 1.7 2002/04/12 19:04:50 relyea%netscape.com Exp $
+ * $Id: sdrtest.c,v 1.8 2002/09/06 00:27:21 wtc%netscape.com Exp $
  */
 
 #include "nspr.h"
@@ -100,7 +100,6 @@ main (int argc, char **argv)
 {
     int		 retval = 0;  /* 0 - test succeeded.  -1 - test failed */
     SECStatus	 rv;
-    const char	*certDir = ".";
     PLOptState	*optstate;
     char	*program_name;
     const char  *input_file = NULL; 	/* read encrypted data from here (or create) */
@@ -236,7 +235,6 @@ file_loser:
       }
       if (slot) {
 	PK11_FreeSlot(slot);
-	slot == NULL;
       }
 
       rv = PK11SDR_Encrypt(&keyid, &data, &result, 0);

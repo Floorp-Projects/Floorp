@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: devslot.c,v $ $Revision: 1.11 $ $Date: 2002/07/09 04:40:35 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: devslot.c,v $ $Revision: 1.12 $ $Date: 2002/09/06 00:27:37 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef NSSCKEPV_H
@@ -91,6 +91,7 @@ static PRIntervalTime s_token_delay_time = 0;
 /* The flags needed to open a read-only session. */
 static const CK_FLAGS s_ck_readonly_flags = CKF_SERIAL_SESSION;
 
+#ifdef PURE_STAN_BUILD
 /* In pk11slot.c, this was a no-op.  So it is here also. */
 static CK_RV PR_CALLBACK
 nss_ck_slot_notify
@@ -103,7 +104,6 @@ nss_ck_slot_notify
     return CKR_OK;
 }
 
-#ifdef PURE_STAN_BUILD
 NSS_IMPLEMENT NSSSlot *
 nssSlot_Create
 (

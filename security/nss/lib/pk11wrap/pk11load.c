@@ -46,13 +46,13 @@ extern void FC_GetFunctionList(void);
 extern void NSC_GetFunctionList(void);
 extern void NSC_ModuleDBFunc(void);
 
-static char *modToDBG = NULL;
-
 #ifdef DEBUG
 #define DEBUG_MODULE 1
 #endif
 
 #ifdef DEBUG_MODULE
+static char *modToDBG = NULL;
+
 #include "debug_module.c"
 #endif
 

@@ -558,9 +558,8 @@ P12U_ExportPKCS12Object(char *nn, char *outfile, PK11SlotInfo *inSlot,
     SEC_PKCS12ExportContext *p12ecx = NULL;
     SEC_PKCS12SafeInfo *keySafe = NULL, *certSafe = NULL;
     SECItem *pwitem = NULL;
-    PK11SlotInfo *slot = NULL;
     p12uContext *p12cxt = NULL;
-    CERTCertificate *cert;
+    CERTCertificate *cert = NULL;
 
     if (P12U_InitSlot(inSlot, slotPw) != SECSuccess) {
 	SECU_PrintError(progName,"Failed to authenticate to \"%s\"",
@@ -641,9 +640,6 @@ P12U_ExportPKCS12Object(char *nn, char *outfile, PK11SlotInfo *inSlot,
     p12u_DestroyExportFileInfo(&p12cxt, PR_FALSE);
     SECITEM_ZfreeItem(pwitem, PR_TRUE);
     CERT_DestroyCertificate(cert);
-    if(slot) {
-	PK11_FreeSlot(slot);
-    }
 
     fprintf(stdout, "%s: PKCS12 EXPORT SUCCESSFUL\n", progName);
     SEC_PKCS12DestroyExportContext(p12ecx);
@@ -659,9 +655,6 @@ loser:
     if (p12FilePw)
 	PR_Free(p12FilePw->data);
 
-    if(slot && (slot != cert->slot)) {
-	PK11_FreeSlot(slot);
-    }
     if(cert) {
 	CERT_DestroyCertificate(cert);
     }

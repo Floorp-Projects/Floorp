@@ -32,7 +32,7 @@
  *
  * Private Key Database code
  *
- * $Id: keydb.c,v 1.28 2002/09/06 00:18:24 relyea%netscape.com Exp $
+ * $Id: keydb.c,v 1.29 2002/09/06 00:27:49 wtc%netscape.com Exp $
  */
 
 #include "lowkeyi.h"
@@ -539,12 +539,6 @@ makeGlobalSalt(NSSLOWKEYDBHandle *handle)
     }
 
     return(SECSuccess);
-}
-
-static char *
-keyDBFilenameCallback(void *arg, int dbVersion)
-{
-    return(PORT_Strdup((char *)arg));
 }
 
 static SECStatus

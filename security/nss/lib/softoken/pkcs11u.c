@@ -320,11 +320,6 @@ static const PK11Attribute pk11_StaticMustVerifyAttr =
   PK11_DEF_ATTRIBUTE(&pk11_staticMustVerifyValue,
 				sizeof(pk11_staticMustVerifyValue));
 
-static void pk11_FreeItem(SECItem *item)
-{
-    SECITEM_FreeItem(item, PR_TRUE);
-}
-
 static certDBEntrySMime *
 pk11_getSMime(PK11TokenObject *object)
 {

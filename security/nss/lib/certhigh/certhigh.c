@@ -388,8 +388,10 @@ CollectNicknames( NSSCertificate *c, void *data)
     PRBool saveit = PR_FALSE;
     stringNode *node;
     int len;
+#ifdef notdef
     NSSTrustDomain *td;
     NSSTrust *trust;
+#endif
     char *stanNickname;
     char *nickname = NULL;
     

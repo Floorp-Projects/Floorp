@@ -34,7 +34,7 @@
 /*
  * cmsutil -- A command to work with CMS data
  *
- * $Id: cmsutil.c,v 1.33 2002/08/27 13:14:36 kaie%netscape.com Exp $
+ * $Id: cmsutil.c,v 1.34 2002/09/06 00:27:23 wtc%netscape.com Exp $
  */
 
 #include "nspr.h"
@@ -47,6 +47,7 @@
 #include "cms.h"
 #include "nss.h"
 #include "smime.h"
+#include "pk11func.h"
 
 #if defined(XP_UNIX)
 #include <unistd.h>
@@ -195,7 +196,7 @@ struct encryptOptionsStr {
 
 static NSSCMSMessage *
 decode(FILE *out, SECItem *output, SECItem *input, 
-       struct decodeOptionsStr *decodeOptions)
+       const struct decodeOptionsStr *decodeOptions)
 {
     NSSCMSDecoderContext *dcx;
     NSSCMSMessage *cmsg;
