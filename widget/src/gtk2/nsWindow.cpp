@@ -1476,16 +1476,18 @@ nsWindow::OnKeyPressEvent(GtkWidget *aWidget, GdkEventKey *aEvent)
     // key down, key press and key up.  X only has key press and key
     // release.  gtk2 already filters the extra key release events for
     // us.
-    nsEventStatus status;
-    nsKeyEvent event;
 
     if (!mInKeyRepeat) {
         mInKeyRepeat = PR_TRUE;
         // send the key down event
+        nsEventStatus status;
+        nsKeyEvent event;
         InitKeyEvent(event, aEvent, NS_KEY_DOWN);
         DispatchEvent(&event, status);
     }
 
+    nsEventStatus status;
+    nsKeyEvent event;
     InitKeyEvent(event, aEvent, NS_KEY_PRESS);
     event.charCode = nsConvertCharCodeToUnicode(aEvent);
     if (event.charCode) {
