@@ -170,7 +170,6 @@ function sendEvent()
 	var nsIMsgAttachmentComponent;
 	var nsIMsgAttachment;
 
-	Event = gCalendarWindow.EventSelection.selectedEvents[0].clone();
 	CalendarDataFilePath = getCalendarDataFilePath();
 	if (! CalendarDataFilePath)
 	{
@@ -182,54 +181,74 @@ function sendEvent()
      * Where: San Francisco
 	 * see bug 59630
 	 */
-	if (Event)
-	{
-		// lets open a composer with fields and body prefilled
-		try
-		{
+   var CalendarText = "";
+   var EmailBody = "";
+   var Seperator = "";
+
+	for( var i = 0; i < gCalendarWindow.EventSelection.selectedEvents.length; i++ )
+   {
+      Event = gCalendarWindow.EventSelection.selectedEvents[0].clone();
+
+      if( Event )
+      {
          Event.alarm = false;
-         
-         if(Event.method == 0)
-             Event.method = Event.ICAL_METHOD_PUBLISH;
-			saveCalendarObject(CalendarDataFilePath, Event.getIcalString());
-			nsIMsgAttachmentComponent = Components.classes["@mozilla.org/messengercompose/attachment;1"];
-			nsIMsgAttachment = nsIMsgAttachmentComponent.createInstance(Components.interfaces.nsIMsgAttachment);
-			nsIMsgAttachment.name = emailStringBundle.GetStringFromName( "AttachmentName" );
-			nsIMsgAttachment.contentType = "text/calendar;"
-			nsIMsgAttachment.temporary = true;
-			nsIMsgAttachment.url = "file://" + CalendarDataFilePath;
-			// lets setup the fields for the message
-			nsIMsgCompFieldsComponent = Components.classes["@mozilla.org/messengercompose/composefields;1"];
-			nsIMsgCompFields = nsIMsgCompFieldsComponent.createInstance(Components.interfaces.nsIMsgCompFields);
-			nsIMsgCompFields.useMultipartAlternative = true;
-			nsIMsgCompFields.attachVCard = true;
-			nsIMsgCompFields.from = gMailIdentity.email;
-			nsIMsgCompFields.replyTo = gMailIdentity.replyTo;
-			nsIMsgCompFields.subject = Event.title;
-			nsIMsgCompFields.organization = gMailIdentity.organization;
-			nsIMsgCompFields.body = emailStringBundle.GetStringFromName( "When" )+" " + Event.start + "-" + Event.end + "\n"+emailStringBundle.GetStringFromName( "Where" )+" " + Event.location + "\n"+emailStringBundle.GetStringFromName( "Organizer" )+" " + gMailIdentity.fullName + " <" + gMailIdentity.email + ">" + "\n"+emailStringBundle.GetStringFromName( "Summary" )+":" + Event.description;
-			nsIMsgCompFields.addAttachment(nsIMsgAttachment);
-			/* later on we may be able to add:
-			 * returnReceipt, attachVCard
-			 */
-			// time to handle the message paramaters
-			nsIMsgComposeParamsComponent = Components.classes["@mozilla.org/messengercompose/composeparams;1"];
-			nsIMsgComposeParams = nsIMsgComposeParamsComponent.createInstance(Components.interfaces.nsIMsgComposeParams);
-			nsIMsgComposeParams.composeFields = nsIMsgCompFields;
-			nsIMsgCompFormat = Components.interfaces.nsIMsgCompFormat;
-			nsIMsgCompType = Components.interfaces.nsIMsgCompType;
-			nsIMsgComposeParams.format = nsIMsgCompFormat.PlainText; // this could be a pref for the user
-			nsIMsgComposeParams.type = nsIMsgCompType.New;
-			// finally lets pop open a composer window after all this work :)
-			nsIMsgComposeServiceComponent = Components.classes["@mozilla.org/messengercompose;1"];
-			nsIMsgComposeService = nsIMsgComposeServiceComponent.getService().QueryInterface(Components.interfaces.nsIMsgComposeService);
-			nsIMsgComposeService.OpenComposeWindowWithParams(null, nsIMsgComposeParams);
-		}
-		catch(ex)
-		{
-			mdebug("failed to get composer window\nex: " + ex);
-		}
-	}
+         if( Event.method == 0 )
+            Event.method = Event.ICAL_METHOD_PUBLISH;
+
+         CalendarText += Event.getIcalString();
+         EmailBody += emailStringBundle.GetStringFromName( "When" )+" " + Event.start + "-" + Event.end + "\n"+emailStringBundle.GetStringFromName( "Where" )+" " + Event.location + "\n"+emailStringBundle.GetStringFromName( "Organizer" )+" " + gMailIdentity.fullName + " <" + gMailIdentity.email + ">" + "\n"+emailStringBundle.GetStringFromName( "Summary" )+":" + Event.description;
+         EmailBody += Seperator;
+         Seperator = "\n";
+      }
+   }
+   
+   if( gCalendarWindow.EventSelection.selectedEvents.length == 1 )
+      var EmailSubject = Event.title;
+   else
+      var EmailSubject = emailStringBundle.GetStringFromName( "EmailSubject" );
+
+   saveCalendarObject(CalendarDataFilePath, CalendarText);
+
+   // lets open a composer with fields and body prefilled
+   try
+   {
+      nsIMsgAttachmentComponent = Components.classes["@mozilla.org/messengercompose/attachment;1"];
+      nsIMsgAttachment = nsIMsgAttachmentComponent.createInstance(Components.interfaces.nsIMsgAttachment);
+      nsIMsgAttachment.name = emailStringBundle.GetStringFromName( "AttachmentName" );
+      nsIMsgAttachment.contentType = "text/calendar;"
+      nsIMsgAttachment.temporary = true;
+      nsIMsgAttachment.url = "file://" + CalendarDataFilePath;
+      // lets setup the fields for the message
+      nsIMsgCompFieldsComponent = Components.classes["@mozilla.org/messengercompose/composefields;1"];
+      nsIMsgCompFields = nsIMsgCompFieldsComponent.createInstance(Components.interfaces.nsIMsgCompFields);
+      nsIMsgCompFields.useMultipartAlternative = true;
+      nsIMsgCompFields.attachVCard = true;
+      nsIMsgCompFields.from = gMailIdentity.email;
+      nsIMsgCompFields.replyTo = gMailIdentity.replyTo;
+      nsIMsgCompFields.subject = EmailSubject;
+      nsIMsgCompFields.organization = gMailIdentity.organization;
+      nsIMsgCompFields.body = EmailBody;
+      nsIMsgCompFields.addAttachment(nsIMsgAttachment);
+      /* later on we may be able to add:
+       * returnReceipt, attachVCard
+       */
+      // time to handle the message paramaters
+      nsIMsgComposeParamsComponent = Components.classes["@mozilla.org/messengercompose/composeparams;1"];
+      nsIMsgComposeParams = nsIMsgComposeParamsComponent.createInstance(Components.interfaces.nsIMsgComposeParams);
+      nsIMsgComposeParams.composeFields = nsIMsgCompFields;
+      nsIMsgCompFormat = Components.interfaces.nsIMsgCompFormat;
+      nsIMsgCompType = Components.interfaces.nsIMsgCompType;
+      nsIMsgComposeParams.format = nsIMsgCompFormat.PlainText; // this could be a pref for the user
+      nsIMsgComposeParams.type = nsIMsgCompType.New;
+      // finally lets pop open a composer window after all this work :)
+      nsIMsgComposeServiceComponent = Components.classes["@mozilla.org/messengercompose;1"];
+      nsIMsgComposeService = nsIMsgComposeServiceComponent.getService().QueryInterface(Components.interfaces.nsIMsgComposeService);
+      nsIMsgComposeService.OpenComposeWindowWithParams(null, nsIMsgComposeParams);
+   }
+   catch(ex)
+   {
+      mdebug("failed to get composer window\nex: " + ex);
+   }
 }
 
 /**** getCalendarDataFilePath
