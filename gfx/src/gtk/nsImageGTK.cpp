@@ -59,6 +59,7 @@ NS_IMPL_ISUPPORTS(nsImageGTK, kIImageIID);
 
 nsresult nsImageGTK :: Init(PRInt32 aWidth, PRInt32 aHeight, PRInt32 aDepth,nsMaskRequirements aMaskRequirements)
 {
+  fprintf(stderr, "nsImageGTK::Init called\n");
   if (nsnull != mImageBits)
    delete[] (PRUint8*)mImageBits;
 
