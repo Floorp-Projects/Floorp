@@ -144,11 +144,6 @@ PRBool nsDll::Load(void)
     //   on the dependent libraries with the assumption that the 
     //   component library holds a reference via the OS so loader.
 
-    if (!m_loader->mLoadedDependentLibs) {
-        NS_ERROR("huh?  no dependent libs");
-        return PR_TRUE;
-    }
-
 #if defined(XP_UNIX)
     nsCOMPtr<nsIComponentLoaderManager> manager = do_QueryInterface(m_loader->mCompMgr);
     if (!manager)
@@ -188,12 +183,12 @@ PRBool nsDll::Load(void)
         while (token!=nsnull)
         {
             nsCStringKey key(token);
-            if (m_loader->mLoadedDependentLibs->Get(&key)) {
+            if (m_loader.mLoadedDependentLibs->Get(&key)) {
                 token = nsCRT::strtok(newStr, " ", &newStr);
                 continue;
             }
 
-            m_loader->mLoadedDependentLibs->Put(&key, (void*)1);
+            m_loader.mLoadedDependentLibs->Put(&key, (void*)1);
 
             nsXPIDLCString libpath;
             file->SetNativeLeafName(nsDependentCString(token));
