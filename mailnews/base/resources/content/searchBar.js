@@ -166,7 +166,6 @@ function initializeSearchBar()
    createQuickSearchView();
    if (!gSearchSession)
    {
-     getDocumentElements();
      var searchSessionContractID = "@mozilla.org/messenger/searchSession;1";
      gSearchSession = Components.classes[searchSessionContractID].createInstance(Components.interfaces.nsIMsgSearchSession);
      initializeGlobalListeners();
@@ -185,6 +184,8 @@ function initializeSearchBar()
 
 function onEnterInSearchBar()
 {
+   if (!gSearchInput)
+     getDocumentElements();
    viewDebug ("onEnterInSearchBar gSearchInput.value = " + gSearchInput.value + " showing criteria = " + gSearchInput.showingSearchCriteria +"\n");
    if (gSearchInput.value == ""  /* || gSearchInput.showingSearchCriteria */) 
    {
