@@ -166,7 +166,7 @@
     
 		<splitter id="unifinder-splitter" collapse="before" persist="state hidden collapsed"
            class="chromeclass-extrachrome sidebar-splitter"
-           orient="vertical">
+           orient="horizontal">
        <grippy class="sidebar-splitter-grippy"/>
       </splitter>
 
