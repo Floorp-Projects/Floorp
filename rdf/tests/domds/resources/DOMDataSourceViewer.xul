@@ -24,8 +24,8 @@
     OOB data
   </html:div>
   <box align="horizontal">
-    <titledbutton onclick="loadUrl();" value="Load"/>
-    <titledbutton onclick="refreshTree();" value="Refresh"/>
+    <titledbutton class="push" onclick="loadUrl();" value="Load"/>
+    <titledbutton class="push" onclick="refreshTree();" value="Refresh"/>
   </box>
 <html:div flex="100%">
 <tree style="height:100%"
