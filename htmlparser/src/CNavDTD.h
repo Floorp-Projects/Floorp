@@ -512,10 +512,9 @@ protected:
     nsString            mScratch;  //used for various purposes; non-persistent
     nsAutoString        mMimeType;  //ok as an autostring; these are short.
     nsNodeAllocator     mNodeAllocator;
-    
+    nsString            mFilename; 
 
 #ifdef NS_DEBUG
-    nsString            mFilename;
     nsIDTDDebug*        mDTDDebug;
 #endif
     
