@@ -25,44 +25,43 @@
 	#include "nsAppleSingleDecoder.h"
 #endif
 
+#include "MoreFilesExtras.h"
+#include "MoreDesktopMgr.h"
 
-#ifdef dougt
-
-OSErr DTSetAPPL(constStr255Param volName,
+OSErr DTSetAPPL(Str255 volName,
                 short vRefNum,
                 OSType creator,
                 long applParID,
                 Str255 applName)
 {
-    OSErr error;
-    UniversalFMPB *pb = NULL;
+    OSErr err;
+    DTPBRec *pb = NULL;
     short dtRefNum;
-    Boolean realVRefNum;
-
+    short realVRefNum;
+    Boolean newDTDatabase;
     /* get the real vRefnum */
-    error = DetermineVRefNum(volName, vRefNum, &realVRefNum);
-    if (error == noErr)
+    err = DetermineVRefNum(volName, vRefNum, &realVRefNum);
+    if (err == noErr)
     {
-        error = DTOpen(volName, vRefNum, &dtRefNum, &newDTDatabase);
-        if (error == noErr && !newDTDatabase)
+        err = DTOpen(volName, vRefNum, &dtRefNum, &newDTDatabase);
+        if (err == noErr && !newDTDatabase)
         {
-            pb = (UniversalFMPB*) NewPtrClear( sizeof(UniversalFMPB) );
+            pb = (DTPBRec*) NewPtrClear( sizeof(DTPBRec) );
             
             if (pb==NULL) return -1;
 
-            pb->dtPB.ioNamePtr      =   appleName;
-            pb->dtPB.ioDTRefNum     =   dtRefNum;
-            pb->dtPB.ioDirID        =   appParID;
-            pb->dtPB.ioFileCreator  =   creator;
+            pb->ioNamePtr      =   applName;
+            pb->ioDTRefNum     =   dtRefNum;
+            pb->ioDirID        =   applParID;
+            pb->ioFileCreator  =   creator;
 
-            error = PBDTAddAPPLSync(&pb->dtPB);
+            err = PBDTAddAPPLSync(pb);
             
             if (pb) DisposePtr((Ptr)pb);
-        }
+        }        
     }
+    return err;
 }
-
-#endif
 
 /*----------------------------------------------------------------------*
  *   Constructors/Destructor
@@ -445,19 +444,19 @@ nsAppleSingleDecoder::ProcessFinderInfo(ASEntry inEntry)
 	err = PBSetCatInfo(&pb, false);
     
     
-#ifdef DOUGT
+
     if (info.ioFlFndrInfo.fdType == 'APPL')
     {
         // need to register in desktop database or bad things will happen
 
         DTSetAPPL(  NULL, 
-                    mOutSpec.vRefNum,
+                    mOutSpec->vRefNum,
                     info.ioFlFndrInfo.fdCreator,
-                    mOutSpec.parID,
-                    mOutSpec.name );
+                    mOutSpec->parID,
+                    mOutSpec->name );
 
     }
-#endif
+
 
 	return err;
 }
