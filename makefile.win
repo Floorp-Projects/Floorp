@@ -183,8 +183,10 @@ splitsymbols:
 
 componentreg:
 !if defined(MOZILLA_OFFICIAL)
+!if !defined(MOZ_STATIC_COMPONENT_LIBS)
 	cd $(DIST)\bin
 	regxpcom.exe
+!endif
 !endif
 
 install:: regchrome rebase splitsymbols componentreg
