@@ -126,6 +126,16 @@ public:
    * Load inline and attribute style sheets
    */
   NS_IMETHOD PrepareStyleSheets(nsIURI* aURI) = 0;
+
+  /**
+   * Notify the XUL document that a subtree has been added
+   */
+  NS_IMETHOD AddSubtreeToDocument(nsIContent* aElement) = 0;
+
+  /**
+   * Notify the XUL document that a subtree has been removed
+   */
+  NS_IMETHOD RemoveSubtreeFromDocument(nsIContent* aElement) = 0;
 };
 
 // factory functions
