@@ -148,7 +148,7 @@ sub GetBugText {
     
     my @collist = ("bug_id", "product", "version", "rep_platform", "op_sys",
                    "bug_status", "resolution", "priority", "bug_severity",
-                   "area", "assigned_to", "reporter", "bug_file_loc",
+                   "assigned_to", "reporter", "bug_file_loc",
                    "short_desc", "component", "qa_contact", "target_milestone",
                    "status_whiteboard", "groupset");
 
@@ -190,11 +190,14 @@ sub GetBugText {
 
     my @cclist;
     @cclist = split(/,/, ShowCcList($id));
+    my @voterlist;
     SendSQL("select profiles.login_name from votes, profiles where votes.bug_id = $id and profiles.userid = votes.who");
     while (MoreSQLData()) {
-        push(@cclist, FetchOneColumn());
+        my $v = FetchOneColumn();
+        push(@voterlist, $v);
     }
-    $::bug{'cclist'} = \@cclist;
+    $::bug{'cclist'} = join(',', @cclist);
+    $::bug{'voterlist'} = join(',', @voterlist);
 
 
     return "Bug\#: $id
@@ -207,11 +210,10 @@ Resolution: $::bug{'resolution'}
 Severity: $::bug{'bug_severity'}
 Priority: $::bug{'priority'}
 Component: $::bug{'component'}
-Area: $::bug{'area'}
 AssignedTo: $::bug{'assigned_to'}                            
 ReportedBy: $::bug{'reporter'}               
 $qa_contact$target_milestone${status_whiteboard}URL: $::bug{'bug_file_loc'}
-" . DescCC($::bug{'cclist'}) . "Summary: $::bug{'short_desc'}
+" . DescCC(\@cclist) . "Summary: $::bug{'short_desc'}
 " . DescDependencies($id) . "
 $::bug{'long_desc'}
 ";
@@ -225,7 +227,7 @@ sub fixaddresses {
     my ($field, $list) = (@_);
     my @result;
     foreach my $i (@$list) {
-        if ($i eq "") {
+        if (!defined $i || $i eq "") {
             next;
         }
         SendSQL("select emailnotification, groupset & $::bug{'groupset'} from profiles where login_name = " .
@@ -288,7 +290,11 @@ sub ProcessOneBug {
         my $tolist = fixaddresses("to",
                                   [$::bug{'assigned_to'}, $::bug{'reporter'},
                                    $::bug{'qa_contact'}]);
-        my $cclist = fixaddresses("cc", $::bug{'cclist'});
+        my @combinedcc;
+        foreach my $v (split(/,/, "$::bug{'cclist'},$::bug{'voterlist'}")) {
+            push @combinedcc, $v;
+        }
+        my $cclist = fixaddresses("cc", \@combinedcc);
         my $logstr = "Bug $i $verb";
         if ($tolist ne "" || $cclist ne "") {
             my %substs;
