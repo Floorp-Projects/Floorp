@@ -28,8 +28,68 @@ static NS_DEFINE_CID(kStdURLCID, NS_STANDARDURL_CID);
 static NS_DEFINE_CID(kThisStdURLImplementationCID,
                      NS_THIS_STANDARDURL_IMPLEMENTATION_CID);
 
-PRInt32 ExtractPortFrom(char* src, int start, int length);
-void ReplaceDotMess(char* io_Path);
+//----------------------------------------
+
+// Helper function to extract the port # from a string
+static PRInt32 ExtractPortFrom(char* src, int start, int length)
+{
+    char* port = new char[length +1];
+    PRInt32 returnValue = -1;
+    if (!port)
+        return returnValue; // ERROR!
+    PL_strncpyz(port, src+start, length+1);
+    returnValue = atoi(port);
+    delete[] port;
+    return returnValue;
+}
+
+// Replace all /./ with a /
+// Also changes all \ to /
+static void ReplaceDotMess(char* io_Path)
+{
+    /* Stolen from the old netlib's mkparse.c.
+     *
+     * modifies a url of the form   /foo/../foo1  ->  /foo1
+     *                       and    /foo/./foo1   ->  /foo/foo1
+     */
+    char *fwdPtr = io_Path;
+    char *urlPtr = io_Path;
+    
+    for(; *fwdPtr != '\0'; ++fwdPtr)
+    {
+        if (*fwdPtr == '\\')
+            *fwdPtr = '/';
+        if (*fwdPtr == '/' && *(fwdPtr+1) == '.' && 
+            (*(fwdPtr+2) == '/' || *(fwdPtr+2) == '\\'))
+        {
+            // remove . followed by slash or a backslash
+            fwdPtr += 1;
+        }
+        else if(*fwdPtr == '/' && *(fwdPtr+1) == '.' && *(fwdPtr+2) == '.' && 
+                (*(fwdPtr+3) == '/' || 
+                    *(fwdPtr+3) == '\0' || 
+                    *(fwdPtr+3) == '\\'))
+        {
+            // remove foo/.. 
+            // reverse the urlPtr to the previous slash 
+            if(urlPtr != io_Path) 
+                urlPtr--; // we must be going back at least by one 
+            for(;*urlPtr != '/' && urlPtr != io_Path; urlPtr--)
+                ;  // null body 
+
+            // forward the fwd_prt past the ../
+            fwdPtr += 2;
+        }
+        else
+        {
+            // copy the url incrementaly 
+            *urlPtr++ = *fwdPtr;
+        }
+    }
+    *urlPtr = '\0';  // terminate the url 
+}
+
+//----------------------------------------
 
 class nsParsePath
 {
@@ -655,18 +715,6 @@ nsStdURL::ExtractString(char* i_Source, char* *o_Destination, PRUint32 start, PR
     return (*o_Destination ? NS_OK : NS_ERROR_OUT_OF_MEMORY);
 }
 
-PRInt32 ExtractPortFrom(char* src, int start, int length)
-{
-    char* port = new char[length +1];
-    PRInt32 returnValue = -1;
-    if (!port)
-        return returnValue; // ERROR!
-    PL_strncpyz(port, src+start, length+1);
-    returnValue = atoi(port);
-    delete[] port;
-    return returnValue;
-}
-
 nsresult 
 nsStdURL::DupString(char* *o_Destination, const char* i_Source)
 {
@@ -708,7 +756,6 @@ nsStdURL::SetDirectory(const char* i_Directory)
 NS_IMETHODIMP
 nsStdURL::SetFileName(const char* i_FileName)
 {
-    nsParsePath pp(this); // Someone mayhave set .. in the name
     if (!i_FileName)
         return NS_ERROR_NULL_POINTER;
     
@@ -718,12 +765,18 @@ nsStdURL::SetFileName(const char* i_FileName)
     CRTFREEIF(mRef);
 
     //If it starts with a / then everything is the path.
-    if ('/' == *i_FileName)
+    if ('/' == *i_FileName) {
         return SetPath(i_FileName);
+    }
  
     if (mFileName) nsCRT::free(mFileName);
     nsresult status = DupString(&mFileName, i_FileName);
-    return (NS_FAILED(status) ? status : ReconstructPath());
+
+    // XXX This is ineffecient
+    ReconstructPath();
+    ParsePath();
+
+    return status;
 }
 
 NS_IMETHODIMP
@@ -773,15 +826,20 @@ nsStdURL::SetRelativePath(const char* i_Relative)
 
     // Need a better way to detect this ...
     // Check if :// is part of the string
-    char* AbsoluteUrl = PL_strstr(i_Relative,"://");
+    char* AbsoluteUrl = PL_strstr(i_Relative,":/");
     if (AbsoluteUrl) {
-        return SetSpec((char*)i_Relative);
+        // Make sure we don't have ...?scheme:/...
+        query = PL_strchr(i_Relative, '?');
+        if (!query || (query > AbsoluteUrl)) {
+            return SetSpec((char*)i_Relative);
+        }
     }
 
     switch (*i_Relative) 
     {
-        case '/': return SetPath((char*) i_Relative);
-            break;
+        case '/':
+            return SetPath((char*) i_Relative);
+
         case ';': 
             // Append to Filename add then call SetFilePath
             options = mFileName;
@@ -789,7 +847,7 @@ nsStdURL::SetRelativePath(const char* i_Relative)
             file = (char*)options.GetBuffer();
             rv = SetFileName(file);
             return rv;
-            break;
+
         case '?': 
             // check for ref part
             ref = PL_strrchr(i_Relative, '#');
@@ -807,18 +865,21 @@ nsStdURL::SetRelativePath(const char* i_Relative)
                 return rv;
             }
             break;
-        case '#': return SetRef((char*)i_Relative);
-            break;
-        default: return SetFileName((char*)i_Relative);
-            break;
+
+        case '#':
+            return SetRef((char*)i_Relative);
+
+        default:
+            return SetFileName((char*)i_Relative);
     }
 }
 
 nsresult
 nsStdURL::ReconstructPath(void)
 {
-    //Take all the elements of the path and construct it
     if (mPath) nsCRT::free(mPath);
+
+    //Take all the elements of the path and construct it
     nsAutoString path;
     if (mDirectory)
     {
@@ -843,8 +904,8 @@ nsStdURL::ReconstructPath(void)
         path += '#';
         path += mRef;
     }
-
     mPath = path.ToNewCString();
+
     return (mPath ? ReconstructSpec() : NS_ERROR_OUT_OF_MEMORY);
 }
 
@@ -866,10 +927,8 @@ nsStdURL::ParsePath(void)
         return (mDirectory ? ReconstructPath() : NS_ERROR_OUT_OF_MEMORY);
     }
 
-    char* dirfile;
-    char* options;
-    DupString(&dirfile, nsnull); 
-    DupString(&options, nsnull); 
+    char* dirfile = nsnull;
+    char* options = nsnull;
 
     int len = PL_strlen(mPath);
 
@@ -881,9 +940,10 @@ nsStdURL::ParsePath(void)
     {
         DupString(&dirfile, mPath); 
     } else {
-        ExtractString(mPath, &dirfile, 0, (brk-mPath));
-        ExtractString(mPath, &options, (brk-mPath), len-(brk-mPath));
-        brk = options;
+        int dirfileLen = brk - mPath;
+        ExtractString(mPath, &dirfile, 0, dirfileLen);
+        len -= dirfileLen;
+        ExtractString(mPath, &options, dirfileLen, len);
     }
 
     /* now that we have broken up the path treat every part differently */
@@ -913,7 +973,9 @@ nsStdURL::ParsePath(void)
         if (file != dirfile)
         {
             ExtractString(dirfile, &mDirectory, 0, (file - dirfile)+1);
-        } else DupString(&mDirectory, "/");
+        } else {
+            DupString(&mDirectory, "/");
+        }
     }
 
     /* Extract Filename */
@@ -928,24 +990,65 @@ nsStdURL::ParsePath(void)
         } 
     }
 
-    /* Now take a look at the options */
+    // Now take a look at the options. "#" has precedence over "?"
+    // which has precedence over ";"
+    if (options) {
+        // Look for "#" first. Everything following it is in the ref
+        brk = PL_strchr(options, '#');
+        if (brk) {
+            *brk = 0;
+            int pieceLen = len - (brk + 1 - options);
+            ExtractString(brk, &mRef, 1, pieceLen);
+            len -= pieceLen + 1;
+        }
+
+        // Now look for "?"
+        brk = PL_strchr(options, '?');
+        if (brk) {
+            *brk = 0;
+            int pieceLen = len - (brk + 1 - options);
+            ExtractString(brk, &mQuery, 1, pieceLen);
+            len -= pieceLen + 1;
+        }
+
+        // Now look for ';'
+        brk = PL_strchr(options, ';');
+        if (brk) {
+            int pieceLen = len - (brk + 1 - options);
+            ExtractString(brk, &mParam, 1, pieceLen);
+            len -= pieceLen + 1;
+        }
+    }
+
+#if 0
     while (brk)
     {
+        int pieceLen;
         char* lastbrk = brk;
         brk = PL_strpbrk(lastbrk+1, delimiters);
         switch (*lastbrk)
         {
-            case ';' : ExtractString(lastbrk, &mParam, 1, (brk ? (brk-lastbrk-1) : (len - (lastbrk-file) -1)));
-                break;
-            case '?' : ExtractString(lastbrk, &mQuery, 1, (brk ? (brk-lastbrk-1) : (len - (lastbrk-file) -1)));
-                break;
-            case '#' : ExtractString(lastbrk, &mRef, 1, (brk ? (brk-lastbrk-1) : (len - (lastbrk-file) -1)));
-                break;
+            case ';':
+              pieceLen = (brk ? (brk-lastbrk-1) : len);
+              ExtractString(lastbrk, &mParam, 1, pieceLen);
+              len -= pieceLen;
+              break;
+            case '?':
+              pieceLen = (brk ? (brk-lastbrk-1) : len);
+              ExtractString(lastbrk, &mQuery, 1, pieceLen);
+              len -= pieceLen;
+              break;
+            case '#':
+              pieceLen = (brk ? (brk-lastbrk-1) : len);
+              ExtractString(lastbrk, &mRef, 1, pieceLen);
+              len -= pieceLen;
+              break;
             default:
-                NS_ASSERTION(0, "This just can't be!");
-                break;
+              NS_ASSERTION(0, "This just can't be!");
+              break;
         }
     }
+#endif
 
     nsCRT::free(dirfile);
     nsCRT::free(options);
@@ -982,52 +1085,6 @@ nsStdURL::SetPath(const char* i_Path)
     ReconstructSpec();
     return status;
 }
-
-void ReplaceDotMess(char* io_Path)
-{
-    // Replace all /./ with a /
-    // Also changes all \ to /
-    /* Stolen from netlib's mkparse.c.
-     *
-     * modifies a url of the form   /foo/../foo1  ->  /foo1
-     *                       and    /foo/./foo1   ->  /foo/foo1
-     */
-    char *fwdPtr = io_Path;
-    char *urlPtr = io_Path;
-    
-    for(; *fwdPtr != '\0'; ++fwdPtr)
-    {
-        if (*fwdPtr == '\\')
-            *fwdPtr = '/';
-        if (*fwdPtr == '/' && *(fwdPtr+1) == '.' && 
-            (*(fwdPtr+2) == '/' || *(fwdPtr+2) == '\\'))
-        {
-            // remove . followed by slash or a backslash
-            fwdPtr += 1;
-        }
-        else if(*fwdPtr == '/' && *(fwdPtr+1) == '.' && *(fwdPtr+2) == '.' && 
-                (*(fwdPtr+3) == '/' || 
-                    *(fwdPtr+3) == '\0' || 
-                    *(fwdPtr+3) == '\\'))
-        {
-            // remove foo/.. 
-            // reverse the urlPtr to the previous slash 
-            if(urlPtr != io_Path) 
-                urlPtr--; // we must be going back at least by one 
-            for(;*urlPtr != '/' && urlPtr != io_Path; urlPtr--)
-                ;  // null body 
-
-            // forward the fwd_prt past the ../
-            fwdPtr += 2;
-        }
-        else
-        {
-            // copy the url incrementaly 
-            *urlPtr++ = *fwdPtr;
-        }
-    }
-    *urlPtr = '\0';  // terminate the url 
-}
     
 NS_METHOD
 nsStdURL::DirFile(char **o_DirFile)
@@ -1049,4 +1106,3 @@ nsStdURL::DirFile(char **o_DirFile)
         return NS_ERROR_OUT_OF_MEMORY;
     return NS_OK;
 }
-
