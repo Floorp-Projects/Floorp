@@ -3145,6 +3145,21 @@ nsMsgComposeAndSend::DeliverAsMailExit(nsIURL *aUrl, nsresult aExitCode)
     PR_FREEIF(eMsg);
     return;
   }
+#ifdef NS_DEBUG
+  else
+  {
+    char    buf[512];
+    char    *sub = NULL;
+
+    m_fields->GetSubject(&sub);
+
+    if (sub)
+      PR_snprintf(buf, sizeof(buf), "Message [%s] sent successfully!", sub);
+    else
+      PR_snprintf(buf, sizeof(buf), "Message sent successfully!");
+    nsMsgDisplayMessageByString(buf);
+  }
+#endif
 
   // If we get here...the send was successful, but now we have FCC operations
   // to deal with. 
