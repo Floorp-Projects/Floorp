@@ -19,6 +19,7 @@
  */
 
 var selectedServer   = null; 
+var nsPrefBranch = null;
 
 function OnInit()
 {
@@ -29,6 +30,19 @@ function OnInit()
     var acctName     = null;
     var brandBundle;
     var messengerBundle;
+
+    try {
+      if (!nsPrefBranch) {
+        var prefService = Components.classes["@mozilla.org/preferences-service;1"];
+        prefService = prefService.getService();
+        prefService = prefService.QueryInterface(Components.interfaces.nsIPrefService);
+
+        nsPrefBranch = prefService.getBranch(null);
+      }
+    }
+    catch (ex) {
+      dump("error getting pref service. "+ex+"\n");
+    }
 
     // Set the header for the page.
     // Title containts the brand name of the application and the account
@@ -107,6 +121,13 @@ function ArrangeAccountCentralItems(server, protocolInfo, msgFolder)
         if (!(canSubscribe || displayEmailHeader)) { 
             CollapseSectionSeparators("MessagesSection.separator", false);
         } 
+
+        /***** Accounts : Begin *****/
+
+        var canShowCreateAccount = ! nsPrefBranch.prefIsLocked("mail.accountmanager.accounts");
+        SetItemDisplay("CreateAccount", canShowCreateAccount);
+          
+        /***** Accounts : End *****/
 
         /***** Advanced Features header and items : Begin *****/
 

@@ -56,7 +56,7 @@ function enabling()
   var directoriesList =  document.getElementById("directoriesList"); 
   var directoriesListPopup = document.getElementById("directoriesListPopup");
   var editButton = document.getElementById("editButton");
-  if (override.checked)
+  if (override.checked && !override.disabled)
   {
     directoriesList.removeAttribute("disabled");
     directoriesListPopup.removeAttribute("disabled");

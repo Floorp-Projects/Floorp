@@ -55,12 +55,38 @@ var gPrefsBundle;
 var RDF;
 var accountManager;
 var smtpService;
+var nsPrefBranch;
 
 // widgets
 var duplicateButton;
 var deleteButton;
 var newAccountButton;
 var setDefaultButton;
+
+// This sets an attribute in a xul element so that we can later
+// know what value to substitute in a prefstring.  Different
+// preference types set different attributes.  We get the value
+// in the same way as the function getAccountValue() determines it.
+function updateElementWithKeys(account, element, type) {
+    switch (type)
+    {
+    case "identity":
+      element["identitykey"] = account.defaultIdentity.key;
+      break;
+    case "pop3":
+    case "imap":
+    case "nntp":
+    case "server":
+      element["serverkey"] = account.incomingServer.key;
+      break;
+    case "smtp":
+      element["serverkey"] = smtpService.defaultServer.key;
+      break;
+    default:
+//      dump("unknown element type! "+type+"\n");
+      break;
+    }
+}
 
 // called when the whole document loads
 // perform initialization here
@@ -79,6 +105,11 @@ function onLoad() {
   smtpService =
     Components.classes["@mozilla.org/messengercompose/smtp;1"].getService(Components.interfaces.nsISmtpService);
   accounttree = document.getElementById("accounttree");
+
+  var prefService = Components.classes["@mozilla.org/preferences-service;1"];
+  prefService = prefService.getService();
+  prefService=prefService.QueryInterface(Components.interfaces.nsIPrefService);
+  nsPrefBranch = prefService.getBranch(null);
 
   doSetOKCancel(onOk, 0);
 
@@ -314,6 +345,7 @@ function saveAccount(accountValues, account)
 
 
 function updateButtons(tree,serverId) {
+  var canCreate = true;
   var canDuplicate = true;
   var canDelete = true;
   var canSetDefault = true;
@@ -351,6 +383,19 @@ function updateButtons(tree,serverId) {
   if (tree.selectedItems.length < 1)
     canDuplicate = canSetDefault = canDelete = false;
 
+  // check for disabled preferences on the account buttons.  
+  //  Not currently handled by WSM or the main loop yet since these buttons aren't
+  //  under the IFRAME
+  if (nsPrefBranch.prefIsLocked(newAccountButton.getAttribute("prefstring")))
+    canCreate = false;
+  //if (nsPrefBranch.prefIsLocked(duplicateButton.getAttribute("prefstring")))
+  //  canDuplicate = false;
+  if (nsPrefBranch.prefIsLocked(setDefaultButton.getAttribute("prefstring")))
+    canSetDefault = false;
+  if (nsPrefBranch.prefIsLocked(deleteButton.getAttribute("prefstring")))
+    canDelete = false;
+
+  setEnabled(newAccountButton, canCreate);
   setEnabled(duplicateButton, canDuplicate);
   setEnabled(setDefaultButton, canSetDefault);
   setEnabled(deleteButton, canDelete);
@@ -543,7 +588,6 @@ function getAccountValue(account, accountValues, type, slot) {
 //
 function restorePage(pageId, serverId) {
   if (!serverId) return;
-
   var accountValues = getValueArrayFor(serverId);
   var pageElements = getPageFormElements();
 
@@ -560,9 +604,16 @@ function restorePage(pageId, serverId) {
         var vals = pageElements[i].id.split(".");
         var type = vals[0];
         var slot = vals[1];
-
+      // buttons are lockable, but don't have any data so we skip that part.
+      // elements that do have data, we get the values at poke them in.
+      if (pageElements[i].localName != "button") {
         var value = getAccountValue(account, accountValues, type, slot);
         setFormElementValue(pageElements[i], value);
+      }
+        updateElementWithKeys(account,pageElements[i],type);
+        var isLocked = getAccountValueIsLocked(pageElements[i]);
+        if (isLocked)
+          setEnabled(pageElements[i],false);
       }
   }
 

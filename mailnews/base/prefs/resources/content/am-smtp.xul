@@ -29,7 +29,10 @@
   
   <box>
     <spring flex="1"/>
-    <button label="&advanced.label;" oncommand="onAdvanced(event);"/>
+    <button label="&advanced.label;" oncommand="onAdvanced(event);"
+            wsm_persist="true" id="smtp.advancedbutton" 
+            pref="true" preftype="bool" prefattribute="disabled" 
+            prefstring="mail.smtpserver.%serverkey%.advanced.disable"/>
   </box>
   
   </titledbox>

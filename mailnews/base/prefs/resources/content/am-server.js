@@ -187,18 +187,23 @@ function setupBiffUI()
 { 
    var broadcaster = document.getElementById("broadcaster_doBiff");
 
-   var checked = document.getElementById("server.doBiff").checked;
+   var dobiff = document.getElementById("server.doBiff");
+   var checked = dobiff.checked;
+   var locked = getAccountValueIsLocked(dobiff);
+
    if (checked)
      broadcaster.removeAttribute("disabled");
    else
      broadcaster.setAttribute("disabled", "true");
+   if (locked)
+     broadcaster.setAttribute("disabled","true");
 }
 
 function setupMailOnServerUI()
 { 
    var checked = document.getElementById("pop3.leaveMessagesOnServer").checked;
-
-   document.getElementById("pop3.deleteMailLeftOnServer").disabled = !checked;
+   var locked = getAccountValueIsLocked(document.getElementById("pop3.leaveMessagesOnServer"));
+   document.getElementById("pop3.deleteMailLeftOnServer").disabled = locked || !checked ;
 }
 
 function setupLimitMessageSizeUI()
@@ -210,4 +215,6 @@ function setupLimitMessageSizeUI()
      broadcaster.removeAttribute("disabled");
    else
      broadcaster.setAttribute("disabled", "true");
+   if ( getAccountValueIsLocked(document.getElementById("server.limitMessageSize")) )
+     broadcaster.setAttribute("disable","true");
 }

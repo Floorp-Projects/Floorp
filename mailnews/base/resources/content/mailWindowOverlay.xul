@@ -729,11 +729,11 @@ Rights Reserved.
       key="key_newMessage"
       oncommand="MsgNewMessage(event);"/>
       <menu id="menu_New">
-        <menupopup id="menu_NewPopup">
+        <menupopup id="menu_NewPopup" oncreate="menu_new_init();">
           <menuitem label="&newFolderCmd.label;"
                      oncommand="MsgNewFolder(NewFolder);"
                      accesskey="&newFolderCmd.accesskey;"/>
-          <menuitem label="&newAccountCmd.label;"
+          <menuitem id="newAccountMenuItem" label="&newAccountCmd.label;"
                      accesskey="&newAccountCmd.accesskey;"
                      oncommand="MsgAccountWizard();"/>
           <menuseparator/>

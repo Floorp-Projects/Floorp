@@ -23,6 +23,24 @@
  */
 
 var gMessengerBundle;
+var nsPrefBranch = null;
+
+// Disable the new account menu item if the account preference is locked.
+// Two other affected areas are the account central and the account manager
+// dialog.
+function menu_new_init()
+{
+  if (!nsPrefBranch) {
+    var prefService = Components.classes["@mozilla.org/preferences-service;1"];
+    prefService = prefService.getService();
+    prefService = prefService.QueryInterface(Components.interfaces.nsIPrefService);
+
+    nsPrefBranch = prefService.getBranch(null);
+  }
+  var newAccountItem = document.getElementById('newAccountMenuItem');
+  if (nsPrefBranch.prefIsLocked("mail.accountmanager.accounts"))
+    newAccountItem.setAttribute("disabled","true");
+}
 
 function goUpdateMailMenuItems(commandset)
 {

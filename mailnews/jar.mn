@@ -50,6 +50,7 @@ messenger.jar:
     content/messenger/am-advanced_overlay.xul                                  (base/prefs/resources/content/pref-advanced_overlay.xul)
     content/messenger/am-appearance_overlay.xul                                (base/prefs/resources/content/pref-appearance_overlay.xul)
     content/messenger/am-tree_overlay.xul                                      (base/prefs/resources/content/pref-tree_overlay.xul)
+    content/messenger/am-prefs.js                                              (base/prefs/resources/content/am-prefs.js)
     content/messenger/pref-mailnews.xul                                        (base/prefs/resources/content/pref-mailnews.xul)
     content/messenger/pref-mailnews.js                                         (base/prefs/resources/content/pref-mailnews.js)
     content/messenger/pref-viewing_messages.xul                                (base/prefs/resources/content/pref-viewing_messages.xul)

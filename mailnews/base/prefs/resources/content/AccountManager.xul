@@ -15,6 +15,7 @@
 
 <stringbundle id="bundle_prefs" src="chrome://messenger/locale/prefs.properties"/>
 <script type="application/x-javascript" src="chrome://messenger/content/accountUtils.js"/>
+<script type="application/x-javascript" src="chrome://messenger/content/am-prefs.js"/>
 <script type="application/x-javascript" src="chrome://messenger/content/AccountManager.js"/>
 
   <keyset id="dialogKeys"/>
@@ -47,14 +48,20 @@
           </rule>
         </template>
       </tree>
-      <button label="&newAccountButton.label;" oncommand="onNewAccount(event);" id="newAccountButton"/>
-      <button label="&setDefaultButton.label;" oncommand="onSetDefault(event);" disabled="true" id="setDefaultButton"/>
+      <button label="&newAccountButton.label;" oncommand="onNewAccount(event);" id="newAccountButton"
+              pref="true" preftype="bool" prefattribute="disabled"
+              prefstring="mail.accountmanager.accounts"/>
+      <button label="&setDefaultButton.label;" oncommand="onSetDefault(event);" disabled="true" id="setDefaultButton"
+              pref="true" preftype="bool" prefattribute="disabled"
+              prefstring="mail.disable_button.set_default_account"/>
   
       <box >
         <!-- taking out for PR2
           <button class="dialog" disabled="true" label="&duplicateButton.label;" id="duplicateButton" oncommand="onDuplicateAccount();" flex="50%"/>
         -->
-        <button class="dialog" disabled="true" label="&deleteButton.label;" oncommand="onDeleteAccount(event);" id="deleteButton" flex="50%"/>
+        <button class="dialog" disabled="true" label="&deleteButton.label;" oncommand="onDeleteAccount(event);" id="deleteButton" flex="50%"
+                pref="true" preftype="bool" prefattribute="disabled"
+                prefstring="mail.disable_button.delete_account"/>
       </box>
     </box>
   

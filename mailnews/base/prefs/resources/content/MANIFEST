@@ -70,5 +70,6 @@ SmtpServerEdit.js
 smtpEditOverlay.xul
 smtpEditOverlay.js
 mailPrefsOverlay.xul
+am-prefs.js
 am-offline.xul
 am-offline.js

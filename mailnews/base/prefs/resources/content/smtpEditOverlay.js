@@ -90,8 +90,12 @@ function saveSmtpSettings(server)
 function onUseUsername(checkbox, dofocus)
 {
     if (checkbox.checked) {
-        gSmtpUsername.removeAttribute("disabled");
-        gSmtpUsernameLabel.removeAttribute("disabled");
+        // not only do we enable the elements when the check box is checked,
+        // but we also make sure that it's not disabled (ie locked) as well.
+        if (!checkbox.disabled) {
+            gSmtpUsername.removeAttribute("disabled");
+            gSmtpUsernameLabel.removeAttribute("disabled");
+        }
         if (dofocus)
             gSmtpUsername.focus();
         if (gSavedUsername && gSavedUsername != "")
@@ -105,5 +109,6 @@ function onUseUsername(checkbox, dofocus)
 }
 
 function updateControls() {
-
+    if (gSmtpTrySSL.disabled)  // see bug 70033 on why this is necessary for radiobuttons
+        gSmtpTrySSL.disabled = gSmtpTrySSL.disabled;
 }

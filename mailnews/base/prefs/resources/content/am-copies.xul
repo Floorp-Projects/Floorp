@@ -18,9 +18,15 @@
   <script type="application/x-javascript" src="chrome://messenger/content/widgetglue.js"/>
   <script type="application/x-javascript" src="chrome://messenger/content/am-copies.js"/>
   
-  <text hidden="true" wsm_persist="true" id="identity.fccFolder"/>
-  <text hidden="true" wsm_persist="true" id="identity.draftFolder"/>
-  <text hidden="true" wsm_persist="true" id="identity.stationeryFolder"/>
+  <text hidden="true" wsm_persist="true" id="identity.fccFolder"
+                pref="true" preftype="string" prefattribute="value"
+                prefstring="mail.identity.%identitykey%.fcc_folder"/>
+  <text hidden="true" wsm_persist="true" id="identity.draftFolder"
+                pref="true" preftype="string" prefattribute="value"
+                prefstring="mail.identity.%identitykey%.draft_folder"/>
+  <text hidden="true" wsm_persist="true" id="identity.stationeryFolder"
+                pref="true" preftype="string" prefattribute="value"
+                prefstring="mail.identity.%identitykey%.stationary_folder"/>
   <text hidden="true" wsm_persist="true" id="identity.email"/>
   
   <box class="box-smallheader" title="&copyAndFolderTitle.label;"/>
@@ -29,18 +35,28 @@
     <label value="&sendingPrefix.label;"/>
   
     <box autostretch="never">
-      <checkbox wsm_persist="true" id="identity.doFcc" label="&fccMailFolder.label;"/>
+      <checkbox wsm_persist="true" id="identity.doFcc" label="&fccMailFolder.label;"
+                pref="true" preftype="bool" prefattribute="value"
+                prefstring="mail.identity.%identitykey%.fcc"/>
       <spring flex="1"/>
-      <menulist id="msgFccFolderPicker" flex="1"/>
+      <menulist id="msgFccFolderPicker" flex="1">
+         <observes element="identity.fccFolder" attribute="disabled"/>
+      </menulist>
     </box>
   
     <box autostretch="never">
-      <checkbox wsm_persist="true" id="identity.bccSelf" before="&bccAccount.label; &lt;" after="&gt;"/>
+      <checkbox wsm_persist="true" id="identity.bccSelf" before="&bccAccount.label; &lt;" after="&gt;"
+                pref="true" preftype="bool" prefattribute="value"
+                prefstring="mail.identity.%identitykey%.bcc_self"/>
     </box>
       
     <box autostretch="never">
-      <checkbox wsm_persist="true" id="identity.bccOthers" label="&bccAddress.label;"/>
-      <textbox wsm_persist="true" id="identity.bccList" flex="1"/>
+      <checkbox wsm_persist="true" id="identity.bccOthers" label="&bccAddress.label;"
+                pref="true" preftype="bool" prefattribute="value"
+                prefstring="mail.identity.%identitykey%.bcc_other"/>
+      <textbox wsm_persist="true" id="identity.bccList" flex="1"
+               pref="true" preftype="string" prefattribute="value"
+               prefstring="mail.identity.%identitykey%.bcc_other_list"/>
     </box>
   </titledbox>
   
@@ -55,17 +71,23 @@
         <row autostretch="never">
           <text class="label" value="&draftMailFolder.label;" for="msgDraftsFolderPicker"/>
           <!-- name="identity.draftFolder" -->
-          <menulist id="msgDraftsFolderPicker"/>
+          <menulist id="msgDraftsFolderPicker">
+            <observes element="identity.draftFolder" attribute="disabled"/>
+          </menulist>
         </row>
         <row autostretch="never">
           <text class="label" value="&templateMailFolder.label;"/>
           <!-- name="identity.stationeryFolder " -->
-          <menulist id="msgStationeryFolderPicker"/>
+          <menulist id="msgStationeryFolderPicker">
+            <observes element="identity.stationeryFolder" attribute="disabled"/>
+          </menulist>
         </row>
       </rows>
     </grid>
     <box autostretch="never">
-      <checkbox wsm_persist="true" id="identity.showSaveMsgDlg" label="&saveMessageDlg.label;"/>
+      <checkbox wsm_persist="true" id="identity.showSaveMsgDlg" label="&saveMessageDlg.label;"
+                pref="true" preftype="bool" prefattribute="value"
+                prefstring="mail.identity.%identitykey%.showSaveMsgDlg"/>
     </box>
   </titledbox>
 
