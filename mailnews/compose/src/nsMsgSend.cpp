@@ -2774,10 +2774,15 @@ nsMsgComposeAndSend::InitCompositionFields(nsMsgCompFields *fields)
         useDefaultFCC = PR_FALSE;
         mCompFields->SetFcc("");
       }
-      else if (IsValidFolderURI(fieldsFCC))
+      else
       {
-        useDefaultFCC = PR_FALSE;
-        SetMimeHeader(nsMsgCompFields::MSG_FCC_HEADER_ID, fieldsFCC); 
+        nsCOMPtr<nsIMsgFolder> folder;
+        (void)GetExistingFolder(fieldsFCC, getter_AddRefs(folder));
+        if (folder)
+        {
+          useDefaultFCC = PR_FALSE;
+          SetMimeHeader(nsMsgCompFields::MSG_FCC_HEADER_ID, fieldsFCC); 
+        }
       }
     }
     
@@ -4070,6 +4075,7 @@ nsMsgComposeAndSend::MimeDoFCC(nsFileSpec       *input_file,
   PRUnichar     *printfString = nsnull;
   nsXPIDLString folderName;
   nsXPIDLString msg; 
+  nsCOMPtr<nsIMsgFolder> folder;
 
   // Before continuing, just check the user has not cancel the operation
   if (mSendProgress)
@@ -4160,7 +4166,9 @@ nsMsgComposeAndSend::MimeDoFCC(nsFileSpec       *input_file,
   // First, we we need to put a Berkeley "From - " delimiter at the head of 
   // the file for parsing...
   //
-  if ((mode == nsMsgDeliverNow || mode == nsMsgSendUnsent) && IsValidFolderURI(fcc_header))
+
+  (void)GetExistingFolder(fcc_header, getter_AddRefs(folder));
+  if ((mode == nsMsgDeliverNow || mode == nsMsgSendUnsent) && folder)
     turi = PL_strdup(fcc_header);
   else
     turi = GetFolderURIFromUserPrefs(mode, mUserIdentity);
