@@ -33,7 +33,7 @@
 
   <script language="JavaScript">
   <![CDATA[
-    _elementIDs = ["viewUseViewManager2", "nglayoutDebugWindow",
+    _elementIDs = ["nglayoutDebugWindow",
                    "debugXULBoxes", "nglayoutDebugPaintFlashing", "nglayoutDebugPaintDumping",
                    "nglayoutDebugInvalidateDumping", "nglayoutDebugEventDumping", "nglayoutDebugMotionEventDumping",
                    "nglayoutDebugCrossingEventDumping", "nglayoutDebugDisableXULCache", "browserEnableCache",
