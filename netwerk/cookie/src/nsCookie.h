@@ -77,6 +77,7 @@ class nsCookie : public nsICookie2
              const char     *aEnd,
              nsInt64         aExpiry,
              nsInt64         aLastAccessed,
+             PRUint32        aCreationTime,
              PRBool          aIsSession,
              PRBool          aIsSecure,
              nsCookieStatus  aStatus,
@@ -89,6 +90,7 @@ class nsCookie : public nsICookie2
      , mEnd(aEnd)
      , mExpiry(aExpiry)
      , mLastAccessed(aLastAccessed)
+     , mCreationTime(aCreationTime)
      , mRefCnt(0)
      , mIsSession(aIsSession != PR_FALSE)
      , mIsSecure(aIsSecure != PR_FALSE)
@@ -121,6 +123,7 @@ class nsCookie : public nsICookie2
     inline const nsDependentCString Path()  const { return nsDependentCString(mPath, mEnd); }
     inline nsInt64 Expiry()                 const { return mExpiry; }
     inline nsInt64 LastAccessed()           const { return mLastAccessed; }
+    inline PRUint32 CreationTime()          const { return mCreationTime; }
     inline PRBool IsSession()               const { return mIsSession; }
     inline PRBool IsDomain()                const { return *mHost == '.'; }
     inline PRBool IsSecure()                const { return mIsSecure; }
@@ -131,6 +134,7 @@ class nsCookie : public nsICookie2
     inline void SetLastAccessed(nsInt64 aLastAccessed) { mLastAccessed = aLastAccessed; }
     inline void SetExpiry(PRInt64 aExpiry)             { mExpiry = aExpiry; }
     inline void SetIsSession(PRBool aIsSession)        { mIsSession = aIsSession; }
+    inline void SetCreationTime(PRUint32 aCT)          { mCreationTime = aCT; }
 
     // linked list management helper
     inline nsCookie*& Next() { return mNext; }
@@ -150,6 +154,7 @@ class nsCookie : public nsICookie2
     const char *mEnd;
     nsInt64     mExpiry;
     nsInt64     mLastAccessed;
+    PRUint32    mCreationTime;
     PRUint32    mRefCnt    : 16;
     PRUint32    mIsSession : 1;
     PRUint32    mIsSecure  : 1;
