@@ -1786,10 +1786,19 @@ NS_IMETHODIMP nsPluginHostImpl::SetUpPluginInstance(const char *aMimeType,
       return NS_ERROR_OUT_OF_MEMORY;
 
     // set up the peer for the instance
-    peer->Initialize(aOwner, mimetype);     
+    peer->Initialize(aOwner, mimetype);   
+
+    nsIPluginInstancePeer *pi;
+
+    result = peer->QueryInterface(kIPluginInstancePeerIID, (void **)&pi);
+
+    if(result != NS_OK)
+      return result;
 
     // tell the plugin instance to initialize itself and pass in the peer.
-    instance->Initialize(peer);  // this will not add a ref to the instance (or owner). MMP
+    instance->Initialize(pi);  // this will not add a ref to the instance (or owner). MMP
+
+    NS_RELEASE(pi);
 
     AddInstanceToActiveList(instance, aURL);
 
@@ -2169,7 +2178,8 @@ NS_IMETHODIMP nsPluginHostImpl::LoadPlugins()
         if (pluginFile.LoadPlugin(pluginLibrary) == NS_OK && pluginLibrary != NULL) {
 #endif
 					// create a tag describing this plugin.
-					nsPluginTag* pluginTag = new nsPluginTag();
+/*
+          nsPluginTag* pluginTag = new nsPluginTag();
           if(pluginTag == nsnull)
             return NS_ERROR_OUT_OF_MEMORY;
 
@@ -2193,6 +2203,23 @@ NS_IMETHODIMP nsPluginHostImpl::LoadPlugins()
 					pluginTag->mLibrary = pluginLibrary;
 					pluginTag->mEntryPoint = NULL;
 					pluginTag->mFlags = 0;
+*/
+	        nsPluginInfo info = { sizeof(info) };
+	        if (pluginFile.GetPluginInfo(info) != NS_OK)
+        	  return NS_ERROR_FAILURE;
+
+          nsPluginTag* pluginTag = new nsPluginTag(&info);
+
+          pluginFile.FreePluginInfo(info);
+
+          if(pluginTag == nsnull)
+            return NS_ERROR_OUT_OF_MEMORY;
+
+				  pluginTag->mNext = mPlugins;
+				  mPlugins = pluginTag;
+				  
+          pluginTag->mLibrary = pluginLibrary;
+
 #ifndef XP_WIN
 				}
 #endif
@@ -2281,6 +2308,9 @@ NS_IMETHODIMP nsPluginHostImpl::LoadPlugins()
         	return NS_ERROR_FAILURE;
 
         nsPluginTag* pluginTag = new nsPluginTag(&info);
+
+        pluginFile.FreePluginInfo(info);
+
         if(pluginTag == nsnull)
           return NS_ERROR_OUT_OF_MEMORY;
 
@@ -2315,6 +2345,9 @@ NS_IMETHODIMP nsPluginHostImpl::LoadPlugins()
         	return NS_ERROR_FAILURE;
 
 				nsPluginTag* pluginTag = new nsPluginTag(&info);
+
+        pluginFile.FreePluginInfo(info);
+
         if(pluginTag == nsnull)
           return NS_ERROR_OUT_OF_MEMORY;
 

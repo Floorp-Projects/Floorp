@@ -176,3 +176,8 @@ nsresult nsPluginFile::GetPluginInfo(nsPluginInfo& info)
 	}
 	return NS_OK;
 }
+
+nsresult nsPluginFile::FreePluginInfo(nsPluginInfo& info)
+{
+  return NS_OK;
+}
