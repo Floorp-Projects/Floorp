@@ -44,6 +44,7 @@
 #include "nsReadableUtils.h"
 #include "nsCRT.h"
 #include "prprf.h"
+#include "nsAutoBuffer.h"
 
 #include <ctype.h>
 
@@ -91,6 +92,11 @@ static int posix_locale_category[LocaleListLength] =
   LC_CTYPE
 #endif
 };
+#endif
+
+#ifdef XP_MACOSX
+typedef CFLocaleRef (*fpCFLocaleCopyCurrent_type) ();
+typedef CFStringRef (*fpCFLocaleGetIdentifier_type) (CFLocaleRef);
 #endif
 
 //
@@ -280,21 +286,81 @@ nsLocaleService::nsLocaleService(void)
 #endif
 
 #if defined(XP_MAC) || defined(XP_MACOSX)
-	long script = GetScriptManagerVariable(smSysScript);
-	long lang = GetScriptVariable(smSystemScript,smScriptLang);
-	long region = GetScriptManagerVariable(smRegionCode);
-	nsCOMPtr<nsIMacLocale> macConverter = do_CreateInstance(NS_MACLOCALE_CONTRACTID);
-	if (macConverter) {
-		nsresult result;
-		nsAutoString xpLocale;
-		result = macConverter->GetXPLocale((short)script,(short)lang,(short)region, xpLocale);
-		if (NS_SUCCEEDED(result)) {
-			result = NewLocale(xpLocale, getter_AddRefs(mSystemLocale));
-			if (NS_SUCCEEDED(result)) {
-				mApplicationLocale = mSystemLocale;
-			}
-		}
-	}
+    // On MacOSX, the recommended way to get the user's current locale is to use
+    // the CFLocale APIs.  However, these are only available on 10.3 and later.
+    // So for the older systems, we have to keep using the Script Manager APIs.
+
+    static PRBool checked = PR_FALSE;
+    static fpCFLocaleCopyCurrent_type fpCFLocaleCopyCurrent = NULL;
+    static fpCFLocaleGetIdentifier_type fpCFLocaleGetIdentifier = NULL;
+
+    if (!checked)
+    {
+        CFBundleRef bundle =
+            ::CFBundleGetBundleWithIdentifier(CFSTR("com.apple.Carbon"));
+        if (bundle)
+        {
+            // We dynamically load these two functions and only use them if
+            // they are available (OS 10.3+).
+            fpCFLocaleCopyCurrent = (fpCFLocaleCopyCurrent_type)
+                ::CFBundleGetFunctionPointerForName(bundle,
+                                                    CFSTR("CFLocaleCopyCurrent"));
+            fpCFLocaleGetIdentifier = (fpCFLocaleGetIdentifier_type)
+                ::CFBundleGetFunctionPointerForName(bundle,
+                                                    CFSTR("CFLocaleGetIdentifier"));
+        }
+        checked = PR_TRUE;
+    }
+
+    if (fpCFLocaleCopyCurrent)
+    {
+        // Get string representation of user's current locale
+        CFLocaleRef userLocaleRef = fpCFLocaleCopyCurrent();
+        CFStringRef userLocaleStr = fpCFLocaleGetIdentifier(userLocaleRef);
+        ::CFRetain(userLocaleStr);
+
+        nsAutoBuffer<UniChar, 32> buffer;
+        int size = ::CFStringGetLength(userLocaleStr);
+        if (buffer.EnsureElemCapacity(size))
+        {
+            CFRange range = ::CFRangeMake(0, size);
+            ::CFStringGetCharacters(userLocaleStr, range, buffer.get());
+            buffer.get()[size] = 0;
+
+            // Convert the locale string to the format that Mozilla expects
+            nsAutoString xpLocale(buffer.get());
+            xpLocale.ReplaceChar('_', '-');
+
+            nsresult rv = NewLocale(xpLocale, getter_AddRefs(mSystemLocale));
+            if (NS_SUCCEEDED(rv)) {
+              mApplicationLocale = mSystemLocale;
+            }
+        }
+
+        ::CFRelease(userLocaleStr);
+        ::CFRelease(userLocaleRef);
+
+        NS_ASSERTION(mApplicationLocale, "Failed to create locale objects");
+    }
+    else
+    {
+        // Legacy MacOSX locale code
+        long script = GetScriptManagerVariable(smSysScript);
+        long lang = GetScriptVariable(smSystemScript,smScriptLang);
+        long region = GetScriptManagerVariable(smRegionCode);
+        nsCOMPtr<nsIMacLocale> macConverter = do_CreateInstance(NS_MACLOCALE_CONTRACTID);
+        if (macConverter) {
+            nsresult result;
+            nsAutoString xpLocale;
+            result = macConverter->GetXPLocale((short)script,(short)lang,(short)region, xpLocale);
+            if (NS_SUCCEEDED(result)) {
+                result = NewLocale(xpLocale, getter_AddRefs(mSystemLocale));
+                if (NS_SUCCEEDED(result)) {
+                    mApplicationLocale = mSystemLocale;
+                }
+            }
+        }
+    }
 #endif
 }
 
