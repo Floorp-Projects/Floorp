@@ -220,6 +220,27 @@ if (defined $::FORM{'cc'}) {
         }
     }
 }
+# Check for valid keywords and create list of keywords to be added to db
+# (validity routine copied from process_bug.cgi)
+my @keywordlist;
+my %keywordseen;
+
+if ($::FORM{'keywords'} && UserInGroup("editbugs")) {
+    foreach my $keyword (split(/[\s,]+/, $::FORM{'keywords'})) {
+        if ($keyword eq '') {
+           next;
+        }
+        my $i = GetKeywordIdFromName($keyword);
+        if (!$i) {
+            $vars->{'keyword'} = $keyword;
+            ThrowUserError("unknown_keyword");
+        }
+        if (!$keywordseen{$i}) {
+            push(@keywordlist, $i);
+            $keywordseen{$i} = 1;
+        }
+    }
+}
 
 # Build up SQL string to add bug.
 my $sql = "INSERT INTO bugs " . 
@@ -279,6 +300,13 @@ SendSQL("INSERT INTO longdescs (bug_id, who, bug_when, thetext)
 # Insert the cclist into the database
 foreach my $ccid (keys(%ccids)) {
     SendSQL("INSERT INTO cc (bug_id, who) VALUES ($id, $ccid)");
+}
+
+if (UserInGroup("editbugs")) {
+    foreach my $keyword (@keywordlist) {
+        SendSQL("INSERT INTO keywords (bug_id, keywordid) 
+                 VALUES ($id, $keyword)");
+    }
 }
 
 SendSQL("UNLOCK TABLES") if Param("shadowdb");
