@@ -119,6 +119,7 @@ protected:
   NS_IMETHOD GetEncoder(nsIUnicodeEncoder** encoder);
   NS_IMETHOD GetPlatformEncoder(nsIUnicodeEncoder** encoder);
   void GetSubmitCharset(nsString& oCharset);
+  void UpdateSubmitter(nsIFormControlFrame * aFrame);
 
   nsVoidArray          mFormControls;
   nsVoidArray          mRadioGroups;
