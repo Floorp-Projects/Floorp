@@ -117,7 +117,6 @@ nsHTMLDocument::StartDocumentLoad(nsIURL *aURL,
     rv = NS_NewHTMLContentSink(&sink, this, aURL, aWebWidget);
 #endif
 
-    rv = NS_NewHTMLContentSink(&sink, this, aURL, aWebWidget);
     if (NS_OK == rv) {
       nsIHTMLCSSStyleSheet* styleAttrSheet;
       if (NS_OK == NS_NewHTMLCSSStyleSheet(&styleAttrSheet, aURL)) {
