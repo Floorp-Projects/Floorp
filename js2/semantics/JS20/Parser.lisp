@@ -16,14 +16,14 @@
     (production :identifier ($identifier) identifier-identifier)
     (production :identifier (get) identifier-get)
     (production :identifier (set) identifier-set)
-    (? js2
-      (production :identifier (include) identifier-include))
+    (production :identifier (exclude) identifier-exclude)
+    (production :identifier (include) identifier-include)
     
     (production :qualifier (:identifier) qualifier-identifier)
     (production :qualifier (public) qualifier-public)
     (production :qualifier (private) qualifier-private)
     (production :qualifier (super) qualifier-super)
-    (production :qualifier (:qualifier \:\: :identifier) qualifier-identifier-qualifier)
+    ;(production :qualifier (:qualifier \:\: :identifier) qualifier-identifier-qualifier)
     
     (production :simple-qualified-identifier (:identifier) simple-qualified-identifier-identifier)
     (production :simple-qualified-identifier (:qualifier \:\: :identifier) simple-qualified-identifier-qualifier)
@@ -38,7 +38,7 @@
     (production :unit-expression (:parenthesized-list-expression) unit-expression-parenthesized-list-expression)
     (production :unit-expression ($number :no-line-break $string) unit-expression-number-with-unit)
     (production :unit-expression (:unit-expression :no-line-break $string) unit-expression-unit-expression-with-unit)
-
+    
     (%subsection "Primary Expressions")
     (production :primary-expression (null) primary-expression-null)
     (production :primary-expression (true) primary-expression-true)
@@ -99,7 +99,7 @@
     (production :attribute-expression (:simple-qualified-identifier) attribute-expression-simple-qualified-identifier)
     (production :attribute-expression (:attribute-expression :dot-operator) attribute-expression-dot-operator)
     (production :attribute-expression (:attribute-expression :brackets) attribute-expression-brackets)
-    (production :attribute-expression (:attribute-expression :arguments) attribute-expression-call1)
+    (production :attribute-expression (:attribute-expression :arguments) attribute-expression-call)
     
     (production :full-postfix-expression (:const-dot-expression) full-postfix-expression-const-dot-expression)
     (production :full-postfix-expression (:full-postfix-subexpression) full-postfix-expression-full-postfix-subexpression)
@@ -417,10 +417,37 @@
     
     
     (%subsection "Use Statement")
-    (production :use-statement (use :no-line-break namespace :nonassignment-expression-list) use-statement-normal)
+    (production :use-statement (use :no-line-break namespace :nonassignment-expression-list :use-includes-excludes) use-statement-normal)
     
     (production :nonassignment-expression-list ((:non-assignment-expression allow-in)) nonassignment-expression-list-one)
     (production :nonassignment-expression-list (:nonassignment-expression-list \, (:non-assignment-expression allow-in)) nonassignment-expression-list-more)
+    
+    (production :use-includes-excludes () use-includes-excludes-none)
+    (production :use-includes-excludes (exclude :use-name-list) use-includes-excludes-exclude-list)
+    (production :use-includes-excludes (include :use-name-list) use-includes-excludes-include-list)
+    
+    (production :use-name-list (:use-name-pattern) use-name-list-one)
+    (production :use-name-list (:use-name-list \, :use-name-pattern) use-name-list-more)
+    
+    (production :use-name-pattern (:use-name) use-name-pattern-use-name)
+    (production :use-name-pattern (:qualified-wildcard-pattern) use-name-pattern-qualified-wildcard-pattern)
+    (production :use-name-pattern (:use-name-prefix \. :qualified-wildcard-pattern) use-name-pattern-dot-qualified-wildcard-pattern)
+    
+    (production :qualified-wildcard-pattern (:wildcard-pattern) qualified-wildcard-pattern-wildcard-pattern)
+    (production :qualified-wildcard-pattern (:qualifier \:\: :wildcard-pattern) qualified-wildcard-pattern-qualifier)
+    (production :qualified-wildcard-pattern (:parenthesized-expression \:\: :wildcard-pattern) qualified-wildcard-pattern-expression-qualifier)
+    
+    (production :wildcard-pattern (*) wildcard-pattern-all)
+    (production :wildcard-pattern ($regular-expression) wildcard-pattern-regular-expression)
+    
+    (production :use-name (:qualified-identifier) use-name-qualified-identifier)
+    (production :use-name (:use-name-prefix \. :qualified-identifier) use-name-dot-operator)
+    
+    (production :use-name-prefix (:use-name) use-name-prefix-use-name)
+    (production :use-name-prefix (:primary-expression) use-name-prefix-primary-expression)
+    (production :use-name-prefix (:use-name-prefix \. class) use-name-prefix-dot-class)
+    (production :use-name-prefix (:use-name-prefix :brackets) use-name-prefix-brackets)
+    (production :use-name-prefix (:use-name-prefix :arguments) use-name-prefix-call)
     
     
     (? js2
@@ -440,6 +467,8 @@
     (production :attribute (private) attribute-private)
     (production :attribute (public) attribute-public)
     (production :attribute (static) attribute-static)
+    (production :attribute (true) attribute-true)
+    (production :attribute (false) attribute-false)
     
     (production (:definition :omega) (:import-definition (:semicolon :omega)) definition-import-definition)
     (production (:definition :omega) (:export-definition (:semicolon :omega)) definition-export-definition)
@@ -452,14 +481,16 @@
     
     
     (%subsection "Import Definition")
-    (production :import-definition (import :import-binding) import-definition-import)
-    (production :import-definition (import :import-binding \: :nonassignment-expression-list) import-definition-import-and-use)
+    (production :import-definition (import :import-binding :import-uses :use-includes-excludes) import-definition-import)
     
     (production :import-binding (:import-item) import-binding-import-item)
     (production :import-binding (:identifier = :import-item) import-binding-named-import-item)
     
     (production :import-item ($string) import-item-string)
     (production :import-item (:package-name) import-item-package-name)
+    
+    (production :import-uses () import-uses-none)
+    (production :import-uses (\: :nonassignment-expression-list) import-uses-nonassignment-expression-list)
     
     
     (%subsection "Export Definition")
