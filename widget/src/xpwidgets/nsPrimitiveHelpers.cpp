@@ -267,7 +267,7 @@ nsLinebreakHelpers :: ConvertPlatformToDOMLinebreaks ( const char* inFlavor, voi
   if ( strcmp(inFlavor, "text/plain") == 0 ) {
     char* buffAsChars = NS_REINTERPRET_CAST(char*, *ioData);
     char* oldBuffer = buffAsChars;
-    retVal = nsLinebreakConverter::ConvertLineBreaksInSitu ( &buffAsChars, nsLinebreakConverter::eLinebreakPlatform, 
+    retVal = nsLinebreakConverter::ConvertLineBreaksInSitu ( &buffAsChars, nsLinebreakConverter::eLinebreakAny, 
                                                               nsLinebreakConverter::eLinebreakContent, 
                                                               *ioLengthInBytes, ioLengthInBytes );
     if ( NS_SUCCEEDED(retVal) ) {
@@ -283,7 +283,7 @@ nsLinebreakHelpers :: ConvertPlatformToDOMLinebreaks ( const char* inFlavor, voi
     PRUnichar* buffAsUnichar = NS_REINTERPRET_CAST(PRUnichar*, *ioData);
     PRUnichar* oldBuffer = buffAsUnichar;
     PRInt32 newLengthInChars;
-    retVal = nsLinebreakConverter::ConvertUnicharLineBreaksInSitu ( &buffAsUnichar, nsLinebreakConverter::eLinebreakPlatform, 
+    retVal = nsLinebreakConverter::ConvertUnicharLineBreaksInSitu ( &buffAsUnichar, nsLinebreakConverter::eLinebreakAny, 
                                                                      nsLinebreakConverter::eLinebreakContent, 
                                                                      *ioLengthInBytes / sizeof(PRUnichar), &newLengthInChars );
     if ( NS_SUCCEEDED(retVal) ) {
