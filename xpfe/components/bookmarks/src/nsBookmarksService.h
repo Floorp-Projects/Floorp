@@ -58,7 +58,7 @@ protected:
 	nsCOMPtr<nsIStringBundle>	mBundle;
 	nsString			mPersonalToolbarName;
     PRInt32             mUpdateBatchNest;
-static	nsCOMPtr<nsITimer>		mTimer;
+	nsCOMPtr<nsITimer>	mTimer;
 
 #ifdef	XP_MAC
 	PRBool				mIEFavoritesAvailable;
