@@ -998,7 +998,7 @@ scale_imageAntiJag(nsAntiAliasedGlyph *aSrc, nsAntiAliasedGlyph *aDst)
     NS_ASSERTION(aDst->GetBorder()==0, "non zero dest border not supported");
     return;
   }
-  int expand = (((dst_width<<8)/aSrc->GetWidth())+255)>>8;
+  PRUint32 expand = (((dst_width<<8)/aSrc->GetWidth())+255)>>8;
 
   PRUint32 src_width     = aSrc->GetWidth();
   PRUint32 src_height    = aSrc->GetHeight();
