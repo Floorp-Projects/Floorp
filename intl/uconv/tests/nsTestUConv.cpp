@@ -80,25 +80,25 @@ nsresult setupRegistry()
 {
   nsresult res;
 
-  res = nsRepository::RegisterFactory(kCharsetConverterManagerCID, UCONV_DLL, PR_FALSE, PR_FALSE);
+  res = nsRepository::RegisterComponent(kCharsetConverterManagerCID, NULL, NULL, UCONV_DLL, PR_FALSE, PR_FALSE);
   if (NS_FAILED(res) && (NS_ERROR_FACTORY_EXISTS != res)) return res;
 
-  res = nsRepository::RegisterFactory(kLatin1ToUnicodeCID, UCVLATIN_DLL, PR_FALSE, PR_FALSE);
+  res = nsRepository::RegisterComponent(kLatin1ToUnicodeCID, NULL, NULL, UCVLATIN_DLL, PR_FALSE, PR_FALSE);
   if (NS_FAILED(res) && (NS_ERROR_FACTORY_EXISTS != res)) return res;
 
-  res = nsRepository::RegisterFactory(kCP1253ToUnicodeCID, UCVLATIN_DLL, PR_FALSE, PR_FALSE);
+  res = nsRepository::RegisterComponent(kCP1253ToUnicodeCID, NULL, NULL, UCVLATIN_DLL, PR_FALSE, PR_FALSE);
   if (NS_FAILED(res) && (NS_ERROR_FACTORY_EXISTS != res)) return res;
 
-  res = nsRepository::RegisterFactory(kISO88597ToUnicodeCID, UCVLATIN_DLL, PR_FALSE, PR_FALSE);
+  res = nsRepository::RegisterComponent(kISO88597ToUnicodeCID, NULL, NULL, UCVLATIN_DLL, PR_FALSE, PR_FALSE);
   if (NS_FAILED(res) && (NS_ERROR_FACTORY_EXISTS != res)) return res;
 
-  res = nsRepository::RegisterFactory(kSJIS2UnicodeCID, UCVJA_DLL, PR_FALSE, PR_FALSE);
+  res = nsRepository::RegisterComponent(kSJIS2UnicodeCID, NULL, NULL, UCVJA_DLL, PR_FALSE, PR_FALSE);
   if (NS_FAILED(res) && (NS_ERROR_FACTORY_EXISTS != res)) return res;
 
-  res = nsRepository::RegisterFactory(kISO2022JPToUnicodeCID, UCVJA2_DLL, PR_FALSE, PR_FALSE);
+  res = nsRepository::RegisterComponent(kISO2022JPToUnicodeCID, NULL, NULL, UCVJA2_DLL, PR_FALSE, PR_FALSE);
   if (NS_FAILED(res) && (NS_ERROR_FACTORY_EXISTS != res)) return res;
 
-  res = nsRepository::RegisterFactory(kPlatformCharsetCID, UCONV_DLL, PR_FALSE, PR_FALSE);
+  res = nsRepository::RegisterComponent(kPlatformCharsetCID, NULL, NULL, UCONV_DLL, PR_FALSE, PR_FALSE);
   if (NS_FAILED(res) && (NS_ERROR_FACTORY_EXISTS != res)) return res;
 
   return NS_OK;

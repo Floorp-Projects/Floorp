@@ -108,7 +108,7 @@ extern "C" NS_EXPORT PRBool NSCanUnload(nsISupports* serviceMgr) {
 }
 extern "C" NS_EXPORT nsresult NSRegisterSelf(nsISupports* serviceMgr, const char *path)
 {
-  return nsRepository::RegisterFactory(kUnicharUtilCID, path,
+  return nsRepository::RegisterComponent(kUnicharUtilCID, NULL, NULL, path,
                                        PR_TRUE, PR_TRUE);
 }
 

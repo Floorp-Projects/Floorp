@@ -106,19 +106,19 @@ extern "C" NS_EXPORT nsresult NSRegisterSelf(nsISupports* serviceMgr, const char
 {
   nsresult res;
 
-  res = nsRepository::RegisterFactory(kUnicodeEncodeHelperCID, path, 
+  res = nsRepository::RegisterComponent(kUnicodeEncodeHelperCID, NULL, NULL,
+      path, PR_TRUE, PR_TRUE);
+  if(NS_FAILED(res) && (NS_ERROR_FACTORY_EXISTS != res)) return res;
+
+  res = nsRepository::RegisterComponent(kCharsetAliasCID, NULL, NULL, path, 
       PR_TRUE, PR_TRUE);
   if(NS_FAILED(res) && (NS_ERROR_FACTORY_EXISTS != res)) return res;
 
-  res = nsRepository::RegisterFactory(kCharsetAliasCID, path, 
-      PR_TRUE, PR_TRUE);
+  res = nsRepository::RegisterComponent(kCharsetConverterManagerCID, NULL, NULL,
+      path, PR_TRUE, PR_TRUE);
   if(NS_FAILED(res) && (NS_ERROR_FACTORY_EXISTS != res)) return res;
 
-  res = nsRepository::RegisterFactory(kCharsetConverterManagerCID, path, 
-      PR_TRUE, PR_TRUE);
-  if(NS_FAILED(res) && (NS_ERROR_FACTORY_EXISTS != res)) return res;
-
-  res = nsRepository::RegisterFactory(kPlatformCharsetCID, path, 
+  res = nsRepository::RegisterComponent(kPlatformCharsetCID, NULL, NULL, path, 
       PR_TRUE, PR_TRUE);
   return res;
 }

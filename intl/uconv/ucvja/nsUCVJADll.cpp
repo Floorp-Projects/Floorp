@@ -149,8 +149,8 @@ extern "C" NS_EXPORT nsresult NSRegisterSelf(nsISupports* serviceMgr, const char
   nsresult res;
 
   for (PRInt32 i=0; i<ARRAY_SIZE(g_FactoryData); i++) {
-    res = nsRepository::RegisterFactory(*(g_FactoryData[i].mCID), path, 
-      PR_TRUE, PR_TRUE);
+    res = nsRepository::RegisterComponent(*(g_FactoryData[i].mCID), NULL, NULL,
+      path, PR_TRUE, PR_TRUE);
     if(NS_FAILED(res) && (NS_ERROR_FACTORY_EXISTS != res)) return res;
   }
 
