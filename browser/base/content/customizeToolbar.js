@@ -49,6 +49,12 @@ function buildDialog()
   var iconSize = toolbar.getAttribute("iconsize");
   useSmallIcons.checked = (iconSize == "small");
 
+  var modeList = document.getElementById("modelist");
+  var modeValue = toolbar.getAttribute("mode");
+  if (!modeValue)
+    modeValue = "full";
+  modeList.value = modeValue;
+
   var cloneToolbarBox = document.getElementById("cloned-bar-container");
   var paletteBox = document.getElementById("palette-box");
   var currentSet = toolbar.getAttribute("currentset");
@@ -447,8 +453,12 @@ function updateToolbar()
   else
     newToolbar.removeAttribute("iconsize");
 
+  var mode = toolbar.getAttribute("mode");
+  newToolbar.setAttribute("mode", mode);
+
   window.opener.document.persist("nav-bar", "currentset");
   window.opener.document.persist("nav-bar", "iconsize");
+  window.opener.document.persist("nav-bar", "mode");
 
   newToolbar.rebuild();
 }
@@ -499,6 +509,14 @@ function updateIconSize(useSmallIcons)
     toolbar.setAttribute("iconsize", "small");
   else
     toolbar.removeAttribute("iconsize");
+  toolbar.removeAttribute("minheight");
+  gToolbarChanged = true;
+}
+
+function updateToolbarMode(modeValue)
+{
+  var toolbar = document.getElementById("cloneToolbar");
+  toolbar.setAttribute("mode", modeValue);
   toolbar.removeAttribute("minheight");
   gToolbarChanged = true;
 }

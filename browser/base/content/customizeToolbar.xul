@@ -67,11 +67,11 @@
 
 <box align="center">
   <label value="&show.label;"/>
-  <menulist>
+  <menulist id="modelist" oncommand="updateToolbarMode(this.value)">
     <menupopup>
-       <menuitem label="&iconsAndText.label;"/>
-       <menuitem label="&icons.label;"/>
-       <menuitem label="&text.label;"/>
+       <menuitem value="full" label="&iconsAndText.label;"/>
+       <menuitem value="icons" label="&icons.label;"/>
+       <menuitem value="text" label="&text.label;"/>
     </menupopup>
   </menulist>
   <checkbox id="smallicons" oncommand="updateIconSize(this.checked);" label="&useSmallIcons.label;"/>
