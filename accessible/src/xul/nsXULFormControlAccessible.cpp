@@ -40,13 +40,15 @@
 // NOTE: alphabetically ordered
 #include "nsXULFormControlAccessible.h"
 #include "nsHTMLFormControlAccessible.h"
+#include "nsAccessibilityAtoms.h"
+#include "nsAccessibleTreeWalker.h"
 #include "nsIDOMHTMLInputElement.h"
 #include "nsIDOMXULButtonElement.h"
 #include "nsIDOMXULCheckboxElement.h"
 #include "nsIDOMXULMenuListElement.h"
 #include "nsIDOMXULSelectCntrlItemEl.h"
 #include "nsIDOMXULTextboxElement.h"
-#include "nsAccessibleTreeWalker.h"
+#include "nsINameSpaceManager.h"
 
 /**
   * XUL Button: can contain arbitrary HTML content
@@ -637,6 +639,20 @@ NS_IMETHODIMP nsXULTextFieldAccessible::GetValue(nsAString& aValue)
     return textBox->GetValue(aValue);
   }
   return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP nsXULTextFieldAccessible::GetExtState(PRUint32 *aExtState)
+{
+  nsresult rv = nsAccessible::GetExtState(aExtState);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+  nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
+  NS_ASSERTION(content, "Should not have gotten past nsAccessible::GetExtState() without node");
+
+  PRBool isMultiLine = content->HasAttr(kNameSpaceID_None, nsAccessibilityAtoms::multiline);
+  *aExtState |= (isMultiLine ? EXT_STATE_MULTI_LINE : EXT_STATE_SINGLE_LINE);
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsXULTextFieldAccessible::GetState(PRUint32 *aState)

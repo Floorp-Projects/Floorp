@@ -56,40 +56,6 @@ nsAccessibleWrap(aNode, aShell)
 NS_IMPL_ISUPPORTS_INHERITED0(nsFormControlAccessible, nsAccessible)
 
 /**
-  * XUL states: focused, unavailable(disabled), focusable, ?protected?
-  * HTML states: focused, unabailable(disabled), focusable, protected
-  */
-NS_IMETHODIMP nsFormControlAccessible::GetState(PRUint32 *_retval)
-{
-  // Get the focused state from the nsAccessible
-  nsAccessible::GetState(_retval);
-
-  PRBool disabled = PR_FALSE;
-  nsresult rv = NS_ERROR_FAILURE;
-  nsCOMPtr<nsIDOMHTMLInputElement> htmlFormElement(do_QueryInterface(mDOMNode, &rv));
-  if (NS_SUCCEEDED(rv) && htmlFormElement) {
-    htmlFormElement->GetDisabled(&disabled);
-    nsAutoString typeString;
-    htmlFormElement->GetType(typeString);
-    if (typeString.LowerCaseEqualsLiteral("password"))
-      *_retval |= STATE_PROTECTED;
-  }
-  else {
-    nsCOMPtr<nsIDOMXULControlElement> xulFormElement(do_QueryInterface(mDOMNode, &rv));  
-    if (NS_SUCCEEDED(rv) && xulFormElement) {
-      xulFormElement->GetDisabled(&disabled);
-      /* XXX jgaunt do XUL elements support password fields? */
-    }
-  }
-  if (disabled)
-    *_retval |= STATE_UNAVAILABLE;
-  else 
-    *_retval |= STATE_FOCUSABLE;
-
-  return NS_OK;
-}
-
-/**
   * Will be called by both HTML and XUL elements, this method
   *  merely checks who is calling and then calls the appropriate
   *  protected method for the XUL or HTML element.
