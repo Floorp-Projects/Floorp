@@ -110,7 +110,7 @@ NS_METHOD nsTableCellFrame::Paint(nsIPresContext& aPresContext,
     nsRect  rect(0, 0, mRect.width, mRect.height);
 
     nsCSSRendering::PaintBackground(aPresContext, aRenderingContext, this,
-                                    aDirtyRect, rect, *myColor);
+                                    aDirtyRect, rect, *myColor, 0, 0);
 
     // empty cells do not render their border
     if (0!=mPass1DesiredSize.width || 0!=mPass1DesiredSize.height)
