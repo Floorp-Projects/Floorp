@@ -28,27 +28,36 @@ static char *me = NULL;
 
 static char *passThese[] =
 {
-	"HTTP_USER_AGENT=",
-	"HTTP_ACCEPT=",
-	"HTTP_ACCEPT_CHARSET=",
-	"HTTP_ACCEPT_LANGUAGE=",
+	"HTTP_ACCEPT",
+	"HTTP_ACCEPT_CHARSET",
+	"HTTP_ACCEPT_LANGUAGE",
+	"HTTP_USER_AGENT",
+
+	/*
+	"HTTP_ACCEPT_ENCODING",
+	"HTTP_CONNECTION",
+	"HTTP_HOST",
+	"HTTP_KEEP_ALIVE",
+	"HTTP_REFERER",
+	*/
+
 	NULL
 };
 
 static void
-cgiviewHTML(App *app, Input *input)
+cgiviewHTML(App *app, Buf *buf)
 {
-	viewHTML(app, input);
+	viewHTML(app, buf);
 }
 
 static void
-cgiviewHTMLAttributeName(App *app, HTML *html, Input *input)
+cgiviewHTMLAttributeName(App *app, HTML *html, Buf *buf)
 {
-	viewHTMLAttributeName(app, input);
+	viewHTMLAttributeName(app, buf);
 }
 
 static void
-cgiviewHTMLAttributeValue(App *app, HTML *html, Input *input)
+cgiviewHTMLAttributeValue(App *app, HTML *html, Buf *buf)
 {
 	unsigned char	*referer;
 	URL		*url;
@@ -68,7 +77,7 @@ cgiviewHTMLAttributeValue(App *app, HTML *html, Input *input)
 		free(referer);
 		urlFree(url);
 	}
-	viewHTMLAttributeValue(app, input);
+	viewHTMLAttributeValue(app, buf);
 	if (html->currentAttributeIsURL)
 	{
 		fprintf(view->out, "</a>");
@@ -76,37 +85,55 @@ cgiviewHTMLAttributeValue(App *app, HTML *html, Input *input)
 }
 
 static void
-cgiviewHTMLTag(App *app, HTML *html, Input *input)
+cgiviewHTMLTag(App *app, HTML *html, Buf *buf)
 {
-	viewHTMLTag(app, input);
+	viewHTMLTag(app, buf);
 }
 
 static void
-cgiviewHTMLText(App *app, Input *input)
+cgiviewHTMLText(App *app, Buf *buf)
 {
-	viewHTMLText(app, input);
+	viewHTMLText(app, buf);
 }
 
 static void
-cgiviewHTTP(App *app, Input *input)
+cgiviewHTTPRequest(App *app, Buf *buf)
 {
-	viewHTTP(app, input);
+	viewHTTP(app, buf);
 }
 
 static void
-cgiviewHTTPBody(App *app, Input *input)
+cgiviewHTTPRequestHeaderName(App *app, Buf *buf)
 {
-	viewHTTP(app, input);
+	viewHTTPHeaderName(app, buf);
 }
 
 static void
-cgiviewHTTPHeaderName(App *app, Input *input)
+cgiviewHTTPRequestHeaderValue(App *app, Buf *buf)
 {
-	viewHTTPHeaderName(app, input);
+	viewHTTPHeaderValue(app, buf);
 }
 
 static void
-cgiviewHTTPHeaderValue(App *app, Input *input, unsigned char *url)
+cgiviewHTTPResponse(App *app, Buf *buf)
+{
+	viewHTTP(app, buf);
+}
+
+static void
+cgiviewHTTPResponseBody(App *app, Buf *buf)
+{
+	viewHTTP(app, buf);
+}
+
+static void
+cgiviewHTTPResponseHeaderName(App *app, Buf *buf)
+{
+	viewHTTPHeaderName(app, buf);
+}
+
+static void
+cgiviewHTTPResponseHeaderValue(App *app, Buf *buf, unsigned char *url)
 {
 	unsigned char	*urlstring;
 	View		*view;
@@ -119,34 +146,29 @@ cgiviewHTTPHeaderValue(App *app, Input *input, unsigned char *url)
 		fprintf(view->out, "<a href=\"%s%s\">", me, urlstring);
 		free(urlstring);
 	}
-	viewHTTPHeaderValue(app, input);
+	viewHTTPHeaderValue(app, buf);
 	if (url)
 	{
 		fprintf(view->out, "</a>");
 	}
 }
 
-unsigned char **
-getHTTPRequestHeaders(App *app, char *host, char *referer, char *verbose)
+static HTTPNameValue *
+cgiviewGetEnv(App *app, char *referer, char *verbose, char **version)
 {
 	char		**e;
 	extern char	**environ;
+	char		*equals;
 	int		firstLetter;
 	char		**h;
 	char		*p;
 	char		*q;
-	char		**r;
-	char		**ret;
+	HTTPNameValue	*r;
+	HTTPNameValue	*ret;
 	char		*scriptName;
-	char		*str;
 
 	scriptName = "view.cgi";
-	e = environ;
-	while (*e)
-	{
-		e++;
-	}
-	ret = malloc((e - environ + 2) * sizeof(*e));
+	ret = malloc((NELEMS(passThese) + 1) * sizeof(HTTPNameValue));
 	if (!ret)
 	{
 		return NULL;
@@ -161,13 +183,20 @@ getHTTPRequestHeaders(App *app, char *host, char *referer, char *verbose)
 
 	e = environ;
 	r = ret;
-	viewReport(app, "will send these HTTP Request headers:");
+	viewReport(app, "will ignore these:");
 	while (*e)
 	{
+		equals = strchr(*e, '=');
+		if (!equals)
+		{
+			e++;
+			continue;
+		}
+		*equals = 0;
 		h = passThese;
 		while (*h)
 		{
-			if (!strncmp(*e, *h, strlen(*h)))
+			if (!strcmp(*e, *h))
 			{
 				break;
 			}
@@ -175,14 +204,14 @@ getHTTPRequestHeaders(App *app, char *host, char *referer, char *verbose)
 		}
 		if (*h)
 		{
-			str = malloc(strlen(*e) - 5 + 1 + 1);
-			if (!str)
+			r->name = malloc(strlen(*e) - 5 + 1);
+			if (!r->name)
 			{
-				continue;
+				return NULL;
 			}
 			p = *e + 5;
-			q = str;
-			while (*p && (*p != '='))
+			q = (char *) r->name;
+			while (*p)
 			{
 				firstLetter = 1;
 				while (*p && (*p != '=') && (*p != '_'))
@@ -204,45 +233,42 @@ getHTTPRequestHeaders(App *app, char *host, char *referer, char *verbose)
 					p++;
 				}
 			}
-			if (*p == '=')
+			*q = 0;
+			r->value = (unsigned char *) strdup(equals + 1);
+			if (!r->value)
 			{
-				p++;
-				*q++ = ':';
-				*q++ = ' ';
-				while (*p)
-				{
-					*q++ = *p++;
-				}
-				*q = 0;
-				*r++ = str;
-				viewReport(app, str);
+				return NULL;
 			}
+			r++;
+		}
+		else if (!strncmp(*e, "HTTP_", 5))
+		{
+			viewReport(app, *e);
+		}
+		else if (!strcmp(*e, "SERVER_PROTOCOL"))
+		{
+			*version = strdup(equals + 1);
 		}
 		e++;
 	}
-	str = malloc(6 + strlen(host) + 1);
-	if (str)
-	{
-		strcpy(str, "Host: ");
-		strcat(str, host);
-		/* *r++ = str; */	/* http.c will do Host header */
-		viewReport(app, str);
-	}
 	if (referer)
 	{
-		str = malloc(9 + strlen(referer) + 1);
-		if (str)
+		r->name = (unsigned char *) strdup("Referer");
+		if (!r->name)
 		{
-			strcpy(str, "Referer: ");
-			strcat(str, referer);
-			*r++ = str;
-			viewReport(app, str);
+			return NULL;
 		}
+		r->value = (unsigned char *) strdup(referer);
+		if (!r->value)
+		{
+			return NULL;
+		}
+		r++;
 	}
+	r->name = NULL;
 	viewReportHTML(app, "<hr>");
-	*r = NULL;
 
-	return (unsigned char **) ret;
+	return ret;
 }
 
 int
@@ -251,6 +277,7 @@ main(int argc, char *argv[])
 	char		*ampersand;
 	App		*app;
 	unsigned char	*equals;
+	HTTPNameValue	*headers;
 	char		*name;
 	unsigned char	*newURL;
 	char		*p;
@@ -259,6 +286,7 @@ main(int argc, char *argv[])
 	URL		*u;
 	unsigned char	*url;
 	char		*verbose;
+	char		*version;
 	View		*view;
 
 	if (!netInit())
@@ -282,10 +310,13 @@ main(int argc, char *argv[])
 	app->htmlAttributeValue = cgiviewHTMLAttributeValue;
 	app->htmlTag = cgiviewHTMLTag;
 	app->htmlText = cgiviewHTMLText;
-	app->http = cgiviewHTTP;
-	app->httpBody = cgiviewHTTPBody;
-	app->httpHeaderName = cgiviewHTTPHeaderName;
-	app->httpHeaderValue = cgiviewHTTPHeaderValue;
+	app->httpRequest = cgiviewHTTPRequest;
+	app->httpRequestHeaderName = cgiviewHTTPRequestHeaderName;
+	app->httpRequestHeaderValue = cgiviewHTTPRequestHeaderValue;
+	app->httpResponse = cgiviewHTTPResponse;
+	app->httpResponseBody = cgiviewHTTPResponseBody;
+	app->httpResponseHeaderName = cgiviewHTTPResponseHeaderName;
+	app->httpResponseHeaderValue = cgiviewHTTPResponseHeaderValue;
 	view = &app->view;
 	view->out = stdout;
 	freopen("/dev/null", "w", stderr);
@@ -337,12 +368,9 @@ main(int argc, char *argv[])
 	}
 	if (url && (*url))
 	{
-		fprintf
-		(
-			view->out,
-			"<html><head><title>View %s</title></head><body><pre>",
-			url
-		);
+		fprintf(view->out,
+			"<html><head><title>View %s</title></head><body>\n"
+			"<pre>", url);
 		viewReport(app, "input url:");
 		viewReport(app, (char *) url);
 		viewReportHTML(app, "<hr>");
@@ -399,9 +427,14 @@ main(int argc, char *argv[])
 		viewReportHTML(app, "<hr>");
 		if (!strcmp((char *) u->scheme, "http"))
 		{
-			httpProcess(app, u,
-				getHTTPRequestHeaders(app, (char *) u->host,
-				(char *) referer, verbose));
+			version = NULL;
+			headers = cgiviewGetEnv(app, (char *) referer,
+				verbose, &version);
+			if (!headers)
+			{
+				return 1;
+			}
+			httpFree(httpProcess(app, u, version, headers));
 		}
 		else
 		{

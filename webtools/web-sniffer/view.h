@@ -25,7 +25,7 @@
 #ifndef _VIEW_H_
 #define _VIEW_H_
 
-#include "io.h"
+#include "buf.h"
 
 typedef struct View
 {
@@ -33,14 +33,14 @@ typedef struct View
 	FILE	*out;
 } View;
 
-void viewHTML(App *app, Input *input);
-void viewHTMLAttributeName(App *app, Input *input);
-void viewHTMLAttributeValue(App *app, Input *input);
-void viewHTMLTag(App *app, Input *input);
-void viewHTMLText(App *app, Input *input);
-void viewHTTP(App *app, Input *input);
-void viewHTTPHeaderName(App *app, Input *input);
-void viewHTTPHeaderValue(App *app, Input *input);
+void viewHTML(App *app, Buf *buf);
+void viewHTMLAttributeName(App *app, Buf *buf);
+void viewHTMLAttributeValue(App *app, Buf *buf);
+void viewHTMLTag(App *app, Buf *buf);
+void viewHTMLText(App *app, Buf *buf);
+void viewHTTP(App *app, Buf *buf);
+void viewHTTPHeaderName(App *app, Buf *buf);
+void viewHTTPHeaderValue(App *app, Buf *buf);
 void viewReport(App *app, char *str);
 void viewReportHTML(App *app, char *str);
 void viewVerbose(void);

@@ -25,16 +25,25 @@
 #ifndef _HTTP_H_
 #define _HTTP_H_
 
-#include "io.h"
 #include "url.h"
+
+typedef struct HTTPNameValue HTTPNameValue;
 
 typedef struct HTTP
 {
-	const unsigned char	*body;
-	unsigned long		bodyLen;
-	Input			*input;
-	int			status;
+	unsigned long	body;
+	HTTPNameValue	*headers;
+	Buf		*in;
+	int		status;
+	URL		*url;
+	unsigned char	*version;
 } HTTP;
+
+struct HTTPNameValue
+{
+	unsigned char	*name;
+	unsigned char	*value;
+};
 
 HTTP *httpAlloc(void);
 void httpFree(HTTP *http);
@@ -42,7 +51,6 @@ int httpGetHTTP10OrGreaterCount(void);
 int httpGetNonEmptyHTTPResponseCount(void);
 void httpParseRequest(HTTP *http, App *app, char *url);
 void httpParseStream(HTTP *http, App *app, unsigned char *url);
-HTTP *httpProcess(App *app, URL *url, unsigned char **headers);
-void httpRead(HTTP *http, App *app, int fd, unsigned char *url);
+HTTP *httpProcess(App *app, URL *url, char *version, HTTPNameValue *headers);
 
 #endif /* _HTTP_H_ */

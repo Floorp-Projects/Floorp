@@ -263,57 +263,57 @@ addURLFunc(App *app, URL *url)
 }
 
 static void
-robotHTTP(App *app, Input *input)
+robotHTTP(App *app, Buf *buf)
 {
 	Robot	*robot;
 
 	robot = app->data;
 
-	viewHTTP(app, input);
+	viewHTTP(app, buf);
 }
 
 static void
-robotHTTPBody(App *app, Input *input)
+robotHTTPBody(App *app, Buf *buf)
 {
 }
 
 static void
-robotHTTPHeaderName(App *app, Input *input)
+robotHTTPHeaderName(App *app, Buf *buf)
 {
 	Robot		*robot;
 	unsigned char	*name;
 
 	robot = app->data;
 
-	name = copyLower(input);
+	name = bufCopyLower(buf);
 	addEntry(httpHeaderTable, robot, robot->url->url, name);
 	free(name);
 
-	viewHTTPHeaderName(app, input);
+	viewHTTPHeaderName(app, buf);
 }
 
 static void
-robotHTTPHeaderValue(App *app, Input *input, unsigned char *url)
+robotHTTPHeaderValue(App *app, Buf *buf, unsigned char *url)
 {
 	Robot	*robot;
 
 	robot = app->data;
 
-	viewHTTPHeaderValue(app, input);
+	viewHTTPHeaderValue(app, buf);
 }
 
 static void
-robotHTML(App *app, Input *input)
+robotHTML(App *app, Buf *buf)
 {
 	Robot	*robot;
 
 	robot = app->data;
 
-	viewHTML(app, input);
+	viewHTML(app, buf);
 }
 
 static void
-robotHTMLText(App *app, Input *input)
+robotHTMLText(App *app, Buf *buf)
 {
 	Robot		*robot;
 	unsigned char	*p;
@@ -321,9 +321,9 @@ robotHTMLText(App *app, Input *input)
 
 	robot = app->data;
 
-	viewHTMLText(app, input);
+	viewHTMLText(app, buf);
 
-	str = copy(input);
+	str = bufCopy(buf);
 	p = str;
 	while (*p)
 	{
@@ -352,7 +352,7 @@ robotHTMLText(App *app, Input *input)
 }
 
 static void
-robotHTMLTag(App *app, HTML *html, Input *input)
+robotHTMLTag(App *app, HTML *html, Buf *buf)
 {
 	Robot		*robot;
 	HashEntry	*tagEntry;
@@ -375,11 +375,11 @@ robotHTMLTag(App *app, HTML *html, Input *input)
 		}
 	}
 
-	viewHTMLTag(app, input);
+	viewHTMLTag(app, buf);
 }
 
 static void
-robotHTMLAttributeName(App *app, HTML *html, Input *input)
+robotHTMLAttributeName(App *app, HTML *html, Buf *buf)
 {
 	Robot	*robot;
 
@@ -391,17 +391,17 @@ robotHTMLAttributeName(App *app, HTML *html, Input *input)
 			html->currentAttribute->name);
 #endif
 	}
-	viewHTMLAttributeName(app, input);
+	viewHTMLAttributeName(app, buf);
 }
 
 static void
-robotHTMLAttributeValue(App *app, HTML *html, Input *input)
+robotHTMLAttributeValue(App *app, HTML *html, Buf *buf)
 {
 	Robot	*robot;
 
 	robot = app->data;
 
-	viewHTMLAttributeValue(app, input);
+	viewHTMLAttributeValue(app, buf);
 }
 
 static void
@@ -669,7 +669,7 @@ processURL(App *app)
 	app->status(app, "processURL", __FILE__, __LINE__);
 
 	openViewFile(app);
-	httpFree(httpProcess(app, robot->url, NULL));
+	httpFree(httpProcess(app, robot->url, NULL, NULL));
 	closeViewFile(app);
 
 	app->status(app, "processURL done", __FILE__, __LINE__);
@@ -688,17 +688,17 @@ startHere(void *a)
 	app = appAlloc();
 	app->status = robotStatus;
 	app->time = robotTime;
-	app->http = robotHTTP;
-	app->httpBody = robotHTTPBody;
-	app->httpHeaderName = robotHTTPHeaderName;
-	app->httpHeaderValue = robotHTTPHeaderValue;
+	app->httpResponse = robotHTTP;
+	app->httpResponseBody = robotHTTPBody;
+	app->httpResponseHeaderName = robotHTTPHeaderName;
+	app->httpResponseHeaderValue = robotHTTPHeaderValue;
 	app->html = robotHTML;
 	app->htmlText = robotHTMLText;
 	app->htmlTag = robotHTMLTag;
 	app->htmlAttributeName = robotHTMLAttributeName;
 	app->htmlAttributeValue = robotHTMLAttributeValue;
 	app->contentType = robotContentType;
-	app->httpCharSet = robotHTTPCharSet;
+	app->httpResponseCharSet = robotHTTPCharSet;
 	app->data = &robot;
 
 	while (1)
@@ -841,12 +841,12 @@ compareStatusEntries(const void *e1, const void *e2)
 static void
 readClientRequest(int fd)
 {
-	unsigned char	buf[10240];
+	unsigned char	b[10240];
 	int		bytesRead;
 	FILE		*file;
 	int		i;
 
-	bytesRead = recv(fd, buf, sizeof(buf) - 1, 0);
+	bytesRead = recv(fd, b, sizeof(b) - 1, 0);
 	if (bytesRead < 0)
 	{
 		if (errno != ECONNRESET)
@@ -861,7 +861,7 @@ readClientRequest(int fd)
 		removeFD(fd);
 		return;
 	}
-	buf[bytesRead] = 0;
+	b[bytesRead] = 0;
 
 	file = fdopen(fd, "w");
 	if (!file)
@@ -874,7 +874,7 @@ readClientRequest(int fd)
 
 	table[fd]->file = file;
 
-	if (strstr((char *) buf, "/exit"))
+	if (strstr((char *) b, "/exit"))
 	{
 		char *goodbye =
 			"HTTP/1.0 200 OK\n"
@@ -886,7 +886,7 @@ readClientRequest(int fd)
 		removeFD(fd);
 		exit(0);
 	}
-	else if (strstr((char *) buf, "/times"))
+	else if (strstr((char *) b, "/times"))
 	{
 		char *begin =
 			"HTTP/1.0 200 OK\n"

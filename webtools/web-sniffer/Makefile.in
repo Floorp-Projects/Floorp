@@ -47,11 +47,11 @@ PURIFY =
 OBJS =			\
 	addurl.$(OBJ)	\
 	app.$(OBJ)	\
+	buf.$(OBJ)	\
 	file.$(OBJ)	\
 	hash.$(OBJ)	\
 	html.$(OBJ)	\
 	http.$(OBJ)	\
-	io.$(OBJ)	\
 	mime.$(OBJ)	\
 	net.$(OBJ)	\
 	thread.$(OBJ)	\
@@ -60,13 +60,9 @@ OBJS =			\
 	view.$(OBJ)
 
 EXES =			\
-	dnstest$(EXE)	\
-	ftp$(EXE)	\
 	grab$(EXE)	\
 	httpd$(EXE)	\
 	link$(EXE)	\
-	pop$(EXE)	\
-	proxy$(EXE)	\
 	robot$(EXE)	\
 	urltest$(EXE)	\
 	view.cgi$(EXE)

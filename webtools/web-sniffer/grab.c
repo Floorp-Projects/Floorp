@@ -107,11 +107,9 @@ grab(char *dir, unsigned char *url, HTTP *http)
 		fprintf(stderr, "cannot open file %s for writing\n", str);
 		exit(0);
 	}
-	if (fwrite(http->body, 1, http->bodyLen, file) != http->bodyLen)
-	{
-		fprintf(stderr, "did not write %ld bytes\n", http->bodyLen);
-		exit(0);
-	}
+	bufSetFD(http->in, fileno(file));
+	bufSet(http->in, http->body);
+	bufWrite(http->in);
 	fclose(file);
 	free(str);
 }
@@ -198,7 +196,7 @@ main(int argc, char *argv[])
 	while (url)
 	{
 		appDefault.data = url;
-		http = httpProcess(&appDefault, url, NULL);
+		http = httpProcess(&appDefault, url, NULL, NULL);
 		if (http)
 		{
 			switch (http->status)

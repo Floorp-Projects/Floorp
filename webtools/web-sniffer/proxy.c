@@ -46,15 +46,15 @@ typedef struct Arg
 	View	*view;
 } Arg;
 
-static void proxyHTML(App *app, Input *input);
-static void proxyHTMLAttributeName(App *app, HTML *html, Input *input);
-static void proxyHTMLAttributeValue(App *app, HTML *html, Input *input);
-static void proxyHTMLTag(App *app, HTML *html, Input *input);
-static void proxyHTMLText(App *app, Input *input);
-static void proxyHTTP(App *app, Input *input);
-static void proxyHTTPBody(App *app, Input *input);
-static void proxyHTTPHeaderName(App *app, Input *input);
-static void proxyHTTPHeaderValue(App *app, Input *input, unsigned char *url);
+static void proxyHTML(App *app, Buf *buf);
+static void proxyHTMLAttributeName(App *app, HTML *html, Buf *buf);
+static void proxyHTMLAttributeValue(App *app, HTML *html, Buf *buf);
+static void proxyHTMLTag(App *app, HTML *html, Buf *buf);
+static void proxyHTMLText(App *app, Buf *buf);
+static void proxyHTTP(App *app, Buf *buf);
+static void proxyHTTPBody(App *app, Buf *buf);
+static void proxyHTTPHeaderName(App *app, Buf *buf);
+static void proxyHTTPHeaderValue(App *app, Buf *buf, unsigned char *url);
 
 static fd_set fdSet;
 static int id = 0;
@@ -193,10 +193,10 @@ proxyApp(FD *f)
 	app->htmlAttributeValue = proxyHTMLAttributeValue;
 	app->htmlTag = proxyHTMLTag;
 	app->htmlText = proxyHTMLText;
-	app->http = proxyHTTP;
-	app->httpBody = proxyHTTPBody;
-	app->httpHeaderName = proxyHTTPHeaderName;
-	app->httpHeaderValue = proxyHTTPHeaderValue;
+	app->httpResponse = proxyHTTP;
+	app->httpResponseBody = proxyHTTPBody;
+	app->httpResponseHeaderName = proxyHTTPHeaderName;
+	app->httpResponseHeaderValue = proxyHTTPHeaderValue;
 	app->view.backslash = 1;
 	app->view.out = f->logFile;
 
@@ -204,7 +204,7 @@ proxyApp(FD *f)
 }
 
 static int
-logRequest(FD *f, Input *input)
+logRequest(FD *f, Buf *buf)
 {
 	App	*app;
 	HTTP	*http;
@@ -212,7 +212,7 @@ logRequest(FD *f, Input *input)
 	if
 	(
 		(table[fileno(f->logFile)]->suspend) ||
-		(strstr((char *) current(input), suspendStr))
+		(strstr((char *) current(buf), suspendStr))
 	)
 	{
 		table[f->writeFD]->suspend = 1;
@@ -232,7 +232,7 @@ logRequest(FD *f, Input *input)
 		f->id
 	);
 	http = httpAlloc();
-	http->input = input;
+	http->in = buf;
 	app = proxyApp(f);
 	httpParseRequest(http, app, "logRequest");
 	free(app);
@@ -247,21 +247,21 @@ static int
 readClientRequest(int fd)
 {
 	FD	*f;
-	Input	*input;
+	Buf	*buf;
 
 	f = table[fd];
-	input = readAvailableBytes(fd);
-	send(f->writeFD, current(input), inputLength(input), 0);
-	if (!logRequest(f, input))
+	buf = readAvailableBytes(fd);
+	send(f->writeFD, current(buf), inputLength(buf), 0);
+	if (!logRequest(f, buf))
 	{
-		inputFree(input);
+		bufFree(buf);
 	}
 
 	return 0;
 }
 
 static int
-logResponse(FD *f, Input *input)
+logResponse(FD *f, Buf *buf)
 {
 	App	*app;
 	HTTP	*http;
@@ -280,7 +280,7 @@ logResponse(FD *f, Input *input)
 		f->id
 	);
 	http = httpAlloc();
-	http->input = input;
+	http->in = buf;
 	app = proxyApp(f);
 	httpParseStream(http, app, (unsigned char *) "readProxyResponse");
 	free(app);
@@ -295,14 +295,14 @@ static int
 readProxyResponse(int fd)
 {
 	FD	*f;
-	Input	*input;
+	Buf	*buf;
 
 	f = table[fd];
-	input = readStream(fd, (unsigned char *) "readProxyResponse");
-	send(f->writeFD, current(input), inputLength(input), 0);
-	if (!logResponse(f, input))
+	buf = readStream(fd, (unsigned char *) "readProxyResponse");
+	send(f->writeFD, current(buf), inputLength(buf), 0);
+	if (!logResponse(f, buf))
 	{
-		inputFree(input);
+		bufFree(buf);
 	}
 	removeFD(f->writeFD);
 	removeFD(fd);
@@ -365,7 +365,7 @@ acceptNewClient(int fd)
 static int
 readLoggerRequest(int fd)
 {
-	char		buf[10240];
+	char		b[10240];
 	int		bytesRead;
 	int		doSuspend;
 	FD		*f;
@@ -380,7 +380,7 @@ readLoggerRequest(int fd)
 	char		*suspend;
 	int		suspendPort;
 
-	bytesRead = recv(fd, buf, sizeof(buf) - 1, 0);
+	bytesRead = recv(fd, b, sizeof(b) - 1, 0);
 	if (bytesRead < 0)
 	{
 		if (errno != ECONNRESET)
@@ -395,11 +395,11 @@ readLoggerRequest(int fd)
 		removeFD(fd);
 		return 0;
 	}
-	buf[bytesRead] = 0;
+	b[bytesRead] = 0;
 
 	resume = "/resume";
 	suspend = "/suspend";
-	if (strstr(buf, "/exit"))
+	if (strstr(b, "/exit"))
 	{
 		char *goodbye =
 			"HTTP/1.0 200 OK\n"
@@ -411,9 +411,9 @@ readLoggerRequest(int fd)
 		removeFD(fd);
 		return 1;
 	}
-	else if ((strstr(buf, resume)) || (strstr(buf, suspend)))
+	else if ((strstr(b, resume)) || (strstr(b, suspend)))
 	{
-		if (strstr(buf, resume))
+		if (strstr(b, resume))
 		{
 			str = resume;
 			doSuspend = 0;
@@ -423,7 +423,7 @@ readLoggerRequest(int fd)
 			str = suspend;
 			doSuspend = 1;
 		}
-		p = strstr(buf, str);
+		p = strstr(b, str);
 		p += strlen(str);
 		if (*p != '/')
 		{
@@ -470,7 +470,7 @@ readLoggerRequest(int fd)
 		return 0;
 	}
 
-	/* XXX send(1, buf, bytesRead, 0); */
+	/* XXX send(1, b, bytesRead, 0); */
 
 	file = fdopen(fd, "w");
 	if (!file)
@@ -537,57 +537,57 @@ acceptNewLogger(int fd)
 }
 
 static void
-proxyHTML(App *app, Input *input)
+proxyHTML(App *app, Buf *buf)
 {
-	viewHTML(app, input);
+	viewHTML(app, buf);
 }
 
 static void
-proxyHTMLAttributeName(App *app, HTML *html, Input *input)
+proxyHTMLAttributeName(App *app, HTML *html, Buf *buf)
 {
-	viewHTMLAttributeName(app, input);
+	viewHTMLAttributeName(app, buf);
 }
 
 static void
-proxyHTMLAttributeValue(App *app, HTML *html, Input *input)
+proxyHTMLAttributeValue(App *app, HTML *html, Buf *buf)
 {
-	viewHTMLAttributeValue(app, input);
+	viewHTMLAttributeValue(app, buf);
 }
 
 static void
-proxyHTMLTag(App *app, HTML *html, Input *input)
+proxyHTMLTag(App *app, HTML *html, Buf *buf)
 {
-	viewHTMLTag(app, input);
+	viewHTMLTag(app, buf);
 }
 
 static void
-proxyHTMLText(App *app, Input *input)
+proxyHTMLText(App *app, Buf *buf)
 {
-	viewHTMLText(app, input);
+	viewHTMLText(app, buf);
 }
 
 static void
-proxyHTTP(App *app, Input *input)
+proxyHTTP(App *app, Buf *buf)
 {
-	viewHTTP(app, input);
+	viewHTTP(app, buf);
 }
 
 static void
-proxyHTTPBody(App *app, Input *input)
+proxyHTTPBody(App *app, Buf *buf)
 {
-	viewHTTP(app, input);
+	viewHTTP(app, buf);
 }
 
 static void
-proxyHTTPHeaderName(App *app, Input *input)
+proxyHTTPHeaderName(App *app, Buf *buf)
 {
-	viewHTTPHeaderName(app, input);
+	viewHTTPHeaderName(app, buf);
 }
 
 static void
-proxyHTTPHeaderValue(App *app, Input *input, unsigned char *url)
+proxyHTTPHeaderValue(App *app, Buf *buf, unsigned char *url)
 {
-	viewHTTPHeaderValue(app, input);
+	viewHTTPHeaderValue(app, buf);
 }
 
 int

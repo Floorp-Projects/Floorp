@@ -70,11 +70,11 @@ typedef struct App App;
 
 #include "addurl.h"
 #include "app.h"
+#include "buf.h"
 #include "file.h"
 #include "hash.h"
 #include "html.h"
 #include "http.h"
-#include "io.h"
 #include "mime.h"
 #include "net.h"
 #include "thread.h"

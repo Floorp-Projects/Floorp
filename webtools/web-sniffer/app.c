@@ -30,52 +30,67 @@ appContentType(App *app, unsigned char *contentType)
 }
 
 static void
-appHTML(App *app, Input *input)
+appHTML(App *app, Buf *buf)
 {
 }
 
 static void
-appHTMLAttributeName(App *app, HTML *html, Input *input)
+appHTMLAttributeName(App *app, HTML *html, Buf *buf)
 {
 }
 
 static void
-appHTMLAttributeValue(App *app, HTML *html, Input *input)
+appHTMLAttributeValue(App *app, HTML *html, Buf *buf)
 {
 }
 
 static void
-appHTMLTag(App *app, HTML *html, Input *input)
+appHTMLTag(App *app, HTML *html, Buf *buf)
 {
 }
 
 static void
-appHTMLText(App *app, Input *input)
+appHTMLText(App *app, Buf *buf)
 {
 }
 
 static void
-appHTTP(App *app, Input *input)
+appHTTPRequest(App *app, Buf *buf)
 {
 }
 
 static void
-appHTTPBody(App *app, Input *input)
+appHTTPRequestHeaderName(App *app, Buf *buf)
 {
 }
 
 static void
-appHTTPCharSet(App *app, unsigned char *charset)
+appHTTPRequestHeaderValue(App *app, Buf *buf)
 {
 }
 
 static void
-appHTTPHeaderName(App *app, Input *input)
+appHTTPResponse(App *app, Buf *buf)
 {
 }
 
 static void
-appHTTPHeaderValue(App *app, Input *input, unsigned char *url)
+appHTTPResponseBody(App *app, Buf *buf)
+{
+}
+
+static void
+appHTTPResponseCharSet(App *app, unsigned char *charset)
+{
+}
+
+static void
+appHTTPResponseHeaderName(App *app, Buf *buf)
+{
+}
+
+static void
+appHTTPResponseHeaderValue(App *app, Buf *buf, unsigned char *url)
 {
 }
 
@@ -97,11 +112,14 @@ App appDefault =
 	appHTMLAttributeValue,
 	appHTMLTag,
 	appHTMLText,
-	appHTTP,
-	appHTTPBody,
-	appHTTPCharSet,
-	appHTTPHeaderName,
-	appHTTPHeaderValue,
+	appHTTPRequest,
+	appHTTPRequestHeaderName,
+	appHTTPRequestHeaderValue,
+	appHTTPResponse,
+	appHTTPResponseBody,
+	appHTTPResponseCharSet,
+	appHTTPResponseHeaderName,
+	appHTTPResponseHeaderValue,
 	appStatus,
 	appTime
 };

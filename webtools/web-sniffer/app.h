@@ -23,7 +23,6 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "html.h"
-#include "io.h"
 #include "view.h"
 
 enum {
@@ -40,16 +39,28 @@ enum {
 struct App
 {
 	void	(*contentType)(App *app, unsigned char *contentType);
-	void	(*html)(App *app, Input *input);
-	void	(*htmlAttributeName)(App *app, HTML *html, Input *input);
-	void	(*htmlAttributeValue)(App *app, HTML *html, Input *input);
-	void	(*htmlTag)(App *app, HTML *html, Input *input);
-	void	(*htmlText)(App *app, Input *input);
-	void	(*http)(App *app, Input *input);
-	void	(*httpBody)(App *app, Input *input);
-	void	(*httpCharSet)(App *app, unsigned char *charset);
-	void	(*httpHeaderName)(App *app, Input *input);
-	void	(*httpHeaderValue)(App *app, Input *input, unsigned char *url);
+
+	void	(*html)(App *app, Buf *buf);
+	void	(*htmlAttributeName)(App *app, HTML *html, Buf *buf);
+	void	(*htmlAttributeValue)(App *app, HTML *html, Buf *buf);
+	void	(*htmlTag)(App *app, HTML *html, Buf *buf);
+	void	(*htmlText)(App *app, Buf *buf);
+
+	void	(*httpRequest)(App *app, Buf *buf);
+	void	(*httpRequestHeaderName)(App *app, Buf *buf);
+	void	(*httpRequestHeaderValue)(App *app, Buf *buf);
+
+	/* pieces of http response other than header names and values */
+	void	(*httpResponse)(App *app, Buf *buf);
+
+	/* called when Content-Type != text/html or Content-Type missing */
+	void	(*httpResponseBody)(App *app, Buf *buf);
+
+	void	(*httpResponseCharSet)(App *app, unsigned char *charset);
+	void	(*httpResponseHeaderName)(App *app, Buf *buf);
+	void	(*httpResponseHeaderValue)(App *app, Buf *buf,
+			unsigned char *url);
+
 	void	(*status)(App *app, char *message, char *file, int line);
 	void	(*time)(App *app, int task, struct timeval *theTime);
 

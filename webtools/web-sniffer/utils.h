@@ -30,6 +30,8 @@
 #endif
 #define FREE(p) do { if (p) { free(p); (p) = NULL; } } while (0)
 
+#define NELEMS(array) (sizeof(array) / sizeof((array)[0]))
+
 unsigned char *appendString(const unsigned char *str1,
 	const unsigned char *str2);
 unsigned char *copySizedString(const unsigned char *str, int size);

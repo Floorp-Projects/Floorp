@@ -29,7 +29,7 @@ fileProcess(void *a, URL *url)
 {
 	char	*dot;
 	FILE	*file;
-	Input	*input;
+	Buf	*buf;
 
 	/* XXX temporary? */
 	if (!url->file)
@@ -55,7 +55,12 @@ fileProcess(void *a, URL *url)
 		fprintf(stderr, "cannot open file %s\n", url->path);
 		return;
 	}
-	input = readStream(fileno(file), url->url);
-	htmlRead(a, input, url->url);
-	inputFree(input);
+	buf = bufAlloc(fileno(file));
+	if (!buf)
+	{
+		fprintf(stderr, "cannot alloc buf\n");
+		return;
+	}
+	htmlRead(a, buf, url->url);
+	bufFree(buf);
 }

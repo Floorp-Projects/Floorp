@@ -33,41 +33,57 @@ static int nonEmptyHTTPResponseCount = 0;
 static int http10OrGreaterCount = 0;
 
 static unsigned short
-readLine(Input *input, unsigned short c)
+readLine(Buf *buf, unsigned short c)
 {
 	while ((c != 256) && (c != '\r') && (c != '\n'))
 	{
-		c = getByte(input);
+		c = bufGetByte(buf);
 	}
 	if (c == '\r')
 	{
-		c = getByte(input);
+		c = bufGetByte(buf);
 		if (c == '\n')
 		{
-			c = getByte(input);
+			c = bufGetByte(buf);
 		}
 	}
 	else if (c == '\n')
 	{
-		c = getByte(input);
+		c = bufGetByte(buf);
 	}
 
 	return c;
 }
 
 static unsigned short
-readSpaceTab(Input *input, unsigned short c)
+readNumber(Buf *buf, unsigned short c, int *num)
+{
+	int	n;
+
+	n = 0;
+	while ((c != 256) && (c >= '0') && (c <= '9'))
+	{
+		n = ((n * 10) + (c - '0'));
+		c = bufGetByte(buf);
+	}
+	*num = n;
+
+	return c;
+}
+
+static unsigned short
+readSpaceTab(Buf *buf, unsigned short c)
 {
 	while ((c == ' ') || (c == '\t'))
 	{
-		c = getByte(input);
+		c = bufGetByte(buf);
 	}
 
 	return c;
 }
 
 static unsigned short
-readNonWhiteSpace(Input *input, unsigned short c)
+readNonWhiteSpace(Buf *buf, unsigned short c)
 {
 	while
 	(
@@ -78,14 +94,15 @@ readNonWhiteSpace(Input *input, unsigned short c)
 		(c != '\n')
 	)
 	{
-		c = getByte(input);
+		c = bufGetByte(buf);
 	}
 
 	return c;
 }
 
-static unsigned char *
-httpReadHeaders(HTTP *http, App *app, Input *input, unsigned char *url)
+static unsigned short
+httpReadHeaders(HTTP *http, App *app, Buf *buf, unsigned char *url,
+	unsigned char **ct, int *chunked)
 {
 	unsigned short	c;
 	unsigned char	*charset;
@@ -95,42 +112,59 @@ httpReadHeaders(HTTP *http, App *app, Input *input, unsigned char *url)
 	URL		*rel;
 	ContentType	*type;
 	unsigned char	*value;
+	char		*version;
 
 	contentType = NULL;
 	locationFound = 0;
 
-	if (!*current(input))
+	bufMark(buf, 0);
+	c = bufGetByte(buf);
+	if (c == 256)
 	{
-		return emptyHTTPResponse;
+		*ct = emptyHTTPResponse;
+		return c;
 	}
 	nonEmptyHTTPResponseCount++;
-	if (strncmp((char *) current(input), "HTTP/", 5))
+	c = readNonWhiteSpace(buf, c);
+	bufMark(buf, -1);
+	app->httpResponse(app, buf);
+	version = (char *) bufCopy(buf);
+	if (!strcmp(version, "HTTP/1.0"))
+	{
+	}
+	else if (!strcmp(version, "HTTP/1.1"))
+	{
+	}
+	else if (!strncmp(version, "HTTP/", 5))
+	{
+	}
+	else
 	{
 		/* XXX deal with HTTP/0.9? */
-		return http09Response;
+		*ct = http09Response;
+		return c;
 	}
+	free(version);
 	http10OrGreaterCount++;
-	mark(input, 0);
-	c = readNonWhiteSpace(input, getByte(input));
-	c = readSpaceTab(input, c);
-	sscanf((char *) current(input) - 1, "%d", &http->status);
-	c = readLine(input, c);
+	c = readSpaceTab(buf, c);
+	c = readNumber(buf, c, &http->status);
+	c = readLine(buf, c);
 	while (1)
 	{
 		if (c == 256)
 		{
-			mark(input, 0);
-			app->http(app, input);
+			bufMark(buf, 0);
+			app->httpResponse(app, buf);
 			break;
 		}
-		mark(input, -1);
-		app->http(app, input);
+		bufMark(buf, -1);
+		app->httpResponse(app, buf);
 		if ((c == '\r') || (c == '\n'))
 		{
-			readLine(input, c);
-			unGetByte(input);
-			mark(input, 0);
-			app->http(app, input);
+			readLine(buf, c);
+			bufUnGetByte(buf);
+			bufMark(buf, 0);
+			app->httpResponse(app, buf);
 			break;
 		}
 		while
@@ -141,73 +175,86 @@ httpReadHeaders(HTTP *http, App *app, Input *input, unsigned char *url)
 			(c != ':')
 		)
 		{
-			c = getByte(input);
+			c = bufGetByte(buf);
 		}
 		if (c != ':')
 		{
-			mark(input, -1);
+			bufMark(buf, -1);
 			fprintf(stderr, "no colon in HTTP header \"%s\": %s\n",
-				copy(input), url);
-			return NULL;
+				bufCopy(buf), url);
+			*ct = NULL;
+			return c;
 		}
-		mark(input, -1);
-		app->httpHeaderName(app, input);
-		name = copyLower(input);
-		c = readSpaceTab(input, getByte(input));
-		mark(input, -1);
-		app->http(app, input);
-		c = readLine(input, c);
+		bufMark(buf, -1);
+		app->httpResponseHeaderName(app, buf);
+		name = bufCopyLower(buf);
+		c = readSpaceTab(buf, bufGetByte(buf));
+		bufMark(buf, -1);
+		app->httpResponse(app, buf);
+		c = readLine(buf, c);
 		if ((c == ' ') || (c == '\t'))
 		{
 			do
 			{
-				c = readLine(input, c);
+				c = readLine(buf, c);
 			} while ((c == ' ') || (c == '\t'));
 		}
-		c = trimTrailingWhiteSpace(input);
-		mark(input, -1);
-		value = copy(input);
+		c = bufTrimTrailingWhiteSpace(buf);
+		bufMark(buf, -1);
+		value = bufCopy(buf);
 		if (!strcasecmp((char *) name, "content-type"))
 		{
-			app->httpHeaderValue(app, input, NULL);
+			app->httpResponseHeaderValue(app, buf, NULL);
 			type = mimeParseContentType(value);
 			contentType = mimeGetContentType(type);
 			charset = mimeGetContentTypeParameter(type, "charset");
 			if (charset)
 			{
-				app->httpCharSet(app, charset);
+				app->httpResponseCharSet(app, charset);
+				free(charset);
 			}
 			mimeFreeContentType(type);
 		}
 		else if (!strcasecmp((char *) name, "location"))
 		{
-			app->httpHeaderValue(app, input, value);
+			app->httpResponseHeaderValue(app, buf, value);
 			/* XXX supposed to be absolute URL */
 			rel = urlRelative(url, value);
 			addURL(app, rel->url);
 			urlFree(rel);
 			locationFound = 1;
 		}
+		else if (!strcasecmp((char *) name, "transfer-encoding"))
+		{
+			app->httpResponseHeaderValue(app, buf, NULL);
+			if (!strcasecmp((char *) value, "chunked"))
+			{
+				*chunked = 1;
+			}
+		}
 		else
 		{
-			app->httpHeaderValue(app, input, NULL);
+			app->httpResponseHeaderValue(app, buf, NULL);
 		}
 		free(name);
 		free(value);
-		c = readLine(input, c);
-		mark(input, -1);
-		app->http(app, input);
+		c = readLine(buf, c);
+		bufMark(buf, -1);
+		app->httpResponse(app, buf);
 	}
 
 	if (!contentType)
 	{
 		if (locationFound)
 		{
-			return locationURLWasAdded;
+			*ct = locationURLWasAdded;
+			return c;
 		}
 	}
 
-	return contentType;
+	*ct = contentType;
+
+	return c;
 }
 
 void
@@ -215,13 +262,13 @@ httpParseRequest(HTTP *http, App *app, char *url)
 {
 	unsigned short	c;
 
-	mark(http->input, 0);
+	bufMark(http->in, 0);
 	do
 	{
-		c = getByte(http->input);
+		c = bufGetByte(http->in);
 	} while (c != 256);
-	mark(http->input, -1);
-	app->http(app, http->input);
+	bufMark(http->in, -1);
+	app->httpResponse(app, http->in);
 }
 
 static void
@@ -231,23 +278,77 @@ httpDefaultType(HTTP *http, App *app)
 
 	do
 	{
-		c = getByte(http->input);
+		c = bufGetByte(http->in);
 	}
 	while (c != 256);
-	mark(http->input, -1);
-	app->httpBody(app, http->input);
+	bufMark(http->in, -1);
+	app->httpResponseBody(app, http->in);
 }
 
 void
 httpParseStream(HTTP *http, App *app, unsigned char *url)
 {
-	const unsigned char	*begin;
-	unsigned char		*contentType;
+	Buf		*buf;
+	unsigned short	c;
+	unsigned char	*contentType;
+	int		chunked;
+	int		i;
+	unsigned char	*line;
+	unsigned int	size;
 
-	begin = current(http->input);
-	contentType = httpReadHeaders(http, app, http->input, url);
-	http->body = current(http->input);
-	http->bodyLen = inputLength(http->input) - (http->body - begin);
+	chunked = 0;
+	c = httpReadHeaders(http, app, http->in, url, &contentType, &chunked);
+
+	if (chunked)
+	{
+		buf = bufAlloc(-1);
+		while (1)
+		{
+			bufMark(http->in, 0);
+			c = bufGetByte(http->in);
+			c = readLine(http->in, c);
+			bufMark(http->in, -1);
+			line = bufCopy(http->in);
+			size = 0;
+			sscanf((char *) line, "%x", &size);
+			free(line);
+			if (!size)
+			{
+				break;
+			}
+			bufUnGetByte(http->in);
+			for (i = 0; i < size; i++)
+			{
+				c = bufGetByte(http->in);
+				if (c == 256)
+				{
+					break;
+				}
+				else
+				{
+					bufPutChar(buf, c);
+				}
+			}
+			c = bufGetByte(http->in);
+			if (c != '\r')
+			{
+				break;
+			}
+			c = bufGetByte(http->in);
+			if (c != '\n')
+			{
+				break;
+			}
+		}
+		bufSet(buf, 0);
+		bufMark(buf, 0);
+	}
+	else
+	{
+		buf = http->in;
+	}
+	http->body = bufCurrent(buf);
+
 	if (contentType)
 	{
 		if
@@ -260,7 +361,7 @@ httpParseStream(HTTP *http, App *app, unsigned char *url)
 			app->contentType(app, contentType);
 			if (!strcasecmp((char *) contentType, "text/html"))
 			{
-				htmlRead(app, http->input, url);
+				htmlRead(app, buf, url);
 			}
 			else
 			{
@@ -273,95 +374,100 @@ httpParseStream(HTTP *http, App *app, unsigned char *url)
 	{
 		httpDefaultType(http, app);
 	}
-}
 
-void
-httpRead(HTTP *http, App *app, int sock, unsigned char *url)
-{
-	struct timeval	theTime;
-
-	app->status(app, "readStream", __FILE__, __LINE__);
-	gettimeofday(&theTime, NULL);
-	http->input = readStream(sock, url);
-	app->time(app, appTimeReadStream, &theTime);
-	app->status(app, "readStream done", __FILE__, __LINE__);
-	httpParseStream(http, app, url);
-}
-
-static int
-countOrCopy(char **p, char *str)
-{
-	char	*orig;
-	char	*q;
-
-	orig = str;
-	if (*p)
+	if (chunked)
 	{
-		q = *p;
-		while ((*q++ = *str++));
-		*p = --q;
+		bufFree(buf);
 	}
-	else
-	{
-		while (*str++);
-	}
-
-	return --str - orig;
 }
 
 static void
-httpGetObject(HTTP *http, App *app, int sock, URL *url, unsigned char **headers)
+httpRead(App *app, HTTP *http, int sock)
 {
-	unsigned char	**h;
-	char		*p;
-	int		len;
-	int		i;
-	char		*buf;
+	struct timeval	theTime;
 
-	p = NULL;
-	buf = NULL;
-	for (i = 0; i < 2; i++)
+	app->status(app, "httpRead", __FILE__, __LINE__);
+	gettimeofday(&theTime, NULL);
+	http->in = bufAlloc(sock);
+	httpParseStream(http, app, http->url->url);
+	app->time(app, appTimeReadStream, &theTime);
+	app->status(app, "httpRead done", __FILE__, __LINE__);
+}
+
+static void
+httpPutHeader(App *app, Buf *buf, char *name, char *value)
+{
+	bufPutString(buf, (unsigned char *) name);
+	bufMark(buf, 0);
+	app->httpRequestHeaderName(app, buf);
+	bufPutString(buf, (unsigned char *) ": ");
+	bufMark(buf, 0);
+	app->httpRequest(app, buf);
+	bufPutString(buf, (unsigned char *) value);
+	bufMark(buf, 0);
+	app->httpRequestHeaderValue(app, buf);
+	bufPutString(buf, (unsigned char *) "\r\n");
+	bufMark(buf, 0);
+	app->httpRequest(app, buf);
+}
+
+static void
+httpGetObject(App *app, HTTP *http, int sock)
+{
+	Buf		*buf;
+	HTTPNameValue	*h;
+
+	buf = bufAlloc(sock);
+
+	bufMark(buf, 0);
+	bufPutString(buf, (unsigned char *) "GET ");
+	if (http->url->path)
 	{
-		len = countOrCopy(&p, "GET ");
-		if (url->path)
+		bufPutString(buf, http->url->path);
+	}
+	if (http->url->params)
+	{
+		bufPutString(buf, http->url->params);
+	}
+	if (http->url->query)
+	{
+		bufPutString(buf, http->url->query);
+	}
+	bufPutChar(buf, ' ');
+	bufPutString(buf, http->version);
+	bufPutString(buf, (unsigned char *) "\r\n");
+	bufMark(buf, 0);
+	app->httpRequest(app, buf);
+
+	h = http->headers;
+	if (h)
+	{
+		while (h->name)
 		{
-			len += countOrCopy(&p, (char *) url->path);
-		}
-		if (url->params)
-		{
-			len += countOrCopy(&p, (char *) url->params);
-		}
-		if (url->query)
-		{
-			len += countOrCopy(&p, (char *) url->query);
-		}
-		len += countOrCopy(&p, " HTTP/1.0\n");
-		h = headers;
-		if (h)
-		{
-			while (*h)
-			{
-				len += countOrCopy(&p, (char *) *h);
-				len += countOrCopy(&p, "\n");
-				h++;
-			}
-		}
-		len += countOrCopy(&p, "Host: ");
-		len += countOrCopy(&p, (char *) url->host);
-		len += countOrCopy(&p, "\n\n");
-		if (!buf)
-		{
-			buf = malloc(len + 1);
-			if (!buf)
-			{
-				return;
-			}
-			p = buf;
+			httpPutHeader(app, buf, (char *) h->name,
+				(char *) h->value);
+			h++;
 		}
 	}
-	send(sock, buf, len, 0);
 
-	httpRead(http, app, sock, url->url);
+	httpPutHeader(app, buf, "Connection", "close");
+
+	httpPutHeader(app, buf, "Host", (char *) http->url->host);
+
+	bufPutString(buf, (unsigned char *) "\r\n");
+	bufMark(buf, 0);
+	app->httpRequest(app, buf);
+
+	if (bufError(buf))
+	{
+		return;
+	}
+
+	bufSend(buf);
+
+	bufFree(buf);
+
+	httpRead(app, http, sock);
 }
 
 HTTP *
@@ -384,13 +490,13 @@ httpFree(HTTP *http)
 {
 	if (http)
 	{
-		inputFree(http->input);
+		bufFree(http->in);
 		free(http);
 	}
 }
 
 HTTP *
-httpProcess(App *app, URL *url, unsigned char **headers)
+httpProcess(App *app, URL *url, char *version, HTTPNameValue *headers)
 {
 	HTTP	*http;
 	int	port;
@@ -418,8 +524,18 @@ httpProcess(App *app, URL *url, unsigned char **headers)
 	}
 
 	http = httpAlloc();
+	http->url = url;
+	if (version)
+	{
+		http->version = (unsigned char *) version;
+	}
+	else
+	{
+		http->version = (unsigned char *) "HTTP/1.0";
+	}
+	http->headers = headers;
 
-	httpGetObject(http, app, sock, url, headers);
+	httpGetObject(app, http, sock);
 
 	close(sock);
 

@@ -58,6 +58,7 @@ Description of Files
 
   addurl.c, addurl.h: adds URLs to a list
   all.h: header that includes all the required headers
+  buf.c, buf.h: I/O routines
   cgiview.c: the view.cgi tool
   config*: autoconf-related files
   dns.c: experimental DNS toy
@@ -71,7 +72,6 @@ Description of Files
   http.c, http.h: simple HTTP implementation
   index.html: used with view.cgi tool
   INSTALL: see this file for build instructions
-  io.c, io.h: I/O routines
   link.c: the "link" tool
   main.h: very simple callbacks, could be more object-oriented
   Makefile, Makefile.in: to build everything

@@ -25,7 +25,7 @@
 #ifndef _HTML_H_
 #define _HTML_H_
 
-#include "io.h"
+#include "buf.h"
 
 typedef struct HTMLAttribute
 {
@@ -47,7 +47,7 @@ typedef struct HTML
 
 typedef void (*HTMLHandler)(App *app, HTML *html);
 
-void htmlRead(App *app, Input *input, unsigned char *base);
+void htmlRead(App *app, Buf *buf, unsigned char *base);
 void htmlRegister(char *tag, char *attributeName, HTMLHandler handler);
 void htmlRegisterTagHandler(HTMLHandler handler);
 void htmlRegisterURLHandler(HTMLHandler handler);

@@ -32,7 +32,7 @@
 static int verbose = 0;
 
 static void
-print(View *view, Input *input)
+print(View *view, Buf *b)
 {
 	char		buf[1024];
 	char		*hex;
@@ -47,7 +47,7 @@ print(View *view, Input *input)
 	unsigned char	*str;
 
 	hex = "0123456789ABCDEF";
-	str = copyMemory(input, &inLen);
+	str = bufCopyMemory(b, &inLen);
 
 	buf[1] = 0;
 	len = 0;
@@ -61,7 +61,7 @@ print(View *view, Input *input)
 			switch (str[j])
 			{
 			case '\r':
-				if (str[j + 1] == '\n')
+				if (((j + 1) < inLen) && (str[j + 1] == '\n'))
 				{
 					j++;
 					replacement = CONTROL("CRLF") NL;
@@ -154,62 +154,62 @@ print(View *view, Input *input)
 }
 
 void
-viewHTML(App *app, Input *input)
+viewHTML(App *app, Buf *buf)
 {
 	fprintf(app->view.out, "<font color=#009900>");
-	print(&app->view, input);
+	print(&app->view, buf);
 	fprintf(app->view.out, "</font>");
 }
 
 void
-viewHTMLAttributeName(App *app, Input *input)
+viewHTMLAttributeName(App *app, Buf *buf)
 {
 	fprintf(app->view.out, "<font color=#FF6600>");
-	print(&app->view, input);
+	print(&app->view, buf);
 	fprintf(app->view.out, "</font>");
 }
 
 void
-viewHTMLAttributeValue(App *app, Input *input)
+viewHTMLAttributeValue(App *app, Buf *buf)
 {
 	fprintf(app->view.out, "<font color=#3333FF>");
-	print(&app->view, input);
+	print(&app->view, buf);
 	fprintf(app->view.out, "</font>");
 }
 
 void
-viewHTMLTag(App *app, Input *input)
+viewHTMLTag(App *app, Buf *buf)
 {
 	fprintf(app->view.out, "<font color=#CC33CC>");
-	print(&app->view, input);
+	print(&app->view, buf);
 	fprintf(app->view.out, "</font>");
 }
 
 void
-viewHTMLText(App *app, Input *input)
+viewHTMLText(App *app, Buf *buf)
 {
-	print(&app->view, input);
+	print(&app->view, buf);
 }
 
 void
-viewHTTP(App *app, Input *input)
+viewHTTP(App *app, Buf *buf)
 {
-	print(&app->view, input);
+	print(&app->view, buf);
 }
 
 void
-viewHTTPHeaderName(App *app, Input *input)
+viewHTTPHeaderName(App *app, Buf *buf)
 {
 	fprintf(app->view.out, "<font color=#FF6600>");
-	print(&app->view, input);
+	print(&app->view, buf);
 	fprintf(app->view.out, "</font>");
 }
 
 void
-viewHTTPHeaderValue(App *app, Input *input)
+viewHTTPHeaderValue(App *app, Buf *buf)
 {
 	fprintf(app->view.out, "<font color=#3333FF>");
-	print(&app->view, input);
+	print(&app->view, buf);
 	fprintf(app->view.out, "</font>");
 }
 
@@ -222,10 +222,13 @@ viewVerbose(void)
 void
 viewReport(App *app, char *str)
 {
+	unsigned char	*esc;
+
 	if (verbose)
 	{
-         	fprintf(app->view.out, (char *) escapeHTML((unsigned char *) str));
-		fprintf(app->view.out, "<br>");
+         	esc = escapeHTML((unsigned char *) str);
+         	fprintf(app->view.out, "%s\n", (char *) esc);
+		free(esc);
 		fflush(app->view.out);
 	}
 }
@@ -235,8 +238,7 @@ viewReportHTML(App *app, char *str)
 {
 	if (verbose)
 	{
-         	fprintf(app->view.out, str);
-		fprintf(app->view.out, "<br>");
+         	fprintf(app->view.out, "%s\n", str);
 		fflush(app->view.out);
 	}
 }

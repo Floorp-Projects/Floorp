@@ -68,7 +68,7 @@ main(int argc, char *argv[])
 	while (url)
 	{
 		appDefault.data = url;
-		http = httpProcess(&appDefault, url, NULL);
+		http = httpProcess(&appDefault, url, NULL, NULL);
 		if (http)
 		{
 			switch (http->status)
