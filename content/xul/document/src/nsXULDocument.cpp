@@ -115,9 +115,7 @@
 #include "nsContentUtils.h"
 #include "nsIParser.h"
 #include "nsICSSStyleSheet.h"
-#include "nsIConsoleService.h"
 #include "nsIScriptError.h"
-#include "nsIStringBundle.h"
 
 //----------------------------------------------------------------------
 //
@@ -3005,53 +3003,20 @@ nsXULDocument::ReportMissingOverlay(nsIURI* aURI)
 {
     NS_PRECONDITION(aURI, "Must have a URI");
     
-    nsresult rv;
-    nsCOMPtr<nsIConsoleService> consoleService =
-        do_GetService(NS_CONSOLESERVICE_CONTRACTID, &rv);
-    if (NS_FAILED(rv))
-        return;
-    nsCOMPtr<nsIScriptError> errorObject =
-        do_CreateInstance(NS_SCRIPTERROR_CONTRACTID, &rv);
-    if (NS_FAILED(rv))
-        return;
-    nsCOMPtr<nsIStringBundleService> stringBundleService =
-        do_GetService(NS_STRINGBUNDLE_CONTRACTID, &rv);
-    if (NS_FAILED(rv))
-        return;
-    nsCOMPtr<nsIStringBundle> bundle;
-    rv = stringBundleService->CreateBundle(
-           "chrome://global/locale/xul.properties", getter_AddRefs(bundle));
-    if (NS_FAILED(rv))
-        return;
-
     nsCAutoString spec;
     aURI->GetSpec(spec);
 
     NS_ConvertUTF8toUTF16 utfSpec(spec);
     const PRUnichar* params[] = { utfSpec.get() };
 
-    nsXPIDLString errorText;
-    rv = bundle->FormatStringFromName(NS_LITERAL_STRING("MissingOverlay").get(),
-                                      params, NS_ARRAY_LENGTH(params),
-                                      getter_Copies(errorText));
-    if (NS_FAILED(rv))
-        return;
-
-    nsCAutoString documentURI;
-    mDocumentURI->GetSpec(documentURI);
-    
-    rv = errorObject->Init(errorText.get(),
-                           NS_ConvertUTF8toUTF16(documentURI).get(),/* file name */
-                           EmptyString().get(), /* source line */
-                           0, /* line number */
-                           0, /* column number */
-                           nsIScriptError::warningFlag,
-                           "XUL Document");
-    
-    if (NS_FAILED(rv))
-        return;
-    
-    consoleService->LogMessage(errorObject);
+    nsContentUtils::ReportToConsole(nsContentUtils::eXUL_PROPERTIES,
+                                    "MissingOverlay",
+                                    params, NS_ARRAY_LENGTH(params),
+                                    mDocumentURI,
+                                    0, /* line number */
+                                    0, /* column number */
+                                    nsIScriptError::warningFlag,
+                                    "XUL Document");
 }
 
 nsresult

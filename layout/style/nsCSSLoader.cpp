@@ -66,9 +66,7 @@
 #include "nsIScriptGlobalObject.h"
 #include "nsITimelineService.h"
 #include "nsIHttpChannel.h"
-#include "nsIConsoleService.h"
 #include "nsIScriptError.h"
-#include "nsIStringBundle.h"
 #include "nsMimeTypes.h"
 #include "nsIAtom.h"
 #include "nsCSSLoader.h"
@@ -669,55 +667,6 @@ SheetLoadData::OnDetermineCharset(nsIUnicharStreamLoader* aLoader,
   return NS_OK;
 }
 
-/**
- * Report an error to the error console.
- *  @param aErrorName     The name of a string in css.properties.
- *  @param aParams        The parameters for that string in css.properties.
- *  @param aParamsLength  The length of aParams.
- *  @param aErrorFlags    Error/warning flag to pass to nsIScriptError::Init.
- *
- * XXX This should be a static method on a class called something like
- * nsCSSUtils, since it's a general way of accessing css.properties and
- * will be useful for localizability work on CSS parser error reporting.
- * However, it would need some way of reporting source file name, text,
- * line, and column information.
- */
-static nsresult
-ReportToConsole(const PRUnichar* aMessageName, const PRUnichar **aParams, 
-                PRUint32 aParamsLength, PRUint32 aErrorFlags, const PRUnichar* aReferrer)
-{
-  nsresult rv;
-  nsCOMPtr<nsIConsoleService> consoleService =
-    do_GetService(NS_CONSOLESERVICE_CONTRACTID, &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
-  nsCOMPtr<nsIScriptError> errorObject =
-    do_CreateInstance(NS_SCRIPTERROR_CONTRACTID, &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
-  nsCOMPtr<nsIStringBundleService> stringBundleService =
-    do_GetService(NS_STRINGBUNDLE_CONTRACTID, &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
-  nsCOMPtr<nsIStringBundle> bundle;
-  rv = stringBundleService->CreateBundle(
-           "chrome://global/locale/css.properties", getter_AddRefs(bundle));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsXPIDLString errorText;
-  rv = bundle->FormatStringFromName(aMessageName, aParams, aParamsLength,
-                                    getter_Copies(errorText));
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = errorObject->Init(errorText.get(),
-                         aReferrer, /* file name */
-                         EmptyString().get(), /* source line */
-                         0, /* line number */
-                         0, /* column number */
-                         aErrorFlags,
-                         "CSS Loader");
-  NS_ENSURE_SUCCESS(rv, rv);
-  consoleService->LogMessage(errorObject);
-
-  return NS_OK;
-}
-
 already_AddRefed<nsIURI>
 SheetLoadData::GetReferrerURI()
 {
@@ -805,32 +754,33 @@ SheetLoadData::OnStreamComplete(nsIUnicharStreamLoader* aLoader,
                                           
     if (!validType) {
       nsCAutoString spec;
-      nsCAutoString referrer;
       if (channelURI) {
         channelURI->GetSpec(spec);
       }
 
-      {
-        nsCOMPtr<nsIURI> referrerURI = GetReferrerURI();
-        if (referrerURI)
-          referrerURI->GetSpec(referrer);
-      }
-
       const nsAFlatString& specUTF16 = NS_ConvertUTF8toUTF16(spec);
       const nsAFlatString& ctypeUTF16 = NS_ConvertASCIItoUTF16(contentType);
-      const nsAFlatString& referrerUTF16 = NS_ConvertUTF8toUTF16(referrer);
       const PRUnichar *strings[] = { specUTF16.get(), ctypeUTF16.get() };
 
+      const char *errorMessage;
+      PRUint32 errorFlag;
+
       if (mLoader->mCompatMode == eCompatibility_NavQuirks) {
-        ReportToConsole(NS_LITERAL_STRING("MimeNotCssWarn").get(), strings, 2,
-                        nsIScriptError::warningFlag, referrerUTF16.get());
+        errorMessage = "MimeNotCssWarn";
+        errorFlag = nsIScriptError::warningFlag;
       } else {
         // Drop the data stream so that we do not load it
         aDataStream = nsnull;
 
-        ReportToConsole(NS_LITERAL_STRING("MimeNotCss").get(), strings, 2,
-                        nsIScriptError::errorFlag, referrerUTF16.get());
+        errorMessage = "MimeNotCss";
+        errorFlag = nsIScriptError::errorFlag;
       }
+      nsCOMPtr<nsIURI> referrer = GetReferrerURI();
+      nsContentUtils::ReportToConsole(nsContentUtils::eCSS_PROPERTIES,
+                                      errorMessage,
+                                      strings, NS_ARRAY_LENGTH(strings),
+                                      referrer, 0, 0, errorFlag,
+                                      "CSS Loader");
     }
   }
   

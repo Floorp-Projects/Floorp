@@ -56,9 +56,9 @@
 #include "nsXBLProtoImplMethod.h"
 #include "nsXBLProtoImplField.h"
 #include "nsXBLPrototypeBinding.h"
+#include "nsContentUtils.h"
 #include "nsIConsoleService.h"
 #include "nsIScriptError.h"
-#include "nsIStringBundle.h"
 #include "nsNodeInfoManager.h"
 #include "nsINodeInfo.h"
 
@@ -242,44 +242,15 @@ nsXBLContentSink::ReportUnexpectedElement(nsIAtom* aElementName,
   nsAutoString elementName;
   aElementName->ToString(elementName);
 
-  nsresult rv;
-  nsCOMPtr<nsIConsoleService> consoleService =
-    do_GetService(NS_CONSOLESERVICE_CONTRACTID, &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
-  nsCOMPtr<nsIScriptError> errorObject =
-    do_CreateInstance(NS_SCRIPTERROR_CONTRACTID, &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
-  nsCOMPtr<nsIStringBundleService> stringBundleService =
-    do_GetService(NS_STRINGBUNDLE_CONTRACTID, &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsCOMPtr<nsIStringBundle> bundle;
-  rv = stringBundleService->CreateBundle(
-           "chrome://global/locale/xbl.properties", getter_AddRefs(bundle));
-  NS_ENSURE_SUCCESS(rv, rv);
-
   const PRUnichar* params[] = { elementName.get() };
-  
-  nsXPIDLString errorText;
-  rv = bundle->FormatStringFromName(NS_LITERAL_STRING("UnexpectedElement").get(),
-                                    params, NS_ARRAY_LENGTH(params),
-                                    getter_Copies(errorText));
-  NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCAutoString documentURI;
-  mDocumentURI->GetSpec(documentURI);
-  
-  rv = errorObject->Init(errorText.get(),
-                         NS_ConvertUTF8toUCS2(documentURI).get(),
-                         EmptyString().get(), /* source line */
-                         aLineNumber,
-                         0,  /* column number */
-                         nsIScriptError::errorFlag,
-                         "XBL Content Sink");
-
-  NS_ENSURE_SUCCESS(rv, rv);
-  
-  return consoleService->LogMessage(errorObject);
+  return nsContentUtils::ReportToConsole(nsContentUtils::eXBL_PROPERTIES,
+                                         "UnexpectedElement",
+                                         params, NS_ARRAY_LENGTH(params),
+                                         mDocumentURI,
+                                         aLineNumber, 0 /* column number */,
+                                         nsIScriptError::errorFlag,
+                                         "XBL Content Sink");
 }
 
 void
