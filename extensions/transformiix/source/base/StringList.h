@@ -23,13 +23,13 @@
  * Bob Miller, kbob@oblix.com
  *    -- plugged core leak.
  *
- * $Id: StringList.h,v 1.5 2000/02/22 11:10:01 kvisco%ziplink.net Exp $
+ * $Id: StringList.h,v 1.6 2000/04/06 22:37:29 Peter.VanderBeken%pandora.be Exp $
  */
 
 /**
  * A class for keeping an ordered list of Strings
  * @author <a href="mailto:kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.5 $ $Date: 2000/02/22 11:10:01 $
+ * @version $Revision: 1.6 $ $Date: 2000/04/06 22:37:29 $
 **/
 
 #include "String.h"
@@ -130,7 +130,7 @@ public:
 
 private:
 
-   StringList::StringListItem* currentItem;
+   StringListItem* currentItem;
 
    StringList* stringList;
    MBool allowRemove;
