@@ -25,6 +25,10 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS=webBrowser setup build gtk
+DIRS=webBrowser setup build
+
+ifdef MOZ_ENABLE_GTK
+DIRS += gtk
+endif
 
 include $(topsrcdir)/config/rules.mk
