@@ -1372,6 +1372,29 @@ PRIntn  whichSide=0;
 }
 
 
+
+nscolor 
+nsCSSRendering::TransformColor(nscolor  aMapColor,PRBool aNoBackGround)
+{
+PRInt32 brightness;
+nscolor newcolor;
+
+  newcolor = aMapColor;
+  if (PR_TRUE == aNoBackGround){
+    // convert the RBG to a brightness value (HSV scale)
+    brightness = NS_GetBrightness(NS_GET_R(aMapColor),NS_GET_G(aMapColor),NS_GET_B(aMapColor));
+
+    if(brightness > 64){
+      newcolor = NS_RGB(64,64,64);
+    }
+  }
+
+ return newcolor;
+}
+
+
+
+
 // method GetBGColorForHTMLElement
 //
 // Now here's a *fun* hack: Nav4 uses the BODY element's background color for the 
