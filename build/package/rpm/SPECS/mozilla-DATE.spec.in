@@ -2,7 +2,7 @@ Name:        mozilla
 Summary:     Web browser and mail reader
 Version:     DATE
 Release:     0_rh7
-Serial:      31
+Serial:      33
 Copyright:   MPL
 Source0:     mozilla-source-DATE.tar.gz
 Source1:     mozilla.sh
