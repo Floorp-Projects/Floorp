@@ -40,7 +40,7 @@ CPP_OBJS=		\
 	.\$(OBJDIR)\nsOutlinerSelection.obj \
 	$(NULL)
 
-EXPORTS =					\
+EXPORTS = nsOutlinerColFrame.h	\
 	$(NULL)
 
 LINCS=-I$(PUBLIC)\xpcom -I$(PUBLIC)\raptor -I$(PUBLIC)\js \

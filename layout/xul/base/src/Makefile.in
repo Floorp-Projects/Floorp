@@ -24,6 +24,8 @@ topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
 
+DIRS		= outliner
+
 include $(DEPTH)/config/autoconf.mk
 
 MODULE		= layout

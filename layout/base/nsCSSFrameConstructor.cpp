@@ -169,6 +169,7 @@ static PRBool gNoisyInlineConstruction = PR_FALSE;
 #include "nsXULTreeCellFrame.h"
 #include "nsMenuFrame.h"
 #include "nsPopupSetFrame.h"
+#include "nsOutlinerColFrame.h"
 
 //------------------------------------------------------------------
 
@@ -246,6 +247,9 @@ NS_NewMenuBarFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame );
 
 nsresult
 NS_NewTreeScrollPortFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame );
+
+nsresult
+NS_NewOutlinerBodyFrame (nsIPresShell* aPresShell, nsIFrame** aNewFrame);
 
 // grid
 nsresult
@@ -5261,7 +5265,7 @@ nsCSSFrameConstructor::ConstructXULFrame(nsIPresShell*            aPresShell,
                           display->mDisplay == NS_STYLE_DISPLAY_BOX)) || 
         aTag == nsXULAtoms::box || aTag == nsXULAtoms::vbox || aTag == nsXULAtoms::hbox || aTag == nsXULAtoms::tabbox || 
         aTag == nsXULAtoms::tabpage || aTag == nsXULAtoms::tabcontrol
-        || aTag == nsXULAtoms::treecell  
+        || aTag == nsXULAtoms::treecell  || aTag == nsXULAtoms::outliner
         ) {
       processChildren = PR_TRUE;
       isReplaced = PR_TRUE;
@@ -5404,7 +5408,15 @@ nsCSSFrameConstructor::ConstructXULFrame(nsIPresShell*            aPresShell,
       isReplaced = PR_TRUE;
       rv = NS_NewSpringFrame(aPresShell, &newFrame);
     }
-    
+     else if (aTag == nsXULAtoms::outlinerbody) {
+      isReplaced = PR_TRUE;
+      rv = NS_NewOutlinerBodyFrame(aPresShell, &newFrame);
+    }
+    else if (aTag == nsXULAtoms::outlinercol) {
+      isReplaced = PR_TRUE;
+      processChildren = PR_TRUE;
+      rv = NS_NewOutlinerColFrame(aPresShell, &newFrame);
+    }
     // TEXT CONSTRUCTION
     else if (aTag == nsXULAtoms::text) {
         processChildren = PR_TRUE;

@@ -344,6 +344,7 @@ static Components gComponents[] = {
   { "XUL Editor Box Object", NS_EDITORBOXOBJECT_CID, "@mozilla.org/layout/xul-boxobject-editor;1" },
   { "XUL Iframe Object", NS_IFRAMEBOXOBJECT_CID, "@mozilla.org/layout/xul-boxobject-iframe;1" },
   { "XUL ScrollBox Object", NS_SCROLLBOXOBJECT_CID, "@mozilla.org/layout/xul-boxobject-scrollbox;1" },
+  { "XUL Outliner Box Object", NS_OUTLINERBOXOBJECT_CID, "@mozilla.org/layout/xul-boxobject-outliner;1" },
 
   { "AutoCopy Service", NS_AUTOCOPYSERVICE_CID, "@mozilla.org/autocopy;1" }
 };

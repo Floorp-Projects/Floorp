@@ -56,6 +56,7 @@ SHARED_LIBRARY_LIBS = \
 		$(DIST)/lib/libgkxulcon_s.$(LIB_SUFFIX) \
 		$(DIST)/lib/libgkxulbase_s.$(LIB_SUFFIX) \
 		$(DIST)/lib/libgkbase_s.$(LIB_SUFFIX) \
+		$(DIST)/lib/libgkxuloutliner_s.$(LIB_SUFFIX) \
 		$(NULL)
 
 ifdef MOZ_PERF_METRICS

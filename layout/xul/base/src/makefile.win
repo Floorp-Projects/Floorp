@@ -23,6 +23,7 @@ DEPTH=..\..\..\..
 
 LIBRARY_NAME=layoutxulbase_s 
 MODULE=raptor 
+DIRS=outliner
 
 DEFINES=-D_IMPL_NS_HTML -DWIN32_LEAN_AND_MEAN
 

@@ -85,6 +85,7 @@ static NS_DEFINE_CID(kPopupSetBoxObjectCID, NS_POPUPSETBOXOBJECT_CID);
 static NS_DEFINE_CID(kBrowserBoxObjectCID, NS_BROWSERBOXOBJECT_CID);
 static NS_DEFINE_CID(kEditorBoxObjectCID, NS_EDITORBOXOBJECT_CID);
 static NS_DEFINE_CID(kIFrameBoxObjectCID, NS_IFRAMEBOXOBJECT_CID);
+static NS_DEFINE_CID(kOutlinerBoxObjectCID, NS_OUTLINERBOXOBJECT_CID);
 
 static NS_DEFINE_CID(kAutoCopyServiceCID, NS_AUTOCOPYSERVICE_CID);
 
@@ -102,6 +103,7 @@ extern nsresult NS_NewEditorBoxObject(nsIBoxObject** aResult);
 extern nsresult NS_NewPopupSetBoxObject(nsIBoxObject** aResult);
 extern nsresult NS_NewBrowserBoxObject(nsIBoxObject** aResult);
 extern nsresult NS_NewIFrameBoxObject(nsIBoxObject** aResult);
+extern nsresult NS_NewOutlinerBoxObject(nsIBoxObject** aResult);
 
 extern nsresult NS_NewAutoCopyService(nsIAutoCopyService** aResult);
 
@@ -288,6 +290,13 @@ nsLayoutFactory::CreateInstance(nsISupports *aOuter,
     res = NS_NewIFrameBoxObject((nsIBoxObject**) &inst);
     if (NS_FAILED(res)) {
       LOG_NEW_FAILURE("NS_NewIFrameBoxObject", res);
+      return res;
+    }
+  }
+  else if (mClassID.Equals(kOutlinerBoxObjectCID)) {
+    res = NS_NewOutlinerBoxObject((nsIBoxObject**) &inst);
+    if (NS_FAILED(res)) {
+      LOG_NEW_FAILURE("NS_NewOutlinerBoxObject", res);
       return res;
     }
   }
