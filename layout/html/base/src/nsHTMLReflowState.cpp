@@ -2170,7 +2170,19 @@ nsHTMLReflowState::ComputeHorizontalValue(nscoord aContainingBlockWidth,
     else {
       const nsStyleFont* font;
       frame->GetStyleData(eStyleStruct_Font, (const nsStyleStruct*&) font);
-      rendContext->SetFont(font->mFont);
+
+      const nsStyleVisibility* vis; 
+      (const nsStyleVisibility*)frame->GetStyleData(eStyleStruct_Visibility, (const nsStyleStruct*&)vis);
+
+      nsCOMPtr<nsIDeviceContext> deviceContext;
+      rendContext->GetDeviceContext(*getter_AddRefs(deviceContext));
+      nsCOMPtr<nsIAtom> langGroup;
+      if (vis->mLanguage) {
+        vis->mLanguage->GetLanguageGroup(getter_AddRefs(langGroup));
+      }
+      nsCOMPtr<nsIFontMetrics> fm;
+      deviceContext->GetMetricsFor(font->mFont, langGroup, *getter_AddRefs(fm));
+      rendContext->SetFont(fm);
       nscoord fontWidth;
       rendContext->GetWidth('M', fontWidth);
       aResult = aCoord.GetIntValue() * fontWidth;
