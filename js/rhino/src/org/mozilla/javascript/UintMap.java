@@ -172,7 +172,10 @@ class UintMap implements Serializable {
         if (0 <= index) {
             keys[index] = DELETED;
             --keyCount;
+            // Allow to GC value and make sure that new key with the deleted
+            // slot shall get proper default values
             if (values != null) { values[index] = null; }
+            if (ivaluesShift != 0) { keys[ivaluesShift + index] = 0; }
         }
     }
 
