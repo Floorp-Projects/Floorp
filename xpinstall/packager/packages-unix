@@ -128,6 +128,7 @@ bin/components/mozxfer.xpt
 bin/components/libnecko.so
 bin/components/libnecko2.so
 bin/components/necko.xpt
+bin/components/mimetypes.xpt
 bin/components/necko_cache.xpt
 bin/components/necko_strconv.xpt
 bin/components/necko_about.xpt

@@ -108,6 +108,7 @@ bin\components\nativapp.dll
 bin\components\necko.dll
 bin\components\necko2.dll
 bin\components\necko.xpt
+bin\components\mimetype.xpt
 bin\components\necko_cache.xpt
 bin\components\necko_strconv.xpt
 bin\components\necko_about.xpt
