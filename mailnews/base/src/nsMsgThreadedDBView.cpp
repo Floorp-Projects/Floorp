@@ -582,59 +582,55 @@ nsresult nsMsgThreadedDBView::OnNewHeader(nsIMsgDBHdr *newHdr, nsMsgKey aParentK
       nsMsgViewIndex threadIndex = ThreadIndexOfMsg(newKey, nsMsgViewIndex_None, &threadCount, &threadFlags);
       if (threadIndex != nsMsgViewIndex_None)
       {
-        // check if this is now the new thread hdr
         PRUint32	flags = m_flags[threadIndex];
-        // if we have a collapsed thread which just got a new
-        // top of thread, change the keys array.
-        PRInt32 level = FindLevelInThread(newHdr, threadIndex);
-        if (((flags & MSG_FLAG_ELIDED) || threadCount == 1)
-          && (!(m_viewFlags & nsMsgViewFlagsType::kUnreadOnly) || !(msgFlags & MSG_FLAG_READ)))
-        {
-          if (level == 0) {
-            nsMsgKey msgKey;
-            newHdr->GetMessageKey(&msgKey);
-            m_keys.SetAt(threadIndex, msgKey);
-          }
-          // note change, to update the parent thread's unread and total counts
-          NoteChange(threadIndex, 1, nsMsgViewNotificationCode::changed);
-        }
         if (!(flags & MSG_VIEW_FLAG_HASCHILDREN))
         {
           flags |= MSG_VIEW_FLAG_HASCHILDREN | MSG_VIEW_FLAG_ISTHREAD;
           if (!(m_viewFlags & nsMsgViewFlagsType::kUnreadOnly))
             flags |= MSG_FLAG_ELIDED;
           m_flags[threadIndex] = flags;
-          NoteChange(threadIndex, 1, nsMsgViewNotificationCode::changed);
         }
         if (!(flags & MSG_FLAG_ELIDED))	// thread is expanded
         {								// insert child into thread
           // levels of other hdrs may have changed!
           PRUint32	newFlags = msgFlags;
-          nsMsgViewIndex insertIndex = GetInsertInfoForNewHdr(newHdr, threadIndex, level);
-          // this header is the new king! try collapsing the existing thread,
-          // removing it, installing this header as king, and expanding it.
-          if (level == 0)	
+          PRInt32 level = 0;
+          nsMsgViewIndex insertIndex = FindParentInThread(newHdr, threadIndex);
+          if (aParentKey == nsMsgKey_None)
           {
             newFlags |= MSG_VIEW_FLAG_ISTHREAD | MSG_VIEW_FLAG_HASCHILDREN;
-            insertIndex = threadIndex;
+          }
+          else
+          {
+            level = m_levels[insertIndex];
+            insertIndex = GetInsertInfoForNewHdr(newHdr, threadIndex, level);
           }
           m_keys.InsertAt(insertIndex, newKey);
           m_flags.InsertAt(insertIndex, newFlags, 1);
           m_levels.InsertAt(insertIndex, level);
-          NoteChange(threadIndex, 1, nsMsgViewNotificationCode::changed);
 
           // the call to NoteChange() has to happen after we add the key
           // as NoteChange() will call RowCountChanged() which will call our GetRowCount()
           NoteChange(insertIndex, 1, nsMsgViewNotificationCode::insertOrDelete);
 
-          if (level == 0)
+          if (aParentKey == nsMsgKey_None)
           {
+            // this header is the new king! try collapsing the existing thread,
+            // removing it, installing this header as king, and expanding it.
             CollapseByIndex(threadIndex, nsnull);
             // call base class, so child won't get promoted.
             // nsMsgDBView::RemoveByIndex(threadIndex);	
             ExpandByIndex(threadIndex, nsnull);
           }
         }
+        else if (aParentKey == nsMsgKey_None)
+        {
+          // if we have a collapsed thread which just got a new
+          // top of thread, change the keys array.
+          m_keys.SetAt(threadIndex, newKey);
+        }
+        // note change, to update the parent thread's unread and total counts
+        NoteChange(threadIndex, 1, nsMsgViewNotificationCode::changed);
       }
       else // adding msg to thread that's not in view.
       {
@@ -687,23 +683,14 @@ NS_IMETHODIMP nsMsgThreadedDBView::OnParentChanged (nsMsgKey aKeyChanged, nsMsgK
 
 nsMsgViewIndex nsMsgThreadedDBView::GetInsertInfoForNewHdr(nsIMsgDBHdr *newHdr, nsMsgViewIndex parentIndex, PRInt32 targetLevel)
 {
-	if (targetLevel == 0) // newHdr is the top level header, so the thread index is our index.
-		return parentIndex;
-  PRInt32 viewSize = GetSize();
-  nsMsgViewIndex insertIndex = parentIndex + 1;
-  if (parentIndex != nsMsgViewIndex_None)
+  PRUint32 viewSize = GetSize();
+  while (++parentIndex < viewSize)
   {
-    PRInt32 parentLevel = m_levels[parentIndex];
-    NS_ASSERTION(targetLevel == parentLevel + 1, "levels are screwed up");
-    while ((PRInt32) insertIndex < viewSize)
-    {
-      // loop until we find a message at a level less than or equal to the parent level
-      if (m_levels[insertIndex] <= parentLevel)
-        break;
-      insertIndex++;
-    }
+    // loop until we find a message at a level less than or equal to the parent level
+    if (m_levels[parentIndex] < targetLevel)
+      break;
   }
-  return insertIndex;
+  return parentIndex;
 }
 
 nsresult nsMsgThreadedDBView::AddMsgToThreadNotInView(nsIMsgThread *threadHdr, nsIMsgDBHdr *msgHdr, PRBool ensureListed)

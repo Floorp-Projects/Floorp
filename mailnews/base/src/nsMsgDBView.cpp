@@ -4357,26 +4357,28 @@ PRBool nsMsgDBView::WantsThisThread(nsIMsgThread * /*threadHdr*/)
   return PR_TRUE; // default is to want all threads.
 }
 
-PRInt32 nsMsgDBView::FindLevelInThread(nsIMsgDBHdr *msgHdr, nsMsgViewIndex startOfThreadViewIndex)
+nsMsgViewIndex nsMsgDBView::FindParentInThread(nsIMsgDBHdr *msgHdr, nsMsgViewIndex startOfThreadViewIndex)
 {
-  nsMsgKey threadParent;
-  msgHdr->GetThreadParent(&threadParent);
-  nsMsgViewIndex parentIndex = m_keys.FindIndex(threadParent, startOfThreadViewIndex);
-  if (parentIndex != nsMsgViewIndex_None)
-    return m_levels[parentIndex] + 1;
-  else
+  nsCOMPtr<nsIMsgDBHdr> curMsgHdr;
+  nsMsgKey parentKey;
+  msgHdr->GetThreadParent(&parentKey);
+
+  while (parentKey != nsMsgKey_None)
   {
-#ifdef DEBUG_bienvenu1
-    NS_ASSERTION(PR_FALSE, "couldn't find parent of msg");
-#endif
-    nsMsgKey msgKey;
-    msgHdr->GetMessageKey(&msgKey);
-    // check if this is a newly promoted thread root
-    if (threadParent == nsMsgKey_None || threadParent == msgKey)
-      return 0;
-    else
-      return 1; // well, return level 1.
+    if (NS_FAILED(m_db->GetMsgHdrForKey(parentKey, getter_AddRefs(curMsgHdr))))
+      break;
+
+    nsMsgKey parentKey;
+    curMsgHdr->GetThreadParent(&parentKey);
+    if (parentKey == nsMsgKey_None)
+      break;
+
+    nsMsgViewIndex parentIndex = m_keys.FindIndex(parentKey, startOfThreadViewIndex);
+    if (parentIndex != nsMsgViewIndex_None)
+      return parentIndex;
   }
+
+  return startOfThreadViewIndex;
 }
 
 nsresult nsMsgDBView::ListIdsInThreadOrder(nsIMsgThread *threadHdr, nsMsgKey parentKey, PRInt32 level, nsMsgViewIndex *viewIndex, PRUint32 *pNumListed)
