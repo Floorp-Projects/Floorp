@@ -21,6 +21,7 @@
 #include "nsISupports.h"
 
 // Alphabetically ordered list of externally defined IID's
+extern const nsIID kIAreaFrameIID;
 extern const nsIID kIHTMLContentIID;
 extern const nsIID kIHTMLReflowIID;
 extern const nsIID kIPageSequenceFrameIID;
