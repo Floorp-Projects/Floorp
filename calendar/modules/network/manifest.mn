@@ -12,8 +12,6 @@ DEPTH  = ../../..
 
 DIRS =  capi
 
-LIBRARY_NAME = calnetwork
-
 EXPORTS = \
 	$(NULL)
 
