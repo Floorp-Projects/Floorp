@@ -29,7 +29,7 @@
 #include "nsAbsoluteContainingBlock.h"
 #include "nsLayoutAtoms.h"
 
-#define NOISY_FINAL_SIZE
+#undef NOISY_FINAL_SIZE
 
 nsIID nsInlineFrame::kInlineFrameCID = NS_INLINE_FRAME_CID;
 
