@@ -36,8 +36,8 @@ public:
                               PRInt32         aHint);
 
 protected:
-	virtual PRBool	GetCheckboxState();
-	virtual void 		SetCheckboxState(PRBool aValue);
+	virtual CheckState	GetCheckboxState();
+	virtual void 		SetCheckboxState(CheckState aValue);
 
   virtual nscoord GetCheckboxSize(float aPixToTwip) const;
   virtual void GetDesiredSize(nsIPresContext* aPresContext,

@@ -129,7 +129,8 @@ nsNativeCheckboxControlFrame::AttributeChanged(nsIPresContext* aPresContext,
   return result;
 }
 
-PRBool nsNativeCheckboxControlFrame::GetCheckboxState()
+nsCheckboxControlFrame::CheckState
+nsNativeCheckboxControlFrame::GetCheckboxState()
 {
 	PRBool state = PR_FALSE;
 
@@ -141,16 +142,16 @@ PRBool nsNativeCheckboxControlFrame::GetCheckboxState()
        NS_RELEASE(checkBox);
       }
   }
-  return state;
+  return state ? eOn : eOff;
 }
 
 
-void nsNativeCheckboxControlFrame::SetCheckboxState(PRBool aValue)
+void nsNativeCheckboxControlFrame::SetCheckboxState(CheckState aValue)
 {
   if (nsnull != mWidget) {
     nsICheckButton* checkBox = nsnull;
     if (NS_OK == mWidget->QueryInterface(kICheckButtonIID,(void**)&checkBox)) {
-      checkBox->SetState(aValue);
+      checkBox->SetState(aValue == eOn);
       NS_RELEASE(checkBox);
     }
   }
