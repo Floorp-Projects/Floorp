@@ -113,7 +113,6 @@ PR_STATIC_CALLBACK(JSBool)
 GetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
   nsIDOMWindow *a = (nsIDOMWindow*)nsJSUtils::nsGetNativeThis(cx, obj);
-  nsresult result = NS_OK;
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == a) {
@@ -135,6 +134,7 @@ GetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
         nsIDOMWindow* prop;
+        nsresult result = NS_OK;
         result = a->GetWindow(&prop);
         if (NS_SUCCEEDED(result)) {
           // get the js object
@@ -153,6 +153,7 @@ GetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
         nsIDOMWindow* prop;
+        nsresult result = NS_OK;
         result = a->GetSelf(&prop);
         if (NS_SUCCEEDED(result)) {
           // get the js object
@@ -171,6 +172,7 @@ GetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
         nsIDOMDocument* prop;
+        nsresult result = NS_OK;
         result = a->GetDocument(&prop);
         if (NS_SUCCEEDED(result)) {
           // get the js object
@@ -189,6 +191,7 @@ GetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
         nsIDOMNavigator* prop;
+        nsresult result = NS_OK;
         result = a->GetNavigator(&prop);
         if (NS_SUCCEEDED(result)) {
           // get the js object
@@ -207,6 +210,7 @@ GetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
         nsIDOMScreen* prop;
+        nsresult result = NS_OK;
         result = a->GetScreen(&prop);
         if (NS_SUCCEEDED(result)) {
           // get the js object
@@ -225,6 +229,7 @@ GetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
         nsIDOMHistory* prop;
+        nsresult result = NS_OK;
         result = a->GetHistory(&prop);
         if (NS_SUCCEEDED(result)) {
           // get the js object
@@ -243,6 +248,7 @@ GetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
         nsIDOMWindow* prop;
+        nsresult result = NS_OK;
         result = a->GetParent(&prop);
         if (NS_SUCCEEDED(result)) {
           // get the js object
@@ -261,6 +267,7 @@ GetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
         nsIDOMWindow* prop;
+        nsresult result = NS_OK;
         result = a->GetTop(&prop);
         if (NS_SUCCEEDED(result)) {
           // get the js object
@@ -279,6 +286,7 @@ GetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
         nsIDOMWindow* prop;
+        nsresult result = NS_OK;
         result = a->GetContent(&prop);
         if (NS_SUCCEEDED(result)) {
           // get the js object
@@ -297,6 +305,7 @@ GetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
         nsIDOMBarProp* prop;
+        nsresult result = NS_OK;
         result = a->GetMenubar(&prop);
         if (NS_SUCCEEDED(result)) {
           // get the js object
@@ -315,6 +324,7 @@ GetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
         nsIDOMBarProp* prop;
+        nsresult result = NS_OK;
         result = a->GetToolbar(&prop);
         if (NS_SUCCEEDED(result)) {
           // get the js object
@@ -333,6 +343,7 @@ GetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
         nsIDOMBarProp* prop;
+        nsresult result = NS_OK;
         result = a->GetLocationbar(&prop);
         if (NS_SUCCEEDED(result)) {
           // get the js object
@@ -351,6 +362,7 @@ GetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
         nsIDOMBarProp* prop;
+        nsresult result = NS_OK;
         result = a->GetPersonalbar(&prop);
         if (NS_SUCCEEDED(result)) {
           // get the js object
@@ -369,6 +381,7 @@ GetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
         nsIDOMBarProp* prop;
+        nsresult result = NS_OK;
         result = a->GetStatusbar(&prop);
         if (NS_SUCCEEDED(result)) {
           // get the js object
@@ -387,6 +400,7 @@ GetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
         nsIDOMBarProp* prop;
+        nsresult result = NS_OK;
         result = a->GetScrollbars(&prop);
         if (NS_SUCCEEDED(result)) {
           // get the js object
@@ -405,6 +419,7 @@ GetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
         nsIDOMBarProp* prop;
+        nsresult result = NS_OK;
         result = a->GetDirectories(&prop);
         if (NS_SUCCEEDED(result)) {
           // get the js object
@@ -423,6 +438,7 @@ GetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
         PRBool prop;
+        nsresult result = NS_OK;
         result = a->GetClosed(&prop);
         if (NS_SUCCEEDED(result)) {
           *vp = BOOLEAN_TO_JSVAL(prop);
@@ -440,6 +456,7 @@ GetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
         nsIDOMWindowCollection* prop;
+        nsresult result = NS_OK;
         result = a->GetFrames(&prop);
         if (NS_SUCCEEDED(result)) {
           // get the js object
@@ -458,6 +475,7 @@ GetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
         nsIDOMWindow* prop;
+        nsresult result = NS_OK;
         result = a->GetOpener(&prop);
         if (NS_SUCCEEDED(result)) {
           // get the js object
@@ -476,6 +494,7 @@ GetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
         nsAutoString prop;
+        nsresult result = NS_OK;
         result = a->GetStatus(prop);
         if (NS_SUCCEEDED(result)) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
@@ -493,6 +512,7 @@ GetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
         nsAutoString prop;
+        nsresult result = NS_OK;
         result = a->GetDefaultStatus(prop);
         if (NS_SUCCEEDED(result)) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
@@ -510,6 +530,7 @@ GetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
         nsAutoString prop;
+        nsresult result = NS_OK;
         result = a->GetName(prop);
         if (NS_SUCCEEDED(result)) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
@@ -527,6 +548,7 @@ GetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
         PRInt32 prop;
+        nsresult result = NS_OK;
         result = a->GetInnerWidth(&prop);
         if (NS_SUCCEEDED(result)) {
           *vp = INT_TO_JSVAL(prop);
@@ -544,6 +566,7 @@ GetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
         PRInt32 prop;
+        nsresult result = NS_OK;
         result = a->GetInnerHeight(&prop);
         if (NS_SUCCEEDED(result)) {
           *vp = INT_TO_JSVAL(prop);
@@ -561,6 +584,7 @@ GetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
         PRInt32 prop;
+        nsresult result = NS_OK;
         result = a->GetOuterWidth(&prop);
         if (NS_SUCCEEDED(result)) {
           *vp = INT_TO_JSVAL(prop);
@@ -578,6 +602,7 @@ GetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
         PRInt32 prop;
+        nsresult result = NS_OK;
         result = a->GetOuterHeight(&prop);
         if (NS_SUCCEEDED(result)) {
           *vp = INT_TO_JSVAL(prop);
@@ -595,6 +620,7 @@ GetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
         PRInt32 prop;
+        nsresult result = NS_OK;
         result = a->GetScreenX(&prop);
         if (NS_SUCCEEDED(result)) {
           *vp = INT_TO_JSVAL(prop);
@@ -612,6 +638,7 @@ GetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
         PRInt32 prop;
+        nsresult result = NS_OK;
         result = a->GetScreenY(&prop);
         if (NS_SUCCEEDED(result)) {
           *vp = INT_TO_JSVAL(prop);
@@ -629,6 +656,7 @@ GetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
         PRInt32 prop;
+        nsresult result = NS_OK;
         result = a->GetPageXOffset(&prop);
         if (NS_SUCCEEDED(result)) {
           *vp = INT_TO_JSVAL(prop);
@@ -646,6 +674,7 @@ GetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
         PRInt32 prop;
+        nsresult result = NS_OK;
         result = a->GetPageYOffset(&prop);
         if (NS_SUCCEEDED(result)) {
           *vp = INT_TO_JSVAL(prop);
@@ -674,7 +703,6 @@ PR_STATIC_CALLBACK(JSBool)
 SetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
   nsIDOMWindow *a = (nsIDOMWindow*)nsJSUtils::nsGetNativeThis(cx, obj);
-  nsresult result = NS_OK;
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == a) {

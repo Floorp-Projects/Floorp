@@ -55,7 +55,6 @@ PR_STATIC_CALLBACK(JSBool)
 GetProcessingInstructionProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
   nsIDOMProcessingInstruction *a = (nsIDOMProcessingInstruction*)nsJSUtils::nsGetNativeThis(cx, obj);
-  nsresult result = NS_OK;
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == a) {
@@ -77,6 +76,7 @@ GetProcessingInstructionProperty(JSContext *cx, JSObject *obj, jsval id, jsval *
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
         nsAutoString prop;
+        nsresult result = NS_OK;
         result = a->GetTarget(prop);
         if (NS_SUCCEEDED(result)) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
@@ -94,6 +94,7 @@ GetProcessingInstructionProperty(JSContext *cx, JSObject *obj, jsval id, jsval *
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
         nsAutoString prop;
+        nsresult result = NS_OK;
         result = a->GetData(prop);
         if (NS_SUCCEEDED(result)) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
@@ -122,7 +123,6 @@ PR_STATIC_CALLBACK(JSBool)
 SetProcessingInstructionProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
   nsIDOMProcessingInstruction *a = (nsIDOMProcessingInstruction*)nsJSUtils::nsGetNativeThis(cx, obj);
-  nsresult result = NS_OK;
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == a) {

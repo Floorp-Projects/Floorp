@@ -102,7 +102,6 @@ PR_STATIC_CALLBACK(JSBool)
 GetDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
   nsIDOMDocument *a = (nsIDOMDocument*)nsJSUtils::nsGetNativeThis(cx, obj);
-  nsresult result = NS_OK;
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == a) {
@@ -124,6 +123,7 @@ GetDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
         nsIDOMDocumentType* prop;
+        nsresult result = NS_OK;
         result = a->GetDoctype(&prop);
         if (NS_SUCCEEDED(result)) {
           // get the js object
@@ -142,6 +142,7 @@ GetDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
         nsIDOMDOMImplementation* prop;
+        nsresult result = NS_OK;
         result = a->GetImplementation(&prop);
         if (NS_SUCCEEDED(result)) {
           // get the js object
@@ -160,6 +161,7 @@ GetDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
         nsIDOMElement* prop;
+        nsresult result = NS_OK;
         result = a->GetDocumentElement(&prop);
         if (NS_SUCCEEDED(result)) {
           // get the js object
@@ -180,6 +182,7 @@ GetDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         nsIDOMStyleSheetCollection* prop;
         nsIDOMNSDocument* b;
         if (NS_OK == a->QueryInterface(kINSDocumentIID, (void **)&b)) {
+          nsresult result = NS_OK;
           result = b->GetStyleSheets(&prop);
           if(NS_SUCCEEDED(result)) {
           // get the js object
@@ -215,7 +218,6 @@ PR_STATIC_CALLBACK(JSBool)
 SetDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
   nsIDOMDocument *a = (nsIDOMDocument*)nsJSUtils::nsGetNativeThis(cx, obj);
-  nsresult result = NS_OK;
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == a) {

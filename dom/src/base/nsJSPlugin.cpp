@@ -60,7 +60,6 @@ PR_STATIC_CALLBACK(JSBool)
 GetPluginProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
   nsIDOMPlugin *a = (nsIDOMPlugin*)nsJSUtils::nsGetNativeThis(cx, obj);
-  nsresult result = NS_OK;
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == a) {
@@ -84,6 +83,7 @@ GetPluginProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
         nsAutoString prop;
+        nsresult result = NS_OK;
         result = a->GetDescription(prop);
         if (NS_SUCCEEDED(result)) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
@@ -101,6 +101,7 @@ GetPluginProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
         nsAutoString prop;
+        nsresult result = NS_OK;
         result = a->GetFilename(prop);
         if (NS_SUCCEEDED(result)) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
@@ -118,6 +119,7 @@ GetPluginProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
         nsAutoString prop;
+        nsresult result = NS_OK;
         result = a->GetName(prop);
         if (NS_SUCCEEDED(result)) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
@@ -135,6 +137,7 @@ GetPluginProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
         PRUint32 prop;
+        nsresult result = NS_OK;
         result = a->GetLength(&prop);
         if (NS_SUCCEEDED(result)) {
           *vp = INT_TO_JSVAL(prop);
@@ -146,6 +149,7 @@ GetPluginProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       default:
       {
+        nsresult result = NS_OK;
         nsIDOMMimeType* prop;
         result = a->Item(JSVAL_TO_INT(id), &prop);
         if (NS_SUCCEEDED(result)) {
@@ -162,6 +166,7 @@ GetPluginProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
   if (checkNamedItem) {
     nsIDOMMimeType* prop;
     nsAutoString name;
+    nsresult result = NS_OK;
 
     JSString *jsstring = JS_ValueToString(cx, id);
     if (nsnull != jsstring) {
@@ -200,7 +205,6 @@ PR_STATIC_CALLBACK(JSBool)
 SetPluginProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
   nsIDOMPlugin *a = (nsIDOMPlugin*)nsJSUtils::nsGetNativeThis(cx, obj);
-  nsresult result = NS_OK;
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == a) {

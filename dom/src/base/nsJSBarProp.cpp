@@ -54,7 +54,6 @@ PR_STATIC_CALLBACK(JSBool)
 GetBarPropProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
   nsIDOMBarProp *a = (nsIDOMBarProp*)nsJSUtils::nsGetNativeThis(cx, obj);
-  nsresult result = NS_OK;
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == a) {
@@ -76,6 +75,7 @@ GetBarPropProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
         PRBool prop;
+        nsresult result = NS_OK;
         result = a->GetVisible(&prop);
         if (NS_SUCCEEDED(result)) {
           *vp = BOOLEAN_TO_JSVAL(prop);
@@ -104,7 +104,6 @@ PR_STATIC_CALLBACK(JSBool)
 SetBarPropProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
   nsIDOMBarProp *a = (nsIDOMBarProp*)nsJSUtils::nsGetNativeThis(cx, obj);
-  nsresult result = NS_OK;
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == a) {

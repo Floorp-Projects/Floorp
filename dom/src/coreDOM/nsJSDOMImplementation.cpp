@@ -48,7 +48,6 @@ PR_STATIC_CALLBACK(JSBool)
 GetDOMImplementationProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
   nsIDOMDOMImplementation *a = (nsIDOMDOMImplementation*)nsJSUtils::nsGetNativeThis(cx, obj);
-  nsresult result = NS_OK;
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == a) {
@@ -82,7 +81,6 @@ PR_STATIC_CALLBACK(JSBool)
 SetDOMImplementationProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
   nsIDOMDOMImplementation *a = (nsIDOMDOMImplementation*)nsJSUtils::nsGetNativeThis(cx, obj);
-  nsresult result = NS_OK;
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == a) {
