@@ -2245,11 +2245,23 @@ nsLocalFile::SetPersistentDescriptor(const char * aPersistentDescriptor)
 NS_IMETHODIMP
 nsLocalFile::Reveal()
 {
-  nsXPIDLCString platformPath;
+  PRBool isDirectory = PR_FALSE;
+  nsXPIDLCString path;
 
-  GetPath(getter_Copies(platformPath));  
+  IsDirectory(&isDirectory);
+  if (isDirectory)
+  {
+    GetPath(getter_Copies(path));  
+  }
+  else
+  {
+    nsCOMPtr<nsIFile> parent;
+    GetParent(getter_AddRefs(parent));
+    if (parent)
+      parent->GetPath(getter_Copies(path));  
+  }
 
-  HOBJECT hobject = WinQueryObject(platformPath);
+  HOBJECT hobject = WinQueryObject(path);
   WinOpenObject( hobject, OPEN_DEFAULT, TRUE);
 
   // we don't care if it succeeded or failed.
@@ -2260,7 +2272,15 @@ nsLocalFile::Reveal()
 NS_IMETHODIMP
 nsLocalFile::Launch()
 {
-  return NS_ERROR_FAILURE;
+  nsXPIDLCString platformPath;
+
+  GetPath(getter_Copies(platformPath));  
+
+  HOBJECT hobject = WinQueryObject(platformPath);
+  WinOpenObject( hobject, OPEN_DEFAULT, TRUE);
+
+  // we don't care if it succeeded or failed.
+  return NS_OK;
 }
 
 nsresult 
