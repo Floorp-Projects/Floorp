@@ -279,8 +279,11 @@ const char js_decodeURIComponent_str[] = "decodeURIComponent";
 const char js_encodeURIComponent_str[] = "encodeURIComponent";
 
 static JSFunctionSpec string_functions[] = {
+#ifndef MOZILLA_CLIENT
+    /* These two are predefined in a backward-compatible way by the DOM. */
     {js_escape_str,             str_escape,                 1,0,0},
     {js_unescape_str,           str_unescape,               1,0,0},
+#endif
 #if JS_HAS_UNEVAL
     {js_uneval_str,             str_uneval,                 1,0,0},
 #endif
