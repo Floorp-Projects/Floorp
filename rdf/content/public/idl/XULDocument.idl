@@ -12,4 +12,5 @@ interface XULDocument : Document {
 	NodeList getElementsByAttribute(in DOMString name, in DOMString value);
 
         void persist(in DOMString id, in DOMString attr);
+    readonly attribute HTMLCollection controls;
 };

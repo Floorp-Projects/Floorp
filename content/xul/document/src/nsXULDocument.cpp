@@ -2605,6 +2605,19 @@ nsXULDocument::GetCommandDispatcher(nsIDOMXULCommandDispatcher** aTracker)
 }
 
 NS_IMETHODIMP
+nsXULDocument::GetControls(nsIDOMHTMLCollection ** aResult) {
+    NS_ENSURE_ARG_POINTER(aResult);
+    
+    // for now, just return the elements in the HTML form...
+    // eventually we could return other XUL elements
+    if (mHiddenForm)
+        return mHiddenForm->GetElements(aResult);
+    else
+        *aResult = nsnull;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
 nsXULDocument::GetElementById(const nsString& aId, nsIDOMElement** aReturn)
 {
     nsresult rv;

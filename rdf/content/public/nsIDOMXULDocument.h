@@ -16,8 +16,6 @@
  * Communications Corporation.  Portions created by Netscape are
  * Copyright (C) 1998 Netscape Communications Corporation. All
  * Rights Reserved.
- *
- * Contributor(s): 
  */
 /* AUTO-GENERATED. DO NOT EDIT!!! */
 
@@ -32,6 +30,7 @@
 class nsIDOMElement;
 class nsIDOMNode;
 class nsIDOMXULCommandDispatcher;
+class nsIDOMHTMLCollection;
 class nsIDOMNodeList;
 
 #define NS_IDOMXULDOCUMENT_IID \
@@ -50,6 +49,8 @@ public:
 
   NS_IMETHOD    GetCommandDispatcher(nsIDOMXULCommandDispatcher** aCommandDispatcher)=0;
 
+  NS_IMETHOD    GetControls(nsIDOMHTMLCollection** aControls)=0;
+
   NS_IMETHOD    GetElementById(const nsString& aId, nsIDOMElement** aReturn)=0;
 
   NS_IMETHOD    GetElementsByAttribute(const nsString& aName, const nsString& aValue, nsIDOMNodeList** aReturn)=0;
@@ -64,6 +65,7 @@ public:
   NS_IMETHOD    GetTooltipNode(nsIDOMNode** aTooltipNode);  \
   NS_IMETHOD    SetTooltipNode(nsIDOMNode* aTooltipNode);  \
   NS_IMETHOD    GetCommandDispatcher(nsIDOMXULCommandDispatcher** aCommandDispatcher);  \
+  NS_IMETHOD    GetControls(nsIDOMHTMLCollection** aControls);  \
   NS_IMETHOD    GetElementById(const nsString& aId, nsIDOMElement** aReturn);  \
   NS_IMETHOD    GetElementsByAttribute(const nsString& aName, const nsString& aValue, nsIDOMNodeList** aReturn);  \
   NS_IMETHOD    Persist(const nsString& aId, const nsString& aAttr);  \
@@ -76,6 +78,7 @@ public:
   NS_IMETHOD    GetTooltipNode(nsIDOMNode** aTooltipNode) { return _to GetTooltipNode(aTooltipNode); } \
   NS_IMETHOD    SetTooltipNode(nsIDOMNode* aTooltipNode) { return _to SetTooltipNode(aTooltipNode); } \
   NS_IMETHOD    GetCommandDispatcher(nsIDOMXULCommandDispatcher** aCommandDispatcher) { return _to GetCommandDispatcher(aCommandDispatcher); } \
+  NS_IMETHOD    GetControls(nsIDOMHTMLCollection** aControls) { return _to GetControls(aControls); } \
   NS_IMETHOD    GetElementById(const nsString& aId, nsIDOMElement** aReturn) { return _to GetElementById(aId, aReturn); }  \
   NS_IMETHOD    GetElementsByAttribute(const nsString& aName, const nsString& aValue, nsIDOMNodeList** aReturn) { return _to GetElementsByAttribute(aName, aValue, aReturn); }  \
   NS_IMETHOD    Persist(const nsString& aId, const nsString& aAttr) { return _to Persist(aId, aAttr); }  \

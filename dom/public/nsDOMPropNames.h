@@ -875,6 +875,7 @@
     "xulcommanddispatcher.removecommandupdater", \
     "xulcommanddispatcher.updatecommands", \
     "xuldocument.commanddispatcher", \
+    "xuldocument.controls", \
     "xuldocument.getelementbyid", \
     "xuldocument.getelementsbyattribute", \
     "xuldocument.persist", \

@@ -16,8 +16,6 @@
  * Communications Corporation.  Portions created by Netscape are
  * Copyright (C) 1998 Netscape Communications Corporation. All
  * Rights Reserved.
- *
- * Contributor(s): 
  */
 /* AUTO-GENERATED. DO NOT EDIT!!! */
 
@@ -38,6 +36,7 @@
 #include "nsIDOMNode.h"
 #include "nsIDOMXULCommandDispatcher.h"
 #include "nsIDOMXULDocument.h"
+#include "nsIDOMHTMLCollection.h"
 #include "nsIDOMNodeList.h"
 
 
@@ -48,6 +47,7 @@ static NS_DEFINE_IID(kIElementIID, NS_IDOMELEMENT_IID);
 static NS_DEFINE_IID(kINodeIID, NS_IDOMNODE_IID);
 static NS_DEFINE_IID(kIXULCommandDispatcherIID, NS_IDOMXULCOMMANDDISPATCHER_IID);
 static NS_DEFINE_IID(kIXULDocumentIID, NS_IDOMXULDOCUMENT_IID);
+static NS_DEFINE_IID(kIHTMLCollectionIID, NS_IDOMHTMLCOLLECTION_IID);
 static NS_DEFINE_IID(kINodeListIID, NS_IDOMNODELIST_IID);
 
 //
@@ -56,7 +56,8 @@ static NS_DEFINE_IID(kINodeListIID, NS_IDOMNODELIST_IID);
 enum XULDocument_slots {
   XULDOCUMENT_POPUPNODE = -1,
   XULDOCUMENT_TOOLTIPNODE = -2,
-  XULDOCUMENT_COMMANDDISPATCHER = -3
+  XULDOCUMENT_COMMANDDISPATCHER = -3,
+  XULDOCUMENT_CONTROLS = -4
 };
 
 /***********************************************************************/
@@ -129,6 +130,25 @@ GetXULDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         nsIDOMXULCommandDispatcher* prop;
         nsresult result = NS_OK;
         result = a->GetCommandDispatcher(&prop);
+        if (NS_SUCCEEDED(result)) {
+          // get the js object
+          nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, obj, vp);
+        }
+        else {
+          return nsJSUtils::nsReportError(cx, obj, result);
+        }
+        break;
+      }
+      case XULDOCUMENT_CONTROLS:
+      {
+        PRBool ok = PR_FALSE;
+        secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_XULDOCUMENT_CONTROLS, PR_FALSE, &ok);
+        if (!ok) {
+          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
+        }
+        nsIDOMHTMLCollection* prop;
+        nsresult result = NS_OK;
+        result = a->GetControls(&prop);
         if (NS_SUCCEEDED(result)) {
           // get the js object
           nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, obj, vp);
@@ -431,6 +451,7 @@ static JSPropertySpec XULDocumentProperties[] =
   {"popupNode",    XULDOCUMENT_POPUPNODE,    JSPROP_ENUMERATE},
   {"tooltipNode",    XULDOCUMENT_TOOLTIPNODE,    JSPROP_ENUMERATE},
   {"commandDispatcher",    XULDOCUMENT_COMMANDDISPATCHER,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"controls",    XULDOCUMENT_CONTROLS,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {0}
 };
 
