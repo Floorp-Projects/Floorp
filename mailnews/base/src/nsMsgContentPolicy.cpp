@@ -147,8 +147,8 @@ nsMsgContentPolicy::ShouldLoad(PRUint32          aContentType,
       if (needToCheck) // http or https ? 
       {
         // check the 'disable remote images pref' and block the image if appropriate
-        *aDecision = mBlockRemoteImages ? nsIContentPolicy::ACCEPT :
-                                          nsIContentPolicy::REJECT_REQUEST;
+        *aDecision = mBlockRemoteImages ? nsIContentPolicy::REJECT_REQUEST  :
+                                          nsIContentPolicy::ACCEPT;
       }
     }
   }
