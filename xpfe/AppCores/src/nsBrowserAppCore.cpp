@@ -804,6 +804,7 @@ nsBrowserAppCore::WalletSafeFillin(nsIDOMWindow*, nsIDOMWindow*) {
 NS_IMETHODIMP    
 nsBrowserAppCore::LoadUrl(const nsString& aUrl)
 {
+  nsresult rv = NS_OK;
   char * urlstr = nsnull;
   urlstr = aUrl.ToNewCString();
 
@@ -815,15 +816,15 @@ nsBrowserAppCore::LoadUrl(const nsString& aUrl)
   GetId(id);
   if ( id.Find("ViewSource") == 0 ) {
     // Viewing source, load with "view-source" command.
-    mContentAreaWebShell->LoadURL(nsString(urlstr).GetUnicode(), "view-source", nsnull, PR_FALSE );
+    rv = mContentAreaWebShell->LoadURL(nsString(urlstr).GetUnicode(), "view-source", nsnull, PR_FALSE );
   } else {
     // Normal browser.
-    mContentAreaWebShell->LoadURL(nsString(urlstr).GetUnicode());
+    rv = mContentAreaWebShell->LoadURL(nsString(urlstr).GetUnicode());
   }
 
   delete[] urlstr;
 
-  return NS_OK;
+  return rv;
 }
 
 NS_IMETHODIMP    
