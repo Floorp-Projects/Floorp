@@ -26,10 +26,23 @@
 #//------------------------------------------------------------------------
 #//
 #// Specify the depth of the current directory relative to the
-#// root of NS
+#// root of MOZILLA
 #//
 #//------------------------------------------------------------------------
 DEPTH = ..
+
+#// Specify any "command" targets. (ie. DIRS, INSTALL_FILES, ...)
+#// (these must come before the common makefiles are included)
+#// 
+#// DIRS          - There is a subdirectory to process
+#// INSTALL_FILES - Files to be installed in the distribution area
+#//
+#//------------------------------------------------------------------------
+
+!ifdef MOZ_FULLCIRCLE
+INSTALL_FILE_LIST=$(MOZ_TOOLS)\bin\fullsoft.dll $(MOZ_TOOLS)\bin\talkback.cnt $(MOZ_TOOLS)\bin\talkback.exe $(MOZ_TOOLS)\bin\talkback.hlp
+INSTALL_DIR=$(DIST)\bin
+!endif
 
 #//------------------------------------------------------------------------
 #//
@@ -61,8 +74,10 @@ bin2rc.exe:: bin2rc.c
 
 makedep.exe:: makedep.cpp
     @cl -MT makedep.cpp 
-    
-export:: makecopy.exe mangle.exe mantomak.exe bin2rc.exe makedep.exe build_number
+
+export:: makecopy.exe mangle.exe mantomak.exe bin2rc.exe makedep.exe build_number 
+
+
 
 # update build number from within make script
 build_number:: FORCE
@@ -71,6 +86,21 @@ build_number:: FORCE
     echo Setting build number...
     $(PERL) aboutime.pl $(DEPTH)/xpfe/browser/src/navigator.xul $@
 
+
+!ifdef MOZ_FULLCIRCLE
+
+export:: INSTALL_FILES
+
+master.pl: build_number
+        $(PERL) build-number.pl
+
+master.ini: master.pl
+	$(RM) $@
+	$(PERL) master.pl
+
+install:: master.ini
+	$(MAKE_INSTALL) master.ini $(DIST)\bin\
+!endif
 
 install:: export
 
