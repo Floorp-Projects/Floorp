@@ -90,6 +90,8 @@
 ##  -o   | --set-object-name:		Set object name for current system.
 ##  -cc  | --set-compiler:			Set compiler for building test program.
 ##
+##  -xif | --set-x11-include-flags:	Set X11 include flags.
+##
 ##  -xpm | --requires-xpm:			Print {True,False} if we need libXpm.
 ##
 ##  -c   | --cleanup:				Clean up any generated files.
@@ -150,6 +152,8 @@ MOTIF_PRINT_EVERYTHING=False
 MOTIF_OBJECT_NAME=`uname`-`uname -r`
 MOTIF_CC=cc
 
+MOTIF_X11_INCLUDE_FLAGS=
+
 MOTIF_CLEANUP=False
 
 MOTIF_CHECK_XPM=False
@@ -208,6 +212,8 @@ echo "  -se,  --static-ext:            Set extension used on static libs."
 echo
 echo "  -o,   --set-object-name:       Set object name for current system."
 echo "  -cc,  --set-compiler:          Set compiler for building test program."
+echo
+echo "  -xif, --set-x11-include-flags: Set X11 include flags."
 echo
 echo "  -xpm, --requires-xpm:          Print {True,False} if we need libXpm."
 echo
@@ -326,6 +332,12 @@ while [ "$*" ]; do
         -cc | --set-compiler)
             shift
             MOTIF_CC="$1"
+            shift
+            ;;
+
+        -xif | --set-x11-include-flags)
+            shift
+            MOTIF_X11_INCLUDE_FLAGS="$1"
             shift
             ;;
 
@@ -491,7 +503,7 @@ MOTIF_INCLUDE_FLAGS=-I$MOTIF_INCLUDE_DIR
 ##
 if [ ! -x $MOTIF_PROG ]
 then
-	$MOTIF_CC $MOTIF_INCLUDE_FLAGS -o $MOTIF_PROG $MOTIF_SRC
+	$MOTIF_CC $MOTIF_INCLUDE_FLAGS $MOTIF_X11_INCLUDE_FLAGS -o $MOTIF_PROG $MOTIF_SRC
 fi
 
 ##
