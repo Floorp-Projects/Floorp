@@ -29,7 +29,7 @@ PROGRAM = widget
 #
 TOOLKIT_CXXFLAGS := \
 	-DWIDGET_DLL=\"libwidget$(MOZ_TOOLKIT).$(DLL_SUFFIX)\" \
-	-DGFXWIN_DLL=\"libgfx$(MOZ_TOOLKIT).$(DLL_SUFFIX)\" \
+	-DGFX_DLL=\"libgfx$(MOZ_TOOLKIT).$(DLL_SUFFIX)\" \
 	$(TK_CFLAGS)
 
 CPPSRCS = \
