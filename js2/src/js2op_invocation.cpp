@@ -37,12 +37,12 @@
         {
             uint16 argCount = BytecodeContainer::getShort(pc);
             pc += sizeof(uint16);
-            PrototypeInstance *pInst = new PrototypeInstance(NULL); // XXX Object prototype object
+            PrototypeInstance *pInst = new PrototypeInstance(meta->objectClass->prototype);
             for (uint16 i = 0; i < argCount; i++) {
                 js2val nameVal = pop();
                 ASSERT(JS2VAL_IS_STRING(nameVal));
                 String *name = JS2VAL_TO_STRING(nameVal);
-                const StringAtom &nameAtom = world.identifiers[*name];
+                const StringAtom &nameAtom = meta->world.identifiers[*name];
                 js2val fieldVal = pop();
                 const DynamicPropertyMap::value_type e(nameAtom, fieldVal);
                 pInst->dynamicProperties.insert(e);
@@ -68,7 +68,7 @@
             JS2Object *obj = JS2VAL_TO_OBJECT(v);
             ASSERT(obj->kind == ClassKind);
             JS2Class *c = checked_cast<JS2Class *>(obj);
-            push(OBJECT_TO_JS2VAL(c->construct(this)));
+            push(OBJECT_TO_JS2VAL(c->construct(this, argCount)));
         }
         break;
 
@@ -101,10 +101,10 @@
                 runtimeFrame->thisObject = runtimeThis;
 //                assignArguments(runtimeFrame, fWrap->compileFrame->signature);
                 if (!fWrap->code)
-                    jsr(fWrap->bCon);   // seems out of order, but we need to catch the current top frame 
+                    jsr(phase, fWrap->bCon);   // seems out of order, but we need to catch the current top frame 
                 meta->env.addFrame(runtimeFrame);
                 if (fWrap->code) {
-                    fWrap->code(this);
+                    fWrap->code(this, argCount);
                     meta->env.removeTopFrame();
                 }
             }
@@ -117,7 +117,7 @@
                 runtimeFrame->instantiate(&meta->env);
                 runtimeFrame->thisObject = mc->thisObject;
 //                assignArguments(runtimeFrame, fWrap->compileFrame->signature);
-                jsr(fWrap->bCon);   // seems out of order, but we need to catch the current top frame 
+                jsr(phase, fWrap->bCon);   // seems out of order, but we need to catch the current top frame 
                 meta->env.addFrame(meta->objectType(mc->thisObject));
                 meta->env.addFrame(runtimeFrame);
             }
@@ -171,13 +171,13 @@
                 rval = STRING_TO_JS2VAL(&undefined_StringAtom);
             else
             if (JS2VAL_IS_BOOLEAN(a))
-                rval = STRING_TO_JS2VAL(&world.identifiers["boolean"]);
+                rval = STRING_TO_JS2VAL(&meta->world.identifiers["boolean"]);
             else
             if (JS2VAL_IS_NUMBER(a))
-                rval = STRING_TO_JS2VAL(&world.identifiers["number"]);
+                rval = STRING_TO_JS2VAL(&meta->world.identifiers["number"]);
             else
             if (JS2VAL_IS_STRING(a))
-                rval = STRING_TO_JS2VAL(&world.identifiers["string"]);
+                rval = STRING_TO_JS2VAL(&meta->world.identifiers["string"]);
             else {
                 ASSERT(JS2VAL_IS_OBJECT(a));
                 if (JS2VAL_IS_NULL(a))
@@ -185,10 +185,10 @@
                 JS2Object *obj = JS2VAL_TO_OBJECT(a);
                 switch (obj->kind) {
                 case MultinameKind:
-                    rval = STRING_TO_JS2VAL(&world.identifiers["namespace"]); 
+                    rval = STRING_TO_JS2VAL(&meta->world.identifiers["namespace"]); 
                     break;
                 case AttributeObjectKind:
-                    rval = STRING_TO_JS2VAL(&world.identifiers["attribute"]); 
+                    rval = STRING_TO_JS2VAL(&meta->world.identifiers["attribute"]); 
                     break;
                 case ClassKind:
                 case MethodClosureKind:

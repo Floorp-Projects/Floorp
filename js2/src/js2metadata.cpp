@@ -47,6 +47,7 @@
 #include "utilities.h"
 #include "js2value.h"
 #include "numerics.h"
+#include "prmjtime.h"
 
 #include <map>
 #include <algorithm>
@@ -530,7 +531,7 @@ namespace MetaData {
             p = p->next;
         }
         bCon->emitOp(eReturnVoid, lastPos);
-        js2val retval = engine->interpret(this, phase, bCon);
+        js2val retval = engine->interpret(phase, bCon);
         bCon = saveBacon;
         return retval;
     }
@@ -1209,7 +1210,7 @@ namespace MetaData {
         Reference *r = EvalExprNode(env, phase, p);
         if (r) r->emitReadBytecode(bCon, p->pos);
         bCon->emitOp(eReturn, p->pos);
-        js2val retval = engine->interpret(this, phase, bCon);
+        js2val retval = engine->interpret(phase, bCon);
         bCon = saveBacon;
         return retval;
     }
@@ -2064,11 +2065,33 @@ doUnary:
         //else A hoisted binding of the same var already exists, so there is no need to create another one
     }
 
-    void t(JS2Engine *engine)
+    void t(JS2Engine *engine, uint16 argCount)
     {
     }
 
-#define MAKEBUILTINCLASS(c, super, dynamic, allowNull, final, name) c = new JS2Class(super, new JS2Object(PrototypeInstanceKind), new Namespace(engine->private_StringAtom), dynamic, allowNull, final, name); c->complete = true
+    JS2Object *dateConstructor(JS2Engine *engine, uint16 argCount)
+    {
+        js2val v = engine->pop();
+        ASSERT(JS2VAL_IS_OBJECT(v) && !JS2VAL_IS_NULL(v));
+        JS2Object *obj = JS2VAL_TO_OBJECT(v);
+        ASSERT(obj == engine->meta->dateClass);
+
+        if (argCount == 0) {
+            DateInstance *result = new DateInstance(engine->meta->dateClass->prototype);
+            int64 us, ms, us2ms;
+            float64 msec_time;
+
+            us = PRMJ_Now();
+            JSLL_UI2L(us2ms, PRMJ_USEC_PER_MSEC);
+            JSLL_DIV(ms, us, us2ms);
+            JSLL_L2D(msec_time, ms);
+
+            result->ms = msec_time;
+        }
+        return NULL;
+    }
+
+#define MAKEBUILTINCLASS(c, super, dynamic, allowNull, final, name) c = new JS2Class(super, NULL, new Namespace(engine->private_StringAtom), dynamic, allowNull, final, name); c->complete = true
 
     JS2Metadata::JS2Metadata(World &world) :
         world(world),
@@ -2078,6 +2101,8 @@ doUnary:
         glob(new GlobalObject(world)),
         env(new MetaData::SystemFrame(), glob)
     {
+        engine->meta = this;
+
         cxt.openNamespaces.clear();
         cxt.openNamespaces.push_back(publicNamespace);
 
@@ -2096,20 +2121,34 @@ doUnary:
         MAKEBUILTINCLASS(prototypeClass, objectClass, true, true, true, world.identifiers["prototype"]);
         MAKEBUILTINCLASS(packageClass, objectClass, true, true, true, world.identifiers["package"]);
         
+
+        MAKEBUILTINCLASS(dateClass, objectClass, true, true, true, world.identifiers["Date"]);
+        Variable *v = new Variable(classClass, OBJECT_TO_JS2VAL(objectClass), true);
+        NamespaceList publicNamespaceList;
+        publicNamespaceList.push_back(publicNamespace);
+        defineStaticMember(&env, world.identifiers["Date"], &publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, v, 0);
+        dateClass->prototype = new PrototypeInstance(NULL);
+        dateClass->construct = dateConstructor;
+        /*
+        FixedInstance *fInst = new FixedInstance(functionClass);
+        fInst->fWrap = new FunctionWrapper(true, new ParameterFrame(JS2VAL_VOID, true), t);
+        writeDynamicProperty(objectClass->prototype, new Multiname(world.identifiers["toString"], publicNamespace), true, OBJECT_TO_JS2VAL(fInst), RunPhase);
+        */
+
+
+        // A 'forbidden' member, used to mark hidden bindings
         forbiddenMember = new StaticMember(Member::Forbidden);
 
+        // Non-function properties of the global object : 'undefined', 'NaN' and 'Infinity'
         writeDynamicProperty(glob, new Multiname(engine->undefined_StringAtom, publicNamespace), true, JS2VAL_UNDEFINED, RunPhase);
         writeDynamicProperty(glob, new Multiname(world.identifiers["NaN"], publicNamespace), true, engine->allocNumber(nan), RunPhase);
         writeDynamicProperty(glob, new Multiname(world.identifiers["Infinity"], publicNamespace), true, engine->allocNumber(positiveInfinity), RunPhase);
 
+        // Function properties of the Object prototype object
+        objectClass->prototype = new PrototypeInstance(NULL);
         FixedInstance *fInst = new FixedInstance(functionClass);
         fInst->fWrap = new FunctionWrapper(true, new ParameterFrame(JS2VAL_VOID, true), t);
-        env.addFrame(objectClass);
-        NamespaceList publicNamespaceList;
-        publicNamespaceList.push_back(publicNamespace);
-        Variable *v = new Variable(functionClass, OBJECT_TO_JS2VAL(fInst), true);
-        defineStaticMember(&env, world.identifiers["toString"], &publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, v, 0);
-        env.removeTopFrame();
+        writeDynamicProperty(objectClass->prototype, new Multiname(world.identifiers["toString"], publicNamespace), true, OBJECT_TO_JS2VAL(fInst), RunPhase);
 
     }
 
@@ -2193,16 +2232,7 @@ doUnary:
             }
         }
         if (isPrototypeInstance) {
-            PrototypeInstance *pInst = (checked_cast<PrototypeInstance *>(container))->parent;
-            while (pInst) {
-                for (DynamicPropertyIterator i = pInst->dynamicProperties.begin(), end = pInst->dynamicProperties.end(); (i != end); i++) {
-                    if (i->first == name) {
-                        *rval = i->second;
-                        return true;
-                    }
-                }
-                pInst = pInst->parent;
-            }
+            return readDynamicProperty((checked_cast<PrototypeInstance *>(container))->parent, multiname, lookupKind, phase, rval);
         }
         if (lookupKind->isPropertyLookup()) {
             *rval = JS2VAL_UNDEFINED;
@@ -2254,6 +2284,12 @@ doUnary:
                     glob->dynamicProperties.insert(e);
                     return true;
                 }
+            }
+            else {
+                PrototypeInstance *pInst = checked_cast<PrototypeInstance *>(container);
+                const DynamicPropertyMap::value_type e(name, newValue);
+                pInst->dynamicProperties.insert(e);
+                return true;
             }
         }
         return false;   // 'None'

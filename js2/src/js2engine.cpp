@@ -64,13 +64,13 @@ namespace JavaScript {
 namespace MetaData {
 
     // Begin execution of a bytecodeContainer
-    js2val JS2Engine::interpret(JS2Metadata *metadata, Phase execPhase, BytecodeContainer *targetbCon)
+    js2val JS2Engine::interpret(Phase execPhase, BytecodeContainer *targetbCon)
     {
-        bCon = targetbCon;
-        pc = bCon->getCodeStart();
-        meta = metadata;
-        phase = execPhase;
-        return interpreterLoop();
+        jsr(execPhase, targetbCon);
+        js2val result = interpreterLoop();
+        if (!activationStackEmpty())
+            rts();
+        return result;
     }
 
     // Execute the opcode sequence at pc.
@@ -229,8 +229,7 @@ namespace MetaData {
     #define INIT_STRINGATOM(n) n##_StringAtom(world.identifiers[#n])
 
     JS2Engine::JS2Engine(World &world)
-                : world(world),
-                  pc(NULL),
+                : pc(NULL),
                   bCon(NULL),
                   meta(NULL),
                   INIT_STRINGATOM(true),
@@ -379,7 +378,7 @@ namespace MetaData {
 
     // XXX Default construction of an instance of the class
     // that is the value at the top of the execution stack
-    JS2Object *JS2Engine::defaultConstructor(JS2Engine *engine)
+    JS2Object *JS2Engine::defaultConstructor(JS2Engine *engine, uint16 argCount)
     {
         js2val v = engine->pop();
         ASSERT(JS2VAL_IS_OBJECT(v) && !JS2VAL_IS_NULL(v));
@@ -390,23 +389,26 @@ namespace MetaData {
             return new DynamicInstance(c);
         else
             if (c->prototype)
-                return new PrototypeInstance(NULL);
+                return new PrototypeInstance(c->prototype);
             else
                 return new FixedInstance(c);
     }
 
     // Save current engine state (pc, environment top) and
     // jump to start of new bytecodeContainer
-    void JS2Engine::jsr(BytecodeContainer *new_bCon)
+    void JS2Engine::jsr(Phase execPhase, BytecodeContainer *new_bCon)
     {
-        ASSERT(activationStackTop < (activationStack + MAX_ACTIVATION_STACK));
-        activationStackTop->bCon = bCon;
-        activationStackTop->pc = pc;
-        activationStackTop->topFrame = meta->env.getTopFrame();
-        activationStackTop++;
-
+        if (pc) {
+            ASSERT(activationStackTop < (activationStack + MAX_ACTIVATION_STACK));
+            activationStackTop->bCon = bCon;
+            activationStackTop->pc = pc;
+            activationStackTop->phase = phase;
+            activationStackTop->topFrame = meta->env.getTopFrame();
+            activationStackTop++;
+        }
         bCon = new_bCon;
         pc = new_bCon->getCodeStart();
+        phase = execPhase;
 
     }
 
@@ -418,6 +420,7 @@ namespace MetaData {
 
         bCon = activationStackTop->bCon;
         pc = activationStackTop->pc;
+        phase = activationStackTop->phase;
         while (meta->env.getTopFrame() != activationStackTop->topFrame)
             meta->env.removeTopFrame();
 

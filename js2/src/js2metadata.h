@@ -55,7 +55,7 @@ class FixedInstance;
 
 typedef void (Invokable)();
 typedef Invokable Callor;
-typedef JS2Object *(Constructor)(JS2Engine *engine);
+typedef JS2Object *(Constructor)(JS2Engine *engine, uint16 argCount);
 
 
 // OBJECT is the semantic domain of all possible objects and is defined as:
@@ -511,14 +511,23 @@ public:
 // contain no fixed properties.
 class PrototypeInstance : public JS2Object {
 public:
-    PrototypeInstance(PrototypeInstance *parent) : JS2Object(PrototypeInstanceKind), parent(parent) { }
+    PrototypeInstance(JS2Object *parent) : JS2Object(PrototypeInstanceKind), parent(parent) { }
 
 
-    PrototypeInstance   *parent;        // If this instance was created by calling new on a prototype function,
+    JS2Object   *parent;        // If this instance was created by calling new on a prototype function,
                                         // the value of the function’s prototype property at the time of the call;
                                         // none otherwise.
     DynamicPropertyMap dynamicProperties; // A set of this instance's dynamic properties
     virtual void markChildren();
+};
+
+// Date instances are prototype instances created by the Date class, they have an extra field 
+// that contains the millisecond count
+class DateInstance : public PrototypeInstance {
+public:
+    DateInstance(JS2Object *parent) : PrototypeInstance(parent) { }
+
+    float64     ms;
 };
 
 // A METHODCLOSURE tuple describes an instance method with a bound this value.
@@ -716,7 +725,7 @@ private:
 };
 
 
-typedef void (NativeCode)(JS2Engine *engine);
+typedef void (NativeCode)(JS2Engine *engine, uint16 argCount);
 
 class FunctionWrapper {
 public:
@@ -875,6 +884,7 @@ public:
     JS2Class *functionClass;
     JS2Class *prototypeClass;
     JS2Class *packageClass;
+    JS2Class *dateClass;
 
     Parser *mParser;                // used for error reporting
 

@@ -112,7 +112,7 @@
             js2val baseVal = pop();
             js2val rval;
             String *indexStr = toString(indexVal);
-            Multiname mn(world.identifiers[*indexStr], meta->publicNamespace);
+            Multiname mn(meta->world.identifiers[*indexStr], meta->publicNamespace);
             if (!meta->readProperty(baseVal, &mn, &lookup, RunPhase, &rval))
                 meta->reportError(Exception::propertyAccessError, "No property named {0}", errorPos(), mn.name);
             push(rval);
@@ -128,7 +128,7 @@
             js2val indexVal = pop();
             js2val baseVal = pop();
             String *indexStr = toString(indexVal);
-            Multiname mn(world.identifiers[*indexStr], meta->publicNamespace);
+            Multiname mn(meta->world.identifiers[*indexStr], meta->publicNamespace);
             meta->writeProperty(baseVal, &mn, &lookup, true, rval, RunPhase);
             push(rval);
         }
@@ -142,7 +142,7 @@
             js2val baseVal = top();
             js2val rval;
             String *indexStr = toString(indexVal);
-            Multiname mn(world.identifiers[*indexStr], meta->publicNamespace);
+            Multiname mn(meta->world.identifiers[*indexStr], meta->publicNamespace);
             if (!meta->readProperty(baseVal, &mn, &lookup, RunPhase, &rval))
                 meta->reportError(Exception::propertyAccessError, "No property named {0}", errorPos(), mn.name);
             push(rval);

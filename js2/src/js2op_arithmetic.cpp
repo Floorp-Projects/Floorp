@@ -454,7 +454,7 @@
             js2val indexVal = pop();
             js2val baseVal = pop();
             String *indexStr = toString(indexVal);
-            Multiname mn(world.identifiers[*indexStr], meta->publicNamespace);
+            Multiname mn(meta->world.identifiers[*indexStr], meta->publicNamespace);
             js2val rval;
             if (!meta->readProperty(baseVal, &mn, &lookup, RunPhase, &rval))
                 meta->reportError(Exception::propertyAccessError, "No property named {0}", errorPos(), mn.name);
@@ -469,7 +469,7 @@
             js2val indexVal = pop();
             js2val baseVal = pop();
             String *indexStr = toString(indexVal);
-            Multiname mn(world.identifiers[*indexStr], meta->publicNamespace);
+            Multiname mn(meta->world.identifiers[*indexStr], meta->publicNamespace);
             js2val rval;
             if (!meta->readProperty(baseVal, &mn, &lookup, RunPhase, &rval))
                 meta->reportError(Exception::propertyAccessError, "No property named {0}", errorPos(), mn.name);
@@ -484,7 +484,7 @@
             js2val indexVal = pop();
             js2val baseVal = pop();
             String *indexStr = toString(indexVal);
-            Multiname mn(world.identifiers[*indexStr], meta->publicNamespace);
+            Multiname mn(meta->world.identifiers[*indexStr], meta->publicNamespace);
             js2val rval;
             if (!meta->readProperty(baseVal, &mn, &lookup, RunPhase, &rval))
                 meta->reportError(Exception::propertyAccessError, "No property named {0}", errorPos(), mn.name);
@@ -499,7 +499,7 @@
             js2val indexVal = pop();
             js2val baseVal = pop();
             String *indexStr = toString(indexVal);
-            Multiname mn(world.identifiers[*indexStr], meta->publicNamespace);
+            Multiname mn(meta->world.identifiers[*indexStr], meta->publicNamespace);
             js2val rval;
             if (!meta->readProperty(baseVal, &mn, &lookup, RunPhase, &rval))
                 meta->reportError(Exception::propertyAccessError, "No property named {0}", errorPos(), mn.name);

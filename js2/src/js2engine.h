@@ -128,7 +128,7 @@ public:
 
     JS2Engine(World &world);
 
-    js2val interpret(JS2Metadata *metadata, Phase execPhase, BytecodeContainer *targetbCon);
+    js2val interpret(Phase execPhase, BytecodeContainer *targetbCon);
     js2val interpreterLoop();
 
     // Use the pc map in the current bytecode container to get a source offset
@@ -149,11 +149,11 @@ public:
     js2val assignmentConversion(js2val val, JS2Class *type)     { return val; } // XXX s'more code, please
 
 
-    World &world;
+    JS2Metadata *meta;
+
     // Current engine execution state
     uint8 *pc;
     BytecodeContainer *bCon;
-    JS2Metadata *meta;
     Phase phase;
 
 
@@ -185,8 +185,9 @@ public:
         uint8 *pc;
         BytecodeContainer *bCon;
         Frame *topFrame;
+        Phase phase;
     };
-    void jsr(BytecodeContainer *bCon);
+    void jsr(Phase execPhase, BytecodeContainer *bCon);
     bool activationStackEmpty() { return (activationStackTop == activationStack); }
     void rts();
     ActivationFrame *activationStack;
@@ -208,7 +209,7 @@ public:
     void mark();
 
 
-    static JS2Object *defaultConstructor(JS2Engine *engine);
+    static JS2Object *defaultConstructor(JS2Engine *engine, uint16 argCount);
 
 
 };
