@@ -103,7 +103,7 @@ nsHTTPChunkConv::AsyncConvertData (
     mAsyncConvContext = (nsISupportsVoid *) aCtxt;
     if (mAsyncConvContext)
     {
-        const void *p;
+        void *p;
         mAsyncConvContext -> GetData (&p);
         mChunkContext = (nsHTTPChunkConvContext *)p;
     }
