@@ -61,7 +61,7 @@ protected:
   nsresult      SetNodeAttribute(const char* nodeID, const char* attributeName, const nsString& newValue);
 
   nsresult      UpdateParagraphState(const char* observerName, const char* attributeName, nsString& ioParaFormat);
-  nsresult      UpdateListState(const char* observerName, const char* tagName);
+  nsresult      UpdateListState(const char* observerName);
   nsresult      UpdateTextState(const char* tagName, const char* observerName, const char* attributeName, PRInt8& ioState);
   nsresult      UpdateFontFace(const char* observerName, const char* attributeName, nsString& ioFontString);
   nsresult      UpdateDirtyState(PRBool aNowDirty);

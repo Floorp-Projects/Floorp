@@ -142,7 +142,7 @@ nsInterfaceState::NotifySelectionChanged()
   rv = UpdateParagraphState("Editor:Paragraph:Format", "format", mParagraphFormat);
   
   // update the list buttons
-  rv = UpdateListState("Editor:Paragraph:List", "ol");
+  rv = UpdateListState("Editor:Paragraph:ListType");
 
   return NS_OK;
 }
@@ -172,7 +172,7 @@ nsInterfaceState::UpdateParagraphState(const char* observerName, const char* att
 }
 
 nsresult
-nsInterfaceState::UpdateListState(const char* observerName, const char* tagName)
+nsInterfaceState::UpdateListState(const char* observerName)
 {
   nsresult  rv = NS_ERROR_NO_INTERFACE;
 
@@ -182,14 +182,34 @@ nsInterfaceState::UpdateListState(const char* observerName, const char* tagName)
     editor->GetSelection(getter_AddRefs(domSelection));
   }
 
-  nsAutoString  tagStr(tagName);
+  PRBool inOL = PR_FALSE;
+  PRBool inUL = PR_FALSE;
   
   nsCOMPtr<nsIDOMNode>       domNode;
   if (domSelection)
     domSelection->GetAnchorNode(getter_AddRefs(domNode));
   
+  // tagStr will hold the list state when we're done.
+  nsAutoString  tagStr("ol");
   nsCOMPtr<nsIDOMElement> parentElement;
   rv = mEditor->GetElementOrParentByTagName(tagStr, domNode, getter_AddRefs(parentElement));
+  if (NS_FAILED(rv)) return rv;  
+
+  if (!parentElement)
+  {
+    tagStr = "ul";
+    rv = mEditor->GetElementOrParentByTagName(tagStr, domNode, getter_AddRefs(parentElement));
+    if (NS_FAILED(rv)) return rv;
+    
+    if (!parentElement)
+      tagStr = "";
+  }
+  
+  if (tagStr != mListTag)
+  {
+    rv = SetNodeAttribute(observerName, "format", tagStr);
+    mListTag = tagStr;
+  }
 
   return rv;
 }
