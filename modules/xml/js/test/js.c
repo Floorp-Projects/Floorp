@@ -25,11 +25,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "prtypes.h"
-#ifndef NSPR20
-#include "prarena.h"
-#else
 #include "plarena.h"
-#endif
 #include "prlog.h"
 #include "prprf.h"
 #include "jsapi.h"
