@@ -32,7 +32,9 @@
 
 /* ::::: textbox ::::: */
 
-textbox {
+textbox 
+{
+  -moz-appearance: textfield;
   cursor: text;
   margin: 2px 4px;
   border: 2px solid;
