@@ -389,4 +389,7 @@ nsMenuBarFrame::Escape()
 
   // It's us. Just set our active flag to false.
   mIsActive = PR_FALSE;
+
+  // Clear our current menu item if we've got one.
+  SetCurrentMenuItem(nsnull);
 }
