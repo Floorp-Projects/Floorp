@@ -82,6 +82,7 @@
 		style="width:100%; height:100%"
 		align="vertical"
 		title="&addressbookWindow.title;"
+		windowtype="mail:addressbook"
 		onload="OnLoadAddressBook()">
 
 <html:script language="JavaScript" src="chrome://addressbook/content/addressbook.js"/>
@@ -180,5 +181,8 @@
 	<!-- The main address book three pane frame -->
 	<html:iframe src="chrome://addressbook/content/addresspanes.html" name="3paneaddressbook" flex="100%" />
 
+	<toolbox>                                                               
+		<toolbar id="taskbar" />
+	</toolbox>                                                               
 </window>
 

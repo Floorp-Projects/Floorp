@@ -65,7 +65,7 @@ Rights Reserved.
 		<menuitem name="&quoteOrigCmd.label;" cmd="nsCmd:ComposeQuote"/>
 		<menuitem name="&selectAddressCmd.label;" onclick="SelectAddress()"/>
 		<separator/>
-		<menuitem name="&printSetupCmd.label;" cmd="nsCmd:BrowserPrintSetup"/>
+		<menuitem id="pageSetup"/>
 		<menuitem name="&printPreviewCmd.label;" cmd="nsCmd:BrowserPrintPreview"/>
 		<menuitem name="&printCmd.label;" cmd="nsCmd:BrowserPrint"/>
 		<separator/>

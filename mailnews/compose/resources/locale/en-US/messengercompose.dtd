@@ -24,7 +24,6 @@
 <!ENTITY sendLaterCmd.label "Send Later">
 <!ENTITY quoteOrigCmd.label ".Quote Original Message">
 <!ENTITY selectAddressCmd.label "Select Addresses...">
-<!ENTITY printSetupCmd.label ".Print Setup">
 <!ENTITY printPreviewCmd.label ".Print Preview">
 <!ENTITY printCmd.label ".Print">
 <!ENTITY closeCmd.label "Close">
