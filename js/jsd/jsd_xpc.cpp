@@ -238,6 +238,51 @@ jsds_GCCallbackProc (JSContext *cx, JSGCStatus status)
     return JS_TRUE;
 }
 
+static JSBool
+jsds_EmptyCallHookProc (JSDContext* jsdc, JSDThreadState* jsdthreadstate,
+                        uintN type, void* callerdata)
+{
+    /* empty hook returns true so that we get called when the function
+     * returns (we may have a hook function by then.) */
+    return JS_TRUE;
+}
+
+
+static JSBool
+jsds_CallHookProc (JSDContext* jsdc, JSDThreadState* jsdthreadstate,
+                   uintN type, void* callerdata)
+{
+    nsCOMPtr<jsdICallHook> hook(0);
+
+    switch (type)
+    {
+        case JSD_HOOK_TOPLEVEL_START:
+        case JSD_HOOK_TOPLEVEL_END:
+            gJsds->GetTopLevelHook(getter_AddRefs(hook));
+            break;
+            
+        case JSD_HOOK_FUNCTION_CALL:
+        case JSD_HOOK_FUNCTION_RETURN:
+            gJsds->GetFunctionHook(getter_AddRefs(hook));
+            break;
+
+        default:
+            NS_ASSERTION (0, "Unknown hook type.");
+    }
+    
+    if (!hook)
+        return JS_TRUE;
+
+    JSDStackFrameInfo *native_frame = JSD_GetStackFrame (jsdc, jsdthreadstate);
+    nsCOMPtr<jsdIStackFrame> frame =
+        getter_AddRefs(jsdStackFrame::FromPtr(jsdc, jsdthreadstate,
+                                              native_frame));
+    hook->OnCall(frame, type);    
+    frame->Invalidate();
+
+    return JS_TRUE;
+}
+
 static PRUint32
 jsds_ExecutionHookProc (JSDContext* jsdc, JSDThreadState* jsdthreadstate,
                         uintN type, void* callerdata, jsval* rval)
@@ -262,6 +307,7 @@ jsds_ExecutionHookProc (JSDContext* jsdc, JSDThreadState* jsdthreadstate,
             break;
         case JSD_HOOK_THROW:
         {
+            hook_rv = JSD_HOOK_RETURN_CONTINUE_THROW;
             gJsds->GetThrowHook(getter_AddRefs(hook));
             if (hook) {
                 JSDValue *jsdv = JSD_GetException (jsdc, jsdthreadstate);
@@ -274,7 +320,7 @@ jsds_ExecutionHookProc (JSDContext* jsdc, JSDThreadState* jsdthreadstate,
     }
 
     if (!hook)
-        return NS_OK;
+        return hook_rv;
     
     JSDStackFrameInfo *native_frame = JSD_GetStackFrame (jsdc, jsdthreadstate);
     nsCOMPtr<jsdIStackFrame> frame =
@@ -1185,7 +1231,14 @@ jsdService::OnForRuntime (JSRuntime *rt)
         JSD_SetDebuggerHook (mCx, jsds_ExecutionHookProc, NULL);
     if (mErrorHook)
         JSD_SetDebugBreakHook (mCx, jsds_ExecutionHookProc, NULL);
-
+    if (mTopLevelHook)
+        JSD_SetTopLevelHook (mCx, jsds_CallHookProc, NULL);
+    else
+        JSD_SetTopLevelHook (mCx, jsds_EmptyCallHookProc, NULL);
+    if (mFunctionHook)
+        JSD_SetFunctionHook (mCx, jsds_CallHookProc, NULL);
+    else
+        JSD_SetFunctionHook (mCx, jsds_EmptyCallHookProc, NULL);
     mOn = PR_TRUE;
 
     return NS_OK;
@@ -1220,6 +1273,8 @@ jsdService::Off (void)
     JSD_SetInterruptHook (mCx, NULL, NULL);
     JSD_SetDebuggerHook (mCx, NULL, NULL);
     JSD_SetDebugBreakHook (mCx, NULL, NULL);
+    JSD_SetTopLevelHook (mCx, NULL, NULL);
+    JSD_SetFunctionHook (mCx, NULL, NULL);
     
     JSD_DebuggerOff (mCx);
 
@@ -1484,6 +1539,62 @@ NS_IMETHODIMP
 jsdService::GetThrowHook (jsdIExecutionHook **aHook)
 {   
     *aHook = mThrowHook;
+    NS_IF_ADDREF(*aHook);
+    
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+jsdService::SetTopLevelHook (jsdICallHook *aHook)
+{    
+    mTopLevelHook = aHook;
+
+    /* if the debugger isn't initialized, that's all we can do for now.  The
+     * OnForRuntime() method will do the rest when the coast is clear.
+     */
+    if (!mCx)
+        return NS_OK;
+
+    if (aHook)
+        JSD_SetTopLevelHook (mCx, jsds_CallHookProc, NULL);
+    else
+        JSD_SetTopLevelHook (mCx, jsds_EmptyCallHookProc, NULL);
+    
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+jsdService::GetTopLevelHook (jsdICallHook **aHook)
+{   
+    *aHook = mTopLevelHook;
+    NS_IF_ADDREF(*aHook);
+    
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+jsdService::SetFunctionHook (jsdICallHook *aHook)
+{    
+    mFunctionHook = aHook;
+
+    /* if the debugger isn't initialized, that's all we can do for now.  The
+     * OnForRuntime() method will do the rest when the coast is clear.
+     */
+    if (!mCx)
+        return NS_OK;
+
+    if (aHook)
+        JSD_SetFunctionHook (mCx, jsds_CallHookProc, NULL);
+    else
+        JSD_SetFunctionHook (mCx, jsds_EmptyCallHookProc, NULL);
+    
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+jsdService::GetFunctionHook (jsdICallHook **aHook)
+{   
+    *aHook = mFunctionHook;
     NS_IF_ADDREF(*aHook);
     
     return NS_OK;

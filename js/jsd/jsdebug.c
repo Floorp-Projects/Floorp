@@ -486,6 +486,38 @@ JSD_ClearThrowHook(JSDContext* jsdc)
     return jsd_ClearThrowHook(jsdc);
 }
 
+JSD_PUBLIC_API(JSBool)
+JSD_SetTopLevelHook(JSDContext*      jsdc,
+                    JSD_CallHookProc hook,
+                    void*            callerdata)
+{
+    JSD_ASSERT_VALID_CONTEXT(jsdc);
+    return jsd_SetTopLevelHook(jsdc, hook, callerdata);
+}
+
+JSD_PUBLIC_API(JSBool)
+JSD_ClearTopLevelHook(JSDContext* jsdc)
+{
+    JSD_ASSERT_VALID_CONTEXT(jsdc);
+    return jsd_ClearTopLevelHook(jsdc);
+}
+
+JSD_PUBLIC_API(JSBool)
+JSD_SetFunctionHook(JSDContext*      jsdc,
+                    JSD_CallHookProc hook,
+                    void*            callerdata)
+{
+    JSD_ASSERT_VALID_CONTEXT(jsdc);
+    return jsd_SetFunctionHook(jsdc, hook, callerdata);
+}
+
+JSD_PUBLIC_API(JSBool)
+JSD_ClearFunctionHook(JSDContext* jsdc)
+{
+    JSD_ASSERT_VALID_CONTEXT(jsdc);
+    return jsd_ClearFunctionHook(jsdc);
+}
+
 /***************************************************************************/
 /* Stack Frame functions */
 

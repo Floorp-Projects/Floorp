@@ -129,6 +129,10 @@ struct JSDContext
     void*                   debuggerHookData;
     JSD_ExecutionHookProc   throwHook;
     void*                   throwHookData;
+    JSD_CallHookProc        functionHook;
+    void*                   functionHookData;
+    JSD_CallHookProc        toplevelHook;
+    void*                   toplevelHookData;
     JSContext*              dumbContext;
     JSObject*               glob;
     JSD_UserCallbacks       userCallbacks;
@@ -513,12 +517,19 @@ extern JSBool
 jsd_ClearDebuggerHook(JSDContext* jsdc);
 
 extern JSTrapStatus
-jsd_CallExecutionHook(JSDContext* jsdc,
-                      JSContext *cx,
-                      uintN type,
+jsd_CallExecutionHook(JSDContext*           jsdc,
+                      JSContext*            cx,
+                      uintN                 type,
                       JSD_ExecutionHookProc hook,
-                      void* hookData,
-                      jsval* rval);
+                      void*                 hookData,
+                      jsval*                rval);
+
+extern JSBool
+jsd_CallCallHook (JSDContext*      jsdc,
+                  JSContext*       cx,
+                  uintN            type,
+                  JSD_CallHookProc hook,
+                  void*            hookData);
 
 extern JSBool
 jsd_SetThrowHook(JSDContext*           jsdc,
@@ -534,6 +545,22 @@ jsd_DebuggerHandler(JSContext *cx, JSScript *script, jsbytecode *pc,
 extern JSTrapStatus JS_DLL_CALLBACK
 jsd_ThrowHandler(JSContext *cx, JSScript *script, jsbytecode *pc,
                  jsval *rval, void *closure);
+
+extern JSBool
+jsd_SetFunctionHook(JSDContext*      jsdc,
+                    JSD_CallHookProc hook,
+                    void*            callerdata);
+
+extern JSBool
+jsd_ClearFunctionHook(JSDContext* jsdc);
+
+extern JSBool
+jsd_SetTopLevelHook(JSDContext*      jsdc,
+                    JSD_CallHookProc hook,
+                    void*            callerdata);
+
+extern JSBool
+jsd_ClearTopLevelHook(JSDContext* jsdc);
 
 /***************************************************************************/
 /* Stack Frame functions */
@@ -863,8 +890,12 @@ jsd_GetPropertyVarArgSlot(JSDContext* jsdc, JSDProperty* jsdprop);
 /* Stepping Functions */
 
 extern void * JS_DLL_CALLBACK
-jsd_InterpreterHook(JSContext *cx, JSStackFrame *fp, JSBool before,
-                    JSBool *ok, void *closure);
+jsd_FunctionCallHook(JSContext *cx, JSStackFrame *fp, JSBool before,
+                     JSBool *ok, void *closure);
+
+extern void * JS_DLL_CALLBACK
+jsd_TopLevelCallHook(JSContext *cx, JSStackFrame *fp, JSBool before,
+                     JSBool *ok, void *closure);
 
 /**************************************************/
 /* Object Functions */

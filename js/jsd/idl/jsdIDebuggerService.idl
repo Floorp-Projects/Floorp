@@ -56,6 +56,7 @@ interface jsdIDebuggerService;
 interface jsdIScriptEnumerator;
 interface jsdIScriptHook;
 interface jsdIExecutionHook;
+interface jsdICallHook;
 interface jsdIEphemeral;
 interface jsdIPC;
 interface jsdIStackFrame;
@@ -95,6 +96,14 @@ interface jsdIDebuggerService : nsISupports
      * Called when an exception is thrown (even if it will be caught.)
      */
     attribute jsdIExecutionHook throwHook;
+    /**
+     * Called before and after a toplevel script is evaluated.
+     */
+    attribute jsdICallHook topLevelHook;
+    /**
+     * Called before and after a function is called.
+     */
+    attribute jsdICallHook functionHook;
 
     /**
      * |true| if the debugger service has been turned on.  This does not
@@ -193,6 +202,21 @@ interface jsdIScriptHook : nsISupports
      * object passed in will already be invalidated.
      */
     void onScriptDestroyed (in jsdIScript script);
+};
+
+/**
+ * Hook instances of this interface up to the
+ * jsdIDebuggerService::functionHook and toplevelHook properties.
+ */
+[scriptable, uuid(f102caf6-1dd1-11b2-bd43-c1dbacb95a98)]
+interface jsdICallHook : nsISupports
+{
+    const unsigned long TYPE_TOPLEVEL_START  = 0;
+    const unsigned long TYPE_TOPLEVEL_END    = 1;
+    const unsigned long TYPE_FUNCTION_CALL   = 2;
+    const unsigned long TYPE_FUNCTION_RETURN = 3;
+    
+    void onCall (in jsdIStackFrame frame, in unsigned long type);
 };
 
 /**

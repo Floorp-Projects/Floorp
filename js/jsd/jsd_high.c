@@ -183,8 +183,8 @@ jsd_DebuggerOnForUser(JSRuntime*         jsrt,
     JS_SetNewScriptHookProc(jsdc->jsrt, jsd_NewScriptHookProc, jsdc);
     JS_SetDestroyScriptHookProc(jsdc->jsrt, jsd_DestroyScriptHookProc, jsdc);
     JS_SetDebuggerHandler(jsdc->jsrt, jsd_DebuggerHandler, jsdc);
-    JS_SetExecuteHook(jsdc->jsrt, jsd_InterpreterHook, jsdc);
-    JS_SetCallHook(jsdc->jsrt, jsd_InterpreterHook, jsdc);
+    JS_SetExecuteHook(jsdc->jsrt, jsd_TopLevelCallHook, jsdc);
+    JS_SetCallHook(jsdc->jsrt, jsd_FunctionCallHook, jsdc);
     JS_SetObjectHook(jsdc->jsrt, jsd_ObjectHook, jsdc);
     JS_SetThrowHook(jsdc->jsrt, jsd_ThrowHandler, jsdc);
     JS_SetDebugErrorHook(jsdc->jsrt, jsd_DebugErrorHook, jsdc);

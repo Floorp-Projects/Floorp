@@ -287,7 +287,8 @@ class jsdService : public jsdIDebuggerService
 
     jsdService() : mOn(PR_FALSE), mNestedLoopLevel(0), mCx(0), mRuntime(0),
                    mBreakpointHook(0), mErrorHook(0), mDebuggerHook(0),
-                   mInterruptHook(0), mScriptHook(0), mThrowHook(0)
+                   mInterruptHook(0), mScriptHook(0), mThrowHook(0),
+                   mTopLevelHook(0), mFunctionHook(0)
     {
         NS_INIT_ISUPPORTS();
     }
@@ -308,6 +309,9 @@ class jsdService : public jsdIDebuggerService
     nsCOMPtr<jsdIExecutionHook> mInterruptHook;
     nsCOMPtr<jsdIScriptHook>    mScriptHook;
     nsCOMPtr<jsdIExecutionHook> mThrowHook;
+    nsCOMPtr<jsdICallHook>      mTopLevelHook;
+    nsCOMPtr<jsdICallHook>      mFunctionHook;
+
 };
 
 #endif /* JSDSERVICE_H___ */

@@ -49,7 +49,7 @@ _indentSpaces(int i)
 
 static void
 _interpreterTrace(JSDContext* jsdc, JSContext *cx, JSStackFrame *fp,
-                  JSBool before, JSBool *ok)
+                  JSBool before)
 {
     JSDScript* jsdscript = NULL;
     JSScript * script;
@@ -93,28 +93,95 @@ _interpreterTrace(JSDContext* jsdc, JSContext *cx, JSStackFrame *fp,
 }
 #endif
 
-void * JS_DLL_CALLBACK
-jsd_InterpreterHook(JSContext *cx, JSStackFrame *fp, JSBool before,
-                    JSBool *ok, void *closure)
+JSBool
+_callHook(JSDContext *jsdc, JSContext *cx, JSStackFrame *fp, JSBool before,
+          uintN type, JSD_CallHookProc hook, void *hookData)
 {
-    JSDContext*     jsdc = (JSDContext*) closure;
-
-    if( ! jsdc || ! jsdc->inited )
-        return NULL;
-
-    if(before && JS_IsContructorFrame(cx, fp))
+    JSDScript*        jsdscript;
+    JSScript*         jsscript;
+    JSBool            hookresult;
+    
+    if (!jsdc || !jsdc->inited)
+        return JS_FALSE;
+    
+    if (before && JS_IsContructorFrame(cx, fp))
         jsd_Constructing(jsdc, cx, JS_GetFrameThis(cx, fp), fp);
 
+    if (hook)
+    {
+        jsscript = JS_GetFrameScript(cx, fp);
+        if (jsscript) {
+            JSD_LOCK_SCRIPTS(jsdc);
+            jsdscript = jsd_FindJSDScript(jsdc, jsscript);
+            JSD_UNLOCK_SCRIPTS(jsdc);
+            if (jsdscript) {
+                hookresult = jsd_CallCallHook (jsdc, cx, type, hook, hookData);
+            }
+        }
+    }
+    else
+    {
+        hookresult = JS_FALSE;
+    }
+    
 #ifdef JSD_TRACE
-    _interpreterTrace(jsdc, cx, fp, before, ok);
-    return closure;
+    _interpreterTrace(jsdc, cx, fp, before);
+    return JS_TRUE;
 #else
-    return NULL;
+    return hookresult;
 #endif
-/*
-*   use this before calling any hook...
-*     if( JSD_IS_DANGEROUS_THREAD(jsdc) )
-*         return NULL;
-*/
 
+}
+
+void * JS_DLL_CALLBACK
+jsd_FunctionCallHook(JSContext *cx, JSStackFrame *fp, JSBool before,
+                     JSBool *ok, void *closure)
+{
+    JSDContext*       jsdc;
+    JSD_CallHookProc  hook;
+    void*             hookData;
+
+    jsdc = (JSDContext*) closure;
+    
+    /* local in case jsdc->functionHook gets cleared on another thread */
+    JSD_LOCK();
+    hook     = jsdc->functionHook;
+    hookData = jsdc->functionHookData;
+    JSD_UNLOCK();
+    
+    if (_callHook (jsdc, cx, fp, before,
+                   (before) ? JSD_HOOK_FUNCTION_CALL : JSD_HOOK_FUNCTION_RETURN,
+                   hook, hookData))
+    {
+        return closure;
+    }
+    
+    return NULL;
+}
+
+void * JS_DLL_CALLBACK
+jsd_TopLevelCallHook(JSContext *cx, JSStackFrame *fp, JSBool before,
+                     JSBool *ok, void *closure)
+{
+    JSDContext*       jsdc;
+    JSD_CallHookProc  hook;
+    void*             hookData;
+
+    jsdc = (JSDContext*) closure;
+
+    /* local in case jsdc->toplevelHook gets cleared on another thread */
+    JSD_LOCK();
+    hook     = jsdc->toplevelHook;
+    hookData = jsdc->toplevelHookData;
+    JSD_UNLOCK();
+    
+    if (_callHook (jsdc, cx, fp, before,
+                   (before) ? JSD_HOOK_TOPLEVEL_START : JSD_HOOK_TOPLEVEL_END,
+                   hook, hookData))
+    {
+        return closure;
+    }
+    
+    return NULL;
+    
 }
