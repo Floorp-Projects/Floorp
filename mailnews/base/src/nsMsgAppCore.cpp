@@ -43,7 +43,7 @@
 #include "nsIMsgMailSession.h"
 #include "nsIMsgIncomingServer.h"
 #include "nsIPop3IncomingServer.h"
-#include "nsIMailboxService.h"
+#include "nsIMsgMessageService.h"
 #include "nsINntpService.h"
 #include "nsFileSpec.h"
 
@@ -70,7 +70,6 @@ static NS_DEFINE_IID(kIDOMAppCoresManagerIID, NS_IDOMAPPCORESMANAGER_IID);
 static NS_DEFINE_IID(kAppCoresManagerCID,  NS_APPCORESMANAGER_CID);
 
 static NS_DEFINE_IID(kIScriptObjectOwnerIID, NS_ISCRIPTOBJECTOWNER_IID);
-static NS_DEFINE_CID(kCMailboxServiceCID, NS_MAILBOXSERVICE_CID);
 static NS_DEFINE_CID(kCNntpServiceCID, NS_NNTPSERVICE_CID);
 static NS_DEFINE_CID(kCMsgMailSessionCID, NS_MSGMAILSESSION_CID); 
 static NS_DEFINE_CID(kCPop3ServiceCID, NS_POP3SERVICE_CID);
@@ -578,35 +577,21 @@ nsMsgAppCore::OpenURL(const char * url)
 				nsServiceManager::ReleaseService(kCNntpServiceCID, nntpService);
 			}
 		}
+
+		// mscott - eventually we will call a function which takes a URI and returns a nsIMsgMessageService 
+		// then we won't even have to look at the protocol prototype and use a hard coded progid to get the
+		// right instance of the message service.
 		if (PL_strncmp(url, "mailbox:", 8) == 0 || PL_strncmp(url, kMailboxMessageRootURI, PL_strlen(kMailboxMessageRootURI)) == 0)
 		{
-			PRUint32 msgIndex=0;
-			nsFileSpec folderPath; 
-			PRBool displayNumber;
-			if(isdigit(url[8]))
-			{
-				// right now these urls are just mailbox:# where # is the ordinal number representing what message
-				// we want to load...we have a whole syntax for mailbox urls which are used in the normal case but
-				// we aren't using for this little demo menu....
-				url += 8; // skip past mailbox: stuff...
-				msgIndex = atol(url); // extract the index to use...
-				folderPath = m_folderPath;
-				displayNumber = PR_TRUE;
-			}
-			else
-			{
-				displayNumber = PR_FALSE;
-			}
-			nsIMailboxService * mailboxService = nsnull;
-			nsresult rv = nsServiceManager::GetService(kCMailboxServiceCID, nsIMailboxService::GetIID(), (nsISupports **) &mailboxService);
+		
+			nsIMsgMessageService * mailboxService = nsnull;
+			nsresult rv = nsServiceManager::GetService("component://netscape/messenger/messageservice;type=mailbox", 
+														nsIMsgMessageService::GetIID(), (nsISupports **) &mailboxService);
+
 			if (NS_SUCCEEDED(rv) && mailboxService)
 			{
-				if(displayNumber)
-					mailboxService->DisplayMessageNumber(folderPath, msgIndex, mWebShell, nsnull, nsnull);
-				else
-					mailboxService->DisplayMessage(url, mWebShell, nsnull, nsnull);
-
-				nsServiceManager::ReleaseService(kCMailboxServiceCID, mailboxService);
+				mailboxService->DisplayMessage(url, mWebShell, nsnull, nsnull);
+				nsServiceManager::ReleaseService("component://netscape/messenger/messageservice;type=mailbox", mailboxService);
 			}
 		}
 
@@ -701,14 +686,14 @@ nsMsgAppCore::CopyMessages(nsIDOMXULElement *srcFolderElement, nsIDOMXULElement 
 		firstMessage->GetValue(&uri);
 		nsCopyMessageStreamListener* copyStreamListener = new nsCopyMessageStreamListener(srcFolder, dstFolder, nsnull);
 
-		nsIMailboxService * mailboxService = nsnull;
-		nsresult rv = nsServiceManager::GetService(kCMailboxServiceCID, nsIMailboxService::GetIID(), (nsISupports **) &mailboxService);
+		nsIMsgMessageService * mailboxService = nsnull;
+		nsresult rv = nsServiceManager::GetService("component://netscape/messenger/messageservice;type=mailbox", nsIMsgMessageService::GetIID(), (nsISupports **) &mailboxService);
 		if (NS_SUCCEEDED(rv) && mailboxService)
 		{
 			nsIURL * url = nsnull;
 			mailboxService->CopyMessage(uri, copyStreamListener, isMove, nsnull, &url);
 
-			nsServiceManager::ReleaseService(kCMailboxServiceCID, mailboxService);
+			nsServiceManager::ReleaseService("component://netscape/messenger/messageservice;type=mailbox", mailboxService);
 		}
 	}
 
