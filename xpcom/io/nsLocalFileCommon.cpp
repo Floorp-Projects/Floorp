@@ -165,6 +165,7 @@ static PRInt32 SplitPath(PRUnichar *path, PRUnichar **nodeArray, PRInt32 arrayLe
 NS_IMETHODIMP
 nsLocalFile::GetRelativeDescriptor(nsILocalFile *fromFile, nsACString& _retval)
 {
+    NS_ENSURE_ARG_POINTER(fromFile);
     const PRInt32 kMaxNodesInPath = 32;
 
     //
