@@ -247,6 +247,8 @@ XFE_SimplePopupMenu::addPushButton(String name, void *userData, Boolean isSensit
                   XmNlabelString, str,
                   NULL);
 
+    XmStringFree(str);
+
     XtAddCallback(button, XmNactivateCallback, pushb_activate_cb, this);
 
     XtManageChild(button);
