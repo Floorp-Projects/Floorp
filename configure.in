@@ -974,6 +974,7 @@ case "$target" in
     AC_DEFINE(MSVC4)
     AC_DEFINE(STDC_HEADERS)
     AC_DEFINE(NEW_H, <new>)
+    AC_DEFINE(WIN32_LEAN_AND_MEAN)
     TARGET_MD_ARCH=win32
     _PLATFORM_DEFAULT_TOOLKIT='windows'
     BIN_SUFFIX='.exe'
