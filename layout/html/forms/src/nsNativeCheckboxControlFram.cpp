@@ -26,13 +26,12 @@
 #include "nsILookAndFeel.h"
 #include "nsWidgetsCID.h"
 #include "nsIComponentManager.h"
+#include "nsCOMPtr.h"
 
 
 #define NS_DEFAULT_CHECKBOX_SIZE 12
 
 static NS_DEFINE_IID(kICheckButtonIID, NS_ICHECKBUTTON_IID);
-static NS_DEFINE_IID(kLookAndFeelCID,  NS_LOOKANDFEEL_CID);
-static NS_DEFINE_IID(kILookAndFeelIID, NS_ILOOKANDFEEL_IID);
 
 
 nsresult
@@ -52,13 +51,12 @@ NS_NewNativeCheckboxControlFrame(nsIFrame** aNewFrame)
 
 
 nscoord 
-nsNativeCheckboxControlFrame::GetCheckboxSize(float aPixToTwip) const
+nsNativeCheckboxControlFrame::GetCheckboxSize(nsIPresContext* aPresContext, float aPixToTwip) const
 {
-  nsILookAndFeel * lookAndFeel;
   PRInt32 checkboxSize = 0;
-  if (NS_OK == nsComponentManager::CreateInstance(kLookAndFeelCID, nsnull, kILookAndFeelIID, (void**)&lookAndFeel)) {
+  nsCOMPtr<nsILookAndFeel> lookAndFeel;
+  if (NS_SUCCEEDED(aPresContext->GetLookAndFeel(getter_AddRefs(lookAndFeel)))) {
    lookAndFeel->GetMetric(nsILookAndFeel::eMetric_CheckboxSize,  checkboxSize);
-   NS_RELEASE(lookAndFeel);
   }
  if (checkboxSize == 0)
    checkboxSize = NS_DEFAULT_CHECKBOX_SIZE;
@@ -74,7 +72,7 @@ nsNativeCheckboxControlFrame::GetDesiredSize(nsIPresContext*          aPresConte
   float p2t;
   aPresContext->GetScaledPixelsToTwips(&p2t);
 
-  aDesiredWidgetSize.width  = GetCheckboxSize(p2t);
+  aDesiredWidgetSize.width  = GetCheckboxSize(aPresContext, p2t);
   aDesiredWidgetSize.height = aDesiredWidgetSize.width;
   aDesiredLayoutSize.width  = aDesiredWidgetSize.width;
   aDesiredLayoutSize.height = aDesiredWidgetSize.height;
