@@ -45,6 +45,7 @@ EXPORT_RESOURCE_SAMPLES = \
 	$(srcdir)/PrefsWindow.html \
 	$(srcdir)/PrefsWindow.js \
 	$(srcdir)/SignonWindow.js \
+	$(srcdir)/CookieWindow.js \
 	$(srcdir)/WalletWindow.js \
 	$(srcdir)/preftree.css \
 	$(srcdir)/preftree.xul \

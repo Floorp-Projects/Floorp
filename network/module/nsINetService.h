@@ -19,6 +19,7 @@
 #ifndef nsINetService_h___
 #define nsINetService_h___
 
+#include "nsString.h"
 #include "nscore.h"
 #include "nsISupports.h"
 #include "nsIURL.h"
@@ -107,22 +108,10 @@ struct nsINetService : public nsISupports
      */
     NS_IMETHOD SetCookieString(nsIURL *aURL, const nsString& aCookie)=0;
 
-#ifdef CookieManagement
-    NS_IMETHOD NET_DisplayCookieInfoAsHTML()=0;
-#ifndef HTMLDialogs
-    NS_IMETHOD NET_CookieViewerReturn()=0;
-#endif
-#ifdef PrivacySiteInfo
-    NS_IMETHOD NET_DisplayCookieInfoOfSiteAsHTML(char * URLName)=0;
-    NS_IMETHOD NET_CookiePermission(char* URLName, PRInt32* permission)=0;
-    NS_IMETHOD NET_CookieCount(char* URLName, PRInt32* count)=0;
-#endif
-#endif
-
-    NS_IMETHOD NET_AnonymizeCookies()=0;
-    NS_IMETHOD NET_UnanonymizeCookies()=0;
-    NS_IMETHOD SI_AnonymizeSignons()=0;
-    NS_IMETHOD SI_UnanonymizeSignons()=0;
+    NS_IMETHOD Cookie_DisplayCookieInfoAsHTML()=0;
+    NS_IMETHOD Cookie_CookieViewerReturn(nsAutoString results)=0;
+    NS_IMETHOD Cookie_GetCookieListForViewer(nsString& aCookieList)=0;
+    NS_IMETHOD Cookie_GetPermissionListForViewer(nsString& aPermissionList)=0;
 
    /**
      * Get the http proxy used for http transactions.

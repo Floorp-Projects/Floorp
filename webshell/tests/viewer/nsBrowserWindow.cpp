@@ -641,7 +641,7 @@ nsBrowserWindow::DispatchMenuItem(PRInt32 aID)
                                      kINetServiceIID,
                                      (nsISupports **)&netservice);
   if ((NS_OK == res) && (nsnull != netservice)) {
-    res = netservice->NET_DisplayCookieInfoAsHTML();
+    res = netservice->Cookie_DisplayCookieInfoAsHTML();
     NS_RELEASE(netservice);
   }
   break;

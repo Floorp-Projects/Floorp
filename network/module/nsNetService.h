@@ -20,6 +20,7 @@
 #ifndef nsNetService_h___
 #define nsNetService_h___
 
+#include "nsString.h"
 #include "nspr.h"
 #include "nsIPref.h"
 #include "nsITransport.h"
@@ -53,22 +54,10 @@ public:
     NS_IMETHOD GetCookieString(nsIURL *aURL, nsString& aCookie);
     NS_IMETHOD SetCookieString(nsIURL *aURL, const nsString& aCookie);
 
-#ifdef CookieManagement
-    NS_IMETHOD NET_DisplayCookieInfoAsHTML();
-#ifndef HTMLDialogs
-    NS_IMETHOD NET_CookieViewerReturn();
-#endif
-#ifdef PrivacySiteInfo
-    NS_IMETHOD 	NET_DisplayCookieInfoOfSiteAsHTML(char * URLName);
-    NS_IMETHOD  NET_CookiePermission(char* URLName, PRInt32* permission);
-    NS_IMETHOD  NET_CookieCount(char* URLName, PRInt32* count);
-#endif
-#endif
-
-    NS_IMETHOD NET_AnonymizeCookies();
-    NS_IMETHOD NET_UnanonymizeCookies();
-    NS_IMETHOD SI_AnonymizeSignons();
-    NS_IMETHOD SI_UnanonymizeSignons();
+    NS_IMETHOD Cookie_DisplayCookieInfoAsHTML();
+    NS_IMETHOD Cookie_CookieViewerReturn(nsAutoString results);
+    NS_IMETHOD Cookie_GetCookieListForViewer(nsString& aCookieList);
+    NS_IMETHOD Cookie_GetPermissionListForViewer(nsString& aPermissionList);
 
     NS_IMETHOD GetProxyHTTP(nsString& aProxyHTTP);
     NS_IMETHOD SetProxyHTTP(nsString& aProxyHTTP);

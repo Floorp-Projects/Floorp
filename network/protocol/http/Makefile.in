@@ -30,6 +30,10 @@ CSRCS		= \
 	mkaccess.c	\
 	$(NULL)
 
+CPPSRCS		= \
+		  nsCookie.cpp \
+		  $(NULL)
+
 ifdef MOZ_BRPROF
 CPPSRCS += nsGetBrowsingProfile.cpp
 endif

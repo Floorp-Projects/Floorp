@@ -26,11 +26,6 @@
    executed.
 */
 
-#if defined(CookieManagement)
-/* #define TRUST_LABELS 1 */
-#endif
-
-
 /* make sure we only include this once */
 #ifndef _NET_PROTO_H_
 #define _NET_PROTO_H_
@@ -1060,22 +1055,8 @@ extern void NET_RegisterCookiePrefCallbacks(void);
  */
 extern int NET_SaveCookies(char *filename);
 
-/* Start an anonymous list of cookies */
-extern void NET_AnonymizeCookies();
-
-/* Restore original list of cookies */
-extern void NET_UnanonymizeCookies();
-
 /* Should referer by supressed for anonymity sake */
 extern Bool NET_SupressRefererForAnonymity();
-
-#if defined(CookieManagement)
-extern void NET_DisplayCookieInfoAsHTML(MWContext *context);
-extern void NET_CookieViewerReturn();
-extern void NET_DisplayCookieInfoOfSiteAsHTML(MWContext *context, char * URLName);
-extern int NET_CookiePermission(char* URLName);
-extern int NET_CookieCount(char * URLName);
-#endif
 
 #if defined(SingleSignon)
 extern void SI_DisplaySignonInfoAsHTML(MWContext *context);
