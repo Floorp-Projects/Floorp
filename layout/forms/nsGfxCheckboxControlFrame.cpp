@@ -54,6 +54,7 @@
 #include "nsIServiceManager.h"
 #include "nsIDOMNode.h"
 #include "nsIDOMHTMLInputElement.h"
+#include "nsITheme.h"
 
 
 //------------------------------------------------------------
@@ -187,6 +188,14 @@ nsGfxCheckboxControlFrame::PaintCheckBox(nsIPresContext* aPresContext,
                                          const nsRect& aDirtyRect,
                                          nsFramePaintLayer aWhichLayer)
 {
+  const nsStyleDisplay* disp = (const nsStyleDisplay*)mStyleContext->GetStyleData(eStyleStruct_Display);
+  if (disp->mAppearance) {
+    nsCOMPtr<nsITheme> theme;
+    aPresContext->GetTheme(getter_AddRefs(theme));
+    if (theme && theme->ThemeSupportsWidget(aPresContext, this, disp->mAppearance))
+      return; // No need to paint the checkbox. The theme will do it.
+  }
+
   aRenderingContext.PushState();
 
   float p2t;

@@ -365,7 +365,7 @@ nsImageBoxFrame::GetImageSource()
     const nsStyleDisplay* disp =
       (const nsStyleDisplay*)mStyleContext->GetStyleData(eStyleStruct_Display);
     if (disp->mAppearance && nsBox::gTheme && 
-        nsBox::gTheme->ThemeSupportsWidget(nsnull, disp->mAppearance))
+        nsBox::gTheme->ThemeSupportsWidget(nsnull, this, disp->mAppearance))
       return;
 
     // get the list-style-image
@@ -572,7 +572,7 @@ nsImageBoxFrame::DidSetStyleContext( nsIPresContext* aPresContext )
   const nsStyleDisplay* disp =
     (const nsStyleDisplay*)mStyleContext->GetStyleData(eStyleStruct_Display);
   if (disp->mAppearance && nsBox::gTheme && 
-      nsBox::gTheme->ThemeSupportsWidget(nsnull, disp->mAppearance))
+      nsBox::gTheme->ThemeSupportsWidget(nsnull, this, disp->mAppearance))
     return NS_OK;
 
   // If list-style-image changes, we have a new image.

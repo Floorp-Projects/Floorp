@@ -675,7 +675,7 @@ nsBox::GetBorder(nsMargin& aMargin)
         doc->GetShellAt(0, getter_AddRefs(shell));
         nsCOMPtr<nsIPresContext> context;
         shell->GetPresContext(getter_AddRefs(context));
-        if (gTheme->ThemeSupportsWidget(context, disp->mAppearance)) {
+        if (gTheme->ThemeSupportsWidget(context, frame, disp->mAppearance)) {
           nsCOMPtr<nsIDeviceContext> dc;
           context->GetDeviceContext(getter_AddRefs(dc));
           nsMargin margin(0,0,0,0);
@@ -1301,7 +1301,7 @@ nsIBox::AddCSSMinSize(nsBoxLayoutState& aState, nsIBox* aBox, nsSize& aSize)
     if (display->mAppearance) {
       nsCOMPtr<nsITheme> theme;
       aState.GetPresContext()->GetTheme(getter_AddRefs(theme));
-      if (theme && theme->ThemeSupportsWidget(aState.GetPresContext(), display->mAppearance)) {
+      if (theme && theme->ThemeSupportsWidget(aState.GetPresContext(), frame, display->mAppearance)) {
         nsSize size;
         const nsHTMLReflowState* reflowState = aState.GetReflowState();
         if (reflowState) {

@@ -34,6 +34,7 @@ class nsIPresContext;
 class nsIRenderingContext;
 class nsIDeviceContext;
 class nsIFrame;
+class nsIContent;
 class nsIAtom;
 
 // IID for the nsITheme interface
@@ -71,6 +72,7 @@ public:
   NS_IMETHOD ThemeChanged()=0;
 
   virtual PRBool ThemeSupportsWidget(nsIPresContext* aPresContext,
+                                     nsIFrame* aFrame,
                                      PRUint8 aWidgetType)=0;
 
   virtual PRBool WidgetIsContainer(PRUint8 aWidgetType)=0;

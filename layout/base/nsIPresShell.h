@@ -537,6 +537,16 @@ public:
   NS_IMETHOD UnsuppressPainting() = 0;
 
   /**
+   * Called to disable nsITheme support in a specific presshell.
+   */
+  NS_IMETHOD DisableThemeSupport() = 0;
+
+  /**
+   * Indicates whether theme support is enabled.
+   */
+  virtual PRBool IsThemeSupportEnabled() = 0;
+
+  /**
    * See if reflow verification is enabled. To enable reflow verification add
    * "verifyreflow:1" to your NSPR_LOG_MODULES environment variable
    * (any non-zero debug level will work). Or, call SetVerifyReflowEnable

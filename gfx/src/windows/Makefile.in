@@ -44,6 +44,7 @@ REQUIRES	= xpcom \
 		  necko \
 		  content \
 		  layout \
+      dom \
 		  debug \
 		  imglib2 \
 		  $(NULL)

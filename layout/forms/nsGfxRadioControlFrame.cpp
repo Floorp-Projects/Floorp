@@ -53,7 +53,7 @@
 #endif
 #include "nsIServiceManager.h"
 #include "nsIDOMNode.h"
-
+#include "nsITheme.h"
 
 nsresult
 NS_NewGfxRadioControlFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame)
@@ -180,7 +180,14 @@ nsGfxRadioControlFrame::PaintRadioButton(nsIPresContext* aPresContext,
                                       nsIRenderingContext& aRenderingContext,
                                       const nsRect& aDirtyRect)
 {
-   
+  const nsStyleDisplay* disp = (const nsStyleDisplay*)mStyleContext->GetStyleData(eStyleStruct_Display);
+  if (disp->mAppearance) {
+    nsCOMPtr<nsITheme> theme;
+    aPresContext->GetTheme(getter_AddRefs(theme));
+    if (theme && theme->ThemeSupportsWidget(aPresContext, this, disp->mAppearance))
+      return; // No need to paint the radio button. The theme will do it.
+  }
+
   PRBool checked = PR_TRUE;
   GetCurrentCheckState(&checked); // Get check state from the content model
   if (checked) {

@@ -86,6 +86,7 @@
 #include "nsCSSRendering.h"
 #include "nsILookAndFeel.h"
 #include "nsReflowPath.h"
+#include "nsITheme.h"
 
 // Timer Includes
 #include "nsITimer.h"
@@ -522,6 +523,19 @@ nsListControlFrame::Paint(nsIPresContext*      aPresContext,
   } 
 
   if (isVisible) {
+    if (aWhichLayer == NS_FRAME_PAINT_LAYER_BACKGROUND) {
+      const nsStyleDisplay* displayData;
+      GetStyleData(eStyleStruct_Display, ((const nsStyleStruct*&)displayData));
+      if (displayData->mAppearance) {
+        nsCOMPtr<nsITheme> theme;
+        aPresContext->GetTheme(getter_AddRefs(theme));
+        nsRect  rect(0, 0, mRect.width, mRect.height);
+        if (theme && theme->ThemeSupportsWidget(aPresContext, this, displayData->mAppearance))
+          theme->DrawWidgetBackground(&aRenderingContext, this, 
+                                      displayData->mAppearance, rect, aDirtyRect); 
+      }
+    }
+
     return nsScrollFrame::Paint(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer);
   }
 
