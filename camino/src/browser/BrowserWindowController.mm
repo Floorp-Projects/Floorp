@@ -1156,6 +1156,12 @@ enum BWCOpenDest {
     [theItem setEnabled:enable];
     return enable;
   }
+  else if (action == @selector(manageBookmarks:)) {
+    BOOL enable = [[mBrowserView getBrowserView] canGoBack];
+    if (!enable && ![self bookmarkManagerIsVisible])
+      enable = true;
+    return enable;
+  }
   else if (action == @selector(forward:)) {
     // we have to handle all the enabling/disabling ourselves because this
     // toolbar button is a view item. Note the return value is ignored.
@@ -1455,9 +1461,12 @@ enum BWCOpenDest {
 //
 // Load the bookmarks in the frontmost tab or window.
 //
--(IBAction)manageBookmarks: (id)aSender
+-(IBAction)manageBookmarks:(id)aSender
 {
-  [self loadURL:@"about:bookmarks" referrer:nil activate:YES allowPopups:YES];
+  if ([self bookmarkManagerIsVisible])
+    [self back:aSender];
+  else
+    [self loadURL:@"about:bookmarks" referrer:nil activate:YES allowPopups:YES];
 }
 
 //
