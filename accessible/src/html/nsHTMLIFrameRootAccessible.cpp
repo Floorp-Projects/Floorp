@@ -281,7 +281,7 @@ nsresult nsHTMLIFrameAccessible::GetLinkIndexFromAccNode(nsIAccessible *aAccNode
       return NS_OK;
     }
     *_retval = -1;
-    return  NS_ERROR_INVALID_ARG;
+    return  NS_OK;
   }
 
   //begin to count char length
@@ -289,9 +289,10 @@ nsresult nsHTMLIFrameAccessible::GetLinkIndexFromAccNode(nsIAccessible *aAccNode
     aAccNode->GetAccName(tempAccName);
     charLength = tempAccName.Length();
     if (aCharIndex < charLength) {
-      rv = NS_OK;
       *_retval = -1;
+      return NS_OK;
     }
+    return NS_ERROR_INVALID_ARG;
   }
   if (IsHyperLink(aAccNode)) {
     links = 1;
