@@ -20,6 +20,11 @@
  * layer between the W3C code and our layout engine to digest PICS labels.
  * Coded by Lou Montulli
  */
+#if defined(CookieManagement)
+#define TRUST_LABELS 1
+#endif
+
+
 
 #include "xp.h"
 #include "cslutils.h"
@@ -661,4 +666,1033 @@ cleanup:
 
 	return rv;
 }
+
+/***************************************************************************/
+/***************************************************************************/
+/***********  TRUST.C  at a latter time   **********************************/
+/*********   break from here down into trust.c  ****************************/
+/***************************************************************************/
+/***************************************************************************/
+
+
+/* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
+ * The contents of this file are subject to the Netscape Public License
+ * Version 1.0 (the "NPL"); you may not use this file except in
+ * compliance with the NPL.  You may obtain a copy of the NPL at
+ * http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the NPL is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
+ * for the specific language governing rights and limitations under the
+ * NPL.
+ *
+ * The Initial Developer of this code under the NPL is Netscape
+ * Communications Corporation.  Portions created by Netscape are
+ * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
+ * Reserved.
+ */
+/*
+ * This is another version of the thin layer between the W3C code - which
+ * parses the PICS labels - and the HTTP parsing code, to digest PICS labels.
+ * The original version was coded by Lou Montulli, this version by Paul Chek.
+ *
+ * This code is called when the HTTP header is being parsed and a PICS label
+ * was found.
+ *
+ * The broad overview is:
+ *  1.  The PICS parsing engine parses the ENTIRE label creating structures and
+ *		lists of the different rating services and labels in the services.
+ *  2.  After the label is completely parsed we iterate thru the rating 
+ *		services and the labels for each service to see if there are any trust
+ *		labels.
+ *	3.	If trust label are found they are added to the TrustList which is part
+ *		of the URL struct.
+ * 
+ *  The two main functions for the trust label processing are:
+ *  ProcessSingleLabel -  this is where the parsing engine presents ONE label with 
+ * 						all its options and extensions.  ProcessSingleLabel examines
+ * 						the label and determines if it is a valid trust label.  If
+ * 						it is the label is added to the TrustList.  This list
+ *						is the list of all trust labels.
+ * 
+ *  MatchCookieToLabel -	here is where a cookie gets matched to a trust label.  The
+ * 						entire header for the response has been read.  The 
+ *						end-of-header processing is pulling out the "Set-Cookie"
+ *						entries.  It has retrieved a cookie for processing.  The 
+ *						cookie processing code see that the user is processing
+ *						cookies using a script and inorder to fill out the cookie
+ *						properties for the script it has called MatchCookieToLabel
+ *						to see if there is a trust label associated with the cookie.
+ *						MatchCookieToLabel will look thru the trust_label list and 
+ *						match the best label to the cookie.
+ */
+
+#include "xp.h"
+/* uncomment out these .h files when trust.c is seperated. 
+#include "csllst.h"
+#include "cslutils.h"
+#include "csll.h"
+#include "pics.h"
+#include "prefapi.h"
+#include "xpgetstr.h"
+#include "sechash.h"			  
+#include "base64.h"
+*/
+#include "jscookie.h"
+#include "mkaccess.h"		/* use #include "trust.h" when it is broken out of mkaccess.h */
+#include "prlong.h"
+
+#ifdef TRUST_LABELS
+
+#ifdef _DEBUG
+#define HTTrace OutputDebugString 
+#else
+#define HTTrace
+#endif
+
+
+#define PICS_VERSION	1.1		/* the version of PICS labels that this code expects */
+
+CSLabel_callback_t ProcessService;
+CSLabel_callback_t ProcessLabel;
+CSLabel_callback_t ProcessSingleLabel;
+
+Bool IsValidValue( FVal_t *Value, int MinValue, int MaxValue, int *TheValue );
+Bool IsExpired( DVal_t *Value, PRTime *ExpirationDate );
+Bool IsValidTrustService( char *ServiceName );
+Bool ISODateToLocalTime( DVal_t *Value, PRTime *LocalDate );
+Bool CheckOptions( LabelOptions_t  *LabelOptions, PRTime *ExpirationDate );
+Bool IsLabelSigned( Extension_t *AExt );
+Bool IsSignatureValid( Extension_t *AExt, LabelOptions_t  *LabelOptions );
+
+extern int NET_SameDomain(char * currentHost, char * inlineHost);		  
+extern char * lowercase_string(char *string);
+extern char * illegal_to_underscore(char *string);
+
+/* THIS IS THE MASTER LIST OF TRUST LABELS.  
+   The labels stay on this list until they are matched to an incoming cookie. */
+XP_List *TrustList = NULL;
+
+
+#ifdef _DEBUG
+/**************    FOR DEBUGGINGG   ***********************************/ 
+#include "csparse.h"
+LabelTargetCallback_t targetCallback;
+StateRet_t trustCallback(CSLabel_t * pCSMR, CSParse_t * pCSParse, CSLLTC_t target, Bool closed, void * pVoid)
+{
+#ifdef NOPE
+	static int Total = 0;
+    char space[256];
+    int change = closed ? -target : target;
+    Total += change;
+	sprintf( space, "(%2d:%3d)token-->|%s|  %s %s \n", 
+		   Total, closed ? -target : target, pCSParse->token->data,
+		   closed ? "  ending" : "starting", pCSParse->pTargetObject->note ); 
+	sprintf(space, "%s %s (%d)\n", closed ? "  ending" : "starting", pCSParse->pParseState->note, closed ? -target : target); 
+    HTTrace(space);
+	if ( Total == 0 ) HTTrace( "All Done\n" );
+#endif
+    return StateRet_OK;
+}
+
+/* LLErrorHandler_t parseErrorHandler; */
+StateRet_t trustErrorHandler(CSLabel_t * pCSLabel, CSParse_t * pCSParse, 
+			     const char * token, char demark, 
+			     StateRet_t errorCode)
+{
+    char space[256];
+    sprintf(space, "%20s - %s: ", pCSParse->pTargetObject->note, 
+	   pCSParse->currentSubState == SubState_X ? "SubState_X" : 
+	   pCSParse->currentSubState == SubState_N ? "SubState_N" : 
+	   pCSParse->currentSubState == SubState_A ? "SubState_A" : 
+	   pCSParse->currentSubState == SubState_B ? "SubState_B" : 
+	   pCSParse->currentSubState == SubState_C ? "SubState_C" : 
+	   pCSParse->currentSubState == SubState_D ? "SubState_D" : 
+	   pCSParse->currentSubState == SubState_E ? "SubState_E" : 
+	   pCSParse->currentSubState == SubState_F ? "SubState_F" : 
+	   pCSParse->currentSubState == SubState_G ? "SubState_G" : 
+	   pCSParse->currentSubState == SubState_H ? "SubState_H" : 
+	   "???");
+    HTTrace(space);
+
+    switch (errorCode) {
+        case StateRet_WARN_NO_MATCH:
+            if (token)
+	        sprintf(space, "Unexpected token \"%s\".\n", token);
+	    else
+	        sprintf(space, "Unexpected lack of token.\n");
+            break;
+        case StateRet_WARN_BAD_PUNCT:
+			if (token)
+				sprintf(space, "Unexpected punctuation |%c| after token \"%s\".\n", demark, token);
+			else
+				sprintf(space, "Unexpected punctuation |%c| \n", demark);
+            break;
+        case StateRet_ERROR_BAD_CHAR:
+            sprintf(space, "Unexpected character \"%c\" in token \"%s\".\n", 
+			    *pCSParse->pParseContext->pTokenError, token);
+            break;
+        default:
+            sprintf(space, "Internal error: demark:\"%c\" token:\"%s\".\n", demark, token);
+            break;
+    }
+    HTTrace(space);
+/*
+    CSLabel_dump(pCSMR);
+    HTTrace(pParseState->note);
+*/
+  return errorCode;
+}
+
+/***************  END OF FOR DEBUGGINGG   *********************************** */
+#endif
+
+/*----------------------------------------------------------------------------------------------------
+ *  Purpose: given the value part of a PICS label parse it and determine
+ *			if it is a valid trust label according to internet draft
+ *			draft-ietf-http-trust-state-mgt-02.txt
+ * 
+ *---------------------------------------------------------------------------------------------------- */
+PUBLIC void PICS_ExtractTrustLabel( URL_Struct *URL_s, char *value )
+{
+	CSParse_t * pCSParse = 0;
+    CSDoMore_t status;
+
+#ifdef _DEBUG				/* display the label for debug */
+	HTTrace( "\n" );
+	HTTrace( value );
+	HTTrace( "\n" );
+#endif
+
+	/* validate input args */
+	if ( !URL_s || !URL_s->address ||
+		 !value || *value == '\0' ) return;
+
+	/* parse the PICS label and extract the trust label information from it */
+	/* ignoring the other rating information. */
+	/* init the PICS parsing code */
+#ifdef _DEBUG
+	pCSParse = CSParse_newLabel( &trustCallback, &trustErrorHandler );
+#else
+	pCSParse = CSParse_newLabel( 0, 0 );
+#endif
+	if ( pCSParse ) {
+	/* parse the label - the entire label is in value.  So one call 
+		to parse chunk is all that is needed.*/
+		status = CSParse_parseChunk(pCSParse, value, XP_STRLEN(value), 0);
+		
+		/* was the parse sucessfull? */
+		if ( status == CSDoMore_done ) {
+		/* yes - Iterate thru the services looking for valid trust labels.
+		*  the PICS label parsing code is set up to iterate thru the labels.
+		*  the hierarchy is:
+		* 	Services
+		* 		Labels
+		* 			SingleLabels
+		* 				Label Options
+			*				Label Ratings			   */
+			CSLabel_t * pCSLabel = CSParse_getLabel( pCSParse );
+			/* make sure the PICS version is correct */
+			if ( PICS_VERSION <= FVal_value(&CSLabel_getCSLLData(pCSLabel)->version) ) {
+				/* iterate thru each of the service IDs in this label calling ProcessService for each*/
+				CSLabel_iterateServices( pCSLabel, ProcessService, NULL, 0, (void *)(URL_s->address));
+				/* IF there are valid trust labels in this PICS label they are added to  */
+				/* the trust list at TrustList */
+			}
+			
+		} else {
+		/* either there was a error parsing the label or the label wasnt complete.
+			In either case ignore the label */
+			HTTrace( "Invalid label\n" );
+		}
+		CSParse_deleteLabel(pCSParse);	/* free the label parsing structures */
+	}
+}
+
+/*----------------------------------------------------------------------------------------------------
+ *  Purpose: the call back to handle a single service ID
+ * 			
+ *  
+ *----------------------------------------------------------------------------------------------------*/
+CSError_t ProcessService(CSLabel_t * pCSLabel, State_Parms_t * pParms, const char * identifier, void * szURL)
+{
+	CSError_t ret = CSError_OK;
+	if ( IsValidTrustService( CSLabel_getServiceName( pCSLabel ) ) ) {
+		/* yes - passed the first test for trust labels, i.e. a valid trust service
+		   I dont care about any of the service level options at this point; but if I 
+		   did I would use LabelOptions_t Opt =  pServiceInfo->pLabelOptions to check them
+		   
+		   So iterate thru the labels which if they have the purpose, Recipients and identifiable ratings
+		   will be trust labels																	   */
+		ret = CSLabel_iterateLabels(pCSLabel, ProcessLabel, pParms, 0, szURL);
+	} else {
+		/* if this is not a trust label but a regular PICS label it will usually 
+		   fail the rating service.  So this is an expected occurance. */
+		HTTrace( "ProcessService: invalid trust rating service\n" );
+	}
+    return ret;
+}
+
+/*----------------------------------------------------------------------------------------------------
+ *  Purpose: the call back to process a label and iterate thru the SingleLabels
+ * 			
+ *  
+ *----------------------------------------------------------------------------------------------------*/
+ CSError_t ProcessLabel(CSLabel_t * pCSLabel, State_Parms_t * pParms, const char * identifier, void * szURL)
+{
+    return CSLabel_iterateSingleLabels(pCSLabel, ProcessSingleLabel, pParms, 0, szURL);
+}
+
+/*----------------------------------------------------------------------------------------------------
+ *  Purpose: the call back get the options and the ratings for a single label.
+ * 		Create a TrustLabel to contain the info about the label and put on the 
+ * 		the trust label list
+ *  
+ *  Input:
+ *    pCSLabel - current parsed label instance
+ *    szURL    - the URL associated with this trust label
+ *  NOTES:
+ * 	1.  If the same rating is seen twice in one single label, the first VALID instance is used.
+ * 
+ * History:
+ *   8/22/98 Paul Chek - switch recipient to support a range of values
+ *---------------------------------------------------------------------------------------------------- */
+CSError_t ProcessSingleLabel(CSLabel_t * pCSLabel, State_Parms_t * pParms, const char * identifier, void * szURL)
+{
+/* tracks the ratings I have seen */
+#define HAVE_PURPOSE	0x1
+#define HAVE_RECIPIENTS	0x2
+#define HAVE_ID			0x4
+	typedef struct {
+		char *szName;			/* the full name of the rating */
+		int  Min, Max;			/* the valid ranges for the rating */
+	} ValidRating;
+
+	/* the ratings I am interested in for a trust label  */
+	ValidRating PurposeRating	= { "purpose", 0, 5 };
+	ValidRating RecipientsRating	= { "recipients", 0, 3 };
+	ValidRating IDRating		= { "identifiable", 0, 1 };
+
+    CSError_t ret = CSError_OK;
+	int PurposeRange = 0;				/* bits corresponding to the purpose ranges seen */
+	int RecpRange = 0;
+	int  IDValue = 0;
+
+	HTList * ranges;
+    Range_t * pRange;
+	int TempValue, MinValue, MaxValue;
+	int i;
+	TrustLabel *TheLabel;
+
+	Extension_t *AExt;
+	ExtensionData_t	*AData;
+	char	*AName;				
+	Bool	bForgedLabel;
+
+	/* march thru the ratings looking for purpose, Recipients and identification.  When found save their values. */
+	int count = 0;
+	if (!pCSLabel || !szURL ) {
+		/* oops got a bad one */
+		ret = CSError_BAD_PARAM;
+	} else {
+		/* the current single label */
+		SingleLabel_t * pSingleLabel = CSLabel_getSingleLabel(pCSLabel);
+		/* get the options */
+		LabelOptions_t  *LabelOptions = pSingleLabel->pLabelOptions;
+		PRTime  ExpDate;						/* the expiration date */
+
+		/* VALIDITY TESTS */
+		/* Has the expiration date passed - there must be an expiration date - sec 3.4.2 */
+		/* and these options are required "by", "generic", "on" - sec 3.1? */
+		if ( CheckOptions( LabelOptions, &ExpDate ) ) {
+			/* yes - check the ratings for purpose, Recipients and ID */
+			/* get the Ratings list */
+			HTList *LabelRatings = pSingleLabel->labelRatings;
+			LabelRating_t *Rating;
+			Bool bContinue = TRUE;
+			short AllRatings = HAVE_PURPOSE | HAVE_RECIPIENTS | HAVE_ID;
+			/* look thru all the ratings until I have the 3 required ratings */
+			while ( AllRatings != 0 && (Rating = (LabelRating_t *) HTList_nextObject(LabelRatings))) {
+				/* is it the purpose rating? */
+				if ( (AllRatings & HAVE_PURPOSE) &&
+					 !XP_STRCASECMP( SVal_value(&Rating->identifier), PurposeRating.szName)) {
+					/* Was a single value given?? */
+					if ( IsValidValue( &Rating->value, PurposeRating.Min, PurposeRating.Max, &TempValue ) ) {
+						PurposeRange = PurposeRange | ( 1 << TempValue );
+						AllRatings &= (~HAVE_PURPOSE );
+
+					/* Was a range or a list of values given?? */
+					} else if ( Rating->ranges ) {
+						ranges = Rating->ranges;
+						while ((pRange = (Range_t *) HTList_nextObject(ranges))) {
+							MinValue = MaxValue = -1;
+							if ( IsValidValue( &pRange->min, PurposeRating.Min, PurposeRating.Max, &MinValue ) ) {
+								PurposeRange = PurposeRange | ( 1 << MinValue );
+								AllRatings &= (~HAVE_PURPOSE );
+							}
+							if ( IsValidValue( &pRange->max, PurposeRating.Min, PurposeRating.Max, &MaxValue ) ) {
+								/* if there was also a min value then set all the bits between the min and the max */
+								if ( 0 <= MinValue && MinValue <= MaxValue ) {
+									for( i=MinValue; i<=MaxValue; i++ ) PurposeRange = PurposeRange | ( 1 << i );
+								} else {
+									PurposeRange = PurposeRange | ( 1 << MaxValue );
+								}
+								AllRatings &= (~HAVE_PURPOSE );
+							}
+						}
+					}
+				/* is it the Recipients rating? */
+				} else if ( (AllRatings & HAVE_RECIPIENTS) &&
+							!XP_STRCASECMP(SVal_value(&Rating->identifier), RecipientsRating.szName)) {
+					/* Was a single value given?? */
+					if ( IsValidValue( &Rating->value, RecipientsRating.Min, RecipientsRating.Max, &TempValue ) ) {
+						RecpRange = RecpRange | ( 1 << TempValue );
+						AllRatings &= (~HAVE_RECIPIENTS );
+
+					/* Was a range or a list of values given?? */
+					} else if ( Rating->ranges ) {
+						ranges = Rating->ranges;
+						while ((pRange = (Range_t *) HTList_nextObject(ranges))) {
+							MinValue = MaxValue = -1;
+							if ( IsValidValue( &pRange->min, RecipientsRating.Min, RecipientsRating.Max, &MinValue ) ) {
+								RecpRange = RecpRange | ( 1 << MinValue );
+								AllRatings &= (~HAVE_RECIPIENTS );
+							}
+							if ( IsValidValue( &pRange->max, RecipientsRating.Min, RecipientsRating.Max, &MaxValue ) ) {
+								/* if there was also a min value then set all the bits between the min and the max */
+								if ( 0 <= MinValue && MinValue <= MaxValue ) {
+									for( i=MinValue; i<=MaxValue; i++ ) RecpRange = RecpRange | ( 1 << i );
+								} else {
+									RecpRange = RecpRange | ( 1 << MaxValue );
+								}
+								AllRatings &= (~HAVE_RECIPIENTS );
+							}
+						}
+					}
+				/* is it the identifiable rating   */
+				} else if ( (AllRatings & HAVE_ID) &&
+							!XP_STRCASECMP(SVal_value(&Rating->identifier), IDRating.szName)) {
+					/* yes - is the range valid? */
+					if ( IsValidValue( &Rating->value, IDRating.Min, IDRating.Max, &IDValue ) ) {
+						AllRatings &= (~HAVE_ID );
+					}
+				}
+			}		/* end while ( AllRatings  */
+			/* Did I get the required ratings? */
+			if ( !AllRatings ) {
+				/* yes  */
+				/*HTTrace( "  Valid trust label: purpose = 0x%0x, ID = %d, recipients = %d\n", PurposeRange, IDValue, RecpRange ); */
+				/*HTTrace( "  for: \"%s\" \n", SVal_value(&LabelOptions->fur));		*/
+				/*HTTrace( "  expires: %s\n", DVal_value( &LabelOptions->until ) ); */
+				TheLabel = TL_Construct();			/* allocate a net trust label */
+				if ( TheLabel ) {
+					/* fill up the structure */
+					TheLabel->purpose = PurposeRange;
+					TheLabel->ID = IDValue;
+					TheLabel->recipients = RecpRange;
+					TheLabel->ExpDate = ExpDate;
+					TL_SetTrustAuthority( TheLabel, CSLabel_getServiceName( pCSLabel ) );
+					TL_SetByField( TheLabel, SVal_value(&LabelOptions->by) );
+					TL_SetURLField( TheLabel, szURL );
+					bForgedLabel = FALSE;
+
+					/* if this is a generic label then set the isGeneric flag */
+					if ( BVal_value( &LabelOptions->generic )  ) TheLabel->isGeneric = TRUE;
+
+					/* if there is a cookieinfo extension and it had a name(s) then save the name */
+					if ( LabelOptions->extensions ) {
+						while( !bForgedLabel && (AExt = (Extension_t *)XP_ListNextObject( LabelOptions->extensions )) ) {
+							/* is this an extension for cookie info? */
+							if ( IsValidTrustService( SVal_value(&AExt->url) ) ) {
+								/* is there data attached to the extension - that is stuff besides the mandatory | optional and the URL */
+								if ( AExt->extensionData ) {
+									/* yes copy the list to the trust label */
+									if ( !TheLabel->nameList ) TheLabel->nameList = XP_ListNew();
+									if ( TheLabel->nameList ) {
+										while( (AData = (ExtensionData_t *)HTList_nextObject( AExt->extensionData ) ) ) {
+											AName = XP_STRDUP( AData->text );		/* copy it */
+											XP_ListAddObjectToEnd( TheLabel->nameList, AName );		 /* add it to the trust label list */
+										}
+									}
+								}
+							/* Is this a digital signature extension?? */
+							} else if ( IsLabelSigned( AExt ) ) {
+								/* Yes - the label is signed, I must now check if the signature is valid.
+								   If the signature is NOT valid then throw the label out. */
+								if ( IsSignatureValid( AExt, LabelOptions ) ) {
+									/* the label is signed with a good signature */
+									TheLabel->isSigned = TRUE;
+								} else {
+									/* the label has a signature but the MIC on the label doesnt match 
+									   the signature, so someone has fooled with the label */
+									bForgedLabel = TRUE;
+								}
+							}			/* end of if ( IsValidTrustService */
+						}
+					}
+
+					/* Was the label forged?? */
+					if ( !bForgedLabel ) {
+						/* seperate the path and domain out of the "for" label attribute */
+						TL_ProcessForAttrib( TheLabel, SVal_value(&LabelOptions->fur) );
+
+						/* add the trust label to the list of trust labels in this header */
+						if ( !TrustList ) {
+							/* create the list */
+							TrustList = XP_ListNew();
+						}
+						if ( TrustList ) {
+							/* NOTE: this is the only place where trust label are added to the TrustList */
+							XP_ListAddObjectToEnd( TrustList, TheLabel );
+							HTTrace( "  Valid trust label\n" );
+						} else {
+							HTTrace( "ERROR in ProcessSingleLabel: unable to allocate the trust list\n" );
+							ret = CSError_APP;
+						}
+
+					} else {
+						/* the label was forged - discard it */
+						HTTrace( "Forged label\n" );
+						TL_Destruct( TheLabel );
+					}
+
+				} else {
+					/* memory allocation problems */
+					HTTrace( "ERROR in ProcessSingleLabel: failed to allocate trust object\n" );
+					ret = CSError_APP;
+				}
+			} else {
+				/* no not a valid trust label, not a big deal, keep goin */
+				HTTrace( "   Label not a trust label - not all ratings present.\n" );
+			}
+		} else {
+			/* not a valid trust label - missing expiration date or for option */
+			HTTrace( "   Label not a trust label - missing a required option\n" );
+		}				/* if ( !IsExpired( LabelOptions  */
+	}					/* if (!pCSLabel || */
+	return ret;
+}
+
+/*----------------------------------------------------------------------------------------------------
+ *  Purpose: determine if the value for a rating falls within the specified range
+ *  
+ * ---------------------------------------------------------------------------------------------------- */
+Bool IsValidValue( FVal_t *Value, int MinValue, int MaxValue, int *TheValue )
+{
+	if ( FVal_initialized(Value) ) {
+		/* NOTE: the conversion from a float to an int, since for trust labels we are  */
+		/*  only dealing with ints. */
+		*TheValue = (int)FVal_value(Value); 
+		if ( MinValue <= (*TheValue) && (*TheValue) <= MaxValue ) {
+			return TRUE;
+		}
+	}
+	return FALSE;
+}
+
+/*----------------------------------------------------------------------------------------------------
+ *  Purpose: determine if the required label options are present.
+ *  
+ *  
+ *  returns:  TRUE if all the required options are present
+ *     ExpDate  - returns the label expiration date
+ *  
+ * ---------------------------------------------------------------------------------------------------- */
+Bool CheckOptions( LabelOptions_t  *LabelOptions, PRTime *ExpirationDate )
+{
+	Bool Status = FALSE;
+	/* According to the spec these options must be present:
+	 *   "by", "gen", "for", "on" AND "exp" OR "until".  AND the expiration date must
+	 *   not have passed.
+	 */
+
+   	if ( !IsExpired( &LabelOptions->until, ExpirationDate ) &&			/* expiration date */
+		 SVal_initialized( &LabelOptions->fur )       &&			/* for option */
+		 SVal_initialized( &LabelOptions->by )        &&			/* by option */
+		 DVal_initialized( &LabelOptions->on )        &&			/* on option */
+		 BVal_initialized( &LabelOptions->generic )         ) {		/* generic option */
+		Status = TRUE;
+	}
+	return Status;
+}
+
+/*----------------------------------------------------------------------------------------------------
+ *  Purpose: determine if the expiration date has passed.  
+ *  
+ *  Note:
+ * 		The PICS spec calls for only one form for the date, ISO 8601:1988 which is
+ * 		YYYY.MM.DDTHH:MMSxxxx
+ * 		where S = - or +
+ * 			  xxxx = four digit time zone offset
+ *  
+ *  returns 
+ * 	TRUE if the expiration date has PASSED or is not present
+ *   FALSE if the expiration date is AFTER now.
+ * ---------------------------------------------------------------------------------------------------- */
+Bool IsExpired( DVal_t *Value, PRTime *ExpirationDate )
+{
+	PRTime			CurrentTime;
+	/* Has the expiration date been given?? */
+    if (DVal_initialized( Value ) ) {
+		/* yes - is it before now? */
+		if ( ISODateToLocalTime( Value, ExpirationDate ) ) {
+			/* get the exploded local time parameters  */
+			CurrentTime = PR_Now();  
+
+			/*HTTrace( "Cur Time = %s", ctime( &CurrentTime ) ); */
+			/*HTTrace( "Exp Time = %s", ctime( &ExpTime) ); */
+			if ( LL_CMP(CurrentTime,>,*ExpirationDate) ) {
+				return TRUE;		/* Expiration time has passed */
+			} else {
+				return FALSE;		/* Expiration time has NOT passed */
+			}
+		}
+	}
+	return TRUE;
+}
+
+
+/*----------------------------------------------------------------------------------------------------
+ *  Purpose: if the given service name is a valid trust service.
+ * 
+ *  Note: the valid trust services are stored in the user's preferences.
+ *  They are of the form  "browser.trust.service.XXX.service_enabled" 
+ *  where XXX is an escaped URL formed by coverting illegal preference characters to underscore
+ *        and lowercasing the string  .
+ *  So the preference for the default trust service 
+ *     "http:  www.w3.org/PICS/systems/P3P-http-trust-state-01.rat"    is
+ *  pref("browser.trust.service.http___www_w3_org_pics_systems_p3p_http_trust_state_01_rat.service_enabled", true);
+ *  
+ *  returns TRUE if the given service is a valid trust service
+ * ----------------------------------------------------------------------------------------------------*/
+Bool IsValidTrustService( char *ServiceName )
+{
+	char	*PrefName;
+	char	*escaped_service;
+	XP_Bool bool_pref;
+
+	if ( ServiceName && *ServiceName ) {
+		/* Build the preference string - first escape the service name */
+		escaped_service = XP_STRDUP(ServiceName);
+		escaped_service = illegal_to_underscore(escaped_service);
+		escaped_service = lowercase_string(escaped_service);
+		if(!escaped_service) return FALSE;
+
+		/* create the preference string */
+		PrefName = XP_Cat( "browser.trust.service.", escaped_service, ".service_enabled", (char *)NULL );
+		XP_FREE(escaped_service);
+		if ( PrefName ) {
+#ifndef	  FOR_PHASE2
+#define FIRST_STR "browser.trust.service.http___www_w3_org_pics_systems_p3p_http_trust_state_01_rat.service_enabled" 
+#define SECOND_STR "browser.trust.service.http___www_w3_org_pics_extensions_cookieinfo_1_0_html.service_enabled"
+			if ( XP_STRCASECMP( PrefName, FIRST_STR ) == 0 ||
+				 XP_STRCASECMP( PrefName, SECOND_STR ) == 0   ) {
+				return TRUE;
+			} else {
+				return FALSE;
+			}
+#else
+			/* Now make sure the preference both exists and is enabled */
+			if(!PREF_GetBoolPref(PrefName, &bool_pref)) {
+				/* the preference exists - this is a known rating service */
+				XP_FREE( PrefName );
+				return bool_pref;
+			} else {
+				/* the preference does not exist - this is an unknown rating service */
+				XP_FREE( PrefName );
+				return FALSE;
+			}
+#endif
+		}
+	}
+	return FALSE;
+}
+
+/*----------------------------------------------------------------------------------------------------
+ *  Purpose: takes a parsed ISO date from the PICS label parser and converts
+ * 			it to a local PRTime
+ *  
+ *  
+ *  returns 
+ * 	TRUE if the date  is valid
+ *   FALSE if the date is not a valid ISO string
+ * ---------------------------------------------------------------------------------------------------- */
+Bool ISODateToLocalTime( DVal_t *Value, PRTime *LocalDate )
+{
+    if (DVal_initialized( Value ) ) {
+		/* the string was parsed into the different fields */
+		PRExplodedTime tm;
+		XP_MEMSET( (void *)&tm, 0, sizeof( PRExplodedTime ) );
+		tm.tm_year   = Value->year;
+		tm.tm_month  = Value->month - 1;
+		tm.tm_mday	 = Value->day;
+		tm.tm_hour	 = Value->hour;
+		tm.tm_min	 = min(Value->minute, 59 );
+		/* the adjustment for GMT offset to the local time zone in seconds */
+	    tm.tm_params.tp_gmt_offset = Value->timeZoneHours *3600 + Value->timeZoneMinutes * 60;
+		*LocalDate = PR_ImplodeTime(&tm);
+		return TRUE;
+	} else {
+		return FALSE;
+	}
+
+}
+
+/*----------------------------------------------------------------------------------------------------
+ *  Purpose: determine if path2 is a prefix of path1
+ *  
+ *  returns - TRUE if it is
+ *---------------------------------------------------------------------------------------------------- */
+Bool IsPrefix( char *path1, char *path2 )
+{
+	int i;
+	if ( path1 && path2 ) {
+		int len1 = XP_STRLEN( path1 );
+		int len2 = XP_STRLEN( path2 );
+		/* Is path2's length <= path1's length?? */
+		if ( len2 <= len1 ) {
+			/* path1 characters must match path2 up to the length of path1 */
+			for ( i=0; i<len2; i++ ) {
+				if ( path1[i] != path2[i] ) {
+					/* not a prefix */
+					return FALSE;
+				}
+			}
+			/* path2 is a prefix of path1 */
+			return TRUE;
+		}
+	}
+	return FALSE;
+
+}
+
+/*----------------------------------------------------------------------------------------------------
+ *  Purpose: given the path from a cookie and the list of trust labels in this header
+ * 			try to match the cookie to a trust label.                             
+ *  
+ *  inputs:
+ * 	TrustList	- the list of trust labels to search
+ *  CookieData  - the data struct used for java script partially filled out 
+ * 				  with the cookie name, path and domain
+ *  CookieDomain  - the domain attribute from the cookie
+ *  returns 
+ * 	TRUE if a matching trust label is found
+ *  FALSE if none found
+ *  TheLabel - ptr to the matching trust label
+ *----------------------------------------------------------------------------------------------------*/
+PUBLIC Bool MatchCookieToLabel( char *CurURL, JSCFCookieData *CookieData, TrustLabel **TheLabel )
+{
+	Bool Status = FALSE;
+	if ( CurURL && CookieData && 
+		 !XP_ListIsEmpty( TrustList ) && TheLabel ) {
+		Status = MatchCookieToLabel2( CurURL, CookieData->name_from_header,
+							  CookieData->path_from_header, CookieData->host_from_header, 
+							  TheLabel );
+	} 
+	return Status;
+}
+
+/****************************************************************
+ * Purpose: The actual matching code.
+ * 			This implements part of section 3.3.1 of the trust label spec dealing 
+ * 			with figuring out if a cookie and a trust label are "compatiable".
+ *
+ * 	TrustList	- the list of trust labels to search
+ *  CookieName  - the name of the cookie 
+ *  CookiePath  - the path for the cookie
+ *  CookieHost  - the host for the cookie 
+ *
+ *  returns 
+ * 	TRUE if a matching trust label is found
+ *  FALSE if none found
+ *  TheLabel - ptr to the matching trust label
+ *
+ *
+ * History:
+ *  Paul Chek - initial creation
+ ****************************************************************/
+PUBLIC Bool MatchCookieToLabel2( char *CurURL, char *CookieName,
+								 char *CookiePath, char *CookieHost, 
+								 TrustLabel **TheLabel )
+{
+	Bool	Status = FALSE;
+	TrustLabel  *ALabel;
+	char	*AName;
+	Bool	bNameMatch;
+	XP_List *TempList;
+	TrustLabel	*LastMatch = NULL;
+	Bool		LastMatchNamed;
+	XP_List *TempTrustList;
+
+	/* make sure I have the data I need										 */
+	if ( CurURL && CookieName && CookiePath && CookieHost &&
+		 !XP_ListIsEmpty( TrustList ) && TheLabel ) {
+		/* look thru the list of trust labels for one to match this cookie */
+		/* First see if there is a named trust label that matches the cookie */
+		TempTrustList = TrustList;
+		while( (ALabel = (TrustLabel *)XP_ListNextObject( TempTrustList )) ) {
+			/* is this label for this URL? */
+			if ( XP_STRCASECMP( CurURL, ALabel->szURL ) == 0 ) {
+				/* is this label for a specific cookie(s)?? */
+				bNameMatch = FALSE;
+				if ( ALabel->nameList != NULL ) {
+					/* yes - do the names match -  CASE INSENSITIVE COMPARE ?? */
+					TempList = ALabel->nameList;		/* always walk a list with a COPY of the list pointer */
+					while( (AName = (char *)XP_ListNextObject( TempList ) ) ) {
+						if ( XP_STRCASECMP (AName, CookieName ) == 0 ) {
+							/* this label has a cookie name and it matches the current cookie */
+							bNameMatch = TRUE;
+							break;
+						}
+					}
+				}
+
+				/* do the domains match?? */
+				if ( NET_SameDomain( ALabel->domainName, CookieHost ) == 1 ) {
+					/* the domains match - is this label a "Generic" label?? */
+					if ( ALabel->isGeneric ) {
+						/* is the path from the label a prefix to the path in the cookie */
+						if ( IsPrefix( CookiePath, ALabel->path ) ) {
+							/* this label matches this cookie -- is it the best match */
+							if ( !LastMatch ) {
+								/* no previous match - take this one */
+								LastMatch = ALabel;
+								LastMatchNamed = bNameMatch;
+							} else {
+								/* there was a previus match - is this one more specific?? 
+								   Pick named over unnamed labels; pick non-generic over generic labels.
+								   
+								   So since the current label is GENERIC, if it is named AND 
+								   the previous label is NOT named use the current label
+								   because it is a better match - named is better than not named.
+
+								   An implied test is if neither are named, since this is a GENERIC
+								   label then keep the previous label because it is either
+								   a better match or an equivalent match. 
+								*/
+								if (  bNameMatch && (!LastMatchNamed) ) {
+									LastMatch = ALabel;
+									LastMatchNamed = bNameMatch;
+								}
+							}
+						}
+					} else {
+						/* this is not a generic label - do the paths match exactly - CASE INSENSITIVE COMPARE ?? */
+						if ( XP_STRCASECMP( ALabel->path, CookiePath ) == 0 ) {
+							/* this label matches this cookie -- is it the best match */
+							if ( !LastMatch ) {
+								/* no previous match - take this one */
+								LastMatch = ALabel;
+								LastMatchNamed = bNameMatch;
+							} else {
+								/* there was a previus match - is this one more specific?? 
+								   Pick named over unnamed labels; pick non-generic over generic labels.
+								   
+								   So since the current label is NON-GENERIC, if it is named 
+								   use it because it is either a better match or an equivalent match.
+								   If it is not named AND the previous label is not named then use
+								   the current label because it is either a better match or an equivalent match. 
+								*/
+								if (  bNameMatch || (!LastMatchNamed) ) {
+									/* both are named, the current label is non-generic, use it */
+									LastMatch = ALabel;
+									LastMatchNamed = bNameMatch;
+								}
+							}
+						}
+					}		/* end of if ( ALabel->isGeneric  */
+				}		/* end of if ( NET_SameDomain */
+			}			/* end of if ( XP_STRNCASECMP( CurURL, */
+		}			/* end of while( (ALabel */
+	}
+
+	/* Was there a match?? */
+	if ( LastMatch ) {
+		/* yes */
+		*TheLabel = LastMatch;
+		return TRUE;
+	} else {
+		return FALSE;
+	}
+
+}
+
+/*----------------------------------------------------------------------------------------------------
+ *  Purpose: returns true if the user preference for supporting trust labels is 
+ *			 set to true.
+ *  
+ *  
+ *---------------------------------------------------------------------------------------------------- */
+PUBLIC Bool IsTrustLabelsEnabled()
+{
+#ifndef FOR_PHASE2
+	return TRUE;
+#else
+static int bEnabled = -1;
+	if ( bEnabled == -1 ) {
+		/* on the first call get it from the preferences */	
+		PREF_GetBoolPref("browser.PICS.trust_labels_enabled", &bEnabled);
+	}
+	return (Bool)bEnabled;
+#endif
+}
+
+
+/*----------------------------------------------------------------------------------------------------
+ *  Purpose: returns true if the given extension is the Digital Signature extension
+ *  
+ *---------------------------------------------------------------------------------------------------- */
+Bool IsLabelSigned( Extension_t *AExt )
+{
+	return FALSE;			/* not handling signed label right now */
+}
+
+/*----------------------------------------------------------------------------------------------------
+ *  Purpose: returns true if the given Digital Signature extension is a valid signature for 
+ *			 the given label.  If this returns false then we have a forged label.
+ *  
+ *---------------------------------------------------------------------------------------------------- */
+Bool IsSignatureValid( Extension_t *AExt, LabelOptions_t  *LabelOptions )
+{
+	return TRUE;			/* not handling signed label right now */
+
+}
+
+
+
+/*\\//\\//\\//\\//  "MEMBERS" OF THE TRUST LABEL "CLASS" \\//\\//\\//\\//\\//\\//\\//\\//\\// */
+
+
+/*----------------------------------------------------------------------------------------------------
+ *  Purpose: construct a Trust Label and init its members
+ *
+ *  returns - the new initialized TrustLabel
+ * ----------------------------------------------------------------------------------------------------*/
+TrustLabel *TL_Construct()
+{
+	TrustLabel *ALabel = NULL;
+	ALabel = XP_ALLOC( sizeof(TrustLabel) );
+	if ( ALabel ) {
+		ALabel->purpose	= 0;
+		ALabel->ID = 0;
+		ALabel->recipients = 0;	
+		ALabel->szTrustAuthority = NULL;	
+		ALabel->isGeneric = FALSE;	
+		ALabel->isSigned = FALSE;	
+		ALabel->ExpDate = 0;	
+		ALabel->signatory = NULL;	
+		ALabel->domainName = NULL;	
+		ALabel->path = NULL;  
+		ALabel->nameList = NULL;
+		ALabel->szBy = NULL;  
+		ALabel->szURL = NULL;  
+		time(&ALabel->TimeStamp);	/* second since 1970 */
+	}
+	return ALabel;
+
+}
+
+/*----------------------------------------------------------------------------------------------------
+ *  Purpose: destroy a TrustLabel freeing allocated memory
+ *  
+ * ----------------------------------------------------------------------------------------------------*/
+PUBLIC void TL_Destruct( TrustLabel *ALabel )
+{
+	char *AName;
+	if ( ALabel ) {
+		if ( ALabel->signatory ) XP_FREE( ALabel->signatory );
+		if ( ALabel->domainName ) XP_FREE( ALabel->domainName );
+		if ( ALabel->path ) XP_FREE( ALabel->path );
+		if ( ALabel->szTrustAuthority ) XP_FREE( ALabel->szTrustAuthority );
+		if ( ALabel->szBy ) XP_FREE( ALabel->szBy );
+		if ( ALabel->szURL ) XP_FREE( ALabel->szURL );
+		if ( ALabel->nameList ) {
+			while( (AName = (char *)XP_ListRemoveEndObject( ALabel->nameList )) ){
+				XP_FREE( AName );
+			}
+			/* now delete the list */
+			XP_ListDestroy( ALabel->nameList );
+		}
+		XP_FREE( ALabel );
+	}
+}
+
+/*----------------------------------------------------------------------------------------------------
+ *  Purpose: decompose the "for" label attribute into a domain and path
+ * 			and save in the trust label
+ *  
+ * ----------------------------------------------------------------------------------------------------*/
+void TL_ProcessForAttrib( TrustLabel *ALabel, char *szFor)
+{
+	char *p;
+	if ( ALabel && szFor ) {
+		/* for the domain - skip to the "//" to jump over the protocol, */
+		/* this is the beginning of the domain, then					*/
+		/* look for the first ":" or "/" to mark the end of the domain	*/
+		p = XP_STRCASESTR(szFor, "//");
+		if ( p == NULL ) {
+			NET_SACopy( &ALabel->domainName, szFor);
+		} else {
+			NET_SACopy( &ALabel->domainName, p+2);
+		}
+		for(p=ALabel->domainName; *p != '\0' && *p != ':' && *p != '/'; p++);  /* skip to end OR : or / */
+		
+		/* for the path it starts where the domain stopped */
+		NET_SACopy( &ALabel->path, p );
+		*p = '\0';			/* terminate the domain name */
+	}
+
+}
+
+/*----------------------------------------------------------------------------------------------------
+ *  Purpose: set the signatory for a signed label
+ *  
+ * ----------------------------------------------------------------------------------------------------*/
+void TL_SetSignatory( TrustLabel *ALabel, char *Signatory )
+{
+	if ( ALabel && Signatory ) {
+		NET_SACopy( &ALabel->signatory, Signatory );
+	}
+}
+
+/*----------------------------------------------------------------------------------------------------
+ *  Purpose: set the trust authority string
+ *  
+ * ----------------------------------------------------------------------------------------------------*/ 
+void TL_SetTrustAuthority( TrustLabel *ALabel, char *TrustAuthority )
+{
+	if ( ALabel && TrustAuthority ) {
+		NET_SACopy( &ALabel->szTrustAuthority, TrustAuthority );
+	}
+}
+
+/*----------------------------------------------------------------------------------------------------
+ *  Purpose: set the by field in the label from the "by" label option
+ *  
+ * ----------------------------------------------------------------------------------------------------*/ 
+void TL_SetByField( TrustLabel *ALabel, char *szBy )
+{
+	if ( ALabel && szBy ) {
+		NET_SACopy( &ALabel->szBy, szBy );
+	}
+}
+
+/*----------------------------------------------------------------------------------------------------
+ *  Purpose: set the URL field in the label
+ *  
+ * ----------------------------------------------------------------------------------------------------*/ 
+void TL_SetURLField( TrustLabel *ALabel, char *szURL )
+{
+	if ( ALabel && szURL ) {
+		NET_SACopy( &ALabel->szURL, szURL );
+	}
+}
+
+
+#endif			/* end of #ifdef TRUST_LABELS */
+
+
+
+
 

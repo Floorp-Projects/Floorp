@@ -43,6 +43,11 @@ with copyright holders.
 ** BUGS: no code yet; doesn't actually do anything
 */
 
+#if defined(CookieManagement)
+#define TRUST_LABELS 1
+#endif
+
+
 /* Library include files */
 /* --- BEGIN added by mharmsen@netscape.com on 7/9/97 --- */
 #include "xp.h"
@@ -605,7 +610,11 @@ static NowIn_t lastRet = NowIn_END;
      *   token = HTChunk_data(pCSParse->token);
      * }
 	 */
+#ifdef TRUST_LABELS
+	if(HTChunk_size(pCSParse->token))
+#else
 	if(HTChunk_data(pCSParse->token))
+#endif
 	{
 		HTChunk_terminate(pCSParse->token);
 		token = HTChunk_data(pCSParse->token);

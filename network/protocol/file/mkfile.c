@@ -22,6 +22,10 @@
  * Designed and implemented by Lou Montulli '94
  */
 
+#if defined(CookieManagement)
+#define TRUST_LABELS 1
+#endif
+
 #include "xp.h"
 #include "plstr.h"
 #include "prmem.h"
@@ -51,6 +55,10 @@ IL_Type(const char *buf, int32 len);
 #endif
 
 #include "prefapi.h"
+
+#ifdef TRUST_LABELS
+extern void ProcessCookiesAndTrustLabels( ActiveEntry *ce );
+#endif 
 
 /* for XP_GetString() */
 #include "xpgetstr.h"
@@ -1287,6 +1295,9 @@ net_ProcessFile (ActiveEntry * cur_entry)
     			if(con_data->stream)
                		COMPLETE_STREAM;
                 con_data->next_state = NET_FILE_FREE;
+#ifdef TRUST_LABELS
+                ProcessCookiesAndTrustLabels( cur_entry );
+#endif
                 break;
     
             case NET_FILE_ERROR_DONE:
