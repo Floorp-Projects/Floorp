@@ -448,7 +448,7 @@ main(int argc, char **argv)
     if (trueNumberOfInterfaces>1) {
         for (i=1; i<trueNumberOfInterfaces; i++) {
             /* Only complain if the IIDs are identical and nonzero. */
-            if (compare_IDEs_by_IID(&IDE_array[i-1], &IDE_array[i]) == 0 &&
+            if (compare_IIDs(&IDE_array[i-1].iid, &IDE_array[i].iid) == 0 && 
                 compare_IDE_with_zero(&IDE_array[i]) != 0) {
                 fprintf(stderr, "FATAL ERROR:\n"
                         "Duplicate IID detected (");
@@ -531,7 +531,11 @@ compare_IDEs_by_IID(const void *ap,
 {
     const XPTInterfaceDirectoryEntry *ide1 = ap, *ide2 = bp;
     
-    return compare_IIDs(&ide1->iid, &ide2->iid);
+    int answer = compare_IIDs(&ide1->iid, &ide2->iid);
+    if(!answer)
+        answer = compare_strings(ide1->name, ide2->name);
+
+    return answer;
 }  
 
 /* For detecting unresolved interfaces. */
@@ -552,7 +556,11 @@ compare_fixElements_by_IID(const void *ap,
 {
     const fixElement *fix1 = ap, *fix2 = bp;
     
-    return compare_IIDs(&fix1->iid, &fix2->iid);
+    int answer = compare_IIDs(&fix1->iid, &fix2->iid);
+    if(!answer)
+        answer = compare_strings(fix1->name, fix2->name);
+
+    return answer;
 }  
 
 static int 
