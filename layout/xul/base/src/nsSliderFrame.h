@@ -199,7 +199,7 @@ public:
                            nsEventStatus*  aEventStatus);
 
   NS_IMETHOD_(void) Notify(nsITimer *timer);
-  friend nsSliderMediator;
+  //friend nsSliderMediator;
 
 protected:
 
