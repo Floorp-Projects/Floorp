@@ -121,8 +121,7 @@ GetScreenOrigin(nsIDOMElement* aElement)
 
   if (doc) {
     // Get Presentation shell 0
-    nsCOMPtr<nsIPresShell> presShell;
-    doc->GetShellAt(0, getter_AddRefs(presShell));
+    nsIPresShell* presShell = doc->GetShellAt(0);
     
     if (presShell) {
       nsCOMPtr<nsIPresContext> presContext;
