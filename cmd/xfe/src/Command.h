@@ -253,5 +253,21 @@ public:
 	virtual char* getObjectType(XFE_View*) = 0;
 };
 
+//
+// Class used to pass arguments in notifications
+//
+class XFE_DoCommandArgs
+{
+public:
+  CommandType       cmd;
+  void*             callData;
+  XFE_CommandInfo*  info;
+
+  XFE_DoCommandArgs(CommandType command, void* cd = NULL, 
+                    XFE_CommandInfo* i = NULL)
+    : cmd(command), callData(cd), info(i) {}
+
+};
+
 #endif /* _xfe_command_h */
 

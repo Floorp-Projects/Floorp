@@ -32,19 +32,6 @@
 
 #define MAX_ICON_GROUPS 4
 
-typedef struct XFE_DoCommandArgs
-{
-public:
-  CommandType       cmd;
-  void*             callData;
-  XFE_CommandInfo*  info;
-
-  XFE_DoCommandArgs(CommandType command, void* cd = NULL, 
-                    XFE_CommandInfo* i = NULL)
-    : cmd(command), callData(cd), info(i) {}
-
-} XFE_doCommandArgs;
-
 class XFE_Button : public XFE_Component
 {
 public:
