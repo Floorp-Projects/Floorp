@@ -65,8 +65,6 @@ interface nsIMailboxUrl : nsISupports {
     
     attribute nsMailboxAction mailboxAction;
 
-    attribute nsIFileSpec messageFile;
-
     /* these are nsMailboxActions */
 	const long ActionParseMailbox = 0;
     const long ActionDisplayMessage = 1;
