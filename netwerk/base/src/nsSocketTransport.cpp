@@ -32,9 +32,9 @@
 #include "nsIBufferOutputStream.h"
 #include "nsAutoLock.h"
 #include "nsIDNSService.h"
+#include "nsString2.h"
 #include "nsISocketProvider.h"
 #include "nsISocketProviderService.h"
-
 
 static NS_DEFINE_CID(kEventQueueService, NS_EVENTQUEUESERVICE_CID);
 static NS_DEFINE_CID(kSocketProviderService, NS_SOCKETPROVIDERSERVICE_CID);
@@ -531,7 +531,17 @@ nsresult nsSocketTransport::doResolveHost(void)
   char dbbuf[PR_NETDB_BUF_SIZE];
   PRHostEnt hostEnt;
 
-  status = PR_GetHostByName(mHostName, dbbuf, sizeof(dbbuf), &hostEnt);
+  if (nsString2::IsDigit(mHostName[0])) {
+      PRNetAddr *netAddr = (PRNetAddr*)nsAllocator::Alloc(sizeof(PRNetAddr));
+      status = PR_StringToNetAddr(mHostName, netAddr);
+      if (PR_SUCCESS != status) {
+          ;
+      }
+      status = PR_GetHostByAddr(netAddr, dbbuf, sizeof(dbbuf), &hostEnt);
+  } else {
+      status = PR_GetHostByName(mHostName, dbbuf, sizeof(dbbuf), &hostEnt);
+  }
+
   if (PR_SUCCESS == status) {
     if (hostEnt.h_addr_list) {
       memcpy(&mNetAddress.inet.ip, hostEnt.h_addr_list[0], 
