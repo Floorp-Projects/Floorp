@@ -1389,7 +1389,7 @@ void nsCSSRendering::PaintBorder(nsIPresContext* aPresContext,
   }
 
     // get the radius for our border
-  borderRadius = aBorderStyle.mBorderRadius;
+  aBorderStyle.mBorderRadius.GetTop(borderRadius);		// XXX-border-radius
   theRadius = 0;
   switch (borderRadius.GetUnit() ) {
     case eStyleUnit_Inherit:
@@ -2190,7 +2190,7 @@ nsCSSRendering::PaintBackground(nsIPresContext* aPresContext,
     // is rendered over the 'border' 'padding' and 'content' areas
     if (!transparentBG) {
       // check to see if we have a radius
-      borderRadius = aSpacing.mBorderRadius;
+      aSpacing.mBorderRadius.GetTop(borderRadius);	// XXX-border-radius
       theRadius = 0;
       switch (borderRadius.GetUnit() ) {
         case eStyleUnit_Inherit:
