@@ -41,7 +41,9 @@ if($#ARGV < 1)
   die "usage: $0 <.jst file> <default version>
 
        .jst file       : .js template input file
-       default version : default julian base version number to use
+       default version : default julian base version number to use in the
+                         form of: major.minor.release.yydoy
+                         ie: 5.0.0.99256
        \n";
 }
 
