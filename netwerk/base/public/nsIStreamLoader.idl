@@ -63,8 +63,7 @@ interface nsIStreamLoader : nsISupports
               in nsILoadGroup loadGroup,
               in nsIInterfaceRequestor notificationCallbacks,
               in nsLoadFlags loadAttributes,
-              in nsIURI referrer,
-              in unsigned long refererFlags);
+              in nsIURI referrer);
 
     /**
      * Gets the number of bytes read so far.

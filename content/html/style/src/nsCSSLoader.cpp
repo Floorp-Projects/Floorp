@@ -1578,8 +1578,7 @@ CSSLoaderImpl::LoadSheet(URLKey& aKey, SheetLoadData* aData)
           if (document_uri) {
             nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(channel));
             if (httpChannel) {
-              result = httpChannel->SetReferrer(document_uri,
-                                                nsIHttpChannel::REFERRER_INLINES);
+              result = httpChannel->SetReferrer(document_uri);
             }
           }
 

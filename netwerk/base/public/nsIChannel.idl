@@ -145,11 +145,13 @@ interface nsIChannel : nsIRequest
 
     /**************************************************************************
      * Channel specific load flags:
+     *
+     * Bits 20-31 are reserved for future use by this interface
      */
 
     /**
-     * Used (e.g., by the uriloader and docshell) to indicate whether or not
-     * the channel corresponds to the toplevel document.
+     * Set (e.g., by the docshell) to indicate whether or not the channel
+     * corresponds to a document URI.
      */
     const unsigned long LOAD_DOCUMENT_URI = 1 << 16;
 
@@ -165,4 +167,10 @@ interface nsIChannel : nsIRequest
      * used by the multipart/replace stream converter.
      */
 	const unsigned long LOAD_REPLACE = 1 << 18;
+
+    /**
+     * Set (e.g., by the docshell) to indicate whether or not the channel
+     * corresponds to an initial document URI load (e.g., link click).
+     */
+    const unsigned long LOAD_INITIAL_DOCUMENT_URI = 1 << 19;
 };

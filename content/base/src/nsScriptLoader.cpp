@@ -387,8 +387,7 @@ nsScriptLoader::ProcessScriptElement(nsIDOMHTMLScriptElement *aElement,
       nsCOMPtr<nsIChannel> channel;
       rv = NS_NewStreamLoader(getter_AddRefs(loader), scriptURI, this,
                               reqsup, loadGroup, prompter,
-                              nsIChannel::LOAD_NORMAL, documentURI,
-                              nsIHttpChannel::REFERRER_INLINES);
+                              nsIChannel::LOAD_NORMAL, documentURI);
       if (NS_FAILED(rv)) {
         mPendingRequests.RemoveElement(reqsup, 0);
         return FireErrorNotification(rv, aElement, aObserver);

@@ -42,17 +42,9 @@ interface nsIHttpChannel : nsIChannel
     /**
      * Get/set the referrer URI on the request.  This is the address (URI) of
      * the resource from which this channel's URI was obtained (see RFC2616
-     * section 14.36).  The referrer type may be used to block the referrer
-     * from being sent in certain cases.
+     * section 14.36).
      */
-    readonly attribute nsIURI referrer;
-    void setReferrer(in nsIURI referrer, in unsigned long referrerType);
-
-    /* possible values for the referrerType */
-    const unsigned long REFERRER_NONE = 0;
-    const unsigned long REFERRER_LINK_CLICK = 1; // http link clicks
-    const unsigned long REFERRER_INLINES = 2;    // images and other inlines
-    const unsigned long REFERRER_NON_HTTP = 3;   // e.g. news or FTP clicks
+    attribute nsIURI referrer;
 
     /**
      * An http channel can own a reference to the document URI

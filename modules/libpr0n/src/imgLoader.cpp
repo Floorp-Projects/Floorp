@@ -187,7 +187,7 @@ static nsresult NewImageChannel(nsIChannel **aResult,
   newHttpChannel = do_QueryInterface(*aResult);
   if (newHttpChannel) {
     newHttpChannel->SetDocumentURI(aInitialDocumentURI);
-    newHttpChannel->SetReferrer(aReferringURI, nsIHttpChannel::REFERRER_INLINES);
+    newHttpChannel->SetReferrer(aReferringURI);
   }
 
   return NS_OK;

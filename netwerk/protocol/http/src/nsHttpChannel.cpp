@@ -64,7 +64,6 @@ nsHttpChannel::nsHttpChannel()
     , mStatus(NS_OK)
     , mLogicalOffset(0)
     , mCapabilities(0)
-    , mReferrerType(REFERRER_NONE)
     , mCachedResponseHead(nsnull)
     , mCacheAccess(0)
     , mPostID(0)
@@ -398,8 +397,9 @@ nsHttpChannel::SetupTransaction()
     // XXX does the toplevel document check really belong here?
     // XXX or, should we push it out entirely to necko consumers?
     PRUint8 caps = mCapabilities;
-    if (!mAllowPipelining || (mURI == mDocumentURI) ||
-        !(mRequestHead.Method() == nsHttp::Get || mRequestHead.Method() == nsHttp::Head)) {
+    if (!mAllowPipelining || (mLoadFlags && LOAD_INITIAL_DOCUMENT_URI) ||
+        !(mRequestHead.Method() == nsHttp::Get ||
+          mRequestHead.Method() == nsHttp::Head)) {
         LOG(("nsHttpChannel::SetupTransaction [this=%x] pipelining disallowed\n", this));
         caps &= ~NS_HTTP_ALLOW_PIPELINING;
     }
@@ -1546,7 +1546,7 @@ nsHttpChannel::ProcessRedirection(PRUint32 redirectType)
             httpChannel->SetDocumentURI(mDocumentURI);
         // convey the referrer if one was used for this channel to the next one
         if (mReferrer)
-            httpChannel->SetReferrer(mReferrer, mReferrerType);
+            httpChannel->SetReferrer(mReferrer);
         // convey the mApplyConversion flag (bug 91862)
         httpChannel->SetApplyConversion(mApplyConversion);
         // convey the mAllowPipelining flag
@@ -2459,11 +2459,17 @@ nsHttpChannel::GetReferrer(nsIURI **referrer)
 }
 
 NS_IMETHODIMP
-nsHttpChannel::SetReferrer(nsIURI *referrerIn, PRUint32 referrerType)
+nsHttpChannel::SetReferrer(nsIURI *referrerIn)
 {
     NS_ENSURE_TRUE(!mIsPending, NS_ERROR_IN_PROGRESS);
 
-    if (nsHttpHandler::get()->ReferrerLevel() < referrerType)
+    PRUint32 referrerLevel;
+    if (mLoadFlags & LOAD_INITIAL_DOCUMENT_URI)
+        referrerLevel = 1; // user action
+    else
+        referrerLevel = 2; // inline content
+
+    if (nsHttpHandler::get()->ReferrerLevel() < referrerLevel)
         return NS_OK;
 
     nsCOMPtr<nsIURI> referrer = referrerIn;
@@ -2537,9 +2543,6 @@ nsHttpChannel::SetReferrer(nsIURI *referrerIn, PRUint32 referrerType)
 
     // save a copy of the referrer so we can return it if requested
     mReferrer = referrer;
-
-    // save a copy of the referrer type for redirects
-    mReferrerType = (PRUint8) referrerType;
 
     // clear the old referer first
     mRequestHead.SetHeader(nsHttp::Referer, NS_LITERAL_CSTRING(""));
