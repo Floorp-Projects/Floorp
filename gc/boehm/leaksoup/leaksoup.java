@@ -154,29 +154,24 @@ class Leak {
 }
 
 public class leaksoup {
-	/**
-	 * Set by the "-blame" option when generating leak reports.
-	 */
-	static boolean USE_BLAME = false;
-
 	public static void main(String[] args) {
 		if (args.length == 0) {
-			System.out.println("usage:  leaksoup leaks");
+			System.out.println("usage:  leaksoup [-blame] leaks");
 			System.exit(1);
 		}
 		
-		String inputName = null;
-
 		for (int i = 0; i < args.length; i++) {
 			String arg = args[i];
 			if (arg.charAt(0) == '-') {
 				if (arg.equals("-blame"))
-					USE_BLAME = true;
+					FileLocator.USE_BLAME = true;
 			} else {
-				inputName = arg;
+				cook(arg);
 			}
 		}
-
+	}
+	
+	static void cook(String inputName) {
 		try {
 			Vector vec = new Vector();
 			Hashtable leakTable = new Hashtable();
@@ -347,52 +342,6 @@ public class leaksoup {
 		out.println("</PRE>");
 	}
 
-	static final String MOZILLA_BASE = "mozilla/";
-	static final String LXR_BASE = "http://lxr.mozilla.org/seamonkey/source/";
-	static final String BONSAI_BASE = "http://cvs-mirror.mozilla.org/webtools/bonsai/cvsblame.cgi?file=mozilla/";
-	
-	static String getFileLocation(Hashtable fileTables, String line) throws IOException {
-		int leftBracket = line.indexOf('[');
-		if (leftBracket == -1)
-			return line;
-		int rightBracket = line.indexOf(']', leftBracket + 1);
-		if (rightBracket == -1)
-			return line;
-		int comma = line.indexOf(',', leftBracket + 1);
-		String macPath = line.substring(leftBracket + 1, comma);
-		String path = macPath.replace(':', '/');
-		
-		// compute the line number in the file.
-		int offset = 0;
-		try {
-			offset = Integer.parseInt(line.substring(comma + 1, rightBracket));
-		} catch (NumberFormatException nfe) {
-			return line;
-		}
-		FileTable table = (FileTable) fileTables.get(path);
-		if (table == null) {
-			table = new FileTable("/" + path);
-			fileTables.put(path, table);
-		}
-		int lineNumber = 1 + table.getLine(offset);
-
-		// compute the URL of the file.
-		int mozillaIndex = path.indexOf(MOZILLA_BASE);
-		String locationURL;
-		if (mozillaIndex > -1)
-			locationURL = (USE_BLAME ? BONSAI_BASE : LXR_BASE) + path.substring(path.indexOf(MOZILLA_BASE) + MOZILLA_BASE.length());
-		else
-			locationURL = "file:///" + path;
-		
-		// if using blame, hilite the line number of the call.
-		if (USE_BLAME) {
-			locationURL += "&mark=" + lineNumber;
-			lineNumber -= 10;
-		}
-		
-		return "<A HREF=\"" + locationURL + "#" + lineNumber + "\"TARGET=\"SOURCE\">" + line.substring(0, leftBracket) + "</A>";
-	}
-	
 	static void printLeaks(PrintWriter out, Leak[] leaks) throws IOException {
 		// sort the leaks by size.
 		QuickSort bySize = new QuickSort(new Leak.ByTotalSize());
@@ -409,7 +358,6 @@ public class leaksoup {
 				out.println(leak);
 		}
 		
-		Hashtable fileTables = new Hashtable();
 		Type anchorType = null;
 
 		// now, print the report, sorted by type size.
@@ -437,7 +385,7 @@ public class leaksoup {
 			Object[] crawl = leak.mCrawl;
 			count = crawl.length;
 			for (int j = 0; j < count; j++) {
-				String location = getFileLocation(fileTables, (String) crawl[j]);
+				String location = FileLocator.getFileLocation((String) crawl[j]);
 				out.println(location);
 			}
 			// print object's parents.
@@ -450,8 +398,6 @@ public class leaksoup {
 					out.println("\t" + parents[j]);
 			}
 		}
-
-		fileTables.clear();
 
 		out.println("</PRE>");
 	}

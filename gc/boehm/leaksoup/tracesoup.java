@@ -38,29 +38,24 @@ import java.io.*;
 import java.util.*;
 
 public class tracesoup {
-	/**
-	 * Set by the "-blame" option when generating trace reports.
-	 */
-	static boolean USE_BLAME = false;
-	
 	public static void main(String[] args) {
 		if (args.length == 0) {
-			System.out.println("usage:  tracesoup trace");
+			System.out.println("usage:  tracesoup [-blame] trace");
 			System.exit(1);
 		}
 		
-		String inputName = null;
-
 		for (int i = 0; i < args.length; i++) {
 			String arg = args[i];
 			if (arg.charAt(0) == '-') {
 				if (arg.equals("-blame"))
-					USE_BLAME = true;
+					FileLocator.USE_BLAME = true;
 			} else {
-				inputName = arg;
+				cook(arg);
 			}
 		}
-		
+	}
+
+	static void cook(String inputName) {
 		String outputName = inputName + ".html";
 
 		try {
@@ -79,7 +74,7 @@ public class tracesoup {
 					// lines containing square brackets need to be wrapped with <A HREF="..."></A>.
 					int leftBracket = line.indexOf('[');
 					if (leftBracket >= 0)
-						line = getFileLocation(fileTables, line);
+						line = FileLocator.getFileLocation(line);
 				}
 				writer.println(line);
 				line = reader.readLine();
@@ -95,7 +90,7 @@ public class tracesoup {
 			e.printStackTrace(System.err);
 		}
 	}
-
+	
 	/**
 	 * Simply replaces instances of '<' with "&LT;" and '>' with "&GT;".
 	 */
@@ -117,52 +112,5 @@ public class tracesoup {
 			}
 		}
 		return buf.toString();
-	}
-	
-
-	static final String MOZILLA_BASE = "mozilla/";
-	static final String LXR_BASE = "http://lxr.mozilla.org/seamonkey/source/";
-	static final String BONSAI_BASE = "http://cvs-mirror.mozilla.org/webtools/bonsai/cvsblame.cgi?file=mozilla/";
-	
-	static String getFileLocation(Hashtable fileTables, String line) throws IOException {
-		int leftBracket = line.indexOf('[');
-		if (leftBracket == -1)
-			return line;
-		int rightBracket = line.indexOf(']', leftBracket + 1);
-		if (rightBracket == -1)
-			return line;
-		int comma = line.indexOf(',', leftBracket + 1);
-		String macPath = line.substring(leftBracket + 1, comma);
-		String path = macPath.replace(':', '/');
-		
-		// compute the line number in the file.
-		int offset = 0;
-		try {
-			offset = Integer.parseInt(line.substring(comma + 1, rightBracket));
-		} catch (NumberFormatException nfe) {
-			return line;
-		}
-		FileTable table = (FileTable) fileTables.get(path);
-		if (table == null) {
-			table = new FileTable("/" + path);
-			fileTables.put(path, table);
-		}
-		int lineNumber = 1 + table.getLine(offset);
-
-		// compute the URL of the file.
-		int mozillaIndex = path.indexOf(MOZILLA_BASE);
-		String locationURL;
-		if (mozillaIndex > -1)
-			locationURL = (USE_BLAME ? BONSAI_BASE : LXR_BASE) + path.substring(path.indexOf(MOZILLA_BASE) + MOZILLA_BASE.length());
-		else
-			locationURL = "file:///" + path;
-		
-		// if using blame, hilite the line number of the call.
-		if (USE_BLAME) {
-			locationURL += "&mark=" + lineNumber;
-			lineNumber -= 10;
-		}
-		
-		return "<A HREF=\"" + locationURL + "#" + lineNumber + "\"TARGET=\"SOURCE\">" + line.substring(0, leftBracket) + "</A>";
 	}
 }
