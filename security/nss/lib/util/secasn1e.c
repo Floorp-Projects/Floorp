@@ -38,7 +38,7 @@
  * Support for ENcoding ASN.1 data based on BER/DER (Basic/Distinguished
  * Encoding Rules).
  *
- * $Id: secasn1e.c,v 1.16 2004/07/13 05:49:48 nelsonb%netscape.com Exp $
+ * $Id: secasn1e.c,v 1.17 2004/07/13 05:52:24 nelsonb%netscape.com Exp $
  */
 
 #include "secasn1.h"
@@ -265,9 +265,10 @@ sec_asn1e_init_state_based_on_template (sec_asn1e_state *state)
 		 * on to the next state in case this is a member of a
 		 * SEQUENCE OF
 		 */
-		state->tag_modifiers = (unsigned char)encode_kind & SEC_ASN1_TAG_MASK
-					& ~SEC_ASN1_TAGNUM_MASK;
-		state->tag_number = (unsigned char)encode_kind & SEC_ASN1_TAGNUM_MASK;
+		state->tag_modifiers = (unsigned char)
+		    (encode_kind & (SEC_ASN1_TAG_MASK & ~SEC_ASN1_TAGNUM_MASK));
+		state->tag_number = (unsigned char)
+		    (encode_kind & SEC_ASN1_TAGNUM_MASK);
 		
 		state->place = afterImplicit;
 		state->optional = optional;
@@ -324,7 +325,8 @@ sec_asn1e_init_state_based_on_template (sec_asn1e_state *state)
 	tag_number = 0;
 	is_string = PR_TRUE;
     } else {
-	tag_modifiers = (unsigned char)encode_kind & SEC_ASN1_TAG_MASK & ~SEC_ASN1_TAGNUM_MASK;
+	tag_modifiers = (unsigned char)
+		(encode_kind & (SEC_ASN1_TAG_MASK & ~SEC_ASN1_TAGNUM_MASK));
 	/*
 	 * XXX This assumes only single-octet identifiers.  To handle
 	 * the HIGH TAG form we would need to do some more work, especially
@@ -818,7 +820,8 @@ sec_asn1e_write_header (sec_asn1e_state *state)
 	contents_length = 0;
     }
 
-    sec_asn1e_write_identifier_bytes (state, (unsigned char)(tag_number | tag_modifiers));
+    sec_asn1e_write_identifier_bytes (state, 
+                                (unsigned char)(tag_number | tag_modifiers));
     sec_asn1e_write_length_bytes (state, contents_length, state->indefinite);
 
     if (contents_length == 0 && !state->indefinite) {
@@ -834,12 +837,10 @@ sec_asn1e_write_header (sec_asn1e_state *state)
      * written.  Now we need to do the inner header and contents.
      */
     if (state->isExplicit) {
+	const SEC_ASN1Template *subt =
+	      SEC_ASN1GetSubtemplate(state->theTemplate, state->src, PR_TRUE);
 	state->place = afterContents;
-	state = sec_asn1e_push_state (state->top,
-				      SEC_ASN1GetSubtemplate(state->theTemplate,
-							     state->src,
-							     PR_TRUE),
-				      state->src, PR_TRUE);
+	state = sec_asn1e_push_state (state->top, subt, state->src, PR_TRUE);
 	if (state != NULL)
 	    state = sec_asn1e_init_state_based_on_template (state);
 	return;
@@ -935,7 +936,8 @@ sec_asn1e_write_contents_from_buf (sec_asn1e_state *state,
 	 * implicitly encoded field.  In that case, the underlying
 	 * substrings *are* encoded with their real tag.
 	 */
-	identifier = (unsigned char)state->underlying_kind & SEC_ASN1_TAG_MASK;
+	identifier = (unsigned char)
+	                    (state->underlying_kind & SEC_ASN1_TAG_MASK);
 	/*
 	 * The underlying kind should just be a simple string; there
 	 * should be no bits like CONTEXT_SPECIFIC or CONSTRUCTED set.
@@ -1204,7 +1206,6 @@ SEC_ASN1EncoderUpdate (SEC_ASN1EncoderContext *cx,
     sec_asn1e_state *state;
 
     if (cx->status == needBytes) {
-	PORT_Assert (buf != NULL && len != 0);
 	cx->status = keepGoing;
     }
 
