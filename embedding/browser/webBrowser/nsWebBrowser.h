@@ -106,6 +106,7 @@ protected:
    nsCOMPtr<nsITextScroll>    mDocShellAsTextScroll;
    nsCOMPtr<nsIWidget>        mInternalWidget;
    nsWebBrowserInitInfo*      mInitInfo;
+   PRUint32                   mContentType;
    nativeWindow               mParentNativeWindow;
 
    //Weak Reference interfaces...

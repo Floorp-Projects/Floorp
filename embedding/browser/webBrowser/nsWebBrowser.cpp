@@ -46,9 +46,9 @@ static NS_DEFINE_IID(kDeviceContextCID,       NS_DEVICE_CONTEXT_CID);
 
 nsWebBrowser::nsWebBrowser() : mDocShellTreeOwner(nsnull), 
    mContentListener(nsnull), mInitInfo(nsnull), mParentNativeWindow(nsnull),
-   mParentWidget(nsnull), mParent(nsnull)
+   mParentWidget(nsnull), mParent(nsnull), mContentType(typeContentWrapper)
 {
-	NS_INIT_REFCNT();
+    NS_INIT_REFCNT();
    mInitInfo = new nsWebBrowserInitInfo();
 }
 
@@ -88,15 +88,15 @@ NS_IMPL_ADDREF(nsWebBrowser)
 NS_IMPL_RELEASE(nsWebBrowser)
 
 NS_INTERFACE_MAP_BEGIN(nsWebBrowser)
-   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIWebBrowser)
-   NS_INTERFACE_MAP_ENTRY(nsIWebBrowser)
-   NS_INTERFACE_MAP_ENTRY(nsIWebNavigation)
-   NS_INTERFACE_MAP_ENTRY(nsIWebProgress)
-   NS_INTERFACE_MAP_ENTRY(nsIBaseWindow)
-   NS_INTERFACE_MAP_ENTRY(nsIScrollable)
-   NS_INTERFACE_MAP_ENTRY(nsITextScroll)
-   NS_INTERFACE_MAP_ENTRY(nsIDocShellTreeItem)
-   NS_INTERFACE_MAP_ENTRY(nsIInterfaceRequestor)
+     NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIWebBrowser)
+     NS_INTERFACE_MAP_ENTRY(nsIWebBrowser)
+     NS_INTERFACE_MAP_ENTRY(nsIWebNavigation)
+     NS_INTERFACE_MAP_ENTRY(nsIWebProgress)
+     NS_INTERFACE_MAP_ENTRY(nsIBaseWindow)
+     NS_INTERFACE_MAP_ENTRY(nsIScrollable)
+     NS_INTERFACE_MAP_ENTRY(nsITextScroll)
+     NS_INTERFACE_MAP_ENTRY(nsIDocShellTreeItem)
+     NS_INTERFACE_MAP_ENTRY(nsIInterfaceRequestor)
 NS_INTERFACE_MAP_END
 
 ///*****************************************************************************
@@ -225,14 +225,15 @@ NS_IMETHODIMP nsWebBrowser::GetItemType(PRInt32* aItemType)
 {
    NS_ENSURE_ARG_POINTER(aItemType);
 
-   *aItemType = typeContentWrapper;
+   *aItemType = mContentType;
    return NS_OK;
 }
 
 NS_IMETHODIMP nsWebBrowser::SetItemType(PRInt32 aItemType)
 {
-   NS_ERROR("Can't call that on this");
-   return NS_ERROR_FAILURE;
+   NS_ENSURE_TRUE((aItemType == typeContentWrapper || aItemType == typeChromeWrapper), NS_ERROR_FAILURE);
+   mContentType = aItemType;
+   return NS_OK;
 }
 
 NS_IMETHODIMP nsWebBrowser::GetParent(nsIDocShellTreeItem** aParent)
@@ -466,7 +467,7 @@ nsWebBrowser::GetSHEForChild(PRInt32 aChildOffset, nsISHEntry ** aResult)
 {
 
     // XXX Not yet implemented
-	return NS_OK;
+    return NS_OK;
 
 }
 
@@ -591,7 +592,14 @@ NS_IMETHODIMP nsWebBrowser::Create()
       mInitInfo->cy), NS_ERROR_FAILURE);
 
    mDocShellAsItem->SetName(mInitInfo->name.GetUnicode());
-   mDocShellAsItem->SetItemType(nsIDocShellTreeItem::typeContent);
+   if (mContentType == typeChromeWrapper)
+   {
+       mDocShellAsItem->SetItemType(nsIDocShellTreeItem::typeChrome);
+   }
+   else
+   {
+       mDocShellAsItem->SetItemType(nsIDocShellTreeItem::typeContent);
+   }
    mDocShellAsItem->SetTreeOwner(mDocShellTreeOwner);
    mDocShell->SetParentURIContentListener(mContentListener);
 
@@ -997,44 +1005,49 @@ NS_IMETHODIMP nsWebBrowser::ScrollByPages(PRInt32 aNumPages)
 
 NS_IMETHODIMP nsWebBrowser::SetDocShell(nsIDocShell* aDocShell)
 {
-   if(aDocShell)
-      {
-      NS_ENSURE_TRUE(!mDocShell, NS_ERROR_FAILURE);
+     if(aDocShell)
+     {
+         NS_ENSURE_TRUE(!mDocShell, NS_ERROR_FAILURE);
+ 
+         nsCOMPtr<nsIInterfaceRequestor> req(do_QueryInterface(aDocShell));
+         nsCOMPtr<nsIBaseWindow> baseWin(do_QueryInterface(aDocShell));
+         nsCOMPtr<nsIDocShellTreeItem> item(do_QueryInterface(aDocShell));
+         nsCOMPtr<nsIWebNavigation> nav(do_QueryInterface(aDocShell));
+         nsCOMPtr<nsIWebProgress> progress(do_GetInterface(aDocShell));
+         nsCOMPtr<nsIScrollable> scrollable(do_QueryInterface(aDocShell));
+         nsCOMPtr<nsITextScroll> textScroll(do_QueryInterface(aDocShell));
+         NS_ENSURE_TRUE(req && baseWin && item && nav && scrollable && textScroll &&
+           progress, NS_ERROR_FAILURE);
+ 
+         mDocShell = aDocShell;
+         mDocShellAsReq = req;
+         mDocShellAsWin = baseWin;
+         mDocShellAsItem = item;
+         mDocShellAsNav = nav;
+         mDocShellAsProgress = progress;
+         mDocShellAsScrollable = scrollable;
+         mDocShellAsTextScroll = textScroll;
+ 
+         AddProgressListener(NS_STATIC_CAST(nsIWebProgressListener *, mDocShellTreeOwner));
+     }
+     else
+     {
+         if (mDocShell)
+         {
+             RemoveProgressListener(NS_STATIC_CAST(nsIWebProgressListener *, mDocShellTreeOwner));
+             mDocShellAsWin->Destroy();
+         }
+         mDocShell = nsnull;
+         mDocShellAsReq = nsnull;
+         mDocShellAsWin = nsnull;
+         mDocShellAsItem = nsnull;
+         mDocShellAsNav = nsnull;
+         mDocShellAsProgress = nsnull;
+         mDocShellAsScrollable = nsnull;
+         mDocShellAsTextScroll = nsnull;
+     }
 
-      nsCOMPtr<nsIInterfaceRequestor> req(do_QueryInterface(aDocShell));
-      nsCOMPtr<nsIBaseWindow> baseWin(do_QueryInterface(aDocShell));
-      nsCOMPtr<nsIDocShellTreeItem> item(do_QueryInterface(aDocShell));
-      nsCOMPtr<nsIWebNavigation> nav(do_QueryInterface(aDocShell));
-      nsCOMPtr<nsIWebProgress> progress(do_GetInterface(aDocShell));
-      nsCOMPtr<nsIScrollable> scrollable(do_QueryInterface(aDocShell));
-      nsCOMPtr<nsITextScroll> textScroll(do_QueryInterface(aDocShell));
-      NS_ENSURE_TRUE(req && baseWin && item && nav && scrollable && textScroll &&
-         progress, NS_ERROR_FAILURE);
-
-      mDocShell = aDocShell;
-      mDocShellAsReq = req;
-      mDocShellAsWin = baseWin;
-      mDocShellAsItem = item;
-      mDocShellAsNav = nav;
-      mDocShellAsProgress = progress;
-      mDocShellAsScrollable = scrollable;
-      mDocShellAsTextScroll = textScroll;
-      }
-   else
-      {
-      if(mDocShell)
-         mDocShellAsWin->Destroy();
-      mDocShell = nsnull;
-      mDocShellAsReq = nsnull;
-      mDocShellAsWin = nsnull;
-      mDocShellAsItem = nsnull;
-      mDocShellAsNav = nsnull;
-      mDocShellAsProgress = nsnull;
-      mDocShellAsScrollable = nsnull;
-      mDocShellAsTextScroll = nsnull;
-      }
-
-   return NS_OK;
+     return NS_OK; 
 }
 
 NS_IMETHODIMP nsWebBrowser::EnsureDocShellTreeOwner()

@@ -24,6 +24,7 @@
 
 #include "nsIServiceManager.h"
 #include "nsIEventQueueService.h"
+#include "nsIChromeRegistry.h"
 
 #include "nsIStringBundle.h"
 
@@ -160,7 +161,17 @@ nsresult NS_InitEmbedding(nsILocalFile *aPath)
     }
 #endif
 
-    return NS_OK;
+
+    // Init the chrome registry.
+    
+    nsCOMPtr <nsIChromeRegistry> chromeReg = do_GetService("component://netscape/chrome/chrome-registry");
+    NS_ASSERTION(chromeReg, "chrome check couldn't get the chrome registry");
+
+    if (!chromeReg)
+        return NS_ERROR_FAILURE;
+
+    return chromeReg->CheckForNewChrome();
+
 }
 
 

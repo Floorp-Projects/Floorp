@@ -29,24 +29,26 @@
 #include "nsIBaseWindow.h"
 #include "nsIWebBrowser.h"
 #include "nsIEditorShell.h"
+#include "nsIWebBrowserChrome.h"
 
 class WebBrowser
 {
 public:
-   nsresult Init(nsNativeWidget widget);
+   nsresult Init(nsNativeWidget widget, nsIWebBrowserChrome* aTopWindow);
    nsresult SetPositionAndSize(int x, int y, int cx, int cy);
    nsresult GoTo(char* url);
    nsresult Edit(char* url);
    nsresult Print(void);
-   nsresult GetIWebBrowser(nsIWebBrowser **outBrowser);
-   
+
+   nsresult GetWebBrowser(nsIWebBrowser **outBrowser);
+
    WebBrowser();
    virtual ~WebBrowser();
 
 protected:
     nsCOMPtr<nsIWebBrowser> mWebBrowser;
     nsCOMPtr<nsIBaseWindow> mBaseWindow;
-
+    nsCOMPtr<nsIWebBrowserChrome> mTopWindow;
     //for editing
     nsCOMPtr<nsIEditorShell> mEditor;
 };
