@@ -1486,6 +1486,7 @@ nsStandardURL::Clone(nsIURI **result)
     clone->mFile = mFile;
     clone->mHostA = mHostA ? nsCRT::strdup(mHostA) : nsnull;
     clone->mMutable = PR_TRUE;
+    clone->mSupportsFileURL = mSupportsFileURL;
     clone->mHostEncoding = mHostEncoding;
     clone->mSpecEncoding = mSpecEncoding;
 
