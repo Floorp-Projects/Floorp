@@ -237,7 +237,7 @@ sub setup_env {
 
     $shell_command = "java";
     if ($js_classpath) {
-        $shell_command .= " -cp " . $js_classpath;
+        $shell_command .= " -classpath " . $js_classpath;
     }
     $shell_command .= " org.mozilla.javascript.tools.shell.Main ";
 
