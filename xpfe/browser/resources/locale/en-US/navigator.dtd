@@ -20,6 +20,7 @@
 <!ENTITY openFileCmd.accesskey "o">
 <!ENTITY openFileCmd.commandkey "o">
 <!ENTITY sendLinkCmd.label "Send Link"> 
+<!ENTITY sendLinkCmd.accesskey "i">
 <!ENTITY editPageCmd.label					"Edit Page">
 <!ENTITY editPageCmd.accesskey				"d">
 <!ENTITY offlineMenu.label "Offline">
@@ -288,7 +289,7 @@
 
 <!-- Statusbar -->
 <!ENTITY  statusText.label "Document: Done">
-<!ENTITY  buildId.label "Build ID: 2000022708">
+<!ENTITY  buildId.label "Build ID: 2000030708">
 
 <!-- Context Menu -->                 
 <!ENTITY openLinkCmd.label            "Open Link in New Window">
