@@ -1281,60 +1281,46 @@ NS_IMETHODIMP nsPrinterEnumeratorWin::DisplayPropertiesDlg(const PRUnichar *aPri
 
   LPDEVMODE lpDevMode = prtInfo->pDevMode;
 
-  // Convert Printer Name from Unicode to char*
-  const char* nameCStr = NS_ConvertUCS2toUTF8(aPrinterName).get();
-
-  if (nameCStr != nsnull) {
+  if (aPrinterName) {
     HANDLE hPrinter = NULL;
 
-    PRINTER_DEFAULTS printerDefs;
-    printerDefs.pDatatype     = NULL;
-    printerDefs.pDevMode      = lpDevMode;
-    printerDefs.DesiredAccess = PRINTER_ACCESS_USE;
-
-    BOOL status = ::OpenPrinter((char*)nameCStr, &hPrinter, &printerDefs);
+    BOOL status = ::OpenPrinter((char*)NS_ConvertUCS2toUTF8(aPrinterName).get(), &hPrinter, NULL);
     if (status) {
       // For some unknown reason calling AdvancedDocumentProperties with the output arg
       // set to NULL doesn't return the number of bytes needed like the MS documentation says
       // it should. So I am calling DocumentProperties to get the number of bytes for the new DevMode
       // but calling it with a NULL output arg also causes problems
-      // So I am creating a 1K buffer and using that and then if the returned size is larger 
-      // reallocate the buffer with the new size.
-      const int kBufferSize = 1024;
-      LPDEVMODE newDevMode = (LPDEVMODE)malloc(kBufferSize);
-      nsCRT::memset(newDevMode, 0, 1024);
-      newDevMode->dmSize = sizeof(DEVMODE);
 
       // get the bytes need for the new DevMode
-#if 0 // leave this ifdef'ed for now
-      LONG bytesNeeded = DocumentProperties(NULL, hPrinter, nameCStr, newDevMode, lpDevMode, 0);
-      if (bytesNeeded > kBufferSize) {
-        free(newDevMode);
-        newDevMode = (LPDEVMODE)malloc(bytesNeeded);
-      }
-#endif
-      if (newDevMode != nsnull) {
-        SetupDevModeFromSettings(lpDevMode, aPrintSettings);
+      LONG bytesNeeded = ::DocumentProperties(gParentWnd, hPrinter, (char*)NS_ConvertUCS2toUTF8(aPrinterName).get(), NULL, NULL, 0);
+      if (bytesNeeded > 0) {
+        LPDEVMODE newDevMode = (LPDEVMODE)malloc(bytesNeeded);
+        if (newDevMode) {
+          SetupDevModeFromSettings(lpDevMode, aPrintSettings);
 
-        // Display the Dialog and get the new DevMode
-#if 0 // need more to do more work to see why AdvancedDocumentProperties fails 
-      // when cancel is pressed
-        LONG stat = ::AdvancedDocumentProperties(gParentWnd, hPrinter, prtInfo->pDriverName, newDevMode, lpDevMode);
+          memcpy((void*)newDevMode, (void*)lpDevMode, sizeof(*lpDevMode));
+          // Display the Dialog and get the new DevMode
+          // need more to do more work to see why AdvancedDocumentProperties fails 
+          // when cancel is pressed
+#if 0
+          LONG stat = ::AdvancedDocumentProperties(gParentWnd, hPrinter, prtInfo->pDriverName, newDevMode, lpDevMode);
 #else
-        LONG stat = ::DocumentProperties(gParentWnd, hPrinter, prtInfo->pPrinterName, newDevMode, lpDevMode, DM_IN_BUFFER|DM_IN_PROMPT|DM_OUT_BUFFER);
+          LONG stat = ::DocumentProperties(gParentWnd, hPrinter, prtInfo->pPrinterName, newDevMode, lpDevMode, DM_IN_BUFFER|DM_IN_PROMPT|DM_OUT_BUFFER);
 #endif
-        if (stat == IDOK) {
-          LONG size = sizeof(*lpDevMode);
-          memcpy((void*)lpDevMode, (void*)newDevMode, size);
-          // Now set the print options from the native Page Setup
-          SetPrintSettingsFromDevMode(aPrintSettings, lpDevMode);
+          if (stat == IDOK) {
+            memcpy((void*)lpDevMode, (void*)newDevMode, sizeof(*lpDevMode));
+            // Now set the print options from the native Page Setup
+            SetPrintSettingsFromDevMode(aPrintSettings, lpDevMode);
+          }
+          free(newDevMode);
+          rv = NS_OK;
+        } else {
+          rv = NS_ERROR_OUT_OF_MEMORY;
         }
-        ::ClosePrinter(hPrinter);
-        free(newDevMode);
-        rv = NS_OK;
       } else {
         rv = NS_ERROR_OUT_OF_MEMORY;
       }
+      ::ClosePrinter(hPrinter);
     }
   } else {
     rv = NS_ERROR_OUT_OF_MEMORY;
@@ -1461,31 +1447,29 @@ GlobalPrinters::EnumerateNativePrinters(DWORD aWhichPrinters)
 }
 
 //------------------------------------------------------------------
-// At this time, it is the only way I can figure out 
-// how to get the default printer name is silently invoking the 
-// native print dialog
+// Uses the GetProfileString to get the default printer from the registry
 void 
 GlobalPrinters::GetDefaultPrinterName(char*& aDefaultPrinterName)
 {
   aDefaultPrinterName = nsnull;
-
-  PRINTDLG  prntdlg;
-  memset(&prntdlg, 0, sizeof(PRINTDLG));
-
-  prntdlg.lStructSize = sizeof(prntdlg);
-  prntdlg.Flags = PD_RETURNDEFAULT | PD_RETURNIC;
-
-  BOOL result = ::PrintDlg(&prntdlg);
-
-  if (TRUE == result) {
-    DEVNAMES *devnames = (DEVNAMES *)::GlobalLock(prntdlg.hDevNames);
-    if ( NULL != devnames ) {
-      char* device = &(((char *)devnames)[devnames->wDeviceOffset]);
-      aDefaultPrinterName = new char[strlen(device)+1];
-      PL_strcpy(aDefaultPrinterName, device);
-      ::GlobalUnlock(prntdlg.hDevNames);
+  TCHAR szDefaultPrinterName[1024];    
+  DWORD status = GetProfileString("windows", "device", 0, szDefaultPrinterName, sizeof(szDefaultPrinterName)/sizeof(TCHAR));
+  if (status > 0) {
+    TCHAR comma = (TCHAR)',';
+    LPTSTR sPtr = (LPTSTR)szDefaultPrinterName;
+    while (*sPtr != comma && *sPtr != NULL) 
+      sPtr++;
+    if (*sPtr == comma) {
+      *sPtr = NULL;
     }
-  } 
+    aDefaultPrinterName = PL_strdup(szDefaultPrinterName);
+  } else {
+    aDefaultPrinterName = PL_strdup("");
+  }
+
+#ifdef DEBUG_rods
+  printf("DEFAULT PRINTER [%s]\n", aDefaultPrinterName);
+#endif
 }
 
 //----------------------------------------------------------------------------------
@@ -1523,7 +1507,7 @@ GlobalPrinters::EnumeratePrinterList()
         break;
       }
     }
-    delete[] defPrinterName;
+    PL_strfree(defPrinterName);
   }
 
 
