@@ -42,6 +42,8 @@ sub Told {
     } elsif ($message =~ /^\s*(?:karma\s+)?ranks?[?\s]*$/os) {
         $self->ReportKarmaRanks($event, $1);
     } elsif ($message =~ /^\s*(\S+)\s+(?:karma\s+)?rank[?\s]*$/os or
+             $message =~ /^\s*(\S+)\s+karma(?:\s+rank)?[?\s]*$/os or
+             $message =~ /^\s*karma(?:\s+rank)?\s+(\S+)[?\s]*$/os or
              $message =~ /^\s*(?:karma\s+)?rank\s+(\S+)[?\s]*$/os) {
         $self->ReportKarma($event, $1);
     } else {
