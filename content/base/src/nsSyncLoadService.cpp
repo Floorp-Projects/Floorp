@@ -292,6 +292,15 @@ nsSyncLoader::LoadDocument(nsIChannel* aChannel,
     nsCOMPtr<nsIDocument> document = do_CreateInstance(kXMLDocumentCID, &rv);
     NS_ENSURE_SUCCESS(rv, rv);
 
+    // Start the document load. Do this before we attach the load listener
+    // since we reset the document which drops all observers.
+    nsCOMPtr<nsIStreamListener> listener;
+    rv = document->StartDocumentLoad(kLoadAsData, mChannel, 
+                                     loadGroup, nsnull, 
+                                     getter_AddRefs(listener),
+                                     PR_TRUE);
+    NS_ENSURE_SUCCESS(rv, rv);
+
     // Register as a load listener on the document
     nsCOMPtr<nsIDOMEventReceiver> target = do_QueryInterface(document);
     NS_ENSURE_TRUE(target, NS_ERROR_FAILURE);
@@ -307,19 +316,6 @@ nsSyncLoader::LoadDocument(nsIChannel* aChannel,
     NS_ENSURE_SUCCESS(rv, rv);
     
     mLoadSuccess = PR_FALSE;
-
-    nsCOMPtr<nsIStreamListener> listener;
-    rv = document->StartDocumentLoad(kLoadAsData, mChannel, 
-                                     loadGroup, nsnull, 
-                                     getter_AddRefs(listener),
-                                     PR_FALSE);
-    if (NS_FAILED(rv)) {
-        target->RemoveEventListenerByIID(NS_STATIC_CAST(nsIDOMEventListener*, 
-                                                        proxy), 
-                                         NS_GET_IID(nsIDOMLoadListener));
-        return rv;
-    }
-
     if (aChannelIsSync) {
         rv = PushSyncStream(listener);
     }
