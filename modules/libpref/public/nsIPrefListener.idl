@@ -1,4 +1,4 @@
-/* -*- Mode: IDL; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+/* -*- Mode: IDL; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  *
  * The contents of this file are subject to the Netscape Public
  * License Version 1.1 (the "License"); you may not use this file
@@ -21,14 +21,26 @@
  * Alec Flett <alecf@netscape.com>
  */
 
+#include "nsISupports.idl"
+
 [scriptable, uuid(b08d2804-1dd1-11b2-80ea-9fee2622f017)]
 interface nsIPrefListener : nsISupports
 {
-  /**
-   * called when the given pref changes
-   *
-   * @param prefName
-   */
-  void prefChanged(in string prefName);
+    /**
+     * called when the given pref changes
+     *
+     * @param prefName - name of pref
+     */
+    void onBoolPrefChanged(in string prefName,
+                           in boolean oldValue, in boolean newValue);
+  
+    void onIntPrefChanged(in string prefName,
+                          in long oldValue, in long newValue);
+  
+    void onCharPrefChanged(in string prefName,
+                           in string oldValue, in string newValue);
+  
+    void onUnicharPrefChanged(in string prefName,
+                              in wstring oldValue, in string newValue);
+};
 
-}
