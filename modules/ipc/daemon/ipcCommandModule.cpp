@@ -135,7 +135,13 @@ struct ipcCommandModule
         newMsg->Init(msg->InnerTarget(),
                      msg->InnerData(),
                      msg->InnerDataLen());
-        IPC_SendMsg(destID, newMsg);
+
+        ipcClient *dest = IPC_GetClientByID(destID);
+        if (!dest) {
+            LOG(("  destination client not found!\n"));
+            return;
+        }
+        IPC_SendMsg(dest, newMsg);
     }
 
     //

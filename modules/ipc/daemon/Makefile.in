@@ -63,6 +63,7 @@ PROGRAM = mozipcd$(BIN_SUFFIX)
 
 EXPORTS = \
         ipcModule.h \
+        ipcModuleUtil.h \
         $(NULL)
 
 LOCAL_INCLUDES	= \
@@ -77,20 +78,4 @@ LIBS		= \
         $(DIST)/lib/$(LIB_PREFIX)ipccom_s.$(LIB_SUFFIX) \
 		$(NULL)
 
-# XXX -rdynamic is probably good for lots of other platforms
-#ifeq ($(OS_ARCH),Linux)
-#LIBS += -rdynamic
-#endif
-
 include $(topsrcdir)/config/rules.mk
-
-#DEFINES += -DIPC_DAEMON
-#
-#ifeq ($(OS_ARCH),WINNT)
-#
-# need to install mozipcd.lib, which contains the symbols exported by the
-# daemon that modules will need to import.
-#
-#libs:: $(PROGRAM)
-#	$(INSTALL) mozipcd.lib $(DIST)/lib
-#endif
