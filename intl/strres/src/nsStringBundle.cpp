@@ -46,7 +46,8 @@
 
 static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
 
-static PRInt32 gLockCount = 0;
+// XXX investigate need for proper locking in this module
+//static PRInt32 gLockCount = 0;
 
 NS_DEFINE_IID(kIFactoryIID, NS_IFACTORY_IID);
 NS_DEFINE_IID(kIStringBundleIID, NS_ISTRINGBUNDLE_IID);
