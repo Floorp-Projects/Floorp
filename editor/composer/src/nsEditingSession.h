@@ -74,11 +74,6 @@ class nsIWebProgress;
 class nsIEditorDocShell;
 class nsIChannel;
 
-#ifndef FULL_EDITOR_HTML_SUPPORT
-class nsEditorParserObserver;
-#endif
-
-
 class nsComposerCommandsUpdater;
 
 class nsEditingSession : public nsIEditingSession,
