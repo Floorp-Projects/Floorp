@@ -44,10 +44,7 @@
     aFoo->GetFoo(&bar);
     // Use bar here...
     printf("bar is %s!\n", bar);
-    delete[] bar;
-
-  (Strictly speaking, the `delete[] bar' should use the proper XPCOM
-  de-allocator; we'll ignore that for now.)
+    nsAllocator::Free(bar);
 
   This makes your life harder, because you need to convolute your code
   to ensure that you don't leak `bar'.
@@ -61,7 +58,7 @@
     aFoo->GetFoo( getter_Copies(bar) );
     // Use bar here...
     printf("bar is %s!\n", (const char*) bar);
-    // no need to remember to delete[].
+    // no need to remember to nsAllocator::Free().
 
   Like nsCOMPtr, nsXPIDLString uses some syntactic sugar to make it
   painfully clear exactly what the code expects. You need to wrap an
