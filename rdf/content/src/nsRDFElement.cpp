@@ -1842,6 +1842,10 @@ RDFElementImpl::SetParent(nsIContent* aParent)
       if (! xulDocument)
           return NS_ERROR_UNEXPECTED;
 
+      nsCOMPtr<nsIDOMElement> listener( do_QueryInterface(aParent) );
+      if (! listener)
+          return NS_ERROR_UNEXPECTED;
+
       nsCOMPtr<nsIDOMElement> domElement;
       xulDocument->GetElementById(elementValue, getter_AddRefs(domElement));
       
@@ -1849,15 +1853,17 @@ RDFElementImpl::SetParent(nsIContent* aParent)
         // We have a DOM element to bind to.  Add a broadcast
         // listener to that element, but only if it's a XUL element.
         // XXX: Handle context nodes.
-        nsCOMPtr<nsIDOMNode> parentElement = do_QueryInterface(aParent);
         nsCOMPtr<nsIDOMXULElement> broadcaster( do_QueryInterface(domElement) );
-        nsCOMPtr<nsIDOMElement> listener( do_QueryInterface(parentElement) );
-        
-        if (listener)
-        {
-            broadcaster->AddBroadcastListener(attributeValue,
-                                              listener);
+        if (broadcaster) {
+            broadcaster->AddBroadcastListener(attributeValue, listener);
         }
+      }
+      else {
+        nsCOMPtr<nsIRDFDocument> rdfdoc = do_QueryInterface(mDocument);
+        if (! rdfdoc)
+          return NS_ERROR_UNEXPECTED;
+
+        rdfdoc->AddForwardObserverDecl(listener, elementValue, attributeValue);
       }
     }
 
@@ -2260,6 +2266,13 @@ RDFElementImpl::SetAttribute(PRInt32 aNameSpaceID,
         if (xulBroadcaster) {
           xulBroadcaster->AddBroadcastListener("*", this);
         }
+      }
+      else {
+        nsCOMPtr<nsIRDFDocument> rdfdoc = do_QueryInterface(mDocument);
+        if (! rdfdoc)
+          return NS_ERROR_UNEXPECTED;
+
+        rdfdoc->AddForwardObserverDecl(this, aValue, "*");
       }
     }
 

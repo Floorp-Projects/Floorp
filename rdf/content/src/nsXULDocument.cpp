@@ -706,6 +706,10 @@ public:
     NS_IMETHOD GetDocumentDataSource(nsIRDFDataSource** aDatasource);
     NS_IMETHOD GetForm(nsIDOMHTMLFormElement** aForm);
     NS_IMETHOD SetForm(nsIDOMHTMLFormElement* aForm);
+    NS_IMETHOD AddForwardObserverDecl(nsIDOMElement* aListener,
+                                      const nsString& aTargetId,
+                                      const nsString& aAttribute);
+    NS_IMETHOD ResolveForwardObserverDecls();
 
     // nsIDOMEventCapturer interface
     NS_IMETHOD    CaptureEvent(const nsString& aType);
@@ -884,6 +888,9 @@ protected:
     nsresult
     Persist(nsIContent* aElement, PRInt32 aNameSpaceID, nsIAtom* aAttribute);
 
+    nsresult
+    DestroyForwardObserverDecls();
+
     // IMPORTANT: The ownership implicit in the following member variables has been 
     // explicitly checked and set using nsCOMPtr for owning pointers and raw COM interface 
     // pointers for weak (ie, non owning) references. If you add any members to this
@@ -925,6 +932,16 @@ protected:
     PRBool                     mIsPopup; 
     nsCOMPtr<nsIDOMHTMLFormElement>     mHiddenForm;   // [OWNER] of this content element
     nsCOMPtr<nsIDOMXULCommandDispatcher>     mCommandDispatcher; // [OWNER] of the focus tracker
+
+    struct ForwardObserverDecl {
+        nsIDOMElement*       mListener;
+        nsString             mTargetId;
+        nsString             mAttribute;
+        ForwardObserverDecl* mNext;
+    };
+
+    ForwardObserverDecl* mForwardObserverDecls;
+    PRBool mForwardObserverDeclsResolved;
 
       // The following are pointers into the content model which provide access to
       // the objects triggering either a popup or a tooltip. These are marked as
@@ -969,7 +986,9 @@ XULDocumentImpl::XULDocumentImpl(void)
       mDisplaySelection(PR_FALSE),
       mContentViewerContainer(nsnull),
       mParentContentSink(nsnull),
-      mIsPopup(PR_FALSE)
+      mIsPopup(PR_FALSE),
+      mForwardObserverDecls(nsnull),
+      mForwardObserverDeclsResolved(PR_FALSE)
 {
     NS_INIT_REFCNT();
 
@@ -1029,6 +1048,10 @@ static const char kXULNameSpaceURI[] = XUL_NAMESPACE_URI;
 
 XULDocumentImpl::~XULDocumentImpl()
 {
+    // In case we failed somewhere early on and the forward observer
+    // decls never got resolved.
+    DestroyForwardObserverDecls();
+
     // mParentDocument is never refcounted
     // Delete references to sub-documents
     {
@@ -2082,7 +2105,9 @@ XULDocumentImpl::EndLoad()
             return NS_ERROR_UNEXPECTED;
 
         // Do any initial hookup that needs to happen.
-        //
+        rv = ResolveForwardObserverDecls();
+        if (NS_FAILED(rv)) return rv;
+
         // XXX Because we are now doing this, maybe we can remove all
         // the code from the RDFXULBuilderImpl that adds and removes
         // elements from the element map?
@@ -2922,6 +2947,61 @@ XULDocumentImpl::SetForm(nsIDOMHTMLFormElement* aForm)
 }
 
 
+NS_IMETHODIMP
+XULDocumentImpl::AddForwardObserverDecl(nsIDOMElement* aListener,
+                                        const nsString& aTargetId,
+                                        const nsString& aAttribute)
+{
+    NS_PRECONDITION(aListener != nsnull, "null ptr");
+    if (! aListener)
+        return NS_ERROR_NULL_POINTER;
+
+    if (! mForwardObserverDeclsResolved) {
+        ForwardObserverDecl* decl = new ForwardObserverDecl;
+        if (! decl)
+            return NS_ERROR_OUT_OF_MEMORY;
+
+        decl->mListener = aListener;
+        NS_ADDREF(decl->mListener);
+
+        decl->mTargetId  = aTargetId;
+        decl->mAttribute = aAttribute;
+
+        decl->mNext = mForwardObserverDecls;
+        mForwardObserverDecls = decl;
+    }
+
+    return NS_OK;
+}
+
+
+NS_IMETHODIMP
+XULDocumentImpl::ResolveForwardObserverDecls()
+{
+    // Resolve each outstanding 'forward' observer declarations.
+    ForwardObserverDecl* decl = mForwardObserverDecls;
+    while (decl) {
+        ForwardObserverDecl* resolvee = decl;
+        decl = decl->mNext;
+
+        nsCOMPtr<nsIDOMElement> target;
+        GetElementById(resolvee->mTargetId, getter_AddRefs(target));
+        if (target) {
+            nsCOMPtr<nsIDOMXULElement> broadcaster = do_QueryInterface(target);
+            if (broadcaster) {
+                broadcaster->AddBroadcastListener(resolvee->mAttribute, resolvee->mListener);
+            }
+        }
+
+        NS_RELEASE(resolvee->mListener);
+        delete resolvee;
+    }
+
+    mForwardObserverDecls = nsnull;
+
+    return NS_OK;
+}
+
 
 ////////////////////////////////////////////////////////////////////////
 // nsIDOMDocument interface
@@ -3217,6 +3297,26 @@ XULDocumentImpl::Persist(nsIContent* aElement, PRInt32 aNameSpaceID, nsIAtom* aA
     if (NS_FAILED(rv)) return rv;
     return NS_OK;
 }
+
+
+
+nsresult
+XULDocumentImpl::DestroyForwardObserverDecls()
+{
+    ForwardObserverDecl* decl = mForwardObserverDecls;
+    while (decl) {
+        ForwardObserverDecl* doomed = decl;
+        decl = decl->mNext;
+
+        NS_RELEASE(doomed->mListener);
+        delete doomed;
+    }
+
+    mForwardObserverDecls = nsnull;
+
+    return NS_OK;
+}
+
 
 ////////////////////////////////////////////////////////////////////////
 // nsIDOMNSDocument interface
