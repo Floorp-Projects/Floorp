@@ -65,7 +65,6 @@ public:
   nsTableFrame* GetTreeFrame();
 
   void SetAllowEvents(PRBool allowEvents) { mAllowEvents = allowEvents; };
-  void SetAnonymousContent(nsIContent* aAnonymousContent) { mAnonymousContent = aAnonymousContent; };
   void ToggleOpenClose();
   void Open();
   void Close();
@@ -101,5 +100,4 @@ protected:
   PRBool mIsHeader; // Whether or not we're a column header
   nsTreeFrame* mTreeFrame; // Our parent tree frame.
   PRBool mAllowEvents; // Whether we let events go through.
-  nsIContent* mAnonymousContent; // Our anonymous titledbutton [WEAK ref]
 }; // class nsTableCellFrame

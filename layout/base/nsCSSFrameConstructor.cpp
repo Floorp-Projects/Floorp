@@ -3887,6 +3887,10 @@ nsCSSFrameConstructor::CreateAnonymousFrames(nsIPresShell*        aPresShell,
                                              nsIFrame*                aNewFrame,
                                              nsFrameItems&            aChildItems)
 {
+  if (aTag == nsXULAtoms::treecell)
+    return NS_OK; // Don't even allow the XBL check.  The inner cell frame throws it off.
+                  // There's a separate special method for XBL treecells.
+
   nsCOMPtr<nsIStyleContext> styleContext;
   aNewFrame->GetStyleContext(getter_AddRefs(styleContext));
 
@@ -4007,130 +4011,47 @@ nsCSSFrameConstructor::CreateAnonymousTreeCellFrames(nsIPresShell*        aPresS
                                              nsIFrame*                aNewCellFrame,
                                              nsFrameItems&            aChildItems)
 {
-  // see if the frame implements anonymous content
-  nsCOMPtr<nsISupportsArray> anonymousItems;
-  NS_NewISupportsArray(getter_AddRefs(anonymousItems));
+  nsCOMPtr<nsIStyleContext> styleContext;
+  aNewCellFrame->GetStyleContext(getter_AddRefs(styleContext));
 
-  nsCOMPtr<nsIDocument> doc;
-  nsresult rv = aParent->GetDocument(*getter_AddRefs(doc));
-  if (NS_FAILED(rv) || !doc)
-    return rv;
+  const nsStyleUserInterface* ui= (const nsStyleUserInterface*)
+      styleContext->GetStyleData(eStyleStruct_UserInterface);
 
-  PRInt32 childCount;
-  aParent->ChildCount(childCount);
-  nsCOMPtr<nsIContent> buttonContent;
+  if (ui->mBehavior != "") {
+    // Get the XBL loader.
+    nsresult rv;
+    NS_WITH_SERVICE(nsIXBLService, xblService, "component://netscape/xbl", &rv);
+    if (!xblService)
+      return rv;
 
-  if (childCount == 0) {
-    // Have to do it right here, since the inner cell frame isn't mine, 
-    // and i can't have it creating anonymous content.
-    nsCOMPtr<nsIDOMNSDocument> nsdoc(do_QueryInterface(doc));
-    nsCOMPtr<nsIDOMDocument> document(do_QueryInterface(doc));
-
-    nsAutoString xulNamespace = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
-    nsCOMPtr<nsIDOMElement> node;
-    nsCOMPtr<nsIContent> content;
-
-    nsAutoString indent;
-    aParent->GetAttribute(kNameSpaceID_None, nsXULAtoms::indent, indent);
+    // Load the bindings.
+    xblService->LoadBindings(aParent, ui->mBehavior);
+  
+    // Retrieve the anonymous content that we should build.
+    nsCOMPtr<nsISupportsArray> anonymousItems;
+    xblService->GetContentList(aParent, getter_AddRefs(anonymousItems));
     
-    nsCOMPtr<nsIDOMElement> boxElement;
+    if (!anonymousItems)
+      return NS_OK;
 
-    nsCOMPtr<nsIDOMNode> dummy;
-    if (indent == "true") {
-      // We have to make a box to hold everything.
-      nsdoc->CreateElementWithNameSpace(nsAutoString("box"), xulNamespace, getter_AddRefs(node));
-      content = do_QueryInterface(node);
-      content->SetDocument(doc, PR_FALSE);
-      anonymousItems->AppendElement(content);
-      content->SetAttribute(kNameSpaceID_None, nsHTMLAtoms::kClass, nsAutoString("tree-icon"), PR_FALSE);
-      content->SetAttribute(kNameSpaceID_None, nsXULAtoms::flex, nsAutoString("1"), PR_FALSE);
+    // Build the frames for the anonymous content.
+    PRUint32 count = 0;
+    anonymousItems->Count(&count);
+
+    for (PRUint32 i=0; i < count; i++)
+    {
+      // get our child's content and set its parent to our content
+      nsCOMPtr<nsISupports> node;
+      anonymousItems->GetElementAt(i,getter_AddRefs(node));
+
+      nsCOMPtr<nsIContent> content(do_QueryInterface(node));
       
-      boxElement = do_QueryInterface(content);
-
-      // Make the indentation.
-      nsdoc->CreateElementWithNameSpace(nsAutoString("treeindentation"), xulNamespace, getter_AddRefs(node));
-      content = do_QueryInterface(node);
-      content->SetDocument(doc, PR_FALSE);
-      boxElement->AppendChild(node, getter_AddRefs(dummy));
-      
-      nsCOMPtr<nsIContent> treeRow;
-      aParent->GetParent(*getter_AddRefs(treeRow));
-
-      nsCOMPtr<nsIContent> treeItem;
-      treeRow->GetParent(*getter_AddRefs(treeItem));
-    
-      nsAutoString container;
-      treeItem->GetAttribute(kNameSpaceID_None, nsXULAtoms::container, container);
-        
-      // Always make a twisty but disable it for non-containers.
-      nsdoc->CreateElementWithNameSpace(nsAutoString("titledbutton"), xulNamespace, getter_AddRefs(node));
-      content = do_QueryInterface(node);
-      content->SetDocument(doc, PR_FALSE);
-      content->SetAttribute(kNameSpaceID_None, nsHTMLAtoms::kClass, nsAutoString("twisty"), PR_FALSE);
-      if (container != "true")
-        content->SetAttribute(kNameSpaceID_None, nsHTMLAtoms::disabled, nsAutoString("true"), PR_FALSE);
-      else content->SetAttribute(kNameSpaceID_None, nsXULAtoms::allowevents, nsAutoString("true"), PR_FALSE);
-
-      boxElement->AppendChild(node, getter_AddRefs(dummy));
+      // create the frame and attach it to our frame
+      ConstructFrame(aPresShell, aPresContext, aState, content, aNewFrame, aChildItems);
     }
 
-    nsAutoString classDesc = "tree-button";
-    
-    nsdoc->CreateElementWithNameSpace(nsAutoString("titledbutton"), xulNamespace, getter_AddRefs(node));
-    buttonContent = do_QueryInterface(node);
-    buttonContent->SetDocument(doc, PR_FALSE);
-    buttonContent->SetAttribute(kNameSpaceID_None, nsHTMLAtoms::kClass, classDesc, PR_FALSE);
-
-    nsAutoString value;
-    aParent->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::value, value);
-    if (value != "")
-      buttonContent->SetAttribute(kNameSpaceID_None, nsHTMLAtoms::value, value, PR_FALSE);
-  
-    nsAutoString src;
-    aParent->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::src, src);
-    if (src != "")
-      buttonContent->SetAttribute(kNameSpaceID_None, nsHTMLAtoms::src, src, PR_FALSE);
-  
-    nsAutoString crop;
-    aParent->GetAttribute(kNameSpaceID_None, nsXULAtoms::crop, crop);
-    if (crop == "") crop = "right";
-    buttonContent->SetAttribute(kNameSpaceID_None, nsXULAtoms::crop, crop, PR_FALSE);
-    buttonContent->SetAttribute(kNameSpaceID_None, nsXULAtoms::flex, nsAutoString("1"), PR_FALSE);
-
-    nsAutoString align;
-    aParent->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::align, align);
-    if (align == "") align = "left";
-    buttonContent->SetAttribute(kNameSpaceID_None, nsHTMLAtoms::align, align, PR_FALSE);
-
-    if (boxElement) {
-      buttonContent->SetAttribute(kNameSpaceID_None, nsXULAtoms::flex, nsAutoString("1"), PR_FALSE);
-      boxElement->AppendChild(node, getter_AddRefs(dummy));
-    }
-    else anonymousItems->AppendElement(buttonContent);
+    return NS_OK;
   }
-
-  PRUint32 count = 0;
-  anonymousItems->Count(&count);
-
-  for (PRUint32 i=0; i < count; i++)
-  {
-    // get our child's content and set its parent to our content
-    nsCOMPtr<nsISupports> node;
-    anonymousItems->GetElementAt(i,getter_AddRefs(node));
-
-    nsCOMPtr<nsIContent> content(do_QueryInterface(node));
-    content->SetParent(aParent);
-    content->SetDocument(doc, PR_TRUE);
-
-    // create the frame and attach it to our frame
-    ConstructFrame(aPresShell, aPresContext, aState, content, aNewFrame, aChildItems);
-  }
-  if (count > 0)
-  {
-    nsTreeCellFrame *cellFrame = (nsTreeCellFrame *) aNewCellFrame;
-    cellFrame->SetAnonymousContent(buttonContent);
-  }
-
   return NS_OK;
 }
 
