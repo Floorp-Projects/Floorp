@@ -101,6 +101,13 @@ protected:
 #ifdef DEBUG
   PRBool                mInitialized;
 #endif
+
+protected:
+  void   GetUserPreferences();
+
+private:
+  friend PrefChangedCallback(const char*, void*);
+  void   PreferenceChanged(const char* aPrefName);
 };
 
 #endif /* nsPresContext_h___ */

@@ -28,8 +28,25 @@
 #include "nsIURL.h"
 #include "nsIURLGroup.h"
 #include "nsIDocument.h"
+#include "nsIFrame.h"
+#include "nsIStyleContext.h"
+#ifdef _WIN32
+#include <windows.h>
+#endif
 
 #define NOISY_IMAGES
+
+static int
+PrefChangedCallback(const char* aPrefName, void* instance_data)
+{
+  nsPresContext*  presContext = (nsPresContext*)instance_data;
+
+  NS_ASSERTION(nsnull != presContext, "bad instance data");
+  if (nsnull != presContext) {
+    presContext->PreferenceChanged(aPrefName);
+  }
+  return 0;  // PREF_OK
+}
 
 static NS_DEFINE_IID(kIPresContextIID, NS_IPRESCONTEXT_IID);
 
@@ -60,8 +77,14 @@ nsPresContext::nsPresContext()
   mCompatibilityMode = eCompatibility_NavQuirks;
   mBaseURL = nsnull;
 
+#ifdef _WIN32
+  // XXX This needs to be elsewhere, e.g., part of nsIDeviceContext
+  mDefaultColor = ::GetSysColor(COLOR_WINDOWTEXT);
+  mDefaultBackgroundColor = ::GetSysColor(COLOR_WINDOW);
+#else
   mDefaultColor = NS_RGB(0x00, 0x00, 0x00);
   mDefaultBackgroundColor = NS_RGB(0xFF, 0xFF, 0xFF);
+#endif
 
 #ifdef DEBUG
   mInitialized = PR_FALSE;
@@ -95,6 +118,9 @@ nsPresContext::~nsPresContext()
   NS_IF_RELEASE(mContainer);
   NS_IF_RELEASE(mEventManager);
   NS_IF_RELEASE(mDeviceContext);
+  // Unregister preference callbacks
+  mPrefs->UnregisterCallback("browser.", PrefChangedCallback, (void*)this);
+  mPrefs->UnregisterCallback("intl.font2.", PrefChangedCallback, (void*)this);
   NS_IF_RELEASE(mPrefs);
   NS_IF_RELEASE(mBaseURL);
 }
@@ -118,6 +144,75 @@ nsPresContext::Release(void)
 
 NS_IMPL_QUERY_INTERFACE(nsPresContext, kIPresContextIID);
 
+void
+nsPresContext::GetUserPreferences()
+{
+  int32 prefInt;
+  char  prefChar[512];
+  int   charSize = sizeof(prefChar);
+
+  if (NS_OK == mPrefs->GetIntPref("browser.base_font_scaler", &prefInt)) {
+    mFontScaler = prefInt;
+  }
+
+  // XXX these font prefs strings don't take font encoding into account
+  if (NS_OK == mPrefs->GetCharPref("intl.font2.win.prop_font", &(prefChar[0]), &charSize)) {
+    mDefaultFont.name = prefChar;
+  }
+  if (NS_OK == mPrefs->GetIntPref("intl.font2.win.prop_size", &prefInt)) {
+    mDefaultFont.size = NSIntPointsToTwips(prefInt);
+  }
+  if (NS_OK == mPrefs->GetCharPref("intl.font2.win.fixed_font", &(prefChar[0]), &charSize)) {
+    mDefaultFixedFont.name = prefChar;
+  }
+  if (NS_OK == mPrefs->GetIntPref("intl.font2.win.fixed_size", &prefInt)) {
+    mDefaultFixedFont.size = NSIntPointsToTwips(prefInt);
+  }
+  if (NS_OK == mPrefs->GetIntPref("nglayout.compatibility.mode", &prefInt)) {
+    mCompatibilityMode = (enum nsCompatibility)prefInt;  // bad cast
+  }
+
+  PRBool usePrefColors = PR_TRUE;
+#ifdef _WIN32
+  XP_Bool boolPref;
+  // XXX Is Windows the only platform that uses this?
+  if (NS_OK == mPrefs->GetBoolPref("browser.wfe.use_windows_colors", &boolPref)) {
+    usePrefColors = !PRBool(boolPref);
+  }
+#endif
+  if (usePrefColors) {
+    uint32  colorPref;
+    if (NS_OK == mPrefs->GetColorPrefDWord("browser.foreground_color", &colorPref)) {
+      mDefaultColor = (nscolor)colorPref;
+    }
+    if (NS_OK == mPrefs->GetColorPrefDWord("browser.background_color", &colorPref)) {
+      mDefaultBackgroundColor = (nscolor)colorPref;
+    }
+  }
+}
+
+void
+nsPresContext::PreferenceChanged(const char* aPrefName)
+{
+  // Initialize our state from the user preferences
+  GetUserPreferences();
+
+  // Have the root frame's style context remap its style based on the
+  // user preferences
+  nsIFrame*         rootFrame;
+  nsIStyleContext*  rootStyleContext;
+
+  rootFrame = mShell->GetRootFrame();
+  if (nsnull != rootFrame) {
+    rootFrame->GetStyleContext(rootStyleContext);
+    rootStyleContext->RemapStyle(this);
+    NS_RELEASE(rootStyleContext);
+  
+    // Force a reflow of the root frame
+    mShell->StyleChangeReflow();
+  }
+}
+
 nsresult
 nsPresContext::Init(nsIDeviceContext* aDeviceContext, nsIPref* aPrefs)
 {
@@ -129,31 +224,13 @@ nsPresContext::Init(nsIDeviceContext* aDeviceContext, nsIPref* aPrefs)
   mPrefs = aPrefs;
   NS_IF_ADDREF(mPrefs);
 
-  if (nsnull != mPrefs) { // initialize pres context state from preferences
-    int32 prefInt;
-    char  prefChar[512];
-    int   charSize = sizeof(prefChar);
+  if (nsnull != mPrefs) {
+    // Register callbacks so we're notified when the preferences change
+    mPrefs->RegisterCallback("browser.", PrefChangedCallback, (void*)this);
+    mPrefs->RegisterCallback("intl.font2.", PrefChangedCallback, (void*)this);
 
-    if (NS_OK == mPrefs->GetIntPref("browser.base_font_scaler", &prefInt)) {
-      mFontScaler = prefInt;
-    }
-
-    // XXX these font prefs strings don't take font encoding into account
-    if (NS_OK == mPrefs->GetCharPref("intl.font2.win.prop_font", &(prefChar[0]), &charSize)) {
-      mDefaultFont.name = prefChar;
-    }
-    if (NS_OK == mPrefs->GetIntPref("intl.font2.win.prop_size", &prefInt)) {
-      mDefaultFont.size = NSIntPointsToTwips(prefInt);
-    }
-    if (NS_OK == mPrefs->GetCharPref("intl.font2.win.fixed_font", &(prefChar[0]), &charSize)) {
-      mDefaultFixedFont.name = prefChar;
-    }
-    if (NS_OK == mPrefs->GetIntPref("intl.font2.win.fixed_size", &prefInt)) {
-      mDefaultFixedFont.size = NSIntPointsToTwips(prefInt);
-    }
-    if (NS_OK == mPrefs->GetIntPref("nglayout.compatibility.mode", &prefInt)) {
-      mCompatibilityMode = (enum nsCompatibility)prefInt;  // bad cast
-    }
+    // Initialize our state from the user preferences
+    GetUserPreferences();
   }
 
 #ifdef DEBUG

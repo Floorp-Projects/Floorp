@@ -204,6 +204,7 @@ public:
   virtual void EndObservingDocument();
   NS_IMETHOD InitialReflow(nscoord aWidth, nscoord aHeight);
   NS_IMETHOD ResizeReflow(nscoord aWidth, nscoord aHeight);
+  NS_IMETHOD StyleChangeReflow();
   virtual nsIFrame* GetRootFrame();
   virtual nsIFrame* FindFrameWithContent(nsIContent* aContent);
   virtual void AppendReflowCommand(nsIReflowCommand* aReflowCommand);
@@ -578,6 +579,52 @@ PresShell::ResizeReflow(nscoord aWidth, nscoord aHeight)
 #ifdef NOISY
     printf("PresShell::ResizeReflow: null root frame\n");
 #endif
+  }
+
+  ExitReflowLock();
+
+  return NS_OK; //XXX this needs to be real. MMP
+}
+
+NS_IMETHODIMP
+PresShell::StyleChangeReflow()
+{
+  EnterReflowLock();
+
+  if (nsnull != mRootFrame) {
+    // Kick off a top-down reflow
+    NS_FRAME_LOG(NS_FRAME_TRACE_CALLS,
+                 ("enter nsPresShell::StyleChangeReflow"));
+#ifdef NS_DEBUG
+    if (nsIFrame::GetVerifyTreeEnable()) {
+      mRootFrame->VerifyTree();
+    }
+#endif
+    nsRect                bounds;
+    mPresContext->GetVisibleArea(bounds);
+    nsSize                maxSize(bounds.width, bounds.height);
+    nsHTMLReflowMetrics   desiredSize(nsnull);
+    nsReflowStatus        status;
+    nsIHTMLReflow*        htmlReflow;
+    nsIRenderingContext*  rcx = nsnull;
+
+    CreateRenderingContext(mRootFrame, rcx);
+
+    // XXX We should be using eReflowReason_StyleChange
+    nsHTMLReflowState reflowState(*mPresContext, mRootFrame,
+                                  eReflowReason_Resize, maxSize, rcx);
+
+    if (NS_OK == mRootFrame->QueryInterface(kIHTMLReflowIID, (void**)&htmlReflow)) {
+      htmlReflow->Reflow(*mPresContext, desiredSize, reflowState, status);
+      mRootFrame->SizeTo(desiredSize.width, desiredSize.height);
+#ifdef NS_DEBUG
+      if (nsIFrame::GetVerifyTreeEnable()) {
+        mRootFrame->VerifyTree();
+      }
+#endif
+    }
+    NS_IF_RELEASE(rcx);
+    NS_FRAME_LOG(NS_FRAME_TRACE_CALLS, ("exit nsPresShell::StyleChangeReflow"));
   }
 
   ExitReflowLock();

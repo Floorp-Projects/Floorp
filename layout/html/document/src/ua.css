@@ -16,12 +16,12 @@
  */
 
 HTML {
-  background: none;
+  background: inherit;
   background-image: none;
 }
 
 BODY {
-  background: white;
+  background: inherit;
   cursor: default;
   display: block;
   line-height: normal;
