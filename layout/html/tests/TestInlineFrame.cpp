@@ -24,7 +24,7 @@
 #include "nsVoidArray.h"
 #include "nsDocument.h"
 #include "nsHTMLTagContent.h"
-#include "nscoord.h"
+#include "nsCoord.h"
 #include "nsSplittableFrame.h"
 #include "nsIContentDelegate.h"
 #include "nsIPresContext.h"
@@ -286,7 +286,7 @@ TestReflowUnmapped(nsIPresContext* presContext)
   InlineFrame*      f = new InlineFrame(b, 0, nsnull);
   nsIStyleContext*  styleContext = presContext->ResolveStyleContextFor(b, nsnull);
 
-  f->SetStyleContext(styleContext);
+  f->SetStyleContext(presContext,styleContext);
 
   // Reflow the HTML container
   nsReflowMetrics         reflowMetrics;
@@ -379,7 +379,7 @@ TestChildrenThatDontFit(nsIPresContext* presContext)
   InlineFrame*      f = new InlineFrame(b, 0, nsnull);
   nsIStyleContext*  styleContext = presContext->ResolveStyleContextFor(b, nsnull);
 
-  f->SetStyleContext(styleContext);
+  f->SetStyleContext(presContext,styleContext);
 
   ///////////////////////////////////////////////////////////////////////////
   // Test #1a
@@ -413,7 +413,7 @@ TestChildrenThatDontFit(nsIPresContext* presContext)
 
   // Create a new inline frame for the HTML container
   InlineFrame*  f1 = new InlineFrame(b, 0, nsnull);
-  f1->SetStyleContext(styleContext);
+  f1->SetStyleContext(presContext,styleContext);
 
   // Reflow the frame with a width narrower than the first child frame. This
   // tests how we handle children that don't fit when reflowing unmapped
@@ -551,7 +551,7 @@ TestOverflow(nsIPresContext* presContext)
   InlineFrame*      f = new InlineFrame(b, 0, nsnull);
   nsIStyleContext*  styleContext = presContext->ResolveStyleContextFor(b, nsnull);
 
-  f->SetStyleContext(styleContext);
+  f->SetStyleContext(presContext,styleContext);
 
   ///////////////////////////////////////////////////////////////////////////
   // Test #1
@@ -663,7 +663,7 @@ TestPushingPulling(nsIPresContext* presContext)
   InlineFrame*      f = new InlineFrame(b, 0, nsnull);
   nsIStyleContext*  styleContext = presContext->ResolveStyleContextFor(b, nsnull);
 
-  f->SetStyleContext(styleContext);
+  f->SetStyleContext(presContext,styleContext);
 
   // Reflow the inline frame so only the first frame fits
   nsReflowMetrics         reflowMetrics;
@@ -1084,7 +1084,7 @@ TestSplittableChildren(nsIPresContext* presContext)
   InlineFrame*      f = new InlineFrame(b, 0, nsnull);
   nsIStyleContext*  styleContext = presContext->ResolveStyleContextFor(b, nsnull);
 
-  f->SetStyleContext(styleContext);
+  f->SetStyleContext(presContext,styleContext);
 
   ///////////////////////////////////////////////////////////////////////////
   // Test #1
@@ -1443,7 +1443,7 @@ TestMaxElementSize(nsIPresContext* presContext)
   InlineFrame*      f = new InlineFrame(b, 0, nsnull);
   nsIStyleContext*  styleContext = presContext->ResolveStyleContextFor(b, nsnull);
 
-  f->SetStyleContext(styleContext);
+  f->SetStyleContext(presContext,styleContext);
 
   ///////////////////////////////////////////////////////////////////////////
   // Test #1
