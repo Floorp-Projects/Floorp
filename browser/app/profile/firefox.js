@@ -121,7 +121,8 @@ pref("update.showSlidingNotification", true);   // Windows-only slide-up taskbar
 // 2 = high   (new version of Firefox/Security patch)
 pref("update.severity", 0); 
 
-pref("xpinstall.whitelist.add", "update.mozilla.org,addons.mozilla.org");
+pref("xpinstall.whitelist.add", "update.mozilla.org");
+pref("xpinstall.whitelist.add.103", "addons.mozilla.org");
 
 pref("keyword.enabled", true);
 pref("keyword.URL", "http://www.google.com/search?btnI=I%27m+Feeling+Lucky&ie=UTF-8&oe=UTF-8&q=");

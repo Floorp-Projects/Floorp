@@ -106,7 +106,8 @@ pref("update.showSlidingNotification", true);   // Windows-only slide-up taskbar
 // 2 = high   (new version of Firefox/Security patch)
 pref("update.severity", 0); 
 
-pref("xpinstall.whitelist.add", "update.mozilla.org,addons.mozilla.org");
+pref("xpinstall.whitelist.add", "update.mozilla.org");
+pref("xpinstall.whitelist.add.103", "addons.mozilla.org");
 
 pref("mail.phishing.detection.enabled", true); // enable / disable phishing detection for link clicks
 pref("mail.spellcheck.inline", true);

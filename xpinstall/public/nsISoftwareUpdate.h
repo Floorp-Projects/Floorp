@@ -57,6 +57,7 @@
 
 #define XPINSTALL_ENABLE_PREF            "xpinstall.enabled"
 #define XPINSTALL_WHITELIST_ADD          "xpinstall.whitelist.add"
+#define XPINSTALL_WHITELIST_ADD_103      "xpinstall.whitelist.add.103"
 #define XPINSTALL_WHITELIST_REQUIRED     "xpinstall.whitelist.required"
 #define XPINSTALL_BLACKLIST_ADD          "xpinstall.blacklist.add"
 
