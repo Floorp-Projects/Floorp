@@ -20,59 +20,7 @@
 #ifndef nsIRDFResource_h__
 #define nsIRDFResource_h__
 
-#if 1 //defined(USE_XPIDL_INTERFACES)
 #include "nsRDFInterfaces.h"
-#else
-
-#include "nsIRDFNode.h"
-#include "prtypes.h"
-
-struct JSContext;
-struct JSObject;
-
-/**
- * A resource node, which has unique object identity.
- */
-
-// {E0C493D1-9542-11d2-8EB8-00805F29F370}
-#define NS_IRDFRESOURCE_IID \
-{ 0xe0c493d1, 0x9542, 0x11d2, { 0x8e, 0xb8, 0x0, 0x80, 0x5f, 0x29, 0xf3, 0x70 } }
-
-class NS_RDF nsIRDFResource : public nsIRDFNode {
-public:
-    static const nsIID& GetIID() { static nsIID iid = NS_IRDFRESOURCE_IID; return iid; }
-
-    /**
-     * Called by nsIRDFService after constructing a resource object to
-     * initialize it's URI.
-     */
-    NS_IMETHOD Init(const char* uri) = 0;
-
-    /**
-     * Get the 8-bit string value of the node.
-     */
-    NS_IMETHOD GetValue(const char* *uri) const = 0;
-
-    /**
-     * Determine if two resources are identical.
-     */
-    NS_IMETHOD EqualsResource(const nsIRDFResource* resource, PRBool* result) const = 0;
-
-    /**
-     * Determine if two resources are identical.
-     */
-    NS_IMETHOD EqualsString(const char* uri, PRBool* result) const = 0;
-
-
-    // XXX This is a kludge that's here until we get XPIDL scriptability working.
-    static JSObject*
-    GetJSObject(JSContext* aContext, nsIRDFResource* aPrivate) {
-        NS_NOTREACHED("sorry, you script RDF resources yet");
-        return nsnull;
-    }
-};
-
-#endif
 
 #endif // nsIRDFResource_h__
 
