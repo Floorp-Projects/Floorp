@@ -15,7 +15,7 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
-#include "stdio.h"
+#include <stdio.h>
 #include <windows.h>
 
 #include "nspr.h"
@@ -43,6 +43,7 @@
 static NS_DEFINE_CID(kSocketTransportServiceCID, NS_SOCKETTRANSPORTSERVICE_CID);
 static NS_DEFINE_CID(kEventQueueServiceCID,      NS_EVENTQUEUESERVICE_CID);
 
+static PRTime gElapsedTime;
 static int gKeepRunning = 1;
 static PLEventQueue* gEventQ = nsnull;
 
@@ -86,7 +87,7 @@ NS_IMPL_ISUPPORTS(InputTestConsumer,kIStreamListenerIID);
 NS_IMETHODIMP
 InputTestConsumer::OnStartBinding(nsISupports* context)
 {
-///  printf("\n+++ InputTestConsumer::OnStartBinding +++\n");
+  printf("\n+++ InputTestConsumer::OnStartBinding +++\n");
   return NS_OK;
 }
 
@@ -114,7 +115,7 @@ InputTestConsumer::OnStopBinding(nsISupports* context,
                          nsIString* aMsg)
 {
   gKeepRunning = 0;
-///  printf("\n+++ InputTestConsumer::OnStopBinding +++\n");
+  printf("\n+++ InputTestConsumer::OnStopBinding (status = %x) +++\n", aStatus);
   return NS_OK;
 }
 
@@ -160,7 +161,7 @@ NS_IMPL_ISUPPORTS(TestWriteObserver,nsIStreamObserver::GetIID());
 NS_IMETHODIMP
 TestWriteObserver::OnStartBinding(nsISupports* context)
 {
-///  printf("\n+++ TestWriteObserver::OnStartBinding +++\n");
+  printf("\n+++ TestWriteObserver::OnStartBinding +++\n");
   return NS_OK;
 }
 
@@ -170,9 +171,14 @@ TestWriteObserver::OnStopBinding(nsISupports* context,
                                  nsresult aStatus,
                                  nsIString* aMsg)
 {
-///  printf("\n+++ TestWriteObserver::OnStopBinding +++\n");
+  printf("\n+++ TestWriteObserver::OnStopBinding (status = %x) +++\n", aStatus);
 
-  mTransport->AsyncRead(nsnull, gEventQ, new InputTestConsumer);
+  if (NS_SUCCEEDED(aStatus)) {
+    mTransport->AsyncRead(nsnull, gEventQ, new InputTestConsumer);
+  } else {
+    gKeepRunning = 0;
+  }
+
   return NS_OK;
 }
 
@@ -193,7 +199,7 @@ main(int argc, char* argv[])
   char* hostName = argv[1];
   char* fileName = argv[2];
   int port = 80;
-
+ 
   // XXX why do I have to do this?!
   nsComponentManager::RegisterComponent(kEventQueueServiceCID, NULL, NULL, XPCOM_DLL, PR_FALSE, PR_FALSE);
   rv = nsComponentManager::AutoRegister(nsIComponentManager::NS_Startup,
@@ -222,7 +228,7 @@ main(int argc, char* argv[])
 
   char *buffer = PR_smprintf("GET %s HTML/1.0\r\n\r\n", fileName);
   stream->Fill(buffer, strlen(buffer), &bytesWritten);
-///  printf("Request is: %s\n", buffer);
+  printf("\n+++ Request is: %s\n", buffer);
 
   // Create the socket transport...
   nsITransport* transport;
@@ -230,6 +236,7 @@ main(int argc, char* argv[])
   if (NS_SUCCEEDED(rv)) {
     TestWriteObserver* observer = new TestWriteObserver(transport);
 
+    gElapsedTime = PR_Now();
     transport->AsyncWrite(stream, nsnull, gEventQ, observer);
 
     NS_RELEASE(transport);
@@ -240,12 +247,18 @@ main(int argc, char* argv[])
 #ifdef XP_PC
     MSG msg;
 
-    if (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) {
+    if (GetMessage(&msg, NULL, 0, 0)) {
       TranslateMessage(&msg);
       DispatchMessage(&msg);
+    } else {
+      gKeepRunning = FALSE;
     }
 #endif
   }
+
+  PRTime endTime;
+  endTime = PR_Now();
+  printf("Elapsed time: %ld\n", (PRInt32)(endTime/1000UL-gElapsedTime/1000UL));
 
   sts->Shutdown();
   NS_RELEASE(sts);

@@ -52,7 +52,7 @@ nsSocketState gStateTable[eSocketOperation_Max][eSocketState_Max] = {
     eSocketState_Error,         // WaitWrite   -> Error
     eSocketState_Connected,     // Done        -> Connected
     eSocketState_Error,         // Timeout     -> Error
-    eSocketState_Error          // Error       -> Error
+    eSocketState_Closed         // Error       -> Closed
   },
   // eSocketOperation_Read:
   {
@@ -65,7 +65,7 @@ nsSocketState gStateTable[eSocketOperation_Max][eSocketState_Max] = {
     eSocketState_Error,         // WaitWrite   -> Error
     eSocketState_Connected,     // Done        -> Connected
     eSocketState_Error,         // Timeout     -> Error
-    eSocketState_Error          // Error       -> Error
+    eSocketState_Connected      // Error       -> Connected
   },
     // eSocketOperation_Write:
   {
@@ -78,7 +78,7 @@ nsSocketState gStateTable[eSocketOperation_Max][eSocketState_Max] = {
     eSocketState_Done,          // WaitWrite   -> Done
     eSocketState_Connected,     // Done        -> Connected
     eSocketState_Error,         // Timeout     -> Error
-    eSocketState_Error          // Error       -> Error
+    eSocketState_Connected          // Error       -> Connected
   }
 };
 
@@ -194,8 +194,9 @@ nsresult nsSocketTransport::Init(nsSocketTransportService* aService,
 nsresult nsSocketTransport::Process(PRInt16 aSelectFlags)
 {
   nsresult rv = NS_OK;
+  PRBool done = PR_FALSE;
 
-  while ((eSocketOperation_None != mOperation) && (rv == NS_OK))
+  while (!done)
   {
     switch (mCurrentState) {
       case eSocketState_Created:
@@ -209,12 +210,17 @@ nsresult nsSocketTransport::Process(PRInt16 aSelectFlags)
         break;
 
       case eSocketState_Done:
+      case eSocketState_Error:
         if (mListener) {
           mListener->OnStopBinding(mContext, rv, nsnull);
         }
         NS_IF_RELEASE(mContext);
+        //
+        // Set up the connection for the next operation...
+        //
         mCurrentState = gStateTable[mOperation][mCurrentState];
-        mOperation = eSocketOperation_None;
+        mOperation    = eSocketOperation_None;
+        done = PR_TRUE;
         continue;
 
       case eSocketState_WaitDNS:
@@ -238,8 +244,10 @@ nsresult nsSocketTransport::Process(PRInt16 aSelectFlags)
         rv = NS_ERROR_FAILURE;
         break;
 
-      case eSocketState_Error:
-        NS_ASSERTION(0, "Unexpected Error...");
+      default:
+        NS_ASSERTION(0, "Unexpected state...");
+        rv = NS_ERROR_FAILURE;
+        break;
     }
     //
     // If the current state has successfully completed, then move to the
@@ -247,17 +255,33 @@ nsresult nsSocketTransport::Process(PRInt16 aSelectFlags)
     //
     if (NS_OK == rv) {
       mCurrentState = gStateTable[mOperation][mCurrentState];
-      // 
-      // Any select flags are *only* valid the first time through the loop...
-      // 
-      aSelectFlags = 0;
+    } 
+    else if (NS_FAILED(rv)) {
+      mCurrentState = eSocketState_Error;
     }
+    else if (NS_BASE_STREAM_WOULD_BLOCK == rv) {
+      done = PR_TRUE;
+    }
+    // 
+    // Any select flags are *only* valid the first time through the loop...
+    // 
+    aSelectFlags = 0;
   }
   
   return rv;
 }
 
 
+//-----
+//
+// doResolveHost:
+//
+// Return Codes:
+//    NS_OK
+//    NS_ERROR_HOST_NOT_FOUND
+//    NS_ERROR_FAILURE
+//
+//-----
 nsresult nsSocketTransport::doResolveHost(void)
 {
   PRStatus status;
@@ -296,7 +320,19 @@ nsresult nsSocketTransport::doResolveHost(void)
   return rv;
 }
 
-
+//-----
+//
+// doConnection:
+//
+// Return values:
+//    NS_OK
+//    NS_BASE_STREAM_WOULD_BLOCK
+//
+//    NS_ERROR_CONNECTION_REFUSED (XXX: Not yet defined)
+//    NS_ERROR_FAILURE
+//    NS_ERROR_OUT_OF_MEMORY
+//
+//-----
 nsresult nsSocketTransport::doConnection(PRInt16 aSelectFlags)
 {
   PRStatus status;
@@ -366,8 +402,7 @@ nsresult nsSocketTransport::doConnection(PRInt16 aSelectFlags)
       //
       else {
         // Connection refused...
-        // XXX: what should the next state be?
-        mCurrentState = eSocketState_Error;
+        // XXX: Should be NS_ERROR_CONNECTION_REFUSED
         rv = NS_ERROR_FAILURE;
       }
     }
@@ -378,8 +413,7 @@ nsresult nsSocketTransport::doConnection(PRInt16 aSelectFlags)
   //
   else if (NS_SUCCEEDED(rv) && aSelectFlags) {
     if (PR_POLL_EXCEPT & aSelectFlags) {
-      // XXX: what should the next state be?
-      mCurrentState = eSocketState_Error;
+      // XXX: Should be NS_ERROR_CONNECTION_REFUSED
       rv = NS_ERROR_FAILURE;
     }
     //
@@ -394,6 +428,17 @@ nsresult nsSocketTransport::doConnection(PRInt16 aSelectFlags)
 }
 
 
+//-----
+//
+// doRead:
+//
+// Return values:
+//    NS_OK
+//    NS_BASE_STREAM_WOULD_BLOCK
+//
+//    NS_ERROR_FAILURE
+//
+//-----
 nsresult nsSocketTransport::doRead(PRInt16 aSelectFlags)
 {
   PRUint32 size, bytesWritten, totalBytesWritten;
@@ -403,8 +448,16 @@ nsresult nsSocketTransport::doRead(PRInt16 aSelectFlags)
 
   NS_ASSERTION(eSocketState_WaitRead == mCurrentState, "Wrong state.");
 
+  //
+  // Check for an error during PR_Poll(...)
+  //
+  if (PR_POLL_EXCEPT & aSelectFlags) {
+    // XXX: What should this error code be?
+    rv = NS_ERROR_FAILURE;
+  }
+
   totalBytesWritten = 0;
-  do {
+  while (NS_OK == rv) {
     //
     // Determine how much space is available in the input stream...
     //
@@ -429,10 +482,6 @@ nsresult nsSocketTransport::doRead(PRInt16 aSelectFlags)
       // The read operation has completed...
       //
       else if (len == 0) {
-        //
-        // Notify the listener that the read operation has completed...
-        //
-        //mListener->OnStopBinding(mContext, rv, nsnull);
         rv = NS_OK;
         break;
       } 
@@ -444,6 +493,7 @@ nsresult nsSocketTransport::doRead(PRInt16 aSelectFlags)
           rv = NS_BASE_STREAM_WOULD_BLOCK;
         } 
         else {
+          // XXX: What should this error code be?
           rv = NS_ERROR_FAILURE;
         }
       }
@@ -452,13 +502,21 @@ nsresult nsSocketTransport::doRead(PRInt16 aSelectFlags)
     // There is no room in the input stream for more data...  Give the 
     // consumer more time to empty the stream...
     //
+    // XXX: Until there is a mechanism to remove this entry from the 
+    //      select list until the consumer has read some data, this will
+    //      cause the transport thread to spin !!
+    //
     else {
       rv = NS_BASE_STREAM_WOULD_BLOCK;
     }
-  } while (NS_OK == rv);
+  }
 
-  if (bytesWritten) {
-    mListener->OnDataAvailable(mContext, mReadStream, bytesWritten);
+  //
+  // Fire a single OnDataAvaliable(...) notification once as much data has
+  // been filled into the stream as possible...
+  //
+  if (totalBytesWritten) {
+    mListener->OnDataAvailable(mContext, mReadStream, totalBytesWritten);
   }
 
   //
@@ -472,6 +530,17 @@ nsresult nsSocketTransport::doRead(PRInt16 aSelectFlags)
 }
 
 
+//-----
+//
+// doWrite:
+//
+// Return values:
+//    NS_OK
+//    NS_BASE_STREAM_WOULD_BLOCK
+//
+//    NS_ERROR_FAILURE
+//
+//-----
 nsresult nsSocketTransport::doWrite(PRInt16 aSelectFlags)
 {
   PRUint32 size, bytesRead;
@@ -481,7 +550,15 @@ nsresult nsSocketTransport::doWrite(PRInt16 aSelectFlags)
 
   NS_ASSERTION(eSocketState_WaitWrite == mCurrentState, "Wrong state.");
 
-  do {
+  //
+  // Check for an error during PR_Poll(...)
+  //
+  if (PR_POLL_EXCEPT & aSelectFlags) {
+    // XXX: What should this error code be?
+    rv = NS_ERROR_FAILURE;
+  }
+
+  while (NS_OK == rv) {
     rv = mWriteStream->Read(gIOBuffer, sizeof(gIOBuffer), &bytesRead);
     if (NS_SUCCEEDED(rv)) {
       if (bytesRead > 0) {
@@ -501,15 +578,11 @@ nsresult nsSocketTransport::doWrite(PRInt16 aSelectFlags)
       // The write operation has completed...
       //
       else if (bytesRead == 0) {
-        //
-        // Notify the listener that the write operation has completed...
-        //
-        //mListener->OnStopBinding(mContext, rv, nsnull);
         rv = NS_OK;
         break;
       }
     }
-  } while(NS_OK == rv);
+  }
 
   //
   // Set up the select flags for connect...
