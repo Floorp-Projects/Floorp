@@ -1,0 +1,59 @@
+<?xml version="1.0"?>
+<!--
+   - The contents of this file are subject to the Mozilla Public
+   - License Version 1.1 (the "License"); you may not use this file
+   - except in compliance with the License. You may obtain a copy of
+   - the License at http://www.mozilla.org/MPL/
+   -
+   - Software distributed under the License is distributed on an "AS
+   - IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+   - implied. See the License for the specific language governing
+   - rights and limitations under the License.
+   -
+   -
+   - Contributor(s):
+   -  David Drinan <ddrinan@netscape.com>
+  -->
+
+<?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
+
+<!-- CHANGE THIS WHEN MOVING FILES -->
+<!DOCTYPE window [
+    <!ENTITY % pipPkiDTD SYSTEM "chrome://pippki/locale/pippki.dtd">
+    %pipPkiDTD;
+]>
+
+<window
+  id="serverCrlNextupdate"
+  xmlns:html="http://www.w3.org/1999/xhtml"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"      
+  debug="false"
+  style="width: 30em; height: 16em"
+  onload="onLoad();"
+>
+<script type="application/x-javascript" src="chrome://global/content/strres.js" />
+<script type="application/x-javascript" src="chrome://pippki/content/pippki.js" />
+<script type="application/x-javascript" src="chrome://pippki/content/serverCrlExpired.js" />
+<script type="application/x-javascript" src="chrome://help/content/help.js" />
+
+<keyset id="keys">
+  <key id="enter-key"  keycode="VK_ENTER"  oncommand="doOK()"    />
+  <key id="return-key" keycode="VK_RETURN" oncommand="doOK()"    />
+</keyset>
+
+<vbox style="margin: 5px;" flex="100%">
+
+  <html id="message1" flex="100%"/>
+  <separator/>
+  <html id="message2" flex="100%"/>
+  <separator/>
+  <text value="&serverCrlNextupdate.message;" flex="100%"/>
+  <separator/>
+  <hbox>
+  <button id="ok-button" class="dialog" label="&ok.label;" primary="true"
+     onclick="doOK();" /> 
+  <button id="help-button" class="dialog" label="&help.label;"
+    oncommand="openHelp('chrome://help/content/help.xul?exp_crl');" /> 
+  </hbox>
+</vbox>
+</window>

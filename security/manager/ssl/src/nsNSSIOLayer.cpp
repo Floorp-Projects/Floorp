@@ -959,7 +959,20 @@ nsContinueDespiteCertError(nsNSSSocketInfo  *infoObject,
     }
     break;
   case SEC_ERROR_CRL_EXPIRED:
-    rv = badCertHandler->CrlExpired(csi, callBackCert, &retVal);
+    {
+      char *url = SSL_RevealURL(sslSocket);
+      NS_ASSERTION(url, "could not find valid URL in ssl socket");
+      nsAutoString autoURL = NS_ConvertASCIItoUCS2(url);
+      PRUnichar *autoUnichar = autoURL.ToNewUnicode();
+      NS_ASSERTION(autoUnichar, "Could not allocate new PRUnichar");
+      rv = badCertHandler->CrlNextupdate(csi, autoUnichar, callBackCert);
+      Recycle(autoUnichar);
+      if (NS_SUCCEEDED(rv) && retVal) {
+        rv = CERT_AddOKDomainName(peerCert, url);
+      }
+      retVal = PR_FALSE;
+      PR_Free(url);
+    }
     break;
   default:
     rv = NS_ERROR_FAILURE;

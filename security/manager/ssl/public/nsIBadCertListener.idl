@@ -54,8 +54,8 @@ interface nsIBadCertListener : nsISupports {
 
   boolean certExpired(in nsITransportSecurityInfo socketInfo,
                       in nsIX509Cert cert);
-  boolean crlExpired(in nsITransportSecurityInfo socketInfo,
-                      in nsIX509Cert cert);
+  void crlNextupdate(in nsITransportSecurityInfo socketInfo,
+                     in wstring targetURL, in nsIX509Cert cert);
 
 };
 

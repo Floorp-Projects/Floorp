@@ -419,30 +419,25 @@ nsNSSDialogs::CertExpired(nsITransportSecurityInfo *socketInfo,
 }
 
 NS_IMETHODIMP 
-nsNSSDialogs::CrlExpired(nsITransportSecurityInfo *socketInfo, 
-                          nsIX509Cert *cert, PRBool *_retval)
+nsNSSDialogs::CrlNextupdate(nsITransportSecurityInfo *socketInfo, 
+                          const PRUnichar * targetURL, nsIX509Cert *cert)
 {
   nsresult rv;
 
-  *_retval = PR_FALSE;
   nsCOMPtr<nsIPKIParamBlock> block = do_CreateInstance(kPKIParamBlockCID);
   nsCOMPtr<nsIDialogParamBlock> dialogBlock = do_QueryInterface(block);
+
+  rv = dialogBlock->SetString(1, targetURL);
+  if (NS_FAILED(rv))
+    return rv;
 
   rv = block->SetISupportAtIndex(1, cert);
   if (NS_FAILED(rv))
     return rv;
 
   rv = nsNSSDialogHelper::openDialog(nsnull,
-                             "chrome://pippki/content/serverCrlExpired.xul",
+                             "chrome://pippki/content/serverCrlNextupdate.xul",
                              block);
-
-  PRInt32 status;
-  rv = dialogBlock->GetInt(1, &status);
-  if (NS_FAILED(rv))
-    return rv; 
-
-  *_retval = (status) ? PR_TRUE : PR_FALSE;
-
   return NS_OK;
 }
 
