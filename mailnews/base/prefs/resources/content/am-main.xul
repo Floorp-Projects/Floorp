@@ -60,7 +60,7 @@ function onInit() {
       <html:input name="identity.attachSignature" type="checkbox"/>
       &signature.label;</html:div>
       <html:spacer/>
-      <html:input type="text" name="identity.signature"/>
+      <html:input type="text" flex="100%" name="identity.signature"/>
 <!--
       <html:select flex="100%">
          <html:option value="sig1">&sampleSig1.label;</html:option>

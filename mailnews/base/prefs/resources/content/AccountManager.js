@@ -97,15 +97,35 @@ function saveAccount(accountValues, account)
     
     for (var slot in typeArray) {
       var dest;
-      
-      if (type == "identity") dest = identity;
-      if (type == "server") dest = server;
 
+      try {
+      if (type == "identity")
+        dest = identity;
+      else if (type == "server")
+        dest = server;
+      else if (type == "pop3")
+        dest = server.QueryInterface(Components.interfaces.nsIPop3IncomingServer);
+      
+      else if (type == "imap")
+        dest = server.QueryInterface(Components.interfaces.nsIImapIncomingServer);
+      
+      else if (type == "none")
+        dest = server.QueryInterface(Components.interfaces.nsINoIncomingServer); 
+      
+      else if (type == "nntp")
+        dest = server.QueryInterface(Components.interfaces.nsINntpIncomingServer);
+      } catch (ex) {
+        // don't do anything, just means we don't support that
+      }
       if (dest == undefined) continue;
       
       if (dest[slot] != typeArray[slot]) {
-        // dump("Saving: " + slot + " to " + dest + "\n");
-        dest[slot] = typeArray[slot];
+        //dump("Array->Account: " + slot + " to " + dest + "\n");
+        try {
+          dest[slot] = typeArray[slot];
+        } catch (ex) {
+          // hrm... need to handle special types here
+        }
       }
     }
   }
@@ -214,7 +234,7 @@ function setAccountValue(accountValues, type, slot, value) {
   if (!accountValues[type])
     accountValues[type] = new Array;
 
-  //  dump("Form->Array: accountValues[" + type + "][" + slot + "] = " + value + "\n");
+  dump("Form->Array: accountValues[" + type + "][" + slot + "] = " + value + "\n");
   
   accountValues[type][slot] = value;
 }
@@ -226,55 +246,36 @@ function getAccountValue(account, accountValues, type, slot) {
   // fill in the slot from the account if necessary
   if (accountValues[type][slot]== undefined) {
     // dump("Array->Form: lazily reading in the " + slot + " from the " + type + "\n");
+    var server= account.incomingServer;
     var source = null;
-    if (type == "identity") {
+    try {
+    if (type == "identity")
       source = account.defaultIdentity;
-    }
-    else if (type == "server") {
-      source = account.incomingServer;
-    }
-    else if (type == "pop3server") {
-	var server= account.incomingServer; 
-	var check = server.type + "server";
-	if (check == type) {
-		source = server.QueryInterface(Components.interfaces.nsIPop3IncomingServer); 
-	}
-    }
-    else if (type == "imapserver") {
-	var server= account.incomingServer; 
-	var check = server.type + "server";
-	if (check == type) {
-		source = server.QueryInterface(Components.interfaces.nsIImapIncomingServer); 
-	}
-    }
-    else if (type == "noneserver") {
-	var server= account.incomingServer; 
-	var check = server.type + "server";
-	if (check == type) {
-		source = server.QueryInterface(Components.interfaces.nsINoIncomingServer); 
-	}
-    }
-    else if (type == "nntpserver") {
-	var server= account.incomingServer; 
-	var check = server.type + "server";
-	if (check == type) {
-		source = server.QueryInterface(Components.interfaces.nsINntpIncomingServer); 
-	}
-    }
-    else { 
-	// do nothing
-    }
 
-    if (source) {
-    	accountValues[type][slot] = source[slot];
+    else if (type == "server")
+      source = account.incomingServer;
+
+    else if (type == "pop3")
+      source = server.QueryInterface(Components.interfaces.nsIPop3IncomingServer);
+    
+    else if (type == "imap")
+      source = server.QueryInterface(Components.interfaces.nsIImapIncomingServer);
+    
+    else if (type == "none")
+      source = server.QueryInterface(Components.interfaces.nsINoIncomingServer); 
+
+    else if (type == "nntp")
+      source = server.QueryInterface(Components.interfaces.nsINntpIncomingServer);
+
+    } catch (ex) {
     }
-    else {
-	// dump("error getting: (" + type + "," + slot + ")\n");
-	accountValues[type][slot] = null;
+    
+    if (source) {
+      accountValues[type][slot] = getStringValueOf(source[slot]);
     }
   }
   var value = accountValues[type][slot];
-  //  dump("Array->Form: accountValues[" + type + "][" + slot + "] = " + value + "\n");
+  dump("Array->Form: accountValues[" + type + "][" + slot + "] = " + value + "\n");
   return value;
 }
 //
@@ -294,8 +295,8 @@ function restorePage(serverId, pageId) {
         var slot = vals[1];
 
         var account = getAccountFromServerId(serverId);
-        setFormElementValue(pageElements[i],
-                            getAccountValue(account, accountValues, type, slot));
+        var value = getAccountValue(account, accountValues, type, slot);
+        setFormElementValue(pageElements[i], value);
       }
   }
 
@@ -317,23 +318,36 @@ function getFormElementValue(formElement) {
     return formElement.value;
 }
 
+function getStringValueOf(obj) {
+
+  var value = obj;
+  if (value && typeof(value) == "object") {
+    try {
+      var filespec = value.QueryInterface(Components.interfaces.nsIFileSpec);
+      realvalue = filespec.nativePath;
+    } catch (ex) {}
+  }
+  return obj;
+}
 //
 // sets the value of a widget
 //
 function setFormElementValue(formElement, value) {
+
   if (formElement.type == "checkbox") {
-    if (value)
+    if (value == undefined) {
+      formElement.checked = formElement.defaultChecked;
+    } else {
       if (formElement.getAttribute("reversed"))
         formElement.checked = !value;
       else
         formElement.checked = value;
-    else
-      formElement.checked = formElement.defaultChecked;
+    }
   } else {
-    if (value)
-      formElement.value = value;
-    else
+    if (value == undefined)
       formElement.value = formElement.defaultValue;
+    else
+      formElement.value = value;
   }
 }
 
