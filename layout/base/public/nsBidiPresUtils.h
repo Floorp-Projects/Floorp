@@ -92,13 +92,13 @@ public:
    * @param aRenderingContext the rendering context
    * @param aTextRect contains the coordinates to render the string
    */
-  nsresult nsBidiPresUtils::RenderText(PRUnichar*           aText,
-                                       PRInt32              aLength,
-                                       nsBidiDirection      aBaseDirection,
-                                       nsIPresContext*      aPresContext,
-                                       nsIRenderingContext& aRenderingContext,
-                                       nscoord              aX,
-                                       nscoord              aY);
+  nsresult RenderText(PRUnichar*           aText,
+                      PRInt32              aLength,
+                      nsBidiDirection      aBaseDirection,
+                      nsIPresContext*      aPresContext,
+                      nsIRenderingContext& aRenderingContext,
+                      nscoord              aX,
+                      nscoord              aY);
 
 private:
   /**
