@@ -1570,10 +1570,6 @@ nsGenericHTMLElement::SetAttr(PRInt32 aNameSpaceID,
                               PRBool aNotify)
 {
   nsresult  result = NS_OK;
-  NS_ASSERTION((kNameSpaceID_HTML == aNameSpaceID) ||
-               (kNameSpaceID_None == aNameSpaceID) ||
-               (kNameSpaceID_Unknown == aNameSpaceID),
-               "html content only holds HTML attributes");
 
   if ((kNameSpaceID_HTML != aNameSpaceID) &&
       (kNameSpaceID_None != aNameSpaceID) &&
