@@ -515,3 +515,4 @@ extern "C" NS_COM nsresult NS_NewByteInputStream(
     *aStreamResult = (nsISupports*)(void*)stream;
     return NS_OK;
 }
+
