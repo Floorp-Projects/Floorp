@@ -32,7 +32,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- # $Id: nssinit.c,v 1.55 2002/08/30 22:56:59 jpierre%netscape.com Exp $
+ # $Id: nssinit.c,v 1.56 2002/10/01 00:46:20 relyea%netscape.com Exp $
  */
 
 #include <ctype.h>
@@ -474,6 +474,7 @@ loser:
 	    }
 	}
 #endif
+	pk11sdr_Init();
 	nss_IsInitted = PR_TRUE;
     }
     return rv;
@@ -544,6 +545,7 @@ NSS_Shutdown(void)
     SECOID_Shutdown();
     STAN_Shutdown();
     rv = SECMOD_Shutdown();
+    pk11sdr_Shutdown();
     nss_IsInitted = PR_FALSE;
     return rv;
 }
