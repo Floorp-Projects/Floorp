@@ -234,7 +234,7 @@ public:
                                        const nsHTMLValue& aValue,
                                        nsString& aResult);
 
-  static PRBool SetStyleHintForCommonAttributes(const nsIContent* aNode,
+  static PRBool GetStyleHintForCommonAttributes(const nsIContent* aNode,
                                                 const nsIAtom* aAttribute,
                                                 PRInt32* aHint);
 
