@@ -606,7 +606,7 @@ nsXMLDocument::StartDocumentLoad(const char* aCommand,
                                               aDocListener, aReset, aSink);
   if (NS_FAILED(rv)) return rv;
 
-  nsAutoString charset(NS_LITERAL_STRING("UTF-8"));
+  nsCAutoString charset(NS_LITERAL_CSTRING("UTF-8"));
   PRInt32 charsetSource = kCharsetFromDocTypeDefault;
 
   nsCOMPtr<nsIURI> aUrl;
@@ -621,9 +621,8 @@ nsXMLDocument::StartDocumentLoad(const char* aCommand,
 
       if(NS_SUCCEEDED(rv) && (nsnull != calias) ) {
         nsCAutoString preferred;
-        rv = calias->GetPreferred(charsetVal, preferred);
+        rv = calias->GetPreferred(charsetVal, charset);
         if(NS_SUCCEEDED(rv)){            
-          CopyASCIItoUCS2(preferred, charset);
           charsetSource = kCharsetFromChannel;
         }
       }

@@ -1113,13 +1113,13 @@ nsresult nsDocShell::FindTarget(const PRUnichar *aWindowTarget,
               muCV = do_QueryInterface(cv);            
               target_muCV = do_QueryInterface(target_cv);            
               if (muCV && target_muCV) {
-                nsXPIDLString defaultCharset;
-                nsXPIDLString prevDocCharset;
-                rv = muCV->GetDefaultCharacterSet(getter_Copies(defaultCharset));
+                nsCAutoString defaultCharset;
+                nsCAutoString prevDocCharset;
+                rv = muCV->GetDefaultCharacterSet(defaultCharset);
                 if(NS_SUCCEEDED(rv)) {
                   target_muCV->SetDefaultCharacterSet(defaultCharset);
                 }
-                rv = muCV->GetPrevDocCharacterSet(getter_Copies(prevDocCharset));
+                rv = muCV->GetPrevDocCharacterSet(prevDocCharset);
                 if(NS_SUCCEEDED(rv)) {
                   target_muCV->SetPrevDocCharacterSet(prevDocCharset);
                 }
@@ -1326,7 +1326,7 @@ nsDocShell::SetCurrentURI(nsIURI *aURI)
 }
 
 NS_IMETHODIMP
-nsDocShell::GetCharset(PRUnichar** aCharset)
+nsDocShell::GetCharset(char** aCharset)
 {
     NS_ENSURE_ARG_POINTER(aCharset);
     *aCharset = nsnull; 
@@ -1337,15 +1337,15 @@ nsDocShell::GetCharset(PRUnichar** aCharset)
     NS_ENSURE_TRUE(presShell, NS_ERROR_FAILURE);
     presShell->GetDocument(getter_AddRefs(doc));
     NS_ENSURE_TRUE(doc, NS_ERROR_FAILURE);
-    nsAutoString charset;
+    nsCAutoString charset;
     NS_ENSURE_SUCCESS(doc->GetDocumentCharacterSet(charset), NS_ERROR_FAILURE);
-    *aCharset = ToNewUnicode(charset);
+    *aCharset = ToNewCString(charset);
 
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsDocShell::SetCharset(const PRUnichar* aCharset)
+nsDocShell::SetCharset(const char* aCharset)
 {
     // set the default charset
     nsCOMPtr<nsIContentViewer> viewer;
@@ -1353,8 +1353,8 @@ nsDocShell::SetCharset(const PRUnichar* aCharset)
     if (viewer) {
       nsCOMPtr<nsIMarkupDocumentViewer> muDV(do_QueryInterface(viewer));
       if (muDV) {
-        NS_ENSURE_SUCCESS(muDV->SetDefaultCharacterSet(aCharset),
-                                                       NS_ERROR_FAILURE);
+        NS_ENSURE_SUCCESS(muDV->SetDefaultCharacterSet(nsDependentCString(aCharset)),
+                          NS_ERROR_FAILURE);
       }
     }
 
@@ -2081,7 +2081,7 @@ nsDocShell::AddChild(nsIDocShellTreeItem * aChild)
     res = docv->GetDocument(getter_AddRefs(doc));
     if (NS_FAILED(res) || (!doc))
         return NS_OK;
-    nsAutoString parentCS;
+    nsCAutoString parentCS;
     res = doc->GetDocumentCharacterSet(parentCS);
     if (NS_FAILED(res))
         return NS_OK;
@@ -4663,11 +4663,11 @@ nsDocShell::SetupNewViewer(nsIContentViewer * aNewViewer)
                       NS_ERROR_FAILURE);
     nsCOMPtr<nsIDocShell> parent(do_QueryInterface(parentAsItem));
 
-    nsXPIDLString defaultCharset;
-    nsXPIDLString forceCharset;
-    nsXPIDLString hintCharset;
+    nsCAutoString defaultCharset;
+    nsCAutoString forceCharset;
+    nsCAutoString hintCharset;
     PRInt32 hintCharsetSource;
-    nsXPIDLString prevDocCharset;
+    nsCAutoString prevDocCharset;
     float textZoom;
     // |newMUDV| also serves as a flag to set the data from the above vars
     nsCOMPtr<nsIMarkupDocumentViewer> newMUDV;
@@ -4693,14 +4693,13 @@ nsDocShell::SetupNewViewer(nsIContentViewer * aNewViewer)
             newMUDV = do_QueryInterface(aNewViewer,&rv);
             if (newMUDV) {
                 NS_ENSURE_SUCCESS(oldMUDV->
-                                  GetDefaultCharacterSet(getter_Copies
-                                                         (defaultCharset)),
+                                  GetDefaultCharacterSet(defaultCharset),
                                   NS_ERROR_FAILURE);
                 NS_ENSURE_SUCCESS(oldMUDV->
-                                  GetForceCharacterSet(getter_Copies(forceCharset)),
+                                  GetForceCharacterSet(forceCharset),
                                   NS_ERROR_FAILURE);
                 NS_ENSURE_SUCCESS(oldMUDV->
-                                  GetHintCharacterSet(getter_Copies(hintCharset)),
+                                  GetHintCharacterSet(hintCharset),
                                   NS_ERROR_FAILURE);
                 NS_ENSURE_SUCCESS(oldMUDV->
                                   GetHintCharacterSetSource(&hintCharsetSource),
@@ -4709,7 +4708,7 @@ nsDocShell::SetupNewViewer(nsIContentViewer * aNewViewer)
                                   GetTextZoom(&textZoom),
                                   NS_ERROR_FAILURE);
                 NS_ENSURE_SUCCESS(oldMUDV->
-                                  GetPrevDocCharacterSet(getter_Copies(prevDocCharset)),
+                                  GetPrevDocCharacterSet(prevDocCharset),
                                   NS_ERROR_FAILURE);
             }
         }
@@ -5829,7 +5828,7 @@ nsDocShell::ScrollIfAnchor(nsIURI * aURI, PRBool * aWasAnchor,
             nsCOMPtr<nsIDocument> doc;
             rv = docv->GetDocument(getter_AddRefs(doc));
             NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
-            nsAutoString aCharset;
+            nsCAutoString aCharset;
             rv = doc->GetDocumentCharacterSet(aCharset);
             NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
 
@@ -5840,9 +5839,8 @@ nsDocShell::ScrollIfAnchor(nsIURI * aURI, PRBool * aWasAnchor,
 
             // Unescape and convert to unicode
             nsXPIDLString uStr;
-            NS_LossyConvertUCS2toASCII charset(aCharset);
 
-            rv = textToSubURI->UnEscapeAndConvert(charset.get(),
+            rv = textToSubURI->UnEscapeAndConvert(aCharset.get(),
                                                   PromiseFlatCString(sNewRef).get(),
                                                   getter_Copies(uStr));
             NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);

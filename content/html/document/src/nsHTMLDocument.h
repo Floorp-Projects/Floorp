@@ -295,30 +295,30 @@ protected:
 
   static PRBool TryHintCharset(nsIMarkupDocumentViewer* aMarkupDV,
                                PRInt32& aCharsetSource,
-                               nsAString& aCharset);
+                               nsACString& aCharset);
   static PRBool TryUserForcedCharset(nsIMarkupDocumentViewer* aMarkupDV,
                                      nsIDocumentCharsetInfo*  aDocInfo,
                                      PRInt32& aCharsetSource,
-                                     nsAString& aCharset);
+                                     nsACString& aCharset);
   static PRBool TryCacheCharset(nsICacheEntryDescriptor* aCacheDescriptor,
                                 PRInt32& aCharsetSource,
-                                nsAString& aCharset);
+                                nsACString& aCharset);
   static PRBool TryBookmarkCharset(nsIDocShell* aDocShell,
                                    nsIChannel* aChannel,
                                    PRInt32& aCharsetSource,
-                                   nsAString& aCharset);
+                                   nsACString& aCharset);
   static PRBool TryParentCharset(nsIDocumentCharsetInfo*  aDocInfo,
-                                 PRInt32& charsetSource, nsAString& aCharset);
+                                 PRInt32& charsetSource, nsACString& aCharset);
   static PRBool UseWeakDocTypeDefault(PRInt32& aCharsetSource,
-                                      nsAString& aCharset);
+                                      nsACString& aCharset);
   static PRBool TryChannelCharset(nsIChannel *aChannel,
                                   PRInt32& aCharsetSource,
-                                  nsAString& aCharset);
+                                  nsACString& aCharset);
   static PRBool TryDefaultCharset(nsIMarkupDocumentViewer* aMarkupDV,
                                   PRInt32& aCharsetSource,
-                                  nsAString& aCharset);
+                                  nsACString& aCharset);
 
-  void StartAutodetection(nsIDocShell *aDocShell, nsAString& aCharset,
+  void StartAutodetection(nsIDocShell *aDocShell, nsACString& aCharset,
                           const char* aCommand);
 
   PRUint32 mIsWriting : 1;

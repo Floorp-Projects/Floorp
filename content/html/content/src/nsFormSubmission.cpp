@@ -1276,10 +1276,7 @@ nsFormSubmission::GetSubmitCharset(nsIHTMLContent* aForm,
   nsCOMPtr<nsIDocument> doc;
   aForm->GetDocument(getter_AddRefs(doc));
   if (doc) {
-    nsAutoString docCharset;
-    rv = doc->GetDocumentCharacterSet(docCharset);
-    if (NS_SUCCEEDED(rv))
-      CopyUCS2toASCII(docCharset, oCharset);
+    rv = doc->GetDocumentCharacterSet(oCharset);
   }
 
   if (aCtrlsModAtSubmit==IBMBIDI_CONTROLSTEXTMODE_VISUAL

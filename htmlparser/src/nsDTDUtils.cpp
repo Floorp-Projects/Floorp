@@ -1574,9 +1574,10 @@ nsObserverEntry::Notify(nsIParserNode* aNode,
   if (theTag <= NS_HTML_TAG_MAX) {
     nsVoidArray*  theObservers = mObservers[theTag];
     if (theObservers) {
-      nsAutoString      theCharsetValue;
       PRInt32   theCharsetSource;
-      aParser->GetDocumentCharset(theCharsetValue,theCharsetSource);
+      nsCAutoString      charset;
+      aParser->GetDocumentCharset(charset,theCharsetSource);
+      NS_ConvertASCIItoUCS2 theCharsetValue(charset);
 
       PRInt32 theAttrCount = aNode->GetAttributeCount(); 
       PRInt32 theObserversCount = theObservers->Count(); 

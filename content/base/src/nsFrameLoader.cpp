@@ -164,13 +164,13 @@ nsFrameLoader::LoadFrame()
   nsCOMPtr<nsIURI> base_uri;
   doc->GetBaseURL(getter_AddRefs(base_uri));
 
-  nsAutoString doc_charset;
+  nsCAutoString doc_charset;
   doc->GetDocumentCharacterSet(doc_charset);
 
   nsCOMPtr<nsIURI> uri;
   rv = NS_NewURI(getter_AddRefs(uri), src,
                  doc_charset.IsEmpty() ? nsnull :
-                 NS_ConvertUCS2toUTF8(doc_charset).get(), base_uri);
+                 doc_charset.get(), base_uri);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Check for security

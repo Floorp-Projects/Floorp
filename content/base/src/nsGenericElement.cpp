@@ -2972,11 +2972,11 @@ nsGenericElement::TriggerLink(nsIPresContext* aPresContext,
 
   // Resolve url to an absolute url
   nsCOMPtr<nsIURI> targetURI;
-  nsAutoString docCharset;
+  nsCAutoString docCharset;
   if (mDocument &&
       NS_SUCCEEDED(mDocument->GetDocumentCharacterSet(docCharset))) {
     rv = NS_NewURI(getter_AddRefs(targetURI), aURLSpec,
-                   NS_LossyConvertUCS2toASCII(docCharset).get(), aBaseURL);
+                   docCharset.get(), aBaseURL);
   } else {
     rv = NS_NewURI(getter_AddRefs(targetURI), aURLSpec, nsnull, aBaseURL);
   }

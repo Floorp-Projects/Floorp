@@ -95,7 +95,7 @@ class nsScanner {
        *  @param   aMode represents the parser mode (nav, other)
        *  @return  
        */
-      nsScanner(const nsAString& anHTMLString, const nsString& aCharset, PRInt32 aSource);
+      nsScanner(const nsAString& anHTMLString, const nsACString& aCharset, PRInt32 aSource);
 
       /**
        *  Use this constructor if you want i/o to be based on 
@@ -107,7 +107,7 @@ class nsScanner {
        *  @param   aMode represents the parser mode (nav, other)
        *  @return  
        */
-      nsScanner(nsString& aFilename,PRBool aCreateStream, const nsString& aCharset, PRInt32 aSource);
+      nsScanner(nsString& aFilename,PRBool aCreateStream, const nsACString& aCharset, PRInt32 aSource);
 
       /**
        *  Use this constructor if you want i/o to be stream based.
@@ -118,7 +118,7 @@ class nsScanner {
        *  @param   aMode represents the parser mode (nav, other)
        *  @return  
        */
-      nsScanner(const nsAString& aFilename, nsIInputStream* aStream, const nsString& aCharset, PRInt32 aSource);
+      nsScanner(const nsAString& aFilename, nsIInputStream* aStream, const nsACString& aCharset, PRInt32 aSource);
 
 
       ~nsScanner();
@@ -346,7 +346,7 @@ class nsScanner {
        *  @param   aCharsetSource- where the charset info came from
        *  @return  
        */
-      nsresult SetDocumentCharset(const nsAString& aCharset, PRInt32 aSource);
+      nsresult SetDocumentCharset(const nsACString& aCharset, PRInt32 aSource);
 
       void BindSubstring(nsSlidingSubstring& aSubstring, const nsReadingIterator<PRUnichar>& aStart, const nsReadingIterator<PRUnichar>& aEnd);
       void CurrentPosition(nsReadingIterator<PRUnichar>& aPosition);

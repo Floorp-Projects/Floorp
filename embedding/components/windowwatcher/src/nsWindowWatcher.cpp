@@ -702,7 +702,7 @@ nsWindowWatcher::OpenWindowJS(nsIDOMWindow *aParent,
         newDocShell->GetContentViewer(getter_AddRefs(newContentViewer));
         nsCOMPtr<nsIMarkupDocumentViewer> newMarkupDocViewer(do_QueryInterface(newContentViewer));
         if (doc && newMarkupDocViewer) {
-          nsXPIDLString charset;
+          nsCAutoString charset;
           rv = doc->GetDocumentCharacterSet(charset);
           if (NS_SUCCEEDED(rv))
             newMarkupDocViewer->SetDefaultCharacterSet(charset);

@@ -109,7 +109,7 @@ nsPresContext::PrefChangedCallback(const char* aPrefName, void* instance_data)
 
 #ifdef IBMBIDI
 PRBool
-IsVisualCharset(const nsAutoString& aCharset)
+IsVisualCharset(const nsCAutoString& aCharset)
 {
   if (aCharset.EqualsIgnoreCase("ibm864")             // Arabic//ahmed
       || aCharset.EqualsIgnoreCase("ibm862")          // Hebrew
@@ -683,7 +683,7 @@ nsPresContext::SetShell(nsIPresShell* aShell)
         }
 
         if (mLangService) {
-          nsAutoString charset;
+          nsCAutoString charset;
           doc->AddCharSetObserver(this);
           doc->GetDocumentCharacterSet(charset);
           UpdateCharSet(charset.get());
@@ -704,10 +704,10 @@ nsPresContext::GetShell(nsIPresShell** aResult)
 }
 
 void
-nsPresContext::UpdateCharSet(const PRUnichar* aCharSet)
+nsPresContext::UpdateCharSet(const char* aCharSet)
 {
   if (mLangService) {
-    mLangService->LookupCharSet(NS_LossyConvertUCS2toASCII(aCharSet).get(),
+    mLangService->LookupCharSet(aCharSet,
                                 getter_AddRefs(mLanguage));
     GetFontPreferences();
     if (mLanguage) {
@@ -742,7 +742,7 @@ nsPresContext::Observe(nsISupports* aSubject,
                        const PRUnichar* aData)
 {
   if (!nsCRT::strcmp(aTopic, "charset")) {
-    UpdateCharSet(aData);
+    UpdateCharSet(NS_LossyConvertUCS2toASCII(aData).get());
     if (mDeviceContext) {
       mDeviceContext->FlushFontCache();
       ClearStyleDataAndReflow();
@@ -1641,7 +1641,7 @@ nsPresContext::GetIsBidiSystem(PRBool& aResult) const
 }
 
 NS_IMETHODIMP
-nsPresContext::GetBidiCharset(nsAString &aCharSet) const
+nsPresContext::GetBidiCharset(nsACString &aCharSet) const
 {
   aCharSet = mCharset;
   return NS_OK;

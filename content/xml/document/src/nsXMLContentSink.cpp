@@ -361,12 +361,11 @@ nsXMLContentSink::ScrollToRef(PRBool aReallyScroll)
         // document's charset.
 
         if (NS_FAILED(rv)) {
-          nsAutoString docCharset;
+          nsCAutoString docCharset;
           rv = mDocument->GetDocumentCharacterSet(docCharset);
 
           if (NS_SUCCEEDED(rv)) {
-            rv = CharsetConvRef(NS_LossyConvertUCS2toASCII(docCharset),
-                                unescapedRef, ref);
+            rv = CharsetConvRef(docCharset, unescapedRef, ref);
 
             if (NS_SUCCEEDED(rv) && !ref.IsEmpty())
               rv = shell->GoToAnchor(ref, aReallyScroll);
@@ -1235,7 +1234,7 @@ nsXMLContentSink::ProcessMETATag(nsIContent* aContent)
 }
 
 NS_IMETHODIMP 
-nsXMLContentSink::SetDocumentCharset(nsAString& aCharset)
+nsXMLContentSink::SetDocumentCharset(nsACString& aCharset)
 {
   if (mDocument) {
     return mDocument->SetDocumentCharacterSet(aCharset);

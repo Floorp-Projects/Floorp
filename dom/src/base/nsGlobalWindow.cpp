@@ -3469,14 +3469,13 @@ GlobalWindowImpl::ConvertCharset(const nsAString& aStr,
 {
   nsresult result = NS_OK;
   nsCOMPtr<nsIUnicodeEncoder> encoder;
-  nsAutoString charset;
 
   nsCOMPtr<nsICharsetConverterManager>
     ccm(do_GetService(kCharsetConverterManagerCID));
   NS_ENSURE_TRUE(ccm, NS_ERROR_FAILURE);
 
   // Get the document character set
-  charset.Assign(NS_LITERAL_STRING("UTF-8"));        // default to utf-8
+  nsCAutoString charset(NS_LITERAL_CSTRING("UTF-8")); // default to utf-8
   if (mDocument) {
     nsCOMPtr<nsIDocument> doc(do_QueryInterface(mDocument));
 
@@ -3487,7 +3486,7 @@ GlobalWindowImpl::ConvertCharset(const nsAString& aStr,
     return result;
 
   // Get an encoder for the character set
-  result = ccm->GetUnicodeEncoderRaw(NS_LossyConvertUCS2toASCII(charset).get(),
+  result = ccm->GetUnicodeEncoderRaw(charset.get(),
                                      getter_AddRefs(encoder));
   if (NS_FAILED(result))
     return result;
@@ -3580,7 +3579,7 @@ GlobalWindowImpl::Unescape(const nsAString& aStr,
   NS_ENSURE_TRUE(ccm, NS_ERROR_NOT_AVAILABLE);
 
   // Get the document character set; default to utf-8 if all else fails
-  nsAutoString charset(NS_LITERAL_STRING("UTF-8"));
+  nsCAutoString charset(NS_LITERAL_CSTRING("UTF-8"));
 
   if (mDocument) {
     nsCOMPtr<nsIDocument> doc(do_QueryInterface(mDocument));
@@ -3593,7 +3592,7 @@ GlobalWindowImpl::Unescape(const nsAString& aStr,
 
   // Get a decoder for the character set
   nsCOMPtr<nsIUnicodeDecoder> decoder;
-  rv = ccm->GetUnicodeDecoderRaw(NS_LossyConvertUCS2toASCII(charset).get(),
+  rv = ccm->GetUnicodeDecoderRaw(charset.get(),
                                  getter_AddRefs(decoder));
   NS_ENSURE_SUCCESS(rv, rv);
 

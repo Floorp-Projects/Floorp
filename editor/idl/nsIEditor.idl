@@ -151,7 +151,7 @@ interface nsIEditor  : nsISupports
   readonly attribute boolean documentModified;
 
   /** Sets the current 'Save' document character set */
-  attribute AString documentCharacterSet;
+  attribute ACString documentCharacterSet;
 
   /** to be used ONLY when we need to override the doc's modification
     * state (such as when it's saved).

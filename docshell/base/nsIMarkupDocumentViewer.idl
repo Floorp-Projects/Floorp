@@ -53,17 +53,17 @@ interface nsIMarkupDocumentViewer : nsISupports
 	/*
 	XXX Comment here!
 	*/
-	attribute wstring defaultCharacterSet;
+	attribute ACString defaultCharacterSet;
 
 	/*
 	XXX Comment here!
 	*/
-	attribute wstring forceCharacterSet;
+	attribute ACString forceCharacterSet;
 
 	/*
 	XXX Comment here!
 	*/
-	attribute wstring hintCharacterSet;
+	attribute ACString hintCharacterSet;
 
 	/*
 	XXX Comment here!
@@ -73,7 +73,7 @@ interface nsIMarkupDocumentViewer : nsISupports
 	/*
 	character set from prev document 
 	*/
-	attribute wstring prevDocCharacterSet;
+	attribute ACString prevDocCharacterSet;
 
 	//void GetCharacterSetHint(in wstring hintCharset, in PRInt32 charsetSource);
 

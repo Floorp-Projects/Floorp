@@ -121,7 +121,7 @@ public:
    * Set the document character set. This should be passed on to the
    * document itself.
    */
-  NS_IMETHOD SetDocumentCharset(nsAString& aCharset)=0;
+  NS_IMETHOD SetDocumentCharset(nsACString& aCharset)=0;
 };
 
 #endif /* nsIContentSink_h___ */

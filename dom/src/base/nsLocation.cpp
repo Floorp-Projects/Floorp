@@ -97,12 +97,7 @@ static nsresult GetDocumentCharacterSetForURI(const nsAString& aHref, nsACString
   nsCOMPtr<nsIDocument> doc(do_QueryInterface(domDoc));
   NS_ENSURE_TRUE(doc, NS_ERROR_FAILURE);
 
-  nsAutoString charset;
-  rv = doc->GetDocumentCharacterSet(charset);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  CopyUCS2toASCII(charset, aCharset);
-
+  rv = doc->GetDocumentCharacterSet(aCharset);
   return rv;
 }
 

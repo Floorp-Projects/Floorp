@@ -366,7 +366,7 @@ nsXULDocument::nsXULDocument(void)
     // bother initializing members to 0.
 
     // Override the default in nsDocument
-    mCharacterSet.Assign(NS_LITERAL_STRING("UTF-8"));
+    mCharacterSet.Assign(NS_LITERAL_CSTRING("UTF-8"));
 }
 
 nsXULDocument::~nsXULDocument()
@@ -2459,7 +2459,7 @@ nsXULDocument::PrepareToLoadPrototype(nsIURI* aURI, const char* aCommand,
     parser->SetCommand(nsCRT::strcmp(aCommand, "view-source") ? eViewNormal :
                        eViewSource);
 
-    parser->SetDocumentCharset(NS_LITERAL_STRING("UTF-8"),
+    parser->SetDocumentCharset(NS_LITERAL_CSTRING("UTF-8"),
                                kCharsetFromDocTypeDefault);
     parser->SetContentSink(sink); // grabs a reference to the parser
 

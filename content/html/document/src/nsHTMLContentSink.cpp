@@ -246,7 +246,7 @@ public:
   NS_IMETHOD WillResume(void);
   NS_IMETHOD SetParser(nsIParser* aParser);
   NS_IMETHOD FlushPendingNotifications();
-  NS_IMETHOD SetDocumentCharset(nsAString& aCharset);
+  NS_IMETHOD SetDocumentCharset(nsACString& aCharset);
 
   // nsIHTMLContentSink
   NS_IMETHOD OpenContainer(const nsIParserNode& aNode);
@@ -4361,12 +4361,11 @@ HTMLContentSink::ScrollToRef(PRBool aReallyScroll)
       // document's charset.
 
       if (NS_FAILED(rv)) {
-        nsAutoString docCharset;
+        nsCAutoString docCharset;
         rv = mDocument->GetDocumentCharacterSet(docCharset);
 
         if (NS_SUCCEEDED(rv)) {
-          NS_LossyConvertUCS2toASCII charset(docCharset);
-          rv = CharsetConvRef(charset, unescapedRef, ref);
+          rv = CharsetConvRef(docCharset, unescapedRef, ref);
 
           if (NS_SUCCEEDED(rv) && !ref.IsEmpty())
             rv = shell->GoToAnchor(ref, aReallyScroll);
@@ -4928,12 +4927,11 @@ HTMLContentSink::PrefetchHref(const nsAString &aHref, PRBool aExplicit)
           do_GetService(NS_PREFETCHSERVICE_CONTRACTID));
   if (prefetchService) {
     // construct URI using document charset
-    nsAutoString charset;
+    nsCAutoString charset;
     mDocument->GetDocumentCharacterSet(charset);
     nsCOMPtr<nsIURI> uri;
     NS_NewURI(getter_AddRefs(uri), aHref,
-            charset.IsEmpty() ? nsnull
-                              : NS_LossyConvertUCS2toASCII(charset).get(),
+              charset.IsEmpty() ? nsnull : charset.get(),
             mDocumentBaseURL);
     if (uri)
       prefetchService->PrefetchURI(uri, mDocumentURI, aExplicit);
@@ -5815,7 +5813,7 @@ HTMLContentSink::FlushPendingNotifications()
 }
 
 NS_IMETHODIMP
-HTMLContentSink::SetDocumentCharset(nsAString& aCharset)
+HTMLContentSink::SetDocumentCharset(nsACString& aCharset)
 {
   if (mDocShell) {
     // the following logic to get muCV is copied from
@@ -5851,7 +5849,7 @@ HTMLContentSink::SetDocumentCharset(nsAString& aCharset)
     }
 
     if (muCV) {
-      muCV->SetPrevDocCharacterSet(PromiseFlatString(aCharset).get());
+      muCV->SetPrevDocCharacterSet(aCharset);
     }
   }
 

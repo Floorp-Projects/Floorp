@@ -979,11 +979,11 @@ nsObjectFrame::MakeAbsoluteURL(nsIURI* *aFullURI,
   aSrc.Trim(" \n\r\t\b", PR_TRUE, PR_TRUE, PR_FALSE);
 
   // get document charset
-  nsAutoString originCharset;
+  nsCAutoString originCharset;
   if (document && NS_FAILED(document->GetDocumentCharacterSet(originCharset)))
     originCharset.Truncate();
  
-  return NS_NewURI(aFullURI, aSrc, NS_LossyConvertUCS2toASCII(originCharset).get(),
+  return NS_NewURI(aFullURI, aSrc, originCharset.get(),
                    aBaseURI, nsHTMLUtils::IOService);
 }
 
@@ -2736,7 +2736,7 @@ NS_IMETHODIMP nsPluginInstanceOwner::GetDocumentEncoding(const char* *result)
   NS_ASSERTION(NS_SUCCEEDED(rv), "failed to get document");
   if (NS_FAILED(rv)) return rv;
 
-  nsString charset;
+  nsCAutoString charset;
   rv = doc->GetDocumentCharacterSet(charset);
   NS_ASSERTION(NS_SUCCEEDED(rv), "can't get charset");
   if (NS_FAILED(rv)) return rv;
@@ -2744,11 +2744,11 @@ NS_IMETHODIMP nsPluginInstanceOwner::GetDocumentEncoding(const char* *result)
   if (charset.IsEmpty()) return NS_OK;
 
   // common charsets and those not requiring conversion first
-  if (charset == NS_LITERAL_STRING("us-acsii")) {
+  if (charset == NS_LITERAL_CSTRING("us-acsii")) {
     *result = PL_strdup("US_ASCII");
-  } else if (charset == NS_LITERAL_STRING("ISO-8859-1") ||
-      !nsCRT::strncmp(charset.get(), NS_LITERAL_STRING("UTF").get(), 3)) {
-    *result = ToNewUTF8String(charset);
+  } else if (charset == NS_LITERAL_CSTRING("ISO-8859-1") ||
+      !nsCRT::strncmp(charset.get(), "UTF", 3)) {
+    *result = ToNewCString(charset);
   } else {
     if (!gCharsetMap) {
       gCharsetMap = new nsHashtable(sizeof(charsets)/sizeof(moz2javaCharset));
@@ -2759,10 +2759,10 @@ NS_IMETHODIMP nsPluginInstanceOwner::GetDocumentEncoding(const char* *result)
         gCharsetMap->Put(&key, (void *)(charsets[i].javaName));
       }
     }
-    nsCStringKey mozKey(NS_LossyConvertUCS2toASCII(charset).get());
+    nsCStringKey mozKey(charset);
     // if found mapping, return it; otherwise return original charset
     char *mapping = (char *)gCharsetMap->Get(&mozKey);
-    *result = mapping ? PL_strdup(mapping) : ToNewUTF8String(charset);
+    *result = mapping ? PL_strdup(mapping) : ToNewCString(charset);
   }
 
   return (*result) ? NS_OK : NS_ERROR_OUT_OF_MEMORY;

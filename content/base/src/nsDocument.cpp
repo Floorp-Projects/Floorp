@@ -482,7 +482,7 @@ NS_IMPL_RELEASE_USING_AGGREGATOR(nsXPathDocumentTearoff, mDocument)
   // bother initializing members to 0.
 
 nsDocument::nsDocument()
-  : mCharacterSet(NS_LITERAL_STRING("ISO-8859-1")),
+  : mCharacterSet(NS_LITERAL_CSTRING("ISO-8859-1")),
     mNextContentID(NS_CONTENT_ID_COUNTER_BASE)
 {
 
@@ -954,7 +954,7 @@ nsDocument::SetBaseTarget(const nsAString &aBaseTarget)
 }
 
 NS_IMETHODIMP
-nsDocument::GetDocumentCharacterSet(nsAString& aCharSetID)
+nsDocument::GetDocumentCharacterSet(nsACString& aCharSetID)
 {
   aCharSetID = mCharacterSet;
 
@@ -962,7 +962,7 @@ nsDocument::GetDocumentCharacterSet(nsAString& aCharSetID)
 }
 
 NS_IMETHODIMP
-nsDocument::SetDocumentCharacterSet(const nsAString& aCharSetID)
+nsDocument::SetDocumentCharacterSet(const nsACString& aCharSetID)
 {
   if (!mCharacterSet.Equals(aCharSetID)) {
     mCharacterSet = aCharSetID;
@@ -974,7 +974,7 @@ nsDocument::SetDocumentCharacterSet(const nsAString& aCharSetID)
         NS_STATIC_CAST(nsIObserver *, mCharSetObservers.ElementAt(i));
 
       observer->Observe(NS_STATIC_CAST(nsIDocument *, this), "charset",
-                        PromiseFlatString(aCharSetID).get());
+                        NS_ConvertASCIItoUCS2(aCharSetID).get());
     }
   }
 
@@ -2569,7 +2569,11 @@ nsDocument::GetStyleSheets(nsIDOMStyleSheetList** aStyleSheets)
 NS_IMETHODIMP
 nsDocument::GetCharacterSet(nsAString& aCharacterSet)
 {
-  return GetDocumentCharacterSet(aCharacterSet);
+  nsCAutoString charset;
+  nsresult rv = GetDocumentCharacterSet(charset);
+  if (NS_SUCCEEDED(rv))
+    CopyASCIItoUCS2(charset, aCharacterSet);
+  return rv;
 }
 
 NS_IMETHODIMP
@@ -3972,7 +3976,7 @@ nsDocument::GetXMLDeclaration(nsAString& aVersion, nsAString& aEncoding,
   if (mXMLDeclarationBits & XML_DECLARATION_BITS_ENCODING_EXISTS) {
     // This is what we have stored, not necessarily what was written
     // in the original
-    GetDocumentCharacterSet(aEncoding);
+    GetCharacterSet(aEncoding);
   }
 
   if (mXMLDeclarationBits & XML_DECLARATION_BITS_STANDALONE_EXISTS) {

@@ -259,7 +259,7 @@ nsMediaDocument::UpdateTitleAndCharset(const nsACString& aTypeStr,
     if (!originCharset.IsEmpty()) {
       // set doc. charset to that of the referring document if known so that
       // filepicker comes up with the correct non-ascii filename.
-      SetDocumentCharacterSet(NS_ConvertASCIItoUCS2(originCharset));
+      SetDocumentCharacterSet(originCharset);
       if (!fileName.IsEmpty()) {
         nsresult rv;
         nsCOMPtr<nsITextToSubURI> textToSubURI = 

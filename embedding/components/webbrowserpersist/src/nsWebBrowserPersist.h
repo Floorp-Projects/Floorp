@@ -131,7 +131,7 @@ private:
     nsresult SaveDocumentWithFixup(
         nsIDocument *pDocument, nsIDocumentEncoderNodeFixup *pFixup,
         nsIURI *aFile, PRBool aReplaceExisting, const nsACString &aFormatType,
-        const nsString &aSaveCharset, PRUint32  aFlags);
+        const nsCString &aSaveCharset, PRUint32  aFlags);
     nsresult SaveSubframeContent(
         nsIDOMDocument *aFrameContent, URIData *aData);
     nsresult SetDocumentBase(nsIDOMDocument *aDocument, nsIURI *aBaseURI);

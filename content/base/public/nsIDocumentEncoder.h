@@ -213,7 +213,7 @@ public:
    *
    *  Possible result codes: NS_ERROR_NO_CHARSET_CONVERTER
    */
-  NS_IMETHOD SetCharset(const nsAString& aCharset) = 0;
+  NS_IMETHOD SetCharset(const nsACString& aCharset) = 0;
 
   /**
    *  Set a wrap column.  This may have no effect in some types of encoders.

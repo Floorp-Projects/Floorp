@@ -475,15 +475,15 @@ nsHTMLDocument::CreateShell(nsIPresContext* aContext,
 
 PRBool
 nsHTMLDocument::TryHintCharset(nsIMarkupDocumentViewer* aMarkupDV,
-                               PRInt32& aCharsetSource, nsAString& aCharset)
+                               PRInt32& aCharsetSource, nsACString& aCharset)
 {
   if (aMarkupDV) {
     PRInt32 requestCharsetSource;
     nsresult rv = aMarkupDV->GetHintCharacterSetSource(&requestCharsetSource);
 
     if(NS_SUCCEEDED(rv) && kCharsetUninitialized != requestCharsetSource) {
-      PRUnichar* requestCharset;
-      rv = aMarkupDV->GetHintCharacterSet(&requestCharset);
+      nsCAutoString requestCharset;
+      rv = aMarkupDV->GetHintCharacterSet(requestCharset);
       aMarkupDV->SetHintCharacterSetSource((PRInt32)(kCharsetUninitialized));
 
       if(requestCharsetSource <= aCharsetSource)
@@ -492,8 +492,6 @@ nsHTMLDocument::TryHintCharset(nsIMarkupDocumentViewer* aMarkupDV,
       if(NS_SUCCEEDED(rv)) {
         aCharsetSource = requestCharsetSource;
         aCharset = requestCharset;
-
-        Recycle(requestCharset);
 
         return PR_TRUE;
       }
@@ -507,28 +505,27 @@ PRBool
 nsHTMLDocument::TryUserForcedCharset(nsIMarkupDocumentViewer* aMarkupDV,
                                      nsIDocumentCharsetInfo*  aDocInfo,
                                      PRInt32& aCharsetSource,
-                                     nsAString& aCharset)
+                                     nsACString& aCharset)
 {
   nsresult rv = NS_OK;
 
   if(kCharsetFromUserForced <= aCharsetSource)
     return PR_TRUE;
 
-  PRUnichar* forceCharsetFromDocShell = nsnull;
+  nsCAutoString forceCharsetFromDocShell;
   if (aMarkupDV) {
-    rv = aMarkupDV->GetForceCharacterSet(&forceCharsetFromDocShell);
+    rv = aMarkupDV->GetForceCharacterSet(forceCharsetFromDocShell);
   }
 
-  if(NS_SUCCEEDED(rv) && forceCharsetFromDocShell) {
+  if(NS_SUCCEEDED(rv) && !forceCharsetFromDocShell.IsEmpty()) {
     aCharset = forceCharsetFromDocShell;
-    Recycle(forceCharsetFromDocShell);
     //TODO: we should define appropriate constant for force charset
     aCharsetSource = kCharsetFromUserForced;
   } else if (aDocInfo) {
     nsCOMPtr<nsIAtom> csAtom;
     aDocInfo->GetForcedCharset(getter_AddRefs(csAtom));
     if (csAtom) {
-      csAtom->ToString(aCharset);
+      csAtom->ToUTF8String(aCharset);
       aCharsetSource = kCharsetFromUserForced;
       aDocInfo->SetForcedCharset(nsnull);
       return PR_TRUE;
@@ -541,7 +538,7 @@ nsHTMLDocument::TryUserForcedCharset(nsIMarkupDocumentViewer* aMarkupDV,
 PRBool
 nsHTMLDocument::TryCacheCharset(nsICacheEntryDescriptor* aCacheDescriptor,
                                 PRInt32& aCharsetSource,
-                                nsAString& aCharset)
+                                nsACString& aCharset)
 {
   nsresult rv;
 
@@ -554,7 +551,7 @@ nsHTMLDocument::TryCacheCharset(nsICacheEntryDescriptor* aCacheDescriptor,
                                            getter_Copies(cachedCharset));
   if (NS_SUCCEEDED(rv) && !cachedCharset.IsEmpty())
   {
-    aCharset.Assign(NS_ConvertASCIItoUCS2(cachedCharset));
+    aCharset = cachedCharset;
     aCharsetSource = kCharsetFromCache;
 
     return PR_TRUE;
@@ -567,7 +564,7 @@ PRBool
 nsHTMLDocument::TryBookmarkCharset(nsIDocShell* aDocShell,
                                    nsIChannel* aChannel,
                                    PRInt32& aCharsetSource,
-                                   nsAString& aCharset)
+                                   nsACString& aCharset)
 {
   if (kCharsetFromBookmarks <= aCharsetSource) {
     return PR_TRUE;
@@ -599,7 +596,7 @@ nsHTMLDocument::TryBookmarkCharset(nsIDocShell* aDocShell,
                                            nsnull,
                                            charset);
     if (NS_SUCCEEDED(rv) && !charset.IsEmpty()) {
-      aCharset = NS_ConvertASCIItoUCS2(charset);
+      aCharset = charset;
       return PR_TRUE;
     }
   }
@@ -610,7 +607,7 @@ nsHTMLDocument::TryBookmarkCharset(nsIDocShell* aDocShell,
 PRBool
 nsHTMLDocument::TryParentCharset(nsIDocumentCharsetInfo*  aDocInfo,
                                  PRInt32& aCharsetSource,
-                                 nsAString& aCharset)
+                                 nsACString& aCharset)
 {
   if (aDocInfo) {
     PRInt32 source;
@@ -632,7 +629,7 @@ nsHTMLDocument::TryParentCharset(nsIDocumentCharsetInfo*  aDocInfo,
 
     aDocInfo->GetParentCharset(getter_AddRefs(csAtom));
     if (csAtom) {
-      csAtom->ToString(aCharset);
+      csAtom->ToUTF8String(aCharset);
       aCharsetSource = source;
       return PR_TRUE;
     }
@@ -642,19 +639,19 @@ nsHTMLDocument::TryParentCharset(nsIDocumentCharsetInfo*  aDocInfo,
 
 PRBool
 nsHTMLDocument::UseWeakDocTypeDefault(PRInt32& aCharsetSource,
-                                      nsAString& aCharset)
+                                      nsACString& aCharset)
 {
   if (kCharsetFromWeakDocTypeDefault <= aCharsetSource)
     return PR_TRUE;
   // fallback value in case docshell return error
-  aCharset.Assign(NS_LITERAL_STRING("ISO-8859-1"));
+  aCharset = NS_LITERAL_CSTRING("ISO-8859-1");
   nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID));
   if (prefs) {
     nsXPIDLString defCharset;
     nsresult rv = prefs->GetLocalizedUnicharPref("intl.charset.default",
                                                  getter_Copies(defCharset));
     if (NS_SUCCEEDED(rv) && !defCharset.IsEmpty()) {
-      aCharset.Assign(defCharset);
+      CopyUCS2toASCII(defCharset, aCharset);
       aCharsetSource = kCharsetFromWeakDocTypeDefault;
     }
   }
@@ -663,7 +660,8 @@ nsHTMLDocument::UseWeakDocTypeDefault(PRInt32& aCharsetSource,
 
 PRBool
 nsHTMLDocument::TryChannelCharset(nsIChannel *aChannel,
-                                  PRInt32& aCharsetSource, nsAString& aCharset)
+                                  PRInt32& aCharsetSource,
+                                  nsACString& aCharset)
 {
   if(kCharsetFromChannel <= aCharsetSource) {
     return PR_TRUE;
@@ -679,7 +677,7 @@ nsHTMLDocument::TryChannelCharset(nsIChannel *aChannel,
         rv = calias->GetPreferred(charsetVal,
                                   preferred);
         if(NS_SUCCEEDED(rv)) {
-          CopyASCIItoUCS2(preferred, aCharset);
+          aCharset = preferred;
           aCharsetSource = kCharsetFromChannel;
           return PR_TRUE;
         }
@@ -691,19 +689,19 @@ nsHTMLDocument::TryChannelCharset(nsIChannel *aChannel,
 
 PRBool
 nsHTMLDocument::TryDefaultCharset( nsIMarkupDocumentViewer* aMarkupDV,
-                                       PRInt32& aCharsetSource,
-                                       nsAString& aCharset)
+                                   PRInt32& aCharsetSource,
+                                   nsACString& aCharset)
 {
   if(kCharsetFromUserDefault <= aCharsetSource)
     return PR_TRUE;
 
-  PRUnichar* defaultCharsetFromDocShell = NULL;
+  nsCAutoString defaultCharsetFromDocShell;
   if (aMarkupDV) {
     nsresult rv =
-      aMarkupDV->GetDefaultCharacterSet(&defaultCharsetFromDocShell);
+      aMarkupDV->GetDefaultCharacterSet(defaultCharsetFromDocShell);
     if(NS_SUCCEEDED(rv)) {
       aCharset = defaultCharsetFromDocShell;
-      Recycle(defaultCharsetFromDocShell);
+
       aCharsetSource = kCharsetFromUserDefault;
       return PR_TRUE;
     }
@@ -712,7 +710,7 @@ nsHTMLDocument::TryDefaultCharset( nsIMarkupDocumentViewer* aMarkupDV,
 }
 
 void
-nsHTMLDocument::StartAutodetection(nsIDocShell *aDocShell, nsAString& aCharset,
+nsHTMLDocument::StartAutodetection(nsIDocShell *aDocShell, nsACString& aCharset,
                                    const char* aCommand)
 {
   nsCOMPtr <nsIParserFilter> cdetflt;
@@ -751,7 +749,7 @@ nsHTMLDocument::StartAutodetection(nsIDocShell *aDocShell, nsAString& aCharset,
         nsCOMPtr<nsIWebShellServices> wss = do_QueryInterface(aDocShell);
         if (wss) {
           rv_detect = adp->Init(wss, cdet, this, mParser,
-                                PromiseFlatString(aCharset).get(), aCommand);
+                                PromiseFlatCString(aCharset).get(), aCommand);
 
           if (mParser)
             mParser->SetParserFilter(cdetflt);
@@ -900,7 +898,7 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
   aURL->GetSpec(urlSpec);
 
   PRInt32 charsetSource = kCharsetUninitialized;
-  nsAutoString charset;
+  nsCAutoString charset;
 
   // The following charset resolving calls has implied knowledge about
   // charset source priority order. Each try will return true if the
@@ -943,8 +941,8 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
   }
 
   if (isPostPage && muCV && kCharsetFromHintPrevDoc > charsetSource) {
-    nsXPIDLString requestCharset;
-    muCV->GetPrevDocCharacterSet(getter_Copies(requestCharset));
+    nsCAutoString requestCharset;
+    muCV->GetPrevDocCharacterSet(requestCharset);
     if (!requestCharset.IsEmpty()) {
       charsetSource = kCharsetFromHintPrevDoc;
       charset = requestCharset;
@@ -959,7 +957,7 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
   // Check if 864 but in Implicit mode !
   if ((mTexttype == IBMBIDI_TEXTTYPE_LOGICAL) &&
       (charset.EqualsIgnoreCase("ibm864"))) {
-    charset.Assign(NS_LITERAL_STRING("IBM864i"));
+    charset = NS_LITERAL_CSTRING("IBM864i");
   }
 
   SetDocumentCharacterSet(charset);
@@ -967,11 +965,11 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
 
   // set doc charset to muCV for next document.
   if (muCV)
-    muCV->SetPrevDocCharacterSet(charset.get());
+    muCV->SetPrevDocCharacterSet(charset);
 
   if(cacheDescriptor) {
     rv = cacheDescriptor->SetMetaDataElement("charset",
-                                    NS_ConvertUCS2toUTF8(charset).get());
+                                             charset.get());
     NS_ASSERTION(NS_SUCCEEDED(rv),"cannot SetMetaDataElement");
   }
 

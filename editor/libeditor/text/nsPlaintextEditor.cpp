@@ -243,7 +243,7 @@ nsPlaintextEditor::EndEditorInit()
 }
 
 NS_IMETHODIMP 
-nsPlaintextEditor::SetDocumentCharacterSet(const nsAString & characterSet) 
+nsPlaintextEditor::SetDocumentCharacterSet(const nsACString & characterSet) 
 { 
   nsresult result; 
 
@@ -290,7 +290,7 @@ nsPlaintextEditor::SetDocumentCharacterSet(const nsAString & characterSet)
               // set attribute to <original prefix> charset=text/html
               result = nsEditor::SetAttribute(metaElement, content,
                                               Substring(originalStart, start) +
-                                              charsetEquals + characterSet); 
+                                              charsetEquals + NS_ConvertASCIItoUCS2(characterSet)); 
               if (NS_SUCCEEDED(result)) 
                 newMetaCharset = PR_FALSE; 
               break; 
@@ -321,7 +321,7 @@ nsPlaintextEditor::SetDocumentCharacterSet(const nsAString & characterSet)
                 if (NS_SUCCEEDED(result)) { 
                   // not undoable, undo should undo CreateNode 
                   result = metaElement->SetAttribute(NS_LITERAL_STRING("content"),
-                                                     NS_LITERAL_STRING("text/html;charset=") + characterSet); 
+                                                     NS_LITERAL_STRING("text/html;charset=") + NS_ConvertASCIItoUCS2(characterSet)); 
                 } 
               } 
             } 
@@ -1425,7 +1425,7 @@ NS_IMETHODIMP nsPlaintextEditor::CanCopy(PRBool *aCanCopy)
 NS_IMETHODIMP
 nsPlaintextEditor::GetAndInitDocEncoder(const nsAString& aFormatType,
                                         PRUint32 aFlags,
-                                        const nsAString& aCharset,
+                                        const nsACString& aCharset,
                                         nsIDocumentEncoder** encoder)
 {
   nsCOMPtr<nsIPresShell> presShell;
@@ -1446,7 +1446,7 @@ nsPlaintextEditor::GetAndInitDocEncoder(const nsAString& aFormatType,
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (!aCharset.IsEmpty()
-    && !(aCharset.Equals(NS_LITERAL_STRING("null"))))
+    && !(aCharset.Equals(NS_LITERAL_CSTRING("null"))))
     docEncoder->SetCharset(aCharset);
 
   PRInt32 wc;
@@ -1530,10 +1530,10 @@ nsPlaintextEditor::OutputToString(const nsAString& aFormatType,
     return rv;
   }
 
-  nsAutoString charsetStr;
+  nsCAutoString charsetStr;
   rv = GetDocumentCharacterSet(charsetStr);
   if(NS_FAILED(rv) || charsetStr.IsEmpty())
-    charsetStr = NS_LITERAL_STRING("ISO-8859-1");
+    charsetStr = NS_LITERAL_CSTRING("ISO-8859-1");
 
   nsCOMPtr<nsIDocumentEncoder> encoder;
   rv = GetAndInitDocEncoder(aFormatType, aFlags, charsetStr, getter_AddRefs(encoder));
@@ -1547,7 +1547,7 @@ nsPlaintextEditor::OutputToString(const nsAString& aFormatType,
 NS_IMETHODIMP
 nsPlaintextEditor::OutputToStream(nsIOutputStream* aOutputStream,
                              const nsAString& aFormatType,
-                             const nsAString& aCharset,
+                             const nsACString& aCharset,
                              PRUint32 aFlags)
 {
   nsresult rv;

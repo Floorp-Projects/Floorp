@@ -466,10 +466,10 @@ nsIsIndexFrame::OnSubmit(nsIPresContext* aPresContext)
     nsCOMPtr<nsIURI> actionURL;
     nsXPIDLCString scheme;
     PRBool isJSURL = PR_FALSE;
-    nsAutoString docCharset;
+    nsCAutoString docCharset;
     document->GetDocumentCharacterSet(docCharset);
     if (NS_SUCCEEDED(result = NS_NewURI(getter_AddRefs(actionURL), href,
-                                        NS_LossyConvertUCS2toASCII(docCharset).get(),
+                                        docCharset.get(),
                                         docURL))) {
       result = actionURL->SchemeIs("javascript", &isJSURL);
     }
@@ -486,7 +486,7 @@ nsIsIndexFrame::OnSubmit(nsIPresContext* aPresContext)
     }
     nsCOMPtr<nsIURI> uri;
     result = NS_NewURI(getter_AddRefs(uri), href,
-                       NS_LossyConvertUCS2toASCII(docCharset).get(), docURL);
+                       docCharset.get(), docURL);
     if (NS_FAILED(result)) return result;
 
     // Now pass on absolute url to the click handler
@@ -510,9 +510,7 @@ void nsIsIndexFrame::GetSubmitCharset(nsCString& oCharset)
   nsCOMPtr<nsIDocument> doc;
   mContent->GetDocument(getter_AddRefs(doc));
   if (doc) {
-    nsAutoString docCharset;
-    doc->GetDocumentCharacterSet(docCharset);
-    CopyUCS2toASCII(docCharset, oCharset);
+    doc->GetDocumentCharacterSet(oCharset);
   }
 }
 

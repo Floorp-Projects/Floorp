@@ -188,8 +188,8 @@ class nsIParser : public nsISupports {
      *  @param   aCharsetSource- the soure of the chares
      *  @return	 nada
      */
-    NS_IMETHOD_(void) SetDocumentCharset(const nsAString& aCharset, PRInt32 aSource)=0;
-    NS_IMETHOD_(void) GetDocumentCharset(nsAString& oCharset, PRInt32& oSource)=0;
+    NS_IMETHOD_(void) SetDocumentCharset(const nsACString& aCharset, PRInt32 aSource)=0;
+    NS_IMETHOD_(void) GetDocumentCharset(nsACString& oCharset, PRInt32& oSource)=0;
 
     NS_IMETHOD_(void) SetParserFilter(nsIParserFilter* aFilter) = 0;
 

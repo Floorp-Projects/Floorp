@@ -809,9 +809,7 @@ nsScriptLoader::OnStreamComplete(nsIStreamLoader* aLoader,
 
     if (characterSet.IsEmpty()) {
       // charset from document default
-      nsAutoString uCharset;
-      rv = mDocument->GetDocumentCharacterSet(uCharset);
-      CopyUCS2toASCII(uCharset, characterSet);
+      rv = mDocument->GetDocumentCharacterSet(characterSet);
     }
 
     NS_ASSERTION(NS_SUCCEEDED(rv), "Could not get document charset!");
