@@ -113,7 +113,7 @@ nsEventQueueServiceImpl::Init()
   if (!mEventQTable.Init()) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  
+
   // ensure that a main thread event queue exists!
   nsresult rv;
   nsCOMPtr<nsIThread> mainThread;
@@ -171,7 +171,9 @@ nsEventQueueServiceImpl::MakeNewQueue(PRThread* thread,
 
   if (NS_SUCCEEDED(rv)) {
     rv = queue->InitFromPRThread(thread, aNative);
-  }	
+    if (NS_FAILED(rv))
+      queue = nsnull;
+  }
   *aQueue = queue;
   NS_IF_ADDREF(*aQueue);
   return rv;
@@ -189,9 +191,10 @@ nsEventQueueServiceImpl::CreateEventQueue(PRThread *aThread, PRBool aNative)
   if (!mEventQTable.GetWeak(aThread)) {
     nsCOMPtr<nsIEventQueue> queue;
 
-    // we don't have one in the table
-    rv = MakeNewQueue(aThread, aNative, getter_AddRefs(queue)); // create new queue
-    mEventQTable.Put(aThread, queue); // add to the table (initial addref)
+    // we don't have one in the table, create new queue
+    rv = MakeNewQueue(aThread, aNative, getter_AddRefs(queue));
+    if (NS_SUCCEEDED(rv))
+      mEventQTable.Put(aThread, queue); // add to the table (initial addref)
   }
 
   // Release the EventQ lock...
@@ -224,17 +227,17 @@ nsEventQueueServiceImpl::DestroyThreadEventQueue(void)
 NS_IMETHODIMP
 nsEventQueueServiceImpl::CreateFromPLEventQueue(PLEventQueue* aPLEventQueue, nsIEventQueue** aResult)
 {
-	// Create our thread queue using the component manager
-	nsresult rv;
-	nsCOMPtr<nsIEventQueue> queue = do_CreateInstance(kEventQueueCID, &rv);
-	if (NS_FAILED(rv)) return rv;
+  // Create our thread queue using the component manager
+  nsresult rv;
+  nsCOMPtr<nsIEventQueue> queue = do_CreateInstance(kEventQueueCID, &rv);
+  if (NS_FAILED(rv)) return rv;
 
   rv = queue->InitFromPLQueue(aPLEventQueue);
-	if (NS_FAILED(rv)) return rv;
+  if (NS_FAILED(rv)) return rv;
 
-	*aResult = queue;
+  *aResult = queue;
   NS_IF_ADDREF(*aResult);
-	return NS_OK;
+  return NS_OK;
 }
 
 
@@ -274,7 +277,7 @@ nsEventQueueServiceImpl::PushThreadEventQueue(nsIEventQueue **aNewQueue)
   PR_EnterMonitor(mEventQMonitor);
 
   nsIEventQueue* queue = mEventQTable.GetWeak(currentThread);
-  
+
   NS_ASSERTION(queue, "pushed event queue on top of nothing");
 
   if (queue) { // find out what kind of queue our relatives are
@@ -286,27 +289,28 @@ nsEventQueueServiceImpl::PushThreadEventQueue(nsIEventQueue **aNewQueue)
   }
 
   nsIEventQueue* newQueue = nsnull;
-  MakeNewQueue(currentThread, native, &newQueue); // create new queue; addrefs
+  rv = MakeNewQueue(currentThread, native, &newQueue);  // AddRefs on success
+  if (NS_SUCCEEDED(rv)) {
+    if (!queue) {
+      // shouldn't happen. as a fallback, we guess you wanted a native queue
+      mEventQTable.Put(currentThread, newQueue);
+    }
 
-  if (!queue) {
-    // shouldn't happen. as a fallback, we guess you wanted a native queue
-    mEventQTable.Put(currentThread, newQueue);
-  }
+      // append to the event queue chain -- QI the queue in the hash table
+      nsCOMPtr<nsPIEventQueueChain> ourChain(do_QueryInterface(queue));
+    if (ourChain)
+      ourChain->AppendQueue(newQueue); // append new queue to it
 
-  // append to the event queue chain
-  nsCOMPtr<nsPIEventQueueChain> ourChain(do_QueryInterface(queue)); // QI the queue in the hash table
-  if (ourChain)
-    ourChain->AppendQueue(newQueue); // append new queue to it
-
-  *aNewQueue = newQueue;
+    *aNewQueue = newQueue;
 
 #if defined(PR_LOGGING) && defined(DEBUG_danm)
-  PLEventQueue *equeue;
-  (*aNewQueue)->GetPLEventQueue(&equeue);
-  PR_LOG(gEventQueueLog, PR_LOG_DEBUG,
-         ("EventQueue: Service push queue [queue=%lx]",(long)equeue));
-  ++gEventQueueLogCount;
+    PLEventQueue *equeue;
+    (*aNewQueue)->GetPLEventQueue(&equeue);
+    PR_LOG(gEventQueueLog, PR_LOG_DEBUG,
+           ("EventQueue: Service push queue [queue=%lx]",(long)equeue));
+    ++gEventQueueLogCount;
 #endif
+  }
 
   // Release the EventQ lock...
   PR_ExitMonitor(mEventQMonitor);
