@@ -50,11 +50,6 @@ class ProcessorState : public txIMatchContext {
 
 public:
     /**
-     * Creates a new ProcessorState
-    **/
-    ProcessorState();
-
-    /**
      * Creates a new ProcessorState for the given XSL document
      * And result Document
     **/
@@ -422,12 +417,7 @@ private:
     **/
     XMLSpaceMode getXMLSpaceMode(Node* aNode);
 
-    /**
-     * Initializes the ProcessorState
-    **/
-    void initialize();
-
-}; //-- ProcessorState
+};
 
 /**
  * txNameTestItem holds both an ElementExpr and a bool for use in

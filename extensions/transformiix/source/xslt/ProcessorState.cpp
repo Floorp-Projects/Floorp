@@ -47,28 +47,52 @@
 #include "txAtoms.h"
 
 /**
- * Creates a new ProcessorState
-**/
-ProcessorState::ProcessorState() : mEvalContext(0), mSourceDocument(0),
-                                   xslDocument(0),
-                                   resultDocument(0)
-{
-    initialize();
-} //-- ProcessorState
-
-/**
  * Creates a new ProcessorState for the given XSL document
  * and resultDocument
 **/
 ProcessorState::ProcessorState(Document* aSourceDocument,
                                Document* aXslDocument,
                                Document* aResultDocument)
-    : mEvalContext(0), mSourceDocument(aSourceDocument),
+    : mEvalContext(0),
+      mSourceDocument(aSourceDocument),
       xslDocument(aXslDocument),
       resultDocument(aResultDocument)
 {
-    initialize();
-} //-- ProcessorState
+    NS_ASSERTION(aSourceDocument, "missing source document");
+    NS_ASSERTION(aXslDocument, "missing xslt document");
+    NS_ASSERTION(aResultDocument, "missing result document");
+
+    // add global variable set
+    NamedMap* globalVars = new NamedMap();
+    globalVars->setObjectDeletion(MB_TRUE);
+    variableSets.push(globalVars);
+
+    /* turn object deletion on for some of the Maps (NamedMap) */
+    mExprHashes[SelectAttr].setOwnership(Map::eOwnsItems);
+    mExprHashes[TestAttr].setOwnership(Map::eOwnsItems);
+    mExprHashes[ValueAttr].setOwnership(Map::eOwnsItems);
+    mPatternHashes[CountAttr].setOwnership(Map::eOwnsItems);
+    mPatternHashes[FromAttr].setOwnership(Map::eOwnsItems);
+
+    // determine xslt properties
+    if (mSourceDocument) {
+        loadedDocuments.put(mSourceDocument->getBaseURI(), mSourceDocument);
+    }
+    if (xslDocument) {
+        loadedDocuments.put(xslDocument->getBaseURI(), xslDocument);
+    }
+
+    // make sure all keys are deleted
+    xslKeys.setObjectDeletion(MB_TRUE);
+
+    // Make sure all loaded documents get deleted
+    loadedDocuments.setObjectDeletion(MB_TRUE);
+
+    // add predefined default decimal format
+    defaultDecimalFormatSet = MB_FALSE;
+    decimalFormats.put("", new txDecimalFormat);
+    decimalFormats.setObjectDeletion(MB_TRUE);
+}
 
 /**
  * Destroys this ProcessorState
@@ -1046,43 +1070,6 @@ ProcessorState::XMLSpaceMode ProcessorState::getXMLSpaceMode(Node* aNode)
         parent = parent->getParentNode();
     }
     return DEFAULT;
-}
-
-/**
- * Initializes this ProcessorState
-**/
-void ProcessorState::initialize()
-{
-    // add global variable set
-    NamedMap* globalVars = new NamedMap();
-    globalVars->setObjectDeletion(MB_TRUE);
-    variableSets.push(globalVars);
-
-    /* turn object deletion on for some of the Maps (NamedMap) */
-    mExprHashes[SelectAttr].setOwnership(Map::eOwnsItems);
-    mExprHashes[TestAttr].setOwnership(Map::eOwnsItems);
-    mExprHashes[ValueAttr].setOwnership(Map::eOwnsItems);
-    mPatternHashes[CountAttr].setOwnership(Map::eOwnsItems);
-    mPatternHashes[FromAttr].setOwnership(Map::eOwnsItems);
-
-    // determine xslt properties
-    if (mSourceDocument) {
-        loadedDocuments.put(mSourceDocument->getBaseURI(), mSourceDocument);
-    }
-    if (xslDocument) {
-        loadedDocuments.put(xslDocument->getBaseURI(), xslDocument);
-    }
-
-    // make sure all keys are deleted
-    xslKeys.setObjectDeletion(MB_TRUE);
-
-    // Make sure all loaded documents get deleted
-    loadedDocuments.setObjectDeletion(MB_TRUE);
-
-    // add predefined default decimal format
-    defaultDecimalFormatSet = MB_FALSE;
-    decimalFormats.put("", new txDecimalFormat);
-    decimalFormats.setObjectDeletion(MB_TRUE);
 }
 
 ProcessorState::ImportFrame::ImportFrame(ImportFrame* aFirstNotImported)
