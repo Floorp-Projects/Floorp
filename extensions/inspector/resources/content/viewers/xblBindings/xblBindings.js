@@ -71,7 +71,7 @@ function XBLBindings()
 {
   this.mURL = window.location;
   this.mObsMan = new ObserverManager(this);
-  this.mDOMUtils = XPCU.createInstance("@mozilla.org/inspector/dom-utils;1", "inIDOMUtils");
+  this.mDOMUtils = XPCU.getService("@mozilla.org/inspector/dom-utils;1", "inIDOMUtils");
 
   this.mContentTree = document.getElementById("olContent");
   this.mMethodTree = document.getElementById("olMethods");

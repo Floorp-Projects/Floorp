@@ -326,7 +326,7 @@ function doesQI(aObject, aInterface)
 
 function StyleRuleView(aObject)
 {
-  this.mDOMUtils = XPCU.createInstance("@mozilla.org/inspector/dom-utils;1", "inIDOMUtils");
+  this.mDOMUtils = XPCU.getService("@mozilla.org/inspector/dom-utils;1", "inIDOMUtils");
   if (doesQI(aObject, "nsIDOMCSSStyleSheet")) {
     this.mSheetRules = aObject.cssRules;
   } else {

@@ -73,7 +73,7 @@ function PseudoClassDialog()
   this.mOpener = window.opener.viewer;
   this.mSubject = window.arguments[0];
 
-  this.mDOMUtils = XPCU.createInstance("@mozilla.org/inspector/dom-utils;1", "inIDOMUtils");
+  this.mDOMUtils = XPCU.getService("@mozilla.org/inspector/dom-utils;1", "inIDOMUtils");
 }
 
 PseudoClassDialog.prototype = 
