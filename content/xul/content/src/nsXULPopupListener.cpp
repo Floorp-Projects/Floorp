@@ -20,6 +20,7 @@
  * Original Author: David W. Hyatt (hyatt@netscape.com)
  *
  * Contributor(s): 
+ *   Dean Tessman <dean_tessman@hotmail.com>
  *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
@@ -425,8 +426,15 @@ XULPopupListenerImpl::LaunchPopup(PRInt32 aClientX, PRInt32 aClientY)
   nsresult rv = NS_OK;
 
   nsAutoString type; type.AssignWithConversion("popup");
-  if ( popupType == eXULPopupType_context )
+  if ( popupType == eXULPopupType_context ) {
     type.AssignWithConversion("context");
+    
+    // position the menu two pixels down and to the right from the current
+    // mouse position. This makes it easier to dismiss the menu by just
+    // clicking.
+    aClientX += 2;
+    aClientY += 2;
+  }
   else if ( popupType == eXULPopupType_tooltip )
     type.AssignWithConversion("tooltip");
 
