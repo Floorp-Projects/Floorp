@@ -127,21 +127,18 @@ JNIEXPORT void JNICALL Java_org_mozilla_dom_AttrImpl_setValue
 {
   nsIDOMAttr* attr = (nsIDOMAttr*) 
     env->GetLongField(jthis, JavaDOMGlobals::nodePtrFID);
-  if (!attr) {
-    PR_LOG(JavaDOMGlobals::log, PR_LOG_ERROR, 
-	   ("Attr.setValue: NULL pointer\n"));
+  if (!attr || !jval) {
+    JavaDOMGlobals::ThrowException(env,
+      "Attr.setValue: NULL pointer\n");
     return;
   }
 
-  const char* cvalue = NULL;
   jboolean iscopy = JNI_FALSE;
-  if (jval) {
-    cvalue = env->GetStringUTFChars(jval, &iscopy);
-    if (!cvalue) {
-      PR_LOG(JavaDOMGlobals::log, PR_LOG_ERROR, 
-	     ("Attr.setValue: GetStringUTFChars failed\n"));
-      return;
-    }
+  const char* cvalue = env->GetStringUTFChars(jval, &iscopy);
+  if (!cvalue) {
+    PR_LOG(JavaDOMGlobals::log, PR_LOG_ERROR, 
+	   ("Attr.setValue: GetStringUTFChars failed\n"));
+    return;
   }
 
   nsresult rv = attr->SetValue(cvalue);

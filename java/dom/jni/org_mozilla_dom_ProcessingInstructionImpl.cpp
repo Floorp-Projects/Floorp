@@ -104,21 +104,18 @@ JNIEXPORT void JNICALL Java_org_mozilla_dom_ProcessingInstructionImpl_setData
 {
   nsIDOMProcessingInstruction* pi = (nsIDOMProcessingInstruction*) 
     env->GetLongField(jthis, JavaDOMGlobals::nodePtrFID);
-  if (!pi) {
+  if (!pi || !jdata) {
     JavaDOMGlobals::ThrowException(env,
       "ProcessingInstruction.setData: NULL pointer");
     return;
   }
 
-  const char* data = NULL;
   jboolean iscopy = JNI_FALSE;
-  if (jdata) {
-    data = env->GetStringUTFChars(jdata, &iscopy);
-    if (!data) {
-      JavaDOMGlobals::ThrowException(env,
+  const char* data = env->GetStringUTFChars(jdata, &iscopy);
+  if (!data) {
+    JavaDOMGlobals::ThrowException(env,
         "ProcessingInstruction.setData: GetStringUTFChars failed");
-      return;
-    }
+    return;
   }
 
   nsresult rv = pi->SetData(data);

@@ -140,21 +140,18 @@ JNIEXPORT jobject JNICALL Java_org_mozilla_dom_NodeImpl_appendChild
 {
   nsIDOMNode* node = (nsIDOMNode*) 
     env->GetLongField(jthis, JavaDOMGlobals::nodePtrFID);
-  if (!node) {
+  if (!node || !jchild) {
     JavaDOMGlobals::ThrowException(env,
       "Node.appendChild: NULL pointer");
     return NULL;
   }
 
-  nsIDOMNode* child = NULL;
-  if (jchild) {
-    child = (nsIDOMNode*) 
+  nsIDOMNode* child = (nsIDOMNode*) 
       env->GetLongField(jchild, JavaDOMGlobals::nodePtrFID);
-    if (!child) {
-      JavaDOMGlobals::ThrowException(env,
+  if (!child) {
+    JavaDOMGlobals::ThrowException(env,
         "Node.appendChild: NULL child pointer");
-      return NULL;
-    }
+    return NULL;
   }
 
   nsIDOMNode* ret = nsnull;
@@ -667,32 +664,26 @@ JNIEXPORT jobject JNICALL Java_org_mozilla_dom_NodeImpl_insertBefore
 {
   nsIDOMNode* node = (nsIDOMNode*) 
     env->GetLongField(jthis, JavaDOMGlobals::nodePtrFID);
-  if (!node) {
+  if (!node || !jnewChild || !jrefChild) {
     JavaDOMGlobals::ThrowException(env,
       "Node.insertBefore: NULL pointer");
     return NULL;
   }
 
-  nsIDOMNode* newChild = NULL;
-  if (jnewChild) {
-    newChild = (nsIDOMNode*) 
+  nsIDOMNode* newChild = (nsIDOMNode*) 
       env->GetLongField(jnewChild, JavaDOMGlobals::nodePtrFID);
-    if (!newChild) {
-      JavaDOMGlobals::ThrowException(env,
+  if (!newChild) {
+    JavaDOMGlobals::ThrowException(env,
         "Node.insertBefore: NULL newChild pointer");
-      return NULL;
-    }
+    return NULL;
   }
 
-  nsIDOMNode* refChild = NULL;
-  if (jrefChild) {
-    refChild = (nsIDOMNode*) 
+  nsIDOMNode* refChild = (nsIDOMNode*) 
       env->GetLongField(jrefChild, JavaDOMGlobals::nodePtrFID);
-    if (!refChild) {
-      JavaDOMGlobals::ThrowException(env,
-        "Node.insertBefore: NULL refChild pointer");
-      return NULL;
-    }
+  if (!refChild) {
+    JavaDOMGlobals::ThrowException(env,
+	"Node.insertBefore: NULL refChild pointer");
+    return NULL;
   }
 
   nsIDOMNode* ret = nsnull;
@@ -724,21 +715,18 @@ JNIEXPORT jobject JNICALL Java_org_mozilla_dom_NodeImpl_removeChild
 {
   nsIDOMNode* node = (nsIDOMNode*) 
     env->GetLongField(jthis, JavaDOMGlobals::nodePtrFID);
-  if (!node) {
+  if (!node || !joldChild) {
     JavaDOMGlobals::ThrowException(env,
       "Node.removeChild: NULL pointer");
     return NULL;
   }
 
-  nsIDOMNode* oldChild = NULL;
-  if (joldChild) {
-    oldChild = (nsIDOMNode*) 
+  nsIDOMNode* oldChild = (nsIDOMNode*) 
       env->GetLongField(joldChild, JavaDOMGlobals::nodePtrFID);
-    if (!oldChild) {
-      JavaDOMGlobals::ThrowException(env,
+  if (!oldChild) {
+    JavaDOMGlobals::ThrowException(env,
         "Node.removeChild: NULL oldChild pointer");
-      return NULL;
-    }
+    return NULL;
   }
 
   nsIDOMNode* ret = nsnull;
@@ -768,32 +756,26 @@ JNIEXPORT jobject JNICALL Java_org_mozilla_dom_NodeImpl_replaceChild
 {
   nsIDOMNode* node = (nsIDOMNode*) 
     env->GetLongField(jthis, JavaDOMGlobals::nodePtrFID);
-  if (!node) {
+  if (!node || !jnewChild || !joldChild) {
     JavaDOMGlobals::ThrowException(env,
       "Node.replaceChild: NULL pointer");
     return NULL;
   }
 
-  nsIDOMNode* newChild = NULL;
-  if (jnewChild) {
-    newChild = (nsIDOMNode*) 
+  nsIDOMNode* newChild = (nsIDOMNode*) 
       env->GetLongField(jnewChild, JavaDOMGlobals::nodePtrFID);
-    if (!newChild) {
-      JavaDOMGlobals::ThrowException(env,
+  if (!newChild) {
+    JavaDOMGlobals::ThrowException(env,
         "Node.replaceChild: NULL newChild pointer");
-      return NULL;
-    }
+    return NULL;
   }
 
-  nsIDOMNode* oldChild = NULL;
-  if (joldChild) {
-    oldChild = (nsIDOMNode*) 
+  nsIDOMNode* oldChild = (nsIDOMNode*) 
       env->GetLongField(joldChild, JavaDOMGlobals::nodePtrFID);
-    if (!oldChild) {
-      JavaDOMGlobals::ThrowException(env,
+  if (!oldChild) {
+    JavaDOMGlobals::ThrowException(env,
         "Node.replaceChild: NULL oldChild pointer");
-      return NULL;
-    }
+    return NULL;
   }
 
   nsIDOMNode* ret = nsnull;
@@ -825,21 +807,18 @@ JNIEXPORT void JNICALL Java_org_mozilla_dom_NodeImpl_setNodeValue
 {
   nsIDOMNode* node = (nsIDOMNode*) 
     env->GetLongField(jthis, JavaDOMGlobals::nodePtrFID);
-  if (!node) {
+  if (!node || !jvalue) {
     JavaDOMGlobals::ThrowException(env,
       "Node.setNodeValue: NULL pointer");
     return;
   }
 
-  const char* value = NULL;
   jboolean iscopy = JNI_FALSE;
-  if (jvalue) {
-    value = env->GetStringUTFChars(jvalue, &iscopy);
-    if (!value) {
-      JavaDOMGlobals::ThrowException(env,
+  const char* value = env->GetStringUTFChars(jvalue, &iscopy);
+  if (!value) {
+    JavaDOMGlobals::ThrowException(env,
         "Node.setNodeValue: GetStringUTFChars failed");
-      return;
-    }
+    return;
   }
 
   nsresult rv = node->SetNodeValue(value);
