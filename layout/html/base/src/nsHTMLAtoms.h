@@ -78,7 +78,9 @@ public:
   static nsIAtom* face;
   static nsIAtom* font;
   static nsIAtom* fontWeight;
+  static nsIAtom* frame;
   static nsIAtom* frameborder;
+  static nsIAtom* frameset;
 
   static nsIAtom* gutter;
 
@@ -96,6 +98,7 @@ public:
   static nsIAtom* httpEquiv;
 
   static nsIAtom* id;
+  static nsIAtom* iframe;
   static nsIAtom* ismap;
 
   static nsIAtom* lang;
