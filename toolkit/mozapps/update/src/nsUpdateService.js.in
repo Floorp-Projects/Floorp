@@ -312,9 +312,9 @@ nsUpdateService.prototype = {
     if (aSourceEvent == nsIUpdateService.SOURCE_EVENT_BACKGROUND && 
         (this._appAutoUpdateEnabled || this._extAutoUpdateEnabled)) {
       if (types & nsIUpdateItem.TYPE_ADDON)
-        gPref.setIntPref(PREF_UPDATE_EXTENSIONS_LASTUPDATEDATE, this._nowInMilliseconds / 1000);
+        gPref.setIntPref(PREF_UPDATE_EXTENSIONS_LASTUPDATEDATE, Date.now() / 1000);
       if (types & nsIUpdateItem.TYPE_APP)
-        gPref.setIntPref(PREF_UPDATE_APP_LASTUPDATEDATE, this._nowInMilliseconds / 1000);
+        gPref.setIntPref(PREF_UPDATE_APP_LASTUPDATEDATE, Date.now() / 1000);
     }
   },
   
@@ -378,7 +378,7 @@ nsUpdateService.prototype = {
   {
     var interval = gPref.getIntPref(aIntervalPref);
     var lastUpdateTime = gPref.getIntPref(aLastCheckPref);
-    return ((Math.round(this._nowInMilliseconds/1000) - lastUpdateTime) > Math.round(interval/1000));
+    return ((Math.round(Date.now() / 1000) - lastUpdateTime) > Math.round(interval/1000));
   },
   
   notify: function nsUpdateService_notify (aTimer)
@@ -486,18 +486,6 @@ nsUpdateService.prototype = {
                                  Components.interfaces.nsITimer.TYPE_REPEATING_SLACK);
   },
   
-  get _nowInMilliseconds ()
-  {
-    var d = new Date();
-    return Date.UTC(d.getUTCFullYear(), 
-                    d.getUTCMonth(),
-                    d.getUTCDate(),
-                    d.getUTCHours(),
-                    d.getUTCMinutes(),
-                    d.getUTCSeconds(),
-                    d.getUTCMilliseconds());
-  },
-  
   _clearAppUpdatePrefs: function nsUpdateService__clearAppUpdatePrefs ()
   {
     // Unset prefs used by the update service to signify application updates
@@ -585,6 +573,20 @@ nsUpdateObserver.prototype = {
       this.appUpdater.destroy();
       this.appUpdater = null;
       break;
+    case "alertfinished":
+      // must not show alert again
+      return;
+    case "alertclickcallback":
+      var updates = Components.classes["@mozilla.org/updates/update-service;1"]
+                              .getService(Components.interfaces.nsIUpdateService);
+      updates.checkForUpdates([], 0, Components.interfaces.nsIUpdateItem.TYPE_ANY, 
+                              Components.interfaces.nsIUpdateService.SOURCE_EVENT_USER,
+                              null);
+      // must not show alert again
+      return;
+    default:
+      dump("nsUpdateObserver received unknown topic: " + aTopic + "\n");
+      return;
     }
     
     if (this._doneUpdating) {
@@ -648,21 +650,6 @@ nsUpdateObserver.prototype = {
       this._endedTimer.cancel();
       this._endedTimer = null;
     }
-  },
-
-  ////////////////////////////////////////////////////////////////////////////
-  // nsIAlertListener
-  onAlertFinished: function nsUpdateObserver_onAlertFinished ()
-  {
-  },
-  
-  onAlertClickCallback: function nsUpdateObserver_onAlertClickCallback (aCookie)
-  {
-    var updates = Components.classes["@mozilla.org/updates/update-service;1"]
-                            .getService(Components.interfaces.nsIUpdateService);
-    updates.checkForUpdates([], 0, Components.interfaces.nsIUpdateItem.TYPE_ANY, 
-                            Components.interfaces.nsIUpdateService.SOURCE_EVENT_USER,
-                            null);
   },
   
   /////////////////////////////////////////////////////////////////////////////
