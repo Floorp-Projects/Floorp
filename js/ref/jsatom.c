@@ -607,7 +607,8 @@ js_GetAtom(JSContext *cx, JSAtomMap *map, jsatomid i)
     if (!map->vector || i >= map->length) {
 	char numBuf[12];
 	sprintf(numBuf, "%s", (long)i);
-	JS_ReportErrorNumber(cx, NULL, JSMSG_BAD_ATOMIC_NUMBER, numBuf);
+	JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, 
+                                JSMSG_BAD_ATOMIC_NUMBER, numBuf);
 	return NULL;
     }
     atom = map->vector[i];
@@ -631,7 +632,8 @@ js_InitAtomMap(JSContext *cx, JSAtomMap *map, JSAtomList *al)
 
     count = al->count;
     if (count >= ATOM_INDEX_LIMIT) {
-	JS_ReportErrorNumber(cx, NULL, JSMSG_TOO_MANY_LITERALS);
+	JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, 
+                                            JSMSG_TOO_MANY_LITERALS);
 	return JS_FALSE;
     }
     vector = JS_malloc(cx, (size_t) count * sizeof *vector);

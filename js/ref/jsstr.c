@@ -111,7 +111,8 @@ str_escape(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
         {
 	    char numBuf[12];
 	    sprintf(numBuf, "%x", mask);
-            JS_ReportErrorNumber(cx, NULL, JSMSG_BAD_STRING_MASK, numBuf);
+            JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
+                                    JSMSG_BAD_STRING_MASK, numBuf);
             return JS_FALSE;
         }
     } else {
@@ -746,7 +747,8 @@ str_lastIndexOf(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 static JSBool
 str_nyi(JSContext *cx, const char *what)
 {
-    JS_ReportErrorNumber(cx, NULL, JSMSG_NO_STRING_PROTO, what);
+    JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
+                            JSMSG_NO_STRING_PROTO, what);
     return JS_FALSE;
 }
 #endif

@@ -649,15 +649,18 @@ loop:
       case '{':
 	c = *++cp;
 	if (!JS7_ISDEC(c)) {
-	    JS_ReportErrorNumber(state->context, NULL, JSMSG_BAD_QUANTIFIER, state->cp);
+	    JS_ReportErrorNumber(state->context, 
+                            js_GetErrorMessage, NULL,
+                            JSMSG_BAD_QUANTIFIER, state->cp);
 	    return NULL;
 	}
 	min = (uint32)JS7_UNDEC(c);
 	for (c = *++cp; JS7_ISDEC(c); c = *++cp) {
 	    min = 10 * min + (uint32)JS7_UNDEC(c);
 	    if (min >> 16) {
-		JS_ReportErrorNumber(state->context, NULL, JSMSG_MIN_TOO_BIG,
-			       state->cp);
+		JS_ReportErrorNumber(state->context, 
+                        js_GetErrorMessage, NULL,
+                        JSMSG_MIN_TOO_BIG, state->cp);
 		return NULL;
 	    }
 	}
@@ -668,15 +671,17 @@ loop:
 		for (c = *++cp; JS7_ISDEC(c); c = *++cp) {
 		    max = 10 * max + (uint32)JS7_UNDEC(c);
 		    if (max >> 16) {
-			JS_ReportErrorNumber(state->context, NULL, JSMSG_MAX_TOO_BIG,
-				       up);
+			JS_ReportErrorNumber(state->context, 
+                                    js_GetErrorMessage, NULL,
+                                    JSMSG_MAX_TOO_BIG, up);
 			return NULL;
 		    }
 		}
 		if (max == 0)
 		    goto zero_quant;
 		if (min > max) {
-		    JS_ReportErrorNumber(state->context, NULL,
+		    JS_ReportErrorNumber(state->context, 
+                                   js_GetErrorMessage, NULL,
 				   JSMSG_OUT_OF_ORDER, up);
 		    return NULL;
 		}
@@ -688,15 +693,17 @@ loop:
 	    /* Exactly n times. */
 	    if (min == 0) {
       zero_quant:
-		JS_ReportErrorNumber(state->context, NULL, JSMSG_ZERO_QUANTIFIER,
-								    state->cp);
+		JS_ReportErrorNumber(state->context, 
+                                        js_GetErrorMessage, NULL,
+                                        JSMSG_ZERO_QUANTIFIER, state->cp);
 		return NULL;
 	    }
 	    max = min;
 	}
 	if (*cp != '}') {
-	    JS_ReportErrorNumber(state->context, NULL, JSMSG_UNTERM_QUANTIFIER,
-			   state->cp);
+	    JS_ReportErrorNumber(state->context, 
+                                        js_GetErrorMessage, NULL,
+                                        JSMSG_UNTERM_QUANTIFIER, state->cp);
 	    return NULL;
 	}
 	cp++;
@@ -713,7 +720,8 @@ loop:
 
       case '*':
 	if (!(ren->flags & RENODE_NONEMPTY)) {
-	    JS_ReportErrorNumber(state->context, NULL, 
+	    JS_ReportErrorNumber(state->context, 
+                            js_GetErrorMessage, NULL, 
 			    JSMSG_EMPTY_BEFORE_STAR);
 	    return NULL;
 	}
@@ -723,7 +731,8 @@ loop:
 
       case '+':
 	if (!(ren->flags & RENODE_NONEMPTY)) {
-	    JS_ReportErrorNumber(state->context, NULL,
+	    JS_ReportErrorNumber(state->context, 
+                           js_GetErrorMessage, NULL,
 			   JSMSG_EMPTY_BEFORE_PLUS);
 	    return NULL;
 	}
@@ -806,8 +815,9 @@ ParseAtom(CompilerState *state)
 	    return NULL;
 	cp = state->cp;
 	if (*cp != ')') {
-	    JS_ReportErrorNumber(state->context, NULL, JSMSG_MISSING_PAREN,
-			   ocp);
+	    JS_ReportErrorNumber(state->context, 
+                            js_GetErrorMessage, NULL,
+                            JSMSG_MISSING_PAREN, ocp);
 	    return NULL;
 	}
 	cp++;
@@ -847,8 +857,9 @@ ParseAtom(CompilerState *state)
 	while ((c = *++cp) != ']') {
 	    if (c == 0) {
       bad_cclass:
-		JS_ReportErrorNumber(state->context, NULL,
-			       JSMSG_UNTERM_CLASS, ocp);
+		JS_ReportErrorNumber(state->context, 
+                                js_GetErrorMessage, NULL,
+			        JSMSG_UNTERM_CLASS, ocp);
 		return NULL;
 	    }
 	    if (c == '\\' && cp[1] != 0)
@@ -864,7 +875,9 @@ ParseAtom(CompilerState *state)
 	c = *++cp;
 	switch (c) {
 	  case 0:
-	    JS_ReportErrorNumber(state->context, NULL, JSMSG_TRAILING_SLASH);
+	    JS_ReportErrorNumber(state->context,
+                                    js_GetErrorMessage, NULL, 
+                                    JSMSG_TRAILING_SLASH);
 	    return NULL;
 
 	  case 'f':
@@ -1835,8 +1848,9 @@ EmitRegExp(CompilerState *state, RENode *ren, JSRegExp *re)
 
 		if (inrange) {
 		    if (lastc > c) {
-			JS_ReportErrorNumber(state->context, NULL,
-				       JSMSG_BAD_CLASS_RANGE);
+			JS_ReportErrorNumber(state->context,
+                                        js_GetErrorMessage, NULL,
+				        JSMSG_BAD_CLASS_RANGE);
 			return JS_FALSE;
 		    }
 		    inrange = JS_FALSE;
@@ -2036,7 +2050,8 @@ js_NewRegExpOpt(JSContext *cx, JSString *str, JSString *opt)
 	      default: {
 		char charBuf[2] = " ";
 		charBuf[0] = (char)*cp;
-		JS_ReportErrorNumber(cx, NULL, JSMSG_BAD_FLAG, charBuf);
+		JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, 
+                                                JSMSG_BAD_FLAG, charBuf);
 		return NULL;
 		}
 	    }
@@ -3187,7 +3202,8 @@ regexp_exec_sub(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     if (argc == 0) {
 	str = cx->regExpStatics.input;
 	if (!str) {
-	    JS_ReportErrorNumber(cx, NULL, JSMSG_NO_INPUT,
+	    JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
+                           JSMSG_NO_INPUT,
 			   JS_GetStringBytes(re->source),
 			   (re->flags & JSREG_GLOB) ? "g" : "",
 			   (re->flags & JSREG_FOLD) ? "i" : "");

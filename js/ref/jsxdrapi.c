@@ -49,7 +49,8 @@ typedef struct JSXDRMemState {
     PR_BEGIN_MACRO                                                            \
         if ((xdr)->mode == JSXDR_DECODE &&                                    \
 	    MEM_COUNT(xdr) + bytes > MEM_LIMIT(xdr)) {                        \
-	    JS_ReportErrorNumber((xdr)->cx, NULL, JSMSG_END_OF_DATA);         \
+	    JS_ReportErrorNumber((xdr)->cx, js_GetErrorMessage, NULL,         \
+                                            JSMSG_END_OF_DATA);               \
 	    return 0;                                                         \
 	}                                                                     \
     PR_END_MACRO
@@ -70,7 +71,8 @@ typedef struct JSXDRMemState {
 	    }                                                                 \
 	} else {                                                              \
 	    if (MEM_LIMIT(xdr) < MEM_COUNT(xdr) + bytes) {                    \
-		JS_ReportErrorNumber((xdr)->cx, NULL, JSMSG_END_OF_DATA);     \
+		JS_ReportErrorNumber((xdr)->cx, js_GetErrorMessage, NULL,     \
+                                            JSMSG_END_OF_DATA);               \
 		return 0;                                                     \
 	    }                                                                 \
 	}                                                                     \
@@ -135,7 +137,8 @@ mem_seek(JSXDRState *xdr, int32 offset, JSXDRWhence whence)
     switch (whence) {
       case JSXDR_SEEK_CUR:
 	if ((int32)MEM_COUNT(xdr) + offset < 0) {
-	    JS_ReportErrorNumber(xdr->cx, NULL, JSMSG_SEEK_BEYOND_START);
+	    JS_ReportErrorNumber(xdr->cx, js_GetErrorMessage, NULL,
+                                                JSMSG_SEEK_BEYOND_START);
 	    return JS_FALSE;
 	}
 	if (offset > 0)
@@ -144,7 +147,8 @@ mem_seek(JSXDRState *xdr, int32 offset, JSXDRWhence whence)
 	return JS_TRUE;
       case JSXDR_SEEK_SET:
 	if (offset < 0) {
-	    JS_ReportErrorNumber(xdr->cx, NULL, JSMSG_SEEK_BEYOND_START);
+	    JS_ReportErrorNumber(xdr->cx, js_GetErrorMessage, NULL,
+                                                JSMSG_SEEK_BEYOND_START);
 	    return JS_FALSE;
 	}
 	if (xdr->mode == JSXDR_ENCODE) {
@@ -153,7 +157,8 @@ mem_seek(JSXDRState *xdr, int32 offset, JSXDRWhence whence)
 	    MEM_COUNT(xdr) = offset;
 	} else {
 	    if ((uint32)offset > MEM_LIMIT(xdr)) {
-		JS_ReportErrorNumber(xdr->cx, NULL, JSMSG_SEEK_BEYOND_END);
+		JS_ReportErrorNumber(xdr->cx, js_GetErrorMessage, NULL,
+                                                    JSMSG_SEEK_BEYOND_END);
 		return JS_FALSE;
 	    }
 	    MEM_COUNT(xdr) = offset;
@@ -163,7 +168,8 @@ mem_seek(JSXDRState *xdr, int32 offset, JSXDRWhence whence)
 	if (offset >= 0 ||
 	    xdr->mode == JSXDR_ENCODE ||
 	    (int32)MEM_LIMIT(xdr) + offset < 0) {
-	    JS_ReportErrorNumber(xdr->cx, NULL, JSMSG_END_SEEK);
+	    JS_ReportErrorNumber(xdr->cx, js_GetErrorMessage, NULL,
+                                                        JSMSG_END_SEEK);
 	    return JS_FALSE;
 	}
 	MEM_COUNT(xdr) = MEM_LIMIT(xdr) + offset;
@@ -171,7 +177,8 @@ mem_seek(JSXDRState *xdr, int32 offset, JSXDRWhence whence)
       default: {
 	char numBuf[12];
 	sprintf(numBuf, "%d", whence);
-	JS_ReportErrorNumber(xdr->cx, NULL, JSMSG_WHITHER_WHENCE, numBuf);
+	JS_ReportErrorNumber(xdr->cx, js_GetErrorMessage, NULL,
+                                            JSMSG_WHITHER_WHENCE, numBuf);
 	}
 	return JS_FALSE;
     }
@@ -484,7 +491,8 @@ JS_XDRValue(JSXDRState *xdr, jsval *vp)
 	    break;
 	}
 	sprintf(numBuf, "%#lx", type);
-	JS_ReportErrorNumber(xdr->cx, NULL, JSMSG_BAD_JVAL_TYPE, type);
+	JS_ReportErrorNumber(xdr->cx, js_GetErrorMessage, NULL,
+                                        JSMSG_BAD_JVAL_TYPE, type);
 	}
 	return JS_FALSE;
     }

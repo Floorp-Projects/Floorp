@@ -109,7 +109,7 @@ UpdateDepth(JSContext *cx, JSCodeGenerator *cg, ptrdiff_t target)
     if (cg->stackDepth < 0) {
         char numBuf[12];
         sprintf(numBuf, "%d", target);
-        JS_ReportErrorNumber(cx, NULL,
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
                        JSMSG_STACK_UNDERFLOW,
                        cg->filename ? cg->filename : "stdin", numBuf);
     }
@@ -201,7 +201,8 @@ StatementName(JSCodeGenerator *cg)
 static void
 ReportStatementTooLarge(JSContext *cx, JSCodeGenerator *cg)
 {
-    JS_ReportErrorNumber(cx, NULL, JSMSG_NEED_DIET, StatementName(cg));
+    JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, 
+                            JSMSG_NEED_DIET, StatementName(cg));
 }
 
 JSBool
@@ -732,7 +733,8 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
                     !JSVAL_IS_BOOLEAN(pn3->pn_val)) {
                     char numBuf[12];
                     sprintf(numBuf, "%u", pn4->pn_pos.begin.lineno);
-                    JS_ReportErrorNumber(cx, NULL, JSMSG_BAD_CASE,
+                    JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
+                                   JSMSG_BAD_CASE,
                                    cg2.filename ? cg2.filename : "stdin",
                                    numBuf);
 

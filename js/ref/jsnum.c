@@ -214,7 +214,8 @@ num_toString(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 	if (base < 2 || base > 36) {
 	    char numBuf[12];
 	    sprintf(numBuf, "%d", base);
-	    JS_ReportErrorNumber(cx, NULL, JSMSG_BAD_RADIX, numBuf);
+	    JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
+                                                      JSMSG_BAD_RADIX, numBuf);
 	    return JS_FALSE;
 	}
 	if (base != 10 && JSDOUBLE_IS_FINITE(d)) {
@@ -475,7 +476,7 @@ js_ValueToNumber(JSContext *cx, jsval v, jsdouble *dp)
 	str = js_DecompileValueGenerator(cx, v, NULL);
 badstr:
 	if (str) {
-	    JS_ReportErrorNumber(cx, NULL, JSMSG_NAN,
+	    JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_NAN,
 			   JS_GetStringBytes(str));
 
 	}
@@ -560,8 +561,8 @@ js_ValueToInt32(JSContext *cx, jsval v, int32 *ip)
     if (JSDOUBLE_IS_NaN(d) || d <= -2147483649.0 || 2147483648.0 <= d) {
 	str = js_DecompileValueGenerator(cx, v, NULL);
 	if (str) {
-	    JS_ReportErrorNumber(cx, NULL, JSMSG_CANT_CONVERT,
-			   JS_GetStringBytes(str));
+	    JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, 
+                        JSMSG_CANT_CONVERT, JS_GetStringBytes(str));
 
 	}
 	return JS_FALSE;

@@ -285,7 +285,7 @@ js_AllocStack(JSContext *cx, uintN nslots, void **markp)
         *markp = PR_ARENA_MARK(&cx->stackPool);
     PR_ARENA_ALLOCATE(sp, &cx->stackPool, nslots * sizeof(jsval));
     if (!sp) {
-        JS_ReportErrorNumber(cx, NULL, JSMSG_STACK_OVERFLOW,
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_STACK_OVERFLOW,
                        (cx->fp && cx->fp->fun)
                        ? JS_GetFunctionName(cx->fp->fun)
                        : "script");
@@ -849,8 +849,8 @@ ImportProperty(JSContext *cx, JSObject *obj, jsid id)
         if (!(attrs & JSPROP_EXPORTED)) {
             str = js_DecompileValueGenerator(cx, js_IdToValue(id), NULL);
             if (str) {
-                JS_ReportErrorNumber(cx, NULL, JSMSG_NOT_EXPORTED,
-                               JS_GetStringBytes(str));
+                JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, 
+                        JSMSG_NOT_EXPORTED, JS_GetStringBytes(str));
             }
             return JS_FALSE;
         }
@@ -986,7 +986,7 @@ js_Interpret(JSContext *cx, jsval *result)
 #endif
 
     if (cx->interpLevel == MAX_INTERP_LEVEL) {
-        JS_ReportErrorNumber(cx, NULL, JSMSG_OVER_RECURSED);
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_OVER_RECURSED);
         return JS_FALSE;
     }
     cx->interpLevel++;
@@ -1193,7 +1193,8 @@ js_Interpret(JSContext *cx, jsval *result)
           case JSOP_IN:
             rval = POP();
             if (!JSVAL_IS_OBJECT(rval) || rval == JSVAL_NULL) {
-                JS_ReportErrorNumber(cx, NULL, JSMSG_IN_NOT_OBJECT);
+                JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, 
+                                                        JSMSG_IN_NOT_OBJECT);
                 ok = JS_FALSE;
                 goto out;
             }
@@ -1921,8 +1922,8 @@ js_Interpret(JSContext *cx, jsval *result)
                 /* native [[Construct]] returning primitive is error */
                 str = js_ValueToString(cx, rval);
                 if (str) {
-                    JS_ReportErrorNumber(cx, NULL, JSMSG_BAD_NEW_RESULT,
-                                   JS_GetStringBytes(str));
+                    JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
+                                JSMSG_BAD_NEW_RESULT, JS_GetStringBytes(str));
                 }
                 ok = JS_FALSE;
                 goto out;
@@ -2558,7 +2559,8 @@ js_Interpret(JSContext *cx, jsval *result)
             if (JSVAL_IS_PRIMITIVE(rval)) {
                 char numBuf[12];
                 sprintf(numBuf, "%u", (unsigned) i);
-                JS_ReportErrorNumber(cx, NULL, JSMSG_BAD_SHARP_DEF, numBuf);
+                JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, 
+                                            JSMSG_BAD_SHARP_DEF, numBuf);
                 ok = JS_FALSE;
                 goto out;
             }
@@ -2581,7 +2583,8 @@ js_Interpret(JSContext *cx, jsval *result)
             if (!JSVAL_IS_OBJECT(rval)) {
                 char numBuf[12];
                 sprintf(numBuf, "%u", (unsigned) i);
-                JS_ReportErrorNumber(cx, NULL, JSMSG_BAD_SHARP_USE, numBuf);
+                JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, 
+                                            JSMSG_BAD_SHARP_USE, numBuf);
                 ok = JS_FALSE;
                 goto out;
             }
@@ -2644,8 +2647,8 @@ js_Interpret(JSContext *cx, jsval *result)
             if (JSVAL_IS_PRIMITIVE(rval)) {
                 str = js_DecompileValueGenerator(cx, rval, NULL);
                 if (str) {
-                    JS_ReportErrorNumber(cx, NULL, JSMSG_BAD_INSTANCEOF_RHS,
-                                   JS_GetStringBytes(str));
+                    JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
+                             JSMSG_BAD_INSTANCEOF_RHS, JS_GetStringBytes(str));
 
                 }
                 ok = JS_FALSE;
@@ -2690,7 +2693,8 @@ js_Interpret(JSContext *cx, jsval *result)
           default: {
             char numBuf[12];
             sprintf(numBuf, "%d", op);
-            JS_ReportErrorNumber(cx, NULL, JSMSG_BAD_BYTECODE, numBuf);
+            JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, 
+                                                    JSMSG_BAD_BYTECODE, numBuf);
             ok = JS_FALSE;
             goto out;
             }

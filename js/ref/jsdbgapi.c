@@ -345,7 +345,7 @@ JS_SetWatchPoint(JSContext *cx, JSObject *obj, jsval id,
     JSWatchPoint *wp;
 
     if (!OBJ_IS_NATIVE(obj)) {
-	JS_ReportErrorNumber(cx, NULL, JSMSG_CANT_WATCH, 
+	JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_CANT_WATCH, 
 		OBJ_GET_CLASS(cx, obj)->name);
 	return JS_FALSE;
     }

@@ -296,6 +296,6 @@ typedef struct JSErrorFormatString {
 } JSErrorFormatString;
 
 typedef const JSErrorFormatString * 
-(* CRT_CALL JSErrorCallBack)(const uintN errorNumber);
+(* CRT_CALL JSErrorCallBack)(void *userRef, const char *locale, const uintN errorNumber);
 
 #endif /* jspubtd_h___ */

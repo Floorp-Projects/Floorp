@@ -226,7 +226,8 @@ js_NewFileTokenStream(JSContext *cx, const char *filename, FILE *defaultfp)
     } else {
 	file = fopen(filename, "r");
 	if (!file) {
-	    JS_ReportErrorNumber(cx, NULL, JSMSG_CANT_OPEN, filename, strerror(errno));
+	    JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
+                            JSMSG_CANT_OPEN, filename, strerror(errno));
 	    return NULL;
 	}
     }
@@ -558,7 +559,8 @@ js_ReportCompileErrorNumber(JSContext *cx, JSTokenStream *ts, uintN flags,
     message = NULL;
 
     va_start(ap, errorNumber);
-    if (!js_ExpandErrorArguments(cx, NULL, errorNumber, &message, &report, ap))
+    if (!js_ExpandErrorArguments(cx, js_GetErrorMessage, NULL, 
+                                errorNumber, &message, &report, ap))
         return;
     va_end(ap);
 

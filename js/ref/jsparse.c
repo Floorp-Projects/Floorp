@@ -2173,7 +2173,8 @@ MemberExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
 	    	return NULL;
 	}
 	if (pn->pn_count - 1 >= ARGC_LIMIT) {
-	    JS_ReportErrorNumber(cx, NULL, JSMSG_TOO_MANY_CON_ARGS);
+	    JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
+                                        JSMSG_TOO_MANY_CON_ARGS);
 	    return NULL;
 	}
 	pn->pn_pos.end = PN_LAST(pn)->pn_pos.end;
@@ -2230,7 +2231,8 @@ MemberExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
 	    if (!pn2)
 	    	return NULL;
 	    if (pn2->pn_count - 1 >= ARGC_LIMIT) {
-		JS_ReportErrorNumber(cx, NULL, JSMSG_TOO_MANY_FUN_ARGS);
+		JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
+                                            JSMSG_TOO_MANY_FUN_ARGS);
 		return NULL;
 	    }
 	    pn2->pn_pos.end = PN_LAST(pn2)->pn_pos.end;

@@ -891,7 +891,8 @@ fun_setProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 _readonly:
     if (JSVERSION_IS_ECMA(cx->version))
 	return fun_getProperty(cx, obj, id, vp);
-    JS_ReportErrorNumber(cx, NULL, JSMSG_READ_ONLY, js_arguments_str);
+    JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, 
+                                JSMSG_READ_ONLY, js_arguments_str);
     return JS_FALSE;
 }
 
@@ -1155,7 +1156,7 @@ fun_hasInstance(JSContext *cx, JSObject *obj, jsval v, JSBool *bp)
      */
     str = js_DecompileValueGenerator(cx, OBJECT_TO_JSVAL(obj), NULL);
     if (str) {
-        JS_ReportErrorNumber(cx, NULL, JSMSG_BAD_PROTOTYPE,
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_BAD_PROTOTYPE,
                              JS_GetStringBytes(str));
     }
     return JS_FALSE;
@@ -1464,7 +1465,8 @@ Function(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
                  * TOK_ERROR.
                  */
                 if (tt != TOK_NAME) {
-                    JS_ReportErrorNumber(cx, NULL, JSMSG_NO_FORMAL);
+                    JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
+                                                        JSMSG_NO_FORMAL);
                     goto badargs;
                 }
                 /*
@@ -1736,7 +1738,7 @@ js_ReportIsNotFunction(JSContext *cx, jsval *vp, JSBool constructing)
     if (fp)
 	fp->sp = sp;
     if (str) {
-	JS_ReportErrorNumber(cx, NULL,
+	JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
                              constructing ? JSMSG_NOT_CONSTRUCTOR
                                           : JSMSG_NOT_FUNCTION,
                              JS_GetStringBytes(str));

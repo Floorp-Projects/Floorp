@@ -106,6 +106,15 @@ static JSDJContext *_jsdjc;
 
 static int reportWarnings;
 
+typedef enum JSShellErrNum {
+#define MSG_DEF(name, number, count, exception, format) \
+    name = number,
+#include "shellmsg.def"
+#undef MSG_DEF
+    JSShellErr_Limit
+#undef MSGDEF
+} JSShellErrNum;
+
 static void
 Process(JSContext *cx, JSObject *obj, char *filename)
 {
@@ -300,6 +309,9 @@ Version(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 static void
 my_ErrorReporter(JSContext *cx, const char *message, JSErrorReport *report);
 
+static const JSErrorFormatString *
+my_GetErrorMessage(void *userRef, const char *locale, const uintN errorNumber);
+
 static JSBool
 Load(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
@@ -458,7 +470,7 @@ Trap(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     int32 i;
 
     if (argc == 0) {
-	JS_ReportErrorNumber(cx, NULL, JSMSG_TRAP_USAGE);
+	JS_ReportErrorNumber(cx, my_GetErrorMessage, NULL, JSSMSG_TRAP_USAGE);
 	return JS_FALSE;
     }
     argc--;
@@ -492,7 +504,7 @@ LineToPC(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     jsbytecode *pc;
 
     if (argc == 0) {
-	JS_ReportErrorNumber(cx, NULL, JSMSG_LINE2PC_USAGE);
+	JS_ReportErrorNumber(cx, my_GetErrorMessage, NULL, JSSMSG_LINE2PC_USAGE);
 	return JS_FALSE;
     }
     script = cx->fp->down->script;
@@ -654,13 +666,15 @@ DisassWithSrc(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval
 	    return JS_FALSE;
 
 	if (!fun->script || !fun->script->filename) {
-	    JS_ReportErrorNumber(cx, NULL, JSMSG_FILE_SCRIPTS_ONLY);
+	    JS_ReportErrorNumber(cx, my_GetErrorMessage, NULL,
+                                            JSSMSG_FILE_SCRIPTS_ONLY);
 	    return JS_FALSE;
 	}
 
 	file = fopen(fun->script->filename, "r");
 	if (!file) {
-	    JS_ReportErrorNumber(cx, NULL, JSMSG_CANT_OPEN,
+	    JS_ReportErrorNumber(cx, my_GetErrorMessage, NULL, 
+                            JSSMSG_CANT_OPEN,
 			    fun->script->filename, strerror(errno));
 	    return JS_FALSE;
 	}
@@ -688,7 +702,8 @@ DisassWithSrc(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval
 		bupline = 0;
 		while (line1 < line2) {
 		    if (!fgets(linebuf, LINE_BUF_LEN, file)) {
-			JS_ReportErrorNumber(cx, NULL, JSMSG_UNEXPECTED_EOF,
+			JS_ReportErrorNumber(cx, my_GetErrorMessage, NULL, 
+                                       JSSMSG_UNEXPECTED_EOF,
 				       fun->script->filename);
 			goto bail;
 		    }
@@ -862,7 +877,7 @@ DoExport(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     uintN attrs;
 
     if (argc != 2) {
-	JS_ReportErrorNumber(cx, NULL, JSMSG_DOEXP_USAGE);
+	JS_ReportErrorNumber(cx, my_GetErrorMessage, NULL, JSSMSG_DOEXP_USAGE);
 	return JS_FALSE;
     }
     if (!JS_ValueToObject(cx, argv[0], &obj))
@@ -1152,6 +1167,27 @@ static JSClass its_class = {
     its_enumerate,    its_resolve,      its_convert,      its_finalize
 };
 
+JSErrorFormatString jsShell_ErrorFormatString[JSErr_Limit] = {
+#if JS_HAS_DFLT_MSG_STRINGS
+#define MSG_DEF(name, number, count, exception, format) \
+    { format, count } ,
+#else
+#define MSG_DEF(name, number, count, exception, format) \
+    { NULL, count } ,
+#endif
+#include "shellmsg.def"
+#undef MSG_DEF
+};
+
+static const JSErrorFormatString *
+my_GetErrorMessage(void *userRef, const char *locale, const uintN errorNumber)
+{
+    if ((errorNumber > 0) && (errorNumber < JSShellErr_Limit))
+	    return &jsShell_ErrorFormatString[errorNumber];
+	else
+            return NULL;
+}
+
 static void
 my_ErrorReporter(JSContext *cx, const char *message, JSErrorReport *report)
 {
@@ -1189,7 +1225,7 @@ my_ErrorReporter(JSContext *cx, const char *message, JSErrorReport *report)
     /* embedded newlines -- argh! */
     while ((tmp = strchr(message, '\n'))) {
         tmp++;
-        fputs(prefix, stderr);
+        if (prefix) fputs(prefix, stderr);
         fwrite(message, 1, tmp - message, stderr);
         message = tmp;
     }

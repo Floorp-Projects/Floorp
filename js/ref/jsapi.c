@@ -116,7 +116,8 @@ JS_ConvertArguments(JSContext *cx, uintN argc, jsval *argv, const char *format,
 		if (fun) {
 		    char numBuf[12];
 		    sprintf(numBuf, "%u", argc);
-		    JS_ReportErrorNumber(cx, NULL, JSMSG_MORE_ARGS_NEEDED,
+		    JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, 
+                                JSMSG_MORE_ARGS_NEEDED,
 				JS_GetFunctionName(fun),
 				numBuf,
 				(argc == 1) ? "" : "s");
@@ -190,7 +191,8 @@ JS_ConvertArguments(JSContext *cx, uintN argc, jsval *argv, const char *format,
 	  default: {
 	    char charBuf[2] = " ";
 	    charBuf[0] = *cp;
-	    JS_ReportErrorNumber(cx, NULL, JSMSG_BAD_CHAR, charBuf);
+	    JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, 
+                                        JSMSG_BAD_CHAR, charBuf);
 	    return JS_FALSE;
 	    }
     	}
@@ -248,7 +250,8 @@ JS_ConvertValue(JSContext *cx, jsval v, JSType type, jsval *vp)
       default: {
 	char numBuf[12];
 	sprintf(numBuf, "%d", (int)type);
-	JS_ReportErrorNumber(cx, NULL, JSMSG_BAD_TYPE, numBuf);
+	JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, 
+                                        JSMSG_BAD_TYPE, numBuf);
 	ok = JS_FALSE;
 	}
 	break;
@@ -825,7 +828,7 @@ JS_LockGCThing(JSContext *cx, void *thing)
     CHECK_REQUEST(cx);
     ok = js_LockGCThing(cx, thing);
     if (!ok)
-	JS_ReportErrorNumber(cx, NULL, JSMSG_CANT_LOCK);
+	JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_CANT_LOCK);
     return ok;
 }
 
@@ -837,7 +840,7 @@ JS_UnlockGCThing(JSContext *cx, void *thing)
     CHECK_REQUEST(cx);
     ok = js_UnlockGCThing(cx, thing);
     if (!ok)
-	JS_ReportErrorNumber(cx, NULL, JSMSG_CANT_UNLOCK);
+	JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_CANT_UNLOCK);
     return ok;
 }
 
@@ -1043,7 +1046,8 @@ JS_InstanceOf(JSContext *cx, JSObject *obj, JSClass *clasp, jsval *argv)
     if (argv) {
 	fun = js_ValueToFunction(cx, &argv[-2], JS_FALSE);
 	if (fun) {
-	    JS_ReportErrorNumber(cx, NULL, JSMSG_INCOMPATIBLE_PROTO,
+	    JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, 
+                           JSMSG_INCOMPATIBLE_PROTO,
 			   clasp->name, JS_GetFunctionName(fun),
 			   OBJ_GET_CLASS(cx, obj)->name);
 	}
@@ -1136,7 +1140,7 @@ JS_GetConstructor(JSContext *cx, JSObject *proto)
     if (!ok)
 	return NULL;
     if (!JSVAL_IS_FUNCTION(cx, cval)) {
-	JS_ReportErrorNumber(cx, NULL, JSMSG_NO_CONSTRUCTOR,
+	JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_NO_CONSTRUCTOR,
 		       OBJ_GET_CLASS(cx, proto)->name);
 	return NULL;
     }
@@ -1351,7 +1355,7 @@ JS_AliasProperty(JSContext *cx, JSObject *obj, const char *name,
     }
     if (obj2 != obj || !OBJ_IS_NATIVE(obj2)) {
 	OBJ_DROP_PROPERTY(cx, obj2, prop);
-	JS_ReportErrorNumber(cx, NULL, JSMSG_CANT_ALIAS,
+	JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_CANT_ALIAS,
 		       alias, name, OBJ_GET_CLASS(cx, obj2)->name);
 	return JS_FALSE;
     }
@@ -1701,7 +1705,7 @@ JS_AliasElement(JSContext *cx, JSObject *obj, const char *name, jsint alias)
 	char numBuf[12];
 	OBJ_DROP_PROPERTY(cx, obj2, prop);
 	sprintf(numBuf, "%ld", (long)alias);
-	JS_ReportErrorNumber(cx, NULL, JSMSG_CANT_ALIAS,
+	JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_CANT_ALIAS,
 		       numBuf, name, OBJ_GET_CLASS(cx, obj2)->name);
 	return JS_FALSE;
     }
@@ -2495,7 +2499,7 @@ JS_ReportError(JSContext *cx, const char *format, ...)
 }
 
 JS_PUBLIC_API(void)
-JS_ReportErrorNumber(JSContext *cx, JSErrorCallBack errCallBack,
+JS_ReportErrorNumber(JSContext *cx, JSErrorCallBack errCallBack, void *userRef,
 				const uintN errorNumber, ...)
 {
     va_list ap;
@@ -2503,7 +2507,7 @@ JS_ReportErrorNumber(JSContext *cx, JSErrorCallBack errCallBack,
     CHECK_REQUEST(cx);
     va_start(ap, errorNumber);
     js_ReportErrorNumberVA(cx, JSREPORT_ERROR, 
-			errCallBack, errorNumber, ap);
+			errCallBack, userRef, errorNumber, ap);
     va_end(ap);
 }
 
@@ -2554,7 +2558,7 @@ JS_NewRegExpObject(JSContext *cx, char *bytes, size_t length, uintN flags)
     JS_free(cx, chars);
     return obj;
 #else
-    JS_ReportErrorNumber(cx, NULL, JSMSG_NO_REG_EXPS);
+    JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_NO_REG_EXPS);
     return NULL;
 #endif
 }
@@ -2566,7 +2570,7 @@ JS_NewUCRegExpObject(JSContext *cx, jschar *chars, size_t length, uintN flags)
 #if JS_HAS_REGEXPS
     return js_NewRegExpObject(cx, chars, length, flags);
 #else
-    JS_ReportErrorNumber(cx, NULL, JSMSG_NO_REG_EXPS);
+    JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_NO_REG_EXPS);
     return NULL;
 #endif
 }
