@@ -19,6 +19,6 @@
    - Contributor(s): Stephen Lamm <slamm@netscape.com>
   --> 
 
-<!ENTITY sidebar.customize-panel.title.label          "Customize Panel: ">
+<!ENTITY sidebar.customize-panel.title.label          "Customize Tab: ">
 <!ENTITY sidebar.customize-panel.save.label           "Save">
 <!ENTITY sidebar.customize-panel.cancel.label         "Cancel">
