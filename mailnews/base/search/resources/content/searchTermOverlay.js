@@ -160,7 +160,7 @@ function initializeBooleanWidgets()
 {
     var booleanAnd = true;
     // get the boolean value from the first term
-    var firstTerm = gSearchTerms[0].obj;
+    var firstTerm = gSearchTerms[0].searchTerm;
     if (firstTerm)
         booleanAnd = firstTerm.booleanAnd;
 
