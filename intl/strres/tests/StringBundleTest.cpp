@@ -25,6 +25,7 @@
 #include "nsCOMPtr.h"
 #include "nsIPersistentProperties2.h"
 #include "nsIStringBundle.h"
+#include "nsIAcceptLang.h"
 #include "nsIEventQueueService.h"
 #include "nsILocale.h"
 #include <iostream.h>
@@ -66,6 +67,9 @@ static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 
 static NS_DEFINE_IID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
 static NS_DEFINE_IID(kIStringBundleServiceIID, NS_ISTRINGBUNDLESERVICE_IID);
+
+static NS_DEFINE_IID(kAcceptLangCID, NS_ACCEPTLANG_CID);
+static NS_DEFINE_IID(kIAcceptLangIID, NS_IACCEPTLANG_IID);
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 //
@@ -174,6 +178,15 @@ main(int argc, char *argv[])
     printf("cannot create service\n");
     return 1;
   }
+
+  nsIAcceptLang* Aservice = nsnull;
+  ret = nsServiceManager::GetService(kAcceptLangCID,
+                                     kIAcceptLangIID, (nsISupports**) &Aservice);
+  if (NS_FAILED(ret)) {
+    printf("cannot create AcceptLang service\n");
+    return 1;
+  }
+    printf("\n ** created AcceptLang service\n");
 
   nsILocale* locale = get_applocale();
 
