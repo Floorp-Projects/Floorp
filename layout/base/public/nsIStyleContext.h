@@ -134,6 +134,9 @@ struct nsStylePosition : public nsStyleStruct {
 
   nsStyleCoord  mZIndex;                // [reset] 
 
+  PRBool IsAbsolutelyPositioned() const {return (NS_STYLE_POSITION_ABSOLUTE == mPosition) ||
+                                                (NS_STYLE_POSITION_FIXED == mPosition);}
+
 protected:
   nsStylePosition(void);
 };
