@@ -74,11 +74,12 @@ function Init()
 
         dump('adding "' + service.Value + '" to the tree\n');
         try {
-            // create a new RDF/XML datasource. This will,
-            // unfortunately, force it to be read synchronously the
-            // first time around.
+            // Create a new RDF/XML datasource. If this is a 'remote'
+            // datasource (e.g., a 'http:' URL), it will be loaded
+            // asynchronously.
             var flashservice = RDF.GetDataSource(service.Value);
             flashservice = flashservice.QueryInterface(Components.interfaces.nsIRDFDataSource);
+
             // Add it to the tree control's composite datasource.
             tree.database.AddDataSource(flashservice);
 
@@ -87,7 +88,6 @@ function Init()
                                    RDF.GetResource('http://home.netscape.com/NC-rdf#poll-interval'),
                                    true);
 
-            dump('poll interval = "' + pollInterval + '"\n');
             if (pollInterval)
                 pollInterval = pollInterval.QueryInterface(Components.interfaces.nsIRDFLiteral);
 
