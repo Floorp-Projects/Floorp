@@ -452,6 +452,7 @@ NS_COM PRBool NS_UnescapeURL(const char *str, PRInt32 len, PRInt16 flags, nsACSt
         len = strlen(str);
 
     PRBool ignoreNonAscii = (flags & esc_OnlyASCII);
+    PRBool ignoreAscii = (flags & esc_OnlyNonASCII);
     PRBool writing = (flags & esc_AlwaysCopy);
     PRBool skipControl = (flags & esc_SkipControl); 
 
@@ -465,7 +466,8 @@ NS_COM PRBool NS_UnescapeURL(const char *str, PRInt32 len, PRInt16 flags, nsACSt
         if (*p == HEX_ESCAPE && i < len-2) {
             unsigned char *p1 = ((unsigned char *) p) + 1;
             unsigned char *p2 = ((unsigned char *) p) + 2;
-            if (ISHEX(*p1) && ISHEX(*p2) && !(ignoreNonAscii && *p1 >= '8') &&
+            if (ISHEX(*p1) && ISHEX(*p2) && 
+                ((*p1 < '8' && !ignoreAscii) || (*p1 >= '8' && !ignoreNonAscii)) &&
                 !(skipControl && 
                   (*p1 < '2' || (*p1 == '7' && (*p2 == 'f' || *p2 == 'F'))))) {
                 //printf("- p1=%c p2=%c\n", *p1, *p2);
