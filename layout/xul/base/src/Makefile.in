@@ -44,6 +44,11 @@ CPPSRCS =				\
 	nsTreeIndentationFrame.cpp \
 	nsTreeCellFrame.cpp \
 	nsTriStateCheckboxFrame.cpp \
+	nsSpinnerFrame.cpp \
+	nsScrollbarFrame.cpp \
+	nsSliderFrame.cpp \
+	nsColorPickerFrame.cpp \
+	nsFontPickerFrame.cpp \
 	$(NULL)
 
 include $(topsrcdir)/config/config.mk
