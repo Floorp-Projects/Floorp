@@ -30,6 +30,7 @@
 #include "nsSound.h"
 
 #include "nsIURL.h"
+#include "nsIFileURL.h"
 #include "nsNetUtil.h"
 #include "nsCOMPtr.h"
 
@@ -113,8 +114,10 @@ nsSound::Init()
     return NS_OK;
 }
 
-#define GET_WORD(s, i) (s[i+1] << 8) | s[i]
-#define GET_DWORD(s, i) (s[i+3] << 24) | (s[i+2] << 16) | (s[i+1] << 8) | s[i]
+#define GET_WORD(s, i) ((unsigned char)s[i+1] << 8) | (unsigned char)s[i]
+#define GET_DWORD(s, i) ((unsigned char)s[i+3] << 24) | \
+    ((unsigned char)s[i+2] << 16) | ((unsigned char)s[i+1] << 8) | \
+    (unsigned char)s[i]
 
 NS_IMETHODIMP nsSound::OnStreamComplete(nsIStreamLoader *aLoader,
                                         nsISupports *context,
@@ -146,9 +149,9 @@ NS_IMETHODIMP nsSound::OnStreamComplete(nsIStreamLoader *aLoader,
 #endif
 
     int fd, mask = 0;
-    long samples_per_sec, avg_bytes_per_sec;
-    long rate = 0;
-    int format, channels = 1, block_align, bits_per_sample = 0;
+    unsigned long samples_per_sec=0, avg_bytes_per_sec=0;
+    unsigned long rate=0;
+    unsigned short format, channels = 1, block_align, bits_per_sample=0;
 
     if (PL_strncmp(string, "RIFF", 4)) {
 #ifdef DEBUG
@@ -187,7 +190,7 @@ NS_IMETHODIMP nsSound::OnStreamComplete(nsIStreamLoader *aLoader,
                 bits_per_sample = GET_WORD(string, i);
                 i+=2;
 
-                rate = samples_per_sec * channels * (bits_per_sample / 8);
+                rate = samples_per_sec;
 
                 break;
             }
@@ -253,5 +256,29 @@ NS_METHOD nsSound::Play(nsIURL *aURL)
 
 NS_IMETHODIMP nsSound::PlaySystemSound(const char *aSoundAlias)
 {
-    return Beep();
+    if (!aSoundAlias)
+        return NS_ERROR_FAILURE;
+
+    if (strcmp(aSoundAlias, "_moz_mailbeep") == 0) {
+        return Beep();
+    }
+
+    nsresult rv;
+    nsCOMPtr <nsIURI> fileURI;
+
+    // create a nsILocalFile and then a nsIFileURL from that
+    nsCOMPtr <nsILocalFile> soundFile;
+    rv = NS_NewNativeLocalFile(nsDependentCString(aSoundAlias), PR_TRUE, 
+                               getter_AddRefs(soundFile));
+    NS_ENSURE_SUCCESS(rv,rv);
+
+    rv = NS_NewFileURI(getter_AddRefs(fileURI), soundFile);
+    NS_ENSURE_SUCCESS(rv,rv);
+
+    nsCOMPtr<nsIFileURL> fileURL = do_QueryInterface(fileURI,&rv);
+    NS_ENSURE_SUCCESS(rv,rv);
+
+    rv = Play(fileURL);
+
+    return rv;
 }
